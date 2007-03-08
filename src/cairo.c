@@ -49,6 +49,9 @@ static const cairo_t cairo_nil = {
   CAIRO_STATUS_NO_MEMORY,	/* status */
   { 0, 0, 0, NULL },		/* user_data */
   NULL,				/* gstate */
+  {{				/* gstate_tail */
+    0
+  }},
   {{ 				/* path */
     { 0, 0 },			   /* last_move_point */
     { 0, 0 },			   /* current point */
@@ -197,17 +200,14 @@ cairo_create (cairo_surface_t *target)
 
     _cairo_user_data_array_init (&cr->user_data);
 
+    cr->gstate = cr->gstate_tail;
+    _cairo_gstate_init (cr->gstate, target);
+
     _cairo_path_fixed_init (cr->path);
 
     if (target == NULL) {
-	cr->gstate = NULL;
 	_cairo_set_error (cr, CAIRO_STATUS_NULL_POINTER);
-	return cr;
     }
-
-    cr->gstate = _cairo_gstate_create (target);
-    if (cr->gstate == NULL)
-	_cairo_set_error (cr, CAIRO_STATUS_NO_MEMORY);
 
     return cr;
 }
@@ -259,12 +259,14 @@ cairo_destroy (cairo_t *cr)
     if (cr->ref_count)
 	return;
 
-    while (cr->gstate) {
+    while (cr->gstate != cr->gstate_tail) {
 	cairo_gstate_t *tmp = cr->gstate;
 	cr->gstate = tmp->next;
 
 	_cairo_gstate_destroy (tmp);
     }
+
+    _cairo_gstate_fini (cr->gstate);
 
     _cairo_path_fixed_fini (cr->path);
 
@@ -399,21 +401,15 @@ cairo_restore (cairo_t *cr)
     if (cr->status)
 	return;
 
+    if (cr->gstate == cr->gstate_tail) {
+	_cairo_set_error (cr, CAIRO_STATUS_INVALID_RESTORE);
+	return;
+    }
+
     top = cr->gstate;
     cr->gstate = top->next;
 
     _cairo_gstate_destroy (top);
-
-    if (cr->gstate == NULL) {
-	_cairo_set_error (cr, CAIRO_STATUS_INVALID_RESTORE);
-	/* We go ahead and create a new gstate here, just for the sake
-	 * of the various cairo_get functions that don't check
-	 * cr->status. This gstate should never be written to, (since
-	 * the cairo functions that do modify anything all check
-	 * status and immediately abort).
-	 */
-	cr->gstate = _cairo_gstate_create ((cairo_surface_t *)&_cairo_surface_nil);
-    }
 }
 slim_hidden_def(cairo_restore);
 

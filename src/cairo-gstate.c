@@ -43,14 +43,7 @@
 #include "cairo-gstate-private.h"
 
 static cairo_status_t
-_cairo_gstate_init (cairo_gstate_t  *gstate,
-		    cairo_surface_t *target);
-
-static cairo_status_t
 _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other);
-
-static void
-_cairo_gstate_fini (cairo_gstate_t *gstate);
 
 static cairo_status_t
 _cairo_gstate_ensure_font_face (cairo_gstate_t *gstate);
@@ -67,40 +60,7 @@ _cairo_gstate_transform_glyphs_to_backend (cairo_gstate_t      *gstate,
                                            int                  num_glyphs,
                                            cairo_glyph_t       *transformed_glyphs);
 
-/**
- * _cairo_gstate_create:
- * @target: a #cairo_surface_t, not NULL
- *
- * Create a new #cairo_gstate_t to draw to target with all graphics
- * state parameters set to defaults. gstate->next will be set to NULL
- * and may be used by the caller to chain #cairo_gstate_t objects
- * together.
- *
- * Return value: a new #cairo_gstate_t or NULL if there is
- * insufficient memory.
- **/
-cairo_gstate_t *
-_cairo_gstate_create (cairo_surface_t *target)
-{
-    cairo_status_t status;
-    cairo_gstate_t *gstate;
-
-    assert (target != NULL);
-
-    gstate = malloc (sizeof (cairo_gstate_t));
-    if (gstate == NULL)
-	return NULL;
-
-    status = _cairo_gstate_init (gstate, target);
-    if (status) {
-	free (gstate);
-	return NULL;
-    }
-
-    return gstate;
-}
-
-static cairo_status_t
+cairo_status_t
 _cairo_gstate_init (cairo_gstate_t  *gstate,
 		    cairo_surface_t *target)
 {
@@ -189,7 +149,7 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void
+void
 _cairo_gstate_fini (cairo_gstate_t *gstate)
 {
     _cairo_stroke_style_fini (&gstate->stroke_style);
