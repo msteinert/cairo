@@ -134,7 +134,7 @@ create_test_fallback_surface (const char		 *name,
 			      void			**closure)
 {
     *closure = NULL;
-    return _test_fallback_surface_create (content, width, height);
+    return _cairo_test_fallback_surface_create (content, width, height);
 }
 
 static cairo_surface_t *
@@ -146,7 +146,7 @@ create_test_meta_surface (const char			 *name,
 			  void				**closure)
 {
     *closure = NULL;
-    return _test_meta_surface_create (content, width, height);
+    return _cairo_test_meta_surface_create (content, width, height);
 }
 
 static const cairo_user_data_key_t test_paginated_closure_key;
@@ -179,7 +179,7 @@ create_test_paginated_surface (const char		 *name,
 
     tpc->data = xcalloc (tpc->stride * height, 1);
 
-    surface = _test_paginated_surface_create_for_data (tpc->data,
+    surface = _cairo_test_paginated_surface_create_for_data (tpc->data,
 						       tpc->content,
 						       tpc->width,
 						       tpc->height,

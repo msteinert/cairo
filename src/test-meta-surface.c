@@ -68,7 +68,7 @@ static cairo_int_status_t
 _test_meta_surface_show_page (void *abstract_surface);
 
 cairo_surface_t *
-_test_meta_surface_create (cairo_content_t	content,
+_cairo_test_meta_surface_create (cairo_content_t	content,
 			   int		 	width,
 			   int		 	height)
 {

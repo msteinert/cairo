@@ -61,7 +61,7 @@ static const cairo_surface_backend_t test_paginated_surface_backend;
 static const cairo_paginated_surface_backend_t test_paginated_surface_paginated_backend;
 
 cairo_surface_t *
-_test_paginated_surface_create_for_data (unsigned char		*data,
+_cairo_test_paginated_surface_create_for_data (unsigned char		*data,
 					 cairo_content_t	 content,
 					 int		 	 width,
 					 int		 	 height,
