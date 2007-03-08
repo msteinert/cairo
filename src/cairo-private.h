@@ -48,7 +48,7 @@ struct _cairo {
 
     cairo_gstate_t *gstate;
 
-    cairo_path_fixed_t path;
+    cairo_path_fixed_t path[1];
 };
 
 #endif /* CAIRO_PRIVATE_H */

@@ -49,13 +49,13 @@ static const cairo_t cairo_nil = {
   CAIRO_STATUS_NO_MEMORY,	/* status */
   { 0, 0, 0, NULL },		/* user_data */
   NULL,				/* gstate */
-  { 				/* path */
+  {{ 				/* path */
     { 0, 0 },			   /* last_move_point */
     { 0, 0 },			   /* current point */
     FALSE,			   /* has_current_point */
     FALSE,			   /* has_curve_to */
-    NULL, {0}			   /* buf_tail, buf_head */
-  }
+    NULL, {{0}}			   /* buf_tail, buf_head */
+  }}
 };
 
 #include <assert.h>
@@ -197,7 +197,7 @@ cairo_create (cairo_surface_t *target)
 
     _cairo_user_data_array_init (&cr->user_data);
 
-    _cairo_path_fixed_init (&cr->path);
+    _cairo_path_fixed_init (cr->path);
 
     if (target == NULL) {
 	cr->gstate = NULL;
@@ -266,7 +266,7 @@ cairo_destroy (cairo_t *cr)
 	_cairo_gstate_destroy (tmp);
     }
 
-    _cairo_path_fixed_fini (&cr->path);
+    _cairo_path_fixed_fini (cr->path);
 
     _cairo_user_data_array_fini (&cr->user_data);
 
@@ -1336,7 +1336,7 @@ cairo_new_path (cairo_t *cr)
     if (cr->status)
 	return;
 
-    _cairo_path_fixed_fini (&cr->path);
+    _cairo_path_fixed_fini (cr->path);
 }
 slim_hidden_def(cairo_new_path);
 
@@ -1361,7 +1361,7 @@ cairo_move_to (cairo_t *cr, double x, double y)
     x_fixed = _cairo_fixed_from_double (x);
     y_fixed = _cairo_fixed_from_double (y);
 
-    cr->status = _cairo_path_fixed_move_to (&cr->path, x_fixed, y_fixed);
+    cr->status = _cairo_path_fixed_move_to (cr->path, x_fixed, y_fixed);
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
@@ -1391,7 +1391,7 @@ cairo_new_sub_path (cairo_t *cr)
     if (cr->status)
 	return;
 
-    _cairo_path_fixed_new_sub_path (&cr->path);
+    _cairo_path_fixed_new_sub_path (cr->path);
 }
 
 /**
@@ -1419,7 +1419,7 @@ cairo_line_to (cairo_t *cr, double x, double y)
     x_fixed = _cairo_fixed_from_double (x);
     y_fixed = _cairo_fixed_from_double (y);
 
-    cr->status = _cairo_path_fixed_line_to (&cr->path, x_fixed, y_fixed);
+    cr->status = _cairo_path_fixed_line_to (cr->path, x_fixed, y_fixed);
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
@@ -1470,7 +1470,7 @@ cairo_curve_to (cairo_t *cr,
     x3_fixed = _cairo_fixed_from_double (x3);
     y3_fixed = _cairo_fixed_from_double (y3);
 
-    cr->status = _cairo_path_fixed_curve_to (&cr->path,
+    cr->status = _cairo_path_fixed_curve_to (cr->path,
 					     x1_fixed, y1_fixed,
 					     x2_fixed, y2_fixed,
 					     x3_fixed, y3_fixed);
@@ -1636,7 +1636,7 @@ cairo_rel_move_to (cairo_t *cr, double dx, double dy)
     dx_fixed = _cairo_fixed_from_double (dx);
     dy_fixed = _cairo_fixed_from_double (dy);
 
-    cr->status = _cairo_path_fixed_rel_move_to (&cr->path, dx_fixed, dy_fixed);
+    cr->status = _cairo_path_fixed_rel_move_to (cr->path, dx_fixed, dy_fixed);
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
@@ -1671,7 +1671,7 @@ cairo_rel_line_to (cairo_t *cr, double dx, double dy)
     dx_fixed = _cairo_fixed_from_double (dx);
     dy_fixed = _cairo_fixed_from_double (dy);
 
-    cr->status = _cairo_path_fixed_rel_line_to (&cr->path, dx_fixed, dy_fixed);
+    cr->status = _cairo_path_fixed_rel_line_to (cr->path, dx_fixed, dy_fixed);
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
@@ -1729,7 +1729,7 @@ cairo_rel_curve_to (cairo_t *cr,
     dx3_fixed = _cairo_fixed_from_double (dx3);
     dy3_fixed = _cairo_fixed_from_double (dy3);
 
-    cr->status = _cairo_path_fixed_rel_curve_to (&cr->path,
+    cr->status = _cairo_path_fixed_rel_curve_to (cr->path,
 						 dx1_fixed, dy1_fixed,
 						 dx2_fixed, dy2_fixed,
 						 dx3_fixed, dy3_fixed);
@@ -1817,7 +1817,7 @@ cairo_close_path (cairo_t *cr)
     if (cr->status)
 	return;
 
-    cr->status = _cairo_path_fixed_close_path (&cr->path);
+    cr->status = _cairo_path_fixed_close_path (cr->path);
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
@@ -2007,7 +2007,7 @@ cairo_stroke_preserve (cairo_t *cr)
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_stroke (cr->gstate, &cr->path);
+    cr->status = _cairo_gstate_stroke (cr->gstate, cr->path);
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
@@ -2048,7 +2048,7 @@ cairo_fill_preserve (cairo_t *cr)
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_fill (cr->gstate, &cr->path);
+    cr->status = _cairo_gstate_fill (cr->gstate, cr->path);
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
@@ -2118,7 +2118,7 @@ cairo_in_stroke (cairo_t *cr, double x, double y)
 	return 0;
 
     cr->status = _cairo_gstate_in_stroke (cr->gstate,
-					  &cr->path,
+					  cr->path,
 					  x, y, &inside);
     if (cr->status)
 	return 0;
@@ -2150,7 +2150,7 @@ cairo_in_fill (cairo_t *cr, double x, double y)
 	return 0;
 
     cr->status = _cairo_gstate_in_fill (cr->gstate,
-					&cr->path,
+					cr->path,
 					x, y, &inside);
     if (cr->status) {
 	_cairo_set_error (cr, cr->status);
@@ -2186,7 +2186,7 @@ cairo_stroke_extents (cairo_t *cr,
 	return;
 
     cr->status = _cairo_gstate_stroke_extents (cr->gstate,
-					       &cr->path,
+					       cr->path,
 					       x1, y1, x2, y2);
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
@@ -2216,7 +2216,7 @@ cairo_fill_extents (cairo_t *cr,
 	return;
 
     cr->status = _cairo_gstate_fill_extents (cr->gstate,
-					     &cr->path,
+					     cr->path,
 					     x1, y1, x2, y2);
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
@@ -2280,7 +2280,7 @@ cairo_clip_preserve (cairo_t *cr)
     if (cr->status)
 	return;
 
-    cr->status = _cairo_gstate_clip (cr->gstate, &cr->path);
+    cr->status = _cairo_gstate_clip (cr->gstate, cr->path);
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
@@ -2911,7 +2911,7 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
 
     cr->status = _cairo_gstate_glyph_path (cr->gstate,
 					   glyphs, num_glyphs,
-					   &cr->path);
+					   cr->path);
 
     if (cr->status)
 	goto BAIL;
@@ -2954,7 +2954,7 @@ cairo_glyph_path (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
 
     cr->status = _cairo_gstate_glyph_path (cr->gstate,
 					   glyphs, num_glyphs,
-					   &cr->path);
+					   cr->path);
     if (cr->status)
 	_cairo_set_error (cr, cr->status);
 }
@@ -3030,7 +3030,7 @@ cairo_get_current_point (cairo_t *cr, double *x_ret, double *y_ret)
     cairo_fixed_t x_fixed, y_fixed;
     double x, y;
 
-    status = _cairo_path_fixed_get_current_point (&cr->path, &x_fixed, &y_fixed);
+    status = _cairo_path_fixed_get_current_point (cr->path, &x_fixed, &y_fixed);
     if (status == CAIRO_STATUS_NO_CURRENT_POINT) {
 	x = 0.0;
 	y = 0.0;
@@ -3222,7 +3222,7 @@ cairo_copy_path (cairo_t *cr)
     if (cr->status)
 	return _cairo_path_create_in_error (cr->status);
 
-    return _cairo_path_create (&cr->path, cr->gstate);
+    return _cairo_path_create (cr->path, cr->gstate);
 }
 
 /**
@@ -3264,7 +3264,7 @@ cairo_copy_path_flat (cairo_t *cr)
     if (cr->status)
 	return _cairo_path_create_in_error (cr->status);
 
-    return _cairo_path_create_flat (&cr->path, cr->gstate);
+    return _cairo_path_create_flat (cr->path, cr->gstate);
 }
 
 /**
