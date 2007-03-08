@@ -37,7 +37,6 @@
 #include <Carbon/Carbon.h>
 
 #include "cairoint.h"
-#include "cairo-private.h"
 
 #include "cairo-quartz-private.h"
 
