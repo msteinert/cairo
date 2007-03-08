@@ -44,7 +44,9 @@ typedef enum cairo_path_op {
 } __attribute__ ((packed)) cairo_path_op_t; /* Don't want 32 bits if we can avoid it. */
 /* XXX Shall we just not use char instead of hoping for __attribute__ working? */
 
-#define CAIRO_PATH_BUF_SIZE 64
+/* make cairo_path_fixed fit a 512 bytes.  about 50 items */
+#define CAIRO_PATH_BUF_SIZE ((512 - 12 * sizeof (void*)) \
+			   / (sizeof (cairo_point_t) + sizeof (cairo_path_op_t)))
 
 typedef struct _cairo_path_buf {
     struct _cairo_path_buf *next, *prev;
@@ -57,13 +59,13 @@ typedef struct _cairo_path_buf {
 } cairo_path_buf_t;
 
 struct _cairo_path_fixed {
-    cairo_path_buf_t  buf_head[1];
-    cairo_path_buf_t *buf_tail;
-
     cairo_point_t last_move_point;
     cairo_point_t current_point;
     unsigned int has_current_point	: 1;
     unsigned int has_curve_to		: 1;
+
+    cairo_path_buf_t *buf_tail;
+    cairo_path_buf_t  buf_head[1];
 };
 
 #endif /* CAIRO_PATH_FIXED_PRIVATE_H */
