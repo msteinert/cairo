@@ -1226,6 +1226,8 @@ typedef struct _cairo_traps {
     int num_traps;
     int traps_size;
     cairo_box_t extents;
+
+    cairo_trapezoid_t  traps_embedded[1];
 } cairo_traps_t;
 
 #define CAIRO_FONT_SLANT_DEFAULT   CAIRO_FONT_SLANT_NORMAL

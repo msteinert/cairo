@@ -77,12 +77,12 @@ _cairo_traps_init (cairo_traps_t *traps)
 void
 _cairo_traps_fini (cairo_traps_t *traps)
 {
-    if (traps->traps_size) {
+    if (traps->traps != traps->traps_embedded)
 	free (traps->traps);
-	traps->traps = NULL;
-	traps->traps_size = 0;
-	traps->num_traps = 0;
-    }
+
+    traps->traps = NULL;
+    traps->traps_size = 0;
+    traps->num_traps = 0;
 }
 
 /**
@@ -192,19 +192,35 @@ _cairo_traps_add_trap_from_points (cairo_traps_t *traps, cairo_fixed_t top, cair
     return _cairo_traps_add_trap (traps, top, bottom, &left, &right);
 }
 
+/* make room for at least one more trap */
 static cairo_status_t
 _cairo_traps_grow (cairo_traps_t *traps)
 {
     cairo_trapezoid_t *new_traps;
     int old_size = traps->traps_size;
-    int new_size = old_size ? 2 * old_size : 32;
+    int embedded_size = sizeof (traps->traps_embedded) / sizeof (traps->traps_embedded[0]);
+    int new_size = 2 * MAX (old_size, 16);
+
+    /* we have a local buffer at traps->traps_embedded.  try to fulfill the request
+     * from there. */
+    if (old_size < embedded_size) {
+	traps->traps = traps->traps_embedded;
+	traps->traps_size = embedded_size;
+	return traps->status;
+    }
 
     assert (traps->num_traps <= traps->traps_size);
 
     if (traps->status)
 	return traps->status;
 
-    new_traps = realloc (traps->traps, new_size * sizeof (cairo_trapezoid_t));
+    if (traps->traps == traps->traps_embedded) {
+	new_traps = malloc (new_size * sizeof (cairo_trapezoid_t));
+	if (new_traps)
+	    memcpy (new_traps, traps->traps, old_size * sizeof (cairo_trapezoid_t));
+    } else {
+	new_traps = realloc (traps->traps, new_size * sizeof (cairo_trapezoid_t));
+    }
 
     if (new_traps == NULL) {
 	traps->status = CAIRO_STATUS_NO_MEMORY;
