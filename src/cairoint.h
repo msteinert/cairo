@@ -1222,11 +1222,11 @@ typedef struct _cairo_surface_attributes {
 typedef struct _cairo_traps {
     cairo_status_t status;
 
-    cairo_trapezoid_t *traps;
-    int num_traps;
-    int traps_size;
     cairo_box_t extents;
 
+    int num_traps;
+    int traps_size;
+    cairo_trapezoid_t *traps;
     cairo_trapezoid_t  traps_embedded[1];
 } cairo_traps_t;
 
