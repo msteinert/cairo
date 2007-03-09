@@ -70,8 +70,8 @@ _cairo_traps_init (cairo_traps_t *traps)
 
     traps->traps_size = 0;
     traps->traps = NULL;
-    traps->extents.p1.x = traps->extents.p1.y = INT16_MAX << 16;
-    traps->extents.p2.x = traps->extents.p2.y = INT16_MIN << 16;
+    traps->extents.p1.x = traps->extents.p1.y = INT32_MAX;
+    traps->extents.p2.x = traps->extents.p2.y = INT32_MIN;
 }
 
 void
