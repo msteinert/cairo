@@ -463,6 +463,9 @@ $(top_builddir)/boilerplate/libcairoboilerplate.la:
 $(top_builddir)/src/libcairo.la:
 	cd $(top_builddir)/src && $(MAKE) $(AM_MAKEFLAGS) libcairo.la
 
+$(top_builddir)/test/pdiff/libpdiff.la:
+	cd $(top_builddir)/test/pdiff && $(MAKE) $(AM_MAKEFLAGS) libpdiff.la
+
 if HAVE_PTHREAD
 LDADD += -lpthread
 endif
