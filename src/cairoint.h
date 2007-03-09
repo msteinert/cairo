@@ -441,6 +441,7 @@ typedef struct _cairo_spline {
     int num_points;
     int points_size;
     cairo_point_t *points;
+    cairo_point_t  points_embedded[8];
 } cairo_spline_t;
 
 typedef struct _cairo_pen_vertex {
