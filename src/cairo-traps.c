@@ -40,7 +40,7 @@
 /* private functions */
 
 static cairo_status_t
-_cairo_traps_grow_by (cairo_traps_t *traps, int additional);
+_cairo_traps_grow (cairo_traps_t *traps);
 
 static cairo_status_t
 _cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
@@ -100,7 +100,7 @@ _cairo_traps_init_box (cairo_traps_t *traps,
 {
   _cairo_traps_init (traps);
 
-  traps->status = _cairo_traps_grow_by (traps, 1);
+  traps->status = _cairo_traps_grow (traps);
   if (traps->status)
     return traps->status;
 
@@ -134,8 +134,7 @@ _cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bo
     }
 
     if (traps->num_traps >= traps->traps_size) {
-	int inc = traps->traps_size ? traps->traps_size : 32;
-	traps->status = _cairo_traps_grow_by (traps, inc);
+	traps->status = _cairo_traps_grow (traps);
 	if (traps->status)
 	    return traps->status;
     }
@@ -194,28 +193,26 @@ _cairo_traps_add_trap_from_points (cairo_traps_t *traps, cairo_fixed_t top, cair
 }
 
 static cairo_status_t
-_cairo_traps_grow_by (cairo_traps_t *traps, int additional)
+_cairo_traps_grow (cairo_traps_t *traps)
 {
     cairo_trapezoid_t *new_traps;
     int old_size = traps->traps_size;
-    int new_size = traps->num_traps + additional;
+    int new_size = old_size ? 2 * old_size : 32;
+
+    assert (traps->num_traps <= traps->traps_size);
 
     if (traps->status)
 	return traps->status;
 
-    if (new_size <= traps->traps_size)
-	return traps->status;
-
-    traps->traps_size = new_size;
-    new_traps = realloc (traps->traps, traps->traps_size * sizeof (cairo_trapezoid_t));
+    new_traps = realloc (traps->traps, new_size * sizeof (cairo_trapezoid_t));
 
     if (new_traps == NULL) {
-	traps->traps_size = old_size;
 	traps->status = CAIRO_STATUS_NO_MEMORY;
 	return traps->status;
     }
 
     traps->traps = new_traps;
+    traps->traps_size = new_size;
 
     return traps->status;
 }
