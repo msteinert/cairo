@@ -46,8 +46,8 @@ convolve (lpyramid_t *pyramid, float *a, float *b)
 		    ny=y+j;
 		    if (nx<0) nx=-nx;
 		    if (ny<0) ny=-ny;
-		    if (nx>=width) nx=2*(width-1)-nx;
-		    if (ny>=height) ny=2*(height-1)-ny;
+		    if (nx>=width) nx=2*width - nx - 1;
+		    if (ny>=height) ny=2*height - ny - 1;
 		    a[index] += Kernel[i+2] * Kernel[j+2] * b[ny * width + nx];
 		}
 	    }
