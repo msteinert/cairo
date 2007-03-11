@@ -995,7 +995,7 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 
     status = surface->backend->clone_similar (surface, src, src_x, src_y,
 					      width, height, clone_out);
-    if (status == CAIRO_STATUS_SUCCESS)
+    if (status == CAIRO_STATUS_SUCCESS && *clone_out != src)
         (*clone_out)->device_transform = src->device_transform;
 
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
@@ -1007,7 +1007,7 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 
     status = surface->backend->clone_similar (surface, &image->base, src_x,
 					      src_y, width, height, clone_out);
-    if (status == CAIRO_STATUS_SUCCESS) {
+    if (status == CAIRO_STATUS_SUCCESS && *clone_out != src) {
         (*clone_out)->device_transform = src->device_transform;
         (*clone_out)->device_transform_inverse = src->device_transform_inverse;
     }
