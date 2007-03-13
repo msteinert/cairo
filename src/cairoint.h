@@ -421,15 +421,15 @@ typedef struct _cairo_edge {
 } cairo_edge_t;
 
 typedef struct _cairo_polygon {
-    int num_edges;
-    int edges_size;
-    cairo_edge_t *edges;
-
     cairo_point_t first_point;
     cairo_point_t current_point;
     int has_current_point;
 
     int closed;
+
+    int num_edges;
+    int edges_size;
+    cairo_edge_t *edges;
 } cairo_polygon_t;
 
 typedef struct _cairo_spline {
