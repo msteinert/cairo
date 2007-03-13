@@ -684,10 +684,10 @@ _cairo_pattern_add_color_stop (cairo_gradient_pattern_t *pattern,
 
     new_stops[i].x = x;
 
-    new_stops[i].color.red   = red   * 65535.0;
-    new_stops[i].color.green = green * 65535.0;
-    new_stops[i].color.blue  = blue  * 65535.0;
-    new_stops[i].color.alpha = alpha * 65535.0;
+    new_stops[i].color.red   = _cairo_color_double_to_short (red);
+    new_stops[i].color.green = _cairo_color_double_to_short (green);
+    new_stops[i].color.blue  = _cairo_color_double_to_short (blue);
+    new_stops[i].color.alpha = _cairo_color_double_to_short (alpha);
 
     pattern->n_stops++;
 }
