@@ -45,8 +45,11 @@ double_buf_equal (double *a, double *b, int nc)
 {
     int i;
     for (i = 0; i < nc; i++) {
-	if (!DOUBLE_EQUALS(a[i],b[i]))
+	if (!DOUBLE_EQUALS(a[i],b[i])) {
+	    cairo_test_log ("Error: doubles not equal: %g, %g\n",
+			    a[i], b[i]);
 	    return 0;
+	}
     }
     return 1;
 }
@@ -68,8 +71,11 @@ draw (cairo_t *cr, int width, int height)
 	if (!DOUBLE_EQUALS(r,0.2) ||
 	    !DOUBLE_EQUALS(g,0.3) ||
 	    !DOUBLE_EQUALS(b,0.4) ||
-	    !DOUBLE_EQUALS(a,0.5))
+	    !DOUBLE_EQUALS(a,0.5)) {
+	    cairo_test_log ("Error: cairo_pattern_get_rgba returned unexepcted results: %g, %g, %g, %g\n",
+			    r, g, b, a);
 	    return CAIRO_TEST_FAILURE;
+	}
 
 	cairo_pattern_destroy (pat);
     }
@@ -83,8 +89,10 @@ draw (cairo_t *cr, int width, int height)
 	status = cairo_pattern_get_surface (pat, &surf);
 	CHECK_SUCCESS;
 
-	if (surf != cairo_get_target (cr))
+	if (surf != cairo_get_target (cr)) {
+	    cairo_test_log ("Error: cairo_pattern_get_resurface returned wrong surface\n");
 	    return CAIRO_TEST_FAILURE;
+	}
 
 	cairo_pattern_destroy (pat);
     }
