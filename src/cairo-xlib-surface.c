@@ -2268,12 +2268,35 @@ typedef struct _cairo_xlib_surface_font_private {
     XRenderPictFormat	*xrender_format;
 } cairo_xlib_surface_font_private_t;
 
+static void
+_cairo_xlib_surface_remove_scaled_font (Display *dpy,
+	                               void    *data)
+{
+    cairo_scaled_font_t *scaled_font = data;
+    cairo_xlib_surface_font_private_t	*font_private = scaled_font->surface_private;
+
+    _cairo_scaled_font_reset_cache (scaled_font);
+
+    /* separate function to avoid deadlock if we tried to remove the
+     * close display hook ala _cairo_xlib_surface_scaled_font_fini() */
+    if (font_private) {
+	XRenderFreeGlyphSet (font_private->dpy, font_private->glyphset);
+	free (font_private);
+	scaled_font->surface_private = NULL;
+    }
+}
+
 static cairo_status_t
 _cairo_xlib_surface_font_init (Display		    *dpy,
 			       cairo_scaled_font_t  *scaled_font,
 			       cairo_format_t	     format)
 {
     cairo_xlib_surface_font_private_t	*font_private;
+
+    if (!_cairo_xlib_add_close_display_hook (dpy,
+		_cairo_xlib_surface_remove_scaled_font,
+		scaled_font, scaled_font))
+	return CAIRO_STATUS_NO_MEMORY;
 
     font_private = malloc (sizeof (cairo_xlib_surface_font_private_t));
     if (!font_private)
@@ -2285,6 +2308,7 @@ _cairo_xlib_surface_font_init (Display		    *dpy,
     font_private->glyphset = XRenderCreateGlyphSet (dpy, font_private->xrender_format);
     scaled_font->surface_private = font_private;
     scaled_font->surface_backend = &cairo_xlib_surface_backend;
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -2294,6 +2318,7 @@ _cairo_xlib_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font)
     cairo_xlib_surface_font_private_t	*font_private = scaled_font->surface_private;
 
     if (font_private) {
+	_cairo_xlib_remove_close_display_hook (font_private->dpy, scaled_font);
 	XRenderFreeGlyphSet (font_private->dpy, font_private->glyphset);
 	free (font_private);
     }
