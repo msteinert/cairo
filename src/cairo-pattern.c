@@ -1442,10 +1442,10 @@ _cairo_pattern_acquire_surface (cairo_pattern_t		   *pattern,
 		cairo_color_t color;
 
 		_cairo_color_init_rgba (&color,
-					src->stops->color.red / 65536.0,
-					src->stops->color.green / 65536.0,
-					src->stops->color.blue / 65536.0,
-					src->stops->color.alpha / 65536.0);
+					src->stops->color.red / 65535.0,
+					src->stops->color.green / 65535.0,
+					src->stops->color.blue / 65535.0,
+					src->stops->color.alpha / 65535.0);
 
 		_cairo_pattern_init_solid (&solid, &color);
 	    }
