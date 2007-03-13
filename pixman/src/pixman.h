@@ -113,11 +113,16 @@ extern "C" {
 
 /* pixregion.h */
 
-typedef struct pixman_region16 pixman_region16_t;
+typedef struct pixman_region16_data pixman_region16_data_t;
 
 typedef struct pixman_box16 {
     short x1, y1, x2, y2;
 } pixman_box16_t;
+
+typedef struct pixman_region16 {
+    pixman_box16_t          extents;
+    pixman_region16_data_t  *data;
+} pixman_region16_t;
 
 typedef enum {
     PIXMAN_REGION_STATUS_FAILURE,
