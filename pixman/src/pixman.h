@@ -138,6 +138,11 @@ pixman_private pixman_region16_t *
 pixman_region_create_simple (pixman_box16_t *extents);
 
 pixman_private void
+pixman_region_init(pixman_region16_t *region, pixman_box16_t *extents);
+pixman_private void
+pixman_region_uninit (pixman_region16_t *region);
+
+pixman_private void
 pixman_region_destroy (pixman_region16_t *region);
 
 /* manipulation */

@@ -80,12 +80,6 @@ static pixman_region16_t   pixman_brokenregion = { { 0, 0, 0, 0 }, &pixman_broke
 static pixman_region_status_t
 pixman_break (pixman_region16_t *pReg);
 
-static void
-pixman_init (pixman_region16_t *region, pixman_box16_t *rect);
-
-static void
-pixman_uninit (pixman_region16_t *region);
-
 /*
  * The functions in this file implement the Region abstraction used extensively
  * throughout the X11 sample server. A Region is simply a set of disjoint
@@ -316,7 +310,7 @@ pixman_region_create_simple (pixman_box16_t *extents)
     if (region == NULL)
 	return &pixman_brokenregion;
 
-    pixman_init (region, extents);
+    pixman_region_init (region, extents);
 
     return region;
 }
@@ -326,8 +320,8 @@ pixman_region_create_simple (pixman_box16_t *extents)
  *     Outer region rect is statically allocated.
  *****************************************************************/
 
-static void
-pixman_init(pixman_region16_t *region, pixman_box16_t *extents)
+void
+pixman_region_init(pixman_region16_t *region, pixman_box16_t *extents)
 {
     if (extents)
     {
@@ -341,8 +335,8 @@ pixman_init(pixman_region16_t *region, pixman_box16_t *extents)
     }
 }
 
-static void
-pixman_uninit (pixman_region16_t *region)
+void
+pixman_region_uninit (pixman_region16_t *region)
 {
     good (region);
     freeData (region);
@@ -351,7 +345,7 @@ pixman_uninit (pixman_region16_t *region)
 void
 pixman_region_destroy (pixman_region16_t *region)
 {
-    pixman_uninit (region);
+    pixman_region_uninit (region);
 
     if (region != &pixman_brokenregion)
 	free (region);
