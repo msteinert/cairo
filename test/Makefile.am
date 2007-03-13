@@ -86,6 +86,7 @@ self-intersecting		\
 set-source			\
 show-text-current-point		\
 skew-extreme			\
+solid-pattern-cache-stress	\
 source-clip			\
 source-clip-scale		\
 source-surface-scale-paint	\

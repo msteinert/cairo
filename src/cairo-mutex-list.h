@@ -34,6 +34,8 @@
 #ifndef CAIRO_MUTEX_LIST_H
 #define CAIRO_MUTEX_LIST_H
 
+CAIRO_MUTEX_DECLARE (_cairo_pattern_solid_cache_lock);
+
 CAIRO_MUTEX_DECLARE (_cairo_font_face_mutex);
 CAIRO_MUTEX_DECLARE (_cairo_scaled_font_map_mutex);
 

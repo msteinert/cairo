@@ -1546,6 +1546,10 @@ _cairo_color_get_rgba_premultiplied (cairo_color_t *color,
 				     double	   *blue,
 				     double	   *alpha);
 
+cairo_private cairo_bool_t
+_cairo_color_equal (const cairo_color_t *color_a,
+                    const cairo_color_t *color_b);
+
 /* cairo-font.c */
 
 cairo_private void
@@ -2406,6 +2410,9 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
 cairo_private cairo_status_t
 _cairo_pattern_get_extents (cairo_pattern_t	    *pattern,
 			    cairo_rectangle_int16_t *extents);
+
+cairo_private void
+_cairo_pattern_reset_static_data (void);
 
 cairo_private cairo_status_t
 _cairo_gstate_set_antialias (cairo_gstate_t *gstate,
