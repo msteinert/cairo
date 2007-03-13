@@ -2320,9 +2320,9 @@ _cairo_traps_contain (cairo_traps_t *traps, double x, double y);
 cairo_private void
 _cairo_traps_extents (cairo_traps_t *traps, cairo_box_t *extents);
 
-cairo_private cairo_status_t
-_cairo_traps_extract_region (cairo_traps_t      *tr,
-			     pixman_region16_t **region);
+cairo_private cairo_int_status_t
+_cairo_traps_extract_region (cairo_traps_t     *tr,
+			     pixman_region16_t *region);
 
 cairo_private void
 _cairo_trapezoid_array_translate_and_scale (cairo_trapezoid_t *offset_traps,

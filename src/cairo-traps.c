@@ -534,11 +534,12 @@ _cairo_traps_extents (cairo_traps_t *traps, cairo_box_t *extents)
  * Determines if a set of trapezoids are exactly representable as a
  * pixman region, and if so creates such a region.
  *
- * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY
+ * Return value: %CAIRO_STATUS_SUCCESS, %CAIRO_INT_STATUS_UNSUPPORTED
+ * or %CAIRO_STATUS_NO_MEMORY
  **/
-cairo_status_t
-_cairo_traps_extract_region (cairo_traps_t      *traps,
-			     pixman_region16_t **region)
+cairo_int_status_t
+_cairo_traps_extract_region (cairo_traps_t     *traps,
+			     pixman_region16_t *region)
 {
     int i;
 
@@ -549,11 +550,10 @@ _cairo_traps_extract_region (cairo_traps_t      *traps,
 	      && _cairo_fixed_is_integer(traps->traps[i].bottom)
 	      && _cairo_fixed_is_integer(traps->traps[i].left.p1.x)
 	      && _cairo_fixed_is_integer(traps->traps[i].right.p1.x))) {
-	    *region = NULL;
-	    return CAIRO_STATUS_SUCCESS;
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
 
-    *region = pixman_region_create ();
+    pixman_region_init (region, NULL);
 
     for (i = 0; i < traps->num_traps; i++) {
 	int x = _cairo_fixed_integer_part(traps->traps[i].left.p1.x);
@@ -568,9 +568,9 @@ _cairo_traps_extract_region (cairo_traps_t      *traps,
 	if (width == 0 || height == 0)
 	  continue;
 
-	if (pixman_region_union_rect (*region, *region,
+	if (pixman_region_union_rect (region, region,
 				      x, y, width, height) != PIXMAN_REGION_STATUS_SUCCESS) {
-	    pixman_region_destroy (*region);
+	    pixman_region_uninit (region);
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
     }
