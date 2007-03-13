@@ -98,7 +98,7 @@ _cairo_spline_fini (cairo_spline_t *spline)
     spline->num_points = 0;
 }
 
-/* make room for at least one more trap */
+/* make room for at least one more point */
 static cairo_status_t
 _cairo_spline_grow (cairo_spline_t *spline)
 {
