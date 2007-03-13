@@ -132,8 +132,6 @@ endif
 FONTCONFIG_LIBS=@FONTCONFIG_LIBS@
 XRENDER_LIBS=@XRENDER_LIBS@
 
-BUILT_SOURCES = cairo-features.h
-
 cairo_headers =				\
 	cairo.h				\
 	$(libcairo_atsui_headers)	\
@@ -153,9 +151,11 @@ cairo_headers =				\
 
 cairoincludedir = $(includedir)/cairo
 cairoinclude_HEADERS =			\
-	cairo-features.h		\
 	cairo-deprecated.h		\
 	$(cairo_headers)
+
+nodist_cairoinclude_HEADERS =		\
+	cairo-features.h
 
 lib_LTLIBRARIES = libcairo.la
 
