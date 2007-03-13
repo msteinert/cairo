@@ -391,6 +391,15 @@ _cairo_scaled_font_thaw_cache (cairo_scaled_font_t *scaled_font)
 }
 
 void
+_cairo_scaled_font_reset_cache (cairo_scaled_font_t *scaled_font)
+{
+    _cairo_cache_destroy (scaled_font->glyphs);
+    scaled_font->glyphs = _cairo_cache_create (_cairo_scaled_glyph_keys_equal,
+					       _cairo_scaled_glyph_destroy,
+					       max_glyphs_cached_per_font);
+}
+
+void
 _cairo_scaled_font_set_metrics (cairo_scaled_font_t	    *scaled_font,
 				cairo_font_extents_t	    *fs_metrics)
 {
