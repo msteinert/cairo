@@ -423,7 +423,7 @@ typedef struct _cairo_edge {
 typedef struct _cairo_polygon {
     cairo_point_t first_point;
     cairo_point_t current_point;
-    int has_current_point;
+    cairo_bool_t has_current_point;
 
     int num_edges;
     int edges_size;

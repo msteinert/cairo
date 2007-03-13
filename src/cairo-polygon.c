@@ -50,7 +50,7 @@ _cairo_polygon_init (cairo_polygon_t *polygon)
     polygon->edges_size = 0;
     polygon->edges = NULL;
 
-    polygon->has_current_point = 0;
+    polygon->has_current_point = FALSE;
 }
 
 void
@@ -63,7 +63,7 @@ _cairo_polygon_fini (cairo_polygon_t *polygon)
 	polygon->num_edges = 0;
     }
 
-    polygon->has_current_point = 0;
+    polygon->has_current_point = FALSE;
 }
 
 static cairo_status_t
@@ -130,7 +130,7 @@ _cairo_polygon_move_to (cairo_polygon_t *polygon, cairo_point_t *point)
     if (! polygon->has_current_point)
 	polygon->first_point = *point;
     polygon->current_point = *point;
-    polygon->has_current_point = 1;
+    polygon->has_current_point = TRUE;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -161,7 +161,7 @@ _cairo_polygon_close (cairo_polygon_t *polygon)
 	if (status)
 	    return status;
 
-	polygon->has_current_point = 0;
+	polygon->has_current_point = FALSE;
     }
 
     return CAIRO_STATUS_SUCCESS;
