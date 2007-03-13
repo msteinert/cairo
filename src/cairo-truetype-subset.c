@@ -658,7 +658,7 @@ cairo_truetype_font_write_post_table (cairo_truetype_font_t *font,
         cairo_truetype_font_write_be16 (font, i + 257);
 
     for (i = 1; i < font->base.num_glyphs; i++) {
-        n = snprintf(buf + 1, 10, "g%d", i - 1);
+        n = snprintf(buf + 1, 9, "g%d", i - 1);
         buf[0] = n;
         cairo_truetype_font_write (font, buf, n + 1);
     }
