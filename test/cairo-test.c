@@ -453,10 +453,11 @@ cairo_test_expecting (cairo_test_t *test,
 
     /* The intended logic here is that we return overall SUCCESS
      * iff. there is at least one tested backend and that all tested
-     * backends return SUCCESS, OR, there's no backend to test at all.
+     * backends return SUCCESS, OR, there's backends were manually
+     * limited, and none were tested.
      * In other words:
      *
-     *  if      no backend to test
+     *  if      backends limited and no backend tested
      *          -> SUCCESS
      *	else if any backend not SUCCESS
      *		-> FAILURE
@@ -547,19 +548,32 @@ cairo_test_expecting (cairo_test_t *test,
     if (ret != CAIRO_TEST_SUCCESS)
         printf ("Check %s%s out for more information.\n", test->name, CAIRO_TEST_LOG_SUFFIX);
 
-    /* if no target was requested for test, succeed, otherwise if all
-     * were untested, fail. */
-    if (ret == CAIRO_TEST_UNTESTED)
-	ret = num_targets ? CAIRO_TEST_FAILURE : CAIRO_TEST_SUCCESS;
+    /* if the set of targets to test was limited using CAIRO_TEST_TARGET, we
+     * behave slightly differently, to ensure that limiting the targets does
+     * not increase the number of tests failing. */
+    if (limited_targets) {
 
-    /* if targets are limited using CAIRO_TEST_TARGET, and expecting failure,
-     * make it fail, such that we can pass test suite by limiting backends
-     * to test without triggering XPASS failures. */
-    if (limited_targets && expectation == CAIRO_TEST_FAILURE && ret == CAIRO_TEST_SUCCESS) {
-	printf ("All tested backends passed, but tested targets are manually limited\n"
-		"and the test suite expects this test to fail for at least one target.\n"
-		"Intentionally failing the test, to not fail the suite.\n");
-	ret = CAIRO_TEST_FAILURE;
+	/* if all untested, success */
+	if (ret == CAIRO_TEST_UNTESTED) {
+	    printf ("None of the tested backends passed, but tested targets are manually limited.\n"
+		    "Passing the test, to not fail the suite.\n");
+	    ret = CAIRO_TEST_SUCCESS;
+	}
+
+	/* if all passed, but expecting failure, return failure to not
+	 * trigger an XPASS failure */
+	if (expectation == CAIRO_TEST_FAILURE && ret == CAIRO_TEST_SUCCESS) {
+	    printf ("All tested backends passed, but tested targets are manually limited\n"
+		    "and the test suite expects this test to fail for at least one target.\n"
+		    "Intentionally failing the test, to not fail the suite.\n");
+	    ret = CAIRO_TEST_FAILURE;
+	}
+
+    } else {
+
+	if (ret == CAIRO_TEST_UNTESTED)
+	    ret = CAIRO_TEST_FAILURE;
+
     }
 
     cairo_test_fini ();
