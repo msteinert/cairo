@@ -189,9 +189,9 @@ pixman_color_rects (pixman_image_t	 *dst,
 	      int	 xoff,
 	      int	 yoff)
 {
-    pixman_bits_t	pixel;
-    pixman_region16_t  *clip;
-    pixman_region16_t  *rects_as_region;
+    pixman_bits_t       pixel;
+    pixman_region16_t   clip;
+    pixman_region16_t   rects_as_region;
     pixman_box16_t     *clipped_rects;
     int	                i, n_clipped_rects;
     FillFunc            func;
@@ -204,19 +204,19 @@ pixman_color_rects (pixman_image_t	 *dst,
     xoff -= dst->pixels->x;
     yoff -= dst->pixels->y;
 
-    clip = pixman_region_create();
-    pixman_region_union_rect (clip, clip,
+    pixman_region_init (&clip, NULL);
+    pixman_region_union_rect (&clip, &clip,
 			      dst->pixels->x, dst->pixels->y,
 			      dst->pixels->width, dst->pixels->height);
 
-    pixman_region_intersect (clip, clip, clipPict->pCompositeClip);
+    pixman_region_intersect (&clip, &clip, clipPict->pCompositeClip);
     if (clipPict->alphaMap)
     {
-	pixman_region_translate (clip,
+	pixman_region_translate (&clip,
 				 -clipPict->alphaOrigin.x,
 				 -clipPict->alphaOrigin.y);
-	pixman_region_intersect (clip, clip, clipPict->alphaMap->pCompositeClip);
-	pixman_region_translate (clip,
+	pixman_region_intersect (&clip, &clip, clipPict->alphaMap->pCompositeClip);
+	pixman_region_translate (&clip,
 				 clipPict->alphaOrigin.x,
 				 clipPict->alphaOrigin.y);
     }
@@ -230,19 +230,19 @@ pixman_color_rects (pixman_image_t	 *dst,
 	}
     }
 
-    rects_as_region = pixman_region_create ();
+    pixman_region_init (&rects_as_region, NULL);
     for (i = 0; i < nRect; i++)
     {
-	pixman_region_union_rect (rects_as_region, rects_as_region,
+	pixman_region_union_rect (&rects_as_region, &rects_as_region,
 				  rects[i].x, rects[i].y,
 				  rects[i].width, rects[i].height);
     }
 
-    pixman_region_intersect (rects_as_region, rects_as_region, clip);
-    pixman_region_destroy (clip);
+    pixman_region_intersect (&rects_as_region, &rects_as_region, &clip);
+    pixman_region_uninit (&clip);
 
-    n_clipped_rects = pixman_region_num_rects (rects_as_region);
-    clipped_rects = pixman_region_rects (rects_as_region);
+    n_clipped_rects = pixman_region_num_rects (&rects_as_region);
+    clipped_rects = pixman_region_rects (&rects_as_region);
 
     if (dst->pixels->bpp == 8)
 	func = pixman_fill_rect_8bpp;
@@ -262,7 +262,7 @@ pixman_color_rects (pixman_image_t	 *dst,
 		 &pixel);
     }
 
-    pixman_region_destroy (rects_as_region);
+    pixman_region_uninit (&rects_as_region);
 
     if (xoff || yoff)
     {
