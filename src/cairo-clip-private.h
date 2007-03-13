@@ -85,9 +85,6 @@ cairo_private void
 _cairo_clip_init (cairo_clip_t *clip, cairo_surface_t *target);
 
 cairo_private void
-_cairo_clip_fini (cairo_clip_t *clip);
-
-cairo_private void
 _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other);
 
 cairo_private void

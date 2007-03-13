@@ -68,23 +68,6 @@ _cairo_clip_init (cairo_clip_t *clip, cairo_surface_t *target)
 }
 
 void
-_cairo_clip_fini (cairo_clip_t *clip)
-{
-    cairo_surface_destroy (clip->surface);
-    clip->surface = NULL;
-
-    clip->serial = 0;
-
-    if (clip->has_region) {
-	pixman_region_uninit (&clip->region);
-       clip->has_region = FALSE;
-    }
-
-    _cairo_clip_path_destroy (clip->path);
-    clip->path = NULL;
-}
-
-void
 _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other)
 {
     clip->mode = other->mode;

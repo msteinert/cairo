@@ -773,7 +773,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 	    break;
     }
 
-    _cairo_clip_fini (&clip);
+    _cairo_clip_reset (&clip);
 
     return status;
 }

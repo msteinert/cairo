@@ -158,7 +158,7 @@ _cairo_gstate_fini (cairo_gstate_t *gstate)
     cairo_scaled_font_destroy (gstate->scaled_font);
     gstate->scaled_font = NULL;
 
-    _cairo_clip_fini (&gstate->clip);
+    _cairo_clip_reset (&gstate->clip);
 
     cairo_surface_destroy (gstate->target);
     gstate->target = NULL;
@@ -316,7 +316,7 @@ _cairo_gstate_redirect_target (cairo_gstate_t *gstate, cairo_surface_t *child)
      * since its ref is now owned by gstate->parent_target */
     gstate->target = cairo_surface_reference (child);
 
-    _cairo_clip_fini (&gstate->clip);
+    _cairo_clip_reset (&gstate->clip);
     _cairo_clip_init_deep_copy (&gstate->clip, &gstate->next->clip, child);
 
     /* The clip is in surface backend coordinates for the previous target;
