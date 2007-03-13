@@ -425,8 +425,6 @@ typedef struct _cairo_polygon {
     cairo_point_t current_point;
     int has_current_point;
 
-    int closed;
-
     int num_edges;
     int edges_size;
     cairo_edge_t *edges;
