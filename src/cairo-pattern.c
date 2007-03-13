@@ -1637,6 +1637,7 @@ _cairo_pattern_get_extents (cairo_pattern_t         *pattern,
 	imatrix = pattern->matrix;
 	cairo_matrix_invert (&imatrix);
 
+	/* XXX Use _cairo_matrix_transform_bounding_box here */
 	for (sy = 0; sy <= 1; sy++) {
 	    for (sx = 0; sx <= 1; sx++) {
 		x = surface_extents.x + sx * surface_extents.width;
