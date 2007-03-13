@@ -61,6 +61,7 @@ _cairo_clip_init (cairo_clip_t *clip, cairo_surface_t *target)
 
     clip->serial = 0;
 
+    pixman_region_init (&clip->region, NULL);
     clip->has_region = FALSE;
 
     clip->path = NULL;
@@ -93,6 +94,8 @@ _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other)
 
     clip->serial = other->serial;
 
+    pixman_region_init (&clip->region, NULL);
+
     if (other->has_region) {
         pixman_region_copy (&clip->region, &other->region);
         clip->has_region = TRUE;
@@ -113,7 +116,12 @@ _cairo_clip_reset (cairo_clip_t *clip)
     clip->serial = 0;
 
     if (clip->has_region) {
+        /* pixman_region_uninit just releases the resources used but
+         * doesn't bother with leaving the region in a valid state.
+         * So pixman_region_init has to be called afterwards. */
 	pixman_region_uninit (&clip->region);
+        pixman_region_init (&clip->region, NULL);
+
         clip->has_region = FALSE;
     }
 
