@@ -409,7 +409,6 @@ extend-pad			\
 filter-nearest-offset		\
 ft-text-vertical-layout-type1	\
 long-lines			\
-radial-gradient			\
 self-intersecting		\
 surface-pattern			\
 surface-pattern-scale-down	\

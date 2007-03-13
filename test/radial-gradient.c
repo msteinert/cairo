@@ -36,8 +36,7 @@ static cairo_test_draw_function_t draw;
 
 cairo_test_t test = {
     "radial-gradient",
-    "Simple test of radial gradients"
-    "\nCurrently failing EXTEND_REFLECT with non-zero inner radius for SVG backend",
+    "Simple test of radial gradients",
     WIDTH, HEIGHT,
     draw
 };
