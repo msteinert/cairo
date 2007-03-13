@@ -428,6 +428,7 @@ typedef struct _cairo_polygon {
     int num_edges;
     int edges_size;
     cairo_edge_t *edges;
+    cairo_edge_t  edges_embedded[8];
 } cairo_polygon_t;
 
 typedef struct _cairo_spline {
