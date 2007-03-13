@@ -1589,6 +1589,9 @@ _cairo_stock_color (cairo_stock_t stock);
 #define CAIRO_COLOR_BLACK       _cairo_stock_color (CAIRO_STOCK_BLACK)
 #define CAIRO_COLOR_TRANSPARENT _cairo_stock_color (CAIRO_STOCK_TRANSPARENT)
 
+cairo_private uint16_t
+_cairo_color_double_to_short (double d);
+
 cairo_private void
 _cairo_color_init (cairo_color_t *color);
 
