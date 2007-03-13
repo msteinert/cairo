@@ -56,7 +56,7 @@ _cairo_polygon_init (cairo_polygon_t *polygon)
 void
 _cairo_polygon_fini (cairo_polygon_t *polygon)
 {
-    if (polygon->edges != polygon->edges_embedded)
+    if (polygon->edges && polygon->edges != polygon->edges_embedded)
 	free (polygon->edges);
 
     polygon->edges = NULL;

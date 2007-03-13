@@ -77,7 +77,7 @@ _cairo_traps_init (cairo_traps_t *traps)
 void
 _cairo_traps_fini (cairo_traps_t *traps)
 {
-    if (traps->traps != traps->traps_embedded)
+    if (traps->traps && traps->traps != traps->traps_embedded)
 	free (traps->traps);
 
     traps->traps = NULL;

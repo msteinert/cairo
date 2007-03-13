@@ -90,7 +90,7 @@ _cairo_spline_init (cairo_spline_t *spline,
 void
 _cairo_spline_fini (cairo_spline_t *spline)
 {
-    if (spline->points != spline->points_embedded)
+    if (spline->points && spline->points != spline->points_embedded)
 	free (spline->points);
 
     spline->points = NULL;
