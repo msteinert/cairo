@@ -181,26 +181,24 @@ _cairo_clip_intersect_to_rectangle (cairo_clip_t            *clip,
     }
 
     if (clip->has_region) {
-	pixman_region16_t *intersection;
 	cairo_status_t status = CAIRO_STATUS_SUCCESS;
-	pixman_region_status_t pixman_status;
+	pixman_region16_t intersection;
 
-	intersection = _cairo_region_create_from_rectangle (rectangle);
-	if (intersection == NULL)
+	if (_cairo_region_init_from_rectangle (&intersection, rectangle))
 	    return CAIRO_STATUS_NO_MEMORY;
 
-	pixman_status = pixman_region_intersect (intersection,
-					  &clip->region,
-					  intersection);
-	if (pixman_status == PIXMAN_REGION_STATUS_SUCCESS)
-	    _cairo_region_extents_rectangle (intersection, rectangle);
-	else
+	if (PIXMAN_REGION_STATUS_SUCCESS !=
+            pixman_region_intersect (&intersection, &clip->region,
+                                     &intersection)) {
 	    status = CAIRO_STATUS_NO_MEMORY;
+	} else {
+            _cairo_region_extents_rectangle (&intersection, rectangle);
+        }
 
-	pixman_region_destroy (intersection);
+        pixman_region_uninit (&intersection);
 
-	if (status)
-	    return status;
+        if (status)
+            return status;
     }
 
     if (clip->surface)
@@ -224,24 +222,20 @@ _cairo_clip_intersect_to_region (cairo_clip_t      *clip,
 	pixman_region_intersect (region, &clip->region, region);
 
     if (clip->surface) {
-	pixman_region16_t *clip_rect;
-	pixman_region_status_t pixman_status;
 	cairo_status_t status = CAIRO_STATUS_SUCCESS;
+	pixman_region16_t clip_rect;
 
-	clip_rect = _cairo_region_create_from_rectangle (&clip->surface_rect);
-	if (clip_rect == NULL)
+	if (_cairo_region_init_from_rectangle (&clip_rect, &clip->surface_rect))
 	    return CAIRO_STATUS_NO_MEMORY;
 
-	pixman_status = pixman_region_intersect (region,
-						 clip_rect,
-						 region);
-	if (pixman_status != PIXMAN_REGION_STATUS_SUCCESS)
+        if (PIXMAN_REGION_STATUS_SUCCESS !=
+            pixman_region_intersect (region, &clip_rect, region))
 	    status = CAIRO_STATUS_NO_MEMORY;
 
-	pixman_region_destroy (clip_rect);
+        pixman_region_uninit (&clip_rect);
 
-	if (status)
-	    return status;
+        if (status)
+            return status;
     }
 
     return CAIRO_STATUS_SUCCESS;

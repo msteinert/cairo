@@ -1869,9 +1869,11 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
 {
     cairo_rectangle_int16_t dst_rectangle;
     cairo_rectangle_int16_t drawn_rectangle;
-    pixman_region16_t *drawn_region;
-    pixman_region16_t *clear_region;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_bool_t has_drawn_region = FALSE;
+    cairo_bool_t has_clear_region = FALSE;
+    pixman_region16_t drawn_region;
+    pixman_region16_t clear_region;
+    cairo_status_t status;
 
     /* The area that was drawn is the area in the destination rectangle but not within
      * the source or the mask.
@@ -1884,34 +1886,42 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
     drawn_rectangle = dst_rectangle;
 
     if (src_rectangle)
-	_cairo_rectangle_intersect (&drawn_rectangle, src_rectangle);
+        _cairo_rectangle_intersect (&drawn_rectangle, src_rectangle);
 
     if (mask_rectangle)
-	_cairo_rectangle_intersect (&drawn_rectangle, mask_rectangle);
+        _cairo_rectangle_intersect (&drawn_rectangle, mask_rectangle);
 
     /* Now compute the area that is in dst_rectangle but not in drawn_rectangle
      */
-    drawn_region = _cairo_region_create_from_rectangle (&drawn_rectangle);
-    clear_region = _cairo_region_create_from_rectangle (&dst_rectangle);
-    if (!drawn_region || !clear_region) {
-	status = CAIRO_STATUS_NO_MEMORY;
-	goto CLEANUP_REGIONS;
+    if (_cairo_region_init_from_rectangle (&drawn_region, &drawn_rectangle)) {
+        status = CAIRO_STATUS_NO_MEMORY;
+        goto CLEANUP_REGIONS;
     }
 
-    if (pixman_region_subtract (clear_region, clear_region, drawn_region) != PIXMAN_REGION_STATUS_SUCCESS) {
-	status = CAIRO_STATUS_NO_MEMORY;
-	goto CLEANUP_REGIONS;
+    has_drawn_region = TRUE;
+
+    if (_cairo_region_init_from_rectangle (&clear_region, &dst_rectangle)) {
+        status = CAIRO_STATUS_NO_MEMORY;
+        goto CLEANUP_REGIONS;
+    }
+
+    has_clear_region = TRUE;
+
+    if (PIXMAN_REGION_STATUS_SUCCESS !=
+        pixman_region_subtract (&clear_region, &clear_region, &drawn_region)) {
+        status = CAIRO_STATUS_NO_MEMORY;
+        goto CLEANUP_REGIONS;
     }
 
     status = _cairo_surface_fill_region (dst, CAIRO_OPERATOR_SOURCE,
-					 CAIRO_COLOR_TRANSPARENT,
-					 clear_region);
+                                         CAIRO_COLOR_TRANSPARENT,
+                                         &clear_region);
 
- CLEANUP_REGIONS:
-    if (drawn_region)
-	pixman_region_destroy (drawn_region);
-    if (clear_region)
-	pixman_region_destroy (clear_region);
+CLEANUP_REGIONS:
+    if (has_drawn_region)
+        pixman_region_uninit (&drawn_region);
+    if (has_clear_region)
+        pixman_region_uninit (&clear_region);
 
     return status;
 }

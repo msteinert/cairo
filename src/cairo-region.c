@@ -36,30 +36,28 @@
 #include "cairoint.h"
 
 /**
- * _cairo_region_create_from_rectangle:
+ * _cairo_region_init_from_rectangle:
+ * @region: a #pixman_region16_t
  * @rect: a #cairo_rectangle_int16_t
  *
- * Creates a region with extents initialized from the given
- * rectangle.
+ * Initializes a region with extents from the given rectangle.
  *
- * Return value: a newly created #pixman_region16_t or %NULL if
- *    memory couldn't a allocated.
+ * Return value: #CAIRO_STATUS_SUCCESS on success, or
+ * #CAIRO_STATUS_NO_MEMORY when pixman fails to initialize
+ * the region.
  **/
-pixman_region16_t *
-_cairo_region_create_from_rectangle (cairo_rectangle_int16_t *rect)
+cairo_status_t
+_cairo_region_init_from_rectangle (pixman_region16_t       *region,
+                                   cairo_rectangle_int16_t *rect)
 {
-    /* We can't use pixman_region_create_simple(), because it doesn't
-     * have an error return
-     */
-    pixman_region16_t *region = pixman_region_create ();
-    if (pixman_region_union_rect (region, region,
-				  rect->x, rect->y,
-				  rect->width, rect->height) != PIXMAN_REGION_STATUS_SUCCESS) {
-	pixman_region_destroy (region);
-	return NULL;
-    }
+    pixman_region_init (region, NULL);
 
-    return region;
+    if (PIXMAN_REGION_STATUS_SUCCESS == pixman_region_union_rect (
+        region, region, rect->x, rect->y, rect->width, rect->height))
+        return CAIRO_STATUS_SUCCESS;
+
+    pixman_region_uninit (region);
+    return CAIRO_STATUS_NO_MEMORY;
 }
 
 /**

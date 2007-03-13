@@ -2429,8 +2429,9 @@ _cairo_gstate_get_antialias (cairo_gstate_t *gstate);
 
 /* cairo-region.c */
 
-cairo_private pixman_region16_t *
-_cairo_region_create_from_rectangle (cairo_rectangle_int16_t *rect);
+cairo_private cairo_status_t
+_cairo_region_init_from_rectangle (pixman_region16_t       *region,
+				   cairo_rectangle_int16_t *rect);
 
 cairo_private void
 _cairo_region_extents_rectangle (pixman_region16_t       *region,
