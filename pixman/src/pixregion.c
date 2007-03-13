@@ -293,24 +293,13 @@ pixman_region16_valid(reg)
 pixman_region16_t *
 pixman_region_create (void)
 {
-    return pixman_region_create_simple (NULL);
-}
-
-/*****************************************************************
- *   pixman_region_create_simple (extents)
- *     This routine creates a pixman_region16_t for a simple
- *     rectangular region.
- *****************************************************************/
-pixman_region16_t *
-pixman_region_create_simple (pixman_box16_t *extents)
-{
     pixman_region16_t *region;
 
     region = malloc (sizeof (pixman_region16_t));
     if (region == NULL)
 	return &pixman_brokenregion;
 
-    pixman_region_init (region, extents);
+    pixman_region_init (region, NULL);
 
     return region;
 }
