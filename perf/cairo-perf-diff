@@ -82,6 +82,12 @@ rev2sha() {
     git rev-parse --verify $rev || ( echo "Cannot resolve $rev as a git object" && exit 1 )
 }
 
+cpu_count() {
+    test -f /proc/cpuinfo &&
+    grep -c '^processor[[:blank:]]\+:' /proc/cpuinfo ||
+    echo 1
+}
+
 # We cache performance output based on a two-part name capturing the
 # current performance test suite and the library being tested. We
 # capture these as the tree object of the perf directory in HEAD and
@@ -133,6 +139,11 @@ run_cairo_perf_if_not_cached() {
 
     git checkout tmp-cairo-perf-diff
     git reset --hard $sha
+
+    if [ -z "$MAKEFLAGS" ]; then
+        export MAKEFLAGS="-j$(expr $(cpu_count) + 1)"
+    fi
+
     if [ ! -e Makefile ]; then
 	CFLAGS="-O2" ./autogen.sh $CAIRO_AUTOGEN_OPTIONS
     fi
