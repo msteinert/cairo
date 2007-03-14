@@ -1170,6 +1170,7 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
 {
     int num_rects = pixman_region_num_rects (region);
     pixman_box16_t *boxes = pixman_region_rects (region);
+    cairo_rectangle_int16_t stack_rects[CAIRO_STACK_BUFFER_SIZE / sizeof (cairo_rectangle_int16_t)];
     cairo_rectangle_int16_t *rects;
     cairo_status_t status;
     int i;
@@ -1179,9 +1180,12 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
     if (!num_rects)
 	return CAIRO_STATUS_SUCCESS;
 
-    rects = malloc (sizeof (pixman_rectangle_t) * num_rects);
-    if (!rects)
-	return CAIRO_STATUS_NO_MEMORY;
+    rects = stack_rects;
+    if (num_rects > (int) (sizeof (stack_rects) / sizeof (stack_rects[0]))) {
+	rects = malloc (sizeof (cairo_rectangle_int16_t) * num_rects);
+	if (!rects)
+	    return CAIRO_STATUS_NO_MEMORY;
+    }
 
     for (i = 0; i < num_rects; i++) {
 	rects[i].x = boxes[i].x1;
@@ -1193,7 +1197,8 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
     status =  _cairo_surface_fill_rectangles (surface, op,
 					      color, rects, num_rects);
 
-    free (rects);
+    if (rects != stack_rects)
+	free (rects);
 
     return status;
 }
