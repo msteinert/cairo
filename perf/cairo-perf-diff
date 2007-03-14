@@ -42,10 +42,15 @@ if [ $# -eq 0 ] || [ "$1" = "--" ]; then
     usage
 fi
 
-if [ "$1" = "-f" ]; then
-    force_cairo_perf="true"
-    shift 1
-fi
+while true; do
+    case $1 in
+        -f|--force) force_cairo_perf="true";;
+        -h|--html) html_output="true";;
+        *) break;;
+    esac
+
+    shift
+done
 
 if [ $# -eq 1 ] || [ "$2" = "--" ]; then
     old="$1^"
@@ -175,4 +180,9 @@ if [ ! -e $new ]; then
     new=$(rev2perf $new)
 fi
 
-$CAIRO_DIR/perf/cairo-perf-diff-files $old $new
+if [ "$html_output" != "true" ]; then
+    $CAIRO_DIR/perf/cairo-perf-diff-files $old $new
+else
+    $CAIRO_DIR/perf/cairo-perf-diff-files $old $new |
+    $CAIRO_DIR/perf/make-html.py
+fi

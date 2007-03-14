@@ -60,6 +60,11 @@ $(top_builddir)/src/libcairo.la:
 perf: cairo-perf FORCE
 	./cairo-perf
 
+html: index.html
+
+index.html: cairo-perf
+	./cairo-perf-diff -h HEAD > $@
+
 EXTRA_VG_FLAGS = $(CAIRO_EXTRA_VALGRIND_FLAGS)
 VG_MEMCHECK_FLAGS = \
 	--tool=memcheck \
@@ -68,7 +73,8 @@ VG_MEMCHECK_FLAGS = \
 VG_CALLGRIND_FLAGS = \
 	--tool=callgrind
 CLEANFILES = \
-	valgrind-log
+	valgrind-log \
+	index.html
 
 perf-valgrind: cairo-perf FORCE
 	$(top_srcdir)/libtool --mode=execute \
