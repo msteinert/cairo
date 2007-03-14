@@ -380,6 +380,8 @@ _cairo_traps_tessellate_convex_quad (cairo_traps_t *traps, cairo_point_t q[4])
 {
     int a, b, c, d;
     int i;
+    cairo_slope_t ab, ad;
+    cairo_bool_t b_left_of_d;
 
     /* Choose a as a point with minimal y */
     a = 0;
@@ -399,24 +401,39 @@ _cairo_traps_tessellate_convex_quad (cairo_traps_t *traps, cairo_point_t q[4])
     }
 
     /* Without freedom left to choose anything else, we have four
-     * cases to tessellate which we can distinguish by comparing c.y
-     * to d.y and then by comparing b.x to d.x. And then for any of
-     * these cases there is a trivial way to emit three
-     * trapezoids. The 4 cases and their trapezoids are described and
-     * implemented below:
-     */
-    if (q[c].y < q[d].y) {
-	if (q[b].x < q[d].x) {
-	    /* c.y < d.y && b.x < d.x
+     * cases to tessellate.
+     *
+     * First, we have to determine the Y-axis sort of the four
+     * vertices, (either abcd or abdc). After that we need to detemine
+     * which edges will be "left" and which will be "right" in the
+     * resulting trapezoids. This can be determined by computing a
+     * slope comparison of ab and ad to determine if b is left of d or
+     * not.
+     *
+     * Note that "left of" here is in the sense of which edges should
+     * be the left vs. right edges of the trapezoid. In particular, b
+     * left of d does *not* mean that b.x is less than d.x.
+     *
+     * This should hopefully be made clear in the lame ASCII art
+     * below. Since the same slope comparison is used in all cases, we
+     * compute it before testing for the Y-value sort. */
+    _cairo_slope_init (&ab, &q[a], &q[b]);
+    _cairo_slope_init (&ad, &q[a], &q[d]);
+
+    b_left_of_d = (_cairo_slope_compare (&ab, &ad) > 0);
+
+    if (q[c].y <= q[d].y) {
+	if (b_left_of_d) {
+	    /* Y-sort is abcd and b is left of d, (slope(ab) > slope (ad))
 	     *
-	     *           top bot left right
-	     *   a
-	     *  / |      a.y b.y  ab   ad
-	     * b  |
-	     * |  |      b.y c.y  bc   ad
-	     * c  |
-	     *  \ |      c.y d.y  cd   ad
-	     *   d
+	     *                      top bot left right
+	     *        _a  a  a
+	     *      / /  /|  |\      a.y b.y  ab   ad
+	     *     b /  b |  b \
+	     *    / /   | |   \ \    b.y c.y  bc   ad
+	     *   c /    c |    c \
+	     *  | /      \|     \ \  c.y d.y  cd   ad
+	     *  d         d       d
 	     */
 	    _cairo_traps_add_trap_from_points (traps,
 					       q[a].y, q[b].y,
@@ -428,15 +445,15 @@ _cairo_traps_tessellate_convex_quad (cairo_traps_t *traps, cairo_point_t q[4])
 					       q[c].y, q[d].y,
 					       q[c], q[d], q[a], q[d]);
 	} else {
-	    /* c.y < d.y && b.x >= d.x
+	    /* Y-sort is abcd and b is right of d, (slope(ab) <= slope (ad))
 	     *
-	     *  a
-	     * | \       a.y b.y  ad  ab
-	     * |  b
-	     * |  |      b.y c.y  ad  bc
-	     * |  c
-	     * | /       c.y d.y  ad  cd
-	     *  d
+	     *       a  a  a_
+	     *      /|  |\  \ \     a.y b.y  ad  ab
+	     *     / b  | b  \ b
+	     *    / /   | |   \ \   b.y c.y  ad  bc
+	     *   / c    | c    \ c
+	     *  / /     |/      \ | c.y d.y  ad  cd
+	     *  d       d         d
 	     */
 	    _cairo_traps_add_trap_from_points (traps,
 					       q[a].y, q[b].y,
@@ -449,16 +466,16 @@ _cairo_traps_tessellate_convex_quad (cairo_traps_t *traps, cairo_point_t q[4])
 					       q[a], q[d], q[c], q[d]);
 	}
     } else {
-	if (q[b].x < q[d].x) {
-	    /* c.y >= d.y && b.x < d.x
+	if (b_left_of_d) {
+	    /* Y-sort is abdc and b is left of d, (slope (ab) > slope (ad))
 	     *
-	     *   a
-	     *  / \      a.y b.y  ab  ad
-	     * b   \
-	     *  \   \    b.y d.y  bc  ad
-	     *   \   d
-	     *    \ /    d.y c.y  bc  dc
-	     *     c
+	     *        a   a     a
+	     *       //  / \    |\     a.y b.y  ab  ad
+	     *     /b/  b   \   b \
+	     *    / /    \   \   \ \   b.y d.y  bc  ad
+	     *   /d/      \   d   \ d
+	     *  //         \ /     \|  d.y c.y  bc  dc
+	     *  c           c       c
 	     */
 	    _cairo_traps_add_trap_from_points (traps,
 					       q[a].y, q[b].y,
@@ -470,15 +487,15 @@ _cairo_traps_tessellate_convex_quad (cairo_traps_t *traps, cairo_point_t q[4])
 					       q[d].y, q[c].y,
 					       q[b], q[c], q[d], q[c]);
 	} else {
-	    /* c.y >= d.y && b.x >= d.x
+	    /* Y-sort is abdc and b is right of d, (slope (ab) <= slope (ad))
 	     *
-	     *     a
-	     *    / \    a.y b.y  ad  ab
-	     *   /   b
-	     *  /   /    b.y d.y  ad  bc
-	     * d   /
-	     *  \ /      d.y c.y  dc  bc
-	     *   c
+	     *      a     a   a
+	     *     /|    / \  \\       a.y b.y  ad  ab
+	     *    / b   /   b  \b\
+	     *   / /   /   /    \ \    b.y d.y  ad  bc
+	     *  d /   d   /	 \d\
+	     *  |/     \ /         \\  d.y c.y  dc  bc
+	     *  c       c	   c
 	     */
 	    _cairo_traps_add_trap_from_points (traps,
 					       q[a].y, q[b].y,
