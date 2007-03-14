@@ -154,13 +154,13 @@ struct pixman_image {
     FbPoint	    alphaOrigin;
 
     FbPoint 	    clipOrigin;
-    void	   *clientClip;
 
     unsigned long   dither;
 
     unsigned long   stateChanges;
     unsigned long   serialNumber;
 
+    pixman_region16_t       clientClip;
     pixman_region16_t	    compositeClip;
     pixman_region16_t	    sourceClip;
 

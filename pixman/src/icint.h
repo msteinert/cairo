@@ -778,7 +778,7 @@ fbRasterizeTrapezoid (pixman_image_t		*pMask,
 /* XXX: This is to avoid including gc.h from the server includes */
 /* clientClipType field in GC */
 #define CT_NONE			0
-#define CT_PIXMAP		1
+/* #define CT_PIXMAP		1 (not used anymore) */
 #define CT_REGION		2
 #define CT_UNSORTED		6
 #define CT_YSORTED		10

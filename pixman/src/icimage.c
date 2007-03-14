@@ -319,7 +319,6 @@ pixman_image_init (pixman_image_t *image)
 
     image->clipOrigin.x = 0;
     image->clipOrigin.y = 0;
-    image->clientClip = NULL;
 
     image->dither = 0L;
 
@@ -514,17 +513,9 @@ pixman_image_destroy (pixman_image_t *image)
 void
 pixman_image_destroyClip (pixman_image_t *image)
 {
-    switch (image->clientClipType) {
-    case CT_NONE:
-	return;
-    case CT_PIXMAP:
-	pixman_image_destroy (image->clientClip);
-	break;
-    default:
-	pixman_region_destroy (image->clientClip);
-	break;
-    }
-    image->clientClip = NULL;
+    if (CT_NONE != image->clientClipType)
+	pixman_region_uninit (&image->clientClip);
+
     image->clientClipType = CT_NONE;
 }
 
@@ -533,9 +524,10 @@ pixman_image_set_clip_region (pixman_image_t	*image,
 			      pixman_region16_t	*region)
 {
     pixman_image_destroyClip (image);
+
     if (region) {
-	image->clientClip = pixman_region_create ();
-	pixman_region_copy (image->clientClip, region);
+        pixman_region_init (&image->clientClip, NULL);
+	pixman_region_copy (&image->clientClip, region);
 	image->clientClipType = CT_REGION;
     }
 
@@ -622,7 +614,7 @@ FbClipImageSrc (pixman_region16_t	*region,
 	    pixman_region_translate (region,
 			   dx - image->clipOrigin.x,
 			   dy - image->clipOrigin.y);
-	    pixman_region_intersect (region, image->clientClip, region);
+	    pixman_region_intersect (region, &image->clientClip, region);
 	    pixman_region_translate (region,
 			   - (dx - image->clipOrigin.x),
 			   - (dy - image->clipOrigin.y));
@@ -643,192 +635,6 @@ FbClipImageSrc (pixman_region16_t	*region,
 
     return 1;
 }
-
-/* XXX: Need to decide what to do with this
-#define NEXT_VAL(_type) (vlist ? (_type) *vlist++ : (_type) ulist++->val)
-
-#define NEXT_PTR(_type) ((_type) ulist++->ptr)
-
-int
-pixman_image_change (pixman_image_t		*image,
-	       Mask		vmask,
-	       unsigned int	*vlist,
-	       DevUnion		*ulist,
-	       int		*error_value)
-{
-    BITS32		index2;
-    int			error = 0;
-    BITS32		maskQ;
-
-    maskQ = vmask;
-    while (vmask && !error)
-    {
-	index2 = (BITS32) lowbit (vmask);
-	vmask &= ~index2;
-	image->stateChanges |= index2;
-	switch (index2)
-	{
-	case CPRepeat:
-	    {
-		unsigned int	newr;
-		newr = NEXT_VAL(unsigned int);
-		if (newr <= xTrue)
-		    image->repeat = newr;
-		else
-		{
-		    *error_value = newr;
-		    error = BadValue;
-		}
-	    }
-	    break;
-	case CPAlphaMap:
-	    {
-		pixman_image_t *iAlpha;
-
-		iAlpha = NEXT_PTR(pixman_image_t *);
-		if (iAlpha)
-		    iAlpha->refcnt++;
-		if (image->alphaMap)
-		    pixman_image_destroy ((void *) image->alphaMap);
-		image->alphaMap = iAlpha;
-	    }
-	    break;
-	case CPAlphaXOrigin:
-	    image->alphaOrigin.x = NEXT_VAL(int16_t);
-	    break;
-	case CPAlphaYOrigin:
-	    image->alphaOrigin.y = NEXT_VAL(int16_t);
-	    break;
-	case CPClipXOrigin:
-	    image->clipOrigin.x = NEXT_VAL(int16_t);
-	    break;
-	case CPClipYOrigin:
-	    image->clipOrigin.y = NEXT_VAL(int16_t);
-	    break;
-	case CPClipMask:
-	    {
-		pixman_image_t	    *mask;
-		int	    clipType;
-
-		mask = NEXT_PTR(pixman_image_t *);
-		if (mask) {
-		    clipType = CT_PIXMAP;
-		    mask->refcnt++;
-		} else {
-		    clipType = CT_NONE;
-		}
-		error = pixman_image_change_clip (image, clipType,
-					   (void *)mask, 0);
-		break;
-	    }
-	case CPGraphicsExposure:
-	    {
-		unsigned int	newe;
-		newe = NEXT_VAL(unsigned int);
-		if (newe <= xTrue)
-		    image->graphicsExposures = newe;
-		else
-		{
-		    *error_value = newe;
-		    error = BadValue;
-		}
-	    }
-	    break;
-	case CPSubwindowMode:
-	    {
-		unsigned int	news;
-		news = NEXT_VAL(unsigned int);
-		if (news == ClipByChildren || news == IncludeInferiors)
-		    image->subWindowMode = news;
-		else
-		{
-		    *error_value = news;
-		    error = BadValue;
-		}
-	    }
-	    break;
-	case CPPolyEdge:
-	    {
-		unsigned int	newe;
-		newe = NEXT_VAL(unsigned int);
-		if (newe == PolyEdgeSharp || newe == PolyEdgeSmooth)
-		    image->polyEdge = newe;
-		else
-		{
-		    *error_value = newe;
-		    error = BadValue;
-		}
-	    }
-	    break;
-	case CPPolyMode:
-	    {
-		unsigned int	newm;
-		newm = NEXT_VAL(unsigned int);
-		if (newm == PolyModePrecise || newm == PolyModeImprecise)
-		    image->polyMode = newm;
-		else
-		{
-		    *error_value = newm;
-		    error = BadValue;
-		}
-	    }
-	    break;
-	case CPDither:
-	    image->dither = NEXT_VAL(unsigned long);
-	    break;
-	case CPComponentAlpha:
-	    {
-		unsigned int	newca;
-
-		newca = NEXT_VAL (unsigned int);
-		if (newca <= xTrue)
-		    image->componentAlpha = newca;
-		else
-		{
-		    *error_value = newca;
-		    error = BadValue;
-		}
-	    }
-	    break;
-	default:
-	    *error_value = maskQ;
-	    error = BadValue;
-	    break;
-	}
-    }
-    return error;
-}
-*/
-
-/* XXX: Do we need this?
-int
-SetPictureClipRects (PicturePtr	pPicture,
-		     int	xOrigin,
-		     int	yOrigin,
-		     int	nRect,
-		     xRectangle	*rects)
-{
-    ScreenPtr		pScreen = pPicture->pDrawable->pScreen;
-    PictureScreenPtr	ps = GetPictureScreen(pScreen);
-    pixman_region16_t		*clientClip;
-    int			result;
-
-    clientClip = RECTS_TO_REGION(pScreen,
-				 nRect, rects, CT_UNSORTED);
-    if (!clientClip)
-	return 1;
-    result =(*ps->ChangePictureClip) (pPicture, CT_REGION,
-				      (void *) clientClip, 0);
-    if (result == 0)
-    {
-	pPicture->clipOrigin.x = xOrigin;
-	pPicture->clipOrigin.y = yOrigin;
-	pPicture->stateChanges |= CPClipXOrigin|CPClipYOrigin|CPClipMask;
-	pPicture->serialNumber |= GC_CHANGE_SERIAL_BIT;
-    }
-    return result;
-}
-*/
 
 int
 FbComputeCompositeRegion (pixman_region16_t	*region,
