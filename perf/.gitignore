@@ -1,5 +1,6 @@
 cairo-perf
 cairo-perf-diff-files
+index.html
 *.o
 *.exe
 *.manifest
