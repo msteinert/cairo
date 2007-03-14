@@ -121,6 +121,7 @@ self-intersecting
 set-source
 show-glyphs-many
 show-text-current-point
+skew-extreme
 source-clip
 source-clip-scale
 source-surface-scale-paint

@@ -85,6 +85,7 @@ self-copy			\
 self-intersecting		\
 set-source			\
 show-text-current-point		\
+skew-extreme			\
 source-clip			\
 source-clip-scale		\
 source-surface-scale-paint	\
