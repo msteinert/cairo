@@ -1178,8 +1178,9 @@ typedef struct _cairo_surface_pattern {
 typedef struct _cairo_gradient_pattern {
     cairo_pattern_t base;
 
+    unsigned int	    n_stops;
+    unsigned int	    stops_size;
     pixman_gradient_stop_t *stops;
-    unsigned int	   n_stops;
 } cairo_gradient_pattern_t;
 
 typedef struct _cairo_linear_pattern {
