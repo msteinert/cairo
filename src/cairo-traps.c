@@ -50,9 +50,6 @@ _cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bo
 static int
 _compare_point_fixed_by_y (const void *av, const void *bv);
 
-static cairo_fixed_16_16_t
-_compute_x (cairo_line_t *line, cairo_fixed_t y);
-
 void
 _cairo_traps_init (cairo_traps_t *traps)
 {
@@ -314,57 +311,20 @@ _cairo_trapezoid_array_translate_and_scale (cairo_trapezoid_t *offset_traps,
     }
 }
 
+/* A triangle is simply a degenerate case of a convex
+ * quadrilateral. We would not benefit from having any distinct
+ * implementation of triangle vs. quadrilateral tessellation here. */
 cairo_status_t
 _cairo_traps_tessellate_triangle (cairo_traps_t *traps, cairo_point_t t[3])
 {
-    cairo_line_t line;
-    cairo_fixed_16_16_t intersect;
-    cairo_point_t tsort[3];
+    cairo_point_t quad[4];
 
-    memcpy (tsort, t, 3 * sizeof (cairo_point_t));
-    qsort (tsort, 3, sizeof (cairo_point_t), _compare_point_fixed_by_y);
+    quad[0] = t[0];
+    quad[1] = t[0];
+    quad[2] = t[1];
+    quad[3] = t[2];
 
-    /* horizontal top edge requires special handling */
-    if (tsort[0].y == tsort[1].y) {
-	if (tsort[0].x < tsort[1].x)
-	    _cairo_traps_add_trap_from_points (traps,
-					       tsort[1].y, tsort[2].y,
-					       tsort[0], tsort[2],
-					       tsort[1], tsort[2]);
-	else
-	    _cairo_traps_add_trap_from_points (traps,
-					       tsort[1].y, tsort[2].y,
-					       tsort[1], tsort[2],
-					       tsort[0], tsort[2]);
-	return traps->status;
-    }
-
-    line.p1 = tsort[0];
-    line.p2 = tsort[1];
-
-    intersect = _compute_x (&line, tsort[2].y);
-
-    if (intersect < tsort[2].x) {
-	_cairo_traps_add_trap_from_points (traps,
-					   tsort[0].y, tsort[1].y,
-					   tsort[0], tsort[1],
-					   tsort[0], tsort[2]);
-	_cairo_traps_add_trap_from_points (traps,
-					   tsort[1].y, tsort[2].y,
-					   tsort[1], tsort[2],
-					   tsort[0], tsort[2]);
-    } else {
-	_cairo_traps_add_trap_from_points (traps,
-					   tsort[0].y, tsort[1].y,
-					   tsort[0], tsort[2],
-					   tsort[0], tsort[1]);
-	_cairo_traps_add_trap_from_points (traps,
-					   tsort[1].y, tsort[2].y,
-					   tsort[0], tsort[2],
-					   tsort[1], tsort[2]);
-    }
-
-    return traps->status;
+    return _cairo_traps_tessellate_convex_quad (traps, quad);
 }
 
 cairo_status_t
@@ -513,37 +473,6 @@ _cairo_traps_tessellate_convex_quad (cairo_traps_t *traps, cairo_point_t q[4])
     }
 
     return traps->status;
-}
-
-/* XXX: Both _compute_x and _compute_inverse_slope will divide by zero
-   for horizontal lines. Now, we "know" that when we are tessellating
-   polygons that the polygon data structure discards all horizontal
-   edges, but there's nothing here to guarantee that. I suggest the
-   following:
-
-   A) Move all of the polygon tessellation code out of xrtraps.c and
-      into xrpoly.c, (in order to be in the same module as the code
-      discarding horizontal lines).
-
-   OR
-
-   B) Re-implement the line intersection in a way that avoids all
-      division by zero. Here's one approach. The only disadvantage
-      might be that that there are not meaningful names for all of the
-      sub-computations -- just a bunch of determinants. I haven't
-      looked at complexity, (both are probably similar and it probably
-      doesn't matter much anyway).
- */
-
-
-static cairo_fixed_16_16_t
-_compute_x (cairo_line_t *line, cairo_fixed_t y)
-{
-    cairo_fixed_16_16_t dx = line->p2.x - line->p1.x;
-    cairo_fixed_32_32_t ex = (cairo_fixed_48_16_t) (y - line->p1.y) * (cairo_fixed_48_16_t) dx;
-    cairo_fixed_16_16_t dy = line->p2.y - line->p1.y;
-
-    return line->p1.x + (ex / dy);
 }
 
 static cairo_bool_t
