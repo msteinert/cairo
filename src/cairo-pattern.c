@@ -117,7 +117,9 @@ _cairo_gradient_pattern_init_copy (cairo_gradient_pattern_t	  *pattern,
 	*dst = *src;
     }
 
-    if (other->n_stops)
+    if (other->stops == other->stops_embedded)
+	pattern->stops = pattern->stops_embedded;
+    else if (other->stops)
     {
 	pattern->stops = malloc (other->stops_size *
 				 sizeof (pixman_gradient_stop_t));
@@ -187,7 +189,7 @@ _cairo_pattern_fini (cairo_pattern_t *pattern)
 	cairo_gradient_pattern_t *gradient =
 	    (cairo_gradient_pattern_t *) pattern;
 
-	if (gradient->stops)
+	if (gradient->stops && gradient->stops != gradient->stops_embedded)
 	    free (gradient->stops);
     } break;
     }
@@ -657,11 +659,26 @@ _cairo_pattern_gradient_grow (cairo_gradient_pattern_t *pattern)
 {
     pixman_gradient_stop_t *new_stops;
     int old_size = pattern->stops_size;
-    int new_size = old_size ? 2 * old_size : 8;
+    int embedded_size = sizeof (pattern->stops_embedded) / sizeof (pattern->stops_embedded[0]);
+    int new_size = 2 * MAX (old_size, 4);
+
+    /* we have a local buffer at pattern->stops_embedded.  try to fulfill the request
+     * from there. */
+    if (old_size < embedded_size) {
+	pattern->stops = pattern->stops_embedded;
+	pattern->stops_size = embedded_size;
+	return CAIRO_STATUS_SUCCESS;
+    }
 
     assert (pattern->n_stops <= pattern->stops_size);
 
-    new_stops = realloc (pattern->stops, new_size *  sizeof (pixman_gradient_stop_t));
+    if (pattern->stops == pattern->stops_embedded) {
+	new_stops = malloc (new_size * sizeof (pixman_gradient_stop_t));
+	if (new_stops)
+	    memcpy (new_stops, pattern->stops, old_size * sizeof (pixman_gradient_stop_t));
+    } else {
+	new_stops = realloc (pattern->stops, new_size * sizeof (pixman_gradient_stop_t));
+    }
 
     if (new_stops == NULL) {
 	return CAIRO_STATUS_NO_MEMORY;

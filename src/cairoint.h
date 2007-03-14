@@ -1181,6 +1181,7 @@ typedef struct _cairo_gradient_pattern {
     unsigned int	    n_stops;
     unsigned int	    stops_size;
     pixman_gradient_stop_t *stops;
+    pixman_gradient_stop_t  stops_embedded[2];
 } cairo_gradient_pattern_t;
 
 typedef struct _cairo_linear_pattern {
