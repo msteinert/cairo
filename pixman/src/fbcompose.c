@@ -4198,7 +4198,7 @@ pixman_compositeGeneral (pixman_operator_t	op,
 		    CARD16	width,
 		    CARD16	height)
 {
-    pixman_region16_t *region;
+    pixman_region16_t region;
     int		    n;
     BoxPtr	    pbox;
     Bool	    srcRepeat = FALSE;
@@ -4219,22 +4219,12 @@ pixman_compositeGeneral (pixman_operator_t	op,
     if (op == PIXMAN_OPERATOR_OVER && !pMask && !pSrc->transform && !PICT_FORMAT_A(pSrc->format_code) && !pSrc->alphaMap)
         op = PIXMAN_OPERATOR_SRC;
 
-    region = pixman_region_create();
-    pixman_region_union_rect (region, region, xDst, yDst, width, height);
+    pixman_region_init (&region, NULL);
+    pixman_region_union_rect (&region, &region, xDst, yDst, width, height);
 
-    if (!FbComputeCompositeRegion (region,
-				   pSrc,
-				   pMask,
-				   pDst,
-				   xSrc,
-				   ySrc,
-				   xMask,
-				   yMask,
-				   xDst,
-				   yDst,
-				   width,
-				   height))
-	    return;
+    if (!FbComputeCompositeRegion (&region, pSrc, pMask, pDst, xSrc, ySrc,
+                                   xMask, yMask, xDst, yDst, width, height))
+        goto CLEANUP_REGION;
 
     compose_data.op = op;
     compose_data.src = pSrc;
@@ -4243,8 +4233,8 @@ pixman_compositeGeneral (pixman_operator_t	op,
     if (width > SCANLINE_BUFFER_LENGTH)
         scanline_buffer = (CARD32 *) malloc(width * 3 * sizeof(CARD32));
 
-    n = pixman_region_num_rects (region);
-    pbox = pixman_region_rects (region);
+    n = pixman_region_num_rects (&region);
+    pbox = pixman_region_rects (&region);
     while (n--)
     {
 	h = pbox->y2 - pbox->y1;
@@ -4298,10 +4288,12 @@ pixman_compositeGeneral (pixman_operator_t	op,
 	}
 	pbox++;
     }
-    pixman_region_destroy (region);
 
     if (scanline_buffer != _scanline_buffer)
         free(scanline_buffer);
+
+CLEANUP_REGION:
+    pixman_region_uninit (&region);
 }
 
 #endif

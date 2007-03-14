@@ -858,67 +858,47 @@ FbComputeCompositeRegion (pixman_region16_t	*region,
     y1 = yDst;
     v = yDst + height;
     y2 = BOUND(v);
+
     /* Check for empty operation */
-    if (x1 >= x2 ||
-	y1 >= y2)
-    {
+    if (x1 >= x2 || y1 >= y2) {
 	pixman_region_empty (region);
 	return 1;
     }
+
     /* clip against src */
     if (!FbClipImageSrc (region, iSrc, xDst - xSrc, yDst - ySrc))
-    {
-	pixman_region_destroy (region);
 	return 0;
-    }
-    if (iSrc->alphaMap)
-    {
-	if (!FbClipImageSrc (region, iSrc->alphaMap,
-			     xDst - (xSrc + iSrc->alphaOrigin.x),
-			     yDst - (ySrc + iSrc->alphaOrigin.y)))
-	{
-	    pixman_region_destroy (region);
-	    return 0;
-	}
-    }
+
+    if (iSrc->alphaMap &&
+	!FbClipImageSrc (region, iSrc->alphaMap,
+                         xDst - (xSrc + iSrc->alphaOrigin.x),
+                         yDst - (ySrc + iSrc->alphaOrigin.y)))
+        return 0;
+
     /* clip against mask */
-    if (iMask)
-    {
+    if (iMask) {
 	if (!FbClipImageSrc (region, iMask, xDst - xMask, yDst - yMask))
-	{
-	    pixman_region_destroy (region);
 	    return 0;
-	}
-	if (iMask->alphaMap)
-	{
-	    if (!FbClipImageSrc (region, iMask->alphaMap,
-				 xDst - (xMask + iMask->alphaOrigin.x),
-				 yDst - (yMask + iMask->alphaOrigin.y)))
-	    {
-		pixman_region_destroy (region);
-		return 0;
-	    }
-	}
+
+	if (iMask->alphaMap &&
+	    !FbClipImageSrc (region, iMask->alphaMap,
+                             xDst - (xMask + iMask->alphaOrigin.x),
+                             yDst - (yMask + iMask->alphaOrigin.y)))
+            return 0;
     }
 
     if (!FbClipImageReg (region,
                          iDst->hasCompositeClip ?
                          &iDst->compositeClip : NULL,
-                         0, 0)) {
-	pixman_region_destroy (region);
+                         0, 0))
 	return 0;
-    }
 
-    if (iDst->alphaMap) {
-	if (!FbClipImageReg (region,
-                             iDst->hasCompositeClip ?
-                             &iDst->alphaMap->compositeClip : NULL,
-			     -iDst->alphaOrigin.x,
-			     -iDst->alphaOrigin.y)) {
-	    pixman_region_destroy (region);
-	    return 0;
-	}
-    }
+    if (iDst->alphaMap &&
+        !FbClipImageReg (region,
+                         iDst->hasCompositeClip ?
+                         &iDst->alphaMap->compositeClip : NULL,
+                         -iDst->alphaOrigin.x, -iDst->alphaOrigin.y))
+        return 0;
 
     return 1;
 }
