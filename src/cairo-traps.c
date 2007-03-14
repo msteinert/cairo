@@ -1,5 +1,6 @@
 /*
  * Copyright © 2002 Keith Packard
+ * Copyright © 2007 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -408,7 +409,18 @@ _cairo_traps_tessellate_convex_quad (cairo_traps_t *traps, cairo_point_t q[4])
      * This should hopefully be made clear in the lame ASCII art
      * below. Since the same slope comparison is used in all cases, we
      * compute it before testing for the Y-value sort. */
-    _cairo_slope_init (&ab, &q[a], &q[b]);
+
+    /* Note: If a == b then the ab slope doesn't give us any
+     * information. In that case, we can replace it with the ac (or
+     * equivalenly the bc) slope which gives us exactly the same
+     * information we need. At worst the names of the identifiers ab
+     * and b_left_of_d are inaccurate in this case, (would be ac, and
+     * c_left_of_d). */
+    if (q[a].x == q[b].x && q[a].y == q[b].y)
+	_cairo_slope_init (&ab, &q[a], &q[c]);
+    else
+	_cairo_slope_init (&ab, &q[a], &q[b]);
+
     _cairo_slope_init (&ad, &q[a], &q[d]);
 
     b_left_of_d = (_cairo_slope_compare (&ab, &ad) > 0);
