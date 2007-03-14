@@ -3374,8 +3374,8 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
     if (pict->filter == PIXMAN_FILTER_NEAREST || pict->filter == PIXMAN_FILTER_FAST)
     {
         if (pict->repeat == RepeatNormal) {
-            if (PIXREGION_NUM_RECTS(pict->pSourceClip) == 1) {
-                box = pict->pSourceClip->extents;
+            if (PIXREGION_NUM_RECTS(&pict->sourceClip) == 1) {
+                box = pict->sourceClip.extents;
                 for (i = 0; i < width; ++i) {
  		    if (!mask || mask[i] & maskBits)
  		    {
@@ -3410,7 +3410,7 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
 				y = MOD(v.vector[1]>>16, pict->pDrawable->height);
 				x = MOD(v.vector[0]>>16, pict->pDrawable->width);
 			    }
-			    if (pixman_region_contains_point (pict->pSourceClip, x, y, &box))
+			    if (pixman_region_contains_point (&pict->sourceClip, x, y, &box))
 				buffer[i] = fetch(bits + (y + pict->pDrawable->y)*stride, x + pict->pDrawable->x, indexed);
 			    else
 				buffer[i] = 0;
@@ -3422,8 +3422,8 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
                 }
             }
         } else {
-            if (PIXREGION_NUM_RECTS(pict->pSourceClip) == 1) {
-                box = pict->pSourceClip->extents;
+            if (PIXREGION_NUM_RECTS(&pict->sourceClip) == 1) {
+                box = pict->sourceClip.extents;
                 for (i = 0; i < width; ++i) {
  		    if (!mask || mask[i] & maskBits)
  		    {
@@ -3457,7 +3457,7 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
                             y = v.vector[1]>>16;
                             x = v.vector[0]>>16;
                         }
-                        if (pixman_region_contains_point (pict->pSourceClip, x, y, &box))
+                        if (pixman_region_contains_point (&pict->sourceClip, x, y, &box))
                             buffer[i] = fetch(bits + (y + pict->pDrawable->y)*stride, x + pict->pDrawable->x, indexed);
                         else
                             buffer[i] = 0;
@@ -3476,8 +3476,8 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
         unit.vector[1] -= unit.vector[2]/2;
 
         if (pict->repeat == RepeatNormal) {
-            if (PIXREGION_NUM_RECTS(pict->pSourceClip) == 1) {
-                box = pict->pSourceClip->extents;
+            if (PIXREGION_NUM_RECTS(&pict->sourceClip) == 1) {
+                box = pict->sourceClip.extents;
                 for (i = 0; i < width; ++i) {
 		    if (!mask || mask[i] & maskBits)
 		    {
@@ -3580,14 +3580,14 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
 
 			    b = bits + (y1 + pict->pDrawable->y)*stride;
 
-			    tl = pixman_region_contains_point(pict->pSourceClip, x1, y1, &box)
+			    tl = pixman_region_contains_point(&pict->sourceClip, x1, y1, &box)
 				? fetch(b, x1 + pict->pDrawable->x, indexed) : 0;
-			    tr = pixman_region_contains_point(pict->pSourceClip, x2, y1, &box)
+			    tr = pixman_region_contains_point(&pict->sourceClip, x2, y1, &box)
 				? fetch(b, x2 + pict->pDrawable->x, indexed) : 0;
 			    b = bits + (y2 + pict->pDrawable->y)*stride;
-			    bl = pixman_region_contains_point(pict->pSourceClip, x1, y2, &box)
+			    bl = pixman_region_contains_point(&pict->sourceClip, x1, y2, &box)
 				? fetch(b, x1 + pict->pDrawable->x, indexed) : 0;
-			    br = pixman_region_contains_point(pict->pSourceClip, x2, y2, &box)
+			    br = pixman_region_contains_point(&pict->sourceClip, x2, y2, &box)
 				? fetch(b, x2 + pict->pDrawable->x, indexed) : 0;
 
 			    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
@@ -3611,8 +3611,8 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
                 }
             }
         } else {
-            if (PIXREGION_NUM_RECTS(pict->pSourceClip) == 1) {
-                box = pict->pSourceClip->extents;
+            if (PIXREGION_NUM_RECTS(&pict->sourceClip) == 1) {
+                box = pict->sourceClip.extents;
                 for (i = 0; i < width; ++i) {
 		    if (!mask || mask[i] & maskBits)
 		    {
@@ -3713,14 +3713,14 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
 			    b = bits + (y1 + pict->pDrawable->y)*stride;
 			    x_off = x1 + pict->pDrawable->x;
 
-			    tl = pixman_region_contains_point(pict->pSourceClip, x1, y1, &box)
+			    tl = pixman_region_contains_point(&pict->sourceClip, x1, y1, &box)
 				? fetch(b, x_off, indexed) : 0;
-			    tr = pixman_region_contains_point(pict->pSourceClip, x2, y1, &box)
+			    tr = pixman_region_contains_point(&pict->sourceClip, x2, y1, &box)
 				? fetch(b, x_off + 1, indexed) : 0;
 			    b += stride;
-			    bl = pixman_region_contains_point(pict->pSourceClip, x1, y2, &box)
+			    bl = pixman_region_contains_point(&pict->sourceClip, x1, y2, &box)
 				? fetch(b, x_off, indexed) : 0;
-			    br = pixman_region_contains_point(pict->pSourceClip, x2, y2, &box)
+			    br = pixman_region_contains_point(&pict->sourceClip, x2, y2, &box)
 				? fetch(b, x_off + 1, indexed) : 0;
 
 			    ft = FbGet8(tl,0) * idistx + FbGet8(tr,0) * distx;
@@ -3782,7 +3782,7 @@ static void fbFetchTransformed(PicturePtr pict, int x, int y, int width, CARD32 
 			for (x = x1; x < x2; x++) {
 			    if (*p) {
 				int tx = (pict->repeat == RepeatNormal) ? MOD (x, pict->pDrawable->width) : x;
-				if (pixman_region_contains_point (pict->pSourceClip, tx, ty, &box)) {
+				if (pixman_region_contains_point (&pict->sourceClip, tx, ty, &box)) {
 				    FbBits *b = bits + (ty + pict->pDrawable->y)*stride;
 				    CARD32 c = fetch(b, tx + pict->pDrawable->x, indexed);
 

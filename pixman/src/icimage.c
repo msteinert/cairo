@@ -307,8 +307,8 @@ pixman_image_init (pixman_image_t *image)
      * In the server this was 0 because the composite clip list
      * can be referenced from a window (and often is)
      */
-    image->freeCompClip = 0;
-    image->freeSourceClip = 0;
+    image->hasCompositeClip = 0;
+    image->hasSourceClip = 0;
     image->clientClipType = CT_NONE;
     image->componentAlpha = 0;
     image->compositeClipSource = 0;
@@ -328,24 +328,34 @@ pixman_image_init (pixman_image_t *image)
     image->serialNumber = GC_CHANGE_SERIAL_BIT;
 */
 
-    if (image->pixels)
-    {
-	image->pCompositeClip = pixman_region_create();
-	pixman_region_union_rect (image->pCompositeClip, image->pCompositeClip,
-				  0, 0, image->pixels->width,
-				  image->pixels->height);
-	image->freeCompClip = 1;
+    if (image->pixels) {
+	if (!image->hasCompositeClip) {
+	    pixman_region_init (&image->compositeClip, NULL);
+            image->hasCompositeClip = 1;
+        }
 
-	image->pSourceClip = pixman_region_create ();
-	pixman_region_union_rect (image->pSourceClip, image->pSourceClip,
+	pixman_region_union_rect (&image->compositeClip, &image->compositeClip,
 				  0, 0, image->pixels->width,
 				  image->pixels->height);
-	image->freeSourceClip = 1;
-    }
-    else
-    {
-	image->pCompositeClip = NULL;
-	image->pSourceClip    = NULL;
+
+        if (!image->hasSourceClip) {
+	    pixman_region_init (&image->sourceClip, NULL);
+            image->hasSourceClip = 1;
+        }
+
+	pixman_region_union_rect (&image->sourceClip, &image->sourceClip,
+				  0, 0, image->pixels->width,
+				  image->pixels->height);
+    } else {
+        if (image->hasCompositeClip) {
+            pixman_region_uninit (&image->compositeClip);
+            image->hasCompositeClip = FALSE;
+        }
+
+        if (image->hasSourceClip) {
+            pixman_region_uninit (&image->sourceClip);
+	    image->hasSourceClip = FALSE;
+        }
     }
 
     image->transform = NULL;
@@ -473,14 +483,14 @@ pixman_image_destroy (pixman_image_t *image)
 {
     pixman_image_destroyClip (image);
 
-    if (image->freeCompClip) {
-	pixman_region_destroy (image->pCompositeClip);
-	image->pCompositeClip = NULL;
+    if (image->hasCompositeClip) {
+	pixman_region_uninit (&image->compositeClip);
+	image->hasCompositeClip = 0;
     }
 
-    if (image->freeSourceClip) {
-	pixman_region_destroy (image->pSourceClip);
-	image->pSourceClip = NULL;
+    if (image->hasSourceClip) {
+	pixman_region_uninit (&image->sourceClip);
+	image->hasSourceClip = 0;
     }
 
     if (image->owns_pixels) {
@@ -533,20 +543,22 @@ pixman_image_set_clip_region (pixman_image_t	*image,
     if (image->pSourcePict)
 	return 0;
 
-    if (image->freeCompClip)
-	pixman_region_destroy (image->pCompositeClip);
-    image->pCompositeClip = pixman_region_create();
-    pixman_region_union_rect (image->pCompositeClip, image->pCompositeClip,
+    if (image->hasCompositeClip)
+        pixman_region_uninit (&image->compositeClip);
+
+    pixman_region_init (&image->compositeClip, NULL);
+    pixman_region_union_rect (&image->compositeClip, &image->compositeClip,
 			      0, 0, image->pixels->width, image->pixels->height);
-    image->freeCompClip = 1;
+    image->hasCompositeClip = 1;
+
     if (region) {
-	pixman_region_translate (image->pCompositeClip,
+	pixman_region_translate (&image->compositeClip,
 				 - image->clipOrigin.x,
 				 - image->clipOrigin.y);
-	pixman_region_intersect (image->pCompositeClip,
-				 image->pCompositeClip,
+	pixman_region_intersect (&image->compositeClip,
+				 &image->compositeClip,
 				 region);
-	pixman_region_translate (image->pCompositeClip,
+	pixman_region_translate (&image->compositeClip,
 				 image->clipOrigin.x,
 				 image->clipOrigin.y);
     }
@@ -601,13 +613,12 @@ FbClipImageSrc (pixman_region16_t	*region,
     /* XXX what to do with clipping from transformed pictures? */
     if (image->transform)
 	return 1;
+
     /* XXX davidr hates this, wants to never use source-based clipping */
-    if (image->repeat != PIXMAN_REPEAT_NONE || image->pSourcePict)
-    {
+    if (image->repeat != PIXMAN_REPEAT_NONE || image->pSourcePict) {
 	/* XXX no source clipping */
 	if (image->compositeClipSource &&
-	    image->clientClipType != CT_NONE)
-	{
+	    image->clientClipType != CT_NONE) {
 	    pixman_region_translate (region,
 			   dx - image->clipOrigin.x,
 			   dy - image->clipOrigin.y);
@@ -616,21 +627,20 @@ FbClipImageSrc (pixman_region16_t	*region,
 			   - (dx - image->clipOrigin.x),
 			   - (dy - image->clipOrigin.y));
 	}
-	return 1;
-    }
-    else
-    {
-	pixman_region16_t   *clip;
 
-	if (image->compositeClipSource)
-	    clip = image->pCompositeClip;
-	else
-	    clip = image->pSourceClip;
-	return FbClipImageReg (region,
-			       clip,
-			       dx,
-			       dy);
+	return 1;
+    } else {
+	pixman_region16_t *clip;
+
+	if (image->compositeClipSource) {
+	    clip = (image->hasCompositeClip ? &image->compositeClip : NULL);
+	} else {
+	    clip = (image->hasSourceClip ? &image->sourceClip : NULL);
+        }
+
+	return FbClipImageReg (region, clip, dx, dy);
     }
+
     return 1;
 }
 
@@ -890,21 +900,26 @@ FbComputeCompositeRegion (pixman_region16_t	*region,
 	    }
 	}
     }
-    if (!FbClipImageReg (region, iDst->pCompositeClip, 0, 0))
-    {
+
+    if (!FbClipImageReg (region,
+                         iDst->hasCompositeClip ?
+                         &iDst->compositeClip : NULL,
+                         0, 0)) {
 	pixman_region_destroy (region);
 	return 0;
     }
-    if (iDst->alphaMap)
-    {
-	if (!FbClipImageReg (region, iDst->alphaMap->pCompositeClip,
+
+    if (iDst->alphaMap) {
+	if (!FbClipImageReg (region,
+                             iDst->hasCompositeClip ?
+                             &iDst->alphaMap->compositeClip : NULL,
 			     -iDst->alphaOrigin.x,
-			     -iDst->alphaOrigin.y))
-	{
+			     -iDst->alphaOrigin.y)) {
 	    pixman_region_destroy (region);
 	    return 0;
 	}
     }
+
     return 1;
 }
 

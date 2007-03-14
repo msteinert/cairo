@@ -209,13 +209,16 @@ pixman_color_rects (pixman_image_t	 *dst,
 			      dst->pixels->x, dst->pixels->y,
 			      dst->pixels->width, dst->pixels->height);
 
-    pixman_region_intersect (&clip, &clip, clipPict->pCompositeClip);
+    pixman_region_intersect (&clip, &clip, clipPict->hasCompositeClip ?
+                             &clipPict->compositeClip : NULL);
     if (clipPict->alphaMap)
     {
 	pixman_region_translate (&clip,
 				 -clipPict->alphaOrigin.x,
 				 -clipPict->alphaOrigin.y);
-	pixman_region_intersect (&clip, &clip, clipPict->alphaMap->pCompositeClip);
+	pixman_region_intersect (&clip, &clip, 
+                                 clipPict->alphaMap->hasCompositeClip ?
+                                 &clipPict->alphaMap->compositeClip : NULL);
 	pixman_region_translate (&clip,
 				 clipPict->alphaOrigin.x,
 				 clipPict->alphaOrigin.y);
