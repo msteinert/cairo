@@ -75,7 +75,6 @@ static pixman_box16_t pixman_region_emptyBox = {0, 0, 0, 0};
 static pixman_region16_data_t pixman_region_emptyData = {0, 0};
 
 static pixman_region16_data_t  pixman_brokendata = {0, 0};
-static pixman_region16_t   pixman_brokenregion = { { 0, 0, 0, 0 }, &pixman_brokendata };
 
 static pixman_region_status_t
 pixman_break (pixman_region16_t *pReg);
@@ -289,21 +288,6 @@ pixman_region16_valid(reg)
 
 #endif /* DEBUG_PIXREGION */
 
-/*	Create a new empty region	*/
-pixman_region16_t *
-pixman_region_create (void)
-{
-    pixman_region16_t *region;
-
-    region = malloc (sizeof (pixman_region16_t));
-    if (region == NULL)
-	return &pixman_brokenregion;
-
-    pixman_region_init (region, NULL);
-
-    return region;
-}
-
 /*****************************************************************
  *   RegionInit(pReg, rect, size)
  *     Outer region rect is statically allocated.
@@ -329,15 +313,6 @@ pixman_region_uninit (pixman_region16_t *region)
 {
     good (region);
     freeData (region);
-}
-
-void
-pixman_region_destroy (pixman_region16_t *region)
-{
-    pixman_region_uninit (region);
-
-    if (region != &pixman_brokenregion)
-	free (region);
 }
 
 int
