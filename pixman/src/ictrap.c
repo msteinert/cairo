@@ -138,8 +138,7 @@ pixman_composite_trapezoids (pixman_operator_t	      op,
     yDst = traps[0].left.p1.y >> 16;
 
     pixman_trapezoid_bounds (ntraps, traps, &traps_bounds);
-
-    pixman_region_init (&traps_region, &traps_bounds);
+    pixman_region_init_with_extents (&traps_region, &traps_bounds);
 
     /* XXX: If the image has a clip region set, we should really be
      * fetching it here instead, but it looks like we don't yet expose
@@ -149,8 +148,7 @@ pixman_composite_trapezoids (pixman_operator_t	      op,
     dst_bounds.x2 = pixman_image_get_width (dst);
     dst_bounds.y2 = pixman_image_get_height (dst);
 
-    pixman_region_init (&dst_region, &dst_bounds);
-
+    pixman_region_init_with_extents (&dst_region, &dst_bounds);
     pixman_region_intersect (&traps_region, &traps_region, &dst_region);
 
     bounds = *(pixman_region_extents (&traps_region));

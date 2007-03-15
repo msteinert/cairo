@@ -61,7 +61,7 @@ _cairo_clip_init (cairo_clip_t *clip, cairo_surface_t *target)
 
     clip->serial = 0;
 
-    pixman_region_init (&clip->region, NULL);
+    pixman_region_init (&clip->region);
     clip->has_region = FALSE;
 
     clip->path = NULL;
@@ -77,7 +77,7 @@ _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other)
 
     clip->serial = other->serial;
 
-    pixman_region_init (&clip->region, NULL);
+    pixman_region_init (&clip->region);
 
     if (other->has_region) {
         pixman_region_copy (&clip->region, &other->region);
@@ -103,7 +103,7 @@ _cairo_clip_reset (cairo_clip_t *clip)
          * doesn't bother with leaving the region in a valid state.
          * So pixman_region_init has to be called afterwards. */
 	pixman_region_uninit (&clip->region);
-        pixman_region_init (&clip->region, NULL);
+        pixman_region_init (&clip->region);
 
         clip->has_region = FALSE;
     }
@@ -167,8 +167,9 @@ _cairo_clip_intersect_to_rectangle (cairo_clip_t            *clip,
 	cairo_status_t status = CAIRO_STATUS_SUCCESS;
 	pixman_region16_t intersection;
 
-	if (_cairo_region_init_from_rectangle (&intersection, rectangle))
-	    return CAIRO_STATUS_NO_MEMORY;
+	pixman_region_init_rect (&intersection,
+                                  rectangle->x, rectangle->y,
+                                  rectangle->width, rectangle->height);
 
 	if (PIXMAN_REGION_STATUS_SUCCESS !=
             pixman_region_intersect (&intersection, &clip->region,
@@ -208,8 +209,9 @@ _cairo_clip_intersect_to_region (cairo_clip_t      *clip,
 	cairo_status_t status = CAIRO_STATUS_SUCCESS;
 	pixman_region16_t clip_rect;
 
-	if (_cairo_region_init_from_rectangle (&clip_rect, &clip->surface_rect))
-	    return CAIRO_STATUS_NO_MEMORY;
+        pixman_region_init_rect (&clip_rect,
+                                  clip->surface_rect.x, clip->surface_rect.y,
+                                  clip->surface_rect.width, clip->surface_rect.height);
 
         if (PIXMAN_REGION_STATUS_SUCCESS !=
             pixman_region_intersect (region, &clip_rect, region))
@@ -339,7 +341,7 @@ _cairo_clip_intersect_region (cairo_clip_t    *clip,
         clip->has_region = TRUE;
     } else {
 	pixman_region16_t intersection;
-        pixman_region_init (&intersection, NULL);
+        pixman_region_init (&intersection);
 
 	if (PIXMAN_REGION_STATUS_SUCCESS ==
             pixman_region_intersect (&intersection, &clip->region, &region)) {

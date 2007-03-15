@@ -1893,18 +1893,14 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
 
     /* Now compute the area that is in dst_rectangle but not in drawn_rectangle
      */
-    if (_cairo_region_init_from_rectangle (&drawn_region, &drawn_rectangle)) {
-        status = CAIRO_STATUS_NO_MEMORY;
-        goto CLEANUP_REGIONS;
-    }
+    pixman_region_init_rect (&drawn_region,
+                              drawn_rectangle.x, drawn_rectangle.y,
+                              drawn_rectangle.width, drawn_rectangle.height);
+    pixman_region_init_rect (&clear_region,
+                              dst_rectangle.x, dst_rectangle.y,
+                              dst_rectangle.width, dst_rectangle.height);
 
     has_drawn_region = TRUE;
-
-    if (_cairo_region_init_from_rectangle (&clear_region, &dst_rectangle)) {
-        status = CAIRO_STATUS_NO_MEMORY;
-        goto CLEANUP_REGIONS;
-    }
-
     has_clear_region = TRUE;
 
     if (PIXMAN_REGION_STATUS_SUCCESS !=

@@ -1284,7 +1284,7 @@ _cairo_glitz_surface_set_clip_region (void		*abstract_surface,
 	int	    n;
 
 	if (!surface->has_clip) {
-            pixman_region_init (&surface->clip, NULL);
+            pixman_region_init (&surface->clip);
             surface->has_clip = TRUE;
         }
 

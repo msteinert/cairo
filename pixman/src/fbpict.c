@@ -1933,8 +1933,7 @@ pixman_composite (pixman_operator_t	op,
     if (maskTransform)
 	maskRepeat = 0;
 
-    pixman_region_init (&region, NULL);
-    pixman_region_union_rect (&region, &region, xDst, yDst, width, height);
+    pixman_region_init_rect (&region, xDst, yDst, width, height);
 
     if (!FbComputeCompositeRegion (&region, pSrc, pMask, pDst, xSrc, ySrc,
 				   xMask, yMask, xDst, yDst, width, height))

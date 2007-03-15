@@ -132,7 +132,12 @@ typedef enum {
 /* creation/destruction */
 
 pixman_private void
-pixman_region_init(pixman_region16_t *region, pixman_box16_t *extents);
+pixman_region_init(pixman_region16_t *region);
+pixman_private void
+pixman_region_init_rect(pixman_region16_t *region,
+                        int x, int y, unsigned int width, unsigned int height);
+pixman_private void
+pixman_region_init_with_extents(pixman_region16_t *region, pixman_box16_t *extents);
 pixman_private void
 pixman_region_uninit (pixman_region16_t *region);
 

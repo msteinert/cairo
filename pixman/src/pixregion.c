@@ -288,24 +288,29 @@ pixman_region16_valid(reg)
 
 #endif /* DEBUG_PIXREGION */
 
-/*****************************************************************
- *   RegionInit(pReg, rect, size)
- *     Outer region rect is statically allocated.
- *****************************************************************/
+void
+pixman_region_init(pixman_region16_t *region)
+{
+    region->extents = pixman_region_emptyBox;
+    region->data = &pixman_region_emptyData;
+}
 
 void
-pixman_region_init(pixman_region16_t *region, pixman_box16_t *extents)
+pixman_region_init_rect(pixman_region16_t *region,
+                        int x, int y, unsigned int width, unsigned int height)
 {
-    if (extents)
-    {
-	region->extents = *extents;
-	region->data = NULL;
-    }
-    else
-    {
-	region->extents = pixman_region_emptyBox;
-	region->data = &pixman_region_emptyData;
-    }
+    region->extents.x1 = x;
+    region->extents.y1 = y;
+    region->extents.x2 = x + width;
+    region->extents.y2 = y + height;
+    region->data = NULL;
+}
+
+void
+pixman_region_init_with_extents(pixman_region16_t *region, pixman_box16_t *extents)
+{
+    region->extents = *extents;
+    region->data = NULL;
 }
 
 void
@@ -1093,7 +1098,7 @@ pixman_region_unionO (
 /* Convenience function for performing union of region with a single rectangle */
 pixman_region_status_t
 pixman_region_union_rect(pixman_region16_t *dest, pixman_region16_t *source,
-		   int x, int y, unsigned int width, unsigned int height)
+                         int x, int y, unsigned int width, unsigned int height)
 {
     pixman_region16_t region;
 

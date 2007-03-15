@@ -204,10 +204,9 @@ pixman_color_rects (pixman_image_t	 *dst,
     xoff -= dst->pixels->x;
     yoff -= dst->pixels->y;
 
-    pixman_region_init (&clip, NULL);
-    pixman_region_union_rect (&clip, &clip,
-			      dst->pixels->x, dst->pixels->y,
-			      dst->pixels->width, dst->pixels->height);
+    pixman_region_init_rect (&clip,
+                             dst->pixels->x, dst->pixels->y,
+			     dst->pixels->width, dst->pixels->height);
 
     pixman_region_intersect (&clip, &clip, clipPict->hasCompositeClip ?
                              &clipPict->compositeClip : NULL);
@@ -233,7 +232,8 @@ pixman_color_rects (pixman_image_t	 *dst,
 	}
     }
 
-    pixman_region_init (&rects_as_region, NULL);
+    pixman_region_init (&rects_as_region);
+
     for (i = 0; i < nRect; i++)
     {
 	pixman_region_union_rect (&rects_as_region, &rects_as_region,

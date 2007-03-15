@@ -567,10 +567,9 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
              * _cairo_surface_fill_rectangles() or to drawing with a
              * clip region, then we have an additional region to clear.
              */
-            if (_cairo_region_init_from_rectangle (&clear_region, &extents)) {
-                status = CAIRO_STATUS_NO_MEMORY;
-                goto out;
-            }
+            pixman_region_init_rect (&clear_region,
+                                     extents.x, extents.y,
+                                     extents.width, extents.height);
 
             has_clear_region = TRUE;
             status = _cairo_clip_intersect_to_region (clip, &clear_region);

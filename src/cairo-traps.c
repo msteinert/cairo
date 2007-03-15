@@ -553,7 +553,7 @@ _cairo_traps_extract_region (cairo_traps_t     *traps,
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
 
-    pixman_region_init (region, NULL);
+    pixman_region_init (region);
 
     for (i = 0; i < traps->num_traps; i++) {
 	int x = _cairo_fixed_integer_part(traps->traps[i].left.p1.x);

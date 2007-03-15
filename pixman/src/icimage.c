@@ -329,22 +329,18 @@ pixman_image_init (pixman_image_t *image)
 
     if (image->pixels) {
 	if (!image->hasCompositeClip) {
-	    pixman_region_init (&image->compositeClip, NULL);
+	    pixman_region_init_rect (&image->compositeClip,
+				     0, 0, image->pixels->width,
+				     image->pixels->height);
             image->hasCompositeClip = 1;
         }
 
-	pixman_region_union_rect (&image->compositeClip, &image->compositeClip,
-				  0, 0, image->pixels->width,
-				  image->pixels->height);
-
         if (!image->hasSourceClip) {
-	    pixman_region_init (&image->sourceClip, NULL);
+	    pixman_region_init_rect (&image->sourceClip,
+				     0, 0, image->pixels->width,
+				     image->pixels->height);
             image->hasSourceClip = 1;
         }
-
-	pixman_region_union_rect (&image->sourceClip, &image->sourceClip,
-				  0, 0, image->pixels->width,
-				  image->pixels->height);
     } else {
         if (image->hasCompositeClip) {
             pixman_region_uninit (&image->compositeClip);
@@ -526,7 +522,7 @@ pixman_image_set_clip_region (pixman_image_t	*image,
     pixman_image_destroyClip (image);
 
     if (region) {
-        pixman_region_init (&image->clientClip, NULL);
+        pixman_region_init (&image->clientClip);
 	pixman_region_copy (&image->clientClip, region);
 	image->clientClipType = CT_REGION;
     }
@@ -538,9 +534,10 @@ pixman_image_set_clip_region (pixman_image_t	*image,
     if (image->hasCompositeClip)
         pixman_region_uninit (&image->compositeClip);
 
-    pixman_region_init (&image->compositeClip, NULL);
-    pixman_region_union_rect (&image->compositeClip, &image->compositeClip,
-			      0, 0, image->pixels->width, image->pixels->height);
+    pixman_region_init_rect (&image->compositeClip, 0, 0,
+                             image->pixels->width,
+                             image->pixels->height);
+
     image->hasCompositeClip = 1;
 
     if (region) {

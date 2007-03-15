@@ -36,31 +36,6 @@
 #include "cairoint.h"
 
 /**
- * _cairo_region_init_from_rectangle:
- * @region: a #pixman_region16_t
- * @rect: a #cairo_rectangle_int16_t
- *
- * Initializes a region with extents from the given rectangle.
- *
- * Return value: #CAIRO_STATUS_SUCCESS on success, or
- * #CAIRO_STATUS_NO_MEMORY when pixman fails to initialize
- * the region.
- **/
-cairo_status_t
-_cairo_region_init_from_rectangle (pixman_region16_t       *region,
-                                   cairo_rectangle_int16_t *rect)
-{
-    pixman_region_init (region, NULL);
-
-    if (PIXMAN_REGION_STATUS_SUCCESS == pixman_region_union_rect (
-        region, region, rect->x, rect->y, rect->width, rect->height))
-        return CAIRO_STATUS_SUCCESS;
-
-    pixman_region_uninit (region);
-    return CAIRO_STATUS_NO_MEMORY;
-}
-
-/**
  * _cairo_region_extents_rectangle:
  * @region: a #pixman_region16_t
  * @rect: rectangle into which to store the extents

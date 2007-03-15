@@ -4219,8 +4219,7 @@ pixman_compositeGeneral (pixman_operator_t	op,
     if (op == PIXMAN_OPERATOR_OVER && !pMask && !pSrc->transform && !PICT_FORMAT_A(pSrc->format_code) && !pSrc->alphaMap)
         op = PIXMAN_OPERATOR_SRC;
 
-    pixman_region_init (&region, NULL);
-    pixman_region_union_rect (&region, &region, xDst, yDst, width, height);
+    pixman_region_init_rect (&region, xDst, yDst, width, height);
 
     if (!FbComputeCompositeRegion (&region, pSrc, pMask, pDst, xSrc, ySrc,
                                    xMask, yMask, xDst, yDst, width, height))
