@@ -723,7 +723,7 @@ _cairo_win32_scaled_font_set_metrics (cairo_win32_scaled_font_t *scaled_font)
 	_cairo_win32_scaled_font_done_unscaled_font (&scaled_font->base);
 
 	extents.ascent = (double)metrics.tmAscent / scaled_font->em_square;
-	extents.descent = metrics.tmDescent * scaled_font->em_square;
+	extents.descent = (double)metrics.tmDescent / scaled_font->em_square;
 	extents.height = (double)(metrics.tmHeight + metrics.tmExternalLeading) / scaled_font->em_square;
 	extents.max_x_advance = (double)(metrics.tmMaxCharWidth) / scaled_font->em_square;
 	extents.max_y_advance = 0;
