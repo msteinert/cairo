@@ -915,6 +915,11 @@ _cairo_gstate_in_stroke (cairo_gstate_t	    *gstate,
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_traps_t traps;
 
+    if (gstate->stroke_style.line_width <= 0.0) {
+	*inside_ret = FALSE;
+	return CAIRO_STATUS_SUCCESS;
+    }
+
     _cairo_gstate_user_to_backend (gstate, &x, &y);
 
     _cairo_traps_init (&traps);
@@ -1052,6 +1057,11 @@ _cairo_gstate_stroke_extents (cairo_gstate_t	 *gstate,
 {
     cairo_status_t status;
     cairo_traps_t traps;
+
+    if (gstate->stroke_style.line_width <= 0.0) {
+        *x1 = *y1 = *x2 = *y2 = 0.0;
+	return CAIRO_STATUS_SUCCESS;
+    }
 
     _cairo_traps_init (&traps);
 
