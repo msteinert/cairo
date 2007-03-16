@@ -500,11 +500,7 @@ AM_CONDITIONAL(HAVE_PTHREAD, test "x$have_pthread" = "xyes")
 
 dnl ===========================================================================
 
-CAIRO_BACKEND_ENABLE(ps, PostScript, ps, PS_SURFACE, auto, [
-    # The postscript backend requires zlib.
-    use_ps=$have_libz
-    ps_NONPKGCONFIG_LIBS=-lz
-])
+CAIRO_BACKEND_ENABLE(ps, PostScript, ps, PS_SURFACE, auto, [use_ps=yes])
 
 dnl ===========================================================================
 
