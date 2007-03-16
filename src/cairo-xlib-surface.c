@@ -1217,7 +1217,12 @@ _recategorize_composite_operation (cairo_xlib_surface_t	      *dst,
 {
     cairo_bool_t is_integer_translation =
 	_cairo_matrix_is_integer_translation (&src_attr->matrix, NULL, NULL);
-    cairo_bool_t needs_alpha_composite =
+    cairo_bool_t needs_alpha_composite;
+
+    if (!_cairo_surface_is_xlib (&src->base))
+	return DO_UNSUPPORTED;
+
+    needs_alpha_composite =
 	_operator_needs_alpha_composite (op, _surface_has_alpha (src));
 
     if (!have_mask &&
