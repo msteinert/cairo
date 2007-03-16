@@ -54,6 +54,7 @@ leaky-dash			\
 leaky-polygon			\
 line-width			\
 line-width-scale		\
+line-width-zero			\
 linear-gradient			\
 linear-gradient-reflect		\
 long-lines			\
