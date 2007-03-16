@@ -51,7 +51,7 @@ typedef int (*cairo_xlib_error_func_t) (Display     *display,
 
 typedef struct _cairo_xlib_surface cairo_xlib_surface_t;
 
-static void
+static cairo_status_t
 _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface);
 
 static void
@@ -587,22 +587,27 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	 * retry, but to keep things simple, we just create a
 	 * temporary pixmap
 	 */
-	Pixmap pixmap = XCreatePixmap (surface->dpy,
+	Pixmap pixmap;
+	cairo_status_t status = _cairo_xlib_surface_ensure_gc (surface);
+	if (status)
+	    return status;
+
+	pixmap = XCreatePixmap (surface->dpy,
 				       surface->drawable,
 				       x2 - x1, y2 - y1,
 				       surface->depth);
-	_cairo_xlib_surface_ensure_gc (surface);
+	if (pixmap) {
+	    XCopyArea (surface->dpy, surface->drawable, pixmap, surface->gc,
+		       x1, y1, x2 - x1, y2 - y1, 0, 0);
 
-	XCopyArea (surface->dpy, surface->drawable, pixmap, surface->gc,
-		   x1, y1, x2 - x1, y2 - y1, 0, 0);
+	    ximage = XGetImage (surface->dpy,
+				pixmap,
+				0, 0,
+				x2 - x1, y2 - y1,
+				AllPlanes, ZPixmap);
 
-	ximage = XGetImage (surface->dpy,
-			    pixmap,
-			    0, 0,
-			    x2 - x1, y2 - y1,
-			    AllPlanes, ZPixmap);
-
-	XFreePixmap (surface->dpy, pixmap);
+	    XFreePixmap (surface->dpy, pixmap);
+	}
     }
     if (!ximage)
 	return CAIRO_STATUS_NO_MEMORY;
@@ -731,18 +736,23 @@ _cairo_xlib_surface_ensure_dst_picture (cairo_xlib_surface_t    *surface)
 
 }
 
-static void
+static cairo_status_t
 _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface)
 {
     XGCValues gcv;
 
     if (surface->gc)
-	return;
+	return CAIRO_STATUS_SUCCESS;
 
     gcv.graphics_exposures = False;
     surface->gc = XCreateGC (surface->dpy, surface->drawable,
 			     GCGraphicsExposures, &gcv);
+    if (!surface->gc)
+	return CAIRO_STATUS_NO_MEMORY;
+
     _cairo_xlib_surface_set_gc_clip_rects (surface);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -758,6 +768,7 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
     XImage ximage;
     unsigned int bpp, alpha, red, green, blue;
     int native_byte_order = _native_byte_order_lsb () ? LSBFirst : MSBFirst;
+    cairo_status_t status;
 
     pixman_format_get_masks (pixman_image_get_format (image->pixman_image),
 			     &bpp, &alpha, &red, &green, &blue);
@@ -780,7 +791,9 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 
     XInitImage (&ximage);
 
-    _cairo_xlib_surface_ensure_gc (surface);
+    status = _cairo_xlib_surface_ensure_gc (surface);
+    if (status)
+	return status;
     XPutImage(surface->dpy, surface->drawable, surface->gc,
 	      &ximage, src_x, src_y, dst_x, dst_y,
 	      width, height);
@@ -1364,7 +1377,9 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 	break;
 
     case DO_XCOPYAREA:
-	_cairo_xlib_surface_ensure_gc (dst);
+	status = _cairo_xlib_surface_ensure_gc (dst);
+	if (status)
+	    goto BAIL;
 	XCopyArea (dst->dpy,
 		   src->drawable,
 		   dst->drawable,
@@ -1384,7 +1399,9 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 	 * _recategorize_composite_operation.
 	 */
 
-	_cairo_xlib_surface_ensure_gc (dst);
+	status = _cairo_xlib_surface_ensure_gc (dst);
+	if (status)
+	    goto BAIL;
 	_cairo_matrix_is_integer_translation (&src_attr.matrix, &itx, &ity);
 
 	XSetTSOrigin (dst->dpy, dst->gc,
