@@ -577,6 +577,17 @@ dnl Checks for precise integer types
 AC_CHECK_HEADERS([stdint.h signal.h inttypes.h sys/int_types.h])
 AC_CHECK_TYPES([uint64_t, uint128_t])
 
+dnl ===========================================================================
+dnl check for CPU affinity support
+AC_CHECK_HEADERS([sched.h], [
+  AC_CHECK_FUNCS([sched_getaffinity], [
+    AC_DEFINE([HAVE_SCHED_GETAFFINITY], [1],
+	      [Define to 1 if you have Linux compatible sched_getaffinity])
+  ])
+])
+
+dnl ===========================================================================
+dnl check compiler flags
 AC_DEFUN([CAIRO_CC_TRY_FLAG], [
   AC_MSG_CHECKING([whether $CC supports $1])
 
