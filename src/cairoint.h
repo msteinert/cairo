@@ -73,7 +73,7 @@
 
 CAIRO_BEGIN_DECLS
 
-#if __GNUC__ >= 3 && defined(__ELF__)
+#if __GNUC__ >= 3 && defined(__ELF__) && !defined(__sun)
 # define slim_hidden_proto(name)	slim_hidden_proto1(name, slim_hidden_int_name(name))
 # define slim_hidden_def(name)		slim_hidden_def1(name, slim_hidden_int_name(name))
 # define slim_hidden_int_name(name) INT_##name
@@ -102,7 +102,7 @@ CAIRO_BEGIN_DECLS
 #endif
 
 /* slim_internal.h */
-#if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__)
+#if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__) && !defined(__sun)
 #define cairo_private		__attribute__((__visibility__("hidden")))
 #elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
 #define cairo_private		__hidden
