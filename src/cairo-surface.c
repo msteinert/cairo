@@ -786,8 +786,10 @@ cairo_surface_get_device_offset (cairo_surface_t *surface,
 				 double          *x_offset,
 				 double          *y_offset)
 {
-    *x_offset = surface->device_transform.x0;
-    *y_offset = surface->device_transform.y0;
+    if (x_offset)
+	*x_offset = surface->device_transform.x0;
+    if (y_offset)
+	*y_offset = surface->device_transform.y0;
 }
 slim_hidden_def (cairo_surface_get_device_offset);
 

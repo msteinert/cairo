@@ -1038,12 +1038,23 @@ _cairo_gstate_traps_extents_to_user_rectangle (cairo_gstate_t	  *gstate,
 
     if (extents.p1.x >= extents.p2.x || extents.p1.y >= extents.p2.y) {
         /* no traps, so we actually won't draw anything */
-        *x1 = *y1 = *x2 = *y2 = 0;
+	if (x1)
+	    *x1 = 0.0;
+	if (y1)
+	    *y1 = 0.0;
+	if (x2)
+	    *x2 = 0.0;
+	if (y2)
+	    *y2 = 0.0;
     } else {
-        *x1 = _cairo_fixed_to_double (extents.p1.x);
-        *y1 = _cairo_fixed_to_double (extents.p1.y);
-        *x2 = _cairo_fixed_to_double (extents.p2.x);
-        *y2 = _cairo_fixed_to_double (extents.p2.y);
+	if (x1)
+	    *x1 = _cairo_fixed_to_double (extents.p1.x);
+	if (y1)
+	    *y1 = _cairo_fixed_to_double (extents.p1.y);
+	if (x2)
+	    *x2 = _cairo_fixed_to_double (extents.p2.x);
+	if (y2)
+	    *y2 = _cairo_fixed_to_double (extents.p2.y);
 
         _cairo_gstate_backend_to_user_rectangle (gstate, x1, y1, x2, y2, NULL);
     }
@@ -1059,7 +1070,14 @@ _cairo_gstate_stroke_extents (cairo_gstate_t	 *gstate,
     cairo_traps_t traps;
 
     if (gstate->stroke_style.line_width <= 0.0) {
-        *x1 = *y1 = *x2 = *y2 = 0.0;
+	if (x1)
+	    *x1 = 0.0;
+	if (y1)
+	    *y1 = 0.0;
+	if (x2)
+	    *x2 = 0.0;
+	if (y2)
+	    *y2 = 0.0;
 	return CAIRO_STATUS_SUCCESS;
     }
 
@@ -1135,11 +1153,15 @@ _cairo_gstate_clip_extents (cairo_gstate_t *gstate,
     status = _cairo_clip_intersect_to_rectangle (&gstate->clip, &extents);
     if (status)
         return status;
-    
-    *x1 = extents.x;
-    *y1 = extents.y;
-    *x2 = extents.x + extents.width;
-    *y2 = extents.y + extents.height;
+
+    if (x1)
+	*x1 = extents.x;
+    if (y1)
+	*y1 = extents.y;
+    if (x2)
+	*x2 = extents.x + extents.width;
+    if (y2)
+	*y2 = extents.y + extents.height;
 
     _cairo_gstate_backend_to_user_rectangle (gstate, x1, y1, x2, y2, NULL);
 
