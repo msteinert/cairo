@@ -693,7 +693,7 @@ _cairo_win32_scaled_font_set_metrics (cairo_win32_scaled_font_t *scaled_font)
     if (!hdc)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    if (scaled_font->preserve_axes) {
+    if (scaled_font->preserve_axes || scaled_font->base.options.hint_metrics == CAIRO_HINT_METRICS_OFF) {
 	/* For 90-degree rotations (including 0), we get the metrics
 	 * from the GDI in logical space, then convert back to font space
 	 */
