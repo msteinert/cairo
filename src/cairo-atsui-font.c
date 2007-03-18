@@ -82,6 +82,9 @@ struct _cairo_atsui_font {
     ATSUStyle style;
     ATSUStyle unscaled_style;
     ATSUFontID fontID;
+
+    Fixed size;
+    CGAffineTransform font_matrix;
 };
 
 struct _cairo_atsui_font_face {
@@ -224,8 +227,6 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
     cairo_status_t status;
     double xscale = 1.0;
     double yscale = 1.0;
-    CGAffineTransform theTransform;
-    Fixed theSize;
 
     font = malloc(sizeof(cairo_atsui_font_t));
     if (font == NULL)
@@ -236,11 +237,12 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
 
     _cairo_matrix_compute_scale_factors (&font->base.scale, 
 					 &xscale, &yscale, 1);
-    theTransform = CGAffineTransformMake (1.0, 0,
-					  0, yscale/xscale,
-					  0, 0);
-    theSize = FloatToFixed (xscale); 
-    font->style = CreateSizedCopyOfStyle (style, &theSize, &theTransform);
+    font->font_matrix = CGAffineTransformMake (1., 0.,
+					       0., yscale/xscale,
+					       0., 0.);
+    font->size = FloatToFixed (xscale);
+
+    font->style = CreateSizedCopyOfStyle (style, &font->size, &font->font_matrix);
 
     {
 	Fixed theSize = FloatToFixed(1.0);
