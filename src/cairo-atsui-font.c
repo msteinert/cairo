@@ -155,24 +155,18 @@ CGAffineTransformMakeWithCairoFontScale(const cairo_matrix_t *scale)
 }
 
 static ATSUStyle
-CreateSizedCopyOfStyle(ATSUStyle inStyle, const cairo_matrix_t *scale)
+CreateSizedCopyOfStyle(ATSUStyle inStyle, 
+		       const Fixed *theSize, 
+		       const CGAffineTransform *theTransform)
 {
     ATSUStyle style;
     OSStatus err;
-    double xscale = 1.0;
-    double yscale = 1.0;
-    CGAffineTransform theTransform;
-    Fixed theSize;
-    const ATSUAttributeTag theFontStyleTags[] = { kATSUSizeTag, kATSUFontMatrixTag };
-    const ByteCount theFontStyleSizes[] = { sizeof(Fixed), sizeof(CGAffineTransform) };
-    ATSUAttributeValuePtr theFontStyleValues[] = { &theSize, &theTransform };
-
-    /* Set the style's size */
-    _cairo_matrix_compute_scale_factors(scale, &xscale, &yscale, 1);
-    theTransform = CGAffineTransformMake(1.0, 0,
-					 0, yscale/xscale,
-					 0, 0);
-    theSize = FloatToFixed(xscale);    
+    const ATSUAttributeTag theFontStyleTags[] = { kATSUSizeTag, 
+						  kATSUFontMatrixTag };
+    const ByteCount theFontStyleSizes[] = { sizeof(Fixed), 
+					    sizeof(CGAffineTransform) };
+    ATSUAttributeValuePtr theFontStyleValues[] = { (Fixed *)theSize, 
+						   (CGAffineTransform *)theTransform };
 
     err = ATSUCreateAndCopyStyle(inStyle, &style);
 
@@ -228,6 +222,10 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
     cairo_atsui_font_t *font = NULL;
     OSStatus err;
     cairo_status_t status;
+    double xscale = 1.0;
+    double yscale = 1.0;
+    CGAffineTransform theTransform;
+    Fixed theSize;
 
     font = malloc(sizeof(cairo_atsui_font_t));
     if (font == NULL)
@@ -236,7 +234,13 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
     _cairo_scaled_font_init(&font->base, font_face, font_matrix, ctm, options,
 			    &cairo_atsui_scaled_font_backend);
 
-    font->style = CreateSizedCopyOfStyle(style, &font->base.scale);
+    _cairo_matrix_compute_scale_factors (&font->base.scale, 
+					 &xscale, &yscale, 1);
+    theTransform = CGAffineTransformMake (1.0, 0,
+					  0, yscale/xscale,
+					  0, 0);
+    theSize = FloatToFixed (xscale); 
+    font->style = CreateSizedCopyOfStyle (style, &theSize, &theTransform);
 
     {
 	Fixed theSize = FloatToFixed(1.0);
