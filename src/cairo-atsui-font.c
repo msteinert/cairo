@@ -146,47 +146,6 @@ cairo_atsui_font_face_create_for_atsu_font_id (ATSUFontID font_id)
     return &font_face->base;
 }
 
-static CGContextRef
-CGBitmapContextCreateWithCairoImageSurface (const cairo_image_surface_t * surface)
-{
-    CGContextRef contextRef;
-    CGColorSpaceRef colorSpace;
-    int bits_per_comp, alpha;
-
-    /* Create a CGBitmapContext for the dest surface for drawing into */
-    if (surface->depth == 1) {
-	colorSpace = CGColorSpaceCreateDeviceGray ();
-	bits_per_comp = 1;
-	alpha = kCGImageAlphaNone;
-    } else if (surface->depth == 8) {
-	colorSpace = CGColorSpaceCreateDeviceGray ();
-	bits_per_comp = 8;
-	alpha = kCGImageAlphaNone;
-    } else if (surface->depth == 24) {
-	colorSpace = CGColorSpaceCreateDeviceRGB ();
-	bits_per_comp = 8;
-	alpha = kCGImageAlphaNoneSkipFirst | CG_BITMAP_BYTE_ORDER_FLAG;
-    } else if (surface->depth == 32) {
-	colorSpace = CGColorSpaceCreateDeviceRGB ();
-	bits_per_comp = 8;
-	alpha = kCGImageAlphaPremultipliedFirst | CG_BITMAP_BYTE_ORDER_FLAG;
-    } else {
-	/* not reached */
-	return NULL;
-    }
-    
-    contextRef = CGBitmapContextCreate (surface->data,
-					surface->width,
-					surface->height,
-					bits_per_comp,
-					surface->stride,
-					colorSpace,
-					alpha);
-    CGColorSpaceRelease (colorSpace);
-
-    return contextRef;
-}
-
 static CGAffineTransform
 CGAffineTransformMakeWithCairoFontScale(const cairo_matrix_t *scale)
 {
@@ -781,7 +740,20 @@ _cairo_atsui_scaled_font_init_glyph_surface (cairo_atsui_font_t *scaled_font,
     if (!surface)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    drawingContext = CGBitmapContextCreateWithCairoImageSurface (surface);
+    /* Create a CGBitmapContext for the dest surface for drawing into */
+    {
+	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceGray ();
+    
+	drawingContext = CGBitmapContextCreate (surface->data,
+						surface->width,
+						surface->height,
+						8,
+						surface->stride,
+						colorSpace,
+						kCGImageAlphaNone);
+	CGColorSpaceRelease (colorSpace);
+    }
+
     if (!drawingContext) {
 	cairo_surface_destroy ((cairo_surface_t *)surface);
 	return CAIRO_STATUS_NO_MEMORY;
@@ -908,124 +880,6 @@ _cairo_atsui_font_text_to_glyphs (void		*abstract_font,
     return CAIRO_STATUS_SUCCESS;
 }
 
-#if CAIRO_HAS_QUARTZ_SURFACE
-static cairo_int_status_t
-_cairo_atsui_font_old_show_glyphs (void		       *abstract_font,
-				   cairo_operator_t    	op,
-				   cairo_pattern_t     *pattern,
-				   cairo_surface_t     *generic_surface,
-				   int                 	source_x,
-				   int                 	source_y,
-				   int			dest_x,
-				   int			dest_y,
-				   unsigned int		width,
-				   unsigned int		height,
-				   cairo_glyph_t       *glyphs,
-				   int                 	num_glyphs)
-{
-    cairo_atsui_font_t *font = abstract_font;
-    CGContextRef drawingContext;
-    cairo_image_surface_t *destImageSurface;
-    int i;
-    void *extra = NULL;
-    cairo_bool_t can_draw_directly;
-    cairo_rectangle_int16_t rect;
-
-    ATSFontRef atsFont;
-    CGFontRef cgFont;
-    CGAffineTransform textTransform;
-
-    if (cairo_surface_get_type (generic_surface) != CAIRO_SURFACE_TYPE_QUARTZ)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    /* Check if we can draw directly to the destination surface */
-    can_draw_directly = _cairo_pattern_is_opaque_solid (pattern) &&
-	op == CAIRO_OPERATOR_OVER;
-
-    if (!can_draw_directly) {
-	rect.x = dest_x;
-	rect.y = dest_y;
-	rect.width = width;
-	rect.height = height;
-
-	_cairo_surface_acquire_dest_image(generic_surface,
-					  &rect,
-					  &destImageSurface,
-					  &rect,
-					  &extra);
-
-	drawingContext = CGBitmapContextCreateWithCairoImageSurface (destImageSurface);
-	if (!drawingContext) 
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-
-	CGContextTranslateCTM(drawingContext, 0, destImageSurface->height);
-	CGContextScaleCTM(drawingContext, 1.0f, -1.0f);
-    } else {
-	drawingContext = ((cairo_quartz_surface_t *)generic_surface)->cgContext;
-	CGContextSaveGState (drawingContext);
-    }
-
-    atsFont = FMGetATSFontRefFromFont(font->fontID);
-    cgFont = CGFontCreateWithPlatformFont(&atsFont);
-
-    CGContextSetFont(drawingContext, cgFont);
-
-    if (font->base.options.antialias ==  CAIRO_ANTIALIAS_NONE) {
-	CGContextSetShouldAntialias (drawingContext, false);
-    }
-
-    textTransform = CGAffineTransformMakeWithCairoFontScale(&font->base.scale);
-    textTransform = CGAffineTransformScale(textTransform, 1.0f, -1.0f);
-
-    CGContextSetFontSize(drawingContext, 1.0);
-    CGContextSetTextMatrix(drawingContext, textTransform);
-
-    if (pattern->type == CAIRO_PATTERN_TYPE_SOLID &&
-	_cairo_pattern_is_opaque_solid(pattern))
-    {
-	cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *)pattern;
-	CGContextSetRGBFillColor(drawingContext,
-				 solid->color.red,
-				 solid->color.green,
-				 solid->color.blue, 1.0f);
-    } else {
-	CGContextSetRGBFillColor(drawingContext, 0.0f, 0.0f, 0.0f, 0.0f);
-    }
-
-    /* TODO - bold and italic text
-     *
-     * We could draw the text using ATSUI and get bold, italics
-     * etc. for free, but ATSUI does a lot of text layout work
-     * that we don't really need...
-     */
-
-    for (i = 0; i < num_glyphs; i++) {
-        CGGlyph theGlyph = glyphs[i].index;
-
-	/* round glyph locations to the nearest pixel */
-	/* XXX: FRAGILE: We're ignoring device_transform scaling here. A bug? */
-        CGContextShowGlyphsAtPoint(drawingContext,
-				   _cairo_lround (glyphs[i].x),
-				   _cairo_lround (glyphs[i].y),
-                                   &theGlyph, 1);
-    }
-
-    if (!can_draw_directly) {
-	CGContextRelease(drawingContext);
-
-	_cairo_surface_release_dest_image(generic_surface,
-					  &rect,
-					  destImageSurface,
-					  &rect,
-					  extra);
-    } else {
-      CGContextRestoreGState (drawingContext);
-    }
-
-    return CAIRO_STATUS_SUCCESS;
-}
-#endif /* CAIRO_HAS_QUARTZ_SURFACE */
-
 ATSUStyle
 _cairo_atsui_scaled_font_get_atsu_style (cairo_scaled_font_t *sfont)
 {
@@ -1073,11 +927,7 @@ const cairo_scaled_font_backend_t cairo_atsui_scaled_font_backend = {
     _cairo_atsui_font_scaled_glyph_init,
     _cairo_atsui_font_text_to_glyphs,
     NULL, /* ucs4_to_index */
-#if CAIRO_HAS_QUARTZ_SURFACE
-    _cairo_atsui_font_old_show_glyphs,
-#else
-    NULL,
-#endif /* CAIRO_HAS_QUARTZ_SURFACE */
+    NULL, /* show_glyphs */
     _cairo_atsui_load_truetype_table,
     NULL, /* map_glyphs_to_unicode */
 };
