@@ -610,24 +610,27 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
     _swap_ximage_to_native (ximage);
 
     /*
-     * Compute the pixel format masks from either a visual or a
-     * XRenderFormat, failing we assume the drawable is an
-     * alpha-only pixmap as it could only have been created
-     * that way through the cairo_xlib_surface_create_for_bitmap
-     * function.
+     * Compute the pixel format masks from either a XrenderFormat or
+     * else from a visual; failing that we assume the drawable is an
+     * alpha-only pixmap as it could only have been created that way
+     * through the cairo_xlib_surface_create_for_bitmap function.
      */
-    if (surface->visual) {
+    if (surface->xrender_format) {
+	masks.bpp = ximage->bits_per_pixel;
+	masks.red_mask =   (unsigned long) surface->xrender_format->direct.redMask
+	    << surface->xrender_format->direct.red;
+	masks.green_mask = (unsigned long) surface->xrender_format->direct.greenMask
+	    << surface->xrender_format->direct.green;
+	masks.blue_mask =  (unsigned long) surface->xrender_format->direct.blueMask
+	    << surface->xrender_format->direct.blue;
+	masks.alpha_mask = (unsigned long) surface->xrender_format->direct.alphaMask
+	    << surface->xrender_format->direct.alpha;
+    } else if (surface->visual) {
 	masks.bpp = ximage->bits_per_pixel;
 	masks.alpha_mask = 0;
 	masks.red_mask = surface->visual->red_mask;
 	masks.green_mask = surface->visual->green_mask;
 	masks.blue_mask = surface->visual->blue_mask;
-    } else if (surface->xrender_format) {
-	masks.bpp = ximage->bits_per_pixel;
-	masks.red_mask = (unsigned long)surface->xrender_format->direct.redMask << surface->xrender_format->direct.red;
-	masks.green_mask = (unsigned long)surface->xrender_format->direct.greenMask << surface->xrender_format->direct.green;
-	masks.blue_mask = (unsigned long)surface->xrender_format->direct.blueMask << surface->xrender_format->direct.blue;
-	masks.alpha_mask = (unsigned long)surface->xrender_format->direct.alphaMask << surface->xrender_format->direct.alpha;
     } else {
 	masks.bpp = ximage->bits_per_pixel;
 	masks.red_mask = 0;
