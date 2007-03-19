@@ -844,6 +844,9 @@ _cairo_atsui_font_text_to_glyphs (void		*abstract_font,
     cairo_atsui_font_t *font = abstract_font;
     ItemCount glyphCount;
     int i;
+    CGPoint point;
+    double xscale, yscale;
+    CGAffineTransform device_to_user_scale;
 
     status = _cairo_utf8_to_utf16 ((unsigned char *)utf8, -1, &utf16, &n16);
     if (status)
@@ -870,9 +873,18 @@ _cairo_atsui_font_text_to_glyphs (void		*abstract_font,
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
+    _cairo_matrix_compute_scale_factors (&font->base.ctm, &xscale, &yscale, 1);
+    device_to_user_scale = 
+	CGAffineTransformInvert (CGAffineTransformMake (xscale, 0,
+							0, yscale,
+							0, 0));
     for (i = 0; i < *num_glyphs; i++) {
 	(*glyphs)[i].index = layoutRecords[i].glyphID;
-	(*glyphs)[i].x = x + FixedToFloat(layoutRecords[i].realPos);
+	/* ATSLayoutRecord.realPos is in device units, convert to user units */
+	point = CGPointMake (FixedToFloat (layoutRecords[i].realPos), 0);
+	point = CGPointApplyAffineTransform (point, device_to_user_scale);
+
+	(*glyphs)[i].x = x + point.x;
 	(*glyphs)[i].y = y;
     }
 
