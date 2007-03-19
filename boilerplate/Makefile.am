@@ -1,4 +1,4 @@
-noinst_LTLIBRARIES = libcairoboilerplate.la
+EXTRA_LTLIBRARIES = libcairoboilerplate.la
 
 
 libcairoboilerplate_la_SOURCES =\
