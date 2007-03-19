@@ -234,6 +234,10 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
     if (surface == NULL)
 	surface = cairo_image_surface_create (format, width, height);
 
+    /* If any error occurred, then return the nil surface we received. */
+    if (surface->status)
+	return surface;
+
     cairo_surface_get_font_options (other, &options);
     _cairo_surface_set_font_options (surface, &options);
 
