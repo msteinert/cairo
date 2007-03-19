@@ -1285,12 +1285,19 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
      * text matrix?
      */
     //ND((stderr, "show_glyphs: glyph 0 at: %f, %f\n", glyphs[0].x, glyphs[0].y));
-    CGAffineTransform cairoTextTransform, textTransform;
+    CGAffineTransform cairoTextTransform, textTransform, ctm;
     _cairo_quartz_cairo_matrix_to_quartz (&scaled_font->font_matrix, &cairoTextTransform);
 
     textTransform = CGAffineTransformMakeTranslation (glyphs[0].x, glyphs[0].y);
     textTransform = CGAffineTransformScale (textTransform, 1.0, -1.0);
     textTransform = CGAffineTransformConcat (cairoTextTransform, textTransform);
+
+    ctm = CGAffineTransformMake (scaled_font->ctm.xx,
+				 -scaled_font->ctm.yx,
+				 -scaled_font->ctm.xy,
+				 scaled_font->ctm.yy,
+				 0., 0.);
+    textTransform = CGAffineTransformConcat (ctm, textTransform);
 
     CGContextSetTextMatrix (surface->cgContext, textTransform);
     CGContextSetFontSize (surface->cgContext, 1.0);
