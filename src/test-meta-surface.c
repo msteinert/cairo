@@ -48,7 +48,6 @@
 #include "test-meta-surface.h"
 
 #include "cairoint.h"
-#include "cairo-mutex-private.h"
 
 #include "cairo-meta-surface-private.h"
 
