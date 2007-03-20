@@ -45,8 +45,4 @@ CAIRO_MUTEX_DECLARE (_cairo_ft_unscaled_font_map_mutex);
 CAIRO_MUTEX_DECLARE (_xlib_screen_mutex);
 #endif
 
-#if CAIRO_HAS_OS2_SURFACE
-CAIRO_MUTEX_DECLARE (_global_image_glyph_cache_mutex);
-#endif
-
 #endif
