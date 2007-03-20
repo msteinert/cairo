@@ -187,6 +187,7 @@ libcairo_la_SOURCES =				\
 	cairo-image-surface.c			\
 	cairo-lzw.c				\
 	cairo-matrix.c				\
+	cairo-mutex.c				\
 	cairo-operator.c			\
 	cairo-path.c				\
 	cairo-path-private.h			\

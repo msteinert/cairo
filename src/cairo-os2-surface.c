@@ -68,14 +68,6 @@
 /* Initialization counter: */
 static int cairo_os2_initialization_count = 0;
 
-/* The mutex semaphores Cairo uses all around: */
-HMTX _cairo_scaled_font_map_mutex = 0;
-HMTX _global_image_glyph_cache_mutex = 0;
-HMTX _cairo_font_face_mutex = 0;
-#ifdef CAIRO_HAS_FT_FONT
-HMTX _cairo_ft_unscaled_font_map_mutex = 0;
-#endif
-
 static void inline
 DisableFPUException (void)
 {
@@ -103,18 +95,6 @@ cairo_os2_init (void)
 
     DisableFPUException ();
 
-    /* Create the mutex semaphores we'll use! */
-
-    /* cairo-font.c: */
-    DosCreateMutexSem (NULL, &_cairo_scaled_font_map_mutex, 0, FALSE);
-    DosCreateMutexSem (NULL, &_global_image_glyph_cache_mutex, 0, FALSE);
-    DosCreateMutexSem (NULL, &_cairo_font_face_mutex, 0, FALSE);
-
-#ifdef CAIRO_HAS_FT_FONT
-    /* cairo-ft-font.c: */
-    DosCreateMutexSem (NULL, &_cairo_ft_unscaled_font_map_mutex, 0, FALSE);
-#endif
-
     /* Initialize FontConfig */
     FcInit ();
 }
@@ -137,28 +117,9 @@ cairo_os2_fini (void)
     _cairo_ft_font_reset_static_data ();
 #endif
 
-    /* Destroy the mutex semaphores we've created! */
-    /* cairo-font.c: */
-    if (_cairo_scaled_font_map_mutex) {
-        DosCloseMutexSem (_cairo_scaled_font_map_mutex);
-        _cairo_scaled_font_map_mutex = 0;
-    }
-    if (_global_image_glyph_cache_mutex) {
-        DosCloseMutexSem (_global_image_glyph_cache_mutex);
-        _global_image_glyph_cache_mutex = 0;
-    }
-    if (_cairo_font_face_mutex) {
-        DosCloseMutexSem (_cairo_font_face_mutex);
-        _cairo_font_face_mutex = 0;
-    }
-
-#ifdef CAIRO_HAS_FT_FONT
-    /* cairo-ft-font.c: */
-    if (_cairo_ft_unscaled_font_map_mutex) {
-        DosCloseMutexSem (_cairo_ft_unscaled_font_map_mutex);
-        _cairo_ft_unscaled_font_map_mutex = 0;
-    }
-#endif
+#define CAIRO_MUTEX_DECLARE(name) CAIRO_MUTEX_FINI(name)
+#include "cairo-mutext-list.h"
+#undef CAIRO_MUTEX_DECLARE
 
     /* Uninitialize FontConfig */
     FcFini ();

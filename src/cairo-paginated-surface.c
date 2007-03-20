@@ -45,6 +45,7 @@
 #include "cairo-paginated-surface-private.h"
 #include "cairo-meta-surface-private.h"
 #include "cairo-analysis-surface-private.h"
+#include "cairo-mutex-private.h"
 
 typedef struct _cairo_paginated_surface {
     cairo_surface_t base;

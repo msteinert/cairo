@@ -239,8 +239,6 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
     cairo_matrix_t scale;
     cairo_status_t status;
 
-    _cairo_win32_initialize ();
-
     f = malloc (sizeof(cairo_win32_scaled_font_t));
     if (f == NULL)
 	return NULL;
@@ -471,8 +469,6 @@ _cairo_win32_scaled_font_create_toy (cairo_toy_font_face_t *toy_face,
     uint16_t *face_name;
     int face_name_len;
     cairo_status_t status;
-
-    _cairo_win32_initialize ();
 
     status = _cairo_utf8_to_utf16 (toy_face->family, -1,
 				   &face_name, &face_name_len);
@@ -1510,8 +1506,6 @@ _cairo_win32_font_face_scaled_font_create (void			*abstract_face,
 {
     cairo_win32_font_face_t *font_face = abstract_face;
 
-    _cairo_win32_initialize ();
-
     *font = _win32_scaled_font_create (&font_face->logfont,
 				       font_face->hfont,
 				       &font_face->base,
@@ -1549,8 +1543,6 @@ cairo_win32_font_face_create_for_logfontw (LOGFONTW *logfont)
 {
     cairo_win32_font_face_t *font_face;
 
-    _cairo_win32_initialize ();
-
     font_face = malloc (sizeof (cairo_win32_font_face_t));
     if (!font_face) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -1583,8 +1575,6 @@ cairo_font_face_t *
 cairo_win32_font_face_create_for_hfont (HFONT font)
 {
     cairo_win32_font_face_t *font_face;
-
-    _cairo_win32_initialize ();
 
     font_face = malloc (sizeof (cairo_win32_font_face_t));
     if (!font_face) {

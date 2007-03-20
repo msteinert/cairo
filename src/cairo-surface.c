@@ -39,6 +39,7 @@
 
 #include "cairoint.h"
 #include "cairo-surface-fallback-private.h"
+#include "cairo-mutex-private.h"
 #include "cairo-clip-private.h"
 
 #define DEFINE_NIL_SURFACE(status, name)			\
@@ -180,10 +181,10 @@ _cairo_surface_init (cairo_surface_t			*surface,
 		     const cairo_surface_backend_t	*backend,
 		     cairo_content_t			 content)
 {
+    CAIRO_MUTEX_INITIALIZE ();
+
     surface->backend = backend;
-
     surface->content = content;
-
     surface->type = backend->type;
 
     surface->ref_count = 1;

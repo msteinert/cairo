@@ -29,6 +29,7 @@
  */
 
 #include "cairoint.h"
+#include "cairo-mutex-private.h"
 
 const cairo_solid_pattern_t cairo_pattern_nil = {
     { CAIRO_PATTERN_TYPE_SOLID, 	/* type */
@@ -82,6 +83,8 @@ _cairo_pattern_set_error (cairo_pattern_t *pattern,
 static void
 _cairo_pattern_init (cairo_pattern_t *pattern, cairo_pattern_type_t type)
 {
+    CAIRO_MUTEX_INITIALIZE ();
+
     pattern->type      = type;
     pattern->ref_count = 1;
     pattern->status    = CAIRO_STATUS_SUCCESS;

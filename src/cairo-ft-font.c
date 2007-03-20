@@ -40,6 +40,7 @@
 #include <float.h>
 
 #include "cairo-ft-private.h"
+#include "cairo-mutex-private.h"
 
 #include <fontconfig/fontconfig.h>
 #include <fontconfig/fcfreetype.h>
@@ -149,8 +150,6 @@ typedef struct _cairo_ft_unscaled_font_map {
 } cairo_ft_unscaled_font_map_t;
 
 static cairo_ft_unscaled_font_map_t *cairo_ft_unscaled_font_map = NULL;
-
-CAIRO_MUTEX_DECLARE(_cairo_ft_unscaled_font_map_mutex);
 
 static void
 _font_map_release_face_lock_held (cairo_ft_unscaled_font_map_t *font_map,

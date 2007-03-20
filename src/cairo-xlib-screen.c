@@ -55,6 +55,7 @@
 #include <string.h>
 
 #include "cairo-xlib-private.h"
+#include "cairo-mutex-private.h"
 
 #include <fontconfig/fontconfig.h>
 
@@ -242,8 +243,6 @@ _cairo_xlib_init_screen_font_options (cairo_xlib_screen_info_t *info)
     cairo_font_options_set_antialias (&info->font_options, antialias);
     cairo_font_options_set_subpixel_order (&info->font_options, subpixel_order);
 }
-
-CAIRO_MUTEX_DECLARE(_xlib_screen_mutex);
 
 static cairo_xlib_screen_info_t *_cairo_xlib_screen_list = NULL;
 

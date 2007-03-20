@@ -136,81 +136,38 @@ CAIRO_BEGIN_DECLS
 
 #if HAVE_PTHREAD_H
 # include <pthread.h>
-# define CAIRO_MUTEX_DECLARE(name) static pthread_mutex_t name = PTHREAD_MUTEX_INITIALIZER
-# define CAIRO_MUTEX_DECLARE_GLOBAL(name) pthread_mutex_t name = PTHREAD_MUTEX_INITIALIZER
-# define CAIRO_MUTEX_LOCK(name) pthread_mutex_lock (&name)
-# define CAIRO_MUTEX_UNLOCK(name) pthread_mutex_unlock (&name)
-typedef pthread_mutex_t cairo_mutex_t;
-#define CAIRO_MUTEX_INIT(mutex) do {				\
-    pthread_mutex_t tmp_mutex = PTHREAD_MUTEX_INITIALIZER;      \
-    memcpy (mutex, &tmp_mutex, sizeof (tmp_mutex));             \
-} while (0)
-# define CAIRO_MUTEX_FINI(mutex) pthread_mutex_destroy (mutex)
-# define CAIRO_MUTEX_NIL_INITIALIZER PTHREAD_MUTEX_INITIALIZER
-#endif
 
-#if !defined(CAIRO_MUTEX_DECLARE) && defined CAIRO_HAS_WIN32_SURFACE
-# define WIN32_LEAN_AND_MEAN
+  typedef pthread_mutex_t cairo_mutex_t;
+
+#elif defined CAIRO_HAS_WIN32_SURFACE
+
 /* We require Windows 2000 features. Although we don't use them here, things
  * should still work if this header file ends up being the one to include
  * windows.h into a source file, so: */
 # if !defined(WINVER) || (WINVER < 0x0500)
 #  define WINVER 0x0500
 # endif
+
 # if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
 #  define _WIN32_WINNT 0x0500
 # endif
-# include <windows.h>
-  /* the real initialization must take place in DllMain */
-# define CAIRO_MUTEX_DECLARE(name) extern CRITICAL_SECTION name;
-# define CAIRO_MUTEX_DECLARE_GLOBAL(name) extern LPCRITICAL_SECTION name;
-# define CAIRO_MUTEX_LOCK(name) EnterCriticalSection (&name)
-# define CAIRO_MUTEX_UNLOCK(name) LeaveCriticalSection (&name)
-typedef CRITICAL_SECTION cairo_mutex_t;
-# define CAIRO_MUTEX_INIT(mutex) InitializeCriticalSection (mutex)
-# define CAIRO_MUTEX_FINI(mutex) DeleteCriticalSection (mutex)
-# define CAIRO_MUTEX_NIL_INITIALIZER { 0 }
-#endif
 
-#if defined(__OS2__) && !defined(CAIRO_MUTEX_DECLARE)
+# define WIN32_LEAN_AND_MEAN
+# include <windows.h>
+
+  typedef CRITICAL_SECTION cairo_mutex_t;
+
+#elif defined CAIRO_HAS_OS2_SURFACE
 # define INCL_BASE
 # define INCL_PM
 # include <os2.h>
 
-# define CAIRO_MUTEX_DECLARE(name) extern HMTX name
-# define CAIRO_MUTEX_DECLARE_GLOBAL(name) extern HMTX name
-# define CAIRO_MUTEX_LOCK(name) DosRequestMutexSem(name, SEM_INDEFINITE_WAIT)
-# define CAIRO_MUTEX_UNLOCK(name) DosReleaseMutexSem(name)
-typedef HMTX cairo_mutex_t;
-# define CAIRO_MUTEX_INIT(mutex) DosCreateMutexSem (NULL, mutex, 0L, FALSE)
-# define CAIRO_MUTEX_FINI(mutex) DosCloseMutexSem (*(mutex))
-# define CAIRO_MUTEX_NIL_INITIALIZER 0
-#endif
+  typedef HMTX cairo_mutex_t;
 
-#if !defined(CAIRO_MUTEX_DECLARE) && defined CAIRO_HAS_BEOS_SURFACE
-cairo_private void _cairo_beos_lock(void*);
-cairo_private void _cairo_beos_unlock(void*);
-  /* the real initialization takes place in a global constructor */
-# define CAIRO_MUTEX_DECLARE(name) extern void* name;
-# define CAIRO_MUTEX_DECLARE_GLOBAL(name) extern void* name;
-# define CAIRO_MUTEX_LOCK(name) _cairo_beos_lock (&name)
-# define CAIRO_MUTEX_UNLOCK(name) _cairo_beos_unlock (&name)
-# error "XXX: Someone who understands BeOS needs to add definitions for" \
-        "     cairo_mutex_t, CAIRO_MUTEX_INIT, and CAIRO_MUTEX_FINI," \
-        "     to cairoint.h"
-typedef ??? cairo_mutex_t;
-# define CAIRO_MUTEX_INIT(mutex) ???
-# define CAIRO_MUTEX_FINI(mutex) ???
-# define CAIRO_MUTEX_NIL_INITIALIZER {}
-#endif
+#elif defined CAIRO_HAS_BEOS_SURFACE
 
-#ifndef CAIRO_MUTEX_DECLARE
-# error "No mutex declarations. Cairo will not work with multiple threads." \
-	"(Remove this #error directive to acknowledge & accept this limitation)."
-# define CAIRO_MUTEX_DECLARE(name)
-# define CAIRO_MUTEX_DECLARE_GLOBAL(name)
-# define CAIRO_MUTEX_LOCK(name)
-# define CAIRO_MUTEX_UNLOCK(name)
+  typedef void* cairo_mutex_t;
+
 #endif
 
 #undef MIN

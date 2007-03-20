@@ -37,6 +37,7 @@
  */
 
 #include "cairoint.h"
+#include "cairo-mutex-private.h"
 #include "cairo-scaled-font-test.h"
 
 static cairo_bool_t
@@ -184,8 +185,6 @@ typedef struct _cairo_scaled_font_map {
 } cairo_scaled_font_map_t;
 
 static cairo_scaled_font_map_t *cairo_scaled_font_map = NULL;
-
-CAIRO_MUTEX_DECLARE (_cairo_scaled_font_map_mutex);
 
 static int
 _cairo_scaled_font_keys_equal (const void *abstract_key_a, const void *abstract_key_b);
