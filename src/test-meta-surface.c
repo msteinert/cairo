@@ -48,6 +48,8 @@
 #include "test-meta-surface.h"
 
 #include "cairoint.h"
+#include "cairo-mutex-private.h"
+
 #include "cairo-meta-surface-private.h"
 
 typedef struct _test_meta_surface {

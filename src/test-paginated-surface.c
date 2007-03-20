@@ -48,6 +48,7 @@
 #include "test-paginated-surface.h"
 
 #include "cairoint.h"
+#include "cairo-mutex-private.h"
 
 #include "cairo-paginated-surface-private.h"
 
