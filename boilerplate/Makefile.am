@@ -1,6 +1,5 @@
 EXTRA_LTLIBRARIES = libcairoboilerplate.la
 
-
 libcairoboilerplate_la_SOURCES =\
 cairo-boilerplate.c	\
 cairo-boilerplate.h	\
@@ -42,3 +41,6 @@ INCLUDES =					\
 	-I$(top_builddir)/src			\
 	-I$(top_srcdir)/src			\
 	$(CAIRO_CFLAGS)
+
+CLEANFILES =					\
+	$(EXTRA_LTLIBRARIES)
