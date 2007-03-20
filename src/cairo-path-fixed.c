@@ -356,8 +356,8 @@ _cairo_path_fixed_add (cairo_path_fixed_t *path,
 		       cairo_point_t	  *points,
 		       int		   num_points)
 {
-    if (path->buf_tail->num_ops + 1 > CAIRO_PATH_BUF_SIZE ||
-	path->buf_tail->num_points + num_points > CAIRO_PATH_BUF_SIZE)
+    if ((unsigned int) path->buf_tail->num_ops + 1 > CAIRO_PATH_BUF_SIZE ||
+	(unsigned int) path->buf_tail->num_points + num_points > CAIRO_PATH_BUF_SIZE)
     {
 	cairo_path_buf_t *buf;
 
