@@ -152,6 +152,9 @@ CAIRO_BEGIN_DECLS
 #define M_PI 3.14159265358979323846
 #endif
 
+#undef  ARRAY_LEN
+#define ARRAY_LEN(__array) ((int) (sizeof (__array) / sizeof (__array[0])))
+
 /* Size in bytes of buffer to use off the stack per functions.
  * Mostly used by text functions.  For larger allocations, they'll
  * malloc(). */

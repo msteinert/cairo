@@ -58,8 +58,6 @@
 
 #define NUM_STD_STRINGS 391
 
-#define ARRAY_LENGTH(a) ( (sizeof (a)) / (sizeof ((a)[0])) )
-
 typedef struct _cff_header {
     uint8_t major;
     uint8_t minor;
@@ -897,7 +895,7 @@ cairo_cff_font_read_font (cairo_cff_font_t *font)
     cairo_int_status_t status;
     unsigned int i;
 
-    for (i = 0; i < ARRAY_LENGTH (font_read_funcs); i++) {
+    for (i = 0; i < ARRAY_LEN (font_read_funcs); i++) {
         status = font_read_funcs[i] (font);
         if (status)
             return status;
@@ -957,7 +955,7 @@ cairo_cff_font_subset_dict_strings (cairo_cff_font_t   *font,
     cairo_status_t status;
     unsigned int i;
 
-    for (i = 0; i < ARRAY_LENGTH (dict_strings); i++) {
+    for (i = 0; i < ARRAY_LEN (dict_strings); i++) {
         status = cairo_cff_font_subset_dict_string (font, dict, dict_strings[i]);
         if (status)
             return status;
@@ -1318,7 +1316,7 @@ cairo_cff_font_write_subset (cairo_cff_font_t *font)
     cairo_int_status_t status;
     unsigned int i;
 
-    for (i = 0; i < ARRAY_LENGTH (font_write_funcs); i++) {
+    for (i = 0; i < ARRAY_LEN (font_write_funcs); i++) {
         status = font_write_funcs[i] (font);
         if (status)
             return status;

@@ -187,7 +187,7 @@ _cairo_traps_grow (cairo_traps_t *traps)
 {
     cairo_trapezoid_t *new_traps;
     int old_size = traps->traps_size;
-    int embedded_size = sizeof (traps->traps_embedded) / sizeof (traps->traps_embedded[0]);
+    int embedded_size = ARRAY_LEN (traps->traps_embedded);
     int new_size = 2 * MAX (old_size, 16);
 
     /* we have a local buffer at traps->traps_embedded.  try to fulfill the request

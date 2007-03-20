@@ -104,7 +104,7 @@ _cairo_spline_grow (cairo_spline_t *spline)
 {
     cairo_point_t *new_points;
     int old_size = spline->points_size;
-    int embedded_size = sizeof (spline->points_embedded) / sizeof (spline->points_embedded[0]);
+    int embedded_size = ARRAY_LEN (spline->points_embedded);
     int new_size = 2 * MAX (old_size, 16);
 
     /* we have a local buffer at spline->points_embedded.  try to fulfill the request

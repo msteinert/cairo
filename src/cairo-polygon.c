@@ -72,7 +72,7 @@ _cairo_polygon_grow (cairo_polygon_t *polygon)
 {
     cairo_edge_t *new_edges;
     int old_size = polygon->edges_size;
-    int embedded_size = sizeof (polygon->edges_embedded) / sizeof (polygon->edges_embedded[0]);
+    int embedded_size = ARRAY_LEN (polygon->edges_embedded);
     int new_size = 2 * MAX (old_size, 16);
 
     /* we have a local buffer at polygon->edges_embedded.  try to fulfill the request

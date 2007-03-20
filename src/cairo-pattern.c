@@ -720,7 +720,7 @@ _cairo_pattern_gradient_grow (cairo_gradient_pattern_t *pattern)
 {
     pixman_gradient_stop_t *new_stops;
     int old_size = pattern->stops_size;
-    int embedded_size = sizeof (pattern->stops_embedded) / sizeof (pattern->stops_embedded[0]);
+    int embedded_size = ARRAY_LEN (pattern->stops_embedded);
     int new_size = 2 * MAX (old_size, 4);
 
     /* we have a local buffer at pattern->stops_embedded.  try to fulfill the request

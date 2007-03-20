@@ -75,8 +75,6 @@ typedef struct _cairo_truetype_font {
 static int
 cairo_truetype_font_use_glyph (cairo_truetype_font_t *font, int glyph);
 
-#define ARRAY_LENGTH(a) ( (sizeof (a)) / (sizeof ((a)[0])) )
-
 #define SFNT_VERSION			0x00010000
 #define SFNT_STRING_MAX_LENGTH  65535
 
@@ -705,7 +703,7 @@ cairo_truetype_font_write_offset_table (cairo_truetype_font_t *font)
     unsigned short search_range, entry_selector, range_shift;
     int num_tables;
 
-    num_tables = ARRAY_LENGTH (truetype_tables);
+    num_tables = ARRAY_LEN (truetype_tables);
     search_range = 1;
     entry_selector = 0;
     while (search_range * 2 <= num_tables) {
@@ -724,7 +722,7 @@ cairo_truetype_font_write_offset_table (cairo_truetype_font_t *font)
     /* Allocate space for the table directory. Each directory entry
      * will be filled in by cairo_truetype_font_update_entry() after
      * the table is written. */
-    table_buffer_length = ARRAY_LENGTH (truetype_tables) * 16;
+    table_buffer_length = ARRAY_LEN (truetype_tables) * 16;
     status = cairo_truetype_font_allocate_write_buffer (font, table_buffer_length,
 						      &table_buffer);
     if (status)
@@ -787,7 +785,7 @@ cairo_truetype_font_generate (cairo_truetype_font_t  *font,
     end = start;
 
     end = 0;
-    for (i = 0; i < ARRAY_LENGTH (truetype_tables); i++) {
+    for (i = 0; i < ARRAY_LEN (truetype_tables); i++) {
 	if (truetype_tables[i].write (font, truetype_tables[i].tag))
 	    goto fail;
 

@@ -1771,7 +1771,7 @@ main (void)
     unsigned int i, num_random;
     test_t *test;
 
-    for (i = 0; i < sizeof (tests) / sizeof (tests[0]); i++) {
+    for (i = 0; i < ARRAY_LEN (tests); i++) {
 	test = &tests[i];
 	run_test (test->name, test->edges, test->num_edges);
     }
