@@ -344,6 +344,7 @@ REFERENCE_IMAGES = \
 	set-source-svg-argb32-ref.png	\
 	show-glyphs-many-ref.png	\
 	show-text-current-point-ref.png	\
+	skew-extreme-ref.png \
 	source-clip-ref.png	\
 	source-clip-scale-quartz-ref.png	\
 	source-clip-scale-ref.png	\
