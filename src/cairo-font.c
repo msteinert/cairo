@@ -39,7 +39,6 @@
  */
 
 #include "cairoint.h"
-#include "cairo-mutex-private.h"
 
 /* Forward declare so we can use it as an arbitrary backend for
  * _cairo_font_face_nil.

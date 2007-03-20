@@ -55,7 +55,6 @@
 #include <string.h>
 
 #include "cairo-xlib-private.h"
-#include "cairo-mutex-private.h"
 
 #include <fontconfig/fontconfig.h>
 

@@ -134,42 +134,6 @@ CAIRO_BEGIN_DECLS
 #define __attribute__(x)
 #endif
 
-#if HAVE_PTHREAD_H
-# include <pthread.h>
-
-  typedef pthread_mutex_t cairo_mutex_t;
-
-#elif defined CAIRO_HAS_WIN32_SURFACE
-
-/* We require Windows 2000 features. Although we don't use them here, things
- * should still work if this header file ends up being the one to include
- * windows.h into a source file, so: */
-# if !defined(WINVER) || (WINVER < 0x0500)
-#  define WINVER 0x0500
-# endif
-
-# if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
-#  define _WIN32_WINNT 0x0500
-# endif
-
-# define WIN32_LEAN_AND_MEAN
-# include <windows.h>
-
-  typedef CRITICAL_SECTION cairo_mutex_t;
-
-#elif defined CAIRO_HAS_OS2_SURFACE
-# define INCL_BASE
-# define INCL_PM
-# include <os2.h>
-
-  typedef HMTX cairo_mutex_t;
-
-#elif defined CAIRO_HAS_BEOS_SURFACE
-
-  typedef void* cairo_mutex_t;
-
-#endif
-
 #undef MIN
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
@@ -203,6 +167,7 @@ do {					\
 
 #define CAIRO_REF_COUNT_INVALID ((unsigned int) -1)
 
+#include "cairo-mutex-private.h"
 #include "cairo-wideint-private.h"
 
 typedef int32_t		cairo_fixed_16_16_t;

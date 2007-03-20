@@ -40,7 +40,6 @@
 #include <float.h>
 
 #include "cairo-ft-private.h"
-#include "cairo-mutex-private.h"
 
 #include <fontconfig/fontconfig.h>
 #include <fontconfig/fcfreetype.h>

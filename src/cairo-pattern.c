@@ -29,7 +29,6 @@
  */
 
 #include "cairoint.h"
-#include "cairo-mutex-private.h"
 
 const cairo_solid_pattern_t cairo_pattern_nil = {
     { CAIRO_PATTERN_TYPE_SOLID, 	/* type */

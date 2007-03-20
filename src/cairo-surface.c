@@ -39,7 +39,6 @@
 
 #include "cairoint.h"
 #include "cairo-surface-fallback-private.h"
-#include "cairo-mutex-private.h"
 #include "cairo-clip-private.h"
 
 #define DEFINE_NIL_SURFACE(status, name)			\

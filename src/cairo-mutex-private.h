@@ -40,9 +40,13 @@
 #ifndef CAIRO_MUTEX_PRIVATE_H
 #define CAIRO_MUTEX_PRIVATE_H
 
-#include "cairoint.h"
+CAIRO_BEGIN_DECLS
 
-#if HAVE_PTHREAD_H
+#if HAVE_PTHREAD_H /*********************************************************/
+
+# include <pthread.h>
+
+  typedef pthread_mutex_t cairo_mutex_t;
 
 # define CAIRO_MUTEX_INITIALIZE() /* no-op */
 # define CAIRO_MUTEX_LOCK(name) pthread_mutex_lock (&name)
@@ -54,7 +58,23 @@
 # define CAIRO_MUTEX_FINI(mutex) pthread_mutex_destroy (mutex)
 # define CAIRO_MUTEX_NIL_INITIALIZER PTHREAD_MUTEX_INITIALIZER
 
-#elif defined CAIRO_HAS_WIN32_SURFACE
+#elif defined CAIRO_HAS_WIN32_SURFACE /**************************************/
+
+/* We require Windows 2000 features. Although we don't use them here, things
+ * should still work if this header file ends up being the one to include
+ * windows.h into a source file, so: */
+# if !defined(WINVER) || (WINVER < 0x0500)
+#  define WINVER 0x0500
+# endif
+
+# if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
+#  define _WIN32_WINNT 0x0500
+# endif
+
+# define WIN32_LEAN_AND_MEAN
+# include <windows.h>
+
+  typedef CRITICAL_SECTION cairo_mutex_t;
 
 # define CAIRO_MUTEX_LOCK(name) EnterCriticalSection (&name)
 # define CAIRO_MUTEX_UNLOCK(name) LeaveCriticalSection (&name)
@@ -62,7 +82,13 @@
 # define CAIRO_MUTEX_FINI(mutex) DeleteCriticalSection (mutex)
 # define CAIRO_MUTEX_NIL_INITIALIZER { NULL, 0, 0, NULL, NULL, 0 }
 
-#elif defined __OS2__
+#elif defined __OS2__ /******************************************************/
+
+# define INCL_BASE
+# define INCL_PM
+# include <os2.h>
+
+  typedef HMTX cairo_mutex_t;
 
 # define CAIRO_MUTEX_LOCK(name) DosRequestMutexSem(name, SEM_INDEFINITE_WAIT)
 # define CAIRO_MUTEX_UNLOCK(name) DosReleaseMutexSem(name)
@@ -75,10 +101,12 @@
 } while (0)
 # define CAIRO_MUTEX_NIL_INITIALIZER 0
 
-#elif defined CAIRO_HAS_BEOS_SURFACE
+#elif defined CAIRO_HAS_BEOS_SURFACE /***************************************/
 
-cairo_private void _cairo_beos_lock(cairo_mutex_t*);
-cairo_private void _cairo_beos_unlock(cairo_mutex_t*);
+  typedef void* cairo_mutex_t;
+
+  cairo_private void _cairo_beos_lock(cairo_mutex_t*);
+  cairo_private void _cairo_beos_unlock(cairo_mutex_t*);
 
 /* the real initialization takes place in a global constructor */
 # define CAIRO_MUTEX_LOCK(name) _cairo_beos_lock (&name)
@@ -92,12 +120,12 @@ cairo_private void _cairo_beos_unlock(cairo_mutex_t*);
 # define CAIRO_MUTEX_FINI(mutex) ???
 # define CAIRO_MUTEX_NIL_INITIALIZER {}
 
-#else
+#else /**********************************************************************/
 
 # define CAIRO_MUTEX_LOCK(name)
 # define CAIRO_MUTEX_UNLOCK(name)
 
-#endif
+#endif  /********************************************************************/
 
 #ifndef CAIRO_MUTEX_DECLARE
 #define CAIRO_MUTEX_DECLARE(name) extern cairo_mutex_t name;
@@ -120,4 +148,11 @@ cairo_private void _cairo_mutex_initialize(void);
 
 #endif
 
+CAIRO_END_DECLS
+
 #endif
+
+
+
+
+

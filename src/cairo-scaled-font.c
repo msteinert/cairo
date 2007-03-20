@@ -37,7 +37,6 @@
  */
 
 #include "cairoint.h"
-#include "cairo-mutex-private.h"
 #include "cairo-scaled-font-test.h"
 
 static cairo_bool_t
