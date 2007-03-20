@@ -223,6 +223,7 @@ CAIRO_NONPKGCONFIG_CFLAGS=""
 CAIRO_NONPKGCONFIG_LIBS="$LIBM"
 CAIRO_CFLAGS=$CAIRO_NONPKGCONFIG_CFLAGS
 CAIRO_LIBS=$CAIRO_NONPKGCONFIG_LIBS
+PIXMAN_CFLAGS=""
 
 dnl ===========================================================================
 
@@ -651,16 +652,19 @@ AC_CACHE_CHECK([for supported warning flags], cairo_cv_warn_cflags, [
 
 	AC_MSG_CHECKING([which warning flags were supported])])
 WARN_CFLAGS=$cairo_cv_warn_cflags
-AC_SUBST(WARN_CFLAGS)
 CAIRO_CFLAGS="$CAIRO_CFLAGS $WARN_CFLAGS"
+PIXMAN_CFLAGS="$PIXMAN_CFLAGS $WARN_CFLAGS"
 
-CAIRO_CC_TRY_FLAG([-fno-strict-aliasing], [CAIRO_CFLAGS="$CAIRO_CFLAGS -fno-strict-aliasing"])
+CAIRO_CC_TRY_FLAG([-fno-strict-aliasing],
+		  [CAIRO_CFLAGS="$CAIRO_CFLAGS -fno-strict-aliasing"
+		   PIXMAN_CFLAGS="$PIXMAN_CFLAGS -fno-strict-aliasing"])
 
 AC_SUBST(CAIRO_REQUIRES)
 AC_SUBST(CAIRO_NONPKGCONFIG_CFLAGS)
 AC_SUBST(CAIRO_NONPKGCONFIG_LIBS)
 AC_SUBST(CAIRO_CFLAGS)
 AC_SUBST(CAIRO_LIBS)
+AC_SUBST(PIXMAN_CFLAGS)
 
 dnl ===========================================================================
 dnl Check for gtk-doc and docbook
@@ -705,7 +709,7 @@ if test $have_mmx_intrinsics = yes ; then
 else
    MMX_CFLAGS=
 fi
-AC_SUBST(MMX_CFLAGS)
+PIXMAN_CFLAGS="$PIXMAN_CFLAGS $MMX_CFLAGS"
 
 AM_CONDITIONAL(USE_MMX, test $have_mmx_intrinsics = yes)
 

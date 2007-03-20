@@ -35,8 +35,6 @@ noinst_LTLIBRARIES += libpixman-mmx.la
 libpixman_mmx_la_SOURCES = \
 	fbmmx.c		\
 	fbmmx.h
-libpixman_mmx_la_CFLAGS = @MMX_CFLAGS@ $(WARN_CFLAGS)
+libpixman_mmx_la_CFLAGS = $(PIXMAN_CFLAGS)
 libpixman_la_LIBADD = libpixman-mmx.la
 endif
-
-INCLUDES = -I$(top_srcdir) -I$(srcdir) @WARN_CFLAGS@
