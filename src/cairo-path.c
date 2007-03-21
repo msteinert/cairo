@@ -36,7 +36,6 @@
 
 #include "cairo-path-private.h"
 #include "cairo-path-fixed-private.h"
-#include "cairo-gstate-private.h"
 
 const cairo_path_t _cairo_path_nil = { CAIRO_STATUS_NO_MEMORY, NULL, 0 };
 
@@ -275,7 +274,8 @@ _cpp_curve_to_flatten (void		*closure,
     if (status == CAIRO_INT_STATUS_DEGENERATE)
 	return CAIRO_STATUS_SUCCESS;
 
-    status = _cairo_spline_decompose (&spline, cpp->gstate->tolerance);
+    status = _cairo_spline_decompose (&spline,
+				      _cairo_gstate_get_tolerance (cpp->gstate));
     if (status)
       goto out;
 
@@ -360,7 +360,8 @@ _cairo_path_create_internal (cairo_path_fixed_t *path_fixed,
 	return (cairo_path_t*) &_cairo_path_nil;
 
     path->num_data = _cairo_path_count (path, path_fixed,
-					gstate->tolerance, flatten);
+					_cairo_gstate_get_tolerance (gstate),
+					flatten);
 
     path->data = malloc (path->num_data * sizeof (cairo_path_data_t));
     if (path->data == NULL) {
