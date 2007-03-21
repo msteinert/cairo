@@ -279,7 +279,7 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 			      const char *fmt, va_list ap)
 {
     char buffer[512], single_fmt[32];
-    char *p, *end;
+    char *p;
     const char *f, *start;
     int length_modifier;
 
@@ -305,10 +305,8 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 	if (*f == '0')
 	    f++;
 
-	if (isdigit (*f)) {
-	    strtol (f, &end, 10);
-	    f = end;
-	}
+	while (isdigit (*f))
+	    f++;
 
 	length_modifier = 0;
 	if (*f == 'l') {
