@@ -478,6 +478,9 @@ cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
     cairo_rectangle_int16_t extents;
     cairo_surface_t *parent_surface, *group_surface = NULL;
 
+    if (cr->status)
+	return;
+
     parent_surface = _cairo_gstate_get_target (cr->gstate);
     /* Get the extents that we'll use in creating our new group surface */
     _cairo_surface_get_extents (parent_surface, &extents);
@@ -543,6 +546,9 @@ cairo_pop_group (cairo_t *cr)
     cairo_surface_t *group_surface, *parent_target;
     cairo_pattern_t *group_pattern = NULL;
     cairo_matrix_t group_matrix;
+
+    if (cr->status)
+	return (cairo_pattern_t*) &cairo_pattern_nil.base;
 
     /* Grab the active surfaces */
     group_surface = _cairo_gstate_get_target (cr->gstate);
@@ -612,9 +618,6 @@ cairo_pop_group_to_source (cairo_t *cr)
     cairo_pattern_t *group_pattern;
 
     group_pattern = cairo_pop_group (cr);
-    if (!group_pattern)
-        return;
-
     cairo_set_source (cr, group_pattern);
     cairo_pattern_destroy (group_pattern);
 }
