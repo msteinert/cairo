@@ -64,6 +64,8 @@ cairo_status_t
 _cairo_gstate_init (cairo_gstate_t  *gstate,
 		    cairo_surface_t *target)
 {
+    gstate->next = NULL;
+
     gstate->op = CAIRO_GSTATE_OPERATOR_DEFAULT;
 
     gstate->tolerance = CAIRO_GSTATE_TOLERANCE_DEFAULT;
@@ -94,8 +96,6 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     gstate->source = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK);
     if (gstate->source->status)
 	return CAIRO_STATUS_NO_MEMORY;
-
-    gstate->next = NULL;
 
     return CAIRO_STATUS_SUCCESS;
 }
