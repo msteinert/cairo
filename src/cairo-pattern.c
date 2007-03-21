@@ -270,6 +270,19 @@ static struct {
     int size;
 } solid_pattern_cache;
 
+static cairo_pattern_t *
+_cairo_pattern_create_solid_not_cached (const cairo_color_t *color)
+{
+    void *pattern;
+
+    /* Not cached, need to create a new pattern. */
+    pattern = malloc (sizeof (cairo_solid_pattern_t));
+    if (pattern != NULL)
+	_cairo_pattern_init_solid (pattern, color);
+
+    return pattern;
+}
+
 cairo_pattern_t *
 _cairo_pattern_create_solid (const cairo_color_t *color)
 {
@@ -290,11 +303,9 @@ _cairo_pattern_create_solid (const cairo_color_t *color)
 	    goto DONE;
 
     /* Not cached, need to create a new pattern. */
-    pattern = malloc (sizeof (cairo_solid_pattern_t));
+    pattern = _cairo_pattern_create_solid_not_cached (color);
     if (pattern == NULL)
 	return (cairo_pattern_t *) &cairo_pattern_nil.base;
-
-    _cairo_pattern_init_solid (pattern, color);
 
     /* And insert it into the cache. */
     if (solid_pattern_cache.size < MAX_PATTERN_CACHE_SIZE) {
@@ -337,7 +348,7 @@ _cairo_pattern_create_in_error (cairo_status_t status)
 {
     cairo_pattern_t *pattern;
 
-    pattern = _cairo_pattern_create_solid (_cairo_stock_color (CAIRO_STOCK_BLACK));
+    pattern = _cairo_pattern_create_solid_not_cached (_cairo_stock_color (CAIRO_STOCK_BLACK));
     if (cairo_pattern_status (pattern))
 	return pattern;
 
