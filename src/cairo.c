@@ -260,10 +260,8 @@ cairo_destroy (cairo_t *cr)
 	return;
 
     while (cr->gstate != cr->gstate_tail) {
-	cairo_gstate_t *tmp = cr->gstate;
-	cr->gstate = tmp->next;
-
-	_cairo_gstate_destroy (tmp);
+	if (_cairo_gstate_restore (&cr->gstate))
+	    break;
     }
 
     _cairo_gstate_fini (cr->gstate);
@@ -368,20 +366,15 @@ cairo_get_reference_count (cairo_t *cr)
 void
 cairo_save (cairo_t *cr)
 {
-    cairo_gstate_t *top;
+    cairo_status_t status;
 
     if (cr->status)
 	return;
 
-    top = _cairo_gstate_clone (cr->gstate);
-
-    if (top == NULL) {
-	_cairo_set_error (cr, CAIRO_STATUS_NO_MEMORY);
-	return;
+    status = _cairo_gstate_save (&cr->gstate);
+    if (status) {
+	_cairo_set_error (cr, status);
     }
-
-    top->next = cr->gstate;
-    cr->gstate = top;
 }
 slim_hidden_def(cairo_save);
 
@@ -396,20 +389,15 @@ slim_hidden_def(cairo_save);
 void
 cairo_restore (cairo_t *cr)
 {
-    cairo_gstate_t *top;
+    cairo_status_t status;
 
     if (cr->status)
 	return;
 
-    if (cr->gstate == cr->gstate_tail) {
-	_cairo_set_error (cr, CAIRO_STATUS_INVALID_RESTORE);
-	return;
+    status = _cairo_gstate_restore (&cr->gstate);
+    if (status) {
+	_cairo_set_error (cr, status);
     }
-
-    top = cr->gstate;
-    cr->gstate = top->next;
-
-    _cairo_gstate_destroy (top);
 }
 slim_hidden_def(cairo_restore);
 

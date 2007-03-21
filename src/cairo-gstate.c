@@ -175,7 +175,7 @@ _cairo_gstate_fini (cairo_gstate_t *gstate)
     gstate->source = NULL;
 }
 
-void
+static void
 _cairo_gstate_destroy (cairo_gstate_t *gstate)
 {
     if (gstate == NULL)
@@ -197,7 +197,7 @@ _cairo_gstate_destroy (cairo_gstate_t *gstate)
  * Return value: a new cairo_gstate_t or NULL if there is insufficient
  * memory.
  **/
-cairo_gstate_t*
+static cairo_gstate_t*
 _cairo_gstate_clone (cairo_gstate_t *other)
 {
     cairo_status_t status;
@@ -216,6 +216,55 @@ _cairo_gstate_clone (cairo_gstate_t *other)
     }
 
     return gstate;
+}
+
+/**
+ * _cairo_gstate_save:
+ * @gstate: input/output gstate pointer
+ *
+ * Makes a copy of the current state of @gstate and saves it
+ * to @gstate->next, then put the address of the newly allcated
+ * copy into @gstate.  _cairo_gstate_restore() reverses this.
+ **/
+cairo_status_t
+_cairo_gstate_save (cairo_gstate_t **gstate)
+{
+    cairo_gstate_t *top;
+
+    top = _cairo_gstate_clone (*gstate);
+
+    if (top == NULL) {
+	return CAIRO_STATUS_NO_MEMORY;
+    }
+
+    top->next = *gstate;
+    *gstate = top;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+/**
+ * _cairo_gstate_restore:
+ * @gstate: input/output gstate pointer
+ *
+ * Reverses the effects of one _cairo_gstate_save() call.
+ **/
+cairo_status_t
+_cairo_gstate_restore (cairo_gstate_t **gstate)
+{
+    cairo_gstate_t *top;
+
+    top = *gstate;
+
+    if (top->next == NULL) {
+	return CAIRO_STATUS_INVALID_RESTORE;
+    }
+
+    *gstate = top->next;
+
+    _cairo_gstate_destroy (top);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t

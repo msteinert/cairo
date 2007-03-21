@@ -1244,11 +1244,11 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
 cairo_private void
 _cairo_gstate_fini (cairo_gstate_t *gstate);
 
-cairo_private cairo_gstate_t *
-_cairo_gstate_clone (cairo_gstate_t *gstate);
+cairo_private cairo_status_t
+_cairo_gstate_save (cairo_gstate_t **gstate);
 
-cairo_private void
-_cairo_gstate_destroy (cairo_gstate_t *gstate);
+cairo_private cairo_status_t
+_cairo_gstate_restore (cairo_gstate_t **gstate);
 
 cairo_private cairo_bool_t
 _cairo_gstate_is_redirected (cairo_gstate_t *gstate);
