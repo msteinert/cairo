@@ -148,6 +148,12 @@ draw (cairo_t *cr, int width, int height)
 	return CAIRO_TEST_FAILURE;
     }
 
+    /* Test that get_target returns something valid */
+    if (cairo_get_target (cr2) == NULL) {
+	cairo_test_log ("Error: cairo_get_target() returned NULL\n");
+	return CAIRO_TEST_FAILURE;
+    }
+
     /* Test that push_group doesn't crash */
     cairo_push_group (cr2);
     cairo_stroke (cr2);
