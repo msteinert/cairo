@@ -556,6 +556,24 @@ _cairo_gstate_set_dash (cairo_gstate_t *gstate, const double *dash, int num_dash
     return CAIRO_STATUS_SUCCESS;
 }
 
+void
+_cairo_gstate_get_dash (cairo_gstate_t *gstate,
+			double         *dashes,
+			int            *num_dashes,
+			double         *offset)
+{
+    if (dashes)
+	memcpy (dashes,
+		gstate->stroke_style.dash,
+		sizeof (double) * gstate->stroke_style.num_dashes);
+
+    if (num_dashes)
+	*num_dashes = gstate->stroke_style.num_dashes;
+
+    if (offset)
+	*offset = gstate->stroke_style.dash_offset;
+}
+
 cairo_status_t
 _cairo_gstate_set_miter_limit (cairo_gstate_t *gstate, double limit)
 {

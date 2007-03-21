@@ -476,10 +476,11 @@ cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
 {
     cairo_status_t status;
     cairo_rectangle_int16_t extents;
-    cairo_surface_t *group_surface = NULL;
+    cairo_surface_t *parent_surface, *group_surface = NULL;
 
+    parent_surface = _cairo_gstate_get_target (cr->gstate);
     /* Get the extents that we'll use in creating our new group surface */
-    _cairo_surface_get_extents (_cairo_gstate_get_target (cr->gstate), &extents);
+    _cairo_surface_get_extents (parent_surface, &extents);
     status = _cairo_clip_intersect_to_rectangle (_cairo_gstate_get_clip (cr->gstate), &extents);
     if (status != CAIRO_STATUS_SUCCESS)
 	goto bail;
@@ -498,8 +499,8 @@ cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
      * device offsets, so we want to set our own surface offsets from /that/,
      * and not from the device origin. */
     cairo_surface_set_device_offset (group_surface,
-                                     cr->gstate->target->device_transform.x0 - extents.x,
-                                     cr->gstate->target->device_transform.y0 - extents.y);
+                                     parent_surface->device_transform.x0 - extents.x,
+                                     parent_surface->device_transform.y0 - extents.y);
 
     /* create a new gstate for the redirect */
     cairo_save (cr);
@@ -1032,7 +1033,11 @@ cairo_set_dash (cairo_t	     *cr,
 int
 cairo_get_dash_count (cairo_t *cr)
 {
-    return cr->gstate->stroke_style.num_dashes;
+    int num_dashes;
+
+    _cairo_gstate_get_dash (cr->gstate, NULL, &num_dashes, NULL);
+
+    return num_dashes;
 }
 
 /**
@@ -1052,13 +1057,7 @@ cairo_get_dash (cairo_t *cr,
 		double  *dashes,
 		double  *offset)
 {
-    if (dashes)
-	memcpy (dashes,
-		cr->gstate->stroke_style.dash,
-		sizeof (double) * cr->gstate->stroke_style.num_dashes);
-
-    if (offset)
-	*offset = cr->gstate->stroke_style.dash_offset;
+    _cairo_gstate_get_dash (cr->gstate, dashes, NULL, offset);
 }
 
 /**
