@@ -207,8 +207,13 @@ stdio_write_func (png_structp png, png_bytep data, png_size_t size)
     FILE *fp;
 
     fp = png_get_io_ptr (png);
-    if (fwrite (data, 1, size, fp) != size)
-	png_error(png, "Write Error");
+    while (size) {
+	size_t ret = fwrite (data, 1, size, fp);
+	size -= ret;
+	data += ret;
+	if (size && ferror (fp))
+	    png_error(png, "Write Error");
+    }
 }
 
 /**
@@ -333,14 +338,14 @@ read_png (png_rw_ptr	read_func,
 	  void		*closure)
 {
     cairo_surface_t *surface = (cairo_surface_t*) &_cairo_surface_nil;
-    png_byte *data = NULL;
-    unsigned int i;
     png_struct *png = NULL;
     png_info *info;
+    volatile png_byte *data = NULL;
+    volatile png_byte **row_pointers = NULL;
     png_uint_32 png_width, png_height, stride;
     int depth, color_type, interlace;
+    unsigned int i;
     unsigned int pixel_size;
-    png_byte **row_pointers = NULL;
 
     /* XXX: Perhaps we'll want some other error handlers? */
     png = png_create_read_struct (PNG_LIBPNG_VER_STRING,
@@ -443,8 +448,13 @@ stdio_read_func (png_structp png, png_bytep data, png_size_t size)
     FILE *fp;
 
     fp = png_get_io_ptr (png);
-    if (fread (data, 1, size, fp) != size)
-	png_error(png, "Read Error");
+    while (size) {
+	size_t ret = fread (data, 1, size, fp);
+	size -= ret;
+	data += ret;
+	if (size && ferror (fp))
+	    png_error(png, "Read Error");
+    }
 }
 
 /**
