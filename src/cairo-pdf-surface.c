@@ -2860,6 +2860,8 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
     return status;
 }
 
+#define GLYPH_POSITION_TOLERANCE 0.001
+
 static cairo_int_status_t
 _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
 				cairo_operator_t	 op,
@@ -2870,9 +2872,11 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
 {
     cairo_pdf_surface_t *surface = abstract_surface;
     unsigned int current_subset_id = (unsigned int)-1;
-    unsigned int font_id, subset_id, subset_glyph_index;
-    cairo_bool_t diagonal;
+    cairo_scaled_font_subsets_glyph_t subset_glyph;
+    cairo_bool_t diagonal, in_TJ;
     cairo_status_t status;
+    double Tlm_x = 0, Tlm_y = 0;
+    double Tm_x = 0, y;
     int i;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
@@ -2893,35 +2897,118 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
     else
         diagonal = FALSE;
 
+    in_TJ = FALSE;
     for (i = 0; i < num_glyphs; i++) {
-	status = _cairo_scaled_font_subsets_map_glyph (surface->font_subsets,
-						       scaled_font, glyphs[i].index,
-						       &font_id, &subset_id, &subset_glyph_index);
+        status = _cairo_scaled_font_subsets_map_glyph (surface->font_subsets,
+                                                       scaled_font, glyphs[i].index,
+                                                       &subset_glyph);
 	if (status)
-	    return status;
+            return status;
 
-	if (subset_id != current_subset_id)
-	    _cairo_output_stream_printf (surface->output,
-					 "/CairoFont-%d-%d 1 Tf\r\n",
-					 font_id, subset_id);
+        if (subset_glyph.is_scaled == FALSE) {
+            y = 0.0;
+            cairo_matrix_transform_distance (&scaled_font->scale,
+                                             &subset_glyph.x_advance,
+                                             &y);
+        }
 
-        if (subset_id != current_subset_id || !diagonal) {
+	if (subset_glyph.subset_id != current_subset_id) {
+            if (in_TJ) {
+                _cairo_output_stream_printf (surface->output, ">] TJ\r\n");
+                in_TJ = FALSE;
+            }
             _cairo_output_stream_printf (surface->output,
-                                         "%f %f %f %f %f %f Tm <%02x> Tj\r\n",
+                                         "/CairoFont-%d-%d 1 Tf\r\n",
+                                         subset_glyph.font_id,
+                                         subset_glyph.subset_id);
+        }
+
+        if (subset_glyph.subset_id != current_subset_id || !diagonal) {
+            _cairo_output_stream_printf (surface->output,
+                                         "%f %f %f %f %f %f Tm\r\n",
                                          scaled_font->scale.xx,
                                          scaled_font->scale.yx,
                                          -scaled_font->scale.xy,
                                          -scaled_font->scale.yy,
                                          glyphs[i].x,
-                                         glyphs[i].y,
-                                         subset_glyph_index);
-	    current_subset_id = subset_id;
+                                         glyphs[i].y);
+            current_subset_id = subset_glyph.subset_id;
+            Tlm_x = glyphs[i].x;
+            Tlm_y = glyphs[i].y;
+            Tm_x = Tlm_x;
+        }
+
+        if (diagonal) {
+            if (i < num_glyphs - 1 &&
+                fabs((glyphs[i].y - glyphs[i+1].y)/scaled_font->scale.yy) < GLYPH_POSITION_TOLERANCE &&
+                fabs((glyphs[i].x - glyphs[i+1].x)/scaled_font->scale.xx) < 10)
+            {
+                if (!in_TJ) {
+                    if (i != 0) {
+                        _cairo_output_stream_printf (surface->output,
+                                                     "%f %f Td\r\n",
+                                                     (glyphs[i].x - Tlm_x)/scaled_font->scale.xx,
+                                                     (glyphs[i].y - Tlm_y)/-scaled_font->scale.yy);
+                        Tlm_x = glyphs[i].x;
+                        Tlm_y = glyphs[i].y;
+                        Tm_x = Tlm_x;
+                    }
+                    _cairo_output_stream_printf (surface->output,
+                                                 "[<%02x",
+                                                 subset_glyph.subset_glyph_index);
+                    Tm_x += subset_glyph.x_advance;
+                    in_TJ = TRUE;
+                } else {
+                    if (fabs((glyphs[i].x - Tm_x)/scaled_font->scale.xx) > GLYPH_POSITION_TOLERANCE) {
+                        double delta = glyphs[i].x - Tm_x;
+
+                        _cairo_output_stream_printf (surface->output,
+                                                     "> %f <",
+                                                     -1000.0*delta/scaled_font->scale.xx);
+                        Tm_x += delta;
+                    }
+                    _cairo_output_stream_printf (surface->output,
+                                                 "%02x",
+                                                 subset_glyph.subset_glyph_index);
+                    Tm_x += subset_glyph.x_advance;
+                }
+            }
+            else
+            {
+                if (in_TJ) {
+                    if (fabs((glyphs[i].x - Tm_x)/scaled_font->scale.xx) > GLYPH_POSITION_TOLERANCE) {
+                        double delta = glyphs[i].x - Tm_x;
+
+                        _cairo_output_stream_printf (surface->output,
+                                                     "> %f <",
+                                                     -1000.0*delta/scaled_font->scale.xx);
+                        Tm_x += delta;
+                    }
+                    _cairo_output_stream_printf (surface->output,
+                                                 "%02x>] TJ\r\n",
+                                                 subset_glyph.subset_glyph_index);
+                    Tm_x += subset_glyph.x_advance;
+                    in_TJ = FALSE;
+                } else {
+                    if (i != 0) {
+                        _cairo_output_stream_printf (surface->output,
+                                                     "%f %f Td ",
+                                                     (glyphs[i].x - Tlm_x)/scaled_font->scale.xx,
+                                                     (glyphs[i].y - Tlm_x)/-scaled_font->scale.yy);
+                        Tlm_x = glyphs[i].x;
+                        Tlm_y = glyphs[i].y;
+                        Tm_x = Tlm_x;
+                    }
+                    _cairo_output_stream_printf (surface->output,
+                                                 "<%02x> Tj ",
+                                                 subset_glyph.subset_glyph_index);
+                    Tm_x += subset_glyph.x_advance;
+                }
+            }
         } else {
             _cairo_output_stream_printf (surface->output,
-                                         "%f %f Td <%02x> Tj\r\n",
-                                         (glyphs[i].x - glyphs[i-1].x)/scaled_font->scale.xx,
-                                         (glyphs[i].y - glyphs[i-1].y)/-scaled_font->scale.yy,
-                                         subset_glyph_index);
+                                         "<%02x> Tj\r\n",
+                                         subset_glyph.subset_glyph_index);
         }
     }
 
