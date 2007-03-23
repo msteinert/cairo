@@ -2206,7 +2206,6 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     unsigned int num_glyphs_unsigned, i, j, last, end;
     cairo_bool_t vertical, horizontal;
     cairo_output_stream_t *word_wrap;
-    double x_advance;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _cairo_ps_surface_analyze_operation (surface, op, source);
