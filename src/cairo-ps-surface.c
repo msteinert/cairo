@@ -2200,7 +2200,7 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_output_stream_t *stream = surface->stream;
     unsigned int current_subset_id = -1;
-    unsigned int font_id;
+    cairo_scaled_font_subsets_glyph_t subset_glyph;
     cairo_ps_glyph_id_t *glyph_ids;
     cairo_status_t status;
     unsigned int num_glyphs_unsigned, i, j, last, end;
@@ -2228,11 +2228,11 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     for (i = 0; i < num_glyphs_unsigned; i++) {
         status = _cairo_scaled_font_subsets_map_glyph (surface->font_subsets,
                                                        scaled_font, glyphs[i].index,
-                                                       &font_id,
-                                                       &(glyph_ids[i].subset_id),
-                                                       &(glyph_ids[i].glyph_id));
+                                                       &subset_glyph);
         if (status)
             goto fail;
+        glyph_ids[i].subset_id = subset_glyph.subset_id;
+        glyph_ids[i].glyph_id = subset_glyph.subset_glyph_index;
     }
 
     i = 0;
@@ -2242,7 +2242,7 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
                                          "/CairoFont-%d-%d findfont\n"
                                          "[ %f %f %f %f 0 0 ] makefont\n"
                                          "setfont\n",
-                                         font_id,
+                                         subset_glyph.font_id,
                                          glyph_ids[i].subset_id,
                                          scaled_font->scale.xx,
                                          scaled_font->scale.yx,

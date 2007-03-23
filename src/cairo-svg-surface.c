@@ -1877,7 +1877,7 @@ _cairo_svg_surface_show_glyphs (void			*abstract_surface,
     cairo_svg_document_t *document = surface->document;
     cairo_path_fixed_t path;
     cairo_status_t status;
-    unsigned int font_id, subset_id, subset_glyph_index;
+    cairo_scaled_font_subsets_glyph_t subset_glyph;
     int i;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
@@ -1901,7 +1901,7 @@ _cairo_svg_surface_show_glyphs (void			*abstract_surface,
     for (i = 0; i < num_glyphs; i++) {
 	status = _cairo_scaled_font_subsets_map_glyph (document->font_subsets,
 						       scaled_font, glyphs[i].index,
-						       &font_id, &subset_id, &subset_glyph_index);
+                                                       &subset_glyph);
 	if (status) {
 	    glyphs += i;
 	    num_glyphs -= i;
@@ -1911,7 +1911,8 @@ _cairo_svg_surface_show_glyphs (void			*abstract_surface,
 	_cairo_output_stream_printf (surface->xml_node,
 				     "  <use xlink:href=\"#glyph%d-%d\" "
 				     "x=\"%f\" y=\"%f\"/>\n",
-				     font_id, subset_glyph_index,
+				     subset_glyph.font_id,
+                                     subset_glyph.subset_glyph_index,
 				     glyphs[i].x, glyphs[i].y);
     }
 
