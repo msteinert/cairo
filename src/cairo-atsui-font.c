@@ -690,11 +690,17 @@ _cairo_atsui_scaled_font_init_glyph_surface (cairo_atsui_font_t *scaled_font,
     }
 
     /* Compute a box to contain the glyph mask. The vertical
-     * sizes come from the font extents; extra pixels are 
+     * sizes come from the font extents; extra pixels are
      * added to account for fractional sizes.
      */
     height = extents.ascent + extents.descent + 2.0;
     bottom = -extents.descent - 1.0;
+
+    _cairo_matrix_compute_scale_factors (&base.scale,
+					&xscale, &yscale, 1);
+    bbox = CGRectApplyAffineTransform (CGRectMake (1.0, bottom, 1.0, height), CGAffineTransformMakeScale(xscale, yscale));
+    bottom = CGRectGetMinY (bbox);
+    height = bbox.size.height;
 
     /* Horizontal sizes come from the glyph typographic metrics.
      * It is possible that this might result in clipped text
@@ -702,7 +708,7 @@ _cairo_atsui_scaled_font_init_glyph_surface (cairo_atsui_font_t *scaled_font,
      * The width is recalculated, since metricsH.width is rounded.
      */
     err = ATSUGlyphGetScreenMetrics (scaled_font->style,
-				     1, &theGlyph, 0, false, 
+				     1, &theGlyph, 0, false,
 				     false, &metricsH);    
     left = metricsH.sideBearing.x - 1.0;
     width = metricsH.deviceAdvance.x 
