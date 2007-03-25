@@ -1393,7 +1393,11 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
      */
     //ND((stderr, "show_glyphs: glyph 0 at: %f, %f\n", glyphs[0].x, glyphs[0].y));
     CGAffineTransform cairoTextTransform, textTransform, ctm;
-    _cairo_quartz_cairo_matrix_to_quartz (&scaled_font->font_matrix, &cairoTextTransform);
+    cairoTextTransform = CGAffineTransformMake (scaled_font->font_matrix.xx, 
+						scaled_font->font_matrix.yx,
+						scaled_font->font_matrix.xy, 
+						scaled_font->font_matrix.yy,
+						0., 0.);
 
     textTransform = CGAffineTransformMakeTranslation (glyphs[0].x, glyphs[0].y);
     textTransform = CGAffineTransformScale (textTransform, 1.0, -1.0);
