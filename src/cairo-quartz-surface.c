@@ -286,8 +286,8 @@ _cairo_quartz_cairo_matrix_to_quartz (const cairo_matrix_t *src,
 				       CGAffineTransform *dst)
 {
     dst->a = src->xx;
-    dst->b = src->xy;
-    dst->c = src->yx;
+    dst->b = src->yx;
+    dst->c = src->xy;
     dst->d = src->yy;
     dst->tx = src->x0;
     dst->ty = src->y0;
