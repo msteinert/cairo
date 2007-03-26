@@ -1093,6 +1093,7 @@ typedef struct _cairo_solid_pattern {
 } cairo_solid_pattern_t;
 
 extern const cairo_private cairo_solid_pattern_t cairo_pattern_nil;
+extern const cairo_private cairo_solid_pattern_t cairo_pattern_none;
 
 typedef struct _cairo_surface_pattern {
     cairo_pattern_t base;
