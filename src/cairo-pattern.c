@@ -259,72 +259,48 @@ _cairo_pattern_init_radial (cairo_radial_pattern_t *pattern,
     pattern->gradient.c2.radius = _cairo_fixed_from_double (fabs (radius1));
 }
 
-/* We use a small cache here, because we don't want to constantly
- * reallocate simple colors. */
-#define MAX_PATTERN_CACHE_SIZE 16
+/* We use a small freed pattern cache here, because we don't want to
+ * constantly reallocate simple colors. */
+#define MAX_PATTERN_CACHE_SIZE 4
 static struct {
-    struct {
-	cairo_color_t          color;
-	cairo_solid_pattern_t *pattern;
-    } cache[MAX_PATTERN_CACHE_SIZE];
+    cairo_solid_pattern_t *patterns[MAX_PATTERN_CACHE_SIZE];
     int size;
 } solid_pattern_cache;
 
 static cairo_pattern_t *
-_cairo_pattern_create_solid_not_cached (const cairo_color_t *color)
+_cairo_pattern_create_solid_from_cache (const cairo_color_t *color)
 {
-    void *pattern;
+    cairo_solid_pattern_t *pattern = NULL;
 
-    /* Not cached, need to create a new pattern. */
-    pattern = malloc (sizeof (cairo_solid_pattern_t));
+    CAIRO_MUTEX_LOCK (_cairo_pattern_solid_cache_lock);
+
+    if (solid_pattern_cache.size) {
+	int i = --solid_pattern_cache.size %
+	    ARRAY_LEN (solid_pattern_cache.patterns);
+	pattern = solid_pattern_cache.patterns[i];
+	solid_pattern_cache.patterns[i] = NULL;
+    }
+
+    CAIRO_MUTEX_UNLOCK (_cairo_pattern_solid_cache_lock);
+
+    if (pattern == NULL) {
+	/* None cached, need to create a new pattern. */
+	pattern = malloc (sizeof (cairo_solid_pattern_t));
+    }
     if (pattern != NULL)
 	_cairo_pattern_init_solid (pattern, color);
 
-    return pattern;
+    return &pattern->base;
 }
 
 cairo_pattern_t *
 _cairo_pattern_create_solid (const cairo_color_t *color)
 {
-    static int cache_index;
-    void *pattern;
+    cairo_pattern_t *pattern;
 
-    CAIRO_MUTEX_LOCK (_cairo_pattern_solid_cache_lock);
-
-    /* Check cache first. */
-    if (cache_index < solid_pattern_cache.size &&
-	    _cairo_color_equal (
-		&solid_pattern_cache.cache[cache_index].color, color))
-	goto DONE;
-
-    for (cache_index = 0; cache_index < solid_pattern_cache.size; cache_index++)
-	if (_cairo_color_equal (
-		    &solid_pattern_cache.cache[cache_index].color, color))
-	    goto DONE;
-
-    /* Not cached, need to create a new pattern. */
-    pattern = _cairo_pattern_create_solid_not_cached (color);
+    pattern = _cairo_pattern_create_solid_from_cache (color);
     if (pattern == NULL)
 	return (cairo_pattern_t *) &cairo_pattern_nil.base;
-
-    /* And insert it into the cache. */
-    if (solid_pattern_cache.size < MAX_PATTERN_CACHE_SIZE) {
-	solid_pattern_cache.size ++;
-	/* cache_index == solid_pattern_cache.size */
-    } else {
-	/* Evict an old pattern. */
-	cache_index = rand () % MAX_PATTERN_CACHE_SIZE;
-	cairo_pattern_destroy (
-		&solid_pattern_cache.cache[cache_index].pattern->base);
-    }
-
-    solid_pattern_cache.cache[cache_index].color = *color;
-    solid_pattern_cache.cache[cache_index].pattern = pattern;
-
-DONE:
-    pattern = cairo_pattern_reference (
-	    &solid_pattern_cache.cache[cache_index].pattern->base);
-    CAIRO_MUTEX_UNLOCK (_cairo_pattern_solid_cache_lock);
 
     return pattern;
 }
@@ -336,8 +312,10 @@ _cairo_pattern_reset_static_data (void)
 
     CAIRO_MUTEX_LOCK (_cairo_pattern_solid_cache_lock);
 
-    for (i = 0; i < solid_pattern_cache.size; i++)
-	cairo_pattern_destroy (&solid_pattern_cache.cache[i].pattern->base);
+    for (i = 0; i < MIN (ARRAY_LEN (solid_pattern_cache.patterns), solid_pattern_cache.size); i++) {
+	free (solid_pattern_cache.patterns[i]);
+	solid_pattern_cache.patterns[i] = NULL;
+    }
     solid_pattern_cache.size = 0;
 
     CAIRO_MUTEX_UNLOCK (_cairo_pattern_solid_cache_lock);
@@ -348,7 +326,7 @@ _cairo_pattern_create_in_error (cairo_status_t status)
 {
     cairo_pattern_t *pattern;
 
-    pattern = _cairo_pattern_create_solid_not_cached (_cairo_stock_color (CAIRO_STOCK_BLACK));
+    pattern = _cairo_pattern_create_solid_from_cache (_cairo_stock_color (CAIRO_STOCK_BLACK));
     if (cairo_pattern_status (pattern))
 	return pattern;
 
@@ -648,7 +626,25 @@ cairo_pattern_destroy (cairo_pattern_t *pattern)
 	return;
 
     _cairo_pattern_fini (pattern);
-    free (pattern);
+
+    /* maintain a small cache of freed patterns */
+    if (pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
+	int i;
+
+	CAIRO_MUTEX_LOCK (_cairo_pattern_solid_cache_lock);
+
+	i = solid_pattern_cache.size++ %
+	    ARRAY_LEN (solid_pattern_cache.patterns);
+	/* swap an old pattern for this 'cache-hot' pattern */
+	if (solid_pattern_cache.patterns[i])
+	    free (solid_pattern_cache.patterns[i]);
+
+	solid_pattern_cache.patterns[i] = (cairo_solid_pattern_t *) pattern;
+
+	CAIRO_MUTEX_UNLOCK (_cairo_pattern_solid_cache_lock);
+    } else {
+	free (pattern);
+    }
 }
 slim_hidden_def (cairo_pattern_destroy);
 
