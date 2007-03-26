@@ -224,7 +224,6 @@ REFERENCE_IMAGES = \
 	dash-zero-length-ref.png	\
 	dash-zero-length-rgb24-ref.png	\
 	degenerate-path-ps-argb32-ref.png	\
-	degenerate-path-quartz-rgb24-ref.png	\
 	degenerate-path-ref.png	\
 	degenerate-path-rgb24-ref.png	\
 	device-offset-positive-ref.png	\
