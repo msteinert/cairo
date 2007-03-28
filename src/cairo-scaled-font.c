@@ -351,6 +351,12 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 			 const cairo_font_options_t	   *options,
 			 const cairo_scaled_font_backend_t *backend)
 {
+    scaled_font->glyphs = _cairo_cache_create (_cairo_scaled_glyph_keys_equal,
+					       _cairo_scaled_glyph_destroy,
+					       max_glyphs_cached_per_font);
+    if (scaled_font->glyphs == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
     scaled_font->ref_count = 1;
 
     _cairo_user_data_array_init (&scaled_font->user_data);
@@ -365,9 +371,6 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 			   &scaled_font->ctm);
 
     CAIRO_MUTEX_INIT (&scaled_font->mutex);
-    scaled_font->glyphs = _cairo_cache_create (_cairo_scaled_glyph_keys_equal,
-					       _cairo_scaled_glyph_destroy,
-					       max_glyphs_cached_per_font);
 
     scaled_font->surface_backend = NULL;
     scaled_font->surface_private = NULL;
