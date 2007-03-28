@@ -67,7 +67,7 @@ typedef struct cairo_stroker {
 } cairo_stroker_t;
 
 /* private functions */
-static void
+static cairo_status_t
 _cairo_stroker_init (cairo_stroker_t		*stroker,
 		     cairo_stroke_style_t	*stroke_style,
 		     cairo_matrix_t		*ctm,
@@ -148,7 +148,7 @@ _cairo_stroker_step_dash (cairo_stroker_t *stroker, double step)
     }
 }
 
-static void
+static cairo_status_t
 _cairo_stroker_init (cairo_stroker_t		*stroker,
 		     cairo_stroke_style_t	*stroke_style,
 		     cairo_matrix_t		*ctm,
@@ -156,15 +156,18 @@ _cairo_stroker_init (cairo_stroker_t		*stroker,
 		     double			 tolerance,
 		     cairo_traps_t		*traps)
 {
+    cairo_status_t status;
     stroker->style = stroke_style;
     stroker->ctm = ctm;
     stroker->ctm_inverse = ctm_inverse;
     stroker->tolerance = tolerance;
     stroker->traps = traps;
 
-    _cairo_pen_init (&stroker->pen,
-		     stroke_style->line_width / 2.0,
-		     tolerance, ctm);
+    status = _cairo_pen_init (&stroker->pen,
+		              stroke_style->line_width / 2.0,
+			      tolerance, ctm);
+    if (status)
+	return status;
 
     stroker->has_current_face = FALSE;
     stroker->has_first_face = FALSE;
@@ -174,6 +177,8 @@ _cairo_stroker_init (cairo_stroker_t		*stroker,
 	_cairo_stroker_start_dash (stroker);
     else
 	stroker->dashed = FALSE;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -984,9 +989,11 @@ _cairo_path_fixed_stroke_to_traps (cairo_path_fixed_t	*path,
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
-    _cairo_stroker_init (&stroker, stroke_style,
-			 ctm, ctm_inverse, tolerance,
-			 traps);
+    status = _cairo_stroker_init (&stroker, stroke_style,
+			          ctm, ctm_inverse, tolerance,
+				  traps);
+    if (status)
+	return status;
 
     if (stroker.style->dash)
 	status = _cairo_path_fixed_interpret (path,
