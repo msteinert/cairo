@@ -819,6 +819,8 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 	    stride = bitmap->pitch;
 	    stride_rgba = (width_rgba * 4 + 3) & ~3;
 	    data_rgba = calloc (1, stride_rgba * height);
+	    if (data_rgba == NULL)
+		return CAIRO_STATUS_NO_MEMORY;
 
 	    os = 1;
 	    switch (font_options->subpixel_order) {
