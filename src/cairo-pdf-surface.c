@@ -1190,6 +1190,7 @@ _cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t *surface, cairo_line
     cairo_pdf_resource_t function, pattern_resource, alpha;
     double x0, y0, x1, y1;
     cairo_matrix_t p2u;
+    cairo_status_t status;
 
     _cairo_pdf_surface_pause_content_stream (surface);
 
@@ -1198,7 +1199,9 @@ _cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t *surface, cairo_line
 	return CAIRO_STATUS_NO_MEMORY;
 
     p2u = pattern->base.base.matrix;
-    cairo_matrix_invert (&p2u);
+    status = cairo_matrix_invert (&p2u);
+    if (status)
+	return status;
 
     x0 = _cairo_fixed_to_double (pattern->gradient.p1.x);
     y0 = _cairo_fixed_to_double (pattern->gradient.p1.y);
