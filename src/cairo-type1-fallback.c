@@ -464,18 +464,21 @@ fail:
     return status;
 }
 
-static void
+static cairo_status_t
 cairo_type1_font_write_header (cairo_type1_font_t *font,
                                const char         *name)
 {
     cairo_matrix_t matrix;
+    cairo_status_t status;
     unsigned int i;
     const char spaces[50] = "                                                  ";
 
     matrix = font->type1_scaled_font->scale;
     matrix.xy = -matrix.xy;
     matrix.yy = -matrix.yy;
-    cairo_matrix_invert (&matrix);
+    status = cairo_matrix_invert (&matrix);
+    if (status)
+	return status;
 
     _cairo_output_stream_printf (font->output,
                                  "%%!FontType1-1.1 %s 1.0\n"
@@ -512,6 +515,8 @@ cairo_type1_font_write_header (cairo_type1_font_t *font,
                                  "readonly def\n"
                                  "currentdict end\n"
                                  "currentfile eexec\n");
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -635,7 +640,9 @@ cairo_type1_font_write (cairo_type1_font_t *font,
 {
     cairo_int_status_t status;
 
-    cairo_type1_font_write_header (font, name);
+    status = cairo_type1_font_write_header (font, name);
+    if (status)
+	return status;
     font->header_size = _cairo_output_stream_get_position (font->output);
 
     status = cairo_type1_font_write_private_dict (font, name);
@@ -673,14 +680,18 @@ cairo_type1_font_generate (cairo_type1_font_t *font, const char *name)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void
+static cairo_status_t
 cairo_type1_font_destroy (cairo_type1_font_t *font)
 {
+    cairo_status_t status;
+
     free (font->widths);
     cairo_scaled_font_destroy (font->type1_scaled_font);
     _cairo_array_fini (&font->contents);
-    _cairo_output_stream_destroy (font->output);
+    status = _cairo_output_stream_destroy (font->output);
     free (font);
+
+    return status;
 }
 
 static cairo_status_t
@@ -746,14 +757,14 @@ _cairo_type1_fallback_init_internal (cairo_type1_subset_t	*type1_subset,
     type1_subset->data_length = font->data_size;
     type1_subset->trailer_length = font->trailer_size;
 
-    cairo_type1_font_destroy (font);
-    return CAIRO_STATUS_SUCCESS;
+    return cairo_type1_font_destroy (font);
 
  fail3:
     free (type1_subset->widths);
  fail2:
     free (type1_subset->base_font);
  fail1:
+    /* status is already set, ignore further errors */
     cairo_type1_font_destroy (font);
 
     return status;
