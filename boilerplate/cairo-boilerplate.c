@@ -843,7 +843,8 @@ boilerplate_xlib_synchronize (void *closure)
 
     ximage = XGetImage (xtc->dpy, xtc->drawable,
 			0, 0, 1, 1, AllPlanes, ZPixmap);
-    XDestroyImage (ximage);
+    if (ximage != NULL)
+	XDestroyImage (ximage);
 }
 
 /* For the xlib backend we distinguish between TEST and PERF mode in a
