@@ -481,8 +481,12 @@ _cairo_hash_table_insert (cairo_hash_table_t *hash_table,
     hash_table->live_entries++;
 
     status = _cairo_hash_table_resize (hash_table);
-    if (status)
+    if (status) {
+	/* abort the insert... */
+	*entry = DEAD_ENTRY;
+	hash_table->live_entries--;
 	return status;
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -561,6 +565,9 @@ _cairo_hash_table_foreach (cairo_hash_table_t	      *hash_table,
      * the table may need resizing. Just do this every time
      * as the check is inexpensive.
      */
-    if (--hash_table->iterating == 0)
+    if (--hash_table->iterating == 0) {
+	/* Should we fail to shrink the hash table, it is left unaltered,
+	 * and we don't need to propagate the error status. */
 	_cairo_hash_table_resize (hash_table);
+    }
 }
