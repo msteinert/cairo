@@ -2920,6 +2920,8 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
                                                  0, 0, 1, 1,
                                                  (cairo_surface_t **) &src,
                                                  &attributes);
+    if (status)
+        goto BAIL0;
     } else {
         cairo_rectangle_int16_t glyph_extents;
 
@@ -2928,38 +2930,38 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
                                                           num_glyphs,
                                                           &glyph_extents);
         if (status)
-	    goto BAIL;
+	    goto BAIL0;
 
         status = _cairo_pattern_acquire_surface (src_pattern, &dst->base,
                                                  glyph_extents.x, glyph_extents.y,
                                                  glyph_extents.width, glyph_extents.height,
                                                  (cairo_surface_t **) &src,
                                                  &attributes);
+        if (status)
+	    goto BAIL0;
     }
-
-    if (status)
-        goto BAIL;
 
     operation = _recategorize_composite_operation (dst, op, src, &attributes, TRUE);
     if (operation == DO_UNSUPPORTED) {
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
-	goto BAIL;
+	goto BAIL1;
     }
 
     status = _cairo_xlib_surface_set_attributes (src, &attributes);
     if (status)
-        goto BAIL;
+        goto BAIL1;
 
-    _cairo_xlib_surface_emit_glyphs (dst, (cairo_xlib_glyph_t *) glyphs, num_glyphs,
+    _cairo_xlib_surface_emit_glyphs (dst,
+	                             (cairo_xlib_glyph_t *) glyphs, num_glyphs,
 				     scaled_font, op, src, &attributes);
 
-  BAIL:
-    _cairo_scaled_font_thaw_cache (scaled_font);
-
+  BAIL1:
     if (src)
         _cairo_pattern_release_surface (src_pattern, &src->base, &attributes);
     if (src_pattern == &solid_pattern.base)
 	_cairo_pattern_fini (&solid_pattern.base);
+  BAIL0:
+    _cairo_scaled_font_thaw_cache (scaled_font);
 
     return status;
 }
