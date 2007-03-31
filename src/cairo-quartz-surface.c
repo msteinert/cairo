@@ -101,6 +101,11 @@ static void quartz_image_to_png (CGImageRef, char *dest);
  * Cairo path -> Quartz path conversion helpers
  */
 
+typedef struct _quartz_stroke {
+    CGContextRef cgContext;
+    cairo_matrix_t *ctm_inverse;
+} quartz_stroke_t;
+
 /* cairo path -> mutable path */
 static cairo_status_t
 _cairo_path_to_quartz_path_move_to (void *closure, cairo_point_t *point)
@@ -140,8 +145,14 @@ static cairo_status_t
 _cairo_path_to_quartz_context_move_to (void *closure, cairo_point_t *point)
 {
     //ND((stderr, "moveto: %f %f\n", _cairo_fixed_to_double(point->x), _cairo_fixed_to_double(point->y)));
-    CGContextMoveToPoint ((CGContextRef) closure,
-			  _cairo_fixed_to_double(point->x), _cairo_fixed_to_double(point->y));
+    quartz_stroke_t *stroke = (quartz_stroke_t *)closure;
+    double x = _cairo_fixed_to_double (point->x);
+    double y = _cairo_fixed_to_double (point->y);
+
+    if (stroke->ctm_inverse)
+	cairo_matrix_transform_point (stroke->ctm_inverse, &x, &y);
+
+    CGContextMoveToPoint (stroke->cgContext, x, y);
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -149,12 +160,17 @@ static cairo_status_t
 _cairo_path_to_quartz_context_line_to (void *closure, cairo_point_t *point)
 {
     //ND((stderr, "lineto: %f %f\n",  _cairo_fixed_to_double(point->x), _cairo_fixed_to_double(point->y)));
-    if (CGContextIsPathEmpty ((CGContextRef) closure))
-	CGContextMoveToPoint ((CGContextRef) closure,
-			      _cairo_fixed_to_double(point->x), _cairo_fixed_to_double(point->y));
+    quartz_stroke_t *stroke = (quartz_stroke_t *)closure;
+    double x = _cairo_fixed_to_double (point->x);
+    double y = _cairo_fixed_to_double (point->y);
+    
+    if (stroke->ctm_inverse)
+	cairo_matrix_transform_point (stroke->ctm_inverse, &x, &y);
+
+    if (CGContextIsPathEmpty (stroke->cgContext))
+	CGContextMoveToPoint (stroke->cgContext, x, y);
     else
-	CGContextAddLineToPoint ((CGContextRef) closure,
-				 _cairo_fixed_to_double(point->x), _cairo_fixed_to_double(point->y));
+	CGContextAddLineToPoint (stroke->cgContext, x, y);
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -165,11 +181,22 @@ _cairo_path_to_quartz_context_curve_to (void *closure, cairo_point_t *p0, cairo_
     //		   _cairo_fixed_to_double(p0->x), _cairo_fixed_to_double(p0->y),
     //		   _cairo_fixed_to_double(p1->x), _cairo_fixed_to_double(p1->y),
     //		   _cairo_fixed_to_double(p2->x), _cairo_fixed_to_double(p2->y)));
+    quartz_stroke_t *stroke = (quartz_stroke_t *)closure;
+    double x0 = _cairo_fixed_to_double (p0->x);
+    double y0 = _cairo_fixed_to_double (p0->y);
+    double x1 = _cairo_fixed_to_double (p1->x);
+    double y1 = _cairo_fixed_to_double (p1->y);
+    double x2 = _cairo_fixed_to_double (p2->x);
+    double y2 = _cairo_fixed_to_double (p2->y);
 
-    CGContextAddCurveToPoint ((CGContextRef) closure,
-			      _cairo_fixed_to_double(p0->x), _cairo_fixed_to_double(p0->y),
-			      _cairo_fixed_to_double(p1->x), _cairo_fixed_to_double(p1->y),
-			      _cairo_fixed_to_double(p2->x), _cairo_fixed_to_double(p2->y));
+    if (stroke->ctm_inverse) {
+	cairo_matrix_transform_point (stroke->ctm_inverse, &x0, &y0);
+	cairo_matrix_transform_point (stroke->ctm_inverse, &x1, &y1);
+	cairo_matrix_transform_point (stroke->ctm_inverse, &x2, &y2);
+    }
+
+    CGContextAddCurveToPoint (stroke->cgContext,
+			      x0, y0, x1, y1, x2, y2);
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -177,7 +204,8 @@ static cairo_status_t
 _cairo_path_to_quartz_context_close_path (void *closure)
 {
     //ND((stderr, "closepath\n"));
-    CGContextClosePath ((CGContextRef) closure);
+    quartz_stroke_t *stroke = (quartz_stroke_t *)closure;
+    CGContextClosePath (stroke->cgContext);
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -1156,6 +1184,7 @@ _cairo_quartz_surface_fill (void *abstract_surface,
     cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
     cairo_int_status_t rv = CAIRO_STATUS_SUCCESS;
     cairo_quartz_action_t action;
+    quartz_stroke_t stroke;
 
     ND((stderr, "%p _cairo_quartz_surface_fill op %d source->type %d\n", surface, op, source->type));
 
@@ -1174,7 +1203,10 @@ _cairo_quartz_surface_fill (void *abstract_surface,
     }
 
     CGContextBeginPath (surface->cgContext);
-    _cairo_quartz_cairo_path_to_quartz_context (path, surface->cgContext);
+
+    stroke.cgContext = surface->cgContext;
+    stroke.ctm_inverse = NULL;
+    _cairo_quartz_cairo_path_to_quartz_context (path, &stroke);
 
     if (action == DO_SOLID || action == DO_PATTERN) {
 	if (fill_rule == CAIRO_FILL_RULE_WINDING)
@@ -1237,6 +1269,8 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
     cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
     cairo_int_status_t rv = CAIRO_STATUS_SUCCESS;
     cairo_quartz_action_t action;
+    quartz_stroke_t stroke;
+    CGAffineTransform strokeTransform;
 
     ND((stderr, "%p _cairo_quartz_surface_stroke op %d source->type %d\n", surface, op, source->type));
 
@@ -1252,6 +1286,8 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
     CGContextSetLineCap (surface->cgContext, _cairo_quartz_cairo_line_cap_to_quartz (style->line_cap));
     CGContextSetLineJoin (surface->cgContext, _cairo_quartz_cairo_line_join_to_quartz (style->line_join));
     CGContextSetMiterLimit (surface->cgContext, style->miter_limit);
+    _cairo_quartz_cairo_matrix_to_quartz (ctm, &strokeTransform);
+    CGContextConcatCTM (surface->cgContext, strokeTransform);
 
     if (style->dash && style->num_dashes) {
 #define STATIC_DASH 32
@@ -1279,7 +1315,10 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
     }
 
     CGContextBeginPath (surface->cgContext);
-    _cairo_quartz_cairo_path_to_quartz_context (path, surface->cgContext);
+
+    stroke.cgContext = surface->cgContext;
+    stroke.ctm_inverse = ctm_inverse;
+    _cairo_quartz_cairo_path_to_quartz_context (path, &stroke);
 
     if (action == DO_SOLID || action == DO_PATTERN) {
 	CGContextStrokePath (surface->cgContext);
@@ -1472,6 +1511,7 @@ _cairo_quartz_surface_intersect_clip_path (void *abstract_surface,
 					    cairo_antialias_t antialias)
 {
     cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
+    quartz_stroke_t stroke;
 
     ND((stderr, "%p _cairo_quartz_surface_intersect_clip_path path: %p\n", surface, path));
 
@@ -1487,7 +1527,9 @@ _cairo_quartz_surface_intersect_clip_path (void *abstract_surface,
 	CGContextSaveGState (surface->cgContext);
     } else {
 	CGContextBeginPath (surface->cgContext);
-	_cairo_quartz_cairo_path_to_quartz_context (path, surface->cgContext);
+	stroke.cgContext = surface->cgContext;
+	stroke.ctm_inverse = NULL;
+	_cairo_quartz_cairo_path_to_quartz_context (path, &stroke);
 	if (fill_rule == CAIRO_FILL_RULE_WINDING)
 	    CGContextClip (surface->cgContext);
 	else
