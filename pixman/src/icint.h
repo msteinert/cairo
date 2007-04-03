@@ -33,16 +33,6 @@
 #include <string.h>
 #include <limits.h>
 
-#ifndef __GNUC__
-#define __inline
-#endif
-
-#if defined(__GNUC__)
-#define INLINE __inline__
-#else
-#define INLINE
-#endif
-
 #undef MIN
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #undef MAX
@@ -804,7 +794,7 @@ fbRasterizeTrapezoid (pixman_image_t		*pMask,
    in libgcc in case a target does not have one, which should be just as
    good as the static function below.  */
 #if __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
-static INLINE int
+static inline int
 _FbOnes(unsigned int mask)
 {
 	return __builtin_popcount(mask);

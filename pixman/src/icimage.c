@@ -21,6 +21,10 @@
  * Author:  Keith Packard, SuSE, Inc.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "pixman-xserver-compat.h"
 
 pixman_image_t *
@@ -552,7 +556,7 @@ pixman_image_set_clip_region (pixman_image_t	*image,
 
 #define BOUND(v)	(int16_t) ((v) < MINSHORT ? MINSHORT : (v) > MAXSHORT ? MAXSHORT : (v))
 
-static __inline int
+static inline int
 FbClipImageReg (pixman_region16_t	*region,
 		pixman_region16_t	*clip,
 		int		dx,
@@ -588,7 +592,7 @@ FbClipImageReg (pixman_region16_t	*region,
     return 1;
 }
 
-static __inline int
+static inline int
 FbClipImageSrc (pixman_region16_t	*region,
 		pixman_image_t		*image,
 		int		dx,

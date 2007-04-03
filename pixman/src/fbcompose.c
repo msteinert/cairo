@@ -1741,7 +1741,7 @@ fbCombineSaturateU (CARD32 *dest, const CARD32 *src, int width)
 #define CombineXor	(CombineAOut|CombineBOut)
 
 /* portion covered by a but not b */
-static INLINE CARD8
+static inline CARD8
 fbCombineDisjointOutPart (CARD8 a, CARD8 b)
 {
     /* min (1, (1-b) / a) */
@@ -1753,7 +1753,7 @@ fbCombineDisjointOutPart (CARD8 a, CARD8 b)
 }
 
 /* portion covered by both a and b */
-static INLINE CARD8
+static inline CARD8
 fbCombineDisjointInPart (CARD8 a, CARD8 b)
 {
     /* max (1-(1-b)/a,0) */
@@ -1881,7 +1881,7 @@ fbCombineDisjointXorU (CARD32 *dest, const CARD32 *src, int width)
 }
 
 /* portion covered by a but not b */
-static INLINE CARD8
+static inline CARD8
 fbCombineConjointOutPart (CARD8 a, CARD8 b)
 {
     /* max (1-b/a,0) */
@@ -1895,7 +1895,7 @@ fbCombineConjointOutPart (CARD8 a, CARD8 b)
 }
 
 /* portion covered by both a and b */
-static INLINE CARD8
+static inline CARD8
 fbCombineConjointInPart (CARD8 a, CARD8 b)
 {
     /* min (1,b/a) */

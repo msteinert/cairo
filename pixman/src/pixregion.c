@@ -45,17 +45,15 @@ SOFTWARE.
 
 ******************************************************************/
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
 
 #include "pixregionint.h"
-
-#if defined (__GNUC__) && !defined (NO_INLINES)
-#define INLINE	__inline
-#else
-#define INLINE
-#endif
 
 #undef assert
 #ifdef DEBUG_PIXREGION
@@ -469,7 +467,7 @@ pixman_region_copy(pixman_region16_t *dst, pixman_region16_t *src)
  *
  *-----------------------------------------------------------------------
  */
-INLINE static int
+static inline int
 pixman_coalesce (
     pixman_region16_t *	region,	    	/* Region to coalesce		     */
     int	    	  	prevStart,  	/* Index of start of previous band   */
@@ -552,7 +550,7 @@ pixman_coalesce (
  *-----------------------------------------------------------------------
  */
 
-INLINE static pixman_region_status_t
+static inline pixman_region_status_t
 pixman_region_appendNonO (
     pixman_region16_t *	region,
     pixman_box16_t *	r,
