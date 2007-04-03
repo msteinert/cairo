@@ -819,8 +819,11 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 	    stride = bitmap->pitch;
 	    stride_rgba = (width_rgba * 4 + 3) & ~3;
 	    data_rgba = calloc (1, stride_rgba * height);
-	    if (data_rgba == NULL)
+	    if (data_rgba == NULL) {
+		if (own_buffer)
+		    free (bitmap->buffer);
 		return CAIRO_STATUS_NO_MEMORY;
+	    }
 
 	    os = 1;
 	    switch (font_options->subpixel_order) {
@@ -885,6 +888,8 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
     case FT_PIXEL_MODE_GRAY4:
 	/* These could be triggered by very rare types of TrueType fonts */
     default:
+	if (own_buffer)
+	    free (bitmap->buffer);
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
