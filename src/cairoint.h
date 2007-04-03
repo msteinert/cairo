@@ -67,8 +67,6 @@
 
 #ifdef _MSC_VER
 #define snprintf _snprintf
-#undef inline
-#define inline __inline
 #endif
 
 CAIRO_BEGIN_DECLS
