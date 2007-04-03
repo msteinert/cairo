@@ -1557,7 +1557,7 @@ cairo_arc (cairo_t *cr,
  * arc is centered at (@xc, @yc), begins at @angle1 and proceeds in
  * the direction of decreasing angles to end at @angle2. If @angle2 is
  * greater than @angle1 it will be progressively decreased by 2*M_PI
- * until it is greater than @angle1.
+ * until it is less than @angle1.
  *
  * See cairo_arc() for more details. This function differs only in the
  * direction of the arc between the two angles.
