@@ -429,6 +429,7 @@ multi-page			\
 fallback-resolution
 
 SUPPORT_PROGS =
+EXTRA_PROGRAMS =
 
 # We're using _GNU_SOURCE to get the prototype for asprintf. This may
 # not be the most portable approach, but it is pragmatic and I'm
@@ -478,6 +479,12 @@ SUPPORT_PROGS += pdf2png$(EXEEXT)
 pdf2png_CFLAGS = $(POPPLER_CFLAGS)
 # add LDADD, so poppler uses "our" cairo
 pdf2png_LDADD  = $(LDADD) $(POPPLER_LIBS)
+if CAIRO_HAS_SVG_SURFACE
+EXTRA_PROGRAMS += pdf2svg$(EXEEXT)
+pdf2svg_CFLAGS = $(POPPLER_CFLAGS)
+# add LDADD, so poppler uses "our" cairo
+pdf2svg_LDADD  = $(LDADD) $(POPPLER_LIBS)
+endif
 endif
 
 if CAIRO_CAN_TEST_SVG_SURFACE
@@ -487,7 +494,7 @@ svg2png_CFLAGS = $(LIBRSVG_CFLAGS)
 svg2png_LDADD  = $(LDADD) $(LIBRSVG_LIBS)
 endif
 
-EXTRA_PROGRAMS = $(TESTS) $(SUPPORT_PROGS)
+EXTRA_PROGRAMS += $(TESTS) $(SUPPORT_PROGS)
 
 # Do a funny transition of CAIRO_TEST_TARGET through TARGETS such that
 # one can limit tested targets both through CAIRO_TEST_TARGET env var
