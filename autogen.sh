@@ -191,4 +191,9 @@ cd $ORIGDIR || exit 1
 
 rm -f config.cache
 
-do_cmd $srcdir/configure --cache-file=config.cache --disable-static --enable-maintainer-mode --enable-gtk-doc ${1+"$@"} && echo "Now type \`make' to compile $PROJECT." || exit 1
+do_cmd $srcdir/configure \
+	--cache-file=config.cache \
+	--disable-static \
+	--enable-gtk-doc \
+	--enable-test-surfaces \
+	${1+"$@"} && echo "Now type \`make' to compile $PROJECT." || exit 1
