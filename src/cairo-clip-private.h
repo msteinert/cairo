@@ -38,7 +38,7 @@
 
 #include "cairo-path-fixed-private.h"
 
-extern cairo_private const cairo_rectangle_list_t _cairo_rectangles_nil;
+extern const cairo_private cairo_rectangle_list_t _cairo_rectangles_nil;
 
 struct _cairo_clip_path {
     unsigned int	ref_count;

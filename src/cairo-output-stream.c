@@ -63,7 +63,7 @@ _cairo_output_stream_fini (cairo_output_stream_t *stream)
     return _cairo_output_stream_close (stream);
 }
 
-const cairo_output_stream_t cairo_output_stream_nil = {
+const cairo_output_stream_t _cairo_output_stream_nil = {
     NULL, /* write_func */
     NULL, /* close_func */
     0,    /* position */
@@ -71,7 +71,7 @@ const cairo_output_stream_t cairo_output_stream_nil = {
     FALSE /* closed */
 };
 
-static const cairo_output_stream_t cairo_output_stream_nil_write_error = {
+static const cairo_output_stream_t _cairo_output_stream_nil_write_error = {
     NULL, /* write_func */
     NULL, /* close_func */
     0,    /* position */
@@ -119,7 +119,7 @@ _cairo_output_stream_create (cairo_write_func_t		write_func,
 
     stream = malloc (sizeof (cairo_output_stream_with_closure_t));
     if (stream == NULL)
-	return (cairo_output_stream_t *) &cairo_output_stream_nil;
+	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
 
     _cairo_output_stream_init (&stream->base, closure_write, closure_close);
     stream->write_func = write_func;
@@ -137,8 +137,8 @@ _cairo_output_stream_close (cairo_output_stream_t *stream)
     if (stream->closed)
 	return stream->status;
 
-    if (stream == &cairo_output_stream_nil ||
-	stream == &cairo_output_stream_nil_write_error)
+    if (stream == &_cairo_output_stream_nil ||
+	stream == &_cairo_output_stream_nil_write_error)
     {
 	return stream->status;
     }
@@ -444,11 +444,11 @@ _cairo_output_stream_create_for_file (FILE *file)
     stdio_stream_t *stream;
 
     if (file == NULL)
-	return (cairo_output_stream_t *) &cairo_output_stream_nil_write_error;
+	return (cairo_output_stream_t *) &_cairo_output_stream_nil_write_error;
 
     stream = malloc (sizeof *stream);
     if (stream == NULL)
-	return (cairo_output_stream_t *) &cairo_output_stream_nil;
+	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
 
     _cairo_output_stream_init (&stream->base, stdio_write, stdio_flush);
     stream->file = file;
@@ -464,12 +464,12 @@ _cairo_output_stream_create_for_filename (const char *filename)
 
     file = fopen (filename, "wb");
     if (file == NULL)
-	return (cairo_output_stream_t *) &cairo_output_stream_nil_write_error;
+	return (cairo_output_stream_t *) &_cairo_output_stream_nil_write_error;
 
     stream = malloc (sizeof *stream);
     if (stream == NULL) {
 	fclose (file);
-	return (cairo_output_stream_t *) &cairo_output_stream_nil;
+	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
     }
 
     _cairo_output_stream_init (&stream->base, stdio_write, stdio_close);
@@ -510,7 +510,7 @@ _cairo_memory_stream_create (void)
 
     stream = malloc (sizeof *stream);
     if (stream == NULL)
-	return (cairo_output_stream_t *) &cairo_output_stream_nil;
+	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
 
     _cairo_output_stream_init (&stream->base, memory_write, memory_close);
     _cairo_array_init (&stream->array, 1);

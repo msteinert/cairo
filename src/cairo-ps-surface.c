@@ -182,7 +182,7 @@ _word_wrap_stream_create (cairo_output_stream_t *output, int max_column)
 
     stream = malloc (sizeof (word_wrap_stream_t));
     if (stream == NULL)
-	return (cairo_output_stream_t *) &cairo_output_stream_nil;
+	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
 
     _cairo_output_stream_init (&stream->base,
 			       _word_wrap_stream_write,
@@ -1542,7 +1542,7 @@ _string_array_stream_create (cairo_output_stream_t *output)
 
     stream = malloc (sizeof (string_array_stream_t));
     if (stream == NULL)
-	return (cairo_output_stream_t *) &cairo_output_stream_nil;
+	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
 
     _cairo_output_stream_init (&stream->base,
 			       _string_array_stream_write,

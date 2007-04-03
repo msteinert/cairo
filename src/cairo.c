@@ -44,7 +44,7 @@
 
 #define CAIRO_TOLERANCE_MINIMUM	0.0002 /* We're limited by 16 bits of sub-pixel precision */
 
-static const cairo_t cairo_nil = {
+static const cairo_t _cairo_nil = {
   CAIRO_REF_COUNT_INVALID,	/* ref_count */
   CAIRO_STATUS_NO_MEMORY,	/* status */
   { 0, 0, 0, NULL },		/* user_data */
@@ -192,7 +192,7 @@ cairo_create (cairo_surface_t *target)
 
     cr = malloc (sizeof (cairo_t));
     if (cr == NULL)
-	return (cairo_t *) &cairo_nil;
+	return (cairo_t *) &_cairo_nil;
 
     cr->ref_count = 1;
 
@@ -548,7 +548,7 @@ cairo_pop_group (cairo_t *cr)
     cairo_matrix_t group_matrix;
 
     if (cr->status)
-	return (cairo_pattern_t*) &cairo_pattern_nil.base;
+	return (cairo_pattern_t*) &_cairo_pattern_nil.base;
 
     /* Grab the active surfaces */
     group_surface = _cairo_gstate_get_target (cr->gstate);
@@ -816,7 +816,7 @@ cairo_pattern_t *
 cairo_get_source (cairo_t *cr)
 {
     if (cr->status)
-	return (cairo_pattern_t*) &cairo_pattern_nil.base;
+	return (cairo_pattern_t*) &_cairo_pattern_nil.base;
 
     return _cairo_gstate_get_source (cr->gstate);
 }

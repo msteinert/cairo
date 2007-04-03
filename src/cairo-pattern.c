@@ -30,7 +30,7 @@
 
 #include "cairoint.h"
 
-const cairo_solid_pattern_t cairo_pattern_nil = {
+const cairo_solid_pattern_t _cairo_pattern_nil = {
     { CAIRO_PATTERN_TYPE_SOLID, 	/* type */
       CAIRO_REF_COUNT_INVALID,		/* ref_count */
       CAIRO_STATUS_NO_MEMORY,	/* status */
@@ -40,7 +40,7 @@ const cairo_solid_pattern_t cairo_pattern_nil = {
       CAIRO_EXTEND_GRADIENT_DEFAULT },	/* extend */
 };
 
-static const cairo_solid_pattern_t cairo_pattern_nil_null_pointer = {
+static const cairo_solid_pattern_t _cairo_pattern_nil_null_pointer = {
     { CAIRO_PATTERN_TYPE_SOLID, 	/* type */
       CAIRO_REF_COUNT_INVALID,		/* ref_count */
       CAIRO_STATUS_NULL_POINTER,/* status */
@@ -310,7 +310,7 @@ _cairo_pattern_create_solid (const cairo_color_t *color)
 
     pattern = _cairo_pattern_create_solid_from_cache (color);
     if (pattern == NULL)
-	return (cairo_pattern_t *) &cairo_pattern_nil.base;
+	return (cairo_pattern_t *) &_cairo_pattern_nil.base;
 
     return pattern;
 }
@@ -449,7 +449,7 @@ cairo_pattern_create_for_surface (cairo_surface_t *surface)
     cairo_surface_pattern_t *pattern;
 
     if (surface == NULL)
-	return (cairo_pattern_t*) &cairo_pattern_nil_null_pointer;
+	return (cairo_pattern_t*) &_cairo_pattern_nil_null_pointer;
 
     if (surface->status)
 	return (cairo_pattern_t*) _cairo_pattern_create_in_error (surface->status);
@@ -457,7 +457,7 @@ cairo_pattern_create_for_surface (cairo_surface_t *surface)
     pattern = malloc (sizeof (cairo_surface_pattern_t));
     if (pattern == NULL) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_pattern_t *)&cairo_pattern_nil.base;
+	return (cairo_pattern_t *)&_cairo_pattern_nil.base;
     }
 
     _cairo_pattern_init_for_surface (pattern, surface);
@@ -500,7 +500,7 @@ cairo_pattern_create_linear (double x0, double y0, double x1, double y1)
     pattern = malloc (sizeof (cairo_linear_pattern_t));
     if (pattern == NULL) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_pattern_t *) &cairo_pattern_nil.base;
+	return (cairo_pattern_t *) &_cairo_pattern_nil.base;
     }
 
     _cairo_pattern_init_linear (pattern, x0, y0, x1, y1);
@@ -545,7 +545,7 @@ cairo_pattern_create_radial (double cx0, double cy0, double radius0,
     pattern = malloc (sizeof (cairo_radial_pattern_t));
     if (pattern == NULL) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_pattern_t *) &cairo_pattern_nil.base;
+	return (cairo_pattern_t *) &_cairo_pattern_nil.base;
     }
 
     _cairo_pattern_init_radial (pattern, cx0, cy0, radius0, cx1, cy1, radius1);

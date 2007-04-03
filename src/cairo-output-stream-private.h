@@ -53,7 +53,7 @@ struct _cairo_output_stream {
     cairo_bool_t		     closed;
 };
 
-extern const cairo_private cairo_output_stream_t cairo_output_stream_nil;
+extern const cairo_private cairo_output_stream_t _cairo_output_stream_nil;
 
 cairo_private void
 _cairo_output_stream_init (cairo_output_stream_t            *stream,
