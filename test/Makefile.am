@@ -492,6 +492,12 @@ SUPPORT_PROGS += svg2png$(EXEEXT)
 svg2png_CFLAGS = $(LIBRSVG_CFLAGS)
 # add LDADD, so librsvg uses "our" cairo
 svg2png_LDADD  = $(LDADD) $(LIBRSVG_LIBS)
+if CAIRO_HAS_PDF_SURFACE
+EXTRA_PROGRAMS += svg2pdf$(EXEEXT)
+svg2pdf_CFLAGS = $(LIBRSVG_CFLAGS)
+# add LDADD, so librsvg uses "our" cairo
+svg2pdf_LDADD  = $(LDADD) $(LIBRSVG_LIBS)
+endif
 endif
 
 EXTRA_PROGRAMS += $(TESTS) $(SUPPORT_PROGS)
