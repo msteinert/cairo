@@ -241,6 +241,9 @@ _cairo_image_surface_create_with_masks (unsigned char	       *data,
 
     surface = _cairo_image_surface_create_for_pixman_image (pixman_image,
 							    cairo_format);
+    if (cairo_surface_status (surface)) {
+	pixman_image_destroy (pixman_image);
+    }
 
     return surface;
 }
@@ -315,6 +318,9 @@ cairo_image_surface_create (cairo_format_t	format,
     }
 
     surface = _cairo_image_surface_create_for_pixman_image (pixman_image, format);
+    if (cairo_surface_status (surface)) {
+	pixman_image_destroy (pixman_image);
+    }
 
     return surface;
 }
@@ -395,6 +401,9 @@ cairo_image_surface_create_for_data (unsigned char     *data,
     }
 
     surface = _cairo_image_surface_create_for_pixman_image (pixman_image, format);
+    if (cairo_surface_status (surface)) {
+	pixman_image_destroy (pixman_image);
+    }
 
     return surface;
 }
