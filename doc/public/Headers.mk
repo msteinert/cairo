@@ -20,6 +20,7 @@ PRIVATE_TEST_HFILES = \
 	cairo-ps-test.h \
 	cairo-quartz-private.h \
 	cairo-wideint-private.h \
+	cairo-mutex-private.h \
 	cairo-path-fixed-private.h \
 	cairo-private.h \
 	cairo-ft-private.h \
