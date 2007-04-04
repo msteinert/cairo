@@ -287,5 +287,5 @@ install-data-local:
         fi
 
 TESTS_ENVIRONMENT = srcdir="$(srcdir)"
-TESTS = check-def.sh check-plt.sh check-headers.sh
+TESTS = check-def.sh check-plt.sh check-headers.sh check-cairoint.sh
 EXTRA_DIST += $(TESTS)
