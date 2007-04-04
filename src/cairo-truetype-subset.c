@@ -34,8 +34,8 @@
  *	Adrian Johnson <ajohnson@redneon.com>
  */
 
-#include <string.h>
 #include "cairoint.h"
+
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-truetype-subset-private.h"
 

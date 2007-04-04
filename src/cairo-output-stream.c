@@ -34,11 +34,12 @@
  *	Kristian Høgsberg <krh@redhat.com>
  */
 
-#include <stdio.h>
+#include "cairoint.h"
+
+#include "cairo-output-stream-private.h"
+
 #include <locale.h>
 #include <ctype.h>
-#include "cairoint.h"
-#include "cairo-output-stream-private.h"
 
 #ifdef _MSC_VER
 #define snprintf _snprintf

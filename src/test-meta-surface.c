@@ -45,9 +45,9 @@
  * backend.
  */
 
-#include "test-meta-surface.h"
-
 #include "cairoint.h"
+
+#include "test-meta-surface.h"
 
 #include "cairo-meta-surface-private.h"
 

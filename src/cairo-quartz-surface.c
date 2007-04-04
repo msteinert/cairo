@@ -34,11 +34,11 @@
  *	Vladimir Vukicevic <vladimir@mozilla.com>
  */
 
-#include <Carbon/Carbon.h>
-
 #include "cairoint.h"
 
 #include "cairo-quartz-private.h"
+
+#include <Carbon/Carbon.h>
 
 #undef QUARTZ_DEBUG
 

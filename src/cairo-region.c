@@ -33,7 +33,7 @@
  *	Owen Taylor <otaylor@redhat.com>
  */
 
-#include <cairoint.h>
+#include "cairoint.h"
 
 /**
  * _cairo_region_create_from_rectangle:

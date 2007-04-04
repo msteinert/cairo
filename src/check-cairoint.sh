@@ -5,7 +5,7 @@ LANG=C
 test -z "$srcdir" && srcdir=.
 status=0
 
-echo Checking source files for missing or misplaced \#include cairoint.h
+echo 'Checking source files for missing or misplaced #include "cairoint.h"'
 
 find "$srcdir" -name '*.c' -or -name '*.cpp' |
 while read x; do

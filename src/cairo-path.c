@@ -34,6 +34,8 @@
  *	Carl D. Worth <cworth@redhat.com>
  */
 
+#include "cairoint.h"
+
 #include "cairo-path-private.h"
 #include "cairo-path-fixed-private.h"
 

@@ -37,9 +37,11 @@
  *      Carl Worth <cworth@cworth.org>
  */
 
-#include <float.h>
+#include "cairoint.h"
 
 #include "cairo-ft-private.h"
+
+#include <float.h>
 
 #include <fontconfig/fontconfig.h>
 #include <fontconfig/fcfreetype.h>

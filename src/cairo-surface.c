@@ -35,9 +35,8 @@
  *	Carl D. Worth <cworth@cworth.org>
  */
 
-#include <stdlib.h>
-
 #include "cairoint.h"
+
 #include "cairo-surface-fallback-private.h"
 #include "cairo-clip-private.h"
 

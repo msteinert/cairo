@@ -51,9 +51,9 @@
  * there.
  */
 
-#include "test-fallback-surface.h"
-
 #include "cairoint.h"
+
+#include "test-fallback-surface.h"
 
 typedef struct _test_fallback_surface {
     cairo_surface_t base;

@@ -34,7 +34,6 @@
  *	Carl D. Worth <cworth@cworth.org>
  */
 
-#include <stdlib.h>
 #include "cairoint.h"
 
 /* private functions */

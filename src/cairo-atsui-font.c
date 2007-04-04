@@ -34,11 +34,10 @@
  *  Calum Robinson <calumr@mac.com>
  */
 
-#include <stdlib.h>
-#include <math.h>
-#include "cairo-atsui.h"
 #include "cairoint.h"
+
 #include "cairo.h"
+#include "cairo-atsui.h"
 #include "cairo-quartz-private.h"
 
 /*
