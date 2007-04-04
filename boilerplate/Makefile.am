@@ -2,6 +2,7 @@ EXTRA_LTLIBRARIES = libcairoboilerplate.la
 
 libcairoboilerplate_la_SOURCES =\
 cairo-boilerplate.c	\
+cairo-quartz-boilerplate.c	\
 cairo-boilerplate.h	\
 xmalloc.c		\
 xmalloc.h

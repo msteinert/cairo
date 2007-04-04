@@ -25,6 +25,7 @@
  */
 
 #include "cairo-boilerplate.h"
+#include "cairo-boilerplate-private.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -705,41 +706,6 @@ cleanup_cairo_glitz_wgl (void *closure)
 #endif /* CAIRO_CAN_TEST_GLITZ_WGL_SURFACE */
 
 #endif /* CAIRO_HAS_GLITZ_SURFACE */
-
-#if CAIRO_HAS_QUARTZ_SURFACE
-
-#include <cairo-quartz.h>
-
-static cairo_surface_t *
-create_quartz_surface (const char		*name,
-		       cairo_content_t		 content,
-		       int			 width,
-		       int			 height,
-		       cairo_boilerplate_mode_t  mode,
-		       void **closure)
-{
-    cairo_format_t format;
-
-    switch (content) {
-	case CAIRO_CONTENT_COLOR: format = CAIRO_FORMAT_RGB24; break;
-	case CAIRO_CONTENT_COLOR_ALPHA: format = CAIRO_FORMAT_ARGB32; break;
-	case CAIRO_CONTENT_ALPHA: format = CAIRO_FORMAT_A8; break;
-	default:
-	    assert (0); /* not reached */
-	    return NULL;
-    }
-
-    *closure = NULL;
-
-    return cairo_quartz_surface_create (format, width, height);
-}
-
-static void
-cleanup_quartz (void *closure)
-{
-    /* nothing */
-}
-#endif
 
 /* Testing the win32 surface isn't interesting, since for
  * ARGB images it just chains to the image backend
@@ -1424,11 +1390,11 @@ cairo_boilerplate_target_t targets[] =
 #endif /* CAIRO_HAS_GLITZ_SURFACE */
 #if CAIRO_HAS_QUARTZ_SURFACE
     { "quartz", CAIRO_SURFACE_TYPE_QUARTZ, CAIRO_CONTENT_COLOR_ALPHA, 0,
-      create_quartz_surface, cairo_surface_write_to_png,
-      cleanup_quartz },
+      _cairo_quartz_boilerplate_create_surface, cairo_surface_write_to_png,
+      _cairo_quartz_boilerplate_cleanup },
     { "quartz", CAIRO_SURFACE_TYPE_QUARTZ, CAIRO_CONTENT_COLOR, 0,
-      create_quartz_surface, cairo_surface_write_to_png,
-      cleanup_quartz },
+      _cairo_quartz_boilerplate_create_surface, cairo_surface_write_to_png,
+      _cairo_quartz_boilerplate_cleanup },
 #endif
 #if CAIRO_HAS_WIN32_SURFACE
     { "win32", CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR, 0,
