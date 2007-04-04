@@ -455,9 +455,10 @@ libcairotest_la_SOURCES =\
 libcairotest_la_LIBADD =\
 	$(top_builddir)/test/pdiff/libpdiff.la \
         $(top_builddir)/boilerplate/libcairoboilerplate.la \
-	$(top_builddir)/src/libcairo.la
+	$(top_builddir)/src/libcairo.la \
+	$(CAIRO_LDADD)
 
-LDADD = libcairotest.la
+LDADD = $(CAIRO_LDADD) libcairotest.la
 
 $(top_builddir)/boilerplate/libcairoboilerplate.la:
 	cd $(top_builddir)/boilerplate && $(MAKE) $(AM_MAKEFLAGS) libcairoboilerplate.la

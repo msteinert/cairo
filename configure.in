@@ -221,9 +221,11 @@ CAIRO_FEATURES=""
 CAIRO_REQUIRES=""
 CAIRO_NONPKGCONFIG_CFLAGS=""
 CAIRO_NONPKGCONFIG_LIBS="$LIBM"
+CAIRO_LDADD=""
 CAIRO_CFLAGS=$CAIRO_NONPKGCONFIG_CFLAGS
 CAIRO_LIBS=$CAIRO_NONPKGCONFIG_LIBS
 PIXMAN_CFLAGS=""
+PIXMAN_LDADD=""
 
 dnl ===========================================================================
 
@@ -663,8 +665,10 @@ AC_SUBST(CAIRO_REQUIRES)
 AC_SUBST(CAIRO_NONPKGCONFIG_CFLAGS)
 AC_SUBST(CAIRO_NONPKGCONFIG_LIBS)
 AC_SUBST(CAIRO_CFLAGS)
+AC_SUBST(CAIRO_LDADD)
 AC_SUBST(CAIRO_LIBS)
 AC_SUBST(PIXMAN_CFLAGS)
+AC_SUBST(PIXMAN_LDADD)
 
 dnl ===========================================================================
 dnl Check for gtk-doc and docbook
@@ -727,7 +731,8 @@ if test "x$use_gcov" = "xyes"; then
   fi
 
   dnl Check if ccache is being used
-  case `shtool path $CC` in
+  AC_CHECK_PROG(SHTOOL, shtool, shtool)
+  case `$SHTOOL path $CC` in
     *ccache*[)] gcc_ccache=yes;;
     *[)] gcc_ccache=no;;
   esac
@@ -736,7 +741,7 @@ if test "x$use_gcov" = "xyes"; then
     AC_MSG_ERROR([ccache must be disabled when --enable-gcov option is used. You can disable ccache by setting environment variable CCACHE_DISABLE=1.])
   fi
 
-  ltp_version_list="1.4"
+  ltp_version_list="1.4 1.5"
   AC_CHECK_PROG(LTP, lcov, lcov)
   AC_CHECK_PROG(LTP_GENHTML, genhtml, genhtml)
 
@@ -772,11 +777,16 @@ dnl  PHP_ADD_MAKEFILE_FRAGMENT($abs_srcdir/Makefile.gcov, $abs_srcdir)
 
   dnl Remove all optimization flags from CFLAGS
   changequote({,})
+  CFLAGS=`echo "$CFLAGS" | $SED -e 's/-O[0-9]*//g'`
   CAIRO_CFLAGS=`echo "$CAIRO_CFLAGS" | $SED -e 's/-O[0-9]*//g'`
+  PIXMAN_CFLAGS=`echo "$PIXMAN_CFLAGS" | $SED -e 's/-O[0-9]*//g'`
   changequote([,])
 
   dnl Add the special gcc flags
   CAIRO_CFLAGS="$CAIRO_CFLAGS -O0 -fprofile-arcs -ftest-coverage"
+  CAIRO_LDADD="$CAIRO_LDADD -lgcov"
+  PIXMAN_CFLAGS="$PIXMAN_CFLAGS -O0 -fprofile-arcs -ftest-coverage"
+  PIXMAN_LDADD="$PIXMAN_LDADD -lgcov"
 fi
 
 dnl ===========================================================================

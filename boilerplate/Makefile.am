@@ -6,7 +6,7 @@ cairo-quartz-boilerplate.c	\
 cairo-boilerplate.h	\
 xmalloc.c		\
 xmalloc.h
-libcairoboilerplate_la_LIBADD = $(top_builddir)/src/libcairo.la
+libcairoboilerplate_la_LIBADD = $(top_builddir)/src/libcairo.la $(CAIRO_LDADD)
 
 if CAIRO_HAS_BEOS_SURFACE
 libcairoboilerplate_la_SOURCES += cairo-test-beos.cpp cairo-test-beos.h
