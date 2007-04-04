@@ -38,3 +38,6 @@ libpixman_mmx_la_SOURCES = \
 libpixman_mmx_la_CFLAGS = $(PIXMAN_CFLAGS)
 libpixman_la_LIBADD = libpixman-mmx.la
 endif
+
+TESTS = check-config.sh
+EXTRA_DIST = $(TESTS)
