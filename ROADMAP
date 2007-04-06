@@ -32,6 +32,7 @@ cairo 1.4.x (not scheduled, may become part of 1.6)
    cairo 1.0.x apparently)
 
 	7735 cairo doesn't support 8-bit truecolor visuals
+	4945 Cairo doesn't support 8-bit pseudocolor visuals
 	9993 Cairo fails with 555 X server visual
 
  • Discard trapezoids that lie outside the clip region (cworth)
