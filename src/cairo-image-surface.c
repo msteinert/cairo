@@ -690,7 +690,8 @@ _cairo_image_surface_set_matrix (cairo_image_surface_t	*surface,
 
     _cairo_matrix_to_pixman_matrix (matrix, &pixman_transform);
 
-    pixman_image_set_transform (surface->pixman_image, &pixman_transform);
+    if (pixman_image_set_transform (surface->pixman_image, &pixman_transform))
+	return CAIRO_STATUS_NO_MEMORY;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1047,7 +1048,8 @@ _cairo_image_surface_set_clip_region (void *abstract_surface,
 {
     cairo_image_surface_t *surface = (cairo_image_surface_t *) abstract_surface;
 
-    pixman_image_set_clip_region (surface->pixman_image, region);
+    if (pixman_image_set_clip_region (surface->pixman_image, region))
+	return CAIRO_STATUS_NO_MEMORY;
 
     surface->has_clip = region != NULL;
 
