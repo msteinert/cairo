@@ -134,9 +134,7 @@ _cairo_polygon_add_edge (cairo_polygon_t *polygon, cairo_point_t *p1, cairo_poin
     polygon->num_edges++;
 
   DONE:
-    _cairo_polygon_move_to (polygon, p2);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_polygon_move_to (polygon, p2);
 }
 
 cairo_status_t
@@ -153,12 +151,12 @@ _cairo_polygon_move_to (cairo_polygon_t *polygon, cairo_point_t *point)
 cairo_status_t
 _cairo_polygon_line_to (cairo_polygon_t *polygon, cairo_point_t *point)
 {
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_status_t status;
 
     if (polygon->has_current_point) {
 	status = _cairo_polygon_add_edge (polygon, &polygon->current_point, point);
     } else {
-	_cairo_polygon_move_to (polygon, point);
+	status = _cairo_polygon_move_to (polygon, point);
     }
 
     return status;
