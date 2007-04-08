@@ -189,6 +189,7 @@ cairo_t *
 cairo_create (cairo_surface_t *target)
 {
     cairo_t *cr;
+    cairo_status_t status;
 
     cr = malloc (sizeof (cairo_t));
     if (cr == NULL)
@@ -201,13 +202,17 @@ cairo_create (cairo_surface_t *target)
     _cairo_user_data_array_init (&cr->user_data);
 
     cr->gstate = cr->gstate_tail;
-    _cairo_gstate_init (cr->gstate, target);
+    status = _cairo_gstate_init (cr->gstate, target);
 
     _cairo_path_fixed_init (cr->path);
 
     if (target == NULL) {
-	_cairo_set_error (cr, CAIRO_STATUS_NULL_POINTER);
+	/* override status with user error */
+	status = CAIRO_STATUS_NULL_POINTER;
     }
+
+    if (status)
+	_cairo_set_error (cr, status);
 
     return cr;
 }
@@ -483,9 +488,11 @@ cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
 
     parent_surface = _cairo_gstate_get_target (cr->gstate);
     /* Get the extents that we'll use in creating our new group surface */
-    _cairo_surface_get_extents (parent_surface, &extents);
+    status = _cairo_surface_get_extents (parent_surface, &extents);
+    if (status)
+	goto bail;
     status = _cairo_clip_intersect_to_rectangle (_cairo_gstate_get_clip (cr->gstate), &extents);
-    if (status != CAIRO_STATUS_SUCCESS)
+    if (status)
 	goto bail;
 
     group_surface = cairo_surface_create_similar (_cairo_gstate_get_target (cr->gstate),
@@ -563,7 +570,7 @@ cairo_pop_group (cairo_t *cr)
     /* We need to save group_surface before we restore; we don't need
      * to reference parent_target and original_target, since the
      * gstate will still hold refs to them once we restore. */
-    cairo_surface_reference (group_surface);
+    group_surface = cairo_surface_reference (group_surface);
 
     cairo_restore (cr);
 
@@ -1623,17 +1630,20 @@ void
 cairo_rel_move_to (cairo_t *cr, double dx, double dy)
 {
     cairo_fixed_t dx_fixed, dy_fixed;
+    cairo_status_t status;
 
     if (cr->status)
 	return;
 
-    _cairo_gstate_user_to_device_distance (cr->gstate, &dx, &dy);
-    dx_fixed = _cairo_fixed_from_double (dx);
-    dy_fixed = _cairo_fixed_from_double (dy);
+    status = _cairo_gstate_user_to_device_distance (cr->gstate, &dx, &dy);
+    if (status == CAIRO_STATUS_SUCCESS) {
+	dx_fixed = _cairo_fixed_from_double (dx);
+	dy_fixed = _cairo_fixed_from_double (dy);
 
-    cr->status = _cairo_path_fixed_rel_move_to (cr->path, dx_fixed, dy_fixed);
-    if (cr->status)
-	_cairo_set_error (cr, cr->status);
+	status = _cairo_path_fixed_rel_move_to (cr->path, dx_fixed, dy_fixed);
+    }
+    if (status)
+	_cairo_set_error (cr, status);
 }
 
 /**
@@ -1658,17 +1668,20 @@ void
 cairo_rel_line_to (cairo_t *cr, double dx, double dy)
 {
     cairo_fixed_t dx_fixed, dy_fixed;
+    cairo_status_t status;
 
     if (cr->status)
 	return;
 
-    _cairo_gstate_user_to_device_distance (cr->gstate, &dx, &dy);
-    dx_fixed = _cairo_fixed_from_double (dx);
-    dy_fixed = _cairo_fixed_from_double (dy);
+    status = _cairo_gstate_user_to_device_distance (cr->gstate, &dx, &dy);
+    if (status == CAIRO_STATUS_SUCCESS) {
+	dx_fixed = _cairo_fixed_from_double (dx);
+	dy_fixed = _cairo_fixed_from_double (dy);
 
-    cr->status = _cairo_path_fixed_rel_line_to (cr->path, dx_fixed, dy_fixed);
-    if (cr->status)
-	_cairo_set_error (cr, cr->status);
+	status = _cairo_path_fixed_rel_line_to (cr->path, dx_fixed, dy_fixed);
+    }
+    if (status)
+	_cairo_set_error (cr, status);
 }
 slim_hidden_def(cairo_rel_line_to);
 
@@ -1707,13 +1720,20 @@ cairo_rel_curve_to (cairo_t *cr,
     cairo_fixed_t dx1_fixed, dy1_fixed;
     cairo_fixed_t dx2_fixed, dy2_fixed;
     cairo_fixed_t dx3_fixed, dy3_fixed;
+    cairo_status_t status;
 
     if (cr->status)
 	return;
 
-    _cairo_gstate_user_to_device_distance (cr->gstate, &dx1, &dy1);
-    _cairo_gstate_user_to_device_distance (cr->gstate, &dx2, &dy2);
-    _cairo_gstate_user_to_device_distance (cr->gstate, &dx3, &dy3);
+    status = _cairo_gstate_user_to_device_distance (cr->gstate, &dx1, &dy1);
+    if (status)
+	goto BAIL;
+    status = _cairo_gstate_user_to_device_distance (cr->gstate, &dx2, &dy2);
+    if (status)
+	goto BAIL;
+    status = _cairo_gstate_user_to_device_distance (cr->gstate, &dx3, &dy3);
+    if (status)
+	goto BAIL;
 
     dx1_fixed = _cairo_fixed_from_double (dx1);
     dy1_fixed = _cairo_fixed_from_double (dy1);
@@ -1724,12 +1744,14 @@ cairo_rel_curve_to (cairo_t *cr,
     dx3_fixed = _cairo_fixed_from_double (dx3);
     dy3_fixed = _cairo_fixed_from_double (dy3);
 
-    cr->status = _cairo_path_fixed_rel_curve_to (cr->path,
-						 dx1_fixed, dy1_fixed,
-						 dx2_fixed, dy2_fixed,
-						 dx3_fixed, dy3_fixed);
-    if (cr->status)
-	_cairo_set_error (cr, cr->status);
+    status = _cairo_path_fixed_rel_curve_to (cr->path,
+					     dx1_fixed, dy1_fixed,
+					     dx2_fixed, dy2_fixed,
+					     dx3_fixed, dy3_fixed);
+    if (status) {
+BAIL:
+	_cairo_set_error (cr, status);
+    }
 }
 
 /**
