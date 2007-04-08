@@ -211,6 +211,7 @@ _cairo_scaled_font_map_lock (void)
 
  CLEANUP_SCALED_FONT_MAP:
     free (cairo_scaled_font_map);
+    cairo_scaled_font_map = NULL;
  CLEANUP_MUTEX_LOCK:
     CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
     return NULL;
