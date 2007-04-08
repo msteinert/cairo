@@ -503,35 +503,44 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	    memmove (&font_map->holdovers[i],
 		     &font_map->holdovers[i+1],
 		     (font_map->num_holdovers - i) * sizeof (cairo_scaled_font_t*));
-	}
 
-	/* We increment the reference count manually here, (rather
-	 * than calling into cairo_scaled_font_reference), since we
-	 * must modify the reference count while our lock is still
-	 * held. */
-	scaled_font->ref_count++;
-	_cairo_scaled_font_map_unlock ();
-    } else {
-	/* Otherwise create it and insert it into the hash table. */
-	status = font_face->backend->scaled_font_create (font_face, font_matrix,
-							 ctm, options, &scaled_font);
-	if (status) {
+	    /* reset any error status */
+	    scaled_font->status = CAIRO_STATUS_SUCCESS;
+	}
+	
+	if (scaled_font->status == CAIRO_STATUS_SUCCESS) {
+	    /* We increment the reference count manually here, (rather
+	     * than calling into cairo_scaled_font_reference), since we
+	     * must modify the reference count while our lock is still
+	     * held. */
+	    scaled_font->ref_count++;
 	    _cairo_scaled_font_map_unlock ();
-	    return NULL;
+	    return scaled_font;
 	}
 
-	status = _cairo_hash_table_insert (font_map->hash_table,
-					   &scaled_font->hash_entry);
+	/* the font has been put into an error status - abandon the cache */
+	_cairo_hash_table_remove (font_map->hash_table, &key.hash_entry);
+    }
+
+    /* Otherwise create it and insert it into the hash table. */
+    status = font_face->backend->scaled_font_create (font_face, font_matrix,
+						     ctm, options, &scaled_font);
+    if (status) {
 	_cairo_scaled_font_map_unlock ();
+	return NULL;
+    }
 
-	if (status) {
-	    /* We can't call _cairo_scaled_font_destroy here since it expects
-	     * that the font has already been successfully inserted into the
-	     * hash table. */
-	    _cairo_scaled_font_fini (scaled_font);
-	    free (scaled_font);
-	    return NULL;
-	}
+    status = _cairo_hash_table_insert (font_map->hash_table,
+				       &scaled_font->hash_entry);
+    _cairo_scaled_font_map_unlock ();
+
+    if (status) {
+	/* We can't call _cairo_scaled_font_destroy here since it expects
+	 * that the font has already been successfully inserted into the
+	 * hash table. */
+	_cairo_scaled_font_fini (scaled_font);
+	free (scaled_font);
+	return NULL;
     }
 
     return scaled_font;
