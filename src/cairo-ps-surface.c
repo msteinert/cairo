@@ -297,7 +297,7 @@ _cairo_ps_surface_emit_path (cairo_ps_surface_t	   *surface,
 			     cairo_line_cap_t	    line_cap)
 {
     cairo_output_stream_t *word_wrap;
-    cairo_status_t status;
+    cairo_status_t status, status2;
     ps_path_info_t path_info;
 
     word_wrap = _word_wrap_stream_create (stream, 79);
@@ -315,7 +315,9 @@ _cairo_ps_surface_emit_path (cairo_ps_surface_t	   *surface,
 
     if (status == CAIRO_STATUS_SUCCESS)
 	status = _cairo_output_stream_get_status (word_wrap);
-    _cairo_output_stream_destroy (word_wrap);
+    status2 = _cairo_output_stream_destroy (word_wrap);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = status2;
 
     return status;
 }
@@ -1201,7 +1203,7 @@ cairo_ps_surface_dsc_begin_page_setup (cairo_surface_t *surface)
 static cairo_status_t
 _cairo_ps_surface_finish (void *abstract_surface)
 {
-    cairo_status_t status;
+    cairo_status_t status, status2;
     cairo_ps_surface_t *surface = abstract_surface;
     int i, num_comments;
     char **comments;
@@ -1214,16 +1216,13 @@ _cairo_ps_surface_finish (void *abstract_surface)
 
     _cairo_ps_surface_emit_footer (surface);
 
-    _cairo_output_stream_close (surface->stream);
-    status = _cairo_output_stream_get_status (surface->stream);
-    _cairo_output_stream_destroy (surface->stream);
+    status = _cairo_output_stream_destroy (surface->stream);
 
     fclose (surface->tmpfile);
 
-    _cairo_output_stream_close (surface->final_stream);
+    status2 = _cairo_output_stream_destroy (surface->final_stream);
     if (status == CAIRO_STATUS_SUCCESS)
-	status = _cairo_output_stream_get_status (surface->final_stream);
-    _cairo_output_stream_destroy (surface->final_stream);
+	status = status2;
 
     num_comments = _cairo_array_num_elements (&surface->dsc_header_comments);
     comments = _cairo_array_index (&surface->dsc_header_comments, 0);
@@ -1588,20 +1587,29 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 
 	_cairo_pattern_init_for_surface (&pattern.surface, &image->base);
 
-	_cairo_surface_fill_rectangle (opaque,
-				       CAIRO_OPERATOR_SOURCE,
-				       CAIRO_COLOR_WHITE,
-				       0, 0, image->width, image->height);
+	status = _cairo_surface_fill_rectangle (opaque,
+				                CAIRO_OPERATOR_SOURCE,
+						CAIRO_COLOR_WHITE,
+						0, 0,
+					       	image->width, image->height);
+	if (status) {
+	    _cairo_pattern_fini (&pattern.base);
+	    goto bail0;
+	}
 
-	_cairo_surface_composite (CAIRO_OPERATOR_OVER,
-				  &pattern.base,
-				  NULL,
-				  opaque,
-				  0, 0,
-				  0, 0,
-				  0, 0,
-				  image->width,
-				  image->height);
+	status = _cairo_surface_composite (CAIRO_OPERATOR_OVER,
+				           &pattern.base,
+					   NULL,
+					   opaque,
+					   0, 0,
+					   0, 0,
+					   0, 0,
+					   image->width,
+					   image->height);
+	if (status) {
+	    _cairo_pattern_fini (&pattern.base);
+	    goto bail0;
+	}
 
 	_cairo_pattern_fini (&pattern.base);
 	opaque_image = (cairo_image_surface_t *) opaque;
