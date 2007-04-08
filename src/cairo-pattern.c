@@ -277,8 +277,8 @@ static struct {
     int size;
 } solid_pattern_cache;
 
-static cairo_pattern_t *
-_cairo_pattern_create_solid_from_cache (const cairo_color_t *color)
+cairo_pattern_t *
+_cairo_pattern_create_solid (const cairo_color_t *color)
 {
     cairo_solid_pattern_t *pattern = NULL;
 
@@ -299,20 +299,10 @@ _cairo_pattern_create_solid_from_cache (const cairo_color_t *color)
     }
     if (pattern != NULL)
 	_cairo_pattern_init_solid (pattern, color);
+    else
+	pattern = (cairo_solid_pattern_t *) &_cairo_pattern_nil;
 
     return &pattern->base;
-}
-
-cairo_pattern_t *
-_cairo_pattern_create_solid (const cairo_color_t *color)
-{
-    cairo_pattern_t *pattern;
-
-    pattern = _cairo_pattern_create_solid_from_cache (color);
-    if (pattern == NULL)
-	return (cairo_pattern_t *) &_cairo_pattern_nil.base;
-
-    return pattern;
 }
 
 void
@@ -336,10 +326,8 @@ _cairo_pattern_create_in_error (cairo_status_t status)
 {
     cairo_pattern_t *pattern;
 
-    pattern = _cairo_pattern_create_solid_from_cache (_cairo_stock_color (CAIRO_STOCK_BLACK));
-    if (cairo_pattern_status (pattern))
-	return pattern;
-
+    pattern = _cairo_pattern_create_solid (_cairo_stock_color (CAIRO_STOCK_BLACK));
+    /* no-op on a pattern already in error i.e the _cairo_pattern_nil */
     _cairo_pattern_set_error (pattern, status);
 
     return pattern;
