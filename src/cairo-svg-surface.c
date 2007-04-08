@@ -447,7 +447,8 @@ _cairo_svg_surface_store_page (cairo_svg_surface_t *surface)
     for (i = 0; i < page.clip_level; i++)
 	_cairo_output_stream_printf (page.xml_node, "</g>\n");
 
-    _cairo_array_append (&surface->page_set, &page);
+    if (_cairo_array_append (&surface->page_set, &page) != CAIRO_STATUS_SUCCESS)
+	return NULL;
 
     return _cairo_array_index (&surface->page_set, surface->page_set.num_elements - 1);
 }
@@ -776,7 +777,7 @@ _cairo_svg_surface_create_similar (void			*abstract_src,
 static cairo_status_t
 _cairo_svg_surface_finish (void *abstract_surface)
 {
-    cairo_status_t status;
+    cairo_status_t status, status2;
     cairo_svg_surface_t *surface = abstract_surface;
     cairo_svg_document_t *document = surface->document;
     cairo_svg_page_t *page;
@@ -787,11 +788,15 @@ _cairo_svg_surface_finish (void *abstract_surface)
     else
 	status = CAIRO_STATUS_SUCCESS;
 
-    _cairo_output_stream_destroy (surface->xml_node);
+    status2 = _cairo_output_stream_destroy (surface->xml_node);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = status2;
 
     for (i = 0; i < surface->page_set.num_elements; i++) {
 	page = _cairo_array_index (&surface->page_set, i);
-	_cairo_output_stream_destroy (page->xml_node);
+	status2 = _cairo_output_stream_destroy (page->xml_node);
+	if (status == CAIRO_STATUS_SUCCESS)
+	    status = status2;
     }
     _cairo_array_fini (&surface->page_set);
 
@@ -941,7 +946,9 @@ _cairo_svg_surface_emit_composite_image_pattern (cairo_output_stream_t     *outp
 	return status;
 
     p2u = pattern->base.matrix;
-    cairo_matrix_invert (&p2u);
+    status = cairo_matrix_invert (&p2u);
+    if (status)
+	return status;
 
     if (pattern_id != invalid_pattern_id) {
 	_cairo_output_stream_printf (output,
@@ -1075,14 +1082,17 @@ _cairo_svg_surface_emit_composite_meta_pattern (cairo_output_stream_t	*output,
     cairo_svg_document_t *document = surface->document;
     cairo_meta_surface_t *meta_surface;
     cairo_matrix_t p2u;
+    cairo_status_t status;
     int id;
+
+    p2u = pattern->base.matrix;
+    status = cairo_matrix_invert (&p2u);
+    if (status)
+	return status;
 
     meta_surface = (cairo_meta_surface_t *) pattern->surface;
 
     id = _cairo_svg_surface_emit_meta_surface (document, meta_surface);
-
-    p2u = pattern->base.matrix;
-    cairo_matrix_invert (&p2u);
 
     if (pattern_id != invalid_pattern_id) {
 	_cairo_output_stream_printf (output,
@@ -1375,6 +1385,12 @@ _cairo_svg_surface_emit_linear_pattern (cairo_svg_surface_t    *surface,
     cairo_svg_document_t *document = surface->document;
     double x0, y0, x1, y1;
     cairo_matrix_t p2u;
+    cairo_status_t status;
+
+    p2u = pattern->base.base.matrix;
+    status = cairo_matrix_invert (&p2u);
+    if (status)
+	return status;
 
     x0 = _cairo_fixed_to_double (pattern->gradient.p1.x);
     y0 = _cairo_fixed_to_double (pattern->gradient.p1.y);
@@ -1389,8 +1405,6 @@ _cairo_svg_surface_emit_linear_pattern (cairo_svg_surface_t    *surface,
 				 x0, y0, x1, y1);
 
     _cairo_svg_surface_emit_pattern_extend (document->xml_node_defs, &pattern->base.base),
-    p2u = pattern->base.base.matrix;
-    cairo_matrix_invert (&p2u);
     _cairo_svg_surface_emit_transform (document->xml_node_defs, "gradientTransform", ">\n", &p2u);
 
     _cairo_svg_surface_emit_pattern_stops (document->xml_node_defs ,&pattern->base, 0.0, FALSE, FALSE);
