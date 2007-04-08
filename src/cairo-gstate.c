@@ -62,6 +62,7 @@ cairo_status_t
 _cairo_gstate_init (cairo_gstate_t  *gstate,
 		    cairo_surface_t *target)
 {
+    cairo_status_t status;
     gstate->next = NULL;
 
     gstate->op = CAIRO_GSTATE_OPERATOR_DEFAULT;
@@ -88,7 +89,9 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     gstate->parent_target = NULL;
     gstate->original_target = cairo_surface_reference (target);
 
-    _cairo_gstate_identity_matrix (gstate);
+    status = _cairo_gstate_identity_matrix (gstate);
+    if (status)
+	return status;
     gstate->source_ctm_inverse = gstate->ctm_inverse;
 
     gstate->source = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK);
@@ -403,7 +406,7 @@ _cairo_gstate_set_source (cairo_gstate_t  *gstate,
     if (source->status)
 	return source->status;
 
-    cairo_pattern_reference (source);
+    source = cairo_pattern_reference (source);
     cairo_pattern_destroy (gstate->source);
     gstate->source = source;
     gstate->source_ctm_inverse = gstate->ctm_inverse;
@@ -648,13 +651,16 @@ _cairo_gstate_transform (cairo_gstate_t	      *gstate,
 			 const cairo_matrix_t *matrix)
 {
     cairo_matrix_t tmp;
+    cairo_status_t status;
 
     _cairo_gstate_unset_scaled_font (gstate);
 
     tmp = *matrix;
     cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
 
-    cairo_matrix_invert (&tmp);
+    status = cairo_matrix_invert (&tmp);
+    if (status)
+	return status;
     cairo_matrix_multiply (&gstate->ctm_inverse, &gstate->ctm_inverse, &tmp);
 
     return CAIRO_STATUS_SUCCESS;
@@ -1255,12 +1261,15 @@ _cairo_gstate_select_font_face (cairo_gstate_t       *gstate,
 				cairo_font_weight_t   weight)
 {
     cairo_font_face_t *font_face;
+    cairo_status_t status;
 
     font_face = _cairo_toy_font_face_create (family, slant, weight);
     if (font_face->status)
 	return font_face->status;
 
-    _cairo_gstate_set_font_face (gstate, font_face);
+    status = _cairo_gstate_set_font_face (gstate, font_face);
+    if (status)
+	return status;
     cairo_font_face_destroy (font_face);
 
     return CAIRO_STATUS_SUCCESS;
