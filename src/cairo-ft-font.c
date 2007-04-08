@@ -1158,23 +1158,32 @@ _transform_glyph_bitmap (cairo_matrix_t         * shape,
 
     /* Initialize it to empty
      */
-    _cairo_surface_fill_rectangle (image, CAIRO_OPERATOR_CLEAR,
-				   CAIRO_COLOR_TRANSPARENT,
-				   0, 0,
-				   width, height);
+    status = _cairo_surface_fill_rectangle (image, CAIRO_OPERATOR_CLEAR,
+				            CAIRO_COLOR_TRANSPARENT,
+					    0, 0,
+					    width, height);
+    if (status) {
+	cairo_surface_destroy (image);
+	return status;
+    }
 
     /* Draw the original bitmap transformed into the new bitmap
      */
     _cairo_pattern_init_for_surface (&pattern, &(*surface)->base);
     cairo_pattern_set_matrix (&pattern.base, &transformed_to_original);
 
-    _cairo_surface_composite (CAIRO_OPERATOR_OVER,
-			      &pattern.base, NULL, image,
-			      0, 0, 0, 0, 0, 0,
-			      width,
-			      height);
+    status = _cairo_surface_composite (CAIRO_OPERATOR_OVER,
+			               &pattern.base, NULL, image,
+				       0, 0, 0, 0, 0, 0,
+				       width,
+				       height);
 
     _cairo_pattern_fini (&pattern.base);
+
+    if (status) {
+	cairo_surface_destroy (image);
+	return status;
+    }
 
     /* Now update the cache entry for the new bitmap, recomputing
      * the origin based on the final transform.
@@ -1425,6 +1434,7 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
     FT_Face face;
     FT_Size_Metrics *metrics;
     cairo_font_extents_t fs_metrics;
+    cairo_status_t status;
 
     face = _cairo_ft_unscaled_font_lock_face (unscaled);
     if (!face)
@@ -1445,10 +1455,15 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
     _cairo_font_options_init_copy (&scaled_font->ft_options.base, options);
     _cairo_ft_options_merge (&scaled_font->ft_options, &ft_options);
 
-    _cairo_scaled_font_init (&scaled_font->base,
-			     font_face,
-			     font_matrix, ctm, options,
-			     &cairo_ft_scaled_font_backend);
+    status = _cairo_scaled_font_init (&scaled_font->base,
+			              font_face,
+				      font_matrix, ctm, options,
+				      &cairo_ft_scaled_font_backend);
+    if (status) {
+	free (scaled_font);
+	_cairo_ft_unscaled_font_unlock_face (unscaled);
+	return NULL;
+    }
 
     _cairo_ft_unscaled_font_set_scale (unscaled,
 				       &scaled_font->base.scale);
@@ -1624,8 +1639,10 @@ _move_to (FT_Vector *to, void *closure)
     x = _cairo_fixed_from_26_6 (to->x);
     y = _cairo_fixed_from_26_6 (to->y);
 
-    _cairo_path_fixed_close_path (path);
-    _cairo_path_fixed_move_to (path, x, y);
+    if (_cairo_path_fixed_close_path (path) != CAIRO_STATUS_SUCCESS)
+	return 1;
+    if (_cairo_path_fixed_move_to (path, x, y) != CAIRO_STATUS_SUCCESS)
+	return 1;
 
     return 0;
 }
@@ -1639,7 +1656,8 @@ _line_to (FT_Vector *to, void *closure)
     x = _cairo_fixed_from_26_6 (to->x);
     y = _cairo_fixed_from_26_6 (to->y);
 
-    _cairo_path_fixed_line_to (path, x, y);
+    if (_cairo_path_fixed_line_to (path, x, y) != CAIRO_STATUS_SUCCESS)
+	return 1;
 
     return 0;
 }
@@ -1655,7 +1673,9 @@ _conic_to (FT_Vector *control, FT_Vector *to, void *closure)
     cairo_fixed_t x3, y3;
     cairo_point_t conic;
 
-    _cairo_path_fixed_get_current_point (path, &x0, &y0);
+    if (_cairo_path_fixed_get_current_point (path, &x0, &y0) !=
+	    CAIRO_STATUS_SUCCESS)
+	return 1;
 
     conic.x = _cairo_fixed_from_26_6 (control->x);
     conic.y = _cairo_fixed_from_26_6 (control->y);
@@ -1669,10 +1689,11 @@ _conic_to (FT_Vector *control, FT_Vector *to, void *closure)
     x2 = x3 + 2.0/3.0 * (conic.x - x3);
     y2 = y3 + 2.0/3.0 * (conic.y - y3);
 
-    _cairo_path_fixed_curve_to (path,
-				x1, y1,
-				x2, y2,
-				x3, y3);
+    if (_cairo_path_fixed_curve_to (path,
+				    x1, y1,
+				    x2, y2,
+				    x3, y3) != CAIRO_STATUS_SUCCESS)
+	return 1;
 
     return 0;
 }
@@ -1695,10 +1716,11 @@ _cubic_to (FT_Vector *control1, FT_Vector *control2,
     x2 = _cairo_fixed_from_26_6 (to->x);
     y2 = _cairo_fixed_from_26_6 (to->y);
 
-    _cairo_path_fixed_curve_to (path,
-				x0, y0,
-				x1, y1,
-				x2, y2);
+    if (_cairo_path_fixed_curve_to (path,
+				    x0, y0,
+				    x1, y1,
+				    x2, y2) != CAIRO_STATUS_SUCCESS)
+	return 1;
 
     return 0;
 }
@@ -1723,6 +1745,7 @@ _decompose_glyph_outline (FT_Face		  face,
 
     FT_GlyphSlot glyph;
     cairo_path_fixed_t *path;
+    cairo_status_t status;
 
     path = _cairo_path_fixed_create ();
     if (!path)
@@ -1730,15 +1753,18 @@ _decompose_glyph_outline (FT_Face		  face,
 
     glyph = face->glyph;
 
+    status = CAIRO_STATUS_SUCCESS;
     /* Font glyphs have an inverted Y axis compared to cairo. */
     FT_Outline_Transform (&glyph->outline, &invert_y);
-    FT_Outline_Decompose (&glyph->outline, &outline_funcs, path);
+    if (FT_Outline_Decompose (&glyph->outline, &outline_funcs, path))
+	status = CAIRO_STATUS_NO_MEMORY;
 
     _cairo_path_fixed_close_path (path);
 
-    *pathp = path;
+    if (status == CAIRO_STATUS_SUCCESS)
+	*pathp = path;
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 /*
