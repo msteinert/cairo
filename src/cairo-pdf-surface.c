@@ -900,7 +900,9 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
     if (status)
 	goto BAIL;
 
-    _cairo_surface_get_extents (&surface->base, &surface_extents);
+    status = _cairo_surface_get_extents (&surface->base, &surface_extents);
+    if (status)
+	goto BAIL;
 
     switch (extend) {
     /* We implement EXTEND_PAD like EXTEND_NONE for now */
@@ -1256,6 +1258,7 @@ _cairo_pdf_surface_emit_radial_pattern (cairo_pdf_surface_t *surface, cairo_radi
     cairo_pdf_resource_t function, pattern_resource, alpha;
     double x0, y0, x1, y1, r0, r1;
     cairo_matrix_t p2u;
+    cairo_status_t status;
 
     _cairo_pdf_surface_pause_content_stream (surface);
 
@@ -1264,7 +1267,9 @@ _cairo_pdf_surface_emit_radial_pattern (cairo_pdf_surface_t *surface, cairo_radi
 	return CAIRO_STATUS_NO_MEMORY;
 
     p2u = pattern->base.base.matrix;
-    cairo_matrix_invert (&p2u);
+    status = cairo_matrix_invert (&p2u);
+    if (status)
+	return status;
 
     x0 = _cairo_fixed_to_double (pattern->gradient.c1.x);
     y0 = _cairo_fixed_to_double (pattern->gradient.c1.y);
@@ -1825,11 +1830,11 @@ _cairo_pdf_surface_emit_cff_font_subset (cairo_pdf_surface_t		*surface,
     font.font_id = font_subset->font_id;
     font.subset_id = font_subset->subset_id;
     font.subset_resource = subset_resource;
-    _cairo_array_append (&surface->fonts, &font);
+    status = _cairo_array_append (&surface->fonts, &font);
 
     _cairo_cff_subset_fini (&subset);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static cairo_status_t
@@ -1934,9 +1939,7 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
     font.font_id = font_subset->font_id;
     font.subset_id = font_subset->subset_id;
     font.subset_resource = subset_resource;
-    _cairo_array_append (&surface->fonts, &font);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_array_append (&surface->fonts, &font);
 }
 
 #if CAIRO_HAS_FT_FONT
@@ -2105,11 +2108,11 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
     font.font_id = font_subset->font_id;
     font.subset_id = font_subset->subset_id;
     font.subset_resource = subset_resource;
-    _cairo_array_append (&surface->fonts, &font);
+    status = _cairo_array_append (&surface->fonts, &font);
 
     _cairo_truetype_subset_fini (&subset);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static cairo_int_status_t
@@ -2390,9 +2393,7 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
     font.font_id = font_subset->font_id;
     font.subset_id = font_subset->subset_id;
     font.subset_resource = subset_resource;
-    _cairo_array_append (&surface->fonts, &font);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_array_append (&surface->fonts, &font);
 }
 
 static void
