@@ -201,15 +201,22 @@ _cairo_paginated_surface_acquire_source_image (void	       *abstract_surface,
 {
     cairo_paginated_surface_t *surface = abstract_surface;
     cairo_surface_t *image;
+    cairo_status_t status;
     cairo_rectangle_int16_t extents;
 
-    _cairo_surface_get_extents (surface->target, &extents);
+    status = _cairo_surface_get_extents (surface->target, &extents);
+    if (status)
+	return status;
 
     image = _cairo_paginated_surface_create_image_surface (surface,
 							   extents.width,
 							   extents.height);
 
-    _cairo_meta_surface_replay (surface->meta, image);
+    status = _cairo_meta_surface_replay (surface->meta, image);
+    if (status) {
+	cairo_surface_destroy (image);
+	return status;
+    }
 
     *image_out = (cairo_image_surface_t*) image;
     *image_extra = NULL;
@@ -257,26 +264,29 @@ _paint_page (cairo_paginated_surface_t *surface)
 							       surface->height * y_scale);
 	_cairo_surface_set_device_scale (image, x_scale, y_scale);
 
-	_cairo_meta_surface_replay (surface->meta, image);
+	status = _cairo_meta_surface_replay (surface->meta, image);
+	if (status)
+	    goto CLEANUP_IMAGE;
 
 	pattern = cairo_pattern_create_for_surface (image);
 	cairo_matrix_init_scale (&matrix, x_scale, y_scale);
 	cairo_pattern_set_matrix (pattern, &matrix);
 
-	_cairo_surface_paint (surface->target, CAIRO_OPERATOR_SOURCE, pattern);
+	status = _cairo_surface_paint (surface->target, CAIRO_OPERATOR_SOURCE, pattern);
 
 	cairo_pattern_destroy (pattern);
 
+CLEANUP_IMAGE:
 	cairo_surface_destroy (image);
     }
     else
     {
-	_cairo_meta_surface_replay (surface->meta, surface->target);
+	status = _cairo_meta_surface_replay (surface->meta, surface->target);
     }
 
     cairo_surface_destroy (analysis);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static cairo_status_t
