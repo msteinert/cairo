@@ -461,5 +461,5 @@ _cairo_pen_stroke_spline (cairo_pen_t		*pen,
 BAIL:
     _cairo_polygon_fini (&polygon);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
