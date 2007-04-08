@@ -558,6 +558,7 @@ cairo_type1_font_write_private_dict (cairo_type1_font_t *font,
                                      const char         *name)
 {
     cairo_int_status_t status;
+    cairo_status_t status2;
     cairo_output_stream_t *encrypted_output;
 
     font->eexec_key = CAIRO_TYPE1_PRIVATE_DICT_KEY;
@@ -597,10 +598,10 @@ cairo_type1_font_write_private_dict (cairo_type1_font_t *font,
                                  "dup /FontName get exch definefont pop\n"
                                  "mark currentfile closefile\n");
 
-    if (status == CAIRO_STATUS_SUCCESS)
-	status = _cairo_output_stream_get_status (encrypted_output);
   fail:
-    _cairo_output_stream_destroy (encrypted_output);
+    status2 = _cairo_output_stream_destroy (encrypted_output);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = status2;
 
     return status;
 }
