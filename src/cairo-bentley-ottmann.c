@@ -1262,7 +1262,7 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
 					    cairo_fixed_t	ymax,
 					    int			*num_intersections)
 {
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_status_t status;
     int intersection_count = 0;
     cairo_bo_event_queue_t event_queue;
     cairo_bo_sweep_line_t sweep_line;
@@ -1272,7 +1272,9 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
     cairo_bo_edge_t *left, *right;
     cairo_bo_edge_t *edge1, *edge2;
 
-    _cairo_bo_event_queue_init (&event_queue, edges, num_edges);
+    status = _cairo_bo_event_queue_init (&event_queue, edges, num_edges);
+    if (status)
+	return status;
     _cairo_bo_sweep_line_init (&sweep_line);
     _cairo_bo_traps_init (&bo_traps, traps, xmin, ymin, xmax, ymax);
 
