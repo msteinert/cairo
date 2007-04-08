@@ -138,7 +138,7 @@ _cairo_filler_curve_to (void *closure,
     if (status == CAIRO_INT_STATUS_DEGENERATE)
 	return CAIRO_STATUS_SUCCESS;
 
-    _cairo_spline_decompose (&spline, filler->tolerance);
+    status = _cairo_spline_decompose (&spline, filler->tolerance);
     if (status)
 	goto CLEANUP_SPLINE;
 
