@@ -889,6 +889,7 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 {
     cairo_xlib_surface_t *surface = abstract_surface;
     cairo_xlib_surface_t *clone;
+    cairo_status_t status;
 
     if (src->backend == surface->base.backend ) {
 	cairo_xlib_surface_t *xlib_src = (cairo_xlib_surface_t *)src;
@@ -910,8 +911,12 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	if (clone->base.status)
 	    return CAIRO_STATUS_NO_MEMORY;
 
-	_draw_image_surface (clone, image_src, src_x, src_y,
-			     width, height, src_x, src_y);
+	status = _draw_image_surface (clone, image_src, src_x, src_y,
+			              width, height, src_x, src_y);
+	if (status) {
+	    cairo_surface_destroy (&clone->base);
+	    return status;
+	}
 
 	*clone_out = &clone->base;
 
@@ -1042,15 +1047,17 @@ _cairo_xlib_surface_set_attributes (cairo_xlib_surface_t	  *surface,
 
     switch (attributes->extend) {
     case CAIRO_EXTEND_NONE:
-	_cairo_xlib_surface_set_repeat (surface, 0);
+	status = _cairo_xlib_surface_set_repeat (surface, 0);
 	break;
     case CAIRO_EXTEND_REPEAT:
-	_cairo_xlib_surface_set_repeat (surface, 1);
+	status = _cairo_xlib_surface_set_repeat (surface, 1);
 	break;
     case CAIRO_EXTEND_REFLECT:
     case CAIRO_EXTEND_PAD:
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
     }
+    if (status)
+	return status;
 
     status = _cairo_xlib_surface_set_filter (surface, attributes->filter);
     if (status)
@@ -2318,14 +2325,17 @@ _cairo_xlib_surface_font_init (Display		    *dpy,
 {
     cairo_xlib_surface_font_private_t	*font_private;
 
-    if (!_cairo_xlib_add_close_display_hook (dpy,
-		_cairo_xlib_surface_remove_scaled_font,
-		scaled_font, scaled_font))
-	return CAIRO_STATUS_NO_MEMORY;
-
     font_private = malloc (sizeof (cairo_xlib_surface_font_private_t));
     if (!font_private)
 	return CAIRO_STATUS_NO_MEMORY;
+
+    if (!_cairo_xlib_add_close_display_hook (dpy,
+		_cairo_xlib_surface_remove_scaled_font,
+		scaled_font, scaled_font)) {
+	free (font_private);
+	return CAIRO_STATUS_NO_MEMORY;
+    }
+
 
     font_private->dpy = dpy;
     font_private->format = format;
@@ -2815,7 +2825,11 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 
 	/* Send unsent glyphs to the server */
 	if (scaled_glyph->surface_private == NULL) {
-	    _cairo_xlib_surface_add_glyph (dst->dpy, scaled_font, scaled_glyph);
+	    status = _cairo_xlib_surface_add_glyph (dst->dpy,
+		                                    scaled_font,
+						    scaled_glyph);
+	    if (status)
+		return status;
 	    scaled_glyph->surface_private = (void *) 1;
 	}
 
@@ -2951,9 +2965,13 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
     if (status)
         goto BAIL1;
 
-    _cairo_xlib_surface_emit_glyphs (dst,
-	                             (cairo_xlib_glyph_t *) glyphs, num_glyphs,
-				     scaled_font, op, src, &attributes);
+    status = _cairo_xlib_surface_emit_glyphs (dst,
+	                                      (cairo_xlib_glyph_t *) glyphs,
+					      num_glyphs,
+					      scaled_font,
+					      op,
+					      src,
+					      &attributes);
 
   BAIL1:
     if (src)
