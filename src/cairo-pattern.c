@@ -1191,7 +1191,11 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     pixman_image_set_filter (pixman_image, PIXMAN_FILTER_BILINEAR);
 
     _cairo_matrix_to_pixman_matrix (&pattern->base.matrix, &pixman_transform);
-    pixman_image_set_transform (pixman_image, &pixman_transform);
+    if (pixman_image_set_transform (pixman_image, &pixman_transform)) {
+	cairo_surface_destroy (&image->base);
+	pixman_image_destroy (pixman_image);
+	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     switch (pattern->base.extend) {
     case CAIRO_EXTEND_NONE:
@@ -1755,7 +1759,9 @@ _cairo_pattern_get_extents (cairo_pattern_t         *pattern,
 	    return status;
 
 	imatrix = pattern->matrix;
-	cairo_matrix_invert (&imatrix);
+	status = cairo_matrix_invert (&imatrix);
+	if (status)
+	    return status;
 
 	/* XXX Use _cairo_matrix_transform_bounding_box here */
 	for (sy = 0; sy <= 1; sy++) {
