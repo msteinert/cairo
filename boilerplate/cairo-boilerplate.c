@@ -1062,7 +1062,15 @@ create_ps_surface (const char			 *name,
 	ptc->target = NULL;
     }
 
-    cairo_surface_set_user_data (surface, &ps_closure_key, ptc, NULL);
+    if (cairo_surface_set_user_data (surface,
+	       	                     &ps_closure_key,
+				     ptc,
+				     NULL) != CAIRO_STATUS_SUCCESS) {
+	cairo_surface_destroy (surface);
+	free (ptc->filename);
+	free (ptc);
+	return NULL;
+    }
 
     return surface;
 }
