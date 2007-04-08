@@ -205,6 +205,7 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 {
     int			clockwise = _cairo_stroker_face_clockwise (out, in);
     cairo_point_t	*inpt, *outpt;
+    cairo_status_t status;
 
     if (in->cw.x == out->cw.x
 	&& in->cw.y == out->cw.y
@@ -231,13 +232,21 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 
 	tri[0] = in->point;
 	if (clockwise) {
-	    _cairo_pen_find_active_ccw_vertex_index (pen, &in->dev_vector, &start);
+	    status = _cairo_pen_find_active_ccw_vertex_index (pen, &in->dev_vector, &start);
+	    if (status)
+		return status;
 	    step = -1;
-	    _cairo_pen_find_active_ccw_vertex_index (pen, &out->dev_vector, &stop);
+	    status = _cairo_pen_find_active_ccw_vertex_index (pen, &out->dev_vector, &stop);
+	    if (status)
+		return status;
 	} else {
-	    _cairo_pen_find_active_cw_vertex_index (pen, &in->dev_vector, &start);
+	    status = _cairo_pen_find_active_cw_vertex_index (pen, &in->dev_vector, &start);
+	    if (status)
+		return status;
 	    step = +1;
-	    _cairo_pen_find_active_cw_vertex_index (pen, &out->dev_vector, &stop);
+	    status = _cairo_pen_find_active_cw_vertex_index (pen, &out->dev_vector, &stop);
+	    if (status)
+		return status;
 	}
 
 	i = start;
@@ -245,7 +254,9 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	while (i != stop) {
 	    tri[2] = in->point;
 	    _translate_point (&tri[2], &pen->vertices[i].point);
-	    _cairo_traps_tessellate_triangle (stroker->traps, tri);
+	    status = _cairo_traps_tessellate_triangle (stroker->traps, tri);
+	    if (status)
+		return status;
 	    tri[1] = tri[2];
 	    i += step;
 	    if (i < 0)
@@ -378,17 +389,23 @@ _cairo_stroker_add_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 	cairo_pen_t *pen = &stroker->pen;
 
 	slope = f->dev_vector;
-	_cairo_pen_find_active_cw_vertex_index (pen, &slope, &start);
+	status = _cairo_pen_find_active_cw_vertex_index (pen, &slope, &start);
+	if (status)
+	    return status;
 	slope.dx = -slope.dx;
 	slope.dy = -slope.dy;
-	_cairo_pen_find_active_cw_vertex_index (pen, &slope, &stop);
+	status = _cairo_pen_find_active_cw_vertex_index (pen, &slope, &stop);
+	if (status)
+	    return status;
 
 	tri[0] = f->point;
 	tri[1] = f->cw;
 	for (i=start; i != stop; i = (i+1) % pen->num_vertices) {
 	    tri[2] = f->point;
 	    _translate_point (&tri[2], &pen->vertices[i].point);
-	    _cairo_traps_tessellate_triangle (stroker->traps, tri);
+	    status = _cairo_traps_tessellate_triangle (stroker->traps, tri);
+	    if (status)
+		return status;
 	    tri[1] = tri[2];
 	}
 	tri[2] = f->ccw;
