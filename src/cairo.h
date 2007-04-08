@@ -313,7 +313,7 @@ cairo_public void *
 cairo_get_user_data (cairo_t			 *cr,
 		     const cairo_user_data_key_t *key);
 
-cairo_public cairo_status_t
+cairo_public_warn cairo_status_t
 cairo_set_user_data (cairo_t			 *cr,
 		     const cairo_user_data_key_t *key,
 		     void			 *user_data,
@@ -972,7 +972,7 @@ cairo_font_options_copy (const cairo_font_options_t *original);
 cairo_public void
 cairo_font_options_destroy (cairo_font_options_t *options);
 
-cairo_public cairo_status_t
+cairo_public_warn cairo_status_t
 cairo_font_options_status (cairo_font_options_t *options);
 
 cairo_public void
@@ -1088,7 +1088,7 @@ cairo_font_face_destroy (cairo_font_face_t *font_face);
 cairo_public unsigned int
 cairo_font_face_get_reference_count (cairo_font_face_t *font_face);
 
-cairo_public cairo_status_t
+cairo_public_warn cairo_status_t
 cairo_font_face_status (cairo_font_face_t *font_face);
 
 /**
@@ -1141,7 +1141,7 @@ cairo_public void *
 cairo_font_face_get_user_data (cairo_font_face_t	   *font_face,
 			       const cairo_user_data_key_t *key);
 
-cairo_public cairo_status_t
+cairo_public_warn cairo_status_t
 cairo_font_face_set_user_data (cairo_font_face_t	   *font_face,
 			       const cairo_user_data_key_t *key,
 			       void			   *user_data,
@@ -1164,7 +1164,7 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font);
 cairo_public unsigned int
 cairo_scaled_font_get_reference_count (cairo_scaled_font_t *scaled_font);
 
-cairo_public cairo_status_t
+cairo_public_warn cairo_status_t
 cairo_scaled_font_status (cairo_scaled_font_t *scaled_font);
 
 cairo_public cairo_font_type_t
@@ -1174,7 +1174,7 @@ cairo_public void *
 cairo_scaled_font_get_user_data (cairo_scaled_font_t         *scaled_font,
 				 const cairo_user_data_key_t *key);
 
-cairo_public cairo_status_t
+cairo_public_warn cairo_status_t
 cairo_scaled_font_set_user_data (cairo_scaled_font_t         *scaled_font,
 				 const cairo_user_data_key_t *key,
 				 void                        *user_data,
@@ -1392,7 +1392,7 @@ cairo_path_destroy (cairo_path_t *path);
 
 /* Error status queries */
 
-cairo_public cairo_status_t
+cairo_public_warn cairo_status_t
 cairo_status (cairo_t *cr);
 
 cairo_public const char *
@@ -1418,7 +1418,7 @@ cairo_surface_destroy (cairo_surface_t *surface);
 cairo_public unsigned int
 cairo_surface_get_reference_count (cairo_surface_t *surface);
 
-cairo_public cairo_status_t
+cairo_public_warn cairo_status_t
 cairo_surface_status (cairo_surface_t *surface);
 
 /**
@@ -1482,11 +1482,11 @@ cairo_surface_get_content (cairo_surface_t *surface);
 
 #if CAIRO_HAS_PNG_FUNCTIONS
 
-cairo_public cairo_status_t
+cairo_public_warn cairo_status_t
 cairo_surface_write_to_png (cairo_surface_t	*surface,
 			    const char		*filename);
 
-cairo_public cairo_status_t
+cairo_public_warn cairo_status_t
 cairo_surface_write_to_png_stream (cairo_surface_t	*surface,
 				   cairo_write_func_t	write_func,
 				   void			*closure);
@@ -1497,7 +1497,7 @@ cairo_public void *
 cairo_surface_get_user_data (cairo_surface_t		 *surface,
 			     const cairo_user_data_key_t *key);
 
-cairo_public cairo_status_t
+cairo_public_warn cairo_status_t
 cairo_surface_set_user_data (cairo_surface_t		 *surface,
 			     const cairo_user_data_key_t *key,
 			     void			 *user_data,
@@ -1642,14 +1642,14 @@ cairo_pattern_destroy (cairo_pattern_t *pattern);
 cairo_public unsigned int
 cairo_pattern_get_reference_count (cairo_pattern_t *pattern);
 
-cairo_public cairo_status_t
+cairo_public_warn cairo_status_t
 cairo_pattern_status (cairo_pattern_t *pattern);
 
 cairo_public void *
 cairo_pattern_get_user_data (cairo_pattern_t		 *pattern,
 			     const cairo_user_data_key_t *key);
 
-cairo_public cairo_status_t
+cairo_public_warn cairo_status_t
 cairo_pattern_set_user_data (cairo_pattern_t		 *pattern,
 			     const cairo_user_data_key_t *key,
 			     void			 *user_data,
@@ -1758,32 +1758,32 @@ cairo_pattern_set_filter (cairo_pattern_t *pattern, cairo_filter_t filter);
 cairo_public cairo_filter_t
 cairo_pattern_get_filter (cairo_pattern_t *pattern);
 
-cairo_public cairo_status_t
+cairo_public_warn cairo_status_t
 cairo_pattern_get_rgba (cairo_pattern_t *pattern,
 			double *red, double *green,
 			double *blue, double *alpha);
 
-cairo_public cairo_status_t
+cairo_public_warn cairo_status_t
 cairo_pattern_get_surface (cairo_pattern_t *pattern,
 			   cairo_surface_t **surface);
 
 
-cairo_public cairo_status_t
+cairo_public_warn cairo_status_t
 cairo_pattern_get_color_stop_rgba (cairo_pattern_t *pattern,
 				   int index, double *offset,
 				   double *red, double *green,
 				   double *blue, double *alpha);
 
-cairo_public cairo_status_t
+cairo_public_warn cairo_status_t
 cairo_pattern_get_color_stop_count (cairo_pattern_t *pattern,
 				    int *count);
 
-cairo_public cairo_status_t
+cairo_public_warn cairo_status_t
 cairo_pattern_get_linear_points (cairo_pattern_t *pattern,
 				 double *x0, double *y0,
 				 double *x1, double *y1);
 
-cairo_public cairo_status_t
+cairo_public_warn cairo_status_t
 cairo_pattern_get_radial_circles (cairo_pattern_t *pattern,
 				  double *x0, double *y0, double *r0,
 				  double *x1, double *y1, double *r1);
@@ -1820,7 +1820,7 @@ cairo_matrix_scale (cairo_matrix_t *matrix, double sx, double sy);
 cairo_public void
 cairo_matrix_rotate (cairo_matrix_t *matrix, double radians);
 
-cairo_public cairo_status_t
+cairo_public_warn cairo_status_t
 cairo_matrix_invert (cairo_matrix_t *matrix);
 
 cairo_public void

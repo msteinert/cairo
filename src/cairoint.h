@@ -102,12 +102,14 @@ CAIRO_BEGIN_DECLS
 
 /* slim_internal.h */
 #if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__) && !defined(__sun)
-#define cairo_private		__attribute__((__visibility__("hidden")))
+#define cairo_private			__attribute__((__visibility__("hidden"),__warn_unused_result__))
 #elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
-#define cairo_private		__hidden
+#define cairo_private			__hidden CAIRO_WARN_UNUSED_RESULT
 #else /* not gcc >= 3.3 and not Sun Studio >= 8 */
-#define cairo_private
+#define cairo_private			CAIRO_WARN_UNUSED_RESULT
 #endif
+
+#define cairo_warn CAIRO_WARN_UNUSED_RESULT
 
 /* This macro allow us to deprecate a function by providing an alias
    for the old function name to the new function name. With this

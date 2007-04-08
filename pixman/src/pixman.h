@@ -100,7 +100,7 @@ SOFTWARE.
 #include "pixman-remap.h"
 
 #if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__) && !defined(__sun__)
-#define pixman_private		__attribute__((__visibility__("hidden")))
+#define pixman_private		__attribute__((__visibility__("hidden"),__warn_unused_result__))
 #elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
 #define pixman_private		__hidden
 #else /* not gcc >= 3.3 and not Sun Studio >= 8 */
