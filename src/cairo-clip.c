@@ -195,6 +195,8 @@ cairo_status_t
 _cairo_clip_intersect_to_region (cairo_clip_t      *clip,
 				 pixman_region16_t *region)
 {
+    pixman_region_status_t pixman_status;
+
     if (!clip)
 	return CAIRO_STATUS_SUCCESS;
 
@@ -202,8 +204,11 @@ _cairo_clip_intersect_to_region (cairo_clip_t      *clip,
 	/* Intersect clip path into region. */
     }
 
-    if (clip->has_region)
-	pixman_region_intersect (region, &clip->region, region);
+    if (clip->has_region) {
+	pixman_status = pixman_region_intersect (region, &clip->region, region);
+	if (pixman_status != PIXMAN_REGION_STATUS_SUCCESS)
+	    return CAIRO_STATUS_NO_MEMORY;
+    }
 
     if (clip->surface) {
 	cairo_status_t status = CAIRO_STATUS_SUCCESS;
@@ -625,10 +630,11 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
         }
     } else {
         cairo_rectangle_int16_t extents;
-        _cairo_surface_get_extents (_cairo_gstate_get_target (gstate), &extents);
-        if (!_cairo_clip_rect_to_user(gstate, extents.x, extents.y,
-                                      extents.width, extents.height,
-                                      rectangles)) {
+        if (_cairo_surface_get_extents (_cairo_gstate_get_target (gstate),
+		                        &extents) != CAIRO_STATUS_SUCCESS ||
+		!_cairo_clip_rect_to_user(gstate, extents.x, extents.y,
+                                          extents.width, extents.height,
+                                          rectangles)) {
             free (rectangles);
             return (cairo_rectangle_list_t*)
                 &_cairo_rectangles_not_representable;
