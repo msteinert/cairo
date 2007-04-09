@@ -32,7 +32,7 @@
  *   http://citeseer.ist.psu.edu/pugh90skip.html
  */
 
-#define MAX_LEVEL   31
+#define MAX_LEVEL   15
 
 /* Returns the index of the free-list to use for a node at level 'level' */
 #define FREELIST_FOR_LEVEL(level) (((level) - 1) / 2)
