@@ -232,6 +232,9 @@ _cairo_skip_list_init (cairo_skip_list_t		*list,
 
     for (i = 0; i < MAX_LEVEL; i++) {
 	list->chains[i] = NULL;
+    }
+
+    for (i = 0; i < MAX_FREELIST_LEVEL; i++) {
 	list->freelists[i] = NULL;
     }
 
@@ -247,7 +250,7 @@ _cairo_skip_list_fini (cairo_skip_list_t *list)
     while ((elt = list->chains[0])) {
 	_cairo_skip_list_delete_given (list, elt);
     }
-    for (i=0; i<MAX_LEVEL; i++) {
+    for (i=0; i<MAX_FREELIST_LEVEL; i++) {
 	elt = list->freelists[i];
 	while (elt) {
 	    skip_elt_t *nextfree = elt->prev;
@@ -282,19 +285,23 @@ random_level (void)
 static void *
 alloc_node_for_level (cairo_skip_list_t *list, unsigned level)
 {
-    if (list->freelists[level-1]) {
-	skip_elt_t *elt = list->freelists[level-1];
-	list->freelists[level-1] = elt->prev;
+    int freelist_level = FREELIST_FOR_LEVEL (level);
+    if (list->freelists[freelist_level]) {
+	skip_elt_t *elt = list->freelists[freelist_level];
+	list->freelists[freelist_level] = elt->prev;
 	return ELT_DATA(elt);
     }
-    return malloc (list->elt_size + (level-1) * sizeof (skip_elt_t *));
+    return malloc (list->elt_size
+		   + (FREELIST_MAX_LEVEL_FOR (level) - 1) * sizeof (skip_elt_t *));
 }
 
 static void
 free_elt (cairo_skip_list_t *list, skip_elt_t *elt)
 {
-    elt->prev = list->freelists[elt->prev_index];
-    list->freelists[elt->prev_index] = elt;
+    int level = elt->prev_index + 1;
+    int freelist_level = FREELIST_FOR_LEVEL (level);
+    elt->prev = list->freelists[freelist_level];
+    list->freelists[freelist_level] = elt;
 }
 
 /*
