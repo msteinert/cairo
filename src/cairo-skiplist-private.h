@@ -26,6 +26,12 @@
 
 #include "cairoint.h"
 
+/*
+ * Skip lists are described in detail here:
+ *
+ *   http://citeseer.ist.psu.edu/pugh90skip.html
+ */
+
 #define MAX_LEVEL   31
 
 /*
