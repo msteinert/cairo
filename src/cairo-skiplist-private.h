@@ -32,6 +32,9 @@
  *   http://citeseer.ist.psu.edu/pugh90skip.html
  */
 
+/* Note that random_level() called from alloc_node_for_level() depends on
+ * this being not more than 16.
+ */
 #define MAX_LEVEL   15
 
 /* Returns the index of the free-list to use for a node at level 'level' */

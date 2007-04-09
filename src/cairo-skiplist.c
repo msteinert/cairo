@@ -269,9 +269,12 @@ _cairo_skip_list_fini (cairo_skip_list_t *list)
 static int
 random_level (void)
 {
-    /* tricky bit -- each bit is '1' 75% of the time */
-    long int	bits = lfsr_random() | lfsr_random();
     int	level = 0;
+    /* tricky bit -- each bit is '1' 75% of the time.
+     * This works because we only use the lower MAX_LEVEL
+     * bits, and MAX_LEVEL < 16 */
+    long int	bits = lfsr_random();
+    bits |= bits >> 16;
 
     while (++level < MAX_LEVEL)
     {
