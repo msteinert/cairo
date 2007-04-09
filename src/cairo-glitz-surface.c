@@ -47,7 +47,7 @@ _cairo_glitz_surface_finish (void *abstract_surface)
 
     if (surface->has_clip) {
         glitz_surface_set_clip_region (surface->surface, 0, 0, NULL, 0);
-        pixman_region_uninit (&surface->clip);
+        pixman_region_fini (&surface->clip);
     }
 
     glitz_surface_destroy (surface->surface);
@@ -1299,7 +1299,7 @@ _cairo_glitz_surface_set_clip_region (void		*abstract_surface,
 	glitz_surface_set_clip_region (surface->surface, 0, 0, NULL, 0);
 
 	if (surface->has_clip) {
-	    pixman_region_uninit (&surface->clip);
+	    pixman_region_fini (&surface->clip);
 	    surface->has_clip = FALSE;
         }
     }

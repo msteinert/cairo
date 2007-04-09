@@ -570,7 +570,7 @@ _cairo_traps_extract_region (cairo_traps_t     *traps,
 
 	if (pixman_region_union_rect (region, region,
 				      x, y, width, height) != PIXMAN_REGION_STATUS_SUCCESS) {
-	    pixman_region_uninit (region);
+	    pixman_region_fini (region);
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
     }

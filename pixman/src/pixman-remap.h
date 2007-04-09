@@ -59,7 +59,7 @@
 #define pixman_region_init _cairo_pixman_region_init
 #define pixman_region_init_rect _cairo_pixman_region_init_rect
 #define pixman_region_init_with_extents _cairo_pixman_region_init_with_extents
-#define pixman_region_uninit _cairo_pixman_region_uninit
+#define pixman_region_fini _cairo_pixman_region_fini
 #define pixman_region_empty _cairo_pixman_region_empty
 #define pixman_region_extents _cairo_pixman_region_extents
 #define pixman_region_intersect _cairo_pixman_region_intersect

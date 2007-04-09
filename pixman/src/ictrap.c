@@ -153,8 +153,8 @@ pixman_composite_trapezoids (pixman_operator_t	      op,
 
     bounds = *(pixman_region_extents (&traps_region));
 
-    pixman_region_uninit (&traps_region);
-    pixman_region_uninit (&dst_region);
+    pixman_region_fini (&traps_region);
+    pixman_region_fini (&dst_region);
 
     if (bounds.y1 >= bounds.y2 || bounds.x1 >= bounds.x2)
 	return;

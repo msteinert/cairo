@@ -242,7 +242,7 @@ pixman_color_rects (pixman_image_t	 *dst,
     }
 
     pixman_region_intersect (&rects_as_region, &rects_as_region, &clip);
-    pixman_region_uninit (&clip);
+    pixman_region_fini (&clip);
 
     n_clipped_rects = pixman_region_num_rects (&rects_as_region);
     clipped_rects = pixman_region_rects (&rects_as_region);
@@ -265,7 +265,7 @@ pixman_color_rects (pixman_image_t	 *dst,
 		 &pixel);
     }
 
-    pixman_region_uninit (&rects_as_region);
+    pixman_region_fini (&rects_as_region);
 
     if (xoff || yoff)
     {

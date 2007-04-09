@@ -99,10 +99,10 @@ _cairo_clip_reset (cairo_clip_t *clip)
     clip->serial = 0;
 
     if (clip->has_region) {
-        /* pixman_region_uninit just releases the resources used but
+        /* pixman_region_fini just releases the resources used but
          * doesn't bother with leaving the region in a valid state.
          * So pixman_region_init has to be called afterwards. */
-	pixman_region_uninit (&clip->region);
+	pixman_region_fini (&clip->region);
         pixman_region_init (&clip->region);
 
         clip->has_region = FALSE;
@@ -179,7 +179,7 @@ _cairo_clip_intersect_to_rectangle (cairo_clip_t            *clip,
             _cairo_region_extents_rectangle (&intersection, rectangle);
         }
 
-        pixman_region_uninit (&intersection);
+        pixman_region_fini (&intersection);
 
         if (status)
             return status;
@@ -217,7 +217,7 @@ _cairo_clip_intersect_to_region (cairo_clip_t      *clip,
             pixman_region_intersect (region, &clip_rect, region))
 	    status = CAIRO_STATUS_NO_MEMORY;
 
-        pixman_region_uninit (&clip_rect);
+        pixman_region_fini (&clip_rect);
 
         if (status)
             return status;
@@ -350,11 +350,11 @@ _cairo_clip_intersect_region (cairo_clip_t    *clip,
             status = CAIRO_STATUS_NO_MEMORY;
         }
 
-        pixman_region_uninit (&intersection);
+        pixman_region_fini (&intersection);
     }
 
     clip->serial = _cairo_surface_allocate_clip_serial (target);
-    pixman_region_uninit (&region);
+    pixman_region_fini (&region);
 
     return status;
 }

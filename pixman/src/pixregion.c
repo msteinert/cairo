@@ -314,7 +314,7 @@ pixman_region_init_with_extents(pixman_region16_t *region, pixman_box16_t *exten
 }
 
 void
-pixman_region_uninit (pixman_region16_t *region)
+pixman_region_fini (pixman_region16_t *region)
 {
     good (region);
     freeData (region);

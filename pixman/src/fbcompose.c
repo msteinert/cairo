@@ -4292,7 +4292,7 @@ pixman_compositeGeneral (pixman_operator_t	op,
         free(scanline_buffer);
 
 CLEANUP_REGION:
-    pixman_region_uninit (&region);
+    pixman_region_fini (&region);
 }
 
 #endif

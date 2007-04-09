@@ -1998,7 +1998,7 @@ pixman_composite (pixman_operator_t	op,
     }
 
 CLEANUP_REGION:    
-    pixman_region_uninit (&region);
+    pixman_region_fini (&region);
 }
 
 /* The CPU detection code needs to be in a file not compiled with

@@ -1915,9 +1915,9 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
 
 CLEANUP_REGIONS:
     if (has_drawn_region)
-        pixman_region_uninit (&drawn_region);
+        pixman_region_fini (&drawn_region);
     if (has_clear_region)
-        pixman_region_uninit (&clear_region);
+        pixman_region_fini (&clear_region);
 
     return status;
 }

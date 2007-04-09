@@ -586,7 +586,7 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
             }
 
             if (!pixman_region_not_empty (&clear_region)) {
-                pixman_region_uninit (&clear_region);
+                pixman_region_fini (&clear_region);
                 has_clear_region = FALSE;
             }
         } else {
@@ -660,9 +660,9 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
 
 out:
     if (has_trap_region)
-        pixman_region_uninit (&trap_region);
+        pixman_region_fini (&trap_region);
     if (has_clear_region)
-        pixman_region_uninit (&clear_region);
+        pixman_region_fini (&clear_region);
 
     return status;
 }

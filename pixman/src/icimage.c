@@ -465,12 +465,12 @@ pixman_image_destroy (pixman_image_t *image)
     pixman_image_destroyClip (image);
 
     if (image->hasCompositeClip) {
-	pixman_region_uninit (&image->compositeClip);
+	pixman_region_fini (&image->compositeClip);
 	image->hasCompositeClip = 0;
     }
 
     if (image->hasSourceClip) {
-	pixman_region_uninit (&image->sourceClip);
+	pixman_region_fini (&image->sourceClip);
 	image->hasSourceClip = 0;
     }
 
@@ -496,7 +496,7 @@ void
 pixman_image_destroyClip (pixman_image_t *image)
 {
     if (CT_NONE != image->clientClipType)
-	pixman_region_uninit (&image->clientClip);
+	pixman_region_fini (&image->clientClip);
 
     image->clientClipType = CT_NONE;
 }
@@ -518,7 +518,7 @@ pixman_image_set_clip_region (pixman_image_t	*image,
 	return 0;
 
     if (image->hasCompositeClip)
-        pixman_region_uninit (&image->compositeClip);
+        pixman_region_fini (&image->compositeClip);
 
     pixman_region_init_rect (&image->compositeClip, 0, 0,
                              image->pixels->width,
