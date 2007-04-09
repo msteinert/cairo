@@ -129,7 +129,9 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 
     _cairo_font_options_init_copy (&gstate->font_options , &other->font_options);
 
-    _cairo_clip_init_copy (&gstate->clip, &other->clip);
+    status = _cairo_clip_init_copy (&gstate->clip, &other->clip);
+    if (status)
+	return status;
 
     gstate->target = cairo_surface_reference (other->target);
     /* parent_target is always set to NULL; it's only ever set by redirect_target */
@@ -299,9 +301,11 @@ _cairo_gstate_recursive_apply_clip_path (cairo_gstate_t *gstate,
  * original #cairo_t target, the clip will be INVALID after this call,
  * and the caller should either recreate or reset the clip.
  **/
-void
+cairo_status_t
 _cairo_gstate_redirect_target (cairo_gstate_t *gstate, cairo_surface_t *child)
 {
+    cairo_status_t status;
+
     /* If this gstate is already redirected, this is an error; we need a
      * new gstate to be able to redirect */
     assert (gstate->parent_target == NULL);
@@ -317,13 +321,17 @@ _cairo_gstate_redirect_target (cairo_gstate_t *gstate, cairo_surface_t *child)
     gstate->target = cairo_surface_reference (child);
 
     _cairo_clip_reset (&gstate->clip);
-    _cairo_clip_init_deep_copy (&gstate->clip, &gstate->next->clip, child);
+    status = _cairo_clip_init_deep_copy (&gstate->clip, &gstate->next->clip, child);
+    if (status)
+	return status;
 
     /* The clip is in surface backend coordinates for the previous target;
      * translate it into the child's backend coordinates. */
     _cairo_clip_translate (&gstate->clip,
                            _cairo_fixed_from_double (child->device_transform.x0 - gstate->parent_target->device_transform.x0),
                            _cairo_fixed_from_double (child->device_transform.y0 - gstate->parent_target->device_transform.y0));
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 /**

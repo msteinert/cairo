@@ -67,7 +67,7 @@ _cairo_clip_init (cairo_clip_t *clip, cairo_surface_t *target)
     clip->path = NULL;
 }
 
-void
+cairo_status_t
 _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other)
 {
     clip->mode = other->mode;
@@ -80,13 +80,20 @@ _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other)
     pixman_region_init (&clip->region);
 
     if (other->has_region) {
-        pixman_region_copy (&clip->region, &other->region);
+	if (pixman_region_copy (&clip->region, &other->region) !=
+		PIXMAN_REGION_STATUS_SUCCESS) {
+	    pixman_region_fini (&clip->region);
+	    cairo_surface_destroy (clip->surface);
+	    return CAIRO_STATUS_NO_MEMORY;
+	}
         clip->has_region = TRUE;
     } else {
         clip->has_region = FALSE;
     }
 
     clip->path = _cairo_clip_path_reference (other->path);
+    
+    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_status_t
@@ -342,18 +349,20 @@ _cairo_clip_intersect_region (cairo_clip_t    *clip,
     status = CAIRO_STATUS_SUCCESS;
 
     if (!clip->has_region) {
-        pixman_region_copy (&clip->region, &region);
-        clip->has_region = TRUE;
+        if (pixman_region_copy (&clip->region, &region) ==
+		PIXMAN_REGION_STATUS_SUCCESS)
+	    clip->has_region = TRUE;
     } else {
 	pixman_region16_t intersection;
         pixman_region_init (&intersection);
 
-	if (PIXMAN_REGION_STATUS_SUCCESS ==
-            pixman_region_intersect (&intersection, &clip->region, &region)) {
-            pixman_region_copy (&clip->region, &intersection);
-        } else {
-            status = CAIRO_STATUS_NO_MEMORY;
-        }
+	if (PIXMAN_REGION_STATUS_SUCCESS !=
+		pixman_region_intersect (&intersection,
+		                         &clip->region,
+		                         &region) ||
+	    PIXMAN_REGION_STATUS_SUCCESS !=
+		pixman_region_copy (&clip->region, &intersection))
+	    status = CAIRO_STATUS_NO_MEMORY;
 
         pixman_region_fini (&intersection);
     }
@@ -544,7 +553,7 @@ _cairo_clip_path_reapply_clip_path (cairo_clip_t      *clip,
                                 clip_path->antialias);
 }
 
-void
+cairo_status_t
 _cairo_clip_init_deep_copy (cairo_clip_t    *clip,
                             cairo_clip_t    *other,
                             cairo_surface_t *target)
@@ -556,17 +565,21 @@ _cairo_clip_init_deep_copy (cairo_clip_t    *clip,
          * whatever the right handling is happen */
     } else {
         if (other->has_region) {
-            pixman_region_copy (&clip->region, &other->region);
-            clip->has_region = TRUE;
+            if (pixman_region_copy (&clip->region, &other->region) !=
+		    PIXMAN_REGION_STATUS_SUCCESS)
+		goto BAIL;
+	    clip->has_region = TRUE;
         }
 
         if (other->surface) {
-            _cairo_surface_clone_similar (target, other->surface,
+            if (_cairo_surface_clone_similar (target, other->surface,
 					  other->surface_rect.x,
 					  other->surface_rect.y,
 					  other->surface_rect.width,
 					  other->surface_rect.height,
-					  &clip->surface);
+					  &clip->surface) !=
+		    CAIRO_STATUS_SUCCESS)
+		goto BAIL;
             clip->surface_rect = other->surface_rect;
         }
 
@@ -574,6 +587,16 @@ _cairo_clip_init_deep_copy (cairo_clip_t    *clip,
             _cairo_clip_path_reapply_clip_path (clip, other->path);
         }
     }
+
+    return CAIRO_STATUS_SUCCESS;
+
+BAIL:
+    if (clip->has_region)
+	pixman_region_fini (&clip->region);
+    if (clip->surface)
+	cairo_surface_destroy (clip->surface);
+
+    return CAIRO_STATUS_NO_MEMORY;
 }
 
 const cairo_rectangle_list_t _cairo_rectangles_nil =

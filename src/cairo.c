@@ -517,7 +517,7 @@ cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
     if (cr->status)
 	goto bail;
 
-    _cairo_gstate_redirect_target (cr->gstate, group_surface);
+    status = _cairo_gstate_redirect_target (cr->gstate, group_surface);
 
 bail:
     cairo_surface_destroy (group_surface);
