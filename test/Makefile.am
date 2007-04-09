@@ -460,7 +460,7 @@ libcairotest_la_LIBADD =\
 
 LDADD = $(CAIRO_LDADD) libcairotest.la
 
-$(top_builddir)/boilerplate/libcairoboilerplate.la:
+$(top_builddir)/boilerplate/libcairoboilerplate.la: $(top_builddir)/src/libcairo.la
 	cd $(top_builddir)/boilerplate && $(MAKE) $(AM_MAKEFLAGS) libcairoboilerplate.la
 
 $(top_builddir)/src/libcairo.la:
