@@ -261,7 +261,7 @@ _cairo_skip_list_fini (cairo_skip_list_t *list)
  * Generate a random level number, distributed
  * so that each level is 1/4 as likely as the one before
  *
- * Note that level numbers run 1 <= level <= MAX_LEVEL
+ * Note that level numbers run 1 <= level < MAX_LEVEL
  */
 static int
 random_level (void)
