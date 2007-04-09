@@ -191,6 +191,8 @@ _pixman_create_source_image (void)
     pixman_image_t *image;
 
     image = (pixman_image_t *) malloc (sizeof (pixman_image_t));
+    if (image == NULL)
+	return NULL;
     image->pDrawable   = NULL;
     image->pixels      = NULL;
     image->format_code = PICT_a8r8g8b8;
