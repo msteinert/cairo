@@ -328,29 +328,15 @@ pixman_image_init (pixman_image_t *image)
 */
 
     if (image->pixels) {
-	if (!image->hasCompositeClip) {
-	    pixman_region_init_rect (&image->compositeClip,
-				     0, 0, image->pixels->width,
-				     image->pixels->height);
-            image->hasCompositeClip = 1;
-        }
+	pixman_region_init_rect (&image->compositeClip,
+				 0, 0, image->pixels->width,
+				 image->pixels->height);
+	image->hasCompositeClip = 1;
 
-        if (!image->hasSourceClip) {
-	    pixman_region_init_rect (&image->sourceClip,
-				     0, 0, image->pixels->width,
-				     image->pixels->height);
-            image->hasSourceClip = 1;
-        }
-    } else {
-        if (image->hasCompositeClip) {
-            pixman_region_uninit (&image->compositeClip);
-            image->hasCompositeClip = FALSE;
-        }
-
-        if (image->hasSourceClip) {
-            pixman_region_uninit (&image->sourceClip);
-	    image->hasSourceClip = FALSE;
-        }
+	pixman_region_init_rect (&image->sourceClip,
+				 0, 0, image->pixels->width,
+				 image->pixels->height);
+	image->hasSourceClip = 1;
     }
 
     image->transform = NULL;
