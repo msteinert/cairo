@@ -279,7 +279,9 @@ void
 _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 			      const char *fmt, va_list ap)
 {
-    char buffer[512], single_fmt[32];
+#define SINGLE_FMT_BUFFER_SIZE 32
+    char buffer[512], single_fmt[SINGLE_FMT_BUFFER_SIZE];
+    int single_fmt_length;
     char *p;
     const char *f, *start;
     int length_modifier;
@@ -315,9 +317,15 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 	    f++;
 	}
 
+	/* The only format strings exist in the cairo implementation
+	 * itself. So there's an internal consistency problem if any
+	 * of them is larger than our format buffer size. */
+	single_fmt_length = f - start + 1;
+	assert (single_fmt_length + 1 <= SINGLE_FMT_BUFFER_SIZE);
+
 	/* Reuse the format string for this conversion. */
-	memcpy (single_fmt, start, f + 1 - start);
-	single_fmt[f + 1 - start] = '\0';
+	memcpy (single_fmt, start, single_fmt_length);
+	single_fmt[single_fmt_length] = '\0';
 
 	/* Flush contents of buffer before snprintf()'ing into it. */
 	_cairo_output_stream_write (stream, buffer, p - buffer);
