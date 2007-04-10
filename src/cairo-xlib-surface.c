@@ -1322,6 +1322,7 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
     cairo_int_status_t		status;
     composite_operation_t       operation;
     int				itx, ity;
+    cairo_bool_t		is_integer_translation;
 
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1414,7 +1415,10 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 	status = _cairo_xlib_surface_ensure_gc (dst);
 	if (status)
 	    goto BAIL;
-	_cairo_matrix_is_integer_translation (&src_attr.matrix, &itx, &ity);
+	is_integer_translation = _cairo_matrix_is_integer_translation (&src_attr.matrix,
+								       &itx, &ity);
+	/* This is a pre-condition for DO_XTILE. */
+	assert (is_integer_translation);
 
 	XSetTSOrigin (dst->dpy, dst->gc,
 		      - (itx + src_attr.x_offset), - (ity + src_attr.y_offset));
