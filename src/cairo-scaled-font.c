@@ -478,7 +478,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 
     font_map = _cairo_scaled_font_map_lock ();
     if (font_map == NULL)
-	return NULL;
+	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
 
     _cairo_scaled_font_init_key (&key, font_face,
 				 font_matrix, ctm, options);
@@ -517,7 +517,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 							 ctm, options, &scaled_font);
 	if (status) {
 	    _cairo_scaled_font_map_unlock ();
-	    return NULL;
+	    return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
 	}
 
 	status = _cairo_hash_table_insert (font_map->hash_table,
@@ -530,7 +530,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	     * hash table. */
 	    _cairo_scaled_font_fini (scaled_font);
 	    free (scaled_font);
-	    return NULL;
+	    return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
 	}
     }
 
