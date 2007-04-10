@@ -286,7 +286,7 @@ _cairo_pattern_create_solid (const cairo_color_t *color)
 
     if (solid_pattern_cache.size) {
 	int i = --solid_pattern_cache.size %
-	    ARRAY_LEN (solid_pattern_cache.patterns);
+	    ARRAY_LENGTH (solid_pattern_cache.patterns);
 	pattern = solid_pattern_cache.patterns[i];
 	solid_pattern_cache.patterns[i] = NULL;
     }
@@ -312,7 +312,7 @@ _cairo_pattern_reset_static_data (void)
 
     CAIRO_MUTEX_LOCK (_cairo_pattern_solid_cache_lock);
 
-    for (i = 0; i < MIN (ARRAY_LEN (solid_pattern_cache.patterns), solid_pattern_cache.size); i++) {
+    for (i = 0; i < MIN (ARRAY_LENGTH (solid_pattern_cache.patterns), solid_pattern_cache.size); i++) {
 	free (solid_pattern_cache.patterns[i]);
 	solid_pattern_cache.patterns[i] = NULL;
     }
@@ -632,7 +632,7 @@ cairo_pattern_destroy (cairo_pattern_t *pattern)
 	CAIRO_MUTEX_LOCK (_cairo_pattern_solid_cache_lock);
 
 	i = solid_pattern_cache.size++ %
-	    ARRAY_LEN (solid_pattern_cache.patterns);
+	    ARRAY_LENGTH (solid_pattern_cache.patterns);
 	/* swap an old pattern for this 'cache-hot' pattern */
 	if (solid_pattern_cache.patterns[i])
 	    free (solid_pattern_cache.patterns[i]);
@@ -725,7 +725,7 @@ _cairo_pattern_gradient_grow (cairo_gradient_pattern_t *pattern)
 {
     pixman_gradient_stop_t *new_stops;
     int old_size = pattern->stops_size;
-    int embedded_size = ARRAY_LEN (pattern->stops_embedded);
+    int embedded_size = ARRAY_LENGTH (pattern->stops_embedded);
     int new_size = 2 * MAX (old_size, 4);
 
     /* we have a local buffer at pattern->stops_embedded.  try to fulfill the request

@@ -116,7 +116,7 @@ _cairo_atsui_font_face_scaled_font_create (void	*abstract_face,
     ATSUStyle style;
 
     err = ATSUCreateStyle (&style);
-    err = ATSUSetAttributes(style, ARRAY_LEN (styleTags),
+    err = ATSUSetAttributes(style, ARRAY_LENGTH (styleTags),
                             styleTags, styleSizes, styleValues);
 
     return _cairo_atsui_font_create_scaled (&font_face->base, font_face->font_id, style,
@@ -372,7 +372,7 @@ _cairo_atsui_font_create_toy(cairo_toy_font_face_t *toy_face,
 	ByteCount styleSizes[] =
 	    { sizeof(Boolean), sizeof(Boolean), sizeof(ATSUFontID) };
 
-	err = ATSUSetAttributes(style, ARRAY_LEN (styleTags),
+	err = ATSUSetAttributes(style, ARRAY_LENGTH (styleTags),
 				styleTags, styleSizes, styleValues);
     }
 

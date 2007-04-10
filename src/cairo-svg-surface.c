@@ -59,7 +59,7 @@ static const cairo_svg_version_t _cairo_svg_versions[] =
     CAIRO_SVG_VERSION_1_2
 };
 
-#define CAIRO_SVG_VERSION_LAST ARRAY_LEN (_cairo_svg_versions)
+#define CAIRO_SVG_VERSION_LAST ARRAY_LENGTH (_cairo_svg_versions)
 
 static cairo_bool_t
 _cairo_svg_version_has_page_set_support (cairo_svg_version_t version)

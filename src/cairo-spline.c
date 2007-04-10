@@ -81,7 +81,7 @@ _cairo_spline_init (cairo_spline_t *spline,
 	_cairo_slope_init (&spline->final_slope, &spline->a, &spline->d);
 
     spline->points = spline->points_embedded;
-    spline->points_size = ARRAY_LEN (spline->points_embedded);
+    spline->points_size = ARRAY_LENGTH (spline->points_embedded);
     spline->num_points = 0;
 
     return CAIRO_STATUS_SUCCESS;
@@ -94,7 +94,7 @@ _cairo_spline_fini (cairo_spline_t *spline)
 	free (spline->points);
 
     spline->points = spline->points_embedded;
-    spline->points_size = ARRAY_LEN (spline->points_embedded);
+    spline->points_size = ARRAY_LENGTH (spline->points_embedded);
     spline->num_points = 0;
 }
 

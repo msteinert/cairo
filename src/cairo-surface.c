@@ -1180,7 +1180,7 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
 	return CAIRO_STATUS_SUCCESS;
 
     rects = stack_rects;
-    if (num_rects > ARRAY_LEN (stack_rects)) {
+    if (num_rects > ARRAY_LENGTH (stack_rects)) {
 	rects = malloc (sizeof (cairo_rectangle_int16_t) * num_rects);
 	if (!rects)
 	    return CAIRO_STATUS_NO_MEMORY;
