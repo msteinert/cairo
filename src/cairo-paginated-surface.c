@@ -277,7 +277,7 @@ _paint_page (cairo_paginated_surface_t *surface)
 
 	cairo_pattern_destroy (pattern);
 
-CLEANUP_IMAGE:
+     CLEANUP_IMAGE:
 	cairo_surface_destroy (image);
     }
     else
