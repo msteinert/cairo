@@ -303,7 +303,9 @@ _test_meta_surface_snapshot (void *abstract_other)
     cairo_rectangle_int16_t extents;
     cairo_surface_t *surface;
 
-    _cairo_surface_get_extents (other->image, &extents);
+    status = _cairo_surface_get_extents (other->image, &extents);
+    if (status)
+	return (cairo_surface_t*) &_cairo_surface_nil;
 
     surface = cairo_surface_create_similar (other->image,
 					    CAIRO_CONTENT_COLOR_ALPHA,
