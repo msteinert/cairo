@@ -219,48 +219,48 @@ _cairo_output_stream_write_hex_string (cairo_output_stream_t *stream,
 int
 _cairo_dtostr (char *buffer, size_t size, double d)
 {
-  struct lconv *locale_data;
-  const char *decimal_point;
-  int decimal_point_len;
-  char *p;
-  int decimal_len;
+    struct lconv *locale_data;
+    const char *decimal_point;
+    int decimal_point_len;
+    char *p;
+    int decimal_len;
 
-  /* Omit the minus sign from negative zero. */
-  if (d == 0.0)
-      d = 0.0;
+    /* Omit the minus sign from negative zero. */
+    if (d == 0.0)
+	d = 0.0;
 
-  snprintf (buffer, size, "%f", d);
+    snprintf (buffer, size, "%f", d);
 
-  locale_data = localeconv ();
-  decimal_point = locale_data->decimal_point;
-  decimal_point_len = strlen (decimal_point);
+    locale_data = localeconv ();
+    decimal_point = locale_data->decimal_point;
+    decimal_point_len = strlen (decimal_point);
 
-  assert (decimal_point_len != 0);
-  p = buffer;
+    assert (decimal_point_len != 0);
+    p = buffer;
 
-  if (*p == '+' || *p == '-')
-      p++;
+    if (*p == '+' || *p == '-')
+	p++;
 
-  while (isdigit (*p))
-      p++;
+    while (isdigit (*p))
+	p++;
 
-  if (strncmp (p, decimal_point, decimal_point_len) == 0) {
-      *p = '.';
-      decimal_len = strlen (p + decimal_point_len);
-      memmove (p + 1, p + decimal_point_len, decimal_len);
-      p[1 + decimal_len] = 0;
+    if (strncmp (p, decimal_point, decimal_point_len) == 0) {
+	*p = '.';
+	decimal_len = strlen (p + decimal_point_len);
+	memmove (p + 1, p + decimal_point_len, decimal_len);
+	p[1 + decimal_len] = 0;
 
-      /* Remove trailing zeros and decimal point if possible. */
-      for (p = p + decimal_len; *p == '0'; p--)
-	  *p = 0;
+	/* Remove trailing zeros and decimal point if possible. */
+	for (p = p + decimal_len; *p == '0'; p--)
+	    *p = 0;
 
-      if (*p == '.') {
-	  *p = 0;
-	  p--;
-      }
-  }
+	if (*p == '.') {
+	    *p = 0;
+	    p--;
+	}
+    }
 
-  return p + 1 - buffer;
+    return p + 1 - buffer;
 }
 
 enum {
