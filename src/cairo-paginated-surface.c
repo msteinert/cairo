@@ -244,11 +244,12 @@ _paint_page (cairo_paginated_surface_t *surface)
 					       surface->width, surface->height);
 
     surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_ANALYZE);
-    _cairo_meta_surface_replay (surface->meta, analysis);
+    status = _cairo_meta_surface_replay (surface->meta, analysis);
     surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_RENDER);
 
-    if (analysis->status) {
-	status = analysis->status;
+    if (status || analysis->status) {
+	if (status == CAIRO_STATUS_SUCCESS)
+	    status = analysis->status;
 	cairo_surface_destroy (analysis);
 	return status;
     }
@@ -495,6 +496,7 @@ _cairo_paginated_surface_show_glyphs (void			*abstract_surface,
 static cairo_surface_t *
 _cairo_paginated_surface_snapshot (void *abstract_other)
 {
+    cairo_status_t status;
     cairo_paginated_surface_t *other = abstract_other;
 
     /* XXX: Just making a snapshot of other->meta is what we really
@@ -521,7 +523,11 @@ _cairo_paginated_surface_snapshot (void *abstract_other)
 							     extents.width,
 							     extents.height);
 
-    _cairo_meta_surface_replay (other->meta, surface);
+    status = _cairo_meta_surface_replay (other->meta, surface);
+    if (status) {
+	cairo_surface_destroy (surface);
+	surface = (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     return surface;
 #endif
