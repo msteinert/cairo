@@ -136,6 +136,7 @@ _cairo_path_count (cairo_path_t		*path,
 		   double		 tolerance,
 		   cairo_bool_t		 flatten)
 {
+    cairo_status_t status;
     cpc_t cpc;
 
     cpc.count = 0;
@@ -143,15 +144,16 @@ _cairo_path_count (cairo_path_t		*path,
     cpc.current_point.x = 0;
     cpc.current_point.y = 0;
 
-    if (_cairo_path_fixed_interpret (path_fixed,
-				     CAIRO_DIRECTION_FORWARD,
-				     _cpc_move_to,
-				     _cpc_line_to,
-				     flatten ?
-				     _cpc_curve_to_flatten :
-				     _cpc_curve_to,
-				     _cpc_close_path,
-				     &cpc) != CAIRO_STATUS_SUCCESS)
+    status = _cairo_path_fixed_interpret (path_fixed,
+					  CAIRO_DIRECTION_FORWARD,
+					  _cpc_move_to,
+					  _cpc_line_to,
+					  flatten ?
+					  _cpc_curve_to_flatten :
+					  _cpc_curve_to,
+					  _cpc_close_path,
+					  &cpc);
+    if (status)
 	return 0;
 
     return cpc.count;
