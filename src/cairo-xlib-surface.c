@@ -2934,8 +2934,8 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
                                                  0, 0, 1, 1,
                                                  (cairo_surface_t **) &src,
                                                  &attributes);
-    if (status)
-        goto BAIL0;
+	if (status)
+	    goto BAIL0;
     } else {
         cairo_rectangle_int16_t glyph_extents;
 
