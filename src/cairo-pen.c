@@ -45,15 +45,13 @@ _cairo_pen_compute_slopes (cairo_pen_t *pen);
 static cairo_status_t
 _cairo_pen_stroke_spline_half (cairo_pen_t *pen, cairo_spline_t *spline, cairo_direction_t dir, cairo_polygon_t *polygon);
 
-cairo_status_t
+void
 _cairo_pen_init_empty (cairo_pen_t *pen)
 {
     pen->radius = 0;
     pen->tolerance = 0;
     pen->vertices = NULL;
     pen->num_vertices = 0;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_status_t

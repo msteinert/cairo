@@ -2176,7 +2176,7 @@ _cairo_pen_init (cairo_pen_t	*pen,
 		 double		 tolerance,
 		 cairo_matrix_t	*ctm);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_pen_init_empty (cairo_pen_t *pen);
 
 cairo_private cairo_status_t
