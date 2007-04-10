@@ -1280,14 +1280,10 @@ cairo_identity_matrix (cairo_t *cr)
 void
 cairo_user_to_device (cairo_t *cr, double *x, double *y)
 {
-    cairo_status_t status;
-
     if (cr->status)
 	return;
 
-    status = _cairo_gstate_user_to_device (cr->gstate, x, y);
-    if (status)
-	_cairo_set_error (cr, status);
+    _cairo_gstate_user_to_device (cr->gstate, x, y);
 }
 
 /**
@@ -1304,14 +1300,10 @@ cairo_user_to_device (cairo_t *cr, double *x, double *y)
 void
 cairo_user_to_device_distance (cairo_t *cr, double *dx, double *dy)
 {
-    cairo_status_t status;
-
     if (cr->status)
 	return;
 
-    status = _cairo_gstate_user_to_device_distance (cr->gstate, dx, dy);
-    if (status)
-	_cairo_set_error (cr, status);
+    _cairo_gstate_user_to_device_distance (cr->gstate, dx, dy);
 }
 
 /**
@@ -1327,14 +1319,10 @@ cairo_user_to_device_distance (cairo_t *cr, double *dx, double *dy)
 void
 cairo_device_to_user (cairo_t *cr, double *x, double *y)
 {
-    cairo_status_t status;
-
     if (cr->status)
 	return;
 
-    status = _cairo_gstate_device_to_user (cr->gstate, x, y);
-    if (status)
-	_cairo_set_error (cr, status);
+    _cairo_gstate_device_to_user (cr->gstate, x, y);
 }
 
 /**
@@ -1351,14 +1339,10 @@ cairo_device_to_user (cairo_t *cr, double *x, double *y)
 void
 cairo_device_to_user_distance (cairo_t *cr, double *dx, double *dy)
 {
-    cairo_status_t status;
-
     if (cr->status)
 	return;
 
-    status = _cairo_gstate_device_to_user_distance (cr->gstate, dx, dy);
-    if (status)
-	_cairo_set_error (cr, status);
+    _cairo_gstate_device_to_user_distance (cr->gstate, dx, dy);
 }
 
 /**
@@ -1678,13 +1662,12 @@ cairo_rel_move_to (cairo_t *cr, double dx, double dy)
     if (cr->status)
 	return;
 
-    status = _cairo_gstate_user_to_device_distance (cr->gstate, &dx, &dy);
-    if (status == CAIRO_STATUS_SUCCESS) {
-	dx_fixed = _cairo_fixed_from_double (dx);
-	dy_fixed = _cairo_fixed_from_double (dy);
+    _cairo_gstate_user_to_device_distance (cr->gstate, &dx, &dy);
 
-	status = _cairo_path_fixed_rel_move_to (cr->path, dx_fixed, dy_fixed);
-    }
+    dx_fixed = _cairo_fixed_from_double (dx);
+    dy_fixed = _cairo_fixed_from_double (dy);
+
+    status = _cairo_path_fixed_rel_move_to (cr->path, dx_fixed, dy_fixed);
     if (status)
 	_cairo_set_error (cr, status);
 }
@@ -1716,13 +1699,12 @@ cairo_rel_line_to (cairo_t *cr, double dx, double dy)
     if (cr->status)
 	return;
 
-    status = _cairo_gstate_user_to_device_distance (cr->gstate, &dx, &dy);
-    if (status == CAIRO_STATUS_SUCCESS) {
-	dx_fixed = _cairo_fixed_from_double (dx);
-	dy_fixed = _cairo_fixed_from_double (dy);
+    _cairo_gstate_user_to_device_distance (cr->gstate, &dx, &dy);
 
-	status = _cairo_path_fixed_rel_line_to (cr->path, dx_fixed, dy_fixed);
-    }
+    dx_fixed = _cairo_fixed_from_double (dx);
+    dy_fixed = _cairo_fixed_from_double (dy);
+
+    status = _cairo_path_fixed_rel_line_to (cr->path, dx_fixed, dy_fixed);
     if (status)
 	_cairo_set_error (cr, status);
 }
@@ -1768,15 +1750,9 @@ cairo_rel_curve_to (cairo_t *cr,
     if (cr->status)
 	return;
 
-    status = _cairo_gstate_user_to_device_distance (cr->gstate, &dx1, &dy1);
-    if (status)
-	goto BAIL;
-    status = _cairo_gstate_user_to_device_distance (cr->gstate, &dx2, &dy2);
-    if (status)
-	goto BAIL;
-    status = _cairo_gstate_user_to_device_distance (cr->gstate, &dx3, &dy3);
-    if (status)
-	goto BAIL;
+    _cairo_gstate_user_to_device_distance (cr->gstate, &dx1, &dy1);
+    _cairo_gstate_user_to_device_distance (cr->gstate, &dx2, &dy2);
+    _cairo_gstate_user_to_device_distance (cr->gstate, &dx3, &dy3);
 
     dx1_fixed = _cairo_fixed_from_double (dx1);
     dy1_fixed = _cairo_fixed_from_double (dy1);
@@ -1791,10 +1767,8 @@ cairo_rel_curve_to (cairo_t *cr,
 					     dx1_fixed, dy1_fixed,
 					     dx2_fixed, dy2_fixed,
 					     dx3_fixed, dy3_fixed);
-    if (status) {
-BAIL:
+    if (status)
 	_cairo_set_error (cr, status);
-    }
 }
 
 /**

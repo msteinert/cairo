@@ -690,38 +690,30 @@ _cairo_gstate_identity_matrix (cairo_gstate_t *gstate)
     cairo_matrix_init_identity (&gstate->ctm_inverse);
 }
 
-cairo_status_t
+void
 _cairo_gstate_user_to_device (cairo_gstate_t *gstate, double *x, double *y)
 {
     cairo_matrix_transform_point (&gstate->ctm, x, y);
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_status_t
+void
 _cairo_gstate_user_to_device_distance (cairo_gstate_t *gstate,
 				       double *dx, double *dy)
 {
     cairo_matrix_transform_distance (&gstate->ctm, dx, dy);
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_status_t
+void
 _cairo_gstate_device_to_user (cairo_gstate_t *gstate, double *x, double *y)
 {
     cairo_matrix_transform_point (&gstate->ctm_inverse, x, y);
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_status_t
+void
 _cairo_gstate_device_to_user_distance (cairo_gstate_t *gstate,
 				       double *dx, double *dy)
 {
     cairo_matrix_transform_distance (&gstate->ctm_inverse, dx, dy);
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 void
