@@ -2260,7 +2260,7 @@ _cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
 cairo_private void
 _cairo_matrix_compute_determinant (const cairo_matrix_t *matrix, double *det);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
 				     double *sx, double *sy, int x_major);
 
