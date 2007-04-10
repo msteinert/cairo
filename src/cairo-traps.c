@@ -87,26 +87,26 @@ cairo_status_t
 _cairo_traps_init_box (cairo_traps_t *traps,
 		       cairo_box_t   *box)
 {
-  _cairo_traps_init (traps);
+    _cairo_traps_init (traps);
 
-  traps->status = _cairo_traps_grow (traps);
-  if (traps->status)
+    traps->status = _cairo_traps_grow (traps);
+    if (traps->status)
+	return traps->status;
+
+    traps->num_traps = 1;
+
+    traps->traps[0].top = box->p1.y;
+    traps->traps[0].bottom = box->p2.y;
+    traps->traps[0].left.p1 = box->p1;
+    traps->traps[0].left.p2.x = box->p1.x;
+    traps->traps[0].left.p2.y = box->p2.y;
+    traps->traps[0].right.p1.x = box->p2.x;
+    traps->traps[0].right.p1.y = box->p1.y;
+    traps->traps[0].right.p2 = box->p2;
+
+    traps->extents = *box;
+
     return traps->status;
-
-  traps->num_traps = 1;
-
-  traps->traps[0].top = box->p1.y;
-  traps->traps[0].bottom = box->p2.y;
-  traps->traps[0].left.p1 = box->p1;
-  traps->traps[0].left.p2.x = box->p1.x;
-  traps->traps[0].left.p2.y = box->p2.y;
-  traps->traps[0].right.p1.x = box->p2.x;
-  traps->traps[0].right.p1.y = box->p1.y;
-  traps->traps[0].right.p2 = box->p2;
-
-  traps->extents = *box;
-
-  return traps->status;
 }
 
 cairo_status_t
