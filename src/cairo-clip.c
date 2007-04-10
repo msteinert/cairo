@@ -96,7 +96,7 @@ _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other)
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_status_t
+void
 _cairo_clip_reset (cairo_clip_t *clip)
 {
     /* destroy any existing clip-region artifacts */
@@ -117,8 +117,6 @@ _cairo_clip_reset (cairo_clip_t *clip)
 
     _cairo_clip_path_destroy (clip->path);
     clip->path = NULL;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t

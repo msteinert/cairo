@@ -756,7 +756,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 	    /* XXX Meta surface clipping is broken and requires some
 	     * cairo-gstate.c rewriting.  Work around it for now. */
 	    if (dev_path == NULL)
-		status = _cairo_clip_reset (&clip);
+		_cairo_clip_reset (&clip);
 	    else
 		status = _cairo_clip_clip (&clip, dev_path,
 					   command->intersect_clip_path.fill_rule,

@@ -1191,7 +1191,9 @@ _cairo_gstate_fill_extents (cairo_gstate_t     *gstate,
 cairo_status_t
 _cairo_gstate_reset_clip (cairo_gstate_t *gstate)
 {
-    return _cairo_clip_reset (&gstate->clip);
+    _cairo_clip_reset (&gstate->clip);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_status_t
