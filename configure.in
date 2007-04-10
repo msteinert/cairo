@@ -654,9 +654,23 @@ AC_CACHE_CHECK([for supported warning flags], cairo_cv_warn_cflags, [
 	cairo_cv_warn_maybe=$MAYBE_WARN
 
 	AC_MSG_CHECKING([which warning flags were supported])])
-WARN_CFLAGS=$cairo_cv_warn_cflags
+WARN_CFLAGS="$cairo_cv_warn_cflags"
 CAIRO_CFLAGS="$CAIRO_CFLAGS $WARN_CFLAGS"
 PIXMAN_CFLAGS="$PIXMAN_CFLAGS $WARN_CFLAGS"
+
+# We only wish to enable attribute(warn_unused_result) if we can prevent
+# gcc from generating thousands of warnings about the misapplication of the
+# attribute to void functions and variables.
+AC_MSG_CHECKING([how to enable unused result warnings])
+warn_unused_result=""
+if echo $WARN_CFLAGS | grep -e '-Wno-attributes' >/dev/null; then
+    AC_TRY_COMPILE([__attribute__((__warn_unused_result__))
+	int f (int i) { return i; }], [],
+	[warn_unused_result="__attribute__((__warn_unused_result__))"])
+fi
+AC_DEFINE_UNQUOTED([WARN_UNUSED_RESULT], [$warn_unused_result],
+	  [Define to the value your compiler uses to support the warn-unused-result attribute])
+AC_MSG_RESULT([$warn_unused_result])
 
 CAIRO_CC_TRY_FLAG([-fno-strict-aliasing],
 		  [CAIRO_CFLAGS="$CAIRO_CFLAGS -fno-strict-aliasing"
@@ -845,7 +859,8 @@ AC_CONFIG_COMMANDS([src/cairo-features.h],
 # define CAIRO_END_DECLS
 #endif
 
-#if    __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
+#if    __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1)
+/* only enable warnings if they can be suppressed  (-Wno-attributes) */
 #define CAIRO_WARN_UNUSED_RESULT 		\
   __attribute__((__warn_unused_result__))
 #else

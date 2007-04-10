@@ -100,12 +100,16 @@ SOFTWARE.
 #include "pixman-remap.h"
 
 #if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__) && !defined(__sun__)
-#define pixman_private		__attribute__((__visibility__("hidden"),__warn_unused_result__))
+#define pixman_private_no_warn	__attribute__((__visibility__("hidden")))
 #elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
-#define pixman_private		__hidden
+#define pixman_private_no_warn	__hidden
 #else /* not gcc >= 3.3 and not Sun Studio >= 8 */
-#define pixman_private
+#define pixman_private_no_warn
 #endif
+
+/* Add attribute(warn_unused_result) if supported */
+#define pixman_warn WARN_UNUSED_RESULT
+#define pixman_private pixman_private_no_warn pixman_warn
 
 #if defined(__cplusplus) || defined(c_plusplus)
 extern "C" {
