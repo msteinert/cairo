@@ -144,11 +144,14 @@ static cairo_int_status_t
 _test_meta_surface_show_page (void *abstract_surface)
 {
     test_meta_surface_t *surface = abstract_surface;
+    cairo_status_t status;
 
     if (surface->image_reflects_meta)
 	return CAIRO_STATUS_SUCCESS;
 
-    _cairo_meta_surface_replay (surface->meta, surface->image);
+    status = _cairo_meta_surface_replay (surface->meta, surface->image);
+    if (status)
+	return status;
 
     surface->image_reflects_meta = TRUE;
 
@@ -280,6 +283,7 @@ static cairo_surface_t *
 _test_meta_surface_snapshot (void *abstract_other)
 {
     test_meta_surface_t *other = abstract_other;
+    cairo_status_t status;
 
     /* XXX: Just making a snapshot of other->meta is what we really
      * want. But this currently triggers a bug somewhere (the "mask"
@@ -306,7 +310,9 @@ _test_meta_surface_snapshot (void *abstract_other)
 					    extents.width,
 					    extents.height);
 
-    _cairo_meta_surface_replay (other->meta, surface);
+    status = _cairo_meta_surface_replay (other->meta, surface);
+    if (status)
+	return (cairo_surface_t*) &_cairo_surface_nil;
 
     return surface;
 #endif
