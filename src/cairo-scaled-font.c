@@ -1178,6 +1178,42 @@ _scaled_glyph_path_close_path (void *abstract_closure)
     return _cairo_path_fixed_close_path (closure->path);
 }
 
+/* Add a single-device-unit rectangle to a path. */
+static cairo_status_t
+_add_unit_rectangle_to_path (cairo_path_fixed_t *path, int x, int y)
+{
+    cairo_status_t status;
+
+    status = _cairo_path_fixed_move_to (path,
+					_cairo_fixed_from_int (x),
+					_cairo_fixed_from_int (y));
+    if (status)
+	return status;
+
+    status = _cairo_path_fixed_rel_line_to (path,
+					    _cairo_fixed_from_int (1),
+					    _cairo_fixed_from_int (0));
+    if (status)
+	return status;
+
+    status = _cairo_path_fixed_rel_line_to (path,
+					    _cairo_fixed_from_int (0),
+					    _cairo_fixed_from_int (1));
+    if (status)
+	return status;
+
+    status = _cairo_path_fixed_rel_line_to (path,
+					    _cairo_fixed_from_int (-1),
+					    _cairo_fixed_from_int (0));
+    if (status)
+	return status;
+
+    status = _cairo_path_fixed_close_path (path);
+    if (status)
+	return status;
+
+    return CAIRO_STATUS_SUCCESS;
+}
 
 /**
  * _trace_mask_to_path:
@@ -1200,6 +1236,7 @@ static cairo_status_t
 _trace_mask_to_path (cairo_image_surface_t *mask,
 		     cairo_path_fixed_t *path)
 {
+    cairo_status_t status;
     cairo_image_surface_t *a1_mask;
     unsigned char *row, *byte_ptr, byte;
     int rows, cols, bytes_per_row;
@@ -1222,19 +1259,10 @@ _trace_mask_to_path (cairo_image_surface_t *mask,
 	    byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte_ptr);
 	    for (bit = 7; bit >= 0 && x < a1_mask->width; bit--, x++) {
 		if (byte & (1 << bit)) {
-		    _cairo_path_fixed_move_to (path,
-					       _cairo_fixed_from_int (x + xoff),
-					       _cairo_fixed_from_int (y + yoff));
-		    _cairo_path_fixed_rel_line_to (path,
-						   _cairo_fixed_from_int (1),
-						   _cairo_fixed_from_int (0));
-		    _cairo_path_fixed_rel_line_to (path,
-						   _cairo_fixed_from_int (0),
-						   _cairo_fixed_from_int (1));
-		    _cairo_path_fixed_rel_line_to (path,
-						   _cairo_fixed_from_int (-1),
-						   _cairo_fixed_from_int (0));
-		    _cairo_path_fixed_close_path (path);
+		    status = _add_unit_rectangle_to_path (path,
+							  x + xoff, y + yoff);
+		    if (status)
+			return status;
 		}
 	    }
 	}
