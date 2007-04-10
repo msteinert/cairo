@@ -313,8 +313,10 @@ _test_meta_surface_snapshot (void *abstract_other)
 					    extents.height);
 
     status = _cairo_meta_surface_replay (other->meta, surface);
-    if (status)
-	return (cairo_surface_t*) &_cairo_surface_nil;
+    if (status) {
+	cairo_surface_destroy (surface);
+	surface = (cairo_surface_t*) &_cairo_surface_nil;
+    }
 
     return surface;
 #endif
