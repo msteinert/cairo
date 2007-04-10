@@ -320,16 +320,24 @@ cairo_truetype_font_align_output (cairo_truetype_font_t *font)
     return aligned;
 }
 
-static void
+static cairo_status_t
 cairo_truetype_font_check_boundary (cairo_truetype_font_t *font,
 				    unsigned long          boundary)
 {
+    cairo_status_t status;
+
     if (boundary - font->last_offset > SFNT_STRING_MAX_LENGTH)
     {
-        _cairo_array_append(&font->string_offsets, &font->last_boundary);
+        status = _cairo_array_append (&font->string_offsets,
+				      &font->last_boundary);
+	if (status)
+	    return status;
+
         font->last_offset = font->last_boundary;
     }
     font->last_boundary = boundary;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static int
@@ -487,7 +495,13 @@ cairo_truetype_font_write_glyf_table (cairo_truetype_font_t *font,
 	size = end - begin;
 
         next = cairo_truetype_font_align_output (font);
-        cairo_truetype_font_check_boundary (font, next);
+
+        status = cairo_truetype_font_check_boundary (font, next);
+	if (status) {
+	    font->status = status;
+	    break;
+	}
+
         font->glyphs[i].location = next - start_offset;
 
 	status = cairo_truetype_font_allocate_write_buffer (font, size, &buffer);
@@ -774,6 +788,7 @@ cairo_truetype_font_generate (cairo_truetype_font_t  *font,
 			      const unsigned long   **string_offsets,
 			      unsigned long          *num_strings)
 {
+    cairo_status_t status;
     unsigned long start, end, next;
     uint32_t checksum, *checksum_location;
     unsigned int i;
@@ -793,7 +808,12 @@ cairo_truetype_font_generate (cairo_truetype_font_t  *font,
 	next = cairo_truetype_font_align_output (font);
 	cairo_truetype_font_update_entry (font, truetype_tables[i].pos, truetype_tables[i].tag,
 					start, end);
-        cairo_truetype_font_check_boundary (font, next);
+        status = cairo_truetype_font_check_boundary (font, next);
+	if (status) {
+	    font->status = status;
+	    goto fail;
+	}
+
 	start = next;
     }
 
