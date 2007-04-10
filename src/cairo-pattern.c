@@ -297,10 +297,11 @@ _cairo_pattern_create_solid (const cairo_color_t *color)
 	/* None cached, need to create a new pattern. */
 	pattern = malloc (sizeof (cairo_solid_pattern_t));
     }
-    if (pattern != NULL)
-	_cairo_pattern_init_solid (pattern, color);
-    else
+
+    if (pattern == NULL)
 	pattern = (cairo_solid_pattern_t *) &_cairo_pattern_nil;
+    else
+	_cairo_pattern_init_solid (pattern, color);
 
     return &pattern->base;
 }
