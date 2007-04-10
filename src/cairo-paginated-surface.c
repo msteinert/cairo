@@ -517,7 +517,9 @@ _cairo_paginated_surface_snapshot (void *abstract_other)
     cairo_rectangle_int16_t extents;
     cairo_surface_t *surface;
 
-    _cairo_surface_get_extents (other->target, &extents);
+    status = _cairo_surface_get_extents (other->target, &extents);
+    if (status)
+	return (cairo_surface_t*) &_cairo_surface_nil;
 
     surface = _cairo_paginated_surface_create_image_surface (other,
 							     extents.width,
