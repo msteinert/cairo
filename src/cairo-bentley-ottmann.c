@@ -1065,7 +1065,6 @@ _cairo_bo_edge_end_trap (cairo_bo_edge_t	*left,
 			 cairo_bo_traps_t	*bo_traps)
 {
     cairo_fixed_t fixed_top, fixed_bot;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_bo_trap_t *trap = left->deferred_trap;
     cairo_bo_edge_t *right;
 
@@ -1107,11 +1106,11 @@ _cairo_bo_edge_end_trap (cairo_bo_edge_t	*left,
 	    left_bot.x != right_bot.x ||
 	    left_bot.y != right_bot.y)
 	{
-	    status = _cairo_traps_add_trap_from_points (bo_traps->traps,
-							fixed_top,
-							fixed_bot,
-							left_top, left_bot,
-							right_top, right_bot);
+	    _cairo_traps_add_trap_from_points (bo_traps->traps,
+					       fixed_top,
+					       fixed_bot,
+					       left_top, left_bot,
+					       right_top, right_bot);
 
 #if DEBUG_PRINT_STATE
 	    printf ("Deferred trap: left=(%08x, %08x)-(%08x,%08x) "
@@ -1125,7 +1124,8 @@ _cairo_bo_edge_end_trap (cairo_bo_edge_t	*left,
 
     _cairo_freelist_free (&bo_traps->freelist, trap);
     left->deferred_trap = NULL;
-    return status;
+
+    return _cairo_traps_status (bo_traps->traps);
 }
 
 /* Start a new trapezoid at the given top y coordinate, whose edges

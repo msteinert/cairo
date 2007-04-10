@@ -2297,6 +2297,9 @@ _cairo_traps_init_box (cairo_traps_t *traps,
 cairo_private void
 _cairo_traps_fini (cairo_traps_t *traps);
 
+cairo_private cairo_status_t
+_cairo_traps_status (cairo_traps_t *traps);
+
 cairo_private void
 _cairo_traps_translate (cairo_traps_t *traps, int x, int y);
 
@@ -2311,7 +2314,7 @@ _cairo_traps_tessellate_polygon (cairo_traps_t *traps,
 				 cairo_polygon_t *poly,
 				 cairo_fill_rule_t fill_rule);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_traps_add_trap_from_points (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
 				   cairo_point_t left_p1, cairo_point_t left_p2,
 				   cairo_point_t right_p1, cairo_point_t right_p2);

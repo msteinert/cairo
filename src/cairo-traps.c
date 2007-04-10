@@ -43,7 +43,7 @@
 static cairo_status_t
 _cairo_traps_grow (cairo_traps_t *traps);
 
-static cairo_status_t
+static void
 _cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
 		       cairo_line_t *left, cairo_line_t *right);
 
@@ -109,23 +109,29 @@ _cairo_traps_init_box (cairo_traps_t *traps,
   return traps->status;
 }
 
-static cairo_status_t
+cairo_status_t
+_cairo_traps_status (cairo_traps_t *traps)
+{
+    return traps->status;
+}
+
+static void
 _cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
 		       cairo_line_t *left, cairo_line_t *right)
 {
     cairo_trapezoid_t *trap;
 
     if (traps->status)
-	return traps->status;
+	return;
 
     if (top == bottom) {
-	return CAIRO_STATUS_SUCCESS;
+	return;
     }
 
     if (traps->num_traps >= traps->traps_size) {
 	traps->status = _cairo_traps_grow (traps);
 	if (traps->status)
-	    return traps->status;
+	    return;
     }
 
     trap = &traps->traps[traps->num_traps];
@@ -157,11 +163,9 @@ _cairo_traps_add_trap (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bo
 	traps->extents.p2.x = right->p2.x;
 
     traps->num_traps++;
-
-    return traps->status;
 }
 
-cairo_status_t
+void
 _cairo_traps_add_trap_from_points (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
 				   cairo_point_t left_p1, cairo_point_t left_p2,
 				   cairo_point_t right_p1, cairo_point_t right_p2)
@@ -170,7 +174,7 @@ _cairo_traps_add_trap_from_points (cairo_traps_t *traps, cairo_fixed_t top, cair
     cairo_line_t right;
 
     if (traps->status)
-	return traps->status;
+	return;
 
     left.p1 = left_p1;
     left.p2 = left_p2;
@@ -178,7 +182,7 @@ _cairo_traps_add_trap_from_points (cairo_traps_t *traps, cairo_fixed_t top, cair
     right.p1 = right_p1;
     right.p2 = right_p2;
 
-    return _cairo_traps_add_trap (traps, top, bottom, &left, &right);
+    _cairo_traps_add_trap (traps, top, bottom, &left, &right);
 }
 
 /* make room for at least one more trap */
