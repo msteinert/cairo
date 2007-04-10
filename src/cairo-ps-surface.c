@@ -836,7 +836,8 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 					    &cairo_ps_surface_paginated_backend);
 
  CLEANUP_OUTPUT_STREAM:
-    _cairo_output_stream_destroy (surface->stream);
+    status = _cairo_output_stream_destroy (surface->stream);
+    /* Ignore status---we're already on a failure path. */
  CLEANUP_TMPFILE:
     fclose (surface->tmpfile);
  CLEANUP_SURFACE:
@@ -1561,7 +1562,7 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 	    cairo_image_surface_t *image,
 	    const char		  *name)
 {
-    cairo_status_t status;
+    cairo_status_t status, status2;
     unsigned char *rgb, *compressed;
     unsigned long rgb_size, compressed_size;
     cairo_surface_t *opaque;
@@ -1654,8 +1655,12 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 
     _cairo_output_stream_write (base85_stream, compressed, compressed_size);
 
-    _cairo_output_stream_destroy (base85_stream);
-    _cairo_output_stream_destroy (string_array_stream);
+    status = _cairo_output_stream_destroy (base85_stream);
+    status2 = _cairo_output_stream_destroy (string_array_stream);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = status2;
+    if (status)
+	goto bail3;
 
     _cairo_output_stream_printf (surface->stream,
 				 "] def\n");
@@ -1687,6 +1692,7 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 
     status = CAIRO_STATUS_SUCCESS;
 
+ bail3:
     free (compressed);
  bail2:
     free (rgb);
