@@ -2164,7 +2164,7 @@ cairo_bool_t
 cairo_in_stroke (cairo_t *cr, double x, double y)
 {
     cairo_status_t status;
-    cairo_bool_t inside = 0;
+    cairo_bool_t inside = FALSE;
 
     if (cr->status)
 	return 0;
@@ -2197,7 +2197,7 @@ cairo_bool_t
 cairo_in_fill (cairo_t *cr, double x, double y)
 {
     cairo_status_t status;
-    cairo_bool_t inside = 0;
+    cairo_bool_t inside = FALSE;
 
     if (cr->status)
 	return 0;
