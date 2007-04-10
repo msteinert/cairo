@@ -2460,9 +2460,6 @@ _cairo_utf8_to_utf16 (const unsigned char *str,
 cairo_private void
 _cairo_error (cairo_status_t status);
 
-cairo_private int
-_cairo_dtostr (char *buffer, size_t size, double d);
-
 /* Avoid unnecessary PLT entries.  */
 slim_hidden_proto (cairo_clip_preserve);
 slim_hidden_proto (cairo_close_path);
