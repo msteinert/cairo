@@ -1275,6 +1275,7 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
     status = _cairo_bo_event_queue_init (&event_queue, edges, num_edges);
     if (status)
 	return status;
+
     _cairo_bo_sweep_line_init (&sweep_line);
     _cairo_bo_traps_init (&bo_traps, traps, xmin, ymin, xmax, ymax);
 

@@ -643,6 +643,7 @@ cairo_type1_font_write (cairo_type1_font_t *font,
     status = cairo_type1_font_write_header (font, name);
     if (status)
 	return status;
+
     font->header_size = _cairo_output_stream_get_position (font->output);
 
     status = cairo_type1_font_write_private_dict (font, name);
