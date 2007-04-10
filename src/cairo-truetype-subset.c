@@ -505,8 +505,11 @@ cairo_truetype_font_write_glyf_table (cairo_truetype_font_t *font,
         font->glyphs[i].location = next - start_offset;
 
 	status = cairo_truetype_font_allocate_write_buffer (font, size, &buffer);
-	if (status)
+	if (status) {
+	    font->status = status;
 	    break;
+	}
+
         if (size != 0) {
             font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
                                                 TT_TAG_glyf, begin, buffer, &size);
