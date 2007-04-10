@@ -1344,7 +1344,7 @@ cairo_private cairo_status_t
 _cairo_gstate_set_matrix (cairo_gstate_t       *gstate,
 			  const cairo_matrix_t *matrix);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_gstate_identity_matrix (cairo_gstate_t *gstate);
 
 cairo_private cairo_status_t

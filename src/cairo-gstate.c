@@ -62,7 +62,6 @@ cairo_status_t
 _cairo_gstate_init (cairo_gstate_t  *gstate,
 		    cairo_surface_t *target)
 {
-    cairo_status_t status;
     gstate->next = NULL;
 
     gstate->op = CAIRO_GSTATE_OPERATOR_DEFAULT;
@@ -89,9 +88,7 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     gstate->parent_target = NULL;
     gstate->original_target = cairo_surface_reference (target);
 
-    status = _cairo_gstate_identity_matrix (gstate);
-    if (status)
-	return status;
+    _cairo_gstate_identity_matrix (gstate);
     gstate->source_ctm_inverse = gstate->ctm_inverse;
 
     gstate->source = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK);
@@ -684,15 +681,13 @@ _cairo_gstate_set_matrix (cairo_gstate_t       *gstate,
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_status_t
+void
 _cairo_gstate_identity_matrix (cairo_gstate_t *gstate)
 {
     _cairo_gstate_unset_scaled_font (gstate);
 
     cairo_matrix_init_identity (&gstate->ctm);
     cairo_matrix_init_identity (&gstate->ctm_inverse);
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_status_t

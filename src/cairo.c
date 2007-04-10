@@ -1261,14 +1261,10 @@ cairo_set_matrix (cairo_t	       *cr,
 void
 cairo_identity_matrix (cairo_t *cr)
 {
-    cairo_status_t status;
-
     if (cr->status)
 	return;
 
-    status = _cairo_gstate_identity_matrix (cr->gstate);
-    if (status)
-	_cairo_set_error (cr, status);
+    _cairo_gstate_identity_matrix (cr->gstate);
 }
 
 /**
