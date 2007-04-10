@@ -1750,7 +1750,7 @@ _decompose_glyph_outline (FT_Face		  face,
 
     FT_GlyphSlot glyph;
     cairo_path_fixed_t *path;
-    cairo_status_t status;
+    cairo_status_t status, status2;
 
     path = _cairo_path_fixed_create ();
     if (!path)
@@ -1764,7 +1764,9 @@ _decompose_glyph_outline (FT_Face		  face,
     if (FT_Outline_Decompose (&glyph->outline, &outline_funcs, path))
 	status = CAIRO_STATUS_NO_MEMORY;
 
-    _cairo_path_fixed_close_path (path);
+    status2 = _cairo_path_fixed_close_path (path);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = status2;
 
     if (status == CAIRO_STATUS_SUCCESS)
 	*pathp = path;
