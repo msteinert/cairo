@@ -1658,8 +1658,8 @@ _cairo_pdf_surface_write_pages (cairo_pdf_surface_t *surface)
 }
 
 static cairo_pdf_resource_t
-_cairo_pdf_surface_emit_toUnicode_stream (cairo_pdf_surface_t		*surface,
-                                          cairo_scaled_font_subset_t	*font_subset)
+_cairo_pdf_surface_emit_to_unicode_stream (cairo_pdf_surface_t		*surface,
+					   cairo_scaled_font_subset_t	*font_subset)
 {
     const cairo_scaled_font_backend_t *backend;
     cairo_pdf_resource_t stream;
@@ -1781,7 +1781,7 @@ _cairo_pdf_surface_emit_cff_font_subset (cairo_pdf_surface_t		*surface,
 				 "endobj\r\n");
     free (compressed);
 
-    to_unicode_stream = _cairo_pdf_surface_emit_toUnicode_stream (surface, font_subset);
+    to_unicode_stream = _cairo_pdf_surface_emit_to_unicode_stream (surface, font_subset);
 
     descriptor = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
@@ -1890,7 +1890,7 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
 				 "endobj\r\n");
     free (compressed);
 
-    to_unicode_stream = _cairo_pdf_surface_emit_toUnicode_stream (surface, font_subset);
+    to_unicode_stream = _cairo_pdf_surface_emit_to_unicode_stream (surface, font_subset);
 
     descriptor = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
@@ -2041,7 +2041,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 				 "endobj\r\n");
     free (compressed);
 
-    to_unicode_stream = _cairo_pdf_surface_emit_toUnicode_stream (surface, font_subset);
+    to_unicode_stream = _cairo_pdf_surface_emit_to_unicode_stream (surface, font_subset);
 
     descriptor = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
@@ -2357,7 +2357,7 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 
     free (glyphs);
 
-    to_unicode_stream = _cairo_pdf_surface_emit_toUnicode_stream (surface, font_subset);
+    to_unicode_stream = _cairo_pdf_surface_emit_to_unicode_stream (surface, font_subset);
 
     subset_resource = _cairo_pdf_surface_new_object (surface);
     matrix = font_subset->scaled_font->scale;
