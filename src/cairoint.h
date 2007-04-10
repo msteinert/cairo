@@ -347,6 +347,8 @@ typedef struct _cairo_edge {
 } cairo_edge_t;
 
 typedef struct _cairo_polygon {
+    cairo_status_t status;
+
     cairo_point_t first_point;
     cairo_point_t current_point;
     cairo_bool_t has_current_point;
@@ -2219,15 +2221,18 @@ cairo_private void
 _cairo_polygon_fini (cairo_polygon_t *polygon);
 
 cairo_private cairo_status_t
+_cairo_polygon_status (cairo_polygon_t *polygon);
+
+cairo_private void
 _cairo_polygon_add_edge (cairo_polygon_t *polygon, cairo_point_t *p1, cairo_point_t *p2);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_polygon_move_to (cairo_polygon_t *polygon, cairo_point_t *point);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_polygon_line_to (cairo_polygon_t *polygon, cairo_point_t *point);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_polygon_close (cairo_polygon_t *polygon);
 
 /* cairo_spline.c */

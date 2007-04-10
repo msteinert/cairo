@@ -399,9 +399,8 @@ _cairo_pen_stroke_spline_half (cairo_pen_t *pen,
     while (i != stop) {
 	hull_point.x = point[i].x + pen->vertices[active].point.x;
 	hull_point.y = point[i].y + pen->vertices[active].point.y;
-	status = _cairo_polygon_line_to (polygon, &hull_point);
-	if (status)
-	    return status;
+
+	_cairo_polygon_line_to (polygon, &hull_point);
 
 	if (i + step == stop)
 	    slope = final_slope;
@@ -452,9 +451,11 @@ _cairo_pen_stroke_spline (cairo_pen_t		*pen,
     if (status)
 	goto BAIL;
 
-    status = _cairo_polygon_close (&polygon);
+    _cairo_polygon_close (&polygon);
+    status = _cairo_polygon_status (&polygon);
     if (status)
 	goto BAIL;
+
     status = _cairo_bentley_ottmann_tessellate_polygon (traps, &polygon, CAIRO_FILL_RULE_WINDING);
 BAIL:
     _cairo_polygon_fini (&polygon);
