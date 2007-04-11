@@ -509,7 +509,11 @@ pixman_image_set_clip_region (pixman_image_t	*image,
 
     if (region) {
         pixman_region_init (&image->clientClip);
-	pixman_region_copy (&image->clientClip, region);
+	if (pixman_region_copy (&image->clientClip, region) !=
+		PIXMAN_REGION_STATUS_SUCCESS) {
+	    pixman_region_fini (&image->clientClip);
+	    return 1;
+	}
 	image->clientClipType = CT_REGION;
     }
 
@@ -530,9 +534,14 @@ pixman_image_set_clip_region (pixman_image_t	*image,
 	pixman_region_translate (&image->compositeClip,
 				 - image->clipOrigin.x,
 				 - image->clipOrigin.y);
-	pixman_region_intersect (&image->compositeClip,
+	if (pixman_region_intersect (&image->compositeClip,
 				 &image->compositeClip,
-				 region);
+				 region) != PIXMAN_REGION_STATUS_SUCCESS) {
+	    pixman_image_destroyClip (image);
+	    pixman_region_fini (&image->compositeClip);
+	    image->hasCompositeClip = 0;
+	    return 1;
+	}
 	pixman_region_translate (&image->compositeClip,
 				 image->clipOrigin.x,
 				 image->clipOrigin.y);
