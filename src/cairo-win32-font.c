@@ -283,11 +283,13 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
     cairo_matrix_multiply (&scale, font_matrix, ctm);
     _compute_transform (f, &scale);
 
-    _cairo_scaled_font_init (&f->base, font_face,
-			     font_matrix, ctm, options,
-			     &cairo_win32_scaled_font_backend);
+    status = _cairo_scaled_font_init (&f->base, font_face,
+				      font_matrix, ctm, options,
+				      &cairo_win32_scaled_font_backend);
 
-    status = _cairo_win32_scaled_font_set_metrics (f);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = _cairo_win32_scaled_font_set_metrics (f);
+
     if (status) {
 	cairo_scaled_font_destroy (&f->base);
 	return NULL;

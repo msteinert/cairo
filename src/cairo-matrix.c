@@ -495,7 +495,7 @@ _cairo_matrix_compute_determinant (const cairo_matrix_t *matrix,
 }
 
 /* Compute the amount that each basis vector is scaled by. */
-cairo_status_t
+void
 _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
 				     double *sx, double *sy, int x_major)
 {
@@ -535,8 +535,6 @@ _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
 	    *sy = major;
 	}
     }
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_bool_t

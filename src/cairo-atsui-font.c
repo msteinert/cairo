@@ -116,7 +116,7 @@ _cairo_atsui_font_face_scaled_font_create (void	*abstract_face,
     ATSUStyle style;
 
     err = ATSUCreateStyle (&style);
-    err = ATSUSetAttributes(style, ARRAY_LEN (styleTags),
+    err = ATSUSetAttributes(style, ARRAY_LENGTH (styleTags),
                             styleTags, styleSizes, styleValues);
 
     return _cairo_atsui_font_create_scaled (&font_face->base, font_face->font_id, style,
@@ -230,8 +230,13 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
     if (font == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    _cairo_scaled_font_init(&font->base, font_face, font_matrix, ctm, options,
-			    &cairo_atsui_scaled_font_backend);
+    status = _cairo_scaled_font_init (&font->base,
+				      font_face, font_matrix, ctm, options,
+				      &cairo_atsui_scaled_font_backend);
+    if (status) {
+	free (font);
+	return status;
+    }
 
     _cairo_matrix_compute_scale_factors (&font->base.scale, 
 					 &xscale, &yscale, 1);
@@ -372,7 +377,7 @@ _cairo_atsui_font_create_toy(cairo_toy_font_face_t *toy_face,
 	ByteCount styleSizes[] =
 	    { sizeof(Boolean), sizeof(Boolean), sizeof(ATSUFontID) };
 
-	err = ATSUSetAttributes(style, ARRAY_LEN (styleTags),
+	err = ATSUSetAttributes(style, ARRAY_LENGTH (styleTags),
 				styleTags, styleSizes, styleValues);
     }
 
@@ -680,8 +685,9 @@ _cairo_atsui_scaled_font_init_glyph_surface (cairo_atsui_font_t *scaled_font,
 
     if (theGlyph == kATSDeletedGlyphcode) {
 	surface = (cairo_image_surface_t *)cairo_image_surface_create (CAIRO_FORMAT_A8, 2, 2);
-	if (!surface)
-	    return CAIRO_STATUS_NO_MEMORY;
+	if (cairo_surface_status (surface))
+	    return cairo_surface_status (surface);
+
 	_cairo_scaled_glyph_set_surface (scaled_glyph,
 					 &base,
 					 surface);
@@ -746,8 +752,8 @@ _cairo_atsui_scaled_font_init_glyph_surface (cairo_atsui_font_t *scaled_font,
 
     /* create the glyph mask surface */
     surface = (cairo_image_surface_t *)cairo_image_surface_create (format, bbox.size.width, bbox.size.height);
-    if (!surface)
-	return CAIRO_STATUS_NO_MEMORY;
+    if (cairo_surface_status (surface))
+	return cairo_surface_status (surface);
 
     /* Create a CGBitmapContext for the dest surface for drawing into */
     {

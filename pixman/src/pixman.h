@@ -100,7 +100,7 @@ SOFTWARE.
 #include "pixman-remap.h"
 
 #if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__) && !defined(__sun__)
-#define pixman_private		__attribute__((__visibility__("hidden")))
+#define pixman_private		__attribute__((__visibility__("hidden"),__warn_unused_result__))
 #elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
 #define pixman_private		__hidden
 #else /* not gcc >= 3.3 and not Sun Studio >= 8 */
@@ -448,7 +448,7 @@ pixman_pixel_to_color (const pixman_format_t	*format,
 
 /* icrect.c */
 
-pixman_private void
+pixman_private int
 pixman_fill_rectangle (pixman_operator_t	op,
 		       pixman_image_t		*dst,
 		       const pixman_color_t	*color,
@@ -457,7 +457,7 @@ pixman_fill_rectangle (pixman_operator_t	op,
 		       unsigned int		width,
 		       unsigned int		height);
 
-pixman_private void
+pixman_private int
 pixman_fill_rectangles (pixman_operator_t		op,
 			pixman_image_t			*dst,
 			const pixman_color_t		*color,
@@ -466,7 +466,7 @@ pixman_fill_rectangles (pixman_operator_t		op,
 
 /* ictrap.c */
 
-pixman_private void
+pixman_private int
 pixman_composite_trapezoids (pixman_operator_t		op,
 			     pixman_image_t		*src,
 			     pixman_image_t		*dst,

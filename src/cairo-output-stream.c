@@ -215,52 +215,49 @@ _cairo_output_stream_write_hex_string (cairo_output_stream_t *stream,
  * has been relicensed under the LGPL/MPL dual license for inclusion
  * into cairo (see COPYING). -- Kristian Høgsberg <krh@redhat.com>
  */
-
-int
+void
 _cairo_dtostr (char *buffer, size_t size, double d)
 {
-  struct lconv *locale_data;
-  const char *decimal_point;
-  int decimal_point_len;
-  char *p;
-  int decimal_len;
+    struct lconv *locale_data;
+    const char *decimal_point;
+    int decimal_point_len;
+    char *p;
+    int decimal_len;
 
-  /* Omit the minus sign from negative zero. */
-  if (d == 0.0)
-      d = 0.0;
+    /* Omit the minus sign from negative zero. */
+    if (d == 0.0)
+	d = 0.0;
 
-  snprintf (buffer, size, "%f", d);
+    snprintf (buffer, size, "%f", d);
 
-  locale_data = localeconv ();
-  decimal_point = locale_data->decimal_point;
-  decimal_point_len = strlen (decimal_point);
+    locale_data = localeconv ();
+    decimal_point = locale_data->decimal_point;
+    decimal_point_len = strlen (decimal_point);
 
-  assert (decimal_point_len != 0);
-  p = buffer;
+    assert (decimal_point_len != 0);
+    p = buffer;
 
-  if (*p == '+' || *p == '-')
-      p++;
+    if (*p == '+' || *p == '-')
+	p++;
 
-  while (isdigit (*p))
-      p++;
+    while (isdigit (*p))
+	p++;
 
-  if (strncmp (p, decimal_point, decimal_point_len) == 0) {
-      *p = '.';
-      decimal_len = strlen (p + decimal_point_len);
-      memmove (p + 1, p + decimal_point_len, decimal_len);
-      p[1 + decimal_len] = 0;
+    if (strncmp (p, decimal_point, decimal_point_len) == 0) {
+	*p = '.';
+	decimal_len = strlen (p + decimal_point_len);
+	memmove (p + 1, p + decimal_point_len, decimal_len);
+	p[1 + decimal_len] = 0;
 
-      /* Remove trailing zeros and decimal point if possible. */
-      for (p = p + decimal_len; *p == '0'; p--)
-	  *p = 0;
+	/* Remove trailing zeros and decimal point if possible. */
+	for (p = p + decimal_len; *p == '0'; p--)
+	    *p = 0;
 
-      if (*p == '.') {
-	  *p = 0;
-	  p--;
-      }
-  }
-
-  return p + 1 - buffer;
+	if (*p == '.') {
+	    *p = 0;
+	    p--;
+	}
+    }
 }
 
 enum {
@@ -279,7 +276,9 @@ void
 _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 			      const char *fmt, va_list ap)
 {
-    char buffer[512], single_fmt[32];
+#define SINGLE_FMT_BUFFER_SIZE 32
+    char buffer[512], single_fmt[SINGLE_FMT_BUFFER_SIZE];
+    int single_fmt_length;
     char *p;
     const char *f, *start;
     int length_modifier;
@@ -315,9 +314,15 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 	    f++;
 	}
 
+	/* The only format strings exist in the cairo implementation
+	 * itself. So there's an internal consistency problem if any
+	 * of them is larger than our format buffer size. */
+	single_fmt_length = f - start + 1;
+	assert (single_fmt_length + 1 <= SINGLE_FMT_BUFFER_SIZE);
+
 	/* Reuse the format string for this conversion. */
-	memcpy (single_fmt, start, f + 1 - start);
-	single_fmt[f + 1 - start] = '\0';
+	memcpy (single_fmt, start, single_fmt_length);
+	single_fmt[single_fmt_length] = '\0';
 
 	/* Flush contents of buffer before snprintf()'ing into it. */
 	_cairo_output_stream_write (stream, buffer, p - buffer);

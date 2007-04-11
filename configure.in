@@ -436,7 +436,7 @@ FREETYPE_MIN_VERSION=8.0.2
 CAIRO_BACKEND_ENABLE(ft, FreeType font, freetype, FT_FONT, auto, [
   ft_REQUIRES="fontconfig"
   PKG_CHECK_MODULES(FONTCONFIG, $ft_REQUIRES,
-		    [_CHECK_FUNCS_WITH_FLAGS(FcFini, $ft_CFLAGS, $ft_LIBS)],
+		    [_CHECK_FUNCS_WITH_FLAGS(FcFini, [$FONTCONFIG_CFLAGS], [$FONTCONFIG_LIBS])],
 		    [AC_MSG_RESULT(no); use_ft="no (requires fontconfig"])
 
   if test "x$use_ft" = "xyes"; then
@@ -623,7 +623,8 @@ MAYBE_WARN="-Wall -Wextra \
 -Wpacked -Wswitch-enum -Wmissing-format-attribute \
 -Wstrict-aliasing=2 -Winit-self -Wunsafe-loop-optimizations \
 -Wdeclaration-after-statement -Wold-style-definition \
--Wno-missing-field-initializers -Wno-unused-parameter"
+-Wno-missing-field-initializers -Wno-unused-parameter \
+-Wno-attributes"
 
 
 # invalidate cached value if MAYBE_WARN has changed
@@ -844,8 +845,18 @@ AC_CONFIG_COMMANDS([src/cairo-features.h],
 # define CAIRO_END_DECLS
 #endif
 
+#if    __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
+#define CAIRO_WARN_UNUSED_RESULT 		\
+  __attribute__((__warn_unused_result__))
+#else
+#define CAIRO_WARN_UNUSED_RESULT
+#endif /* __GNUC__ */
+
 #ifndef cairo_public
 # define cairo_public
+#endif
+#ifndef cairo_public_warn
+# define cairo_public_warn CAIRO_WARN_UNUSED_RESULT
 #endif
 
 #define CAIRO_VERSION_MAJOR $CAIRO_VERSION_MAJOR

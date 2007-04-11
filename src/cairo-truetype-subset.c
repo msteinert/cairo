@@ -320,16 +320,24 @@ cairo_truetype_font_align_output (cairo_truetype_font_t *font)
     return aligned;
 }
 
-static void
+static cairo_status_t
 cairo_truetype_font_check_boundary (cairo_truetype_font_t *font,
 				    unsigned long          boundary)
 {
+    cairo_status_t status;
+
     if (boundary - font->last_offset > SFNT_STRING_MAX_LENGTH)
     {
-        _cairo_array_append(&font->string_offsets, &font->last_boundary);
+        status = _cairo_array_append (&font->string_offsets,
+				      &font->last_boundary);
+	if (status)
+	    return status;
+
         font->last_offset = font->last_boundary;
     }
     font->last_boundary = boundary;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static int
@@ -487,12 +495,21 @@ cairo_truetype_font_write_glyf_table (cairo_truetype_font_t *font,
 	size = end - begin;
 
         next = cairo_truetype_font_align_output (font);
-        cairo_truetype_font_check_boundary (font, next);
+
+        status = cairo_truetype_font_check_boundary (font, next);
+	if (status) {
+	    font->status = status;
+	    break;
+	}
+
         font->glyphs[i].location = next - start_offset;
 
 	status = cairo_truetype_font_allocate_write_buffer (font, size, &buffer);
-	if (status)
+	if (status) {
+	    font->status = status;
 	    break;
+	}
+
         if (size != 0) {
             font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
                                                 TT_TAG_glyf, begin, buffer, &size);
@@ -703,7 +720,7 @@ cairo_truetype_font_write_offset_table (cairo_truetype_font_t *font)
     unsigned short search_range, entry_selector, range_shift;
     int num_tables;
 
-    num_tables = ARRAY_LEN (truetype_tables);
+    num_tables = ARRAY_LENGTH (truetype_tables);
     search_range = 1;
     entry_selector = 0;
     while (search_range * 2 <= num_tables) {
@@ -722,7 +739,7 @@ cairo_truetype_font_write_offset_table (cairo_truetype_font_t *font)
     /* Allocate space for the table directory. Each directory entry
      * will be filled in by cairo_truetype_font_update_entry() after
      * the table is written. */
-    table_buffer_length = ARRAY_LEN (truetype_tables) * 16;
+    table_buffer_length = ARRAY_LENGTH (truetype_tables) * 16;
     status = cairo_truetype_font_allocate_write_buffer (font, table_buffer_length,
 						      &table_buffer);
     if (status)
@@ -774,6 +791,7 @@ cairo_truetype_font_generate (cairo_truetype_font_t  *font,
 			      const unsigned long   **string_offsets,
 			      unsigned long          *num_strings)
 {
+    cairo_status_t status;
     unsigned long start, end, next;
     uint32_t checksum, *checksum_location;
     unsigned int i;
@@ -785,7 +803,7 @@ cairo_truetype_font_generate (cairo_truetype_font_t  *font,
     end = start;
 
     end = 0;
-    for (i = 0; i < ARRAY_LEN (truetype_tables); i++) {
+    for (i = 0; i < ARRAY_LENGTH (truetype_tables); i++) {
 	if (truetype_tables[i].write (font, truetype_tables[i].tag))
 	    goto fail;
 
@@ -793,7 +811,12 @@ cairo_truetype_font_generate (cairo_truetype_font_t  *font,
 	next = cairo_truetype_font_align_output (font);
 	cairo_truetype_font_update_entry (font, truetype_tables[i].pos, truetype_tables[i].tag,
 					start, end);
-        cairo_truetype_font_check_boundary (font, next);
+        status = cairo_truetype_font_check_boundary (font, next);
+	if (status) {
+	    font->status = status;
+	    goto fail;
+	}
+
 	start = next;
     }
 

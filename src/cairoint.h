@@ -73,13 +73,13 @@
 CAIRO_BEGIN_DECLS
 
 #if __GNUC__ >= 3 && defined(__ELF__) && !defined(__sun)
-# define slim_hidden_proto(name)	slim_hidden_proto1(name, slim_hidden_int_name(name))
-# define slim_hidden_def(name)		slim_hidden_def1(name, slim_hidden_int_name(name))
+# define slim_hidden_proto(name)		slim_hidden_proto1(name, slim_hidden_int_name(name)) cairo_private
+# define slim_hidden_proto_no_warn(name)	slim_hidden_proto1(name, slim_hidden_int_name(name)) cairo_private_no_warn
+# define slim_hidden_def(name)			slim_hidden_def1(name, slim_hidden_int_name(name))
 # define slim_hidden_int_name(name) INT_##name
 # define slim_hidden_proto1(name, internal)				\
   extern __typeof (name) name						\
-	__asm__ (slim_hidden_asmname (internal))			\
-	cairo_private
+	__asm__ (slim_hidden_asmname (internal))
 # define slim_hidden_def1(name, internal)				\
   extern __typeof (name) EXT_##name __asm__(slim_hidden_asmname(name))	\
 	__attribute__((__alias__(slim_hidden_asmname(internal))))
@@ -89,8 +89,9 @@ CAIRO_BEGIN_DECLS
 # define slim_hidden_asmname(name)	slim_hidden_asmname1(name)
 # define slim_hidden_asmname1(name)	slim_hidden_ulp #name
 #else
-# define slim_hidden_proto(name)	int _cairo_dummy_prototype(void)
-# define slim_hidden_def(name)		int _cairo_dummy_prototype(void)
+# define slim_hidden_proto(name)		int _cairo_dummy_prototype(void)
+# define slim_hidden_proto_no_warn(name)	int _cairo_dummy_prototype(void)
+# define slim_hidden_def(name)			int _cairo_dummy_prototype(void)
 #endif
 
 #if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
@@ -102,12 +103,17 @@ CAIRO_BEGIN_DECLS
 
 /* slim_internal.h */
 #if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__) && !defined(__sun)
-#define cairo_private		__attribute__((__visibility__("hidden")))
+#define cairo_private			__attribute__((__visibility__("hidden"),__warn_unused_result__))
+#define cairo_private_no_warn		__attribute__((__visibility__("hidden")))
 #elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
-#define cairo_private		__hidden
+#define cairo_private			__hidden CAIRO_WARN_UNUSED_RESULT
+#define cairo_private_no_warn		__hidden
 #else /* not gcc >= 3.3 and not Sun Studio >= 8 */
-#define cairo_private
+#define cairo_private			CAIRO_WARN_UNUSED_RESULT
+#define cairo_private_no_warn		
 #endif
+
+#define cairo_warn CAIRO_WARN_UNUSED_RESULT
 
 /* This macro allow us to deprecate a function by providing an alias
    for the old function name to the new function name. With this
@@ -151,8 +157,8 @@ CAIRO_BEGIN_DECLS
 #define M_PI 3.14159265358979323846
 #endif
 
-#undef  ARRAY_LEN
-#define ARRAY_LEN(__array) ((int) (sizeof (__array) / sizeof (__array[0])))
+#undef  ARRAY_LENGTH
+#define ARRAY_LENGTH(__array) ((int) (sizeof (__array) / sizeof (__array[0])))
 
 /* Size in bytes of buffer to use off the stack per functions.
  * Mostly used by text functions.  For larger allocations, they'll
@@ -345,6 +351,8 @@ typedef struct _cairo_edge {
 } cairo_edge_t;
 
 typedef struct _cairo_polygon {
+    cairo_status_t status;
+
     cairo_point_t first_point;
     cairo_point_t current_point;
     cairo_bool_t has_current_point;
@@ -1253,7 +1261,7 @@ _cairo_gstate_restore (cairo_gstate_t **gstate);
 cairo_private cairo_bool_t
 _cairo_gstate_is_redirected (cairo_gstate_t *gstate);
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_gstate_redirect_target (cairo_gstate_t *gstate, cairo_surface_t *child);
 
 cairo_private cairo_surface_t *
@@ -1342,19 +1350,19 @@ cairo_private cairo_status_t
 _cairo_gstate_set_matrix (cairo_gstate_t       *gstate,
 			  const cairo_matrix_t *matrix);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_gstate_identity_matrix (cairo_gstate_t *gstate);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_gstate_user_to_device (cairo_gstate_t *gstate, double *x, double *y);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_gstate_user_to_device_distance (cairo_gstate_t *gstate, double *dx, double *dy);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_gstate_device_to_user (cairo_gstate_t *gstate, double *x, double *y);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_gstate_device_to_user_distance (cairo_gstate_t *gstate, double *dx, double *dy);
 
 cairo_private void
@@ -1587,7 +1595,7 @@ cairo_private void
 _cairo_unscaled_font_init (cairo_unscaled_font_t               *font,
 			   const cairo_unscaled_font_backend_t *backend);
 
-cairo_private cairo_unscaled_font_t *
+cairo_private_no_warn cairo_unscaled_font_t *
 _cairo_unscaled_font_reference (cairo_unscaled_font_t *font);
 
 cairo_private void
@@ -1944,10 +1952,10 @@ _cairo_surface_composite_trapezoids (cairo_operator_t	op,
 				     cairo_trapezoid_t	*traps,
 				     int		ntraps);
 
-cairo_private cairo_int_status_t
+cairo_private cairo_status_t
 _cairo_surface_copy_page (cairo_surface_t *surface);
 
-cairo_private cairo_int_status_t
+cairo_private cairo_status_t
 _cairo_surface_show_page (cairo_surface_t *surface);
 
 cairo_private cairo_status_t
@@ -2174,7 +2182,7 @@ _cairo_pen_init (cairo_pen_t	*pen,
 		 double		 tolerance,
 		 cairo_matrix_t	*ctm);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_pen_init_empty (cairo_pen_t *pen);
 
 cairo_private cairo_status_t
@@ -2217,15 +2225,18 @@ cairo_private void
 _cairo_polygon_fini (cairo_polygon_t *polygon);
 
 cairo_private cairo_status_t
+_cairo_polygon_status (cairo_polygon_t *polygon);
+
+cairo_private void
 _cairo_polygon_add_edge (cairo_polygon_t *polygon, cairo_point_t *p1, cairo_point_t *p2);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_polygon_move_to (cairo_polygon_t *polygon, cairo_point_t *point);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_polygon_line_to (cairo_polygon_t *polygon, cairo_point_t *point);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_polygon_close (cairo_polygon_t *polygon);
 
 /* cairo_spline.c */
@@ -2258,7 +2269,7 @@ _cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
 cairo_private void
 _cairo_matrix_compute_determinant (const cairo_matrix_t *matrix, double *det);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
 				     double *sx, double *sy, int x_major);
 
@@ -2290,6 +2301,9 @@ _cairo_traps_init_box (cairo_traps_t *traps,
 cairo_private void
 _cairo_traps_fini (cairo_traps_t *traps);
 
+cairo_private cairo_status_t
+_cairo_traps_status (cairo_traps_t *traps);
+
 cairo_private void
 _cairo_traps_translate (cairo_traps_t *traps, int x, int y);
 
@@ -2304,7 +2318,7 @@ _cairo_traps_tessellate_polygon (cairo_traps_t *traps,
 				 cairo_polygon_t *poly,
 				 cairo_fill_rule_t fill_rule);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_traps_add_trap_from_points (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
 				   cairo_point_t left_p1, cairo_point_t left_p2,
 				   cairo_point_t right_p1, cairo_point_t right_p2);
@@ -2450,9 +2464,6 @@ _cairo_utf8_to_utf16 (const unsigned char *str,
 cairo_private void
 _cairo_error (cairo_status_t status);
 
-cairo_private int
-_cairo_dtostr (char *buffer, size_t size, double d);
-
 /* Avoid unnecessary PLT entries.  */
 slim_hidden_proto (cairo_clip_preserve);
 slim_hidden_proto (cairo_close_path);
@@ -2461,7 +2472,7 @@ slim_hidden_proto (cairo_curve_to);
 slim_hidden_proto (cairo_destroy);
 slim_hidden_proto (cairo_fill_preserve);
 slim_hidden_proto (cairo_font_face_destroy);
-slim_hidden_proto (cairo_font_face_reference);
+slim_hidden_proto_no_warn (cairo_font_face_reference);
 slim_hidden_proto (cairo_font_options_create);
 slim_hidden_proto (cairo_font_options_destroy);
 slim_hidden_proto (cairo_font_options_equal);
@@ -2500,7 +2511,7 @@ slim_hidden_proto (cairo_pattern_create_rgba);
 slim_hidden_proto (cairo_pattern_destroy);
 slim_hidden_proto (cairo_pattern_get_extend);
 slim_hidden_proto (cairo_pattern_get_type);
-slim_hidden_proto (cairo_pattern_reference);
+slim_hidden_proto_no_warn (cairo_pattern_reference);
 slim_hidden_proto (cairo_pattern_set_matrix);
 slim_hidden_proto (cairo_pattern_status);
 slim_hidden_proto (cairo_pop_group);
@@ -2519,7 +2530,8 @@ slim_hidden_proto (cairo_scaled_font_get_font_face);
 slim_hidden_proto (cairo_scaled_font_get_font_matrix);
 slim_hidden_proto (cairo_scaled_font_get_font_options);
 slim_hidden_proto (cairo_scaled_font_glyph_extents);
-slim_hidden_proto (cairo_scaled_font_reference);
+slim_hidden_proto_no_warn (cairo_scaled_font_reference);
+slim_hidden_proto (cairo_scaled_font_status);
 slim_hidden_proto (cairo_set_operator);
 slim_hidden_proto (cairo_set_source);
 slim_hidden_proto (cairo_set_source_surface);
@@ -2533,7 +2545,7 @@ slim_hidden_proto (cairo_surface_get_device_offset);
 slim_hidden_proto (cairo_surface_get_font_options);
 slim_hidden_proto (cairo_surface_get_type);
 slim_hidden_proto (cairo_surface_mark_dirty_rectangle);
-slim_hidden_proto (cairo_surface_reference);
+slim_hidden_proto_no_warn (cairo_surface_reference);
 slim_hidden_proto (cairo_surface_set_device_offset);
 slim_hidden_proto (cairo_surface_set_fallback_resolution);
 slim_hidden_proto (cairo_surface_status);

@@ -241,6 +241,9 @@ _cairo_image_surface_create_with_masks (unsigned char	       *data,
 
     surface = _cairo_image_surface_create_for_pixman_image (pixman_image,
 							    cairo_format);
+    if (cairo_surface_status (surface)) {
+	pixman_image_destroy (pixman_image);
+    }
 
     return surface;
 }
@@ -315,6 +318,9 @@ cairo_image_surface_create (cairo_format_t	format,
     }
 
     surface = _cairo_image_surface_create_for_pixman_image (pixman_image, format);
+    if (cairo_surface_status (surface)) {
+	pixman_image_destroy (pixman_image);
+    }
 
     return surface;
 }
@@ -395,6 +401,9 @@ cairo_image_surface_create_for_data (unsigned char     *data,
     }
 
     surface = _cairo_image_surface_create_for_pixman_image (pixman_image, format);
+    if (cairo_surface_status (surface)) {
+	pixman_image_destroy (pixman_image);
+    }
 
     return surface;
 }
@@ -690,7 +699,8 @@ _cairo_image_surface_set_matrix (cairo_image_surface_t	*surface,
 
     _cairo_matrix_to_pixman_matrix (matrix, &pixman_transform);
 
-    pixman_image_set_transform (surface->pixman_image, &pixman_transform);
+    if (pixman_image_set_transform (surface->pixman_image, &pixman_transform))
+	return CAIRO_STATUS_NO_MEMORY;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -907,8 +917,10 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
     pixman_color.alpha = color->alpha_short;
 
     /* XXX: The pixman_rectangle_t cast is evil... it needs to go away somehow. */
-    pixman_fill_rectangles (_pixman_operator(op), surface->pixman_image,
-			    &pixman_color, (pixman_rectangle_t *) rects, num_rects);
+    if (pixman_fill_rectangles (_pixman_operator(op), surface->pixman_image,
+		                &pixman_color,
+				(pixman_rectangle_t *) rects, num_rects))
+	return CAIRO_STATUS_NO_MEMORY;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1047,7 +1059,8 @@ _cairo_image_surface_set_clip_region (void *abstract_surface,
 {
     cairo_image_surface_t *surface = (cairo_image_surface_t *) abstract_surface;
 
-    pixman_image_set_clip_region (surface->pixman_image, region);
+    if (pixman_image_set_clip_region (surface->pixman_image, region))
+	return CAIRO_STATUS_NO_MEMORY;
 
     surface->has_clip = region != NULL;
 

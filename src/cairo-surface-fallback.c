@@ -454,8 +454,11 @@ _composite_trap_region (cairo_clip_t            *clip,
 				       extents->width, extents->height);
 
     /* Restore the original clip if we modified it temporarily. */
-    if (num_rects >1)
-	_cairo_surface_set_clip (dst, clip);
+    if (num_rects > 1) {
+	cairo_status_t status2 = _cairo_surface_set_clip (dst, clip);
+	if (status == CAIRO_STATUS_SUCCESS)
+	    status = status2;
+    }
 
     if (clip_surface)
       _cairo_pattern_fini (&mask.base);
@@ -992,17 +995,21 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
 
     _cairo_pattern_init_for_surface (&pattern.surface, &image->base);
 
-    _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
-			      &pattern.base,
-			      NULL,
-			      snapshot,
-			      0, 0,
-			      0, 0,
-			      0, 0,
-			      image->width,
-			      image->height);
+    status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
+			               &pattern.base,
+				       NULL,
+				       snapshot,
+				       0, 0,
+				       0, 0,
+				       0, 0,
+				       image->width,
+				       image->height);
 
     _cairo_pattern_fini (&pattern.base);
+    if (status) {
+	cairo_surface_destroy (snapshot);
+	return (cairo_surface_t *) &_cairo_surface_nil;
+    }
 
     _cairo_surface_release_source_image (surface,
 					 image, &image_extra);
@@ -1171,13 +1178,14 @@ _cairo_surface_fallback_composite_trapezoids (cairo_operator_t		op,
 	traps = offset_traps;
     }
 
-    _cairo_surface_composite_trapezoids (op, pattern,
-					 &state.image->base,
-					 antialias,
-					 src_x, src_y,
-					 dst_x - state.image_rect.x,
-					 dst_y - state.image_rect.y,
-					 width, height, traps, num_traps);
+    status = _cairo_surface_composite_trapezoids (op, pattern,
+					          &state.image->base,
+						  antialias,
+						  src_x, src_y,
+						  dst_x - state.image_rect.x,
+						  dst_y - state.image_rect.y,
+						  width, height,
+						  traps, num_traps);
     if (offset_traps)
 	free (offset_traps);
 
