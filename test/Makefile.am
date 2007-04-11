@@ -525,14 +525,12 @@ CLEANFILES =					\
 
 # most systems cannot handle all of our clean files together
 clean-local:
-	-find . \
-	    \( -name '*.ps' -print0 \) , \
-	    \( -name '*.pdf' -print0 \) , \
-	    \( -name '*.svg' -print0 \) , \
-	    \( -name '*-out.png' -print0 \) , \
-	    \( -name '*-diff.png' -print0 \) , \
-	    \( -name '*.log' -print0 \) \
-	    | xargs -0 rm -f
+	-find . -name '*.ps' -print | xargs rm
+	-find . -name '*.pdf' -print | xargs rm
+	-find . -name '*.svg' -print | xargs rm
+	-find . -name '*-out.png' -print | xargs rm
+	-find . -name '*-diff.png' -print | xargs rm
+	-find . -name '*.log' -print | xargs rm
 
 # Check tests under valgrind
 # Saves log to valgrind-log
