@@ -351,6 +351,23 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 			 const cairo_font_options_t	   *options,
 			 const cairo_scaled_font_backend_t *backend)
 {
+    cairo_matrix_t inverse;
+    cairo_status_t status;
+
+    /* Initialize scaled_font->scale early for easier bail out on an
+     * invalid matrix. */
+    _cairo_scaled_font_init_key (scaled_font, font_face,
+				 font_matrix, ctm, options);
+
+    cairo_matrix_multiply (&scaled_font->scale,
+			   &scaled_font->font_matrix,
+			   &scaled_font->ctm);
+
+    inverse = scaled_font->scale;
+    status = cairo_matrix_invert (&inverse);
+    if (status)
+	return status;
+
     scaled_font->glyphs = _cairo_cache_create (_cairo_scaled_glyph_keys_equal,
 					       _cairo_scaled_glyph_destroy,
 					       max_glyphs_cached_per_font);
@@ -361,14 +378,7 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 
     _cairo_user_data_array_init (&scaled_font->user_data);
 
-    _cairo_scaled_font_init_key (scaled_font, font_face,
-				 font_matrix, ctm, options);
-
     cairo_font_face_reference (font_face);
-
-    cairo_matrix_multiply (&scaled_font->scale,
-			   &scaled_font->font_matrix,
-			   &scaled_font->ctm);
 
     CAIRO_MUTEX_INIT (&scaled_font->mutex);
 

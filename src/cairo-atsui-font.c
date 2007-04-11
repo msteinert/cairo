@@ -230,8 +230,13 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
     if (font == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    _cairo_scaled_font_init(&font->base, font_face, font_matrix, ctm, options,
-			    &cairo_atsui_scaled_font_backend);
+    status = _cairo_scaled_font_init (&font->base,
+				      font_face, font_matrix, ctm, options,
+				      &cairo_atsui_scaled_font_backend);
+    if (status) {
+	free (font);
+	return status;
+    }
 
     _cairo_matrix_compute_scale_factors (&font->base.scale, 
 					 &xscale, &yscale, 1);
