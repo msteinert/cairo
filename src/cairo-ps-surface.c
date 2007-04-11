@@ -1726,11 +1726,14 @@ static void
 _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t *surface,
 		      cairo_surface_pattern_t *pattern)
 {
+    cairo_status_t status;
     double bbox_width, bbox_height;
     double xstep, ystep;
     cairo_matrix_t inverse = pattern->base.matrix;
 
-    cairo_matrix_invert (&inverse);
+    status = cairo_matrix_invert (&inverse);
+    /* cairo_pattern_set_matrix ensures the matrix is invertible */
+    assert (status == CAIRO_STATUS_SUCCESS);
 
     if (_cairo_surface_is_meta (pattern->surface)) {
 	_cairo_output_stream_printf (surface->stream, "/MyPattern {\n");

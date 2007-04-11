@@ -983,7 +983,9 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
      * pattern cell.
      */
     cairo_p2d = pattern->base.matrix;
-    cairo_matrix_invert (&cairo_p2d);
+    status = cairo_matrix_invert (&cairo_p2d);
+    /* cairo_pattern_set_matrix ensures the matrix is invertible */
+    assert (status == CAIRO_STATUS_SUCCESS);
 
     cairo_matrix_init_identity (&pdf_p2d);
     cairo_matrix_translate (&pdf_p2d, 0.0, surface_extents.height);
