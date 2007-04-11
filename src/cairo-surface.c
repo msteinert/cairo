@@ -1434,10 +1434,7 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		op,
 							  traps, num_traps);
 }
 
-/* _copy_page and _show_page are unique among _cairo_surface functions
- * in that they will actually return CAIRO_INT_STATUS_UNSUPPORTED
- * rather than performing any fallbacks. */
-cairo_int_status_t
+cairo_status_t
 _cairo_surface_copy_page (cairo_surface_t *surface)
 {
     assert (! surface->is_snapshot);
@@ -1448,16 +1445,14 @@ _cairo_surface_copy_page (cairo_surface_t *surface)
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
+    /* It's fine if some backends don't implement copy_page */
     if (surface->backend->copy_page == NULL)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return CAIRO_STATUS_SUCCESS;
 
     return surface->backend->copy_page (surface);
 }
 
-/* _show_page and _copy_page are unique among _cairo_surface functions
- * in that they will actually return CAIRO_INT_STATUS_UNSUPPORTED
- * rather than performing any fallbacks. */
-cairo_int_status_t
+cairo_status_t
 _cairo_surface_show_page (cairo_surface_t *surface)
 {
     assert (! surface->is_snapshot);
@@ -1468,8 +1463,9 @@ _cairo_surface_show_page (cairo_surface_t *surface)
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
+    /* It's fine if some backends don't implement show_page */
     if (surface->backend->show_page == NULL)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return CAIRO_STATUS_SUCCESS;
 
     return surface->backend->show_page (surface);
 }

@@ -336,7 +336,9 @@ _cairo_paginated_surface_show_page (void *abstract_surface)
 
     _paint_page (surface);
 
-    _cairo_surface_show_page (surface->target);
+    status = _cairo_surface_show_page (surface->target);
+    if (status)
+	return status;
 
     cairo_surface_destroy (surface->meta);
 
