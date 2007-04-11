@@ -917,8 +917,10 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
     pixman_color.alpha = color->alpha_short;
 
     /* XXX: The pixman_rectangle_t cast is evil... it needs to go away somehow. */
-    pixman_fill_rectangles (_pixman_operator(op), surface->pixman_image,
-			    &pixman_color, (pixman_rectangle_t *) rects, num_rects);
+    if (pixman_fill_rectangles (_pixman_operator(op), surface->pixman_image,
+		                &pixman_color,
+				(pixman_rectangle_t *) rects, num_rects))
+	return CAIRO_STATUS_NO_MEMORY;
 
     return CAIRO_STATUS_SUCCESS;
 }
