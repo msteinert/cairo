@@ -120,6 +120,24 @@ create_image_surface (const char		 *name,
     return cairo_image_surface_create (format, width, height);
 }
 
+static void
+xcairo_surface_set_user_data (cairo_surface_t		 *surface,
+			      const cairo_user_data_key_t *key,
+			      void			 *user_data,
+			      cairo_destroy_func_t	 destroy)
+{
+    cairo_status_t status;
+
+    status = cairo_surface_set_user_data (surface,
+					  key, user_data,
+					  destroy);
+    if (status) {
+	CAIRO_BOILERPLATE_LOG ("Error: %s. Exiting\n",
+			       cairo_status_to_string (status));
+	exit (1);
+    }
+}
+
 #ifdef CAIRO_HAS_TEST_SURFACES
 
 #include "test-fallback-surface.h"
@@ -186,8 +204,8 @@ create_test_paginated_surface (const char		 *name,
 						       tpc->height,
 						       tpc->stride);
 
-    cairo_surface_set_user_data (surface, &test_paginated_closure_key,
-				 tpc, NULL);
+    xcairo_surface_set_user_data (surface, &test_paginated_closure_key,
+				  tpc, NULL);
 
     return surface;
 }
@@ -1179,7 +1197,7 @@ create_pdf_surface (const char			 *name,
 	ptc->target = NULL;
     }
 
-    cairo_surface_set_user_data (surface, &pdf_closure_key, ptc, NULL);
+    xcairo_surface_set_user_data (surface, &pdf_closure_key, ptc, NULL);
 
     return surface;
 }
@@ -1285,7 +1303,7 @@ create_svg_surface (const char			 *name,
 	ptc->target = NULL;
     }
 
-    cairo_surface_set_user_data (surface, &svg_closure_key, ptc, NULL);
+    xcairo_surface_set_user_data (surface, &svg_closure_key, ptc, NULL);
 
     return surface;
 }
