@@ -523,14 +523,16 @@ CLEANFILES =					\
 	$(EXTRA_LTLIBRARIES)			\
 	$(EXTRA_PROGRAMS)
 
-# some systems cannot handle all of our clean files together
+# most systems cannot handle all of our clean files together
 clean-local:
-	-$(RM) *.ps
-	-$(RM) *.pdf
-	-$(RM) *.svg
-	-$(RM) *-out.png
-	-$(RM) *-diff.png
-	-$(RM) *.log
+	-find . \
+	    \( -name '*.ps' -print0 \) , \
+	    \( -name '*.pdf' -print0 \) , \
+	    \( -name '*.svg' -print0 \) , \
+	    \( -name '*-out.png' -print0 \) , \
+	    \( -name '*-diff.png' -print0 \) , \
+	    \( -name '*.log' -print0 \) \
+	    | xargs -0 rm -f
 
 # Check tests under valgrind
 # Saves log to valgrind-log
