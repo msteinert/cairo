@@ -738,16 +738,6 @@ fbStipple (pixman_bits_t   *dst,
 	   int	    xRot,
 	   int	    yRot);
 
-/* XXX: Is depth redundant here? */
-struct pixman_format {
-    int		format_code;
-    int		depth;
-    int		red, redMask;
-    int		green, greenMask;
-    int		blue, blueMask;
-    int		alpha, alphaMask;
-};
-
 typedef struct _FbPixels {
     pixman_bits_t		*data;
     unsigned int	width;
@@ -808,7 +798,7 @@ _FbOnes(unsigned int mask);
 /* icformat.c */
 
 pixman_private void
-pixman_format_init (pixman_format_t *format, int format_code);
+pixman_format_init_code (pixman_format_t *format, int format_code);
 
 /* icimage.c */
 
