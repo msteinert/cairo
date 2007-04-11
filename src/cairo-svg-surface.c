@@ -992,10 +992,12 @@ _cairo_svg_surface_emit_composite_image_pattern (cairo_output_stream_t     *outp
     return status;
 }
 
-static int
+static cairo_status_t
 _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
-		   cairo_meta_surface_t *surface)
+				      cairo_meta_surface_t *surface,
+				      int		   *id)
 {
+    cairo_status_t status;
     cairo_surface_t *paginated_surface;
     cairo_surface_t *svg_surface;
     cairo_meta_snapshot_t new_snapshot;
@@ -1005,7 +1007,7 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
     cairo_meta_surface_t *meta;
     cairo_meta_snapshot_t *snapshot;
     unsigned int num_elements;
-    unsigned int i, id;
+    unsigned int i;
 
     /* search in already emitted meta snapshots */
     num_elements = document->meta_snapshots.num_elements;
@@ -1014,7 +1016,8 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
 	meta = snapshot->meta;
 	if (meta->commands.num_elements == surface->commands.num_elements &&
 	    _cairo_array_index (&meta->commands, 0) == _cairo_array_index (&surface->commands, 0)) {
-	    return snapshot->id;
+	    *id = snapshot->id;
+	    return CAIRO_STATUS_SUCCESS;
 	}
     }
 
@@ -1027,12 +1030,26 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
     cairo_surface_set_fallback_resolution (paginated_surface,
 					   document->owner->x_fallback_resolution,
 					   document->owner->y_fallback_resolution);
-    _cairo_meta_surface_replay ((cairo_surface_t *)meta, paginated_surface);
-    _cairo_surface_show_page (paginated_surface);
+
+    status = _cairo_meta_surface_replay ((cairo_surface_t *)meta, paginated_surface);
+    if (status) {
+	cairo_surface_destroy (&meta->base);
+	return status;
+    }
+
+    status = _cairo_surface_show_page (paginated_surface);
+    if (status) {
+	cairo_surface_destroy (&meta->base);
+	return status;
+    }
 
     new_snapshot.meta = meta;
     new_snapshot.id = ((cairo_svg_surface_t *) svg_surface)->id;
-    _cairo_array_append (&document->meta_snapshots, &new_snapshot);
+    status = _cairo_array_append (&document->meta_snapshots, &new_snapshot);
+    if (status) {
+	cairo_surface_destroy (&meta->base);
+	return status;
+    }
 
     if (meta->content == CAIRO_CONTENT_ALPHA) {
 	_cairo_svg_surface_emit_alpha_filter (document);
@@ -1065,7 +1082,7 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
 
     _cairo_output_stream_printf (document->xml_node_defs, "</g>\n");
 
-    id = new_snapshot.id;
+    *id = new_snapshot.id;
 
     cairo_surface_destroy (paginated_surface);
 
@@ -1076,7 +1093,7 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
 
     /* cairo_surface_destroy (svg_surface); */
 
-    return id;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -1099,7 +1116,9 @@ _cairo_svg_surface_emit_composite_meta_pattern (cairo_output_stream_t	*output,
 
     meta_surface = (cairo_meta_surface_t *) pattern->surface;
 
-    id = _cairo_svg_surface_emit_meta_surface (document, meta_surface);
+    status = _cairo_svg_surface_emit_meta_surface (document, meta_surface, &id);
+    if (status)
+	return status;
 
     if (pattern_id != invalid_pattern_id) {
 	_cairo_output_stream_printf (output,
