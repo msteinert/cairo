@@ -932,10 +932,18 @@ void
 cairo_pattern_set_matrix (cairo_pattern_t      *pattern,
 			  const cairo_matrix_t *matrix)
 {
+    cairo_matrix_t inverse;
+    cairo_status_t status;
+
     if (pattern->status)
 	return;
 
     pattern->matrix = *matrix;
+
+    inverse = *matrix;
+    status = cairo_matrix_invert (&inverse);
+    if (status)
+	_cairo_pattern_set_error (pattern, status);
 }
 slim_hidden_def (cairo_pattern_set_matrix);
 
