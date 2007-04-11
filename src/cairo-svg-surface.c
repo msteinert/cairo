@@ -1734,6 +1734,7 @@ _cairo_svg_surface_paint (void		    *abstract_surface,
 			  cairo_operator_t   op,
 			  cairo_pattern_t   *source)
 {
+    cairo_status_t status;
     cairo_svg_surface_t *surface = abstract_surface;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
@@ -1759,8 +1760,12 @@ _cairo_svg_surface_paint (void		    *abstract_surface,
      * and an optimiszation in meta surface. */
     if (surface->clip_level == 0 &&
 	(op == CAIRO_OPERATOR_CLEAR ||
-	 op == CAIRO_OPERATOR_SOURCE)) {
-	_cairo_output_stream_destroy (surface->xml_node);
+	 op == CAIRO_OPERATOR_SOURCE))
+    {
+	status = _cairo_output_stream_destroy (surface->xml_node);
+	if (status)
+	    return status;
+
 	surface->xml_node = _cairo_memory_stream_create ();
 
 	if (op == CAIRO_OPERATOR_CLEAR) {
@@ -1788,6 +1793,7 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
 			cairo_pattern_t	    *source,
 			cairo_pattern_t	    *mask)
 {
+    cairo_status_t status;
     cairo_svg_surface_t *surface = abstract_surface;
     cairo_svg_document_t *document = surface->document;
     cairo_output_stream_t *mask_stream;
@@ -1813,7 +1819,10 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
 				 "  </g>\n"
 				 "</mask>\n");
     _cairo_memory_stream_copy (mask_stream, document->xml_node_defs);
-    _cairo_output_stream_destroy (mask_stream);
+
+    status = _cairo_output_stream_destroy (mask_stream);
+    if (status)
+	return status;
 
     snprintf (buffer, sizeof buffer, "mask=\"url(#mask%d);\"",
 	      document->mask_id);
@@ -2141,7 +2150,7 @@ _cairo_svg_document_destroy (cairo_svg_document_t *document)
 static cairo_status_t
 _cairo_svg_document_finish (cairo_svg_document_t *document)
 {
-    cairo_status_t status;
+    cairo_status_t status, status2;
     cairo_output_stream_t *output = document->output_stream;
     cairo_meta_snapshot_t *snapshot;
     cairo_svg_surface_t *surface;
@@ -2209,10 +2218,15 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
 
     _cairo_output_stream_printf (output, "</svg>\n");
 
-    _cairo_output_stream_destroy (document->xml_node_glyphs);
-    _cairo_output_stream_destroy (document->xml_node_defs);
+    status = _cairo_output_stream_destroy (document->xml_node_glyphs);
 
-    status = _cairo_output_stream_destroy (output);
+    status2 = _cairo_output_stream_destroy (document->xml_node_defs);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = status2;
+
+    status2 = _cairo_output_stream_destroy (output);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = status2;
 
     for (i = 0; i < document->meta_snapshots.num_elements; i++) {
 	snapshot = _cairo_array_index (&document->meta_snapshots, i);
