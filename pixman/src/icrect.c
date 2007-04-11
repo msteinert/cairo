@@ -363,7 +363,7 @@ pixman_fill_rectangles (pixman_operator_t		op,
 	pixman_image_t		*src;
 	pixman_bits_t		pixel;
 
-	pixman_format_init (&rgbaFormat, PICT_a8r8g8b8);
+	pixman_format_init_code (&rgbaFormat, PICT_a8r8g8b8);
 
 	pixels = FbPixelsCreate (1, 1, rgbaFormat.depth);
 	if (!pixels)
