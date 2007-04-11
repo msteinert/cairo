@@ -154,7 +154,7 @@ _cairo_pdf_surface_open_stream (cairo_pdf_surface_t	*surface,
 static cairo_status_t
 _cairo_pdf_surface_close_stream (cairo_pdf_surface_t	*surface);
 
-static void
+static cairo_status_t
 _cairo_pdf_surface_add_stream (cairo_pdf_surface_t	*surface,
 			       cairo_pdf_resource_t	 stream);
 
@@ -210,26 +210,26 @@ _cairo_pdf_surface_update_object (cairo_pdf_surface_t	*surface,
     object->offset = _cairo_output_stream_get_position (surface->output);
 }
 
-static void
+static cairo_status_t
 _cairo_pdf_surface_add_stream (cairo_pdf_surface_t	*surface,
 			       cairo_pdf_resource_t	 stream)
 {
-    /* XXX: Should be checking the return value here. */
-    _cairo_array_append (&surface->streams, &stream);
+    return _cairo_array_append (&surface->streams, &stream);
 }
 
-static void
+static cairo_status_t
 _cairo_pdf_surface_add_pattern (cairo_pdf_surface_t	*surface,
 				cairo_pdf_resource_t	 pattern)
 {
-    /* XXX: Should be checking the return value here. */
-    _cairo_array_append (&surface->patterns, &pattern);
+    return _cairo_array_append (&surface->patterns, &pattern);
 }
 
-static cairo_pdf_resource_t
-_cairo_pdf_surface_add_alpha (cairo_pdf_surface_t *surface, double alpha)
+static cairo_status_t
+_cairo_pdf_surface_add_alpha (cairo_pdf_surface_t *surface,
+			      double alpha,
+			      cairo_pdf_resource_t *resource)
 {
-    cairo_pdf_resource_t resource;
+    cairo_status_t status;
     int num_alphas, i;
     double other;
 
@@ -237,16 +237,18 @@ _cairo_pdf_surface_add_alpha (cairo_pdf_surface_t *surface, double alpha)
     for (i = 0; i < num_alphas; i++) {
 	_cairo_array_copy_element (&surface->alphas, i, &other);
 	if (alpha == other) {
-	    resource.id  = i;
-	    return resource;
+	    resource->id  = i;
+	    return CAIRO_STATUS_SUCCESS;
 	}
     }
 
-    /* XXX: Should be checking the return value here. */
-    _cairo_array_append (&surface->alphas, &alpha);
+    status = _cairo_array_append (&surface->alphas, &alpha);
+    if (status)
+	return status;
 
-    resource.id = _cairo_array_num_elements (&surface->alphas) - 1;
-    return resource;
+    resource->id = _cairo_array_num_elements (&surface->alphas) - 1;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_surface_t *
@@ -599,7 +601,7 @@ _cairo_pdf_surface_pause_content_stream (cairo_pdf_surface_t *surface)
     return _cairo_pdf_surface_close_stream (surface);
 }
 
-static void
+static cairo_status_t
 _cairo_pdf_surface_resume_content_stream (cairo_pdf_surface_t *surface)
 {
     cairo_pdf_resource_t stream;
@@ -612,12 +614,13 @@ _cairo_pdf_surface_resume_content_stream (cairo_pdf_surface_t *surface)
 					     surface->width,
 					     surface->height);
 
-    _cairo_pdf_surface_add_stream (surface, stream);
+    return _cairo_pdf_surface_add_stream (surface, stream);
 }
 
 static cairo_int_status_t
 _cairo_pdf_surface_start_page (void *abstract_surface)
 {
+    cairo_status_t status;
     cairo_pdf_surface_t *surface = abstract_surface;
     cairo_pdf_resource_t stream;
 
@@ -629,7 +632,9 @@ _cairo_pdf_surface_start_page (void *abstract_surface)
 					     surface->width,
 					     surface->height);
 
-    _cairo_pdf_surface_add_stream (surface, stream);
+    status = _cairo_pdf_surface_add_stream (surface, stream);
+    if (status)
+	return status;
 
     _cairo_output_stream_printf (surface->output,
 				 "1 0 0 -1 0 %f cm\r\n",
@@ -849,9 +854,14 @@ static cairo_status_t
 _cairo_pdf_surface_emit_solid_pattern (cairo_pdf_surface_t *surface,
 		    cairo_solid_pattern_t *pattern)
 {
+    cairo_status_t status;
     cairo_pdf_resource_t alpha;
 
-    alpha = _cairo_pdf_surface_add_alpha (surface, pattern->color.alpha);
+    status = _cairo_pdf_surface_add_alpha (surface,
+					   pattern->color.alpha,
+					   &alpha);
+    if (status)
+	return status;
 
     /* With some work, we could separate the stroking
      * or non-stroking color here as actually needed. */
@@ -1018,12 +1028,21 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
 				 image_resource.id);
 
     status = _cairo_pdf_surface_close_stream (surface);
+    if (status)
+	goto BAIL;
 
-    _cairo_pdf_surface_resume_content_stream (surface);
+    status = _cairo_pdf_surface_resume_content_stream (surface);
+    if (status)
+	goto BAIL;
 
-    _cairo_pdf_surface_add_pattern (surface, stream);
+    status = _cairo_pdf_surface_add_pattern (surface, stream);
+    if (status)
+	goto BAIL;
 
-    alpha = _cairo_pdf_surface_add_alpha (surface, 1.0);
+    status = _cairo_pdf_surface_add_alpha (surface, 1.0, &alpha);
+    if (status)
+	goto BAIL;
+
     /* With some work, we could separate the stroking
      * or non-stroking pattern here as actually needed. */
     _cairo_output_stream_printf (surface->output,
@@ -1243,9 +1262,13 @@ _cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t *surface, cairo_line
 				 x0, y0, x1, y1,
 				 function.id);
 
-    _cairo_pdf_surface_add_pattern (surface, pattern_resource);
+    status = _cairo_pdf_surface_add_pattern (surface, pattern_resource);
+    if (status)
+	return status;
 
-    alpha = _cairo_pdf_surface_add_alpha (surface, 1.0);
+    status = _cairo_pdf_surface_add_alpha (surface, 1.0, &alpha);
+    if (status)
+	return status;
 
     /* Use pattern */
     /* With some work, we could separate the stroking
@@ -1258,9 +1281,7 @@ _cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t *surface, cairo_line
 				 pattern_resource.id,
 				 alpha.id);
 
-    _cairo_pdf_surface_resume_content_stream (surface);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_pdf_surface_resume_content_stream (surface);
 }
 
 static cairo_status_t
@@ -1324,9 +1345,13 @@ _cairo_pdf_surface_emit_radial_pattern (cairo_pdf_surface_t *surface, cairo_radi
 				 x0, y0, r0, x1, y1, r1,
 				 function.id);
 
-    _cairo_pdf_surface_add_pattern (surface, pattern_resource);
+    status = _cairo_pdf_surface_add_pattern (surface, pattern_resource);
+    if (status)
+	return status;
 
-    alpha = _cairo_pdf_surface_add_alpha (surface, 1.0);
+    status = _cairo_pdf_surface_add_alpha (surface, 1.0, &alpha);
+    if (status)
+	return status;
 
     /* Use pattern */
     /* With some work, we could separate the stroking
@@ -1339,9 +1364,7 @@ _cairo_pdf_surface_emit_radial_pattern (cairo_pdf_surface_t *surface, cairo_radi
 				 pattern_resource.id,
 				 alpha.id);
 
-    _cairo_pdf_surface_resume_content_stream (surface);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_pdf_surface_resume_content_stream (surface);
 }
 
 static cairo_status_t
