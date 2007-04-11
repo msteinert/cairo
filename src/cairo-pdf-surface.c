@@ -2285,6 +2285,7 @@ static cairo_status_t
 _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 					   cairo_scaled_font_subset_t	*font_subset)
 {
+    cairo_status_t status;
     cairo_pdf_resource_t *glyphs, encoding, char_procs, subset_resource, to_unicode_stream;
     cairo_pdf_font_t font;
     cairo_matrix_t matrix;
@@ -2361,7 +2362,9 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 
     subset_resource = _cairo_pdf_surface_new_object (surface);
     matrix = font_subset->scaled_font->scale;
-    cairo_matrix_invert (&matrix);
+    status = cairo_matrix_invert (&matrix);
+    /* _cairo_scaled_font_init ensures the matrix is invertible */
+    assert (status == CAIRO_STATUS_SUCCESS);
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\r\n"
 				 "<< /Type /Font\r\n"

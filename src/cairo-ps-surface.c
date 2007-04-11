@@ -668,6 +668,7 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
 
 
 {
+    cairo_status_t status;
     cairo_matrix_t matrix;
     unsigned int i;
 
@@ -680,7 +681,9 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
 				 font_subset->subset_id);
 
     matrix = font_subset->scaled_font->scale;
-    cairo_matrix_invert (&matrix);
+    status = cairo_matrix_invert (&matrix);
+    /* _cairo_scaled_font_init ensures the matrix is invertible */
+    assert (status == CAIRO_STATUS_SUCCESS);
     _cairo_output_stream_printf (surface->final_stream,
 				 "\t/FontType\t3\n"
 				 "\t/FontMatrix\t[%f %f %f %f 0 0]\n"
