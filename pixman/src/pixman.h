@@ -466,7 +466,7 @@ pixman_fill_rectangles (pixman_operator_t		op,
 
 /* ictrap.c */
 
-pixman_private void
+pixman_private int
 pixman_composite_trapezoids (pixman_operator_t		op,
 			     pixman_image_t		*src,
 			     pixman_image_t		*dst,
