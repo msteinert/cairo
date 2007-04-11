@@ -1450,6 +1450,9 @@ _cairo_gstate_ensure_scaled_font (cairo_gstate_t *gstate)
     if (gstate->scaled_font == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
+    if (cairo_scaled_font_status (gstate->scaled_font))
+	return cairo_scaled_font_status (gstate->scaled_font);
+
     return CAIRO_STATUS_SUCCESS;
 }
 
