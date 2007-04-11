@@ -1722,7 +1722,7 @@ _cairo_ps_surface_emit_solid_pattern (cairo_ps_surface_t *surface,
 				     pattern->color.blue);
 }
 
-static void
+static cairo_status_t
 _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t *surface,
 		      cairo_surface_pattern_t *pattern)
 {
@@ -1737,7 +1737,11 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t *surface,
 
     if (_cairo_surface_is_meta (pattern->surface)) {
 	_cairo_output_stream_printf (surface->stream, "/MyPattern {\n");
-	_cairo_meta_surface_replay (pattern->surface, &surface->base);
+
+	status = _cairo_meta_surface_replay (pattern->surface, &surface->base);
+	if (status)
+	    return status;
+
 	bbox_width = surface->width;
 	bbox_height = surface->height;
 	xstep = surface->width;
@@ -1825,6 +1829,8 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t *surface,
 				 inverse.x0, inverse.y0);
     _cairo_output_stream_printf (surface->stream,
 				 "makepattern setpattern\n");
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -1841,12 +1847,13 @@ _cairo_ps_surface_emit_radial_pattern (cairo_ps_surface_t *surface,
     /* XXX: NYI */
 }
 
-static void
+static cairo_status_t
 _cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface, cairo_pattern_t *pattern)
 {
     /* FIXME: We should keep track of what pattern is currently set in
      * the postscript file and only emit code if we're setting a
      * different pattern. */
+    cairo_status_t status;
 
     switch (pattern->type) {
     case CAIRO_PATTERN_TYPE_SOLID:
@@ -1854,7 +1861,10 @@ _cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface, cairo_pattern_t *pa
 	break;
 
     case CAIRO_PATTERN_TYPE_SURFACE:
-	_cairo_ps_surface_emit_surface_pattern (surface, (cairo_surface_pattern_t *) pattern);
+	status = _cairo_ps_surface_emit_surface_pattern (surface,
+							 (cairo_surface_pattern_t *) pattern);
+	if (status)
+	    return status;
 	break;
 
     case CAIRO_PATTERN_TYPE_LINEAR:
@@ -1865,6 +1875,8 @@ _cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface, cairo_pattern_t *pa
 	_cairo_ps_surface_emit_radial_pattern (surface, (cairo_radial_pattern_t *) pattern);
 	break;
     }
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
@@ -1978,7 +1990,9 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 
     _cairo_rectangle_intersect (&extents, &pattern_extents);
 
-    _cairo_ps_surface_emit_pattern (surface, source);
+    status = _cairo_ps_surface_emit_pattern (surface, source);
+    if (status)
+	return status;
 
     _cairo_output_stream_printf (stream, "%d %d M\n",
 				 extents.x, extents.y);
@@ -1992,6 +2006,7 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 				 extents.x,
 				 extents.y + extents.height);
     _cairo_output_stream_printf (stream, "P F\n");
+
     return CAIRO_STATUS_SUCCESS;
 }
 
