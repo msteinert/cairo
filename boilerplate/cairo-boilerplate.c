@@ -228,6 +228,7 @@ test_paginated_write_to_png (cairo_surface_t *surface,
     cairo_surface_t *image;
     cairo_format_t format;
     test_paginated_closure_t *tpc;
+    cairo_status_t status;
 
     /* show page first.  the automatic show_page is too late for us */
     /* XXX use cairo_surface_show_page() when that's added */
@@ -256,7 +257,13 @@ test_paginated_write_to_png (cairo_surface_t *surface,
 						 tpc->height,
 						 tpc->stride);
 
-    cairo_surface_write_to_png (image, filename);
+    status = cairo_surface_write_to_png (image, filename);
+    if (status) {
+	CAIRO_BOILERPLATE_LOG ("Error writing %s: %s. Exiting\n",
+			       filename,
+			       cairo_status_to_string (status));
+	exit (1);
+    }
 
     cairo_surface_destroy (image);
 
