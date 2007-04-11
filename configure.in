@@ -871,7 +871,7 @@ AC_CONFIG_COMMANDS([src/cairo-features.h],
 # define cairo_public
 #endif
 #ifndef cairo_public_warn
-# define cairo_public_warn CAIRO_WARN_UNUSED_RESULT
+# define cairo_public_warn cairo_public CAIRO_WARN_UNUSED_RESULT
 #endif
 
 #define CAIRO_VERSION_MAJOR $CAIRO_VERSION_MAJOR
