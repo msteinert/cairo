@@ -49,6 +49,7 @@ get-path-extents                \
 gradient-alpha			\
 infinite-join			\
 in-fill-empty-trapezoid		\
+invalid-matrix			\
 leaky-dash			\
 leaky-polygon			\
 line-width			\
