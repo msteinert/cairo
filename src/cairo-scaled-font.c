@@ -153,6 +153,7 @@ cairo_scaled_font_status (cairo_scaled_font_t *scaled_font)
 {
     return scaled_font->status;
 }
+slim_hidden_def (cairo_scaled_font_status);
 
 /* Here we keep a unique mapping from
  * cairo_font_face_t/matrix/ctm/options => cairo_scaled_font_t.

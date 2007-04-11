@@ -2531,6 +2531,7 @@ slim_hidden_proto (cairo_scaled_font_get_font_matrix);
 slim_hidden_proto (cairo_scaled_font_get_font_options);
 slim_hidden_proto (cairo_scaled_font_glyph_extents);
 slim_hidden_proto_no_warn (cairo_scaled_font_reference);
+slim_hidden_proto (cairo_scaled_font_status);
 slim_hidden_proto (cairo_set_operator);
 slim_hidden_proto (cairo_set_source);
 slim_hidden_proto (cairo_set_source_surface);
