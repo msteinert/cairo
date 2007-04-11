@@ -1658,6 +1658,102 @@ fbCompositeSolidMask_nx8x8888mmx (pixman_operator_t      op,
     _mm_empty();
 }
 
+static void
+fbSolidFillmmx (FbPixels	*pDraw,
+		int		x,
+		int		y,
+		int		width,
+		int		height,
+		FbBits		xor)
+{
+    FbStride	stride;
+    int		bpp;
+    ullong	fill;
+    __m64	vfill;
+    CARD32	byte_width;
+    CARD8	*byte_line;
+    FbBits      *bits;
+    int		xoff, yoff;
+
+    CHECKPOINT();
+
+    fbGetDrawable(pDraw, bits, stride, bpp, xoff, yoff);
+
+    assert (bpp == 32 || (xor >> 16 == (xor & 0xffff)));
+    assert (bpp == 16 || bpp == 32);
+
+    if (bpp == 16)
+    {
+	stride = stride * sizeof (FbBits) / 2;
+	byte_line = (CARD8 *)(((CARD16 *)bits) + stride * (y + yoff) + (x + xoff));
+	byte_width = 2 * width;
+	stride *= 2;
+    }
+    else
+    {
+	stride = stride * sizeof (FbBits) / 4;
+	byte_line = (CARD8 *)(((CARD32 *)bits) + stride * (y + yoff) + (x + xoff));
+	byte_width = 4 * width;
+	stride *= 4;
+    }
+
+    fill = ((ullong)xor << 32) | xor;
+    vfill = M64(fill);
+
+    while (height--)
+    {
+	unsigned int w;
+	CARD8 *d = byte_line;
+	byte_line += stride;
+	w = byte_width;
+
+	while (w >= 2 && ((unsigned long)d & 3))
+	{
+	    *(CARD16 *)d = xor;
+	    w -= 2;
+	    d += 2;
+	}
+
+	while (w >= 4 && ((unsigned long)d & 7))
+	{
+	    *(CARD32 *)d = xor;
+
+	    w -= 4;
+	    d += 4;
+	}
+
+	while (w >= 64)
+	{
+	    *(__m64*) (d +  0) = vfill;
+	    *(__m64*) (d +  8) = vfill;
+	    *(__m64*) (d + 16) = vfill;
+	    *(__m64*) (d + 24) = vfill;
+	    *(__m64*) (d + 32) = vfill;
+	    *(__m64*) (d + 40) = vfill;
+	    *(__m64*) (d + 48) = vfill;
+	    *(__m64*) (d + 56) = vfill;
+
+	    w -= 64;
+	    d += 64;
+	}
+	while (w >= 4)
+	{
+	    *(CARD32 *)d = xor;
+
+	    w -= 4;
+	    d += 4;
+	}
+	if (w >= 2)
+	{
+	    *(CARD16 *)d = xor;
+	    w -= 2;
+	    d += 2;
+	}
+    }
+
+    _mm_empty();
+}
+
 void
 fbCompositeSolidMaskSrc_nx8x8888mmx (pixman_operator_t      op,
 				     PicturePtr pSrc,
@@ -1687,8 +1783,8 @@ fbCompositeSolidMaskSrc_nx8x8888mmx (pixman_operator_t      op,
     srca = src >> 24;
     if (srca == 0)
     {
-	if (fbSolidFillmmx (pDst->pDrawable, xDst, yDst, width, height, 0))
-	    return;
+	fbSolidFillmmx (pDst->pDrawable, xDst, yDst, width, height, 0);
+	return;
     }
 
     srcsrc = (ullong)src << 32 | src;
@@ -2592,107 +2688,7 @@ fbCompositeSrcAdd_8888x8888mmx (pixman_operator_t		op,
     _mm_empty();
 }
 
-Bool
-fbSolidFillmmx (FbPixels	*pDraw,
-		int		x,
-		int		y,
-		int		width,
-		int		height,
-		FbBits		xor)
-{
-    FbStride	stride;
-    int		bpp;
-    ullong	fill;
-    __m64	vfill;
-    CARD32	byte_width;
-    CARD8	*byte_line;
-    FbBits      *bits;
-    int		xoff, yoff;
-
-    CHECKPOINT();
-
-    fbGetDrawable(pDraw, bits, stride, bpp, xoff, yoff);
-
-    if (bpp == 16 && (xor >> 16 != (xor & 0xffff)))
-	return FALSE;
-
-    if (bpp != 16 && bpp != 32)
-	return FALSE;
-
-    if (bpp == 16)
-    {
-	stride = stride * sizeof (FbBits) / 2;
-	byte_line = (CARD8 *)(((CARD16 *)bits) + stride * (y + yoff) + (x + xoff));
-	byte_width = 2 * width;
-	stride *= 2;
-    }
-    else
-    {
-	stride = stride * sizeof (FbBits) / 4;
-	byte_line = (CARD8 *)(((CARD32 *)bits) + stride * (y + yoff) + (x + xoff));
-	byte_width = 4 * width;
-	stride *= 4;
-    }
-
-    fill = ((ullong)xor << 32) | xor;
-    vfill = M64(fill);
-
-    while (height--)
-    {
-	unsigned int w;
-	CARD8 *d = byte_line;
-	byte_line += stride;
-	w = byte_width;
-
-	while (w >= 2 && ((unsigned long)d & 3))
-	{
-	    *(CARD16 *)d = xor;
-	    w -= 2;
-	    d += 2;
-	}
-
-	while (w >= 4 && ((unsigned long)d & 7))
-	{
-	    *(CARD32 *)d = xor;
-
-	    w -= 4;
-	    d += 4;
-	}
-
-	while (w >= 64)
-	{
-	    *(__m64*) (d +  0) = vfill;
-	    *(__m64*) (d +  8) = vfill;
-	    *(__m64*) (d + 16) = vfill;
-	    *(__m64*) (d + 24) = vfill;
-	    *(__m64*) (d + 32) = vfill;
-	    *(__m64*) (d + 40) = vfill;
-	    *(__m64*) (d + 48) = vfill;
-	    *(__m64*) (d + 56) = vfill;
-
-	    w -= 64;
-	    d += 64;
-	}
-	while (w >= 4)
-	{
-	    *(CARD32 *)d = xor;
-
-	    w -= 4;
-	    d += 4;
-	}
-	if (w >= 2)
-	{
-	    *(CARD16 *)d = xor;
-	    w -= 2;
-	    d += 2;
-	}
-    }
-
-    _mm_empty();
-    return TRUE;
-}
-
-Bool
+static void
 fbCopyAreammx (FbPixels	*pSrc,
 	       FbPixels	*pDst,
 	       int		src_x,
@@ -2721,16 +2717,8 @@ fbCopyAreammx (FbPixels	*pSrc,
     fbGetDrawable(pSrc, src_bits, src_stride, src_bpp, src_xoff, src_yoff);
     fbGetDrawable(pDst, dst_bits, dst_stride, dst_bpp, dst_xoff, dst_yoff);
 
-    if (src_bpp != 16 && src_bpp != 32)
-	return FALSE;
-
-    if (dst_bpp != 16 && dst_bpp != 32)
-	return FALSE;
-
-    if (src_bpp != dst_bpp)
-    {
-	return FALSE;
-    }
+    assert (src_bpp == dst_bpp);
+    assert (src_bpp == 16 || src_bpp == 32);
 
     if (src_bpp == 16)
     {
@@ -2811,7 +2799,6 @@ fbCopyAreammx (FbPixels	*pSrc,
     }
 
     _mm_empty();
-    return TRUE;
 }
 
 void

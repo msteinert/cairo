@@ -78,4 +78,3 @@
 #define RenderLineFixedEdgeInit _cairo_pixman_render_line_fixed_edge_init
 #define RenderSampleCeilY _cairo_pixman_render_sample_ceil_y
 #define RenderSampleFloorY _cairo_pixman_render_sample_floor_y
-#define fbSolidFillmmx _cairo_pixman_solid_fill_mmx
