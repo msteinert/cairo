@@ -3040,7 +3040,7 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
                         _cairo_output_stream_printf (surface->output,
                                                      "%f %f Td ",
                                                      (glyphs[i].x - Tlm_x)/scaled_font->scale.xx,
-                                                     (glyphs[i].y - Tlm_x)/-scaled_font->scale.yy);
+                                                     (glyphs[i].y - Tlm_y)/-scaled_font->scale.yy);
                         Tlm_x = glyphs[i].x;
                         Tlm_y = glyphs[i].y;
                         Tm_x = Tlm_x;
