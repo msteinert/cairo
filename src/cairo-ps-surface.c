@@ -1950,6 +1950,7 @@ _cairo_ps_surface_paint (void			*abstract_surface,
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_output_stream_t *stream = surface->stream;
     cairo_rectangle_int16_t extents, pattern_extents;
+    cairo_status_t status;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _cairo_ps_surface_analyze_operation (surface, op, source);
@@ -1967,8 +1968,14 @@ _cairo_ps_surface_paint (void			*abstract_surface,
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_paint\n");
 
-    _cairo_surface_get_extents (&surface->base, &extents);
-    _cairo_pattern_get_extents (source, &pattern_extents);
+    status = _cairo_surface_get_extents (&surface->base, &extents);
+    if (status)
+	return status;
+
+    status = _cairo_pattern_get_extents (source, &pattern_extents);
+    if (status)
+	return status;
+
     _cairo_rectangle_intersect (&extents, &pattern_extents);
 
     _cairo_ps_surface_emit_pattern (surface, source);
