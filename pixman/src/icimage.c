@@ -558,6 +558,7 @@ FbClipImageReg (pixman_region16_t	*region,
 		int		dx,
 		int		dy)
 {
+    int ret = 1;
     if (pixman_region_num_rects (region) == 1 &&
 	pixman_region_num_rects (clip) == 1)
     {
@@ -581,11 +582,14 @@ FbClipImageReg (pixman_region16_t	*region,
     }
     else
     {
+	pixman_region_status_t status;
+
 	pixman_region_translate (region, dx, dy);
-	pixman_region_intersect (region, clip, region);
+	status = pixman_region_intersect (region, clip, region);
+	ret = status == PIXMAN_REGION_STATUS_SUCCESS;
 	pixman_region_translate (region, -dx, -dy);
     }
-    return 1;
+    return ret;
 }
 
 static inline int
@@ -600,19 +604,25 @@ FbClipImageSrc (pixman_region16_t	*region,
 
     /* XXX davidr hates this, wants to never use source-based clipping */
     if (image->repeat != PIXMAN_REPEAT_NONE || image->pSourcePict) {
+	int ret = 1;
 	/* XXX no source clipping */
 	if (image->compositeClipSource &&
 	    image->clientClipType != CT_NONE) {
+	    pixman_region_status_t status;
+
 	    pixman_region_translate (region,
 			   dx - image->clipOrigin.x,
 			   dy - image->clipOrigin.y);
-	    pixman_region_intersect (region, &image->clientClip, region);
+	    status = pixman_region_intersect (region,
+		                              &image->clientClip,
+					      region);
+	    ret = status == PIXMAN_REGION_STATUS_SUCCESS;
 	    pixman_region_translate (region,
 			   - (dx - image->clipOrigin.x),
 			   - (dy - image->clipOrigin.y));
 	}
 
-	return 1;
+	return ret;
     } else {
 	pixman_region16_t *clip;
 
