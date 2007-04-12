@@ -637,7 +637,7 @@ typedef struct _cairo_scaled_font_subset {
 struct _cairo_scaled_font_backend {
     cairo_font_type_t type;
 
-    cairo_status_t
+    cairo_warn cairo_status_t
     (*create_toy)  (cairo_toy_font_face_t	*toy_face,
 		    const cairo_matrix_t	*font_matrix,
 		    const cairo_matrix_t	*ctm,
@@ -647,7 +647,7 @@ struct _cairo_scaled_font_backend {
     void
     (*fini)		(void			*scaled_font);
 
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*scaled_glyph_init)	(void			     *scaled_font,
 				 cairo_scaled_glyph_t	     *scaled_glyph,
 				 cairo_scaled_glyph_info_t    info);
@@ -656,7 +656,7 @@ struct _cairo_scaled_font_backend {
      * both. This allows the backend to do something more sophisticated
      * then just converting characters one by one.
      */
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*text_to_glyphs) (void                *scaled_font,
 		       double		    x,
 		       double		    y,
@@ -667,7 +667,7 @@ struct _cairo_scaled_font_backend {
     unsigned long
     (*ucs4_to_index)		(void			     *scaled_font,
 				 uint32_t		      ucs4);
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*show_glyphs)	(void			*scaled_font,
 			 cairo_operator_t	 op,
 			 cairo_pattern_t	*pattern,
@@ -681,7 +681,7 @@ struct _cairo_scaled_font_backend {
 			 cairo_glyph_t		*glyphs,
 			 int			 num_glyphs);
 
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*load_truetype_table)(void		        *scaled_font,
                            unsigned long         tag,
                            long                  offset,
@@ -703,7 +703,7 @@ struct _cairo_font_face_backend {
     void
     (*destroy)     (void			*font_face);
 
-    cairo_status_t
+    cairo_warn cairo_status_t
     (*scaled_font_create) (void				*font_face,
 			   const cairo_matrix_t		*font_matrix,
 			   const cairo_matrix_t		*ctm,
@@ -749,10 +749,10 @@ struct _cairo_surface_backend {
 				 int			 width,
 				 int			 height);
 
-    cairo_status_t
+    cairo_warn cairo_status_t
     (*finish)			(void			*surface);
 
-    cairo_status_t
+    cairo_warn cairo_status_t
     (*acquire_source_image)	(void                    *abstract_surface,
 				 cairo_image_surface_t  **image_out,
 				 void                   **image_extra);
@@ -762,7 +762,7 @@ struct _cairo_surface_backend {
 				 cairo_image_surface_t  *image,
 				 void                   *image_extra);
 
-    cairo_status_t
+    cairo_warn cairo_status_t
     (*acquire_dest_image)       (void                    *abstract_surface,
 				 cairo_rectangle_int16_t *interest_rect,
 				 cairo_image_surface_t  **image_out,
@@ -786,7 +786,7 @@ struct _cairo_surface_backend {
      *
      * 3. It has the same contents as @src within the given rectangle.
      */
-    cairo_status_t
+    cairo_warn cairo_status_t
     (*clone_similar)            (void                   *surface,
 				 cairo_surface_t        *src,
 				 int                     src_x,
@@ -796,7 +796,7 @@ struct _cairo_surface_backend {
 				 cairo_surface_t       **clone_out);
 
     /* XXX: dst should be the first argument for consistency */
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*composite)		(cairo_operator_t	 op,
 				 cairo_pattern_t       	*src,
 				 cairo_pattern_t	*mask,
@@ -810,7 +810,7 @@ struct _cairo_surface_backend {
 				 unsigned int		 width,
 				 unsigned int		 height);
 
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*fill_rectangles)		(void			 *surface,
 				 cairo_operator_t	  op,
 				 const cairo_color_t     *color,
@@ -818,7 +818,7 @@ struct _cairo_surface_backend {
 				 int			  num_rects);
 
     /* XXX: dst should be the first argument for consistency */
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*composite_trapezoids)	(cairo_operator_t	 op,
 				 cairo_pattern_t	*pattern,
 				 void			*dst,
@@ -832,10 +832,10 @@ struct _cairo_surface_backend {
 				 cairo_trapezoid_t	*traps,
 				 int			 num_traps);
 
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*copy_page)		(void			*surface);
 
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*show_page)		(void			*surface);
 
     /* Set given region as the clip region for the surface, replacing
@@ -851,7 +851,7 @@ struct _cairo_surface_backend {
      * this is not possible, cairo will use mask surfaces for
      * clipping.
      */
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*set_clip_region)		(void			*surface,
 				 pixman_region16_t	*region);
 
@@ -869,7 +869,7 @@ struct _cairo_surface_backend {
      * function is not implemented cairo will use set_clip_region()
      * (if available) and mask surfaces for clipping.
      */
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*intersect_clip_path)	(void			*dst,
 				 cairo_path_fixed_t	*path,
 				 cairo_fill_rule_t	fill_rule,
@@ -886,7 +886,7 @@ struct _cairo_surface_backend {
      * into the specific surface->get_extents if there is no current
      * clip.
      */
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*get_extents)		(void			 *surface,
 				 cairo_rectangle_int16_t *rectangle);
 
@@ -895,7 +895,7 @@ struct _cairo_surface_backend {
      * resources. If null, render against this surface, using image
      * surfaces as glyphs.
      */
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*old_show_glyphs)		(cairo_scaled_font_t	        *font,
 				 cairo_operator_t		 op,
 				 cairo_pattern_t		*pattern,
@@ -913,10 +913,10 @@ struct _cairo_surface_backend {
     (*get_font_options)         (void                  *surface,
 				 cairo_font_options_t  *options);
 
-    cairo_status_t
+    cairo_warn cairo_status_t
     (*flush)                    (void                  *surface);
 
-    cairo_status_t
+    cairo_warn cairo_status_t
     (*mark_dirty_rectangle)     (void                  *surface,
 				 int                    x,
 				 int                    y,
@@ -933,18 +933,18 @@ struct _cairo_surface_backend {
     /* OK, I'm starting over somewhat by defining the 5 top-level
      * drawing operators for the surface backend here with consistent
      * naming and argument-order conventions. */
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*paint)			(void			*surface,
 				 cairo_operator_t	 op,
 				 cairo_pattern_t	*source);
 
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*mask)			(void			*surface,
 				 cairo_operator_t	 op,
 				 cairo_pattern_t	*source,
 				 cairo_pattern_t	*mask);
 
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*stroke)			(void			*surface,
 				 cairo_operator_t	 op,
 				 cairo_pattern_t	*source,
@@ -955,7 +955,7 @@ struct _cairo_surface_backend {
 				 double			 tolerance,
 				 cairo_antialias_t	 antialias);
 
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*fill)			(void			*surface,
 				 cairo_operator_t	 op,
 				 cairo_pattern_t	*source,
@@ -964,7 +964,7 @@ struct _cairo_surface_backend {
 				 double			 tolerance,
 				 cairo_antialias_t	 antialias);
 
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*show_glyphs)		(void			*surface,
 				 cairo_operator_t	 op,
 				 cairo_pattern_t	*source,

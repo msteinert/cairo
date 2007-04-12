@@ -25,6 +25,7 @@
 #endif
 
 #include "icint.h"
+#include <assert.h>
 
 pixman_image_t *
 FbCreateAlphaPicture (pixman_image_t	*dst,
@@ -32,30 +33,24 @@ FbCreateAlphaPicture (pixman_image_t	*dst,
 		      uint16_t	width,
 		      uint16_t	height)
 {
-    pixman_image_t	*image;
-    int own_format = 0;
+    pixman_format_t	 local_format;
 
     if (width > 32767 || height > 32767)
 	return NULL;
 
     if (!format)
     {
-	own_format = 1;
+	int ret;
+	format = &local_format;
 	if (dst->polyEdge == PolyEdgeSharp)
-	    format = pixman_format_create (PIXMAN_FORMAT_NAME_A1);
+	     ret = pixman_format_init (format, PIXMAN_FORMAT_NAME_A1);
 	else
-	    format = pixman_format_create (PIXMAN_FORMAT_NAME_A8);
-	if (!format)
-	    return NULL;
+	     ret = pixman_format_init (format, PIXMAN_FORMAT_NAME_A8);
+	assert (ret);
     }
 
     /* pixman_image_create zeroes out the pixels, so we don't have to */
-    image = pixman_image_create (format, width, height);
-
-    if (own_format)
-	pixman_format_destroy (format);
-
-    return image;
+    return pixman_image_create (format, width, height);
 }
 
 static pixman_fixed16_16_t
@@ -116,8 +111,9 @@ pixman_composite_trapezoids (pixman_operator_t	      op,
     pixman_region16_t		 traps_region, dst_region;
     int16_t			 xDst, yDst;
     int16_t			 xRel, yRel;
-    pixman_format_t		*format;
+    pixman_format_t		 format;
     pixman_region_status_t	 status;
+    int                          ret;
 
     if (ntraps == 0)
 	return 0;
@@ -162,18 +158,14 @@ pixman_composite_trapezoids (pixman_operator_t	      op,
     if (bounds.y1 >= bounds.y2 || bounds.x1 >= bounds.x2)
 	return 0;
 
-    format = pixman_format_create (PIXMAN_FORMAT_NAME_A8);
-    if (!format)
-	return 1;
+    ret = pixman_format_init (&format, PIXMAN_FORMAT_NAME_A8);
+    assert (ret);
 
-    image = FbCreateAlphaPicture (dst, format,
+    image = FbCreateAlphaPicture (dst, &format,
 				  bounds.x2 - bounds.x1,
 				  bounds.y2 - bounds.y1);
     if (!image)
-    {
-	pixman_format_destroy (format);
 	return 1;
-    }
 
     for (; ntraps; ntraps--, traps++)
     {
@@ -190,8 +182,6 @@ pixman_composite_trapezoids (pixman_operator_t	      op,
 		      bounds.x2 - bounds.x1,
 		      bounds.y2 - bounds.y1);
     pixman_image_destroy (image);
-
-    pixman_format_destroy (format);
 
     return 0;
 }

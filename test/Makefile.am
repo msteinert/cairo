@@ -523,16 +523,17 @@ CLEANFILES =					\
 	$(EXTRA_LTLIBRARIES)			\
 	$(EXTRA_PROGRAMS)
 
-# most systems cannot handle all of our clean files together
+# This used to be a simple 'echo ${RM} *.ps *.pdf *.svg *.etc', but
+# most systems cannot handle all of our clean files together.
+# Then it became a fancy find using many GNU extensions, but then the ugly
+# reality of portability was raised and it became....
 clean-local:
-	-find . \
-	    \( -name '*.ps' -print0 \) , \
-	    \( -name '*.pdf' -print0 \) , \
-	    \( -name '*.svg' -print0 \) , \
-	    \( -name '*-out.png' -print0 \) , \
-	    \( -name '*-diff.png' -print0 \) , \
-	    \( -name '*.log' -print0 \) \
-	    | xargs -0 rm -f
+	-${FIND} . -name '*.ps'       -print | ${XARGS} ${RM}
+	-${FIND} . -name '*.pdf'      -print | ${XARGS} ${RM}
+	-${FIND} . -name '*.svg'      -print | ${XARGS} ${RM}
+	-${FIND} . -name '*-out.png'  -print | ${XARGS} ${RM}
+	-${FIND} . -name '*-diff.png' -print | ${XARGS} ${RM}
+	-${FIND} . -name '*.log'      -print | ${XARGS} ${RM}
 
 # Check tests under valgrind
 # Saves log to valgrind-log
