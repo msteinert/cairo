@@ -1062,6 +1062,15 @@ _cairo_image_surface_get_extents (void			  *abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static void
+_cairo_image_surface_get_font_options (void                  *abstract_surface,
+				       cairo_font_options_t  *options)
+{
+    _cairo_font_options_init_default (options);
+
+    cairo_font_options_set_hint_metrics (options, CAIRO_HINT_METRICS_ON);
+}
+
 /**
  * _cairo_surface_is_image:
  * @surface: a #cairo_surface_t
@@ -1093,7 +1102,8 @@ const cairo_surface_backend_t cairo_image_surface_backend = {
     _cairo_image_surface_set_clip_region,
     NULL, /* intersect_clip_path */
     _cairo_image_surface_get_extents,
-    NULL /* old_show_glyphs */
+    NULL, /* old_show_glyphs */
+    _cairo_image_surface_get_font_options
 };
 
 /* A convenience function for when one needs to coerce an image
