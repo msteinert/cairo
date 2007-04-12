@@ -50,10 +50,8 @@ AC_SUBST(CAIRO_VERSION_MICRO)
 
 dnl ===========================================================================
 
-AC_PATH_PROG(FIND, find,
-	     AC_MSG_ERROR([Cairo requires a POSIX compatible 'find'.]))
-AC_PATH_PROG(XARGS, xargs,
-	     AC_MSG_ERROR([Cairo requires 'xargs'.]))
+AC_PATH_PROG(FIND, find)
+AC_PATH_PROG(XARGS, xargs)
 
 dnl ===========================================================================
 
