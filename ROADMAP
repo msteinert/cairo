@@ -13,7 +13,7 @@ cairo 1.4.4 (scheduled for 2007-04-09)
 
  • 10508 Painting regression in 1.4.x (cworth)
 
- • 5777 fbcompose.c broken for some composite operations post r1.5
+ ✓ 5777 fbcompose.c broken for some composite operations post r1.5
    (choose one of the existing patches)
 
  ✓ 10531 cairo nquartz backend floating point precision issues (bewins)
