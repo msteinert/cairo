@@ -99,7 +99,6 @@ text-antialias-gray		\
 text-antialias-none		\
 text-antialias-subpixel		\
 text-cache-crash		\
-text-glyph-range		\
 text-pattern			\
 text-rotate			\
 text-zero-len			\
@@ -113,6 +112,10 @@ user-data			\
 rel-path                        \
 push-group			\
 zero-alpha
+
+DISABLED_TESTS =		\
+text-glyph-range		\
+extend-reflect
 
 # Then we have a collection of tests that are only run if certain
 # features are compiled into cairo
@@ -415,8 +418,7 @@ long-lines			\
 self-intersecting		\
 surface-pattern			\
 surface-pattern-scale-down	\
-surface-pattern-scale-up	\
-text-glyph-range
+surface-pattern-scale-up
 
 # Any test that doesn't generate a log file goes here
 NOLOG_TESTS =			\
@@ -502,7 +504,7 @@ svg2pdf_LDADD  = $(LDADD) $(LIBRSVG_LIBS)
 endif
 endif
 
-EXTRA_PROGRAMS += $(TESTS) $(SUPPORT_PROGS)
+EXTRA_PROGRAMS += $(TESTS) $(DISABLED_TESTS) $(SUPPORT_PROGS)
 
 # Do a funny transition of CAIRO_TEST_TARGET through TARGETS such that
 # one can limit tested targets both through CAIRO_TEST_TARGET env var
