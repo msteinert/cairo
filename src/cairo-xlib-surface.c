@@ -2309,16 +2309,18 @@ _cairo_xlib_surface_remove_scaled_font (Display *dpy,
 	                               void    *data)
 {
     cairo_scaled_font_t *scaled_font = data;
-    cairo_xlib_surface_font_private_t	*font_private = scaled_font->surface_private;
+    cairo_xlib_surface_font_private_t	*font_private;
+
+    CAIRO_MUTEX_LOCK (scaled_font->mutex);
+    font_private  = scaled_font->surface_private;
+    scaled_font->surface_private = NULL;
 
     _cairo_scaled_font_reset_cache (scaled_font);
+    CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
 
-    /* separate function to avoid deadlock if we tried to remove the
-     * close display hook ala _cairo_xlib_surface_scaled_font_fini() */
     if (font_private) {
 	XRenderFreeGlyphSet (font_private->dpy, font_private->glyphset);
 	free (font_private);
-	scaled_font->surface_private = NULL;
     }
 }
 
