@@ -244,6 +244,29 @@ _cairo_xlib_init_screen_font_options (cairo_xlib_screen_info_t *info)
 
 static cairo_xlib_screen_info_t *_cairo_xlib_screen_list = NULL;
 
+/* NOTE: This function must be called with _cairo_xlib_screen_mutex held. */
+static void
+_cairo_xlib_call_close_display_hooks (cairo_xlib_screen_info_t *info)
+{
+    /* call all registered shutdown routines */
+    while (info->close_display_hooks != NULL) {
+	cairo_xlib_hook_t *hooks = info->close_display_hooks;
+	info->close_display_hooks = NULL;
+
+	/* drop the list mutex whilst calling the hooks */
+	CAIRO_MUTEX_UNLOCK (_cairo_xlib_screen_mutex);
+	do {
+	    cairo_xlib_hook_t *hook = hooks;
+	    hooks = hook->next;
+
+	    hook->func (info->display, hook->data);
+
+	    free (hook);
+	} while (hooks != NULL);
+	CAIRO_MUTEX_LOCK (_cairo_xlib_screen_mutex);
+    }
+}
+
 static int
 _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
 {
@@ -258,16 +281,8 @@ _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
     for (info = _cairo_xlib_screen_list; info; info = next) {
 	next = info->next;
 	if (info->display == dpy) {
+	    _cairo_xlib_call_close_display_hooks (info);
 	    *prev = next;
-	    /* call all registered shutdown routines */
-	    while (info->close_display_hooks) {
-		cairo_xlib_hook_t *hook = info->close_display_hooks;
-		info->close_display_hooks = hook->next;
-
-		hook->func (dpy, hook->data);
-
-		free (hook);
-	    }
 	    free (info);
 	} else {
 	    prev = &info->next;
