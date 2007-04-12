@@ -188,6 +188,8 @@ libcairo_la_SOURCES =				\
 	cairo-lzw.c				\
 	cairo-matrix.c				\
 	cairo-mutex.c				\
+	cairo-mutex-list-private.h		\
+	cairo-mutex-private.h			\
 	cairo-operator.c			\
 	cairo-path.c				\
 	cairo-path-private.h			\

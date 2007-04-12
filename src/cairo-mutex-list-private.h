@@ -31,8 +31,8 @@
  *	Mathias Hasselmann <mathias.hasselmann@gmx.de>
  */
 
-#ifndef CAIRO_MUTEX_LIST_H
-#define CAIRO_MUTEX_LIST_H
+#ifndef CAIRO_MUTEX_LIST_PRIVATE_H
+#define CAIRO_MUTEX_LIST_PRIVATE_H
 
 CAIRO_MUTEX_DECLARE (_cairo_pattern_solid_cache_lock);
 

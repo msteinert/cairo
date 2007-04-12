@@ -46,7 +46,7 @@ void _cairo_mutex_initialize (void)
         return;
 
 #define CAIRO_MUTEX_DECLARE(mutex) CAIRO_MUTEX_INIT (mutex);
-#include "cairo-mutex-list.h"
+#include "cairo-mutex-list-private.h"
 #undef CAIRO_MUTEX_DECLARE
 }
 
