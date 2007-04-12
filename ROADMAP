@@ -6,10 +6,10 @@ to get involved with cairo (see http://cairographics.org ).
 
 cairo 1.4.4 (scheduled for 2007-04-09)
 ======================================
- • Mathias Hasselmann's "static region" patch series, (to be reviewed
+ ✓ Mathias Hasselmann's "static region" patch series, (to be reviewed
    by behdad, and performance tested by cworth)
 
- • Chris Wilson's many recent cleanups, (to be reviewed by behdad and cworth)
+ ✓ Chris Wilson's many recent cleanups, (to be reviewed by behdad and cworth)
 
  • 10508 Painting regression in 1.4.x (cworth)
 
