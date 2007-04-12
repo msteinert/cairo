@@ -2058,7 +2058,7 @@ static CombineFuncU fbCombineFuncU[] = {
     fbCombineConjointXorU,
 };
 
-static FASTCALL void
+static inline void
 fbCombineMaskC (CARD32 *src, CARD32 *mask)
 {
     CARD32 a = *mask;
@@ -2089,7 +2089,7 @@ fbCombineMaskC (CARD32 *src, CARD32 *mask)
     *mask = a;
 }
 
-static FASTCALL void
+static inline void
 fbCombineMaskValueC (CARD32 *src, const CARD32 *mask)
 {
     CARD32 a = *mask;
@@ -2109,7 +2109,7 @@ fbCombineMaskValueC (CARD32 *src, const CARD32 *mask)
     *src = x;
 }
 
-static FASTCALL void
+static inline void
 fbCombineMaskAlphaC (const CARD32 *src, CARD32 *mask)
 {
     CARD32 a = *mask;
