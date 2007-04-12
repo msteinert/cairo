@@ -237,7 +237,6 @@ _cairo_xlib_init_screen_font_options (cairo_xlib_screen_info_t *info)
 	antialias = CAIRO_ANTIALIAS_NONE;
     }
 
-    _cairo_font_options_init_default (&info->font_options);
     cairo_font_options_set_hint_style (&info->font_options, hint_style);
     cairo_font_options_set_antialias (&info->font_options, antialias);
     cairo_font_options_set_subpixel_order (&info->font_options, subpixel_order);
@@ -354,12 +353,15 @@ _cairo_xlib_screen_info_get_unlocked (Display *dpy, Screen *screen)
 
     info->display = dpy;
     info->screen = screen;
-    info->has_render = (XRenderQueryExtension (dpy, &event_base, &error_base) &&
-			(XRenderFindVisualFormat (dpy, DefaultVisual (dpy, DefaultScreen (dpy))) != 0));
-
     info->close_display_hooks = NULL;
+    info->has_render = FALSE;
+    _cairo_font_options_init_default (&info->font_options);
 
-    _cairo_xlib_init_screen_font_options (info);
+    if (screen) {
+	info->has_render = (XRenderQueryExtension (dpy, &event_base, &error_base) &&
+			    (XRenderFindVisualFormat (dpy, DefaultVisual (dpy, DefaultScreen (dpy))) != 0));
+	_cairo_xlib_init_screen_font_options (info);
+    }
 
     info->next = _cairo_xlib_screen_list;
     _cairo_xlib_screen_list = info;
