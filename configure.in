@@ -48,6 +48,15 @@ AC_SUBST(CAIRO_VERSION_MAJOR)
 AC_SUBST(CAIRO_VERSION_MINOR)
 AC_SUBST(CAIRO_VERSION_MICRO)
 
+dnl ===========================================================================
+
+AC_PATH_PROG(FIND, find,
+	     AC_MSG_ERROR([Cairo requires a POSIX compatible 'find'.]))
+AC_PATH_PROG(XARGS, xargs,
+	     AC_MSG_ERROR([Cairo requires 'xargs'.]))
+
+dnl ===========================================================================
+
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_LIBTOOL dnl required version (1.4) DON'T REMOVE!
