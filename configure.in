@@ -866,19 +866,8 @@ AC_CONFIG_COMMANDS([src/cairo-features.h],
 # define CAIRO_END_DECLS
 #endif
 
-#if    __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1)
-/* only enable warnings if they can be suppressed  (-Wno-attributes) */
-#define CAIRO_WARN_UNUSED_RESULT 		\
-  __attribute__((__warn_unused_result__))
-#else
-#define CAIRO_WARN_UNUSED_RESULT
-#endif /* __GNUC__ */
-
 #ifndef cairo_public
 # define cairo_public
-#endif
-#ifndef cairo_public_warn
-# define cairo_public_warn cairo_public CAIRO_WARN_UNUSED_RESULT
 #endif
 
 #define CAIRO_VERSION_MAJOR $CAIRO_VERSION_MAJOR
