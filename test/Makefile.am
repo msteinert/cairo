@@ -113,9 +113,50 @@ rel-path                        \
 push-group			\
 zero-alpha
 
+# XXX: Here are some existing tests that are currently disabled for
+# one reason or another. They can still be built and run (manually)
+# but we don't currently run them as part of 'make check' to avoid
+# inflicting some particularly nasty problems on the user of the test
+# suite (described below).
+#
+# It would definitely be worthwhile to address these problems so that
+# these tests can get back into the test suite proper, (since the
+# problems do indicated bugs somewhere and we're less likely to get
+# those bugs fixed without the attention due to having these tests in
+# the suite).
+#
+# The reasons for disabling the tests are as follows:
+#
+# extend-reflect - Triggers an infinite (or near-infinite) bug in some
+#	X servers in some circumstances. Details and cause unknown.
+#
+# show-glyphs-many - This stress test was exercising a particular bug
+#	in the xlib surface code (exceeding the X11 protocol request
+#	limit) when rendering several thousand glyphs at once. The
+#	original xlib-surface bug is fixed now, but the test continues
+#	to stress some other aspects of the test suite. For example,
+#	when doing text as paths, the resuilting PostScript file is one
+#	giant path that ghostscript has a particularly hard time
+#	with. I'm disabling this test for now, since I don't care about
+#	that performance problem in ghostscript. (But, there is a
+#	similar performance problem when using cairo to rasterize the
+#	equivalen giant path---from an SVG files say---so this might be
+#	a useful kind of test to bring back again for performance (not
+#	correctness) testing.
+# text-glyph-range - This test triggers the following assertion in cairo:
+#
+#	lt-text-glyph-range: cairo-scaled-font-subsets.c:350:
+#	_cairo_sub_font_collect: Assertion `collection->num_glyphs ==
+#	collection->max_glyph + 1' failed.
+#
+#	And as a result causes a failure to be recorded by the test
+#	suite, (in spite of the XFAIL status of the test). So maybe
+#	that's just a bug in the test rig that should just consider
+#	the abort an XFAIL like any other.
 DISABLED_TESTS =		\
-text-glyph-range		\
-extend-reflect
+extend-reflect			\
+show-glyphs-many		\
+text-glyph-range
 
 # Then we have a collection of tests that are only run if certain
 # features are compiled into cairo
@@ -158,23 +199,6 @@ TESTS += fallback-resolution
 endif
 endif
 endif
-
-# XXX: Here are some existing tests that are currently disabled for
-# one reason or another.
-# 
-# show-glyphs-many - this stress test was exercising a particular bug
-#      in the xlib surface code (exceeding the X11 protocol request
-#      limit) when rendering several thousand glyphs at once. The
-#      original xlib-surface bug is fixed now, but the test continues
-#      to stress some other aspects of the test suite. For example,
-#      when doing text as paths, the resuilting PostScript file is one
-#      giant path that ghostscript has a particularly hard time
-#      with. I'm disabling this test for now, since I don't care about
-#      that performance problem in ghostscript. (But, there is a
-#      similar performance problem when using cairo to rasterize the
-#      equivalen giant path---from an SBG files say---so this might be
-#      a useful kind of test to bring back again for performance (not
-#      correctness) testing.
 
 # All tests which have a reference image go here.
 REFERENCE_IMAGES = \
