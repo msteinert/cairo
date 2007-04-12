@@ -240,6 +240,7 @@ _cairo_xlib_init_screen_font_options (cairo_xlib_screen_info_t *info)
     cairo_font_options_set_hint_style (&info->font_options, hint_style);
     cairo_font_options_set_antialias (&info->font_options, antialias);
     cairo_font_options_set_subpixel_order (&info->font_options, subpixel_order);
+    cairo_font_options_set_hint_metrics (&info->font_options, CAIRO_HINT_METRICS_ON);
 }
 
 static cairo_xlib_screen_info_t *_cairo_xlib_screen_list = NULL;
