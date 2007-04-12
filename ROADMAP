@@ -50,6 +50,8 @@ cairo 1.6 (scheduled for July 2007, targeting firefox and GNOME)
 
  • Implement a faster lookup-table-based rasterizer (cworth)
 
+ • Internal move to cairo_object_t (Chris 'ickle' Wilson)
+
  • New cairo-xlib API to support IncludeInferior Pictures (see bug
 	10329 for one proposal --- perhaps do
 	cairo_xlib_surface_create_for_picture instead)
