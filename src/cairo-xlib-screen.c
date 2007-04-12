@@ -320,7 +320,7 @@ _cairo_xlib_screen_info_get_unlocked (Display *dpy, Screen *screen)
     {
 	if (info->display == dpy) {
 	    seen_display = TRUE;
-	    if (info->screen == screen || screen == NULL) {
+	    if (info->screen == screen) {
 		/*
 		 * MRU the list
 		 */
