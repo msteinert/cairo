@@ -341,6 +341,9 @@ _cairo_xlib_surface_finish (void *abstract_surface)
     if (surface->clip_rects != NULL)
 	free (surface->clip_rects);
 
+    if (surface->screen_info != NULL)
+	_cairo_xlib_screen_info_destroy (surface->screen_info);
+
     surface->dpy = NULL;
 
     return CAIRO_STATUS_SUCCESS;
@@ -1857,6 +1860,7 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 
     surface = malloc (sizeof (cairo_xlib_surface_t));
     if (surface == NULL) {
+	_cairo_xlib_screen_info_destroy (screen_info);
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }

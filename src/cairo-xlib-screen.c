@@ -267,6 +267,53 @@ _cairo_xlib_call_close_display_hooks (cairo_xlib_screen_info_t *info)
     }
 }
 
+static void
+_cairo_xlib_screen_info_reference_lock_held (cairo_xlib_screen_info_t *info)
+{
+    assert (info->ref_count > 0);
+    info->ref_count++;
+}
+
+cairo_xlib_screen_info_t *
+_cairo_xlib_screen_info_reference (cairo_xlib_screen_info_t *info)
+{
+    if (info == NULL)
+	return NULL;
+
+    /* use our global mutex until we get a real atomic inc */
+    CAIRO_MUTEX_LOCK (_cairo_xlib_screen_mutex);
+
+    _cairo_xlib_screen_info_reference_lock_held (info);
+
+    CAIRO_MUTEX_UNLOCK (_cairo_xlib_screen_mutex);
+
+    return info;
+}
+
+static void
+_cairo_xlib_screen_info_destroy_lock_held (cairo_xlib_screen_info_t *info)
+{
+    assert (info->ref_count > 0);
+    if (--info->ref_count)
+	return;
+
+    _cairo_xlib_call_close_display_hooks (info);
+    free (info);
+}
+
+void
+_cairo_xlib_screen_info_destroy (cairo_xlib_screen_info_t *info)
+{
+    if (info == NULL)
+	return;
+
+    CAIRO_MUTEX_LOCK (_cairo_xlib_screen_mutex);
+
+    _cairo_xlib_screen_info_destroy_lock_held (info);
+
+    CAIRO_MUTEX_UNLOCK (_cairo_xlib_screen_mutex);
+}
+
 static int
 _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
 {
@@ -281,9 +328,10 @@ _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
     for (info = _cairo_xlib_screen_list; info; info = next) {
 	next = info->next;
 	if (info->display == dpy) {
+	    /* trigger the hooks explicitly as we know the display is closing */
 	    _cairo_xlib_call_close_display_hooks (info);
+	    _cairo_xlib_screen_info_destroy_lock_held (info);
 	    *prev = next;
-	    free (info);
 	} else {
 	    prev = &info->next;
 	}
@@ -299,31 +347,23 @@ _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
 static void
 _cairo_xlib_screen_info_reset (void)
 {
-    cairo_xlib_screen_info_t *info, *next;
-
     /*
      * Delete everything in the list.
      */
     CAIRO_MUTEX_LOCK (_cairo_xlib_screen_mutex);
 
-    for (info = _cairo_xlib_screen_list; info; info = next) {
-	next = info->next;
-	while (info->close_display_hooks) {
-	    cairo_xlib_hook_t *hook = info->close_display_hooks;
-	    info->close_display_hooks = hook->next;
-	    free (hook);
-	}
-	free (info);
+    while (_cairo_xlib_screen_list != NULL) {
+	cairo_xlib_screen_info_t *info = _cairo_xlib_screen_list;
+	_cairo_xlib_screen_list = info->next;
+	_cairo_xlib_screen_info_destroy_lock_held (info);
     }
-
-    _cairo_xlib_screen_list = NULL;
 
     CAIRO_MUTEX_UNLOCK (_cairo_xlib_screen_mutex);
 
 }
 
 static cairo_xlib_screen_info_t *
-_cairo_xlib_screen_info_get_unlocked (Display *dpy, Screen *screen)
+_cairo_xlib_screen_info_get_lock_held (Display *dpy, Screen *screen)
 {
     cairo_xlib_screen_info_t *info;
     cairo_xlib_screen_info_t **prev;
@@ -366,6 +406,7 @@ _cairo_xlib_screen_info_get_unlocked (Display *dpy, Screen *screen)
 	XESetCloseDisplay (dpy, codes->extension, _cairo_xlib_close_display);
     }
 
+    info->ref_count = 1;
     info->display = dpy;
     info->screen = screen;
     info->close_display_hooks = NULL;
@@ -397,7 +438,9 @@ _cairo_xlib_screen_info_get (Display *dpy, Screen *screen)
      */
     CAIRO_MUTEX_LOCK (_cairo_xlib_screen_mutex);
 
-    info = _cairo_xlib_screen_info_get_unlocked (dpy, screen);
+    info = _cairo_xlib_screen_info_get_lock_held (dpy, screen);
+    if (info != NULL)
+	_cairo_xlib_screen_info_reference_lock_held (info);
 
     CAIRO_MUTEX_UNLOCK (_cairo_xlib_screen_mutex);
 
@@ -414,7 +457,7 @@ _cairo_xlib_add_close_display_hook (Display *dpy, void (*func) (Display *, void 
 
     CAIRO_MUTEX_LOCK (_cairo_xlib_screen_mutex);
 
-    info = _cairo_xlib_screen_info_get_unlocked (dpy,  NULL);
+    info = _cairo_xlib_screen_info_get_lock_held (dpy,  NULL);
     if (!info)
 	goto unlock;
 
@@ -459,7 +502,7 @@ _cairo_xlib_remove_close_display_hook (Display *dpy, void *key)
 
     CAIRO_MUTEX_LOCK (_cairo_xlib_screen_mutex);
 
-    info = _cairo_xlib_screen_info_get_unlocked (dpy, NULL);
+    info = _cairo_xlib_screen_info_get_lock_held (dpy, NULL);
     if (!info)
 	goto unlock;
 
