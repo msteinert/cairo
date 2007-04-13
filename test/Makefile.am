@@ -437,7 +437,6 @@ a8-mask				\
 big-trap			\
 extend-pad			\
 filter-nearest-offset		\
-ft-text-vertical-layout-type1	\
 long-lines			\
 self-intersecting		\
 surface-pattern			\
