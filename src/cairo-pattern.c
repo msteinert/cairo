@@ -1472,11 +1472,16 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 		 * in a region larger than the surface, but we never
 		 * want to clone more than the surface itself, (we
 		 * know we're not repeating at this point due to the
-		 * above. */
-		x = MAX (0, floor (x1));
-		y = MAX (0, floor (y1));
-		width = MIN (extents.width, ceil (x2)) - x;
-		height = MIN (extents.height, ceil (y2)) - y;
+		 * above.
+		 *
+		 * XXX: The one padding here is to account for filter
+		 * radius.  It's a workaround right now, until we get a
+		 * proper fix. (see bug #10508)
+		 */
+		x = MAX (0, floor (x1) - 1);
+		y = MAX (0, floor (y1) - 1);
+		width = MIN (extents.width, ceil (x2) + 1) - x;
+		height = MIN (extents.height, ceil (y2) + 1) - y;
 	    }
 	    x += tx;
 	    y += ty;
