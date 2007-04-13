@@ -25,9 +25,7 @@
  */
 
 #include "cairo-boilerplate.h"
-#include "cairo-boilerplate-private.h"
-
-#if CAIRO_HAS_QUARTZ_SURFACE
+#include "cairo-quartz-boilerplate-private.h"
 
 #include <cairo-quartz.h>
 
@@ -60,5 +58,3 @@ _cairo_quartz_boilerplate_cleanup (void *closure)
 {
     /* nothing */
 }
-#endif
-

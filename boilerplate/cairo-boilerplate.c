@@ -25,7 +25,10 @@
  */
 
 #include "cairo-boilerplate.h"
-#include "cairo-boilerplate-private.h"
+
+#if CAIRO_HAS_QUARTZ_SURFACE
+#include "cairo-quartz-boilerplate-private.h"
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>

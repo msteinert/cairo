@@ -24,10 +24,8 @@
  * Author: Carl D. Worth <cworth@cworth.org>
  */
 
-#ifndef _CAIRO_BOILERPLATE_PRIVATE_H_
-#define _CAIRO_BOILERPLATE_PRIVATE_H_
-
-#if CAIRO_HAS_QUARTZ_SURFACE
+#ifndef _CAIRO_QUARTZ_BOILERPLATE_PRIVATE_H_
+#define _CAIRO_QUARTZ_BOILERPLATE_PRIVATE_H_
 
 cairo_surface_t *
 _cairo_quartz_boilerplate_create_surface (const char		*name,
@@ -39,7 +37,5 @@ _cairo_quartz_boilerplate_create_surface (const char		*name,
 
 void
 _cairo_quartz_boilerplate_cleanup (void *closure);
-
-#endif /* CAIRO_HAS_QUARTZ_SURFACE */
 
 #endif
