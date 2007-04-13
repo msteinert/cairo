@@ -572,10 +572,10 @@ cairo_surface_get_font_options (cairo_surface_t       *surface,
     if (!surface->has_font_options) {
 	surface->has_font_options = TRUE;
 
+	_cairo_font_options_init_default (&surface->font_options);
+
 	if (!surface->finished && surface->backend->get_font_options) {
 	    surface->backend->get_font_options (surface, &surface->font_options);
-	} else {
-	    _cairo_font_options_init_default (&surface->font_options);
 	}
     }
 
