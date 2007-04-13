@@ -16,11 +16,11 @@ cairo 1.4.4 (scheduled for 2007-04-09)
 
  ✓ 10531 cairo nquartz backend floating point precision issues (bewins)
 
-cairo 1.4.x (not scheduled, may become part of 1.6)
-===================================================
- • 10508 Transformed image source surfaces sometimes misrender to xlib
+ ✓ 10508 Transformed image source surfaces sometimes misrender to xlib
    surface target (cworth)
 
+cairo 1.4.x (not scheduled, may become part of 1.6)
+===================================================
  • Fix all remaining XFAIL failures from the test suite
 	a8mask has a patch available on the list
 
