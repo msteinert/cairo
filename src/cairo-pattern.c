@@ -1381,6 +1381,13 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 
 	attr->extend = CAIRO_EXTEND_REPEAT;
 
+	/* TODO: Instead of rendering pattern->surface four times to
+	 * out, we should first copy pattern->surface to surface similar
+	 * to dst and then copy that four times to out.  This may cause
+	 * an extra copy in the case of image destination, but for X servers,
+	 * this will send pattern->surface just once over the wire instead
+	 * of current four.
+	 */
 	x = extents.x;
 	y = extents.y;
 	w = 2 * extents.width;
