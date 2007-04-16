@@ -512,12 +512,6 @@ _cairo_font_reset_static_data (void);
 cairo_private void
 _cairo_ft_font_reset_static_data (void);
 
-cairo_private void
-_cairo_xlib_surface_reset_static_data (void);
-
-cairo_private void
-_cairo_xlib_screen_reset_static_data (void);
-
 /* the font backend interface */
 
 struct _cairo_unscaled_font_backend {

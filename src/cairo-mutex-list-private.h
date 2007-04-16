@@ -42,7 +42,7 @@ CAIRO_MUTEX_DECLARE (_cairo_ft_unscaled_font_map_mutex);
 #endif
 
 #if CAIRO_HAS_XLIB_SURFACE
-CAIRO_MUTEX_DECLARE (_cairo_xlib_screen_mutex);
+CAIRO_MUTEX_DECLARE (_cairo_xlib_display_mutex);
 #endif
 
 

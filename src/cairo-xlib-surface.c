@@ -2319,7 +2319,7 @@ _cairo_xlib_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font)
     cairo_xlib_surface_font_private_t	*font_private = scaled_font->surface_private;
 
     if (font_private) {
-	_cairo_xlib_remove_close_display_hook (font_private->dpy, scaled_font);
+	_cairo_xlib_remove_close_display_hooks (font_private->dpy, scaled_font);
 	XRenderFreeGlyphSet (font_private->dpy, font_private->glyphset);
 	free (font_private);
     }
