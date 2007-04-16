@@ -57,6 +57,7 @@ dnl ===========================================================================
 
 AC_PROG_CC
 AC_PROG_CPP
+AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL dnl required version (1.4) DON'T REMOVE!
 AC_STDC_HEADERS
 AC_C_INLINE
