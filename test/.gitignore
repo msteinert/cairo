@@ -124,6 +124,7 @@ set-source
 show-glyphs-many
 show-text-current-point
 skew-extreme
+solid-pattern-cache-stress
 source-clip
 source-clip-scale
 source-surface-scale-paint
@@ -155,6 +156,7 @@ valgrind-log
 *-out.svg
 *-diff.png
 *.manifest
+*.gcda
 *.gcno
 *.exe
 *.obj
@@ -166,3 +168,4 @@ valgrind-log
 *.suo
 *.o
 *~
+.*.sw?

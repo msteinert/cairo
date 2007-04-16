@@ -25,6 +25,7 @@ stamp-h
 stamp-h1
 stamp-h.in
 *~
+.*.sw?
 *.la
 *.lo
 *.orig

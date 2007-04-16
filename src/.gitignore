@@ -19,4 +19,5 @@ cairo.def
 *.exp
 *.lib
 *~
+.*.sw?
 TAGS
