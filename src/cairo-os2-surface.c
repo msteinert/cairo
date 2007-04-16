@@ -35,8 +35,12 @@
  *     Peter Weilbacher <mozilla@Weilbacher.org>
  */
 
-#include <stdlib.h>
-#include <stdio.h>
+#include "cairoint.h"
+
+#include "cairo-os2-private.h"
+
+#include <fontconfig/fontconfig.h>
+
 #include <float.h>
 #ifdef BUILD_CAIRO_DLL
 # define INCL_WIN
@@ -49,9 +53,6 @@
 #  include <emx/startup.h>
 # endif
 #endif
-#include "cairoint.h"
-#include "cairo-os2-private.h"
-#include "fontconfig/fontconfig.h"
 
 /*
  * Here comes the extra API for the OS/2 platform. Currently it consists

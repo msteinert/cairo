@@ -54,6 +54,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <stddef.h>
 
 #ifdef _MSC_VER
 #define _USE_MATH_DEFINES
@@ -67,20 +68,18 @@
 
 #ifdef _MSC_VER
 #define snprintf _snprintf
-#undef inline
-#define inline __inline
 #endif
 
 CAIRO_BEGIN_DECLS
 
 #if __GNUC__ >= 3 && defined(__ELF__) && !defined(__sun)
-# define slim_hidden_proto(name)	slim_hidden_proto1(name, slim_hidden_int_name(name))
-# define slim_hidden_def(name)		slim_hidden_def1(name, slim_hidden_int_name(name))
+# define slim_hidden_proto(name)		slim_hidden_proto1(name, slim_hidden_int_name(name)) cairo_private
+# define slim_hidden_proto_no_warn(name)	slim_hidden_proto1(name, slim_hidden_int_name(name)) cairo_private_no_warn
+# define slim_hidden_def(name)			slim_hidden_def1(name, slim_hidden_int_name(name))
 # define slim_hidden_int_name(name) INT_##name
 # define slim_hidden_proto1(name, internal)				\
   extern __typeof (name) name						\
-	__asm__ (slim_hidden_asmname (internal))			\
-	cairo_private
+	__asm__ (slim_hidden_asmname (internal))
 # define slim_hidden_def1(name, internal)				\
   extern __typeof (name) EXT_##name __asm__(slim_hidden_asmname(name))	\
 	__attribute__((__alias__(slim_hidden_asmname(internal))))
@@ -90,8 +89,9 @@ CAIRO_BEGIN_DECLS
 # define slim_hidden_asmname(name)	slim_hidden_asmname1(name)
 # define slim_hidden_asmname1(name)	slim_hidden_ulp #name
 #else
-# define slim_hidden_proto(name)	int _cairo_dummy_prototype(void)
-# define slim_hidden_def(name)		int _cairo_dummy_prototype(void)
+# define slim_hidden_proto(name)		int _cairo_dummy_prototype(void)
+# define slim_hidden_proto_no_warn(name)	int _cairo_dummy_prototype(void)
+# define slim_hidden_def(name)			int _cairo_dummy_prototype(void)
 #endif
 
 #if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
@@ -103,12 +103,16 @@ CAIRO_BEGIN_DECLS
 
 /* slim_internal.h */
 #if (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 3)) && defined(__ELF__) && !defined(__sun)
-#define cairo_private		__attribute__((__visibility__("hidden")))
+#define cairo_private_no_warn	__attribute__((__visibility__("hidden")))
 #elif defined(__SUNPRO_C) && (__SUNPRO_C >= 0x550)
-#define cairo_private		__hidden
+#define cairo_private_no_warn	__hidden
 #else /* not gcc >= 3.3 and not Sun Studio >= 8 */
-#define cairo_private
+#define cairo_private_no_warn
 #endif
+
+/* Add attribute(warn_unused_result) if supported */
+#define cairo_warn	    WARN_UNUSED_RESULT
+#define cairo_private	    cairo_private_no_warn cairo_warn
 
 /* This macro allow us to deprecate a function by providing an alias
    for the old function name to the new function name. With this
@@ -152,8 +156,8 @@ CAIRO_BEGIN_DECLS
 #define M_PI 3.14159265358979323846
 #endif
 
-#undef  ARRAY_LEN
-#define ARRAY_LEN(__array) ((int) (sizeof (__array) / sizeof (__array[0])))
+#undef  ARRAY_LENGTH
+#define ARRAY_LENGTH(__array) ((int) (sizeof (__array) / sizeof (__array[0])))
 
 /* Size in bytes of buffer to use off the stack per functions.
  * Mostly used by text functions.  For larger allocations, they'll
@@ -346,6 +350,8 @@ typedef struct _cairo_edge {
 } cairo_edge_t;
 
 typedef struct _cairo_polygon {
+    cairo_status_t status;
+
     cairo_point_t first_point;
     cairo_point_t current_point;
     cairo_bool_t has_current_point;
@@ -631,7 +637,7 @@ typedef struct _cairo_scaled_font_subset {
 struct _cairo_scaled_font_backend {
     cairo_font_type_t type;
 
-    cairo_status_t
+    cairo_warn cairo_status_t
     (*create_toy)  (cairo_toy_font_face_t	*toy_face,
 		    const cairo_matrix_t	*font_matrix,
 		    const cairo_matrix_t	*ctm,
@@ -641,7 +647,7 @@ struct _cairo_scaled_font_backend {
     void
     (*fini)		(void			*scaled_font);
 
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*scaled_glyph_init)	(void			     *scaled_font,
 				 cairo_scaled_glyph_t	     *scaled_glyph,
 				 cairo_scaled_glyph_info_t    info);
@@ -650,7 +656,7 @@ struct _cairo_scaled_font_backend {
      * both. This allows the backend to do something more sophisticated
      * then just converting characters one by one.
      */
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*text_to_glyphs) (void                *scaled_font,
 		       double		    x,
 		       double		    y,
@@ -661,7 +667,7 @@ struct _cairo_scaled_font_backend {
     unsigned long
     (*ucs4_to_index)		(void			     *scaled_font,
 				 uint32_t		      ucs4);
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*show_glyphs)	(void			*scaled_font,
 			 cairo_operator_t	 op,
 			 cairo_pattern_t	*pattern,
@@ -675,7 +681,7 @@ struct _cairo_scaled_font_backend {
 			 cairo_glyph_t		*glyphs,
 			 int			 num_glyphs);
 
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*load_truetype_table)(void		        *scaled_font,
                            unsigned long         tag,
                            long                  offset,
@@ -697,7 +703,7 @@ struct _cairo_font_face_backend {
     void
     (*destroy)     (void			*font_face);
 
-    cairo_status_t
+    cairo_warn cairo_status_t
     (*scaled_font_create) (void				*font_face,
 			   const cairo_matrix_t		*font_matrix,
 			   const cairo_matrix_t		*ctm,
@@ -743,10 +749,10 @@ struct _cairo_surface_backend {
 				 int			 width,
 				 int			 height);
 
-    cairo_status_t
+    cairo_warn cairo_status_t
     (*finish)			(void			*surface);
 
-    cairo_status_t
+    cairo_warn cairo_status_t
     (*acquire_source_image)	(void                    *abstract_surface,
 				 cairo_image_surface_t  **image_out,
 				 void                   **image_extra);
@@ -756,7 +762,7 @@ struct _cairo_surface_backend {
 				 cairo_image_surface_t  *image,
 				 void                   *image_extra);
 
-    cairo_status_t
+    cairo_warn cairo_status_t
     (*acquire_dest_image)       (void                    *abstract_surface,
 				 cairo_rectangle_int16_t *interest_rect,
 				 cairo_image_surface_t  **image_out,
@@ -780,7 +786,7 @@ struct _cairo_surface_backend {
      *
      * 3. It has the same contents as @src within the given rectangle.
      */
-    cairo_status_t
+    cairo_warn cairo_status_t
     (*clone_similar)            (void                   *surface,
 				 cairo_surface_t        *src,
 				 int                     src_x,
@@ -790,7 +796,7 @@ struct _cairo_surface_backend {
 				 cairo_surface_t       **clone_out);
 
     /* XXX: dst should be the first argument for consistency */
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*composite)		(cairo_operator_t	 op,
 				 cairo_pattern_t       	*src,
 				 cairo_pattern_t	*mask,
@@ -804,7 +810,7 @@ struct _cairo_surface_backend {
 				 unsigned int		 width,
 				 unsigned int		 height);
 
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*fill_rectangles)		(void			 *surface,
 				 cairo_operator_t	  op,
 				 const cairo_color_t     *color,
@@ -812,7 +818,7 @@ struct _cairo_surface_backend {
 				 int			  num_rects);
 
     /* XXX: dst should be the first argument for consistency */
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*composite_trapezoids)	(cairo_operator_t	 op,
 				 cairo_pattern_t	*pattern,
 				 void			*dst,
@@ -826,10 +832,10 @@ struct _cairo_surface_backend {
 				 cairo_trapezoid_t	*traps,
 				 int			 num_traps);
 
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*copy_page)		(void			*surface);
 
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*show_page)		(void			*surface);
 
     /* Set given region as the clip region for the surface, replacing
@@ -845,7 +851,7 @@ struct _cairo_surface_backend {
      * this is not possible, cairo will use mask surfaces for
      * clipping.
      */
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*set_clip_region)		(void			*surface,
 				 pixman_region16_t	*region);
 
@@ -863,7 +869,7 @@ struct _cairo_surface_backend {
      * function is not implemented cairo will use set_clip_region()
      * (if available) and mask surfaces for clipping.
      */
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*intersect_clip_path)	(void			*dst,
 				 cairo_path_fixed_t	*path,
 				 cairo_fill_rule_t	fill_rule,
@@ -880,7 +886,7 @@ struct _cairo_surface_backend {
      * into the specific surface->get_extents if there is no current
      * clip.
      */
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*get_extents)		(void			 *surface,
 				 cairo_rectangle_int16_t *rectangle);
 
@@ -889,7 +895,7 @@ struct _cairo_surface_backend {
      * resources. If null, render against this surface, using image
      * surfaces as glyphs.
      */
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*old_show_glyphs)		(cairo_scaled_font_t	        *font,
 				 cairo_operator_t		 op,
 				 cairo_pattern_t		*pattern,
@@ -907,10 +913,10 @@ struct _cairo_surface_backend {
     (*get_font_options)         (void                  *surface,
 				 cairo_font_options_t  *options);
 
-    cairo_status_t
+    cairo_warn cairo_status_t
     (*flush)                    (void                  *surface);
 
-    cairo_status_t
+    cairo_warn cairo_status_t
     (*mark_dirty_rectangle)     (void                  *surface,
 				 int                    x,
 				 int                    y,
@@ -927,18 +933,18 @@ struct _cairo_surface_backend {
     /* OK, I'm starting over somewhat by defining the 5 top-level
      * drawing operators for the surface backend here with consistent
      * naming and argument-order conventions. */
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*paint)			(void			*surface,
 				 cairo_operator_t	 op,
 				 cairo_pattern_t	*source);
 
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*mask)			(void			*surface,
 				 cairo_operator_t	 op,
 				 cairo_pattern_t	*source,
 				 cairo_pattern_t	*mask);
 
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*stroke)			(void			*surface,
 				 cairo_operator_t	 op,
 				 cairo_pattern_t	*source,
@@ -949,7 +955,7 @@ struct _cairo_surface_backend {
 				 double			 tolerance,
 				 cairo_antialias_t	 antialias);
 
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*fill)			(void			*surface,
 				 cairo_operator_t	 op,
 				 cairo_pattern_t	*source,
@@ -958,7 +964,7 @@ struct _cairo_surface_backend {
 				 double			 tolerance,
 				 cairo_antialias_t	 antialias);
 
-    cairo_int_status_t
+    cairo_warn cairo_int_status_t
     (*show_glyphs)		(void			*surface,
 				 cairo_operator_t	 op,
 				 cairo_pattern_t	*source,
@@ -1092,7 +1098,8 @@ typedef struct _cairo_solid_pattern {
     cairo_color_t color;
 } cairo_solid_pattern_t;
 
-extern const cairo_private cairo_solid_pattern_t cairo_pattern_nil;
+extern const cairo_private cairo_solid_pattern_t _cairo_pattern_nil;
+extern const cairo_private cairo_solid_pattern_t cairo_pattern_none;
 
 typedef struct _cairo_surface_pattern {
     cairo_pattern_t base;
@@ -1253,7 +1260,7 @@ _cairo_gstate_restore (cairo_gstate_t **gstate);
 cairo_private cairo_bool_t
 _cairo_gstate_is_redirected (cairo_gstate_t *gstate);
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_gstate_redirect_target (cairo_gstate_t *gstate, cairo_surface_t *child);
 
 cairo_private cairo_surface_t *
@@ -1342,19 +1349,19 @@ cairo_private cairo_status_t
 _cairo_gstate_set_matrix (cairo_gstate_t       *gstate,
 			  const cairo_matrix_t *matrix);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_gstate_identity_matrix (cairo_gstate_t *gstate);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_gstate_user_to_device (cairo_gstate_t *gstate, double *x, double *y);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_gstate_user_to_device_distance (cairo_gstate_t *gstate, double *dx, double *dy);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_gstate_device_to_user (cairo_gstate_t *gstate, double *x, double *y);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_gstate_device_to_user_distance (cairo_gstate_t *gstate, double *dx, double *dy);
 
 cairo_private void
@@ -1587,7 +1594,7 @@ cairo_private void
 _cairo_unscaled_font_init (cairo_unscaled_font_t               *font,
 			   const cairo_unscaled_font_backend_t *backend);
 
-cairo_private cairo_unscaled_font_t *
+cairo_private_no_warn cairo_unscaled_font_t *
 _cairo_unscaled_font_reference (cairo_unscaled_font_t *font);
 
 cairo_private void
@@ -1944,10 +1951,10 @@ _cairo_surface_composite_trapezoids (cairo_operator_t	op,
 				     cairo_trapezoid_t	*traps,
 				     int		ntraps);
 
-cairo_private cairo_int_status_t
+cairo_private cairo_status_t
 _cairo_surface_copy_page (cairo_surface_t *surface);
 
-cairo_private cairo_int_status_t
+cairo_private cairo_status_t
 _cairo_surface_show_page (cairo_surface_t *surface);
 
 cairo_private cairo_status_t
@@ -2174,7 +2181,7 @@ _cairo_pen_init (cairo_pen_t	*pen,
 		 double		 tolerance,
 		 cairo_matrix_t	*ctm);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_pen_init_empty (cairo_pen_t *pen);
 
 cairo_private cairo_status_t
@@ -2217,15 +2224,18 @@ cairo_private void
 _cairo_polygon_fini (cairo_polygon_t *polygon);
 
 cairo_private cairo_status_t
+_cairo_polygon_status (cairo_polygon_t *polygon);
+
+cairo_private void
 _cairo_polygon_add_edge (cairo_polygon_t *polygon, cairo_point_t *p1, cairo_point_t *p2);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_polygon_move_to (cairo_polygon_t *polygon, cairo_point_t *point);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_polygon_line_to (cairo_polygon_t *polygon, cairo_point_t *point);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_polygon_close (cairo_polygon_t *polygon);
 
 /* cairo_spline.c */
@@ -2258,7 +2268,7 @@ _cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
 cairo_private void
 _cairo_matrix_compute_determinant (const cairo_matrix_t *matrix, double *det);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
 				     double *sx, double *sy, int x_major);
 
@@ -2290,6 +2300,9 @@ _cairo_traps_init_box (cairo_traps_t *traps,
 cairo_private void
 _cairo_traps_fini (cairo_traps_t *traps);
 
+cairo_private cairo_status_t
+_cairo_traps_status (cairo_traps_t *traps);
+
 cairo_private void
 _cairo_traps_translate (cairo_traps_t *traps, int x, int y);
 
@@ -2304,7 +2317,7 @@ _cairo_traps_tessellate_polygon (cairo_traps_t *traps,
 				 cairo_polygon_t *poly,
 				 cairo_fill_rule_t fill_rule);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_traps_add_trap_from_points (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
 				   cairo_point_t left_p1, cairo_point_t left_p2,
 				   cairo_point_t right_p1, cairo_point_t right_p2);
@@ -2320,9 +2333,9 @@ _cairo_traps_contain (cairo_traps_t *traps, double x, double y);
 cairo_private void
 _cairo_traps_extents (cairo_traps_t *traps, cairo_box_t *extents);
 
-cairo_private cairo_status_t
-_cairo_traps_extract_region (cairo_traps_t      *tr,
-			     pixman_region16_t **region);
+cairo_private cairo_int_status_t
+_cairo_traps_extract_region (cairo_traps_t     *tr,
+			     pixman_region16_t *region);
 
 cairo_private void
 _cairo_trapezoid_array_translate_and_scale (cairo_trapezoid_t *offset_traps,
@@ -2429,9 +2442,6 @@ _cairo_gstate_get_antialias (cairo_gstate_t *gstate);
 
 /* cairo-region.c */
 
-cairo_private pixman_region16_t *
-_cairo_region_create_from_rectangle (cairo_rectangle_int16_t *rect);
-
 cairo_private void
 _cairo_region_extents_rectangle (pixman_region16_t       *region,
 				 cairo_rectangle_int16_t *rect);
@@ -2453,9 +2463,6 @@ _cairo_utf8_to_utf16 (const unsigned char *str,
 cairo_private void
 _cairo_error (cairo_status_t status);
 
-cairo_private int
-_cairo_dtostr (char *buffer, size_t size, double d);
-
 /* Avoid unnecessary PLT entries.  */
 slim_hidden_proto (cairo_clip_preserve);
 slim_hidden_proto (cairo_close_path);
@@ -2464,7 +2471,7 @@ slim_hidden_proto (cairo_curve_to);
 slim_hidden_proto (cairo_destroy);
 slim_hidden_proto (cairo_fill_preserve);
 slim_hidden_proto (cairo_font_face_destroy);
-slim_hidden_proto (cairo_font_face_reference);
+slim_hidden_proto_no_warn (cairo_font_face_reference);
 slim_hidden_proto (cairo_font_options_create);
 slim_hidden_proto (cairo_font_options_destroy);
 slim_hidden_proto (cairo_font_options_equal);
@@ -2503,7 +2510,7 @@ slim_hidden_proto (cairo_pattern_create_rgba);
 slim_hidden_proto (cairo_pattern_destroy);
 slim_hidden_proto (cairo_pattern_get_extend);
 slim_hidden_proto (cairo_pattern_get_type);
-slim_hidden_proto (cairo_pattern_reference);
+slim_hidden_proto_no_warn (cairo_pattern_reference);
 slim_hidden_proto (cairo_pattern_set_matrix);
 slim_hidden_proto (cairo_pattern_status);
 slim_hidden_proto (cairo_pop_group);
@@ -2522,7 +2529,8 @@ slim_hidden_proto (cairo_scaled_font_get_font_face);
 slim_hidden_proto (cairo_scaled_font_get_font_matrix);
 slim_hidden_proto (cairo_scaled_font_get_font_options);
 slim_hidden_proto (cairo_scaled_font_glyph_extents);
-slim_hidden_proto (cairo_scaled_font_reference);
+slim_hidden_proto_no_warn (cairo_scaled_font_reference);
+slim_hidden_proto (cairo_scaled_font_status);
 slim_hidden_proto (cairo_set_operator);
 slim_hidden_proto (cairo_set_source);
 slim_hidden_proto (cairo_set_source_surface);
@@ -2536,7 +2544,7 @@ slim_hidden_proto (cairo_surface_get_device_offset);
 slim_hidden_proto (cairo_surface_get_font_options);
 slim_hidden_proto (cairo_surface_get_type);
 slim_hidden_proto (cairo_surface_mark_dirty_rectangle);
-slim_hidden_proto (cairo_surface_reference);
+slim_hidden_proto_no_warn (cairo_surface_reference);
 slim_hidden_proto (cairo_surface_set_device_offset);
 slim_hidden_proto (cairo_surface_set_fallback_resolution);
 slim_hidden_proto (cairo_surface_status);

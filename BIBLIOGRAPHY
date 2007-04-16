@@ -60,6 +60,14 @@ algorithm for robustness against edges being "bent" due to restricting
 intersection coordinates to the grid available by finite-precision
 arithmetic. This is one algorithm we have not implemented yet.
 
+We use a data-structure called Skiplists in the our implementation
+of Bentley-Ottmann:
+
+	W. Pugh, Skip Lists: a Probabilistic Alternative to Balanced Trees,
+	Communications of the ACM, vol. 33, no. 6, pp.668-676, 1990.
+
+	http://citeseer.ist.psu.edu/pugh90skip.html
+
 From the result of the intersection-finding pass, we are currently
 computing a tessellation of trapezoids, (the exact manner is
 undergoing some work right now with some important speedup), but we

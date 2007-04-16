@@ -2,6 +2,8 @@ cairo-perf
 cairo-perf-diff-files
 index.html
 *.o
+*.gcda
+*.gcno
 *.exe
 *.manifest
 *.obj
@@ -9,3 +11,5 @@ index.html
 *.suo
 *.lib
 *.pdb
+*~
+.*.sw?

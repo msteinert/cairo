@@ -32,9 +32,8 @@
  * Contributor(s):
  */
 
-#include <string.h>
-#include <stdio.h>
 #include "cairoint.h"
+
 #include "cairo-win32-private.h"
 
 #ifndef SPI_GETFONTSMOOTHINGTYPE
@@ -284,11 +283,13 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
     cairo_matrix_multiply (&scale, font_matrix, ctm);
     _compute_transform (f, &scale);
 
-    _cairo_scaled_font_init (&f->base, font_face,
-			     font_matrix, ctm, options,
-			     &cairo_win32_scaled_font_backend);
+    status = _cairo_scaled_font_init (&f->base, font_face,
+				      font_matrix, ctm, options,
+				      &cairo_win32_scaled_font_backend);
 
-    status = _cairo_win32_scaled_font_set_metrics (f);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = _cairo_win32_scaled_font_set_metrics (f);
+
     if (status) {
 	cairo_scaled_font_destroy (&f->base);
 	return NULL;
@@ -1452,16 +1453,14 @@ _cairo_win32_scaled_font_init_glyph_path (cairo_win32_scaled_font_t *scaled_font
     }
     free(buffer);
 
-CLEANUP_FONT:
-
     _cairo_scaled_glyph_set_path (scaled_glyph,
 				  &scaled_font->base,
 				  path);
 
+ CLEANUP_FONT:
     cairo_win32_scaled_font_done_font (&scaled_font->base);
 
  CLEANUP_PATH:
-
     if (status != CAIRO_STATUS_SUCCESS)
 	_cairo_path_fixed_destroy (path);
 

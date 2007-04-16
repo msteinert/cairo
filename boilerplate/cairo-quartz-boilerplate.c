@@ -1,5 +1,6 @@
+/* -*- Mode: c; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 8; -*- */
 /*
- * Copyright © 2006 Red Hat, Inc.
+ * Copyright © 2004,2007 Red Hat, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
@@ -23,39 +24,37 @@
  * Author: Carl D. Worth <cworth@cworth.org>
  */
 
-#include "cairo-perf.h"
+#include "cairo-boilerplate.h"
+#include "cairo-quartz-boilerplate-private.h"
 
-static cairo_perf_ticks_t
-do_text (cairo_t *cr, int width, int height)
+#include <cairo-quartz.h>
+
+cairo_surface_t *
+_cairo_quartz_boilerplate_create_surface (const char		*name,
+					  cairo_content_t	 content,
+					  int			 width,
+					  int			 height,
+					  cairo_boilerplate_mode_t  mode,
+					  void			**closure)
 {
-    const char text[] = "the jay, pig, fox, zebra and my wolves quack";
-    int len = strlen (text);
-    double x, y;
-    int i = 0;
+    cairo_format_t format;
 
-    cairo_perf_timer_start ();
+    switch (content) {
+	case CAIRO_CONTENT_COLOR: format = CAIRO_FORMAT_RGB24; break;
+	case CAIRO_CONTENT_COLOR_ALPHA: format = CAIRO_FORMAT_ARGB32; break;
+	case CAIRO_CONTENT_ALPHA: format = CAIRO_FORMAT_A8; break;
+	default:
+	    assert (0); /* not reached */
+	    return NULL;
+    }
 
-    cairo_set_font_size (cr, 9);
-    do {
-	cairo_move_to (cr, 0, i * 10);
-	cairo_show_text (cr, text + i);
-	cairo_get_current_point (cr, &x, &y);
-	while (x < width && cairo_status (cr) == CAIRO_STATUS_SUCCESS) {
-	    cairo_show_text (cr, text);
-	    cairo_get_current_point (cr, &x, &y);
-	}
-	i++;
-	if (i >= len)
-	    i = 0;
-    } while (y < height && cairo_status (cr) == CAIRO_STATUS_SUCCESS);
+    *closure = NULL;
 
-    cairo_perf_timer_stop ();
-
-    return cairo_perf_timer_elapsed ();
+    return cairo_quartz_surface_create (format, width, height);
 }
 
 void
-text (cairo_perf_t *perf, cairo_t *cr, int width, int height)
+_cairo_quartz_boilerplate_cleanup (void *closure)
 {
-    cairo_perf_cover_sources_and_operators (perf, "text", do_text);
+    /* nothing */
 }

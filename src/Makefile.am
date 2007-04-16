@@ -188,6 +188,8 @@ libcairo_la_SOURCES =				\
 	cairo-lzw.c				\
 	cairo-matrix.c				\
 	cairo-mutex.c				\
+	cairo-mutex-list-private.h		\
+	cairo-mutex-private.h			\
 	cairo-operator.c			\
 	cairo-path.c				\
 	cairo-path-private.h			\
@@ -244,7 +246,7 @@ libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined $(export_symbol
 
 INCLUDES = -I$(srcdir) -I$(top_srcdir)/pixman/src $(CAIRO_CFLAGS)
 
-libcairo_la_LIBADD = $(top_builddir)/pixman/src/libpixman.la $(CAIRO_LIBS) $(noinst_LTLIBRARIES)
+libcairo_la_LIBADD = $(top_builddir)/pixman/src/libpixman.la $(CAIRO_LIBS) $(noinst_LTLIBRARIES) $(CAIRO_LDADD)
 
 libcairo_la_DEPENDENCIES = $(cairo_def_dependency) $(top_builddir)/pixman/src/libpixman.la $(noinst_LTLIBRARIES)
 
@@ -287,5 +289,5 @@ install-data-local:
         fi
 
 TESTS_ENVIRONMENT = srcdir="$(srcdir)"
-TESTS = check-def.sh check-plt.sh check-headers.sh
+TESTS = check-def.sh check-plt.sh check-headers.sh check-cairoint.sh
 EXTRA_DIST += $(TESTS)
