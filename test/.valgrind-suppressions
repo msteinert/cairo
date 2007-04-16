@@ -500,4 +500,9 @@
    fun:NewDatabase
    fun:XrmGetFileDatabase
 }
-
+{
+   Xau chooses not to free its static data...
+   Memcheck:Leak
+   fun:malloc
+   fun:XauFileName
+}
