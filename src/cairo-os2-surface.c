@@ -119,7 +119,7 @@ cairo_os2_fini (void)
 #endif
 
 #define CAIRO_MUTEX_DECLARE(name) CAIRO_MUTEX_FINI(name)
-#include "cairo-mutext-list.h"
+#include "cairo-mutex-list-private.h"
 #undef CAIRO_MUTEX_DECLARE
 
     /* Uninitialize FontConfig */
