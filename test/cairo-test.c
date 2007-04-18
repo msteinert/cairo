@@ -203,7 +203,7 @@ cairo_test_for_target (cairo_test_t			 *test,
     const char *format;
 
     /* Get the strings ready that we'll need. */
-    format = _cairo_test_content_name (target->content);
+    format = cairo_boilerplate_content_name (target->content);
     if (dev_offset)
 	xasprintf (&offset_str, "-%d", dev_offset);
     else
@@ -479,7 +479,7 @@ cairo_test_expecting (cairo_test_t *test,
 
 	    cairo_test_log ("Testing %s with %s target (dev offset %d)\n", test->name, target->name, dev_offset);
 	    printf ("%s-%s-%s [%d]:\t", test->name, target->name,
-		    _cairo_test_content_name (target->content),
+		    cairo_boilerplate_content_name (target->content),
 		    dev_offset);
 
 #ifdef HAVE_SIGNAL_H
@@ -496,7 +496,7 @@ cairo_test_expecting (cairo_test_t *test,
 
 	    cairo_test_log ("TEST: %s TARGET: %s FORMAT: %s OFFSET: %d RESULT: ",
 			    test->name, target->name,
-			    _cairo_test_content_name (target->content),
+			    cairo_boilerplate_content_name (target->content),
 			    dev_offset);
 
 	    switch (status) {
@@ -521,7 +521,7 @@ cairo_test_expecting (cairo_test_t *test,
 		cairo_test_log ("CRASHED\n");
 		fprintf (stderr, "%s-%s-%s [%d]:\t%s!!!CRASHED!!!%s\n",
 			 test->name, target->name,
-			 _cairo_test_content_name (target->content), dev_offset,
+			 cairo_boilerplate_content_name (target->content), dev_offset,
 			 fail_face, normal_face);
 		ret = CAIRO_TEST_FAILURE;
 		break;
@@ -540,7 +540,7 @@ cairo_test_expecting (cairo_test_t *test,
 		    }
 		    fprintf (stderr, "%s-%s-%s [%d]:\t%sFAIL%s\n",
 			     test->name, target->name,
-			     _cairo_test_content_name (target->content), dev_offset,
+			     cairo_boilerplate_content_name (target->content), dev_offset,
 			     fail_face, normal_face);
 		    cairo_test_log ("FAIL\n");
 		}

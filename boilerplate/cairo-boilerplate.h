@@ -78,7 +78,7 @@
 #define CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED ((unsigned int) -1)
 
 const char *
-_cairo_test_content_name (cairo_content_t content);
+cairo_boilerplate_content_name (cairo_content_t content);
 
 #ifndef FALSE
 #define FALSE 0

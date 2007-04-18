@@ -80,7 +80,7 @@ static const char *vector_ignored_tests[] = {
 };
 
 const char *
-_cairo_test_content_name (cairo_content_t content)
+cairo_boilerplate_content_name (cairo_content_t content)
 {
     /* For the purpose of the content name, we don't distinguish the
      * flattened content value.
@@ -1068,7 +1068,7 @@ create_ps_surface (const char			 *name,
     *closure = ptc = xmalloc (sizeof (ps_target_closure_t));
 
     xasprintf (&ptc->filename, "%s-ps-%s-out.ps",
-	       name, _cairo_test_content_name (content));
+	       name, cairo_boilerplate_content_name (content));
 
     ptc->width = width;
     ptc->height = height;
@@ -1188,7 +1188,7 @@ create_pdf_surface (const char			 *name,
     ptc->height = height;
 
     xasprintf (&ptc->filename, "%s-pdf-%s-out.pdf",
-	       name, _cairo_test_content_name (content));
+	       name, cairo_boilerplate_content_name (content));
 
     surface = cairo_pdf_surface_create (ptc->filename, width, height);
     if (cairo_surface_status (surface)) {
@@ -1294,7 +1294,7 @@ create_svg_surface (const char			 *name,
     ptc->height = height;
 
     xasprintf (&ptc->filename, "%s-svg-%s-out.svg",
-	       name, _cairo_test_content_name (content));
+	       name, cairo_boilerplate_content_name (content));
 
     surface = cairo_svg_surface_create (ptc->filename, width, height);
     if (cairo_surface_status (surface)) {
