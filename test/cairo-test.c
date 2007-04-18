@@ -383,7 +383,6 @@ cairo_test_expecting (cairo_test_t *test,
      * by longjmp */
     volatile size_t i, j, num_targets;
     volatile cairo_bool_t limited_targets = FALSE, print_fail_on_stdout = TRUE;
-    const char *tname;
 #ifdef HAVE_SIGNAL_H
     void (*old_segfault_handler)(int);
 #endif
@@ -409,51 +408,12 @@ cairo_test_expecting (cairo_test_t *test,
     if (expectation == CAIRO_TEST_FAILURE)
     printf ("Expecting failure\n");
 
-    if ((tname = getenv ("CAIRO_TEST_TARGET")) != NULL && *tname) {
-
-	limited_targets = TRUE;
-
-	num_targets = 0;
-	targets_to_test = NULL;
-
-	while (*tname) {
-	    int found = 0;
-	    const char *end = strpbrk (tname, " \t\r\n;:,");
-	    if (!end)
-	        end = tname + strlen (tname);
-
-	    if (end == tname) {
-		tname = end + 1;
-		continue;
-	    }
-
-	    for (i = 0; targets[i].name != NULL; i++) {
-		if (0 == strncmp (targets[i].name, tname, end - tname) &&
-		    !isalnum (targets[i].name[end - tname])) {
-		    /* realloc isn't exactly the best thing here, but meh. */
-		    targets_to_test = realloc (targets_to_test, sizeof(cairo_boilerplate_target_t *) * (num_targets+1));
-		    targets_to_test[num_targets++] = &targets[i];
-		    found = 1;
-		}
-	    }
-
-	    if (!found) {
-		fprintf (stderr, "Cannot test target '%.*s'\n", (int)(end - tname), tname);
-		exit(-1);
-	    }
-
-	    if (*end)
-	      end++;
-	    tname = end;
-	}
-    } else {
-	num_targets = 0;
-	for (i = 0; targets[i].name != NULL; i++)
-	    num_targets++;
-	targets_to_test = malloc (sizeof(cairo_boilerplate_target_t*) * num_targets);
-	for (i = 0; i < num_targets; i++) {
-	    targets_to_test[i] = &targets[i];
-	}
+    {
+	int tmp_num_targets;
+	cairo_bool_t tmp_limited_targets;
+	targets_to_test = cairo_boilerplate_get_targets (&tmp_num_targets, &tmp_limited_targets);
+	num_targets = tmp_num_targets;
+	limited_targets = tmp_limited_targets;
     }
 
     /* The intended logic here is that we return overall SUCCESS
@@ -583,7 +543,7 @@ cairo_test_expecting (cairo_test_t *test,
 
     cairo_test_fini ();
 
-    free (targets_to_test);
+    cairo_boilerplate_free_targets (targets_to_test);
 
     return ret;
 }

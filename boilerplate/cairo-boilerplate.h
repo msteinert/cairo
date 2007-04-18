@@ -123,7 +123,11 @@ typedef struct _cairo_boilerplate_target
     void			       *closure;
 } cairo_boilerplate_target_t;
 
-extern cairo_boilerplate_target_t targets[];
+cairo_boilerplate_target_t **
+cairo_boilerplate_get_targets (int *num_targets, cairo_bool_t *limited_targets);
+
+void
+cairo_boilerplate_free_targets (cairo_boilerplate_target_t **targets);
 
 #if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
 #define CAIRO_PRINTF_FORMAT(fmt_index, va_index) \

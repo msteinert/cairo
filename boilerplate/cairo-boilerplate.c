@@ -1366,7 +1366,7 @@ cleanup_svg (void *closure)
 }
 #endif /* CAIRO_HAS_SVG_SURFACE && CAIRO_CAN_TEST_SVG_SURFACE */
 
-cairo_boilerplate_target_t targets[] =
+static cairo_boilerplate_target_t targets[] =
 {
     /* I'm uncompromising about leaving the image backend as 0
      * for tolerance. There shouldn't ever be anything that is out of
@@ -1517,9 +1517,76 @@ cairo_boilerplate_target_t targets[] =
     { "directfb-bitmap", CAIRO_SURFACE_TYPE_DIRECTFB, CAIRO_CONTENT_COLOR_ALPHA, 0,
       create_directfb_surface, cairo_surface_write_to_png,cleanup_directfb},
 #endif
-
-    { NULL }
 };
+
+cairo_boilerplate_target_t **
+cairo_boilerplate_get_targets (int *pnum_targets, cairo_bool_t *plimited_targets)
+{
+    size_t i, num_targets;
+    cairo_bool_t limited_targets = FALSE;
+    const char *tname;
+    cairo_boilerplate_target_t **targets_to_test;
+
+    if ((tname = getenv ("CAIRO_TEST_TARGET")) != NULL && *tname) {
+
+	limited_targets = TRUE;
+
+	num_targets = 0;
+	targets_to_test = NULL;
+
+	while (*tname) {
+	    int found = 0;
+	    const char *end = strpbrk (tname, " \t\r\n;:,");
+	    if (!end)
+	        end = tname + strlen (tname);
+
+	    if (end == tname) {
+		tname = end + 1;
+		continue;
+	    }
+
+	    for (i = 0; i < sizeof (targets) / sizeof (targets[0]); i++) {
+		if (0 == strncmp (targets[i].name, tname, end - tname) &&
+		    !isalnum (targets[i].name[end - tname])) {
+		    /* realloc isn't exactly the best thing here, but meh. */
+		    targets_to_test = realloc (targets_to_test, sizeof(cairo_boilerplate_target_t *) * (num_targets+1));
+		    targets_to_test[num_targets++] = &targets[i];
+		    found = 1;
+		}
+	    }
+
+	    if (!found) {
+		fprintf (stderr, "Cannot find target '%.*s'\n", (int)(end - tname), tname);
+		exit(-1);
+	    }
+
+	    if (*end)
+	      end++;
+	    tname = end;
+	}
+    } else {
+	num_targets = sizeof (targets) / sizeof (targets[0]);
+	targets_to_test = malloc (sizeof(cairo_boilerplate_target_t*) * num_targets);
+	for (i = 0; i < num_targets; i++) {
+	    targets_to_test[i] = &targets[i];
+	}
+    }
+
+    if (pnum_targets)
+	*pnum_targets = num_targets;
+
+    if (plimited_targets)
+	*plimited_targets = limited_targets;
+
+    return targets_to_test;
+}
+
+void
+cairo_boilerplate_free_targets (cairo_boilerplate_target_t **targets)
+{
+    free (targets);
+}
+
 
 void
 xasprintf (char **strp, const char *fmt, ...)

@@ -302,11 +302,10 @@ check_cpu_affinity(void)
 int
 main (int argc, char *argv[])
 {
-    int i, j;
+    int i, j, num_targets;
     cairo_perf_case_t *perf_case;
     cairo_perf_t perf;
-    const char *cairo_test_target = getenv ("CAIRO_TEST_TARGET");
-    cairo_boilerplate_target_t *target;
+    cairo_boilerplate_target_t **targets;
     cairo_surface_t *surface;
 
     parse_options (&perf, argc, argv);
@@ -324,17 +323,16 @@ main (int argc, char *argv[])
             stderr);
     }
 
-    if (!*cairo_test_target)
-	cairo_test_target = NULL;
+    targets = cairo_boilerplate_get_targets (&num_targets, NULL);
 
-    for (i = 0; targets[i].name; i++) {
-	perf.target = target = &targets[i];
-	perf.test_number = 0;
+    for (i = 0; i < num_targets; i++) {
+        cairo_boilerplate_target_t *target = targets[i];
 
 	if (! target_is_measurable (target))
 	    continue;
-	if (cairo_test_target && ! strstr (cairo_test_target, target->name))
-	    continue;
+
+	perf.target = target;
+	perf.test_number = 0;
 
 	for (j = 0; perf_cases[j].run; j++) {
 
@@ -377,6 +375,8 @@ main (int argc, char *argv[])
 	    }
 	}
     }
+
+    cairo_boilerplate_free_targets (targets);
 
     return 0;
 }
