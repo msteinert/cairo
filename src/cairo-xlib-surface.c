@@ -127,7 +127,16 @@ struct _cairo_xlib_surface {
     int num_clip_rects;
 
     XRenderPictFormat *xrender_format;
+    cairo_filter_t filter;
+    int repeat;
+    XTransform xtransform;
 };
+
+static const XTransform identity = { {
+    { 1 << 16, 0x00000, 0x00000 },
+    { 0x00000, 1 << 16, 0x00000 },
+    { 0x00000, 0x00000, 1 << 16 },
+} };
 
 #define CAIRO_SURFACE_RENDER_AT_LEAST(surface, major, minor)	\
 	(((surface)->render_major > major) ||			\
@@ -950,21 +959,14 @@ _cairo_xlib_surface_set_matrix (cairo_xlib_surface_t *surface,
     xtransform.matrix[2][1] = 0;
     xtransform.matrix[2][2] = _cairo_fixed_from_double (1);
 
+    if (memcmp (&xtransform, &surface->xtransform, sizeof (XTransform)) == 0)
+	return CAIRO_STATUS_SUCCESS;
+
     if (!CAIRO_SURFACE_RENDER_HAS_PICTURE_TRANSFORM (surface))
-    {
-	static const XTransform identity = { {
-	    { 1 << 16, 0x00000, 0x00000 },
-	    { 0x00000, 1 << 16, 0x00000 },
-	    { 0x00000, 0x00000, 1 << 16 },
-	} };
-
-	if (memcmp (&xtransform, &identity, sizeof (XTransform)) == 0)
-	    return CAIRO_STATUS_SUCCESS;
-
 	return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
 
     XRenderSetPictureTransform (surface->dpy, surface->src_picture, &xtransform);
+    surface->xtransform = xtransform;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -976,6 +978,9 @@ _cairo_xlib_surface_set_filter (cairo_xlib_surface_t *surface,
     const char *render_filter;
 
     if (!surface->src_picture)
+	return CAIRO_STATUS_SUCCESS;
+
+    if (surface->filter == filter)
 	return CAIRO_STATUS_SUCCESS;
 
     if (!CAIRO_SURFACE_RENDER_HAS_FILTERS (surface))
@@ -1015,6 +1020,7 @@ _cairo_xlib_surface_set_filter (cairo_xlib_surface_t *surface,
 
     XRenderSetPictureFilter (surface->dpy, surface->src_picture,
 			     (char *) render_filter, NULL, 0);
+    surface->filter = filter;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1028,10 +1034,14 @@ _cairo_xlib_surface_set_repeat (cairo_xlib_surface_t *surface, int repeat)
     if (!surface->src_picture)
 	return CAIRO_STATUS_SUCCESS;
 
+    if (surface->repeat == repeat)
+	return CAIRO_STATUS_SUCCESS;
+
     mask = CPRepeat;
     pa.repeat = repeat;
 
     XRenderChangePicture (surface->dpy, surface->src_picture, mask, &pa);
+    surface->repeat = repeat;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1935,6 +1945,9 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     surface->visual = visual;
     surface->xrender_format = xrender_format;
     surface->depth = depth;
+    surface->filter = CAIRO_FILTER_NEAREST;
+    surface->repeat = FALSE;
+    surface->xtransform = identity;
 
     surface->have_clip_rects = FALSE;
     surface->clip_rects = NULL;
