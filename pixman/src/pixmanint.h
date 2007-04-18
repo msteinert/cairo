@@ -27,11 +27,17 @@
 #  include "config.h"
 #endif
 
-#include "pixman.h"
-
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#undef inline
+#define inline __inline
+#endif
+
+#include "pixman.h"
 
 #undef MIN
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
