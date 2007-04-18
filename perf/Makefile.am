@@ -57,20 +57,28 @@ $(top_builddir)/boilerplate/libcairoboilerplate.la: $(top_builddir)/src/libcairo
 $(top_builddir)/src/libcairo.la:
 	cd $(top_builddir)/src && $(MAKE) $(AM_MAKEFLAGS) libcairo.la
 
+
+# Do a funny transition of CAIRO_TEST_TARGET through TARGETS such that
+# one can limit tested targets both through CAIRO_TEST_TARGET env var
+# and TARGETS make var on the command line.
+TARGETS = $(CAIRO_TEST_TARGET)
+ITERS = $(CAIRO_PERF_ITERATIONS)
+CAIRO_PERF_ENVIRONMENT = CAIRO_TEST_TARGET="$(TARGETS)" CAIRO_PERF_ITERATIONS="$(ITERS)"
+
 perf: cairo-perf FORCE
-	./cairo-perf
+	$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf
 
 html: index.html
 
 index.html: cairo-perf
-	./cairo-perf-diff -h HEAD > $@
+	$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf-diff -h HEAD > $@
 
-EXTRA_VG_FLAGS = $(CAIRO_EXTRA_VALGRIND_FLAGS)
-VG_MEMCHECK_FLAGS = \
+EXTRA_VALGRIND_FLAGS = $(CAIRO_EXTRA_VALGRIND_FLAGS)
+VALGRIND_MEMCHECK_FLAGS = \
 	--tool=memcheck \
 	--suppressions=$(top_srcdir)/test/.valgrind-suppressions \
 	--leak-check=yes --show-reachable=yes
-VG_CALLGRIND_FLAGS = \
+VALGRIND_CALLGRIND_FLAGS = \
 	--tool=callgrind
 CLEANFILES = \
 	valgrind-log \
@@ -78,12 +86,12 @@ CLEANFILES = \
 
 perf-valgrind: cairo-perf FORCE
 	$(top_srcdir)/libtool --mode=execute \
-		valgrind $(VG_MEMCHECK_FLAGS) $(EXTRA_VG_FLAGS) \
-		./cairo-perf 2>&1 | tee valgrind-log
+		valgrind $(VALGRIND_MEMCHECK_FLAGS) $(EXTRA_VALGRIND_FLAGS) \
+		$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf 2>&1 | tee valgrind-log
 perf-callgrind: cairo-perf FORCE
 	$(top_srcdir)/libtool --mode=execute \
-		valgrind $(VG_CALLGRIND_FLAGS) $(EXTRA_VG_FLAGS) \
-		./cairo-perf
+		valgrind $(VALGRIND_CALLGRIND_FLAGS) $(EXTRA_VALGRIND_FLAGS) \
+		$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf
 
 FORCE:
 

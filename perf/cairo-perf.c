@@ -216,10 +216,11 @@ static void
 parse_options (cairo_perf_t *perf, int argc, char *argv[])
 {
     int c;
+    const char *iters;
     char *end;
 
-    if (getenv("CAIRO_PERF_ITERATIONS"))
-	perf->iterations = strtol(getenv("CAIRO_PERF_ITERATIONS"), NULL, 0);
+    if ((iters = getenv("CAIRO_PERF_ITERATIONS")) && *iters)
+	perf->iterations = strtol(iters, NULL, 0);
     else
 	perf->iterations = CAIRO_PERF_ITERATIONS_DEFAULT;
     perf->exact_iterations = 0;
@@ -322,6 +323,9 @@ main (int argc, char *argv[])
             "See taskset(1) for information about changing CPU affinity.\n",
             stderr);
     }
+
+    if (!*cairo_test_target)
+	cairo_test_target = NULL;
 
     for (i = 0; targets[i].name; i++) {
 	perf.target = target = &targets[i];
