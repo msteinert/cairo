@@ -1568,7 +1568,7 @@ cairo_private cairo_bool_t
 _cairo_color_equal (const cairo_color_t *color_a,
                     const cairo_color_t *color_b);
 
-/* cairo-font.c */
+/* cairo-font-face.c */
 
 cairo_private void
 _cairo_scaled_font_freeze_cache (cairo_scaled_font_t *scaled_font);

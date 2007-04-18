@@ -17,7 +17,7 @@ SOURCES = \
 	cairo-deflate-stream.c \
 	cairo-fixed.c \
 	cairo-font-options.c \
-	cairo-font.c \
+	cairo-font-face.c \
 	cairo-freelist.c \
 	cairo-gstate.c \
 	cairo-hash.c \

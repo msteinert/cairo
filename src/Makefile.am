@@ -175,7 +175,7 @@ libcairo_la_SOURCES =				\
 	cairo-color.c				\
 	cairo-debug.c				\
 	cairo-fixed.c				\
-	cairo-font.c				\
+	cairo-font-face.c			\
 	cairo-font-options.c			\
 	cairo-freelist.c			\
 	cairo-freelist-private.h		\
