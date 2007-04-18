@@ -422,6 +422,11 @@ cairo_test_expecting (cairo_test_t *test,
 	    if (!end)
 	        end = tname + strlen (tname);
 
+	    if (end == tname) {
+		tname = end + 1;
+		continue;
+	    }
+
 	    for (i = 0; targets[i].name != NULL; i++) {
 		if (0 == strncmp (targets[i].name, tname, end - tname) &&
 		    !isalnum (targets[i].name[end - tname])) {
