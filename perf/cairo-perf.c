@@ -347,7 +347,7 @@ main (int argc, char *argv[])
 						    &target->closure);
 		if (surface == NULL) {
 		    fprintf (stderr,
-			     "Error: Failed to create target surface: %s",
+			     "Error: Failed to create target surface: %s\n",
 			     target->name);
 		    exit (1);
 		}
