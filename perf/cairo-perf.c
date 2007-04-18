@@ -345,6 +345,13 @@ main (int argc, char *argv[])
 						    perf.size, perf.size,
 						    CAIRO_BOILERPLATE_MODE_PERF,
 						    &target->closure);
+		if (surface == NULL) {
+		    fprintf (stderr,
+			     "Error: Failed to create target surface: %s",
+			     target->name);
+		    exit (1);
+		}
+
 		cairo_perf_timer_set_synchronize (target->synchronize,
 						  target->closure);
 
