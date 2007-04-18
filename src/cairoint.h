@@ -110,6 +110,9 @@ CAIRO_BEGIN_DECLS
 #define cairo_private_no_warn
 #endif
 
+#ifndef WARN_UNUSED_RESULT
+#define WARN_UNUSED_RESULT
+#endif
 /* Add attribute(warn_unused_result) if supported */
 #define cairo_warn	    WARN_UNUSED_RESULT
 #define cairo_private	    cairo_private_no_warn cairo_warn
