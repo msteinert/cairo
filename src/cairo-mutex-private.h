@@ -48,6 +48,12 @@
 
 CAIRO_BEGIN_DECLS
 
+
+/* A fully qualified no-operation statement */
+#define CAIRO_MUTEX_NOOP	do {/*no-op*/} while (0)
+
+
+
 #if HAVE_PTHREAD_H /*********************************************************/
 
 # include <pthread.h>
