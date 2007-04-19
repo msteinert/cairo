@@ -404,7 +404,8 @@ _cairo_clip_intersect_mask (cairo_clip_t      *clip,
 						   CAIRO_CONTENT_ALPHA,
 						   surface_rect.width,
 						   surface_rect.height,
-						   CAIRO_COLOR_WHITE);
+						   CAIRO_COLOR_WHITE,
+						   NULL);
     if (surface->status)
 	return CAIRO_STATUS_NO_MEMORY;
 

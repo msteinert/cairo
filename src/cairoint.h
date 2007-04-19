@@ -1851,12 +1851,16 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
 				       int		width,
 				       int		height);
 
+/* Note: the color_pattern argument is optional - if provided it will reuse
+ * that pattern instead of creating a very short-lived fresh solid pattern
+ */
 cairo_private cairo_surface_t *
 _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
 				     cairo_content_t	  content,
 				     int		  width,
 				     int		  height,
-				     const cairo_color_t *color);
+				     const cairo_color_t *color,
+				     cairo_pattern_t     *color_pattern);
 
 cairo_private void
 _cairo_surface_init (cairo_surface_t			*surface,

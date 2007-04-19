@@ -1250,7 +1250,8 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 				       CAIRO_CONTENT_COLOR :
 				       CAIRO_CONTENT_COLOR_ALPHA,
 				       1, 1,
-				       &pattern->color);
+				       &pattern->color,
+				       &pattern->base);
     if ((*out)->status)
 	return CAIRO_STATUS_NO_MEMORY;
 
