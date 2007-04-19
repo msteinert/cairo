@@ -66,7 +66,7 @@ CAIRO_BEGIN_DECLS
 # define CAIRO_MUTEX_FINI(mutex) pthread_mutex_destroy (mutex)
 # define CAIRO_MUTEX_NIL_INITIALIZER PTHREAD_MUTEX_INITIALIZER
 
-#elif defined CAIRO_HAS_WIN32_SURFACE /**************************************/
+#elif CAIRO_HAS_WIN32_SURFACE /**********************************************/
 
 /* We require Windows 2000 features. Although we don't use them here, things
  * should still work if this header file ends up being the one to include
@@ -109,7 +109,7 @@ CAIRO_BEGIN_DECLS
 } while (0)
 # define CAIRO_MUTEX_NIL_INITIALIZER 0
 
-#elif defined CAIRO_HAS_BEOS_SURFACE /***************************************/
+#elif CAIRO_HAS_BEOS_SURFACE /***********************************************/
 
   typedef void* cairo_mutex_t;
 
