@@ -60,7 +60,7 @@ CAIRO_BEGIN_DECLS
 
   typedef pthread_mutex_t cairo_mutex_t;
 
-# define CAIRO_MUTEX_INITIALIZE() /* no-op */
+# define CAIRO_MUTEX_INITIALIZE() CAIRO_MUTEX_NOOP
 # define CAIRO_MUTEX_LOCK(name) pthread_mutex_lock (&name)
 # define CAIRO_MUTEX_UNLOCK(name) pthread_mutex_unlock (&name)
 # define CAIRO_MUTEX_INIT(mutex) do {				\
