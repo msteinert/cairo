@@ -54,7 +54,15 @@ CAIRO_BEGIN_DECLS
 
 
 
-#if HAVE_PTHREAD_H /*********************************************************/
+#if CAIRO_NO_MUTEX
+
+typedef int cairo_mutex_t;
+# define CAIRO_MUTEX_INITIALIZE()	CAIRO_MUTEX_NOOP
+# define CAIRO_MUTEX_LOCK(name)		CAIRO_MUTEX_NOOP
+# define CAIRO_MUTEX_UNLOCK(name)	CAIRO_MUTEX_NOOP
+# define CAIRO_MUTEX_NIL_INITIALIZER	0
+
+#elif HAVE_PTHREAD_H /*******************************************************/
 
 # include <pthread.h>
 
