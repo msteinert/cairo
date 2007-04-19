@@ -689,17 +689,20 @@ main (int argc, const char *argv[])
 	1,			/* use UTF-8? */
 	1,			/* display change bars? */
     };
-    cairo_perf_report_t old, new;
+    cairo_perf_report_t *reports;
+    int i;
 
     parse_args (argc, argv, &args);
 
     if (args.num_filenames != 2)
 	usage (argv[0]);
 
-    cairo_perf_report_load (&old, args.filenames[0]);
-    cairo_perf_report_load (&new, args.filenames[1]);
+    reports = xmalloc (args.num_filenames * sizeof (cairo_perf_report_t));
 
-    cairo_perf_report_diff (&old, &new, &args);
+    for (i = 0; i < args.num_filenames; i++ )
+	cairo_perf_report_load (&reports[i], args.filenames[i]);
+
+    cairo_perf_report_diff (&reports[0], &reports[1], &args);
 
     return 0;
 }
