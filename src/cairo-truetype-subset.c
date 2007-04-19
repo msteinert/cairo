@@ -915,7 +915,7 @@ cairo_status_t
 _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
 			     cairo_scaled_font_subset_t	*font_subset)
 {
-    cairo_truetype_font_t *font;
+    cairo_truetype_font_t *font = NULL;
     cairo_status_t status;
     const char *data = NULL; /* squelch bogus compiler warning */
     unsigned long length = 0; /* squelch bogus compiler warning */
