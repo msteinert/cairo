@@ -24,37 +24,18 @@
  * Author: Carl D. Worth <cworth@cworth.org>
  */
 
-#include "cairo-boilerplate.h"
-#include "cairo-quartz-boilerplate-private.h"
-
-#include <cairo-quartz.h>
+#ifndef _CAIRO_BOILERPLATE_QUARTZ_PRIVATE_H_
+#define _CAIRO_BOILERPLATE_QUARTZ_PRIVATE_H_
 
 cairo_surface_t *
-_cairo_quartz_boilerplate_create_surface (const char		*name,
+_cairo_boilerplate_quartz_create_surface (const char		*name,
 					  cairo_content_t	 content,
 					  int			 width,
 					  int			 height,
 					  cairo_boilerplate_mode_t  mode,
-					  void			**closure)
-{
-    cairo_format_t format;
-
-    switch (content) {
-	case CAIRO_CONTENT_COLOR: format = CAIRO_FORMAT_RGB24; break;
-	case CAIRO_CONTENT_COLOR_ALPHA: format = CAIRO_FORMAT_ARGB32; break;
-	case CAIRO_CONTENT_ALPHA: format = CAIRO_FORMAT_A8; break;
-	default:
-	    assert (0); /* not reached */
-	    return NULL;
-    }
-
-    *closure = NULL;
-
-    return cairo_quartz_surface_create (format, width, height);
-}
+					  void			**closure);
 
 void
-_cairo_quartz_boilerplate_cleanup (void *closure)
-{
-    /* nothing */
-}
+_cairo_boilerplate_quartz_cleanup (void *closure);
+
+#endif

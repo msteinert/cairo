@@ -27,7 +27,7 @@
 #include "cairo-boilerplate.h"
 
 #if CAIRO_HAS_QUARTZ_SURFACE
-#include "cairo-quartz-boilerplate-private.h"
+#include "cairo-boilerplate-quartz-private.h"
 #endif
 
 #include <stdio.h>
@@ -1427,11 +1427,11 @@ static cairo_boilerplate_target_t targets[] =
 #endif /* CAIRO_HAS_GLITZ_SURFACE */
 #if CAIRO_HAS_QUARTZ_SURFACE
     { "quartz", CAIRO_SURFACE_TYPE_QUARTZ, CAIRO_CONTENT_COLOR_ALPHA, 0,
-      _cairo_quartz_boilerplate_create_surface, cairo_surface_write_to_png,
-      _cairo_quartz_boilerplate_cleanup },
+      _cairo_boilerplate_quartz_create_surface, cairo_surface_write_to_png,
+      _cairo_boilerplate_quartz_cleanup },
     { "quartz", CAIRO_SURFACE_TYPE_QUARTZ, CAIRO_CONTENT_COLOR, 0,
-      _cairo_quartz_boilerplate_create_surface, cairo_surface_write_to_png,
-      _cairo_quartz_boilerplate_cleanup },
+      _cairo_boilerplate_quartz_create_surface, cairo_surface_write_to_png,
+      _cairo_boilerplate_quartz_cleanup },
 #endif
 #if CAIRO_HAS_WIN32_SURFACE
     { "win32", CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR, 0,
