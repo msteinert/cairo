@@ -1900,3 +1900,33 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
  *              it will still copy over the src alpha, because the SCA value (255) will be
  *              multiplied by all the src components.
  */
+
+
+#if !defined(CAIRO_WIN32_STATIC_BUILD)
+
+/* declare to avoid "no previous prototype for 'DllMain'" warning */
+BOOL WINAPI
+DllMain (HINSTANCE hinstDLL,
+         DWORD     fdwReason,
+         LPVOID    lpvReserved);
+
+BOOL WINAPI
+DllMain (HINSTANCE hinstDLL,
+         DWORD     fdwReason,
+         LPVOID    lpvReserved)
+{
+    switch (fdwReason) {
+        case DLL_PROCESS_ATTACH:
+            CAIRO_MUTEX_INITIALIZE ();
+            break;
+
+        case DLL_PROCESS_DETACH:
+            CAIRO_MUTEX_FINALIZE ();
+            break;
+    }
+
+    return TRUE;
+}
+
+#endif
+
