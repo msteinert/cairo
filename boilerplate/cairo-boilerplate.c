@@ -1029,7 +1029,7 @@ cleanup_xlib (void *closure)
 #endif
 
 #if CAIRO_HAS_DIRECTFB_SURFACE
-#include "cairo-test-directfb.h"
+#include "cairo-boilerplate-directfb-private.h"
 #endif
 
 #if CAIRO_HAS_PS_SURFACE
@@ -1513,9 +1513,9 @@ static cairo_boilerplate_target_t targets[] =
 
 #if CAIRO_HAS_DIRECTFB_SURFACE
     { "directfb", CAIRO_SURFACE_TYPE_DIRECTFB, CAIRO_CONTENT_COLOR, 0,
-      create_directfb_surface, cairo_surface_write_to_png, cleanup_directfb},
+      _cairo_boilerplate_directfb_create_surface, cairo_surface_write_to_png, _cairo_boilerplate_directfb_cleanup},
     { "directfb-bitmap", CAIRO_SURFACE_TYPE_DIRECTFB, CAIRO_CONTENT_COLOR_ALPHA, 0,
-      create_directfb_surface, cairo_surface_write_to_png,cleanup_directfb},
+      _cairo_boilerplate_directfb_create_surface, cairo_surface_write_to_png,_cairo_boilerplate_directfb_cleanup},
 #endif
 };
 

@@ -20,7 +20,8 @@ libcairoboilerplate_la_CXXFLAGS = -Wno-multichar
 endif
 
 if CAIRO_HAS_DIRECTFB_SURFACE
-libcairoboilerplate_la_SOURCES += cairo-test-directfb.c cairo-test-directfb.h
+libcairoboilerplate_la_SOURCES += cairo-boilerplate-directfb.c
+libcairoboilerplate_la_SOURCES += cairo-boilerplate-directfb-private.h
 endif
 
 if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE

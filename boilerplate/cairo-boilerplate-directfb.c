@@ -14,7 +14,7 @@ make check
 #include "cairo-boilerplate.h"
 #include <directfb.h>
 #include "cairo-directfb.h"
-#include "cairo-test-directfb.h"
+#include "cairo-boilerplate-directfb-private.h"
 
 /* macro for a safe call to DirectFB functions */
 #define DFBCHECK(x...) \
@@ -104,7 +104,7 @@ create_directfb_bitmap_surface (DFBInfo *info,
 }
 
 void
-cleanup_directfb (void* closure) {
+_cairo_boilerplate_directfb_cleanup (void* closure) {
 	DFBInfo *info = (DFBInfo *)closure;
 	if( info->surface )
 		info->surface->Release( info->surface );
@@ -117,16 +117,16 @@ cleanup_directfb (void* closure) {
 }
 
 cairo_surface_t *
-create_directfb_surface (const char			 *name,
+_cairo_boilerplate_directfb_create_surface (const char			 *name,
 		     cairo_content_t		  content,
 		     int			  width,
 		     int			  height,
 		     cairo_boilerplate_mode_t	  mode,
 		     void			**closure) {
-    
+
     DFBInfo* info= init();
     *closure = info;
-    if( !info ) { 
+    if( !info ) {
 	    CAIRO_BOILERPLATE_LOG ("Failed to init directfb:\n");
         return NULL;
     }
