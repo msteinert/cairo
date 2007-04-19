@@ -287,85 +287,6 @@ strndup (const char *s, size_t n)
 }
 #endif /* ifndef __USE_GNU */
 
-static void
-cairo_perf_report_load (cairo_perf_report_t *report, const char *filename)
-{
-    FILE *file;
-    test_report_status_t status;
-    int line_number = 0;
-    char *line = NULL;
-    size_t line_size = 0;
-
-    report->name = filename;
-    report->tests = NULL;
-    report->tests_size = 0;
-    report->tests_count = 0;
-
-    file = fopen (filename, "r");
-    if (file == NULL) {
-	fprintf (stderr, "Failed to open %s: %s\n",
-		 filename, strerror (errno));
-	exit (1);
-    }
-
-    while (1) {
-	if (report->tests_count == report->tests_size) {
-	    report->tests_size = report->tests_size ? 2 * report->tests_size : 16;
-	    report->tests = realloc (report->tests,
-				     report->tests_size * sizeof (test_report_t));
-	    if (report->tests == NULL) {
-		fprintf (stderr, "Out of memory.\n");
-		exit (1);
-	    }
-	}
-
-	line_number++;
-	if (getline (&line, &line_size, file) == -1)
-	    break;
-
-	status = test_report_parse (&report->tests[report->tests_count], line);
-	if (status == TEST_REPORT_STATUS_ERROR)
-	    fprintf (stderr, "Ignoring unrecognized line %d of %s:\n%s",
-		     line_number, filename, line);
-	if (status == TEST_REPORT_STATUS_SUCCESS)
-	    report->tests_count++;
-	/* Do nothing on TEST_REPORT_STATUS_COMMENT */
-    }
-
-    if (line)
-	free (line);
-}
-
-static int
-test_diff_cmp (const void *a, const void *b)
-{
-    const test_diff_t *a_diff = a;
-    const test_diff_t *b_diff = b;
-    double a_change, b_change;
-
-    a_change = a_diff->speedup;
-    b_change = b_diff->speedup;
-
-    /* First make all speedups come before all slowdowns. */
-    if (a_change > 1.0 && b_change < 1.0)
-	return -1;
-    if (a_change < 1.0 && b_change > 1.0)
-	return 1;
-
-    /* Then, within each, sort by magnitude of speed change */
-    if (a_change < 1.0)
-	a_change = 1.0 / a_change;
-
-    if (b_change < 1.0)
-	b_change = 1.0 / b_change;
-
-    /* Reverse sort so larger changes come first */
-    if (a_change > b_change)
-	return -1;
-    if (a_change < b_change)
-	return 1;
-    return 0;
-}
 
 static int
 test_report_cmp_backend_then_name (const void *a, const void *b)
@@ -438,6 +359,88 @@ cairo_perf_report_sort_and_compute_stats (cairo_perf_report_t *report)
     }
 }
 
+static void
+cairo_perf_report_load (cairo_perf_report_t *report, const char *filename)
+{
+    FILE *file;
+    test_report_status_t status;
+    int line_number = 0;
+    char *line = NULL;
+    size_t line_size = 0;
+
+    report->name = filename;
+    report->tests = NULL;
+    report->tests_size = 0;
+    report->tests_count = 0;
+
+    file = fopen (filename, "r");
+    if (file == NULL) {
+	fprintf (stderr, "Failed to open %s: %s\n",
+		 filename, strerror (errno));
+	exit (1);
+    }
+
+    while (1) {
+	if (report->tests_count == report->tests_size) {
+	    report->tests_size = report->tests_size ? 2 * report->tests_size : 16;
+	    report->tests = realloc (report->tests,
+				     report->tests_size * sizeof (test_report_t));
+	    if (report->tests == NULL) {
+		fprintf (stderr, "Out of memory.\n");
+		exit (1);
+	    }
+	}
+
+	line_number++;
+	if (getline (&line, &line_size, file) == -1)
+	    break;
+
+	status = test_report_parse (&report->tests[report->tests_count], line);
+	if (status == TEST_REPORT_STATUS_ERROR)
+	    fprintf (stderr, "Ignoring unrecognized line %d of %s:\n%s",
+		     line_number, filename, line);
+	if (status == TEST_REPORT_STATUS_SUCCESS)
+	    report->tests_count++;
+	/* Do nothing on TEST_REPORT_STATUS_COMMENT */
+    }
+
+    if (line)
+	free (line);
+
+    cairo_perf_report_sort_and_compute_stats (report);
+}
+
+static int
+test_diff_cmp (const void *a, const void *b)
+{
+    const test_diff_t *a_diff = a;
+    const test_diff_t *b_diff = b;
+    double a_change, b_change;
+
+    a_change = a_diff->speedup;
+    b_change = b_diff->speedup;
+
+    /* First make all speedups come before all slowdowns. */
+    if (a_change > 1.0 && b_change < 1.0)
+	return -1;
+    if (a_change < 1.0 && b_change > 1.0)
+	return 1;
+
+    /* Then, within each, sort by magnitude of speed change */
+    if (a_change < 1.0)
+	a_change = 1.0 / a_change;
+
+    if (b_change < 1.0)
+	b_change = 1.0 / b_change;
+
+    /* Reverse sort so larger changes come first */
+    if (a_change > b_change)
+	return -1;
+    if (a_change < b_change)
+	return 1;
+    return 0;
+}
+
 #define CHANGE_BAR_WIDTH 70
 static void
 print_change_bar (double change, double max_change, int use_utf)
@@ -500,16 +503,13 @@ cairo_perf_report_diff (cairo_perf_report_t		*old,
 
     diffs = xmalloc (MAX (old->tests_count, new->tests_count) * sizeof (test_diff_t));
 
-    cairo_perf_report_sort_and_compute_stats (old);
-    cairo_perf_report_sort_and_compute_stats (new);
-
     i_old = 0;
     i_new = 0;
     while (i_old < old->tests_count && i_new < new->tests_count) {
 	o = &old->tests[i_old];
 	n = &new->tests[i_new];
 
-	/* We expect iterations values of 0 when mutltiple raw reports
+	/* We expect iterations values of 0 when multiple raw reports
 	 * for the same test have been condensed into the stats of the
 	 * first. So we just skip these later reports that have no
 	 * stats. */
