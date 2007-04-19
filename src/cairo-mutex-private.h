@@ -174,4 +174,27 @@ cairo_private void _cairo_mutex_finalize(void);
 
 CAIRO_END_DECLS
 
+/* Make sure everything we want is defined */
+#ifndef CAIRO_MUTEX_INITIALIZE
+# error "CAIRO_MUTEX_INITIALIZE not defined"
+#endif
+#ifndef CAIRO_MUTEX_FINALIZE
+# error "CAIRO_MUTEX_FINALIZE not defined"
+#endif
+#ifndef CAIRO_MUTEX_LOCK
+# error "CAIRO_MUTEX_LOCK not defined"
+#endif
+#ifndef CAIRO_MUTEX_UNLOCK
+# error "CAIRO_MUTEX_UNLOCK not defined"
+#endif
+#ifndef CAIRO_MUTEX_INIT
+# error "CAIRO_MUTEX_INIT not defined"
+#endif
+#ifndef CAIRO_MUTEX_FINI
+# error "CAIRO_MUTEX_FINI not defined"
+#endif
+#ifndef CAIRO_MUTEX_NIL_INITIALIZER
+# error "CAIRO_MUTEX_NIL_INITIALIZER not defined"
+#endif
+
 #endif
