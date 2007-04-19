@@ -54,7 +54,7 @@ extern "C" {
 #include "cairo-boilerplate.h"
 }
 
-#include "cairo-test-beos.h"
+#include "cairo-boilerplate-beos-private.h"
 #include "cairo-beos.h"
 
 static int cairo_beos_boilerplate_log(const char* format, ...) {
@@ -174,7 +174,7 @@ AppRunner::~AppRunner()
 // Make sure that the BApplication is initialized
 static AppRunner sAppRunner;
 
-struct beos_test_closure
+struct beos_boilerplate_closure
 {
     BView* view;
     BBitmap* bitmap;
@@ -183,7 +183,7 @@ struct beos_test_closure
 
 // Test a real window
 cairo_surface_t *
-create_beos_surface (const char              *name,
+_cairo_boilerplate_beos_create_surface (const char              *name,
                      cairo_content_t          content,
                      int                      width,
                      int                      height,
@@ -195,7 +195,7 @@ create_beos_surface (const char              *name,
     BRect rect(0.0, 0.0, right, bottom);
     CairoTestWindow* wnd = new CairoTestWindow(rect, name);
 
-    beos_test_closure* bclosure = new beos_test_closure;
+    beos_boilerplate_closure* bclosure = new beos_boilerplate_closure;
     bclosure->view = wnd->View();
     bclosure->bitmap = NULL;
     bclosure->window = wnd;
@@ -206,9 +206,9 @@ create_beos_surface (const char              *name,
 }
 
 void
-cleanup_beos (void* closure)
+_cairo_boilerplate_beos_cleanup (void* closure)
 {
-    beos_test_closure* bclosure = reinterpret_cast<beos_test_closure*>(closure);
+    beos_boilerplate_closure* bclosure = reinterpret_cast<beos_boilerplate_closure*>(closure);
 
     bclosure->window->Lock();
     bclosure->window->Quit();
@@ -218,7 +218,7 @@ cleanup_beos (void* closure)
 
 // Test a bitmap
 cairo_surface_t *
-create_beos_bitmap_surface (const char              *name,
+_cairo_boilerplate_beos_create_surface_for_bitmap (const char              *name,
                             cairo_content_t          content,
                             int                      width,
                             int                      height,
@@ -232,7 +232,7 @@ create_beos_bitmap_surface (const char              *name,
     BView* view = new BView(rect, "Cairo test view", B_FOLLOW_ALL_SIDES, 0);
     bmp->AddChild(view);
 
-    beos_test_closure* bclosure = new beos_test_closure;
+    beos_boilerplate_closure* bclosure = new beos_boilerplate_closure;
     bclosure->view = view;
     bclosure->bitmap = bmp;
     bclosure->window = NULL;
@@ -242,9 +242,9 @@ create_beos_bitmap_surface (const char              *name,
 }
 
 void
-cleanup_beos_bitmap (void* closure)
+_cairo_boilerplate_beos_cleanup_bitmap (void* closure)
 {
-    beos_test_closure* bclosure = reinterpret_cast<beos_test_closure*>(closure);
+    beos_boilerplate_closure* bclosure = reinterpret_cast<beos_boilerplate_closure*>(closure);
 
     bclosure->bitmap->RemoveChild(bclosure->view);
 

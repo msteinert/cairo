@@ -13,7 +13,8 @@ libcairoboilerplate_la_SOURCES += cairo-boilerplate-quartz-private.h
 endif
 
 if CAIRO_HAS_BEOS_SURFACE
-libcairoboilerplate_la_SOURCES += cairo-test-beos.cpp cairo-test-beos.h
+libcairoboilerplate_la_SOURCES += cairo-boilerplate-beos.cpp
+libcairoboilerplate_la_SOURCES += cairo-boilerplate-beos-private.h
 # BeOS system headers trigger this warning
 libcairoboilerplate_la_CXXFLAGS = -Wno-multichar
 endif

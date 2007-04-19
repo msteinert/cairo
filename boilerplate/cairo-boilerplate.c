@@ -1025,7 +1025,7 @@ cleanup_xlib (void *closure)
 
 #if CAIRO_HAS_BEOS_SURFACE
 /* BeOS test functions are external as they need to be C++ */
-#include "cairo-test-beos.h"
+#include "cairo-boilerplate-beos-private.h"
 #endif
 
 #if CAIRO_HAS_DIRECTFB_SURFACE
@@ -1504,11 +1504,11 @@ static cairo_boilerplate_target_t targets[] =
      * is related to the fact that it doesn't use premultiplied alpha...
      * Just ignore the small difference. */
     { "beos", CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR, 1,
-      create_beos_surface, cairo_surface_write_to_png, cleanup_beos},
+      _cairo_boilerplate_beos_create_surface, cairo_surface_write_to_png, _cairo_boilerplate_beos_cleanup},
     { "beos-bitmap", CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR, 1,
-      create_beos_bitmap_surface, cairo_surface_write_to_png, cleanup_beos_bitmap},
+      _cairo_boilerplate_beos_create_surface_for_bitmap, cairo_surface_write_to_png, _cairo_boilerplate_beos_cleanup_bitmap},
     { "beos-bitmap", CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR_ALPHA, 1,
-      create_beos_bitmap_surface, cairo_surface_write_to_png, cleanup_beos_bitmap},
+      _cairo_boilerplate_beos_create_surface_for_bitmap, cairo_surface_write_to_png, _cairo_boilerplate_beos_cleanup_bitmap},
 #endif
 
 #if CAIRO_HAS_DIRECTFB_SURFACE
