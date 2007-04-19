@@ -615,21 +615,26 @@ usage (const char *argv0)
     char const *basename = strrchr(argv0, '/');
     basename = basename ? basename+1 : argv0;
     fprintf (stderr,
-	     "Usage: %s [--no-utf] [--no-bars] file1 file2 [minimum_significant_change[%%]]\n\n",
+	     "Usage: %s [options] file1 file2\n\n",
 	     basename);
     fprintf (stderr,
 	     "Computes significant performance differences for cairo performance reports.\n"
 	     "Each file should be the output of the cairo-perf program (or \"make perf\").\n"
-	     "The third argument is used to supress all changes below some threshold.\n"
-	     "The default value of 5%% ignores any speeedup or slowdown of 5%% or less,\n"
-	     "A value of 0 will cause all output to be reported.\n"
+	     "The following options are available:\n"
 	     "\n"
 	     "--no-utf    Use ascii stars instead of utf-8 change bars.\n"
 	     "            Four stars are printed per factor of speedup.\n"
-	     "--no-bars   Don't display change bars at all.\n"
+	     "\n"
+	     "--no-bars   Don't display change bars at all.\n\n"
+	     "\n"
 	     "--use-ms    Use milliseconds to calculate differences.\n"
 	     "            (instead of ticks which are hardware dependant)\n"
-
+	     "\n"
+	     "--min-change threshold[%%]\n"
+	     "            Suppress all changes below the given threshold.\n"
+	     "            The default threshold of 0.05 or 5%% ignores any\n"
+	     "            speedup or slowdown of 1.05 or less. A threshold\n"
+	     "            of 0 will cause all output to be reported.\n"
 	);
     exit(1);
 }
@@ -640,7 +645,6 @@ parse_args(int				  argc,
 	   cairo_perf_diff_files_args_t  *args)
 {
     int i;
-    int have_minchange = 0;
 
     for (i = 1; i < argc; i++) {
 	if (strcmp (argv[i], "--no-utf") == 0) {
@@ -652,22 +656,25 @@ parse_args(int				  argc,
 	else if (strcmp (argv[i], "--use-ms") == 0) {
 	    args->use_ms = 1;
 	}
-	else if (!args->old_filename) {
-	    args->old_filename = argv[i];
-	}
-	else if (!args->new_filename) {
-	    args->new_filename = argv[i];
-	}
-	else if (!have_minchange) {
+	else if (strcmp (argv[i], "--min-change") == 0) {
 	    char *end = NULL;
+	    i++;
+	    if (i >= argc)
+		usage (argv[0]);
 	    args->min_change = strtod (argv[i], &end);
-	    if (*end && *end) {
-		if (0 == strcmp (end, "%")) {
+	    if (*end) {
+		if (*end == '%') {
 		    args->min_change /= 100;
 		} else {
 		    usage (argv[0]);
 		}
 	    }
+	}
+	else if (!args->old_filename) {
+	    args->old_filename = argv[i];
+	}
+	else if (!args->new_filename) {
+	    args->new_filename = argv[i];
 	}
 	else {
 	    usage (argv[0]);
