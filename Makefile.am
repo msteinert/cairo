@@ -2,7 +2,7 @@ DIST_SUBDIRS = pixman src boilerplate test perf doc
 SUBDIRS = pixman src doc
 # libpng is required for our test programs
 if CAIRO_HAS_PNG_FUNCTIONS
-SUBDIRS += boilerplate test
+SUBDIRS += boilerplate test perf
 endif
 
 
@@ -19,6 +19,7 @@ recheck: all
 	cd test && $(MAKE) $(AM_MAKEFLAGS) recheck
 check-valgrind: all
 	cd test && $(MAKE) $(AM_MAKEFLAGS) check-valgrind
+	cd perf && $(MAKE) $(AM_MAKEFLAGS) check-valgrind
 perf: all
 	cd perf && $(MAKE) $(AM_MAKEFLAGS) perf
 lcov: check
