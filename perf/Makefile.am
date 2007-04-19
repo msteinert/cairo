@@ -82,6 +82,7 @@ VALGRIND_CALLGRIND_FLAGS = \
 	--tool=callgrind
 CLEANFILES = \
 	valgrind-log \
+	callgrind.out.* \
 	index.html
 
 perf-valgrind: cairo-perf FORCE

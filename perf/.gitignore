@@ -1,5 +1,7 @@
 cairo-perf
 cairo-perf-diff-files
+valgrind-log
+callgrind.out.*
 index.html
 *.o
 *.gcda
