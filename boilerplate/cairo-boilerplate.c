@@ -26,10 +26,6 @@
 
 #include "cairo-boilerplate.h"
 
-#if CAIRO_HAS_QUARTZ_SURFACE
-#include "cairo-boilerplate-quartz-private.h"
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -46,6 +42,16 @@
 #include <string.h>
 #if HAVE_FCFINI
 #include <fontconfig/fontconfig.h>
+#endif
+
+#if CAIRO_HAS_BEOS_SURFACE
+#include "cairo-boilerplate-beos-private.h"
+#endif
+#if CAIRO_HAS_DIRECTFB_SURFACE
+#include "cairo-boilerplate-directfb-private.h"
+#endif
+#if CAIRO_HAS_QUARTZ_SURFACE
+#include "cairo-boilerplate-quartz-private.h"
 #endif
 
 /* This is copied from cairoint.h. That makes it painful to keep in
@@ -1021,15 +1027,6 @@ cleanup_xlib (void *closure)
     XCloseDisplay (xtc->dpy);
     free (xtc);
 }
-#endif
-
-#if CAIRO_HAS_BEOS_SURFACE
-/* BeOS test functions are external as they need to be C++ */
-#include "cairo-boilerplate-beos-private.h"
-#endif
-
-#if CAIRO_HAS_DIRECTFB_SURFACE
-#include "cairo-boilerplate-directfb-private.h"
 #endif
 
 #if CAIRO_HAS_PS_SURFACE
