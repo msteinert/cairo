@@ -120,13 +120,9 @@ CAIRO_BEGIN_DECLS
 # define CAIRO_MUTEX_LOCK(name) _cairo_beos_lock (&name)
 # define CAIRO_MUTEX_UNLOCK(name) _cairo_beos_unlock (&name)
 
-# error "XXX: Someone who understands BeOS needs to add definitions for" \
-        "     cairo_mutex_t, CAIRO_MUTEX_INIT, and CAIRO_MUTEX_FINI," \
-        "     to cairoint.h"
-
-# define CAIRO_MUTEX_INIT(mutex) ???
-# define CAIRO_MUTEX_FINI(mutex) ???
-# define CAIRO_MUTEX_NIL_INITIALIZER {}
+# warning "XXX: Someone who understands BeOS needs to add definitions for" \
+          "     cairo_mutex_t, CAIRO_MUTEX_INIT, and CAIRO_MUTEX_FINI," \
+          "     and CAIRO_MUTEX_NIL_INITIALIZER to cairo-mutex-private.h"
 
 #else /**********************************************************************/
 
