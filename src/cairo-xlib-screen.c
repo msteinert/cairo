@@ -242,7 +242,6 @@ _cairo_xlib_init_screen_font_options (Display *dpy, cairo_xlib_screen_info_t *in
     cairo_font_options_set_hint_metrics (&info->font_options, CAIRO_HINT_METRICS_ON);
 }
 
-
 cairo_xlib_screen_info_t *
 _cairo_xlib_screen_info_reference (cairo_xlib_screen_info_t *info)
 {

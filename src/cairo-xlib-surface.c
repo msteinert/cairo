@@ -220,6 +220,8 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
     cairo_xlib_surface_t *surface;
     Pixmap pix;
 
+    _cairo_xlib_display_notify (src->screen_info->display);
+
     /* Start by examining the surface's XRenderFormat, or if it
      * doesn't have one, then look one up through its visual (in the
      * case of a bitmap, it won't even have that). */
@@ -754,6 +756,8 @@ _cairo_xlib_surface_acquire_source_image (void                    *abstract_surf
     cairo_image_surface_t *image;
     cairo_status_t status;
 
+    _cairo_xlib_display_notify (surface->screen_info->display);
+
     status = _get_image_surface (surface, NULL, &image, NULL);
     if (status)
 	return status;
@@ -782,6 +786,8 @@ _cairo_xlib_surface_acquire_dest_image (void                    *abstract_surfac
     cairo_xlib_surface_t *surface = abstract_surface;
     cairo_image_surface_t *image;
     cairo_status_t status;
+
+    _cairo_xlib_display_notify (surface->screen_info->display);
 
     status = _get_image_surface (surface, interest_rect, &image, image_rect_out);
     if (status)
@@ -833,6 +839,8 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
     cairo_xlib_surface_t *surface = abstract_surface;
     cairo_xlib_surface_t *clone;
     cairo_status_t status;
+
+    _cairo_xlib_display_notify (surface->screen_info->display);
 
     if (src->backend == surface->base.backend ) {
 	cairo_xlib_surface_t *xlib_src = (cairo_xlib_surface_t *)src;
@@ -1268,6 +1276,8 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
     int				itx, ity;
     cairo_bool_t		is_integer_translation;
 
+    _cairo_xlib_display_notify (dst->screen_info->display);
+
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -1417,6 +1427,8 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
     cairo_xlib_surface_t *surface = abstract_surface;
     XRenderColor render_color;
 
+    _cairo_xlib_display_notify (surface->screen_info->display);
+
     if (!CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLE (surface))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -1549,6 +1561,8 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
     int				render_src_x, render_src_y;
     XRenderPictFormat		*pict_format;
 
+    _cairo_xlib_display_notify (dst->screen_info->display);
+
     if (!CAIRO_SURFACE_RENDER_HAS_TRAPEZOIDS (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -1660,6 +1674,8 @@ _cairo_xlib_surface_set_clip_region (void              *abstract_surface,
 
     if (surface->have_clip_rects == FALSE && region == NULL)
 	return CAIRO_STATUS_SUCCESS;
+
+    _cairo_xlib_display_notify (surface->screen_info->display);
 
     if (surface->clip_rects != surface->embedded_clip_rects) {
 	free (surface->clip_rects);
@@ -2266,7 +2282,7 @@ typedef struct _cairo_xlib_surface_font_private {
 
 static void
 _cairo_xlib_surface_remove_scaled_font (Display *dpy,
-	                               void    *data)
+	                                void    *data)
 {
     cairo_scaled_font_t *scaled_font = data;
     cairo_xlib_surface_font_private_t	*font_private;
@@ -2278,7 +2294,7 @@ _cairo_xlib_surface_remove_scaled_font (Display *dpy,
     _cairo_scaled_font_reset_cache (scaled_font);
     CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
 
-    if (font_private) {
+    if (font_private != NULL) {
 	XRenderFreeGlyphSet (font_private->dpy, font_private->glyphset);
 	free (font_private);
     }
@@ -2947,6 +2963,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 	_cairo_pattern_fini (&solid_pattern.base);
   BAIL0:
     _cairo_scaled_font_thaw_cache (scaled_font);
+    _cairo_xlib_display_notify (dst->screen_info->display);
 
     return status;
 }

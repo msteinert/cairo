@@ -35,9 +35,13 @@
 
 #include "cairoint.h"
 #include "cairo-xlib.h"
+#include "cairo-freelist-private.h"
 
 typedef struct _cairo_xlib_display cairo_xlib_display_t;
 typedef struct _cairo_xlib_hook cairo_xlib_hook_t;
+typedef struct _cairo_xlib_job cairo_xlib_job_t;
+typedef void (*cairo_xlib_notify_func) (Display *, void *);
+typedef void (*cairo_xlib_notify_resource_func) (Display *, XID);
 
 struct _cairo_xlib_hook {
     cairo_xlib_hook_t *next;
@@ -53,6 +57,9 @@ struct _cairo_xlib_display {
 
     Display *display;
     cairo_xlib_screen_info_t *screens;
+
+    cairo_xlib_job_t *workqueue;
+    cairo_freelist_t wq_freelist;
 
     cairo_xlib_hook_t *close_display_hooks;
     unsigned int closed :1;
@@ -82,6 +89,17 @@ _cairo_xlib_add_close_display_hook (Display *display, void (*func) (Display *, v
 cairo_private void
 _cairo_xlib_remove_close_display_hooks (Display *display, const void *key);
 
+cairo_private cairo_status_t
+_cairo_xlib_display_queue_work (cairo_xlib_display_t *display,
+	                        cairo_xlib_notify_func notify,
+				void *data,
+				void (*destroy)(void *));
+cairo_private cairo_status_t
+_cairo_xlib_display_queue_resource (cairo_xlib_display_t *display,
+	                           cairo_xlib_notify_resource_func notify,
+				   XID resource);
+cairo_private void
+_cairo_xlib_display_notify (cairo_xlib_display_t *display);
 
 cairo_private cairo_xlib_screen_info_t *
 _cairo_xlib_screen_info_get (Display *display, Screen *screen);
