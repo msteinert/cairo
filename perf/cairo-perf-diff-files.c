@@ -130,8 +130,8 @@ typedef enum {
 } test_report_status_t;
 
 typedef struct _cairo_perf_diff_files_args {
-    char const *old_filename;
-    char const *new_filename;
+    const char **filenames;
+    int num_filenames;
     double min_change;
     int use_utf;
     int print_change_bars;
@@ -670,27 +670,21 @@ parse_args(int				  argc,
 		}
 	    }
 	}
-	else if (!args->old_filename) {
-	    args->old_filename = argv[i];
-	}
-	else if (!args->new_filename) {
-	    args->new_filename = argv[i];
-	}
 	else {
-	    usage (argv[0]);
+	    args->num_filenames++;
+	    args->filenames = xrealloc (args->filenames,
+					args->num_filenames * sizeof (char *));
+	    args->filenames[args->num_filenames - 1] = argv[i];
 	}
     }
-    if ( !args->old_filename || !args->new_filename )
-	usage (argv[0]);
-#undef is_yesno_opt
 }
 
 int
 main (int argc, const char *argv[])
 {
     cairo_perf_diff_files_args_t args = {
-	NULL,			/* old filename */
-	NULL,			/* new filename */
+	NULL,			/* filenames */
+	0,			/* num_filenames */
 	0.05,			/* min change */
 	1,			/* use UTF-8? */
 	1,			/* display change bars? */
@@ -699,11 +693,13 @@ main (int argc, const char *argv[])
 
     parse_args (argc, argv, &args);
 
-    cairo_perf_report_load (&old, args.old_filename);
-    cairo_perf_report_load (&new, args.new_filename);
+    if (args.num_filenames != 2)
+	usage (argv[0]);
+
+    cairo_perf_report_load (&old, args.filenames[0]);
+    cairo_perf_report_load (&new, args.filenames[1]);
 
     cairo_perf_report_diff (&old, &new, &args);
 
     return 0;
 }
-
