@@ -145,6 +145,12 @@ CAIRO_BEGIN_DECLS
 #include "cairo-mutex-list-private.h"
 #undef CAIRO_MUTEX_DECLARE
 
+
+#ifndef CAIRO_MUTEX_FINI
+# define CAIRO_MUTEX_FINI(mutex)	CAIRO_MUTEX_NOOP
+#endif
+
+
 #ifndef CAIRO_MUTEX_INITIALIZE
 # define CAIRO_MUTEX_USE_GENERIC_INITIALIZATION 1
 #else
