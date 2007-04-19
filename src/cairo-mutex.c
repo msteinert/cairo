@@ -52,4 +52,16 @@ void _cairo_mutex_initialize (void)
 #undef CAIRO_MUTEX_DECLARE
 }
 
+void _cairo_mutex_finalize (void)
+{
+    if (!_cairo_mutex_initialized)
+        return;
+
+    _cairo_mutex_initialized = FALSE;
+
+#define CAIRO_MUTEX_DECLARE(mutex) CAIRO_MUTEX_FINI (mutex)
+#include "cairo-mutex-list-private.h"
+#undef CAIRO_MUTEX_DECLARE
+}
+
 #endif

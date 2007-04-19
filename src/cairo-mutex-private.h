@@ -140,11 +140,17 @@ CAIRO_BEGIN_DECLS
 
 #define CAIRO_MUTEX_INITIALIZE() do { \
     if (!_cairo_mutex_initialized) \
-        _cairo_mutex_initialize(); \
+        _cairo_mutex_initialize (); \
+} while(0)
+
+#define CAIRO_MUTEX_FINALIZE() do { \
+    if (_cairo_mutex_initialized) \
+        _cairo_mutex_finalize (); \
 } while(0)
 
 cairo_private extern cairo_bool_t _cairo_mutex_initialized;
 cairo_private void _cairo_mutex_initialize(void);
+cairo_private void _cairo_mutex_finalize(void);
 
 #endif
 
