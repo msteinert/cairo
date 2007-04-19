@@ -134,10 +134,12 @@ typedef int cairo_mutex_t;
 
 #else /**********************************************************************/
 
-# define CAIRO_MUTEX_LOCK(name)
-# define CAIRO_MUTEX_UNLOCK(name)
+# warning "XXX: No mutex implementation found.  Define CAIRO_NO_MUTEX to 1" \
+          "     to compile cairo without thread-safety support."
 
-#endif  /********************************************************************/
+#endif
+
+
 
 #ifndef CAIRO_MUTEX_DECLARE
 #define CAIRO_MUTEX_DECLARE(name) extern cairo_mutex_t name;
