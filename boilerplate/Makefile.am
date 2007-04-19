@@ -24,6 +24,11 @@ libcairoboilerplate_la_SOURCES += cairo-boilerplate-directfb.c
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-directfb-private.h
 endif
 
+if CAIRO_HAS_XLIB_XRENDER_SURFACE
+libcairoboilerplate_la_SOURCES += cairo-boilerplate-xlib.c
+libcairoboilerplate_la_SOURCES += cairo-boilerplate-xlib-private.h
+endif
+
 if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE
 libcairoboilerplate_la_LIBADD += $(GLITZ_AGL_LIBS)
 endif
