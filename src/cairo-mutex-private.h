@@ -135,8 +135,8 @@ typedef int cairo_mutex_t;
 
 #else /**********************************************************************/
 
-# warning "XXX: No mutex implementation found.  Define CAIRO_NO_MUTEX to 1" \
-          "     to compile cairo without thread-safety support."
+# error "XXX: No mutex implementation found.  Define CAIRO_NO_MUTEX to 1" \
+        "     to compile cairo without thread-safety support."
 
 #endif
 
