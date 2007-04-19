@@ -404,6 +404,14 @@ cairo_perf_report_load (cairo_perf_report_t *report, const char *filename)
 	free (line);
 
     cairo_perf_report_sort_and_compute_stats (report);
+
+    /* Add one final report with a NULL name to terminate the list. */
+    if (report->tests_count == report->tests_size) {
+	report->tests_size *= 2;
+	report->tests = xrealloc (report->tests,
+				  report->tests_size * sizeof (test_report_t));
+    }
+    report->tests[report->tests_count].name = NULL;
 }
 
 static int
@@ -489,7 +497,7 @@ cairo_perf_report_diff (cairo_perf_report_t		*old,
 			cairo_perf_report_t		*new,
 			cairo_perf_report_options_t	*options)
 {
-    int i, i_old, i_new;
+    int i;
     test_report_t *o, *n;
     int cmp;
     test_diff_t *diff, *diffs;
@@ -499,34 +507,31 @@ cairo_perf_report_diff (cairo_perf_report_t		*old,
 
     diffs = xmalloc (MAX (old->tests_count, new->tests_count) * sizeof (test_diff_t));
 
-    i_old = 0;
-    i_new = 0;
-    while (i_old < old->tests_count && i_new < new->tests_count) {
-	o = &old->tests[i_old];
-	n = &new->tests[i_new];
-
+    o = &old->tests[0];
+    n = &new->tests[0];
+    while (o->name && n->name) {
 	/* We expect iterations values of 0 when multiple raw reports
 	 * for the same test have been condensed into the stats of the
 	 * first. So we just skip these later reports that have no
 	 * stats. */
 	if (o->stats.iterations == 0) {
-	    i_old++;
+	    o++;
 	    continue;
 	}
 	if (n->stats.iterations == 0) {
-	    i_new++;
+	    n++;
 	    continue;
 	}
 
 	cmp = test_report_cmp_backend_then_name (o, n);
 	if (cmp < 0) {
 	    fprintf (stderr, "Only in old: %s %s\n", o->backend, o->name);
-	    i_old++;
+	    o++;
 	    continue;
 	}
 	if (cmp > 0) {
 	    fprintf (stderr, "Only in new: %s %s\n", n->backend, n->name);
-	    i_new++;
+	    n++;
 	    continue;
 	}
 
@@ -542,8 +547,8 @@ cairo_perf_report_diff (cairo_perf_report_t		*old,
 	}
 	num_diffs++;
 
-	i_old++;
-	i_new++;
+	o++;
+	n++;
     }
 
     qsort (diffs, num_diffs, sizeof (test_diff_t), test_diff_cmp);
