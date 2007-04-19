@@ -36,7 +36,7 @@
 
 #include "cairoint.h"
 
-#if !HAVE_PTHREAD_H
+#if CAIRO_MUTEX_USE_GENERIC_INITIALIZATION
 
 cairo_bool_t _cairo_mutex_initialized = FALSE;
 
