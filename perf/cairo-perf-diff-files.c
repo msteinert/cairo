@@ -75,13 +75,17 @@ typedef enum {
     TEST_REPORT_STATUS_ERROR
 } test_report_status_t;
 
-typedef struct _cairo_perf_diff_files_args {
-    const char **filenames;
-    int num_filenames;
+typedef struct _cairo_perf_report_options {
     double min_change;
     int use_utf;
     int print_change_bars;
     int use_ms;
+} cairo_perf_report_options_t;
+
+typedef struct _cairo_perf_diff_files_args {
+    const char **filenames;
+    int num_filenames;
+    cairo_perf_report_options_t options;
 } cairo_perf_diff_files_args_t;
 
 /* Ad-hoc parsing, macros with a strong dependence on the calling
@@ -482,9 +486,9 @@ print_change_bar (double change, double max_change, int use_utf)
 
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 static void
-cairo_perf_report_diff (cairo_perf_report_t			*old,
-			cairo_perf_report_t			*new,
-			cairo_perf_diff_files_args_t const	*args)
+cairo_perf_report_diff (cairo_perf_report_t		*old,
+			cairo_perf_report_t		*new,
+			cairo_perf_report_options_t	*options)
 {
     int i, i_old, i_new;
     test_report_t *o, *n;
@@ -492,7 +496,7 @@ cairo_perf_report_diff (cairo_perf_report_t			*old,
     test_diff_t *diff, *diffs;
     int num_diffs = 0;
     int printed_speedup = 0, printed_slowdown = 0;
-    double min_change = args->min_change, change, max_change;
+    double min_change = options->min_change, change, max_change;
 
     diffs = xmalloc (MAX (old->tests_count, new->tests_count) * sizeof (test_diff_t));
 
@@ -532,7 +536,7 @@ cairo_perf_report_diff (cairo_perf_report_t			*old,
 
 	diffs[num_diffs].old = o;
 	diffs[num_diffs].new = n;
-	if (args->use_ms) {
+	if (options->use_ms) {
 	    diffs[num_diffs].speedup =
 		(double) (o->stats.median_ticks / o->stats.ticks_per_ms)
 		       / (n->stats.median_ticks / n->stats.ticks_per_ms);
@@ -600,8 +604,8 @@ cairo_perf_report_diff (cairo_perf_report_t			*old,
 	else
 	    printf ("slowdown\n");
 
-	if (args->print_change_bars)
-	    print_change_bar (change, max_change, args->use_utf);
+	if (options->print_change_bars)
+	    print_change_bar (change, max_change, options->use_utf);
     }
 
     free (diffs);
@@ -646,23 +650,23 @@ parse_args(int				  argc,
 
     for (i = 1; i < argc; i++) {
 	if (strcmp (argv[i], "--no-utf") == 0) {
-	    args->use_utf = 0;
+	    args->options.use_utf = 0;
 	}
 	else if (strcmp (argv[i], "--no-bars") == 0) {
-	    args->print_change_bars = 0;
+	    args->options.print_change_bars = 0;
 	}
 	else if (strcmp (argv[i], "--use-ms") == 0) {
-	    args->use_ms = 1;
+	    args->options.use_ms = 1;
 	}
 	else if (strcmp (argv[i], "--min-change") == 0) {
 	    char *end = NULL;
 	    i++;
 	    if (i >= argc)
 		usage (argv[0]);
-	    args->min_change = strtod (argv[i], &end);
+	    args->options.min_change = strtod (argv[i], &end);
 	    if (*end) {
 		if (*end == '%') {
-		    args->min_change /= 100;
+		    args->options.min_change /= 100;
 		} else {
 		    usage (argv[0]);
 		}
@@ -683,9 +687,11 @@ main (int argc, const char *argv[])
     cairo_perf_diff_files_args_t args = {
 	NULL,			/* filenames */
 	0,			/* num_filenames */
-	0.05,			/* min change */
-	1,			/* use UTF-8? */
-	1,			/* display change bars? */
+	{
+	    0.05,		/* min change */
+	    1,			/* use UTF-8? */
+	    1,			/* display change bars? */
+	}
     };
     cairo_perf_report_t *reports;
     int i;
@@ -700,7 +706,7 @@ main (int argc, const char *argv[])
     for (i = 0; i < args.num_filenames; i++ )
 	cairo_perf_report_load (&reports[i], args.filenames[i]);
 
-    cairo_perf_report_diff (&reports[0], &reports[1], &args);
+    cairo_perf_report_diff (&reports[0], &reports[1], &args.options);
 
     return 0;
 }
