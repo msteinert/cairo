@@ -1,7 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
- * Copyright © 2005 Red Hat, Inc.
+ * Copyright © 2005,2007 Red Hat, Inc.
  * Copyright © 2007 Mathias Hasselmann
  *
  * This library is free software; you can redistribute it and/or
@@ -35,6 +35,7 @@
  * Contributor(s):
  *	Carl D. Worth <cworth@cworth.org>
  *	Mathias Hasselmann <mathias.hasselmann@gmx.de>
+ *	Behdad Esfahbod <behdad@behdad.org>
  */
 
 #ifndef CAIRO_MUTEX_PRIVATE_H
