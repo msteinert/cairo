@@ -309,10 +309,10 @@ _cairo_xlib_surface_finish (void *abstract_surface)
 
     if (surface->gc != NULL) {
 	cairo_status_t status2;
-	status2 = _cairo_xlib_display_queue_work (display,
-		                               (cairo_xlib_notify_func) XFreeGC,
-					       surface->gc,
-					       NULL);
+	status2 = _cairo_xlib_screen_put_gc (surface->screen_info,
+		                   surface->depth,
+				   surface->gc,
+				   surface->have_clip_rects);
 	if (status2 == CAIRO_STATUS_SUCCESS)
 	    surface->gc = NULL;
 	else if (status == CAIRO_STATUS_SUCCESS)
@@ -731,11 +731,15 @@ _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface)
     if (surface->gc)
 	return CAIRO_STATUS_SUCCESS;
 
-    gcv.graphics_exposures = False;
-    surface->gc = XCreateGC (surface->dpy, surface->drawable,
-			     GCGraphicsExposures, &gcv);
-    if (!surface->gc)
-	return CAIRO_STATUS_NO_MEMORY;
+    surface->gc = _cairo_xlib_screen_get_gc (surface->screen_info,
+	                                     surface->depth);
+    if (surface->gc == NULL) {
+	gcv.graphics_exposures = False;
+	surface->gc = XCreateGC (surface->dpy, surface->drawable,
+				 GCGraphicsExposures, &gcv);
+	if (!surface->gc)
+	    return CAIRO_STATUS_NO_MEMORY;
+    }
 
     _cairo_xlib_surface_set_gc_clip_rects (surface);
 

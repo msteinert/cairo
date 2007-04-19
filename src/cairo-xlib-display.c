@@ -67,10 +67,14 @@ static cairo_xlib_display_t *_cairo_xlib_display_list;
 static void
 _cairo_xlib_call_close_display_hooks (cairo_xlib_display_t *display)
 {
-    cairo_xlib_hook_t *hooks;
+    cairo_xlib_screen_info_t	    *screen;
+    cairo_xlib_hook_t		    *hooks;
 
     /* call all registered shutdown routines */
     CAIRO_MUTEX_LOCK (display->mutex);
+
+    for (screen = display->screens; screen != NULL; screen = screen->next)
+	_cairo_xlib_screen_info_close_display (screen);
 
     hooks = display->close_display_hooks;
     while (hooks != NULL) {

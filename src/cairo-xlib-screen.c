@@ -255,6 +255,19 @@ _cairo_xlib_screen_info_reference (cairo_xlib_screen_info_t *info)
 }
 
 void
+_cairo_xlib_screen_info_close_display (cairo_xlib_screen_info_t *info)
+{
+    int i;
+
+    for (i = 0; i < ARRAY_LENGTH (info->gc); i++) {
+	if (info->gc[i] != NULL) {
+	    XFreeGC (info->display->display, info->gc[i]);
+	    info->gc[i] = NULL;
+	}
+    }
+}
+
+void
 _cairo_xlib_screen_info_destroy (cairo_xlib_screen_info_t *info)
 {
     cairo_xlib_screen_info_t **prev;
@@ -276,6 +289,8 @@ _cairo_xlib_screen_info_destroy (cairo_xlib_screen_info_t *info)
     }
     assert (list != NULL);
     CAIRO_MUTEX_UNLOCK (info->display->mutex);
+
+    _cairo_xlib_screen_info_close_display (info);
 
     _cairo_xlib_display_destroy (info->display);
 
@@ -323,6 +338,8 @@ _cairo_xlib_screen_info_get (Display *dpy, Screen *screen)
 	    info->screen = screen;
 	    info->has_render = FALSE;
 	    _cairo_font_options_init_default (&info->font_options);
+	    memset (info->gc, 0, sizeof (info->gc));
+	    info->gc_needs_clip_reset = 0;
 
 	    if (screen) {
 		int event_base, error_base;
@@ -342,4 +359,57 @@ DONE:
     _cairo_xlib_display_destroy (display);
 
     return info;
+}
+
+static int
+depth_to_index (int depth)
+{
+    switch(depth){
+	case 1:  return 0;
+	case 8:  return 1;
+	case 15: return 2;
+	case 16: return 3;
+	case 24: return 4;
+	case 32: return 5;
+    }
+    return 0;
+}
+
+GC
+_cairo_xlib_screen_get_gc (cairo_xlib_screen_info_t *info, int depth)
+{
+    GC gc;
+
+    depth = depth_to_index (depth);
+
+    gc = info->gc[depth];
+    info->gc[depth] = NULL;
+
+    if (info->gc_needs_clip_reset & (1 << depth))
+	XSetClipMask(info->display->display, gc, None);
+
+    return gc;
+}
+
+cairo_status_t
+_cairo_xlib_screen_put_gc (cairo_xlib_screen_info_t *info, int depth, GC gc, cairo_bool_t reset_clip)
+{
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+
+    depth = depth_to_index (depth);
+
+    if (info->gc[depth] != NULL) {
+	status = _cairo_xlib_display_queue_work (info->display,
+		                               (cairo_xlib_notify_func) XFreeGC,
+					       info->gc[depth],
+					       NULL);
+    }
+
+    info->gc[depth] = gc;
+    if (reset_clip)
+	info->gc_needs_clip_reset |= 1 << depth;
+    else
+	info->gc_needs_clip_reset &= ~(1 << depth);
+
+    return status;
 }

@@ -74,6 +74,9 @@ struct _cairo_xlib_screen_info {
     cairo_bool_t has_render;
 
     cairo_font_options_t font_options;
+
+    GC gc[6];
+    unsigned int gc_needs_clip_reset;
 };
 
 cairo_private cairo_xlib_display_t *
@@ -109,6 +112,13 @@ _cairo_xlib_screen_info_reference (cairo_xlib_screen_info_t *info);
 cairo_private void
 _cairo_xlib_screen_info_destroy (cairo_xlib_screen_info_t *info);
 
+cairo_private void
+_cairo_xlib_screen_info_close_display (cairo_xlib_screen_info_t *info);
+
+cairo_private GC
+_cairo_xlib_screen_get_gc (cairo_xlib_screen_info_t *info, int depth);
+cairo_private cairo_status_t
+_cairo_xlib_screen_put_gc (cairo_xlib_screen_info_t *info, int depth, GC gc, cairo_bool_t reset_clip);
 
 #if CAIRO_HAS_XLIB_XRENDER_SURFACE
 
