@@ -123,6 +123,7 @@ struct _cairo_xlib_surface {
     Picture dst_picture, src_picture;
 
     cairo_bool_t have_clip_rects;
+    XRectangle embedded_clip_rects[4];
     XRectangle *clip_rects;
     int num_clip_rects;
 
@@ -347,7 +348,7 @@ _cairo_xlib_surface_finish (void *abstract_surface)
     if (surface->gc != NULL)
 	XFreeGC (surface->dpy, surface->gc);
 
-    if (surface->clip_rects != NULL)
+    if (surface->clip_rects != surface->embedded_clip_rects)
 	free (surface->clip_rects);
 
     if (surface->screen_info != NULL)
@@ -1717,9 +1718,12 @@ _cairo_xlib_surface_set_clip_region (void              *abstract_surface,
 {
     cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *) abstract_surface;
 
-    if (surface->clip_rects) {
+    if (surface->have_clip_rects == FALSE && region == NULL)
+	return CAIRO_STATUS_SUCCESS;
+
+    if (surface->clip_rects != surface->embedded_clip_rects) {
 	free (surface->clip_rects);
-	surface->clip_rects = NULL;
+	surface->clip_rects = surface->embedded_clip_rects;
     }
 
     surface->have_clip_rects = FALSE;
@@ -1741,12 +1745,12 @@ _cairo_xlib_surface_set_clip_region (void              *abstract_surface,
 	int n_boxes, i;
 
 	n_boxes = pixman_region_num_rects (region);
-	if (n_boxes > 0) {
+	if (n_boxes > ARRAY_LENGTH (surface->embedded_clip_rects)) {
 	    rects = malloc (sizeof(XRectangle) * n_boxes);
 	    if (rects == NULL)
 		return CAIRO_STATUS_NO_MEMORY;
-	} else {
-	    rects = NULL;
+	}else {
+	    rects = surface->embedded_clip_rects;
 	}
 
 	boxes = pixman_region_rects (region);
@@ -1950,7 +1954,7 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     surface->xtransform = identity;
 
     surface->have_clip_rects = FALSE;
-    surface->clip_rects = NULL;
+    surface->clip_rects = surface->embedded_clip_rects;
     surface->num_clip_rects = 0;
 
     return (cairo_surface_t *) surface;
