@@ -45,3 +45,6 @@ CAIRO_MUTEX_DECLARE (_cairo_ft_unscaled_font_map_mutex);
 CAIRO_MUTEX_DECLARE (_cairo_xlib_screen_mutex);
 #endif
 
+
+/* Undefine, to err on unintended inclusion */
+#undef   CAIRO_MUTEX_DECLARE
