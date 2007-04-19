@@ -46,7 +46,7 @@ done, Mathias!
 Other improvements since 1.4.2
 ------------------------------
 • Centralize mutex declarations (will reduce future build breaks),
-  (Chris Wilson)
+  (Mathias Hasselmann)
 
 • Reduce malloc by caching recently freed pattern objects (Chris
   Wilson)
