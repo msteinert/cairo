@@ -75,7 +75,7 @@ typedef int cairo_mutex_t;
 # define CAIRO_MUTEX_FINI(mutex) pthread_mutex_destroy (mutex)
 # define CAIRO_MUTEX_NIL_INITIALIZER PTHREAD_MUTEX_INITIALIZER
 
-#elif CAIRO_HAS_WIN32_SURFACE /**********************************************/
+#elif HAVE_WINDOWS_H /*******************************************************/
 
 /* We require Windows 2000 features. Although we don't use them here, things
  * should still work if this header file ends up being the one to include
