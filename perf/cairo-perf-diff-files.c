@@ -639,18 +639,17 @@ parse_args(int				  argc,
 	   char const			**argv,
 	   cairo_perf_diff_files_args_t  *args)
 {
-#define is_yesno_opt(opt) !(strcmp ("--no-" opt, argv[i]) && strcmp ("--" opt, argv[i]))
     int i;
     int have_minchange = 0;
 
-    for (i=1; i<argc; i++) {
-	if (is_yesno_opt("utf")) {
-	    args->use_utf = 0 != strncmp ("--no-", argv[i], 4);
+    for (i = 1; i < argc; i++) {
+	if (strcmp (argv[i], "--no-utf") == 0) {
+	    args->use_utf = 0;
 	}
-	else if (is_yesno_opt("bars")) {
-	    args->print_change_bars = 0 != strncmp ("--no-", argv[i], 4);
+	else if (strcmp (argv[i], "--no-bars") == 0) {
+	    args->print_change_bars = 0;
 	}
-	else if (strcmp(argv[i], "--use-ms") == 0) {
+	else if (strcmp (argv[i], "--use-ms") == 0) {
 	    args->use_ms = 1;
 	}
 	else if (!args->old_filename) {
