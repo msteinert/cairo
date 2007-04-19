@@ -369,8 +369,8 @@ cairo_perf_report_load (cairo_perf_report_t *report, const char *filename)
     size_t line_size = 0;
 
     report->name = filename;
-    report->tests = NULL;
-    report->tests_size = 0;
+    report->tests_size = 16;
+    report->tests = xmalloc (report->tests_size * sizeof (test_report_t));
     report->tests_count = 0;
 
     file = fopen (filename, "r");
@@ -382,13 +382,9 @@ cairo_perf_report_load (cairo_perf_report_t *report, const char *filename)
 
     while (1) {
 	if (report->tests_count == report->tests_size) {
-	    report->tests_size = report->tests_size ? 2 * report->tests_size : 16;
-	    report->tests = realloc (report->tests,
-				     report->tests_size * sizeof (test_report_t));
-	    if (report->tests == NULL) {
-		fprintf (stderr, "Out of memory.\n");
-		exit (1);
-	    }
+	    report->tests_size *= 2;
+	    report->tests = xrealloc (report->tests,
+				      report->tests_size * sizeof (test_report_t));
 	}
 
 	line_number++;
