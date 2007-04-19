@@ -63,10 +63,6 @@ CAIRO_BEGIN_DECLS
 # define CAIRO_MUTEX_INITIALIZE() CAIRO_MUTEX_NOOP
 # define CAIRO_MUTEX_LOCK(name) pthread_mutex_lock (&name)
 # define CAIRO_MUTEX_UNLOCK(name) pthread_mutex_unlock (&name)
-# define CAIRO_MUTEX_INIT(mutex) do {				\
-    pthread_mutex_t tmp_mutex = PTHREAD_MUTEX_INITIALIZER;      \
-    memcpy (mutex, &tmp_mutex, sizeof (tmp_mutex));             \
-} while (0)
 # define CAIRO_MUTEX_FINI(mutex) pthread_mutex_destroy (mutex)
 # define CAIRO_MUTEX_NIL_INITIALIZER PTHREAD_MUTEX_INITIALIZER
 
@@ -145,6 +141,13 @@ CAIRO_BEGIN_DECLS
 #include "cairo-mutex-list-private.h"
 #undef CAIRO_MUTEX_DECLARE
 
+
+#ifndef CAIRO_MUTEX_INIT
+# define CAIRO_MUTEX_INIT(_mutex) do {				\
+    cairo_mutex_t _tmp_mutex = CAIRO_MUTEX_NIL_INITIALIZER;     \
+    memcpy ((_mutex), &_tmp_mutex, sizeof (_tmp_mutex));        \
+} while (0)
+#endif
 
 #ifndef CAIRO_MUTEX_FINI
 # define CAIRO_MUTEX_FINI(mutex)	CAIRO_MUTEX_NOOP
