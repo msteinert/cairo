@@ -85,13 +85,13 @@ CLEANFILES = \
 	index.html
 
 perf-valgrind: cairo-perf FORCE
-	$(top_srcdir)/libtool --mode=execute \
+	$(CAIRO_PERF_ENVIRONMENT) $(top_srcdir)/libtool --mode=execute \
 		valgrind $(VALGRIND_MEMCHECK_FLAGS) $(EXTRA_VALGRIND_FLAGS) \
-		$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf 2>&1 | tee valgrind-log
+		./cairo-perf 2>&1 | tee valgrind-log
 perf-callgrind: cairo-perf FORCE
-	$(top_srcdir)/libtool --mode=execute \
+	$(CAIRO_PERF_ENVIRONMENT) $(top_srcdir)/libtool --mode=execute \
 		valgrind $(VALGRIND_CALLGRIND_FLAGS) $(EXTRA_VALGRIND_FLAGS) \
-		$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf
+		./cairo-perf
 
 FORCE:
 
