@@ -40,6 +40,12 @@
 #ifndef CAIRO_MUTEX_PRIVATE_H
 #define CAIRO_MUTEX_PRIVATE_H
 
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <cairo-features.h>
+
 CAIRO_BEGIN_DECLS
 
 #if HAVE_PTHREAD_H /*********************************************************/
