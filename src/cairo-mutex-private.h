@@ -130,11 +130,8 @@ CAIRO_BEGIN_DECLS
 #ifndef CAIRO_MUTEX_DECLARE
 #define CAIRO_MUTEX_DECLARE(name) extern cairo_mutex_t name;
 #endif
-
 #include "cairo-mutex-list-private.h"
-
 #undef CAIRO_MUTEX_DECLARE
-#undef CAIRO_MUTEX_EXTERNAL
 
 #ifndef CAIRO_MUTEX_INITIALIZE
 
@@ -157,8 +154,3 @@ cairo_private void _cairo_mutex_finalize(void);
 CAIRO_END_DECLS
 
 #endif
-
-
-
-
-
