@@ -1246,7 +1246,7 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 					  cairo_surface_attributes_t *attribs)
 {
     *out = _cairo_surface_create_similar_solid (dst,
-						CAIRO_CONTENT_COLOR_ALPHA,
+				                CAIRO_CONTENT_COLOR_ALPHA,
 						1, 1,
 						&pattern->color);
     if ((*out)->status)
@@ -1282,7 +1282,7 @@ _cairo_pattern_is_opaque_solid (const cairo_pattern_t *pattern)
 
     solid = (cairo_solid_pattern_t *) pattern;
 
-    return CAIRO_ALPHA_IS_OPAQUE (solid->color.alpha);
+    return CAIRO_COLOR_IS_OPAQUE (&solid->color);
 }
 
 static cairo_bool_t
@@ -1291,7 +1291,7 @@ _gradient_is_opaque (const cairo_gradient_pattern_t *gradient)
     unsigned int i;
 
     for (i = 0; i < gradient->n_stops; i++)
-	if (! CAIRO_ALPHA_IS_OPAQUE (gradient->stops[i].color.alpha))
+	if (! CAIRO_ALPHA_SHORT_IS_OPAQUE (gradient->stops[i].color.alpha))
 	    return FALSE;
 
     return TRUE;
