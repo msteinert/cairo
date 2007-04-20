@@ -872,7 +872,6 @@ _cairo_boilerplate_ps_create_surface (const char		 *name,
 {
     ps_target_closure_t	*ptc;
     cairo_surface_t *surface;
-    int i;
 
     /* Sanitize back to a real cairo_content_t value. */
     if (content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
@@ -985,7 +984,6 @@ _cairo_boilerplate_pdf_create_surface (const char		 *name,
 {
     pdf_target_closure_t *ptc;
     cairo_surface_t *surface;
-    int i;
 
     /* Sanitize back to a real cairo_content_t value. */
     if (content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
@@ -1089,7 +1087,6 @@ _cairo_boilerplate_svg_create_surface (const char		 *name,
 				       cairo_boilerplate_mode_t	  mode,
 				       void			**closure)
 {
-    int i;
     svg_target_closure_t *ptc;
     cairo_surface_t *surface;
 
