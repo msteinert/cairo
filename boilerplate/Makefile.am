@@ -56,6 +56,11 @@ libcairoboilerplate_la_SOURCES += cairo-boilerplate-svg.c
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-svg-private.h
 endif
 
+if CAIRO_HAS_WIN32_SURFACE
+libcairoboilerplate_la_SOURCES += cairo-boilerplate-win32.c
+libcairoboilerplate_la_SOURCES += cairo-boilerplate-win32-private.h
+endif
+
 if CAIRO_HAS_XCB_SURFACE
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-xcb.c
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-xcb-private.h

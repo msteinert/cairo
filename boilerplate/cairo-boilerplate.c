@@ -65,11 +65,14 @@
 #if CAIRO_HAS_SVG_SURFACE
 #include "cairo-boilerplate-svg-private.h"
 #endif
-#if CAIRO_HAS_XLIB_XRENDER_SURFACE
-#include "cairo-boilerplate-xlib-private.h"
+#if CAIRO_HAS_WIN32_SURFACE
+#include "cairo-boilerplate-win32-private.h"
 #endif
 #if CAIRO_HAS_XCB_SURFACE
 #include "cairo-boilerplate-xcb-private.h"
+#endif
+#if CAIRO_HAS_XLIB_XRENDER_SURFACE
+#include "cairo-boilerplate-xlib-private.h"
 #endif
 
 /* This is copied from cairoint.h. That makes it painful to keep in
@@ -273,30 +276,6 @@ _cairo_boilerplate_test_paginated_cleanup (void *closure)
     free (tpc);
 }
 
-#endif
-
-#if CAIRO_HAS_WIN32_SURFACE
-#include "cairo-win32.h"
-static cairo_surface_t *
-_cairo_boilerplate_win32_create_surface (const char			 *name,
-					 cairo_content_t		  content,
-					 int				  width,
-					 int				  height,
-					 cairo_boilerplate_mode_t	  mode,
-					 void				**closure)
-{
-    cairo_format_t format;
-
-    if (content == CAIRO_CONTENT_COLOR)
-        format = CAIRO_FORMAT_RGB24;
-    else if (content == CAIRO_CONTENT_COLOR_ALPHA)
-        format = CAIRO_FORMAT_ARGB32;
-    else
-        return NULL;
-
-    *closure = NULL;
-    return cairo_win32_surface_create_with_dib (format, width, height);
-}
 #endif
 
 static cairo_boilerplate_target_t targets[] =
