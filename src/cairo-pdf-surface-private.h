@@ -1,6 +1,7 @@
-/* Cairo - a vector graphics library with display and print output
+/* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2005 Red Hat, Inc.
+ * Copyright © 2004 Red Hat, Inc
+ * Copyright © 2006 Red Hat, Inc
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,7 +28,12 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is Red Hat, Inc.
+ * The Initial Developer of the Original Code is University of Southern
+ * California.
+ *
+ * Contributor(s):
+ *	Kristian Høgsberg <krh@redhat.com>
+ *	Carl Worth <cworth@cworth.org>
  */
 
 #ifndef CAIRO_PDF_SURFACE_PRIVATE_H
