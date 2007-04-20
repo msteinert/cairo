@@ -21,7 +21,8 @@ endif
 
 if CAIRO_HAS_PDF_SURFACE
 libcairo_pdf_headers = cairo-pdf.h
-libcairo_pdf_sources = cairo-pdf-surface.c cairo-deflate-stream.c cairo-pdf-test.h
+libcairo_pdf_sources = cairo-pdf-surface.c cairo-pdf-surface-private.h \
+		       cairo-deflate-stream.c cairo-pdf-test.h
 libcairo_font_subset_sources =	$(font_subset_sources)
 backend_pkgconfigs += cairo-pdf.pc
 endif

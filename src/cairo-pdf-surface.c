@@ -39,6 +39,7 @@
 #include "cairoint.h"
 #include "cairo-pdf.h"
 #include "cairo-pdf-test.h"
+#include "cairo-pdf-surface-private.h"
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-paginated-surface-private.h"
 #include "cairo-path-fixed-private.h"
@@ -91,52 +92,11 @@ typedef struct _cairo_pdf_object {
     long offset;
 } cairo_pdf_object_t;
 
-typedef struct _cairo_pdf_resource {
-    unsigned int id;
-} cairo_pdf_resource_t;
-
 typedef struct _cairo_pdf_font {
     unsigned int font_id;
     unsigned int subset_id;
     cairo_pdf_resource_t subset_resource;
 } cairo_pdf_font_t;
-
-typedef struct _cairo_pdf_surface {
-    cairo_surface_t base;
-
-    /* Prefer the name "output" here to avoid confusion over the
-     * structure within a PDF document known as a "stream". */
-    cairo_output_stream_t *output;
-
-    double width;
-    double height;
-
-    cairo_array_t objects;
-    cairo_array_t pages;
-    cairo_array_t patterns;
-    cairo_array_t xobjects;
-    cairo_array_t streams;
-    cairo_array_t alphas;
-
-    cairo_scaled_font_subsets_t *font_subsets;
-    cairo_array_t fonts;
-
-    cairo_pdf_resource_t next_available_resource;
-    cairo_pdf_resource_t pages_resource;
-
-    struct {
-	cairo_bool_t active;
-	cairo_pdf_resource_t self;
-	cairo_pdf_resource_t length;
-	long start_offset;
-        cairo_bool_t compressed;
-        cairo_output_stream_t *old_output;
-    } current_stream;
-
-    cairo_bool_t has_clip;
-
-    cairo_paginated_mode_t paginated_mode;
-} cairo_pdf_surface_t;
 
 static cairo_pdf_resource_t
 _cairo_pdf_surface_new_object (cairo_pdf_surface_t *surface);

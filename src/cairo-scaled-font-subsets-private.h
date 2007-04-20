@@ -39,8 +39,6 @@
 
 #include "cairoint.h"
 
-typedef struct _cairo_scaled_font_subsets cairo_scaled_font_subsets_t;
-
 typedef struct _cairo_scaled_font_subsets_glyph {
     unsigned int font_id;
     unsigned int subset_id;

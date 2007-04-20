@@ -1,6 +1,5 @@
-/* cairo - a vector graphics library with display and print output
+/* Cairo - a vector graphics library with display and print output
  *
- * Copyright © 2002 University of Southern California
  * Copyright © 2005 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
@@ -28,46 +27,57 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is University of Southern
- * California.
- *
- * Contributor(s):
- *	Carl D. Worth <cworth@cworth.org>
+ * The Initial Developer of the Original Code is Red Hat, Inc.
  */
 
-#ifndef CAIRO_TYPES_PRIVATE_H
-#define CAIRO_TYPES_PRIVATE_H
+#ifndef CAIRO_PDF_SURFACE_PRIVATE_H
+#define CAIRO_PDF_SURFACE_PRIVATE_H
 
-typedef struct _cairo_array cairo_array_t;
-struct _cairo_array {
-    unsigned int size;
-    unsigned int num_elements;
-    unsigned int element_size;
-    char **elements;
+#include "cairo-pdf.h"
 
-    cairo_bool_t is_snapshot;
+#include "cairo-surface-private.h"
+
+typedef struct _cairo_pdf_resource {
+    unsigned int id;
+} cairo_pdf_resource_t;
+
+typedef struct _cairo_pdf_surface cairo_pdf_surface_t;
+
+struct _cairo_pdf_surface {
+    cairo_surface_t base;
+
+    /* Prefer the name "output" here to avoid confusion over the
+     * structure within a PDF document known as a "stream". */
+    cairo_output_stream_t *output;
+
+    double width;
+    double height;
+
+    cairo_array_t objects;
+    cairo_array_t pages;
+    cairo_array_t patterns;
+    cairo_array_t xobjects;
+    cairo_array_t streams;
+    cairo_array_t alphas;
+
+    cairo_scaled_font_subsets_t *font_subsets;
+    cairo_array_t fonts;
+
+    cairo_pdf_resource_t next_available_resource;
+    cairo_pdf_resource_t pages_resource;
+
+    struct {
+	cairo_bool_t active;
+	cairo_pdf_resource_t self;
+	cairo_pdf_resource_t length;
+	long start_offset;
+        cairo_bool_t compressed;
+        cairo_output_stream_t *old_output;
+    } current_stream;
+
+    cairo_bool_t has_clip;
+
+    cairo_paginated_mode_t paginated_mode;
 };
 
-typedef cairo_array_t cairo_user_data_array_t;
-
-struct _cairo_font_options {
-    cairo_antialias_t antialias;
-    cairo_subpixel_order_t subpixel_order;
-    cairo_hint_style_t hint_style;
-    cairo_hint_metrics_t hint_metrics;
-};
-
-typedef struct _cairo_surface_backend cairo_surface_backend_t;
-typedef struct _cairo_clip cairo_clip_t;
-typedef struct _cairo_output_stream cairo_output_stream_t;
-typedef struct _cairo_scaled_font_subsets cairo_scaled_font_subsets_t;
-
-
-typedef struct _cairo_xlib_screen_info cairo_xlib_screen_info_t;
-
-typedef enum {
-    CAIRO_PAGINATED_MODE_ANALYZE,	/* analyze page regions */
-    CAIRO_PAGINATED_MODE_RENDER		/* render page contents */
-} cairo_paginated_mode_t;
-
-#endif /* CAIRO_TYPES_PRIVATE_H */
+#endif /* CAIRO_PDF_SURFACE_PRIVATE_H */
