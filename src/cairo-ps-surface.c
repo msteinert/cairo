@@ -39,6 +39,7 @@
 
 #include "cairoint.h"
 #include "cairo-ps.h"
+#include "cairo-ps-surface-private.h"
 #include "cairo-ps-test.h"
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-paginated-private.h"
@@ -51,38 +52,6 @@
 
 static const cairo_surface_backend_t cairo_ps_surface_backend;
 static const cairo_paginated_surface_backend_t cairo_ps_surface_paginated_backend;
-
-typedef struct cairo_ps_surface {
-    cairo_surface_t base;
-
-    /* Here final_stream corresponds to the stream/file passed to
-     * cairo_ps_surface_create surface is built. Meanwhile stream is a
-     * temporary stream in which the file output is built, (so that
-     * the header can be built and inserted into the target stream
-     * before the contents of the temporary stream are copied). */
-    cairo_output_stream_t *final_stream;
-
-    FILE *tmpfile;
-    cairo_output_stream_t *stream;
-
-    double width;
-    double height;
-    double max_width;
-    double max_height;
-
-    int num_pages;
-
-    cairo_paginated_mode_t paginated_mode;
-
-    cairo_scaled_font_subsets_t *font_subsets;
-
-    cairo_array_t dsc_header_comments;
-    cairo_array_t dsc_setup_comments;
-    cairo_array_t dsc_page_setup_comments;
-
-    cairo_array_t *dsc_comment_target;
-
-} cairo_ps_surface_t;
 
 /* A word wrap stream can be used as a filter to do word wrapping on
  * top of an existing output stream. The word wrapping is quite

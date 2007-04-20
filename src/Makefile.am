@@ -14,7 +14,7 @@ backend_pkgconfigs =
 
 if CAIRO_HAS_PS_SURFACE
 libcairo_ps_headers = cairo-ps.h
-libcairo_ps_sources = cairo-ps-surface.c cairo-ps-test.h
+libcairo_ps_sources = cairo-ps-surface.c cairo-pdf-surface-private.h cairo-ps-test.h
 libcairo_font_subset_sources =	$(font_subset_sources)
 backend_pkgconfigs += cairo-ps.pc
 endif
