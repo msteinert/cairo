@@ -59,10 +59,11 @@ static DFBInfo *init(void) {
 }
 
 static cairo_surface_t *
-create_directfb_window_surface (DFBInfo *info,
-		     cairo_content_t		  content,
-		     int			  width,
-		     int			  height) {
+_cairo_boilerplate_directfb_window_create_surface (DFBInfo		*info,
+						   cairo_content_t	 content,
+						   int			 width,
+						   int			 height)
+{
 	DFBWindowDescription desc;
 	int err;
 	desc.flags  = ( DWDESC_POSX | DWDESC_POSY |
@@ -87,10 +88,11 @@ create_directfb_window_surface (DFBInfo *info,
 }
 
 static cairo_surface_t *
-create_directfb_bitmap_surface (DFBInfo *info,
-		     cairo_content_t		  content,
-		     int			  width,
-		     int			  height) {
+_cairo_boilerplate_directfb_bitmap_create_surface (DFBInfo		*info,
+						   cairo_content_t	 content,
+						   int			 width,
+						   int			 height)
+{
 	int  err;
 	DFBSurfaceDescription  desc;
 
@@ -118,11 +120,12 @@ _cairo_boilerplate_directfb_cleanup (void* closure) {
 
 cairo_surface_t *
 _cairo_boilerplate_directfb_create_surface (const char			 *name,
-		     cairo_content_t		  content,
-		     int			  width,
-		     int			  height,
-		     cairo_boilerplate_mode_t	  mode,
-		     void			**closure) {
+					    cairo_content_t		  content,
+					    int				  width,
+					    int				  height,
+					    cairo_boilerplate_mode_t	  mode,
+					    void			**closure)
+{
 
     DFBInfo* info= init();
     *closure = info;
@@ -137,7 +140,7 @@ _cairo_boilerplate_directfb_create_surface (const char			 *name,
 	height = 1;
 
     if (mode == CAIRO_BOILERPLATE_MODE_TEST)
-	return create_directfb_bitmap_surface (info, content, width, height);
+	return _cairo_boilerplate_directfb_bitmap_create_surface (info, content, width, height);
     else /* mode == CAIRO_BOILERPLATE_MODE_PERF */
-	return create_directfb_window_surface (info, content, width, height);
+	return _cairo_boilerplate_directfb_window_create_surface (info, content, width, height);
 }

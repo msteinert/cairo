@@ -30,12 +30,12 @@
 #include <cairo-quartz.h>
 
 cairo_surface_t *
-_cairo_boilerplate_quartz_create_surface (const char		*name,
-					  cairo_content_t	 content,
-					  int			 width,
-					  int			 height,
-					  cairo_boilerplate_mode_t  mode,
-					  void			**closure)
+_cairo_boilerplate_quartz_create_surface (const char			 *name,
+					  cairo_content_t		  content,
+					  int				  width,
+					  int				  height,
+					  cairo_boilerplate_mode_t	  mode,
+					  void				**closure)
 {
     cairo_format_t format;
 

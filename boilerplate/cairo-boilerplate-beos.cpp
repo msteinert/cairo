@@ -183,12 +183,12 @@ struct beos_boilerplate_closure
 
 // Test a real window
 cairo_surface_t *
-_cairo_boilerplate_beos_create_surface (const char              *name,
-                     cairo_content_t          content,
-                     int                      width,
-                     int                      height,
-                     cairo_boilerplate_mode_t mode,
-                     void                   **closure)
+_cairo_boilerplate_beos_create_surface (const char			 *name,
+					cairo_content_t			  content,
+					int				  width,
+					int				  height,
+					cairo_boilerplate_mode_t	  mode,
+					void				**closure)
 {
     float right = width ? width - 1 : 0;
     float bottom = height ? height - 1 : 0;
@@ -218,12 +218,12 @@ _cairo_boilerplate_beos_cleanup (void* closure)
 
 // Test a bitmap
 cairo_surface_t *
-_cairo_boilerplate_beos_create_surface_for_bitmap (const char              *name,
-                            cairo_content_t          content,
-                            int                      width,
-                            int                      height,
-                            cairo_boilerplate_mode_t mode,
-                            void                   **closure)
+_cairo_boilerplate_beos_create_surface_for_bitmap (const char			 *name,
+						   cairo_content_t		  content,
+						   int				  width,
+						   int				  height,
+						   cairo_boilerplate_mode_t	  mode,
+						   void				**closure)
 {
     BRect rect(0.0, 0.0, width - 1, height - 1);
     color_space beosformat = (content == CAIRO_CONTENT_COLOR_ALPHA) ? B_RGBA32

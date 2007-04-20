@@ -60,11 +60,11 @@ _cairo_boilerplate_xlib_synchronize (void *closure)
  * For obvious reasons, we don't use XSynchronize.
  */
 static cairo_surface_t *
-create_xlib_test_surface (Display		*dpy,
-			  cairo_content_t	 content,
-			  int			 width,
-			  int			 height,
-			  xlib_target_closure_t	*xtc)
+_cairo_boilerplate_xlib_test_create_surface (Display			*dpy,
+					     cairo_content_t		 content,
+					     int			 width,
+					     int			 height,
+					     xlib_target_closure_t	*xtc)
 {
     XRenderPictFormat *xrender_format;
 
@@ -109,11 +109,11 @@ create_xlib_test_surface (Display		*dpy,
 }
 
 static cairo_surface_t *
-create_xlib_perf_surface (Display		*dpy,
-			  cairo_content_t	 content,
-			  int			 width,
-			  int			 height,
-			  xlib_target_closure_t	*xtc)
+_cairo_boilerplate_xlib_perf_create_surface (Display			*dpy,
+					     cairo_content_t		 content,
+					     int			 width,
+					     int			 height,
+					     xlib_target_closure_t	*xtc)
 {
     XSetWindowAttributes attr;
     XRenderPictFormat *xrender_format;
@@ -177,9 +177,9 @@ _cairo_boilerplate_xlib_create_surface (const char			 *name,
     }
 
     if (mode == CAIRO_BOILERPLATE_MODE_TEST)
-	return create_xlib_test_surface (dpy, content, width, height, xtc);
+	return _cairo_boilerplate_xlib_test_create_surface (dpy, content, width, height, xtc);
     else /* mode == CAIRO_BOILERPLATE_MODE_PERF */
-	return create_xlib_perf_surface (dpy, content, width, height, xtc);
+	return _cairo_boilerplate_xlib_perf_create_surface (dpy, content, width, height, xtc);
 }
 
 void

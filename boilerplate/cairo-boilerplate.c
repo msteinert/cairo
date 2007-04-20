@@ -110,12 +110,12 @@ cairo_boilerplate_content_name (cairo_content_t content)
 }
 
 static cairo_surface_t *
-create_image_surface (const char		 *name,
-		      cairo_content_t		  content,
-		      int			  width,
-		      int			  height,
-		      cairo_boilerplate_mode_t	  mode,
-		      void			**closure)
+_cairo_boilerplate_image_create_surface (const char			 *name,
+					 cairo_content_t		  content,
+					 int				  width,
+					 int				  height,
+					 cairo_boilerplate_mode_t	  mode,
+					 void				**closure)
 {
     cairo_format_t format;
     *closure = NULL;
@@ -157,24 +157,24 @@ xcairo_surface_set_user_data (cairo_surface_t		 *surface,
 #include "test-paginated-surface.h"
 
 static cairo_surface_t *
-create_test_fallback_surface (const char		 *name,
-			      cairo_content_t		  content,
-			      int			  width,
-			      int			  height,
-			      cairo_boilerplate_mode_t	  mode,
-			      void			**closure)
+_cairo_boilerplate_test_fallback_create_surface (const char			 *name,
+						 cairo_content_t		  content,
+						 int				  width,
+						 int				  height,
+						 cairo_boilerplate_mode_t	  mode,
+						 void				**closure)
 {
     *closure = NULL;
     return _cairo_test_fallback_surface_create (content, width, height);
 }
 
 static cairo_surface_t *
-create_test_meta_surface (const char			 *name,
-			  cairo_content_t		  content,
-			  int				  width,
-			  int				  height,
-			  cairo_boilerplate_mode_t	  mode,
-			  void				**closure)
+_cairo_boilerplate_test_meta_create_surface (const char			 *name,
+					     cairo_content_t		  content,
+					     int			  width,
+					     int			  height,
+					     cairo_boilerplate_mode_t	  mode,
+					     void			**closure)
 {
     *closure = NULL;
     return _cairo_test_meta_surface_create (content, width, height);
@@ -191,12 +191,12 @@ typedef struct {
 } test_paginated_closure_t;
 
 static cairo_surface_t *
-create_test_paginated_surface (const char		 *name,
-			       cairo_content_t		  content,
-			       int			  width,
-			       int			  height,
-			       cairo_boilerplate_mode_t	  mode,
-			       void			**closure)
+_cairo_boilerplate_test_paginated_create_surface (const char			 *name,
+						  cairo_content_t		  content,
+						  int				  width,
+						  int				  height,
+						  cairo_boilerplate_mode_t	  mode,
+						  void				**closure)
 {
     test_paginated_closure_t *tpc;
     cairo_surface_t *surface;
@@ -234,7 +234,7 @@ create_test_paginated_surface (const char		 *name,
  * tested.
  */
 static cairo_status_t
-test_paginated_write_to_png (cairo_surface_t *surface,
+_cairo_boilerplate_test_paginated_surface_write_to_png (cairo_surface_t *surface,
 			     const char	     *filename)
 {
     cairo_surface_t *image;
@@ -283,7 +283,7 @@ test_paginated_write_to_png (cairo_surface_t *surface,
 }
 
 static void
-cleanup_test_paginated (void *closure)
+_cairo_boilerplate_test_paginated_cleanup (void *closure)
 {
     test_paginated_closure_t *tpc = closure;
 
@@ -316,10 +316,10 @@ typedef struct _glitz_glx_target_closure {
 } glitz_glx_target_closure_t;
 
 static glitz_surface_t *
-create_glitz_glx_surface (glitz_format_name_t	      formatname,
-			  int			      width,
-			  int			      height,
-			  glitz_glx_target_closure_t *closure)
+_cairo_boilerplate_glitz_glx_create_surface (glitz_format_name_t	 formatname,
+					     int			 width,
+					     int			 height,
+					     glitz_glx_target_closure_t	*closure)
 {
     Display                 * dpy = closure->dpy;
     int                       scr = closure->scr;
@@ -426,12 +426,12 @@ create_glitz_glx_surface (glitz_format_name_t	      formatname,
 }
 
 static cairo_surface_t *
-create_cairo_glitz_glx_surface (const char			 *name,
-				cairo_content_t 		  content,
-				int				  width,
-				int				  height,
-				cairo_boilerplate_mode_t	  mode,
-				void				**closure)
+_cairo_boilerplate_cairo_glitz_glx_create_surface (const char			 *name,
+						   cairo_content_t 		  content,
+						   int				  width,
+						   int				  height,
+						   cairo_boilerplate_mode_t	  mode,
+						   void				**closure)
 {
     glitz_glx_target_closure_t *gxtc;
     glitz_surface_t  * glitz_surface;
@@ -456,10 +456,10 @@ create_cairo_glitz_glx_surface (const char			 *name,
 
     switch (content) {
     case CAIRO_CONTENT_COLOR:
-	glitz_surface = create_glitz_glx_surface (GLITZ_STANDARD_RGB24, width, height, gxtc);
+	glitz_surface = _cairo_boilerplate_glitz_glx_create_surface (GLITZ_STANDARD_RGB24, width, height, gxtc);
 	break;
     case CAIRO_CONTENT_COLOR_ALPHA:
-	glitz_surface = create_glitz_glx_surface (GLITZ_STANDARD_ARGB32, width, height, gxtc);
+	glitz_surface = _cairo_boilerplate_glitz_glx_create_surface (GLITZ_STANDARD_ARGB32, width, height, gxtc);
 	break;
     case CAIRO_CONTENT_ALPHA:
     default:
@@ -488,7 +488,7 @@ create_cairo_glitz_glx_surface (const char			 *name,
 }
 
 static void
-cleanup_cairo_glitz_glx (void *closure)
+_cairo_boilerplate_cairo_glitz_glx_cleanup (void *closure)
 {
     glitz_glx_target_closure_t *gxtc = closure;
 
@@ -512,9 +512,10 @@ typedef struct _glitz_agl_target_closure {
 } glitz_agl_target_closure_t;
 
 static glitz_surface_t *
-create_glitz_agl_surface (glitz_format_name_t formatname,
-			  int width, int height,
-			  glitz_agl_target_closure_t *closure)
+_cairo_boilerplate_glitz_agl_create_surface (glitz_format_name_t	 formatname,
+					     int			 width,
+					     int			 height,
+					     glitz_agl_target_closure_t	*closure)
 {
     glitz_drawable_format_t *dformat;
     glitz_drawable_format_t templ;
@@ -571,12 +572,12 @@ create_glitz_agl_surface (glitz_format_name_t formatname,
 }
 
 static cairo_surface_t *
-create_cairo_glitz_agl_surface (const char			 *name,
-				cairo_content_t 		  content,
-				int				  width,
-				int				  height,
-				cairo_boilerplate_mode_t	  mode,
-				void				**closure)
+_cairo_boilerplate_cairo_glitz_agl_create_surface (const char			 *name,
+						   cairo_content_t 		  content,
+						   int				  width,
+						   int				  height,
+						   cairo_boilerplate_mode_t	  mode,
+						   void				**closure)
 {
     glitz_surface_t *glitz_surface;
     cairo_surface_t *surface;
@@ -588,10 +589,10 @@ create_cairo_glitz_agl_surface (const char			 *name,
 
     switch (content) {
     case CAIRO_CONTENT_COLOR:
-	glitz_surface = create_glitz_agl_surface (GLITZ_STANDARD_RGB24, width, height, NULL);
+	glitz_surface = _cairo_boilerplate_glitz_agl_create_surface (GLITZ_STANDARD_RGB24, width, height, NULL);
 	break;
     case CAIRO_CONTENT_COLOR_ALPHA:
-	glitz_surface = create_glitz_agl_surface (GLITZ_STANDARD_ARGB32, width, height, NULL);
+	glitz_surface = _cairo_boilerplate_glitz_agl_create_surface (GLITZ_STANDARD_ARGB32, width, height, NULL);
 	break;
     default:
 	CAIRO_BOILERPLATE_LOG ("Invalid content for glitz-agl test: %d\n", content);
@@ -615,7 +616,7 @@ create_cairo_glitz_agl_surface (const char			 *name,
 }
 
 static void
-cleanup_cairo_glitz_agl (void *closure)
+_cairo_boilerplate_cairo_glitz_agl_cleanup (void *closure)
 {
     free (closure);
     glitz_agl_fini ();
@@ -631,9 +632,10 @@ typedef struct _glitz_wgl_target_closure {
 } glitz_wgl_target_closure_t;
 
 static glitz_surface_t *
-create_glitz_wgl_surface (glitz_format_name_t formatname,
-			  int width, int height,
-			  glitz_wgl_target_closure_t *closure)
+_cairo_boilerplate_glitz_wgl_create_surface (glitz_format_name_t	 formatname,
+					     int			 width,
+					     int			 height,
+					     glitz_wgl_target_closure_t	*closure)
 {
     glitz_drawable_format_t *dformat;
     glitz_drawable_format_t templ;
@@ -690,12 +692,12 @@ create_glitz_wgl_surface (glitz_format_name_t formatname,
 }
 
 static cairo_surface_t *
-create_cairo_glitz_wgl_surface (const char			 *name,
-				cairo_content_t			  content,
-				int				  width,
-				int				  height,
-				cairo_boilerplate_mode_t	  mode,
-				void				**closure)
+_cairo_boilerplate_cairo_glitz_wgl_create_surface (const char			 *name,
+						   cairo_content_t		  content,
+						   int				  width,
+						   int				  height,
+						   cairo_boilerplate_mode_t	  mode,
+						   void				**closure)
 {
     glitz_surface_t *glitz_surface;
     cairo_surface_t *surface;
@@ -707,10 +709,10 @@ create_cairo_glitz_wgl_surface (const char			 *name,
 
     switch (content) {
     case CAIRO_CONTENT_COLOR:
-	glitz_surface = create_glitz_wgl_surface (GLITZ_STANDARD_RGB24, width, height, NULL);
+	glitz_surface = _cairo_boilerplate_glitz_wgl_create_surface (GLITZ_STANDARD_RGB24, width, height, NULL);
 	break;
     case CAIRO_CONTENT_COLOR_ALPHA:
-	glitz_surface = create_glitz_wgl_surface (GLITZ_STANDARD_ARGB32, width, height, NULL);
+	glitz_surface = _cairo_boilerplate_glitz_wgl_create_surface (GLITZ_STANDARD_ARGB32, width, height, NULL);
 	break;
     default:
 	CAIRO_BOILERPLATE_LOG ("Invalid content for glitz-wgl test: %d\n", content);
@@ -734,7 +736,7 @@ create_cairo_glitz_wgl_surface (const char			 *name,
 }
 
 static void
-cleanup_cairo_glitz_wgl (void *closure)
+_cairo_boilerplate_cairo_glitz_wgl_cleanup (void *closure)
 {
     free (closure);
     glitz_wgl_fini ();
@@ -786,7 +788,7 @@ typedef struct _xcb_target_closure
 } xcb_target_closure_t;
 
 static void
-boilerplate_xcb_synchronize (void *closure)
+_cairo_boilerplate_xlib_synchronize (void *closure)
 {
     xcb_target_closure_t *xtc = closure;
     free (xcb_get_image_reply (xtc->c,
@@ -796,12 +798,12 @@ boilerplate_xcb_synchronize (void *closure)
 }
 
 static cairo_surface_t *
-create_xcb_surface (const char			 *name,
-		    cairo_content_t		  content,
-		    int				  width,
-		    int				  height,
-		    cairo_boilerplate_mode_t	  mode,
-		    void			**closure)
+_cairo_boilerplate_xcb_create_surface (const char		 *name,
+				       cairo_content_t		  content,
+				       int			  width,
+				       int			  height,
+				       cairo_boilerplate_mode_t	  mode,
+				       void			**closure)
 {
     xcb_screen_t *root;
     xcb_target_closure_t *xtc;
@@ -853,7 +855,7 @@ create_xcb_surface (const char			 *name,
 }
 
 static void
-cleanup_xcb (void *closure)
+_cairo_boilerplate_xcb_cleanup (void *closure)
 {
     xcb_target_closure_t *xtc = closure;
 
@@ -877,12 +879,12 @@ typedef struct _ps_target_closure
 } ps_target_closure_t;
 
 static cairo_surface_t *
-create_ps_surface (const char			 *name,
-		   cairo_content_t		  content,
-		   int				  width,
-		   int				  height,
-		   cairo_boilerplate_mode_t	  mode,
-		   void				**closure)
+_cairo_boilerplate_ps_create_surface (const char		 *name,
+				      cairo_content_t		  content,
+				      int			  width,
+				      int			  height,
+				      cairo_boilerplate_mode_t	  mode,
+				      void			**closure)
 {
     ps_target_closure_t	*ptc;
     cairo_surface_t *surface;
@@ -935,7 +937,7 @@ create_ps_surface (const char			 *name,
 }
 
 static cairo_status_t
-ps_surface_write_to_png (cairo_surface_t *surface, const char *filename)
+_cairo_boilerplate_ps_surface_write_to_png (cairo_surface_t *surface, const char *filename)
 {
     ps_target_closure_t *ptc = cairo_surface_get_user_data (surface, &ps_closure_key);
     char    command[4096];
@@ -970,7 +972,7 @@ ps_surface_write_to_png (cairo_surface_t *surface, const char *filename)
 }
 
 static void
-cleanup_ps (void *closure)
+_cairo_boilerplate_ps_cleanup (void *closure)
 {
     ps_target_closure_t *ptc = closure;
     if (ptc->target)
@@ -994,12 +996,12 @@ typedef struct _pdf_target_closure
 } pdf_target_closure_t;
 
 static cairo_surface_t *
-create_pdf_surface (const char			 *name,
-		    cairo_content_t		  content,
-		    int				  width,
-		    int				  height,
-		    cairo_boilerplate_mode_t	  mode,
-		    void			**closure)
+_cairo_boilerplate_pdf_create_surface (const char		 *name,
+				       cairo_content_t		  content,
+				       int			  width,
+				       int			  height,
+				       cairo_boilerplate_mode_t	  mode,
+				       void			**closure)
 {
     pdf_target_closure_t *ptc;
     cairo_surface_t *surface;
@@ -1044,7 +1046,7 @@ create_pdf_surface (const char			 *name,
 }
 
 static cairo_status_t
-pdf_surface_write_to_png (cairo_surface_t *surface, const char *filename)
+_cairo_boilerplate_pdf_surface_write_to_png (cairo_surface_t *surface, const char *filename)
 {
     pdf_target_closure_t *ptc = cairo_surface_get_user_data (surface, &pdf_closure_key);
     char    command[4096];
@@ -1081,7 +1083,7 @@ pdf_surface_write_to_png (cairo_surface_t *surface, const char *filename)
 }
 
 static void
-cleanup_pdf (void *closure)
+_cairo_boilerplate_pdf_cleanup (void *closure)
 {
     pdf_target_closure_t *ptc = closure;
     if (ptc->target)
@@ -1104,12 +1106,12 @@ typedef struct _svg_target_closure
 } svg_target_closure_t;
 
 static cairo_surface_t *
-create_svg_surface (const char			 *name,
-		    cairo_content_t		  content,
-		    int				  width,
-		    int				  height,
-		    cairo_boilerplate_mode_t	  mode,
-		    void			**closure)
+_cairo_boilerplate_svg_create_surface (const char		 *name,
+				       cairo_content_t		  content,
+				       int			  width,
+				       int			  height,
+				       cairo_boilerplate_mode_t	  mode,
+				       void			**closure)
 {
     int i;
     svg_target_closure_t *ptc;
@@ -1150,7 +1152,7 @@ create_svg_surface (const char			 *name,
 }
 
 static cairo_status_t
-svg_surface_write_to_png (cairo_surface_t *surface, const char *filename)
+_cairo_boilerplate_svg_surface_write_to_png (cairo_surface_t *surface, const char *filename)
 {
     svg_target_closure_t *ptc = cairo_surface_get_user_data (surface, &svg_closure_key);
     char    command[4096];
@@ -1187,7 +1189,7 @@ svg_surface_write_to_png (cairo_surface_t *surface, const char *filename)
 }
 
 static void
-cleanup_svg (void *closure)
+_cairo_boilerplate_svg_cleanup (void *closure)
 {
     svg_target_closure_t *ptc = closure;
     if (ptc->target)
@@ -1203,121 +1205,153 @@ static cairo_boilerplate_target_t targets[] =
      * for tolerance. There shouldn't ever be anything that is out of
      * our control here. */
     { "image", CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR_ALPHA, 0,
-      create_image_surface, cairo_surface_write_to_png, NULL},
+      _cairo_boilerplate_image_create_surface,
+      cairo_surface_write_to_png },
     { "image", CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR, 0,
-      create_image_surface, cairo_surface_write_to_png, NULL},
+      _cairo_boilerplate_image_create_surface,
+      cairo_surface_write_to_png },
 #ifdef CAIRO_HAS_TEST_SURFACES
     { "test-fallback", CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
       CAIRO_CONTENT_COLOR_ALPHA, 0,
-      create_test_fallback_surface, cairo_surface_write_to_png, NULL },
+      _cairo_boilerplate_test_fallback_create_surface,
+      cairo_surface_write_to_png },
     { "test-fallback", CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
       CAIRO_CONTENT_COLOR, 0,
-      create_test_fallback_surface, cairo_surface_write_to_png, NULL },
+      _cairo_boilerplate_test_fallback_create_surface,
+      cairo_surface_write_to_png },
     { "test-meta", CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
       CAIRO_CONTENT_COLOR_ALPHA, 0,
-      create_test_meta_surface, cairo_surface_write_to_png, NULL },
+      _cairo_boilerplate_test_meta_create_surface,
+      cairo_surface_write_to_png },
     { "test-meta", CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
       CAIRO_CONTENT_COLOR, 0,
-      create_test_meta_surface, cairo_surface_write_to_png, NULL },
+      _cairo_boilerplate_test_meta_create_surface,
+      cairo_surface_write_to_png },
     { "test-paginated", CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED,
       CAIRO_CONTENT_COLOR_ALPHA, 0,
-      create_test_paginated_surface,
-      test_paginated_write_to_png,
-      cleanup_test_paginated },
+      _cairo_boilerplate_test_paginated_create_surface,
+      _cairo_boilerplate_test_paginated_surface_write_to_png,
+      _cairo_boilerplate_test_paginated_cleanup },
     { "test-paginated", CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED,
       CAIRO_CONTENT_COLOR, 0,
-      create_test_paginated_surface,
-      test_paginated_write_to_png,
-      cleanup_test_paginated },
+      _cairo_boilerplate_test_paginated_create_surface,
+      _cairo_boilerplate_test_paginated_surface_write_to_png,
+      _cairo_boilerplate_test_paginated_cleanup },
 #endif
 #ifdef CAIRO_HAS_GLITZ_SURFACE
 #if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE
     { "glitz-glx", CAIRO_SURFACE_TYPE_GLITZ,CAIRO_CONTENT_COLOR_ALPHA, 0,
-      create_cairo_glitz_glx_surface, cairo_surface_write_to_png,
-      cleanup_cairo_glitz_glx },
+      _cairo_boilerplate_cairo_glitz_glx_create_surface,
+      cairo_surface_write_to_png,
+      _cairo_boilerplate_cairo_glitz_glx_cleanup },
     { "glitz-glx", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR, 0,
-      create_cairo_glitz_glx_surface, cairo_surface_write_to_png,
-      cleanup_cairo_glitz_glx },
+      _cairo_boilerplate_cairo_glitz_glx_create_surface,
+      cairo_surface_write_to_png,
+      _cairo_boilerplate_cairo_glitz_glx_cleanup },
 #endif
 #if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE
     { "glitz-agl", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR_ALPHA, 0,
-      create_cairo_glitz_agl_surface, cairo_surface_write_to_png,
-      cleanup_cairo_glitz_agl },
+      _cairo_boilerplate_cairo_glitz_agl_create_surface,
+      cairo_surface_write_to_png,
+      _cairo_boilerplate_cairo_glitz_agl_cleanup },
     { "glitz-agl", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR, 0,
-      create_cairo_glitz_agl_surface, cairo_surface_write_to_png,
-      cleanup_cairo_glitz_agl },
+      _cairo_boilerplate_cairo_glitz_agl_create_surface,
+      cairo_surface_write_to_png,
+      _cairo_boilerplate_cairo_glitz_agl_cleanup },
 #endif
 #if CAIRO_CAN_TEST_GLITZ_WGL_SURFACE
     { "glitz-wgl", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR_ALPHA, 0,
-      create_cairo_glitz_wgl_surface, cairo_surface_write_to_png,
-      cleanup_cairo_glitz_wgl },
+      _cairo_boilerplate_cairo_glitz_wgl_create_surface,
+      cairo_surface_write_to_png,
+      _cairo_boilerplate_cairo_glitz_wgl_cleanup },
     { "glitz-wgl", CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR, 0,
-      create_cairo_glitz_wgl_surface, cairo_surface_write_to_png,
-      cleanup_cairo_glitz_wgl },
+      _cairo_boilerplate_cairo_glitz_wgl_create_surface,
+      cairo_surface_write_to_png,
+      _cairo_boilerplate_cairo_glitz_wgl_cleanup },
 #endif
 #endif /* CAIRO_HAS_GLITZ_SURFACE */
 #if CAIRO_HAS_QUARTZ_SURFACE
     { "quartz", CAIRO_SURFACE_TYPE_QUARTZ, CAIRO_CONTENT_COLOR_ALPHA, 0,
-      _cairo_boilerplate_quartz_create_surface, cairo_surface_write_to_png,
+      _cairo_boilerplate_quartz_create_surface,
+      cairo_surface_write_to_png,
       _cairo_boilerplate_quartz_cleanup },
     { "quartz", CAIRO_SURFACE_TYPE_QUARTZ, CAIRO_CONTENT_COLOR, 0,
-      _cairo_boilerplate_quartz_create_surface, cairo_surface_write_to_png,
+      _cairo_boilerplate_quartz_create_surface,
+      cairo_surface_write_to_png,
       _cairo_boilerplate_quartz_cleanup },
 #endif
 #if CAIRO_HAS_WIN32_SURFACE
     { "win32", CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR, 0,
-      create_win32_surface, cairo_surface_write_to_png, cleanup_win32 },
+      create_win32_surface,
+      cairo_surface_write_to_png,
+      cleanup_win32 },
     { "win32", CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR_ALPHA, 0,
-      create_win32_surface, cairo_surface_write_to_png, cleanup_win32 },
+      create_win32_surface,
+      cairo_surface_write_to_png,
+      cleanup_win32 },
 #endif
 #if CAIRO_HAS_XCB_SURFACE
     /* Acceleration architectures may make the results differ by a
      * bit, so we set the error tolerance to 1. */
     { "xcb", CAIRO_SURFACE_TYPE_XCB, CAIRO_CONTENT_COLOR_ALPHA, 1,
-      create_xcb_surface, cairo_surface_write_to_png, cleanup_xcb,
-      boilerplate_xcb_synchronize},
+      _cairo_boilerplate_xcb_create_surface,
+      cairo_surface_write_to_png,
+      _cairo_boilerplate_xcb_cleanup,
+      _cairo_boilerplate_xcb_synchronize},
 #endif
 #if CAIRO_HAS_XLIB_XRENDER_SURFACE
     /* Acceleration architectures may make the results differ by a
      * bit, so we set the error tolerance to 1. */
     { "xlib", CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR_ALPHA, 1,
-      _cairo_boilerplate_xlib_create_surface, cairo_surface_write_to_png, _cairo_boilerplate_xlib_cleanup,
+      _cairo_boilerplate_xlib_create_surface,
+      cairo_surface_write_to_png,
+      _cairo_boilerplate_xlib_cleanup,
       _cairo_boilerplate_xlib_synchronize},
     { "xlib", CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR, 1,
-      _cairo_boilerplate_xlib_create_surface, cairo_surface_write_to_png, _cairo_boilerplate_xlib_cleanup,
+      _cairo_boilerplate_xlib_create_surface,
+      cairo_surface_write_to_png,
+      _cairo_boilerplate_xlib_cleanup,
       _cairo_boilerplate_xlib_synchronize},
 #endif
 #if CAIRO_HAS_PS_SURFACE
     { "ps", CAIRO_SURFACE_TYPE_PS,
       CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED, 0,
-      create_ps_surface, ps_surface_write_to_png, cleanup_ps },
+      _cairo_boilerplate_ps_create_surface,
+      _cairo_boilerplate_ps_surface_write_to_png,
+      _cairo_boilerplate_ps_cleanup },
 
     /* XXX: We expect type image here only due to a limitation in
      * the current PS/meta-surface code. A PS surface is
      * "naturally" COLOR_ALPHA, so the COLOR-only variant goes
-     * through create_similar in create_ps_surface which results
+     * through create_similar in _cairo_boilerplate_ps_create_surface which results
      * in the similar surface being used as a source. We do not yet
      * have source support for PS/meta-surfaces, so the
      * create_similar path for all paginated surfaces currently
      * returns an image surface.*/
     { "ps", CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR, 0,
-      create_ps_surface, ps_surface_write_to_png, cleanup_ps },
+      _cairo_boilerplate_ps_create_surface,
+      _cairo_boilerplate_ps_surface_write_to_png,
+      _cairo_boilerplate_ps_cleanup },
 #endif
 #if CAIRO_HAS_PDF_SURFACE && CAIRO_CAN_TEST_PDF_SURFACE
     { "pdf", CAIRO_SURFACE_TYPE_PDF,
       CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED, 0,
-      create_pdf_surface, pdf_surface_write_to_png, cleanup_pdf },
+      _cairo_boilerplate_pdf_create_surface,
+      _cairo_boilerplate_pdf_surface_write_to_png,
+      _cairo_boilerplate_pdf_cleanup },
 
     /* XXX: We expect type image here only due to a limitation in
      * the current PDF/meta-surface code. A PDF surface is
      * "naturally" COLOR_ALPHA, so the COLOR-only variant goes
-     * through create_similar in create_pdf_surface which results
+     * through create_similar in _cairo_boilerplate_pdf_create_surface which results
      * in the similar surface being used as a source. We do not yet
      * have source support for PDF/meta-surfaces, so the
      * create_similar path for all paginated surfaces currently
      * returns an image surface.*/
     { "pdf", CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR, 0,
-      create_pdf_surface, pdf_surface_write_to_png, cleanup_pdf },
+      _cairo_boilerplate_pdf_create_surface,
+      _cairo_boilerplate_pdf_surface_write_to_png,
+      _cairo_boilerplate_pdf_cleanup },
 #endif
 #if CAIRO_HAS_SVG_SURFACE && CAIRO_CAN_TEST_SVG_SURFACE
     /* It seems we should be able to round-trip SVG content perfrectly
@@ -1326,28 +1360,42 @@ static cairo_boilerplate_target_t targets[] =
      * tests. XXX: I'd still like to chase these down at some point.
      * For now just set the svg error tolerance to 1. */
     { "svg", CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR_ALPHA, 1,
-      create_svg_surface, svg_surface_write_to_png, cleanup_svg },
+      _cairo_boilerplate_svg_create_surface,
+      _cairo_boilerplate_svg_surface_write_to_png,
+      _cairo_boilerplate_svg_cleanup },
     { "svg", CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 1,
-      create_svg_surface, svg_surface_write_to_png, cleanup_svg },
+      _cairo_boilerplate_svg_create_surface,
+      _cairo_boilerplate_svg_surface_write_to_png,
+      _cairo_boilerplate_svg_cleanup },
 #endif
 #if CAIRO_HAS_BEOS_SURFACE
     /* BeOS sometimes produces a slightly different image. Perhaps this
      * is related to the fact that it doesn't use premultiplied alpha...
      * Just ignore the small difference. */
     { "beos", CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR, 1,
-      _cairo_boilerplate_beos_create_surface, cairo_surface_write_to_png, _cairo_boilerplate_beos_cleanup},
+      _cairo_boilerplate_beos_create_surface,
+      cairo_surface_write_to_png,
+      _cairo_boilerplate_beos_cleanup},
     { "beos-bitmap", CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR, 1,
-      _cairo_boilerplate_beos_create_surface_for_bitmap, cairo_surface_write_to_png, _cairo_boilerplate_beos_cleanup_bitmap},
+      _cairo_boilerplate_beos_create_surface_for_bitmap,
+      cairo_surface_write_to_png,
+      _cairo_boilerplate_beos_cleanup_bitmap},
     { "beos-bitmap", CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR_ALPHA, 1,
-      _cairo_boilerplate_beos_create_surface_for_bitmap, cairo_surface_write_to_png, _cairo_boilerplate_beos_cleanup_bitmap},
+      _cairo_boilerplate_beos_create_surface_for_bitmap,
+      cairo_surface_write_to_png,
+      _cairo_boilerplate_beos_cleanup_bitmap},
 #endif
 
 
 #if CAIRO_HAS_DIRECTFB_SURFACE
     { "directfb", CAIRO_SURFACE_TYPE_DIRECTFB, CAIRO_CONTENT_COLOR, 0,
-      _cairo_boilerplate_directfb_create_surface, cairo_surface_write_to_png, _cairo_boilerplate_directfb_cleanup},
+      _cairo_boilerplate_directfb_create_surface,
+      cairo_surface_write_to_png,
+      _cairo_boilerplate_directfb_cleanup},
     { "directfb-bitmap", CAIRO_SURFACE_TYPE_DIRECTFB, CAIRO_CONTENT_COLOR_ALPHA, 0,
-      _cairo_boilerplate_directfb_create_surface, cairo_surface_write_to_png,_cairo_boilerplate_directfb_cleanup},
+      _cairo_boilerplate_directfb_create_surface,
+      cairo_surface_write_to_png,
+      _cairo_boilerplate_directfb_cleanup},
 #endif
 };
 
