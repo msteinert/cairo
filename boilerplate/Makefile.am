@@ -19,6 +19,23 @@ libcairoboilerplate_la_SOURCES += cairo-boilerplate-directfb.c
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-directfb-private.h
 endif
 
+if CAIRO_HAS_GLITZ_SURFACE
+libcairoboilerplate_la_SOURCES += cairo-boilerplate-glitz.c
+libcairoboilerplate_la_SOURCES += cairo-boilerplate-glitz-private.h
+if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE
+libcairoboilerplate_la_LIBADD += $(GLITZ_AGL_LIBS)
+endif
+if CAIRO_CAN_TEST_GLITZ_EGL_SURFACE
+libcairoboilerplate_la_LIBADD += $(GLITZ_EGL_LIBS)
+endif
+if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE
+libcairoboilerplate_la_LIBADD += $(GLITZ_GLX_LIBS)
+endif
+if CAIRO_CAN_TEST_GLITZ_WGL_SURFACE
+libcairoboilerplate_la_LIBADD += $(GLITZ_WGL_LIBS)
+endif
+endif
+
 if CAIRO_HAS_PDF_SURFACE
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-pdf.c
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-pdf-private.h
@@ -47,19 +64,6 @@ endif
 if CAIRO_HAS_XLIB_XRENDER_SURFACE
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-xlib.c
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-xlib-private.h
-endif
-
-if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE
-libcairoboilerplate_la_LIBADD += $(GLITZ_AGL_LIBS)
-endif
-if CAIRO_CAN_TEST_GLITZ_EGL_SURFACE
-libcairoboilerplate_la_LIBADD += $(GLITZ_EGL_LIBS)
-endif
-if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE
-libcairoboilerplate_la_LIBADD += $(GLITZ_GLX_LIBS)
-endif
-if CAIRO_CAN_TEST_GLITZ_WGL_SURFACE
-libcairoboilerplate_la_LIBADD += $(GLITZ_WGL_LIBS)
 endif
 
 # We're using _GNU_SOURCE to get the prototype for asprintf. This may
