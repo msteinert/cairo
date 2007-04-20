@@ -38,14 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// Part of this code was originally part of
-// xpfe/bootstrap/nsNativeAppSupportBeOS.cpp in the Mozilla source code.
-
-#include <Application.h>
-#include <Window.h>
-#include <View.h>
-#include <Bitmap.h>
-
 // BeOS's C++ compiler does not support varargs in macros
 // So, define CAIRO_BOILERPLATE_LOG here
 #define CAIRO_BOILERPLATE_LOG cairo_beos_boilerplate_log
@@ -53,9 +45,17 @@
 extern "C" {
 #include "cairo-boilerplate.h"
 }
-
 #include "cairo-boilerplate-beos-private.h"
-#include "cairo-beos.h"
+
+#include <cairo-beos.h>
+
+// Part of this code was originally part of
+// xpfe/bootstrap/nsNativeAppSupportBeOS.cpp in the Mozilla source code.
+
+#include <Application.h>
+#include <Window.h>
+#include <View.h>
+#include <Bitmap.h>
 
 static int cairo_beos_boilerplate_log(const char* format, ...) {
     va_list args;
