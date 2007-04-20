@@ -2440,9 +2440,11 @@ _cairo_pdf_surface_emit_unscaled_font_subset (cairo_scaled_font_subset_t *font_s
     cairo_pdf_surface_t *surface = closure;
     cairo_status_t status;
 
+#if 0
     status = _cairo_pdf_surface_emit_cff_font_subset (surface, font_subset);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return;
+#endif
 
 #if CAIRO_HAS_FT_FONT
     status = _cairo_pdf_surface_emit_type1_font_subset (surface, font_subset);
