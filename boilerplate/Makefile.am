@@ -7,11 +7,6 @@ xmalloc.c		\
 xmalloc.h
 libcairoboilerplate_la_LIBADD = $(top_builddir)/src/libcairo.la $(CAIRO_LDADD)
 
-if CAIRO_HAS_QUARTZ_SURFACE
-libcairoboilerplate_la_SOURCES += cairo-boilerplate-quartz.c
-libcairoboilerplate_la_SOURCES += cairo-boilerplate-quartz-private.h
-endif
-
 if CAIRO_HAS_BEOS_SURFACE
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-beos.cpp
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-beos-private.h
@@ -22,6 +17,11 @@ endif
 if CAIRO_HAS_DIRECTFB_SURFACE
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-directfb.c
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-directfb-private.h
+endif
+
+if CAIRO_HAS_QUARTZ_SURFACE
+libcairoboilerplate_la_SOURCES += cairo-boilerplate-quartz.c
+libcairoboilerplate_la_SOURCES += cairo-boilerplate-quartz-private.h
 endif
 
 if CAIRO_HAS_XLIB_XRENDER_SURFACE
