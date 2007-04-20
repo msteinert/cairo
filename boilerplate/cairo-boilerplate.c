@@ -772,7 +772,7 @@ typedef struct _xcb_target_closure
 } xcb_target_closure_t;
 
 static void
-_cairo_boilerplate_xlib_synchronize (void *closure)
+_cairo_boilerplate_xcb_synchronize (void *closure)
 {
     xcb_target_closure_t *xtc = closure;
     free (xcb_get_image_reply (xtc->c,
