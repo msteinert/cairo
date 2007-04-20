@@ -379,7 +379,7 @@ cairo_boilerplate_get_targets (int *pnum_targets, cairo_bool_t *plimited_targets
 		if (0 == strncmp (targets[i].name, tname, end - tname) &&
 		    !isalnum (targets[i].name[end - tname])) {
 		    /* realloc isn't exactly the best thing here, but meh. */
-		    targets_to_test = realloc (targets_to_test, sizeof(cairo_boilerplate_target_t *) * (num_targets+1));
+		    targets_to_test = xrealloc (targets_to_test, sizeof(cairo_boilerplate_target_t *) * (num_targets+1));
 		    targets_to_test[num_targets++] = &targets[i];
 		    found = 1;
 		}
@@ -396,7 +396,7 @@ cairo_boilerplate_get_targets (int *pnum_targets, cairo_bool_t *plimited_targets
 	}
     } else {
 	num_targets = sizeof (targets) / sizeof (targets[0]);
-	targets_to_test = malloc (sizeof(cairo_boilerplate_target_t*) * num_targets);
+	targets_to_test = xmalloc (sizeof(cairo_boilerplate_target_t*) * num_targets);
 	for (i = 0; i < num_targets; i++) {
 	    targets_to_test[i] = &targets[i];
 	}
