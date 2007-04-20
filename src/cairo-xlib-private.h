@@ -61,6 +61,7 @@ struct _cairo_xlib_display {
     cairo_xlib_job_t *workqueue;
     cairo_freelist_t wq_freelist;
 
+    cairo_freelist_t hook_freelist;
     cairo_xlib_hook_t *close_display_hooks;
     unsigned int closed :1;
 };

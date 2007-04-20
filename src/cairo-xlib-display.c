@@ -68,7 +68,7 @@ static void
 _cairo_xlib_call_close_display_hooks (cairo_xlib_display_t *display)
 {
     cairo_xlib_screen_info_t	    *screen;
-    cairo_xlib_hook_t		    *hooks;
+    cairo_xlib_hook_t		    *hooks, *list;
 
     /* call all registered shutdown routines */
     CAIRO_MUTEX_LOCK (display->mutex);
@@ -81,16 +81,22 @@ _cairo_xlib_call_close_display_hooks (cairo_xlib_display_t *display)
 	display->close_display_hooks = NULL;
 	CAIRO_MUTEX_UNLOCK (display->mutex);
 
+	list = hooks;
+	do {
+	    cairo_xlib_hook_t *hook = list;
+	    list = hook->next;
+
+	    hook->func (display->display, hook->data);
+	} while (list != NULL);
+
+	CAIRO_MUTEX_LOCK (display->mutex);
 	do {
 	    cairo_xlib_hook_t *hook = hooks;
 	    hooks = hook->next;
 
-	    hook->func (display->display, hook->data);
-
-	    free (hook);
+	    _cairo_freelist_free (&display->hook_freelist, hook);
 	} while (hooks != NULL);
 
-	CAIRO_MUTEX_LOCK (display->mutex);
 	hooks = display->close_display_hooks;
     }
     display->closed = TRUE;
@@ -153,6 +159,7 @@ _cairo_xlib_display_destroy (cairo_xlib_display_t *display)
 	    _cairo_freelist_free (&display->wq_freelist, job);
 	}
 	_cairo_freelist_fini (&display->wq_freelist);
+	_cairo_freelist_fini (&display->hook_freelist);
 
 	CAIRO_MUTEX_UNLOCK (display->mutex);
 
@@ -263,6 +270,8 @@ _cairo_xlib_display_get (Display *dpy)
     XESetCloseDisplay (dpy, codes->extension, _cairo_xlib_close_display);
 
     _cairo_freelist_init (&display->wq_freelist, sizeof (cairo_xlib_job_t));
+    _cairo_freelist_init (&display->hook_freelist, sizeof (cairo_xlib_hook_t));
+
     display->ref_count = 2; /* add one for the CloseDisplay */
     CAIRO_MUTEX_INIT (display->mutex);
     display->display = dpy;
@@ -290,20 +299,20 @@ _cairo_xlib_add_close_display_hook (Display *dpy, void (*func) (Display *, void 
     if (display == NULL)
 	return FALSE;
 
-    hook = malloc (sizeof (cairo_xlib_hook_t));
-    if (hook != NULL) {
-	hook->func = func;
-	hook->data = data;
-	hook->key = key;
+    CAIRO_MUTEX_LOCK (display->mutex);
+    if (display->closed == FALSE) {
+	hook = _cairo_freelist_alloc (&display->hook_freelist);
+	if (hook != NULL) {
+	    hook->func = func;
+	    hook->data = data;
+	    hook->key = key;
 
-	CAIRO_MUTEX_LOCK (display->mutex);
-	if (display->closed == FALSE) {
 	    hook->next = display->close_display_hooks;
 	    display->close_display_hooks = hook;
 	    ret = TRUE;
 	}
-	CAIRO_MUTEX_UNLOCK (display->mutex);
     }
+    CAIRO_MUTEX_UNLOCK (display->mutex);
 
     _cairo_xlib_display_destroy (display);
 
@@ -326,7 +335,7 @@ _cairo_xlib_remove_close_display_hooks (Display *dpy, const void *key)
 	next = hook->next;
 	if (hook->key == key) {
 	    *prev = hook->next;
-	    free (hook);
+	    _cairo_freelist_free (&display->hook_freelist, hook);
 	} else
 	    prev = &hook->next;
     }
@@ -342,24 +351,21 @@ _cairo_xlib_display_queue_resource (cairo_xlib_display_t *display,
 				    XID xid)
 {
     cairo_xlib_job_t *job;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
-
-    job = _cairo_freelist_alloc (&display->wq_freelist);
-    if (job == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    job->type = RESOURCE;
-    job->func.resource.xid = xid;
-    job->func.resource.notify = notify;
+    cairo_status_t status = CAIRO_STATUS_NO_MEMORY;
 
     CAIRO_MUTEX_LOCK (display->mutex);
     if (display->closed == FALSE) {
-	job->next = display->workqueue;
-	display->workqueue = job;
-    } else {
-	_cairo_freelist_free (&display->wq_freelist, job);
-	job = NULL;
-	status = CAIRO_STATUS_NO_MEMORY;
+	job = _cairo_freelist_alloc (&display->wq_freelist);
+	if (job != NULL) {
+	    job->type = RESOURCE;
+	    job->func.resource.xid = xid;
+	    job->func.resource.notify = notify;
+
+	    job->next = display->workqueue;
+	    display->workqueue = job;
+
+	    status = CAIRO_STATUS_SUCCESS;
+	}
     }
     CAIRO_MUTEX_UNLOCK (display->mutex);
 
@@ -373,25 +379,22 @@ _cairo_xlib_display_queue_work (cairo_xlib_display_t *display,
 				void (*destroy) (void *))
 {
     cairo_xlib_job_t *job;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
-
-    job = _cairo_freelist_alloc (&display->wq_freelist);
-    if (job == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
-
-    job->type = WORK;
-    job->func.work.data    = data;
-    job->func.work.notify  = notify;
-    job->func.work.destroy = destroy;
+    cairo_status_t status = CAIRO_STATUS_NO_MEMORY;
 
     CAIRO_MUTEX_LOCK (display->mutex);
     if (display->closed == FALSE) {
-	job->next = display->workqueue;
-	display->workqueue = job;
-    } else {
-	_cairo_freelist_free (&display->wq_freelist, job);
-	job = NULL;
-	status = CAIRO_STATUS_NO_MEMORY;
+	job = _cairo_freelist_alloc (&display->wq_freelist);
+	if (job != NULL) {
+	    job->type = WORK;
+	    job->func.work.data    = data;
+	    job->func.work.notify  = notify;
+	    job->func.work.destroy = destroy;
+
+	    job->next = display->workqueue;
+	    display->workqueue = job;
+
+	    status = CAIRO_STATUS_SUCCESS;
+	}
     }
     CAIRO_MUTEX_UNLOCK (display->mutex);
 
@@ -401,7 +404,7 @@ _cairo_xlib_display_queue_work (cairo_xlib_display_t *display,
 void
 _cairo_xlib_display_notify (cairo_xlib_display_t *display)
 {
-    cairo_xlib_job_t *jobs, *job;
+    cairo_xlib_job_t *jobs, *job, *freelist;
 
     CAIRO_MUTEX_LOCK (display->mutex);
     jobs = display->workqueue;
@@ -417,7 +420,7 @@ _cairo_xlib_display_notify (cairo_xlib_display_t *display)
 	    job = jobs;
 	    jobs = next;
 	} while (jobs != NULL);
-	jobs = job;
+	freelist = jobs = job;
 
 	do {
 	    job = jobs;
@@ -435,11 +438,15 @@ _cairo_xlib_display_notify (cairo_xlib_display_t *display)
 			                   job->func.resource.xid);
 		break;
 	    }
-
-	    _cairo_freelist_free (&display->wq_freelist, job);
 	} while (jobs != NULL);
 
 	CAIRO_MUTEX_LOCK (display->mutex);
+	do {
+	    job = freelist;
+	    freelist = job->next;
+	    _cairo_freelist_free (&display->wq_freelist, job);
+	} while (freelist != NULL);
+
 	jobs = display->workqueue;
     }
     CAIRO_MUTEX_UNLOCK (display->mutex);
