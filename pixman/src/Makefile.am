@@ -2,7 +2,7 @@ noinst_LTLIBRARIES = libpixman.la
 
 libpixman_la_SOURCES = \
 	pixman.h \
-	pixman-int.h \
+	pixmanint.h \
 	pixman-remap.h \
 	pixman-xserver-compat.h \
 	pixregion.c \
