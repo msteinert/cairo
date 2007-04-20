@@ -19,6 +19,11 @@ libcairoboilerplate_la_SOURCES += cairo-boilerplate-directfb.c
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-directfb-private.h
 endif
 
+if CAIRO_HAS_PDF_SURFACE
+libcairoboilerplate_la_SOURCES += cairo-boilerplate-pdf.c
+libcairoboilerplate_la_SOURCES += cairo-boilerplate-pdf-private.h
+endif
+
 if CAIRO_HAS_PS_SURFACE
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-ps.c
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-ps-private.h
