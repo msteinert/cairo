@@ -213,7 +213,9 @@ libcairo_la_SOURCES =				\
 	cairo-surface.c				\
 	cairo-surface-fallback.c		\
 	cairo-surface-fallback-private.h	\
+	cairo-surface-private.h			\
 	cairo-traps.c				\
+	cairo-types-private.h			\
 	cairo-pattern.c				\
 	cairo-unicode.c				\
 	cairo-output-stream.c			\

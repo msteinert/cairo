@@ -35,6 +35,8 @@
 
 #include "cairo-xlib.h"
 
+#include "cairo-surface-private.h"
+
 typedef struct _cairo_xlib_surface cairo_xlib_surface_t;
 
 struct _cairo_xlib_surface {
