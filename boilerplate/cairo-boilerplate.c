@@ -50,6 +50,9 @@
 #if CAIRO_HAS_DIRECTFB_SURFACE
 #include "cairo-boilerplate-directfb-private.h"
 #endif
+#if CAIRO_HAS_PS_SURFACE
+#include "cairo-boilerplate-ps-private.h"
+#endif
 #if CAIRO_HAS_QUARTZ_SURFACE
 #include "cairo-boilerplate-quartz-private.h"
 #endif
@@ -848,118 +851,6 @@ _cairo_boilerplate_xcb_cleanup (void *closure)
     free (xtc);
 }
 #endif
-
-#if CAIRO_HAS_PS_SURFACE
-#include "cairo-ps.h"
-
-cairo_user_data_key_t	ps_closure_key;
-
-typedef struct _ps_target_closure
-{
-    char		*filename;
-    int			 width;
-    int			 height;
-    cairo_surface_t	*target;
-} ps_target_closure_t;
-
-static cairo_surface_t *
-_cairo_boilerplate_ps_create_surface (const char		 *name,
-				      cairo_content_t		  content,
-				      int			  width,
-				      int			  height,
-				      cairo_boilerplate_mode_t	  mode,
-				      void			**closure)
-{
-    ps_target_closure_t	*ptc;
-    cairo_surface_t *surface;
-
-    /* Sanitize back to a real cairo_content_t value. */
-    if (content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
-	content = CAIRO_CONTENT_COLOR_ALPHA;
-
-    *closure = ptc = xmalloc (sizeof (ps_target_closure_t));
-
-    xasprintf (&ptc->filename, "%s-ps-%s-out.ps",
-	       name, cairo_boilerplate_content_name (content));
-
-    ptc->width = width;
-    ptc->height = height;
-
-    surface = cairo_ps_surface_create (ptc->filename, width, height);
-    if (cairo_surface_status (surface)) {
-	free (ptc->filename);
-	free (ptc);
-	return NULL;
-    }
-    cairo_surface_set_fallback_resolution (surface, 72., 72.);
-
-    if (content == CAIRO_CONTENT_COLOR) {
-	ptc->target = surface;
-	surface = cairo_surface_create_similar (ptc->target,
-						CAIRO_CONTENT_COLOR,
-						width, height);
-    } else {
-	ptc->target = NULL;
-    }
-
-    if (cairo_surface_set_user_data (surface,
-	       	                     &ps_closure_key,
-				     ptc,
-				     NULL) != CAIRO_STATUS_SUCCESS) {
-	cairo_surface_destroy (surface);
-	free (ptc->filename);
-	free (ptc);
-	return NULL;
-    }
-
-    return surface;
-}
-
-static cairo_status_t
-_cairo_boilerplate_ps_surface_write_to_png (cairo_surface_t *surface, const char *filename)
-{
-    ps_target_closure_t *ptc = cairo_surface_get_user_data (surface, &ps_closure_key);
-    char    command[4096];
-
-    /* Both surface and ptc->target were originally created at the
-     * same dimensions. We want a 1:1 copy here, so we first clear any
-     * device offset on surface.
-     *
-     * In a more realistic use case of device offsets, the target of
-     * this copying would be of a different size than the source, and
-     * the offset would be desirable during the copy operation. */
-    cairo_surface_set_device_offset (surface, 0, 0);
-
-    if (ptc->target) {
-	cairo_t *cr;
-	cr = cairo_create (ptc->target);
-	cairo_set_source_surface (cr, surface, 0, 0);
-	cairo_paint (cr);
-	cairo_show_page (cr);
-	cairo_destroy (cr);
-
-	cairo_surface_finish (surface);
-	surface = ptc->target;
-    }
-
-    cairo_surface_finish (surface);
-    sprintf (command, "gs -q -r72 -g%dx%d -dSAFER -dBATCH -dNOPAUSE -sDEVICE=pngalpha -sOutputFile=%s %s",
-	     ptc->width, ptc->height, filename, ptc->filename);
-    if (system (command) == 0)
-	return CAIRO_STATUS_SUCCESS;
-    return CAIRO_STATUS_WRITE_ERROR;
-}
-
-static void
-_cairo_boilerplate_ps_cleanup (void *closure)
-{
-    ps_target_closure_t *ptc = closure;
-    if (ptc->target)
-	cairo_surface_destroy (ptc->target);
-    free (ptc->filename);
-    free (ptc);
-}
-#endif /* CAIRO_HAS_PS_SURFACE */
 
 #if CAIRO_HAS_PDF_SURFACE && CAIRO_CAN_TEST_PDF_SURFACE
 #include "cairo-pdf.h"
