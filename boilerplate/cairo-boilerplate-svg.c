@@ -27,7 +27,7 @@
 #include "cairo-boilerplate.h"
 #include "cairo-boilerplate-svg-private.h"
 
-#include "cairo-svg.h"
+#include <cairo-svg.h>
 
 cairo_user_data_key_t	svg_closure_key;
 

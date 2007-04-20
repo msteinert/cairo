@@ -9,12 +9,13 @@ make check
 
 */
 
+#include "cairo-boilerplate.h"
+#include "cairo-boilerplate-directfb-private.h"
+
+#include <cairo-directfb.h>
+
 #include <stdio.h>
 #include <stdlib.h>
-#include "cairo-boilerplate.h"
-#include <directfb.h>
-#include "cairo-directfb.h"
-#include "cairo-boilerplate-directfb-private.h"
 
 /* macro for a safe call to DirectFB functions */
 #define DFBCHECK(x...) \

@@ -27,7 +27,7 @@
 #include "cairo-boilerplate.h"
 #include "cairo-boilerplate-xcb-private.h"
 
-#include "cairo-xcb-xrender.h"
+#include <cairo-xcb-xrender.h>
 
 #include <xcb/xcb_renderutil.h>
 

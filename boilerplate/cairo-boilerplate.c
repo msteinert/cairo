@@ -26,24 +26,6 @@
 
 #include "cairo-boilerplate.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <ctype.h>
-#include <setjmp.h>
-#ifdef HAVE_SIGNAL_H
-#include <signal.h>
-#endif
-#include <assert.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#include <errno.h>
-#include <string.h>
-#if HAVE_FCFINI
-#include <fontconfig/fontconfig.h>
-#endif
-
 #if CAIRO_HAS_BEOS_SURFACE
 #include "cairo-boilerplate-beos-private.h"
 #endif
@@ -74,6 +56,12 @@
 #if CAIRO_HAS_XLIB_XRENDER_SURFACE
 #include "cairo-boilerplate-xlib-private.h"
 #endif
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <ctype.h>
+#include <assert.h>
 
 /* This is copied from cairoint.h. That makes it painful to keep in
  * sync, but the slim stuff makes cairoint.h "hard" to include when
@@ -136,9 +124,9 @@ _cairo_boilerplate_image_create_surface (const char			 *name,
 
 #ifdef CAIRO_HAS_TEST_SURFACES
 
-#include "test-fallback-surface.h"
-#include "test-meta-surface.h"
-#include "test-paginated-surface.h"
+#include <test-fallback-surface.h>
+#include <test-meta-surface.h>
+#include <test-paginated-surface.h>
 
 static cairo_surface_t *
 _cairo_boilerplate_test_fallback_create_surface (const char			 *name,

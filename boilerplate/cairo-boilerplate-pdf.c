@@ -27,7 +27,7 @@
 #include "cairo-boilerplate.h"
 #include "cairo-boilerplate-pdf-private.h"
 
-#include "cairo-pdf.h"
+#include <cairo-pdf.h>
 
 cairo_user_data_key_t pdf_closure_key;
 
