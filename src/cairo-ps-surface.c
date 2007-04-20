@@ -40,7 +40,6 @@
 #include "cairoint.h"
 #include "cairo-ps.h"
 #include "cairo-ps-surface-private.h"
-#include "cairo-ps-test.h"
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-paginated-private.h"
 #include "cairo-meta-surface-private.h"
@@ -790,6 +789,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     surface->max_width = width;
     surface->max_height = height;
     surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
+    surface->force_fallbacks = FALSE;
 
     surface->num_pages = 0;
 
@@ -1352,32 +1352,12 @@ pattern_supported (const cairo_pattern_t *pattern)
     return FALSE;
 }
 
-static cairo_bool_t cairo_ps_force_fallbacks = FALSE;
-
-/**
- * _cairo_ps_test_force_fallbacks
- *
- * Force the PS surface backend to use image fallbacks for every
- * operation.
- *
- * <note>
- * This function is <emphasis>only</emphasis> intended for internal
- * testing use within the cairo distribution. It is not installed in
- * any public header file.
- * </note>
- **/
-void
-_cairo_ps_test_force_fallbacks (void)
-{
-    cairo_ps_force_fallbacks = TRUE;
-}
-
 static cairo_int_status_t
 _cairo_ps_surface_operation_supported (cairo_ps_surface_t *surface,
 		      cairo_operator_t op,
 		      const cairo_pattern_t *pattern)
 {
-    if (cairo_ps_force_fallbacks)
+    if (surface->force_fallbacks)
 	return FALSE;
 
     if (! pattern_supported (pattern))

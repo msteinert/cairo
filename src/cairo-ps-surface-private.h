@@ -66,6 +66,8 @@ typedef struct cairo_ps_surface {
 
     cairo_paginated_mode_t paginated_mode;
 
+    cairo_bool_t force_fallbacks;
+
     cairo_scaled_font_subsets_t *font_subsets;
 
     cairo_array_t dsc_header_comments;
@@ -73,7 +75,6 @@ typedef struct cairo_ps_surface {
     cairo_array_t dsc_page_setup_comments;
 
     cairo_array_t *dsc_comment_target;
-
 } cairo_ps_surface_t;
 
 #endif /* CAIRO_PS_SURFACE_PRIVATE_H */

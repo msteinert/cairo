@@ -44,6 +44,7 @@ endif
 
 if CAIRO_HAS_PS_SURFACE
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-ps.c
+libcairoboilerplate_la_SOURCES += cairo-boilerplate-ps.h
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-ps-private.h
 endif
 

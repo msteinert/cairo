@@ -25,9 +25,11 @@
  */
 
 #include "cairo-boilerplate.h"
+#include "cairo-boilerplate-ps.h"
 #include "cairo-boilerplate-ps-private.h"
 
 #include <cairo-ps.h>
+#include <cairo-ps-surface-private.h>
 
 cairo_user_data_key_t	ps_closure_key;
 
@@ -135,4 +137,17 @@ _cairo_boilerplate_ps_cleanup (void *closure)
 	cairo_surface_destroy (ptc->target);
     free (ptc->filename);
     free (ptc);
+}
+
+cairo_status_t
+cairo_boilerplate_ps_surface_force_fallbacks (cairo_surface_t *abstract_surface)
+{
+    cairo_ps_surface_t *surface = (cairo_ps_surface_t*) abstract_surface;
+
+    if (cairo_surface_get_type (abstract_surface) != CAIRO_SURFACE_TYPE_PS)
+	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+
+    surface->force_fallbacks = TRUE;
+
+    return CAIRO_STATUS_SUCCESS;
 }
