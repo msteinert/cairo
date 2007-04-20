@@ -46,7 +46,8 @@ endif
 
 if CAIRO_HAS_XLIB_SURFACE
 libcairo_xlib_headers = cairo-xlib.h cairo-xlib-xrender.h
-libcairo_xlib_sources = cairo-xlib-surface.c cairo-xlib-screen.c cairo-xlib-private.h cairo-xlib-test.h
+libcairo_xlib_sources = cairo-xlib-surface.c cairo-xlib-surface-private.h \
+			cairo-xlib-screen.c cairo-xlib-private.h cairo-xlib-test.h
 backend_pkgconfigs += cairo-xlib.pc
 endif
 
