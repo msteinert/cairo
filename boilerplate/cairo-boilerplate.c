@@ -275,18 +275,15 @@ _cairo_boilerplate_test_paginated_cleanup (void *closure)
 
 #endif
 
-/* Testing the win32 surface isn't interesting, since for
- * ARGB images it just chains to the image backend
- */
 #if CAIRO_HAS_WIN32_SURFACE
 #include "cairo-win32.h"
 static cairo_surface_t *
-create_win32_surface (const char		 *name,
-		      cairo_content_t		  content,
-		      int			  width,
-		      int			  height,
-		      cairo_boilerplate_mode_t	  mode,
-		      void			**closure)
+_cairo_boilerplate_win32_create_surface (const char			 *name,
+					 cairo_content_t		  content,
+					 int				  width,
+					 int				  height,
+					 cairo_boilerplate_mode_t	  mode,
+					 void				**closure)
 {
     cairo_format_t format;
 
@@ -385,10 +382,13 @@ static cairo_boilerplate_target_t targets[] =
 #endif
 #if CAIRO_HAS_WIN32_SURFACE
     { "win32", CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR, 0,
-      create_win32_surface,
+      _cairo_boilerplate_win32_create_surface,
       cairo_surface_write_to_png },
+    /* Testing the win32 surface isn't interesting, since for
+     * ARGB images it just chains to the image backend
+     */
     { "win32", CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR_ALPHA, 0,
-      create_win32_surface,
+      _cairo_boilerplate_win32_create_surface,
       cairo_surface_write_to_png },
 #endif
 #if CAIRO_HAS_XCB_SURFACE
