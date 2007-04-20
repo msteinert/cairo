@@ -57,9 +57,7 @@
 #include "cairo-boilerplate-xlib-private.h"
 #endif
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <ctype.h>
 #include <assert.h>
 
@@ -557,47 +555,4 @@ cairo_boilerplate_surface_set_user_data (cairo_surface_t		*surface,
 			       cairo_status_to_string (status));
 	exit (1);
     }
-}
-
-void
-xasprintf (char **strp, const char *fmt, ...)
-{
-#ifdef HAVE_VASPRINTF
-    va_list va;
-    int ret;
-
-    va_start (va, fmt);
-    ret = vasprintf (strp, fmt, va);
-    va_end (va);
-
-    if (ret < 0) {
-	CAIRO_BOILERPLATE_LOG ("Error: Out of memory. Exiting.\n");
-	exit (1);
-    }
-#else /* !HAVE_VASNPRINTF */
-#define BUF_SIZE 1024
-    va_list va;
-    char buffer[BUF_SIZE];
-    int ret;
-
-    va_start (va, fmt);
-    ret = vsnprintf (buffer, sizeof(buffer), fmt, va);
-    va_end (va);
-
-    if (ret < 0) {
-	CAIRO_BOILERPLATE_LOG ("Failure in vsnprintf\n");
-	exit (1);
-    }
-
-    if (strlen (buffer) == sizeof(buffer) - 1) {
-	CAIRO_BOILERPLATE_LOG ("Overflowed fixed buffer\n");
-	exit (1);
-    }
-
-    *strp = strdup (buffer);
-    if (!*strp) {
-	CAIRO_BOILERPLATE_LOG ("Out of memory\n");
-	exit (1);
-    }
-#endif /* !HAVE_VASNPRINTF */
 }

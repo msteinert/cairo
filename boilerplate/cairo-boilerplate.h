@@ -67,18 +67,16 @@
 #error Cannot find definitions for fixed-width integral types (uint8_t, uint32_t, etc.)
 #endif
 
-#include "xmalloc.h"
-
 #ifndef CAIRO_BOILERPLATE_LOG
 #define CAIRO_BOILERPLATE_LOG(...) fprintf(stderr, __VA_ARGS__)
 #endif
 
-/* A fake format we use for the flattened ARGB output of the PS and
- * PDF surfaces. */
-#define CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED ((unsigned int) -1)
-
-const char *
-cairo_boilerplate_content_name (cairo_content_t content);
+#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
+#define CAIRO_BOILERPLATE_PRINTF_FORMAT(fmt_index, va_index) \
+	__attribute__((__format__(__printf__, fmt_index, va_index)))
+#else
+#define CAIRO_BOILERPLATE_PRINTF_FORMAT(fmt_index, va_index)
+#endif
 
 #ifndef FALSE
 #define FALSE 0
@@ -87,6 +85,14 @@ cairo_boilerplate_content_name (cairo_content_t content);
 #ifndef TRUE
 #define TRUE 1
 #endif
+
+
+/* A fake format we use for the flattened ARGB output of the PS and
+ * PDF surfaces. */
+#define CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED ((unsigned int) -1)
+
+const char *
+cairo_boilerplate_content_name (cairo_content_t content);
 
 typedef enum {
     CAIRO_BOILERPLATE_MODE_TEST,
@@ -130,20 +136,12 @@ cairo_boilerplate_get_targets (int *num_targets, cairo_bool_t *limited_targets);
 void
 cairo_boilerplate_free_targets (cairo_boilerplate_target_t **targets);
 
-#if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
-#define CAIRO_PRINTF_FORMAT(fmt_index, va_index) \
-	__attribute__((__format__(__printf__, fmt_index, va_index)))
-#else
-#define CAIRO_PRINTF_FORMAT(fmt_index, va_index)
-#endif
-
 void
 cairo_boilerplate_surface_set_user_data (cairo_surface_t		*surface,
 					 const cairo_user_data_key_t	*key,
 					 void				*user_data,
 					 cairo_destroy_func_t		 destroy);
 
-void
-xasprintf (char **strp, const char *fmt, ...) CAIRO_PRINTF_FORMAT(2, 3);
+#include "xmalloc.h"
 
 #endif
