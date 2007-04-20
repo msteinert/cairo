@@ -113,7 +113,7 @@ typedef int cairo_mutex_t;
 # define CAIRO_MUTEX_FINI(mutex) do {				\
     if (0 != (mutex)) {						\
         DosCloseMutexSem (*(mutex));				\
-        (mutex) = 0;						\
+        (*(mutex)) = 0;						\
     }								\
 } while (0)
 # define CAIRO_MUTEX_NIL_INITIALIZER 0
