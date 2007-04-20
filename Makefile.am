@@ -70,9 +70,18 @@ DISTCHECK_CONFIGURE_FLAGS = --enable-gtk-doc --enable-test-surfaces
 include $(srcdir)/ChangeLog.mk
 
 # Some custom targets to make it easier to release things.
-# Use either:
+#
+# To make real stable releases or devel snapshots, use either:
 #		make release-check
 # or		make release-publish
+#
+# To make a quick properly named (date and git hash stamped) tarball:
+#		make snapshot
+
+snapshot:
+	distdir="$(distdir)-`date '+%Y%m%d'`"; \
+	test -d "$(srcdir)/.git" && distdir=$$distdir-`cd "$(srcdir)" && git-rev-parse HEAD | cut -c 1-6`; \
+	$(MAKE) $(AM_MAKEFLAGS) distdir="$$distdir" dist
 
 RELEASE_OR_SNAPSHOT = $$(if test "x$(CAIRO_VERSION_MINOR)" = "x$$(echo "$(CAIRO_VERSION_MINOR)/2*2" | bc)" ; then echo release; else echo snapshot; fi)
 RELEASE_UPLOAD_HOST =   cairographics.org
