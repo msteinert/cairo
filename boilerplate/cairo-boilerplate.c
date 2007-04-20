@@ -119,24 +119,6 @@ _cairo_boilerplate_image_create_surface (const char			 *name,
     return cairo_image_surface_create (format, width, height);
 }
 
-static void
-xcairo_surface_set_user_data (cairo_surface_t		 *surface,
-			      const cairo_user_data_key_t *key,
-			      void			 *user_data,
-			      cairo_destroy_func_t	 destroy)
-{
-    cairo_status_t status;
-
-    status = cairo_surface_set_user_data (surface,
-					  key, user_data,
-					  destroy);
-    if (status) {
-	CAIRO_BOILERPLATE_LOG ("Error: %s. Exiting\n",
-			       cairo_status_to_string (status));
-	exit (1);
-    }
-}
-
 #ifdef CAIRO_HAS_TEST_SURFACES
 
 #include "test-fallback-surface.h"
@@ -203,8 +185,9 @@ _cairo_boilerplate_test_paginated_create_surface (const char			 *name,
 						       tpc->height,
 						       tpc->stride);
 
-    xcairo_surface_set_user_data (surface, &test_paginated_closure_key,
-				  tpc, NULL);
+    cairo_boilerplate_surface_set_user_data (surface,
+					     &test_paginated_closure_key,
+					     tpc, NULL);
 
     return surface;
 }
@@ -905,7 +888,9 @@ _cairo_boilerplate_pdf_create_surface (const char		 *name,
 	ptc->target = NULL;
     }
 
-    xcairo_surface_set_user_data (surface, &pdf_closure_key, ptc, NULL);
+    cairo_boilerplate_surface_set_user_data (surface,
+					     &pdf_closure_key,
+					     ptc, NULL);
 
     return surface;
 }
@@ -1006,7 +991,9 @@ _cairo_boilerplate_svg_create_surface (const char		 *name,
 	ptc->target = NULL;
     }
 
-    xcairo_surface_set_user_data (surface, &svg_closure_key, ptc, NULL);
+    cairo_boilerplate_surface_set_user_data (surface,
+					     &svg_closure_key,
+					     ptc, NULL);
 
     return surface;
 }
@@ -1333,6 +1320,23 @@ cairo_boilerplate_free_targets (cairo_boilerplate_target_t **targets)
     free (targets);
 }
 
+void
+cairo_boilerplate_surface_set_user_data (cairo_surface_t		*surface,
+					 const cairo_user_data_key_t	*key,
+					 void				*user_data,
+					 cairo_destroy_func_t		 destroy)
+{
+    cairo_status_t status;
+
+    status = cairo_surface_set_user_data (surface,
+					  key, user_data,
+					  destroy);
+    if (status) {
+	CAIRO_BOILERPLATE_LOG ("Error: %s. Exiting\n",
+			       cairo_status_to_string (status));
+	exit (1);
+    }
+}
 
 void
 xasprintf (char **strp, const char *fmt, ...)

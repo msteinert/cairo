@@ -138,6 +138,12 @@ cairo_boilerplate_free_targets (cairo_boilerplate_target_t **targets);
 #endif
 
 void
+cairo_boilerplate_surface_set_user_data (cairo_surface_t		*surface,
+					 const cairo_user_data_key_t	*key,
+					 void				*user_data,
+					 cairo_destroy_func_t		 destroy);
+
+void
 xasprintf (char **strp, const char *fmt, ...) CAIRO_PRINTF_FORMAT(2, 3);
 
 #endif
