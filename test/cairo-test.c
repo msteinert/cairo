@@ -75,6 +75,22 @@ static const char *fail_face = "", *normal_face = "";
 
 #define NUM_DEVICE_OFFSETS 2
 
+static const char *vector_ignored_tests[] = {
+    /* We can't match the results of tests that depend on
+     * CAIRO_ANTIALIAS_NONE/SUBPIXEL for vector backends
+     * (nor do we care). */
+    "ft-text-antialias-none",
+    "rectangle-rounding-error",
+    "text-antialias-gray",
+    "text-antialias-none",
+    "text-antialias-subpixel",
+    "unantialiased-shapes",
+
+    /* Nor do we care about rendering anomalies in external renderers. */
+    "fill-degenerate-sort-order",
+    NULL
+};
+
 /* Static data is messy, but we're coding for tests here, not a
  * general-purpose library, and it keeps the tests cleaner to avoid a
  * context object there, (though not a whole lot). */
@@ -194,10 +210,10 @@ cairo_test_for_target (cairo_test_t			 *test,
 		       int				  dev_offset)
 {
     cairo_test_status_t status;
-    cairo_surface_t *surface;
+    cairo_surface_t *surface = NULL;
     cairo_t *cr;
     char *png_name, *ref_name, *diff_name, *offset_str;
-    cairo_test_status_t ret;
+    cairo_test_status_t ret = CAIRO_TEST_SUCCESS;
     cairo_content_t expected_content;
     cairo_font_options_t *font_options;
     const char *format;
@@ -221,22 +237,36 @@ cairo_test_for_target (cairo_test_t			 *test,
 	       format,
 	       offset_str, CAIRO_TEST_DIFF_SUFFIX);
 
-    /* Run the actual drawing code. */
-    if (test->width && test->height) {
-	test->width += dev_offset;
-	test->height += dev_offset;
+    if (target->is_vector) {
+	int i;
+
+	for (i = 0; vector_ignored_tests[i] != NULL; i++)
+	    if (strcmp (test->name, vector_ignored_tests[i]) == 0) {
+		cairo_test_log ("Error: Skipping for vector target %s\n", target->name);
+		ret = CAIRO_TEST_UNTESTED;
+		goto UNWIND_STRINGS;
+	    }
     }
 
-    surface = (target->create_surface) (test->name,
-					target->content,
-					test->width,
-					test->height,
-					CAIRO_BOILERPLATE_MODE_TEST,
-					&target->closure);
+    if (ret == CAIRO_TEST_SUCCESS) {
+	/* Run the actual drawing code. */
 
-    if (test->width && test->height) {
-	test->width -= dev_offset;
-	test->height -= dev_offset;;
+	if (test->width && test->height) {
+	    test->width += dev_offset;
+	    test->height += dev_offset;
+	}
+
+	surface = (target->create_surface) (test->name,
+					    target->content,
+					    test->width,
+					    test->height,
+					    CAIRO_BOILERPLATE_MODE_TEST,
+					    &target->closure);
+
+	if (test->width && test->height) {
+	    test->width -= dev_offset;
+	    test->height -= dev_offset;;
+	}
     }
 
     if (surface == NULL) {
@@ -341,8 +371,6 @@ cairo_test_for_target (cairo_test_t			 *test,
 	    goto UNWIND_CAIRO;
 	}
     }
-
-    ret = CAIRO_TEST_SUCCESS;
 
 UNWIND_CAIRO:
     cairo_destroy (cr);

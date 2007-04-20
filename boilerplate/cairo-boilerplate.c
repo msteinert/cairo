@@ -72,22 +72,6 @@ typedef enum cairo_internal_surface_type {
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED
 } cairo_internal_surface_type_t;
 
-static const char *vector_ignored_tests[] = {
-    /* We can't match the results of tests that depend on
-     * CAIRO_ANTIALIAS_NONE/SUBPIXEL for vector backends
-     * (nor do we care). */
-    "ft-text-antialias-none",
-    "rectangle-rounding-error",
-    "text-antialias-gray",
-    "text-antialias-none",
-    "text-antialias-subpixel",
-    "unantialiased-shapes",
-
-    /* Nor do we care about rendering anomalies in external renderers. */
-    "fill-degenerate-sort-order",
-    NULL
-};
-
 const char *
 cairo_boilerplate_content_name (cairo_content_t content)
 {
@@ -890,10 +874,6 @@ _cairo_boilerplate_ps_create_surface (const char		 *name,
     cairo_surface_t *surface;
     int i;
 
-    for (i = 0; vector_ignored_tests[i] != NULL; i++)
-	if (strcmp (name, vector_ignored_tests[i]) == 0)
-	    return NULL;
-
     /* Sanitize back to a real cairo_content_t value. */
     if (content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
 	content = CAIRO_CONTENT_COLOR_ALPHA;
@@ -1007,10 +987,6 @@ _cairo_boilerplate_pdf_create_surface (const char		 *name,
     cairo_surface_t *surface;
     int i;
 
-    for (i = 0; vector_ignored_tests[i] != NULL; i++)
-	if (strcmp (name, vector_ignored_tests[i]) == 0)
-	    return NULL;
-
     /* Sanitize back to a real cairo_content_t value. */
     if (content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
 	content = CAIRO_CONTENT_COLOR_ALPHA;
@@ -1116,10 +1092,6 @@ _cairo_boilerplate_svg_create_surface (const char		 *name,
     int i;
     svg_target_closure_t *ptc;
     cairo_surface_t *surface;
-
-    for (i = 0; vector_ignored_tests[i] != NULL; i++)
-	if (strcmp (name, vector_ignored_tests[i]) == 0)
-	    return NULL;
 
     *closure = ptc = xmalloc (sizeof (svg_target_closure_t));
 
