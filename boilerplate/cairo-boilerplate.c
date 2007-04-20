@@ -47,6 +47,9 @@
 #if CAIRO_HAS_SVG_SURFACE
 #include "cairo-boilerplate-svg-private.h"
 #endif
+#ifdef CAIRO_HAS_TEST_SURFACES
+#include "cairo-boilerplate-test-surfaces-private.h"
+#endif
 #if CAIRO_HAS_WIN32_SURFACE
 #include "cairo-boilerplate-win32-private.h"
 #endif
@@ -120,149 +123,6 @@ _cairo_boilerplate_image_create_surface (const char			 *name,
     return cairo_image_surface_create (format, width, height);
 }
 
-#ifdef CAIRO_HAS_TEST_SURFACES
-
-#include <test-fallback-surface.h>
-#include <test-meta-surface.h>
-#include <test-paginated-surface.h>
-
-static cairo_surface_t *
-_cairo_boilerplate_test_fallback_create_surface (const char			 *name,
-						 cairo_content_t		  content,
-						 int				  width,
-						 int				  height,
-						 cairo_boilerplate_mode_t	  mode,
-						 void				**closure)
-{
-    *closure = NULL;
-    return _cairo_test_fallback_surface_create (content, width, height);
-}
-
-static cairo_surface_t *
-_cairo_boilerplate_test_meta_create_surface (const char			 *name,
-					     cairo_content_t		  content,
-					     int			  width,
-					     int			  height,
-					     cairo_boilerplate_mode_t	  mode,
-					     void			**closure)
-{
-    *closure = NULL;
-    return _cairo_test_meta_surface_create (content, width, height);
-}
-
-static const cairo_user_data_key_t test_paginated_closure_key;
-
-typedef struct {
-    unsigned char *data;
-    cairo_content_t content;
-    int width;
-    int height;
-    int stride;
-} test_paginated_closure_t;
-
-static cairo_surface_t *
-_cairo_boilerplate_test_paginated_create_surface (const char			 *name,
-						  cairo_content_t		  content,
-						  int				  width,
-						  int				  height,
-						  cairo_boilerplate_mode_t	  mode,
-						  void				**closure)
-{
-    test_paginated_closure_t *tpc;
-    cairo_surface_t *surface;
-
-    *closure = tpc = xmalloc (sizeof (test_paginated_closure_t));
-
-    tpc->content = content;
-    tpc->width = width;
-    tpc->height = height;
-    tpc->stride = width * 4;
-
-    tpc->data = xcalloc (tpc->stride * height, 1);
-
-    surface = _cairo_test_paginated_surface_create_for_data (tpc->data,
-						       tpc->content,
-						       tpc->width,
-						       tpc->height,
-						       tpc->stride);
-
-    cairo_boilerplate_surface_set_user_data (surface,
-					     &test_paginated_closure_key,
-					     tpc, NULL);
-
-    return surface;
-}
-
-/* The only reason we go through all these machinations to write a PNG
- * image is to _really ensure_ that the data actually landed in our
- * buffer through the paginated surface to the test_paginated_surface.
- *
- * If we didn't implement this function then the default
- * cairo_surface_write_to_png would result in the paginated_surface's
- * acquire_source_image function replaying the meta-surface to an
- * intermediate image surface. And in that case the
- * test_paginated_surface would not be involved and wouldn't be
- * tested.
- */
-static cairo_status_t
-_cairo_boilerplate_test_paginated_surface_write_to_png (cairo_surface_t	*surface,
-						        const char	*filename)
-{
-    cairo_surface_t *image;
-    cairo_format_t format;
-    test_paginated_closure_t *tpc;
-    cairo_status_t status;
-
-    /* show page first.  the automatic show_page is too late for us */
-    /* XXX use cairo_surface_show_page() when that's added */
-    cairo_t *cr = cairo_create (surface);
-    cairo_show_page (cr);
-    cairo_destroy (cr);
-
-    tpc = cairo_surface_get_user_data (surface, &test_paginated_closure_key);
-
-    switch (tpc->content) {
-    case CAIRO_CONTENT_COLOR:
-	format = CAIRO_FORMAT_RGB24;
-	break;
-    case CAIRO_CONTENT_COLOR_ALPHA:
-	format = CAIRO_FORMAT_ARGB32;
-	break;
-    case CAIRO_CONTENT_ALPHA:
-    default:
-	assert (0); /* not reached */
-	return CAIRO_STATUS_NO_MEMORY;
-    }
-
-    image = cairo_image_surface_create_for_data (tpc->data,
-						 format,
-						 tpc->width,
-						 tpc->height,
-						 tpc->stride);
-
-    status = cairo_surface_write_to_png (image, filename);
-    if (status) {
-	CAIRO_BOILERPLATE_LOG ("Error writing %s: %s. Exiting\n",
-			       filename,
-			       cairo_status_to_string (status));
-	exit (1);
-    }
-
-    cairo_surface_destroy (image);
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static void
-_cairo_boilerplate_test_paginated_cleanup (void *closure)
-{
-    test_paginated_closure_t *tpc = closure;
-
-    free (tpc->data);
-    free (tpc);
-}
-
-#endif
 
 static cairo_boilerplate_target_t targets[] =
 {
