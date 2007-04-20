@@ -39,14 +39,7 @@ _cairo_boilerplate_quartz_create_surface (const char			 *name,
 {
     cairo_format_t format;
 
-    switch (content) {
-	case CAIRO_CONTENT_COLOR: format = CAIRO_FORMAT_RGB24; break;
-	case CAIRO_CONTENT_COLOR_ALPHA: format = CAIRO_FORMAT_ARGB32; break;
-	case CAIRO_CONTENT_ALPHA: format = CAIRO_FORMAT_A8; break;
-	default:
-	    assert (0); /* not reached */
-	    return NULL;
-    }
+    format = cairo_boilerplate_format_from_content (content);
 
     *closure = NULL;
 

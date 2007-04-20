@@ -39,13 +39,9 @@ _cairo_boilerplate_win32_create_surface (const char			 *name,
 {
     cairo_format_t format;
 
-    if (content == CAIRO_CONTENT_COLOR)
-        format = CAIRO_FORMAT_RGB24;
-    else if (content == CAIRO_CONTENT_COLOR_ALPHA)
-        format = CAIRO_FORMAT_ARGB32;
-    else
-        return NULL;
+    format = cairo_boilerplate_format_from_content (content);
 
     *closure = NULL;
+
     return cairo_win32_surface_create_with_dib (format, width, height);
 }

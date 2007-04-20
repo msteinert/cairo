@@ -128,18 +128,7 @@ _cairo_boilerplate_test_paginated_surface_write_to_png (cairo_surface_t	*surface
 
     tpc = cairo_surface_get_user_data (surface, &test_paginated_closure_key);
 
-    switch (tpc->content) {
-    case CAIRO_CONTENT_COLOR:
-	format = CAIRO_FORMAT_RGB24;
-	break;
-    case CAIRO_CONTENT_COLOR_ALPHA:
-	format = CAIRO_FORMAT_ARGB32;
-	break;
-    case CAIRO_CONTENT_ALPHA:
-    default:
-	assert (0); /* not reached */
-	return CAIRO_STATUS_NO_MEMORY;
-    }
+    format = cairo_boilerplate_format_from_content (tpc->content);
 
     image = cairo_image_surface_create_for_data (tpc->data,
 						 format,

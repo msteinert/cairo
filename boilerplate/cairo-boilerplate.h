@@ -94,6 +94,9 @@
 const char *
 cairo_boilerplate_content_name (cairo_content_t content);
 
+cairo_format_t
+cairo_boilerplate_format_from_content (cairo_content_t content);
+
 typedef enum {
     CAIRO_BOILERPLATE_MODE_TEST,
     CAIRO_BOILERPLATE_MODE_PERF
