@@ -340,8 +340,8 @@ read_png (png_rw_ptr	read_func,
     cairo_surface_t *surface = (cairo_surface_t*) &_cairo_surface_nil;
     png_struct *png = NULL;
     png_info *info;
-    volatile png_byte *data = NULL;
-    volatile png_byte **row_pointers = NULL;
+    png_byte *data = NULL;
+    png_byte **row_pointers = NULL;
     png_uint_32 png_width, png_height, stride;
     int depth, color_type, interlace;
     unsigned int i;
