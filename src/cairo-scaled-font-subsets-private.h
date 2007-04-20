@@ -97,7 +97,7 @@ _cairo_scaled_font_subsets_create_simple (void);
  *
  * Glyphs with an outline path available will be mapped to one font
  * subset for each font face. Each unscaled subset has a maximum of
- * 65536 glyphs.
+ * 65536 glyphs except for Type1 fonts which have a maximum of 256 glyphs.
  *
  * Glyphs from bitmap fonts will mapped to separate font subsets for
  * each cairo_scaled_font_t object. Each unscaled subset has a maximum
@@ -423,6 +423,15 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type_subset,
  **/
 cairo_private void
 _cairo_type1_subset_fini (cairo_type1_subset_t *subset);
+
+/**
+ * _cairo_type1_scaled_font_is_type1:
+ * @scaled_font: a #cairo_scaled_font_t
+ *
+ * Return TRUE if @scaled_font is a Type 1 font, otherwise return FALSE.
+ **/
+cairo_private cairo_bool_t
+_cairo_type1_scaled_font_is_type1 (cairo_scaled_font_t	*scaled_font);
 
 /**
  * _cairo_type1_fallback_init_binary:
