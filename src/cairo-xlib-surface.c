@@ -39,7 +39,6 @@
 #include "cairoint.h"
 #include "cairo-xlib.h"
 #include "cairo-xlib-xrender.h"
-#include "cairo-xlib-test.h"
 #include "cairo-xlib-private.h"
 #include "cairo-xlib-surface-private.h"
 #include "cairo-clip-private.h"
@@ -108,25 +107,6 @@ static const XTransform identity = { {
 
 #define CAIRO_SURFACE_RENDER_HAS_PICTURE_TRANSFORM(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 6)
 #define CAIRO_SURFACE_RENDER_HAS_FILTERS(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 6)
-
-static cairo_bool_t cairo_xlib_render_disabled = FALSE;
-
-/**
- * _cairo_xlib_test_disable_render:
- *
- * Disables the use of the RENDER extension.
- *
- * <note>
- * This function is <emphasis>only</emphasis> intended for internal
- * testing use within the cairo distribution. It is not installed in
- * any public header file.
- * </note>
- **/
-void
-_cairo_xlib_test_disable_render (void)
-{
-    cairo_xlib_render_disabled = TRUE;
-}
 
 static int
 _CAIRO_FORMAT_DEPTH (cairo_format_t format)
@@ -1848,8 +1828,7 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 	;
     }
 
-    if (cairo_xlib_render_disabled ||
-	! XRenderQueryVersion (dpy, &surface->render_major, &surface->render_minor)) {
+    if (! XRenderQueryVersion (dpy, &surface->render_major, &surface->render_minor)) {
 	surface->render_major = -1;
 	surface->render_minor = -1;
     }
