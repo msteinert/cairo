@@ -1318,7 +1318,8 @@ static cairo_boilerplate_target_t targets[] =
       CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED, 0,
       _cairo_boilerplate_ps_create_surface,
       _cairo_boilerplate_ps_surface_write_to_png,
-      _cairo_boilerplate_ps_cleanup },
+      _cairo_boilerplate_ps_cleanup,
+      NULL, TRUE },
 
     /* XXX: We expect type image here only due to a limitation in
      * the current PS/meta-surface code. A PS surface is
@@ -1331,14 +1332,16 @@ static cairo_boilerplate_target_t targets[] =
     { "ps", CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR, 0,
       _cairo_boilerplate_ps_create_surface,
       _cairo_boilerplate_ps_surface_write_to_png,
-      _cairo_boilerplate_ps_cleanup },
+      _cairo_boilerplate_ps_cleanup,
+      NULL, TRUE },
 #endif
 #if CAIRO_HAS_PDF_SURFACE && CAIRO_CAN_TEST_PDF_SURFACE
     { "pdf", CAIRO_SURFACE_TYPE_PDF,
       CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED, 0,
       _cairo_boilerplate_pdf_create_surface,
       _cairo_boilerplate_pdf_surface_write_to_png,
-      _cairo_boilerplate_pdf_cleanup },
+      _cairo_boilerplate_pdf_cleanup,
+      NULL, TRUE },
 
     /* XXX: We expect type image here only due to a limitation in
      * the current PDF/meta-surface code. A PDF surface is
@@ -1351,7 +1354,8 @@ static cairo_boilerplate_target_t targets[] =
     { "pdf", CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR, 0,
       _cairo_boilerplate_pdf_create_surface,
       _cairo_boilerplate_pdf_surface_write_to_png,
-      _cairo_boilerplate_pdf_cleanup },
+      _cairo_boilerplate_pdf_cleanup,
+      NULL, TRUE },
 #endif
 #if CAIRO_HAS_SVG_SURFACE && CAIRO_CAN_TEST_SVG_SURFACE
     /* It seems we should be able to round-trip SVG content perfrectly
@@ -1362,11 +1366,13 @@ static cairo_boilerplate_target_t targets[] =
     { "svg", CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR_ALPHA, 1,
       _cairo_boilerplate_svg_create_surface,
       _cairo_boilerplate_svg_surface_write_to_png,
-      _cairo_boilerplate_svg_cleanup },
+      _cairo_boilerplate_svg_cleanup,
+      NULL, TRUE },
     { "svg", CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 1,
       _cairo_boilerplate_svg_create_surface,
       _cairo_boilerplate_svg_surface_write_to_png,
-      _cairo_boilerplate_svg_cleanup },
+      _cairo_boilerplate_svg_cleanup,
+      NULL, TRUE },
 #endif
 #if CAIRO_HAS_BEOS_SURFACE
     /* BeOS sometimes produces a slightly different image. Perhaps this
