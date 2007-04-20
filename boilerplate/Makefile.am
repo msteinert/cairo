@@ -73,6 +73,7 @@ endif
 
 if CAIRO_HAS_XLIB_XRENDER_SURFACE
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-xlib.c
+libcairoboilerplate_la_SOURCES += cairo-boilerplate-xlib.h
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-xlib-private.h
 endif
 
