@@ -84,8 +84,6 @@ typedef struct cairo_ps_surface {
 
 } cairo_ps_surface_t;
 
-#define PS_SURFACE_MAX_GLYPHS_PER_FONT	256
-
 /* A word wrap stream can be used as a filter to do word wrapping on
  * top of an existing output stream. The word wrapping is quite
  * simple, using isspace to determine characters that separate
@@ -486,18 +484,18 @@ _cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,
 
     /* FIXME: Figure out how subset->x_max etc maps to the /FontBBox */
 
-    for (i = 0; i < font_subset->num_glyphs; i++)
+    for (i = 1; i < font_subset->num_glyphs; i++)
 	_cairo_output_stream_printf (surface->final_stream,
 				     "Encoding %d /g%d put\n", i, i);
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "/CharStrings %d dict dup begin\n"
 				 "/.notdef 0 def\n",
-				 font_subset->num_glyphs + 1);
+				 font_subset->num_glyphs);
 
-    for (i = 0; i < font_subset->num_glyphs; i++)
+    for (i = 1; i < font_subset->num_glyphs; i++)
 	_cairo_output_stream_printf (surface->final_stream,
-				     "/g%d %d def\n", i, i + 1);
+				     "/g%d %d def\n", i, i);
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "end readonly def\n");
@@ -814,8 +812,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     if (status)
 	goto CLEANUP_TMPFILE;
 
-    surface->font_subsets = _cairo_scaled_font_subsets_create (PS_SURFACE_MAX_GLYPHS_PER_FONT,
-                                                               PS_SURFACE_MAX_GLYPHS_PER_FONT);
+    surface->font_subsets = _cairo_scaled_font_subsets_create_simple ();
     if (! surface->font_subsets)
 	goto CLEANUP_OUTPUT_STREAM;
 

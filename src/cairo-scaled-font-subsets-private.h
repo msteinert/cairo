@@ -46,20 +46,12 @@ typedef struct _cairo_scaled_font_subsets_glyph {
     unsigned int subset_id;
     unsigned int subset_glyph_index;
     cairo_bool_t is_scaled;
+    cairo_bool_t is_composite;
     double       x_advance;
 } cairo_scaled_font_subsets_glyph_t;
 
 /**
- * _cairo_scaled_font_subsets_create:
- *
- * @max_glyphs_per_unscaled_subset: the maximum number of glyphs that
- * should appear in any unscaled subset. A value of 0 indicates that
- * no unscaled subset will be created. All glyphs will mapped to
- * scaled subsets.
- *
- * @max_glyphs_per_scaled_subset: the maximum number of glyphs that
- * should appear in any scaled subset. A value of 0 indicates that
- * no scaled subset will be created.
+ * _cairo_scaled_font_subsets_create_scaled:
  *
  * Create a new #cairo_scaled_font_subsets_t object which can be used
  * to create subsets of any number of cairo_scaled_font_t
@@ -68,16 +60,57 @@ typedef struct _cairo_scaled_font_subsets_glyph {
  * subsets with glyph indices packed into the range
  * [0 .. max_glyphs_per_subset).
  *
- * @max_glyphs_per_unscaled_subset and @max_glyphs_per_scaled_subset
- * cannot both be 0.
+ * Return value: a pointer to the newly creates font subsets. The
+ * caller owns this object and should call
+ * _cairo_scaled_font_subsets_destroy() when done with it.
+ **/
+cairo_private cairo_scaled_font_subsets_t *
+_cairo_scaled_font_subsets_create_scaled (void);
+
+/**
+ * _cairo_scaled_font_subsets_create_simple:
+ *
+ * Create a new #cairo_scaled_font_subsets_t object which can be used
+ * to create font subsets suitable for embedding as Postscript or PDF
+ * simple fonts.
+ *
+ * Glyphs with an outline path available will be mapped to one font
+ * subset for each font face. Glyphs from bitmap fonts will mapped to
+ * separate font subsets for each cairo_scaled_font_t object.
+ *
+ * The maximum number of glyphs per subset is 256. Each subset
+ * reserves the first glyph for the .notdef glyph.
  *
  * Return value: a pointer to the newly creates font subsets. The
  * caller owns this object and should call
  * _cairo_scaled_font_subsets_destroy() when done with it.
  **/
 cairo_private cairo_scaled_font_subsets_t *
-_cairo_scaled_font_subsets_create (int max_glyphs_unscaled_per_subset,
-                                   int max_glyphs_scaled_per_subset);
+_cairo_scaled_font_subsets_create_simple (void);
+
+/**
+ * _cairo_scaled_font_subsets_create_composite:
+ *
+ * Create a new #cairo_scaled_font_subsets_t object which can be used
+ * to create font subsets suitable for embedding as Postscript or PDF
+ * composite fonts.
+ *
+ * Glyphs with an outline path available will be mapped to one font
+ * subset for each font face. Each unscaled subset has a maximum of
+ * 65536 glyphs.
+ *
+ * Glyphs from bitmap fonts will mapped to separate font subsets for
+ * each cairo_scaled_font_t object. Each unscaled subset has a maximum
+ * of 256 glyphs.
+ *
+ * Each subset reserves the first glyph for the .notdef glyph.
+ *
+ * Return value: a pointer to the newly creates font subsets. The
+ * caller owns this object and should call
+ * _cairo_scaled_font_subsets_destroy() when done with it.
+ **/
+cairo_private cairo_scaled_font_subsets_t *
+_cairo_scaled_font_subsets_create_composite (void);
 
 /**
  * _cairo_scaled_font_subsets_destroy:

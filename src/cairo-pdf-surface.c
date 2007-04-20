@@ -138,8 +138,6 @@ typedef struct _cairo_pdf_surface {
     cairo_paginated_mode_t paginated_mode;
 } cairo_pdf_surface_t;
 
-#define PDF_SURFACE_MAX_GLYPHS_PER_FONT	256
-
 static cairo_pdf_resource_t
 _cairo_pdf_surface_new_object (cairo_pdf_surface_t *surface);
 
@@ -279,8 +277,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
     _cairo_array_init (&surface->streams, sizeof (cairo_pdf_resource_t));
     _cairo_array_init (&surface->alphas, sizeof (double));
 
-    surface->font_subsets = _cairo_scaled_font_subsets_create (PDF_SURFACE_MAX_GLYPHS_PER_FONT,
-                                                               PDF_SURFACE_MAX_GLYPHS_PER_FONT);
+    surface->font_subsets = _cairo_scaled_font_subsets_create_simple();
     if (! surface->font_subsets) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	free (surface);

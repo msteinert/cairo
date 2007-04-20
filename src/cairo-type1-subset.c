@@ -1133,9 +1133,6 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
 	cairo_type1_font_subset_use_glyph (font, parent_glyph);
     }
 
-    /* Pull in the .notdef glyph */
-    cairo_type1_font_subset_use_glyph (font, 0);
-
     status = cairo_type1_font_subset_generate (font, name);
     if (status)
 	goto fail1;

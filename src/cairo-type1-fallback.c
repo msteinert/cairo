@@ -421,7 +421,7 @@ cairo_type1_font_write_charstrings (cairo_type1_font_t    *font,
                                  "2 index /CharStrings %d dict dup begin\n",
                                  font->scaled_font_subset->num_glyphs + 1);
 
-    for (i = 0; i < font->scaled_font_subset->num_glyphs; i++) {
+    for (i = 1; i < font->scaled_font_subset->num_glyphs; i++) {
         _cairo_array_truncate (&data, 0);
         /* four "random" bytes required by encryption algorithm */
         status = _cairo_array_append_multiple (&data, zeros, 4);

@@ -985,11 +985,6 @@ cairo_cff_font_subset_charstrings (cairo_cff_font_t  *font)
     unsigned int i;
     cairo_status_t status;
 
-    /* add .notdef */
-    element = _cairo_array_index (&font->charstrings_index, 0);
-    status = cff_index_append (&font->charstrings_subset_index,
-                               element->data,
-                               element->length);
     if (status)
         return status;
 
@@ -1056,7 +1051,7 @@ cairo_cff_font_subset_charset (cairo_cff_font_t  *font)
 {
     unsigned int i;
 
-    for (i = 0; i < font->scaled_font_subset->num_glyphs; i++) {
+    for (i = 1; i < font->scaled_font_subset->num_glyphs; i++) {
 	int gid = font->scaled_font_subset->glyphs[i];
 	uint16_t original_sid = cff_sid_from_gid(&font->charset, gid);
 	uint16_t new_sid;
@@ -1371,7 +1366,7 @@ cairo_cff_font_create_set_widths (cairo_cff_font_t *font)
         return status;
     num_hmetrics = be16_to_cpu (hhea.num_hmetrics);
 
-    for (i = 0; i < font->scaled_font_subset->num_glyphs; i++) {
+    for (i = 1; i < font->scaled_font_subset->num_glyphs; i++) {
         glyph_index = font->scaled_font_subset->glyphs[i];
         long_entry_size = 2 * sizeof (int16_t);
         short_entry_size = sizeof (int16_t);

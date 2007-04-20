@@ -2092,7 +2092,7 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
     }
 
     /* The use of defs for font glyphs imposes no per-subset limit. */
-    document->font_subsets = _cairo_scaled_font_subsets_create (0, INT_MAX);
+    document->font_subsets = _cairo_scaled_font_subsets_create_scaled ();
     if (document->font_subsets == NULL) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	free (document);
