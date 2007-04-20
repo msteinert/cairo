@@ -38,11 +38,6 @@
 
 #include "cairoint.h"
 
-typedef enum {
-    CAIRO_PAGINATED_MODE_ANALYZE,	/* analyze page regions */
-    CAIRO_PAGINATED_MODE_RENDER		/* render page contents */
-} cairo_paginated_mode_t;
-
 typedef struct _cairo_paginated_surface_backend {
     /* Optional. Will be called once for each page.
      *

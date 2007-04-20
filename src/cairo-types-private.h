@@ -62,4 +62,9 @@ typedef struct _cairo_clip cairo_clip_t;
 
 typedef struct _cairo_xlib_screen_info cairo_xlib_screen_info_t;
 
+typedef enum {
+    CAIRO_PAGINATED_MODE_ANALYZE,	/* analyze page regions */
+    CAIRO_PAGINATED_MODE_RENDER		/* render page contents */
+} cairo_paginated_mode_t;
+
 #endif /* CAIRO_TYPES_PRIVATE_H */
