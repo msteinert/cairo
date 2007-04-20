@@ -571,7 +571,7 @@ xasprintf (char **strp, const char *fmt, ...)
     va_end (va);
 
     if (ret < 0) {
-	cairo_test_log ("Out of memory\n");
+	CAIRO_BOILERPLATE_LOG ("Error: Out of memory. Exiting.\n");
 	exit (1);
     }
 #else /* !HAVE_VASNPRINTF */
