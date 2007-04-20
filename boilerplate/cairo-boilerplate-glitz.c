@@ -25,7 +25,7 @@
  */
 
 #include "cairo-boilerplate.h"
-#include "cairo-boilerplate-xlib-private.h"
+#include "cairo-boilerplate-glitz-private.h"
 
 #include <cairo-glitz.h>
 
@@ -47,7 +47,7 @@ typedef struct _glitz_glx_target_closure {
     Window          win;
 } glitz_glx_target_closure_t;
 
-glitz_surface_t *
+static glitz_surface_t *
 _cairo_boilerplate_glitz_glx_create_surface_internal (glitz_format_name_t		 formatname,
 						      int				 width,
 						      int				 height,
