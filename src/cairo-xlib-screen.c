@@ -287,7 +287,6 @@ _cairo_xlib_screen_info_destroy (cairo_xlib_screen_info_t *info)
 	    break;
 	}
     }
-    assert (list != NULL);
     CAIRO_MUTEX_UNLOCK (info->display->mutex);
 
     _cairo_xlib_screen_info_close_display (info);
@@ -333,7 +332,7 @@ _cairo_xlib_screen_info_get (Display *dpy, Screen *screen)
     } else {
 	info = malloc (sizeof (cairo_xlib_screen_info_t));
 	if (info != NULL) {
-	    info->ref_count = 1;
+	    info->ref_count = 2; /* Add one for display cache */
 	    info->display = _cairo_xlib_display_reference (display);
 	    info->screen = screen;
 	    info->has_render = FALSE;

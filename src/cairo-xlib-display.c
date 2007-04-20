@@ -98,6 +98,24 @@ _cairo_xlib_call_close_display_hooks (cairo_xlib_display_t *display)
     CAIRO_MUTEX_UNLOCK (display->mutex);
 }
 
+static void
+_cairo_xlib_display_discard_screens (cairo_xlib_display_t *display)
+{
+    cairo_xlib_screen_info_t *screens;
+
+    CAIRO_MUTEX_LOCK (display->mutex);
+    screens = display->screens;
+    display->screens = NULL;
+    CAIRO_MUTEX_UNLOCK (display->mutex);
+
+    while (screens != NULL) {
+	cairo_xlib_screen_info_t *screen = screens;
+	screens = screen->next;
+
+	_cairo_xlib_screen_info_destroy (screen);
+    }
+}
+
 cairo_xlib_display_t *
 _cairo_xlib_display_reference (cairo_xlib_display_t *display)
 {
@@ -173,6 +191,7 @@ _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
 
 	    _cairo_xlib_display_notify (display);
 	    _cairo_xlib_call_close_display_hooks (display);
+	    _cairo_xlib_display_discard_screens (display);
 
 	    /* catch any that arrived before marking the display as closed */
 	    _cairo_xlib_display_notify (display);
