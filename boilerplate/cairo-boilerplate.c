@@ -213,8 +213,8 @@ _cairo_boilerplate_test_paginated_create_surface (const char			 *name,
  * tested.
  */
 static cairo_status_t
-_cairo_boilerplate_test_paginated_surface_write_to_png (cairo_surface_t *surface,
-			     const char	     *filename)
+_cairo_boilerplate_test_paginated_surface_write_to_png (cairo_surface_t	*surface,
+						        const char	*filename)
 {
     cairo_surface_t *image;
     cairo_format_t format;
