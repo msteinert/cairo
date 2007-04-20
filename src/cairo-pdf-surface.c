@@ -2658,7 +2658,7 @@ _pattern_supported (cairo_pattern_t *pattern)
 }
 
 static cairo_int_status_t
-__cairo_pdf_surface_operation_supported (cairo_pdf_surface_t *surface,
+_cairo_pdf_surface_operation_supported (cairo_pdf_surface_t *surface,
 		      cairo_operator_t op,
 		      cairo_pattern_t *pattern)
 {
@@ -2681,7 +2681,7 @@ _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t *surface,
 		    cairo_operator_t op,
 		    cairo_pattern_t *pattern)
 {
-    if (__cairo_pdf_surface_operation_supported (surface, op, pattern))
+    if (_cairo_pdf_surface_operation_supported (surface, op, pattern))
 	return CAIRO_STATUS_SUCCESS;
     else
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -2705,7 +2705,7 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
      * possible only because there is nothing between the fallback
      * images and the paper, nor is anything painted above. */
     /*
-    assert (__cairo_pdf_surface_operation_supported (op, source));
+    assert (_cairo_pdf_surface_operation_supported (op, source));
     */
 
     status = _cairo_pdf_surface_emit_pattern (surface, source);
@@ -2819,7 +2819,7 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _cairo_pdf_surface_analyze_operation (surface, op, source);
 
-    assert (__cairo_pdf_surface_operation_supported (surface, op, source));
+    assert (_cairo_pdf_surface_operation_supported (surface, op, source));
 
     status = _cairo_pdf_surface_emit_pattern (surface, source);
     if (status)
@@ -2868,7 +2868,7 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _cairo_pdf_surface_analyze_operation (surface, op, source);
 
-    assert (__cairo_pdf_surface_operation_supported (surface, op, source));
+    assert (_cairo_pdf_surface_operation_supported (surface, op, source));
 
     status = _cairo_pdf_surface_emit_pattern (surface, source);
     if (status)
@@ -2925,7 +2925,7 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _cairo_pdf_surface_analyze_operation (surface, op, source);
 
-    assert (__cairo_pdf_surface_operation_supported (surface, op, source));
+    assert (_cairo_pdf_surface_operation_supported (surface, op, source));
 
     status = _cairo_pdf_surface_emit_pattern (surface, source);
     if (status)
