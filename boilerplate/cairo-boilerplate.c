@@ -300,11 +300,6 @@ create_win32_surface (const char		 *name,
     *closure = NULL;
     return cairo_win32_surface_create_with_dib (format, width, height);
 }
-
-static void
-cleanup_win32 (void *closure)
-{
-}
 #endif
 
 static cairo_boilerplate_target_t targets[] =
@@ -391,12 +386,10 @@ static cairo_boilerplate_target_t targets[] =
 #if CAIRO_HAS_WIN32_SURFACE
     { "win32", CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR, 0,
       create_win32_surface,
-      cairo_surface_write_to_png,
-      cleanup_win32 },
+      cairo_surface_write_to_png },
     { "win32", CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR_ALPHA, 0,
       create_win32_surface,
-      cairo_surface_write_to_png,
-      cleanup_win32 },
+      cairo_surface_write_to_png },
 #endif
 #if CAIRO_HAS_XCB_SURFACE
     /* Acceleration architectures may make the results differ by a
