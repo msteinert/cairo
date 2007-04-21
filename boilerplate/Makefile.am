@@ -3,6 +3,7 @@ EXTRA_LTLIBRARIES = libcairoboilerplate.la
 libcairoboilerplate_la_SOURCES =\
 cairo-boilerplate.c	\
 cairo-boilerplate.h	\
+cairo-boilerplate-scaled-font.h	\
 xmalloc.c		\
 xmalloc.h
 libcairoboilerplate_la_LIBADD = $(top_builddir)/src/libcairo.la $(CAIRO_LDADD)
@@ -38,11 +39,13 @@ endif
 
 if CAIRO_HAS_PDF_SURFACE
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-pdf.c
+libcairoboilerplate_la_SOURCES += cairo-boilerplate-pdf.h
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-pdf-private.h
 endif
 
 if CAIRO_HAS_PS_SURFACE
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-ps.c
+libcairoboilerplate_la_SOURCES += cairo-boilerplate-ps.h
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-ps-private.h
 endif
 
@@ -53,6 +56,7 @@ endif
 
 if CAIRO_HAS_SVG_SURFACE
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-svg.c
+libcairoboilerplate_la_SOURCES += cairo-boilerplate-svg.h
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-svg-private.h
 endif
 
@@ -73,6 +77,7 @@ endif
 
 if CAIRO_HAS_XLIB_XRENDER_SURFACE
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-xlib.c
+libcairoboilerplate_la_SOURCES += cairo-boilerplate-xlib.h
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-xlib-private.h
 endif
 

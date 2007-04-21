@@ -244,6 +244,7 @@ be32_to_cpu(uint32_t v)
 
 #endif
 
+#include "cairo-types-private.h"
 #include "cairo-hash-private.h"
 #include "cairo-cache-private.h"
 
@@ -348,7 +349,6 @@ typedef enum _cairo_clip_mode {
     CAIRO_CLIP_MODE_MASK
 } cairo_clip_mode_t;
 typedef struct _cairo_clip_path cairo_clip_path_t;
-typedef struct _cairo_clip cairo_clip_t;
 
 typedef struct _cairo_edge {
     cairo_line_t edge;
@@ -400,8 +400,6 @@ typedef struct _cairo_pen {
 typedef struct _cairo_color cairo_color_t;
 typedef struct _cairo_image_surface cairo_image_surface_t;
 
-typedef struct _cairo_surface_backend cairo_surface_backend_t;
-
 cairo_private void
 _cairo_box_round_to_rectangle (cairo_box_t *box, cairo_rectangle_int16_t *rectangle);
 
@@ -409,16 +407,6 @@ cairo_private void
 _cairo_rectangle_intersect (cairo_rectangle_int16_t *dest, cairo_rectangle_int16_t *src);
 
 /* cairo_array.c structures and functions */
-
-typedef struct _cairo_array cairo_array_t;
-struct _cairo_array {
-    unsigned int size;
-    unsigned int num_elements;
-    unsigned int element_size;
-    char **elements;
-
-    cairo_bool_t is_snapshot;
-};
 
 cairo_private void
 _cairo_array_init (cairo_array_t *array, int element_size);
@@ -461,8 +449,6 @@ _cairo_array_num_elements (cairo_array_t *array);
 cairo_private int
 _cairo_array_size (cairo_array_t *array);
 
-typedef cairo_array_t cairo_user_data_array_t;
-
 cairo_private void
 _cairo_user_data_array_init (cairo_user_data_array_t *array);
 
@@ -483,8 +469,6 @@ cairo_private unsigned long
 _cairo_hash_string (const char *c);
 
 typedef struct _cairo_unscaled_font_backend cairo_unscaled_font_backend_t;
-typedef struct _cairo_scaled_font_backend   cairo_scaled_font_backend_t;
-typedef struct _cairo_font_face_backend     cairo_font_face_backend_t;
 
 /*
  * A cairo_unscaled_font_t is just an opaque handle we use in the
@@ -495,13 +479,6 @@ typedef struct _cairo_unscaled_font {
     unsigned int ref_count;
     const cairo_unscaled_font_backend_t *backend;
 } cairo_unscaled_font_t;
-
-struct _cairo_font_options {
-    cairo_antialias_t antialias;
-    cairo_subpixel_order_t subpixel_order;
-    cairo_hint_style_t hint_style;
-    cairo_hint_metrics_t hint_metrics;
-};
 
 typedef struct _cairo_scaled_glyph {
     cairo_cache_entry_t	    cache_entry;	/* hash is glyph index */
@@ -518,71 +495,7 @@ typedef struct _cairo_scaled_glyph {
 #define _cairo_scaled_glyph_index(g) ((g)->cache_entry.hash)
 #define _cairo_scaled_glyph_set_index(g,i)  ((g)->cache_entry.hash = (i))
 
-struct _cairo_scaled_font {
-    /* For most cairo objects, the rule for multiple threads is that
-     * the user is responsible for any locking if the same object is
-     * manipulated from multiple threads simultaneously.
-     *
-     * However, with the caching that cairo does for scaled fonts, a
-     * user can easily end up with the same cairo_scaled_font object
-     * being manipulated from multiple threads without the user ever
-     * being aware of this, (and in fact, unable to control it).
-     *
-     * So, as a special exception, the cairo implementation takes care
-     * of all locking needed for cairo_scaled_font_t. Most of what is
-     * in the scaled font is immutable, (which is what allows for the
-     * sharing in the first place). The things that are modified and
-     * the locks protecting them are as follows:
-     *
-     * 1. The reference count (scaled_font->ref_count)
-     *
-     *    Modifications to the reference count are protected by the
-     *    _cairo_scaled_font_map_mutex. This is because the reference
-     *    count of a scaled font is intimately related with the font
-     *    map itself, (and the magic holdovers array).
-     *
-     * 2. The cache of glyphs (scaled_font->glyphs)
-     * 3. The backend private data (scaled_font->surface_backend,
-     *				    scaled_font->surface_private)
-     *
-     *    Modifications to these fields are protected with locks on
-     *    scaled_font->mutex in the generic scaled_font code.
-     */
-
-    /* must be first to be stored in a hash table */
-    cairo_hash_entry_t hash_entry;
-
-    /* useful bits for _cairo_scaled_font_nil */
-    cairo_status_t status;
-    unsigned int ref_count;
-    cairo_user_data_array_t user_data;
-
-    /* hash key members */
-    cairo_font_face_t *font_face; /* may be NULL */
-    cairo_matrix_t font_matrix;	  /* font space => user space */
-    cairo_matrix_t ctm;	          /* user space => device space */
-    cairo_font_options_t options;
-
-    /* "live" scaled_font members */
-    cairo_matrix_t scale;	  /* font space => device space */
-    cairo_font_extents_t extents; /* user space */
-
-    /* The mutex protects modification to all subsequent fields. */
-    cairo_mutex_t mutex;
-
-    cairo_cache_t *glyphs;	  /* glyph index -> cairo_scaled_glyph_t */
-
-    /*
-     * One surface backend may store data in each glyph.
-     * Whichever surface manages to store its pointer here
-     * first gets to store data in each glyph
-     */
-    const cairo_surface_backend_t *surface_backend;
-    void *surface_private;
-
-    /* font backend managing this scaled font */
-    const cairo_scaled_font_backend_t *backend;
-};
+#include "cairo-scaled-font-private.h"
 
 struct _cairo_font_face {
     /* hash_entry must be first */
@@ -993,56 +906,7 @@ typedef struct _cairo_format_masks {
     unsigned long blue_mask;
 } cairo_format_masks_t;
 
-struct _cairo_surface {
-    const cairo_surface_backend_t *backend;
-
-    /* We allow surfaces to override the backend->type by shoving something
-     * else into surface->type. This is for "wrapper" surfaces that want to
-     * hide their internal type from the user-level API. */
-    cairo_surface_type_t type;
-
-    cairo_content_t content;
-
-    unsigned int ref_count;
-    cairo_status_t status;
-    cairo_bool_t finished;
-    cairo_user_data_array_t user_data;
-
-    cairo_matrix_t device_transform;
-    cairo_matrix_t device_transform_inverse;
-
-    double x_fallback_resolution;
-    double y_fallback_resolution;
-
-    cairo_clip_t *clip;
-
-    /*
-     * Each time a clip region is modified, it gets the next value in this
-     * sequence.  This means that clip regions for this surface are uniquely
-     * identified and updates to the clip can be readily identified
-     */
-    unsigned int next_clip_serial;
-    /*
-     * The serial number of the current clip.  This is set when
-     * the surface clipping is set.  The gstate can then cheaply
-     * check whether the surface clipping is already correct before
-     * performing a rendering operation.
-     *
-     * The special value '0' is reserved for the unclipped case.
-     */
-    unsigned int current_clip_serial;
-
-    /* A "snapshot" surface is immutable. See _cairo_surface_snapshot. */
-    cairo_bool_t is_snapshot;
-
-    /*
-     * Surface font options, falling back to backend's default options,
-     * and set using _cairo_surface_set_font_options(), and propagated by
-     * cairo_surface_create_similar().
-     */
-    cairo_bool_t has_font_options;
-    cairo_font_options_t font_options;
-};
+#include "cairo-surface-private.h"
 
 struct _cairo_image_surface {
     cairo_surface_t base;

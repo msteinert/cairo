@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2006 Red Hat, Inc.
+ * Copyright © 2003 University of Southern California
+ * Copyright © 2005 Red Hat, Inc
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -32,23 +33,48 @@
  *
  * Contributor(s):
  *	Carl D. Worth <cworth@cworth.org>
+ *	Kristian Høgsberg <krh@redhat.com>
+ *	Keith Packard <keithp@keithp.com>
  */
 
-#ifndef CAIRO_SVG_TEST_H
-#define CAIRO_SVG_TEST_H
+#ifndef CAIRO_PS_SURFACE_PRIVATE_H
+#define CAIRO_PS_SURFACE_PRIVATE_H
 
-#include <cairo.h>
+#include "cairo-ps.h"
 
-#if CAIRO_HAS_SVG_SURFACE
+#include "cairo-surface-private.h"
 
-#include <cairo-svg.h>
+typedef struct cairo_ps_surface {
+    cairo_surface_t base;
 
-CAIRO_BEGIN_DECLS
+    /* Here final_stream corresponds to the stream/file passed to
+     * cairo_ps_surface_create surface is built. Meanwhile stream is a
+     * temporary stream in which the file output is built, (so that
+     * the header can be built and inserted into the target stream
+     * before the contents of the temporary stream are copied). */
+    cairo_output_stream_t *final_stream;
 
-cairo_public void
-_cairo_svg_test_force_fallbacks (void);
+    FILE *tmpfile;
+    cairo_output_stream_t *stream;
 
-CAIRO_END_DECLS
+    double width;
+    double height;
+    double max_width;
+    double max_height;
 
-#endif /* CAIRO_HAS_SVG_SURFACE */
-#endif /* CAIRO_SVG_TEST_H */
+    int num_pages;
+
+    cairo_paginated_mode_t paginated_mode;
+
+    cairo_bool_t force_fallbacks;
+
+    cairo_scaled_font_subsets_t *font_subsets;
+
+    cairo_array_t dsc_header_comments;
+    cairo_array_t dsc_setup_comments;
+    cairo_array_t dsc_page_setup_comments;
+
+    cairo_array_t *dsc_comment_target;
+} cairo_ps_surface_t;
+
+#endif /* CAIRO_PS_SURFACE_PRIVATE_H */

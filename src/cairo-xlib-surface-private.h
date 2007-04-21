@@ -30,52 +30,64 @@
  * The Initial Developer of the Original Code is Red Hat, Inc.
  */
 
-#ifndef CAIRO_XLIB_PRIVATE_H
-#define CAIRO_XLIB_PRIVATE_H
+#ifndef CAIRO_XLIB_SURFACE_PRIVATE_H
+#define CAIRO_XLIB_SURFACE_PRIVATE_H
 
-#include "cairoint.h"
 #include "cairo-xlib.h"
 
-typedef struct _cairo_xlib_hook cairo_xlib_hook_t;
+#include "cairo-surface-private.h"
 
-struct _cairo_xlib_hook {
-    cairo_xlib_hook_t *next;
-    void (*func) (Display *display, void *data);
-    void *data;
-    void *key;
-};
+typedef struct _cairo_xlib_surface cairo_xlib_surface_t;
 
-struct _cairo_xlib_screen_info {
-    cairo_xlib_screen_info_t *next;
-    unsigned int ref_count;
+struct _cairo_xlib_surface {
+    cairo_surface_t base;
 
-    Display *display;
+    Display *dpy;
+    cairo_xlib_screen_info_t *screen_info;
+
+    GC gc;
+    Drawable drawable;
     Screen *screen;
-    cairo_bool_t has_render;
+    cairo_bool_t owns_pixmap;
+    Visual *visual;
 
-    cairo_font_options_t font_options;
+    int use_pixmap;
 
-    cairo_xlib_hook_t *close_display_hooks;
+    int render_major;
+    int render_minor;
+
+    /* TRUE if the server has a bug with repeating pictures
+     *
+     *  https://bugs.freedesktop.org/show_bug.cgi?id=3566
+     *
+     * We can't test for this because it depends on whether the
+     * picture is in video memory or not.
+     *
+     * We also use this variable as a guard against a second
+     * independent bug with transformed repeating pictures:
+     *
+     * http://lists.freedesktop.org/archives/cairo/2004-September/001839.html
+     *
+     * Both are fixed in xorg >= 6.9 and hopefully in > 6.8.2, so
+     * we can reuse the test for now.
+     */
+    cairo_bool_t buggy_repeat;
+
+    int width;
+    int height;
+    int depth;
+
+    Picture dst_picture, src_picture;
+
+    cairo_bool_t have_clip_rects;
+    XRectangle embedded_clip_rects[4];
+    XRectangle *clip_rects;
+    int num_clip_rects;
+
+    XRenderPictFormat *xrender_format;
+    cairo_filter_t filter;
+    int repeat;
+    XTransform xtransform;
 };
 
-cairo_private cairo_xlib_screen_info_t *
-_cairo_xlib_screen_info_get (Display *display, Screen *screen);
-
-cairo_private cairo_xlib_screen_info_t *
-_cairo_xlib_screen_info_reference (cairo_xlib_screen_info_t *info);
-cairo_private void
-_cairo_xlib_screen_info_destroy (cairo_xlib_screen_info_t *info);
-
-cairo_private cairo_bool_t
-_cairo_xlib_add_close_display_hook (Display *display, void (*func) (Display *, void *), void *data, void *key);
-cairo_private void
-_cairo_xlib_remove_close_display_hook (Display *display, void *key);
-
-#if CAIRO_HAS_XLIB_XRENDER_SURFACE
-
-#include "cairo-xlib-xrender.h"
-slim_hidden_proto (cairo_xlib_surface_create_with_xrender_format);
-
-#endif
-
-#endif /* CAIRO_XLIB_PRIVATE_H */
+#endif /* CAIRO_XLIB_SURFACE_PRIVATE_H */

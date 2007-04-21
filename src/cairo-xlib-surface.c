@@ -39,8 +39,8 @@
 #include "cairoint.h"
 #include "cairo-xlib.h"
 #include "cairo-xlib-xrender.h"
-#include "cairo-xlib-test.h"
 #include "cairo-xlib-private.h"
+#include "cairo-xlib-surface-private.h"
 #include "cairo-clip-private.h"
 #include <X11/extensions/Xrender.h>
 #include <X11/extensions/renderproto.h>
@@ -48,8 +48,6 @@
 /* Xlib doesn't define a typedef, so define one ourselves */
 typedef int (*cairo_xlib_error_func_t) (Display     *display,
 					XErrorEvent *event);
-
-typedef struct _cairo_xlib_surface cairo_xlib_surface_t;
 
 static cairo_status_t
 _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface);
@@ -82,57 +80,6 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 
 #define CAIRO_ASSUME_PIXMAP	20
 
-struct _cairo_xlib_surface {
-    cairo_surface_t base;
-
-    Display *dpy;
-    cairo_xlib_screen_info_t *screen_info;
-
-    GC gc;
-    Drawable drawable;
-    Screen *screen;
-    cairo_bool_t owns_pixmap;
-    Visual *visual;
-
-    int use_pixmap;
-
-    int render_major;
-    int render_minor;
-
-    /* TRUE if the server has a bug with repeating pictures
-     *
-     *  https://bugs.freedesktop.org/show_bug.cgi?id=3566
-     *
-     * We can't test for this because it depends on whether the
-     * picture is in video memory or not.
-     *
-     * We also use this variable as a guard against a second
-     * independent bug with transformed repeating pictures:
-     *
-     * http://lists.freedesktop.org/archives/cairo/2004-September/001839.html
-     *
-     * Both are fixed in xorg >= 6.9 and hopefully in > 6.8.2, so
-     * we can reuse the test for now.
-     */
-    cairo_bool_t buggy_repeat;
-
-    int width;
-    int height;
-    int depth;
-
-    Picture dst_picture, src_picture;
-
-    cairo_bool_t have_clip_rects;
-    XRectangle embedded_clip_rects[4];
-    XRectangle *clip_rects;
-    int num_clip_rects;
-
-    XRenderPictFormat *xrender_format;
-    cairo_filter_t filter;
-    int repeat;
-    XTransform xtransform;
-};
-
 static const XTransform identity = { {
     { 1 << 16, 0x00000, 0x00000 },
     { 0x00000, 1 << 16, 0x00000 },
@@ -160,25 +107,6 @@ static const XTransform identity = { {
 
 #define CAIRO_SURFACE_RENDER_HAS_PICTURE_TRANSFORM(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 6)
 #define CAIRO_SURFACE_RENDER_HAS_FILTERS(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 6)
-
-static cairo_bool_t cairo_xlib_render_disabled = FALSE;
-
-/**
- * _cairo_xlib_test_disable_render:
- *
- * Disables the use of the RENDER extension.
- *
- * <note>
- * This function is <emphasis>only</emphasis> intended for internal
- * testing use within the cairo distribution. It is not installed in
- * any public header file.
- * </note>
- **/
-void
-_cairo_xlib_test_disable_render (void)
-{
-    cairo_xlib_render_disabled = TRUE;
-}
 
 static int
 _CAIRO_FORMAT_DEPTH (cairo_format_t format)
@@ -1900,8 +1828,7 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 	;
     }
 
-    if (cairo_xlib_render_disabled ||
-	! XRenderQueryVersion (dpy, &surface->render_major, &surface->render_minor)) {
+    if (! XRenderQueryVersion (dpy, &surface->render_major, &surface->render_minor)) {
 	surface->render_major = -1;
 	surface->render_minor = -1;
     }

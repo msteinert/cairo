@@ -25,6 +25,7 @@
  */
 
 #include "cairo-boilerplate.h"
+#include "cairo-boilerplate-scaled-font.h"
 
 #if CAIRO_HAS_BEOS_SURFACE
 #include "cairo-boilerplate-beos-private.h"
@@ -59,6 +60,9 @@
 #if CAIRO_HAS_XLIB_XRENDER_SURFACE
 #include "cairo-boilerplate-xlib-private.h"
 #endif
+
+#include <cairo-types-private.h>
+#include <cairo-scaled-font-private.h>
 
 #include <stdlib.h>
 #include <ctype.h>
@@ -433,4 +437,11 @@ cairo_boilerplate_surface_set_user_data (cairo_surface_t		*surface,
 			       cairo_status_to_string (status));
 	exit (1);
     }
+}
+
+void
+cairo_boilerplate_scaled_font_set_max_glyphs_cached (cairo_scaled_font_t *scaled_font,
+						     int max_glyphs)
+{
+    scaled_font->glyphs->max_size = max_glyphs;
 }

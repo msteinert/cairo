@@ -25,9 +25,11 @@
  */
 
 #include "cairo-boilerplate.h"
+#include "cairo-boilerplate-xlib.h"
 #include "cairo-boilerplate-xlib-private.h"
 
 #include <cairo-xlib-xrender.h>
+#include <cairo-xlib-surface-private.h>
 
 typedef struct _xlib_target_closure
 {
@@ -193,4 +195,17 @@ _cairo_boilerplate_xlib_cleanup (void *closure)
 	XDestroyWindow (xtc->dpy, xtc->drawable);
     XCloseDisplay (xtc->dpy);
     free (xtc);
+}
+
+cairo_status_t
+cairo_boilerplate_xlib_surface_disable_render (cairo_surface_t *abstract_surface)
+{
+    cairo_xlib_surface_t *surface = (cairo_xlib_surface_t*) abstract_surface;
+
+    if (cairo_surface_get_type (abstract_surface) != CAIRO_SURFACE_TYPE_XLIB)
+	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+
+    surface->render_major = surface->render_minor = -1;
+
+    return CAIRO_STATUS_SUCCESS;
 }

@@ -1,6 +1,7 @@
 .deps
 .libs
-cairo-manual-*
+.perf
+cairo-*.*.*
 ChangeLog*
 Makefile
 Makefile.in
@@ -29,3 +30,4 @@ stamp-h.in
 *.la
 *.lo
 *.orig
+*.rej

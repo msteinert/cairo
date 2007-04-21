@@ -1,6 +1,6 @@
 /* -*- Mode: c; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 8; -*- */
 /*
- * Copyright © 2004,2006 Red Hat, Inc.
+ * Copyright © 2007 Red Hat, Inc.
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
@@ -21,24 +21,13 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * Author: Carl D. Worth <cworth@cworth.org>
+ * Author: Behdad Esfahbod <behdad@behdad.org>
  */
 
-#ifndef _CAIRO_BOILERPLATE_XLIB_PRIVATE_H_
-#define _CAIRO_BOILERPLATE_XLIB_PRIVATE_H_
+#ifndef _CAIRO_BOILERPLATE_PS_H_
+#define _CAIRO_BOILERPLATE_PS_H_
 
-cairo_surface_t *
-_cairo_boilerplate_xlib_create_surface (const char		  *name,
-					cairo_content_t		   content,
-					int			   width,
-					int			   height,
-					cairo_boilerplate_mode_t   mode,
-					void			 **closure);
-
-void
-_cairo_boilerplate_xlib_cleanup (void *closure);
-
-void
-_cairo_boilerplate_xlib_synchronize (void *closure);
+cairo_status_t
+cairo_boilerplate_ps_surface_force_fallbacks (cairo_surface_t *surface);
 
 #endif

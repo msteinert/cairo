@@ -39,9 +39,9 @@
 
 #include "cairoint.h"
 #include "cairo-ps.h"
-#include "cairo-ps-test.h"
+#include "cairo-ps-surface-private.h"
 #include "cairo-scaled-font-subsets-private.h"
-#include "cairo-paginated-surface-private.h"
+#include "cairo-paginated-private.h"
 #include "cairo-meta-surface-private.h"
 #include "cairo-output-stream-private.h"
 
@@ -51,38 +51,6 @@
 
 static const cairo_surface_backend_t cairo_ps_surface_backend;
 static const cairo_paginated_surface_backend_t cairo_ps_surface_paginated_backend;
-
-typedef struct cairo_ps_surface {
-    cairo_surface_t base;
-
-    /* Here final_stream corresponds to the stream/file passed to
-     * cairo_ps_surface_create surface is built. Meanwhile stream is a
-     * temporary stream in which the file output is built, (so that
-     * the header can be built and inserted into the target stream
-     * before the contents of the temporary stream are copied). */
-    cairo_output_stream_t *final_stream;
-
-    FILE *tmpfile;
-    cairo_output_stream_t *stream;
-
-    double width;
-    double height;
-    double max_width;
-    double max_height;
-
-    int num_pages;
-
-    cairo_paginated_mode_t paginated_mode;
-
-    cairo_scaled_font_subsets_t *font_subsets;
-
-    cairo_array_t dsc_header_comments;
-    cairo_array_t dsc_setup_comments;
-    cairo_array_t dsc_page_setup_comments;
-
-    cairo_array_t *dsc_comment_target;
-
-} cairo_ps_surface_t;
 
 /* A word wrap stream can be used as a filter to do word wrapping on
  * top of an existing output stream. The word wrapping is quite
@@ -821,6 +789,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     surface->max_width = width;
     surface->max_height = height;
     surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
+    surface->force_fallbacks = FALSE;
 
     surface->num_pages = 0;
 
@@ -1383,32 +1352,12 @@ pattern_supported (const cairo_pattern_t *pattern)
     return FALSE;
 }
 
-static cairo_bool_t cairo_ps_force_fallbacks = FALSE;
-
-/**
- * _cairo_ps_test_force_fallbacks
- *
- * Force the PS surface backend to use image fallbacks for every
- * operation.
- *
- * <note>
- * This function is <emphasis>only</emphasis> intended for internal
- * testing use within the cairo distribution. It is not installed in
- * any public header file.
- * </note>
- **/
-void
-_cairo_ps_test_force_fallbacks (void)
-{
-    cairo_ps_force_fallbacks = TRUE;
-}
-
 static cairo_int_status_t
 _cairo_ps_surface_operation_supported (cairo_ps_surface_t *surface,
 		      cairo_operator_t op,
 		      const cairo_pattern_t *pattern)
 {
-    if (cairo_ps_force_fallbacks)
+    if (surface->force_fallbacks)
 	return FALSE;
 
     if (! pattern_supported (pattern))
@@ -1971,7 +1920,7 @@ _cairo_ps_surface_paint (void			*abstract_surface,
      * possible only because there is nothing between the fallback
      * images and the paper, nor is anything painted above. */
     /*
-    assert (__cairo_ps_surface_operation_supported (op, source));
+    assert (_cairo_ps_surface_operation_supported (op, source));
     */
 
     _cairo_output_stream_printf (stream,
