@@ -1,0 +1,17 @@
+.deps
+.libs
+Makefile
+Makefile.in
+*.so
+*.la
+*.lo
+*.loT
+*.o
+*.obj
+*.pdb
+*.dll
+*.exp
+*.lib
+*~
+.*.sw?
+TAGS
