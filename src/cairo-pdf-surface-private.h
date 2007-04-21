@@ -78,6 +78,8 @@ struct _cairo_pdf_surface {
     cairo_bool_t has_clip;
 
     cairo_paginated_mode_t paginated_mode;
+
+    cairo_bool_t force_fallbacks;
 };
 
 #endif /* CAIRO_PDF_SURFACE_PRIVATE_H */

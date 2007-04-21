@@ -25,9 +25,12 @@
  */
 
 #include "cairo-boilerplate.h"
+#include "cairo-boilerplate-pdf.h"
 #include "cairo-boilerplate-pdf-private.h"
 
 #include <cairo-pdf.h>
+#include <cairo-pdf-surface-private.h>
+#include <cairo-paginated-surface-private.h>
 
 cairo_user_data_key_t pdf_closure_key;
 
@@ -131,4 +134,20 @@ _cairo_boilerplate_pdf_cleanup (void *closure)
 	cairo_surface_destroy (ptc->target);
     free (ptc->filename);
     free (ptc);
+}
+
+cairo_status_t
+cairo_boilerplate_pdf_surface_force_fallbacks (cairo_surface_t *abstract_surface)
+{
+    cairo_paginated_surface_t *paginated = (cairo_paginated_surface_t*) abstract_surface;
+    cairo_pdf_surface_t *surface;
+
+    if (cairo_surface_get_type (abstract_surface) != CAIRO_SURFACE_TYPE_PDF)
+	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+
+    surface = (cairo_pdf_surface_t*) paginated->target;
+
+    surface->force_fallbacks = TRUE;
+
+    return CAIRO_STATUS_SUCCESS;
 }

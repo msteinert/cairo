@@ -38,6 +38,7 @@ endif
 
 if CAIRO_HAS_PDF_SURFACE
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-pdf.c
+libcairoboilerplate_la_SOURCES += cairo-boilerplate-pdf.h
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-pdf-private.h
 endif
 

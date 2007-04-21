@@ -38,7 +38,6 @@
 
 #include "cairoint.h"
 #include "cairo-pdf.h"
-#include "cairo-pdf-test.h"
 #include "cairo-pdf-surface-private.h"
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-paginated-private.h"
@@ -254,6 +253,8 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
     surface->has_clip = FALSE;
 
     surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
+
+    surface->force_fallbacks = FALSE;
 
     /* Document header */
     _cairo_output_stream_printf (surface->output,
@@ -2656,32 +2657,12 @@ _pattern_supported (cairo_pattern_t *pattern)
     return FALSE;
 }
 
-static cairo_bool_t cairo_pdf_force_fallbacks = FALSE;
-
-/**
- * _cairo_pdf_test_force_fallbacks
- *
- * Force the PDF surface backend to use image fallbacks for every
- * operation.
- *
- * <note>
- * This function is <emphasis>only</emphasis> intended for internal
- * testing use within the cairo distribution. It is not installed in
- * any public header file.
- * </note>
- **/
-void
-_cairo_pdf_test_force_fallbacks (void)
-{
-    cairo_pdf_force_fallbacks = TRUE;
-}
-
 static cairo_int_status_t
 __cairo_pdf_surface_operation_supported (cairo_pdf_surface_t *surface,
 		      cairo_operator_t op,
 		      cairo_pattern_t *pattern)
 {
-    if (cairo_pdf_force_fallbacks)
+    if (surface->force_fallbacks)
 	return FALSE;
 
     if (! _pattern_supported (pattern))
