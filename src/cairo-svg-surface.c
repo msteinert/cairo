@@ -40,6 +40,7 @@
 
 #include "cairoint.h"
 #include "cairo-svg.h"
+#include "cairo-svg-surface-private.h"
 #include "cairo-svg-test.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-meta-surface-private.h"
@@ -47,8 +48,6 @@
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-output-stream-private.h"
 
-typedef struct cairo_svg_document cairo_svg_document_t;
-typedef struct cairo_svg_surface cairo_svg_surface_t;
 typedef struct cairo_svg_page cairo_svg_page_t;
 
 static const int invalid_pattern_id = -1;
@@ -113,27 +112,6 @@ struct cairo_svg_document {
     cairo_svg_version_t svg_version;
 
     cairo_scaled_font_subsets_t *font_subsets;
-};
-
-struct cairo_svg_surface {
-    cairo_surface_t base;
-
-    cairo_content_t content;
-
-    unsigned int id;
-
-    double width;
-    double height;
-
-    cairo_svg_document_t *document;
-
-    cairo_output_stream_t *xml_node;
-    cairo_array_t	   page_set;
-
-    unsigned int clip_level;
-    unsigned int base_clip;
-
-    cairo_paginated_mode_t paginated_mode;
 };
 
 typedef struct {

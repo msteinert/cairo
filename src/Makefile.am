@@ -34,7 +34,7 @@ endif
 
 if CAIRO_HAS_SVG_SURFACE
 libcairo_svg_headers = cairo-svg.h
-libcairo_svg_sources = cairo-svg-surface.c cairo-svg-test.h
+libcairo_svg_sources = cairo-svg-surface.c cairo-svg-surface-private.h cairo-svg-test.h
 libcairo_font_subset_sources =	$(font_subset_sources)
 backend_pkgconfigs += cairo-svg.pc
 endif
