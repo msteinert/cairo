@@ -40,6 +40,8 @@
 
 #include "cairo.h"
 
+#include "cairo-types-private.h"
+
 struct _cairo_scaled_font {
     /* For most cairo objects, the rule for multiple threads is that
      * the user is responsible for any locking if the same object is
