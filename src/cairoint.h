@@ -469,8 +469,6 @@ cairo_private unsigned long
 _cairo_hash_string (const char *c);
 
 typedef struct _cairo_unscaled_font_backend cairo_unscaled_font_backend_t;
-typedef struct _cairo_scaled_font_backend   cairo_scaled_font_backend_t;
-typedef struct _cairo_font_face_backend     cairo_font_face_backend_t;
 
 /*
  * A cairo_unscaled_font_t is just an opaque handle we use in the
