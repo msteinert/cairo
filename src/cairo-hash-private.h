@@ -39,12 +39,12 @@
 #ifndef CAIRO_HASH_PRIVATE_H
 #define CAIRO_HASH_PRIVATE_H
 
+#include "cairo-types-private.h"
+
 /* XXX: I'd like this file to be self-contained in terms of
  * includeability, but that's not really possible with the current
  * monolithic cairoint.h. So, for now, just include cairoint.h instead
  * if you want to include this file. */
-
-typedef struct _cairo_hash_table cairo_hash_table_t;
 
 /**
  * cairo_hash_entry_t:

@@ -57,6 +57,20 @@ struct _cairo_font_options {
     cairo_hint_metrics_t hint_metrics;
 };
 
+typedef struct _cairo_hash_table cairo_hash_table_t;
+
+typedef struct _cairo_cache {
+    cairo_hash_table_t *hash_table;
+
+    cairo_destroy_func_t entry_destroy;
+
+    unsigned long max_size;
+    unsigned long size;
+
+    int freeze_count;
+} cairo_cache_t;
+
+
 typedef struct _cairo_surface_backend cairo_surface_backend_t;
 typedef struct _cairo_clip cairo_clip_t;
 typedef struct _cairo_output_stream cairo_output_stream_t;
