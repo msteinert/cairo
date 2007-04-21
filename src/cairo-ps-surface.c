@@ -41,7 +41,7 @@
 #include "cairo-ps.h"
 #include "cairo-ps-test.h"
 #include "cairo-scaled-font-subsets-private.h"
-#include "cairo-paginated-surface-private.h"
+#include "cairo-paginated-private.h"
 #include "cairo-meta-surface-private.h"
 #include "cairo-output-stream-private.h"
 

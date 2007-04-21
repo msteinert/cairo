@@ -61,6 +61,7 @@ typedef struct _cairo_surface_backend cairo_surface_backend_t;
 typedef struct _cairo_clip cairo_clip_t;
 typedef struct _cairo_output_stream cairo_output_stream_t;
 typedef struct _cairo_scaled_font_subsets cairo_scaled_font_subsets_t;
+typedef struct _cairo_paginated_surface_backend cairo_paginated_surface_backend_t;
 
 
 typedef struct _cairo_xlib_screen_info cairo_xlib_screen_info_t;

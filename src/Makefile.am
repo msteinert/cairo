@@ -225,6 +225,7 @@ libcairo_la_SOURCES =				\
 	cairo-wideint-private.h			\
 	cairo-meta-surface.c			\
 	cairo-meta-surface-private.h		\
+	cairo-paginated-private.h		\
 	cairo-paginated-surface.c		\
 	cairo-paginated-surface-private.h	\
 	cairo-analysis-surface.c		\
