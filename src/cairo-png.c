@@ -379,7 +379,11 @@ read_png (png_rw_ptr	read_func,
 
     /* expand gray bit depth if needed */
     if (color_type == PNG_COLOR_TYPE_GRAY && depth < 8)
+#if PNG_LIBPNG_VER >= 10209
+        png_set_expand_gray_1_2_4_to_8 (png);
+#else
         png_set_gray_1_2_4_to_8 (png);
+#endif
     /* transform transparency to alpha */
     if (png_get_valid(png, info, PNG_INFO_tRNS))
         png_set_tRNS_to_alpha (png);
