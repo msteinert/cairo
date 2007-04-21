@@ -66,6 +66,8 @@ typedef struct cairo_svg_surface {
     unsigned int base_clip;
 
     cairo_paginated_mode_t paginated_mode;
+
+    cairo_bool_t force_fallbacks;
 } cairo_svg_surface_t;
 
 #endif /* CAIRO_SVG_SURFACE_PRIVATE_H */

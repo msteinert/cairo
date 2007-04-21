@@ -41,7 +41,6 @@
 #include "cairoint.h"
 #include "cairo-svg.h"
 #include "cairo-svg-surface-private.h"
-#include "cairo-svg-test.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-meta-surface-private.h"
 #include "cairo-paginated-private.h"
@@ -376,6 +375,7 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
     }
 
     surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
+    surface->force_fallbacks = FALSE;
     surface->content = content;
 
     return _cairo_paginated_surface_create (&surface->base,
@@ -703,24 +703,6 @@ _cairo_svg_document_emit_font_subsets (cairo_svg_document_t *document)
 }
 
 static cairo_bool_t cairo_svg_force_fallbacks = FALSE;
-
-/**
- * _cairo_svg_test_force_fallbacks
- *
- * Force the SVG surface backend to use image fallbacks for every
- * operation.
- *
- * <note>
- * This function is <emphasis>only</emphasis> intended for internal
- * testing use within the cairo distribution. It is not installed in
- * any public header file.
- * </note>
- **/
-void
-_cairo_svg_test_force_fallbacks (void)
-{
-    cairo_svg_force_fallbacks = TRUE;
-}
 
 static cairo_int_status_t
 _cairo_svg_surface_operation_supported (cairo_svg_surface_t *surface,

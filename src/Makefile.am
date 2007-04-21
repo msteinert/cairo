@@ -22,7 +22,7 @@ endif
 if CAIRO_HAS_PDF_SURFACE
 libcairo_pdf_headers = cairo-pdf.h
 libcairo_pdf_sources = cairo-pdf-surface.c cairo-pdf-surface-private.h \
-		       cairo-deflate-stream.c cairo-pdf-test.h
+		       cairo-deflate-stream.c
 libcairo_font_subset_sources =	$(font_subset_sources)
 backend_pkgconfigs += cairo-pdf.pc
 endif
@@ -34,7 +34,7 @@ endif
 
 if CAIRO_HAS_SVG_SURFACE
 libcairo_svg_headers = cairo-svg.h
-libcairo_svg_sources = cairo-svg-surface.c cairo-svg-surface-private.h cairo-svg-test.h
+libcairo_svg_sources = cairo-svg-surface.c cairo-svg-surface-private.h
 libcairo_font_subset_sources =	$(font_subset_sources)
 backend_pkgconfigs += cairo-svg.pc
 endif

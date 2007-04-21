@@ -55,6 +55,7 @@ endif
 
 if CAIRO_HAS_SVG_SURFACE
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-svg.c
+libcairoboilerplate_la_SOURCES += cairo-boilerplate-svg.h
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-svg-private.h
 endif
 
