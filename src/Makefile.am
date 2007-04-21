@@ -205,7 +205,6 @@ libcairo_la_SOURCES =				\
 	cairo-rectangle.c			\
 	cairo-region.c				\
 	cairo-scaled-font.c			\
-	cairo-scaled-font-test.h		\
 	cairo-scaled-font-private.h		\
 	cairo-skiplist.c			\
 	cairo-skiplist-private.h		\

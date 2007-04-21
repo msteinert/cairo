@@ -3,6 +3,7 @@ EXTRA_LTLIBRARIES = libcairoboilerplate.la
 libcairoboilerplate_la_SOURCES =\
 cairo-boilerplate.c	\
 cairo-boilerplate.h	\
+cairo-boilerplate-scaled-font.h	\
 xmalloc.c		\
 xmalloc.h
 libcairoboilerplate_la_LIBADD = $(top_builddir)/src/libcairo.la $(CAIRO_LDADD)
