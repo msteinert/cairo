@@ -1,5 +1,5 @@
 
-tools: malloc-stats.so
+util: malloc-stats.so
 
 %.so: %.la
 	$(RM) $@
