@@ -40,7 +40,11 @@ cairo_perf_SOURCES =		\
 if CAIRO_HAS_WIN32_SURFACE
 cairo_perf_SOURCES += cairo-perf-win32.c
 else
+if CAIRO_HAS_OS2_SURFACE
+cairo_perf_SOURCES += cairo-perf-os2.c
+else
 cairo_perf_SOURCES += cairo-perf-posix.c
+endif
 endif
 
 cairo_perf_diff_files_SOURCES =	\
