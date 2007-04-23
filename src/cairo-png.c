@@ -91,6 +91,7 @@ static void
 png_simple_error_callback (png_structp png_save_ptr,
 	                   png_const_charp error_msg)
 {
+    _cairo_error (CAIRO_STATUS_NO_MEMORY);
     longjmp (png_save_ptr->jmpbuf, CAIRO_STATUS_NO_MEMORY);
 }
 
