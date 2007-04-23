@@ -383,6 +383,7 @@ main (int argc, char *argv[])
 
 cairo_perf_case_t perf_cases[] = {
     { paint,  256, 512},
+    { paint_with_alpha,  256, 512},
     { fill,   64, 256},
     { stroke, 64, 256},
     { text,   64, 256},
