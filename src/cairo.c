@@ -1545,7 +1545,7 @@ slim_hidden_def (cairo_curve_to);
  * <informalexample><programlisting>
  * cairo_save (cr);
  * cairo_translate (cr, x + width / 2., y + height / 2.);
- * cairo_scale (cr, 1. / (height / 2.), 1. / (width / 2.));
+ * cairo_scale (cr, width / 2., height / 2.);
  * cairo_arc (cr, 0., 0., 1., 0., 2 * M_PI);
  * cairo_restore (cr);
  * </programlisting></informalexample>
