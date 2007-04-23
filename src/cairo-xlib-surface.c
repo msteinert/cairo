@@ -2878,7 +2878,8 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
      * so PictOpClear was never used with CompositeText before.
      */
     if (op == CAIRO_OPERATOR_CLEAR) {
-	_cairo_pattern_init_solid (&solid_pattern.solid, CAIRO_COLOR_WHITE);
+	_cairo_pattern_init_solid (&solid_pattern.solid, CAIRO_COLOR_WHITE,
+				   CAIRO_CONTENT_COLOR);
 	src_pattern = &solid_pattern.base;
 	op = CAIRO_OPERATOR_DEST_OUT;
     }

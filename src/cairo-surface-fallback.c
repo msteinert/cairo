@@ -365,7 +365,8 @@ _clip_and_composite (cairo_clip_t                  *clip,
 	return CAIRO_STATUS_SUCCESS;
 
     if (op == CAIRO_OPERATOR_CLEAR) {
-	_cairo_pattern_init_solid (&solid_pattern.solid, CAIRO_COLOR_WHITE);
+	_cairo_pattern_init_solid (&solid_pattern.solid, CAIRO_COLOR_WHITE,
+				   CAIRO_CONTENT_COLOR);
 	src = &solid_pattern.base;
 	op = CAIRO_OPERATOR_DEST_OUT;
     }
@@ -420,7 +421,8 @@ _composite_trap_region (cairo_clip_t            *clip,
     cairo_surface_t *clip_surface = clip ? clip->surface : NULL;
 
     if (clip_surface && op == CAIRO_OPERATOR_CLEAR) {
-	_cairo_pattern_init_solid (&solid_pattern.solid, CAIRO_COLOR_WHITE);
+	_cairo_pattern_init_solid (&solid_pattern.solid, CAIRO_COLOR_WHITE,
+				   CAIRO_CONTENT_COLOR);
 	src = &solid_pattern.base;
 	op = CAIRO_OPERATOR_DEST_OUT;
     }
@@ -490,7 +492,8 @@ _composite_traps_draw_func (void                          *closure,
     if (dst_x != 0 || dst_y != 0)
 	_cairo_traps_translate (info->traps, - dst_x, - dst_y);
 
-    _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE);
+    _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE,
+			       CAIRO_CONTENT_COLOR);
     if (!src)
 	src = &pattern.base;
 
@@ -894,7 +897,8 @@ _cairo_surface_old_show_glyphs_draw_func (void                          *closure
 	}
     }
 
-    _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE);
+    _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE,
+			       CAIRO_CONTENT_COLOR);
     if (!src)
 	src = &pattern.base;
 

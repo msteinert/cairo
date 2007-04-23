@@ -313,7 +313,7 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
     }
 
     if (pattern == NULL) {
-	source = _cairo_pattern_create_solid (color);
+	source = _cairo_pattern_create_solid (color, content);
 	if (source->status) {
 	    cairo_surface_destroy (surface);
 	    _cairo_error (CAIRO_STATUS_NO_MEMORY);

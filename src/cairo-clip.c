@@ -412,7 +412,8 @@ _cairo_clip_intersect_mask (cairo_clip_t      *clip,
     /* Render the new clipping path into the new mask surface. */
 
     _cairo_traps_translate (traps, -surface_rect.x, -surface_rect.y);
-    _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE);
+    _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE,
+			       CAIRO_CONTENT_COLOR);
 
     status = _cairo_surface_composite_trapezoids (CAIRO_OPERATOR_IN,
 						  &pattern.base,

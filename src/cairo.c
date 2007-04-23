@@ -1913,7 +1913,7 @@ cairo_paint_with_alpha (cairo_t *cr,
     }
 
     _cairo_color_init_rgba (&color, 1., 1., 1., alpha);
-    _cairo_pattern_init_solid (&pattern.solid, &color);
+    _cairo_pattern_init_solid (&pattern.solid, &color, CAIRO_CONTENT_ALPHA);
 
     status = _cairo_gstate_mask (cr->gstate, &pattern.base);
     if (status)
