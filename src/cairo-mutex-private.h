@@ -57,11 +57,14 @@ CAIRO_BEGIN_DECLS
 
 #if CAIRO_NO_MUTEX
 
-typedef int cairo_mutex_t;
-# define CAIRO_MUTEX_INITIALIZE()	CAIRO_MUTEX_NOOP
-# define CAIRO_MUTEX_LOCK(name)		CAIRO_MUTEX_NOOP
-# define CAIRO_MUTEX_UNLOCK(name)	CAIRO_MUTEX_NOOP
-# define CAIRO_MUTEX_NIL_INITIALIZER	0
+/* A poor man's mutex */
+
+  typedef int cairo_mutex_t;
+
+# define CAIRO_MUTEX_INITIALIZE() CAIRO_MUTEX_NOOP
+# define CAIRO_MUTEX_LOCK(name) do { while (name) ; (name) = 1; } while (0)
+# define CAIRO_MUTEX_UNLOCK(name) (name) = 0
+# define CAIRO_MUTEX_NIL_INITIALIZER 0
 
 #elif HAVE_PTHREAD_H /*******************************************************/
 
@@ -70,8 +73,8 @@ typedef int cairo_mutex_t;
   typedef pthread_mutex_t cairo_mutex_t;
 
 # define CAIRO_MUTEX_INITIALIZE() CAIRO_MUTEX_NOOP
-# define CAIRO_MUTEX_LOCK(name) pthread_mutex_lock (&name)
-# define CAIRO_MUTEX_UNLOCK(name) pthread_mutex_unlock (&name)
+# define CAIRO_MUTEX_LOCK(name) pthread_mutex_lock (&(name))
+# define CAIRO_MUTEX_UNLOCK(name) pthread_mutex_unlock (&(name))
 # define CAIRO_MUTEX_FINI(mutex) pthread_mutex_destroy (mutex)
 # define CAIRO_MUTEX_NIL_INITIALIZER PTHREAD_MUTEX_INITIALIZER
 
@@ -93,8 +96,8 @@ typedef int cairo_mutex_t;
 
   typedef CRITICAL_SECTION cairo_mutex_t;
 
-# define CAIRO_MUTEX_LOCK(name) EnterCriticalSection (&name)
-# define CAIRO_MUTEX_UNLOCK(name) LeaveCriticalSection (&name)
+# define CAIRO_MUTEX_LOCK(name) EnterCriticalSection (&(name))
+# define CAIRO_MUTEX_UNLOCK(name) LeaveCriticalSection (&(name))
 # define CAIRO_MUTEX_INIT(mutex) InitializeCriticalSection (mutex)
 # define CAIRO_MUTEX_FINI(mutex) DeleteCriticalSection (mutex)
 # define CAIRO_MUTEX_NIL_INITIALIZER { NULL, 0, 0, NULL, NULL, 0 }
@@ -120,18 +123,13 @@ typedef int cairo_mutex_t;
 
 #elif CAIRO_HAS_BEOS_SURFACE /***********************************************/
 
-  typedef void* cairo_mutex_t;
+  typedef BLocker* cairo_mutex_t;
 
-  cairo_private void _cairo_beos_lock(cairo_mutex_t*);
-  cairo_private void _cairo_beos_unlock(cairo_mutex_t*);
-
-/* the real initialization takes place in a global constructor */
-# define CAIRO_MUTEX_LOCK(name) _cairo_beos_lock (&name)
-# define CAIRO_MUTEX_UNLOCK(name) _cairo_beos_unlock (&name)
-
-# warning "XXX: Someone who understands BeOS needs to add definitions for" \
-          "     cairo_mutex_t, CAIRO_MUTEX_INIT, and CAIRO_MUTEX_FINI," \
-          "     and CAIRO_MUTEX_NIL_INITIALIZER to cairo-mutex-private.h"
+# define CAIRO_MUTEX_LOCK(name) (name)->Lock()
+# define CAIRO_MUTEX_UNLOCK(name) (name)->Unlock()
+# define CAIRO_MUTEX_INIT(mutex) (*(mutex)) = new BLocker()
+# define CAIRO_MUTEX_FINI(mutex) delete (*(mutex))
+# define CAIRO_MUTEX_NIL_INITIALIZER NULL
 
 #else /**********************************************************************/
 

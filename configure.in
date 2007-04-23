@@ -917,6 +917,7 @@ src/Makefile
 test/Makefile
 test/pdiff/Makefile
 perf/Makefile
+util/Makefile
 doc/Makefile
 doc/public/Makefile
 doc/public/version.xml

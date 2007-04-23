@@ -1,4 +1,4 @@
-DIST_SUBDIRS = pixman src boilerplate test perf doc
+DIST_SUBDIRS = pixman src boilerplate test perf doc util
 SUBDIRS = pixman src doc
 # libpng is required for our test programs
 if CAIRO_HAS_PNG_FUNCTIONS
