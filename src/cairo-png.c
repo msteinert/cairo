@@ -83,6 +83,24 @@ convert_data_to_bytes (png_structp png, png_row_infop row_info, png_bytep data)
     }
 }
 
+/* Use a couple of simple error callbacks that do not print anything to
+ * stderr and rely on the user to check for errors via the cairo_status_t
+ * return.
+ */
+static void
+png_simple_error_callback (png_structp png_save_ptr,
+	                   png_const_charp error_msg)
+{
+    longjmp (png_save_ptr->jmpbuf, CAIRO_STATUS_NO_MEMORY);
+}
+
+static void
+png_simple_warning_callback (png_structp png_save_ptr,
+	                     png_const_charp error_msg)
+{
+}
+
+
 static cairo_status_t
 write_png (cairo_surface_t	*surface,
 	   png_rw_ptr		write_func,
@@ -118,7 +136,9 @@ write_png (cairo_surface_t	*surface,
     for (i = 0; i < image->height; i++)
 	rows[i] = (png_byte *) image->data + i * image->stride;
 
-    png = png_create_write_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    png = png_create_write_struct (PNG_LIBPNG_VER_STRING, NULL,
+	                           png_simple_error_callback,
+	                           png_simple_warning_callback);
     if (png == NULL) {
 	status = CAIRO_STATUS_NO_MEMORY;
 	goto BAIL2;
@@ -130,10 +150,9 @@ write_png (cairo_surface_t	*surface,
 	goto BAIL3;
     }
 
-    if (setjmp (png_jmpbuf (png))) {
-	status = CAIRO_STATUS_NO_MEMORY;
+    status = setjmp (png_jmpbuf (png));
+    if (status)
 	goto BAIL3;
-    }
 
     png_set_write_fn (png, closure, write_func, NULL);
 
@@ -350,8 +369,8 @@ read_png (png_rw_ptr	read_func,
     /* XXX: Perhaps we'll want some other error handlers? */
     png = png_create_read_struct (PNG_LIBPNG_VER_STRING,
                                   NULL,
-                                  NULL,
-                                  NULL);
+	                          png_simple_error_callback,
+	                          png_simple_warning_callback);
     if (png == NULL)
 	goto BAIL;
 
