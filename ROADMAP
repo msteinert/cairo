@@ -46,6 +46,7 @@ cairo 1.4.x (not scheduled, may become part of 1.6)
 cairo 1.6 (scheduled for July 2007, targeting firefox and GNOME)
 ================================================================
  • David Turner's cairo-ft rewrite. (behdad)
+   http://david.freetype.org/cairo/
 
  • Change from 16.16 to 24.8 (or so) for fixed-point storage (cworth)
 
