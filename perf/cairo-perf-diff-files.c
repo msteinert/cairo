@@ -444,6 +444,29 @@ cairo_perf_report_load (cairo_perf_report_t *report, const char *filename)
 }
 
 static int
+test_diff_cmp_speedup_before_slowdown (const void *a, const void *b)
+{
+    const test_diff_t *a_diff = a;
+    const test_diff_t *b_diff = b;
+
+    /* First make all speedups come before all slowdowns. */
+    if (a_diff->change > 1.0 && b_diff->change < 1.0)
+	return -1;
+    if (a_diff->change < 1.0 && b_diff->change > 1.0)
+	return 1;
+
+    /* Reverse sort by magnitude of change so larger changes come
+     * first */
+    if (fabs (a_diff->change) > fabs (b_diff->change))
+	return -1;
+
+    if (fabs (a_diff->change) < fabs (b_diff->change))
+	return 1;
+
+    return 0;
+}
+
+static int
 test_diff_cmp (const void *a, const void *b)
 {
     const test_diff_t *a_diff = a;
@@ -507,9 +530,33 @@ print_change_bar (double change, double max_change, int use_utf)
 }
 
 static void
-test_diff_print (test_diff_t			*diff,
-		 double				 max_change,
-		 cairo_perf_report_options_t	*options)
+test_diff_print_binary (test_diff_t			*diff,
+			double				 max_change,
+			cairo_perf_report_options_t	*options)
+{
+    printf ("%5s-%-4s %26s-%-3d  %6.2f %4.2f%% -> %6.2f %4.2f%%: %5.2fx ",
+	    diff->tests[0]->backend, diff->tests[0]->content,
+	    diff->tests[0]->name, diff->tests[0]->size,
+	    diff->tests[0]->stats.median_ticks / diff->tests[0]->stats.ticks_per_ms,
+	    diff->tests[0]->stats.std_dev * 100,
+	    diff->tests[1]->stats.median_ticks / diff->tests[1]->stats.ticks_per_ms,
+	    diff->tests[1]->stats.std_dev * 100,
+	    fabs (diff->change));
+
+    if (diff->change > 1.0)
+	printf ("speedup\n");
+    else
+	printf ("slowdown\n");
+
+    if (options->print_change_bars)
+	print_change_bar (fabs (diff->change), max_change,
+			  options->use_utf);
+}
+
+static void
+test_diff_print_multi (test_diff_t			*diff,
+		       double				 max_change,
+		       cairo_perf_report_options_t	*options)
 {
     int i;
     double test_time;
@@ -551,6 +598,8 @@ cairo_perf_reports_compare (cairo_perf_report_t		*reports,
     double max_change;
     double test_time;
     cairo_bool_t seen_non_null;
+    cairo_bool_t printed_speedup = FALSE;
+    cairo_bool_t printed_slowdown = FALSE;
 
     assert (num_reports >= 2);
 
@@ -613,16 +662,41 @@ cairo_perf_reports_compare (cairo_perf_report_t		*reports,
 	}
 	diff->change = diff->max / diff->min;
 
+	if (num_reports == 2) {
+	    double old_time, new_time;
+	    if (diff->num_tests == 1) {
+		printf ("Only in %s: %s %s\n",
+			diff->tests[0]->configuration,
+			diff->tests[0]->backend,
+			diff->tests[0]->name);
+		continue;
+	    }
+	    old_time = diff->tests[0]->stats.min_ticks;
+	    new_time = diff->tests[1]->stats.min_ticks;
+	    if (options->use_ms) {
+		old_time /= diff->tests[0]->stats.ticks_per_ms;
+		new_time /= diff->tests[1]->stats.ticks_per_ms;
+	    }
+	    diff->change = old_time / new_time;
+	    if (diff->change < 1.0)
+		diff->change = - 1.0 / diff->change;
+	}
+
 	diff++;
 	num_diffs++;
     }
 
-    qsort (diffs, num_diffs, sizeof (test_diff_t), test_diff_cmp);
+    if (num_reports == 2)
+	qsort (diffs, num_diffs, sizeof (test_diff_t),
+	       test_diff_cmp_speedup_before_slowdown);
+    else
+	qsort (diffs, num_diffs, sizeof (test_diff_t), test_diff_cmp);
 
     max_change = 1.0;
-    for (i = 0; i < num_diffs; i++)
-	if (diffs[i].change > max_change)
-	    max_change = diffs[i].change;
+    for (i = 0; i < num_diffs; i++) {
+	if (fabs (diffs[i].change) > max_change)
+	    max_change = fabs (diffs[i].change);
+    }
 
     for (i = 0; i < num_diffs; i++) {
 	diff = &diffs[i];
@@ -630,10 +704,30 @@ cairo_perf_reports_compare (cairo_perf_report_t		*reports,
 	/* Discard as uninteresting a change which is less than the
 	 * minimum change required, (default may be overriden on
 	 * command-line). */
-	if (diff->change - 1.0 < options->min_change)
+	if (fabs (diff->change) - 1.0 < options->min_change)
 	    continue;
 
-	test_diff_print (diff, max_change, options);
+	if (num_reports == 2) {
+	    if (i == 0) {
+		printf ("old: %s\n"
+			"new: %s\n",
+			diffs->tests[0]->configuration,
+			diffs->tests[1]->configuration);
+	    }
+	    if (diff->change > 1.0 && ! printed_speedup) {
+		printf ("Speedups\n"
+			"========\n");
+		printed_speedup = TRUE;
+	    }
+	    if (diff->change < 1.0 && ! printed_slowdown) {
+		printf ("Slowdowns\n"
+			"=========\n");
+		printed_slowdown = TRUE;
+	    }
+	    test_diff_print_binary (diff, max_change, options);
+	} else {
+	    test_diff_print_multi (diff, max_change, options);
+	}
     }
 
     for (i = 0; i < num_diffs; i++)
