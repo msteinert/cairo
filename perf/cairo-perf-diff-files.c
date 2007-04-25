@@ -37,9 +37,11 @@
 #include <errno.h>
 #include <ctype.h>
 #include <math.h>
+#include <assert.h>
 
 typedef struct _test_report {
     int id;
+    const char *configuration;
     char *backend;
     char *content;
     char *name;
@@ -57,12 +59,15 @@ typedef struct _test_report {
 } test_report_t;
 
 typedef struct _test_diff {
-    test_report_t *old;
-    test_report_t *new;
-    double speedup;
+    test_report_t **tests;
+    int num_tests;
+    double min;
+    double max;
+    double change;
 } test_diff_t;
 
 typedef struct _cairo_perf_report {
+    char *configuration;
     const char *name;
     test_report_t *tests;
     int tests_size;
@@ -143,7 +148,7 @@ do {									\
 } while (0)
 
 static test_report_status_t
-test_report_parse (test_report_t *report, char *line)
+test_report_parse (test_report_t *report, char *line, char *configuration)
 {
     char *end;
     char *s = line;
@@ -169,6 +174,7 @@ test_report_parse (test_report_t *report, char *line)
 
     skip_space ();
 
+    report->configuration = configuration;
     parse_string (report->backend);
     end = strrchr (report->backend, '-');
     if (*end)
@@ -293,6 +299,7 @@ test_report_cmp_backend_then_name (const void *a, const void *b)
 {
     const test_report_t *a_test = a;
     const test_report_t *b_test = b;
+
     int cmp;
 
     cmp = strcmp (a_test->backend, b_test->backend);
@@ -303,6 +310,15 @@ test_report_cmp_backend_then_name (const void *a, const void *b)
     if (cmp)
 	return cmp;
 
+    /* A NULL name is a list-termination marker, so force it last. */
+    if (a_test->name == NULL)
+	if (b_test->name == NULL)
+	    return 0;
+	else
+	    return 1;
+    else if (b_test->name == NULL)
+	return -1;
+
     cmp = strcmp (a_test->name, b_test->name);
     if (cmp)
 	return cmp;
@@ -311,6 +327,7 @@ test_report_cmp_backend_then_name (const void *a, const void *b)
 	return -1;
     if (a_test->size > b_test->size)
 	return 1;
+
     return 0;
 }
 
@@ -367,6 +384,15 @@ cairo_perf_report_load (cairo_perf_report_t *report, const char *filename)
     int line_number = 0;
     char *line = NULL;
     size_t line_size = 0;
+    char *configuration;
+    char *dot;
+
+    configuration = strdup (filename);
+    report->configuration = strdup (basename (configuration));
+    free (configuration);
+    dot = strrchr (report->configuration, '.');
+    if (dot)
+	*dot = '\0';
 
     report->name = filename;
     report->tests_size = 16;
@@ -391,7 +417,8 @@ cairo_perf_report_load (cairo_perf_report_t *report, const char *filename)
 	if (getline (&line, &line_size, file) == -1)
 	    break;
 
-	status = test_report_parse (&report->tests[report->tests_count], line);
+	status = test_report_parse (&report->tests[report->tests_count],
+				    line, report->configuration);
 	if (status == TEST_REPORT_STATUS_ERROR)
 	    fprintf (stderr, "Ignoring unrecognized line %d of %s:\n%s",
 		     line_number, filename, line);
@@ -402,6 +429,8 @@ cairo_perf_report_load (cairo_perf_report_t *report, const char *filename)
 
     if (line)
 	free (line);
+
+    fclose (file);
 
     cairo_perf_report_sort_and_compute_stats (report);
 
@@ -419,29 +448,15 @@ test_diff_cmp (const void *a, const void *b)
 {
     const test_diff_t *a_diff = a;
     const test_diff_t *b_diff = b;
-    double a_change, b_change;
 
-    a_change = a_diff->speedup;
-    b_change = b_diff->speedup;
-
-    /* First make all speedups come before all slowdowns. */
-    if (a_change > 1.0 && b_change < 1.0)
+    /* Reverse sort by magnitude of change so larger changes come
+     * first */
+    if (a_diff->change > b_diff->change)
 	return -1;
-    if (a_change < 1.0 && b_change > 1.0)
+
+    if (a_diff->change < b_diff->change)
 	return 1;
 
-    /* Then, within each, sort by magnitude of speed change */
-    if (a_change < 1.0)
-	a_change = 1.0 / a_change;
-
-    if (b_change < 1.0)
-	b_change = 1.0 / b_change;
-
-    /* Reverse sort so larger changes come first */
-    if (a_change > b_change)
-	return -1;
-    if (a_change < b_change)
-	return 1;
     return 0;
 }
 
@@ -491,125 +506,140 @@ print_change_bar (double change, double max_change, int use_utf)
     printf ("\n");
 }
 
-#define MAX(a,b) ((a) > (b) ? (a) : (b))
 static void
-cairo_perf_report_diff (cairo_perf_report_t		*old,
-			cairo_perf_report_t		*new,
-			cairo_perf_report_options_t	*options)
+test_diff_print (test_diff_t			*diff,
+		 double				 max_change,
+		 cairo_perf_report_options_t	*options)
 {
     int i;
-    test_report_t *o, *n;
-    int cmp;
-    test_diff_t *diff, *diffs;
-    int num_diffs = 0;
-    int printed_speedup = 0, printed_slowdown = 0;
-    double min_change = options->min_change, change, max_change;
+    double test_time;
+    double change;
 
-    diffs = xmalloc (MAX (old->tests_count, new->tests_count) * sizeof (test_diff_t));
+    printf ("%s (backend: %s-%s, size: %d)\n",
+	    diff->tests[0]->name,
+	    diff->tests[0]->backend,
+	    diff->tests[0]->content,
+	    diff->tests[0]->size);
 
-    o = &old->tests[0];
-    n = &new->tests[0];
-    while (o->name && n->name) {
-	/* We expect iterations values of 0 when multiple raw reports
-	 * for the same test have been condensed into the stats of the
-	 * first. So we just skip these later reports that have no
-	 * stats. */
-	if (o->stats.iterations == 0) {
-	    o++;
-	    continue;
-	}
-	if (n->stats.iterations == 0) {
-	    n++;
-	    continue;
-	}
-
-	cmp = test_report_cmp_backend_then_name (o, n);
-	if (cmp < 0) {
-	    fprintf (stderr, "Only in old: %s %s\n", o->backend, o->name);
-	    o++;
-	    continue;
-	}
-	if (cmp > 0) {
-	    fprintf (stderr, "Only in new: %s %s\n", n->backend, n->name);
-	    n++;
-	    continue;
-	}
-
-	diffs[num_diffs].old = o;
-	diffs[num_diffs].new = n;
-	if (options->use_ms) {
-	    diffs[num_diffs].speedup =
-		(double) (o->stats.median_ticks / o->stats.ticks_per_ms)
-		       / (n->stats.median_ticks / n->stats.ticks_per_ms);
-	} else {
-	    diffs[num_diffs].speedup =
-		(double) o->stats.median_ticks / n->stats.median_ticks;
-	}
-	num_diffs++;
-
-	o++;
-	n++;
-    }
-
-    qsort (diffs, num_diffs, sizeof (test_diff_t), test_diff_cmp);
-
-    max_change = 1.0;
-    for (i = 0; i < num_diffs; i++) {
-	change = diffs[i].speedup;
-	if (change < 1.0)
-	    change = 1.0 / change;
-	if (change > max_change)
-	    max_change = change;
-    }
-
-    for (i = 0; i < num_diffs; i++) {
-	diff = &diffs[i];
-
-	change = diff->speedup;
-	if (change < 1.0)
-	    change = 1.0 / change;
-
-	/* Discard as uninteresting a change which is less than the
-	 * minimum change required, (default may be overriden on
-	 * command-line). */
-	if (change - 1.0 < min_change)
-	    continue;
-
-	/* Also discard as uninteresting if the change is less than
-	 * the sum each of the standard deviations. */
-	if (change - 1.0 < diff->old->stats.std_dev + diff->new->stats.std_dev)
-	    continue;
-
-	if (diff->speedup > 1.0 && ! printed_speedup) {
-	    printf ("Speedups\n"
-		    "========\n");
-	    printed_speedup = 1;
-	}
-	if (diff->speedup < 1.0 && ! printed_slowdown) {
-	    printf ("Slowdowns\n"
-		    "=========\n");
-	    printed_slowdown = 1;
-	}
-
-	printf ("%5s-%-4s %26s-%-3d  %6.2f %4.2f%% -> %6.2f %4.2f%%: %5.2fx ",
-		diff->old->backend, diff->old->content,
-		diff->old->name, diff->old->size,
-		diff->old->stats.median_ticks / diff->old->stats.ticks_per_ms,
-		diff->old->stats.std_dev * 100,
-		diff->new->stats.median_ticks / diff->new->stats.ticks_per_ms,
-		diff->new->stats.std_dev * 100,
+    for (i = 0; i < diff->num_tests; i++) {
+	test_time = diff->tests[i]->stats.min_ticks;
+	if (options->use_ms)
+	    test_time /= diff->tests[i]->stats.ticks_per_ms;
+	change = diff->max / test_time;
+	printf ("%8s %6.2f: %5.2fx ",
+		diff->tests[i]->configuration,
+		diff->tests[i]->stats.min_ticks / diff->tests[i]->stats.ticks_per_ms,
 		change);
-
-	if (diff->speedup > 1.0)
-	    printf ("speedup\n");
-	else
-	    printf ("slowdown\n");
 
 	if (options->print_change_bars)
 	    print_change_bar (change, max_change, options->use_utf);
     }
 
+    printf("\n");
+}
+
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+static void
+cairo_perf_reports_compare (cairo_perf_report_t		*reports,
+			    int				 num_reports,
+			    cairo_perf_report_options_t	*options)
+{
+    int i;
+    test_report_t **tests, *min_test;
+    test_diff_t *diff, *diffs;
+    int num_diffs, max_diffs;
+    double max_change;
+    double test_time;
+    cairo_bool_t seen_non_null;
+
+    assert (num_reports >= 2);
+
+    tests = xmalloc (num_reports * sizeof (test_report_t *));
+
+    max_diffs = reports[0].tests_count;
+    for (i = 0; i < num_reports; i++) {
+	tests[i] = reports[i].tests;
+	if (reports[i].tests_count > max_diffs)
+	    max_diffs = reports[i].tests_count;
+    }
+
+    diff = diffs = xmalloc (max_diffs * sizeof (test_diff_t));
+
+    num_diffs = 0;
+    while (1) {
+	/* We expect iterations values of 0 when multiple raw reports
+	 * for the same test have been condensed into the stats of the
+	 * first. So we just skip these later reports that have no
+	 * stats. */
+	seen_non_null = 0;
+	for (i = 0; i < num_reports; i++) {
+	    while (tests[i]->name && tests[i]->stats.iterations == 0)
+		tests[i]++;
+	    if (tests[i]->name)
+		seen_non_null = 1;
+	}
+
+	if (! seen_non_null)
+	    break;
+
+	/* Find the minimum of all current tests, (we have to do this
+	 * in case some reports don't have a particular test). */
+	min_test = tests[0];
+	for (i = 1; i < num_reports; i++)
+	    if (test_report_cmp_backend_then_name (tests[i], min_test) < 0)
+		min_test = tests[i];
+
+	/* For each report that has the current test, record it into
+	 * the diff structure. */
+	diff->num_tests = 0;
+	diff->tests = xmalloc (num_reports * sizeof (test_diff_t));
+	for (i = 0; i < num_reports; i++) {
+	    if (test_report_cmp_backend_then_name (tests[i], min_test) == 0) {
+		test_time = tests[i]->stats.min_ticks;
+		if (options->use_ms)
+		    test_time /= tests[i]->stats.ticks_per_ms;
+		if (diff->num_tests == 0) {
+		    diff->min = test_time;
+		    diff->max = test_time;
+		} else {
+		    if (test_time < diff->min)
+			diff->min = test_time;
+		    if (test_time > diff->max)
+			diff->max = test_time;
+		}
+		diff->tests[diff->num_tests++] = tests[i];
+		tests[i]++;
+	    }
+	}
+	diff->change = diff->max / diff->min;
+
+	diff++;
+	num_diffs++;
+    }
+
+    qsort (diffs, num_diffs, sizeof (test_diff_t), test_diff_cmp);
+
+    max_change = 1.0;
+    for (i = 0; i < num_diffs; i++)
+	if (diffs[i].change > max_change)
+	    max_change = diffs[i].change;
+
+    for (i = 0; i < num_diffs; i++) {
+	diff = &diffs[i];
+
+	/* Discard as uninteresting a change which is less than the
+	 * minimum change required, (default may be overriden on
+	 * command-line). */
+	if (diff->change - 1.0 < options->min_change)
+	    continue;
+
+	test_diff_print (diff, max_change, options);
+    }
+
+    for (i = 0; i < num_diffs; i++)
+	free (diffs[i].tests);
     free (diffs);
+    free (tests);
 }
 
 static void
@@ -618,7 +648,7 @@ usage (const char *argv0)
     char const *basename = strrchr(argv0, '/');
     basename = basename ? basename+1 : argv0;
     fprintf (stderr,
-	     "Usage: %s [options] file1 file2\n\n",
+	     "Usage: %s [options] file1 file2 [...]\n\n",
 	     basename);
     fprintf (stderr,
 	     "Computes significant performance differences for cairo performance reports.\n"
@@ -695,11 +725,12 @@ main (int argc, const char *argv[])
 	}
     };
     cairo_perf_report_t *reports;
+    test_report_t *t;
     int i;
 
     parse_args (argc, argv, &args);
 
-    if (args.num_filenames != 2)
+    if (args.num_filenames < 2)
 	usage (argv[0]);
 
     reports = xmalloc (args.num_filenames * sizeof (cairo_perf_report_t));
@@ -707,7 +738,20 @@ main (int argc, const char *argv[])
     for (i = 0; i < args.num_filenames; i++ )
 	cairo_perf_report_load (&reports[i], args.filenames[i]);
 
-    cairo_perf_report_diff (&reports[0], &reports[1], &args.options);
+    cairo_perf_reports_compare (reports, args.num_filenames, &args.options);
+
+    /* Pointless memory cleanup, (would be a great place for talloc) */
+    free (args.filenames);
+    for (i = 0; i < args.num_filenames; i++) {
+	for (t = reports[i].tests; t->name; t++) {
+	    free (t->samples);
+	    free (t->backend);
+	    free (t->name);
+	}
+	free (reports[i].tests);
+	free (reports[i].configuration);
+    }
+    free (reports);
 
     return 0;
 }
