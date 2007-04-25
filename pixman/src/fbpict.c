@@ -1653,14 +1653,12 @@ pixman_composite (pixman_operator_t	op,
 				pMask->format_code == PICT_a8 && fbHaveMMX())
 				func = fbCompositeSrc_x888x8x8888mmx;
 			    break;
-#if 0 /* This case fails rendercheck for me */
 			case PICT_a8r8g8b8:
-			    if ((pDst->format == PICT_a8r8g8b8 ||
-				 pDst->format == PICT_x8r8g8b8) &&
-				pMask->format == PICT_a8 && fbHaveMMX())
+			    if ((pDst->format_code == PICT_a8r8g8b8 ||
+				 pDst->format_code == PICT_x8r8g8b8) &&
+				pMask->format_code == PICT_a8 && fbHaveMMX())
 				func = fbCompositeSrc_8888x8x8888mmx;
 			    break;
-#endif
 			case PICT_a8b8g8r8:
 			    if ((pDst->format_code == PICT_a8b8g8r8 ||
 				 pDst->format_code == PICT_x8b8g8r8) &&
