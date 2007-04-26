@@ -698,6 +698,12 @@ cairo_perf_reports_compare (cairo_perf_report_t		*reports,
 	    max_change = fabs (diffs[i].change);
     }
 
+    if (num_reports == 2 )
+	printf ("old: %s\n"
+		"new: %s\n",
+		diffs->tests[0]->configuration,
+		diffs->tests[1]->configuration);
+
     for (i = 0; i < num_diffs; i++) {
 	diff = &diffs[i];
 
@@ -708,12 +714,6 @@ cairo_perf_reports_compare (cairo_perf_report_t		*reports,
 	    continue;
 
 	if (num_reports == 2) {
-	    if (i == 0) {
-		printf ("old: %s\n"
-			"new: %s\n",
-			diffs->tests[0]->configuration,
-			diffs->tests[1]->configuration);
-	    }
 	    if (diff->change > 1.0 && ! printed_speedup) {
 		printf ("Speedups\n"
 			"========\n");
