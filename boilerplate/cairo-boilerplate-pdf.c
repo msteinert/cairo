@@ -42,6 +42,14 @@ typedef struct _pdf_target_closure
     cairo_surface_t	*target;
 } pdf_target_closure_t;
 
+#define ARRAY_LENGTH(__array) ((int) (sizeof (__array) / sizeof (__array[0])))
+static const char *pdf_ignored_tests[] = {
+    "gradient-alpha",
+    "linear-gradient",
+    "text-pattern",
+    "trap-clip"
+};
+
 cairo_surface_t *
 _cairo_boilerplate_pdf_create_surface (const char		 *name,
 				       cairo_content_t		  content,
@@ -52,6 +60,13 @@ _cairo_boilerplate_pdf_create_surface (const char		 *name,
 {
     pdf_target_closure_t *ptc;
     cairo_surface_t *surface;
+
+    if (mode == CAIRO_BOILERPLATE_MODE_TEST) {
+	int i;
+	for (i = 0; i < ARRAY_LENGTH (pdf_ignored_tests); i++)
+	    if (strcmp (name, pdf_ignored_tests[i]) == 0)
+		return NULL;
+    }
 
     /* Sanitize back to a real cairo_content_t value. */
     if (content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
