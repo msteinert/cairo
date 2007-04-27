@@ -58,6 +58,7 @@ struct _cairo_pdf_surface {
 
     double width;
     double height;
+    cairo_matrix_t cairo_to_pdf;
 
     cairo_array_t objects;
     cairo_array_t pages;

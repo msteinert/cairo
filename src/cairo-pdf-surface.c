@@ -245,6 +245,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
 
     surface->width = width;
     surface->height = height;
+    cairo_matrix_init (&surface->cairo_to_pdf, 1, 0, 0, -1, 0, height);
 
     _cairo_array_init (&surface->objects, sizeof (cairo_pdf_object_t));
     _cairo_array_init (&surface->pages, sizeof (cairo_pdf_resource_t));
@@ -662,10 +663,6 @@ _cairo_pdf_surface_start_page (void *abstract_surface)
     status = _cairo_pdf_surface_add_stream (surface, stream);
     if (status)
 	return status;
-
-    _cairo_output_stream_printf (surface->output,
-				 "1 0 0 -1 0 %f cm\r\n",
-				 surface->height);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1422,8 +1419,8 @@ _cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t    *surface,
 {
     cairo_pdf_resource_t pattern_resource, smask;
     cairo_pdf_resource_t color_function, alpha_function;
-    double x0, y0, x1, y1;
-    cairo_matrix_t p2u;
+    double x1, y1, x2, y2;
+    cairo_matrix_t pat_to_pdf;
     cairo_extend_t extend;
     cairo_status_t status;
 
@@ -1439,32 +1436,33 @@ _cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t    *surface,
     if (status)
 	return status;
 
-    p2u = pattern->base.base.matrix;
-    status = cairo_matrix_invert (&p2u);
+    pat_to_pdf = pattern->base.base.matrix;
+    status = cairo_matrix_invert (&pat_to_pdf);
     if (status)
 	return status;
 
-    x0 = _cairo_fixed_to_double (pattern->gradient.p1.x);
-    y0 = _cairo_fixed_to_double (pattern->gradient.p1.y);
-    cairo_matrix_transform_point (&p2u, &x0, &y0);
-    x1 = _cairo_fixed_to_double (pattern->gradient.p2.x);
-    y1 = _cairo_fixed_to_double (pattern->gradient.p2.y);
-    cairo_matrix_transform_point (&p2u, &x1, &y1);
+    cairo_matrix_multiply (&pat_to_pdf, &pat_to_pdf, &surface->cairo_to_pdf);
+    x1 = _cairo_fixed_to_double (pattern->gradient.p1.x);
+    y1 = _cairo_fixed_to_double (pattern->gradient.p1.y);
+    x2 = _cairo_fixed_to_double (pattern->gradient.p2.x);
+    y2 = _cairo_fixed_to_double (pattern->gradient.p2.y);
 
     pattern_resource = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
                                  "%d 0 obj\r\n"
                                  "<< /Type /Pattern\r\n"
                                  "   /PatternType 2\r\n"
-                                 "   /Matrix [ 1 0 0 -1 0 %f ]\r\n"
+                                 "   /Matrix [ %f %f %f %f %f %f ]\r\n"
                                  "   /Shading\r\n"
                                  "      << /ShadingType 2\r\n"
                                  "         /ColorSpace /DeviceRGB\r\n"
                                  "         /Coords [ %f %f %f %f ]\r\n"
                                  "         /Function %d 0 R\r\n",
                                  pattern_resource.id,
-                                 surface->height,
-                                 x0, y0, x1, y1,
+                                 pat_to_pdf.xx, pat_to_pdf.yx,
+                                 pat_to_pdf.xy, pat_to_pdf.yy,
+                                 pat_to_pdf.x0, pat_to_pdf.y0,
+                                 x1, y1, x2, y2,
                                  color_function.id);
 
     if (extend == CAIRO_EXTEND_PAD) {
@@ -1491,15 +1489,17 @@ _cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t    *surface,
                                      "%d 0 obj\r\n"
                                      "<< /Type /Pattern\r\n"
                                      "   /PatternType 2\r\n"
-                                     "   /Matrix [ 1 0 0 -1 0 %f ]\r\n"
+                                     "   /Matrix [ %f %f %f %f %f %f ]\r\n"
                                      "   /Shading\r\n"
                                      "      << /ShadingType 2\r\n"
                                      "         /ColorSpace /DeviceGray\r\n"
                                      "         /Coords [ %f %f %f %f ]\r\n"
                                      "         /Function %d 0 R\r\n",
                                      mask_resource.id,
-                                     surface->height,
-                                     x0, y0, x1, y1,
+                                     pat_to_pdf.xx, pat_to_pdf.yx,
+                                     pat_to_pdf.xy, pat_to_pdf.yy,
+                                     pat_to_pdf.x0, pat_to_pdf.y0,
+                                     x1, y1, x2, y2,
                                      alpha_function.id);
 
         if (extend == CAIRO_EXTEND_PAD) {
@@ -1541,8 +1541,8 @@ _cairo_pdf_surface_emit_radial_pattern (cairo_pdf_surface_t    *surface,
 {
     cairo_pdf_resource_t pattern_resource, smask;
     cairo_pdf_resource_t color_function, alpha_function;
-    double x0, y0, x1, y1, r0, r1;
-    cairo_matrix_t p2u, pdf_p2d;
+    double x1, y1, x2, y2, r1, r2;
+    cairo_matrix_t pat_to_pdf;
     cairo_extend_t extend;
     cairo_status_t status;
 
@@ -1558,22 +1558,18 @@ _cairo_pdf_surface_emit_radial_pattern (cairo_pdf_surface_t    *surface,
     if (status)
 	return status;
 
-    p2u = pattern->base.base.matrix;
-    status = cairo_matrix_invert (&p2u);
+    pat_to_pdf = pattern->base.base.matrix;
+    status = cairo_matrix_invert (&pat_to_pdf);
     if (status)
 	return status;
 
-    x0 = _cairo_fixed_to_double (pattern->gradient.c1.x);
-    y0 = _cairo_fixed_to_double (pattern->gradient.c1.y);
-    r0 = _cairo_fixed_to_double (pattern->gradient.c1.radius);
-    x1 = _cairo_fixed_to_double (pattern->gradient.c2.x);
-    y1 = _cairo_fixed_to_double (pattern->gradient.c2.y);
-    r1 = _cairo_fixed_to_double (pattern->gradient.c2.radius);
-
-    cairo_matrix_init_identity (&pdf_p2d);
-    cairo_matrix_translate (&pdf_p2d, 0.0, surface->height);
-    cairo_matrix_scale (&pdf_p2d, 1.0, -1.0);
-    cairo_matrix_multiply (&pdf_p2d, &p2u, &pdf_p2d);
+    cairo_matrix_multiply (&pat_to_pdf, &pat_to_pdf, &surface->cairo_to_pdf);
+    x1 = _cairo_fixed_to_double (pattern->gradient.c1.x);
+    y1 = _cairo_fixed_to_double (pattern->gradient.c1.y);
+    r1 = _cairo_fixed_to_double (pattern->gradient.c1.radius);
+    x2 = _cairo_fixed_to_double (pattern->gradient.c2.x);
+    y2 = _cairo_fixed_to_double (pattern->gradient.c2.y);
+    r2 = _cairo_fixed_to_double (pattern->gradient.c2.radius);
 
     pattern_resource = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
@@ -1587,10 +1583,10 @@ _cairo_pdf_surface_emit_radial_pattern (cairo_pdf_surface_t    *surface,
                                  "         /Coords [ %f %f %f %f %f %f ]\r\n"
                                  "         /Function %d 0 R\r\n",
                                  pattern_resource.id,
-                                 pdf_p2d.xx, pdf_p2d.yx,
-                                 pdf_p2d.xy, pdf_p2d.yy,
-                                 pdf_p2d.x0, pdf_p2d.y0,
-                                 x0, y0, r0, x1, y1, r1,
+                                 pat_to_pdf.xx, pat_to_pdf.yx,
+                                 pat_to_pdf.xy, pat_to_pdf.yy,
+                                 pat_to_pdf.x0, pat_to_pdf.y0,
+                                 x1, y1, r1, x2, y2, r2,
                                  color_function.id);
 
     if (extend == CAIRO_EXTEND_PAD) {
@@ -1624,10 +1620,10 @@ _cairo_pdf_surface_emit_radial_pattern (cairo_pdf_surface_t    *surface,
                                      "         /Coords [ %f %f %f %f %f %f ]\r\n"
                                      "         /Function %d 0 R\r\n",
                                      mask_resource.id,
-                                     pdf_p2d.xx, pdf_p2d.yx,
-                                     pdf_p2d.xy, pdf_p2d.yy,
-                                     pdf_p2d.x0, pdf_p2d.y0,
-                                     x0, y0, r0, x1, y1, r1,
+                                     pat_to_pdf.xx, pat_to_pdf.yx,
+                                     pat_to_pdf.xy, pat_to_pdf.yy,
+                                     pat_to_pdf.x0, pat_to_pdf.y0,
+                                     x1, y1, r1, x2, y2, r2,
                                      alpha_function.id);
 
         if (extend == CAIRO_EXTEND_PAD) {
@@ -1767,6 +1763,7 @@ _cairo_pdf_surface_get_extents (void		        *abstract_surface,
 
 typedef struct _pdf_path_info {
     cairo_output_stream_t   *output;
+    cairo_matrix_t	    *cairo_to_pdf;
     cairo_matrix_t	    *ctm_inverse;
 } pdf_path_info_t;
 
@@ -1777,6 +1774,8 @@ _cairo_pdf_path_move_to (void *closure, cairo_point_t *point)
     double x = _cairo_fixed_to_double (point->x);
     double y = _cairo_fixed_to_double (point->y);
 
+    if (info->cairo_to_pdf)
+        cairo_matrix_transform_point (info->cairo_to_pdf, &x, &y);
     if (info->ctm_inverse)
 	cairo_matrix_transform_point (info->ctm_inverse, &x, &y);
 
@@ -1793,6 +1792,8 @@ _cairo_pdf_path_line_to (void *closure, cairo_point_t *point)
     double x = _cairo_fixed_to_double (point->x);
     double y = _cairo_fixed_to_double (point->y);
 
+    if (info->cairo_to_pdf)
+        cairo_matrix_transform_point (info->cairo_to_pdf, &x, &y);
     if (info->ctm_inverse)
 	cairo_matrix_transform_point (info->ctm_inverse, &x, &y);
 
@@ -1815,6 +1816,11 @@ _cairo_pdf_path_curve_to (void          *closure,
     double dx = _cairo_fixed_to_double (d->x);
     double dy = _cairo_fixed_to_double (d->y);
 
+    if (info->cairo_to_pdf) {
+        cairo_matrix_transform_point (info->cairo_to_pdf, &bx, &by);
+        cairo_matrix_transform_point (info->cairo_to_pdf, &cx, &cy);
+        cairo_matrix_transform_point (info->cairo_to_pdf, &dx, &dy);
+    }
     if (info->ctm_inverse) {
 	cairo_matrix_transform_point (info->ctm_inverse, &bx, &by);
 	cairo_matrix_transform_point (info->ctm_inverse, &cx, &cy);
@@ -1863,6 +1869,7 @@ _cairo_pdf_surface_intersect_clip_path (void			*abstract_surface,
     }
 
     info.output = surface->output;
+    info.cairo_to_pdf = &surface->cairo_to_pdf;
     info.ctm_inverse = NULL;
 
     status = _cairo_path_fixed_interpret (path,
@@ -2581,6 +2588,7 @@ _cairo_pdf_surface_emit_outline_glyph (cairo_pdf_surface_t	*surface,
 				 -_cairo_fixed_to_double (scaled_glyph->bbox.p1.y));
 
     info.output = surface->output;
+    info.cairo_to_pdf = &surface->cairo_to_pdf;
     info.ctm_inverse = NULL;
 
     status = _cairo_path_fixed_interpret (scaled_glyph->path,
@@ -3143,9 +3151,6 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
 	status = _cairo_pdf_surface_begin_group (surface, &group);
         if (status)
             return status;
-        _cairo_output_stream_printf (surface->output,
-                                     "1 0 0 -1 0 %f cm\r\n",
-                                     surface->height);
     } else {
         _cairo_output_stream_printf (surface->output, "q ");
     }
@@ -3160,8 +3165,7 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
         _cairo_pdf_surface_end_group (surface);
 
         _cairo_output_stream_printf (surface->output,
-                                     "q 1 0 0 -1 0 %f cm /sm%d gs /res%d Do Q\r\n",
-                                     surface->height,
+                                     "q /sm%d gs /res%d Do Q\r\n",
                                      surface->emitted_pattern.smask,
                                      group.id);
     } else {
@@ -3268,6 +3272,7 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
     cairo_pdf_resource_t group = {0}; /* squelch bogus compiler warning */
     pdf_path_info_t info;
     cairo_status_t status;
+    cairo_matrix_t m;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _cairo_pdf_surface_analyze_operation (surface, op, source);
@@ -3282,9 +3287,6 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 	status = _cairo_pdf_surface_begin_group (surface, &group);
         if (status)
             return status;
-        _cairo_output_stream_printf (surface->output,
-                                     "1 0 0 -1 0 %f cm\r\n",
-                                     surface->height);
     } else {
         _cairo_output_stream_printf (surface->output, "q ");
     }
@@ -3297,12 +3299,14 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 	return status;
 
     info.output = surface->output;
+    info.cairo_to_pdf = NULL;
     info.ctm_inverse = ctm_inverse;
 
+    cairo_matrix_multiply (&m, ctm, &surface->cairo_to_pdf);
     _cairo_output_stream_printf (surface->output,
 				 "q %f %f %f %f %f %f cm\r\n",
-				 ctm->xx, ctm->yx, ctm->xy, ctm->yy,
-				 ctm->x0, ctm->y0);
+				 m.xx, m.yx, m.xy, m.yy,
+				 m.x0, m.y0);
 
     status = _cairo_path_fixed_interpret (path,
 					  CAIRO_DIRECTION_FORWARD,
@@ -3318,8 +3322,7 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
         _cairo_pdf_surface_end_group (surface);
 
         _cairo_output_stream_printf (surface->output,
-                                     "q 1 0 0 -1 0 %f cm /sm%d gs /res%d Do Q\r\n",
-                                     surface->height,
+                                     "q /sm%d gs /res%d Do Q\r\n",
                                      surface->emitted_pattern.smask,
                                      group.id);
     } else {
@@ -3357,15 +3360,13 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
 	status = _cairo_pdf_surface_begin_group (surface, &group);
         if (status)
             return status;
-        _cairo_output_stream_printf (surface->output,
-                                     "1 0 0 -1 0 %f cm\r\n",
-                                     surface->height);
     } else {
         _cairo_output_stream_printf (surface->output, "q ");
     }
 
     _cairo_pdf_surface_select_pattern (surface, FALSE);
     info.output = surface->output;
+    info.cairo_to_pdf = &surface->cairo_to_pdf;
     info.ctm_inverse = NULL;
     status = _cairo_path_fixed_interpret (path,
 					  CAIRO_DIRECTION_FORWARD,
@@ -3394,8 +3395,7 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
         _cairo_pdf_surface_end_group (surface);
 
         _cairo_output_stream_printf (surface->output,
-                                     "q 1 0 0 -1 0 %f cm /sm%d gs /res%d Do Q\r\n",
-                                     surface->height,
+                                     "q /sm%d gs /res%d Do Q\r\n",
                                      surface->emitted_pattern.smask,
                                      group.id);
     } else {
@@ -3438,9 +3438,6 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
 	status = _cairo_pdf_surface_begin_group (surface, &group);
         if (status)
             return status;
-        _cairo_output_stream_printf (surface->output,
-                                     "1 0 0 -1 0 %f cm\r\n",
-                                     surface->height);
     } else {
         _cairo_output_stream_printf (surface->output, "q ");
     }
@@ -3491,11 +3488,11 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
             _cairo_output_stream_printf (surface->output,
                                          "%f %f %f %f %f %f Tm\r\n",
                                          scaled_font->scale.xx,
-                                         scaled_font->scale.yx,
+                                         -scaled_font->scale.yx,
                                          -scaled_font->scale.xy,
-                                         -scaled_font->scale.yy,
+                                         scaled_font->scale.yy,
                                          glyphs[i].x,
-                                         glyphs[i].y);
+                                         surface->height - glyphs[i].y);
             current_subset_id = subset_glyph.subset_id;
             Tlm_x = glyphs[i].x;
             Tlm_y = glyphs[i].y;
@@ -3512,7 +3509,8 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
                         _cairo_output_stream_printf (surface->output,
                                                      "%f %f Td\r\n",
                                                      (glyphs[i].x - Tlm_x)/scaled_font->scale.xx,
-                                                     (glyphs[i].y - Tlm_y)/-scaled_font->scale.yy);
+                                                     -(glyphs[i].y - Tlm_y)/scaled_font->scale.yy);
+
                         Tlm_x = glyphs[i].x;
                         Tlm_y = glyphs[i].y;
                         Tm_x = Tlm_x;
@@ -3588,8 +3586,7 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
         _cairo_pdf_surface_end_group (surface);
 
         _cairo_output_stream_printf (surface->output,
-                                     "q 1 0 0 -1 0 %f cm /sm%d gs /res%d Do Q\r\n",
-                                     surface->height,
+                                     "q /sm%d gs /res%d Do Q\r\n",
                                      surface->emitted_pattern.smask,
                                      group.id);
     } else {
