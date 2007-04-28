@@ -2151,7 +2151,8 @@ cairo_show_page (cairo_t *cr)
  *
  * Tests whether the given point is inside the area that would be
  * affected by a cairo_stroke() operation given the current path and
- * stroking parameters.
+ * stroking parameters. Surface dimensions and clipping are not taken
+ * into account.
  *
  * See cairo_stroke(), cairo_set_line_width(), cairo_set_line_join(),
  * cairo_set_line_cap(), cairo_set_dash(), and
@@ -2186,7 +2187,8 @@ cairo_in_stroke (cairo_t *cr, double x, double y)
  *
  * Tests whether the given point is inside the area that would be
  * affected by a cairo_fill() operation given the current path and
- * filling parameters.
+ * filling parameters. Surface dimensions and clipping are not taken
+ * into account.
  *
  * See cairo_fill(), cairo_set_fill_rule() and cairo_fill_preserve().
  *
