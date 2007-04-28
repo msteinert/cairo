@@ -1036,6 +1036,9 @@ typedef struct _cairo_traps {
     int traps_size;
     cairo_trapezoid_t *traps;
     cairo_trapezoid_t  traps_embedded[1];
+
+    cairo_bool_t has_limits;
+    cairo_box_t limits;
 } cairo_traps_t;
 
 #define CAIRO_FONT_SLANT_DEFAULT   CAIRO_FONT_SLANT_NORMAL
@@ -2170,6 +2173,10 @@ _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
 /* cairo_traps.c */
 cairo_private void
 _cairo_traps_init (cairo_traps_t *traps);
+
+cairo_private void
+_cairo_traps_limit (cairo_traps_t	*traps,
+		    cairo_box_t		*limits);
 
 cairo_private cairo_status_t
 _cairo_traps_init_box (cairo_traps_t *traps,

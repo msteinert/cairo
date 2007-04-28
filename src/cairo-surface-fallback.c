@@ -804,8 +804,34 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
 {
     cairo_status_t status;
     cairo_traps_t traps;
+    cairo_box_t box;
+    cairo_rectangle_int16_t extents;
+
+    status = _cairo_surface_get_extents (surface, &extents);
+    if (status)
+        return status;
+
+    if (_cairo_operator_bounded_by_source (op)) {
+	cairo_rectangle_int16_t source_extents;
+	status = _cairo_pattern_get_extents (source, &source_extents);
+	if (status)
+	    return status;
+
+	_cairo_rectangle_intersect (&extents, &source_extents);
+    }
+
+    status = _cairo_clip_intersect_to_rectangle (surface->clip, &extents);
+    if (status)
+        return status;
+
+    box.p1.x = _cairo_fixed_from_int (extents.x);
+    box.p1.y = _cairo_fixed_from_int (extents.y);
+    box.p2.x = _cairo_fixed_from_int (extents.x + extents.width);
+    box.p2.y = _cairo_fixed_from_int (extents.y + extents.height);
 
     _cairo_traps_init (&traps);
+
+    _cairo_traps_limit (&traps, &box);
 
     status = _cairo_path_fixed_stroke_to_traps (path,
 						stroke_style,
@@ -840,8 +866,34 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
 {
     cairo_status_t status;
     cairo_traps_t traps;
+    cairo_box_t box;
+    cairo_rectangle_int16_t extents;
+
+    status = _cairo_surface_get_extents (surface, &extents);
+    if (status)
+        return status;
+
+    if (_cairo_operator_bounded_by_source (op)) {
+	cairo_rectangle_int16_t source_extents;
+	status = _cairo_pattern_get_extents (source, &source_extents);
+	if (status)
+	    return status;
+
+	_cairo_rectangle_intersect (&extents, &source_extents);
+    }
+
+    status = _cairo_clip_intersect_to_rectangle (surface->clip, &extents);
+    if (status)
+        return status;
+
+    box.p1.x = _cairo_fixed_from_int (extents.x);
+    box.p1.y = _cairo_fixed_from_int (extents.y);
+    box.p2.x = _cairo_fixed_from_int (extents.x + extents.width);
+    box.p2.y = _cairo_fixed_from_int (extents.y + extents.height);
 
     _cairo_traps_init (&traps);
+
+    _cairo_traps_limit (&traps, &box);
 
     status = _cairo_path_fixed_fill_to_traps (path,
 					      fill_rule,
