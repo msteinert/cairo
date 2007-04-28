@@ -103,6 +103,9 @@ SOFTWARE.
 #define pixman_private_no_warn
 #endif
 
+#ifndef WARN_UNUSED_RESULT
+#define WARN_UNUSED_RESULT
+#endif
 /* Add attribute(warn_unused_result) if supported */
 #define pixman_warn WARN_UNUSED_RESULT
 #define pixman_private pixman_private_no_warn pixman_warn
