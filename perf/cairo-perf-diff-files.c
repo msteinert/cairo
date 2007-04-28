@@ -38,6 +38,7 @@
 #include <ctype.h>
 #include <math.h>
 #include <assert.h>
+#include <libgen.h>
 
 typedef struct _test_report {
     int id;
