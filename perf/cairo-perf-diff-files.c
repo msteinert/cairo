@@ -94,6 +94,14 @@ typedef struct _cairo_perf_diff_files_args {
     cairo_perf_report_options_t options;
 } cairo_perf_diff_files_args_t;
 
+#ifndef __USE_GNU
+static ssize_t
+getline (char **lineptr, size_t *n, FILE *stream);
+
+static char *
+strndup (const char *s, size_t n);
+#endif
+
 /* Ad-hoc parsing, macros with a strong dependence on the calling
  * context, and plenty of other ugliness is here.  But at least it's
  * not perl... */
@@ -248,7 +256,7 @@ test_report_parse (test_report_t *report, char *line, char *configuration)
  */
 #ifndef __USE_GNU
 #define POORMANS_GETLINE_BUFFER_SIZE (65536)
-ssize_t
+static ssize_t
 getline (char **lineptr, size_t *n, FILE *stream)
 {
     if (!*lineptr)
@@ -272,7 +280,7 @@ getline (char **lineptr, size_t *n, FILE *stream)
 }
 #undef POORMANS_GETLINE_BUFFER_SIZE
 
-char *
+static char *
 strndup (const char *s, size_t n)
 {
     size_t len;
