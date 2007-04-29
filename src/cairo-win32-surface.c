@@ -36,11 +36,6 @@
  *	Vladimir Vukicevic <vladimir@pobox.com>
  */
 
-#include "cairoint.h"
-
-#include "cairo-clip-private.h"
-#include "cairo-win32-private.h"
-
 #define WIN32_LEAN_AND_MEAN
 /* We require Windows 2000 features such as ETO_PDY */
 #if !defined(WINVER) || (WINVER < 0x0500)
@@ -49,6 +44,12 @@
 #if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
 # define _WIN32_WINNT 0x0500
 #endif
+
+#include "cairoint.h"
+
+#include "cairo-clip-private.h"
+#include "cairo-win32-private.h"
+
 #include <windows.h>
 
 #if defined(__MINGW32__) && !defined(ETO_PDY)

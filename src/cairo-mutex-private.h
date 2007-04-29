@@ -80,18 +80,6 @@ CAIRO_BEGIN_DECLS
 
 #elif HAVE_WINDOWS_H /*******************************************************/
 
-/* We require Windows 2000 features. Although we don't use them here, things
- * should still work if this header file ends up being the one to include
- * windows.h into a source file, so: */
-# if !defined(WINVER) || (WINVER < 0x0500)
-#  define WINVER 0x0500
-# endif
-
-# if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
-#  define _WIN32_WINNT 0x0500
-# endif
-
-# define WIN32_LEAN_AND_MEAN
 # include <windows.h>
 
   typedef CRITICAL_SECTION cairo_mutex_t;
