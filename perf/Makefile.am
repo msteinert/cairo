@@ -10,7 +10,7 @@ INCLUDES =					\
 	-I$(top_builddir)/src			\
 	$(CAIRO_CFLAGS)
 
-noinst_PROGRAMS = cairo-perf cairo-perf-diff-files
+EXTRA_PROGRAMS = cairo-perf cairo-perf-diff-files
 EXTRA_DIST = cairo-perf-diff
 
 cairo_perf_SOURCES =		\
