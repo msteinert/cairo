@@ -34,6 +34,10 @@
 /* For basename */
 #include <libgen.h>
 
+#if HAVE_FCFINI
+#include <fontconfig/fontconfig.h>
+#endif
+
 #ifdef HAVE_SCHED_H
 #include <sched.h>
 #endif
@@ -299,6 +303,16 @@ check_cpu_affinity(void)
 #endif
 }
 
+static void
+cairo_perf_fini (void)
+{
+    cairo_debug_reset_static_data ();
+#if HAVE_FCFINI
+    FcFini ();
+#endif
+}
+
+
 int
 main (int argc, char *argv[])
 {
@@ -351,6 +365,8 @@ main (int argc, char *argv[])
 		    fprintf (stderr,
 			     "Error: Failed to create target surface: %s\n",
 			     target->name);
+		    cairo_boilerplate_free_targets (targets);
+		    cairo_perf_fini ();
 		    exit (1);
 		}
 
@@ -364,6 +380,8 @@ main (int argc, char *argv[])
 		if (cairo_status (perf.cr)) {
 		    fprintf (stderr, "Error: Test left cairo in an error state: %s\n",
 			     cairo_status_to_string (cairo_status (perf.cr)));
+		    cairo_boilerplate_free_targets (targets);
+		    cairo_perf_fini ();
 		    exit (1);
 		}
 
@@ -377,6 +395,7 @@ main (int argc, char *argv[])
     }
 
     cairo_boilerplate_free_targets (targets);
+    cairo_perf_fini ();
 
     return 0;
 }
