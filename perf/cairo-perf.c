@@ -27,12 +27,16 @@
  */
 
 #include "cairo-perf.h"
-#include "config.h"
 
 /* For getopt */
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+
 /* For basename */
+#ifdef HAVE_LIBGEN_H
 #include <libgen.h>
+#endif
 
 #if HAVE_FCFINI
 #include <fontconfig/fontconfig.h>

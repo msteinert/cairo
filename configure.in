@@ -609,6 +609,10 @@ AC_CHECK_HEADERS([sched.h], [
 ])
 
 dnl ===========================================================================
+dnl Checks for misc headers
+AC_CHECK_HEADERS([libgen.h])
+
+dnl ===========================================================================
 dnl check compiler flags
 AC_DEFUN([CAIRO_CC_TRY_FLAG], [
   AC_MSG_CHECKING([whether $CC supports $1])

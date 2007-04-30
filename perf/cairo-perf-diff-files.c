@@ -38,7 +38,9 @@
 #include <ctype.h>
 #include <math.h>
 #include <assert.h>
+#ifdef HAVE_LIBGEN_H
 #include <libgen.h>
+#endif
 
 typedef struct _test_report {
     int id;
