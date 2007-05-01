@@ -66,7 +66,7 @@ CAIRO_BEGIN_DECLS
 #endif
 
 #ifndef CAIRO_MUTEX_FINI
-# define CAIRO_MUTEX_FINI(mutex)	CAIRO_MUTEX_NOOP
+# define CAIRO_MUTEX_FINI(mutex)	CAIRO_MUTEX_NOOP1(mutex)
 #endif
 
 

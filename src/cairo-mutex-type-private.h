@@ -52,7 +52,8 @@ CAIRO_BEGIN_DECLS
 
 /* A fully qualified no-operation statement */
 #define CAIRO_MUTEX_NOOP	do {/*no-op*/} while (0)
-
+/* And one that evaluates it's argument once */
+#define CAIRO_MUTEX_NOOP1(expr)        do { if (expr) ; } while (0)
 
 
 #if CAIRO_NO_MUTEX
