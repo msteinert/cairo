@@ -52,16 +52,16 @@
 CAIRO_BEGIN_DECLS
 
 #ifndef CAIRO_MUTEX_DECLARE
-#define CAIRO_MUTEX_DECLARE(name) extern cairo_mutex_t name;
+#define CAIRO_MUTEX_DECLARE(mutex) extern cairo_mutex_t mutex;
 #endif
 #include "cairo-mutex-list-private.h"
 #undef CAIRO_MUTEX_DECLARE
 
 
 #ifndef CAIRO_MUTEX_INIT
-# define CAIRO_MUTEX_INIT(_mutex) do {				\
+# define CAIRO_MUTEX_INIT(mutex) do {				\
     cairo_mutex_t _tmp_mutex = CAIRO_MUTEX_NIL_INITIALIZER;     \
-    memcpy ((_mutex), &_tmp_mutex, sizeof (_tmp_mutex));        \
+    memcpy ((mutex), &_tmp_mutex, sizeof (_tmp_mutex));        \
 } while (0)
 #endif
 

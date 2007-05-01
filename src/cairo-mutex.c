@@ -31,8 +31,8 @@
  *	Mathias Hasselmann <mathias.hasselmann@gmx.de>
  */
 
-#define CAIRO_MUTEX_DECLARE(name) \
- cairo_mutex_t name = CAIRO_MUTEX_NIL_INITIALIZER;
+#define CAIRO_MUTEX_DECLARE(mutex) \
+ cairo_mutex_t mutex = CAIRO_MUTEX_NIL_INITIALIZER;
 
 #include "cairoint.h"
 

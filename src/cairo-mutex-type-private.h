@@ -62,8 +62,8 @@ CAIRO_BEGIN_DECLS
   typedef int cairo_mutex_t;
 
 # define CAIRO_MUTEX_INITIALIZE() CAIRO_MUTEX_NOOP
-# define CAIRO_MUTEX_LOCK(name) do { while (name) ; (name) = 1; } while (0)
-# define CAIRO_MUTEX_UNLOCK(name) (name) = 0
+# define CAIRO_MUTEX_LOCK(mutex) do { while (mutex) ; (mutex) = 1; } while (0)
+# define CAIRO_MUTEX_UNLOCK(mutex) (mutex) = 0
 # define CAIRO_MUTEX_NIL_INITIALIZER 0
 
 #elif HAVE_PTHREAD_H /*******************************************************/
@@ -73,8 +73,8 @@ CAIRO_BEGIN_DECLS
   typedef pthread_mutex_t cairo_mutex_t;
 
 # define CAIRO_MUTEX_INITIALIZE() CAIRO_MUTEX_NOOP
-# define CAIRO_MUTEX_LOCK(name) pthread_mutex_lock (&(name))
-# define CAIRO_MUTEX_UNLOCK(name) pthread_mutex_unlock (&(name))
+# define CAIRO_MUTEX_LOCK(mutex) pthread_mutex_lock (&(mutex))
+# define CAIRO_MUTEX_UNLOCK(mutex) pthread_mutex_unlock (&(mutex))
 # define CAIRO_MUTEX_FINI(mutex) pthread_mutex_destroy (mutex)
 # define CAIRO_MUTEX_NIL_INITIALIZER PTHREAD_MUTEX_INITIALIZER
 
@@ -84,8 +84,8 @@ CAIRO_BEGIN_DECLS
 
   typedef CRITICAL_SECTION cairo_mutex_t;
 
-# define CAIRO_MUTEX_LOCK(name) EnterCriticalSection (&(name))
-# define CAIRO_MUTEX_UNLOCK(name) LeaveCriticalSection (&(name))
+# define CAIRO_MUTEX_LOCK(mutex) EnterCriticalSection (&(mutex))
+# define CAIRO_MUTEX_UNLOCK(mutex) LeaveCriticalSection (&(mutex))
 # define CAIRO_MUTEX_INIT(mutex) InitializeCriticalSection (mutex)
 # define CAIRO_MUTEX_FINI(mutex) DeleteCriticalSection (mutex)
 # define CAIRO_MUTEX_NIL_INITIALIZER { NULL, 0, 0, NULL, NULL, 0 }
@@ -98,8 +98,8 @@ CAIRO_BEGIN_DECLS
 
   typedef HMTX cairo_mutex_t;
 
-# define CAIRO_MUTEX_LOCK(name) DosRequestMutexSem(name, SEM_INDEFINITE_WAIT)
-# define CAIRO_MUTEX_UNLOCK(name) DosReleaseMutexSem(name)
+# define CAIRO_MUTEX_LOCK(mutex) DosRequestMutexSem(mutex, SEM_INDEFINITE_WAIT)
+# define CAIRO_MUTEX_UNLOCK(mutex) DosReleaseMutexSem(mutex)
 # define CAIRO_MUTEX_INIT(mutex) DosCreateMutexSem (NULL, mutex, 0L, FALSE)
 # define CAIRO_MUTEX_FINI(mutex) do {				\
     if (0 != (mutex)) {						\
@@ -113,8 +113,8 @@ CAIRO_BEGIN_DECLS
 
   typedef BLocker* cairo_mutex_t;
 
-# define CAIRO_MUTEX_LOCK(name) (name)->Lock()
-# define CAIRO_MUTEX_UNLOCK(name) (name)->Unlock()
+# define CAIRO_MUTEX_LOCK(mutex) (mutex)->Lock()
+# define CAIRO_MUTEX_UNLOCK(mutex) (mutex)->Unlock()
 # define CAIRO_MUTEX_INIT(mutex) (*(mutex)) = new BLocker()
 # define CAIRO_MUTEX_FINI(mutex) delete (*(mutex))
 # define CAIRO_MUTEX_NIL_INITIALIZER NULL
