@@ -62,9 +62,7 @@
 
 CAIRO_BEGIN_DECLS
 
-#ifndef CAIRO_MUTEX_DECLARE
-#define CAIRO_MUTEX_DECLARE(mutex) extern cairo_mutex_t mutex;
-#endif
+#define CAIRO_MUTEX_DECLARE(mutex) extern cairo_mutex_t mutex
 #include "cairo-mutex-list-private.h"
 #undef CAIRO_MUTEX_DECLARE
 

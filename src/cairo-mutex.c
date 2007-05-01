@@ -31,10 +31,11 @@
  *	Mathias Hasselmann <mathias.hasselmann@gmx.de>
  */
 
-#define CAIRO_MUTEX_DECLARE(mutex) \
- cairo_mutex_t mutex = CAIRO_MUTEX_NIL_INITIALIZER;
-
 #include "cairoint.h"
+
+#define CAIRO_MUTEX_DECLARE(mutex) cairo_mutex_t mutex = CAIRO_MUTEX_NIL_INITIALIZER
+#include "cairo-mutex-list-private.h"
+#undef   CAIRO_MUTEX_DECLARE
 
 #if CAIRO_MUTEX_USE_GENERIC_INITIALIZATION
 
@@ -47,7 +48,7 @@ void _cairo_mutex_initialize (void)
 
     _cairo_mutex_initialized = TRUE;
 
-#define  CAIRO_MUTEX_DECLARE(mutex) CAIRO_MUTEX_INIT (mutex);
+#define  CAIRO_MUTEX_DECLARE(mutex) CAIRO_MUTEX_INIT (mutex)
 #include "cairo-mutex-list-private.h"
 #undef   CAIRO_MUTEX_DECLARE
 }
