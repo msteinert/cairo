@@ -379,7 +379,7 @@ slim_hidden_def (cairo_surface_reference);
 
 /**
  * cairo_surface_destroy:
- * @surface: a #cairo_t
+ * @surface: a #cairo_surface_t
  *
  * Decreases the reference count on @surface by one. If the result is
  * zero, then @surface and all associated resources are freed.  See
