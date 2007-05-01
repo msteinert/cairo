@@ -334,7 +334,7 @@ _cairo_ft_unscaled_font_init (cairo_ft_unscaled_font_t *unscaled,
     }
 
     unscaled->have_scale = FALSE;
-    CAIRO_MUTEX_INIT (&unscaled->mutex);
+    CAIRO_MUTEX_INIT (unscaled->mutex);
     unscaled->lock_count = 0;
 
     unscaled->faces = NULL;
@@ -369,7 +369,7 @@ _cairo_ft_unscaled_font_fini (cairo_ft_unscaled_font_t *unscaled)
 	unscaled->filename = NULL;
     }
 
-    CAIRO_MUTEX_FINI (&unscaled->mutex);
+    CAIRO_MUTEX_FINI (unscaled->mutex);
 }
 
 static int

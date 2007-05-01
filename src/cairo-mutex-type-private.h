@@ -76,7 +76,7 @@ CAIRO_BEGIN_DECLS
 # define CAIRO_MUTEX_INITIALIZE() CAIRO_MUTEX_NOOP
 # define CAIRO_MUTEX_LOCK(mutex) pthread_mutex_lock (&(mutex))
 # define CAIRO_MUTEX_UNLOCK(mutex) pthread_mutex_unlock (&(mutex))
-# define CAIRO_MUTEX_FINI(mutex) pthread_mutex_destroy (mutex)
+# define CAIRO_MUTEX_FINI(mutex) pthread_mutex_destroy (&(mutex))
 # define CAIRO_MUTEX_NIL_INITIALIZER PTHREAD_MUTEX_INITIALIZER
 
 #elif HAVE_WINDOWS_H /*******************************************************/
@@ -87,8 +87,8 @@ CAIRO_BEGIN_DECLS
 
 # define CAIRO_MUTEX_LOCK(mutex) EnterCriticalSection (&(mutex))
 # define CAIRO_MUTEX_UNLOCK(mutex) LeaveCriticalSection (&(mutex))
-# define CAIRO_MUTEX_INIT(mutex) InitializeCriticalSection (mutex)
-# define CAIRO_MUTEX_FINI(mutex) DeleteCriticalSection (mutex)
+# define CAIRO_MUTEX_INIT(mutex) InitializeCriticalSection (&(mutex))
+# define CAIRO_MUTEX_FINI(mutex) DeleteCriticalSection (&(mutex))
 # define CAIRO_MUTEX_NIL_INITIALIZER { NULL, 0, 0, NULL, NULL, 0 }
 
 #elif defined __OS2__ /******************************************************/
@@ -101,13 +101,8 @@ CAIRO_BEGIN_DECLS
 
 # define CAIRO_MUTEX_LOCK(mutex) DosRequestMutexSem(mutex, SEM_INDEFINITE_WAIT)
 # define CAIRO_MUTEX_UNLOCK(mutex) DosReleaseMutexSem(mutex)
-# define CAIRO_MUTEX_INIT(mutex) DosCreateMutexSem (NULL, mutex, 0L, FALSE)
-# define CAIRO_MUTEX_FINI(mutex) do {				\
-    if (0 != (mutex)) {						\
-        DosCloseMutexSem (*(mutex));				\
-        (*(mutex)) = 0;						\
-    }								\
-} while (0)
+# define CAIRO_MUTEX_INIT(mutex) DosCreateMutexSem (NULL, &(mutex), 0L, FALSE)
+# define CAIRO_MUTEX_FINI(mutex) DosCloseMutexSem (mutex)
 # define CAIRO_MUTEX_NIL_INITIALIZER 0
 
 #elif CAIRO_HAS_BEOS_SURFACE /***********************************************/
@@ -116,8 +111,8 @@ CAIRO_BEGIN_DECLS
 
 # define CAIRO_MUTEX_LOCK(mutex) (mutex)->Lock()
 # define CAIRO_MUTEX_UNLOCK(mutex) (mutex)->Unlock()
-# define CAIRO_MUTEX_INIT(mutex) (*(mutex)) = new BLocker()
-# define CAIRO_MUTEX_FINI(mutex) delete (*(mutex))
+# define CAIRO_MUTEX_INIT(mutex) (mutex) = new BLocker()
+# define CAIRO_MUTEX_FINI(mutex) delete (mutex)
 # define CAIRO_MUTEX_NIL_INITIALIZER NULL
 
 #else /**********************************************************************/

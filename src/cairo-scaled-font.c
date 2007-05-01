@@ -374,7 +374,7 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 
     cairo_font_face_reference (font_face);
 
-    CAIRO_MUTEX_INIT (&scaled_font->mutex);
+    CAIRO_MUTEX_INIT (scaled_font->mutex);
 
     scaled_font->surface_backend = NULL;
     scaled_font->surface_private = NULL;
@@ -436,7 +436,7 @@ _cairo_scaled_font_fini (cairo_scaled_font_t *scaled_font)
     if (scaled_font->glyphs != NULL)
 	_cairo_cache_destroy (scaled_font->glyphs);
 
-    CAIRO_MUTEX_FINI (&scaled_font->mutex);
+    CAIRO_MUTEX_FINI (scaled_font->mutex);
 
     if (scaled_font->surface_backend != NULL &&
 	scaled_font->surface_backend->scaled_font_fini != NULL)

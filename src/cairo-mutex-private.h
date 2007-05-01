@@ -61,7 +61,7 @@ CAIRO_BEGIN_DECLS
 #ifndef CAIRO_MUTEX_INIT
 # define CAIRO_MUTEX_INIT(mutex) do {				\
     cairo_mutex_t _tmp_mutex = CAIRO_MUTEX_NIL_INITIALIZER;     \
-    memcpy ((mutex), &_tmp_mutex, sizeof (_tmp_mutex));        \
+    memcpy (&(mutex), &_tmp_mutex, sizeof (_tmp_mutex));        \
 } while (0)
 #endif
 
