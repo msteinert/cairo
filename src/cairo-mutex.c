@@ -37,10 +37,21 @@
 #include "cairo-mutex-list-private.h"
 #undef   CAIRO_MUTEX_DECLARE
 
-#if CAIRO_MUTEX_USE_GENERIC_INITIALIZATION
+#if _CAIRO_MUTEX_USE_STATIC_INITIALIZER || _CAIRO_MUTEX_USE_STATIC_FINALIZER
 
-cairo_bool_t _cairo_mutex_initialized = FALSE;
+# if _CAIRO_MUTEX_USE_STATIC_INITIALIZER
+#  define _CAIRO_MUTEX_INITALIZED_DEFAULT_VALUE FALSE
+# else
+#  define _CAIRO_MUTEX_INITALIZED_DEFAULT_VALUE TRUE
+# endif
 
+cairo_bool_t _cairo_mutex_initialized = _CAIRO_MUTEX_INITALIZED_DEFAULT_VALUE;
+
+# undef _CAIRO_MUTEX_INITALIZED_DEFAULT_VALUE
+
+#endif
+
+#if _CAIRO_MUTEX_USE_STATIC_INITIALIZER
 void _cairo_mutex_initialize (void)
 {
     if (_cairo_mutex_initialized)
@@ -52,7 +63,9 @@ void _cairo_mutex_initialize (void)
 #include "cairo-mutex-list-private.h"
 #undef   CAIRO_MUTEX_DECLARE
 }
+#endif
 
+#if _CAIRO_MUTEX_USE_STATIC_FINALIZER
 void _cairo_mutex_finalize (void)
 {
     if (!_cairo_mutex_initialized)
@@ -64,5 +77,4 @@ void _cairo_mutex_finalize (void)
 #include "cairo-mutex-list-private.h"
 #undef   CAIRO_MUTEX_DECLARE
 }
-
 #endif
