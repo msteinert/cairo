@@ -92,6 +92,7 @@ VALGRIND_MEMCHECK_FLAGS = \
 VALGRIND_CALLGRIND_FLAGS = \
 	--tool=callgrind
 CLEANFILES = \
+	$(EXTRA_PROGRAMS) \
 	valgrind-log \
 	callgrind.out.* \
 	index.html
