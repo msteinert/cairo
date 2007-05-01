@@ -47,86 +47,9 @@
 
 #include <cairo-features.h>
 
+#include "cairo-mutex-type-private.h"
+
 CAIRO_BEGIN_DECLS
-
-
-/* A fully qualified no-operation statement */
-#define CAIRO_MUTEX_NOOP	do {/*no-op*/} while (0)
-
-
-
-#if CAIRO_NO_MUTEX
-
-/* A poor man's mutex */
-
-  typedef int cairo_mutex_t;
-
-# define CAIRO_MUTEX_INITIALIZE() CAIRO_MUTEX_NOOP
-# define CAIRO_MUTEX_LOCK(name) do { while (name) ; (name) = 1; } while (0)
-# define CAIRO_MUTEX_UNLOCK(name) (name) = 0
-# define CAIRO_MUTEX_NIL_INITIALIZER 0
-
-#elif HAVE_PTHREAD_H /*******************************************************/
-
-# include <pthread.h>
-
-  typedef pthread_mutex_t cairo_mutex_t;
-
-# define CAIRO_MUTEX_INITIALIZE() CAIRO_MUTEX_NOOP
-# define CAIRO_MUTEX_LOCK(name) pthread_mutex_lock (&(name))
-# define CAIRO_MUTEX_UNLOCK(name) pthread_mutex_unlock (&(name))
-# define CAIRO_MUTEX_FINI(mutex) pthread_mutex_destroy (mutex)
-# define CAIRO_MUTEX_NIL_INITIALIZER PTHREAD_MUTEX_INITIALIZER
-
-#elif HAVE_WINDOWS_H /*******************************************************/
-
-# include <windows.h>
-
-  typedef CRITICAL_SECTION cairo_mutex_t;
-
-# define CAIRO_MUTEX_LOCK(name) EnterCriticalSection (&(name))
-# define CAIRO_MUTEX_UNLOCK(name) LeaveCriticalSection (&(name))
-# define CAIRO_MUTEX_INIT(mutex) InitializeCriticalSection (mutex)
-# define CAIRO_MUTEX_FINI(mutex) DeleteCriticalSection (mutex)
-# define CAIRO_MUTEX_NIL_INITIALIZER { NULL, 0, 0, NULL, NULL, 0 }
-
-#elif defined __OS2__ /******************************************************/
-
-# define INCL_BASE
-# define INCL_PM
-# include <os2.h>
-
-  typedef HMTX cairo_mutex_t;
-
-# define CAIRO_MUTEX_LOCK(name) DosRequestMutexSem(name, SEM_INDEFINITE_WAIT)
-# define CAIRO_MUTEX_UNLOCK(name) DosReleaseMutexSem(name)
-# define CAIRO_MUTEX_INIT(mutex) DosCreateMutexSem (NULL, mutex, 0L, FALSE)
-# define CAIRO_MUTEX_FINI(mutex) do {				\
-    if (0 != (mutex)) {						\
-        DosCloseMutexSem (*(mutex));				\
-        (*(mutex)) = 0;						\
-    }								\
-} while (0)
-# define CAIRO_MUTEX_NIL_INITIALIZER 0
-
-#elif CAIRO_HAS_BEOS_SURFACE /***********************************************/
-
-  typedef BLocker* cairo_mutex_t;
-
-# define CAIRO_MUTEX_LOCK(name) (name)->Lock()
-# define CAIRO_MUTEX_UNLOCK(name) (name)->Unlock()
-# define CAIRO_MUTEX_INIT(mutex) (*(mutex)) = new BLocker()
-# define CAIRO_MUTEX_FINI(mutex) delete (*(mutex))
-# define CAIRO_MUTEX_NIL_INITIALIZER NULL
-
-#else /**********************************************************************/
-
-# error "XXX: No mutex implementation found.  Define CAIRO_NO_MUTEX to 1" \
-        "     to compile cairo without thread-safety support."
-
-#endif
-
-
 
 #ifndef CAIRO_MUTEX_DECLARE
 #define CAIRO_MUTEX_DECLARE(name) extern cairo_mutex_t name;

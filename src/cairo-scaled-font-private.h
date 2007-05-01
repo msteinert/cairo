@@ -41,7 +41,7 @@
 #include "cairo.h"
 
 #include "cairo-types-private.h"
-#include "cairo-mutex-private.h"
+#include "cairo-mutex-type-private.h"
 
 struct _cairo_scaled_font {
     /* For most cairo objects, the rule for multiple threads is that
