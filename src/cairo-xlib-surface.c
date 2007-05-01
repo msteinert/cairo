@@ -693,21 +693,33 @@ _cairo_xlib_surface_ensure_src_picture (cairo_xlib_surface_t    *surface)
 static void
 _cairo_xlib_surface_set_picture_clip_rects (cairo_xlib_surface_t *surface)
 {
-    if (surface->have_clip_rects)
+    if (surface->have_clip_rects) {
 	XRenderSetPictureClipRectangles (surface->dpy, surface->dst_picture,
 					 0, 0,
 					 surface->clip_rects,
 					 surface->num_clip_rects);
+    } else {
+	XRenderPictureAttributes pa;
+	pa.clip_mask = None;
+	XRenderChangePicture (surface->dpy, surface->dst_picture,
+			      CPClipMask, &pa);
+    }
+
+    surface->clip_dirty &= ~CAIRO_XLIB_SURFACE_CLIP_DIRTY_PICTURE;
 }
 
 static void
 _cairo_xlib_surface_set_gc_clip_rects (cairo_xlib_surface_t *surface)
 {
-    if (surface->have_clip_rects)
+    if (surface->have_clip_rects) {
 	XSetClipRectangles(surface->dpy, surface->gc,
 			   0, 0,
 			   surface->clip_rects,
 			   surface->num_clip_rects, YXSorted);
+    } else
+	XSetClipMask (surface->dpy, surface->gc, None);
+
+    surface->clip_dirty &= ~CAIRO_XLIB_SURFACE_CLIP_DIRTY_GC;
 }
 
 static void
@@ -719,8 +731,8 @@ _cairo_xlib_surface_ensure_dst_picture (cairo_xlib_surface_t    *surface)
 						     surface->xrender_format,
 						     0, NULL);
 	_cairo_xlib_surface_set_picture_clip_rects (surface);
-    }
-
+    } else if (surface->clip_dirty & CAIRO_XLIB_SURFACE_CLIP_DIRTY_PICTURE)
+	_cairo_xlib_surface_set_picture_clip_rects (surface);
 }
 
 static cairo_status_t
@@ -728,20 +740,20 @@ _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface)
 {
     XGCValues gcv;
 
-    if (surface->gc)
-	return CAIRO_STATUS_SUCCESS;
-
-    surface->gc = _cairo_xlib_screen_get_gc (surface->screen_info,
-	                                     surface->depth);
     if (surface->gc == NULL) {
-	gcv.graphics_exposures = False;
-	surface->gc = XCreateGC (surface->dpy, surface->drawable,
-				 GCGraphicsExposures, &gcv);
-	if (!surface->gc)
-	    return CAIRO_STATUS_NO_MEMORY;
-    }
+	surface->gc = _cairo_xlib_screen_get_gc (surface->screen_info,
+						 surface->depth);
+	if (surface->gc == NULL) {
+	    gcv.graphics_exposures = False;
+	    surface->gc = XCreateGC (surface->dpy, surface->drawable,
+				     GCGraphicsExposures, &gcv);
+	    if (!surface->gc)
+		return CAIRO_STATUS_NO_MEMORY;
+	}
 
-    _cairo_xlib_surface_set_gc_clip_rects (surface);
+	_cairo_xlib_surface_set_gc_clip_rects (surface);
+    } else if (surface->clip_dirty & CAIRO_XLIB_SURFACE_CLIP_DIRTY_GC)
+	_cairo_xlib_surface_set_gc_clip_rects (surface);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1032,8 +1044,8 @@ _cairo_xlib_surface_set_repeat (cairo_xlib_surface_t *surface, int repeat)
 }
 
 static cairo_int_status_t
-_cairo_xlib_surface_set_attributes (cairo_xlib_surface_t	  *surface,
-				       cairo_surface_attributes_t *attributes)
+_cairo_xlib_surface_set_attributes (cairo_xlib_surface_t	    *surface,
+				    cairo_surface_attributes_t	    *attributes)
 {
     cairo_int_status_t status;
 
@@ -1716,12 +1728,10 @@ static cairo_int_status_t
 _cairo_xlib_surface_set_clip_region (void              *abstract_surface,
 				     pixman_region16_t *region)
 {
-    cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *) abstract_surface;
+    cairo_xlib_surface_t *surface = abstract_surface;
 
     if (surface->have_clip_rects == FALSE && region == NULL)
 	return CAIRO_STATUS_SUCCESS;
-
-    _cairo_xlib_display_notify (surface->screen_info->display);
 
     if (surface->clip_rects != surface->embedded_clip_rects) {
 	free (surface->clip_rects);
@@ -1731,17 +1741,7 @@ _cairo_xlib_surface_set_clip_region (void              *abstract_surface,
     surface->have_clip_rects = FALSE;
     surface->num_clip_rects = 0;
 
-    if (region == NULL) {
-	if (surface->gc)
-	    XSetClipMask (surface->dpy, surface->gc, None);
-
-	if (surface->xrender_format && surface->dst_picture) {
-	    XRenderPictureAttributes pa;
-	    pa.clip_mask = None;
-	    XRenderChangePicture (surface->dpy, surface->dst_picture,
-				  CPClipMask, &pa);
-	}
-    } else {
+    if (region != NULL) {
 	pixman_box16_t *boxes;
 	XRectangle *rects = NULL;
 	int n_boxes, i;
@@ -1767,13 +1767,9 @@ _cairo_xlib_surface_set_clip_region (void              *abstract_surface,
 	surface->have_clip_rects = TRUE;
 	surface->clip_rects = rects;
 	surface->num_clip_rects = n_boxes;
-
-	if (surface->gc)
-	    _cairo_xlib_surface_set_gc_clip_rects (surface);
-
-	if (surface->dst_picture)
-	    _cairo_xlib_surface_set_picture_clip_rects (surface);
     }
+
+    surface->clip_dirty = CAIRO_XLIB_SURFACE_CLIP_DIRTY_ALL;
 
     return CAIRO_STATUS_SUCCESS;
 }
