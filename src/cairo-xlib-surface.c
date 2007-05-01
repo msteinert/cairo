@@ -174,6 +174,7 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
 						       xrender_format,
 						       width, height);
     if (surface->base.status != CAIRO_STATUS_SUCCESS) {
+	XFreePixmap (dpy, pix);
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
@@ -251,6 +252,7 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
 						       xrender_format,
 						       width, height);
     if (surface->base.status != CAIRO_STATUS_SUCCESS) {
+	XFreePixmap (src->dpy, pix);
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
