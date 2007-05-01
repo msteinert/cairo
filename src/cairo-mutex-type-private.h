@@ -76,6 +76,7 @@ CAIRO_BEGIN_DECLS
 # define CAIRO_MUTEX_LOCK(mutex) pthread_mutex_lock (&(mutex))
 # define CAIRO_MUTEX_UNLOCK(mutex) pthread_mutex_unlock (&(mutex))
 # define CAIRO_MUTEX_FINI(mutex) pthread_mutex_destroy (&(mutex))
+# define CAIRO_MUTEX_FINALIZE() CAIRO_MUTEX_NOOP
 # define CAIRO_MUTEX_NIL_INITIALIZER PTHREAD_MUTEX_INITIALIZER
 
 #elif HAVE_WINDOWS_H /*******************************************************/
