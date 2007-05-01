@@ -49,6 +49,17 @@
 
 #include "cairo-mutex-type-private.h"
 
+/* Only the following three are mandatory at this point */
+#ifndef CAIRO_MUTEX_LOCK
+# error "CAIRO_MUTEX_LOCK not defined.  Check cairo-mutex-type-private.h."
+#endif
+#ifndef CAIRO_MUTEX_UNLOCK
+# error "CAIRO_MUTEX_UNLOCK not defined.  Check cairo-mutex-type-private.h."
+#endif
+#ifndef CAIRO_MUTEX_NIL_INITIALIZER
+# error "CAIRO_MUTEX_NIL_INITIALIZER not defined.  Check cairo-mutex-type-private.h."
+#endif
+
 CAIRO_BEGIN_DECLS
 
 #ifndef CAIRO_MUTEX_DECLARE
