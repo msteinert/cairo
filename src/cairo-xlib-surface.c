@@ -1287,6 +1287,16 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
     if (status)
 	return status;
 
+    /* check for fallback surfaces that we cannot handle ... */
+    if (!_cairo_surface_is_xlib (&src->base)) {
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
+	goto BAIL;
+    }
+    if (mask != NULL && !_cairo_surface_is_xlib (&mask->base)) {
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
+	goto BAIL;
+    }
+
     operation = _recategorize_composite_operation (dst, op, src, &src_attr,
 						   mask_pattern != NULL);
     if (operation == DO_UNSUPPORTED) {
