@@ -1318,7 +1318,12 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 	goto UNLOCK;
     }
 
-    assert (_cairo_surface_is_similar (surface, dst, pattern->content));
+    if (! _cairo_surface_is_similar (surface, dst, pattern->content)) {
+	/* in the rare event of a substitute surface being returned (e.g.
+	 * malloc failure) don't cache the fallback surface */
+	*out = surface;
+	goto NOCACHE;
+    }
 
     /* Cache new */
     if (solid_surface_cache.size < MAX_SURFACE_CACHE_SIZE) {
@@ -1336,6 +1341,7 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 DONE:
     *out = cairo_surface_reference (solid_surface_cache.cache[i].surface);
 
+NOCACHE:
     attribs->x_offset = attribs->y_offset = 0;
     cairo_matrix_init_identity (&attribs->matrix);
     attribs->extend = CAIRO_EXTEND_REPEAT;
