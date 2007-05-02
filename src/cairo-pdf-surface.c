@@ -3637,6 +3637,9 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend = {
     _cairo_pdf_surface_fill,
     _cairo_pdf_surface_show_glyphs,
     NULL, /* snapshot */
+
+    NULL, /* is_compatible */
+    NULL, /* reset */
 };
 
 static const cairo_paginated_surface_backend_t cairo_pdf_surface_paginated_backend = {

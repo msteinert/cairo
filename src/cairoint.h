@@ -890,6 +890,14 @@ struct _cairo_surface_backend {
 
     cairo_surface_t *
     (*snapshot)			(void			*surface);
+
+    cairo_bool_t
+    (*is_similar)		(void			*surface_a,
+	                         void			*surface_b,
+				 cairo_content_t         content);
+
+    cairo_warn cairo_status_t
+    (*reset)			(void			*surface);
 };
 
 typedef struct _cairo_format_masks {
@@ -1867,6 +1875,14 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 
 cairo_private cairo_surface_t *
 _cairo_surface_snapshot (cairo_surface_t *surface);
+
+cairo_private cairo_bool_t
+_cairo_surface_is_similar (cairo_surface_t *surface_a,
+	                   cairo_surface_t *surface_b,
+			   cairo_content_t  content);
+
+cairo_private cairo_status_t
+_cairo_surface_reset (cairo_surface_t *surface);
 
 cairo_private unsigned int
 _cairo_surface_get_current_clip_serial (cairo_surface_t *surface);

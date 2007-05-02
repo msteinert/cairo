@@ -285,7 +285,7 @@ _cairo_pattern_create_solid (const cairo_color_t *color,
 {
     cairo_solid_pattern_t *pattern = NULL;
 
-    CAIRO_MUTEX_LOCK (_cairo_pattern_solid_cache_lock);
+    CAIRO_MUTEX_LOCK (_cairo_pattern_solid_pattern_cache_lock);
 
     if (solid_pattern_cache.size) {
 	int i = --solid_pattern_cache.size %
@@ -294,7 +294,7 @@ _cairo_pattern_create_solid (const cairo_color_t *color,
 	solid_pattern_cache.patterns[i] = NULL;
     }
 
-    CAIRO_MUTEX_UNLOCK (_cairo_pattern_solid_cache_lock);
+    CAIRO_MUTEX_UNLOCK (_cairo_pattern_solid_pattern_cache_lock);
 
     if (pattern == NULL) {
 	/* None cached, need to create a new pattern. */
@@ -309,12 +309,12 @@ _cairo_pattern_create_solid (const cairo_color_t *color,
     return &pattern->base;
 }
 
-void
-_cairo_pattern_reset_static_data (void)
+static void
+_cairo_pattern_reset_solid_pattern_cache (void)
 {
     int i;
 
-    CAIRO_MUTEX_LOCK (_cairo_pattern_solid_cache_lock);
+    CAIRO_MUTEX_LOCK (_cairo_pattern_solid_pattern_cache_lock);
 
     for (i = 0; i < MIN (ARRAY_LENGTH (solid_pattern_cache.patterns), solid_pattern_cache.size); i++) {
 	free (solid_pattern_cache.patterns[i]);
@@ -322,7 +322,7 @@ _cairo_pattern_reset_static_data (void)
     }
     solid_pattern_cache.size = 0;
 
-    CAIRO_MUTEX_UNLOCK (_cairo_pattern_solid_cache_lock);
+    CAIRO_MUTEX_UNLOCK (_cairo_pattern_solid_pattern_cache_lock);
 }
 
 static const cairo_pattern_t *
@@ -636,7 +636,7 @@ cairo_pattern_destroy (cairo_pattern_t *pattern)
     if (pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
 	int i;
 
-	CAIRO_MUTEX_LOCK (_cairo_pattern_solid_cache_lock);
+	CAIRO_MUTEX_LOCK (_cairo_pattern_solid_pattern_cache_lock);
 
 	i = solid_pattern_cache.size++ %
 	    ARRAY_LENGTH (solid_pattern_cache.patterns);
@@ -646,7 +646,7 @@ cairo_pattern_destroy (cairo_pattern_t *pattern)
 
 	solid_pattern_cache.patterns[i] = (cairo_solid_pattern_t *) pattern;
 
-	CAIRO_MUTEX_UNLOCK (_cairo_pattern_solid_cache_lock);
+	CAIRO_MUTEX_UNLOCK (_cairo_pattern_solid_pattern_cache_lock);
     } else {
 	free (pattern);
     }
@@ -1241,6 +1241,35 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     return status;
 }
 
+/* We maintain a small cache here, because we don't want to constantly
+ * recreate surfaces for simple solid colors. */
+#define MAX_SURFACE_CACHE_SIZE 16
+static struct {
+    struct _cairo_pattern_solid_surface_cache{
+	cairo_color_t    color;
+	cairo_surface_t *surface;
+    } cache[MAX_SURFACE_CACHE_SIZE];
+    int size;
+} solid_surface_cache;
+
+static cairo_bool_t
+_cairo_pattern_solid_surface_matches (
+	const struct _cairo_pattern_solid_surface_cache	    *cache,
+	const cairo_solid_pattern_t			    *pattern,
+	cairo_surface_t					    *dst)
+{
+    if (cache->surface->ref_count != 1)
+	return FALSE;
+
+    if (! _cairo_color_equal (&cache->color, &pattern->color))
+	return FALSE;
+
+    if (! _cairo_surface_is_similar (cache->surface, dst, pattern->content))
+	return FALSE;
+
+    return TRUE;
+}
+
 static cairo_int_status_t
 _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 					  cairo_surface_t	     *dst,
@@ -1251,13 +1280,61 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 					  cairo_surface_t	     **out,
 					  cairo_surface_attributes_t *attribs)
 {
-    *out = _cairo_surface_create_similar_solid (dst,
-						pattern->content,
-						1, 1,
-						&pattern->color,
-						&pattern->base);
-    if ((*out)->status)
-	return CAIRO_STATUS_NO_MEMORY;
+    static int i;
+
+    cairo_surface_t *surface;
+    cairo_status_t   status;
+
+    CAIRO_MUTEX_LOCK (_cairo_pattern_solid_surface_cache_lock);
+
+    /* Check cache first */
+    if (i < solid_surface_cache.size &&
+	    _cairo_pattern_solid_surface_matches (&solid_surface_cache.cache[i],
+		                                  pattern,
+						  dst))
+    {
+	if (! _cairo_surface_reset (solid_surface_cache.cache[i].surface))
+	    goto DONE;
+    }
+
+    for (i = 0 ; i < solid_surface_cache.size; i++) {
+	if (_cairo_pattern_solid_surface_matches (&solid_surface_cache.cache[i],
+		                                  pattern,
+						  dst))
+	{
+	    if (! _cairo_surface_reset (solid_surface_cache.cache[i].surface))
+		goto DONE;
+	}
+    }
+
+    /* Not cached, need to create new */
+    surface = _cairo_surface_create_similar_solid (dst,
+	                                           pattern->content,
+						   1, 1,
+						   &pattern->color,
+						   &pattern->base);
+    if (surface->status) {
+	status = surface->status;
+	goto UNLOCK;
+    }
+
+    assert (_cairo_surface_is_similar (surface, dst, pattern->content));
+
+    /* Cache new */
+    if (solid_surface_cache.size < MAX_SURFACE_CACHE_SIZE) {
+	solid_surface_cache.size++;
+    } else {
+	i = rand () % MAX_SURFACE_CACHE_SIZE;
+
+	/* Evict old */
+	cairo_surface_destroy (solid_surface_cache.cache[i].surface);
+    }
+
+    solid_surface_cache.cache[i].color   = pattern->color;
+    solid_surface_cache.cache[i].surface = surface;
+
+DONE:
+    *out = cairo_surface_reference (solid_surface_cache.cache[i].surface);
 
     attribs->x_offset = attribs->y_offset = 0;
     cairo_matrix_init_identity (&attribs->matrix);
@@ -1265,7 +1342,26 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
     attribs->filter = CAIRO_FILTER_NEAREST;
     attribs->acquired = FALSE;
 
-    return CAIRO_STATUS_SUCCESS;
+    status = CAIRO_STATUS_SUCCESS;
+
+UNLOCK:
+    CAIRO_MUTEX_UNLOCK (_cairo_pattern_solid_surface_cache_lock);
+
+    return status;
+}
+
+static void
+_cairo_pattern_reset_solid_surface_cache (void)
+{
+    int i;
+
+    CAIRO_MUTEX_LOCK (_cairo_pattern_solid_surface_cache_lock);
+
+    for (i = 0; i < solid_surface_cache.size; i++)
+	cairo_surface_destroy (solid_surface_cache.cache[i].surface);
+    solid_surface_cache.size = 0;
+
+    CAIRO_MUTEX_UNLOCK (_cairo_pattern_solid_surface_cache_lock);
 }
 
 /**
@@ -2062,4 +2158,11 @@ cairo_pattern_get_radial_circles (cairo_pattern_t *pattern,
 	*r1 = _cairo_fixed_to_double (radial->gradient.c2.radius);
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+void
+_cairo_pattern_reset_static_data (void)
+{
+    _cairo_pattern_reset_solid_pattern_cache ();
+    _cairo_pattern_reset_solid_surface_cache ();
 }

@@ -2175,6 +2175,33 @@ _cairo_glitz_surface_flush (void *abstract_surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_bool_t
+_cairo_glitz_surface_is_similar (void *surface_a,
+	                         void *surface_b,
+				 cairo_content_t content)
+{
+    cairo_glitz_surface_t *a = (cairo_glitz_surface_t *) surface_a;
+    cairo_glitz_surface_t *b = (cairo_glitz_surface_t *) surface_b;
+
+    glitz_drawable_t *drawable_a = glitz_surface_get_drawable (a->surface);
+    glitz_drawable_t *drawable_b = glitz_surface_get_drawable (b->surface);
+
+    return drawable_a == drawable_b;
+}
+
+static cairo_status_t
+_cairo_glitz_surface_reset (void *abstract_surface)
+{
+    cairo_glitz_surface_t *surface = abstract_surface;
+    cairo_status_t status;
+
+    status = _cairo_glitz_surface_set_clip_region (surface, NULL);
+    if (status)
+	return status;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static const cairo_surface_backend_t cairo_glitz_surface_backend = {
     CAIRO_SURFACE_TYPE_GLITZ,
     _cairo_glitz_surface_create_similar,
@@ -2197,7 +2224,18 @@ static const cairo_surface_backend_t cairo_glitz_surface_backend = {
     _cairo_glitz_surface_flush,
     NULL, /* mark_dirty_rectangle */
     _cairo_glitz_surface_scaled_font_fini,
-    _cairo_glitz_surface_scaled_glyph_fini
+    _cairo_glitz_surface_scaled_glyph_fini,
+
+    NULL, /* paint */
+    NULL, /* mask */
+    NULL, /* stroke */
+    NULL, /* fill */
+    NULL, /* show_glyphs */
+
+    NULL, /* snapshot */
+    _cairo_glitz_surface_is_compatible,
+
+    _cairo_glitz_surface_reset
 };
 
 static const cairo_surface_backend_t *

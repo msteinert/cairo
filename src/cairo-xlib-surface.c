@@ -1805,6 +1805,46 @@ static void
 _cairo_xlib_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 				       cairo_scaled_font_t  *scaled_font);
 
+static cairo_bool_t
+_cairo_xlib_surface_is_similar (void		*surface_a,
+	                        void		*surface_b,
+				cairo_content_t	 content)
+{
+    cairo_xlib_surface_t *a = surface_a;
+    cairo_xlib_surface_t *b = surface_b;
+    XRenderPictFormat *xrender_format = b->xrender_format;
+
+    if (!_cairo_xlib_surface_same_screen (a, b))
+	return FALSE;
+
+    /* now inspect the content to check that a is similar to b */
+    if (xrender_format == NULL && b->visual != NULL)
+        xrender_format = XRenderFindVisualFormat (b->dpy, b->visual);
+
+    if (xrender_format == NULL ||
+	_xrender_format_to_content (xrender_format) != content)
+    {
+	xrender_format = _CAIRO_FORMAT_TO_XRENDER_FORMAT (b->dpy,
+		_cairo_format_from_content (content));
+    }
+
+
+    return a->xrender_format == xrender_format;
+}
+
+static cairo_status_t
+_cairo_xlib_surface_reset (void *abstract_surface)
+{
+    cairo_xlib_surface_t *surface = abstract_surface;
+    cairo_status_t status;
+
+    status = _cairo_xlib_surface_set_clip_region (surface, NULL);
+    if (status)
+	return status;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static const cairo_surface_backend_t cairo_xlib_surface_backend = {
     CAIRO_SURFACE_TYPE_XLIB,
     _cairo_xlib_surface_create_similar,
@@ -1834,7 +1874,10 @@ static const cairo_surface_backend_t cairo_xlib_surface_backend = {
     NULL, /* stroke */
     NULL, /* fill */
     _cairo_xlib_surface_show_glyphs,
-    NULL  /* snapshot */
+    NULL,  /* snapshot */
+    _cairo_xlib_surface_is_similar,
+
+    _cairo_xlib_surface_reset
 };
 
 /**

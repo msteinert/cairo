@@ -1071,6 +1071,19 @@ _cairo_image_surface_get_font_options (void                  *abstract_surface,
     cairo_font_options_set_hint_metrics (options, CAIRO_HINT_METRICS_ON);
 }
 
+static cairo_status_t
+_cairo_image_surface_reset (void *abstract_surface)
+{
+    cairo_image_surface_t *surface = abstract_surface;
+    cairo_status_t status;
+
+    status = _cairo_image_surface_set_clip_region (surface, NULL);
+    if (status)
+	return status;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 /**
  * _cairo_surface_is_image:
  * @surface: a #cairo_surface_t
@@ -1103,7 +1116,21 @@ const cairo_surface_backend_t cairo_image_surface_backend = {
     NULL, /* intersect_clip_path */
     _cairo_image_surface_get_extents,
     NULL, /* old_show_glyphs */
-    _cairo_image_surface_get_font_options
+    _cairo_image_surface_get_font_options,
+    NULL, /* flush */
+    NULL, /* mark_dirty_rectangle */
+    NULL, //* font_fini */
+    NULL, //* glyph_fini */
+
+    NULL, /* paint */
+    NULL, /* mask */
+    NULL, /* stroke */
+    NULL, /* fill */
+    NULL, /* show_glyphs */
+    NULL,  /* snapshot */
+    NULL, /* is_similar */
+
+    _cairo_image_surface_reset
 };
 
 /* A convenience function for when one needs to coerce an image
