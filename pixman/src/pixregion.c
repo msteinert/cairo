@@ -670,9 +670,13 @@ pixman_op(
 	newReg->data = &pixman_region_emptyData;
     else if (newReg->data->size)
 	newReg->data->numRects = 0;
-    if (newSize > newReg->data->size)
-	if (!pixman_rect_alloc(newReg, newSize))
+    if (newSize > newReg->data->size) {
+	if (!pixman_rect_alloc(newReg, newSize)) {
+	    if (oldData)
+		free (oldData);
 	    return PIXMAN_REGION_STATUS_FAILURE;
+	}
+    }
 
     /*
      * Initialize ybot.
