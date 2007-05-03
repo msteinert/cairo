@@ -38,6 +38,7 @@ Changes that add new API (API changes/removals will not be considered)
 	http://lists.freedesktop.org/archives/cairo/2007-April/010363.html
 
  • cairo_copy_clip() and cairo_copy_clip_flat()
+	http://lists.freedesktop.org/archives/cairo/2007-April/010520.html
 
 Performance improvements
 ========================
