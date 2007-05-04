@@ -1,3 +1,24 @@
+Release 1.4.x
+=========================================================
+«Preamble»
+
+Surface cache for solid patterns
+--------------------------------
+Originally written by Jorn Baayen, the introduction of a small cache
+for surfaces created for solid patterns dramatically reduced the amount
+the number of required surface allocations and backend traffic.  For
+example, this reduces the volume of X requests during text rendering
+to the same level as Xft.  Unfortunately, the cache had to be removed
+when complications arose with threaded applications, like Evince,
+which were designed to only make lockless X requests from a single
+thread, but Cairo violated this design when it ejected cached surfaces,
+with corresponding X traffic, from auxiliary threads.  A solution was
+proposed by Behdad Esfahbod, and implemented by Chris Wilson, to
+introduce work queues for the xlib backend that deferred the
+destruction of the X resources until the next time the application
+directly operated on a xlib surface.
+
+
 Release 1.4.6 (2007-05-01 Carl Worth <cworth@cworth.org>)
 =========================================================
 This is the third update in cairo's stable 1.4 series. It comes a
