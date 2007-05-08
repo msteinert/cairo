@@ -1853,6 +1853,11 @@ _cairo_surface_show_glyphs (cairo_surface_t	*surface,
 						    font_options);
 	cairo_font_options_destroy (font_options);
     }
+    status = cairo_scaled_font_status (dev_scaled_font);
+    if (status) {
+	_cairo_pattern_fini (&dev_source.base);
+	return status;
+    }
 
     CAIRO_MUTEX_LOCK (dev_scaled_font->mutex);
 
