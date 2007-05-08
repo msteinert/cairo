@@ -668,7 +668,7 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 	}
 
 	glitz_set_pixels (src->surface, 0, 0, gradient->n_stops, 1,
-			  &format, buffer);
+			  (glitz_pixel_format_t *)&format, buffer);
 
 	glitz_buffer_destroy (buffer);
 
@@ -1292,7 +1292,14 @@ _cairo_glitz_surface_set_clip_region (void		*abstract_surface,
             surface->has_clip = TRUE;
         }
 
-	pixman_region_copy (&surface->clip, region);
+	if (pixman_region_copy (&surface->clip, region) !=
+            PIXMAN_REGION_STATUS_SUCCESS)
+        {
+	    pixman_region_fini (&surface->clip);
+	    surface->has_clip = FALSE;
+            return CAIRO_STATUS_NO_MEMORY;
+        }
+
 	box = (glitz_box_t *) pixman_region_rects (&surface->clip);
 	n = pixman_region_num_rects (&surface->clip);
 
