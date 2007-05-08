@@ -1039,7 +1039,8 @@ void
 _cairo_pattern_transform (cairo_pattern_t	*pattern,
 			  const cairo_matrix_t  *ctm_inverse)
 {
-    assert (pattern->status == CAIRO_STATUS_SUCCESS);
+    if (pattern->status)
+	return;
 
     cairo_matrix_multiply (&pattern->matrix, ctm_inverse, &pattern->matrix);
 }
