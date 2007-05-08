@@ -2233,7 +2233,7 @@ static const cairo_surface_backend_t cairo_glitz_surface_backend = {
     NULL, /* show_glyphs */
 
     NULL, /* snapshot */
-    _cairo_glitz_surface_is_compatible,
+    _cairo_glitz_surface_is_similar,
 
     _cairo_glitz_surface_reset
 };
