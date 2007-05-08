@@ -458,9 +458,11 @@ cairo_test_expecting (cairo_test_t *test,
      *		-> FAILURE
      *	else    (== some backend SUCCESS)
      *		-> SUCCESS
+     *
+     * Also, on a crash, run no further tests.
      */
-    ret = CAIRO_TEST_UNTESTED;
-    for (i = 0; i < num_targets; i++) {
+    status = ret = CAIRO_TEST_UNTESTED;
+    for (i = 0; i < num_targets && status != CAIRO_TEST_CRASHED; i++) {
 	for (j = 0; j < NUM_DEVICE_OFFSETS; j++) {
 	    cairo_boilerplate_target_t * volatile target = targets_to_test[i];
 	    volatile int dev_offset = j * 25;
