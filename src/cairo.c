@@ -2641,9 +2641,11 @@ cairo_set_font_options (cairo_t                    *cr,
     if (cr->status)
 	return;
 
-    status = _cairo_gstate_set_font_options (cr->gstate, options);
+    status = cairo_font_options_status ((cairo_font_options_t *) options);
     if (status)
 	_cairo_set_error (cr, status);
+
+    _cairo_gstate_set_font_options (cr->gstate, options);
 }
 
 /**
@@ -2661,6 +2663,10 @@ void
 cairo_get_font_options (cairo_t              *cr,
 			cairo_font_options_t *options)
 {
+    /* check that we aren't trying to overwrite the nil object */
+    if (cairo_font_options_status (options))
+	return;
+
     _cairo_gstate_get_font_options (cr->gstate, options);
 }
 
@@ -2698,9 +2704,7 @@ cairo_set_scaled_font (cairo_t                   *cr,
     if (status)
         goto BAIL;
 
-    status = _cairo_gstate_set_font_options (cr->gstate, &scaled_font->options);
-    if (status)
-        goto BAIL;
+    _cairo_gstate_set_font_options (cr->gstate, &scaled_font->options);
 
     return;
 

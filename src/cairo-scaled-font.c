@@ -348,6 +348,10 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
     cairo_matrix_t inverse;
     cairo_status_t status;
 
+    status = cairo_font_options_status ((cairo_font_options_t *) options);
+    if (status)
+	return status;
+
     /* Initialize scaled_font->scale early for easier bail out on an
      * invalid matrix. */
     _cairo_scaled_font_init_key (scaled_font, font_face,
@@ -478,6 +482,9 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     cairo_scaled_font_t key, *scaled_font = NULL;
 
     if (font_face->status)
+	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
+
+    if (cairo_font_options_status ((cairo_font_options_t *) options))
 	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
 
     font_map = _cairo_scaled_font_map_lock ();
@@ -1644,6 +1651,9 @@ void
 cairo_scaled_font_get_font_options (cairo_scaled_font_t		*scaled_font,
 				    cairo_font_options_t	*options)
 {
+    if (cairo_font_options_status (options))
+	return;
+
     if (scaled_font->status) {
 	_cairo_font_options_init_default (options);
 	return;

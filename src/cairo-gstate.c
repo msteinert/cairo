@@ -1286,15 +1286,13 @@ _cairo_gstate_get_font_matrix (cairo_gstate_t *gstate,
     *matrix = gstate->font_matrix;
 }
 
-cairo_status_t
+void
 _cairo_gstate_set_font_options (cairo_gstate_t             *gstate,
 				const cairo_font_options_t *options)
 {
     _cairo_gstate_unset_scaled_font (gstate);
 
     gstate->font_options = *options;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 void

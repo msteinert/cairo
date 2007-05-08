@@ -603,6 +603,9 @@ void
 cairo_surface_get_font_options (cairo_surface_t       *surface,
 				cairo_font_options_t  *options)
 {
+    if (cairo_font_options_status (options))
+	return;
+
     if (!surface->has_font_options) {
 	surface->has_font_options = TRUE;
 

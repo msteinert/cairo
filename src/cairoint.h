@@ -1346,7 +1346,7 @@ cairo_private void
 _cairo_gstate_get_font_options (cairo_gstate_t       *gstate,
 				cairo_font_options_t *options);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_gstate_set_font_options (cairo_gstate_t	           *gstate,
 				const cairo_font_options_t *options);
 
@@ -2378,6 +2378,7 @@ slim_hidden_proto (cairo_font_options_set_antialias);
 slim_hidden_proto (cairo_font_options_set_hint_metrics);
 slim_hidden_proto (cairo_font_options_set_hint_style);
 slim_hidden_proto (cairo_font_options_set_subpixel_order);
+slim_hidden_proto (cairo_font_options_status);
 slim_hidden_proto (cairo_get_current_point);
 slim_hidden_proto (cairo_get_matrix);
 slim_hidden_proto (cairo_get_tolerance);
