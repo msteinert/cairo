@@ -680,8 +680,10 @@ cairo_test_paint_checkered (cairo_t *cr)
 
     check = cairo_image_surface_create (CAIRO_FORMAT_RGB24, 12, 12);
     status = _draw_check (check, 12, 12);
-    if (status)
+    if (status) {
+	cairo_surface_destroy (check);
 	return status;
+    }
 
     cairo_save (cr);
     cairo_set_source_surface (cr, check, 0, 0);
