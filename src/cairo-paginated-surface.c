@@ -214,6 +214,8 @@ _paint_page (cairo_paginated_surface_t *surface)
 
     analysis = _cairo_analysis_surface_create (surface->target,
 					       surface->width, surface->height);
+    if (analysis == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
 
     surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_ANALYZE);
     status = _cairo_meta_surface_replay (surface->meta, analysis);
@@ -281,7 +283,9 @@ _cairo_paginated_surface_copy_page (void *abstract_surface)
     if (status)
 	return status;
 
-    _paint_page (surface);
+    status = _paint_page (surface);
+    if (status)
+	return status;
 
     surface->page_num++;
 
@@ -306,7 +310,9 @@ _cairo_paginated_surface_show_page (void *abstract_surface)
     if (status)
 	return status;
 
-    _paint_page (surface);
+    status = _paint_page (surface);
+    if (status)
+	return status;
 
     status = _cairo_surface_show_page (surface->target);
     if (status)
