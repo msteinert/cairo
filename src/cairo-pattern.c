@@ -110,7 +110,7 @@ _cairo_pattern_init (cairo_pattern_t *pattern, cairo_pattern_type_t type)
     cairo_matrix_init_identity (&pattern->matrix);
 }
 
-static void
+static cairo_status_t
 _cairo_gradient_pattern_init_copy (cairo_gradient_pattern_t	  *pattern,
 				   const cairo_gradient_pattern_t *other)
 {
@@ -139,21 +139,23 @@ _cairo_gradient_pattern_init_copy (cairo_gradient_pattern_t	  *pattern,
 	    pattern->stops_size = 0;
 	    pattern->n_stops = 0;
 	    _cairo_pattern_set_error (&pattern->base, CAIRO_STATUS_NO_MEMORY);
-	    return;
+	    return CAIRO_STATUS_NO_MEMORY;
 	}
 
 	memcpy (pattern->stops, other->stops,
 		other->n_stops * sizeof (pixman_gradient_stop_t));
     }
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
-void
+cairo_status_t
 _cairo_pattern_init_copy (cairo_pattern_t	*pattern,
 			  const cairo_pattern_t *other)
 {
     if (other->status) {
 	_cairo_pattern_set_error (pattern, other->status);
-	return;
+	return other->status;
     }
 
     switch (other->type) {
@@ -174,12 +176,18 @@ _cairo_pattern_init_copy (cairo_pattern_t	*pattern,
     case CAIRO_PATTERN_TYPE_RADIAL: {
 	cairo_gradient_pattern_t *dst = (cairo_gradient_pattern_t *) pattern;
 	cairo_gradient_pattern_t *src = (cairo_gradient_pattern_t *) other;
+	cairo_status_t status;
 
-	_cairo_gradient_pattern_init_copy (dst, src);
+	status = _cairo_gradient_pattern_init_copy (dst, src);
+	if (status)
+	    return status;
+
     } break;
     }
 
     pattern->ref_count = 1;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 void
@@ -1812,7 +1820,9 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
     }
     else
     {
-	_cairo_pattern_init_copy (&src_tmp.base, src);
+	status = _cairo_pattern_init_copy (&src_tmp.base, src);
+	if (status)
+	    return status;
     }
 
     status = _cairo_pattern_acquire_surface (&src_tmp.base, dst,
@@ -1831,19 +1841,23 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    _cairo_pattern_init_copy (&mask_tmp.base, mask);
+    status = _cairo_pattern_init_copy (&mask_tmp.base, mask);
+    if (status)
+	goto CLEANUP_SOURCE;
 
     status = _cairo_pattern_acquire_surface (&mask_tmp.base, dst,
 					     mask_x, mask_y,
 					     width, height,
 					     mask_out, mask_attributes);
 
+    _cairo_pattern_fini (&mask_tmp.base);
+
+CLEANUP_SOURCE:
     if (status)
 	_cairo_pattern_release_surface (&src_tmp.base,
 					*src_out, src_attributes);
 
     _cairo_pattern_fini (&src_tmp.base);
-    _cairo_pattern_fini (&mask_tmp.base);
 
     return status;
 }

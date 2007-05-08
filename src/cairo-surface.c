@@ -80,7 +80,7 @@ DEFINE_NIL_SURFACE(CAIRO_STATUS_FILE_NOT_FOUND, _cairo_surface_nil_file_not_foun
 DEFINE_NIL_SURFACE(CAIRO_STATUS_READ_ERROR, _cairo_surface_nil_read_error);
 DEFINE_NIL_SURFACE(CAIRO_STATUS_WRITE_ERROR, _cairo_surface_nil_write_error);
 
-static void
+static cairo_status_t
 _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
 					     cairo_surface_t *destination,
 					     cairo_pattern_t *pattern_out);
@@ -1325,7 +1325,9 @@ _cairo_surface_paint (cairo_surface_t	*surface,
 
     assert (! surface->is_snapshot);
 
-    _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source.base);
+    status = _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source.base);
+    if (status)
+	return status;
 
     if (surface->backend->paint) {
 	status = surface->backend->paint (surface, op, &dev_source.base);
@@ -1353,20 +1355,26 @@ _cairo_surface_mask (cairo_surface_t	*surface,
 
     assert (! surface->is_snapshot);
 
-    _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source.base);
-    _cairo_surface_copy_pattern_for_destination (mask, surface, &dev_mask.base);
+    status = _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source.base);
+    if (status)
+	goto FINISH;
+    status = _cairo_surface_copy_pattern_for_destination (mask, surface, &dev_mask.base);
+    if (status)
+	goto CLEANUP_SOURCE;
 
     if (surface->backend->mask) {
 	status = surface->backend->mask (surface, op, &dev_source.base, &dev_mask.base);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-            goto FINISH;
+            goto CLEANUP_MASK;
     }
 
     status = _cairo_surface_fallback_mask (surface, op, &dev_source.base, &dev_mask.base);
 
- FINISH:
+ CLEANUP_MASK:
     _cairo_pattern_fini (&dev_mask.base);
+ CLEANUP_SOURCE:
     _cairo_pattern_fini (&dev_source.base);
+ FINISH:
 
     return status;
 }
@@ -1391,7 +1399,9 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
 
     assert (! surface->is_snapshot);
 
-    _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source.base);
+    status = _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source.base);
+    if (status)
+	return status;
 
     if (surface->backend->stroke) {
 	status = surface->backend->stroke (surface, op, &dev_source.base,
@@ -1430,7 +1440,9 @@ _cairo_surface_fill (cairo_surface_t	*surface,
 
     assert (! surface->is_snapshot);
 
-    _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source.base);
+    status = _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source.base);
+    if (status)
+	return status;
 
     if (surface->backend->fill) {
 	status = surface->backend->fill (surface, op, &dev_source.base,
@@ -1830,9 +1842,11 @@ _cairo_surface_show_glyphs (cairo_surface_t	*surface,
     if (!num_glyphs)
 	return CAIRO_STATUS_SUCCESS;
 
-    _cairo_surface_copy_pattern_for_destination (source,
-						 surface,
-						 &dev_source.base);
+    status = _cairo_surface_copy_pattern_for_destination (source,
+						          surface,
+							  &dev_source.base);
+    if (status)
+	return status;
 
     cairo_scaled_font_get_font_matrix (scaled_font, &font_matrix);
 
@@ -2145,16 +2159,19 @@ _cairo_surface_composite_shape_fixup_unbounded (cairo_surface_t            *dst,
  * Copies the given pattern, taking into account device scale and offsets
  * of the destination surface.
  */
-void
+static cairo_status_t
 _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
                                              cairo_surface_t *destination,
                                              cairo_pattern_t *pattern_out)
 {
-    _cairo_pattern_init_copy (pattern_out, pattern);
+    cairo_status_t status;
+
+    status = _cairo_pattern_init_copy (pattern_out, pattern);
+    if (status)
+	return status;
 
     if (_cairo_surface_has_device_transform (destination)) {
 	cairo_matrix_t device_to_surface = destination->device_transform;
-	cairo_status_t status;
 
 	status = cairo_matrix_invert (&device_to_surface);
 	/* We only ever allow for scaling (under the implementation's
@@ -2164,6 +2181,8 @@ _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
 
 	_cairo_pattern_transform (pattern_out, &device_to_surface);
     }
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 /*  LocalWords:  rasterized

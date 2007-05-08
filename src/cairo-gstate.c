@@ -764,7 +764,7 @@ _cairo_gstate_stroke_to_path (cairo_gstate_t *gstate)
 }
 */
 
-static void
+static cairo_status_t
 _cairo_gstate_copy_transformed_pattern (cairo_gstate_t  *gstate,
 					cairo_pattern_t *pattern,
 					cairo_pattern_t *original,
@@ -772,8 +772,12 @@ _cairo_gstate_copy_transformed_pattern (cairo_gstate_t  *gstate,
 {
     cairo_surface_pattern_t *surface_pattern;
     cairo_surface_t *surface;
+    cairo_status_t status;
 
-    _cairo_pattern_init_copy (pattern, original);
+    status = _cairo_pattern_init_copy (pattern, original);
+    if (status)
+	return status;
+
     _cairo_pattern_transform (pattern, ctm_inverse);
 
     if (cairo_pattern_get_type (original) == CAIRO_PATTERN_TYPE_SURFACE) {
@@ -783,25 +787,26 @@ _cairo_gstate_copy_transformed_pattern (cairo_gstate_t  *gstate,
             _cairo_pattern_transform (pattern, &surface->device_transform);
     }
 
+    return CAIRO_STATUS_SUCCESS;
 }
 
-static void
+static cairo_status_t
 _cairo_gstate_copy_transformed_source (cairo_gstate_t  *gstate,
 				       cairo_pattern_t *pattern)
 {
-    _cairo_gstate_copy_transformed_pattern (gstate, pattern,
-					    gstate->source,
-					    &gstate->source_ctm_inverse);
+    return _cairo_gstate_copy_transformed_pattern (gstate, pattern,
+					           gstate->source,
+					           &gstate->source_ctm_inverse);
 }
 
-static void
+static cairo_status_t
 _cairo_gstate_copy_transformed_mask (cairo_gstate_t  *gstate,
 				     cairo_pattern_t *pattern,
 				     cairo_pattern_t *mask)
 {
-    _cairo_gstate_copy_transformed_pattern (gstate, pattern,
-					    mask,
-					    &gstate->ctm_inverse);
+    return _cairo_gstate_copy_transformed_pattern (gstate, pattern,
+					           mask,
+					           &gstate->ctm_inverse);
 }
 
 cairo_status_t
@@ -817,7 +822,9 @@ _cairo_gstate_paint (cairo_gstate_t *gstate)
     if (status)
 	return status;
 
-    _cairo_gstate_copy_transformed_source (gstate, &pattern.base);
+    status = _cairo_gstate_copy_transformed_source (gstate, &pattern.base);
+    if (status)
+	return status;
 
     status = _cairo_surface_paint (gstate->target,
 				   gstate->op,
@@ -924,16 +931,22 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
     if (status)
 	return status;
 
-    _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
-    _cairo_gstate_copy_transformed_mask (gstate, &mask_pattern.base, mask);
+    status = _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
+    if (status)
+	return status;
+
+    status = _cairo_gstate_copy_transformed_mask (gstate, &mask_pattern.base, mask);
+    if (status)
+	goto CLEANUP_SOURCE;
 
     status = _cairo_surface_mask (gstate->target,
 				  gstate->op,
 				  &source_pattern.base,
 				  &mask_pattern.base);
 
-    _cairo_pattern_fini (&source_pattern.base);
     _cairo_pattern_fini (&mask_pattern.base);
+CLEANUP_SOURCE:
+    _cairo_pattern_fini (&source_pattern.base);
 
     return status;
 }
@@ -954,7 +967,10 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
     if (status)
 	return status;
 
-    _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
+    status = _cairo_gstate_copy_transformed_source (gstate,
+	                                            &source_pattern.base);
+    if (status)
+	return status;
 
     status = _cairo_surface_stroke (gstate->target,
 				    gstate->op,
@@ -1021,7 +1037,9 @@ _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
     if (status)
 	return status;
 
-    _cairo_gstate_copy_transformed_source (gstate, &pattern.base);
+    status = _cairo_gstate_copy_transformed_source (gstate, &pattern.base);
+    if (status)
+	return status;
 
     status = _cairo_surface_fill (gstate->target,
 				  gstate->op,
@@ -1561,7 +1579,9 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     _cairo_gstate_transform_glyphs_to_backend (gstate, glyphs, num_glyphs,
                                                transformed_glyphs);
 
-    _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
+    status = _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
+    if (status)
+	goto CLEANUP_GLYPHS;
 
     status = _cairo_surface_show_glyphs (gstate->target,
 					 gstate->op,
@@ -1572,6 +1592,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 
     _cairo_pattern_fini (&source_pattern.base);
 
+CLEANUP_GLYPHS:
     if (transformed_glyphs != stack_transformed_glyphs)
       free (transformed_glyphs);
 

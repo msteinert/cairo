@@ -829,7 +829,9 @@ _cairo_glitz_pattern_acquire_surfaces (cairo_pattern_t	                *src,
 
 	mask = NULL;
     } else {
-	_cairo_pattern_init_copy (&tmp.base, src);
+	status = _cairo_pattern_init_copy (&tmp.base, src);
+	if (status)
+	    return status;
     }
 
     status = _cairo_glitz_pattern_acquire_surface (&tmp.base, dst,
@@ -844,7 +846,9 @@ _cairo_glitz_pattern_acquire_surfaces (cairo_pattern_t	                *src,
 
     if (mask)
     {
-	_cairo_pattern_init_copy (&tmp.base, mask);
+	status = _cairo_pattern_init_copy (&tmp.base, mask);
+	if (status)
+	    return status;
 
 	status = _cairo_glitz_pattern_acquire_surface (&tmp.base, dst,
 						       mask_x, mask_y,
@@ -1075,7 +1079,9 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 
     if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE)
     {
-	_cairo_pattern_init_copy (&tmp_src_pattern.base, pattern);
+	status = _cairo_pattern_init_copy (&tmp_src_pattern.base, pattern);
+	if (status)
+	    return status;
 
 	status = _cairo_glitz_pattern_acquire_surface (&tmp_src_pattern.base,
 						       dst,
