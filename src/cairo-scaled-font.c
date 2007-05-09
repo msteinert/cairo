@@ -1328,6 +1328,8 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
 						 glyphs[i].index,
 						 CAIRO_SCALED_GLYPH_INFO_SURFACE,
 						 &scaled_glyph);
+	    if (status)
+		return status;
 
 	    glyph_path = _cairo_path_fixed_create ();
 	    if (glyph_path == NULL)
