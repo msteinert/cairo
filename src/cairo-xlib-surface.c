@@ -2521,7 +2521,10 @@ _cairo_xlib_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 			(cairo_xlib_notify_func) _cairo_xlib_render_free_glyphs,
 			arg,
 			free);
-		(void) status; /* XXX cannot propagate failure */
+		if (status) {
+		    /* XXX cannot propagate failure */
+		    free (arg);
+		}
 	    }
 
 	    _cairo_xlib_display_destroy (display);
