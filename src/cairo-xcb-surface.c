@@ -1584,16 +1584,16 @@ _cairo_xcb_surface_is_similar (void *surface_a,
 {
     cairo_xcb_surface_t *a = surface_a;
     cairo_xcb_surface_t *b = surface_b;
-    xcb_render_pictforminfo_t xrender_format;
+    xcb_render_pictforminfo_t *xrender_format;
 
-    if (! _cairo_xcb_surface_same_screen (dst, src))
+    if (! _cairo_xcb_surface_same_screen (a, b))
 	return FALSE;
 
     /* now check that the target is a similar format */
     xrender_format = _CAIRO_FORMAT_TO_XRENDER_FORMAT (b->dpy,
 	    _cairo_format_from_content (content));
 
-    return a->xrender_format == xrender_format;
+    return a->xrender_format.id == xrender_format->id;
 }
 
 static cairo_status_t
