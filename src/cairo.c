@@ -564,7 +564,7 @@ cairo_pop_group (cairo_t *cr)
     /* Verify that we are at the right nesting level */
     if (parent_target == NULL) {
 	_cairo_set_error (cr, CAIRO_STATUS_INVALID_POP_GROUP);
-	return NULL;
+	return (cairo_pattern_t*) &_cairo_pattern_nil.base;
     }
 
     /* We need to save group_surface before we restore; we don't need
@@ -578,8 +578,8 @@ cairo_pop_group (cairo_t *cr)
 	goto done;
 
     group_pattern = cairo_pattern_create_for_surface (group_surface);
-    if (!group_pattern) {
-	_cairo_set_error (cr, CAIRO_STATUS_NO_MEMORY);
+    if (cairo_pattern_status (group_pattern)) {
+	_cairo_set_error (cr, cairo_pattern_status (group_pattern));
         goto done;
     }
 
