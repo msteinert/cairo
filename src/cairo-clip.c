@@ -350,6 +350,8 @@ _cairo_clip_intersect_region (cairo_clip_t    *clip,
         if (pixman_region_copy (&clip->region, &region) ==
 		PIXMAN_REGION_STATUS_SUCCESS)
 	    clip->has_region = TRUE;
+	else
+	    status = CAIRO_STATUS_NO_MEMORY;
     } else {
 	pixman_region16_t intersection;
         pixman_region_init (&intersection);
