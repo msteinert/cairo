@@ -1512,7 +1512,7 @@ _cairo_directfb_surface_show_glyphs ( void                 *abstract_dst,
 
 
 static cairo_bool_t
-_cairo_directfb_surface_is_simlar (void *surface_a,
+_cairo_directfb_surface_is_similar (void *surface_a,
 	                           void *surface_b,
 				   cairo_content_t content)
 {
