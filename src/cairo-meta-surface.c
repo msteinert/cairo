@@ -652,6 +652,9 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
     cairo_matrix_t *device_transform = &target->device_transform;
     cairo_path_fixed_t path_copy, *dev_path;
 
+    if (surface->status)
+	return surface->status;
+
     meta = (cairo_meta_surface_t *) surface;
     status = CAIRO_STATUS_SUCCESS;
 
