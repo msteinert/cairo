@@ -309,7 +309,7 @@
    obj:/lib/ld-2.3.6.so
 }
 {
-   XrmGetFileDatabase is fairly obnoxious about leaving reachable memory around
+   XrmGet*Database is fairly obnoxious about leaving reachable memory around
    Memcheck:Leak
    fun:malloc
    fun:_XlcAddCT
@@ -321,18 +321,16 @@
    fun:_XOpenLC
    fun:_XrmInitParseInfo
    fun:NewDatabase
-   fun:XrmGetFileDatabase
 }
 {
-   XrmGetFileDatabase is fairly obnoxious about leaving reachable memory around
+   XrmGet*Database is fairly obnoxious about leaving reachable memory around
    Memcheck:Leak
    fun:malloc
    fun:PutEntry
    fun:GetDatabase
-   fun:XrmGetFileDatabase
 }
 {
-   XrmGetFileDatabase is fairly obnoxious about leaving reachable memory around
+   XrmGet*Database is fairly obnoxious about leaving reachable memory around
    Memcheck:Leak
    fun:malloc
    fun:initialize
@@ -341,10 +339,9 @@
    fun:_XOpenLC
    fun:_XrmInitParseInfo
    fun:NewDatabase
-   fun:XrmGetFileDatabase
 }
 {
-   XrmGetFileDatabase is fairly obnoxious about leaving reachable memory around
+   XrmGet*Database is fairly obnoxious about leaving reachable memory around
    Memcheck:Leak
    fun:malloc
    fun:add_codeset
@@ -354,10 +351,9 @@
    fun:_XOpenLC
    fun:_XrmInitParseInfo
    fun:NewDatabase
-   fun:XrmGetFileDatabase
 }
 {
-   XrmGetFileDatabase is fairly obnoxious about leaving reachable memory around
+   XrmGet*Database is fairly obnoxious about leaving reachable memory around
    Memcheck:Leak
    fun:malloc
    fun:_XlcAddCharSet
@@ -370,10 +366,9 @@
    fun:_XOpenLC
    fun:_XrmInitParseInfo
    fun:NewDatabase
-   fun:XrmGetFileDatabase
 }
 {
-   XrmGetFileDatabase is fairly obnoxious about leaving reachable memory around
+   XrmGet*Database is fairly obnoxious about leaving reachable memory around
    Memcheck:Leak
    fun:realloc
    fun:add_codeset
@@ -383,10 +378,9 @@
    fun:_XOpenLC
    fun:_XrmInitParseInfo
    fun:NewDatabase
-   fun:XrmGetFileDatabase
 }
 {
-   XrmGetFileDatabase is fairly obnoxious about leaving reachable memory around
+   XrmGet*Database is fairly obnoxious about leaving reachable memory around
    Memcheck:Leak
    fun:malloc
    fun:_XlcCreateDefaultCharSet
@@ -399,10 +393,9 @@
    fun:_XOpenLC
    fun:_XrmInitParseInfo
    fun:NewDatabase
-   fun:XrmGetFileDatabase
 }
 {
-   XrmGetFileDatabase is fairly obnoxious about leaving reachable memory around
+   XrmGet*Database is fairly obnoxious about leaving reachable memory around
    Memcheck:Leak
    fun:malloc
    fun:_XlcCreateDefaultCharSet
@@ -415,10 +408,9 @@
    fun:_XOpenLC
    fun:_XrmInitParseInfo
    fun:NewDatabase
-   fun:XrmGetFileDatabase
 }
 {
-   XrmGetFileDatabase is fairly obnoxious about leaving reachable memory around
+   XrmGet*Database is fairly obnoxious about leaving reachable memory around
    Memcheck:Leak
    fun:malloc
    fun:_XlcAddCT
@@ -430,10 +422,9 @@
    fun:_XOpenLC
    fun:_XrmInitParseInfo
    fun:NewDatabase
-   fun:XrmGetFileDatabase
 }
 {
-   XrmGetFileDatabase is fairly obnoxious about leaving reachable memory around
+   XrmGet*Database is fairly obnoxious about leaving reachable memory around
    Memcheck:Leak
    fun:malloc
    fun:_XlcCreateLocaleDataBase
@@ -444,10 +435,9 @@
    fun:_XOpenLC
    fun:_XrmInitParseInfo
    fun:NewDatabase
-   fun:XrmGetFileDatabase
 }
 {
-   XrmGetFileDatabase is fairly obnoxious about leaving reachable memory around
+   XrmGet*Database is fairly obnoxious about leaving reachable memory around
    Memcheck:Leak
    fun:malloc
    fun:_XlcCreateDefaultCharSet
@@ -460,10 +450,9 @@
    fun:_XOpenLC
    fun:_XrmInitParseInfo
    fun:NewDatabase
-   fun:XrmGetFileDatabase
 }
 {
-   XrmGetFileDatabase is fairly obnoxious about leaving reachable memory around
+   XrmGet*Database is fairly obnoxious about leaving reachable memory around
    Memcheck:Leak
    fun:malloc
    fun:_XlcSetConverter
@@ -475,10 +464,9 @@
    fun:_XOpenLC
    fun:_XrmInitParseInfo
    fun:NewDatabase
-   fun:XrmGetFileDatabase
 }
 {
-   XrmGetFileDatabase is fairly obnoxious about leaving reachable memory around
+   XrmGet*Database is fairly obnoxious about leaving reachable memory around
    Memcheck:Leak
    fun:malloc
    fun:_XlcSetConverter
@@ -486,10 +474,9 @@
    fun:_XOpenLC
    fun:_XrmInitParseInfo
    fun:NewDatabase
-   fun:XrmGetFileDatabase
 }
 {
-   XrmGetFileDatabase is fairly obnoxious about leaving reachable memory around
+   XrmGet*Database is fairly obnoxious about leaving reachable memory around
    Memcheck:Leak
    fun:malloc
    fun:_XlcSetConverter
@@ -498,7 +485,6 @@
    fun:_XOpenLC
    fun:_XrmInitParseInfo
    fun:NewDatabase
-   fun:XrmGetFileDatabase
 }
 {
    Xau chooses not to free its static data...
