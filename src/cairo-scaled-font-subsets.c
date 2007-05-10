@@ -531,6 +531,8 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
                                                       &identity,
                                                       &identity,
                                                       &font_options);
+	    if (unscaled_font->status)
+		return unscaled_font->status;
 
             subset_glyph->is_scaled = FALSE;
             type1_font = FALSE;
