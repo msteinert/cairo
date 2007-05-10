@@ -939,16 +939,20 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
 	goto fail1;
 
     truetype_subset->base_font = strdup (font->base.base_font);
-    if (truetype_subset->base_font == NULL)
+    if (truetype_subset->base_font == NULL) {
+	status = CAIRO_STATUS_NO_MEMORY;
 	goto fail1;
+    }
 
     /* The widths array returned must contain only widths for the
      * glyphs in font_subset. Any subglyphs appended after
      * font_subset->num_glyphs are omitted. */
     truetype_subset->widths = calloc (sizeof (double),
                                       font->scaled_font_subset->num_glyphs);
-    if (truetype_subset->widths == NULL)
+    if (truetype_subset->widths == NULL) {
+	status = CAIRO_STATUS_NO_MEMORY;
 	goto fail2;
+    }
     for (i = 0; i < font->scaled_font_subset->num_glyphs; i++)
 	truetype_subset->widths[i] = (double)font->base.widths[i]/font->base.units_per_em;
 
@@ -960,16 +964,20 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
     truetype_subset->descent = (double)font->base.descent/font->base.units_per_em;
 
     truetype_subset->data = malloc (length);
-    if (truetype_subset->data == NULL)
+    if (truetype_subset->data == NULL) {
+	status = CAIRO_STATUS_NO_MEMORY;
 	goto fail3;
+    }
 
     memcpy (truetype_subset->data, data, length);
     truetype_subset->data_length = length;
 
     offsets_length = num_strings * sizeof (unsigned long);
     truetype_subset->string_offsets = malloc (offsets_length);
-    if (truetype_subset->string_offsets == NULL)
+    if (truetype_subset->string_offsets == NULL) {
+	status = CAIRO_STATUS_NO_MEMORY;
 	goto fail4;
+    }
 
     memcpy (truetype_subset->string_offsets, string_offsets, offsets_length);
     truetype_subset->num_string_offsets = num_strings;
