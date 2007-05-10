@@ -338,6 +338,9 @@ _cairo_pattern_create_in_error (cairo_status_t status)
 {
     cairo_pattern_t *pattern;
 
+    if (status == CAIRO_STATUS_NO_MEMORY)
+	return (cairo_pattern_t *)&_cairo_pattern_nil.base;
+
     pattern = _cairo_pattern_create_solid (_cairo_stock_color (CAIRO_STOCK_BLACK),
 					   CAIRO_CONTENT_COLOR);
     /* no-op on a pattern already in error i.e the _cairo_pattern_nil */
