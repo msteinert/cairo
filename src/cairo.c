@@ -2407,6 +2407,9 @@ _cairo_rectangle_list_create_in_error (cairo_status_t status)
 {
     cairo_rectangle_list_t *list;
 
+    if (status == CAIRO_STATUS_NO_MEMORY)
+        return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
+
     list = malloc (sizeof (cairo_rectangle_list_t));
     if (list == NULL)
         return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
