@@ -191,6 +191,10 @@ cairo_create (cairo_surface_t *target)
     cairo_t *cr;
     cairo_status_t status;
 
+    /* special case OOM in order to avoid another allocation */
+    if (target && target->status == CAIRO_STATUS_NO_MEMORY)
+	return (cairo_t *) &_cairo_nil;
+
     cr = malloc (sizeof (cairo_t));
     if (cr == NULL)
 	return (cairo_t *) &_cairo_nil;
@@ -200,16 +204,10 @@ cairo_create (cairo_surface_t *target)
     cr->status = CAIRO_STATUS_SUCCESS;
 
     _cairo_user_data_array_init (&cr->user_data);
+    _cairo_path_fixed_init (cr->path);
 
     cr->gstate = cr->gstate_tail;
     status = _cairo_gstate_init (cr->gstate, target);
-
-    _cairo_path_fixed_init (cr->path);
-
-    if (target == NULL) {
-	/* override status with user error */
-	status = CAIRO_STATUS_NULL_POINTER;
-    }
 
     if (status)
 	_cairo_set_error (cr, status);

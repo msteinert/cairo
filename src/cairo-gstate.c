@@ -96,7 +96,7 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     if (gstate->source->status)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    return CAIRO_STATUS_SUCCESS;
+    return target ? target->status : CAIRO_STATUS_NULL_POINTER;
 }
 
 /**
