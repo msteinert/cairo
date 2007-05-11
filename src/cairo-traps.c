@@ -57,8 +57,8 @@ _cairo_traps_init (cairo_traps_t *traps)
 
     traps->num_traps = 0;
 
-    traps->traps_size = 0;
-    traps->traps = NULL;
+    traps->traps_size = ARRAY_LENGTH (traps->traps_embedded);
+    traps->traps = traps->traps_embedded;
     traps->extents.p1.x = traps->extents.p1.y = INT32_MAX;
     traps->extents.p2.x = traps->extents.p2.y = INT32_MIN;
 
@@ -100,9 +100,7 @@ _cairo_traps_init_box (cairo_traps_t *traps,
 {
     _cairo_traps_init (traps);
 
-    traps->status = _cairo_traps_grow (traps);
-    if (traps->status)
-	return traps->status;
+    assert (traps->traps_size >= 1);
 
     traps->num_traps = 1;
 
@@ -256,19 +254,7 @@ static cairo_status_t
 _cairo_traps_grow (cairo_traps_t *traps)
 {
     cairo_trapezoid_t *new_traps;
-    int old_size = traps->traps_size;
-    int embedded_size = ARRAY_LENGTH (traps->traps_embedded);
-    int new_size = 2 * MAX (old_size, 16);
-
-    /* we have a local buffer at traps->traps_embedded.  try to fulfill the request
-     * from there. */
-    if (old_size < embedded_size) {
-	traps->traps = traps->traps_embedded;
-	traps->traps_size = embedded_size;
-	return traps->status;
-    }
-
-    assert (traps->num_traps <= traps->traps_size);
+    int new_size = 2 * MAX (traps->traps_size, 16);
 
     if (traps->status)
 	return traps->status;
@@ -276,7 +262,7 @@ _cairo_traps_grow (cairo_traps_t *traps)
     if (traps->traps == traps->traps_embedded) {
 	new_traps = malloc (new_size * sizeof (cairo_trapezoid_t));
 	if (new_traps)
-	    memcpy (new_traps, traps->traps, old_size * sizeof (cairo_trapezoid_t));
+	    memcpy (new_traps, traps->traps, sizeof (traps->traps_embedded));
     } else {
 	new_traps = realloc (traps->traps, new_size * sizeof (cairo_trapezoid_t));
     }
@@ -289,7 +275,7 @@ _cairo_traps_grow (cairo_traps_t *traps)
     traps->traps = new_traps;
     traps->traps_size = new_size;
 
-    return traps->status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static int
