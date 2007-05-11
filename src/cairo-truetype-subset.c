@@ -972,15 +972,20 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
     memcpy (truetype_subset->data, data, length);
     truetype_subset->data_length = length;
 
-    offsets_length = num_strings * sizeof (unsigned long);
-    truetype_subset->string_offsets = malloc (offsets_length);
-    if (truetype_subset->string_offsets == NULL) {
-	status = CAIRO_STATUS_NO_MEMORY;
-	goto fail4;
-    }
+    if (num_strings) {
+	offsets_length = num_strings * sizeof (unsigned long);
+	truetype_subset->string_offsets = malloc (offsets_length);
+	if (truetype_subset->string_offsets == NULL) {
+	    status = CAIRO_STATUS_NO_MEMORY;
+	    goto fail4;
+	}
 
-    memcpy (truetype_subset->string_offsets, string_offsets, offsets_length);
-    truetype_subset->num_string_offsets = num_strings;
+	memcpy (truetype_subset->string_offsets, string_offsets, offsets_length);
+	truetype_subset->num_string_offsets = num_strings;
+    } else {
+	truetype_subset->string_offsets = NULL;
+	truetype_subset->num_string_offsets = 0;
+    }
 
     cairo_truetype_font_destroy (font);
 
