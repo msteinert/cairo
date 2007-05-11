@@ -618,6 +618,10 @@ _cairo_scaled_font_subsets_foreach_internal (cairo_scaled_font_subsets_t        
         collection.glyphs_size = font_subsets->max_glyphs_per_scaled_subset_used;
     else
         collection.glyphs_size = font_subsets->max_glyphs_per_unscaled_subset_used;
+
+    if (! collection.glyphs_size)
+	return CAIRO_STATUS_SUCCESS;
+
     collection.glyphs = malloc (collection.glyphs_size * sizeof(unsigned long));
     if (collection.glyphs == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
