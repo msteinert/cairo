@@ -231,7 +231,7 @@ _cairo_pattern_init_for_surface (cairo_surface_pattern_t *pattern,
 {
     if (surface->status) {
 	/* Force to solid to simplify the pattern_fini process. */
-	pattern->base.type = CAIRO_PATTERN_TYPE_SOLID;
+	_cairo_pattern_init (&pattern->base, CAIRO_PATTERN_TYPE_SOLID);
 	_cairo_pattern_set_error (&pattern->base, surface->status);
 	return;
     }
