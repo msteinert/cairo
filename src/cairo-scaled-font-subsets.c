@@ -425,7 +425,7 @@ _cairo_scaled_font_subsets_create_internal (cairo_subsets_type_t type)
 
     subsets->scaled_sub_fonts = _cairo_hash_table_create (_cairo_sub_fonts_equal);
     if (! subsets->scaled_sub_fonts) {
-        free (subsets->unscaled_sub_fonts);
+	_cairo_hash_table_destroy (subsets->unscaled_sub_fonts);
 	free (subsets);
 	return NULL;
     }
