@@ -1360,6 +1360,9 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
 					      &closure);
 	if (glyph_path != scaled_glyph->path)
 	    _cairo_path_fixed_destroy (glyph_path);
+
+	if (status)
+	    return status;
     }
 
     return CAIRO_STATUS_SUCCESS;
