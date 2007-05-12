@@ -413,8 +413,8 @@ _cairo_ft_unscaled_font_create_for_pattern (FcPattern *pattern)
     if (_cairo_hash_table_lookup (font_map->hash_table, &key.base.hash_entry,
 				  (cairo_hash_entry_t **) &unscaled))
     {
-	_cairo_ft_unscaled_font_map_unlock ();
 	_cairo_unscaled_font_reference (&unscaled->base);
+	_cairo_ft_unscaled_font_map_unlock ();
 	return unscaled;
     }
 
