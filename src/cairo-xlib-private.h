@@ -76,7 +76,7 @@ struct _cairo_xlib_screen_info {
 
     cairo_font_options_t font_options;
 
-    GC gc[6];
+    GC gc[9];
     unsigned int gc_needs_clip_reset;
 };
 
