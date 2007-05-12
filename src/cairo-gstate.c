@@ -1499,13 +1499,8 @@ _cairo_gstate_text_to_glyphs (cairo_gstate_t *gstate,
     if (status)
 	return status;
 
-    status = _cairo_scaled_font_text_to_glyphs (gstate->scaled_font, x, y,
-						utf8, glyphs, num_glyphs);
-
-    if (status || !glyphs || !num_glyphs || !(*glyphs) || !(num_glyphs))
-	return status;
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_scaled_font_text_to_glyphs (gstate->scaled_font, x, y,
+					      utf8, glyphs, num_glyphs);
 }
 
 cairo_status_t
