@@ -1515,8 +1515,12 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 	h = 2 * extents.height;
 
 	*out = cairo_surface_create_similar (dst, dst->content, w, h);
-	if (!*out)
-	    return CAIRO_STATUS_NO_MEMORY;
+	status = cairo_surface_status (*out);
+	if (status) {
+	    cairo_surface_destroy (*out);
+	    *out = NULL;
+	    return status;
+	}
 
 	(*out)->device_transform = pattern->surface->device_transform;
 	(*out)->device_transform_inverse = pattern->surface->device_transform_inverse;
@@ -1540,6 +1544,11 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 
 	status = cairo_status (cr);
 	cairo_destroy (cr);
+
+	if (status) {
+	    cairo_surface_destroy (*out);
+	    *out = NULL;
+	}
 
 	return status;
     }
@@ -1617,8 +1626,12 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 
 	    *out = cairo_surface_create_similar (dst, dst->content,
 						 width, height);
-	    if (!*out)
-		return CAIRO_STATUS_NO_MEMORY;
+	    status = cairo_surface_status (*out);
+	    if (status) {
+		cairo_surface_destroy (*out);
+		*out = NULL;
+		return status;
+	    }
 
 	    (*out)->device_transform = pattern->surface->device_transform;
 	    (*out)->device_transform_inverse = pattern->surface->device_transform_inverse;
@@ -1632,6 +1645,11 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 
 	    status = cairo_status (cr);
 	    cairo_destroy (cr);
+
+	    if (status) {
+		cairo_surface_destroy (*out);
+		*out = NULL;
+	    }
 	}
     }
 
