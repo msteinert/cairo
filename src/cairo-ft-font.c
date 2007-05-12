@@ -1751,7 +1751,7 @@ _decompose_glyph_outline (FT_Face		  face,
 
     FT_GlyphSlot glyph;
     cairo_path_fixed_t *path;
-    cairo_status_t status, status2;
+    cairo_status_t status;
 
     path = _cairo_path_fixed_create ();
     if (!path)
@@ -1759,20 +1759,22 @@ _decompose_glyph_outline (FT_Face		  face,
 
     glyph = face->glyph;
 
-    status = CAIRO_STATUS_SUCCESS;
     /* Font glyphs have an inverted Y axis compared to cairo. */
     FT_Outline_Transform (&glyph->outline, &invert_y);
-    if (FT_Outline_Decompose (&glyph->outline, &outline_funcs, path))
-	status = CAIRO_STATUS_NO_MEMORY;
+    if (FT_Outline_Decompose (&glyph->outline, &outline_funcs, path)) {
+	_cairo_path_fixed_destroy (path);
+	return CAIRO_STATUS_NO_MEMORY;
+    }
 
-    status2 = _cairo_path_fixed_close_path (path);
-    if (status == CAIRO_STATUS_SUCCESS)
-	status = status2;
+    status = _cairo_path_fixed_close_path (path);
+    if (status) {
+	_cairo_path_fixed_destroy (path);
+	return status;
+    }
 
-    if (status == CAIRO_STATUS_SUCCESS)
-	*pathp = path;
+    *pathp = path;
 
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 /*
