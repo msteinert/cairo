@@ -553,13 +553,17 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
                                                max_glyphs,
                                                subset_glyph->is_scaled,
                                                subset_glyph->is_composite);
-            if (sub_font == NULL)
+            if (sub_font == NULL) {
+		cairo_scaled_font_destroy (unscaled_font);
                 return CAIRO_STATUS_NO_MEMORY;
+	    }
 
             status = _cairo_hash_table_insert (subsets->unscaled_sub_fonts,
                                                &sub_font->base);
-            if (status)
+            if (status) {
+		_cairo_sub_font_destroy (sub_font);
                 return status;
+	    }
         }
     } else {
         /* No path available. Add to scaled subset. */
@@ -581,13 +585,17 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
                                                max_glyphs,
                                                subset_glyph->is_scaled,
                                                subset_glyph->is_composite);
-            if (sub_font == NULL)
+            if (sub_font == NULL) {
+		cairo_scaled_font_destroy (scaled_font);
                 return CAIRO_STATUS_NO_MEMORY;
+	    }
 
             status = _cairo_hash_table_insert (subsets->scaled_sub_fonts,
                                                &sub_font->base);
-            if (status)
+            if (status) {
+		_cairo_sub_font_destroy (sub_font);
                 return status;
+	    }
         }
     }
 
