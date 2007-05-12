@@ -384,8 +384,10 @@ _cairo_xlib_screen_get_gc (cairo_xlib_screen_info_t *info, int depth)
     gc = info->gc[depth];
     info->gc[depth] = NULL;
 
-    if (info->gc_needs_clip_reset & (1 << depth))
+    if (info->gc_needs_clip_reset & (1 << depth)) {
 	XSetClipMask(info->display->display, gc, None);
+	info->gc_needs_clip_reset &= ~(1 << depth);
+    }
 
     return gc;
 }
