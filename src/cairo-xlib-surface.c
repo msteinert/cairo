@@ -310,12 +310,11 @@ _cairo_xlib_surface_finish (void *abstract_surface)
     if (surface->gc != NULL) {
 	cairo_status_t status2;
 	status2 = _cairo_xlib_screen_put_gc (surface->screen_info,
-		                   surface->depth,
-				   surface->gc,
-				   surface->have_clip_rects);
-	if (status2 == CAIRO_STATUS_SUCCESS)
-	    surface->gc = NULL;
-	else if (status == CAIRO_STATUS_SUCCESS)
+		                             surface->depth,
+				             surface->gc,
+				             surface->have_clip_rects);
+	surface->gc = NULL;
+	if (status == CAIRO_STATUS_SUCCESS)
 	    status = status2;
     }
 
