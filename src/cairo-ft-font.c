@@ -1466,6 +1466,7 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
 				      &cairo_ft_scaled_font_backend);
     if (status) {
 	free (scaled_font);
+	_cairo_unscaled_font_destroy (&unscaled->base);
 	_cairo_ft_unscaled_font_unlock_face (unscaled);
 	return NULL;
     }
