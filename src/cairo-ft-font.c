@@ -1964,9 +1964,12 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	} else {
 	    status = _render_glyph_bitmap (face, &scaled_font->ft_options.base,
 					   &surface);
-	    if (status == CAIRO_STATUS_SUCCESS && unscaled->have_shape)
+	    if (status == CAIRO_STATUS_SUCCESS && unscaled->have_shape) {
 		status = _transform_glyph_bitmap (&unscaled->current_shape,
 						  &surface);
+		if (status)
+		    cairo_surface_destroy (&surface->base);
+	    }
 	}
 	if (status)
 	    goto FAIL;
