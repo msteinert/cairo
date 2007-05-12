@@ -160,13 +160,13 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     font->glyphs = calloc (font->num_glyphs_in_face + 1, sizeof (subset_glyph_t));
     if (font->glyphs == NULL) {
 	status = CAIRO_STATUS_NO_MEMORY;
-	goto fail2;
+	goto fail1;
     }
 
     font->parent_to_subset = calloc (font->num_glyphs_in_face, sizeof (int));
     if (font->parent_to_subset == NULL) {
 	status = CAIRO_STATUS_NO_MEMORY;
-	goto fail3;
+	goto fail2;
     }
 
     font->base.num_glyphs = 0;
@@ -210,7 +210,7 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
         font->base.base_font = malloc (30);
         if (font->base.base_font == NULL) {
 	    status = CAIRO_STATUS_NO_MEMORY;
-            goto fail4; 
+            goto fail3;
 	}
 
         snprintf(font->base.base_font, 30, "CairoFont-%u-%u",
@@ -228,13 +228,13 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     font->base.widths = calloc (font->num_glyphs_in_face, sizeof (int));
     if (font->base.widths == NULL) {
 	status = CAIRO_STATUS_NO_MEMORY;
-	goto fail5;
+	goto fail4;
     }
 
     _cairo_array_init (&font->string_offsets, sizeof (unsigned long));
     status = _cairo_array_grow_by (&font->string_offsets, 10);
     if (status)
-	goto fail6;
+	goto fail5;
 
     font->status = CAIRO_STATUS_SUCCESS;
 
@@ -242,17 +242,17 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
 
     return CAIRO_STATUS_SUCCESS;
 
- fail6:
-    free (font->base.widths);
  fail5:
-    free (font->base.base_font);
+    _cairo_array_fini (&font->string_offsets);
+    free (font->base.widths);
  fail4:
-    free (font->parent_to_subset);
+    free (font->base.base_font);
  fail3:
-    free (font->glyphs);
+    free (font->parent_to_subset);
  fail2:
-    _cairo_array_fini (&font->output);
+    free (font->glyphs);
  fail1:
+    _cairo_array_fini (&font->output);
     free (font);
  fail0:
     if (name)
