@@ -338,8 +338,10 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
         }
 
 	status = _cairo_hash_table_insert (sub_font->sub_font_glyphs, &sub_font_glyph->base);
-	if (status)
+	if (status) {
+	    _cairo_sub_font_glyph_destroy (sub_font_glyph);
 	    return status;
+	}
     }
 
     subset_glyph->font_id = sub_font->font_id;
