@@ -869,6 +869,15 @@ _cairo_quartz_surface_acquire_source_image (void *abstract_surface,
     return _cairo_quartz_get_image (surface, image_out, NULL);
 }
 
+static void
+_cairo_quartz_surface_release_source_image (void *abstract_surface,
+					     cairo_image_surface_t *image,
+					     void *image_extra)
+{
+    cairo_surface_destroy ((cairo_surface_t *) image);
+}
+
+
 static cairo_status_t
 _cairo_quartz_surface_acquire_dest_image (void *abstract_surface,
 					   cairo_rectangle_int16_t *interest_rect,
@@ -1442,7 +1451,7 @@ static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
     _cairo_quartz_surface_create_similar,
     _cairo_quartz_surface_finish,
     _cairo_quartz_surface_acquire_source_image,
-    NULL, /* release_source_image */
+    _cairo_quartz_surface_release_source_image,
     _cairo_quartz_surface_acquire_dest_image,
     _cairo_quartz_surface_release_dest_image,
     _cairo_quartz_surface_clone_similar,
