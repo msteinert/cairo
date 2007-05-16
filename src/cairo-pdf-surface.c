@@ -1294,7 +1294,7 @@ _cairo_pdf_surface_emit_pattern_stops (cairo_pdf_surface_t      *surface,
 		    sizeof (cairo_pdf_color_stop_t));
 	    n_stops++;
     }
-    stops[n_stops].offset = 1.0;
+    stops[n_stops-1].offset = 1.0;
 
     if (n_stops == 2) {
         /* no need for stitched function */
