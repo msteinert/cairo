@@ -2221,17 +2221,24 @@ static cairo_font_face_t *
 _cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
 			    cairo_ft_options_t	     *ft_options)
 {
-    cairo_ft_font_face_t *font_face;
+    cairo_ft_font_face_t *font_face, **prev_font_face;
 
     /* Looked for an existing matching font face */
-    for (font_face = unscaled->faces;
+    for (font_face = unscaled->faces, prev_font_face = &unscaled->faces;
 	 font_face;
-	 font_face = font_face->next)
+	 prev_font_face = &font_face->next, font_face = font_face->next)
     {
 	if (font_face->ft_options.load_flags == ft_options->load_flags &&
 	    font_face->ft_options.extra_flags == ft_options->extra_flags &&
 	    cairo_font_options_equal (&font_face->ft_options.base, &ft_options->base))
-	    return cairo_font_face_reference (&font_face->base);
+	{
+	    if (! font_face->base.status)
+		return cairo_font_face_reference (&font_face->base);
+
+	    /* The font_face has been left in an error state, abandon it. */
+	    *prev_font_face = font_face->next;
+	    break;
+	}
     }
 
     /* No match found, create a new one */
