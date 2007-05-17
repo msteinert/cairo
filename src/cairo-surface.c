@@ -502,10 +502,8 @@ cairo_surface_finish (cairo_surface_t *surface)
     }
 
     status = surface->backend->finish (surface);
-    if (status) {
+    if (status)
 	_cairo_surface_set_error (surface, status);
-	return;
-    }
 
     surface->finished = TRUE;
 }
