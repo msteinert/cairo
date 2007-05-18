@@ -834,6 +834,13 @@ _cairo_pattern_add_color_stop (cairo_gradient_pattern_t *pattern,
  *
  * The color is specified in the same way as in cairo_set_source_rgb().
  *
+ * If two (or more) stops are specified with identical offset values,
+ * they will be sorted according to the order in which the stops are
+ * added, (stops added earlier will compare less than stops added
+ * later). This can be useful for reliably making sharp color
+ * transitions instead of the typical blend.
+ *
+ *
  * Note: If the pattern is not a gradient pattern, (eg. a linear or
  * radial pattern), then the pattern will be put into an error status
  * with a status of %CAIRO_STATUS_PATTERN_TYPE_MISMATCH.
@@ -880,6 +887,12 @@ cairo_pattern_add_color_stop_rgb (cairo_pattern_t *pattern,
  * on the start circle to the corresponding point on the end circle.
  *
  * The color is specified in the same way as in cairo_set_source_rgba().
+ *
+ * If two (or more) stops are specified with identical offset values,
+ * they will be sorted according to the order in which the stops are
+ * added, (stops added earlier will compare less than stops added
+ * later). This can be useful for reliably making sharp color
+ * transitions instead of the typical blend.
  *
  * Note: If the pattern is not a gradient pattern, (eg. a linear or
  * radial pattern), then the pattern will be put into an error status
