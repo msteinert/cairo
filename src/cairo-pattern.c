@@ -1084,7 +1084,7 @@ _cairo_linear_pattern_classify (cairo_linear_pattern_t *pattern,
     cairo_fixed_t factors[3];
     int i;
 
-    /* To classidy a pattern as horizontal or vertical, we first
+    /* To classify a pattern as horizontal or vertical, we first
      * compute the (fixed point) factors at the corners of the
      * pattern. We actually only need 3/4 corners, so we skip the
      * fourth.
