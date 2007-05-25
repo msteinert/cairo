@@ -399,50 +399,6 @@ _cairo_atsui_font_fini(void *abstract_font)
         ATSUDisposeStyle(font->unscaled_style);
 }
 
-static
-OSStatus _move_to_for_metrics (const Float32Point *point, void *callback_data)
-{
-    CGMutablePathRef path = callback_data;
-
-    CGPathMoveToPoint (path, &CGAffineTransformIdentity,
-			   point->x, point->y);
-    return noErr;
-}
-
-static
-OSStatus _line_to_for_metrics(const Float32Point *point, void *callback_data)
-{
-    CGMutablePathRef path = callback_data;
-
-    CGPathAddLineToPoint (path, &CGAffineTransformIdentity,
-			   point->x, point->y);
-    return noErr;
-}
-
-static
-OSStatus _curve_to_for_metrics (const Float32Point *point1,
-				const Float32Point *point2,
-				const Float32Point *point3,
-				void *callback_data)
-{
-    CGMutablePathRef path = callback_data;
-
-    CGPathAddCurveToPoint (path, &CGAffineTransformIdentity,
-			   point1->x, point1->y,
-			   point2->x, point2->y,
-			   point3->x, point3->y);
-    return noErr;
-}
-
-static
-OSStatus _close_path_for_metrics(void *callback_data)
-{
-    CGMutablePathRef path = callback_data;
-
-    CGPathCloseSubpath (path);
-    return noErr;
-}
-
 static GlyphID 
 _cairo_atsui_scaled_glyph_index (cairo_scaled_glyph_t *scaled_glyph) {
     unsigned long index = _cairo_scaled_glyph_index (scaled_glyph);
@@ -456,16 +412,10 @@ _cairo_atsui_font_init_glyph_metrics (cairo_atsui_font_t *scaled_font,
 				      cairo_scaled_glyph_t *scaled_glyph)
 {
     cairo_text_extents_t extents = {0, 0, 0, 0, 0, 0};
-    OSStatus err, callback_err;
+    OSStatus err;
     ATSGlyphScreenMetrics metricsH;
-    static ATSCubicMoveToUPP moveProc = NULL;
-    static ATSCubicLineToUPP lineProc = NULL;
-    static ATSCubicCurveToUPP curveProc = NULL;
-    static ATSCubicClosePathUPP closePathProc = NULL;
-    CGMutablePathRef path;
     GlyphID theGlyph = _cairo_atsui_scaled_glyph_index (scaled_glyph);
     double xscale, yscale;
-    CGRect rect;
 
     if (theGlyph == kATSDeletedGlyphcode) {
 	_cairo_scaled_glyph_set_metrics (scaled_glyph,
@@ -491,41 +441,15 @@ _cairo_atsui_font_init_glyph_metrics (cairo_atsui_font_t *scaled_font,
 
     extents.x_advance = metricsH.deviceAdvance.x * xscale;
     extents.y_advance = 0;
-
-    if (moveProc == NULL) {
-        moveProc = NewATSCubicMoveToUPP (_move_to_for_metrics);
-        lineProc = NewATSCubicLineToUPP (_line_to_for_metrics);
-        curveProc = NewATSCubicCurveToUPP (_curve_to_for_metrics);
-        closePathProc = NewATSCubicClosePathUPP (_close_path_for_metrics);
-    }
-
-    path = CGPathCreateMutable ();
-
-    /* The callback error contains any error our functions returned.
-     * Its only meaningful if err != noErr, and we don't currently
-     * use it for anything.
-     */
-    err = ATSUGlyphGetCubicPaths (scaled_font->style, theGlyph,
-				  moveProc, lineProc, curveProc, closePathProc,
-				  (void *)path, &callback_err);
-
-    if (err != noErr) {
-	CGPathRelease (path);
-	return CAIRO_STATUS_NO_MEMORY;
-    }
-
-    rect = CGPathGetBoundingBox (path);
-
-    extents.x_bearing = rect.origin.x * xscale;
-    extents.y_bearing = rect.origin.y * yscale;
-    extents.width = rect.size.width * xscale;
-    extents.height = rect.size.height * yscale;
+    
+    extents.x_bearing = metricsH.topLeft.x * xscale;
+    extents.y_bearing = -metricsH.topLeft.y * yscale;
+    extents.width = metricsH.width * xscale;
+    extents.height = metricsH.height * yscale;
 
     _cairo_scaled_glyph_set_metrics (scaled_glyph,
 				     &scaled_font->base,
 				     &extents);
-    CGPathRelease (path);
-
     return CAIRO_STATUS_SUCCESS;
 }
 
