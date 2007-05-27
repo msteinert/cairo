@@ -1487,7 +1487,7 @@ _cairo_gstate_get_font_extents (cairo_gstate_t *gstate,
 
     cairo_scaled_font_extents (gstate->scaled_font, extents);
 
-    return CAIRO_STATUS_SUCCESS;
+    return cairo_scaled_font_status (gstate->scaled_font);
 }
 
 cairo_status_t
@@ -1541,7 +1541,7 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
 				     glyphs, num_glyphs,
 				     extents);
 
-    return CAIRO_STATUS_SUCCESS;
+    return cairo_scaled_font_status (gstate->scaled_font);
 }
 
 #define STACK_GLYPHS_LEN ((int) (CAIRO_STACK_BUFFER_SIZE / sizeof (cairo_glyph_t)))
