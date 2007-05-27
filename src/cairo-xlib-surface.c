@@ -2887,6 +2887,7 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
     int request_size = 0;
 
     _cairo_xlib_surface_ensure_dst_picture (dst);
+    _cairo_xlib_display_notify (dst->screen_info->display);
 
     for (i = 0; i < num_glyphs; i++) {
 	int this_x, this_y;
