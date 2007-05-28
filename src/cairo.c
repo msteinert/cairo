@@ -894,7 +894,7 @@ cairo_set_antialias (cairo_t *cr, cairo_antialias_t antialias)
  * Set the current fill rule within the cairo context. The fill rule
  * is used to determine which regions are inside or outside a complex
  * (potentially self-intersecting) path. The current fill rule affects
- * both cairo_fill and cairo_clip. See #cairo_fill_rule_t for details
+ * both cairo_fill() and cairo_clip(). See #cairo_fill_rule_t for details
  * on the semantics of each available fill rule.
  **/
 void
@@ -2936,7 +2936,7 @@ cairo_show_text (cairo_t *cr, const char *utf8)
  * @glyphs: array of glyphs to show
  * @num_glyphs: number of glyphs to show
  *
- * A drawing operator that generates the shape from an array  of glyphs,
+ * A drawing operator that generates the shape from an array of glyphs,
  * rendered according to the current font_face, font_size
  * (font_matrix), and font_options.
  **/
@@ -3114,11 +3114,19 @@ cairo_get_antialias (cairo_t *cr)
  *
  * Most path construction functions alter the current point. See the
  * following for details on how they affect the current point:
+ * cairo_new_path(), cairo_new_sub_path(),
+ * cairo_append_path(), cairo_close_path(),
+ * cairo_move_to(), cairo_line_to(), cairo_curve_to(),
+ * cairo_rel_move_to(), cairo_rel_line_to(), cairo_rel_curve_to(),
+ * cairo_arc(), cairo_arc_negative(), cairo_rectangle(),
+ * cairo_text_path(), cairo_glyph_path(), cairo_stroke_to_path()
  *
- * cairo_new_path(), cairo_move_to(), cairo_line_to(),
- * cairo_curve_to(), cairo_arc(), cairo_rel_move_to(),
- * cairo_rel_line_to(), cairo_rel_curve_to(), cairo_arc(),
- * cairo_text_path(), cairo_stroke_to_path()
+ * Some functions use and alter the current point but do not otherwise
+ * change current path:
+ * cairo_show_text(), cairo_show_glyphs().
+ *
+ * Some functions unset the current path and as a result, current point:
+ * cairo_fill(), cairo_stroke().
  **/
 void
 cairo_get_current_point (cairo_t *cr, double *x_ret, double *y_ret)

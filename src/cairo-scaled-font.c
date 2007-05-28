@@ -802,7 +802,7 @@ cairo_scaled_font_text_extents (cairo_scaled_font_t   *scaled_font,
  * graphics state were set to the same font_face, font_matrix, ctm,
  * and font_options as @scaled_font).  Additionally, the x_advance and
  * y_advance values indicate the amount by which the current point
- * would be advanced by cairo_show_glyphs.
+ * would be advanced by cairo_show_glyphs().
  *
  * Note that whitespace glyphs do not contribute to the size of the
  * rectangle (extents.width and extents.height).

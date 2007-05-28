@@ -524,7 +524,7 @@ cairo_pattern_create_linear (double x0, double y0, double x1, double y1)
  * @radius1: radius of the end circle
  *
  * Creates a new radial gradient cairo_pattern_t between the two
- * circles defined by (x0, y0, c0) and (x1, y1, c0).  Before using the
+ * circles defined by (cx0, cy0, radius0) and (cx1, cy1, radius1).  Before using the
  * gradient pattern, a number of color stops should be defined using
  * cairo_pattern_add_color_stop_rgb() or
  * cairo_pattern_add_color_stop_rgba().
