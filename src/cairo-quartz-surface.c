@@ -648,6 +648,7 @@ typedef enum {
     DO_SOLID,
     DO_SHADING,
     DO_PATTERN,
+    DO_IMAGE,
     DO_UNSUPPORTED
 } cairo_quartz_action_t;
 
@@ -682,6 +683,22 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
 	surface->sourceShading = shading;
 
 	return DO_SHADING;
+    } else if (source->type == CAIRO_PATTERN_TYPE_SURFACE
+	&& source->extend == CAIRO_EXTEND_NONE) {
+	    cairo_surface_pattern_t *spat = (cairo_surface_pattern_t *) source;
+	    cairo_surface_t *pat_surf = spat->surface;
+	    cairo_quartz_surface_t *quartz_surf = _cairo_quartz_surface_to_quartz (pat_surf);
+	    CGImageRef img = CGBitmapContextCreateImage (quartz_surf->cgContext);
+	    cairo_matrix_t m = spat->base.matrix;
+
+	    if (!img)
+		return DO_UNSUPPORTED;
+
+	    surface->sourceImage = img;
+
+	    cairo_matrix_invert(&m);
+	    _cairo_quartz_cairo_matrix_to_quartz (&m, &surface->imageTransform);
+	    return DO_IMAGE;
     } else if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	CGPatternRef pattern = _cairo_quartz_cairo_repeating_surface_pattern_to_quartz (surface, source);
 	if (!pattern)
@@ -694,7 +711,8 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
 	// pattern (which may be stack allocated)
 	CGContextSaveGState(surface->cgContext);
 
-	CGColorSpaceRef patternSpace = CGColorSpaceCreatePattern(NULL);
+	CGColorSpaceRef patternSpace;
+	patternSpace = CGColorSpaceCreatePattern(NULL);
 	CGContextSetFillColorSpace (surface->cgContext, patternSpace);
 	CGContextSetFillPattern (surface->cgContext, pattern, &patternAlpha);
 	CGContextSetStrokeColorSpace (surface->cgContext, patternSpace);
@@ -722,7 +740,8 @@ _cairo_quartz_teardown_source (cairo_quartz_surface_t *surface,
 				cairo_pattern_t *source)
 {
     if (surface->sourceImage) {
-	// nothing to do; we don't use sourceImage yet
+	CGImageRelease(surface->sourceImage);
+	surface->sourceImage = NULL;
     }
 
     if (surface->sourceShading) {
@@ -1101,6 +1120,24 @@ _cairo_quartz_surface_paint (void *abstract_surface,
 							  surface->extents.height));
     } else if (action == DO_SHADING) {
 	CGContextDrawShading (surface->cgContext, surface->sourceShading);
+    } else if (action == DO_IMAGE) {
+	cairo_surface_pattern_t *surface_pattern =
+	    (cairo_surface_pattern_t *) source;
+	cairo_surface_t *pat_surf = surface_pattern->surface;
+	CGContextSaveGState (surface->cgContext);
+	CGContextConcatCTM (surface->cgContext, surface->imageTransform);
+	if (cairo_surface_get_type(pat_surf) == CAIRO_SURFACE_TYPE_QUARTZ) {
+	    CGContextTranslateCTM (surface->cgContext, 0, CGImageGetHeight(surface->sourceImage));
+	    CGContextScaleCTM (surface->cgContext, 1, -1);
+	}
+
+	CGRect imageBounds;
+	imageBounds.size = CGSizeMake (CGImageGetWidth(surface->sourceImage), CGImageGetHeight(surface->sourceImage));
+	imageBounds.origin.x = 0;
+	imageBounds.origin.y = 0;
+
+	CGContextDrawImage (surface->cgContext, imageBounds, surface->sourceImage);
+	CGContextRestoreGState (surface->cgContext);
     } else {
 	rv = CAIRO_INT_STATUS_UNSUPPORTED;
     }
@@ -1158,6 +1195,26 @@ _cairo_quartz_surface_fill (void *abstract_surface,
 	    CGContextEOClip (surface->cgContext);
 
 	CGContextDrawShading (surface->cgContext, surface->sourceShading);
+    } else if (action == DO_IMAGE) {
+	cairo_surface_pattern_t *surface_pattern =
+	    (cairo_surface_pattern_t *) source;
+	cairo_surface_t *pat_surf = surface_pattern->surface;
+	if (fill_rule == CAIRO_FILL_RULE_WINDING)
+	    CGContextClip (surface->cgContext);
+	else
+	    CGContextEOClip (surface->cgContext);
+	CGContextConcatCTM (surface->cgContext, surface->imageTransform);
+	if (cairo_surface_get_type(pat_surf) == CAIRO_SURFACE_TYPE_QUARTZ) {
+	    CGContextTranslateCTM (surface->cgContext, 0, CGImageGetHeight(surface->sourceImage));
+	    CGContextScaleCTM (surface->cgContext, 1, -1);
+	}
+
+	CGRect imageBounds;
+	imageBounds.size = CGSizeMake (CGImageGetWidth(surface->sourceImage), CGImageGetHeight(surface->sourceImage));
+	imageBounds.origin.x = 0;
+	imageBounds.origin.y = 0;
+
+	CGContextDrawImage (surface->cgContext, imageBounds, surface->sourceImage);
     } else {
 	rv = CAIRO_INT_STATUS_UNSUPPORTED;
     }
