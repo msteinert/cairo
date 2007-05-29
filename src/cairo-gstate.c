@@ -1429,17 +1429,19 @@ _cairo_gstate_get_scaled_font (cairo_gstate_t       *gstate,
 static cairo_status_t
 _cairo_gstate_ensure_font_face (cairo_gstate_t *gstate)
 {
-    if (!gstate->font_face) {
-	cairo_font_face_t *font_face;
+    cairo_font_face_t *font_face;
 
-	font_face = _cairo_toy_font_face_create (CAIRO_FONT_FAMILY_DEFAULT,
-						 CAIRO_FONT_SLANT_DEFAULT,
-						 CAIRO_FONT_WEIGHT_DEFAULT);
-	if (font_face->status)
-	    return font_face->status;
-	else
-	    gstate->font_face = font_face;
-    }
+    if (gstate->font_face != NULL)
+	return gstate->font_face->status;
+
+
+    font_face = _cairo_toy_font_face_create (CAIRO_FONT_FAMILY_DEFAULT,
+					     CAIRO_FONT_SLANT_DEFAULT,
+					     CAIRO_FONT_WEIGHT_DEFAULT);
+    if (font_face->status)
+	return font_face->status;
+
+    gstate->font_face = font_face;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1449,9 +1451,10 @@ _cairo_gstate_ensure_scaled_font (cairo_gstate_t *gstate)
 {
     cairo_status_t status;
     cairo_font_options_t options;
+    cairo_scaled_font_t *scaled_font;
 
-    if (gstate->scaled_font)
-	return CAIRO_STATUS_SUCCESS;
+    if (gstate->scaled_font != NULL)
+	return gstate->scaled_font->status;
 
     status = _cairo_gstate_ensure_font_face (gstate);
     if (status)
@@ -1460,14 +1463,16 @@ _cairo_gstate_ensure_scaled_font (cairo_gstate_t *gstate)
     cairo_surface_get_font_options (gstate->target, &options);
     cairo_font_options_merge (&options, &gstate->font_options);
 
-    gstate->scaled_font = cairo_scaled_font_create (gstate->font_face,
-						    &gstate->font_matrix,
-						    &gstate->ctm,
-						    &options);
+    scaled_font = cairo_scaled_font_create (gstate->font_face,
+				            &gstate->font_matrix,
+					    &gstate->ctm,
+					    &options);
 
-    status = cairo_scaled_font_status (gstate->scaled_font);
+    status = cairo_scaled_font_status (scaled_font);
     if (status)
 	return status;
+
+    gstate->scaled_font = scaled_font;
 
     return CAIRO_STATUS_SUCCESS;
 }
