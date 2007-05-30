@@ -36,7 +36,7 @@
 
 #include "cairoint.h"
 
-const cairo_image_surface_t _cairo_image_surface_nil_invalid_format = {
+static const cairo_image_surface_t _cairo_image_surface_nil_invalid_format = {
     {
 	&cairo_image_surface_backend,	/* backend */
 	CAIRO_SURFACE_TYPE_IMAGE,
