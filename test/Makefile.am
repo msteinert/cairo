@@ -93,6 +93,7 @@ source-clip-scale		\
 source-surface-scale-paint	\
 surface-finish-twice		\
 surface-pattern			\
+surface-pattern-big-scale-down  \
 surface-pattern-scale-down	\
 surface-pattern-scale-up	\
 text-antialias-gray		\
@@ -440,6 +441,7 @@ filter-nearest-offset		\
 long-lines			\
 self-intersecting		\
 surface-pattern			\
+surface-pattern-big-scale-down  \
 surface-pattern-scale-down	\
 surface-pattern-scale-up
 
