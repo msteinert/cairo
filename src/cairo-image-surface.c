@@ -131,7 +131,7 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t *pixman_image,
 
 /* Try to recover a cairo_format_t from a pixman_format
  * by looking at the bpp and masks values. */
-static cairo_format_t
+static cairo_internal_format_t
 _cairo_format_from_pixman_format (pixman_format_t *pixman_format)
 {
     unsigned int bpp, am, rm, gm, bm;
@@ -167,7 +167,7 @@ _cairo_format_from_pixman_format (pixman_format_t *pixman_format)
 	    rm == 0xf800 &&
 	    gm == 0x07e0 &&
 	    bm == 0x001f)
-	    return CAIRO_FORMAT_RGB16_565;
+	    return CAIRO_INTERNAL_FORMAT_RGB16_565;
 	break;
     case 8:
 	if (am == 0xff &&
@@ -560,7 +560,7 @@ _cairo_content_from_format (cairo_format_t format)
     case CAIRO_INTERNAL_FORMAT_ABGR32:
 	return CAIRO_CONTENT_COLOR_ALPHA;
     case CAIRO_FORMAT_RGB24:
-    case CAIRO_FORMAT_RGB16_565:
+    case CAIRO_INTERNAL_FORMAT_RGB16_565:
     case CAIRO_INTERNAL_FORMAT_BGR24:
 	return CAIRO_CONTENT_COLOR;
     case CAIRO_FORMAT_A8:
