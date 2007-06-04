@@ -1128,7 +1128,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 
 	_cairo_pattern_fini (&glyph_pattern.base);
 	if (status)
-	    break;
+	    goto CLEANUP_MASK;
     }
 
     if (mask != NULL) {
