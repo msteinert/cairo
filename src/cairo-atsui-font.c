@@ -593,6 +593,7 @@ _cairo_atsui_scaled_font_init_glyph_surface (cairo_atsui_font_t *scaled_font,
     CGContextRef drawingContext;
     cairo_image_surface_t *surface;
     cairo_format_t format;
+    cairo_status_t status;
 
     ATSFontRef atsFont;
     CGFontRef cgFont;
@@ -609,8 +610,9 @@ _cairo_atsui_scaled_font_init_glyph_surface (cairo_atsui_font_t *scaled_font,
 
     if (theGlyph == kATSDeletedGlyphcode) {
 	surface = (cairo_image_surface_t *)cairo_image_surface_create (CAIRO_FORMAT_A8, 2, 2);
-	if (cairo_surface_status (surface))
-	    return cairo_surface_status (surface);
+	status = cairo_surface_status ((cairo_surface_t *)surface);
+	if (status)
+	    return status;
 
 	_cairo_scaled_glyph_set_surface (scaled_glyph,
 					 &base,
@@ -676,8 +678,9 @@ _cairo_atsui_scaled_font_init_glyph_surface (cairo_atsui_font_t *scaled_font,
 
     /* create the glyph mask surface */
     surface = (cairo_image_surface_t *)cairo_image_surface_create (format, bbox.size.width, bbox.size.height);
-    if (cairo_surface_status (surface))
-	return cairo_surface_status (surface);
+    status = cairo_surface_status ((cairo_surface_t *)surface);
+    if (status)
+	return status;
 
     /* Create a CGBitmapContext for the dest surface for drawing into */
     {
