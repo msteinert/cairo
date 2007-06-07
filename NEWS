@@ -1,37 +1,56 @@
-Release 1.4.x
+Release 1.4.8 (2007-06-07 Carl Worth <cworth@cworth.org>)
 =========================================================
-«Preamble»
+This is the fourth update in cairo's stable 1.4 series. It comes just
+over five weeks after the 1.4.6 release. This release includes a
+thread-safe surface-cache for solid patterns which significantly
+improves text rendering with the xlib backend. Also, dozens of error
+paths in cairo have been fixed thanks to extensive fault-injection
+testing by Chris Wilson.
 
 Surface cache for solid patterns
 --------------------------------
 Originally written by Jorn Baayen, the introduction of a small cache
-for surfaces created for solid patterns dramatically reduced the amount
-the number of required surface allocations and backend traffic.  For
-example, this reduces the volume of X requests during text rendering
-to the same level as Xft.  Unfortunately, the cache had to be removed
-when complications arose with threaded applications, like Evince,
-which were designed to only make lockless X requests from a single
-thread, but Cairo violated this design when it ejected cached surfaces,
-with corresponding X traffic, from auxiliary threads.  A solution was
-proposed by Behdad Esfahbod, and implemented by Chris Wilson, to
-introduce work queues for the xlib backend that deferred the
-destruction of the X resources until the next time the application
-directly operated on a xlib surface.
+for surfaces created for solid patterns improves performance
+dramatically. For example, this reduces the volume of X requests
+during text rendering to the same level as Xft.
 
-Improved error handling patchs
+This cache first made its appearance in a 1.3.x snapshot, but was
+removed before appearing in any previous major release due to
+complications with multi-threaded programs. For example, programs like
+evince that would carefully restrict usage of cairo-xlib to a single
+thread were unpleasantly surprised to find that using cairo-image in a
+separate thread could trigger X requests.
+
+Behdad Esfahbod designed a fix which was implemented by Chris
+Wilson. Now, the necessary X requests are queued up until the next
+time the application directly operates on an xlib surface.
+
+Improved error handling paths
 ------------------------------
-Cairo has a fairly unique error-handling scheme that retains error
-status with objects infected.  This requires lots of internal paths
-dealing with error returns and directing the error to the right
-object and releasing resources correctly (like all good libraries do).
-Chris Wilson previsouly stressed the memory allocation paths by
-injecting memory allocations faults into cairo's performance test suite
-and fixed all found issues.  In this release he has done the same, plus
-applying other static and dynamic stress tests on the main cairo test
-suite and fixed a whole lot of other error-handling errors.  We were
-pleased to find that his work fixed a highly-dupped crasher in
-gnome-about: http://bugzilla.gnome.org/show_bug.cgi?id=431990
+Chris Wilson continued the excellent work he started in cairo 1.4.4 to
+make cairo much more robust against out-of-memory and other errors. He
+applied his memory allocation fault injection cairo's main test suite,
+(previously he had applied it to cairo's performance suite).
 
+Chris's testing found dozens of bugs which he fixed. Many of these
+bugs had perhaps never been hit by any users. But at least one was
+hit by the gnome-about program which resulted in dozens of duplicated
+bug reports against that program:
+
+	http://bugzilla.gnome.org/show_bug.cgi?id=431990
+
+We were very pleasantly surprised to see this bug get fixed as a
+side-effect of Chris's work. Well done, Chris!
+
+Other fixes
+-----------
+Cleanup of mutex declarations (Behdad Esfahbod)
+
+Remove unnecessary clip region from SVG output (Emmanuel Pacaud)
+
+Remove Xsun from the buggy_repeat blacklist (Elaine Xiong)
+
+ATSUI: Fix glyph measurement: faster and more correct (Brian Ewins)
 
 Release 1.4.6 (2007-05-01 Carl Worth <cworth@cworth.org>)
 =========================================================
@@ -3720,3 +3739,5 @@ server.
 Carl Worth <cworth@isi.edu> wrote the first lines of Xr, after Keith
 Packard <keithp@keithp.com> proposed the plan for a stateful drawing
 library in C providing a PostScript-like rendering model.
+
+ LocalWords:  mutex BeOS extraordinaire
