@@ -51,8 +51,7 @@ libcairo_xlib_sources = cairo-xlib-surface.c \
 			cairo-xlib-surface-private.h \
 			cairo-xlib-display.c \
 			cairo-xlib-screen.c \
-			cairo-xlib-private.h \
-			cairo-xlib-test.h
+			cairo-xlib-private.h
 backend_pkgconfigs += cairo-xlib.pc
 endif
 
