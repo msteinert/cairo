@@ -147,14 +147,6 @@ cairo_atsui_font_face_create_for_atsu_font_id (ATSUFontID font_id)
     return &font_face->base;
 }
 
-static CGAffineTransform
-CGAffineTransformMakeWithCairoFontScale(const cairo_matrix_t *scale)
-{
-    return CGAffineTransformMake(scale->xx, scale->yx,
-                                 scale->xy, scale->yy,
-                                 0, 0);
-}
-
 static ATSUStyle
 CreateSizedCopyOfStyle(ATSUStyle inStyle, 
 		       const Fixed *theSize, 
