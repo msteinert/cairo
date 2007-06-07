@@ -435,19 +435,11 @@ _cairo_quartz_cairo_gradient_pattern_to_quartz (cairo_pattern_t *abspat)
     return NULL;
 }
 
-
-/* Generic cairo_pattern -> CGPattern function */
-static void
-SurfacePatternDrawFunc (void *info, CGContextRef context)
+/* generic cairo surface -> cairo_quartz_surface_t function */
+static cairo_quartz_surface_t *
+_cairo_quartz_surface_to_quartz (cairo_surface_t *pat_surf)
 {
-    cairo_surface_pattern_t *spat = (cairo_surface_pattern_t *) info;
-    cairo_surface_t *pat_surf = spat->surface;
-
     cairo_quartz_surface_t *quartz_surf = NULL;
-
-    cairo_bool_t flip = FALSE;
-
-    CGImageRef img;
 
     if (cairo_surface_get_type(pat_surf) != CAIRO_SURFACE_TYPE_QUARTZ) {
 	/* This sucks; we should really store a dummy quartz surface
@@ -476,15 +468,20 @@ SurfacePatternDrawFunc (void *info, CGContextRef context)
 	cairo_surface_reference (pat_surf);
 	quartz_surf = (cairo_quartz_surface_t*) pat_surf;
 
-	/* XXXtodo WHY does this need to be flipped?  Writing this stuff
-	 * to disk shows that in both this path and the path above the source image
-	 * has an identical orientation, and the destination context at all times has a Y
-	 * flip.  So why do we need to flip in this case?
-	 */
-	flip = TRUE;
     }
 
-    img = CGBitmapContextCreateImage (quartz_surf->cgContext);
+    return quartz_surf;
+}
+
+/* Generic cairo_pattern -> CGPattern function */
+static void
+SurfacePatternDrawFunc (void *info, CGContextRef context)
+{
+    cairo_surface_pattern_t *spat = (cairo_surface_pattern_t *) info;
+    cairo_surface_t *pat_surf = spat->surface;
+
+    cairo_quartz_surface_t *quartz_surf = _cairo_quartz_surface_to_quartz (pat_surf);
+    CGImageRef img = CGBitmapContextCreateImage (quartz_surf->cgContext);
 
     if (!img) {
 	// ... give up.
@@ -493,7 +490,12 @@ SurfacePatternDrawFunc (void *info, CGContextRef context)
 	return;
     }
 
-    if (flip) {
+    /* XXXtodo WHY does this need to be flipped?  Writing this stuff
+     * to disk shows that in both this path and the path above the source image
+     * has an identical orientation, and the destination context at all times has a Y
+     * flip.  So why do we need to flip in this case?
+     */
+    if (cairo_surface_get_type(pat_surf) == CAIRO_SURFACE_TYPE_QUARTZ) {
 	CGContextTranslateCTM (context, 0, CGImageGetHeight(img));
 	CGContextScaleCTM (context, 1, -1);
     }
