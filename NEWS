@@ -18,6 +18,20 @@ introduce work queues for the xlib backend that deferred the
 destruction of the X resources until the next time the application
 directly operated on a xlib surface.
 
+Improved error handling patchs
+------------------------------
+Cairo has a fairly unique error-handling scheme that retains error
+status with objects infected.  This requires lots of internal paths
+dealing with error returns and directing the error to the right
+object and releasing resources correctly (like all good libraries do).
+Chris Wilson previsouly stressed the memory allocation paths by
+injecting memory allocations faults into cairo's performance test suite
+and fixed all found issues.  In this release he has done the same, plus
+applying other static and dynamic stress tests on the main cairo test
+suite and fixed a whole lot of other error-handling errors.  We were
+pleased to find that his work fixed a highly-dupped crasher in
+gnome-about: http://bugzilla.gnome.org/show_bug.cgi?id=431990
+
 
 Release 1.4.6 (2007-05-01 Carl Worth <cworth@cworth.org>)
 =========================================================
