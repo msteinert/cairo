@@ -506,6 +506,18 @@ SurfacePatternDrawFunc (void *info, CGContextRef context)
     imageBounds.origin.y = 0;
 
     CGContextDrawImage (context, imageBounds, img);
+    if (spat->base.extend == CAIRO_EXTEND_REFLECT) {
+	/* draw 3 more copies of the image, flipped. */
+	CGContextTranslateCTM (context, 0, 2 * imageBounds.size.height);
+	CGContextScaleCTM (context, 1, -1);
+	CGContextDrawImage (context, imageBounds, img);
+	CGContextTranslateCTM (context, 2 * imageBounds.size.width, 0);
+	CGContextScaleCTM (context, -1, 1);
+	CGContextDrawImage (context, imageBounds, img);
+	CGContextTranslateCTM (context, 0, 2 * imageBounds.size.height);
+	CGContextScaleCTM (context, 1, -1);
+	CGContextDrawImage (context, imageBounds, img);
+    }
 
     CGImageRelease (img);
 
@@ -569,8 +581,24 @@ _cairo_quartz_cairo_repeating_surface_pattern_to_quartz (cairo_quartz_surface_t 
     _cairo_surface_get_extents (pat_surf, &extents);
     pbounds.origin.x = 0;
     pbounds.origin.y = 0;
-    pbounds.size.width = extents.width;
-    pbounds.size.height = extents.height;
+
+    // kjs seems to indicate this should work (setting to 0,0 to avoid
+    // tiling); however, the pattern CTM scaling ends up being NaN in
+    // the pattern draw function if either rw or rh are 0.
+    // XXXtodo get pattern drawing working with extend options
+    // XXXtodo/perf optimize CAIRO_EXTEND_NONE to a single DrawImage instead of a pattern
+    if (spat->base.extend == CAIRO_EXTEND_REFLECT) {
+	/* XXX broken; need to emulate by reflecting the image into 4 quadrants
+	 * and then tiling that
+	 */
+	pbounds.size.width = 2 * extents.width;
+	pbounds.size.height = 2 * extents.height;
+    } else {
+	pbounds.size.width = extents.width;
+	pbounds.size.height = extents.height;
+    }
+    rw = pbounds.size.width;
+    rh = pbounds.size.height;
 
     m = spat->base.matrix;
     cairo_matrix_invert(&m);
@@ -590,38 +618,6 @@ _cairo_quartz_cairo_repeating_surface_pattern_to_quartz (cairo_quartz_surface_t 
     ND((stderr, "  context xform: t: %f %f xx: %f xy: %f yx: %f yy: %f\n", xform.tx, xform.ty, xform.a, xform.b, xform.c, xform.d));
 #endif
 
-    // kjs seems to indicate this should work (setting to 0,0 to avoid
-    // tiling); however, the pattern CTM scaling ends up being NaN in
-    // the pattern draw function if either rw or rh are 0.
-    // XXXtodo get pattern drawing working with extend options
-    // XXXtodo/perf optimize CAIRO_EXTEND_NONE to a single DrawImage instead of a pattern
-#if 0
-    if (spat->base.extend == CAIRO_EXTEND_NONE) {
-	/* XXX wasteful; this will keep drawing the pattern in the
-	 * original location.  We need to set up the clip region
-	 * instead to do this right.
-	 */
-	rw = 0;
-	rh = 0;
-    } else if (spat->base.extend == CAIRO_EXTEND_REPEAT) {
-	rw = extents.width;
-	rh = extents.height;
-    } else if (spat->base.extend == CAIRO_EXTEND_REFLECT) {
-	/* XXX broken; need to emulate by reflecting the image into 4 quadrants
-	 * and then tiling that
-	 */
-	rw = extents.width;
-	rh = extents.height;
-    } else {
-	/* CAIRO_EXTEND_PAD */
-	/* XXX broken. */
-	rw = 0;
-	rh = 0;
-    }
-#else
-    rw = extents.width;
-    rh = extents.height;
-#endif
 
     /* XXX fixme: only do snapshots if the context is for printing, or get rid of the
        other block if it doesn't fafect performance */
