@@ -393,6 +393,13 @@ _cairo_quartz_cairo_gradient_pattern_to_quartz (cairo_pattern_t *abspat)
 	abspat->type != CAIRO_PATTERN_TYPE_RADIAL)
 	return NULL;
 
+    /* bandaid for mozilla bug 379321, also visible in the
+     * linear-gradient-reflect test. 
+     */
+    if (abspat->extend == CAIRO_EXTEND_REFLECT ||
+	abspat->extend == CAIRO_EXTEND_REPEAT)
+	return NULL;
+	
     /* We can only do this if we have an identity pattern matrix;
      * otherwise fall back through to the generic pattern case.
      * XXXperf we could optimize this by creating a pattern with the shading;
