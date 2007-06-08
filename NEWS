@@ -52,6 +52,9 @@ Remove Xsun from the buggy_repeat blacklist (Elaine Xiong)
 
 ATSUI: Fix glyph measurement: faster and more correct (Brian Ewins)
 
+Quartz: fixed 'extend' behaviour for patterns, improved pattern performance,
+and a few smaller correctness fixes. (Brian Ewins, Vladimir Vukicevic)
+
 Release 1.4.6 (2007-05-01 Carl Worth <cworth@cworth.org>)
 =========================================================
 This is the third update in cairo's stable 1.4 series. It comes a
