@@ -54,7 +54,8 @@ cairo_perf_diff_files_SOURCES =	\
 	cairo-stats.h
 
 LDADD = $(top_builddir)/boilerplate/libcairoboilerplate.la \
-	$(top_builddir)/src/libcairo.la
+	$(top_builddir)/src/libcairo.la \
+	$(CAIROPERF_LIBS)
 
 $(top_builddir)/boilerplate/libcairoboilerplate.la: $(top_builddir)/src/libcairo.la
 	cd $(top_builddir)/boilerplate && $(MAKE) $(AM_MAKEFLAGS) libcairoboilerplate.la
