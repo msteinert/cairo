@@ -129,6 +129,19 @@ static const cairo_font_face_backend_t _cairo_atsui_font_face_backend = {
     _cairo_atsui_font_face_scaled_font_create
 };
 
+/**
+ * cairo_atsui_font_face_create_for_atsu_font_id
+ * @font_id: an ATSUFontID for the font.
+ *
+ * Creates a new font for the ATSUI font backend based on an
+ * #ATSUFontID. This font can then be used with
+ * cairo_set_font_face() or cairo_scaled_font_create().
+ *
+ * Return value: a newly created #cairo_font_face_t. Free with
+ *  cairo_font_face_destroy() when you are done using it.
+ *
+ * Since: 1.4
+ **/
 cairo_font_face_t *
 cairo_atsui_font_face_create_for_atsu_font_id (ATSUFontID font_id)
 {
