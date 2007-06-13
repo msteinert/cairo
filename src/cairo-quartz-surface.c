@@ -224,7 +224,7 @@ _cairo_quartz_cairo_path_to_quartz_path (cairo_path_fixed_t *path,
 
 static cairo_status_t
 _cairo_quartz_cairo_path_to_quartz_context (cairo_path_fixed_t *path,
-					     CGContextRef cgc)
+					    quartz_stroke_t *stroke)
 {
     return _cairo_path_fixed_interpret (path,
 					CAIRO_DIRECTION_FORWARD,
@@ -232,7 +232,7 @@ _cairo_quartz_cairo_path_to_quartz_context (cairo_path_fixed_t *path,
 					_cairo_path_to_quartz_context_line_to,
 					_cairo_path_to_quartz_context_curve_to,
 					_cairo_path_to_quartz_context_close_path,
-					cgc);
+					stroke);
 }
 
 /*
