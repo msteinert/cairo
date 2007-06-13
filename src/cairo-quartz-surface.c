@@ -1370,10 +1370,17 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
     ATSFontRef atsfref;
     CGFontRef cgfref;
     CGAffineTransform cairoTextTransform, textTransform, ctm;
+    // XXXtodo/perf: stack storage for glyphs/sizes
+#define STATIC_BUF_SIZE 64
+    CGGlyph glyphs_static[STATIC_BUF_SIZE];
+    CGSize cg_advances_static[STATIC_BUF_SIZE];
+    CGGlyph *cg_glyphs = &glyphs_static[0];
+    CGSize *cg_advances = &cg_advances_static[0];
 
     cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
     cairo_int_status_t rv = CAIRO_STATUS_SUCCESS;
     cairo_quartz_action_t action;
+    float xprev, yprev;
     int i;
 
     if (num_glyphs <= 0)
@@ -1433,29 +1440,22 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
     CGContextSetTextMatrix (surface->cgContext, textTransform);
     CGContextSetFontSize (surface->cgContext, 1.0);
 
-    // XXXtodo/perf: stack storage for glyphs/sizes
-#define STATIC_BUF_SIZE 64
-    CGGlyph glyphs_static[STATIC_BUF_SIZE];
-    CGSize cg_advances_static[STATIC_BUF_SIZE];
-    CGGlyph *cg_glyphs = &glyphs_static[0];
-    CGSize *cg_advances = &cg_advances_static[0];
-
     if (num_glyphs > STATIC_BUF_SIZE) {
 	cg_glyphs = (CGGlyph*) malloc(sizeof(CGGlyph) * num_glyphs);
 	cg_advances = (CGSize*) malloc(sizeof(CGSize) * num_glyphs);
     }
 
-    float xprev = glyphs[0].x;
-    float yprev = glyphs[0].y;
+    xprev = glyphs[0].x;
+    yprev = glyphs[0].y;
 
     cg_glyphs[0] = glyphs[0].index;
     cg_advances[0].width = 0;
     cg_advances[0].height = 0;
 
     for (i = 1; i < num_glyphs; i++) {
-	cg_glyphs[i] = glyphs[i].index;
 	float xf = glyphs[i].x;
 	float yf = glyphs[i].y;
+	cg_glyphs[i] = glyphs[i].index;
 	cg_advances[i-1].width = xf - xprev;
 	cg_advances[i-1].height = yf - yprev;
 	xprev = xf;
