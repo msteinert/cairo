@@ -106,40 +106,6 @@ typedef struct _quartz_stroke {
     cairo_matrix_t *ctm_inverse;
 } quartz_stroke_t;
 
-/* cairo path -> mutable path */
-static cairo_status_t
-_cairo_path_to_quartz_path_move_to (void *closure, cairo_point_t *point)
-{
-    CGPathMoveToPoint ((CGMutablePathRef) closure, NULL,
-		       _cairo_fixed_to_double(point->x), _cairo_fixed_to_double(point->y));
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_cairo_path_to_quartz_path_line_to (void *closure, cairo_point_t *point)
-{
-    CGPathAddLineToPoint ((CGMutablePathRef) closure, NULL,
-			  _cairo_fixed_to_double(point->x), _cairo_fixed_to_double(point->y));
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_cairo_path_to_quartz_path_curve_to (void *closure, cairo_point_t *p0, cairo_point_t *p1, cairo_point_t *p2)
-{
-    CGPathAddCurveToPoint ((CGMutablePathRef) closure, NULL,
-			   _cairo_fixed_to_double(p0->x), _cairo_fixed_to_double(p0->y),
-			   _cairo_fixed_to_double(p1->x), _cairo_fixed_to_double(p1->y),
-			   _cairo_fixed_to_double(p2->x), _cairo_fixed_to_double(p2->y));
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_cairo_path_to_quartz_path_close_path (void *closure)
-{
-    CGPathCloseSubpath ((CGMutablePathRef) closure);
-    return CAIRO_STATUS_SUCCESS;
-}
-
 /* cairo path -> execute in context */
 static cairo_status_t
 _cairo_path_to_quartz_context_move_to (void *closure, cairo_point_t *point)
@@ -207,19 +173,6 @@ _cairo_path_to_quartz_context_close_path (void *closure)
     quartz_stroke_t *stroke = (quartz_stroke_t *)closure;
     CGContextClosePath (stroke->cgContext);
     return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-_cairo_quartz_cairo_path_to_quartz_path (cairo_path_fixed_t *path,
-					  CGMutablePathRef cgPath)
-{
-    return _cairo_path_fixed_interpret (path,
-					CAIRO_DIRECTION_FORWARD,
-					_cairo_path_to_quartz_path_move_to,
-					_cairo_path_to_quartz_path_line_to,
-					_cairo_path_to_quartz_path_curve_to,
-					_cairo_path_to_quartz_path_close_path,
-					cgPath);
 }
 
 static cairo_status_t
