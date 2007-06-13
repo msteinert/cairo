@@ -767,6 +767,38 @@ _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
+static void
+cairo_format_get_masks (cairo_format_t  format,
+			uint32_t       *bpp,
+			uint32_t       *red,
+			uint32_t       *green,
+			uint32_t       *blue)
+{
+    *red = 0x0;
+    *green = 0x0;
+    *blue = 0x0;
+    
+    switch (format)
+    {
+    case CAIRO_FORMAT_ARGB32:
+    case CAIRO_FORMAT_RGB24:
+    default:
+	*bpp =   32;
+	*red =   0x00ff0000;
+	*green = 0x0000ff00;
+	*blue =  0x000000ff;
+	break;
+	
+    case CAIRO_FORMAT_A8:
+	*bpp = 8;
+	break;
+	
+    case CAIRO_FORMAT_A1:
+	*bpp = 1;
+	break;
+    }
+}
+
 static cairo_status_t
 _draw_image_surface (cairo_xlib_surface_t   *surface,
 		     cairo_image_surface_t  *image,
@@ -778,13 +810,12 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 		     int                    dst_y)
 {
     XImage ximage;
-    unsigned int bpp, alpha, red, green, blue;
+    uint32_t bpp, red, green, blue;
     int native_byte_order = _native_byte_order_lsb () ? LSBFirst : MSBFirst;
     cairo_status_t status;
 
-    pixman_format_get_masks (pixman_image_get_format (image->pixman_image),
-			     &bpp, &alpha, &red, &green, &blue);
-
+    cairo_format_get_masks (image->format, &bpp, &red, &green, &blue);
+    
     ximage.width = image->width;
     ximage.height = image->height;
     ximage.format = ZPixmap;
@@ -1755,7 +1786,7 @@ _cairo_xlib_surface_set_clip_region (void              *abstract_surface,
 	XRectangle *rects = NULL;
 	int n_boxes, i;
 
-	n_boxes = pixman_region_num_rects (region);
+	n_boxes = pixman_region_n_rects (region);
 	if (n_boxes > ARRAY_LENGTH (surface->embedded_clip_rects)) {
 	    rects = malloc (sizeof(XRectangle) * n_boxes);
 	    if (rects == NULL)
@@ -1764,7 +1795,7 @@ _cairo_xlib_surface_set_clip_region (void              *abstract_surface,
 	    rects = surface->embedded_clip_rects;
 	}
 
-	boxes = pixman_region_rects (region);
+	boxes = pixman_region_rectangles (region, NULL);
 
 	for (i = 0; i < n_boxes; i++) {
 	    rects[i].x = boxes[i].x1;

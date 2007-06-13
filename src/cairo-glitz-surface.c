@@ -110,6 +110,46 @@ _cairo_glitz_surface_create_similar (void	    *abstract_src,
     return crsurface;
 }
 
+static cairo_bool_t
+_CAIRO_MASK_FORMAT (cairo_format_masks_t *masks, cairo_format_t *format)
+{
+    switch (masks->bpp) {
+    case 32:
+	if (masks->alpha_mask == 0xff000000 &&
+	    masks->red_mask == 0x00ff0000 &&
+	    masks->green_mask == 0x0000ff00 &&
+	    masks->blue_mask == 0x000000ff)
+	{
+	    *format = CAIRO_FORMAT_ARGB32;
+	    return TRUE;
+	}
+	if (masks->alpha_mask == 0x00000000 &&
+	    masks->red_mask == 0x00ff0000 &&
+	    masks->green_mask == 0x0000ff00 &&
+	    masks->blue_mask == 0x000000ff)
+	{
+	    *format = CAIRO_FORMAT_RGB24;
+	    return TRUE;
+	}
+	break;
+    case 8:
+	if (masks->alpha_mask == 0xff)
+	{
+	    *format = CAIRO_FORMAT_A8;
+	    return TRUE;
+	}
+	break;
+    case 1:
+	if (masks->alpha_mask == 0x1)
+	{
+	    *format = CAIRO_FORMAT_A1;
+	    return TRUE;
+	}
+	break;
+    }
+    return FALSE;
+}
+
 static cairo_status_t
 _cairo_glitz_surface_get_image (cairo_glitz_surface_t   *surface,
 				cairo_rectangle_int16_t *interest,
@@ -120,9 +160,10 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t   *surface,
     int			  x1, y1, x2, y2;
     int			  width, height;
     unsigned char	  *pixels;
-    cairo_format_masks_t  format;
+    cairo_format_masks_t  masks;
     glitz_buffer_t	  *buffer;
     glitz_pixel_format_t  pf;
+    cairo_format_t	  format;
 
     x1 = 0;
     y1 = 0;
@@ -160,41 +201,41 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t   *surface,
 
     if (surface->format->color.fourcc == GLITZ_FOURCC_RGB) {
 	if (surface->format->color.red_size > 0) {
-	    format.bpp = 32;
+	    masks.bpp = 32;
 
 	    if (surface->format->color.alpha_size > 0)
-		format.alpha_mask = 0xff000000;
+		masks.alpha_mask = 0xff000000;
 	    else
-		format.alpha_mask = 0x0;
+		masks.alpha_mask = 0x0;
 
-	    format.red_mask = 0xff0000;
-	    format.green_mask = 0xff00;
-	    format.blue_mask = 0xff;
+	    masks.red_mask = 0xff0000;
+	    masks.green_mask = 0xff00;
+	    masks.blue_mask = 0xff;
 	} else {
-	    format.bpp = 8;
-	    format.blue_mask = format.green_mask = format.red_mask = 0x0;
-	    format.alpha_mask = 0xff;
+	    masks.bpp = 8;
+	    masks.blue_mask = masks.green_mask = masks.red_mask = 0x0;
+	    masks.alpha_mask = 0xff;
 	}
     } else {
-	format.bpp = 32;
-	format.alpha_mask = 0xff000000;
-	format.red_mask = 0xff0000;
-	format.green_mask = 0xff00;
-	format.blue_mask = 0xff;
+	masks.bpp = 32;
+	masks.alpha_mask = 0xff000000;
+	masks.red_mask = 0xff0000;
+	masks.green_mask = 0xff00;
+	masks.blue_mask = 0xff;
     }
 
     pf.fourcc = GLITZ_FOURCC_RGB;
-    pf.masks.bpp = format.bpp;
-    pf.masks.alpha_mask = format.alpha_mask;
-    pf.masks.red_mask = format.red_mask;
-    pf.masks.green_mask = format.green_mask;
-    pf.masks.blue_mask = format.blue_mask;
+    pf.masks.bpp = masks.bpp;
+    pf.masks.alpha_mask = masks.alpha_mask;
+    pf.masks.red_mask = masks.red_mask;
+    pf.masks.green_mask = masks.green_mask;
+    pf.masks.blue_mask = masks.blue_mask;
     pf.xoffset = 0;
     pf.skip_lines = 0;
 
     /* XXX: we should eventually return images with negative stride,
        need to verify that libpixman have no problem with this first. */
-    pf.bytes_per_line = (((width * format.bpp) / 8) + 3) & -4;
+    pf.bytes_per_line = (((width * masks.bpp) / 8) + 3) & -4;
     pf.scanline_order = GLITZ_PIXEL_SCANLINE_ORDER_TOP_DOWN;
 
     pixels = malloc (height * pf.bytes_per_line);
@@ -230,22 +271,45 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t   *surface,
 	glitz_surface_set_clip_region (surface->surface, 0, 0, box, n);
     }
 
-    image = (cairo_image_surface_t *)
-	_cairo_image_surface_create_with_masks (pixels,
-						&format,
-						width, height,
-						pf.bytes_per_line);
-    if (image->base.status)
-    {
-	free (pixels);
-	return CAIRO_STATUS_NO_MEMORY;
+    /*
+     * Prefer to use a standard pixman format instead of the
+     * general masks case.
+     */
+    if (_CAIRO_MASK_FORMAT (&masks, &format)) {
+	image = (cairo_image_surface_t *)
+	    cairo_image_surface_create_for_data (data,
+						 format,
+						 x2 - x1,
+						 y2 - y1,
+						 bytes_per_line);
+	if (image->base.status)
+	    goto FAIL;
+    } else {
+	/*
+	 * XXX This can't work.  We must convert the data to one of the
+	 * supported pixman formats.  Pixman needs another function
+	 * which takes data in an arbitrary format and converts it
+	 * to something supported by that library.
+	 */
+	image = (cairo_image_surface_t *)
+	    _cairo_image_surface_create_with_masks (data,
+						    &masks,
+						    x2 - x1,
+						    y2 - y1,
+						    bytes_per_line);
+	if (image->base.status)
+	    goto FAIL;
     }
-
+    
     _cairo_image_surface_assume_ownership_of_data (image);
 
     *image_out = image;
 
     return CAIRO_STATUS_SUCCESS;
+
+FAIL:
+    free (pixels);
+    return CAIRO_STATUS_NO_MEMORY;
 }
 
 static cairo_status_t

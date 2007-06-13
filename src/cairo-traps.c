@@ -601,7 +601,7 @@ _cairo_traps_extract_region (cairo_traps_t     *traps,
     pixman_box16_t static_boxes[NUM_STATIC_BOXES];
     pixman_box16_t *boxes;
     int i, box_count;
-    pixman_region_status_t status;
+    pixman_bool_t status;
 
     for (i = 0; i < traps->num_traps; i++)
 	if (!(traps->traps[i].left.p1.x == traps->traps[i].left.p2.x
@@ -650,7 +650,7 @@ _cairo_traps_extract_region (cairo_traps_t     *traps,
     if (boxes != static_boxes)
 	free (boxes);
 
-    if (status != PIXMAN_REGION_STATUS_SUCCESS) {
+    if (!status) {
 	pixman_region_fini (region);
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }

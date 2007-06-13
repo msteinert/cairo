@@ -1231,8 +1231,8 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
 			    const cairo_color_t    *color,
 			    pixman_region16_t      *region)
 {
-    int num_rects = pixman_region_num_rects (region);
-    pixman_box16_t *boxes = pixman_region_rects (region);
+    int num_rects;
+    pixman_box16_t *boxes;
     cairo_rectangle_int16_t stack_rects[CAIRO_STACK_BUFFER_SIZE / sizeof (cairo_rectangle_int16_t)];
     cairo_rectangle_int16_t *rects;
     cairo_status_t status;
@@ -1240,6 +1240,8 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
 
     assert (! surface->is_snapshot);
 
+    boxes = pixman_region_rectangles (region, &num_rects);
+    
     if (!num_rects)
 	return CAIRO_STATUS_SUCCESS;
 
@@ -1982,8 +1984,7 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
     has_drawn_region = TRUE;
     has_clear_region = TRUE;
 
-    if (PIXMAN_REGION_STATUS_SUCCESS !=
-        pixman_region_subtract (&clear_region, &clear_region, &drawn_region)) {
+    if (!pixman_region_subtract (&clear_region, &clear_region, &drawn_region)) {
         status = CAIRO_STATUS_NO_MEMORY;
         goto CLEANUP_REGIONS;
     }

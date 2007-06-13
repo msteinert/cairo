@@ -34,7 +34,7 @@
 #endif
 #include <errno.h>
 #include <string.h>
-#include <pixman.h>
+#include <pixman/pixman.h>
 
 #include "cairo-test.h"
 
@@ -66,17 +66,17 @@ buffer_diff_core (unsigned char *_buf_a,
 		  int		width,
 		  int		height,
 		  int		stride,
-		  pixman_bits_t mask,
+		  uint32_t mask,
 		  buffer_diff_result_t *result_ret)
 {
     int x, y;
-    pixman_bits_t *row_a, *row_b, *row;
+    uint32_t *row_a, *row_b, *row;
     buffer_diff_result_t result = {0, 0};
-    pixman_bits_t *buf_a = (pixman_bits_t*)_buf_a;
-    pixman_bits_t *buf_b = (pixman_bits_t*)_buf_b;
-    pixman_bits_t *buf_diff = (pixman_bits_t*)_buf_diff;
+    uint32_t *buf_a = (uint32_t*)_buf_a;
+    uint32_t *buf_b = (uint32_t*)_buf_b;
+    uint32_t *buf_diff = (uint32_t*)_buf_diff;
 
-    stride /= sizeof(pixman_bits_t);
+    stride /= sizeof(uint32_t);
     for (y = 0; y < height; y++)
     {
 	row_a = buf_a + y * stride;
@@ -87,7 +87,7 @@ buffer_diff_core (unsigned char *_buf_a,
 	    /* check if the pixels are the same */
 	    if ((row_a[x] & mask) != (row_b[x] & mask)) {
 		int channel;
-		pixman_bits_t diff_pixel = 0;
+		uint32_t diff_pixel = 0;
 
 		/* calculate a difference value for all 4 channels */
 		for (channel = 0; channel < 4; channel++) {

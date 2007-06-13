@@ -258,10 +258,10 @@ _cairo_pattern_init_linear (cairo_linear_pattern_t *pattern,
 {
     _cairo_pattern_init_gradient (&pattern->base, CAIRO_PATTERN_TYPE_LINEAR);
 
-    pattern->gradient.p1.x = _cairo_fixed_from_double (x0);
-    pattern->gradient.p1.y = _cairo_fixed_from_double (y0);
-    pattern->gradient.p2.x = _cairo_fixed_from_double (x1);
-    pattern->gradient.p2.y = _cairo_fixed_from_double (y1);
+    pattern->p1.x = _cairo_fixed_from_double (x0);
+    pattern->p1.y = _cairo_fixed_from_double (y0);
+    pattern->p2.x = _cairo_fixed_from_double (x1);
+    pattern->p2.y = _cairo_fixed_from_double (y1);
 }
 
 void
@@ -271,12 +271,12 @@ _cairo_pattern_init_radial (cairo_radial_pattern_t *pattern,
 {
     _cairo_pattern_init_gradient (&pattern->base, CAIRO_PATTERN_TYPE_RADIAL);
 
-    pattern->gradient.c1.x	   = _cairo_fixed_from_double (cx0);
-    pattern->gradient.c1.y	   = _cairo_fixed_from_double (cy0);
-    pattern->gradient.c1.radius = _cairo_fixed_from_double (fabs (radius0));
-    pattern->gradient.c2.x	   = _cairo_fixed_from_double (cx1);
-    pattern->gradient.c2.y	   = _cairo_fixed_from_double (cy1);
-    pattern->gradient.c2.radius = _cairo_fixed_from_double (fabs (radius1));
+    pattern->c1.x = _cairo_fixed_from_double (cx0);
+    pattern->c1.y = _cairo_fixed_from_double (cy0);
+    pattern->radius2 = _cairo_fixed_from_double (fabs (radius0));
+    pattern->c2.x = _cairo_fixed_from_double (cx1);
+    pattern->c2.y = _cairo_fixed_from_double (cy1);
+    pattern->radius2 = _cairo_fixed_from_double (fabs (radius1));
 }
 
 /* We use a small freed pattern cache here, because we don't want to
@@ -1089,10 +1089,10 @@ _cairo_linear_pattern_classify (cairo_linear_pattern_t *pattern,
      * pattern. We actually only need 3/4 corners, so we skip the
      * fourth.
      */
-    point0.x = _cairo_fixed_to_double (pattern->gradient.p1.x);
-    point0.y = _cairo_fixed_to_double (pattern->gradient.p1.y);
-    point1.x = _cairo_fixed_to_double (pattern->gradient.p2.x);
-    point1.y = _cairo_fixed_to_double (pattern->gradient.p2.y);
+    point0.x = _cairo_fixed_to_double (pattern->p1.x);
+    point0.y = _cairo_fixed_to_double (pattern->p1.y);
+    point1.x = _cairo_fixed_to_double (pattern->p2.x);
+    point1.y = _cairo_fixed_to_double (pattern->p2.y);
 
     _cairo_matrix_get_affine (&pattern->base.base.matrix,
 			      &a, &b, &c, &d, &tx, &ty);
@@ -1147,7 +1147,8 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     {
 	cairo_linear_pattern_t *linear = (cairo_linear_pattern_t *) pattern;
 
-	pixman_image = pixman_image_create_linear_gradient (&linear->gradient,
+	pixman_image = pixman_image_create_linear_gradient (&linear->p1,
+							    &linear->p2,
 							    pattern->stops,
 							    pattern->n_stops);
     }
@@ -1155,7 +1156,10 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     {
 	cairo_radial_pattern_t *radial = (cairo_radial_pattern_t *) pattern;
 
-	pixman_image = pixman_image_create_radial_gradient (&radial->gradient,
+	pixman_image = pixman_image_create_radial_gradient (&radial->c1,
+							    &radial->c2,
+							    radial->radius1,
+							    radial->radius2,
 							    pattern->stops,
 							    pattern->n_stops);
     }
@@ -1170,7 +1174,7 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
 							  CAIRO_FORMAT_ARGB32);
 	if (image->base.status)
 	{
-	    pixman_image_destroy (pixman_image);
+	    pixman_image_unref (pixman_image);
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
 
@@ -1212,16 +1216,16 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     image = (cairo_image_surface_t *)
 	cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
     if (image->base.status) {
-	pixman_image_destroy (pixman_image);
+	pixman_image_unref (pixman_image);
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
-    pixman_image_set_filter (pixman_image, PIXMAN_FILTER_BILINEAR);
+    pixman_image_set_filter (pixman_image, PIXMAN_FILTER_BILINEAR, NULL, 0);
 
     _cairo_matrix_to_pixman_matrix (&pattern->base.matrix, &pixman_transform);
     if (pixman_image_set_transform (pixman_image, &pixman_transform)) {
 	cairo_surface_destroy (&image->base);
-	pixman_image_destroy (pixman_image);
+	pixman_image_unref (pixman_image);
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
@@ -1240,16 +1244,16 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
 	break;
     }
 
-    pixman_composite (PIXMAN_OPERATOR_SRC,
-		      pixman_image,
-		      NULL,
-		      image->pixman_image,
-		      x, y,
-		      0, 0,
-		      0, 0,
-		      width, height);
+    pixman_image_composite (PIXMAN_OP_SRC,
+			    pixman_image,
+			    NULL,
+			    image->pixman_image,
+			    x, y,
+			    0, 0,
+			    0, 0,
+			    width, height);
 
-    pixman_image_destroy (pixman_image);
+    pixman_image_unref (pixman_image);
 
     status = _cairo_surface_clone_similar (dst, &image->base,
 					   0, 0, width, height, out);
@@ -2159,13 +2163,13 @@ cairo_pattern_get_linear_points (cairo_pattern_t *pattern,
 	return CAIRO_STATUS_PATTERN_TYPE_MISMATCH;
 
     if (x0)
-	*x0 = _cairo_fixed_to_double (linear->gradient.p1.x);
+	*x0 = _cairo_fixed_to_double (linear->p1.x);
     if (y0)
-	*y0 = _cairo_fixed_to_double (linear->gradient.p1.y);
+	*y0 = _cairo_fixed_to_double (linear->p1.y);
     if (x1)
-	*x1 = _cairo_fixed_to_double (linear->gradient.p2.x);
+	*x1 = _cairo_fixed_to_double (linear->p2.x);
     if (y1)
-	*y1 = _cairo_fixed_to_double (linear->gradient.p2.y);
+	*y1 = _cairo_fixed_to_double (linear->p2.y);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -2200,17 +2204,17 @@ cairo_pattern_get_radial_circles (cairo_pattern_t *pattern,
 	return CAIRO_STATUS_PATTERN_TYPE_MISMATCH;
 
     if (x0)
-	*x0 = _cairo_fixed_to_double (radial->gradient.c1.x);
+	*x0 = _cairo_fixed_to_double (radial->c1.x);
     if (y0)
-	*y0 = _cairo_fixed_to_double (radial->gradient.c1.y);
+	*y0 = _cairo_fixed_to_double (radial->c1.y);
     if (r0)
-	*r0 = _cairo_fixed_to_double (radial->gradient.c1.radius);
+	*r0 = _cairo_fixed_to_double (radial->radius1);
     if (x1)
-	*x1 = _cairo_fixed_to_double (radial->gradient.c2.x);
+	*x1 = _cairo_fixed_to_double (radial->c2.x);
     if (y1)
-	*y1 = _cairo_fixed_to_double (radial->gradient.c2.y);
+	*y1 = _cairo_fixed_to_double (radial->c2.y);
     if (r1)
-	*r1 = _cairo_fixed_to_double (radial->gradient.c2.radius);
+	*r1 = _cairo_fixed_to_double (radial->radius2);
 
     return CAIRO_STATUS_SUCCESS;
 }

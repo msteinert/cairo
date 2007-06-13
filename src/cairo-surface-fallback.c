@@ -416,7 +416,7 @@ _composite_trap_region (cairo_clip_t            *clip,
     cairo_status_t status;
     cairo_pattern_union_t solid_pattern;
     cairo_pattern_union_t mask;
-    int num_rects = pixman_region_num_rects (trap_region);
+    int num_rects = pixman_region_n_rects (trap_region);
     unsigned int clip_serial;
     cairo_surface_t *clip_surface = clip ? clip->surface : NULL;
 
@@ -585,8 +585,7 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
 
             _cairo_region_extents_rectangle (&clear_region,  &extents);
 
-            if (PIXMAN_REGION_STATUS_SUCCESS !=
-                pixman_region_subtract (&clear_region, &clear_region, &trap_region)) {
+            if (!pixman_region_subtract (&clear_region, &clear_region, &trap_region)) {
                 status = CAIRO_STATUS_NO_MEMORY;
                 goto out;
             }

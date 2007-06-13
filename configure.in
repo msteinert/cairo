@@ -102,6 +102,7 @@ if test "x$PKG_CONFIG" = x; then
 	AC_MSG_ERROR([pkg-config >= $PKGCONFIG_REQUIRED required but not found (http://pkgconfig.freedesktop.org/)])
 fi
 
+
 dnl ===========================================================================
 dnl
 dnl cairo_cache_version should be increased every time that the backend
@@ -232,8 +233,15 @@ CAIRO_NONPKGCONFIG_LIBS="$LIBM"
 CAIRO_LDADD=""
 CAIRO_CFLAGS=$CAIRO_NONPKGCONFIG_CFLAGS
 CAIRO_LIBS=$CAIRO_NONPKGCONFIG_LIBS
-PIXMAN_CFLAGS=""
-PIXMAN_LDADD=""
+
+dnl ===========================================================================
+
+PKG_CHECK_MODULES(PIXMAN, pixman >= 0.9.2)
+
+CAIRO_NONPKGCONFIG_CFLAGS="PIXMAN_CFLAGS $CAIRO_NONPKGCONFIG_CFLAGS"
+CAIRO_NONPKGCONFIG_LIBS="PIXMAN_LIBS $CAIRO_NONPKGCONFIG_LIBS"
+CAIRO_CFLAGS="$PIXMAN_CFLAGS $CAIRO_CFLAGS"
+CAIRO_LIBS="$PIXMAN_LIBS $CAIRO_LIBS"
 
 dnl ===========================================================================
 
@@ -919,8 +927,6 @@ _EOF
 AC_CONFIG_FILES([
 Makefile
 boilerplate/Makefile
-pixman/Makefile
-pixman/src/Makefile
 src/Makefile
 test/Makefile
 test/pdiff/Makefile

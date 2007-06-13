@@ -1583,7 +1583,7 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 
     i = 0;
     for (y = 0; y < opaque_image->height; y++) {
-	pixman_bits_t *pixel = (pixman_bits_t *) (opaque_image->data + y * opaque_image->stride);
+	uint32_t *pixel = (uint32_t *) (opaque_image->data + y * opaque_image->stride);
 	for (x = 0; x < opaque_image->width; x++, pixel++) {
 	    rgb[i++] = (*pixel & 0x00ff0000) >> 16;
 	    rgb[i++] = (*pixel & 0x0000ff00) >>  8;

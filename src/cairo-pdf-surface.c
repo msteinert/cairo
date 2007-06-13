@@ -698,7 +698,7 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t		*surface,
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     char *alpha, *alpha_compressed;
     unsigned long alpha_size, alpha_compressed_size;
-    pixman_bits_t *pixel;
+    uint32_t *pixel;
     int i, x, y;
     cairo_bool_t opaque;
     uint8_t a;
@@ -716,7 +716,7 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t		*surface,
     opaque = TRUE;
     i = 0;
     for (y = 0; y < image->height; y++) {
-	pixel = (pixman_bits_t *) (image->data + y * image->stride);
+	pixel = (uint32_t *) (image->data + y * image->stride);
 
 	for (x = 0; x < image->width; x++, pixel++) {
 	    a = (*pixel & 0xff000000) >> 24;
@@ -769,7 +769,7 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t   *surface,
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     char *rgb, *compressed;
     unsigned long rgb_size, compressed_size;
-    pixman_bits_t *pixel;
+    uint32_t *pixel;
     int i, x, y;
     cairo_pdf_resource_t smask = {0}; /* squelch bogus compiler warning */
     cairo_bool_t need_smask;
@@ -795,7 +795,7 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t   *surface,
 
     i = 0;
     for (y = 0; y < image->height; y++) {
-	pixel = (pixman_bits_t *) (image->data + y * image->stride);
+	pixel = (uint32_t *) (image->data + y * image->stride);
 
 	for (x = 0; x < image->width; x++, pixel++) {
 	    /* XXX: We're un-premultiplying alpha here. My reading of the PDF
@@ -1442,10 +1442,10 @@ _cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t    *surface,
 	return status;
 
     cairo_matrix_multiply (&pat_to_pdf, &pat_to_pdf, &surface->cairo_to_pdf);
-    x1 = _cairo_fixed_to_double (pattern->gradient.p1.x);
-    y1 = _cairo_fixed_to_double (pattern->gradient.p1.y);
-    x2 = _cairo_fixed_to_double (pattern->gradient.p2.x);
-    y2 = _cairo_fixed_to_double (pattern->gradient.p2.y);
+    x1 = _cairo_fixed_to_double (pattern->p1.x);
+    y1 = _cairo_fixed_to_double (pattern->p1.y);
+    x2 = _cairo_fixed_to_double (pattern->p2.x);
+    y2 = _cairo_fixed_to_double (pattern->p2.y);
 
     pattern_resource = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
@@ -1564,12 +1564,12 @@ _cairo_pdf_surface_emit_radial_pattern (cairo_pdf_surface_t    *surface,
 	return status;
 
     cairo_matrix_multiply (&pat_to_pdf, &pat_to_pdf, &surface->cairo_to_pdf);
-    x1 = _cairo_fixed_to_double (pattern->gradient.c1.x);
-    y1 = _cairo_fixed_to_double (pattern->gradient.c1.y);
-    r1 = _cairo_fixed_to_double (pattern->gradient.c1.radius);
-    x2 = _cairo_fixed_to_double (pattern->gradient.c2.x);
-    y2 = _cairo_fixed_to_double (pattern->gradient.c2.y);
-    r2 = _cairo_fixed_to_double (pattern->gradient.c2.radius);
+    x1 = _cairo_fixed_to_double (pattern->c1.x);
+    y1 = _cairo_fixed_to_double (pattern->c1.y);
+    r1 = _cairo_fixed_to_double (pattern->radius1);
+    x2 = _cairo_fixed_to_double (pattern->c2.x);
+    y2 = _cairo_fixed_to_double (pattern->c2.y);
+    r2 = _cairo_fixed_to_double (pattern->radius2);
 
     pattern_resource = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
@@ -3059,12 +3059,12 @@ _gradient_pattern_supported (cairo_pattern_t *pattern)
         double x1, y1, x2, y2, r1, r2, d;
         cairo_radial_pattern_t *radial = (cairo_radial_pattern_t *) pattern;
 
-        x1 = _cairo_fixed_to_double (radial->gradient.c1.x);
-        y1 = _cairo_fixed_to_double (radial->gradient.c1.y);
-        r1 = _cairo_fixed_to_double (radial->gradient.c1.radius);
-        x2 = _cairo_fixed_to_double (radial->gradient.c2.x);
-        y2 = _cairo_fixed_to_double (radial->gradient.c2.y);
-        r2 = _cairo_fixed_to_double (radial->gradient.c2.radius);
+        x1 = _cairo_fixed_to_double (radial->c1.x);
+        y1 = _cairo_fixed_to_double (radial->c1.y);
+        r1 = _cairo_fixed_to_double (radial->radius1);
+        x2 = _cairo_fixed_to_double (radial->c2.x);
+        y2 = _cairo_fixed_to_double (radial->c2.y);
+        r2 = _cairo_fixed_to_double (radial->radius2);
 
         d = sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1));
         if (d > fabs(r2 - r1)) {

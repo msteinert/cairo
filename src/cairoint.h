@@ -64,7 +64,7 @@
 #include <stdio.h>
 
 #include "cairo.h"
-#include <pixman.h>
+#include <pixman/pixman.h>
 
 #ifdef _MSC_VER
 #define snprintf _snprintf
@@ -1005,13 +1005,21 @@ typedef struct _cairo_gradient_pattern {
 typedef struct _cairo_linear_pattern {
     cairo_gradient_pattern_t base;
 
-    pixman_linear_gradient_t gradient;
+    pixman_point_fixed_t     p1;
+    pixman_point_fixed_t     p2;
+    pixman_gradient_stop_t  *stops;
+    int			     n_stops;
 } cairo_linear_pattern_t;
 
 typedef struct _cairo_radial_pattern {
     cairo_gradient_pattern_t base;
 
-    pixman_radial_gradient_t gradient;
+    pixman_point_fixed_t     c1;
+    pixman_point_fixed_t     c2;
+    pixman_fixed_t           radius1;
+    pixman_fixed_t           radius2;
+    pixman_gradient_stop_t  *stops;
+    int                      n_stops;
 } cairo_radial_pattern_t;
 
 typedef union {

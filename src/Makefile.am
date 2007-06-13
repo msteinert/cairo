@@ -253,11 +253,11 @@ libcairo_la_SOURCES =				\
 
 libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined $(export_symbols)
 
-INCLUDES = -I$(srcdir) -I$(top_srcdir)/pixman/src $(CAIRO_CFLAGS)
+INCLUDES = -I$(srcdir) $(CAIRO_CFLAGS)
 
-libcairo_la_LIBADD = $(top_builddir)/pixman/src/libpixman.la $(CAIRO_LIBS) $(noinst_LTLIBRARIES) $(CAIRO_LDADD)
+libcairo_la_LIBADD = $(CAIRO_LIBS) $(noinst_LTLIBRARIES) $(CAIRO_LDADD)
 
-libcairo_la_DEPENDENCIES = $(cairo_def_dependency) $(top_builddir)/pixman/src/libpixman.la $(noinst_LTLIBRARIES)
+libcairo_la_DEPENDENCIES = $(cairo_def_dependency) $(noinst_LTLIBRARIES)
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = cairo.pc $(backend_pkgconfigs)
