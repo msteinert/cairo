@@ -482,10 +482,10 @@ _cairo_quartz_surface_to_quartz (cairo_surface_t *target, cairo_surface_t *pat_s
 	 */
 
 	cairo_surface_t *ref_type = target;
-	if (ref_type == NULL)
-	    ref_type = cairo_quartz_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
 	cairo_surface_t *new_surf = NULL;
 	cairo_rectangle_int16_t rect;
+	if (ref_type == NULL)
+	    ref_type = cairo_quartz_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
 
 	_cairo_surface_get_extents (pat_surf, &rect);
 
@@ -517,6 +517,7 @@ SurfacePatternDrawFunc (void *info, CGContextRef context)
 
     cairo_quartz_surface_t *quartz_surf = _cairo_quartz_surface_to_quartz (NULL, pat_surf);
     CGImageRef img = CGBitmapContextCreateImage (quartz_surf->cgContext);
+    CGRect imageBounds;
 
     if (!img) {
 	// ... give up.
@@ -535,7 +536,6 @@ SurfacePatternDrawFunc (void *info, CGContextRef context)
 	CGContextScaleCTM (context, 1, -1);
     }
 
-    CGRect imageBounds;
     imageBounds.size = CGSizeMake (CGImageGetWidth(img), CGImageGetHeight(img));
     imageBounds.origin.x = 0;
     imageBounds.origin.y = 0;
@@ -719,7 +719,7 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
     {
 	    cairo_surface_pattern_t *spat = (cairo_surface_pattern_t *) source;
 	    cairo_surface_t *pat_surf = spat->surface;
-	    cairo_quartz_surface_t *quartz_surf = _cairo_quartz_surface_to_quartz (surface, pat_surf);
+	    cairo_quartz_surface_t *quartz_surf = _cairo_quartz_surface_to_quartz ((cairo_surface_t *) surface, pat_surf);
 	    CGImageRef img = CGBitmapContextCreateImage (quartz_surf->cgContext);
 	    cairo_matrix_t m = spat->base.matrix;
 	    cairo_rectangle_int16_t extents;
@@ -739,18 +739,18 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
 
 	    return DO_IMAGE;
     } else if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	float patternAlpha = 1.0f;
+	CGColorSpaceRef patternSpace;
+
 	CGPatternRef pattern = _cairo_quartz_cairo_repeating_surface_pattern_to_quartz (surface, source);
 	if (!pattern)
 	    return DO_UNSUPPORTED;
-
-	float patternAlpha = 1.0f;
 
 	// Save before we change the pattern, colorspace, etc. so that
 	// we can restore and make sure that quartz releases our
 	// pattern (which may be stack allocated)
 	CGContextSaveGState(surface->cgContext);
 
-	CGColorSpaceRef patternSpace;
 	patternSpace = CGColorSpaceCreatePattern(NULL);
 	CGContextSetFillColorSpace (surface->cgContext, patternSpace);
 	CGContextSetFillPattern (surface->cgContext, pattern, &patternAlpha);
@@ -1041,7 +1041,6 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
 				      int              height,
 				      cairo_surface_t **clone_out)
 {
-    cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
     cairo_quartz_surface_t *new_surface = NULL;
     cairo_format_t new_format;
 
@@ -1367,6 +1366,11 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 				    int num_glyphs,
 				    cairo_scaled_font_t *scaled_font)
 {
+    ATSUFontID fid;
+    ATSFontRef atsfref;
+    CGFontRef cgfref;
+    CGAffineTransform cairoTextTransform, textTransform, ctm;
+
     cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
     cairo_int_status_t rv = CAIRO_STATUS_SUCCESS;
     cairo_quartz_action_t action;
@@ -1396,9 +1400,9 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 
     CGContextSetCompositeOperation (surface->cgContext, _cairo_quartz_cairo_operator_to_quartz (op));
 
-    ATSUFontID fid = _cairo_atsui_scaled_font_get_atsu_font_id (scaled_font);
-    ATSFontRef atsfref = FMGetATSFontRefFromFont (fid);
-    CGFontRef cgfref = CGFontCreateWithPlatformFont (&atsfref);
+    fid = _cairo_atsui_scaled_font_get_atsu_font_id (scaled_font);
+    atsfref = FMGetATSFontRefFromFont (fid);
+    cgfref = CGFontCreateWithPlatformFont (&atsfref);
 
     CGContextSetFont (surface->cgContext, cgfref);
     CGFontRelease (cgfref);
@@ -1409,7 +1413,6 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
      * text matrix?
      */
     //ND((stderr, "show_glyphs: glyph 0 at: %f, %f\n", glyphs[0].x, glyphs[0].y));
-    CGAffineTransform cairoTextTransform, textTransform, ctm;
     cairoTextTransform = CGAffineTransformMake (scaled_font->font_matrix.xx, 
 						scaled_font->font_matrix.yx,
 						scaled_font->font_matrix.xy, 
