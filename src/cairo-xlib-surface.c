@@ -683,10 +683,18 @@ static void
 _cairo_xlib_surface_ensure_src_picture (cairo_xlib_surface_t    *surface)
 {
     if (!surface->src_picture)
+    {
+	XRenderPictureAttributes pa;
+	int mask = 0;
+
+	pa.subwindow_mode = IncludeInferiors;
+	mask |= CPSubwindowMode;
+
 	surface->src_picture = XRenderCreatePicture (surface->dpy,
 						     surface->drawable,
 						     surface->xrender_format,
-						     0, NULL);
+						     mask, &pa);
+    }
 }
 
 static void
@@ -2073,6 +2081,11 @@ _cairo_xlib_screen_from_visual (Display *dpy, Visual *visual)
  * NOTE: If @drawable is a Window, then the function
  * cairo_xlib_surface_set_size must be called whenever the size of the
  * window changes.
+ *
+ * When @drawable is a Window containing child windows then drawing to
+ * the created surface will be clipped by those child windows.  When
+ * the created surface is used as a source, the contents of the
+ * children will be included.
  *
  * Return value: the newly created surface
  **/
