@@ -914,7 +914,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 	format = PIXMAN_a1;
 	ret = 1;
 	assert (ret);
-	mask_stride = (width + 31)/8;
+	mask_stride = ((width + 31) / 8) & ~0x03;
 	mask_bpp = 1;
  	break;
     case CAIRO_ANTIALIAS_GRAY:
