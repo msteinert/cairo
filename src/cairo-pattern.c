@@ -273,7 +273,7 @@ _cairo_pattern_init_radial (cairo_radial_pattern_t *pattern,
 
     pattern->c1.x = _cairo_fixed_from_double (cx0);
     pattern->c1.y = _cairo_fixed_from_double (cy0);
-    pattern->radius2 = _cairo_fixed_from_double (fabs (radius0));
+    pattern->radius1 = _cairo_fixed_from_double (fabs (radius0));
     pattern->c2.x = _cairo_fixed_from_double (cx1);
     pattern->c2.y = _cairo_fixed_from_double (cy1);
     pattern->radius2 = _cairo_fixed_from_double (fabs (radius1));
