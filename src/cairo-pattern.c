@@ -1223,7 +1223,7 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     pixman_image_set_filter (pixman_image, PIXMAN_FILTER_BILINEAR, NULL, 0);
 
     _cairo_matrix_to_pixman_matrix (&pattern->base.matrix, &pixman_transform);
-    if (pixman_image_set_transform (pixman_image, &pixman_transform)) {
+    if (!pixman_image_set_transform (pixman_image, &pixman_transform)) {
 	cairo_surface_destroy (&image->base);
 	pixman_image_unref (pixman_image);
 	return CAIRO_STATUS_NO_MEMORY;
