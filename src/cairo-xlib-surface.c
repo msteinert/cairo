@@ -542,6 +542,7 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
     {
 	cairo_xlib_error_func_t old_handler;
 
+	XSync (surface->dpy, False);
 	old_handler = XSetErrorHandler (_noop_error_handler);
 
 	ximage = XGetImage (surface->dpy,
@@ -550,6 +551,7 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 			    x2 - x1, y2 - y1,
 			    AllPlanes, ZPixmap);
 
+	XSync (surface->dpy, False);
 	XSetErrorHandler (old_handler);
 
 	/* If we get an error, the surface must have been a window,
