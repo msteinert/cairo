@@ -676,6 +676,7 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
 	    CGImageRef img = CGBitmapContextCreateImage (quartz_surf->cgContext);
 	    cairo_matrix_t m = spat->base.matrix;
 	    cairo_rectangle_int_t extents;
+	    cairo_status_t status;
 
 	    if (!img)
 		return DO_UNSUPPORTED;
@@ -685,7 +686,10 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
 	    cairo_matrix_invert(&m);
 	    _cairo_quartz_cairo_matrix_to_quartz (&m, &surface->sourceImageTransform);
 
-	    _cairo_surface_get_extents (pat_surf, &extents);
+	    status = _cairo_surface_get_extents (pat_surf, &extents);
+	    if (status)
+		return DO_UNSUPPORTED;
+
 	    surface->sourceImageRect = CGRectMake (0, 0, extents.width, extents.height);
 
 	    surface->sourceImageSurface = (cairo_surface_t *)quartz_surf;
