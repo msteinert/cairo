@@ -1171,7 +1171,9 @@ _cairo_quartz_surface_fill (void *abstract_surface,
 
     stroke.cgContext = surface->cgContext;
     stroke.ctm_inverse = NULL;
-    _cairo_quartz_cairo_path_to_quartz_context (path, &stroke);
+    rv = _cairo_quartz_cairo_path_to_quartz_context (path, &stroke);
+    if (rv)
+        goto BAIL;
 
     if (action == DO_SOLID || action == DO_PATTERN) {
 	if (fill_rule == CAIRO_FILL_RULE_WINDING)
@@ -1207,6 +1209,7 @@ _cairo_quartz_surface_fill (void *abstract_surface,
 	rv = CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
+  BAIL:
     _cairo_quartz_teardown_source (surface, source);
 
     CGContextRestoreGState (surface->cgContext);
@@ -1280,7 +1283,9 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
 
     stroke.cgContext = surface->cgContext;
     stroke.ctm_inverse = ctm_inverse;
-    _cairo_quartz_cairo_path_to_quartz_context (path, &stroke);
+    rv = _cairo_quartz_cairo_path_to_quartz_context (path, &stroke);
+    if (rv)
+	goto BAIL;
 
     if (action == DO_SOLID || action == DO_PATTERN) {
 	CGContextStrokePath (surface->cgContext);
@@ -1304,6 +1309,7 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
 	rv = CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
+  BAIL:
     _cairo_quartz_teardown_source (surface, source);
 
     CGContextRestoreGState (surface->cgContext);
@@ -1507,6 +1513,7 @@ _cairo_quartz_surface_intersect_clip_path (void *abstract_surface,
 {
     cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
     quartz_stroke_t stroke;
+    cairo_status_t status;
 
     ND((stderr, "%p _cairo_quartz_surface_intersect_clip_path path: %p\n", surface, path));
 
@@ -1524,7 +1531,10 @@ _cairo_quartz_surface_intersect_clip_path (void *abstract_surface,
 	CGContextBeginPath (surface->cgContext);
 	stroke.cgContext = surface->cgContext;
 	stroke.ctm_inverse = NULL;
-	_cairo_quartz_cairo_path_to_quartz_context (path, &stroke);
+	status = _cairo_quartz_cairo_path_to_quartz_context (path, &stroke);
+	if (status)
+	    return status;
+
 	if (fill_rule == CAIRO_FILL_RULE_WINDING)
 	    CGContextClip (surface->cgContext);
 	else
