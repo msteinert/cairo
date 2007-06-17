@@ -63,6 +63,9 @@
 /* Public in 10.4, present in 10.3.9 */
 CG_EXTERN CGRect CGRectApplyAffineTransform (CGRect, CGAffineTransform);
 
+/* Error code for path callbacks */
+static OSStatus CAIRO_CG_PATH_ERROR = 1001;
+
 typedef struct _cairo_atsui_font_face cairo_atsui_font_face_t;
 typedef struct _cairo_atsui_font cairo_atsui_font_t;
 typedef struct _cairo_atsui_scaled_path cairo_atsui_scaled_path_t;
@@ -462,16 +465,22 @@ static OSStatus
 _move_to (const Float32Point *point,
 	  void *callback_data)
 {
+    cairo_status_t status;
     cairo_atsui_scaled_path_t *scaled_path = callback_data;
     double x = point->x;
     double y = point->y;
     
     cairo_matrix_transform_point (scaled_path->scale, &x, &y);
-    _cairo_path_fixed_close_path (scaled_path->path);
-    _cairo_path_fixed_move_to (scaled_path->path,
+    status = _cairo_path_fixed_close_path (scaled_path->path);
+    if (status)
+	return CAIRO_CG_PATH_ERROR;
+
+    status = _cairo_path_fixed_move_to (scaled_path->path,
 			       _cairo_fixed_from_double (x),
 			       _cairo_fixed_from_double (y));
-
+    if (status)
+	return CAIRO_CG_PATH_ERROR;
+    
     return noErr;
 }
 
@@ -479,15 +488,18 @@ static OSStatus
 _line_to (const Float32Point *point,
 	  void *callback_data)
 {
+    cairo_status_t status;
     cairo_atsui_scaled_path_t *scaled_path = callback_data;
     double x = point->x;
     double y = point->y;
     
     cairo_matrix_transform_point (scaled_path->scale, &x, &y);
 
-    _cairo_path_fixed_line_to (scaled_path->path,
+    status = _cairo_path_fixed_line_to (scaled_path->path,
 			       _cairo_fixed_from_double (x),
 			       _cairo_fixed_from_double (y));
+    if (status)
+	return CAIRO_CG_PATH_ERROR;
 
     return noErr;
 }
@@ -498,6 +510,7 @@ _curve_to (const Float32Point *point1,
 	   const Float32Point *point3,
 	   void *callback_data)
 {
+    cairo_status_t status;
     cairo_atsui_scaled_path_t *scaled_path = callback_data;
     double x1 = point1->x;
     double y1 = point1->y;
@@ -510,13 +523,15 @@ _curve_to (const Float32Point *point1,
     cairo_matrix_transform_point (scaled_path->scale, &x2, &y2);
     cairo_matrix_transform_point (scaled_path->scale, &x3, &y3);
 
-    _cairo_path_fixed_curve_to (scaled_path->path,
+    status = _cairo_path_fixed_curve_to (scaled_path->path,
 				_cairo_fixed_from_double (x1),
 				_cairo_fixed_from_double (y1),
 				_cairo_fixed_from_double (x2),
 				_cairo_fixed_from_double (y2),
 				_cairo_fixed_from_double (x3),
 				_cairo_fixed_from_double (y3));
+    if (status)
+	return CAIRO_CG_PATH_ERROR;
 
     return noErr;
 }
@@ -525,9 +540,12 @@ static OSStatus
 _close_path (void *callback_data)
 
 {
+    cairo_status_t status;
     cairo_atsui_scaled_path_t *scaled_path = callback_data;
 
-    _cairo_path_fixed_close_path (scaled_path->path);
+    status = _cairo_path_fixed_close_path (scaled_path->path);
+    if (status)
+	return CAIRO_CG_PATH_ERROR;
 
     return noErr;
 }
