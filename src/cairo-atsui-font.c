@@ -111,6 +111,7 @@ _cairo_atsui_font_face_scaled_font_create (void	*abstract_face,
 					   const cairo_font_options_t *options,
 					   cairo_scaled_font_t **font)
 {
+    cairo_status_t status;
     cairo_atsui_font_face_t *font_face = abstract_face;
     OSStatus err;
     ATSUAttributeTag styleTags[] = { kATSUFontTag };
@@ -119,11 +120,22 @@ _cairo_atsui_font_face_scaled_font_create (void	*abstract_face,
     ATSUStyle style;
 
     err = ATSUCreateStyle (&style);
+    if (err != noErr)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
     err = ATSUSetAttributes(style, ARRAY_LENGTH (styleTags),
                             styleTags, styleSizes, styleValues);
+    if (err != noErr) {
+        ATSUDisposeStyle (style);
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
 
-    return _cairo_atsui_font_create_scaled (&font_face->base, font_face->font_id, style,
+    status = _cairo_atsui_font_create_scaled (&font_face->base, font_face->font_id, style,
 					    font_matrix, ctm, options, font);
+    if (status)
+        ATSUDisposeStyle (style);
+
+    return status;
 }
 
 static const cairo_font_face_backend_t _cairo_atsui_font_face_backend = {
@@ -294,6 +306,7 @@ _cairo_atsui_font_create_toy(cairo_toy_font_face_t *toy_face,
 			     const cairo_font_options_t *options,
 			     cairo_scaled_font_t **font_out)
 {
+    cairo_status_t status;
     ATSUStyle style;
     ATSUFontID fontID;
     OSStatus err;
@@ -302,6 +315,9 @@ _cairo_atsui_font_create_toy(cairo_toy_font_face_t *toy_face,
     const char *full_name;
 
     err = ATSUCreateStyle(&style);
+    if (err != noErr) {
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
 
     switch (toy_face->weight) {
     case CAIRO_FONT_WEIGHT_BOLD:
@@ -375,6 +391,10 @@ _cairo_atsui_font_create_toy(cairo_toy_font_face_t *toy_face,
 				       kFontNoPlatformCode,
 				       kFontRomanScript,
 				       kFontNoLanguageCode, &fontID);
+	    if (err != noErr) {
+		ATSUDisposeStyle (style);
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    }
 	}
     }
 
@@ -387,10 +407,18 @@ _cairo_atsui_font_create_toy(cairo_toy_font_face_t *toy_face,
 
 	err = ATSUSetAttributes(style, ARRAY_LENGTH (styleTags),
 				styleTags, styleSizes, styleValues);
+	if (err != noErr) {
+	    ATSUDisposeStyle (style);
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	}
     }
 
-    return _cairo_atsui_font_create_scaled (&toy_face->base, fontID, style,
+    status = _cairo_atsui_font_create_scaled (&toy_face->base, fontID, style,
 					    font_matrix, ctm, options, font_out);
+    if (status)
+	ATSUDisposeStyle (style);
+
+    return status;
 }
 
 static void
@@ -601,6 +629,10 @@ _cairo_atsui_scaled_font_init_glyph_path (cairo_atsui_font_t *scaled_font,
 				 lineProc,
 				 curveProc,
 				 closePathProc, (void *)&scaled_path, &err);
+    if (err != noErr) {
+	_cairo_path_fixed_destroy (scaled_path.path);
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
 
     _cairo_scaled_glyph_set_path (scaled_glyph, &scaled_font->base, 
 				  scaled_path.path);
@@ -664,6 +696,10 @@ _cairo_atsui_scaled_font_init_glyph_surface (cairo_atsui_font_t *scaled_font,
     err = ATSUGlyphGetScreenMetrics (scaled_font->style,
 				     1, &theGlyph, 0, false,
 				     false, &metricsH);    
+    if (err != noErr) {
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+
     left = metricsH.sideBearing.x - 1.0;
     width = metricsH.deviceAdvance.x 
 	- metricsH.sideBearing.x 
@@ -809,28 +845,45 @@ _cairo_atsui_font_text_to_glyphs (void		*abstract_font,
 
     status = _cairo_utf8_to_utf16 ((unsigned char *)utf8, -1, &utf16, &n16);
     if (status)
-	return status;
+	goto BAIL3;
 
     err = ATSUCreateTextLayout(&textLayout);
+    if (err != noErr) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto BAIL3;
+    }
 
     err = ATSUSetTextPointerLocation(textLayout, utf16, 0, n16, n16);
+    if (err != noErr) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto BAIL2;
+    }
 
     /* Set the style for all of the text */
     err = ATSUSetRunStyle(textLayout,
 			  font->style, kATSUFromTextBeginning, kATSUToTextEnd);
+    if (err != noErr) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto BAIL2;
+    }
 
     err = ATSUDirectGetLayoutDataArrayPtrFromTextLayout(textLayout,
 							0,
 							kATSUDirectDataLayoutRecordATSLayoutRecordCurrent,
 							(void *)&layoutRecords,
 							&glyphCount);
+    if (err != noErr) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto BAIL2;
+    }
 
     *num_glyphs = glyphCount - 1;
     *glyphs =
 	(cairo_glyph_t *) _cairo_malloc_ab(*num_glyphs, sizeof (cairo_glyph_t));
-    if (*glyphs == NULL)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
+    if (*glyphs == NULL) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto BAIL1;
+    }
     _cairo_matrix_compute_scale_factors (&font->base.ctm, &xscale, &yscale, 1);
     device_to_user_scale = 
 	CGAffineTransformInvert (CGAffineTransformMake (xscale, 0,
@@ -846,14 +899,17 @@ _cairo_atsui_font_text_to_glyphs (void		*abstract_font,
 	(*glyphs)[i].y = y;
     }
 
-    free (utf16);
-
+  BAIL1:
+    /* TODO ignored return value. Is there anything we should do? */
     ATSUDirectReleaseLayoutDataArrayPtr(NULL,
 					kATSUDirectDataLayoutRecordATSLayoutRecordCurrent,
 					(void *) &layoutRecords);
+  BAIL2:
     ATSUDisposeTextLayout(textLayout);
+  BAIL3:
+    free (utf16);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 ATSUStyle
