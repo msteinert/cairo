@@ -182,15 +182,7 @@ do {					\
 #include "cairo-mutex-private.h"
 #include "cairo-wideint-private.h"
 #include "cairo-malloc-private.h"
-
-typedef int32_t		cairo_fixed_16_16_t;
-typedef cairo_int64_t	cairo_fixed_32_32_t;
-typedef cairo_int64_t	cairo_fixed_48_16_t;
-typedef cairo_int128_t	cairo_fixed_64_64_t;
-typedef cairo_int128_t	cairo_fixed_96_32_t;
-
-/* The common 16.16 format gets a shorter name */
-typedef cairo_fixed_16_16_t cairo_fixed_t;
+#include "cairo-fixed-private.h"
 
 #define CAIRO_ALPHA_IS_OPAQUE(alpha) ((alpha) >= ((double)0xff00 / (double)0xffff))
 #define CAIRO_ALPHA_SHORT_IS_OPAQUE(alpha) ((alpha) >= 0xff00)
@@ -1113,33 +1105,6 @@ _cairo_restrict_value (double *value, double min, double max);
 
 cairo_private int
 _cairo_lround (double d);
-
-/* cairo_fixed.c */
-cairo_private cairo_fixed_t
-_cairo_fixed_from_int (int i);
-
-#define CAIRO_FIXED_ONE _cairo_fixed_from_int (1)
-
-cairo_private cairo_fixed_t
-_cairo_fixed_from_double (double d);
-
-cairo_private cairo_fixed_t
-_cairo_fixed_from_26_6 (uint32_t i);
-
-cairo_private double
-_cairo_fixed_to_double (cairo_fixed_t f);
-
-cairo_private int
-_cairo_fixed_is_integer (cairo_fixed_t f);
-
-cairo_private int
-_cairo_fixed_integer_part (cairo_fixed_t f);
-
-cairo_private int
-_cairo_fixed_integer_floor (cairo_fixed_t f);
-
-cairo_private int
-_cairo_fixed_integer_ceil (cairo_fixed_t f);
 
 /* cairo_gstate.c */
 cairo_private cairo_status_t

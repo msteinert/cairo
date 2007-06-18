@@ -282,7 +282,7 @@ static void
 ComputeGradientValue (void *info, const float *in, float *out)
 {
     float fdist = *in; /* 0.0 .. 1.0 */
-    cairo_fixed_16_16_t fdist_fix = _cairo_fixed_from_double(*in);
+    cairo_fixed_t fdist_fix = _cairo_fixed_from_double(*in);
     cairo_gradient_pattern_t *grad = (cairo_gradient_pattern_t*) info;
     unsigned int i;
 
