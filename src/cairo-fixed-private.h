@@ -71,7 +71,6 @@ typedef uint32_t cairo_fixed_unsigned_t;
  * No configurable bits below this.
  */
 
-
 #if (CAIRO_FIXED_BITS != 32)
 # error CAIRO_FIXED_BITS must be 32, and the type must be a 32-bit type.
 # error To remove this limitation, you will have to fix the tesselator.
