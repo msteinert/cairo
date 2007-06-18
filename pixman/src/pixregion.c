@@ -76,6 +76,8 @@ static pixman_region16_data_t  pixman_brokendata = {0, 0};
 
 static pixman_region_status_t
 pixman_break (pixman_region16_t *pReg);
+static pixman_region_status_t
+pixman_rect_alloc(pixman_region16_t * region, int n);
 
 /*
  * The functions in this file implement the Region abstraction used extensively
@@ -309,6 +311,33 @@ pixman_region_init_with_extents(pixman_region16_t *region, pixman_box16_t *exten
 {
     region->extents = *extents;
     region->data = NULL;
+}
+
+pixman_region_status_t
+pixman_region_init_rects(pixman_region16_t *region, pixman_box16_t *boxes, int count)
+{
+    int overlap;
+
+    if (count == 1) {
+	pixman_region_init_rect(region,
+				boxes[0].x1,
+				boxes[0].y1,
+				boxes[0].x2 - boxes[0].x1,
+				boxes[0].y2 - boxes[0].y1);
+	return PIXMAN_REGION_STATUS_SUCCESS;
+    }
+
+    pixman_region_init(region);
+    if (!pixman_rect_alloc(region, count))
+	return PIXMAN_REGION_STATUS_FAILURE;
+
+    /* Copy in the rects */
+    memcpy (PIXREGION_RECTS(region), boxes, sizeof(pixman_box16_t) * count);
+    region->data->numRects = count;
+
+    /* Validate */
+    region->extents.x1 = region->extents.x2 = 0;
+    return pixman_region_validate (region, &overlap);
 }
 
 void

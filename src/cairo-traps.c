@@ -597,7 +597,11 @@ cairo_int_status_t
 _cairo_traps_extract_region (cairo_traps_t     *traps,
 			     pixman_region16_t *region)
 {
-    int i;
+#define NUM_STATIC_BOXES 16
+    pixman_box16_t static_boxes[NUM_STATIC_BOXES];
+    pixman_box16_t *boxes;
+    int i, box_count;
+    pixman_region_status_t status;
 
     for (i = 0; i < traps->num_traps; i++)
 	if (!(traps->traps[i].left.p1.x == traps->traps[i].left.p2.x
@@ -609,26 +613,46 @@ _cairo_traps_extract_region (cairo_traps_t     *traps,
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
 
-    pixman_region_init (region);
+    if (traps->num_traps <= NUM_STATIC_BOXES) {
+	boxes = static_boxes;
+    } else {
+	/*boxes = _cairo_malloc2 (traps->num_traps, sizeof(pixman_box16_t));*/
+	boxes = malloc (traps->num_traps * sizeof(pixman_box16_t));
+
+	if (boxes == NULL)
+	    return CAIRO_STATUS_NO_MEMORY;
+    }
+
+    box_count = 0;
 
     for (i = 0; i < traps->num_traps; i++) {
-	int x = _cairo_fixed_integer_part(traps->traps[i].left.p1.x);
-	int y = _cairo_fixed_integer_part(traps->traps[i].top);
-	int width = _cairo_fixed_integer_part(traps->traps[i].right.p1.x) - x;
-	int height = _cairo_fixed_integer_part(traps->traps[i].bottom) - y;
+	int x1 = _cairo_fixed_integer_part(traps->traps[i].left.p1.x);
+	int y1 = _cairo_fixed_integer_part(traps->traps[i].top);
+	int x2 = _cairo_fixed_integer_part(traps->traps[i].right.p1.x);
+	int y2 = _cairo_fixed_integer_part(traps->traps[i].bottom);
 
-	/* XXX: Sometimes we get degenerate trapezoids from the tesellator,
-	 * if we call pixman_region_union_rect(), it bizarrly fails on such
-	 * an empty rectangle, so skip them.
+	/* XXX: Sometimes we get degenerate trapezoids from the tesellator;
+	 * skip these.
 	 */
-	if (width == 0 || height == 0)
-	  continue;
+	if (x1 == x2 || y1 == y2)
+	    continue;
 
-	if (pixman_region_union_rect (region, region,
-				      x, y, width, height) != PIXMAN_REGION_STATUS_SUCCESS) {
-	    pixman_region_fini (region);
-	    return CAIRO_STATUS_NO_MEMORY;
-	}
+	boxes[box_count].x1 = (short) x1;
+	boxes[box_count].y1 = (short) y1;
+	boxes[box_count].x2 = (short) x2;
+	boxes[box_count].y2 = (short) y2;
+
+	box_count++;
+    }
+
+    status = pixman_region_init_rects (region, boxes, box_count);
+
+    if (boxes != static_boxes)
+	free (boxes);
+
+    if (status != PIXMAN_REGION_STATUS_SUCCESS) {
+	pixman_region_fini (region);
+	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
     return CAIRO_STATUS_SUCCESS;
