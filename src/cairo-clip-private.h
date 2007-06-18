@@ -63,7 +63,7 @@ struct _cairo_clip {
      * clip paths
      */
     cairo_surface_t *surface;
-    cairo_rectangle_int16_t surface_rect;
+    cairo_rectangle_int_t surface_rect;
     /*
      * Surface clip serial number to store
      * in the surface when this clip is set
@@ -105,7 +105,7 @@ _cairo_clip_clip (cairo_clip_t       *clip,
 
 cairo_private cairo_status_t
 _cairo_clip_intersect_to_rectangle (cairo_clip_t            *clip,
-				    cairo_rectangle_int16_t *rectangle);
+				    cairo_rectangle_int_t   *rectangle);
 
 cairo_private cairo_status_t
 _cairo_clip_intersect_to_region (cairo_clip_t      *clip,
@@ -117,7 +117,7 @@ _cairo_clip_combine_to_surface (cairo_clip_t                  *clip,
 				cairo_surface_t               *dst,
 				int                            dst_x,
 				int                            dst_y,
-				const cairo_rectangle_int16_t *extents);
+				const cairo_rectangle_int_t   *extents);
 
 cairo_private void
 _cairo_clip_translate (cairo_clip_t  *clip,

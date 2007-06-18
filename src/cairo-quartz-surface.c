@@ -436,7 +436,7 @@ _cairo_quartz_surface_to_quartz (cairo_surface_t *target, cairo_surface_t *pat_s
 
 	cairo_surface_t *ref_type = target;
 	cairo_surface_t *new_surf = NULL;
-	cairo_rectangle_int16_t rect;
+	cairo_rectangle_int_t rect;
 	if (ref_type == NULL)
 	    ref_type = cairo_quartz_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
 
@@ -545,7 +545,7 @@ _cairo_quartz_cairo_repeating_surface_pattern_to_quartz (cairo_quartz_surface_t 
 {
     cairo_surface_pattern_t *spat;
     cairo_surface_t *pat_surf;
-    cairo_rectangle_int16_t extents;
+    cairo_rectangle_int_t extents;
 
     CGRect pbounds;
     CGAffineTransform ptransform, stransform;
@@ -675,7 +675,7 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
 	    cairo_quartz_surface_t *quartz_surf = _cairo_quartz_surface_to_quartz ((cairo_surface_t *) surface, pat_surf);
 	    CGImageRef img = CGBitmapContextCreateImage (quartz_surf->cgContext);
 	    cairo_matrix_t m = spat->base.matrix;
-	    cairo_rectangle_int16_t extents;
+	    cairo_rectangle_int_t extents;
 
 	    if (!img)
 		return DO_UNSUPPORTED;
@@ -896,10 +896,10 @@ _cairo_quartz_surface_release_source_image (void *abstract_surface,
 
 static cairo_status_t
 _cairo_quartz_surface_acquire_dest_image (void *abstract_surface,
-					   cairo_rectangle_int16_t *interest_rect,
-					   cairo_image_surface_t **image_out,
-					   cairo_rectangle_int16_t *image_rect,
-					   void **image_extra)
+					  cairo_rectangle_int_t *interest_rect,
+					  cairo_image_surface_t **image_out,
+					  cairo_rectangle_int_t *image_rect,
+					  void **image_extra)
 {
     cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
     cairo_int_status_t status;
@@ -920,10 +920,10 @@ _cairo_quartz_surface_acquire_dest_image (void *abstract_surface,
 
 static void
 _cairo_quartz_surface_release_dest_image (void *abstract_surface,
-					   cairo_rectangle_int16_t *interest_rect,
-					   cairo_image_surface_t *image,
-					   cairo_rectangle_int16_t *image_rect,
-					   void *image_extra)
+					  cairo_rectangle_int_t *interest_rect,
+					  cairo_image_surface_t *image,
+					  cairo_rectangle_int_t *image_rect,
+					  void *image_extra)
 {
     cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
     unsigned char *imageData = (unsigned char *) image_extra;
@@ -1080,7 +1080,7 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
 
 static cairo_int_status_t
 _cairo_quartz_surface_get_extents (void *abstract_surface,
-				    cairo_rectangle_int16_t *extents)
+				   cairo_rectangle_int_t *extents)
 {
     cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
 

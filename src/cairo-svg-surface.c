@@ -888,7 +888,7 @@ _cairo_svg_surface_emit_composite_image_pattern (cairo_output_stream_t     *outp
 {
     cairo_surface_t *surface;
     cairo_surface_attributes_t surface_attr;
-    cairo_rectangle_int16_t extents;
+    cairo_rectangle_int_t extents;
     cairo_status_t status;
     cairo_matrix_t p2u;
 
@@ -1647,7 +1647,7 @@ _cairo_svg_surface_fill (void			*abstract_surface,
 
 static cairo_int_status_t
 _cairo_svg_surface_get_extents (void		        *abstract_surface,
-				cairo_rectangle_int16_t *rectangle)
+				cairo_rectangle_int_t   *rectangle)
 {
     cairo_svg_surface_t *surface = abstract_surface;
 

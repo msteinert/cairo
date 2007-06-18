@@ -1214,7 +1214,7 @@ _cairo_gstate_clip_extents (cairo_gstate_t *gstate,
         		    double         *x2,
         		    double         *y2)
 {
-    cairo_rectangle_int16_t extents;
+    cairo_rectangle_int_t extents;
     cairo_status_t status;
     
     status = _cairo_surface_get_extents (gstate->target, &extents);

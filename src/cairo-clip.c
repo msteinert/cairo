@@ -120,13 +120,13 @@ _cairo_clip_reset (cairo_clip_t *clip)
 
 static cairo_status_t
 _cairo_clip_path_intersect_to_rectangle (cairo_clip_path_t       *clip_path,
-   				         cairo_rectangle_int16_t *rectangle)
+   				         cairo_rectangle_int_t   *rectangle)
 {
     while (clip_path) {
         cairo_status_t status;
         cairo_traps_t traps;
         cairo_box_t extents;
-        cairo_rectangle_int16_t extents_rect;
+        cairo_rectangle_int_t extents_rect;
 
         _cairo_traps_init (&traps);
 
@@ -153,7 +153,7 @@ _cairo_clip_path_intersect_to_rectangle (cairo_clip_path_t       *clip_path,
 
 cairo_status_t
 _cairo_clip_intersect_to_rectangle (cairo_clip_t            *clip,
-				    cairo_rectangle_int16_t *rectangle)
+				    cairo_rectangle_int_t *rectangle)
 {
     if (!clip)
 	return CAIRO_STATUS_SUCCESS;
@@ -240,7 +240,7 @@ _cairo_clip_combine_to_surface (cairo_clip_t                  *clip,
 				cairo_surface_t               *dst,
 				int                           dst_x,
 				int                           dst_y,
-				const cairo_rectangle_int16_t *extents)
+				const cairo_rectangle_int_t *extents)
 {
     cairo_pattern_union_t pattern;
     cairo_status_t status;
@@ -372,7 +372,7 @@ _cairo_clip_intersect_mask (cairo_clip_t      *clip,
 {
     cairo_pattern_union_t pattern;
     cairo_box_t extents;
-    cairo_rectangle_int16_t surface_rect, target_rect;
+    cairo_rectangle_int_t surface_rect, target_rect;
     cairo_surface_t *surface;
     cairo_status_t status;
 
@@ -648,7 +648,7 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
             }
         }
     } else {
-        cairo_rectangle_int16_t extents;
+        cairo_rectangle_int_t extents;
         if (_cairo_surface_get_extents (_cairo_gstate_get_target (gstate),
 		                        &extents) != CAIRO_STATUS_SUCCESS) {
             free (rectangles);

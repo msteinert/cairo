@@ -478,7 +478,7 @@ void
 cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
 {
     cairo_status_t status;
-    cairo_rectangle_int16_t extents;
+    cairo_rectangle_int_t extents;
     cairo_surface_t *parent_surface, *group_surface = NULL;
 
     if (cr->status)

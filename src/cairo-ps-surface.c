@@ -1878,7 +1878,7 @@ _cairo_ps_surface_intersect_clip_path (void		   *abstract_surface,
 
 static cairo_int_status_t
 _cairo_ps_surface_get_extents (void		       *abstract_surface,
-			       cairo_rectangle_int16_t *rectangle)
+			       cairo_rectangle_int_t   *rectangle)
 {
     cairo_ps_surface_t *surface = abstract_surface;
 
@@ -1913,7 +1913,7 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_output_stream_t *stream = surface->stream;
-    cairo_rectangle_int16_t extents, pattern_extents;
+    cairo_rectangle_int_t extents, pattern_extents;
     cairo_status_t status;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)

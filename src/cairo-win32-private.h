@@ -71,11 +71,11 @@ typedef struct _cairo_win32_surface {
 
     cairo_surface_t *image;
 
-    cairo_rectangle_int16_t clip_rect;
+    cairo_rectangle_int_t clip_rect;
 
     HRGN saved_clip;
 
-    cairo_rectangle_int16_t extents;
+    cairo_rectangle_int_t extents;
 
     /* Surface DC flags */
     uint32_t flags;

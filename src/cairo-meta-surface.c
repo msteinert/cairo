@@ -556,7 +556,7 @@ _cairo_meta_surface_intersect_clip_path (void		    *dst,
  */
 static cairo_int_status_t
 _cairo_meta_surface_get_extents (void			 *abstract_surface,
-				 cairo_rectangle_int16_t *rectangle)
+				 cairo_rectangle_int_t   *rectangle)
 {
     cairo_meta_surface_t *surface = abstract_surface;
 

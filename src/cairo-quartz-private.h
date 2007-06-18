@@ -51,7 +51,7 @@ typedef struct cairo_quartz_surface {
     CGContextRef cgContext;
     CGAffineTransform cgContextBaseCTM;
 
-    cairo_rectangle_int16_t extents;
+    cairo_rectangle_int_t extents;
 
     /* These are stored while drawing operations are in place, set up
      * by quartz_setup_source() and quartz_finish_source()

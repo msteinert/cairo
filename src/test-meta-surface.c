@@ -174,7 +174,7 @@ _test_meta_surface_intersect_clip_path (void			*abstract_surface,
 
 static cairo_int_status_t
 _test_meta_surface_get_extents (void			*abstract_surface,
-				cairo_rectangle_int16_t	*rectangle)
+				cairo_rectangle_int_t	*rectangle)
 {
     test_meta_surface_t *surface = abstract_surface;
 
@@ -300,7 +300,7 @@ _test_meta_surface_snapshot (void *abstract_other)
 #if 0
     return _cairo_surface_snapshot (other->meta);
 #else
-    cairo_rectangle_int16_t extents;
+    cairo_rectangle_int_t extents;
     cairo_surface_t *surface;
 
     status = _cairo_surface_get_extents (other->image, &extents);

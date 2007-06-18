@@ -320,9 +320,9 @@ _directfb_buffer_surface_create (IDirectFB             *dfb,
 
 static cairo_status_t
 _directfb_acquire_surface (cairo_directfb_surface_t *surface, 
-                                              cairo_rectangle_int16_t *intrest_rec,
+                                              cairo_rectangle_int_t *intrest_rec,
                                               cairo_image_surface_t **image_out,
-                                              cairo_rectangle_int16_t *image_rect_out,
+                                              cairo_rectangle_int_t *image_rect_out,
                                               void                  **image_extra,
                                               DFBSurfaceLockFlags       lock_flags)
 {   
@@ -499,9 +499,9 @@ _cairo_directfb_surface_release_source_image (void                  *abstract_su
 
 static cairo_status_t
 _cairo_directfb_surface_acquire_dest_image (void                   *abstract_surface,
-                                            cairo_rectangle_int16_t      *interest_rect,
+                                            cairo_rectangle_int_t      *interest_rect,
                                             cairo_image_surface_t **image_out,
-                                            cairo_rectangle_int16_t      *image_rect_out,
+                                            cairo_rectangle_int_t      *image_rect_out,
                                             void                  **image_extra)
 {
     cairo_directfb_surface_t *surface = abstract_surface;
@@ -515,9 +515,9 @@ _cairo_directfb_surface_acquire_dest_image (void                   *abstract_sur
 
 static void
 _cairo_directfb_surface_release_dest_image (void                  *abstract_surface,
-                                            cairo_rectangle_int16_t     *interest_rect,
+                                            cairo_rectangle_int_t     *interest_rect,
                                             cairo_image_surface_t *image,
-                                            cairo_rectangle_int16_t     *image_rect,
+                                            cairo_rectangle_int_t     *image_rect,
                                             void                  *image_extra)
 {
     cairo_directfb_surface_t *surface = abstract_surface;
@@ -911,7 +911,7 @@ static cairo_int_status_t
 _cairo_directfb_surface_fill_rectangles (void                *abstract_surface,
                                          cairo_operator_t     op,
                                          const cairo_color_t *color,
-                                         cairo_rectangle_int16_t   *rects,
+                                         cairo_rectangle_int_t   *rects,
                                          int                  n_rects)
 {
     cairo_directfb_surface_t *dst = abstract_surface;
@@ -1142,7 +1142,7 @@ _cairo_directfb_surface_set_clip_region (void              *abstract_surface,
 
 static cairo_int_status_t
 _cairo_directfb_abstract_surface_get_extents (void              *abstract_surface,
-                                              cairo_rectangle_int16_t *rectangle)
+                                              cairo_rectangle_int_t *rectangle)
 {
     cairo_directfb_surface_t *surface = abstract_surface;
     

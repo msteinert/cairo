@@ -1512,7 +1512,7 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 	cairo_t *cr;
 	int w,h;
 
-	cairo_rectangle_int16_t extents;
+	cairo_rectangle_int_t extents;
 	status = _cairo_surface_get_extents (pattern->surface, &extents);
 	if (status)
 	    return status;
@@ -1585,7 +1585,7 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
     }
     else
     {
-	cairo_rectangle_int16_t extents;
+	cairo_rectangle_int_t extents;
 	status = _cairo_surface_get_extents (pattern->surface, &extents);
 	if (status)
 	    return status;
@@ -1914,13 +1914,13 @@ CLEANUP_SOURCE:
  **/
 cairo_status_t
 _cairo_pattern_get_extents (cairo_pattern_t         *pattern,
-			    cairo_rectangle_int16_t *extents)
+			    cairo_rectangle_int_t   *extents)
 {
     if (pattern->extend == CAIRO_EXTEND_NONE &&
 	pattern->type == CAIRO_PATTERN_TYPE_SURFACE)
     {
 	cairo_status_t status;
-	cairo_rectangle_int16_t surface_extents;
+	cairo_rectangle_int_t surface_extents;
 	cairo_surface_pattern_t *surface_pattern =
 	    (cairo_surface_pattern_t *) pattern;
 	cairo_surface_t *surface = surface_pattern->surface;
@@ -1948,9 +1948,9 @@ _cairo_pattern_get_extents (cairo_pattern_t         *pattern,
 		y = surface_extents.y + sy * surface_extents.height;
 		cairo_matrix_transform_point (&imatrix, &x, &y);
 		if (x < 0) x = 0;
-		if (x > INT16_MAX) x = INT16_MAX;
+		if (x > CAIRO_RECT_INT_MAX) x = CAIRO_RECT_INT_MAX;
 		if (y < 0) y = 0;
-		if (y > INT16_MAX) y = INT16_MAX;
+		if (y > CAIRO_RECT_INT_MAX) y = CAIRO_RECT_INT_MAX;
 		lx = floor (x); rx = ceil (x);
 		ty = floor (y); by = ceil (y);
 		if (!set) {

@@ -517,9 +517,9 @@ _cairo_os2_surface_release_source_image (void                  *abstract_surface
 
 static cairo_status_t
 _cairo_os2_surface_acquire_dest_image (void                     *abstract_surface,
-                                       cairo_rectangle_int16_t  *interest_rect,
+                                       cairo_rectangle_int_t    *interest_rect,
                                        cairo_image_surface_t   **image_out,
-                                       cairo_rectangle_int16_t  *image_rect,
+                                       cairo_rectangle_int_t    *image_rect,
                                        void                    **image_extra)
 {
     cairo_os2_surface_t *local_os2_surface;
@@ -552,9 +552,9 @@ _cairo_os2_surface_acquire_dest_image (void                     *abstract_surfac
 
 static void
 _cairo_os2_surface_release_dest_image (void                    *abstract_surface,
-                                       cairo_rectangle_int16_t *interest_rect,
+                                       cairo_rectangle_int_t   *interest_rect,
                                        cairo_image_surface_t   *image,
-                                       cairo_rectangle_int16_t *image_rect,
+                                       cairo_rectangle_int_t   *image_rect,
                                        void                    *image_extra)
 {
     cairo_os2_surface_t *local_os2_surface;
@@ -628,7 +628,7 @@ _cairo_os2_surface_release_dest_image (void                    *abstract_surface
 
 static cairo_int_status_t
 _cairo_os2_surface_get_extents (void                    *abstract_surface,
-                                cairo_rectangle_int16_t *rectangle)
+                                cairo_rectangle_int_t   *rectangle)
 {
     cairo_os2_surface_t *local_os2_surface;
 

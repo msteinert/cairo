@@ -44,7 +44,7 @@
  **/
 void
 _cairo_region_extents_rectangle (pixman_region16_t       *region,
-				 cairo_rectangle_int16_t *rect)
+				 cairo_rectangle_int_t   *rect)
 {
     pixman_box16_t *region_extents = pixman_region_extents (region);
 

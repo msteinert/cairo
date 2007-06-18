@@ -152,9 +152,9 @@ _CAIRO_MASK_FORMAT (cairo_format_masks_t *masks, cairo_format_t *format)
 
 static cairo_status_t
 _cairo_glitz_surface_get_image (cairo_glitz_surface_t   *surface,
-				cairo_rectangle_int16_t *interest,
+				cairo_rectangle_int_t   *interest,
 				cairo_image_surface_t  **image_out,
-				cairo_rectangle_int16_t *rect_out)
+				cairo_rectangle_int_t   *rect_out)
 {
     cairo_image_surface_t *image;
     int			  x1, y1, x2, y2;
@@ -426,9 +426,9 @@ _cairo_glitz_surface_release_source_image (void              *abstract_surface,
 
 static cairo_status_t
 _cairo_glitz_surface_acquire_dest_image (void                    *abstract_surface,
-					 cairo_rectangle_int16_t *interest_rect,
+					 cairo_rectangle_int_t   *interest_rect,
 					 cairo_image_surface_t  **image_out,
-					 cairo_rectangle_int16_t *image_rect_out,
+					 cairo_rectangle_int_t   *image_rect_out,
 					 void                   **image_extra)
 {
     cairo_glitz_surface_t *surface = abstract_surface;
@@ -448,9 +448,9 @@ _cairo_glitz_surface_acquire_dest_image (void                    *abstract_surfa
 
 static void
 _cairo_glitz_surface_release_dest_image (void                    *abstract_surface,
-					 cairo_rectangle_int16_t *interest_rect,
+					 cairo_rectangle_int_t   *interest_rect,
 					 cairo_image_surface_t   *image,
-					 cairo_rectangle_int16_t *image_rect,
+					 cairo_rectangle_int_t   *image_rect,
 					 void                    *image_extra)
 {
     cairo_glitz_surface_t *surface = abstract_surface;
@@ -487,8 +487,8 @@ _cairo_glitz_surface_clone_similar (void	    *abstract_surface,
     {
 	cairo_image_surface_t *image_src = (cairo_image_surface_t *) src;
 	cairo_content_t	      content;
-	cairo_rectangle_int16_t image_extent;
-	cairo_rectangle_int16_t extent;
+	cairo_rectangle_int_t image_extent;
+	cairo_rectangle_int_t extent;
 
 	content = _cairo_content_from_format (image_src->format);
 
@@ -1073,7 +1073,7 @@ static cairo_int_status_t
 _cairo_glitz_surface_fill_rectangles (void		      *abstract_dst,
 				      cairo_operator_t	       op,
 				      const cairo_color_t     *color,
-				      cairo_rectangle_int16_t *rects,
+				      cairo_rectangle_int_t   *rects,
 				      int		       n_rects)
 {
     cairo_glitz_surface_t *dst = abstract_dst;
@@ -1433,7 +1433,7 @@ _cairo_glitz_surface_set_clip_region (void		*abstract_surface,
 
 static cairo_int_status_t
 _cairo_glitz_surface_get_extents (void		          *abstract_surface,
-				  cairo_rectangle_int16_t *rectangle)
+				  cairo_rectangle_int_t   *rectangle)
 {
     cairo_glitz_surface_t *surface = abstract_surface;
 
