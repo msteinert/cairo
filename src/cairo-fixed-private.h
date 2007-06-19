@@ -128,18 +128,8 @@ _cairo_fixed_from_int (int i)
 /* The 16.16 number must always be available */
 #define CAIRO_MAGIC_NUMBER_FIXED_16_16 (103079215104.0)
 
-#if CAIRO_FIXED_BITS == 32
-
-# if CAIRO_FIXED_FRAC_BITS == 16
-#  define CAIRO_MAGIC_NUMBER_FIXED CAIRO_MAGIC_NUMBER_FIXED_16_16
-# elif CAIRO_FIXED_FRAC_BITS == 8
-#  define CAIRO_MAGIC_NUMBER_FIXED (26388279066624.0)
-# elif CAIRO_FIXED_FRAC_BITS == 6
-#  define CAIRO_MAGIC_NUMBER_FIXED (105553116266496.0)
-# else
-#  error Please define a magic number for your fixed point type!
-#  error See cairo-fixed-private.h for details.
-# endif
+#if CAIRO_FIXED_BITS <= 32
+#define CAIRO_MAGIC_NUMBER_FIXED ((1LL << (52 - CAIRO_FIXED_FRAC_BITS)) * 1.5)
 
 /* For 32-bit fixed point numbers */
 static inline cairo_fixed_t
