@@ -970,12 +970,12 @@ cairo_status_t
 _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
 					 const cairo_glyph_t	 *glyphs,
 					 int                      num_glyphs,
-					 cairo_rectangle_int_t   *extents)
+					 cairo_rectangle_int16_t *extents)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     int i;
-    int min_x = INT16_MAX, max_x = INT16_MIN;
-    int	min_y = INT16_MAX, max_y = INT16_MIN;
+    short min_x = INT16_MAX, max_x = INT16_MIN;
+    short min_y = INT16_MAX, max_y = INT16_MIN;
 
     if (scaled_font->status)
 	return scaled_font->status;

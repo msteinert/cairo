@@ -736,13 +736,13 @@ _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
         *pixman_transform = pixman_identity_transform;
     }
     else {
-        pixman_transform->matrix[0][0] = _cairo_fixed_from_double (matrix->xx);
-        pixman_transform->matrix[0][1] = _cairo_fixed_from_double (matrix->xy);
-        pixman_transform->matrix[0][2] = _cairo_fixed_from_double (matrix->x0);
+        pixman_transform->matrix[0][0] = _cairo_fixed_16_16_from_double (matrix->xx);
+        pixman_transform->matrix[0][1] = _cairo_fixed_16_16_from_double (matrix->xy);
+        pixman_transform->matrix[0][2] = _cairo_fixed_16_16_from_double (matrix->x0);
 
-        pixman_transform->matrix[1][0] = _cairo_fixed_from_double (matrix->yx);
-        pixman_transform->matrix[1][1] = _cairo_fixed_from_double (matrix->yy);
-        pixman_transform->matrix[1][2] = _cairo_fixed_from_double (matrix->y0);
+        pixman_transform->matrix[1][0] = _cairo_fixed_16_16_from_double (matrix->yx);
+        pixman_transform->matrix[1][1] = _cairo_fixed_16_16_from_double (matrix->yy);
+        pixman_transform->matrix[1][2] = _cairo_fixed_16_16_from_double (matrix->y0);
 
         pixman_transform->matrix[2][0] = 0;
         pixman_transform->matrix[2][1] = 0;

@@ -998,33 +998,34 @@ typedef struct _cairo_surface_pattern {
     cairo_surface_t *surface;
 } cairo_surface_pattern_t;
 
+typedef struct _cairo_gradient_stop {
+    cairo_fixed_t x;
+    cairo_color_t color;
+} cairo_gradient_stop_t;
+
 typedef struct _cairo_gradient_pattern {
     cairo_pattern_t base;
 
     unsigned int	    n_stops;
     unsigned int	    stops_size;
-    pixman_gradient_stop_t *stops;
-    pixman_gradient_stop_t  stops_embedded[2];
+    cairo_gradient_stop_t  *stops;
+    cairo_gradient_stop_t   stops_embedded[2];
 } cairo_gradient_pattern_t;
 
 typedef struct _cairo_linear_pattern {
     cairo_gradient_pattern_t base;
 
-    pixman_point_fixed_t     p1;
-    pixman_point_fixed_t     p2;
-    pixman_gradient_stop_t  *stops;
-    int			     n_stops;
+    cairo_point_t p1;
+    cairo_point_t p2;
 } cairo_linear_pattern_t;
 
 typedef struct _cairo_radial_pattern {
     cairo_gradient_pattern_t base;
 
-    pixman_point_fixed_t     c1;
-    pixman_point_fixed_t     c2;
-    pixman_fixed_t           radius1;
-    pixman_fixed_t           radius2;
-    pixman_gradient_stop_t  *stops;
-    int                      n_stops;
+    cairo_point_t c1;
+    cairo_fixed_t r1;
+    cairo_point_t c2;
+    cairo_fixed_t r2;
 } cairo_radial_pattern_t;
 
 typedef union {
@@ -1643,7 +1644,7 @@ cairo_private cairo_status_t
 _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
 					 const cairo_glyph_t	 *glyphs,
 					 int                      num_glyphs,
-					 cairo_rectangle_int_t   *extents);
+					 cairo_rectangle_int16_t *extents);
 
 cairo_private cairo_status_t
 _cairo_scaled_font_show_glyphs (cairo_scaled_font_t *scaled_font,

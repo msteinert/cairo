@@ -1566,10 +1566,10 @@ _cairo_pdf_surface_emit_radial_pattern (cairo_pdf_surface_t    *surface,
     cairo_matrix_multiply (&pat_to_pdf, &pat_to_pdf, &surface->cairo_to_pdf);
     x1 = _cairo_fixed_to_double (pattern->c1.x);
     y1 = _cairo_fixed_to_double (pattern->c1.y);
-    r1 = _cairo_fixed_to_double (pattern->radius1);
+    r1 = _cairo_fixed_to_double (pattern->r1);
     x2 = _cairo_fixed_to_double (pattern->c2.x);
     y2 = _cairo_fixed_to_double (pattern->c2.y);
-    r2 = _cairo_fixed_to_double (pattern->radius2);
+    r2 = _cairo_fixed_to_double (pattern->r2);
 
     pattern_resource = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
@@ -3061,10 +3061,10 @@ _gradient_pattern_supported (cairo_pattern_t *pattern)
 
         x1 = _cairo_fixed_to_double (radial->c1.x);
         y1 = _cairo_fixed_to_double (radial->c1.y);
-        r1 = _cairo_fixed_to_double (radial->radius1);
+        r1 = _cairo_fixed_to_double (radial->r1);
         x2 = _cairo_fixed_to_double (radial->c2.x);
         y2 = _cairo_fixed_to_double (radial->c2.y);
-        r2 = _cairo_fixed_to_double (radial->radius2);
+        r2 = _cairo_fixed_to_double (radial->r2);
 
         d = sqrt((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1));
         if (d > fabs(r2 - r1)) {
