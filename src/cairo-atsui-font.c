@@ -175,29 +175,34 @@ cairo_atsui_font_face_create_for_atsu_font_id (ATSUFontID font_id)
     return &font_face->base;
 }
 
-static ATSUStyle
+static OSStatus
 CreateSizedCopyOfStyle(ATSUStyle inStyle, 
 		       const Fixed *theSize, 
-		       const CGAffineTransform *theTransform)
+                      const CGAffineTransform *theTransform,
+                      ATSUStyle *style)
 {
-    ATSUStyle style;
     OSStatus err;
     const ATSUAttributeTag theFontStyleTags[] = { kATSUSizeTag, 
-						  kATSUFontMatrixTag };
+                                                 kATSUFontMatrixTag };
     const ByteCount theFontStyleSizes[] = { sizeof(Fixed), 
-					    sizeof(CGAffineTransform) };
+                                           sizeof(CGAffineTransform) };
     ATSUAttributeValuePtr theFontStyleValues[] = { (Fixed *)theSize, 
-						   (CGAffineTransform *)theTransform };
+                                                  (CGAffineTransform *)theTransform };
 
-    err = ATSUCreateAndCopyStyle(inStyle, &style);
+    err = ATSUCreateAndCopyStyle (inStyle, style);
+    if (err != noErr)
+	return err;
 
-    err = ATSUSetAttributes(style,
+    err = ATSUSetAttributes(*style,
                             sizeof(theFontStyleTags) /
                             sizeof(ATSUAttributeTag), theFontStyleTags,
                             theFontStyleSizes, theFontStyleValues);
+    if (err != noErr)
+	ATSUDisposeStyle (*style);
 
-    return style;
+    return err;
 }
+
 
 static cairo_status_t
 _cairo_atsui_font_set_metrics (cairo_atsui_font_t *font)
@@ -265,7 +270,12 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
 					       0., 0.);
     font->size = FloatToFixed (xscale);
 
-    font->style = CreateSizedCopyOfStyle (style, &font->size, &font->font_matrix);
+    err = CreateSizedCopyOfStyle (style, &font->size, &font->font_matrix, &font->style);
+    if (err != noErr) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto FAIL;
+    }
 
     {
 	Fixed theSize = FloatToFixed(1.0);
@@ -292,7 +302,12 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
 
   FAIL:
     if (status) {
-	cairo_scaled_font_destroy (&font->base);
+	if (font) {
+	    if (font->style)
+		ATSUDisposeStyle(font->style);
+	    free (font);
+	}
+
 	return status;
     }
 
