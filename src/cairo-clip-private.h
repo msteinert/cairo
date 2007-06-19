@@ -72,7 +72,7 @@ struct _cairo_clip {
     /*
      * A clip region that can be placed in the surface
      */
-    pixman_region16_t region;
+    cairo_region_t region;
     cairo_bool_t has_region;
     /*
      * If the surface supports path clipping, we store the list of
@@ -109,7 +109,7 @@ _cairo_clip_intersect_to_rectangle (cairo_clip_t            *clip,
 
 cairo_private cairo_status_t
 _cairo_clip_intersect_to_region (cairo_clip_t      *clip,
-				 pixman_region16_t *region);
+				 cairo_region_t *region);
 
 cairo_private cairo_status_t
 _cairo_clip_combine_to_surface (cairo_clip_t                  *clip,

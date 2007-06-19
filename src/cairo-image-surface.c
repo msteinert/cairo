@@ -1032,11 +1032,11 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 
 cairo_int_status_t
 _cairo_image_surface_set_clip_region (void *abstract_surface,
-				      pixman_region16_t *region)
+				      cairo_region_t *region)
 {
     cairo_image_surface_t *surface = (cairo_image_surface_t *) abstract_surface;
 
-    if (!pixman_image_set_clip_region (surface->pixman_image, region))
+    if (!pixman_image_set_clip_region (surface->pixman_image, &region->rgn))
 	return CAIRO_STATUS_NO_MEMORY;
 
     surface->has_clip = region != NULL;

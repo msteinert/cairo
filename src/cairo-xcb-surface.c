@@ -1532,8 +1532,8 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
 }
 
 static cairo_int_status_t
-_cairo_xcb_surface_set_clip_region (void              *abstract_surface,
-				    pixman_region16_t *region)
+_cairo_xcb_surface_set_clip_region (void           *abstract_surface,
+				    cairo_region_t *region)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
 
@@ -1554,27 +1554,31 @@ _cairo_xcb_surface_set_clip_region (void              *abstract_surface,
 	    xcb_render_change_picture (surface->dpy, surface->dst_picture,
 		XCB_RENDER_CP_CLIP_MASK, none);
     } else {
-	pixman_box16_t *boxes;
+	cairo_box_int_t *boxes;
 	xcb_rectangle_t *rects = NULL;
 	int n_boxes, i;
 
-	n_boxes = pixman_region_num_rects (region);
+        if (_cairo_region_get_boxes (region, &n_boxes, &boxes) != CAIRO_STATUS_SUCCESS)
+            return CAIRO_STATUS_NO_MEMORY;
+
 	if (n_boxes > 0) {
 	    rects = _cairo_malloc_ab (n_boxes, sizeof(xcb_rectangle_t));
-	    if (rects == NULL)
+	    if (rects == NULL) {
+                _cairo_region_boxes_fini (region, boxes);
 		return CAIRO_STATUS_NO_MEMORY;
+            }
 	} else {
 	    rects = NULL;
 	}
 
-	boxes = pixman_region_rects (region);
-
 	for (i = 0; i < n_boxes; i++) {
-	    rects[i].x = boxes[i].x1;
-	    rects[i].y = boxes[i].y1;
-	    rects[i].width = boxes[i].x2 - boxes[i].x1;
-	    rects[i].height = boxes[i].y2 - boxes[i].y1;
+	    rects[i].x = boxes[i].p1.x;
+	    rects[i].y = boxes[i].p1.y;
+	    rects[i].width = boxes[i].p2.x - boxes[i].p1.x;
+	    rects[i].height = boxes[i].p2.y - boxes[i].p1.y;
 	}
+
+        _cairo_region_boxes_fini (region, boxes);
 
 	surface->have_clip_rects = TRUE;
 	surface->clip_rects = rects;

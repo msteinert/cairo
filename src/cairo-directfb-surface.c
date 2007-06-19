@@ -1095,8 +1095,8 @@ _cairo_directfb_surface_composite_trapezoids (cairo_operator_t   op,
 #endif /* DFB_COMPOSITE_TRAPEZOIDS */
 
 static cairo_int_status_t
-_cairo_directfb_surface_set_clip_region (void              *abstract_surface,
-                                         pixman_region16_t *region)
+_cairo_directfb_surface_set_clip_region (void           *abstract_surface,
+                                         cairo_region_t *region)
 {
     cairo_directfb_surface_t *surface = abstract_surface;
     
@@ -1105,16 +1105,19 @@ _cairo_directfb_surface_set_clip_region (void              *abstract_surface,
                 __FUNCTION__, surface, region);
     
     if (region) {
-        pixman_box16_t *boxes   = pixman_region_rects (region);
-        int             n_boxes = pixman_region_num_rects (region);
-        int             i;
-        
+        cairo_box_int_t *boxes;
+        int n_boxes, i;
+
+        if (_cairo_region_get_boxes (region, &n_boxes, &boxes) != CAIRO_STATUS_SUCCESS)
+            return CAIRO_STATUS_NO_MEMORY;
+
         if (surface->n_clips != n_boxes) {
             if( surface->clips )
                 free (surface->clips);
             
             surface->clips = _cairo_malloc_ab (n_boxes, sizeof(DFBRegion));
             if (!surface->clips) {
+                _cairo_region_boxes_fini (region, boxes);
                 surface->n_clips = 0;
                 return CAIRO_STATUS_NO_MEMORY;
             }
@@ -1123,11 +1126,13 @@ _cairo_directfb_surface_set_clip_region (void              *abstract_surface,
         }
         
         for (i = 0; i < n_boxes; i++) {
-            surface->clips[i].x1 = boxes[i].x1;
-            surface->clips[i].y1 = boxes[i].y1;
-            surface->clips[i].x2 = boxes[i].x2;
-            surface->clips[i].y2 = boxes[i].y2;
+            surface->clips[i].x1 = boxes[i].p1.x;
+            surface->clips[i].y1 = boxes[i].p1.y;
+            surface->clips[i].x2 = boxes[i].p2.x;
+            surface->clips[i].y2 = boxes[i].p2.y;
         }
+
+        _cairo_region_boxes_fini (region, boxes);
     }
     else {
         if (surface->clips) {

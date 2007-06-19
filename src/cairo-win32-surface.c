@@ -1374,8 +1374,8 @@ _cairo_win32_surface_fill_rectangles (void			*abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_win32_surface_set_clip_region (void              *abstract_surface,
-				      pixman_region16_t *region)
+_cairo_win32_surface_set_clip_region (void           *abstract_surface,
+				      cairo_region_t *region)
 {
     cairo_win32_surface_t *surface = abstract_surface;
     cairo_status_t status;
@@ -1404,9 +1404,9 @@ _cairo_win32_surface_set_clip_region (void              *abstract_surface,
 	return CAIRO_STATUS_SUCCESS;
 
     } else {
-	pixman_box16_t *boxes = pixman_region_rects (region);
-	int num_boxes = pixman_region_num_rects (region);
-	pixman_box16_t *extents = pixman_region_extents (region);
+	cairo_rectangle_int_t extents;
+	cairo_box_int_t *boxes;
+	int num_boxes;
 	RGNDATA *data;
 	size_t data_size;
 	RECT *rects;
@@ -1415,10 +1415,16 @@ _cairo_win32_surface_set_clip_region (void              *abstract_surface,
 
 	/* Create a GDI region for the cairo region */
 
+	_cairo_region_get_extents (region, &extents);
+	if (_cairo_region_get_boxes (region, &num_boxes, &boxes) != CAIRO_STATUS_SUCCESS)
+	    return CAIRO_STATUS_NO_MEMORY;
+
 	data_size = sizeof (RGNDATAHEADER) + num_boxes * sizeof (RECT);
 	data = malloc (data_size);
-	if (!data)
+	if (!data) {
+	    _cairo_region_boxes_fini (region, boxes);
 	    return CAIRO_STATUS_NO_MEMORY;
+	}
 	rects = (RECT *)data->Buffer;
 
 	data->rdh.dwSize = sizeof (RGNDATAHEADER);
@@ -1431,11 +1437,13 @@ _cairo_win32_surface_set_clip_region (void              *abstract_surface,
 	data->rdh.rcBound.bottom = extents->y2;
 
 	for (i = 0; i < num_boxes; i++) {
-	    rects[i].left = boxes[i].x1;
-	    rects[i].top = boxes[i].y1;
-	    rects[i].right = boxes[i].x2;
-	    rects[i].bottom = boxes[i].y2;
+	    rects[i].left = boxes[i].p1.x;
+	    rects[i].top = boxes[i].p1.y;
+	    rects[i].right = boxes[i].p2.x;
+	    rects[i].bottom = boxes[i].p2.y;
 	}
+
+	_cairo_region_boxes_fini (region, &boxes);
 
 	gdi_region = ExtCreateRegion (NULL, data_size, data);
 	free (data);

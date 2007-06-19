@@ -34,7 +34,7 @@ typedef struct _cairo_glitz_surface {
     glitz_surface_t   *surface;
     glitz_format_t    *format;
     cairo_bool_t      has_clip;
-    pixman_region16_t clip;
+    cairo_region_t    clip;
 } cairo_glitz_surface_t;
 
 static const cairo_surface_backend_t *
@@ -47,7 +47,7 @@ _cairo_glitz_surface_finish (void *abstract_surface)
 
     if (surface->has_clip) {
         glitz_surface_set_clip_region (surface->surface, 0, 0, NULL, 0);
-        pixman_region_fini (&surface->clip);
+        _cairo_region_fini (&surface->clip);
     }
 
     glitz_surface_destroy (surface->surface);
@@ -148,6 +148,36 @@ _CAIRO_MASK_FORMAT (cairo_format_masks_t *masks, cairo_format_t *format)
 	break;
     }
     return FALSE;
+}
+
+static glitz_box_t *
+_cairo_glitz_get_boxes_from_region (cairo_region_t *region, int *nboxes)
+{
+    cairo_box_int_t *cboxes;
+    glitz_box_t *gboxes;
+    int n, i;
+
+    if (_cairo_region_get_boxes (&surface->clip, &n, &cboxes) != CAIRO_STATUS_SUCCESS)
+        return NULL;
+
+    *nboxes = n;
+    if (n == 0)
+        return NULL;
+
+    gboxes = malloc (sizeof(glitz_box_t) * n);
+    if (gboxes == NULL)
+        goto done;
+
+    for (i = 0; i < n; i++) {
+        gboxes[i].x1 = cboxes[i].p1.x;
+        gboxes[i].y1 = cboxes[i].p1.y;
+        gboxes[i].x2 = cboxes[i].p2.x;
+        gboxes[i].y2 = cboxes[i].p2.y;
+    }
+
+done:
+    _cairo_region_boxes_fini (&sruface->clip, &cboxes);
+    return gboxes;
 }
 
 static cairo_status_t
@@ -264,10 +294,17 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t   *surface,
     /* restore the clip, if any */
     if (surface->has_clip) {
 	glitz_box_t *box;
-	int	    n;
+        int n;
 
-	box = (glitz_box_t *) pixman_region_rectangles (&surface->clip, &n);
+        box = _cairo_glitz_get_boxes_from_region (&surface->clip, &n);
+        if (box == NULL && n != 0) {
+            free (pixels);
+            return CAIRO_STATUS_NO_MEMORY;
+        }
+
 	glitz_surface_set_clip_region (surface->surface, 0, 0, box, n);
+
+        free (box);
     }
 
     /*
@@ -1393,37 +1430,45 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 
 static cairo_int_status_t
 _cairo_glitz_surface_set_clip_region (void		*abstract_surface,
-				      pixman_region16_t *region)
+                                      cairo_region_t	*region);
 {
     cairo_glitz_surface_t *surface = abstract_surface;
 
     if (region)
+
     {
 	glitz_box_t *box;
 	int	    n;
 
 	if (!surface->has_clip) {
-            pixman_region_init (&surface->clip);
+            _cairo_region_init (&surface->clip);
             surface->has_clip = TRUE;
         }
 
-	if (!pixman_region_copy (&surface->clip, region))
+	if (_cairo_region_copy (&surface->clip, region) != CAIRO_STATUS_SUCCESS)
         {
-	    pixman_region_fini (&surface->clip);
+            _cairo_region_fini (&surface->clip);
 	    surface->has_clip = FALSE;
             return CAIRO_STATUS_NO_MEMORY;
         }
 
-	box = (glitz_box_t *) pixman_region_rectangles (&surface->clip, &n);
+        box = _cairo_glitz_get_boxes_from_region (&surface->clip, &n);
+        if (box == NULL && n != 0) {
+            _cairo_region_fini (&surface->clip);
+	    surface->has_clip = FALSE;
+            return CAIRO_STATUS_NO_MEMORY;
+        }
 
 	glitz_surface_set_clip_region (surface->surface, 0, 0, box, n);
+
+        free (box);
     }
     else
     {
 	glitz_surface_set_clip_region (surface->surface, 0, 0, NULL, 0);
 
 	if (surface->has_clip) {
-	    pixman_region_fini (&surface->clip);
+	    _cairo_region_fini (&surface->clip);
 	    surface->has_clip = FALSE;
         }
     }

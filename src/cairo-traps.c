@@ -575,29 +575,30 @@ _cairo_traps_extents (cairo_traps_t *traps, cairo_box_t *extents)
     *extents = traps->extents;
 }
 
+#define STACK_BOXES_LEN ((int) (CAIRO_STACK_BUFFER_SIZE / sizeof(cairo_box_int_t)))
+
 /**
  * _cairo_traps_extract_region:
  * @traps: a #cairo_traps_t
- * @region: on return, %NULL is stored here if the trapezoids aren't
- *          exactly representable as a pixman region, otherwise a
- *          a pointer to such a region, newly allocated.
- *          (free with pixman region destroy)
+ * @region: a #cairo_region_t
  *
  * Determines if a set of trapezoids are exactly representable as a
- * pixman region, and if so creates such a region.
+ * cairo region.  If so, the passed-in region is initialized to
+ * the area representing the given traps.  It should be finalized
+ * with _cairo_region_fini().  If not, %CAIRO_INT_STATUS_UNSUPPORTED
+ * is returned.
  *
  * Return value: %CAIRO_STATUS_SUCCESS, %CAIRO_INT_STATUS_UNSUPPORTED
  * or %CAIRO_STATUS_NO_MEMORY
  **/
 cairo_int_status_t
-_cairo_traps_extract_region (cairo_traps_t     *traps,
-			     pixman_region16_t *region)
+_cairo_traps_extract_region (cairo_traps_t  *traps,
+			     cairo_region_t *region)
 {
-#define NUM_STATIC_BOXES 16
-    pixman_box16_t static_boxes[NUM_STATIC_BOXES];
-    pixman_box16_t *boxes;
+    cairo_box_int_t stack_boxes[STACK_BOXES_LEN];
+    cairo_box_int_t *boxes = stack_boxes;
     int i, box_count;
-    pixman_bool_t status;
+    cairo_int_status_t status;
 
     for (i = 0; i < traps->num_traps; i++)
 	if (!(traps->traps[i].left.p1.x == traps->traps[i].left.p2.x
@@ -609,11 +610,8 @@ _cairo_traps_extract_region (cairo_traps_t     *traps,
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
 
-    if (traps->num_traps <= NUM_STATIC_BOXES) {
-	boxes = static_boxes;
-    } else {
-	/*boxes = _cairo_malloc2 (traps->num_traps, sizeof(pixman_box16_t));*/
-	boxes = malloc (traps->num_traps * sizeof(pixman_box16_t));
+    if (traps->num_traps > ARRAY_LENGTH(stack_boxes)) {
+	boxes = _cairo_malloc_ab (traps->num_traps, sizeof(cairo_box_int_t));
 
 	if (boxes == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;
@@ -633,23 +631,21 @@ _cairo_traps_extract_region (cairo_traps_t     *traps,
 	if (x1 == x2 || y1 == y2)
 	    continue;
 
-	boxes[box_count].x1 = (short) x1;
-	boxes[box_count].y1 = (short) y1;
-	boxes[box_count].x2 = (short) x2;
-	boxes[box_count].y2 = (short) y2;
+	boxes[box_count].p1.x = x1;
+	boxes[box_count].p1.y = y1;
+	boxes[box_count].p2.x = x2;
+	boxes[box_count].p2.y = y2;
 
 	box_count++;
     }
 
-    status = pixman_region_init_rects (region, boxes, box_count);
+    status = _cairo_region_init_boxes (region, boxes, box_count);
 
-    if (boxes != static_boxes)
+    if (boxes != stack_boxes)
 	free (boxes);
 
-    if (!status) {
-	pixman_region_fini (region);
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
+    if (status)
+	_cairo_region_fini (region);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }

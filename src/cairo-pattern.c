@@ -1771,10 +1771,10 @@ _cairo_pattern_acquire_surface (cairo_pattern_t		   *pattern,
 		cairo_color_t color;
 
 		_cairo_color_init_rgba (&color,
-					src->stops->color.red / 65535.0,
-					src->stops->color.green / 65535.0,
-					src->stops->color.blue / 65535.0,
-					src->stops->color.alpha / 65535.0);
+					src->stops->color.red,
+					src->stops->color.green,
+					src->stops->color.blue,
+					src->stops->color.alpha);
 
 		_cairo_pattern_init_solid (&solid, &color,
 					   CAIRO_COLOR_IS_OPAQUE (&color) ?
@@ -2140,13 +2140,13 @@ cairo_pattern_get_color_stop_rgba (cairo_pattern_t *pattern,
     if (offset)
 	*offset = _cairo_fixed_to_double(gradient->stops[index].x);
     if (red)
-	*red = gradient->stops[index].color.red / (double) 0xffff;
+	*red = gradient->stops[index].color.red;
     if (green)
-	*green = gradient->stops[index].color.green / (double) 0xffff;
+	*green = gradient->stops[index].color.green;
     if (blue)
-	*blue = gradient->stops[index].color.blue / (double) 0xffff;
+	*blue = gradient->stops[index].color.blue;
     if (alpha)
-	*alpha = gradient->stops[index].color.alpha / (double) 0xffff;
+	*alpha = gradient->stops[index].color.alpha;
 
     return CAIRO_STATUS_SUCCESS;
 }

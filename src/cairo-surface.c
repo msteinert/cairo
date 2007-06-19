@@ -1,3 +1,4 @@
+/* -*- Mode: c; tab-width: 8; c-basic-offset: 4; indent-tabs-mode: t; -*- */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
@@ -1220,7 +1221,7 @@ _cairo_surface_fill_rectangle (cairo_surface_t	   *surface,
  * @region: the region to modify, in backend coordinates
  *
  * Applies an operator to a set of rectangles specified as a
- * #pixman_region16_t using a solid color as the source.
+ * #cairo_region_t using a solid color as the source.
  * See _cairo_surface_fill_rectangles() for full details.
  *
  * Return value: %CAIRO_STATUS_SUCCESS or the error that occurred
@@ -1229,10 +1230,10 @@ cairo_status_t
 _cairo_surface_fill_region (cairo_surface_t	   *surface,
 			    cairo_operator_t	    op,
 			    const cairo_color_t    *color,
-			    pixman_region16_t      *region)
+			    cairo_region_t         *region)
 {
-    int num_rects;
-    pixman_box16_t *boxes;
+    int num_boxes;
+    cairo_box_int_t *boxes;
     cairo_rectangle_int_t stack_rects[CAIRO_STACK_BUFFER_SIZE / sizeof (cairo_rectangle_int_t)];
     cairo_rectangle_int_t *rects;
     cairo_status_t status;
@@ -1240,27 +1241,33 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
 
     assert (! surface->is_snapshot);
 
-    boxes = pixman_region_rectangles (region, &num_rects);
-    
-    if (!num_rects)
+    status = _cairo_region_get_boxes (region, &num_boxes, &boxes);
+    if (status)
+	return status;
+
+    if (num_boxes == 0)
 	return CAIRO_STATUS_SUCCESS;
 
     rects = stack_rects;
-    if (num_rects > ARRAY_LENGTH (stack_rects)) {
-	rects = _cairo_malloc_ab (num_rects, sizeof (cairo_rectangle_int_t));
-	if (!rects)
+    if (num_boxes > ARRAY_LENGTH (stack_rects)) {
+	rects = _cairo_malloc_ab (num_boxes, sizeof (cairo_rectangle_int_t));
+	if (!rects) {
+	    _cairo_region_boxes_fini (region, boxes);
 	    return CAIRO_STATUS_NO_MEMORY;
+        }
     }
 
-    for (i = 0; i < num_rects; i++) {
-	rects[i].x = boxes[i].x1;
-	rects[i].y = boxes[i].y1;
-	rects[i].width = boxes[i].x2 - boxes[i].x1;
-	rects[i].height = boxes[i].y2 - boxes[i].y1;
+    for (i = 0; i < num_boxes; i++) {
+	rects[i].x = boxes[i].p1.x;
+	rects[i].y = boxes[i].p1.y;
+	rects[i].width = boxes[i].p2.x - boxes[i].p1.x;
+	rects[i].height = boxes[i].p2.y - boxes[i].p1.y;
     }
 
     status =  _cairo_surface_fill_rectangles (surface, op,
-					      color, rects, num_rects);
+					      color, rects, num_boxes);
+
+    _cairo_region_boxes_fini (region, boxes);
 
     if (rects != stack_rects)
 	free (rects);
@@ -1630,7 +1637,7 @@ _cairo_surface_reset_clip (cairo_surface_t *surface)
 /**
  * _cairo_surface_set_clip_region:
  * @surface: the #cairo_surface_t to reset the clip on
- * @region: the #pixman_region16_t to use for clipping
+ * @region: the #cairo_region_t to use for clipping
  * @serial: the clip serial number associated with the region
  *
  * This function sets the clipping for the surface to
@@ -1639,7 +1646,7 @@ _cairo_surface_reset_clip (cairo_surface_t *surface)
  */
 cairo_status_t
 _cairo_surface_set_clip_region (cairo_surface_t	    *surface,
-				pixman_region16_t   *region,
+				cairo_region_t	    *region,
 				unsigned int	    serial)
 {
     cairo_status_t status;
@@ -1952,8 +1959,8 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
     cairo_rectangle_int_t drawn_rectangle;
     cairo_bool_t has_drawn_region = FALSE;
     cairo_bool_t has_clear_region = FALSE;
-    pixman_region16_t drawn_region;
-    pixman_region16_t clear_region;
+    cairo_region_t drawn_region;
+    cairo_region_t clear_region;
     cairo_status_t status;
 
     /* The area that was drawn is the area in the destination rectangle but not within
@@ -1974,17 +1981,15 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
 
     /* Now compute the area that is in dst_rectangle but not in drawn_rectangle
      */
-    pixman_region_init_rect (&drawn_region,
-                              drawn_rectangle.x, drawn_rectangle.y,
-                              drawn_rectangle.width, drawn_rectangle.height);
-    pixman_region_init_rect (&clear_region,
-                              dst_rectangle.x, dst_rectangle.y,
-                              dst_rectangle.width, dst_rectangle.height);
+    _cairo_region_init_rect (&drawn_region, &drawn_rectangle);
+    _cairo_region_init_rect (&clear_region, &dst_rectangle);
 
     has_drawn_region = TRUE;
     has_clear_region = TRUE;
 
-    if (!pixman_region_subtract (&clear_region, &clear_region, &drawn_region)) {
+    if (_cairo_region_subtract (&clear_region, &clear_region, &drawn_region)
+	!= CAIRO_STATUS_SUCCESS)
+    {
         status = CAIRO_STATUS_NO_MEMORY;
         goto CLEANUP_REGIONS;
     }
@@ -1995,9 +2000,9 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
 
 CLEANUP_REGIONS:
     if (has_drawn_region)
-        pixman_region_fini (&drawn_region);
+        _cairo_region_fini (&drawn_region);
     if (has_clear_region)
-        pixman_region_fini (&clear_region);
+        _cairo_region_fini (&clear_region);
 
     return status;
 }

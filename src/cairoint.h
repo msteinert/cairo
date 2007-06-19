@@ -241,6 +241,8 @@ be32_to_cpu(uint32_t v)
 #include "cairo-hash-private.h"
 #include "cairo-cache-private.h"
 
+typedef struct _cairo_region cairo_region_t;
+
 typedef struct _cairo_point {
     cairo_fixed_t x;
     cairo_fixed_t y;
@@ -282,12 +284,34 @@ typedef struct _cairo_rectangle_int32 {
     uint32_t width, height;
 } cairo_rectangle_int32_t;
 
+typedef struct _cairo_point_int16 {
+    int16_t x, y;
+} cairo_point_int16_t;
+
+typedef struct _cairo_point_int32 {
+    int16_t x, y;
+} cairo_point_int32_t;
+
+typedef struct _cairo_box_int16 {
+    cairo_point_int16_t p1;
+    cairo_point_int16_t p2;
+} cairo_box_int16_t;
+
+typedef struct _cairo_box_int32 {
+    cairo_point_int32_t p1;
+    cairo_point_int32_t p2;
+} cairo_box_int32_t;
+
 #if CAIRO_FIXED_BITS == 32 && CAIRO_FIXED_FRAC_BITS >= 16
 typedef cairo_rectangle_int16_t cairo_rectangle_int_t;
+typedef cairo_point_int16_t cairo_point_int_t;
+typedef cairo_box_int16_t cairo_box_int_t;
 #define CAIRO_RECT_INT_MIN INT16_MIN
 #define CAIRO_RECT_INT_MAX INT16_MAX
 #elif CAIRO_FIXED_BITS == 32
 typedef cairo_rectangle_int32_t cairo_rectangle_int_t;
+typedef cairo_point_int32_t cairo_point_int_t;
+typedef cairo_box_int32_t cairo_box_int_t;
 #define CAIRO_RECT_INT_MIN INT32_MIN
 #define CAIRO_RECT_INT_MAX INT32_MAX
 #else
@@ -784,7 +808,7 @@ struct _cairo_surface_backend {
      */
     cairo_warn cairo_int_status_t
     (*set_clip_region)		(void			*surface,
-				 pixman_region16_t	*region);
+				 cairo_region_t		*region);
 
     /* Intersect the given path against the clip path currently set in
      * the surface, using the given fill_rule and tolerance, and set
@@ -1769,7 +1793,7 @@ cairo_private cairo_status_t
 _cairo_surface_fill_region (cairo_surface_t	   *surface,
 			    cairo_operator_t	    op,
 			    const cairo_color_t    *color,
-			    pixman_region16_t      *region);
+			    cairo_region_t         *region);
 
 cairo_private cairo_status_t
 _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
@@ -1892,7 +1916,7 @@ _cairo_surface_reset_clip (cairo_surface_t *surface);
 
 cairo_private cairo_status_t
 _cairo_surface_set_clip_region (cairo_surface_t	    *surface,
-				pixman_region16_t   *region,
+				cairo_region_t      *region,
 				unsigned int	    serial);
 
 cairo_private cairo_int_status_t
@@ -2050,7 +2074,7 @@ _cairo_image_surface_assume_ownership_of_data (cairo_image_surface_t *surface);
  */
 cairo_private cairo_int_status_t
 _cairo_image_surface_set_clip_region (void *abstract_surface,
-				      pixman_region16_t *region);
+				      cairo_region_t *region);
 
 cairo_private cairo_image_surface_t *
 _cairo_image_surface_clone (cairo_image_surface_t	*surface,
@@ -2227,7 +2251,7 @@ _cairo_traps_extents (cairo_traps_t *traps, cairo_box_t *extents);
 
 cairo_private cairo_int_status_t
 _cairo_traps_extract_region (cairo_traps_t     *tr,
-			     pixman_region16_t *region);
+			     cairo_region_t *region);
 
 cairo_private void
 _cairo_trapezoid_array_translate_and_scale (cairo_trapezoid_t *offset_traps,
@@ -2336,9 +2360,7 @@ _cairo_gstate_get_antialias (cairo_gstate_t *gstate);
 
 /* cairo-region.c */
 
-cairo_private void
-_cairo_region_extents_rectangle (pixman_region16_t       *region,
-				 cairo_rectangle_int_t   *rect);
+#include "cairo-region-private.h"
 
 /* cairo_unicode.c */
 

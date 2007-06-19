@@ -107,7 +107,7 @@ _test_paginated_surface_finish (void *abstract_surface)
 
 static cairo_int_status_t
 _test_paginated_surface_set_clip_region (void *abstract_surface,
-					 pixman_region16_t *region)
+					 cairo_region_t *region)
 {
     test_paginated_surface_t *surface = abstract_surface;
 

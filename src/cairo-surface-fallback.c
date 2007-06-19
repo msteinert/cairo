@@ -410,13 +410,13 @@ _composite_trap_region (cairo_clip_t            *clip,
 			cairo_pattern_t         *src,
 			cairo_operator_t         op,
 			cairo_surface_t         *dst,
-			pixman_region16_t       *trap_region,
+			cairo_region_t          *trap_region,
 			cairo_rectangle_int_t   *extents)
 {
     cairo_status_t status;
     cairo_pattern_union_t solid_pattern;
     cairo_pattern_union_t mask;
-    int num_rects = pixman_region_n_rects (trap_region);
+    int num_rects = _cairo_region_num_boxes (trap_region);
     unsigned int clip_serial;
     cairo_surface_t *clip_surface = clip ? clip->surface : NULL;
 
@@ -519,8 +519,8 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
 				cairo_antialias_t antialias)
 {
     cairo_status_t status;
-    pixman_region16_t trap_region;
-    pixman_region16_t clear_region;
+    cairo_region_t trap_region;
+    cairo_region_t clear_region;
     cairo_bool_t has_trap_region = FALSE;
     cairo_bool_t has_clear_region = FALSE;
     cairo_rectangle_int_t extents;
@@ -553,7 +553,7 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
             if (status)
                 goto out;
 
-            _cairo_region_extents_rectangle (&trap_region, &trap_extents);
+            _cairo_region_get_extents (&trap_region, &trap_extents);
         } else {
             cairo_box_t trap_box;
             _cairo_traps_extents (traps, &trap_box);
@@ -573,9 +573,7 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
              * _cairo_surface_fill_rectangles() or to drawing with a
              * clip region, then we have an additional region to clear.
              */
-            pixman_region_init_rect (&clear_region,
-                                     extents.x, extents.y,
-                                     extents.width, extents.height);
+            _cairo_region_init_rect (&clear_region, &extents);
 
             has_clear_region = TRUE;
             status = _cairo_clip_intersect_to_region (clip, &clear_region);
@@ -583,15 +581,14 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
             if (status)
                 goto out;
 
-            _cairo_region_extents_rectangle (&clear_region,  &extents);
+            _cairo_region_get_extents (&clear_region, &extents);
 
-            if (!pixman_region_subtract (&clear_region, &clear_region, &trap_region)) {
-                status = CAIRO_STATUS_NO_MEMORY;
+            status = _cairo_region_subtract (&clear_region, &clear_region, &trap_region);
+            if (status)
                 goto out;
-            }
 
-            if (!pixman_region_not_empty (&clear_region)) {
-                pixman_region_fini (&clear_region);
+            if (!_cairo_region_not_empty (&clear_region)) {
+                _cairo_region_fini (&clear_region);
                 has_clear_region = FALSE;
             }
         } else {
@@ -665,9 +662,9 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
 
 out:
     if (has_trap_region)
-        pixman_region_fini (&trap_region);
+        _cairo_region_fini (&trap_region);
     if (has_clear_region)
-        pixman_region_fini (&clear_region);
+        _cairo_region_fini (&clear_region);
 
     return status;
 }
