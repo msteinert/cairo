@@ -1166,7 +1166,7 @@ _cairo_surface_fallback_fill_rectangles (cairo_surface_t         *surface,
     /* If the fetched image isn't at 0,0, we need to offset the rectangles */
 
     if (state.image_rect.x != 0 || state.image_rect.y != 0) {
-	offset_rects = malloc (sizeof (cairo_rectangle_int16_t) * num_rects);
+      offset_rects = _cairo_malloc_ab (num_rects, sizeof (cairo_rectangle_int16_t));
 	if (offset_rects == NULL) {
 	    status = CAIRO_STATUS_NO_MEMORY;
 	    goto DONE;
@@ -1222,7 +1222,7 @@ _cairo_surface_fallback_composite_trapezoids (cairo_operator_t		op,
     /* If the destination image isn't at 0,0, we need to offset the trapezoids */
 
     if (state.image_rect.x != 0 || state.image_rect.y != 0) {
-	offset_traps = malloc (sizeof (cairo_trapezoid_t) * num_traps);
+	offset_traps = _cairo_malloc_ab (num_traps, sizeof (cairo_trapezoid_t));
 	if (!offset_traps) {
 	    status = CAIRO_STATUS_NO_MEMORY;
 	    goto DONE;

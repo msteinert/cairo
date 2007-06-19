@@ -754,7 +754,7 @@ _cairo_bo_event_queue_init (cairo_bo_event_queue_t	*event_queue,
      * or stop events, so this allocation is safe.  XXX: make the
      * event type a union so it doesn't always contain the skip
      * elt? */
-    events = malloc (num_events * (sizeof (cairo_bo_event_t) + sizeof(cairo_bo_event_t*)));
+    events = _cairo_malloc_ab (num_events, sizeof (cairo_bo_event_t) + sizeof(cairo_bo_event_t*));
     if (events == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
@@ -1436,7 +1436,7 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	*traps,
     if (polygon->num_edges < ARRAY_LENGTH (stack_edges)) {
 	edges = stack_edges;
     } else {
-	edges = malloc (polygon->num_edges * sizeof (cairo_bo_edge_t));
+	edges = _cairo_malloc_ab (polygon->num_edges, sizeof (cairo_bo_edge_t));
 	if (edges == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;
     }
@@ -1757,7 +1757,7 @@ run_test (const char		*test_name,
     while (intersections) {
 	int num_edges = _cairo_array_num_elements (&intersected_edges);
 	passes++;
-	edges = malloc (num_edges * sizeof (cairo_bo_edge_t));
+	edges = _cairo_malloc_ab (num_edges, sizeof (cairo_bo_edge_t));
 	assert (edges != NULL);
 	memcpy (edges, _cairo_array_index (&intersected_edges, 0), num_edges * sizeof (cairo_bo_edge_t));
 	_cairo_array_fini (&intersected_edges);

@@ -215,8 +215,8 @@ pixman_image_create_linear_gradient (const pixman_linear_gradient_t *gradient,
     if (!image)
 	return NULL;
 
-    linear = malloc (sizeof (pixman_linear_gradient_image_t) +
-		     sizeof (pixman_gradient_stop_t) * n_stops);
+    linear = _pixman_malloc_ab_plus_c (n_stops, sizeof (pixman_gradient_stop_t),
+			       sizeof (pixman_linear_gradient_image_t));
     if (!linear)
     {
 	free (image);
@@ -259,8 +259,8 @@ pixman_image_create_radial_gradient (const pixman_radial_gradient_t *gradient,
     if (!image)
 	return NULL;
 
-    radial = malloc (sizeof (pixman_radial_gradient_image_t) +
-		     sizeof (pixman_gradient_stop_t) * n_stops);
+    radial = _pixman_malloc_ab_plus_c (n_stops, sizeof (pixman_gradient_stop_t),
+			       sizeof (pixman_radial_gradient_image_t));
     if (!radial)
     {
 	free (image);

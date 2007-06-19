@@ -259,7 +259,7 @@ premultiply_rgba (unsigned char* data,
 		  int            height,
 		  int            stride)
 {
-    unsigned char* retdata = reinterpret_cast<unsigned char*>(malloc(stride * height));
+    unsigned char* retdata = reinterpret_cast<unsigned char*>(_cairo_malloc_ab(height, stride));
     if (!retdata)
 	return NULL;
 
@@ -322,7 +322,7 @@ _cairo_beos_bitmap_to_surface (BBitmap* bitmap)
 					bitmap->BytesPerRow());
     } else {
 	premultiplied = reinterpret_cast<unsigned char*>(
-					malloc(bitmap->BytesPerRow() * height));
+					_cairo_malloc_ab(bitmap->BytesPerRow(), height));
 	if (premultiplied)
 	    memcpy(premultiplied, bits, bitmap->BytesPerRow() * height);
     }

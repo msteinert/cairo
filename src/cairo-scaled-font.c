@@ -927,7 +927,7 @@ _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
     if (status)
 	goto DONE;
 
-    *glyphs = (cairo_glyph_t *) malloc ((*num_glyphs) * (sizeof (cairo_glyph_t)));
+    *glyphs = (cairo_glyph_t *) _cairo_malloc_ab ((*num_glyphs), sizeof (cairo_glyph_t));
 
     if (*glyphs == NULL) {
 	status = CAIRO_STATUS_NO_MEMORY;

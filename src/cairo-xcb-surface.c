@@ -403,7 +403,7 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
     bpp = _bits_per_pixel(surface->dpy, imagerep->depth);
     bytes_per_line = _bytes_per_line(surface->dpy, surface->width, bpp);
 
-    data = malloc (bytes_per_line * surface->height);
+    data = _cairo_malloc_ab (surface->height, bytes_per_line);
     if (data == NULL) {
 	free (imagerep);
 	return CAIRO_STATUS_NO_MEMORY;
@@ -1328,7 +1328,7 @@ _create_trapezoid_mask (cairo_xcb_surface_t *dst,
     mask_picture = _create_a8_picture (dst, &transparent, width, height, FALSE);
     solid_picture = _create_a8_picture (dst, &solid, width, height, TRUE);
 
-    offset_traps = malloc (sizeof (xcb_render_trapezoid_t) * num_traps);
+    offset_traps = _cairo_malloc_ab (num_traps, sizeof (xcb_render_trapezoid_t));
     if (!offset_traps)
 	return XCB_NONE;
 
@@ -1515,7 +1515,7 @@ _cairo_xcb_surface_set_clip_region (void              *abstract_surface,
 
 	n_boxes = pixman_region_num_rects (region);
 	if (n_boxes > 0) {
-	    rects = malloc (sizeof(xcb_rectangle_t) * n_boxes);
+	    rects = _cairo_malloc_ab (n_boxes, sizeof(xcb_rectangle_t));
 	    if (rects == NULL)
 		return CAIRO_STATUS_NO_MEMORY;
 	} else {
@@ -2360,7 +2360,7 @@ _cairo_xcb_surface_show_glyphs (void                *abstract_dst,
     /* We make a copy of the glyphs so that we can elide any size-zero
      * glyphs to workaround an X server bug, (present in at least Xorg
      * 7.1 without EXA). */
-    output_glyphs = malloc (num_glyphs * sizeof (cairo_glyph_t));
+    output_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
     if (output_glyphs == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 

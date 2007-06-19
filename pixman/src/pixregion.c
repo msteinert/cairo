@@ -148,7 +148,31 @@ pixman_rect_alloc(pixman_region16_t * region, int n);
         ((r1)->y1 <= (r2)->y1) && \
         ((r1)->y2 >= (r2)->y2) )
 
-#define allocData(n) malloc(PIXREGION_SZOF(n))
+static size_t
+PIXREGION_SZOF(size_t n)
+{
+    size_t size = n * sizeof(pixman_box16_t);
+    if (n > UINT32_MAX / sizeof(pixman_box16_t))
+	return 0;
+
+    if (sizeof(pixman_region16_data_t) > UINT32_MAX - size)
+	return 0;
+
+    return size + sizeof(pixman_region16_data_t);
+}
+
+static void
+allocData(size_t n, void **data)
+{
+    size_t sz = PIXREGION_SZOF(n);
+    if (!sz) {
+	*data = NULL;
+	return;
+    }
+
+    *data = malloc(sz);
+}
+
 #define freeData(reg) if ((reg)->data && (reg)->data->size) free((reg)->data)
 
 #define RECTALLOC_BAIL(pReg,n,bail) \
@@ -185,7 +209,10 @@ if (!(pReg)->data || (((pReg)->data->numRects + (n)) > (pReg)->data->size)) \
 if (((numRects) < ((reg)->data->size >> 1)) && ((reg)->data->size > 50)) \
 {									 \
     pixman_region16_data_t * NewData;							 \
-    NewData = (pixman_region16_data_t *)realloc((reg)->data, PIXREGION_SZOF(numRects));	 \
+    size_t data_size = PIXREGION_SZOF(numRects);			 \
+    if (!data_size)							 \
+      goto bail;							 \
+    NewData = (pixman_region16_data_t *)realloc((reg)->data, data_size); \
     if (NewData)							 \
     {									 \
 	NewData->size = (numRects);					 \
@@ -372,11 +399,12 @@ static pixman_region_status_t
 pixman_rect_alloc(pixman_region16_t * region, int n)
 {
     pixman_region16_data_t *data;
+    size_t data_size;
 
     if (!region->data)
     {
 	n++;
-	region->data = allocData(n);
+	allocData(n, (void **) &region->data);
 	if (!region->data)
 	    return pixman_break (region);
 	region->data->numRects = 1;
@@ -384,7 +412,7 @@ pixman_rect_alloc(pixman_region16_t * region, int n)
     }
     else if (!region->data->size)
     {
-	region->data = allocData(n);
+      allocData(n, (void **) &region->data);
 	if (!region->data)
 	    return pixman_break (region);
 	region->data->numRects = 0;
@@ -398,7 +426,10 @@ pixman_rect_alloc(pixman_region16_t * region, int n)
 		n = 250;
 	}
 	n += region->data->numRects;
-	data = (pixman_region16_data_t *)realloc(region->data, PIXREGION_SZOF(n));
+	data_size = PIXREGION_SZOF(n);
+	if (!data_size)
+	    return pixman_break (region);
+	data = (pixman_region16_data_t *)realloc(region->data, data_size);
 	if (!data)
 	    return pixman_break (region);
 	region->data = data;
@@ -424,7 +455,7 @@ pixman_region_copy(pixman_region16_t *dst, pixman_region16_t *src)
     if (!dst->data || (dst->data->size < src->data->numRects))
     {
 	freeData(dst);
-	dst->data = allocData(src->data->numRects);
+	allocData(src->data->numRects, (void **) &dst->data);
 	if (!dst->data)
 	    return pixman_break (dst);
 	dst->data->size = src->data->numRects;
@@ -835,8 +866,10 @@ pixman_op(
 	AppendRegions(newReg, r2BandEnd, r2End);
     }
 
-    if (oldData)
+    if (oldData) {
 	free(oldData);
+	oldData = NULL;
+    }
 
     if (!(numRects = newReg->data->numRects))
     {
@@ -1493,7 +1526,7 @@ pixman_region_validate(pixman_region16_t * badreg,
 
     /* Set up the first region to be the first rectangle in badreg */
     /* Note that step 2 code will never overflow the ri[0].reg rects array */
-    ri = (RegionInfo *) malloc(4 * sizeof(RegionInfo));
+    ri = (RegionInfo *) _pixman_malloc_ab(4, sizeof(RegionInfo));
     if (!ri)
 	return pixman_break (badreg);
     sizeRI = 4;
@@ -1555,9 +1588,13 @@ pixman_region_validate(pixman_region16_t * badreg,
 	/* Uh-oh.  No regions were appropriate.  Create a new one. */
 	if (sizeRI == numRI)
 	{
+	    size_t data_size;
 	    /* Oops, allocate space for new region information */
 	    sizeRI <<= 1;
-	    rit = (RegionInfo *) realloc(ri, sizeRI * sizeof(RegionInfo));
+	    data_size = sizeRI * sizeof(RegionInfo);
+	    if (data_size / sizeRI != sizeof(RegionInfo))
+		goto bail;
+	    rit = (RegionInfo *) realloc(ri, data_size);
 	    if (!rit)
 		goto bail;
 	    ri = rit;
@@ -1659,7 +1696,7 @@ pixman_region_rectsToRegion(nrects, prect, ctype)
 	}
 	return region;
     }
-    pData = allocData(nrects);
+    allocData(nrects, &pData);
     if (!pData)
     {
 	pixman_break (region);
@@ -2167,7 +2204,7 @@ pixman_region16_data_copy(pixman_region16_t * dst, pixman_region16_t * src)
     if (!dst->data || (dst->data->size < src->data->numRects))
     {
 	freeData(dst);
-	dst->data = allocData(src->data->numRects);
+	allocData(src->data->numRects, &dst->data);
 	if (!dst->data)
 	    return pixman_break (dst);
     }

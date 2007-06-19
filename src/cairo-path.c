@@ -381,7 +381,7 @@ _cairo_path_create_internal (cairo_path_fixed_t *path_fixed,
 	return (cairo_path_t*) &_cairo_path_nil;
     }
 
-    path->data = malloc (path->num_data * sizeof (cairo_path_data_t));
+    path->data = _cairo_malloc_ab (path->num_data, sizeof (cairo_path_data_t));
     if (path->data == NULL) {
 	free (path);
 	return (cairo_path_t*) &_cairo_path_nil;

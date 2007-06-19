@@ -1579,7 +1579,7 @@ _create_trapezoid_mask (cairo_xlib_surface_t *dst,
     mask_picture = _create_a8_picture (dst, &transparent, width, height, FALSE);
     solid_picture = _create_a8_picture (dst, &solid, width, height, TRUE);
 
-    offset_traps = malloc (sizeof (XTrapezoid) * num_traps);
+    offset_traps = _cairo_malloc_ab (num_traps, sizeof (XTrapezoid));
     if (!offset_traps)
 	return None;
 
@@ -1760,7 +1760,7 @@ _cairo_xlib_surface_set_clip_region (void              *abstract_surface,
 
 	n_boxes = pixman_region_num_rects (region);
 	if (n_boxes > ARRAY_LENGTH (surface->embedded_clip_rects)) {
-	    rects = malloc (sizeof(XRectangle) * n_boxes);
+	    rects = _cairo_malloc_ab (n_boxes, sizeof(XRectangle));
 	    if (rects == NULL)
 		return CAIRO_STATUS_NO_MEMORY;
 	}else {
@@ -2815,7 +2815,7 @@ _cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
     if (num_elts <= STACK_ELTS_LEN) {
       elts = stack_elts;
     } else {
-      elts = malloc (num_elts * sizeof (XGlyphElt8));
+      elts = _cairo_malloc_ab (num_elts, sizeof (XGlyphElt8));
       if (elts == NULL)
 	  return CAIRO_STATUS_NO_MEMORY;
     }

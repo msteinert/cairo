@@ -70,6 +70,5 @@ typedef struct pixman_region16_point {
 #define PIXREGION_BOX(reg,i) (&PIXREGION_BOXPTR(reg)[i])
 #define PIXREGION_TOP(reg) PIXREGION_BOX(reg, (reg)->data->numRects)
 #define PIXREGION_END(reg) PIXREGION_BOX(reg, (reg)->data->numRects - 1)
-#define PIXREGION_SZOF(n) (sizeof(pixman_region16_data_t) + ((n) * sizeof(pixman_box16_t)))
 
 #endif /* _PIXREGIONINT_H_ */

@@ -133,8 +133,8 @@ _cairo_gradient_pattern_init_copy (cairo_gradient_pattern_t	  *pattern,
 	pattern->stops = pattern->stops_embedded;
     else if (other->stops)
     {
-	pattern->stops = malloc (other->stops_size *
-				 sizeof (pixman_gradient_stop_t));
+	pattern->stops = _cairo_malloc_ab (other->stops_size,
+					 sizeof (pixman_gradient_stop_t));
 	if (pattern->stops == NULL) {
 	    pattern->stops_size = 0;
 	    pattern->n_stops = 0;
@@ -757,7 +757,7 @@ _cairo_pattern_gradient_grow (cairo_gradient_pattern_t *pattern)
     assert (pattern->n_stops <= pattern->stops_size);
 
     if (pattern->stops == pattern->stops_embedded) {
-	new_stops = malloc (new_size * sizeof (pixman_gradient_stop_t));
+	new_stops = _cairo_malloc_ab (new_size, sizeof (pixman_gradient_stop_t));
 	if (new_stops)
 	    memcpy (new_stops, pattern->stops, old_size * sizeof (pixman_gradient_stop_t));
     } else {

@@ -181,6 +181,7 @@ do {					\
 
 #include "cairo-mutex-private.h"
 #include "cairo-wideint-private.h"
+#include "cairo-malloc-private.h"
 
 typedef int32_t		cairo_fixed_16_16_t;
 typedef cairo_int64_t	cairo_fixed_32_32_t;

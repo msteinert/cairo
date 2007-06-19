@@ -1245,7 +1245,7 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
 
     rects = stack_rects;
     if (num_rects > ARRAY_LENGTH (stack_rects)) {
-	rects = malloc (sizeof (cairo_rectangle_int16_t) * num_rects);
+	rects = _cairo_malloc_ab (num_rects, sizeof (cairo_rectangle_int16_t));
 	if (!rects)
 	    return CAIRO_STATUS_NO_MEMORY;
     }

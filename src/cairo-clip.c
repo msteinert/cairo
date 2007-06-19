@@ -634,9 +634,13 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
         return (cairo_rectangle_list_t*) &_cairo_rectangles_not_representable;
 
     n_boxes = clip->has_region ? pixman_region_num_rects (&clip->region) : 1;
-    rectangles = malloc (sizeof (cairo_rectangle_t)*n_boxes);
-    if (rectangles == NULL)
-        return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
+    if (n_boxes > 0) {
+	rectangles = _cairo_malloc_ab (n_boxes, sizeof (cairo_rectangle_t));
+	if (rectangles == NULL)
+	    return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
+    } else {
+	rectangles = NULL;
+    }
 
     if (clip->has_region) {
         pixman_box16_t *boxes;

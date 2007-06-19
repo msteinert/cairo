@@ -1073,4 +1073,21 @@ typedef	xFixed_16_16	xFixed;
 		       (*((a)+2) = (CARD8) ((v) >> 16))))
 #endif
 
+
+/* Allocation helpers */
+
+#define _pixman_malloc_ab(n, size) \
+  ((unsigned) (n) >= INT32_MAX / (unsigned) (size) ? NULL : \
+   malloc((unsigned) (n) * (unsigned) (size)))
+
+#define _pixman_malloc_abc(a, b, size) \
+  ((unsigned) (a) >= INT32_MAX / (unsigned) (b) ? NULL : \
+   (unsigned) ((a)*(b)) >= INT32_MAX / (unsigned) (size) ? NULL : \
+   malloc((unsigned) (a) * (unsigned) (b) * (unsigned) size))
+
+#define _pixman_malloc_ab_plus_c(n, size, k) \
+  ((unsigned) (n) >= INT32_MAX / (unsigned) (size) ? NULL : \
+   (unsigned) (k) >= INT32_MAX - (unsigned) (n) * (unsigned) (size) ? NULL : \
+   malloc((unsigned) (n) * (unsigned) (size) + (unsigned) (k)))
+
 #endif /* _PIXMANINT_H_ */

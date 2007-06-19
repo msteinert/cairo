@@ -2037,7 +2037,7 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
 	 * can modify some of the values.
 	 */
 	if (num_dashes % 2) {
-	    dash = malloc (2 * num_dashes * sizeof (double));
+	    dash = _cairo_malloc_abc (num_dashes, 2, sizeof (double));
 	    if (dash == NULL)
 		return CAIRO_STATUS_NO_MEMORY;
 
@@ -2215,7 +2215,7 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     num_glyphs_unsigned = num_glyphs;
 
     _cairo_ps_surface_emit_pattern (surface, source);
-    glyph_ids = malloc (num_glyphs_unsigned*sizeof (cairo_ps_glyph_id_t));
+    glyph_ids = _cairo_malloc_ab (num_glyphs_unsigned, sizeof (cairo_ps_glyph_id_t));
     if (glyph_ids == NULL)
         return CAIRO_STATUS_NO_MEMORY;
 

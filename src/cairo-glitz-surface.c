@@ -197,7 +197,7 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t   *surface,
     pf.bytes_per_line = (((width * format.bpp) / 8) + 3) & -4;
     pf.scanline_order = GLITZ_PIXEL_SCANLINE_ORDER_TOP_DOWN;
 
-    pixels = malloc (height * pf.bytes_per_line);
+    pixels = _cairo_malloc_ab (height, pf.bytes_per_line);
     if (!pixels)
 	return CAIRO_STATUS_NO_MEMORY;
 
@@ -627,8 +627,22 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 
 	n_params = gradient->n_stops * 3 + n_base_params;
 
-	data = malloc (sizeof (glitz_fixed16_16_t) * n_params +
-		       sizeof (unsigned int) * gradient->n_stops);
+        /* check for int overflow */
+        {
+            int size1, size2;
+            if (n_params >= INT32_MAX / sizeof (glitz_fixed16_16_t) ||
+                gradient->n_stops >= INT32_MAX / sizeof (unsigned int))
+                return CAIRO_STATUS_NO_MEMORY;
+
+            size1 = n_params * sizeof (glitz_fixed16_16_t);
+            size2 = gradient->n_stops * sizeof (unsigned int);
+
+            if (size1 >= INT32_MAX - size2)
+                return CAIRO_STATUS_NO_MEMORY;
+
+            data = malloc (size1 + size2);
+        }
+
 	if (!data)
 	    return CAIRO_STATUS_NO_MEMORY;
 
@@ -1992,9 +2006,19 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
     if (num_glyphs > N_STACK_BUF)
     {
 	char *data;
+        int size1, size2;
 
-	data = malloc (num_glyphs * sizeof (void *) +
-		       num_glyphs * sizeof (glitz_float_t) * 16);
+        if (num_glyphs >= INT32_MAX / sizeof(void*) ||
+            num_glyphs >= INT32_MAX / sizeof(glitz_float_t) ||
+            (num_glyphs * sizeof(glitz_float_t)) >= INT32_MAX / 16)
+            goto FAIL1;
+
+        size1 = num_glyphs * sizeof(void *);
+        size2 = num_glyphs * sizeof(glitz_float_t) * 16;
+        if (size1 >= INT32_MAX - size2)
+            goto FAIL1;
+
+	data = malloc (size1 + size2);
 	if (!data)
 	    goto FAIL1;
 

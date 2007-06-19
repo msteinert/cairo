@@ -1220,7 +1220,7 @@ _cairo_svg_surface_emit_pattern_stops (cairo_output_stream_t *output,
 
     if (emulate_reflect || reverse_stops) {
 	n_stops = emulate_reflect ? pattern->n_stops * 2 - 2: pattern->n_stops;
-	stops = malloc (sizeof (pixman_gradient_stop_t) * n_stops);
+	stops = _cairo_malloc_ab (n_stops, sizeof (pixman_gradient_stop_t));
 
 	for (i = 0; i < pattern->n_stops; i++) {
 	    if (reverse_stops) {

@@ -439,7 +439,7 @@ _cairo_meta_surface_show_glyphs (void			*abstract_surface,
     if (status)
 	goto CLEANUP_COMMAND;
 
-    command->glyphs = malloc (sizeof (cairo_glyph_t) * num_glyphs);
+    command->glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
     if (command->glyphs == NULL) {
 	status = CAIRO_STATUS_NO_MEMORY;
 	goto CLEANUP_SOURCE;
@@ -735,7 +735,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 	    int i, num_glyphs = command->show_glyphs.num_glyphs;
 
 	    if (has_device_transform) {
-		dev_glyphs = malloc (sizeof (cairo_glyph_t) * num_glyphs);
+		dev_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
 		if (dev_glyphs == NULL) {
 		    status = CAIRO_STATUS_NO_MEMORY;
 		    break;

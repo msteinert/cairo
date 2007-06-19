@@ -1113,7 +1113,7 @@ _cairo_directfb_surface_set_clip_region (void              *abstract_surface,
             if( surface->clips )
                 free (surface->clips);
             
-            surface->clips = malloc (n_boxes * sizeof(DFBRegion));
+            surface->clips = _cairo_malloc_ab (n_boxes, sizeof(DFBRegion));
             if (!surface->clips) {
                 surface->n_clips = 0;
                 return CAIRO_STATUS_NO_MEMORY;
