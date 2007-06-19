@@ -987,17 +987,17 @@ _cairo_xlib_surface_set_matrix (cairo_xlib_surface_t *surface,
     if (!surface->src_picture)
 	return CAIRO_STATUS_SUCCESS;
 
-    xtransform.matrix[0][0] = _cairo_fixed_from_double (matrix->xx);
-    xtransform.matrix[0][1] = _cairo_fixed_from_double (matrix->xy);
-    xtransform.matrix[0][2] = _cairo_fixed_from_double (matrix->x0);
+    xtransform.matrix[0][0] = _cairo_fixed_16_16_from_double (matrix->xx);
+    xtransform.matrix[0][1] = _cairo_fixed_16_16_from_double (matrix->xy);
+    xtransform.matrix[0][2] = _cairo_fixed_16_16_from_double (matrix->x0);
 
-    xtransform.matrix[1][0] = _cairo_fixed_from_double (matrix->yx);
-    xtransform.matrix[1][1] = _cairo_fixed_from_double (matrix->yy);
-    xtransform.matrix[1][2] = _cairo_fixed_from_double (matrix->y0);
+    xtransform.matrix[1][0] = _cairo_fixed_16_16_from_double (matrix->yx);
+    xtransform.matrix[1][1] = _cairo_fixed_16_16_from_double (matrix->yy);
+    xtransform.matrix[1][2] = _cairo_fixed_16_16_from_double (matrix->y0);
 
     xtransform.matrix[2][0] = 0;
     xtransform.matrix[2][1] = 0;
-    xtransform.matrix[2][2] = _cairo_fixed_from_double (1);
+    xtransform.matrix[2][2] = 1 << 16;
 
     if (memcmp (&xtransform, &surface->xtransform, sizeof (XTransform)) == 0)
 	return CAIRO_STATUS_SUCCESS;
@@ -1527,6 +1527,9 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
 {
     cairo_xlib_surface_t *surface = abstract_surface;
     XRenderColor render_color;
+    XRectangle static_xrects[16];
+    XRectangle *xrects = static_xrects;
+    int i;
 
     _cairo_xlib_display_notify (surface->screen_info->display);
 
@@ -1538,12 +1541,27 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
     render_color.blue  = color->blue_short;
     render_color.alpha = color->alpha_short;
 
-    /* XXX: This XRectangle cast is evil... it needs to go away somehow. */
+    if (num_rects > ARRAY_LENGTH(static_xrects)) {
+        xrects = malloc(sizeof(XRectangle) * num_rects);
+        if (xrects == NULL)
+            return CAIRO_STATUS_NO_MEMORY;
+    }
+
+    for (i = 0; i < num_rects; i++) {
+        xrects[i].x = rects[i].x;
+        xrects[i].y = rects[i].y;
+        xrects[i].width = rects[i].width;
+        xrects[i].height = rects[i].height;
+    }
+
     _cairo_xlib_surface_ensure_dst_picture (surface);
     XRenderFillRectangles (surface->dpy,
 			   _render_operator (op),
 			   surface->dst_picture,
-			   &render_color, (XRectangle *) rects, num_rects);
+			   &render_color, xrects, num_rects);
+
+    if (xrects != static_xrects)
+        free(xrects);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1615,16 +1633,16 @@ _create_trapezoid_mask (cairo_xlib_surface_t *dst,
 	return None;
 
     for (i = 0; i < num_traps; i++) {
-	offset_traps[i].top = traps[i].top - 0x10000 * dst_y;
-	offset_traps[i].bottom = traps[i].bottom - 0x10000 * dst_y;
-	offset_traps[i].left.p1.x = traps[i].left.p1.x - 0x10000 * dst_x;
-	offset_traps[i].left.p1.y = traps[i].left.p1.y - 0x10000 * dst_y;
-	offset_traps[i].left.p2.x = traps[i].left.p2.x - 0x10000 * dst_x;
-	offset_traps[i].left.p2.y = traps[i].left.p2.y - 0x10000 * dst_y;
-	offset_traps[i].right.p1.x = traps[i].right.p1.x - 0x10000 * dst_x;
-	offset_traps[i].right.p1.y = traps[i].right.p1.y - 0x10000 * dst_y;
-	offset_traps[i].right.p2.x = traps[i].right.p2.x - 0x10000 * dst_x;
-	offset_traps[i].right.p2.y = traps[i].right.p2.y - 0x10000 * dst_y;
+	offset_traps[i].top = _cairo_fixed_to_16_16(traps[i].top) - 0x10000 * dst_y;
+	offset_traps[i].bottom = _cairo_fixed_to_16_16(traps[i].bottom) - 0x10000 * dst_y;
+	offset_traps[i].left.p1.x = _cairo_fixed_to_16_16(traps[i].left.p1.x) - 0x10000 * dst_x;
+	offset_traps[i].left.p1.y = _cairo_fixed_to_16_16(traps[i].left.p1.y) - 0x10000 * dst_y;
+	offset_traps[i].left.p2.x = _cairo_fixed_to_16_16(traps[i].left.p2.x) - 0x10000 * dst_x;
+	offset_traps[i].left.p2.y = _cairo_fixed_to_16_16(traps[i].left.p2.y) - 0x10000 * dst_y;
+	offset_traps[i].right.p1.x = _cairo_fixed_to_16_16(traps[i].right.p1.x) - 0x10000 * dst_x;
+	offset_traps[i].right.p1.y = _cairo_fixed_to_16_16(traps[i].right.p1.y) - 0x10000 * dst_y;
+	offset_traps[i].right.p2.x = _cairo_fixed_to_16_16(traps[i].right.p2.x) - 0x10000 * dst_x;
+	offset_traps[i].right.p2.y = _cairo_fixed_to_16_16(traps[i].right.p2.y) - 0x10000 * dst_y;
     }
 
     XRenderCompositeTrapezoids (dst->dpy, PictOpAdd,
@@ -1751,14 +1769,41 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
 								 dst_x, dst_y, width, height);
 
     } else {
-	/* XXX: The XTrapezoid cast is evil and needs to go away somehow. */
+        XTrapezoid xtraps_stack[16];
+        XTrapezoid *xtraps = xtraps_stack;
+        int i;
+
+        if (num_traps > ARRAY_LENGTH(xtraps_stack)) {
+            xtraps = malloc(sizeof(XTrapezoid) * num_traps);
+            if (xtraps == NULL) {
+                status = CAIRO_STATUS_NO_MEMORY;
+                goto BAIL;
+            }
+        }
+
+        for (i = 0; i < num_traps; i++) {
+            xtraps[i].top = _cairo_fixed_to_16_16(traps[i].top);
+            xtraps[i].bottom = _cairo_fixed_to_16_16(traps[i].bottom);
+            xtraps[i].left.p1.x = _cairo_fixed_to_16_16(traps[i].left.p1.x);
+            xtraps[i].left.p1.y = _cairo_fixed_to_16_16(traps[i].left.p1.y);
+            xtraps[i].left.p2.x = _cairo_fixed_to_16_16(traps[i].left.p2.x);
+            xtraps[i].left.p2.y = _cairo_fixed_to_16_16(traps[i].left.p2.y);
+            xtraps[i].right.p1.x = _cairo_fixed_to_16_16(traps[i].right.p1.x);
+            xtraps[i].right.p1.y = _cairo_fixed_to_16_16(traps[i].right.p1.y);
+            xtraps[i].right.p2.x = _cairo_fixed_to_16_16(traps[i].right.p2.x);
+            xtraps[i].right.p2.y = _cairo_fixed_to_16_16(traps[i].right.p2.y);
+        }
+
 	XRenderCompositeTrapezoids (dst->dpy,
 				    _render_operator (op),
 				    src->src_picture, dst->dst_picture,
 				    pict_format,
 				    render_src_x + attributes.x_offset,
 				    render_src_y + attributes.y_offset,
-				    (XTrapezoid *) traps, num_traps);
+				    xtraps, num_traps);
+
+        if (xtraps != xtraps_stack)
+            free(xtraps);
     }
 
  BAIL:
