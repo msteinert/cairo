@@ -1,3 +1,4 @@
+/* -*- Mode: c; tab-width: 8; c-basic-offset: 4; indent-tabs-mode: t; -*- */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2003 University of Southern California
@@ -821,6 +822,8 @@ _cairo_image_surface_composite (cairo_operator_t	op,
     return status;
 }
 
+#define STACK_RECTS_LEN (CAIRO_STACK_BUFFER_SIZE / sizeof(pixman_rectangle16_t))
+
 static cairo_int_status_t
 _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
 				      cairo_operator_t	       op,
@@ -831,23 +834,47 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
     cairo_image_surface_t *surface = abstract_surface;
 
     pixman_color_t pixman_color;
+    pixman_rectangle16_t stack_rects[STACK_RECTS_LEN];
+    pixman_rectangle16_t *pixman_rects = stack_rects;
+    int i;
+
+    cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
 
     pixman_color.red   = color->red_short;
     pixman_color.green = color->green_short;
     pixman_color.blue  = color->blue_short;
     pixman_color.alpha = color->alpha_short;
 
+    if (num_rects > ARRAY_LENGTH(stack_rects)) {
+	pixman_rects = _cairo_malloc_ab (num_rects, sizeof(pixman_rectangle16_t));
+	if (pixman_rects == NULL)
+	    return CAIRO_STATUS_NO_MEMORY;
+    }		 
+
+    for (i = 0; i < num_rects; i++) {
+	pixman_rects[i].x = rects[i].x;
+	pixman_rects[i].y = rects[i].y;
+	pixman_rects[i].width = rects[i].width;
+	pixman_rects[i].height = rects[i].height;
+    }
+
     /* XXX: pixman_fill_rectangles() should be implemented */
-    /* XXX: The pixman_rectangle_t cast is evil... it needs to go away somehow. */
     if (!pixman_image_fill_rectangles (_pixman_operator(op),
 				       surface->pixman_image,
 				       &pixman_color,
 				       num_rects,
-				       (pixman_rectangle16_t *) rects))
-	return CAIRO_STATUS_NO_MEMORY;
+				       pixman_rects))
+	status = CAIRO_STATUS_NO_MEMORY;
 
-    return CAIRO_STATUS_SUCCESS;
+    if (pixman_rects != stack_rects)
+	free (pixman_rects);
+
+    return status;
 }
+
+#undef STACK_RECTS_LEN
+
+#define STACK_TRAPS_LEN ((int) (CAIRO_STACK_BUFFER_SIZE / sizeof(pixman_trapezoid_t)))
 
 static cairo_int_status_t
 _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
@@ -870,9 +897,31 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     pixman_image_t		*mask;
     pixman_format_code_t	 format;
     uint32_t			*mask_data;
+    pixman_trapezoid_t		 stack_traps[STACK_TRAPS_LEN];
+    pixman_trapezoid_t		*pixman_traps = stack_traps;
     int				 mask_stride;
     int				 mask_bpp;
-    int				 ret;
+    int				 ret, i;
+
+    /* Convert traps to pixman traps */
+    if (num_traps > ARRAY_LENGTH(stack_traps)) {
+	pixman_traps = malloc (num_traps * sizeof(pixman_trapezoid_t));
+	if (pixman_traps == NULL)
+	    return CAIRO_STATUS_NO_MEMORY;
+    }
+
+    for (i = 0; i < num_traps; i++) {
+	pixman_traps[i].top = _cairo_fixed_to_16_16 (traps[i].top);
+	pixman_traps[i].bottom = _cairo_fixed_to_16_16 (traps[i].bottom);
+	pixman_traps[i].left.p1.x = _cairo_fixed_to_16_16 (traps[i].left.p1.x);
+	pixman_traps[i].left.p1.y = _cairo_fixed_to_16_16 (traps[i].left.p1.y);
+	pixman_traps[i].left.p2.x = _cairo_fixed_to_16_16 (traps[i].left.p2.x);
+	pixman_traps[i].left.p2.y = _cairo_fixed_to_16_16 (traps[i].left.p2.y);
+	pixman_traps[i].right.p1.x = _cairo_fixed_to_16_16 (traps[i].right.p1.x);
+	pixman_traps[i].right.p1.y = _cairo_fixed_to_16_16 (traps[i].right.p1.y);
+	pixman_traps[i].right.p2.x = _cairo_fixed_to_16_16 (traps[i].right.p2.x);
+	pixman_traps[i].right.p2.y = _cairo_fixed_to_16_16 (traps[i].right.p2.y);
+    }
 
     /* Special case adding trapezoids onto a mask surface; we want to avoid
      * creating an intermediate temporary mask unecessarily.
@@ -894,8 +943,9 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 	antialias != CAIRO_ANTIALIAS_NONE)
     {
 	pixman_add_trapezoids (dst->pixman_image, 0, 0,
-			       num_traps, (pixman_trapezoid_t *) traps);
-	return CAIRO_STATUS_SUCCESS;
+			       num_traps, pixman_traps);
+	status = CAIRO_STATUS_SUCCESS;
+	goto finish;
     }
 
     status = _cairo_pattern_acquire_surface (pattern, &dst->base,
@@ -903,7 +953,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 					     (cairo_surface_t **) &src,
 					     &attributes);
     if (status)
-	return status;
+	goto finish;
 
     status = _cairo_image_surface_set_attributes (src, &attributes);
     if (status)
@@ -943,10 +993,8 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 	goto CLEANUP_IMAGE_DATA;
     }
 
-    /* XXX: The pixman_trapezoid_t cast is evil and needs to go away
-     * somehow. */
     pixman_add_trapezoids (mask, - dst_x, - dst_y,
-			   num_traps, (pixman_trapezoid_t *) traps);
+			   num_traps, pixman_traps);
 
     pixman_image_composite (_pixman_operator (op),
 			    src->pixman_image,
@@ -973,8 +1021,14 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
  CLEANUP_SOURCE:
     _cairo_pattern_release_surface (pattern, &src->base, &attributes);
 
+ finish:
+    if (pixman_traps != stack_traps)
+	free (pixman_traps);
+
     return status;
 }
+
+#undef STACK_TRAPS_LEN
 
 cairo_int_status_t
 _cairo_image_surface_set_clip_region (void *abstract_surface,
