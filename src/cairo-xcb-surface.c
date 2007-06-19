@@ -742,17 +742,17 @@ _cairo_xcb_surface_set_matrix (cairo_xcb_surface_t *surface,
     if (!surface->src_picture)
 	return CAIRO_STATUS_SUCCESS;
 
-    xtransform.matrix11 = _cairo_fixed_from_double (matrix->xx);
-    xtransform.matrix12 = _cairo_fixed_from_double (matrix->xy);
-    xtransform.matrix13 = _cairo_fixed_from_double (matrix->x0);
+    xtransform.matrix11 = _cairo_fixed_16_16_from_double (matrix->xx);
+    xtransform.matrix12 = _cairo_fixed_16_16_from_double (matrix->xy);
+    xtransform.matrix13 = _cairo_fixed_16_16_from_double (matrix->x0);
 
-    xtransform.matrix21 = _cairo_fixed_from_double (matrix->yx);
-    xtransform.matrix22 = _cairo_fixed_from_double (matrix->yy);
-    xtransform.matrix23 = _cairo_fixed_from_double (matrix->y0);
+    xtransform.matrix21 = _cairo_fixed_16_16_from_double (matrix->yx);
+    xtransform.matrix22 = _cairo_fixed_16_16_from_double (matrix->yy);
+    xtransform.matrix23 = _cairo_fixed_16_16_from_double (matrix->y0);
 
     xtransform.matrix31 = 0;
     xtransform.matrix32 = 0;
-    xtransform.matrix33 = _cairo_fixed_from_double (1);
+    xtransform.matrix33 = 1 << 16;
 
     if (!CAIRO_SURFACE_RENDER_HAS_PICTURE_TRANSFORM (surface))
     {
@@ -1251,6 +1251,9 @@ _cairo_xcb_surface_fill_rectangles (void			     *abstract_surface,
 {
     cairo_xcb_surface_t *surface = abstract_surface;
     xcb_render_color_t render_color;
+    xcb_rectangle_t static_xrects[16];
+    xcb_rectangle_t *xrects = static_xrects;
+    int i;
 
     if (!CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLE (surface))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1260,12 +1263,27 @@ _cairo_xcb_surface_fill_rectangles (void			     *abstract_surface,
     render_color.blue  = color->blue_short;
     render_color.alpha = color->alpha_short;
 
-    /* XXX: This xcb_rectangle_t cast is evil... it needs to go away somehow. */
+    if (num_rects > ARRAY_LENGTH(static_xrects)) {
+        xrects = malloc(sizeof(xcb_rectangle_t) * num_rects);
+        if (xrects == NULL)
+            return CAIRO_STATUS_NO_MEMORY;
+    }
+
+    for (i = 0; i < num_rects; i++) {
+        xrects[i].x = rects[i].x;
+        xrects[i].y = rects[i].y;
+        xrects[i].width = rects[i].width;
+        xrects[i].height = rects[i].height;
+    }
+
     _cairo_xcb_surface_ensure_dst_picture (surface);
     xcb_render_fill_rectangles (surface->dpy,
 			   _render_operator (op),
 			   surface->dst_picture,
-			   render_color, num_rects, (xcb_rectangle_t *) rects);
+			   render_color, num_rects, xrects);
+
+    if (xrects != static_xrects)
+        free(xrects);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1333,16 +1351,16 @@ _create_trapezoid_mask (cairo_xcb_surface_t *dst,
 	return XCB_NONE;
 
     for (i = 0; i < num_traps; i++) {
-	offset_traps[i].top = traps[i].top - 0x10000 * dst_y;
-	offset_traps[i].bottom = traps[i].bottom - 0x10000 * dst_y;
-	offset_traps[i].left.p1.x = traps[i].left.p1.x - 0x10000 * dst_x;
-	offset_traps[i].left.p1.y = traps[i].left.p1.y - 0x10000 * dst_y;
-	offset_traps[i].left.p2.x = traps[i].left.p2.x - 0x10000 * dst_x;
-	offset_traps[i].left.p2.y = traps[i].left.p2.y - 0x10000 * dst_y;
-	offset_traps[i].right.p1.x = traps[i].right.p1.x - 0x10000 * dst_x;
-	offset_traps[i].right.p1.y = traps[i].right.p1.y - 0x10000 * dst_y;
-	offset_traps[i].right.p2.x = traps[i].right.p2.x - 0x10000 * dst_x;
-	offset_traps[i].right.p2.y = traps[i].right.p2.y - 0x10000 * dst_y;
+	offset_traps[i].top = _cairo_fixed_to_16_16(traps[i].top) - 0x10000 * dst_y;
+	offset_traps[i].bottom = _cairo_fixed_to_16_16(traps[i].bottom) - 0x10000 * dst_y;
+	offset_traps[i].left.p1.x = _cairo_fixed_to_16_16(traps[i].left.p1.x) - 0x10000 * dst_x;
+	offset_traps[i].left.p1.y = _cairo_fixed_to_16_16(traps[i].left.p1.y) - 0x10000 * dst_y;
+	offset_traps[i].left.p2.x = _cairo_fixed_to_16_16(traps[i].left.p2.x) - 0x10000 * dst_x;
+	offset_traps[i].left.p2.y = _cairo_fixed_to_16_16(traps[i].left.p2.y) - 0x10000 * dst_y;
+	offset_traps[i].right.p1.x = _cairo_fixed_to_16_16(traps[i].right.p1.x) - 0x10000 * dst_x;
+	offset_traps[i].right.p1.y = _cairo_fixed_to_16_16(traps[i].right.p1.y) - 0x10000 * dst_y;
+	offset_traps[i].right.p2.x = _cairo_fixed_to_16_16(traps[i].right.p2.x) - 0x10000 * dst_x;
+        offset_traps[i].right.p2.y = _cairo_fixed_to_16_16(traps[i].right.p2.y) - 0x10000 * dst_y;
     }
 
     xcb_render_trapezoids (dst->dpy, XCB_RENDER_PICT_OP_ADD,
@@ -1470,14 +1488,41 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
 								 dst_x, dst_y, width, height);
 
     } else {
-	/* XXX: The XTrapezoid cast is evil and needs to go away somehow. */
+        xcb_render_trapezoid_t xtraps_stack[16];
+        xcb_render_trapezoid_t *xtraps = xtraps_stack;
+        int i;
+
+        if (num_traps > ARRAY_LENGTH(xtraps_stack)) {
+            xtraps = malloc(sizeof(xcb_render_trapezoid_t) * num_traps);
+            if (xtraps == NULL) {
+                status = CAIRO_STATUS_NO_MEMORY;
+                goto BAIL;
+            }
+        }
+
+        for (i = 0; i < num_traps; i++) {
+            xtraps[i].top = _cairo_fixed_to_16_16(traps[i].top);
+            xtraps[i].bottom = _cairo_fixed_to_16_16(traps[i].bottom);
+            xtraps[i].left.p1.x = _cairo_fixed_to_16_16(traps[i].left.p1.x);
+            xtraps[i].left.p1.y = _cairo_fixed_to_16_16(traps[i].left.p1.y);
+            xtraps[i].left.p2.x = _cairo_fixed_to_16_16(traps[i].left.p2.x);
+            xtraps[i].left.p2.y = _cairo_fixed_to_16_16(traps[i].left.p2.y);
+            xtraps[i].right.p1.x = _cairo_fixed_to_16_16(traps[i].right.p1.x);
+            xtraps[i].right.p1.y = _cairo_fixed_to_16_16(traps[i].right.p1.y);
+            xtraps[i].right.p2.x = _cairo_fixed_to_16_16(traps[i].right.p2.x);
+            xtraps[i].right.p2.y = _cairo_fixed_to_16_16(traps[i].right.p2.y);
+        }
+
 	xcb_render_trapezoids (dst->dpy,
 				    _render_operator (op),
 				    src->src_picture, dst->dst_picture,
 				    render_format->id,
 				    render_src_x + attributes.x_offset,
 				    render_src_y + attributes.y_offset,
-				    num_traps, (xcb_render_trapezoid_t *) traps);
+				    num_traps, xtraps);
+
+        if (xtraps != xtraps_stack)
+            free(xtraps);
     }
 
  BAIL:
