@@ -1572,7 +1572,7 @@ static cairo_surface_backend_t cairo_directfb_surface_backend = {
         NULL, /* show_glyphs */
 #endif
         NULL, /* snapshot */
-	_cairo_directfb_is_similar,
+	_cairo_directfb_surface_is_similar,
 	NULL /* reset */
 };
 
