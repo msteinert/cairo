@@ -485,6 +485,7 @@ SurfacePatternDrawFunc (void *info, CGContextRef context)
     if (!img) {
 	// ... give up.
 	ND((stderr, "CGBitmapContextCreateImage failed\n"));
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	cairo_surface_destroy ((cairo_surface_t*)quartz_surf);
 	return;
     }
