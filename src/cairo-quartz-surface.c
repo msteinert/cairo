@@ -899,13 +899,18 @@ _cairo_quartz_surface_acquire_source_image (void *abstract_surface,
 					     cairo_image_surface_t **image_out,
 					     void **image_extra)
 {
+    cairo_int_status_t status;
     cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
 
     //ND((stderr, "%p _cairo_quartz_surface_acquire_source_image\n", surface));
 
     *image_extra = NULL;
 
-    return _cairo_quartz_get_image (surface, image_out, NULL);
+    status = _cairo_quartz_get_image (surface, image_out, NULL);
+    if (status)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -934,7 +939,7 @@ _cairo_quartz_surface_acquire_dest_image (void *abstract_surface,
 
     status = _cairo_quartz_get_image (surface, image_out, &data);
     if (status)
-	return status;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     *image_extra = data;
 
