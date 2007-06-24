@@ -1287,17 +1287,23 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
 #define STATIC_DASH 32
 	float sdash[STATIC_DASH];
 	float *fdash = sdash;
+	unsigned int max_dashes = style->num_dashes;
 	unsigned int k;
-	if (style->num_dashes > STATIC_DASH)
+
+	if (style->num_dashes%2)
+	    max_dashes *= 2;
+	if (max_dashes > STATIC_DASH)
 	    fdash = _cairo_malloc_ab (style->num_dashes, sizeof (float));
 	if (fdash == NULL)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-	for (k = 0; k < style->num_dashes; k++)
-	    fdash[k] = (float) style->dash[k];
-	
-	CGContextSetLineDash (surface->cgContext, style->dash_offset, fdash, style->num_dashes);
+	if (max_dashes > STATIC_DASH)
+	    fdash = malloc (sizeof(float)*max_dashes);
 
+	for (k = 0; k < max_dashes; k++)
+	    fdash[k] = (float) style->dash[k % style->num_dashes];
+	
+	CGContextSetLineDash (surface->cgContext, style->dash_offset, fdash, max_dashes);
 	if (fdash != sdash)
 	    free (fdash);
     }
