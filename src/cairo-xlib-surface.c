@@ -1626,11 +1626,14 @@ _create_trapezoid_mask (cairo_xlib_surface_t *dst,
      * the servers that have XRenderAddTraps().
      */
     mask_picture = _create_a8_picture (dst, &transparent, width, height, FALSE);
-    solid_picture = _create_a8_picture (dst, &solid, width, height, TRUE);
+    if (num_traps == 0)
+	return mask_picture;
 
     offset_traps = _cairo_malloc_ab (num_traps, sizeof (XTrapezoid));
-    if (!offset_traps)
+    if (!offset_traps) {
+	XRenderFreePicture (dst->dpy, mask_picture);
 	return None;
+    }
 
     for (i = 0; i < num_traps; i++) {
 	offset_traps[i].top = _cairo_fixed_to_16_16(traps[i].top) - 0x10000 * dst_y;
@@ -1644,6 +1647,8 @@ _create_trapezoid_mask (cairo_xlib_surface_t *dst,
 	offset_traps[i].right.p2.x = _cairo_fixed_to_16_16(traps[i].right.p2.x) - 0x10000 * dst_x;
 	offset_traps[i].right.p2.y = _cairo_fixed_to_16_16(traps[i].right.p2.y) - 0x10000 * dst_y;
     }
+
+    solid_picture = _create_a8_picture (dst, &solid, width, height, TRUE);
 
     XRenderCompositeTrapezoids (dst->dpy, PictOpAdd,
 				solid_picture, mask_picture,
