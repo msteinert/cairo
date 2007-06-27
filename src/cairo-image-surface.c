@@ -922,7 +922,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     }
 
     /* Special case adding trapezoids onto a mask surface; we want to avoid
-     * creating an intermediate temporary mask unecessarily.
+     * creating an intermediate temporary mask unnecessarily.
      *
      * We make the assumption here that the portion of the trapezoids
      * contained within the surface is bounded by [dst_x,dst_y,width,height];

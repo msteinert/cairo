@@ -36,7 +36,7 @@ xmalloc (size_t size)
     void *buf;
 
     buf = malloc (size);
-    if (!buf) {
+    if (buf == NULL && size != 0) {
 	CAIRO_BOILERPLATE_LOG ("Error: Out of memory. Exiting.\n");
 	exit (1);
     }
@@ -50,7 +50,7 @@ xcalloc (size_t nmemb, size_t size)
     void *buf;
 
     buf = calloc (nmemb, size);
-    if (!buf) {
+    if (buf == NULL && nmemb != 0 && size != 0) {
 	CAIRO_BOILERPLATE_LOG ("Error: Out of memory. Exiting\n");
 	exit (1);
     }
@@ -62,7 +62,7 @@ void *
 xrealloc (void *buf, size_t size)
 {
     buf = realloc (buf, size);
-    if (!buf) {
+    if (buf == NULL && size != 0) {
 	CAIRO_BOILERPLATE_LOG ("Error: Out of memory. Exiting\n");
 	exit (1);
     }
