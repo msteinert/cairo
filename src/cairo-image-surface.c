@@ -921,6 +921,9 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 	pixman_traps[i].right.p2.y = _cairo_fixed_to_16_16 (traps[i].right.p2.y);
     }
 
+    if (height == 0 || width == 0)
+	return CAIRO_STATUS_SUCCESS;
+
     /* Special case adding trapezoids onto a mask surface; we want to avoid
      * creating an intermediate temporary mask unnecessarily.
      *
