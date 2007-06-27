@@ -405,13 +405,10 @@ void
 _cairo_xlib_display_notify (cairo_xlib_display_t *display)
 {
     cairo_xlib_job_t *jobs, *job, *freelist;
-    Display *dpy = display->display;
 
     CAIRO_MUTEX_LOCK (display->mutex);
     jobs = display->workqueue;
     while (jobs != NULL) {
-	cairo_xlib_error_func_t old_handler;
-
 	display->workqueue = NULL;
 	CAIRO_MUTEX_UNLOCK (display->mutex);
 
@@ -425,31 +422,23 @@ _cairo_xlib_display_notify (cairo_xlib_display_t *display)
 	} while (jobs != NULL);
 	freelist = jobs = job;
 
-	/* protect the notifies from triggering XErrors
-	 * XXX There is a remote possibility that the application has
-	 * been reallocated an XID that we are about to destroy here... */
-	XSync (dpy, False);
-	old_handler = XSetErrorHandler (_noop_error_handler);
-
 	do {
 	    job = jobs;
 	    jobs = job->next;
 
 	    switch (job->type){
 	    case WORK:
-		job->func.work.notify (dpy, job->func.work.data);
+		job->func.work.notify (display->display, job->func.work.data);
 		if (job->func.work.destroy != NULL)
 		    job->func.work.destroy (job->func.work.data);
 		break;
 
 	    case RESOURCE:
-		job->func.resource.notify (dpy, job->func.resource.xid);
+		job->func.resource.notify (display->display,
+			                   job->func.resource.xid);
 		break;
 	    }
 	} while (jobs != NULL);
-
-	XSync (dpy, False);
-	XSetErrorHandler (old_handler);
 
 	CAIRO_MUTEX_LOCK (display->mutex);
 	do {
