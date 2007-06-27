@@ -1,3 +1,48 @@
+Release 1.4.10 (2007-06-27 Carl Worth <cworth@cworth.org>)
+==========================================================
+This is the fifth update in cairo's stable 1.4 series. It comes
+roughly three weeks after the 1.4.8 release. The most significant
+change in this release is a fix to avoid an X error in certain cases,
+(that were causing OpenOffice.org to crash in Fedora). There is also a
+semantic change to include child window contents when using an xlib
+surface as a source, an optimization when drawing many rectangles, and
+several minor fixes.
+
+Eliminate X errors that were killing OO.o (Chris Wilson)
+--------------------------------------------------------
+Cairo is fixed to avoid the X errors propagated when cleaning up
+Render Pictures after the application had already destroyed the
+Drawable they reference. (It would be nice if the X server wouldn't
+complain that some cleanup work is already done, but there you have
+it.) This fixes the bug causing OpenOffice.org to crash as described
+here:
+
+        XError on right click menus in OOo.
+        https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=243811
+
+Use IncludeInferiors when using xlib surface as a source (Ryan Lortie)
+----------------------------------------------------------------------
+When an xlib surface is used as the source of a draw operation the
+contents of child windows are now included in the source data. The
+semantics of drawing to xlib surfaces are unchanged (ie: draws are
+still clipped by child windows overlapping the destination window).
+
+Optimize drawing of many rectangles (Vladimir Vukicevic)
+--------------------------------------------------------
+Avoid O(N*N) loop when filling many axis-aligned rectangles, (either
+many rectangles as separate sub-paths or due to dashing).
+
+Miscellaneous fixes
+-------------------
+Fix cairo-perf on Solaris by linking to librt. (Behdad Esfahbod)
+
+Fix make check for systems that require executable files to have a
+particular extension. (Behdad Esfahbod)
+
+Eliminate some warnings in cairo-quartz. (Brian Ewins)
+
+Fix build-breaking typo for cairo-directfb. (Chris Wilson)
+
 Release 1.4.8 (2007-06-07 Carl Worth <cworth@cworth.org>)
 =========================================================
 This is the fourth update in cairo's stable 1.4 series. It comes just
