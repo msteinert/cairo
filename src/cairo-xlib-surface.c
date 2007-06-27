@@ -273,30 +273,29 @@ _cairo_xlib_surface_finish (void *abstract_surface)
 				    NULL;
     cairo_status_t        status  = CAIRO_STATUS_SUCCESS;
 
-    if (surface->dst_picture != None) {
-	cairo_status_t status2;
-	status2 = _cairo_xlib_display_queue_resource (display,
-		                                      XRenderFreePicture,
-						      surface->dst_picture);
-	if (status2 == CAIRO_STATUS_SUCCESS)
-	    surface->dst_picture = None;
-	else if (status == CAIRO_STATUS_SUCCESS)
-	    status = status2;
-    }
-
-    if (surface->src_picture != None) {
-	cairo_status_t status2;
-	status2 = _cairo_xlib_display_queue_resource (display,
-		                                      XRenderFreePicture,
-						      surface->src_picture);
-	if (status2 == CAIRO_STATUS_SUCCESS)
-	    surface->src_picture = None;
-	else if (status == CAIRO_STATUS_SUCCESS)
-	    status = status2;
-    }
-
     if (surface->owns_pixmap) {
 	cairo_status_t status2;
+
+	if (surface->dst_picture != None) {
+	    status2 = _cairo_xlib_display_queue_resource (display,
+							  XRenderFreePicture,
+							  surface->dst_picture);
+	    if (status2 == CAIRO_STATUS_SUCCESS)
+		surface->dst_picture = None;
+	    else if (status == CAIRO_STATUS_SUCCESS)
+		status = status2;
+	}
+
+	if (surface->src_picture != None) {
+	    status2 = _cairo_xlib_display_queue_resource (display,
+							  XRenderFreePicture,
+							  surface->src_picture);
+	    if (status2 == CAIRO_STATUS_SUCCESS)
+		surface->src_picture = None;
+	    else if (status == CAIRO_STATUS_SUCCESS)
+		status = status2;
+	}
+
 	status2 = _cairo_xlib_display_queue_resource (display,
 		                           (cairo_xlib_notify_resource_func) XFreePixmap,
 					   surface->drawable);
@@ -305,6 +304,12 @@ _cairo_xlib_surface_finish (void *abstract_surface)
 	    surface->drawable = None;
 	} else if (status == CAIRO_STATUS_SUCCESS)
 	    status = status2;
+    } else {
+	if (surface->dst_picture != None)
+	    XRenderFreePicture (surface->dpy, surface->dst_picture);
+
+	if (surface->src_picture != None)
+	    XRenderFreePicture (surface->dpy, surface->src_picture);
     }
 
     if (surface->gc != NULL) {
