@@ -89,6 +89,8 @@ CG_EXTERN void CGContextReplacePathWithStrokedPath (CGContextRef);
 CG_EXTERN CGImageRef CGBitmapContextCreateImage (CGContextRef);
 #endif
 
+/* missing in 10.3.9 */
+extern void CGContextClipToMask (CGContextRef, CGRect, CGImageRef) __attribute__((weak_import));
 
 /*
  * Utility functions
@@ -1503,6 +1505,43 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 }
 #endif /* CAIRO_HAS_ATSUI_FONT */
 
+static cairo_status_t
+_cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
+                                         cairo_operator_t op,
+                                         cairo_pattern_t *source,
+                                         cairo_surface_pattern_t *mask)
+{
+    cairo_rectangle_int16_t extents;
+    cairo_quartz_surface_t *quartz_surf;
+    CGRect rect;
+    CGImageRef img;
+    cairo_surface_t *pat_surf = mask->surface;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+
+    status = _cairo_surface_get_extents (pat_surf, &extents);
+    if (status)
+	return status;
+
+    quartz_surf = _cairo_quartz_surface_to_quartz (NULL, pat_surf);
+
+    img = CGBitmapContextCreateImage (quartz_surf->cgContext);
+    if (!img) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto BAIL;
+    }
+
+    rect = CGRectMake (-mask->base.matrix.x0, -mask->base.matrix.y0, extents.width, extents.height);
+    CGContextSaveGState (surface->cgContext);
+    CGContextClipToMask (surface->cgContext, rect, img);
+    status = _cairo_quartz_surface_paint (surface, op, source);
+
+    CGContextRestoreGState (surface->cgContext);
+    CGImageRelease (img);
+  BAIL:
+    cairo_surface_destroy ((cairo_surface_t*) quartz_surf);
+    return status;
+}
+
 static cairo_int_status_t
 _cairo_quartz_surface_mask (void *abstract_surface,
 			     cairo_operator_t op,
@@ -1519,6 +1558,10 @@ _cairo_quartz_surface_mask (void *abstract_surface,
 	cairo_solid_pattern_t *solid_mask = (cairo_solid_pattern_t *) mask;
 
 	CGContextSetAlpha (surface->cgContext, solid_mask->color.alpha);
+    } else if (CGContextClipToMask &&
+               mask->type == CAIRO_PATTERN_TYPE_SURFACE &&
+	       mask->extend == CAIRO_EXTEND_NONE) {
+	return _cairo_quartz_surface_mask_with_surface (surface, op, source, (cairo_surface_pattern_t *) mask);
     } else {
 	/* So, CGContextClipToMask is not present in 10.3.9, so we're
 	 * doomed; if we have imageData, we can do fallback, otherwise
