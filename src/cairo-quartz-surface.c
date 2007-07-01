@@ -1211,7 +1211,13 @@ _cairo_quartz_surface_paint (void *abstract_surface,
 	cairo_surface_pattern_t *surface_pattern =
 	    (cairo_surface_pattern_t *) source;
 	cairo_surface_t *pat_surf = surface_pattern->surface;
+
 	CGContextSaveGState (surface->cgContext);
+	CGContextSetRGBFillColor (surface->cgContext, 0.0, 0.0, 0.0, 0.0);
+	CGContextFillRect (surface->cgContext, CGRectMake(surface->extents.x,
+							  surface->extents.y,
+							  surface->extents.width,
+							  surface->extents.height));
 	CGContextConcatCTM (surface->cgContext, surface->sourceImageTransform);
 	if (cairo_surface_get_type(pat_surf) == CAIRO_SURFACE_TYPE_QUARTZ) {
 	    CGContextTranslateCTM (surface->cgContext, 0, CGImageGetHeight(surface->sourceImage));
@@ -1291,6 +1297,12 @@ _cairo_quartz_surface_fill (void *abstract_surface,
 	    CGContextClip (surface->cgContext);
 	else
 	    CGContextEOClip (surface->cgContext);
+
+	CGContextSetRGBFillColor (surface->cgContext, 0.0, 0.0, 0.0, 0.0);
+	CGContextFillRect (surface->cgContext, CGRectMake(surface->extents.x,
+							  surface->extents.y,
+							  surface->extents.width,
+							  surface->extents.height));
 	CGContextConcatCTM (surface->cgContext, surface->sourceImageTransform);
 	if (cairo_surface_get_type(pat_surf) == CAIRO_SURFACE_TYPE_QUARTZ) {
 	    CGContextTranslateCTM (surface->cgContext, 0, CGImageGetHeight(surface->sourceImage));
@@ -1389,6 +1401,11 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
 	CGContextReplacePathWithStrokedPath (surface->cgContext);
 	CGContextClip (surface->cgContext);
 
+	CGContextSetRGBFillColor (surface->cgContext, 0.0, 0.0, 0.0, 0.0);
+	CGContextFillRect (surface->cgContext, CGRectMake(surface->extents.x,
+							  surface->extents.y,
+							  surface->extents.width,
+							  surface->extents.height));
 	CGContextConcatCTM (surface->cgContext, surface->sourceImageTransform);
 	if (cairo_surface_get_type(((cairo_surface_pattern_t*)source)->surface) == CAIRO_SURFACE_TYPE_QUARTZ) {
 	    CGContextTranslateCTM (surface->cgContext, 0, CGImageGetHeight(surface->sourceImage));
@@ -1540,6 +1557,11 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 				     num_glyphs);
 
     if (action == DO_IMAGE) {
+	CGContextSetRGBFillColor (surface->cgContext, 0.0, 0.0, 0.0, 0.0);
+	CGContextFillRect (surface->cgContext, CGRectMake(surface->extents.x,
+							  surface->extents.y,
+							  surface->extents.width,
+							  surface->extents.height));
 	CGContextConcatCTM (surface->cgContext, surface->sourceImageTransform);
 	if (cairo_surface_get_type(((cairo_surface_pattern_t*)source)->surface) == CAIRO_SURFACE_TYPE_QUARTZ) {
 	    CGContextTranslateCTM (surface->cgContext, 0, CGImageGetHeight(surface->sourceImage));
