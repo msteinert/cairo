@@ -128,7 +128,7 @@ write_png (cairo_surface_t	*surface,
     else if (status != CAIRO_STATUS_SUCCESS)
 	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
 
-    rows = malloc (image->height * sizeof(png_byte*));
+    rows = _cairo_malloc_ab (image->height, sizeof(png_byte*));
     if (rows == NULL) {
         status = CAIRO_STATUS_NO_MEMORY;
 	goto BAIL1;
@@ -429,11 +429,11 @@ read_png (png_rw_ptr	read_func,
     png_read_update_info (png, info);
 
     pixel_size = 4;
-    data = malloc (png_width * png_height * pixel_size);
+    data = _cairo_malloc_abc (png_height, png_width, pixel_size);
     if (data == NULL)
 	goto BAIL;
 
-    row_pointers = malloc (png_height * sizeof(char *));
+    row_pointers = _cairo_malloc_ab (png_height, sizeof(char *));
     if (row_pointers == NULL)
 	goto BAIL;
 

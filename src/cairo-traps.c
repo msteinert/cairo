@@ -260,7 +260,7 @@ _cairo_traps_grow (cairo_traps_t *traps)
 	return traps->status;
 
     if (traps->traps == traps->traps_embedded) {
-	new_traps = malloc (new_size * sizeof (cairo_trapezoid_t));
+	new_traps = _cairo_malloc_ab (new_size, sizeof (cairo_trapezoid_t));
 	if (new_traps)
 	    memcpy (new_traps, traps->traps, sizeof (traps->traps_embedded));
     } else {

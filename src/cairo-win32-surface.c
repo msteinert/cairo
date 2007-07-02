@@ -186,7 +186,7 @@ _create_dc_and_bitmap (cairo_win32_surface_t *surface,
     }
 
     if (num_palette > 2) {
-	bitmap_info = malloc (sizeof (BITMAPINFOHEADER) + num_palette * sizeof (RGBQUAD));
+	bitmap_info = _cairo_malloc_ab_plus_c (num_palette, sizeof(RGBQUAD), sizeof(BITMAPINFOHEADER));
 	if (!bitmap_info)
 	    return CAIRO_STATUS_NO_MEMORY;
     } else {
@@ -1546,8 +1546,8 @@ _cairo_win32_surface_show_glyphs (void			*surface,
     SetBkMode(dst->dc, TRANSPARENT);
 
     if (num_glyphs > STACK_GLYPH_SIZE) {
-	glyph_buf = (WORD *)malloc(num_glyphs * sizeof(WORD));
-        dxy_buf = (int *)malloc(num_glyphs * 2 * sizeof(int));
+	glyph_buf = (WORD *) _cairo_malloc_ab (num_glyphs, sizeof(WORD));
+        dxy_buf = (int *) _cairo_malloc_abc (num_glyphs, sizeof(int), 2);
     }
 
     /* It is vital that dx values for dxy_buf are calculated from the delta of

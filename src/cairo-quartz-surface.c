@@ -1255,7 +1255,7 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
 	float *fdash = sdash;
 	unsigned int k;
 	if (style->num_dashes > STATIC_DASH)
-	    fdash = malloc (sizeof(float)*style->num_dashes);
+	    fdash = _cairo_malloc_ab (style->num_dashes, sizeof (float));
 
 	for (k = 0; k < style->num_dashes; k++)
 	    fdash[k] = (float) style->dash[k];
@@ -1394,8 +1394,8 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
     CGContextSetFontSize (surface->cgContext, 1.0);
 
     if (num_glyphs > STATIC_BUF_SIZE) {
-	cg_glyphs = (CGGlyph*) malloc(sizeof(CGGlyph) * num_glyphs);
-	cg_advances = (CGSize*) malloc(sizeof(CGSize) * num_glyphs);
+	cg_glyphs = (CGGlyph*) _cairo_malloc_ab (num_glyphs, sizeof(CGGlyph));
+	cg_advances = (CGSize*) _cairo_malloc_ab (num_glyphs, sizeof(CGSize));
     }
 
     xprev = glyphs[0].x;
@@ -1711,7 +1711,7 @@ cairo_quartz_surface_create (cairo_format_t format,
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
-    imageData = malloc (height * stride);
+    imageData = _cairo_malloc_ab (height, stride);
     if (!imageData) {
 	CGColorSpaceRelease (cgColorspace);
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);

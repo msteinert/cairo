@@ -273,30 +273,29 @@ _cairo_xlib_surface_finish (void *abstract_surface)
 				    NULL;
     cairo_status_t        status  = CAIRO_STATUS_SUCCESS;
 
-    if (surface->dst_picture != None) {
-	cairo_status_t status2;
-	status2 = _cairo_xlib_display_queue_resource (display,
-		                                      XRenderFreePicture,
-						      surface->dst_picture);
-	if (status2 == CAIRO_STATUS_SUCCESS)
-	    surface->dst_picture = None;
-	else if (status == CAIRO_STATUS_SUCCESS)
-	    status = status2;
-    }
-
-    if (surface->src_picture != None) {
-	cairo_status_t status2;
-	status2 = _cairo_xlib_display_queue_resource (display,
-		                                      XRenderFreePicture,
-						      surface->src_picture);
-	if (status2 == CAIRO_STATUS_SUCCESS)
-	    surface->src_picture = None;
-	else if (status == CAIRO_STATUS_SUCCESS)
-	    status = status2;
-    }
-
     if (surface->owns_pixmap) {
 	cairo_status_t status2;
+
+	if (surface->dst_picture != None) {
+	    status2 = _cairo_xlib_display_queue_resource (display,
+							  XRenderFreePicture,
+							  surface->dst_picture);
+	    if (status2 == CAIRO_STATUS_SUCCESS)
+		surface->dst_picture = None;
+	    else if (status == CAIRO_STATUS_SUCCESS)
+		status = status2;
+	}
+
+	if (surface->src_picture != None) {
+	    status2 = _cairo_xlib_display_queue_resource (display,
+							  XRenderFreePicture,
+							  surface->src_picture);
+	    if (status2 == CAIRO_STATUS_SUCCESS)
+		surface->src_picture = None;
+	    else if (status == CAIRO_STATUS_SUCCESS)
+		status = status2;
+	}
+
 	status2 = _cairo_xlib_display_queue_resource (display,
 		                           (cairo_xlib_notify_resource_func) XFreePixmap,
 					   surface->drawable);
@@ -305,6 +304,12 @@ _cairo_xlib_surface_finish (void *abstract_surface)
 	    surface->drawable = None;
 	} else if (status == CAIRO_STATUS_SUCCESS)
 	    status = status2;
+    } else {
+	if (surface->dst_picture != None)
+	    XRenderFreePicture (surface->dpy, surface->dst_picture);
+
+	if (surface->src_picture != None)
+	    XRenderFreePicture (surface->dpy, surface->src_picture);
     }
 
     if (surface->gc != NULL) {
@@ -542,7 +547,6 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
     {
 	cairo_xlib_error_func_t old_handler;
 
-	XSync (surface->dpy, False);
 	old_handler = XSetErrorHandler (_noop_error_handler);
 
 	ximage = XGetImage (surface->dpy,
@@ -551,7 +555,6 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 			    x2 - x1, y2 - y1,
 			    AllPlanes, ZPixmap);
 
-	XSync (surface->dpy, False);
 	XSetErrorHandler (old_handler);
 
 	/* If we get an error, the surface must have been a window,
@@ -1607,7 +1610,7 @@ _create_trapezoid_mask (cairo_xlib_surface_t *dst,
     mask_picture = _create_a8_picture (dst, &transparent, width, height, FALSE);
     solid_picture = _create_a8_picture (dst, &solid, width, height, TRUE);
 
-    offset_traps = malloc (sizeof (XTrapezoid) * num_traps);
+    offset_traps = _cairo_malloc_ab (num_traps, sizeof (XTrapezoid));
     if (!offset_traps)
 	return None;
 
@@ -1788,7 +1791,7 @@ _cairo_xlib_surface_set_clip_region (void              *abstract_surface,
 
 	n_boxes = pixman_region_n_rects (region);
 	if (n_boxes > ARRAY_LENGTH (surface->embedded_clip_rects)) {
-	    rects = malloc (sizeof(XRectangle) * n_boxes);
+	    rects = _cairo_malloc_ab (n_boxes, sizeof(XRectangle));
 	    if (rects == NULL)
 		return CAIRO_STATUS_NO_MEMORY;
 	}else {
@@ -2843,7 +2846,7 @@ _cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
     if (num_elts <= STACK_ELTS_LEN) {
       elts = stack_elts;
     } else {
-      elts = malloc (num_elts * sizeof (XGlyphElt8));
+      elts = _cairo_malloc_ab (num_elts, sizeof (XGlyphElt8));
       if (elts == NULL)
 	  return CAIRO_STATUS_NO_MEMORY;
     }

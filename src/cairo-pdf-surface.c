@@ -1262,7 +1262,7 @@ _cairo_pdf_surface_emit_pattern_stops (cairo_pdf_surface_t      *surface,
     color_function->id = 0;
     alpha_function->id = 0;
 
-    allstops = malloc ((pattern->n_stops + 2) * sizeof (cairo_pdf_color_stop_t));
+    allstops = _cairo_malloc_ab ((pattern->n_stops + 2), sizeof (cairo_pdf_color_stop_t));
     if (allstops == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
@@ -2726,13 +2726,13 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
     cairo_box_t font_bbox = {{0,0},{0,0}};
     cairo_box_t bbox = {{0,0},{0,0}};
 
-    glyphs = malloc (font_subset->num_glyphs * sizeof (cairo_pdf_resource_t));
+    glyphs = _cairo_malloc_ab (font_subset->num_glyphs, sizeof (cairo_pdf_resource_t));
     if (glyphs == NULL) {
 	_cairo_surface_set_error (&surface->base, CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
-    widths = malloc (font_subset->num_glyphs * sizeof (double));
+    widths = _cairo_malloc_ab (font_subset->num_glyphs, sizeof (double));
     if (widths == NULL) {
         free (glyphs);
 	_cairo_surface_set_error (&surface->base, CAIRO_STATUS_NO_MEMORY);

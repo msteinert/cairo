@@ -742,7 +742,7 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 	    data = bitmap->buffer;
 	    assert (stride == bitmap->pitch);
 	} else {
-	    data = malloc (stride * height);
+	    data = _cairo_malloc_ab (height, stride);
 	    if (!data) {
 		_cairo_error (CAIRO_STATUS_NO_MEMORY);
 		return CAIRO_STATUS_NO_MEMORY;
@@ -792,7 +792,7 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 	    if (own_buffer) {
 		data = bitmap->buffer;
 	    } else {
-		data = malloc (stride * height);
+		data = _cairo_malloc_ab (height, stride);
 		if (!data) {
 		    _cairo_error (CAIRO_STATUS_NO_MEMORY);
 		    return CAIRO_STATUS_NO_MEMORY;

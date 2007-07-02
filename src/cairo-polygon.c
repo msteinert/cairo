@@ -93,7 +93,7 @@ _cairo_polygon_grow (cairo_polygon_t *polygon)
     assert (polygon->num_edges <= polygon->edges_size);
 
     if (polygon->edges == polygon->edges_embedded) {
-	new_edges = malloc (new_size * sizeof (cairo_edge_t));
+	new_edges = _cairo_malloc_ab (new_size, sizeof (cairo_edge_t));
 	if (new_edges)
 	    memcpy (new_edges, polygon->edges, old_size * sizeof (cairo_edge_t));
     } else {

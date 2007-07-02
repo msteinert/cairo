@@ -296,8 +296,9 @@ _cairo_os2_surface_blit_pixels (cairo_os2_surface_t *surface,
         ULONG ulPixels;
 
         /* allocate temporary pixel buffer */
-        pchPixBuf = (unsigned char *) malloc (3 * surface->bitmap_info.cx *
-                                              surface->bitmap_info.cy);
+        pchPixBuf = (unsigned char *) _cairo_malloc_abc (surface->bitmap_info.cy,
+						      surface->bitmap_info.cx,
+						      3);
         pchPixSource = surface->pixels; /* start at beginning of pixel buffer */
         pBufStart = pchPixBuf; /* remember beginning of the new pixel buffer */
 
@@ -713,7 +714,7 @@ cairo_os2_surface_create (HPS hps_client_window,
     local_os2_surface->bitmap_info.cBitCount = 32;
 
     /* Allocate memory for pixels */
-    local_os2_surface->pixels = (unsigned char *) malloc (width * height * 4);
+    local_os2_surface->pixels = (unsigned char *) _cairo_malloc_abc (height, width, 4);
     if (!(local_os2_surface->pixels)) {
         /* Not enough memory for the pixels! */
         DosCloseEventSem (local_os2_surface->hev_pixel_array_came_back);
@@ -783,7 +784,7 @@ cairo_os2_surface_set_size (cairo_surface_t *surface,
     }
 
     /* Allocate memory for new stuffs */
-    pchNewPixels = (unsigned char *) malloc (new_width * new_height * 4);
+    pchNewPixels = (unsigned char *) _cairo_malloc_abc (new_height, new_width, 4);
     if (!pchNewPixels) {
         /* Not enough memory for the pixels!
          * Everything remains the same!

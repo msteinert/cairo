@@ -530,7 +530,7 @@ _cairo_gstate_set_dash (cairo_gstate_t *gstate, const double *dash, int num_dash
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    gstate->stroke_style.dash = malloc (gstate->stroke_style.num_dashes * sizeof (double));
+    gstate->stroke_style.dash = _cairo_malloc_ab (gstate->stroke_style.num_dashes, sizeof (double));
     if (gstate->stroke_style.dash == NULL) {
 	gstate->stroke_style.num_dashes = 0;
 	return CAIRO_STATUS_NO_MEMORY;
@@ -1570,7 +1570,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     if (num_glyphs <= STACK_GLYPHS_LEN) {
 	transformed_glyphs = stack_transformed_glyphs;
     } else {
-	transformed_glyphs = malloc (num_glyphs * sizeof(cairo_glyph_t));
+	transformed_glyphs = _cairo_malloc_ab (num_glyphs, sizeof(cairo_glyph_t));
 	if (transformed_glyphs == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;
     }
@@ -1615,7 +1615,7 @@ _cairo_gstate_glyph_path (cairo_gstate_t      *gstate,
     if (num_glyphs < STACK_GLYPHS_LEN)
       transformed_glyphs = stack_transformed_glyphs;
     else
-      transformed_glyphs = malloc (num_glyphs * sizeof(cairo_glyph_t));
+      transformed_glyphs = _cairo_malloc_ab (num_glyphs, sizeof(cairo_glyph_t));
     if (transformed_glyphs == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 

@@ -109,7 +109,7 @@ _cairo_spline_grow (cairo_spline_t *spline)
     assert (spline->num_points <= spline->points_size);
 
     if (spline->points == spline->points_embedded) {
-	new_points = malloc (new_size * sizeof (cairo_point_t));
+	new_points = _cairo_malloc_ab (new_size, sizeof (cairo_point_t));
 	if (new_points)
 	    memcpy (new_points, spline->points, old_size * sizeof (cairo_point_t));
     } else {
