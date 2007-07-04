@@ -7,7 +7,7 @@ Using this test should be as simple as running:
 assuming that the cairo distribution in the directory above has been
 configured and built. The test suite here goes through some effort to
 run against the locally compiled library rather than any installed
-version, but those efforts may fall short depending the level of your
+version, but those efforts may fall short depending on the level of your
 libtool madness.
 
 The test suite needs to be run before any code is committed and before
@@ -23,7 +23,7 @@ to circumvent the "pass" requirements listed below.
 
 To limit the backends that the tests are run against, use the
 TARGETS make variable, that can also be passed to make.
-It should contain a (space-, comma-, etc-separate) list of backends to test.
+It should contain a (space-, comma-, etc-separated) list of backends to test.
 To limit the tests run, use the TESTS make variable, which should be a
 space-separated list of tests to run.  For example:
 
@@ -56,7 +56,7 @@ the style of existing tests. The new-bug-ref.png image should contain
 the desired result of new-bug.c if the bug were fixed.
 
 Makefile.am should be edited, adding new-bug.c to both the TESTS and
-XFAIL_TESTS lists and new-bug-ref.png to EXTRA_DIST, add new-bug to
+XFAIL_TESTS lists and new-bug-ref.png to EXTRA_DIST. Add new-bug to
 .gitignore, and last but not least, don't forget to "git add" the new
 files.
 

@@ -14,7 +14,7 @@ while taking advantage of display hardware acceleration when available
 (for example, through the X Render Extension).
 
 The cairo API provides operations similar to the drawing operators of
-PostScript and PDF. Operations in cairo including stroking and filling
+PostScript and PDF. Operations in cairo include stroking and filling
 cubic Bézier splines, transforming and compositing translucent images,
 and antialiased text rendering. All drawing operations can be
 transformed by any affine transformation (scale, rotation, shear,
@@ -134,7 +134,7 @@ Font backends:
 	    (excluding Windows Me.) Most testing has been done on
 	    Windows XP. While some portions of the code have been
 	    adapted to work on older versions of Windows, considerable
-	    work still needs to done to get cairo running in these
+	    work still needs to be done to get cairo running in these
 	    environments.
 
 	    Cairo can be compiled on Windows either with the GCC
