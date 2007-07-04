@@ -1170,7 +1170,6 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     {
 	cairo_linear_pattern_t *linear = (cairo_linear_pattern_t *) pattern;
 	pixman_point_fixed_t p1, p2;
-	pixman_linear_gradient_t gradient;
 
 	p1.x = _cairo_fixed_to_16_16 (linear->p1.x);
 	p1.y = _cairo_fixed_to_16_16 (linear->p1.y);

@@ -77,7 +77,7 @@ _cairo_region_init_boxes (cairo_region_t *region,
 	pboxes[i].y2 = boxes[i].p2.y;
     }
 
-    if (!pixman_region_init_rects (region, pboxes, count))
+    if (!pixman_region_init_rects (&region->rgn, pboxes, count))
 	status = CAIRO_STATUS_NO_MEMORY;
 
     if (pboxes != stack_pboxes)
@@ -104,16 +104,18 @@ _cairo_region_copy (cairo_region_t *dst, cairo_region_t *src)
 int
 _cairo_region_num_boxes (cairo_region_t *region)
 {
-    return pixman_region_n_rects(&region->rgn);
+    return pixman_region_n_rects (&region->rgn);
 }
 
 cairo_int_status_t
 _cairo_region_get_boxes (cairo_region_t *region, int *num_boxes, cairo_box_int_t **boxes)
 {
-    int nboxes = pixman_region_n_rects (&region->rgn);
+    int nboxes;
     pixman_box16_t *pboxes;
     cairo_box_int_t *cboxes;
     int i;
+
+    pboxes = pixman_region_rectangles (&region->rgn, &nboxes);
 
     if (nboxes == 0) {
 	*num_boxes = 0;
@@ -121,7 +123,6 @@ _cairo_region_get_boxes (cairo_region_t *region, int *num_boxes, cairo_box_int_t
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    pboxes = pixman_region_rectangles (&region->rgn);
     cboxes = _cairo_malloc_ab (nboxes, sizeof(cairo_box_int_t));
     if (cboxes == NULL)
 	return CAIRO_STATUS_NO_MEMORY;

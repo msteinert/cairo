@@ -1429,12 +1429,12 @@ _cairo_svg_surface_emit_radial_pattern (cairo_svg_surface_t    *surface,
     double fx, fy;
     cairo_bool_t reverse_stops;
     cairo_status_t status;
-    cairo_point_t &c0, &c1;
+    cairo_point_t *c0, *c1;
     cairo_fixed_t radius0, radius1;
 
     extend = pattern->base.base.extend;
 
-    if (pattern->radius1 < pattern->radius2) {
+    if (pattern->r1 < pattern->r2) {
 	c0 = &pattern->c1;
 	c1 = &pattern->c2;
 	radius0 = pattern->r1;
@@ -1460,7 +1460,7 @@ _cairo_svg_surface_emit_radial_pattern (cairo_svg_surface_t    *surface,
     if (status)
 	return status;
 
-    if (radius0 == radius1) {
+    if (pattern->r1 == pattern->r2) {
 	_cairo_output_stream_printf (document->xml_node_defs,
 				     "<radialGradient id=\"radial%d\" "
 				     "gradientUnits=\"userSpaceOnUse\" "
