@@ -680,7 +680,10 @@ compress_dup (const void *data, unsigned long data_size,
     if (compressed == NULL)
 	return NULL;
 
-    compress (compressed, compressed_size, data, data_size);
+    if (compress (compressed, compressed_size, data, data_size) != Z_OK) {
+	free (compressed);
+	compressed = NULL;
+    }
 
     return compressed;
 }
