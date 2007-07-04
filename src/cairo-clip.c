@@ -635,7 +635,7 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
 	if (_cairo_region_get_boxes (&clip->region, &n_boxes, &boxes) != CAIRO_STATUS_SUCCESS)
 	    return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
 
-	rectangles = malloc (sizeof (cairo_rectangle_t) * n_boxes);
+	rectangles = _cairo_malloc_ab (n_boxes, sizeof (cairo_rectangle_t));
 	if (rectangles == NULL) {
 	    _cairo_region_boxes_fini (&clip->region, boxes);
 	    return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;

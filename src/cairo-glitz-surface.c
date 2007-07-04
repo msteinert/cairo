@@ -164,7 +164,7 @@ _cairo_glitz_get_boxes_from_region (cairo_region_t *region, int *nboxes)
     if (n == 0)
         return NULL;
 
-    gboxes = malloc (sizeof(glitz_box_t) * n);
+    gboxes = _cairo_malloc_ab (n, sizeof(glitz_box_t));
     if (gboxes == NULL)
         goto done;
 

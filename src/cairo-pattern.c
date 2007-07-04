@@ -1153,7 +1153,7 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     unsigned int i;
 
     if (pattern->n_stops > ARRAY_LENGTH(pixman_stops_static)) {
-	pixman_stops = malloc(pattern->n_stops * sizeof(pixman_gradient_stop_t));
+	pixman_stops = _cairo_malloc_ab (pattern->n_stops, sizeof(pixman_gradient_stop_t));
 	if (pixman_stops == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;
     }

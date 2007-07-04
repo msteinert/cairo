@@ -905,7 +905,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 
     /* Convert traps to pixman traps */
     if (num_traps > ARRAY_LENGTH(stack_traps)) {
-	pixman_traps = malloc (num_traps * sizeof(pixman_trapezoid_t));
+	pixman_traps = _cairo_malloc_ab (num_traps, sizeof(pixman_trapezoid_t));
 	if (pixman_traps == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;
     }

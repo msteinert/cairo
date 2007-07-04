@@ -1542,7 +1542,7 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
     render_color.alpha = color->alpha_short;
 
     if (num_rects > ARRAY_LENGTH(static_xrects)) {
-        xrects = malloc(sizeof(XRectangle) * num_rects);
+        xrects = _cairo_malloc_ab (num_rects, sizeof(XRectangle));
         if (xrects == NULL)
             return CAIRO_STATUS_NO_MEMORY;
     }
@@ -1774,7 +1774,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
         int i;
 
         if (num_traps > ARRAY_LENGTH(xtraps_stack)) {
-            xtraps = malloc(sizeof(XTrapezoid) * num_traps);
+            xtraps = _cairo_malloc_ab (num_traps, sizeof(XTrapezoid));
             if (xtraps == NULL) {
                 status = CAIRO_STATUS_NO_MEMORY;
                 goto BAIL;
