@@ -45,7 +45,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_scaled_font_t *scaled_font;
     cairo_pattern_t *pattern;
     cairo_t *cr2;
-    cairo_matrix_t identity, invalid = {
+    cairo_matrix_t identity, bogus, invalid = {
 	4.0, 4.0,
 	4.0, 4.0,
 	4.0, 4.0
@@ -53,7 +53,7 @@ draw (cairo_t *cr, int width, int height)
 
 #define CHECK_STATUS(status, function_name)						\
 if ((status) == CAIRO_STATUS_SUCCESS) {							\
-    cairo_test_log ("Error: %s with invalid matrix passed",				\
+    cairo_test_log ("Error: %s with invalid matrix passed\n",				\
 		    (function_name));							\
     return CAIRO_TEST_FAILURE;								\
 } else if ((status) != CAIRO_STATUS_INVALID_MATRIX) {					\
@@ -64,6 +64,17 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
 		    cairo_status_to_string (status));					\
 }
 
+    /* create a bogus matrix and check results of attempted inversion */
+    bogus.x0 = bogus.xy = bogus.xx = strtod ("NaN", NULL);
+    bogus.y0 = bogus.yx = bogus.yy = bogus.xx;
+    status = cairo_matrix_invert (&bogus);
+    CHECK_STATUS (status, "cairo_matrix_invert(NaN)");
+
+    /* test cairo_matrix_invert with invalid matrix */
+    status = cairo_matrix_invert (&invalid);
+    CHECK_STATUS (status, "cairo_matrix_invert(invalid)");
+
+
     cairo_matrix_init_identity (&identity);
 
     target = cairo_get_target (cr);
@@ -73,18 +84,34 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
     cairo_transform (cr2, &invalid);
 
     status = cairo_status (cr2);
-    CHECK_STATUS (status,"cairo_transform");
-
     cairo_destroy (cr2);
+    CHECK_STATUS (status, "cairo_transform(invalid)");
+
+    /* test cairo_transform with bogus matrix */
+    cr2 = cairo_create (target);
+    cairo_transform (cr2, &bogus);
+
+    status = cairo_status (cr2);
+    cairo_destroy (cr2);
+    CHECK_STATUS (status, "cairo_transform(NaN)");
+
 
     /* test cairo_set_matrix with invalid matrix */
     cr2 = cairo_create (target);
     cairo_set_matrix (cr2, &invalid);
 
     status = cairo_status (cr2);
-    CHECK_STATUS (status, "cairo_set_matrix");
-
     cairo_destroy (cr2);
+    CHECK_STATUS (status, "cairo_set_matrix(invalid)");
+
+    /* test cairo_set_matrix with bogus matrix */
+    cr2 = cairo_create (target);
+    cairo_set_matrix (cr2, &bogus);
+
+    status = cairo_status (cr2);
+    cairo_destroy (cr2);
+    CHECK_STATUS (status, "cairo_set_matrix(NaN)");
+
 
     /* test cairo_set_font_matrix with invalid matrix */
     cr2 = cairo_create (target);
@@ -94,12 +121,24 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
     cairo_show_text (cr2, "hello");
 
     status = cairo_status (cr2);
-    CHECK_STATUS (status, "cairo_set_font_matrix");
-
     cairo_destroy (cr2);
+    CHECK_STATUS (status, "cairo_set_font_matrix(invalid)");
+
+    /* test cairo_set_font_matrix with bogus matrix */
+    cr2 = cairo_create (target);
+    cairo_set_font_matrix (cr2, &bogus);
+
+    /* draw some text to force the font to be resolved */
+    cairo_show_text (cr2, "hello");
+
+    status = cairo_status (cr2);
+    cairo_destroy (cr2);
+    CHECK_STATUS (status, "cairo_set_font_matrix(NaN)");
+
 
     /* test cairo_scaled_font_create with invalid matrix */
-    font_face = cairo_get_font_face (cr);
+    cr2 = cairo_create (target);
+    font_face = cairo_get_font_face (cr2);
     font_options = cairo_font_options_create ();
     cairo_get_font_options (cr, font_options);
     scaled_font = cairo_scaled_font_create (font_face,
@@ -107,7 +146,7 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
 					    &identity,
 					    font_options);
     status = cairo_scaled_font_status (scaled_font);
-    CHECK_STATUS (status, "cairo_scaled_font_create");
+    CHECK_STATUS (status, "cairo_scaled_font_create(invalid)");
 
     cairo_scaled_font_destroy (scaled_font);
 
@@ -116,21 +155,52 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
 					    &invalid,
 					    font_options);
     status = cairo_scaled_font_status (scaled_font);
-    CHECK_STATUS (status, "cairo_scaled_font_create");
+    CHECK_STATUS (status, "cairo_scaled_font_create(invalid)");
 
     cairo_scaled_font_destroy (scaled_font);
     cairo_font_options_destroy (font_options);
+    cairo_destroy (cr2);
+
+    /* test cairo_scaled_font_create with bogus matrix */
+    cr2 = cairo_create (target);
+    font_face = cairo_get_font_face (cr2);
+    font_options = cairo_font_options_create ();
+    cairo_get_font_options (cr, font_options);
+    scaled_font = cairo_scaled_font_create (font_face,
+					    &bogus,
+					    &identity,
+					    font_options);
+    status = cairo_scaled_font_status (scaled_font);
+    CHECK_STATUS (status, "cairo_scaled_font_create(NaN)");
+
+    cairo_scaled_font_destroy (scaled_font);
+
+    scaled_font = cairo_scaled_font_create (font_face,
+					    &identity,
+					    &bogus,
+					    font_options);
+    status = cairo_scaled_font_status (scaled_font);
+    CHECK_STATUS (status, "cairo_scaled_font_create(NaN)");
+
+    cairo_scaled_font_destroy (scaled_font);
+    cairo_font_options_destroy (font_options);
+    cairo_destroy (cr2);
+
 
     /* test cairo_pattern_set_matrix with invalid matrix */
     pattern = cairo_pattern_create_rgb (1.0, 1.0, 1.0);
     cairo_pattern_set_matrix (pattern, &invalid);
     status = cairo_pattern_status (pattern);
-    CHECK_STATUS (status, "cairo_pattern_set_matrix");
+    CHECK_STATUS (status, "cairo_pattern_set_matrix(invalid)");
     cairo_pattern_destroy (pattern);
 
-    /* test cairo_matrix_invert with invalid matrix */
-    status = cairo_matrix_invert (&invalid);
-    CHECK_STATUS (status, "cairo_matrix_invert");
+    /* test cairo_pattern_set_matrix with bogus matrix */
+    pattern = cairo_pattern_create_rgb (1.0, 1.0, 1.0);
+    cairo_pattern_set_matrix (pattern, &bogus);
+    status = cairo_pattern_status (pattern);
+    CHECK_STATUS (status, "cairo_pattern_set_matrix(NaN)");
+    cairo_pattern_destroy (pattern);
+
 
     return CAIRO_TEST_SUCCESS;
 }

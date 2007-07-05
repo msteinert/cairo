@@ -475,6 +475,10 @@ cairo_matrix_invert (cairo_matrix_t *matrix)
     if (det == 0)
 	return CAIRO_STATUS_INVALID_MATRIX;
 
+    /* this weird construct is for detecting NaNs */
+    if (! (det * det > 0.))
+	return CAIRO_STATUS_INVALID_MATRIX;
+
     _cairo_matrix_compute_adjoint (matrix);
     _cairo_matrix_scalar_multiply (matrix, 1 / det);
 
