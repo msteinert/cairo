@@ -261,7 +261,7 @@ static cairo_boilerplate_target_t targets[] =
       _cairo_boilerplate_xlib_cleanup,
       _cairo_boilerplate_xlib_synchronize},
 #endif
-#if CAIRO_HAS_PS_SURFACE
+#if CAIRO_HAS_PS_SURFACE && CAIRO_CAN_TEST_PS_SURFACE
     { "ps", CAIRO_SURFACE_TYPE_PS,
       CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED, 0,
       _cairo_boilerplate_ps_create_surface,

@@ -531,6 +531,19 @@ fi
 dnl ===========================================================================
 
 CAIRO_BACKEND_ENABLE(ps, PostScript, ps, PS_SURFACE, auto, [use_ps=yes])
+test_ps=no
+if test "x$use_ps" = "xyes"; then
+  AC_CHECK_PROG(GS, gs, gs)
+  if test "$GS"; then
+    AC_DEFINE([CAIRO_CAN_TEST_PS_SURFACE], 1, [Define to 1 if the PS backend can be tested (needs ghostscript)])
+    test_ps="yes"
+  else
+    AC_MSG_WARN([PS backend will not be tested since ghostscript is not available])
+    test_ps="no (requires ghostscript)"
+  fi
+fi
+
+AM_CONDITIONAL(CAIRO_CAN_TEST_PS_SURFACE, test "x$test_ps" = "xyes")
 
 dnl ===========================================================================
 
@@ -969,6 +982,7 @@ echo ""
 echo "and the following debug options:"
 echo "  gcov support:  $use_gcov"
 echo "  test surfaces: $use_test_surfaces"
+echo "  ps testing:    $test_ps"
 echo "  pdf testing:   $test_pdf"
 echo "  svg testing:   $test_svg"
 echo ""
