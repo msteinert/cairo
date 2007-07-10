@@ -67,7 +67,7 @@ Surface backends:
 
 	image backend
 	-------------
-	no dependencies
+	pixman			git://git.freedesktop.org/git/pixman
 
 	glitz backend
 	-------------
