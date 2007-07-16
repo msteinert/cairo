@@ -1439,8 +1439,8 @@ _cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t    *surface,
 
     pat_to_pdf = pattern->base.base.matrix;
     status = cairo_matrix_invert (&pat_to_pdf);
-    if (status)
-	return status;
+    /* cairo_pattern_set_matrix ensures the matrix is invertible */
+    assert (status == CAIRO_STATUS_SUCCESS);
 
     cairo_matrix_multiply (&pat_to_pdf, &pat_to_pdf, &surface->cairo_to_pdf);
     x1 = _cairo_fixed_to_double (pattern->p1.x);
@@ -1561,8 +1561,8 @@ _cairo_pdf_surface_emit_radial_pattern (cairo_pdf_surface_t    *surface,
 
     pat_to_pdf = pattern->base.base.matrix;
     status = cairo_matrix_invert (&pat_to_pdf);
-    if (status)
-	return status;
+    /* cairo_pattern_set_matrix ensures the matrix is invertible */
+    assert (status == CAIRO_STATUS_SUCCESS);
 
     cairo_matrix_multiply (&pat_to_pdf, &pat_to_pdf, &surface->cairo_to_pdf);
     x1 = _cairo_fixed_to_double (pattern->c1.x);
