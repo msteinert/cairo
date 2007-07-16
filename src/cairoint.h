@@ -2112,12 +2112,12 @@ _cairo_pen_add_points_for_slopes (cairo_pen_t *pen,
 				  cairo_point_t *c,
 				  cairo_point_t *d);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_pen_find_active_cw_vertex_index (cairo_pen_t *pen,
 					cairo_slope_t *slope,
 					int *active);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_pen_find_active_ccw_vertex_index (cairo_pen_t *pen,
 					 cairo_slope_t *slope,
 					 int *active);

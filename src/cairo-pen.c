@@ -308,7 +308,7 @@ _cairo_pen_compute_slopes (cairo_pen_t *pen)
  * counterclockwise order. However, for this function, we care
  * strongly about which vertex is returned.
  */
-cairo_status_t
+void
 _cairo_pen_find_active_cw_vertex_index (cairo_pen_t *pen,
 					cairo_slope_t *slope,
 					int *active)
@@ -324,8 +324,6 @@ _cairo_pen_find_active_cw_vertex_index (cairo_pen_t *pen,
     assert (i < pen->num_vertices);
 
     *active = i;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 /* Find active pen vertex for counterclockwise edge of stroke at the given slope.
@@ -333,7 +331,7 @@ _cairo_pen_find_active_cw_vertex_index (cairo_pen_t *pen,
  * NOTE: The behavior of this function is sensitive to the sense of
  * the inequality within _cairo_slope_clockwise/_cairo_slope_counter_clockwise.
  */
-cairo_status_t
+void
 _cairo_pen_find_active_ccw_vertex_index (cairo_pen_t *pen,
 					 cairo_slope_t *slope,
 					 int *active)
@@ -352,8 +350,6 @@ _cairo_pen_find_active_ccw_vertex_index (cairo_pen_t *pen,
     }
 
     *active = i;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -388,11 +384,9 @@ _cairo_pen_stroke_spline_half (cairo_pen_t *pen,
 	final_slope.dy = -final_slope.dy;
     }
 
-    status = _cairo_pen_find_active_cw_vertex_index (pen,
-	                                             &initial_slope,
-						     &active);
-    if (status)
-	return status;
+    _cairo_pen_find_active_cw_vertex_index (pen,
+	                                    &initial_slope,
+					    &active);
 
     i = start;
     while (i != stop) {
