@@ -1979,8 +1979,8 @@ _cairo_pattern_get_extents (cairo_pattern_t         *pattern,
 
 	imatrix = pattern->matrix;
 	status = cairo_matrix_invert (&imatrix);
-	if (status)
-	    return status;
+	/* cairo_pattern_set_matrix ensures the matrix is invertible */
+	assert (status == CAIRO_STATUS_SUCCESS);
 
 	/* XXX Use _cairo_matrix_transform_bounding_box here */
 	for (sy = 0; sy <= 1; sy++) {
