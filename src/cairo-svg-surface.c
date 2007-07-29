@@ -451,16 +451,15 @@ _cairo_svg_surface_show_page (void *abstract_surface)
 static void
 _cairo_svg_surface_emit_transform (cairo_output_stream_t *output,
 		char const *attribute_str,
-		char const *trailer,
 		cairo_matrix_t *matrix)
 {
-    _cairo_output_stream_printf (output,
-				 "%s=\"matrix(%f,%f,%f,%f,%f,%f)\"%s",
-				 attribute_str,
-				 matrix->xx, matrix->yx,
-				 matrix->xy, matrix->yy,
-				 matrix->x0, matrix->y0,
-				 trailer);
+    if (!_cairo_matrix_is_identity (matrix))
+	_cairo_output_stream_printf (output,
+				     "%s=\"matrix(%f,%f,%f,%f,%f,%f)\"",
+				     attribute_str,
+				     matrix->xx, matrix->yx,
+				     matrix->xy, matrix->yy,
+				     matrix->x0, matrix->y0);
 }
 
 typedef struct
@@ -616,7 +615,8 @@ _cairo_svg_document_emit_bitmap_glyph_data (cairo_svg_document_t	*document,
     }
 
     _cairo_output_stream_printf (document->xml_node_glyphs, "<g");
-    _cairo_svg_surface_emit_transform (document->xml_node_glyphs, " transform", ">/n", &image->base.device_transform_inverse);
+    _cairo_svg_surface_emit_transform (document->xml_node_glyphs, " transform", &image->base.device_transform_inverse);
+    _cairo_output_stream_printf (document->xml_node_glyphs, ">/n");
 
     for (y = 0, row = image->data, rows = image->height; rows; row += image->stride, rows--, y++) {
 	for (x = 0, byte = row, cols = (image->width + 7) / 8; cols; byte++, cols--) {
@@ -917,7 +917,8 @@ _cairo_svg_surface_emit_composite_image_pattern (cairo_output_stream_t     *outp
 				     "width=\"%d\" height=\"%d\"",
 				     pattern_id,
 				     extents.width, extents.height);
-	_cairo_svg_surface_emit_transform (output, " patternTransform", ">\n", &p2u);
+	_cairo_svg_surface_emit_transform (output, " patternTransform", &p2u);
+	_cairo_output_stream_printf (output, ">\n");
     }
 
     _cairo_output_stream_printf (output,
@@ -925,7 +926,7 @@ _cairo_svg_surface_emit_composite_image_pattern (cairo_output_stream_t     *outp
 				 extents.width, extents.height);
 
     if (pattern_id == invalid_pattern_id)
-	_cairo_svg_surface_emit_transform (output, " transform", "", &p2u);
+	_cairo_svg_surface_emit_transform (output, " transform", &p2u);
 
     if (extra_attributes)
 	_cairo_output_stream_printf (output, " %s", extra_attributes);
@@ -1092,7 +1093,8 @@ _cairo_svg_surface_emit_composite_meta_pattern (cairo_output_stream_t	*output,
 				     pattern_id,
 				     meta_surface->width_pixels,
 				     meta_surface->height_pixels);
-	_cairo_svg_surface_emit_transform (output, " patternTransform", ">\n", &p2u);
+	_cairo_svg_surface_emit_transform (output, " patternTransform", &p2u);
+	_cairo_output_stream_printf (output, ">\n");
     }
 
     _cairo_output_stream_printf (output,
@@ -1100,7 +1102,7 @@ _cairo_svg_surface_emit_composite_meta_pattern (cairo_output_stream_t	*output,
 				 id);
 
     if (pattern_id == invalid_pattern_id)
-	_cairo_svg_surface_emit_transform (output, " transform", "", &p2u);
+	_cairo_svg_surface_emit_transform (output, " transform", &p2u);
 
     if (extra_attributes)
 	_cairo_output_stream_printf (output, " %s", extra_attributes);
@@ -1399,7 +1401,8 @@ _cairo_svg_surface_emit_linear_pattern (cairo_svg_surface_t    *surface,
 				 x0, y0, x1, y1);
 
     _cairo_svg_surface_emit_pattern_extend (document->xml_node_defs, &pattern->base.base),
-    _cairo_svg_surface_emit_transform (document->xml_node_defs, "gradientTransform", ">\n", &p2u);
+    _cairo_svg_surface_emit_transform (document->xml_node_defs, "gradientTransform", &p2u);
+    _cairo_output_stream_printf (document->xml_node_defs, ">\n");
 
     _cairo_svg_surface_emit_pattern_stops (document->xml_node_defs ,&pattern->base, 0.0, FALSE, FALSE);
 
@@ -1469,8 +1472,8 @@ _cairo_svg_surface_emit_radial_pattern (cairo_svg_surface_t    *surface,
 				     document->radial_pattern_id,
 				     x1, y1,
 				     x1, y1, r1);
-
-	_cairo_svg_surface_emit_transform (document->xml_node_defs, "gradientTransform", ">\n", &p2u);
+	_cairo_svg_surface_emit_transform (document->xml_node_defs, "gradientTransform", &p2u);
+	_cairo_output_stream_printf (document->xml_node_defs, ">\n");
 
 	if (extend == CAIRO_EXTEND_NONE ||
 	    pattern->base.n_stops < 1)
@@ -1554,7 +1557,8 @@ _cairo_svg_surface_emit_radial_pattern (cairo_svg_surface_t    *surface,
 	    _cairo_output_stream_printf (document->xml_node_defs, "spreadMethod=\"repeat\" ");
 	else
 	    _cairo_svg_surface_emit_pattern_extend (document->xml_node_defs, &pattern->base.base);
-	_cairo_svg_surface_emit_transform (document->xml_node_defs, "gradientTransform", ">\n", &p2u);
+	_cairo_svg_surface_emit_transform (document->xml_node_defs, "gradientTransform", &p2u);
+	_cairo_output_stream_printf (document->xml_node_defs, ">\n");
 
 	/* To support cairo's EXTEND_NONE, (for which SVG has no similar
 	 * notion), we add transparent color stops on either end of the
@@ -1725,7 +1729,8 @@ _cairo_svg_surface_fill_stroke (void			*abstract_surface,
 
     status = _cairo_svg_surface_emit_path (surface->xml_node, path, stroke_ctm_inverse);
 
-    _cairo_svg_surface_emit_transform (surface->xml_node, " transform", "/>\n", stroke_ctm);
+    _cairo_svg_surface_emit_transform (surface->xml_node, " transform", stroke_ctm);
+    _cairo_output_stream_printf (surface->xml_node, "/>\n");
 
     return status;
 }
@@ -1998,7 +2003,8 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
 
     status = _cairo_svg_surface_emit_path (surface->xml_node, path, ctm_inverse);
 
-    _cairo_svg_surface_emit_transform (surface->xml_node, " transform", "/>\n", ctm);
+    _cairo_svg_surface_emit_transform (surface->xml_node, " transform", ctm);
+    _cairo_output_stream_printf (surface->xml_node, "/>\n");
 
     return status;
 }
