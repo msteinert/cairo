@@ -1270,10 +1270,10 @@ _cairo_pdf_surface_emit_pattern_stops (cairo_pdf_surface_t      *surface,
     n_stops = pattern->n_stops;
 
     for (i = 0; i < n_stops; i++) {
-	stops[i].color[0] = pattern->stops[i].color.red / 65535.0;
-	stops[i].color[1] = pattern->stops[i].color.green / 65535.0;
-	stops[i].color[2] = pattern->stops[i].color.blue / 65535.0;
-	stops[i].color[3] = pattern->stops[i].color.alpha / 65535.0;
+	stops[i].color[0] = pattern->stops[i].color.red;
+	stops[i].color[1] = pattern->stops[i].color.green;
+	stops[i].color[2] = pattern->stops[i].color.blue;
+	stops[i].color[3] = pattern->stops[i].color.alpha;
         if (!CAIRO_ALPHA_IS_OPAQUE (stops[i].color[3]))
             emit_alpha = TRUE;
 	stops[i].offset = _cairo_fixed_to_double (pattern->stops[i].x);
