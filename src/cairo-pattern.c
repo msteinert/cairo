@@ -185,7 +185,9 @@ _cairo_pattern_init_copy (cairo_pattern_t	*pattern,
     } break;
     }
 
+    /* The reference count and user_data array are unique to the copy. */
     pattern->ref_count = 1;
+    _cairo_user_data_array_init (&pattern->user_data);
 
     return CAIRO_STATUS_SUCCESS;
 }
