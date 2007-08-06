@@ -34,7 +34,7 @@
 #endif
 #include <errno.h>
 #include <string.h>
-#include <pixman/pixman.h>
+#include <pixman.h>
 
 #include "cairo-test.h"
 

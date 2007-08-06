@@ -64,7 +64,7 @@
 #include <stdio.h>
 
 #include "cairo.h"
-#include <pixman/pixman.h>
+#include <pixman.h>
 
 #ifdef _MSC_VER
 #define snprintf _snprintf
