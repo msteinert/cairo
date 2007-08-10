@@ -446,6 +446,7 @@ cairo_pdf_surface_set_size (cairo_surface_t	*surface,
 
     pdf_surface->width = width_in_points;
     pdf_surface->height = height_in_points;
+    cairo_matrix_init (&pdf_surface->cairo_to_pdf, 1, 0, 0, -1, 0, height_in_points);
 }
 
 static void
