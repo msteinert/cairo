@@ -124,13 +124,24 @@ _cairo_boilerplate_xlib_perf_create_surface (Display			*dpy,
     switch (content) {
     case CAIRO_CONTENT_COLOR_ALPHA:
 	xrender_format = XRenderFindStandardFormat (dpy, PictStandardARGB32);
+	if (xrender_format == NULL) {
+	    CAIRO_BOILERPLATE_LOG ("X server does not have the Render extension.\n");
+	    return NULL;
+	}
+
 	xtc->drawable = XCreatePixmap (dpy, DefaultRootWindow (dpy),
 				       width, height, xrender_format->depth);
 	xtc->drawable_is_pixmap = TRUE;
 	break;
+
     case CAIRO_CONTENT_COLOR:
 	visual = DefaultVisual (dpy, DefaultScreen (dpy));
 	xrender_format = XRenderFindVisualFormat (dpy, visual);
+	if (xrender_format == NULL) {
+	    CAIRO_BOILERPLATE_LOG ("X server does not have the Render extension.\n");
+	    return NULL;
+	}
+
 	attr.override_redirect = True;
 	xtc->drawable = XCreateWindow (dpy, DefaultRootWindow (dpy), 0, 0,
 				       width, height, 0, xrender_format->depth,
@@ -138,13 +149,10 @@ _cairo_boilerplate_xlib_perf_create_surface (Display			*dpy,
 	XMapWindow (dpy, xtc->drawable);
 	xtc->drawable_is_pixmap = FALSE;
 	break;
+
     case CAIRO_CONTENT_ALPHA:
     default:
 	CAIRO_BOILERPLATE_LOG ("Invalid content for xlib test: %d\n", content);
-	return NULL;
-    }
-    if (xrender_format == NULL) {
-	CAIRO_BOILERPLATE_LOG ("X server does not have the Render extension.\n");
 	return NULL;
     }
 
