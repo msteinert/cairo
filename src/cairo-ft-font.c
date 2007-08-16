@@ -552,6 +552,7 @@ _cairo_ft_unscaled_font_lock_face (cairo_ft_unscaled_font_t *unscaled)
 		     unscaled->id,
 		     &face) != FT_Err_Ok)
     {
+	unscaled->lock_count--;
 	CAIRO_MUTEX_UNLOCK (unscaled->mutex);
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
