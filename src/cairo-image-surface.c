@@ -627,7 +627,7 @@ _cairo_image_surface_set_matrix (cairo_image_surface_t	*surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static void
 _cairo_image_surface_set_filter (cairo_image_surface_t *surface, cairo_filter_t filter)
 {
     pixman_filter_t pixman_filter;
@@ -659,11 +659,9 @@ _cairo_image_surface_set_filter (cairo_image_surface_t *surface, cairo_filter_t 
     }
 
     pixman_image_set_filter (surface->pixman_image, pixman_filter, NULL, 0);
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_int_status_t
+static cairo_status_t
 _cairo_image_surface_set_attributes (cairo_image_surface_t      *surface,
 				     cairo_surface_attributes_t *attributes)
 {
@@ -688,9 +686,9 @@ _cairo_image_surface_set_attributes (cairo_image_surface_t      *surface,
 	break;
     }
 
-    status = _cairo_image_surface_set_filter (surface, attributes->filter);
+    _cairo_image_surface_set_filter (surface, attributes->filter);
 
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 /* XXX: I think we should fix pixman to match the names/order of the
@@ -1074,8 +1072,7 @@ _cairo_image_surface_reset (void *abstract_surface)
     cairo_status_t status;
 
     status = _cairo_image_surface_set_clip_region (surface, NULL);
-    if (status)
-	return status;
+    assert (status == CAIRO_STATUS_SUCCESS);
 
     return CAIRO_STATUS_SUCCESS;
 }
