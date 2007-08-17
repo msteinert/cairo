@@ -217,6 +217,13 @@ _pixman_format_from_masks (cairo_format_masks_t *masks)
 	{
 	    return PIXMAN_r5g6b5;
 	}
+	if (masks->alpha_mask == 0x0000 &&
+	    masks->red_mask   == 0x7c00 &&
+	    masks->green_mask == 0x03e0 &&
+	    masks->blue_mask  == 0x001f)
+	{
+	    return PIXMAN_x1r5g5b5;
+	}
 	break;
     case 8:
 	if (masks->alpha_mask == 0xff)
@@ -275,6 +282,13 @@ _pixman_format_to_masks (pixman_format_code_t	 pixman_format,
 	*bpp   = 16;
 	*red   = 0xf800;
 	*green = 0x07e0;
+	*blue  = 0x001f;
+	break;
+
+    case PIXMAN_x1r5g5b5:
+	*bpp   = 16;
+	*red   = 0x7c00;
+	*green = 0x03e0;
 	*blue  = 0x001f;
 	break;
 
