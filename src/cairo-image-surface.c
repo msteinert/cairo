@@ -71,6 +71,7 @@ static const cairo_image_surface_t _cairo_image_surface_nil_invalid_format = {
 	  CAIRO_HINT_METRICS_DEFAULT
 	}				/* font_options */
     },					/* base */
+    PIXMAN_a8r8g8b8,			/* pixman_format */
     CAIRO_FORMAT_ARGB32,		/* format */
     NULL,				/* data */
     FALSE,				/* owns_data */
@@ -173,6 +174,7 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
 
     surface->pixman_image = pixman_image;
 
+    surface->pixman_format = pixman_format;
     surface->format = _cairo_format_from_pixman_format (pixman_format);
     surface->data = (unsigned char *) pixman_image_get_data (pixman_image);
     surface->owns_data = FALSE;
@@ -186,48 +188,78 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
     return &surface->base;
 }
 
-static cairo_bool_t
-_CAIRO_MASK_FORMAT (cairo_format_masks_t *masks, cairo_format_t *format)
+/* XXX: This function should really live inside pixman. */
+pixman_format_code_t
+_pixman_format_from_masks (cairo_format_masks_t *masks)
 {
-    /* XXX: many formats are simply not supported by pixman, so this function
-     * converts the masks into something we know will be supported.
-     */
     switch (masks->bpp) {
     case 32:
 	if (masks->alpha_mask == 0xff000000 &&
-	    masks->red_mask == 0x00ff0000 &&
+	    masks->red_mask   == 0x00ff0000 &&
 	    masks->green_mask == 0x0000ff00 &&
-	    masks->blue_mask == 0x000000ff)
+	    masks->blue_mask  == 0x000000ff)
 	{
-	    *format = CAIRO_FORMAT_ARGB32;
-	    return TRUE;
+	    return PIXMAN_a8r8g8b8;
 	}
 	if (masks->alpha_mask == 0x00000000 &&
-	    masks->red_mask == 0x00ff0000 &&
+	    masks->red_mask   == 0x00ff0000 &&
 	    masks->green_mask == 0x0000ff00 &&
-	    masks->blue_mask == 0x000000ff)
+	    masks->blue_mask  == 0x000000ff)
 	{
-	    *format = CAIRO_FORMAT_RGB24;
-	    return TRUE;
+	    return PIXMAN_x8r8g8b8;
 	}
 	break;
     case 8:
 	if (masks->alpha_mask == 0xff)
 	{
-	    *format = CAIRO_FORMAT_A8;
-	    return TRUE;
+	    return PIXMAN_a8;
 	}
 	break;
     case 1:
 	if (masks->alpha_mask == 0x1)
 	{
-	    *format = CAIRO_FORMAT_A1;
-	    return TRUE;
+	    return PIXMAN_a1;
 	}
 	break;
     }
-    return FALSE;
+
+    ASSERT_NOT_REACHED;
+    return 0;
 }
+
+/* XXX: This function should really live inside pixman. */
+void
+_pixman_format_to_masks (pixman_format_code_t	 pixman_format,
+			 uint32_t		*bpp,
+			 uint32_t		*red,
+			 uint32_t		*green,
+			 uint32_t		*blue)
+{
+    *red = 0x0;
+    *green = 0x0;
+    *blue = 0x0;
+
+    switch (pixman_format)
+    {
+    case PIXMAN_a8r8g8b8:
+    case PIXMAN_x8r8g8b8:
+    default:
+	*bpp   = 32;
+	*red   = 0x00ff0000;
+	*green = 0x0000ff00;
+	*blue  = 0x000000ff;
+	break;
+
+    case PIXMAN_a8:
+	*bpp = 8;
+	break;
+
+    case PIXMAN_a1:
+	*bpp = 1;
+	break;
+    }
+}
+
 
 /* XXX: This function really should be eliminated. We don't really
  * want to advertise a cairo image surface that supports any possible
@@ -240,18 +272,15 @@ _cairo_image_surface_create_with_masks (unsigned char	       *data,
 					int			height,
 					int			stride)
 {
-    cairo_format_t format;
+    pixman_format_code_t pixman_format;
     
-    if (!_CAIRO_MASK_FORMAT (masks, &format)) {
-	_cairo_error (CAIRO_STATUS_INVALID_FORMAT);
-	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
+    pixman_format = _pixman_format_from_masks (masks);
 
-    return cairo_image_surface_create_for_data (data,
-						format,
-						width,
-						height,
-						stride);
+    return _cairo_image_surface_create_with_pixman_format (data,
+							   pixman_format,
+							   width,
+							   height,
+							   stride);
 }
 
 static pixman_format_code_t 
@@ -277,7 +306,7 @@ _cairo_format_to_pixman_format_code (cairo_format_t format)
     return ret;
 }
 
-static cairo_surface_t *
+cairo_surface_t *
 _cairo_image_surface_create_with_pixman_format (unsigned char		*data,
 						pixman_format_code_t	 pixman_format,
 						int			 width,

@@ -344,46 +344,6 @@ _noop_error_handler (Display     *display,
     return False;		/* return value is ignored */
 }
 
-static cairo_bool_t
-_CAIRO_MASK_FORMAT (cairo_format_masks_t *masks, cairo_format_t *format)
-{
-    switch (masks->bpp) {
-    case 32:
-	if (masks->alpha_mask == 0xff000000 &&
-	    masks->red_mask == 0x00ff0000 &&
-	    masks->green_mask == 0x0000ff00 &&
-	    masks->blue_mask == 0x000000ff)
-	{
-	    *format = CAIRO_FORMAT_ARGB32;
-	    return True;
-	}
-	if (masks->alpha_mask == 0x00000000 &&
-	    masks->red_mask == 0x00ff0000 &&
-	    masks->green_mask == 0x0000ff00 &&
-	    masks->blue_mask == 0x000000ff)
-	{
-	    *format = CAIRO_FORMAT_RGB24;
-	    return True;
-	}
-	break;
-    case 8:
-	if (masks->alpha_mask == 0xff)
-	{
-	    *format = CAIRO_FORMAT_A8;
-	    return True;
-	}
-	break;
-    case 1:
-	if (masks->alpha_mask == 0x1)
-	{
-	    *format = CAIRO_FORMAT_A1;
-	    return True;
-	}
-	break;
-    }
-    return False;
-}
-
 static void
 _swap_ximage_2bytes (XImage *ximage)
 {
@@ -504,7 +464,7 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
     XImage *ximage;
     short x1, y1, x2, y2;
     cairo_format_masks_t masks;
-    cairo_format_t format;
+    pixman_format_code_t pixman_format;
 
     x1 = 0;
     y1 = 0;
@@ -638,38 +598,15 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	    masks.alpha_mask = 0xffffffff;
     }
 
-    /*
-     * Prefer to use a standard pixman format instead of the
-     * general masks case.
-     */
-    if (_CAIRO_MASK_FORMAT (&masks, &format))
-    {
-	image = (cairo_image_surface_t*)
-	    cairo_image_surface_create_for_data ((unsigned char *) ximage->data,
-						 format,
-						 ximage->width,
-						 ximage->height,
-						 ximage->bytes_per_line);
-	if (image->base.status)
-	    goto FAIL;
-    }
-    else
-    {
-	/*
-	 * XXX This can't work.  We must convert the data to one of the
-	 * supported pixman formats.  Pixman needs another function
-	 * which takes data in an arbitrary format and converts it
-	 * to something supported by that library.
-	 */
-	image = (cairo_image_surface_t*)
-	    _cairo_image_surface_create_with_masks ((unsigned char *) ximage->data,
-						    &masks,
-						    ximage->width,
-						    ximage->height,
-						    ximage->bytes_per_line);
-	if (image->base.status)
-	    goto FAIL;
-    }
+    pixman_format = _pixman_format_from_masks (&masks);
+    image = (cairo_image_surface_t*)
+	_cairo_image_surface_create_with_pixman_format ((unsigned char *) ximage->data,
+							pixman_format,
+							ximage->width,
+							ximage->height,
+							ximage->bytes_per_line);
+    if (image->base.status)
+	goto FAIL;
 
     /* Let the surface take ownership of the data */
     _cairo_image_surface_assume_ownership_of_data (image);
@@ -770,38 +707,6 @@ _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void
-cairo_format_get_masks (cairo_format_t  format,
-			uint32_t       *bpp,
-			uint32_t       *red,
-			uint32_t       *green,
-			uint32_t       *blue)
-{
-    *red = 0x0;
-    *green = 0x0;
-    *blue = 0x0;
-    
-    switch (format)
-    {
-    case CAIRO_FORMAT_ARGB32:
-    case CAIRO_FORMAT_RGB24:
-    default:
-	*bpp =   32;
-	*red =   0x00ff0000;
-	*green = 0x0000ff00;
-	*blue =  0x000000ff;
-	break;
-	
-    case CAIRO_FORMAT_A8:
-	*bpp = 8;
-	break;
-	
-    case CAIRO_FORMAT_A1:
-	*bpp = 1;
-	break;
-    }
-}
-
 static cairo_status_t
 _draw_image_surface (cairo_xlib_surface_t   *surface,
 		     cairo_image_surface_t  *image,
@@ -817,7 +722,7 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
     int native_byte_order = _native_byte_order_lsb () ? LSBFirst : MSBFirst;
     cairo_status_t status;
 
-    cairo_format_get_masks (image->format, &bpp, &red, &green, &blue);
+    _pixman_format_to_masks (image->pixman_format, &bpp, &red, &green, &blue);
     
     ximage.width = image->width;
     ximage.height = image->height;

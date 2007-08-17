@@ -915,7 +915,7 @@ typedef struct _cairo_format_masks {
 struct _cairo_image_surface {
     cairo_surface_t base;
 
-    /* libic-specific fields */
+    pixman_format_code_t pixman_format;
     cairo_format_t format;
     unsigned char *data;
     cairo_bool_t owns_data;
@@ -2004,6 +2004,23 @@ _cairo_content_from_format (cairo_format_t format);
 cairo_private cairo_surface_t *
 _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
 					      pixman_format_code_t	 pixman_format);
+
+cairo_private pixman_format_code_t
+_pixman_format_from_masks (cairo_format_masks_t *masks);
+
+void
+_pixman_format_to_masks (pixman_format_code_t	 pixman_format,
+			 uint32_t		*bpp,
+			 uint32_t		*red,
+			 uint32_t		*green,
+			 uint32_t		*blue);
+
+cairo_private cairo_surface_t *
+_cairo_image_surface_create_with_pixman_format (unsigned char		*data,
+						pixman_format_code_t	 pixman_format,
+						int			 width,
+						int			 height,
+						int			 stride);
 
 cairo_private cairo_surface_t *
 _cairo_image_surface_create_with_masks (unsigned char	       *data,
