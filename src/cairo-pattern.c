@@ -1212,7 +1212,7 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     {
 	image = (cairo_image_surface_t *)
 	    _cairo_image_surface_create_for_pixman_image (pixman_image,
-							  CAIRO_FORMAT_ARGB32);
+							  PIXMAN_a8r8g8b8);
 	if (image->base.status)
 	{
 	    pixman_image_unref (pixman_image);
