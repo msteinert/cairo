@@ -901,6 +901,9 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     int				 mask_bpp;
     int				 ret, i;
 
+    if (height == 0 || width == 0)
+	return CAIRO_STATUS_SUCCESS;
+
     /* Convert traps to pixman traps */
     if (num_traps > ARRAY_LENGTH(stack_traps)) {
 	pixman_traps = _cairo_malloc_ab (num_traps, sizeof(pixman_trapezoid_t));
@@ -920,9 +923,6 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 	pixman_traps[i].right.p2.x = _cairo_fixed_to_16_16 (traps[i].right.p2.x);
 	pixman_traps[i].right.p2.y = _cairo_fixed_to_16_16 (traps[i].right.p2.y);
     }
-
-    if (height == 0 || width == 0)
-	return CAIRO_STATUS_SUCCESS;
 
     /* Special case adding trapezoids onto a mask surface; we want to avoid
      * creating an intermediate temporary mask unnecessarily.
