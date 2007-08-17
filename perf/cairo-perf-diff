@@ -122,9 +122,8 @@ cpu_count() {
 rev2perf() {
     rev=$1
     src_tree_sha=$(rev2sha $rev:src)
-    pxm_tree_sha=$(rev2sha $rev:pixman/src)
     perf_tree_sha=$(rev2sha HEAD:perf)
-    echo "$CAIRO_PERF_DIR/${perf_tree_sha}-${src_tree_sha}-${pxm_tree_sha}.perf"
+    echo "$CAIRO_PERF_DIR/${perf_tree_sha}-${src_tree_sha}.perf"
 }
 
 # Usage: run_cairo_perf_if_not_cached <rev> <suffix>
