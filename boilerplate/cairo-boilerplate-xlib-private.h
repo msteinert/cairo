@@ -35,6 +35,14 @@ _cairo_boilerplate_xlib_create_surface (const char		  *name,
 					cairo_boilerplate_mode_t   mode,
 					void			 **closure);
 
+cairo_surface_t *
+_cairo_boilerplate_xlib_fallback_create_surface (const char			 *name,
+						 cairo_content_t		  content,
+						 int				  width,
+						 int				  height,
+						 cairo_boilerplate_mode_t	  mode,
+						 void				**closure);
+
 void
 _cairo_boilerplate_xlib_cleanup (void *closure);
 

@@ -261,6 +261,15 @@ static cairo_boilerplate_target_t targets[] =
       _cairo_boilerplate_xlib_cleanup,
       _cairo_boilerplate_xlib_synchronize},
 #endif
+#if CAIRO_HAS_XLIB_SURFACE
+    /* This is a fallback surface which uses xlib fallbacks instead of
+     * the Render extension. */
+    { "xlib-fallback", CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR, 1,
+      _cairo_boilerplate_xlib_fallback_create_surface,
+      cairo_surface_write_to_png,
+      _cairo_boilerplate_xlib_cleanup,
+      _cairo_boilerplate_xlib_synchronize},
+#endif
 #if CAIRO_HAS_PS_SURFACE && CAIRO_CAN_TEST_PS_SURFACE
     { "ps", CAIRO_SURFACE_TYPE_PS,
       CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED, 0,

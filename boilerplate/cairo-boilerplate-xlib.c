@@ -192,6 +192,78 @@ _cairo_boilerplate_xlib_create_surface (const char			 *name,
 	return _cairo_boilerplate_xlib_perf_create_surface (dpy, content, width, height, xtc);
 }
 
+/* The xlib-fallback target differs from the xlib target in two ways:
+ *
+ * 1. It creates its surfaces without relying on the Render extension
+ *
+ * 2. It disables use of the Render extension for its surfaces
+ *
+ * This provides testing of the non-Render fallback paths we have in
+ * cairo-xlib-surface.c
+ */
+cairo_surface_t *
+_cairo_boilerplate_xlib_fallback_create_surface (const char			 *name,
+						 cairo_content_t		  content,
+						 int				  width,
+						 int				  height,
+						 cairo_boilerplate_mode_t	  mode,
+						 void				**closure)
+{
+    xlib_target_closure_t *xtc;
+    Display *dpy;
+    int screen;
+    XSetWindowAttributes attr;
+    cairo_surface_t *surface;
+
+    /* We're not yet bothering to support perf mode for the
+     * xlib-fallback surface. */
+    if (mode == CAIRO_BOILERPLATE_MODE_PERF)
+	return NULL;
+
+    /* We also don't support drawing with destination-alpha in the
+     * xlib-fallback surface. */
+    if (content == CAIRO_CONTENT_COLOR_ALPHA)
+	return NULL;
+
+    *closure = xtc = xmalloc (sizeof (xlib_target_closure_t));
+
+    if (width == 0)
+	width = 1;
+    if (height == 0)
+	height = 1;
+
+    xtc->dpy = dpy = XOpenDisplay (NULL);
+    if (xtc->dpy == NULL) {
+	CAIRO_BOILERPLATE_LOG ("Failed to open display: %s\n", XDisplayName(0));
+	return NULL;
+    }
+
+    /* This kills performance, but it makes debugging much
+     * easier. That's why we have it here only after explicitly not
+     * supporting PERF mode.*/
+    XSynchronize (dpy, 1);
+
+    screen = DefaultScreen (dpy);
+    attr.override_redirect = True;
+    xtc->drawable = XCreateWindow (dpy, DefaultRootWindow (dpy),
+				   0, 0,
+				   width, height, 0,
+				   DefaultDepth (dpy, screen),
+				   InputOutput,
+				   DefaultVisual (dpy, screen),
+				   CWOverrideRedirect, &attr);
+    XMapWindow (dpy, xtc->drawable);
+    xtc->drawable_is_pixmap = FALSE;
+
+    surface = cairo_xlib_surface_create (dpy, xtc->drawable,
+					 DefaultVisual (dpy, screen),
+					 width, height);
+
+    cairo_boilerplate_xlib_surface_disable_render (surface);
+
+    return surface;
+}
+
 void
 _cairo_boilerplate_xlib_cleanup (void *closure)
 {
