@@ -513,17 +513,13 @@ _cairo_path_fixed_offset_and_scale (cairo_path_fixed_t *path,
 
     while (buf) {
 	 for (i = 0; i < buf->num_points; i++) {
-	     if (scalex == CAIRO_FIXED_ONE) {
-		 buf->points[i].x += offx;
-	     } else {
-		 buf->points[i].x = _cairo_fixed_mul (buf->points[i].x + offx, scalex);
-	     }
+	     if (scalex != CAIRO_FIXED_ONE)
+		 buf->points[i].x = _cairo_fixed_mul (buf->points[i].x, scalex);
+	     buf->points[i].x += offx;
 
-	     if (scaley == CAIRO_FIXED_ONE) {
-		 buf->points[i].y += offy;
-	     } else {
-		 buf->points[i].y = _cairo_fixed_mul (buf->points[i].y + offy, scaley);
-	     }
+	     if (scaley != CAIRO_FIXED_ONE)
+		 buf->points[i].y = _cairo_fixed_mul (buf->points[i].y, scaley);
+	     buf->points[i].y += offy;
 	 }
 
 	 buf = buf->next;
@@ -546,10 +542,8 @@ _cairo_path_fixed_device_transform (cairo_path_fixed_t	*path,
 				    cairo_matrix_t	*device_transform)
 {
     assert (device_transform->yx == 0.0 && device_transform->xy == 0.0);
-    /* XXX: FRAGILE: I'm not really sure whether we're doing the
-     * "right" thing here if there is both scaling and translation in
-     * the matrix. But for now, the internals guarantee that we won't
-     * really ever have both going on. */
+    /* XXX: Support freeform matrices someday (right now, only translation and scale
+     * work. */
     _cairo_path_fixed_offset_and_scale (path,
 					_cairo_fixed_from_double (device_transform->x0),
 					_cairo_fixed_from_double (device_transform->y0),
