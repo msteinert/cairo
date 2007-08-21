@@ -49,6 +49,8 @@
 #include <time.h>
 #include <zlib.h>
 
+#define DEBUG_PS 0
+
 static const cairo_surface_backend_t cairo_ps_surface_backend;
 static const cairo_paginated_surface_backend_t cairo_ps_surface_paginated_backend;
 
@@ -379,8 +381,10 @@ _cairo_ps_surface_emit_type1_font_subset (cairo_ps_surface_t		*surface,
 
     /* FIXME: Figure out document structure convention for fonts */
 
+#if DEBUG_PS
     _cairo_output_stream_printf (surface->final_stream,
 				 "%% _cairo_ps_surface_emit_type1_font_subset\n");
+#endif
 
     length = subset.header_length + subset.data_length + subset.trailer_length;
     _cairo_output_stream_write (surface->final_stream, subset.data, length);
@@ -408,8 +412,10 @@ _cairo_ps_surface_emit_type1_font_fallback (cairo_ps_surface_t		*surface,
 
     /* FIXME: Figure out document structure convention for fonts */
 
+#if DEBUG_PS
     _cairo_output_stream_printf (surface->final_stream,
 				 "%% _cairo_ps_surface_emit_type1_font_fallback\n");
+#endif
 
     length = subset.header_length + subset.data_length + subset.trailer_length;
     _cairo_output_stream_write (surface->final_stream, subset.data, length);
@@ -435,8 +441,10 @@ _cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,
 
     /* FIXME: Figure out document structure convention for fonts */
 
+#if DEBUG_PS
     _cairo_output_stream_printf (surface->final_stream,
 				 "%% _cairo_ps_surface_emit_truetype_font_subset\n");
+#endif
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "11 dict begin\n"
@@ -642,8 +650,10 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
     cairo_matrix_t matrix;
     unsigned int i;
 
+#if DEBUG_PS
     _cairo_output_stream_printf (surface->final_stream,
 				 "%% _cairo_ps_surface_emit_type3_font_subset\n");
+#endif
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "/CairoFont-%d-%d <<\n",
@@ -724,8 +734,10 @@ _cairo_ps_surface_emit_font_subsets (cairo_ps_surface_t *surface)
 {
     cairo_status_t status;
 
+#if DEBUG_PS
     _cairo_output_stream_printf (surface->final_stream,
 				 "%% _cairo_ps_surface_emit_font_subsets\n");
+#endif
 
     status = _cairo_scaled_font_subsets_foreach_unscaled (surface->font_subsets,
                                                           _cairo_ps_surface_emit_unscaled_font_subset,
@@ -1878,8 +1890,10 @@ _cairo_ps_surface_intersect_clip_path (void		   *abstract_surface,
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return CAIRO_STATUS_SUCCESS;
 
+#if DEBUG_PS
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_intersect_clip_path\n");
+#endif
 
     if (path == NULL) {
 	_cairo_output_stream_printf (stream, "initclip\n");
@@ -1953,8 +1967,10 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 
     assert (_cairo_ps_surface_operation_supported (surface, op, source));
 
+#if DEBUG_PS
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_paint\n");
+#endif
 
     status = _cairo_surface_get_extents (&surface->base, &extents);
     if (status)
@@ -2041,8 +2057,10 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
 
     assert (_cairo_ps_surface_operation_supported (surface, op, source));
 
+#if DEBUG_PS
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_stroke\n");
+#endif
 
     /* PostScript has "special needs" when it comes to zero-length
      * dash segments with butt caps. It apparently (at least
@@ -2171,8 +2189,10 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 
     assert (_cairo_ps_surface_operation_supported (surface, op, source));
 
+#if DEBUG_PS
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_fill\n");
+#endif
 
     _cairo_ps_surface_emit_pattern (surface, source);
 
@@ -2229,8 +2249,10 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 
     assert (_cairo_ps_surface_operation_supported (surface, op, source));
 
+#if DEBUG_PS
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_show_glyphs\n");
+#endif
 
     if (num_glyphs <= 0)
         return CAIRO_STATUS_SUCCESS;
