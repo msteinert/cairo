@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2005 Red Hat, Inc
+ * Copyright © 2007 Adrian Johnson
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -32,6 +33,7 @@
  * Contributor(s):
  *	Carl Worth <cworth@cworth.org>
  *	Keith Packard <keithp@keithp.com>
+ *	Adrian Johnson <ajohnson@redneon.com>
  */
 
 /* The paginated surface layer exists to provide as much code sharing
@@ -210,12 +212,54 @@ _cairo_paginated_surface_release_source_image (void	  *abstract_surface,
 }
 
 static cairo_int_status_t
+_paint_fallback_image (cairo_paginated_surface_t *surface,
+		       cairo_box_int_t           *box)
+{
+    double x_scale = surface->base.x_fallback_resolution / 72.0;
+    double y_scale = surface->base.y_fallback_resolution / 72.0;
+    cairo_matrix_t matrix;
+    int x, y, width, height;
+    cairo_status_t status;
+    cairo_surface_t *image;
+    cairo_pattern_t *pattern;
+
+    x = box->p1.x;
+    y = box->p1.y;
+    width = box->p2.x - x;
+    height = box->p2.y - y;
+    image = _cairo_paginated_surface_create_image_surface (surface,
+							   width  * x_scale,
+							   height * y_scale);
+    _cairo_surface_set_device_scale (image, x_scale, y_scale);
+    /* set_device_offset just sets the x0/y0 components of the matrix;
+     * so we have to do the scaling manually. */
+    cairo_surface_set_device_offset (image, -x*x_scale, -y*y_scale);
+
+    status = _cairo_meta_surface_replay (surface->meta, image);
+    if (status)
+	goto CLEANUP_IMAGE;
+
+    pattern = cairo_pattern_create_for_surface (image);
+    cairo_matrix_init (&matrix, x_scale, 0, 0, y_scale, -x*x_scale, -y*y_scale);
+    cairo_pattern_set_matrix (pattern, &matrix);
+
+    status = _cairo_surface_paint (surface->target,
+				   CAIRO_OPERATOR_SOURCE,
+				   pattern);
+
+    cairo_pattern_destroy (pattern);
+CLEANUP_IMAGE:
+    cairo_surface_destroy (image);
+
+    return status;
+}
+
+static cairo_int_status_t
 _paint_page (cairo_paginated_surface_t *surface)
 {
     cairo_surface_t *analysis;
-    cairo_surface_t *image;
-    cairo_pattern_t *pattern;
     cairo_status_t status;
+    cairo_bool_t has_supported, has_page_fallback, has_finegrained_fallback;
 
     analysis = _cairo_analysis_surface_create (surface->target,
 					       surface->width, surface->height);
@@ -223,7 +267,7 @@ _paint_page (cairo_paginated_surface_t *surface)
 	return CAIRO_STATUS_NO_MEMORY;
 
     surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_ANALYZE);
-    status = _cairo_meta_surface_replay (surface->meta, analysis);
+    status = _cairo_meta_surface_replay_and_create_regions (surface->meta, analysis);
     surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_RENDER);
 
     if (status || analysis->status) {
@@ -233,35 +277,70 @@ _paint_page (cairo_paginated_surface_t *surface)
 	return status;
     }
 
-    if (_cairo_analysis_surface_has_unsupported (analysis))
-    {
-	double x_scale = surface->base.x_fallback_resolution / 72.0;
-	double y_scale = surface->base.y_fallback_resolution / 72.0;
-	cairo_matrix_t matrix;
-
-	image = _cairo_paginated_surface_create_image_surface (surface,
-							       surface->width  * x_scale,
-							       surface->height * y_scale);
-	_cairo_surface_set_device_scale (image, x_scale, y_scale);
-
-	status = _cairo_meta_surface_replay (surface->meta, image);
-	if (status)
-	    goto CLEANUP_IMAGE;
-
-	pattern = cairo_pattern_create_for_surface (image);
-	cairo_matrix_init_scale (&matrix, x_scale, y_scale);
-	cairo_pattern_set_matrix (pattern, &matrix);
-
-	status = _cairo_surface_paint (surface->target, CAIRO_OPERATOR_SOURCE, pattern);
-
-	cairo_pattern_destroy (pattern);
-
-     CLEANUP_IMAGE:
-	cairo_surface_destroy (image);
+    /* Finer grained fallbacks are currently only supported for PostScript surfaces */
+    if (surface->target->type == CAIRO_SURFACE_TYPE_PS) {
+	has_supported = _cairo_analysis_surface_has_supported (analysis);
+	has_page_fallback = FALSE;
+	has_finegrained_fallback = _cairo_analysis_surface_has_unsupported (analysis);
+    } else {
+	if (_cairo_analysis_surface_has_unsupported (analysis)) {
+	    has_supported = FALSE;
+	    has_page_fallback = TRUE;
+	} else {
+	    has_supported = TRUE;
+	    has_page_fallback = FALSE;
+	}
+	has_finegrained_fallback = FALSE;
     }
-    else
+
+    if (has_supported) {
+	status = _cairo_meta_surface_replay_region (surface->meta,
+						    surface->target,
+						    CAIRO_META_REGION_NATIVE);
+	if (status)
+	    return status;
+    }
+
+    if (has_page_fallback)
     {
-	status = _cairo_meta_surface_replay (surface->meta, surface->target);
+	cairo_box_int_t box;
+
+	box.p1.x = 0;
+	box.p1.y = 0;
+	box.p2.x = surface->width;
+	box.p2.y = surface->height;
+	status = _paint_fallback_image (surface, &box);
+	if (status)
+	    return status;
+    }
+
+    if (has_finegrained_fallback)
+    {
+        cairo_region_t *region;
+        cairo_box_int_t *boxes;
+        int num_boxes, i;
+
+	/* Reset clip region before drawing the fall back images */
+	status = _cairo_surface_intersect_clip_path (surface->target,
+						     NULL,
+						     CAIRO_FILL_RULE_WINDING,
+						     CAIRO_GSTATE_TOLERANCE_DEFAULT,
+						     CAIRO_ANTIALIAS_DEFAULT);
+	if (status)
+	    return status;
+
+	region = _cairo_analysis_surface_get_unsupported (analysis);
+	status = _cairo_region_get_boxes (region, &num_boxes, &boxes);
+	if (status)
+	    return status;
+	for (i = 0; i < num_boxes; i++) {
+	    status = _paint_fallback_image (surface, &boxes[i]);
+	    if (status) {
+                _cairo_region_boxes_fini (region, boxes);
+		return status;
+            }
+	}
+        _cairo_region_boxes_fini (region, boxes);
     }
 
     cairo_surface_destroy (analysis);

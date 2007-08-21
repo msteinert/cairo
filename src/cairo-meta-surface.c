@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2005 Red Hat, Inc
+ * Copyright © 2007 Adrian Johnson
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -32,6 +33,7 @@
  * Contributor(s):
  *	Kristian Høgsberg <krh@redhat.com>
  *	Carl Worth <cworth@cworth.org>
+ *	Adrian Johnson <ajohnson@redneon.com>
  */
 
 /* A meta surface is a surface that records all drawing operations at
@@ -123,7 +125,7 @@ _cairo_meta_surface_finish (void *abstract_surface)
     elements = _cairo_array_index (&meta->commands, 0);
     for (i = 0; i < num_elements; i++) {
 	command = elements[i];
-	switch (command->type) {
+	switch (command->header.type) {
 
 	/* 5 basic drawing operations */
 
@@ -253,7 +255,8 @@ _cairo_meta_surface_paint (void			*abstract_surface,
     if (command == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    command->type = CAIRO_COMMAND_PAINT;
+    command->header.type = CAIRO_COMMAND_PAINT;
+    command->header.region = CAIRO_META_REGION_ALL;
     command->op = op;
 
     status = _init_pattern_with_snapshot (&command->source.base, source);
@@ -287,7 +290,8 @@ _cairo_meta_surface_mask (void			*abstract_surface,
     if (command == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    command->type = CAIRO_COMMAND_MASK;
+    command->header.type = CAIRO_COMMAND_MASK;
+    command->header.region = CAIRO_META_REGION_ALL;
     command->op = op;
 
     status = _init_pattern_with_snapshot (&command->source.base, source);
@@ -332,7 +336,8 @@ _cairo_meta_surface_stroke (void			*abstract_surface,
     if (command == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    command->type = CAIRO_COMMAND_STROKE;
+    command->header.type = CAIRO_COMMAND_STROKE;
+    command->header.region = CAIRO_META_REGION_ALL;
     command->op = op;
 
     status = _init_pattern_with_snapshot (&command->source.base, source);
@@ -386,7 +391,8 @@ _cairo_meta_surface_fill (void			*abstract_surface,
     if (command == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    command->type = CAIRO_COMMAND_FILL;
+    command->header.type = CAIRO_COMMAND_FILL;
+    command->header.region = CAIRO_META_REGION_ALL;
     command->op = op;
 
     status = _init_pattern_with_snapshot (&command->source.base, source);
@@ -432,7 +438,8 @@ _cairo_meta_surface_show_glyphs (void			*abstract_surface,
     if (command == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    command->type = CAIRO_COMMAND_SHOW_GLYPHS;
+    command->header.type = CAIRO_COMMAND_SHOW_GLYPHS;
+    command->header.region = CAIRO_META_REGION_ALL;
     command->op = op;
 
     status = _init_pattern_with_snapshot (&command->source.base, source);
@@ -521,7 +528,8 @@ _cairo_meta_surface_intersect_clip_path (void		    *dst,
     if (command == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    command->type = CAIRO_COMMAND_INTERSECT_CLIP_PATH;
+    command->header.type = CAIRO_COMMAND_INTERSECT_CLIP_PATH;
+    command->header.region = CAIRO_META_REGION_ALL;
 
     if (path) {
 	status = _cairo_path_fixed_init_copy (&command->path, path);
@@ -622,7 +630,7 @@ static const cairo_surface_backend_t cairo_meta_surface_backend = {
 static cairo_path_fixed_t *
 _cairo_command_get_path (cairo_command_t *command)
 {
-    switch (command->type) {
+    switch (command->header.type) {
     case CAIRO_COMMAND_PAINT:
     case CAIRO_COMMAND_MASK:
     case CAIRO_COMMAND_SHOW_GLYPHS:
@@ -639,9 +647,11 @@ _cairo_command_get_path (cairo_command_t *command)
     return NULL;
 }
 
-cairo_status_t
-_cairo_meta_surface_replay (cairo_surface_t *surface,
-			    cairo_surface_t *target)
+static cairo_status_t
+_cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
+				     cairo_surface_t	     *target,
+				     cairo_bool_t	      create_regions,
+				     cairo_meta_region_type_t region)
 {
     cairo_meta_surface_t *meta;
     cairo_command_t *command, **elements;
@@ -665,9 +675,14 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
     for (i = meta->replay_start_idx; i < num_elements; i++) {
 	command = elements[i];
 
+	if (!create_regions && region != CAIRO_META_REGION_ALL) {
+	    if (command->header.region != region)
+		continue;
+        }
+
 	/* For all commands except intersect_clip_path, we have to
 	 * ensure the current clip gets set on the surface. */
-	if (command->type != CAIRO_COMMAND_INTERSECT_CLIP_PATH) {
+	if (command->header.type != CAIRO_COMMAND_INTERSECT_CLIP_PATH) {
 	    status = _cairo_surface_set_clip (target, &clip);
 	    if (status)
 		break;
@@ -682,7 +697,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 	    dev_path = &path_copy;
 	}
 
-	switch (command->type) {
+	switch (command->header.type) {
 	case CAIRO_COMMAND_PAINT:
 	    status = _cairo_surface_paint (target,
 					   command->paint.op,
@@ -770,6 +785,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 					   command->intersect_clip_path.tolerance,
 					   command->intersect_clip_path.antialias,
 					   target);
+            assert (status == 0);
 	    break;
 	default:
 	    ASSERT_NOT_REACHED;
@@ -778,6 +794,14 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 	if (dev_path == &path_copy)
 	    _cairo_path_fixed_fini (&path_copy);
 
+	if (create_regions) {
+	    if (status == CAIRO_STATUS_SUCCESS) {
+		command->header.region = CAIRO_META_REGION_NATIVE;
+	    } else if (status == CAIRO_INT_STATUS_IMAGE_FALLBACK) {
+		command->header.region = CAIRO_META_REGION_IMAGE_FALLBACK;
+		status = CAIRO_STATUS_SUCCESS;
+	    }
+	}
 	if (status)
 	    break;
     }
@@ -785,4 +809,32 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
     _cairo_clip_reset (&clip);
 
     return status;
+}
+
+cairo_status_t
+_cairo_meta_surface_replay (cairo_surface_t *surface,
+			    cairo_surface_t *target)
+{
+    return _cairo_meta_surface_replay_internal (surface, target, FALSE, CAIRO_META_REGION_ALL);
+}
+
+/* Replay meta to surface. When the return status of each operation is
+ * one of CAIRO_STATUS_SUCCESS, CAIRO_INT_STATUS_UNSUPPORTED, or
+ * CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY the status of each operation
+ * will be stored in the meta surface. Any other status will abort the
+ * replay and return the status.
+ */
+cairo_status_t
+_cairo_meta_surface_replay_and_create_regions (cairo_surface_t *surface,
+					       cairo_surface_t *target)
+{
+    return _cairo_meta_surface_replay_internal (surface, target, TRUE, CAIRO_META_REGION_ALL);
+}
+
+cairo_status_t
+_cairo_meta_surface_replay_region (cairo_surface_t          *surface,
+				   cairo_surface_t          *target,
+				   cairo_meta_region_type_t  region)
+{
+    return _cairo_meta_surface_replay_internal (surface, target, FALSE, region);
 }

@@ -1359,34 +1359,53 @@ pattern_supported (const cairo_pattern_t *pattern)
 }
 
 static cairo_int_status_t
-_cairo_ps_surface_operation_supported (cairo_ps_surface_t *surface,
-		      cairo_operator_t op,
-		      const cairo_pattern_t *pattern)
+_cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
+				     cairo_operator_t       op,
+				     const cairo_pattern_t *pattern)
 {
-    if (surface->force_fallbacks)
-	return FALSE;
+    if (surface->force_fallbacks && surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (! pattern_supported (pattern))
-	return FALSE;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (op == CAIRO_OPERATOR_SOURCE)
+	return CAIRO_STATUS_SUCCESS;
+
+    if (op != CAIRO_OPERATOR_OVER)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* CAIRO_OPERATOR_OVER is only supported for opaque patterns. If
+     * the pattern contains transparency, we return
+     * CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY to the analysis
+     * surface. If the analysis surface determines that there is
+     * anything drawn under this operation, a fallback image will be
+     * used. Otherwise the operation will be replayed during the
+     * render stage and we blend the transarency into the white
+     * background to convert the pattern to opaque.
+     */
 
     if (_cairo_operator_always_opaque (op))
-	return TRUE;
+	return CAIRO_STATUS_SUCCESS;
 
     if (_cairo_operator_always_translucent (op))
-	return FALSE;
+	return CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY;
 
-    return _cairo_pattern_is_opaque (pattern);
-}
-
-static cairo_int_status_t
-_cairo_ps_surface_analyze_operation (cairo_ps_surface_t *surface,
-		    cairo_operator_t op,
-		    const cairo_pattern_t *pattern)
-{
-    if (_cairo_ps_surface_operation_supported (surface, op, pattern))
+    if (_cairo_pattern_is_opaque (pattern))
 	return CAIRO_STATUS_SUCCESS;
     else
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY;
+}
+
+static cairo_bool_t
+_cairo_ps_surface_operation_supported (cairo_ps_surface_t    *surface,
+				       cairo_operator_t       op,
+				       const cairo_pattern_t *pattern)
+{
+    if (_cairo_ps_surface_analyze_operation (surface, op, pattern) != CAIRO_INT_STATUS_UNSUPPORTED)
+	return TRUE;
+    else
+	return FALSE;
 }
 
 /* The "standard" implementation limit for PostScript string sizes is
@@ -1514,8 +1533,8 @@ _string_array_stream_create (cairo_output_stream_t *output)
 
 static cairo_status_t
 _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
-	    cairo_image_surface_t *image,
-	    const char		  *name)
+			      cairo_image_surface_t *image,
+			      const char	    *name)
 {
     cairo_status_t status, status2;
     unsigned char *rgb, *compressed;
@@ -1659,24 +1678,33 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 }
 
 static void
-_cairo_ps_surface_emit_solid_pattern (cairo_ps_surface_t *surface,
-		    cairo_solid_pattern_t *pattern)
+_cairo_ps_surface_emit_solid_pattern (cairo_ps_surface_t    *surface,
+				      cairo_solid_pattern_t *pattern)
 {
-    if (color_is_gray (&pattern->color))
+    cairo_color_t color = pattern->color;
+
+    if (!CAIRO_COLOR_IS_OPAQUE(&color)) {
+	/* Blend into white */
+	color.red = color.red*color.alpha + 1 - color.alpha;
+	color.green = color.green*color.alpha + 1 - color.alpha;
+	color.blue = color.blue*color.alpha + 1 - color.alpha;
+    }
+
+    if (color_is_gray (&color))
 	_cairo_output_stream_printf (surface->stream,
 				     "%f G\n",
-				     pattern->color.red);
+				     color.red);
     else
 	_cairo_output_stream_printf (surface->stream,
 				     "%f %f %f R\n",
-				     pattern->color.red,
-				     pattern->color.green,
-				     pattern->color.blue);
+				     color.red,
+				     color.green,
+				     color.blue);
 }
 
 static cairo_status_t
-_cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t *surface,
-		      cairo_surface_pattern_t *pattern)
+_cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
+					cairo_surface_pattern_t *pattern)
 {
     cairo_status_t status;
     double bbox_width, bbox_height;
@@ -1919,15 +1947,7 @@ _cairo_ps_surface_paint (void			*abstract_surface,
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _cairo_ps_surface_analyze_operation (surface, op, source);
 
-    /* XXX: It would be nice to be able to assert this condition
-     * here. But, we actually allow one 'cheat' that is used when
-     * painting the final image-based fallbacks. The final fallbacks
-     * do have alpha which we support by blending with white. This is
-     * possible only because there is nothing between the fallback
-     * images and the paper, nor is anything painted above. */
-    /*
-    assert (_cairo_ps_surface_operation_supported (op, source));
-    */
+    assert (_cairo_ps_surface_operation_supported (surface, op, source));
 
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_paint\n");
@@ -2016,7 +2036,6 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
 	return _cairo_ps_surface_analyze_operation (surface, op, source);
 
     assert (_cairo_ps_surface_operation_supported (surface, op, source));
-
 
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_stroke\n");
