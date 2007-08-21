@@ -1681,25 +1681,29 @@ static void
 _cairo_ps_surface_emit_solid_pattern (cairo_ps_surface_t    *surface,
 				      cairo_solid_pattern_t *pattern)
 {
-    cairo_color_t color = pattern->color;
+    cairo_color_t *color = &pattern->color;
+    double red, green, blue;
 
-    if (!CAIRO_COLOR_IS_OPAQUE(&color)) {
-	/* Blend into white */
-	color.red = color.red*color.alpha + 1 - color.alpha;
-	color.green = color.green*color.alpha + 1 - color.alpha;
-	color.blue = color.blue*color.alpha + 1 - color.alpha;
+    red = color->red;
+    green = color->green;
+    blue = color->blue;
+
+    if (!CAIRO_COLOR_IS_OPAQUE(color)) {
+	uint8_t one_minus_alpha = 255 - (color->alpha_short >> 8);
+
+	red   = ((color->red_short   >> 8) + one_minus_alpha) / 255.0;
+	green = ((color->green_short >> 8) + one_minus_alpha) / 255.0;
+	blue  = ((color->blue_short  >> 8) + one_minus_alpha) / 255.0;
     }
 
-    if (color_is_gray (&color))
+    if (color_is_gray (color))
 	_cairo_output_stream_printf (surface->stream,
 				     "%f G\n",
-				     color.red);
+				     red);
     else
 	_cairo_output_stream_printf (surface->stream,
 				     "%f %f %f R\n",
-				     color.red,
-				     color.green,
-				     color.blue);
+				     red, green, blue);
 }
 
 static cairo_status_t
