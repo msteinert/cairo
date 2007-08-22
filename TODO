@@ -92,13 +92,6 @@ Other fixes
 	objects. As a result, cairo uses Type3 fonts which generates
 	slightly different outlines.  Type1 has the same problem.
 
- • Make image fallbacks finer-grained than a whole page (most of the
-	This is work to be done in the cairo-analysis-surface layer
-	and will benefit ps, pdf, svg, and any other
-	analysis-surface-using backends.
-	Adrian has started work on this:
-	http://lists.freedesktop.org/archives/cairo/2007-June/010774.html
-
  • Pen matrix locking.  Carl has written an excellent summary but
    unfortunately that was not sent to the mailing list.  Ask him.
 

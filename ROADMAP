@@ -49,6 +49,13 @@ cairo 1.4.x (not scheduled, may become part of 1.6)
 
 cairo 1.6 (scheduled for July 2007, targeting firefox and GNOME)
 ================================================================
+ ✓ Make image fallbacks finer-grained than a whole page (most of the
+	This is work to be done in the cairo-analysis-surface layer
+	and will benefit ps, pdf, svg, and any other
+	analysis-surface-using backends.
+	Adrian has started work on this:
+	http://lists.freedesktop.org/archives/cairo/2007-June/010774.html
+
  • David Turner's cairo-ft rewrite. (behdad)
    http://david.freetype.org/cairo/
 
