@@ -1252,15 +1252,15 @@ const cairo_surface_backend_t cairo_image_surface_backend = {
     _cairo_image_surface_get_font_options,
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
-    NULL, //* font_fini */
-    NULL, //* glyph_fini */
+    NULL, /* font_fini */
+    NULL, /* glyph_fini */
 
     NULL, /* paint */
     NULL, /* mask */
     NULL, /* stroke */
     NULL, /* fill */
     NULL, /* show_glyphs */
-    NULL,  /* snapshot */
+    NULL, /* snapshot */
     NULL, /* is_similar */
 
     _cairo_image_surface_reset
