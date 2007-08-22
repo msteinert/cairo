@@ -253,7 +253,7 @@ libcairo_la_SOURCES =				\
 
 libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined $(export_symbols)
 
-INCLUDES = -I$(srcdir) $(CAIRO_CFLAGS)
+libcairo_la_CFLAGS = -I$(srcdir) $(CAIRO_CFLAGS)
 
 libcairo_la_LIBADD = $(CAIRO_LIBS) $(noinst_LTLIBRARIES) $(CAIRO_LDADD)
 
