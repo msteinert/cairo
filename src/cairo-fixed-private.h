@@ -37,6 +37,7 @@
 #ifndef CAIRO_FIXED_PRIVATE_H
 #define CAIRO_FIXED_PRIVATE_H
 
+#include "cairoint.h"
 #include "cairo-wideint-private.h"
 
 /*

@@ -36,6 +36,8 @@
 #ifndef CAIRO_TYPE1_PRIVATE_H
 #define CAIRO_TYPE1_PRIVATE_H
 
+#include "cairoint.h"
+
 /* Magic constants for the type1 eexec encryption */
 #define CAIRO_TYPE1_ENCRYPT_C1		((unsigned short) 52845)
 #define CAIRO_TYPE1_ENCRYPT_C2		((unsigned short) 22719)

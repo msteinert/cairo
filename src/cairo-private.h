@@ -36,6 +36,7 @@
 #ifndef CAIRO_PRIVATE_H
 #define CAIRO_PRIVATE_H
 
+#include "cairoint.h"
 #include "cairo-gstate-private.h"
 #include "cairo-path-fixed-private.h"
 

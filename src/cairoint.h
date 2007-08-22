@@ -179,11 +179,6 @@ do {					\
 
 #define CAIRO_REF_COUNT_INVALID ((unsigned int) -1)
 
-#include "cairo-mutex-private.h"
-#include "cairo-wideint-private.h"
-#include "cairo-malloc-private.h"
-#include "cairo-fixed-private.h"
-
 #define CAIRO_ALPHA_IS_OPAQUE(alpha) ((alpha) >= ((double)0xff00 / (double)0xffff))
 #define CAIRO_ALPHA_SHORT_IS_OPAQUE(alpha) ((alpha) >= 0xff00)
 #define CAIRO_ALPHA_IS_ZERO(alpha) ((alpha) <= 0.0)
@@ -238,8 +233,8 @@ be32_to_cpu(uint32_t v)
 #endif
 
 #include "cairo-types-private.h"
-#include "cairo-hash-private.h"
 #include "cairo-cache-private.h"
+#include "cairo-fixed-private.h"
 
 typedef struct _cairo_region cairo_region_t;
 
@@ -2455,5 +2450,10 @@ slim_hidden_proto (cairo_surface_write_to_png_stream);
 #endif
 
 CAIRO_END_DECLS
+
+#include "cairo-mutex-private.h"
+#include "cairo-wideint-private.h"
+#include "cairo-malloc-private.h"
+#include "cairo-hash-private.h"
 
 #endif

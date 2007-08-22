@@ -164,7 +164,7 @@ nodist_cairoinclude_HEADERS =		\
 
 lib_LTLIBRARIES = libcairo.la
 
-libcairo_la_SOURCES =				\
+libcairo_la_base_sources =			\
 	cairo.c					\
 	cairo.h					\
 	cairo-private.h				\
@@ -174,7 +174,6 @@ libcairo_la_SOURCES =				\
 	cairo-base85-stream.c			\
 	cairo-bentley-ottmann.c			\
 	cairo-cache.c				\
-	cairo-cache-private.h			\
 	cairo-clip.c				\
 	cairo-clip-private.h			\
 	cairo-color.c				\
@@ -193,7 +192,6 @@ libcairo_la_SOURCES =				\
 	cairo-lzw.c				\
 	cairo-matrix.c				\
 	cairo-mutex.c				\
-	cairo-mutex-list-private.h		\
 	cairo-mutex-private.h			\
 	cairo-mutex-type-private.h		\
 	cairo-operator.c			\
@@ -220,7 +218,6 @@ libcairo_la_SOURCES =				\
 	cairo-surface-fallback-private.h	\
 	cairo-surface-private.h			\
 	cairo-traps.c				\
-	cairo-types-private.h			\
 	cairo-pattern.c				\
 	cairo-unicode.c				\
 	cairo-output-stream.c			\
@@ -250,6 +247,19 @@ libcairo_la_SOURCES =				\
 	$(libcairo_os2_sources)			\
 	$(libcairo_directfb_sources)		\
 	cairoint.h
+
+# source files that cannot be passed to compiler directly.
+# mostly when they depend recursively on cairoint.h.  that is,
+# cairoint.h includes them in the middle.
+libcairo_la_special_sources =			\
+	cairo-cache-private.h			\
+	cairo-fixed-private.h			\
+	cairo-mutex-list-private.h		\
+	cairo-types-private.h
+
+libcairo_la_SOURCES =				\
+	$(libcairo_la_base_sources)		\
+	$(libcairo_la_special_sources)
 
 libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined $(export_symbols)
 
@@ -301,5 +311,8 @@ TESTS_ENVIRONMENT = srcdir="$(srcdir)"
 TESTS = check-def.sh check-plt.sh check-headers.sh check-cairoint.sh
 EXTRA_DIST += $(TESTS)
 
+sparse:
+	sparse -I$(top_builddir) $(libcairo_la_CFLAGS) -DHAVE_CONFIG_H $(libcairo_la_base_sources)
+
 splint:
-	splint -badflag -I$(top_builddir) $(libcairo_la_CFLAGS) -DHAVE_CONFIG_H $(libcairo_la_SOURCES)
+	splint -badflag -I$(top_builddir) $(libcairo_la_CFLAGS) -DHAVE_CONFIG_H $(libcairo_la_base_sources)

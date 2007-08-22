@@ -38,6 +38,8 @@
 #ifndef CAIRO_TYPES_PRIVATE_H
 #define CAIRO_TYPES_PRIVATE_H
 
+#include "cairoint.h"
+
 typedef struct _cairo_array cairo_array_t;
 struct _cairo_array {
     unsigned int size;

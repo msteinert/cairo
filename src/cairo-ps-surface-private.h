@@ -40,6 +40,8 @@
 #ifndef CAIRO_PS_SURFACE_PRIVATE_H
 #define CAIRO_PS_SURFACE_PRIVATE_H
 
+#include "cairoint.h"
+
 #include "cairo-ps.h"
 
 #include "cairo-surface-private.h"

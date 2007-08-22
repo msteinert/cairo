@@ -36,6 +36,8 @@
 #ifndef CAIRO_PATH_FIXED_PRIVATE_H
 #define CAIRO_PATH_FIXED_PRIVATE_H
 
+#include "cairoint.h"
+
 typedef enum cairo_path_op {
     CAIRO_PATH_OP_MOVE_TO = 0,
     CAIRO_PATH_OP_LINE_TO = 1,

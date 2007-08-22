@@ -36,6 +36,7 @@
 #ifndef CAIRO_GSTATE_PRIVATE_H
 #define CAIRO_GSTATE_PRIVATE_H
 
+#include "cairoint.h"
 #include "cairo-clip-private.h"
 
 struct _cairo_gstate {

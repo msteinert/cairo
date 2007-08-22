@@ -37,6 +37,8 @@
 #ifndef CAIRO_WIDEINT_H
 #define CAIRO_WIDEINT_H
 
+#include "cairoint.h"
+
 #if   HAVE_STDINT_H
 # include <stdint.h>
 #elif HAVE_INTTYPES_H

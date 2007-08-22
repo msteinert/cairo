@@ -41,6 +41,8 @@
 #ifndef CAIRO_SVG_SURFACE_PRIVATE_H
 #define CAIRO_SVG_SURFACE_PRIVATE_H
 
+#include "cairoint.h"
+
 #include "cairo-svg.h"
 
 #include "cairo-surface-private.h"
