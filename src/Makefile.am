@@ -302,4 +302,4 @@ TESTS = check-def.sh check-plt.sh check-headers.sh check-cairoint.sh
 EXTRA_DIST += $(TESTS)
 
 splint:
-	splint -I$(top_builddir) $(libcairo_la_CFLAGS) $(libcairo_la_SOURCES) -DHAVE_CONFIG_H
+	splint -badflag -I$(top_builddir) $(libcairo_la_CFLAGS) $(libcairo_la_SOURCES) -DHAVE_CONFIG_H
