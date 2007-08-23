@@ -37,8 +37,6 @@
 #ifndef CAIRO_REGION_PRIVATE_H
 #define CAIRO_REGION_PRIVATE_H
 
-#include "cairoint.h"
-
 #include <pixman.h>
 
 /* cairo_region_t is defined in cairoint.h */

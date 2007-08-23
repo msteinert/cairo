@@ -37,7 +37,6 @@
 #ifndef CAIRO_FT_PRIVATE_H
 #define CAIRO_FT_PRIVATE_H
 
-#include "cairoint.h"
 #include <cairo-ft.h>
 #include <cairoint.h>
 

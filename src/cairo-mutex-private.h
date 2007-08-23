@@ -41,7 +41,9 @@
 #ifndef CAIRO_MUTEX_PRIVATE_H
 #define CAIRO_MUTEX_PRIVATE_H
 
-#include "cairoint.h"
+#if HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <cairo-features.h>
 

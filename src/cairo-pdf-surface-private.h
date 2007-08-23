@@ -39,8 +39,6 @@
 #ifndef CAIRO_PDF_SURFACE_PRIVATE_H
 #define CAIRO_PDF_SURFACE_PRIVATE_H
 
-#include "cairoint.h"
-
 #include "cairo-pdf.h"
 
 #include "cairo-surface-private.h"

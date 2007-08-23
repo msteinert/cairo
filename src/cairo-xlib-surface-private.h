@@ -33,8 +33,6 @@
 #ifndef CAIRO_XLIB_SURFACE_PRIVATE_H
 #define CAIRO_XLIB_SURFACE_PRIVATE_H
 
-#include "cairoint.h"
-
 #include "cairo-xlib.h"
 
 #include "cairo-surface-private.h"

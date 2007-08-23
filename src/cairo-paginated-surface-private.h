@@ -36,7 +36,7 @@
 #ifndef CAIRO_PAGINATED_SURFACE_H
 #define CAIRO_PAGINATED_SURFACE_H
 
-#include "cairoint.h"
+#include "cairo.h"
 
 #include "cairo-surface-private.h"
 

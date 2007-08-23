@@ -36,7 +36,6 @@
 #ifndef CAIRO_CLIP_PRIVATE_H
 #define CAIRO_CLIP_PRIVATE_H
 
-#include "cairoint.h"
 #include "cairo-path-fixed-private.h"
 
 extern const cairo_private cairo_rectangle_list_t _cairo_rectangles_nil;

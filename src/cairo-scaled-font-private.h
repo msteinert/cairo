@@ -38,7 +38,7 @@
 #ifndef CAIRO_SCALED_FONT_PRIVATE_H
 #define CAIRO_SCALED_FONT_PRIVATE_H
 
-#include "cairoint.h"
+#include "cairo.h"
 
 #include "cairo-types-private.h"
 #include "cairo-mutex-type-private.h"
