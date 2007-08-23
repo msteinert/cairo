@@ -313,28 +313,7 @@ typedef cairo_box_int32_t cairo_box_int_t;
 #error Not sure how to pick a cairo_rectangle_int_t for your CAIRO_FIXED_BITS!
 #endif
 
-/* Sure wish C had a real enum type so that this would be distinct
-   from cairo_status_t. Oh well, without that, I'll use this bogus 1000
-   offset */
-typedef enum cairo_int_status {
-    CAIRO_INT_STATUS_DEGENERATE = 1000,
-    CAIRO_INT_STATUS_UNSUPPORTED,
-    CAIRO_INT_STATUS_NOTHING_TO_DO,
-    CAIRO_INT_STATUS_CACHE_EMPTY,
-    CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY,
-    CAIRO_INT_STATUS_IMAGE_FALLBACK
-} cairo_int_status_t;
-
-typedef enum cairo_internal_surface_type {
-    CAIRO_INTERNAL_SURFACE_TYPE_META = 0x1000,
-    CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED,
-    CAIRO_INTERNAL_SURFACE_TYPE_ANALYSIS,
-    CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
-    CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
-    CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED
-} cairo_internal_surface_type_t;
-
-typedef enum cairo_direction {
+typedef enum _cairo_direction {
     CAIRO_DIRECTION_FORWARD,
     CAIRO_DIRECTION_REVERSE
 } cairo_direction_t;
