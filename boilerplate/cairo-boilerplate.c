@@ -68,21 +68,6 @@
 #include <ctype.h>
 #include <assert.h>
 
-/* This is copied from cairoint.h. That makes it painful to keep in
- * sync, but the slim stuff makes cairoint.h "hard" to include when
- * not actually building the cairo library itself. Fortunately, since
- * we're checking all these values, we do have a safeguard for keeping
- * them in sync.
- */
-typedef enum cairo_internal_surface_type {
-    CAIRO_INTERNAL_SURFACE_TYPE_META = 0x1000,
-    CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED,
-    CAIRO_INTERNAL_SURFACE_TYPE_ANALYSIS,
-    CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
-    CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
-    CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED
-} cairo_internal_surface_type_t;
-
 const char *
 cairo_boilerplate_content_name (cairo_content_t content)
 {

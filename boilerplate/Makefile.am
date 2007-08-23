@@ -95,3 +95,5 @@ INCLUDES =					\
 
 CLEANFILES =					\
 	$(EXTRA_LTLIBRARIES)
+
+check test: libcairoboilerplate.la
