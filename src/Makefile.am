@@ -311,8 +311,17 @@ TESTS_ENVIRONMENT = srcdir="$(srcdir)"
 TESTS = check-def.sh check-plt.sh check-headers.sh check-cairoint.sh
 EXTRA_DIST += $(TESTS)
 
+SPARSE = sparse
 sparse:
-	sparse -I$(top_builddir) $(libcairo_la_CFLAGS) -DHAVE_CONFIG_H $(libcairo_la_base_sources)
+	@status=true; for f in $(libcairo_la_base_sources); do \
+		echo sparse $$f; \
+		$(SPARSE) -I$(top_builddir) $(libcairo_la_CFLAGS) -DHAVE_CONFIG_H $$f || status=false; \
+	done; $$status
 
+SPLINT = splint -badflag
 splint:
-	splint -badflag -I$(top_builddir) $(libcairo_la_CFLAGS) -DHAVE_CONFIG_H $(libcairo_la_base_sources)
+	@status=true; for f in $(libcairo_la_base_sources); do \
+		test "$$f" = "`echo "$$f" | sed 's/[.]h$$//'`" || continue; \
+		echo sparse $$f; \
+		$(SPLINT) -I$(top_builddir) $(libcairo_la_CFLAGS) -DHAVE_CONFIG_H $$f || status=false; \
+	done; $$status
