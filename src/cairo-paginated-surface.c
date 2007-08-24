@@ -277,8 +277,10 @@ _paint_page (cairo_paginated_surface_t *surface)
 	return status;
     }
 
-    /* Finer grained fallbacks are currently only supported for PostScript surfaces */
-    if (surface->target->type == CAIRO_SURFACE_TYPE_PS) {
+    /* Finer grained fallbacks are currently only supported for PDF
+     * and PostScript surfaces */
+    if (surface->target->type == CAIRO_SURFACE_TYPE_PDF ||
+	surface->target->type == CAIRO_SURFACE_TYPE_PS) {
 	has_supported = _cairo_analysis_surface_has_supported (analysis);
 	has_page_fallback = FALSE;
 	has_finegrained_fallback = _cairo_analysis_surface_has_unsupported (analysis);
