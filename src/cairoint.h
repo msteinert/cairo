@@ -43,8 +43,6 @@
  * existing published interfaces. cworth@cworth.org
  */
 
-#error Stay out!
-
 #ifndef _CAIROINT_H_
 #define _CAIROINT_H_
 
