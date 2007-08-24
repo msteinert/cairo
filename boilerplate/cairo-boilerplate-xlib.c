@@ -110,6 +110,18 @@ _cairo_boilerplate_xlib_test_create_surface (Display			*dpy,
 							  width, height);
 }
 
+
+static cairo_bool_t
+_cairo_boilerplate_xlib_check_screen_size (Display	*dpy,
+	                                   int		 screen,
+					   int		 width,
+					   int		 height)
+{
+    Screen *scr = XScreenOfDisplay (dpy, screen);
+    return width <= WidthOfScreen (scr) && height <= HeightOfScreen (scr);
+}
+
+
 static cairo_surface_t *
 _cairo_boilerplate_xlib_perf_create_surface (Display			*dpy,
 					     cairo_content_t		 content,
@@ -135,6 +147,13 @@ _cairo_boilerplate_xlib_perf_create_surface (Display			*dpy,
 	break;
 
     case CAIRO_CONTENT_COLOR:
+	if (! _cairo_boilerplate_xlib_check_screen_size (dpy,
+		                                         DefaultScreen (dpy),
+		                                         width, height)) {
+	    CAIRO_BOILERPLATE_LOG ("Surface is larger than the Screen.\n");
+	    return NULL;
+	}
+
 	visual = DefaultVisual (dpy, DefaultScreen (dpy));
 	xrender_format = XRenderFindVisualFormat (dpy, visual);
 	if (xrender_format == NULL) {
@@ -244,6 +263,12 @@ _cairo_boilerplate_xlib_fallback_create_surface (const char			 *name,
     XSynchronize (dpy, 1);
 
     screen = DefaultScreen (dpy);
+    if (! _cairo_boilerplate_xlib_check_screen_size (dpy, screen,
+		                                     width, height)) {
+	CAIRO_BOILERPLATE_LOG ("Surface is larger than the Screen.\n");
+	return NULL;
+    }
+
     attr.override_redirect = True;
     xtc->drawable = XCreateWindow (dpy, DefaultRootWindow (dpy),
 				   0, 0,
@@ -286,6 +311,11 @@ cairo_boilerplate_xlib_surface_disable_render (cairo_surface_t *abstract_surface
 	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
 
     surface->render_major = surface->render_minor = -1;
+    surface->xrender_format = NULL;
+
+    /* The content type is forced by _xrender_format_to_content() during
+     * non-Render surface creation, so repeat the procedure here. */
+    surface->base.content = CAIRO_CONTENT_COLOR;
 
     return CAIRO_STATUS_SUCCESS;
 }
