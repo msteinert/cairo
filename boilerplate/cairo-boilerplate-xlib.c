@@ -286,6 +286,11 @@ cairo_boilerplate_xlib_surface_disable_render (cairo_surface_t *abstract_surface
 	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
 
     surface->render_major = surface->render_minor = -1;
+    surface->xrender_format = NULL;
+
+    /* The content type is forced by _xrender_format_to_content() during
+     * non-Render surface creation, so repeat the procedure here. */
+    surface->base.content = CAIRO_CONTENT_COLOR;
 
     return CAIRO_STATUS_SUCCESS;
 }
