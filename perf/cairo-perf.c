@@ -78,6 +78,14 @@ target_is_measurable (cairo_boilerplate_target_t *target)
 	    return TRUE;
 	}
     case CAIRO_SURFACE_TYPE_XLIB:
+	if (strcmp (target->name, "xlib-fallback") == 0)
+	{
+	    return FALSE;
+	}
+	else
+	{
+	    return TRUE;
+	}
     case CAIRO_SURFACE_TYPE_XCB:
     case CAIRO_SURFACE_TYPE_GLITZ:
     case CAIRO_SURFACE_TYPE_QUARTZ:
