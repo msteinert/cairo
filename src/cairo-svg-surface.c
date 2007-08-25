@@ -1932,74 +1932,15 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
 {
     cairo_svg_surface_t *surface = abstract_dst;
     cairo_status_t status;
-    const char *line_cap, *line_join;
-    unsigned int i;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _cairo_svg_surface_analyze_operation (surface, op, source);
 
     assert (_cairo_svg_surface_operation_supported (surface, op, source));
 
-    switch (stroke_style->line_cap) {
-    case CAIRO_LINE_CAP_BUTT:
- 	line_cap = "butt";
- 	break;
-    case CAIRO_LINE_CAP_ROUND:
- 	line_cap = "round";
- 	break;
-    case CAIRO_LINE_CAP_SQUARE:
- 	line_cap = "square";
- 	break;
-    default:
- 	ASSERT_NOT_REACHED;
-    }
-
-    switch (stroke_style->line_join) {
-    case CAIRO_LINE_JOIN_MITER:
- 	line_join = "miter";
- 	break;
-    case CAIRO_LINE_JOIN_ROUND:
- 	line_join = "round";
- 	break;
-    case CAIRO_LINE_JOIN_BEVEL:
- 	line_join = "bevel";
- 	break;
-    default:
- 	ASSERT_NOT_REACHED;
-    }
-
-    _cairo_output_stream_printf (surface->xml_node,
- 				 "<path style=\"fill: none; "
- 				 "stroke-width: %f; "
- 				 "stroke-linecap: %s; "
- 				 "stroke-linejoin: %s; ",
-				 stroke_style->line_width,
- 				 line_cap,
- 				 line_join);
-
-     _cairo_svg_surface_emit_pattern (surface, source, surface->xml_node, TRUE);
-     _cairo_svg_surface_emit_operator (surface->xml_node, surface, op);
-
-    if (stroke_style->num_dashes > 0) {
- 	_cairo_output_stream_printf (surface->xml_node, "stroke-dasharray: ");
-	for (i = 0; i < stroke_style->num_dashes; i++) {
- 	    _cairo_output_stream_printf (surface->xml_node, "%f",
- 					 stroke_style->dash[i]);
- 	    if (i + 1 < stroke_style->num_dashes)
- 		_cairo_output_stream_printf (surface->xml_node, ",");
- 	    else
- 		_cairo_output_stream_printf (surface->xml_node, "; ");
-	}
-	if (stroke_style->dash_offset != 0.0) {
- 	    _cairo_output_stream_printf (surface->xml_node,
- 					 "stroke-dashoffset: %f; ",
- 					 stroke_style->dash_offset);
-	}
-    }
-
-    _cairo_output_stream_printf (surface->xml_node,
- 				 "stroke-miterlimit: %f;\" ",
- 				 stroke_style->miter_limit);
+    _cairo_output_stream_printf (surface->xml_node, "<path style=\"fill: none; ");
+    _cairo_svg_surface_emit_stroke_style (surface->xml_node, surface, op, source, stroke_style);
+    _cairo_output_stream_printf (surface->xml_node, "\" ");
 
     status = _cairo_svg_surface_emit_path (surface->xml_node, path, ctm_inverse);
 
