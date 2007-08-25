@@ -735,14 +735,54 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 	    break;
 	}
 	case CAIRO_COMMAND_FILL:
-	    status = _cairo_surface_fill (target,
-					  command->fill.op,
-					  &command->fill.source.base,
-					  dev_path,
-					  command->fill.fill_rule,
-					  command->fill.tolerance,
-					  command->fill.antialias);
+	{
+	    cairo_command_t *stroke_command;
+
+	    stroke_command = (i < num_elements - 1) ? elements[i + 1] : NULL;
+
+	    if (stroke_command != NULL &&
+		stroke_command->header.type == CAIRO_COMMAND_STROKE &&
+		_cairo_path_fixed_is_equal (dev_path, _cairo_command_get_path (stroke_command))) {
+		cairo_matrix_t dev_ctm;
+		cairo_matrix_t dev_ctm_inverse;
+		cairo_matrix_t tmp;
+
+		dev_ctm = stroke_command->stroke.ctm;
+		dev_ctm_inverse = stroke_command->stroke.ctm_inverse;
+
+		if (has_device_transform) {
+		    cairo_matrix_multiply (&dev_ctm, &dev_ctm, device_transform);
+		    tmp = surface->device_transform;
+		    status = cairo_matrix_invert (&tmp);
+		    assert (status == CAIRO_STATUS_SUCCESS);
+		    cairo_matrix_multiply (&dev_ctm_inverse, &tmp, &dev_ctm_inverse);
+		}
+
+		status = _cairo_surface_fill_stroke (target,
+						     command->fill.op,
+						     &command->fill.source.base,
+						     command->fill.fill_rule,
+						     command->fill.tolerance,
+						     command->fill.antialias,
+						     dev_path,
+						     stroke_command->stroke.op,
+						     &stroke_command->stroke.source.base,
+						     &stroke_command->stroke.style,
+						     &dev_ctm,
+						     &dev_ctm_inverse,
+						     stroke_command->stroke.tolerance,
+						     stroke_command->stroke.antialias);
+		i++;
+	    } else
+		status = _cairo_surface_fill (target,
+					      command->fill.op,
+					      &command->fill.source.base,
+					      dev_path,
+					      command->fill.fill_rule,
+					      command->fill.tolerance,
+					      command->fill.antialias);
 	    break;
+	}
 	case CAIRO_COMMAND_SHOW_GLYPHS:
 	{
 	    cairo_glyph_t *glyphs = command->show_glyphs.glyphs;

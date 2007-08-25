@@ -1387,6 +1387,65 @@ _cairo_surface_mask (cairo_surface_t	*surface,
 }
 
 cairo_status_t
+_cairo_surface_fill_stroke (cairo_surface_t	    *surface,
+			    cairo_operator_t	     fill_op,
+			    cairo_pattern_t	    *fill_source,
+			    cairo_fill_rule_t	     fill_rule,
+			    double		     fill_tolerance,
+			    cairo_antialias_t	     fill_antialias,
+			    cairo_path_fixed_t	    *path,
+			    cairo_operator_t	     stroke_op,
+			    cairo_pattern_t	    *stroke_source,
+			    cairo_stroke_style_t    *stroke_style,
+			    cairo_matrix_t	    *stroke_ctm,
+			    cairo_matrix_t	    *stroke_ctm_inverse,
+			    double		     stroke_tolerance,
+			    cairo_antialias_t	     stroke_antialias)
+{
+    cairo_status_t status;
+
+    if (surface->backend->fill_stroke) {
+	cairo_pattern_union_t dev_stroke_source;
+	cairo_pattern_union_t dev_fill_source;
+	cairo_matrix_t dev_ctm = *stroke_ctm;
+	cairo_matrix_t dev_ctm_inverse = *stroke_ctm_inverse;
+
+	status = _cairo_surface_copy_pattern_for_destination (stroke_source, surface, &dev_stroke_source.base);
+	if (status)
+	    return status;
+
+	status = _cairo_surface_copy_pattern_for_destination (fill_source, surface, &dev_fill_source.base);
+	if (status) {
+	    _cairo_pattern_fini (&dev_stroke_source.base);
+	    return status;
+	}
+
+	status = surface->backend->fill_stroke (surface, fill_op, &dev_fill_source.base,
+						fill_rule, fill_tolerance, fill_antialias,
+						path, stroke_op, &dev_stroke_source.base, stroke_style,
+						&dev_ctm, &dev_ctm_inverse, stroke_tolerance,
+						stroke_antialias);
+
+	_cairo_pattern_fini (&dev_stroke_source.base);
+	_cairo_pattern_fini (&dev_fill_source.base);
+
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
+
+    status = _cairo_surface_fill (surface, fill_op, fill_source, path,
+				  fill_rule, fill_tolerance, fill_antialias);
+    if (status)
+	return status;
+
+    status = _cairo_surface_stroke (surface, stroke_op, stroke_source, path,
+				    stroke_style, stroke_ctm, stroke_ctm_inverse,
+				    stroke_tolerance, stroke_antialias);
+
+    return status;
+}
+
+cairo_status_t
 _cairo_surface_stroke (cairo_surface_t		*surface,
 		       cairo_operator_t		 op,
 		       cairo_pattern_t		*source,

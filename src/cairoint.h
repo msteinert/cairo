@@ -874,6 +874,22 @@ struct _cairo_surface_backend {
 
     cairo_warn cairo_status_t
     (*reset)			(void			*surface);
+
+    cairo_warn cairo_int_status_t
+    (*fill_stroke)		(void			*surface,
+				 cairo_operator_t	 fill_op,
+				 cairo_pattern_t	*fill_source,
+				 cairo_fill_rule_t	 fill_rule,
+				 double			 fill_tolerance,
+				 cairo_antialias_t	 fill_antialias,
+				 cairo_path_fixed_t	*path,
+				 cairo_operator_t	 stroke_op,
+				 cairo_pattern_t	*stroke_source,
+				 cairo_stroke_style_t	*stroke_style,
+				 cairo_matrix_t		*stroke_ctm,
+				 cairo_matrix_t		*stroke_ctm_inverse,
+				 double			 stroke_tolerance,
+				 cairo_antialias_t	 stroke_antialias);
 };
 
 typedef struct _cairo_format_masks {
@@ -1469,6 +1485,10 @@ cairo_private cairo_status_t
 _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
 			     cairo_path_fixed_t *other);
 
+cairo_private cairo_bool_t
+_cairo_path_fixed_is_equal (cairo_path_fixed_t *path,
+			    cairo_path_fixed_t *other);
+
 cairo_private cairo_path_fixed_t *
 _cairo_path_fixed_create (void);
 
@@ -1749,6 +1769,22 @@ _cairo_surface_mask (cairo_surface_t	*surface,
 		     cairo_operator_t	 op,
 		     cairo_pattern_t	*source,
 		     cairo_pattern_t	*mask);
+
+cairo_private cairo_status_t
+_cairo_surface_fill_stroke (cairo_surface_t	    *surface,
+			    cairo_operator_t	     fill_op,
+			    cairo_pattern_t	    *fill_source,
+			    cairo_fill_rule_t	     fill_rule,
+			    double		     fill_tolerance,
+			    cairo_antialias_t	     fill_antialias,
+			    cairo_path_fixed_t	    *path,
+			    cairo_operator_t	     stroke_op,
+			    cairo_pattern_t	    *stroke_source,
+			    cairo_stroke_style_t    *stroke_style,
+			    cairo_matrix_t	    *stroke_ctm,
+			    cairo_matrix_t	    *stroke_ctm_inverse,
+			    double		     stroke_tolerance,
+			    cairo_antialias_t	     stroke_antialias);
 
 cairo_private cairo_status_t
 _cairo_surface_stroke (cairo_surface_t		*surface,

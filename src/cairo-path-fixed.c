@@ -550,3 +550,30 @@ _cairo_path_fixed_device_transform (cairo_path_fixed_t	*path,
 					_cairo_fixed_from_double (device_transform->xx),
 					_cairo_fixed_from_double (device_transform->yy));
 }
+
+cairo_bool_t
+_cairo_path_fixed_is_equal (cairo_path_fixed_t *path,
+			    cairo_path_fixed_t *other)
+{
+    cairo_path_buf_t *path_buf, *other_buf;
+
+    if (path->current_point.x != other->current_point.x ||
+	path->current_point.y != other->current_point.y ||
+	path->has_current_point != other->has_current_point ||
+	path->has_curve_to != other->has_curve_to ||
+	path->last_move_point.x != other->last_move_point.x ||
+	path->last_move_point.y != other->last_move_point.y)
+	return FALSE;
+
+    other_buf = other->buf_head;
+    for (path_buf = path->buf_head; path_buf != NULL; path_buf = path_buf->next) {
+	if (other_buf == NULL ||
+	    path_buf->num_ops != other_buf->num_ops ||
+	    path_buf->num_points != other_buf->num_points ||
+	    memcmp (path_buf->op, other_buf->op, path_buf->num_ops) != 0 ||
+	    memcmp (path_buf->points, other_buf->points, path_buf->num_points != 0))
+	    return FALSE;
+	other_buf = other_buf->next;
+    }
+    return TRUE;
+}
