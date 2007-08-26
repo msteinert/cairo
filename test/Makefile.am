@@ -66,6 +66,10 @@ new-sub-path			\
 nil-surface			\
 operator-clear			\
 operator-source			\
+over-above-source		\
+over-around-source		\
+over-below-source		\
+over-between-source		\
 paint				\
 paint-repeat			\
 paint-source-alpha		\
