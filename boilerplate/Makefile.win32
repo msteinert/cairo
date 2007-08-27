@@ -1,5 +1,9 @@
-CC = cl
-CFLAGS = /nologo /MD /Zi /O2 /I../src /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE
+
+SUBMAKEFILE = 1
+
+include ../Makefile.win32
+
+CFLAGS += -I../src
 
 SOURCES = \
 	cairo-boilerplate.c \
@@ -10,9 +14,6 @@ OBJECTS = $(subst .c,.obj,$(SOURCES))
 
 all: boiler.lib
 
-%.obj: %.c
-	@$(CC) $(CFLAGS) /c /Fo"$@" $<
-
 boiler.lib: $(OBJECTS)
-	lib /NOLOGO /OUT:$@ $(OBJECTS)
+	lib -NOLOGO -OUT:$@ $(OBJECTS)
 

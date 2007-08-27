@@ -1,0 +1,18 @@
+
+SUBMAKEFILE = 1
+
+include ../../Makefile.win32
+
+CFLAGS += -I../../src
+
+SOURCES = \
+	lpyramid.c \
+	pdiff.c \
+	$(NULL)
+
+OBJECTS = $(subst .c,.obj,$(SOURCES))
+
+all: pdiff.lib
+
+pdiff.lib: $(OBJECTS)
+	lib -NOLOGO -OUT:$@ $(OBJECTS)
