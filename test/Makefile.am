@@ -512,12 +512,6 @@ check_PROGRAMS += pdf2png
 pdf2png_CFLAGS = $(POPPLER_CFLAGS)
 # add LDADD, so poppler uses "our" cairo
 pdf2png_LDADD  = $(LDADD) $(POPPLER_LIBS)
-if CAIRO_HAS_SVG_SURFACE
-EXTRA_PROGRAMS += pdf2svg$(EXEEXT)
-pdf2svg_CFLAGS = $(POPPLER_CFLAGS)
-# add LDADD, so poppler uses "our" cairo
-pdf2svg_LDADD  = $(LDADD) $(POPPLER_LIBS)
-endif
 endif
 
 if CAIRO_CAN_TEST_SVG_SURFACE
@@ -525,12 +519,6 @@ check_PROGRAMS += svg2png
 svg2png_CFLAGS = $(LIBRSVG_CFLAGS)
 # add LDADD, so librsvg uses "our" cairo
 svg2png_LDADD  = $(LDADD) $(LIBRSVG_LIBS)
-if CAIRO_HAS_PDF_SURFACE
-EXTRA_PROGRAMS += svg2pdf$(EXEEXT)
-svg2pdf_CFLAGS = $(LIBRSVG_CFLAGS)
-# add LDADD, so librsvg uses "our" cairo
-svg2pdf_LDADD  = $(LDADD) $(LIBRSVG_LIBS)
-endif
 endif
 
 EXTRA_PROGRAMS += $(TESTS) $(DISABLED_TESTS)

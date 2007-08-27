@@ -98,7 +98,6 @@ path-data
 pattern-get-type
 pattern-getters
 pdf2png
-pdf2svg
 pdf-features
 pdf-features.pdf
 png-flatten
