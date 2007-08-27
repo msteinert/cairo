@@ -476,7 +476,10 @@ _cairo_win32_surface_get_subimage (cairo_win32_surface_t  *surface,
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if ((local->flags & CAIRO_WIN32_SURFACE_CAN_BITBLT) &&
+    /* We are blitting -from- surface, so we need to check if it
+     * supports BitBlt.  I believe any surface can be used as a
+     * BitBlt destination. */
+    if ((surface->flags & CAIRO_WIN32_SURFACE_CAN_BITBLT) &&
 	BitBlt (local->dc,
 		0, 0,
 		width, height,
