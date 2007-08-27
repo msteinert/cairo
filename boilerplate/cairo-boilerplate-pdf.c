@@ -67,16 +67,27 @@ typedef struct _pdf_target_closure
  * And when this list shrinks to nothing, we can close bug 12143.
  */
 static const char *pdf_ignored_tests[] = {
-  /* These first four failures are caused by poppler mis-handling
-   * transparency in gradients. See here:
-   *
-   *	Poppler doesn't correctly handle gradients with transparency
-   *	https://bugs.freedesktop.org/show_bug.cgi?id=12144
-   */
+    /* These first four failures are due to:
+     *
+     *	Poppler doesn't correctly handle gradients with transparency
+     *	https://bugs.freedesktop.org/show_bug.cgi?id=12144
+     */
     "gradient-alpha",
     "linear-gradient",
     "text-pattern",
-    "trap-clip"
+    "trap-clip",
+    /* These next 7 failures are due to:
+     *
+     *	Poppler does not correctly handle knockout groups
+     *	https://bugs.freedesktop.org/show_bug.cgi?id=12185
+     */
+    "clip-operator",
+    "operator-clear",
+    "operator-source",
+    "over-above-source",
+    "over-around-source",
+    "over-below-source",
+    "over-between-source"
 };
 
 cairo_surface_t *
