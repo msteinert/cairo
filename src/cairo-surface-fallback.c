@@ -1070,7 +1070,7 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
     }
 
     _cairo_surface_release_source_image (surface,
-					 image, &image_extra);
+					 image, image_extra);
 
     snapshot->device_transform = surface->device_transform;
     snapshot->device_transform_inverse = surface->device_transform_inverse;
