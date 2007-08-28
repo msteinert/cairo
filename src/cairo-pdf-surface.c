@@ -219,6 +219,9 @@ static cairo_pdf_resource_t
 _cairo_pdf_surface_new_object (cairo_pdf_surface_t *surface);
 
 static void
+_cairo_pdf_group_element_array_finish (cairo_array_t *array);
+
+static void
 _cairo_pdf_surface_clear (cairo_pdf_surface_t *surface);
 
 static void
@@ -524,6 +527,10 @@ static void
 _cairo_pdf_surface_clear (cairo_pdf_surface_t *surface)
 {
     _cairo_array_truncate (&surface->streams, 0);
+    _cairo_pdf_group_element_array_finish (&surface->content_group);
+    _cairo_pdf_group_element_array_finish (&surface->knockout_group);
+    _cairo_array_truncate (&surface->content_group, 0);
+    _cairo_array_truncate (&surface->knockout_group, 0);
 }
 
 static void
