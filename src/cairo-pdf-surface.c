@@ -235,10 +235,6 @@ _cairo_pdf_surface_open_stream (cairo_pdf_surface_t	*surface,
 static cairo_status_t
 _cairo_pdf_surface_close_stream (cairo_pdf_surface_t	*surface);
 
-static cairo_status_t
-_cairo_pdf_surface_add_stream (cairo_pdf_surface_t	*surface,
-			       cairo_pdf_resource_t	 stream);
-
 static void
 _cairo_pdf_surface_write_pages (cairo_pdf_surface_t *surface);
 
@@ -296,13 +292,6 @@ _cairo_pdf_surface_update_object (cairo_pdf_surface_t	*surface,
     object->offset = _cairo_output_stream_get_position (surface->output);
 }
 
-static cairo_status_t
-_cairo_pdf_surface_add_stream (cairo_pdf_surface_t	*surface,
-			       cairo_pdf_resource_t	 stream)
-{
-    return _cairo_array_append (&surface->streams, &stream);
-}
-
 static cairo_surface_t *
 _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
 					       double			 width,
@@ -327,7 +316,6 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
 
     _cairo_array_init (&surface->objects, sizeof (cairo_pdf_object_t));
     _cairo_array_init (&surface->pages, sizeof (cairo_pdf_resource_t));
-    _cairo_array_init (&surface->streams, sizeof (cairo_pdf_resource_t));
     _cairo_array_init (&surface->rgb_linear_functions, sizeof (cairo_pdf_rgb_linear_function_t));
     _cairo_array_init (&surface->alpha_linear_functions, sizeof (cairo_pdf_alpha_linear_function_t));
     _cairo_array_init (&surface->fonts, sizeof (cairo_pdf_font_t));
@@ -526,7 +514,6 @@ cairo_pdf_surface_set_size (cairo_surface_t	*surface,
 static void
 _cairo_pdf_surface_clear (cairo_pdf_surface_t *surface)
 {
-    _cairo_array_truncate (&surface->streams, 0);
     _cairo_pdf_group_element_array_finish (&surface->content_group);
     _cairo_pdf_group_element_array_finish (&surface->knockout_group);
     _cairo_array_truncate (&surface->content_group, 0);
@@ -1087,7 +1074,6 @@ _cairo_pdf_surface_finish (void *abstract_surface)
 
     _cairo_array_fini (&surface->objects);
     _cairo_array_fini (&surface->pages);
-    _cairo_array_fini (&surface->streams);
     _cairo_array_fini (&surface->rgb_linear_functions);
     _cairo_array_fini (&surface->alpha_linear_functions);
     _cairo_array_fini (&surface->fonts);
@@ -3393,10 +3379,6 @@ _cairo_pdf_surface_write_page (cairo_pdf_surface_t *surface)
 				 "/x%d Do\r\n",
 				 has_fallback_images ? knockout_group.id : content_group.id);
     _cairo_pdf_surface_close_stream (surface);
-
-    status = _cairo_pdf_surface_add_stream (surface, page_content);
-    if (status)
-	return status;
 
     page = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,

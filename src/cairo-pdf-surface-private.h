@@ -72,7 +72,6 @@ struct _cairo_pdf_surface {
 
     cairo_array_t objects;
     cairo_array_t pages;
-    cairo_array_t streams;
     cairo_array_t rgb_linear_functions;
     cairo_array_t alpha_linear_functions;
     cairo_array_t knockout_group;
