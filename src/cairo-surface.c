@@ -1024,46 +1024,49 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 			      int               height,
 			      cairo_surface_t **clone_out)
 {
-    cairo_status_t status;
+    cairo_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
     cairo_image_surface_t *image;
     void *image_extra;
 
     if (surface->finished)
 	return CAIRO_STATUS_SURFACE_FINISHED;
 
-    if (surface->backend->clone_similar == NULL)
-	return (cairo_int_status_t)
-	    _cairo_surface_fallback_clone_similar (surface, src,
-						   src_x, src_y,
-						   width, height,
-						   clone_out);
+    if (surface->backend->clone_similar) {
+	status = surface->backend->clone_similar (surface, src, src_x, src_y,
+						  width, height, clone_out);
 
-    status = surface->backend->clone_similar (surface, src, src_x, src_y,
-					      width, height, clone_out);
-    if (status == CAIRO_STATUS_SUCCESS && *clone_out != src)
-        (*clone_out)->device_transform = src->device_transform;
+	if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+	    /* If we failed, try again with an image surface */
+	    status = _cairo_surface_acquire_source_image (src, &image, &image_extra);
+	    if (status == CAIRO_STATUS_SUCCESS) {
+		status =
+		    surface->backend->clone_similar (surface, &image->base,
+						     src_x, src_y,
+						     width, height,
+						     clone_out);
 
-    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	return status;
-
-    status = _cairo_surface_acquire_source_image (src, &image, &image_extra);
-    if (status != CAIRO_STATUS_SUCCESS)
-	return status;
-
-    status = surface->backend->clone_similar (surface, &image->base, src_x,
-					      src_y, width, height, clone_out);
-    if (status == CAIRO_STATUS_SUCCESS && *clone_out != src) {
-        (*clone_out)->device_transform = src->device_transform;
-        (*clone_out)->device_transform_inverse = src->device_transform_inverse;
+		_cairo_surface_release_source_image (src, image, image_extra);
+	    }
+	}
     }
 
-    /* If the above failed point, we could implement a full fallback
-     * using acquire_dest_image, but that's going to be very
-     * inefficient compared to a backend-specific implementation of
-     * clone_similar() with an image source. So we don't bother
-     */
+    /* If we're still unsupported, hit our fallback path to get a clone */
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+	status =
+	    _cairo_surface_fallback_clone_similar (surface, src, src_x, src_y,
+						   width, height, clone_out);
 
-    _cairo_surface_release_source_image (src, image, image_extra);
+    /* We should never get UNSUPPORTED here, so if we have an error, bail. */
+    if (status)
+	return status;
+
+    /* Update the clone's device_transform (which the underlying surface
+     * backend knows nothing about) */
+    if (*clone_out != src) {
+        (*clone_out)->device_transform = src->device_transform;
+        (*clone_out)->device_transform_inverse = src->device_transform_inverse;
+    }	
+
     return status;
 }
 

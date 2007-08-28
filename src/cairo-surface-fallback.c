@@ -1264,8 +1264,8 @@ _cairo_surface_fallback_clone_similar (cairo_surface_t	*surface,
 				       cairo_surface_t **clone_out)
 {
     cairo_status_t status;
-    cairo_pattern_union_t src_pattern;
     cairo_surface_t *new_surface = NULL;
+    cairo_t *cr;
 
     new_surface = _cairo_surface_create_similar_scratch (surface,
 							 cairo_surface_get_content (src),
@@ -1273,18 +1273,22 @@ _cairo_surface_fallback_clone_similar (cairo_surface_t	*surface,
     if (new_surface->status)
 	return new_surface->status;
 
-    _cairo_pattern_init_for_surface (&src_pattern.surface, src);
+    /* We have to copy these here, so that the coordinate spaces are correct */
+    new_surface->device_transform = src->device_transform;
+    new_surface->device_transform_inverse = src->device_transform_inverse;
 
-    status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
-				       &src_pattern.base,
-				       NULL,
-				       new_surface,
-				       src_x, src_y,
-				       0, 0,
-				       0, 0,
-				       width, height);
-
-    _cairo_pattern_fini (&src_pattern.base);
+    /* We can't use _cairo_composite directly, because backends that
+     * implement the "high-level" API may not have it implemented.
+     * (For example, SVG.)  We can fix this by either checking if the
+     * destination supports composite first, or we can make clone a
+     * required "high-level" operation.
+     */
+    cr = cairo_create (new_surface);
+    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+    cairo_set_source_surface (cr, src, -src_x, -src_y);
+    cairo_paint (cr);
+    status = cairo_status (cr);
+    cairo_destroy (cr);
 
     if (status == CAIRO_STATUS_SUCCESS)
 	*clone_out = new_surface;
