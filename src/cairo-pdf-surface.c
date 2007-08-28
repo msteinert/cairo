@@ -69,9 +69,6 @@
  * - What if you create a similar surface and does show_page and then
  *   does show_surface on another surface?
  *
- * - Output TM so page scales to the right size - PDF default user
- *   space has 1 unit = 1 / 72 inch.
- *
  * - Add test case for RGBA images.
  *
  * - Add test case for RGBA gradients.
@@ -83,17 +80,19 @@
  * Page Structure of the Generated PDF:
  *
  * Each page requiring fallbacks images contains a knockout group at
- * the top level. The first operation of the knock group paints a
- * group containing all the supported drawing operations. Fallback images
- * (if any) are painted from the knockout group. This ensures that
- * fallback images do not composite with any content under the
+ * the top level. The first operation of the knockout group paints a
+ * group containing all the supported drawing operations. Fallback
+ * images (if any) are painted in the knockout group. This ensures
+ * that fallback images do not composite with any content under the
  * fallback images.
  *
  * The group containing the supported operations (content_group_list
  * in the example below) does not do any drawing directly. Instead it
  * paints groups containing the drawing operations and performs
  * clipping. The reason for this is that clipping operations performed
- * in a group does not affect the parent group.
+ * in a group do not affect the parent group.
+ *
+ * Example PDF Page Structure:
  *
  *   Page Content
  *   ------------
@@ -152,8 +151,9 @@
  *   Content Stream may be resumed.
  *
  *   The Content Stream contains the text and graphics operators. When
- *   a pattern is required the Content Stream is paused, the pattern
- *   is written to a PDF Stream, then the Content Stream is resumed.
+ *   a pattern is required the Content Stream is paused, a PDF Stream
+ *   is opened, the pattern is written to a PDF Stream, the PDF Stream
+ *   is closed, then the Content Stream is resumed.
  *
  *   Each group comprising the Content Stream is stored in memory
  *   until the stream is closed or the maximum group size is
