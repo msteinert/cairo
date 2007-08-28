@@ -308,7 +308,7 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
 	status = _cairo_win32_scaled_font_set_metrics (f);
 
     if (status) {
-	cairo_scaled_font_destroy (&f->base);
+	free (f);
 	return NULL;
     }
 
