@@ -183,14 +183,20 @@ run_cairo_perf_if_not_cached() {
     cd $owd
 }
 
+git_setup
+
+# Build cairo-perf-diff-files if not available
+if [ ! -e $CAIRO_DIR/perf/cairo-perf-diff-files ]; then
+    echo "Building cairo-perf-diff-files"
+    make -C $CAIRO_DIR/perf/ cairo-perf-diff-files
+fi
+
 if [ ! -e $old ]; then
-    git_setup
     run_cairo_perf_if_not_cached $old old
     old=$(rev2perf $old)
 fi
 
 if [ ! -e $new ]; then
-    git_setup
     run_cairo_perf_if_not_cached $new new
     new=$(rev2perf $new)
 fi
