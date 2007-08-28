@@ -1612,9 +1612,9 @@ _cairo_pdf_surface_emit_stitched_colorgradient (cairo_pdf_surface_t    *surface,
     for (i = 0; i < n_stops-1; i++) {
         if (is_alpha) {
             status = cairo_pdf_surface_emit_alpha_linear_function (surface,
-                                                             &stops[i],
-                                                             &stops[i+1],
-                                                             &stops[i].resource);
+                                                                   &stops[i],
+                                                                   &stops[i+1],
+                                                                   &stops[i].resource);
             if (status)
                 return status;
         } else {
@@ -1632,8 +1632,10 @@ _cairo_pdf_surface_emit_stitched_colorgradient (cairo_pdf_surface_t    *surface,
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\r\n"
 				 "<< /FunctionType 3\r\n"
-				 "   /Domain [ 0 1 ]\r\n",
-				 res.id);
+				 "   /Domain [ %f %f ]\r\n",
+				 res.id,
+                                 stops[0].offset,
+                                 stops[n_stops - 1].offset);
 
     _cairo_output_stream_printf (surface->output,
 				 "   /Functions [ ");
@@ -1701,23 +1703,6 @@ _cairo_pdf_surface_emit_pattern_stops (cairo_pdf_surface_t      *surface,
             emit_alpha = TRUE;
 	stops[i].offset = _cairo_fixed_to_double (pattern->stops[i].x);
     }
-
-    /* make sure first offset is 0.0 and last offset is 1.0. (Otherwise Acrobat
-     * Reader chokes.) */
-    if (stops[0].offset > COLOR_STOP_EPSILON) {
-	    memcpy (allstops, stops, sizeof (cairo_pdf_color_stop_t));
-	    stops = allstops;
-	    n_stops++;
-    }
-    stops[0].offset = 0.0;
-
-    if (stops[n_stops-1].offset < 1.0 - COLOR_STOP_EPSILON) {
-	    memcpy (&stops[n_stops],
-		    &stops[n_stops - 1],
-		    sizeof (cairo_pdf_color_stop_t));
-	    n_stops++;
-    }
-    stops[n_stops-1].offset = 1.0;
 
     if (n_stops == 2) {
         /* no need for stitched function */
@@ -1844,6 +1829,8 @@ _cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t    *surface,
     cairo_matrix_t pat_to_pdf;
     cairo_extend_t extend;
     cairo_status_t status;
+    cairo_gradient_pattern_t *gradient = &pattern->base;
+    double first_stop, last_stop;
 
     extend = cairo_pattern_get_extend (&pattern->base.base);
     _cairo_pdf_surface_pause_content_stream (surface);
@@ -1865,6 +1852,36 @@ _cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t    *surface,
     x2 = _cairo_fixed_to_double (pattern->p2.x);
     y2 = _cairo_fixed_to_double (pattern->p2.y);
 
+    first_stop = _cairo_fixed_to_double (gradient->stops[0].x);
+    last_stop = _cairo_fixed_to_double (gradient->stops[gradient->n_stops - 1].x);
+
+    /* PDF requires the first and last stop to be the same as the line
+     * coordinates. If this is not a repeating pattern move the line
+     * coordinates to the location of first and last stop. */
+
+    if (pattern->base.base.extend == CAIRO_EXTEND_NONE ||
+	pattern->base.base.extend == CAIRO_EXTEND_PAD) {
+	double _x1, _y1, _x2, _y2;
+
+	_x1 = x1 + (x2 - x1)*first_stop;
+	_y1 = y1 + (y2 - y1)*first_stop;
+	_x2 = x1 + (x2 - x1)*last_stop;
+	_y2 = y1 + (y2 - y1)*last_stop;
+
+	x1 = _x1;
+	x2 = _x2;
+	y1 = _y1;
+	y2 = _y2;
+    }
+
+    if (gradient->n_stops == 2) {
+	/* If only two stops the Type 2 function is used by itself
+	 * without a Stitching function. Type 2 functions always have
+	 * the domain [0 1] */
+	first_stop = 0.0;
+	last_stop = 1.0;
+    }
+
     pattern_resource = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
                                  "%d 0 obj\r\n"
@@ -1875,12 +1892,14 @@ _cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t    *surface,
                                  "      << /ShadingType 2\r\n"
                                  "         /ColorSpace /DeviceRGB\r\n"
                                  "         /Coords [ %f %f %f %f ]\r\n"
+                                 "         /Domain [ %f %f ]\r\n"
                                  "         /Function %d 0 R\r\n",
                                  pattern_resource.id,
                                  pat_to_pdf.xx, pat_to_pdf.yx,
                                  pat_to_pdf.xy, pat_to_pdf.yy,
                                  pat_to_pdf.x0, pat_to_pdf.y0,
                                  x1, y1, x2, y2,
+                                 first_stop, last_stop,
                                  color_function.id);
 
     if (extend == CAIRO_EXTEND_PAD) {
