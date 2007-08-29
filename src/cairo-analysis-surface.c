@@ -288,32 +288,34 @@ _cairo_analysis_surface_stroke (void			*abstract_surface,
 
     _cairo_rectangle_intersect (&extents, &surface->current_clip);
 
-    box.p1.x = _cairo_fixed_from_int (extents.x);
-    box.p1.y = _cairo_fixed_from_int (extents.y);
-    box.p2.x = _cairo_fixed_from_int (extents.x + extents.width);
-    box.p2.y = _cairo_fixed_from_int (extents.y + extents.height);
+    if (_cairo_operator_bounded_by_mask (op)) {
+	box.p1.x = _cairo_fixed_from_int (extents.x);
+	box.p1.y = _cairo_fixed_from_int (extents.y);
+	box.p2.x = _cairo_fixed_from_int (extents.x + extents.width);
+	box.p2.y = _cairo_fixed_from_int (extents.y + extents.height);
 
-    _cairo_traps_init (&traps);
+	_cairo_traps_init (&traps);
+	_cairo_traps_limit (&traps, &box);
+	status = _cairo_path_fixed_stroke_to_traps (path,
+						    style,
+						    ctm, ctm_inverse,
+						    tolerance,
+						    &traps);
 
-    _cairo_traps_limit (&traps, &box);
+	if (status) {
+	    _cairo_traps_fini (&traps);
+	    return status;
+	}
 
-    status = _cairo_path_fixed_stroke_to_traps (path,
-						style,
-						ctm, ctm_inverse,
-						tolerance,
-						&traps);
-    if (status)
-	goto FINISH;
+	_cairo_traps_extents (&traps, &box);
+	extents.x = _cairo_fixed_integer_floor (box.p1.x);
+	extents.y = _cairo_fixed_integer_floor (box.p1.y);
+	extents.width = _cairo_fixed_integer_ceil (box.p2.x) - extents.x;
+	extents.height = _cairo_fixed_integer_ceil (box.p2.y) - extents.y;
+	_cairo_traps_fini (&traps);
+    }
 
-    _cairo_traps_extents (&traps, &box);
-    extents.x = _cairo_fixed_integer_floor (box.p1.x);
-    extents.y = _cairo_fixed_integer_floor (box.p1.y);
-    extents.width = _cairo_fixed_integer_ceil (box.p2.x) - extents.x;
-    extents.height = _cairo_fixed_integer_ceil (box.p2.y) - extents.y;
     status = _cairo_analysis_surface_add_operation (surface, &extents, backend_status);
-
-FINISH:
-    _cairo_traps_fini (&traps);
 
     return status;
 }
@@ -355,31 +357,34 @@ _cairo_analysis_surface_fill (void			*abstract_surface,
 
     _cairo_rectangle_intersect (&extents, &surface->current_clip);
 
-    box.p1.x = _cairo_fixed_from_int (extents.x);
-    box.p1.y = _cairo_fixed_from_int (extents.y);
-    box.p2.x = _cairo_fixed_from_int (extents.x + extents.width);
-    box.p2.y = _cairo_fixed_from_int (extents.y + extents.height);
+    if (_cairo_operator_bounded_by_mask (op)) {
+	box.p1.x = _cairo_fixed_from_int (extents.x);
+	box.p1.y = _cairo_fixed_from_int (extents.y);
+	box.p2.x = _cairo_fixed_from_int (extents.x + extents.width);
+	box.p2.y = _cairo_fixed_from_int (extents.y + extents.height);
 
-    _cairo_traps_init (&traps);
+	_cairo_traps_init (&traps);
+	_cairo_traps_limit (&traps, &box);
+	status = _cairo_path_fixed_fill_to_traps (path,
+						  fill_rule,
+						  tolerance,
+						  &traps);
 
-    _cairo_traps_limit (&traps, &box);
+	if (status) {
+	    _cairo_traps_fini (&traps);
+	    return status;
+	}
 
-    status = _cairo_path_fixed_fill_to_traps (path,
-					      fill_rule,
-					      tolerance,
-					      &traps);
-    if (status)
-	goto FINISH;
+	_cairo_traps_extents (&traps, &box);
+	extents.x = _cairo_fixed_integer_floor (box.p1.x);
+	extents.y = _cairo_fixed_integer_floor (box.p1.y);
+	extents.width = _cairo_fixed_integer_ceil (box.p2.x) - extents.x;
+	extents.height = _cairo_fixed_integer_ceil (box.p2.y) - extents.y;
 
-    _cairo_traps_extents (&traps, &box);
-    extents.x = _cairo_fixed_integer_floor (box.p1.x);
-    extents.y = _cairo_fixed_integer_floor (box.p1.y);
-    extents.width = _cairo_fixed_integer_ceil (box.p2.x) - extents.x;
-    extents.height = _cairo_fixed_integer_ceil (box.p2.y) - extents.y;
+	_cairo_traps_fini (&traps);
+    }
+
     status = _cairo_analysis_surface_add_operation (surface, &extents, backend_status);
-
-FINISH:
-    _cairo_traps_fini (&traps);
 
     return status;
 }
@@ -394,7 +399,7 @@ _cairo_analysis_surface_show_glyphs (void		  *abstract_surface,
 {
     cairo_analysis_surface_t *surface = abstract_surface;
     cairo_status_t	     status, backend_status;
-    cairo_rectangle_int_t  extent;
+    cairo_rectangle_int_t    extents, glyph_extents;
 
     if (!surface->target->backend->show_glyphs)
 	backend_status = CAIRO_INT_STATUS_UNSUPPORTED;
@@ -404,15 +409,23 @@ _cairo_analysis_surface_show_glyphs (void		  *abstract_surface,
 							   glyphs, num_glyphs,
 							   scaled_font);
 
-    status = _cairo_scaled_font_glyph_device_extents (scaled_font,
-						      glyphs,
-						      num_glyphs,
-						      &extent);
+    status = _cairo_surface_get_extents (&surface->base, &extents);
     if (status)
 	return status;
 
-    _cairo_rectangle_intersect (&extent, &surface->current_clip);
-    status = _cairo_analysis_surface_add_operation (surface, &extent, backend_status);
+    if (_cairo_operator_bounded_by_mask (op)) {
+	status = _cairo_scaled_font_glyph_device_extents (scaled_font,
+							  glyphs,
+							  num_glyphs,
+							  &glyph_extents);
+	if (status)
+	    return status;
+
+	_cairo_rectangle_intersect (&extents, &glyph_extents);
+    }
+
+    _cairo_rectangle_intersect (&extents, &surface->current_clip);
+    status = _cairo_analysis_surface_add_operation (surface, &extents, backend_status);
 
     return status;
 }
