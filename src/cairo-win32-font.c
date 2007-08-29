@@ -326,12 +326,7 @@ _win32_scaled_font_set_world_transform (cairo_win32_scaled_font_t *scaled_font,
 {
     XFORM xform;
 
-    xform.eM11 = scaled_font->logical_to_device.xx;
-    xform.eM21 = scaled_font->logical_to_device.xy;
-    xform.eM12 = scaled_font->logical_to_device.yx;
-    xform.eM22 = scaled_font->logical_to_device.yy;
-    xform.eDx = scaled_font->logical_to_device.x0;
-    xform.eDy = scaled_font->logical_to_device.y0;
+    _cairo_matrix_to_win32_xform (&scaled_font->logical_to_device, &xform);
 
     if (!SetWorldTransform (hdc, &xform))
 	return _cairo_win32_print_gdi_error ("_win32_scaled_font_set_world_transform");

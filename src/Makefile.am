@@ -81,7 +81,7 @@ endif
 libcairo_win32_sources =
 if CAIRO_HAS_WIN32_SURFACE
 libcairo_win32_headers = cairo-win32.h
-libcairo_win32_sources += cairo-win32-surface.c cairo-win32-private.h
+libcairo_win32_sources += cairo-win32-surface.c cairo-win32-printing-surface.c cairo-win32-private.h
 backend_pkgconfigs += cairo-win32.pc
 endif
 # This is not really a separate conditional.  Is TRUE iff the previous one is.
