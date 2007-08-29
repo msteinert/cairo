@@ -74,6 +74,7 @@ static const char *pdf_ignored_tests[] = {
      */
     "gradient-alpha",
     "linear-gradient",
+    "radial-gradient",
     "text-pattern",
     "trap-clip",
     /* These next 7 failures are due to:
@@ -87,7 +88,8 @@ static const char *pdf_ignored_tests[] = {
     "over-above-source",
     "over-around-source",
     "over-below-source",
-    "over-between-source"
+    "over-between-source",
+    "unbounded-operator"
 };
 
 cairo_surface_t *
