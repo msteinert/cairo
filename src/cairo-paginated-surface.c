@@ -238,8 +238,8 @@ static cairo_int_status_t
 _paint_fallback_image (cairo_paginated_surface_t *surface,
 		       cairo_box_int_t           *box)
 {
-    double x_scale = surface->base.x_fallback_resolution / 72.0;
-    double y_scale = surface->base.y_fallback_resolution / 72.0;
+    double x_scale = surface->base.x_fallback_resolution / surface->base.x_resolution;
+    double y_scale = surface->base.y_fallback_resolution / surface->base.y_resolution;
     cairo_matrix_t matrix;
     int x, y, width, height;
     cairo_status_t status;

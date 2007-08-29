@@ -62,6 +62,8 @@ const cairo_surface_t name = {					\
       0.0, 1.0,							\
       0.0, 0.0							\
     },					/* device_transform_inverse */	\
+    0.0,				/* x_resolution */	\
+    0.0,				/* y_resolution */	\
     0.0,				/* x_fallback_resolution */	\
     0.0,				/* y_fallback_resolution */	\
     NULL,				/* clip */		\
@@ -194,6 +196,9 @@ _cairo_surface_init (cairo_surface_t			*surface,
 
     cairo_matrix_init_identity (&surface->device_transform);
     cairo_matrix_init_identity (&surface->device_transform_inverse);
+
+    surface->x_resolution = CAIRO_SURFACE_RESOLUTION_DEFAULT; 
+    surface->y_resolution = CAIRO_SURFACE_RESOLUTION_DEFAULT; 
 
     surface->x_fallback_resolution = CAIRO_SURFACE_FALLBACK_RESOLUTION_DEFAULT;
     surface->y_fallback_resolution = CAIRO_SURFACE_FALLBACK_RESOLUTION_DEFAULT;
@@ -2284,6 +2289,25 @@ _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
     }
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+/**
+ * _cairo_surface_set_resolution
+ * @surface: the surface
+ * @x_res: x resolution, in dpi
+ * @y_res: y resolution, in dpi
+ *
+ * Set the actual surface resolution of @surface to the given x and y DPI.
+ * Mainly used for correctly computing the scale factor when fallback
+ * rendering needs to take place in the paginated surface.
+ */
+void
+_cairo_surface_set_resolution (cairo_surface_t *surface,
+			       double x_res,
+			       double y_res)
+{
+    surface->x_resolution = x_res;
+    surface->y_resolution = y_res;
 }
 
 /*  LocalWords:  rasterized

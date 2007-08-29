@@ -58,6 +58,8 @@ static const cairo_image_surface_t _cairo_image_surface_nil_invalid_format = {
 	  0.0, 1.0,
 	  0.0, 0.0
 	},				/* device_transform_inverse */
+	0.0,				/* x_resolution */
+	0.0,				/* y_resolution */
 	0.0,				/* x_fallback_resolution */
 	0.0,				/* y_fallback_resolution */
 	NULL,				/* clip */

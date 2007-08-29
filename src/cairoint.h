@@ -1077,6 +1077,7 @@ typedef struct _cairo_traps {
 #define CAIRO_GSTATE_MITER_LIMIT_DEFAULT	10.0
 #define CAIRO_GSTATE_DEFAULT_FONT_SIZE  10.0
 
+#define CAIRO_SURFACE_RESOLUTION_DEFAULT 72.0
 #define CAIRO_SURFACE_FALLBACK_RESOLUTION_DEFAULT 300.0
 
 typedef struct _cairo_gstate cairo_gstate_t;
@@ -1693,6 +1694,11 @@ extern const cairo_private cairo_surface_t _cairo_surface_nil_file_not_found;
 cairo_private void
 _cairo_surface_set_error (cairo_surface_t	*surface,
 			  cairo_status_t	 status);
+
+cairo_private void
+_cairo_surface_set_resolution (cairo_surface_t *surface,
+                               double x_res,
+                               double y_res);
 
 cairo_private cairo_surface_t *
 _cairo_surface_create_similar_scratch (cairo_surface_t *other,
