@@ -787,6 +787,12 @@ _cairo_svg_surface_operators[] = {
 
     "xor", "plus",
     "color-dodge", /* FIXME: saturate ? */
+
+    "multiply",	"screen", "overlay",
+    "darken", "lighten",
+    "color-dodge", "color-burn",
+    "hard-light", "soft-light",
+    "difference", "exclusion"
 };
 
 static cairo_bool_t
