@@ -327,6 +327,8 @@ _cairo_xlib_surface_finish (void *abstract_surface)
     return status;
 }
 
+#define CAIRO_SURFACE_RENDER_SUPPORTS_OPERATOR(surface, op)	((op) <= CAIRO_OPERATOR_SATURATE)
+
 static int
 _noop_error_handler (Display     *display,
 		     XErrorEvent *event)
@@ -1588,6 +1590,9 @@ _categorize_composite_operation (cairo_xlib_surface_t *dst,
 				 cairo_bool_t	       have_mask)
 
 {
+    if (!CAIRO_SURFACE_RENDER_SUPPORTS_OPERATOR (dst, op))
+	return DO_UNSUPPORTED;
+
     if (!dst->buggy_repeat)
 	return DO_RENDER;
 
@@ -1728,6 +1733,24 @@ _render_operator (cairo_operator_t op)
 	return PictOpAdd;
     case CAIRO_OPERATOR_SATURATE:
 	return PictOpSaturate;
+
+    case CAIRO_OPERATOR_MULTIPLY:
+    case CAIRO_OPERATOR_SCREEN:
+    case CAIRO_OPERATOR_OVERLAY:
+    case CAIRO_OPERATOR_DARKEN:
+    case CAIRO_OPERATOR_LIGHTEN:
+    case CAIRO_OPERATOR_COLOR_DODGE:
+    case CAIRO_OPERATOR_COLOR_BURN:
+    case CAIRO_OPERATOR_HARD_LIGHT:
+    case CAIRO_OPERATOR_SOFT_LIGHT:
+    case CAIRO_OPERATOR_DIFFERENCE:
+    case CAIRO_OPERATOR_EXCLUSION:
+    case CAIRO_OPERATOR_HSL_HUE:
+    case CAIRO_OPERATOR_HSL_SATURATION:
+    case CAIRO_OPERATOR_HSL_COLOR:
+    case CAIRO_OPERATOR_HSL_LUMINOSITY:
+	ASSERT_NOT_REACHED;
+
     default:
 	return PictOpOver;
     }
@@ -1993,7 +2016,10 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
 
     _cairo_xlib_display_notify (surface->display);
 
-    if (! CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLES (surface)) {
+    if (!CAIRO_SURFACE_RENDER_SUPPORTS_OPERATOR (surface, op))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (!CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLES (surface)) {
 	if (op == CAIRO_OPERATOR_CLEAR ||
 	    ((op == CAIRO_OPERATOR_SOURCE || op == CAIRO_OPERATOR_OVER) &&
 	     CAIRO_COLOR_IS_OPAQUE (color)))
