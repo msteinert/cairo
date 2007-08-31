@@ -1897,6 +1897,14 @@ _cairo_surface_get_extents (cairo_surface_t         *surface,
     return surface->backend->get_extents (surface, rectangle);
 }
 
+/* Note: the backends may modify the contents of the glyph array as long as
+ * they do not return CAIRO_STATUS_UNSUPPORTED. This makes it possible to
+ * avoid copying the array again and again, and edit it in-place.
+ * Backends are in fact free to use the array as a generic buffer as they
+ * see fit.
+ * See commits 5a9642c5746fd677aed35ce620ce90b1029b1a0c and
+ * 1781e6018c17909311295a9cc74b70500c6b4d0a for the rationale.
+ */
 cairo_status_t
 _cairo_surface_show_glyphs (cairo_surface_t	*surface,
 			    cairo_operator_t	 op,
