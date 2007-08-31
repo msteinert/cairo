@@ -2086,7 +2086,7 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
 				      int		   dst_y,
 				      unsigned int	   width,
 				      unsigned int	   height,
-				      const cairo_glyph_t *glyphs,
+				      cairo_glyph_t       *glyphs,
 				      int		   num_glyphs)
 {
     cairo_glitz_surface_attributes_t	attributes;

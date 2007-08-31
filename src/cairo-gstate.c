@@ -58,9 +58,6 @@ _cairo_gstate_transform_glyphs_to_backend (cairo_gstate_t      *gstate,
                                            int                  num_glyphs,
                                            cairo_glyph_t       *transformed_glyphs);
 
-static cairo_bool_t
-_cairo_gstate_transform_glyphs_to_backend_required (cairo_gstate_t *gstate);
-
 cairo_status_t
 _cairo_gstate_init (cairo_gstate_t  *gstate,
 		    cairo_surface_t *target)
@@ -1570,19 +1567,16 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     if (status)
 	return status;
 
-    if (_cairo_gstate_transform_glyphs_to_backend_required (gstate)) {
-	if (num_glyphs <= STACK_GLYPHS_LEN) {
-	    transformed_glyphs = stack_transformed_glyphs;
-	} else {
-	    transformed_glyphs = _cairo_malloc_ab (num_glyphs, sizeof(cairo_glyph_t));
-	    if (transformed_glyphs == NULL)
-		return CAIRO_STATUS_NO_MEMORY;
-	}
+    if (num_glyphs <= STACK_GLYPHS_LEN) {
+	transformed_glyphs = stack_transformed_glyphs;
+    } else {
+	transformed_glyphs = _cairo_malloc_ab (num_glyphs, sizeof(cairo_glyph_t));
+	if (transformed_glyphs == NULL)
+	    return CAIRO_STATUS_NO_MEMORY;
+    }
 
-	_cairo_gstate_transform_glyphs_to_backend (gstate, glyphs, num_glyphs,
-						   transformed_glyphs);
-    } else
-	transformed_glyphs = (cairo_glyph_t *) glyphs;
+    _cairo_gstate_transform_glyphs_to_backend (gstate, glyphs, num_glyphs,
+                                               transformed_glyphs);
 
     status = _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
     if (status)
@@ -1598,8 +1592,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     _cairo_pattern_fini (&source_pattern.base);
 
 CLEANUP_GLYPHS:
-    if (transformed_glyphs != stack_transformed_glyphs &&
-	    transformed_glyphs != glyphs)
+    if (transformed_glyphs != stack_transformed_glyphs)
       free (transformed_glyphs);
 
     return status;
@@ -1653,20 +1646,6 @@ cairo_antialias_t
 _cairo_gstate_get_antialias (cairo_gstate_t *gstate)
 {
     return gstate->antialias;
-}
-
-static cairo_bool_t
-_cairo_gstate_transform_glyphs_to_backend_required (cairo_gstate_t *gstate)
-{
-    cairo_matrix_t *ctm = &gstate->ctm;
-    cairo_matrix_t *device_transform = &gstate->target->device_transform;
-
-    if (_cairo_matrix_is_identity (ctm) &&
-        _cairo_matrix_is_identity (device_transform) &&
-	gstate->font_matrix.x0 == 0 && gstate->font_matrix.y0 == 0)
-	return FALSE;
-
-    return TRUE;
 }
 
 /**

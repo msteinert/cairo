@@ -1620,11 +1620,11 @@ _cairo_xcb_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 
 static cairo_int_status_t
 _cairo_xcb_surface_show_glyphs (void                *abstract_dst,
-				cairo_operator_t     op,
-				cairo_pattern_t     *src_pattern,
-				const cairo_glyph_t *glyphs,
-				int		     num_glyphs,
-				cairo_scaled_font_t *scaled_font);
+				 cairo_operator_t     op,
+				 cairo_pattern_t     *src_pattern,
+				 cairo_glyph_t       *glyphs,
+				 int		      num_glyphs,
+				 cairo_scaled_font_t *scaled_font);
 
 static cairo_bool_t
 _cairo_xcb_surface_is_similar (void *surface_a,
@@ -2307,11 +2307,11 @@ typedef cairo_status_t (*cairo_xcb_surface_show_glyphs_func_t)
 
 static cairo_int_status_t
 _cairo_xcb_surface_show_glyphs (void                *abstract_dst,
-				cairo_operator_t     op,
-				cairo_pattern_t     *src_pattern,
-				const cairo_glyph_t *glyphs,
-				int		     num_glyphs,
-				cairo_scaled_font_t *scaled_font)
+				 cairo_operator_t     op,
+				 cairo_pattern_t     *src_pattern,
+				 cairo_glyph_t       *glyphs,
+				 int		      num_glyphs,
+				 cairo_scaled_font_t *scaled_font)
 {
     cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_xcb_surface_t *dst = abstract_dst;
