@@ -68,7 +68,7 @@ static cairo_int_status_t
 _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 cairo_operator_t     op,
 				 cairo_pattern_t     *src_pattern,
-				 cairo_glyph_t       *glyphs,
+				 const cairo_glyph_t *glyphs,
 				 int		      num_glyphs,
 				 cairo_scaled_font_t *scaled_font);
 
@@ -2984,7 +2984,7 @@ static cairo_int_status_t
 _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 cairo_operator_t     op,
 				 cairo_pattern_t     *src_pattern,
-				 cairo_glyph_t       *glyphs,
+				 const cairo_glyph_t *glyphs,
 				 int		      num_glyphs,
 				 cairo_scaled_font_t *scaled_font)
 {
