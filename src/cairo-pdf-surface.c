@@ -203,8 +203,8 @@ typedef struct _cairo_pdf_alpha_linear_function {
 } cairo_pdf_alpha_linear_function_t;
 
 typedef enum group_element_type {
-    GROUP,
-    CLIP
+    ELEM_GROUP,
+    ELEM_CLIP
 } group_element_type_t;
 
 typedef struct _cairo_pdf_group_element {
@@ -914,12 +914,12 @@ _cairo_pdf_surface_write_group_list (cairo_pdf_surface_t  *surface,
     len = _cairo_array_num_elements (group_list);
     for (i = 0; i < len; i++) {
 	elem = _cairo_array_index (group_list, i);
-	if (elem->type == GROUP) {
+	if (elem->type == ELEM_GROUP) {
 	    _cairo_output_stream_printf (surface->output,
 					 "/x%d Do\r\n",
 					 elem->group.id);
 	    _cairo_pdf_surface_add_xobject (surface, elem->group);
-	} else if (elem->type == CLIP) {
+	} else if (elem->type == ELEM_CLIP) {
 	    _cairo_pdf_surface_emit_clip (surface, elem->clip_path, elem->fill_rule);
 	}
     }
@@ -951,7 +951,7 @@ _cairo_pdf_surface_add_group_to_content_stream (cairo_pdf_surface_t   *surface,
     cairo_pdf_group_element_t elem;
 
     memset (&elem, 0, sizeof elem);
-    elem.type = GROUP;
+    elem.type = ELEM_GROUP;
     elem.group = group;
 
     return _cairo_array_append (surface->current_group, &elem);
@@ -1031,7 +1031,7 @@ _cairo_pdf_group_element_array_finish (cairo_array_t *array)
     len = _cairo_array_num_elements (array);
     for (i = 0; i < len; i++) {
 	elem = _cairo_array_index (array, i);
-	if (elem->type == CLIP && elem->clip_path)
+	if (elem->type == ELEM_CLIP && elem->clip_path)
 	    _cairo_path_fixed_destroy (elem->clip_path);
     }
 }
@@ -2288,7 +2288,7 @@ _cairo_pdf_surface_add_clip (cairo_pdf_surface_t  *surface,
     cairo_status_t status;
 
     memset (&elem, 0, sizeof elem);
-    elem.type = CLIP;
+    elem.type = ELEM_CLIP;
 
     if (path == NULL) {
 	elem.clip_path = NULL;
