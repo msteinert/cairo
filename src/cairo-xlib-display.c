@@ -38,7 +38,6 @@
 #include <fontconfig/fontconfig.h>
 
 #include <X11/Xlibint.h>	/* For XESetCloseDisplay */
-#include <X11/extensions/Xrender.h>
 
 typedef int (*cairo_xlib_error_func_t) (Display     *display,
 					XErrorEvent *event);

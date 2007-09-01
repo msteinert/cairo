@@ -37,13 +37,10 @@
  */
 
 #include "cairoint.h"
-#include "cairo-xlib.h"
-#include "cairo-xlib-xrender.h"
+
 #include "cairo-xlib-private.h"
 #include "cairo-xlib-surface-private.h"
 #include "cairo-clip-private.h"
-#include <X11/extensions/Xrender.h>
-#include <X11/extensions/renderproto.h>
 
 /* Xlib doesn't define a typedef, so define one ourselves */
 typedef int (*cairo_xlib_error_func_t) (Display     *display,
@@ -2126,6 +2123,7 @@ cairo_xlib_surface_create_for_bitmap (Display  *dpy,
 						NULL, NULL, width, height, 1);
 }
 
+#if CAIRO_HAS_XLIB_XRENDER_SURFACE
 /**
  * cairo_xlib_surface_create_with_xrender_format:
  * @dpy: an X Display
@@ -2158,6 +2156,7 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
 						NULL, format, width, height, 0);
 }
 slim_hidden_def (cairo_xlib_surface_create_with_xrender_format);
+#endif
 
 /**
  * cairo_xlib_surface_set_size:
