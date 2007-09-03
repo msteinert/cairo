@@ -356,7 +356,7 @@ cairo_boilerplate_get_targets (int *pnum_targets, cairo_bool_t *plimited_targets
     cairo_boilerplate_target_t **targets_to_test;
 
     if ((tname = getenv ("CAIRO_TEST_TARGET")) != NULL && *tname) {
-
+	/* check the list of targets specified by the user */
 	limited_targets = TRUE;
 
 	num_targets = 0;
@@ -393,10 +393,47 @@ cairo_boilerplate_get_targets (int *pnum_targets, cairo_bool_t *plimited_targets
 	    tname = end;
 	}
     } else {
+	/* check all compiled in targets */
 	num_targets = sizeof (targets) / sizeof (targets[0]);
 	targets_to_test = xmalloc (sizeof(cairo_boilerplate_target_t*) * num_targets);
 	for (i = 0; i < num_targets; i++) {
 	    targets_to_test[i] = &targets[i];
+	}
+    }
+
+    /* exclude targets as specified by the user */
+    if ((tname = getenv ("CAIRO_TEST_TARGET_EXCLUDE")) != NULL && *tname) {
+	limited_targets = TRUE;
+
+	while (*tname) {
+	    int j, found = 0;
+	    const char *end = strpbrk (tname, " \t\r\n;:,");
+	    if (!end)
+	        end = tname + strlen (tname);
+
+	    if (end == tname) {
+		tname = end + 1;
+		continue;
+	    }
+
+	    for (i = j = 0; i < num_targets; i++) {
+		if (0 == strncmp (targets_to_test[i]->name, tname, end - tname) &&
+		    !isalnum (targets_to_test[i]->name[end - tname])) {
+		    found = 1;
+		} else {
+		    targets_to_test[j++] = targets_to_test[i];
+		}
+	    }
+	    num_targets = j;
+
+	    if (!found) {
+		fprintf (stderr, "Cannot find target '%.*s'\n", (int)(end - tname), tname);
+		exit(-1);
+	    }
+
+	    if (*end)
+	      end++;
+	    tname = end;
 	}
     }
 
