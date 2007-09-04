@@ -106,6 +106,7 @@ ps-features.ps
 push-group
 radial-gradient
 random-intersections
+rgb24-ignore-alpha
 svg2png
 svg-clip
 svg-clip.svg

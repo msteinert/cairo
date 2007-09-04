@@ -81,6 +81,7 @@ radial-gradient			\
 random-intersections		\
 rectangle-rounding-error	\
 rectilinear-stroke		\
+rgb24-ignore-alpha		\
 rotate-image-surface-paint	\
 scale-down-source-surface-paint	\
 scale-source-surface-paint	\
