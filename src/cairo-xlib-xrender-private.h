@@ -49,6 +49,101 @@ slim_hidden_proto (cairo_xlib_surface_create_with_xrender_format);
  * route, just like as if Xrender is not available in the server at run-time. */
 
 
+/* Functions */
+
+#define CONSUME(a)				+(((void)(a)),0)
+#define CONSUME2(a,b)				CONSUME((a,b))
+#define CONSUME3(a,b,c)				CONSUME((a,b,c))
+#define CONSUME4(a,b,c,d)			CONSUME((a,b,c,d))
+#define CONSUME5(a,b,c,d,e)			CONSUME((a,b,c,d,e))
+#define CONSUME6(a,b,c,d,e,f)			CONSUME((a,b,c,d,e,f))
+#define CONSUME7(a,b,c,d,e,f,g)			CONSUME((a,b,c,d,e,f,g))
+#define CONSUME8(a,b,c,d,e,f,g,h)		CONSUME((a,b,c,d,e,f,g,h))
+#define CONSUME9(a,b,c,d,e,f,g,h,i)		CONSUME((a,b,c,d,e,f,g,h,i))
+#define CONSUME10(a,b,c,d,e,f,g,h,i,j)		CONSUME((a,b,c,d,e,f,g,h,i,j))
+#define CONSUME11(a,b,c,d,e,f,g,h,i,j,k)	CONSUME((a,b,c,d,e,f,g,h,i,j,k))
+#define CONSUME12(a,b,c,d,e,f,g,h,i,j,k,l)	CONSUME((a,b,c,d,e,f,g,h,i,j,k,l))
+#define CONSUME13(a,b,c,d,e,f,g,h,i,j,k,l,m)	CONSUME((a,b,c,d,e,f,g,h,i,j,k,l,m))
+
+/* for when functions are not called */
+static void (CONSUME2)() {}
+static void (CONSUME4)() {}
+static void (CONSUME11)() {}
+
+#define XRenderQueryExtension			0	CONSUME3
+#define XRenderQueryVersion			0	CONSUME3
+#define XRenderQueryFormats			0	CONSUME1
+#define XRenderQuerySubpixelOrder		0	CONSUME2
+#define XRenderSetSubpixelOrder			0	CONSUME3
+#define XRenderFindVisualFormat			NULL	CONSUME2
+#define XRenderFindFormat			NULL	CONSUME4
+#define XRenderFindStandardFormat		NULL	CONSUME2
+#define XRenderQueryPictIndexValues		NULL	CONSUME2
+#define XRenderCreatePicture			0	CONSUME5
+#define XRenderChangePicture				CONSUME4
+#define XRenderSetPictureClipRectangles			CONSUME6
+#define XRenderSetPictureClipRegion			CONSUME3
+#define XRenderSetPictureTransform			CONSUME3
+#define XRenderFreePicture				CONSUME2
+#define XRenderComposite				CONSUME13
+#define XRenderCreateGlyphSet			0	CONSUME2
+#define XRenderReferenceGlyphSet		0	CONSUME2
+#define XRenderFreeGlyphSet				CONSUME2
+#define XRenderAddGlyphs				CONSUME7
+#define XRenderFreeGlyphs				CONSUME4
+#define XRenderCompositeString8				CONSUME12
+#define XRenderCompositeString16			CONSUME12
+#define XRenderCompositeString32			CONSUME12
+#define XRenderCompositeText8				CONSUME11
+#define XRenderCompositeText16				CONSUME11
+#define XRenderCompositeText32				CONSUME11
+#define XRenderFillRectangle				CONSUME8
+#define XRenderFillRectangles				CONSUME6
+#define XRenderCompositeTrapezoids			CONSUME9
+#define XRenderCompositeTriangles			CONSUME9
+#define XRenderCompositeTriStrip			CONSUME9
+#define XRenderCompositeTriFan				CONSUME9
+#define XRenderCompositeDoublePoly			CONSUME12
+#define XRenderParseColor			0	CONSUME3
+#define XRenderCreateCursor			0	CONSUME4
+#define XRenderQueryFilters			NULL	CONSUME2
+#define XRenderSetPictureFilter				CONSUME5
+#define XRenderCreateAnimCursor			0	CONSUME3
+#define XRenderAddTraps					CONSUME6
+#define XRenderCreateSolidFill			0	CONSUME2
+#define XRenderCreateLinearGradient		0	CONSUME5
+#define XRenderCreateRadialGradient		0	CONSUME5
+#define XRenderCreateConicalGradient		0	CONSUME5
+
+#define cairo_xlib_surface_create_with_xrender_format	NULL	CONSUME6
+
+
+
+/* The rest of this file is copied from various Xrender header files, with
+ * the following copyright/license information:
+ *
+ * Copyright © 2000 SuSE, Inc.
+ *
+ * Permission to use, copy, modify, distribute, and sell this software and its
+ * documentation for any purpose is hereby granted without fee, provided that
+ * the above copyright notice appear in all copies and that both that
+ * copyright notice and this permission notice appear in supporting
+ * documentation, and that the name of SuSE not be used in advertising or
+ * publicity pertaining to distribution of the software without specific,
+ * written prior permission.  SuSE makes no representations about the
+ * suitability of this software for any purpose.  It is provided "as is"
+ * without express or implied warranty.
+ *
+ * SuSE DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL SuSE
+ * BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ * Author:  Keith Packard, SuSE, Inc.
+ */
+
 
 /* Copied from X11/extensions/render.h */
 
@@ -1028,74 +1123,6 @@ typedef struct {
 #undef Glyphset
 #undef Glyph
 
-
-/* Functions */
-
-#define CONSUME(a)				+(((void)(a)),0)
-#define CONSUME2(a,b)				CONSUME((a,b))
-#define CONSUME3(a,b,c)				CONSUME((a,b,c))
-#define CONSUME4(a,b,c,d)			CONSUME((a,b,c,d))
-#define CONSUME5(a,b,c,d,e)			CONSUME((a,b,c,d,e))
-#define CONSUME6(a,b,c,d,e,f)			CONSUME((a,b,c,d,e,f))
-#define CONSUME7(a,b,c,d,e,f,g)			CONSUME((a,b,c,d,e,f,g))
-#define CONSUME8(a,b,c,d,e,f,g,h)		CONSUME((a,b,c,d,e,f,g,h))
-#define CONSUME9(a,b,c,d,e,f,g,h,i)		CONSUME((a,b,c,d,e,f,g,h,i))
-#define CONSUME10(a,b,c,d,e,f,g,h,i,j)		CONSUME((a,b,c,d,e,f,g,h,i,j))
-#define CONSUME11(a,b,c,d,e,f,g,h,i,j,k)	CONSUME((a,b,c,d,e,f,g,h,i,j,k))
-#define CONSUME12(a,b,c,d,e,f,g,h,i,j,k,l)	CONSUME((a,b,c,d,e,f,g,h,i,j,k,l))
-#define CONSUME13(a,b,c,d,e,f,g,h,i,j,k,l,m)	CONSUME((a,b,c,d,e,f,g,h,i,j,k,l,m))
-
-/* for when functions are not called */
-static void (CONSUME2)() {}
-static void (CONSUME4)() {}
-static void (CONSUME11)() {}
-
-#define XRenderQueryExtension			0	CONSUME3
-#define XRenderQueryVersion			0	CONSUME3
-#define XRenderQueryFormats			0	CONSUME1
-#define XRenderQuerySubpixelOrder		0	CONSUME2
-#define XRenderSetSubpixelOrder			0	CONSUME3
-#define XRenderFindVisualFormat			NULL	CONSUME2
-#define XRenderFindFormat			NULL	CONSUME4
-#define XRenderFindStandardFormat		NULL	CONSUME2
-#define XRenderQueryPictIndexValues		NULL	CONSUME2
-#define XRenderCreatePicture			0	CONSUME5
-#define XRenderChangePicture				CONSUME4
-#define XRenderSetPictureClipRectangles			CONSUME6
-#define XRenderSetPictureClipRegion			CONSUME3
-#define XRenderSetPictureTransform			CONSUME3
-#define XRenderFreePicture				CONSUME2
-#define XRenderComposite				CONSUME13
-#define XRenderCreateGlyphSet			0	CONSUME2
-#define XRenderReferenceGlyphSet		0	CONSUME2
-#define XRenderFreeGlyphSet				CONSUME2
-#define XRenderAddGlyphs				CONSUME7
-#define XRenderFreeGlyphs				CONSUME4
-#define XRenderCompositeString8				CONSUME12
-#define XRenderCompositeString16			CONSUME12
-#define XRenderCompositeString32			CONSUME12
-#define XRenderCompositeText8				CONSUME11
-#define XRenderCompositeText16				CONSUME11
-#define XRenderCompositeText32				CONSUME11
-#define XRenderFillRectangle				CONSUME8
-#define XRenderFillRectangles				CONSUME6
-#define XRenderCompositeTrapezoids			CONSUME9
-#define XRenderCompositeTriangles			CONSUME9
-#define XRenderCompositeTriStrip			CONSUME9
-#define XRenderCompositeTriFan				CONSUME9
-#define XRenderCompositeDoublePoly			CONSUME12
-#define XRenderParseColor			0	CONSUME3
-#define XRenderCreateCursor			0	CONSUME4
-#define XRenderQueryFilters			NULL	CONSUME2
-#define XRenderSetPictureFilter				CONSUME5
-#define XRenderCreateAnimCursor			0	CONSUME3
-#define XRenderAddTraps					CONSUME6
-#define XRenderCreateSolidFill			0	CONSUME2
-#define XRenderCreateLinearGradient		0	CONSUME5
-#define XRenderCreateRadialGradient		0	CONSUME5
-#define XRenderCreateConicalGradient		0	CONSUME5
-
-#define cairo_xlib_surface_create_with_xrender_format	NULL	CONSUME6
 
 #endif /* CAIRO_HAS_XLIB_XRENDER_SURFACE */
 
