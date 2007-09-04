@@ -1,10 +1,10 @@
 AC_PREREQ(2.54)
 
 dnl cairo package version number, (as distinct from shared library version)
-dnl An odd *minor* number indicates stable release series,
-dnl An even minor number indicates unstable series.
-dnl An odd *micro* number indicates in-progress development, (eg. from git/cvs)
-dnl An even micro number indicates a released version.
+dnl For the minor number: odd => unstable series
+dnl			  even => stable series
+dnl For the micro number: odd => in-progress development (from git)
+dnl			  even => tar-file snapshot or release
 m4_define(cairo_version_major, 1)
 m4_define(cairo_version_minor, 5)
 m4_define(cairo_version_micro, 1)
