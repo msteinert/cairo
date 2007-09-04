@@ -62,6 +62,7 @@ SOURCES = \
 	cairo-paginated-surface.c \
 	cairo-analysis-surface.c \
 	cairo-base85-stream.c \
+	cairo-win32-printing-surface.c \
 	$(NULL)
 
 STATIC_SOURCES = cairo-win32-surface.c 
@@ -97,7 +98,7 @@ $(DEFFILE):
 	@ ! grep -q cairo_ERROR $@ || ($(RM) $@; false)
 
 cairo.dll: $(OBJECTS) $(SHARED_OBJECTS) $(DEFFILE)
-	$(CC) -MD -Zi -LD -Fe$@ $(PIXMAN_LIBS) $(OBJECTS) $(SHARED_OBJECTS) -link -DEF:$(DEFFILE) user32.lib gdi32.lib libpng.lib zdll.lib
+	$(CC) -MD -Zi -LD -Fe$@ $(PIXMAN_LIBS) $(OBJECTS) $(SHARED_OBJECTS) -link -DEF:$(DEFFILE) user32.lib gdi32.lib libpng.lib zdll.lib msimg32.lib
 
 cairo-static.lib: $(OBJECTS) $(STATIC_OBJECTS)
 	lib -NOLOGO -OUT:$@ $(PIXMAN_LIBS) $(OBJECTS) $(STATIC_OBJECTS)
