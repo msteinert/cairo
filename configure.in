@@ -274,9 +274,13 @@ CAIRO_BACKEND_ENABLE(xlib_xrender, Xlib Xrender, xlib-xrender, XLIB_XRENDER_SURF
     PKG_CHECK_MODULES(xlib_xrender, $xlib_xrender_REQUIRES, ,
 		      [AC_MSG_RESULT(no)
 		       xlib_xrender_REQUIRES=""
+		       old_CPPFLAGS=$CPPFLAGS
+		       CPPFLAGS="$CPPFLAGS $xlib_CFLAGS $xlib_NONPKGCONFIG_CFLAGS"
 		       AC_CHECK_HEADER(X11/extensions/Xrender.h,
 				       [xlib_xrender_NONPKGCONFIG_LIBS="-lXrender"],
-				       [use_xlib_xrender="no (requires Xrender http://freedesktop.org/Software/xlibs)"])])
+				       [use_xlib_xrender="no (requires Xrender http://freedesktop.org/Software/xlibs)"])
+		       CPPFLAGS=$old_CPPFLAGS
+		      ])
   fi
 ])
 
