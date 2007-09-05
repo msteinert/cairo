@@ -192,9 +192,9 @@ _cairo_meta_surface_acquire_source_image (void			 *abstract_surface,
     cairo_meta_surface_t *surface = abstract_surface;
     cairo_surface_t *image;
 
-    image = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
-					surface->width_pixels,
-					surface->height_pixels);
+    image = _cairo_image_surface_create_with_content (surface->content,
+						      surface->width_pixels,
+						      surface->height_pixels);
 
     status = _cairo_meta_surface_replay (&surface->base, image);
     if (status) {
