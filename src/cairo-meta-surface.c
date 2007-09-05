@@ -59,6 +59,12 @@
 #include "cairo-meta-surface-private.h"
 #include "cairo-clip-private.h"
 
+typedef enum {
+    CAIRO_META_REPLAY,
+    CAIRO_META_CREATE_REGIONS,
+    CAIRO_META_ANALYZE_META_PATTERN
+} cairo_meta_replay_type_t;
+
 static const cairo_surface_backend_t cairo_meta_surface_backend;
 
 /* Currently all meta surfaces do have a size which should be passed
@@ -186,9 +192,9 @@ _cairo_meta_surface_acquire_source_image (void			 *abstract_surface,
     cairo_meta_surface_t *surface = abstract_surface;
     cairo_surface_t *image;
 
-    image = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
-					surface->width_pixels,
-					surface->height_pixels);
+    image = _cairo_image_surface_create_with_content (surface->content,
+						      surface->width_pixels,
+						      surface->height_pixels);
 
     status = _cairo_meta_surface_replay (&surface->base, image);
     if (status) {
@@ -245,12 +251,6 @@ _cairo_meta_surface_paint (void			*abstract_surface,
     cairo_meta_surface_t *meta = abstract_surface;
     cairo_command_paint_t *command;
 
-    /* An optimisation that takes care to not replay what was done
-     * before surface is cleared. We don't erase recorded commands
-     * since we may have earlier snapshots of this surface. */
-    if (op == CAIRO_OPERATOR_CLEAR && !meta->is_clipped)
-	meta->replay_start_idx = meta->commands.num_elements;
-
     command = malloc (sizeof (cairo_command_paint_t));
     if (command == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
@@ -266,6 +266,12 @@ _cairo_meta_surface_paint (void			*abstract_surface,
     status = _cairo_array_append (&meta->commands, &command);
     if (status)
 	goto CLEANUP_SOURCE;
+
+    /* An optimisation that takes care to not replay what was done
+     * before surface is cleared. We don't erase recorded commands
+     * since we may have earlier snapshots of this surface. */
+    if (op == CAIRO_OPERATOR_CLEAR && !meta->is_clipped)
+	meta->replay_start_idx = meta->commands.num_elements;
 
     return CAIRO_STATUS_SUCCESS;
 
@@ -650,7 +656,7 @@ _cairo_command_get_path (cairo_command_t *command)
 static cairo_status_t
 _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 				     cairo_surface_t	     *target,
-				     cairo_bool_t	      create_regions,
+				     cairo_meta_replay_type_t type,
 				     cairo_meta_region_type_t region)
 {
     cairo_meta_surface_t *meta;
@@ -675,7 +681,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
     for (i = meta->replay_start_idx; i < num_elements; i++) {
 	command = elements[i];
 
-	if (!create_regions && region != CAIRO_META_REGION_ALL) {
+	if (type == CAIRO_META_REPLAY && region != CAIRO_META_REGION_ALL) {
 	    if (command->header.region != region)
 		continue;
         }
@@ -834,7 +840,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 	if (dev_path == &path_copy)
 	    _cairo_path_fixed_fini (&path_copy);
 
-	if (create_regions) {
+	if (type == CAIRO_META_CREATE_REGIONS) {
 	    if (status == CAIRO_STATUS_SUCCESS) {
 		command->header.region = CAIRO_META_REGION_NATIVE;
 	    } else if (status == CAIRO_INT_STATUS_IMAGE_FALLBACK) {
@@ -842,6 +848,12 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 		status = CAIRO_STATUS_SUCCESS;
 	    }
 	}
+
+	if (type == CAIRO_META_ANALYZE_META_PATTERN) {
+	    if (status == CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY)
+		status = CAIRO_STATUS_SUCCESS;
+	}
+
 	if (status)
 	    break;
     }
@@ -855,7 +867,20 @@ cairo_status_t
 _cairo_meta_surface_replay (cairo_surface_t *surface,
 			    cairo_surface_t *target)
 {
-    return _cairo_meta_surface_replay_internal (surface, target, FALSE, CAIRO_META_REGION_ALL);
+    return _cairo_meta_surface_replay_internal (surface,
+						target,
+						CAIRO_META_REPLAY,
+						CAIRO_META_REGION_ALL);
+}
+
+cairo_status_t
+_cairo_meta_surface_replay_analyze_meta_pattern (cairo_surface_t *surface,
+						 cairo_surface_t *target)
+{
+    return _cairo_meta_surface_replay_internal (surface,
+						target,
+						CAIRO_META_ANALYZE_META_PATTERN,
+						CAIRO_META_REGION_ALL);
 }
 
 /* Replay meta to surface. When the return status of each operation is
@@ -868,7 +893,10 @@ cairo_status_t
 _cairo_meta_surface_replay_and_create_regions (cairo_surface_t *surface,
 					       cairo_surface_t *target)
 {
-    return _cairo_meta_surface_replay_internal (surface, target, TRUE, CAIRO_META_REGION_ALL);
+    return _cairo_meta_surface_replay_internal (surface,
+						target,
+						CAIRO_META_CREATE_REGIONS,
+						CAIRO_META_REGION_ALL);
 }
 
 cairo_status_t
@@ -876,5 +904,8 @@ _cairo_meta_surface_replay_region (cairo_surface_t          *surface,
 				   cairo_surface_t          *target,
 				   cairo_meta_region_type_t  region)
 {
-    return _cairo_meta_surface_replay_internal (surface, target, FALSE, region);
+    return _cairo_meta_surface_replay_internal (surface,
+						target,
+						CAIRO_META_REPLAY,
+						region);
 }

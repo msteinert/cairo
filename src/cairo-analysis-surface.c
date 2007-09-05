@@ -39,6 +39,7 @@
 #include "cairo-analysis-surface-private.h"
 #include "cairo-paginated-private.h"
 #include "cairo-region-private.h"
+#include "cairo-meta-surface-private.h"
 
 typedef struct {
     cairo_surface_t base;
@@ -55,6 +56,33 @@ typedef struct {
     cairo_rectangle_int_t current_clip;
 
 } cairo_analysis_surface_t;
+
+static cairo_int_status_t
+_cairo_analysis_surface_analyze_meta_surface_pattern (cairo_analysis_surface_t *surface,
+						      cairo_pattern_t	       *pattern)
+{
+    cairo_surface_pattern_t *surface_pattern;
+    cairo_surface_t *meta_surface;
+    cairo_surface_t *analysis;
+    cairo_status_t status;
+
+    assert (pattern->type == CAIRO_PATTERN_TYPE_SURFACE);
+    surface_pattern = (cairo_surface_pattern_t *) pattern;
+    assert (_cairo_surface_is_meta (surface_pattern->surface));
+
+    meta_surface = surface_pattern->surface;
+    analysis = _cairo_analysis_surface_create (surface->target,
+					       surface->width, surface->height);
+    if (analysis == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    status = _cairo_meta_surface_replay_analyze_meta_pattern (meta_surface, analysis);
+    if (status == CAIRO_STATUS_SUCCESS)
+	    status = analysis->status;
+    cairo_surface_destroy (analysis);
+
+    return status;
+}
 
 static cairo_int_status_t
 _cairo_analysis_surface_add_operation  (cairo_analysis_surface_t *surface,
@@ -186,6 +214,10 @@ _cairo_analysis_surface_paint (void			*abstract_surface,
 	backend_status = (*surface->target->backend->paint) (surface->target, op,
                                                              source);
 
+    if (backend_status == CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN)
+	backend_status = _cairo_analysis_surface_analyze_meta_surface_pattern (surface,
+									       source);
+
     status = _cairo_surface_get_extents (&surface->base, &extents);
     if (status)
 	return status;
@@ -221,6 +253,28 @@ _cairo_analysis_surface_mask (void		*abstract_surface,
     else
 	backend_status = (*surface->target->backend->mask) (surface->target, op,
                                                             source, mask);
+
+    if (backend_status == CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN) {
+	if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	    cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) source;
+	    if (_cairo_surface_is_meta (surface_pattern->surface))
+		backend_status = _cairo_analysis_surface_analyze_meta_surface_pattern (surface,
+										       source);
+	    if (backend_status != CAIRO_STATUS_SUCCESS &&
+		backend_status != CAIRO_INT_STATUS_IMAGE_FALLBACK)
+		return backend_status;
+	}
+
+	if (mask->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	    cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) mask;
+	    if (_cairo_surface_is_meta (surface_pattern->surface))
+		backend_status = _cairo_analysis_surface_analyze_meta_surface_pattern (surface,
+										       mask);
+	    if (backend_status != CAIRO_STATUS_SUCCESS &&
+		backend_status != CAIRO_INT_STATUS_IMAGE_FALLBACK)
+		return backend_status;
+	}
+    }
 
     status = _cairo_surface_get_extents (&surface->base, &extents);
     if (status)
@@ -272,6 +326,10 @@ _cairo_analysis_surface_stroke (void			*abstract_surface,
 							      source, path, style,
 							      ctm, ctm_inverse,
 							      tolerance, antialias);
+
+    if (backend_status == CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN)
+	backend_status = _cairo_analysis_surface_analyze_meta_surface_pattern (surface,
+									       source);
 
     status = _cairo_surface_get_extents (&surface->base, &extents);
     if (status)
@@ -342,6 +400,10 @@ _cairo_analysis_surface_fill (void			*abstract_surface,
 						    source, path, fill_rule,
 						    tolerance, antialias);
 
+    if (backend_status == CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN)
+	backend_status = _cairo_analysis_surface_analyze_meta_surface_pattern (surface,
+									       source);
+
     status = _cairo_surface_get_extents (&surface->base, &extents);
     if (status)
 	return status;
@@ -408,6 +470,10 @@ _cairo_analysis_surface_show_glyphs (void		  *abstract_surface,
 							   source,
 							   glyphs, num_glyphs,
 							   scaled_font);
+
+    if (backend_status == CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN)
+	backend_status = _cairo_analysis_surface_analyze_meta_surface_pattern (surface,
+									       source);
 
     status = _cairo_surface_get_extents (&surface->base, &extents);
     if (status)

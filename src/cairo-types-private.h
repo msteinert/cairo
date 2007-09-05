@@ -136,7 +136,8 @@ typedef enum _cairo_int_status {
     CAIRO_INT_STATUS_NOTHING_TO_DO,
     CAIRO_INT_STATUS_CACHE_EMPTY,
     CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY,
-    CAIRO_INT_STATUS_IMAGE_FALLBACK
+    CAIRO_INT_STATUS_IMAGE_FALLBACK,
+    CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN,
 } cairo_int_status_t;
 
 typedef enum _cairo_internal_surface_type {
