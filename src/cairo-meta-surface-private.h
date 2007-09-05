@@ -164,6 +164,10 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 			    cairo_surface_t *target);
 
 cairo_private cairo_status_t
+_cairo_meta_surface_replay_analyze_meta_pattern (cairo_surface_t *surface,
+						 cairo_surface_t *target);
+
+cairo_private cairo_status_t
 _cairo_meta_surface_replay_and_create_regions (cairo_surface_t *surface,
 					       cairo_surface_t *target);
 cairo_private cairo_status_t

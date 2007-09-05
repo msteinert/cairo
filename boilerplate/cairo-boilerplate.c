@@ -284,16 +284,7 @@ static cairo_boilerplate_target_t targets[] =
       _cairo_boilerplate_pdf_surface_write_to_png,
       _cairo_boilerplate_pdf_cleanup,
       NULL, TRUE },
-
-    /* XXX: We expect type image here only due to a limitation in
-     * the current PDF/meta-surface code. A PDF surface is
-     * "naturally" COLOR_ALPHA, so the COLOR-only variant goes
-     * through create_similar in _cairo_boilerplate_pdf_create_surface which results
-     * in the similar surface being used as a source. We do not yet
-     * have source support for PDF/meta-surfaces, so the
-     * create_similar path for all paginated surfaces currently
-     * returns an image surface.*/
-    { "pdf", CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR, 0,
+    { "pdf", CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
       _cairo_boilerplate_pdf_create_surface,
       _cairo_boilerplate_pdf_surface_write_to_png,
       _cairo_boilerplate_pdf_cleanup,
