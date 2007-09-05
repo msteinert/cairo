@@ -735,6 +735,12 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
     width = bitmap->width;
     height = bitmap->rows;
 
+    if (width == 0 || height == 0) {
+	*surface = (cairo_image_surface_t *)
+	    cairo_image_surface_create_for_data (NULL, format, 0, 0, 0);
+	return (*surface)->base.status;
+    }
+
     switch (bitmap->pixel_mode) {
     case FT_PIXEL_MODE_MONO:
 	stride = (((width + 31) & ~31) >> 3);
