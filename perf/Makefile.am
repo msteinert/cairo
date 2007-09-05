@@ -67,10 +67,12 @@ $(top_builddir)/src/libcairo.la:
 
 # Do a funny transition of CAIRO_TEST_TARGET through TARGETS such that
 # one can limit tested targets both through CAIRO_TEST_TARGET env var
-# and TARGETS make var on the command line.
+# and TARGETS make var on the command line.  Same for the rest.
 TARGETS = $(CAIRO_TEST_TARGET)
+TARGETS_EXCLUDE = $(CAIRO_TEST_TARGET_EXCLUDE)
 ITERS = $(CAIRO_PERF_ITERATIONS)
-CAIRO_PERF_ENVIRONMENT = CAIRO_TEST_TARGET="$(TARGETS)" CAIRO_PERF_ITERATIONS="$(ITERS)"
+
+CAIRO_PERF_ENVIRONMENT = CAIRO_PERF_ITERATIONS="$(ITERS)" CAIRO_TEST_TARGET="$(TARGETS)" CAIRO_TEST_TARGET_EXCLUDE="$(TARGETS_EXCLUDE)"
 
 # Cap the maximum number of iterations during 'make check'
 TESTS_ENVIRONMENT = CAIRO_TEST_TARGET="$(TARGETS)" CAIRO_PERF_ITERATIONS="10"
