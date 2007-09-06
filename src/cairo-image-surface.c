@@ -208,6 +208,20 @@ _pixman_format_from_masks (cairo_format_masks_t *masks)
 	{
 	    return PIXMAN_x8r8g8b8;
 	}
+	if (masks->alpha_mask == 0xff000000 &&
+	    masks->red_mask   == 0x000000ff &&
+	    masks->green_mask == 0x0000ff00 &&
+	    masks->blue_mask  == 0x00ff0000)
+	{
+	    return PIXMAN_a8b8g8r8;
+	}
+	if (masks->alpha_mask == 0x00000000 &&
+	    masks->red_mask   == 0x000000ff &&
+	    masks->green_mask == 0x0000ff00 &&
+	    masks->blue_mask  == 0x00ff0000)
+	{
+	    return PIXMAN_x8b8g8r8;
+	}
 	break;
     case 16:
 	if (masks->alpha_mask == 0x0000 &&
@@ -276,6 +290,14 @@ _pixman_format_to_masks (pixman_format_code_t	 pixman_format,
 	*red   = 0x00ff0000;
 	*green = 0x0000ff00;
 	*blue  = 0x000000ff;
+	break;
+
+    case PIXMAN_a8b8g8r8:
+    case PIXMAN_x8b8g8r8:
+	*bpp   = 32;
+	*red   = 0x000000ff;
+	*green = 0x0000ff00;
+	*blue  = 0x00ff0000;
 	break;
 
     case PIXMAN_r5g6b5:
