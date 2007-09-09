@@ -1919,7 +1919,6 @@ cairo_pdf_surface_emit_transparency_group (cairo_pdf_surface_t  *surface,
                                  "<< /Type /Mask\r\n"
                                  "   /S /Luminosity\r\n"
                                  "   /G %d 0 R\r\n"
-                                 "   /BC [ 0.0 ]\r\n"
                                  ">>\r\n"
                                  "endobj\r\n",
                                  smask_resource.id,
@@ -3855,7 +3854,6 @@ _cairo_pdf_surface_mask	(void			*abstract_surface,
 				 "<< /Type /Mask\r\n"
 				 "   /S /Alpha\r\n"
 				 "   /G %d 0 R\r\n"
-				 "   /BC [ 0.0 ]\r\n"
 				 ">>\r\n"
 				 "endobj\r\n",
 				 smask.id,
