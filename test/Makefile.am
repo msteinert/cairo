@@ -59,6 +59,7 @@ linear-gradient			\
 linear-gradient-reflect		\
 long-lines			\
 mask				\
+mask-alpha			\
 mask-ctm			\
 mask-surface-ctm		\
 move-to-show-surface		\
