@@ -13,6 +13,7 @@ cairo_ft_scaled_font_unlock_face
 <TITLE>Win32 Fonts</TITLE>
 cairo_win32_font_face_create_for_logfontw
 cairo_win32_font_face_create_for_hfont
+cairo_win32_font_face_create_for_logfontw_hfont
 cairo_win32_scaled_font_select_font
 cairo_win32_scaled_font_done_font
 cairo_win32_scaled_font_get_metrics_factor
@@ -129,6 +130,8 @@ cairo_surface_get_type
 cairo_surface_get_reference_count
 cairo_surface_set_user_data
 cairo_surface_get_user_data
+cairo_surface_copy_page
+cairo_surface_show_page
 </SECTION>
 
 <SECTION>
