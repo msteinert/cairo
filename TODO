@@ -27,11 +27,6 @@ Changes that add new API (API changes/removals will not be considered)
 	current path. We may also need to provide the coordinates of the
 	faces of every dash as well.
 
- • cairo_surface_show_page() and cairo_surface_copy_page()
-	how_page is a surface operation and should have been there instead of
-	cairo_show_page() from the beginning.  Same about copy_page().
-	Implement the right API now.
-
  • Polling API (cairo_get_serial and cairo_changed)
 
  • cairo_save/restore_path()

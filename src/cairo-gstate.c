@@ -1086,13 +1086,13 @@ BAIL:
 cairo_status_t
 _cairo_gstate_copy_page (cairo_gstate_t *gstate)
 {
-    return _cairo_surface_copy_page (gstate->target);
+    return cairo_surface_copy_page (gstate->target);
 }
 
 cairo_status_t
 _cairo_gstate_show_page (cairo_gstate_t *gstate)
 {
-    return _cairo_surface_show_page (gstate->target);
+    return cairo_surface_show_page (gstate->target);
 }
 
 static void

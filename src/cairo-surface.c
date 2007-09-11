@@ -1585,8 +1585,19 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		op,
 							  traps, num_traps);
 }
 
+/**
+ * cairo_surface_copy_page:
+ * @suface: a #cairo_surface_t
+ *
+ * Emits the current page for backends that support multiple pages,
+ * but doesn't clear it, so that the contents of the current page will
+ * be retained for the next page.  Use cairo_surface_show_page() if you
+ * want to get an empty page after the emission.
+ *
+ * Since: 1.6
+ */
 cairo_status_t
-_cairo_surface_copy_page (cairo_surface_t *surface)
+cairo_surface_copy_page (cairo_surface_t *surface)
 {
     assert (! surface->is_snapshot);
 
@@ -1602,9 +1613,20 @@ _cairo_surface_copy_page (cairo_surface_t *surface)
 
     return surface->backend->copy_page (surface);
 }
+slim_hidden_def (cairo_surface_copy_page);
+
+/**
+ * cairo_surface_show_page:
+ * @surface: a #cairo_Surface_t
+ *
+ * Emits and clears the current page for backends that support multiple
+ * pages.  Use cairo_surface_copy_page() if you don't want to clear the page.
+ *
+ * Since: 1.6
+ **/
 
 cairo_status_t
-_cairo_surface_show_page (cairo_surface_t *surface)
+cairo_surface_show_page (cairo_surface_t *surface)
 {
     assert (! surface->is_snapshot);
 
@@ -1620,6 +1642,7 @@ _cairo_surface_show_page (cairo_surface_t *surface)
 
     return surface->backend->show_page (surface);
 }
+slim_hidden_def (cairo_surface_show_page);
 
 /**
  * _cairo_surface_get_current_clip_serial:

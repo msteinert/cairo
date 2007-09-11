@@ -1535,6 +1535,12 @@ cairo_surface_set_fallback_resolution (cairo_surface_t	*surface,
 				       double		 x_pixels_per_inch,
 				       double		 y_pixels_per_inch);
 
+cairo_public cairo_status_t
+cairo_surface_copy_page (cairo_surface_t *surface);
+
+cairo_public cairo_status_t
+cairo_surface_show_page (cairo_surface_t *surface);
+
 /* Image-surface functions */
 
 /**

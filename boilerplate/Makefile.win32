@@ -7,6 +7,10 @@ CFLAGS += -I../src
 
 SOURCES = \
 	cairo-boilerplate.c \
+	cairo-boilerplate-win32.c \
+	cairo-boilerplate-ps.c \
+	cairo-boilerplate-svg.c \
+	cairo-boilerplate-pdf.c \
 	xmalloc.c \
 	$(NULL)
 

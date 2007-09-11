@@ -2107,6 +2107,9 @@ slim_hidden_def(cairo_fill_preserve);
  * doesn't clear it, so, the contents of the current page will be retained
  * for the next page too.  Use cairo_show_page() if you want to get an
  * empty page after the emission.
+ *
+ * This is a convenience function that simply calls
+ * cairo_surface_copy_page() on @cr's target.
  **/
 void
 cairo_copy_page (cairo_t *cr)
@@ -2127,6 +2130,9 @@ cairo_copy_page (cairo_t *cr)
  *
  * Emits and clears the current page for backends that support multiple
  * pages.  Use cairo_copy_page() if you don't want to clear the page.
+ *
+ * This is a convenience function that simply calls
+ * cairo_surface_show_page() on @cr's target.
  **/
 void
 cairo_show_page (cairo_t *cr)

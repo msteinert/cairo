@@ -991,7 +991,7 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
 	return status;
     }
 
-    status = _cairo_surface_show_page (paginated_surface);
+    status = cairo_surface_show_page (paginated_surface);
     if (status) {
 	cairo_surface_destroy (&meta->base);
 	return status;

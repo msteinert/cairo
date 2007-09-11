@@ -1829,12 +1829,6 @@ _cairo_surface_composite_trapezoids (cairo_operator_t	op,
 				     int		ntraps);
 
 cairo_private cairo_status_t
-_cairo_surface_copy_page (cairo_surface_t *surface);
-
-cairo_private cairo_status_t
-_cairo_surface_show_page (cairo_surface_t *surface);
-
-cairo_private cairo_status_t
 _cairo_surface_acquire_source_image (cairo_surface_t         *surface,
 				     cairo_image_surface_t  **image_out,
 				     void                   **image_extra);
@@ -2455,6 +2449,8 @@ slim_hidden_proto (cairo_surface_mark_dirty_rectangle);
 slim_hidden_proto_no_warn (cairo_surface_reference);
 slim_hidden_proto (cairo_surface_set_device_offset);
 slim_hidden_proto (cairo_surface_set_fallback_resolution);
+slim_hidden_proto (cairo_surface_copy_page);
+slim_hidden_proto (cairo_surface_show_page);
 slim_hidden_proto (cairo_surface_status);
 slim_hidden_proto (cairo_version_string);
 

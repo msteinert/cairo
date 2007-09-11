@@ -376,14 +376,14 @@ _cairo_paginated_surface_copy_page (void *abstract_surface)
     surface->page_num++;
 
     /* XXX: It might make sense to add some suport here for calling
-     * _cairo_surface_copy_page on the target surface. It would be an
+     * cairo_surface_copy_page on the target surface. It would be an
      * optimization for the output, (so that PostScript could include
      * copypage, for example), but the interaction with image
      * fallbacks gets tricky. For now, we just let the target see a
      * show_page and we implement the copying by simply not destroying
      * the meta-surface. */
 
-    return _cairo_surface_show_page (surface->target);
+    return cairo_surface_show_page (surface->target);
 }
 
 static cairo_int_status_t
@@ -400,7 +400,7 @@ _cairo_paginated_surface_show_page (void *abstract_surface)
     if (status)
 	return status;
 
-    status = _cairo_surface_show_page (surface->target);
+    status = cairo_surface_show_page (surface->target);
     if (status)
 	return status;
 
