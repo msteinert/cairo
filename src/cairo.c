@@ -549,11 +549,11 @@ cairo_pattern_t *
 cairo_pop_group (cairo_t *cr)
 {
     cairo_surface_t *group_surface, *parent_target;
-    cairo_pattern_t *group_pattern = NULL;
+    cairo_pattern_t *group_pattern = (cairo_pattern_t*) &_cairo_pattern_nil.base;
     cairo_matrix_t group_matrix;
 
     if (cr->status)
-	return (cairo_pattern_t*) &_cairo_pattern_nil.base;
+	return group_pattern;
 
     /* Grab the active surfaces */
     group_surface = _cairo_gstate_get_target (cr->gstate);
@@ -562,7 +562,7 @@ cairo_pop_group (cairo_t *cr)
     /* Verify that we are at the right nesting level */
     if (parent_target == NULL) {
 	_cairo_set_error (cr, CAIRO_STATUS_INVALID_POP_GROUP);
-	return (cairo_pattern_t*) &_cairo_pattern_nil.base;
+	return group_pattern;
     }
 
     /* We need to save group_surface before we restore; we don't need
