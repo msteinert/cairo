@@ -1397,13 +1397,14 @@ _cairo_gstate_get_scaled_font (cairo_gstate_t       *gstate,
  *
  *   [ 12.0, 0.0, 0.0, 12.0, 0.0, 0.0 ]
  *
- * It is an affine matrix, like all cairo matrices, but its tx and ty
- * components are always set to zero; we don't permit "nudging" fonts
- * around.
+ * It is an affine matrix, like all cairo matrices, where its tx and ty
+ * components are used to "nudging" fonts around and are handled in gstate
+ * and then ignored by the "scaled-font" layer.
  *
  * In order to perform any action on a font, we must build an object
  * called a cairo_font_scale_t; this contains the central 2x2 matrix
- * resulting from "font matrix * CTM".
+ * resulting from "font matrix * CTM" (sans the font matrix translation
+ * components as stated in the previous paragraph).
  *
  * We pass this to the font when making requests of it, which causes it to
  * reply for a particular [user request, device] combination, under the CTM
