@@ -1543,7 +1543,7 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	 *surface,
      * pattern space, (which has a size that we establish in the BBox
      * dictionary entry), to the PDF page's *initial* space, (which
      * does not benefit from the Y-axis flipping matrix that we emit
-     * on each page). So the PDF patterns patrix maps from a
+     * on each page). So the PDF patterns matrix maps from a
      * (width,height) pattern space to a device space with the origin
      * in the lower-left corner.
      *
