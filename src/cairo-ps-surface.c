@@ -1267,7 +1267,7 @@ _cairo_ps_surface_start_page (void *abstract_surface)
 				 (int) ceil (surface->height));
 
     _cairo_output_stream_printf (surface->stream,
-				 "gsave %f %f translate 1.0 -1.0 scale \n",
+				 "gsave %f %f translate 1.0 -1.0 scale gsave\n",
 				 0.0, surface->height);
 
     _cairo_output_stream_printf (surface->stream,
@@ -1285,7 +1285,7 @@ static void
 _cairo_ps_surface_end_page (cairo_ps_surface_t *surface)
 {
     _cairo_output_stream_printf (surface->stream,
-				 "grestore\n");
+				 "grestore grestore\n");
 }
 
 static cairo_int_status_t
@@ -1884,7 +1884,7 @@ _cairo_ps_surface_intersect_clip_path (void		   *abstract_surface,
 #endif
 
     if (path == NULL) {
-	_cairo_output_stream_printf (stream, "initclip\n");
+	_cairo_output_stream_printf (stream, "grestore gsave\n");
 	return CAIRO_STATUS_SUCCESS;
     }
 
