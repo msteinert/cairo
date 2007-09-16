@@ -2279,6 +2279,8 @@ _cairo_pdf_surface_copy_page (void *abstract_surface)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
 
+    _cairo_pdf_surface_stop_content_stream (surface);
+
     return _cairo_pdf_surface_write_page (surface);
 }
 
