@@ -479,6 +479,17 @@ _cairo_analysis_surface_show_glyphs (void		  *abstract_surface,
     if (status)
 	return status;
 
+    if (_cairo_operator_bounded_by_source (op)) {
+	cairo_rectangle_int_t source_extents;
+	status = _cairo_pattern_get_extents (source, &source_extents);
+	if (status)
+	    return status;
+
+	_cairo_rectangle_intersect (&extents, &source_extents);
+    }
+
+    _cairo_rectangle_intersect (&extents, &surface->current_clip);
+
     if (_cairo_operator_bounded_by_mask (op)) {
 	status = _cairo_scaled_font_glyph_device_extents (scaled_font,
 							  glyphs,
@@ -490,7 +501,6 @@ _cairo_analysis_surface_show_glyphs (void		  *abstract_surface,
 	_cairo_rectangle_intersect (&extents, &glyph_extents);
     }
 
-    _cairo_rectangle_intersect (&extents, &surface->current_clip);
     status = _cairo_analysis_surface_add_operation (surface, &extents, backend_status);
 
     return status;
