@@ -124,6 +124,8 @@ struct _cairo_pdf_surface {
     cairo_paginated_mode_t paginated_mode;
 
     cairo_bool_t force_fallbacks;
+
+    cairo_surface_t *paginated_surface;
 };
 
 #endif /* CAIRO_PDF_SURFACE_PRIVATE_H */

@@ -128,6 +128,29 @@ _cairo_paginated_surface_get_target (cairo_surface_t *surface)
     return paginated_surface->target;
 }
 
+cairo_status_t
+_cairo_paginated_surface_set_size (cairo_surface_t 	*surface,
+				   int			 width,
+				   int			 height)
+{
+    cairo_paginated_surface_t *paginated_surface;
+
+    assert (_cairo_surface_is_paginated (surface));
+
+    paginated_surface = (cairo_paginated_surface_t *) surface;
+
+    paginated_surface->width = width;
+    paginated_surface->height = height;
+
+    cairo_surface_destroy (paginated_surface->meta);
+    paginated_surface->meta = _cairo_meta_surface_create (paginated_surface->content,
+							  width, height);
+    if (cairo_surface_status (paginated_surface->meta))
+	return cairo_surface_status (paginated_surface->meta);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_status_t
 _cairo_paginated_surface_finish (void *abstract_surface)
 {

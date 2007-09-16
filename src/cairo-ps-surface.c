@@ -817,10 +817,11 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 
     surface->dsc_comment_target = &surface->dsc_header_comments;
 
-    return _cairo_paginated_surface_create (&surface->base,
-					    CAIRO_CONTENT_COLOR_ALPHA,
-					    width, height,
-					    &cairo_ps_surface_paginated_backend);
+    surface->paginated_surface = _cairo_paginated_surface_create (&surface->base,
+								   CAIRO_CONTENT_COLOR_ALPHA,
+								   width, height,
+								   &cairo_ps_surface_paginated_backend);
+    return surface->paginated_surface;
 
  CLEANUP_OUTPUT_STREAM:
     status = _cairo_output_stream_destroy (surface->stream);
@@ -988,6 +989,11 @@ cairo_ps_surface_set_size (cairo_surface_t	*surface,
 
     ps_surface->width = width_in_points;
     ps_surface->height = height_in_points;
+    status = _cairo_paginated_surface_set_size (ps_surface->paginated_surface,
+						width_in_points,
+						height_in_points);
+    if (status)
+	_cairo_surface_set_error (surface, status);
 }
 
 /**

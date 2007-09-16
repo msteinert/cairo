@@ -357,10 +357,11 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
     _cairo_output_stream_printf (surface->output,
 				 "%%%c%c%c%c\r\n", 181, 237, 174, 251);
 
-    return _cairo_paginated_surface_create (&surface->base,
-					    CAIRO_CONTENT_COLOR_ALPHA,
-					    width, height,
-					    &cairo_pdf_surface_paginated_backend);
+    surface->paginated_surface = _cairo_paginated_surface_create (&surface->base,
+								  CAIRO_CONTENT_COLOR_ALPHA,
+								  width, height,
+								  &cairo_pdf_surface_paginated_backend);
+    return surface->paginated_surface;
 
 fail:
     free (surface);
@@ -513,6 +514,11 @@ cairo_pdf_surface_set_size (cairo_surface_t	*surface,
     pdf_surface->width = width_in_points;
     pdf_surface->height = height_in_points;
     cairo_matrix_init (&pdf_surface->cairo_to_pdf, 1, 0, 0, -1, 0, height_in_points);
+    status = _cairo_paginated_surface_set_size (pdf_surface->paginated_surface,
+						width_in_points,
+						height_in_points);
+    if (status)
+	_cairo_surface_set_error (surface, status);
 }
 
 static void
