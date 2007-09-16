@@ -180,7 +180,7 @@ _cairo_ps_surface_path_move_to (void *closure, cairo_point_t *point)
     path_info->has_sub_path = FALSE;
 
     _cairo_output_stream_printf (path_info->stream,
-				 "%f %f moveto ",
+				 "%f %f M ",
 				 _cairo_fixed_to_double (point->x),
 				 _cairo_fixed_to_double (point->y));
 
@@ -203,7 +203,7 @@ _cairo_ps_surface_path_line_to (void *closure, cairo_point_t *point)
     path_info->has_sub_path = TRUE;
 
     _cairo_output_stream_printf (path_info->stream,
-				 "%f %f lineto ",
+				 "%f %f L ",
 				 _cairo_fixed_to_double (point->x),
 				 _cairo_fixed_to_double (point->y));
 
@@ -221,7 +221,7 @@ _cairo_ps_surface_path_curve_to (void          *closure,
     path_info->has_sub_path = TRUE;
 
     _cairo_output_stream_printf (path_info->stream,
-				 "%f %f %f %f %f %f curveto ",
+				 "%f %f %f %f %f %f C ",
 				 _cairo_fixed_to_double (b->x),
 				 _cairo_fixed_to_double (b->y),
 				 _cairo_fixed_to_double (c->x),
@@ -244,7 +244,7 @@ _cairo_ps_surface_path_close_path (void *closure)
     }
 
     _cairo_output_stream_printf (path_info->stream,
-				 "closepath\n");
+				 "P\n");
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -2278,9 +2278,8 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     while (i < num_glyphs_unsigned) {
         if (glyph_ids[i].subset_id != current_subset_id) {
             _cairo_output_stream_printf (surface->stream,
-                                         "/CairoFont-%d-%d findfont\n"
-                                         "[ %f %f %f %f 0 0 ] makefont\n"
-                                         "setfont\n",
+                                         "/CairoFont-%d-%d "
+                                         "[ %f %f %f %f 0 0 ] selectfont\n",
                                          subset_glyph.font_id,
                                          glyph_ids[i].subset_id,
                                          scaled_font->scale.xx,
