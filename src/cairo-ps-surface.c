@@ -1289,18 +1289,6 @@ _cairo_ps_surface_end_page (cairo_ps_surface_t *surface)
 }
 
 static cairo_int_status_t
-_cairo_ps_surface_copy_page (void *abstract_surface)
-{
-    cairo_ps_surface_t *surface = abstract_surface;
-
-    _cairo_ps_surface_end_page (surface);
-
-    _cairo_output_stream_printf (surface->stream, "copypage\n");
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_int_status_t
 _cairo_ps_surface_show_page (void *abstract_surface)
 {
     cairo_ps_surface_t *surface = abstract_surface;
@@ -2387,7 +2375,7 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
     NULL, /* composite */
     NULL, /* fill_rectangles */
     NULL, /* composite_trapezoids */
-    _cairo_ps_surface_copy_page,
+    NULL, /* cairo_ps_surface_copy_page */
     _cairo_ps_surface_show_page,
     NULL, /* set_clip_region */
     _cairo_ps_surface_intersect_clip_path,
