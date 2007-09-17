@@ -51,7 +51,7 @@ $(srcdir)/ChangeLog:
 
 DISTCLEANFILES += ChangeLog.cache-*
 
-ChangeLog.cache-*..: .git
+ChangeLog.cache-*..: .git/HEAD
 
 ChangeLog%: $(srcdir)/ChangeLog%
 
