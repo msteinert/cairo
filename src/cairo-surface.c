@@ -197,8 +197,8 @@ _cairo_surface_init (cairo_surface_t			*surface,
     cairo_matrix_init_identity (&surface->device_transform);
     cairo_matrix_init_identity (&surface->device_transform_inverse);
 
-    surface->x_resolution = CAIRO_SURFACE_RESOLUTION_DEFAULT; 
-    surface->y_resolution = CAIRO_SURFACE_RESOLUTION_DEFAULT; 
+    surface->x_resolution = CAIRO_SURFACE_RESOLUTION_DEFAULT;
+    surface->y_resolution = CAIRO_SURFACE_RESOLUTION_DEFAULT;
 
     surface->x_fallback_resolution = CAIRO_SURFACE_FALLBACK_RESOLUTION_DEFAULT;
     surface->y_fallback_resolution = CAIRO_SURFACE_FALLBACK_RESOLUTION_DEFAULT;
