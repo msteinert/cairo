@@ -106,6 +106,13 @@ cairo 1.6 (scheduled for July 2007, targeting firefox and GNOME)
  • Debug environment variable to disable PDF compression (adrianj)
 	http://lists.freedesktop.org/archives/cairo/2007-February/009492.html
 
+cairo 1.8
+================================================================
+ • API to set surface metadata (title, author, etc). This should be a generic
+   surface API.
+        http://lists.freedesktop.org/archives/cairo/2006-April/006809.html
+        http://lists.cairographics.org/archives/cairo/2007-September/011441.html
+
 For other ideas that have been proposed for cairo but are not yet
 scheduled on the roadmap of any particular release, please see the
 TODO file next to this ROADMAP file.
