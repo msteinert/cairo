@@ -1159,13 +1159,15 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     char *alpha, *alpha_compressed;
     unsigned long alpha_size, alpha_compressed_size;
-    uint32_t *pixel;
+    uint32_t *pixel32;
+    uint8_t *pixel8;
     int i, x, y;
     cairo_bool_t opaque;
     uint8_t a;
 
     /* This is the only image format we support, which simplfies things. */
-    assert (image->format == CAIRO_FORMAT_ARGB32);
+    assert (image->format == CAIRO_FORMAT_ARGB32 ||
+	    image->format == CAIRO_FORMAT_A8 );
 
     alpha_size = image->height * image->width;
     alpha = malloc (alpha_size);
@@ -1177,13 +1179,24 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
     opaque = TRUE;
     i = 0;
     for (y = 0; y < image->height; y++) {
-	pixel = (uint32_t *) (image->data + y * image->stride);
+	if (image->format == CAIRO_FORMAT_ARGB32) {
+	    pixel32 = (uint32_t *) (image->data + y * image->stride);
 
-	for (x = 0; x < image->width; x++, pixel++) {
-	    a = (*pixel & 0xff000000) >> 24;
-	    alpha[i++] = a;
-	    if (a != 0xff)
-		opaque = FALSE;
+	    for (x = 0; x < image->width; x++, pixel32++) {
+		a = (*pixel32 & 0xff000000) >> 24;
+		alpha[i++] = a;
+		if (a != 0xff)
+		    opaque = FALSE;
+	    }
+	} else {
+	    pixel8 = (uint8_t *) (image->data + y * image->stride);
+
+	    for (x = 0; x < image->width; x++, pixel8++) {
+		a = *pixel8;
+		alpha[i++] = a;
+		if (a != 0xff)
+		    opaque = FALSE;
+	    }
 	}
     }
 
@@ -1245,7 +1258,9 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t   *surface,
      * _cairo_pdf_surface_analyze_operation which only accept source surfaces of
      * CONTENT_COLOR or CONTENT_COLOR_ALPHA.
      */
-    assert (image->format == CAIRO_FORMAT_RGB24 || image->format == CAIRO_FORMAT_ARGB32);
+    assert (image->format == CAIRO_FORMAT_RGB24 ||
+	    image->format == CAIRO_FORMAT_ARGB32 ||
+	    image->format == CAIRO_FORMAT_A8);
 
     rgb_size = image->height * image->width * 3;
     rgb = malloc (rgb_size);
@@ -1276,10 +1291,14 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t   *surface,
 		    rgb[i++] = (((*pixel & 0x00ff00) >>  8) * 255 + a / 2) / a;
 		    rgb[i++] = (((*pixel & 0x0000ff) >>  0) * 255 + a / 2) / a;
 		}
-	    } else {
+	    } else if (image->format == CAIRO_FORMAT_RGB24) {
 		rgb[i++] = (*pixel & 0x00ff0000) >> 16;
 		rgb[i++] = (*pixel & 0x0000ff00) >>  8;
 		rgb[i++] = (*pixel & 0x000000ff) >>  0;
+	    } else {
+		rgb[i++] = 0;
+		rgb[i++] = 0;
+		rgb[i++] = 0;
 	    }
 	}
     }
@@ -1291,7 +1310,8 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t   *surface,
     }
 
     need_smask = FALSE;
-    if (image->format == CAIRO_FORMAT_ARGB32) {
+    if (image->format == CAIRO_FORMAT_ARGB32 ||
+	image->format == CAIRO_FORMAT_A8) {
 	status = _cairo_pdf_surface_emit_smask (surface, image, &smask);
 	if (status)
 	    goto CLEANUP_COMPRESSED;
