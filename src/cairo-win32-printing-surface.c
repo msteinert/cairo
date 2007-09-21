@@ -147,11 +147,10 @@ _cairo_win32_printing_surface_analyze_operation (cairo_win32_surface_t *surface,
 	op == CAIRO_OPERATOR_CLEAR)
 	return CAIRO_STATUS_SUCCESS;
 
-    /* If IGNORE_OPERATORS was set, then we pretend everything is
-     * OVER/SOURCE.  Otherwise, we go to fallback.
+    /* If the operation is anything other than CLEAR, SOURCE, or
+     * OVER, we have to go to fallback.
      */
-    if (!(surface->flags & CAIRO_WIN32_SURFACE_IGNORE_OPERATORS) &&
-	op != CAIRO_OPERATOR_OVER)
+    if (op != CAIRO_OPERATOR_OVER)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* CAIRO_OPERATOR_OVER is only supported for opaque patterns. If
@@ -1084,8 +1083,6 @@ _cairo_win32_printing_surface_set_paginated_mode (void *abstract_surface,
 /**
  * cairo_win32_printing_surface_create:
  * @hdc: the DC to create a surface for
- * @ignore_operators: whether operators other than CLEAR and OVER
- *   should be treated as SOURCE
  *
  * Creates a cairo surface that targets the given DC.  The DC will be
  * queried for its initial clip extents, and this will be used as the
@@ -1097,13 +1094,10 @@ _cairo_win32_printing_surface_set_paginated_mode (void *abstract_surface,
  * provide correct complex renderinf behaviour; show_page() and
  * associated methods must be used for correct output.
  *
- * If ignore_operators is TRUE, the rendering may be incorrect;
- * however, the chances of hitting fallback code are much reduced.
- *
  * Return value: the newly created surface
  **/
 cairo_surface_t *
-cairo_win32_printing_surface_create (HDC hdc, cairo_bool_t ignore_operators)
+cairo_win32_printing_surface_create (HDC hdc)
 {
     cairo_win32_surface_t *surface;
     RECT rect;
@@ -1155,8 +1149,6 @@ cairo_win32_printing_surface_create (HDC hdc, cairo_bool_t ignore_operators)
 
     surface->flags = _cairo_win32_flags_for_dc (surface->dc);
     surface->flags |= CAIRO_WIN32_SURFACE_FOR_PRINTING;
-    if (ignore_operators)
-	surface->flags |= CAIRO_WIN32_SURFACE_IGNORE_OPERATORS;
     surface->clip_saved_dc = 0;
 
     _cairo_win32_printing_surface_init_ps_mode (surface);
