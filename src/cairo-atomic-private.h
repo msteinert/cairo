@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2007 Mathias Hasselmann
+ * Copyright © 2007 Chris Wilson
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,28 +27,55 @@
  *
  * The Original Code is the cairo graphics library.
  *
+ * The Initial Developer of the Original Code is University of Southern
+ * California.
+ *
  * Contributor(s):
- *	Mathias Hasselmann <mathias.hasselmann@gmx.de>
+ *	Chris Wilson <chris@chris-wilson.co.uk>
  */
 
+#ifndef CAIRO_ATOMIC_PRIVATE_H
+#define CAIRO_ATOMIC_PRIVATE_H
 
-CAIRO_MUTEX_DECLARE (_cairo_pattern_solid_pattern_cache_lock);
-CAIRO_MUTEX_DECLARE (_cairo_pattern_solid_surface_cache_lock);
-
-CAIRO_MUTEX_DECLARE (_cairo_font_face_mutex);
-CAIRO_MUTEX_DECLARE (_cairo_scaled_font_map_mutex);
-
-#if CAIRO_HAS_FT_FONT
-CAIRO_MUTEX_DECLARE (_cairo_ft_unscaled_font_map_mutex);
+#if HAVE_CONFIG_H
+#include "config.h"
 #endif
 
-#if CAIRO_HAS_XLIB_SURFACE
-CAIRO_MUTEX_DECLARE (_cairo_xlib_display_mutex);
+CAIRO_BEGIN_DECLS
+
+#define CAIRO_HAS_ATOMIC_OPS 1
+
+#if CAIRO_HAS_INTEL_ATOMIC_PRIMITIVES
+
+typedef int cairo_atomic_int_t;
+
+# define _cairo_atomic_int_inc(x) ((void) __sync_fetch_and_add(x, 1))
+# define _cairo_atomic_int_dec_and_test(x) (__sync_fetch_and_add(x, -1) == 1)
+# define _cairo_atomic_int_get(x) (*x)
+# define _cairo_atomic_int_set(x, value) ((*x) = value)
+
+#else
+
+# include "cairo-compiler-private.h"
+
+# undef CAIRO_HAS_ATOMIC_OPS
+
+typedef int cairo_atomic_int_t;
+
+cairo_private void
+_cairo_atomic_int_inc (int *x);
+
+cairo_private cairo_bool_t
+_cairo_atomic_int_dec_and_test (int *x);
+
+cairo_private int
+_cairo_atomic_int_get (int *x);
+
+cairo_private void
+_cairo_atomic_int_set (int *x, int value);
+
 #endif
 
-#ifndef CAIRO_HAS_ATOMIC_OPS
-CAIRO_MUTEX_DECLARE (_cairo_atomic_mutex);
-#endif
+CAIRO_END_DECLS
 
-/* Undefine, to err on unintended inclusion */
-#undef   CAIRO_MUTEX_DECLARE
+#endif

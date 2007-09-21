@@ -89,6 +89,22 @@ dnl ===========================================================================
 
 AC_CHECK_FUNCS(vasnprintf)
 	
+dnl ===========================================================================
+dnl
+dnl Test for native atomic operations.
+dnl
+AC_MSG_CHECKING([for native atomic primitives])
+cairo_atomic_primitives="none"
+
+AC_TRY_COMPILE([int atomic_add(int i) { return __sync_fetch_and_add (&i, 1); }], [],
+  AC_DEFINE(CAIRO_HAS_INTEL_ATOMIC_PRIMITIVES, 1, [Enable if your compiler supports the Intel __sync_* atomic primitives])
+  cairo_atomic_primitives="Intel"
+  )
+
+AC_MSG_RESULT([$cairo_atomic_primitives])
+
+dnl ===========================================================================
+
 AC_CHECK_LIBM
 LIBS="$LIBS $LIBM"
 

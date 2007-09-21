@@ -172,6 +172,8 @@ libcairo_la_base_sources =			\
 	cairo-arc.c				\
 	cairo-arc-private.h			\
 	cairo-array.c				\
+	cairo-atomic.c				\
+	cairo-atomic-private.h			\
 	cairo-base85-stream.c			\
 	cairo-bentley-ottmann.c			\
 	cairo-cache.c				\

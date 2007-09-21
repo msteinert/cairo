@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2007 Mathias Hasselmann
+ * Copyright © 2007 Chris Wilson
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -28,27 +28,52 @@
  * The Original Code is the cairo graphics library.
  *
  * Contributor(s):
- *	Mathias Hasselmann <mathias.hasselmann@gmx.de>
+ *	Chris Wilson <chris@chris-wilson.co.uk>
  */
 
+#include "cairoint.h"
 
-CAIRO_MUTEX_DECLARE (_cairo_pattern_solid_pattern_cache_lock);
-CAIRO_MUTEX_DECLARE (_cairo_pattern_solid_surface_cache_lock);
-
-CAIRO_MUTEX_DECLARE (_cairo_font_face_mutex);
-CAIRO_MUTEX_DECLARE (_cairo_scaled_font_map_mutex);
-
-#if CAIRO_HAS_FT_FONT
-CAIRO_MUTEX_DECLARE (_cairo_ft_unscaled_font_map_mutex);
-#endif
-
-#if CAIRO_HAS_XLIB_SURFACE
-CAIRO_MUTEX_DECLARE (_cairo_xlib_display_mutex);
-#endif
+#include "cairo-atomic-private.h"
+#include "cairo-mutex-private.h"
 
 #ifndef CAIRO_HAS_ATOMIC_OPS
-CAIRO_MUTEX_DECLARE (_cairo_atomic_mutex);
-#endif
+void
+_cairo_atomic_int_inc (int *x)
+{
+    CAIRO_MUTEX_LOCK (_cairo_atomic_mutex);
+    *x += 1;
+    CAIRO_MUTEX_UNLOCK (_cairo_atomic_mutex);
+}
 
-/* Undefine, to err on unintended inclusion */
-#undef   CAIRO_MUTEX_DECLARE
+cairo_bool_t
+_cairo_atomic_int_dec_and_test (int *x)
+{
+    cairo_bool_t ret;
+
+    CAIRO_MUTEX_LOCK (_cairo_atomic_mutex);
+    ret = --*x == 0;
+    CAIRO_MUTEX_UNLOCK (_cairo_atomic_mutex);
+
+    return ret;
+}
+
+int
+_cairo_atomic_int_get (int *x)
+{
+    int ret;
+
+    CAIRO_MUTEX_LOCK (_cairo_atomic_mutex);
+    ret = *x;
+    CAIRO_MUTEX_UNLOCK (_cairo_atomic_mutex);
+
+    return ret;
+}
+
+void
+_cairo_atomic_int_set (int *x, int value)
+{
+    CAIRO_MUTEX_LOCK (_cairo_atomic_mutex);
+    *x = value;
+    CAIRO_MUTEX_UNLOCK (_cairo_atomic_mutex);
+}
+#endif
