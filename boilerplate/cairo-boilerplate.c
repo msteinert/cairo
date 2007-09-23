@@ -417,11 +417,6 @@ cairo_boilerplate_get_targets (int *pnum_targets, cairo_bool_t *plimited_targets
 	    }
 	    num_targets = j;
 
-	    if (!found) {
-		fprintf (stderr, "Cannot find target '%.*s'\n", (int)(end - tname), tname);
-		exit(-1);
-	    }
-
 	    if (*end)
 	      end++;
 	    tname = end;
