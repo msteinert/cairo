@@ -110,8 +110,6 @@ do {					\
     assert (NOT_REACHED);		\
 } while (0)
 
-#define CAIRO_REF_COUNT_INVALID ((unsigned int) -1)
-
 #define CAIRO_ALPHA_IS_OPAQUE(alpha) ((alpha) >= ((double)0xff00 / (double)0xffff))
 #define CAIRO_ALPHA_SHORT_IS_OPAQUE(alpha) ((alpha) >= 0xff00)
 #define CAIRO_ALPHA_IS_ZERO(alpha) ((alpha) <= 0.0)
@@ -168,6 +166,7 @@ be32_to_cpu(uint32_t v)
 #include "cairo-types-private.h"
 #include "cairo-cache-private.h"
 #include "cairo-fixed-private.h"
+#include "cairo-reference-count-private.h"
 
 typedef struct _cairo_region cairo_region_t;
 
@@ -384,9 +383,9 @@ typedef struct _cairo_unscaled_font_backend cairo_unscaled_font_backend_t;
  * glyph cache.
  */
 typedef struct _cairo_unscaled_font {
-    cairo_hash_entry_t hash_entry;
-    unsigned int ref_count;
-    const cairo_unscaled_font_backend_t *backend;
+    cairo_hash_entry_t			 hash_entry;
+    cairo_reference_count_t		 ref_count;
+    const cairo_unscaled_font_backend_t	*backend;
 } cairo_unscaled_font_t;
 
 typedef struct _cairo_scaled_glyph {
@@ -410,7 +409,7 @@ struct _cairo_font_face {
     /* hash_entry must be first */
     cairo_hash_entry_t hash_entry;
     cairo_status_t status;
-    unsigned int ref_count;
+    cairo_reference_count_t ref_count;
     cairo_user_data_array_t user_data;
     const cairo_font_face_backend_t *backend;
 };
@@ -883,14 +882,14 @@ typedef enum {
 #define CAIRO_FILTER_DEFAULT CAIRO_FILTER_BEST
 
 struct _cairo_pattern {
-    cairo_pattern_type_t    type;
-    unsigned int	    ref_count;
-    cairo_status_t          status;
-    cairo_user_data_array_t user_data;
+    cairo_pattern_type_t	type;
+    cairo_reference_count_t	ref_count;
+    cairo_status_t		status;
+    cairo_user_data_array_t	user_data;
 
-    cairo_matrix_t	    matrix;
-    cairo_filter_t	    filter;
-    cairo_extend_t	    extend;
+    cairo_matrix_t		matrix;
+    cairo_filter_t		filter;
+    cairo_extend_t		extend;
 };
 
 typedef struct _cairo_solid_pattern {

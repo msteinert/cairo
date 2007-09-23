@@ -180,7 +180,7 @@ _cairo_scaled_glyph_destroy (void *abstract_glyph)
 const cairo_scaled_font_t _cairo_scaled_font_nil = {
     { 0 },			/* hash_entry */
     CAIRO_STATUS_NO_MEMORY,	/* status */
-    CAIRO_REF_COUNT_INVALID,	/* ref_count */
+    CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
     { 0, 0, 0, NULL },		/* user_data */
     NULL,			/* font_face */
     { 1., 0., 0., 1., 0, 0},	/* font_matrix */
@@ -241,7 +241,7 @@ _cairo_scaled_font_set_error (cairo_scaled_font_t *scaled_font,
 cairo_font_type_t
 cairo_scaled_font_get_type (cairo_scaled_font_t *scaled_font)
 {
-    if (scaled_font->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (CAIRO_REFERENCE_COUNT_IS_INVALID (&scaled_font->ref_count))
 	return CAIRO_FONT_TYPE_TOY;
 
     return scaled_font->backend->type;
@@ -352,7 +352,7 @@ _cairo_scaled_font_map_destroy (void)
 	/* We should only get here through the reset_static_data path
 	 * and there had better not be any active references at that
 	 * point. */
-	assert (scaled_font->ref_count == 0);
+	assert (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&scaled_font->ref_count));
 	_cairo_hash_table_remove (font_map->hash_table,
 				  &scaled_font->hash_entry);
 	_cairo_scaled_font_fini (scaled_font);
@@ -483,7 +483,7 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
     if (scaled_font->glyphs == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
 
-    scaled_font->ref_count = 1;
+    CAIRO_REFERENCE_COUNT_INIT (&scaled_font->ref_count, 1);
 
     _cairo_user_data_array_init (&scaled_font->user_data);
 
@@ -613,7 +613,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	 * been found in font_map->holdovers, (which means this caching is
 	 * actually working). So now we remove it from the holdovers
 	 * array. */
-	if (scaled_font->ref_count == 0) {
+	if (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&scaled_font->ref_count)) {
 	    int i;
 
 	    for (i = 0; i < font_map->num_holdovers; i++)
@@ -635,7 +635,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	     * than calling into cairo_scaled_font_reference), since we
 	     * must modify the reference count while our lock is still
 	     * held. */
-	    scaled_font->ref_count++;
+	    _cairo_reference_count_inc (&scaled_font->ref_count);
 	    _cairo_scaled_font_map_unlock ();
 	    return scaled_font;
 	}
@@ -686,16 +686,13 @@ slim_hidden_def (cairo_scaled_font_create);
 cairo_scaled_font_t *
 cairo_scaled_font_reference (cairo_scaled_font_t *scaled_font)
 {
-    if (scaled_font == NULL || scaled_font->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (scaled_font == NULL ||
+	    CAIRO_REFERENCE_COUNT_IS_INVALID (&scaled_font->ref_count))
 	return scaled_font;
 
-    _cairo_scaled_font_map_lock ();
-    {
-	assert (scaled_font->ref_count > 0);
+    assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&scaled_font->ref_count));
 
-	scaled_font->ref_count++;
-    }
-    _cairo_scaled_font_map_unlock ();
+    _cairo_reference_count_inc (&scaled_font->ref_count);
 
     return scaled_font;
 }
@@ -715,38 +712,37 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
     cairo_scaled_font_map_t *font_map;
     cairo_scaled_font_t *lru = NULL;
 
-    if (scaled_font == NULL || scaled_font->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (scaled_font == NULL ||
+	    CAIRO_REFERENCE_COUNT_IS_INVALID (&scaled_font->ref_count))
 	return;
 
     font_map = _cairo_scaled_font_map_lock ();
-    {
-	assert (font_map != NULL);
+    assert (font_map != NULL);
 
-	assert (scaled_font->ref_count > 0);
+    assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&scaled_font->ref_count));
 
-	if (--(scaled_font->ref_count) == 0)
+    if (_cairo_reference_count_dec_and_test (&scaled_font->ref_count)) {
+	/* Rather than immediately destroying this object, we put it into
+	 * the font_map->holdovers array in case it will get used again
+	 * soon (and is why we must hold the lock over the atomic op on
+	 * the reference count). To make room for it, we do actually
+	 * destroy the least-recently-used holdover.
+	 */
+	if (font_map->num_holdovers == CAIRO_SCALED_FONT_MAX_HOLDOVERS)
 	{
-	    /* Rather than immediately destroying this object, we put it into
-	     * the font_map->holdovers array in case it will get used again
-	     * soon. To make room for it, we do actually destroy the
-	     * least-recently-used holdover.
-	     */
-	    if (font_map->num_holdovers == CAIRO_SCALED_FONT_MAX_HOLDOVERS)
-	    {
-		lru = font_map->holdovers[0];
-		assert (lru->ref_count == 0);
+	    lru = font_map->holdovers[0];
+	    assert (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&lru->ref_count));
 
-		_cairo_hash_table_remove (font_map->hash_table, &lru->hash_entry);
+	    _cairo_hash_table_remove (font_map->hash_table, &lru->hash_entry);
 
-		font_map->num_holdovers--;
-		memmove (&font_map->holdovers[0],
-			 &font_map->holdovers[1],
-			 font_map->num_holdovers * sizeof (cairo_scaled_font_t*));
-	    }
-
-	    font_map->holdovers[font_map->num_holdovers] = scaled_font;
-	    font_map->num_holdovers++;
+	    font_map->num_holdovers--;
+	    memmove (&font_map->holdovers[0],
+		     &font_map->holdovers[1],
+		     font_map->num_holdovers * sizeof (cairo_scaled_font_t*));
 	}
+
+	font_map->holdovers[font_map->num_holdovers] = scaled_font;
+	font_map->num_holdovers++;
     }
     _cairo_scaled_font_map_unlock ();
 
@@ -777,10 +773,11 @@ slim_hidden_def (cairo_scaled_font_destroy);
 unsigned int
 cairo_scaled_font_get_reference_count (cairo_scaled_font_t *scaled_font)
 {
-    if (scaled_font == NULL || scaled_font->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (scaled_font == NULL ||
+	    CAIRO_REFERENCE_COUNT_IS_INVALID (&scaled_font->ref_count))
 	return 0;
 
-    return scaled_font->ref_count;
+    return CAIRO_REFERENCE_COUNT_GET_VALUE (&scaled_font->ref_count);
 }
 
 /**
@@ -829,7 +826,7 @@ cairo_scaled_font_set_user_data (cairo_scaled_font_t	     *scaled_font,
 				 void			     *user_data,
 				 cairo_destroy_func_t	      destroy)
 {
-    if (scaled_font->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (CAIRO_REFERENCE_COUNT_IS_INVALID (&scaled_font->ref_count))
 	return CAIRO_STATUS_NO_MEMORY;
 
     return _cairo_user_data_array_set_data (&scaled_font->user_data,

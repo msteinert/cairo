@@ -45,7 +45,7 @@
 #define CAIRO_TOLERANCE_MINIMUM	0.0002 /* We're limited by 16 bits of sub-pixel precision */
 
 static const cairo_t _cairo_nil = {
-  CAIRO_REF_COUNT_INVALID,	/* ref_count */
+  CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
   CAIRO_STATUS_NO_MEMORY,	/* status */
   { 0, 0, 0, NULL },		/* user_data */
   NULL,				/* gstate */
@@ -199,7 +199,7 @@ cairo_create (cairo_surface_t *target)
     if (cr == NULL)
 	return (cairo_t *) &_cairo_nil;
 
-    cr->ref_count = 1;
+    CAIRO_REFERENCE_COUNT_INIT (&cr->ref_count, 1);
 
     cr->status = CAIRO_STATUS_SUCCESS;
 
@@ -232,12 +232,12 @@ slim_hidden_def (cairo_create);
 cairo_t *
 cairo_reference (cairo_t *cr)
 {
-    if (cr == NULL || cr->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (cr == NULL || CAIRO_REFERENCE_COUNT_IS_INVALID (&cr->ref_count))
 	return cr;
 
-    assert (cr->ref_count > 0);
+    assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&cr->ref_count));
 
-    cr->ref_count++;
+    _cairo_reference_count_inc (&cr->ref_count);
 
     return cr;
 }
@@ -253,13 +253,12 @@ cairo_reference (cairo_t *cr)
 void
 cairo_destroy (cairo_t *cr)
 {
-    if (cr == NULL || cr->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (cr == NULL || CAIRO_REFERENCE_COUNT_IS_INVALID (&cr->ref_count))
 	return;
 
-    assert (cr->ref_count > 0);
+    assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&cr->ref_count));
 
-    cr->ref_count--;
-    if (cr->ref_count)
+    if (! _cairo_reference_count_dec_and_test (&cr->ref_count))
 	return;
 
     while (cr->gstate != cr->gstate_tail) {
@@ -323,7 +322,7 @@ cairo_set_user_data (cairo_t			 *cr,
 		     void			 *user_data,
 		     cairo_destroy_func_t	 destroy)
 {
-    if (cr->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (CAIRO_REFERENCE_COUNT_IS_INVALID (&cr->ref_count))
 	return CAIRO_STATUS_NO_MEMORY;
 
     return _cairo_user_data_array_set_data (&cr->user_data,
@@ -344,10 +343,10 @@ cairo_set_user_data (cairo_t			 *cr,
 unsigned int
 cairo_get_reference_count (cairo_t *cr)
 {
-    if (cr == NULL || cr->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (cr == NULL || CAIRO_REFERENCE_COUNT_IS_INVALID (&cr->ref_count))
 	return 0;
 
-    return cr->ref_count;
+    return CAIRO_REFERENCE_COUNT_GET_VALUE (&cr->ref_count);
 }
 
 /**

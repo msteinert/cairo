@@ -42,7 +42,7 @@ static const cairo_image_surface_t _cairo_image_surface_nil_invalid_format = {
 	&cairo_image_surface_backend,	/* backend */
 	CAIRO_SURFACE_TYPE_IMAGE,
 	CAIRO_CONTENT_COLOR,
-	CAIRO_REF_COUNT_INVALID,	/* ref_count */
+	CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
 	CAIRO_STATUS_INVALID_FORMAT,	/* status */
 	FALSE,				/* finished */
 	{ 0,	/* size */

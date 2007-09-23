@@ -209,6 +209,7 @@ libcairo_la_base_sources =			\
 	cairo-pen.c				\
 	cairo-polygon.c				\
 	cairo-rectangle.c			\
+	cairo-reference-count-private.h		\
 	cairo-region.c				\
 	cairo-scaled-font.c			\
 	cairo-scaled-font-private.h		\

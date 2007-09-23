@@ -39,6 +39,7 @@
 
 #include "cairo-compiler-private.h"
 #include "cairo-freelist-private.h"
+#include "cairo-reference-count-private.h"
 #include "cairo-xlib-xrender-private.h"
 
 #include <X11/Xutil.h> /* for XDestroyImage */
@@ -58,7 +59,7 @@ struct _cairo_xlib_hook {
 
 struct _cairo_xlib_display {
     cairo_xlib_display_t *next;
-    unsigned int ref_count;
+    cairo_reference_count_t ref_count;
     cairo_mutex_t mutex;
 
     Display *display;
@@ -74,7 +75,7 @@ struct _cairo_xlib_display {
 
 struct _cairo_xlib_screen_info {
     cairo_xlib_screen_info_t *next;
-    unsigned int ref_count;
+    cairo_reference_count_t ref_count;
 
     cairo_xlib_display_t *display;
     Screen *screen;

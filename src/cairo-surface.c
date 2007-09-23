@@ -46,7 +46,7 @@ const cairo_surface_t name = {					\
     &cairo_image_surface_backend,	/* backend */		\
     CAIRO_SURFACE_TYPE_IMAGE,					\
     CAIRO_CONTENT_COLOR,					\
-    CAIRO_REF_COUNT_INVALID,		/* ref_count */		\
+    CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */		\
     status,				/* status */		\
     FALSE,				/* finished */		\
     { 0,	/* size */					\
@@ -188,7 +188,7 @@ _cairo_surface_init (cairo_surface_t			*surface,
     surface->content = content;
     surface->type = backend->type;
 
-    surface->ref_count = 1;
+    CAIRO_REFERENCE_COUNT_INIT (&surface->ref_count, 1);
     surface->status = CAIRO_STATUS_SUCCESS;
     surface->finished = FALSE;
 
@@ -372,12 +372,13 @@ _cairo_surface_get_clip_mode (cairo_surface_t *surface)
 cairo_surface_t *
 cairo_surface_reference (cairo_surface_t *surface)
 {
-    if (surface == NULL || surface->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (surface == NULL ||
+	    CAIRO_REFERENCE_COUNT_IS_INVALID (&surface->ref_count))
 	return surface;
 
-    assert (surface->ref_count > 0);
+    assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&surface->ref_count));
 
-    surface->ref_count++;
+    _cairo_reference_count_inc (&surface->ref_count);
 
     return surface;
 }
@@ -394,13 +395,13 @@ slim_hidden_def (cairo_surface_reference);
 void
 cairo_surface_destroy (cairo_surface_t *surface)
 {
-    if (surface == NULL || surface->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (surface == NULL ||
+	    CAIRO_REFERENCE_COUNT_IS_INVALID (&surface->ref_count))
 	return;
 
-    assert (surface->ref_count > 0);
+    assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&surface->ref_count));
 
-    surface->ref_count--;
-    if (surface->ref_count)
+    if (! _cairo_reference_count_dec_and_test (&surface->ref_count))
 	return;
 
     if (! surface->finished)
@@ -422,10 +423,11 @@ slim_hidden_def(cairo_surface_destroy);
 cairo_status_t
 _cairo_surface_reset (cairo_surface_t *surface)
 {
-    if (surface == NULL || surface->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (surface == NULL ||
+	    CAIRO_REFERENCE_COUNT_IS_INVALID (&surface->ref_count))
 	return CAIRO_STATUS_SUCCESS;
 
-    assert (surface->ref_count == 1);
+    assert (CAIRO_REFERENCE_COUNT_GET_VALUE (&surface->ref_count) == 1);
 
     _cairo_user_data_array_fini (&surface->user_data);
 
@@ -454,10 +456,11 @@ _cairo_surface_reset (cairo_surface_t *surface)
 unsigned int
 cairo_surface_get_reference_count (cairo_surface_t *surface)
 {
-    if (surface == NULL || surface->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (surface == NULL ||
+	    CAIRO_REFERENCE_COUNT_IS_INVALID (&surface->ref_count))
 	return 0;
 
-    return surface->ref_count;
+    return CAIRO_REFERENCE_COUNT_GET_VALUE (&surface->ref_count);
 }
 
 /**
@@ -486,7 +489,7 @@ cairo_surface_finish (cairo_surface_t *surface)
     if (surface == NULL)
 	return;
 
-    if (surface->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (CAIRO_REFERENCE_COUNT_IS_INVALID (&surface->ref_count))
 	return;
 
     if (surface->finished) {
@@ -557,7 +560,7 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
 			     void			 *user_data,
 			     cairo_destroy_func_t	 destroy)
 {
-    if (surface->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (CAIRO_REFERENCE_COUNT_IS_INVALID (&surface->ref_count))
 	return CAIRO_STATUS_NO_MEMORY;
 
     return _cairo_user_data_array_set_data (&surface->user_data,

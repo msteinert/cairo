@@ -127,13 +127,9 @@ _cairo_xlib_display_reference (cairo_xlib_display_t *display)
     if (display == NULL)
 	return NULL;
 
-    /* use our mutex until we get a real atomic inc */
-    CAIRO_MUTEX_LOCK (display->mutex);
+    assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&display->ref_count));
 
-    assert (display->ref_count > 0);
-    display->ref_count++;
-
-    CAIRO_MUTEX_UNLOCK (display->mutex);
+    _cairo_reference_count_inc (&display->ref_count);
 
     return display;
 }
@@ -144,27 +140,25 @@ _cairo_xlib_display_destroy (cairo_xlib_display_t *display)
     if (display == NULL)
 	return;
 
-    CAIRO_MUTEX_LOCK (display->mutex);
-    assert (display->ref_count > 0);
-    if (--display->ref_count == 0) {
-	/* destroy all outstanding notifies */
-	while (display->workqueue != NULL) {
-	    cairo_xlib_job_t *job = display->workqueue;
-	    display->workqueue = job->next;
+    assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&display->ref_count));
 
-	    if (job->type == WORK && job->func.work.destroy != NULL)
-		job->func.work.destroy (job->func.work.data);
+    if (! _cairo_reference_count_dec_and_test (&display->ref_count))
+	return;
 
-	    _cairo_freelist_free (&display->wq_freelist, job);
-	}
-	_cairo_freelist_fini (&display->wq_freelist);
-	_cairo_freelist_fini (&display->hook_freelist);
+    /* destroy all outstanding notifies */
+    while (display->workqueue != NULL) {
+	cairo_xlib_job_t *job = display->workqueue;
+	display->workqueue = job->next;
 
-	CAIRO_MUTEX_UNLOCK (display->mutex);
+	if (job->type == WORK && job->func.work.destroy != NULL)
+	    job->func.work.destroy (job->func.work.data);
 
-	free (display);
-    } else
-	CAIRO_MUTEX_UNLOCK (display->mutex);
+	_cairo_freelist_free (&display->wq_freelist, job);
+    }
+    _cairo_freelist_fini (&display->wq_freelist);
+    _cairo_freelist_fini (&display->hook_freelist);
+
+    free (display);
 }
 
 static int
@@ -280,7 +274,7 @@ _cairo_xlib_display_get (Display *dpy)
     _cairo_freelist_init (&display->wq_freelist, sizeof (cairo_xlib_job_t));
     _cairo_freelist_init (&display->hook_freelist, sizeof (cairo_xlib_hook_t));
 
-    display->ref_count = 2; /* add one for the CloseDisplay */
+    CAIRO_REFERENCE_COUNT_INIT (&display->ref_count, 2); /* add one for the CloseDisplay */
     CAIRO_MUTEX_INIT (display->mutex);
     display->display = dpy;
     display->screens = NULL;

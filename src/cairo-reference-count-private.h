@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2005 Red Hat, Inc.
+ * Copyright © 2007 Chris Wilson
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,30 +27,40 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is Red Hat, Inc.
+ * The Initial Developer of the Original Code is University of Southern
+ * California.
  *
  * Contributor(s):
- *	Carl D. Worth <cworth@redhat.com>
+ *	Chris Wilson <chris@chris-wilson.co.uk>
  */
 
-#ifndef CAIRO_PRIVATE_H
-#define CAIRO_PRIVATE_H
+#ifndef CAIRO_REFRENCE_COUNT_PRIVATE_H
+#define CAIRO_REFRENCE_COUNT_PRIVATE_H
 
-#include "cairo-reference-count-private.h"
-#include "cairo-gstate-private.h"
-#include "cairo-path-fixed-private.h"
+#include "cairo-atomic-private.h"
 
-struct _cairo {
-    cairo_reference_count_t ref_count;
+CAIRO_BEGIN_DECLS
 
-    cairo_status_t status;
+/* Encapsulate operations on the object's reference count */
+typedef struct {
+    cairo_atomic_int_t ref_count;
+} cairo_reference_count_t;
 
-    cairo_user_data_array_t user_data;
+#define _cairo_reference_count_inc(RC) _cairo_atomic_int_inc (&(RC)->ref_count)
+#define _cairo_reference_count_dec_and_test(RC) _cairo_atomic_int_dec_and_test (&(RC)->ref_count)
 
-    cairo_gstate_t *gstate;
-    cairo_gstate_t  gstate_tail[1];
+#define CAIRO_REFERENCE_COUNT_INIT(RC, VALUE) ((RC)->ref_count = (VALUE))
 
-    cairo_path_fixed_t path[1];
-};
+#define CAIRO_REFERENCE_COUNT_GET_VALUE(RC) _cairo_atomic_int_get (&(RC)->ref_count)
+#define CAIRO_REFERENCE_COUNT_SET_VALUE(RC, VALUE) _cairo_atomic_int_set (&(RC)->ref_count, (VALUE))
 
-#endif /* CAIRO_PRIVATE_H */
+#define CAIRO_REFERENCE_COUNT_INVALID_VALUE ((cairo_atomic_int_t) -1)
+#define CAIRO_REFERENCE_COUNT_INVALID ((cairo_reference_count_t) {CAIRO_REFERENCE_COUNT_INVALID_VALUE})
+
+#define CAIRO_REFERENCE_COUNT_IS_INVALID(RC) (CAIRO_REFERENCE_COUNT_GET_VALUE (RC) == CAIRO_REFERENCE_COUNT_INVALID_VALUE)
+
+#define CAIRO_REFERENCE_COUNT_HAS_REFERENCE(RC) (CAIRO_REFERENCE_COUNT_GET_VALUE (RC) > 0)
+
+CAIRO_END_DECLS
+
+#endif

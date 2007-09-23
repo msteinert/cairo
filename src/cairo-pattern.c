@@ -32,31 +32,31 @@
 
 const cairo_solid_pattern_t _cairo_pattern_nil = {
     { CAIRO_PATTERN_TYPE_SOLID, 	/* type */
-      CAIRO_REF_COUNT_INVALID,		/* ref_count */
-      CAIRO_STATUS_NO_MEMORY,	/* status */
+      CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
+      CAIRO_STATUS_NO_MEMORY,		/* status */
       { 0, 0, 0, NULL },		/* user_data */
-      { 1., 0., 0., 1., 0., 0., }, /* matrix */
-      CAIRO_FILTER_DEFAULT,	/* filter */
+      { 1., 0., 0., 1., 0., 0., },	/* matrix */
+      CAIRO_FILTER_DEFAULT,		/* filter */
       CAIRO_EXTEND_GRADIENT_DEFAULT },	/* extend */
 };
 
 static const cairo_solid_pattern_t _cairo_pattern_nil_null_pointer = {
     { CAIRO_PATTERN_TYPE_SOLID, 	/* type */
-      CAIRO_REF_COUNT_INVALID,		/* ref_count */
-      CAIRO_STATUS_NULL_POINTER,/* status */
+      CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
+      CAIRO_STATUS_NULL_POINTER,	/* status */
       { 0, 0, 0, NULL },		/* user_data */
-      { 1., 0., 0., 1., 0., 0., }, /* matrix */
-      CAIRO_FILTER_DEFAULT,	/* filter */
+      { 1., 0., 0., 1., 0., 0., },	/* matrix */
+      CAIRO_FILTER_DEFAULT,		/* filter */
       CAIRO_EXTEND_GRADIENT_DEFAULT },	/* extend */
 };
 
 const cairo_solid_pattern_t cairo_pattern_none = {
     { CAIRO_PATTERN_TYPE_SOLID, 	/* type */
-      CAIRO_REF_COUNT_INVALID,		/* ref_count */
+      CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
       CAIRO_STATUS_SUCCESS,		/* status */
       { 0, 0, 0, NULL },		/* user_data */
-      { 1., 0., 0., 1., 0., 0., }, /* matrix */
-      CAIRO_FILTER_DEFAULT,	/* filter */
+      { 1., 0., 0., 1., 0., 0., },	/* matrix */
+      CAIRO_FILTER_DEFAULT,		/* filter */
       CAIRO_EXTEND_GRADIENT_DEFAULT },	/* extend */
 };
 
@@ -95,7 +95,7 @@ _cairo_pattern_init (cairo_pattern_t *pattern, cairo_pattern_type_t type)
     CAIRO_MUTEX_INITIALIZE ();
 
     pattern->type      = type;
-    pattern->ref_count = 1;
+    CAIRO_REFERENCE_COUNT_INIT (&pattern->ref_count, 1);
     pattern->status    = CAIRO_STATUS_SUCCESS;
 
     _cairo_user_data_array_init (&pattern->user_data);
@@ -186,7 +186,7 @@ _cairo_pattern_init_copy (cairo_pattern_t	*pattern,
     }
 
     /* The reference count and user_data array are unique to the copy. */
-    pattern->ref_count = 1;
+    CAIRO_REFERENCE_COUNT_INIT (&pattern->ref_count, 1);
     _cairo_user_data_array_init (&pattern->user_data);
 
     return CAIRO_STATUS_SUCCESS;
@@ -577,12 +577,13 @@ cairo_pattern_create_radial (double cx0, double cy0, double radius0,
 cairo_pattern_t *
 cairo_pattern_reference (cairo_pattern_t *pattern)
 {
-    if (pattern == NULL || pattern->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (pattern == NULL ||
+	    CAIRO_REFERENCE_COUNT_IS_INVALID (&pattern->ref_count))
 	return pattern;
 
-    assert (pattern->ref_count > 0);
+    assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&pattern->ref_count));
 
-    pattern->ref_count++;
+    _cairo_reference_count_inc (&pattern->ref_count);
 
     return pattern;
 }
@@ -634,13 +635,13 @@ slim_hidden_def (cairo_pattern_status);
 void
 cairo_pattern_destroy (cairo_pattern_t *pattern)
 {
-    if (pattern == NULL || pattern->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (pattern == NULL ||
+	    CAIRO_REFERENCE_COUNT_IS_INVALID (&pattern->ref_count))
 	return;
 
-    assert (pattern->ref_count > 0);
+    assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&pattern->ref_count));
 
-    pattern->ref_count--;
-    if (pattern->ref_count)
+    if (! _cairo_reference_count_dec_and_test (&pattern->ref_count))
 	return;
 
     _cairo_pattern_fini (pattern);
@@ -680,10 +681,11 @@ slim_hidden_def (cairo_pattern_destroy);
 unsigned int
 cairo_pattern_get_reference_count (cairo_pattern_t *pattern)
 {
-    if (pattern == NULL || pattern->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (pattern == NULL ||
+	    CAIRO_REFERENCE_COUNT_IS_INVALID (&pattern->ref_count))
 	return 0;
 
-    return pattern->ref_count;
+    return CAIRO_REFERENCE_COUNT_GET_VALUE (&pattern->ref_count);
 }
 
 /**
@@ -732,7 +734,7 @@ cairo_pattern_set_user_data (cairo_pattern_t		 *pattern,
 			     void			 *user_data,
 			     cairo_destroy_func_t	  destroy)
 {
-    if (pattern->ref_count == CAIRO_REF_COUNT_INVALID)
+    if (CAIRO_REFERENCE_COUNT_IS_INVALID (&pattern->ref_count))
 	return CAIRO_STATUS_NO_MEMORY;
 
     return _cairo_user_data_array_set_data (&pattern->user_data,
@@ -1328,7 +1330,7 @@ _cairo_pattern_solid_surface_matches (
 	const cairo_solid_pattern_t			    *pattern,
 	cairo_surface_t					    *dst)
 {
-    if (cache->surface->ref_count != 1)
+    if (CAIRO_REFERENCE_COUNT_GET_VALUE (&cache->surface->ref_count) != 1)
 	return FALSE;
 
     if (! _cairo_color_equal (&cache->color, &pattern->color))

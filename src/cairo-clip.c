@@ -285,7 +285,7 @@ _cairo_clip_intersect_path (cairo_clip_t       *clip,
 	return status;
     }
 
-    clip_path->ref_count = 1;
+    CAIRO_REFERENCE_COUNT_INIT (&clip_path->ref_count, 1);
     clip_path->fill_rule = fill_rule;
     clip_path->tolerance = tolerance;
     clip_path->antialias = antialias;
@@ -301,7 +301,9 @@ _cairo_clip_path_reference (cairo_clip_path_t *clip_path)
     if (clip_path == NULL)
 	return NULL;
 
-    clip_path->ref_count++;
+    assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&clip_path->ref_count));
+
+    _cairo_reference_count_inc (&clip_path->ref_count);
 
     return clip_path;
 }
@@ -312,8 +314,9 @@ _cairo_clip_path_destroy (cairo_clip_path_t *clip_path)
     if (clip_path == NULL)
 	return;
 
-    clip_path->ref_count--;
-    if (clip_path->ref_count)
+    assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&clip_path->ref_count));
+
+    if (! _cairo_reference_count_dec_and_test (&clip_path->ref_count))
 	return;
 
     _cairo_path_fixed_fini (&clip_path->path);
