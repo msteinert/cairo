@@ -178,6 +178,7 @@ libcairo_la_base_sources =			\
 	cairo-clip.c				\
 	cairo-clip-private.h			\
 	cairo-color.c				\
+	cairo-compiler-private.h		\
 	cairo-debug.c				\
 	cairo-fixed.c				\
 	cairo-font-face.c			\

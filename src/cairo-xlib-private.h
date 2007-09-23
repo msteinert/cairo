@@ -34,9 +34,12 @@
 #define CAIRO_XLIB_PRIVATE_H
 
 #include "cairoint.h"
+
 #include "cairo-xlib.h"
-#include "cairo-xlib-xrender-private.h"
+
+#include "cairo-compiler-private.h"
 #include "cairo-freelist-private.h"
+#include "cairo-xlib-xrender-private.h"
 
 #include <X11/Xutil.h> /* for XDestroyImage */
 
