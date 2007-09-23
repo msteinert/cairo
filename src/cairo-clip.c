@@ -635,23 +635,26 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
 	if (_cairo_region_get_boxes (&clip->region, &n_boxes, &boxes) != CAIRO_STATUS_SUCCESS)
 	    return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
 
-	rectangles = _cairo_malloc_ab (n_boxes, sizeof (cairo_rectangle_t));
-	if (rectangles == NULL) {
-	    _cairo_region_boxes_fini (&clip->region, boxes);
-	    return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
-	}
-
-        for (i = 0; i < n_boxes; ++i) {
-	    cairo_rectangle_int_t clip_rect = { boxes[i].p1.x, boxes[i].p1.y,
-						boxes[i].p2.x - boxes[i].p1.x,
-						boxes[i].p2.y - boxes[i].p1.y };
-
-            if (!_cairo_clip_int_rect_to_user(gstate, &clip_rect, &rectangles[i])) {
+	if (n_boxes) {
+	    rectangles = _cairo_malloc_ab (n_boxes, sizeof (cairo_rectangle_t));
+	    if (rectangles == NULL) {
 		_cairo_region_boxes_fini (&clip->region, boxes);
-		free (rectangles);
-		return (cairo_rectangle_list_t*) &_cairo_rectangles_not_representable;
+		_cairo_error (CAIRO_STATUS_NO_MEMORY);
+		return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
 	    }
-        }
+
+	    for (i = 0; i < n_boxes; ++i) {
+		cairo_rectangle_int_t clip_rect = { boxes[i].p1.x, boxes[i].p1.y,
+						    boxes[i].p2.x - boxes[i].p1.x,
+						    boxes[i].p2.y - boxes[i].p1.y };
+
+		if (!_cairo_clip_int_rect_to_user(gstate, &clip_rect, &rectangles[i])) {
+		    _cairo_region_boxes_fini (&clip->region, boxes);
+		    free (rectangles);
+		    return (cairo_rectangle_list_t*) &_cairo_rectangles_not_representable;
+		}
+	    }
+	}
 
 	_cairo_region_boxes_fini (&clip->region, boxes);
     } else {
@@ -660,8 +663,10 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
 	n_boxes = 1;
 
 	rectangles = malloc(sizeof (cairo_rectangle_t));
-	if (rectangles == NULL)
+	if (rectangles == NULL) {
+	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
+	}
 
 	if (_cairo_surface_get_extents (_cairo_gstate_get_target (gstate), &extents) ||
 	    !_cairo_clip_int_rect_to_user(gstate, &extents, rectangles))
@@ -674,6 +679,7 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
     list = malloc (sizeof (cairo_rectangle_list_t));
     if (list == NULL) {
         free (rectangles);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
         return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
     }
     
