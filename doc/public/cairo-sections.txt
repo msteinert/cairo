@@ -58,6 +58,8 @@ cairo_surface_write_to_png_stream
 <TITLE>PostScript Surfaces</TITLE>
 cairo_ps_surface_create
 cairo_ps_surface_create_for_stream
+cairo_ps_surface_set_eps
+cairo_ps_surface_get_eps
 cairo_ps_surface_set_size
 cairo_ps_surface_dsc_begin_setup
 cairo_ps_surface_dsc_begin_page_setup

@@ -57,6 +57,8 @@ typedef struct cairo_ps_surface {
     FILE *tmpfile;
     cairo_output_stream_t *stream;
 
+    cairo_bool_t eps;
+
     double width;
     double height;
     double max_width;

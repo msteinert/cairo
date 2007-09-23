@@ -957,6 +957,63 @@ _extract_ps_surface (cairo_surface_t	 *surface,
 }
 
 /**
+ * cairo_ps_surface_set_eps:
+ * @surface: a PostScript cairo_surface_t
+ * @eps: TRUE to output EPS format PostScript
+ *
+ * If @eps is TRUE, the PostScript surface will output Encapsulated
+ * PostScript.
+ *
+ * This function should only be called before any drawing operations
+ * have been performed on the current page. The simplest way to do
+ * this is to call this function immediately after creating the
+ * surface. An Encapsulated Postscript file should never contain more
+ * than one page.
+ *
+ * Since: 1.6
+ **/
+void
+cairo_ps_surface_set_eps (cairo_surface_t	*surface,
+			  cairo_bool_t           eps)
+{
+    cairo_ps_surface_t *ps_surface;
+    cairo_status_t status;
+
+    status = _extract_ps_surface (surface, &ps_surface);
+    if (status) {
+	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return;
+    }
+
+    ps_surface->eps = eps;
+}
+
+/**
+ * cairo_ps_surface_get_eps:
+ * @surface: a PostScript cairo_surface_t
+ *
+ * Check whether the PostScript surface will output Encapsulated PostScript.
+ *
+ * Return value: TRUE if the surface will output Encapsulated PostScript.
+ *
+ * Since: 1.6
+ **/
+cairo_public cairo_bool_t
+cairo_ps_surface_get_eps (cairo_surface_t	*surface)
+{
+    cairo_ps_surface_t *ps_surface;
+    cairo_status_t status;
+
+    status = _extract_ps_surface (surface, &ps_surface);
+    if (status) {
+	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return FALSE;
+    }
+
+    return ps_surface->eps;
+}
+
+/**
  * cairo_ps_surface_set_size:
  * @surface: a PostScript cairo_surface_t
  * @width_in_points: new surface width, in points (1 point == 1/72.0 inch)
