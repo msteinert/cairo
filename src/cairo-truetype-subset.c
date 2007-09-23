@@ -46,9 +46,21 @@ struct subset_glyph {
     unsigned long location;
 };
 
-typedef struct _cairo_truetype_font {
+typedef struct _cairo_truetype_font cairo_truetype_font_t;
+
+typedef struct table table_t;
+struct table {
+    unsigned long tag;
+    cairo_status_t (*write) (cairo_truetype_font_t *font, unsigned long tag);
+    int pos; /* position in the font directory */
+};
+
+struct _cairo_truetype_font {
 
     cairo_scaled_font_subset_t *scaled_font_subset;
+
+    table_t truetype_tables[10];
+    int num_tables;
 
     struct {
 	char *base_font;
@@ -70,7 +82,7 @@ typedef struct _cairo_truetype_font {
     int *parent_to_subset;
     cairo_status_t status;
 
-} cairo_truetype_font_t;
+};
 
 static int
 cairo_truetype_font_use_glyph (cairo_truetype_font_t *font, int glyph);
@@ -712,35 +724,6 @@ cairo_truetype_font_write_maxp_table (cairo_truetype_font_t *font,
     return font->status;
 }
 
-typedef struct table table_t;
-struct table {
-    unsigned long tag;
-    cairo_status_t (*write) (cairo_truetype_font_t *font, unsigned long tag);
-    int pos; /* position in the font directory */
-};
-
-static const table_t truetype_tables[] = {
-    /* As we write out the glyf table we remap composite glyphs.
-     * Remapping composite glyphs will reference the sub glyphs the
-     * composite glyph is made up of.  That needs to be done first so
-     * we have all the glyphs in the subset before going further.
-     *
-     * The third column in this table is the order in which the
-     * directory entries will appear in the table directory.
-     * The table directory must be sorted in tag order. */
-    { TT_TAG_glyf, cairo_truetype_font_write_glyf_table,     3 },
-    { TT_TAG_cmap, cairo_truetype_font_write_cmap_table,     0 },
-    { TT_TAG_cvt,  cairo_truetype_font_write_generic_table,  1 },
-    { TT_TAG_fpgm, cairo_truetype_font_write_generic_table,  2 },
-    { TT_TAG_head, cairo_truetype_font_write_head_table,     4 },
-    { TT_TAG_hhea, cairo_truetype_font_write_hhea_table,     5 },
-    { TT_TAG_hmtx, cairo_truetype_font_write_hmtx_table,     6 },
-    { TT_TAG_loca, cairo_truetype_font_write_loca_table,     7 },
-    { TT_TAG_maxp, cairo_truetype_font_write_maxp_table,     8 },
-    { TT_TAG_name, cairo_truetype_font_write_generic_table,  9 },
-    { TT_TAG_prep, cairo_truetype_font_write_generic_table, 10 },
-};
-
 static cairo_status_t
 cairo_truetype_font_write_offset_table (cairo_truetype_font_t *font)
 {
@@ -748,20 +731,18 @@ cairo_truetype_font_write_offset_table (cairo_truetype_font_t *font)
     unsigned char *table_buffer;
     size_t table_buffer_length;
     unsigned short search_range, entry_selector, range_shift;
-    int num_tables;
 
-    num_tables = ARRAY_LENGTH (truetype_tables);
     search_range = 1;
     entry_selector = 0;
-    while (search_range * 2 <= num_tables) {
+    while (search_range * 2 <= font->num_tables) {
 	search_range *= 2;
 	entry_selector++;
     }
     search_range *= 16;
-    range_shift = num_tables * 16 - search_range;
+    range_shift = font->num_tables * 16 - search_range;
 
     cairo_truetype_font_write_be32 (font, SFNT_VERSION);
-    cairo_truetype_font_write_be16 (font, num_tables);
+    cairo_truetype_font_write_be16 (font, font->num_tables);
     cairo_truetype_font_write_be16 (font, search_range);
     cairo_truetype_font_write_be16 (font, entry_selector);
     cairo_truetype_font_write_be16 (font, range_shift);
@@ -769,7 +750,7 @@ cairo_truetype_font_write_offset_table (cairo_truetype_font_t *font)
     /* Allocate space for the table directory. Each directory entry
      * will be filled in by cairo_truetype_font_update_entry() after
      * the table is written. */
-    table_buffer_length = ARRAY_LENGTH (truetype_tables) * 16;
+    table_buffer_length = font->num_tables * 16;
     status = cairo_truetype_font_allocate_write_buffer (font, table_buffer_length,
 						      &table_buffer);
     if (status)
@@ -824,7 +805,7 @@ cairo_truetype_font_generate (cairo_truetype_font_t  *font,
     cairo_status_t status;
     unsigned long start, end, next;
     uint32_t checksum, *checksum_location;
-    unsigned int i;
+    int i;
 
     if (cairo_truetype_font_write_offset_table (font))
 	goto fail;
@@ -833,14 +814,14 @@ cairo_truetype_font_generate (cairo_truetype_font_t  *font,
     end = start;
 
     end = 0;
-    for (i = 0; i < ARRAY_LENGTH (truetype_tables); i++) {
-	if (truetype_tables[i].write (font, truetype_tables[i].tag))
+    for (i = 0; i < font->num_tables; i++) {
+	if (font->truetype_tables[i].write (font, font->truetype_tables[i].tag))
 	    goto fail;
 
 	end = _cairo_array_num_elements (&font->output);
 	next = cairo_truetype_font_align_output (font);
-	cairo_truetype_font_update_entry (font, truetype_tables[i].pos, truetype_tables[i].tag,
-					start, end);
+	cairo_truetype_font_update_entry (font, font->truetype_tables[i].pos,
+                                          font->truetype_tables[i].tag, start, end);
         status = cairo_truetype_font_check_boundary (font, next);
 	if (status) {
 	    font->status = status;
@@ -879,6 +860,91 @@ cairo_truetype_font_use_glyph (cairo_truetype_font_t *font, int glyph)
     return font->parent_to_subset[glyph];
 }
 
+static void
+cairo_truetype_font_add_truetype_table (cairo_truetype_font_t *font,
+           unsigned long tag,
+           cairo_status_t (*write) (cairo_truetype_font_t *font, unsigned long tag),
+           int pos)
+{
+    font->truetype_tables[font->num_tables].tag = tag;
+    font->truetype_tables[font->num_tables].write = write;
+    font->truetype_tables[font->num_tables].pos = pos;
+    font->num_tables++;
+}
+
+/* cairo_truetype_font_create_truetype_table_list() builds the list of
+ * truetype tables to be embedded in the subsetted font. Each call to
+ * cairo_truetype_font_add_truetype_table() adds a table, the callback
+ * for generating the table, and the position in the table directory
+ * to the truetype_tables array.
+ *
+ * As we write out the glyf table we remap composite glyphs.
+ * Remapping composite glyphs will reference the sub glyphs the
+ * composite glyph is made up of. The "glyf" table callback needs to
+ * be called first so we have all the glyphs in the subset before
+ * going further.
+ *
+ * The order in which tables are added to the truetype_table array
+ * using cairo_truetype_font_add_truetype_table() specifies the order
+ * in which the callback functions will be called.
+ *
+ * The tables in the table directory must be listed in alphabetical
+ * order.  The "cvt", "fpgm", and "prep" are optional tables. They
+ * will only be embedded in the subset if they exist in the source
+ * font. The pos parameter of cairo_truetype_font_add_truetype_table()
+ * specifies the position of the table in the table directory.
+ */
+static void
+cairo_truetype_font_create_truetype_table_list (cairo_truetype_font_t *font)
+{
+    cairo_bool_t has_cvt = FALSE;
+    cairo_bool_t has_fpgm = FALSE;
+    cairo_bool_t has_prep = FALSE;
+    unsigned long size;
+    int pos;
+
+    size = 0;
+    if (font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
+                                      TT_TAG_cvt, 0, NULL,
+                                      &size) == CAIRO_STATUS_SUCCESS)
+        has_cvt = TRUE;
+
+    size = 0;
+    if (font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
+                                      TT_TAG_fpgm, 0, NULL,
+                                      &size) == CAIRO_STATUS_SUCCESS)
+        has_fpgm = TRUE;
+
+    size = 0;
+    if (font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
+                                      TT_TAG_prep, 0, NULL,
+                                      &size) == CAIRO_STATUS_SUCCESS)
+        has_prep = TRUE;
+
+    font->num_tables = 0;
+    pos = 1;
+    if (has_cvt)
+        pos++;
+    if (has_fpgm)
+        pos++;
+    cairo_truetype_font_add_truetype_table (font, TT_TAG_glyf, cairo_truetype_font_write_glyf_table, pos);
+
+    pos = 0;
+    cairo_truetype_font_add_truetype_table (font, TT_TAG_cmap, cairo_truetype_font_write_cmap_table, pos++);
+    if (has_cvt)
+        cairo_truetype_font_add_truetype_table (font, TT_TAG_cvt, cairo_truetype_font_write_generic_table, pos++);
+    if (has_fpgm)
+        cairo_truetype_font_add_truetype_table (font, TT_TAG_fpgm, cairo_truetype_font_write_generic_table, pos++);
+    pos++;
+    cairo_truetype_font_add_truetype_table (font, TT_TAG_head, cairo_truetype_font_write_head_table, pos++);
+    cairo_truetype_font_add_truetype_table (font, TT_TAG_hhea, cairo_truetype_font_write_hhea_table, pos++);
+    cairo_truetype_font_add_truetype_table (font, TT_TAG_hmtx, cairo_truetype_font_write_hmtx_table, pos++);
+    cairo_truetype_font_add_truetype_table (font, TT_TAG_loca, cairo_truetype_font_write_loca_table, pos++);
+    cairo_truetype_font_add_truetype_table (font, TT_TAG_maxp, cairo_truetype_font_write_maxp_table, pos++);
+    if (has_prep)
+        cairo_truetype_font_add_truetype_table (font, TT_TAG_prep, cairo_truetype_font_write_generic_table, pos);
+}
+
 cairo_status_t
 _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
 			     cairo_scaled_font_subset_t	*font_subset)
@@ -901,8 +967,9 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
 	cairo_truetype_font_use_glyph (font, parent_glyph);
     }
 
+    cairo_truetype_font_create_truetype_table_list (font);
     status = cairo_truetype_font_generate (font, &data, &length,
-					 &string_offsets, &num_strings);
+                                           &string_offsets, &num_strings);
     if (status)
 	goto fail1;
 
