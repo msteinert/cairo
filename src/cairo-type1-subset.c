@@ -1203,6 +1203,8 @@ _cairo_type1_scaled_font_is_type1 (cairo_scaled_font_t *scaled_font)
     PS_FontInfoRec font_info;
     cairo_bool_t is_type1 = FALSE;
 
+    if (!_cairo_scaled_font_is_ft (scaled_font))
+       return FALSE;
     unscaled = (cairo_ft_unscaled_font_t *) _cairo_ft_scaled_font_get_unscaled_font (scaled_font);
     face = _cairo_ft_unscaled_font_lock_face (unscaled);
     if (!face)
