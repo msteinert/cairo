@@ -124,8 +124,10 @@ _cairo_region_get_boxes (cairo_region_t *region, int *num_boxes, cairo_box_int_t
     }
 
     cboxes = _cairo_malloc_ab (nboxes, sizeof(cairo_box_int_t));
-    if (cboxes == NULL)
+    if (cboxes == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     for (i = 0; i < nboxes; i++) {
 	cboxes[i].p1.x = pboxes[i].x1;
