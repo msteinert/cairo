@@ -296,21 +296,27 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
     time_t now;
     char **comments;
     int i, num_comments;
+    const char *eps_header = "";
 
     now = time (NULL);
 
+    if (surface->eps)
+	eps_header = " EPSF-3.0";
+
     _cairo_output_stream_printf (surface->final_stream,
-				 "%%!PS-Adobe-3.0\n"
+				 "%%!PS-Adobe-3.0%s\n"
 				 "%%%%Creator: cairo %s (http://cairographics.org)\n"
 				 "%%%%CreationDate: %s"
 				 "%%%%Pages: %d\n"
 				 "%%%%BoundingBox: %d %d %d %d\n",
-                                 cairo_version_string (),
+				 eps_header,
+				 cairo_version_string (),
 				 ctime (&now),
 				 surface->num_pages,
-				 0, 0,
-				 (int) ceil (surface->max_width),
-				 (int) ceil (surface->max_height));
+				 surface->bbox_x1,
+				 surface->bbox_y1,
+				 surface->bbox_x2,
+				 surface->bbox_y2);
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "%%%%DocumentData: Clean7Bit\n"
@@ -329,7 +335,17 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 				 "%%%%EndComments\n");
 
     _cairo_output_stream_printf (surface->final_stream,
-				 "%%%%BeginProlog\n"
+				 "%%%%BeginProlog\n");
+
+    if (surface->eps) {
+	_cairo_output_stream_printf (surface->final_stream,
+				     "/cairo_eps_state save def\n"
+				     "/dict_count countdictstack def\n"
+				     "/op_count count 1 sub def\n"
+				     "userdict begin\n");
+    }
+
+    _cairo_output_stream_printf (surface->final_stream,
 				 "/C{curveto}bind def\n"
 				 "/F{fill}bind def\n"
 				 "/G{setgray}bind def\n"
@@ -766,7 +782,16 @@ static void
 _cairo_ps_surface_emit_footer (cairo_ps_surface_t *surface)
 {
     _cairo_output_stream_printf (surface->final_stream,
-				 "%%%%Trailer\n"
+				 "%%%%Trailer\n");
+
+    if (surface->eps) {
+	_cairo_output_stream_printf (surface->final_stream,
+				     "count op_count sub {pop} repeat\n"
+				     "countdictstack dict_count sub {end} repeat\n"
+				     "cairo_eps_state restore\n");
+    }
+
+    _cairo_output_stream_printf (surface->final_stream,
 				 "%%%%EOF\n");
 }
 
@@ -802,10 +827,9 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     if (! surface->font_subsets)
 	goto CLEANUP_OUTPUT_STREAM;
 
+    surface->eps = FALSE;
     surface->width  = width;
     surface->height = height;
-    surface->max_width = width;
-    surface->max_height = height;
     surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
     surface->force_fallbacks = FALSE;
 
@@ -1300,48 +1324,11 @@ static cairo_int_status_t
 _cairo_ps_surface_start_page (void *abstract_surface)
 {
     cairo_ps_surface_t *surface = abstract_surface;
-    int i, num_comments;
-    char **comments;
 
     /* Increment before print so page numbers start at 1. */
     surface->num_pages++;
-    _cairo_output_stream_printf (surface->stream,
-				 "%%%%Page: %d %d\n",
-				 surface->num_pages,
-				 surface->num_pages);
 
-    _cairo_output_stream_printf (surface->stream,
-				 "%%%%BeginPageSetup\n");
-
-    num_comments = _cairo_array_num_elements (&surface->dsc_page_setup_comments);
-    comments = _cairo_array_index (&surface->dsc_page_setup_comments, 0);
-    for (i = 0; i < num_comments; i++) {
-	_cairo_output_stream_printf (surface->stream,
-				     "%s\n", comments[i]);
-	free (comments[i]);
-	comments[i] = NULL;
-    }
-    _cairo_array_truncate (&surface->dsc_page_setup_comments, 0);
-
-    _cairo_output_stream_printf (surface->stream,
-				 "%%%%PageBoundingBox: %d %d %d %d\n",
-				 0, 0,
-				 (int) ceil (surface->width),
-				 (int) ceil (surface->height));
-
-    _cairo_output_stream_printf (surface->stream,
-				 "gsave %f %f translate 1.0 -1.0 scale gsave\n",
-				 0.0, surface->height);
-
-    _cairo_output_stream_printf (surface->stream,
-				 "%%%%EndPageSetup\n");
-
-    if (surface->width > surface->max_width)
-	surface->max_width = surface->width;
-    if (surface->height > surface->max_height)
-	surface->max_height = surface->height;
-
-    return _cairo_output_stream_get_status (surface->stream);
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -2426,6 +2413,73 @@ _cairo_ps_surface_set_paginated_mode (void			*abstract_surface,
     surface->paginated_mode = paginated_mode;
 }
 
+static cairo_int_status_t
+_cairo_ps_surface_set_bounding_box (void		*abstract_surface,
+				    cairo_box_t		*bbox)
+{
+    cairo_ps_surface_t *surface = abstract_surface;
+    int i, num_comments;
+    char **comments;
+    int x1, y1, x2, y2;
+
+    if (surface->eps) {
+	x1 = (int) floor (_cairo_fixed_to_double (bbox->p1.x));
+	y1 = (int) floor (surface->height - _cairo_fixed_to_double (bbox->p2.y));
+	x2 = (int) ceil (_cairo_fixed_to_double (bbox->p2.x));
+	y2 = (int) ceil (surface->height - _cairo_fixed_to_double (bbox->p1.y));
+    } else {
+	x1 = 0;
+	y1 = 0;
+	x2 = (int) ceil (surface->width);
+	y2 = (int) ceil (surface->height);
+    }
+
+    _cairo_output_stream_printf (surface->stream,
+				 "%%%%Page: %d %d\n",
+				 surface->num_pages,
+				 surface->num_pages);
+
+    _cairo_output_stream_printf (surface->stream,
+				 "%%%%BeginPageSetup\n");
+
+    num_comments = _cairo_array_num_elements (&surface->dsc_page_setup_comments);
+    comments = _cairo_array_index (&surface->dsc_page_setup_comments, 0);
+    for (i = 0; i < num_comments; i++) {
+	_cairo_output_stream_printf (surface->stream,
+				     "%s\n", comments[i]);
+	free (comments[i]);
+	comments[i] = NULL;
+    }
+    _cairo_array_truncate (&surface->dsc_page_setup_comments, 0);
+
+    _cairo_output_stream_printf (surface->stream,
+				 "%%%%PageBoundingBox: %d %d %d %d\n"
+				 "gsave %f %f translate 1.0 -1.0 scale gsave\n",
+				 x1, y1, x2, y2,
+				 0.0, surface->height);
+
+    _cairo_output_stream_printf (surface->stream,
+                                 "%%%%EndPageSetup\n");
+
+    if (surface->num_pages == 1) {
+	surface->bbox_x1 = x1;
+	surface->bbox_y1 = y1;
+	surface->bbox_x2 = x2;
+	surface->bbox_y2 = y2;
+    } else {
+	if (x1 < surface->bbox_x1)
+	    surface->bbox_x1 = x1;
+	if (y1 < surface->bbox_y1)
+	    surface->bbox_y1 = y1;
+	if (x2 > surface->bbox_x2)
+	    surface->bbox_x2 = x2;
+	if (y2 > surface->bbox_y2)
+	    surface->bbox_y2 = y2;
+    }
+
+    return _cairo_output_stream_get_status (surface->stream);
+}
+
 static const cairo_surface_backend_t cairo_ps_surface_backend = {
     CAIRO_SURFACE_TYPE_PS,
     NULL, /* create_similar */
@@ -2462,5 +2516,6 @@ static const cairo_surface_backend_t cairo_ps_surface_backend = {
 
 static const cairo_paginated_surface_backend_t cairo_ps_surface_paginated_backend = {
     _cairo_ps_surface_start_page,
-    _cairo_ps_surface_set_paginated_mode
+    _cairo_ps_surface_set_paginated_mode,
+    _cairo_ps_surface_set_bounding_box,
 };

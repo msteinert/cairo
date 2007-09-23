@@ -291,14 +291,25 @@ _paint_page (cairo_paginated_surface_t *surface)
 
     surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_ANALYZE);
     status = _cairo_meta_surface_replay_and_create_regions (surface->meta, analysis);
-    surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_RENDER);
-
     if (status || analysis->status) {
 	if (status == CAIRO_STATUS_SUCCESS)
 	    status = analysis->status;
 	cairo_surface_destroy (analysis);
 	return status;
     }
+
+     if (surface->backend->set_bounding_box) {
+	 cairo_box_t bbox;
+
+	 _cairo_analysis_surface_get_bounding_box (analysis, &bbox);
+	 status = surface->backend->set_bounding_box (surface->target, &bbox);
+	 if (status) {
+	     cairo_surface_destroy (analysis);
+	     return status;
+	 }
+     }
+
+    surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_RENDER);
 
     /* Finer grained fallbacks are currently only supported for some
      * surface types */

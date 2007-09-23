@@ -61,8 +61,7 @@ typedef struct cairo_ps_surface {
 
     double width;
     double height;
-    double max_width;
-    double max_height;
+    int bbox_x1, bbox_y1, bbox_x2, bbox_y2;
 
     int num_pages;
 
