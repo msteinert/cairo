@@ -153,6 +153,7 @@ test_surface (const char                 *backend,
 
     draw_to (surface);
 
+    cairo_surface_finish (surface);
     status = cairo_surface_status (surface);
     cairo_surface_destroy (surface);
 
