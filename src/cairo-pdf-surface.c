@@ -623,10 +623,8 @@ _cairo_pdf_surface_add_font (cairo_pdf_surface_t *surface,
     for (i = 0; i < num_fonts; i++) {
 	_cairo_array_copy_element (&surface->fonts, i, &font);
 	if (font.font_id == font_id &&
-	    font.subset_id == subset_id) {
-	    status = _cairo_array_append (&res->fonts, &font);
+	    font.subset_id == subset_id)
 	    return CAIRO_STATUS_SUCCESS;
-	}
     }
 
     font.font_id = font_id;
