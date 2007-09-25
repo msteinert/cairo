@@ -91,8 +91,13 @@ static void
 png_simple_error_callback (png_structp png_save_ptr,
 	                   png_const_charp error_msg)
 {
-    _cairo_error (CAIRO_STATUS_NO_MEMORY);
-    longjmp (png_save_ptr->jmpbuf, CAIRO_STATUS_NO_MEMORY);
+    cairo_status_t *error = png_get_error_ptr (png_save_ptr);
+
+    /* default to the most likely error */
+    if (*error == CAIRO_STATUS_SUCCESS)
+	*error = CAIRO_STATUS_NO_MEMORY;
+
+    longjmp (png_save_ptr->jmpbuf, 1);
 }
 
 static void
@@ -108,7 +113,7 @@ write_png (cairo_surface_t	*surface,
 	   void			*closure)
 {
     int i;
-    volatile cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_status_t status;
     cairo_image_surface_t *image;
     void *image_extra;
     png_struct *png;
@@ -129,7 +134,7 @@ write_png (cairo_surface_t	*surface,
 	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
 
     if (image->height && image->width) {
-	rows = _cairo_malloc_ab (image->height, sizeof(png_byte*));
+	rows = _cairo_malloc_ab (image->height, sizeof (png_byte*));
 	if (rows == NULL) {
 	    status = CAIRO_STATUS_NO_MEMORY;
 	    goto BAIL1;
@@ -139,7 +144,7 @@ write_png (cairo_surface_t	*surface,
 	    rows[i] = (png_byte *) image->data + i * image->stride;
     }
 
-    png = png_create_write_struct (PNG_LIBPNG_VER_STRING, NULL,
+    png = png_create_write_struct (PNG_LIBPNG_VER_STRING, &status,
 	                           png_simple_error_callback,
 	                           png_simple_warning_callback);
     if (png == NULL) {
@@ -153,8 +158,7 @@ write_png (cairo_surface_t	*surface,
 	goto BAIL3;
     }
 
-    status = setjmp (png_jmpbuf (png));
-    if (status)
+    if (setjmp (png_jmpbuf (png)))
 	goto BAIL3;
 
     png_set_write_fn (png, closure, write_func, NULL);
@@ -234,8 +238,11 @@ stdio_write_func (png_structp png, png_bytep data, png_size_t size)
 	size_t ret = fwrite (data, 1, size, fp);
 	size -= ret;
 	data += ret;
-	if (size && ferror (fp))
-	    png_error(png, "Write Error");
+	if (size && ferror (fp)) {
+	    cairo_status_t *error = png_get_error_ptr (png);
+	    *error = CAIRO_STATUS_WRITE_ERROR;
+	    png_error (png, NULL);
+	}
     }
 }
 
@@ -286,8 +293,11 @@ stream_write_func (png_structp png, png_bytep data, png_size_t size)
 
     png_closure = png_get_io_ptr (png);
     status = png_closure->write_func (png_closure->closure, data, size);
-    if (status)
-	png_error(png, "Write Error");
+    if (status) {
+	cairo_status_t *error = png_get_error_ptr (png);
+	*error = status;
+	png_error (png, NULL);
+    }
 }
 
 /**
@@ -369,10 +379,11 @@ read_png (png_rw_ptr	read_func,
     int depth, color_type, interlace;
     unsigned int i;
     unsigned int pixel_size;
+    cairo_status_t status;
 
     /* XXX: Perhaps we'll want some other error handlers? */
     png = png_create_read_struct (PNG_LIBPNG_VER_STRING,
-                                  NULL,
+                                  &status,
 	                          png_simple_error_callback,
 	                          png_simple_warning_callback);
     if (png == NULL)
@@ -384,8 +395,10 @@ read_png (png_rw_ptr	read_func,
 
     png_set_read_fn (png, closure, read_func);
 
+    status = CAIRO_STATUS_SUCCESS;
     if (setjmp (png_jmpbuf (png))) {
-	surface = (cairo_surface_t*) &_cairo_surface_nil_read_error;
+	if (status != CAIRO_STATUS_NO_MEMORY)
+	    surface = (cairo_surface_t*) &_cairo_surface_nil_read_error;
 	goto BAIL;
     }
 
@@ -408,7 +421,7 @@ read_png (png_rw_ptr	read_func,
         png_set_gray_1_2_4_to_8 (png);
 #endif
     /* transform transparency to alpha */
-    if (png_get_valid(png, info, PNG_INFO_tRNS))
+    if (png_get_valid (png, info, PNG_INFO_tRNS))
         png_set_tRNS_to_alpha (png);
 
     if (depth == 16)
@@ -436,7 +449,7 @@ read_png (png_rw_ptr	read_func,
     if (data == NULL)
 	goto BAIL;
 
-    row_pointers = _cairo_malloc_ab (png_height, sizeof(char *));
+    row_pointers = _cairo_malloc_ab (png_height, sizeof (char *));
     if (row_pointers == NULL)
 	goto BAIL;
 
@@ -479,8 +492,11 @@ stdio_read_func (png_structp png, png_bytep data, png_size_t size)
 	size_t ret = fread (data, 1, size, fp);
 	size -= ret;
 	data += ret;
-	if (size && ferror (fp))
-	    png_error(png, "Read Error");
+	if (size && ferror (fp)) {
+	    cairo_status_t *error = png_get_error_ptr (png);
+	    *error = CAIRO_STATUS_READ_ERROR;
+	    png_error (png, NULL);
+	}
     }
 }
 
@@ -541,8 +557,11 @@ stream_read_func (png_structp png, png_bytep data, png_size_t size)
 
     png_closure = png_get_io_ptr (png);
     status = png_closure->read_func (png_closure->closure, data, size);
-    if (status)
-	png_error(png, "Read Error");
+    if (status) {
+	cairo_status_t *error = png_get_error_ptr (png);
+	*error = status;
+	png_error (png, NULL);
+    }
 }
 
 /**
