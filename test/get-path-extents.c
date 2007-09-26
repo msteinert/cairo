@@ -38,7 +38,7 @@ cairo_test_t test = {
 
 enum ExtentsType { FILL, STROKE };
 
-enum Relation { EQUALS, CONTAINS };
+enum Relation { EQUALS, APPROX_EQUALS, CONTAINS };
 
 static cairo_bool_t
 check_extents (const char *message, cairo_t *cr, enum ExtentsType type,
@@ -60,7 +60,7 @@ check_extents (const char *message, cairo_t *cr, enum ExtentsType type,
         cairo_stroke_extents (cr, &ext_x1, &ext_y1, &ext_x2, &ext_y2);
         break;
     }
-    
+
     /* let empty rects match */
     if ((ext_x1 == ext_x2 || ext_y1 == ext_y2) && (width == 0 || height == 0))
         return 1;
@@ -70,6 +70,11 @@ check_extents (const char *message, cairo_t *cr, enum ExtentsType type,
     case EQUALS:
         relation_string = "equal";
         if (ext_x1 == x && ext_y1 == y && ext_x2 == x + width && ext_y2 == y + height)
+            return 1;
+        break;
+    case APPROX_EQUALS:
+        relation_string = "approx. equal";
+        if (round (ext_x1) == x && round (ext_y1) == y && round (ext_x2) == x + width && round (ext_y2) == y + height)
             return 1;
         break;
     case CONTAINS:
@@ -83,7 +88,7 @@ check_extents (const char *message, cairo_t *cr, enum ExtentsType type,
         break;
     }
 
-    cairo_test_log ("Error: %s; %s extents %f,%f,%f,%f should %s %f,%f,%f,%f\n",
+    cairo_test_log ("Error: %s; %s extents (%f, %f) x (%f, %f) should %s (%f, %f) x (%f, %f)\n",
                     message, type_string,
                     ext_x1, ext_y1, ext_x2 - ext_x1, ext_y2 - ext_y1,
                     relation_string,
@@ -97,7 +102,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_surface_t *surface;
     cairo_t         *cr2;
     const char      *phase;
-    
+
     surface = cairo_surface_create_similar (cairo_get_target (cr),
                                             CAIRO_CONTENT_COLOR, 100, 100);
     /* don't use cr accidentally */
@@ -159,7 +164,16 @@ draw (cairo_t *cr, int width, int height)
 	return CAIRO_TEST_FAILURE;
     cairo_new_path (cr2);
     cairo_restore (cr2);
-    
+
+    phase = "Arc";
+    cairo_save (cr2);
+    cairo_arc (cr2, 250.0, 250.0, 157.0, 5.147, 3.432);
+    cairo_set_line_width (cr2, 154.0);
+    if (!check_extents (phase, cr2, STROKE, APPROX_EQUALS, 16, 38, 468, 446))
+	return CAIRO_TEST_FAILURE;
+    cairo_new_path (cr2);
+    cairo_restore (cr2);
+
     phase = "User space, simple scale, getting extents with same transform";
     cairo_save (cr2);
     cairo_scale (cr2, 2, 2);
