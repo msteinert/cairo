@@ -1951,7 +1951,7 @@ cairo_pdf_surface_emit_transparency_group (cairo_pdf_surface_t  *surface,
     cairo_pdf_resource_t xobj_resource, smask_resource, gstate_resource;
 
     xobj_resource = _cairo_pdf_surface_open_stream (surface,
-                                                    TRUE,
+                                                    surface->compress_content,
                                                     "   /Type /XObject\r\n"
                                                     "   /Subtype /Form\r\n"
                                                     "   /FormType 1\r\n"
@@ -2608,7 +2608,9 @@ _cairo_pdf_surface_emit_to_unicode_stream (cairo_pdf_surface_t		*surface,
         backend->map_glyphs_to_unicode (font_subset->scaled_font, font_subset);
     }
 
-    stream = _cairo_pdf_surface_open_stream (surface, FALSE, NULL);
+    stream = _cairo_pdf_surface_open_stream (surface,
+					     surface->compress_content,
+					     NULL);
     _cairo_output_stream_printf (surface->output,
                                  "/CIDInit /ProcSet findresource begin\r\n"
                                  "12 dict begin\r\n"
@@ -3136,7 +3138,9 @@ _cairo_pdf_surface_emit_outline_glyph (cairo_pdf_surface_t	*surface,
     if (status)
 	return status;
 
-    *glyph_ret = _cairo_pdf_surface_open_stream (surface, FALSE, NULL);
+    *glyph_ret = _cairo_pdf_surface_open_stream (surface,
+						 surface->compress_content,
+						 NULL);
 
     _cairo_output_stream_printf (surface->output,
 				 "0 0 %f %f %f %f d1\r\n",
@@ -3199,7 +3203,9 @@ _cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
 	    return cairo_surface_status (&image->base);
     }
 
-    *glyph_ret = _cairo_pdf_surface_open_stream (surface, TRUE, NULL);
+    *glyph_ret = _cairo_pdf_surface_open_stream (surface,
+						 surface->compress_content,
+						 NULL);
 
     _cairo_output_stream_printf (surface->output,
 				 "%f 0 %f %f %f %f d1\r\n",
@@ -3580,7 +3586,7 @@ _cairo_pdf_surface_write_page (cairo_pdf_surface_t *surface)
     }
 
     page_content = _cairo_pdf_surface_open_stream (surface,
-						   TRUE,
+						   FALSE,
 						   "   /Type /XObject\r\n"
 						   "   /Subtype /Form\r\n"
 						   "   /BBox [ 0 0 %f %f ]\r\n"
