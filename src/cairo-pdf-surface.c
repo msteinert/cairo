@@ -622,7 +622,7 @@ _cairo_pdf_surface_add_font (cairo_pdf_surface_t *surface,
     cairo_status_t status;
     cairo_pdf_group_resources_t *res = surface->current_resources;
 
-    num_fonts = _cairo_array_num_elements (&surface->fonts);
+    num_fonts = _cairo_array_num_elements (&res->fonts);
     for (i = 0; i < num_fonts; i++) {
 	_cairo_array_copy_element (&surface->fonts, i, &font);
 	if (font.font_id == font_id &&
@@ -630,17 +630,23 @@ _cairo_pdf_surface_add_font (cairo_pdf_surface_t *surface,
 	    return CAIRO_STATUS_SUCCESS;
     }
 
+    num_fonts = _cairo_array_num_elements (&surface->fonts);
+    for (i = 0; i < num_fonts; i++) {
+	_cairo_array_copy_element (&surface->fonts, i, &font);
+	if (font.font_id == font_id &&
+	    font.subset_id == subset_id)
+	    return _cairo_array_append (&res->fonts, &font);
+    }
+
     font.font_id = font_id;
     font.subset_id = subset_id;
     font.subset_resource = _cairo_pdf_surface_new_object (surface);
 
-    status = _cairo_array_append (&res->fonts, &font);
+    status = _cairo_array_append (&surface->fonts, &font);
     if (status)
 	return status;
 
-    status = _cairo_array_append (&surface->fonts, &font);
-
-    return status;
+    return _cairo_array_append (&res->fonts, &font);
 }
 
 static cairo_pdf_resource_t
