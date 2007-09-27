@@ -102,6 +102,8 @@ draw (cairo_t *cr, int width, int height)
     cairo_surface_t *surface;
     cairo_t         *cr2;
     const char      *phase;
+    cairo_text_extents_t extents;
+    cairo_test_status_t ret = CAIRO_TEST_SUCCESS;
 
     surface = cairo_surface_create_similar (cairo_get_target (cr),
                                             CAIRO_CONTENT_COLOR, 100, 100);
@@ -117,7 +119,7 @@ draw (cairo_t *cr, int width, int height)
     phase = "No path";
     if (!check_extents (phase, cr2, FILL, EQUALS, 0, 0, 0, 0) ||
         !check_extents (phase, cr2, STROKE, EQUALS, 0, 0, 0, 0))
-	return CAIRO_TEST_FAILURE;
+	ret = CAIRO_TEST_FAILURE;
 
     /* http://bugs.freedesktop.org/show_bug.cgi?id=7965 */
     phase = "A vertical, open path";
@@ -128,7 +130,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_line_to (cr2, 750, 180);
     if (!check_extents (phase, cr2, FILL, EQUALS, 0, 0, 0, 0) ||
         !check_extents (phase, cr2, STROKE, EQUALS, -5, 175, 760, 10))
-	return CAIRO_TEST_FAILURE;
+	ret = CAIRO_TEST_FAILURE;
     cairo_new_path (cr2);
     cairo_restore (cr2);
 
@@ -137,7 +139,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_rectangle (cr2, 10, 10, 80, 80);
     if (!check_extents (phase, cr2, FILL, EQUALS, 10, 10, 80, 80) ||
         !check_extents (phase, cr2, STROKE, EQUALS, 5, 5, 90, 90))
-	return CAIRO_TEST_FAILURE;
+	ret = CAIRO_TEST_FAILURE;
     cairo_new_path (cr2);
     cairo_restore (cr2);
 
@@ -147,7 +149,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_rectangle (cr2, 20, 20, 10, 10);
     if (!check_extents (phase, cr2, FILL, EQUALS, 10, 10, 20, 20) ||
         !check_extents (phase, cr2, STROKE, EQUALS, 5, 5, 30, 30))
-	return CAIRO_TEST_FAILURE;
+	ret = CAIRO_TEST_FAILURE;
     cairo_new_path (cr2);
     cairo_restore (cr2);
 
@@ -161,7 +163,7 @@ draw (cairo_t *cr, int width, int height)
        the right of the bottom-right corner */
     if (!check_extents (phase, cr2, FILL, EQUALS, 10, 10, 80, 80) ||
         !check_extents (phase, cr2, STROKE, CONTAINS, 0, 5, 95, 95))
-	return CAIRO_TEST_FAILURE;
+	ret = CAIRO_TEST_FAILURE;
     cairo_new_path (cr2);
     cairo_restore (cr2);
 
@@ -170,7 +172,23 @@ draw (cairo_t *cr, int width, int height)
     cairo_arc (cr2, 250.0, 250.0, 157.0, 5.147, 3.432);
     cairo_set_line_width (cr2, 154.0);
     if (!check_extents (phase, cr2, STROKE, APPROX_EQUALS, 16, 38, 468, 446))
-	return CAIRO_TEST_FAILURE;
+	ret = CAIRO_TEST_FAILURE;
+    cairo_new_path (cr2);
+    cairo_restore (cr2);
+
+    phase = "Text";
+    cairo_save (cr2);
+    cairo_select_font_face (cr2, "Bitstream Vera Sans",
+			    CAIRO_FONT_SLANT_NORMAL,
+			    CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_set_font_size (cr2, 12);
+    cairo_text_extents (cr2, "The quick brown fox jumped over the lazy dog.", &extents);
+    cairo_move_to (cr2, -extents.x_bearing, -extents.y_bearing);
+    cairo_text_path (cr2, "The quick brown fox jumped over the lazy dog.");
+    cairo_set_line_width (cr2, 2.0);
+    if (!check_extents (phase, cr2, FILL, EQUALS, 0, 0, extents.width, extents.height) ||
+	!check_extents (phase, cr2, STROKE, EQUALS, -1, -1, extents.width+2, extents.height+2))
+	ret = CAIRO_TEST_FAILURE;
     cairo_new_path (cr2);
     cairo_restore (cr2);
 
@@ -180,7 +198,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_rectangle (cr2, 5, 5, 40, 40);
     if (!check_extents (phase, cr2, FILL, EQUALS, 5, 5, 40, 40) ||
         !check_extents (phase, cr2, STROKE, EQUALS, 0, 0, 50, 50))
-	return CAIRO_TEST_FAILURE;
+	ret = CAIRO_TEST_FAILURE;
     cairo_new_path (cr2);
     cairo_restore (cr2);
 
@@ -192,7 +210,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_restore (cr2);
     if (!check_extents (phase, cr2, FILL, EQUALS, 10, 10, 80, 80) ||
         !check_extents (phase, cr2, STROKE, EQUALS, 5, 5, 90, 90))
-	return CAIRO_TEST_FAILURE;
+	ret = CAIRO_TEST_FAILURE;
     cairo_new_path (cr2);
     cairo_restore (cr2);
 
@@ -211,12 +229,12 @@ draw (cairo_t *cr, int width, int height)
        the axes. */
     if (!check_extents (phase, cr2, FILL, CONTAINS, -35, -35, 35, 35) ||
         !check_extents (phase, cr2, STROKE, CONTAINS, -38, -38, 38, 38))
-	return CAIRO_TEST_FAILURE;
+	ret = CAIRO_TEST_FAILURE;
     cairo_new_path (cr2);
     cairo_restore (cr2);
 
     cairo_destroy (cr2);
-    return CAIRO_TEST_SUCCESS;
+    return ret;
 }
 
 int
