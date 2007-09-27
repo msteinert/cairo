@@ -22,17 +22,28 @@ check-valgrind: all
 	cd perf && $(MAKE) $(AM_MAKEFLAGS) check-valgrind
 perf: all
 	cd perf && $(MAKE) $(AM_MAKEFLAGS) perf
-lcov: check
-	$(LTP) --directory $(top_builddir) --capture --output-file cairo-lcov.info --test-name CAIRO_TEST --no-checksum
-	LANG=C $(LTP_GENHTML) --prefix $(top_builddir) --output-directory cairo-test-lcov --title "Cairo Test Code Coverage" --show-details cairo-test-lcov.info
-lcov-perf: perf
-	$(LTP) --directory $(top_builddir) --capture --output-file cairo-perf-lcov.info --test-name CAIRO_PERF --no-checksum
-	LANG=C $(LTP_GENHTML) --prefix $(top_builddir) --output-directory cairo-perf-lcov --title "Cairo Perf Code Coverage" --show-details cairo-perf-lcov.info
+
+.PHONY: lcov lcov-perf genlcov lcov-clean
+# use recursive makes in order to ignore errors during check/perf
+lcov:
+	-$(MAKE) $(AM_MAKEFLAGS) check
+	$(MAKE) $(AM_MAKEFLAGS) genlcov
+lcov-perf:
+	-$(MAKE) $(AM_MAKEFLAGS) perf
+	$(MAKE) $(AM_MAKEFLAGS) genlcov
+
+# we have to massage the lcov.info file slightly to hide the effect of libtool
+# placing the objects files in the .libs/ directory separate from the *.c
+genlcov:
+	$(LTP) --directory $(top_builddir) --capture --output-file cairo-lcov.info --test-name CAIRO_PERF --no-checksum
+	$(SED) -e 's#.libs/##' < cairo-lcov.info > cairo-lcov.info.tmp
+	LANG=C $(LTP_GENHTML) --prefix $(top_builddir) --output-directory cairo-lcov --title "Cairo Code Coverage" --show-details cairo-lcov.info.tmp
+	rm -f cairo-lcov.info.tmp
+
 lcov-clean:
 	$(LTP) --directory $(top_builddir) --reset
-	$(RM) -rf \
-	    cairo-test-lcov.info cairo-test-lcov \
-	    cairo-perf-lcov.info cairo-perf-lcov
+	$(RM) -rf cairo-lcov.info cairo-lcov
+	$(FIND) -name '*.gcda' -print0 | xargs -0 rm
 
 EXTRA_DIST = \
 	AUTHORS \
