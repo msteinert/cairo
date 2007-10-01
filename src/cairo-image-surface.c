@@ -541,7 +541,10 @@ cairo_image_surface_create_for_data (unsigned char     *data,
 {
     pixman_format_code_t pixman_format;
 
-    if (! CAIRO_FORMAT_VALID (format)) {
+    /* XXX pixman does not support images with arbitrary strides and
+     * attempting to create such surfaces will failure but we will interpret
+     * such failure as CAIRO_STATUS_NO_MEMORY.  */
+    if (! CAIRO_FORMAT_VALID (format) || stride % sizeof (uint32_t) != 0) {
 	_cairo_error (CAIRO_STATUS_INVALID_FORMAT);
 	return (cairo_surface_t*) &_cairo_image_surface_nil_invalid_format;
     }
