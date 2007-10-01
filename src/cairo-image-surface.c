@@ -84,6 +84,53 @@ static const cairo_image_surface_t _cairo_image_surface_nil_invalid_format = {
     0,					/* depth */
     NULL				/* pixman_image */
 };
+static const cairo_image_surface_t _cairo_image_surface_nil_invalid_content = {
+    {
+	&cairo_image_surface_backend,	/* backend */
+	CAIRO_SURFACE_TYPE_IMAGE,
+	CAIRO_CONTENT_COLOR,
+	CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
+	CAIRO_STATUS_INVALID_CONTENT,	/* status */
+	FALSE,				/* finished */
+	{ 0,	/* size */
+	  0,	/* num_elements */
+	  0,	/* element_size */
+	  NULL,	/* elements */
+	},				/* user_data */
+	{ 1.0, 0.0,
+	  0.0, 1.0,
+	  0.0, 0.0
+	},				/* device_transform */
+	{ 1.0, 0.0,
+	  0.0, 1.0,
+	  0.0, 0.0
+	},				/* device_transform_inverse */
+	0.0,				/* x_resolution */
+	0.0,				/* y_resolution */
+	0.0,				/* x_fallback_resolution */
+	0.0,				/* y_fallback_resolution */
+	NULL,				/* clip */
+	0,				/* next_clip_serial */
+	0,				/* current_clip_serial */
+	FALSE,				/* is_snapshot */
+	FALSE,				/* has_font_options */
+	{ CAIRO_ANTIALIAS_DEFAULT,
+	  CAIRO_SUBPIXEL_ORDER_DEFAULT,
+	  CAIRO_HINT_STYLE_DEFAULT,
+	  CAIRO_HINT_METRICS_DEFAULT
+	}				/* font_options */
+    },					/* base */
+    PIXMAN_a8r8g8b8,			/* pixman_format */
+    CAIRO_FORMAT_ARGB32,		/* format */
+    NULL,				/* data */
+    FALSE,				/* owns_data */
+    FALSE,				/* has_clip */
+    0,					/* width */
+    0,					/* height */
+    0,					/* stride */
+    0,					/* depth */
+    NULL				/* pixman_image */
+};
 
 static cairo_format_t
 _cairo_format_from_pixman_format (pixman_format_code_t pixman_format)
@@ -446,8 +493,10 @@ _cairo_image_surface_create_with_content (cairo_content_t	content,
 					  int			width,
 					  int			height)
 {
-    if (! CAIRO_CONTENT_VALID (content))
-	return (cairo_surface_t*) &_cairo_surface_nil;
+    if (! CAIRO_CONTENT_VALID (content)) {
+	_cairo_error (CAIRO_STATUS_INVALID_CONTENT);
+	return (cairo_surface_t*) &_cairo_image_surface_nil_invalid_content;
+    }
 
     return cairo_image_surface_create (_cairo_format_from_content (content),
 				       width, height);
@@ -492,8 +541,10 @@ cairo_image_surface_create_for_data (unsigned char     *data,
 {
     pixman_format_code_t pixman_format;
 
-    if (! CAIRO_FORMAT_VALID (format))
-	return (cairo_surface_t*) &_cairo_surface_nil;
+    if (! CAIRO_FORMAT_VALID (format)) {
+	_cairo_error (CAIRO_STATUS_INVALID_FORMAT);
+	return (cairo_surface_t*) &_cairo_image_surface_nil_invalid_format;
+    }
 
     pixman_format = _cairo_format_to_pixman_format_code (format);
 
@@ -509,8 +560,10 @@ _cairo_image_surface_create_for_data_with_content (unsigned char	*data,
 						   int			 height,
 						   int			 stride)
 {
-    if (! CAIRO_CONTENT_VALID (content))
-	return (cairo_surface_t*) &_cairo_surface_nil;
+    if (! CAIRO_CONTENT_VALID (content)) {
+	_cairo_error (CAIRO_STATUS_INVALID_CONTENT);
+	return (cairo_surface_t*) &_cairo_image_surface_nil_invalid_content;
+    }
 
     return cairo_image_surface_create_for_data (data,
 						_cairo_format_from_content (content),
