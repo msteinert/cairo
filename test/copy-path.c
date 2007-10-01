@@ -125,6 +125,23 @@ draw (cairo_t *cr, int width, int height)
     cairo_path_destroy (path);
 
     cairo_destroy (cr_error);
+    
+    /* first check that we can copy an empty path */
+    cairo_new_path (cr);
+    path = cairo_copy_path (cr);
+    if (path->status != CAIRO_STATUS_SUCCESS) {
+	cairo_test_log ("Error: cairo_copy_path returned status of %s\n",
+			cairo_status_to_string (path->status));
+	cairo_path_destroy (path);
+	return CAIRO_TEST_FAILURE;
+    }
+    if (path->num_data != 0) {
+	cairo_test_log ("Error: cairo_copy_path did not copy an empty path, returned path contains %d elements\n",
+		        path->num_data);
+	cairo_path_destroy (path);
+	return CAIRO_TEST_FAILURE;
+    }
+    cairo_path_destroy (path);
 
     /* We draw in the default black, so paint white first. */
     cairo_save (cr);
