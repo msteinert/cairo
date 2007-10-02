@@ -1831,8 +1831,25 @@ cairo_win32_surface_create_with_ddb (HDC hdc,
 	screen_dc = NULL;
     }
 
-    ddb = CreateCompatibleBitmap (hdc, width, height);
     ddb_dc = CreateCompatibleDC (hdc);
+    if (ddb_dc == NULL) {
+	_cairo_win32_print_gdi_error("CreateCompatibleDC");
+	new_surf = NIL_SURFACE;
+	goto FINISH;
+    }
+
+    ddb = CreateCompatibleBitmap (hdc, width, height);
+    if (ddb == NULL) {
+	DeleteDC (ddb_dc);
+
+	/* Note that if an app actually does hit this out of memory
+	 * condition, it's going to have lots of other issues, as
+	 * video memory is probably exhausted.
+	 */
+	_cairo_win32_print_gdi_error("CreateCompatibleBitmap");
+	new_surf = NIL_SURFACE;
+	goto FINISH;
+    }
 
     saved_dc_bitmap = SelectObject (ddb_dc, ddb);
 
@@ -1845,6 +1862,7 @@ cairo_win32_surface_create_with_ddb (HDC hdc,
     new_surf->saved_dc_bitmap = saved_dc_bitmap;
     new_surf->is_dib = FALSE;
 
+FINISH:
     if (screen_dc)
 	ReleaseDC (NULL, screen_dc);
 
