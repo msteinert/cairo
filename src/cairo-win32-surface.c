@@ -1818,7 +1818,7 @@ cairo_win32_surface_create_with_ddb (HDC hdc,
     HBITMAP saved_dc_bitmap;
 
     if (format != CAIRO_FORMAT_RGB24)
-	return NULL;
+	return NIL_SURFACE;
 /* XXX handle these eventually
 	format != CAIRO_FORMAT_A8 ||
 	format != CAIRO_FORMAT_A1)
