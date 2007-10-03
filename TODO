@@ -100,8 +100,6 @@ Backend-specific improvements
 
  PS/PDF improvements
      • Fix extend modes in PDF
-     • Fix encoding "issues" reported here:
-       http://lists.freedesktop.org/archives/cairo/2006-December/008985.html
      • Use glyph advances to generate more compact PostScript (done for PDF)
 
  Xlib backend
