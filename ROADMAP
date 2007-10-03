@@ -95,7 +95,7 @@ cairo 1.6 (scheduled for July 2007, targeting firefox and GNOME)
 
  • Set PS Level for the PS backend (adrianj)
 
- • EPS output from the PS backend (adrianj)
+ ✓ EPS output from the PS backend (adrianj)
 
  • API to allow enable/disabling certain subsetters (adrianj)
 	http://bugs.freedesktop.org/show_bug.cgi?id=8180#c28
