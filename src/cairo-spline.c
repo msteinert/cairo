@@ -113,7 +113,8 @@ _cairo_spline_grow (cairo_spline_t *spline)
 	if (new_points)
 	    memcpy (new_points, spline->points, old_size * sizeof (cairo_point_t));
     } else {
-	new_points = realloc (spline->points, new_size * sizeof (cairo_point_t));
+	new_points = _cairo_realloc_ab (spline->points,
+	       	                        new_size, sizeof (cairo_point_t));
     }
 
     if (new_points == NULL) {

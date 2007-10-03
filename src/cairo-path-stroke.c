@@ -1064,7 +1064,8 @@ _cairo_rectilinear_stroker_add_segment (cairo_rectilinear_stroker_t	*stroker,
 	/* Common case is one rectangle of exactly 4 segments. */
 	if (new_size == 0)
 	    new_size = 4;
-	new_segments = realloc (stroker->segments, new_size * sizeof (cairo_line_t));
+	new_segments = _cairo_realloc_ab (stroker->segments,
+	       	                          new_size, sizeof (cairo_line_t));
 	if (new_segments == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;
 	stroker->segments_size = new_size;

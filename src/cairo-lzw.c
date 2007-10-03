@@ -93,7 +93,11 @@ _lzw_buf_grow (lzw_buf_t *buf)
     if (buf->status)
 	return buf->status;
 
-    new_data = realloc (buf->data, new_size);
+    new_data = NULL;
+    /* check for integer overflow */
+    if (new_size / 2 == buf->data_size)
+	new_data = realloc (buf->data, new_size);
+
     if (new_data == NULL) {
 	free (buf->data);
 	buf->data_size = 0;

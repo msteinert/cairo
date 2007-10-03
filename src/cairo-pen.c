@@ -142,7 +142,8 @@ _cairo_pen_add_points (cairo_pen_t *pen, cairo_point_t *point, int num_points)
     int i;
 
     num_vertices = pen->num_vertices + num_points;
-    vertices = realloc (pen->vertices, num_vertices * sizeof (cairo_pen_vertex_t));
+    vertices = _cairo_realloc_ab (pen->vertices,
+	                          num_vertices, sizeof (cairo_pen_vertex_t));
     if (vertices == NULL) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;

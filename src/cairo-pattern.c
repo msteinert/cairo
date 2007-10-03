@@ -765,7 +765,9 @@ _cairo_pattern_gradient_grow (cairo_gradient_pattern_t *pattern)
 	if (new_stops)
 	    memcpy (new_stops, pattern->stops, old_size * sizeof (cairo_gradient_stop_t));
     } else {
-	new_stops = realloc (pattern->stops, new_size * sizeof (cairo_gradient_stop_t));
+	new_stops = _cairo_realloc_ab (pattern->stops,
+	       	                       new_size,
+				       sizeof (cairo_gradient_stop_t));
     }
 
     if (new_stops == NULL) {
