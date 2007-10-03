@@ -78,8 +78,10 @@ _cairo_pen_init (cairo_pen_t	*pen,
 						    radius,
 						    ctm);
 
-    pen->vertices = _cairo_malloc_ab (pen->num_vertices, sizeof (cairo_pen_vertex_t));
+    pen->vertices = _cairo_malloc_ab (pen->num_vertices,
+	                              sizeof (cairo_pen_vertex_t));
     if (pen->vertices == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
@@ -119,8 +121,10 @@ _cairo_pen_init_copy (cairo_pen_t *pen, cairo_pen_t *other)
     *pen = *other;
 
     if (pen->num_vertices) {
-	pen->vertices = _cairo_malloc_ab (pen->num_vertices, sizeof (cairo_pen_vertex_t));
+	pen->vertices = _cairo_malloc_ab (pen->num_vertices,
+	       	                          sizeof (cairo_pen_vertex_t));
 	if (pen->vertices == NULL) {
+	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
 	memcpy (pen->vertices, other->vertices, pen->num_vertices * sizeof (cairo_pen_vertex_t));
@@ -139,8 +143,10 @@ _cairo_pen_add_points (cairo_pen_t *pen, cairo_point_t *point, int num_points)
 
     num_vertices = pen->num_vertices + num_points;
     vertices = realloc (pen->vertices, num_vertices * sizeof (cairo_pen_vertex_t));
-    if (vertices == NULL)
+    if (vertices == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     pen->vertices = vertices;
     pen->num_vertices = num_vertices;
