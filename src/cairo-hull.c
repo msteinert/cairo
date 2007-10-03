@@ -63,8 +63,10 @@ _cairo_hull_create (cairo_pen_vertex_t *vertices, int num_vertices)
     vertices[0].point = tmp;
 
     hull = _cairo_malloc_ab (num_vertices, sizeof (cairo_hull_t));
-    if (hull == NULL)
+    if (hull == NULL) {
+	_cairo_error (CAIRO_STATUS_SUCCESS);
 	return NULL;
+    }
 
     for (i = 0; i < num_vertices; i++) {
 	hull[i].point = vertices[i].point;

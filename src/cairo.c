@@ -196,8 +196,10 @@ cairo_create (cairo_surface_t *target)
 	return (cairo_t *) &_cairo_nil;
 
     cr = malloc (sizeof (cairo_t));
-    if (cr == NULL)
+    if (cr == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_t *) &_cairo_nil;
+    }
 
     CAIRO_REFERENCE_COUNT_INIT (&cr->ref_count, 1);
 
@@ -2414,8 +2416,11 @@ _cairo_rectangle_list_create_in_error (cairo_status_t status)
         return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
 
     list = malloc (sizeof (cairo_rectangle_list_t));
-    if (list == NULL)
+    if (list == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
         return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
+    }
+
     list->status = status;
     list->rectangles = NULL;
     list->num_rectangles = 0;

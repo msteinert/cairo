@@ -251,8 +251,10 @@ _cairo_xlib_display_get (Display *dpy)
     }
 
     display = malloc (sizeof (cairo_xlib_display_t));
-    if (display == NULL)
+    if (display == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto UNLOCK;
+    }
 
     /* Xlib calls out to the extension close_display hooks in LIFO
      * order. So we have to ensure that all extensions that we depend

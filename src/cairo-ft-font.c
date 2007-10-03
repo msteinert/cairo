@@ -176,8 +176,10 @@ _cairo_ft_unscaled_font_map_create (void)
     assert (cairo_ft_unscaled_font_map == NULL);
 
     font_map = malloc (sizeof (cairo_ft_unscaled_font_map_t));
-    if (font_map == NULL)
+    if (font_map == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FAIL;
+    }
 
     font_map->hash_table =
 	_cairo_hash_table_create (_cairo_ft_unscaled_font_keys_equal);
@@ -423,8 +425,10 @@ _cairo_ft_unscaled_font_create_for_pattern (FcPattern *pattern)
 
     /* Otherwise create it and insert into hash table. */
     unscaled = malloc (sizeof (cairo_ft_unscaled_font_t));
-    if (unscaled == NULL)
+    if (unscaled == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto UNWIND_FONT_MAP_LOCK;
+    }
 
     status = _cairo_ft_unscaled_font_init (unscaled, filename, id, NULL);
     if (status)
@@ -456,8 +460,10 @@ _cairo_ft_unscaled_font_create_from_face (FT_Face face)
     cairo_ft_unscaled_font_t *unscaled;
 
     unscaled = malloc (sizeof (cairo_ft_unscaled_font_t));
-    if (unscaled == NULL)
+    if (unscaled == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
+    }
 
     status = _cairo_ft_unscaled_font_init (unscaled, NULL, 0, face);
     if (status) {
@@ -1042,7 +1048,6 @@ _render_glyph_outline (FT_Face                    face,
 	bitmap.width = width * hmul;
 	bitmap.rows = height * vmul;
 	bitmap.buffer = calloc (stride, bitmap.rows);
-
 	if (bitmap.buffer == NULL) {
 	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    return CAIRO_STATUS_NO_MEMORY;

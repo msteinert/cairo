@@ -76,8 +76,10 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
     cairo_paginated_surface_t *surface;
 
     surface = malloc (sizeof (cairo_paginated_surface_t));
-    if (surface == NULL)
+    if (surface == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FAIL;
+    }
 
     _cairo_surface_init (&surface->base, &cairo_paginated_surface_backend,
 			 content);

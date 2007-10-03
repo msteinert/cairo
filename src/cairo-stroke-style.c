@@ -63,8 +63,10 @@ _cairo_stroke_style_init_copy (cairo_stroke_style_t *style,
 	style->dash = NULL;
     } else {
 	style->dash = _cairo_malloc_ab (style->num_dashes, sizeof (double));
-	if (style->dash == NULL)
+	if (style->dash == NULL) {
+	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    return CAIRO_STATUS_NO_MEMORY;
+	}
 
 	memcpy (style->dash, other->dash,
 		style->num_dashes * sizeof (double));

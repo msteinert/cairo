@@ -1181,8 +1181,10 @@ compress_dup (const void *data, unsigned long data_size,
     /* Bound calculation taken from zlib. */
     *compressed_size = data_size + (data_size >> 12) + (data_size >> 14) + 11;
     compressed = malloc (*compressed_size);
-    if (compressed == NULL)
+    if (compressed == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
+    }
 
     if (compress (compressed, compressed_size, data, data_size) != Z_OK) {
 	free (compressed);
@@ -1220,6 +1222,7 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
     alpha = malloc (alpha_size);
     if (alpha == NULL) {
 	status = CAIRO_STATUS_NO_MEMORY;
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP;
     }
 
@@ -1313,6 +1316,7 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t   *surface,
     rgb = malloc (rgb_size);
     if (rgb == NULL) {
 	status = CAIRO_STATUS_NO_MEMORY;
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP;
     }
 
@@ -1884,8 +1888,10 @@ _cairo_pdf_surface_emit_pattern_stops (cairo_pdf_surface_t      *surface,
     alpha_function->id = 0;
 
     allstops = _cairo_malloc_ab ((pattern->n_stops + 2), sizeof (cairo_pdf_color_stop_t));
-    if (allstops == NULL)
+    if (allstops == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     stops = &allstops[1];
     n_stops = pattern->n_stops;

@@ -414,8 +414,10 @@ _cairo_directfb_surface_create_similar (void            *abstract_src,
 
     format = _cairo_format_from_content (content);             
     surface = calloc (1, sizeof(cairo_directfb_surface_t));
-    if (!surface) 
+    if (!surface) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
         return NULL;
+    }
    
     surface->dfbsurface = _directfb_buffer_surface_create (source->dfb,
                                               cairo_to_directfb_format (format),
@@ -1119,6 +1121,7 @@ _cairo_directfb_surface_set_clip_region (void           *abstract_surface,
             if (!surface->clips) {
                 _cairo_region_boxes_fini (region, boxes);
                 surface->n_clips = 0;
+		_cairo_error (CAIRO_STATUS_NO_MEMORY);
                 return CAIRO_STATUS_NO_MEMORY;
             }
         
@@ -1211,12 +1214,15 @@ _directfb_allocate_font_cache (IDirectFB *dfb, int width, int height)
     cairo_directfb_font_cache_t *cache;
 
     cache = calloc (1, sizeof(cairo_directfb_font_cache_t));
-    if (!cache)
-        return NULL;
+    if (!cache) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return NULL;
+    }
 
     cache->dfbsurface = _directfb_buffer_surface_create( dfb, DSPF_A8, width, height);
     if (!cache->dfbsurface) {
         free (cache);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
         return NULL;
     }
 
@@ -1313,8 +1319,10 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
             
             /* Remember glyph location */ 
             rect = malloc (sizeof(DFBRectangle));
-            if (!rect)
+            if (!rect) {
+		_cairo_error (CAIRO_STATUS_NO_MEMORY);
                 return CAIRO_STATUS_NO_MEMORY;
+	    }
             *rect = rects[n];
             
             scaled_glyph->surface_private = rect;
@@ -1351,8 +1359,10 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
                         "Reallocating font cache (%dx%d).\n", w, h);
             
             new_cache = _directfb_allocate_font_cache (surface->dfb, w, h);
-            if (!new_cache)
+            if (!new_cache) {
+		_cairo_error (CAIRO_STATUS_NO_MEMORY);
                 return CAIRO_STATUS_NO_MEMORY;
+	    }
             
             new_cache->dfbsurface->Blit (new_cache->dfbsurface,
                                      cache->dfbsurface, NULL, 0, 0);
@@ -1366,8 +1376,10 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
                     "Allocating font cache (%dx%d).\n", w, h);
         
         cache = _directfb_allocate_font_cache (surface->dfb, w, h);
-        if (!cache)
-            return CAIRO_STATUS_NO_MEMORY;
+	if (!cache) {
+	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    return CAIRO_STATUS_NO_MEMORY;
+	}
             
         scaled_font->surface_backend = &cairo_directfb_surface_backend;
         scaled_font->surface_private = cache;
@@ -1629,8 +1641,10 @@ cairo_directfb_surface_create (IDirectFB *dfb, IDirectFBSurface *dfbsurface)
     cairo_directfb_surface_backend_init (dfb);
         
     surface = calloc (1, sizeof(cairo_directfb_surface_t));
-    if (!surface)
-        return NULL;
+    if (!surface) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return NULL;
+    }
         
     dfbsurface->GetPixelFormat (dfbsurface, &format);
     _cairo_surface_init (&surface->base, &cairo_directfb_surface_backend,

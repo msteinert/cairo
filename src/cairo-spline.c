@@ -118,6 +118,7 @@ _cairo_spline_grow (cairo_spline_t *spline)
     }
 
     if (new_points == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
     }
 

@@ -755,8 +755,10 @@ _cairo_bo_event_queue_init (cairo_bo_event_queue_t	*event_queue,
      * event type a union so it doesn't always contain the skip
      * elt? */
     events = _cairo_malloc_ab (num_events, sizeof (cairo_bo_event_t) + sizeof(cairo_bo_event_t*));
-    if (events == NULL)
+    if (events == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     sorted_event_ptrs = (cairo_bo_event_t **) (events + num_events);
     event_queue->startstop_events = events;
@@ -1146,8 +1148,10 @@ _cairo_bo_edge_start_or_continue_trap (cairo_bo_edge_t	*edge,
 
     if (edge->next) {
 	trap = edge->deferred_trap = _cairo_freelist_alloc (&bo_traps->freelist);
-	if (!edge->deferred_trap)
+	if (!edge->deferred_trap) {
+	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    return CAIRO_STATUS_NO_MEMORY;
+	}
 
 	trap->right = edge->next;
 	trap->top = top;
@@ -1437,8 +1441,10 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	*traps,
 	edges = stack_edges;
     } else {
 	edges = _cairo_malloc_ab (polygon->num_edges, sizeof (cairo_bo_edge_t));
-	if (edges == NULL)
+	if (edges == NULL) {
+	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    return CAIRO_STATUS_NO_MEMORY;
+	}
     }
 
     /* Figure out the bounding box of the input coordinates and

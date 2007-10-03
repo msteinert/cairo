@@ -324,6 +324,7 @@ _cairo_scaled_font_map_lock (void)
     cairo_scaled_font_map = NULL;
  CLEANUP_MUTEX_LOCK:
     CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
+    _cairo_error (CAIRO_STATUS_NO_MEMORY);
     return NULL;
 }
 
@@ -1036,6 +1037,7 @@ _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
 
     if (*glyphs == NULL) {
 	status = CAIRO_STATUS_NO_MEMORY;
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto DONE;
     }
 
@@ -1626,6 +1628,7 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 	scaled_glyph = malloc (sizeof (cairo_scaled_glyph_t));
 	if (scaled_glyph == NULL) {
 	    status = CAIRO_STATUS_NO_MEMORY;
+	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto CLEANUP;
 	}
 

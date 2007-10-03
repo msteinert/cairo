@@ -406,6 +406,7 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
     data = _cairo_malloc_ab (surface->height, bytes_per_line);
     if (data == NULL) {
 	free (imagerep);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
@@ -1265,8 +1266,10 @@ _cairo_xcb_surface_fill_rectangles (void			     *abstract_surface,
 
     if (num_rects > ARRAY_LENGTH(static_xrects)) {
         xrects = _cairo_malloc_ab (num_rects, sizeof(xcb_rectangle_t));
-        if (xrects == NULL)
-            return CAIRO_STATUS_NO_MEMORY;
+	if (xrects == NULL) {
+	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    return CAIRO_STATUS_NO_MEMORY;
+	}
     }
 
     for (i = 0; i < num_rects; i++) {
@@ -1347,8 +1350,10 @@ _create_trapezoid_mask (cairo_xcb_surface_t *dst,
     solid_picture = _create_a8_picture (dst, &solid, width, height, TRUE);
 
     offset_traps = _cairo_malloc_ab (num_traps, sizeof (xcb_render_trapezoid_t));
-    if (!offset_traps)
+    if (!offset_traps) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return XCB_NONE;
+    }
 
     for (i = 0; i < num_traps; i++) {
 	offset_traps[i].top = _cairo_fixed_to_16_16(traps[i].top) - 0x10000 * dst_y;
@@ -1496,6 +1501,7 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
             xtraps = _cairo_malloc_ab (num_traps, sizeof(xcb_render_trapezoid_t));
             if (xtraps == NULL) {
                 status = CAIRO_STATUS_NO_MEMORY;
+		_cairo_error (CAIRO_STATUS_NO_MEMORY);
                 goto BAIL;
             }
         }
@@ -1565,6 +1571,7 @@ _cairo_xcb_surface_set_clip_region (void           *abstract_surface,
 	    rects = _cairo_malloc_ab (n_boxes, sizeof(xcb_rectangle_t));
 	    if (rects == NULL) {
                 _cairo_region_boxes_fini (region, boxes);
+		_cairo_error (CAIRO_STATUS_NO_MEMORY);
 		return CAIRO_STATUS_NO_MEMORY;
             }
 	} else {
@@ -1989,8 +1996,10 @@ _cairo_xcb_surface_font_init (xcb_connection_t		    *dpy,
     cairo_xcb_surface_font_private_t	*font_private;
 
     font_private = malloc (sizeof (cairo_xcb_surface_font_private_t));
-    if (!font_private)
+    if (!font_private) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     font_private->dpy = dpy;
     font_private->format = format;
@@ -2109,6 +2118,7 @@ _cairo_xcb_surface_add_glyph (xcb_connection_t *dpy,
 	    new = malloc (c);
 	    if (!new) {
 		status = CAIRO_STATUS_NO_MEMORY;
+		_cairo_error (CAIRO_STATUS_NO_MEMORY);
 		goto BAIL;
 	    }
 	    n = new;
@@ -2135,6 +2145,7 @@ _cairo_xcb_surface_add_glyph (xcb_connection_t *dpy,
 	    new = malloc (c);
 	    if (new == NULL) {
 		status = CAIRO_STATUS_NO_MEMORY;
+		_cairo_error (CAIRO_STATUS_NO_MEMORY);
 		goto BAIL;
 	    }
 	    n = new;
@@ -2374,8 +2385,10 @@ _cairo_xcb_surface_show_glyphs (void                *abstract_dst,
      * glyphs to workaround an X server bug, (present in at least Xorg
      * 7.1 without EXA). */
     output_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
-    if (output_glyphs == NULL)
+    if (output_glyphs == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     /* After passing all those tests, we're now committed to rendering
      * these glyphs or to fail trying. We first upload any glyphs to

@@ -120,10 +120,14 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
 cairo_path_fixed_t *
 _cairo_path_fixed_create (void)
 {
-    cairo_path_fixed_t	*path = malloc (sizeof (cairo_path_fixed_t));
+    cairo_path_fixed_t	*path;
 
-    if (!path)
+    path = malloc (sizeof (cairo_path_fixed_t));
+    if (!path) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
+    }
+
     _cairo_path_fixed_init (path);
     return path;
 }

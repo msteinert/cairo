@@ -395,8 +395,10 @@ _cairo_toy_font_face_create (const char          *family,
 
     /* Otherwise create it and insert into hash table. */
     font_face = malloc (sizeof (cairo_toy_font_face_t));
-    if (font_face == NULL)
+    if (font_face == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto UNWIND_HASH_TABLE_LOCK;
+    }
 
     status = _cairo_toy_font_face_init (font_face, family, slant, weight);
     if (status)

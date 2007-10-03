@@ -149,8 +149,10 @@ _word_wrap_stream_create (cairo_output_stream_t *output, int max_column)
     word_wrap_stream_t *stream;
 
     stream = malloc (sizeof (word_wrap_stream_t));
-    if (stream == NULL)
+    if (stream == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
+    }
 
     _cairo_output_stream_init (&stream->base,
 			       _word_wrap_stream_write,
@@ -1565,8 +1567,10 @@ _string_array_stream_create (cairo_output_stream_t *output)
     string_array_stream_t *stream;
 
     stream = malloc (sizeof (string_array_stream_t));
-    if (stream == NULL)
+    if (stream == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
+    }
 
     _cairo_output_stream_init (&stream->base,
 			       _string_array_stream_write,
@@ -1647,6 +1651,7 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
     rgb = malloc (rgb_size);
     if (rgb == NULL) {
 	status = CAIRO_STATUS_NO_MEMORY;
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto bail1;
     }
 
@@ -2117,8 +2122,10 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
 	 */
 	if (num_dashes % 2) {
 	    dash = _cairo_malloc_abc (num_dashes, 2, sizeof (double));
-	    if (dash == NULL)
+	    if (dash == NULL) {
+		_cairo_error (CAIRO_STATUS_NO_MEMORY);
 		return CAIRO_STATUS_NO_MEMORY;
+	    }
 
 	    memcpy (dash, style->dash, num_dashes * sizeof (double));
 	    memcpy (dash + num_dashes, style->dash, num_dashes * sizeof (double));
@@ -2299,8 +2306,10 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 
     _cairo_ps_surface_emit_pattern (surface, source);
     glyph_ids = _cairo_malloc_ab (num_glyphs_unsigned, sizeof (cairo_ps_glyph_id_t));
-    if (glyph_ids == NULL)
-        return CAIRO_STATUS_NO_MEMORY;
+    if (glyph_ids == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     for (i = 0; i < num_glyphs_unsigned; i++) {
         status = _cairo_scaled_font_subsets_map_glyph (surface->font_subsets,

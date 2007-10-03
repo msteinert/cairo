@@ -241,8 +241,10 @@ _cairo_utf8_to_ucs4 (const unsigned char *str,
     }
 
     str32 = _cairo_malloc_ab (n_chars + 1, sizeof (uint32_t));
-    if (!str32)
+    if (!str32) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     in = str;
     for (i=0; i < n_chars; i++) {
@@ -308,8 +310,10 @@ _cairo_utf8_to_utf16 (const unsigned char *str,
     }
 
     str16 = _cairo_malloc_ab (n16 + 1, sizeof (uint16_t));
-    if (!str16)
+    if (!str16) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     in = str;
     for (i = 0; i < n16;) {

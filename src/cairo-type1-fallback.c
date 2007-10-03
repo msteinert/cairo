@@ -80,13 +80,16 @@ cairo_type1_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     cairo_font_options_t font_options;
 
     font = calloc (1, sizeof (cairo_type1_font_t));
-    if (font == NULL)
+    if (font == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     font->widths = calloc (scaled_font_subset->num_glyphs,
                            sizeof (int));
     if (font->widths == NULL) {
 	free (font);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
@@ -781,6 +784,7 @@ _cairo_type1_fallback_init_internal (cairo_type1_subset_t	*type1_subset,
     /* status is already set, ignore further errors */
     cairo_type1_font_destroy (font);
 
+    _cairo_error (status);
     return status;
 }
 
@@ -873,6 +877,7 @@ fail2:
     _cairo_type2_charstrings_fini (type2_subset);
 fail1:
     cairo_type1_font_destroy (font);
+    _cairo_error (status);
     return status;
 }
 

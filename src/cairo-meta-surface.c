@@ -252,8 +252,10 @@ _cairo_meta_surface_paint (void			*abstract_surface,
     cairo_command_paint_t *command;
 
     command = malloc (sizeof (cairo_command_paint_t));
-    if (command == NULL)
+    if (command == NULL) {
+	_cairo_error (CAIRO_STATUS_SUCCESS);
 	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     command->header.type = CAIRO_COMMAND_PAINT;
     command->header.region = CAIRO_META_REGION_ALL;
@@ -293,8 +295,10 @@ _cairo_meta_surface_mask (void			*abstract_surface,
     cairo_command_mask_t *command;
 
     command = malloc (sizeof (cairo_command_mask_t));
-    if (command == NULL)
+    if (command == NULL) {
+	_cairo_error (CAIRO_STATUS_SUCCESS);
 	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     command->header.type = CAIRO_COMMAND_MASK;
     command->header.region = CAIRO_META_REGION_ALL;
@@ -339,8 +343,10 @@ _cairo_meta_surface_stroke (void			*abstract_surface,
     cairo_command_stroke_t *command;
 
     command = malloc (sizeof (cairo_command_stroke_t));
-    if (command == NULL)
+    if (command == NULL) {
+	_cairo_error (CAIRO_STATUS_SUCCESS);
 	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     command->header.type = CAIRO_COMMAND_STROKE;
     command->header.region = CAIRO_META_REGION_ALL;
@@ -394,8 +400,10 @@ _cairo_meta_surface_fill (void			*abstract_surface,
     cairo_command_fill_t *command;
 
     command = malloc (sizeof (cairo_command_fill_t));
-    if (command == NULL)
+    if (command == NULL) {
+	_cairo_error (CAIRO_STATUS_SUCCESS);
 	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     command->header.type = CAIRO_COMMAND_FILL;
     command->header.region = CAIRO_META_REGION_ALL;
@@ -441,8 +449,10 @@ _cairo_meta_surface_show_glyphs (void			*abstract_surface,
     cairo_command_show_glyphs_t *command;
 
     command = malloc (sizeof (cairo_command_show_glyphs_t));
-    if (command == NULL)
+    if (command == NULL) {
+	_cairo_error (CAIRO_STATUS_SUCCESS);
 	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     command->header.type = CAIRO_COMMAND_SHOW_GLYPHS;
     command->header.region = CAIRO_META_REGION_ALL;
@@ -476,6 +486,7 @@ _cairo_meta_surface_show_glyphs (void			*abstract_surface,
     _cairo_pattern_fini (&command->source.base);
   CLEANUP_COMMAND:
     free (command);
+    _cairo_error (status);
     return status;
 }
 
@@ -531,8 +542,10 @@ _cairo_meta_surface_intersect_clip_path (void		    *dst,
     cairo_status_t status;
 
     command = malloc (sizeof (cairo_command_intersect_clip_path_t));
-    if (command == NULL)
+    if (command == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     command->header.type = CAIRO_COMMAND_INTERSECT_CLIP_PATH;
     command->header.region = CAIRO_META_REGION_ALL;
@@ -799,6 +812,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 		dev_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
 		if (dev_glyphs == NULL) {
 		    status = CAIRO_STATUS_NO_MEMORY;
+		    _cairo_error (CAIRO_STATUS_NO_MEMORY);
 		    break;
 		}
 		for (i = 0; i < num_glyphs; i++) {

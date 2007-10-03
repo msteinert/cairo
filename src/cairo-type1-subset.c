@@ -119,6 +119,8 @@ _cairo_type1_font_subset_create (cairo_unscaled_font_t      *unscaled_font,
     ft_unscaled_font = (cairo_ft_unscaled_font_t *) unscaled_font;
 
     face = _cairo_ft_unscaled_font_lock_face (ft_unscaled_font);
+    if (!face)
+	return CAIRO_STATUS_NO_MEMORY;
 
     if (FT_Get_PS_Font_Info(face, &font_info) != 0) {
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
@@ -179,6 +181,8 @@ _cairo_type1_font_subset_create (cairo_unscaled_font_t      *unscaled_font,
  fail1:
     _cairo_ft_unscaled_font_unlock_face (ft_unscaled_font);
 
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	_cairo_error (status);
     return status;
 }
 
@@ -368,10 +372,12 @@ cairo_type1_font_subset_decrypt_eexec_segment (cairo_type1_font_subset_t *font)
     end = (unsigned char *) in + font->eexec_segment_size;
 
     font->cleartext = malloc (font->eexec_segment_size);
-    if (font->cleartext == NULL)
+    if (font->cleartext == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return font->status = CAIRO_STATUS_NO_MEMORY;
-    out = font->cleartext;
+    }
 
+    out = font->cleartext;
     while (in < end) {
 	if (font->eexec_segment_is_ascii) {
 	    c = *in++;
@@ -386,7 +392,6 @@ cairo_type1_font_subset_decrypt_eexec_segment (cairo_type1_font_subset_t *font)
 
 	*out++ = p;
     }
-
     font->cleartext_end = out;
 
     return font->status;
@@ -714,8 +719,10 @@ cairo_type1_font_subset_look_for_seac(cairo_type1_font_subset_t *font,
     int command;
 
     charstring = malloc (encrypted_charstring_length);
-    if (charstring == NULL)
+    if (charstring == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return;
+    }
 
     cairo_type1_font_subset_decrypt_charstring ((const unsigned char *)
 						encrypted_charstring,
@@ -1041,15 +1048,20 @@ cairo_type1_font_subset_generate (void       *abstract_font,
     unsigned long ret;
 
     ft_unscaled_font = (cairo_ft_unscaled_font_t *) font->base.unscaled_font;
-    font->face = _cairo_ft_unscaled_font_lock_face (ft_unscaled_font);
 
     /* If anything fails below, it's out of memory. */
     font->status = CAIRO_STATUS_NO_MEMORY;
 
+    font->face = _cairo_ft_unscaled_font_lock_face (ft_unscaled_font);
+    if (!font->face)
+	return CAIRO_STATUS_NO_MEMORY;
+
     font->type1_length = font->face->stream->size;
     font->type1_data = malloc (font->type1_length);
-    if (font->type1_data == NULL)
+    if (font->type1_data == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto fail;
+    }
 
     if (font->face->stream->read) {
 	ret = font->face->stream->read (font->face->stream, 0,
@@ -1184,6 +1196,8 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
  fail1:
     cairo_type1_font_subset_destroy (font);
 
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	_cairo_error (status);
     return status;
 }
 

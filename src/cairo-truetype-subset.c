@@ -270,6 +270,7 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     if (name)
 	free (name);
 
+    _cairo_error (status);
     return status;
 }
 
@@ -511,6 +512,7 @@ cairo_truetype_font_write_glyf_table (cairo_truetype_font_t *font,
     u.bytes = malloc (size);
     if (u.bytes == NULL) {
 	font->status = CAIRO_STATUS_NO_MEMORY;
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return font->status;
     }
 
@@ -1038,6 +1040,7 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
  fail1:
     cairo_truetype_font_destroy (font);
 
+    _cairo_error (status);
     return status;
 }
 
@@ -1083,8 +1086,11 @@ _cairo_truetype_map_glyphs_to_unicode (cairo_scaled_font_subset_t *font_subset,
 
     size = be16_to_cpu (map->length);
     map = malloc (size);
-    if (map == NULL)
+    if (map == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
+    }
+
     if (backend->load_truetype_table (font_subset->scaled_font,
                                       TT_TAG_cmap, table_offset,
                                       (unsigned char *) map,
@@ -1167,8 +1173,11 @@ _cairo_truetype_create_glyph_to_unicode_map (cairo_scaled_font_subset_t	*font_su
     num_tables = be16_to_cpu (cmap->num_tables);
     size = 4 + num_tables*sizeof(tt_cmap_index_t);
     cmap = malloc (size);
-    if (cmap == NULL)
+    if (cmap == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
+    }
+
     if (backend->load_truetype_table (font_subset->scaled_font,
                                       TT_TAG_cmap, 0, (unsigned char *) cmap,
                                       &size) != CAIRO_STATUS_SUCCESS) {

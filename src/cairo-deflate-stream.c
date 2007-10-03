@@ -118,8 +118,10 @@ _cairo_deflate_stream_create (cairo_output_stream_t *output)
     cairo_deflate_stream_t *stream;
 
     stream = malloc (sizeof (cairo_deflate_stream_t));
-    if (stream == NULL)
+    if (stream == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
+    }
 
     _cairo_output_stream_init (&stream->base,
 			       _cairo_deflate_stream_write,

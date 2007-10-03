@@ -187,8 +187,10 @@ _create_dc_and_bitmap (cairo_win32_surface_t *surface,
 
     if (num_palette > 2) {
 	bitmap_info = _cairo_malloc_ab_plus_c (num_palette, sizeof(RGBQUAD), sizeof(BITMAPINFOHEADER));
-	if (!bitmap_info)
+	if (!bitmap_info) {
+	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    return CAIRO_STATUS_NO_MEMORY;
+	}
     } else {
 	bitmap_info = (BITMAPINFO *)&bmi_stack;
     }
@@ -1467,6 +1469,7 @@ _cairo_win32_surface_set_clip_region (void           *abstract_surface,
 	data = malloc (data_size);
 	if (!data) {
 	    _cairo_region_boxes_fini (region, boxes);
+	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
 	rects = (RECT *)data->Buffer;

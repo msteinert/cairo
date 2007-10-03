@@ -124,8 +124,10 @@ _cairo_sub_font_glyph_create (unsigned long	scaled_font_glyph_index,
     cairo_sub_font_glyph_t *sub_font_glyph;
 
     sub_font_glyph = malloc (sizeof (cairo_sub_font_glyph_t));
-    if (sub_font_glyph == NULL)
+    if (sub_font_glyph == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
+    }
 
     _cairo_sub_font_glyph_init_key (sub_font_glyph, scaled_font_glyph_index);
     sub_font_glyph->subset_id = subset_id;
@@ -214,8 +216,10 @@ _cairo_sub_font_create (cairo_scaled_font_subsets_t	*parent,
     cairo_sub_font_t *sub_font;
 
     sub_font = malloc (sizeof (cairo_sub_font_t));
-    if (sub_font == NULL)
+    if (sub_font == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
+    }
 
     sub_font->is_scaled = is_scaled;
     sub_font->is_composite = is_composite;
@@ -410,9 +414,11 @@ _cairo_scaled_font_subsets_create_internal (cairo_subsets_type_t type)
 {
     cairo_scaled_font_subsets_t *subsets;
 
-    subsets = malloc (sizeof (cairo_scaled_font_subsets_t));
-    if (subsets == NULL)
+    subsets = malloc (sizeof (cairo_scaled_font_subsets_t)); 
+    if (subsets == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
+    }
 
     subsets->type = type;
     subsets->max_glyphs_per_unscaled_subset_used = 0;
@@ -623,8 +629,10 @@ _cairo_scaled_font_subsets_foreach_internal (cairo_scaled_font_subsets_t        
 	return CAIRO_STATUS_SUCCESS;
 
     collection.glyphs = _cairo_malloc_ab (collection.glyphs_size, sizeof(unsigned long));
-    if (collection.glyphs == NULL)
+    if (collection.glyphs == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     collection.font_subset_callback = font_subset_callback;
     collection.font_subset_callback_closure = closure;

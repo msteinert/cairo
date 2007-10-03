@@ -1445,8 +1445,10 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
 
     if (num_rects > ARRAY_LENGTH(static_xrects)) {
         xrects = _cairo_malloc_ab (num_rects, sizeof(XRectangle));
-        if (xrects == NULL)
-            return CAIRO_STATUS_NO_MEMORY;
+	if (xrects == NULL) {
+	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    return CAIRO_STATUS_NO_MEMORY;
+	}
     }
 
     for (i = 0; i < num_rects; i++) {
@@ -1534,6 +1536,7 @@ _create_trapezoid_mask (cairo_xlib_surface_t *dst,
     offset_traps = _cairo_malloc_ab (num_traps, sizeof (XTrapezoid));
     if (!offset_traps) {
 	XRenderFreePicture (dst->dpy, mask_picture);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return None;
     }
 
@@ -1684,6 +1687,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
             xtraps = _cairo_malloc_ab (num_traps, sizeof(XTrapezoid));
             if (xtraps == NULL) {
                 status = CAIRO_STATUS_NO_MEMORY;
+		_cairo_error (CAIRO_STATUS_NO_MEMORY);
                 goto BAIL;
             }
         }
@@ -1748,6 +1752,7 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 	    rects = _cairo_malloc_ab (n_boxes, sizeof(XRectangle));
 	    if (rects == NULL) {
                 _cairo_region_boxes_fini (region, boxes);
+		_cairo_error (CAIRO_STATUS_NO_MEMORY);
 		return CAIRO_STATUS_NO_MEMORY;
             }
 	} else {
@@ -2451,13 +2456,16 @@ _cairo_xlib_surface_font_init (Display		    *dpy,
     cairo_xlib_surface_font_private_t	*font_private;
 
     font_private = malloc (sizeof (cairo_xlib_surface_font_private_t));
-    if (!font_private)
+    if (!font_private) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
+    }
 
     if (!_cairo_xlib_add_close_display_hook (dpy,
 		_cairo_xlib_surface_remove_scaled_font,
 		scaled_font, scaled_font)) {
 	free (font_private);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
@@ -2642,6 +2650,7 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 
 	    new = malloc (c);
 	    if (new == NULL) {
+		_cairo_error (CAIRO_STATUS_NO_MEMORY);
 		status = CAIRO_STATUS_NO_MEMORY;
 		goto BAIL;
 	    }
@@ -2769,8 +2778,10 @@ _cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
       elts = stack_elts;
     } else {
       elts = _cairo_malloc_ab (num_elts, sizeof (XGlyphElt8));
-      if (elts == NULL)
+      if (elts == NULL) {
+	  _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	  return CAIRO_STATUS_NO_MEMORY;
+      }
     }
 
     /* Fill them in */

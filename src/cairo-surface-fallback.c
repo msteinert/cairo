@@ -1172,6 +1172,7 @@ _cairo_surface_fallback_fill_rectangles (cairo_surface_t         *surface,
 	offset_rects = _cairo_malloc_ab (num_rects, sizeof (cairo_rectangle_int_t));
 	if (offset_rects == NULL) {
 	    status = CAIRO_STATUS_NO_MEMORY;
+	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto DONE;
 	}
 
@@ -1228,6 +1229,7 @@ _cairo_surface_fallback_composite_trapezoids (cairo_operator_t		op,
 	offset_traps = _cairo_malloc_ab (num_traps, sizeof (cairo_trapezoid_t));
 	if (!offset_traps) {
 	    status = CAIRO_STATUS_NO_MEMORY;
+	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto DONE;
 	}
 

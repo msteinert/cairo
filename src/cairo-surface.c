@@ -1268,6 +1268,7 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
 	rects = _cairo_malloc_ab (num_boxes, sizeof (cairo_rectangle_int_t));
 	if (!rects) {
 	    _cairo_region_boxes_fini (region, boxes);
+	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    return CAIRO_STATUS_NO_MEMORY;
         }
     }

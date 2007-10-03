@@ -246,8 +246,10 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
     cairo_status_t status;
 
     f = malloc (sizeof(cairo_win32_scaled_font_t));
-    if (f == NULL)
+    if (f == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
+    }
 
     f->logfont = *logfont;
 
@@ -412,8 +414,10 @@ _win32_scaled_font_get_unscaled_hfont (cairo_win32_scaled_font_t *scaled_font,
 	}
 
 	otm = malloc (otm_size);
-	if (!otm)
+	if (!otm) {
+	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    return NULL;
+	}
 
 	if (!GetOutlineTextMetrics (hdc, otm_size, otm)) {
 	    _cairo_win32_print_gdi_error ("_win32_scaled_font_get_unscaled_hfont:GetOutlineTextMetrics");
@@ -691,6 +695,7 @@ _cairo_win32_scaled_font_text_to_glyphs (void		*abstract_font,
  FAIL1:
     free (utf16);
 
+    _cairo_error (status);
     return status;
 }
 
