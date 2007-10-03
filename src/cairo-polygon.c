@@ -101,6 +101,7 @@ _cairo_polygon_grow (cairo_polygon_t *polygon)
     }
 
     if (new_edges == NULL) {
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
