@@ -1347,7 +1347,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 	int		      stride;
 
 	stride = (width + 3) & -4;
-	data = calloc (stride * height, 1);
+	data = calloc (stride, height);
 	if (!data)
 	{
 	    _cairo_glitz_pattern_release_surface (src_pattern, src, &attributes);

@@ -1198,7 +1198,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     }
 
     /* The image must be initially transparent */
-    mask_data = calloc (1, mask_stride * height);
+    mask_data = calloc (mask_stride, height);
     if (mask_data == NULL) {
 	status = CAIRO_STATUS_NO_MEMORY;
 	goto CLEANUP_SOURCE;
