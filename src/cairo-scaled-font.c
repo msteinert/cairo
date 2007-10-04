@@ -204,11 +204,12 @@ const cairo_scaled_font_t _cairo_scaled_font_nil = {
  * @status: a status value indicating an error, (eg. not
  * CAIRO_STATUS_SUCCESS)
  *
- * Sets scaled_font->status to @status and calls _cairo_error;
+ * Atomically sets scaled_font->status to @status and calls _cairo_error;
  *
  * All assignments of an error status to scaled_font->status should happen
- * through _cairo_scaled_font_set_error() or else _cairo_error() should be
- * called immediately after the assignment.
+ * through _cairo_scaled_font_set_error(). Note that due to the nature of
+ * the atomic operation, it is not safe to call this function on the nil
+ * objects.
  *
  * The purpose of this function is to allow the user to set a
  * breakpoint in _cairo_error() to generate a stack trace for when the
@@ -219,10 +220,8 @@ _cairo_scaled_font_set_error (cairo_scaled_font_t *scaled_font,
 			      cairo_status_t status)
 {
     /* Don't overwrite an existing error. This preserves the first
-     * error, which is the most significant. It also avoids attempting
-     * to write to read-only data (eg. from a nil scaled_font). */
-    if (scaled_font->status == CAIRO_STATUS_SUCCESS)
-	scaled_font->status = status;
+     * error, which is the most significant. */
+    _cairo_status_set_error (&scaled_font->status, status);
 
     _cairo_error (status);
 }

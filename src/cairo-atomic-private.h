@@ -54,6 +54,8 @@ typedef int cairo_atomic_int_t;
 # define _cairo_atomic_int_get(x) (*x)
 # define _cairo_atomic_int_set(x, value) ((*x) = value)
 
+# define _cairo_atomic_int_cmpxchg(x, oldv, newv) __sync_val_compare_and_swap (x, oldv, newv)
+
 #else
 
 # include "cairo-compiler-private.h"
@@ -74,7 +76,13 @@ _cairo_atomic_int_get (int *x);
 cairo_private void
 _cairo_atomic_int_set (int *x, int value);
 
+cairo_private int
+_cairo_atomic_int_cmpxchg (int *x, int oldv, int newv);
+
 #endif
+
+#define _cairo_status_set_error(status, err) \
+    (void) _cairo_atomic_int_cmpxchg (status, CAIRO_STATUS_SUCCESS, err)
 
 CAIRO_END_DECLS
 

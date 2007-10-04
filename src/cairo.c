@@ -97,11 +97,11 @@ _cairo_error (cairo_status_t status)
  * @status: a status value indicating an error, (eg. not
  * CAIRO_STATUS_SUCCESS)
  *
- * Sets cr->status to @status and calls _cairo_error;
+ * Atomically sets cr->status to @status and calls _cairo_error;
  *
  * All assignments of an error status to cr->status should happen
- * through _cairo_set_error() or else _cairo_error() should be
- * called immediately after the assignment.
+ * through _cairo_set_error(). Note that due to the nature of the atomic
+ * operation, it is not safe to call this function on the nil objects.
  *
  * The purpose of this function is to allow the user to set a
  * breakpoint in _cairo_error() to generate a stack trace for when the
@@ -111,10 +111,8 @@ static void
 _cairo_set_error (cairo_t *cr, cairo_status_t status)
 {
     /* Don't overwrite an existing error. This preserves the first
-     * error, which is the most significant. It also avoids attempting
-     * to write to read-only data (eg. from a nil cairo_t). */
-    if (cr->status == CAIRO_STATUS_SUCCESS)
-	cr->status = status;
+     * error, which is the most significant. */
+    _cairo_status_set_error (&cr->status, status);
 
     _cairo_error (status);
 }

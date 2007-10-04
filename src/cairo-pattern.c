@@ -66,11 +66,12 @@ const cairo_solid_pattern_t cairo_pattern_none = {
  * @status: a status value indicating an error, (eg. not
  * CAIRO_STATUS_SUCCESS)
  *
- * Sets pattern->status to @status and calls _cairo_error;
+ * Atomically sets pattern->status to @status and calls _cairo_error;
  *
  * All assignments of an error status to pattern->status should happen
- * through _cairo_pattern_set_error() or else _cairo_error() should be
- * called immediately after the assignment.
+ * through _cairo_pattern_set_error(). Note that due to the nature of
+ * the atomic operation, it is not safe to call this function on the nil
+ * objects.
  *
  * The purpose of this function is to allow the user to set a
  * breakpoint in _cairo_error() to generate a stack trace for when the
@@ -81,10 +82,8 @@ _cairo_pattern_set_error (cairo_pattern_t *pattern,
 			  cairo_status_t status)
 {
     /* Don't overwrite an existing error. This preserves the first
-     * error, which is the most significant. It also avoids attempting
-     * to write to read-only data (eg. from a nil pattern). */
-    if (pattern->status == CAIRO_STATUS_SUCCESS)
-	pattern->status = status;
+     * error, which is the most significant. */
+    _cairo_status_set_error (&pattern->status, status);
 
     _cairo_error (status);
 }
@@ -345,8 +344,8 @@ _cairo_pattern_create_in_error (cairo_status_t status)
 
     pattern = _cairo_pattern_create_solid (_cairo_stock_color (CAIRO_STOCK_BLACK),
 					   CAIRO_CONTENT_COLOR);
-    /* no-op on a pattern already in error i.e the _cairo_pattern_nil */
-    _cairo_pattern_set_error (pattern, status);
+    if (pattern->status == CAIRO_STATUS_SUCCESS)
+	_cairo_pattern_set_error (pattern, status);
 
     return pattern;
 }
