@@ -214,8 +214,10 @@ const cairo_scaled_font_t _cairo_scaled_font_nil = {
  * The purpose of this function is to allow the user to set a
  * breakpoint in _cairo_error() to generate a stack trace for when the
  * user causes cairo to detect an error.
+ *
+ * Return value: the error status.
  **/
-void
+cairo_status_t
 _cairo_scaled_font_set_error (cairo_scaled_font_t *scaled_font,
 			      cairo_status_t status)
 {
@@ -223,7 +225,7 @@ _cairo_scaled_font_set_error (cairo_scaled_font_t *scaled_font,
      * error, which is the most significant. */
     _cairo_status_set_error (&scaled_font->status, status);
 
-    _cairo_error_throw (status);
+    return _cairo_error (status);
 }
 
 /**
@@ -888,7 +890,7 @@ cairo_scaled_font_text_extents (cairo_scaled_font_t   *scaled_font,
 
     status = _cairo_scaled_font_text_to_glyphs (scaled_font, 0., 0., utf8, &glyphs, &num_glyphs);
     if (status) {
-        _cairo_scaled_font_set_error (scaled_font, status);
+        status = _cairo_scaled_font_set_error (scaled_font, status);
         return;
     }
     cairo_scaled_font_glyph_extents (scaled_font, glyphs, num_glyphs, extents);
@@ -938,7 +940,7 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 					     CAIRO_SCALED_GLYPH_INFO_METRICS,
 					     &scaled_glyph);
 	if (status) {
-	    _cairo_scaled_font_set_error (scaled_font, status);
+	    status = _cairo_scaled_font_set_error (scaled_font, status);
 	    goto UNLOCK;
 	}
 
@@ -1096,10 +1098,8 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
 					     glyphs[i].index,
 					     CAIRO_SCALED_GLYPH_INFO_METRICS,
 					     &scaled_glyph);
-	if (status) {
-	    _cairo_scaled_font_set_error (scaled_font, status);
-	    return status;
-	}
+	if (status)
+	    return _cairo_scaled_font_set_error (scaled_font, status);
 
 	/* glyph images are snapped to pixel locations */
 	x = _cairo_lround (glyphs[i].x);
@@ -1677,7 +1677,7 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
     if (status) {
 	/* It's not an error for the backend to not support the info we want. */
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    _cairo_scaled_font_set_error (scaled_font, status);
+	    status = _cairo_scaled_font_set_error (scaled_font, status);
 	*scaled_glyph_ret = NULL;
     } else {
 	*scaled_glyph_ret = scaled_glyph;

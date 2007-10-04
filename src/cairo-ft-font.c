@@ -2539,7 +2539,7 @@ cairo_ft_scaled_font_lock_face (cairo_scaled_font_t *abstract_font)
 
     face = _cairo_ft_unscaled_font_lock_face (scaled_font->unscaled);
     if (face == NULL) {
-	_cairo_scaled_font_set_error (&scaled_font->base, CAIRO_STATUS_NO_MEMORY);
+	status = _cairo_scaled_font_set_error (&scaled_font->base, CAIRO_STATUS_NO_MEMORY);
 	return NULL;
     }
 
@@ -2547,7 +2547,7 @@ cairo_ft_scaled_font_lock_face (cairo_scaled_font_t *abstract_font)
 				                &scaled_font->base.scale);
     if (status) {
 	_cairo_ft_unscaled_font_unlock_face (scaled_font->unscaled);
-	_cairo_scaled_font_set_error (&scaled_font->base, status);
+	status = _cairo_scaled_font_set_error (&scaled_font->base, status);
 	return NULL;
     }
 
