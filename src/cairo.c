@@ -3415,6 +3415,9 @@ cairo_append_path (cairo_t		*cr,
 	return;
     }
 
+    if (path->num_data == 0)
+	return;
+
     if (path->data == NULL) {
 	_cairo_set_error (cr, CAIRO_STATUS_NULL_POINTER);
 	return;
