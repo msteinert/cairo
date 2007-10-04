@@ -671,6 +671,9 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
     if (surface->status)
 	return surface->status;
 
+    if (target->status)
+	return _cairo_surface_set_error (surface, target->status);
+
     meta = (cairo_meta_surface_t *) surface;
     status = CAIRO_STATUS_SUCCESS;
 
@@ -860,7 +863,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 
     _cairo_clip_reset (&clip);
 
-    return status;
+    return _cairo_surface_set_error (surface, status);
 }
 
 cairo_status_t
