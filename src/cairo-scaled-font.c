@@ -934,6 +934,7 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 	return;
 
     CAIRO_MUTEX_LOCK (scaled_font->mutex);
+    _cairo_scaled_font_freeze_cache (scaled_font);
 
     for (i = 0; i < num_glyphs; i++) {
 	double			left, top, right, bottom;
@@ -1000,6 +1001,7 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
     }
 
  UNLOCK:
+    _cairo_scaled_font_thaw_cache (scaled_font);
     CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
 }
 slim_hidden_def (cairo_scaled_font_glyph_extents);
@@ -1028,6 +1030,7 @@ _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
     }
 
     CAIRO_MUTEX_LOCK (scaled_font->mutex);
+    _cairo_scaled_font_freeze_cache (scaled_font);
 
     if (scaled_font->backend->text_to_glyphs) {
 	status = scaled_font->backend->text_to_glyphs (scaled_font,
@@ -1070,6 +1073,7 @@ _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
     }
 
  DONE:
+    _cairo_scaled_font_thaw_cache (scaled_font);
     CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
 
     if (ucs4)
@@ -1430,6 +1434,7 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
 	return status;
 
     closure.path = path;
+    _cairo_scaled_font_freeze_cache (scaled_font);
     for (i = 0; i < num_glyphs; i++) {
 	cairo_scaled_glyph_t *scaled_glyph;
 
@@ -1482,6 +1487,7 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
 	    goto BAIL;
     }
   BAIL:
+    _cairo_scaled_font_thaw_cache (scaled_font);
 
     return _cairo_scaled_font_set_error (scaled_font, status);
 }
