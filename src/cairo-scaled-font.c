@@ -221,6 +221,9 @@ cairo_status_t
 _cairo_scaled_font_set_error (cairo_scaled_font_t *scaled_font,
 			      cairo_status_t status)
 {
+    if (status == CAIRO_STATUS_SUCCESS)
+	return status;
+
     /* Don't overwrite an existing error. This preserves the first
      * error, which is the most significant. */
     _cairo_status_set_error (&scaled_font->status, status);
@@ -1011,8 +1014,12 @@ _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
 {
     int i;
     uint32_t *ucs4 = NULL;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_status_t status;
     cairo_scaled_glyph_t *scaled_glyph;
+
+    status = scaled_font->status;
+    if (status)
+	return status;
 
     if (utf8[0] == '\0') {
 	*num_glyphs = 0;
@@ -1165,7 +1172,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 						    width, height,
 						    glyphs, num_glyphs);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
+	    return _cairo_scaled_font_set_error (scaled_font, status);
     }
 
     /* Font display routine either does not exist or failed. */
@@ -1255,7 +1262,7 @@ CLEANUP_MASK:
 
     if (mask != NULL)
 	cairo_surface_destroy (mask);
-    return status;
+    return _cairo_scaled_font_set_error (scaled_font, status);
 }
 
 typedef struct _cairo_scaled_glyph_path_closure {
@@ -1415,8 +1422,9 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
     cairo_scaled_glyph_path_closure_t closure;
     cairo_path_fixed_t *glyph_path;
 
-    if (scaled_font->status)
-	return scaled_font->status;
+    status = scaled_font->status;
+    if (status)
+	return status;
 
     closure.path = path;
     for (i = 0; i < num_glyphs; i++) {
@@ -1429,7 +1437,7 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
 	if (status == CAIRO_STATUS_SUCCESS)
 	    glyph_path = scaled_glyph->path;
 	else if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
+	    goto BAIL;
 
 	/* If the font is incapable of providing a path, then we'll
 	 * have to trace our own from a surface. */
@@ -1439,16 +1447,18 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
 						 CAIRO_SCALED_GLYPH_INFO_SURFACE,
 						 &scaled_glyph);
 	    if (status)
-		return status;
+		goto BAIL;
 
 	    glyph_path = _cairo_path_fixed_create ();
-	    if (glyph_path == NULL)
-		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    if (glyph_path == NULL) {
+		status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+		goto BAIL;
+	    }
 
 	    status = _trace_mask_to_path (scaled_glyph->surface, glyph_path);
 	    if (status) {
 		_cairo_path_fixed_destroy (glyph_path);
-		return status;
+		goto BAIL;
 	    }
 	}
 
@@ -1466,10 +1476,11 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
 	    _cairo_path_fixed_destroy (glyph_path);
 
 	if (status)
-	    return status;
+	    goto BAIL;
     }
+  BAIL:
 
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_scaled_font_set_error (scaled_font, status);
 }
 
 /**
