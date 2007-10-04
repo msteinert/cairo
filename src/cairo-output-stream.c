@@ -166,6 +166,12 @@ _cairo_output_stream_destroy (cairo_output_stream_t *stream)
     if (stream == NULL)
 	return _cairo_error (CAIRO_STATUS_NULL_POINTER);
 
+    if (stream == &_cairo_output_stream_nil ||
+	stream == &_cairo_output_stream_nil_write_error)
+    {
+	return stream->status;
+    }
+
     status = _cairo_output_stream_fini (stream);
     free (stream);
 
