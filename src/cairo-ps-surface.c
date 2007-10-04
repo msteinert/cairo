@@ -271,6 +271,9 @@ _cairo_ps_surface_emit_path (cairo_ps_surface_t	   *surface,
     ps_path_info_t path_info;
 
     word_wrap = _word_wrap_stream_create (stream, 79);
+    status = _cairo_output_stream_get_status (word_wrap);
+    if (status)
+	return status;
 
     path_info.surface = surface;
     path_info.stream = word_wrap;
@@ -283,8 +286,6 @@ _cairo_ps_surface_emit_path (cairo_ps_surface_t	   *surface,
 					  _cairo_ps_surface_path_close_path,
 					  &path_info);
 
-    if (status == CAIRO_STATUS_SUCCESS)
-	status = _cairo_output_stream_get_status (word_wrap);
     status2 = _cairo_output_stream_destroy (word_wrap);
     if (status == CAIRO_STATUS_SUCCESS)
 	status = status2;
@@ -1675,7 +1676,16 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 				 "/%sData [\n", name);
 
     string_array_stream = _string_array_stream_create (surface->stream);
+    status = _cairo_output_stream_get_status (string_array_stream);
+    if (status)
+	goto bail3;
+
     base85_stream = _cairo_base85_stream_create (string_array_stream);
+    status = _cairo_output_stream_get_status (base85_stream);
+    if (status) {
+	status2 = _cairo_output_stream_destroy (string_array_stream);
+	goto bail3;
+    }
 
     _cairo_output_stream_write (base85_stream, compressed, compressed_size);
 
@@ -2354,6 +2364,10 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
             _cairo_output_stream_printf (surface->stream, "<%02x> S\n", glyph_ids[i].glyph_id);
         } else {
             word_wrap = _word_wrap_stream_create (surface->stream, 79);
+	    status = _cairo_output_stream_get_status (word_wrap);
+	    if (status)
+		goto fail;
+
             _cairo_output_stream_printf (word_wrap, "<");
             for (j = i; j < last+1; j++)
                 _cairo_output_stream_printf (word_wrap, "%02x", glyph_ids[j].glyph_id);
