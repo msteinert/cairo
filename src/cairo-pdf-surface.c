@@ -2425,6 +2425,7 @@ _cairo_pdf_surface_select_pattern (cairo_pdf_surface_t *surface,
     status = _cairo_pdf_surface_add_alpha (surface, surface->emitted_pattern.alpha, &alpha);
     if (status)
 	return status;
+
     if (surface->emitted_pattern.type == CAIRO_PATTERN_TYPE_SOLID) {
 	_cairo_output_stream_printf (surface->output,
                                      "%f %f %f ",
@@ -2450,7 +2451,9 @@ _cairo_pdf_surface_select_pattern (cairo_pdf_surface_t *surface,
                                          "/Pattern cs /p%d scn ",
                                          surface->emitted_pattern.pattern.id);
         }
-        _cairo_pdf_surface_add_pattern (surface, surface->emitted_pattern.pattern);
+        status = _cairo_pdf_surface_add_pattern (surface, surface->emitted_pattern.pattern);
+	if (status)
+	    return status;
 
         _cairo_output_stream_printf (surface->output,
                                      "/a%d gs ",
@@ -2459,7 +2462,7 @@ _cairo_pdf_surface_select_pattern (cairo_pdf_surface_t *surface,
         _cairo_output_stream_printf (surface->output, "\r\n");
     }
 
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_output_stream_get_status (surface->output);
 }
 
 static cairo_int_status_t
@@ -4020,7 +4023,9 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
 	_cairo_output_stream_printf (surface->output, "q ");
     }
 
-    _cairo_pdf_surface_select_pattern (surface, FALSE);
+    status = _cairo_pdf_surface_select_pattern (surface, FALSE);
+    if (status)
+	return status;
 
     _cairo_output_stream_printf (surface->output,
 				 "0 0 %f %f re f\r\n",
@@ -4098,7 +4103,10 @@ _cairo_pdf_surface_mask	(void			*abstract_surface,
     if (status)
 	return status;
 
-    _cairo_pdf_surface_select_pattern (surface, FALSE);
+    status = _cairo_pdf_surface_select_pattern (surface, FALSE);
+    if (status)
+	return status;
+
     _cairo_output_stream_printf (surface->output,
 				 "0 0 %f %f re f\r\n",
 				 surface->width, surface->height);
@@ -4139,7 +4147,10 @@ _cairo_pdf_surface_mask	(void			*abstract_surface,
     if (status)
 	return status;
 
-    _cairo_pdf_surface_select_pattern (surface, FALSE);
+    status = _cairo_pdf_surface_select_pattern (surface, FALSE);
+    if (status)
+	return status;
+
     _cairo_output_stream_printf (surface->output,
 				 "0 0 %f %f re f\r\n",
 				 surface->width, surface->height);
@@ -4318,7 +4329,9 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 	_cairo_output_stream_printf (surface->output, "q ");
     }
 
-    _cairo_pdf_surface_select_pattern (surface, TRUE);
+    status = _cairo_pdf_surface_select_pattern (surface, TRUE);
+    if (status)
+	return status;
 
     status = _cairo_pdf_surface_emit_stroke_style (surface,
 						   style);
@@ -4409,7 +4422,10 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
 	_cairo_output_stream_printf (surface->output, "q ");
     }
 
-    _cairo_pdf_surface_select_pattern (surface, FALSE);
+    status = _cairo_pdf_surface_select_pattern (surface, FALSE);
+    if (status)
+	return status;
+
     info.output = surface->output;
     info.cairo_to_pdf = &surface->cairo_to_pdf;
     info.ctm_inverse = NULL;
@@ -4501,7 +4517,9 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
 	_cairo_output_stream_printf (surface->output, "q ");
     }
 
-    _cairo_pdf_surface_select_pattern (surface, FALSE);
+    status = _cairo_pdf_surface_select_pattern (surface, FALSE);
+    if (status)
+	return status;
 
     _cairo_output_stream_printf (surface->output,
 				 "BT\r\n");
