@@ -63,7 +63,7 @@ typedef struct _test_meta_surface {
     cairo_bool_t image_reflects_meta;
 } test_meta_surface_t;
 
-const cairo_private cairo_surface_backend_t test_meta_surface_backend;
+static const cairo_surface_backend_t test_meta_surface_backend;
 
 static cairo_int_status_t
 _test_meta_surface_show_page (void *abstract_surface);
@@ -322,7 +322,7 @@ _test_meta_surface_snapshot (void *abstract_other)
 #endif
 }
 
-const cairo_surface_backend_t test_meta_surface_backend = {
+static const cairo_surface_backend_t test_meta_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
     NULL, /* create_similar */
     _test_meta_surface_finish,
