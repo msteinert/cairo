@@ -46,7 +46,7 @@
 #endif /* _MSC_VER */
 
 
-cairo_private void
+void
 _cairo_output_stream_init (cairo_output_stream_t            *stream,
 			   cairo_output_stream_write_func_t  write_func,
 			   cairo_output_stream_close_func_t  close_func)
@@ -58,7 +58,7 @@ _cairo_output_stream_init (cairo_output_stream_t            *stream,
     stream->closed = FALSE;
 }
 
-cairo_private cairo_status_t
+cairo_status_t
 _cairo_output_stream_fini (cairo_output_stream_t *stream)
 {
     return _cairo_output_stream_close (stream);
@@ -559,6 +559,14 @@ _cairo_memory_stream_copy (cairo_output_stream_t *base,
 			   cairo_output_stream_t *dest)
 {
     memory_stream_t *stream = (memory_stream_t *) base;
+
+    if (dest->status)
+	return;
+
+    if (base->status) {
+	dest->status = base->status;
+	return;
+    }
 
     _cairo_output_stream_write (dest, 
 				_cairo_array_index (&stream->array, 0),
