@@ -1354,6 +1354,7 @@ _cairo_image_surface_clone (cairo_image_surface_t	*surface,
 			    cairo_format_t		 format)
 {
     cairo_image_surface_t *clone;
+    cairo_status_t status;
     cairo_t *cr;
     double x, y;
 
@@ -1369,7 +1370,13 @@ _cairo_image_surface_clone (cairo_image_surface_t	*surface,
     cairo_set_source_surface (cr, &surface->base, 0, 0);
     cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
     cairo_paint (cr);
+    status = cairo_status (cr);
     cairo_destroy (cr);
+
+    if (status) {
+	cairo_surface_destroy (&clone->base);
+	return (cairo_image_surface_t *) &_cairo_surface_nil;
+    }
 
     return clone;
 }
