@@ -77,7 +77,7 @@ const cairo_solid_pattern_t cairo_pattern_none = {
  * breakpoint in _cairo_error() to generate a stack trace for when the
  * user causes cairo to detect an error.
  **/
-static void
+static cairo_status_t
 _cairo_pattern_set_error (cairo_pattern_t *pattern,
 			  cairo_status_t status)
 {
@@ -85,7 +85,7 @@ _cairo_pattern_set_error (cairo_pattern_t *pattern,
      * error, which is the most significant. */
     _cairo_status_set_error (&pattern->status, status);
 
-    _cairo_error (status);
+    return _cairo_error (status);
 }
 
 static void
@@ -137,8 +137,7 @@ _cairo_gradient_pattern_init_copy (cairo_gradient_pattern_t	  *pattern,
 	if (pattern->stops == NULL) {
 	    pattern->stops_size = 0;
 	    pattern->n_stops = 0;
-	    _cairo_pattern_set_error (&pattern->base, CAIRO_STATUS_NO_MEMORY);
-	    return CAIRO_STATUS_NO_MEMORY;
+	    return _cairo_pattern_set_error (&pattern->base, CAIRO_STATUS_NO_MEMORY);
 	}
 
 	memcpy (pattern->stops, other->stops,
@@ -152,10 +151,8 @@ cairo_status_t
 _cairo_pattern_init_copy (cairo_pattern_t	*pattern,
 			  const cairo_pattern_t *other)
 {
-    if (other->status) {
-	_cairo_pattern_set_error (pattern, other->status);
-	return other->status;
-    }
+    if (other->status)
+	return _cairo_pattern_set_error (pattern, other->status);
 
     switch (other->type) {
     case CAIRO_PATTERN_TYPE_SOLID: {
@@ -345,7 +342,7 @@ _cairo_pattern_create_in_error (cairo_status_t status)
     pattern = _cairo_pattern_create_solid (_cairo_stock_color (CAIRO_STOCK_BLACK),
 					   CAIRO_CONTENT_COLOR);
     if (pattern->status == CAIRO_STATUS_SUCCESS)
-	_cairo_pattern_set_error (pattern, status);
+	status = _cairo_pattern_set_error (pattern, status);
 
     return pattern;
 }
@@ -385,7 +382,7 @@ cairo_pattern_create_rgb (double red, double green, double blue)
     pattern = _cairo_pattern_create_solid (&color,
 					   CAIRO_CONTENT_COLOR);
     if (pattern->status)
-	_cairo_error (pattern->status);
+	_cairo_error_throw (pattern->status);
 
     return pattern;
 }
@@ -429,7 +426,7 @@ cairo_pattern_create_rgba (double red, double green, double blue,
     pattern = _cairo_pattern_create_solid (&color,
 					   CAIRO_CONTENT_COLOR_ALPHA);
     if (pattern->status)
-	_cairo_error (pattern->status);
+	_cairo_error_throw (pattern->status);
 
     return pattern;
 }
@@ -463,7 +460,7 @@ cairo_pattern_create_for_surface (cairo_surface_t *surface)
 
     pattern = malloc (sizeof (cairo_surface_pattern_t));
     if (pattern == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_pattern_t *)&_cairo_pattern_nil.base;
     }
 
@@ -506,7 +503,7 @@ cairo_pattern_create_linear (double x0, double y0, double x1, double y1)
 
     pattern = malloc (sizeof (cairo_linear_pattern_t));
     if (pattern == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_pattern_t *) &_cairo_pattern_nil.base;
     }
 
@@ -551,7 +548,7 @@ cairo_pattern_create_radial (double cx0, double cy0, double radius0,
 
     pattern = malloc (sizeof (cairo_radial_pattern_t));
     if (pattern == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_pattern_t *) &_cairo_pattern_nil.base;
     }
 
@@ -734,7 +731,7 @@ cairo_pattern_set_user_data (cairo_pattern_t		 *pattern,
 			     cairo_destroy_func_t	  destroy)
 {
     if (CAIRO_REFERENCE_COUNT_IS_INVALID (&pattern->ref_count))
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     return _cairo_user_data_array_set_data (&pattern->user_data,
 					    key, user_data, destroy);
@@ -769,10 +766,8 @@ _cairo_pattern_gradient_grow (cairo_gradient_pattern_t *pattern)
 				       sizeof (cairo_gradient_stop_t));
     }
 
-    if (new_stops == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return CAIRO_STATUS_NO_MEMORY;
-    }
+    if (new_stops == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     pattern->stops = new_stops;
     pattern->stops_size = new_size;
@@ -795,7 +790,7 @@ _cairo_pattern_add_color_stop (cairo_gradient_pattern_t *pattern,
     if (pattern->n_stops >= pattern->stops_size) {
         cairo_status_t status = _cairo_pattern_gradient_grow (pattern);
 	if (status) {
-	    _cairo_pattern_set_error (&pattern->base, CAIRO_STATUS_NO_MEMORY);
+	    status = _cairo_pattern_set_error (&pattern->base, status);
 	    return;
 	}
     }
@@ -984,7 +979,7 @@ cairo_pattern_set_matrix (cairo_pattern_t      *pattern,
     inverse = *matrix;
     status = cairo_matrix_invert (&inverse);
     if (status)
-	_cairo_pattern_set_error (pattern, status);
+	status = _cairo_pattern_set_error (pattern, status);
 }
 slim_hidden_def (cairo_pattern_set_matrix);
 
@@ -1160,10 +1155,8 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
 
     if (pattern->n_stops > ARRAY_LENGTH(pixman_stops_static)) {
 	pixman_stops = _cairo_malloc_ab (pattern->n_stops, sizeof(pixman_gradient_stop_t));
-	if (pixman_stops == NULL) {
-	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    return CAIRO_STATUS_NO_MEMORY;
-	}
+	if (pixman_stops == NULL)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     for (i = 0; i < pattern->n_stops; i++) {
@@ -1212,7 +1205,7 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
 	free (pixman_stops);
 
     if (pixman_image == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     if (_cairo_surface_is_image (dst))
     {
@@ -1222,7 +1215,7 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
 	if (image->base.status)
 	{
 	    pixman_image_unref (pixman_image);
-	    return CAIRO_STATUS_NO_MEMORY;
+	    return image->base.status;
 	}
 
 	attr->x_offset = attr->y_offset = 0;
@@ -1264,7 +1257,7 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
 	cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
     if (image->base.status) {
 	pixman_image_unref (pixman_image);
-	return CAIRO_STATUS_NO_MEMORY;
+	return image->base.status;
     }
 
     pixman_image_set_filter (pixman_image, PIXMAN_FILTER_BILINEAR, NULL, 0);
@@ -1273,7 +1266,7 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     if (!pixman_image_set_transform (pixman_image, &pixman_transform)) {
 	cairo_surface_destroy (&image->base);
 	pixman_image_unref (pixman_image);
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     switch (pattern->base.extend) {
@@ -2030,7 +2023,7 @@ cairo_pattern_get_rgba (cairo_pattern_t *pattern,
     double r0, g0, b0, a0;
 
     if (pattern->type != CAIRO_PATTERN_TYPE_SOLID)
-	return CAIRO_STATUS_PATTERN_TYPE_MISMATCH;
+	return _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
 
     _cairo_color_get_rgba (&solid->color, &r0, &g0, &b0, &a0);
 
@@ -2068,7 +2061,7 @@ cairo_pattern_get_surface (cairo_pattern_t *pattern,
     cairo_surface_pattern_t *spat = (cairo_surface_pattern_t*) pattern;
 
     if (pattern->type != CAIRO_PATTERN_TYPE_SURFACE)
-	return CAIRO_STATUS_PATTERN_TYPE_MISMATCH;
+	return _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
 
     if (surface)
 	*surface = spat->surface;
@@ -2107,10 +2100,10 @@ cairo_pattern_get_color_stop_rgba (cairo_pattern_t *pattern,
 
     if (pattern->type != CAIRO_PATTERN_TYPE_LINEAR &&
 	pattern->type != CAIRO_PATTERN_TYPE_RADIAL)
-	return CAIRO_STATUS_PATTERN_TYPE_MISMATCH;
+	return _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
 
     if (index < 0 || (unsigned int) index >= gradient->n_stops)
-	return CAIRO_STATUS_INVALID_INDEX;
+	return _cairo_error (CAIRO_STATUS_INVALID_INDEX);
 
     if (offset)
 	*offset = _cairo_fixed_to_double(gradient->stops[index].x);
@@ -2148,7 +2141,7 @@ cairo_pattern_get_color_stop_count (cairo_pattern_t *pattern,
 
     if (pattern->type != CAIRO_PATTERN_TYPE_LINEAR &&
 	pattern->type != CAIRO_PATTERN_TYPE_RADIAL)
-	return CAIRO_STATUS_PATTERN_TYPE_MISMATCH;
+	return _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
 
     if (count)
 	*count = gradient->n_stops;
@@ -2180,7 +2173,7 @@ cairo_pattern_get_linear_points (cairo_pattern_t *pattern,
     cairo_linear_pattern_t *linear = (cairo_linear_pattern_t*) pattern;
 
     if (pattern->type != CAIRO_PATTERN_TYPE_LINEAR)
-	return CAIRO_STATUS_PATTERN_TYPE_MISMATCH;
+	return _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
 
     if (x0)
 	*x0 = _cairo_fixed_to_double (linear->p1.x);
@@ -2221,7 +2214,7 @@ cairo_pattern_get_radial_circles (cairo_pattern_t *pattern,
     cairo_radial_pattern_t *radial = (cairo_radial_pattern_t*) pattern;
 
     if (pattern->type != CAIRO_PATTERN_TYPE_RADIAL)
-	return CAIRO_STATUS_PATTERN_TYPE_MISMATCH;
+	return _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
 
     if (x0)
 	*x0 = _cairo_fixed_to_double (radial->c1.x);

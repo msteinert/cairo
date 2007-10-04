@@ -356,7 +356,7 @@ _cairo_skip_list_insert (cairo_skip_list_t *list, void *data, int unique)
 
     data_and_elt = alloc_node_for_level (list, level);
     if (data_and_elt == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
     }
 

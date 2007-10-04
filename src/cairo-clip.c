@@ -86,7 +86,7 @@ _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other)
         {
 	    _cairo_region_fini (&clip->region);
 	    cairo_surface_destroy (clip->surface);
-	    return CAIRO_STATUS_NO_MEMORY;
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
         clip->has_region = TRUE;
     } else {
@@ -276,10 +276,8 @@ _cairo_clip_intersect_path (cairo_clip_t       *clip,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     clip_path = malloc (sizeof (cairo_clip_path_t));
-    if (clip_path == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return CAIRO_STATUS_NO_MEMORY;
-    }
+    if (clip_path == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     status = _cairo_path_fixed_init_copy (&clip_path->path, path);
     if (status) {
@@ -404,7 +402,7 @@ _cairo_clip_intersect_mask (cairo_clip_t      *clip,
 						   CAIRO_COLOR_WHITE,
 						   NULL);
     if (surface->status)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     /* Render the new clipping path into the new mask surface. */
 
@@ -593,7 +591,7 @@ BAIL:
     if (clip->surface)
 	cairo_surface_destroy (clip->surface);
 
-    return CAIRO_STATUS_NO_MEMORY;
+    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 }
 
 const cairo_rectangle_list_t _cairo_rectangles_nil =
@@ -644,7 +642,7 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
 	    rectangles = _cairo_malloc_ab (n_boxes, sizeof (cairo_rectangle_t));
 	    if (rectangles == NULL) {
 		_cairo_region_boxes_fini (&clip->region, boxes);
-		_cairo_error (CAIRO_STATUS_NO_MEMORY);
+		_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 		return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
 	    }
 
@@ -669,7 +667,7 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
 
 	rectangles = malloc(sizeof (cairo_rectangle_t));
 	if (rectangles == NULL) {
-	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	    return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
 	}
 
@@ -684,7 +682,7 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
     list = malloc (sizeof (cairo_rectangle_list_t));
     if (list == NULL) {
         free (rectangles);
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
         return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
     }
     

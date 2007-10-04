@@ -178,10 +178,8 @@ cairo_svg_surface_create_for_stream (cairo_write_func_t		 write_func,
 
     stream = _cairo_output_stream_create (write_func, NULL, closure);
     status = _cairo_output_stream_get_status (stream);
-    if (status) {
-	_cairo_error (status);
+    if (status)
 	return (cairo_surface_t *) &_cairo_surface_nil;
-    }
 
     return _cairo_svg_surface_create_for_stream_internal (stream, width, height, CAIRO_SVG_VERSION_1_1);
 }
@@ -215,12 +213,10 @@ cairo_svg_surface_create (const char	*filename,
 
     stream = _cairo_output_stream_create_for_filename (filename);
     status = _cairo_output_stream_get_status (stream);
-    if (status) {
-	_cairo_error (status);
+    if (status)
 	return (status == CAIRO_STATUS_WRITE_ERROR) ?
 		(cairo_surface_t *) &_cairo_surface_nil_write_error :
 		(cairo_surface_t *) &_cairo_surface_nil;
-    }
 
     return _cairo_svg_surface_create_for_stream_internal (stream, width, height, CAIRO_SVG_VERSION_1_1);
 }
@@ -242,12 +238,12 @@ _extract_svg_surface (cairo_surface_t		 *surface,
     cairo_surface_t *target;
 
     if (! _cairo_surface_is_paginated (surface))
-	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 
     target = _cairo_paginated_surface_get_target (surface);
 
     if (! _cairo_surface_is_svg (target))
-	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 
     *svg_surface = (cairo_svg_surface_t *) target;
 
@@ -273,13 +269,12 @@ void
 cairo_svg_surface_restrict_to_version (cairo_surface_t 		*abstract_surface,
 				       cairo_svg_version_t  	 version)
 {
-    cairo_svg_surface_t *surface;
+    cairo_svg_surface_t *surface = NULL; /* hide compiler warning */
     cairo_status_t status;
 
     status = _extract_svg_surface (abstract_surface, &surface);
     if (status) {
-	_cairo_surface_set_error (abstract_surface,
-				  CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	status = _cairo_surface_set_error (abstract_surface, status);
 	return;
     }
 
@@ -339,7 +334,7 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
 
     surface = malloc (sizeof (cairo_svg_surface_t));
     if (surface == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
@@ -389,7 +384,7 @@ _cairo_svg_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
 
     document = _cairo_svg_document_create (stream, width, height, version);
     if (document == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t *) &_cairo_surface_nil;
     }
 
@@ -2119,14 +2114,13 @@ _cairo_svg_document_create (cairo_output_stream_t	*output_stream,
 
     document = malloc (sizeof (cairo_svg_document_t));
     if (document == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
     }
 
     /* The use of defs for font glyphs imposes no per-subset limit. */
     document->font_subsets = _cairo_scaled_font_subsets_create_scaled ();
     if (document->font_subsets == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	free (document);
 	return NULL;
     }

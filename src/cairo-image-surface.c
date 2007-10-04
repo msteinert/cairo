@@ -214,7 +214,7 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
 
     surface = malloc (sizeof (cairo_image_surface_t));
     if (surface == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
@@ -433,7 +433,7 @@ _cairo_image_surface_create_with_pixman_format (unsigned char		*data,
 					     (uint32_t *) data, stride);
 
     if (pixman_image == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
@@ -475,7 +475,7 @@ cairo_image_surface_create (cairo_format_t	format,
     pixman_format_code_t pixman_format;
 
     if (! CAIRO_FORMAT_VALID (format)) {
-	_cairo_error (CAIRO_STATUS_INVALID_FORMAT);
+	_cairo_error_throw (CAIRO_STATUS_INVALID_FORMAT);
 	return (cairo_surface_t*) &_cairo_image_surface_nil_invalid_format;
     }
 
@@ -494,7 +494,7 @@ _cairo_image_surface_create_with_content (cairo_content_t	content,
 					  int			height)
 {
     if (! CAIRO_CONTENT_VALID (content)) {
-	_cairo_error (CAIRO_STATUS_INVALID_CONTENT);
+	_cairo_error_throw (CAIRO_STATUS_INVALID_CONTENT);
 	return (cairo_surface_t*) &_cairo_image_surface_nil_invalid_content;
     }
 
@@ -545,7 +545,7 @@ cairo_image_surface_create_for_data (unsigned char     *data,
      * attempting to create such surfaces will failure but we will interpret
      * such failure as CAIRO_STATUS_NO_MEMORY.  */
     if (! CAIRO_FORMAT_VALID (format) || stride % sizeof (uint32_t) != 0) {
-	_cairo_error (CAIRO_STATUS_INVALID_FORMAT);
+	_cairo_error_throw (CAIRO_STATUS_INVALID_FORMAT);
 	return (cairo_surface_t*) &_cairo_image_surface_nil_invalid_format;
     }
 
@@ -564,7 +564,7 @@ _cairo_image_surface_create_for_data_with_content (unsigned char	*data,
 						   int			 stride)
 {
     if (! CAIRO_CONTENT_VALID (content)) {
-	_cairo_error (CAIRO_STATUS_INVALID_CONTENT);
+	_cairo_error_throw (CAIRO_STATUS_INVALID_CONTENT);
 	return (cairo_surface_t*) &_cairo_image_surface_nil_invalid_content;
     }
 
@@ -591,7 +591,7 @@ cairo_image_surface_get_data (cairo_surface_t *surface)
     cairo_image_surface_t *image_surface = (cairo_image_surface_t *) surface;
 
     if (!_cairo_surface_is_image (surface)) {
-	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return NULL;
     }
 
@@ -614,7 +614,7 @@ cairo_image_surface_get_format (cairo_surface_t *surface)
     cairo_image_surface_t *image_surface = (cairo_image_surface_t *) surface;
 
     if (!_cairo_surface_is_image (surface)) {
-	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return 0;
     }
 
@@ -637,7 +637,7 @@ cairo_image_surface_get_width (cairo_surface_t *surface)
     cairo_image_surface_t *image_surface = (cairo_image_surface_t *) surface;
 
     if (!_cairo_surface_is_image (surface)) {
-	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return 0;
     }
 
@@ -659,7 +659,7 @@ cairo_image_surface_get_height (cairo_surface_t *surface)
     cairo_image_surface_t *image_surface = (cairo_image_surface_t *) surface;
 
     if (!_cairo_surface_is_image (surface)) {
-	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return 0;
     }
 
@@ -687,7 +687,7 @@ cairo_image_surface_get_stride (cairo_surface_t *surface)
     cairo_image_surface_t *image_surface = (cairo_image_surface_t *) surface;
 
     if (!_cairo_surface_is_image (surface)) {
-	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return 0;
     }
 
@@ -839,7 +839,7 @@ _cairo_image_surface_set_matrix (cairo_image_surface_t	*surface,
     _cairo_matrix_to_pixman_matrix (matrix, &pixman_transform);
 
     if (!pixman_image_set_transform (surface->pixman_image, &pixman_transform))
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1062,10 +1062,8 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
 
     if (num_rects > ARRAY_LENGTH(stack_rects)) {
 	pixman_rects = _cairo_malloc_ab (num_rects, sizeof(pixman_rectangle16_t));
-	if (pixman_rects == NULL) {
-	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    return CAIRO_STATUS_NO_MEMORY;
-	}
+	if (pixman_rects == NULL)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }		 
 
     for (i = 0; i < num_rects; i++) {
@@ -1081,8 +1079,7 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
 				       &pixman_color,
 				       num_rects,
 				       pixman_rects)) {
-	status = CAIRO_STATUS_NO_MEMORY;
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     if (pixman_rects != stack_rects)
@@ -1128,10 +1125,8 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     /* Convert traps to pixman traps */
     if (num_traps > ARRAY_LENGTH(stack_traps)) {
 	pixman_traps = _cairo_malloc_ab (num_traps, sizeof(pixman_trapezoid_t));
-	if (pixman_traps == NULL) {
-	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    return CAIRO_STATUS_NO_MEMORY;
-	}
+	if (pixman_traps == NULL)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     for (i = 0; i < num_traps; i++) {
@@ -1206,16 +1201,14 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     /* The image must be initially transparent */
     mask_data = calloc (mask_stride, height);
     if (mask_data == NULL) {
-	status = CAIRO_STATUS_NO_MEMORY;
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP_SOURCE;
     }
 
     mask = pixman_image_create_bits (format, width, height,
 				     mask_data, mask_stride);
     if (mask == NULL) {
-	status = CAIRO_STATUS_NO_MEMORY;
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP_IMAGE_DATA;
     }
 
@@ -1263,7 +1256,7 @@ _cairo_image_surface_set_clip_region (void *abstract_surface,
     cairo_image_surface_t *surface = (cairo_image_surface_t *) abstract_surface;
 
     if (!pixman_image_set_clip_region (surface->pixman_image, &region->rgn))
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     surface->has_clip = region != NULL;
 

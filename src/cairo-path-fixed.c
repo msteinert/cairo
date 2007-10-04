@@ -108,7 +108,7 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
 	buf = _cairo_path_buf_create ();
 	if (buf == NULL) {
 	    _cairo_path_fixed_fini (path);
-	    return CAIRO_STATUS_NO_MEMORY;
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
 	memcpy (buf, other_buf, sizeof (cairo_path_buf_t));
 	_cairo_path_fixed_add_buf (path, buf);
@@ -124,7 +124,7 @@ _cairo_path_fixed_create (void)
 
     path = malloc (sizeof (cairo_path_fixed_t));
     if (!path) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
     }
 
@@ -206,7 +206,7 @@ _cairo_path_fixed_rel_move_to (cairo_path_fixed_t *path,
     cairo_fixed_t x, y;
 
     if (! path->has_current_point)
-	return CAIRO_STATUS_NO_CURRENT_POINT;
+	return _cairo_error (CAIRO_STATUS_NO_CURRENT_POINT);
 
     x = path->current_point.x + dx;
     y = path->current_point.y + dy;
@@ -252,7 +252,7 @@ _cairo_path_fixed_rel_line_to (cairo_path_fixed_t *path,
     cairo_fixed_t x, y;
 
     if (! path->has_current_point)
-	return CAIRO_STATUS_NO_CURRENT_POINT;
+	return _cairo_error (CAIRO_STATUS_NO_CURRENT_POINT);
 
     x = path->current_point.x + dx;
     y = path->current_point.y + dy;
@@ -302,7 +302,7 @@ _cairo_path_fixed_rel_curve_to (cairo_path_fixed_t *path,
     cairo_fixed_t x2, y2;
 
     if (! path->has_current_point)
-	return CAIRO_STATUS_NO_CURRENT_POINT;
+	return _cairo_error (CAIRO_STATUS_NO_CURRENT_POINT);
 
     x0 = path->current_point.x + dx0;
     y0 = path->current_point.y + dy0;
@@ -346,7 +346,7 @@ _cairo_path_fixed_get_current_point (cairo_path_fixed_t *path,
 				     cairo_fixed_t	*y)
 {
     if (! path->has_current_point)
-	return CAIRO_STATUS_NO_CURRENT_POINT;
+	return _cairo_error (CAIRO_STATUS_NO_CURRENT_POINT);
 
     *x = path->current_point.x;
     *y = path->current_point.y;
@@ -367,7 +367,7 @@ _cairo_path_fixed_add (cairo_path_fixed_t *path,
 
 	buf = _cairo_path_buf_create ();
 	if (buf == NULL)
-	    return CAIRO_STATUS_NO_MEMORY;
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	_cairo_path_fixed_add_buf (path, buf);
     }

@@ -104,8 +104,10 @@ _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
  * The purpose of this function is to allow the user to set a
  * breakpoint in _cairo_error() to generate a stack trace for when the
  * user causes cairo to detect an error.
+ *
+ * Return value: the error status.
  **/
-void
+cairo_status_t
 _cairo_surface_set_error (cairo_surface_t *surface,
 			  cairo_status_t status)
 {
@@ -113,7 +115,7 @@ _cairo_surface_set_error (cairo_surface_t *surface,
      * error, which is the most significant. */
     _cairo_status_set_error (&surface->status, status);
 
-    _cairo_error (status);
+    return _cairo_error (status);
 }
 
 /**
@@ -287,7 +289,7 @@ cairo_surface_create_similar (cairo_surface_t  *other,
 	return (cairo_surface_t*) &_cairo_surface_nil;
 
     if (! CAIRO_CONTENT_VALID (content)) {
-	_cairo_error (CAIRO_STATUS_INVALID_CONTENT);
+	_cairo_error_throw (CAIRO_STATUS_INVALID_CONTENT);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
@@ -313,7 +315,7 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
     surface = _cairo_surface_create_similar_scratch (other, content,
 						     width, height);
     if (surface->status) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
@@ -321,7 +323,7 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
 	source = _cairo_pattern_create_solid (color, content);
 	if (source->status) {
 	    cairo_surface_destroy (surface);
-	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	    return (cairo_surface_t*) &_cairo_surface_nil;
 	}
     } else
@@ -337,7 +339,7 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
 
     if (status) {
 	cairo_surface_destroy (surface);
-	_cairo_error (status);
+	_cairo_error_throw (status);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
@@ -492,7 +494,7 @@ cairo_surface_finish (cairo_surface_t *surface)
 	return;
 
     if (surface->finished) {
-	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
+	status = _cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
 	return;
     }
 
@@ -504,14 +506,14 @@ cairo_surface_finish (cairo_surface_t *surface)
     if (!surface->status && surface->backend->flush) {
 	status = surface->backend->flush (surface);
 	if (status) {
-	    _cairo_surface_set_error (surface, status);
+	    status = _cairo_surface_set_error (surface, status);
 	    return;
 	}
     }
 
     status = surface->backend->finish (surface);
     if (status)
-	_cairo_surface_set_error (surface, status);
+	status = _cairo_surface_set_error (surface, status);
 
     surface->finished = TRUE;
 }
@@ -560,7 +562,7 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
 			     cairo_destroy_func_t	 destroy)
 {
     if (CAIRO_REFERENCE_COUNT_IS_INVALID (&surface->ref_count))
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     return _cairo_user_data_array_set_data (&surface->user_data,
 					    key, user_data, destroy);
@@ -640,21 +642,20 @@ slim_hidden_def (cairo_surface_get_font_options);
 void
 cairo_surface_flush (cairo_surface_t *surface)
 {
+    cairo_status_t status;
+
     if (surface->status)
 	return;
 
     if (surface->finished) {
-	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
+	status = _cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
 	return;
     }
 
     if (surface->backend->flush) {
-	cairo_status_t status;
-
 	status = surface->backend->flush (surface);
-
 	if (status)
-	    _cairo_surface_set_error (surface, status);
+	    status = _cairo_surface_set_error (surface, status);
     }
 }
 
@@ -697,13 +698,15 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
 				    int              width,
 				    int              height)
 {
+    cairo_status_t status;
+
     assert (! surface->is_snapshot);
 
     if (surface->status)
 	return;
 
     if (surface->finished) {
-	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
+	status = _cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
 	return;
     }
 
@@ -715,8 +718,6 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
     surface->current_clip_serial = -1;
 
     if (surface->backend->mark_dirty_rectangle) {
-	cairo_status_t status;
-
 	/* XXX: FRAGILE: We're ignoring the scaling component of
 	 * device_transform here. I don't know what the right thing to
 	 * do would actually be if there were some scaling here, but
@@ -728,7 +729,7 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
 							 width, height);
 
 	if (status)
-	    _cairo_surface_set_error (surface, status);
+	    status = _cairo_surface_set_error (surface, status);
     }
 }
 slim_hidden_def (cairo_surface_mark_dirty_rectangle);
@@ -758,13 +759,15 @@ _cairo_surface_set_device_scale (cairo_surface_t *surface,
 				 double		  sx,
 				 double		  sy)
 {
+    cairo_status_t status;
+
     assert (! surface->is_snapshot);
 
     if (surface->status)
 	return;
 
     if (surface->finished) {
-	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
+	status = _cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
 	return;
     }
 
@@ -798,13 +801,15 @@ cairo_surface_set_device_offset (cairo_surface_t *surface,
 				 double           x_offset,
 				 double           y_offset)
 {
+    cairo_status_t status;
+
     assert (! surface->is_snapshot);
 
     if (surface->status)
 	return;
 
     if (surface->finished) {
-	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
+	status = _cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
 	return;
     }
 
@@ -1036,7 +1041,7 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
     void *image_extra;
 
     if (surface->finished)
-	return CAIRO_STATUS_SURFACE_FINISHED;
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
 
     if (surface->backend->clone_similar) {
 	status = surface->backend->clone_similar (surface, src, src_x, src_y,
@@ -1164,7 +1169,7 @@ _cairo_surface_composite (cairo_operator_t	op,
 	return dst->status;
 
     if (dst->finished)
-	return CAIRO_STATUS_SURFACE_FINISHED;
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
 
     if (dst->backend->composite) {
 	status = dst->backend->composite (op,
@@ -1217,7 +1222,7 @@ _cairo_surface_fill_rectangle (cairo_surface_t	   *surface,
 	return surface->status;
 
     if (surface->finished)
-	return CAIRO_STATUS_SURFACE_FINISHED;
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
 
     rect.x = x;
     rect.y = y;
@@ -1267,8 +1272,7 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
 	rects = _cairo_malloc_ab (num_boxes, sizeof (cairo_rectangle_int_t));
 	if (!rects) {
 	    _cairo_region_boxes_fini (region, boxes);
-	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    return CAIRO_STATUS_NO_MEMORY;
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
         }
     }
 
@@ -1321,7 +1325,7 @@ _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
 	return surface->status;
 
     if (surface->finished)
-	return CAIRO_STATUS_SURFACE_FINISHED;
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
 
     if (num_rects == 0)
 	return CAIRO_STATUS_SUCCESS;
@@ -1571,7 +1575,7 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		op,
 	return dst->status;
 
     if (dst->finished)
-	return CAIRO_STATUS_SURFACE_FINISHED;
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
 
     if (dst->backend->composite_trapezoids) {
 	status = dst->backend->composite_trapezoids (op,
@@ -1613,7 +1617,7 @@ cairo_surface_copy_page (cairo_surface_t *surface)
 	return surface->status;
 
     if (surface->finished)
-	return CAIRO_STATUS_SURFACE_FINISHED;
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
 
     /* It's fine if some backends don't implement copy_page */
     if (surface->backend->copy_page == NULL)
@@ -1642,7 +1646,7 @@ cairo_surface_show_page (cairo_surface_t *surface)
 	return surface->status;
 
     if (surface->finished)
-	return CAIRO_STATUS_SURFACE_FINISHED;
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
 
     /* It's fine if some backends don't implement show_page */
     if (surface->backend->show_page == NULL)
@@ -1708,7 +1712,7 @@ _cairo_surface_reset_clip (cairo_surface_t *surface)
 	return surface->status;
 
     if (surface->finished)
-	return CAIRO_STATUS_SURFACE_FINISHED;
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
 
     surface->current_clip_serial = 0;
 
@@ -1752,7 +1756,7 @@ _cairo_surface_set_clip_region (cairo_surface_t	    *surface,
 	return surface->status;
 
     if (surface->finished)
-	return CAIRO_STATUS_SURFACE_FINISHED;
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
 
     assert (surface->backend->set_clip_region != NULL);
 
@@ -1777,7 +1781,7 @@ _cairo_surface_intersect_clip_path (cairo_surface_t    *surface,
 	return surface->status;
 
     if (surface->finished)
-	return CAIRO_STATUS_SURFACE_FINISHED;
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
 
     assert (surface->backend->intersect_clip_path != NULL);
 
@@ -1830,7 +1834,7 @@ _cairo_surface_set_clip_path (cairo_surface_t	*surface,
 	return surface->status;
 
     if (surface->finished)
-	return CAIRO_STATUS_SURFACE_FINISHED;
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
 
     assert (surface->backend->intersect_clip_path != NULL);
 
@@ -1857,13 +1861,13 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
     unsigned int serial = 0;
 
     if (!surface)
-	return CAIRO_STATUS_NULL_POINTER;
+	return _cairo_error (CAIRO_STATUS_NULL_POINTER);
 
     if (surface->status)
 	return surface->status;
 
     if (surface->finished)
-	return CAIRO_STATUS_SURFACE_FINISHED;
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
 
     if (clip) {
 	serial = clip->serial;
@@ -1923,7 +1927,7 @@ _cairo_surface_get_extents (cairo_surface_t         *surface,
 	return surface->status;
 
     if (surface->finished)
-	return CAIRO_STATUS_SURFACE_FINISHED;
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
 
     return surface->backend->get_extents (surface, rectangle);
 }
@@ -2036,7 +2040,7 @@ _cairo_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
 	return dst->status;
 
     if (dst->finished)
-	return CAIRO_STATUS_SURFACE_FINISHED;
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
 
     if (dst->backend->old_show_glyphs) {
 	status = dst->backend->old_show_glyphs (scaled_font,
@@ -2095,7 +2099,7 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
     if (_cairo_region_subtract (&clear_region, &clear_region, &drawn_region)
 	!= CAIRO_STATUS_SUCCESS)
     {
-        status = CAIRO_STATUS_NO_MEMORY;
+        status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
         goto CLEANUP_REGIONS;
     }
 

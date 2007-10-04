@@ -172,7 +172,7 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
 						       width, height);
     if (surface->base.status != CAIRO_STATUS_SUCCESS) {
 	XFreePixmap (dpy, pix);
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
@@ -252,7 +252,7 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
 						       width, height);
     if (surface->base.status != CAIRO_STATUS_SUCCESS) {
 	XFreePixmap (src->dpy, pix);
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
@@ -558,7 +558,7 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	}
     }
     if (!ximage)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     _swap_ximage_to_native (ximage);
 
@@ -615,7 +615,7 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 
  FAIL:
     XDestroyImage (ximage);
-    return CAIRO_STATUS_NO_MEMORY;
+    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 }
 
 static void
@@ -694,7 +694,7 @@ _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface)
 	    surface->gc = XCreateGC (surface->dpy, surface->drawable,
 				     GCGraphicsExposures, &gcv);
 	    if (!surface->gc)
-		return CAIRO_STATUS_NO_MEMORY;
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
 
 	_cairo_xlib_surface_set_gc_clip_rects (surface);
@@ -863,7 +863,7 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	    _cairo_xlib_surface_create_similar_with_format (surface, image_src->format,
 						image_src->width, image_src->height);
 	if (clone->base.status)
-	    return CAIRO_STATUS_NO_MEMORY;
+	    return clone->base.status;
 
 	status = _draw_image_surface (clone, image_src, src_x, src_y,
 			              width, height, src_x, src_y);
@@ -1445,10 +1445,8 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
 
     if (num_rects > ARRAY_LENGTH(static_xrects)) {
         xrects = _cairo_malloc_ab (num_rects, sizeof(XRectangle));
-	if (xrects == NULL) {
-	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    return CAIRO_STATUS_NO_MEMORY;
-	}
+	if (xrects == NULL)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     for (i = 0; i < num_rects; i++) {
@@ -1536,7 +1534,7 @@ _create_trapezoid_mask (cairo_xlib_surface_t *dst,
     offset_traps = _cairo_malloc_ab (num_traps, sizeof (XTrapezoid));
     if (!offset_traps) {
 	XRenderFreePicture (dst->dpy, mask_picture);
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return None;
     }
 
@@ -1654,7 +1652,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
 						       dst_x, dst_y, width, height,
 						       pict_format);
 	if (!mask_picture) {
-	    status = CAIRO_STATUS_NO_MEMORY;
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto BAIL;
 	}
 
@@ -1686,8 +1684,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
         if (num_traps > ARRAY_LENGTH(xtraps_stack)) {
             xtraps = _cairo_malloc_ab (num_traps, sizeof(XTrapezoid));
             if (xtraps == NULL) {
-                status = CAIRO_STATUS_NO_MEMORY;
-		_cairo_error (CAIRO_STATUS_NO_MEMORY);
+                status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
                 goto BAIL;
             }
         }
@@ -1742,18 +1739,19 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 
     if (region != NULL) {
 	cairo_box_int_t *boxes;
+	cairo_status_t status;
 	XRectangle *rects = NULL;
 	int n_boxes, i;
 
-        if (_cairo_region_get_boxes (region, &n_boxes, &boxes) != CAIRO_STATUS_SUCCESS)
-            return CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_region_get_boxes (region, &n_boxes, &boxes);
+        if (status)
+            return status;
 
 	if (n_boxes > ARRAY_LENGTH (surface->embedded_clip_rects)) {
 	    rects = _cairo_malloc_ab (n_boxes, sizeof(XRectangle));
 	    if (rects == NULL) {
                 _cairo_region_boxes_fini (region, boxes);
-		_cairo_error (CAIRO_STATUS_NO_MEMORY);
-		return CAIRO_STATUS_NO_MEMORY;
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
             }
 	} else {
 	    rects = surface->embedded_clip_rects;
@@ -1942,14 +1940,14 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 
     screen_info = _cairo_xlib_screen_info_get (dpy, screen);
     if (screen_info == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
     surface = malloc (sizeof (cairo_xlib_surface_t));
     if (surface == NULL) {
 	_cairo_xlib_screen_info_destroy (screen_info);
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
@@ -1957,7 +1955,7 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 	    _cairo_xlib_surface_detach_display, surface, surface)) {
 	free (surface);
 	_cairo_xlib_screen_info_destroy (screen_info);
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
@@ -2096,7 +2094,7 @@ cairo_xlib_surface_create (Display     *dpy,
     Screen *screen = _cairo_xlib_screen_from_visual (dpy, visual);
 
     if (screen == NULL) {
-	_cairo_error (CAIRO_STATUS_INVALID_VISUAL);
+	_cairo_error_throw (CAIRO_STATUS_INVALID_VISUAL);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
@@ -2185,10 +2183,11 @@ cairo_xlib_surface_set_size (cairo_surface_t *abstract_surface,
 			     int              height)
 {
     cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *) abstract_surface;
+    cairo_status_t status;
 
     if (! _cairo_surface_is_xlib (abstract_surface)) {
-	_cairo_surface_set_error (abstract_surface,
-				  CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	status = _cairo_surface_set_error (abstract_surface,
+		                           CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return;
     }
 
@@ -2219,7 +2218,8 @@ cairo_xlib_surface_set_drawable (cairo_surface_t   *abstract_surface,
     cairo_status_t status;
 
     if (! _cairo_surface_is_xlib (abstract_surface)) {
-	_cairo_surface_set_error (abstract_surface, CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	status = _cairo_surface_set_error (abstract_surface,
+		                           CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return;
     }
 
@@ -2234,7 +2234,7 @@ cairo_xlib_surface_set_drawable (cairo_surface_t   *abstract_surface,
 						  XRenderFreePicture,
 						  surface->dst_picture);
 	    if (status) {
-		_cairo_surface_set_error (&surface->base, status);
+		status = _cairo_surface_set_error (&surface->base, status);
 		return;
 	    }
 
@@ -2247,7 +2247,7 @@ cairo_xlib_surface_set_drawable (cairo_surface_t   *abstract_surface,
 						  XRenderFreePicture,
 						  surface->src_picture);
 	    if (status) {
-		_cairo_surface_set_error (&surface->base, status);
+		status = _cairo_surface_set_error (&surface->base, status);
 		return;
 	    }
 
@@ -2276,7 +2276,7 @@ cairo_xlib_surface_get_display (cairo_surface_t *abstract_surface)
     cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *) abstract_surface;
 
     if (! _cairo_surface_is_xlib (abstract_surface)) {
-	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return NULL;
     }
 
@@ -2299,7 +2299,7 @@ cairo_xlib_surface_get_drawable (cairo_surface_t *abstract_surface)
     cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *) abstract_surface;
 
     if (! _cairo_surface_is_xlib (abstract_surface)) {
-	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return 0;
     }
 
@@ -2322,7 +2322,7 @@ cairo_xlib_surface_get_screen (cairo_surface_t *abstract_surface)
     cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *) abstract_surface;
 
     if (! _cairo_surface_is_xlib (abstract_surface)) {
-	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return NULL;
     }
 
@@ -2345,7 +2345,7 @@ cairo_xlib_surface_get_visual (cairo_surface_t *abstract_surface)
     cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *) abstract_surface;
 
     if (! _cairo_surface_is_xlib (abstract_surface)) {
-	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return NULL;
     }
 
@@ -2368,7 +2368,7 @@ cairo_xlib_surface_get_depth (cairo_surface_t *abstract_surface)
     cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *) abstract_surface;
 
     if (! _cairo_surface_is_xlib (abstract_surface)) {
-	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return 0;
     }
 
@@ -2391,7 +2391,7 @@ cairo_xlib_surface_get_width (cairo_surface_t *abstract_surface)
     cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *) abstract_surface;
 
     if (! _cairo_surface_is_xlib (abstract_surface)) {
-	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return -1;
     }
 
@@ -2414,7 +2414,7 @@ cairo_xlib_surface_get_height (cairo_surface_t *abstract_surface)
     cairo_xlib_surface_t *surface = (cairo_xlib_surface_t *) abstract_surface;
 
     if (! _cairo_surface_is_xlib (abstract_surface)) {
-	_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return -1;
     }
 
@@ -2456,17 +2456,14 @@ _cairo_xlib_surface_font_init (Display		    *dpy,
     cairo_xlib_surface_font_private_t	*font_private;
 
     font_private = malloc (sizeof (cairo_xlib_surface_font_private_t));
-    if (!font_private) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return CAIRO_STATUS_NO_MEMORY;
-    }
+    if (!font_private)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     if (!_cairo_xlib_add_close_display_hook (dpy,
 		_cairo_xlib_surface_remove_scaled_font,
 		scaled_font, scaled_font)) {
 	free (font_private);
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
 
@@ -2624,7 +2621,7 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 
 	    new = malloc (c);
 	    if (!new) {
-		status = CAIRO_STATUS_NO_MEMORY;
+		status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 		goto BAIL;
 	    }
 	    n = new;
@@ -2650,8 +2647,7 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 
 	    new = malloc (c);
 	    if (new == NULL) {
-		_cairo_error (CAIRO_STATUS_NO_MEMORY);
-		status = CAIRO_STATUS_NO_MEMORY;
+		status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 		goto BAIL;
 	    }
 	    n = new;
@@ -2778,10 +2774,8 @@ _cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
       elts = stack_elts;
     } else {
       elts = _cairo_malloc_ab (num_elts, sizeof (XGlyphElt8));
-      if (elts == NULL) {
-	  _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	  return CAIRO_STATUS_NO_MEMORY;
-      }
+      if (elts == NULL)
+	  return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     /* Fill them in */

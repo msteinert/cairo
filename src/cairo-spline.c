@@ -117,10 +117,8 @@ _cairo_spline_grow (cairo_spline_t *spline)
 	       	                        new_size, sizeof (cairo_point_t));
     }
 
-    if (new_points == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return CAIRO_STATUS_NO_MEMORY;
-    }
+    if (new_points == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     spline->points = new_points;
     spline->points_size = new_size;

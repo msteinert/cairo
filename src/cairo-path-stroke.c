@@ -1066,10 +1066,8 @@ _cairo_rectilinear_stroker_add_segment (cairo_rectilinear_stroker_t	*stroker,
 	    new_size = 4;
 	new_segments = _cairo_realloc_ab (stroker->segments,
 	       	                          new_size, sizeof (cairo_line_t));
-	if (new_segments == NULL) {
-	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    return CAIRO_STATUS_NO_MEMORY;
-	}
+	if (new_segments == NULL)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	stroker->segments_size = new_size;
 	stroker->segments = new_segments;

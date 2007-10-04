@@ -75,14 +75,12 @@ _cairo_test_paginated_surface_create_for_data (unsigned char		*data,
 								width, height,
 								stride);
     status = cairo_surface_status (target);
-    if (status) {
-	_cairo_error (status);
+    if (status)
 	return (cairo_surface_t *) &_cairo_surface_nil;
-    }
 
     surface = malloc (sizeof (test_paginated_surface_t));
     if (surface == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t *) &_cairo_surface_nil;
     }
 

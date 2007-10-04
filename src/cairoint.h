@@ -1623,7 +1623,7 @@ extern const cairo_private cairo_surface_t _cairo_surface_nil_read_error;
 extern const cairo_private cairo_surface_t _cairo_surface_nil_write_error;
 extern const cairo_private cairo_surface_t _cairo_surface_nil_file_not_found;
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_surface_set_error (cairo_surface_t	*surface,
 			  cairo_status_t	 status);
 
@@ -2301,6 +2301,12 @@ _cairo_utf8_to_utf16 (const unsigned char *str,
 
 cairo_private cairo_status_t
 _cairo_error (cairo_status_t status);
+
+/* hide compiler warnings when discarding the return value */
+#define _cairo_error_throw(status) do { \
+    cairo_status_t status__ = _cairo_error (status); \
+    (void) status__; \
+} while (0)
 
 /* Avoid unnecessary PLT entries.  */
 slim_hidden_proto (cairo_clip_preserve);

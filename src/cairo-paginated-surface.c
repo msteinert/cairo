@@ -76,10 +76,8 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
     cairo_paginated_surface_t *surface;
 
     surface = malloc (sizeof (cairo_paginated_surface_t));
-    if (surface == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+    if (surface == NULL)
 	goto FAIL;
-    }
 
     _cairo_surface_init (&surface->base, &cairo_paginated_surface_backend,
 			 content);
@@ -108,7 +106,7 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
   FAIL_CLEANUP_SURFACE:
     free (surface);
   FAIL:
-    _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
     return (cairo_surface_t*) &_cairo_surface_nil;
 }
 
@@ -289,7 +287,7 @@ _paint_page (cairo_paginated_surface_t *surface)
     analysis = _cairo_analysis_surface_create (surface->target,
 					       surface->width, surface->height);
     if (analysis == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_ANALYZE);
     status = _cairo_meta_surface_replay_and_create_regions (surface->meta, analysis);

@@ -66,10 +66,8 @@ _cairo_region_init_boxes (cairo_region_t *region,
 
     if (count > ARRAY_LENGTH(stack_pboxes)) {
 	pboxes = _cairo_malloc_ab (count, sizeof(pixman_box16_t));
-	if (pboxes == NULL) {
-	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    return CAIRO_STATUS_NO_MEMORY;
-	}
+	if (pboxes == NULL)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     for (i = 0; i < count; i++) {
@@ -80,7 +78,7 @@ _cairo_region_init_boxes (cairo_region_t *region,
     }
 
     if (!pixman_region_init_rects (&region->rgn, pboxes, count))
-	status = CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     if (pboxes != stack_pboxes)
 	free (pboxes);
@@ -98,7 +96,7 @@ cairo_int_status_t
 _cairo_region_copy (cairo_region_t *dst, cairo_region_t *src)
 {
     if (!pixman_region_copy (&dst->rgn, &src->rgn))
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -126,10 +124,8 @@ _cairo_region_get_boxes (cairo_region_t *region, int *num_boxes, cairo_box_int_t
     }
 
     cboxes = _cairo_malloc_ab (nboxes, sizeof(cairo_box_int_t));
-    if (cboxes == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return CAIRO_STATUS_NO_MEMORY;
-    }
+    if (cboxes == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     for (i = 0; i < nboxes; i++) {
 	cboxes[i].p1.x = pboxes[i].x1;
@@ -172,7 +168,7 @@ cairo_int_status_t
 _cairo_region_subtract (cairo_region_t *dst, cairo_region_t *a, cairo_region_t *b)
 {
     if (!pixman_region_subtract (&dst->rgn, &a->rgn, &b->rgn))
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -181,7 +177,7 @@ cairo_int_status_t
 _cairo_region_intersect (cairo_region_t *dst, cairo_region_t *a, cairo_region_t *b)
 {
     if (!pixman_region_intersect (&dst->rgn, &a->rgn, &b->rgn))
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -194,7 +190,7 @@ _cairo_region_union_rect (cairo_region_t *dst,
     if (!pixman_region_union_rect (&dst->rgn, &src->rgn,
 				   rect->x, rect->y,
 				   rect->width, rect->height))
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     return CAIRO_STATUS_SUCCESS;
 }

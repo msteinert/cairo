@@ -1256,10 +1256,8 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
 	unsigned int k;
 	if (style->num_dashes > STATIC_DASH)
 	    fdash = _cairo_malloc_ab (style->num_dashes, sizeof (float));
-	if (fdash == NULL) {
-	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    return CAIRO_STATUS_NO_MEMORY;
-	}
+	if (fdash == NULL)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	for (k = 0; k < style->num_dashes; k++)
 	    fdash[k] = (float) style->dash[k];
@@ -1399,16 +1397,13 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 
     if (num_glyphs > STATIC_BUF_SIZE) {
 	cg_glyphs = (CGGlyph*) _cairo_malloc_ab (num_glyphs, sizeof(CGGlyph));
-	if (cg_glyphs == NULL) {
-	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    return CAIRO_STATUS_NO_MEMORY;
-	}
+	if (cg_glyphs == NULL)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	cg_advances = (CGSize*) _cairo_malloc_ab (num_glyphs, sizeof(CGSize));
 	if (cg_glyphs == NULL) {
 	    free (cg_advances);
-	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    return CAIRO_STATUS_NO_MEMORY;
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
     }
 

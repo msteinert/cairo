@@ -118,7 +118,7 @@ _cairo_set_error (cairo_t *cr, cairo_status_t status)
      * error, which is the most significant. */
     _cairo_status_set_error (&cr->status, status);
 
-    _cairo_error (status);
+    status = _cairo_error (status);
 }
 
 /**
@@ -199,7 +199,7 @@ cairo_create (cairo_surface_t *target)
 
     cr = malloc (sizeof (cairo_t));
     if (cr == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_t *) &_cairo_nil;
     }
 
@@ -327,7 +327,7 @@ cairo_set_user_data (cairo_t			 *cr,
 		     cairo_destroy_func_t	 destroy)
 {
     if (CAIRO_REFERENCE_COUNT_IS_INVALID (&cr->ref_count))
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     return _cairo_user_data_array_set_data (&cr->user_data,
 					    key, user_data, destroy);
@@ -2419,7 +2419,7 @@ _cairo_rectangle_list_create_in_error (cairo_status_t status)
 
     list = malloc (sizeof (cairo_rectangle_list_t));
     if (list == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
         return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
     }
 

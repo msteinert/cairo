@@ -80,17 +80,14 @@ cairo_type1_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     cairo_font_options_t font_options;
 
     font = calloc (1, sizeof (cairo_type1_font_t));
-    if (font == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return CAIRO_STATUS_NO_MEMORY;
-    }
+    if (font == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     font->widths = calloc (scaled_font_subset->num_glyphs,
                            sizeof (int));
     if (font->widths == NULL) {
 	free (font);
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     font->scaled_font_subset = scaled_font_subset;
@@ -122,7 +119,7 @@ fail:
     free (font->widths);
     free (font);
 
-    return CAIRO_STATUS_NO_MEMORY;
+    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 }
 
 /* Charstring commands. If the high byte is 0 the command is encoded
@@ -592,7 +589,7 @@ cairo_type1_font_write_private_dict (cairo_type1_font_t *font,
         NULL,
         font);
     if (encrypted_output == NULL) {
-	status = CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto fail;
     }
 
@@ -732,13 +729,13 @@ _cairo_type1_fallback_init_internal (cairo_type1_subset_t	*type1_subset,
 
     type1_subset->base_font = strdup (name);
     if (type1_subset->base_font == NULL) {
-        status = CAIRO_STATUS_NO_MEMORY;
+        status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
         goto fail1;
     }
 
     type1_subset->widths = calloc (sizeof (int), font->scaled_font_subset->num_glyphs);
     if (type1_subset->widths == NULL) {
-        status = CAIRO_STATUS_NO_MEMORY;
+        status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
         goto fail2;
     }
     for (i = 0; i < font->scaled_font_subset->num_glyphs; i++)
@@ -755,7 +752,7 @@ _cairo_type1_fallback_init_internal (cairo_type1_subset_t	*type1_subset,
 	font->trailer_size;
     type1_subset->data = malloc (length);
     if (type1_subset->data == NULL) {
-        status = CAIRO_STATUS_NO_MEMORY;
+        status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto fail3;
     }
     memcpy (type1_subset->data,
@@ -784,8 +781,7 @@ _cairo_type1_fallback_init_internal (cairo_type1_subset_t	*type1_subset,
     /* status is already set, ignore further errors */
     cairo_type1_font_destroy (font);
 
-    _cairo_error (status);
-    return status;
+    return _cairo_error (status);
 }
 
 cairo_status_t
@@ -833,7 +829,7 @@ _cairo_type2_charstrings_init (cairo_type2_charstrings_t *type2_subset,
 
     type2_subset->widths = calloc (sizeof (int), font->scaled_font_subset->num_glyphs);
     if (type2_subset->widths == NULL) {
-        status = CAIRO_STATUS_NO_MEMORY;
+        status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
         goto fail1;
     }
 
@@ -877,8 +873,7 @@ fail2:
     _cairo_type2_charstrings_fini (type2_subset);
 fail1:
     cairo_type1_font_destroy (font);
-    _cairo_error (status);
-    return status;
+    return _cairo_error (status);
 }
 
 void

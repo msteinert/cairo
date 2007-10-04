@@ -701,7 +701,7 @@ _cairo_bo_event_queue_insert (cairo_bo_event_queue_t *queue,
     /* Don't insert if there's already an equivalent intersection event in the queue. */
     if (_cairo_skip_list_insert (&queue->intersection_queue, event,
 		      event->type == CAIRO_BO_EVENT_TYPE_INTERSECTION) == NULL)
-	status = CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
     return status;
 }
 
@@ -755,10 +755,8 @@ _cairo_bo_event_queue_init (cairo_bo_event_queue_t	*event_queue,
      * event type a union so it doesn't always contain the skip
      * elt? */
     events = _cairo_malloc_ab (num_events, sizeof (cairo_bo_event_t) + sizeof(cairo_bo_event_t*));
-    if (events == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return CAIRO_STATUS_NO_MEMORY;
-    }
+    if (events == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     sorted_event_ptrs = (cairo_bo_event_t **) (events + num_events);
     event_queue->startstop_events = events;
@@ -861,7 +859,7 @@ _cairo_bo_sweep_line_insert (cairo_bo_sweep_line_t	*sweep_line,
     sweep_line_elt = _cairo_skip_list_insert (&sweep_line->active_edges, &edge,
 				       1 /* unique inserts*/);
     if (sweep_line_elt == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     next_elt = sweep_line_elt->elt.next[0];
     if (next_elt)
@@ -1148,10 +1146,8 @@ _cairo_bo_edge_start_or_continue_trap (cairo_bo_edge_t	*edge,
 
     if (edge->next) {
 	trap = edge->deferred_trap = _cairo_freelist_alloc (&bo_traps->freelist);
-	if (!edge->deferred_trap) {
-	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    return CAIRO_STATUS_NO_MEMORY;
-	}
+	if (!edge->deferred_trap)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	trap->right = edge->next;
 	trap->top = top;
@@ -1441,10 +1437,8 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	*traps,
 	edges = stack_edges;
     } else {
 	edges = _cairo_malloc_ab (polygon->num_edges, sizeof (cairo_bo_edge_t));
-	if (edges == NULL) {
-	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    return CAIRO_STATUS_NO_MEMORY;
-	}
+	if (edges == NULL)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     /* Figure out the bounding box of the input coordinates and

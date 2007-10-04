@@ -90,7 +90,7 @@ cairo_font_options_create (void)
 
     options = malloc (sizeof (cairo_font_options_t));
     if (!options) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_font_options_t *)&_cairo_font_options_nil;
     }
 
@@ -123,7 +123,7 @@ cairo_font_options_copy (const cairo_font_options_t *original)
 
     options = malloc (sizeof (cairo_font_options_t));
     if (!options) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_font_options_t *)&_cairo_font_options_nil;
     }
 

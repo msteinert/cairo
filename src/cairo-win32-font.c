@@ -455,7 +455,7 @@ _cairo_win32_scaled_font_select_unscaled_font (cairo_scaled_font_t *scaled_font,
 
     hfont = _win32_scaled_font_get_unscaled_hfont ((cairo_win32_scaled_font_t *)scaled_font, hdc);
     if (!hfont)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     old_hfont = SelectObject (hdc, hfont);
     if (!old_hfont)
@@ -499,7 +499,7 @@ _cairo_win32_scaled_font_create_toy (cairo_toy_font_face_t *toy_face,
 
     if (face_name_len > LF_FACESIZE - 1) {
 	free (face_name);
-	return CAIRO_STATUS_INVALID_STRING;
+	return _cairo_error (CAIRO_STATUS_INVALID_STRING);
     }
 
     memcpy (logfont.lfFaceName, face_name, sizeof (uint16_t) * (face_name_len + 1));
@@ -544,12 +544,12 @@ _cairo_win32_scaled_font_create_toy (cairo_toy_font_face_t *toy_face,
     logfont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
 
     if (!logfont.lfFaceName)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     scaled_font = _win32_scaled_font_create (&logfont, NULL, &toy_face->base,
 					     font_matrix, ctm, options);
     if (!scaled_font)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     *scaled_font_out = scaled_font;
 
@@ -610,13 +610,13 @@ _cairo_win32_scaled_font_text_to_glyphs (void		*abstract_font,
 
     buffer_size = MAX (n16 * 1.2, 16);		/* Initially guess number of chars plus a few */
     if (buffer_size > INT_MAX) {
-	status = CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FAIL1;
     }
 
     hdc = _get_global_font_dc ();
     if (!hdc) {
-	status = CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FAIL1;
     }
 
@@ -637,7 +637,7 @@ _cairo_win32_scaled_font_text_to_glyphs (void		*abstract_font,
 	glyph_indices = _cairo_malloc_ab (buffer_size, sizeof (WCHAR));
 	dx = _cairo_malloc_ab (buffer_size, sizeof (int));
 	if (!glyph_indices || !dx) {
-	    status = CAIRO_STATUS_NO_MEMORY;
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto FAIL2;
 	}
 
@@ -660,7 +660,7 @@ _cairo_win32_scaled_font_text_to_glyphs (void		*abstract_font,
 
 	buffer_size *= 1.5;
 	if (buffer_size > INT_MAX) {
-	    status = CAIRO_STATUS_NO_MEMORY;
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto FAIL2;
 	}
     }
@@ -668,7 +668,7 @@ _cairo_win32_scaled_font_text_to_glyphs (void		*abstract_font,
     *num_glyphs = gcp_results.nGlyphs;
     *glyphs = _cairo_malloc_ab (gcp_results.nGlyphs, sizeof (cairo_glyph_t));
     if (!*glyphs) {
-	status = CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FAIL2;
     }
 
@@ -710,7 +710,7 @@ _cairo_win32_scaled_font_set_metrics (cairo_win32_scaled_font_t *scaled_font)
 
     hdc = _get_global_font_dc ();
     if (!hdc)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     if (scaled_font->preserve_axes || scaled_font->base.options.hint_metrics == CAIRO_HINT_METRICS_OFF) {
 	/* For 90-degree rotations (including 0), we get the metrics
@@ -773,7 +773,7 @@ _cairo_win32_scaled_font_init_glyph_metrics (cairo_win32_scaled_font_t *scaled_f
 
     hdc = _get_global_font_dc ();
     if (!hdc)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     if (scaled_font->glyph_indexing)
         glyph_index_option = GGO_GLYPH_INDEX;
@@ -873,7 +873,7 @@ _cairo_win32_scaled_font_glyph_bbox (void		 *abstract_font,
         UINT glyph_index_option;
 
 	if (!hdc)
-	    return CAIRO_STATUS_NO_MEMORY;
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	status = cairo_win32_scaled_font_select_font (&scaled_font->base, hdc);
 	if (status)
@@ -1215,7 +1215,7 @@ _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
 
 	tmp_surface = (cairo_win32_surface_t *)cairo_win32_surface_create_with_dib (CAIRO_FORMAT_ARGB32, width, height);
 	if (tmp_surface->base.status)
-	    return CAIRO_STATUS_NO_MEMORY;
+	    return tmp_surface->base.status;
 
 	r.left = 0;
 	r.top = 0;
@@ -1248,7 +1248,7 @@ _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
 	    mask_surface = _compute_a8_mask (tmp_surface);
 	    cairo_surface_destroy (&tmp_surface->base);
 	    if (!mask_surface)
-		return CAIRO_STATUS_NO_MEMORY;
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
 
 	/* For op == OVER, no-cleartype, a possible optimization here is to
@@ -1286,7 +1286,7 @@ _cairo_win32_scaled_font_load_truetype_table (void	       *abstract_font,
     cairo_win32_scaled_font_t *scaled_font = abstract_font;
     hdc = _get_global_font_dc ();
     if (!hdc)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     tag = (tag&0x000000ff)<<24 | (tag&0x0000ff00)<<8 | (tag&0x00ff0000)>>8 | (tag&0xff000000)>>24;
     status = _cairo_win32_scaled_font_select_unscaled_font (&scaled_font->base, hdc);
@@ -1345,11 +1345,11 @@ _cairo_win32_scaled_font_init_glyph_path (cairo_win32_scaled_font_t *scaled_font
 
     hdc = _get_global_font_dc ();
     if (!hdc)
-        return CAIRO_STATUS_NO_MEMORY;
+        return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     path = _cairo_path_fixed_create ();
     if (!path)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     if (scaled_font->base.options.hint_style == CAIRO_HINT_STYLE_NONE) {
         status = _cairo_win32_scaled_font_select_unscaled_font (&scaled_font->base, hdc);
@@ -1379,7 +1379,7 @@ _cairo_win32_scaled_font_init_glyph_path (cairo_win32_scaled_font_t *scaled_font
     ptr = buffer = malloc (bytesGlyph);
 
     if (!buffer) {
-	status = CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP_FONT;
     }
 
@@ -1557,7 +1557,7 @@ _cairo_win32_font_face_scaled_font_create (void			*abstract_face,
     if (*font)
 	return CAIRO_STATUS_SUCCESS;
     else
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 }
 
 static const cairo_font_face_backend_t _cairo_win32_font_face_backend = {
@@ -1694,7 +1694,7 @@ cairo_win32_scaled_font_select_font (cairo_scaled_font_t *scaled_font,
 
     hfont = _win32_scaled_font_get_scaled_hfont ((cairo_win32_scaled_font_t *)scaled_font);
     if (!hfont)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     old_hfont = SelectObject (hdc, hfont);
     if (!old_hfont)

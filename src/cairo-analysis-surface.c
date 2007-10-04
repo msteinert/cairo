@@ -76,7 +76,7 @@ _cairo_analysis_surface_analyze_meta_surface_pattern (cairo_analysis_surface_t *
     analysis = _cairo_analysis_surface_create (surface->target,
 					       surface->width, surface->height);
     if (analysis == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     status = _cairo_meta_surface_replay_analyze_meta_pattern (meta_surface, analysis);
     if (status == CAIRO_STATUS_SUCCESS)
@@ -592,7 +592,7 @@ _cairo_analysis_surface_create (cairo_surface_t		*target,
 
     return &surface->base;
 FAIL:
-    _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
     return NULL;
 }
 

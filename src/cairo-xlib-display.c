@@ -252,7 +252,7 @@ _cairo_xlib_display_get (Display *dpy)
 
     display = malloc (sizeof (cairo_xlib_display_t));
     if (display == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	goto UNLOCK;
     }
 

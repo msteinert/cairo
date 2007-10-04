@@ -125,7 +125,7 @@ _create_composite_mask_pattern (cairo_surface_pattern_t       *mask_pattern,
 					 extents->width,
 					 extents->height);
     if (mask->status)
-	return CAIRO_STATUS_NO_MEMORY;
+	return mask->status;
 
     status = (*draw_func) (draw_closure, CAIRO_OPERATOR_ADD,
 			   NULL, mask,
@@ -211,7 +211,7 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
 						 extents->width,
 						 extents->height);
     if (intermediate->status)
-	return CAIRO_STATUS_NO_MEMORY;
+	return intermediate->status;
 
     /* Initialize the intermediate surface from the destination surface
      */
@@ -1171,8 +1171,7 @@ _cairo_surface_fallback_fill_rectangles (cairo_surface_t         *surface,
     if (state.image_rect.x != 0 || state.image_rect.y != 0) {
 	offset_rects = _cairo_malloc_ab (num_rects, sizeof (cairo_rectangle_int_t));
 	if (offset_rects == NULL) {
-	    status = CAIRO_STATUS_NO_MEMORY;
-	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto DONE;
 	}
 
@@ -1228,8 +1227,7 @@ _cairo_surface_fallback_composite_trapezoids (cairo_operator_t		op,
     if (state.image_rect.x != 0 || state.image_rect.y != 0) {
 	offset_traps = _cairo_malloc_ab (num_traps, sizeof (cairo_trapezoid_t));
 	if (!offset_traps) {
-	    status = CAIRO_STATUS_NO_MEMORY;
-	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto DONE;
 	}
 

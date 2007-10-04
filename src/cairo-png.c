@@ -129,14 +129,14 @@ write_png (cairo_surface_t	*surface,
 						  &image_extra);
 
     if (status == CAIRO_STATUS_NO_MEMORY)
-        return CAIRO_STATUS_NO_MEMORY;
+        return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     else if (status != CAIRO_STATUS_SUCCESS)
-	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 
     if (image->height && image->width) {
 	rows = _cairo_malloc_ab (image->height, sizeof (png_byte*));
 	if (rows == NULL) {
-	    status = CAIRO_STATUS_NO_MEMORY;
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto BAIL1;
 	}
 
@@ -148,13 +148,13 @@ write_png (cairo_surface_t	*surface,
 	                           png_simple_error_callback,
 	                           png_simple_warning_callback);
     if (png == NULL) {
-	status = CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto BAIL2;
     }
 
     info = png_create_info_struct (png);
     if (info == NULL) {
-	status = CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto BAIL3;
     }
 
@@ -181,7 +181,7 @@ write_png (cairo_surface_t	*surface,
 	png_color_type = PNG_COLOR_TYPE_GRAY;
 	break;
     default:
-	status = CAIRO_STATUS_INVALID_FORMAT;
+	status = _cairo_error (CAIRO_STATUS_INVALID_FORMAT);
 	goto BAIL3;
     }
 
@@ -270,12 +270,12 @@ cairo_surface_write_to_png (cairo_surface_t	*surface,
 
     fp = fopen (filename, "wb");
     if (fp == NULL)
-	return CAIRO_STATUS_WRITE_ERROR;
+	return _cairo_error (CAIRO_STATUS_WRITE_ERROR);
 
     status = write_png (surface, stdio_write_func, fp);
 
     if (fclose (fp) && status == CAIRO_STATUS_SUCCESS)
-	status = CAIRO_STATUS_WRITE_ERROR;
+	status = _cairo_error (CAIRO_STATUS_WRITE_ERROR);
 
     return status;
 }
@@ -477,7 +477,7 @@ read_png (png_rw_ptr	read_func,
 	png_destroy_read_struct (&png, &info, NULL);
 
     if (surface->status)
-	_cairo_error (surface->status);
+	_cairo_error_throw (surface->status);
 
     return surface;
 }
@@ -526,13 +526,13 @@ cairo_image_surface_create_from_png (const char *filename)
     if (fp == NULL) {
 	switch (errno) {
 	case ENOMEM:
-	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	    return (cairo_surface_t*) &_cairo_surface_nil;
 	case ENOENT:
-	    _cairo_error (CAIRO_STATUS_FILE_NOT_FOUND);
+	    _cairo_error_throw (CAIRO_STATUS_FILE_NOT_FOUND);
 	    return (cairo_surface_t*) &_cairo_surface_nil_file_not_found;
 	default:
-	    _cairo_error (CAIRO_STATUS_READ_ERROR);
+	    _cairo_error_throw (CAIRO_STATUS_READ_ERROR);
 	    return (cairo_surface_t*) &_cairo_surface_nil_read_error;
 	}
     }

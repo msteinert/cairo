@@ -150,7 +150,7 @@ _cairo_hash_table_create (cairo_hash_keys_equal_func_t keys_equal)
 
     hash_table = malloc (sizeof (cairo_hash_table_t));
     if (hash_table == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
     }
 
@@ -161,8 +161,8 @@ _cairo_hash_table_create (cairo_hash_keys_equal_func_t keys_equal)
     hash_table->entries = calloc (hash_table->arrangement->size,
 				  sizeof(cairo_hash_entry_t *));
     if (hash_table->entries == NULL) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	free (hash_table);
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
     }
 
@@ -331,10 +331,8 @@ _cairo_hash_table_resize  (cairo_hash_table_t *hash_table)
 
     new_size = tmp.arrangement->size;
     tmp.entries = calloc (new_size, sizeof (cairo_hash_entry_t*));
-    if (tmp.entries == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return CAIRO_STATUS_NO_MEMORY;
-    }
+    if (tmp.entries == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     for (i = 0; i < hash_table->arrangement->size; ++i) {
 	if (ENTRY_IS_LIVE (hash_table->entries[i])) {

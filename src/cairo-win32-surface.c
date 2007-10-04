@@ -105,7 +105,7 @@ _cairo_win32_print_gdi_error (const char *context)
      * is no CAIRO_STATUS_UNKNOWN_ERROR.
      */
 
-    return CAIRO_STATUS_NO_MEMORY;
+    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 }
 
 uint32_t
@@ -187,10 +187,8 @@ _create_dc_and_bitmap (cairo_win32_surface_t *surface,
 
     if (num_palette > 2) {
 	bitmap_info = _cairo_malloc_ab_plus_c (num_palette, sizeof(RGBQUAD), sizeof(BITMAPINFOHEADER));
-	if (!bitmap_info) {
-	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    return CAIRO_STATUS_NO_MEMORY;
-	}
+	if (!bitmap_info)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     } else {
 	bitmap_info = (BITMAPINFO *)&bmi_stack;
     }
@@ -349,7 +347,7 @@ _cairo_win32_surface_create_for_dc (HDC             original_dc,
     surface->image = cairo_image_surface_create_for_data (bits, format,
 							  width, height, rowstride);
     if (surface->image->status) {
-	status = CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FAIL;
     }
 
@@ -517,7 +515,7 @@ _cairo_win32_surface_get_subimage (cairo_win32_surface_t  *surface,
 	(cairo_win32_surface_t *) _cairo_win32_surface_create_similar_internal
 	(surface, content, width, height, TRUE);
     if (local->base.status)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -1452,6 +1450,7 @@ _cairo_win32_surface_set_clip_region (void           *abstract_surface,
     } else {
 	cairo_rectangle_int_t extents;
 	cairo_box_int_t *boxes;
+	cairo_status_t status;
 	int num_boxes;
 	RGNDATA *data;
 	size_t data_size;
@@ -1462,15 +1461,15 @@ _cairo_win32_surface_set_clip_region (void           *abstract_surface,
 	/* Create a GDI region for the cairo region */
 
 	_cairo_region_get_extents (region, &extents);
-	if (_cairo_region_get_boxes (region, &num_boxes, &boxes) != CAIRO_STATUS_SUCCESS)
-	    return CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_region_get_boxes (region, &num_boxes, &boxes);
+	if (status)
+	    return status;
 
 	data_size = sizeof (RGNDATAHEADER) + num_boxes * sizeof (RECT);
 	data = malloc (data_size);
 	if (!data) {
 	    _cairo_region_boxes_fini (region, boxes);
-	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    return CAIRO_STATUS_NO_MEMORY;
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
 	rects = (RECT *)data->Buffer;
 
@@ -1496,7 +1495,7 @@ _cairo_win32_surface_set_clip_region (void           *abstract_surface,
 	free (data);
 
 	if (!gdi_region)
-	    return CAIRO_STATUS_NO_MEMORY;
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	/* Combine the new region with the original clip */
 

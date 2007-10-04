@@ -231,7 +231,7 @@ cairo_font_face_set_user_data (cairo_font_face_t	   *font_face,
 			       cairo_destroy_func_t	    destroy)
 {
     if (CAIRO_REFERENCE_COUNT_IS_INVALID (&font_face->ref_count))
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     return _cairo_user_data_array_set_data (&font_face->user_data,
 					    key, user_data, destroy);
@@ -321,7 +321,7 @@ _cairo_toy_font_face_init (cairo_toy_font_face_t *font_face,
 
     family_copy = strdup (family);
     if (family_copy == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     _cairo_toy_font_face_init_key (font_face, family_copy,
 				      slant, weight);
@@ -396,7 +396,7 @@ _cairo_toy_font_face_create (const char          *family,
     /* Otherwise create it and insert into hash table. */
     font_face = malloc (sizeof (cairo_toy_font_face_t));
     if (font_face == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto UNWIND_HASH_TABLE_LOCK;
     }
 

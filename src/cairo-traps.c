@@ -270,8 +270,7 @@ _cairo_traps_grow (cairo_traps_t *traps)
     }
 
     if (new_traps == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	traps->status = CAIRO_STATUS_NO_MEMORY;
+	traps->status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return traps->status;
     }
 
@@ -615,10 +614,8 @@ _cairo_traps_extract_region (cairo_traps_t  *traps,
     if (traps->num_traps > ARRAY_LENGTH(stack_boxes)) {
 	boxes = _cairo_malloc_ab (traps->num_traps, sizeof(cairo_box_int_t));
 
-	if (boxes == NULL) {
-	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    return CAIRO_STATUS_NO_MEMORY;
-	}
+	if (boxes == NULL)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     box_count = 0;

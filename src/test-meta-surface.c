@@ -76,10 +76,8 @@ _cairo_test_meta_surface_create (cairo_content_t	content,
     test_meta_surface_t *surface;
 
     surface = malloc (sizeof (test_meta_surface_t));
-    if (surface == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+    if (surface == NULL)
 	goto FAIL;
-    }
 
     _cairo_surface_init (&surface->base, &test_meta_surface_backend,
 			 content);
@@ -102,7 +100,7 @@ _cairo_test_meta_surface_create (cairo_content_t	content,
   FAIL_CLEANUP_SURFACE:
     free (surface);
   FAIL:
-    _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
     return (cairo_surface_t*) &_cairo_surface_nil;
 }
 

@@ -305,7 +305,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
 
     surface = malloc (sizeof (cairo_pdf_surface_t));
     if (surface == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
 
@@ -331,7 +331,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
 
     surface->font_subsets = _cairo_scaled_font_subsets_create_composite ();
     if (! surface->font_subsets) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	goto fail;
     }
 
@@ -403,10 +403,8 @@ cairo_pdf_surface_create_for_stream (cairo_write_func_t		 write_func,
 
     output = _cairo_output_stream_create (write_func, NULL, closure);
     status = _cairo_output_stream_get_status (output);
-    if (status) {
-	_cairo_error (status);
+    if (status)
 	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
 
     return _cairo_pdf_surface_create_for_stream_internal (output,
 							  width_in_points,
@@ -442,12 +440,10 @@ cairo_pdf_surface_create (const char		*filename,
 
     output = _cairo_output_stream_create_for_filename (filename);
     status = _cairo_output_stream_get_status (output);
-    if (status) {
-	_cairo_error (status);
+    if (status)
 	return (status == CAIRO_STATUS_WRITE_ERROR) ?
 		(cairo_surface_t*) &_cairo_surface_nil_write_error :
 		(cairo_surface_t*) &_cairo_surface_nil;
-    }
 
     return _cairo_pdf_surface_create_for_stream_internal (output,
 							  width_in_points,
@@ -471,12 +467,12 @@ _extract_pdf_surface (cairo_surface_t		 *surface,
     cairo_surface_t *target;
 
     if (! _cairo_surface_is_paginated (surface))
-	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 
     target = _cairo_paginated_surface_get_target (surface);
 
     if (! _cairo_surface_is_pdf (target))
-	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 
     *pdf_surface = (cairo_pdf_surface_t *) target;
 
@@ -505,12 +501,12 @@ cairo_pdf_surface_set_size (cairo_surface_t	*surface,
 			    double		 width_in_points,
 			    double		 height_in_points)
 {
-    cairo_pdf_surface_t *pdf_surface;
+    cairo_pdf_surface_t *pdf_surface = NULL; /* hide compiler warning */
     cairo_status_t status;
 
     status = _extract_pdf_surface (surface, &pdf_surface);
     if (status) {
-	_cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	status = _cairo_surface_set_error (surface, status);
 	return;
     }
 
@@ -521,7 +517,7 @@ cairo_pdf_surface_set_size (cairo_surface_t	*surface,
 						width_in_points,
 						height_in_points);
     if (status)
-	_cairo_surface_set_error (surface, status);
+	status = _cairo_surface_set_error (surface, status);
 }
 
 static void
@@ -1182,7 +1178,7 @@ compress_dup (const void *data, unsigned long data_size,
     *compressed_size = data_size + (data_size >> 12) + (data_size >> 14) + 11;
     compressed = malloc (*compressed_size);
     if (compressed == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
     }
 
@@ -1221,8 +1217,7 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
     alpha_size = image->height * image->width;
     alpha = malloc (alpha_size);
     if (alpha == NULL) {
-	status = CAIRO_STATUS_NO_MEMORY;
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP;
     }
 
@@ -1258,7 +1253,7 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 
     alpha_compressed = compress_dup (alpha, alpha_size, &alpha_compressed_size);
     if (alpha_compressed == NULL) {
-	status = CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP_ALPHA;
     }
 
@@ -1315,8 +1310,7 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t   *surface,
     rgb_size = image->height * image->width * 3;
     rgb = malloc (rgb_size);
     if (rgb == NULL) {
-	status = CAIRO_STATUS_NO_MEMORY;
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP;
     }
 
@@ -1356,7 +1350,7 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t   *surface,
 
     compressed = compress_dup (rgb, rgb_size, &compressed_size);
     if (compressed == NULL) {
-	status = CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP_RGB;
     }
 
@@ -1888,10 +1882,8 @@ _cairo_pdf_surface_emit_pattern_stops (cairo_pdf_surface_t      *surface,
     alpha_function->id = 0;
 
     allstops = _cairo_malloc_ab ((pattern->n_stops + 2), sizeof (cairo_pdf_color_stop_t));
-    if (allstops == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return CAIRO_STATUS_NO_MEMORY;
-    }
+    if (allstops == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     stops = &allstops[1];
     n_stops = pattern->n_stops;
@@ -2303,7 +2295,7 @@ _cairo_pdf_surface_emit_pattern (cairo_pdf_surface_t *surface, cairo_pattern_t *
     }
 
     ASSERT_NOT_REACHED;
-    return CAIRO_STATUS_PATTERN_TYPE_MISMATCH;
+    return _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
 }
 
 static cairo_status_t
@@ -2498,7 +2490,8 @@ _cairo_pdf_surface_add_clip (cairo_pdf_surface_t  *surface,
     } else {
 	elem.clip_path = _cairo_path_fixed_create ();
 	if (elem.clip_path == NULL)
-	    return CAIRO_STATUS_NO_MEMORY;
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
 	status = _cairo_path_fixed_init_copy (elem.clip_path, path);
 	if (status)
 	    return status;
@@ -2694,7 +2687,7 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
 
     compressed = compress_dup (subset->data, subset->data_length, &compressed_length);
     if (compressed == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     stream = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
@@ -2858,7 +2851,7 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
     length = subset->header_length + subset->data_length;
     compressed = compress_dup (subset->data, length, &compressed_length);
     if (compressed == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     stream = _cairo_pdf_surface_new_object (surface);
     _cairo_output_stream_printf (surface->output,
@@ -3015,7 +3008,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 			       &compressed_length);
     if (compressed == NULL) {
 	_cairo_truetype_subset_fini (&subset);
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     stream = _cairo_pdf_surface_new_object (surface);
@@ -3280,7 +3273,7 @@ _cairo_pdf_surface_emit_glyph (cairo_pdf_surface_t	*surface,
                                                        width);
 
     if (status)
-	_cairo_surface_set_error (&surface->base, status);
+	status = _cairo_surface_set_error (&surface->base, status);
 }
 
 static cairo_status_t
@@ -3297,16 +3290,13 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
     cairo_box_t bbox = {{0,0},{0,0}};
 
     glyphs = _cairo_malloc_ab (font_subset->num_glyphs, sizeof (cairo_pdf_resource_t));
-    if (glyphs == NULL) {
-	_cairo_surface_set_error (&surface->base, CAIRO_STATUS_NO_MEMORY);
-	return CAIRO_STATUS_NO_MEMORY;
-    }
+    if (glyphs == NULL)
+	return _cairo_surface_set_error (&surface->base, CAIRO_STATUS_NO_MEMORY);
 
     widths = _cairo_malloc_ab (font_subset->num_glyphs, sizeof (double));
     if (widths == NULL) {
         free (glyphs);
-	_cairo_surface_set_error (&surface->base, CAIRO_STATUS_NO_MEMORY);
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_surface_set_error (&surface->base, CAIRO_STATUS_NO_MEMORY);
     }
 
     for (i = 0; i < font_subset->num_glyphs; i++) {

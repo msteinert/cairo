@@ -94,7 +94,7 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     gstate->source = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK,
 						  CAIRO_CONTENT_COLOR);
     if (gstate->source->status)
-	return CAIRO_STATUS_NO_MEMORY;
+	return gstate->source->status;
 
     return target ? target->status : CAIRO_STATUS_NULL_POINTER;
 }
@@ -208,7 +208,7 @@ _cairo_gstate_clone (cairo_gstate_t *other)
 
     gstate = malloc (sizeof (cairo_gstate_t));
     if (gstate == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
     }
 
@@ -235,10 +235,8 @@ _cairo_gstate_save (cairo_gstate_t **gstate)
     cairo_gstate_t *top;
 
     top = _cairo_gstate_clone (*gstate);
-
-    if (top == NULL) {
-	return CAIRO_STATUS_NO_MEMORY;
-    }
+    if (top == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     top->next = *gstate;
     *gstate = top;
@@ -258,10 +256,8 @@ _cairo_gstate_restore (cairo_gstate_t **gstate)
     cairo_gstate_t *top;
 
     top = *gstate;
-
-    if (top->next == NULL) {
-	return CAIRO_STATUS_INVALID_RESTORE;
-    }
+    if (top->next == NULL)
+	return _cairo_error (CAIRO_STATUS_INVALID_RESTORE);
 
     *gstate = top->next;
 
@@ -535,8 +531,7 @@ _cairo_gstate_set_dash (cairo_gstate_t *gstate, const double *dash, int num_dash
     gstate->stroke_style.dash = _cairo_malloc_ab (gstate->stroke_style.num_dashes, sizeof (double));
     if (gstate->stroke_style.dash == NULL) {
 	gstate->stroke_style.num_dashes = 0;
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     memcpy (gstate->stroke_style.dash, dash, gstate->stroke_style.num_dashes * sizeof (double));
@@ -544,12 +539,12 @@ _cairo_gstate_set_dash (cairo_gstate_t *gstate, const double *dash, int num_dash
     dash_total = 0.0;
     for (i = 0; i < gstate->stroke_style.num_dashes; i++) {
 	if (gstate->stroke_style.dash[i] < 0)
-	    return CAIRO_STATUS_INVALID_DASH;
+	    return _cairo_error (CAIRO_STATUS_INVALID_DASH);
 	dash_total += gstate->stroke_style.dash[i];
     }
 
     if (dash_total == 0.0)
-	return CAIRO_STATUS_INVALID_DASH;
+	return _cairo_error (CAIRO_STATUS_INVALID_DASH);
 
     /* A single dash value indicate symmetric repeating, so the total
      * is twice as long. */
@@ -626,7 +621,7 @@ _cairo_gstate_scale (cairo_gstate_t *gstate, double sx, double sy)
     cairo_matrix_t tmp;
 
     if (sx == 0 || sy == 0)
-	return CAIRO_STATUS_INVALID_MATRIX;
+	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
     _cairo_gstate_unset_scaled_font (gstate);
 
@@ -1576,10 +1571,8 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 	transformed_glyphs = stack_transformed_glyphs;
     } else {
 	transformed_glyphs = _cairo_malloc_ab (num_glyphs, sizeof(cairo_glyph_t));
-	if (transformed_glyphs == NULL) {
-	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    return CAIRO_STATUS_NO_MEMORY;
-	}
+	if (transformed_glyphs == NULL)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     _cairo_gstate_transform_glyphs_to_backend (gstate, glyphs, num_glyphs,
@@ -1623,10 +1616,8 @@ _cairo_gstate_glyph_path (cairo_gstate_t      *gstate,
       transformed_glyphs = stack_transformed_glyphs;
     else
       transformed_glyphs = _cairo_malloc_ab (num_glyphs, sizeof(cairo_glyph_t));
-    if (transformed_glyphs == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return CAIRO_STATUS_NO_MEMORY;
-    }
+    if (transformed_glyphs == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     _cairo_gstate_transform_glyphs_to_backend (gstate, glyphs, num_glyphs,
                                                transformed_glyphs);
