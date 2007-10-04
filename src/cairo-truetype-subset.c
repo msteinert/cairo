@@ -248,7 +248,7 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     if (status)
 	goto fail5;
 
-    font->status = _cairo_error (CAIRO_STATUS_SUCCESS);
+    font->status = CAIRO_STATUS_SUCCESS;
 
     *font_return = font;
 
