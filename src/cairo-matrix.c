@@ -486,6 +486,16 @@ cairo_matrix_invert (cairo_matrix_t *matrix)
 }
 slim_hidden_def(cairo_matrix_invert);
 
+cairo_bool_t
+_cairo_matrix_is_invertible (const cairo_matrix_t *matrix)
+{
+    double det;
+
+    _cairo_matrix_compute_determinant (matrix, &det);
+
+    return det != 0. && det * det > 0.;
+}
+
 void
 _cairo_matrix_compute_determinant (const cairo_matrix_t *matrix,
 				   double		*det)

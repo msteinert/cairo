@@ -603,6 +603,9 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     if (cairo_font_options_status ((cairo_font_options_t *) options))
 	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
 
+    if (! _cairo_matrix_is_invertible (font_matrix))
+	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
+
     font_map = _cairo_scaled_font_map_lock ();
     if (font_map == NULL)
 	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
