@@ -64,7 +64,7 @@ _cairo_hull_create (cairo_pen_vertex_t *vertices, int num_vertices)
 
     hull = _cairo_malloc_ab (num_vertices, sizeof (cairo_hull_t));
     if (hull == NULL) {
-	_cairo_error (CAIRO_STATUS_SUCCESS);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
     }
 

@@ -253,7 +253,7 @@ _cairo_meta_surface_paint (void			*abstract_surface,
 
     command = malloc (sizeof (cairo_command_paint_t));
     if (command == NULL) {
-	_cairo_error (CAIRO_STATUS_SUCCESS);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
@@ -296,7 +296,7 @@ _cairo_meta_surface_mask (void			*abstract_surface,
 
     command = malloc (sizeof (cairo_command_mask_t));
     if (command == NULL) {
-	_cairo_error (CAIRO_STATUS_SUCCESS);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
@@ -344,7 +344,7 @@ _cairo_meta_surface_stroke (void			*abstract_surface,
 
     command = malloc (sizeof (cairo_command_stroke_t));
     if (command == NULL) {
-	_cairo_error (CAIRO_STATUS_SUCCESS);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
@@ -401,7 +401,7 @@ _cairo_meta_surface_fill (void			*abstract_surface,
 
     command = malloc (sizeof (cairo_command_fill_t));
     if (command == NULL) {
-	_cairo_error (CAIRO_STATUS_SUCCESS);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
     }
 
@@ -450,7 +450,7 @@ _cairo_meta_surface_show_glyphs (void			*abstract_surface,
 
     command = malloc (sizeof (cairo_command_show_glyphs_t));
     if (command == NULL) {
-	_cairo_error (CAIRO_STATUS_SUCCESS);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return CAIRO_STATUS_NO_MEMORY;
     }
 

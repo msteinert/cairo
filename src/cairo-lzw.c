@@ -76,7 +76,7 @@ _lzw_buf_init (lzw_buf_t *buf, int size)
     if (buf->data == NULL) {
 	buf->data_size = 0;
 	buf->status = CAIRO_STATUS_NO_MEMORY;
-	_cairo_error (CAIRO_STATUS_SUCCESS);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return;
     }
 }
@@ -103,7 +103,7 @@ _lzw_buf_grow (lzw_buf_t *buf)
 	free (buf->data);
 	buf->data_size = 0;
 	buf->status = CAIRO_STATUS_NO_MEMORY;
-	_cairo_error (CAIRO_STATUS_SUCCESS);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return buf->status;
     }
 

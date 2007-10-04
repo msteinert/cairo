@@ -1063,7 +1063,7 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
     if (num_rects > ARRAY_LENGTH(stack_rects)) {
 	pixman_rects = _cairo_malloc_ab (num_rects, sizeof(pixman_rectangle16_t));
 	if (pixman_rects == NULL) {
-	    _cairo_error (CAIRO_STATUS_SUCCESS);
+	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
     }		 
@@ -1080,8 +1080,10 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
 				       surface->pixman_image,
 				       &pixman_color,
 				       num_rects,
-				       pixman_rects))
+				       pixman_rects)) {
 	status = CAIRO_STATUS_NO_MEMORY;
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
 
     if (pixman_rects != stack_rects)
 	free (pixman_rects);
@@ -1127,7 +1129,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     if (num_traps > ARRAY_LENGTH(stack_traps)) {
 	pixman_traps = _cairo_malloc_ab (num_traps, sizeof(pixman_trapezoid_t));
 	if (pixman_traps == NULL) {
-	    _cairo_error (CAIRO_STATUS_SUCCESS);
+	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    return CAIRO_STATUS_NO_MEMORY;
 	}
     }
@@ -1205,7 +1207,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     mask_data = calloc (mask_stride, height);
     if (mask_data == NULL) {
 	status = CAIRO_STATUS_NO_MEMORY;
-	_cairo_error (CAIRO_STATUS_SUCCESS);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP_SOURCE;
     }
 
@@ -1213,7 +1215,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 				     mask_data, mask_stride);
     if (mask == NULL) {
 	status = CAIRO_STATUS_NO_MEMORY;
-	_cairo_error (CAIRO_STATUS_SUCCESS);
+	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP_IMAGE_DATA;
     }
 
