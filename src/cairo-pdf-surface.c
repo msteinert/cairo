@@ -3337,6 +3337,10 @@ _cairo_pdf_surface_emit_outline_glyph (cairo_pdf_surface_t	*surface,
 					  _cairo_pdf_path_curve_to,
 					  _cairo_pdf_path_close_path,
 					  &info);
+    if (status) {
+	_cairo_pdf_surface_close_stream (surface);
+	return status;
+    }
 
     _cairo_output_stream_printf (surface->output,
 				 " f");
@@ -3655,16 +3659,18 @@ _cairo_pdf_surface_emit_font_subsets (cairo_pdf_surface_t *surface)
     status = _cairo_scaled_font_subsets_foreach_unscaled (surface->font_subsets,
                                                           _cairo_pdf_surface_emit_unscaled_font_subset,
                                                           surface);
+    if (status)
+	goto BAIL;
+
     status = _cairo_scaled_font_subsets_foreach_scaled (surface->font_subsets,
                                                         _cairo_pdf_surface_emit_scaled_font_subset,
                                                         surface);
+
+BAIL:
     _cairo_scaled_font_subsets_destroy (surface->font_subsets);
     surface->font_subsets = NULL;
 
-    if (status)
-	return status;
-
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static cairo_pdf_resource_t
@@ -4360,6 +4366,8 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 					  _cairo_pdf_path_curve_to,
 					  _cairo_pdf_path_close_path,
 					  &info);
+    if (status)
+	return status;
 
     _cairo_output_stream_printf (surface->output, "S Q\r\n");
 
@@ -4441,6 +4449,8 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
 					  _cairo_pdf_path_curve_to,
 					  _cairo_pdf_path_close_path,
 					  &info);
+    if (status)
+	return status;
 
     switch (fill_rule) {
     case CAIRO_FILL_RULE_WINDING:
