@@ -649,6 +649,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 						     ctm, options, &scaled_font);
     if (status) {
 	_cairo_scaled_font_map_unlock ();
+	status = _cairo_font_face_set_error (font_face, status);
 	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
     }
 

@@ -55,6 +55,18 @@ const cairo_font_face_t _cairo_font_face_nil = {
     &_cairo_toy_font_face_backend
 };
 
+cairo_status_t
+_cairo_font_face_set_error (cairo_font_face_t *font_face,
+	                    cairo_status_t     status)
+{
+    if (status == CAIRO_STATUS_SUCCESS)
+	return status;
+
+    _cairo_status_set_error (&font_face->status, status);
+
+    return _cairo_error (status);
+}
+
 void
 _cairo_font_face_init (cairo_font_face_t               *font_face,
 		       const cairo_font_face_backend_t *backend)
@@ -308,6 +320,7 @@ _cairo_toy_font_face_init_key (cairo_toy_font_face_t *key,
     hash += ((unsigned long) slant) * 1607;
     hash += ((unsigned long) weight) * 1451;
 
+    assert (hash != 0);
     key->base.hash_entry.hash = hash;
 }
 
@@ -386,11 +399,17 @@ _cairo_toy_font_face_create (const char          *family,
 				  &key.base.hash_entry,
 				  (cairo_hash_entry_t **) &font_face))
     {
-	/* We increment the reference count here manually to avoid
-	   double-locking. */
-	_cairo_reference_count_inc (&font_face->base.ref_count);
-	_cairo_toy_font_face_hash_table_unlock ();
-	return &font_face->base;
+	if (! font_face->base.status)  {
+	    /* We increment the reference count here manually to avoid
+	       double-locking. */
+	    _cairo_reference_count_inc (&font_face->base.ref_count);
+	    _cairo_toy_font_face_hash_table_unlock ();
+	    return &font_face->base;
+	}
+
+	/* remove the bad font from the hash table */
+	_cairo_hash_table_remove (hash_table, &key.base.hash_entry);
+	font_face->base.hash_entry.hash = 0;
     }
 
     /* Otherwise create it and insert into hash table. */
@@ -427,14 +446,16 @@ _cairo_toy_font_face_destroy (void *abstract_face)
     cairo_toy_font_face_t *font_face = abstract_face;
     cairo_hash_table_t *hash_table;
 
-    if (font_face == NULL)
+    if (font_face == NULL ||
+	    CAIRO_REFERENCE_COUNT_IS_INVALID (&font_face->base.ref_count))
 	return;
 
     hash_table = _cairo_toy_font_face_hash_table_lock ();
     /* All created objects must have been mapped in the hash table. */
     assert (hash_table != NULL);
 
-    _cairo_hash_table_remove (hash_table, &font_face->base.hash_entry);
+    if (font_face->base.hash_entry.hash != 0)
+	_cairo_hash_table_remove (hash_table, &font_face->base.hash_entry);
 
     _cairo_toy_font_face_hash_table_unlock ();
 
@@ -452,12 +473,19 @@ _cairo_toy_font_face_scaled_font_create (void                *abstract_font_face
     const cairo_scaled_font_backend_t * backend = CAIRO_SCALED_FONT_BACKEND_DEFAULT;
     cairo_status_t status;
 
+    if (font_face->base.status)
+	return font_face->base.status;
+
     status = cairo_font_options_status ((cairo_font_options_t *) options);
     if (status)
 	return status;
 
-    return backend->create_toy (font_face,
-				font_matrix, ctm, options, scaled_font);
+    return _cairo_font_face_set_error (&font_face->base,
+	                               backend->create_toy (font_face,
+				                            font_matrix,
+							    ctm,
+							    options,
+							    scaled_font));
 }
 
 static const cairo_font_face_backend_t _cairo_toy_font_face_backend = {

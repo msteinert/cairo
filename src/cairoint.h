@@ -1371,6 +1371,10 @@ cairo_private void
 _cairo_font_face_init (cairo_font_face_t               *font_face,
 		       const cairo_font_face_backend_t *backend);
 
+cairo_private cairo_status_t
+_cairo_font_face_set_error (cairo_font_face_t *font_face,
+	                    cairo_status_t     status);
+
 cairo_private cairo_font_face_t *
 _cairo_toy_font_face_create (const char           *family,
 			     cairo_font_slant_t    slant,
