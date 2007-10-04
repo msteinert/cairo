@@ -1381,12 +1381,15 @@ _trace_mask_to_path (cairo_image_surface_t *mask,
     double xoff, yoff;
 
     if (mask->format == CAIRO_FORMAT_A1)
-	a1_mask = mask;
+	a1_mask = (cairo_image_surface_t *) cairo_surface_reference (&mask->base);
     else
 	a1_mask = _cairo_image_surface_clone (mask, CAIRO_FORMAT_A1);
 
-    if (cairo_surface_status (&a1_mask->base))
-	return cairo_surface_status (&a1_mask->base);
+    status = cairo_surface_status (&a1_mask->base);
+    if (status) {
+	cairo_surface_destroy (&a1_mask->base);
+	return status;
+    }
 
     cairo_surface_get_device_offset (&mask->base, &xoff, &yoff);
 
@@ -1399,16 +1402,16 @@ _trace_mask_to_path (cairo_image_surface_t *mask,
 		    status = _add_unit_rectangle_to_path (path,
 							  x - xoff, y - yoff);
 		    if (status)
-			return status;
+			goto BAIL;
 		}
 	    }
 	}
     }
 
-    if (a1_mask != mask)
-	cairo_surface_destroy (&a1_mask->base);
+BAIL:
+    cairo_surface_destroy (&a1_mask->base);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 cairo_status_t
