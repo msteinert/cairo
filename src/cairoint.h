@@ -2299,7 +2299,7 @@ _cairo_utf8_to_utf16 (const unsigned char *str,
 		      uint16_t		 **result,
 		      int		  *items_written);
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_error (cairo_status_t status);
 
 /* Avoid unnecessary PLT entries.  */
