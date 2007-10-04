@@ -1073,6 +1073,9 @@ cairo_get_dash_count (cairo_t *cr)
 {
     int num_dashes;
 
+    if (cr->status)
+	return 0;
+
     _cairo_gstate_get_dash (cr->gstate, NULL, &num_dashes, NULL);
 
     return num_dashes;
@@ -1095,6 +1098,9 @@ cairo_get_dash (cairo_t *cr,
 		double  *dashes,
 		double  *offset)
 {
+    if (cr->status)
+	return;
+
     _cairo_gstate_get_dash (cr->gstate, dashes, NULL, offset);
 }
 
@@ -2631,6 +2637,11 @@ cairo_set_font_matrix (cairo_t		    *cr,
 void
 cairo_get_font_matrix (cairo_t *cr, cairo_matrix_t *matrix)
 {
+    if (cr->status) {
+	cairo_matrix_init_identity (matrix);
+	return;
+    }
+
     _cairo_gstate_get_font_matrix (cr->gstate, matrix);
 }
 
@@ -2681,6 +2692,11 @@ cairo_get_font_options (cairo_t              *cr,
     /* check that we aren't trying to overwrite the nil object */
     if (cairo_font_options_status (options))
 	return;
+
+    if (cr->status) {
+	_cairo_font_options_init_default (options);
+	return;
+    }
 
     _cairo_gstate_get_font_options (cr->gstate, options);
 }
@@ -3077,6 +3093,9 @@ cairo_glyph_path (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
 cairo_operator_t
 cairo_get_operator (cairo_t *cr)
 {
+    if (cr->status)
+	return (cairo_operator_t) 0;
+
     return _cairo_gstate_get_operator (cr->gstate);
 }
 
@@ -3091,6 +3110,9 @@ cairo_get_operator (cairo_t *cr)
 double
 cairo_get_tolerance (cairo_t *cr)
 {
+    if (cr->status)
+	return 0.;
+
     return _cairo_gstate_get_tolerance (cr->gstate);
 }
 slim_hidden_def (cairo_get_tolerance);
@@ -3106,6 +3128,9 @@ slim_hidden_def (cairo_get_tolerance);
 cairo_antialias_t
 cairo_get_antialias (cairo_t *cr)
 {
+    if (cr->status)
+	return (cairo_antialias_t) 0;
+
     return _cairo_gstate_get_antialias (cr->gstate);
 }
 
@@ -3141,11 +3166,13 @@ cairo_get_antialias (cairo_t *cr)
 void
 cairo_get_current_point (cairo_t *cr, double *x_ret, double *y_ret)
 {
-    cairo_status_t status;
+    cairo_status_t status = CAIRO_STATUS_NO_CURRENT_POINT;
     cairo_fixed_t x_fixed, y_fixed;
     double x, y;
 
-    status = _cairo_path_fixed_get_current_point (cr->path, &x_fixed, &y_fixed);
+    if (cr->status == CAIRO_STATUS_SUCCESS)
+	status = _cairo_path_fixed_get_current_point (cr->path,
+	                                              &x_fixed, &y_fixed);
     if (status == CAIRO_STATUS_NO_CURRENT_POINT) {
 	x = 0.0;
 	y = 0.0;
@@ -3173,6 +3200,9 @@ slim_hidden_def(cairo_get_current_point);
 cairo_fill_rule_t
 cairo_get_fill_rule (cairo_t *cr)
 {
+    if (cr->status)
+	return (cairo_fill_rule_t) 0;
+
     return _cairo_gstate_get_fill_rule (cr->gstate);
 }
 
@@ -3190,6 +3220,9 @@ cairo_get_fill_rule (cairo_t *cr)
 double
 cairo_get_line_width (cairo_t *cr)
 {
+    if (cr->status)
+	return 0.;
+
     return _cairo_gstate_get_line_width (cr->gstate);
 }
 
@@ -3204,6 +3237,9 @@ cairo_get_line_width (cairo_t *cr)
 cairo_line_cap_t
 cairo_get_line_cap (cairo_t *cr)
 {
+    if (cr->status)
+	return (cairo_line_cap_t) 0;
+
     return _cairo_gstate_get_line_cap (cr->gstate);
 }
 
@@ -3218,6 +3254,9 @@ cairo_get_line_cap (cairo_t *cr)
 cairo_line_join_t
 cairo_get_line_join (cairo_t *cr)
 {
+    if (cr->status)
+	return (cairo_line_join_t) 0;
+
     return _cairo_gstate_get_line_join (cr->gstate);
 }
 
@@ -3232,6 +3271,9 @@ cairo_get_line_join (cairo_t *cr)
 double
 cairo_get_miter_limit (cairo_t *cr)
 {
+    if (cr->status)
+	return 0.;
+
     return _cairo_gstate_get_miter_limit (cr->gstate);
 }
 
@@ -3245,6 +3287,11 @@ cairo_get_miter_limit (cairo_t *cr)
 void
 cairo_get_matrix (cairo_t *cr, cairo_matrix_t *matrix)
 {
+    if (cr->status) {
+	cairo_matrix_init_identity (matrix);
+	return;
+    }
+
     _cairo_gstate_get_matrix (cr->gstate, matrix);
 }
 slim_hidden_def (cairo_get_matrix);
