@@ -177,8 +177,9 @@ _cairo_scaled_glyph_destroy (void *abstract_glyph)
     free (scaled_glyph);
 }
 
+#define ZOMBIE 0
 const cairo_scaled_font_t _cairo_scaled_font_nil = {
-    { 0 },			/* hash_entry */
+    { ZOMBIE },			/* hash_entry */
     CAIRO_STATUS_NO_MEMORY,	/* status */
     CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
     { 0, 0, 0, NULL },		/* user_data */
@@ -423,6 +424,7 @@ _cairo_scaled_font_init_key (cairo_scaled_font_t        *scaled_font,
 
     hash ^= cairo_font_options_hash (&scaled_font->options);
 
+    assert (hash != ZOMBIE);
     scaled_font->hash_entry.hash = hash;
 }
 
@@ -650,6 +652,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 
 	/* the font has been put into an error status - abandon the cache */
 	_cairo_hash_table_remove (font_map->hash_table, &key.hash_entry);
+	scaled_font->hash_entry.hash = ZOMBIE;
     }
 
     /* Otherwise create it and insert it into the hash table. */
@@ -730,7 +733,8 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
 
     assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&scaled_font->ref_count));
 
-    if (_cairo_reference_count_dec_and_test (&scaled_font->ref_count)) {
+    if (_cairo_reference_count_dec_and_test (&scaled_font->ref_count)
+	    && scaled_font->hash_entry.hash != ZOMBIE) {
 	/* Rather than immediately destroying this object, we put it into
 	 * the font_map->holdovers array in case it will get used again
 	 * soon (and is why we must hold the lock over the atomic op on
