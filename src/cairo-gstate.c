@@ -93,8 +93,13 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
 
     gstate->source = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK,
 						  CAIRO_CONTENT_COLOR);
-    if (gstate->source->status)
+    if (gstate->source->status) {
+	cairo_surface_destroy (gstate->target);
+	gstate->target = NULL;
+	cairo_surface_destroy (gstate->original_target);
+	gstate->original_target = NULL;
 	return gstate->source->status;
+    }
 
     return target ? target->status : CAIRO_STATUS_NULL_POINTER;
 }
@@ -131,8 +136,12 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
     _cairo_font_options_init_copy (&gstate->font_options , &other->font_options);
 
     status = _cairo_clip_init_copy (&gstate->clip, &other->clip);
-    if (status)
+    if (status) {
+	_cairo_stroke_style_fini (&gstate->stroke_style);
+	cairo_font_face_destroy (gstate->font_face);
+	cairo_scaled_font_destroy (gstate->scaled_font);
 	return status;
+    }
 
     gstate->target = cairo_surface_reference (other->target);
     /* parent_target is always set to NULL; it's only ever set by redirect_target */
@@ -994,7 +1003,7 @@ _cairo_gstate_in_stroke (cairo_gstate_t	    *gstate,
 			 double		     y,
 			 cairo_bool_t	    *inside_ret)
 {
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_status_t status;
     cairo_traps_t traps;
 
     if (gstate->stroke_style.line_width <= 0.0) {
@@ -1060,7 +1069,7 @@ _cairo_gstate_in_fill (cairo_gstate_t	  *gstate,
 		       double		   y,
 		       cairo_bool_t	  *inside_ret)
 {
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_status_t status;
     cairo_traps_t traps;
 
     _cairo_gstate_user_to_backend (gstate, &x, &y);
@@ -1267,11 +1276,9 @@ _cairo_gstate_select_font_face (cairo_gstate_t       *gstate,
 	return font_face->status;
 
     status = _cairo_gstate_set_font_face (gstate, font_face);
-    if (status)
-	return status;
     cairo_font_face_destroy (font_face);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 cairo_status_t
@@ -1557,7 +1564,6 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     cairo_pattern_union_t source_pattern;
     cairo_glyph_t *transformed_glyphs;
     cairo_glyph_t stack_transformed_glyphs[STACK_GLYPHS_LEN];
-
 
     if (gstate->source->status)
 	return gstate->source->status;
