@@ -486,6 +486,8 @@ _cairo_ft_unscaled_font_destroy (void *abstract_font)
 	 */
 	if (unscaled->faces && !unscaled->faces->unscaled)
 	    cairo_font_face_destroy (&unscaled->faces->base);
+
+	unscaled->face = NULL;
     } else {
 	cairo_ft_unscaled_font_map_t *font_map;
 
@@ -497,10 +499,10 @@ _cairo_ft_unscaled_font_destroy (void *abstract_font)
 				  &unscaled->base.hash_entry);
 
 	_font_map_release_face_lock_held (font_map, unscaled);
-	_cairo_ft_unscaled_font_fini (unscaled);
 
 	_cairo_ft_unscaled_font_map_unlock ();
     }
+    _cairo_ft_unscaled_font_fini (unscaled);
 }
 
 static cairo_bool_t
