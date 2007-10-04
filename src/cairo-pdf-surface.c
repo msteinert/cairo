@@ -1768,7 +1768,7 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	 *surface,
     surface->emitted_pattern.pattern = stream;
     surface->emitted_pattern.alpha = 1.0;
 
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 typedef struct _cairo_pdf_color_stop {
@@ -2075,7 +2075,10 @@ cairo_pdf_surface_emit_transparency_group (cairo_pdf_surface_t  *surface,
                                  surface->width,
                                  surface->height);
 
-    _cairo_pdf_surface_close_stream (surface);
+    if (_cairo_pdf_surface_close_stream (surface)) {
+	smask_resource.id = 0;
+	return smask_resource;
+    }
 
     smask_resource = _cairo_pdf_surface_new_object (surface);
     if (smask_resource.id == 0)
@@ -3427,7 +3430,7 @@ _cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
     if (image != scaled_glyph->surface)
 	cairo_surface_destroy (&image->base);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static void
@@ -3806,7 +3809,9 @@ _cairo_pdf_surface_write_page (cairo_pdf_surface_t *surface)
     _cairo_output_stream_printf (surface->output,
 				 "/x%d Do\r\n",
 				 has_fallback_images ? knockout_group.id : content_group.id);
-    _cairo_pdf_surface_close_stream (surface);
+    status = _cairo_pdf_surface_close_stream (surface);
+    if (status)
+	return status;
 
     page = _cairo_pdf_surface_new_object (surface);
     if (page.id == 0)
