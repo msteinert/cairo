@@ -95,6 +95,7 @@ typedef struct _cairo_sub_font_collection {
 
     unsigned int subset_id;
 
+    cairo_status_t status;
     cairo_scaled_font_subset_callback_func_t font_subset_callback;
     void *font_subset_callback_closure;
 } cairo_sub_font_collection_t;
@@ -367,6 +368,9 @@ _cairo_sub_font_collect (void *entry, void *closure)
     int i;
     unsigned int j;
 
+    if (collection->status)
+	return;
+
     for (i = 0; i <= sub_font->current_subset; i++) {
 	collection->subset_id = i;
 
@@ -382,6 +386,10 @@ _cairo_sub_font_collect (void *entry, void *closure)
 
 	_cairo_hash_table_foreach (sub_font->sub_font_glyphs,
 				   _cairo_sub_font_glyph_collect, collection);
+	if (collection->status)
+	    break;
+	if (collection->num_glyphs == 0)
+	    continue;
 
         /* Ensure the resulting array has no uninitialized holes */
 	assert (collection->num_glyphs == collection->max_glyph + 1);
@@ -401,11 +409,14 @@ _cairo_sub_font_collect (void *entry, void *closure)
                 subset.to_unicode[j] = 0xfffd;
             }
         }
-        (collection->font_subset_callback) (&subset,
+        collection->status = (collection->font_subset_callback) (&subset,
 					    collection->font_subset_callback_closure);
 
         if (subset.to_unicode != NULL)
             free (subset.to_unicode);
+
+	if (collection->status)
+	    break;
     }
 }
 
@@ -634,6 +645,7 @@ _cairo_scaled_font_subsets_foreach_internal (cairo_scaled_font_subsets_t        
 
     collection.font_subset_callback = font_subset_callback;
     collection.font_subset_callback_closure = closure;
+    collection.status = CAIRO_STATUS_SUCCESS;
 
     if (is_scaled)
         _cairo_hash_table_foreach (font_subsets->scaled_sub_fonts,
@@ -644,10 +656,10 @@ _cairo_scaled_font_subsets_foreach_internal (cairo_scaled_font_subsets_t        
 
     free (collection.glyphs);
 
-    return CAIRO_STATUS_SUCCESS;
+    return collection.status;
 }
 
-cairo_private cairo_status_t
+cairo_status_t
 _cairo_scaled_font_subsets_foreach_scaled (cairo_scaled_font_subsets_t		    *font_subsets,
                                            cairo_scaled_font_subset_callback_func_t  font_subset_callback,
                                            void					    *closure)
@@ -658,7 +670,7 @@ _cairo_scaled_font_subsets_foreach_scaled (cairo_scaled_font_subsets_t		    *fon
                                                         TRUE);
 }
 
-cairo_private cairo_status_t
+cairo_status_t
 _cairo_scaled_font_subsets_foreach_unscaled (cairo_scaled_font_subsets_t	    *font_subsets,
                                            cairo_scaled_font_subset_callback_func_t  font_subset_callback,
                                            void					    *closure)

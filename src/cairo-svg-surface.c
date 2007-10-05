@@ -707,7 +707,7 @@ _cairo_svg_document_emit_glyph (cairo_svg_document_t	*document,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void
+static cairo_status_t
 _cairo_svg_document_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
 				      void				*closure)
 {
@@ -723,6 +723,8 @@ _cairo_svg_document_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
 	if (status)
 	    break;
     }
+
+    return status;
 }
 
 static cairo_status_t

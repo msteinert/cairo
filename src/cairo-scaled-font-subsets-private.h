@@ -188,7 +188,7 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*font_subsets,
 				      unsigned long			 scaled_font_glyph_index,
                                       cairo_scaled_font_subsets_glyph_t *subset_glyph_ret);
 
-typedef void
+typedef cairo_status_t
 (*cairo_scaled_font_subset_callback_func_t) (cairo_scaled_font_subset_t	*font_subset,
 					     void			*closure);
 

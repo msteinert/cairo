@@ -3607,7 +3607,7 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
     return _cairo_array_append (&surface->fonts, &font);
 }
 
-static void
+static cairo_status_t
 _cairo_pdf_surface_emit_unscaled_font_subset (cairo_scaled_font_subset_t *font_subset,
                                               void			 *closure)
 {
@@ -3617,29 +3617,31 @@ _cairo_pdf_surface_emit_unscaled_font_subset (cairo_scaled_font_subset_t *font_s
     if (font_subset->is_composite) {
         status = _cairo_pdf_surface_emit_cff_font_subset (surface, font_subset);
         if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-            return;
+            return status;
 
         status = _cairo_pdf_surface_emit_truetype_font_subset (surface, font_subset);
         if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-            return;
+            return status;
 
         status = _cairo_pdf_surface_emit_cff_fallback_font (surface, font_subset);
         if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-            return;
+            return status;
     } else {
 #if CAIRO_HAS_FT_FONT
         status = _cairo_pdf_surface_emit_type1_font_subset (surface, font_subset);
         if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-            return;
+            return status;
 #endif
 
         status = _cairo_pdf_surface_emit_type1_fallback_font (surface, font_subset);
         if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-            return;
+            return status;
     }
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
-static void
+static cairo_status_t
 _cairo_pdf_surface_emit_scaled_font_subset (cairo_scaled_font_subset_t *font_subset,
                                             void		       *closure)
 {
@@ -3648,7 +3650,9 @@ _cairo_pdf_surface_emit_scaled_font_subset (cairo_scaled_font_subset_t *font_sub
 
     status = _cairo_pdf_surface_emit_type3_font_subset (surface, font_subset);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	return;
+	return status;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t

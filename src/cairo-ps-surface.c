@@ -714,7 +714,7 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
 }
 
 
-static void
+static cairo_status_t
 _cairo_ps_surface_emit_unscaled_font_subset (cairo_scaled_font_subset_t	*font_subset,
 				            void			*closure)
 {
@@ -724,19 +724,21 @@ _cairo_ps_surface_emit_unscaled_font_subset (cairo_scaled_font_subset_t	*font_su
 #if CAIRO_HAS_FT_FONT
     status = _cairo_ps_surface_emit_type1_font_subset (surface, font_subset);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	return;
+	return status;
 #endif
 
     status = _cairo_ps_surface_emit_truetype_font_subset (surface, font_subset);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	return;
+	return status;
 
     status = _cairo_ps_surface_emit_type1_font_fallback (surface, font_subset);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	return;
+	return status;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
-static void
+static cairo_status_t
 _cairo_ps_surface_emit_scaled_font_subset (cairo_scaled_font_subset_t *font_subset,
                                            void			      *closure)
 {
@@ -745,7 +747,9 @@ _cairo_ps_surface_emit_scaled_font_subset (cairo_scaled_font_subset_t *font_subs
 
     status = _cairo_ps_surface_emit_type3_font_subset (surface, font_subset);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	return;
+	return status;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -761,9 +765,14 @@ _cairo_ps_surface_emit_font_subsets (cairo_ps_surface_t *surface)
     status = _cairo_scaled_font_subsets_foreach_unscaled (surface->font_subsets,
                                                           _cairo_ps_surface_emit_unscaled_font_subset,
                                                           surface);
+    if (status)
+	goto BAIL;
+
     status = _cairo_scaled_font_subsets_foreach_scaled (surface->font_subsets,
                                                         _cairo_ps_surface_emit_scaled_font_subset,
                                                         surface);
+
+BAIL:
     _cairo_scaled_font_subsets_destroy (surface->font_subsets);
     surface->font_subsets = NULL;
 
@@ -1284,13 +1293,15 @@ _cairo_ps_surface_finish (void *abstract_surface)
 
     _cairo_ps_surface_emit_header (surface);
 
-    _cairo_ps_surface_emit_font_subsets (surface);
+    status = _cairo_ps_surface_emit_font_subsets (surface);
 
     _cairo_ps_surface_emit_body (surface);
 
     _cairo_ps_surface_emit_footer (surface);
 
-    status = _cairo_output_stream_destroy (surface->stream);
+    status2 = _cairo_output_stream_destroy (surface->stream);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = status2;
 
     fclose (surface->tmpfile);
 
