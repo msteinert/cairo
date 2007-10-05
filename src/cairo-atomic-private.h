@@ -81,8 +81,12 @@ _cairo_atomic_int_cmpxchg (int *x, int oldv, int newv);
 
 #endif
 
-#define _cairo_status_set_error(status, err) \
-    (void) _cairo_atomic_int_cmpxchg (status, CAIRO_STATUS_SUCCESS, err)
+#define _cairo_status_set_error(status, err) do { \
+    /* hide compiler warnings about cairo_status_t != int (gcc treats its as \
+     * an unsigned integer instead, and about ignoring the return value. */  \
+    int ret__ = _cairo_atomic_int_cmpxchg ((int *) status, CAIRO_STATUS_SUCCESS, err); \
+    (void) ret__; \
+} while (0)
 
 CAIRO_END_DECLS
 
