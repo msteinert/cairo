@@ -254,6 +254,7 @@ _cairo_boilerplate_xlib_fallback_create_surface (const char			 *name,
     xtc->dpy = dpy = XOpenDisplay (NULL);
     if (xtc->dpy == NULL) {
 	CAIRO_BOILERPLATE_LOG ("Failed to open display: %s\n", XDisplayName(0));
+	free (xtc);
 	return NULL;
     }
 
@@ -266,6 +267,8 @@ _cairo_boilerplate_xlib_fallback_create_surface (const char			 *name,
     if (! _cairo_boilerplate_xlib_check_screen_size (dpy, screen,
 		                                     width, height)) {
 	CAIRO_BOILERPLATE_LOG ("Surface is larger than the Screen.\n");
+	XCloseDisplay (dpy);
+	free (xtc);
 	return NULL;
     }
 
@@ -283,8 +286,10 @@ _cairo_boilerplate_xlib_fallback_create_surface (const char			 *name,
     surface = cairo_xlib_surface_create (dpy, xtc->drawable,
 					 DefaultVisual (dpy, screen),
 					 width, height);
-
-    cairo_boilerplate_xlib_surface_disable_render (surface);
+    if (cairo_surface_status (surface))
+	_cairo_boilerplate_xlib_cleanup (xtc);
+    else
+	cairo_boilerplate_xlib_surface_disable_render (surface);
 
     return surface;
 }
