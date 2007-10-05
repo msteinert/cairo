@@ -1812,7 +1812,9 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
 						      &image_extra);
 	assert (status == CAIRO_STATUS_SUCCESS);
 
-	_cairo_ps_surface_emit_image (surface, image, "MyPattern");
+	status = _cairo_ps_surface_emit_image (surface, image, "MyPattern");
+	if (status)
+	    return status;
 
 	bbox_width = image->width;
 	bbox_height = image->height;
@@ -2184,7 +2186,9 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
 	}
     }
 
-    _cairo_ps_surface_emit_pattern (surface, source);
+    status = _cairo_ps_surface_emit_pattern (surface, source);
+    if (status)
+	return status;
 
     _cairo_output_stream_printf (stream,
 				 "gsave\n");
@@ -2253,11 +2257,15 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 				 "%% _cairo_ps_surface_fill\n");
 #endif
 
-    _cairo_ps_surface_emit_pattern (surface, source);
+    status = _cairo_ps_surface_emit_pattern (surface, source);
+    if (status)
+	return status;
 
     /* We're filling not stroking, so we pass CAIRO_LINE_CAP_ROUND. */
     status = _cairo_ps_surface_emit_path (surface, stream, path,
 					  CAIRO_LINE_CAP_ROUND);
+    if (status)
+	return status;
 
     switch (fill_rule) {
     case CAIRO_FILL_RULE_WINDING:
@@ -2273,7 +2281,7 @@ _cairo_ps_surface_fill (void		*abstract_surface,
     _cairo_output_stream_printf (stream,
 				 "%s\n", ps_operator);
 
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 /* This size keeps the length of the hex encoded string of glyphs
@@ -2318,7 +2326,10 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 
     num_glyphs_unsigned = num_glyphs;
 
-    _cairo_ps_surface_emit_pattern (surface, source);
+    status = _cairo_ps_surface_emit_pattern (surface, source);
+    if (status)
+	return status;
+
     glyph_ids = _cairo_malloc_ab (num_glyphs_unsigned, sizeof (cairo_ps_glyph_id_t));
     if (glyph_ids == NULL)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
