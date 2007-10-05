@@ -733,29 +733,31 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
 
     assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&scaled_font->ref_count));
 
-    if (_cairo_reference_count_dec_and_test (&scaled_font->ref_count)
-	    && scaled_font->hash_entry.hash != ZOMBIE) {
-	/* Rather than immediately destroying this object, we put it into
-	 * the font_map->holdovers array in case it will get used again
-	 * soon (and is why we must hold the lock over the atomic op on
-	 * the reference count). To make room for it, we do actually
-	 * destroy the least-recently-used holdover.
-	 */
-	if (font_map->num_holdovers == CAIRO_SCALED_FONT_MAX_HOLDOVERS)
-	{
-	    lru = font_map->holdovers[0];
-	    assert (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&lru->ref_count));
+    if (_cairo_reference_count_dec_and_test (&scaled_font->ref_count)) {
+	if (scaled_font->hash_entry.hash != ZOMBIE) {
+	    /* Rather than immediately destroying this object, we put it into
+	     * the font_map->holdovers array in case it will get used again
+	     * soon (and is why we must hold the lock over the atomic op on
+	     * the reference count). To make room for it, we do actually
+	     * destroy the least-recently-used holdover.
+	     */
+	    if (font_map->num_holdovers == CAIRO_SCALED_FONT_MAX_HOLDOVERS)
+	    {
+		lru = font_map->holdovers[0];
+		assert (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&lru->ref_count));
 
-	    _cairo_hash_table_remove (font_map->hash_table, &lru->hash_entry);
+		_cairo_hash_table_remove (font_map->hash_table, &lru->hash_entry);
 
-	    font_map->num_holdovers--;
-	    memmove (&font_map->holdovers[0],
-		     &font_map->holdovers[1],
-		     font_map->num_holdovers * sizeof (cairo_scaled_font_t*));
-	}
+		font_map->num_holdovers--;
+		memmove (&font_map->holdovers[0],
+			 &font_map->holdovers[1],
+			 font_map->num_holdovers * sizeof (cairo_scaled_font_t*));
+	    }
 
-	font_map->holdovers[font_map->num_holdovers] = scaled_font;
-	font_map->num_holdovers++;
+	    font_map->holdovers[font_map->num_holdovers] = scaled_font;
+	    font_map->num_holdovers++;
+	} else
+	    lru = scaled_font;
     }
     _cairo_scaled_font_map_unlock ();
 
