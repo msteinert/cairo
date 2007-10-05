@@ -44,6 +44,8 @@
 #include "cairo-compiler-private.h"
 #include "cairo-mutex-impl-private.h"
 
+CAIRO_BEGIN_DECLS
+
 /* Only the following three are mandatory at this point */
 #ifndef CAIRO_MUTEX_IMPL_LOCK
 # error "CAIRO_MUTEX_IMPL_LOCK not defined.  Check cairo-mutex-impl-private.h."
@@ -89,7 +91,6 @@
   } while (0)
 
 #endif /* CAIRO_MUTEX_IMPL_INIT */
-
 
 #ifdef CAIRO_MUTEX_IMPL_FINI
 
@@ -169,6 +170,9 @@ typedef cairo_mutex_impl_t cairo_mutex_t;
 #define CAIRO_MUTEX_FINI		CAIRO_MUTEX_IMPL_FINI
 #define CAIRO_MUTEX_NIL_INITIALIZER	CAIRO_MUTEX_IMPL_NIL_INITIALIZER
 
+#ifndef CAIRO_HOLDS_MUTEX
+# define CAIRO_HOLDS_MUTEX(name) 1
+#endif
 
 
 /* Debugging support */
