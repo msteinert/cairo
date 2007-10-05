@@ -326,10 +326,18 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
 
         sub_font_glyph = _cairo_sub_font_glyph_create (scaled_font_glyph_index,
 						       sub_font->current_subset,
-						       sub_font->num_glyphs_in_current_subset++,
+						       sub_font->num_glyphs_in_current_subset,
                                                        scaled_glyph->metrics.x_advance);
 	if (sub_font_glyph == NULL)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+	status = _cairo_hash_table_insert (sub_font->sub_font_glyphs, &sub_font_glyph->base);
+	if (status) {
+	    _cairo_sub_font_glyph_destroy (sub_font_glyph);
+	    return status;
+	}
+
+	sub_font->num_glyphs_in_current_subset++;
 
         if (sub_font->is_scaled)
         {
@@ -341,12 +349,6 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
             if (sub_font->num_glyphs_in_current_subset > sub_font->parent->max_glyphs_per_unscaled_subset_used)
                 sub_font->parent->max_glyphs_per_unscaled_subset_used = sub_font->num_glyphs_in_current_subset;
         }
-
-	status = _cairo_hash_table_insert (sub_font->sub_font_glyphs, &sub_font_glyph->base);
-	if (status) {
-	    _cairo_sub_font_glyph_destroy (sub_font_glyph);
-	    return status;
-	}
     }
 
     subset_glyph->font_id = sub_font->font_id;
@@ -568,7 +570,7 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
 
             sub_font = _cairo_sub_font_create (subsets,
                                                unscaled_font,
-                                               subsets->num_sub_fonts++,
+                                               subsets->num_sub_fonts,
                                                max_glyphs,
                                                subset_glyph->is_scaled,
                                                subset_glyph->is_composite);
@@ -583,6 +585,8 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
 		_cairo_sub_font_destroy (sub_font);
                 return status;
 	    }
+
+	    subsets->num_sub_fonts++;
         }
     } else {
         /* No path available. Add to scaled subset. */
@@ -600,7 +604,7 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
 
             sub_font = _cairo_sub_font_create (subsets,
                                                cairo_scaled_font_reference (scaled_font),
-                                               subsets->num_sub_fonts++,
+                                               subsets->num_sub_fonts,
                                                max_glyphs,
                                                subset_glyph->is_scaled,
                                                subset_glyph->is_composite);
@@ -615,6 +619,8 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
 		_cairo_sub_font_destroy (sub_font);
                 return status;
 	    }
+
+	    subsets->num_sub_fonts++;
         }
     }
 
