@@ -978,19 +978,22 @@ _cairo_pdf_surface_close_group (cairo_pdf_surface_t *surface,
     return _cairo_output_stream_close (surface->group_stream.mem_stream);
 }
 
-static void
+static cairo_status_t
 _cairo_pdf_surface_write_group_list (cairo_pdf_surface_t  *surface,
 				     cairo_array_t        *group_list)
 {
     int i, len;
     cairo_pdf_group_element_t *elem;
+    cairo_status_t status;
 
     _cairo_output_stream_printf (surface->output, "q\r\n");
     if (surface->group_stream.is_knockout) {
 	_cairo_output_stream_printf (surface->output,
 				     "/x%d Do\r\n",
 				     surface->group_stream.first_object.id);
-	_cairo_pdf_surface_add_xobject (surface, surface->group_stream.first_object);
+	status = _cairo_pdf_surface_add_xobject (surface, surface->group_stream.first_object);
+	if (status)
+	    return status;
     }
     len = _cairo_array_num_elements (group_list);
     for (i = 0; i < len; i++) {
@@ -999,12 +1002,18 @@ _cairo_pdf_surface_write_group_list (cairo_pdf_surface_t  *surface,
 	    _cairo_output_stream_printf (surface->output,
 					 "/x%d Do\r\n",
 					 elem->group.id);
-	    _cairo_pdf_surface_add_xobject (surface, elem->group);
+	    status = _cairo_pdf_surface_add_xobject (surface, elem->group);
+	    if (status)
+		return status;
 	} else if (elem->type == ELEM_CLIP) {
-	    _cairo_pdf_surface_emit_clip (surface, elem->clip_path, elem->fill_rule);
+	    status = _cairo_pdf_surface_emit_clip (surface, elem->clip_path, elem->fill_rule);
+	    if (status)
+		return status;
 	}
     }
     _cairo_output_stream_printf (surface->output, "Q\r\n");
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -1102,7 +1111,9 @@ _cairo_pdf_surface_stop_content_stream (cairo_pdf_surface_t *surface)
 							surface->content_stream.mem_stream,
 							&surface->content_stream.resources,
 							FALSE);
-	_cairo_pdf_surface_add_group_to_content_stream (surface, group);
+	status = _cairo_pdf_surface_add_group_to_content_stream (surface, group);
+	if (status)
+	    return status;
     }
     surface->content_stream.active = FALSE;
 
@@ -1566,7 +1577,10 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
     if (status)
 	return status;
 
-    _cairo_pdf_surface_write_group_list (surface, &group);
+    status = _cairo_pdf_surface_write_group_list (surface, &group);
+    if (status)
+	return status;
+
     status = _cairo_pdf_surface_close_group (surface, resource);
     if (status)
 	return status;
@@ -3338,6 +3352,7 @@ _cairo_pdf_surface_emit_outline_glyph (cairo_pdf_surface_t	*surface,
 					  _cairo_pdf_path_close_path,
 					  &info);
     if (status) {
+	/* ignore status return as we are on the error path... */
 	_cairo_pdf_surface_close_stream (surface);
 	return status;
     }
@@ -3785,7 +3800,10 @@ _cairo_pdf_surface_write_page (cairo_pdf_surface_t *surface)
     if (status)
 	return status;
 
-    _cairo_pdf_surface_write_group_list (surface, &surface->content_group);
+    status = _cairo_pdf_surface_write_group_list (surface, &surface->content_group);
+    if (status)
+	return status;
+
     status = _cairo_pdf_surface_close_group (surface, &content_group);
     if (status)
 	return status;
@@ -3795,7 +3813,10 @@ _cairo_pdf_surface_write_page (cairo_pdf_surface_t *surface)
 	if (status)
 	    return status;
 
-	_cairo_pdf_surface_write_group_list (surface, &surface->knockout_group);
+	status = _cairo_pdf_surface_write_group_list (surface, &surface->knockout_group);
+	if (status)
+	    return status;
+
 	status = _cairo_pdf_surface_close_group (surface, &knockout_group);
 	if (status)
 	    return status;
@@ -4578,9 +4599,11 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
 					 "/f-%d-%d 1 Tf\r\n",
 					 subset_glyph.font_id,
 					 subset_glyph.subset_id);
-	    _cairo_pdf_surface_add_font (surface,
-					 subset_glyph.font_id,
-					 subset_glyph.subset_id);
+	    status = _cairo_pdf_surface_add_font (surface,
+					          subset_glyph.font_id,
+						  subset_glyph.subset_id);
+	    if (status)
+		return status;
         }
 
         if (subset_glyph.subset_id != current_subset_id || !diagonal) {
