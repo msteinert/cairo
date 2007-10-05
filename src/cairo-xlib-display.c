@@ -158,6 +158,8 @@ _cairo_xlib_display_destroy (cairo_xlib_display_t *display)
     _cairo_freelist_fini (&display->wq_freelist);
     _cairo_freelist_fini (&display->hook_freelist);
 
+    CAIRO_MUTEX_FINI (display->mutex);
+
     free (display);
 }
 
@@ -171,6 +173,29 @@ static int
 _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
 {
     cairo_xlib_display_t *display, **prev, *next;
+    cairo_xlib_error_func_t old_handler;
+
+    CAIRO_MUTEX_LOCK (_cairo_xlib_display_mutex);
+    for (display = _cairo_xlib_display_list; display; display = display->next)
+	if (display->display == dpy)
+	    break;
+    CAIRO_MUTEX_UNLOCK (_cairo_xlib_display_mutex);
+    if (display == NULL)
+	return 0;
+
+    /* protect the notifies from triggering XErrors */
+    XSync (dpy, False);
+    old_handler = XSetErrorHandler (_noop_error_handler);
+
+    _cairo_xlib_display_notify (display);
+    _cairo_xlib_call_close_display_hooks (display);
+    _cairo_xlib_display_discard_screens (display);
+
+    /* catch any that arrived before marking the display as closed */
+    _cairo_xlib_display_notify (display);
+
+    XSync (dpy, False);
+    XSetErrorHandler (old_handler);
 
     /*
      * Unhook from the global list
@@ -180,33 +205,14 @@ _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
     for (display = _cairo_xlib_display_list; display; display = next) {
 	next = display->next;
 	if (display->display == dpy) {
-	    cairo_xlib_error_func_t old_handler;
-
-	    /* drop the list mutex whilst triggering the hooks */
-	    CAIRO_MUTEX_UNLOCK (_cairo_xlib_display_mutex);
-
-	    /* protect the notifies from triggering XErrors */
-	    XSync (dpy, False);
-	    old_handler = XSetErrorHandler (_noop_error_handler);
-
-	    _cairo_xlib_display_notify (display);
-	    _cairo_xlib_call_close_display_hooks (display);
-	    _cairo_xlib_display_discard_screens (display);
-
-	    /* catch any that arrived before marking the display as closed */
-	    _cairo_xlib_display_notify (display);
-
-	    XSync (dpy, False);
-	    XSetErrorHandler (old_handler);
-
-	    CAIRO_MUTEX_LOCK (_cairo_xlib_display_mutex);
-	    _cairo_xlib_display_destroy (display);
 	    *prev = next;
 	    break;
 	} else
 	    prev = &display->next;
     }
     CAIRO_MUTEX_UNLOCK (_cairo_xlib_display_mutex);
+
+    _cairo_xlib_display_destroy (display);
 
     /* Return value in accordance with requirements of
      * XESetCloseDisplay */
