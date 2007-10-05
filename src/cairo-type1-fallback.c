@@ -865,8 +865,7 @@ _cairo_type2_charstrings_init (cairo_type2_charstrings_t *type2_subset,
     type2_subset->ascent  = (int) font->y_max;
     type2_subset->descent = (int) font->y_min;
 
-    cairo_type1_font_destroy (font);
-    return CAIRO_STATUS_SUCCESS;
+    return cairo_type1_font_destroy (font);
 
 fail2:
     _cairo_array_fini (&charstring);
