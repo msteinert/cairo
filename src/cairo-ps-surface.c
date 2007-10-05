@@ -813,7 +813,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 					      double		     height)
 {
     cairo_status_t status;
-    cairo_ps_surface_t *surface = NULL;
+    cairo_ps_surface_t *surface;
 
     surface = malloc (sizeof (cairo_ps_surface_t));
     if (surface == NULL) {
@@ -853,12 +853,15 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 
     surface->dsc_comment_target = &surface->dsc_header_comments;
 
-    surface->paginated_surface = _cairo_paginated_surface_create (&surface->base,
-								   CAIRO_CONTENT_COLOR_ALPHA,
-								   width, height,
-								   &cairo_ps_surface_paginated_backend);
-    return surface->paginated_surface;
+    surface->paginated_surface = _cairo_paginated_surface_create (
+	                                   &surface->base,
+					   CAIRO_CONTENT_COLOR_ALPHA,
+					   width, height,
+					   &cairo_ps_surface_paginated_backend);
+    if (surface->paginated_surface->status == CAIRO_STATUS_SUCCESS)
+	return surface->paginated_surface;
 
+    _cairo_scaled_font_subsets_destroy (surface->font_subsets);
  CLEANUP_OUTPUT_STREAM:
     status = _cairo_output_stream_destroy (surface->stream);
     /* Ignore status---we're already on a failure path. */
@@ -867,6 +870,8 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
  CLEANUP_SURFACE:
     free (surface);
  CLEANUP:
+    /* destroy stream on behalf of caller */
+    status = _cairo_output_stream_destroy (stream);
     _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
     return (cairo_surface_t*) &_cairo_surface_nil;
 }
