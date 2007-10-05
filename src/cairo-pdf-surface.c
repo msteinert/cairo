@@ -302,9 +302,12 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
 					       double			 height)
 {
     cairo_pdf_surface_t *surface;
+    cairo_status_t status;
 
     surface = malloc (sizeof (cairo_pdf_surface_t));
     if (surface == NULL) {
+	/* destroy stream on behalf of caller */
+	status = _cairo_output_stream_destroy (output);
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
@@ -332,13 +335,13 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
     surface->font_subsets = _cairo_scaled_font_subsets_create_composite ();
     if (! surface->font_subsets) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	goto fail;
+	goto BAIL0;
     }
 
     surface->next_available_resource.id = 1;
     surface->pages_resource = _cairo_pdf_surface_new_object (surface);
     if (surface->pages_resource.id == 0)
-        goto fail;
+        goto BAIL1;
 
     surface->compress_content = TRUE;
     surface->pdf_stream.active = FALSE;
@@ -363,14 +366,22 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
     _cairo_output_stream_printf (surface->output,
 				 "%%%c%c%c%c\r\n", 181, 237, 174, 251);
 
-    surface->paginated_surface = _cairo_paginated_surface_create (&surface->base,
-								  CAIRO_CONTENT_COLOR_ALPHA,
-								  width, height,
-								  &cairo_pdf_surface_paginated_backend);
-    return surface->paginated_surface;
+    surface->paginated_surface =  _cairo_paginated_surface_create (
+	                                  &surface->base,
+					  CAIRO_CONTENT_COLOR_ALPHA,
+					  width, height,
+					  &cairo_pdf_surface_paginated_backend);
+    if (surface->paginated_surface->status == CAIRO_STATUS_SUCCESS)
+	return surface->paginated_surface;
 
-fail:
+BAIL1:
+    _cairo_scaled_font_subsets_destroy (surface->font_subsets);
+BAIL0:
+    _cairo_array_fini (&surface->objects);
     free (surface);
+
+    /* destroy stream on behalf of caller */
+    status = _cairo_output_stream_destroy (output);
 
     return (cairo_surface_t*) &_cairo_surface_nil;
 }
