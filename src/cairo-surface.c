@@ -882,6 +882,18 @@ cairo_surface_set_fallback_resolution (cairo_surface_t	*surface,
 				       double		 x_pixels_per_inch,
 				       double		 y_pixels_per_inch)
 {
+    cairo_status_t status;
+
+    assert (! surface->is_snapshot);
+
+    if (surface->status)
+	return;
+
+    if (surface->finished) {
+	status = _cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
+	return;
+    }
+
     surface->x_fallback_resolution = x_pixels_per_inch;
     surface->y_fallback_resolution = y_pixels_per_inch;
 }
