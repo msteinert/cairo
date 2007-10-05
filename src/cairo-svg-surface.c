@@ -713,7 +713,7 @@ _cairo_svg_document_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
 {
     cairo_svg_document_t *document = closure;
     unsigned int i;
-    cairo_status_t status;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     for (i = 0; i < font_subset->num_glyphs; i++) {
 	status = _cairo_svg_document_emit_glyph (document,

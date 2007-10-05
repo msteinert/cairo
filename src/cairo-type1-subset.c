@@ -1104,8 +1104,10 @@ cairo_type1_font_subset_generate (void       *abstract_font,
 	ret = font->face->stream->read (font->face->stream, 0,
 					(unsigned char *) font->type1_data,
 					font->type1_length);
-	if (ret != font->type1_length)
+	if (ret != font->type1_length) {
+	    status = _cairo_error (CAIRO_STATUS_READ_ERROR);
 	    goto fail;
+	}
     } else {
 	memcpy (font->type1_data,
 		font->face->stream->base, font->type1_length);
