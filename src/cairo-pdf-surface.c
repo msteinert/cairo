@@ -986,6 +986,9 @@ _cairo_pdf_surface_close_group (cairo_pdf_surface_t *surface,
 						     surface->group_stream.mem_stream,
 						     &surface->group_stream.resources,
 						     surface->group_stream.is_knockout);
+    if (group->id == 0)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
     return _cairo_output_stream_close (surface->group_stream.mem_stream);
 }
 
@@ -1122,6 +1125,9 @@ _cairo_pdf_surface_stop_content_stream (cairo_pdf_surface_t *surface)
 							surface->content_stream.mem_stream,
 							&surface->content_stream.resources,
 							FALSE);
+	if (group.id == 0)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
 	status = _cairo_pdf_surface_add_group_to_content_stream (surface, group);
 	if (status)
 	    return status;
@@ -1188,7 +1194,13 @@ _cairo_pdf_surface_finish (void *abstract_surface)
     _cairo_pdf_surface_write_pages (surface);
 
     info = _cairo_pdf_surface_write_info (surface);
+    if (info.id == 0 && status == CAIRO_STATUS_SUCCESS)
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
     catalog = _cairo_pdf_surface_write_catalog (surface);
+    if (catalog.id == 0 && status == CAIRO_STATUS_SUCCESS)
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
     offset = _cairo_pdf_surface_write_xref (surface);
 
     _cairo_output_stream_printf (surface->output,
