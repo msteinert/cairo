@@ -1163,6 +1163,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 {
     cairo_status_t status;
     cairo_surface_t *mask = NULL;
+    cairo_surface_pattern_t mask_pattern;
     int i;
 
     /* These operators aren't interpreted the same way by the backends;
@@ -1255,20 +1256,16 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 	    goto CLEANUP_MASK;
     }
 
-    if (mask != NULL) {
-	cairo_surface_pattern_t mask_pattern;
+    _cairo_pattern_init_for_surface (&mask_pattern, mask);
 
-	_cairo_pattern_init_for_surface (&mask_pattern, mask);
+    status = _cairo_surface_composite (op, pattern, &mask_pattern.base,
+				       surface,
+				       source_x, source_y,
+				       0,        0,
+				       dest_x,   dest_y,
+				       width,    height);
 
-	status = _cairo_surface_composite (op, pattern, &mask_pattern.base,
-					   surface,
-					   source_x, source_y,
-					   0,        0,
-					   dest_x,   dest_y,
-					   width,    height);
-
-	_cairo_pattern_fini (&mask_pattern.base);
-    }
+    _cairo_pattern_fini (&mask_pattern.base);
 
 CLEANUP_MASK:
     _cairo_cache_thaw (scaled_font->glyphs);
