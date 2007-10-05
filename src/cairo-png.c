@@ -95,7 +95,7 @@ png_simple_error_callback (png_structp png_save_ptr,
 
     /* default to the most likely error */
     if (*error == CAIRO_STATUS_SUCCESS)
-	*error = CAIRO_STATUS_NO_MEMORY;
+	*error = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     longjmp (png_save_ptr->jmpbuf, 1);
 }
@@ -240,7 +240,7 @@ stdio_write_func (png_structp png, png_bytep data, png_size_t size)
 	data += ret;
 	if (size && ferror (fp)) {
 	    cairo_status_t *error = png_get_error_ptr (png);
-	    *error = CAIRO_STATUS_WRITE_ERROR;
+	    *error = _cairo_error (CAIRO_STATUS_WRITE_ERROR);
 	    png_error (png, NULL);
 	}
     }
@@ -494,7 +494,7 @@ stdio_read_func (png_structp png, png_bytep data, png_size_t size)
 	data += ret;
 	if (size && ferror (fp)) {
 	    cairo_status_t *error = png_get_error_ptr (png);
-	    *error = CAIRO_STATUS_READ_ERROR;
+	    *error = _cairo_error (CAIRO_STATUS_READ_ERROR);
 	    png_error (png, NULL);
 	}
     }
