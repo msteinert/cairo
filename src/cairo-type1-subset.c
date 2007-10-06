@@ -125,6 +125,14 @@ _cairo_type1_font_subset_create (cairo_unscaled_font_t      *unscaled_font,
         goto fail1;
     }
 
+    /* OpenType/CFF fonts also have a PS_FontInfoRec */
+#if HAVE_FT_LOAD_SFNT_TABLE
+    if (FT_IS_SFNT (face)) {
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
+        goto fail1;
+    }
+#endif
+
     font = calloc (sizeof (cairo_type1_font_subset_t), 1);
     if (font == NULL) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
