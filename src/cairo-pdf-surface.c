@@ -1661,9 +1661,13 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	 *surface,
 	status = _cairo_pdf_surface_emit_meta_surface (surface,
 						       meta_surface,
 						       &pattern_resource);
+	if (status)
+	    return status;
+
 	status = _cairo_surface_get_extents (meta_surface, &pattern_extents);
 	if (status)
 	    return status;
+
 	pattern_width = pattern_extents.width;
 	pattern_height = pattern_extents.height;
     } else {
@@ -1672,9 +1676,9 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	 *surface,
 							&pattern_resource,
 							&pattern_width,
 							&pattern_height);
+	if (status)
+	    return status;
     }
-    if (status)
-	return status;
 
     status = _cairo_surface_get_extents (&surface->base, &surface_extents);
     if (status)
