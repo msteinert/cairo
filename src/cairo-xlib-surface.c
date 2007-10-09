@@ -810,10 +810,12 @@ _cairo_xlib_surface_release_dest_image (void                    *abstract_surfac
 					void                    *image_extra)
 {
     cairo_xlib_surface_t *surface = abstract_surface;
+    cairo_status_t status;
 
-    /* ignore errors */
-    _draw_image_surface (surface, image, 0, 0, image->width, image->height,
-			 image_rect->x, image_rect->y);
+    status = _draw_image_surface (surface, image,
+	                          0, 0, image->width, image->height,
+				  image_rect->x, image_rect->y);
+    status = _cairo_surface_set_error (&surface->base, status);
 
     cairo_surface_destroy (&image->base);
 }
