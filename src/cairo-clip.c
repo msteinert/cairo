@@ -534,18 +534,23 @@ _cairo_clip_translate (cairo_clip_t  *clip,
     }
 }
 
-static void
+static cairo_status_t
 _cairo_clip_path_reapply_clip_path (cairo_clip_t      *clip,
                                     cairo_clip_path_t *clip_path)
 {
-    if (clip_path->prev)
-        _cairo_clip_path_reapply_clip_path (clip, clip_path->prev);
+    cairo_status_t status;
 
-    _cairo_clip_intersect_path (clip,
-                                &clip_path->path,
-                                clip_path->fill_rule,
-                                clip_path->tolerance,
-                                clip_path->antialias);
+    if (clip_path->prev) {
+        status = _cairo_clip_path_reapply_clip_path (clip, clip_path->prev);
+	if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
+
+    return _cairo_clip_intersect_path (clip,
+                                       &clip_path->path,
+				       clip_path->fill_rule,
+				       clip_path->tolerance,
+				       clip_path->antialias);
 }
 
 cairo_status_t
@@ -553,6 +558,8 @@ _cairo_clip_init_deep_copy (cairo_clip_t    *clip,
                             cairo_clip_t    *other,
                             cairo_surface_t *target)
 {
+    cairo_status_t status;
+
     _cairo_clip_init (clip, target);
 
     if (other->mode != clip->mode) {
@@ -560,26 +567,30 @@ _cairo_clip_init_deep_copy (cairo_clip_t    *clip,
          * whatever the right handling is happen */
     } else {
         if (other->has_region) {
-            if (_cairo_region_copy (&clip->region, &other->region) !=
-		CAIRO_STATUS_SUCCESS)
+            status = _cairo_region_copy (&clip->region, &other->region);
+	    if (status)
 		goto BAIL;
+
 	    clip->has_region = TRUE;
         }
 
         if (other->surface) {
-            if (_cairo_surface_clone_similar (target, other->surface,
-					  other->surface_rect.x,
-					  other->surface_rect.y,
-					  other->surface_rect.width,
-					  other->surface_rect.height,
-					  &clip->surface) !=
-		    CAIRO_STATUS_SUCCESS)
+            status = _cairo_surface_clone_similar (target, other->surface,
+					           other->surface_rect.x,
+						   other->surface_rect.y,
+						   other->surface_rect.width,
+						   other->surface_rect.height,
+						   &clip->surface);
+	    if (status)
 		goto BAIL;
+
             clip->surface_rect = other->surface_rect;
         }
 
         if (other->path) {
-            _cairo_clip_path_reapply_clip_path (clip, other->path);
+            status = _cairo_clip_path_reapply_clip_path (clip, other->path);
+	    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+		goto BAIL;
         }
     }
 
@@ -591,7 +602,7 @@ BAIL:
     if (clip->surface)
 	cairo_surface_destroy (clip->surface);
 
-    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    return status;
 }
 
 const cairo_rectangle_list_t _cairo_rectangles_nil =
