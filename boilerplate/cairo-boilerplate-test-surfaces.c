@@ -122,6 +122,9 @@ _cairo_boilerplate_test_paginated_surface_write_to_png (cairo_surface_t	*surface
 
     /* show page first.  the automatic show_page is too late for us */
     cairo_surface_show_page (surface);
+    status = cairo_surface_status (surface);
+    if (status)
+	return status;
 
     tpc = cairo_surface_get_user_data (surface, &test_paginated_closure_key);
 
