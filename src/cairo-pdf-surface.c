@@ -1576,12 +1576,13 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
 
     status = _cairo_pdf_surface_start_content_stream (surface);
     if (status)
-	return status;
+	goto CLEANUP_GROUP;
 
     if (cairo_surface_get_content (meta_surface) == CAIRO_CONTENT_COLOR) {
 	status = _cairo_pdf_surface_add_alpha (surface, 1.0, &alpha);
 	if (status)
-	    return status;
+	    goto CLEANUP_GROUP;
+
 	_cairo_output_stream_printf (surface->output,
 				     "q /a%d gs 0 0 0 rg 0 0 %f %f re f Q\r\n",
 				     alpha,
@@ -1591,38 +1592,42 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
 
     status = _cairo_meta_surface_replay (meta_surface, &surface->base);
     if (status)
-	return status;
+	goto CLEANUP_GROUP;
+
     status = _cairo_pdf_surface_stop_content_stream (surface);
     if (status)
-	return status;
+	goto CLEANUP_GROUP;
 
     status = _cairo_pdf_surface_open_group (surface);
     if (status)
-	return status;
+	goto CLEANUP_GROUP;
 
     status = _cairo_pdf_surface_write_group_list (surface, &group);
     if (status)
-	return status;
+	goto CLEANUP_GROUP;
 
     status = _cairo_pdf_surface_close_group (surface, resource);
     if (status)
-	return status;
+	goto CLEANUP_GROUP;
 
+ CLEANUP_GROUP:
     surface->current_group = old_group;
     surface->width = old_width;
     surface->height = old_height;
     surface->cairo_to_pdf = old_cairo_to_pdf;
 
+    _cairo_pdf_group_element_array_finish (&group);
+    _cairo_array_fini (&group);
+    if (status)
+	return status;
+
     status = _cairo_pdf_surface_start_content_stream (surface);
     if (status)
 	return status;
 
-    _cairo_pdf_group_element_array_finish (&group);
-    _cairo_array_fini (&group);
-
     _cairo_pdf_surface_pause_content_stream (surface);
 
-    return 0;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
