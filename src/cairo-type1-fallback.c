@@ -41,7 +41,7 @@
 
 typedef enum {
     CAIRO_CHARSTRING_TYPE1,
-    CAIRO_CHARSTRING_TYPE2,
+    CAIRO_CHARSTRING_TYPE2
 } cairo_charstring_type_t;
 
 typedef struct _cairo_type1_font {

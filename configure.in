@@ -702,7 +702,7 @@ MAYBE_WARN="-Wall -Wextra \
 -Wstrict-aliasing=2 -Winit-self -Wunsafe-loop-optimizations \
 -Wdeclaration-after-statement -Wold-style-definition \
 -Wno-missing-field-initializers -Wno-unused-parameter \
--Wno-attributes"
+-Wno-attributes -Wno-long-long -Winline"
 
 
 # invalidate cached value if MAYBE_WARN has changed

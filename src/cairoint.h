@@ -74,6 +74,11 @@
 #define inline __inline
 #endif
 
+#ifdef __STRICT_ANSI__
+#undef inline
+#define inline __inline__
+#endif
+
 CAIRO_BEGIN_DECLS
 
 #undef MIN

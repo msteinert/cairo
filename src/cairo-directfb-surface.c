@@ -68,7 +68,7 @@
 #define DFB_SHOW_GLYPHS 1
 
 
-D_DEBUG_DOMAIN (Cairo_DirectFB, "Cairo/DirectFB", "Cairo DirectFB backend");
+D_DEBUG_DOMAIN (Cairo_DirectFB, "Cairo/DirectFB", "Cairo DirectFB backend")
 
 /*****************************************************************************/
 
@@ -530,12 +530,12 @@ _cairo_directfb_surface_release_dest_image (void                  *abstract_surf
     buffer->Unlock (buffer);
 
     if (surface->dfbsurface != buffer) {
-        DFBRegion region = { x1:interest_rect->x, y1:interest_rect->y,
-                x2:interest_rect->x+interest_rect->width-1,
-                y2:interest_rect->y+interest_rect->height-1 };
+        DFBRegion region = { .x1 = interest_rect->x, .y1 = interest_rect->y,
+                .x2 = interest_rect->x+interest_rect->width-1,
+                .y2 = interest_rect->y+interest_rect->height-1 };
         surface->dfbsurface->SetClip (surface->dfbsurface, &region);
-        //surface->dfbsurface->SetBlittingFlags (surface->dfbsurface,
-         //               DSBLIT_BLEND_ALPHACHANNEL | DSBLIT_COLORIZE);
+        /* surface->dfbsurface->SetBlittingFlags (surface->dfbsurface,
+                        DSBLIT_BLEND_ALPHACHANNEL | DSBLIT_COLORIZE); */
         surface->dfbsurface->Blit (surface->dfbsurface,buffer,NULL,
                         image_rect->x,image_rect->y);
         buffer->Release (buffer);
@@ -666,7 +666,7 @@ _directfb_prepare_composite (cairo_directfb_surface_t   *dst,
             if (sblend == DSBF_ONE) {
                 flags |= DSBLIT_BLEND_ALPHACHANNEL;                   
                 sblend = DSBF_SRCALPHA;
-                //dblend = DSBF_INVSRCALPHA;
+                /* dblend = DSBF_INVSRCALPHA; */
             }
         }
             
@@ -1227,7 +1227,7 @@ _directfb_allocate_font_cache (IDirectFB *dfb, int width, int height)
         return NULL;
     }
 
-    //dfb->AddRef (dfb);
+    /* dfb->AddRef (dfb); */
     cache->dfb = dfb;
 
     cache->width  = width;
