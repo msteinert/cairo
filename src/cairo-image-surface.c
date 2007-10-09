@@ -471,7 +471,6 @@ cairo_image_surface_create (cairo_format_t	format,
 			    int			width,
 			    int			height)
 {
-    cairo_surface_t	*surface;
     pixman_format_code_t pixman_format;
 
     if (! CAIRO_FORMAT_VALID (format)) {
@@ -483,8 +482,6 @@ cairo_image_surface_create (cairo_format_t	format,
 
     return _cairo_image_surface_create_with_pixman_format (NULL, pixman_format,
 							   width, height, -1);
-
-    return surface;
 }
 slim_hidden_def (cairo_image_surface_create);
 
