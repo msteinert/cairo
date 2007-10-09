@@ -121,9 +121,13 @@ _test_meta_surface_acquire_source_image (void		  *abstract_surface,
 					 void			**image_extra)
 {
     test_meta_surface_t *surface = abstract_surface;
+    cairo_status_t status;
 
-    if (! surface->image_reflects_meta)
-	_test_meta_surface_show_page (abstract_surface);
+    if (! surface->image_reflects_meta) {
+	status = _test_meta_surface_show_page (abstract_surface);
+	if (status)
+	    return status;
+    }
 
     return _cairo_surface_acquire_source_image (surface->image,
 						image_out, image_extra);
