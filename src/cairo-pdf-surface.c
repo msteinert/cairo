@@ -989,7 +989,7 @@ _cairo_pdf_surface_close_group (cairo_pdf_surface_t *surface,
     if (group->id == 0)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    return _cairo_output_stream_close (surface->group_stream.mem_stream);
+    return _cairo_output_stream_destroy (surface->group_stream.mem_stream);
 }
 
 static cairo_status_t
@@ -1134,7 +1134,7 @@ _cairo_pdf_surface_stop_content_stream (cairo_pdf_surface_t *surface)
     }
     surface->content_stream.active = FALSE;
 
-    return _cairo_output_stream_close (surface->content_stream.mem_stream);
+    return _cairo_output_stream_destroy (surface->content_stream.mem_stream);
 }
 
 static cairo_status_t
