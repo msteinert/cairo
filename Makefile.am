@@ -41,9 +41,9 @@ genlcov:
 	rm -f cairo-lcov.info.tmp
 
 lcov-clean:
-	$(LTP) --directory $(top_builddir) -z
-	$(RM) -rf cairo-lcov.info cairo-lcov
-	$(FIND) -name '*.gcda' -print0 | xargs -0 rm
+	-$(LTP) --directory $(top_builddir) -z
+	-$(RM) -rf cairo-lcov.info cairo-lcov
+	-$(FIND) -name '*.gcda' -print | ${XARGS} ${RM}
 
 EXTRA_DIST = \
 	AUTHORS \
