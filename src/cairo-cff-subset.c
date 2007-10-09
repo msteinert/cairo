@@ -1001,14 +1001,18 @@ cairo_cff_font_set_ros_strings (cairo_cff_font_t *font)
     const char *ordering = "Identity";
 
     sid1 = NUM_STD_STRINGS + _cairo_array_num_elements (&font->strings_subset_index);
-    cff_index_append_copy (&font->strings_subset_index,
-                           (unsigned char *)registry,
-                           strlen(registry));
+    status = cff_index_append_copy (&font->strings_subset_index,
+                                    (unsigned char *)registry,
+                                    strlen(registry));
+    if (status)
+	return status;
 
     sid2 = NUM_STD_STRINGS + _cairo_array_num_elements (&font->strings_subset_index);
-    cff_index_append_copy (&font->strings_subset_index,
-                           (unsigned char *)ordering,
-                           strlen(ordering));
+    status = cff_index_append_copy (&font->strings_subset_index,
+                                    (unsigned char *)ordering,
+				    strlen(ordering));
+    if (status)
+	return status;
 
     p = encode_integer (buf, sid1);
     p = encode_integer (p, sid2);
