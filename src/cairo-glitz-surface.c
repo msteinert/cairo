@@ -493,10 +493,13 @@ _cairo_glitz_surface_release_dest_image (void                    *abstract_surfa
 					 void                    *image_extra)
 {
     cairo_glitz_surface_t *surface = abstract_surface;
+    cairo_status_t status;
 
-    _cairo_glitz_surface_set_image (surface, image, 0, 0,
-				    image->width, image->height,
-				    image_rect->x, image_rect->y);
+    status = _cairo_glitz_surface_set_image (surface, image, 0, 0,
+				             image->width, image->height,
+				             image_rect->x, image_rect->y);
+    if (status)
+	status = _cairo_surface_set_error (&surface->base, status);
 
     cairo_surface_destroy (&image->base);
 }
@@ -512,6 +515,7 @@ _cairo_glitz_surface_clone_similar (void	    *abstract_surface,
 {
     cairo_glitz_surface_t *surface = abstract_surface;
     cairo_glitz_surface_t *clone;
+    cairo_status_t status;
 
     if (surface->base.status)
 	return surface->base.status;
@@ -549,10 +553,14 @@ _cairo_glitz_surface_clone_similar (void	    *abstract_surface,
 
 	_cairo_rectangle_intersect(&extent, &image_extent);
 
-	_cairo_glitz_surface_set_image (clone, image_src,
-					extent.x, extent.y,
-					extent.width, extent.height,
-					extent.x, extent.y);
+	status = _cairo_glitz_surface_set_image (clone, image_src,
+					         extent.x, extent.y,
+						 extent.width, extent.height,
+						 extent.x, extent.y);
+	if (status) {
+	    cairo_surface_destroy (&clone->base);
+	    return status;
+	}
 
 	*clone_out = &clone->base;
 
@@ -1387,9 +1395,13 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 	    return mask->base.status;
 	}
 
-	_cairo_glitz_surface_set_image (mask, image, 0, 0, width, height, 0, 0);
+	status = _cairo_glitz_surface_set_image (mask, image,
+		                                 0, 0, width, height, 0, 0);
 
 	cairo_surface_destroy(&image->base);
+
+	if (status)
+	    return status;
     }
 
     _cairo_glitz_surface_set_attributes (src, &attributes);
