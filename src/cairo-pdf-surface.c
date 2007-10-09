@@ -2667,18 +2667,26 @@ _cairo_pdf_surface_add_clip (cairo_pdf_surface_t  *surface,
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	status = _cairo_path_fixed_init_copy (elem.clip_path, path);
-	if (status)
+	if (status) {
+	    _cairo_path_fixed_destroy (elem.clip_path);
 	    return status;
+	}
     }
     elem.fill_rule = fill_rule;
 
     status = _cairo_pdf_surface_stop_content_stream (surface);
-    if (status)
+    if (status) {
+	if (elem.clip_path != NULL)
+	    _cairo_path_fixed_destroy (elem.clip_path);
 	return status;
+    }
 
     status = _cairo_array_append (surface->current_group, &elem);
-    if (status)
+    if (status) {
+	if (elem.clip_path != NULL)
+	    _cairo_path_fixed_destroy (elem.clip_path);
 	return status;
+    }
 
     status = _cairo_pdf_surface_start_content_stream (surface);
     if (status)
