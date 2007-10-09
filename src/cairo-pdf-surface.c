@@ -935,8 +935,6 @@ _cairo_pdf_surface_open_group (cairo_pdf_surface_t *surface)
 	surface->group_stream.stream = surface->group_stream.mem_stream;
     }
     status = _cairo_output_stream_get_status (surface->group_stream.stream);
-    if (status)
-	return status;
 
     surface->group_stream.old_output = surface->output;
     surface->output = surface->group_stream.stream;
@@ -944,7 +942,7 @@ _cairo_pdf_surface_open_group (cairo_pdf_surface_t *surface)
     surface->current_resources = &surface->group_stream.resources;
     surface->group_stream.is_knockout = FALSE;
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static cairo_status_t
@@ -974,6 +972,7 @@ _cairo_pdf_surface_close_group (cairo_pdf_surface_t *surface,
 
     if (surface->compress_content) {
 	status = _cairo_output_stream_destroy (surface->group_stream.stream);
+	surface->group_stream.stream = NULL;
 	if (status)
 	    return status;
 
@@ -989,7 +988,10 @@ _cairo_pdf_surface_close_group (cairo_pdf_surface_t *surface,
     if (group->id == 0)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    return _cairo_output_stream_destroy (surface->group_stream.mem_stream);
+    status = _cairo_output_stream_destroy (surface->group_stream.mem_stream);
+    surface->group_stream.mem_stream = NULL;
+
+    return status;
 }
 
 static cairo_status_t
@@ -1052,15 +1054,13 @@ _cairo_pdf_surface_start_content_stream (cairo_pdf_surface_t *surface)
 	surface->content_stream.stream = surface->content_stream.mem_stream;
     }
     status = _cairo_output_stream_get_status (surface->content_stream.stream);
-    if (status)
-	return status;
 
     surface->content_stream.old_output = surface->output;
     surface->output = surface->content_stream.stream;
     _cairo_pdf_group_resources_clear (&surface->content_stream.resources);
     surface->current_resources = &surface->content_stream.resources;
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static cairo_status_t
@@ -1112,6 +1112,7 @@ _cairo_pdf_surface_stop_content_stream (cairo_pdf_surface_t *surface)
 
     if (surface->compress_content) {
 	status = _cairo_output_stream_destroy (surface->content_stream.stream);
+	surface->content_stream.stream = NULL;
 	if (status)
 	    return status;
 
@@ -1132,9 +1133,11 @@ _cairo_pdf_surface_stop_content_stream (cairo_pdf_surface_t *surface)
 	if (status)
 	    return status;
     }
-    surface->content_stream.active = FALSE;
 
-    return _cairo_output_stream_destroy (surface->content_stream.mem_stream);
+    status = _cairo_output_stream_destroy (surface->content_stream.mem_stream);
+    surface->content_stream.mem_stream = NULL;
+
+    return status;
 }
 
 static cairo_status_t
@@ -1184,7 +1187,7 @@ _cairo_pdf_surface_create_similar (void			*abstract_surface,
 static cairo_status_t
 _cairo_pdf_surface_finish (void *abstract_surface)
 {
-    cairo_status_t status, status2;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS, status2;
     cairo_pdf_surface_t *surface = abstract_surface;
     long offset;
     cairo_pdf_resource_t info, catalog;
@@ -1219,6 +1222,37 @@ _cairo_pdf_surface_finish (void *abstract_surface)
 				 "%%%%EOF\r\n",
 				 offset);
 
+    /* close any active streams still open due to fatal errors */
+    status2 = _cairo_pdf_surface_close_stream (surface);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = status2;
+
+    if (surface->content_stream.stream != NULL) {
+	status2 = _cairo_output_stream_destroy (surface->content_stream.stream);
+	if (status == CAIRO_STATUS_SUCCESS)
+	    status = status2;
+    }
+    if (surface->content_stream.mem_stream != NULL) {
+	status2 = _cairo_output_stream_destroy (surface->content_stream.mem_stream);
+	if (status == CAIRO_STATUS_SUCCESS)
+	    status = status2;
+    }
+    if (surface->group_stream.stream != NULL) {
+	status2 = _cairo_output_stream_destroy (surface->group_stream.stream);
+	if (status == CAIRO_STATUS_SUCCESS)
+	    status = status2;
+    }
+    if (surface->group_stream.mem_stream != NULL) {
+	status2 = _cairo_output_stream_destroy (surface->group_stream.mem_stream);
+	if (status == CAIRO_STATUS_SUCCESS)
+	    status = status2;
+    }
+    if (surface->content_stream.active)
+	surface->output = surface->content_stream.old_output;
+    if (surface->group_stream.active)
+	surface->output = surface->group_stream.old_output;
+
+    /* and finish the pdf surface */
     status2 = _cairo_output_stream_destroy (surface->output);
     if (status == CAIRO_STATUS_SUCCESS)
 	status = status2;
