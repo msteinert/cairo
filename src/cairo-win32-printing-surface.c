@@ -338,7 +338,9 @@ _cairo_win32_printing_surface_paint_surface_pattern (cairo_win32_surface_t   *su
     bi.bmiHeader.biClrImportant = 0;
 
     m = pattern->base.matrix;
-    cairo_matrix_invert (&m);
+    status = cairo_matrix_invert (&m);
+    /* _cairo_pattern_set_matrix guarantees invertibility */
+    assert (status == CAIRO_STATUS_SUCCESS);
 
     SaveDC (surface->dc);
     SetGraphicsMode (surface->dc, GM_ADVANCED);
@@ -417,12 +419,15 @@ _cairo_win32_printing_surface_paint_linear_pattern (cairo_win32_surface_t *surfa
     cairo_extend_t extend;
     int range_start, range_stop, num_ranges, num_rects, stop;
     int total_verts, total_rects;
+    cairo_status_t status;
 
     extend = cairo_pattern_get_extend (&pattern->base.base);
     SaveDC (surface->dc);
 
     mat = pattern->base.base.matrix;
-    cairo_matrix_invert (&mat);
+    status = cairo_matrix_invert (&mat);
+    /* _cairo_pattern_set_matrix guarantees invertibility */
+    assert (status == CAIRO_STATUS_SUCCESS);
 
     p1x = _cairo_fixed_to_double (pattern->p1.x);
     p1y = _cairo_fixed_to_double (pattern->p1.y);
@@ -899,7 +904,7 @@ _cairo_win32_printing_surface_stroke (void                 *abstract_surface,
 	/* Return to device space to paint the pattern */
 	if (!ModifyWorldTransform (surface->dc, &xform, MWT_IDENTITY))
 	    return _cairo_win32_print_gdi_error ("_win32_surface_stroke:ModifyWorldTransform");
-	_cairo_win32_printing_surface_paint_pattern (surface, source);
+	status = _cairo_win32_printing_surface_paint_pattern (surface, source);
     }
     RestoreDC (surface->dc, -1);
     DeleteObject (pen);
@@ -949,13 +954,16 @@ _cairo_win32_printing_surface_fill (void		        *abstract_surface,
     }
 
     if (source->type == CAIRO_PATTERN_TYPE_SOLID) {
-	_cairo_win32_printing_surface_select_solid_brush (surface, source);
+	status = _cairo_win32_printing_surface_select_solid_brush (surface, source);
+	if (status)
+	    return status;
+
 	FillPath (surface->dc);
 	_cairo_win32_printing_surface_done_solid_brush (surface);
     } else {
 	SaveDC (surface->dc);
 	SelectClipPath (surface->dc, RGN_AND);
-	_cairo_win32_printing_surface_paint_pattern (surface, source);
+	status = _cairo_win32_printing_surface_paint_pattern (surface, source);
 	RestoreDC (surface->dc, -1);
     }
 
@@ -1049,9 +1057,9 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
 	status = _cairo_win32_printing_surface_emit_path (surface, scaled_glyph->path);
     }
     EndPath (surface->dc);
-    if (status == 0) {
+    if (status == CAIRO_STATUS_SUCCESS) {
 	SelectClipPath (surface->dc, RGN_AND);
-	_cairo_win32_printing_surface_paint_pattern (surface, source);
+	status = _cairo_win32_printing_surface_paint_pattern (surface, source);
     }
     RestoreDC (surface->dc, -1);
 
@@ -1108,13 +1116,13 @@ cairo_win32_printing_surface_create (HDC hdc)
     if (GetClipBox (hdc, &rect) == ERROR) {
 	_cairo_win32_print_gdi_error ("cairo_win32_surface_create");
 	/* XXX: Can we make a more reasonable guess at the error cause here? */
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return NIL_SURFACE;
     }
 
     surface = malloc (sizeof (cairo_win32_surface_t));
     if (surface == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return NIL_SURFACE;
     }
 

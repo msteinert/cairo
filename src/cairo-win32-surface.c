@@ -151,7 +151,7 @@ _create_dc_and_bitmap (cairo_win32_surface_t *surface,
 		       cairo_format_t         format,
 		       int                    width,
 		       int                    height,
-		       char                 **bits_out,
+		       unsigned char        **bits_out,
 		       int                   *rowstride_out)
 {
     cairo_status_t status;
@@ -329,12 +329,12 @@ _cairo_win32_surface_create_for_dc (HDC             original_dc,
 {
     cairo_status_t status;
     cairo_win32_surface_t *surface;
-    char *bits;
+    unsigned char *bits;
     int rowstride;
 
     surface = malloc (sizeof (cairo_win32_surface_t));
     if (surface == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return NIL_SURFACE;
     }
 
@@ -376,13 +376,7 @@ _cairo_win32_surface_create_for_dc (HDC             original_dc,
     if (surface)
 	free (surface);
 
-    if (status == CAIRO_STATUS_NO_MEMORY) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return NIL_SURFACE;
-    } else {
-	_cairo_error (status);
-	return NIL_SURFACE;
-    }
+    return NIL_SURFACE;
 }
 
 static cairo_surface_t *
@@ -1440,7 +1434,9 @@ _cairo_win32_surface_set_clip_region (void           *abstract_surface,
 	unsigned int serial;
 
 	serial = _cairo_surface_allocate_clip_serial (surface->image);
-	_cairo_surface_set_clip_region (surface->image, region, serial);
+	status = _cairo_surface_set_clip_region (surface->image, region, serial);
+	if (status)
+	    return status;
     }
 
     /* The semantics we want is that any clip set by cairo combines
@@ -1724,7 +1720,7 @@ cairo_win32_surface_create (HDC hdc)
     if (clipBoxType == ERROR) {
 	_cairo_win32_print_gdi_error ("cairo_win32_surface_create");
 	/* XXX: Can we make a more reasonable guess at the error cause here? */
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return NIL_SURFACE;
     }
 
@@ -1742,7 +1738,7 @@ cairo_win32_surface_create (HDC hdc)
 	    format = CAIRO_FORMAT_A1;
 	else {
 	    _cairo_win32_print_gdi_error("cairo_win32_surface_create(bad BITSPIXEL)");
-	    _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	    return NIL_SURFACE;
 	}
     } else {
@@ -1751,7 +1747,7 @@ cairo_win32_surface_create (HDC hdc)
 
     surface = malloc (sizeof (cairo_win32_surface_t));
     if (surface == NULL) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return NIL_SURFACE;
     }
 
