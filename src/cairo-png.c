@@ -119,7 +119,7 @@ write_png (cairo_surface_t	*surface,
     png_struct *png;
     png_info *info;
     png_time pt;
-    png_byte **rows = NULL;
+    png_byte **volatile rows = NULL;
     png_color_16 white;
     int png_color_type;
     int depth;
