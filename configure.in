@@ -613,6 +613,7 @@ CAIRO_BACKEND_ENABLE(svg, SVG, svg, SVG_SURFACE, auto, [
 ])
 
 LIBRSVG_VERSION_REQUIRED=2.15.0
+test_svg=no
 if test "x$use_svg" = "xyes"; then
   librsvg_DEPENDENCY="librsvg-2.0 >= $LIBRSVG_VERSION_REQUIRED"
   PKG_CHECK_MODULES(LIBRSVG, $librsvg_DEPENDENCY gdk-2.0,
