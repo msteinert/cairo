@@ -1626,6 +1626,7 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto bail0;
 	}
+	opaque_image = (cairo_image_surface_t *) opaque;
 
 	_cairo_pattern_init_for_surface (&pattern.surface, &image->base);
 
@@ -1636,7 +1637,7 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 					       	image->width, image->height);
 	if (status) {
 	    _cairo_pattern_fini (&pattern.base);
-	    goto bail0;
+	    goto bail1;
 	}
 
 	status = _cairo_surface_composite (CAIRO_OPERATOR_OVER,
@@ -1650,11 +1651,10 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 					   image->height);
 	if (status) {
 	    _cairo_pattern_fini (&pattern.base);
-	    goto bail0;
+	    goto bail1;
 	}
 
 	_cairo_pattern_fini (&pattern.base);
-	opaque_image = (cairo_image_surface_t *) opaque;
     } else {
 	opaque = &image->base;
 	opaque_image = image;
@@ -1815,11 +1815,15 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
 	status = _cairo_surface_acquire_source_image (pattern->surface,
 						      &image,
 						      &image_extra);
-	assert (status == CAIRO_STATUS_SUCCESS);
-
-	status = _cairo_ps_surface_emit_image (surface, image, "MyPattern");
 	if (status)
 	    return status;
+
+	status = _cairo_ps_surface_emit_image (surface, image, "MyPattern");
+	if (status) {
+	    _cairo_surface_release_source_image (pattern->surface,
+		                                 image, image_extra);
+	    return status;
+	}
 
 	bbox_width = image->width;
 	bbox_height = image->height;
@@ -1868,8 +1872,8 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
 	    ystep = 0;
 	}
 
-	_cairo_surface_release_source_image (pattern->surface, image,
-					     image_extra);
+	_cairo_surface_release_source_image (pattern->surface,
+		                             image, image_extra);
     }
     _cairo_output_stream_printf (surface->stream,
 				 "<< /PatternType 1\n"
