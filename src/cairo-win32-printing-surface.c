@@ -399,10 +399,13 @@ FINISH:
 static void
 vertex_set_color (TRIVERTEX *vert, cairo_color_t *color)
 {
-    vert->Alpha = 0xffff;
-    vert->Red   = color->red_short;
-    vert->Green = color->green_short;
-    vert->Blue  = color->blue_short;
+    /* MSDN says that the range here is 0x0000 .. 0xff00;
+     * that may well be a typo, but just chop the low bits
+     * here. */
+    vert->Alpha = 0xff00;
+    vert->Red   = color->red_short & 0xff00;
+    vert->Green = color->green_short & 0xff00;
+    vert->Blue  = color->blue_short & 0xff00;
 }
 
 static cairo_int_status_t
