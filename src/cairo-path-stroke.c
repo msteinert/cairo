@@ -816,7 +816,7 @@ _cairo_stroker_curve_to (void *closure,
     if (stroker->has_current_face) {
 	status = _cairo_stroker_join (stroker, &stroker->current_face, &start);
 	if (status)
-	    return status;
+	    goto CLEANUP_PEN;
     } else if (!stroker->has_first_face) {
 	stroker->first_face = start;
 	stroker->has_first_face = TRUE;
