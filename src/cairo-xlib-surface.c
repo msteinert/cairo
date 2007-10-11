@@ -1979,8 +1979,9 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 				     cairo_region_t *region)
 {
     cairo_xlib_surface_t *surface = abstract_surface;
+    cairo_bool_t had_clip_rects = surface->have_clip_rects;
 
-    if (surface->have_clip_rects == FALSE && region == NULL)
+    if (had_clip_rects == FALSE && region == NULL)
 	return CAIRO_STATUS_SUCCESS;
 
     if (surface->clip_rects != surface->embedded_clip_rects) {
@@ -2046,9 +2047,24 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 	surface->have_clip_rects = TRUE;
 	surface->clip_rects = rects;
 	surface->num_clip_rects = n_boxes;
+
+	/* Discard the trivial clip rectangle that covers the entire surface */
+	if (n_boxes == 1 &&
+	    rects[0].x == 0 &&
+	    rects[0].y == 0 &&
+	    rects[0].width  == surface->width &&
+	    rects[0].height == surface->height)
+	{
+	    surface->have_clip_rects = FALSE;
+	    surface->num_clip_rects = 0;
+
+	    if (! had_clip_rects)
+		goto DONE;
+	}
     }
 
     surface->clip_dirty = CAIRO_XLIB_SURFACE_CLIP_DIRTY_ALL;
+  DONE:
 
     return CAIRO_STATUS_SUCCESS;
 }
