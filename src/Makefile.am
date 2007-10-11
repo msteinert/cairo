@@ -194,6 +194,7 @@ libcairo_la_base_sources =			\
 	cairo-hull.c				\
 	cairo-image-surface.c			\
 	cairo-lzw.c				\
+	cairo-malloc-private.h			\
 	cairo-matrix.c				\
 	cairo-mutex.c				\
 	cairo-mutex-private.h			\
@@ -211,6 +212,7 @@ libcairo_la_base_sources =			\
 	cairo-rectangle.c			\
 	cairo-reference-count-private.h		\
 	cairo-region.c				\
+	cairo-region-private.h			\
 	cairo-scaled-font.c			\
 	cairo-scaled-font-private.h		\
 	cairo-skiplist.c			\

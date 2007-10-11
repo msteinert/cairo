@@ -315,6 +315,8 @@ REFERENCE_IMAGES = \
 	line-width-scale-ps-argb32-ref.png	\
 	line-width-scale-ref.png	\
 	long-lines-ref.png	\
+	mask-alpha-ref.png	\
+	mask-alpha-rgb24-ref.png	\
 	mask-ctm-ref.png	\
 	mask-ctm-rgb24-ref.png	\
 	mask-ctm-svg-argb32-ref.png	\
@@ -338,6 +340,18 @@ REFERENCE_IMAGES = \
 	operator-clear-rgb24-ref.png	\
 	operator-source-ref.png	\
 	operator-source-rgb24-ref.png	\
+	over-above-source-ps-argb32-ref.png       \
+	over-above-source-ref.png                 \
+	over-above-source-rgb24-ref.png           \
+	over-around-source-ps-argb32-ref.png       \
+	over-around-source-ref.png                 \
+	over-around-source-rgb24-ref.png           \
+	over-below-source-ps-argb32-ref.png       \
+	over-below-source-ref.png                 \
+	over-below-source-rgb24-ref.png           \
+	over-between-source-ps-argb32-ref.png       \
+	over-between-source-ref.png                 \
+	over-between-source-rgb24-ref.png           \
 	paint-ref.png	\
 	paint-repeat-ref.png	\
 	paint-source-alpha-pdf-argb32-ref.png	\
@@ -352,8 +366,10 @@ REFERENCE_IMAGES = \
 	push-group-rgb24-ref.png	\
 	push-group-svg-argb32-ref.png	\
 	radial-gradient-ref.png	\
+	radial-gradient-svg-ref.png	\
 	random-intersections-ps-argb32-ref.png	\
 	random-intersections-ref.png	\
+	rgb24-ignore-alpha-ref.png \
 	rectangle-rounding-error-ref.png	\
 	rectilinear-stroke-ref.png	\
 	rel-path-quartz-ref.png	\
@@ -413,6 +429,7 @@ REFERENCE_IMAGES = \
 	translate-show-surface-ref.png	\
 	trap-clip-quartz-ref.png	\
 	trap-clip-quartz-rgb24-ref.png	\
+	trap-clip-ps-argb32-ref.png	\
 	trap-clip-ref.png	\
 	trap-clip-rgb24-ref.png	\
 	unantialiased-shapes-ref.png	\
@@ -612,4 +629,10 @@ check-ref-dups:
 	@sha1sum *-ref.png > ref.hash
 	@join ref.hash ref.hash | grep -v -E '( .*-ref.png).*\1' | cut -d' ' -f 1-2 | sort -u
 
-.PHONY: check-valgrind test recheck retest html rehtml check-ref-dups
+# Not exactly the best script in the world...
+check-ref-missing:
+	@for i in *-ref.png; do\
+	    echo ${REFERENCE_IMAGES} | grep -sq $$i || echo $$i; \
+	done
+
+.PHONY: check-valgrind test recheck retest html rehtml check-ref-dups check-ref-missing
