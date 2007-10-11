@@ -1276,6 +1276,7 @@ compress_dup (const void *data, unsigned long data_size,
     }
 
     if (compress (compressed, compressed_size, data, data_size) != Z_OK) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	free (compressed);
 	compressed = NULL;
     }
@@ -2770,35 +2771,32 @@ _cairo_pdf_surface_write_pages (cairo_pdf_surface_t *surface)
 				 "endobj\r\n");
 }
 
-static cairo_pdf_resource_t
+static cairo_int_status_t
 _cairo_pdf_surface_emit_to_unicode_stream (cairo_pdf_surface_t		*surface,
 					   cairo_scaled_font_subset_t	*font_subset,
-                                           cairo_bool_t                  is_composite)
+                                           cairo_bool_t                  is_composite,
+					   cairo_pdf_resource_t         *stream)
 {
     const cairo_scaled_font_backend_t *backend;
-    cairo_pdf_resource_t stream;
     unsigned int i, num_bfchar;
-    cairo_status_t status;
 
-    if (font_subset->to_unicode == NULL) {
-        stream.id = 0;
-        return stream;
-    }
+    stream->id = 0;
+    if (font_subset->to_unicode == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (_cairo_truetype_create_glyph_to_unicode_map (font_subset) != CAIRO_STATUS_SUCCESS) {
         backend = font_subset->scaled_font->backend;
-        if (backend->map_glyphs_to_unicode == NULL) {
-            stream.id = 0;
-            return stream;
-        }
+        if (backend->map_glyphs_to_unicode == NULL)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
         backend->map_glyphs_to_unicode (font_subset->scaled_font, font_subset);
     }
 
-    stream = _cairo_pdf_surface_open_stream (surface,
+    *stream = _cairo_pdf_surface_open_stream (surface,
 					     surface->compress_content,
 					     NULL);
-    if (stream.id == 0)
-	return stream;
+    if (stream->id == 0)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     _cairo_output_stream_printf (surface->output,
                                  "/CIDInit /ProcSet findresource begin\r\n"
@@ -2855,11 +2853,7 @@ _cairo_pdf_surface_emit_to_unicode_stream (cairo_pdf_surface_t		*surface,
                                  "end\r\n"
                                  "end\r\n");
 
-    status = _cairo_pdf_surface_close_stream (surface);
-    if (status)
-	stream.id = 0;
-
-    return stream;
+    return _cairo_pdf_surface_close_stream (surface);
 }
 
 static cairo_status_t
@@ -2901,9 +2895,11 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
 				 "endobj\r\n");
     free (compressed);
 
-    to_unicode_stream = _cairo_pdf_surface_emit_to_unicode_stream (surface, font_subset, TRUE);
-    if (to_unicode_stream.id == 0)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    status = _cairo_pdf_surface_emit_to_unicode_stream (surface,
+	                                                font_subset, TRUE,
+							&to_unicode_stream);
+    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
 
     descriptor = _cairo_pdf_surface_new_object (surface);
     if (descriptor.id == 0)
@@ -3045,6 +3041,7 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
 {
     cairo_pdf_resource_t stream, descriptor, subset_resource, to_unicode_stream;
     cairo_pdf_font_t font;
+    cairo_status_t status;
     unsigned long length, compressed_length;
     char *compressed;
     unsigned int i;
@@ -3082,9 +3079,11 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
 				 "endobj\r\n");
     free (compressed);
 
-    to_unicode_stream = _cairo_pdf_surface_emit_to_unicode_stream (surface, font_subset, FALSE);
-    if (to_unicode_stream.id == 0)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    status = _cairo_pdf_surface_emit_to_unicode_stream (surface,
+	                                                font_subset, FALSE,
+							&to_unicode_stream);
+    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
 
     descriptor = _cairo_pdf_surface_new_object (surface);
     if (descriptor.id == 0)
@@ -3247,9 +3246,13 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 				 "endobj\r\n");
     free (compressed);
 
-    to_unicode_stream = _cairo_pdf_surface_emit_to_unicode_stream (surface, font_subset, TRUE);
-    if (to_unicode_stream.id == 0)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    status = _cairo_pdf_surface_emit_to_unicode_stream (surface,
+	                                                font_subset, TRUE,
+							&to_unicode_stream);
+    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED) {
+	_cairo_truetype_subset_fini (&subset);
+	return status;
+    }
 
     descriptor = _cairo_pdf_surface_new_object (surface);
     if (descriptor.id == 0) {
@@ -3604,9 +3607,13 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 
     free (glyphs);
 
-    to_unicode_stream = _cairo_pdf_surface_emit_to_unicode_stream (surface, font_subset, FALSE);
-    if (to_unicode_stream.id == 0)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    status = _cairo_pdf_surface_emit_to_unicode_stream (surface,
+	                                                font_subset, FALSE,
+							&to_unicode_stream);
+    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED) {
+	free (widths);
+	return status;
+    }
 
     subset_resource = _cairo_pdf_surface_get_font_resource (surface,
 							    font_subset->font_id,
