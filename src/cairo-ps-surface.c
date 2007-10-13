@@ -2,6 +2,7 @@
  *
  * Copyright © 2003 University of Southern California
  * Copyright © 2005 Red Hat, Inc
+ * Copyright © 2007 Adrian Johnson
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -35,6 +36,7 @@
  *	Carl D. Worth <cworth@cworth.org>
  *	Kristian Høgsberg <krh@redhat.com>
  *	Keith Packard <keithp@keithp.com>
+ *	Adrian Johnson <ajohnson@redneon.com>
  */
 
 #include "cairoint.h"
@@ -50,6 +52,12 @@
 #include <zlib.h>
 
 #define DEBUG_PS 0
+
+typedef enum _cairo_image_transparency {
+    CAIRO_IMAGE_IS_OPAQUE,
+    CAIRO_IMAGE_HAS_BILEVEL_ALPHA,
+    CAIRO_IMAGE_HAS_ALPHA
+} cairo_image_transparency_t;
 
 static const cairo_surface_backend_t cairo_ps_surface_backend;
 static const cairo_paginated_surface_backend_t cairo_ps_surface_paginated_backend;
@@ -1481,6 +1489,92 @@ color_is_gray (double red, double green, double blue)
 	    fabs (red - blue) < epsilon);
 }
 
+static cairo_status_t
+_analyze_image_transparency (cairo_image_surface_t      *image,
+			     cairo_image_transparency_t *transparency)
+{
+    cairo_status_t status;
+    int x, y;
+
+    if (image->format == CAIRO_FORMAT_RGB24) {
+	*transparency = CAIRO_IMAGE_IS_OPAQUE;
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    if (image->format != CAIRO_FORMAT_ARGB32) {
+	/* If the PS surface does not support the image format, assume
+	 * that it does have alpha. The image will be converted to
+	 * rgb24 when the PS surface blends the image into the page
+	 * color to remove the transparency. */
+	*transparency = CAIRO_IMAGE_HAS_ALPHA;
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    *transparency = CAIRO_IMAGE_IS_OPAQUE;
+    for (y = 0; y < image->height; y++) {
+	int a;
+	uint32_t *pixel = (uint32_t *) (image->data + y * image->stride);
+
+	for (x = 0; x < image->width; x++, pixel++) {
+	    a = (*pixel & 0xff000000) >> 24;
+	    if (a > 0 && a < 255) {
+		*transparency = CAIRO_IMAGE_HAS_ALPHA;
+		return CAIRO_STATUS_SUCCESS;
+	    } else if (a == 0) {
+		*transparency = CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
+	    }
+	}
+    }
+    status = CAIRO_STATUS_SUCCESS;
+
+    return status;
+}
+
+static cairo_int_status_t
+_cairo_ps_surface_analyze_surface_pattern_transparency (cairo_ps_surface_t      *surface,
+						       cairo_surface_pattern_t *pattern)
+{
+    cairo_image_surface_t  *image;
+    void		   *image_extra;
+    cairo_int_status_t      status;
+    cairo_image_transparency_t transparency;
+
+    status = _cairo_surface_acquire_source_image (pattern->surface,
+						  &image,
+						  &image_extra);
+    if (status)
+	return status;
+
+    if (image->base.status)
+	return image->base.status;
+
+    status = _analyze_image_transparency (image, &transparency);
+    if (status)
+	goto RELEASE_SOURCE;
+
+    switch (transparency) {
+    case CAIRO_IMAGE_IS_OPAQUE:
+	status = CAIRO_STATUS_SUCCESS;
+	break;
+
+    case CAIRO_IMAGE_HAS_BILEVEL_ALPHA:
+	if (surface->ps_level == CAIRO_PS_LEVEL_2)
+	    status = CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY;
+	else
+	    status = CAIRO_STATUS_SUCCESS;
+	break;
+
+    case CAIRO_IMAGE_HAS_ALPHA:
+	status = CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY;
+	break;
+    }
+
+RELEASE_SOURCE:
+    _cairo_surface_release_source_image (pattern->surface, image, image_extra);
+
+    return status;
+}
+
 static cairo_bool_t
 surface_pattern_supported (cairo_surface_pattern_t *pattern)
 {
@@ -1578,7 +1672,7 @@ pattern_supported (cairo_ps_surface_t *surface, cairo_pattern_t *pattern)
 static cairo_int_status_t
 _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
 				     cairo_operator_t       op,
-				     cairo_pattern_t *pattern)
+				     cairo_pattern_t       *pattern)
 {
     if (surface->force_fallbacks && surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1590,15 +1684,18 @@ _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
 	  op == CAIRO_OPERATOR_OVER))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
-	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
-	if ( _cairo_surface_is_meta (surface_pattern->surface)) {
-	    return CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN;
-	}
-    }
-
     if (op == CAIRO_OPERATOR_SOURCE)
 	return CAIRO_STATUS_SUCCESS;
+
+    if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
+
+	if ( _cairo_surface_is_meta (surface_pattern->surface))
+	    return CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN;
+	else
+	    return _cairo_ps_surface_analyze_surface_pattern_transparency (surface,
+									   surface_pattern);
+    }
 
     /* CAIRO_OPERATOR_OVER is only supported for opaque patterns. If
      * the pattern contains transparency, we return
@@ -1753,99 +1850,190 @@ _string_array_stream_create (cairo_output_stream_t *output)
  * surface we can render natively in PS. */
 
 static cairo_status_t
+_cairo_ps_surface_flatten_image_transparency (cairo_ps_surface_t    *surface,
+					      cairo_image_surface_t *image,
+					      cairo_image_surface_t **opaque_image)
+{
+    const cairo_color_t *background_color;
+    cairo_surface_t *opaque;
+    cairo_pattern_union_t pattern;
+    cairo_status_t status;
+
+    if (surface->content == CAIRO_CONTENT_COLOR_ALPHA)
+	background_color = CAIRO_COLOR_WHITE;
+    else
+	background_color = CAIRO_COLOR_BLACK;
+
+    opaque = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
+					 image->width,
+					 image->height);
+    if (opaque->status) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return status;
+    }
+
+    _cairo_pattern_init_for_surface (&pattern.surface, &image->base);
+
+    status = _cairo_surface_fill_rectangle (opaque,
+					    CAIRO_OPERATOR_SOURCE,
+					    background_color,
+					    0, 0,
+					    image->width, image->height);
+    if (status)
+	goto fail;
+
+    status = _cairo_surface_composite (CAIRO_OPERATOR_OVER,
+				       &pattern.base,
+				       NULL,
+				       opaque,
+				       0, 0,
+				       0, 0,
+				       0, 0,
+				       image->width,
+				       image->height);
+    if (status)
+	goto fail;
+
+    _cairo_pattern_fini (&pattern.base);
+    *opaque_image = (cairo_image_surface_t *) opaque;
+
+    return CAIRO_STATUS_SUCCESS;
+
+fail:
+    _cairo_pattern_fini (&pattern.base);
+    cairo_surface_destroy (opaque);
+
+    return status;
+}
+
+static cairo_status_t
+_cairo_ps_surface_emit_base85_string (cairo_ps_surface_t    *surface,
+				      unsigned char 	    *data,
+				      unsigned long 	     length)
+{
+    cairo_output_stream_t *base85_stream, *string_array_stream;
+    cairo_status_t status, status2;
+
+    string_array_stream = _string_array_stream_create (surface->stream);
+    status = _cairo_output_stream_get_status (string_array_stream);
+    if (status)
+	return status;
+
+    base85_stream = _cairo_base85_stream_create (string_array_stream);
+    status = _cairo_output_stream_get_status (base85_stream);
+    if (status) {
+	status2 = _cairo_output_stream_destroy (string_array_stream);
+	return status;
+    }
+
+    _cairo_output_stream_write (base85_stream, data, length);
+
+    status = _cairo_output_stream_destroy (base85_stream);
+    status2 = _cairo_output_stream_destroy (string_array_stream);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = status2;
+
+    return status;
+}
+
+static cairo_status_t
 _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 			      cairo_image_surface_t *image,
-			      const char	    *name)
+			      const char	    *name,
+			      cairo_operator_t 	     op)
 {
-    cairo_status_t status, status2;
-    unsigned char *rgb, *compressed;
-    unsigned long rgb_size, compressed_size;
-    cairo_surface_t *opaque;
-    cairo_image_surface_t *opaque_image;
-    cairo_pattern_union_t pattern;
+    cairo_status_t status;
+    unsigned char *rgb, *rgb_compressed;
+    unsigned long rgb_size, rgb_compressed_size;
+    unsigned char *mask = NULL, *mask_compressed = NULL;
+    unsigned long mask_size = 0, mask_compressed_size = 0;
+    cairo_image_surface_t *opaque_image = NULL;
     int x, y, i;
-    cairo_output_stream_t *base85_stream, *string_array_stream;
+    cairo_image_transparency_t transparency;
+    cairo_bool_t use_mask;
+
+    if (image->base.status)
+	return image->base.status;
+
+    status = _analyze_image_transparency (image, &transparency);
+    if (status)
+	return status;
 
     /* PostScript can not represent the alpha channel, so we blend the
        current image over a white (or black for CONTENT_COLOR
        surfaces) RGB surface to eliminate it. */
 
-    if (image->base.status)
-	return image->base.status;
-
-    if (image->format != CAIRO_FORMAT_RGB24) {
-	const cairo_color_t *background_color;
-
-	if (surface->content == CAIRO_CONTENT_COLOR_ALPHA)
-	    background_color = CAIRO_COLOR_WHITE;
-	else
-	    background_color = CAIRO_COLOR_BLACK;
-
-	opaque = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
-					     image->width,
-					     image->height);
-	if (opaque->status) {
-	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    goto bail0;
-	}
-	opaque_image = (cairo_image_surface_t *) opaque;
-
-	_cairo_pattern_init_for_surface (&pattern.surface, &image->base);
-
-	status = _cairo_surface_fill_rectangle (opaque,
-				                CAIRO_OPERATOR_SOURCE,
-						background_color,
-						0, 0,
-					       	image->width, image->height);
-	if (status) {
-	    _cairo_pattern_fini (&pattern.base);
-	    goto bail1;
-	}
-
-	status = _cairo_surface_composite (CAIRO_OPERATOR_OVER,
-				           &pattern.base,
-					   NULL,
-					   opaque,
-					   0, 0,
-					   0, 0,
-					   0, 0,
-					   image->width,
-					   image->height);
-	if (status) {
-	    _cairo_pattern_fini (&pattern.base);
-	    goto bail1;
-	}
-
-	_cairo_pattern_fini (&pattern.base);
-    } else {
-	opaque = &image->base;
+    if (op == CAIRO_OPERATOR_SOURCE ||
+	transparency == CAIRO_IMAGE_HAS_ALPHA ||
+	(transparency == CAIRO_IMAGE_HAS_BILEVEL_ALPHA &&
+	 surface->ps_level == CAIRO_PS_LEVEL_2)) {
+	_cairo_ps_surface_flatten_image_transparency (surface,
+						      image,
+						      &opaque_image);
+	use_mask = FALSE;
+    } else if (transparency == CAIRO_IMAGE_IS_OPAQUE) {
 	opaque_image = image;
+	use_mask = FALSE;
+    } else {
+	use_mask = TRUE;
     }
 
-    rgb_size = 3 * opaque_image->width * opaque_image->height;
+    rgb_size = 3 * image->width * image->height;
     rgb = malloc (rgb_size);
     if (rgb == NULL) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto bail1;
     }
 
-    i = 0;
-    for (y = 0; y < opaque_image->height; y++) {
-	uint32_t *pixel = (uint32_t *) (opaque_image->data + y * opaque_image->stride);
-	for (x = 0; x < opaque_image->width; x++, pixel++) {
-	    rgb[i++] = (*pixel & 0x00ff0000) >> 16;
-	    rgb[i++] = (*pixel & 0x0000ff00) >>  8;
-	    rgb[i++] = (*pixel & 0x000000ff) >>  0;
+    if (use_mask) {
+	mask_size = (image->width * image->height + 7)/8;
+	mask = malloc (mask_size);
+	if (mask == NULL) {
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto bail2;
+	}
+    }
+
+    if (use_mask) {
+	int byte = 0;
+	int bit = 7;
+	i = 0;
+	for (y = 0; y < image->height; y++) {
+	    uint32_t *pixel = (uint32_t *) (image->data + y * image->stride);
+	    for (x = 0; x < image->width; x++, pixel++) {
+		if (bit == 7)
+		    mask[byte] = 0;
+		if (((*pixel & 0xff000000) >> 24) > 0x80)
+		    mask[byte] |= (1 << bit);
+		bit--;
+		if (bit < 0) {
+		    bit = 7;
+		    byte++;
+		}
+		rgb[i++] = (*pixel & 0x00ff0000) >> 16;
+		rgb[i++] = (*pixel & 0x0000ff00) >>  8;
+		rgb[i++] = (*pixel & 0x000000ff) >>  0;
+	    }
+	}
+    } else {
+	i = 0;
+	for (y = 0; y < opaque_image->height; y++) {
+	    uint32_t *pixel = (uint32_t *) (opaque_image->data + y * opaque_image->stride);
+	    for (x = 0; x < opaque_image->width; x++, pixel++) {
+		rgb[i++] = (*pixel & 0x00ff0000) >> 16;
+		rgb[i++] = (*pixel & 0x0000ff00) >>  8;
+		rgb[i++] = (*pixel & 0x000000ff) >>  0;
+	    }
 	}
     }
 
     /* XXX: Should fix cairo-lzw to provide a stream-based interface
      * instead. */
-    compressed_size = rgb_size;
-    compressed = _cairo_lzw_compress (rgb, &compressed_size);
-    if (compressed == NULL) {
+    rgb_compressed_size = rgb_size;
+    rgb_compressed = _cairo_lzw_compress (rgb, &rgb_compressed_size);
+    if (rgb_compressed == NULL) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto bail2;
+	goto bail3;
     }
 
     /* First emit the image data as a base85-encoded string which will
@@ -1853,65 +2041,128 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
     _cairo_output_stream_printf (surface->stream,
 				 "/%sData [\n", name);
 
-    string_array_stream = _string_array_stream_create (surface->stream);
-    status = _cairo_output_stream_get_status (string_array_stream);
+    status = _cairo_ps_surface_emit_base85_string (surface,
+						   rgb_compressed,
+						   rgb_compressed_size);
     if (status)
-	goto bail3;
-
-    base85_stream = _cairo_base85_stream_create (string_array_stream);
-    status = _cairo_output_stream_get_status (base85_stream);
-    if (status) {
-	status2 = _cairo_output_stream_destroy (string_array_stream);
-	goto bail3;
-    }
-
-    _cairo_output_stream_write (base85_stream, compressed, compressed_size);
-
-    status = _cairo_output_stream_destroy (base85_stream);
-    status2 = _cairo_output_stream_destroy (string_array_stream);
-    if (status == CAIRO_STATUS_SUCCESS)
-	status = status2;
-    if (status)
-	goto bail3;
+	goto bail4;
 
     _cairo_output_stream_printf (surface->stream,
 				 "] def\n");
     _cairo_output_stream_printf (surface->stream,
 				 "/%sDataIndex 0 def\n", name);
 
-    _cairo_output_stream_printf (surface->stream,
-				 "/%s {\n"
-				 "    /DeviceRGB setcolorspace\n"
-				 "    <<\n"
-				 "	/ImageType 1\n"
-				 "	/Width %d\n"
-				 "	/Height %d\n"
-				 "	/BitsPerComponent 8\n"
-				 "	/Decode [ 0 1 0 1 0 1 ]\n"
-				 "	/DataSource {\n"
-				 "	    %sData %sDataIndex get\n"
-				 "	    /%sDataIndex %sDataIndex 1 add def\n"
-				 "	    %sDataIndex %sData length 1 sub gt { /%sDataIndex 0 def } if\n"
-				 "	} /ASCII85Decode filter /LZWDecode filter\n"
-				 "	/ImageMatrix [ 1 0 0 1 0 0 ]\n"
-				 "    >>\n"
-				 "    image\n"
-				 "} def\n",
-				 name,
-				 opaque_image->width,
-				 opaque_image->height,
-				 name, name, name, name, name, name, name);
+    /* Emit the mask data as a base85-encoded string which will
+     * be used as the mask source for the image operator later. */
+    if (mask) {
+	mask_compressed_size = mask_size;
+	mask_compressed = _cairo_lzw_compress (mask, &mask_compressed_size);
+	if (mask_compressed == NULL) {
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto bail4;
+	}
+
+	_cairo_output_stream_printf (surface->stream,
+				     "/%sMask [\n", name);
+
+	status = _cairo_ps_surface_emit_base85_string (surface,
+						       mask_compressed,
+						       mask_compressed_size);
+	if (status)
+	    goto bail5;
+
+	_cairo_output_stream_printf (surface->stream,
+				     "] def\n");
+	_cairo_output_stream_printf (surface->stream,
+				     "/%sMaskIndex 0 def\n", name);
+    }
+
+    if (mask) {
+	_cairo_output_stream_printf (surface->stream,
+				     "/%s {\n"
+				     "    /DeviceRGB setcolorspace\n"
+				     "    <<\n"
+				     "	/ImageType 3\n"
+				     "	/InterleaveType 3\n"
+				     "	/DataDict <<\n"
+				     "		/ImageType 1\n"
+				     "		/Width %d\n"
+				     "		/Height %d\n"
+				     "		/BitsPerComponent 8\n"
+				     "		/Decode [ 0 1 0 1 0 1 ]\n"
+				     "		/DataSource {\n"
+				     "	    		%sData %sDataIndex get\n"
+				     "	    		/%sDataIndex %sDataIndex 1 add def\n"
+				     "	    		%sDataIndex %sData length 1 sub gt { /%sDataIndex 0 def } if\n"
+				     "		} /ASCII85Decode filter /LZWDecode filter\n"
+				     "		/ImageMatrix [ 1 0 0 1 0 0 ]\n"
+				     "	>>\n"
+				     "	/MaskDict <<\n"
+				     "		/ImageType 1\n"
+				     "		/Width %d\n"
+				     "		/Height %d\n"
+				     "		/BitsPerComponent 1\n"
+				     "		/Decode [ 1 0 ]\n"
+				     "		/DataSource {\n"
+				     "	    		%sMask %sMaskIndex get\n"
+				     "	    		/%sMaskIndex %sMaskIndex 1 add def\n"
+				     "	    		%sMaskIndex %sMask length 1 sub gt { /%sMaskIndex 0 def } if\n"
+				     "		} /ASCII85Decode filter /LZWDecode filter\n"
+				     "		/ImageMatrix [ 1 0 0 1 0 0 ]\n"
+				     "	>>\n"
+				     "    >>\n"
+				     "    image\n"
+				     "} def\n",
+				     name,
+				     image->width,
+				     image->height,
+				     name, name, name, name, name, name, name,
+				     image->width,
+				     image->height,
+				     name, name, name, name, name, name, name);
+    } else {
+	_cairo_output_stream_printf (surface->stream,
+				     "/%s {\n"
+				     "    /DeviceRGB setcolorspace\n"
+				     "    <<\n"
+				     "	/ImageType 1\n"
+				     "	/Width %d\n"
+				     "	/Height %d\n"
+				     "	/BitsPerComponent 8\n"
+				     "	/Decode [ 0 1 0 1 0 1 ]\n"
+				     "	/DataSource {\n"
+				     "	    %sData %sDataIndex get\n"
+				     "	    /%sDataIndex %sDataIndex 1 add def\n"
+				     "	    %sDataIndex %sData length 1 sub gt { /%sDataIndex 0 def } if\n"
+				     "	} /ASCII85Decode filter /LZWDecode filter\n"
+				     "	/ImageMatrix [ 1 0 0 1 0 0 ]\n"
+				     "    >>\n"
+				     "    image\n"
+				     "} def\n",
+				     name,
+				     opaque_image->width,
+				     opaque_image->height,
+				     name, name, name, name, name, name, name);
+    }
 
     status = CAIRO_STATUS_SUCCESS;
 
- bail3:
-    free (compressed);
- bail2:
+bail5:
+    if (use_mask)
+	free (mask_compressed);
+bail4:
+    free (rgb_compressed);
+
+bail3:
+    if (use_mask)
+	free (mask);
+bail2:
     free (rgb);
- bail1:
-    if (opaque_image != image)
-	cairo_surface_destroy (opaque);
- bail0:
+
+bail1:
+    if (!use_mask && opaque_image != image)
+	cairo_surface_destroy (&opaque_image->base);
+
     return status;
 }
 
@@ -1919,7 +2170,8 @@ static cairo_status_t
 _cairo_ps_surface_emit_image_surface (cairo_ps_surface_t      *surface,
 				      cairo_surface_pattern_t *pattern,
 				      int                     *width,
-				      int                     *height)
+				      int                     *height,
+				      cairo_operator_t 	       op)
 {
     cairo_image_surface_t  *image;
     void		   *image_extra;
@@ -1931,7 +2183,7 @@ _cairo_ps_surface_emit_image_surface (cairo_ps_surface_t      *surface,
     if (status)
 	return status;
 
-    _cairo_ps_surface_emit_image (surface, image, "CairoPattern");
+    _cairo_ps_surface_emit_image (surface, image, "CairoPattern", op);
     if (status)
 	goto fail;
 
@@ -2034,7 +2286,8 @@ _cairo_ps_surface_emit_solid_pattern (cairo_ps_surface_t    *surface,
 
 static cairo_status_t
 _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
-					cairo_surface_pattern_t *pattern)
+					cairo_surface_pattern_t *pattern,
+					cairo_operator_t 	 op)
 {
     cairo_status_t status;
     int pattern_width = 0; /* squelch bogus compiler warning */
@@ -2061,7 +2314,8 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
 	status = _cairo_ps_surface_emit_image_surface (surface,
 						       pattern,
 						       &pattern_width,
-						       &pattern_height);
+						       &pattern_height,
+						       op);
 	if (status)
 	    return status;
     }
@@ -2359,7 +2613,9 @@ _cairo_ps_surface_emit_radial_pattern (cairo_ps_surface_t     *surface,
 }
 
 static cairo_status_t
-_cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface, cairo_pattern_t *pattern)
+_cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface,
+				cairo_pattern_t *pattern,
+				cairo_operator_t op)
 {
     /* FIXME: We should keep track of what pattern is currently set in
      * the postscript file and only emit code if we're setting a
@@ -2373,7 +2629,8 @@ _cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface, cairo_pattern_t *pa
 
     case CAIRO_PATTERN_TYPE_SURFACE:
 	status = _cairo_ps_surface_emit_surface_pattern (surface,
-							 (cairo_surface_pattern_t *) pattern);
+							 (cairo_surface_pattern_t *) pattern,
+							 op);
 	if (status)
 	    return status;
 	break;
@@ -2497,7 +2754,7 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 
     _cairo_rectangle_intersect (&extents, &pattern_extents);
 
-    status = _cairo_ps_surface_emit_pattern (surface, source);
+    status = _cairo_ps_surface_emit_pattern (surface, source, op);
     if (status)
 	return status;
 
@@ -2640,7 +2897,7 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
 	}
     }
 
-    status = _cairo_ps_surface_emit_pattern (surface, source);
+    status = _cairo_ps_surface_emit_pattern (surface, source, op);
     if (status)
 	return status;
 
@@ -2711,7 +2968,7 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 				 "%% _cairo_ps_surface_fill\n");
 #endif
 
-    status = _cairo_ps_surface_emit_pattern (surface, source);
+    status = _cairo_ps_surface_emit_pattern (surface, source, op);
     if (status)
 	return status;
 
@@ -2780,7 +3037,7 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 
     num_glyphs_unsigned = num_glyphs;
 
-    status = _cairo_ps_surface_emit_pattern (surface, source);
+    status = _cairo_ps_surface_emit_pattern (surface, source, op);
     if (status)
 	return status;
 
