@@ -62,6 +62,7 @@ mask				\
 mask-alpha			\
 mask-ctm			\
 mask-surface-ctm		\
+meta-surface-pattern            \
 move-to-show-surface		\
 new-sub-path			\
 nil-surface			\

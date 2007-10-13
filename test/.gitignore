@@ -79,6 +79,7 @@ mask
 mask-alpha
 mask-ctm
 mask-surface-ctm
+meta-surface-pattern
 move-to-show-surface
 multi-page
 multi-page.pdf
