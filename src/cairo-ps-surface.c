@@ -1610,12 +1610,6 @@ _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
      * background to convert the pattern to opaque.
      */
 
-    if (_cairo_operator_always_opaque (op))
-	return CAIRO_STATUS_SUCCESS;
-
-    if (_cairo_operator_always_translucent (op))
-	return CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY;
-
     if (_cairo_pattern_is_opaque (pattern))
 	return CAIRO_STATUS_SUCCESS;
     else
