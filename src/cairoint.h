@@ -459,6 +459,7 @@ typedef struct _cairo_scaled_font_subset {
      */
     unsigned long *glyphs;
     unsigned long *to_unicode;
+    char          **glyph_names;
     unsigned int num_glyphs;
     cairo_bool_t is_composite;
 } cairo_scaled_font_subset_t;

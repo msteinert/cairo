@@ -465,7 +465,13 @@ cairo_type1_font_write_charstrings (cairo_type1_font_t    *font,
             goto fail;
         charstring_encrypt (&data);
         length = _cairo_array_num_elements (&data);
-        _cairo_output_stream_printf (encrypted_output, "/g%d %d RD ", i, length);
+	if (font->scaled_font_subset->glyph_names != NULL) {
+	    _cairo_output_stream_printf (encrypted_output, "/%s %d RD ",
+					 font->scaled_font_subset->glyph_names[i],
+					 length);
+	} else {
+	    _cairo_output_stream_printf (encrypted_output, "/g%d %d RD ", i, length);
+	}
         _cairo_output_stream_write (encrypted_output,
                                     _cairo_array_index (&data, 0),
                                     length);
@@ -527,8 +533,14 @@ cairo_type1_font_write_header (cairo_type1_font_t *font,
                                  "} readonly def\n"
                                  "/Encoding 256 array\n"
 				 "0 1 255 {1 index exch /.notdef put} for\n");
-    for (i = 0; i < font->scaled_font_subset->num_glyphs; i++)
-        _cairo_output_stream_printf (font->output, "dup %d /g%d put\n", i, i);
+    for (i = 1; i < font->scaled_font_subset->num_glyphs; i++) {
+	if (font->scaled_font_subset->glyph_names != NULL) {
+	    _cairo_output_stream_printf (font->output, "dup %d /%s put\n",
+					 i, font->scaled_font_subset->glyph_names[i]);
+	} else {
+	    _cairo_output_stream_printf (font->output, "dup %d /g%d put\n", i, i);
+	}
+    }
     _cairo_output_stream_printf (font->output,
                                  "readonly def\n"
                                  "currentdict end\n"

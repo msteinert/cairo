@@ -508,18 +508,32 @@ _cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,
 
     /* FIXME: Figure out how subset->x_max etc maps to the /FontBBox */
 
-    for (i = 1; i < font_subset->num_glyphs; i++)
-	_cairo_output_stream_printf (surface->final_stream,
-				     "Encoding %d /g%d put\n", i, i);
+    for (i = 1; i < font_subset->num_glyphs; i++) {
+	if (font_subset->glyph_names != NULL) {
+	    _cairo_output_stream_printf (surface->final_stream,
+					 "Encoding %d /%s put\n",
+					 i, font_subset->glyph_names[i]);
+	} else {
+	    _cairo_output_stream_printf (surface->final_stream,
+					 "Encoding %d /g%d put\n", i, i);
+	}
+    }
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "/CharStrings %d dict dup begin\n"
 				 "/.notdef 0 def\n",
 				 font_subset->num_glyphs);
 
-    for (i = 1; i < font_subset->num_glyphs; i++)
-	_cairo_output_stream_printf (surface->final_stream,
-				     "/g%d %d def\n", i, i);
+    for (i = 1; i < font_subset->num_glyphs; i++) {
+	if (font_subset->glyph_names != NULL) {
+	    _cairo_output_stream_printf (surface->final_stream,
+					 "/%s %d def\n",
+					 font_subset->glyph_names[i], i);
+	} else {
+	    _cairo_output_stream_printf (surface->final_stream,
+					 "/g%d %d def\n", i, i);
+	}
+    }
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "end readonly def\n");
@@ -742,13 +756,17 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-
 static cairo_status_t
 _cairo_ps_surface_emit_unscaled_font_subset (cairo_scaled_font_subset_t	*font_subset,
 				            void			*closure)
 {
     cairo_ps_surface_t *surface = closure;
     cairo_status_t status;
+
+
+    status = _cairo_scaled_font_subset_create_glyph_names (font_subset);
+    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
 
 #if CAIRO_HAS_FT_FONT
     status = _cairo_ps_surface_emit_type1_font_subset (surface, font_subset);
@@ -773,6 +791,10 @@ _cairo_ps_surface_emit_scaled_font_subset (cairo_scaled_font_subset_t *font_subs
 {
     cairo_ps_surface_t *surface = closure;
     cairo_status_t status;
+
+    status = _cairo_scaled_font_subset_create_glyph_names (font_subset);
+    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
 
     status = _cairo_ps_surface_emit_type3_font_subset (surface, font_subset);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)

@@ -37,6 +37,7 @@
  *	Carl D. Worth <cworth@cworth.org>
  *	Kristian Høgsberg <krh@redhat.com>
  *	Keith Packard <keithp@keithp.com>
+ *	Adrian Johnson <ajohnson@redneon.com>
  */
 
 #include "cairoint.h"
@@ -99,6 +100,11 @@ typedef struct _cairo_sub_font_collection {
     cairo_scaled_font_subset_callback_func_t font_subset_callback;
     void *font_subset_callback_closure;
 } cairo_sub_font_collection_t;
+
+typedef struct _cairo_string_entry {
+    cairo_hash_entry_t base;
+    char *string;
+} cairo_string_entry_t;
 
 static void
 _cairo_sub_font_glyph_init_key (cairo_sub_font_glyph_t  *sub_font_glyph,
@@ -402,6 +408,7 @@ _cairo_sub_font_collect (void *entry, void *closure)
 	subset.subset_id = i;
 	subset.glyphs = collection->glyphs;
 	subset.num_glyphs = collection->num_glyphs;
+        subset.glyph_names = NULL;
         /* No need to check for out of memory here. If to_unicode is NULL, the PDF
          * surface does not emit an ToUnicode stream */
         subset.to_unicode = _cairo_malloc_ab (collection->num_glyphs, sizeof (unsigned long));
@@ -416,6 +423,12 @@ _cairo_sub_font_collect (void *entry, void *closure)
 
         if (subset.to_unicode != NULL)
             free (subset.to_unicode);
+
+	if (subset.glyph_names != NULL) {
+            for (j = 0; j < collection->num_glyphs; j++)
+		free (subset.glyph_names[j]);
+	    free (subset.glyph_names);
+	}
 
 	if (collection->status)
 	    break;
@@ -685,4 +698,150 @@ _cairo_scaled_font_subsets_foreach_unscaled (cairo_scaled_font_subsets_t	    *fo
                                                         font_subset_callback,
                                                         closure,
                                                         FALSE);
+}
+
+static cairo_bool_t
+_cairo_string_equal (const void *key_a, const void *key_b)
+{
+    const cairo_string_entry_t *a = key_a;
+    const cairo_string_entry_t *b = key_b;
+
+    if (strcmp (a->string, b->string) == 0)
+	return TRUE;
+    else
+	return FALSE;
+}
+
+static void
+_cairo_string_init_key (cairo_string_entry_t *key, char *s)
+{
+    unsigned long sum = 0;
+    unsigned int i;
+
+    for (i = 0; i < strlen(s); i++)
+        sum += s[i];
+    key->base.hash = sum;
+    key->string = s;
+}
+
+static cairo_string_entry_t *
+create_string_entry (char *s)
+{
+    cairo_string_entry_t *entry;
+
+    entry = malloc (sizeof (cairo_string_entry_t));
+    if (entry == NULL) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+        return NULL;
+    }
+
+    _cairo_string_init_key (entry, s);
+
+    return entry;
+}
+
+cairo_int_status_t
+_cairo_scaled_font_subset_create_glyph_names (cairo_scaled_font_subset_t *subset)
+{
+    const cairo_scaled_font_backend_t *backend;
+    unsigned int i;
+    cairo_status_t status;
+    cairo_hash_table_t *names;
+    cairo_string_entry_t key, *entry;
+    char buf[30];
+
+    if (subset->to_unicode == NULL) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    if (_cairo_truetype_create_glyph_to_unicode_map (subset) != CAIRO_STATUS_SUCCESS) {
+        backend = subset->scaled_font->backend;
+        if (backend->map_glyphs_to_unicode == NULL) {
+            return CAIRO_INT_STATUS_UNSUPPORTED;
+        }
+        backend->map_glyphs_to_unicode (subset->scaled_font, subset);
+    }
+
+    subset->glyph_names = calloc (subset->num_glyphs, sizeof (char *));
+
+    names = _cairo_hash_table_create (_cairo_string_equal);
+    if (names == NULL) {
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto FAIL1;
+    }
+
+    subset->glyph_names[0] = strdup (".notdef");
+    if (subset->glyph_names[0] == NULL) {
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto FAIL1;
+    }
+
+    entry = create_string_entry (subset->glyph_names[0]);
+    if (entry == NULL) {
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto FAIL2;
+    }
+
+    status = _cairo_hash_table_insert (names, &entry->base);
+    if (status) {
+	free (entry);
+	goto CLEANUP_HASH;
+    }
+
+    for (i = 0; i < subset->num_glyphs; i++) {
+	if (subset->to_unicode[i] <= 0xffff) {
+	    snprintf (buf, sizeof(buf), "uni%04X", (unsigned int)(subset->to_unicode[i]));
+	    _cairo_string_init_key (&key, buf);
+	    if (_cairo_hash_table_lookup (names, &key.base,
+					  (cairo_hash_entry_t **) &entry)) {
+		snprintf (buf, sizeof(buf), "g%d", i);
+	    }
+	} else {
+	    snprintf (buf, sizeof(buf), "g%d", i);
+	}
+
+	subset->glyph_names[i] = strdup (buf);
+	if (subset->glyph_names[i] == NULL) {
+	    status = CAIRO_STATUS_NO_MEMORY;
+	    goto CLEANUP_HASH;
+	}
+
+	entry = create_string_entry (subset->glyph_names[i]);
+	if (entry == NULL) {
+	    status = CAIRO_STATUS_NO_MEMORY;
+	    goto CLEANUP_HASH;
+	}
+
+	status = _cairo_hash_table_insert (names, &entry->base);
+	if (status) {
+	    free (entry);
+	    goto CLEANUP_HASH;
+	}
+    }
+    return 0;
+
+CLEANUP_HASH:
+    while (1) {
+	entry = _cairo_hash_table_random_entry (names, NULL);
+	if (entry == NULL)
+	    break;
+        _cairo_hash_table_remove (names, (cairo_hash_entry_t *) entry);
+        free (entry);
+    }
+    _cairo_hash_table_destroy (names);
+
+    if (status == CAIRO_STATUS_SUCCESS)
+	return status;
+
+FAIL2:
+    for (i = 0; i < subset->num_glyphs; i++) {
+	if (subset->glyph_names[i] != NULL)
+	    free (subset->glyph_names[i]);
+    }
+
+FAIL1:
+    free (subset->glyph_names);
+    subset->glyph_names = NULL;
+
+    return status;
 }
