@@ -54,6 +54,20 @@
 static const cairo_surface_backend_t cairo_ps_surface_backend;
 static const cairo_paginated_surface_backend_t cairo_ps_surface_paginated_backend;
 
+static const cairo_ps_level_t _cairo_ps_levels[] =
+{
+    CAIRO_PS_LEVEL_2,
+    CAIRO_PS_LEVEL_3
+};
+
+#define CAIRO_PS_LEVEL_LAST ARRAY_LENGTH (_cairo_ps_levels)
+
+static const char * _cairo_ps_level_strings[CAIRO_PS_LEVEL_LAST] =
+{
+    "PS Level 2",
+    "PS Level 3"
+};
+
 /* A word wrap stream can be used as a filter to do word wrapping on
  * top of an existing output stream. The word wrapping is quite
  * simple, using isspace to determine characters that separate
@@ -299,9 +313,15 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
     time_t now;
     char **comments;
     int i, num_comments;
+    const char *level;
     const char *eps_header = "";
 
     now = time (NULL);
+
+    if (surface->ps_level == CAIRO_PS_LEVEL_2)
+	level = "2";
+    else
+	level = "3";
 
     if (surface->eps)
 	eps_header = " EPSF-3.0";
@@ -323,7 +343,8 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "%%%%DocumentData: Clean7Bit\n"
-				 "%%%%LanguageLevel: 2\n");
+				 "%%%%LanguageLevel: %s\n",
+				 level);
 
     num_comments = _cairo_array_num_elements (&surface->dsc_header_comments);
     comments = _cairo_array_index (&surface->dsc_header_comments, 0);
@@ -840,6 +861,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 	goto CLEANUP_OUTPUT_STREAM;
 
     surface->eps = FALSE;
+    surface->ps_level = CAIRO_PS_LEVEL_3;
     surface->width  = width;
     surface->height = height;
     surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
@@ -992,6 +1014,81 @@ _extract_ps_surface (cairo_surface_t	 *surface,
     *ps_surface = (cairo_ps_surface_t *) target;
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+/**
+ * cairo_ps_surface_restrict_to_level:
+ * @surface: a PostScript #cairo_surface_t
+ * @level: PostScript level
+ *
+ * Restricts the generated PostSript file to @level. See
+ * cairo_ps_get_levels() for a list of available level values that
+ * can be used here.
+ *
+ * This function should only be called before any drawing operations
+ * have been performed on the given surface. The simplest way to do
+ * this is to call this function immediately after creating the
+ * surface.
+ *
+ * Since: 1.6
+ **/
+void
+cairo_ps_surface_restrict_to_level (cairo_surface_t  *surface,
+                                    cairo_ps_level_t  level)
+{
+    cairo_ps_surface_t *ps_surface;
+    cairo_status_t status;
+
+    status = _extract_ps_surface (surface, &ps_surface);
+    if (status) {
+	status = _cairo_surface_set_error (surface, status);
+	return;
+    }
+
+    if (level < CAIRO_PS_LEVEL_LAST)
+	ps_surface->ps_level = level;
+}
+
+/**
+ * cairo_ps_get_levels:
+ * @levels: supported level list
+ * @num_levels: list length
+ *
+ * Used to retrieve the list of supported levels. See
+ * cairo_ps_surface_restrict_to_level().
+ *
+ * Since: 1.6
+ **/
+void
+cairo_ps_get_levels (cairo_ps_level_t const	**levels,
+                     int                     	 *num_levels)
+{
+    if (levels != NULL)
+	*levels = _cairo_ps_levels;
+
+    if (num_levels != NULL)
+	*num_levels = CAIRO_PS_LEVEL_LAST;
+}
+
+/**
+ * cairo_ps_level_to_string:
+ * @level: a level id
+ *
+ * Get the string representation of the given @level id. This function
+ * will return NULL if @level id isn't valid. See cairo_ps_get_levels()
+ * for a way to get the list of valid level ids.
+ *
+ * Return value: the string associated to given level.
+ *
+ * Since: 1.6
+ **/
+const char *
+cairo_ps_level_to_string (cairo_ps_level_t level)
+{
+    if (level >= CAIRO_PS_LEVEL_LAST)
+	return NULL;
+
+    return _cairo_ps_level_strings[level];
 }
 
 /**
