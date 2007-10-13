@@ -844,6 +844,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     surface->height = height;
     surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
     surface->force_fallbacks = FALSE;
+    surface->content = CAIRO_CONTENT_COLOR_ALPHA;
 
     surface->num_pages = 0;
 
@@ -1288,6 +1289,15 @@ cairo_ps_surface_dsc_begin_page_setup (cairo_surface_t *surface)
     }
 }
 
+static cairo_surface_t *
+_cairo_ps_surface_create_similar (void			*abstract_surface,
+				  cairo_content_t	 content,
+				  int			 width,
+				  int			 height)
+{
+    return _cairo_meta_surface_create (content, width, height);
+}
+
 static cairo_status_t
 _cairo_ps_surface_finish (void *abstract_surface)
 {
@@ -1379,6 +1389,9 @@ surface_pattern_supported (const cairo_surface_pattern_t *pattern)
 {
     cairo_extend_t extend;
 
+    if (_cairo_surface_is_meta (pattern->surface))
+	return TRUE;
+
     if (pattern->surface->backend->acquire_source_image == NULL)
 	return FALSE;
 
@@ -1434,11 +1447,19 @@ _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
     if (! pattern_supported (pattern))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    if (!(op == CAIRO_OPERATOR_SOURCE ||
+	  op == CAIRO_OPERATOR_OVER))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
+	if ( _cairo_surface_is_meta (surface_pattern->surface)) {
+	    return CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN;
+	}
+    }
+
     if (op == CAIRO_OPERATOR_SOURCE)
 	return CAIRO_STATUS_SUCCESS;
-
-    if (op != CAIRO_OPERATOR_OVER)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* CAIRO_OPERATOR_OVER is only supported for opaque patterns. If
      * the pattern contains transparency, we return
@@ -1613,12 +1634,20 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
     cairo_output_stream_t *base85_stream, *string_array_stream;
 
     /* PostScript can not represent the alpha channel, so we blend the
-       current image over a white RGB surface to eliminate it. */
+       current image over a white (or black for CONTENT_COLOR
+       surfaces) RGB surface to eliminate it. */
 
     if (image->base.status)
 	return image->base.status;
 
     if (image->format != CAIRO_FORMAT_RGB24) {
+	const cairo_color_t *background_color;
+
+	if (surface->content == CAIRO_CONTENT_COLOR_ALPHA)
+	    background_color = CAIRO_COLOR_WHITE;
+	else
+	    background_color = CAIRO_COLOR_BLACK;
+
 	opaque = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
 					     image->width,
 					     image->height);
@@ -1632,7 +1661,7 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 
 	status = _cairo_surface_fill_rectangle (opaque,
 				                CAIRO_OPERATOR_SOURCE,
-						CAIRO_COLOR_WHITE,
+						background_color,
 						0, 0,
 					       	image->width, image->height);
 	if (status) {
@@ -1753,6 +1782,79 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
     return status;
 }
 
+static cairo_status_t
+_cairo_ps_surface_emit_image_surface (cairo_ps_surface_t      *surface,
+				      cairo_surface_pattern_t *pattern,
+				      int                     *width,
+				      int                     *height)
+{
+    cairo_image_surface_t  *image;
+    void		   *image_extra;
+    cairo_status_t          status;
+
+    status = _cairo_surface_acquire_source_image (pattern->surface,
+						  &image,
+						  &image_extra);
+    if (status)
+	return status;
+
+    _cairo_ps_surface_emit_image (surface, image, "CairoPattern");
+    if (status)
+	goto fail;
+
+    *width = image->width;
+    *height = image->height;
+
+fail:
+    _cairo_surface_release_source_image (pattern->surface, image, image_extra);
+
+    return status;
+}
+
+static cairo_status_t
+_cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
+				     cairo_surface_t      *meta_surface)
+{
+    double old_width, old_height;
+    cairo_content_t old_content;
+    cairo_rectangle_int_t meta_extents;
+    cairo_status_t status;
+
+    status = _cairo_surface_get_extents (meta_surface, &meta_extents);
+    if (status)
+	return status;
+
+    old_content = surface->content;
+    old_width = surface->width;
+    old_height = surface->height;
+    surface->width = meta_extents.width;
+    surface->height = meta_extents.height;
+    _cairo_output_stream_printf (surface->stream,
+				 "/CairoPattern {\n"
+				 "gsave\n");
+
+    if (cairo_surface_get_content (meta_surface) == CAIRO_CONTENT_COLOR) {
+	surface->content = CAIRO_CONTENT_COLOR;
+	_cairo_output_stream_printf (surface->stream,
+				     "0 G 0 0 %f %f rectfill\n",
+				     surface->width,
+				     surface->height);
+    }
+
+    status = _cairo_meta_surface_replay (meta_surface, &surface->base);
+    if (status)
+	return status;
+
+    _cairo_output_stream_printf (surface->stream,
+				 "grestore\n"
+				 "} bind def\n");
+    surface->content = old_content;
+    surface->width = old_width;
+    surface->height = old_height;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static void
 _cairo_ps_surface_emit_solid_pattern (cairo_ps_surface_t    *surface,
 				      cairo_solid_pattern_t *pattern)
@@ -1765,11 +1867,17 @@ _cairo_ps_surface_emit_solid_pattern (cairo_ps_surface_t    *surface,
     blue = color->blue;
 
     if (!CAIRO_COLOR_IS_OPAQUE(color)) {
-	uint8_t one_minus_alpha = 255 - (color->alpha_short >> 8);
+	if (surface->content == CAIRO_CONTENT_COLOR_ALPHA) {
+	    uint8_t one_minus_alpha = 255 - (color->alpha_short >> 8);
 
-	red   = ((color->red_short   >> 8) + one_minus_alpha) / 255.0;
-	green = ((color->green_short >> 8) + one_minus_alpha) / 255.0;
-	blue  = ((color->blue_short  >> 8) + one_minus_alpha) / 255.0;
+	    red   = ((color->red_short   >> 8) + one_minus_alpha) / 255.0;
+	    green = ((color->green_short >> 8) + one_minus_alpha) / 255.0;
+	    blue  = ((color->blue_short  >> 8) + one_minus_alpha) / 255.0;
+	} else {
+	    red   = (color->red_short   >> 8) / 255.0;
+	    green = (color->green_short >> 8) / 255.0;
+	    blue  = (color->blue_short  >> 8) / 255.0;
+	}
     }
 
     if (color_is_gray (color))
@@ -1787,7 +1895,8 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
 					cairo_surface_pattern_t *pattern)
 {
     cairo_status_t status;
-    double bbox_width, bbox_height;
+    int pattern_width = 0; /* squelch bogus compiler warning */
+    int pattern_height = 0; /* squelch bogus compiler warning */
     double xstep, ystep;
     cairo_matrix_t inverse = pattern->base.matrix;
 
@@ -1796,97 +1905,81 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
     assert (status == CAIRO_STATUS_SUCCESS);
 
     if (_cairo_surface_is_meta (pattern->surface)) {
-	_cairo_output_stream_printf (surface->stream, "/MyPattern {\n");
+	cairo_surface_t *meta_surface = pattern->surface;
+	cairo_rectangle_int_t pattern_extents;
 
-	status = _cairo_meta_surface_replay (pattern->surface, &surface->base);
+	status = _cairo_ps_surface_emit_meta_surface (surface,
+						      meta_surface);
+	status = _cairo_surface_get_extents (meta_surface, &pattern_extents);
 	if (status)
 	    return status;
-
-	bbox_width = surface->width;
-	bbox_height = surface->height;
-	xstep = surface->width;
-	ystep = surface->height;
-	_cairo_output_stream_printf (surface->stream, "} bind def\n");
+	pattern_width = pattern_extents.width;
+	pattern_height = pattern_extents.height;
     } else {
-	cairo_image_surface_t	*image;
-	void			*image_extra;
-	cairo_status_t		status;
-
-	status = _cairo_surface_acquire_source_image (pattern->surface,
-						      &image,
-						      &image_extra);
+	status = _cairo_ps_surface_emit_image_surface (surface,
+						       pattern,
+						       &pattern_width,
+						       &pattern_height);
 	if (status)
 	    return status;
+    }
 
-	status = _cairo_ps_surface_emit_image (surface, image, "MyPattern");
-	if (status) {
-	    _cairo_surface_release_source_image (pattern->surface,
-		                                 image, image_extra);
-	    return status;
-	}
-
-	bbox_width = image->width;
-	bbox_height = image->height;
-
-	switch (pattern->base.extend) {
+    switch (pattern->base.extend) {
 	/* We implement EXTEND_PAD like EXTEND_NONE for now */
-	case CAIRO_EXTEND_PAD:
-	case CAIRO_EXTEND_NONE:
-	{
-	    /* In PS/PDF, (as far as I can tell), all patterns are
-	     * repeating. So we support cairo's EXTEND_NONE semantics
-	     * by setting the repeat step size to a size large enough
-	     * to guarantee that no more than a single occurrence will
-	     * be visible.
-	     *
-	     * First, map the surface extents into pattern space (since
-	     * xstep and ystep are in pattern space).  Then use an upper
-	     * bound on the length of the diagonal of the pattern image
-	     * and the surface as repeat size.  This guarantees to never
-	     * repeat visibly.
-	     */
-	    double x1 = 0.0, y1 = 0.0;
-	    double x2 = surface->width, y2 = surface->height;
-	    _cairo_matrix_transform_bounding_box (&pattern->base.matrix,
-						  &x1, &y1, &x2, &y2,
-						  NULL);
+    case CAIRO_EXTEND_PAD:
+    case CAIRO_EXTEND_NONE:
+    {
+	/* In PS/PDF, (as far as I can tell), all patterns are
+	 * repeating. So we support cairo's EXTEND_NONE semantics
+	 * by setting the repeat step size to a size large enough
+	 * to guarantee that no more than a single occurrence will
+	 * be visible.
+	 *
+	 * First, map the surface extents into pattern space (since
+	 * xstep and ystep are in pattern space).  Then use an upper
+	 * bound on the length of the diagonal of the pattern image
+	 * and the surface as repeat size.  This guarantees to never
+	 * repeat visibly.
+	 */
+	double x1 = 0.0, y1 = 0.0;
+	double x2 = surface->width, y2 = surface->height;
+	_cairo_matrix_transform_bounding_box (&pattern->base.matrix,
+					      &x1, &y1, &x2, &y2,
+					      NULL);
 
-	    /* Rather than computing precise bounds of the union, just
-	     * add the surface extents unconditionally. We only
-	     * required an answer that's large enough, we don't really
-	     * care if it's not as tight as possible.*/
-	    xstep = ystep = ceil ((x2 - x1) + (y2 - y1) +
-				  image->width + image->height);
-	    break;
-	}
-	case CAIRO_EXTEND_REPEAT:
-	case CAIRO_EXTEND_REFLECT:
-	    xstep = image->width;
-	    ystep = image->height;
-	    break;
+	/* Rather than computing precise bounds of the union, just
+	 * add the surface extents unconditionally. We only
+	 * required an answer that's large enough, we don't really
+	 * care if it's not as tight as possible.*/
+	xstep = ystep = ceil ((x2 - x1) + (y2 - y1) +
+			      pattern_width + pattern_height);
+	break;
+    }
+    case CAIRO_EXTEND_REPEAT:
+    case CAIRO_EXTEND_REFLECT:
+	xstep = pattern_width;
+	ystep = pattern_height;
+	break;
 	/* All the rest (if any) should have been analyzed away, so these
 	 * cases should be unreachable. */
-	default:
-	    ASSERT_NOT_REACHED;
-	    xstep = 0;
-	    ystep = 0;
-	}
-
-	_cairo_surface_release_source_image (pattern->surface,
-		                             image, image_extra);
+    default:
+	ASSERT_NOT_REACHED;
+	xstep = 0;
+	ystep = 0;
     }
+
     _cairo_output_stream_printf (surface->stream,
 				 "<< /PatternType 1\n"
 				 "   /PaintType 1\n"
 				 "   /TilingType 1\n");
     _cairo_output_stream_printf (surface->stream,
-				 "   /BBox [0 0 %f %f]\n",
-				 bbox_width, bbox_height);
+				 "   /BBox [0 0 %d %d]\n",
+				 pattern_width, pattern_height);
     _cairo_output_stream_printf (surface->stream,
 				 "   /XStep %f /YStep %f\n",
 				 xstep, ystep);
     _cairo_output_stream_printf (surface->stream,
-				 "   /PaintProc { MyPattern } bind\n"
+				 "   /PaintProc { CairoPattern } bind\n"
 				 ">>\n");
     _cairo_output_stream_printf (surface->stream,
 				 "[ %f %f %f %f %f %f ]\n",
@@ -2527,7 +2620,7 @@ _cairo_ps_surface_set_bounding_box (void		*abstract_surface,
 
 static const cairo_surface_backend_t cairo_ps_surface_backend = {
     CAIRO_SURFACE_TYPE_PS,
-    NULL, /* create_similar */
+    _cairo_ps_surface_create_similar,
     _cairo_ps_surface_finish,
     NULL, /* acquire_source_image */
     NULL, /* release_source_image */
