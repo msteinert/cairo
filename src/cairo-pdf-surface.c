@@ -2002,6 +2002,19 @@ _cairo_pdf_surface_emit_stitched_colorgradient (cairo_pdf_surface_t    *surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+
+static void
+calc_gradient_color (cairo_pdf_color_stop_t *new_stop,
+		     cairo_pdf_color_stop_t *stop1,
+		     cairo_pdf_color_stop_t *stop2)
+{
+    int i;
+    double offset = stop1->offset / (stop1->offset + 1.0 - stop2->offset);
+
+    for (i = 0; i < 4; i++)
+	new_stop->color[i] = stop1->color[i] + offset*(stop2->color[i] - stop1->color[i]);
+}
+
 #define COLOR_STOP_EPSILON 1e-6
 
 static cairo_status_t
@@ -2034,6 +2047,31 @@ _cairo_pdf_surface_emit_pattern_stops (cairo_pdf_surface_t      *surface,
         if (!CAIRO_ALPHA_IS_OPAQUE (stops[i].color[3]))
             emit_alpha = TRUE;
 	stops[i].offset = _cairo_fixed_to_double (pattern->stops[i].x);
+    }
+
+    if (pattern->base.extend == CAIRO_EXTEND_REPEAT ||
+	pattern->base.extend == CAIRO_EXTEND_REFLECT) {
+	if (stops[0].offset > COLOR_STOP_EPSILON) {
+	    if (pattern->base.extend == CAIRO_EXTEND_REFLECT)
+		memcpy (allstops, stops, sizeof (cairo_pdf_color_stop_t));
+	    else
+		calc_gradient_color (&allstops[0], &stops[0], &stops[n_stops-1]);
+	    stops = allstops;
+	    n_stops++;
+	}
+	stops[0].offset = 0.0;
+
+	if (stops[n_stops-1].offset < 1.0 - COLOR_STOP_EPSILON) {
+	    if (pattern->base.extend == CAIRO_EXTEND_REFLECT) {
+		memcpy (&stops[n_stops],
+			&stops[n_stops - 1],
+			sizeof (cairo_pdf_color_stop_t));
+	    } else {
+		calc_gradient_color (&stops[n_stops], &stops[0], &stops[n_stops-1]);
+	    }
+	    n_stops++;
+	}
+	stops[n_stops-1].offset = 1.0;
     }
 
     if (n_stops == 2) {
@@ -2078,6 +2116,67 @@ _cairo_pdf_surface_emit_pattern_stops (cairo_pdf_surface_t      *surface,
 BAIL:
     free (allstops);
     return status;
+}
+
+static cairo_status_t
+_cairo_pdf_surface_emit_repeating_function (cairo_pdf_surface_t      *surface,
+					    cairo_gradient_pattern_t *pattern,
+					    cairo_pdf_resource_t     *function,
+					    int                       begin,
+					    int                       end)
+{
+    cairo_pdf_resource_t res;
+    int i;
+
+    res = _cairo_pdf_surface_new_object (surface);
+    if (res.id == 0)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    _cairo_output_stream_printf (surface->output,
+				 "%d 0 obj\r\n"
+				 "<< /FunctionType 3\r\n"
+				 "   /Domain [ %d %d ]\r\n",
+				 res.id,
+                                 begin,
+                                 end);
+
+    _cairo_output_stream_printf (surface->output,
+				 "   /Functions [ ");
+    for (i = begin; i < end; i++)
+        _cairo_output_stream_printf (surface->output,
+                                     "%d 0 R ", function->id);
+    _cairo_output_stream_printf (surface->output,
+				 "]\r\n");
+
+    _cairo_output_stream_printf (surface->output,
+				 "   /Bounds [ ");
+    for (i = begin + 1; i < end; i++)
+        _cairo_output_stream_printf (surface->output,
+				     "%d ", i);
+    _cairo_output_stream_printf (surface->output,
+				 "]\r\n");
+
+    _cairo_output_stream_printf (surface->output,
+				 "   /Encode [ ");
+    for (i = begin; i < end; i++) {
+	if ((i % 2) && pattern->base.extend == CAIRO_EXTEND_REFLECT) {
+	    _cairo_output_stream_printf (surface->output,
+					 "1 0 ");
+	} else {
+	    _cairo_output_stream_printf (surface->output,
+					 "0 1 ");
+	}
+    }
+    _cairo_output_stream_printf (surface->output,
+				 "]\r\n");
+
+    _cairo_output_stream_printf (surface->output,
+				 ">>\r\n"
+				 "endobj\r\n");
+
+    *function = res;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_pdf_resource_t
@@ -2168,20 +2267,16 @@ _cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t    *surface,
     cairo_pdf_resource_t pattern_resource, smask;
     cairo_pdf_resource_t color_function, alpha_function;
     double x1, y1, x2, y2;
+    double _x1, _y1, _x2, _y2;
     cairo_matrix_t pat_to_pdf;
     cairo_extend_t extend;
     cairo_status_t status;
     cairo_gradient_pattern_t *gradient = &pattern->base;
     double first_stop, last_stop;
+    int repeat_begin = 0, repeat_end = 1;
 
     extend = cairo_pattern_get_extend (&pattern->base.base);
     _cairo_pdf_surface_pause_content_stream (surface);
-    status = _cairo_pdf_surface_emit_pattern_stops (surface,
-                                                    &pattern->base,
-                                                    &color_function,
-                                                    &alpha_function);
-    if (status)
-	return status;
 
     pat_to_pdf = pattern->base.base.matrix;
     status = cairo_matrix_invert (&pat_to_pdf);
@@ -2189,39 +2284,91 @@ _cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t    *surface,
     assert (status == CAIRO_STATUS_SUCCESS);
 
     cairo_matrix_multiply (&pat_to_pdf, &pat_to_pdf, &surface->cairo_to_pdf);
+    first_stop = _cairo_fixed_to_double (gradient->stops[0].x);
+    last_stop = _cairo_fixed_to_double (gradient->stops[gradient->n_stops - 1].x);
+
+    if (pattern->base.base.extend == CAIRO_EXTEND_REPEAT ||
+	pattern->base.base.extend == CAIRO_EXTEND_REFLECT) {
+	double dx, dy;
+	int x_rep = 0, y_rep = 0;
+
+	x1 = _cairo_fixed_to_double (pattern->p1.x);
+	y1 = _cairo_fixed_to_double (pattern->p1.y);
+	cairo_matrix_transform_point (&pat_to_pdf, &x1, &y1);
+
+	x2 = _cairo_fixed_to_double (pattern->p2.x);
+	y2 = _cairo_fixed_to_double (pattern->p2.y);
+	cairo_matrix_transform_point (&pat_to_pdf, &x2, &y2);
+
+	dx = fabs (x2 - x1);
+	dy = fabs (y2 - y1);
+	if (dx > 1e-6)
+	    x_rep = (int) ceil (surface->width/dx);
+	if (dy > 1e-6)
+	    y_rep = (int) ceil (surface->height/dy);
+
+	repeat_end = MAX (x_rep, y_rep);
+	repeat_begin = -repeat_end;
+	first_stop = repeat_begin;
+	last_stop = repeat_end;
+    }
+
+    /* PDF requires the first and last stop to be the same as the line
+     * coordinates. For repeating patterns this moves the line
+     * coordinates out to the begin/end of the repeating function. For
+     * non repeating patterns this may move the line coordinates in if
+     * there are not stops at offset 0 and 1. */
     x1 = _cairo_fixed_to_double (pattern->p1.x);
     y1 = _cairo_fixed_to_double (pattern->p1.y);
     x2 = _cairo_fixed_to_double (pattern->p2.x);
     y2 = _cairo_fixed_to_double (pattern->p2.y);
 
-    first_stop = _cairo_fixed_to_double (gradient->stops[0].x);
-    last_stop = _cairo_fixed_to_double (gradient->stops[gradient->n_stops - 1].x);
+    _x1 = x1 + (x2 - x1)*first_stop;
+    _y1 = y1 + (y2 - y1)*first_stop;
+    _x2 = x1 + (x2 - x1)*last_stop;
+    _y2 = y1 + (y2 - y1)*last_stop;
 
-    /* PDF requires the first and last stop to be the same as the line
-     * coordinates. If this is not a repeating pattern move the line
-     * coordinates to the location of first and last stop. */
+    x1 = _x1;
+    x2 = _x2;
+    y1 = _y1;
+    y2 = _y2;
 
-    if (pattern->base.base.extend == CAIRO_EXTEND_NONE ||
-	pattern->base.base.extend == CAIRO_EXTEND_PAD) {
-	double _x1, _y1, _x2, _y2;
-
-	_x1 = x1 + (x2 - x1)*first_stop;
-	_y1 = y1 + (y2 - y1)*first_stop;
-	_x2 = x1 + (x2 - x1)*last_stop;
-	_y2 = y1 + (y2 - y1)*last_stop;
-
-	x1 = _x1;
-	x2 = _x2;
-	y1 = _y1;
-	y2 = _y2;
-    }
-
-    if (gradient->n_stops == 2) {
-	/* If only two stops the Type 2 function is used by itself
-	 * without a Stitching function. Type 2 functions always have
-	 * the domain [0 1] */
+    /* For EXTEND_NONE and EXTEND_PAD if there are only two stops a
+     * Type 2 function is used by itself without a stitching
+     * function. Type 2 functions always have the domain [0 1] */
+    if ((pattern->base.base.extend == CAIRO_EXTEND_NONE ||
+	 pattern->base.base.extend == CAIRO_EXTEND_PAD) &&
+	gradient->n_stops == 2) {
 	first_stop = 0.0;
 	last_stop = 1.0;
+    }
+
+    status = _cairo_pdf_surface_emit_pattern_stops (surface,
+                                                    &pattern->base,
+                                                    &color_function,
+                                                    &alpha_function);
+    if (status)
+	return status;
+
+    if (pattern->base.base.extend == CAIRO_EXTEND_REPEAT ||
+	pattern->base.base.extend == CAIRO_EXTEND_REFLECT) {
+	status = _cairo_pdf_surface_emit_repeating_function (surface,
+							     &pattern->base,
+							     &color_function,
+							     repeat_begin,
+							     repeat_end);
+	if (status)
+	    return status;
+
+	if (alpha_function.id != 0) {
+	    status = _cairo_pdf_surface_emit_repeating_function (surface,
+								 &pattern->base,
+								 &alpha_function,
+								 repeat_begin,
+								 repeat_end);
+	    if (status)
+		return status;
+	}
     }
 
     pattern_resource = _cairo_pdf_surface_new_object (surface);
@@ -2279,12 +2426,14 @@ _cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t    *surface,
                                      "      << /ShadingType 2\r\n"
                                      "         /ColorSpace /DeviceGray\r\n"
                                      "         /Coords [ %f %f %f %f ]\r\n"
+				     "         /Domain [ %f %f ]\r\n"
                                      "         /Function %d 0 R\r\n",
                                      mask_resource.id,
                                      pat_to_pdf.xx, pat_to_pdf.yx,
                                      pat_to_pdf.xy, pat_to_pdf.yy,
                                      pat_to_pdf.x0, pat_to_pdf.y0,
                                      x1, y1, x2, y2,
+				     first_stop, last_stop,
                                      alpha_function.id);
 
         if (extend == CAIRO_EXTEND_PAD) {
@@ -3968,18 +4117,19 @@ _gradient_pattern_supported (cairo_pattern_t *pattern)
 
     extend = cairo_pattern_get_extend (pattern);
 
-    if (extend == CAIRO_EXTEND_REPEAT ||
-        extend == CAIRO_EXTEND_REFLECT) {
-        return FALSE;
-    }
 
-    /* Radial gradients are currently only supported when one circle
-     * is inside the other. */
+    /* Radial gradients are currently only supported with EXTEND_NONE
+     * and EXTEND_PAD and when one circle is inside the other. */
     if (pattern->type == CAIRO_PATTERN_TYPE_RADIAL) {
         double x1, y1, x2, y2, r1, r2, d;
         cairo_radial_pattern_t *radial = (cairo_radial_pattern_t *) pattern;
 
-        x1 = _cairo_fixed_to_double (radial->c1.x);
+	if (extend == CAIRO_EXTEND_REPEAT ||
+	    extend == CAIRO_EXTEND_REFLECT) {
+	    return FALSE;
+	}
+
+	x1 = _cairo_fixed_to_double (radial->c1.x);
         y1 = _cairo_fixed_to_double (radial->c1.y);
         r1 = _cairo_fixed_to_double (radial->r1);
         x2 = _cairo_fixed_to_double (radial->c2.x);
