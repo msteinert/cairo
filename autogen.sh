@@ -49,8 +49,8 @@ esac
 
 
 # some terminal codes ...
-boldface="`tput bold 2>/dev/null`"
-normal="`tput sgr0 2>/dev/null`"
+boldface="`tput bold 2>/dev/null || true`"
+normal="`tput sgr0 2>/dev/null || true`"
 printbold() {
     echo $ECHO_N "$boldface"
     echo "$@"
