@@ -286,6 +286,9 @@ pdiff_compare (cairo_surface_t *surface_a,
 
     w = cairo_image_surface_get_width (surface_a);
     h = cairo_image_surface_get_height (surface_a);
+    if (w < 3 || h < 3) /* too small for the Laplacian convolution */
+	return -1;
+
     for (y = 0; y < h; y++) {
 	for (x = 0; x < w; x++) {
 	    float r, g, b, l;
