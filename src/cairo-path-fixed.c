@@ -345,8 +345,11 @@ _cairo_path_fixed_get_current_point (cairo_path_fixed_t *path,
 				     cairo_fixed_t	*x,
 				     cairo_fixed_t	*y)
 {
-    if (! path->has_current_point)
-	return _cairo_error (CAIRO_STATUS_NO_CURRENT_POINT);
+    if (! path->has_current_point) {
+	/* No need for _cairo_error() as the only caller,
+	 * cairo_get_current_point(), expects and handles NO_CURRENT_POINT */
+	return CAIRO_STATUS_NO_CURRENT_POINT;
+    }
 
     *x = path->current_point.x;
     *y = path->current_point.y;
