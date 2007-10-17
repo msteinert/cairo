@@ -2012,14 +2012,7 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     surface->width = width;
     surface->height = height;
 
-    surface->buggy_repeat = FALSE;
-    if (strstr (ServerVendor (dpy), "X.Org") != NULL) {
-	if (VendorRelease (dpy) <= 60802000)
-	    surface->buggy_repeat = TRUE;
-    } else if (strstr (ServerVendor (dpy), "XFree86") != NULL) {
-	if (VendorRelease (dpy) <= 40500000)
-	    surface->buggy_repeat = TRUE;
-    }
+    surface->buggy_repeat = screen_info->display->buggy_repeat;
 
     surface->dst_picture = None;
     surface->src_picture = None;

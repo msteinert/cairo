@@ -290,6 +290,15 @@ _cairo_xlib_display_get (Display *dpy)
     display->close_display_hooks = NULL;
     display->closed = FALSE;
 
+    display->buggy_repeat = FALSE;
+    if (strstr (ServerVendor (dpy), "X.Org") != NULL) {
+	if (VendorRelease (dpy) <= 60802000)
+	    display->buggy_repeat = TRUE;
+    } else if (strstr (ServerVendor (dpy), "XFree86") != NULL) {
+	if (VendorRelease (dpy) <= 40500000)
+	    display->buggy_repeat = TRUE;
+    }
+
     display->next = _cairo_xlib_display_list;
     _cairo_xlib_display_list = display;
 

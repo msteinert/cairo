@@ -70,6 +70,7 @@ struct _cairo_xlib_display {
 
     cairo_freelist_t hook_freelist;
     cairo_xlib_hook_t *close_display_hooks;
+    unsigned int buggy_repeat :1;
     unsigned int closed :1;
 };
 
