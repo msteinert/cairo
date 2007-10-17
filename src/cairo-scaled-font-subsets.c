@@ -275,7 +275,7 @@ _cairo_sub_font_pluck (void *entry, void *closure)
     _cairo_sub_font_destroy (sub_font);
 }
 
-static cairo_status_t
+static cairo_bool_t
 _cairo_sub_font_lookup_glyph (cairo_sub_font_t	                *sub_font,
                               unsigned long	                 scaled_font_glyph_index,
                               cairo_scaled_font_subsets_glyph_t *subset_glyph)
@@ -293,10 +293,10 @@ _cairo_sub_font_lookup_glyph (cairo_sub_font_t	                *sub_font,
         subset_glyph->is_composite = sub_font->is_composite;
         subset_glyph->x_advance = sub_font_glyph->x_advance;
 
-        return CAIRO_STATUS_SUCCESS;
+        return TRUE;
     }
 
-    return _cairo_error (CAIRO_STATUS_NULL_POINTER);
+    return FALSE;
 }
 
 static cairo_status_t
@@ -519,10 +519,9 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
         if (_cairo_hash_table_lookup (subsets->unscaled_sub_fonts, &key.base,
                                         (cairo_hash_entry_t **) &sub_font))
         {
-            status = _cairo_sub_font_lookup_glyph (sub_font,
-                                                   scaled_font_glyph_index,
-                                                   subset_glyph);
-            if (status == CAIRO_STATUS_SUCCESS)
+            if (_cairo_sub_font_lookup_glyph (sub_font,
+                                              scaled_font_glyph_index,
+                                              subset_glyph))
                 return CAIRO_STATUS_SUCCESS;
         }
     }
@@ -533,10 +532,9 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
     if (_cairo_hash_table_lookup (subsets->scaled_sub_fonts, &key.base,
                                   (cairo_hash_entry_t **) &sub_font))
     {
-        status = _cairo_sub_font_lookup_glyph (sub_font,
-                                               scaled_font_glyph_index,
-                                               subset_glyph);
-        if (status == CAIRO_STATUS_SUCCESS)
+        if (_cairo_sub_font_lookup_glyph (sub_font,
+                                          scaled_font_glyph_index,
+                                          subset_glyph))
             return CAIRO_STATUS_SUCCESS;
     }
 
