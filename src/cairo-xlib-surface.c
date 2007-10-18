@@ -192,10 +192,10 @@ _xrender_format_to_content (XRenderPictFormat *xrender_format)
     if (xrender_format == NULL)
 	return CAIRO_CONTENT_COLOR;
 
-    xrender_format_has_alpha = (xrender_format->direct.alpha != 0);
-    xrender_format_has_color = (xrender_format->direct.red   != 0 ||
-				xrender_format->direct.green != 0 ||
-				xrender_format->direct.blue  != 0);
+    xrender_format_has_alpha = (xrender_format->direct.alphaMask != 0);
+    xrender_format_has_color = (xrender_format->direct.redMask   != 0 ||
+				xrender_format->direct.greenMask != 0 ||
+				xrender_format->direct.blueMask  != 0);
 
     if (xrender_format_has_alpha)
 	if (xrender_format_has_color)
