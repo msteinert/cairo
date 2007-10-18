@@ -165,6 +165,7 @@ valgrind-log
 *.gcda
 *.gcno
 *.exe
+*.exe.so
 *.obj
 *.ilk
 *.pdb
