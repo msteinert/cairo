@@ -104,14 +104,14 @@ CLEANFILES = \
 check-valgrind perf-valgrind:
 	$(MAKE) $(AM_MAKEFLAGS) check \
 	    TESTS_ENVIRONMENT='$(TESTS_ENVIRONMENT) \
-	    $(top_srcdir)/libtool --mode=execute \
+	    $(top_builddir)/libtool --mode=execute \
 	    valgrind $(VALGRIND_MEMCHECK_FLAGS) $(EXTRA_VALGRIND_FLAGS)' \
 	    | tee valgrind-log
 
 perf-callgrind:
 	$(MAKE) $(AM_MAKEFLAGS) check \
 	    TESTS_ENVIRONMENT='$(TESTS_ENVIRONMENT) \
-	    $(top_srcdir)/libtool --mode=execute \
+	    $(top_builddir)/libtool --mode=execute \
 	    valgrind $(VALGRIND_CALLGRIND_FLAGS) $(EXTRA_VALGRIND_FLAGS)'
 
 .PHONY: perf html check-valgrind perf-valgrind perf-callgrind
