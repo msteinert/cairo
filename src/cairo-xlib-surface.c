@@ -2552,15 +2552,34 @@ _native_byte_order_lsb (void)
 
 static cairo_status_t
 _cairo_xlib_surface_add_glyph (Display *dpy,
-			       cairo_scaled_font_t  *scaled_font,
-			       cairo_scaled_glyph_t *scaled_glyph)
+			       cairo_scaled_font_t   *scaled_font,
+			       cairo_scaled_glyph_t **pscaled_glyph)
 {
     XGlyphInfo glyph_info;
     unsigned long glyph_index;
     unsigned char *data;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_xlib_surface_font_private_t *font_private;
+    cairo_scaled_glyph_t *scaled_glyph = *pscaled_glyph;
     cairo_image_surface_t *glyph_surface = scaled_glyph->surface;
+    cairo_bool_t already_had_glyph_surface;
+
+    if (!glyph_surface) {
+
+	status = _cairo_scaled_glyph_lookup (scaled_font,
+					     _cairo_scaled_glyph_index (scaled_glyph),
+					     CAIRO_SCALED_GLYPH_INFO_METRICS |
+					     CAIRO_SCALED_GLYPH_INFO_SURFACE,
+					     pscaled_glyph);
+	if (status != CAIRO_STATUS_SUCCESS)
+	    return status;
+
+	scaled_glyph = *pscaled_glyph;
+	glyph_surface = scaled_glyph->surface;
+	already_had_glyph_surface = FALSE;
+    } else {
+	already_had_glyph_surface = TRUE;
+    }
 
     if (scaled_font->surface_private == NULL) {
 	status = _cairo_xlib_surface_font_init (dpy, scaled_font,
@@ -2570,22 +2589,16 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
     }
     font_private = scaled_font->surface_private;
 
-    /* If the glyph format does not match the font format, then we
-     * create a temporary surface for the glyph image with the font's
-     * format.
+    /* If the glyph surface has zero height or width, we create
+     * a clear 1x1 surface, to avoid various X server bugs.
      */
-    if (glyph_surface->format != font_private->format) {
+    if ((glyph_surface->width == 0) || (glyph_surface->height == 0)) {
 	cairo_t *cr;
 	cairo_surface_t *tmp_surface;
-	double x_offset, y_offset;
 
-	tmp_surface = cairo_image_surface_create (font_private->format,
-						  glyph_surface->width,
-						  glyph_surface->height);
+	tmp_surface = cairo_image_surface_create (font_private->format, 1, 1);
 	cr = cairo_create (tmp_surface);
-	cairo_surface_get_device_offset (&glyph_surface->base, &x_offset, &y_offset);
-	cairo_set_source_surface (cr, &glyph_surface->base, x_offset, y_offset);
-	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
 	cairo_paint (cr);
 
 	status = cairo_status (cr);
@@ -2594,6 +2607,36 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 
 	tmp_surface->device_transform = glyph_surface->base.device_transform;
 	tmp_surface->device_transform_inverse = glyph_surface->base.device_transform_inverse;
+
+	glyph_surface = (cairo_image_surface_t *) tmp_surface;
+
+	if (status)
+	    goto BAIL;
+    }
+
+    /* If the glyph format does not match the font format, then we
+     * create a temporary surface for the glyph image with the font's
+     * format.
+     */
+    if (glyph_surface->format != font_private->format) {
+	cairo_t *cr;
+	cairo_surface_t *tmp_surface;
+
+	tmp_surface = cairo_image_surface_create (font_private->format,
+						  glyph_surface->width,
+						  glyph_surface->height);
+	tmp_surface->device_transform = glyph_surface->base.device_transform;
+	tmp_surface->device_transform_inverse = glyph_surface->base.device_transform_inverse;
+
+	cr = cairo_create (tmp_surface);
+
+	cairo_set_source_surface (cr, &glyph_surface->base, 0, 0);
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+	cairo_paint (cr);
+
+	status = cairo_status (cr);
+
+	cairo_destroy (cr);
 
 	glyph_surface = (cairo_image_surface_t *) tmp_surface;
 
@@ -2686,6 +2729,15 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
  BAIL:
     if (glyph_surface != scaled_glyph->surface)
 	cairo_surface_destroy (&glyph_surface->base);
+
+    /* if the scaled glyph didn't already have a surface attached
+     * to it, release the created surface now that we have it
+     * uploaded to the X server.  If the surface has already been
+     * there (eg. because image backend requested it), leave it in
+     * the cache
+     */
+    if (!already_had_glyph_surface)
+	_cairo_scaled_glyph_set_surface (scaled_glyph, scaled_font, NULL);
 
     return status;
 }
@@ -2872,7 +2924,6 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 
 	status = _cairo_scaled_glyph_lookup (scaled_font,
 					     glyphs[i].index,
-					     CAIRO_SCALED_GLYPH_INFO_SURFACE |
 					     CAIRO_SCALED_GLYPH_INFO_METRICS,
 					     &scaled_glyph);
 	if (status != CAIRO_STATUS_SUCCESS)
@@ -2883,14 +2934,7 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 
 	/* Glyph skipping:
 	 *
-	 * We skip any initial size-zero glyphs to avoid an X server bug (present
-	 * in at least Xorg 7.1 without EXA) which stops rendering glyphs after
-	 * the first zero-size glyph.  However, we don't skip all size-zero
-	 * glyphs, since that will force a new element at every space.  We
-	 * skip initial size-zero glyphs and hope that it's enough.  Since
-	 * Xft never exposed that bug, this assumption should be correct.
-	 *
-	 * We also skip any glyphs that have troublesome coordinates.  We want
+	 * We skip any glyphs that have troublesome coordinates.  We want
 	 * to make sure that (glyph2.x - (glyph1.x + glyph1.width)) fits in
 	 * a signed 16bit integer, otherwise it will overflow in the render
 	 * protocol.
@@ -2904,8 +2948,7 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 	 * Anyway, we will allow positions in the range -1024..15359.  That
 	 * will buy us a few more years before this stops working.
 	 */
-	if ((!num_out_glyphs && !(scaled_glyph->surface->width && scaled_glyph->surface->height)) ||
-	    (((this_x+1024)|(this_y+1024))&~0x3fffu)) {
+	if (((this_x+1024)|(this_y+1024))&~0x3fffu) {
 	    glyphs[i].index = GLYPH_INDEX_SKIP;
 	    continue;
 	}
@@ -2961,7 +3004,7 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 	if (scaled_glyph->surface_private == NULL) {
 	    status = _cairo_xlib_surface_add_glyph (dst->dpy,
 		                                    scaled_font,
-						    scaled_glyph);
+						    &scaled_glyph);
 	    if (status)
 		return status;
 	    scaled_glyph->surface_private = (void *) 1;
