@@ -338,22 +338,23 @@ CreateGradientFunction (cairo_gradient_pattern_t *gpat)
 			     &callbacks);
 }
 
-static CGShadingRef
-_cairo_quartz_cairo_gradient_pattern_to_quartz (cairo_pattern_t *abspat)
+static cairo_int_status_t
+_cairo_quartz_cairo_gradient_pattern_to_quartz (cairo_pattern_t *abspat,
+						CGShadingRef *shading)
 {
     cairo_matrix_t mat;
     double x0, y0;
 
     if (abspat->type != CAIRO_PATTERN_TYPE_LINEAR &&
 	abspat->type != CAIRO_PATTERN_TYPE_RADIAL)
-	return NULL;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* bandaid for mozilla bug 379321, also visible in the
      * linear-gradient-reflect test. 
      */
     if (abspat->extend == CAIRO_EXTEND_REFLECT ||
 	abspat->extend == CAIRO_EXTEND_REPEAT)
-	return NULL;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 	
     /* We can only do this if we have an identity pattern matrix;
      * otherwise fall back through to the generic pattern case.
@@ -364,14 +365,13 @@ _cairo_quartz_cairo_gradient_pattern_to_quartz (cairo_pattern_t *abspat)
      */
     cairo_pattern_get_matrix (abspat, &mat);
     if (mat.xx != 1.0 || mat.yy != 1.0 || mat.xy != 0.0 || mat.yx != 0.0)
-	return NULL;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     x0 = mat.x0;
     y0 = mat.y0;
 
     if (abspat->type == CAIRO_PATTERN_TYPE_LINEAR) {
 	cairo_linear_pattern_t *lpat = (cairo_linear_pattern_t*) abspat;
-	CGShadingRef shading;
 	CGPoint start, end;
 	CGFunctionRef gradFunc;
 	CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
@@ -384,19 +384,18 @@ _cairo_quartz_cairo_gradient_pattern_to_quartz (cairo_pattern_t *abspat)
 
 	cairo_pattern_reference (abspat);
 	gradFunc = CreateGradientFunction ((cairo_gradient_pattern_t*) lpat);
-	shading = CGShadingCreateAxial (rgb,
+	*shading = CGShadingCreateAxial (rgb,
 					start, end,
 					gradFunc,
 					extend, extend);
 	CGColorSpaceRelease(rgb);
 	CGFunctionRelease(gradFunc);
 
-	return shading;
+	return CAIRO_STATUS_SUCCESS;
     }
 
     if (abspat->type == CAIRO_PATTERN_TYPE_RADIAL) {
 	cairo_radial_pattern_t *rpat = (cairo_radial_pattern_t*) abspat;
-	CGShadingRef shading;
 	CGPoint start, end;
 	CGFunctionRef gradFunc;
 	CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
@@ -409,7 +408,7 @@ _cairo_quartz_cairo_gradient_pattern_to_quartz (cairo_pattern_t *abspat)
 
 	cairo_pattern_reference (abspat);
 	gradFunc = CreateGradientFunction ((cairo_gradient_pattern_t*) rpat);
-	shading = CGShadingCreateRadial (rgb,
+	*shading = CGShadingCreateRadial (rgb,
 					 start,
 					 _cairo_fixed_to_double (rpat->r1),
 					 end,
@@ -419,12 +418,12 @@ _cairo_quartz_cairo_gradient_pattern_to_quartz (cairo_pattern_t *abspat)
 	CGColorSpaceRelease(rgb);
 	CGFunctionRelease(gradFunc);
 
-	return shading;
+	return CAIRO_STATUS_SUCCESS;
     }
 
     /* Shouldn't be reached */
     ASSERT_NOT_REACHED;
-    return NULL;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 /* generic cairo surface -> cairo_quartz_surface_t function */
@@ -679,8 +678,11 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
     } else if (source->type == CAIRO_PATTERN_TYPE_LINEAR ||
 	       source->type == CAIRO_PATTERN_TYPE_RADIAL)
     {
-	CGShadingRef shading = _cairo_quartz_cairo_gradient_pattern_to_quartz (source);
-	if (!shading)
+	CGShadingRef shading = NULL;
+	cairo_int_status_t status;
+
+	status = _cairo_quartz_cairo_gradient_pattern_to_quartz (source, &shading);
+	if (status)
 	    return DO_UNSUPPORTED;
 
 	surface->sourceShading = shading;
