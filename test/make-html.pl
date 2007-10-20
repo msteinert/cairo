@@ -57,16 +57,17 @@ foreach (<@files>) {
   my $fn = $_;
   (open LOG, $fn) || next;
   while (<LOG>) {
-    next unless /^TEST: (.*) TARGET: (.*) FORMAT: (.*) OFFSET: (.*) RESULT: ([A-Z]*).*$/;
+    next unless /^TEST: (.*) TARGET: (.*) FORMAT: (.*) OFFSET: (.*) SIMILAR: (.*) RESULT: ([A-Z]*).*$/;
     $testname = $1 if !defined($testname);
     $tests->{$1} = {} unless $tests->{$1};
     $tests->{$1}->{$2} = {} unless $tests->{$1}->{$2};
     $tests->{$1}->{$2}->{$3} = {} unless $tests->{$1}->{$2}->{$3};
-    $tests->{$1}->{$2}->{$3}->{$4} = $5;
+    $tests->{$1}->{$2}->{$3}->{$4} = {} unless $tests->{$1}->{$2}->{$3}->{$4};
+    $tests->{$1}->{$2}->{$3}->{$4}->{$5} = $6;
 
     $teststats->{$2} = {"PASS" => 0, "FAIL" => 0, "XFAIL" => 0, "UNTESTED" => 0, "CRASHED" =>0}
       unless $teststats->{$2};
-    ($teststats->{$2}->{$5})++;
+    ($teststats->{$2}->{$6})++;
   }
   close LOG;
 
@@ -81,6 +82,7 @@ foreach (<@files>) {
 my $targeth = {};
 my $formath = {};
 my $offseth = {};
+my $similarh = {};
 
 foreach my $testname (sort(keys %$tests)) {
   my $v0 = $tests->{$testname};
@@ -93,7 +95,12 @@ foreach my $testname (sort(keys %$tests)) {
 
       $formath->{$formatname} = 1;
       foreach my $offsetval (sort(keys %$v2)) {
+        my $v3 = $v2->{$offsetval};
+
         $offseth->{$offsetval} = 1;
+        foreach my $similarval (sort(keys %$v3)) {
+          $similarh->{$similarval} = 1;
+        }
       }
     }
   }
@@ -102,6 +109,7 @@ foreach my $testname (sort(keys %$tests)) {
 my @targets = sort(keys %$targeth);
 my @formats = sort(keys %$formath);
 my @offsets = sort(keys %$offseth);
+my @similars = sort(keys %$similarh);
 
 sub printl {
   print @_, "\n";
@@ -181,20 +189,24 @@ sub testref {
 }
 
 sub testfiles {
-  my ($test, $target, $format, $offset, $rest) = @_;
+  my ($test, $target, $format, $offset, $similar, $rest) = @_;
   my $fmtstr = "";
   my $offstr = "";
+  my $simstr = "";
   if ($format eq "rgb24") {
     $fmtstr = "-rgb24";
   } elsif ($format eq "argb32") {
     $fmtstr = "-argb32";
   }
+  if ($similar ne "0") {
+    $simstr = "-similar";
+  }
   if ($offset ne "0") {
     $offstr = "-" . $offset;
   }
 
-  return ("out" => "$test-$target$fmtstr$offstr-out.png",
-	  "diff" => "$test-$target$fmtstr$offstr-diff.png");
+  return ("out" => "$test-$target$fmtstr$simstr$offstr-out.png",
+	  "diff" => "$test-$target$fmtstr$simstr$offstr-diff.png");
 }
 
 sub img_for {
@@ -216,72 +228,74 @@ sub img_for {
 
 foreach my $test (sort(keys %$tests)) {
   foreach my $offset (@offsets) {
-    foreach my $format (@formats) {
-      my $testline = "";
+    foreach my $similar (@similars) {
+      foreach my $format (@formats) {
+        my $testline = "";
 
-      foreach my $target (@targets) {
-        my $tgtdata = $tests->{$test}->{$target};
-        if ($tgtdata) {
-          my $testres = $tgtdata->{$format}->{$offset};
-          if ($testres) {
-            my %testfiles = testfiles($test, $target, $format, $offset);
-            $testline .= "<td class=\"$testres\">";
-            $teststats{$target}{$testres}++;
-            if ($testres eq "PASS") {
-              if ($config_show_all) {
-		$testline .= img_for($testfiles{'out'},1);
-              }
-            } elsif ($testres eq "FAIL") {
-              if ($config_show_fail || $config_show_all) {
-		$testline .= img_for($testfiles{'out'},1);
-                $testline .= " ";
-		$testline .= img_for($testfiles{'diff'},1);
-              }
-            } elsif ($testres eq "CRASHED") {
-	       $testline .= "!!!CRASHED!!!";
-            } elsif ($testres eq "XFAIL") {
-              #nothing
-              if ($config_show_all) {
-		$testline .= img_for($testfiles{'out'},1);
-                #$testline .= "<hr size=\"1\">";
-                $testline .= " ";
-		$testline .= img_for($testfiles{'diff'},1);
-              }
-            } elsif ($testres eq "UNTESTED") {
-              #nothing
+        foreach my $target (@targets) {
+          my $tgtdata = $tests->{$test}->{$target};
+          if ($tgtdata) {
+            my $testres = $tgtdata->{$format}->{$offset}->{$similar};
+            if ($testres) {
+              my %testfiles = testfiles($test, $target, $format,
+                                         $offset, $similar);
+              $testline .= "<td class=\"$testres\">";
+              $teststats{$target}{$testres}++;
+              if ($testres eq "PASS") {
+                if ($config_show_all) {
+		  $testline .= img_for($testfiles{'out'},1);
+                }
+              } elsif ($testres eq "FAIL") {
+                if ($config_show_fail || $config_show_all) {
+		  $testline .= img_for($testfiles{'out'},1);
+                  $testline .= " ";
+		  $testline .= img_for($testfiles{'diff'},1);
+                }
+              } elsif ($testres eq "CRASHED") {
+	         $testline .= "!!!CRASHED!!!";
+              } elsif ($testres eq "XFAIL") {
+                #nothing
+                if ($config_show_all) {
+		  $testline .= img_for($testfiles{'out'},1);
+                  #$testline .= "<hr size=\"1\">";
+                  $testline .= " ";
+		  $testline .= img_for($testfiles{'diff'},1);
+                }
+              } elsif ($testres eq "UNTESTED") {
+                #nothing
+              } else {
+	        $testline .= "UNSUPPORTED STATUS (update make-html.pl)";
+	      }
+
+              $testline .= "</td>";
             } else {
-	      $testline .= "UNSUPPORTED STATUS (update make-html.pl)";
-	    }
-
-            $testline .= "</td>";
+              $testline .= '<td></td>';
+            }
           } else {
             $testline .= '<td></td>';
           }
-        } else {
-          $testline .= '<td></td>';
         }
+        my $testref = testref($test, $format);
+        print '<tr><td>';
+
+        if ($config_show_inline) {
+	  print "$test ($format/$offset) ";
+	  print "(<a href=\"" . string_to_data("text/plain",$logs->{$test}) . "\">log</a>)";
+        } else {
+	  print "<a href=\"$testref\">", $test, ' (', $format, '/', $offset, ($similar ? ' similar' : ''), ')</a> ';
+	  print "(<a href=\"$test.log\">log</a>)";
+        }
+
+        print '</td>';
+
+        if ($config_show_ref) {
+	  print "<td>" . img_for($testref,1) . "</td>";
+        }
+
+        print $testline;
+
+        print "</tr>\n";
       }
-
-      my $testref = testref($test, $format);
-      print '<tr><td>';
-
-      if ($config_show_inline) {
-	print "$test ($format/$offset) ";
-	print "(<a href=\"" . string_to_data("text/plain",$logs->{$test}) . "\">log</a>)";
-      } else {
-	print "<a href=\"$testref\">", $test, ' (', $format, '/', $offset, ')</a> ';
-	print "(<a href=\"$test.log\">log</a>)";
-      }
-
-      print '</td>';
-
-      if ($config_show_ref) {
-	print "<td>" . img_for($testref,1) . "</td>";
-      }
-
-      print $testline;
-
-      print "</tr>\n";
     }
   }
 }
