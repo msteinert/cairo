@@ -555,9 +555,10 @@ _init_pattern_with_snapshot (cairo_pattern_t *pattern,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static CGPatternRef
+static cairo_int_status_t
 _cairo_quartz_cairo_repeating_surface_pattern_to_quartz (cairo_quartz_surface_t *dest,
-							  cairo_pattern_t *abspat)
+							 cairo_pattern_t *abspat,
+							 CGPatternRef *cgpat)
 {
     cairo_surface_pattern_t *spat;
     cairo_surface_t *pat_surf;
@@ -568,7 +569,6 @@ _cairo_quartz_cairo_repeating_surface_pattern_to_quartz (cairo_quartz_surface_t 
     CGPatternCallbacks cb = { 0,
 			      SurfacePatternDrawFunc,
 			      (CGFunctionReleaseInfoCallback) cairo_pattern_destroy };
-    CGPatternRef cgpat;
     float rw, rh;
     cairo_status_t status;
 
@@ -578,14 +578,14 @@ _cairo_quartz_cairo_repeating_surface_pattern_to_quartz (cairo_quartz_surface_t 
     cairo_matrix_t m;
     /* SURFACE is the only type we'll handle here */
     if (abspat->type != CAIRO_PATTERN_TYPE_SURFACE)
-	return NULL;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     spat = (cairo_surface_pattern_t *) abspat;
     pat_surf = spat->surface;
 
     status = _cairo_surface_get_extents (pat_surf, &extents);
     if (status)
-	return NULL;
+	return status;
 
     pbounds.origin.x = 0;
     pbounds.origin.y = 0;
@@ -638,14 +638,14 @@ _cairo_quartz_cairo_repeating_surface_pattern_to_quartz (cairo_quartz_surface_t 
 	target_pattern = abspat;
     }
 
-    cgpat = CGPatternCreate (target_pattern,
+    *cgpat = CGPatternCreate (target_pattern,
 			     pbounds,
 			     ptransform,
 			     rw, rh,
 			     kCGPatternTilingConstantSpacing, /* kCGPatternTilingNoDistortion, */
 			     TRUE,
 			     &cb);
-    return cgpat;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 typedef enum {
@@ -726,9 +726,11 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
     } else if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	float patternAlpha = 1.0f;
 	CGColorSpaceRef patternSpace;
+	CGPatternRef pattern;
+	cairo_int_status_t status;
 
-	CGPatternRef pattern = _cairo_quartz_cairo_repeating_surface_pattern_to_quartz (surface, source);
-	if (!pattern)
+	status = _cairo_quartz_cairo_repeating_surface_pattern_to_quartz (surface, source, &pattern);
+	if (status)
 	    return DO_UNSUPPORTED;
 
 	// Save before we change the pattern, colorspace, etc. so that
