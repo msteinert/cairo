@@ -1137,19 +1137,21 @@ _cairo_win32_printing_surface_stroke (void                 *abstract_surface,
     }
 
     assert (_cairo_win32_printing_surface_operation_supported (surface, op, source));
+    assert (!(style->num_dashes > 0 && style->dash_offset != 0.0));
 
     cairo_matrix_multiply (&mat, stroke_ctm, &surface->ctm);
     _cairo_matrix_factor_out_scale (&mat, &scale);
 
+    pen_style = PS_GEOMETRIC;
     dash_array = NULL;
     if (style->num_dashes) {
-	pen_style = PS_USERSTYLE;
+	pen_style |= PS_USERSTYLE;
 	dash_array = calloc (sizeof (DWORD), style->num_dashes);
 	for (i = 0; i < style->num_dashes; i++) {
 	    dash_array[i] = (DWORD) (scale * style->dash[i]);
 	}
     } else {
-	pen_style = PS_SOLID;
+	pen_style |= PS_SOLID;
     }
 
     SetMiterLimit (surface->dc, (FLOAT) (scale * style->miter_limit), NULL);
@@ -1166,9 +1168,8 @@ _cairo_win32_printing_surface_stroke (void                 *abstract_surface,
     brush.lbStyle = BS_SOLID;
     brush.lbColor = color;
     brush.lbHatch = 0;
-    pen_style = PS_GEOMETRIC |
-	        _cairo_win32_line_cap (style->line_cap) |
-	        _cairo_win32_line_join (style->line_join);
+    pen_style |= _cairo_win32_line_cap (style->line_cap);
+    pen_style |= _cairo_win32_line_join (style->line_join);
     pen = ExtCreatePen(pen_style,
 		       scale * style->line_width,
 		       &brush,
