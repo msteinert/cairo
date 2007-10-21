@@ -1334,9 +1334,23 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
     if (cairo_scaled_font_get_type (scaled_font) == CAIRO_FONT_TYPE_WIN32 &&
 	source->type == CAIRO_PATTERN_TYPE_SOLID)
     {
+	cairo_matrix_t ctm;
+
+	if (surface->has_ctm) {
+	    for (i = 0; i < num_glyphs; i++)
+		cairo_matrix_transform_point (&surface->ctm, &glyphs[i].x, &glyphs[i].y);
+	    cairo_matrix_multiply (&ctm, &scaled_font->ctm, &surface->ctm);
+	    scaled_font = cairo_scaled_font_create (scaled_font->font_face,
+						    &scaled_font->font_matrix,
+						    &ctm,
+						    &scaled_font->options);
+	}
 	status = _cairo_win32_surface_show_glyphs (surface, op,
 						   source, glyphs,
 						   num_glyphs, scaled_font);
+	if (surface->has_ctm)
+	    cairo_scaled_font_destroy (scaled_font);
+
 	return status;
     }
 
