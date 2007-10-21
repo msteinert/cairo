@@ -76,6 +76,7 @@ cairo_ps_surface_dsc_comment
 cairo_win32_surface_create
 cairo_win32_surface_create_with_dib
 cairo_win32_surface_create_with_ddb
+cairo_win32_printing_surface_create
 cairo_win32_surface_get_dc
 cairo_win32_surface_get_image
 </SECTION>
