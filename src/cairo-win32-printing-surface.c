@@ -313,6 +313,22 @@ _cairo_win32_printing_surface_done_solid_brush (cairo_win32_surface_t *surface)
 }
 
 static cairo_status_t
+_cairo_win32_printing_surface_get_ctm_clip_box (cairo_win32_surface_t *surface,
+						RECT                  *clip)
+{
+    XFORM xform;
+
+    _cairo_matrix_to_win32_xform (&surface->ctm, &xform);
+    if (!SetWorldTransform (surface->dc, &xform))
+	return _cairo_win32_print_gdi_error ("_cairo_win32_printing_surface_get_clip_box:SetWorldTransform");
+    GetClipBox (surface->dc, clip);
+    if (!ModifyWorldTransform (surface->dc, &xform, MWT_IDENTITY))
+	return _cairo_win32_print_gdi_error ("_cairo_win32_printing_surface_get_clip_box:ModifyWorldTransform");
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
 _cairo_win32_printing_surface_paint_solid_pattern (cairo_win32_surface_t *surface,
                                                    cairo_pattern_t       *pattern)
 {
@@ -335,6 +351,8 @@ _cairo_win32_printing_surface_paint_meta_pattern (cairo_win32_surface_t   *surfa
 						  cairo_surface_pattern_t *pattern)
 {
     cairo_content_t old_content;
+    cairo_matrix_t old_ctm;
+    cairo_bool_t old_has_ctm;
     cairo_rectangle_int_t meta_extents;
     cairo_status_t status;
     cairo_extend_t extend;
@@ -351,18 +369,21 @@ _cairo_win32_printing_surface_paint_meta_pattern (cairo_win32_surface_t   *surfa
     /* _cairo_pattern_set_matrix guarantees invertibility */
     assert (status == CAIRO_STATUS_SUCCESS);
 
+    old_ctm = surface->ctm;
+    old_has_ctm = surface->has_ctm;
+    cairo_matrix_multiply (&p2d, &p2d, &surface->ctm);
+    surface->ctm = p2d;
     SaveDC (surface->dc);
-    SetGraphicsMode (surface->dc, GM_ADVANCED);
     _cairo_matrix_to_win32_xform (&p2d, &xform);
-
-    if (!SetWorldTransform (surface->dc, &xform))
-	return _cairo_win32_print_gdi_error ("_cairo_win32_printing_surface_paint_meta_pattern_set_world_transform_1");
 
     status = _cairo_surface_get_extents (meta_surface, &meta_extents);
     if (status)
 	return status;
 
-    GetClipBox (surface->dc, &clip);
+    status = _cairo_win32_printing_surface_get_ctm_clip_box (surface, &clip);
+    if (status)
+	return status;
+
     if (extend == CAIRO_EXTEND_REPEAT || extend == CAIRO_EXTEND_REFLECT) {
 	left = (int) floor((double)clip.left/meta_extents.width);
 	right = (int) ceil((double)clip.right/meta_extents.width);
@@ -389,6 +410,7 @@ _cairo_win32_printing_surface_paint_meta_pattern (cairo_win32_surface_t   *surfa
     for (y_tile = top; y_tile < bottom; y_tile++) {
 	for (x_tile = left; x_tile < right; x_tile++) {
 	    cairo_matrix_t m;
+	    double x, y;
 
 	    SaveDC (surface->dc);
 	    m = p2d;
@@ -405,22 +427,47 @@ _cairo_win32_printing_surface_paint_meta_pattern (cairo_win32_surface_t   *surfa
 		    cairo_matrix_scale (&m, 1, -1);
 		}
 	    }
-	    _cairo_matrix_to_win32_xform (&m, &xform);
-	    if (!SetWorldTransform (surface->dc, &xform))
-		return _cairo_win32_print_gdi_error ("_cairo_win32_printing_surface_paint_meta_pattern_set_world_transform_2");
+	    surface->ctm = m;
+	    surface->has_ctm = !_cairo_matrix_is_identity (&surface->ctm);
+
+	    /* Set clip path around bbox of the pattern. */
 	    BeginPath (surface->dc);
-	    Rectangle (surface->dc, 0, 0, meta_extents.width, meta_extents.height);
+
+	    x = 0;
+	    y = 0;
+	    cairo_matrix_transform_point (&surface->ctm, &x, &y);
+	    MoveToEx (surface->dc, (int) x, (int) y, NULL);
+
+	    x = meta_extents.width;
+	    y = 0;
+	    cairo_matrix_transform_point (&surface->ctm, &x, &y);
+	    LineTo (surface->dc, (int) x, (int) y);
+
+	    x = meta_extents.width;
+	    y = meta_extents.height;
+	    cairo_matrix_transform_point (&surface->ctm, &x, &y);
+	    LineTo (surface->dc, (int) x, (int) y);
+
+	    x = 0;
+	    y = meta_extents.height;
+	    cairo_matrix_transform_point (&surface->ctm, &x, &y);
+	    LineTo (surface->dc, (int) x, (int) y);
+
+	    CloseFigure (surface->dc);
 	    EndPath (surface->dc);
 	    SelectClipPath (surface->dc, RGN_AND);
+
 	    status = _cairo_meta_surface_replay (meta_surface, &surface->base);
 	    if (status)
 		return status;
+
 	    RestoreDC (surface->dc, -1);
 	}
     }
 
     surface->content = old_content;
-
+    surface->ctm = old_ctm;
+    surface->has_ctm = old_has_ctm;
     RestoreDC (surface->dc, -1);
 
     return status;
@@ -528,8 +575,8 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
     /* _cairo_pattern_set_matrix guarantees invertibility */
     assert (status == CAIRO_STATUS_SUCCESS);
 
+    cairo_matrix_multiply (&m, &m, &surface->ctm);
     SaveDC (surface->dc);
-    SetGraphicsMode (surface->dc, GM_ADVANCED);
     _cairo_matrix_to_win32_xform (&m, &xform);
 
     if (!SetWorldTransform (surface->dc, &xform))
@@ -631,6 +678,8 @@ _cairo_win32_printing_surface_paint_linear_pattern (cairo_win32_surface_t *surfa
     /* _cairo_pattern_set_matrix guarantees invertibility */
     assert (status == CAIRO_STATUS_SUCCESS);
 
+    cairo_matrix_multiply (&mat, &surface->ctm, &mat);
+
     p1x = _cairo_fixed_to_double (pattern->p1.x);
     p1y = _cairo_fixed_to_double (pattern->p1.y);
     p2x = _cairo_fixed_to_double (pattern->p2.x);
@@ -650,7 +699,6 @@ _cairo_win32_printing_surface_paint_linear_pattern (cairo_win32_surface_t *surfa
 
     _cairo_matrix_to_win32_xform (&mat, &xform);
 
-    SetGraphicsMode (surface->dc, GM_ADVANCED);
     if (!SetWorldTransform (surface->dc, &xform))
 	return _cairo_win32_print_gdi_error ("_win32_printing_surface_paint_linear_pattern:SetWorldTransform2");
     GetWorldTransform(surface->dc, &xform);
@@ -660,6 +708,7 @@ _cairo_win32_printing_surface_paint_linear_pattern (cairo_win32_surface_t *surfa
     p2y = 0;
 
     GetClipBox (surface->dc, &clip);
+
     if (extend == CAIRO_EXTEND_REPEAT || extend == CAIRO_EXTEND_REFLECT) {
 	range_start = (int) floor(clip.left/d);
 	range_stop = (int) ceil(clip.right/d);
@@ -803,10 +852,19 @@ _cairo_win32_printing_surface_path_move_to (void *closure, cairo_point_t *point)
     path_info->last_move_to_point = *point;
     path_info->has_sub_path = FALSE;
 
-    MoveToEx (path_info->surface->dc,
-	      _cairo_fixed_integer_part (point->x),
-	      _cairo_fixed_integer_part (point->y),
-	      NULL);
+    if (path_info->surface->has_ctm) {
+	double x, y;
+
+	x = _cairo_fixed_to_double (point->x);
+	y = _cairo_fixed_to_double (point->y);
+	cairo_matrix_transform_point (&path_info->surface->ctm, &x, &y);
+	MoveToEx (path_info->surface->dc, (int) x, (int) y, NULL);
+    } else {
+	MoveToEx (path_info->surface->dc,
+		  _cairo_fixed_integer_part (point->x),
+		  _cairo_fixed_integer_part (point->y),
+		  NULL);
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -816,9 +874,18 @@ _cairo_win32_printing_surface_path_line_to (void *closure, cairo_point_t *point)
 {
     win32_path_info_t *path_info = closure;
 
-    LineTo (path_info->surface->dc,
-	    _cairo_fixed_integer_part (point->x),
-	    _cairo_fixed_integer_part (point->y));
+    if (path_info->surface->has_ctm) {
+	double x, y;
+
+	x = _cairo_fixed_to_double (point->x);
+	y = _cairo_fixed_to_double (point->y);
+	cairo_matrix_transform_point (&path_info->surface->ctm, &x, &y);
+	LineTo (path_info->surface->dc, (int) x, (int) y);
+    } else {
+	LineTo (path_info->surface->dc,
+		_cairo_fixed_integer_part (point->x),
+		_cairo_fixed_integer_part (point->y));
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -832,12 +899,34 @@ _cairo_win32_printing_surface_path_curve_to (void          *closure,
     win32_path_info_t *path_info = closure;
     POINT points[3];
 
-    points[0].x = _cairo_fixed_integer_part (b->x);
-    points[0].y = _cairo_fixed_integer_part (b->y);
-    points[1].x = _cairo_fixed_integer_part (c->x);
-    points[1].y = _cairo_fixed_integer_part (c->y);
-    points[2].x = _cairo_fixed_integer_part (d->x);
-    points[2].y = _cairo_fixed_integer_part (d->y);
+    if (path_info->surface->has_ctm) {
+	double x, y;
+
+	x = _cairo_fixed_to_double (b->x);
+	y = _cairo_fixed_to_double (b->y);
+	cairo_matrix_transform_point (&path_info->surface->ctm, &x, &y);
+	points[0].x = (LONG) x;
+	points[0].y = (LONG) y;
+
+	x = _cairo_fixed_to_double (c->x);
+	y = _cairo_fixed_to_double (c->y);
+	cairo_matrix_transform_point (&path_info->surface->ctm, &x, &y);
+	points[1].x = (LONG) x;
+	points[1].y = (LONG) y;
+
+	x = _cairo_fixed_to_double (d->x);
+	y = _cairo_fixed_to_double (d->y);
+	cairo_matrix_transform_point (&path_info->surface->ctm, &x, &y);
+	points[2].x = (LONG) x;
+	points[2].y = (LONG) y;
+    } else {
+	points[0].x = _cairo_fixed_integer_part (b->x);
+	points[0].y = _cairo_fixed_integer_part (b->y);
+	points[1].x = _cairo_fixed_integer_part (c->x);
+	points[1].y = _cairo_fixed_integer_part (c->y);
+	points[2].x = _cairo_fixed_integer_part (d->x);
+	points[2].y = _cairo_fixed_integer_part (d->y);
+    }
     PolyBezierTo (path_info->surface->dc, points, 3);
 
     return CAIRO_STATUS_SUCCESS;
@@ -1079,7 +1168,6 @@ _cairo_win32_printing_surface_stroke (void                 *abstract_surface,
      * Switch to user space to set line parameters
      */
     SaveDC (surface->dc);
-    SetGraphicsMode (surface->dc, GM_ADVANCED);
     _cairo_matrix_to_win32_xform (ctm, &xform);
     xform.eDx = 0.0f;
     xform.eDy = 0.0f;
@@ -1179,6 +1267,8 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
     cairo_scaled_glyph_t *scaled_glyph;
     cairo_pattern_t *opaque = NULL;
     int i;
+    cairo_matrix_t old_ctm;
+    cairo_bool_t old_has_ctm;
     XFORM xform;
     cairo_solid_pattern_t clear;
 
@@ -1228,11 +1318,14 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
     }
 
     SaveDC (surface->dc);
-    SetGraphicsMode (surface->dc, GM_ADVANCED);
+
     xform.eM11 = 1.0f;
     xform.eM21 = 0.0f;
     xform.eM12 = 0.0f;
     xform.eM22 = 1.0f;
+    old_ctm = surface->ctm;
+    old_has_ctm = surface->has_ctm;
+    surface->has_ctm = TRUE;
     BeginPath (surface->dc);
     for (i = 0; i < num_glyphs; i++) {
 	status = _cairo_scaled_glyph_lookup (scaled_font,
@@ -1241,13 +1334,13 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
 					     &scaled_glyph);
 	if (status)
 	    break;
-	xform.eDx = (FLOAT) glyphs[i].x;
-	xform.eDy = (FLOAT) glyphs[i].y;
-	if (!SetWorldTransform (surface->dc, &xform))
-	    return _cairo_win32_print_gdi_error ("_win32_surface_print_show_glyphs:SetWorldTransform");
+	surface->ctm = old_ctm;
+	cairo_matrix_translate (&surface->ctm, glyphs[i].x, glyphs[i].y);
 	status = _cairo_win32_printing_surface_emit_path (surface, scaled_glyph->path);
     }
     EndPath (surface->dc);
+    surface->ctm = old_ctm;
+    surface->has_ctm = old_has_ctm;
     if (status == CAIRO_STATUS_SUCCESS) {
 	SelectClipPath (surface->dc, RGN_AND);
 	status = _cairo_win32_printing_surface_paint_pattern (surface, source);
@@ -1273,8 +1366,20 @@ static cairo_int_status_t
 _cairo_win32_printing_surface_start_page (void *abstract_surface)
 {
     cairo_win32_surface_t *surface = abstract_surface;
+    XFORM xform;
 
     SaveDC (surface->dc);
+    SetGraphicsMode (surface->dc, GM_ADVANCED);
+    GetWorldTransform(surface->dc, &xform);
+    surface->ctm.xx = xform.eM11;
+    surface->ctm.xy = xform.eM21;
+    surface->ctm.yx = xform.eM12;
+    surface->ctm.yy = xform.eM22;
+    surface->ctm.x0 = xform.eDx;
+    surface->ctm.y0 = xform.eDy;
+    surface->has_ctm = !_cairo_matrix_is_identity (&surface->ctm);
+    if (!ModifyWorldTransform (surface->dc, NULL, MWT_IDENTITY))
+	return _cairo_win32_print_gdi_error ("_cairo_win32_printing_surface_start_page:ModifyWorldTransform");
 
     return CAIRO_STATUS_SUCCESS;
 }
