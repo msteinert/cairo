@@ -94,6 +94,57 @@ _cairo_win32_printing_surface_init_ps_mode (cairo_win32_surface_t *surface)
 	surface->flags |= CAIRO_WIN32_SURFACE_CAN_RECT_GRADIENT;
 }
 
+static cairo_int_status_t
+analyze_surface_pattern_transparency (cairo_surface_pattern_t *pattern)
+{
+    cairo_image_surface_t  *image;
+    void		   *image_extra;
+    cairo_int_status_t      status;
+    int x, y;
+
+    status = _cairo_surface_acquire_source_image (pattern->surface,
+						  &image,
+						  &image_extra);
+    if (status)
+	return status;
+
+    if (image->base.status)
+	return image->base.status;
+
+    if (image->format == CAIRO_FORMAT_RGB24) {
+	status = CAIRO_STATUS_SUCCESS;
+	goto RELEASE_SOURCE;
+    }
+
+    if (image->format != CAIRO_FORMAT_ARGB32) {
+	/* If the surface does not support the image format, assume
+	 * that it does have alpha. The image will be converted to
+	 * rgb24 when the surface blends the image into the page
+	 * color to remove the transparency. */
+	status = CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY;
+	goto RELEASE_SOURCE;
+    }
+
+    for (y = 0; y < image->height; y++) {
+	int a;
+	uint32_t *pixel = (uint32_t *) (image->data + y * image->stride);
+
+	for (x = 0; x < image->width; x++, pixel++) {
+	    a = (*pixel & 0xff000000) >> 24;
+	    if (a != 255) {
+		status = CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY;
+		goto RELEASE_SOURCE;
+	    }
+	}
+    }
+    status = CAIRO_STATUS_SUCCESS;
+
+RELEASE_SOURCE:
+    _cairo_surface_release_source_image (pattern->surface, image, image_extra);
+
+    return status;
+}
+
 static cairo_bool_t
 surface_pattern_supported (const cairo_surface_pattern_t *pattern)
 {
@@ -162,6 +213,12 @@ _cairo_win32_printing_surface_analyze_operation (cairo_win32_surface_t *surface,
      * render stage and we blend the transarency into the white
      * background to convert the pattern to opaque.
      */
+
+    if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
+
+	return analyze_surface_pattern_transparency (surface_pattern);
+    }
 
     if (_cairo_pattern_is_opaque (pattern))
 	return CAIRO_STATUS_SUCCESS;
