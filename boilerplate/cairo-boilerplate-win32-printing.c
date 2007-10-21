@@ -126,16 +126,17 @@ create_printer_dc (win32_target_closure_t *ptc)
     /* The printer device units on win32 are 1 unit == 1 dot and the
      * origin is the start of the printable area. We transform the
      * cordinate space to 1 unit is 1 point as expected by the
-     * tests. As the page size is larger than the test surface sizes,
-     * the origin down so that the each test is drawn at the bottom
-     * left corner of the page. This is because the bottom left corner
-     * of the PNG image that ghostscript creates is positioned at
-     * origin of the PS coordinates (ie the bottom left of the page).
-     * The left and bottom margins are stored in win32_target_closure
-     * as size of the PNG image needs to be increased as the test
-     * output is offset from the bottom left by the non printable
-     * margins. After the PNG is created the margins will be chopped
-     * off so the image matches the reference image.
+     * tests. As the page size is larger than the test surface, the
+     * origin is translated down so that the each test is drawn at the
+     * bottom left corner of the page. This is because the bottom left
+     * corner of the PNG image that ghostscript creates is positioned
+     * at origin of the PS coordinates (ie the bottom left of the
+     * page).  The left and bottom margins are stored in
+     * win32_target_closure as size of the PNG image needs to be
+     * increased because the test output is offset from the bottom
+     * left by the non printable margins. After the PNG is created the
+     * margins will be chopped off so the image matches the reference
+     * image.
      */
     printable_height = GetDeviceCaps (ptc->dc, VERTRES);
     x_dpi = GetDeviceCaps (ptc->dc, LOGPIXELSX);
