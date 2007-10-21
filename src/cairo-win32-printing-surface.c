@@ -1442,7 +1442,7 @@ _cairo_win32_printing_surface_set_paginated_mode (void *abstract_surface,
  * possible to draw to the surface.
  *
  * The returned surface will be wrapped using the paginated surface to
- * provide correct complex renderinf behaviour; show_page() and
+ * provide correct complex rendering behaviour; show_page() and
  * associated methods must be used for correct output.
  *
  * Return value: the newly created surface
