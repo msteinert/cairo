@@ -222,6 +222,17 @@ static cairo_boilerplate_target_t targets[] =
     { "win32", CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR_ALPHA, 0,
       _cairo_boilerplate_win32_create_surface,
       cairo_surface_write_to_png },
+    { "win32-printing", CAIRO_SURFACE_TYPE_WIN32_PRINTING,
+      CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED, 0,
+      _cairo_boilerplate_win32_printing_create_surface,
+      _cairo_boilerplate_win32_printing_surface_write_to_png,
+      _cairo_boilerplate_win32_printing_cleanup,
+      NULL, TRUE },
+    { "win32-printing", CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
+      _cairo_boilerplate_win32_printing_create_surface,
+      _cairo_boilerplate_win32_printing_surface_write_to_png,
+      _cairo_boilerplate_win32_printing_cleanup,
+      NULL, TRUE },
 #endif
 #if CAIRO_HAS_XCB_SURFACE
     /* Acceleration architectures may make the results differ by a
