@@ -701,11 +701,6 @@ _cairo_win32_printing_surface_paint_linear_pattern (cairo_win32_surface_t *surfa
 
     if (!SetWorldTransform (surface->dc, &xform))
 	return _cairo_win32_print_gdi_error ("_win32_printing_surface_paint_linear_pattern:SetWorldTransform2");
-    GetWorldTransform(surface->dc, &xform);
-    p1x = 0.0;
-    p1y = 0.0;
-    p2x = d;
-    p2y = 0;
 
     GetClipBox (surface->dc, &clip);
 
@@ -839,18 +834,12 @@ _cairo_win32_printing_surface_paint_pattern (cairo_win32_surface_t *surface,
 
 typedef struct _win32_print_path_info {
     cairo_win32_surface_t *surface;
-    cairo_line_cap_t       line_cap;
-    cairo_point_t          last_move_to_point;
-    cairo_bool_t           has_sub_path;
 } win32_path_info_t;
 
 static cairo_status_t
 _cairo_win32_printing_surface_path_move_to (void *closure, cairo_point_t *point)
 {
     win32_path_info_t *path_info = closure;
-
-    path_info->last_move_to_point = *point;
-    path_info->has_sub_path = FALSE;
 
     if (path_info->surface->has_ctm) {
 	double x, y;
@@ -1293,7 +1282,6 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
     int i;
     cairo_matrix_t old_ctm;
     cairo_bool_t old_has_ctm;
-    XFORM xform;
     cairo_solid_pattern_t clear;
 
     if (op == CAIRO_OPERATOR_CLEAR) {
@@ -1356,11 +1344,6 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
     }
 
     SaveDC (surface->dc);
-
-    xform.eM11 = 1.0f;
-    xform.eM21 = 0.0f;
-    xform.eM12 = 0.0f;
-    xform.eM22 = 1.0f;
     old_ctm = surface->ctm;
     old_has_ctm = surface->has_ctm;
     surface->has_ctm = TRUE;
