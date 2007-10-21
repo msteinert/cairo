@@ -82,6 +82,7 @@ typedef struct _cairo_win32_surface {
 
     /* printing surface bits */
     cairo_paginated_mode_t paginated_mode;
+    cairo_content_t content;
     int clip_saved_dc;
     HBRUSH brush, old_brush;
 } cairo_win32_surface_t;
