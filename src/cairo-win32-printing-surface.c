@@ -1209,9 +1209,11 @@ static const cairo_surface_backend_t cairo_win32_printing_surface_backend = {
     NULL, /* snapshot */
     NULL, /* is_similar */
     NULL, /* reset */
+    NULL, /* fill_stroke */
 };
 
 static const cairo_paginated_surface_backend_t cairo_win32_surface_paginated_backend = {
     _cairo_win32_printing_surface_start_page,
-    _cairo_win32_printing_surface_set_paginated_mode
+    _cairo_win32_printing_surface_set_paginated_mode,
+    NULL, /* set_bounding_box */
 };
