@@ -613,6 +613,9 @@ _cairo_gstate_translate (cairo_gstate_t *gstate, double tx, double ty)
 {
     cairo_matrix_t tmp;
 
+    if (! (tx * tx >= 0.) || ! (ty * ty >= 0.))
+	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
+
     _cairo_gstate_unset_scaled_font (gstate);
 
     cairo_matrix_init_translate (&tmp, tx, ty);
@@ -630,6 +633,8 @@ _cairo_gstate_scale (cairo_gstate_t *gstate, double sx, double sy)
     cairo_matrix_t tmp;
 
     if (sx == 0 || sy == 0)
+	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
+    if (! (sx * sx > 0.) || ! (sy * sy > 0.))
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
     _cairo_gstate_unset_scaled_font (gstate);
