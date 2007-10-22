@@ -1686,6 +1686,7 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	 *surface,
     cairo_rectangle_int16_t surface_extents;
     int pattern_width = 0; /* squelch bogus compiler warning */
     int pattern_height = 0; /* squelch bogus compiler warning */
+    int bbox_x, bbox_y;
 
     _cairo_pdf_surface_pause_content_stream (surface);
 
@@ -1719,6 +1720,8 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	 *surface,
     if (status)
 	return status;
 
+    bbox_x = pattern_width;
+    bbox_y = pattern_height;
     switch (extend) {
 	/* We implement EXTEND_PAD like EXTEND_NONE for now */
     case CAIRO_EXTEND_PAD:
@@ -1751,9 +1754,14 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	 *surface,
     }
     break;
     case CAIRO_EXTEND_REPEAT:
-    case CAIRO_EXTEND_REFLECT:
 	xstep = pattern_width;
 	ystep = pattern_height;
+	break;
+    case CAIRO_EXTEND_REFLECT:
+	bbox_x = pattern_width*2;
+	bbox_y = pattern_height*2;
+	xstep = bbox_x;
+	ystep = bbox_y;
 	break;
 	/* All the rest (if any) should have been analyzed away, so this
 	 * case should be unreachable. */
@@ -1812,7 +1820,7 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	 *surface,
 					     "   /PaintType 1\r\n"
 					     "   /Matrix [ %f %f %f %f %f %f ]\r\n"
 					     "   /Resources << /XObject << /x%d %d 0 R >> >>\r\n",
-					     pattern_width, pattern_height,
+					     bbox_x, bbox_y,
 					     xstep, ystep,
 					     pdf_p2d.xx, pdf_p2d.yx,
 					     pdf_p2d.xy, pdf_p2d.yy,
@@ -1823,9 +1831,25 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	 *surface,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     if (_cairo_surface_is_meta (pattern->surface)) {
-	_cairo_output_stream_printf (surface->output,
-				     "/x%d Do\r\n",
-				     pattern_resource.id);
+	if (extend == CAIRO_EXTEND_REFLECT) {
+	    _cairo_output_stream_printf (surface->output,
+					 "q 0 0 %d %d re W n /x%d Do Q\r\n"
+					 "q -1 0 0 1 %d 0 cm 0 0 %d %d re W n /x%d Do Q\r\n"
+					 "q 1 0 0 -1 0 %d cm 0 0 %d %d re W n /x%d Do Q\r\n"
+					 "q -1 0 0 -1 %d %d cm 0 0 %d %d re W n /x%d Do Q\r\n",
+					 pattern_width, pattern_height,
+					 pattern_resource.id,
+					 pattern_width*2, pattern_width, pattern_height,
+					 pattern_resource.id,
+					 pattern_height*2, pattern_width, pattern_height,
+					 pattern_resource.id,
+					 pattern_width*2, pattern_height*2, pattern_width, pattern_height,
+					 pattern_resource.id);
+	} else {
+	    _cairo_output_stream_printf (surface->output,
+					 "/x%d Do\r\n",
+					 pattern_resource.id);
+	}
     } else {
 	_cairo_output_stream_printf (surface->output,
 				     "q %d 0 0 %d 0 0 cm /x%d Do Q\r\n",
