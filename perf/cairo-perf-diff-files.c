@@ -644,8 +644,13 @@ cairo_perf_reports_compare (cairo_perf_report_t		*reports,
 
 	/* Find the minimum of all current tests, (we have to do this
 	 * in case some reports don't have a particular test). */
-	min_test = tests[0];
-	for (i = 1; i < num_reports; i++) {
+	for (i = 0; i < num_reports; i++) {
+	    if (tests[i]->name) {
+		min_test = tests[i];
+		break;
+	    }
+	}
+	for (++i; i < num_reports; i++) {
 	    if (tests[i]->name &&
 		test_report_cmp_backend_then_name (tests[i], min_test) < 0)
 	    {
