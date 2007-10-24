@@ -62,6 +62,8 @@ cairo_status_t
 _cairo_gstate_init (cairo_gstate_t  *gstate,
 		    cairo_surface_t *target)
 {
+    cairo_status_t status;
+
     gstate->next = NULL;
 
     gstate->op = CAIRO_GSTATE_OPERATOR_DEFAULT;
@@ -93,15 +95,23 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
 
     gstate->source = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK,
 						  CAIRO_CONTENT_COLOR);
-    if (gstate->source->status) {
-	cairo_surface_destroy (gstate->target);
-	gstate->target = NULL;
-	cairo_surface_destroy (gstate->original_target);
-	gstate->original_target = NULL;
-	return gstate->source->status;
-    }
 
-    return target ? target->status : CAIRO_STATUS_NULL_POINTER;
+    /* Now that the gstate is fully initialized and ready for the eventual
+     * _cairo_gstate_fini(), we can check for errors (and not worry about
+     * the resource deallocation). */
+
+    if (target == NULL)
+	return _cairo_error (CAIRO_STATUS_NULL_POINTER);
+
+    status = target->status;
+    if (status)
+	return status;
+
+    status = gstate->source->status;
+    if (status)
+	return status;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 /**
