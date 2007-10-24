@@ -653,6 +653,9 @@ _cairo_gstate_rotate (cairo_gstate_t *gstate, double angle)
 {
     cairo_matrix_t tmp;
 
+    if (! (angle * angle > 0.)) /* check for NaNs */
+	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
+
     _cairo_gstate_unset_scaled_font (gstate);
 
     cairo_matrix_init_rotate (&tmp, angle);
