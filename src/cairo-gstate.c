@@ -613,7 +613,7 @@ _cairo_gstate_translate (cairo_gstate_t *gstate, double tx, double ty)
 {
     cairo_matrix_t tmp;
 
-    if (! (tx * tx >= 0.) || ! (ty * ty >= 0.))
+    if (! (tx * tx >= 0.) || ! (ty * ty >= 0.)) /* check for NaNs */
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
     _cairo_gstate_unset_scaled_font (gstate);
@@ -632,9 +632,9 @@ _cairo_gstate_scale (cairo_gstate_t *gstate, double sx, double sy)
 {
     cairo_matrix_t tmp;
 
-    if (sx == 0 || sy == 0)
+    if (sx * sy == 0.) /* either sx or sy is 0, or det == 0 due to underflow */
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
-    if (! (sx * sx > 0.) || ! (sy * sy > 0.))
+    if (! (sx * sx > 0.) || ! (sy * sy > 0.)) /* check for NaNs */
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
     _cairo_gstate_unset_scaled_font (gstate);
