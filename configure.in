@@ -103,6 +103,21 @@ AC_TRY_LINK([int atomic_add(int i) { return __sync_fetch_and_add (&i, 1); }], []
 
 AC_MSG_RESULT([$cairo_atomic_primitives])
 
+AC_MSG_CHECKING([whether atomic ops require a memory barrier])
+case $host_cpu in
+    i?86)
+	cairo_atomic_op_needs_memory_barrier="no"
+	;;
+    *)
+	cairo_atomic_op_needs_memory_barrier="yes"
+	;;
+esac
+if test "x$cairo_atomic_op_needs_memory_barrier" = "xyes"; then
+    AC_DEFINE_UNQUOTED(CAIRO_ATOMIC_OP_NEEDS_MEMORY_BARRIER, 1,
+		       [whether Cairo needs memory barriers around atomic ops])
+fi
+AC_MSG_RESULT([$cairo_atomic_op_needs_memory_barrier])
+
 dnl ===========================================================================
 
 AC_CHECK_LIBM
