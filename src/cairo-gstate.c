@@ -189,7 +189,7 @@ _cairo_gstate_fini (cairo_gstate_t *gstate)
     gstate->parent_target = NULL;
 
     cairo_surface_destroy (gstate->original_target);
-    gstate->target = NULL;
+    gstate->original_target = NULL;
 
     cairo_pattern_destroy (gstate->source);
     gstate->source = NULL;
