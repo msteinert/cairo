@@ -35,6 +35,16 @@ Font support for Microsoft Windows
 @Returns: 
 
 
+<!-- ##### FUNCTION cairo_win32_font_face_create_for_logfontw_hfont ##### -->
+<para>
+
+</para>
+
+@logfont: 
+@font: 
+@Returns: 
+
+
 <!-- ##### FUNCTION cairo_win32_scaled_font_select_font ##### -->
 <para>
 
