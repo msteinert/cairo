@@ -273,18 +273,47 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 			      (-in->usr_vector.y * out->usr_vector.y));
 	double	ml = stroker->style->miter_limit;
 
-	/*
-	 * Check the miter limit -- lines meeting at an acute angle
+	/* Check the miter limit -- lines meeting at an acute angle
 	 * can generate long miters, the limit converts them to bevel
 	 *
-	 * We want to know when the miter is within the miter limit.
-	 * That's straightforward to specify:
+	 * Consider the miter join formed when two line segments
+	 * meet at an angle psi:
 	 *
-	 *	secant (psi / 2) <= ml
+	 *	   /.\
+	 *	  /. .\
+	 *	 /./ \.\
+	 *	/./psi\.\
 	 *
-	 * where psi is the angle between in and out
+	 * We can zoom in on the right half of that to see:
 	 *
-	 *				secant(psi/2) = 1/sin(psi/2)
+	 *	    |\
+	 *	    | \ psi/2
+	 *	    |  \
+	 *	    |   \
+	 *	    |    \
+	 *	    |     \
+	 * 	  miter    \
+	 *	 length     \
+	 *	    |        \
+	 *	    |        .\
+	 *	    |    .     \
+	 *	    |.   line   \
+	 *	     \    width  \
+	 *	      \           \
+	 *
+	 *
+	 * The right triangle in that figure, (the line-width side is
+	 * shown faintly with three '.' characters), gives us the
+	 * following expression relating miter length, angle and line
+	 * width:
+	 *
+	 *	1 /sin (psi/2) = miter_length / line_width
+	 *
+	 * The right-hand side of this relationship is the same ratio
+	 * in which the miter limit (ml) is expressed. We want to know
+	 * when the miter length is within the miter limit. That is
+	 * when the following condition holds:
+	 *
 	 *	1/sin(psi/2) <= ml
 	 *	1 <= ml sin(psi/2)
 	 *	1 <= ml² sin²(psi/2)
