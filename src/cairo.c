@@ -3166,20 +3166,17 @@ cairo_get_antialias (cairo_t *cr)
 void
 cairo_get_current_point (cairo_t *cr, double *x_ret, double *y_ret)
 {
-    cairo_status_t status = CAIRO_STATUS_NO_CURRENT_POINT;
     cairo_fixed_t x_fixed, y_fixed;
     double x, y;
 
-    if (cr->status == CAIRO_STATUS_SUCCESS)
-	status = _cairo_path_fixed_get_current_point (cr->path,
-	                                              &x_fixed, &y_fixed);
-    if (status == CAIRO_STATUS_NO_CURRENT_POINT) {
-	x = 0.0;
-	y = 0.0;
-    } else {
+    if (cr->status == CAIRO_STATUS_SUCCESS &&
+	_cairo_path_fixed_get_current_point (cr->path, &x_fixed, &y_fixed)) {
 	x = _cairo_fixed_to_double (x_fixed);
 	y = _cairo_fixed_to_double (y_fixed);
 	_cairo_gstate_backend_to_user (cr->gstate, &x, &y);
+    } else {
+	x = 0.0;
+	y = 0.0;
     }
 
     if (x_ret)

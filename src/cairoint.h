@@ -1479,7 +1479,7 @@ _cairo_path_fixed_rel_curve_to (cairo_path_fixed_t *path,
 cairo_private cairo_status_t
 _cairo_path_fixed_close_path (cairo_path_fixed_t *path);
 
-cairo_private cairo_status_t
+cairo_private cairo_bool_t
 _cairo_path_fixed_get_current_point (cairo_path_fixed_t *path,
 				     cairo_fixed_t	*x,
 				     cairo_fixed_t	*y);
