@@ -1421,8 +1421,7 @@ _cairo_win32_scaled_font_init_glyph_path (cairo_win32_scaled_font_t *scaled_font
 	    case TT_PRIM_QSPLINE:
 		for (i = 0; i < curve->cpfx - 1; i++) {
 		    cairo_fixed_t p1x, p1y, p2x, p2y, cx, cy, c1x, c1y, c2x, c2y;
-		    status = _cairo_path_fixed_get_current_point (path, &p1x, &p1y);
-		    if (status)
+		    if (! _cairo_path_fixed_get_current_point (path, &p1x, &p1y))
 			goto CLEANUP_BUFFER;
                     _cairo_win32_transform_FIXED_to_fixed (&transform,
                                                            points[i].x,

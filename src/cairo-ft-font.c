@@ -1734,8 +1734,7 @@ _conic_to (FT_Vector *control, FT_Vector *to, void *closure)
     cairo_fixed_t x3, y3;
     cairo_point_t conic;
 
-    if (_cairo_path_fixed_get_current_point (path, &x0, &y0) !=
-	    CAIRO_STATUS_SUCCESS)
+    if (! _cairo_path_fixed_get_current_point (path, &x0, &y0))
 	return 1;
 
     conic.x = _cairo_fixed_from_26_6 (control->x);
