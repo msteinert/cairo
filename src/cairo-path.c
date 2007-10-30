@@ -339,7 +339,7 @@ _cairo_path_populate (cairo_path_t		*path,
     /* Sanity check the count */
     assert (cpp.data - path->data == path->num_data);
 
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_path_t *
