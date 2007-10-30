@@ -65,9 +65,10 @@ each backend:
 
 Surface backends:
 
-	image backend
-	-------------
-	pixman			git://git.freedesktop.org/git/pixman
+	image backend (required)
+	------------------------
+	pixman			http://cairographics.org/releases
+			or:	git://git.cairographics.org/git/pixman
 
 	glitz backend
 	-------------
