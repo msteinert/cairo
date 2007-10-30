@@ -272,6 +272,9 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	double	in_dot_out = ((-in->usr_vector.x * out->usr_vector.x)+
 			      (-in->usr_vector.y * out->usr_vector.y));
 	double	ml = stroker->style->miter_limit;
+	double tolerance_squared = stroker->tolerance * stroker->tolerance;
+	double line_width_squared = (stroker->style->line_width *
+				     stroker->style->line_width);
 
 	/* Check the miter limit -- lines meeting at an acute angle
 	 * can generate long miters, the limit converts them to bevel
@@ -329,8 +332,79 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 	 *
 	 *	2 <= ml² (1 - in · out)
 	 *
+	 *
+	 * That gives us the condition to avoid generating miters that
+	 * are too large from angles that are too large. But we also
+	 * need to avoid generating miters when the angle is very small.
+	 *
+	 * The miter formed from a tiny angle is also tiny, so the
+	 * miter limit is not a concern. But with a tiny angle we will
+	 * be computing the intersection of two lines that are very
+	 * near parallel. Also, the limits of the fixed-point grid on
+	 * the input face coordinates mean that the resulting
+	 * intersection could be wildly wrong. (See the
+	 * get-path-extents test case for a call to cairo_arc that
+	 * results in two problematic faces.)
+	 *
+	 * Fortunately we can also derive an expression for when using
+	 * a bevel join instead of a miter will introduce an error no
+	 * larger than the tolerance. Consider the same join from
+	 * before but with the miter now chopped off and replaced with
+	 * a bevel join. The drawing is zoomed in a bit again, the
+	 * point marked as '*' is the center of the stroke---the point
+	 * where the two line segments of interest intersect:
+	 *
+	 *    ----- .
+	 *    ^     ..
+	 *    |     . .
+	 *    |     .  .
+	 *   1/2    .   .
+	 *  miter   .    .         |
+	 *  length  .     .        |
+	 *    |     .______.    ___v___
+	 *    |     |     . \   1/2 bevel
+	 *    v     |  .     \   width
+	 *    ----  *         \ -------
+	 *	    |          \   ^
+	 *
+	 *
+	 * The length of interest here is the vertical length of the
+	 * miter that is eliminated. It's length can be obtained by
+	 * starting with 1/2 the miter length and the subtracting off
+	 * the vertical length that is included by the bevel join,
+	 * (here termed 1/2 bevel width). To determine this new bevel
+	 * width, we have a small right triangle shown, the hypotenuse
+	 * of which has a length of 1/2 the line width, and the small
+	 * angle at the upper right of the figure is psi/2.
+	 *
+	 * So we have:
+	 *
+	 *	sin (psi/2) = (bevel_width / 2) / (line_width / 2)
+	 *
+	 * And we can determine when the miter is required by
+	 * calculating when the eliminated portion of the miter is
+	 * greater than the tolerance:
+	 *
+	 *	(miter_length / 2) - (bevel_width / 2) > tolerance
+	 *
+	 * Substituting in the above expressions for miter_length and
+	 * bevel_width:
+	 *
+	 *	(line_width/2) / sin (psi/2) - (line_width/2) * sin (psi/2) > tolerance
+	 *	1 / sin(psi/2) - sin (psi/2) > 2 * tolerance / line_width
+	 *	1 / sin²(psi/2) -2 +  sin²(psi/2) > 4 * (tolerance/line_width)²
+	 *
+	 * Use identity: sin²(psi/2) = (1-cos(psi))/2
+
+	 *	2/(1 - cos(psi)) - 2 + (1-cos(psi))/2 > 4 * (tolerance/line_width)²
+	 *	4/(1 - cos(psi)) - 4 + (1-cos(psi)) > 8 * (tolerance/line_width)²
+	 *	4/(1 - cos(psi)) + (1-cos(psi)) > 8 * ((tolerance/line_width)² + 0.5)
 	 */
-	if (2 <= ml * ml * (1 - in_dot_out)) {
+	if ((2 <= ml * ml * (1 - in_dot_out)) &&
+	    ((8 * (tolerance_squared / line_width_squared + 0.5)) <
+	     4 / (1 - in_dot_out) + (1 - in_dot_out))
+	    )
+	{
 	    double		x1, y1, x2, y2;
 	    double		mx, my;
 	    double		dx1, dx2, dy1, dy2;
