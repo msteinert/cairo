@@ -39,7 +39,7 @@
 #include "cairo-path-private.h"
 #include "cairo-path-fixed-private.h"
 
-const cairo_path_t _cairo_path_nil = { CAIRO_STATUS_NO_MEMORY, NULL, 0 };
+static const cairo_path_t _cairo_path_nil = { CAIRO_STATUS_NO_MEMORY, NULL, 0 };
 
 /* Closure for path interpretation. */
 typedef struct cairo_path_count {
