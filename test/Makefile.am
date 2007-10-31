@@ -29,6 +29,7 @@ dash-scale			\
 dash-zero-length		\
 dash-state			\
 degenerate-path			\
+degenerate-pen			\
 device-offset			\
 device-offset-positive		\
 extend-pad			\
