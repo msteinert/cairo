@@ -88,20 +88,24 @@ convert_data_to_bytes (png_structp png, png_row_infop row_info, png_bytep data)
  * return.
  */
 static void
-png_simple_error_callback (png_structp png_save_ptr,
+png_simple_error_callback (png_structp png,
 	                   png_const_charp error_msg)
 {
-    cairo_status_t *error = png_get_error_ptr (png_save_ptr);
+    cairo_status_t *error = png_get_error_ptr (png);
 
     /* default to the most likely error */
     if (*error == CAIRO_STATUS_SUCCESS)
 	*error = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    longjmp (png_save_ptr->jmpbuf, 1);
+#ifdef PNG_SETJMP_SUPPORTED
+    longjmp (png_jmpbuf (png), 1);
+#endif
+
+    /* if we get here, then we have to choice but to abort ... */
 }
 
 static void
-png_simple_warning_callback (png_structp png_save_ptr,
+png_simple_warning_callback (png_structp png,
 	                     png_const_charp error_msg)
 {
 }
@@ -158,8 +162,10 @@ write_png (cairo_surface_t	*surface,
 	goto BAIL3;
     }
 
+#ifdef PNG_SETJMP_SUPPORTED
     if (setjmp (png_jmpbuf (png)))
 	goto BAIL3;
+#endif
 
     png_set_write_fn (png, closure, write_func, NULL);
 
@@ -396,11 +402,13 @@ read_png (png_rw_ptr	read_func,
     png_set_read_fn (png, closure, read_func);
 
     status = CAIRO_STATUS_SUCCESS;
+#ifdef PNG_SETJMP_SUPPORTED
     if (setjmp (png_jmpbuf (png))) {
 	if (status != CAIRO_STATUS_NO_MEMORY)
 	    surface = (cairo_surface_t*) &_cairo_surface_nil_read_error;
 	goto BAIL;
     }
+#endif
 
     png_read_info (png, info);
 
