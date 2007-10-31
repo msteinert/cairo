@@ -500,7 +500,7 @@ stdio_read_func (png_structp png, png_bytep data, png_size_t size)
 	size_t ret = fread (data, 1, size, fp);
 	size -= ret;
 	data += ret;
-	if (size && ferror (fp)) {
+	if (size && (feof (fp) || ferror (fp))) {
 	    cairo_status_t *error = png_get_error_ptr (png);
 	    *error = _cairo_error (CAIRO_STATUS_READ_ERROR);
 	    png_error (png, NULL);
