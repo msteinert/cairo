@@ -1506,6 +1506,30 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
 	goto FAIL;
     }
 
+    /*
+     * Force non-AA drawing when using a bitmap strike that
+     * won't be resampled due to non-scaling transform
+     */
+    if (!unscaled->have_shape &&
+	(scaled_font->ft_options.load_flags & FT_LOAD_NO_BITMAP) == 0 &&
+	scaled_font->ft_options.base.antialias != CAIRO_ANTIALIAS_NONE &&
+	(face->face_flags & FT_FACE_FLAG_FIXED_SIZES))
+    {
+	int		i;
+	FT_Size_Metrics	*size_metrics = &face->size->metrics;
+
+	for (i = 0; i < face->num_fixed_sizes; i++)
+	{
+	    FT_Bitmap_Size  *bitmap_size = &face->available_sizes[i];
+
+	    if (bitmap_size->x_ppem == size_metrics->x_ppem * 64 &&
+		bitmap_size->y_ppem == size_metrics->y_ppem * 64)
+	    {
+		scaled_font->ft_options.base.antialias = CAIRO_ANTIALIAS_NONE;
+		break;
+	    }
+	}
+    }
 
     metrics = &face->size->metrics;
 
