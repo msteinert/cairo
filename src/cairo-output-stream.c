@@ -215,6 +215,8 @@ _cairo_output_stream_write_hex_string (cairo_output_stream_t *stream,
     }
 }
 
+#define SIGNIFICANT_DIGITS_AFTER_DECIMAL 6
+
 /* Format a double in a locale independent way and trim trailing
  * zeros.  Based on code from Alex Larson <alexl@redhat.com>.
  * http://mail.gnome.org/archives/gtk-devel-list/2001-October/msg00087.html
@@ -231,18 +233,53 @@ _cairo_dtostr (char *buffer, size_t size, double d)
     int decimal_point_len;
     char *p;
     int decimal_len;
+    int num_zeros, decimal_digits;
 
     /* Omit the minus sign from negative zero. */
     if (d == 0.0)
 	d = 0.0;
-
-    snprintf (buffer, size, "%.18f", d);
 
     locale_data = localeconv ();
     decimal_point = locale_data->decimal_point;
     decimal_point_len = strlen (decimal_point);
 
     assert (decimal_point_len != 0);
+
+    /* Using "%f" to print numbers less than 0.1 will result in
+     * reduced precision due to the default 6 digits after the
+     * decimal point.
+     *
+     * For numbers is < 0.1, we print with maximum precision and count
+     * the number of zeros between the decimal point and the first
+     * significant digit. We then print the number again with the
+     * number of decimal places that gives us the required number of
+     * significant digits. This ensures the number is correctly
+     * rounded.
+     */
+    if (fabs (d) >= 0.1) {
+	snprintf (buffer, size, "%f", d);
+    } else {
+	snprintf (buffer, size, "%.18f", d);
+	p = buffer;
+
+	if (*p == '+' || *p == '-')
+	    p++;
+
+	while (isdigit (*p))
+	    p++;
+
+	if (strncmp (p, decimal_point, decimal_point_len) == 0)
+	    p += decimal_point_len;
+
+	num_zeros = 0;
+	while (*p++ == '0')
+	    num_zeros++;
+
+	decimal_digits = num_zeros + SIGNIFICANT_DIGITS_AFTER_DECIMAL;
+
+	if (decimal_digits < 18)
+	    snprintf (buffer, size, "%.*f", decimal_digits, d);
+    }
     p = buffer;
 
     if (*p == '+' || *p == '-')
