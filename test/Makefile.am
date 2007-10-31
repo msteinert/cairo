@@ -260,6 +260,8 @@ REFERENCE_IMAGES = \
 	dash-zero-length-ps-argb32-ref.png	\
 	dash-zero-length-ref.png	\
 	dash-zero-length-rgb24-ref.png	\
+	degenerate-pen-ref.png		\
+	degenerate-pen-ps-argb32-ref.png	\
 	degenerate-path-ps-argb32-ref.png	\
 	degenerate-path-ref.png	\
 	degenerate-path-rgb24-ref.png	\
@@ -328,6 +330,8 @@ REFERENCE_IMAGES = \
 	mask-surface-ctm-rgb24-ref.png	\
 	mask-surface-ctm-svg-argb32-ref.png	\
 	mask-svg-argb32-ref.png	\
+	meta-surface-pattern-ref.png		\
+	meta-surface-pattern-rgb24-ref.png	\
 	move-to-show-surface-ref.png	\
 	new-sub-path-ps-argb32-ref.png	\
 	new-sub-path-quartz-ref.png	\
