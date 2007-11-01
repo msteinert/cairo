@@ -49,7 +49,7 @@
 #include "cairo-meta-surface-private.h"
 #include "cairo-analysis-surface-private.h"
 
-const cairo_private cairo_surface_backend_t cairo_paginated_surface_backend;
+static const cairo_private cairo_surface_backend_t cairo_paginated_surface_backend;
 
 static cairo_int_status_t
 _cairo_paginated_surface_show_page (void *abstract_surface);
@@ -653,7 +653,7 @@ _cairo_paginated_surface_snapshot (void *abstract_other)
 #endif
 }
 
-const cairo_surface_backend_t cairo_paginated_surface_backend = {
+static const cairo_surface_backend_t cairo_paginated_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED,
     _cairo_paginated_surface_create_similar,
     _cairo_paginated_surface_finish,
