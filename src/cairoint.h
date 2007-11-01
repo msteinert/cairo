@@ -283,8 +283,11 @@ typedef struct _cairo_polygon {
     cairo_edge_t  edges_embedded[8];
 } cairo_polygon_t;
 
-typedef struct _cairo_spline {
+typedef struct _cairo_spline_knots {
     cairo_point_t a, b, c, d;
+} cairo_spline_knots_t;
+typedef struct _cairo_spline {
+    cairo_spline_knots_t knots;
 
     cairo_slope_t initial_slope;
     cairo_slope_t final_slope;
@@ -2086,10 +2089,10 @@ _cairo_polygon_close (cairo_polygon_t *polygon);
 /* cairo_spline.c */
 cairo_private cairo_int_status_t
 _cairo_spline_init (cairo_spline_t *spline,
-		    cairo_point_t *a,
-		    cairo_point_t *b,
-		    cairo_point_t *c,
-		    cairo_point_t *d);
+		    const cairo_point_t *a,
+		    const cairo_point_t *b,
+		    const cairo_point_t *c,
+		    const cairo_point_t *d);
 
 cairo_private cairo_status_t
 _cairo_spline_decompose (cairo_spline_t *spline, double tolerance);
