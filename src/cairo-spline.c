@@ -181,65 +181,62 @@ _de_casteljau (cairo_spline_knots_t *s1, cairo_spline_knots_t *s2)
     s1->d = final;
 }
 
-static double
-_PointDistanceSquaredToPoint (const cairo_point_t *a, const cairo_point_t *b)
-{
-    double dx = _cairo_fixed_to_double (b->x - a->x);
-    double dy = _cairo_fixed_to_double (b->y - a->y);
-
-    return dx*dx + dy*dy;
-}
-
-static double
-_PointDistanceSquaredToSegment (const cairo_point_t *p, const cairo_point_t *p1, const cairo_point_t *p2)
-{
-    double u;
-    double dx, dy;
-    double pdx, pdy;
-    cairo_point_t px;
-
-    /* intersection point (px):
-
-       px = p1 + u(p2 - p1)
-       (p - px) . (p2 - p1) = 0
-
-       Thus:
-
-       u = ((p - p1) . (p2 - p1)) / (||(p2 - p1)|| ^ 2);
-    */
-
-    if (p2->x == p1->x && p2->y == p1->y)
-	return _PointDistanceSquaredToPoint (p, p1);
-
-    dx = _cairo_fixed_to_double (p2->x - p1->x);
-    dy = _cairo_fixed_to_double (p2->y - p1->y);
-
-    pdx = _cairo_fixed_to_double (p->x - p1->x);
-    pdy = _cairo_fixed_to_double (p->y - p1->y);
-
-    u = (pdx * dx + pdy * dy) / (dx*dx + dy*dy);
-
-    if (u <= 0)
-	return _PointDistanceSquaredToPoint (p, p1);
-    else if (u >= 1)
-	return _PointDistanceSquaredToPoint (p, p2);
-
-    px.x = p1->x + u * (p2->x - p1->x);
-    px.y = p1->y + u * (p2->y - p1->y);
-
-    return _PointDistanceSquaredToPoint (p, &px);
-}
-
-/* Return an upper bound on the error (squared) that could result from approximating
-   a spline as a line segment connecting the two endpoints */
+/* Return an upper bound on the error (squared) that could result from
+ * approximating a spline as a line segment connecting the two endpoints. */
 static double
 _cairo_spline_error_squared (const cairo_spline_knots_t *knots)
 {
-    double berr, cerr;
+    double bdx, bdy, berr;
+    double cdx, cdy, cerr;
 
-    berr = _PointDistanceSquaredToSegment (&knots->b, &knots->a, &knots->d);
-    cerr = _PointDistanceSquaredToSegment (&knots->c, &knots->a, &knots->d);
+    /* Intersection point (px):
+     *	    px = p1 + u(p2 - p1)
+     *	    (p - px) ∙ (p2 - p1) = 0
+     * Thus:
+     *	    u = ((p - p1) ∙ (p2 - p1)) / ∥p2 - p1∥²;
+     */
+    bdx = _cairo_fixed_to_double (knots->b.x - knots->a.x);
+    bdy = _cairo_fixed_to_double (knots->b.y - knots->a.y);
 
+    cdx = _cairo_fixed_to_double (knots->c.x - knots->a.x);
+    cdy = _cairo_fixed_to_double (knots->c.y - knots->a.y);
+
+    if (knots->a.x != knots->d.x || knots->a.y != knots->d.y) {
+	double dx, dy, u, v;
+
+	dx = _cairo_fixed_to_double (knots->d.x - knots->a.x);
+	dy = _cairo_fixed_to_double (knots->d.y - knots->a.y);
+	 v = dx * dx + dy * dy;
+
+	u = bdx * dx + bdy * dy;
+	if (u <= 0) {
+	    /* bdx -= 0;
+	     * bdy -= 0;
+	     */
+	} else if (u >= v) {
+	    bdx -= dx;
+	    bdy -= dy;
+	} else {
+	    bdx -= u/v * dx;
+	    bdy -= u/v * dy;
+	}
+
+	u = cdx * dx + cdy * dy;
+	if (u <= 0) {
+	    /* cdx -= 0;
+	     * cdy -= 0;
+	     */
+	} else if (u >= v) {
+	    cdx -= dx;
+	    cdy -= dy;
+	} else {
+	    cdx -= u/v * dx;
+	    cdy -= u/v * dy;
+	}
+    }
+
+    berr = bdx * bdx + bdy * bdy;
+    cerr = cdx * cdx + cdy * cdy;
     if (berr > cerr)
 	return berr;
     else
