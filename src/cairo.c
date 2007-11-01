@@ -53,11 +53,11 @@ static const cairo_t _cairo_nil = {
     0
   }},
   {{ 				/* path */
-    { 0, 0 },			   /* last_move_point */
-    { 0, 0 },			   /* current point */
-    FALSE,			   /* has_current_point */
-    FALSE,			   /* has_curve_to */
-    NULL, {{0}}			   /* buf_tail, buf_head */
+    { 0, 0 },			/* last_move_point */
+    { 0, 0 },			/* current point */
+    FALSE,			/* has_current_point */
+    FALSE,			/* has_curve_to */
+    NULL, {{NULL}}		/* buf_tail, buf_head */
   }}
 };
 
