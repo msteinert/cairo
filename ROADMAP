@@ -93,7 +93,7 @@ cairo 1.6 (scheduled for July 2007, targeting firefox and GNOME)
 
  • New text API that allows for perfect text extraction in PDF (behdad)
 
- • Set PS Level for the PS backend (adrianj)
+ ✓ Set PS Level for the PS backend (adrianj)
 
  ✓ EPS output from the PS backend (adrianj)
 
