@@ -8,6 +8,7 @@ caps-joins			\
 caps-joins-alpha		\
 caps-sub-paths			\
 clip-all			\
+clip-empty			\
 clip-fill-rule			\
 clip-fill-rule-pixel-aligned	\
 clip-nesting			\
@@ -221,6 +222,7 @@ REFERENCE_IMAGES = \
 	caps-joins-ref.png	\
 	caps-sub-paths-ref.png	\
 	clip-all-ref.png	\
+	clip-empty-ref.png	\
 	clip-fill-rule-pixel-aligned-ref.png	\
 	clip-fill-rule-pixel-aligned-rgb24-ref.png	\
 	clip-fill-rule-ps-argb32-ref.png	\
