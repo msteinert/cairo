@@ -1055,7 +1055,7 @@ if test x"$use_quartz" = "xyes" ; then
    echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/Quartz/'
 fi
 
-if test x"$use_quartz" = "xyes" ; then
+if test x"$use_atsui" = "xyes" ; then
    echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/ATSUI/'
 fi
 
