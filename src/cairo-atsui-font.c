@@ -221,7 +221,7 @@ _cairo_atsui_font_set_metrics (cairo_atsui_font_t *font)
 
             extents.ascent = metrics.ascent;
             extents.descent = -metrics.descent;
-            extents.height = metrics.capHeight;
+            extents.height = extents.ascent + extents.descent + metrics.leading;
             extents.max_x_advance = metrics.maxAdvanceWidth;
 
             /* The FT backend doesn't handle max_y_advance either, so we'll ignore it for now. */
