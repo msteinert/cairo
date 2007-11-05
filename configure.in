@@ -108,6 +108,12 @@ case $host_cpu in
     i?86)
 	cairo_atomic_op_needs_memory_barrier="no"
 	;;
+    x86_64)
+	cairo_atomic_op_needs_memory_barrier="no"
+	;;
+    arm*)
+	cairo_atomic_op_needs_memory_barrier="no"
+	;;
     *)
 	cairo_atomic_op_needs_memory_barrier="yes"
 	;;
