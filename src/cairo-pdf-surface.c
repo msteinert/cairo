@@ -3995,26 +3995,34 @@ _cairo_pdf_surface_emit_clip (cairo_pdf_surface_t  *surface,
 			      cairo_path_fixed_t   *path,
 			      cairo_fill_rule_t	    fill_rule)
 {
-    cairo_status_t status;
     const char *pdf_operator;
-    pdf_path_info_t info;
 
     if (path == NULL) {
 	_cairo_output_stream_printf (surface->output, "Q q\r\n");
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    info.output = surface->output;
-    info.cairo_to_pdf = &surface->cairo_to_pdf;
-    info.ctm_inverse = NULL;
+    if (! path->has_current_point) {
+	/* construct an empty path */
+	_cairo_output_stream_printf (surface->output, "0 0 m ");
+    } else {
+	pdf_path_info_t info;
+	cairo_status_t status;
 
-    status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
-					  _cairo_pdf_path_move_to,
-					  _cairo_pdf_path_line_to,
-					  _cairo_pdf_path_curve_to,
-					  _cairo_pdf_path_close_path,
-					  &info);
+	info.output = surface->output;
+	info.cairo_to_pdf = &surface->cairo_to_pdf;
+	info.ctm_inverse = NULL;
+
+	status = _cairo_path_fixed_interpret (path,
+					      CAIRO_DIRECTION_FORWARD,
+					      _cairo_pdf_path_move_to,
+					      _cairo_pdf_path_line_to,
+					      _cairo_pdf_path_curve_to,
+					      _cairo_pdf_path_close_path,
+					      &info);
+	if (status)
+	    return status;
+    }
 
     switch (fill_rule) {
     case CAIRO_FILL_RULE_WINDING:
@@ -4031,7 +4039,7 @@ _cairo_pdf_surface_emit_clip (cairo_pdf_surface_t  *surface,
 				 "%s n\r\n",
 				 pdf_operator);
 
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
