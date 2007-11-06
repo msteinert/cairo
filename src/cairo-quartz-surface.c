@@ -38,6 +38,14 @@
 
 #include "cairo-quartz-private.h"
 
+/* The 10.5 SDK includes a funky new definition of FloatToFixed which
+ * causes all sorts of breakage; so reset to old-style definition
+ */
+#ifdef FloatToFixed
+#undef FloatToFixed
+#define FloatToFixed(a)     ((Fixed)((float)(a) * fixed1))
+#endif
+
 #include <Carbon/Carbon.h>
 
 #undef QUARTZ_DEBUG
