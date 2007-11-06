@@ -537,6 +537,12 @@ _cairo_clip_clip (cairo_clip_t       *clip,
     if (clip->all_clipped)
 	return CAIRO_STATUS_SUCCESS;
 
+    /* catch the empty clip path */
+    if (! path->has_current_point) {
+	_cairo_clip_set_all_clipped (clip, target);
+	return CAIRO_STATUS_SUCCESS;
+    }
+
     status = _cairo_clip_intersect_path (clip,
 					 path, fill_rule, tolerance,
 					 antialias);
