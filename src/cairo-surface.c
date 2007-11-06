@@ -1903,6 +1903,38 @@ _cairo_surface_set_clip_path (cairo_surface_t	*surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+
+/**
+ * _cairo_surface_set_empty_clip_path:
+ * @surface: the #cairo_surface_t to set the clip on
+ * @serial: the clip serial number associated with the clip path
+ *
+ * Create an empty clip path, one that represents the entire surface clipped
+ * out, and assigns the given clipping serial to the surface.
+ **/
+static cairo_status_t
+_cairo_surface_set_empty_clip_path (cairo_surface_t *surface,
+	                            unsigned int serial)
+{
+    cairo_path_fixed_t path;
+    cairo_status_t status;
+
+    _cairo_path_fixed_init (&path);
+
+    status = surface->backend->intersect_clip_path (surface,
+						    &path,
+						    CAIRO_FILL_RULE_WINDING,
+						    0,
+						    CAIRO_ANTIALIAS_DEFAULT);
+
+    if (status == CAIRO_STATUS_SUCCESS)
+	surface->current_clip_serial = serial;
+
+    _cairo_path_fixed_fini (&path);
+
+    return _cairo_surface_set_error (surface, status);
+}
+
 cairo_status_t
 _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
 {
@@ -1926,15 +1958,26 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
 	return CAIRO_STATUS_SUCCESS;
 
     if (clip) {
-	if (clip->path)
-	    return _cairo_surface_set_clip_path (surface,
-						 clip->path,
-						 clip->serial);
+	if (clip->all_clipped) {
+	    if (surface->backend->intersect_clip_path != NULL)
+		return _cairo_surface_set_empty_clip_path (surface,
+						           clip->serial);
 
-	if (clip->has_region)
-	    return _cairo_surface_set_clip_region (surface,
-						   &clip->region,
-						   clip->serial);
+	    if (surface->backend->set_clip_region != NULL)
+		return _cairo_surface_set_clip_region (surface,
+						       &clip->region,
+						       clip->serial);
+	} else {
+	    if (clip->path)
+		return _cairo_surface_set_clip_path (surface,
+						     clip->path,
+						     clip->serial);
+
+	    if (clip->has_region)
+		return _cairo_surface_set_clip_region (surface,
+						       &clip->region,
+						       clip->serial);
+	}
     }
 
     return _cairo_surface_reset_clip (surface);
