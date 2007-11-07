@@ -1324,25 +1324,23 @@ _cairo_xlib_surface_set_filter (cairo_xlib_surface_t *surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static void
 _cairo_xlib_surface_set_repeat (cairo_xlib_surface_t *surface, int repeat)
 {
     XRenderPictureAttributes pa;
     unsigned long	     mask;
 
     if (!surface->src_picture)
-	return CAIRO_STATUS_SUCCESS;
+	return;
 
     if (surface->repeat == repeat)
-	return CAIRO_STATUS_SUCCESS;
+	return;
 
     mask = CPRepeat;
     pa.repeat = repeat;
 
     XRenderChangePicture (surface->dpy, surface->src_picture, mask, &pa);
     surface->repeat = repeat;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
@@ -1359,18 +1357,16 @@ _cairo_xlib_surface_set_attributes (cairo_xlib_surface_t	    *surface,
 
     switch (attributes->extend) {
     case CAIRO_EXTEND_NONE:
-	status = _cairo_xlib_surface_set_repeat (surface, 0);
+	_cairo_xlib_surface_set_repeat (surface, 0);
 	break;
     case CAIRO_EXTEND_REPEAT:
-	status = _cairo_xlib_surface_set_repeat (surface, 1);
+	_cairo_xlib_surface_set_repeat (surface, 1);
 	break;
     case CAIRO_EXTEND_REFLECT:
     case CAIRO_EXTEND_PAD:
     default:
-	status = CAIRO_INT_STATUS_UNSUPPORTED;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
-    if (status)
-	return status;
 
     status = _cairo_xlib_surface_set_filter (surface, attributes->filter);
     if (status)
