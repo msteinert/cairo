@@ -1528,7 +1528,8 @@ slim_hidden_def (cairo_curve_to);
  *
  * If there is a current point, an initial line segment will be added
  * to the path to connect the current point to the beginning of the
- * arc.
+ * arc. If this initial line is undesired, it can be avoided by
+ * calling cairo_new_sub_path() before calling cairo_arc().
  *
  * Angles are measured in radians. An angle of 0.0 is in the direction
  * of the positive X axis (in user space). An angle of %M_PI/2.0 radians
