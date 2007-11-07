@@ -522,6 +522,11 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
 	goto FINISH2;
     }
 
+    if (image->width == 0 || image->height == 0) {
+	status = CAIRO_STATUS_SUCCESS;
+	goto FINISH2;
+    }
+
     if (image->format != CAIRO_FORMAT_RGB24) {
 	opaque_surface = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
 						     image->width,
