@@ -299,6 +299,7 @@ slim_hidden_def (cairo_scaled_font_status);
 #define CAIRO_SCALED_FONT_MAX_HOLDOVERS 256
 
 typedef struct _cairo_scaled_font_map {
+    cairo_scaled_font_t *mru_scaled_font;
     cairo_hash_table_t *hash_table;
     cairo_scaled_font_t *holdovers[CAIRO_SCALED_FONT_MAX_HOLDOVERS];
     int num_holdovers;
@@ -319,6 +320,7 @@ _cairo_scaled_font_map_lock (void)
 	if (cairo_scaled_font_map == NULL)
 	    goto CLEANUP_MUTEX_LOCK;
 
+	cairo_scaled_font_map->mru_scaled_font = NULL;
 	cairo_scaled_font_map->hash_table =
 	    _cairo_hash_table_create (_cairo_scaled_font_keys_equal);
 
@@ -358,11 +360,17 @@ _cairo_scaled_font_map_destroy (void)
         goto CLEANUP_MUTEX_LOCK;
     }
 
+    scaled_font = font_map->mru_scaled_font;
+    if (scaled_font != NULL) {
+	CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
+	cairo_scaled_font_destroy (scaled_font);
+	CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
+    }
+
     /* remove scaled_fonts starting from the end so that font_map->holdovers
      * is always in a consistent state when we release the mutex. */
     while (font_map->num_holdovers) {
 	scaled_font = font_map->holdovers[font_map->num_holdovers-1];
-
 	assert (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&scaled_font->ref_count));
 	_cairo_hash_table_remove (font_map->hash_table,
 				  &scaled_font->hash_entry);
@@ -745,7 +753,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 {
     cairo_status_t status;
     cairo_scaled_font_map_t *font_map;
-    cairo_scaled_font_t key, *scaled_font = NULL;
+    cairo_scaled_font_t key, *old = NULL, *scaled_font = NULL;
 
     if (font_face->status)
 	return _cairo_scaled_font_create_in_error (font_face->status);
@@ -763,42 +771,12 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 
     _cairo_scaled_font_init_key (&key, font_face,
 				 font_matrix, ctm, options);
-
-
-    while (_cairo_hash_table_lookup (font_map->hash_table, &key.hash_entry,
-				     (cairo_hash_entry_t**) &scaled_font))
+    scaled_font = font_map->mru_scaled_font;
+    if (scaled_font != NULL &&
+	scaled_font->hash_entry.hash == key.hash_entry.hash &&
+	_cairo_scaled_font_keys_equal (scaled_font, &key))
     {
-	if (!scaled_font->placeholder)
-	    break;
-
-	/* If the scaled font is being created (happens for user-font),
-	 * just wait until it's done, then retry */
-	_cairo_scaled_font_placeholder_wait_for_creation_to_finish (scaled_font);
-    }
-
-    /* Return existing scaled_font if it exists in the hash table. */
-    if (scaled_font)
-    {
-	/* If the original reference count is 0, then this font must have
-	 * been found in font_map->holdovers, (which means this caching is
-	 * actually working). So now we remove it from the holdovers
-	 * array. */
-	if (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&scaled_font->ref_count)) {
-	    int i;
-
-	    for (i = 0; i < font_map->num_holdovers; i++)
-		if (font_map->holdovers[i] == scaled_font)
-		    break;
-	    assert (i < font_map->num_holdovers);
-
-	    font_map->num_holdovers--;
-	    memmove (&font_map->holdovers[i],
-		     &font_map->holdovers[i+1],
-		     (font_map->num_holdovers - i) * sizeof (cairo_scaled_font_t*));
-
-	    /* reset any error status */
-	    scaled_font->status = CAIRO_STATUS_SUCCESS;
-	}
+	assert (! scaled_font->placeholder);
 
 	if (scaled_font->status == CAIRO_STATUS_SUCCESS) {
 	    /* We increment the reference count manually here, (rather
@@ -814,6 +792,66 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	_cairo_hash_table_remove (font_map->hash_table, &key.hash_entry);
 	scaled_font->hash_entry.hash = ZOMBIE;
     }
+    else
+    {
+	while (_cairo_hash_table_lookup (font_map->hash_table, &key.hash_entry,
+					 (cairo_hash_entry_t**) &scaled_font))
+	{
+	    if (! scaled_font->placeholder)
+		break;
+
+	    /* If the scaled font is being created (happens for user-font),
+	     * just wait until it's done, then retry */
+	    _cairo_scaled_font_placeholder_wait_for_creation_to_finish (scaled_font);
+	}
+
+	/* Return existing scaled_font if it exists in the hash table. */
+	if (scaled_font != NULL) {
+	    /* If the original reference count is 0, then this font must have
+	     * been found in font_map->holdovers, (which means this caching is
+	     * actually working). So now we remove it from the holdovers
+	     * array. */
+	    if (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&scaled_font->ref_count)) {
+		int i;
+
+		for (i = 0; i < font_map->num_holdovers; i++)
+		    if (font_map->holdovers[i] == scaled_font)
+			break;
+		assert (i < font_map->num_holdovers);
+
+		font_map->num_holdovers--;
+		memmove (&font_map->holdovers[i],
+			 &font_map->holdovers[i+1],
+			 (font_map->num_holdovers - i) * sizeof (cairo_scaled_font_t*));
+
+		/* reset any error status */
+		scaled_font->status = CAIRO_STATUS_SUCCESS;
+	    }
+
+	    if (scaled_font->status == CAIRO_STATUS_SUCCESS) {
+		/* We increment the reference count manually here, (rather
+		 * than calling into cairo_scaled_font_reference), since we
+		 * must modify the reference count while our lock is still
+		 * held. */
+
+		old = font_map->mru_scaled_font;
+		font_map->mru_scaled_font = scaled_font;
+		/* increment reference count for the mru cache */
+		_cairo_reference_count_inc (&scaled_font->ref_count);
+		/* and increment for the returned reference */
+		_cairo_reference_count_inc (&scaled_font->ref_count);
+		_cairo_scaled_font_map_unlock ();
+
+		cairo_scaled_font_destroy (old);
+
+		return scaled_font;
+	    }
+
+	    /* the font has been put into an error status - abandon the cache */
+	    _cairo_hash_table_remove (font_map->hash_table, &key.hash_entry);
+	    scaled_font->hash_entry.hash = ZOMBIE;
+	}
+    }
 
     /* Otherwise create it and insert it into the hash table. */
     status = font_face->backend->scaled_font_create (font_face, font_matrix,
@@ -826,6 +864,12 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 
     status = _cairo_hash_table_insert (font_map->hash_table,
 				       &scaled_font->hash_entry);
+    if (status == CAIRO_STATUS_SUCCESS) {
+	old = font_map->mru_scaled_font;
+	font_map->mru_scaled_font = scaled_font;
+	_cairo_reference_count_inc (&scaled_font->ref_count);
+    }
+
     _cairo_scaled_font_map_unlock ();
 
     if (status) {
@@ -836,6 +880,8 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	free (scaled_font);
 	return _cairo_scaled_font_create_in_error (status);
     }
+
+    cairo_scaled_font_destroy (old);
 
     return scaled_font;
 }
