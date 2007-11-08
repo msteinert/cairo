@@ -99,8 +99,9 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     gstate->parent_target = NULL;
     gstate->original_target = cairo_surface_reference (target);
 
-    _cairo_gstate_identity_matrix (gstate);
-    gstate->source_ctm_inverse = gstate->ctm_inverse;
+    cairo_matrix_init_identity (&gstate->ctm);
+    gstate->ctm_inverse = gstate->ctm;
+    gstate->source_ctm_inverse = gstate->ctm;
 
     gstate->source = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK,
 						  CAIRO_CONTENT_COLOR);
@@ -653,6 +654,9 @@ _cairo_gstate_transform (cairo_gstate_t	      *gstate,
     cairo_matrix_t tmp;
     cairo_status_t status;
 
+    if (_cairo_matrix_is_identity (matrix))
+	return CAIRO_STATUS_SUCCESS;
+
     tmp = *matrix;
     status = cairo_matrix_invert (&tmp);
     if (status)
@@ -676,6 +680,9 @@ _cairo_gstate_set_matrix (cairo_gstate_t       *gstate,
 {
     cairo_status_t status;
 
+    if (memcmp (matrix, &gstate->ctm, sizeof (cairo_matrix_t)) == 0)
+	return CAIRO_STATUS_SUCCESS;
+
     if (! _cairo_matrix_is_invertible (matrix))
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
@@ -692,6 +699,9 @@ _cairo_gstate_set_matrix (cairo_gstate_t       *gstate,
 void
 _cairo_gstate_identity_matrix (cairo_gstate_t *gstate)
 {
+    if (_cairo_matrix_is_identity (&gstate->ctm))
+	return;
+
     _cairo_gstate_unset_scaled_font (gstate);
 
     cairo_matrix_init_identity (&gstate->ctm);
@@ -1240,6 +1250,9 @@ cairo_status_t
 _cairo_gstate_set_font_matrix (cairo_gstate_t	    *gstate,
 			       const cairo_matrix_t *matrix)
 {
+    if (memcmp (matrix, &gstate->font_matrix, sizeof (cairo_matrix_t)) == 0)
+	return CAIRO_STATUS_SUCCESS;
+
     if (! _cairo_matrix_is_invertible (matrix))
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
@@ -1261,6 +1274,9 @@ void
 _cairo_gstate_set_font_options (cairo_gstate_t             *gstate,
 				const cairo_font_options_t *options)
 {
+    if (memcmp (options, &gstate->font_options, sizeof (cairo_font_options_t)) == 0)
+	return;
+
     _cairo_gstate_unset_scaled_font (gstate);
 
     _cairo_font_options_init_copy (&gstate->font_options, options);
@@ -1390,8 +1406,8 @@ _cairo_gstate_ensure_font_face (cairo_gstate_t *gstate)
 
 
     font_face = cairo_toy_font_face_create (CAIRO_FONT_FAMILY_DEFAULT,
-					     CAIRO_FONT_SLANT_DEFAULT,
-					     CAIRO_FONT_WEIGHT_DEFAULT);
+					    CAIRO_FONT_SLANT_DEFAULT,
+					    CAIRO_FONT_WEIGHT_DEFAULT);
     if (font_face->status)
 	return font_face->status;
 
@@ -1476,10 +1492,11 @@ _cairo_gstate_set_font_face (cairo_gstate_t    *gstate,
     if (font_face && font_face->status)
 	return font_face->status;
 
-    if (font_face != gstate->font_face) {
-	cairo_font_face_destroy (gstate->font_face);
-	gstate->font_face = cairo_font_face_reference (font_face);
-    }
+    if (font_face == gstate->font_face)
+	return CAIRO_STATUS_SUCCESS;
+
+    cairo_font_face_destroy (gstate->font_face);
+    gstate->font_face = cairo_font_face_reference (font_face);
 
     _cairo_gstate_unset_scaled_font (gstate);
 
