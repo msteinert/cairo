@@ -96,6 +96,7 @@ static const char *vector_ignored_tests[] = {
  * context object there, (though not a whole lot). */
 FILE *cairo_test_log_file = NULL;
 const char *srcdir;
+const char *refdir;
 
 /* Used to catch crashes in a test, such that we report it as such and
  * continue testing, although one crasher may already have corrupted memory in
@@ -158,7 +159,20 @@ cairo_ref_name_for_test_target_format (const char *test_name,
 {
     char *ref_name = NULL;
 
-    /* First look for a target/format-specific reference image. */
+    /* First look for a previous build for comparison. */
+    if (refdir) {
+	xasprintf (&ref_name, "%s/%s-%s-%s%s", refdir,
+		   test_name,
+		   target_name,
+		   format,
+		   CAIRO_TEST_PNG_SUFFIX);
+	if (access (ref_name, F_OK) != 0)
+	    free (ref_name);
+	else
+	    goto done;
+    }
+
+    /* Next look for a target/format-specific reference image. */
     xasprintf (&ref_name, "%s/%s-%s-%s%s", srcdir,
 	       test_name,
 	       target_name,
@@ -477,6 +491,7 @@ cairo_test_expecting (cairo_test_t *test,
     srcdir = getenv ("srcdir");
     if (!srcdir)
 	srcdir = ".";
+    refdir = getenv ("CAIRO_REF_DIR");
 
     cairo_test_init (test->name);
     printf ("%s\n", test->description);
