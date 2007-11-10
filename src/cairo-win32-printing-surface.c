@@ -494,6 +494,12 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
     RECT clip;
     const cairo_color_t *background_color;
 
+    /* If we can't use StretchDIBits with this surface, we can't do anything
+     * here.
+     */
+    if (!(surface->flags & CAIRO_WIN32_SURFACE_CAN_STRETCHDIB))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     if (surface->content == CAIRO_CONTENT_COLOR_ALPHA)
 	background_color = CAIRO_COLOR_WHITE;
     else
@@ -513,6 +519,11 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
 
     if (image->base.status) {
 	status = image->base.status;
+	goto FINISH2;
+    }
+
+    if (image->width == 0 || image->height == 0) {
+	status = CAIRO_STATUS_SUCCESS;
 	goto FINISH2;
     }
 

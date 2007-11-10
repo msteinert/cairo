@@ -54,20 +54,40 @@ if ($#ARGV >= 0) { @files = @ARGV; } else { @files = <*.log>; }
 
 foreach (<@files>) {
   my $testname;
+  my $out_path, $diff_path, $ref_path;
   my $fn = $_;
   (open LOG, $fn) || next;
   while (<LOG>) {
+    if (/^OUTPUT: (.*)$/) {
+      $out_path = $1;
+      next;
+    }
+    if (/^DIFFERENCE: (.*)$/) {
+      $diff_path = $1;
+      next;
+    }
+    if (/^REFERENCE: (.*)$/) {
+      $ref_path = $1;
+      next;
+    }
     next unless /^TEST: (.*) TARGET: (.*) FORMAT: (.*) OFFSET: (.*) SIMILAR: (.*) RESULT: ([A-Z]*).*$/;
     $testname = $1 if !defined($testname);
     $tests->{$1} = {} unless $tests->{$1};
     $tests->{$1}->{$2} = {} unless $tests->{$1}->{$2};
     $tests->{$1}->{$2}->{$3} = {} unless $tests->{$1}->{$2}->{$3};
     $tests->{$1}->{$2}->{$3}->{$4} = {} unless $tests->{$1}->{$2}->{$3}->{$4};
-    $tests->{$1}->{$2}->{$3}->{$4}->{$5} = $6;
+    $tests->{$1}->{$2}->{$3}->{$4}->{$5}->{'out'} = $out_path;
+    $tests->{$1}->{$2}->{$3}->{$4}->{$5}->{'diff'} = $diff_path;
+    $tests->{$1}->{$2}->{$3}->{$4}->{$5}->{'ref'} = $ref_path;
+    $tests->{$1}->{$2}->{$3}->{$4}->{$5}->{'result'} = $6;
 
     $teststats->{$2} = {"PASS" => 0, "FAIL" => 0, "XFAIL" => 0, "UNTESTED" => 0, "CRASHED" =>0}
       unless $teststats->{$2};
     ($teststats->{$2}->{$6})++;
+
+    undef $out_path;
+    undef $diff_path;
+    undef $ref_path;
   }
   close LOG;
 
@@ -158,7 +178,6 @@ printl '<body>';
 
 printl '<table border="1">';
 print '<tr><th>Test</th>';
-print '<th>Ref</th>' if $config_show_ref;
 
 foreach my $target (@targets) {
   print '<th>', $target, '</th>';
@@ -166,7 +185,6 @@ foreach my $target (@targets) {
 printl '</tr>';
 
 print '<tr><td></td>';
-print '<td></td>' if $config_show_ref;
 
 foreach my $target (@targets) {
   print '<td>';
@@ -177,37 +195,6 @@ foreach my $target (@targets) {
   print '</td>';
 }
 printl '</tr>';
-
-sub testref {
-  my ($test, $format, $rest) = @_;
-  my $fmtstr = "";
-  if ($format eq "rgb24") {
-    $fmtstr = "-rgb24";
-  }
-
-  return "$test$fmtstr-ref.png";
-}
-
-sub testfiles {
-  my ($test, $target, $format, $offset, $similar, $rest) = @_;
-  my $fmtstr = "";
-  my $offstr = "";
-  my $simstr = "";
-  if ($format eq "rgb24") {
-    $fmtstr = "-rgb24";
-  } elsif ($format eq "argb32") {
-    $fmtstr = "-argb32";
-  }
-  if ($similar ne "0") {
-    $simstr = "-similar";
-  }
-  if ($offset ne "0") {
-    $offstr = "-" . $offset;
-  }
-
-  return ("out" => "$test-$target$fmtstr$simstr$offstr-out.png",
-	  "diff" => "$test-$target$fmtstr$simstr$offstr-diff.png");
-}
 
 sub img_for {
   my ($fn, $withlink) = @_;
@@ -237,35 +224,42 @@ foreach my $test (sort(keys %$tests)) {
           if ($tgtdata) {
             my $testres = $tgtdata->{$format}->{$offset}->{$similar};
             if ($testres) {
-              my %testfiles = testfiles($test, $target, $format,
-                                         $offset, $similar);
-              $testline .= "<td class=\"$testres\">";
+              my %testfiles;
+              $testfiles{'out'} = $testres->{'out'};
+              $testfiles{'diff'} = $testres->{'diff'};
+              $testfiles{'ref'} = $testres->{'ref'};
+
+              $testline .= "<td class=\"$testres->{'result'}\">";
               $teststats{$target}{$testres}++;
-              if ($testres eq "PASS") {
+              if ($testres->{'result'} eq "PASS") {
                 if ($config_show_all) {
-		  $testline .= img_for($testfiles{'out'},1);
+                  $testline .= img_for($testfiles{'out'},1);
                 }
-              } elsif ($testres eq "FAIL") {
+              } elsif ($testres->{'result'} eq "FAIL") {
                 if ($config_show_fail || $config_show_all) {
-		  $testline .= img_for($testfiles{'out'},1);
+                  $testline .= img_for($testfiles{'out'},1);
                   $testline .= " ";
-		  $testline .= img_for($testfiles{'diff'},1);
+                  $testline .= img_for($testfiles{'diff'},1);
+                  $testline .= " ";
+                  $testline .= img_for($testfiles{'ref'},1);
                 }
-              } elsif ($testres eq "CRASHED") {
-	         $testline .= "!!!CRASHED!!!";
-              } elsif ($testres eq "XFAIL") {
+              } elsif ($testres->{'result'} eq "CRASHED") {
+                 $testline .= "!!!CRASHED!!!";
+              } elsif ($testres->{'result'} eq "XFAIL") {
                 #nothing
                 if ($config_show_all) {
-		  $testline .= img_for($testfiles{'out'},1);
+                  $testline .= img_for($testfiles{'out'},1);
                   #$testline .= "<hr size=\"1\">";
                   $testline .= " ";
-		  $testline .= img_for($testfiles{'diff'},1);
+                  $testline .= img_for($testfiles{'diff'},1);
+                  $testline .= " ";
+                  $testline .= img_for($testfiles{'ref'},1);
                 }
-              } elsif ($testres eq "UNTESTED") {
+              } elsif ($testres->{'result'} eq "UNTESTED") {
                 #nothing
               } else {
-	        $testline .= "UNSUPPORTED STATUS (update make-html.pl)";
-	      }
+                $testline .= "UNSUPPORTED STATUS '$testres->{'result'}' (update make-html.pl)";
+              }
 
               $testline .= "</td>";
             } else {
@@ -275,22 +269,17 @@ foreach my $test (sort(keys %$tests)) {
             $testline .= '<td></td>';
           }
         }
-        my $testref = testref($test, $format);
         print '<tr><td>';
 
         if ($config_show_inline) {
 	  print "$test ($format/$offset) ";
 	  print "(<a href=\"" . string_to_data("text/plain",$logs->{$test}) . "\">log</a>)";
         } else {
-	  print "<a href=\"$testref\">", $test, ' (', $format, '/', $offset, ($similar ? ' similar' : ''), ')</a> ';
+	  print $test, ' (', $format, '/', $offset, ($similar ? ' similar' : ''), ') ';
 	  print "(<a href=\"$test.log\">log</a>)";
         }
 
         print '</td>';
-
-        if ($config_show_ref) {
-	  print "<td>" . img_for($testref,1) . "</td>";
-        }
 
         print $testline;
 
@@ -301,4 +290,3 @@ foreach my $test (sort(keys %$tests)) {
 }
 
 print "</table></body></html>\n";
-
