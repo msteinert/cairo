@@ -2029,7 +2029,7 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
     if (status)
 	return status;
 
-    snprintf (buffer, sizeof buffer, "mask=\"url(#mask%d);\"",
+    snprintf (buffer, sizeof buffer, "mask=\"url(#mask%d)\"",
 	      document->mask_id);
     status = _cairo_svg_surface_emit_paint (surface->xml_node, surface, op, source, buffer);
     if (status)
