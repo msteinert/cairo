@@ -331,6 +331,7 @@ REFERENCE_IMAGES = \
 	mask-surface-ctm-ref.png	\
 	mask-surface-ctm-rgb24-ref.png	\
 	mask-surface-ctm-svg-argb32-ref.png	\
+	mask-svg-rgb24-ref.png	\
 	mask-svg-argb32-ref.png	\
 	meta-surface-pattern-ref.png		\
 	meta-surface-pattern-rgb24-ref.png	\
