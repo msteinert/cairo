@@ -490,7 +490,7 @@ _cairo_path_fixed_interpret (cairo_path_fixed_t			*path,
 	    op = buf->op[i];
 
 	    if (! forward) {
-		points -= num_args[op];
+		points -= num_args[(int) op];
 	    }
 
 	    switch (op) {
@@ -512,7 +512,7 @@ _cairo_path_fixed_interpret (cairo_path_fixed_t			*path,
 		return status;
 
 	    if (forward) {
-		points += num_args[op];
+		points += num_args[(int) op];
 	    }
 
 	}
