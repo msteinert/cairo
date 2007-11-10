@@ -115,6 +115,8 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
 	    _cairo_path_fixed_fini (path);
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
+	buf->num_ops = other_buf->num_ops;
+	buf->num_points = other_buf->num_points;
 	memcpy (buf->op, other_buf->op,
 		buf->num_ops * sizeof (buf->op[0]));
 	memcpy (buf->points, other_buf->points,
