@@ -2,7 +2,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2004 Red Hat, Inc
- * Copyright © 2005-2006 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ * Copyright © 2005-2007 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  * Copyright © 2006 Red Hat, Inc
  *
  * This library is free software; you can redistribute it and/or
@@ -35,7 +35,7 @@
  *
  * Contributor(s):
  *	Kristian Høgsberg <krh@redhat.com>
- * 	Emmanuel Pacaud <emmanuel.pacaud@univ-poitiers.fr>
+ * 	Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  *	Carl Worth <cworth@cworth.org>
  */
 
@@ -1218,15 +1218,14 @@ _cairo_svg_surface_emit_operator (cairo_output_stream_t *output,
 }
 
 static cairo_status_t
-_cairo_svg_surface_emit_solid_pattern (cairo_svg_surface_t	    *surface,
-		    cairo_solid_pattern_t   *pattern,
-		    cairo_output_stream_t   *style,
-		    cairo_bool_t	     is_stroke)
+_cairo_svg_surface_emit_solid_pattern (cairo_svg_surface_t    *surface,
+				       cairo_solid_pattern_t  *pattern,
+				       cairo_output_stream_t  *style,
+				       cairo_bool_t	       is_stroke)
 {
-    _cairo_output_stream_printf (style,
-				 "%s: rgb(%f%%,%f%%,%f%%); "
-				 "opacity: %f;",
-				 is_stroke ? "stroke" : "fill",
+    _cairo_output_stream_printf (style, is_stroke ?
+				 "stroke: rgb(%f%%,%f%%,%f%%); stroke-opacity: %f;":
+				 "fill: rgb(%f%%,%f%%,%f%%); fill-opacity: %f;",
 				 pattern->color.red * 100.0,
 				 pattern->color.green * 100.0,
 				 pattern->color.blue * 100.0,
@@ -1678,8 +1677,10 @@ _cairo_svg_surface_emit_radial_pattern (cairo_svg_surface_t    *surface,
 }
 
 static cairo_status_t
-_cairo_svg_surface_emit_pattern (cairo_svg_surface_t *surface, cairo_pattern_t *pattern,
-	      cairo_output_stream_t *output, cairo_bool_t is_stroke)
+_cairo_svg_surface_emit_pattern (cairo_svg_surface_t   *surface,
+				 cairo_pattern_t       *pattern,
+				 cairo_output_stream_t *output,
+				 cairo_bool_t		is_stroke)
 {
     switch (pattern->type) {
     case CAIRO_PATTERN_TYPE_SOLID:
