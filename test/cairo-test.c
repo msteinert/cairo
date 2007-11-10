@@ -387,6 +387,7 @@ cairo_test_for_target (cairo_test_t			 *test,
 	xunlink (png_name);
 	(target->write_to_png) (surface, png_name);
 
+	cairo_test_log ("OUTPUT: %s\n", png_name);
 	if (!ref_name) {
 	    cairo_test_log ("Error: Cannot find reference image for %s/%s-%s-%s%s\n",srcdir,
 			    test->name,
@@ -397,7 +398,8 @@ cairo_test_for_target (cairo_test_t			 *test,
 	    goto UNWIND_CAIRO;
 	}
 
-	cairo_test_log ("Comparing result against reference image: %s\n", ref_name);
+	cairo_test_log ("REFERENCE: %s\n", ref_name);
+	cairo_test_log ("DIFFERENCE: %s\n", diff_name);
 
 	if (target->content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED) {
 	    diff_status= image_diff_flattened (png_name, ref_name, diff_name,
