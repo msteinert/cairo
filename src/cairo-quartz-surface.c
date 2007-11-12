@@ -1882,7 +1882,7 @@ cairo_quartz_surface_create (cairo_format_t format,
     }
 
     imageData = _cairo_malloc_ab (height, stride);
-    if (!imageData && stride > 0 && height > 0) {
+    if (!imageData) {
 	CGColorSpaceRelease (cgColorspace);
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
