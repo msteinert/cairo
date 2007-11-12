@@ -1461,8 +1461,8 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 	CGContextSetTextDrawingMode (surface->cgContext, kCGTextClip);
     } else {
 	/* Unsupported */
-	CGContextRestoreGState (surface->cgContext);
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	rv = CAIRO_INT_STATUS_UNSUPPORTED;
+	goto BAIL;
     }
 
     CGContextSetCompositeOperation (surface->cgContext, _cairo_quartz_cairo_operator_to_quartz (op));
@@ -1502,13 +1502,15 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 
     if (num_glyphs > STATIC_BUF_SIZE) {
 	cg_glyphs = (CGGlyph*) _cairo_malloc_ab (num_glyphs, sizeof(CGGlyph));
-	if (cg_glyphs == NULL)
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	if (cg_glyphs == NULL) {
+	    rv = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto BAIL;
+	}
 
 	cg_advances = (CGSize*) _cairo_malloc_ab (num_glyphs, sizeof(CGSize));
 	if (cg_glyphs == NULL) {
-	    free (cg_advances);
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    rv = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto BAIL;
 	}
     }
 
@@ -1540,11 +1542,6 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 				     cg_advances,
 				     num_glyphs);
 
-    if (cg_glyphs != &glyphs_static[0]) {
-	free (cg_glyphs);
-	free (cg_advances);
-    }
-
     if (action == DO_IMAGE) {
 	CGContextConcatCTM (surface->cgContext, surface->sourceImageTransform);
 	if (cairo_surface_get_type(((cairo_surface_pattern_t*)source)->surface) == CAIRO_SURFACE_TYPE_QUARTZ) {
@@ -1557,8 +1554,17 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 	CGContextDrawShading (surface->cgContext, surface->sourceShading);
     }
 
-    _cairo_quartz_teardown_source (surface, source);
+BAIL:
+    if (cg_advances != &cg_advances_static[0]) {
+	free (cg_advances);
+    }
 
+    if (cg_glyphs != &glyphs_static[0]) {
+	free (cg_glyphs);
+    }
+
+    _cairo_quartz_teardown_source (surface, source);
+    
     CGContextRestoreGState (surface->cgContext);
 
     return rv;
