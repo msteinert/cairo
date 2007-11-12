@@ -1673,6 +1673,9 @@ _cairo_quartz_surface_intersect_clip_path (void *abstract_surface,
 	CGContextBeginPath (surface->cgContext);
 	stroke.cgContext = surface->cgContext;
 	stroke.ctm_inverse = NULL;
+
+	/* path must not be empty. */
+	CGContextMoveToPoint (surface->cgContext, 0, 0);	    
 	status = _cairo_quartz_cairo_path_to_quartz_context (path, &stroke);
 	if (status)
 	    return status;
