@@ -1508,7 +1508,7 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 	}
 
 	cg_advances = (CGSize*) _cairo_malloc_ab (num_glyphs, sizeof(CGSize));
-	if (cg_glyphs == NULL) {
+	if (cg_advances == NULL) {
 	    rv = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto BAIL;
 	}
