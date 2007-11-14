@@ -1355,12 +1355,9 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
 	if (style->num_dashes%2)
 	    max_dashes *= 2;
 	if (max_dashes > STATIC_DASH)
-	    fdash = _cairo_malloc_ab (style->num_dashes, sizeof (float));
+	    fdash = _cairo_malloc_ab (max_dashes, sizeof (float));
 	if (fdash == NULL)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-	if (max_dashes > STATIC_DASH)
-	    fdash = malloc (sizeof(float)*max_dashes);
 
 	for (k = 0; k < max_dashes; k++)
 	    fdash[k] = (float) style->dash[k % style->num_dashes];
