@@ -325,10 +325,10 @@ ComputeGradientValue (void *info, const float *in, float *out)
     if (i == 0 || i == grad->n_stops) {
 	if (i == grad->n_stops)
 	    --i;
-	out[0] = grad->stops[i].color.red / 65535.;
-	out[1] = grad->stops[i].color.green / 65535.;
-	out[2] = grad->stops[i].color.blue / 65535.;
-	out[3] = grad->stops[i].color.alpha / 65535.;
+	out[0] = grad->stops[i].color.red;
+	out[1] = grad->stops[i].color.green;
+	out[2] = grad->stops[i].color.blue;
+	out[3] = grad->stops[i].color.alpha;
     } else {
 	float ax = _cairo_fixed_to_double(grad->stops[i-1].x);
 	float bx = _cairo_fixed_to_double(grad->stops[i].x) - ax;
@@ -336,17 +336,17 @@ ComputeGradientValue (void *info, const float *in, float *out)
 	float ap = 1.0 - bp;
 
 	out[0] =
-	    (grad->stops[i-1].color.red / 65535.) * ap +
-	    (grad->stops[i].color.red / 65535.) * bp;
+	    grad->stops[i-1].color.red * ap +
+	    grad->stops[i].color.red * bp;
 	out[1] =
-	    (grad->stops[i-1].color.green / 65535.) * ap +
-	    (grad->stops[i].color.green / 65535.) * bp;
+	    grad->stops[i-1].color.green * ap +
+	    grad->stops[i].color.green * bp;
 	out[2] =
-	    (grad->stops[i-1].color.blue / 65535.) * ap +
-	    (grad->stops[i].color.blue / 65535.) * bp;
+	    grad->stops[i-1].color.blue * ap +
+	    grad->stops[i].color.blue * bp;
 	out[3] =
-	    (grad->stops[i-1].color.alpha / 65535.) * ap +
-	    (grad->stops[i].color.alpha / 65535.) * bp;
+	    grad->stops[i-1].color.alpha * ap +
+	    grad->stops[i].color.alpha * bp;
     }
 }
 
