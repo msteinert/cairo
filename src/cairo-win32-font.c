@@ -1497,7 +1497,6 @@ _cairo_win32_scaled_font_init_glyph_path (cairo_win32_scaled_font_t *scaled_font
 	if (status)
 	    goto CLEANUP_BUFFER;
     }
-    free(buffer);
 
     _cairo_scaled_glyph_set_path (scaled_glyph,
 				  &scaled_font->base,
