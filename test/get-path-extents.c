@@ -36,7 +36,7 @@ cairo_test_t test = {
     draw
 };
 
-enum ExtentsType { FILL, STROKE };
+enum ExtentsType { FILL, STROKE, PATH };
 
 enum Relation { EQUALS, APPROX_EQUALS, CONTAINS };
 
@@ -58,6 +58,10 @@ check_extents (const char *message, cairo_t *cr, enum ExtentsType type,
     case STROKE:
         type_string = "stroke";
         cairo_stroke_extents (cr, &ext_x1, &ext_y1, &ext_x2, &ext_y2);
+        break;
+    case PATH:
+        type_string = "path";
+        cairo_path_extents (cr, &ext_x1, &ext_y1, &ext_x2, &ext_y2);
         break;
     }
 
@@ -118,7 +122,8 @@ draw (cairo_t *cr, int width, int height)
 
     phase = "No path";
     if (!check_extents (phase, cr2, FILL, EQUALS, 0, 0, 0, 0) ||
-        !check_extents (phase, cr2, STROKE, EQUALS, 0, 0, 0, 0))
+        !check_extents (phase, cr2, STROKE, EQUALS, 0, 0, 0, 0) ||
+        !check_extents (phase, cr2, PATH, EQUALS, 0, 0, 0, 0))
 	ret = CAIRO_TEST_FAILURE;
 
     cairo_save (cr2);
@@ -164,7 +169,8 @@ draw (cairo_t *cr, int width, int height)
     cairo_move_to (cr2, 0, 180);
     cairo_line_to (cr2, 750, 180);
     if (!check_extents (phase, cr2, FILL, EQUALS, 0, 0, 0, 0) ||
-        !check_extents (phase, cr2, STROKE, EQUALS, -5, 175, 760, 10))
+        !check_extents (phase, cr2, STROKE, EQUALS, -5, 175, 760, 10) ||
+        !check_extents (phase, cr2, PATH, EQUALS, 0, 180, 755, 0))
 	ret = CAIRO_TEST_FAILURE;
     cairo_new_path (cr2);
     cairo_restore (cr2);
@@ -173,7 +179,8 @@ draw (cairo_t *cr, int width, int height)
     cairo_save (cr2);
     cairo_rectangle (cr2, 10, 10, 80, 80);
     if (!check_extents (phase, cr2, FILL, EQUALS, 10, 10, 80, 80) ||
-        !check_extents (phase, cr2, STROKE, EQUALS, 5, 5, 90, 90))
+        !check_extents (phase, cr2, STROKE, EQUALS, 5, 5, 90, 90) ||
+        !check_extents (phase, cr2, PATH, EQUALS, 10, 10, 80, 80))
 	ret = CAIRO_TEST_FAILURE;
     cairo_new_path (cr2);
     cairo_restore (cr2);
@@ -183,7 +190,8 @@ draw (cairo_t *cr, int width, int height)
     cairo_rectangle (cr2, 10, 10, 10, 10);
     cairo_rectangle (cr2, 20, 20, 10, 10);
     if (!check_extents (phase, cr2, FILL, EQUALS, 10, 10, 20, 20) ||
-        !check_extents (phase, cr2, STROKE, EQUALS, 5, 5, 30, 30))
+        !check_extents (phase, cr2, STROKE, EQUALS, 5, 5, 30, 30) ||
+        !check_extents (phase, cr2, PATH, EQUALS, 10, 10, 20, 20))
 	ret = CAIRO_TEST_FAILURE;
     cairo_new_path (cr2);
     cairo_restore (cr2);
@@ -197,7 +205,8 @@ draw (cairo_t *cr, int width, int height)
     /* miter joins protrude 5*(1+sqrt(2)) above the top-left corner and to
        the right of the bottom-right corner */
     if (!check_extents (phase, cr2, FILL, EQUALS, 10, 10, 80, 80) ||
-        !check_extents (phase, cr2, STROKE, CONTAINS, 0, 5, 95, 95))
+        !check_extents (phase, cr2, STROKE, CONTAINS, 0, 5, 95, 95) ||
+        !check_extents (phase, cr2, PATH, CONTAINS, 10, 10, 80, 80))
 	ret = CAIRO_TEST_FAILURE;
     cairo_new_path (cr2);
     cairo_restore (cr2);
@@ -240,7 +249,8 @@ draw (cairo_t *cr, int width, int height)
     cairo_text_path (cr2, "The quick brown fox jumped over the lazy dog.");
     cairo_set_line_width (cr2, 2.0);
     if (!check_extents (phase, cr2, FILL, EQUALS, 0, 0, extents.width, extents.height) ||
-	!check_extents (phase, cr2, STROKE, EQUALS, -1, -1, extents.width+2, extents.height+2))
+	!check_extents (phase, cr2, STROKE, EQUALS, -1, -1, extents.width+2, extents.height+2) ||
+	!check_extents (phase, cr2, PATH, EQUALS, 0, 0, extents.width, extents.height))
 	ret = CAIRO_TEST_FAILURE;
     cairo_new_path (cr2);
     cairo_restore (cr2);
@@ -250,7 +260,8 @@ draw (cairo_t *cr, int width, int height)
     cairo_scale (cr2, 2, 2);
     cairo_rectangle (cr2, 5, 5, 40, 40);
     if (!check_extents (phase, cr2, FILL, EQUALS, 5, 5, 40, 40) ||
-        !check_extents (phase, cr2, STROKE, EQUALS, 0, 0, 50, 50))
+        !check_extents (phase, cr2, STROKE, EQUALS, 0, 0, 50, 50) ||
+        !check_extents (phase, cr2, PATH, EQUALS, 5, 5, 40, 40))
 	ret = CAIRO_TEST_FAILURE;
     cairo_new_path (cr2);
     cairo_restore (cr2);
@@ -262,7 +273,8 @@ draw (cairo_t *cr, int width, int height)
     cairo_rectangle (cr2, 5, 5, 40, 40);
     cairo_restore (cr2);
     if (!check_extents (phase, cr2, FILL, EQUALS, 10, 10, 80, 80) ||
-        !check_extents (phase, cr2, STROKE, EQUALS, 5, 5, 90, 90))
+        !check_extents (phase, cr2, STROKE, EQUALS, 5, 5, 90, 90) ||
+        !check_extents (phase, cr2, PATH, EQUALS, 10, 10, 80, 80))
 	ret = CAIRO_TEST_FAILURE;
     cairo_new_path (cr2);
     cairo_restore (cr2);
@@ -281,7 +293,8 @@ draw (cairo_t *cr, int width, int height)
        the largest axis-aligned square is a bit over 38 on either side of
        the axes. */
     if (!check_extents (phase, cr2, FILL, CONTAINS, -35, -35, 35, 35) ||
-        !check_extents (phase, cr2, STROKE, CONTAINS, -38, -38, 38, 38))
+        !check_extents (phase, cr2, STROKE, CONTAINS, -38, -38, 38, 38) ||
+        !check_extents (phase, cr2, PATH, CONTAINS, -35, -35, 35, 35))
 	ret = CAIRO_TEST_FAILURE;
     cairo_new_path (cr2);
     cairo_restore (cr2);

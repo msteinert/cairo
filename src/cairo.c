@@ -1870,6 +1870,36 @@ cairo_close_path (cairo_t *cr)
 slim_hidden_def(cairo_close_path);
 
 /**
+ * cairo_path_extents:
+ * @cr: a cairo context
+ * @x1: left of the resulting extents
+ * @y1: top of the resulting extents
+ * @x2: right of the resulting extents
+ * @y2: bottom of the resulting extents
+ *
+ * Computes a bounding box in user coordinates covering the points
+ * on the current path. If the current path is empty,
+ * returns an empty rectangle (0,0, 0,0).  Stroke parameters,
+ * surface dimensions and clipping are not taken into account. This
+ * will be the same as the value returned by cairo_fill_extents()
+ * unless the area enclosed by the path is empty.
+ *
+ * Since: 1.6
+ **/
+void
+cairo_path_extents (cairo_t *cr,
+		    double *x1, double *y1, double *x2, double *y2)
+{
+    if (cr->status)
+	return;
+
+    _cairo_gstate_path_extents (cr->gstate,
+				cr->path,
+				x1, y1, x2, y2);
+}
+slim_hidden_def (cairo_path_extents);
+
+/**
  * cairo_paint:
  * @cr: a cairo context
  *

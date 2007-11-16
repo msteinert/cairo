@@ -326,6 +326,7 @@ cairo_text_path
 cairo_rel_curve_to
 cairo_rel_line_to
 cairo_rel_move_to
+cairo_path_extents
 </SECTION>
 
 <SECTION>

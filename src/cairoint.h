@@ -1005,6 +1005,12 @@ _cairo_gstate_backend_to_user_rectangle (cairo_gstate_t *gstate,
                                          double *x2, double *y2,
                                          cairo_bool_t *is_tight);
 
+cairo_private void
+_cairo_gstate_path_extents (cairo_gstate_t     *gstate,
+			    cairo_path_fixed_t *path,
+			    double *x1, double *y1,
+			    double *x2, double *y2);
+
 cairo_private cairo_status_t
 _cairo_gstate_paint (cairo_gstate_t *gstate);
 
@@ -2220,6 +2226,7 @@ slim_hidden_proto (cairo_matrix_translate);
 slim_hidden_proto (cairo_move_to);
 slim_hidden_proto (cairo_new_path);
 slim_hidden_proto (cairo_paint);
+slim_hidden_proto (cairo_path_extents);
 slim_hidden_proto (cairo_pattern_create_for_surface);
 slim_hidden_proto (cairo_pattern_create_rgb);
 slim_hidden_proto (cairo_pattern_create_rgba);
