@@ -1915,6 +1915,8 @@ cairo_quartz_surface_create (cairo_format_t format,
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t*) &_cairo_surface_nil;
     }
+    /* zero the memory to match the image surface behaviour */
+    memset (imageData, 0, height * stride);
 
     cgc = CGBitmapContextCreate (imageData,
 				 width,
