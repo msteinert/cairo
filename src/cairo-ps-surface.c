@@ -3149,7 +3149,7 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
             } else {
                 for (j = i; j < last+1; j++) {
                     if (j == num_glyphs_unsigned - 1)
-                        _cairo_output_stream_printf (word_wrap, "0 ");
+                        _cairo_output_stream_printf (word_wrap, "0 0 ");
                     else
                         _cairo_output_stream_printf (word_wrap,
                                                      "%f %f ",
