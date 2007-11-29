@@ -727,7 +727,7 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
 				 "8 dict begin\n"
 				 "/FontType 3 def\n"
 				 "/FontMatrix [%f %f %f %f 0 0] def\n"
-				 "/FontBBox [0 0 10 10] def\n"
+				 "/FontBBox [0 0 0 0] def\n"
 				 "/Encoding 256 array def\n"
 				 "0 1 255 { Encoding exch /.notdef put } for\n",
 				 matrix.xx,
