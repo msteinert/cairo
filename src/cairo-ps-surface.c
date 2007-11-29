@@ -630,9 +630,9 @@ _cairo_ps_surface_emit_bitmap_glyph_data (cairo_ps_surface_t	*surface,
     _cairo_output_stream_printf (surface->final_stream,
 				 "0 0 %f %f %f %f setcachedevice\n",
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
-				 - _cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x),
-				 - _cairo_fixed_to_double (scaled_glyph->bbox.p1.y));
+				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.y));
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "<<\n"
