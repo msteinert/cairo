@@ -680,18 +680,20 @@ _cairo_ps_surface_emit_glyph (cairo_ps_surface_t	*surface,
 			      unsigned long		 scaled_font_glyph_index,
 			      unsigned int		 subset_glyph_index)
 {
-    cairo_status_t	    status;
+    cairo_status_t	    status = CAIRO_STATUS_SUCCESS;
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "\t\t{ %% %d\n", subset_glyph_index);
 
-    status = _cairo_ps_surface_emit_outline_glyph_data (surface,
-							scaled_font,
-							scaled_font_glyph_index);
-    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
-	status = _cairo_ps_surface_emit_bitmap_glyph_data (surface,
-							   scaled_font,
-							   scaled_font_glyph_index);
+    if (subset_glyph_index != 0) {
+	status = _cairo_ps_surface_emit_outline_glyph_data (surface,
+							    scaled_font,
+							    scaled_font_glyph_index);
+	if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+	    status = _cairo_ps_surface_emit_bitmap_glyph_data (surface,
+							       scaled_font,
+							       scaled_font_glyph_index);
+    }
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "\t\t}\n");
