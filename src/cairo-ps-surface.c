@@ -611,6 +611,7 @@ _cairo_ps_surface_emit_bitmap_glyph_data (cairo_ps_surface_t	*surface,
     cairo_image_surface_t *image;
     unsigned char *row, *byte;
     int rows, cols;
+    double x_advance, y_advance;
 
     status = _cairo_scaled_glyph_lookup (scaled_font,
 					 glyph_index,
@@ -620,6 +621,10 @@ _cairo_ps_surface_emit_bitmap_glyph_data (cairo_ps_surface_t	*surface,
     if (status)
 	return status;
 
+    x_advance = scaled_glyph->metrics.x_advance;
+    y_advance = scaled_glyph->metrics.y_advance;
+    cairo_matrix_transform_distance (&scaled_font->ctm, &x_advance, &y_advance);
+
     image = scaled_glyph->surface;
     if (image->format != CAIRO_FORMAT_A1) {
 	image = _cairo_image_surface_clone (image, CAIRO_FORMAT_A1);
@@ -628,7 +633,8 @@ _cairo_ps_surface_emit_bitmap_glyph_data (cairo_ps_surface_t	*surface,
     }
 
     _cairo_output_stream_printf (surface->final_stream,
-				 "0 0 %f %f %f %f setcachedevice\n",
+				 "%f 0 %f %f %f %f setcachedevice\n",
+				 x_advance,
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
 				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x),
