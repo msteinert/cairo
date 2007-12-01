@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 LANG=C
 
@@ -10,8 +10,8 @@ if ! which readelf 2>/dev/null >/dev/null; then
 fi
 
 for so in .libs/lib*.so; do
-	echo Checking $so for local PLT entries
-	readelf -W -r $so | grep 'JU\?MP_SLO' | grep 'cairo' && status=1
+	echo Checking "$so" for local PLT entries
+	readelf -W -r "$so" | grep 'JU\?MP_SLO' | grep 'cairo' && status=1
 done
 
 exit $status

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 LANG=C
 
@@ -18,19 +18,19 @@ fi
 defs="cairo.def"
 make $defs
 for def in $defs; do
-	lib=${def%.def}
-	lib=${lib##*/}
+	lib=`echo "$def" | sed 's/[.]def$//'`
+	lib=`echo "$lib" | sed 's@.*/@@'`
 	so=.libs/lib${lib}.so
 
-	test -f $so || continue
+	test -f "$so" || continue
 	echo Checking $def
 
 	{
 		echo EXPORTS
 		eval $get_cairo_syms | grep -v '^_cairo_test_\|^_fini\|^_init' | sort -u
 		# cheat: copy the last line from the def file!
-		tail -n1 $def
-	} | diff $def - || status=1
+		tail -n1 "$def"
+	} | diff "$def" - || status=1
 done
 
 exit $status
