@@ -101,6 +101,7 @@ typedef struct {
 
     cairo_bool_t is_truetype;
     cairo_bool_t glyph_indexing;
+    cairo_bool_t is_bitmap;
 
     cairo_bool_t delete_scaled_hfont;
 } cairo_win32_scaled_font_t;
@@ -111,6 +112,10 @@ _cairo_win32_scaled_font_set_metrics (cairo_win32_scaled_font_t *scaled_font);
 static cairo_status_t
 _cairo_win32_scaled_font_init_glyph_metrics (cairo_win32_scaled_font_t *scaled_font,
 					     cairo_scaled_glyph_t      *scaled_glyph);
+
+static cairo_status_t
+_cairo_win32_scaled_font_init_glyph_surface (cairo_win32_scaled_font_t *scaled_font,
+                                             cairo_scaled_glyph_t      *scaled_glyph);
 
 static cairo_status_t
 _cairo_win32_scaled_font_init_glyph_path (cairo_win32_scaled_font_t *scaled_font,
@@ -742,6 +747,11 @@ _cairo_win32_scaled_font_set_metrics (cairo_win32_scaled_font_t *scaled_font)
 
     }
 
+    if (metrics.tmPitchAndFamily & TMPF_VECTOR)
+	scaled_font->is_bitmap = FALSE;
+    else
+	scaled_font->is_bitmap = TRUE;
+
     scaled_font->is_truetype = (metrics.tmPitchAndFamily & TMPF_TRUETYPE) != 0;
     scaled_font->glyph_indexing = scaled_font->is_truetype ||
 	(GetFontData (hdc, OPENTYPE_CFF_TAG, 0, NULL, 0) != GDI_ERROR);
@@ -1157,8 +1167,10 @@ _cairo_win32_scaled_font_glyph_init (void		       *abstract_font,
 	    return status;
     }
 
-    if ((info & CAIRO_SCALED_GLYPH_INFO_SURFACE) != 0) {
-	ASSERT_NOT_REACHED;
+    if (info & CAIRO_SCALED_GLYPH_INFO_SURFACE) {
+	status = _cairo_win32_scaled_font_init_glyph_surface (scaled_font, scaled_glyph);
+	if (status)
+	    return status;
     }
 
     if ((info & CAIRO_SCALED_GLYPH_INFO_PATH) != 0) {
@@ -1330,6 +1342,50 @@ _cairo_win32_scaled_font_map_glyphs_to_unicode (void *abstract_font,
         font_subset->to_unicode[i] = font_subset->glyphs[i];
 }
 
+static cairo_status_t
+_cairo_win32_scaled_font_init_glyph_surface (cairo_win32_scaled_font_t *scaled_font,
+                                             cairo_scaled_glyph_t      *scaled_glyph)
+{
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_glyph_t glyph;
+    cairo_win32_surface_t *surface;
+    cairo_t *cr;
+    cairo_surface_t *image;
+    int width, height;
+    int x1, y1, x2, y2;
+
+    x1 = _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.x);
+    y1 = _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.y);
+    x2 = _cairo_fixed_integer_ceil (scaled_glyph->bbox.p2.x);
+    y2 = _cairo_fixed_integer_ceil (scaled_glyph->bbox.p2.y);
+    width = x2 - x1;
+    height = y2 - y1;
+
+    surface = (cairo_win32_surface_t *)
+	cairo_win32_surface_create_with_dib (CAIRO_FORMAT_RGB24, width, height);
+
+    cr = cairo_create((cairo_surface_t *)surface);
+    cairo_set_source_rgb (cr, 1, 1, 1);
+    cairo_paint (cr);
+    cairo_destroy(cr);
+
+    glyph.index = _cairo_scaled_glyph_index (scaled_glyph);
+    glyph.x = -x1;
+    glyph.y = -y1;
+    status = _draw_glyphs_on_surface (surface, scaled_font, RGB(0,0,0),
+                                      0, 0, &glyph, 1);
+    GdiFlush();
+
+    image = _compute_a8_mask (surface);
+    cairo_surface_set_device_offset ((cairo_surface_t *)image, -x1, -y1);
+    _cairo_scaled_glyph_set_surface (scaled_glyph,
+                                     &scaled_font->base,
+                                     (cairo_image_surface_t*)image);
+    cairo_surface_destroy (&surface->base);
+
+    return status;
+}
+
 static void
 _cairo_win32_transform_FIXED_to_fixed (cairo_matrix_t *matrix,
                                        FIXED Fx, FIXED Fy,
@@ -1356,6 +1412,9 @@ _cairo_win32_scaled_font_init_glyph_path (cairo_win32_scaled_font_t *scaled_font
     cairo_matrix_t transform;
     cairo_fixed_t x, y;
     UINT glyph_index_option;
+
+    if (scaled_font->is_bitmap)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     hdc = _get_global_font_dc ();
     if (!hdc)
