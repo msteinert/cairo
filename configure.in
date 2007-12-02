@@ -482,8 +482,8 @@ dnl ===========================================================================
 # freetype2.pc in the release.
 #
 # FreeType versions come in three forms:
-#   release (such as 2.1.5)
-#   libtool (such as 9.4.3) (returned by freetype-config and pkg-config)
+#   release (such as 2.1.9)
+#   libtool (such as 9.7.3) (returned by freetype-config and pkg-config)
 #   platform-specific/soname (such as 6.3.4)
 # and they recommend you never use the platform-specific version
 # (see docs/VERSION.DLL in freetype2 sources)
@@ -491,9 +491,9 @@ dnl ===========================================================================
 # Set these as appropriate:
 
 # release number - for information only
-FREETYPE_MIN_RELEASE=2.1.0
+FREETYPE_MIN_RELEASE=2.1.9
 # libtool-specific version - this is what is checked
-FREETYPE_MIN_VERSION=8.0.2
+FREETYPE_MIN_VERSION=9.7.3
 
 CAIRO_BACKEND_ENABLE(ft, FreeType font, freetype, FT_FONT, auto, [
   ft_REQUIRES="fontconfig"
