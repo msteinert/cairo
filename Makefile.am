@@ -23,7 +23,7 @@ check-valgrind: all
 perf: all
 	cd perf && $(MAKE) $(AM_MAKEFLAGS) perf
 
-.PHONY: lcov lcov-perf genlcov lcov-clean
+if CAIRO_HAS_LCOV
 # use recursive makes in order to ignore errors during check/perf
 lcov:
 	-$(MAKE) $(AM_MAKEFLAGS) check
@@ -38,12 +38,19 @@ genlcov:
 	$(LTP) --directory $(top_builddir) --capture --output-file cairo-lcov.info --test-name CAIRO_PERF --no-checksum
 	$(SED) -e 's#.libs/##' < cairo-lcov.info > cairo-lcov.info.tmp
 	LANG=C $(LTP_GENHTML) --prefix $(top_builddir) --output-directory cairo-lcov --title "Cairo Code Coverage" --show-details cairo-lcov.info.tmp
-	rm -f cairo-lcov.info.tmp
+	$(RM) cairo-lcov.info.tmp
+else
+lcov lcov-perf genlcov:
+	@echo You need to configure Cairo with support for gcov enabled.
+	@echo e.g, ./configure --enable-gcov
+endif
 
 lcov-clean:
+if CAIRO_HAS_LCOV
 	-$(LTP) --directory $(top_builddir) -z
-	-$(RM) -rf cairo-lcov.info cairo-lcov
-	-$(FIND) -name '*.gcda' -print | ${XARGS} ${RM}
+endif
+	-$(RM) -r cairo-lcov.info cairo-lcov
+	-$(FIND) -name '*.gcda' -print | $(XARGS) $(RM)
 
 EXTRA_DIST = \
 	AUTHORS \
@@ -227,4 +234,4 @@ doc-publish: doc
 	scp $(MANUAL_TAR_FILE) $(RELEASE_UPLOAD_HOST):$(MANUAL_UPLOAD_DIR)
 	ssh $(RELEASE_UPLOAD_HOST) "cd $(MANUAL_UPLOAD_DIR) && tar xzf $(MANUAL_TAR_FILE) && rm -f manual && ln -s $(MANUAL_DATED) manual && ln -sf $(MANUAL_TAR_FILE) cairo-manual.tar.gz"
 
-.PHONY: release-verify-even-micro release-verify-newer release-remove-old release-cleanup-group-sticky release-check release-upload release-publish docs-publish lcov lcov-perf lcov-clean
+.PHONY: release-verify-even-micro release-verify-newer release-remove-old release-cleanup-group-sticky release-check release-upload release-publish docs-publish lcov lcov-perf lcov-clean genlcov
