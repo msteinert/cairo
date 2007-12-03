@@ -68,6 +68,8 @@ EXTRA_DIST = \
 	ROADMAP \
 	TODO
 DISTCLEANFILES = config.cache
+distclean-local: lcov-clean
+
 MAINTAINERCLEANFILES = \
 	$(srcdir)/aclocal.m4 \
 	$(srcdir)/autoscan.log \
