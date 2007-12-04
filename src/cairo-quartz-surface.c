@@ -103,6 +103,9 @@ CG_EXTERN CGImageRef CGBitmapContextCreateImage (CGContextRef);
 /* missing in 10.3.9 */
 extern void CGContextClipToMask (CGContextRef, CGRect, CGImageRef) __attribute__((weak_import));
 
+/* 10.5-only optimization */
+extern void CGContextDrawTiledImage (CGContextRef, CGRect, CGImageRef) __attribute__((weak_import));
+
 /*
  * Utility functions
  */
@@ -699,7 +702,8 @@ typedef enum {
     DO_PATTERN,
     DO_IMAGE,
     DO_UNSUPPORTED,
-    DO_NOTHING
+    DO_NOTHING,
+    DO_TILED_IMAGE
 } cairo_quartz_action_t;
 
 static cairo_quartz_action_t
@@ -737,7 +741,7 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
 
 	return DO_SHADING;
     } else if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
-	       source->extend == CAIRO_EXTEND_NONE)
+	       (source->extend == CAIRO_EXTEND_NONE || (CGContextDrawTiledImage && source->extend == CAIRO_EXTEND_REPEAT)))
     {
 	    cairo_surface_pattern_t *spat = (cairo_surface_pattern_t *) source;
 	    cairo_surface_t *pat_surf = spat->surface;
@@ -771,7 +775,10 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
 
 	    surface->sourceImageRect = CGRectMake (0, 0, extents.width, extents.height);
 
-	    return DO_IMAGE;
+	    if (source->extend == CAIRO_EXTEND_NONE)
+		return DO_IMAGE;
+	    else
+		return DO_TILED_IMAGE;
     } else if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	float patternAlpha = 1.0f;
 	CGColorSpaceRef patternSpace;
@@ -1247,24 +1254,31 @@ _cairo_quartz_surface_paint (void *abstract_surface,
 							  surface->extents.height));
     } else if (action == DO_SHADING) {
 	CGContextDrawShading (surface->cgContext, surface->sourceShading);
-    } else if (action == DO_IMAGE) {
+    } else if (action == DO_IMAGE || action == DO_TILED_IMAGE) {
 	cairo_surface_pattern_t *surface_pattern =
 	    (cairo_surface_pattern_t *) source;
 	cairo_surface_t *pat_surf = surface_pattern->surface;
 
 	CGContextSaveGState (surface->cgContext);
-	CGContextSetRGBFillColor (surface->cgContext, 0.0, 0.0, 0.0, 0.0);
-	CGContextFillRect (surface->cgContext, CGRectMake(surface->extents.x,
-							  surface->extents.y,
-							  surface->extents.width,
-							  surface->extents.height));
+
+	if (action == DO_IMAGE && op != CAIRO_OPERATOR_OVER) {
+	    CGContextSetRGBFillColor (surface->cgContext, 0.0, 0.0, 0.0, 0.0);
+	    CGContextFillRect (surface->cgContext, CGRectMake(surface->extents.x,
+							      surface->extents.y,
+							      surface->extents.width,
+							      surface->extents.height));
+	}
+
 	CGContextConcatCTM (surface->cgContext, surface->sourceImageTransform);
 	if (cairo_surface_get_type(pat_surf) == CAIRO_SURFACE_TYPE_QUARTZ) {
 	    CGContextTranslateCTM (surface->cgContext, 0, CGImageGetHeight(surface->sourceImage));
 	    CGContextScaleCTM (surface->cgContext, 1, -1);
 	}
 
-	CGContextDrawImage (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
+	if (action == DO_IMAGE)
+	    CGContextDrawImage (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
+	else
+	    CGContextDrawTiledImage (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
 	CGContextRestoreGState (surface->cgContext);
     } else if (action != DO_NOTHING) {
 	rv = CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1328,7 +1342,7 @@ _cairo_quartz_surface_fill (void *abstract_surface,
 	    CGContextEOClip (surface->cgContext);
 
 	CGContextDrawShading (surface->cgContext, surface->sourceShading);
-    } else if (action == DO_IMAGE) {
+    } else if (action == DO_IMAGE || action == DO_TILED_IMAGE) {
 	cairo_surface_pattern_t *surface_pattern =
 	    (cairo_surface_pattern_t *) source;
 	cairo_surface_t *pat_surf = surface_pattern->surface;
@@ -1337,18 +1351,24 @@ _cairo_quartz_surface_fill (void *abstract_surface,
 	else
 	    CGContextEOClip (surface->cgContext);
 
-	CGContextSetRGBFillColor (surface->cgContext, 0.0, 0.0, 0.0, 0.0);
-	CGContextFillRect (surface->cgContext, CGRectMake(surface->extents.x,
-							  surface->extents.y,
-							  surface->extents.width,
-							  surface->extents.height));
+	if (action == DO_IMAGE && op != CAIRO_OPERATOR_OVER) {
+	    CGContextSetRGBFillColor (surface->cgContext, 0.0, 0.0, 0.0, 0.0);
+	    CGContextFillRect (surface->cgContext, CGRectMake(surface->extents.x,
+							      surface->extents.y,
+							      surface->extents.width,
+							      surface->extents.height));
+	}
+
 	CGContextConcatCTM (surface->cgContext, surface->sourceImageTransform);
 	if (cairo_surface_get_type(pat_surf) == CAIRO_SURFACE_TYPE_QUARTZ) {
 	    CGContextTranslateCTM (surface->cgContext, 0, CGImageGetHeight(surface->sourceImage));
 	    CGContextScaleCTM (surface->cgContext, 1, -1);
 	}
 
-	CGContextDrawImage (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
+	if (action == DO_IMAGE)
+	    CGContextDrawImage (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
+	else
+	    CGContextDrawTiledImage (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
     } else if (action != DO_NOTHING) {
 	rv = CAIRO_INT_STATUS_UNSUPPORTED;
     }
@@ -1435,22 +1455,28 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
 
     if (action == DO_SOLID || action == DO_PATTERN) {
 	CGContextStrokePath (surface->cgContext);
-    } else if (action == DO_IMAGE) {
+    } else if (action == DO_IMAGE || action == DO_TILED_IMAGE) {
 	CGContextReplacePathWithStrokedPath (surface->cgContext);
 	CGContextClip (surface->cgContext);
 
-	CGContextSetRGBFillColor (surface->cgContext, 0.0, 0.0, 0.0, 0.0);
-	CGContextFillRect (surface->cgContext, CGRectMake(surface->extents.x,
-							  surface->extents.y,
-							  surface->extents.width,
-							  surface->extents.height));
+	if (action == DO_IMAGE && op != CAIRO_OPERATOR_OVER) {
+	    CGContextSetRGBFillColor (surface->cgContext, 0.0, 0.0, 0.0, 0.0);
+	    CGContextFillRect (surface->cgContext, CGRectMake(surface->extents.x,
+							      surface->extents.y,
+							      surface->extents.width,
+							      surface->extents.height));
+	}
+
 	CGContextConcatCTM (surface->cgContext, surface->sourceImageTransform);
 	if (cairo_surface_get_type(((cairo_surface_pattern_t*)source)->surface) == CAIRO_SURFACE_TYPE_QUARTZ) {
 	    CGContextTranslateCTM (surface->cgContext, 0, CGImageGetHeight(surface->sourceImage));
 	    CGContextScaleCTM (surface->cgContext, 1, -1);
 	}
 
-	CGContextDrawImage (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
+	if (action == DO_IMAGE)
+	    CGContextDrawImage (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
+	else
+	    CGContextDrawTiledImage (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
     } else if (action == DO_SHADING) {
 	CGContextReplacePathWithStrokedPath (surface->cgContext);
 	CGContextClip (surface->cgContext);
@@ -1512,7 +1538,7 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
     action = _cairo_quartz_setup_source (surface, source);
     if (action == DO_SOLID || action == DO_PATTERN) {
 	CGContextSetTextDrawingMode (surface->cgContext, kCGTextFill);
-    } else if (action == DO_IMAGE || action == DO_SHADING) {
+    } else if (action == DO_IMAGE || action == DO_TILED_IMAGE || action == DO_SHADING) {
 	CGContextSetTextDrawingMode (surface->cgContext, kCGTextClip);
     } else {
 	if (action != DO_NOTHING)
@@ -1597,19 +1623,25 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 				     cg_advances,
 				     num_glyphs);
 
-    if (action == DO_IMAGE) {
-	CGContextSetRGBFillColor (surface->cgContext, 0.0, 0.0, 0.0, 0.0);
-	CGContextFillRect (surface->cgContext, CGRectMake(surface->extents.x,
-							  surface->extents.y,
-							  surface->extents.width,
-							  surface->extents.height));
+    if (action == DO_IMAGE || action == DO_TILED_IMAGE) {
+	if (action == DO_IMAGE && op != CAIRO_OPERATOR_OVER) {
+	    CGContextSetRGBFillColor (surface->cgContext, 0.0, 0.0, 0.0, 0.0);
+	    CGContextFillRect (surface->cgContext, CGRectMake(surface->extents.x,
+							      surface->extents.y,
+							      surface->extents.width,
+							      surface->extents.height));
+	}
+
 	CGContextConcatCTM (surface->cgContext, surface->sourceImageTransform);
 	if (cairo_surface_get_type(((cairo_surface_pattern_t*)source)->surface) == CAIRO_SURFACE_TYPE_QUARTZ) {
 	    CGContextTranslateCTM (surface->cgContext, 0, CGImageGetHeight(surface->sourceImage));
 	    CGContextScaleCTM (surface->cgContext, 1, -1);
 	}
 
-	CGContextDrawImage (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
+	if (action == DO_IMAGE)
+	    CGContextDrawImage (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
+	else
+	    CGContextDrawTiledImage (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
     } else if (action == DO_SHADING) {
 	CGContextDrawShading (surface->cgContext, surface->sourceShading);
     }
