@@ -15,6 +15,7 @@ clip-nesting			\
 clip-operator			\
 clip-push-group			\
 clip-twice			\
+clip-zero \
 close-path			\
 composite-integer-translate-source \
 composite-integer-translate-over \
