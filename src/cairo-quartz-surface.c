@@ -86,7 +86,7 @@ CG_EXTERN CGSize CGContextGetPatternPhase (CGContextRef);
 
 /* We need to work with the 10.3 SDK as well (and 10.3 machines; luckily, 10.3.9
  * has all the stuff we care about, just some of it isn't exported in the SDK.
- */ 
+ */
 #ifndef kCGBitmapByteOrder32Host
 #define USE_10_3_WORKAROUNDS
 #define kCGBitmapAlphaInfoMask 0x1F
@@ -171,7 +171,7 @@ _cairo_path_to_quartz_context_line_to (void *closure, cairo_point_t *point)
     quartz_stroke_t *stroke = (quartz_stroke_t *)closure;
     double x = _cairo_fixed_to_double (point->x);
     double y = _cairo_fixed_to_double (point->y);
-    
+
     if (stroke->ctm_inverse)
 	cairo_matrix_transform_point (stroke->ctm_inverse, &x, &y);
 
@@ -390,12 +390,12 @@ _cairo_quartz_cairo_gradient_pattern_to_quartz (cairo_pattern_t *abspat,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* bandaid for mozilla bug 379321, also visible in the
-     * linear-gradient-reflect test. 
+     * linear-gradient-reflect test.
      */
     if (abspat->extend == CAIRO_EXTEND_REFLECT ||
 	abspat->extend == CAIRO_EXTEND_REPEAT)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
-	
+
     /* We can only do this if we have an identity pattern matrix;
      * otherwise fall back through to the generic pattern case.
      * XXXperf we could optimize this by creating a pattern with the shading;
@@ -1093,7 +1093,7 @@ _cairo_quartz_surface_create_similar (void *abstract_surface,
 	format = CAIRO_FORMAT_A8;
     else
 	return NULL;
-	
+
     // verify width and height of surface
     if (!verify_surface_size(width, height)) {
 	_cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -1115,7 +1115,7 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
     cairo_quartz_surface_t *new_surface = NULL;
     cairo_format_t new_format;
     CGImageRef quartz_image = NULL;
-    
+
     *clone_out = NULL;
 
     // verify width and height of surface
@@ -1435,7 +1435,7 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
 
 	for (k = 0; k < max_dashes; k++)
 	    fdash[k] = (float) style->dash[k % style->num_dashes];
-	
+
 	CGContextSetLineDash (surface->cgContext, style->dash_offset, fdash, max_dashes);
 	if (fdash != sdash)
 	    free (fdash);
@@ -1561,9 +1561,9 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
      * text matrix?
      */
     //ND((stderr, "show_glyphs: glyph 0 at: %f, %f\n", glyphs[0].x, glyphs[0].y));
-    cairoTextTransform = CGAffineTransformMake (scaled_font->font_matrix.xx, 
+    cairoTextTransform = CGAffineTransformMake (scaled_font->font_matrix.xx,
 						scaled_font->font_matrix.yx,
-						scaled_font->font_matrix.xy, 
+						scaled_font->font_matrix.xy,
 						scaled_font->font_matrix.yy,
 						0., 0.);
 
@@ -1656,7 +1656,7 @@ BAIL:
     }
 
     _cairo_quartz_teardown_source (surface, source);
-    
+
     CGContextRestoreGState (surface->cgContext);
 
     return rv;
@@ -1885,7 +1885,7 @@ _cairo_quartz_surface_create_internal (CGContextRef cgContext,
 
     return surface;
 }
-					 
+
 /**
  * cairo_quartz_surface_create_for_cg_context
  * @cgContext: the existing CGContext for which to create the surface
