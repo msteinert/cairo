@@ -2,7 +2,7 @@ Snapshot 1.5.4 (2007-12-05 Carl Worth <cworth@cworth.org>)
 ==========================================================
 This is the second snapshot in cairo's unstable 1.5 series. It comes
 just over 1 month after the 1.5.2 snapshot. There are no API changes
-or additions in 1.5.3 compared to 1.5.2, but there are several bug
+or additions in 1.5.4 compared to 1.5.2, but there are several bug
 fixes, and some optimizations. Most of these apply to particular
 backends. See below for details.
 
