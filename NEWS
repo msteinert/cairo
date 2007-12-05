@@ -27,12 +27,12 @@ the GIMP, for example. See:
 	https://bugs.freedesktop.org/show_bug.cgi?id=13084
 
 [XXX: Are we interpreting "cairo_new_path;cairo_clip" as a request to
-clip everything? That wouldn't be consisten with how we treat
+clip everything? That wouldn't be consistent with how we treat
 cairo_new_path;cairo_fill, for example. Will follow up on cairo
 mailing list for more details.]
 
-PostScript improvments
-----------------------
+PostScript improvements
+-----------------------
 Fix bug leading to invalid PostScript files when rendering
 text, (need "0 0 xyshow" instead of "0 xyshow").
 
