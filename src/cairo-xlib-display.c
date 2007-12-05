@@ -292,7 +292,7 @@ _cairo_xlib_display_get (Display *dpy)
 
     display->buggy_repeat = FALSE;
     if (strstr (ServerVendor (dpy), "X.Org") != NULL) {
-	if (VendorRelease (dpy) <= 60802000)
+	if (VendorRelease (dpy) >= 60000000 && VendorRelease (dpy) <= 60802000)
 	    display->buggy_repeat = TRUE;
     } else if (strstr (ServerVendor (dpy), "XFree86") != NULL) {
 	if (VendorRelease (dpy) <= 40500000)
