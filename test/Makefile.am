@@ -50,6 +50,7 @@ get-clip                        \
 get-group-target		\
 get-path-extents                \
 gradient-alpha			\
+gradient-zero-stops \
 infinite-join			\
 in-fill-empty-trapezoid		\
 invalid-matrix			\
@@ -311,6 +312,8 @@ REFERENCE_IMAGES = \
 	glyph-cache-pressure-ref.png	\
 	gradient-alpha-ref.png	\
 	gradient-alpha-rgb24-ref.png	\
+	gradient-zero-stops-ref.png	\
+	gradient-zero-stops-rgb24-ref.png	\
 	infinite-join-ref.png	\
 	leaky-dash-ps-argb32-ref.png	\
 	leaky-dash-ref.png	\
