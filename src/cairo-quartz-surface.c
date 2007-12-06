@@ -648,6 +648,12 @@ _cairo_quartz_setup_linear_source (cairo_quartz_surface_t *surface,
     if (mat.xx != 1.0 || mat.yy != 1.0 || mat.xy != 0.0 || mat.yx != 0.0)
 	return DO_UNSUPPORTED;
 
+    if (!lpat->base.n_stops) {
+	CGContextSetRGBStrokeColor (surface->cgContext, 0., 0., 0., 0.);
+	CGContextSetRGBFillColor (surface->cgContext, 0., 0., 0., 0.);
+	return DO_SOLID;
+    }
+
     x0 = mat.x0;
     y0 = mat.y0;
     rgb = CGColorSpaceCreateDeviceRGB();
@@ -693,6 +699,12 @@ _cairo_quartz_setup_radial_source (cairo_quartz_surface_t *surface,
     cairo_pattern_get_matrix (abspat, &mat);
     if (mat.xx != 1.0 || mat.yy != 1.0 || mat.xy != 0.0 || mat.yx != 0.0)
 	return DO_UNSUPPORTED;
+
+    if (!rpat->base.n_stops) {
+	CGContextSetRGBStrokeColor (surface->cgContext, 0., 0., 0., 0.);
+	CGContextSetRGBFillColor (surface->cgContext, 0., 0., 0., 0.);
+	return DO_SOLID;
+    }
 
     x0 = mat.x0;
     y0 = mat.y0;
