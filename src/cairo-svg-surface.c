@@ -1538,6 +1538,8 @@ _cairo_svg_surface_emit_radial_pattern (cairo_svg_surface_t    *surface,
     assert (status == CAIRO_STATUS_SUCCESS);
 
     if (pattern->r1 == pattern->r2) {
+	unsigned int n_stops = pattern->base.n_stops;
+
 	_cairo_output_stream_printf (document->xml_node_defs,
 				     "<radialGradient id=\"radial%d\" "
 				     "gradientUnits=\"userSpaceOnUse\" "
@@ -1549,8 +1551,7 @@ _cairo_svg_surface_emit_radial_pattern (cairo_svg_surface_t    *surface,
 	_cairo_svg_surface_emit_transform (document->xml_node_defs, "gradientTransform", &p2u);
 	_cairo_output_stream_printf (document->xml_node_defs, ">\n");
 
-	if (extend == CAIRO_EXTEND_NONE ||
-	    pattern->base.n_stops < 1)
+	if (extend == CAIRO_EXTEND_NONE || n_stops < 1)
 	    _cairo_output_stream_printf (document->xml_node_defs,
 					 "<stop offset=\"0\" style=\""
 					 "stop-color: rgb(0%%,0%%,0%%); "
@@ -1564,15 +1565,15 @@ _cairo_svg_surface_emit_radial_pattern (cairo_svg_surface_t    *surface,
 					 pattern->base.stops[0].color.green * 100.0,
 					 pattern->base.stops[0].color.blue  * 100.0,
 					 pattern->base.stops[0].color.alpha);
-	    if (pattern->base.n_stops > 1)
+	    if (n_stops > 1)
 		_cairo_output_stream_printf (document->xml_node_defs,
 					     "<stop offset=\"0\" style=\""
 					     "stop-color: rgb(%f%%,%f%%,%f%%); "
 					     "stop-opacity: %f;\"/>\n",
-					     pattern->base.stops[1].color.red   * 100.0,
-					     pattern->base.stops[1].color.green * 100.0,
-					     pattern->base.stops[1].color.blue  * 100.0,
-					     pattern->base.stops[1].color.alpha);
+					     pattern->base.stops[n_stops - 1].color.red   * 100.0,
+					     pattern->base.stops[n_stops - 1].color.green * 100.0,
+					     pattern->base.stops[n_stops - 1].color.blue  * 100.0,
+					     pattern->base.stops[n_stops - 1].color.alpha);
 	}
 
     } else {
