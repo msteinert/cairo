@@ -314,7 +314,7 @@ install-data-local:
 	  false ;									\
         fi
 
-TESTS_ENVIRONMENT = srcdir="$(srcdir)"
+TESTS_ENVIRONMENT = srcdir="$(srcdir)" MAKE="$(MAKE)"
 TESTS = check-def.sh check-plt.sh check-headers.sh check-cairoint.sh
 EXTRA_DIST += $(TESTS)
 
