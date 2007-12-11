@@ -34,6 +34,8 @@
  *    Michael Emmel <mike.emmel@gmail.com>
  *    Claudio Ciccani <klan@users.sf.net>
  */
+ 
+#include <stdlib.h>
 
 #include "cairoint.h"
 
@@ -112,6 +114,10 @@ typedef struct _cairo_directfb_font_cache {
     
 
 static cairo_surface_backend_t cairo_directfb_surface_backend;
+
+/*****************************************************************************/
+
+static int _directfb_argb_font = 0;
 
 /*****************************************************************************/
 
@@ -461,7 +467,7 @@ _cairo_directfb_surface_create_similar (void            *abstract_src,
                                         _cairo_to_directfb_format (format),
                                         MAX (width, 8), MAX (height, 8));
         if (tmp) {
-            DFBRectangle rect = { x:0, y:0, w:width, h:height };
+            DFBRectangle rect = { .x=0, .y=0, .w=width, .h=height };
             tmp->GetSubSurface (tmp, &rect, &surface->dfbsurface);
             tmp->Release (tmp);
         }
@@ -1311,7 +1317,8 @@ _directfb_allocate_font_cache (IDirectFB *dfb, int width, int height)
         return NULL;
 
     cache->dfb = dfb;
-    cache->dfbsurface = _directfb_buffer_surface_create (dfb, DSPF_A8, width, height);
+    cache->dfbsurface = _directfb_buffer_surface_create (dfb, 
+                            _directfb_argb_font ? DSPF_ARGB : DSPF_A8, width, height);
     if (!cache->dfbsurface) {
         free (cache);
         return NULL;
@@ -1476,34 +1483,55 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
         if (cache->dfbsurface->Lock (cache->dfbsurface, 
                                      DSLF_WRITE, (void *)&data, &pitch))
             return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-    
+            
         for (i = 0; i < num_chars; i++) {
             cairo_image_surface_t *img  = chars[i]->surface;
             DFBRectangle          *rect = chars[i]->surface_private;
-            unsigned char         *dst  = data + rect->y*pitch + rect->x;
+            unsigned char         *dst  = data;
             unsigned char         *src  = img->data;
+            int                    j;
             
+            dst += rect->y * pitch + (_directfb_argb_font ? (rect->x<<2) : rect->x);
+                        
             if (img->format == CAIRO_FORMAT_A1) {
-                int j;
                 for (h = rect->h; h; h--) {
-                    for (j = 0; j < rect->w; j++)
-                        dst[j] = (src[j>>3] & (1 << (j&7))) ? 0xff : 0x00;
+                    if (_directfb_argb_font) {
+                        for (j = 0; j < rect->w; j++)
+                            ((u32 *)dst)[j] = (src[j>>3] & (1 << (j&7))) ? 0xffffffff : 0;
+                    }
+                    else {
+                        for (j = 0; j < rect->w; j++)
+                            dst[j] = (src[j>>3] & (1 << (j&7))) ? 0xff : 0;
+                    }
+                    
                     dst += pitch;
                     src += img->stride;
                 }
             }
             else if (img->format == CAIRO_FORMAT_A8) {
                 for (h = rect->h; h; h--) {
-                    direct_memcpy (dst, src, rect->w);
+                    if (_directfb_argb_font) {
+                        for (j = 0; j < rect->w; j++)
+                            ((u32 *)dst)[j] = src[j] * 0x01010101;
+                    }
+                    else {
+                        direct_memcpy (dst, src, rect->w);
+                    }
+                    
                     dst += pitch;
                     src += img->stride;
                 }
             }
             else { /* ARGB32 */
-                int j;
                 for (h = rect->h; h; h--) {
-                    for (j = 0; j < rect->w; j++)
-                        dst[j] = ((unsigned int *)src)[j] >> 24;
+                    if (_directfb_argb_font) {
+                        direct_memcpy (dst, src, rect->w<<2);
+                    }
+                    else {
+                        for (j = 0; j < rect->w; j++)
+                            dst[j] = ((u32 *)src)[j] >> 24;
+                    }
+                    
                     dst += pitch;
                     src += img->stride;
                 }
@@ -1597,10 +1625,12 @@ _cairo_directfb_surface_show_glyphs (void                *abstract_dst,
     if (color.a != 0xff)
         flags |= DSBLIT_BLEND_COLORALPHA;
         
-    if (sblend == DSBF_ONE) {
-        sblend = DSBF_SRCALPHA;
-        if (dblend == DSBF_ZERO)
-            dblend = DSBF_INVSRCALPHA;
+    if (!_directfb_argb_font) {
+        if (sblend == DSBF_ONE) {
+            sblend = DSBF_SRCALPHA;
+            if (dblend == DSBF_ZERO)
+                dblend = DSBF_INVSRCALPHA;
+        }
     } 
         
     dst->dfbsurface->SetBlittingFlags (dst->dfbsurface, flags);
@@ -1686,23 +1716,48 @@ static cairo_surface_backend_t cairo_directfb_surface_backend = {
 static void
 cairo_directfb_surface_backend_init (IDirectFB *dfb)
 {
-    DFBGraphicsDeviceDescription dsc;
-    static int                   done = 0;
+    static int done = 0;
     
     if (done)
         return;
         
-    dfb->GetDeviceDescription (dfb, &dsc);
+    if (getenv ("CAIRO_DIRECTFB_NO_ACCEL")) {
+#if DFB_RECTANGLES
+        cairo_directfb_surface_backend.fill_rectangles = NULL;
+#endif
+#if DFB_COMPOSITE
+        cairo_directfb_surface_backend.composite = NULL;
+#endif
+#if DFB_COMPOSITE_TRAPEZOIDS
+        cairo_directfb_surface_backend.composite_trapezoids = NULL;
+#endif
+#if DFB_SHOW_GLYPHS
+        cairo_directfb_surface_backend.scaled_font_fini = NULL;
+        cairo_directfb_surface_backend.scaled_glyph_fini = NULL;
+        cairo_directfb_surface_backend.show_glyphs = NULL;
+#endif
+        D_DEBUG_AT (Cairo_DirectFB, "Acceleration disabled.\n");
+    }
+    else {
+        DFBGraphicsDeviceDescription dsc;
+        
+        dfb->GetDeviceDescription (dfb, &dsc);
     
 #if DFB_COMPOSITE
-    if (!(dsc.acceleration_mask & DFXL_BLIT))
-        cairo_directfb_surface_backend.composite = NULL;
+        if (!(dsc.acceleration_mask & DFXL_BLIT))
+            cairo_directfb_surface_backend.composite = NULL;
 #endif
 
 #if DFB_COMPOSITE_TRAPEZOIDS
-    if (!(dsc.acceleration_mask & DFXL_TEXTRIANGLES))
-        cairo_directfb_surface_backend.composite_trapezoids = NULL;
+        if (!(dsc.acceleration_mask & DFXL_TEXTRIANGLES))
+            cairo_directfb_surface_backend.composite_trapezoids = NULL;
 #endif
+    }
+    
+    if (getenv ("CAIRO_DIRECTFB_ARGB_FONT")) {
+        _directfb_argb_font = 1;
+        D_DEBUG_AT (Cairo_DirectFB, "Using ARGB fonts.\n");
+    }
 
     done = 1;
 }   
