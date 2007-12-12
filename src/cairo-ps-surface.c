@@ -2011,9 +2011,12 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 	transparency == CAIRO_IMAGE_HAS_ALPHA ||
 	(transparency == CAIRO_IMAGE_HAS_BILEVEL_ALPHA &&
 	 surface->ps_level == CAIRO_PS_LEVEL_2)) {
-	_cairo_ps_surface_flatten_image_transparency (surface,
-						      image,
-						      &opaque_image);
+	status = _cairo_ps_surface_flatten_image_transparency (surface,
+							       image,
+							       &opaque_image);
+	if (status)
+	    return status;
+
 	use_mask = FALSE;
     } else if (transparency == CAIRO_IMAGE_IS_OPAQUE) {
 	opaque_image = image;
@@ -2227,7 +2230,7 @@ _cairo_ps_surface_emit_image_surface (cairo_ps_surface_t      *surface,
     if (status)
 	return status;
 
-    _cairo_ps_surface_emit_image (surface, image, "CairoPattern", op);
+    status = _cairo_ps_surface_emit_image (surface, image, "CairoPattern", op);
     if (status)
 	goto fail;
 
@@ -2680,11 +2683,17 @@ _cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface,
 	break;
 
     case CAIRO_PATTERN_TYPE_LINEAR:
-	_cairo_ps_surface_emit_linear_pattern (surface, (cairo_linear_pattern_t *) pattern);
+	status = _cairo_ps_surface_emit_linear_pattern (surface,
+					  (cairo_linear_pattern_t *) pattern);
+	if (status)
+	    return status;
 	break;
 
     case CAIRO_PATTERN_TYPE_RADIAL:
-	_cairo_ps_surface_emit_radial_pattern (surface, (cairo_radial_pattern_t *) pattern);
+	status = _cairo_ps_surface_emit_radial_pattern (surface,
+					  (cairo_radial_pattern_t *) pattern);
+	if (status)
+	    return status;
 	break;
     }
 
