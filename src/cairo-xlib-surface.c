@@ -3039,7 +3039,7 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 	}
 
 	/* Send unsent glyphs to the server */
-	if (scaled_glyph->surface_private == NULL) {
+	if (_cairo_xlib_scaled_glyph_get_glyphset_info (scaled_glyph) == NULL) {
 	    status = _cairo_xlib_surface_add_glyph (dst->dpy,
 		                                    scaled_font,
 						    &scaled_glyph);
@@ -3070,7 +3070,10 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 	 *
 	 * Also flush if changing glyphsets, as Xrender limits one mask
 	 * format per request, so we can either break up, or use a
-	 * wide-enough mask format.  We do the former.
+	 * wide-enough mask format.  We do the former.  One reason to
+	 * prefer the latter is the fact that Xserver ADDs all glyphs
+	 * to the mask first, and then composes that to final surface,
+	 * though it's not a big deal.
 	 */
 	if (request_size + width > max_request_size - sz_xGlyphElt ||
 	    (this_glyphset_info != glyphset_info)) {
