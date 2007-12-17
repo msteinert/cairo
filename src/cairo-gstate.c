@@ -1575,7 +1575,6 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
     return cairo_scaled_font_status (gstate->scaled_font);
 }
 
-#define STACK_GLYPHS_LEN ((int) (CAIRO_STACK_BUFFER_SIZE / sizeof (cairo_glyph_t)))
 cairo_status_t
 _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 			   const cairo_glyph_t *glyphs,
@@ -1584,7 +1583,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     cairo_status_t status;
     cairo_pattern_union_t source_pattern;
     cairo_glyph_t *transformed_glyphs;
-    cairo_glyph_t stack_transformed_glyphs[STACK_GLYPHS_LEN];
+    cairo_glyph_t stack_transformed_glyphs[CAIRO_STACK_ARRAY_LENGTH (cairo_glyph_t)];
 
     if (gstate->source->status)
 	return gstate->source->status;
@@ -1597,7 +1596,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     if (status)
 	return status;
 
-    if (num_glyphs <= STACK_GLYPHS_LEN) {
+    if (num_glyphs <= ARRAY_LENGTH (stack_transformed_glyphs)) {
 	transformed_glyphs = stack_transformed_glyphs;
     } else {
 	transformed_glyphs = _cairo_malloc_ab (num_glyphs, sizeof(cairo_glyph_t));
@@ -1636,13 +1635,13 @@ _cairo_gstate_glyph_path (cairo_gstate_t      *gstate,
 {
     cairo_status_t status;
     cairo_glyph_t *transformed_glyphs;
-    cairo_glyph_t stack_transformed_glyphs[STACK_GLYPHS_LEN];
+    cairo_glyph_t stack_transformed_glyphs[CAIRO_STACK_ARRAY_LENGTH (cairo_glyph_t)];
 
     status = _cairo_gstate_ensure_scaled_font (gstate);
     if (status)
 	return status;
 
-    if (num_glyphs < STACK_GLYPHS_LEN)
+    if (num_glyphs < ARRAY_LENGTH (stack_transformed_glyphs))
       transformed_glyphs = stack_transformed_glyphs;
     else
       transformed_glyphs = _cairo_malloc_ab (num_glyphs, sizeof(cairo_glyph_t));
@@ -1663,7 +1662,6 @@ _cairo_gstate_glyph_path (cairo_gstate_t      *gstate,
 
     return status;
 }
-#undef STACK_GLYPHS_LEN
 
 cairo_status_t
 _cairo_gstate_set_antialias (cairo_gstate_t *gstate,

@@ -1286,7 +1286,7 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
 {
     int num_boxes;
     cairo_box_int_t *boxes = NULL;
-    cairo_rectangle_int_t stack_rects[CAIRO_STACK_BUFFER_SIZE / sizeof (cairo_rectangle_int_t)];
+    cairo_rectangle_int_t stack_rects[CAIRO_STACK_ARRAY_LENGTH (cairo_rectangle_int_t)];
     cairo_rectangle_int_t *rects = stack_rects;
     cairo_status_t status;
     int i;

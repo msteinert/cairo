@@ -2857,7 +2857,6 @@ typedef struct {
 typedef int cairo_xlib_glyph_t_size_assertion [sizeof (cairo_xlib_glyph_t) == sizeof (cairo_glyph_t) ? 1 : -1];
 
 #define GLYPH_INDEX_SKIP ((unsigned long) -1)
-#define STACK_ELTS_LEN ((int) (CAIRO_STACK_BUFFER_SIZE / sizeof (XGlyphElt8)))
 
 static cairo_status_t
 _cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
@@ -2878,7 +2877,7 @@ _cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
 
     /* Element buffer stuff */
     XGlyphElt8 *elts;
-    XGlyphElt8 stack_elts[STACK_ELTS_LEN];
+    XGlyphElt8 stack_elts[CAIRO_STACK_ARRAY_LENGTH (XGlyphElt8)];
 
     /* Reuse the input glyph array for output char generation */
     char *char8 = (char *) glyphs;
@@ -2907,7 +2906,7 @@ _cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
     }
 
     /* Allocate element array */
-    if (num_elts <= STACK_ELTS_LEN) {
+    if (num_elts <= ARRAY_LENGTH (stack_elts)) {
       elts = stack_elts;
     } else {
       elts = _cairo_malloc_ab (num_elts, sizeof (XGlyphElt8));
@@ -2971,8 +2970,6 @@ _cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
 
     return CAIRO_STATUS_SUCCESS;
 }
-
-#undef STACK_ELTS_LEN
 
 static cairo_status_t
 _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,

@@ -1034,8 +1034,6 @@ _cairo_image_surface_composite (cairo_operator_t	op,
     return status;
 }
 
-#define STACK_RECTS_LEN (CAIRO_STACK_BUFFER_SIZE / sizeof(pixman_rectangle16_t))
-
 static cairo_int_status_t
 _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
 				      cairo_operator_t	       op,
@@ -1046,7 +1044,7 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
     cairo_image_surface_t *surface = abstract_surface;
 
     pixman_color_t pixman_color;
-    pixman_rectangle16_t stack_rects[STACK_RECTS_LEN];
+    pixman_rectangle16_t stack_rects[CAIRO_STACK_ARRAY_LENGTH (pixman_rectangle16_t)];
     pixman_rectangle16_t *pixman_rects = stack_rects;
     int i;
 
@@ -1085,10 +1083,6 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
     return status;
 }
 
-#undef STACK_RECTS_LEN
-
-#define STACK_TRAPS_LEN ((int) (CAIRO_STACK_BUFFER_SIZE / sizeof(pixman_trapezoid_t)))
-
 static cairo_int_status_t
 _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 					   cairo_pattern_t	*pattern,
@@ -1110,7 +1104,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     pixman_image_t		*mask;
     pixman_format_code_t	 format;
     uint32_t			*mask_data;
-    pixman_trapezoid_t		 stack_traps[STACK_TRAPS_LEN];
+    pixman_trapezoid_t		 stack_traps[CAIRO_STACK_ARRAY_LENGTH (pixman_trapezoid_t)];
     pixman_trapezoid_t		*pixman_traps = stack_traps;
     int				 mask_stride;
     int				 mask_bpp;
@@ -1243,8 +1237,6 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 
     return status;
 }
-
-#undef STACK_TRAPS_LEN
 
 cairo_int_status_t
 _cairo_image_surface_set_clip_region (void *abstract_surface,

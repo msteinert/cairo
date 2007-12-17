@@ -109,6 +109,8 @@ CAIRO_BEGIN_DECLS
 #define CAIRO_STACK_BUFFER_SIZE (512 * sizeof (int))
 #endif
 
+#define CAIRO_STACK_ARRAY_LENGTH(T) (CAIRO_STACK_BUFFER_SIZE / sizeof(T))
+
 #define ASSERT_NOT_REACHED		\
 do {					\
     static const int NOT_REACHED = 0;	\
