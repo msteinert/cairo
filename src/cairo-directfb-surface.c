@@ -1497,7 +1497,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
                 for (h = rect->h; h; h--) {
                     if (_directfb_argb_font) {
                         for (j = 0; j < rect->w; j++)
-                            ((u32 *)dst)[j] = (src[j>>3] & (1 << (j&7))) ? 0xffffffff : 0;
+                            ((uint32_t *)dst)[j] = (src[j>>3] & (1 << (j&7))) ? 0xffffffff : 0;
                     }
                     else {
                         for (j = 0; j < rect->w; j++)
@@ -1512,7 +1512,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
                 for (h = rect->h; h; h--) {
                     if (_directfb_argb_font) {
                         for (j = 0; j < rect->w; j++)
-                            ((u32 *)dst)[j] = src[j] * 0x01010101;
+                            ((uint32_t *)dst)[j] = src[j] * 0x01010101;
                     }
                     else {
                         direct_memcpy (dst, src, rect->w);
@@ -1529,7 +1529,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
                     }
                     else {
                         for (j = 0; j < rect->w; j++)
-                            dst[j] = ((u32 *)src)[j] >> 24;
+                            dst[j] = ((uint32_t *)src)[j] >> 24;
                     }
                     
                     dst += pitch;
