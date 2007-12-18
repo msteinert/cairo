@@ -173,5 +173,6 @@ CAIRO_PERF_DECL (rounded_rectangles);
 CAIRO_PERF_DECL (long_dashed_lines);
 CAIRO_PERF_DECL (composite_checker);
 CAIRO_PERF_DECL (twin);
+CAIRO_PERF_DECL (dragon);
 
 #endif
