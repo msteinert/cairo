@@ -35,14 +35,13 @@
  *    Claudio Ciccani <klan@users.sf.net>
  */
  
-#include <stdlib.h>
 
 #include "cairoint.h"
-
 #include "cairo-directfb.h"
 
-#include <directfb.h>
+#include <stdlib.h>
 
+#include <directfb.h>
 #include <direct/types.h>
 #include <direct/debug.h>
 #include <direct/memcpy.h>
