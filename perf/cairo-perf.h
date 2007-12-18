@@ -174,5 +174,6 @@ CAIRO_PERF_DECL (long_dashed_lines);
 CAIRO_PERF_DECL (composite_checker);
 CAIRO_PERF_DECL (twin);
 CAIRO_PERF_DECL (dragon);
+CAIRO_PERF_DECL (pythagoras_tree);
 
 #endif

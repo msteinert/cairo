@@ -460,5 +460,6 @@ const cairo_perf_case_t perf_cases[] = {
     { composite_checker, 16, 512},
     { twin, 800, 800},
     { dragon, 1024, 1024 },
+    { pythagoras_tree, 768, 768 },
     { NULL }
 };
