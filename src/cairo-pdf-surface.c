@@ -2983,17 +2983,25 @@ _cairo_pdf_surface_emit_to_unicode_stream (cairo_pdf_surface_t		*surface,
 {
     const cairo_scaled_font_backend_t *backend;
     unsigned int i, num_bfchar;
+    cairo_int_status_t status;
 
     stream->id = 0;
     if (font_subset->to_unicode == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (_cairo_truetype_create_glyph_to_unicode_map (font_subset) != CAIRO_STATUS_SUCCESS) {
+    status = _cairo_truetype_create_glyph_to_unicode_map (font_subset);
+    if (status) {
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+
         backend = font_subset->scaled_font->backend;
         if (backend->map_glyphs_to_unicode == NULL)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
-        backend->map_glyphs_to_unicode (font_subset->scaled_font, font_subset);
+        status = backend->map_glyphs_to_unicode (font_subset->scaled_font,
+		                                 font_subset);
+	if (status)
+	    return status;
     }
 
     *stream = _cairo_pdf_surface_open_stream (surface,

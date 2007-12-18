@@ -529,7 +529,7 @@ struct _cairo_scaled_font_backend {
                            unsigned char        *buffer,
                            unsigned long        *length);
 
-    void
+    cairo_warn cairo_int_status_t
     (*map_glyphs_to_unicode)(void                       *scaled_font,
                                    cairo_scaled_font_subset_t *font_subset);
 

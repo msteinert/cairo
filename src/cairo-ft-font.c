@@ -2133,7 +2133,7 @@ _cairo_ft_load_truetype_table (void	       *abstract_font,
     return status;
 }
 
-static void
+static cairo_int_status_t
 _cairo_ft_map_glyphs_to_unicode (void	                    *abstract_font,
                                  cairo_scaled_font_subset_t *font_subset)
 {
@@ -2147,7 +2147,7 @@ _cairo_ft_map_glyphs_to_unicode (void	                    *abstract_font,
 
     face = _cairo_ft_unscaled_font_lock_face (unscaled);
     if (!face)
-	return;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     count = font_subset->num_glyphs;
     charcode = FT_Get_First_Char( face, &glyph);
@@ -2160,9 +2160,11 @@ _cairo_ft_map_glyphs_to_unicode (void	                    *abstract_font,
                 break;
             }
         }
-        charcode = FT_Get_Next_Char(face, charcode, &glyph);
+        charcode = FT_Get_Next_Char (face, charcode, &glyph);
     }
     _cairo_ft_unscaled_font_unlock_face (unscaled);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 const cairo_scaled_font_backend_t cairo_ft_scaled_font_backend = {

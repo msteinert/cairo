@@ -1328,7 +1328,7 @@ _cairo_win32_scaled_font_load_truetype_table (void	       *abstract_font,
     return status;
 }
 
-static void
+static cairo_int_status_t
 _cairo_win32_scaled_font_map_glyphs_to_unicode (void *abstract_font,
                                                       cairo_scaled_font_subset_t *font_subset)
 {
@@ -1336,10 +1336,12 @@ _cairo_win32_scaled_font_map_glyphs_to_unicode (void *abstract_font,
     unsigned int i;
 
     if (scaled_font->glyph_indexing)
-        return;
+        return CAIRO_STATUS_SUCCESS; /* XXX ? */
 
     for (i = 0; i < font_subset->num_glyphs; i++)
         font_subset->to_unicode[i] = font_subset->glyphs[i];
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
