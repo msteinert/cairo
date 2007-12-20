@@ -2311,11 +2311,16 @@ _cairo_utf8_to_ucs4 (const unsigned char *str,
 		     uint32_t	        **result,
 		     int		 *items_written);
 
+#if CAIRO_HAS_WIN32_FONT+0 || CAIRO_HAS_ATSUI_FONT+0
+# define CAIRO_HAS_UTF8_TO_UTF16 1
+#endif
+#if CAIRO_HAS_UTF8_TO_UTF16
 cairo_private cairo_status_t
 _cairo_utf8_to_utf16 (const unsigned char *str,
 		      int		   len,
 		      uint16_t		 **result,
 		      int		  *items_written);
+#endif
 
 cairo_private cairo_status_t
 _cairo_error (cairo_status_t status);
