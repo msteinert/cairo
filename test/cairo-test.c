@@ -384,6 +384,7 @@ cairo_test_for_target (cairo_test_t			 *test,
 
     if (similar) {
 	cairo_pop_group_to_source (cr);
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 	cairo_paint (cr);
     }
 
