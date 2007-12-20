@@ -373,7 +373,9 @@ cairo_test_for_target (cairo_test_t			 *test,
     cairo_set_font_options (cr, font_options);
     cairo_font_options_destroy (font_options);
 
+    cairo_save (cr);
     status = (test->draw) (cr, test->width, test->height);
+    cairo_restore (cr);
 
     /* Then, check all the different ways it could fail. */
     if (status) {
