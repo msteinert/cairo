@@ -58,7 +58,7 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_translate (cr, PAD, PAD);
 
-    pat_surface = cairo_surface_create_similar (cairo_get_target (cr),
+    pat_surface = cairo_surface_create_similar (cairo_get_group_target (cr),
 						CAIRO_CONTENT_COLOR_ALPHA,
 						PAT_WIDTH, PAT_HEIGHT);
 

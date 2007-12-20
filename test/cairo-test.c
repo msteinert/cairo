@@ -241,7 +241,7 @@ cairo_test_target_has_similar (const cairo_test_t *test, cairo_boilerplate_targe
 	cairo_t * cr = cairo_create (surface);
 	cairo_surface_t *similar;
 	cairo_push_group_with_content (cr, target->content);
-	similar = cairo_get_target (cr);
+	similar = cairo_get_group_target (cr);
 	has_similar = cairo_surface_get_type (similar) == cairo_surface_get_type (surface);
 
 	cairo_destroy (cr);

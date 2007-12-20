@@ -60,7 +60,7 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_mask (cr, cairo_get_source (cr));
 
-    surf = cairo_surface_create_similar (cairo_get_target (cr), CAIRO_CONTENT_COLOR_ALPHA, 0, 0);
+    surf = cairo_surface_create_similar (cairo_get_group_target (cr), CAIRO_CONTENT_COLOR_ALPHA, 0, 0);
     pat = cairo_pattern_create_for_surface (surf);
     cairo_surface_destroy (surf);
 

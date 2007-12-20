@@ -105,7 +105,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_text_extents_t extents;
     cairo_test_status_t ret = CAIRO_TEST_SUCCESS;
 
-    surface = cairo_surface_create_similar (cairo_get_target (cr),
+    surface = cairo_surface_create_similar (cairo_get_group_target (cr),
                                             CAIRO_CONTENT_COLOR, 100, 100);
     /* don't use cr accidentally */
     cr = NULL;
