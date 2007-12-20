@@ -476,7 +476,7 @@ _cairo_meta_surface_show_glyphs (void			*abstract_surface,
     _cairo_pattern_fini (&command->source.base);
   CLEANUP_COMMAND:
     free (command);
-    return _cairo_error (status);
+    return status;
 }
 
 /**
