@@ -3326,17 +3326,19 @@ cairo_get_target (cairo_t *cr)
  * cairo_get_group_target:
  * @cr: a cairo context
  *
- * Gets the target surface for the current group as started by the
- * most recent call to cairo_push_group() or
- * cairo_push_group_with_content().
+ * Gets the current destination surface for the context. This is either
+ * the original target surface as passed to cairo_create() or the target
+ * surface for the current group as started by the most recent call to
+ * cairo_push_group() or cairo_push_group_with_content().
  *
- * This function will return NULL if called "outside" of any group
- * rendering blocks, (that is, after the last balancing call to
- * cairo_pop_group() or cairo_pop_group_to_source()).
+ * This function will always return a valid pointer, but the result
+ * can be a "nil" surface if @cr is already in an error state,
+ * (ie. cairo_status() <literal>!=</literal> %CAIRO_STATUS_SUCCESS).
+ * A nil surface is indicated by cairo_surface_status()
+ * <literal>!=</literal> %CAIRO_STATUS_SUCCESS.
  *
- * Return value: the target group surface, or NULL if none.  This
- * object is owned by cairo. To keep a reference to it, you must call
- * cairo_surface_reference().
+ * Return value: the target surface. This object is owned by cairo. To
+ * keep a reference to it, you must call cairo_surface_reference().
  *
  * Since: 1.2
  **/
