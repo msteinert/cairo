@@ -931,7 +931,7 @@ _cairo_surface_has_device_transform (cairo_surface_t *surface)
  * @surface as a source. _cairo_surface_release_source_image() must be called
  * when finished.
  *
- * Return value: %CAIRO_STATUS_SUCCESS if a an image was stored in @image_out.
+ * Return value: %CAIRO_STATUS_SUCCESS if an image was stored in @image_out.
  * %CAIRO_INT_STATUS_UNSUPPORTED if an image cannot be retrieved for the specified
  * surface. Or %CAIRO_STATUS_NO_MEMORY.
  **/
@@ -941,6 +941,9 @@ _cairo_surface_acquire_source_image (cairo_surface_t         *surface,
 				     void                   **image_extra)
 {
     assert (!surface->finished);
+
+    if (surface->backend->acquire_source_image == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     return _cairo_surface_set_error (surface,
 	    surface->backend->acquire_source_image (surface,
@@ -1004,6 +1007,9 @@ _cairo_surface_acquire_dest_image (cairo_surface_t         *surface,
 				   void                   **image_extra)
 {
     assert (!surface->finished);
+
+    if (surface->backend->acquire_dest_image == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     return _cairo_surface_set_error (surface,
 	    surface->backend->acquire_dest_image (surface,
