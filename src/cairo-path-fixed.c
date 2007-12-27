@@ -404,12 +404,13 @@ _cairo_path_buf_create (int buf_size)
 {
     cairo_path_buf_t *buf;
 
-#define align(ptr__, alignment__) \
-    ((void *) (((long) (ptr__) + (alignment__) - 1) & -(alignment__)))
+    /* adjust buf_size to ensure that buf->points is naturally aligned */
+    buf_size += sizeof (double)
+	       - ((buf_size + sizeof (cairo_path_buf_t)) & (sizeof (double)-1));
     buf = _cairo_malloc_ab_plus_c (buf_size,
 	                           sizeof (cairo_path_op_t) +
 				   2 * sizeof (cairo_point_t),
-				   sizeof (cairo_path_buf_t) + sizeof (double));
+				   sizeof (cairo_path_buf_t));
     if (buf) {
 	buf->next = NULL;
 	buf->prev = NULL;
@@ -417,10 +418,9 @@ _cairo_path_buf_create (int buf_size)
 	buf->num_points = 0;
 	buf->buf_size = buf_size;
 
-	buf->points = (cairo_point_t *) align (buf + 1, sizeof (double));
-	buf->op = (cairo_path_op_t *) (buf->points + 2 * buf_size);
+	buf->op = (cairo_path_op_t *) (buf + 1);
+	buf->points = (cairo_point_t *) (buf->op + buf_size);
     }
-#undef align
 
     return buf;
 }
