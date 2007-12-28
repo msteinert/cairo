@@ -3553,6 +3553,8 @@ cairo_status_to_string (cairo_status_t status)
 	return "invalid index passed to getter";
     case CAIRO_STATUS_CLIP_NOT_REPRESENTABLE:
         return "clip region not representable in desired format";
+    case CAIRO_STATUS_TEMP_FILE_ERROR:
+	return "error creating or writing to a temporary file";
     }
 
     return "<unknown error status>";
