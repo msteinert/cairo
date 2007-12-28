@@ -73,12 +73,13 @@ libcairo_quartz_sources = cairo-quartz-surface.c cairo-quartz-private.h
 backend_pkgconfigs += cairo-quartz.pc
 endif
 
+libcairo_win32_sources =
 if OS_WIN32
+libcairo_win32_sources += cairo-win32.c
 export_symbols = -export-symbols cairo.def
 cairo_def_dependency = cairo.def
 endif
 
-libcairo_win32_sources =
 if CAIRO_HAS_WIN32_SURFACE
 libcairo_win32_headers = cairo-win32.h
 libcairo_win32_sources += cairo-win32-surface.c cairo-win32-printing-surface.c cairo-win32-private.h

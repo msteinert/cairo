@@ -81,6 +81,12 @@
 
 CAIRO_BEGIN_DECLS
 
+#ifdef _WIN32
+cairo_private FILE *
+_cairo_win32_tmpfile (void);
+#define tmpfile() _cairo_win32_tmpfile()
+#endif
+
 #undef MIN
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 
