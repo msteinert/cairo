@@ -1770,18 +1770,15 @@ _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
 	  op == CAIRO_OPERATOR_OVER))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (op == CAIRO_OPERATOR_SOURCE)
-	return CAIRO_STATUS_SUCCESS;
-
     if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
 
 	if ( _cairo_surface_is_meta (surface_pattern->surface))
 	    return CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN;
-	else
-	    return _cairo_ps_surface_analyze_surface_pattern_transparency (surface,
-									   surface_pattern);
     }
+
+    if (op == CAIRO_OPERATOR_SOURCE)
+	return CAIRO_STATUS_SUCCESS;
 
     /* CAIRO_OPERATOR_OVER is only supported for opaque patterns. If
      * the pattern contains transparency, we return
@@ -1792,6 +1789,13 @@ _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
      * render stage and we blend the transarency into the white
      * background to convert the pattern to opaque.
      */
+
+    if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
+
+	return _cairo_ps_surface_analyze_surface_pattern_transparency (surface,
+								       surface_pattern);
+    }
 
     if (_cairo_pattern_is_opaque (pattern))
 	return CAIRO_STATUS_SUCCESS;
@@ -2314,7 +2318,9 @@ _cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
 				     surface->height);
     }
 
-    status = _cairo_meta_surface_replay (meta_surface, &surface->base);
+    status = _cairo_meta_surface_replay_region (meta_surface, &surface->base,
+						CAIRO_META_REGION_NATIVE);
+    assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
     if (status)
 	return status;
 

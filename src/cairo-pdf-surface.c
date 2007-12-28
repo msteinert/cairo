@@ -1620,7 +1620,9 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
 				     surface->height);
     }
 
-    status = _cairo_meta_surface_replay (meta_surface, &surface->base);
+    status = _cairo_meta_surface_replay_region (meta_surface, &surface->base,
+						CAIRO_META_REGION_NATIVE);
+    assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
     if (status)
 	goto CLEANUP_GROUP;
 

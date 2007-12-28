@@ -341,6 +341,7 @@ _paint_page (cairo_paginated_surface_t *surface)
 	status = _cairo_meta_surface_replay_region (surface->meta,
 						    surface->target,
 						    CAIRO_META_REGION_NATIVE);
+	assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
 	if (status)
 	    goto FAIL;
     }
