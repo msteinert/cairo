@@ -884,15 +884,20 @@ BAIL:
     return status;
 }
 
-static void
+static cairo_status_t
 _cairo_ps_surface_emit_body (cairo_ps_surface_t *surface)
 {
     char    buf[4096];
     int	    n;
 
+    if (ferror (surface->tmpfile) != 0)
+	return CAIRO_STATUS_TEMP_FILE_ERROR;
+
     rewind (surface->tmpfile);
     while ((n = fread (buf, 1, sizeof (buf), surface->tmpfile)) > 0)
 	_cairo_output_stream_write (surface->final_stream, buf, n);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -932,8 +937,10 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     surface->final_stream = stream;
 
     surface->tmpfile = tmpfile ();
-    if (surface->tmpfile == NULL)
+    if (surface->tmpfile == NULL) {
+	status = CAIRO_STATUS_TEMP_FILE_ERROR;
 	goto CLEANUP_SURFACE;
+    }
 
     surface->stream = _cairo_output_stream_create_for_file (surface->tmpfile);
     status = _cairo_output_stream_get_status (surface->stream);
@@ -1490,11 +1497,16 @@ _cairo_ps_surface_finish (void *abstract_surface)
     _cairo_ps_surface_emit_header (surface);
 
     status = _cairo_ps_surface_emit_font_subsets (surface);
+    if (status)
+	goto CLEANUP;
 
-    _cairo_ps_surface_emit_body (surface);
+    status = _cairo_ps_surface_emit_body (surface);
+    if (status)
+	goto CLEANUP;
 
     _cairo_ps_surface_emit_footer (surface);
 
+CLEANUP:
     status2 = _cairo_output_stream_destroy (surface->stream);
     if (status == CAIRO_STATUS_SUCCESS)
 	status = status2;
