@@ -2551,7 +2551,7 @@ _cairo_ps_surface_emit_pattern_stops (cairo_ps_surface_t       *surface,
 
     allstops = _cairo_malloc_ab ((pattern->n_stops + 2), sizeof (cairo_ps_color_stop_t));
     if (allstops == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     stops = &allstops[1];
     n_stops = pattern->n_stops;
