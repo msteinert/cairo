@@ -1096,7 +1096,7 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
     if (_cairo_memory_stream_length (contents) > 0) {
 	if (_cairo_svg_surface_store_page (svg_surface) == NULL) {
 	    cairo_surface_destroy (paginated_surface);
-	    return CAIRO_STATUS_NO_MEMORY;
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
     }
 
@@ -2378,7 +2378,7 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
 		_cairo_memory_stream_length (surface->xml_node) > 0) {
 	    if (_cairo_svg_surface_store_page (surface) == NULL) {
 		if (status == CAIRO_STATUS_SUCCESS)
-		    status = CAIRO_STATUS_NO_MEMORY;
+		    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    }
 	}
 
