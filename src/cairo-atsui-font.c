@@ -272,8 +272,7 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
 
     err = CreateSizedCopyOfStyle (style, &font->size, &font->font_matrix, &font->style);
     if (err != noErr) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	status = CAIRO_STATUS_NO_MEMORY;
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FAIL;
     }
 
