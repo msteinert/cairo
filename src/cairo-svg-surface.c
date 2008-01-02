@@ -1032,7 +1032,7 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
 								meta->height_pixels);
     if (paginated_surface->status) {
 	cairo_surface_destroy (&meta->base);
-	return CAIRO_STATUS_NO_MEMORY;
+	return paginated_surface->status;
     }
 
     svg_surface = (cairo_svg_surface_t *) _cairo_paginated_surface_get_target (paginated_surface);
