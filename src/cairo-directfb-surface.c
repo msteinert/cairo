@@ -94,7 +94,7 @@ typedef struct _cairo_directfb_surface {
     int                  width;
     int                  height;
     
-    bool                 local;
+    cairo_bool_t         local;
 } cairo_directfb_surface_t;
 
 
@@ -1058,6 +1058,29 @@ _cairo_directfb_surface_fill_rectangles (void                  *abstract_surface
 
     if (_directfb_get_operator (op, &sblend, &dblend))
         return CAIRO_INT_STATUS_UNSUPPORTED;
+        
+    if (color->alpha_short >= 0xff00) {
+        if (sblend == DSBF_SRCALPHA)
+            sblend = DSBF_ONE;
+        else if (sblend == DSBF_INVSRCALPHA)
+            sblend = DSBF_ZERO;
+            
+        if (dblend == DSBF_SRCALPHA)
+            dblend = DSBF_ONE;
+        else if (dblend == DSBF_INVSRCALPHA)
+            dblend = DSBF_ZERO;
+    }
+    if (dst->content == CAIRO_CONTENT_COLOR) {
+        if (sblend == DSBF_DESTALPHA)
+            sblend = DSBF_ONE;
+        else if (sblend == DSBF_INVDESTALPHA)
+            sblend = DSBF_ZERO;
+         
+        if (dblend == DSBF_DESTALPHA)
+            dblend = DSBF_ONE;
+        else if (dblend == DSBF_INVDESTALPHA)
+            dblend = DSBF_ZERO;   
+    }
     
     flags = (sblend == DSBF_ONE && dblend == DSBF_ZERO) ? DSDRAW_NOFX : DSDRAW_BLEND;
     dst->dfbsurface->SetDrawingFlags (dst->dfbsurface, flags);
