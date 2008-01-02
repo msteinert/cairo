@@ -891,7 +891,7 @@ _cairo_ps_surface_emit_body (cairo_ps_surface_t *surface)
     int	    n;
 
     if (ferror (surface->tmpfile) != 0)
-	return CAIRO_STATUS_TEMP_FILE_ERROR;
+	return _cairo_error (CAIRO_STATUS_TEMP_FILE_ERROR);
 
     rewind (surface->tmpfile);
     while ((n = fread (buf, 1, sizeof (buf), surface->tmpfile)) > 0)
@@ -938,7 +938,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 
     surface->tmpfile = tmpfile ();
     if (surface->tmpfile == NULL) {
-	status = CAIRO_STATUS_TEMP_FILE_ERROR;
+	status = _cairo_error (CAIRO_STATUS_TEMP_FILE_ERROR);
 	goto CLEANUP_SURFACE;
     }
 
