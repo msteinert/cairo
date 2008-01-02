@@ -190,16 +190,13 @@ _cairo_type1_font_subset_create (cairo_unscaled_font_t      *unscaled_font,
     return status;
 }
 
-static int
+static void
 cairo_type1_font_subset_use_glyph (cairo_type1_font_subset_t *font, int glyph)
 {
     if (font->glyphs[glyph].subset_index >= 0)
-	return font->glyphs[glyph].subset_index;
+	return;
 
-    font->glyphs[glyph].subset_index = font->num_glyphs;
-    font->num_glyphs++;
-
-    return font->glyphs[glyph].subset_index;
+    font->glyphs[glyph].subset_index = font->num_glyphs++;
 }
 
 static cairo_bool_t
