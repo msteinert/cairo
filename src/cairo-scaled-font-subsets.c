@@ -496,7 +496,7 @@ _cairo_scaled_font_subsets_destroy (cairo_scaled_font_subsets_t *subsets)
     free (subsets);
 }
 
-cairo_private cairo_status_t
+cairo_status_t
 _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
 				      cairo_scaled_font_t		*scaled_font,
 				      unsigned long			 scaled_font_glyph_index,
