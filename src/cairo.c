@@ -67,7 +67,7 @@ static const cairo_t _cairo_nil = {
  * a bit of a pain, but it should be easy to always catch as long as
  * one adds a new test case to test a trigger of the new status value.
  */
-#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_INDEX
+#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_TEMP_FILE_ERROR
 
 /**
  * _cairo_error:

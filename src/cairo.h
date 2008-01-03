@@ -236,6 +236,7 @@ typedef enum _cairo_status {
     CAIRO_STATUS_INVALID_INDEX,
     CAIRO_STATUS_CLIP_NOT_REPRESENTABLE,
     CAIRO_STATUS_TEMP_FILE_ERROR
+    /* after adding a new error: update CAIRO_STATUS_LAST_STATUS in cairo.c */
 } cairo_status_t;
 
 /**
