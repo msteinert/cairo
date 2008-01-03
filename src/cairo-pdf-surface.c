@@ -3707,7 +3707,7 @@ _cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
     return status;
 }
 
-static void
+static cairo_status_t
 _cairo_pdf_surface_emit_glyph (cairo_pdf_surface_t	*surface,
 			       cairo_scaled_font_t	*scaled_font,
 			       unsigned long		 glyph_index,
@@ -3728,16 +3728,14 @@ _cairo_pdf_surface_emit_glyph (cairo_pdf_surface_t	*surface,
 						       glyph_ret,
                                                        bbox,
                                                        width);
-
-    if (status)
-	status = _cairo_surface_set_error (&surface->base, status);
+    return status;
 }
 
 static cairo_status_t
 _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 					   cairo_scaled_font_subset_t	*font_subset)
 {
-    cairo_status_t status;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_pdf_resource_t *glyphs, encoding, char_procs, subset_resource, to_unicode_stream;
     cairo_pdf_font_t font;
     cairo_matrix_t matrix;
@@ -3745,6 +3743,9 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
     unsigned int i;
     cairo_box_t font_bbox = {{0,0},{0,0}};
     cairo_box_t bbox = {{0,0},{0,0}};
+
+    if (font_subset->num_glyphs == 0)
+	return CAIRO_STATUS_SUCCESS;
 
     glyphs = _cairo_malloc_ab (font_subset->num_glyphs, sizeof (cairo_pdf_resource_t));
     if (glyphs == NULL)
@@ -3757,12 +3758,15 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
     }
 
     for (i = 0; i < font_subset->num_glyphs; i++) {
-	_cairo_pdf_surface_emit_glyph (surface,
-				       font_subset->scaled_font,
-				       font_subset->glyphs[i],
-				       &glyphs[i],
-                                       &bbox,
-                                       &widths[i]);
+	status = _cairo_pdf_surface_emit_glyph (surface,
+				                font_subset->scaled_font,
+						font_subset->glyphs[i],
+						&glyphs[i],
+						&bbox,
+						&widths[i]);
+	if (status)
+	    break;
+
         if (i == 0) {
             font_bbox.p1.x = bbox.p1.x;
             font_bbox.p1.y = bbox.p1.y;
@@ -3778,6 +3782,11 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
             if (bbox.p2.y > font_bbox.p2.y)
                 font_bbox.p2.y = bbox.p2.y;
         }
+    }
+    if (status) {
+	free (glyphs);
+	free (widths);
+	return status;
     }
 
     encoding = _cairo_pdf_surface_new_object (surface);
