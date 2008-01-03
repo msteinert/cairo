@@ -11,6 +11,7 @@ caps-joins
 caps-joins-alpha
 caps-sub-paths
 clip-all
+clip-empty
 clip-fill-rule
 clip-fill-rule-pixel-aligned
 clip-nesting
@@ -65,6 +66,7 @@ get-group-target
 get-path-extents
 glyph-cache-pressure
 gradient-alpha
+gradient-zero-stops
 imagediff
 infinite-join
 in-fill-empty-trapezoid
@@ -138,6 +140,7 @@ source-clip-scale
 source-surface-scale-paint
 surface-finish-twice
 surface-pattern
+surface-pattern-big-scale-down
 surface-pattern-scale-down
 surface-pattern-scale-up
 text-antialias-gray
