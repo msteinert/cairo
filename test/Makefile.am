@@ -445,6 +445,7 @@ REFERENCE_IMAGES = \
 	source-clip-scale-svg-ref.png	\
 	source-surface-scale-paint-ref.png	\
 	source-surface-scale-paint-rgb24-ref.png	\
+	surface-pattern-big-scale-down-ref.png	\
 	surface-pattern-pdf-argb32-ref.png	\
 	surface-pattern-ps-argb32-ref.png	\
 	surface-pattern-ref.png	\
