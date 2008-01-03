@@ -687,14 +687,14 @@ _cairo_gstate_transform (cairo_gstate_t	      *gstate,
     cairo_matrix_t tmp;
     cairo_status_t status;
 
-    _cairo_gstate_unset_scaled_font (gstate);
-
     tmp = *matrix;
-    cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
-
     status = cairo_matrix_invert (&tmp);
     if (status)
 	return status;
+
+    _cairo_gstate_unset_scaled_font (gstate);
+
+    cairo_matrix_multiply (&gstate->ctm, matrix, &gstate->ctm);
     cairo_matrix_multiply (&gstate->ctm_inverse, &gstate->ctm_inverse, &tmp);
 
     return CAIRO_STATUS_SUCCESS;
@@ -706,14 +706,15 @@ _cairo_gstate_set_matrix (cairo_gstate_t       *gstate,
 {
     cairo_status_t status;
 
+    if (! _cairo_matrix_is_invertible (matrix))
+	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
+
     _cairo_gstate_unset_scaled_font (gstate);
 
     gstate->ctm = *matrix;
-
     gstate->ctm_inverse = *matrix;
     status = cairo_matrix_invert (&gstate->ctm_inverse);
-    if (status)
-	return status;
+    assert (status == CAIRO_STATUS_SUCCESS);
 
     return CAIRO_STATUS_SUCCESS;
 }
