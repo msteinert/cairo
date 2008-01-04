@@ -87,7 +87,7 @@ AC_DEFUN([_CHECK_FUNCS_WITH_FLAGS],
 
 dnl ===========================================================================
 
-AC_CHECK_FUNCS(vasnprintf)
+AC_CHECK_FUNCS(vasnprintf ctime_r)
 	
 dnl ===========================================================================
 dnl

@@ -53,6 +53,10 @@
 
 #define DEBUG_PS 0
 
+#ifndef HAVE_CTIME_R
+#define ctime_r(T, BUF) ctime (T)
+#endif
+
 typedef enum _cairo_image_transparency {
     CAIRO_IMAGE_IS_OPAQUE,
     CAIRO_IMAGE_HAS_BILEVEL_ALPHA,
@@ -318,6 +322,7 @@ _cairo_ps_surface_emit_path (cairo_ps_surface_t	   *surface,
 static void
 _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 {
+    char ctime_buf[26];
     time_t now;
     char **comments;
     int i, num_comments;
@@ -342,7 +347,7 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 				 "%%%%BoundingBox: %d %d %d %d\n",
 				 eps_header,
 				 cairo_version_string (),
-				 ctime (&now),
+				 ctime_r (&now, ctime_buf),
 				 surface->num_pages,
 				 surface->bbox_x1,
 				 surface->bbox_y1,
