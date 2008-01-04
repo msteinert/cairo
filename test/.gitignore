@@ -84,6 +84,7 @@ mask-alpha
 mask-ctm
 mask-surface-ctm
 meta-surface-pattern
+miter-precision
 move-to-show-surface
 multi-page
 multi-page.pdf
