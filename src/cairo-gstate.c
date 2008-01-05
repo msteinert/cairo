@@ -1133,9 +1133,7 @@ _cairo_gstate_traps_extents_to_user_rectangle (cairo_gstate_t	  *gstate,
 {
     cairo_box_t extents;
 
-    _cairo_traps_extents (traps, &extents);
-
-    if (extents.p1.x >= extents.p2.x || extents.p1.y >= extents.p2.y) {
+    if (traps->num_traps == 0) {
         /* no traps, so we actually won't draw anything */
 	if (x1)
 	    *x1 = 0.0;
@@ -1146,6 +1144,8 @@ _cairo_gstate_traps_extents_to_user_rectangle (cairo_gstate_t	  *gstate,
 	if (y2)
 	    *y2 = 0.0;
     } else {
+	_cairo_traps_extents (traps, &extents);
+
 	if (x1)
 	    *x1 = _cairo_fixed_to_double (extents.p1.x);
 	if (y1)
