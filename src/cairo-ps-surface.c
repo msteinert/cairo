@@ -47,9 +47,11 @@
 #include "cairo-meta-surface-private.h"
 #include "cairo-output-stream-private.h"
 
+#include <stdio.h>
 #include <ctype.h>
 #include <time.h>
 #include <zlib.h>
+#include <errno.h>
 
 #define DEBUG_PS 0
 
@@ -943,7 +945,14 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 
     surface->tmpfile = tmpfile ();
     if (surface->tmpfile == NULL) {
-	status = _cairo_error (CAIRO_STATUS_TEMP_FILE_ERROR);
+	switch (errno) {
+	case ENOMEM:
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    break;
+	default:
+	    status = _cairo_error (CAIRO_STATUS_TEMP_FILE_ERROR);
+	    break;
+	}
 	goto CLEANUP_SURFACE;
     }
 
