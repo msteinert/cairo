@@ -410,7 +410,7 @@ _cairo_analysis_surface_stroke (void			*abstract_surface,
 						    tolerance,
 						    &traps);
 
-	if (status) {
+	if (status || traps.num_traps == 0) {
 	    _cairo_traps_fini (&traps);
 	    return status;
 	}
@@ -433,9 +433,9 @@ _cairo_analysis_surface_fill (void			*abstract_surface,
 			      cairo_operator_t		 op,
 			      cairo_pattern_t		*source,
 			      cairo_path_fixed_t	*path,
-			      cairo_fill_rule_t	 	 fill_rule,
+			      cairo_fill_rule_t		 fill_rule,
 			      double			 tolerance,
-			      cairo_antialias_t	 	 antialias)
+			      cairo_antialias_t		 antialias)
 {
     cairo_analysis_surface_t *surface = abstract_surface;
     cairo_status_t	     status, backend_status;
@@ -482,7 +482,7 @@ _cairo_analysis_surface_fill (void			*abstract_surface,
 						  tolerance,
 						  &traps);
 
-	if (status) {
+	if (status || traps.num_traps == 0) {
 	    _cairo_traps_fini (&traps);
 	    return status;
 	}
