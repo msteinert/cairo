@@ -115,8 +115,14 @@ _cairo_analysis_surface_add_operation  (cairo_analysis_surface_t *surface,
 					      NULL);
 	rect->x = floor (x1);
 	rect->y = floor (x2);
-	rect->width = ceil (x2) - rect->x;
-	rect->height = ceil (y2) - rect->y;
+
+	x2 = ceil (x2) - rect->x;
+	y2 = ceil (y2) - rect->y;
+	if (x2 <= 0 || y2 <= 0)
+	    return CAIRO_STATUS_SUCCESS;
+
+	rect->width  = x2;
+	rect->height = y2;
     }
 
     bbox.p1.x = _cairo_fixed_from_int (rect->x);
