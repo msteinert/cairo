@@ -2364,6 +2364,9 @@ _cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t    *surface,
     double first_stop, last_stop;
     int repeat_begin = 0, repeat_end = 1;
 
+    if (pattern->base.n_stops == 0)
+        return CAIRO_INT_STATUS_NOTHING_TO_DO;
+
     extend = cairo_pattern_get_extend (&pattern->base.base);
     _cairo_pdf_surface_pause_content_stream (surface);
 
@@ -2567,6 +2570,9 @@ _cairo_pdf_surface_emit_radial_pattern (cairo_pdf_surface_t    *surface,
     cairo_matrix_t pat_to_pdf;
     cairo_extend_t extend;
     cairo_status_t status;
+
+    if (pattern->base.n_stops == 0)
+        return CAIRO_INT_STATUS_NOTHING_TO_DO;
 
     extend = cairo_pattern_get_extend (&pattern->base.base);
     _cairo_pdf_surface_pause_content_stream (surface);
@@ -4354,6 +4360,9 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
     assert (_cairo_pdf_surface_operation_supported (surface, op, source));
 
     status = _cairo_pdf_surface_emit_pattern (surface, source);
+    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+        return CAIRO_STATUS_SUCCESS;
+
     if (status)
 	return status;
 
@@ -4441,6 +4450,9 @@ _cairo_pdf_surface_mask	(void			*abstract_surface,
 
     /* Create mask group */
     status = _cairo_pdf_surface_emit_pattern (surface, mask);
+    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+        return CAIRO_STATUS_SUCCESS;
+
     if (status)
 	return status;
 
@@ -4485,6 +4497,9 @@ _cairo_pdf_surface_mask	(void			*abstract_surface,
 
     /* Create source group */
     status = _cairo_pdf_surface_emit_pattern (surface, source);
+    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+        return CAIRO_STATUS_SUCCESS;
+
     if (status)
 	return status;
 
@@ -4664,6 +4679,9 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
     assert (_cairo_pdf_surface_operation_supported (surface, op, source));
 
     status = _cairo_pdf_surface_emit_pattern (surface, source);
+    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+        return CAIRO_STATUS_SUCCESS;
+
     if (status)
 	return status;
 
@@ -4759,6 +4777,9 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
 	return status;
 
     status = _cairo_pdf_surface_emit_pattern (surface, source);
+    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+        return CAIRO_STATUS_SUCCESS;
+
     if (status)
 	return status;
 
@@ -4856,6 +4877,9 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
     assert (_cairo_pdf_surface_operation_supported (surface, op, source));
 
     status = _cairo_pdf_surface_emit_pattern (surface, source);
+    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+        return CAIRO_STATUS_SUCCESS;
+
     if (status)
 	return status;
 
