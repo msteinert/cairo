@@ -2621,6 +2621,9 @@ _cairo_ps_surface_emit_linear_pattern (cairo_ps_surface_t     *surface,
     cairo_status_t status;
     cairo_matrix_t inverse = pattern->base.base.matrix;
 
+    if (pattern->base.n_stops == 0)
+        return CAIRO_INT_STATUS_NOTHING_TO_DO;
+
     extend = cairo_pattern_get_extend (&pattern->base.base);
 
     status = cairo_matrix_invert (&inverse);
@@ -2675,6 +2678,9 @@ _cairo_ps_surface_emit_radial_pattern (cairo_ps_surface_t     *surface,
     cairo_extend_t extend;
     cairo_status_t status;
     cairo_matrix_t inverse = pattern->base.base.matrix;
+
+    if (pattern->base.n_stops == 0)
+        return CAIRO_INT_STATUS_NOTHING_TO_DO;
 
     extend = cairo_pattern_get_extend (&pattern->base.base);
 
@@ -2873,6 +2879,9 @@ _cairo_ps_surface_paint (void			*abstract_surface,
     _cairo_rectangle_intersect (&extents, &pattern_extents);
 
     status = _cairo_ps_surface_emit_pattern (surface, source, op);
+    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+        return CAIRO_STATUS_SUCCESS;
+
     if (status)
 	return status;
 
@@ -3016,6 +3025,9 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
     }
 
     status = _cairo_ps_surface_emit_pattern (surface, source, op);
+    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+        return CAIRO_STATUS_SUCCESS;
+
     if (status) {
 	if (dash != style->dash)
 	    free (dash);
@@ -3096,6 +3108,9 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 #endif
 
     status = _cairo_ps_surface_emit_pattern (surface, source, op);
+    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+        return CAIRO_STATUS_SUCCESS;
+
     if (status)
 	return status;
 
@@ -3165,6 +3180,9 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     num_glyphs_unsigned = num_glyphs;
 
     status = _cairo_ps_surface_emit_pattern (surface, source, op);
+    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+        return CAIRO_STATUS_SUCCESS;
+
     if (status)
 	return status;
 
