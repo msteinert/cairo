@@ -108,8 +108,6 @@ struct _cairo_pdf_surface {
     cairo_array_t pages;
     cairo_array_t rgb_linear_functions;
     cairo_array_t alpha_linear_functions;
-    cairo_array_t knockout_group;
-    cairo_array_t content_group;
     cairo_array_t patterns;
     cairo_array_t smask_groups;
 
@@ -120,6 +118,12 @@ struct _cairo_pdf_surface {
     cairo_pdf_resource_t pages_resource;
 
     cairo_bool_t compress_content;
+
+    cairo_pdf_resource_t content;
+    cairo_pdf_resource_t fallback_content;
+    cairo_pdf_resource_t content_resources;
+    cairo_pdf_group_resources_t resources;
+    cairo_bool_t has_fallback_images;
 
     struct {
 	cairo_bool_t active;
@@ -136,21 +140,9 @@ struct _cairo_pdf_surface {
 	cairo_output_stream_t *mem_stream;
 	cairo_output_stream_t *old_output;
 	cairo_pdf_resource_t   resource;
-	cairo_pdf_group_resources_t resources;
 	cairo_bool_t is_knockout;
-	cairo_pdf_resource_t first_object;
     } group_stream;
 
-    struct {
-	cairo_bool_t active;
-	cairo_output_stream_t *stream;
-	cairo_output_stream_t *mem_stream;
-	cairo_output_stream_t *old_output;
-	cairo_pdf_group_resources_t resources;
-    } content_stream;
-
-    cairo_array_t *current_group;
-    cairo_pdf_group_resources_t *current_resources;
     cairo_pdf_operators_t pdf_operators;
     cairo_paginated_mode_t paginated_mode;
 
