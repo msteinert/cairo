@@ -110,6 +110,7 @@ struct _cairo_pdf_surface {
     cairo_array_t alpha_linear_functions;
     cairo_array_t patterns;
     cairo_array_t smask_groups;
+    cairo_array_t knockout_group;
 
     cairo_scaled_font_subsets_t *font_subsets;
     cairo_array_t fonts;
@@ -120,7 +121,6 @@ struct _cairo_pdf_surface {
     cairo_bool_t compress_content;
 
     cairo_pdf_resource_t content;
-    cairo_pdf_resource_t fallback_content;
     cairo_pdf_resource_t content_resources;
     cairo_pdf_group_resources_t resources;
     cairo_bool_t has_fallback_images;

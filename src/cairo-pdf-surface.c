@@ -311,6 +311,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
     _cairo_array_init (&surface->fonts, sizeof (cairo_pdf_font_t));
     _cairo_array_init (&surface->patterns, sizeof (cairo_pdf_pattern_t));
     _cairo_array_init (&surface->smask_groups, sizeof (cairo_pdf_smask_group_t *));
+    _cairo_array_init (&surface->knockout_group, sizeof (cairo_pdf_resource_t));
 
     _cairo_pdf_group_resources_init (&surface->resources);
 
@@ -540,6 +541,7 @@ _cairo_pdf_surface_clear (cairo_pdf_surface_t *surface)
 	_cairo_pdf_smask_group_destroy (group);
     }
     _cairo_array_truncate (&surface->smask_groups, 0);
+    _cairo_array_truncate (&surface->knockout_group, 0);
 }
 
 static void
@@ -1250,6 +1252,7 @@ _cairo_pdf_surface_finish (void *abstract_surface)
     _cairo_array_fini (&surface->patterns);
     _cairo_array_fini (&surface->smask_groups);
     _cairo_array_fini (&surface->fonts);
+    _cairo_array_fini (&surface->knockout_group);
 
     if (surface->font_subsets) {
 	_cairo_scaled_font_subsets_destroy (surface->font_subsets);
@@ -4005,8 +4008,9 @@ _cairo_pdf_surface_write_patterns_and_smask_groups (cairo_pdf_surface_t *surface
 static cairo_status_t
 _cairo_pdf_surface_write_page (cairo_pdf_surface_t *surface)
 {
-    cairo_pdf_resource_t page, knockout;
+    cairo_pdf_resource_t page, knockout, res;
     cairo_status_t status;
+    int i, len;
 
     _cairo_pdf_group_resources_clear (&surface->resources);
     if (surface->has_fallback_images) {
@@ -4014,13 +4018,19 @@ _cairo_pdf_surface_write_page (cairo_pdf_surface_t *surface)
 	if (status)
 	    return status;
 
+	len = _cairo_array_num_elements (&surface->knockout_group);
+	for (i = 0; i < len; i++) {
+	    _cairo_array_copy_element (&surface->knockout_group, i, &res);
+	    _cairo_output_stream_printf (surface->output,
+					 "/x%d Do\r\n",
+					 res.id);
+	    _cairo_pdf_surface_add_xobject (surface, res);
+	}
 	_cairo_output_stream_printf (surface->output,
-				     "/x%d Do\r\n"
 				     "/x%d Do\r\n",
-				     surface->content.id,
-				     surface->fallback_content.id);
+				     surface->content.id);
 	_cairo_pdf_surface_add_xobject (surface, surface->content);
-	_cairo_pdf_surface_add_xobject (surface, surface->fallback_content);
+
 	status = _cairo_pdf_surface_close_group (surface, &knockout);
 	if (status)
 	    return status;
@@ -4204,10 +4214,14 @@ _cairo_pdf_surface_start_fallback (cairo_pdf_surface_t *surface)
     if (status)
 	return status;
 
+    status = _cairo_array_append (&surface->knockout_group, &surface->content);
+    if (status)
+	return status;
+
     surface->has_fallback_images = TRUE;
     _cairo_pdf_group_resources_clear (&surface->resources);
     return _cairo_pdf_surface_open_content_stream (surface,
-						   &surface->fallback_content,
+						   &surface->content,
 						   TRUE);
 }
 
