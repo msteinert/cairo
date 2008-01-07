@@ -1,8 +1,9 @@
+/* -*- Mode: c; tab-width: 8; c-basic-offset: 4; indent-tabs-mode: t; -*- */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2004 Red Hat, Inc
  * Copyright © 2006 Red Hat, Inc
- * Copyright © 2007 Adrian Johnson
+ * Copyright © 2007, 2008 Adrian Johnson
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -45,6 +46,7 @@
 
 #include "cairo-surface-private.h"
 #include "cairo-pdf-operators-private.h"
+#include "cairo-path-fixed-private.h"
 
 typedef struct _cairo_pdf_resource {
     unsigned int id;
@@ -57,6 +59,37 @@ typedef struct _cairo_pdf_group_resources {
     cairo_array_t xobjects;
     cairo_array_t fonts;
 } cairo_pdf_group_resources_t;
+
+typedef struct _cairo_pdf_pattern {
+    cairo_pattern_t *pattern;
+    cairo_pdf_resource_t pattern_res;
+    cairo_pdf_resource_t gstate_res;
+} cairo_pdf_pattern_t;
+
+typedef enum _cairo_pdf_operation {
+    PDF_PAINT,
+    PDF_MASK,
+    PDF_FILL,
+    PDF_STROKE,
+    PDF_SHOW_GLYPHS
+} cairo_pdf_operation_t;
+
+typedef struct _cairo_pdf_smask_group
+{
+    cairo_pdf_resource_t  group_res;
+    cairo_pdf_operation_t operation;
+    cairo_pattern_t	 *source;
+    cairo_pdf_resource_t  source_res;
+    cairo_pattern_t	 *mask;
+    cairo_path_fixed_t	  path;
+    cairo_fill_rule_t	  fill_rule;
+    cairo_stroke_style_t *style;
+    cairo_matrix_t	  ctm;
+    cairo_matrix_t	  ctm_inverse;
+    cairo_glyph_t	 *glyphs;
+    int			  num_glyphs;
+    cairo_scaled_font_t	 *scaled_font;
+} cairo_pdf_smask_group_t;
 
 typedef struct _cairo_pdf_surface cairo_pdf_surface_t;
 
@@ -77,6 +110,8 @@ struct _cairo_pdf_surface {
     cairo_array_t alpha_linear_functions;
     cairo_array_t knockout_group;
     cairo_array_t content_group;
+    cairo_array_t patterns;
+    cairo_array_t smask_groups;
 
     cairo_scaled_font_subsets_t *font_subsets;
     cairo_array_t fonts;
@@ -100,6 +135,7 @@ struct _cairo_pdf_surface {
 	cairo_output_stream_t *stream;
 	cairo_output_stream_t *mem_stream;
 	cairo_output_stream_t *old_output;
+	cairo_pdf_resource_t   resource;
 	cairo_pdf_group_resources_t resources;
 	cairo_bool_t is_knockout;
 	cairo_pdf_resource_t first_object;
@@ -112,16 +148,6 @@ struct _cairo_pdf_surface {
 	cairo_output_stream_t *old_output;
 	cairo_pdf_group_resources_t resources;
     } content_stream;
-
-    struct {
-	cairo_pattern_type_t type;
-	double red;
-	double green;
-	double blue;
-	double alpha;
-	cairo_pdf_resource_t smask;
-	cairo_pdf_resource_t pattern;
-    } emitted_pattern;
 
     cairo_array_t *current_group;
     cairo_pdf_group_resources_t *current_resources;
