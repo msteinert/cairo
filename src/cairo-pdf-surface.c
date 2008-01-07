@@ -2687,19 +2687,6 @@ _cairo_pdf_surface_unselect_pattern (cairo_pdf_surface_t *surface)
 }
 
 static cairo_int_status_t
-_cairo_pdf_surface_copy_page (void *abstract_surface)
-{
-    cairo_pdf_surface_t *surface = abstract_surface;
-    cairo_int_status_t status;
-
-    status = _cairo_pdf_surface_close_content_stream (surface);
-    if (status)
-	return status;
-
-    return _cairo_pdf_surface_write_page (surface);
-}
-
-static cairo_int_status_t
 _cairo_pdf_surface_show_page (void *abstract_surface)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
@@ -4577,7 +4564,7 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend = {
     NULL, /* composite */
     NULL, /* fill_rectangles */
     NULL, /* composite_trapezoids */
-    _cairo_pdf_surface_copy_page,
+    NULL,  /* _cairo_pdf_surface_copy_page */
     _cairo_pdf_surface_show_page,
     NULL, /* set_clip_region */
     _cairo_pdf_surface_intersect_clip_path,
