@@ -123,7 +123,8 @@ struct _cairo_cache {
 
 typedef enum _cairo_paginated_mode {
     CAIRO_PAGINATED_MODE_ANALYZE,	/* analyze page regions */
-    CAIRO_PAGINATED_MODE_RENDER		/* render page contents */
+    CAIRO_PAGINATED_MODE_RENDER,	/* render page contents */
+    CAIRO_PAGINATED_MODE_FALLBACK 	/* paint fallback images */
 } cairo_paginated_mode_t;
 
 /* Sure wish C had a real enum type so that this would be distinct

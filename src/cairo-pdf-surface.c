@@ -4168,7 +4168,7 @@ _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t  *surface,
 
     /* The SOURCE operator is only supported for the fallback images. */
     if (op == CAIRO_OPERATOR_SOURCE &&
-	surface->paginated_mode == CAIRO_PAGINATED_MODE_RENDER)
+	surface->paginated_mode == CAIRO_PAGINATED_MODE_FALLBACK)
 	return CAIRO_STATUS_SUCCESS;
 
     return CAIRO_INT_STATUS_UNSUPPORTED;

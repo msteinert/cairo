@@ -365,7 +365,9 @@ _paint_page (cairo_paginated_surface_t *surface)
         cairo_box_int_t *boxes;
         int num_boxes, i;
 
-	/* Reset clip region before drawing the fall back images */
+	surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_FALLBACK);
+
+    /* Reset clip region before drawing the fall back images */
 	status = _cairo_surface_intersect_clip_path (surface->target,
 						     NULL,
 						     CAIRO_FILL_RULE_WINDING,
