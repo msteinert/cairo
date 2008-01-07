@@ -88,37 +88,6 @@
  * that fallback images do not composite with any content under the
  * fallback images.
  *
- * The group containing the supported operations (content_group_list
- * in the example below) does not do any drawing directly. Instead it
- * paints groups containing the drawing operations and performs
- * clipping. The reason for this is that clipping operations performed
- * in a group do not affect the parent group.
- *
- * Example PDF Page Structure:
- *
- *   Page Content
- *   ------------
- *     /knockout_group Do
- *
- *   knockout_group
- *   --------------
- *     /content_group_list Do
- *     /fallback_image_1 Do
- *     /fallback_image_2 Do
- *     ...
- *
- *   content_group_list
- *   ------------------
- *     q
- *     /content_group_1 Do
- *     /content_group_2 Do
- *     10 10 m 10 20 l 20 20 l 20 10 l h W  # clip
- *     /content_group_3 Do
- *     Q q                                  # reset clip
- *     /content_group_4 Do
- *     Q
- *
- *
  * Streams:
  *
  * This PDF surface has three types of streams:
@@ -139,42 +108,21 @@
  *
  * Content Stream:
  *   The Content Stream is opened and closed with the following functions:
- *     _cairo_pdf_surface_start_content_stream ()
- *     _cairo_pdf_surface_stop_content_stream ()
+ *     _cairo_pdf_surface_open_content_stream ()
+ *     _cairo_pdf_surface_close_content_stream ()
  *
- *   The Content Stream is written to content_group_n groups (as shown
- *   in the page structure example). The Content Stream may be paused
- *   and resumed with the following functions:
- *     _cairo_pdf_surface_pause_content_stream ()
- *     _cairo_pdf_surface_resume_content_stream ()
- *
- *   When the Content Stream is paused, a PDF Stream or Group Stream
- *   may be opened. After closing the PDF Stream or Group Stream the
- *   Content Stream may be resumed.
- *
- *   The Content Stream contains the text and graphics operators. When
- *   a pattern is required the Content Stream is paused, a PDF Stream
- *   is opened, the pattern is written to a PDF Stream, the PDF Stream
- *   is closed, then the Content Stream is resumed.
- *
- *   Each group comprising the Content Stream is stored in memory
- *   until the stream is closed or the maximum group size is
- *   exceeded. This is due to the need to list all resources used in
- *   the group in the group's stream dictionary.
+ *   The Content Stream contains the text and graphics operators.
  *
  * Group Stream:
  *   A Group Stream may be opened and closed with the following functions:
  *     _cairo_pdf_surface_open_group ()
  *     _cairo_pdf_surface_close_group ()
  *
- *   A Group Stream is written to a separate group in the PDF file
- *   that is not part of the Content Stream. Group Streams are also
- *   stored in memory until the stream is closed due to the need to
- *   list the resources used in the group in the group's stream
- *   dictionary.
- *
- *   Group Streams are used for short sequences of graphics operations
- *   that need to be in a separate group from the Content Stream.
+ *   A Group Stream is a Form XObject. It is used for short sequences
+ *   of operators. As the content is very short the group is stored in
+ *   memory until it is closed. This allows some optimization such as
+ *   including the Resource dictionary and stream length inside the
+ *   XObject instead of using an indirect object.
  */
 
 typedef struct _cairo_pdf_object {
