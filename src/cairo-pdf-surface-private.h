@@ -44,6 +44,7 @@
 #include "cairo-pdf.h"
 
 #include "cairo-surface-private.h"
+#include "cairo-pdf-operators-private.h"
 
 typedef struct _cairo_pdf_resource {
     unsigned int id;
@@ -124,7 +125,7 @@ struct _cairo_pdf_surface {
 
     cairo_array_t *current_group;
     cairo_pdf_group_resources_t *current_resources;
-
+    cairo_pdf_operators_t pdf_operators;
     cairo_paginated_mode_t paginated_mode;
 
     cairo_bool_t force_fallbacks;

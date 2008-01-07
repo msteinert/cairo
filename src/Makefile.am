@@ -22,6 +22,7 @@ endif
 if CAIRO_HAS_PDF_SURFACE
 libcairo_pdf_headers = cairo-pdf.h
 libcairo_pdf_sources = cairo-pdf-surface.c cairo-pdf-surface-private.h \
+	               cairo-pdf-operators.c cairo-pdf-operators-private.h \
 		       cairo-deflate-stream.c
 libcairo_font_subset_sources =	$(font_subset_sources)
 backend_pkgconfigs += cairo-pdf.pc
