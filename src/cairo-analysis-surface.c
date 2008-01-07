@@ -70,7 +70,7 @@ _cairo_analysis_surface_analyze_meta_surface_pattern (cairo_analysis_surface_t *
     cairo_surface_pattern_t *surface_pattern;
     cairo_status_t status;
     cairo_bool_t old_has_ctm;
-    cairo_matrix_t old_ctm;
+    cairo_matrix_t old_ctm, p2d;
 
     assert (pattern->type == CAIRO_PATTERN_TYPE_SURFACE);
     surface_pattern = (cairo_surface_pattern_t *) pattern;
@@ -78,7 +78,12 @@ _cairo_analysis_surface_analyze_meta_surface_pattern (cairo_analysis_surface_t *
 
     old_ctm = surface->ctm;
     old_has_ctm = surface->has_ctm;
-    cairo_matrix_multiply (&surface->ctm, &pattern->matrix, &surface->ctm);
+    p2d = pattern->matrix;
+    status = cairo_matrix_invert (&p2d);
+    /* _cairo_pattern_set_matrix guarantees invertibility */
+    assert (status == CAIRO_STATUS_SUCCESS);
+
+    cairo_matrix_multiply (&surface->ctm, &p2d, &surface->ctm);
     surface->has_ctm = !_cairo_matrix_is_identity (&surface->ctm);
 
     status = _cairo_meta_surface_replay_and_create_regions (surface_pattern->surface,
@@ -114,7 +119,7 @@ _cairo_analysis_surface_add_operation  (cairo_analysis_surface_t *surface,
 					      &x1, &y1, &x2, &y2,
 					      NULL);
 	rect->x = floor (x1);
-	rect->y = floor (x2);
+	rect->y = floor (y1);
 
 	x2 = ceil (x2) - rect->x;
 	y2 = ceil (y2) - rect->y;
