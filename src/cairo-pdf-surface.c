@@ -1595,6 +1595,7 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
 {
     double old_width, old_height;
     cairo_matrix_t old_cairo_to_pdf;
+    cairo_paginated_mode_t old_paginated_mode;
     cairo_rectangle_int16_t meta_extents;
     cairo_status_t status;
     int alpha = 0;
@@ -1606,8 +1607,14 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
     old_width = surface->width;
     old_height = surface->height;
     old_cairo_to_pdf = surface->cairo_to_pdf;
+    old_paginated_mode = surface->paginated_mode;
     surface->width = meta_extents.width;
     surface->height = meta_extents.height;
+    /* Patterns are emitted after fallback images. The paginated mode
+     * needs to be set to _RENDER while the meta surface is replayed
+     * back to this surface.
+     */
+    surface->paginated_mode = CAIRO_PAGINATED_MODE_RENDER;
     cairo_matrix_init (&surface->cairo_to_pdf, 1, 0, 0, -1, 0, surface->height);
     _cairo_pdf_operators_set_cairo_to_pdf_matrix (&surface->pdf_operators,
 						  surface->cairo_to_pdf);
@@ -1641,6 +1648,7 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
  CLEANUP_GROUP:
     surface->width = old_width;
     surface->height = old_height;
+    surface->paginated_mode = old_paginated_mode;
     surface->cairo_to_pdf = old_cairo_to_pdf;
     _cairo_pdf_operators_set_cairo_to_pdf_matrix (&surface->pdf_operators,
 						  surface->cairo_to_pdf);
@@ -4157,14 +4165,16 @@ _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t  *surface,
     if (! _pattern_supported (pattern))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (op == CAIRO_OPERATOR_OVER) {
+    if (op == CAIRO_OPERATOR_OVER || op == CAIRO_OPERATOR_SOURCE) {
 	if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	    cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
 	    if ( _cairo_surface_is_meta (surface_pattern->surface))
-	    return CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN;
+		return CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN;
 	}
-	return CAIRO_STATUS_SUCCESS;
     }
+
+    if (op == CAIRO_OPERATOR_OVER)
+	return CAIRO_STATUS_SUCCESS;
 
     /* The SOURCE operator is only if there is nothing painted
      * underneath. */
