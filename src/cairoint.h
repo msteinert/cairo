@@ -2223,6 +2223,10 @@ _cairo_slope_counter_clockwise (cairo_slope_t *a, cairo_slope_t *b);
 /* cairo_pattern.c */
 
 cairo_private cairo_status_t
+_cairo_pattern_create_copy (cairo_pattern_t	  **pattern,
+			    const cairo_pattern_t  *other);
+
+cairo_private cairo_status_t
 _cairo_pattern_init_copy (cairo_pattern_t	*pattern,
 			  const cairo_pattern_t *other);
 

@@ -213,6 +213,34 @@ _cairo_pattern_fini (cairo_pattern_t *pattern)
     }
 }
 
+cairo_status_t
+_cairo_pattern_create_copy (cairo_pattern_t	  **pattern,
+			    const cairo_pattern_t  *other)
+{
+    if (other->status)
+	return other->status;
+
+    switch (other->type) {
+    case CAIRO_PATTERN_TYPE_SOLID:
+	*pattern = malloc (sizeof (cairo_solid_pattern_t));
+	break;
+    case CAIRO_PATTERN_TYPE_SURFACE:
+	*pattern = malloc (sizeof (cairo_surface_pattern_t));
+	break;
+    case CAIRO_PATTERN_TYPE_LINEAR:
+	*pattern = malloc (sizeof (cairo_linear_pattern_t));
+	break;
+    case CAIRO_PATTERN_TYPE_RADIAL:
+	*pattern = malloc (sizeof (cairo_radial_pattern_t));
+	break;
+    }
+    if (*pattern == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    return _cairo_pattern_init_copy (*pattern, other);
+}
+
+
 void
 _cairo_pattern_init_solid (cairo_solid_pattern_t *pattern,
 			   const cairo_color_t	 *color,
