@@ -212,16 +212,11 @@ typedef enum group_element_type {
 typedef struct _cairo_pdf_group_element {
     group_element_type_t  type;
     cairo_pdf_resource_t  group;
-    cairo_path_fixed_t   *clip_path;
-    cairo_fill_rule_t     fill_rule;
 } cairo_pdf_group_element_t;
 
 
 static cairo_pdf_resource_t
 _cairo_pdf_surface_new_object (cairo_pdf_surface_t *surface);
-
-static void
-_cairo_pdf_group_element_array_finish (cairo_array_t *array);
 
 static void
 _cairo_pdf_surface_clear (cairo_pdf_surface_t *surface);
@@ -260,11 +255,6 @@ _cairo_pdf_surface_write_catalog (cairo_pdf_surface_t *surface);
 
 static long
 _cairo_pdf_surface_write_xref (cairo_pdf_surface_t *surface);
-
-static cairo_status_t
-_cairo_pdf_surface_emit_clip (cairo_pdf_surface_t  *surface,
-			      cairo_path_fixed_t   *path,
-			      cairo_fill_rule_t	    fill_rule);
 
 static cairo_status_t
 _cairo_pdf_surface_write_page (cairo_pdf_surface_t *surface);
@@ -562,8 +552,8 @@ _cairo_pdf_surface_clear (cairo_pdf_surface_t *surface)
     cairo_pdf_pattern_t *pattern;
     cairo_pdf_smask_group_t *group;
 
-    _cairo_pdf_group_element_array_finish (&surface->content_group);
-    _cairo_pdf_group_element_array_finish (&surface->knockout_group);
+    _cairo_array_truncate (&surface->content_group, 0);
+    _cairo_array_truncate (&surface->knockout_group, 0);
     _cairo_array_truncate (&surface->content_group, 0);
     _cairo_array_truncate (&surface->knockout_group, 0);
 
@@ -1168,10 +1158,6 @@ _cairo_pdf_surface_write_group_list (cairo_pdf_surface_t  *surface,
 	    status = _cairo_pdf_surface_add_xobject (surface, elem->group);
 	    if (status)
 		return status;
-	} else if (elem->type == ELEM_CLIP) {
-	    status = _cairo_pdf_surface_emit_clip (surface, elem->clip_path, elem->fill_rule);
-	    if (status)
-		return status;
 	}
     }
     _cairo_output_stream_printf (surface->output, "Q\r\n");
@@ -1208,6 +1194,8 @@ _cairo_pdf_surface_start_content_stream (cairo_pdf_surface_t *surface)
     _cairo_pdf_group_resources_clear (&surface->content_stream.resources);
     surface->current_resources = &surface->content_stream.resources;
 
+    _cairo_output_stream_printf (surface->output, "q\r\n");
+
     return status;
 }
 
@@ -1232,6 +1220,8 @@ _cairo_pdf_surface_stop_content_stream (cairo_pdf_surface_t *surface)
 
     assert (surface->pdf_stream.active == FALSE);
     assert (surface->content_stream.active == TRUE);
+
+    _cairo_output_stream_printf (surface->output, "Q\r\n");
 
     if (surface->compress_content) {
 	status = _cairo_output_stream_destroy (surface->content_stream.stream);
@@ -1286,20 +1276,6 @@ _cairo_pdf_surface_check_content_stream_size (cairo_pdf_surface_t *surface)
     }
 
     return CAIRO_STATUS_SUCCESS;
-}
-
-static void
-_cairo_pdf_group_element_array_finish (cairo_array_t *array)
-{
-    int i, len;
-    cairo_pdf_group_element_t *elem;
-
-    len = _cairo_array_num_elements (array);
-    for (i = 0; i < len; i++) {
-	elem = _cairo_array_index (array, i);
-	if (elem->type == ELEM_CLIP && elem->clip_path)
-	    _cairo_path_fixed_destroy (elem->clip_path);
-    }
 }
 
 static cairo_surface_t *
@@ -1812,7 +1788,6 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
     _cairo_pdf_operators_set_cairo_to_pdf_matrix (&surface->pdf_operators,
 						  surface->cairo_to_pdf);
 
-    _cairo_pdf_group_element_array_finish (&group);
     _cairo_array_fini (&group);
     if (status)
 	return status;
@@ -2898,53 +2873,6 @@ _cairo_pdf_surface_get_extents (void		        *abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
-_cairo_pdf_surface_add_clip (cairo_pdf_surface_t  *surface,
-			     cairo_path_fixed_t	  *path,
-			     cairo_fill_rule_t     fill_rule)
-{
-    cairo_pdf_group_element_t elem;
-    cairo_status_t status;
-
-    memset (&elem, 0, sizeof elem);
-    elem.type = ELEM_CLIP;
-
-    if (path == NULL) {
-	elem.clip_path = NULL;
-    } else {
-	elem.clip_path = _cairo_path_fixed_create ();
-	if (elem.clip_path == NULL)
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-	status = _cairo_path_fixed_init_copy (elem.clip_path, path);
-	if (status) {
-	    _cairo_path_fixed_destroy (elem.clip_path);
-	    return status;
-	}
-    }
-    elem.fill_rule = fill_rule;
-
-    status = _cairo_pdf_surface_stop_content_stream (surface);
-    if (status) {
-	if (elem.clip_path != NULL)
-	    _cairo_path_fixed_destroy (elem.clip_path);
-	return status;
-    }
-
-    status = _cairo_array_append (surface->current_group, &elem);
-    if (status) {
-	if (elem.clip_path != NULL)
-	    _cairo_path_fixed_destroy (elem.clip_path);
-	return status;
-    }
-
-    status = _cairo_pdf_surface_start_content_stream (surface);
-    if (status)
-	return status;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static cairo_int_status_t
 _cairo_pdf_surface_intersect_clip_path (void			*abstract_surface,
 					cairo_path_fixed_t	*path,
@@ -2954,7 +2882,12 @@ _cairo_pdf_surface_intersect_clip_path (void			*abstract_surface,
 {
     cairo_pdf_surface_t *surface = abstract_surface;
 
-    return _cairo_pdf_surface_add_clip (surface, path, fill_rule);
+    if (path == NULL) {
+	_cairo_output_stream_printf (surface->output, "Q q\r\n");
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    return _cairo_pdf_operators_clip (&surface->pdf_operators, path, fill_rule);
 }
 
 static void
@@ -3976,19 +3909,6 @@ _cairo_pdf_surface_write_xref (cairo_pdf_surface_t *surface)
     }
 
     return offset;
-}
-
-static cairo_status_t
-_cairo_pdf_surface_emit_clip (cairo_pdf_surface_t  *surface,
-			      cairo_path_fixed_t   *path,
-			      cairo_fill_rule_t	    fill_rule)
-{
-    if (path == NULL) {
-	_cairo_output_stream_printf (surface->output, "Q q\r\n");
-	return CAIRO_STATUS_SUCCESS;
-    }
-
-    return _cairo_pdf_operators_clip (&surface->pdf_operators, path, fill_rule);
 }
 
 static cairo_status_t
