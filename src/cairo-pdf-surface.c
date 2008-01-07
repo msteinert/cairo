@@ -3605,60 +3605,6 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 }
 
 static cairo_int_status_t
-_cairo_pdf_surface_emit_outline_glyph (cairo_pdf_surface_t	*surface,
-				       cairo_scaled_font_t	*scaled_font,
-				       unsigned long		 glyph_index,
-				       cairo_pdf_resource_t	*glyph_ret)
-{
-    cairo_scaled_glyph_t *scaled_glyph;
-    pdf_path_info_t info;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
-
-    status = _cairo_scaled_glyph_lookup (scaled_font,
-					 glyph_index,
-					 CAIRO_SCALED_GLYPH_INFO_METRICS|
-					 CAIRO_SCALED_GLYPH_INFO_PATH,
-					 &scaled_glyph);
-    if (status)
-	return status;
-
-    *glyph_ret = _cairo_pdf_surface_open_stream (surface,
-						 surface->compress_content,
-						 NULL);
-    if (glyph_ret->id == 0)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    _cairo_output_stream_printf (surface->output,
-				 "0 0 %f %f %f %f d1\r\n",
-				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
-				 -_cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
-				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x),
-				 -_cairo_fixed_to_double (scaled_glyph->bbox.p1.y));
-
-    info.output = surface->output;
-    info.cairo_to_pdf = &surface->cairo_to_pdf;
-    info.ctm_inverse = NULL;
-
-    status = _cairo_path_fixed_interpret (scaled_glyph->path,
-					  CAIRO_DIRECTION_FORWARD,
-					  _cairo_pdf_path_move_to,
-					  _cairo_pdf_path_line_to,
-					  _cairo_pdf_path_curve_to,
-					  _cairo_pdf_path_close_path,
-					  &info);
-    if (status) {
-	/* ignore status return as we are on the error path... */
-	_cairo_pdf_surface_close_stream (surface);
-	return status;
-    }
-
-    _cairo_output_stream_printf (surface->output,
-				 " f");
-
-    return _cairo_pdf_surface_close_stream (surface);
-}
-
-static cairo_int_status_t
 _cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
 				      cairo_scaled_font_t	*scaled_font,
 				      unsigned long		 glyph_index,
@@ -3748,30 +3694,6 @@ _cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
 }
 
 static cairo_status_t
-_cairo_pdf_surface_emit_glyph (cairo_pdf_surface_t	*surface,
-			       cairo_scaled_font_t	*scaled_font,
-			       unsigned long		 glyph_index,
-			       cairo_pdf_resource_t	*glyph_ret,
-                               cairo_box_t              *bbox,
-                               double                   *width)
-{
-    cairo_status_t status;
-
-    status = _cairo_pdf_surface_emit_outline_glyph (surface,
-						    scaled_font,
-						    glyph_index,
-						    glyph_ret);
-    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
-	status = _cairo_pdf_surface_emit_bitmap_glyph (surface,
-						       scaled_font,
-						       glyph_index,
-						       glyph_ret,
-                                                       bbox,
-                                                       width);
-    return status;
-}
-
-static cairo_status_t
 _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 					   cairo_scaled_font_subset_t	*font_subset)
 {
@@ -3798,12 +3720,12 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
     }
 
     for (i = 0; i < font_subset->num_glyphs; i++) {
-	status = _cairo_pdf_surface_emit_glyph (surface,
-				                font_subset->scaled_font,
-						font_subset->glyphs[i],
-						&glyphs[i],
-						&bbox,
-						&widths[i]);
+        status = _cairo_pdf_surface_emit_bitmap_glyph (surface,
+                                                       font_subset->scaled_font,
+                                                       font_subset->glyphs[i],
+                                                       &glyphs[i],
+                                                       &bbox,
+                                                       &widths[i]);
 	if (status)
 	    break;
 
