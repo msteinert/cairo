@@ -4166,10 +4166,10 @@ _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t  *surface,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    /* The SOURCE operator is only supported for the fallback images. */
-    if (op == CAIRO_OPERATOR_SOURCE &&
-	surface->paginated_mode == CAIRO_PAGINATED_MODE_FALLBACK)
-	return CAIRO_STATUS_SUCCESS;
+    /* The SOURCE operator is only if there is nothing painted
+     * underneath. */
+    if (op == CAIRO_OPERATOR_SOURCE)
+	return CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY;
 
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
@@ -4186,27 +4186,19 @@ _cairo_pdf_surface_operation_supported (cairo_pdf_surface_t  *surface,
 }
 
 static cairo_int_status_t
-_cairo_pdf_surface_set_operator (cairo_pdf_surface_t *surface,
-				 cairo_operator_t op)
+_cairo_pdf_surface_start_fallback (cairo_pdf_surface_t *surface)
 {
     cairo_status_t status;
 
-    if (op == CAIRO_OPERATOR_OVER)
-	return CAIRO_STATUS_SUCCESS;
+    status = _cairo_pdf_surface_close_content_stream (surface);
+    if (status)
+	return status;
 
-    if (op == CAIRO_OPERATOR_SOURCE) {
-	status = _cairo_pdf_surface_close_content_stream (surface);
-	if (status)
-	    return status;
-
-	surface->has_fallback_images = TRUE;
-	_cairo_pdf_group_resources_clear (&surface->resources);
-	return _cairo_pdf_surface_open_content_stream (surface,
-						       &surface->fallback_content,
-						       TRUE);
-    }
-
-    return CAIRO_INT_STATUS_UNSUPPORTED;
+    surface->has_fallback_images = TRUE;
+    _cairo_pdf_group_resources_clear (&surface->resources);
+    return _cairo_pdf_surface_open_content_stream (surface,
+						   &surface->fallback_content,
+						   TRUE);
 }
 
 static cairo_int_status_t
@@ -4219,14 +4211,15 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
     cairo_pdf_smask_group_t *group;
     cairo_pdf_resource_t pattern_res, gstate_res;
 
-    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
 	return _cairo_pdf_surface_analyze_operation (surface, op, source);
+    } else if (surface->paginated_mode == CAIRO_PAGINATED_MODE_FALLBACK) {
+	status = _cairo_pdf_surface_start_fallback (surface);
+	if (status)
+	    return status;
+    }
 
     assert (_cairo_pdf_surface_operation_supported (surface, op, source));
-
-    status = _cairo_pdf_surface_set_operator (surface, op);
-    if (status)
-	return status;
 
     pattern_res.id = 0;
     gstate_res.id = 0;
@@ -4291,14 +4284,14 @@ _cairo_pdf_surface_mask	(void			*abstract_surface,
 	    return status2;
 
 	return status;
+    } else if (surface->paginated_mode == CAIRO_PAGINATED_MODE_FALLBACK) {
+	status = _cairo_pdf_surface_start_fallback (surface);
+	if (status)
+	    return status;
     }
 
     assert (_cairo_pdf_surface_operation_supported (surface, op, source));
     assert (_cairo_pdf_surface_operation_supported (surface, op, mask));
-
-    status = _cairo_pdf_surface_set_operator (surface, op);
-    if (status)
-	return status;
 
     group = _cairo_pdf_surface_create_smask_group (surface);
     if (group == NULL)
@@ -4414,14 +4407,15 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
     cairo_pdf_smask_group_t *group;
     cairo_pdf_resource_t pattern_res, gstate_res;
 
-    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
 	return _cairo_pdf_surface_analyze_operation (surface, op, source);
+    } else if (surface->paginated_mode == CAIRO_PAGINATED_MODE_FALLBACK) {
+	status = _cairo_pdf_surface_start_fallback (surface);
+	if (status)
+	    return status;
+    }
 
     assert (_cairo_pdf_surface_operation_supported (surface, op, source));
-
-    status = _cairo_pdf_surface_set_operator (surface, op);
-    if (status)
-	return status;
 
     pattern_res.id = 0;
     gstate_res.id = 0;
