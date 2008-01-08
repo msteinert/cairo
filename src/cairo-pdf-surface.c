@@ -2859,6 +2859,12 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
     unsigned int i;
     cairo_status_t status;
 
+    subset_resource = _cairo_pdf_surface_get_font_resource (surface,
+							    font_subset->font_id,
+							    font_subset->subset_id);
+    if (subset_resource.id == 0)
+	return CAIRO_STATUS_SUCCESS;
+
     compressed = compress_dup (subset->data, subset->data_length, &compressed_length);
     if (compressed == NULL)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -2950,9 +2956,6 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
 				 ">>\r\n"
 				 "endobj\r\n");
 
-    subset_resource = _cairo_pdf_surface_get_font_resource (surface,
-							    font_subset->font_id,
-							    font_subset->subset_id);
     _cairo_pdf_surface_update_object (surface, subset_resource);
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\r\n"
@@ -3036,6 +3039,11 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
     char *compressed;
     unsigned int i;
 
+    subset_resource = _cairo_pdf_surface_get_font_resource (surface,
+							    font_subset->font_id,
+							    font_subset->subset_id);
+    if (subset_resource.id == 0)
+	return CAIRO_STATUS_SUCCESS;
 
     /* We ignore the zero-trailer and set Length3 to 0. */
     length = subset->header_length + subset->data_length;
@@ -3104,9 +3112,6 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
 				 subset->descent,
 				 stream.id);
 
-    subset_resource = _cairo_pdf_surface_get_font_resource (surface,
-							    font_subset->font_id,
-							    font_subset->subset_id);
     _cairo_pdf_surface_update_object (surface, subset_resource);
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\r\n"
@@ -3201,6 +3206,12 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
     unsigned long compressed_length;
     char *compressed;
     unsigned int i;
+
+    subset_resource = _cairo_pdf_surface_get_font_resource (surface,
+							    font_subset->font_id,
+							    font_subset->subset_id);
+    if (subset_resource.id == 0)
+	return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_truetype_subset_init (&subset, font_subset);
     if (status)
@@ -3308,9 +3319,6 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 				 ">>\r\n"
 				 "endobj\r\n");
 
-    subset_resource = _cairo_pdf_surface_get_font_resource (surface,
-							    font_subset->font_id,
-							    font_subset->subset_id);
     _cairo_pdf_surface_update_object (surface, subset_resource);
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\r\n"
@@ -3448,6 +3456,12 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
     if (font_subset->num_glyphs == 0)
 	return CAIRO_STATUS_SUCCESS;
 
+    subset_resource = _cairo_pdf_surface_get_font_resource (surface,
+							    font_subset->font_id,
+							    font_subset->subset_id);
+    if (subset_resource.id == 0)
+	return CAIRO_STATUS_SUCCESS;
+
     glyphs = _cairo_malloc_ab (font_subset->num_glyphs, sizeof (cairo_pdf_resource_t));
     if (glyphs == NULL)
 	return _cairo_surface_set_error (&surface->base, CAIRO_STATUS_NO_MEMORY);
@@ -3537,9 +3551,6 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 	return status;
     }
 
-    subset_resource = _cairo_pdf_surface_get_font_resource (surface,
-							    font_subset->font_id,
-							    font_subset->subset_id);
     _cairo_pdf_surface_update_object (surface, subset_resource);
     matrix = font_subset->scaled_font->scale;
     status = cairo_matrix_invert (&matrix);
