@@ -328,15 +328,15 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
     time_t now;
     char **comments;
     int i, num_comments;
-    const char *level;
+    int level;
     const char *eps_header = "";
 
     now = time (NULL);
 
     if (surface->ps_level == CAIRO_PS_LEVEL_2)
-	level = "2";
+	level = 2;
     else
-	level = "3";
+	level = 3;
 
     if (surface->eps)
 	eps_header = " EPSF-3.0";
@@ -358,7 +358,7 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "%%%%DocumentData: Clean7Bit\n"
-				 "%%%%LanguageLevel: %s\n",
+				 "%%%%LanguageLevel: %d\n",
 				 level);
 
     num_comments = _cairo_array_num_elements (&surface->dsc_header_comments);
@@ -375,6 +375,14 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "%%%%BeginProlog\n");
+
+    _cairo_output_stream_printf (surface->final_stream,
+				 "/languagelevel where{pop languagelevel}{1}ifelse %d lt{/Helvetica\n"
+				 "findfont 12 scalefont setfont 50 500 moveto\n"
+				 "(This print job requires a PostScript Language Level %d printer.)show\n"
+				 "showpage quit}if\n",
+				 level,
+				 level);
 
     if (surface->eps) {
 	_cairo_output_stream_printf (surface->final_stream,
