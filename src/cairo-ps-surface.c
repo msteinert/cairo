@@ -333,7 +333,7 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 
     now = time (NULL);
 
-    if (surface->ps_level == CAIRO_PS_LEVEL_2)
+    if (surface->ps_level_used == CAIRO_PS_LEVEL_2)
 	level = 2;
     else
 	level = 3;
@@ -975,6 +975,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 
     surface->eps = FALSE;
     surface->ps_level = CAIRO_PS_LEVEL_3;
+    surface->ps_level_used = CAIRO_PS_LEVEL_2;
     surface->width  = width;
     surface->height = height;
     surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
@@ -1666,10 +1667,12 @@ _cairo_ps_surface_analyze_surface_pattern_transparency (cairo_ps_surface_t      
 	break;
 
     case CAIRO_IMAGE_HAS_BILEVEL_ALPHA:
-	if (surface->ps_level == CAIRO_PS_LEVEL_2)
+	if (surface->ps_level == CAIRO_PS_LEVEL_2) {
 	    status = CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY;
-	else
+	} else {
+	    surface->ps_level_used = CAIRO_PS_LEVEL_3;
 	    status = CAIRO_STATUS_SUCCESS;
+	}
 	break;
 
     case CAIRO_IMAGE_HAS_ALPHA:
@@ -1732,6 +1735,7 @@ _gradient_pattern_supported (cairo_ps_surface_t    *surface,
     if (surface->ps_level == CAIRO_PS_LEVEL_2)
 	return FALSE;
 
+    surface->ps_level_used = CAIRO_PS_LEVEL_3;
     extend = cairo_pattern_get_extend (pattern);
 
     if (extend == CAIRO_EXTEND_REPEAT ||
