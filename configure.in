@@ -609,9 +609,10 @@ test_pdf=no
 if test "x$use_pdf" = "xyes"; then
   poppler_DEPENDENCY="poppler-glib >= $POPPLER_VERSION_REQUIRED"
   PKG_CHECK_MODULES(POPPLER, $poppler_DEPENDENCY pango gtk+-2.0,
+		    [_CHECK_FUNCS_WITH_FLAGS(poppler_page_render_to_pixbuf, [$POPPLER_CFLAGS], [$POPPLER_LIBS],
                     [test_pdf=yes],
 		    [AC_MSG_RESULT(no)
-		     test_pdf="no (requires $poppler_DEPENDENCY)"])
+		     test_pdf="no (requires $poppler_DEPENDENCY)"])])
   if test "x$test_pdf" = "xyes"; then
     AC_DEFINE([CAIRO_CAN_TEST_PDF_SURFACE], 1, [Define to 1 if the PDF backend can be tested (need poppler and other dependencies for pdf2png)])
   else
@@ -638,9 +639,10 @@ test_svg=no
 if test "x$use_svg" = "xyes"; then
   librsvg_DEPENDENCY="librsvg-2.0 >= $LIBRSVG_VERSION_REQUIRED"
   PKG_CHECK_MODULES(LIBRSVG, $librsvg_DEPENDENCY gdk-2.0,
+		    [_CHECK_FUNCS_WITH_FLAGS(rsvg_pixbuf_from_file, [$LIBRSVG_CFLAGS], [$LIBRSVG_LIBS],
                     [test_svg=yes],
 		    [AC_MSG_RESULT(no)
-		     test_svg="no (requires $librsvg_DEPENDENCY)"])
+		     test_svg="no (requires $librsvg_DEPENDENCY)"])])
   if test "x$test_svg" = "xyes"; then
     AC_DEFINE([CAIRO_CAN_TEST_SVG_SURFACE], 1, [Define to 1 if the SVG backend can be tested])
   else
