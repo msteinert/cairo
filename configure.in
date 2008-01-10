@@ -513,7 +513,8 @@ CAIRO_BACKEND_ENABLE(ft, FreeType font, freetype, FT_FONT, auto, [
   ft_REQUIRES="fontconfig"
   PKG_CHECK_MODULES(FONTCONFIG, $ft_REQUIRES,
 		    [_CHECK_FUNCS_WITH_FLAGS(FcFini, [$FONTCONFIG_CFLAGS], [$FONTCONFIG_LIBS],,
-		    [AC_MSG_RESULT(no); use_ft="no (requires fontconfig)"])])
+		    [AC_MSG_RESULT(no); use_ft="no (requires fontconfig)"])],
+		    [AC_MSG_RESULT(no); use_ft="no (requires fontconfig)"])
 
   if test "x$use_ft" = "xyes"; then
     PKG_CHECK_MODULES(FREETYPE, freetype2 >= $FREETYPE_MIN_VERSION,
@@ -625,8 +626,8 @@ if test "x$use_pdf" = "xyes"; then
   PKG_CHECK_MODULES(POPPLER, $poppler_DEPENDENCY pango gtk+-2.0,
 		    [_CHECK_FUNCS_WITH_FLAGS(poppler_page_render_to_pixbuf, [$POPPLER_CFLAGS], [$POPPLER_LIBS],
                     [test_pdf=yes],
-		    [AC_MSG_RESULT(no)
-		     test_pdf="no (requires $poppler_DEPENDENCY)"])])
+		    [AC_MSG_RESULT(no); test_pdf="no (requires $poppler_DEPENDENCY)"])],
+		    [AC_MSG_RESULT(no); test_pdf="no (requires $poppler_DEPENDENCY)"])
   if test "x$test_pdf" = "xyes"; then
     AC_DEFINE([CAIRO_CAN_TEST_PDF_SURFACE], 1, [Define to 1 if the PDF backend can be tested (need poppler and other dependencies for pdf2png)])
   else
@@ -655,8 +656,8 @@ if test "x$use_svg" = "xyes"; then
   PKG_CHECK_MODULES(LIBRSVG, $librsvg_DEPENDENCY gdk-2.0,
 		    [_CHECK_FUNCS_WITH_FLAGS(rsvg_pixbuf_from_file, [$LIBRSVG_CFLAGS], [$LIBRSVG_LIBS],
                     [test_svg=yes],
-		    [AC_MSG_RESULT(no)
-		     test_svg="no (requires $librsvg_DEPENDENCY)"])])
+		    [AC_MSG_RESULT(no); test_svg="no (requires $librsvg_DEPENDENCY)"])],
+		    [AC_MSG_RESULT(no); test_svg="no (requires $librsvg_DEPENDENCY)"])
   if test "x$test_svg" = "xyes"; then
     AC_DEFINE([CAIRO_CAN_TEST_SVG_SURFACE], 1, [Define to 1 if the SVG backend can be tested])
   else
