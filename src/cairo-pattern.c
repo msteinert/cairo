@@ -215,6 +215,8 @@ cairo_status_t
 _cairo_pattern_create_copy (cairo_pattern_t	  **pattern,
 			    const cairo_pattern_t  *other)
 {
+    cairo_status_t status;
+
     if (other->status)
 	return other->status;
 
@@ -235,7 +237,13 @@ _cairo_pattern_create_copy (cairo_pattern_t	  **pattern,
     if (*pattern == NULL)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    return _cairo_pattern_init_copy (*pattern, other);
+    status = _cairo_pattern_init_copy (*pattern, other);
+    if (status) {
+	free (*pattern);
+	return status;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 
