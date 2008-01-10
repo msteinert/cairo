@@ -161,7 +161,7 @@ _cairo_paginated_surface_finish (void *abstract_surface)
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     if (surface->page_is_blank == FALSE || surface->page_num == 1)
-	status = _cairo_paginated_surface_show_page (abstract_surface);
+	status = cairo_surface_show_page (abstract_surface);
 
     if (status == CAIRO_STATUS_SUCCESS) {
 	cairo_surface_finish (surface->target);
