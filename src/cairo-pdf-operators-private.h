@@ -42,7 +42,8 @@
 #ifndef CAIRO_PDF_OPERATORS_H
 #define CAIRO_PDF_OPERATORS_H
 
-#include "cairoint.h"
+#include "cairo-compiler-private.h"
+#include "cairo-types-private.h"
 
 typedef cairo_status_t
 (*cairo_pdf_operators_use_font_subset_t) (unsigned int  font_id,
