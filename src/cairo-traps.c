@@ -570,7 +570,7 @@ _cairo_traps_extents (cairo_traps_t *traps, cairo_box_t *extents)
 {
     if (traps->num_traps == 0) {
 	extents->p1.x = extents->p1.y = _cairo_fixed_from_int (0);
-	extents->p2.y = extents->p2.y = _cairo_fixed_from_int (0);
+	extents->p2.x = extents->p2.y = _cairo_fixed_from_int (0);
     } else
 	*extents = traps->extents;
 }
