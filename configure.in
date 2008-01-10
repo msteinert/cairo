@@ -995,8 +995,9 @@ AC_OUTPUT
 
 dnl ===========================================================================
 
+V="$CAIRO_VERSION_MAJOR.$CAIRO_VERSION_MINOR.$CAIRO_VERSION_MICRO"
 echo ""
-echo "cairo will be compiled with the following surface backends:"
+echo "cairo (version $V) will be compiled with the following surface backends:"
 echo "  image:         yes (always builtin)"
 echo "  Xlib:          $use_xlib"
 echo "  Xlib Xrender:  $use_xlib_xrender"
