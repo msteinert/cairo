@@ -46,9 +46,9 @@
 #include "cairo-scaled-font-subsets-private.h"
 
 void
-_cairo_pdf_operators_init (cairo_pdf_operators_t 	*pdf_operators,
-			   cairo_output_stream_t   	*stream,
-			   cairo_matrix_t 		 cairo_to_pdf,
+_cairo_pdf_operators_init (cairo_pdf_operators_t	*pdf_operators,
+			   cairo_output_stream_t	*stream,
+			   cairo_matrix_t		 cairo_to_pdf,
 			   cairo_scaled_font_subsets_t  *font_subsets)
 {
     pdf_operators->stream = stream;
@@ -59,12 +59,12 @@ _cairo_pdf_operators_init (cairo_pdf_operators_t 	*pdf_operators,
 }
 
 void
-_cairo_pdf_operators_fini (cairo_pdf_operators_t 	*pdf_operators)
+_cairo_pdf_operators_fini (cairo_pdf_operators_t	*pdf_operators)
 {
 }
 
 void
-_cairo_pdf_operators_set_font_subsets_callback (cairo_pdf_operators_t 		     *pdf_operators,
+_cairo_pdf_operators_set_font_subsets_callback (cairo_pdf_operators_t		     *pdf_operators,
 						cairo_pdf_operators_use_font_subset_t use_font_subset,
 						void				     *closure)
 {
@@ -73,7 +73,7 @@ _cairo_pdf_operators_set_font_subsets_callback (cairo_pdf_operators_t 		     *pd
 }
 
 void
-_cairo_pdf_operators_set_stream (cairo_pdf_operators_t 	 *pdf_operators,
+_cairo_pdf_operators_set_stream (cairo_pdf_operators_t	 *pdf_operators,
 				 cairo_output_stream_t   *stream)
 {
     pdf_operators->stream = stream;
@@ -81,7 +81,7 @@ _cairo_pdf_operators_set_stream (cairo_pdf_operators_t 	 *pdf_operators,
 
 void
 _cairo_pdf_operators_set_cairo_to_pdf_matrix (cairo_pdf_operators_t *pdf_operators,
-					      cairo_matrix_t 	     cairo_to_pdf)
+					      cairo_matrix_t	     cairo_to_pdf)
 {
     pdf_operators->cairo_to_pdf = cairo_to_pdf;
 }
@@ -107,7 +107,7 @@ _cairo_pdf_path_move_to (void *closure, cairo_point_t *point)
     _cairo_output_stream_printf (info->output,
 				 "%f %f m ", x, y);
 
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_output_stream_get_status (info->output);
 }
 
 static cairo_status_t
@@ -124,7 +124,8 @@ _cairo_pdf_path_line_to (void *closure, cairo_point_t *point)
 
     _cairo_output_stream_printf (info->output,
 				 "%f %f l ", x, y);
-    return CAIRO_STATUS_SUCCESS;
+
+    return _cairo_output_stream_get_status (info->output);
 }
 
 static cairo_status_t
@@ -155,7 +156,7 @@ _cairo_pdf_path_curve_to (void          *closure,
     _cairo_output_stream_printf (info->output,
 				 "%f %f %f %f %f %f c ",
 				 bx, by, cx, cy, dx, dy);
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_output_stream_get_status (info->output);
 }
 
 static cairo_status_t
@@ -166,11 +167,11 @@ _cairo_pdf_path_close_path (void *closure)
     _cairo_output_stream_printf (info->output,
 				 "h\r\n");
 
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_output_stream_get_status (info->output);
 }
 
 cairo_int_status_t
-_cairo_pdf_operators_clip (cairo_pdf_operators_t 	*pdf_operators,
+_cairo_pdf_operators_clip (cairo_pdf_operators_t	*pdf_operators,
 			   cairo_path_fixed_t		*path,
 			   cairo_fill_rule_t		 fill_rule)
 {
@@ -213,7 +214,7 @@ _cairo_pdf_operators_clip (cairo_pdf_operators_t 	*pdf_operators,
 				 "%s n\r\n",
 				 pdf_operator);
 
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_output_stream_get_status (pdf_operators->stream);
 }
 
 static int
@@ -249,7 +250,7 @@ _cairo_pdf_line_join (cairo_line_join_t join)
 }
 
 static cairo_int_status_t
-_cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t 	*pdf_operators,
+_cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t	*pdf_operators,
 					cairo_stroke_style_t	*style)
 {
     _cairo_output_stream_printf (pdf_operators->stream,
@@ -284,7 +285,7 @@ _cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t 	*pdf_operators,
 
 
 cairo_int_status_t
-_cairo_pdf_operator_stroke (cairo_pdf_operators_t 	*pdf_operators,
+_cairo_pdf_operator_stroke (cairo_pdf_operators_t	*pdf_operators,
 			    cairo_path_fixed_t		*path,
 			    cairo_stroke_style_t	*style,
 			    cairo_matrix_t		*ctm,
@@ -324,9 +325,9 @@ _cairo_pdf_operator_stroke (cairo_pdf_operators_t 	*pdf_operators,
 }
 
 cairo_int_status_t
-_cairo_pdf_operators_fill (cairo_pdf_operators_t 	*pdf_operators,
+_cairo_pdf_operators_fill (cairo_pdf_operators_t	*pdf_operators,
 			   cairo_path_fixed_t		*path,
-			   cairo_fill_rule_t	 	fill_rule)
+			   cairo_fill_rule_t		fill_rule)
 {
     const char *pdf_operator;
     cairo_status_t status;
@@ -366,9 +367,9 @@ _cairo_pdf_operators_fill (cairo_pdf_operators_t 	*pdf_operators,
 #define GLYPH_POSITION_TOLERANCE 0.001
 
 cairo_int_status_t
-_cairo_pdf_operators_show_glyphs (cairo_pdf_operators_t 	*pdf_operators,
+_cairo_pdf_operators_show_glyphs (cairo_pdf_operators_t		*pdf_operators,
 				  cairo_glyph_t			*glyphs,
-				  int			 	 num_glyphs,
+				  int				 num_glyphs,
 				  cairo_scaled_font_t		*scaled_font)
 {
     unsigned int current_subset_id = (unsigned int)-1;
