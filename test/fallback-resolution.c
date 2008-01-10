@@ -89,7 +89,6 @@ int
 main (void)
 {
     cairo_test_context_t ctx;
-    cairo_surface_t *surface = NULL;
     cairo_t *cr;
     cairo_status_t status;
     cairo_test_status_t ret = CAIRO_TEST_SUCCESS;
@@ -102,26 +101,36 @@ main (void)
     cairo_test_init (&ctx, "fallback-resolution");
 
     for (backend=0; backend < NUM_BACKENDS; backend++) {
+	cairo_surface_t *surface = NULL;
 
 	/* Create backend-specific surface and force image fallbacks. */
 	switch (backend) {
 	case PDF:
-	    surface = cairo_pdf_surface_create (backend_filename[backend],
-						SIZE, SIZE);
-	    cairo_boilerplate_pdf_surface_force_fallbacks (surface);
+	    if (cairo_test_is_target_enabled (&ctx, "pdf")) {
+		surface = cairo_pdf_surface_create (backend_filename[backend],
+						    SIZE, SIZE);
+		cairo_boilerplate_pdf_surface_force_fallbacks (surface);
+	    }
 	    break;
 	case PS:
-	    surface = cairo_ps_surface_create (backend_filename[backend],
-					       SIZE, SIZE);
-	    cairo_boilerplate_ps_surface_force_fallbacks (surface);
+	    if (cairo_test_is_target_enabled (&ctx, "ps")) {
+		surface = cairo_ps_surface_create (backend_filename[backend],
+						   SIZE, SIZE);
+		cairo_boilerplate_ps_surface_force_fallbacks (surface);
+	    }
 	    break;
 	case SVG:
-	    surface = cairo_svg_surface_create (backend_filename[backend],
-						SIZE, SIZE);
-	    cairo_boilerplate_svg_surface_force_fallbacks (surface);
-	    cairo_svg_surface_restrict_to_version (surface, CAIRO_SVG_VERSION_1_2);
+	    if (cairo_test_is_target_enabled (&ctx, "svg")) {
+		surface = cairo_svg_surface_create (backend_filename[backend],
+						    SIZE, SIZE);
+		cairo_boilerplate_svg_surface_force_fallbacks (surface);
+		cairo_svg_surface_restrict_to_version (surface, CAIRO_SVG_VERSION_1_2);
+	    }
 	    break;
 	}
+
+	if (surface == NULL)
+	    continue;
 
 	cr = cairo_create (surface);
 	cairo_set_tolerance (cr, 3.0);

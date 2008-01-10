@@ -98,6 +98,10 @@ main (void)
     char dsc[255];
 
     cairo_test_init (&ctx, "ps-features");
+    if (! cairo_test_is_target_enabled (&ctx, "ps")) {
+	cairo_test_fini (&ctx);
+	return CAIRO_TEST_UNTESTED;
+    }
 
     filename = "ps-features.ps";
 

@@ -112,6 +112,10 @@ main (void)
     cairo_surface_t *surface;
 
     cairo_test_init (&ctx, "svg-clip");
+    if (! cairo_test_is_target_enabled (&ctx, "svg")) {
+	cairo_test_fini (&ctx);
+	return CAIRO_TEST_UNTESTED;
+    }
 
     surface = cairo_svg_surface_create (filename,
 					WIDTH_IN_POINTS, HEIGHT_IN_POINTS);

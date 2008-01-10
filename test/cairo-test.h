@@ -176,6 +176,10 @@ cairo_test_paint_checkered (cairo_t *cr);
 
 #define CAIRO_TEST_DOUBLE_EQUALS(a,b)  (fabs((a)-(b)) < 0.00001)
 
+cairo_bool_t
+cairo_test_is_target_enabled (const cairo_test_context_t *ctx,
+	                      const char *target);
+
 CAIRO_END_DECLS
 
 #endif

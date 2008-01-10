@@ -94,6 +94,10 @@ main (void)
     size_t i;
 
     cairo_test_init (&ctx, "pdf-features");
+    if (! cairo_test_is_target_enabled (&ctx, "pdf")) {
+	cairo_test_fini (&ctx);
+	return CAIRO_TEST_UNTESTED;
+    }
 
     filename = "pdf-features.pdf";
 

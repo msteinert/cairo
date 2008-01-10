@@ -243,36 +243,42 @@ main (void)
     cairo_test_init (&ctx, test_name);
 
 #if CAIRO_HAS_PS_SURFACE
-    test_status = test_surface (&ctx, "ps", "create-for-stream.ps",
-			        cairo_ps_surface_create,
-			        cairo_ps_surface_create_for_stream);
-    cairo_test_log (&ctx, "TEST: %s TARGET: %s RESULT: %s\n",
-		    test_name, "ps",
-		    test_status ? "FAIL" : "PASS");
-    if (status == CAIRO_TEST_SUCCESS)
-	status = test_status;
+    if (cairo_test_is_target_enabled (&ctx, "ps")) {
+	test_status = test_surface (&ctx, "ps", "create-for-stream.ps",
+				    cairo_ps_surface_create,
+				    cairo_ps_surface_create_for_stream);
+	cairo_test_log (&ctx, "TEST: %s TARGET: %s RESULT: %s\n",
+			test_name, "ps",
+			test_status ? "FAIL" : "PASS");
+	if (status == CAIRO_TEST_SUCCESS)
+	    status = test_status;
+    }
 #endif
 
 #if CAIRO_HAS_PDF_SURFACE
-    test_status = test_surface (&ctx, "pdf", "create-for-stream.pdf",
-			        cairo_pdf_surface_create,
-			        cairo_pdf_surface_create_for_stream);
-    cairo_test_log (&ctx, "TEST: %s TARGET: %s RESULT: %s\n",
-		    test_name, "pdf",
-		    test_status ? "FAIL" : "PASS");
-    if (status == CAIRO_TEST_SUCCESS)
-	status = test_status;
+    if (cairo_test_is_target_enabled (&ctx, "pdf")) {
+	test_status = test_surface (&ctx, "pdf", "create-for-stream.pdf",
+				    cairo_pdf_surface_create,
+				    cairo_pdf_surface_create_for_stream);
+	cairo_test_log (&ctx, "TEST: %s TARGET: %s RESULT: %s\n",
+			test_name, "pdf",
+			test_status ? "FAIL" : "PASS");
+	if (status == CAIRO_TEST_SUCCESS)
+	    status = test_status;
+    }
 #endif
 
 #if CAIRO_HAS_SVG_SURFACE
-    test_status = test_surface (&ctx, "svg", "create-for-stream.svg",
-			        cairo_svg_surface_create,
-			        cairo_svg_surface_create_for_stream);
-    cairo_test_log (&ctx, "TEST: %s TARGET: %s RESULT: %s\n",
-		    test_name, "svg",
-		    test_status ? "FAIL" : "PASS");
-    if (status == CAIRO_TEST_SUCCESS)
-	status = test_status;
+    if (cairo_test_is_target_enabled (&ctx, "svg")) {
+	test_status = test_surface (&ctx, "svg", "create-for-stream.svg",
+				    cairo_svg_surface_create,
+				    cairo_svg_surface_create_for_stream);
+	cairo_test_log (&ctx, "TEST: %s TARGET: %s RESULT: %s\n",
+			test_name, "svg",
+			test_status ? "FAIL" : "PASS");
+	if (status == CAIRO_TEST_SUCCESS)
+	    status = test_status;
+    }
 #endif
 
     cairo_test_fini (&ctx);

@@ -303,6 +303,10 @@ main (void)
     int stride;
 
     cairo_test_init (&ctx, "xlib-surface");
+    if (! cairo_test_is_target_enabled (&ctx, "xlib")) {
+	cairo_test_fini (&ctx);
+	return CAIRO_TEST_UNTESTED;
+    }
 
     dpy = XOpenDisplay (NULL);
     if (!dpy) {

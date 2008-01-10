@@ -1031,3 +1031,22 @@ cairo_test_paint_checkered (cairo_t *cr)
 
     return status;
 }
+
+cairo_bool_t
+cairo_test_is_target_enabled (const cairo_test_context_t *ctx, const char *target)
+{
+    size_t i;
+
+    for (i = 0; i < ctx->num_targets; i++) {
+	const cairo_boilerplate_target_t *t = ctx->targets_to_test[i];
+	if (strcmp (t->name, target) == 0) {
+	    /* XXX ask the target whether is it possible to run?
+	     * e.g. the xlib backend could check whether it is able to connect
+	     * to the Display.
+	     */
+	    return TRUE;
+	}
+    }
+
+    return FALSE;
+}

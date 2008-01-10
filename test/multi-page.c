@@ -139,41 +139,45 @@ main (void)
     cairo_test_init (&ctx, "multi-page");
 
 #if CAIRO_HAS_PS_SURFACE
-    filename = "multi-page.ps";
+    if (cairo_test_is_target_enabled (&ctx, "ps")) {
+	filename = "multi-page.ps";
 
-    surface = cairo_ps_surface_create (filename,
-				       WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
-    status = cairo_surface_status (surface);
-    if (status) {
-	cairo_test_log (&ctx, "Failed to create ps surface for file %s: %s\n",
-			filename, cairo_status_to_string (status));
-	result = CAIRO_TEST_FAILURE;
+	surface = cairo_ps_surface_create (filename,
+					   WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
+	status = cairo_surface_status (surface);
+	if (status) {
+	    cairo_test_log (&ctx, "Failed to create ps surface for file %s: %s\n",
+			    filename, cairo_status_to_string (status));
+	    result = CAIRO_TEST_FAILURE;
+	}
+
+	draw_some_pages (surface);
+
+	cairo_surface_destroy (surface);
+
+	printf ("multi-page: Please check %s to ensure it looks happy.\n", filename);
     }
-
-    draw_some_pages (surface);
-
-    cairo_surface_destroy (surface);
-
-    printf ("multi-page: Please check %s to ensure it looks happy.\n", filename);
 #endif
 
 #if CAIRO_HAS_PDF_SURFACE
-    filename = "multi-page.pdf";
+    if (cairo_test_is_target_enabled (&ctx, "pdf")) {
+	filename = "multi-page.pdf";
 
-    surface = cairo_pdf_surface_create (filename,
-					WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
-    status = cairo_surface_status (surface);
-    if (status) {
-	cairo_test_log (&ctx, "Failed to create pdf surface for file %s: %s\n",
-			filename, cairo_status_to_string (status));
-	result = CAIRO_TEST_FAILURE;
+	surface = cairo_pdf_surface_create (filename,
+					    WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
+	status = cairo_surface_status (surface);
+	if (status) {
+	    cairo_test_log (&ctx, "Failed to create pdf surface for file %s: %s\n",
+			    filename, cairo_status_to_string (status));
+	    result = CAIRO_TEST_FAILURE;
+	}
+
+	draw_some_pages (surface);
+
+	cairo_surface_destroy (surface);
+
+	printf ("multi-page: Please check %s to ensure it looks happy.\n", filename);
     }
-
-    draw_some_pages (surface);
-
-    cairo_surface_destroy (surface);
-
-    printf ("multi-page: Please check %s to ensure it looks happy.\n", filename);
 #endif
 
     cairo_test_fini (&ctx);

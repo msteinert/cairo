@@ -213,6 +213,10 @@ main (void)
     cairo_test_status_t result = CAIRO_TEST_SUCCESS;
 
     cairo_test_init (&ctx, "xlib-expose-event");
+    if (! cairo_test_is_target_enabled (&ctx, "xlib")) {
+	cairo_test_fini (&ctx);
+	return CAIRO_TEST_UNTESTED;
+    }
 
     dpy = XOpenDisplay (NULL);
     if (dpy == NULL) {
