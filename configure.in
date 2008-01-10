@@ -364,6 +364,20 @@ CAIRO_BACKEND_ENABLE(win32_font, Microsoft Windows font, win32-font, WIN32_FONT,
   use_win32_font=$use_win32
 ])
 
+test_win32_printing=no
+if test "x$use_win32" = "xyes"; then
+  AC_CHECK_PROG(GS, gs, gs)
+  if test "$GS"; then
+    AC_DEFINE([CAIRO_CAN_TEST_WIN32_PRINTING_SURFACE], 1, [Define to 1 if the Win32 Printing backend can be tested (needs ghostscript)])
+    test_win32_printing="yes"
+  else
+    AC_MSG_WARN([Win32 Printing backend will not be tested since ghostscript is not available])
+    test_win32_printing="no (requires ghostscript)"
+  fi
+fi
+
+AM_CONDITIONAL(CAIRO_CAN_TEST_WIN32_PRINTING_SURFACE, test "x$test_win32_printing" = "xyes")
+
 dnl ===========================================================================
 
 CAIRO_BACKEND_ENABLE(os2, OS/2, os2, OS2_SURFACE, no, [
@@ -1028,6 +1042,9 @@ echo "  test surfaces: $use_test_surfaces"
 echo "  ps testing:    $test_ps"
 echo "  pdf testing:   $test_pdf"
 echo "  svg testing:   $test_svg"
+if test x"$use_win32" = "xyes"; then
+	echo "  win32 printing testing:    $test_win32_printing"
+fi
 echo ""
 echo "using CFLAGS:"
 echo $CAIRO_CFLAGS
