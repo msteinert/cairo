@@ -1,4 +1,4 @@
-AC_PREREQ(2.54)
+AC_PREREQ(2.58)
 
 dnl cairo package version number, (as distinct from shared library version)
 dnl For the minor number: odd => unstable series
@@ -17,7 +17,9 @@ AC_CONFIG_HEADERS(config.h)
 
 dnl automake 1.8 requires autoconf 2.58
 dnl automake 1.7 requires autoconf 2.54
-AM_INIT_AUTOMAKE([1.7])
+dnl automake < 1.8 does not handle TESTS=some-test$(EXEXT) as used
+dnl in test/Makefile.am and perf/Makefile.am
+AM_INIT_AUTOMAKE([1.8])
 
 dnl ===========================================================================
 
