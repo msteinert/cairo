@@ -293,7 +293,7 @@ cairo-features.h:
 	cd $(top_builddir) && ./config.status src/cairo-features.h
 
 CLEANFILES = cairo.def
-cairo.def: $(cairoinclude_HEADERS)
+cairo.def: $(cairoinclude_HEADERS) $(nodist_cairoinclude_HEADERS)
 	@echo Generating $@
 	@(echo EXPORTS; \
 	(cd $(srcdir); cat $(cairo_headers) || echo 'cairo_ERROR ()' ) | \
