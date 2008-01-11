@@ -293,7 +293,7 @@ cairo-features.h:
 	cd $(top_builddir) && ./config.status src/cairo-features.h
 
 CLEANFILES = cairo.def
-cairo.def: $(cairoinclude_HEADERS) $(nodist_cairoinclude_HEADERS)
+cairo.def: $(cairo_headers) cairo-features.h
 	@echo Generating $@
 	@(echo EXPORTS; \
 	(cd $(srcdir); cat $(cairo_headers) || echo 'cairo_ERROR ()' ) | \
@@ -322,7 +322,7 @@ EXTRA_DIST += $(TESTS) check-has-hidden-symbols.c
 
 # The pre-processed result is used by check-{def,plt}.sh to determine whether
 # cairo has been compiled with symbol hiding.
-.c.i: $(cairo_headers) cairo-features.h $(top_builddir)/config.h
+.c.i: $(cairoinclude_HEADERS) $(nodist_cairoinclude_HEADERS) cairoint.h $(top_builddir)/config.h
 	$(CPP) -DHAVE_CONFIG_H -I$(srcdir) -I$(builddir) -I$(top_builddir) $(CAIRO_CFLAGS) $< -o $@
 
 SPARSE = sparse
