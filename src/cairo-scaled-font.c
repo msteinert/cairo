@@ -1170,6 +1170,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 {
     cairo_status_t status;
     cairo_surface_t *mask = NULL;
+    cairo_format_t mask_format;
     cairo_surface_pattern_t mask_pattern;
     int i;
 
@@ -1218,9 +1219,11 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 
 	glyph_surface = scaled_glyph->surface;
 
-	/* Create the mask using the format from the first glyph */
+	/* To start, create the mask using the format from the first
+	 * glyph. Later we'll deal with different formats. */
 	if (mask == NULL) {
-	    mask = cairo_image_surface_create (glyph_surface->format,
+	    mask_format = glyph_surface->format;
+	    mask = cairo_image_surface_create (mask_format,
 					       width, height);
 	    if (mask->status) {
 		status = mask->status;
@@ -1234,10 +1237,51 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 						    width, height);
 	    if (status)
 		goto CLEANUP_MASK;
-	    if (glyph_surface->format == CAIRO_FORMAT_ARGB32)
+	    if (mask_format == CAIRO_FORMAT_ARGB32)
 		pixman_image_set_component_alpha (((cairo_image_surface_t*) mask)->
 						  pixman_image, TRUE);
+	}
 
+	/* If we have glyphs of different formats, then the only thing
+	 * we can easily do is to migrate to an A8 mask. This is
+	 * sub-optimal if there are any component-alpha ARGB32 glyphs,
+	 * but pixman doesn't actually give us anyoperators that will
+	 * correctly ADD to a component-alpha mask. So here we are. */
+	if (glyph_surface->format != mask_format &&
+	    mask_format != CAIRO_FORMAT_A8)
+	{
+	    cairo_surface_t *new_mask;
+	    cairo_surface_pattern_t mask_pattern;
+
+	    mask_format = CAIRO_FORMAT_A8;
+	    new_mask = cairo_image_surface_create (mask_format,
+						   width, height);
+	    if (new_mask->status) {
+		status = new_mask->status;
+		cairo_surface_destroy (new_mask);
+		goto CLEANUP_MASK;
+	    }
+
+	    _cairo_pattern_init_for_surface (&mask_pattern, mask);
+
+	    status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
+					       &mask_pattern.base,
+					       NULL,
+					       new_mask,
+					       0, 0,
+					       0, 0,
+					       0, 0,
+					       width, height);
+
+	    _cairo_pattern_fini (&mask_pattern.base);
+
+	    if (status) {
+		cairo_surface_destroy (new_mask);
+		goto CLEANUP_MASK;
+	    }
+
+	    cairo_surface_destroy (mask);
+	    mask = new_mask;
 	}
 
 	/* round glyph locations to the nearest pixel */
