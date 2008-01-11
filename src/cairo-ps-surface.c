@@ -376,20 +376,20 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
     _cairo_output_stream_printf (surface->final_stream,
 				 "%%%%BeginProlog\n");
 
-    _cairo_output_stream_printf (surface->final_stream,
-				 "/languagelevel where{pop languagelevel}{1}ifelse %d lt{/Helvetica\n"
-				 "findfont 12 scalefont setfont 50 500 moveto\n"
-				 "(This print job requires a PostScript Language Level %d printer.)show\n"
-				 "showpage quit}if\n",
-				 level,
-				 level);
-
     if (surface->eps) {
 	_cairo_output_stream_printf (surface->final_stream,
 				     "/cairo_eps_state save def\n"
 				     "/dict_count countdictstack def\n"
 				     "/op_count count 1 sub def\n"
 				     "userdict begin\n");
+    } else {
+	_cairo_output_stream_printf (surface->final_stream,
+				     "/languagelevel where{pop languagelevel}{1}ifelse %d lt{/Helvetica\n"
+				     "findfont 12 scalefont setfont 50 500 moveto\n"
+				     "(This print job requires a PostScript Language Level %d printer.)show\n"
+				     "showpage quit}if\n",
+				     level,
+				     level);
     }
 
     _cairo_output_stream_printf (surface->final_stream,
