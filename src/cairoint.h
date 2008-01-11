@@ -847,6 +847,11 @@ typedef struct _cairo_traps {
 #define CAIRO_FONT_FAMILY_DEFAULT CAIRO_FT_FONT_FAMILY_DEFAULT
 #define CAIRO_SCALED_FONT_BACKEND_DEFAULT &cairo_ft_scaled_font_backend
 
+#else
+
+/* Paranoia: this should have been caught by configure. */
+#error No font backends are available.
+
 #endif
 
 #define CAIRO_GSTATE_OPERATOR_DEFAULT	CAIRO_OPERATOR_OVER
