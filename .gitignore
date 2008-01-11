@@ -20,6 +20,7 @@ depcomp
 install-sh
 libtool
 ltmain.sh
+mkinstalldirs
 missing
 releases
 stamp-h

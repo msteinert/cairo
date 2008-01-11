@@ -77,14 +77,14 @@ CAIRO_PERF_ENVIRONMENT = CAIRO_PERF_ITERATIONS="$(ITERS)" CAIRO_TEST_TARGET="$(T
 # Cap the maximum number of iterations during 'make check'
 TESTS_ENVIRONMENT = CAIRO_TEST_TARGET="$(TARGETS)" CAIRO_PERF_ITERATIONS="10"
 
-TESTS = cairo-perf
+TESTS = cairo-perf$(EXEEXT)
 
-perf: cairo-perf
-	$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf
+perf: cairo-perf$(EXEEXT)
+	$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf$(EXEEXT)
 
 html: index.html
 
-index.html: cairo-perf
+index.html: cairo-perf$(EXEEXT)
 	$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf-diff -h HEAD > $@
 
 

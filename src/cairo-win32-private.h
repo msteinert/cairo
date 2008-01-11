@@ -83,6 +83,7 @@ typedef struct _cairo_win32_surface {
     /* printing surface bits */
     cairo_paginated_mode_t paginated_mode;
     cairo_content_t content;
+    cairo_bool_t path_empty;
     cairo_bool_t has_ctm;
     cairo_matrix_t ctm;
     int clip_saved_dc;

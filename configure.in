@@ -1,4 +1,4 @@
-AC_PREREQ(2.54)
+AC_PREREQ(2.58)
 
 dnl cairo package version number, (as distinct from shared library version)
 dnl For the minor number: odd => unstable series
@@ -17,7 +17,9 @@ AC_CONFIG_HEADERS(config.h)
 
 dnl automake 1.8 requires autoconf 2.58
 dnl automake 1.7 requires autoconf 2.54
-AM_INIT_AUTOMAKE([1.7])
+dnl automake < 1.8 does not handle TESTS=some-test$(EXEXT) as used
+dnl in test/Makefile.am and perf/Makefile.am
+AM_INIT_AUTOMAKE([1.8])
 
 dnl ===========================================================================
 
@@ -87,7 +89,7 @@ AC_DEFUN([_CHECK_FUNCS_WITH_FLAGS],
 
 dnl ===========================================================================
 
-AC_CHECK_FUNCS(vasnprintf)
+AC_CHECK_FUNCS(vasnprintf ctime_r drand48)
 	
 dnl ===========================================================================
 dnl
@@ -364,6 +366,20 @@ CAIRO_BACKEND_ENABLE(win32_font, Microsoft Windows font, win32-font, WIN32_FONT,
   use_win32_font=$use_win32
 ])
 
+test_win32_printing=no
+if test "x$use_win32" = "xyes"; then
+  AC_CHECK_PROG(GS, gs, gs)
+  if test "$GS"; then
+    AC_DEFINE([CAIRO_CAN_TEST_WIN32_PRINTING_SURFACE], 1, [Define to 1 if the Win32 Printing backend can be tested (needs ghostscript)])
+    test_win32_printing="yes"
+  else
+    AC_MSG_WARN([Win32 Printing backend will not be tested since ghostscript is not available])
+    test_win32_printing="no (requires ghostscript)"
+  fi
+fi
+
+AM_CONDITIONAL(CAIRO_CAN_TEST_WIN32_PRINTING_SURFACE, test "x$test_win32_printing" = "xyes")
+
 dnl ===========================================================================
 
 CAIRO_BACKEND_ENABLE(os2, OS/2, os2, OS2_SURFACE, no, [
@@ -498,7 +514,8 @@ FREETYPE_MIN_VERSION=9.7.3
 CAIRO_BACKEND_ENABLE(ft, FreeType font, freetype, FT_FONT, auto, [
   ft_REQUIRES="fontconfig"
   PKG_CHECK_MODULES(FONTCONFIG, $ft_REQUIRES,
-		    [_CHECK_FUNCS_WITH_FLAGS(FcFini, [$FONTCONFIG_CFLAGS], [$FONTCONFIG_LIBS])],
+		    [_CHECK_FUNCS_WITH_FLAGS(FcFini, [$FONTCONFIG_CFLAGS], [$FONTCONFIG_LIBS],,
+		    [AC_MSG_RESULT(no); use_ft="no (requires fontconfig)"])],
 		    [AC_MSG_RESULT(no); use_ft="no (requires fontconfig)"])
 
   if test "x$use_ft" = "xyes"; then
@@ -609,9 +626,10 @@ test_pdf=no
 if test "x$use_pdf" = "xyes"; then
   poppler_DEPENDENCY="poppler-glib >= $POPPLER_VERSION_REQUIRED"
   PKG_CHECK_MODULES(POPPLER, $poppler_DEPENDENCY pango gtk+-2.0,
+		    [_CHECK_FUNCS_WITH_FLAGS(poppler_page_render_to_pixbuf, [$POPPLER_CFLAGS], [$POPPLER_LIBS],
                     [test_pdf=yes],
-		    [AC_MSG_RESULT(no)
-		     test_pdf="no (requires $poppler_DEPENDENCY)"])
+		    [AC_MSG_RESULT(no); test_pdf="no (requires $poppler_DEPENDENCY)"])],
+		    [AC_MSG_RESULT(no); test_pdf="no (requires $poppler_DEPENDENCY)"])
   if test "x$test_pdf" = "xyes"; then
     AC_DEFINE([CAIRO_CAN_TEST_PDF_SURFACE], 1, [Define to 1 if the PDF backend can be tested (need poppler and other dependencies for pdf2png)])
   else
@@ -638,9 +656,10 @@ test_svg=no
 if test "x$use_svg" = "xyes"; then
   librsvg_DEPENDENCY="librsvg-2.0 >= $LIBRSVG_VERSION_REQUIRED"
   PKG_CHECK_MODULES(LIBRSVG, $librsvg_DEPENDENCY gdk-2.0,
+		    [_CHECK_FUNCS_WITH_FLAGS(rsvg_pixbuf_from_file, [$LIBRSVG_CFLAGS], [$LIBRSVG_LIBS],
                     [test_svg=yes],
-		    [AC_MSG_RESULT(no)
-		     test_svg="no (requires $librsvg_DEPENDENCY)"])
+		    [AC_MSG_RESULT(no); test_svg="no (requires $librsvg_DEPENDENCY)"])],
+		    [AC_MSG_RESULT(no); test_svg="no (requires $librsvg_DEPENDENCY)"])
   if test "x$test_svg" = "xyes"; then
     AC_DEFINE([CAIRO_CAN_TEST_SVG_SURFACE], 1, [Define to 1 if the SVG backend can be tested])
   else
@@ -995,8 +1014,9 @@ AC_OUTPUT
 
 dnl ===========================================================================
 
+V="$CAIRO_VERSION_MAJOR.$CAIRO_VERSION_MINOR.$CAIRO_VERSION_MICRO"
 echo ""
-echo "cairo will be compiled with the following surface backends:"
+echo "cairo (version $V) will be compiled with the following surface backends:"
 echo "  image:         yes (always builtin)"
 echo "  Xlib:          $use_xlib"
 echo "  Xlib Xrender:  $use_xlib_xrender"
@@ -1025,6 +1045,9 @@ echo "  test surfaces: $use_test_surfaces"
 echo "  ps testing:    $test_ps"
 echo "  pdf testing:   $test_pdf"
 echo "  svg testing:   $test_svg"
+if test x"$use_win32" = "xyes"; then
+	echo "  win32 printing testing:    $test_win32_printing"
+fi
 echo ""
 echo "using CFLAGS:"
 echo $CAIRO_CFLAGS

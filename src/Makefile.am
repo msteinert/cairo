@@ -22,6 +22,7 @@ endif
 if CAIRO_HAS_PDF_SURFACE
 libcairo_pdf_headers = cairo-pdf.h
 libcairo_pdf_sources = cairo-pdf-surface.c cairo-pdf-surface-private.h \
+	               cairo-pdf-operators.c cairo-pdf-operators-private.h \
 		       cairo-deflate-stream.c
 libcairo_font_subset_sources =	$(font_subset_sources)
 backend_pkgconfigs += cairo-pdf.pc
@@ -292,7 +293,7 @@ cairo-features.h:
 	cd $(top_builddir) && ./config.status src/cairo-features.h
 
 CLEANFILES = cairo.def
-cairo.def: $(cairoinclude_HEADERS)
+cairo.def: $(cairoinclude_HEADERS) $(nodist_cairoinclude_HEADERS)
 	@echo Generating $@
 	@(echo EXPORTS; \
 	(cd $(srcdir); cat $(cairo_headers) || echo 'cairo_ERROR ()' ) | \
@@ -318,6 +319,15 @@ install-data-local:
 TESTS_ENVIRONMENT = srcdir="$(srcdir)" MAKE="$(MAKE)"
 TESTS = check-def.sh check-plt.sh check-headers.sh check-cairoint.sh
 EXTRA_DIST += $(TESTS)
+
+check-def.sh check-plt.sh: .check-has-hidden-symbols
+
+EXTRA_PROGRAMS = check-has-hidden-symbols
+CLEANFILES += $(EXTRA_PROGRAMS) .check-has-hidden-symbols
+
+check_has_hidden_symbols_CFLAGS = -I$(srcdir) $(CAIRO_CFLAGS)
+.check-has-hidden-symbols: check-has-hidden-symbols$(EXEEXT)
+	@nm check-has-hidden-symbols$(EXEEXT) 2>/dev/null | grep cairo_has_hidden_symbols 2>/dev/null >/dev/null && echo 1 > $@ || echo 0 > $@
 
 SPARSE = sparse
 sparse:

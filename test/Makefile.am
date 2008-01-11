@@ -1,130 +1,130 @@
 SUBDIRS=pdiff .
 
 # Here are all the tests that are run unconditionally
-TESTS = 			\
-a8-mask				\
-big-trap			\
-caps-joins			\
-caps-joins-alpha		\
-caps-sub-paths			\
-clip-all			\
-clip-empty			\
-clip-fill-rule			\
-clip-fill-rule-pixel-aligned	\
-clip-nesting			\
-clip-operator			\
-clip-push-group			\
-clip-twice			\
-clip-zero \
-close-path			\
-composite-integer-translate-source \
-composite-integer-translate-over \
-composite-integer-translate-over-repeat \
-copy-path			\
-create-for-stream		\
-create-from-png			\
-create-from-png-stream		\
-dash-caps-joins			\
-dash-no-dash			\
-dash-offset-negative		\
-dash-scale			\
-dash-zero-length		\
-dash-state			\
-degenerate-path			\
-degenerate-pen			\
-device-offset			\
-device-offset-positive		\
-extend-pad			\
-fill-and-stroke			\
-fill-and-stroke-alpha		\
-fill-and-stroke-alpha-add	\
-fill-degenerate-sort-order	\
-fill-missed-stop		\
-fill-rule			\
-filter-nearest-offset		\
-font-face-get-type		\
-font-matrix-translation		\
-glyph-cache-pressure		\
-get-and-set			\
-get-clip                        \
-get-group-target		\
-get-path-extents                \
-gradient-alpha			\
-gradient-zero-stops \
-infinite-join			\
-in-fill-empty-trapezoid		\
-invalid-matrix			\
-leaky-dash			\
-leaky-polygon			\
-line-width			\
-line-width-scale		\
-line-width-zero			\
-linear-gradient			\
-linear-gradient-reflect		\
-long-lines			\
-mask				\
-mask-alpha			\
-mask-ctm			\
-mask-surface-ctm		\
-meta-surface-pattern            \
-miter-precision			\
-move-to-show-surface		\
-new-sub-path			\
-nil-surface			\
-operator-clear			\
-operator-source			\
-over-above-source		\
-over-around-source		\
-over-below-source		\
-over-between-source		\
-paint				\
-paint-repeat			\
-paint-source-alpha		\
-paint-with-alpha		\
-pattern-get-type		\
-pattern-getters			\
-pixman-rotate			\
-radial-gradient			\
-random-intersections		\
-rectangle-rounding-error	\
-rectilinear-stroke		\
-rgb24-ignore-alpha		\
-rotate-image-surface-paint	\
-scale-down-source-surface-paint	\
-scale-source-surface-paint	\
-select-font-face		\
-select-font-no-show-text	\
-self-copy			\
-self-intersecting		\
-set-source			\
-show-text-current-point		\
-skew-extreme			\
-solid-pattern-cache-stress	\
-source-clip			\
-source-clip-scale		\
-source-surface-scale-paint	\
-surface-finish-twice		\
-surface-pattern			\
-surface-pattern-big-scale-down  \
-surface-pattern-scale-down	\
-surface-pattern-scale-up	\
-text-antialias-gray		\
-text-antialias-none		\
-text-antialias-subpixel		\
-text-cache-crash		\
-text-pattern			\
-text-rotate			\
-text-zero-len			\
-transforms			\
-translate-show-surface		\
-trap-clip			\
-truetype-tables			\
-unantialiased-shapes		\
-unbounded-operator		\
-user-data			\
-rel-path                        \
-push-group			\
-zero-alpha
+TESTS =							\
+a8-mask$(EXEEXT)					\
+big-trap$(EXEEXT)					\
+caps-joins$(EXEEXT)					\
+caps-joins-alpha$(EXEEXT)				\
+caps-sub-paths$(EXEEXT)					\
+clip-all$(EXEEXT)					\
+clip-empty$(EXEEXT)					\
+clip-fill-rule$(EXEEXT)					\
+clip-fill-rule-pixel-aligned$(EXEEXT)			\
+clip-nesting$(EXEEXT)					\
+clip-operator$(EXEEXT)					\
+clip-push-group$(EXEEXT)				\
+clip-twice$(EXEEXT)					\
+clip-zero$(EXEEXT)					\
+close-path$(EXEEXT)					\
+composite-integer-translate-source$(EXEEXT)		\
+composite-integer-translate-over$(EXEEXT)		\
+composite-integer-translate-over-repeat$(EXEEXT)	\
+copy-path$(EXEEXT)					\
+create-for-stream$(EXEEXT)				\
+create-from-png$(EXEEXT)				\
+create-from-png-stream$(EXEEXT)				\
+dash-caps-joins$(EXEEXT)				\
+dash-no-dash$(EXEEXT)					\
+dash-offset-negative$(EXEEXT)				\
+dash-scale$(EXEEXT)					\
+dash-zero-length$(EXEEXT)				\
+dash-state$(EXEEXT)					\
+degenerate-path$(EXEEXT)				\
+degenerate-pen$(EXEEXT)					\
+device-offset$(EXEEXT)					\
+device-offset-positive$(EXEEXT)				\
+extend-pad$(EXEEXT)					\
+fill-and-stroke$(EXEEXT)				\
+fill-and-stroke-alpha$(EXEEXT)				\
+fill-and-stroke-alpha-add$(EXEEXT)			\
+fill-degenerate-sort-order$(EXEEXT)			\
+fill-missed-stop$(EXEEXT)				\
+fill-rule$(EXEEXT)					\
+filter-nearest-offset$(EXEEXT)				\
+font-face-get-type$(EXEEXT)				\
+font-matrix-translation$(EXEEXT)			\
+glyph-cache-pressure$(EXEEXT)				\
+get-and-set$(EXEEXT)					\
+get-clip$(EXEEXT)					\
+get-group-target$(EXEEXT)				\
+get-path-extents$(EXEEXT)				\
+gradient-alpha$(EXEEXT)					\
+gradient-zero-stops$(EXEEXT)				\
+infinite-join$(EXEEXT)					\
+in-fill-empty-trapezoid$(EXEEXT)			\
+invalid-matrix$(EXEEXT)					\
+leaky-dash$(EXEEXT)					\
+leaky-polygon$(EXEEXT)					\
+line-width$(EXEEXT)					\
+line-width-scale$(EXEEXT)				\
+line-width-zero$(EXEEXT)				\
+linear-gradient$(EXEEXT)				\
+linear-gradient-reflect$(EXEEXT)			\
+long-lines$(EXEEXT)					\
+mask$(EXEEXT)						\
+mask-alpha$(EXEEXT)					\
+mask-ctm$(EXEEXT)					\
+mask-surface-ctm$(EXEEXT)				\
+meta-surface-pattern$(EXEEXT)				\
+miter-precision$(EXEEXT)				\
+move-to-show-surface$(EXEEXT)				\
+new-sub-path$(EXEEXT)					\
+nil-surface$(EXEEXT)					\
+operator-clear$(EXEEXT)					\
+operator-source$(EXEEXT)				\
+over-above-source$(EXEEXT)				\
+over-around-source$(EXEEXT)				\
+over-below-source$(EXEEXT)				\
+over-between-source$(EXEEXT)				\
+paint$(EXEEXT)						\
+paint-repeat$(EXEEXT)					\
+paint-source-alpha$(EXEEXT)				\
+paint-with-alpha$(EXEEXT)				\
+pattern-get-type$(EXEEXT)				\
+pattern-getters$(EXEEXT)				\
+pixman-rotate$(EXEEXT)					\
+radial-gradient$(EXEEXT)				\
+random-intersections$(EXEEXT)				\
+rectangle-rounding-error$(EXEEXT)			\
+rectilinear-stroke$(EXEEXT)				\
+rgb24-ignore-alpha$(EXEEXT)				\
+rotate-image-surface-paint$(EXEEXT)			\
+scale-down-source-surface-paint$(EXEEXT)		\
+scale-source-surface-paint$(EXEEXT)			\
+select-font-face$(EXEEXT)				\
+select-font-no-show-text$(EXEEXT)			\
+self-copy$(EXEEXT)					\
+self-intersecting$(EXEEXT)				\
+set-source$(EXEEXT)					\
+show-text-current-point$(EXEEXT)			\
+skew-extreme$(EXEEXT)					\
+solid-pattern-cache-stress$(EXEEXT)			\
+source-clip$(EXEEXT)					\
+source-clip-scale$(EXEEXT)				\
+source-surface-scale-paint$(EXEEXT)			\
+surface-finish-twice$(EXEEXT)				\
+surface-pattern$(EXEEXT)				\
+surface-pattern-big-scale-down$(EXEEXT)			\
+surface-pattern-scale-down$(EXEEXT)			\
+surface-pattern-scale-up$(EXEEXT)			\
+text-antialias-gray$(EXEEXT)				\
+text-antialias-none$(EXEEXT)				\
+text-antialias-subpixel$(EXEEXT)			\
+text-cache-crash$(EXEEXT)				\
+text-pattern$(EXEEXT)					\
+text-rotate$(EXEEXT)					\
+text-zero-len$(EXEEXT)					\
+transforms$(EXEEXT)					\
+translate-show-surface$(EXEEXT)				\
+trap-clip$(EXEEXT)					\
+truetype-tables$(EXEEXT)				\
+unantialiased-shapes$(EXEEXT)				\
+unbounded-operator$(EXEEXT)				\
+user-data$(EXEEXT)					\
+rel-path$(EXEEXT)					\
+push-group$(EXEEXT)					\
+zero-alpha$(EXEEXT)
 
 # XXX: Here are some existing tests that are currently disabled for
 # one reason or another. They can still be built and run (manually)
@@ -166,49 +166,50 @@ zero-alpha
 #	suite, (in spite of the XFAIL status of the test). So maybe
 #	that's just a bug in the test rig that should just consider
 #	the abort an XFAIL like any other.
-DISABLED_TESTS =		\
-extend-reflect			\
-show-glyphs-many		\
-text-glyph-range
+DISABLED_TESTS =			\
+extend-reflect$(EXEEXT)			\
+show-glyphs-many$(EXEEXT)		\
+text-glyph-range$(EXEEXT)
 
 # Then we have a collection of tests that are only run if certain
 # features are compiled into cairo
 if HAVE_PTHREAD
-TESTS += pthread-show-text
+TESTS += pthread-show-text$(EXEEXT)
 endif
 
 if CAIRO_HAS_FT_FONT
-TESTS += bitmap-font
-TESTS += ft-font-create-for-ft-face
-TESTS += ft-text-vertical-layout-type1
-TESTS += ft-text-vertical-layout-type3
-TESTS += ft-text-antialias-none
+TESTS += bitmap-font$(EXEEXT)
+TESTS += ft-font-create-for-ft-face$(EXEEXT)
+TESTS += ft-text-vertical-layout-type1$(EXEEXT)
+TESTS += ft-text-vertical-layout-type3$(EXEEXT)
+TESTS += ft-text-antialias-none$(EXEEXT)
 endif
 
 if CAIRO_HAS_SVG_SURFACE
-TESTS += svg-surface svg-clip
+TESTS += svg-surface$(EXEEXT)
+TESTS += svg-clip$(EXEEXT)
 endif
 
 if CAIRO_HAS_PDF_SURFACE
-TESTS += pdf-features
+TESTS += pdf-features$(EXEEXT)
 endif
 
 if CAIRO_HAS_PS_SURFACE
-TESTS += ps-features
+TESTS += ps-features$(EXEEXT)
 endif
 
 if CAIRO_HAS_XLIB_SURFACE
-TESTS += xlib-surface
+TESTS += xlib-surface$(EXEEXT)
 endif
 
 if CAIRO_HAS_MULTI_PAGE_SURFACES
-TESTS += multi-page
+TESTS += multi-page$(EXEEXT)
 endif
 
 if CAIRO_HAS_SVG_SURFACE
 if CAIRO_HAS_PDF_SURFACE
 if CAIRO_HAS_PS_SURFACE
-TESTS += fallback-resolution
+TESTS += fallback-resolution$(EXEEXT)
 endif
 endif
 endif
@@ -505,17 +506,17 @@ $(REFERENCE_IMAGES)
 #
 # Also, any test listed here should call cairo_test_expect_failure and
 # provide an explanation for the expected failure.
-XFAIL_TESTS =			\
-a8-mask				\
-big-trap			\
-extend-pad			\
-filter-nearest-offset		\
-long-lines			\
-self-intersecting		\
-surface-pattern			\
-surface-pattern-big-scale-down  \
-surface-pattern-scale-down	\
-surface-pattern-scale-up
+XFAIL_TESTS =					\
+a8-mask$(EXEEXT)				\
+big-trap$(EXEEXT)				\
+extend-pad$(EXEEXT)				\
+filter-nearest-offset$(EXEEXT)			\
+long-lines$(EXEEXT)				\
+self-intersecting$(EXEEXT)			\
+surface-pattern$(EXEEXT)			\
+surface-pattern-big-scale-down$(EXEEXT)		\
+surface-pattern-scale-down$(EXEEXT)		\
+surface-pattern-scale-up$(EXEEXT)
 
 # Any test that doesn't generate a log file goes here
 NOLOG_TESTS =			\
@@ -597,7 +598,7 @@ EXTRA_PROGRAMS += $(TESTS) $(DISABLED_TESTS)
 TARGETS = $(CAIRO_TEST_TARGET)
 TARGETS_EXCLUDE = $(CAIRO_TEST_TARGET_EXCLUDE)
 
-TESTS_ENVIRONMENT = CAIRO_XFAIL_TESTS="$(XFAIL_TESTS)" CAIRO_TEST_TARGET="$(TARGETS)" CAIRO_TEST_TARGET_EXCLUDE="$(TARGETS_EXCLUDE)"
+TESTS_ENVIRONMENT = CAIRO_XFAIL_TESTS="$(XFAIL_TESTS:$(EXEEXT)=)" CAIRO_TEST_TARGET="$(TARGETS)" CAIRO_TEST_TARGET_EXCLUDE="$(TARGETS_EXCLUDE)"
 
 EXTRA_VALGRIND_FLAGS = $(CAIRO_EXTRA_VALGRIND_FLAGS)
 VALGRIND_FLAGS = \
@@ -629,8 +630,8 @@ check-valgrind:
 	$(MAKE) $(AM_MAKEFLAGS) check TESTS_ENVIRONMENT='$(TESTS_ENVIRONMENT) $(top_builddir)/libtool --mode=execute valgrind $(VALGRIND_FLAGS)' 2>&1 | tee valgrind-log
 
 # The following definitions both should work.
-#FAILED_TESTS = `grep -l '\<FAIL\>' $(TESTS:=.log) 2>/dev/null | sed -e 's/[.]log$$//' | xargs echo`
-FAILED_TESTS = `grep -l '\<FAIL\>' $(TESTS:=.log) 2>/dev/null | tr '\n' ' ' | sed -e 's/[.]log  */ /g; s/^ //; s/ $$//'`
+#FAILED_TESTS = `grep -l '\<FAIL\>' $(TESTS:$(EXEEXT)=.log) 2>/dev/null | sed -e 's/[.]log$$//' | xargs echo`
+FAILED_TESTS = `grep -l '\<FAIL\>' $(TESTS:$(EXEEXT)=.log) 2>/dev/null | tr '\n' ' ' | sed -e 's/[.]log  */ /g; s/^ //; s/ $$//'`
 
 recheck = check TESTS="$(FAILED_TESTS)"
 
@@ -655,7 +656,7 @@ retest:
 # Make index.html with no dependency tracking.
 html:
 	@echo Creating index.html
-	@perl $(srcdir)/make-html.pl $(TESTS:=.log) > index.html
+	@perl $(srcdir)/make-html.pl $(TESTS:$(EXEEXT)=.log) > index.html
 
 # Make index.html with no dependency tracking, containing only the failed tests.
 rehtml:
@@ -669,7 +670,7 @@ NOLOG_TESTS_LOG = $(NOLOG_TESTS:=.log)
 $(NOLOG_TESTS_LOG):
 	echo dummy > $@
 
-index.html: $(srcdir)/make-html.pl $(TESTS:=.log)
+index.html: $(srcdir)/make-html.pl $(TESTS:$(EXEEXT)=.log)
 	@echo Creating index.html
 	@perl $^ > $@
 

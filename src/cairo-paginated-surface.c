@@ -161,7 +161,7 @@ _cairo_paginated_surface_finish (void *abstract_surface)
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     if (surface->page_is_blank == FALSE || surface->page_num == 1)
-	status = _cairo_paginated_surface_show_page (abstract_surface);
+	status = cairo_surface_show_page (abstract_surface);
 
     if (status == CAIRO_STATUS_SUCCESS) {
 	cairo_surface_finish (surface->target);
@@ -365,7 +365,9 @@ _paint_page (cairo_paginated_surface_t *surface)
         cairo_box_int_t *boxes;
         int num_boxes, i;
 
-	/* Reset clip region before drawing the fall back images */
+	surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_FALLBACK);
+
+    /* Reset clip region before drawing the fall back images */
 	status = _cairo_surface_intersect_clip_path (surface->target,
 						     NULL,
 						     CAIRO_FILL_RULE_WINDING,

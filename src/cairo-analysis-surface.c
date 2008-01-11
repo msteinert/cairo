@@ -70,7 +70,7 @@ _cairo_analysis_surface_analyze_meta_surface_pattern (cairo_analysis_surface_t *
     cairo_surface_pattern_t *surface_pattern;
     cairo_status_t status;
     cairo_bool_t old_has_ctm;
-    cairo_matrix_t old_ctm;
+    cairo_matrix_t old_ctm, p2d;
 
     assert (pattern->type == CAIRO_PATTERN_TYPE_SURFACE);
     surface_pattern = (cairo_surface_pattern_t *) pattern;
@@ -78,7 +78,12 @@ _cairo_analysis_surface_analyze_meta_surface_pattern (cairo_analysis_surface_t *
 
     old_ctm = surface->ctm;
     old_has_ctm = surface->has_ctm;
-    cairo_matrix_multiply (&surface->ctm, &pattern->matrix, &surface->ctm);
+    p2d = pattern->matrix;
+    status = cairo_matrix_invert (&p2d);
+    /* _cairo_pattern_set_matrix guarantees invertibility */
+    assert (status == CAIRO_STATUS_SUCCESS);
+
+    cairo_matrix_multiply (&surface->ctm, &p2d, &surface->ctm);
     surface->has_ctm = !_cairo_matrix_is_identity (&surface->ctm);
 
     status = _cairo_meta_surface_replay_and_create_regions (surface_pattern->surface,
@@ -114,9 +119,15 @@ _cairo_analysis_surface_add_operation  (cairo_analysis_surface_t *surface,
 					      &x1, &y1, &x2, &y2,
 					      NULL);
 	rect->x = floor (x1);
-	rect->y = floor (x2);
-	rect->width = ceil (x2) - rect->x;
-	rect->height = ceil (y2) - rect->y;
+	rect->y = floor (y1);
+
+	x2 = ceil (x2) - rect->x;
+	y2 = ceil (y2) - rect->y;
+	if (x2 <= 0 || y2 <= 0)
+	    return CAIRO_STATUS_SUCCESS;
+
+	rect->width  = x2;
+	rect->height = y2;
     }
 
     bbox.p1.x = _cairo_fixed_from_int (rect->x);
@@ -210,28 +221,24 @@ _cairo_analysis_surface_intersect_clip_path (void		*abstract_surface,
     cairo_analysis_surface_t *surface = abstract_surface;
     double                    x1, y1, x2, y2;
     cairo_rectangle_int_t   extent;
-    cairo_status_t	      status;
 
     if (path == NULL) {
 	surface->current_clip.x = 0;
 	surface->current_clip.y = 0;
-	surface->current_clip.width = surface->width;
+	surface->current_clip.width  = surface->width;
 	surface->current_clip.height = surface->height;
-	status = CAIRO_STATUS_SUCCESS;
     } else {
-	status = _cairo_path_fixed_bounds (path, &x1, &y1, &x2, &y2);
-	if (status)
-	    return status;
+	_cairo_path_fixed_bounds (path, &x1, &y1, &x2, &y2);
 
 	extent.x = floor (x1);
 	extent.y = floor (y1);
-	extent.width = ceil (x2) - extent.x;
+	extent.width  = ceil (x2) - extent.x;
 	extent.height = ceil (y2) - extent.y;
 
 	_cairo_rectangle_intersect (&surface->current_clip, &extent);
     }
 
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
@@ -404,7 +411,7 @@ _cairo_analysis_surface_stroke (void			*abstract_surface,
 						    tolerance,
 						    &traps);
 
-	if (status) {
+	if (status || traps.num_traps == 0) {
 	    _cairo_traps_fini (&traps);
 	    return status;
 	}
@@ -427,9 +434,9 @@ _cairo_analysis_surface_fill (void			*abstract_surface,
 			      cairo_operator_t		 op,
 			      cairo_pattern_t		*source,
 			      cairo_path_fixed_t	*path,
-			      cairo_fill_rule_t	 	 fill_rule,
+			      cairo_fill_rule_t		 fill_rule,
 			      double			 tolerance,
-			      cairo_antialias_t	 	 antialias)
+			      cairo_antialias_t		 antialias)
 {
     cairo_analysis_surface_t *surface = abstract_surface;
     cairo_status_t	     status, backend_status;
@@ -476,7 +483,7 @@ _cairo_analysis_surface_fill (void			*abstract_surface,
 						  tolerance,
 						  &traps);
 
-	if (status) {
+	if (status || traps.num_traps == 0) {
 	    _cairo_traps_fini (&traps);
 	    return status;
 	}

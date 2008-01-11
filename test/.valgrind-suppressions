@@ -18,6 +18,16 @@
    fun:deflate
  }
 {
+   bugs in libpng/libz
+   Memcheck:Cond
+   obj:/usr/lib/libz.so.1.2.3.3
+ }
+{
+   bugs in libpng/libz
+   Memcheck:Value8
+   obj:/usr/lib/libz.so.1.2.3.3
+ }
+{
    cairo's write_png triggers apparent bugs in libpng/libz
    Memcheck:Cond
    obj:/usr/lib/libz.so.1.2.2.2
@@ -209,7 +219,13 @@
    Memcheck:Leak
    fun:malloc
    fun:_XrmInternalStringToQuark
-   fun:XrmPermStringToQuark
+}
+{
+   XrmInitialize is fairly obnoxious about leaving reachable memory around
+   Memcheck:Leak
+   fun:malloc
+   obj:/usr/lib/libX11.so.6.2.0
+   fun:_XrmInternalStringToQuark
    fun:XrmInitialize
 }
 {
@@ -218,8 +234,6 @@
    fun:malloc
    fun:permalloc
    fun:_XrmInternalStringToQuark
-   fun:XrmPermStringToQuark
-   fun:XrmInitialize
 }
 {
    XrmGetStringDatabase is fairly obnoxious about leaving reachable memory around
