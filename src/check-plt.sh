@@ -8,6 +8,7 @@ if ! which readelf 2>/dev/null >/dev/null; then
 fi
 
 test -z "$srcdir" && srcdir=.
+test -z "$MAKE" && MAKE=make
 status=0
 
 $MAKE check-has-hidden-symbols.i || exit 1
