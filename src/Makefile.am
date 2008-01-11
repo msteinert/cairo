@@ -318,16 +318,12 @@ install-data-local:
 
 TESTS_ENVIRONMENT = srcdir="$(srcdir)" MAKE="$(MAKE)"
 TESTS = check-def.sh check-plt.sh check-headers.sh check-cairoint.sh
-EXTRA_DIST += $(TESTS)
+EXTRA_DIST += $(TESTS) check-has-hidden-symbols.c
 
-check-def.sh check-plt.sh: .check-has-hidden-symbols
-
-EXTRA_PROGRAMS = check-has-hidden-symbols
-CLEANFILES += $(EXTRA_PROGRAMS) .check-has-hidden-symbols
-
-check_has_hidden_symbols_CFLAGS = -I$(srcdir) $(CAIRO_CFLAGS)
-.check-has-hidden-symbols: check-has-hidden-symbols$(EXEEXT)
-	@nm check-has-hidden-symbols$(EXEEXT) 2>/dev/null | grep cairo_has_hidden_symbols 2>/dev/null >/dev/null && echo 1 > $@ || echo 0 > $@
+# The pre-processed result is used by check-{def,plt}.sh to determine whether
+# cairo has been compiled with symbol hiding.
+.c.i: $(cairo_headers) cairo-features.h $(top_builddir)/config.h
+	$(CPP) -DHAVE_CONFIG_H -I$(srcdir) -I$(builddir) -I$(top_builddir) $(CAIRO_CFLAGS) $< -o $@
 
 SPARSE = sparse
 sparse:
