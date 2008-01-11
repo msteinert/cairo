@@ -4,6 +4,11 @@ LANG=C
 
 status=0
 
+if ! ./compiler-supports-visibility; then
+	echo "Compiler doesn't support symbol visibility; skipping test"
+	exit 0
+fi
+
 if ! which readelf 2>/dev/null >/dev/null; then
 	echo "'readelf' not found; skipping test"
 	exit 0

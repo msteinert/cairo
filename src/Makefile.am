@@ -320,6 +320,11 @@ TESTS_ENVIRONMENT = srcdir="$(srcdir)" MAKE="$(MAKE)"
 TESTS = check-def.sh check-plt.sh check-headers.sh check-cairoint.sh
 EXTRA_DIST += $(TESTS)
 
+check-def.sh check-plt.sh: compiler-supports-visibility$(EXEEXT)
+EXTRA_PROGRAMS = compiler-supports-visibility
+CLEANFILES += $(EXTRA_PROGRAMS)
+compiler_supports_visibility_CFLAGS = -I$(srcdir) $(CAIRO_CFLAGS)
+
 SPARSE = sparse
 sparse:
 	@status=true; for f in $(libcairo_la_base_sources); do \

@@ -2,6 +2,11 @@
 
 LANG=C
 
+if ! ./compiler-supports-visibility; then
+	echo "Compiler doesn't support symbol visibility; skipping test"
+	exit 0
+fi
+
 if ! which nm 2>/dev/null >/dev/null; then
 	echo "'nm' not found; skipping test"
 	exit 0
