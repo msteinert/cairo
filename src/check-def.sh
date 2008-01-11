@@ -2,11 +2,6 @@
 
 LANG=C
 
-if ! ./compiler-supports-visibility; then
-	echo "Compiler doesn't support symbol visibility; skipping test"
-	exit 0
-fi
-
 if ! which nm 2>/dev/null >/dev/null; then
 	echo "'nm' not found; skipping test"
 	exit 0
@@ -15,6 +10,12 @@ fi
 test -z "$srcdir" && srcdir=.
 test -z "$MAKE" && MAKE=make
 status=0
+
+has_hidden_symbols=`cat .check-has-hidden-symbols`
+if test "x$has_hidden_symbols" != "x1"; then
+	echo "Compiler doesn't support symbol visibility; skipping test"
+	exit 0
+fi
 
 get_cairo_syms='nm "$so" | grep " T " | cut -d" " -f3'
 if [ "`uname -s`" = "Linux" ]; then

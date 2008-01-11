@@ -2,15 +2,17 @@
 
 LANG=C
 
-status=0
-
-if ! ./compiler-supports-visibility; then
-	echo "Compiler doesn't support symbol visibility; skipping test"
+if ! which readelf 2>/dev/null >/dev/null; then
+	echo "'readelf' not found; skipping test"
 	exit 0
 fi
 
-if ! which readelf 2>/dev/null >/dev/null; then
-	echo "'readelf' not found; skipping test"
+test -z "$srcdir" && srcdir=.
+status=0
+
+has_hidden_symbols=`cat .check-has-hidden-symbols`
+if test "x$has_hidden_symbols" != "x1"; then
+	echo "Compiler doesn't support symbol visibility; skipping test"
 	exit 0
 fi
 

@@ -320,10 +320,14 @@ TESTS_ENVIRONMENT = srcdir="$(srcdir)" MAKE="$(MAKE)"
 TESTS = check-def.sh check-plt.sh check-headers.sh check-cairoint.sh
 EXTRA_DIST += $(TESTS)
 
-check-def.sh check-plt.sh: compiler-supports-visibility$(EXEEXT)
-EXTRA_PROGRAMS = compiler-supports-visibility
-CLEANFILES += $(EXTRA_PROGRAMS)
-compiler_supports_visibility_CFLAGS = -I$(srcdir) $(CAIRO_CFLAGS)
+check-def.sh check-plt.sh: .check-has-hidden-symbols
+
+EXTRA_PROGRAMS = check-has-hidden-symbols
+CLEANFILES += $(EXTRA_PROGRAMS) .check-has-hidden-symbols
+
+check_has_hidden_symbols_CFLAGS = -I$(srcdir) $(CAIRO_CFLAGS)
+.check-has-hidden-symbols: check-has-hidden-symbols$(EXEEXT)
+	@nm check-has-hidden-symbols$(EXEEXT) 2>/dev/null | grep cairo_has_hidden_symbols 2>/dev/null >/dev/null && echo 1 > $@ || echo 0 > $@
 
 SPARSE = sparse
 sparse:
