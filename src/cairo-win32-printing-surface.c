@@ -1374,8 +1374,18 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
     surface->ctm = old_ctm;
     surface->has_ctm = old_has_ctm;
     if (status == CAIRO_STATUS_SUCCESS) {
-	SelectClipPath (surface->dc, RGN_AND);
-	status = _cairo_win32_printing_surface_paint_pattern (surface, source);
+	if (source->type == CAIRO_PATTERN_TYPE_SOLID) {
+	    status = _cairo_win32_printing_surface_select_solid_brush (surface, source);
+	    if (status)
+		return status;
+
+	    SetPolyFillMode (surface->dc, WINDING);
+	    FillPath (surface->dc);
+	    _cairo_win32_printing_surface_done_solid_brush (surface);
+	} else {
+	    SelectClipPath (surface->dc, RGN_AND);
+	    status = _cairo_win32_printing_surface_paint_pattern (surface, source);
+	}
     }
     RestoreDC (surface->dc, -1);
 
