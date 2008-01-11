@@ -1920,7 +1920,7 @@ _cairo_quartz_surface_create_internal (CGContextRef cgContext,
  * this function is called:
  *
  * <informalexample><programlisting>
- * GContextTranslateCTM (cgContext, 0.0, height);
+ * CGContextTranslateCTM (cgContext, 0.0, height);
  * CGContextScaleCTM (cgContext, 1.0, -1.0);
  * </programlisting></informalexample>
  *
