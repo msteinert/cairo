@@ -323,7 +323,7 @@ EXTRA_DIST += $(TESTS) check-has-hidden-symbols.c
 # The pre-processed result is used by check-{def,plt}.sh to determine whether
 # cairo has been compiled with symbol hiding.
 .c.i: $(cairoinclude_HEADERS) $(nodist_cairoinclude_HEADERS) cairoint.h $(top_builddir)/config.h
-	$(CPP) -DHAVE_CONFIG_H -I$(srcdir) -I$(builddir) -I$(top_builddir) $(CAIRO_CFLAGS) $< -o $@
+	$(CPP) -DHAVE_CONFIG_H -I$(top_builddir) $(libcairo_la_CFLAGS) $< -o $@
 
 SPARSE = sparse
 sparse:
