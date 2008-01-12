@@ -1828,7 +1828,8 @@ _cairo_pattern_acquire_surface (cairo_pattern_t		   *pattern,
 							     attributes);
     } break;
     default:
-	status = CAIRO_INT_STATUS_UNSUPPORTED;
+	ASSERT_NOT_REACHED;
+	status = _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
     }
 
     return status;
