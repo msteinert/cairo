@@ -28,8 +28,8 @@ dash-caps-joins$(EXEEXT)				\
 dash-no-dash$(EXEEXT)					\
 dash-offset-negative$(EXEEXT)				\
 dash-scale$(EXEEXT)					\
-dash-zero-length$(EXEEXT)				\
 dash-state$(EXEEXT)					\
+dash-zero-length$(EXEEXT)				\
 degenerate-path$(EXEEXT)				\
 degenerate-pen$(EXEEXT)					\
 device-offset$(EXEEXT)					\
@@ -84,10 +84,12 @@ paint-with-alpha$(EXEEXT)				\
 pattern-get-type$(EXEEXT)				\
 pattern-getters$(EXEEXT)				\
 pixman-rotate$(EXEEXT)					\
+push-group$(EXEEXT)					\
 radial-gradient$(EXEEXT)				\
 random-intersections$(EXEEXT)				\
 rectangle-rounding-error$(EXEEXT)			\
 rectilinear-stroke$(EXEEXT)				\
+rel-path$(EXEEXT)					\
 rgb24-ignore-alpha$(EXEEXT)				\
 rotate-image-surface-paint$(EXEEXT)			\
 scale-down-source-surface-paint$(EXEEXT)		\
@@ -122,8 +124,6 @@ truetype-tables$(EXEEXT)				\
 unantialiased-shapes$(EXEEXT)				\
 unbounded-operator$(EXEEXT)				\
 user-data$(EXEEXT)					\
-rel-path$(EXEEXT)					\
-push-group$(EXEEXT)					\
 zero-alpha$(EXEEXT)
 
 # XXX: Here are some existing tests that are currently disabled for

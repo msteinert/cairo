@@ -20,9 +20,9 @@ clip-push-group
 clip-twice
 clip-zero
 close-path
-composite-integer-translate-source
 composite-integer-translate-over
 composite-integer-translate-over-repeat
+composite-integer-translate-source
 copy-path
 coverage
 create-for-stream
