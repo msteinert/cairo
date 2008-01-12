@@ -3019,6 +3019,9 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
     if (cr->status)
 	return;
 
+    if (utf8 == NULL)
+	return;
+
     cairo_get_current_point (cr, &x, &y);
 
     status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8,
@@ -3074,6 +3077,9 @@ cairo_glyph_path (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
     cairo_status_t status;
 
     if (cr->status)
+	return;
+
+    if (num_glyphs == 0)
 	return;
 
     status = _cairo_gstate_glyph_path (cr->gstate,
