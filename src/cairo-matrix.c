@@ -38,6 +38,10 @@
 
 #include "cairoint.h"
 
+#if _XOPEN_SOURCE >= 600 || _ISOC99_SOURCE
+#define HAVE_ISFINITE 1
+#endif
+
 static void
 _cairo_matrix_scalar_multiply (cairo_matrix_t *matrix, double scalar);
 
@@ -475,9 +479,14 @@ cairo_matrix_invert (cairo_matrix_t *matrix)
     if (det == 0)
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
+#if HAVE_ISFINITE
+    if (! isfinite (det))
+	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
+#else
     /* this weird construct is for detecting NaNs */
     if (! (det * det > 0.))
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
+#endif
 
     _cairo_matrix_compute_adjoint (matrix);
     _cairo_matrix_scalar_multiply (matrix, 1 / det);
@@ -493,7 +502,14 @@ _cairo_matrix_is_invertible (const cairo_matrix_t *matrix)
 
     _cairo_matrix_compute_determinant (matrix, &det);
 
+#if HAVE_ISFINITE
+    if (! isfinite (det))
+	return FALSE;
+
+    return det != 0.;
+#else
     return det != 0. && det * det > 0.;
+#endif
 }
 
 void
@@ -516,6 +532,10 @@ _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
     double det;
 
     _cairo_matrix_compute_determinant (matrix, &det);
+
+#if HAVE_ISFINITE
+    assert (isfinite (det));
+#endif
 
     if (det == 0)
     {
