@@ -529,6 +529,24 @@ ps-features			\
 multi-page			\
 fallback-resolution
 
+# A hook that summarises the failures
+check: AM_MAKEFLAGS+=-k
+check-local:
+	@FAILED_TESTS=""; \
+	for t in *.log; do \
+	    if grep -e '\<FAIL\>' $$t >/dev/null 2>&1; then \
+		FAILED_TESTS="$$FAILED_TESTS $${t%.log}"; \
+	    fi; \
+	done; \
+	if test -n "$$FAILED_TESTS"; then \
+	    echo "Failed tests:"; \
+	    for t in $$FAILED_TESTS; do \
+		echo -n "     $$t: "; \
+		grep -e '\<FAIL\>' $$t.log | sed -e 's/.*TARGET: \([^ ]*\).*/\1/' | sort | uniq | tr '\n' ' '; \
+		echo; \
+	    done; \
+	fi
+
 check_PROGRAMS =
 EXTRA_PROGRAMS =
 
