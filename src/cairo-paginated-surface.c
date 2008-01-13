@@ -149,7 +149,7 @@ _cairo_paginated_surface_set_size (cairo_surface_t	*surface,
 							  width, height);
     status = cairo_surface_status (paginated_surface->meta);
     if (status)
-	return status;
+	return _cairo_surface_set_error (surface, status);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -293,7 +293,8 @@ _paint_page (cairo_paginated_surface_t *surface)
     analysis = _cairo_analysis_surface_create (surface->target,
 					       surface->width, surface->height);
     if (analysis == NULL)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return _cairo_surface_set_error (surface->target,
+		                         CAIRO_STATUS_NO_MEMORY);
 
     surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_ANALYZE);
     status = _cairo_meta_surface_replay_and_create_regions (surface->meta, analysis);
