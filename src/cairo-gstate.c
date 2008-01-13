@@ -35,10 +35,16 @@
  *	Carl D. Worth <cworth@cworth.org>
  */
 
+#define _GNU_SOURCE
+
 #include "cairoint.h"
 
 #include "cairo-clip-private.h"
 #include "cairo-gstate-private.h"
+
+#if _XOPEN_SOURCE >= 600 || _ISOC99_SOURCE
+#define HAVE_ISFINITE 1
+#endif
 
 static cairo_status_t
 _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other);
@@ -623,8 +629,13 @@ _cairo_gstate_translate (cairo_gstate_t *gstate, double tx, double ty)
 {
     cairo_matrix_t tmp;
 
+#if HAVE_ISFINITE
+    if (! isfinite (tx) || ! isfinite (ty))
+	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
+#else
     if (! (tx * tx >= 0.) || ! (ty * ty >= 0.)) /* check for NaNs */
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
+#endif
 
     _cairo_gstate_unset_scaled_font (gstate);
 
@@ -644,8 +655,13 @@ _cairo_gstate_scale (cairo_gstate_t *gstate, double sx, double sy)
 
     if (sx * sy == 0.) /* either sx or sy is 0, or det == 0 due to underflow */
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
+#if HAVE_ISFINITE
+    if (! isfinite (sx) || ! isfinite (sy))
+	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
+#else
     if (! (sx * sx > 0.) || ! (sy * sy > 0.)) /* check for NaNs */
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
+#endif
 
     _cairo_gstate_unset_scaled_font (gstate);
 
@@ -666,8 +682,13 @@ _cairo_gstate_rotate (cairo_gstate_t *gstate, double angle)
     if (angle == 0.)
 	return CAIRO_STATUS_SUCCESS;
 
+#if HAVE_ISFINITE
+    if (! isfinite (angle))
+	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
+#else
     if (! (angle * angle >= 0.)) /* check for NaNs */
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
+#endif
 
     _cairo_gstate_unset_scaled_font (gstate);
 
