@@ -642,6 +642,10 @@ _cairo_gstate_translate (cairo_gstate_t *gstate, double tx, double ty)
     cairo_matrix_init_translate (&tmp, tx, ty);
     cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
 
+    /* paranoid check against gradual numerical instability */
+    if (! _cairo_matrix_is_invertible (&gstate->ctm))
+	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
+
     cairo_matrix_init_translate (&tmp, -tx, -ty);
     cairo_matrix_multiply (&gstate->ctm_inverse, &gstate->ctm_inverse, &tmp);
 
@@ -667,6 +671,10 @@ _cairo_gstate_scale (cairo_gstate_t *gstate, double sx, double sy)
 
     cairo_matrix_init_scale (&tmp, sx, sy);
     cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
+
+    /* paranoid check against gradual numerical instability */
+    if (! _cairo_matrix_is_invertible (&gstate->ctm))
+	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
     cairo_matrix_init_scale (&tmp, 1/sx, 1/sy);
     cairo_matrix_multiply (&gstate->ctm_inverse, &gstate->ctm_inverse, &tmp);
@@ -695,6 +703,10 @@ _cairo_gstate_rotate (cairo_gstate_t *gstate, double angle)
     cairo_matrix_init_rotate (&tmp, angle);
     cairo_matrix_multiply (&gstate->ctm, &tmp, &gstate->ctm);
 
+    /* paranoid check against gradual numerical instability */
+    if (! _cairo_matrix_is_invertible (&gstate->ctm))
+	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
+
     cairo_matrix_init_rotate (&tmp, -angle);
     cairo_matrix_multiply (&gstate->ctm_inverse, &gstate->ctm_inverse, &tmp);
 
@@ -717,6 +729,10 @@ _cairo_gstate_transform (cairo_gstate_t	      *gstate,
 
     cairo_matrix_multiply (&gstate->ctm, matrix, &gstate->ctm);
     cairo_matrix_multiply (&gstate->ctm_inverse, &gstate->ctm_inverse, &tmp);
+
+    /* paranoid check against gradual numerical instability */
+    if (! _cairo_matrix_is_invertible (&gstate->ctm))
+	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
     return CAIRO_STATUS_SUCCESS;
 }
