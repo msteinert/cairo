@@ -42,6 +42,8 @@
 #include "cairo-xlib-surface-private.h"
 #include "cairo-clip-private.h"
 
+#include <X11/Xutil.h> /* for XDestroyImage */
+
 /* Xlib doesn't define a typedef, so define one ourselves */
 typedef int (*cairo_xlib_error_func_t) (Display     *display,
 					XErrorEvent *event);
@@ -68,6 +70,10 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 cairo_glyph_t       *glyphs,
 				 int		      num_glyphs,
 				 cairo_scaled_font_t *scaled_font);
+
+#if CAIRO_HAS_XLIB_XRENDER_SURFACE
+slim_hidden_proto (cairo_xlib_surface_create_with_xrender_format);
+#endif
 
 /*
  * Instead of taking two round trips for each blending request,

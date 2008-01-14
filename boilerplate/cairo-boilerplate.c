@@ -57,7 +57,7 @@
 #if CAIRO_HAS_XCB_SURFACE
 #include "cairo-boilerplate-xcb-private.h"
 #endif
-#if CAIRO_HAS_XLIB_XRENDER_SURFACE
+#if CAIRO_HAS_XLIB_SURFACE
 #include "cairo-boilerplate-xlib-private.h"
 #endif
 

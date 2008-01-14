@@ -34,6 +34,7 @@
 #include "cairoint.h"
 
 #include "cairo-xlib-private.h"
+#include "cairo-xlib-xrender-private.h"
 
 #include <fontconfig/fontconfig.h>
 

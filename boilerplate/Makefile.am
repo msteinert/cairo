@@ -77,7 +77,7 @@ libcairoboilerplate_la_SOURCES += cairo-boilerplate-xcb.c
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-xcb-private.h
 endif
 
-if CAIRO_HAS_XLIB_XRENDER_SURFACE
+if CAIRO_HAS_XLIB_SURFACE
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-xlib.c
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-xlib.h
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-xlib-private.h
