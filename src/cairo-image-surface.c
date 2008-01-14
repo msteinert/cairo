@@ -724,6 +724,24 @@ _cairo_content_from_format (cairo_format_t format)
     return CAIRO_CONTENT_COLOR_ALPHA;
 }
 
+cairo_private cairo_format_t
+_cairo_format_width (cairo_format_t format)
+{
+    switch (format) {
+    case CAIRO_FORMAT_ARGB32:
+	return 32;
+    case CAIRO_FORMAT_RGB24:
+	return 24;
+    case CAIRO_FORMAT_A8:
+	return 8;
+    case CAIRO_FORMAT_A1:
+	return 1;
+    default:
+	ASSERT_NOT_REACHED;
+	return 0;
+    }
+}
+
 static cairo_surface_t *
 _cairo_image_surface_create_similar (void	       *abstract_src,
 				     cairo_content_t	content,

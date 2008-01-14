@@ -1173,8 +1173,9 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 {
     cairo_status_t status;
     cairo_surface_t *mask = NULL;
-    cairo_format_t mask_format;
+    cairo_format_t mask_format = CAIRO_FORMAT_A1; /* shut gcc up */
     cairo_surface_pattern_t mask_pattern;
+    cairo_solid_pattern_t white_pattern;
     int i;
 
     /* These operators aren't interpreted the same way by the backends;
@@ -1204,6 +1205,8 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 
     status = CAIRO_STATUS_SUCCESS;
 
+    _cairo_pattern_init_solid (&white_pattern, CAIRO_COLOR_WHITE, CAIRO_CONTENT_COLOR);
+
     _cairo_cache_freeze (scaled_font->glyphs);
 
     for (i = 0; i < num_glyphs; i++) {
@@ -1232,31 +1235,29 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 		status = mask->status;
 		goto CLEANUP_MASK;
 	    }
-
-	    status = _cairo_surface_fill_rectangle (mask,
-						    CAIRO_OPERATOR_CLEAR,
-						    CAIRO_COLOR_TRANSPARENT,
-						    0, 0,
-						    width, height);
-	    if (status)
-		goto CLEANUP_MASK;
-	    if (mask_format == CAIRO_FORMAT_ARGB32)
-		pixman_image_set_component_alpha (((cairo_image_surface_t*) mask)->
-						  pixman_image, TRUE);
 	}
 
-	/* If we have glyphs of different formats, then the only thing
-	 * we can easily do is to migrate to an A8 mask. This is
-	 * sub-optimal if there are any component-alpha ARGB32 glyphs,
-	 * but pixman doesn't actually give us anyoperators that will
-	 * correctly ADD to a component-alpha mask. So here we are. */
+	/* If we have glyphs of different formats, we "upgrade" the mask
+	 * to the wider of the formats. */
 	if (glyph_surface->format != mask_format &&
-	    mask_format != CAIRO_FORMAT_A8)
+	    _cairo_format_width (mask_format) < _cairo_format_width (glyph_surface->format) )
 	{
 	    cairo_surface_t *new_mask;
 	    cairo_surface_pattern_t mask_pattern;
 
-	    mask_format = CAIRO_FORMAT_A8;
+	    switch (glyph_surface->format) {
+	    case CAIRO_FORMAT_ARGB32:
+	    case CAIRO_FORMAT_A8:
+	    case CAIRO_FORMAT_A1:
+		mask_format = glyph_surface->format;
+		break;
+	    case CAIRO_FORMAT_RGB24:
+	    default:
+		ASSERT_NOT_REACHED;
+		mask_format = CAIRO_FORMAT_ARGB32;
+		break;
+	    }
+
 	    new_mask = cairo_image_surface_create (mask_format,
 						   width, height);
 	    if (new_mask->status) {
@@ -1267,9 +1268,9 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 
 	    _cairo_pattern_init_for_surface (&mask_pattern, mask);
 
-	    status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
+	    status = _cairo_surface_composite (CAIRO_OPERATOR_ADD,
+					       &white_pattern.base,
 					       &mask_pattern.base,
-					       NULL,
 					       new_mask,
 					       0, 0,
 					       0, 0,
@@ -1295,21 +1296,24 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 	_cairo_pattern_init_for_surface (&glyph_pattern, &glyph_surface->base);
 
 	status = _cairo_surface_composite (CAIRO_OPERATOR_ADD,
+					   &white_pattern.base,
 					   &glyph_pattern.base,
-					   NULL,
 					   mask,
 					   0, 0,
 					   0, 0,
-					   x - dest_x,
-					   y - dest_y,
+					   x - dest_x, y - dest_y,
 					   glyph_surface->width,
 					   glyph_surface->height);
 
 	_cairo_pattern_fini (&glyph_pattern.base);
+
 	if (status)
 	    goto CLEANUP_MASK;
     }
 
+    if (mask_format == CAIRO_FORMAT_ARGB32)
+	pixman_image_set_component_alpha (((cairo_image_surface_t*) mask)->
+					  pixman_image, TRUE);
     _cairo_pattern_init_for_surface (&mask_pattern, mask);
 
     status = _cairo_surface_composite (op, pattern, &mask_pattern.base,
@@ -1323,6 +1327,8 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 
 CLEANUP_MASK:
     _cairo_cache_thaw (scaled_font->glyphs);
+
+    _cairo_pattern_fini (&white_pattern.base);
 
     if (mask != NULL)
 	cairo_surface_destroy (mask);

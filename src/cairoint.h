@@ -1796,6 +1796,9 @@ _cairo_surface_has_device_transform (cairo_surface_t *surface);
 				       == 0))
 
 cairo_private cairo_format_t
+_cairo_format_width (cairo_format_t format);
+
+cairo_private cairo_format_t
 _cairo_format_from_content (cairo_content_t content);
 
 cairo_private cairo_content_t
