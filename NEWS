@@ -1,3 +1,98 @@
+Snapshot 1.5.6 (2008-01-15 Carl Worth <cworth@cworth.org>)
+==========================================================
+This is the third snapshot in cairo's unstable 1.5 series. It comes
+about 6 weeks after the 1.5.4 snapshot. The only API addition compared
+to 1.5.4 is very minor, (a new value CAIRO_STATUS_TEMP_FILE_ERROR).
+The remainder of the changes are the usual accumulation of bug fixes
+and improvements. See below for details.
+
+General bug fixes
+-----------------
+Fix handling of fonts that contain a mixture of outline and bitmapped
+glyphs. There was a change in this handling in 1.5.4 that improved
+some cases and also regressed other cases. Now, all cases should be
+handled quite well.
+
+Fix alignment issues that were causing SIGBUS failures on SPARC.
+
+Fix a regression (which first appeared in 1.5.2) where stroking under
+a large scale would sometimes incorrectly replace a miter join with a
+bevel join. (Thanks to Keith Packard.)
+
+Fix reporting of zero-sized extents to be {0,0} rather than
+{INT_MAX,INT_MIN}. This avoids several integer overflow and
+allocations of massive regions in some cases.
+
+Fix failures of gradients with no stops, (quartz, ps, and pdf).
+
+Fix handling of Type 1 fonts on Windows platforms.
+
+Fix handling of Type 1 fonts with no specific family name in the font
+itself, (generate a CairoFont-x-y name).
+
+Handle NULL string values in cairo_show_text, cairo_show_glyphs, and
+friends.
+
+Many robustness improvements along error-handling paths, (thanks as
+always, to Chris "ickle" Wilson).
+
+Various other minor fixes.
+
+Paginated backends (PDF/PostScript/win32-printing)
+--------------------------------------------------
+Avoid unnecessary rasterization when using a paginated surface as a
+source, (such as drawing from one pdf surface to another).
+
+Fix replaying of paginated surface with more than one level of push/pop
+group.
+
+cairo-xlib
+----------
+Fix xlib backend to not consider recent X server release as having a
+buggy repeat implementation in the Render extension.
+
+cairo-pdf
+---------
+Fix PDF output to avoid triggering very slow rendering in PDF viewers,
+(avoid starting and stopping the content stream for each pattern
+emission).
+
+Support CAIRO_OPERATOR_SOURCE in cases where there is nothing below
+the object being drawn.
+
+Fix to avoid seams appearing between multiple fallback regions.
+
+cairo-ps (PostScript)
+---------------------
+Use correct bounding box in Type 3 fonts.
+
+Fix several bugs in cairo's PostScript output. These include making
+the PostScript output more compatible with recent versions of
+ghostscript that are more strict about Type 3 fonts, for
+example.
+
+Fix for win32 to not attempt to create temporary files in the root
+directory, (where the user may not have write permission).
+
+Avoid generating Level 3 PostScript if Level 2 is sufficient. Also,
+add code in output documents to alert the user if Level 3 PostScript
+is handed to a device that cannot handle PostScript beyond Level
+2.
+
+cairo-directfb
+--------------
+Various performance optimizations.
+
+Fixed support for small surfaces (less than 8x8).
+
+Provide support for environment variables CAIRO_DIRECTFB_NO_ACCEL to
+disable acceleration and CAIRO_DIRECTFB_ARGB_FONT to enable ARGB fonts
+instead of A8.
+
+cairo-os2
+---------
+Allow OS/2 APIs instead of C library allocation functions.
+
 Snapshot 1.5.4 (2007-12-05 Carl Worth <cworth@cworth.org>)
 ==========================================================
 This is the second snapshot in cairo's unstable 1.5 series. It comes
@@ -25,11 +120,6 @@ the GIMP, for example. See:
 
 	cairo 1.5.2 causes font problems in GIMP 2.4 status bar and evolution 2.12.1
 	https://bugs.freedesktop.org/show_bug.cgi?id=13084
-
-[XXX: Are we interpreting "cairo_new_path;cairo_clip" as a request to
-clip everything? That wouldn't be consistent with how we treat
-cairo_new_path;cairo_fill, for example. Will follow up on cairo
-mailing list for more details.]
 
 PostScript improvements
 -----------------------
