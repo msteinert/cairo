@@ -701,8 +701,16 @@ check-ref-dups:
 
 # Not exactly the best script in the world...
 check-ref-missing:
-	@for i in *-ref.png; do\
-	    echo ${REFERENCE_IMAGES} | grep -sq $$i || echo $$i; \
-	done
+	@missing=""; \
+	for i in `git ls-files *-ref.png`; do \
+	    echo ${REFERENCE_IMAGES} | grep -sq $$i || missing="$$missing $$i" ; \
+	done ; \
+	if test -n "$$missing"; then \
+		echo "Some reference files are not included in the distribution." ;\
+		echo "Missing from REFERENCE_IMAGES:$$missing" ; \
+		exit 1; \
+	fi
 
-.PHONY: check-valgrind test recheck retest html rehtml check-ref-dups check-ref-missing
+release-verify-sane-tests: check-ref-missing
+
+.PHONY: check-valgrind test recheck retest html rehtml check-ref-dups check-ref-missing release-verify-sane-tests

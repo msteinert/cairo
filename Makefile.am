@@ -149,6 +149,10 @@ release-verify-sane-changelogs: changelogs
 		&& false); else :; fi
 	@echo "Good."
 
+release-verify-sane-tests:
+	@echo "Checking that the TESTS are sane..."
+	@cd test && $(MAKE) $(AM_MAKEFLAGS) release-verify-sane-tests
+
 release-verify-soname-major:
 	@echo -n "Checking that the cairo soname major number is 2..."
 	@test "$(LT_CURRENT_MINUS_AGE)" = "2" \
@@ -184,7 +188,7 @@ release-remove-old:
 release-cleanup-group-sticky:
 	find . -type f | xargs chmod g-s
 
-release-check: release-verify-sane-changelogs release-verify-soname-major release-verify-even-micro release-verify-newer release-remove-old release-cleanup-group-sticky distcheck
+release-check: release-verify-sane-changelogs release-verify-sane-tests release-verify-soname-major release-verify-even-micro release-verify-newer release-remove-old release-cleanup-group-sticky distcheck
 
 release-upload: release-check $(tar_file) $(sha1_file) $(gpg_file)
 	mkdir -p releases
