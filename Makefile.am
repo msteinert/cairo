@@ -35,8 +35,8 @@ lcov-perf:
 # we have to massage the lcov.info file slightly to hide the effect of libtool
 # placing the objects files in the .libs/ directory separate from the *.c
 genlcov:
-	$(LTP) --directory $(top_builddir) --capture --output-file cairo-lcov.info --test-name CAIRO_PERF --no-checksum
-	$(SED) -e 's#.libs/##' < cairo-lcov.info > cairo-lcov.info.tmp
+	$(LTP) --directory $(top_builddir) --path $(top_builddir) --capture --output-file cairo-lcov.info --test-name CAIRO_TEST --no-checksum
+	$(SED) -e 's#.libs/##' -e 's#$(shell pwd)#$(shell cd $(top_srcdir) && pwd)#' < cairo-lcov.info > cairo-lcov.info.tmp
 	LANG=C $(LTP_GENHTML) --prefix $(top_builddir) --output-directory cairo-lcov --title "Cairo Code Coverage" --show-details cairo-lcov.info.tmp
 	$(RM) cairo-lcov.info.tmp
 else
