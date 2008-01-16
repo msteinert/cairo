@@ -36,7 +36,10 @@ lcov-perf:
 # placing the objects files in the .libs/ directory separate from the *.c
 genlcov:
 	$(LTP) --directory $(top_builddir) --path $(top_builddir) --capture --output-file cairo-lcov.info --test-name CAIRO_TEST --no-checksum
-	$(SED) -e 's#.libs/##' -e 's#$(shell pwd)#$(shell cd $(top_srcdir) && pwd)#' < cairo-lcov.info > cairo-lcov.info.tmp
+	$(SED) -e 's#.libs/##' \
+	       -e 's#boilerplate/src#src#' \
+	       -e 's#$(shell pwd)#$(shell cd $(top_srcdir) && pwd)#' \
+	       < cairo-lcov.info > cairo-lcov.info.tmp
 	LANG=C $(LTP_GENHTML) --prefix $(top_builddir) --output-directory cairo-lcov --title "Cairo Code Coverage" --show-details cairo-lcov.info.tmp
 	$(RM) cairo-lcov.info.tmp
 else
