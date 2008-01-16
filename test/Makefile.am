@@ -25,6 +25,7 @@ create-for-stream$(EXEEXT)				\
 create-from-png$(EXEEXT)				\
 create-from-png-stream$(EXEEXT)				\
 dash-caps-joins$(EXEEXT)				\
+dash-curve$(EXEEXT)					\
 dash-no-dash$(EXEEXT)					\
 dash-offset-negative$(EXEEXT)				\
 dash-scale$(EXEEXT)					\
@@ -265,6 +266,7 @@ REFERENCE_IMAGES = \
 	dash-caps-joins-ps-rgb24-ref.png	\
 	dash-caps-joins-quartz-ref.png	\
 	dash-caps-joins-ref.png	\
+	dash-curve-ref.png	\
 	dash-no-dash-ref.png	\
 	dash-offset-negative-ref.png	\
 	dash-scale-ps-argb32-ref.png	\

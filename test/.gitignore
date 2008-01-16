@@ -32,6 +32,7 @@ create-for-stream.svg
 create-from-png
 create-from-png-stream
 dash-caps-joins
+dash-curve
 dash-no-dash
 dash-offset-negative
 dash-scale
