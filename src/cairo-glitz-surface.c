@@ -88,20 +88,16 @@ _cairo_glitz_surface_create_similar (void	    *abstract_src,
     gformat =
 	glitz_find_standard_format (drawable,
 				    _glitz_format_from_content (content));
-    if (!gformat) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
+    if (!gformat)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     surface = glitz_surface_create (drawable, gformat,
 				    width <= 0 ? 1 : width,
 				    height <= 0 ? 1 : height,
 				    0, NULL);
 
-    if (surface == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
+    if (surface == NULL)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     crsurface = cairo_glitz_surface_create (surface);
 
@@ -2456,13 +2452,11 @@ cairo_glitz_surface_create (glitz_surface_t *surface)
     glitz_format_t *format;
 
     if (surface == NULL)
-	return (cairo_surface_t*) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NULL_POINTER));
 
     crsurface = malloc (sizeof (cairo_glitz_surface_t));
-    if (crsurface == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
+    if (crsurface == NULL)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     format = glitz_surface_get_format (surface);
     _cairo_surface_init (&crsurface->base, &cairo_glitz_surface_backend,

@@ -3323,7 +3323,7 @@ cairo_surface_t *
 cairo_get_target (cairo_t *cr)
 {
     if (cr->status)
-	return (cairo_surface_t*) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (cr->status);
 
     return _cairo_gstate_get_original_target (cr->gstate);
 }
@@ -3352,7 +3352,7 @@ cairo_surface_t *
 cairo_get_group_target (cairo_t *cr)
 {
     if (cr->status)
-	return (cairo_surface_t*) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (cr->status);
 
     return _cairo_gstate_get_target (cr->gstate);
 }

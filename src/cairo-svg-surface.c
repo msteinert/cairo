@@ -179,7 +179,7 @@ cairo_svg_surface_create_for_stream (cairo_write_func_t		 write_func,
     stream = _cairo_output_stream_create (write_func, NULL, closure);
     status = _cairo_output_stream_get_status (stream);
     if (status)
-	return (cairo_surface_t *) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (status);
 
     return _cairo_svg_surface_create_for_stream_internal (stream, width, height, CAIRO_SVG_VERSION_1_1);
 }
@@ -214,9 +214,7 @@ cairo_svg_surface_create (const char	*filename,
     stream = _cairo_output_stream_create_for_filename (filename);
     status = _cairo_output_stream_get_status (stream);
     if (status)
-	return (status == CAIRO_STATUS_WRITE_ERROR) ?
-		(cairo_surface_t *) &_cairo_surface_nil_write_error :
-		(cairo_surface_t *) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (status);
 
     return _cairo_svg_surface_create_for_stream_internal (stream, width, height, CAIRO_SVG_VERSION_1_1);
 }
@@ -335,10 +333,8 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
     cairo_status_t status;
 
     surface = malloc (sizeof (cairo_svg_surface_t));
-    if (surface == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_surface_t*) &_cairo_surface_nil;
-    }
+    if (surface == NULL)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     _cairo_surface_init (&surface->base, &cairo_svg_surface_backend,
 			 content);
@@ -389,8 +385,7 @@ CLEANUP_DOCUMENT:
     status = _cairo_svg_document_destroy (document);
 
     free (surface);
-    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-    return (cairo_surface_t*) &_cairo_surface_nil;
+    return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 }
 
 static cairo_surface_t *
@@ -407,15 +402,14 @@ _cairo_svg_surface_create_for_stream_internal (cairo_output_stream_t	*stream,
     if (document == NULL) {
 	/* consume the output stream on behalf of caller */
 	status = _cairo_output_stream_destroy (stream);
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_surface_t *) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
     surface = _cairo_svg_surface_create_for_document (document, CAIRO_CONTENT_COLOR_ALPHA,
 						      width, height);
     if (surface->status) {
 	status = _cairo_svg_document_destroy (document);
-	return (cairo_surface_t *) &_cairo_surface_nil;
+	return surface;
     }
 
     document->owner = surface;

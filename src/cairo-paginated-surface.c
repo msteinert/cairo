@@ -74,10 +74,11 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
 				 const cairo_paginated_surface_backend_t	*backend)
 {
     cairo_paginated_surface_t *surface;
+    cairo_status_t status;
 
     surface = malloc (sizeof (cairo_paginated_surface_t));
     if (surface == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FAIL;
     }
 
@@ -97,7 +98,8 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
     surface->backend = backend;
 
     surface->meta = _cairo_meta_surface_create (content, width, height);
-    if (cairo_surface_status (surface->meta))
+    status = cairo_surface_status (surface->meta);
+    if (status)
 	goto FAIL_CLEANUP_SURFACE;
 
     surface->page_num = 1;
@@ -108,7 +110,7 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
   FAIL_CLEANUP_SURFACE:
     free (surface);
   FAIL:
-    return (cairo_surface_t*) &_cairo_surface_nil;
+    return _cairo_surface_create_in_error (status);
 }
 
 cairo_bool_t

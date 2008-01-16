@@ -71,7 +71,6 @@
 #endif
 
 #define PELS_72DPI  ((LONG)(72. / 0.0254))
-#define NIL_SURFACE ((cairo_surface_t*)&_cairo_surface_nil)
 
 static const cairo_surface_backend_t cairo_win32_printing_surface_backend;
 static const cairo_paginated_surface_backend_t cairo_win32_surface_paginated_backend;
@@ -1467,15 +1466,12 @@ cairo_win32_printing_surface_create (HDC hdc)
     if (GetClipBox (hdc, &rect) == ERROR) {
 	_cairo_win32_print_gdi_error ("cairo_win32_surface_create");
 	/* XXX: Can we make a more reasonable guess at the error cause here? */
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return NIL_SURFACE;
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
     surface = malloc (sizeof (cairo_win32_surface_t));
-    if (surface == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return NIL_SURFACE;
-    }
+    if (surface == NULL)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     surface->image = NULL;
     surface->format = CAIRO_FORMAT_RGB24;

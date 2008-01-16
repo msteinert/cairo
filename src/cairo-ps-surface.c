@@ -1012,8 +1012,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
  CLEANUP:
     /* destroy stream on behalf of caller */
     status = _cairo_output_stream_destroy (stream);
-    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-    return (cairo_surface_t*) &_cairo_surface_nil;
+    return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 }
 
 /**
@@ -1051,9 +1050,7 @@ cairo_ps_surface_create (const char		*filename,
     stream = _cairo_output_stream_create_for_filename (filename);
     status = _cairo_output_stream_get_status (stream);
     if (status)
-	return (status == CAIRO_STATUS_WRITE_ERROR) ?
-		(cairo_surface_t*) &_cairo_surface_nil_write_error :
-		(cairo_surface_t*) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (status);
 
     return _cairo_ps_surface_create_for_stream_internal (stream,
 							 width_in_points,
@@ -1097,7 +1094,7 @@ cairo_ps_surface_create_for_stream (cairo_write_func_t	write_func,
     stream = _cairo_output_stream_create (write_func, NULL, closure);
     status = _cairo_output_stream_get_status (stream);
     if (status)
-	return (cairo_surface_t*) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (status);
 
     return _cairo_ps_surface_create_for_stream_internal (stream,
 							 width_in_points,

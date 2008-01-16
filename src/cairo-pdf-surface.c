@@ -240,8 +240,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
     if (surface == NULL) {
 	/* destroy stream on behalf of caller */
 	status = _cairo_output_stream_destroy (output);
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_surface_t*) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
     _cairo_surface_init (&surface->base, &cairo_pdf_surface_backend,
@@ -316,7 +315,7 @@ BAIL0:
     /* destroy stream on behalf of caller */
     status = _cairo_output_stream_destroy (output);
 
-    return (cairo_surface_t*) &_cairo_surface_nil;
+    return _cairo_surface_create_in_error (CAIRO_STATUS_NO_MEMORY);
 }
 
 /**
@@ -351,7 +350,7 @@ cairo_pdf_surface_create_for_stream (cairo_write_func_t		 write_func,
     output = _cairo_output_stream_create (write_func, NULL, closure);
     status = _cairo_output_stream_get_status (output);
     if (status)
-	return (cairo_surface_t*) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (status);
 
     return _cairo_pdf_surface_create_for_stream_internal (output,
 							  width_in_points,
@@ -388,9 +387,7 @@ cairo_pdf_surface_create (const char		*filename,
     output = _cairo_output_stream_create_for_filename (filename);
     status = _cairo_output_stream_get_status (output);
     if (status)
-	return (status == CAIRO_STATUS_WRITE_ERROR) ?
-		(cairo_surface_t*) &_cairo_surface_nil_write_error :
-		(cairo_surface_t*) &_cairo_surface_nil;
+	return _cairo_surface_create_in_error (status);
 
     return _cairo_pdf_surface_create_for_stream_internal (output,
 							  width_in_points,
