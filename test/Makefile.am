@@ -520,7 +520,6 @@ surface-pattern-scale-up$(EXEEXT)
 
 # Any test that doesn't generate a log file goes here
 NOLOG_TESTS =			\
-create-for-stream		\
 user-data			\
 svg-surface			\
 svg-clip			\

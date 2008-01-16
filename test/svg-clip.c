@@ -127,7 +127,7 @@ main (void)
     cairo_destroy (cr);
     cairo_surface_destroy (surface);
 
-    printf ("svg-surface: Please check %s to make sure it looks happy.\n",
+    printf ("svg-clip: Please check %s to make sure it looks happy.\n",
 	    filename);
 
     cairo_test_fini ();
