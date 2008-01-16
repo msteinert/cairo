@@ -882,7 +882,7 @@ _cairo_stroker_curve_to (void *closure,
 
     status = _cairo_spline_init (&spline, a, b, c, d);
     if (status == CAIRO_INT_STATUS_DEGENERATE)
-	return CAIRO_STATUS_SUCCESS;
+	return _cairo_stroker_line_to (closure, d);
 
     status = _cairo_pen_init_copy (&pen, &stroker->pen);
     if (status)
@@ -966,7 +966,7 @@ _cairo_stroker_curve_to_dashed (void *closure,
 
     status = _cairo_spline_init (&spline, a, b, c, d);
     if (status == CAIRO_INT_STATUS_DEGENERATE)
-	return CAIRO_STATUS_SUCCESS;
+	return _cairo_stroker_line_to_dashed (closure, d);
 
     /* If the line width is so small that the pen is reduced to a
        single point, then we have nothing to do. */
