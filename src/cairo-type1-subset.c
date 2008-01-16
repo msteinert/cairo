@@ -1126,9 +1126,10 @@ cairo_type1_font_subset_generate (void       *abstract_font,
 	goto fail;
 
     font->output = _cairo_output_stream_create (type1_font_write, NULL, font);
-    status = _cairo_output_stream_get_status (font->output);
-    if (status)
+    if (_cairo_output_stream_get_status (font->output)) {
+	status = _cairo_output_stream_destroy (font->output);
 	goto fail;
+    }
 
     status = cairo_type1_font_subset_write (font, name);
     if (status)

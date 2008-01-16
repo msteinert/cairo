@@ -176,6 +176,9 @@ _word_wrap_stream_create (cairo_output_stream_t *output, int max_column)
 {
     word_wrap_stream_t *stream;
 
+    if (output->status)
+	return _cairo_output_stream_create_in_error (output->status);
+
     stream = malloc (sizeof (word_wrap_stream_t));
     if (stream == NULL) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
@@ -301,7 +304,7 @@ _cairo_ps_surface_emit_path (cairo_ps_surface_t	   *surface,
     word_wrap = _word_wrap_stream_create (stream, 79);
     status = _cairo_output_stream_get_status (word_wrap);
     if (status)
-	return status;
+	return _cairo_output_stream_destroy (word_wrap);
 
     path_info.surface = surface;
     path_info.stream = word_wrap;
@@ -3255,9 +3258,10 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
             _cairo_output_stream_printf (surface->stream, "<%02x> S\n", glyph_ids[i].glyph_id);
         } else {
             word_wrap = _word_wrap_stream_create (surface->stream, 79);
-	    status = _cairo_output_stream_get_status (word_wrap);
-	    if (status)
+	    if (_cairo_output_stream_get_status (word_wrap)) {
+		status = _cairo_output_stream_destroy (word_wrap);
 		goto fail;
+	    }
 
             _cairo_output_stream_printf (word_wrap, "<");
             for (j = i; j < last+1; j++)
