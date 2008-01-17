@@ -302,7 +302,7 @@ _cairo_image_surface_create_with_masks (unsigned char	       *data,
 static pixman_format_code_t 
 _cairo_format_to_pixman_format_code (cairo_format_t format)
 {
-    int ret = 0;
+    pixman_format_code_t ret;
     switch (format) {
     case CAIRO_FORMAT_A1:
 	ret = PIXMAN_a1;
@@ -318,7 +318,6 @@ _cairo_format_to_pixman_format_code (cairo_format_t format)
 	ret = PIXMAN_a8r8g8b8;
 	break;
     }
-    assert (ret);
     return ret;
 }
 
@@ -1083,7 +1082,6 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     case CAIRO_ANTIALIAS_NONE:
 	format = PIXMAN_a1;
 	ret = 1;
-	assert (ret);
 	mask_stride = ((width + 31) / 8) & ~0x03;
 	mask_bpp = 1;
  	break;
@@ -1093,7 +1091,6 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     default:
 	format = PIXMAN_a8;
 	ret = 1;
-	assert (ret);
 	mask_stride = (width + 3) & ~3;
 	mask_bpp = 8;
  	break;
