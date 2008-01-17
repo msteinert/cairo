@@ -597,7 +597,7 @@ _cairo_analysis_surface_create (cairo_surface_t		*target,
 
     surface = malloc (sizeof (cairo_analysis_surface_t));
     if (surface == NULL)
-	goto FAIL;
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     /* I believe the content type here is truly arbitrary. I'm quite
      * sure nothing will ever use this value. */
@@ -622,9 +622,6 @@ _cairo_analysis_surface_create (cairo_surface_t		*target,
     surface->current_clip.height = height;
 
     return &surface->base;
-FAIL:
-    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-    return NULL;
 }
 
 cairo_region_t *
