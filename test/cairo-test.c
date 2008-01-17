@@ -701,8 +701,6 @@ cairo_test_create_surface_from_png (const char *filename)
 	    image = cairo_image_surface_create_from_png (srcdir_filename);
 	    free (srcdir_filename);
 	}
-	if (cairo_surface_status(image))
-	    return NULL;
     }
 
     return image;

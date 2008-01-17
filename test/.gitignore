@@ -43,7 +43,11 @@ degenerate-pen
 device-offset
 device-offset-positive
 extend-pad
+extend-pad-similar
 extend-reflect
+extend-reflect-similar
+extend-repeat
+extend-repeat-similar
 fallback-resolution
 fallback-resolution.pdf
 fallback-resolution.ps

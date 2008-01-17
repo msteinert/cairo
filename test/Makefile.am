@@ -36,6 +36,11 @@ degenerate-pen$(EXEEXT)					\
 device-offset$(EXEEXT)					\
 device-offset-positive$(EXEEXT)				\
 extend-pad$(EXEEXT)					\
+extend-pad-similar$(EXEEXT)				\
+extend-reflect$(EXEEXT)					\
+extend-reflect-similar$(EXEEXT)				\
+extend-repeat$(EXEEXT)					\
+extend-repeat-similar$(EXEEXT)				\
 fill-and-stroke$(EXEEXT)				\
 fill-and-stroke-alpha$(EXEEXT)				\
 fill-and-stroke-alpha-add$(EXEEXT)			\
@@ -169,7 +174,6 @@ zero-alpha$(EXEEXT)
 #	that's just a bug in the test rig that should just consider
 #	the abort an XFAIL like any other.
 DISABLED_TESTS =			\
-extend-reflect$(EXEEXT)			\
 show-glyphs-many$(EXEEXT)		\
 text-glyph-range$(EXEEXT)
 
@@ -290,7 +294,11 @@ REFERENCE_IMAGES = \
 	device-offset-ref.png	\
 	device-offset-rgb24-ref.png	\
 	extend-pad-ref.png	\
+	extend-pad-similar-ref.png	\
 	extend-reflect-ref.png	\
+	extend-reflect-similar-ref.png	\
+	extend-repeat-ref.png	\
+	extend-repeat-similar-ref.png	\
 	fill-and-stroke-alpha-add-quartz-ref.png	\
 	fill-and-stroke-alpha-add-ref.png	\
 	fill-and-stroke-alpha-quartz-ref.png	\
@@ -514,6 +522,7 @@ XFAIL_TESTS =					\
 a8-mask$(EXEEXT)				\
 big-trap$(EXEEXT)				\
 extend-pad$(EXEEXT)				\
+extend-pad-similar$(EXEEXT)			\
 filter-nearest-offset$(EXEEXT)			\
 long-lines$(EXEEXT)				\
 self-intersecting$(EXEEXT)			\
