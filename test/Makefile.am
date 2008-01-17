@@ -54,6 +54,7 @@ gradient-alpha$(EXEEXT)					\
 gradient-zero-stops$(EXEEXT)				\
 infinite-join$(EXEEXT)					\
 in-fill-empty-trapezoid$(EXEEXT)			\
+in-fill-trapezoid$(EXEEXT)			\
 invalid-matrix$(EXEEXT)					\
 leaky-dash$(EXEEXT)					\
 leaky-polygon$(EXEEXT)					\

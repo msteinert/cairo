@@ -71,6 +71,7 @@ gradient-zero-stops
 imagediff
 infinite-join
 in-fill-empty-trapezoid
+in-fill-trapezoid
 invalid-matrix
 leaky-dash
 leaky-polygon
