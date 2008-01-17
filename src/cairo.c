@@ -2812,18 +2812,18 @@ cairo_text_extents (cairo_t              *cr,
     int num_glyphs;
     double x, y;
 
+    extents->x_bearing = 0.0;
+    extents->y_bearing = 0.0;
+    extents->width  = 0.0;
+    extents->height = 0.0;
+    extents->x_advance = 0.0;
+    extents->y_advance = 0.0;
+
     if (cr->status)
 	return;
 
-    if (utf8 == NULL) {
-	extents->x_bearing = 0.0;
-	extents->y_bearing = 0.0;
-	extents->width = 0.0;
-	extents->height = 0.0;
-	extents->x_advance = 0.0;
-	extents->y_advance = 0.0;
+    if (utf8 == NULL)
 	return;
-    }
 
     cairo_get_current_point (cr, &x, &y);
 
@@ -2831,14 +2831,10 @@ cairo_text_extents (cairo_t              *cr,
 					   x, y,
 					   &glyphs, &num_glyphs);
 
-    if (status) {
-	if (glyphs)
-	    free (glyphs);
-	_cairo_set_error (cr, status);
-	return;
-    }
-
-    status = _cairo_gstate_glyph_extents (cr->gstate, glyphs, num_glyphs, extents);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = _cairo_gstate_glyph_extents (cr->gstate,
+		                              glyphs, num_glyphs,
+					      extents);
     if (glyphs)
 	free (glyphs);
 
@@ -2871,6 +2867,13 @@ cairo_glyph_extents (cairo_t                *cr,
 		     cairo_text_extents_t   *extents)
 {
     cairo_status_t status;
+
+    extents->x_bearing = 0.0;
+    extents->y_bearing = 0.0;
+    extents->width  = 0.0;
+    extents->height = 0.0;
+    extents->x_advance = 0.0;
+    extents->y_advance = 0.0;
 
     if (cr->status)
 	return;
