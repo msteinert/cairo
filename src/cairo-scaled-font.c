@@ -901,22 +901,22 @@ cairo_scaled_font_text_extents (cairo_scaled_font_t   *scaled_font,
     int num_glyphs;
 
     if (scaled_font->status)
-	goto ZERO_EXENTS;
+	goto ZERO_EXTENTS;
 
     if (utf8 == NULL)
-	goto ZERO_EXENTS;
+	goto ZERO_EXTENTS;
 
     status = _cairo_scaled_font_text_to_glyphs (scaled_font, 0., 0., utf8, &glyphs, &num_glyphs);
     if (status) {
         status = _cairo_scaled_font_set_error (scaled_font, status);
-	goto ZERO_EXENTS;
+	goto ZERO_EXTENTS;
     }
     cairo_scaled_font_glyph_extents (scaled_font, glyphs, num_glyphs, extents);
     free (glyphs);
 
     return;
 
-ZERO_EXENTS:
+ZERO_EXTENTS:
     extents->x_bearing = 0.0;
     extents->y_bearing = 0.0;
     extents->width  = 0.0;
