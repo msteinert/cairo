@@ -1365,7 +1365,7 @@ _cairo_gstate_set_font_options (cairo_gstate_t             *gstate,
 {
     _cairo_gstate_unset_scaled_font (gstate);
 
-    gstate->font_options = *options;
+    _cairo_font_options_init_copy (&gstate->font_options, options);
 }
 
 void

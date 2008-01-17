@@ -65,6 +65,7 @@ ft-text-vertical-layout-type1
 ft-text-vertical-layout-type3
 font-face-get-type
 font-matrix-translation
+font-options
 get-and-set
 get-clip
 get-group-target

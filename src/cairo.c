@@ -2666,10 +2666,12 @@ cairo_set_font_options (cairo_t                    *cr,
     if (cr->status)
 	return;
 
-    status = cairo_font_options_status ((cairo_font_options_t *) options);
-    if (status) {
-	_cairo_set_error (cr, status);
-	return;
+    if (options != NULL) {
+	status = cairo_font_options_status ((cairo_font_options_t *) options);
+	if (status) {
+	    _cairo_set_error (cr, status);
+	    return;
+	}
     }
 
     _cairo_gstate_set_font_options (cr->gstate, options);

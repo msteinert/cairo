@@ -50,6 +50,7 @@ fill-rule$(EXEEXT)					\
 filter-nearest-offset$(EXEEXT)				\
 font-face-get-type$(EXEEXT)				\
 font-matrix-translation$(EXEEXT)			\
+font-options$(EXEEXT)					\
 glyph-cache-pressure$(EXEEXT)				\
 get-and-set$(EXEEXT)					\
 get-clip$(EXEEXT)					\
@@ -533,13 +534,14 @@ surface-pattern-scale-up$(EXEEXT)
 
 # Any test that doesn't generate a log file goes here
 NOLOG_TESTS =			\
-user-data			\
-svg-surface			\
-svg-clip			\
+fallback-resolution		\
+font-options			\
+multi-page			\
 pdf-features			\
 ps-features			\
-multi-page			\
-fallback-resolution
+svg-clip			\
+svg-surface			\
+user-data
 
 # A hook that summarises the failures
 check: AM_MAKEFLAGS+=-k
