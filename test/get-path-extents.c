@@ -102,7 +102,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_surface_t *surface;
     cairo_t         *cr2;
     const char      *phase;
-    cairo_text_extents_t extents;
+    cairo_text_extents_t extents, scaled_font_extents;
     cairo_test_status_t ret = CAIRO_TEST_SUCCESS;
 
     surface = cairo_surface_create_similar (cairo_get_group_target (cr),
@@ -219,6 +219,23 @@ draw (cairo_t *cr, int width, int height)
 			    CAIRO_FONT_WEIGHT_NORMAL);
     cairo_set_font_size (cr2, 12);
     cairo_text_extents (cr2, "The quick brown fox jumped over the lazy dog.", &extents);
+    /* double check that the two methods of measuring the text agree... */
+    cairo_scaled_font_text_extents (cairo_get_scaled_font (cr2),
+	                     "The quick brown fox jumped over the lazy dog.",
+			     &scaled_font_extents);
+    if (memcmp (&extents, &scaled_font_extents, sizeof (extents))) {
+	cairo_test_log ("Error: cairo_text_extents() does not match cairo_scaled_font_text_extents() - font extents (%f, %f) x (%f, %f) should be (%f, %f) x (%f, %f)\n",
+		        scaled_font_extents.x_bearing,
+			scaled_font_extents.y_bearing,
+			scaled_font_extents.width,
+			scaled_font_extents.height,
+			extents.x_bearing,
+			extents.y_bearing,
+			extents.width,
+			extents.height);
+	ret = CAIRO_TEST_FAILURE;
+    }
+
     cairo_move_to (cr2, -extents.x_bearing, -extents.y_bearing);
     cairo_text_path (cr2, "The quick brown fox jumped over the lazy dog.");
     cairo_set_line_width (cr2, 2.0);
