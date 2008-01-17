@@ -907,10 +907,9 @@ cairo_scaled_font_text_extents (cairo_scaled_font_t   *scaled_font,
 	goto ZERO_EXTENTS;
 
     status = _cairo_scaled_font_text_to_glyphs (scaled_font, 0., 0., utf8, &glyphs, &num_glyphs);
-    if (status) {
-        status = _cairo_scaled_font_set_error (scaled_font, status);
+    if (status)
 	goto ZERO_EXTENTS;
-    }
+
     cairo_scaled_font_glyph_extents (scaled_font, glyphs, num_glyphs, extents);
     free (glyphs);
 
@@ -1111,7 +1110,7 @@ _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
     if (ucs4)
 	free (ucs4);
 
-    return status;
+    return _cairo_scaled_font_set_error (scaled_font, status);
 }
 
 /*
