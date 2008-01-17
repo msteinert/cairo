@@ -327,6 +327,16 @@ _paint_page (cairo_paginated_surface_t *surface)
             has_finegrained_fallback = _cairo_analysis_surface_has_unsupported (analysis);
             break;
 
+	case CAIRO_SURFACE_TYPE_IMAGE:
+	case CAIRO_SURFACE_TYPE_XLIB:
+	case CAIRO_SURFACE_TYPE_XCB:
+	case CAIRO_SURFACE_TYPE_GLITZ:
+	case CAIRO_SURFACE_TYPE_QUARTZ:
+	case CAIRO_SURFACE_TYPE_WIN32:
+	case CAIRO_SURFACE_TYPE_BEOS:
+	case CAIRO_SURFACE_TYPE_DIRECTFB:
+	case CAIRO_SURFACE_TYPE_SVG:
+	case CAIRO_SURFACE_TYPE_OS2:
         default:
             if (_cairo_analysis_surface_has_unsupported (analysis)) {
                 has_supported = FALSE;
