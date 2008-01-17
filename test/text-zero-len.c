@@ -71,6 +71,7 @@ draw (cairo_t *cr, int width, int height)
 {
     cairo_text_extents_t nil_extents;
     cairo_text_extents_t extents;
+    cairo_scaled_font_t *scaled_font;
 
     cairo_select_font_face (cr, "Bitstream Vera Sans",
 			    CAIRO_FONT_SLANT_NORMAL,
@@ -115,6 +116,38 @@ draw (cairo_t *cr, int width, int height)
     cairo_glyph_extents (cr, (void*)8, 0, &extents);
     if (! text_extents_equal (&extents, &nil_extents)) {
 	cairo_test_log ("Error: cairo_glyph_extents(); extents (%g, %g, %g, %g, %g, %g)\n",
+		        extents.x_bearing, extents.y_bearing,
+			extents.width, extents.height,
+			extents.x_advance, extents.y_advance);
+	return CAIRO_TEST_FAILURE;
+    }
+
+    scaled_font = cairo_get_scaled_font (cr);
+
+    memset (&extents, 0xff, sizeof (cairo_text_extents_t));
+    cairo_scaled_font_text_extents (scaled_font, "", &extents);
+    if (! text_extents_equal (&extents, &nil_extents)) {
+	cairo_test_log ("Error: cairo_scaled_font_text_extents(\"\"); extents (%g, %g, %g, %g, %g, %g)\n",
+		        extents.x_bearing, extents.y_bearing,
+			extents.width, extents.height,
+			extents.x_advance, extents.y_advance);
+	return CAIRO_TEST_FAILURE;
+    }
+
+    memset (&extents, 0xff, sizeof (cairo_text_extents_t));
+    cairo_scaled_font_text_extents (scaled_font, NULL, &extents);
+    if (! text_extents_equal (&extents, &nil_extents)) {
+	cairo_test_log ("Error: cairo_scaled_font_text_extents(NULL); extents (%g, %g, %g, %g, %g, %g)\n",
+		        extents.x_bearing, extents.y_bearing,
+			extents.width, extents.height,
+			extents.x_advance, extents.y_advance);
+	return CAIRO_TEST_FAILURE;
+    }
+
+    memset (&extents, 0xff, sizeof (cairo_text_extents_t));
+    cairo_scaled_font_glyph_extents (scaled_font, (void*)8, 0, &extents);
+    if (! text_extents_equal (&extents, &nil_extents)) {
+	cairo_test_log ("Error: cairo_scaled_font_glyph_extents(NULL); extents (%g, %g, %g, %g, %g, %g)\n",
 		        extents.x_bearing, extents.y_bearing,
 			extents.width, extents.height,
 			extents.x_advance, extents.y_advance);
