@@ -23,9 +23,15 @@
  * Author: Chris Wilson <chris@chris-wilson.co.uk>
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <cairo.h>
 #include <assert.h>
 #include <stdlib.h>
+
+#include <fontconfig/fontconfig.h>
 
 int
 main (void)
@@ -53,21 +59,26 @@ main (void)
     cairo_font_options_merge (options1, NULL);
     cairo_font_options_merge (options1, options2);
 
+    cairo_font_options_set_antialias (NULL, CAIRO_ANTIALIAS_DEFAULT);
+    cairo_font_options_get_antialias (NULL);
+    assert (cairo_font_options_get_antialias (options1) == CAIRO_ANTIALIAS_DEFAULT);
+
+    cairo_font_options_set_subpixel_order (NULL, CAIRO_SUBPIXEL_ORDER_DEFAULT);
+    cairo_font_options_get_subpixel_order (NULL);
+    assert (cairo_font_options_get_subpixel_order (options1) ==  CAIRO_SUBPIXEL_ORDER_DEFAULT);
+
+    cairo_font_options_set_hint_style (NULL, CAIRO_HINT_STYLE_DEFAULT);
+    cairo_font_options_get_hint_style (NULL);
+    assert (cairo_font_options_get_hint_style (options1) == CAIRO_HINT_STYLE_DEFAULT);
+
+    cairo_font_options_set_hint_metrics (NULL, CAIRO_HINT_METRICS_DEFAULT);
+    cairo_font_options_get_hint_metrics (NULL);
+    assert (cairo_font_options_get_hint_metrics (options1) == CAIRO_HINT_METRICS_DEFAULT);
+
     cairo_font_options_destroy (NULL);
     cairo_font_options_destroy (options1);
     cairo_font_options_destroy (options2);
 
-    cairo_font_options_set_antialias (NULL, CAIRO_ANTIALIAS_DEFAULT);
-    cairo_font_options_get_antialias (NULL);
-
-    cairo_font_options_set_subpixel_order (NULL, CAIRO_SUBPIXEL_ORDER_DEFAULT);
-    cairo_font_options_get_subpixel_order (NULL);
-
-    cairo_font_options_set_hint_style (NULL, CAIRO_HINT_STYLE_DEFAULT);
-    cairo_font_options_get_hint_style (NULL);
-
-    cairo_font_options_set_hint_metrics (NULL, CAIRO_HINT_METRICS_DEFAULT);
-    cairo_font_options_get_hint_metrics (NULL);
 
     /* Now try creating fonts with NULLs */
     surface = cairo_image_surface_create (CAIRO_FORMAT_RGB24, 0, 0);
@@ -86,6 +97,11 @@ main (void)
     cairo_get_font_options (cr, NULL);
 
     cairo_destroy (cr);
+
+    cairo_debug_reset_static_data ();
+#if HAVE_FCFINI
+    FcFini ();
+#endif
 
     return 0;
 }
