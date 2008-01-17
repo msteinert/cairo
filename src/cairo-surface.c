@@ -2189,12 +2189,9 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
     has_drawn_region = TRUE;
     has_clear_region = TRUE;
 
-    if (_cairo_region_subtract (&clear_region, &clear_region, &drawn_region)
-	!= CAIRO_STATUS_SUCCESS)
-    {
-        status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    status = _cairo_region_subtract (&clear_region, &clear_region, &drawn_region);
+    if (status)
         goto CLEANUP_REGIONS;
-    }
 
     status = _cairo_surface_fill_region (dst, CAIRO_OPERATOR_SOURCE,
                                          CAIRO_COLOR_TRANSPARENT,
