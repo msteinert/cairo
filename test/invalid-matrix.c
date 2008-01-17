@@ -202,6 +202,43 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
     cairo_pattern_destroy (pattern);
 
 
+    /* test invalid transformations */
+    cr2 = cairo_create (target);
+    cairo_translate (cr2, bogus.xx, bogus.yy);
+    CHECK_STATUS (status, "cairo_translate(NaN, NaN)");
+    cairo_destroy (cr2);
+
+    cr2 = cairo_create (target);
+    cairo_translate (cr2, 0, bogus.yy);
+    CHECK_STATUS (status, "cairo_translate(0, NaN)");
+    cairo_destroy (cr2);
+
+    cr2 = cairo_create (target);
+    cairo_translate (cr2, bogus.xx, 0);
+    CHECK_STATUS (status, "cairo_translate(NaN, 0)");
+    cairo_destroy (cr2);
+
+
+    cr2 = cairo_create (target);
+    cairo_scale (cr2, bogus.xx, bogus.yy);
+    CHECK_STATUS (status, "cairo_scale(NaN, NaN)");
+    cairo_destroy (cr2);
+
+    cr2 = cairo_create (target);
+    cairo_scale (cr2, 1, bogus.yy);
+    CHECK_STATUS (status, "cairo_scale(1, NaN)");
+    cairo_destroy (cr2);
+
+    cr2 = cairo_create (target);
+    cairo_scale (cr2, bogus.xx, 1);
+    CHECK_STATUS (status, "cairo_scale(NaN, 1)");
+    cairo_destroy (cr2);
+
+    cr2 = cairo_create (target);
+    cairo_rotate (cr2, bogus.xx);
+    CHECK_STATUS (status, "cairo_rotate(NaN)");
+    cairo_destroy (cr2);
+
     return CAIRO_TEST_SUCCESS;
 }
 
