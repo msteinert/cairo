@@ -3659,6 +3659,7 @@ _cairo_pdf_surface_emit_unscaled_font_subset (cairo_scaled_font_subset_t *font_s
             return status;
     }
 
+    ASSERT_NOT_REACHED;
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -3673,6 +3674,7 @@ _cairo_pdf_surface_emit_scaled_font_subset (cairo_scaled_font_subset_t *font_sub
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
+    ASSERT_NOT_REACHED;
     return CAIRO_STATUS_SUCCESS;
 }
 
