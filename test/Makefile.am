@@ -96,6 +96,7 @@ paint-with-alpha$(EXEEXT)				\
 pattern-get-type$(EXEEXT)				\
 pattern-getters$(EXEEXT)				\
 pixman-rotate$(EXEEXT)					\
+png$(EXEEXT)						\
 push-group$(EXEEXT)					\
 radial-gradient$(EXEEXT)				\
 random-intersections$(EXEEXT)				\
@@ -623,6 +624,7 @@ fallback-resolution		\
 font-options			\
 multi-page			\
 pdf-features			\
+png				\
 ps-features			\
 svg-clip			\
 svg-surface			\
