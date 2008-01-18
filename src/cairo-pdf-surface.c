@@ -1072,17 +1072,15 @@ _cairo_pdf_surface_open_content_stream (cairo_pdf_surface_t  *surface,
 					    surface->width,
 					    surface->height,
 					    surface->content_resources.id);
-	if (status)
-	    return status;
     } else {
 	status =
 	    _cairo_pdf_surface_open_stream (surface,
 					    NULL,
 					    surface->compress_content,
 					    NULL);
-	if (status)
-	    return status;
     }
+    if (status)
+	return status;
 
     surface->content = surface->pdf_stream.self;
 
