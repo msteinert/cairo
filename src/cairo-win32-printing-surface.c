@@ -70,6 +70,10 @@
 # define FEATURESETTING_PSLEVEL 0x0002
 #endif
 
+#if !defined(GRADIENT_FILL_RECT_H)
+# define GRADIENT_FILL_RECT_H 0x00
+#endif
+
 #define PELS_72DPI  ((LONG)(72. / 0.0254))
 
 static const cairo_surface_backend_t cairo_win32_printing_surface_backend;
