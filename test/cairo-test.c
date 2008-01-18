@@ -79,6 +79,8 @@ static const char *vector_ignored_tests[] = {
     /* We can't match the results of tests that depend on
      * CAIRO_ANTIALIAS_NONE/SUBPIXEL for vector backends
      * (nor do we care). */
+    "a1-image-sample",
+    "a1-traps-sample",
     "ft-text-antialias-none",
     "rectangle-rounding-error",
     "text-antialias-gray",

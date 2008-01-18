@@ -2,6 +2,8 @@ SUBDIRS=pdiff .
 
 # Here are all the tests that are run unconditionally
 TESTS =							\
+a1-image-sample$(EXEEXT)				\
+a1-traps-sample$(EXEEXT)				\
 a8-mask$(EXEEXT)					\
 big-trap$(EXEEXT)					\
 caps-joins$(EXEEXT)					\
