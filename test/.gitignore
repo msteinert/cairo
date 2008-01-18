@@ -73,10 +73,12 @@ get-clip
 get-group-target
 get-path-extents
 get-render-format
+glitz-surface-source
 glyph-cache-pressure
 gradient-alpha
 gradient-zero-stops
 imagediff
+image-surface-source
 infinite-join
 in-fill-empty-trapezoid
 in-fill-trapezoid
@@ -117,9 +119,11 @@ pattern-getters
 pdf2png
 pdf-features
 pdf-features.pdf
+pdf-surface-source
 png-flatten
 ps-features
 ps-features.ps
+ps-surface-source
 push-group
 radial-gradient
 random-intersections
@@ -129,6 +133,7 @@ svg-clip
 svg-clip.svg
 svg-surface
 svg-surface.svg
+svg-surface-source
 pixman-rotate
 pthread-show-text
 rectangle-rounding-error
@@ -171,6 +176,7 @@ unantialiased-shapes
 unbounded-operator
 user-data
 xlib-surface
+xlib-surface-source
 zero-alpha
 valgrind-log
 *-out.pdf

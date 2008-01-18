@@ -59,9 +59,10 @@ get-group-target$(EXEEXT)				\
 get-path-extents$(EXEEXT)				\
 gradient-alpha$(EXEEXT)					\
 gradient-zero-stops$(EXEEXT)				\
+image-surface-source$(EXEEXT)				\
 infinite-join$(EXEEXT)					\
 in-fill-empty-trapezoid$(EXEEXT)			\
-in-fill-trapezoid$(EXEEXT)			\
+in-fill-trapezoid$(EXEEXT)				\
 invalid-matrix$(EXEEXT)					\
 leaky-dash$(EXEEXT)					\
 leaky-polygon$(EXEEXT)					\
@@ -194,21 +195,30 @@ TESTS += ft-text-vertical-layout-type3$(EXEEXT)
 TESTS += ft-text-antialias-none$(EXEEXT)
 endif
 
-if CAIRO_HAS_SVG_SURFACE
-TESTS += svg-surface$(EXEEXT)
-TESTS += svg-clip$(EXEEXT)
+# Need to add win32-surface-source, quartz-surface-source
+if CAIRO_HAS_GLITZ_SURFACE
+TESTS += glitz-surface-source$(EXEEXT)
 endif
 
 if CAIRO_HAS_PDF_SURFACE
 TESTS += pdf-features$(EXEEXT)
+TESTS += pdf-surface-source$(EXEEXT)
 endif
 
 if CAIRO_HAS_PS_SURFACE
 TESTS += ps-features$(EXEEXT)
+TESTS += ps-surface-source$(EXEEXT)
+endif
+
+if CAIRO_HAS_SVG_SURFACE
+TESTS += svg-surface$(EXEEXT)
+TESTS += svg-clip$(EXEEXT)
+TESTS += svg-surface-source$(EXEEXT)
 endif
 
 if CAIRO_HAS_XLIB_SURFACE
 TESTS += xlib-surface$(EXEEXT)
+TESTS += xlib-surface-source$(EXEEXT)
 endif
 
 if CAIRO_HAS_XLIB_XRENDER_SURFACE
@@ -515,6 +525,7 @@ EXTRA_DIST =		\
 6x13.pcf		\
 make-html.pl		\
 romedalen.png		\
+surface-source.c	\
 $(REFERENCE_IMAGES)
 
 # Any test for which the code committed to CVS is expected to fail
