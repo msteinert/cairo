@@ -1347,6 +1347,15 @@ _cairo_path_fixed_interpret (cairo_path_fixed_t		  *path,
 		       cairo_path_fixed_close_path_func_t *close_path,
 		       void				  *closure);
 
+cairo_private cairo_status_t
+_cairo_path_fixed_interpret_flat (cairo_path_fixed_t	  *path,
+		       cairo_direction_t		   dir,
+		       cairo_path_fixed_move_to_func_t	  *move_to,
+		       cairo_path_fixed_line_to_func_t	  *line_to,
+		       cairo_path_fixed_close_path_func_t *close_path,
+		       void				  *closure,
+		       double				  tolerance);
+
 cairo_private void
 _cairo_path_fixed_bounds (cairo_path_fixed_t *path,
 			  double *x1, double *y1,
