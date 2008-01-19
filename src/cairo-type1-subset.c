@@ -1028,6 +1028,9 @@ cairo_type1_font_subset_write_trailer(cairo_type1_font_subset_t *font)
     _cairo_output_stream_write (font->output, cleartomark_token,
 				font->type1_end - cleartomark_token);
 
+    /* some fonts do not have a newline at the end of the last line */
+    _cairo_output_stream_printf (font->output, "\n");
+
     return CAIRO_STATUS_SUCCESS;
 }
 
