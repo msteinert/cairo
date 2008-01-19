@@ -1359,7 +1359,8 @@ _cairo_path_fixed_interpret_flat (cairo_path_fixed_t	  *path,
 cairo_private void
 _cairo_path_fixed_bounds (cairo_path_fixed_t *path,
 			  double *x1, double *y1,
-			  double *x2, double *y2);
+			  double *x2, double *y2,
+			  double tolerance);
 
 cairo_private void
 _cairo_path_fixed_device_transform (cairo_path_fixed_t	*path,

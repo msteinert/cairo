@@ -127,21 +127,6 @@ _cairo_path_bounder_line_to (void *closure, cairo_point_t *point)
 }
 
 static cairo_status_t
-_cairo_path_bounder_curve_to (void *closure,
-			      cairo_point_t *b,
-			      cairo_point_t *c,
-			      cairo_point_t *d)
-{
-    cairo_path_bounder_t *bounder = closure;
-
-    _cairo_path_bounder_add_point (bounder, b);
-    _cairo_path_bounder_add_point (bounder, c);
-    _cairo_path_bounder_add_point (bounder, d);
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
 _cairo_path_bounder_close_path (void *closure)
 {
     return CAIRO_STATUS_SUCCESS;
@@ -151,7 +136,8 @@ _cairo_path_bounder_close_path (void *closure)
 void
 _cairo_path_fixed_bounds (cairo_path_fixed_t *path,
 			  double *x1, double *y1,
-			  double *x2, double *y2)
+			  double *x2, double *y2,
+			  double tolerance)
 {
     cairo_status_t status;
 
@@ -159,21 +145,24 @@ _cairo_path_fixed_bounds (cairo_path_fixed_t *path,
 
     _cairo_path_bounder_init (&bounder);
 
-    status = _cairo_path_fixed_interpret (path, CAIRO_DIRECTION_FORWARD,
-					  _cairo_path_bounder_move_to,
-					  _cairo_path_bounder_line_to,
-					  _cairo_path_bounder_curve_to,
-					  _cairo_path_bounder_close_path,
-					  &bounder);
+    status = _cairo_path_fixed_interpret_flat (path, CAIRO_DIRECTION_FORWARD,
+					       _cairo_path_bounder_move_to,
+					       _cairo_path_bounder_line_to,
+					       _cairo_path_bounder_close_path,
+					       &bounder,
+					       tolerance);
     assert (status == CAIRO_STATUS_SUCCESS);
 
-    if (! bounder.has_point) {
-	*x1 = *y1 = *x2 = *y2 = 0.;
-    } else {
+    if (bounder.has_point) {
 	*x1 = _cairo_fixed_to_double (bounder.min_x);
 	*y1 = _cairo_fixed_to_double (bounder.min_y);
 	*x2 = _cairo_fixed_to_double (bounder.max_x);
 	*y2 = _cairo_fixed_to_double (bounder.max_y);
+    } else {
+	*x1 = 0.0;
+	*y1 = 0.0;
+	*x2 = 0.0;
+	*y2 = 0.0;
     }
 
     _cairo_path_bounder_fini (&bounder);

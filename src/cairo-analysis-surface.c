@@ -228,7 +228,7 @@ _cairo_analysis_surface_intersect_clip_path (void		*abstract_surface,
 	surface->current_clip.width  = surface->width;
 	surface->current_clip.height = surface->height;
     } else {
-	_cairo_path_fixed_bounds (path, &x1, &y1, &x2, &y2);
+	_cairo_path_fixed_bounds (path, &x1, &y1, &x2, &y2, tolerance);
 
 	extent.x = floor (x1);
 	extent.y = floor (y1);
