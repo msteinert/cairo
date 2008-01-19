@@ -1522,22 +1522,13 @@ _cairo_pdf_surface_emit_image_surface (cairo_pdf_surface_t     *surface,
 				       int                     *width,
 				       int                     *height)
 {
-    cairo_surface_t *pat_surface;
-    cairo_surface_attributes_t pat_attr;
     cairo_image_surface_t *image;
     void *image_extra;
     cairo_status_t status;
 
-    status = _cairo_pattern_acquire_surface (&pattern->base,
-					     &surface->base,
-					     0, 0, -1, -1,
-					     &pat_surface, &pat_attr);
+    status = _cairo_surface_acquire_source_image (pattern->surface, &image, &image_extra);
     if (status)
-	return status;
-
-    status = _cairo_surface_acquire_source_image (pat_surface, &image, &image_extra);
-    if (status)
-	goto BAIL2;
+	goto BAIL;
 
     status = _cairo_pdf_surface_emit_image (surface, image, resource);
     if (status)
@@ -1547,9 +1538,7 @@ _cairo_pdf_surface_emit_image_surface (cairo_pdf_surface_t     *surface,
     *height = image->height;
 
 BAIL:
-    _cairo_surface_release_source_image (pat_surface, image, image_extra);
-BAIL2:
-    _cairo_pattern_release_surface (&pattern->base, pat_surface, &pat_attr);
+    _cairo_surface_release_source_image (pattern->surface, image, image_extra);
 
     return status;
 }
@@ -1636,6 +1625,7 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
     int pattern_width = 0; /* squelch bogus compiler warning */
     int pattern_height = 0; /* squelch bogus compiler warning */
     int bbox_x, bbox_y;
+    char draw_surface[200];
 
     if (_cairo_surface_is_meta (pattern->surface)) {
 	cairo_surface_t *meta_surface = pattern->surface;
@@ -1780,30 +1770,37 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
 	return status;
 
     if (_cairo_surface_is_meta (pattern->surface)) {
-	if (extend == CAIRO_EXTEND_REFLECT) {
-	    _cairo_output_stream_printf (surface->output,
-					 "q 0 0 %d %d re W n /x%d Do Q\r\n"
-					 "q -1 0 0 1 %d 0 cm 0 0 %d %d re W n /x%d Do Q\r\n"
-					 "q 1 0 0 -1 0 %d cm 0 0 %d %d re W n /x%d Do Q\r\n"
-					 "q -1 0 0 -1 %d %d cm 0 0 %d %d re W n /x%d Do Q\r\n",
-					 pattern_width, pattern_height,
-					 pattern_resource.id,
-					 pattern_width*2, pattern_width, pattern_height,
-					 pattern_resource.id,
-					 pattern_height*2, pattern_width, pattern_height,
-					 pattern_resource.id,
-					 pattern_width*2, pattern_height*2, pattern_width, pattern_height,
-					 pattern_resource.id);
-	} else {
-	    _cairo_output_stream_printf (surface->output,
-					 "/x%d Do\r\n",
-					 pattern_resource.id);
-	}
+	snprintf(draw_surface,
+		 sizeof (draw_surface),
+		 "/x%d Do\r\n",
+		 pattern_resource.id);
+    } else {
+	snprintf(draw_surface,
+		 sizeof (draw_surface),
+		 "q %d 0 0 %d 0 0 cm /x%d Do Q",
+		 pattern_width,
+		 pattern_height,
+		 pattern_resource.id);
+    }
+
+    if (extend == CAIRO_EXTEND_REFLECT) {
+	_cairo_output_stream_printf (surface->output,
+				     "q 0 0 %d %d re W n %s Q\r\n"
+				     "q -1 0 0 1 %d 0 cm 0 0 %d %d re W n %s Q\r\n"
+				     "q 1 0 0 -1 0 %d cm 0 0 %d %d re W n %s Q\r\n"
+				     "q -1 0 0 -1 %d %d cm 0 0 %d %d re W n %s Q\r\n",
+				     pattern_width, pattern_height,
+				     draw_surface,
+				     pattern_width*2, pattern_width, pattern_height,
+				     draw_surface,
+				     pattern_height*2, pattern_width, pattern_height,
+				     draw_surface,
+				     pattern_width*2, pattern_height*2, pattern_width, pattern_height,
+				     draw_surface);
     } else {
 	_cairo_output_stream_printf (surface->output,
-				     "q %d 0 0 %d 0 0 cm /x%d Do Q\r\n",
-				     pattern_width, pattern_height,
-				     pattern_resource.id);
+				     " %s \r\n",
+				     draw_surface);
     }
 
     status = _cairo_pdf_surface_close_stream (surface);
