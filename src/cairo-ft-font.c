@@ -1634,7 +1634,7 @@ _cairo_ft_scaled_font_create_toy (cairo_toy_font_face_t	      *toy_face,
     cairo_matrix_multiply (&scale, font_matrix, ctm);
     _compute_transform (&sf, &scale);
 
-    if (! FcPatternAddInteger (pattern, FC_PIXEL_SIZE, sf.y_scale)) {
+    if (! FcPatternAddDouble (pattern, FC_PIXEL_SIZE, sf.y_scale)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FREE_PATTERN;
     }
