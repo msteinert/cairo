@@ -1352,7 +1352,7 @@ _get_pattern_ft_options (FcPattern *pattern, cairo_ft_options_t *ret)
 	if (!hinting) {
 	    ft_options.base.hint_style = CAIRO_HINT_STYLE_NONE;
 	}
-#endif /* FC_FHINT_STYLE */
+#endif /* FC_HINT_STYLE */
     } else {
 	ft_options.base.antialias = CAIRO_ANTIALIAS_NONE;
     }
