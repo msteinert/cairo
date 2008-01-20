@@ -68,17 +68,6 @@
 
 #include "cairo-compiler-private.h"
 
-#ifdef _MSC_VER
-#define snprintf _snprintf
-#undef inline
-#define inline __inline
-#endif
-
-#ifdef __STRICT_ANSI__
-#undef inline
-#define inline __inline__
-#endif
-
 CAIRO_BEGIN_DECLS
 
 #ifdef _WIN32
