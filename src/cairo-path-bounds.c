@@ -61,12 +61,6 @@ static cairo_status_t
 _cairo_path_bounder_line_to (void *closure, cairo_point_t *point);
 
 static cairo_status_t
-_cairo_path_bounder_curve_to (void *closure,
-			      cairo_point_t *b,
-			      cairo_point_t *c,
-			      cairo_point_t *d);
-
-static cairo_status_t
 _cairo_path_bounder_close_path (void *closure);
 
 static void
