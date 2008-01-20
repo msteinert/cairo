@@ -2278,6 +2278,7 @@ slim_hidden_proto (cairo_surface_write_to_png_stream);
 CAIRO_END_DECLS
 
 #include "cairo-mutex-private.h"
+#include "cairo-fixed-private.h"
 #include "cairo-wideint-private.h"
 #include "cairo-malloc-private.h"
 #include "cairo-hash-private.h"

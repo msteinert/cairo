@@ -233,6 +233,7 @@ libcairo_la_base_sources =			\
 	cairo-output-stream-private.h		\
 	cairo-wideint.c				\
 	cairo-wideint-private.h			\
+	cairo-wideint-type-private.h		\
 	cairo-meta-surface.c			\
 	cairo-meta-surface-private.h		\
 	cairo-paginated-private.h		\
@@ -263,6 +264,7 @@ libcairo_la_base_sources =			\
 libcairo_la_special_sources =			\
 	cairo-cache-private.h			\
 	cairo-fixed-private.h			\
+	cairo-fixed-type-private.h		\
 	cairo-mutex-list-private.h		\
 	cairo-types-private.h
 
