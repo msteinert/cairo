@@ -237,40 +237,6 @@ _cpp_curve_to (void		*closure,
 }
 
 static cairo_status_t
-_cpp_curve_to_flatten (void		*closure,
-		       cairo_point_t	*p1,
-		       cairo_point_t	*p2,
-		       cairo_point_t	*p3)
-{
-    cpp_t *cpp = closure;
-    cairo_status_t status;
-    cairo_spline_t spline;
-    int i;
-
-    cairo_point_t *p0 = &cpp->current_point;
-
-    status = _cairo_spline_init (&spline, p0, p1, p2, p3);
-    if (status == CAIRO_INT_STATUS_DEGENERATE)
-	return CAIRO_STATUS_SUCCESS;
-
-    status = _cairo_spline_decompose (&spline,
-				      _cairo_gstate_get_tolerance (cpp->gstate));
-    if (status)
-      goto out;
-
-    for (i=1; i < spline.num_points; i++)
-	_cpp_line_to (cpp, &spline.points[i]);
-
-    cpp->current_point = *p3;
-
-    status = CAIRO_STATUS_SUCCESS;
-
- out:
-    _cairo_spline_fini (&spline);
-    return status;
-}
-
-static cairo_status_t
 _cpp_close_path (void *closure)
 {
     cpp_t *cpp = closure;
@@ -298,15 +264,25 @@ _cairo_path_populate (cairo_path_t		*path,
     cpp.current_point.x = 0;
     cpp.current_point.y = 0;
 
-    status = _cairo_path_fixed_interpret (path_fixed,
+    if (flatten) {
+	double tolerance = _cairo_gstate_get_tolerance (gstate);
+	status = _cairo_path_fixed_interpret_flat (path_fixed,
+						   CAIRO_DIRECTION_FORWARD,
+						   _cpp_move_to,
+						   _cpp_line_to,
+						   _cpp_close_path,
+						   &cpp,
+						   tolerance);
+    } else {
+	status = _cairo_path_fixed_interpret (path_fixed,
 				          CAIRO_DIRECTION_FORWARD,
 					  _cpp_move_to,
 					  _cpp_line_to,
-					  flatten ?
-					  _cpp_curve_to_flatten :
 					  _cpp_curve_to,
 					  _cpp_close_path,
 					  &cpp);
+    }
+
     if (status)
 	return status;
 
