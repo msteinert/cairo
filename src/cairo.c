@@ -1880,9 +1880,13 @@ slim_hidden_def(cairo_close_path);
  * Computes a bounding box in user coordinates covering the points
  * on the current path. If the current path is empty,
  * returns an empty rectangle (0,0, 0,0).  Stroke parameters,
- * surface dimensions and clipping are not taken into account. This
- * will be the same as the value returned by cairo_fill_extents()
- * unless the area enclosed by the path is empty.
+ * surface dimensions and clipping are not taken into account.
+ *
+ * Contrast with cairo_fill_extents() and cairo_stroke_extents() which
+ * return the extents of the area that would be "inked" by drawing
+ * operations.  The results of cairo_path_extent() and
+ * cairo_fill_extents() are identical unless there are one or more
+ * sub-paths with zero area.
  *
  * Since: 1.6
  **/
@@ -2266,10 +2270,16 @@ cairo_in_fill (cairo_t *cr, double x, double y)
  * @y2: bottom of the resulting extents
  *
  * Computes a bounding box in user coordinates covering the area that
- * would be affected by a cairo_stroke() operation operation given the
- * current path and stroke parameters. If the current path is empty,
- * returns an empty rectangle (0,0, 0,0). Surface dimensions and
- * clipping are not taken into account.
+ * would be affected, (the "inked" area), by a cairo_stroke()
+ * operation operation given the current path and stroke
+ * parameters. If the current path is empty, returns an empty
+ * rectangle (0,0, 0,0). Surface dimensions and clipping are not taken
+ * into account.
+ *
+ * Note that if the line width is set to exactly zero, then
+ * cairo_stroke_extents will return an empty rectangle. Contrast with
+ * cairo_path_extents() which can be used to compute the non-empty
+ * bounds as the line width approaches zero.
  *
  * See cairo_stroke(), cairo_set_line_width(), cairo_set_line_join(),
  * cairo_set_line_cap(), cairo_set_dash(), and
@@ -2300,10 +2310,14 @@ cairo_stroke_extents (cairo_t *cr,
  * @y2: bottom of the resulting extents
  *
  * Computes a bounding box in user coordinates covering the area that
- * would be affected by a cairo_fill() operation given the current path
- * and fill parameters. If the current path is empty, returns an empty
- * rectangle (0,0, 0,0). Surface dimensions and clipping are not taken
- * into account.
+ * would be affected, (the "inked" area), by a cairo_fill() operation
+ * given the current path and fill parameters. If the current path is
+ * empty, returns an empty rectangle (0,0, 0,0). Surface dimensions
+ * and clipping are not taken into account.
+ *
+ * Contrast with cairo_path_extents(), which is similar, but will
+ * return non-zero extents for a path with no inked area, (such as a
+ * simple line segment).
  *
  * See cairo_fill(), cairo_set_fill_rule() and cairo_fill_preserve().
  **/
