@@ -166,6 +166,34 @@ draw (cairo_t *cr, int width, int height)
     cairo_new_path (cr2);
     cairo_restore (cr2);
 
+    /* Test that with CAIRO_LINE_CAP_ROUND, we get "dots" from
+     * cairo_move_to; cairo_rel_line_to(0,0) */
+    cairo_save (cr2);
+
+    cairo_set_line_cap (cr2, CAIRO_LINE_CAP_ROUND);
+    cairo_set_line_width (cr2, 20);
+
+    cairo_move_to (cr2, 200, 400);
+    cairo_rel_line_to (cr2, 0, 0);
+    phase = "Single 'dot'";
+    if (!check_extents (phase, cr2, FILL, EQUALS, 0, 0, 0, 0) ||
+	!check_extents (phase, cr2, STROKE, EQUALS, 190, 390, 20, 20) ||
+	!check_extents (phase, cr2, PATH, EQUALS, 200, 400, 0, 0))
+	ret = CAIRO_TEST_FAILURE;
+
+    /* Add another dot without starting a new path */
+    cairo_move_to (cr2, 100, 500);
+    cairo_rel_line_to (cr2, 0, 0);
+    phase = "Multiple 'dots'";
+    if (!check_extents (phase, cr2, FILL, EQUALS, 0, 0, 0, 0) ||
+	!check_extents (phase, cr2, STROKE, EQUALS, 90, 390, 120, 120) ||
+	!check_extents (phase, cr2, PATH, EQUALS, 100, 400, 100, 100))
+	ret = CAIRO_TEST_FAILURE;
+
+    cairo_new_path (cr2);
+
+    cairo_restore (cr2);
+
     /* http://bugs.freedesktop.org/show_bug.cgi?id=7965 */
     phase = "A vertical, open path";
     cairo_save (cr2);

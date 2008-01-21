@@ -1887,9 +1887,9 @@ slim_hidden_def(cairo_close_path);
  * the corresponding drawing operations.
  *
  * The result of cairo_path_extents() is defined as equivalent to the
- * limit of cairo_stroke_extents() as the line width approaches 0.0,
- * (but never reaching the empty-rectangle returned by
- * cairo_stroke_extents() for a line width of 0.0).
+ * limit of cairo_stroke_extents() with CAIRO_LINE_CAP_ROUND as the
+ * line width approaches 0.0, (but never reaching the empty-rectangle
+ * returned by cairo_stroke_extents() for a line width of 0.0).
  *
  * Specifically, this means that zero-area sub-paths such as
  * cairo_move_to();cairo_line_to() segments, (even degenerate cases
