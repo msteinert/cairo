@@ -37,6 +37,8 @@
 #include "cairoint.h"
 
 typedef struct cairo_path_bounder {
+    cairo_point_t trailing_move_to_point;
+    int has_trailing_move_to;
     int has_point;
 
     cairo_fixed_t min_x;
@@ -105,7 +107,8 @@ _cairo_path_bounder_move_to (void *closure, cairo_point_t *point)
 {
     cairo_path_bounder_t *bounder = closure;
 
-    _cairo_path_bounder_add_point (bounder, point);
+    bounder->trailing_move_to_point = *point;
+    bounder->has_trailing_move_to = 1;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -114,6 +117,12 @@ static cairo_status_t
 _cairo_path_bounder_line_to (void *closure, cairo_point_t *point)
 {
     cairo_path_bounder_t *bounder = closure;
+
+    if (bounder->has_trailing_move_to) {
+	_cairo_path_bounder_add_point (bounder,
+				       &bounder->trailing_move_to_point);
+	bounder->has_trailing_move_to = 0;
+    }
 
     _cairo_path_bounder_add_point (bounder, point);
 
