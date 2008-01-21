@@ -134,7 +134,8 @@ draw (cairo_t *cr, int width, int height)
     cairo_rel_line_to (cr2, 0., 0.);
     phase = "Degenerate line";
     if (!check_extents (phase, cr2, FILL, EQUALS, 0, 0, 0, 0) ||
-        !check_extents (phase, cr2, STROKE, EQUALS, 0, 0, 0, 0))
+        !check_extents (phase, cr2, STROKE, EQUALS, 0, 0, 0, 0) ||
+	!check_extents (phase, cr2, PATH, EQUALS, 200, 400, 0, 0))
 	ret = CAIRO_TEST_FAILURE;
 
     cairo_new_path (cr2);
@@ -142,21 +143,24 @@ draw (cairo_t *cr, int width, int height)
     cairo_rel_curve_to (cr2, 0., 0., 0., 0., 0., 0.);
     phase = "Degenerate curve";
     if (!check_extents (phase, cr2, FILL, EQUALS, 0, 0, 0, 0) ||
-        !check_extents (phase, cr2, STROKE, EQUALS, 0, 0, 0, 0))
+        !check_extents (phase, cr2, STROKE, EQUALS, 0, 0, 0, 0) ||
+	!check_extents (phase, cr2, PATH, EQUALS, 200, 400, 0, 0))
 	ret = CAIRO_TEST_FAILURE;
 
     cairo_new_path (cr2);
     cairo_arc (cr2, 200, 400, 0., 0, 2 * M_PI);
     phase = "Degenerate arc (R=0)";
     if (!check_extents (phase, cr2, FILL, EQUALS, 0, 0, 0, 0) ||
-        !check_extents (phase, cr2, STROKE, EQUALS, 0, 0, 0, 0))
+        !check_extents (phase, cr2, STROKE, EQUALS, 0, 0, 0, 0) ||
+	!check_extents (phase, cr2, PATH, EQUALS, 200, 400, 0, 0))
 	ret = CAIRO_TEST_FAILURE;
 
     cairo_new_path (cr2);
     cairo_arc (cr2, 200, 400, 10., 0, 0);
     phase = "Degenerate arc (Θ=0)";
     if (!check_extents (phase, cr2, FILL, EQUALS, 0, 0, 0, 0) ||
-        !check_extents (phase, cr2, STROKE, EQUALS, 0, 0, 0, 0))
+        !check_extents (phase, cr2, STROKE, EQUALS, 0, 0, 0, 0) ||
+	!check_extents (phase, cr2, PATH, EQUALS, 200, 400, 0, 0))
 	ret = CAIRO_TEST_FAILURE;
 
     cairo_new_path (cr2);
