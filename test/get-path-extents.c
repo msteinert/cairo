@@ -106,7 +106,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_surface_t *surface;
     cairo_t         *cr2;
     const char      *phase;
-    const char	     string[] = "The quick brown fox jumped over the lazy dog.";
+    const char	     string[] = "The quick brown fox jumps over the lazy dog.";
     cairo_text_extents_t extents, scaled_font_extents;
     cairo_test_status_t ret = CAIRO_TEST_SUCCESS;
 
