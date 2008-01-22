@@ -94,6 +94,10 @@ _cairo_win32_tmpfile (void);
 #define M_PI 3.14159265358979323846
 #endif
 
+#ifndef M_SQRT2
+#define M_SQRT2 1.41421356237309504880
+#endif
+
 #undef  ARRAY_LENGTH
 #define ARRAY_LENGTH(__array) ((int) (sizeof (__array) / sizeof (__array[0])))
 
