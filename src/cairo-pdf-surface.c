@@ -1551,7 +1551,7 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
     double old_width, old_height;
     cairo_matrix_t old_cairo_to_pdf;
     cairo_paginated_mode_t old_paginated_mode;
-    cairo_rectangle_int16_t meta_extents;
+    cairo_rectangle_int_t meta_extents;
     cairo_status_t status;
     int alpha = 0;
 
@@ -1621,7 +1621,7 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
     cairo_matrix_t cairo_p2d, pdf_p2d;
     cairo_extend_t extend = cairo_pattern_get_extend (&pattern->base);
     double xstep, ystep;
-    cairo_rectangle_int16_t surface_extents;
+    cairo_rectangle_int_t surface_extents;
     int pattern_width = 0; /* squelch bogus compiler warning */
     int pattern_height = 0; /* squelch bogus compiler warning */
     int bbox_x, bbox_y;
@@ -1629,7 +1629,7 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
 
     if (_cairo_surface_is_meta (pattern->surface)) {
 	cairo_surface_t *meta_surface = pattern->surface;
-	cairo_rectangle_int16_t pattern_extents;
+	cairo_rectangle_int_t pattern_extents;
 
 	status = _cairo_pdf_surface_emit_meta_surface (surface,
 						       meta_surface,
