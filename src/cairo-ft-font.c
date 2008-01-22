@@ -763,67 +763,65 @@ _cairo_ft_unscaled_font_set_scale (cairo_ft_unscaled_font_t *unscaled,
  * like trying to convert a gray bitmap into a monochrome one)
  */
 static int
-_compute_xrender_bitmap_size( FT_Bitmap*      target,
-                              FT_GlyphSlot    slot,
-                              FT_Render_Mode  mode )
+_compute_xrender_bitmap_size(FT_Bitmap      *target,
+			     FT_GlyphSlot    slot,
+			     FT_Render_Mode  mode)
 {
-    FT_Bitmap*  ftbit;
-    int         width, height, pitch;
+    FT_Bitmap *ftbit;
+    int width, height, pitch;
 
-    if ( slot->format != FT_GLYPH_FORMAT_BITMAP )
-        return -1;
+    if (slot->format != FT_GLYPH_FORMAT_BITMAP)
+	return -1;
 
     // compute the size of the final bitmap
-    ftbit  = &slot->bitmap;
+    ftbit = &slot->bitmap;
 
-    width  = ftbit->width;
+    width = ftbit->width;
     height = ftbit->rows;
-    pitch  = (width+3) & ~3;
+    pitch = (width + 3) & ~3;
 
-    switch ( ftbit->pixel_mode )
-    {
+    switch (ftbit->pixel_mode) {
     case FT_PIXEL_MODE_MONO:
-        if ( mode == FT_RENDER_MODE_MONO )
-        {
-          pitch = (((width+31) & ~31) >> 3);
-          break;
-        }
-        /* fall-through */
+	if (mode == FT_RENDER_MODE_MONO) {
+	    pitch = (((width + 31) & ~31) >> 3);
+	    break;
+	}
+	/* fall-through */
 
     case FT_PIXEL_MODE_GRAY:
-        if ( mode == FT_RENDER_MODE_LCD   ||
-            mode == FT_RENDER_MODE_LCD_V )
-        {
-            /* each pixel is replicated into a 32-bit ARGB value */
-            pitch = width*4;
-        }
-        break;
+	if (mode == FT_RENDER_MODE_LCD ||
+	    mode == FT_RENDER_MODE_LCD_V)
+	{
+	    /* each pixel is replicated into a 32-bit ARGB value */
+	    pitch = width * 4;
+	}
+	break;
 
     case FT_PIXEL_MODE_LCD:
-        if ( mode != FT_RENDER_MODE_LCD )
-            return -1;
+	if (mode != FT_RENDER_MODE_LCD)
+	    return -1;
 
-      /* horz pixel triplets are packed into 32-bit ARGB values */
-      width   /= 3;
-      pitch    = width*4;
-      break;
+	/* horz pixel triplets are packed into 32-bit ARGB values */
+	width /= 3;
+	pitch = width * 4;
+	break;
 
     case FT_PIXEL_MODE_LCD_V:
-        if ( mode != FT_RENDER_MODE_LCD_V )
-            return -1;
+	if (mode != FT_RENDER_MODE_LCD_V)
+	    return -1;
 
-        /* vert pixel triplets are packed into 32-bit ARGB values */
-        height  /= 3;
-        pitch    = width*4;
-        break;
+	/* vert pixel triplets are packed into 32-bit ARGB values */
+	height /= 3;
+	pitch = width * 4;
+	break;
 
     default:  /* unsupported source format */
-        return -1;
+	return -1;
     }
 
-    target->width  = width;
-    target->rows   = height;
-    target->pitch  = pitch;
+    target->width = width;
+    target->rows = height;
+    target->pitch = pitch;
     target->buffer = NULL;
 
     return pitch * height;
@@ -844,192 +842,180 @@ _compute_xrender_bitmap_size( FT_Bitmap*      target,
  * bgr    :: boolean, set if BGR or VBGR pixel ordering is needed
  */
 static void
-_fill_xrender_bitmap( FT_Bitmap*      target,
-                      FT_GlyphSlot    slot,
-                      FT_Render_Mode  mode,
-                      int             bgr )
+_fill_xrender_bitmap(FT_Bitmap      *target,
+		     FT_GlyphSlot    slot,
+		     FT_Render_Mode  mode,
+		     int             bgr)
 {
-    FT_Bitmap*   ftbit = &slot->bitmap;
-    unsigned char*   srcLine   = ftbit->buffer;
-    unsigned char*   dstLine   = target->buffer;
-    int              src_pitch = ftbit->pitch;
-    int              width     = target->width;
-    int              height    = target->rows;
-    int              pitch     = target->pitch;
-    int              subpixel;
-    int              h;
+    FT_Bitmap *ftbit = &slot->bitmap;
+    unsigned char *srcLine = ftbit->buffer;
+    unsigned char *dstLine = target->buffer;
+    int src_pitch = ftbit->pitch;
+    int width = target->width;
+    int height = target->rows;
+    int pitch = target->pitch;
+    int subpixel;
+    int h;
 
-    subpixel = ( mode == FT_RENDER_MODE_LCD ||
-        mode == FT_RENDER_MODE_LCD_V );
+    subpixel = (mode == FT_RENDER_MODE_LCD ||
+		mode == FT_RENDER_MODE_LCD_V);
 
-    if ( src_pitch < 0 )
-      srcLine -= src_pitch*(ftbit->rows-1);
+    if (src_pitch < 0)
+	srcLine -= src_pitch * (ftbit->rows - 1);
 
     target->pixel_mode = ftbit->pixel_mode;
 
-    switch ( ftbit->pixel_mode )
-    {
+    switch (ftbit->pixel_mode) {
     case FT_PIXEL_MODE_MONO:
-        if ( subpixel )  /* convert mono to ARGB32 values */
-        {
-            for ( h = height; h > 0; h--, srcLine += src_pitch, dstLine += pitch )
-            {
-                int  x;
+	if (subpixel) {
+	    /* convert mono to ARGB32 values */
 
-                for ( x = 0; x < width; x++ )
-                {
-                    if ( srcLine[(x >> 3)] & (0x80 >> (x & 7)) )
-                        ((unsigned int*)dstLine)[x] = 0xffffffffU;
-                }
-            }
-            target->pixel_mode = FT_PIXEL_MODE_LCD;
-        }
-        else if ( mode == FT_RENDER_MODE_NORMAL )  /* convert mono to 8-bit gray */
-        {
-            for ( h = height; h > 0; h--, srcLine += src_pitch, dstLine += pitch )
-            {
-                int  x;
+	    for (h = height; h > 0; h--, srcLine += src_pitch, dstLine += pitch) {
+		int x;
 
-                for ( x = 0; x < width; x++ )
-                {
-                    if ( srcLine[(x >> 3)] & (0x80 >> (x & 7)) )
-                        dstLine[x] = 0xff;
-                }
-            }
-            target->pixel_mode = FT_PIXEL_MODE_GRAY;
-        }
-        else  /* copy mono to mono */
-        {
-            int  bytes = (width+7) >> 3;
+		for (x = 0; x < width; x++) {
+		    if (srcLine[(x >> 3)] & (0x80 >> (x & 7)))
+			((unsigned int *) dstLine)[x] = 0xffffffffU;
+		}
+	    }
+	    target->pixel_mode = FT_PIXEL_MODE_LCD;
 
-            for ( h = height; h > 0; h--, srcLine += src_pitch, dstLine += pitch )
-                memcpy( dstLine, srcLine, bytes );
-        }
-        break;
+	} else if (mode == FT_RENDER_MODE_NORMAL) {
+	    /* convert mono to 8-bit gray */
+
+	    for (h = height; h > 0; h--, srcLine += src_pitch, dstLine += pitch) {
+		int x;
+
+		for (x = 0; x < width; x++) {
+		    if (srcLine[(x >> 3)] & (0x80 >> (x & 7)))
+			dstLine[x] = 0xff;
+		}
+	    }
+	    target->pixel_mode = FT_PIXEL_MODE_GRAY;
+
+	} else {
+	    /* copy mono to mono */
+
+	    int  bytes = (width + 7) >> 3;
+
+	    for (h = height; h > 0; h--, srcLine += src_pitch, dstLine += pitch)
+		memcpy (dstLine, srcLine, bytes);
+	}
+	break;
 
     case FT_PIXEL_MODE_GRAY:
-        if ( subpixel )  /* convert gray to ARGB32 values */
-        {
-            for ( h = height; h > 0; h--, srcLine += src_pitch, dstLine += pitch )
-            {
-                int            x;
-                unsigned int*  dst = (unsigned int*)dstLine;
+	if (subpixel) {
+	    /* convert gray to ARGB32 values */
 
-                for ( x = 0; x < width; x++ )
-                {
-                    unsigned int  pix = srcLine[x];
+	    for (h = height; h > 0; h--, srcLine += src_pitch, dstLine += pitch) {
+		int x;
+		unsigned int *dst = (unsigned int *) dstLine;
 
-                    pix |= (pix << 8);
-                    pix |= (pix << 16);
+		for (x = 0; x < width; x++) {
+		    unsigned int pix = srcLine[x];
 
-                    dst[x] = pix;
-                }
-            }
-            target->pixel_mode = FT_PIXEL_MODE_LCD;
-        }
-        else  /* copy gray into gray */
-        {
-            for ( h = height; h > 0; h--, srcLine += src_pitch, dstLine += pitch )
-                memcpy( dstLine, srcLine, width );
+		    pix |= (pix << 8);
+		    pix |= (pix << 16);
+
+		    dst[x] = pix;
+		}
+	    }
+	    target->pixel_mode = FT_PIXEL_MODE_LCD;
+        } else {
+            /* copy gray into gray */
+
+            for (h = height; h > 0; h--, srcLine += src_pitch, dstLine += pitch)
+                memcpy (dstLine, srcLine, width);
         }
         break;
 
     case FT_PIXEL_MODE_LCD:
-        if ( !bgr )
-        {
-            /* convert horizontal RGB into ARGB32 */
-            for ( h = height; h > 0; h--, srcLine += src_pitch, dstLine += pitch )
-            {
-                int            x;
-                unsigned char* src = srcLine;
-                unsigned int*  dst = (unsigned int*)dstLine;
+	if (!bgr) {
+	    /* convert horizontal RGB into ARGB32 */
 
-                for ( x = 0; x < width; x++, src += 3 )
-                {
-                    unsigned int  pix;
+	    for (h = height; h > 0; h--, srcLine += src_pitch, dstLine += pitch) {
+		int x;
+		unsigned char *src = srcLine;
+		unsigned int *dst = (unsigned int *) dstLine;
 
-                    pix = ((unsigned int)src[0] << 16) |
-                          ((unsigned int)src[1] <<  8) |
-                          ((unsigned int)src[2]      ) |
-                          ((unsigned int)src[1] << 24) ;
+		for (x = 0; x < width; x++, src += 3) {
+		    unsigned int  pix;
 
-                    dst[x] = pix;
-                }
-            }
-        }
-        else
-        {
-          /* convert horizontal BGR into ARGB32 */
-          for ( h = height; h > 0; h--, srcLine += src_pitch, dstLine += pitch )
-          {
-              int            x;
-              unsigned char* src = srcLine;
-              unsigned int*  dst = (unsigned int*)dstLine;
+		    pix = ((unsigned int)src[0] << 16) |
+			  ((unsigned int)src[1] <<  8) |
+			  ((unsigned int)src[2]      ) |
+			  ((unsigned int)src[1] << 24) ;
 
-              for ( x = 0; x < width; x++, src += 3 )
-              {
-                  unsigned int  pix;
+		    dst[x] = pix;
+		}
+	    }
+	} else {
+	    /* convert horizontal BGR into ARGB32 */
 
-                  pix = ((unsigned int)src[2] << 16) |
-                        ((unsigned int)src[1] <<  8) |
-                        ((unsigned int)src[0]      ) |
-                        ((unsigned int)src[1] << 24) ;
+	    for (h = height; h > 0; h--, srcLine += src_pitch, dstLine += pitch) {
 
-                  dst[x] = pix;
-              }
-          }
-        }
-        break;
+		int x;
+		unsigned char *src = srcLine;
+		unsigned int *dst = (unsigned int *) dstLine;
+
+		for (x = 0; x < width; x++, src += 3) {
+		    unsigned int  pix;
+
+		    pix = ((unsigned int)src[2] << 16) |
+			  ((unsigned int)src[1] <<  8) |
+			  ((unsigned int)src[0]      ) |
+			  ((unsigned int)src[1] << 24) ;
+
+		    dst[x] = pix;
+		}
+	    }
+	}
+	break;
 
     default:  /* FT_PIXEL_MODE_LCD_V */
-        /* convert vertical RGB into ARGB32 */
-        if ( !bgr )
-        {
-            for ( h = height; h > 0; h--, srcLine += 3*src_pitch, dstLine += pitch )
-            {
-                int            x;
-                unsigned char* src = srcLine;
-                unsigned int*  dst = (unsigned int*)dstLine;
+	/* convert vertical RGB into ARGB32 */
+	if (!bgr) {
 
-                for ( x = 0; x < width; x++, src += 1 )
-                {
-                    unsigned int  pix;
+	    for (h = height; h > 0; h--, srcLine += 3 * src_pitch, dstLine += pitch) {
+		int x;
+		unsigned char* src = srcLine;
+		unsigned int*  dst = (unsigned int *) dstLine;
+
+		for (x = 0; x < width; x++, src += 1) {
+		    unsigned int pix;
 #if 1
-                    pix = ((unsigned int)src[0]           << 16) |
-                          ((unsigned int)src[src_pitch]   <<  8) |
-                          ((unsigned int)src[src_pitch*2]      ) |
-                          0xFF000000 ;
+		    pix = ((unsigned int)src[0]           << 16) |
+			  ((unsigned int)src[src_pitch]   <<  8) |
+			  ((unsigned int)src[src_pitch*2]      ) |
+			  0xFF000000 ;
 #else
-                    pix = ((unsigned int)src[0]           << 16) |
-                          ((unsigned int)src[src_pitch]   <<  8) |
-                          ((unsigned int)src[src_pitch*2]      ) |
-                          ((unsigned int)src[src_pitch]   << 24) ;
+		    pix = ((unsigned int)src[0]           << 16) |
+			  ((unsigned int)src[src_pitch]   <<  8) |
+			  ((unsigned int)src[src_pitch*2]      ) |
+			  ((unsigned int)src[src_pitch]   << 24) ;
 #endif
-                    dst[x] = pix;
-                }
-            }
-        }
-        else
-        {
-            for ( h = height; h > 0; h--, srcLine += 3*src_pitch, dstLine += pitch )
-            {
-                int            x;
-                unsigned char* src = srcLine;
-                unsigned int*  dst = (unsigned int*)dstLine;
+		    dst[x] = pix;
+		}
+	    }
+	} else {
 
-                for ( x = 0; x < width; x++, src += 1 )
-                {
-                    unsigned int  pix;
+	    for (h = height; h > 0; h--, srcLine += 3*src_pitch, dstLine += pitch) {
+		int x;
+		unsigned char *src = srcLine;
+		unsigned int *dst = (unsigned int *) dstLine;
 
-                    pix = ((unsigned int)src[src_pitch*2] << 16) |
-                        ((unsigned int)src[src_pitch]   <<  8) |
-                        ((unsigned int)src[0]                ) |
-                        ((unsigned int)src[src_pitch]   << 24) ;
+		for (x = 0; x < width; x++, src += 1) {
+		    unsigned int  pix;
 
-                    dst[x] = pix;
-                }
-            }
-        }
+		    pix = ((unsigned int)src[src_pitch * 2] << 16) |
+			  ((unsigned int)src[src_pitch]     <<  8) |
+			  ((unsigned int)src[0]                  ) |
+			  ((unsigned int)src[src_pitch]     << 24) ;
+
+		    dst[x] = pix;
+		}
+	    }
+	}
     }
 }
 
@@ -1045,7 +1031,7 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
     int width, height, stride;
     unsigned char *data;
     int format = CAIRO_FORMAT_A8;
-    cairo_image_surface_t  *image;
+    cairo_image_surface_t *image;
 
     width = bitmap->width;
     height = bitmap->rows;
@@ -1084,6 +1070,7 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 		}
 	    }
 	}
+
 #ifndef WORDS_BIGENDIAN
 	{
 	    unsigned char   *d = data;
@@ -1095,15 +1082,13 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 	    }
 	}
 #endif
-
 	format = CAIRO_FORMAT_A1;
 	break;
 
     case FT_PIXEL_MODE_LCD:
     case FT_PIXEL_MODE_LCD_V:
     case FT_PIXEL_MODE_GRAY:
-        if (font_options->antialias != CAIRO_ANTIALIAS_SUBPIXEL)
-        {
+        if (font_options->antialias != CAIRO_ANTIALIAS_SUBPIXEL) {
 	    stride = bitmap->pitch;
 	    if (own_buffer) {
 		data = bitmap->buffer;
@@ -1115,14 +1100,14 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 		memcpy (data, bitmap->buffer, stride * height);
 	    }
 	    format = CAIRO_FORMAT_A8;
-        } else {
-            // if we get there, the  data from the source bitmap
-            // really comes from _fill_xrender_bitmap, and is
-            // made of 32-bit ARGB or ABGR values
-            assert(own_buffer != 0);
-            assert(bitmap->pixel_mode != FT_PIXEL_MODE_GRAY);
+	} else {
+	    // if we get there, the  data from the source bitmap
+	    // really comes from _fill_xrender_bitmap, and is
+	    // made of 32-bit ARGB or ABGR values
+	    assert (own_buffer != 0);
+	    assert (bitmap->pixel_mode != FT_PIXEL_MODE_GRAY);
 
-            data   = bitmap->buffer;
+	    data = bitmap->buffer;
 	    stride = bitmap->pitch;
 	    format = CAIRO_FORMAT_ARGB32;
 	}
@@ -1181,36 +1166,34 @@ _render_glyph_outline (FT_Face                    face,
     FT_BBox cbox;
     unsigned int width, height, stride;
     cairo_status_t status;
-    FT_Error  fterror;
-    FT_Library  library = glyphslot->library;
-    FT_Render_Mode  render_mode = FT_RENDER_MODE_NORMAL;
+    FT_Error fterror;
+    FT_Library library = glyphslot->library;
+    FT_Render_Mode render_mode = FT_RENDER_MODE_NORMAL;
 
-    switch (font_options->antialias)
-    {
+    switch (font_options->antialias) {
     case CAIRO_ANTIALIAS_NONE:
-        render_mode = FT_RENDER_MODE_MONO;
-        break;
+	render_mode = FT_RENDER_MODE_MONO;
+	break;
 
     case CAIRO_ANTIALIAS_SUBPIXEL:
-        switch (font_options->subpixel_order)
-        {
-            case CAIRO_SUBPIXEL_ORDER_DEFAULT:
-            case CAIRO_SUBPIXEL_ORDER_RGB:
-            case CAIRO_SUBPIXEL_ORDER_BGR:
-                render_mode = FT_RENDER_MODE_LCD;
-                break;
+	switch (font_options->subpixel_order) {
+	    case CAIRO_SUBPIXEL_ORDER_DEFAULT:
+	    case CAIRO_SUBPIXEL_ORDER_RGB:
+	    case CAIRO_SUBPIXEL_ORDER_BGR:
+		render_mode = FT_RENDER_MODE_LCD;
+		break;
 
-            case CAIRO_SUBPIXEL_ORDER_VRGB:
-            case CAIRO_SUBPIXEL_ORDER_VBGR:
-                render_mode = FT_RENDER_MODE_LCD_V;
-                break;
-        }
+	    case CAIRO_SUBPIXEL_ORDER_VRGB:
+	    case CAIRO_SUBPIXEL_ORDER_VBGR:
+		render_mode = FT_RENDER_MODE_LCD_V;
+		break;
+	}
 
-        break;
+	break;
 
     case CAIRO_ANTIALIAS_DEFAULT:
     case CAIRO_ANTIALIAS_GRAY:
-        render_mode = FT_RENDER_MODE_NORMAL;
+	render_mode = FT_RENDER_MODE_NORMAL;
     }
 
     FT_Outline_Get_CBox (outline, &cbox);
@@ -1274,29 +1257,27 @@ _render_glyph_outline (FT_Face                    face,
 	    break;
 	}
 
-	FT_Library_SetLcdFilter( library, FT_LCD_FILTER_DEFAULT );
+	FT_Library_SetLcdFilter (library, FT_LCD_FILTER_DEFAULT);
 
-	fterror = FT_Render_Glyph( face->glyph, render_mode );
+	fterror = FT_Render_Glyph (face->glyph, render_mode);
 
-	FT_Library_SetLcdFilter( library, FT_LCD_FILTER_NONE );
+	FT_Library_SetLcdFilter (library, FT_LCD_FILTER_NONE);
 
 	if (fterror != 0)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-	bitmap_size = _compute_xrender_bitmap_size(&bitmap,
-						   face->glyph,
-						   render_mode);
-	if (bitmap_size < 0) {
+	bitmap_size = _compute_xrender_bitmap_size (&bitmap,
+						    face->glyph,
+						    render_mode);
+	if (bitmap_size < 0)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	}
 
-	bitmap.buffer = calloc(1, bitmap_size);
-	if (bitmap.buffer == NULL) {
+	bitmap.buffer = calloc (1, bitmap_size);
+	if (bitmap.buffer == NULL)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	}
 
-	_fill_xrender_bitmap(&bitmap, face->glyph, render_mode,
-			     (rgba == FC_RGBA_BGR || rgba == FC_RGBA_VBGR));
+	_fill_xrender_bitmap (&bitmap, face->glyph, render_mode,
+			      (rgba == FC_RGBA_BGR || rgba == FC_RGBA_VBGR));
 
 	// NOTE: _get_bitmap_surface will free bitmap.buffer if there is an error
 	status = _get_bitmap_surface (&bitmap, TRUE, font_options, surface);
