@@ -1358,6 +1358,12 @@ _cairo_path_fixed_stroke_rectilinear (cairo_path_fixed_t	*path,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     if (stroke_style->line_join	!= CAIRO_LINE_JOIN_MITER)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+    /* If the miter limit turns right angles into bevels, then we
+     * can't usethis optimization. Remember, the ratio is
+     * 1/sin(ɸ/2). So the cutoff is 1/sin(π/4.0) or ⎷2 or
+     * approximately 1.414213562373095, which we round for safety. */
+    if (stroke_style->miter_limit < 1.415)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
     if (stroke_style->dash)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     if (! (stroke_style->line_cap == CAIRO_LINE_CAP_BUTT ||
