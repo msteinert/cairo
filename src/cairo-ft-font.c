@@ -1480,6 +1480,15 @@ typedef struct _cairo_ft_scaled_font {
 
 const cairo_scaled_font_backend_t _cairo_ft_scaled_font_backend;
 
+/* Fontconfig version older than 2.6 didn't have these options */
+#ifndef FC_LCD_FILTER
+#define FC_LCD_FILTER	"lcdfilter"
+#define FC_LCD_NONE	0
+#define FC_LCD_DEFAULT	1
+#define FC_LCD_LIGHT	2
+#define FC_LCD_LEGACY	3
+#endif
+
 /* The load flags passed to FT_Load_Glyph control aspects like hinting and
  * antialiasing. Here we compute them from the fields of a FcPattern.
  */

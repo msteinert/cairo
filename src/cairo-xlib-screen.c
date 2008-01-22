@@ -132,6 +132,15 @@ get_integer_default (Display    *dpy,
 #define FC_HINT_FULL        3
 #endif
 
+/* Fontconfig version older than 2.6 didn't have these options */
+#ifndef FC_LCD_FILTER
+#define FC_LCD_FILTER	"lcdfilter"
+#define FC_LCD_NONE	0
+#define FC_LCD_DEFAULT	1
+#define FC_LCD_LIGHT	2
+#define FC_LCD_LEGACY	3
+#endif
+
 static void
 _cairo_xlib_init_screen_font_options (Display *dpy, cairo_xlib_screen_info_t *info)
 {
