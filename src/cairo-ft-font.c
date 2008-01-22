@@ -1160,6 +1160,7 @@ _render_glyph_outline (FT_Face                    face,
 		       cairo_image_surface_t	**surface)
 {
     int rgba = FC_RGBA_UNKNOWN;
+    int lcd_filter = FT_LCD_FILTER_LEGACY;
     FT_GlyphSlot glyphslot = face->glyph;
     FT_Outline *outline = &glyphslot->outline;
     FT_Bitmap bitmap;
@@ -1187,6 +1188,22 @@ _render_glyph_outline (FT_Face                    face,
 	    case CAIRO_SUBPIXEL_ORDER_VBGR:
 		render_mode = FT_RENDER_MODE_LCD_V;
 		break;
+	}
+
+	switch (font_options->lcd_filter) {
+	case CAIRO_LCD_FILTER_NONE:
+	    lcd_filter = FT_LCD_FILTER_NONE;
+	    break;
+	case CAIRO_LCD_FILTER_DEFAULT:
+	case CAIRO_LCD_FILTER_INTRA_PIXEL:
+	    lcd_filter = FT_LCD_FILTER_LEGACY;
+	    break;
+	case CAIRO_LCD_FILTER_FIR3:
+	    lcd_filter = FT_LCD_FILTER_LIGHT;
+	    break;
+	case CAIRO_LCD_FILTER_FIR5:
+	    lcd_filter = FT_LCD_FILTER_DEFAULT;
+	    break;
 	}
 
 	break;
@@ -1257,7 +1274,7 @@ _render_glyph_outline (FT_Face                    face,
 	    break;
 	}
 
-	FT_Library_SetLcdFilter (library, FT_LCD_FILTER_DEFAULT);
+	FT_Library_SetLcdFilter (library, lcd_filter);
 
 	fterror = FT_Render_Glyph (face->glyph, render_mode);
 
@@ -1522,6 +1539,7 @@ _get_pattern_ft_options (FcPattern *pattern, cairo_ft_options_t *ret)
     
     if (antialias) {
 	cairo_subpixel_order_t subpixel_order;
+	int lcd_filter;
 
 	/* disable hinting if requested */
 	if (FcPatternGetBool (pattern,
@@ -1555,6 +1573,25 @@ _get_pattern_ft_options (FcPattern *pattern, cairo_ft_options_t *ret)
 	if (subpixel_order != CAIRO_SUBPIXEL_ORDER_DEFAULT) {
 	    ft_options.base.subpixel_order = subpixel_order;
 	    ft_options.base.antialias = CAIRO_ANTIALIAS_SUBPIXEL;
+	}
+
+	if (FcPatternGetInteger (pattern,
+				 FC_LCD_FILTER, 0, &lcd_filter) == FcResultMatch)
+	{
+	    switch (lcd_filter) {
+	    case FC_LCD_NONE:
+		ft_options.base.lcd_filter = CAIRO_LCD_FILTER_NONE;
+		break;
+	    case FC_LCD_DEFAULT:
+		ft_options.base.lcd_filter = CAIRO_LCD_FILTER_FIR5;
+		break;
+	    case FC_LCD_LIGHT:
+		ft_options.base.lcd_filter = CAIRO_LCD_FILTER_FIR3;
+		break;
+	    case FC_LCD_LEGACY:
+		ft_options.base.lcd_filter = CAIRO_LCD_FILTER_INTRA_PIXEL;
+		break;
+	    }
 	}
 
 #ifdef FC_HINT_STYLE    
@@ -1656,6 +1693,12 @@ _cairo_ft_options_merge (cairo_ft_options_t *options,
 
     if (other->base.hint_style == CAIRO_HINT_STYLE_NONE)
 	options->base.hint_style = CAIRO_HINT_STYLE_NONE;
+
+    if (options->base.lcd_filter == CAIRO_LCD_FILTER_DEFAULT)
+	options->base.lcd_filter = other->base.lcd_filter;
+
+    if (other->base.lcd_filter == CAIRO_LCD_FILTER_NONE)
+	options->base.lcd_filter = CAIRO_LCD_FILTER_NONE;
 
     if (options->base.antialias == CAIRO_ANTIALIAS_NONE) {
 	if (options->base.hint_style == CAIRO_HINT_STYLE_NONE)
@@ -2623,6 +2666,33 @@ _cairo_ft_font_options_substitute (const cairo_font_options_t *options,
 	    }
 
 	    if (! FcPatternAddInteger (pattern, FC_RGBA, rgba))
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	}
+    }
+
+    if (options->lcd_filter != CAIRO_LCD_FILTER_DEFAULT)
+    {
+	if (FcPatternGet (pattern, FC_LCD_FILTER, 0, &v) == FcResultNoMatch)
+	{
+	    int lcd_filter;
+
+	    switch (options->lcd_filter) {
+	    case CAIRO_LCD_FILTER_NONE:
+		lcd_filter = FT_LCD_FILTER_NONE;
+		break;
+	    case CAIRO_LCD_FILTER_DEFAULT:
+	    case CAIRO_LCD_FILTER_INTRA_PIXEL:
+		lcd_filter = FT_LCD_FILTER_LEGACY;
+		break;
+	    case CAIRO_LCD_FILTER_FIR3:
+		lcd_filter = FT_LCD_FILTER_LIGHT;
+		break;
+	    case CAIRO_LCD_FILTER_FIR5:
+		lcd_filter = FT_LCD_FILTER_DEFAULT;
+		break;
+	    }
+
+	    if (! FcPatternAddInteger (pattern, FC_LCD_FILTER, lcd_filter))
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
     }
