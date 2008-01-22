@@ -551,7 +551,7 @@ user-data
 check: AM_MAKEFLAGS+=-k
 check-local:
 	@FAILED_TESTS=""; \
-	for t in *.log; do \
+	for t in $(TESTS:$(EXEEXT)=.log); do \
 	    if grep -e '\<FAIL\>' $$t >/dev/null 2>&1; then \
 		FAILED_TESTS="$$FAILED_TESTS $${t%.log}"; \
 	    fi; \
