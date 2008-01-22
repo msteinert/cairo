@@ -201,7 +201,6 @@ libcairo_la_base_sources =			\
 	cairo-mutex.c				\
 	cairo-mutex-private.h			\
 	cairo-mutex-type-private.h		\
-	cairo-operator.c			\
 	cairo-path.c				\
 	cairo-path-private.h			\
 	cairo-path-bounds.c			\
