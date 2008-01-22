@@ -1879,8 +1879,8 @@ slim_hidden_def(cairo_close_path);
  *
  * Computes a bounding box in user-space coordinates covering the
  * points on the current path. If the current path is empty, returns
- * an empty rectangle ((0,0), (0,0)).  Stroke parameters, surface
- * dimensions and clipping are not taken into account.
+ * an empty rectangle ((0,0), (0,0)). Stroke parameters, fill rule,
+ * surface dimensions and clipping are not taken into account.
  *
  * Contrast with cairo_fill_extents() and cairo_stroke_extents() which
  * return the extents of only the area that would be "inked" by

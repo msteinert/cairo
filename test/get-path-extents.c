@@ -244,6 +244,55 @@ draw (cairo_t *cr, int width, int height)
     cairo_new_path (cr2);
     cairo_restore (cr2);
 
+    cairo_save (cr2);
+
+    cairo_set_line_width (cr2, 4);
+
+    cairo_rectangle (cr2, 10, 10, 30, 30);
+    cairo_rectangle (cr2, 25, 10, 15, 30);
+
+    cairo_set_fill_rule (cr2, CAIRO_FILL_RULE_EVEN_ODD);
+    phase = "EVEN_ODD overlapping rectangles";
+    if (!check_extents (phase, cr2, FILL, EQUALS, 10, 10, 15, 30) ||
+	!check_extents (phase, cr2, STROKE, EQUALS, 8, 8, 34, 34) ||
+	!check_extents (phase, cr2, PATH, EQUALS, 10, 10, 30, 30))
+	ret = CAIRO_TEST_FAILURE;
+
+    /* Test other fill rule with the same path. */
+
+    cairo_set_fill_rule (cr2, CAIRO_FILL_RULE_WINDING);
+    phase = "WINDING overlapping rectangles";
+    if (!check_extents (phase, cr2, FILL, EQUALS, 10, 10, 30, 30) ||
+	!check_extents (phase, cr2, STROKE, EQUALS, 8, 8, 34, 34) ||
+	!check_extents (phase, cr2, PATH, EQUALS, 10, 10, 30, 30))
+	ret = CAIRO_TEST_FAILURE;
+
+    /* Now, change the direction of the second rectangle and test both
+     * fill rules again. */
+    cairo_new_path (cr2);
+    cairo_rectangle (cr2, 10, 10, 30, 30);
+    cairo_rectangle (cr2, 25, 40, 15, -30);
+
+    cairo_set_fill_rule (cr2, CAIRO_FILL_RULE_EVEN_ODD);
+    phase = "EVEN_ODD overlapping rectangles";
+    if (!check_extents (phase, cr2, FILL, EQUALS, 10, 10, 15, 30) ||
+	!check_extents (phase, cr2, STROKE, EQUALS, 8, 8, 34, 34) ||
+	!check_extents (phase, cr2, PATH, EQUALS, 10, 10, 30, 30))
+	ret = CAIRO_TEST_FAILURE;
+
+    /* Test other fill rule with the same path. */
+
+    cairo_set_fill_rule (cr2, CAIRO_FILL_RULE_WINDING);
+    phase = "WINDING overlapping rectangles";
+    if (!check_extents (phase, cr2, FILL, EQUALS, 10, 10, 15, 30) ||
+	!check_extents (phase, cr2, STROKE, EQUALS, 8, 8, 34, 34) ||
+	!check_extents (phase, cr2, PATH, EQUALS, 10, 10, 30, 30))
+	ret = CAIRO_TEST_FAILURE;
+
+    cairo_new_path (cr2);
+
+    cairo_restore (cr2);
+
     /* http://bugs.freedesktop.org/show_bug.cgi?id=7245 */
     phase = "Arc";
     cairo_save (cr2);
