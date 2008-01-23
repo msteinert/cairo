@@ -198,7 +198,7 @@ typedef struct _cairo_point_int16 {
 } cairo_point_int16_t;
 
 typedef struct _cairo_point_int32 {
-    int16_t x, y;
+    int32_t x, y;
 } cairo_point_int32_t;
 
 typedef struct _cairo_box_int16 {
