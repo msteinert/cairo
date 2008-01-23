@@ -712,20 +712,38 @@ index.html: $(srcdir)/make-html.pl $(TESTS:$(EXEEXT)=.log)
 
 # Identify identical reference images
 check-ref-dups:
-	@sha1sum *-ref.png > ref.hash
-	@join ref.hash ref.hash | grep -v -E '( .*-ref.png).*\1' | cut -d' ' -f 1-2 | sort -u
+	@( cd "$(scrdir)" && sha1sum *-ref.png ) > ref.hash; \
+	join ref.hash ref.hash | grep -v -E '( .*-ref.png).*\1' | cut -d' ' -f 1-2 | sort -u
 
 # Not exactly the best script in the world...
 check-ref-missing:
-	@missing=""; \
-	for i in `git ls-files *-ref.png`; do \
-	    echo ${REFERENCE_IMAGES} | grep -sq $$i || missing="$$missing $$i" ; \
+	@cd "$(srcdir)"; \
+	REFS=`git ls-files "*-ref.png"`; \
+	test x = "x$$REFS" && REFS=`ls *-ref.png`; \
+	ret=true; \
+	missing=""; \
+	for i in $$REFS; do \
+	    echo "" $(REFERENCE_IMAGES) "" | grep -sq " $$i " || missing="$$missing $$i" ; \
 	done ; \
 	if test -n "$$missing"; then \
-		echo "Some reference files are not included in the distribution." ;\
-		echo "Missing from REFERENCE_IMAGES:$$missing" ; \
-		exit 1; \
-	fi
+		echo "*** Error: Sanity check failed"; \
+		echo "Some reference files are not included in the distribution."; \
+		echo "You probably need to add these to Makefile.am's REFERENCE_IMAGES."; \
+		echo "Missing: $$missing"; \
+		ret=false; \
+	fi >&2; \
+	missing=""; \
+	for i in $(REFERENCE_IMAGES); do \
+	    echo "" $$REFS "" | grep -sq " $$i " || missing="$$missing $$i" ; \
+	done ; \
+	if test -n "$$missing"; then \
+		echo "*** Error: Sanity check failed"; \
+		echo "Some reference files included in the distribution do not exist"; \
+		echo "or are not in git.  You probably want to add these to git first."; \
+		echo "Missing: $$missing"; \
+		ret=false; \
+	fi >&2; \
+	$$ret
 
 release-verify-sane-tests: check-ref-missing
 
