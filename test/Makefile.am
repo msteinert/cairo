@@ -712,7 +712,8 @@ index.html: $(srcdir)/make-html.pl $(TESTS:$(EXEEXT)=.log)
 
 # Identify identical reference images
 check-ref-dups:
-	@( cd "$(scrdir)" && sha1sum *-ref.png ) > ref.hash; \
+	@LANG=C; \
+	( cd "$(scrdir)" && sha1sum *-ref.png | sort ) > ref.hash; \
 	join ref.hash ref.hash | grep -v -E '( .*-ref.png).*\1' | cut -d' ' -f 1-2 | sort -u
 
 # Not exactly the best script in the world...
