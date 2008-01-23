@@ -769,6 +769,17 @@ _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
         pixman_transform->matrix[2][1] = 0;
         pixman_transform->matrix[2][2] = 1 << 16;
 
+        /* The conversion above breaks cairo's translation invariance:
+         * a translation of (a, b) in device space translates to
+         * a translation of (xx * a + xy * b, yx * a + yy * b)
+         * for cairo, while pixman uses rounded versions of xx ... yy.
+         * This error increases as a and b get larger.
+         *
+         * To compensate for this, we fix the point (0, 0) in pattern
+         * space and adjust pixman's transform to agree with cairo's at
+         * that point. */
+
+        /* Note: If we can't invert the transformation, skip the adjustment. */
         if (cairo_matrix_invert (&inv) != CAIRO_STATUS_SUCCESS)
             return;
 
@@ -784,7 +795,8 @@ _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
         if (!pixman_transform_point_3d (pixman_transform, &vector))
             return;
 
-        /* and compensate for the resulting error */
+        /* Ideally, the vector should now be (0, 0). We can now compensate
+         * for the resulting error */
         pixman_transform->matrix[0][2] -= vector.vector[0];
         pixman_transform->matrix[1][2] -= vector.vector[1];
     }
