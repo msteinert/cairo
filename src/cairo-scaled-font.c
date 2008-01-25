@@ -483,8 +483,22 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 
     inverse = scaled_font->scale;
     status = cairo_matrix_invert (&inverse);
-    if (status)
-	return status;
+    /* If the font scale matrix rank 0, just using an all-zero inverse matrix
+     * makes everything work correctly.  This make font size 0 work without
+     * producing an error.
+     *
+     * FIXME:  If the scale is rank 1, we still go into error mode.  But then
+     * again, that's what we doo everywhere in cairo.
+     */
+    if (status &&
+	scaled_font->scale.xx == 0. && scaled_font->scale.xy == 0. &&
+	scaled_font->scale.yx == 0. && scaled_font->scale.yy == 0.)
+      {
+        cairo_matrix_init (&inverse,
+			   0, 0, 0, 0,
+			   -scaled_font->scale.x0,
+			   -scaled_font->scale.y0);
+      }
 
     scaled_font->glyphs = _cairo_cache_create (_cairo_scaled_glyph_keys_equal,
 					       _cairo_scaled_glyph_destroy,
