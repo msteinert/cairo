@@ -499,6 +499,10 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 			   -scaled_font->scale.x0,
 			   -scaled_font->scale.y0);
       }
+    else
+     {
+      return status;
+     }
 
     scaled_font->glyphs = _cairo_cache_create (_cairo_scaled_glyph_keys_equal,
 					       _cairo_scaled_glyph_destroy,
