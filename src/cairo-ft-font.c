@@ -1288,9 +1288,6 @@ _get_pattern_ft_options (FcPattern *pattern, cairo_ft_options_t *ret)
     if (antialias) {
 	cairo_subpixel_order_t subpixel_order;
 
-	if (!bitmap)
-	    ft_options.load_flags |= FT_LOAD_NO_BITMAP;
-	
 	/* disable hinting if requested */
 	if (FcPatternGetBool (pattern,
 			      FC_HINTING, 0, &hinting) != FcResultMatch)
@@ -1353,6 +1350,14 @@ _get_pattern_ft_options (FcPattern *pattern, cairo_ft_options_t *ret)
 	    ft_options.base.hint_style = CAIRO_HINT_STYLE_NONE;
 	}
 #endif /* FC_HINT_STYLE */
+
+	/* Force embedded bitmaps off if no hinting requested */
+	if (ft_options.base.hint_style == CAIRO_HINT_STYLE_NONE)
+	  bitmap = FcFalse;
+
+	if (!bitmap)
+	    ft_options.load_flags |= FT_LOAD_NO_BITMAP;
+
     } else {
 	ft_options.base.antialias = CAIRO_ANTIALIAS_NONE;
     }
