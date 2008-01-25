@@ -21,3 +21,4 @@ cairo.def
 *~
 .*.sw?
 TAGS
+check-has-hidden-symbols.i
