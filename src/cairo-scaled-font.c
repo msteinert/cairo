@@ -1142,8 +1142,8 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     int i;
-    cairo_point_int_t min = { CAIRO_RECT_INT_MIN, CAIRO_RECT_INT_MIN };
-    cairo_point_int_t max = { CAIRO_RECT_INT_MAX, CAIRO_RECT_INT_MAX };
+    cairo_point_int_t min = { CAIRO_RECT_INT_MAX, CAIRO_RECT_INT_MAX };
+    cairo_point_int_t max = { CAIRO_RECT_INT_MIN, CAIRO_RECT_INT_MIN };
 
     if (scaled_font->status)
 	return scaled_font->status;
