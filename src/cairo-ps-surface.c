@@ -754,10 +754,7 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
 				 "%% _cairo_ps_surface_emit_type3_font_subset\n");
 #endif
 
-    matrix = font_subset->scaled_font->scale;
-    status = cairo_matrix_invert (&matrix);
-    /* _cairo_scaled_font_init ensures the matrix is invertible */
-    assert (status == CAIRO_STATUS_SUCCESS);
+    matrix = font_subset->scaled_font->scale_inverse;
     _cairo_output_stream_printf (surface->final_stream,
 				 "8 dict begin\n"
 				 "/FontType 3 def\n"
