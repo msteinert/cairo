@@ -277,7 +277,7 @@ CAIRO_LIBS=$CAIRO_NONPKGCONFIG_LIBS
 
 dnl ===========================================================================
 
-PIXMAN_VERSION="0.9.4"
+PIXMAN_VERSION="0.9.6"
 PIXMAN_REQUIRES="pixman-1 >= $PIXMAN_VERSION"
 PKG_CHECK_MODULES(pixman, $PIXMAN_REQUIRES, ,
 	[AC_MSG_ERROR([pixman >= $PIXMAN_VERSION is required
