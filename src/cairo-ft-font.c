@@ -1513,8 +1513,13 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
     /*
      * Get to unscaled metrics so that the upper level can get back to
      * user space
+     *
+     * Also use this path for bitmap-only fonts.  The other branch uses
+     * face members that are only relevant for scalable fonts.  This is
+     * detected by simply checking for units_per_EM==0.
      */
-    if (scaled_font->base.options.hint_metrics != CAIRO_HINT_METRICS_OFF) {
+    if (scaled_font->base.options.hint_metrics != CAIRO_HINT_METRICS_OFF ||
+	face->units_per_EM == 0) {
 	double x_factor, y_factor;
 
 	if (unscaled->x_scale == 0)
