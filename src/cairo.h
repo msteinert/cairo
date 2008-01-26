@@ -342,6 +342,34 @@ cairo_pop_group_to_source (cairo_t *cr);
 
 /* Modify state */
 
+/**
+ * cairo_operator_t
+ * @CAIRO_OPERATOR_CLEAR: clear destination layer (bounded)
+ * @CAIRO_OPERATOR_SOURCE: replace destination layer (bounded)
+ * @CAIRO_OPERATOR_OVER: draw source layer on top of destination layer
+ * @CAIRO_OPERATOR_IN: draw source where there was destination content
+ * (unbounded)
+ * @CAIRO_OPERATOR_OUT: draw source where there was no destination
+ * content (unbounded)
+ * @CAIRO_OPERATOR_ATOP: draw source on top of destination content and
+ * only there
+ * @CAIRO_OPERATOR_DEST: ignore the source
+ * @CAIRO_OPERATOR_DEST_OVER: draw destination on top of source
+ * @CAIRO_OPERATOR_DEST_IN: leave destination only where there was
+ * source content (unbounded)
+ * @CAIRO_OPERATOR_DEST_OUT: leave destination only where there was no
+ * source content
+ * @CAIRO_OPERATOR_DEST_ATOP: leave destination on top of source content
+ * an only there
+ * @CAIRO_OPERATOR_XOR: pixel color xor
+ * @CAIRO_OPERATOR_ADD: pixel color addition
+ * @CAIRO_OPERATOR_SATURATE: pixel color saturation
+ *
+ * #cairo_operator_t is used to set the compositing operator for drawing
+ * operations. For a more detailed explanation of the effects of each
+ * operator, see
+ * <ulink url="http://cairographics.org/operators/">http://cairographics.org/operators/</ulink>.
+ **/
 typedef enum _cairo_operator {
     CAIRO_OPERATOR_CLEAR,
 
