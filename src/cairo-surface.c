@@ -1658,23 +1658,25 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		op,
  *
  * Since: 1.6
  */
-cairo_status_t
+void
 cairo_surface_copy_page (cairo_surface_t *surface)
 {
     assert (! surface->is_snapshot);
 
     if (surface->status)
-	return surface->status;
+	return;
 
-    if (surface->finished)
-	return _cairo_surface_set_error (surface,CAIRO_STATUS_SURFACE_FINISHED);
+    if (surface->finished) {
+	_cairo_surface_set_error (surface,CAIRO_STATUS_SURFACE_FINISHED);
+	return;
+    }
 
     /* It's fine if some backends don't implement copy_page */
     if (surface->backend->copy_page == NULL)
-	return CAIRO_STATUS_SUCCESS;
+	return;
 
-    return _cairo_surface_set_error (surface,
-	                             surface->backend->copy_page (surface));
+    _cairo_surface_set_error (surface,
+			      surface->backend->copy_page (surface));
 }
 slim_hidden_def (cairo_surface_copy_page);
 
@@ -1687,24 +1689,25 @@ slim_hidden_def (cairo_surface_copy_page);
  *
  * Since: 1.6
  **/
-
-cairo_status_t
+void
 cairo_surface_show_page (cairo_surface_t *surface)
 {
     assert (! surface->is_snapshot);
 
     if (surface->status)
-	return surface->status;
+	return;
 
-    if (surface->finished)
-	return _cairo_surface_set_error (surface,CAIRO_STATUS_SURFACE_FINISHED);
+    if (surface->finished) {
+	_cairo_surface_set_error (surface,CAIRO_STATUS_SURFACE_FINISHED);
+	return;
+    }
 
     /* It's fine if some backends don't implement show_page */
     if (surface->backend->show_page == NULL)
-	return CAIRO_STATUS_SUCCESS;
+	return;
 
-    return _cairo_surface_set_error (surface,
-	                             surface->backend->show_page (surface));
+    _cairo_surface_set_error (surface,
+			      surface->backend->show_page (surface));
 }
 slim_hidden_def (cairo_surface_show_page);
 

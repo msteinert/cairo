@@ -1045,7 +1045,8 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
 	return status;
     }
 
-    status = cairo_surface_show_page (paginated_surface);
+    cairo_surface_show_page (paginated_surface);
+    status = cairo_surface_status (paginated_surface);
     if (status) {
 	cairo_surface_destroy (&meta->base);
 	cairo_surface_destroy (paginated_surface);
@@ -1133,7 +1134,7 @@ _cairo_svg_surface_emit_composite_meta_pattern (cairo_output_stream_t	*output,
     cairo_meta_surface_t *meta_surface;
     cairo_matrix_t p2u;
     cairo_status_t status;
-    int id;
+    int id = 0;
 
     p2u = pattern->base.matrix;
     status = cairo_matrix_invert (&p2u);
