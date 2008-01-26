@@ -2052,8 +2052,7 @@ _cairo_win32_save_initial_clip (HDC hdc, cairo_win32_surface_t *surface)
 
     if (clipBoxType == COMPLEXREGION) {
 	surface->initial_clip_rgn = CreateRectRgn (0, 0, 0, 0);
-	if (GetClipRgn (hdc, surface->initial_clip_rgn) == -1) {
-	    /* this should never happen */
+	if (GetClipRgn (hdc, surface->initial_clip_rgn) <= 0) {
 	    DeleteObject(surface->initial_clip_rgn);
 	    surface->initial_clip_rgn = NULL;
 	}
