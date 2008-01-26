@@ -219,7 +219,6 @@ Base class for surfaces
 </para>
 
 @surface: 
-@Returns: 
 
 
 <!-- ##### FUNCTION cairo_surface_show_page ##### -->
@@ -228,6 +227,5 @@ Base class for surfaces
 </para>
 
 @surface: 
-@Returns: 
 
 

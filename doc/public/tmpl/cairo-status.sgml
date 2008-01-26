@@ -45,6 +45,7 @@ Decoding cairo's status
 @CAIRO_STATUS_INVALID_DSC_COMMENT: 
 @CAIRO_STATUS_INVALID_INDEX: 
 @CAIRO_STATUS_CLIP_NOT_REPRESENTABLE: 
+@CAIRO_STATUS_TEMP_FILE_ERROR: 
 
 <!-- ##### FUNCTION cairo_status_to_string ##### -->
 <para>
