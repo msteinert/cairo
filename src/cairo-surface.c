@@ -1649,7 +1649,7 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		op,
 
 /**
  * cairo_surface_copy_page:
- * @suface: a #cairo_surface_t
+ * @surface: a #cairo_surface_t
  *
  * Emits the current page for backends that support multiple pages,
  * but doesn't clear it, so that the contents of the current page will
