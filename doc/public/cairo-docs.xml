@@ -9,11 +9,6 @@
     <title>Cairo: A Vector Graphics Library</title>
     <releaseinfo>for Cairo &version;</releaseinfo>
   </bookinfo>
-  <part>
-    <title>Tutorial</title>
-  </part>				  
-  <part>
-    <title>Reference</title>
     <chapter id="Drawing">
       <title>Drawing</title>
       <xi:include href="xml/cairo.xml"/>
@@ -52,7 +47,6 @@
       <xi:include href="xml/cairo-version.xml"/>
       <xi:include href="xml/cairo-types.xml"/>
     </chapter>
-  </part>
   <index>
     <title id="index-all">Index</title>
   </index>
