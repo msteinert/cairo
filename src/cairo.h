@@ -1232,7 +1232,7 @@ cairo_get_tolerance (cairo_t *cr);
 cairo_public cairo_antialias_t
 cairo_get_antialias (cairo_t *cr);
 
-cairo_public void
+cairo_public cairo_status_t
 cairo_get_current_point (cairo_t *cr, double *x, double *y);
 
 cairo_public cairo_fill_rule_t
