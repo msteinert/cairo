@@ -67,7 +67,7 @@ static const cairo_t _cairo_nil = {
  * a bit of a pain, but it should be easy to always catch as long as
  * one adds a new test case to test a trigger of the new status value.
  */
-#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_TEMP_FILE_ERROR
+#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_STRIDE
 
 /**
  * _cairo_error:
@@ -3634,6 +3634,8 @@ cairo_status_to_string (cairo_status_t status)
         return "clip region not representable in desired format";
     case CAIRO_STATUS_TEMP_FILE_ERROR:
 	return "error creating or writing to a temporary file";
+    case CAIRO_STATUS_INVALID_STRIDE:
+	return "invalid value for stride";
     }
 
     return "<unknown error status>";

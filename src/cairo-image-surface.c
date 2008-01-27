@@ -395,16 +395,56 @@ _cairo_image_surface_create_with_content (cairo_content_t	content,
 }
 
 /**
+ * cairo_image_surface_stride_for_width:
+ * @format: The desired format of an image surface to be created.
+ * @width: The desired width of an image surface to be created.
+ *
+ * Return value: the appropriate stride to use given the desired
+ * format and width.
+ *
+ * This function provides a stride value that will respect all
+ * alignment requirements of the accelerated image-rendering code
+ * within cairo. Typical usage will be of the form:
+ *
+ * <informalexample><programlisting>
+ * int stride;
+ * unsigned char *data;
+ * cairo_surface_t *surface;
+ *
+ * stride = cairo_image_surface_stride_for_width (format, width);
+ * data = malloc (stride * height);
+ * surface = cairo_image_surface_create_for_data (date, format,
+ *						  width, height);
+ * </programlisting></informalexample>
+ *
+ * Since: 1.6
+ */
+int
+cairo_image_surface_stride_for_width (cairo_format_t	format,
+				      int		width)
+{
+    int bpp = _cairo_format_bits_per_pixel (format);
+
+    /* Convert from bits-per-row to bytes-per-row with rounding to the
+     * next 4-byte boundary. This satisifies the current alignment
+     * requirements of pixman. */
+    return (((bpp * width) + 31) >> 5) << 2;
+}
+
+/**
  * cairo_image_surface_create_for_data:
- * @data: a pointer to a buffer supplied by the application
- *    in which to write contents.
+ * @data: a pointer to a buffer supplied by the application in which
+ *     to write contents. This pointer must be suitably aligned for any
+ *     kind of variable, (for example, a pointer returned by malloc).
  * @format: the format of pixels in the buffer
  * @width: the width of the image to be stored in the buffer
  * @height: the height of the image to be stored in the buffer
- * @stride: the number of bytes between the start of rows
- *   in the buffer. Having this be specified separate from @width
- *   allows for padding at the end of rows, or for writing
- *   to a subportion of a larger image.
+ * @stride: the number of bytes between the start of rows in the
+ *    buffer. For performance reasons, not all values are legal stride
+ *    values. Use cairo_image_surface_stride_for_width() to compute a
+ *    legal stride value, (and use that value to allocate data of the
+ *    correct size). An illegal stride value will cause a nil surface
+ *    to be resutrned with a status of CAIRO_STATUS_INVALD_STRIDE.
  *
  * Creates an image surface for the provided pixel data. The output
  * buffer must be kept around until the #cairo_surface_t is destroyed
@@ -433,11 +473,11 @@ cairo_image_surface_create_for_data (unsigned char     *data,
 {
     pixman_format_code_t pixman_format;
 
-    /* XXX pixman does not support images with arbitrary strides and
-     * attempting to create such surfaces will failure but we will interpret
-     * such failure as CAIRO_STATUS_NO_MEMORY.  */
-    if (! CAIRO_FORMAT_VALID (format) || stride % sizeof (uint32_t) != 0)
+    if (! CAIRO_FORMAT_VALID (format))
 	return _cairo_surface_create_in_error (_cairo_error(CAIRO_STATUS_INVALID_FORMAT));
+
+    if (stride % sizeof (uint32_t) != 0)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_STRIDE));
 
     pixman_format = _cairo_format_to_pixman_format_code (format);
 

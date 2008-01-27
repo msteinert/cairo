@@ -86,6 +86,7 @@ static DEFINE_NIL_SURFACE(CAIRO_STATUS_FILE_NOT_FOUND, _cairo_surface_nil_file_n
 static DEFINE_NIL_SURFACE(CAIRO_STATUS_TEMP_FILE_ERROR, _cairo_surface_nil_temp_file_error);
 static DEFINE_NIL_SURFACE(CAIRO_STATUS_READ_ERROR, _cairo_surface_nil_read_error);
 static DEFINE_NIL_SURFACE(CAIRO_STATUS_WRITE_ERROR, _cairo_surface_nil_write_error);
+static DEFINE_NIL_SURFACE(CAIRO_STATUS_INVALID_STRIDE, _cairo_surface_nil_invalid_stride);
 
 static cairo_status_t
 _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
@@ -2430,6 +2431,8 @@ _cairo_surface_create_in_error (cairo_status_t status)
 	return (cairo_surface_t *) &_cairo_surface_nil_file_not_found;
     case CAIRO_STATUS_TEMP_FILE_ERROR:
 	return (cairo_surface_t *) &_cairo_surface_nil_temp_file_error;
+    case CAIRO_STATUS_INVALID_STRIDE:
+	return (cairo_surface_t *) &_cairo_surface_nil_invalid_stride;
     default:
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t *) &_cairo_surface_nil;

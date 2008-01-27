@@ -520,11 +520,7 @@ $(REFERENCE_IMAGES)
 # Of course, before any "release" of cairo we should eliminate
 # everything from this list by fixing the bugs. (We don't necessarily
 # have to be that strict for "snapshots" though.)
-#
-# Also, any test listed here should call cairo_test_expect_failure and
-# provide an explanation for the expected failure.
 XFAIL_TESTS =					\
-a8-mask$(EXEEXT)				\
 big-trap$(EXEEXT)				\
 extend-pad$(EXEEXT)				\
 extend-pad-similar$(EXEEXT)			\
