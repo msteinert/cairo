@@ -34,11 +34,11 @@
  *	Vladimir Vukicevic <vladimir@mozilla.com>
  */
 
-#include <dlfcn.h>
-
 #include "cairoint.h"
 
 #include "cairo-quartz-private.h"
+
+#include <dlfcn.h>
 
 /* The 10.5 SDK includes a funky new definition of FloatToFixed which
  * causes all sorts of breakage; so reset to old-style definition
