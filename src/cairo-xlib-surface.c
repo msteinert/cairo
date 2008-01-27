@@ -2160,6 +2160,33 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
 						NULL, format, width, height, 0);
 }
 slim_hidden_def (cairo_xlib_surface_create_with_xrender_format);
+
+/**
+ * cairo_xlib_surface_get_xrender_format
+ * @surface: an xlib surface created by
+ * cairo_xlib_surface_create_with_render_format
+ *
+ * Return value: the XRenderPictFormat* with which the surface was
+ * originally created, (or NULL if the surface is not an xlib surface
+ * or if the Render extension is not available).
+ */
+XRenderPictFormat *
+cairo_xlib_surface_get_xrender_format (cairo_surface_t *surface)
+{
+    cairo_xlib_surface_t *xlib_surface = (cairo_xlib_surface_t *) surface;
+
+    /* Throw an error for a non-xlib surface */
+    if (! _cairo_surface_is_xlib (surface)) {
+	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return NULL;
+    }
+
+    /* And also for an xlib surface that is not an xlib-xrender surface */
+    if (xlib_surface->xrender_format == NULL)
+	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+
+    return xlib_surface->xrender_format;
+}
 #endif
 
 /**
