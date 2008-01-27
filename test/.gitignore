@@ -72,6 +72,7 @@ get-and-set
 get-clip
 get-group-target
 get-path-extents
+get-render-format
 glyph-cache-pressure
 gradient-alpha
 gradient-zero-stops

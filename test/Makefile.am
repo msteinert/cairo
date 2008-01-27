@@ -58,6 +58,7 @@ get-and-set$(EXEEXT)					\
 get-clip$(EXEEXT)					\
 get-group-target$(EXEEXT)				\
 get-path-extents$(EXEEXT)				\
+get-xrender-format$(EXEEXT)				\
 gradient-alpha$(EXEEXT)					\
 gradient-zero-stops$(EXEEXT)				\
 infinite-join$(EXEEXT)					\
@@ -210,6 +211,10 @@ endif
 
 if CAIRO_HAS_XLIB_SURFACE
 TESTS += xlib-surface$(EXEEXT)
+endif
+
+if CAIRO_HAS_XLIB_XRENDER_SURFACE
+TESTS += get-xrender-format$(EXEEXT)
 endif
 
 if CAIRO_HAS_MULTI_PAGE_SURFACES
