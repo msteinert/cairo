@@ -461,12 +461,12 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 		    cairo_image_surface_t  **image_out,
 		    cairo_rectangle_int_t   *image_rect)
 {
+    cairo_int_status_t status;
     cairo_image_surface_t *image;
     XImage *ximage;
     short x1, y1, x2, y2;
     cairo_format_masks_t masks;
     pixman_format_code_t pixman_format;
-    cairo_status_t status;
 
     x1 = 0;
     y1 = 0;
@@ -600,7 +600,23 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	    masks.alpha_mask = 0xffffffff;
     }
 
-    pixman_format = _pixman_format_from_masks (&masks);
+    status = _pixman_format_from_masks (&masks, &pixman_format);
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+	fprintf (stderr,
+		 "Error: Cairo " PACKAGE_VERSION " does not yet support the requested image format:\n"
+		 "\tDepth: %d\n"
+		 "\tAlpha mask: 0x%08lx\n"
+		 "\tRed   mask: 0x%08lx\n"
+		 "\tGreen mask: 0x%08lx\n"
+		 "\tBlue  mask: 0x%08lx\n"
+		 "Please file an enhancement request (quoting the above) at:\n"
+		 PACKAGE_BUGREPORT "\n",
+		 masks.bpp, masks.alpha_mask,
+		 masks.red_mask, masks.green_mask, masks.blue_mask);
+
+	ASSERT_NOT_REACHED;
+    }
+
     image = (cairo_image_surface_t*)
 	_cairo_image_surface_create_with_pixman_format ((unsigned char *) ximage->data,
 							pixman_format,

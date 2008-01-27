@@ -1848,8 +1848,9 @@ cairo_private cairo_surface_t *
 _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
 					      pixman_format_code_t	 pixman_format);
 
-cairo_private pixman_format_code_t
-_pixman_format_from_masks (cairo_format_masks_t *masks);
+cairo_private cairo_int_status_t
+_pixman_format_from_masks (cairo_format_masks_t *masks,
+			   pixman_format_code_t *format_ret);
 
 cairo_private void
 _pixman_format_to_masks (pixman_format_code_t	 pixman_format,
