@@ -1795,8 +1795,8 @@ _cairo_surface_has_device_transform (cairo_surface_t *surface);
 						      CAIRO_CONTENT_COLOR_ALPHA))\
 				       == 0))
 
-cairo_private cairo_format_t
-_cairo_format_width (cairo_format_t format);
+cairo_private int
+_cairo_format_bits_per_pixel (cairo_format_t format);
 
 cairo_private cairo_format_t
 _cairo_format_from_content (cairo_content_t content);

@@ -615,14 +615,14 @@ _cairo_content_from_format (cairo_format_t format)
     return CAIRO_CONTENT_COLOR_ALPHA;
 }
 
-cairo_private cairo_format_t
-_cairo_format_width (cairo_format_t format)
+int
+_cairo_format_bits_per_pixel (cairo_format_t format)
 {
     switch (format) {
     case CAIRO_FORMAT_ARGB32:
 	return 32;
     case CAIRO_FORMAT_RGB24:
-	return 24;
+	return 32;
     case CAIRO_FORMAT_A8:
 	return 8;
     case CAIRO_FORMAT_A1:
