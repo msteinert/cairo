@@ -2168,7 +2168,7 @@ slim_hidden_def (cairo_xlib_surface_create_with_xrender_format);
  *
  * Return value: the XRenderPictFormat* with which the surface was
  * originally created, (or NULL if the surface is not an xlib surface
- * or if the Render extension is not available).
+ * or if the X Render extension is not available).
  */
 XRenderPictFormat *
 cairo_xlib_surface_get_xrender_format (cairo_surface_t *surface)
@@ -2180,10 +2180,6 @@ cairo_xlib_surface_get_xrender_format (cairo_surface_t *surface)
 	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return NULL;
     }
-
-    /* And also for an xlib surface that is not an xlib-xrender surface */
-    if (xlib_surface->xrender_format == NULL)
-	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 
     return xlib_surface->xrender_format;
 }
