@@ -440,12 +440,9 @@ cairo_format_stride_for_width (cairo_format_t	format,
  * @width: the width of the image to be stored in the buffer
  * @height: the height of the image to be stored in the buffer
  * @stride: the number of bytes between the start of rows in the
- *    buffer. For performance reasons, not all values are legal stride
- *    values. Use cairo_format_stride_for_width() to compute a legal
- *    stride value for the desired width, (and use that value to
- *    allocate data of the correct size). An illegal stride value will
- *    cause a nil surface to be resutrned with a status of
- *    CAIRO_STATUS_INVALD_STRIDE.
+ *     buffer as allocated. This value should always be computed by
+ *     cairo_format_stride_for_width() before allocating the data
+ *     buffer.
  *
  * Creates an image surface for the provided pixel data. The output
  * buffer must be kept around until the #cairo_surface_t is destroyed
@@ -454,13 +451,23 @@ cairo_format_stride_for_width (cairo_format_t	format,
  * must explicitly clear the buffer, using, for example,
  * cairo_rectangle() and cairo_fill() if you want it cleared.
  *
+ * Note that the stride will often be larger than
+ * width*bytes_per_pixel to provide proper alignment for each
+ * row. This alignment is required to allow high-performance rendering
+ * within cairo. The correct way to obtain a legal stride value is to
+ * call cairo_format_stride_for_width() with the desired format and
+ * maximum image width value, and the use the resulting stride value
+ * to allocate the data and to create the image surface. See
+ * cairo_format_stride_for_width() for example code.
+ *
  * Return value: a pointer to the newly created surface. The caller
  * owns the surface and should call cairo_surface_destroy when done
  * with it.
  *
  * This function always returns a valid pointer, but it will return a
- * pointer to a "nil" surface if an error such as out of memory
- * occurs. You can use cairo_surface_status() to check for this.
+ * pointer to a "nil" surface in the case of an error such as out of
+ * memory or an invalid stride value. You can use
+ * cairo_surface_status() to check for this.
  *
  * See cairo_surface_set_user_data() for a means of attaching a
  * destroy-notification fallback to the surface if necessary.
