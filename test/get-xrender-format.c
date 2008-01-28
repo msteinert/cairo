@@ -29,6 +29,8 @@
 #include "cairo-xlib.h"
 #include "cairo-xlib-xrender.h"
 
+#include "cairo-boilerplate-xlib.h"
+
 int
 main (void)
 {
@@ -94,7 +96,16 @@ main (void)
 	return CAIRO_TEST_FAILURE;
     }
 
-    cairo_surface_destroy (surface);
+    cairo_test_log ("Testing without the X Render extension.\n");
+
+    cairo_boilerplate_xlib_surface_disable_render (surface);
+
+    format = cairo_xlib_surface_get_xrender_format (surface);
+    if (format != NULL) {
+	cairo_test_log ("Error: did not receive a NULL format as expected\n");
+	return CAIRO_TEST_FAILURE;
+    }
+
 
     XCloseDisplay (dpy);
 
