@@ -20,7 +20,8 @@
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * Author: Jeff Muizelaar <jeff@infidigm.net>
+ * Authors: Jeff Muizelaar <jeff@infidigm.net>
+ *	    Carl Worth <cworth@cworth.org>
  */
 
 #include "cairo-test.h"
@@ -106,8 +107,8 @@ draw (cairo_t *cr, int dst_width, int dst_height)
     cairo_status_t expected;
 
     for (test_width = 0; test_width < 40; test_width++) {
-	stride = cairo_image_surface_stride_for_width (CAIRO_FORMAT_A8,
-						       test_width);
+	stride = cairo_format_stride_for_width (CAIRO_FORMAT_A8,
+						test_width);
 
 	/* First create a surface using the width as the stride, (most
 	 * of these should fail). */
@@ -131,8 +132,8 @@ draw (cairo_t *cr, int dst_width, int dst_height)
 
     /* Now test actually drawing through our mask data, allocating and
      * copying with the proper stride. */
-    stride = cairo_image_surface_stride_for_width (CAIRO_FORMAT_A8,
-						   MASK_WIDTH);
+    stride = cairo_format_stride_for_width (CAIRO_FORMAT_A8,
+					    MASK_WIDTH);
 
     mask_aligned = malloc (stride * MASK_HEIGHT);
 

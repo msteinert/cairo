@@ -1627,8 +1627,8 @@ cairo_image_surface_create (cairo_format_t	format,
 			    int			height);
 
 cairo_public int
-cairo_image_surface_stride_for_width (cairo_format_t	format,
-				      int		width);
+cairo_format_stride_for_width (cairo_format_t	format,
+			       int		width);
 
 cairo_public cairo_surface_t *
 cairo_image_surface_create_for_data (unsigned char	       *data,

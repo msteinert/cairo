@@ -395,8 +395,8 @@ _cairo_image_surface_create_with_content (cairo_content_t	content,
 }
 
 /**
- * cairo_image_surface_stride_for_width:
- * @format: The desired format of an image surface to be created.
+ * cairo_format_stride_for_width:
+ * @format: A cairo_format_t value
  * @width: The desired width of an image surface to be created.
  *
  * Return value: the appropriate stride to use given the desired
@@ -411,17 +411,17 @@ _cairo_image_surface_create_with_content (cairo_content_t	content,
  * unsigned char *data;
  * cairo_surface_t *surface;
  *
- * stride = cairo_image_surface_stride_for_width (format, width);
+ * stride = cairo_format_stride_for_width (format, width);
  * data = malloc (stride * height);
- * surface = cairo_image_surface_create_for_data (date, format,
+ * surface = cairo_image_surface_create_for_data (data, format,
  *						  width, height);
  * </programlisting></informalexample>
  *
  * Since: 1.6
  */
 int
-cairo_image_surface_stride_for_width (cairo_format_t	format,
-				      int		width)
+cairo_format_stride_for_width (cairo_format_t	format,
+			       int		width)
 {
     int bpp = _cairo_format_bits_per_pixel (format);
 
@@ -441,10 +441,11 @@ cairo_image_surface_stride_for_width (cairo_format_t	format,
  * @height: the height of the image to be stored in the buffer
  * @stride: the number of bytes between the start of rows in the
  *    buffer. For performance reasons, not all values are legal stride
- *    values. Use cairo_image_surface_stride_for_width() to compute a
- *    legal stride value, (and use that value to allocate data of the
- *    correct size). An illegal stride value will cause a nil surface
- *    to be resutrned with a status of CAIRO_STATUS_INVALD_STRIDE.
+ *    values. Use cairo_format_stride_for_width() to compute a legal
+ *    stride value for the desired width, (and use that value to
+ *    allocate data of the correct size). An illegal stride value will
+ *    cause a nil surface to be resutrned with a status of
+ *    CAIRO_STATUS_INVALD_STRIDE.
  *
  * Creates an image surface for the provided pixel data. The output
  * buffer must be kept around until the #cairo_surface_t is destroyed
