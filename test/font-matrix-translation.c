@@ -50,7 +50,7 @@ text_extents_equal (const cairo_text_extents_t *A,
 	   A->y_advance == B->y_advance;
 }
 
-static void
+static cairo_test_status_t
 box_text (cairo_t *cr, const char *utf8, double x, double y)
 {
     double line_width;
@@ -88,11 +88,14 @@ box_text (cairo_t *cr, const char *utf8, double x, double y)
     cairo_show_text (cr, utf8);
 
     cairo_restore (cr);
+
+    return CAIRO_TEST_SUCCESS;
 }
 
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
+    cairo_test_status_t status;
     cairo_text_extents_t extents;
     cairo_matrix_t matrix;
 
@@ -111,7 +114,9 @@ draw (cairo_t *cr, int width, int height)
 
     /* Draw text and bounding box */
     cairo_set_source_rgb (cr, 0, 0, 0); /* black */
-    box_text (cr, TEXT, 0, - extents.y_bearing);
+    status = box_text (cr, TEXT, 0, - extents.y_bearing);
+    if (status)
+	return status;
 
     /* Then draw again with the same coordinates, but with a font
      * matrix to position the text below and shifted a bit to the
@@ -121,7 +126,9 @@ draw (cairo_t *cr, int width, int height)
     cairo_set_font_matrix (cr, &matrix);
 
     cairo_set_source_rgb (cr, 0, 0, 1); /* blue */
-    box_text (cr, TEXT, 0, - extents.y_bearing);
+    status = box_text (cr, TEXT, 0, - extents.y_bearing);
+    if (status)
+	return status;
 
     return CAIRO_TEST_SUCCESS;
 }
