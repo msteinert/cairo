@@ -466,7 +466,9 @@ cairo_format_stride_for_width (cairo_format_t	format,
  *
  * This function always returns a valid pointer, but it will return a
  * pointer to a "nil" surface in the case of an error such as out of
- * memory or an invalid stride value. You can use
+ * memory or an invalid stride value. In case of invalid stride value
+ * the error status of the returned surface will be
+ * %CAIRO_STATUS_INVALID_STRIDE.  You can use
  * cairo_surface_status() to check for this.
  *
  * See cairo_surface_set_user_data() for a means of attaching a
