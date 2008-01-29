@@ -301,11 +301,11 @@ _cairo_ft_unscaled_font_init_key (cairo_ft_unscaled_font_t *key,
  * created from an FT_Face and the other created from a filename/id
  * pair. These two flavors are identified as from_face and !from_face.
  *
- * To initialize a from_face font, pass filename==NULL, id=0 and the
+ * To initialize a from_face font, pass filename==%NULL, id=0 and the
  * desired face.
  *
  * To initialize a !from_face font, pass the filename/id as desired
- * and face==NULL.
+ * and face==%NULL.
  *
  * Note that the code handles these two flavors in very distinct
  * ways. For example there is a hash_table mapping
@@ -360,7 +360,7 @@ _cairo_unscaled_font_is_ft (cairo_unscaled_font_t *unscaled_font)
  *
  * Free all data associated with a cairo_ft_unscaled_font_t.
  *
- * CAUTION: The unscaled->face field must be NULL before calling this
+ * CAUTION: The unscaled->face field must be %NULL before calling this
  * function. This is because the cairo_ft_unscaled_font_map keeps a
  * count of these faces (font_map->num_open_faces) so it maintains the
  * unscaled->face field while it has its lock held. See

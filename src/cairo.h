@@ -185,7 +185,7 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_NO_CURRENT_POINT: no current point defined
  * @CAIRO_STATUS_INVALID_MATRIX: invalid matrix (not invertible)
  * @CAIRO_STATUS_INVALID_STATUS: invalid value for an input cairo_status_t
- * @CAIRO_STATUS_NULL_POINTER: NULL pointer
+ * @CAIRO_STATUS_NULL_POINTER: %NULL pointer
  * @CAIRO_STATUS_INVALID_STRING: input string not valid UTF-8
  * @CAIRO_STATUS_INVALID_PATH_DATA: input path data not valid
  * @CAIRO_STATUS_READ_ERROR: error while reading from input stream
@@ -1354,18 +1354,18 @@ typedef enum _cairo_path_data_type {
  *      for (i=0; i < path->num_data; i += path->data[i].header.length) {
  *          data = &amp;path->data[i];
  *          switch (data->header.type) {
- *          case CAIRO_PATH_MOVE_TO:
+ *          case %CAIRO_PATH_MOVE_TO:
  *              do_move_to_things (data[1].point.x, data[1].point.y);
  *              break;
- *          case CAIRO_PATH_LINE_TO:
+ *          case %CAIRO_PATH_LINE_TO:
  *              do_line_to_things (data[1].point.x, data[1].point.y);
  *              break;
- *          case CAIRO_PATH_CURVE_TO:
+ *          case %CAIRO_PATH_CURVE_TO:
  *              do_curve_to_things (data[1].point.x, data[1].point.y,
  *                                  data[2].point.x, data[2].point.y,
  *                                  data[3].point.x, data[3].point.y);
  *              break;
- *          case CAIRO_PATH_CLOSE_PATH:
+ *          case %CAIRO_PATH_CLOSE_PATH:
  *              do_close_path_things ();
  *              break;
  *          }

@@ -240,7 +240,7 @@ _get_system_quality (void)
     }
 }
 
-/* If face_hfont is non-NULL then font_matrix must be a simple scale by some
+/* If face_hfont is non-%NULL then font_matrix must be a simple scale by some
  * factor S, ctm must be the identity, logfont->lfHeight must be -S,
  * logfont->lfWidth, logfont->lfEscapement, logfont->lfOrientation must
  * all be 0, and face_hfont is the result of calling CreateFontIndirectW on
@@ -1767,7 +1767,7 @@ const cairo_scaled_font_backend_t cairo_win32_scaled_font_backend = {
 
 typedef struct _cairo_win32_font_face cairo_win32_font_face_t;
 
-/* If hfont is non-NULL then logfont->lfHeight must be -S for some S,
+/* If hfont is non-%NULL then logfont->lfHeight must be -S for some S,
  * logfont->lfWidth, logfont->lfEscapement, logfont->lfOrientation must
  * all be 0, and hfont is the result of calling CreateFontIndirectW on
  * logfont.

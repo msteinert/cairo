@@ -85,21 +85,21 @@ CAIRO_BEGIN_DECLS
  *	cairo_mutex_t _cairo_some_mutex;
  *
  *      if (1)
- *          CAIRO_MUTEX_LOCK (_cairo_some_mutex);
+ *          %CAIRO_MUTEX_LOCK (_cairo_some_mutex);
  *      else
- *          CAIRO_MUTEX_UNLOCK (_cairo_some_mutex);
+ *          %CAIRO_MUTEX_UNLOCK (_cairo_some_mutex);
  *
- * - #define CAIRO_MUTEX_NIL_INITIALIZER to something that can
+ * - #define %CAIRO_MUTEX_NIL_INITIALIZER to something that can
  *   initialize the cairo_mutex_t type you defined.  Most of the
- *   time one of 0, NULL, or {} works.  At this point
+ *   time one of 0, %NULL, or {} works.  At this point
  *   you should be able to compile the following snippet:
  *
  *	cairo_mutex_t _cairo_some_mutex = CAIRO_MUTEX_NIL_INITIALIZER;
  *
  *      if (1)
- *          CAIRO_MUTEX_LOCK (_cairo_some_mutex);
+ *          %CAIRO_MUTEX_LOCK (_cairo_some_mutex);
  *      else
- *          CAIRO_MUTEX_UNLOCK (_cairo_some_mutex);
+ *          %CAIRO_MUTEX_UNLOCK (_cairo_some_mutex);
  *
  * - If the above code is not enough to initialize a mutex on
  *   your platform, #define CAIRO_MUTEX_INIT(mutex) to statement
@@ -108,17 +108,17 @@ CAIRO_BEGIN_DECLS
  *
  *	cairo_mutex_t _cairo_some_mutex = CAIRO_MUTEX_NIL_INITIALIZER;
  *
- *      CAIRO_MUTEX_INIT (_cairo_some_mutex);
+ *      %CAIRO_MUTEX_INIT (_cairo_some_mutex);
  *
  *      if (1)
- *          CAIRO_MUTEX_LOCK (_cairo_some_mutex);
+ *          %CAIRO_MUTEX_LOCK (_cairo_some_mutex);
  *      else
- *          CAIRO_MUTEX_UNLOCK (_cairo_some_mutex);
+ *          %CAIRO_MUTEX_UNLOCK (_cairo_some_mutex);
  *
  * - If you define CAIRO_MUTEX_INIT(mutex), cairo will use it to
  *   initialize all static mutex'es.  If for any reason that should
- *   not happen (eg. CAIRO_MUTEX_INIT is just a faster way than
- *   what cairo does using CAIRO_MUTEX_NIL_INITIALIZER), then
+ *   not happen (eg. %CAIRO_MUTEX_INIT is just a faster way than
+ *   what cairo does using %CAIRO_MUTEX_NIL_INITIALIZER), then
  *   #define CAIRO_MUTEX_INITIALIZE() CAIRO_MUTEX_NOOP
  *
  * - If your system supports freeing a mutex object (deallocating
@@ -130,7 +130,7 @@ CAIRO_BEGIN_DECLS
  *   However, it's up to you to call CAIRO_MUTEX_FINALIZE() at
  *   proper places, eg. when the system is unloading the cairo library.
  *   So, if for any reason finalizing static mutex'es is not needed
- *   (eg. you never call CAIRO_MUTEX_FINALIZE), then
+ *   (eg. you never call %CAIRO_MUTEX_FINALIZE), then
  *   #define CAIRO_MUTEX_FINALIZE() CAIRO_MUTEX_NOOP
  *
  * - That is all.  If for any reason you think the above API is

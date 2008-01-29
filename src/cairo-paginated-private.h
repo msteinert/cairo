@@ -92,7 +92,7 @@ struct _cairo_paginated_surface_backend {
  * sequence of operations (using the backend functions passed to
  * cairo_paginated_surface_create):
  *
- * 1. Calls start_page (if non NULL). At this point, it is appropriate
+ * 1. Calls start_page (if non %NULL). At this point, it is appropriate
  *    for the target to emit any page-specific header information into
  *    its output.
  *
@@ -121,7 +121,7 @@ struct _cairo_paginated_surface_backend {
  * the target should not actually perform any rendering, (for example,
  * if performing output to a file, no output should be generated
  * during this stage). Instead the drawing functions simply need to
- * return CAIRO_STATUS_SUCCESS or CAIRO_INT_STATUS_UNSUPPORTED to
+ * return %CAIRO_STATUS_SUCCESS or %CAIRO_INT_STATUS_UNSUPPORTED to
  * indicate whether rendering would be supported. And it should do
  * this as quickly as possible. The FALLBACK phase allows the surface
  * to distinguish fallback images from native rendering in case they

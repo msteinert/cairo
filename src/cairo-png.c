@@ -260,11 +260,11 @@ stdio_write_func (png_structp png, png_bytep data, png_size_t size)
  * Writes the contents of @surface to a new file @filename as a PNG
  * image.
  *
- * Return value: CAIRO_STATUS_SUCCESS if the PNG file was written
- * successfully. Otherwise, CAIRO_STATUS_NO_MEMORY if memory could not
+ * Return value: %CAIRO_STATUS_SUCCESS if the PNG file was written
+ * successfully. Otherwise, %CAIRO_STATUS_NO_MEMORY if memory could not
  * be allocated for the operation or
  * CAIRO_STATUS_SURFACE_TYPE_MISMATCH if the surface does not have
- * pixel contents, or CAIRO_STATUS_WRITE_ERROR if an I/O error occurs
+ * pixel contents, or %CAIRO_STATUS_WRITE_ERROR if an I/O error occurs
  * while attempting to write the file.
  **/
 cairo_status_t
@@ -320,8 +320,8 @@ stream_write_func (png_structp png, png_bytep data, png_size_t size)
  *
  * Writes the image surface to the write function.
  *
- * Return value: CAIRO_STATUS_SUCCESS if the PNG file was written
- * successfully.  Otherwise, CAIRO_STATUS_NO_MEMORY is returned if
+ * Return value: %CAIRO_STATUS_SUCCESS if the PNG file was written
+ * successfully.  Otherwise, %CAIRO_STATUS_NO_MEMORY is returned if
  * memory could not be allocated for the operation,
  * CAIRO_STATUS_SURFACE_TYPE_MISMATCH if the surface does not have
  * pixel contents.

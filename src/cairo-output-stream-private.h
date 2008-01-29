@@ -74,7 +74,7 @@ typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
 typedef cairo_status_t (*cairo_close_func_t) (void *closure);
 
 
-/* This function never returns NULL. If an error occurs (NO_MEMORY)
+/* This function never returns %NULL. If an error occurs (NO_MEMORY)
  * while trying to create the output stream this function returns a
  * valid pointer to a nil output stream.
  *
@@ -128,7 +128,7 @@ _cairo_output_stream_get_position (cairo_output_stream_t *stream);
 cairo_private cairo_status_t
 _cairo_output_stream_get_status (cairo_output_stream_t *stream);
 
-/* This function never returns NULL. If an error occurs (NO_MEMORY or
+/* This function never returns %NULL. If an error occurs (NO_MEMORY or
  * WRITE_ERROR) while trying to create the output stream this function
  * returns a valid pointer to a nil output stream.
  *
@@ -139,7 +139,7 @@ _cairo_output_stream_get_status (cairo_output_stream_t *stream);
 cairo_private cairo_output_stream_t *
 _cairo_output_stream_create_for_filename (const char *filename);
 
-/* This function never returns NULL. If an error occurs (NO_MEMORY or
+/* This function never returns %NULL. If an error occurs (NO_MEMORY or
  * WRITE_ERROR) while trying to create the output stream this function
  * returns a valid pointer to a nil output stream.
  *

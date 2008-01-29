@@ -125,7 +125,7 @@ _cairo_set_error (cairo_t *cr, cairo_status_t status)
  * cairo_version:
  *
  * Returns the version of the cairo library encoded in a single
- * integer as per CAIRO_VERSION_ENCODE. The encoding ensures that
+ * integer as per %CAIRO_VERSION_ENCODE. The encoding ensures that
  * later versions compare greater than earlier versions.
  *
  * A run-time comparison to check that cairo's version is greater than
@@ -1021,7 +1021,7 @@ cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
  *
  * Each "on" segment will have caps applied as if the segment were a
  * separate sub-path. In particular, it is valid to use an "on" length
- * of 0.0 with CAIRO_LINE_CAP_ROUND or CAIRO_LINE_CAP_SQUARE in order
+ * of 0.0 with %CAIRO_LINE_CAP_ROUND or %CAIRO_LINE_CAP_SQUARE in order
  * to distributed dots or squares along a path.
  *
  * Note: The length values are in user-space units as evaluated at the
@@ -1036,7 +1036,7 @@ cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
  *
  * If any value in @dashes is negative, or if all values are 0, then
  * @cairo_t will be put into an error state with a status of
- * #CAIRO_STATUS_INVALID_DASH.
+ * #%CAIRO_STATUS_INVALID_DASH.
  **/
 void
 cairo_set_dash (cairo_t	     *cr,
@@ -1887,7 +1887,7 @@ slim_hidden_def(cairo_close_path);
  * the corresponding drawing operations.
  *
  * The result of cairo_path_extents() is defined as equivalent to the
- * limit of cairo_stroke_extents() with CAIRO_LINE_CAP_ROUND as the
+ * limit of cairo_stroke_extents() with %CAIRO_LINE_CAP_ROUND as the
  * line width approaches 0.0, (but never reaching the empty-rectangle
  * returned by cairo_stroke_extents() for a line width of 0.0).
  *
@@ -2059,20 +2059,20 @@ cairo_mask_surface (cairo_t         *cr,
  * situations:
  *
  * 1. Zero-length "on" segments set in cairo_set_dash(). If the cap
- * style is CAIRO_LINE_CAP_ROUND or CAIRO_LINE_CAP_SQUARE then these
+ * style is %CAIRO_LINE_CAP_ROUND or %CAIRO_LINE_CAP_SQUARE then these
  * segments will be drawn as circular dots or squares respectively. In
- * the case of CAIRO_LINE_CAP_SQUARE, the orientation of the squares
+ * the case of %CAIRO_LINE_CAP_SQUARE, the orientation of the squares
  * is determined by the direction of the underlying path.
  *
  * 2. A sub-path created by cairo_move_to() followed by either a
  * cairo_close_path() or one or more calls to cairo_line_to() to the
  * same coordinate as the cairo_move_to(). If the cap style is
  * CAIRO_LINE_CAP_ROUND then these sub-paths will be drawn as circular
- * dots. Note that in the case of CAIRO_LINE_CAP_SQUARE a degenerate
+ * dots. Note that in the case of %CAIRO_LINE_CAP_SQUARE a degenerate
  * sub-path will not be drawn at all, (since the correct orientation
  * is indeterminate).
  *
- * In no case will a cap style of CAIRO_LINE_CAP_BUTT cause anything
+ * In no case will a cap style of %CAIRO_LINE_CAP_BUTT cause anything
  * to be drawn in the case of either degenerate segments or sub-paths.
  **/
 void
@@ -2497,7 +2497,7 @@ _cairo_rectangle_list_create_in_error (cairo_status_t status)
  * Gets the current clip region as a list of rectangles in user coordinates.
  * Never returns %NULL.
  *
- * The status in the list may be CAIRO_STATUS_CLIP_NOT_REPRESENTABLE to
+ * The status in the list may be %CAIRO_STATUS_CLIP_NOT_REPRESENTABLE to
  * indicate that the clip region cannot be represented as a list of
  * user-space rectangles. The status may have other values to indicate
  * other errors.
@@ -3229,9 +3229,9 @@ cairo_get_antialias (cairo_t *cr)
  * Some functions unset the current path and as a result, current point:
  * cairo_fill(), cairo_stroke().
  *
- * Returns: CAIRO_STATUS_SUCCESS if current point was successfully
+ * Returns: %CAIRO_STATUS_SUCCESS if current point was successfully
  * retrieved.  Otherwise, if @cr has been in an error status, that status
- * is returned, otherwise CAIRO_STATUS_NO_CURRENT_POINT is returned if
+ * is returned, otherwise %CAIRO_STATUS_NO_CURRENT_POINT is returned if
  * no current point exists.  In all error cases, both @x and @y will be
  * set to 0.0.
  **/
@@ -3439,7 +3439,7 @@ cairo_get_group_target (cairo_t *cr)
  * over the returned data structure.
  *
  * This function will always return a valid pointer, but the result
- * will have no data (<literal>data==NULL</literal> and
+ * will have no data (<literal>data==%NULL</literal> and
  * <literal>num_data==0</literal>), if either of the following
  * conditions hold:
  *
@@ -3485,7 +3485,7 @@ cairo_copy_path (cairo_t *cr)
  * series of %CAIRO_PATH_LINE_TO elements.
  *
  * This function will always return a valid pointer, but the result
- * will have no data (<literal>data==NULL</literal> and
+ * will have no data (<literal>data==%NULL</literal> and
  * <literal>num_data==0</literal>), if either of the following
  * conditions hold:
  *

@@ -289,7 +289,7 @@ _cairo_ps_surface_path_close_path (void *closure)
  * while cairo draws something only for round caps).
  *
  * When using this function to emit a path to be filled, rather than
- * stroked, simply pass CAIRO_LINE_CAP_ROUND which will guarantee that
+ * stroked, simply pass %CAIRO_LINE_CAP_ROUND which will guarantee that
  * the stroke workaround will not modify the path being emitted.
  */
 static cairo_status_t
@@ -1107,7 +1107,7 @@ _cairo_surface_is_ps (cairo_surface_t *surface)
 
 /* If the abstract_surface is a paginated surface, and that paginated
  * surface's target is a ps_surface, then set ps_surface to that
- * target. Otherwise return CAIRO_STATUS_SURFACE_TYPE_MISMATCH.
+ * target. Otherwise return %CAIRO_STATUS_SURFACE_TYPE_MISMATCH.
  */
 static cairo_status_t
 _extract_ps_surface (cairo_surface_t	 *surface,
@@ -1187,7 +1187,7 @@ cairo_ps_get_levels (cairo_ps_level_t const	**levels,
  * @level: a level id
  *
  * Get the string representation of the given @level id. This function
- * will return NULL if @level id isn't valid. See cairo_ps_get_levels()
+ * will return %NULL if @level id isn't valid. See cairo_ps_get_levels()
  * for a way to get the list of valid level ids.
  *
  * Return value: the string associated to given level.
@@ -1206,9 +1206,9 @@ cairo_ps_level_to_string (cairo_ps_level_t level)
 /**
  * cairo_ps_surface_set_eps:
  * @surface: a PostScript cairo_surface_t
- * @eps: TRUE to output EPS format PostScript
+ * @eps: %TRUE to output EPS format PostScript
  *
- * If @eps is TRUE, the PostScript surface will output Encapsulated
+ * If @eps is %TRUE, the PostScript surface will output Encapsulated
  * PostScript.
  *
  * This function should only be called before any drawing operations
@@ -1241,7 +1241,7 @@ cairo_ps_surface_set_eps (cairo_surface_t	*surface,
  *
  * Check whether the PostScript surface will output Encapsulated PostScript.
  *
- * Return value: TRUE if the surface will output Encapsulated PostScript.
+ * Return value: %TRUE if the surface will output Encapsulated PostScript.
  *
  * Since: 1.6
  **/

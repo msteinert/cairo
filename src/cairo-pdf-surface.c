@@ -401,7 +401,7 @@ _cairo_surface_is_pdf (cairo_surface_t *surface)
 
 /* If the abstract_surface is a paginated surface, and that paginated
  * surface's target is a pdf_surface, then set pdf_surface to that
- * target. Otherwise return CAIRO_STATUS_SURFACE_TYPE_MISMATCH.
+ * target. Otherwise return %CAIRO_STATUS_SURFACE_TYPE_MISMATCH.
  */
 static cairo_status_t
 _extract_pdf_surface (cairo_surface_t		 *surface,

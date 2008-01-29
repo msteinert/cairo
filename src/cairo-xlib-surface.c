@@ -2108,7 +2108,7 @@ cairo_xlib_surface_create (Display     *dpy,
  * @height: the current height of @bitmap.
  *
  * Creates an Xlib surface that draws to the given bitmap.
- * This will be drawn to as a CAIRO_FORMAT_A1 object.
+ * This will be drawn to as a %CAIRO_FORMAT_A1 object.
  *
  * Return value: the newly created surface
  **/
@@ -2167,7 +2167,7 @@ slim_hidden_def (cairo_xlib_surface_create_with_xrender_format);
  * cairo_xlib_surface_create_with_render_format
  *
  * Return value: the XRenderPictFormat* with which the surface was
- * originally created, (or NULL if the surface is not an xlib surface
+ * originally created, (or %NULL if the surface is not an xlib surface
  * or if the X Render extension is not available).
  */
 XRenderPictFormat *

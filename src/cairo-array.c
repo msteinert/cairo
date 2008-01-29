@@ -231,7 +231,7 @@ _cairo_array_copy_element (cairo_array_t *array, int index, void *dst)
  *
  * _cairo_array_index (array, _cairo_array_num_elements (array) - 1);
  *
- * Return value: CAIRO_STATUS_SUCCESS if successful or
+ * Return value: %CAIRO_STATUS_SUCCESS if successful or
  * CAIRO_STATUS_NO_MEMORY if insufficient memory is available for the
  * operation.
  **/
@@ -251,7 +251,7 @@ _cairo_array_append (cairo_array_t	*array,
  * @num_elements, then copying @num_elements * element_size bytes from
  * @elements into the array.
  *
- * Return value: CAIRO_STATUS_SUCCESS if successful or
+ * Return value: %CAIRO_STATUS_SUCCESS if successful or
  * CAIRO_STATUS_NO_MEMORY if insufficient memory is available for the
  * operation.
  **/
@@ -282,7 +282,7 @@ _cairo_array_append_multiple (cairo_array_t	*array,
  * @elements. This memory will be unitialized, but will be accounted
  * for in the return value of _cairo_array_num_elements().
  *
- * Return value: CAIRO_STATUS_SUCCESS if successful or
+ * Return value: %CAIRO_STATUS_SUCCESS if successful or
  * CAIRO_STATUS_NO_MEMORY if insufficient memory is available for the
  * operation.
  **/

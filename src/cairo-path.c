@@ -391,8 +391,8 @@ cairo_path_destroy (cairo_path_t *path)
  *
  * Return value: the new copy of the path. If there is insufficient
  * memory a pointer to a special static cairo_path_nil will be
- * returned instead with status==CAIRO_STATUS_NO_MEMORY and
- * data==NULL.
+ * returned instead with status==%CAIRO_STATUS_NO_MEMORY and
+ * data==%NULL.
  **/
 cairo_path_t *
 _cairo_path_create (cairo_path_fixed_t *path,
@@ -413,8 +413,8 @@ _cairo_path_create (cairo_path_fixed_t *path,
  *
  * Return value: the flattened copy of the path. If there is insufficient
  * memory a pointer to a special static cairo_path_nil will be
- * returned instead with status==CAIRO_STATUS_NO_MEMORY and
- * data==NULL.
+ * returned instead with status==%CAIRO_STATUS_NO_MEMORY and
+ * data==%NULL.
  **/
 cairo_path_t *
 _cairo_path_create_flat (cairo_path_fixed_t *path,
@@ -430,8 +430,8 @@ _cairo_path_create_flat (cairo_path_fixed_t *path,
  *
  * Append @path to the current path within @cr.
  *
- * Return value: CAIRO_STATUS_INVALID_PATH_DATA if the data in @path
- * is invalid, and CAIRO_STATUS_SUCCESS otherwise.
+ * Return value: %CAIRO_STATUS_INVALID_PATH_DATA if the data in @path
+ * is invalid, and %CAIRO_STATUS_SUCCESS otherwise.
  **/
 cairo_status_t
 _cairo_path_append_to_context (const cairo_path_t	*path,

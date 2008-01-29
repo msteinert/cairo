@@ -507,7 +507,7 @@ det64_128 (cairo_int64_t a,
 /* Compute the intersection of two lines as defined by two edges. The
  * result is provided as a coordinate pair of 128-bit integers.
  *
- * Returns CAIRO_BO_STATUS_INTERSECTION if there is an intersection or
+ * Returns %CAIRO_BO_STATUS_INTERSECTION if there is an intersection or
  * CAIRO_BO_STATUS_PARALLEL if the two lines are exactly parallel.
  */
 static cairo_bo_status_t
@@ -638,10 +638,10 @@ _cairo_bo_edge_contains_intersect_point (cairo_bo_edge_t		*edge,
 /* Compute the intersection of two edges. The result is provided as a
  * coordinate pair of 128-bit integers.
  *
- * Returns CAIRO_BO_STATUS_INTERSECTION if there is an intersection
- * that is within both edges, CAIRO_BO_STATUS_NO_INTERSECTION if the
+ * Returns %CAIRO_BO_STATUS_INTERSECTION if there is an intersection
+ * that is within both edges, %CAIRO_BO_STATUS_NO_INTERSECTION if the
  * intersection of the lines defined by the edges occurs outside of
- * one or both edges, and CAIRO_BO_STATUS_PARALLEL if the two edges
+ * one or both edges, and %CAIRO_BO_STATUS_PARALLEL if the two edges
  * are exactly parallel.
  *
  * Note that when determining if a candidate intersection is "inside"

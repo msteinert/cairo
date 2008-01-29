@@ -704,7 +704,7 @@ slim_hidden_def (cairo_scaled_font_create);
 
 /**
  * cairo_scaled_font_reference:
- * @scaled_font: a #cairo_scaled_font_t, (may be NULL in which case
+ * @scaled_font: a #cairo_scaled_font_t, (may be %NULL in which case
  * this function does nothing)
  *
  * Increases the reference count on @scaled_font by one. This prevents
@@ -1455,7 +1455,7 @@ _add_unit_rectangle_to_path (cairo_path_fixed_t *path, int x, int y)
 
 /**
  * _trace_mask_to_path:
- * @bitmap: An alpha mask (either CAIRO_FORMAT_A1 or CAIRO_FORMAT_A8)
+ * @bitmap: An alpha mask (either %CAIRO_FORMAT_A1 or %CAIRO_FORMAT_A8)
  * @path: An initialized path to hold the result
  *
  * Given a mask surface, (an alpha image), fill out the provided path

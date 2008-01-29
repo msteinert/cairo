@@ -239,8 +239,8 @@ _cairo_cache_lookup (cairo_cache_t	  *cache,
  *
  * Remove a random entry from the cache.
  *
- * Return value: CAIRO_STATUS_SUCCESS if an entry was successfully
- * removed. CAIRO_INT_STATUS_CACHE_EMPTY if there are no entries that
+ * Return value: %CAIRO_STATUS_SUCCESS if an entry was successfully
+ * removed. %CAIRO_INT_STATUS_CACHE_EMPTY if there are no entries that
  * can be removed.
  **/
 static cairo_int_status_t
@@ -295,7 +295,7 @@ _cairo_cache_shrink_to_accommodate (cairo_cache_t *cache,
  * a matching key, then the old entry will be removed first, (and the
  * entry_destroy() callback will be called on it).
  *
- * Return value: CAIRO_STATUS_SUCCESS if successful or
+ * Return value: %CAIRO_STATUS_SUCCESS if successful or
  * CAIRO_STATUS_NO_MEMORY if insufficient memory is available.
  **/
 cairo_status_t

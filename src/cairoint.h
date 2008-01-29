@@ -1756,7 +1756,7 @@ _cairo_surface_has_device_transform (cairo_surface_t *surface);
 
 /* cairo_image_surface.c */
 
-/* XXX: In cairo 1.2.0 we added a new CAIRO_FORMAT_RGB16_565 but
+/* XXX: In cairo 1.2.0 we added a new %CAIRO_FORMAT_RGB16_565 but
  * neglected to adjust this macro. The net effect is that it's
  * impossible to externally create an image surface with this
  * format. This is perhaps a good thing since we also neglected to fix
@@ -1773,7 +1773,7 @@ _cairo_surface_has_device_transform (cairo_surface_t *surface);
  * visuals. This time we invented cairo_internal_format_t instead,
  * (see it for more discussion).
  *
- * The punchline is that CAIRO_FORMAT_VALID must not conside any
+ * The punchline is that %CAIRO_FORMAT_VALID must not conside any
  * internal format to be valid. Also we need to decide if the
  * RGB16_565 should be moved to instead be an internal format. If so,
  * this macro need not change for it. (We probably will need to leave
@@ -1781,7 +1781,7 @@ _cairo_surface_has_device_transform (cairo_surface_t *surface);
  * might have that value in it.)
  *
  * If we do decide to start fully supporting RGB16_565 as an external
- * format, then CAIRO_FORMAT_VALID needs to be adjusted to include
+ * format, then %CAIRO_FORMAT_VALID needs to be adjusted to include
  * it. But that should not happen before all necessary code is fixed
  * to support it (at least cairo_surface_write_to_png and a few spots
  * in cairo-xlib-surface.c--again see -Wswitch-enum).

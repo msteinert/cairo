@@ -224,7 +224,7 @@ _cairo_surface_is_svg (cairo_surface_t *surface)
 
 /* If the abstract_surface is a paginated surface, and that paginated
  * surface's target is a svg_surface, then set svg_surface to that
- * target. Otherwise return CAIRO_STATUS_SURFACE_TYPE_MISMATCH.
+ * target. Otherwise return %CAIRO_STATUS_SURFACE_TYPE_MISMATCH.
  */
 static cairo_status_t
 _extract_svg_surface (cairo_surface_t		 *surface,
@@ -303,7 +303,7 @@ cairo_svg_get_versions (cairo_svg_version_t const	**versions,
  * @version: a version id
  *
  * Get the string representation of the given @version id. This function
- * will return NULL if @version isn't valid. See cairo_svg_get_versions()
+ * will return %NULL if @version isn't valid. See cairo_svg_get_versions()
  * for a way to get the list of valid version ids.
  *
  * Return value: the string associated to given version.

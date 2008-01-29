@@ -1886,7 +1886,7 @@ cairo_xcb_surface_create (xcb_connection_t *c,
  * @height: the current height of @bitmap
  *
  * Creates an XCB surface that draws to the given bitmap.
- * This will be drawn to as a CAIRO_FORMAT_A1 object.
+ * This will be drawn to as a %CAIRO_FORMAT_A1 object.
  *
  * Return value: the newly created surface
  **/

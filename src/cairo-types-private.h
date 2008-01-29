@@ -79,9 +79,9 @@ typedef cairo_array_t cairo_user_data_array_t;
  * IMPORTANT: The caller is reponsible for initializing
  * my_entry->base.hash with a hash code derived from the key. The
  * essential property of the hash code is that keys_equal must never
- * return TRUE for two keys that have different hashes. The best hash
+ * return %TRUE for two keys that have different hashes. The best hash
  * code will reduce the frequency of two keys with the same code for
- * which keys_equal returns FALSE.
+ * which keys_equal returns %FALSE.
  *
  * Which parts of the entry make up the "key" and which part make up
  * the value are entirely up to the caller, (as determined by the

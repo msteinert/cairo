@@ -125,7 +125,7 @@ cairo_os2_surface_set_hwnd (cairo_surface_t *surface,
 /* the buffers. It is necessary, because it can be that Cairo is    */
 /* just drawing something into the surface while we want to         */
 /* destroy and recreate it.                                         */
-/* Returns CAIRO_STATUS_SUCCESS if the surface could be resized,    */
+/* Returns %CAIRO_STATUS_SUCCESS if the surface could be resized,    */
 /* or returns other error code if                                   */
 /*  - the surface is not a real OS/2 Surface                        */
 /*  - there is not enough memory to resize the surface              */
@@ -149,9 +149,9 @@ cairo_os2_surface_set_size (cairo_surface_t *surface,
 /* The returned values of WinBeginPaint () is just perfect here,    */
 /* but you can also get the HPS by using the WinGetPS () function,  */
 /* and you can assemble your own update rect by hand.               */
-/* If the hps_begin_paint parameter is NULL, the function will use  */
+/* If the hps_begin_paint parameter is %NULL, the function will use  */
 /* the HPS you passed in to cairo_os2_surface_create (). If the     */
-/* prcl_begin_paint_rect parameter is NULL, the function will query */
+/* prcl_begin_paint_rect parameter is %NULL, the function will query */
 /* the current window size and repaint the whole window.            */
 /*                                                                  */
 /* Cairo/2 assumes that if you told the HWND to the surface using   */

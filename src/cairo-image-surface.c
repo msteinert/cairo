@@ -516,7 +516,7 @@ _cairo_image_surface_create_for_data_with_content (unsigned char	*data,
  * Get a pointer to the data of the image surface, for direct
  * inspection or modification.
  *
- * Return value: a pointer to the image data of this surface or NULL
+ * Return value: a pointer to the image data of this surface or %NULL
  * if @surface is not an image surface.
  *
  * Since: 1.2
@@ -1248,7 +1248,7 @@ _cairo_image_surface_reset (void *abstract_surface)
  *
  * Checks if a surface is an #cairo_image_surface_t
  *
- * Return value: TRUE if the surface is an image surface
+ * Return value: %TRUE if the surface is an image surface
  **/
 cairo_bool_t
 _cairo_surface_is_image (const cairo_surface_t *surface)
