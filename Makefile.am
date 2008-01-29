@@ -151,7 +151,7 @@ release-verify-sane-changelogs: changelogs
 	@echo "Good."
 
 release-verify-sane-tests:
-	@echo "Checking that the TESTS are sane..."
+	@echo "Checking that the test suite is sane..."
 	@cd test && $(MAKE) $(AM_MAKEFLAGS) release-verify-sane-tests
 
 release-verify-soname-major:
