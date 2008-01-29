@@ -701,7 +701,7 @@ struct _cairo_image_surface {
 
 extern const cairo_private cairo_surface_backend_t cairo_image_surface_backend;
 
-/* XXX: Right now, the cairo_color structure puts unpremultiplied
+/* XXX: Right now, the _cairo_color structure puts unpremultiplied
    color in the doubles and premultiplied color in the shorts. Yes,
    this is crazy insane, (but at least we don't export this
    madness). I'm still working on a cleaner API, but in the meantime,
@@ -1760,14 +1760,14 @@ _cairo_surface_has_device_transform (cairo_surface_t *surface);
  * neglected to adjust this macro. The net effect is that it's
  * impossible to externally create an image surface with this
  * format. This is perhaps a good thing since we also neglected to fix
- * up things like cairo_surface_write_to_png for the new format
+ * up things like cairo_surface_write_to_png() for the new format
  * (-Wswitch-enum will tell you where). Is it obvious that format was
  * added in haste?
  *
  * The reason for the new format was to allow the xlib backend to be
  * used on X servers with a 565 visual. So the new format did its job
  * for that, even without being considered "valid" for the sake of
- * things like cairo_image_surface_create.
+ * things like cairo_image_surface_create().
  *
  * Since 1.2.0 we ran into the same situtation with X servers with BGR
  * visuals. This time we invented #cairo_internal_format_t instead,
@@ -1783,7 +1783,7 @@ _cairo_surface_has_device_transform (cairo_surface_t *surface);
  * If we do decide to start fully supporting RGB16_565 as an external
  * format, then %CAIRO_FORMAT_VALID needs to be adjusted to include
  * it. But that should not happen before all necessary code is fixed
- * to support it (at least cairo_surface_write_to_png and a few spots
+ * to support it (at least cairo_surface_write_to_png() and a few spots
  * in cairo-xlib-surface.c--again see -Wswitch-enum).
  */
 #define CAIRO_FORMAT_INVALID ((unsigned int) -1)

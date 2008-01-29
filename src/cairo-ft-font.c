@@ -361,7 +361,7 @@ _cairo_unscaled_font_is_ft (cairo_unscaled_font_t *unscaled_font)
  * Free all data associated with a #cairo_ft_unscaled_font_t.
  *
  * CAUTION: The unscaled->face field must be %NULL before calling this
- * function. This is because the cairo_ft_unscaled_font_map keeps a
+ * function. This is because the #cairo_ft_unscaled_font_t_map keeps a
  * count of these faces (font_map->num_open_faces) so it maintains the
  * unscaled->face field while it has its lock held. See
  * _font_map_release_face_lock_held().
@@ -390,7 +390,7 @@ _cairo_ft_unscaled_font_keys_equal (const void *key_a,
 	    unscaled_a->id == unscaled_b->id);
 }
 
-/* Finds or creates a cairo_ft_unscaled_font for the filename/id from
+/* Finds or creates a #cairo_ft_unscaled_font_t for the filename/id from
  * pattern.  Returns a new reference to the unscaled font.
  */
 static cairo_ft_unscaled_font_t *

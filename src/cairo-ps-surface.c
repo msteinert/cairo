@@ -1032,7 +1032,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
  * vary. See cairo_ps_surface_set_size().
  *
  * Return value: a pointer to the newly created surface. The caller
- * owns the surface and should call cairo_surface_destroy when done
+ * owns the surface and should call cairo_surface_destroy() when done
  * with it.
  *
  * This function always returns a valid pointer, but it will return a
@@ -1073,7 +1073,7 @@ cairo_ps_surface_create (const char		*filename,
  * output can vary. See cairo_ps_surface_set_size().
  *
  * Return value: a pointer to the newly created surface. The caller
- * owns the surface and should call cairo_surface_destroy when done
+ * owns the surface and should call cairo_surface_destroy() when done
  * with it.
  *
  * This function always returns a valid pointer, but it will return a
@@ -1214,7 +1214,7 @@ cairo_ps_level_to_string (cairo_ps_level_t level)
  * This function should only be called before any drawing operations
  * have been performed on the current page. The simplest way to do
  * this is to call this function immediately after creating the
- * surface. An Encapsulated Postscript file should never contain more
+ * surface. An Encapsulated PostScript file should never contain more
  * than one page.
  *
  * Since: 1.6

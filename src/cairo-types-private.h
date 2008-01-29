@@ -72,7 +72,7 @@ typedef cairo_array_t cairo_user_data_array_t;
  *	} my_entry_t;
  *
  * which then allows a pointer to my_entry_t to be passed to any of
- * the cairo_hash_table functions as follows without requiring a cast:
+ * the #cairo_hash_table_t functions as follows without requiring a cast:
  *
  *	_cairo_hash_table_insert (hash_table, &my_entry->base);
  *
@@ -86,7 +86,7 @@ typedef cairo_array_t cairo_user_data_array_t;
  * Which parts of the entry make up the "key" and which part make up
  * the value are entirely up to the caller, (as determined by the
  * computation going into base.hash as well as the keys_equal
- * function). A few of the cairo_hash_table functions accept an entry
+ * function). A few of the #cairo_hash_table_t functions accept an entry
  * which will be used exclusively as a "key", (indicated by a
  * parameter name of key). In these cases, the value-related fields of
  * the entry need not be initialized if so desired.

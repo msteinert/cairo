@@ -140,9 +140,9 @@ typedef struct _cairo_matrix {
  * cairo_pattern_create_rgb() creates a pattern for a solid
  * opaque color.
  *
- * Other than various cairo_pattern_create_<emphasis>type</emphasis>
+ * Other than various cairo_pattern_create_<emphasis>type</emphasis>()
  * functions, some of the pattern types can be implicitly created
- * using various cairo_set_source_<emphasis>type</emphasis> functions;
+ * using various cairo_set_source_<emphasis>type</emphasis>() functions;
  * for example cairo_set_source_rgb().
  *
  * The type of a pattern can be queried with cairo_pattern_get_type().
@@ -180,7 +180,7 @@ typedef struct _cairo_user_data_key {
  * cairo_status_t
  * @CAIRO_STATUS_SUCCESS: no error has occurred
  * @CAIRO_STATUS_NO_MEMORY: out of memory
- * @CAIRO_STATUS_INVALID_RESTORE: cairo_restore without matching cairo_save
+ * @CAIRO_STATUS_INVALID_RESTORE: cairo_restore() called without matching cairo_save()
  * @CAIRO_STATUS_INVALID_POP_GROUP: no saved group to pop
  * @CAIRO_STATUS_NO_CURRENT_POINT: no current point defined
  * @CAIRO_STATUS_INVALID_MATRIX: invalid matrix (not invertible)
@@ -1147,18 +1147,18 @@ cairo_font_face_status (cairo_font_face_t *font_face);
  * cairo_<emphasis>type</emphasis>_font_face_create. The font face type can be queried
  * with cairo_font_face_get_type()
  *
- * The various cairo_font_face functions can be used with a font face
+ * The various #cairo_font_face_t functions can be used with a font face
  * of any type.
  *
  * The type of a scaled font is determined by the type of the font
- * face passed to cairo_scaled_font_create. The scaled font type can
+ * face passed to cairo_scaled_font_create(). The scaled font type can
  * be queried with cairo_scaled_font_get_type()
  *
- * The various cairo_scaled_font functions can be used with scaled
+ * The various #cairo_scaled_font_t functions can be used with scaled
  * fonts of any type, but some font backends also provide
  * type-specific functions that must only be called with a scaled font
  * of the appropriate type. These functions have names that begin with
- * cairo_<emphasis>type</emphasis>_scaled_font such as cairo_ft_scaled_font_lock_face.
+ * cairo_<emphasis>type</emphasis>_scaled_font such as cairo_ft_scaled_font_lock_face().
  *
  * The behavior of calling a type-specific function with a scaled font
  * of the wrong type is undefined.
@@ -1482,12 +1482,12 @@ cairo_surface_status (cairo_surface_t *surface);
  * backends" within cairo.
  *
  * The type of a surface is determined by the function used to create
- * it, which will generally be of the form cairo_<emphasis>type</emphasis>_surface_create,
- * (though see cairo_surface_create_similar as well).
+ * it, which will generally be of the form cairo_<emphasis>type</emphasis>_surface_create(),
+ * (though see cairo_surface_create_similar() as well).
  *
  * The surface type can be queried with cairo_surface_get_type()
  *
- * The various cairo_surface functions can be used with surfaces of
+ * The various #cairo_surface_t functions can be used with surfaces of
  * any type, but some backends also provide type-specific functions
  * that must only be called with a surface of the appropriate
  * type. These functions have names that begin with
@@ -1725,7 +1725,7 @@ cairo_pattern_set_user_data (cairo_pattern_t		 *pattern,
  *
  * The pattern type can be queried with cairo_pattern_get_type()
  *
- * Most cairo_pattern functions can be called with a pattern of any
+ * Most #cairo_pattern_t functions can be called with a pattern of any
  * type, (though trying to change the extend or filter for a solid
  * pattern will have no effect). A notable exception is
  * cairo_pattern_add_color_stop_rgb() and

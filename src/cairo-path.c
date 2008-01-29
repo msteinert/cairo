@@ -363,7 +363,7 @@ _cairo_path_create_internal (cairo_path_fixed_t *path_fixed,
  * to cairo_path_destroy() the @path pointer is no longer valid and
  * should not be used further.
  *
- * NOTE: cairo_path_destroy function should only be called with a
+ * NOTE: cairo_path_destroy() should only be called with a
  * pointer to a #cairo_path_t returned by a cairo function. Any path
  * that is created manually (ie. outside of cairo) should be destroyed
  * manually as well.
@@ -390,7 +390,7 @@ cairo_path_destroy (cairo_path_t *path)
  * conversion.
  *
  * Return value: the new copy of the path. If there is insufficient
- * memory a pointer to a special static cairo_path_nil will be
+ * memory a pointer to a special static nil #cairo_path_t will be
  * returned instead with status==%CAIRO_STATUS_NO_MEMORY and
  * data==%NULL.
  **/
@@ -412,7 +412,7 @@ _cairo_path_create (cairo_path_fixed_t *path,
  * accuracy of the flattening.
  *
  * Return value: the flattened copy of the path. If there is insufficient
- * memory a pointer to a special static cairo_path_nil will be
+ * memory a pointer to a special static nil #cairo_path_t will be
  * returned instead with status==%CAIRO_STATUS_NO_MEMORY and
  * data==%NULL.
  **/

@@ -54,7 +54,7 @@ typedef struct _cairo_scaled_font_subsets_glyph {
  * Create a new #cairo_scaled_font_subsets_t object which can be used
  * to create subsets of any number of #cairo_scaled_font_t
  * objects. This allows the (arbitrarily large and sparse) glyph
- * indices of a cairo_scaled_font to be mapped to one or more font
+ * indices of a #cairo_scaled_font_t to be mapped to one or more font
  * subsets with glyph indices packed into the range
  * [0 .. max_glyphs_per_subset).
  *

@@ -358,7 +358,7 @@ _cairo_image_surface_create_with_pixman_format (unsigned char		*data,
  * but not belonging to the given format are undefined).
  *
  * Return value: a pointer to the newly created surface. The caller
- * owns the surface and should call cairo_surface_destroy when done
+ * owns the surface and should call cairo_surface_destroy() when done
  * with it.
  *
  * This function always returns a valid pointer, but it will return a
@@ -461,7 +461,7 @@ cairo_format_stride_for_width (cairo_format_t	format,
  * cairo_format_stride_for_width() for example code.
  *
  * Return value: a pointer to the newly created surface. The caller
- * owns the surface and should call cairo_surface_destroy when done
+ * owns the surface and should call cairo_surface_destroy() when done
  * with it.
  *
  * This function always returns a valid pointer, but it will return a

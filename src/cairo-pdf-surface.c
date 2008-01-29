@@ -332,7 +332,7 @@ BAIL0:
  * incrementally to the stream represented by @write_func and @closure.
  *
  * Return value: a pointer to the newly created surface. The caller
- * owns the surface and should call cairo_surface_destroy when done
+ * owns the surface and should call cairo_surface_destroy() when done
  * with it.
  *
  * This function always returns a valid pointer, but it will return a
@@ -368,7 +368,7 @@ cairo_pdf_surface_create_for_stream (cairo_write_func_t		 write_func,
  * to @filename.
  *
  * Return value: a pointer to the newly created surface. The caller
- * owns the surface and should call cairo_surface_destroy when done
+ * owns the surface and should call cairo_surface_destroy() when done
  * with it.
  *
  * This function always returns a valid pointer, but it will return a

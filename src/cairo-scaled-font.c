@@ -48,9 +48,9 @@
  *
  *  A device_transform converts from device space (a conceptual space) to
  *  surface space.  For simple cases of translation only, it's called a
- *  device_offset and is public API (cairo_surface_[gs]et_device_offset).
+ *  device_offset and is public API (cairo_surface_[gs]et_device_offset()).
  *  A possibly better name for those functions could have been
- *  cairo_surface_[gs]et_origing.  So, that's what they do: they set where
+ *  cairo_surface_[gs]et_origin().  So, that's what they do: they set where
  *  the device-space origin (0,0) is in the surface.  If the origin is inside
  *  the surface, device_offset values are positive.  It may look like this:
  *
@@ -283,9 +283,9 @@ slim_hidden_def (cairo_scaled_font_status);
  * unreferenced fonts (holdovers) which are expired in
  * least-recently-used order.
  *
- * The cairo_scaled_font_create code gets to treat this like a regular
+ * The cairo_scaled_font_create() code gets to treat this like a regular
  * hash table. All of the magic for the little holdover cache is in
- * cairo_scaled_font_reference and cairo_scaled_font_destroy.
+ * cairo_scaled_font_reference() and cairo_scaled_font_destroy().
  */
 
 /* This defines the size of the holdover array ... that is, the number

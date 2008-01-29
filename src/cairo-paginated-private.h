@@ -69,7 +69,7 @@ struct _cairo_paginated_surface_backend {
 			 cairo_box_t	*bbox);
 };
 
-/* A cairo_paginated_surface provides a very convenient wrapper that
+/* A #cairo_paginated_surface_t provides a very convenient wrapper that
  * is well-suited for doing the analysis common to most surfaces that
  * have paginated output, (that is, things directed at printers, or
  * for saving content in files such as PostScript or PDF files).

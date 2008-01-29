@@ -40,7 +40,7 @@
 /**
  * _cairo_array_init:
  *
- * Initialize a new cairo_array object to store objects each of size
+ * Initialize a new #cairo_array_t object to store objects each of size
  * @element_size.
  *
  * The #cairo_array_t object provides grow-by-doubling storage. It

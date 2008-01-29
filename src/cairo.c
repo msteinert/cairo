@@ -172,7 +172,7 @@ slim_hidden_def (cairo_version_string);
  * default values and with @target as a target surface. The target
  * surface should be constructed with a backend-specific function such
  * as cairo_image_surface_create() (or any other
- * <literal>cairo_&lt;backend&gt;_surface_create</literal> variant).
+ * cairo_<emphasis>backend</emphasis>_surface_create variant).
  *
  * This function references @target, so you can immediately
  * call cairo_surface_destroy() on it if you don't need to
@@ -1035,7 +1035,7 @@ cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
  * @dashes.
  *
  * If any value in @dashes is negative, or if all values are 0, then
- * @cairo_t will be put into an error state with a status of
+ * @cr will be put into an error state with a status of
  * #%CAIRO_STATUS_INVALID_DASH.
  **/
 void
@@ -1145,7 +1145,7 @@ cairo_set_miter_limit (cairo_t *cr, double limit)
  * Modifies the current transformation matrix (CTM) by translating the
  * user-space origin by (@tx, @ty). This offset is interpreted as a
  * user-space coordinate according to the CTM in place before the new
- * call to cairo_translate. In other words, the translation of the
+ * call to cairo_translate(). In other words, the translation of the
  * user-space origin takes place after any existing transformation.
  **/
 void
@@ -1844,10 +1844,10 @@ cairo_stroke_to_path (cairo_t *cr)
  * the ends of the sub-path. Instead, there is a line join connecting
  * the final and initial segments of the sub-path.
  *
- * If there is no current point before the call to cairo_close_path,
+ * If there is no current point before the call to cairo_close_path(),
  * this function will have no effect.
  *
- * Note: As of cairo version 1.2.4 any call to cairo_close_path will
+ * Note: As of cairo version 1.2.4 any call to cairo_close_path() will
  * place an explicit MOVE_TO element into the path immediately after
  * the CLOSE_PATH element, (which can be seen in cairo_copy_path() for
  * example). This can simplify path processing in some cases as it may
@@ -2089,7 +2089,7 @@ cairo_stroke (cairo_t *cr)
  *
  * A drawing operator that strokes the current path according to the
  * current line width, line join, line cap, and dash settings. Unlike
- * cairo_stroke(), cairo_stroke_preserve preserves the path within the
+ * cairo_stroke(), cairo_stroke_preserve() preserves the path within the
  * cairo context.
  *
  * See cairo_set_line_width(), cairo_set_line_join(),
@@ -2116,7 +2116,7 @@ slim_hidden_def(cairo_stroke_preserve);
  *
  * A drawing operator that fills the current path according to the
  * current fill rule, (each sub-path is implicitly closed before being
- * filled). After cairo_fill, the current path will be cleared from
+ * filled). After cairo_fill(), the current path will be cleared from
  * the cairo context. See cairo_set_fill_rule() and
  * cairo_fill_preserve().
  **/
@@ -2134,7 +2134,7 @@ cairo_fill (cairo_t *cr)
  *
  * A drawing operator that fills the current path according to the
  * current fill rule, (each sub-path is implicitly closed before being
- * filled). Unlike cairo_fill(), cairo_fill_preserve preserves the
+ * filled). Unlike cairo_fill(), cairo_fill_preserve() preserves the
  * path within the cairo context.
  *
  * See cairo_set_fill_rule() and cairo_fill().
@@ -2355,7 +2355,7 @@ cairo_fill_extents (cairo_t *cr,
  * region with the current path as it would be filled by cairo_fill()
  * and according to the current fill rule (see cairo_set_fill_rule()).
  *
- * After cairo_clip, the current path will be cleared from the cairo
+ * After cairo_clip(), the current path will be cleared from the cairo
  * context.
  *
  * The current clip region affects all drawing operations by
@@ -2385,7 +2385,7 @@ cairo_clip (cairo_t *cr)
  * region with the current path as it would be filled by cairo_fill()
  * and according to the current fill rule (see cairo_set_fill_rule()).
  *
- * Unlike cairo_clip(), cairo_clip_preserve preserves the path within
+ * Unlike cairo_clip(), cairo_clip_preserve() preserves the path within
  * the cairo context.
  *
  * The current clip region affects all drawing operations by
@@ -2502,10 +2502,8 @@ _cairo_rectangle_list_create_in_error (cairo_status_t status)
  * user-space rectangles. The status may have other values to indicate
  * other errors.
  *
- * The caller must always call cairo_rectangle_list_destroy on the result of
- * this function.
- *
- * Returns: the current clip region as a list of rectangles in user coordinates.
+ * Returns: the current clip region as a list of rectangles in user coordinates,
+ * which should be destroyed using cairo_rectangle_list_destroy().
  *
  * Since: 1.4
  **/
@@ -2610,7 +2608,7 @@ cairo_set_font_face (cairo_t           *cr,
  * this nil object will cause its error state to propagate to other
  * objects it is passed to, (for example, calling
  * cairo_set_font_face() with a nil font will trigger an error that
- * will shutdown the cairo_t object).
+ * will shutdown the #cairo_t object).
  **/
 cairo_font_face_t *
 cairo_get_font_face (cairo_t *cr)
@@ -2816,7 +2814,7 @@ BAIL:
  * this nil object will cause its error state to propagate to other
  * objects it is passed to, (for example, calling
  * cairo_set_scaled_font() with a nil font will trigger an error that
- * will shutdown the cairo_t object).
+ * will shutdown the #cairo_t object).
  *
  * Since: 1.4
  **/

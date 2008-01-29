@@ -445,7 +445,7 @@ _cairo_quartz_surface_to_quartz (cairo_surface_t *target,
     return CAIRO_STATUS_SUCCESS;
 }
 
-/* Generic cairo_pattern -> CGPattern function */
+/* Generic #cairo_pattern_t -> CGPattern function */
 static void
 SurfacePatternDrawFunc (void *info, CGContextRef context)
 {
