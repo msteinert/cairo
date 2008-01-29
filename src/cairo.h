@@ -142,7 +142,7 @@ typedef struct _cairo_matrix {
  *
  * Other than various cairo_pattern_create_<emphasis>type</emphasis>
  * functions, some of the pattern types can be implicitly created
- * using vairous cairo_set_source_<emphasis>type</emphasis> functions;
+ * using various cairo_set_source_<emphasis>type</emphasis> functions;
  * for example cairo_set_source_rgb().
  *
  * The type of a pattern can be queried with cairo_pattern_get_type().
@@ -202,7 +202,7 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_INVALID_INDEX: invalid index passed to getter (Since 1.4)
  * @CAIRO_STATUS_CLIP_NOT_REPRESENTABLE: clip region not representable in desired format (Since 1.4)
  * @CAIRO_STATUS_TEMP_FILE_ERROR: error creating or writing to a temporary file (Since 1.6)
- * @CAIRO_STATUS_INVALID_STRIDE: invalide value for stride (Since 1.6)
+ * @CAIRO_STATUS_INVALID_STRIDE: invalid value for stride (Since 1.6)
  *
  * #cairo_status_t is used to indicate errors that can occur when
  * using Cairo. In some cases it is returned directly by functions.
@@ -288,7 +288,7 @@ typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
  * @length: the amount of data to read
  *
  * #cairo_read_func_t is the type of function which is called when a
- * backend needs to read data from an intput stream.  It is passed the
+ * backend needs to read data from an input stream.  It is passed the
  * closure which was specified by the user at the time the read
  * function was registered, the buffer to read the data into and the
  * length of the data in bytes.  The read function should return
