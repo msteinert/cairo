@@ -67,9 +67,7 @@ EXTRA_DIST = \
 	NEWS \
 	PORTING_GUIDE \
 	README \
-	RELEASING \
-	ROADMAP \
-	TODO
+	RELEASING
 DISTCLEANFILES = config.cache
 distclean-local: lcov-clean
 
