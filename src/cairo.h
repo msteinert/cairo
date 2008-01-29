@@ -363,7 +363,7 @@ cairo_pop_group_to_source (cairo_t *cr);
  * @CAIRO_OPERATOR_DEST_OUT: leave destination only where there was no
  * source content
  * @CAIRO_OPERATOR_DEST_ATOP: leave destination on top of source content
- * and only there
+ * and only there (unbounded)
  * @CAIRO_OPERATOR_XOR: source and destination are shown where there is only
  * one of them
  * @CAIRO_OPERATOR_ADD: source and destination layers are accumulated
@@ -372,6 +372,11 @@ cairo_pop_group_to_source (cairo_t *cr);
  *
  * #cairo_operator_t is used to set the compositing operator for all cairo
  * drawing operations.
+ *
+ * The operators marked as <firstterm>unbounded</firstterm> modify their
+ * destination even outside of the mask layer (that is, their effect is not
+ * bound by the mask layer).  However, their effect can still be limited by
+ * way of clipping.
  *
  * To keep things simple, the operator descriptions here
  * document the behavior for when both source and destination are either fully
