@@ -72,5 +72,5 @@ EXTRA_DIST += version.xml.in
 
 check: doc
 
-TESTS_ENVIRONMENT = srcdir="$(srcdir)" MAKE="$(MAKE)"
-TESTS = check-doc-coverage.sh
+TESTS_ENVIRONMENT = srcdir="$(srcdir)" top_srcdir="$(top_srcdir)" MAKE="$(MAKE)"
+TESTS = check-doc-coverage.sh check-doc-syntax.sh

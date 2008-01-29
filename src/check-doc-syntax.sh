@@ -12,18 +12,30 @@ status=0
 
 echo Checking documentation for incorrect syntax
 
-FILES=`find "$srcdir" -name '*.h' -or -name '*.c' -or -name '*.cpp'`
+# Note: this test is also run from doc/public/ to check the SGML files
 
-enum_regexp='^\([/ ][*] .*[^%@]\)\<\(FALSE\|TRUE\|NULL\|CAIRO_[0-9A-Z_]*[^(0-9A-Z_]\)'
-if grep "$enum_regexp" $FILES; then
-	status=1
-	echo Error: some macros in the docs are not prefixed by percent sign.
-	echo Fix this by running the following sed command as many times as needed:
-	echo "	sed -i 's@$enum_regexp@\\1%\\2@' *.h *.c *.cpp"
+if test "x$SGML_DOCS" = x; then
+	FILES=`find "$srcdir" -name '*.h' -or -name '*.c' -or -name '*.cpp'`
 fi
 
-type_regexp='^[/ ][*]\( .*[^#]\| \)\<\(cairo[0-9a-z_]*_t\>\($\|[^:]$\|[^:].\)\)'
-if grep "$type_regexp" $FILES; then
+enum_regexp='\([^%@]\|^\)\<\(FALSE\|TRUE\|NULL\|CAIRO_[0-9A-Z_]*[^(0-9A-Z_]\)'
+if test "x$SGML_DOCS" = x; then
+	enum_regexp='^[/ ][*] .*'$enum_regexp
+fi
+if grep "$enum_regexp" $FILES | grep -v '#####'; then
+	status=1
+	echo Error: some macros in the docs are not prefixed by percent sign.
+	echo Fix this by searching for the following regexp in the above files:
+	echo "	'$enum_regexp'"
+fi
+
+type_regexp='\( .*[^#]\| \|^\)\<cairo[0-9a-z_]*_t\>\($\|[^:]$\|[^:].\)'
+if test "x$SGML_DOCS" = x; then
+	type_regexp='^[/ ][*]'$type_regexp
+else
+	type_regexp='\(.'$type_regexp'\)\|\('$type_regexp'.\)'
+fi
+if grep "$type_regexp" $FILES | grep -v '#####'; then
 	status=1
 	echo Error: some type names in the docs are not prefixed by hash sign,
 	echo neither are the only token in the doc line followed by collon.
@@ -31,8 +43,11 @@ if grep "$type_regexp" $FILES; then
 	echo "	'$type_regexp'"
 fi
 
-func_regexp='^\([/ ][*] .*[^#]\)\<\(cairo_[][<>/0-9a-z_]*\> \?[^][ <>(]\)'
-if grep "$func_regexp" $FILES; then
+func_regexp='\([^#]\|^\)\<\(cairo_[][<>/0-9a-z_]*\> \?[^][ <>(]\)'
+if test "x$SGML_DOCS" = x; then
+	func_regexp='^[/ ][*] .*'$func_regexp
+fi
+if grep "$func_regexp" $FILES | grep -v '#####'; then
 	status=1
 	echo Error: some function names in the docs are not followed by parantheses.
 	echo Fix this by searching for the following regexp in the above files:
