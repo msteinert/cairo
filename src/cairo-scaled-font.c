@@ -1455,7 +1455,7 @@ _add_unit_rectangle_to_path (cairo_path_fixed_t *path, int x, int y)
 
 /**
  * _trace_mask_to_path:
- * @bitmap: An alpha mask (either CAIRO_FORMAT_A1 or _A8)
+ * @bitmap: An alpha mask (either CAIRO_FORMAT_A1 or CAIRO_FORMAT_A8)
  * @path: An initialized path to hold the result
  *
  * Given a mask surface, (an alpha image), fill out the provided path
