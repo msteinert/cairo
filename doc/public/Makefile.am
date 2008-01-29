@@ -70,3 +70,5 @@ include $(top_srcdir)/gtk-doc.make
 # Version information for marking the documentation
 EXTRA_DIST += version.xml.in
 
+TESTS_ENVIRONMENT = srcdir="$(srcdir)" MAKE="$(MAKE)"
+TESTS = check-doc-coverage.sh
