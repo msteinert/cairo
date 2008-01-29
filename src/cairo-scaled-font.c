@@ -1702,7 +1702,7 @@ _cairo_scaled_glyph_set_path (cairo_scaled_glyph_t *scaled_glyph,
  * @scaled_glyph_ret: a #cairo_scaled_glyph_t * where the glyph
  * is returned.
  *
- * Returns a glyph with the requested portions filled in. Glyph
+ * Returns: a glyph with the requested portions filled in. Glyph
  * lookup is cached and glyph will be automatically freed along
  * with the scaled_font so no explicit free is required.
  * @info can be one or more of:

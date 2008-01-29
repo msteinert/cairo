@@ -3229,7 +3229,7 @@ cairo_get_antialias (cairo_t *cr)
  * Some functions unset the current path and as a result, current point:
  * cairo_fill(), cairo_stroke().
  *
- * Returns CAIRO_STATUS_SUCCESS if current point was successfully
+ * Returns: CAIRO_STATUS_SUCCESS if current point was successfully
  * retrieved.  Otherwise, if @cr has been in an error status, that status
  * is returned, otherwise CAIRO_STATUS_NO_CURRENT_POINT is returned if
  * no current point exists.  In all error cases, both @x and @y will be
@@ -3565,7 +3565,7 @@ cairo_append_path (cairo_t		*cr,
  *
  * Checks whether an error has previously occurred for this context.
  *
- * Returns the current status of this context, see #cairo_status_t
+ * Returns: the current status of this context, see #cairo_status_t
  **/
 cairo_status_t
 cairo_status (cairo_t *cr)
@@ -3580,7 +3580,7 @@ slim_hidden_def (cairo_status);
  *
  * Provides a human-readable description of a #cairo_status_t.
  *
- * Returns a string representation of the status
+ * Returns: a string representation of the status
  */
 const char *
 cairo_status_to_string (cairo_status_t status)

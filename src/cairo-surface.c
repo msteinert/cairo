@@ -1716,7 +1716,7 @@ slim_hidden_def (cairo_surface_show_page);
  * _cairo_surface_get_current_clip_serial:
  * @surface: the #cairo_surface_t to return the serial number for
  *
- * Returns the serial number associated with the current
+ * Returns: the serial number associated with the current
  * clip in the surface.  All gstate functions must
  * verify that the correct clip is set in the surface before
  * invoking any surface drawing function
