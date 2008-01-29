@@ -205,7 +205,7 @@ _create_dc_and_bitmap (cairo_win32_surface_t *surface,
      * break if we do, especially if we don't set up an image
      * fallback.  It could be a bug with using a 24bpp pixman image
      * (and creating one with masks).  So treat them like 32bpp.
-     * NOTE: This causes problems when using BitBlt/AlphaBlend/etc!
+     * Note: This causes problems when using BitBlt/AlphaBlend/etc!
      * see end of file.
      */
     case CAIRO_FORMAT_RGB24:
@@ -1261,7 +1261,7 @@ UNSUPPORTED:
 /* This big function tells us how to optimize operators for the
  * case of solid destination and constant-alpha source
  *
- * NOTE: This function needs revisiting if we add support for
+ * Note: This function needs revisiting if we add support for
  *       super-luminescent colors (a == 0, r,g,b > 0)
  */
 static enum { DO_CLEAR, DO_SOURCE, DO_NOTHING, DO_UNSUPPORTED }

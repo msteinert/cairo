@@ -172,7 +172,7 @@ _cairo_cache_destroy (cairo_cache_t *cache)
  * add new entries to the cache regardless of how large the cache
  * grows. See _cairo_cache_thaw().
  *
- * NOTE: Multiple calls to _cairo_cache_freeze() will stack, in that
+ * Note: Multiple calls to _cairo_cache_freeze() will stack, in that
  * the cache will remain "frozen" until a corresponding number of
  * calls are made to _cairo_cache_thaw().
  **/
@@ -323,7 +323,7 @@ _cairo_cache_insert (cairo_cache_t	 *cache,
  *
  * Remove an existing entry from the cache.
  *
- * (NOTE: If any caller wanted access to a non-static version of this
+ * (Note: If any caller wanted access to a non-static version of this
  * function, an improved version would require only a key rather than
  * an entry. Fixing that would require fixing _cairo_hash_table_remove
  * to return (a copy of?) the entry being removed.)

@@ -131,7 +131,7 @@ _cairo_output_stream_get_status (cairo_output_stream_t *stream);
  * WRITE_ERROR) while trying to create the output stream this function
  * returns a valid pointer to a nil output stream.
  *
- * NOTE: Even if a nil surface is returned, the caller should still
+ * Note: Even if a nil surface is returned, the caller should still
  * call _cairo_output_stream_destroy (or _cairo_output_stream_close at
  * least) in order to ensure that everything is properly cleaned up.
  */

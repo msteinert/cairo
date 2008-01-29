@@ -2606,7 +2606,7 @@ cairo_ft_scaled_font_lock_face (cairo_scaled_font_t *abstract_font)
 	return NULL;
     }
 
-    /* NOTE: We deliberately release the unscaled font's mutex here,
+    /* Note: We deliberately release the unscaled font's mutex here,
      * so that we are not holding a lock across two separate calls to
      * cairo function, (which would give the application some
      * opportunity for creating deadlock. This is obviously unsafe,
@@ -2634,7 +2634,7 @@ cairo_ft_scaled_font_unlock_face (cairo_scaled_font_t *abstract_font)
     if (scaled_font->base.status)
 	return;
 
-    /* NOTE: We released the unscaled font's mutex at the end of
+    /* Note: We released the unscaled font's mutex at the end of
      * cairo_ft_scaled_font_lock_face, so we have to acquire it again
      * as _cairo_ft_unscaled_font_unlock_face expects it to be held
      * when we call into it. */

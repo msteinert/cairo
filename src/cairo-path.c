@@ -363,7 +363,7 @@ _cairo_path_create_internal (cairo_path_fixed_t *path_fixed,
  * to cairo_path_destroy() the @path pointer is no longer valid and
  * should not be used further.
  *
- * NOTE: cairo_path_destroy() should only be called with a
+ * Note: cairo_path_destroy() should only be called with a
  * pointer to a #cairo_path_t returned by a cairo function. Any path
  * that is created manually (ie. outside of cairo) should be destroyed
  * manually as well.

@@ -113,7 +113,7 @@ _lzw_buf_grow (lzw_buf_t *buf)
 
 /* Store the lowest num_bits bits of values into buf.
  *
- * NOTE: The bits of value above size_in_bits must be 0, (so don't lie
+ * Note: The bits of value above size_in_bits must be 0, (so don't lie
  * about the size).
  *
  * See also _lzw_buf_store_pending which must be called after the last
@@ -147,7 +147,7 @@ _lzw_buf_store_bits (lzw_buf_t *buf, uint16_t value, int num_bits)
 
 /* Store the last remaining pending bits into the buffer.
  *
- * NOTE: This function must be called after the last call to
+ * Note: This function must be called after the last call to
  * _lzw_buf_store_bits.
  *
  * Sets buf->status to either %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY.

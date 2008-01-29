@@ -2959,7 +2959,7 @@ cairo_glyph_extents (cairo_t                *cr,
  * by its advance values. This allows for easy display of a single
  * logical string with multiple calls to cairo_show_text().
  *
- * NOTE: The cairo_show_text() function call is part of what the cairo
+ * Note: The cairo_show_text() function call is part of what the cairo
  * designers call the "toy" text API. It is convenient for short demos
  * and simple programs, but it is not expected to be adequate for
  * serious text-using applications. See cairo_show_glyphs() for the
@@ -3058,7 +3058,7 @@ cairo_show_glyphs (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
  * This allows for chaining multiple calls to to cairo_text_path()
  * without having to set current point in between.
  *
- * NOTE: The cairo_text_path() function call is part of what the cairo
+ * Note: The cairo_text_path() function call is part of what the cairo
  * designers call the "toy" text API. It is convenient for short demos
  * and simple programs, but it is not expected to be adequate for
  * serious text-using applications. See cairo_glyph_path() for the

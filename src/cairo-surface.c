@@ -882,7 +882,7 @@ slim_hidden_def (cairo_surface_get_device_offset);
  * device resolution. So this function has no effect on those
  * backends.
  *
- * NOTE: The fallback resolution only takes effect at the time of
+ * Note: The fallback resolution only takes effect at the time of
  * completing a page (with cairo_show_page() or cairo_copy_page()) so
  * there is currently no way to have more than one fallback resolution
  * in effect on a single page.
@@ -2005,7 +2005,7 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
  * maximum size at the time of surface_create. So get_extents uses
  * that size.
  *
- * NOTE: The coordinates returned are in "backend" space rather than
+ * Note: The coordinates returned are in "backend" space rather than
  * "surface" space. That is, they are relative to the true (0,0)
  * origin rather than the device_transform origin. This might seem a
  * bit inconsistent with other #cairo_surface_t interfaces, but all

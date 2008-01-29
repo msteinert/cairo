@@ -33,4 +33,11 @@ if grep "$func_regexp" $FILES; then
 	echo "	'$func_regexp'"
 fi
 
+note_regexp='NOTE'
+if grep "$note_regexp" $FILES; then
+	status=1
+	echo Error: some source files contain the string 'NOTE'.
+	echo Be civil and replace it by 'Note' please.
+fi
+
 exit $status

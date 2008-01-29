@@ -41,7 +41,7 @@
 #include "cairo-scaled-font-private.h"
 
 /*
- *  NOTES:
+ *  Notes:
  *
  *  To store rasterizations of glyphs, we use an image surface and the
  *  device offset to represent the glyph origin.
@@ -1714,7 +1714,7 @@ _cairo_scaled_glyph_set_path (cairo_scaled_glyph_t *scaled_glyph,
  * get INFO_PATH with a bitmapped font), this function will return
  * CAIRO_INT_STATUS_UNSUPPORTED.
  *
- * NOTE: This function must be called with scaled_font->mutex held.
+ * Note: This function must be called with scaled_font->mutex held.
  **/
 cairo_int_status_t
 _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,

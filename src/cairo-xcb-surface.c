@@ -1854,7 +1854,7 @@ _cairo_xcb_screen_from_visual (xcb_connection_t *c, xcb_visualtype_t *visual)
  * The way that colors are represented in the drawable is specified
  * by the provided visual.
  *
- * NOTE: If @drawable is a window, then the function
+ * Note: If @drawable is a window, then the function
  * cairo_xcb_surface_set_size must be called whenever the size of the
  * window changes.
  *
@@ -1916,7 +1916,7 @@ cairo_xcb_surface_create_for_bitmap (xcb_connection_t     *c,
  * The way that colors are represented in the drawable is specified
  * by the provided picture format.
  *
- * NOTE: If @drawable is a Window, then the function
+ * Note: If @drawable is a Window, then the function
  * cairo_xcb_surface_set_size must be called whenever the size of the
  * window changes.
  *

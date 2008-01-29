@@ -2070,7 +2070,7 @@ _cairo_xlib_screen_from_visual (Display *dpy, Visual *visual)
  * The way that colors are represented in the drawable is specified
  * by the provided visual.
  *
- * NOTE: If @drawable is a Window, then the function
+ * Note: If @drawable is a Window, then the function
  * cairo_xlib_surface_set_size must be called whenever the size of the
  * window changes.
  *
@@ -2140,7 +2140,7 @@ cairo_xlib_surface_create_for_bitmap (Display  *dpy,
  * The way that colors are represented in the drawable is specified
  * by the provided picture format.
  *
- * NOTE: If @drawable is a Window, then the function
+ * Note: If @drawable is a Window, then the function
  * cairo_xlib_surface_set_size must be called whenever the size of the
  * window changes.
  *

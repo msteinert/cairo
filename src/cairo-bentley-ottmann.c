@@ -385,7 +385,7 @@ cairo_bo_event_compare (cairo_bo_event_t const *a,
      * need a different sense for start and stop events based on the
      * shortening rule.
      *
-     * NOTE: Fortunately, we get to ignore errors in the relative
+     * Note: Fortunately, we get to ignore errors in the relative
      * ordering of intersection events. This means we don't even have
      * to look at e2 here, nor worry about which sense of the slope
      * comparison test is used for intersection events.

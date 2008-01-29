@@ -41,7 +41,7 @@
 struct _cairo_paginated_surface_backend {
     /* Optional. Will be called once for each page.
      *
-     * NOTE: With respect to the order of drawing operations as seen
+     * Note: With respect to the order of drawing operations as seen
      * by the target, this call will occur before any drawing
      * operations for the relevant page. However, with respect to the
      * function calls as made by the user, this call will be *after*
@@ -127,7 +127,7 @@ struct _cairo_paginated_surface_backend {
  * to distinguish fallback images from native rendering in case they
  * need to be handled as a special case.
  *
- * NOTE: The paginated surface layer assumes that the target surface
+ * Note: The paginated surface layer assumes that the target surface
  * is "blank" by default at the beginning of each page, without any
  * need for an explicit erase operation, (as opposed to an image
  * surface, for example, which might have uninitialized content
