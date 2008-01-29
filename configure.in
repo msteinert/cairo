@@ -262,12 +262,15 @@ AC_DEFUN([CAIRO_BACKEND_ENABLE],
 		rm -f "$outfile"
 		AC_MSG_ERROR([failed creating $outfile])
 	      ])
+	    else
+	      CAIRO_NO_FEATURES="$4 $CAIRO_NO_FEATURES"
 	    fi
 	  fi
 	  AM_CONDITIONAL(CAIRO_HAS_$4, test "x$use_$1" = xyes)
 	])
 
 CAIRO_FEATURES=""
+CAIRO_NO_FEATURES=""
 CAIRO_REQUIRES=""
 CAIRO_NONPKGCONFIG_CFLAGS=""
 CAIRO_NONPKGCONFIG_LIBS="$LIBM"
@@ -980,6 +983,10 @@ _EOF
 	for FEATURE in $CAIRO_FEATURES; do
 		echo "#define CAIRO_HAS_$FEATURE 1" >> $outfile
 	done
+	echo >> $outfile
+	for FEATURE in $CAIRO_NO_FEATURES; do
+		echo "/* #undef CAIRO_HAS_$FEATURE */" >> $outfile
+	done
 
 	echo '' >> $outfile
 	echo '#endif' >> $outfile
@@ -992,6 +999,7 @@ _EOF
 	fi
 ],[
 	CAIRO_FEATURES='$CAIRO_FEATURES'
+	CAIRO_NO_FEATURES='$CAIRO_NO_FEATURES'
 	CAIRO_VERSION_MAJOR=$CAIRO_VERSION_MAJOR
 	CAIRO_VERSION_MINOR=$CAIRO_VERSION_MINOR
 	CAIRO_VERSION_MICRO=$CAIRO_VERSION_MICRO
