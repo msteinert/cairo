@@ -985,7 +985,7 @@ _EOF
 	done
 	echo '' >> $outfile
 	for FEATURE in $CAIRO_NO_FEATURES; do
-		echo "/* #undef CAIRO_HAS_$FEATURE */" >> $outfile
+		echo "/*#undef CAIRO_HAS_$FEATURE */" >> $outfile
 	done
 
 	echo '' >> $outfile
