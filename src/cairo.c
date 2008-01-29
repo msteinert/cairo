@@ -1904,8 +1904,18 @@ void
 cairo_path_extents (cairo_t *cr,
 		    double *x1, double *y1, double *x2, double *y2)
 {
-    if (cr->status)
+    if (cr->status) {
+	if (x1)
+	    *x1 = 0.0;
+	if (y1)
+	    *y1 = 0.0;
+	if (x2)
+	    *x2 = 0.0;
+	if (y2)
+	    *y2 = 0.0;
+
 	return;
+    }
 
     _cairo_gstate_path_extents (cr->gstate,
 				cr->path,
@@ -2301,8 +2311,18 @@ cairo_stroke_extents (cairo_t *cr,
 {
     cairo_status_t status;
 
-    if (cr->status)
+    if (cr->status) {
+	if (x1)
+	    *x1 = 0.0;
+	if (y1)
+	    *y1 = 0.0;
+	if (x2)
+	    *x2 = 0.0;
+	if (y2)
+	    *y2 = 0.0;
+
 	return;
+    }
 
     status = _cairo_gstate_stroke_extents (cr->gstate,
 					   cr->path,
@@ -2337,8 +2357,18 @@ cairo_fill_extents (cairo_t *cr,
 {
     cairo_status_t status;
 
-    if (cr->status)
+    if (cr->status) {
+	if (x1)
+	    *x1 = 0.0;
+	if (y1)
+	    *y1 = 0.0;
+	if (x2)
+	    *x2 = 0.0;
+	if (y2)
+	    *y2 = 0.0;
+
 	return;
+    }
 
     status = _cairo_gstate_fill_extents (cr->gstate,
 					 cr->path,
@@ -2462,8 +2492,18 @@ cairo_clip_extents (cairo_t *cr,
 {
     cairo_status_t status;
 
-    if (cr->status)
+    if (cr->status) {
+	if (x1)
+	    *x1 = 0.0;
+	if (y1)
+	    *y1 = 0.0;
+	if (x2)
+	    *x2 = 0.0;
+	if (y2)
+	    *y2 = 0.0;
+
 	return;
+    }
 
     status = _cairo_gstate_clip_extents (cr->gstate, x1, y1, x2, y2);
     if (status)
@@ -2560,6 +2600,12 @@ cairo_font_extents (cairo_t              *cr,
 		    cairo_font_extents_t *extents)
 {
     cairo_status_t status;
+
+    extents->ascent = 0.0;
+    extents->descent = 0.0;
+    extents->height = 0.0;
+    extents->max_x_advance = 0.0;
+    extents->max_y_advance = 0.0;
 
     if (cr->status)
 	return;
