@@ -65,7 +65,7 @@ box_text (cairo_t *cr, const char *utf8, double x, double y)
     cairo_scaled_font_text_extents (scaled_font, TEXT, &scaled_extents);
     if (! text_extents_equal (&extents, &scaled_extents)) {
         cairo_test_log ("Error: extents differ when they shouldn't:\n"
-			"cairo_text_extents(); extents (%g, %g, %g, %g, %g, %g)\n",
+			"cairo_text_extents(); extents (%g, %g, %g, %g, %g, %g)\n"
 			"cairo_scaled_font_text_extents(); extents (%g, %g, %g, %g, %g, %g)\n",
 		        extents.x_bearing, extents.y_bearing,
 			extents.width, extents.height,
