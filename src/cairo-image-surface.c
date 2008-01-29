@@ -394,6 +394,9 @@ _cairo_image_surface_create_with_content (cairo_content_t	content,
 				       width, height);
 }
 
+/* pixman required stride alignment in bytes.  should be power of two. */
+#define STRIDE_ALIGNMENT (sizeof (uint32_t))
+
 /**
  * cairo_format_stride_for_width:
  * @format: A #cairo_format_t value
@@ -425,10 +428,7 @@ cairo_format_stride_for_width (cairo_format_t	format,
 {
     int bpp = _cairo_format_bits_per_pixel (format);
 
-    /* Convert from bits-per-row to bytes-per-row with rounding to the
-     * next 4-byte boundary. This satisifies the current alignment
-     * requirements of pixman. */
-    return (((bpp * width) + 31) >> 5) << 2;
+    return ((bpp*width+7)/8 + STRIDE_ALIGNMENT-1) & ~(STRIDE_ALIGNMENT-1);
 }
 
 /**
@@ -451,9 +451,9 @@ cairo_format_stride_for_width (cairo_format_t	format,
  * must explicitly clear the buffer, using, for example,
  * cairo_rectangle() and cairo_fill() if you want it cleared.
  *
- * Note that the stride will often be larger than
- * width*bytes_per_pixel to provide proper alignment for each
- * row. This alignment is required to allow high-performance rendering
+ * Note that the stride may be larger than
+ * width*bytes_per_pixel to provide proper alignment for each pixel
+ * and row. This alignment is required to allow high-performance rendering
  * within cairo. The correct way to obtain a legal stride value is to
  * call cairo_format_stride_for_width() with the desired format and
  * maximum image width value, and the use the resulting stride value
@@ -486,7 +486,7 @@ cairo_image_surface_create_for_data (unsigned char     *data,
     if (! CAIRO_FORMAT_VALID (format))
 	return _cairo_surface_create_in_error (_cairo_error(CAIRO_STATUS_INVALID_FORMAT));
 
-    if (stride % sizeof (uint32_t) != 0)
+    if ((stride & (STRIDE_ALIGNMENT-1)) != 0)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_STRIDE));
 
     pixman_format = _cairo_format_to_pixman_format_code (format);
