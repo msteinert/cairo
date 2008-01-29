@@ -380,10 +380,10 @@ cairo_pop_group_to_source (cairo_t *cr);
  *
  * To keep things simple, the operator descriptions here
  * document the behavior for when both source and destination are either fully
- * transparent or fully opaque.  The actual implementaiton works for
+ * transparent or fully opaque.  The actual implementation works for
  * translucent layers too.
  * For a more detailed explanation of the effects of each operator, including
- * the mathematical defitnions, see
+ * the mathematical definitions, see
  * <ulink url="http://cairographics.org/operators/">http://cairographics.org/operators/</ulink>.
  **/
 typedef enum _cairo_operator {

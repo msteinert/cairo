@@ -41,7 +41,7 @@ fi
 if grep "$type_regexp" $FILES | grep -v '#####'; then
 	status=1
 	echo Error: some type names in the docs are not prefixed by hash sign,
-	echo neither are the only token in the doc line followed by collon.
+	echo neither are the only token in the doc line followed by colon.
 	echo Fix this by searching for the following regexp in the above files:
 	echo "	'$type_regexp'"
 fi
@@ -52,7 +52,7 @@ if test "x$SGML_DOCS" = x; then
 fi
 if grep "$func_regexp" $FILES | grep -v '#####'; then
 	status=1
-	echo Error: some function names in the docs are not followed by parantheses.
+	echo Error: some function names in the docs are not followed by parentheses.
 	echo Fix this by searching for the following regexp in the above files:
 	echo "	'$func_regexp'"
 fi
