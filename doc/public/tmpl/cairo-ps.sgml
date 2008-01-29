@@ -20,6 +20,14 @@ PostScript files and is a multi-page vector surface backend.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### MACRO CAIRO_HAS_PS_SURFACE ##### -->
+<para>
+Defined if the PostScript surface backend is available.
+This macro can be used to conditionally compile backend-specific code.
+</para>
+
+
+
 <!-- ##### FUNCTION cairo_ps_surface_create ##### -->
 <para>
 

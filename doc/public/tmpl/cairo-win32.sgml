@@ -29,6 +29,14 @@ The surface returned by the other win32 constructors is of surface type
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### MACRO CAIRO_HAS_WIN32_SURFACE ##### -->
+<para>
+Defined if the Microsoft Windows surface backend is available.
+This macro can be used to conditionally compile backend-specific code.
+</para>
+
+
+
 <!-- ##### FUNCTION cairo_win32_surface_create ##### -->
 <para>
 

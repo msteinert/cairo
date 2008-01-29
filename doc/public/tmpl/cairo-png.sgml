@@ -20,6 +20,15 @@ any surface to a PNG file.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### MACRO CAIRO_HAS_PNG_FUNCTIONS ##### -->
+<para>
+Defined if the PNG functions are available.
+This macro can be used to conditionally compile code using the cairo
+PNG functions.
+</para>
+
+
+
 <!-- ##### FUNCTION cairo_image_surface_create_from_png ##### -->
 <para>
 

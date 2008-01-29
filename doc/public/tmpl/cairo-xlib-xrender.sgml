@@ -24,6 +24,14 @@ if it is available.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### MACRO CAIRO_HAS_XLIB_XRENDER_SURFACE ##### -->
+<para>
+Defined if the XLib/XRender surface functions are available.
+This macro can be used to conditionally compile backend-specific code.
+</para>
+
+
+
 <!-- ##### FUNCTION cairo_xlib_surface_create_with_xrender_format ##### -->
 <para>
 
