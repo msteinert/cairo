@@ -1793,6 +1793,24 @@ cairo_pattern_set_extend (cairo_pattern_t *pattern, cairo_extend_t extend);
 cairo_public cairo_extend_t
 cairo_pattern_get_extend (cairo_pattern_t *pattern);
 
+/**
+ * cairo_filter_t
+ * @CAIRO_FILTER_FAST: A high-performance filter, with quality similar
+ *     to NEAREST
+ * @CAIRO_FILTER_GOOD: A reasonable-performance filter, with quality
+ *     similar to BILINEAR
+ * @CAIRO_FILTER_BEST: The highest-quality available, performance may
+ *     not be suitable for interactive use.
+ * @CAIRO_FILTER_NEAREST: Nearest-neighbor filtering
+ * @CAIRO_FILTER_BILINEAR: Linear interpolation in two dimensions
+ * @CAIRO_FILTER_GAUSSIAN: This filter value is currently
+ *     unimplemented, and should not be used in current code.
+ *
+ * #cairo_filter_t is used to indicate what filtering should be
+ * applied when reading pixel values from patterns. See
+ * cairo_pattern_set_source() for indicating the desired filter to be
+ * used with a particular pattern.
+ */
 typedef enum _cairo_filter {
     CAIRO_FILTER_FAST,
     CAIRO_FILTER_GOOD,
