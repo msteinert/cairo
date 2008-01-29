@@ -8,7 +8,8 @@ X Window System rendering using XLib and the X Render extension
 <para>
 The XLib surface is used to render cairo graphics to X Window System
 windows and pixmaps using the XLib and Xrender libraries.
-
+</para>
+<para>
 Note that the XLib surface automatically takes advantage of X Render extension
 if it is available.
 </para>

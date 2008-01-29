@@ -8,7 +8,8 @@ X Window System rendering using the XCB library and the X Render extension
 <para>
 The XCB surface is used to render cairo graphics to X Window System
 windows and pixmaps using the XCB library and its X Render extension.
-
+</para>
+<para>
 Note that the XCB surface automatically takes advantage of the X Render
 extension if it is available.
 </para>
