@@ -25,6 +25,7 @@ cairo_win32_scaled_font_get_device_to_logical
 <FILE>cairo-image</FILE>
 <TITLE>Image Surfaces</TITLE>
 cairo_format_t
+cairo_format_stride_for_width
 cairo_image_surface_create
 cairo_image_surface_create_for_data
 cairo_image_surface_get_data
@@ -101,6 +102,7 @@ cairo_xlib_surface_get_depth
 <FILE>cairo-xlib-xrender</FILE>
 <TITLE>XLib/Xrender Backend</TITLE>
 cairo_xlib_surface_create_with_xrender_format
+cairo_xlib_surface_get_xrender_format
 </SECTION>
 
 <SECTION>

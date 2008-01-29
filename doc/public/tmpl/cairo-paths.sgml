@@ -86,7 +86,7 @@ generate simple masks.
 @cr: 
 @x: 
 @y: 
-@Returns:
+@Returns: 
 
 
 <!-- ##### FUNCTION cairo_new_path ##### -->

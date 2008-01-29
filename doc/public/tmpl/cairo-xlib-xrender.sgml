@@ -37,3 +37,12 @@ if it is available.
 @Returns: 
 
 
+<!-- ##### FUNCTION cairo_xlib_surface_get_xrender_format ##### -->
+<para>
+
+</para>
+
+@surface: 
+@Returns: 
+
+
