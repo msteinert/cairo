@@ -6,8 +6,8 @@ BeOS surface support
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-The BeOS surface is used to render cairo graphics natively on
-BeOS systems.
+The BeOS surface is used to render cairo graphics to
+BeOS views and bitmaps.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
