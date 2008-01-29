@@ -6,12 +6,15 @@ Reading and writing PNG images
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+The PNG functions allow reading PNG images into image surfaces, and writing
+any surface to a PNG file.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+<itemizedlist>
+<listitem>#cairo_surface_t</listitem>
+</itemizedlist>
 </para>
 
 <!-- ##### SECTION Stability_Level ##### -->

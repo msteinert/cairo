@@ -6,12 +6,16 @@ Base class for surfaces
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+Cairo surfaces are target of all drawing operations.  The actual drawings are
+performed using a cairo <firstterm>context</firstterm>.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
 <para>
-
+<itemizedlist>
+<listitem>#cairo_t()</listitem>
+<listitem>#cairo_pattern_t()</listitem>
+</itemizedlist>
 </para>
 
 <!-- ##### SECTION Stability_Level ##### -->

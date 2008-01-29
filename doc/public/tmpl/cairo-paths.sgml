@@ -6,7 +6,8 @@ Creating paths and manipulating path data
 
 <!-- ##### SECTION Long_Description ##### -->
 <para>
-
+Paths are the most basic drawing tools and are primarily used to implicitly
+generate simple masks.
 </para>
 
 <!-- ##### SECTION See_Also ##### -->
@@ -85,6 +86,7 @@ Creating paths and manipulating path data
 @cr: 
 @x: 
 @y: 
+@Returns:
 
 
 <!-- ##### FUNCTION cairo_new_path ##### -->
