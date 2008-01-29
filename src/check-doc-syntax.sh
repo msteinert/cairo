@@ -2,10 +2,15 @@
 
 LANG=C
 
+if ! grep --version 2>/dev/null | grep GNU >/dev/null; then
+	echo "GNU grep not found; skipping test"
+	exit 0
+fi
+
 test -z "$srcdir" && srcdir=.
 status=0
 
-echo Checking documentation blocks for missing decorators
+echo Checking documentation for incorrect syntax
 
 FILES=`find "$srcdir" -name '*.h' -or -name '*.c' -or -name '*.cpp'`
 
