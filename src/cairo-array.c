@@ -331,7 +331,7 @@ _cairo_array_size (cairo_array_t *array)
     return array->size;
 }
 
-/* cairo_user_data_array_t */
+/* #cairo_user_data_array_t */
 
 typedef struct {
     const cairo_user_data_key_t *key;

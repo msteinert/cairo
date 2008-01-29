@@ -17,12 +17,13 @@ if grep "$enum_regexp" $FILES; then
 	echo "	sed -i 's@$enum_regexp@\\1%\\2@' *.h *.c *.cpp"
 fi
 
-type_regexp='^\([/ ][*] .*[^#]\)\<\(cairo[0-9a-z_]*_t\>\)'
+type_regexp='^[/ ][*]\( .*[^#]\| \)\<\(cairo[0-9a-z_]*_t\>\($\|[^:]$\|[^:].\)\)'
 if grep "$type_regexp" $FILES; then
 	status=1
-	echo Error: some type names in the docs are not prefixed by hash sign.
-	echo Fix this by running the following sed command as many times as needed:
-	echo "	sed -i 's@$type_regexp@\\1#\\2@' *.h *.c *.cpp"
+	echo Error: some type names in the docs are not prefixed by hash sign,
+	echo neither are the only token in the doc line followed by collon.
+	echo Fix this by searching for the following regexp in the above files:
+	echo "	'$type_regexp'"
 fi
 
 func_regexp='^\([/ ][*] .*[^#]\)\<\(cairo_[][<>/0-9a-z_]*\> \?[^][ <>(]\)'

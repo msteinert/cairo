@@ -271,7 +271,7 @@ cairo_scaled_font_status (cairo_scaled_font_t *scaled_font)
 slim_hidden_def (cairo_scaled_font_status);
 
 /* Here we keep a unique mapping from
- * cairo_font_face_t/matrix/ctm/options => #cairo_scaled_font_t.
+ * font_face/matrix/ctm/font_options => #cairo_scaled_font_t.
  *
  * Here are the things that we want to map:
  *

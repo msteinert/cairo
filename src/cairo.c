@@ -605,7 +605,7 @@ slim_hidden_def(cairo_pop_group);
  * operations:
  *
  * <informalexample><programlisting>
- * cairo_pattern_t *group = cairo_pop_group (cr);
+ * #cairo_pattern_t *group = cairo_pop_group (cr);
  * cairo_set_source (cr, group);
  * cairo_pattern_destroy (group);
  * </programlisting></informalexample>

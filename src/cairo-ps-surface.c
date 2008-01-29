@@ -1366,7 +1366,7 @@ cairo_ps_surface_set_size (cairo_surface_t	*surface,
  * Here is an example sequence showing how this function might be used:
  *
  * <informalexample><programlisting>
- * cairo_surface_t *surface = cairo_ps_surface_create (filename, width, height);
+ * #cairo_surface_t *surface = cairo_ps_surface_create (filename, width, height);
  * ...
  * cairo_ps_surface_dsc_comment (surface, "%%Title: My excellent document");
  * cairo_ps_surface_dsc_comment (surface, "%%Copyright: Copyright (C) 2006 Cairo Lover")

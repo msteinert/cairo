@@ -45,7 +45,7 @@
  */
 static const cairo_font_face_backend_t _cairo_toy_font_face_backend;
 
-/* cairo_font_face_t */
+/* #cairo_font_face_t */
 
 const cairo_font_face_t _cairo_font_face_nil = {
     { 0 },			/* hash_entry */
@@ -256,7 +256,7 @@ _cairo_toy_font_face_keys_equal (const void *key_a,
 				 const void *key_b);
 
 /* We maintain a hash table from family/weight/slant =>
- * cairo_font_face_t for #cairo_toy_font_t. The primary purpose of
+ * #cairo_font_face_t for #cairo_toy_font_t. The primary purpose of
  * this mapping is to provide unique #cairo_font_face_t values so that
  * our cache and mapping from #cairo_font_face_t => #cairo_scaled_font_t
  * works. Once the corresponding #cairo_font_face_t objects fall out of

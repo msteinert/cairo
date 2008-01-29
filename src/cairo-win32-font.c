@@ -1763,7 +1763,7 @@ const cairo_scaled_font_backend_t cairo_win32_scaled_font_backend = {
     _cairo_win32_scaled_font_map_glyphs_to_unicode,
 };
 
-/* cairo_win32_font_face_t */
+/* #cairo_win32_font_face_t */
 
 typedef struct _cairo_win32_font_face cairo_win32_font_face_t;
 

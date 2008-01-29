@@ -1244,7 +1244,7 @@ static const cairo_unscaled_font_backend_t cairo_ft_unscaled_font_backend = {
 #endif
 };
 
-/* cairo_ft_scaled_font_t */
+/* #cairo_ft_scaled_font_t */
 
 typedef struct _cairo_ft_scaled_font {
     cairo_scaled_font_t base;
@@ -2192,7 +2192,7 @@ const cairo_scaled_font_backend_t cairo_ft_scaled_font_backend = {
     _cairo_ft_map_glyphs_to_unicode,
 };
 
-/* cairo_ft_font_face_t */
+/* #cairo_ft_font_face_t */
 
 static void
 _cairo_ft_font_face_destroy (void *abstract_face)

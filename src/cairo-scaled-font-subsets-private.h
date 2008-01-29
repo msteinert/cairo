@@ -292,7 +292,7 @@ typedef struct _cairo_cff_subset {
  * @font_subset: the #cairo_scaled_font_subset_t to initialize from
  *
  * If possible (depending on the format of the underlying
- * cairo_scaled_font_t and the font backend in use) generate a
+ * #cairo_scaled_font_t and the font backend in use) generate a
  * cff file corresponding to @font_subset and initialize
  * @cff_subset with information about the subset and the cff
  * data.
@@ -324,7 +324,7 @@ _cairo_cff_subset_fini (cairo_cff_subset_t *cff_subset);
  * @font_subset: the #cairo_scaled_font_subset_t to initialize from
  *
  * If possible (depending on the format of the underlying
- * cairo_scaled_font_t and the font backend in use) generate a cff
+ * #cairo_scaled_font_t and the font backend in use) generate a cff
  * file corresponding to @font_subset and initialize @cff_subset
  * with information about the subset and the cff data.
  *
@@ -366,7 +366,7 @@ typedef struct _cairo_truetype_subset {
  * @font_subset: the #cairo_scaled_font_subset_t to initialize from
  *
  * If possible (depending on the format of the underlying
- * cairo_scaled_font_t and the font backend in use) generate a
+ * #cairo_scaled_font_t and the font backend in use) generate a
  * truetype file corresponding to @font_subset and initialize
  * @truetype_subset with information about the subset and the truetype
  * data.
@@ -411,7 +411,7 @@ typedef struct _cairo_type1_subset {
  * @hex_encode: if true the encrypted portion of the font is hex encoded
  *
  * If possible (depending on the format of the underlying
- * cairo_scaled_font_t and the font backend in use) generate a type1
+ * #cairo_scaled_font_t and the font backend in use) generate a type1
  * file corresponding to @font_subset and initialize @type1_subset
  * with information about the subset and the type1 data.
  *
@@ -452,7 +452,7 @@ _cairo_type1_scaled_font_is_type1 (cairo_scaled_font_t	*scaled_font);
  * @font_subset: the #cairo_scaled_font_subset_t to initialize from
  *
  * If possible (depending on the format of the underlying
- * cairo_scaled_font_t and the font backend in use) generate a type1
+ * #cairo_scaled_font_t and the font backend in use) generate a type1
  * file corresponding to @font_subset and initialize @type1_subset
  * with information about the subset and the type1 data.  The encrypted
  * part of the font is binary encoded.
@@ -473,7 +473,7 @@ _cairo_type1_fallback_init_binary (cairo_type1_subset_t	      *type_subset,
  * @font_subset: the #cairo_scaled_font_subset_t to initialize from
  *
  * If possible (depending on the format of the underlying
- * cairo_scaled_font_t and the font backend in use) generate a type1
+ * #cairo_scaled_font_t and the font backend in use) generate a type1
  * file corresponding to @font_subset and initialize @type1_subset
  * with information about the subset and the type1 data. The encrypted
  * part of the font is hex encoded.
@@ -512,7 +512,7 @@ typedef struct _cairo_type2_charstrings {
  * @font_subset: the #cairo_scaled_font_subset_t to initialize from
  *
  * If possible (depending on the format of the underlying
- * cairo_scaled_font_t and the font backend in use) generate type2
+ * #cairo_scaled_font_t and the font backend in use) generate type2
  * charstrings to @font_subset and initialize @type2_subset
  * with information about the subset.
  *
@@ -541,7 +541,7 @@ _cairo_type2_charstrings_fini (cairo_type2_charstrings_t *charstrings);
  * @font_subset: the #cairo_scaled_font_subset_t to initialize from
  *
  * If possible (depending on the format of the underlying
- * cairo_scaled_font_t and the font backend in use) assign
+ * #cairo_scaled_font_t and the font backend in use) assign
  * the unicode character of each glyph in font_subset to
  * fontsubset->to_unicode.
  *

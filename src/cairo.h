@@ -177,7 +177,7 @@ typedef struct _cairo_user_data_key {
 } cairo_user_data_key_t;
 
 /**
- * cairo_status_t
+ * cairo_status_t:
  * @CAIRO_STATUS_SUCCESS: no error has occurred
  * @CAIRO_STATUS_NO_MEMORY: out of memory
  * @CAIRO_STATUS_INVALID_RESTORE: cairo_restore() called without matching cairo_save()
@@ -242,7 +242,7 @@ typedef enum _cairo_status {
 } cairo_status_t;
 
 /**
- * cairo_content_t
+ * cairo_content_t:
  * @CAIRO_CONTENT_COLOR: The surface will hold color content only.
  * @CAIRO_CONTENT_ALPHA: The surface will hold alpha content only.
  * @CAIRO_CONTENT_COLOR_ALPHA: The surface will hold color and alpha content.
@@ -345,7 +345,7 @@ cairo_pop_group_to_source (cairo_t *cr);
 /* Modify state */
 
 /**
- * cairo_operator_t
+ * cairo_operator_t:
  * @CAIRO_OPERATOR_CLEAR: clear destination layer (bounded)
  * @CAIRO_OPERATOR_SOURCE: replace destination layer (bounded)
  * @CAIRO_OPERATOR_OVER: draw source layer on top of destination layer
@@ -441,7 +441,7 @@ cairo_public void
 cairo_set_antialias (cairo_t *cr, cairo_antialias_t antialias);
 
 /**
- * cairo_fill_rule_t
+ * cairo_fill_rule_t:
  * @CAIRO_FILL_RULE_WINDING: If the path crosses the ray from
  * left-to-right, counts +1. If the path crosses the ray
  * from right to left, counts -1. (Left and right are determined
@@ -475,7 +475,7 @@ cairo_public void
 cairo_set_line_width (cairo_t *cr, double width);
 
 /**
- * cairo_line_cap_t
+ * cairo_line_cap_t:
  * @CAIRO_LINE_CAP_BUTT: start(stop) the line exactly at the start(end) point
  * @CAIRO_LINE_CAP_ROUND: use a round ending, the center of the circle is the end point
  * @CAIRO_LINE_CAP_SQUARE: use squared ending, the center of the square is the end point
@@ -492,7 +492,7 @@ cairo_public void
 cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap);
 
 /**
- * cairo_line_join_t
+ * cairo_line_join_t:
  * @CAIRO_LINE_JOIN_MITER: use a sharp (angled) corner, see
  * cairo_set_miter_limit()
  * @CAIRO_LINE_JOIN_ROUND: use a rounded join, the center of the circle is the
@@ -1132,7 +1132,7 @@ cairo_public cairo_status_t
 cairo_font_face_status (cairo_font_face_t *font_face);
 
 /**
- * cairo_font_type_t
+ * cairo_font_type_t:
  * @CAIRO_FONT_TYPE_TOY: The font was created using cairo's toy font api
  * @CAIRO_FONT_TYPE_FT: The font is of type FreeType
  * @CAIRO_FONT_TYPE_WIN32: The font is of type Win32
@@ -1462,7 +1462,7 @@ cairo_public cairo_status_t
 cairo_surface_status (cairo_surface_t *surface);
 
 /**
- * cairo_surface_type_t
+ * cairo_surface_type_t:
  * @CAIRO_SURFACE_TYPE_IMAGE: The surface is of type image
  * @CAIRO_SURFACE_TYPE_PDF: The surface is of type pdf
  * @CAIRO_SURFACE_TYPE_PS: The surface is of type ps
@@ -1586,7 +1586,7 @@ cairo_surface_show_page (cairo_surface_t *surface);
 /* Image-surface functions */
 
 /**
- * cairo_format_t
+ * cairo_format_t:
  * @CAIRO_FORMAT_ARGB32: each pixel is a 32-bit quantity, with
  *   alpha in the upper 8 bits, then red, then green, then blue.
  *   The 32-bit quantities are stored native-endian. Pre-multiplied
@@ -1708,7 +1708,7 @@ cairo_pattern_set_user_data (cairo_pattern_t		 *pattern,
 			     cairo_destroy_func_t	  destroy);
 
 /**
- * cairo_pattern_type_t
+ * cairo_pattern_type_t:
  * @CAIRO_PATTERN_TYPE_SOLID: The pattern is a solid (uniform)
  * color. It may be opaque or translucent.
  * @CAIRO_PATTERN_TYPE_SURFACE: The pattern is a based on a surface (an image).
@@ -1767,7 +1767,7 @@ cairo_pattern_get_matrix (cairo_pattern_t *pattern,
 			  cairo_matrix_t  *matrix);
 
 /**
- * cairo_extend_t
+ * cairo_extend_t:
  * @CAIRO_EXTEND_NONE: pixels outside of the source pattern
  *   are fully transparent
  * @CAIRO_EXTEND_REPEAT: the pattern is tiled by repeating
@@ -1796,7 +1796,7 @@ cairo_public cairo_extend_t
 cairo_pattern_get_extend (cairo_pattern_t *pattern);
 
 /**
- * cairo_filter_t
+ * cairo_filter_t:
  * @CAIRO_FILTER_FAST: A high-performance filter, with quality similar
  *     to %CAIRO_FILTER_NEAREST
  * @CAIRO_FILTER_GOOD: A reasonable-performance filter, with quality

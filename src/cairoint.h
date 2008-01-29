@@ -291,7 +291,7 @@ struct _cairo_unscaled_font_backend {
     void (*destroy)     	    (void		             *unscaled_font);
 };
 
-/* cairo_toy_font_face_t - simple family/slant/weight font faces used for
+/* #cairo_toy_font_face_t - simple family/slant/weight font faces used for
  * the built-in font API
  */
 

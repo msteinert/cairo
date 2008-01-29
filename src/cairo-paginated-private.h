@@ -75,11 +75,11 @@ struct _cairo_paginated_surface_backend {
  * for saving content in files such as PostScript or PDF files).
  *
  * To use the paginated surface, you'll first need to create your
- * 'real' surface using _cairo_surface_init and the standard
- * cairo_surface_backend_t. Then you also call
+ * 'real' surface using _cairo_surface_init() and the standard
+ * #cairo_surface_backend_t. Then you also call
  * _cairo_paginated_surface_create which takes its own, much simpler,
- * cairo_paginated_surface_backend. You are free to return the result
- * of _cairo_paginated_surface_create from your public
+ * #cairo_paginated_surface_backend_t. You are free to return the result
+ * of _cairo_paginated_surface_create() from your public
  * cairo_<foo>_surface_create. The paginated backend will be careful
  * to not let the user see that they really got a "wrapped"
  * surface. See test-paginated-surface.c for a fairly minimal example
