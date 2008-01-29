@@ -349,6 +349,7 @@ cairo_pop_group_to_source (cairo_t *cr);
  * @CAIRO_OPERATOR_CLEAR: clear destination layer (bounded)
  * @CAIRO_OPERATOR_SOURCE: replace destination layer (bounded)
  * @CAIRO_OPERATOR_OVER: draw source layer on top of destination layer
+ * (bounded)
  * @CAIRO_OPERATOR_IN: draw source where there was destination content
  * (unbounded)
  * @CAIRO_OPERATOR_OUT: draw source where there was no destination
@@ -362,9 +363,10 @@ cairo_pop_group_to_source (cairo_t *cr);
  * @CAIRO_OPERATOR_DEST_OUT: leave destination only where there was no
  * source content
  * @CAIRO_OPERATOR_DEST_ATOP: leave destination on top of source content
- * an only there
- * @CAIRO_OPERATOR_XOR: pixel color xor
- * @CAIRO_OPERATOR_ADD: pixel color addition
+ * and only there
+ * @CAIRO_OPERATOR_XOR: source and destination are shown where there is only
+ * one of them
+ * @CAIRO_OPERATOR_ADD: source and destination layers are accumulated
  * @CAIRO_OPERATOR_SATURATE: pixel color saturation
  *
  * #cairo_operator_t is used to set the compositing operator for drawing
