@@ -367,11 +367,18 @@ cairo_pop_group_to_source (cairo_t *cr);
  * @CAIRO_OPERATOR_XOR: source and destination are shown where there is only
  * one of them
  * @CAIRO_OPERATOR_ADD: source and destination layers are accumulated
- * @CAIRO_OPERATOR_SATURATE: pixel color saturation
+ * @CAIRO_OPERATOR_SATURATE: like over, but assuming source and dest are
+ * disjoint geometries
  *
- * #cairo_operator_t is used to set the compositing operator for drawing
- * operations. For a more detailed explanation of the effects of each
- * operator, see
+ * #cairo_operator_t is used to set the compositing operator for all cairo
+ * drawing operations.
+ *
+ * To keep things simple, the operator descriptions here
+ * document the behavior for when both source and destination are either fully
+ * transparent or fully opaque.  The actual implementaiton works for
+ * translucent layers too.
+ * For a more detailed explanation of the effects of each operator, including
+ * the mathematical defitnions, see
  * <ulink url="http://cairographics.org/operators/">http://cairographics.org/operators/</ulink>.
  **/
 typedef enum _cairo_operator {
