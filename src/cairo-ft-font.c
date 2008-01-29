@@ -589,10 +589,11 @@ _cairo_ft_unscaled_font_unlock_face (cairo_ft_unscaled_font_t *unscaled)
 }
 slim_hidden_def (cairo_ft_scaled_font_unlock_face);
 
-static void
+static cairo_status_t
 _compute_transform (cairo_ft_font_transform_t *sf,
 		    cairo_matrix_t      *scale)
 {
+    cairo_status_t status;
     cairo_matrix_t normalized = *scale;
 
     /* The font matrix has x and y "scale" components which we extract and
@@ -602,9 +603,11 @@ _compute_transform (cairo_ft_font_transform_t *sf,
      * freetype's transformation.
      */
 
-    _cairo_matrix_compute_scale_factors (&normalized,
-					 &sf->x_scale, &sf->y_scale,
-					 /* XXX */ 1);
+    status = _cairo_matrix_compute_scale_factors (&normalized,
+						  &sf->x_scale, &sf->y_scale,
+						  /* XXX */ 1);
+    if (status)
+	return status;
 
     if (sf->x_scale != 0 && sf->y_scale != 0) {
 	cairo_matrix_scale (&normalized, 1.0 / sf->x_scale, 1.0 / sf->y_scale);
@@ -617,6 +620,8 @@ _compute_transform (cairo_ft_font_transform_t *sf,
 	sf->shape[0][0] = sf->shape[1][1] = 1.0;
 	sf->shape[0][1] = sf->shape[1][0] = 0.0;
     }
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 /* Temporarily scales an unscaled font to the give scale. We catch
@@ -626,6 +631,7 @@ static cairo_status_t
 _cairo_ft_unscaled_font_set_scale (cairo_ft_unscaled_font_t *unscaled,
 				   cairo_matrix_t	      *scale)
 {
+    cairo_status_t status;
     cairo_ft_font_transform_t sf;
     FT_Matrix mat;
     FT_Error error;
@@ -642,7 +648,9 @@ _cairo_ft_unscaled_font_set_scale (cairo_ft_unscaled_font_t *unscaled,
     unscaled->have_scale = TRUE;
     unscaled->current_scale = *scale;
 
-    _compute_transform (&sf, scale);
+    status = _compute_transform (&sf, scale);
+    if (status)
+	return status;
 
     unscaled->x_scale = sf.x_scale;
     unscaled->y_scale = sf.y_scale;
@@ -1562,7 +1570,7 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
 	}
     }
 
-    _cairo_scaled_font_set_metrics (&scaled_font->base, &fs_metrics);
+    status = _cairo_scaled_font_set_metrics (&scaled_font->base, &fs_metrics);
 
     *font_out = &scaled_font->base;
 

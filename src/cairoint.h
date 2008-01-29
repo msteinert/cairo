@@ -1395,7 +1395,7 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 			 const cairo_font_options_t	   *options,
 			 const cairo_scaled_font_backend_t *backend);
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_scaled_font_set_metrics (cairo_scaled_font_t	    *scaled_font,
 				cairo_font_extents_t	    *fs_metrics);
 
@@ -1967,7 +1967,7 @@ _cairo_matrix_is_invertible (const cairo_matrix_t *matrix);
 cairo_private void
 _cairo_matrix_compute_determinant (const cairo_matrix_t *matrix, double *det);
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
 				     double *sx, double *sy, int x_major);
 
