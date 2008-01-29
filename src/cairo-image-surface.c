@@ -399,9 +399,6 @@ _cairo_image_surface_create_with_content (cairo_content_t	content,
  * @format: A #cairo_format_t value
  * @width: The desired width of an image surface to be created.
  *
- * Return value: the appropriate stride to use given the desired
- * format and width.
- *
  * This function provides a stride value that will respect all
  * alignment requirements of the accelerated image-rendering code
  * within cairo. Typical usage will be of the form:
@@ -417,8 +414,11 @@ _cairo_image_surface_create_with_content (cairo_content_t	content,
  *						  width, height);
  * </programlisting></informalexample>
  *
+ * Return value: the appropriate stride to use given the desired
+ * format and width.
+ *
  * Since: 1.6
- */
+ **/
 int
 cairo_format_stride_for_width (cairo_format_t	format,
 			       int		width)

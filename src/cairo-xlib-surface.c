@@ -2162,14 +2162,20 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
 slim_hidden_def (cairo_xlib_surface_create_with_xrender_format);
 
 /**
- * cairo_xlib_surface_get_xrender_format
- * @surface: an xlib surface created by
- * cairo_xlib_surface_create_with_render_format
+ * cairo_xlib_surface_get_xrender_format:
+ * @surface: an xlib surface
  *
- * Return value: the XRenderPictFormat* with which the surface was
- * originally created, (or %NULL if the surface is not an xlib surface
- * or if the X Render extension is not available).
- */
+ * Gets the X Render picture format that @surface uses for rendering with the
+ * X Render extension. If the surface was created by
+ * cairo_xlib_surface_create_with_xrender_format() originally, the return
+ * value is the format passed to that constructor.
+ *
+ * Return value: the XRenderPictFormat* associated with @surface,
+ * or %NULL if the surface is not an xlib surface
+ * or if the X Render extension is not available.)
+ *
+ * Since: 1.6
+ **/
 XRenderPictFormat *
 cairo_xlib_surface_get_xrender_format (cairo_surface_t *surface)
 {
