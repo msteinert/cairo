@@ -136,6 +136,8 @@ cairo_sources += $(svg_sources)
 backend_pkgconfigs += cairo-svg.pc
 endif
 
+cairo_sources += $(libcairo_font_subset_sources)
+
 test_sources = test-fallback-surface.c test-fallback-surface.h \
 	       test-meta-surface.c test-meta-surface.h		\
 	       test-paginated-surface.c test-paginated-surface.h
