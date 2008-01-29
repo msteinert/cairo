@@ -140,11 +140,11 @@ struct _cairo_ft_font_face {
 static const cairo_unscaled_font_backend_t cairo_ft_unscaled_font_backend;
 
 /*
- * We maintain a hash table to map file/id => cairo_ft_unscaled_font_t.
+ * We maintain a hash table to map file/id => #cairo_ft_unscaled_font_t.
  * The hash table itself isn't limited in size. However, we limit the
  * number of FT_Face objects we keep around; when we've exceeded that
  * limit and need to create a new FT_Face, we dump the FT_Face from a
- * random cairo_ft_unscaled_font_t which has an unlocked FT_Face, (if
+ * random #cairo_ft_unscaled_font_t which has an unlocked FT_Face, (if
  * there are any).
  */
 
@@ -295,9 +295,9 @@ _cairo_ft_unscaled_font_init_key (cairo_ft_unscaled_font_t *key,
 /**
  * _cairo_ft_unscaled_font_init:
  *
- * Initialize a cairo_ft_unscaled_font_t.
+ * Initialize a #cairo_ft_unscaled_font_t.
  *
- * There are two basic flavors of cairo_ft_unscaled_font_t, one
+ * There are two basic flavors of #cairo_ft_unscaled_font_t, one
  * created from an FT_Face and the other created from a filename/id
  * pair. These two flavors are identified as from_face and !from_face.
  *
@@ -309,7 +309,7 @@ _cairo_ft_unscaled_font_init_key (cairo_ft_unscaled_font_t *key,
  *
  * Note that the code handles these two flavors in very distinct
  * ways. For example there is a hash_table mapping
- * filename/id->cairo_unscaled_font_t in the !from_face case, but no
+ * filename/id->#cairo_unscaled_font_t in the !from_face case, but no
  * parallel in the from_face case, (where the calling code would have
  * to do its own mapping to ensure similar sharing).
  **/
@@ -358,7 +358,7 @@ _cairo_unscaled_font_is_ft (cairo_unscaled_font_t *unscaled_font)
 /**
  * _cairo_ft_unscaled_font_fini:
  *
- * Free all data associated with a cairo_ft_unscaled_font_t.
+ * Free all data associated with a #cairo_ft_unscaled_font_t.
  *
  * CAUTION: The unscaled->face field must be %NULL before calling this
  * function. This is because the cairo_ft_unscaled_font_map keeps a

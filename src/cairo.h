@@ -184,7 +184,7 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_INVALID_POP_GROUP: no saved group to pop
  * @CAIRO_STATUS_NO_CURRENT_POINT: no current point defined
  * @CAIRO_STATUS_INVALID_MATRIX: invalid matrix (not invertible)
- * @CAIRO_STATUS_INVALID_STATUS: invalid value for an input cairo_status_t
+ * @CAIRO_STATUS_INVALID_STATUS: invalid value for an input #cairo_status_t
  * @CAIRO_STATUS_NULL_POINTER: %NULL pointer
  * @CAIRO_STATUS_INVALID_STRING: input string not valid UTF-8
  * @CAIRO_STATUS_INVALID_PATH_DATA: input path data not valid
@@ -193,8 +193,8 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_SURFACE_FINISHED: target surface has been finished
  * @CAIRO_STATUS_SURFACE_TYPE_MISMATCH: the surface type is not appropriate for the operation
  * @CAIRO_STATUS_PATTERN_TYPE_MISMATCH: the pattern type is not appropriate for the operation
- * @CAIRO_STATUS_INVALID_CONTENT: invalid value for an input cairo_content_t
- * @CAIRO_STATUS_INVALID_FORMAT: invalid value for an input cairo_format_t
+ * @CAIRO_STATUS_INVALID_CONTENT: invalid value for an input #cairo_content_t
+ * @CAIRO_STATUS_INVALID_FORMAT: invalid value for an input #cairo_format_t
  * @CAIRO_STATUS_INVALID_VISUAL: invalid value for an input Visual*
  * @CAIRO_STATUS_FILE_NOT_FOUND: file not found
  * @CAIRO_STATUS_INVALID_DASH: invalid value for a dash setting
@@ -251,8 +251,8 @@ typedef enum _cairo_status {
  * contain, whether color information, alpha information (translucence
  * vs. opacity), or both.
  *
- * Note: The large values here are designed to keep cairo_content_t
- * values distinct from cairo_format_t values so that the
+ * Note: The large values here are designed to keep #cairo_content_t
+ * values distinct from #cairo_format_t values so that the
  * implementation can detect the error if users confuse the two types.
  **/
 typedef enum _cairo_content {
@@ -734,7 +734,7 @@ cairo_rectangle_list_destroy (cairo_rectangle_list_t *rectangle_list);
  * cairo_scaled_font_t:
  *
  * A #cairo_scaled_font_t is a font scaled to a particular size and device
- * resolution. A cairo_scaled_font_t is most useful for low-level font
+ * resolution. A #cairo_scaled_font_t is most useful for low-level font
  * usage where a library or application wants to cache a reference
  * to a scaled font to speed up the computation of metrics.
  *
@@ -1346,8 +1346,8 @@ typedef enum _cairo_path_data_type {
  *
  * <informalexample><programlisting>
  *      int i;
- *      cairo_path_t *path;
- *      cairo_path_data_t *data;
+ *      #cairo_path_t *path;
+ *      #cairo_path_data_t *data;
  * &nbsp;
  *      path = cairo_copy_path (cr);
  * &nbsp;

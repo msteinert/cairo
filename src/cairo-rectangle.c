@@ -39,15 +39,15 @@
 #include "cairoint.h"
 
 /* XXX We currently have a confusing mix of boxes and rectangles as
- * exemplified by this function.  A cairo_box_t is a rectangular area
+ * exemplified by this function.  A #cairo_box_t is a rectangular area
  * represented by the coordinates of the upper left and lower right
- * corners, expressed in fixed point numbers.  A cairo_rectangle_int_t is
+ * corners, expressed in fixed point numbers.  A #cairo_rectangle_int_t is
  * also a rectangular area, but represented by the upper left corner
  * and the width and the height, as integer numbers.
  *
- * This function converts a cairo_box_t to a cairo_rectangle_int_t by
+ * This function converts a #cairo_box_t to a #cairo_rectangle_int_t by
  * increasing the area to the nearest integer coordinates.  We should
- * standardize on cairo_rectangle_fixed_t and cairo_rectangle_int_t, and
+ * standardize on #cairo_rectangle_fixed_t and #cairo_rectangle_int_t, and
  * this function could be renamed to the more reasonable
  * _cairo_rectangle_fixed_round.
  */

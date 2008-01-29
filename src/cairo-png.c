@@ -84,7 +84,7 @@ convert_data_to_bytes (png_structp png, png_row_infop row_info, png_bytep data)
 }
 
 /* Use a couple of simple error callbacks that do not print anything to
- * stderr and rely on the user to check for errors via the cairo_status_t
+ * stderr and rely on the user to check for errors via the #cairo_status_t
  * return.
  */
 static void

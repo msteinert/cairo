@@ -133,7 +133,7 @@ struct _cairo_hash_table {
  *
  * Creates a new hash table which will use the keys_equal() function
  * to compare hash keys. Data is provided to the hash table in the
- * form of user-derived versions of cairo_hash_entry_t. A hash entry
+ * form of user-derived versions of #cairo_hash_entry_t. A hash entry
  * must be able to hold both a key (including a hash code) and a
  * value. Sometimes only the key will be necessary, (as in
  * _cairo_hash_table_remove), and other times both a key and a value

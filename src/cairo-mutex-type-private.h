@@ -65,7 +65,7 @@ CAIRO_BEGIN_DECLS
  *   on a win32 system even if you do not compile the win32
  *   surface/backend.
  *
- * - typedef cairo_mutex_t to the proper mutex type on your target
+ * - typedef #cairo_mutex_t to the proper mutex type on your target
  *   system.  Note that you may or may not need to use a pointer,
  *   depending on what kinds of initialization your mutex
  *   implementation supports.  No trailing semicolon needed.
@@ -90,7 +90,7 @@ CAIRO_BEGIN_DECLS
  *          %CAIRO_MUTEX_UNLOCK (_cairo_some_mutex);
  *
  * - #define %CAIRO_MUTEX_NIL_INITIALIZER to something that can
- *   initialize the cairo_mutex_t type you defined.  Most of the
+ *   initialize the #cairo_mutex_t type you defined.  Most of the
  *   time one of 0, %NULL, or {} works.  At this point
  *   you should be able to compile the following snippet:
  *
@@ -134,7 +134,7 @@ CAIRO_BEGIN_DECLS
  *   #define CAIRO_MUTEX_FINALIZE() CAIRO_MUTEX_NOOP
  *
  * - That is all.  If for any reason you think the above API is
- *   not enough to implement cairo_mutex_t on your system, please
+ *   not enough to implement #cairo_mutex_t on your system, please
  *   stop and write to the cairo mailing list about it.  DO NOT
  *   poke around cairo-mutex-private.h for possible solutions.
  */

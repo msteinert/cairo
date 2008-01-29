@@ -92,7 +92,7 @@ _cairo_traps_fini (cairo_traps_t *traps)
  * @box: a box that will be converted to a single trapezoid
  *       to store in @traps.
  *
- * Initializes a cairo_traps_t to contain a single rectangular
+ * Initializes a #cairo_traps_t to contain a single rectangular
  * trapezoid.
  **/
 cairo_status_t

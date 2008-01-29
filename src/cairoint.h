@@ -244,7 +244,7 @@ _cairo_hash_string (const char *c);
 typedef struct _cairo_unscaled_font_backend cairo_unscaled_font_backend_t;
 
 /*
- * A cairo_unscaled_font_t is just an opaque handle we use in the
+ * A #cairo_unscaled_font_t is just an opaque handle we use in the
  * glyph cache.
  */
 typedef struct _cairo_unscaled_font {
@@ -1770,7 +1770,7 @@ _cairo_surface_has_device_transform (cairo_surface_t *surface);
  * things like cairo_image_surface_create.
  *
  * Since 1.2.0 we ran into the same situtation with X servers with BGR
- * visuals. This time we invented cairo_internal_format_t instead,
+ * visuals. This time we invented #cairo_internal_format_t instead,
  * (see it for more discussion).
  *
  * The punchline is that %CAIRO_FORMAT_VALID must not conside any

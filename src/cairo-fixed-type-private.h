@@ -64,7 +64,7 @@ typedef cairo_int128_t	cairo_fixed_96_32_t;
 /* A signed type %CAIRO_FIXED_BITS in size; the main fixed point type */
 typedef int32_t cairo_fixed_t;
 
-/* An unsigned type of the same size as cairo_fixed_t */
+/* An unsigned type of the same size as #cairo_fixed_t */
 typedef uint32_t cairo_fixed_unsigned_t;
 
 #endif /* CAIRO_FIXED_TYPE_PRIVATE_H */

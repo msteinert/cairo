@@ -46,8 +46,8 @@
  * cairo_cache_entry_t:
  *
  * A #cairo_cache_entry_t contains both a key and a value for
- * cairo_cache_t. User-derived types for cairo_cache_entry_t must
- * have a cairo_cache_entry_t as their first field. For example:
+ * cairo_cache_t. User-derived types for #cairo_cache_entry_t must
+ * have a #cairo_cache_entry_t as their first field. For example:
  *
  * 	typedef _my_entry {
  *	    cairo_cache_entry_t base;

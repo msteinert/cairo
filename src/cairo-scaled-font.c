@@ -271,12 +271,12 @@ cairo_scaled_font_status (cairo_scaled_font_t *scaled_font)
 slim_hidden_def (cairo_scaled_font_status);
 
 /* Here we keep a unique mapping from
- * cairo_font_face_t/matrix/ctm/options => cairo_scaled_font_t.
+ * cairo_font_face_t/matrix/ctm/options => #cairo_scaled_font_t.
  *
  * Here are the things that we want to map:
  *
- *  a) All otherwise referenced cairo_scaled_font_t's
- *  b) Some number of not otherwise referenced cairo_scaled_font_t's
+ *  a) All otherwise referenced #cairo_scaled_font_t's
+ *  b) Some number of not otherwise referenced #cairo_scaled_font_t's
  *
  * The implementation uses a hash table which covers (a)
  * completely. Then, for (b) we have an array of otherwise
@@ -453,7 +453,7 @@ _cairo_scaled_font_keys_equal (const void *abstract_key_a, const void *abstract_
 #define MAX_GLYPHS_CACHED_PER_FONT 256
 
 /*
- * Basic cairo_scaled_font_t object management
+ * Basic #cairo_scaled_font_t object management
  */
 
 cairo_status_t

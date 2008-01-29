@@ -1205,7 +1205,7 @@ cairo_ps_level_to_string (cairo_ps_level_t level)
 
 /**
  * cairo_ps_surface_set_eps:
- * @surface: a PostScript cairo_surface_t
+ * @surface: a PostScript #cairo_surface_t
  * @eps: %TRUE to output EPS format PostScript
  *
  * If @eps is %TRUE, the PostScript surface will output Encapsulated
@@ -1237,7 +1237,7 @@ cairo_ps_surface_set_eps (cairo_surface_t	*surface,
 
 /**
  * cairo_ps_surface_get_eps:
- * @surface: a PostScript cairo_surface_t
+ * @surface: a PostScript #cairo_surface_t
  *
  * Check whether the PostScript surface will output Encapsulated PostScript.
  *
@@ -1262,7 +1262,7 @@ cairo_ps_surface_get_eps (cairo_surface_t	*surface)
 
 /**
  * cairo_ps_surface_set_size:
- * @surface: a PostScript cairo_surface_t
+ * @surface: a PostScript #cairo_surface_t
  * @width_in_points: new surface width, in points (1 point == 1/72.0 inch)
  * @height_in_points: new surface height, in points (1 point == 1/72.0 inch)
  *
@@ -1302,7 +1302,7 @@ cairo_ps_surface_set_size (cairo_surface_t	*surface,
 
 /**
  * cairo_ps_surface_dsc_comment:
- * @surface: a PostScript cairo_surface_t
+ * @surface: a PostScript #cairo_surface_t
  * @comment: a comment string to be emitted into the PostScript output
  *
  * Emit a comment into the PostScript output for the given surface.
@@ -1430,7 +1430,7 @@ cairo_ps_surface_dsc_comment (cairo_surface_t	*surface,
 
 /**
  * cairo_ps_surface_dsc_begin_setup:
- * @surface: a PostScript cairo_surface_t
+ * @surface: a PostScript #cairo_surface_t
  *
  * This function indicates that subsequent calls to
  * cairo_ps_surface_dsc_comment() should direct comments to the Setup
@@ -1464,7 +1464,7 @@ cairo_ps_surface_dsc_begin_setup (cairo_surface_t *surface)
 
 /**
  * cairo_ps_surface_dsc_begin_page_setup:
- * @surface: a PostScript cairo_surface_t
+ * @surface: a PostScript #cairo_surface_t
  *
  * This function indicates that subsequent calls to
  * cairo_ps_surface_dsc_comment() should direct comments to the

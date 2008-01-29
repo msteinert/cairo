@@ -63,7 +63,7 @@ static const cairo_t _cairo_nil = {
 
 #include <assert.h>
 
-/* This has to be updated whenever cairo_status_t is extended.  That's
+/* This has to be updated whenever #cairo_status_t is extended.  That's
  * a bit of a pain, but it should be easy to always catch as long as
  * one adds a new test case to test a trigger of the new status value.
  */
@@ -461,7 +461,7 @@ slim_hidden_def(cairo_push_group);
 /**
  * cairo_push_group_with_content:
  * @cr: a cairo context
- * @content: a %cairo_content_t indicating the type of group that
+ * @content: a %#cairo_content_t indicating the type of group that
  *           will be created
  *
  * Temporarily redirects drawing to an intermediate surface known as a

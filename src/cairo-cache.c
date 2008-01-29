@@ -97,7 +97,7 @@ _cairo_cache_fini (cairo_cache_t *cache)
  * the equality of entries.
  *
  * Data is provided to the cache in the form of user-derived version
- * of cairo_cache_entry_t. A cache entry must be able to hold hash
+ * of #cairo_cache_entry_t. A cache entry must be able to hold hash
  * code, a size, and the key/value pair being stored in the
  * cache. Sometimes only the key will be necessary, (as in
  * _cairo_cache_lookup()), and in these cases the value portion of the

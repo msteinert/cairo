@@ -52,7 +52,7 @@ typedef struct _cairo_scaled_font_subsets_glyph {
  * _cairo_scaled_font_subsets_create_scaled:
  *
  * Create a new #cairo_scaled_font_subsets_t object which can be used
- * to create subsets of any number of cairo_scaled_font_t
+ * to create subsets of any number of #cairo_scaled_font_t
  * objects. This allows the (arbitrarily large and sparse) glyph
  * indices of a cairo_scaled_font to be mapped to one or more font
  * subsets with glyph indices packed into the range
@@ -74,7 +74,7 @@ _cairo_scaled_font_subsets_create_scaled (void);
  *
  * Glyphs with an outline path available will be mapped to one font
  * subset for each font face. Glyphs from bitmap fonts will mapped to
- * separate font subsets for each cairo_scaled_font_t object.
+ * separate font subsets for each #cairo_scaled_font_t object.
  *
  * The maximum number of glyphs per subset is 256. Each subset
  * reserves the first glyph for the .notdef glyph.
@@ -98,7 +98,7 @@ _cairo_scaled_font_subsets_create_simple (void);
  * 65536 glyphs except for Type1 fonts which have a maximum of 256 glyphs.
  *
  * Glyphs from bitmap fonts will mapped to separate font subsets for
- * each cairo_scaled_font_t object. Each unscaled subset has a maximum
+ * each #cairo_scaled_font_t object. Each unscaled subset has a maximum
  * of 256 glyphs.
  *
  * Each subset reserves the first glyph for the .notdef glyph.
@@ -167,7 +167,7 @@ _cairo_scaled_font_subsets_destroy (cairo_scaled_font_subsets_t *font_subsets);
  * used by #cairo_scaled_font_subset_t as provided by
  * _cairo_scaled_font_subsets_foreach.
  *
- * The returned values in the cairo_scaled_font_subsets_glyph_t struct are:
+ * The returned values in the #cairo_scaled_font_subsets_glyph_t struct are:
  *
  * @font_id: The font ID of the mapped glyph
  * @subset_id : The subset ID of the mapped glyph within the @font_id

@@ -1890,7 +1890,7 @@ cairo_win32_surface_get_dc (cairo_surface_t *surface)
  * as the DIB of the Win32 surface.  If the passed-in win32 surface
  * is not a DIB surface, %NULL is returned.
  *
- * Return value: a #cairo_surface_t (owned by the win32 cairo_surface_t),
+ * Return value: a #cairo_surface_t (owned by the win32 #cairo_surface_t),
  * or %NULL if the win32 surface is not a DIB.
  *
  * Since: 1.4

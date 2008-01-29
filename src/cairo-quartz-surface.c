@@ -393,7 +393,7 @@ CreateGradientFunction (cairo_gradient_pattern_t *gpat)
 			     &callbacks);
 }
 
-/* generic cairo surface -> cairo_quartz_surface_t function */
+/* generic cairo surface -> #cairo_quartz_surface_t function */
 static cairo_int_status_t
 _cairo_quartz_surface_to_quartz (cairo_surface_t *target,
 				 cairo_surface_t *pat_surf,

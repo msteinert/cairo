@@ -219,10 +219,10 @@ _cairo_gstate_destroy (cairo_gstate_t *gstate)
  *
  * Create a new #cairo_gstate_t setting all graphics state parameters
  * to the same values as contained in @other. gstate->next will be set
- * to %NULL and may be used by the caller to chain cairo_gstate_t
+ * to %NULL and may be used by the caller to chain #cairo_gstate_t
  * objects together.
  *
- * Return value: a new cairo_gstate_t or %NULL if there is insufficient
+ * Return value: a new #cairo_gstate_t or %NULL if there is insufficient
  * memory.
  **/
 static cairo_gstate_t*
@@ -422,7 +422,7 @@ _cairo_gstate_get_original_target (cairo_gstate_t *gstate)
  * _cairo_gstate_get_clip:
  * @gstate: a #cairo_gstate_t
  *
- * Return value: a pointer to the gstate's cairo_clip_t structure.
+ * Return value: a pointer to the gstate's #cairo_clip_t structure.
  */
 cairo_clip_t *
 _cairo_gstate_get_clip (cairo_gstate_t *gstate)
@@ -1469,7 +1469,7 @@ _cairo_gstate_get_scaled_font (cairo_gstate_t       *gstate,
  * and then ignored by the "scaled-font" layer.
  *
  * In order to perform any action on a font, we must build an object
- * called a cairo_font_scale_t; this contains the central 2x2 matrix
+ * called a #cairo_font_scale_t; this contains the central 2x2 matrix
  * resulting from "font matrix * CTM" (sans the font matrix translation
  * components as stated in the previous paragraph).
  *

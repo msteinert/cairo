@@ -280,7 +280,7 @@ _pixman_format_to_masks (pixman_format_code_t	 pixman_format,
 /* XXX: This function really should be eliminated. We don't really
  * want to advertise a cairo image surface that supports any possible
  * format. A minimal step would be to replace this function with one
- * that accepts a cairo_internal_format_t rather than mask values. */
+ * that accepts a #cairo_internal_format_t rather than mask values. */
 cairo_surface_t *
 _cairo_image_surface_create_with_masks (unsigned char	       *data,
 					cairo_format_masks_t   *masks,
@@ -396,7 +396,7 @@ _cairo_image_surface_create_with_content (cairo_content_t	content,
 
 /**
  * cairo_format_stride_for_width:
- * @format: A cairo_format_t value
+ * @format: A #cairo_format_t value
  * @width: The desired width of an image surface to be created.
  *
  * Return value: the appropriate stride to use given the desired

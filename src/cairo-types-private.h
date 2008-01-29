@@ -61,7 +61,7 @@ typedef cairo_array_t cairo_user_data_array_t;
  * cairo_hash_entry_t:
  *
  * A #cairo_hash_entry_t contains both a key and a value for
- * cairo_hash_table_t. User-derived types for cairo_hash_entry_t must
+ * cairo_hash_table_t. User-derived types for #cairo_hash_entry_t must
  * be type-compatible with this structure (eg. they must have an
  * unsigned long as the first parameter. The easiest way to get this
  * is to use:

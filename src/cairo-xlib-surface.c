@@ -2857,7 +2857,7 @@ typedef void (*cairo_xrender_composite_text_func_t)
 	       _Xconst XGlyphElt8           *elts,
 	       int                          nelt);
 
-/* Build a struct of the same size of cairo_glyph_t that can be used both as
+/* Build a struct of the same size of #cairo_glyph_t that can be used both as
  * an input glyph with double coordinates, and as "working" glyph with
  * integer from-current-point offsets. */
 typedef struct {
@@ -2874,7 +2874,7 @@ typedef struct {
   } p;
 } cairo_xlib_glyph_t;
 
-/* compile-time assert that cairo_xlib_glyph_t is the same size as cairo_glyph_t */
+/* compile-time assert that #cairo_xlib_glyph_t is the same size as #cairo_glyph_t */
 typedef int cairo_xlib_glyph_t_size_assertion [sizeof (cairo_xlib_glyph_t) == sizeof (cairo_glyph_t) ? 1 : -1];
 
 #define GLYPH_INDEX_SKIP ((unsigned long) -1)

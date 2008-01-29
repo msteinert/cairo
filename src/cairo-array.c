@@ -177,7 +177,7 @@ _cairo_array_truncate (cairo_array_t *array, unsigned int num_elements)
  * pointer may be used for further direct indexing with []. For
  * example:
  *
- * 	cairo_array_t array;
+ * 	#cairo_array_t array;
  *	double *values;
  *
  *	_cairo_array_init (&array, sizeof(double));

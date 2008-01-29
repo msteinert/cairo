@@ -129,7 +129,7 @@ typedef struct _cairo_bo_event_queue {
     unsigned num_startstop_events;
 } cairo_bo_event_queue_t;
 
-/* This structure extends cairo_skip_list_t, which must come first. */
+/* This structure extends #cairo_skip_list_t, which must come first. */
 typedef struct _cairo_bo_sweep_line {
     cairo_skip_list_t active_edges;
     cairo_bo_edge_t *head;
@@ -1053,7 +1053,7 @@ print_state (const char			*msg,
 }
 #endif
 
-/* Adds the trapezoid, if any, of the left edge to the cairo_traps_t
+/* Adds the trapezoid, if any, of the left edge to the #cairo_traps_t
  * of bo_traps. */
 static cairo_status_t
 _cairo_bo_edge_end_trap (cairo_bo_edge_t	*left,

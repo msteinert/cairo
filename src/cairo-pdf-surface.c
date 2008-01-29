@@ -424,7 +424,7 @@ _extract_pdf_surface (cairo_surface_t		 *surface,
 
 /**
  * cairo_pdf_surface_set_size:
- * @surface: a PDF cairo_surface_t
+ * @surface: a PDF #cairo_surface_t
  * @width_in_points: new surface width, in points (1 point == 1/72.0 inch)
  * @height_in_points: new surface height, in points (1 point == 1/72.0 inch)
  *
