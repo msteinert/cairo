@@ -218,7 +218,7 @@ cairo_debug_reset_static_data
 </SECTION>
 
 <SECTION>
-<FILE>cairo-font</FILE>
+<FILE>cairo-font-face</FILE>
 <TITLE>cairo_font_face_t</TITLE>
 cairo_font_face_t
 cairo_font_face_reference

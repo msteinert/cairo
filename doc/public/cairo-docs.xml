@@ -19,7 +19,7 @@
   </chapter>
   <chapter id="Fonts">
     <title>Fonts</title>
-    <xi:include href="xml/cairo-font.xml"/>
+    <xi:include href="xml/cairo-font-face.xml"/>
     <xi:include href="xml/cairo-scaled-font.xml"/>
     <xi:include href="xml/cairo-font-options.xml"/>
     <xi:include href="xml/cairo-ft.xml"/>
