@@ -318,7 +318,7 @@ install-data-local:
         fi
 
 TESTS_ENVIRONMENT = srcdir="$(srcdir)" MAKE="$(MAKE)"
-TESTS = check-def.sh check-plt.sh check-headers.sh check-cairoint.sh
+TESTS = check-def.sh check-plt.sh check-headers.sh check-cairoint.sh check-doc-syntax.sh
 EXTRA_DIST += $(TESTS) check-has-hidden-symbols.c
 DISTCLEANFILES += check-has-hidden-symbols.i
 
