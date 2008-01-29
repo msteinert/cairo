@@ -1050,6 +1050,17 @@ cairo_pattern_get_matrix (cairo_pattern_t *pattern, cairo_matrix_t *matrix)
  *
  * Sets the filter to be used for resizing when using this pattern.
  * See #cairo_filter_t for details on each filter.
+ *
+ * * Note that you might want to control filtering even when you do not
+ * have an explicit #cairo_pattern_t object, (for example when using
+ * cairo_set_source_surface()). In these cases, it is convenient to
+ * use cairo_get_source() to get access to the pattern that cairo
+ * creates implicitly. For example:
+ *
+ * <informatlexample><programlisting>
+ * cairo_set_source_surface (cr, image, x, y);
+ * cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_NEAREST);
+ * </programlisting></informatlexample>
  **/
 void
 cairo_pattern_set_filter (cairo_pattern_t *pattern, cairo_filter_t filter)
