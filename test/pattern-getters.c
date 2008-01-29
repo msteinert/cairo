@@ -38,14 +38,12 @@ cairo_test_t test = {
 
 #define CHECK_SUCCESS do { if (status) return CAIRO_TEST_FAILURE; } while (0)
 
-#define DOUBLE_EQUALS(a,b)  (fabs((a)-(b)) < 0.00001)
-
 static int
 double_buf_equal (double *a, double *b, int nc)
 {
     int i;
     for (i = 0; i < nc; i++) {
-	if (!DOUBLE_EQUALS(a[i],b[i])) {
+	if (!CAIRO_TEST_DOUBLE_EQUALS(a[i],b[i])) {
 	    cairo_test_log ("Error: doubles not equal: %g, %g\n",
 			    a[i], b[i]);
 	    return 0;

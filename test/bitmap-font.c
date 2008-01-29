@@ -49,11 +49,12 @@ static cairo_bool_t
 font_extents_equal (const cairo_font_extents_t *A,
 	            const cairo_font_extents_t *B)
 {
-    return A->ascent    == B->ascent        &&
-	   A->descent   == B->descent       &&
-	   A->height    == B->height        &&
-       A->max_x_advance == B->max_x_advance &&
-       A->max_y_advance == B->max_y_advance;
+    return
+	CAIRO_TEST_DOUBLE_EQUALS (A->ascent,  B->ascent)  &&
+	CAIRO_TEST_DOUBLE_EQUALS (A->descent, B->descent) &&
+	CAIRO_TEST_DOUBLE_EQUALS (A->height,  B->height)  &&
+	CAIRO_TEST_DOUBLE_EQUALS (A->max_x_advance, B->max_x_advance) &&
+	CAIRO_TEST_DOUBLE_EQUALS (A->max_y_advance, B->max_y_advance);
 }
 
 static cairo_test_status_t
