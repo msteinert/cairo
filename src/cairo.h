@@ -1798,9 +1798,9 @@ cairo_pattern_get_extend (cairo_pattern_t *pattern);
 /**
  * cairo_filter_t
  * @CAIRO_FILTER_FAST: A high-performance filter, with quality similar
- *     to NEAREST
+ *     to %CAIRO_FILTER_NEAREST
  * @CAIRO_FILTER_GOOD: A reasonable-performance filter, with quality
- *     similar to BILINEAR
+ *     similar to %CAIRO_FILTER_BILINEAR
  * @CAIRO_FILTER_BEST: The highest-quality available, performance may
  *     not be suitable for interactive use.
  * @CAIRO_FILTER_NEAREST: Nearest-neighbor filtering
