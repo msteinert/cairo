@@ -2172,7 +2172,7 @@ slim_hidden_def (cairo_xlib_surface_create_with_xrender_format);
  *
  * Return value: the XRenderPictFormat* associated with @surface,
  * or %NULL if the surface is not an xlib surface
- * or if the X Render extension is not available.)
+ * or if the X Render extension is not available.
  *
  * Since: 1.6
  **/
