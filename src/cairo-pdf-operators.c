@@ -45,6 +45,8 @@
 #include "cairo-output-stream-private.h"
 #include "cairo-scaled-font-subsets-private.h"
 
+#include <ctype.h>
+
 void
 _cairo_pdf_operators_init (cairo_pdf_operators_t	*pdf_operators,
 			   cairo_output_stream_t	*stream,
@@ -204,6 +206,9 @@ typedef struct _pdf_path_info {
     cairo_output_stream_t   *output;
     cairo_matrix_t	    *cairo_to_pdf;
     cairo_matrix_t	    *ctm_inverse;
+    cairo_line_cap_t         line_cap;
+    cairo_point_t            last_move_to_point;
+    cairo_bool_t             has_sub_path;
 } pdf_path_info_t;
 
 static cairo_status_t
@@ -212,6 +217,9 @@ _cairo_pdf_path_move_to (void *closure, cairo_point_t *point)
     pdf_path_info_t *info = closure;
     double x = _cairo_fixed_to_double (point->x);
     double y = _cairo_fixed_to_double (point->y);
+
+    info->last_move_to_point = *point;
+    info->has_sub_path = FALSE;
 
     if (info->cairo_to_pdf)
         cairo_matrix_transform_point (info->cairo_to_pdf, &x, &y);
@@ -230,6 +238,16 @@ _cairo_pdf_path_line_to (void *closure, cairo_point_t *point)
     pdf_path_info_t *info = closure;
     double x = _cairo_fixed_to_double (point->x);
     double y = _cairo_fixed_to_double (point->y);
+
+    if (info->line_cap != CAIRO_LINE_CAP_ROUND &&
+	! info->has_sub_path &&
+	point->x == info->last_move_to_point.x &&
+	point->y == info->last_move_to_point.y)
+    {
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    info->has_sub_path = TRUE;
 
     if (info->cairo_to_pdf)
         cairo_matrix_transform_point (info->cairo_to_pdf, &x, &y);
@@ -256,6 +274,8 @@ _cairo_pdf_path_curve_to (void          *closure,
     double dx = _cairo_fixed_to_double (d->x);
     double dy = _cairo_fixed_to_double (d->y);
 
+    info->has_sub_path = TRUE;
+
     if (info->cairo_to_pdf) {
         cairo_matrix_transform_point (info->cairo_to_pdf, &bx, &by);
         cairo_matrix_transform_point (info->cairo_to_pdf, &cx, &cy);
@@ -278,10 +298,60 @@ _cairo_pdf_path_close_path (void *closure)
 {
     pdf_path_info_t *info = closure;
 
+    if (info->line_cap != CAIRO_LINE_CAP_ROUND &&
+	! info->has_sub_path)
+    {
+	return CAIRO_STATUS_SUCCESS;
+    }
+
     _cairo_output_stream_printf (info->output,
 				 "h\r\n");
 
     return _cairo_output_stream_get_status (info->output);
+}
+
+/* The line cap value is needed to workaround the fact that PostScript
+ * and PDF semantics for stroking degenerate sub-paths do not match
+ * cairo semantics. (PostScript draws something for any line cap
+ * value, while cairo draws something only for round caps).
+ *
+ * When using this function to emit a path to be filled, rather than
+ * stroked, simply pass CAIRO_LINE_CAP_ROUND which will guarantee that
+ * the stroke workaround will not modify the path being emitted.
+ */
+static cairo_status_t
+_cairo_pdf_operators_emit_path (cairo_pdf_operators_t 	*pdf_operators,
+				cairo_path_fixed_t      *path,
+				cairo_matrix_t          *cairo_to_pdf,
+				cairo_matrix_t          *ctm_inverse,
+				cairo_line_cap_t         line_cap)
+{
+    cairo_output_stream_t *word_wrap;
+    cairo_status_t status, status2;
+    pdf_path_info_t info;
+
+    word_wrap = _word_wrap_stream_create (pdf_operators->stream, 79);
+    status = _cairo_output_stream_get_status (word_wrap);
+    if (status)
+	return status;
+
+    info.output = word_wrap;
+    info.cairo_to_pdf = cairo_to_pdf;
+    info.ctm_inverse = ctm_inverse;
+    info.line_cap = line_cap;
+    status = _cairo_path_fixed_interpret (path,
+					  CAIRO_DIRECTION_FORWARD,
+					  _cairo_pdf_path_move_to,
+					  _cairo_pdf_path_line_to,
+					  _cairo_pdf_path_curve_to,
+					  _cairo_pdf_path_close_path,
+					  &info);
+
+    status2 = _cairo_output_stream_destroy (word_wrap);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = status2;
+
+    return status;
 }
 
 cairo_int_status_t
@@ -290,25 +360,17 @@ _cairo_pdf_operators_clip (cairo_pdf_operators_t	*pdf_operators,
 			   cairo_fill_rule_t		 fill_rule)
 {
     const char *pdf_operator;
+    cairo_status_t status;
 
     if (! path->has_current_point) {
 	/* construct an empty path */
 	_cairo_output_stream_printf (pdf_operators->stream, "0 0 m ");
     } else {
-	pdf_path_info_t info;
-	cairo_status_t status;
-
-	info.output = pdf_operators->stream;
-	info.cairo_to_pdf = &pdf_operators->cairo_to_pdf;
-	info.ctm_inverse = NULL;
-
-	status = _cairo_path_fixed_interpret (path,
-					      CAIRO_DIRECTION_FORWARD,
-					      _cairo_pdf_path_move_to,
-					      _cairo_pdf_path_line_to,
-					      _cairo_pdf_path_curve_to,
-					      _cairo_pdf_path_close_path,
-					      &info);
+	status = _cairo_pdf_operators_emit_path (pdf_operators,
+						 path,
+						 &pdf_operators->cairo_to_pdf,
+						 NULL,
+						 CAIRO_LINE_CAP_ROUND);
 	if (status)
 	    return status;
     }
@@ -405,7 +467,6 @@ _cairo_pdf_operator_stroke (cairo_pdf_operators_t	*pdf_operators,
 			    cairo_matrix_t		*ctm,
 			    cairo_matrix_t		*ctm_inverse)
 {
-    pdf_path_info_t info;
     cairo_status_t status;
     cairo_matrix_t m;
 
@@ -413,23 +474,17 @@ _cairo_pdf_operator_stroke (cairo_pdf_operators_t	*pdf_operators,
     if (status)
 	return status;
 
-    info.output = pdf_operators->stream;
-    info.cairo_to_pdf = NULL;
-    info.ctm_inverse = ctm_inverse;
-
     cairo_matrix_multiply (&m, ctm, &pdf_operators->cairo_to_pdf);
     _cairo_output_stream_printf (pdf_operators->stream,
 				 "q %f %f %f %f %f %f cm\r\n",
 				 m.xx, m.yx, m.xy, m.yy,
 				 m.x0, m.y0);
 
-    status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
-					  _cairo_pdf_path_move_to,
-					  _cairo_pdf_path_line_to,
-					  _cairo_pdf_path_curve_to,
-					  _cairo_pdf_path_close_path,
-					  &info);
+    status = _cairo_pdf_operators_emit_path (pdf_operators,
+					     path,
+					     NULL,
+					     ctm_inverse,
+					     style->line_cap);
     if (status)
 	return status;
 
@@ -445,18 +500,12 @@ _cairo_pdf_operators_fill (cairo_pdf_operators_t	*pdf_operators,
 {
     const char *pdf_operator;
     cairo_status_t status;
-    pdf_path_info_t info;
 
-    info.output = pdf_operators->stream;
-    info.cairo_to_pdf = &pdf_operators->cairo_to_pdf;
-    info.ctm_inverse = NULL;
-    status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
-					  _cairo_pdf_path_move_to,
-					  _cairo_pdf_path_line_to,
-					  _cairo_pdf_path_curve_to,
-					  _cairo_pdf_path_close_path,
-					  &info);
+    status = _cairo_pdf_operators_emit_path (pdf_operators,
+					     path,
+					     &pdf_operators->cairo_to_pdf,
+					     NULL,
+					     CAIRO_LINE_CAP_ROUND);
     if (status)
 	return status;
 
