@@ -331,6 +331,7 @@ REFERENCE_IMAGES = \
 	fill-rule-quartz-rgb24-ref.png	\
 	fill-rule-ref.png	\
 	fill-rule-rgb24-ref.png	\
+	fill-rule-ps-rgb24-ref.png \
 	filter-nearest-offset-ref.png	\
 	font-matrix-translation-ps-argb32-ref.png	\
 	font-matrix-translation-ps-rgb24-ref.png	\
@@ -381,6 +382,8 @@ REFERENCE_IMAGES = \
 	mask-svg-argb32-ref.png	\
 	meta-surface-pattern-ref.png		\
 	meta-surface-pattern-rgb24-ref.png	\
+	meta-surface-pattern-pdf-ref.png	\
+	meta-surface-pattern-pdf-rgb24-ref.png	\
 	miter-precision-ref.png \
 	move-to-show-surface-ref.png	\
 	new-sub-path-ps-argb32-ref.png	\
