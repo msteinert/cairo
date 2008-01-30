@@ -74,3 +74,4 @@ check: doc
 
 TESTS_ENVIRONMENT = srcdir="$(srcdir)" top_srcdir="$(top_srcdir)" MAKE="$(MAKE)"
 TESTS = check-doc-coverage.sh check-doc-syntax.sh
+EXTRA_DIST += $(TESTS)
