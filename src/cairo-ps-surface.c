@@ -586,48 +586,9 @@ _cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,
 }
 
 static cairo_int_status_t
-_cairo_ps_surface_emit_outline_glyph_data (cairo_ps_surface_t	*surface,
-					   cairo_scaled_font_t	*scaled_font,
-					   unsigned long	 glyph_index,
-					   cairo_box_t          *bbox)
-{
-    cairo_scaled_glyph_t *scaled_glyph;
-    cairo_status_t status;
-
-    status = _cairo_scaled_glyph_lookup (scaled_font,
-					 glyph_index,
-					 CAIRO_SCALED_GLYPH_INFO_METRICS|
-					 CAIRO_SCALED_GLYPH_INFO_PATH,
-					 &scaled_glyph);
-    if (status)
-	return status;
-
-    *bbox = scaled_glyph->bbox;
-    _cairo_output_stream_printf (surface->final_stream,
-				 "0 0 %f %f %f %f setcachedevice\n",
-				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
-				 -_cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
-				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x),
-				 -_cairo_fixed_to_double (scaled_glyph->bbox.p1.y));
-
-    /* We're filling not stroking, so we pass CAIRO_LINE_CAP_ROUND. */
-    status = _cairo_ps_surface_emit_path (surface,
-					  surface->final_stream,
-					  scaled_glyph->path,
-					  CAIRO_LINE_CAP_ROUND);
-    if (status)
-	return status;
-
-    _cairo_output_stream_printf (surface->final_stream,
-				 "F\n");
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_int_status_t
 _cairo_ps_surface_emit_bitmap_glyph_data (cairo_ps_surface_t	*surface,
 					  cairo_scaled_font_t	*scaled_font,
-					  unsigned long	 glyph_index,
+					  unsigned long	         glyph_index,
 					  cairo_box_t           *bbox)
 {
     cairo_scaled_glyph_t *scaled_glyph;
@@ -718,15 +679,10 @@ _cairo_ps_surface_emit_glyph (cairo_ps_surface_t	*surface,
 				 "\t\t{ %% %d\n", subset_glyph_index);
 
     if (subset_glyph_index != 0) {
-	status = _cairo_ps_surface_emit_outline_glyph_data (surface,
-							    scaled_font,
-							    scaled_font_glyph_index,
-							    bbox);
-	if (status == CAIRO_INT_STATUS_UNSUPPORTED)
-	    status = _cairo_ps_surface_emit_bitmap_glyph_data (surface,
-							       scaled_font,
-							       scaled_font_glyph_index,
-							       bbox);
+	status = _cairo_ps_surface_emit_bitmap_glyph_data (surface,
+							   scaled_font,
+							   scaled_font_glyph_index,
+							   bbox);
     }
 
     _cairo_output_stream_printf (surface->final_stream,
