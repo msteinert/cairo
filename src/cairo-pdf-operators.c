@@ -204,8 +204,7 @@ _word_wrap_stream_create (cairo_output_stream_t *output, int max_column)
 
 typedef struct _pdf_path_info {
     cairo_output_stream_t   *output;
-    cairo_matrix_t	    *cairo_to_pdf;
-    cairo_matrix_t	    *ctm_inverse;
+    cairo_matrix_t	    *path_transform;
     cairo_line_cap_t         line_cap;
     cairo_point_t            last_move_to_point;
     cairo_bool_t             has_sub_path;
@@ -220,12 +219,7 @@ _cairo_pdf_path_move_to (void *closure, cairo_point_t *point)
 
     info->last_move_to_point = *point;
     info->has_sub_path = FALSE;
-
-    if (info->cairo_to_pdf)
-        cairo_matrix_transform_point (info->cairo_to_pdf, &x, &y);
-    if (info->ctm_inverse)
-	cairo_matrix_transform_point (info->ctm_inverse, &x, &y);
-
+    cairo_matrix_transform_point (info->path_transform, &x, &y);
     _cairo_output_stream_printf (info->output,
 				 "%f %f m ", x, y);
 
@@ -248,12 +242,7 @@ _cairo_pdf_path_line_to (void *closure, cairo_point_t *point)
     }
 
     info->has_sub_path = TRUE;
-
-    if (info->cairo_to_pdf)
-        cairo_matrix_transform_point (info->cairo_to_pdf, &x, &y);
-    if (info->ctm_inverse)
-	cairo_matrix_transform_point (info->ctm_inverse, &x, &y);
-
+    cairo_matrix_transform_point (info->path_transform, &x, &y);
     _cairo_output_stream_printf (info->output,
 				 "%f %f l ", x, y);
 
@@ -275,18 +264,9 @@ _cairo_pdf_path_curve_to (void          *closure,
     double dy = _cairo_fixed_to_double (d->y);
 
     info->has_sub_path = TRUE;
-
-    if (info->cairo_to_pdf) {
-        cairo_matrix_transform_point (info->cairo_to_pdf, &bx, &by);
-        cairo_matrix_transform_point (info->cairo_to_pdf, &cx, &cy);
-        cairo_matrix_transform_point (info->cairo_to_pdf, &dx, &dy);
-    }
-    if (info->ctm_inverse) {
-	cairo_matrix_transform_point (info->ctm_inverse, &bx, &by);
-	cairo_matrix_transform_point (info->ctm_inverse, &cx, &cy);
-	cairo_matrix_transform_point (info->ctm_inverse, &dx, &dy);
-    }
-
+    cairo_matrix_transform_point (info->path_transform, &bx, &by);
+    cairo_matrix_transform_point (info->path_transform, &cx, &cy);
+    cairo_matrix_transform_point (info->path_transform, &dx, &dy);
     _cairo_output_stream_printf (info->output,
 				 "%f %f %f %f %f %f c ",
 				 bx, by, cx, cy, dx, dy);
@@ -322,8 +302,7 @@ _cairo_pdf_path_close_path (void *closure)
 static cairo_status_t
 _cairo_pdf_operators_emit_path (cairo_pdf_operators_t 	*pdf_operators,
 				cairo_path_fixed_t      *path,
-				cairo_matrix_t          *cairo_to_pdf,
-				cairo_matrix_t          *ctm_inverse,
+				cairo_matrix_t          *path_transform,
 				cairo_line_cap_t         line_cap)
 {
     cairo_output_stream_t *word_wrap;
@@ -336,8 +315,7 @@ _cairo_pdf_operators_emit_path (cairo_pdf_operators_t 	*pdf_operators,
 	return status;
 
     info.output = word_wrap;
-    info.cairo_to_pdf = cairo_to_pdf;
-    info.ctm_inverse = ctm_inverse;
+    info.path_transform = path_transform;
     info.line_cap = line_cap;
     status = _cairo_path_fixed_interpret (path,
 					  CAIRO_DIRECTION_FORWARD,
@@ -369,7 +347,6 @@ _cairo_pdf_operators_clip (cairo_pdf_operators_t	*pdf_operators,
 	status = _cairo_pdf_operators_emit_path (pdf_operators,
 						 path,
 						 &pdf_operators->cairo_to_pdf,
-						 NULL,
 						 CAIRO_LINE_CAP_ROUND);
 	if (status)
 	    return status;
@@ -482,7 +459,6 @@ _cairo_pdf_operator_stroke (cairo_pdf_operators_t	*pdf_operators,
 
     status = _cairo_pdf_operators_emit_path (pdf_operators,
 					     path,
-					     NULL,
 					     ctm_inverse,
 					     style->line_cap);
     if (status)
@@ -504,7 +480,6 @@ _cairo_pdf_operators_fill (cairo_pdf_operators_t	*pdf_operators,
     status = _cairo_pdf_operators_emit_path (pdf_operators,
 					     path,
 					     &pdf_operators->cairo_to_pdf,
-					     NULL,
 					     CAIRO_LINE_CAP_ROUND);
     if (status)
 	return status;
