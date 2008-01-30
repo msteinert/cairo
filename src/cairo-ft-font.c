@@ -932,7 +932,7 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 					     width, height, stride);
     if ((*surface)->base.status) {
 	free (data);
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return (*surface)->base.status;
     }
 
     if (subpixel)
@@ -1051,9 +1051,8 @@ _render_glyph_outline (FT_Face                    face,
 	bitmap.width = width * hmul;
 	bitmap.rows = height * vmul;
 	bitmap.buffer = calloc (stride, bitmap.rows);
-	if (bitmap.buffer == NULL) {
+	if (bitmap.buffer == NULL)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	}
 
 	FT_Outline_Translate (outline, -cbox.xMin*hmul, -cbox.yMin*vmul);
 
@@ -2310,7 +2309,7 @@ _cairo_ft_font_face_create (cairo_ft_unscaled_font_t *unscaled,
 	    font_face->ft_options.extra_flags == ft_options->extra_flags &&
 	    cairo_font_options_equal (&font_face->ft_options.base, &ft_options->base))
 	{
-	    if (! font_face->base.status)
+	    if (font_face->base.status == CAIRO_STATUS_SUCCESS)
 		return cairo_font_face_reference (&font_face->base);
 
 	    /* The font_face has been left in an error state, abandon it. */
