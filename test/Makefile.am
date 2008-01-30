@@ -230,6 +230,8 @@ endif
 
 # All tests which have a reference image go here.
 REFERENCE_IMAGES = \
+	a1-image-sample-ref.png		\
+	a1-traps-sample-ref.png		\
 	a8-mask-ref.png	\
 	bitmap-font-pdf-argb32-ref.png	\
 	bitmap-font-ref.png	\
