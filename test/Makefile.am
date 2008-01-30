@@ -38,7 +38,6 @@ degenerate-pen$(EXEEXT)					\
 device-offset$(EXEEXT)					\
 device-offset-positive$(EXEEXT)				\
 extend-pad$(EXEEXT)					\
-extend-pad-similar$(EXEEXT)				\
 extend-reflect$(EXEEXT)					\
 extend-reflect-similar$(EXEEXT)				\
 extend-repeat$(EXEEXT)					\
@@ -303,7 +302,6 @@ REFERENCE_IMAGES = \
 	device-offset-ref.png	\
 	device-offset-rgb24-ref.png	\
 	extend-pad-ref.png	\
-	extend-pad-similar-ref.png	\
 	extend-reflect-ref.png	\
 	extend-reflect-similar-ref.png	\
 	extend-repeat-ref.png	\
@@ -528,7 +526,6 @@ $(REFERENCE_IMAGES)
 XFAIL_TESTS =					\
 big-trap$(EXEEXT)				\
 extend-pad$(EXEEXT)				\
-extend-pad-similar$(EXEEXT)			\
 filter-nearest-offset$(EXEEXT)			\
 long-lines$(EXEEXT)				\
 self-intersecting$(EXEEXT)			\
