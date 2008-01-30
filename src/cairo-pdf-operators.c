@@ -86,6 +86,120 @@ _cairo_pdf_operators_set_cairo_to_pdf_matrix (cairo_pdf_operators_t *pdf_operato
     pdf_operators->cairo_to_pdf = cairo_to_pdf;
 }
 
+/* A word wrap stream can be used as a filter to do word wrapping on
+ * top of an existing output stream. The word wrapping is quite
+ * simple, using isspace to determine characters that separate
+ * words. Any word that will cause the column count exceed the given
+ * max_column will have a '\n' character emitted before it.
+ *
+ * The stream is careful to maintain integrity for words that cross
+ * the boundary from one call to write to the next.
+ *
+ * Note: This stream does not guarantee that the output will never
+ * exceed max_column. In particular, if a single word is larger than
+ * max_column it will not be broken up.
+ */
+typedef struct _word_wrap_stream {
+    cairo_output_stream_t base;
+    cairo_output_stream_t *output;
+    int max_column;
+    int column;
+    cairo_bool_t last_write_was_space;
+} word_wrap_stream_t;
+
+static int
+_count_word_up_to (const unsigned char *s, int length)
+{
+    int word = 0;
+
+    while (length--) {
+	if (! isspace (*s++))
+	    word++;
+	else
+	    return word;
+    }
+
+    return word;
+}
+
+static cairo_status_t
+_word_wrap_stream_write (cairo_output_stream_t  *base,
+			 const unsigned char	*data,
+			 unsigned int		 length)
+{
+    word_wrap_stream_t *stream = (word_wrap_stream_t *) base;
+    cairo_bool_t newline;
+    int word;
+
+    while (length) {
+	if (isspace (*data)) {
+	    newline =  (*data == '\n' || *data == '\r');
+	    if (! newline && stream->column >= stream->max_column) {
+		_cairo_output_stream_printf (stream->output, "\n");
+		stream->column = 0;
+	    }
+	    _cairo_output_stream_write (stream->output, data, 1);
+	    data++;
+	    length--;
+	    if (newline)
+		stream->column = 0;
+	    else
+		stream->column++;
+	    stream->last_write_was_space = TRUE;
+	} else {
+	    word = _count_word_up_to (data, length);
+	    /* Don't wrap if this word is a continuation of a word
+	     * from a previous call to write. */
+	    if (stream->column + word >= stream->max_column &&
+		stream->last_write_was_space)
+	    {
+		_cairo_output_stream_printf (stream->output, "\n");
+		stream->column = 0;
+	    }
+	    _cairo_output_stream_write (stream->output, data, word);
+	    data += word;
+	    length -= word;
+	    stream->column += word;
+	    stream->last_write_was_space = FALSE;
+	}
+    }
+
+    return _cairo_output_stream_get_status (stream->output);
+}
+
+static cairo_status_t
+_word_wrap_stream_close (cairo_output_stream_t *base)
+{
+    word_wrap_stream_t *stream = (word_wrap_stream_t *) base;
+
+    return _cairo_output_stream_get_status (stream->output);
+}
+
+static cairo_output_stream_t *
+_word_wrap_stream_create (cairo_output_stream_t *output, int max_column)
+{
+    word_wrap_stream_t *stream;
+
+    if (output->status)
+	return _cairo_output_stream_create_in_error (output->status);
+
+    stream = malloc (sizeof (word_wrap_stream_t));
+    if (stream == NULL) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
+    }
+
+    _cairo_output_stream_init (&stream->base,
+			       _word_wrap_stream_write,
+			       _word_wrap_stream_close);
+    stream->output = output;
+    stream->max_column = max_column;
+    stream->column = 0;
+    stream->last_write_was_space = FALSE;
+
+    return &stream->base;
+}
+
 typedef struct _pdf_path_info {
     cairo_output_stream_t   *output;
     cairo_matrix_t	    *cairo_to_pdf;
