@@ -15,10 +15,7 @@ echo Checking documentation for incorrect syntax
 # Note: this test is also run from doc/public/ to check the SGML files
 
 if test "x$SGML_DOCS" = x; then
-	FILES="$cairo_all_source_file"
-	if test "x$FILES" = x; then
-		FILES=`find "$srcdir" -name '*.h' -or -name '*.c' -or -name '*.cpp'`
-	fi
+    FILES=`find "$srcdir" -name '*.h' -or -name '*.c' -or -name '*.cpp'`
 fi
 
 enum_regexp='\([^%@]\|^\)\<\(FALSE\|TRUE\|NULL\|CAIRO_[0-9A-Z_]*[^(0-9A-Z_]\)'
