@@ -3245,6 +3245,26 @@ cairo_get_antialias (cairo_t *cr)
 }
 
 /**
+ * cairo_has_current_point:
+ * @cr: a cairo context
+ *
+ * Returns whether a current point is defined on the current path.
+ * See cairo_get_current_point() for details on the current point.
+ *
+ * Return value: whether a current point is defined.
+ *
+ * Since: 1.6
+ **/
+cairo_bool_t
+cairo_has_current_point (cairo_t *cr)
+{
+    if (cr->status)
+    return FALSE;
+
+    return cr->path->has_current_point;
+}
+
+/**
  * cairo_get_current_point:
  * @cr: a cairo context
  * @x: return value for X coordinate of the current point
@@ -3254,8 +3274,9 @@ cairo_get_antialias (cairo_t *cr)
  * conceptually the final point reached by the path so far.
  *
  * The current point is returned in the user-space coordinate
- * system. If there is no defined current point then @x and @y will
- * both be set to 0.0.
+ * system. If there is no defined current point or if @cr is in an
+ * error status, @x and @y will both be set to 0.0. It is possible to
+ * check this in advance with cairo_has_current_point().
  *
  * Most path construction functions alter the current point. See the
  * following for details on how they affect the current point:
