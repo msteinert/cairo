@@ -2925,7 +2925,7 @@ cairo_text_extents (cairo_t              *cr,
     if (utf8 == NULL)
 	return;
 
-    (void) cairo_get_current_point (cr, &x, &y);
+    cairo_get_current_point (cr, &x, &y);
 
     status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8,
 					   x, y,
@@ -3026,7 +3026,7 @@ cairo_show_text (cairo_t *cr, const char *utf8)
     if (utf8 == NULL)
 	return;
 
-    (void) cairo_get_current_point (cr, &x, &y);
+    cairo_get_current_point (cr, &x, &y);
 
     status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8,
 					       x, y,
@@ -3125,7 +3125,7 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
     if (utf8 == NULL)
 	return;
 
-    (void) cairo_get_current_point (cr, &x, &y);
+    cairo_get_current_point (cr, &x, &y);
 
     status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8,
 					   x, y,
@@ -3272,17 +3272,10 @@ cairo_get_antialias (cairo_t *cr)
  *
  * Some functions unset the current path and as a result, current point:
  * cairo_fill(), cairo_stroke().
- *
- * Returns: %CAIRO_STATUS_SUCCESS if current point was successfully
- * retrieved.  Otherwise, if @cr has been in an error status, that status
- * is returned, otherwise %CAIRO_STATUS_NO_CURRENT_POINT is returned if
- * no current point exists.  In all error cases, both @x and @y will be
- * set to 0.0.
  **/
-cairo_status_t
+void
 cairo_get_current_point (cairo_t *cr, double *x_ret, double *y_ret)
 {
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_fixed_t x_fixed, y_fixed;
     double x, y;
 
@@ -3295,11 +3288,6 @@ cairo_get_current_point (cairo_t *cr, double *x_ret, double *y_ret)
     }
     else
     {
-	if (cr->status)
-	    status = cr->status;
-	else
-	    status = CAIRO_STATUS_NO_CURRENT_POINT;
-
 	x = 0.0;
 	y = 0.0;
     }
@@ -3308,8 +3296,6 @@ cairo_get_current_point (cairo_t *cr, double *x_ret, double *y_ret)
 	*x_ret = x;
     if (y_ret)
 	*y_ret = y;
-
-    return status;
 }
 slim_hidden_def(cairo_get_current_point);
 
