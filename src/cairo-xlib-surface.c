@@ -168,7 +168,7 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
 	return NULL;
     }
 
-    pix = XCreatePixmap (dpy, RootWindowOfScreen (src->screen),
+    pix = XCreatePixmap (dpy, src->drawable,
 			 width <= 0 ? 1 : width, height <= 0 ? 1 : height,
 			 depth);
 
@@ -246,7 +246,7 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
     /* We've got a compatible XRenderFormat now, which means the
      * similar surface will match the existing surface as closely in
      * visual/depth etc. as possible. */
-    pix = XCreatePixmap (src->dpy, RootWindowOfScreen (src->screen),
+    pix = XCreatePixmap (src->dpy, src->drawable,
 			 width <= 0 ? 1 : width, height <= 0 ? 1 : height,
 			 xrender_format->depth);
 
