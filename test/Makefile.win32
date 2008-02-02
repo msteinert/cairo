@@ -5,7 +5,7 @@ include ../Makefile.win32
 
 CFLAGS += -I../src -I../boilerplate -I./pdiff
 
-LDFLAGS += ./pdiff/pdiff.lib ../src/cairo.lib $(PIXMAN_LIBS) ../boilerplate/boiler.lib $(EXE_LDFLAGS)
+LDFLAGS += ./pdiff/pdiff.lib ../src/$(CFG)/cairo-static.lib $(PIXMAN_LIBS) ../boilerplate/$(CFG)/boiler.lib $(EXE_LDFLAGS)
 
 TESTS = 			\
 a8-mask				\
@@ -32,6 +32,7 @@ dash-zero-length		\
 degenerate-path			\
 device-offset			\
 device-offset-positive		\
+extend-pad			\
 extend-reflect			\
 fill-and-stroke			\
 fill-and-stroke-alpha		\
@@ -99,11 +100,13 @@ TESTCORE_SOURCES = \
 	buffer-diff.c \
 	$(NULL)
 
-TEST_EXE = $(addsuffix .exe,$(TESTS))
+TEST_EXE = $(patsubst %, $(CFG)/%.exe, $(TESTS))
+# TEST_EXE = $(addsuffix .exe,$(TESTS))
 
 all: $(TEST_EXE)
 
-%.exe: %.c ./pdiff/pdiff.lib
+$(CFG)/%.exe: %.c ./pdiff/pdiff.lib
+	@mkdir -p $(CFG)
 	@$(CC) $(CFLAGS) -Fe"$@" $<  $(TESTCORE_SOURCES) -link $(LDFLAGS)
 
 ./pdiff/pdiff.lib:
@@ -118,3 +121,19 @@ test: $(TEST_EXE)
 html:
 	@echo Creating index.html...
 	@perl make-html.pl > index.html
+
+clean:
+	@rm -f $(CFG)/*.obj $(CFG)/*.dll $(CFG)/*.lib $(CFG)/*.pdb $(CFG)/*.ilk $(CFG)/*.exe || exit 0
+
+inform:
+ifneq ($(CFG),release)
+ifneq ($(CFG),debug)
+	@echo "Invalid configuration "$(CFG)" specified."
+	@echo -n "You must specify a configuration when "
+	@echo "running make, e.g. make CFG=debug"
+	@echo
+	@echo -n "Possible choices for configuration are "
+	@echo "'release' and 'debug'"
+	@exit 1
+endif
+endif

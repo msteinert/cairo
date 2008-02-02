@@ -4,19 +4,24 @@
 
 CC := cl
 LINK := link
+
+ifeq ($(CFG),debug)
+OPT := -Od -Zi
+else
 OPT := -O2
+endif
 
 PIXMAN_CFLAGS := -I../../pixman/pixman
-PIXMAN_LIBS := ../../pixman/pixman/pixman-1.lib
+PIXMAN_LIBS := ../../pixman/pixman/$(CFG)/pixman-1.lib
 
 EXE_LDFLAGS = libpng.lib zlib.lib gdi32.lib msimg32.lib user32.lib
 
-DEFAULT_CFLAGS = -MD -Zi -nologo $(OPT)
+DEFAULT_CFLAGS = -MD -nologo $(OPT)
 DEFAULT_CFLAGS += -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
 DEFAULT_CFLAGS += -DPACKAGE_VERSION="" -DPACKAGE_BUGREPORT="" -DCAIRO_BUILD
 DEFAULT_CFLAGS += -I. 
 DEFAULT_CFLAGS += $(PIXMAN_CFLAGS)
-DEFAULT_CFLAGS += -DCAIRO_NO_MUTEX=1
+DEFAULT_CFLAGS += -DCAIRO_NO_MUTEX=1  -DLIBCAIRO_EXPORTS
 
 CFLAGS := $(DEFAULT_CFLAGS)
 
@@ -33,7 +38,7 @@ SUBDIRS = src
 
 TEST_SUBDIRS = boilerplate test
 
-all: cairo
+all: inform cairo
 
 cairo: src/cairo-features.h
 	@list='$(SUBDIRS)'; for f in $$list ; do \
@@ -51,13 +56,28 @@ test: cairo
 html:
 	@(cd test ; make -f Makefile.win32 html)
 
+inform:
+ifneq ($(CFG),release)
+ifneq ($(CFG),debug)
+	@echo "Invalid configuration "$(CFG)" specified."
+	@echo -n "You must specify a configuration when "
+	@echo "running make, e.g. make CFG=debug"
+	@echo
+	@echo -n "Possible choices for configuration are "
+	@echo "'release' and 'debug'"
+	@exit 1
+endif
+endif
+
 endif
 
 # Some generic rules
 
-%.obj: %.c
+$(CFG)/%.obj: %.c
+	@mkdir -p $(CFG)
 	@$(CC) $(CFLAGS) -c -Fo"$@" $<
 
-%-static.obj: %.c
+$(CFG)/%-static.obj: %.c
+	@mkdir -p $(CFG)
 	@$(CC) $(CFLAGS) -c -DCAIRO_WIN32_STATIC_BUILD=1 -Fo"$@" $<
 

@@ -9,6 +9,7 @@ srcdir = `pwd`
 SOURCES = \
 	cairo-arc.c \
 	cairo-array.c \
+	cairo-atomic.c \
 	cairo-bentley-ottmann.c \
 	cairo-cache.c \
 	cairo-clip.c \
@@ -28,13 +29,14 @@ SOURCES = \
 	cairo-meta-surface.c \
 	cairo-mutex.c \
 	cairo-output-stream.c \
-	cairo-operator.c \
 	cairo-path-bounds.c \
 	cairo-path-fixed.c \
 	cairo-path-fill.c \
 	cairo-path-stroke.c \
 	cairo-path.c \
 	cairo-pattern.c \
+	cairo-pdf-surface.c \
+	cairo-pdf-operators.c \
 	cairo-pen.c \
 	cairo-polygon.c \
 	cairo-png.c \
@@ -63,6 +65,7 @@ SOURCES = \
 	cairo-analysis-surface.c \
 	cairo-base85-stream.c \
 	cairo-win32-printing-surface.c \
+	cairo-win32.c \
 	$(NULL)
 
 STATIC_SOURCES = cairo-win32-surface.c 
@@ -79,11 +82,13 @@ cairo_headers = \
 	cairo-svg-test.h \
 	$(NULL)
 
-OBJECTS = $(subst .c,.obj,$(SOURCES))
-SHARED_OBJECTS = $(subst .c,.obj,$(STATIC_SOURCES))
-STATIC_OBJECTS = $(subst .c,-static.obj,$(STATIC_SOURCES))
+OBJECTS = $(patsubst %.c, $(CFG)/%.obj, $(SOURCES))
+SHARED_OBJECTS = $(patsubst %.c, $(CFG)/%.obj, $(STATIC_SOURCES))
+STATIC_OBJECTS = $(patsubst %.c, $(CFG)/%-static.obj, $(STATIC_SOURCES))
 
-all: cairo.dll cairo-static.lib
+all: inform $(CFG)/cairo.dll $(CFG)/cairo-static.lib
+static: inform $(CFG)/cairo-static.lib
+dynamic: inform $(CFG)/cairo.dll
 
 $(DEFFILE):
 	(echo EXPORTS; \
@@ -97,11 +102,24 @@ $(DEFFILE):
 	) >$@
 	@ ! grep -q cairo_ERROR $@ || ($(RM) $@; false)
 
-cairo.dll: $(OBJECTS) $(SHARED_OBJECTS) $(DEFFILE)
-	$(CC) -MD -Zi -LD -Fe$@ $(PIXMAN_LIBS) $(OBJECTS) $(SHARED_OBJECTS) -link -DEF:$(DEFFILE) user32.lib gdi32.lib libpng.lib zdll.lib msimg32.lib
+$(CFG)/cairo.dll: $(OBJECTS) $(SHARED_OBJECTS) $(DEFFILE)
+	$(CC) -MD -LD -Fe$@ $(PIXMAN_LIBS) $(OBJECTS) $(SHARED_OBJECTS) -link -DEF:$(DEFFILE) user32.lib gdi32.lib libpng.lib zdll.lib msimg32.lib
 
-cairo-static.lib: $(OBJECTS) $(STATIC_OBJECTS)
+$(CFG)/cairo-static.lib: $(OBJECTS) $(STATIC_OBJECTS)
 	lib -NOLOGO -OUT:$@ $(PIXMAN_LIBS) $(OBJECTS) $(STATIC_OBJECTS)
 
 clean:
-	@rm -f *.obj *.dll *.lib *.pdb *.ilk || exit 0
+	@rm -f $(CFG)/*.obj $(CFG)/*.dll $(CFG)/*.lib $(CFG)/*.pdb $(CFG)/*.ilk || exit 0
+
+inform:
+ifneq ($(CFG),release)
+ifneq ($(CFG),debug)
+	@echo "Invalid configuration "$(CFG)" specified."
+	@echo -n "You must specify a configuration when "
+	@echo "running make, e.g. make CFG=debug"
+	@echo
+	@echo -n "Possible choices for configuration are "
+	@echo "'release' and 'debug'"
+	@exit 1
+endif
+endif

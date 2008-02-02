@@ -16,3 +16,6 @@ all: pdiff.lib
 
 pdiff.lib: $(OBJECTS)
 	lib -NOLOGO -OUT:$@ $(OBJECTS)
+
+%.obj: %.c
+	@$(CC) $(CFLAGS) -c -Fo"$@" $<

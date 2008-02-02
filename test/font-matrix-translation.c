@@ -54,7 +54,7 @@ static cairo_test_status_t
 box_text (cairo_t *cr, const char *utf8, double x, double y)
 {
     double line_width;
-    cairo_text_extents_t extents = {}, scaled_extents = {};
+    cairo_text_extents_t extents = {0}, scaled_extents = {0};
     cairo_scaled_font_t *scaled_font;
 
     cairo_save (cr);
