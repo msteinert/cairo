@@ -2337,12 +2337,15 @@ _cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
     surface->height = meta_extents.height;
     _cairo_output_stream_printf (surface->stream,
 				 "/CairoPattern {\n"
-				 "gsave\n");
+				 "  gsave\n"
+				 "  0 0 %f %f rectclip\n",
+				 surface->width,
+				 surface->height);
 
     if (cairo_surface_get_content (meta_surface) == CAIRO_CONTENT_COLOR) {
 	surface->content = CAIRO_CONTENT_COLOR;
 	_cairo_output_stream_printf (surface->stream,
-				     "0 G 0 0 %f %f rectfill\n",
+				     "  0 G 0 0 %f %f rectfill\n",
 				     surface->width,
 				     surface->height);
     }
@@ -2354,7 +2357,7 @@ _cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
 	return status;
 
     _cairo_output_stream_printf (surface->stream,
-				 "grestore\n"
+				 "  grestore\n"
 				 "} bind def\n");
     surface->content = old_content;
     surface->width = old_width;
@@ -2479,9 +2482,12 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
 	break;
     }
     case CAIRO_EXTEND_REPEAT:
-    case CAIRO_EXTEND_REFLECT:
 	xstep = pattern_width;
 	ystep = pattern_height;
+	break;
+    case CAIRO_EXTEND_REFLECT:
+	xstep = pattern_width*2;
+	ystep = pattern_height*2;
 	break;
 	/* All the rest (if any) should have been analyzed away, so these
 	 * cases should be unreachable. */
@@ -2496,14 +2502,33 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
 				 "   /PaintType 1\n"
 				 "   /TilingType 1\n");
     _cairo_output_stream_printf (surface->stream,
-				 "   /BBox [0 0 %d %d]\n",
-				 pattern_width, pattern_height);
-    _cairo_output_stream_printf (surface->stream,
 				 "   /XStep %f /YStep %f\n",
 				 xstep, ystep);
+
+    if (pattern->base.extend == CAIRO_EXTEND_REFLECT) {
+	_cairo_output_stream_printf (surface->stream,
+				     "   /BBox [0 0 %d %d]\n"
+				     "   /PaintProc {\n"
+				     "      CairoPattern\n"
+				     "      [-1 0 0  1 %d 0] concat CairoPattern\n"
+				     "      [ 1 0 0 -1 0 %d] concat CairoPattern\n"
+				     "      [-1 0 0  1 %d 0] concat CairoPattern\n"
+				     "      CairoPattern\n"
+				     "   } bind\n",
+				     pattern_width*2, pattern_height*2,
+				     pattern_width*2,
+				     pattern_height*2,
+				     pattern_width*2);
+    } else {
+	_cairo_output_stream_printf (surface->stream,
+				     "   /BBox [0 0 %d %d]\n"
+				     "   /PaintProc { CairoPattern } bind\n",
+				     pattern_width, pattern_height);
+    }
+
     _cairo_output_stream_printf (surface->stream,
-				 "   /PaintProc { CairoPattern } bind\n"
 				 ">>\n");
+
     _cairo_output_stream_printf (surface->stream,
 				 "[ %f %f %f %f %f %f ]\n",
 				 inverse.xx, inverse.yx,
