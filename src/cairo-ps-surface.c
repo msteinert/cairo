@@ -3256,7 +3256,7 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
 
     /* miter limit */
     _cairo_output_stream_printf (stream, "%f setmiterlimit\n",
-				 style->miter_limit);
+				 style->miter_limit < 1.0 ? 1.0 : style->miter_limit);
     _cairo_output_stream_printf (stream,
 				 "stroke\n");
     _cairo_output_stream_printf (stream,
