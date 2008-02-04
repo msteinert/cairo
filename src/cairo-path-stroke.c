@@ -67,6 +67,9 @@ typedef struct cairo_stroker {
     cairo_bool_t dash_on;
     cairo_bool_t dash_starts_on;
     double dash_remain;
+
+    cairo_bool_t has_bounds;
+    cairo_box_t bounds;
 } cairo_stroker_t;
 
 /* private functions */
@@ -186,6 +189,34 @@ _cairo_stroker_init (cairo_stroker_t		*stroker,
 	_cairo_stroker_start_dash (stroker);
     else
 	stroker->dashed = FALSE;
+
+    stroker->has_bounds = _cairo_traps_get_limit (traps, &stroker->bounds);
+    if (stroker->has_bounds) {
+	/* Extend the bounds by the line width in each direction so that we correctly
+	 * capture segment endcaps and other similar renderings that would extend beyond
+	 * the segment itself.
+	 */
+	double width_x = stroker->style->line_width;
+	double width_y = stroker->style->line_width;
+
+	cairo_fixed_t fixed_x, fixed_y;
+
+	if (stroke_style->line_join == CAIRO_LINE_JOIN_MITER) {
+	    width_x *= stroker->style->miter_limit;
+	    width_y *= stroker->style->miter_limit;
+	}
+
+	cairo_matrix_transform_distance (stroker->ctm, &width_x, &width_y);
+
+	fixed_x = _cairo_fixed_from_double (width_x);
+	fixed_y = _cairo_fixed_from_double (width_y);
+
+	stroker->bounds.p1.x -= fixed_x;
+	stroker->bounds.p2.x += fixed_x;
+
+	stroker->bounds.p1.y -= fixed_y;
+	stroker->bounds.p2.y += fixed_y;
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -797,15 +828,23 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
     double mag, remain, step_length = 0;
     double slope_dx, slope_dy;
     double dx2, dy2;
-    cairo_point_t fd1, fd2;
     cairo_stroke_face_t sub_start, sub_end;
     cairo_point_t *p1 = &stroker->current_point;
     cairo_point_t *p2 = point;
+    cairo_bool_t fully_in_bounds = TRUE;
+    cairo_line_t segment;
 
     stroker->has_initial_sub_path = stroker->dash_starts_on;
 
     if (p1->x == p2->x && p1->y == p2->y)
 	return CAIRO_STATUS_SUCCESS;
+
+    if (stroker->has_bounds &&
+	(!_cairo_box_contains_point (&stroker->bounds, p1) ||
+	 !_cairo_box_contains_point (&stroker->bounds, p2)))
+    {
+	fully_in_bounds = FALSE;
+    }
 
     slope_dx = _cairo_fixed_to_double (p2->x - p1->x);
     slope_dy = _cairo_fixed_to_double (p2->y - p1->y);
@@ -814,58 +853,63 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 	return CAIRO_STATUS_SUCCESS;
 
     remain = mag;
-    fd1 = *p1;
+    segment.p1 = *p1;
     while (remain) {
 	step_length = MIN (stroker->dash_remain, remain);
 	remain -= step_length;
 	dx2 = slope_dx * (mag - remain);
 	dy2 = slope_dy * (mag - remain);
 	cairo_matrix_transform_distance (stroker->ctm, &dx2, &dy2);
-	fd2.x = _cairo_fixed_from_double (dx2) + p1->x;
-	fd2.y = _cairo_fixed_from_double (dy2) + p1->y;
+	segment.p2.x = _cairo_fixed_from_double (dx2) + p1->x;
+	segment.p2.y = _cairo_fixed_from_double (dy2) + p1->y;
 
-	if (stroker->dash_on) {
-	    status = _cairo_stroker_add_sub_edge (stroker, &fd1, &fd2, slope_dx, slope_dy, &sub_start, &sub_end);
-	    if (status)
-		return status;
-
-	    if (stroker->has_current_face) {
-		/* Join with final face from previous segment */
-		status = _cairo_stroker_join (stroker, &stroker->current_face, &sub_start);
-		stroker->has_current_face = FALSE;
+	if (fully_in_bounds ||
+	    _cairo_box_intersects_line (&stroker->bounds, &segment))
+	{
+	    if (stroker->dash_on) {
+		status = _cairo_stroker_add_sub_edge (stroker, &segment.p1, &segment.p2, slope_dx, slope_dy, &sub_start, &sub_end);
 		if (status)
 		    return status;
-	    } else if (!stroker->has_first_face && stroker->dash_starts_on) {
-		/* Save sub path's first face in case needed for closing join */
-		stroker->first_face = sub_start;
-		stroker->has_first_face = TRUE;
+
+		if (stroker->has_current_face) {
+		    /* Join with final face from previous segment */
+		    status = _cairo_stroker_join (stroker, &stroker->current_face, &sub_start);
+		    stroker->has_current_face = FALSE;
+		    if (status)
+			return status;
+		} else if (!stroker->has_first_face && stroker->dash_starts_on) {
+		    /* Save sub path's first face in case needed for closing join */
+		    stroker->first_face = sub_start;
+		    stroker->has_first_face = TRUE;
+		} else {
+		    /* Cap dash start if not connecting to a previous segment */
+		    status = _cairo_stroker_add_leading_cap (stroker, &sub_start);
+		    if (status)
+			return status;
+		}
+
+		if (remain) {
+		    /* Cap dash end if not at end of segment */
+		    status = _cairo_stroker_add_trailing_cap (stroker, &sub_end);
+		    if (status)
+			return status;
+		} else {
+		    stroker->current_face = sub_end;
+		    stroker->has_current_face = TRUE;
+		}
 	    } else {
-		/* Cap dash start if not connecting to a previous segment */
-		status = _cairo_stroker_add_leading_cap (stroker, &sub_start);
-		if (status)
-		    return status;
-	    }
-
-	    if (remain) {
-		/* Cap dash end if not at end of segment */
-		status = _cairo_stroker_add_trailing_cap (stroker, &sub_end);
-		if (status)
-		    return status;
-	    } else {
-		stroker->current_face = sub_end;
-		stroker->has_current_face = TRUE;
-	    }
-	} else {
-	    if (stroker->has_current_face) {
-		/* Cap final face from previous segment */
-		status = _cairo_stroker_add_trailing_cap (stroker, &stroker->current_face);
-		if (status)
-		    return status;
-		stroker->has_current_face = FALSE;
+		if (stroker->has_current_face) {
+		    /* Cap final face from previous segment */
+		    status = _cairo_stroker_add_trailing_cap (stroker, &stroker->current_face);
+		    if (status)
+			return status;
+		    stroker->has_current_face = FALSE;
+		}
 	    }
 	}
+
 	_cairo_stroker_step_dash (stroker, step_length);
-	fd1 = fd2;
+	segment.p1 = segment.p2;
     }
 
     if (stroker->dash_on && !stroker->has_current_face) {

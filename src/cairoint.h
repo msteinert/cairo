@@ -179,6 +179,12 @@ _cairo_box_round_to_rectangle (cairo_box_t *box, cairo_rectangle_int_t *rectangl
 cairo_private void
 _cairo_rectangle_intersect (cairo_rectangle_int_t *dest, cairo_rectangle_int_t *src);
 
+cairo_private cairo_bool_t
+_cairo_box_intersects_line (cairo_box_t *box, cairo_line_t *line);
+
+cairo_private cairo_bool_t
+_cairo_box_contains_point (cairo_box_t *box, cairo_point_t *point);
+
 /* cairo_array.c structures and functions */
 
 cairo_private void
@@ -1995,6 +2001,10 @@ _cairo_traps_init (cairo_traps_t *traps);
 cairo_private void
 _cairo_traps_limit (cairo_traps_t	*traps,
 		    cairo_box_t		*limits);
+
+cairo_private cairo_bool_t
+_cairo_traps_get_limit (cairo_traps_t *traps,
+                        cairo_box_t   *limits);
 
 cairo_private cairo_status_t
 _cairo_traps_init_box (cairo_traps_t *traps,

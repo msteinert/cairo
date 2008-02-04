@@ -75,6 +75,14 @@ _cairo_traps_limit (cairo_traps_t	*traps,
     traps->limits = *limits;
 }
 
+cairo_bool_t
+_cairo_traps_get_limit (cairo_traps_t *traps,
+			cairo_box_t   *limits)
+{
+    *limits = traps->limits;
+    return traps->has_limits;
+}
+
 void
 _cairo_traps_fini (cairo_traps_t *traps)
 {
