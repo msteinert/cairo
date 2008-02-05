@@ -65,6 +65,8 @@ typedef struct cairo_ps_surface {
     double height;
     int bbox_x1, bbox_y1, bbox_x2, bbox_y2;
     cairo_matrix_t cairo_to_ps;
+    cairo_image_surface_t *image;
+    void *image_extra;
 
     int num_pages;
 
