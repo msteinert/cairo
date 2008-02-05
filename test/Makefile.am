@@ -57,7 +57,6 @@ get-and-set$(EXEEXT)					\
 get-clip$(EXEEXT)					\
 get-group-target$(EXEEXT)				\
 get-path-extents$(EXEEXT)				\
-get-xrender-format$(EXEEXT)				\
 gradient-alpha$(EXEEXT)					\
 gradient-zero-stops$(EXEEXT)				\
 infinite-join$(EXEEXT)					\
