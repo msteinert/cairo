@@ -257,6 +257,8 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
     if (font == NULL)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
+    memset (font, 0, sizeof(cairo_atsui_font_t));
+
     status = _cairo_scaled_font_init (&font->base,
 				      font_face, font_matrix, ctm, options,
 				      &cairo_atsui_scaled_font_backend);
@@ -270,10 +272,18 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
     if (status)
 	goto FAIL;
 
+    /* ATS can't handle 0-sized bits; we end up in an odd infinite loop
+     * if we send down a size of 0. */
+    if (xscale == 0.0) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto FAIL;
+    }
+
     font->font_matrix = CGAffineTransformMake (1., 0.,
 					       0., yscale/xscale,
 					       0., 0.);
     font->size = FloatToFixed (xscale);
+    font->style = NULL;
 
     err = CreateSizedCopyOfStyle (style, &font->size, &font->font_matrix, &font->style);
     if (err != noErr) {
@@ -310,6 +320,7 @@ _cairo_atsui_font_create_scaled (cairo_font_face_t *font_face,
 	if (font) {
 	    if (font->style)
 		ATSUDisposeStyle(font->style);
+	    _cairo_scaled_font_fini(font);
 	    free (font);
 	}
 
