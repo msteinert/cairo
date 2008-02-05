@@ -2974,16 +2974,38 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 				 "%% _cairo_ps_surface_fill\n");
 #endif
 
-    status = _cairo_ps_surface_emit_pattern (surface, source, op);
-    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
-        return CAIRO_STATUS_SUCCESS;
+    if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
+	source->extend == CAIRO_EXTEND_NONE)
+    {
+	_cairo_output_stream_printf (surface->stream, "q\n");
 
-    if (status)
-	return status;
+	status =  _cairo_pdf_operators_clip (&surface->pdf_operators,
+					     path,
+					     fill_rule);
+	if (status)
+	    return status;
 
-    return _cairo_pdf_operators_fill (&surface->pdf_operators,
-				      path,
-				      fill_rule);
+	status = _cairo_ps_surface_paint_surface (surface,
+						 (cairo_surface_pattern_t *) source,
+						 op);
+	if (status)
+	    return status;
+
+	_cairo_output_stream_printf (surface->stream, "Q\n");
+    } else {
+	status = _cairo_ps_surface_emit_pattern (surface, source, op);
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    return CAIRO_STATUS_SUCCESS;
+
+	if (status)
+	    return status;
+
+	status = _cairo_pdf_operators_fill (&surface->pdf_operators,
+					    path,
+					    fill_rule);
+    }
+
+    return status;
 }
 
 /* This size keeps the length of the hex encoded string of glyphs
