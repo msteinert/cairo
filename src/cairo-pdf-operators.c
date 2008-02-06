@@ -406,6 +406,73 @@ static cairo_int_status_t
 _cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t	*pdf_operators,
 					cairo_stroke_style_t	*style)
 {
+    double *dash = style->dash;
+    int num_dashes = style->num_dashes;
+    double dash_offset = style->dash_offset;
+
+    /* PostScript has "special needs" when it comes to zero-length
+     * dash segments with butt caps. It apparently (at least
+     * according to ghostscript) draws hairlines for this
+     * case. That's not what the cairo semantics want, so we first
+     * touch up the array to eliminate any 0.0 values that will
+     * result in "on" segments.
+     */
+    if (num_dashes && style->line_cap == CAIRO_LINE_CAP_BUTT) {
+	int i;
+
+	/* If there's an odd number of dash values they will each get
+	 * interpreted as both on and off. So we first explicitly
+	 * expand the array to remove the duplicate usage so that we
+	 * can modify some of the values.
+	 */
+	if (num_dashes % 2) {
+	    dash = _cairo_malloc_abc (num_dashes, 2, sizeof (double));
+	    if (dash == NULL)
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+	    memcpy (dash, style->dash, num_dashes * sizeof (double));
+	    memcpy (dash + num_dashes, style->dash, num_dashes * sizeof (double));
+
+	    num_dashes *= 2;
+	}
+
+	for (i = 0; i < num_dashes; i += 2) {
+	    if (dash[i] == 0.0) {
+		/* If we're at the front of the list, we first rotate
+		 * two elements from the end of the list to the front
+		 * of the list before folding away the 0.0. Or, if
+		 * there are only two dash elements, then there is
+		 * nothing at all to draw.
+		 */
+		if (i == 0) {
+		    double last_two[2];
+
+		    if (num_dashes == 2) {
+			if (dash != style->dash)
+			    free (dash);
+			return CAIRO_INT_STATUS_NOTHING_TO_DO;
+		    }
+		    /* The cases of num_dashes == 0, 1, or 3 elements
+		     * cannot exist, so the rotation of 2 elements
+		     * will always be safe */
+		    memcpy (last_two, dash + num_dashes - 2, sizeof (last_two));
+		    memmove (dash + 2, dash, (num_dashes - 2) * sizeof (double));
+		    memcpy (dash, last_two, sizeof (last_two));
+		    dash_offset += dash[0] + dash[1];
+		    i = 2;
+		}
+		dash[i-1] += dash[i+1];
+		num_dashes -= 2;
+		memmove (dash + i, dash + i + 2, (num_dashes - i) * sizeof (double));
+		/* If we might have just rotated, it's possible that
+		 * we rotated a 0.0 value to the front of the list.
+		 * Set i to -2 so it will get incremented to 0. */
+		if (i == 2)
+		    i = -2;
+	    }
+	}
+    }
+
     _cairo_output_stream_printf (pdf_operators->stream,
 				 "%f w\r\n",
 				 style->line_width);
@@ -418,16 +485,19 @@ _cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t	*pdf_operators,
 				 "%d j\r\n",
 				 _cairo_pdf_line_join (style->line_join));
 
-    if (style->num_dashes) {
-	unsigned int d;
+    if (num_dashes) {
+	int d;
+
 	_cairo_output_stream_printf (pdf_operators->stream, "[");
-	for (d = 0; d < style->num_dashes; d++)
-	    _cairo_output_stream_printf (pdf_operators->stream, " %f", style->dash[d]);
+	for (d = 0; d < num_dashes; d++)
+	    _cairo_output_stream_printf (pdf_operators->stream, " %f", dash[d]);
 	_cairo_output_stream_printf (pdf_operators->stream, "] %f d\r\n",
-				     style->dash_offset);
+				     dash_offset);
     } else {
 	_cairo_output_stream_printf (pdf_operators->stream, "[] 0.0 d\r\n");
     }
+    if (dash != style->dash)
+        free (dash);
 
     _cairo_output_stream_printf (pdf_operators->stream,
 				 "%f M ",
@@ -448,6 +518,8 @@ _cairo_pdf_operator_stroke (cairo_pdf_operators_t	*pdf_operators,
     cairo_matrix_t m;
 
     status = _cairo_pdf_operators_emit_stroke_style (pdf_operators, style);
+    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	return CAIRO_STATUS_SUCCESS;
     if (status)
 	return status;
 
