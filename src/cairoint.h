@@ -98,6 +98,10 @@ _cairo_win32_tmpfile (void);
 #define M_SQRT2 1.41421356237309504880
 #endif
 
+#ifndef M_SQRT1_2
+#define M_SQRT1_2 0.707106781186547524400844362104849039
+#endif
+
 #undef  ARRAY_LENGTH
 #define ARRAY_LENGTH(__array) ((int) (sizeof (__array) / sizeof (__array[0])))
 
@@ -180,7 +184,7 @@ cairo_private void
 _cairo_rectangle_intersect (cairo_rectangle_int_t *dest, cairo_rectangle_int_t *src);
 
 cairo_private cairo_bool_t
-_cairo_box_intersects_line (cairo_box_t *box, cairo_line_t *line);
+_cairo_box_intersects_line_segment (cairo_box_t *box, cairo_line_t *line);
 
 cairo_private cairo_bool_t
 _cairo_box_contains_point (cairo_box_t *box, cairo_point_t *point);
@@ -1481,6 +1485,11 @@ _cairo_stroke_style_init_copy (cairo_stroke_style_t *style,
 
 cairo_private void
 _cairo_stroke_style_fini (cairo_stroke_style_t *style);
+
+cairo_private void
+_cairo_stroke_style_max_distance_from_path (const cairo_stroke_style_t *style,
+                                            const cairo_matrix_t *ctm,
+                                            double *dx, double *dy);
 
 /* cairo-surface.c */
 

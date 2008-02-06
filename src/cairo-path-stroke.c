@@ -192,30 +192,23 @@ _cairo_stroker_init (cairo_stroker_t		*stroker,
 
     stroker->has_bounds = _cairo_traps_get_limit (traps, &stroker->bounds);
     if (stroker->has_bounds) {
-	/* Extend the bounds by the line width in each direction so that we correctly
-	 * capture segment endcaps and other similar renderings that would extend beyond
-	 * the segment itself.
+	/* Extend the bounds in each direction to account for the maximum area
+	 * we might generate trapezoids, to capture line segments that are outside
+	 * of the bounds but which might generate rendering that's within bounds.
 	 */
-	double width_x = stroker->style->line_width;
-	double width_y = stroker->style->line_width;
+	double dx, dy;
+	cairo_fixed_t fdx, fdy;
 
-	cairo_fixed_t fixed_x, fixed_y;
+	_cairo_stroke_style_max_distance_from_path (stroker->style, stroker->ctm, &dx, &dy);
 
-	if (stroke_style->line_join == CAIRO_LINE_JOIN_MITER) {
-	    width_x *= stroker->style->miter_limit;
-	    width_y *= stroker->style->miter_limit;
-	}
+	fdx = _cairo_fixed_from_double (dx);
+	fdy = _cairo_fixed_from_double (dy);
 
-	cairo_matrix_transform_distance (stroker->ctm, &width_x, &width_y);
+	stroker->bounds.p1.x -= fdx;
+	stroker->bounds.p2.x += fdx;
 
-	fixed_x = _cairo_fixed_from_double (width_x);
-	fixed_y = _cairo_fixed_from_double (width_y);
-
-	stroker->bounds.p1.x -= fixed_x;
-	stroker->bounds.p2.x += fixed_x;
-
-	stroker->bounds.p1.y -= fixed_y;
-	stroker->bounds.p2.y += fixed_y;
+	stroker->bounds.p1.y -= fdy;
+	stroker->bounds.p2.y += fdy;
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -864,7 +857,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 	segment.p2.y = _cairo_fixed_from_double (dy2) + p1->y;
 
 	if (fully_in_bounds ||
-	    _cairo_box_intersects_line (&stroker->bounds, &segment))
+	    _cairo_box_intersects_line_segment (&stroker->bounds, &segment))
 	{
 	    if (stroker->dash_on) {
 		status = _cairo_stroker_add_sub_edge (stroker, &segment.p1, &segment.p2, slope_dx, slope_dy, &sub_start, &sub_end);
