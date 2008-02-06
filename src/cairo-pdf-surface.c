@@ -1249,9 +1249,16 @@ compress_dup (const void *data, unsigned long data_size,
 	      unsigned long *compressed_size)
 {
     void *compressed;
+    unsigned long additional_size;
 
     /* Bound calculation taken from zlib. */
-    *compressed_size = data_size + (data_size >> 12) + (data_size >> 14) + 11;
+    additional_size = (data_size >> 12) + (data_size >> 14) + 11;
+    if (INT32_MAX - data_size <= additional_size) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	return NULL;
+    }
+
+    *compressed_size = data_size + additional_size;
     compressed = malloc (*compressed_size);
     if (compressed == NULL) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
@@ -1295,11 +1302,14 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 
     stream_ret->id = 0;
 
-    if (image->format == CAIRO_FORMAT_A1)
-	alpha_size = (image->height * image->width + 7)/8;
-    else
+    if (image->format == CAIRO_FORMAT_A1) {
+	alpha_size = ((image->width+7) / 8) * image->height;
+	alpha = _cairo_malloc_ab ((image->width+7) / 8, image->height);
+    } else {
 	alpha_size = image->height * image->width;
-    alpha = malloc (alpha_size);
+	alpha = _cairo_malloc_ab (image->height, image->width);
+    }
+
     if (alpha == NULL) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP;
@@ -1420,7 +1430,7 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t   *surface,
 	    image->format == CAIRO_FORMAT_A1);
 
     rgb_size = image->height * image->width * 3;
-    rgb = malloc (rgb_size);
+    rgb = _cairo_malloc_abc (image->width, image->height, 3);
     if (rgb == NULL) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP;
