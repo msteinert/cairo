@@ -2095,7 +2095,7 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
     }
 
     rgb_size = 3 * image->width * image->height;
-    rgb = malloc (rgb_size);
+    rgb = _cairo_malloc_abc (image->width, image->height, 3);
     if (rgb == NULL) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto bail1;
@@ -2103,7 +2103,7 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 
     if (use_mask) {
 	mask_size = ((image->width+7) / 8) * image->height;
-	mask = malloc (mask_size);
+	mask = _cairo_malloc_ab ((image->width+7) / 8, image->height);
 	if (mask == NULL) {
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto bail2;
