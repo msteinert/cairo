@@ -571,11 +571,26 @@ check-local:
 	done; \
 	if test -n "$$FAILED_TESTS"; then \
 	    echo "Failed tests:"; \
+	    surfaces=""; \
 	    for t in $$FAILED_TESTS; do \
 		echo -n "     $$t: "; \
 		grep -e '\<FAIL\>' $$t.log | sed -e 's/.*TARGET: \([^ ]*\).*/\1/' | sort | uniq | tr '\n' ' '; \
 		echo; \
+		for s in `grep -e '\<FAIL\>' $$t.log | sed -e 's/.*TARGET: \([^ ]*\).*/\1/' | sort | uniq`; do \
+		    eval ss=`echo $$s | tr '-' '_'`; \
+		    eval $$ss=$$[$$ss + 1]; \
+		    echo $$surfaces | grep $$ss >/dev/null || surfaces="$$surfaces $$ss"; \
+		done; \
 	    done; \
+	    echo -n "Failures per surface - "; \
+	    first=""; \
+	    for s in $$surfaces; do \
+	        eval ss=`echo $$s | tr '_' '-'`; \
+		test -n "$$first" && echo -n ", "; \
+	        echo -n "$$ss: $$[$$s + 0]"; \
+		first="false"; \
+	    done; \
+	    echo "."; \
 	fi
 
 check_PROGRAMS =
