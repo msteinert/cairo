@@ -111,8 +111,14 @@ _cairo_box_intersects_line (cairo_box_t *box, cairo_line_t *line)
     cairo_fixed_t t1, t2, t3, t4;
     cairo_int64_t t1y, t2y, t3x, t4x;
 
-    cairo_fixed_t xlen = P2x - P1x;
-    cairo_fixed_t ylen = P2y - P1y;
+    cairo_fixed_t xlen, ylen;
+
+    if (_cairo_box_contains_point(box, &line->p1) ||
+	_cairo_box_contains_point(box, &line->p2))
+	return TRUE;
+
+    xlen = P2x - P1x;
+    ylen = P2y - P1y;
 
     if (xlen) {
 	if (xlen > 0) {
