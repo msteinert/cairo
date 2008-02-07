@@ -78,7 +78,7 @@ check_extents (const char *message, cairo_t *cr, enum ExtentsType type,
         break;
     case APPROX_EQUALS:
         relation_string = "approx. equal";
-        if (_cairo_lround (ext_x1) == x && _cairo_lround (ext_y1) == y && _cairo_lround (ext_x2) == x + width && _cairo_lround (ext_y2) == y + height)
+        if (floor (ext_x1+0.5) == x && floor (ext_y1+0.5) == y && floor (ext_x2+0.5) == x + width && floor (ext_y2+0.5) == y + height)
             return 1;
         break;
     case CONTAINS:
