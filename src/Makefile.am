@@ -373,3 +373,5 @@ splint:
 		echo sparse $$f; \
 		$(SPLINT) -I$(top_builddir) $(libcairo_la_CFLAGS) -DHAVE_CONFIG_H $$f || status=false; \
 	done; $$status
+
+EXTRA_DIST += Makefile.win32

@@ -1,3 +1,5 @@
+EXTRA_DIST = Makefile.win32
+
 EXTRA_LTLIBRARIES = libcairoboilerplate.la
 
 libcairoboilerplate_la_SOURCES =\

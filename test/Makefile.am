@@ -751,3 +751,5 @@ check-ref-missing:
 release-verify-sane-tests: check-ref-missing
 
 .PHONY: check-valgrind test recheck retest html rehtml check-ref-dups check-ref-missing release-verify-sane-tests
+
+EXTRA_DIST += Makefile.win32
