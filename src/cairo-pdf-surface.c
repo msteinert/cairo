@@ -2805,11 +2805,11 @@ _cairo_pdf_surface_emit_to_unicode_stream (cairo_pdf_surface_t		*surface,
         }
         if (is_composite) {
             _cairo_output_stream_printf (surface->output,
-                                         "<%04x> <%04x>\r\n",
+                                         "<%04x> <%04lx>\r\n",
                                          i + 1, font_subset->to_unicode[i + 1]);
         } else {
             _cairo_output_stream_printf (surface->output,
-                                         "<%02x> <%04x>\r\n",
+                                         "<%02x> <%04lx>\r\n",
                                          i + 1, font_subset->to_unicode[i + 1]);
         }
     }
