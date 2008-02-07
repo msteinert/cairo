@@ -1303,7 +1303,11 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
     stream_ret->id = 0;
 
     if (image->format == CAIRO_FORMAT_A1) {
-	alpha_size = ((image->width+7) / 8) * image->height;
+	/* We allocate using slightly different math so that we can get
+	 * the overflow checking from _cairo_malloc_ab, but alpha_size
+	 * needs to be the correct size for emitting the data in the PDF.
+	 */
+	alpha_size = (image->width*image->height + 7) / 8;
 	alpha = _cairo_malloc_ab ((image->width+7) / 8, image->height);
     } else {
 	alpha_size = image->height * image->width;
