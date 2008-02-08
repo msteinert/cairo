@@ -31,7 +31,9 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#if HAVE_FCFINI
 #include <fontconfig/fontconfig.h>
+#endif
 
 int
 main (void)
