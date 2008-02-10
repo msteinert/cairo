@@ -1801,14 +1801,14 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 			      cairo_operator_t	     op)
 {
     cairo_status_t status;
-    unsigned char *rgb, *rgb_compressed;
-    unsigned long rgb_size, rgb_compressed_size;
-    unsigned char *mask = NULL, *mask_compressed = NULL;
-    unsigned long mask_size = 0, mask_compressed_size = 0;
+    unsigned char *data, *data_compressed;
+    unsigned long data_size, data_compressed_size;
     cairo_image_surface_t *opaque_image = NULL;
     int x, y, i;
     cairo_image_transparency_t transparency;
     cairo_bool_t use_mask;
+    uint32_t *pixel;
+    int bit;
 
     if (image->base.status)
 	return image->base.status;
@@ -1840,116 +1840,93 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 	use_mask = TRUE;
     }
 
-    rgb_size = 3 * image->width * image->height;
-    rgb = _cairo_malloc_abc (image->width, image->height, 3);
-    if (rgb == NULL) {
+    if (use_mask) {
+	/* Type 2 (mask and image interleaved) has the mask and image
+	 * samples interleaved by row.  The mask row is first, one bit
+	 * per pixel with (bit 7 first). The row is padded to byte
+	 * boundaries. The image data is 3 bytes per pixel RGB
+	 * format. */
+	data_size = image->height * ((image->width + 7)/8 + 3*image->width);
+    } else {
+	data_size = image->height * image->width * 3;
+    }
+    data = malloc (data_size);
+    if (data == NULL) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto bail1;
     }
 
     if (use_mask) {
-	mask_size = ((image->width+7) / 8) * image->height;
-	mask = _cairo_malloc_ab ((image->width+7) / 8, image->height);
-	if (mask == NULL) {
-	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    goto bail2;
-	}
-    }
-
-    if (use_mask) {
-	int byte = 0;
-	int bit = 7;
 	i = 0;
 	for (y = 0; y < image->height; y++) {
-	    uint32_t *pixel = (uint32_t *) (image->data + y * image->stride);
+	    /* mask row */
+	    pixel = (uint32_t *) (image->data + y * image->stride);
+	    bit = 7;
 	    for (x = 0; x < image->width; x++, pixel++) {
 		if (bit == 7)
-		    mask[byte] = 0;
+		    data[i] = 0;
 		if (((*pixel & 0xff000000) >> 24) > 0x80)
-		    mask[byte] |= (1 << bit);
+		    data[i] |= (1 << bit);
 		bit--;
 		if (bit < 0) {
 		    bit = 7;
-		    byte++;
+		    i++;
 		}
-		rgb[i++] = (*pixel & 0x00ff0000) >> 16;
-		rgb[i++] = (*pixel & 0x0000ff00) >>  8;
-		rgb[i++] = (*pixel & 0x000000ff) >>  0;
 	    }
+	    if (bit != 7)
+		i++;
 
-	    if (bit != 7) {
-		bit = 7;
-		byte++;
+	    /* image row*/
+	    pixel = (uint32_t *) (image->data + y * image->stride);
+	    for (x = 0; x < image->width; x++, pixel++) {
+		data[i++] = (*pixel & 0x00ff0000) >> 16;
+		data[i++] = (*pixel & 0x0000ff00) >>  8;
+		data[i++] = (*pixel & 0x000000ff) >>  0;
 	    }
 	}
     } else {
 	i = 0;
 	for (y = 0; y < opaque_image->height; y++) {
-	    uint32_t *pixel = (uint32_t *) (opaque_image->data + y * opaque_image->stride);
+	    pixel = (uint32_t *) (opaque_image->data + y * opaque_image->stride);
 	    for (x = 0; x < opaque_image->width; x++, pixel++) {
-		rgb[i++] = (*pixel & 0x00ff0000) >> 16;
-		rgb[i++] = (*pixel & 0x0000ff00) >>  8;
-		rgb[i++] = (*pixel & 0x000000ff) >>  0;
+		data[i++] = (*pixel & 0x00ff0000) >> 16;
+		data[i++] = (*pixel & 0x0000ff00) >>  8;
+		data[i++] = (*pixel & 0x000000ff) >>  0;
 	    }
 	}
     }
 
     /* XXX: Should fix cairo-lzw to provide a stream-based interface
      * instead. */
-    rgb_compressed_size = rgb_size;
-    rgb_compressed = _cairo_lzw_compress (rgb, &rgb_compressed_size);
-    if (rgb_compressed == NULL) {
+    data_compressed_size = data_size;
+    data_compressed = _cairo_lzw_compress (data, &data_compressed_size);
+    if (data_compressed == NULL) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto bail3;
+	goto bail2;
     }
 
-    /* First emit the image data as a base85-encoded string which will
+    /* Emit the image data as a base85-encoded string which will
      * be used as the data source for the image operator later. */
     _cairo_output_stream_printf (surface->stream,
 				 "/%sData [\n", name);
 
     status = _cairo_ps_surface_emit_base85_string (surface,
-						   rgb_compressed,
-						   rgb_compressed_size);
+						   data_compressed,
+						   data_compressed_size);
     if (status)
-	goto bail4;
+	goto bail3;
 
     _cairo_output_stream_printf (surface->stream,
 				 "] def\n");
     _cairo_output_stream_printf (surface->stream,
 				 "/%sDataIndex 0 def\n", name);
 
-    /* Emit the mask data as a base85-encoded string which will
-     * be used as the mask source for the image operator later. */
-    if (mask) {
-	mask_compressed_size = mask_size;
-	mask_compressed = _cairo_lzw_compress (mask, &mask_compressed_size);
-	if (mask_compressed == NULL) {
-	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    goto bail4;
-	}
-
-	_cairo_output_stream_printf (surface->stream,
-				     "/%sMask [\n", name);
-
-	status = _cairo_ps_surface_emit_base85_string (surface,
-						       mask_compressed,
-						       mask_compressed_size);
-	if (status)
-	    goto bail5;
-
-	_cairo_output_stream_printf (surface->stream,
-				     "] def\n");
-	_cairo_output_stream_printf (surface->stream,
-				     "/%sMaskIndex 0 def\n", name);
-    }
-
-    if (mask) {
+    if (use_mask) {
 	_cairo_output_stream_printf (surface->stream,
 				     "    /DeviceRGB setcolorspace\n"
 				     "    <<\n"
 				     "	/ImageType 3\n"
-				     "	/InterleaveType 3\n"
+				     "	/InterleaveType 2\n"
 				     "	/DataDict <<\n"
 				     "		/ImageType 1\n"
 				     "		/Width %d\n"
@@ -1969,11 +1946,6 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 				     "		/Height %d\n"
 				     "		/BitsPerComponent 1\n"
 				     "		/Decode [ 1 0 ]\n"
-				     "		/DataSource {\n"
-				     "	    		%sMask %sMaskIndex get\n"
-				     "	    		/%sMaskIndex %sMaskIndex 1 add def\n"
-				     "	    		%sMaskIndex %sMask length 1 sub gt { /%sMaskIndex 0 def } if\n"
-				     "		} /ASCII85Decode filter /LZWDecode filter\n"
 				     "		/ImageMatrix [ 1 0 0 -1 0 %d ]\n"
 				     "	>>\n"
 				     "    >>\n"
@@ -1984,7 +1956,6 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 				     image->height,
 				     image->width,
 				     image->height,
-				     name, name, name, name, name, name, name,
 				     image->height);
     } else {
 	_cairo_output_stream_printf (surface->stream,
@@ -2011,17 +1982,11 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 
     status = CAIRO_STATUS_SUCCESS;
 
-bail5:
-    if (use_mask)
-	free (mask_compressed);
-bail4:
-    free (rgb_compressed);
-
 bail3:
-    if (use_mask)
-	free (mask);
+    free (data_compressed);
+
 bail2:
-    free (rgb);
+    free (data);
 
 bail1:
     if (!use_mask && opaque_image != image)
