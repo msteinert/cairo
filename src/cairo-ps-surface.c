@@ -3,7 +3,7 @@
  *
  * Copyright © 2003 University of Southern California
  * Copyright © 2005 Red Hat, Inc
- * Copyright © 2007 Adrian Johnson
+ * Copyright © 2007,2008 Adrian Johnson
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -726,6 +726,8 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
     surface->force_fallbacks = FALSE;
     surface->content = CAIRO_CONTENT_COLOR_ALPHA;
+    surface->use_string_datasource = FALSE;
+
     _cairo_pdf_operators_init (&surface->pdf_operators,
 			       surface->stream,
 			       surface->cairo_to_ps,
@@ -1601,6 +1603,7 @@ typedef struct _string_array_stream {
     cairo_output_stream_t *output;
     int column;
     int string_size;
+    cairo_bool_t use_strings;
 } string_array_stream_t;
 
 static cairo_status_t
@@ -1616,34 +1619,38 @@ _string_array_stream_write (cairo_output_stream_t *base,
 	return CAIRO_STATUS_SUCCESS;
 
     while (length--) {
-	if (stream->string_size == 0) {
+	if (stream->string_size == 0 && stream->use_strings) {
 	    _cairo_output_stream_printf (stream->output, "(");
 	    stream->column++;
 	}
 
 	c = *data++;
-	switch (c) {
-	case '\\':
-	case '(':
-	case ')':
-	    _cairo_output_stream_write (stream->output, &backslash, 1);
-	    stream->column++;
-	    stream->string_size++;
-	    break;
-	/* Have to also be careful to never split the final ~> sequence. */
-	case '~':
-	    _cairo_output_stream_write (stream->output, &c, 1);
-	    stream->column++;
-	    stream->string_size++;
-	    length--;
-	    c = *data++;
-	    break;
+	if (stream->use_strings) {
+	    switch (c) {
+	    case '\\':
+	    case '(':
+	    case ')':
+		_cairo_output_stream_write (stream->output, &backslash, 1);
+		stream->column++;
+		stream->string_size++;
+		break;
+		/* Have to also be careful to never split the final ~> sequence. */
+	    case '~':
+		_cairo_output_stream_write (stream->output, &c, 1);
+		stream->column++;
+		stream->string_size++;
+		length--;
+		c = *data++;
+		break;
+	    }
 	}
 	_cairo_output_stream_write (stream->output, &c, 1);
 	stream->column++;
 	stream->string_size++;
 
-	if (stream->string_size >= STRING_ARRAY_MAX_STRING_SIZE) {
+	if (stream->use_strings &&
+	    stream->string_size >= STRING_ARRAY_MAX_STRING_SIZE)
+	{
 	    _cairo_output_stream_printf (stream->output, ")\n");
 	    stream->string_size = 0;
 	    stream->column = 0;
@@ -1664,7 +1671,8 @@ _string_array_stream_close (cairo_output_stream_t *base)
     cairo_status_t status;
     string_array_stream_t *stream = (string_array_stream_t *) base;
 
-    _cairo_output_stream_printf (stream->output, ")\n");
+    if (stream->use_strings)
+	_cairo_output_stream_printf (stream->output, ")\n");
 
     status = _cairo_output_stream_get_status (stream->output);
 
@@ -1702,9 +1710,37 @@ _string_array_stream_create (cairo_output_stream_t *output)
     stream->output = output;
     stream->column = 0;
     stream->string_size = 0;
+    stream->use_strings = TRUE;
 
     return &stream->base;
 }
+
+/* A base85_array_stream wraps an existing output stream. It wraps the
+ * output within STRING_ARRAY_MAX_COLUMN columns (+/- 1). The output
+ * is not enclosed in strings like string_array_stream.
+ */
+static cairo_output_stream_t *
+_base85_array_stream_create (cairo_output_stream_t *output)
+{
+    string_array_stream_t *stream;
+
+    stream = malloc (sizeof (string_array_stream_t));
+    if (stream == NULL) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
+    }
+
+    _cairo_output_stream_init (&stream->base,
+			       _string_array_stream_write,
+			       _string_array_stream_close);
+    stream->output = output;
+    stream->column = 0;
+    stream->string_size = 0;
+    stream->use_strings = FALSE;
+
+    return &stream->base;
+}
+
 
 /* PS Output - this section handles output of the parts of the meta
  * surface we can render natively in PS. */
@@ -1767,12 +1803,17 @@ fail:
 static cairo_status_t
 _cairo_ps_surface_emit_base85_string (cairo_ps_surface_t    *surface,
 				      unsigned char	    *data,
-				      unsigned long	     length)
+				      unsigned long	     length,
+				      cairo_bool_t           use_strings)
 {
     cairo_output_stream_t *base85_stream, *string_array_stream;
     cairo_status_t status, status2;
 
-    string_array_stream = _string_array_stream_create (surface->stream);
+    if (use_strings)
+	string_array_stream = _string_array_stream_create (surface->stream);
+    else
+	string_array_stream = _base85_array_stream_create (surface->stream);
+
     status = _cairo_output_stream_get_status (string_array_stream);
     if (status)
 	return _cairo_output_stream_destroy (string_array_stream);
@@ -1797,7 +1838,6 @@ _cairo_ps_surface_emit_base85_string (cairo_ps_surface_t    *surface,
 static cairo_status_t
 _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 			      cairo_image_surface_t *image,
-			      const char	    *name,
 			      cairo_operator_t	     op)
 {
     cairo_status_t status;
@@ -1905,82 +1945,113 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 	goto bail2;
     }
 
-    /* Emit the image data as a base85-encoded string which will
-     * be used as the data source for the image operator later. */
-    _cairo_output_stream_printf (surface->stream,
-				 "/%sData [\n", name);
+    if (surface->use_string_datasource) {
+	/* Emit the image data as a base85-encoded string which will
+	 * be used as the data source for the image operator later. */
+	_cairo_output_stream_printf (surface->stream,
+				     "/CairoImageData [\n");
 
-    status = _cairo_ps_surface_emit_base85_string (surface,
-						   data_compressed,
-						   data_compressed_size);
-    if (status)
-	goto bail3;
+	status = _cairo_ps_surface_emit_base85_string (surface,
+						       data_compressed,
+						       data_compressed_size,
+						       TRUE);
+	if (status)
+	    goto bail3;
 
-    _cairo_output_stream_printf (surface->stream,
-				 "] def\n");
-    _cairo_output_stream_printf (surface->stream,
-				 "/%sDataIndex 0 def\n", name);
+	_cairo_output_stream_printf (surface->stream,
+				     "] def\n");
+	_cairo_output_stream_printf (surface->stream,
+				     "/CairoImageDataIndex 0 def\n");
+    }
 
     if (use_mask) {
 	_cairo_output_stream_printf (surface->stream,
-				     "    /DeviceRGB setcolorspace\n"
-				     "    <<\n"
-				     "	/ImageType 3\n"
-				     "	/InterleaveType 2\n"
-				     "	/DataDict <<\n"
-				     "		/ImageType 1\n"
-				     "		/Width %d\n"
-				     "		/Height %d\n"
-				     "		/BitsPerComponent 8\n"
-				     "		/Decode [ 0 1 0 1 0 1 ]\n"
-				     "		/DataSource {\n"
-				     "	    		%sData %sDataIndex get\n"
-				     "	    		/%sDataIndex %sDataIndex 1 add def\n"
-				     "	    		%sDataIndex %sData length 1 sub gt { /%sDataIndex 0 def } if\n"
-				     "		} /ASCII85Decode filter /LZWDecode filter\n"
-				     "		/ImageMatrix [ 1 0 0 -1 0 %d ]\n"
-				     "	>>\n"
-				     "	/MaskDict <<\n"
-				     "		/ImageType 1\n"
-				     "		/Width %d\n"
-				     "		/Height %d\n"
-				     "		/BitsPerComponent 1\n"
-				     "		/Decode [ 1 0 ]\n"
-				     "		/ImageMatrix [ 1 0 0 -1 0 %d ]\n"
-				     "	>>\n"
-				     "    >>\n"
-				     "    image\n",
+				     "/DeviceRGB setcolorspace\n"
+				     "5 dict dup begin\n"
+				     "  /ImageType 3 def\n"
+				     "  /InterleaveType 2 def\n"
+				     "  /DataDict 8 dict def\n"
+				     "    DataDict begin\n"
+				     "    /ImageType 1 def\n"
+				     "    /Width %d def\n"
+				     "    /Height %d def\n"
+				     "    /BitsPerComponent 8 def\n"
+				     "    /Decode [ 0 1 0 1 0 1 ] def\n",
 				     image->width,
-				     image->height,
-				     name, name, name, name, name, name, name,
+				     image->height);
+
+	if (surface->use_string_datasource) {
+	    _cairo_output_stream_printf (surface->stream,
+					 "    /DataSource {\n"
+					 "      CairoImageData CairoImageDataIndex get\n"
+					 "	/CairoImageDataIndex CairoImageDataIndex 1 add def\n"
+					 "	CairoImageDataIndex CairoImageData length 1 sub gt\n"
+					 "       { /CairoImageDataIndex 0 def } if\n"
+					 "    } /ASCII85Decode filter /LZWDecode filter def\n");
+	} else {
+	    _cairo_output_stream_printf (surface->stream,
+					 "    /DataSource currentfile /ASCII85Decode filter /LZWDecode filter def\n");
+	}
+
+	_cairo_output_stream_printf (surface->stream,
+				     "    /ImageMatrix [ 1 0 0 -1 0 %d ] def\n"
+				     "  end\n"
+				     "  /MaskDict 8 dict def\n"
+				     "     MaskDict begin\n"
+				     "    /ImageType 1 def\n"
+				     "    /Width %d def\n"
+				     "    /Height %d def\n"
+				     "    /BitsPerComponent 1 def\n"
+				     "    /Decode [ 1 0 ] def\n"
+				     "    /ImageMatrix [ 1 0 0 -1 0 %d ] def\n"
+				     "  end\n"
+				     "end\n"
+				     "image\n",
 				     image->height,
 				     image->width,
 				     image->height,
 				     image->height);
     } else {
 	_cairo_output_stream_printf (surface->stream,
-				     "    /DeviceRGB setcolorspace\n"
-				     "    <<\n"
-				     "	/ImageType 1\n"
-				     "	/Width %d\n"
-				     "	/Height %d\n"
-				     "	/BitsPerComponent 8\n"
-				     "	/Decode [ 0 1 0 1 0 1 ]\n"
-				     "	/DataSource {\n"
-				     "	    %sData %sDataIndex get\n"
-				     "	    /%sDataIndex %sDataIndex 1 add def\n"
-				     "	    %sDataIndex %sData length 1 sub gt { /%sDataIndex 0 def } if\n"
-				     "	} /ASCII85Decode filter /LZWDecode filter\n"
-				     "	/ImageMatrix [ 1 0 0 -1 0 %d ]\n"
-				     "    >>\n"
-				     "    image\n",
+				     "/DeviceRGB setcolorspace\n"
+				     "8 dict dup begin\n"
+				     "  /ImageType 1 def\n"
+				     "  /Width %d def\n"
+				     "  /Height %d def\n"
+				     "  /BitsPerComponent 8 def\n"
+				     "  /Decode [ 0 1 0 1 0 1 ] def\n",
 				     opaque_image->width,
-				     opaque_image->height,
-				     name, name, name, name, name, name, name,
+				     opaque_image->height);
+	if (surface->use_string_datasource) {
+	    _cairo_output_stream_printf (surface->stream,
+					 "  /DataSource {\n"
+					 "    CairoImageData CairoImageDataIndex get\n"
+					 "    /CairoImageDataIndex CairoImageDataIndex 1 add def\n"
+					 "    CairoImageDataIndex CairoImageData length 1 sub gt\n"
+					 "     { /CairoImageDataIndex 0 def } if\n"
+					 "  } /ASCII85Decode filter /LZWDecode filter def\n");
+	} else {
+	    _cairo_output_stream_printf (surface->stream,
+					 "  /DataSource currentfile /ASCII85Decode filter /LZWDecode filter def\n");
+	}
+
+	_cairo_output_stream_printf (surface->stream,
+				     "  /ImageMatrix [ 1 0 0 -1 0 %d ] def\n"
+				     "end\n"
+				     "image\n",
 				     opaque_image->height);
     }
 
-    status = CAIRO_STATUS_SUCCESS;
+    if (!surface->use_string_datasource) {
+	/* Emit the image data as a base85-encoded string which will
+	 * be used as the data source for the image operator. */
+	status = _cairo_ps_surface_emit_base85_string (surface,
+						       data_compressed,
+						       data_compressed_size,
+						       FALSE);
+    } else {
+	status = CAIRO_STATUS_SUCCESS;
+    }
 
 bail3:
     free (data_compressed);
@@ -2134,7 +2205,7 @@ _cairo_ps_surface_emit_surface (cairo_ps_surface_t      *surface,
 	status = _cairo_ps_surface_emit_meta_surface (surface,
 						      meta_surface);
     } else {
-	status = _cairo_ps_surface_emit_image (surface, surface->image, "CairoPattern", op);
+	status = _cairo_ps_surface_emit_image (surface, surface->image, op);
     }
 
     return status;
@@ -2199,6 +2270,7 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
     double xstep, ystep;
     cairo_matrix_t cairo_p2d, ps_p2d;
     cairo_rectangle_int16_t surface_extents;
+    cairo_bool_t old_use_string_datasource;
 
     cairo_p2d = pattern->base.matrix;
     status = cairo_matrix_invert (&cairo_p2d);
@@ -2265,17 +2337,18 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
 	ystep = 0;
     }
 
-    if (pattern->base.extend == CAIRO_EXTEND_REFLECT) {
-	_cairo_output_stream_printf (surface->stream,
-				     "/CairoPattern {\n");
+    _cairo_output_stream_printf (surface->stream,
+				 "/CairoPattern {\n");
 
-	status = _cairo_ps_surface_emit_surface (surface, pattern, op);
-	if (status)
-	    return status;
+    old_use_string_datasource = surface->use_string_datasource;
+    surface->use_string_datasource = TRUE;
+    status = _cairo_ps_surface_emit_surface (surface, pattern, op);
+    if (status)
+	return status;
 
-	_cairo_output_stream_printf (surface->stream,
-				     "} bind def\n");
-    }
+    surface->use_string_datasource = old_use_string_datasource;
+    _cairo_output_stream_printf (surface->stream,
+				 "} bind def\n");
 
     _cairo_output_stream_printf (surface->stream,
 				 "<< /PatternType 1\n"
@@ -2302,15 +2375,8 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
     } else {
 	_cairo_output_stream_printf (surface->stream,
 				     "   /BBox [0 0 %d %d]\n"
-				     "   /PaintProc {\n",
+				     "   /PaintProc { CairoPattern }\n",
 				     pattern_width, pattern_height);
-
-	status = _cairo_ps_surface_emit_surface (surface, pattern, op);
-	if (status)
-	    return status;
-
-	_cairo_output_stream_printf (surface->stream,
-				     "}\n");
     }
 
     _cairo_output_stream_printf (surface->stream,

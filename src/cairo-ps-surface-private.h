@@ -67,6 +67,7 @@ typedef struct cairo_ps_surface {
     cairo_matrix_t cairo_to_ps;
     cairo_image_surface_t *image;
     void *image_extra;
+    cairo_bool_t use_string_datasource;
 
     int num_pages;
 
