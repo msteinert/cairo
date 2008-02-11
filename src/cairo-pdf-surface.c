@@ -1244,36 +1244,6 @@ _cairo_pdf_surface_start_page (void *abstract_surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void *
-compress_dup (const void *data, unsigned long data_size,
-	      unsigned long *compressed_size)
-{
-    void *compressed;
-    unsigned long additional_size;
-
-    /* Bound calculation taken from zlib. */
-    additional_size = (data_size >> 12) + (data_size >> 14) + 11;
-    if (INT32_MAX - data_size <= additional_size) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return NULL;
-    }
-
-    *compressed_size = data_size + additional_size;
-    compressed = malloc (*compressed_size);
-    if (compressed == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return NULL;
-    }
-
-    if (compress (compressed, compressed_size, data, data_size) != Z_OK) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	free (compressed);
-	compressed = NULL;
-    }
-
-    return compressed;
-}
-
 /* Emit alpha channel from the image into the given data, providing
  * an id that can be used to reference the resulting SMask object.
  *
@@ -1286,8 +1256,8 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 			       cairo_pdf_resource_t	*stream_ret)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    char *alpha, *alpha_compressed;
-    unsigned long alpha_size, alpha_compressed_size;
+    char *alpha;
+    unsigned long alpha_size;
     uint32_t *pixel32;
     uint8_t *pixel8;
     int i, x, y;
@@ -1368,35 +1338,24 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
     if (opaque)
 	goto CLEANUP_ALPHA;
 
-    alpha_compressed = compress_dup (alpha, alpha_size, &alpha_compressed_size);
-    if (alpha_compressed == NULL) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto CLEANUP_ALPHA;
-    }
-
     status = _cairo_pdf_surface_open_stream (surface,
 					     NULL,
-					     FALSE,
+					     TRUE,
 					     "   /Type /XObject\r\n"
 					     "   /Subtype /Image\r\n"
 					     "   /Width %d\r\n"
 					     "   /Height %d\r\n"
 					     "   /ColorSpace /DeviceGray\r\n"
-					     "   /BitsPerComponent %d\r\n"
-					     "   /Filter /FlateDecode\r\n",
+					     "   /BitsPerComponent %d\r\n",
 					     image->width, image->height,
 					     image->format == CAIRO_FORMAT_A1 ? 1 : 8);
     if (status)
-	goto CLEANUP_ALPHA_COMPRESSED;
+	goto CLEANUP_ALPHA;
 
     *stream_ret = surface->pdf_stream.self;
-
-    _cairo_output_stream_write (surface->output, alpha_compressed, alpha_compressed_size);
-    _cairo_output_stream_printf (surface->output, "\r\n");
+    _cairo_output_stream_write (surface->output, alpha, alpha_size);
     status = _cairo_pdf_surface_close_stream (surface);
 
- CLEANUP_ALPHA_COMPRESSED:
-    free (alpha_compressed);
  CLEANUP_ALPHA:
     free (alpha);
  CLEANUP:
@@ -1411,8 +1370,8 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t   *surface,
                                cairo_pdf_resource_t  *image_ret)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    char *rgb, *compressed;
-    unsigned long rgb_size, compressed_size;
+    char *rgb;
+    unsigned long rgb_size;
     uint32_t *pixel;
     int i, x, y;
     cairo_pdf_resource_t smask = {0}; /* squelch bogus compiler warning */
@@ -1474,19 +1433,13 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t   *surface,
 	}
     }
 
-    compressed = compress_dup (rgb, rgb_size, &compressed_size);
-    if (compressed == NULL) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto CLEANUP_RGB;
-    }
-
     need_smask = FALSE;
     if (image->format == CAIRO_FORMAT_ARGB32 ||
 	image->format == CAIRO_FORMAT_A8 ||
 	image->format == CAIRO_FORMAT_A1) {
 	status = _cairo_pdf_surface_emit_smask (surface, image, &smask);
 	if (status)
-	    goto CLEANUP_COMPRESSED;
+	    goto CLEANUP_RGB;
 
 	if (smask.id)
 	    need_smask = TRUE;
@@ -1497,13 +1450,12 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t   *surface,
 				"   /Width %d\r\n"		\
 				"   /Height %d\r\n"		\
 				"   /ColorSpace /DeviceRGB\r\n"	\
-				"   /BitsPerComponent 8\r\n"	\
-				"   /Filter /FlateDecode\r\n"
+				"   /BitsPerComponent 8\r\n"
 
     if (need_smask)
 	status = _cairo_pdf_surface_open_stream (surface,
 						 NULL,
-						 FALSE,
+						 TRUE,
 						 IMAGE_DICTIONARY
 						 "   /SMask %d 0 R\r\n",
 						 image->width, image->height,
@@ -1511,22 +1463,18 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t   *surface,
     else
 	status = _cairo_pdf_surface_open_stream (surface,
 						 NULL,
-						 FALSE,
+						 TRUE,
 						 IMAGE_DICTIONARY,
 						 image->width, image->height);
     if (status)
-	goto CLEANUP_COMPRESSED;
+	goto CLEANUP_RGB;
 
 #undef IMAGE_DICTIONARY
 
     *image_ret = surface->pdf_stream.self;
-
-    _cairo_output_stream_write (surface->output, compressed, compressed_size);
-    _cairo_output_stream_printf (surface->output, "\r\n");
+    _cairo_output_stream_write (surface->output, rgb, rgb_size);
     status = _cairo_pdf_surface_close_stream (surface);
 
-CLEANUP_COMPRESSED:
-    free (compressed);
 CLEANUP_RGB:
     free (rgb);
 CLEANUP:
@@ -2911,8 +2859,6 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
     cairo_pdf_resource_t stream, descriptor, cidfont_dict;
     cairo_pdf_resource_t subset_resource, to_unicode_stream;
     cairo_pdf_font_t font;
-    unsigned long compressed_length;
-    char *compressed;
     unsigned int i;
     cairo_status_t status;
 
@@ -2922,31 +2868,19 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
     if (subset_resource.id == 0)
 	return CAIRO_STATUS_SUCCESS;
 
-    compressed = compress_dup (subset->data, subset->data_length, &compressed_length);
-    if (compressed == NULL)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    status = _cairo_pdf_surface_open_stream (surface,
+					     NULL,
+					     TRUE,
+					     "   /Subtype /CIDFontType0C\r\n");
+    if (status)
+	return status;
 
-    stream = _cairo_pdf_surface_new_object (surface);
-    if (stream.id == 0) {
-	free (compressed);
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-    }
-
-    _cairo_output_stream_printf (surface->output,
-				 "%d 0 obj\r\n"
-				 "<< /Filter /FlateDecode\r\n"
-				 "   /Length %lu\r\n"
-				 "   /Subtype /CIDFontType0C\r\n"
-				 ">>\r\n"
-				 "stream\r\n",
-				 stream.id,
-				 compressed_length);
-    _cairo_output_stream_write (surface->output, compressed, compressed_length);
-    _cairo_output_stream_printf (surface->output,
-				 "\r\n"
-				 "endstream\r\n"
-				 "endobj\r\n");
-    free (compressed);
+    stream = surface->pdf_stream.self;
+    _cairo_output_stream_write (surface->output,
+				subset->data, subset->data_length);
+    status = _cairo_pdf_surface_close_stream (surface);
+    if (status)
+	return status;
 
     status = _cairo_pdf_surface_emit_to_unicode_stream (surface,
 	                                                font_subset, TRUE,
@@ -3092,8 +3026,7 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
     cairo_pdf_resource_t stream, descriptor, subset_resource, to_unicode_stream;
     cairo_pdf_font_t font;
     cairo_status_t status;
-    unsigned long length, compressed_length;
-    char *compressed;
+    unsigned long length;
     unsigned int i;
 
     subset_resource = _cairo_pdf_surface_get_font_resource (surface,
@@ -3103,36 +3036,22 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
 	return CAIRO_STATUS_SUCCESS;
 
     /* We ignore the zero-trailer and set Length3 to 0. */
-    length = subset->header_length + subset->data_length;
-    compressed = compress_dup (subset->data, length, &compressed_length);
-    if (compressed == NULL)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    status = _cairo_pdf_surface_open_stream (surface,
+					     NULL,
+					     TRUE,
+					     "   /Length1 %lu\r\n"
+					     "   /Length2 %lu\r\n"
+					     "   /Length3 0\r\n",
+					     subset->header_length,
+					     subset->data_length);
+    if (status)
+	return status;
 
-    stream = _cairo_pdf_surface_new_object (surface);
-    if (stream.id == 0) {
-	free (compressed);
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-    }
-
-    _cairo_output_stream_printf (surface->output,
-				 "%d 0 obj\r\n"
-				 "<< /Filter /FlateDecode\r\n"
-				 "   /Length %lu\r\n"
-				 "   /Length1 %lu\r\n"
-				 "   /Length2 %lu\r\n"
-				 "   /Length3 0\r\n"
-				 ">>\r\n"
-				 "stream\r\n",
-				 stream.id,
-				 compressed_length,
-				 subset->header_length,
-				 subset->data_length);
-    _cairo_output_stream_write (surface->output, compressed, compressed_length);
-    _cairo_output_stream_printf (surface->output,
-				 "\r\n"
-				 "endstream\r\n"
-				 "endobj\r\n");
-    free (compressed);
+    stream = surface->pdf_stream.self;
+    _cairo_output_stream_write (surface->output, subset->data, length);
+    status = _cairo_pdf_surface_close_stream (surface);
+    if (status)
+	return status;
 
     status = _cairo_pdf_surface_emit_to_unicode_stream (surface,
 	                                                font_subset, FALSE,
@@ -3260,8 +3179,6 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
     cairo_status_t status;
     cairo_pdf_font_t font;
     cairo_truetype_subset_t subset;
-    unsigned long compressed_length;
-    char *compressed;
     unsigned int i;
 
     subset_resource = _cairo_pdf_surface_get_font_resource (surface,
@@ -3274,35 +3191,24 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
     if (status)
 	return status;
 
-    compressed = compress_dup (subset.data, subset.data_length,
-			       &compressed_length);
-    if (compressed == NULL) {
+    status = _cairo_pdf_surface_open_stream (surface,
+					     NULL,
+					     TRUE,
+					     "   /Length1 %lu\r\n",
+					     subset.data_length);
+    if (status) {
 	_cairo_truetype_subset_fini (&subset);
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return status;
     }
 
-    stream = _cairo_pdf_surface_new_object (surface);
-    if (stream.id == 0) {
-	free (compressed);
+    stream = surface->pdf_stream.self;
+    _cairo_output_stream_write (surface->output,
+				subset.data, subset.data_length);
+    status = _cairo_pdf_surface_close_stream (surface);
+    if (status) {
 	_cairo_truetype_subset_fini (&subset);
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return status;
     }
-    _cairo_output_stream_printf (surface->output,
-				 "%d 0 obj\r\n"
-				 "<< /Filter /FlateDecode\r\n"
-				 "   /Length %lu\r\n"
-				 "   /Length1 %lu\r\n"
-				 ">>\r\n"
-				 "stream\r\n",
-				 stream.id,
-				 compressed_length,
-				 subset.data_length);
-    _cairo_output_stream_write (surface->output, compressed, compressed_length);
-    _cairo_output_stream_printf (surface->output,
-				 "\r\n"
-				 "endstream\r\n"
-				 "endobj\r\n");
-    free (compressed);
 
     status = _cairo_pdf_surface_emit_to_unicode_stream (surface,
 	                                                font_subset, TRUE,
