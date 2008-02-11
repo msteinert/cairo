@@ -63,12 +63,6 @@ static const cairo_t _cairo_nil = {
 
 #include <assert.h>
 
-/* This has to be updated whenever #cairo_status_t is extended.  That's
- * a bit of a pain, but it should be easy to always catch as long as
- * one adds a new test case to test a trigger of the new status value.
- */
-#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_STRIDE
-
 /**
  * _cairo_error:
  * @status: a status value indicating an error, (eg. not
@@ -2869,12 +2863,12 @@ cairo_get_scaled_font (cairo_t *cr)
     cairo_scaled_font_t *scaled_font;
 
     if (cr->status)
-	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
+	return _cairo_scaled_font_create_in_error (cr->status);
 
     status = _cairo_gstate_get_scaled_font (cr->gstate, &scaled_font);
     if (status) {
 	_cairo_set_error (cr, status);
-	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
+	return _cairo_scaled_font_create_in_error (status);
     }
 
     return scaled_font;

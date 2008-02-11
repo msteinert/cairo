@@ -96,7 +96,7 @@ main (void)
     scaled_font = cairo_scaled_font_create (cairo_get_font_face (cr),
 	                                    &identity, &identity,
 					    NULL);
-    assert (cairo_scaled_font_status (scaled_font) == CAIRO_STATUS_NO_MEMORY); /* XXX */
+    assert (cairo_scaled_font_status (scaled_font) == CAIRO_STATUS_NULL_POINTER);
     cairo_scaled_font_get_font_options (scaled_font, NULL);
     cairo_scaled_font_destroy (scaled_font);
 
