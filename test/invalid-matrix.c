@@ -57,11 +57,12 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
 		    (function_name));							\
     return CAIRO_TEST_FAILURE;								\
 } else if ((status) != CAIRO_STATUS_INVALID_MATRIX) {					\
-    cairo_test_log ("Warning: %s with invalid matrix returned unexpected status "	\
+    cairo_test_log ("Error: %s with invalid matrix returned unexpected status "	\
 		    "(%d): %s\n",							\
 		    (function_name),							\
 		    status,								\
 		    cairo_status_to_string (status));					\
+    return CAIRO_TEST_FAILURE;								\
 }
 
     /* create a bogus matrix and check results of attempted inversion */
