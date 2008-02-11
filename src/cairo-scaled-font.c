@@ -466,11 +466,9 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 {
     cairo_status_t status;
 
-    if (options != NULL) {
-	status = cairo_font_options_status ((cairo_font_options_t *) options);
-	if (status)
-	    return status;
-    }
+    status = cairo_font_options_status ((cairo_font_options_t *) options);
+    if (status)
+	return status;
 
     _cairo_scaled_font_init_key (scaled_font, font_face,
 				 font_matrix, ctm, options);
@@ -625,11 +623,8 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     if (font_face->status)
 	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
 
-    if (options != NULL &&
-	cairo_font_options_status ((cairo_font_options_t *) options))
-    {
+    if (cairo_font_options_status ((cairo_font_options_t *) options))
 	return (cairo_scaled_font_t *)&_cairo_scaled_font_nil;
-    }
 
     /* Note that degenerate ctm or font_matrix *are* allowed.
      * We want to support a font size of 0. */

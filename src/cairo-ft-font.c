@@ -1661,11 +1661,9 @@ _cairo_ft_scaled_font_create_toy (cairo_toy_font_face_t	      *toy_face,
 	goto FREE_PATTERN;
     }
 
-    if (font_options != NULL) {
-	status = _cairo_ft_font_options_substitute (font_options, pattern);
-	if (status)
-	    goto FREE_PATTERN;
-    }
+    status = _cairo_ft_font_options_substitute (font_options, pattern);
+    if (status)
+	goto FREE_PATTERN;
 
     FcDefaultSubstitute (pattern);
 
