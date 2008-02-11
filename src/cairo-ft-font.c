@@ -1602,6 +1602,11 @@ _cairo_ft_scaled_font_create_toy (cairo_toy_font_face_t	      *toy_face,
     cairo_ft_font_transform_t sf;
     cairo_ft_options_t ft_options;
 
+    cairo_matrix_multiply (&scale, font_matrix, ctm);
+    status = _compute_transform (&sf, &scale);
+    if (status)
+	return status;
+
     pattern = FcPatternCreate ();
     if (!pattern)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -1647,9 +1652,6 @@ _cairo_ft_scaled_font_create_toy (cairo_toy_font_face_t	      *toy_face,
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FREE_PATTERN;
     }
-
-    cairo_matrix_multiply (&scale, font_matrix, ctm);
-    _compute_transform (&sf, &scale);
 
     if (! FcPatternAddDouble (pattern, FC_PIXEL_SIZE, sf.y_scale)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
