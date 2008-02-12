@@ -596,7 +596,7 @@ fi
 
 dnl ===========================================================================
 
-CAIRO_BACKEND_ENABLE(ps, PostScript, ps, PS_SURFACE, auto, [
+CAIRO_BACKEND_ENABLE(ps, PostScript, ps, PS_SURFACE, yes, [
     # The ps backend requires zlib.
     use_ps=$have_libz
     ps_NONPKGCONFIG_LIBS=-lz
@@ -618,7 +618,7 @@ AM_CONDITIONAL(CAIRO_CAN_TEST_PS_SURFACE, test "x$test_ps" = "xyes")
 
 dnl ===========================================================================
 
-CAIRO_BACKEND_ENABLE(pdf, PDF, pdf, PDF_SURFACE, auto, [
+CAIRO_BACKEND_ENABLE(pdf, PDF, pdf, PDF_SURFACE, yes, [
     # The pdf backend requires zlib.
     use_pdf=$have_libz
     pdf_NONPKGCONFIG_LIBS=-lz
@@ -648,7 +648,7 @@ AM_CONDITIONAL(CAIRO_HAS_MULTI_PAGE_SURFACES, test "x$use_ps" = "xyes" -o "x$use
 
 dnl ===========================================================================
 
-CAIRO_BACKEND_ENABLE(svg, SVG, svg, SVG_SURFACE, auto, [
+CAIRO_BACKEND_ENABLE(svg, SVG, svg, SVG_SURFACE, yes, [
   if test "x$use_png" != "xyes"; then
     use_svg="no (requires --enable-png)"
   fi
