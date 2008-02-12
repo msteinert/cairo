@@ -3036,6 +3036,7 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
 	return CAIRO_STATUS_SUCCESS;
 
     /* We ignore the zero-trailer and set Length3 to 0. */
+    length = subset->header_length + subset->data_length;
     status = _cairo_pdf_surface_open_stream (surface,
 					     NULL,
 					     TRUE,
