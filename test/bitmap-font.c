@@ -204,6 +204,8 @@ draw (cairo_t *cr, int width, int height)
     cairo_text_path (cr, " a lazy dog");
     cairo_fill (cr);
 
+    cairo_font_options_destroy (font_options);
+
     return CAIRO_TEST_SUCCESS;
 }
 
