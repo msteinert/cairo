@@ -57,25 +57,7 @@
  *   could add generation counters to surfaces and remember the stream
  *   ID for a particular generation for a particular surface.
  *
- * - Images of other formats than 8 bit RGBA.
- *
  * - Backend specific meta data.
- *
- * - Surface patterns.
- *
- * - Should/does cairo support drawing into a scratch surface and then
- *   using that as a fill pattern?  For this backend, that would involve
- *   using a tiling pattern (4.6.2).  How do you create such a scratch
- *   surface?  cairo_surface_create_similar() ?
- *
- * - What if you create a similar surface and does show_page and then
- *   does show_surface on another surface?
- *
- * - Add test case for RGBA images.
- *
- * - Add test case for RGBA gradients.
- *
- * - Coordinate space for create_similar() args?
  */
 
 /*
@@ -1376,11 +1358,6 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t   *surface,
     int i, x, y;
     cairo_pdf_resource_t smask = {0}; /* squelch bogus compiler warning */
     cairo_bool_t need_smask;
-
-    /* XXX: Need to rewrite this as a pdf_surface function with
-     * pause/resume of content_stream, (currently the only caller does
-     * the pause/resume already, but that is expected to change in the
-     * future). */
 
     /* These are the only image formats we currently support, (which
      * makes things a lot simpler here). This is enforced through
