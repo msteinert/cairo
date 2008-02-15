@@ -206,7 +206,7 @@ slim_hidden_def (cairo_font_options_merge);
  * Compares two font options objects for equality.
  *
  * Return value: %TRUE if all fields of the two font options objects match.
- *	Note that this function will return %FALSE is either object is in
+ *	Note that this function will return %FALSE if either object is in
  *	error.
  **/
 cairo_bool_t
