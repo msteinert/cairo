@@ -296,7 +296,7 @@ _cairo_pdf_path_close_path (void *closure)
  * value, while cairo draws something only for round caps).
  *
  * When using this function to emit a path to be filled, rather than
- * stroked, simply pass CAIRO_LINE_CAP_ROUND which will guarantee that
+ * stroked, simply pass %CAIRO_LINE_CAP_ROUND which will guarantee that
  * the stroke workaround will not modify the path being emitted.
  */
 static cairo_status_t
