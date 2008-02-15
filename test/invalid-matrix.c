@@ -26,7 +26,7 @@
 
 #include "cairo-test.h"
 
-#if _XOPEN_SOURCE >= 600 || _ISOC99_SOURCE
+#if _XOPEN_SOURCE >= 600 || defined (_ISOC99_SOURCE)
 #define HAVE_INFINITY 1
 #endif
 
