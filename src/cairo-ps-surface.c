@@ -61,12 +61,6 @@
 #define ctime_r(T, BUF) ctime (T)
 #endif
 
-typedef enum _cairo_image_transparency {
-    CAIRO_IMAGE_IS_OPAQUE,
-    CAIRO_IMAGE_HAS_BILEVEL_ALPHA,
-    CAIRO_IMAGE_HAS_ALPHA
-} cairo_image_transparency_t;
-
 static const cairo_surface_backend_t cairo_ps_surface_backend;
 static const cairo_paginated_surface_backend_t cairo_ps_surface_paginated_backend;
 
@@ -1349,40 +1343,6 @@ color_is_gray (double red, double green, double blue)
 	    fabs (red - blue) < epsilon);
 }
 
-static cairo_image_transparency_t
-_analyze_image_transparency (cairo_image_surface_t      *image)
-{
-    int x, y;
-    cairo_image_transparency_t transparency;
-
-    if (image->format == CAIRO_FORMAT_RGB24)
-	return CAIRO_IMAGE_IS_OPAQUE;
-
-    if (image->format != CAIRO_FORMAT_ARGB32) {
-	/* If the PS surface does not support the image format, assume
-	 * that it does have alpha. The image will be converted to
-	 * rgb24 when the PS surface blends the image into the page
-	 * color to remove the transparency. */
-	return CAIRO_IMAGE_HAS_ALPHA;
-    }
-
-    transparency = CAIRO_IMAGE_IS_OPAQUE;
-    for (y = 0; y < image->height; y++) {
-	uint32_t *pixel = (uint32_t *) (image->data + y * image->stride);
-
-	for (x = 0; x < image->width; x++, pixel++) {
-	    int a = (*pixel & 0xff000000) >> 24;
-	    if (a > 0 && a < 255) {
-		return CAIRO_IMAGE_HAS_ALPHA;
-	    } else if (a == 0) {
-		transparency = CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
-	    }
-	}
-    }
-
-    return transparency;
-}
-
 static cairo_int_status_t
 _cairo_ps_surface_analyze_surface_pattern_transparency (cairo_ps_surface_t      *surface,
 						       cairo_surface_pattern_t *pattern)
@@ -1401,7 +1361,7 @@ _cairo_ps_surface_analyze_surface_pattern_transparency (cairo_ps_surface_t      
     if (image->base.status)
 	return image->base.status;
 
-    transparency = _analyze_image_transparency (image);
+    transparency = _cairo_image_analyze_transparency (image);
     switch (transparency) {
     case CAIRO_IMAGE_IS_OPAQUE:
 	status = CAIRO_STATUS_SUCCESS;
@@ -1847,7 +1807,7 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
     if (image->base.status)
 	return image->base.status;
 
-    transparency = _analyze_image_transparency (image);
+    transparency = _cairo_image_analyze_transparency (image);
 
     /* PostScript can not represent the alpha channel, so we blend the
        current image over a white (or black for CONTENT_COLOR

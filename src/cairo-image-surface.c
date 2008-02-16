@@ -1337,3 +1337,32 @@ _cairo_image_surface_clone (cairo_image_surface_t	*surface,
 
     return clone;
 }
+
+cairo_image_transparency_t
+_cairo_image_analyze_transparency (cairo_image_surface_t      *image)
+{
+    int x, y;
+    cairo_image_transparency_t transparency;
+
+    if (image->format == CAIRO_FORMAT_RGB24)
+	return CAIRO_IMAGE_IS_OPAQUE;
+
+    if (image->format != CAIRO_FORMAT_ARGB32)
+	return CAIRO_IMAGE_HAS_ALPHA;
+
+    transparency = CAIRO_IMAGE_IS_OPAQUE;
+    for (y = 0; y < image->height; y++) {
+	uint32_t *pixel = (uint32_t *) (image->data + y * image->stride);
+
+	for (x = 0; x < image->width; x++, pixel++) {
+	    int a = (*pixel & 0xff000000) >> 24;
+	    if (a > 0 && a < 255) {
+		return CAIRO_IMAGE_HAS_ALPHA;
+	    } else if (a == 0) {
+		transparency = CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
+	    }
+	}
+    }
+
+    return transparency;
+}

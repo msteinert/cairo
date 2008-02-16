@@ -1903,6 +1903,9 @@ cairo_private cairo_image_surface_t *
 _cairo_image_surface_clone (cairo_image_surface_t	*surface,
 			    cairo_format_t		 format);
 
+cairo_image_transparency_t
+_cairo_image_analyze_transparency (cairo_image_surface_t      *image);
+
 cairo_private cairo_bool_t
 _cairo_surface_is_image (const cairo_surface_t *surface);
 
