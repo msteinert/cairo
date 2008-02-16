@@ -708,6 +708,7 @@ struct _cairo_image_surface {
     unsigned char *data;
     cairo_bool_t owns_data;
     cairo_bool_t has_clip;
+    cairo_image_transparency_t transparency;
 
     int width;
     int height;

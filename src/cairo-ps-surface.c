@@ -1379,6 +1379,9 @@ _cairo_ps_surface_analyze_surface_pattern_transparency (cairo_ps_surface_t      
     case CAIRO_IMAGE_HAS_ALPHA:
 	status = CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY;
 	break;
+
+    case CAIRO_IMAGE_UNKNOWN:
+	ASSERT_NOT_REACHED;
     }
 
     _cairo_surface_release_source_image (pattern->surface, image, image_extra);

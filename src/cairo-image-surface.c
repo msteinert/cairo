@@ -131,6 +131,7 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
     surface->data = (unsigned char *) pixman_image_get_data (pixman_image);
     surface->owns_data = FALSE;
     surface->has_clip = FALSE;
+    surface->transparency = CAIRO_IMAGE_UNKNOWN;
 
     surface->width = pixman_image_get_width (pixman_image);
     surface->height = pixman_image_get_height (pixman_image);
@@ -1321,6 +1322,7 @@ _cairo_image_surface_clone (cairo_image_surface_t	*surface,
 
     cairo_surface_get_device_offset (&surface->base, &x, &y);
     cairo_surface_set_device_offset (&clone->base, x, y);
+    clone->transparency = CAIRO_IMAGE_UNKNOWN;
 
     /* XXX Use _cairo_surface_composite directly */
     cr = cairo_create (&clone->base);
@@ -1342,27 +1344,34 @@ cairo_image_transparency_t
 _cairo_image_analyze_transparency (cairo_image_surface_t      *image)
 {
     int x, y;
-    cairo_image_transparency_t transparency;
 
-    if (image->format == CAIRO_FORMAT_RGB24)
+    if (image->transparency != CAIRO_IMAGE_UNKNOWN)
+	return image->transparency;
+
+    if (image->format == CAIRO_FORMAT_RGB24) {
+	image->transparency = CAIRO_IMAGE_IS_OPAQUE;
 	return CAIRO_IMAGE_IS_OPAQUE;
+    }
 
-    if (image->format != CAIRO_FORMAT_ARGB32)
+    if (image->format != CAIRO_FORMAT_ARGB32) {
+	image->transparency = CAIRO_IMAGE_HAS_ALPHA;
 	return CAIRO_IMAGE_HAS_ALPHA;
+    }
 
-    transparency = CAIRO_IMAGE_IS_OPAQUE;
+    image->transparency = CAIRO_IMAGE_IS_OPAQUE;
     for (y = 0; y < image->height; y++) {
 	uint32_t *pixel = (uint32_t *) (image->data + y * image->stride);
 
 	for (x = 0; x < image->width; x++, pixel++) {
 	    int a = (*pixel & 0xff000000) >> 24;
 	    if (a > 0 && a < 255) {
+		image->transparency = CAIRO_IMAGE_HAS_ALPHA;
 		return CAIRO_IMAGE_HAS_ALPHA;
 	    } else if (a == 0) {
-		transparency = CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
+		image->transparency = CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
 	    }
 	}
     }
 
-    return transparency;
+    return image->transparency;
 }
