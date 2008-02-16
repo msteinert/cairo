@@ -107,6 +107,7 @@ typedef struct _word_wrap_stream {
     int max_column;
     int column;
     cairo_bool_t last_write_was_space;
+    cairo_bool_t in_hexstring;
 } word_wrap_stream_t;
 
 static int
@@ -115,7 +116,28 @@ _count_word_up_to (const unsigned char *s, int length)
     int word = 0;
 
     while (length--) {
-	if (! isspace (*s++))
+	if (! (isspace (*s) || *s == '<')) {
+	    s++;
+	    word++;
+	} else {
+	    return word;
+	}
+    }
+
+    return word;
+}
+
+
+/* Count up to either the end of the ASCII hexstring or the number
+ * of columns remaining.
+ */
+static int
+_count_hexstring_up_to (const unsigned char *s, int length, int columns)
+{
+    int word = 0;
+
+    while (length-- && columns--) {
+	if (*s++ != '>')
 	    word++;
 	else
 	    return word;
@@ -134,7 +156,17 @@ _word_wrap_stream_write (cairo_output_stream_t  *base,
     int word;
 
     while (length) {
-	if (isspace (*data)) {
+	if (*data == '<') {
+	    stream->in_hexstring = TRUE;
+	    data++;
+	    length--;
+	    _cairo_output_stream_printf (stream->output, "<");
+	} else if (*data == '>') {
+	    stream->in_hexstring = FALSE;
+	    data++;
+	    length--;
+	    _cairo_output_stream_printf (stream->output, ">");
+	} else if (isspace (*data)) {
 	    newline =  (*data == '\n' || *data == '\r');
 	    if (! newline && stream->column >= stream->max_column) {
 		_cairo_output_stream_printf (stream->output, "\n");
@@ -149,11 +181,16 @@ _word_wrap_stream_write (cairo_output_stream_t  *base,
 		stream->column++;
 	    stream->last_write_was_space = TRUE;
 	} else {
-	    word = _count_word_up_to (data, length);
-	    /* Don't wrap if this word is a continuation of a word
-	     * from a previous call to write. */
+	    if (stream->in_hexstring) {
+		word = _count_hexstring_up_to (data, length,
+					       MAX (stream->max_column - stream->column, 0));
+	    } else {
+		word = _count_word_up_to (data, length);
+	    }
+	    /* Don't wrap if this word is a continuation of a non hex
+	     * string word from a previous call to write. */
 	    if (stream->column + word >= stream->max_column &&
-		stream->last_write_was_space)
+		(stream->last_write_was_space || stream->in_hexstring))
 	    {
 		_cairo_output_stream_printf (stream->output, "\n");
 		stream->column = 0;
@@ -198,6 +235,7 @@ _word_wrap_stream_create (cairo_output_stream_t *output, int max_column)
     stream->max_column = max_column;
     stream->column = 0;
     stream->last_write_was_space = FALSE;
+    stream->in_hexstring = FALSE;
 
     return &stream->base;
 }
