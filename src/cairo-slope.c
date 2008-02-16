@@ -106,26 +106,3 @@ _cairo_slope_compare (cairo_slope_t *a, cairo_slope_t *b)
     /* Finally, for identical slopes, we obviously return 0. */
     return 0;
 }
-
-/* XXX: It might be cleaner to move away from usage of
-   _cairo_slope_clockwise/_cairo_slope_counter_clockwise in favor of
-   directly using _cairo_slope_compare.
-*/
-
-/* Is a clockwise of b?
- *
- * Note: The strict equality here is not significant in and of itself,
- * but there are functions up above that are sensitive to it,
- * (cf. _cairo_pen_find_active_cw_vertex_index).
- */
-int
-_cairo_slope_clockwise (cairo_slope_t *a, cairo_slope_t *b)
-{
-    return _cairo_slope_compare (a, b) < 0;
-}
-
-int
-_cairo_slope_counter_clockwise (cairo_slope_t *a, cairo_slope_t *b)
-{
-    return ! _cairo_slope_clockwise (a, b);
-}

@@ -2086,12 +2086,6 @@ _cairo_slope_init (cairo_slope_t *slope, cairo_point_t *a, cairo_point_t *b);
 cairo_private int
 _cairo_slope_compare (cairo_slope_t *a, cairo_slope_t *b);
 
-cairo_private int
-_cairo_slope_clockwise (cairo_slope_t *a, cairo_slope_t *b);
-
-cairo_private int
-_cairo_slope_counter_clockwise (cairo_slope_t *a, cairo_slope_t *b);
-
 /* cairo_pattern.c */
 
 cairo_private cairo_status_t
