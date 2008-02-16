@@ -417,7 +417,18 @@ _cairo_pen_stroke_spline_half (cairo_pen_t *pen,
 	    slope = final_slope;
 	else
 	    _cairo_slope_init (&slope, &point[i], &point[i+step]);
-	if (_cairo_slope_compare (&slope, &pen->vertices[active].slope_ccw) >= 0) {
+
+	/* The strict inequalities here ensure that if a spline slope
+	 * compares identically with either of the slopes of the
+	 * active vertex, then it remains the active vertex. This is
+	 * very important since otherwise we can trigger an infinite
+	 * loop in the case of a degenerate pen, (a line), where
+	 * neither vertex considers itself active for the slope---one
+	 * will consider it as equal and reject, and the other will
+	 * consider it unequal and reject. This is due to the inherent
+	 * ambiguity when comparing slopes that differ by exactly
+	 * pi. */
+	if (_cairo_slope_compare (&slope, &pen->vertices[active].slope_ccw) > 0) {
 	    if (++active == pen->num_vertices)
 		active = 0;
 	} else if (_cairo_slope_compare (&slope, &pen->vertices[active].slope_cw) < 0) {
