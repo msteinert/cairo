@@ -2966,11 +2966,11 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
     if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
         return CAIRO_STATUS_SUCCESS;
 
-    return _cairo_pdf_operator_stroke (&surface->pdf_operators,
-				       path,
-				       style,
-				       ctm,
-				       ctm_inverse);
+    return _cairo_pdf_operators_stroke (&surface->pdf_operators,
+					path,
+					style,
+					ctm,
+					ctm_inverse);
 }
 
 static cairo_int_status_t

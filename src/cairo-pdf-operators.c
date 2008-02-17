@@ -546,11 +546,11 @@ _cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t	*pdf_operators,
 
 
 cairo_int_status_t
-_cairo_pdf_operator_stroke (cairo_pdf_operators_t	*pdf_operators,
-			    cairo_path_fixed_t		*path,
-			    cairo_stroke_style_t	*style,
-			    cairo_matrix_t		*ctm,
-			    cairo_matrix_t		*ctm_inverse)
+_cairo_pdf_operators_stroke (cairo_pdf_operators_t	*pdf_operators,
+			     cairo_path_fixed_t		*path,
+			     cairo_stroke_style_t	*style,
+			     cairo_matrix_t		*ctm,
+			     cairo_matrix_t		*ctm_inverse)
 {
     cairo_status_t status;
     cairo_matrix_t m;

@@ -3868,11 +3868,11 @@ _cairo_pdf_surface_write_smask_group (cairo_pdf_surface_t     *surface,
 					    group->fill_rule);
 	break;
     case PDF_STROKE:
-	status = _cairo_pdf_operator_stroke (&surface->pdf_operators,
-					     &group->path,
-					     group->style,
-					     &group->ctm,
-					     &group->ctm_inverse);
+	status = _cairo_pdf_operators_stroke (&surface->pdf_operators,
+					      &group->path,
+					      group->style,
+					      &group->ctm,
+					      &group->ctm_inverse);
 	break;
     case PDF_SHOW_GLYPHS:
 	status = _cairo_pdf_operators_show_glyphs (&surface->pdf_operators,
@@ -4369,11 +4369,11 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 	if (status)
 	    return status;
 
-	status = _cairo_pdf_operator_stroke (&surface->pdf_operators,
-					     path,
-					     style,
-					     ctm,
-					     ctm_inverse);
+	status = _cairo_pdf_operators_stroke (&surface->pdf_operators,
+					      path,
+					      style,
+					      ctm,
+					      ctm_inverse);
 	if (status)
 	    return status;
 
