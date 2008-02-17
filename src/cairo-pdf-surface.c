@@ -2568,7 +2568,7 @@ _cairo_pdf_surface_select_pattern (cairo_pdf_surface_t *surface,
 	    return status;
 
 	_cairo_output_stream_printf (surface->output,
-				     "q %f %f %f ",
+				     "%f %f %f ",
 				     solid_pattern->color.red,
 				     solid_pattern->color.green,
 				     solid_pattern->color.blue);
@@ -2581,6 +2581,7 @@ _cairo_pdf_surface_select_pattern (cairo_pdf_surface_t *surface,
         _cairo_output_stream_printf (surface->output,
                                      "/a%d gs\r\n",
                                      alpha);
+	surface->select_pattern_gstate_saved = FALSE;
     } else {
 	status = _cairo_pdf_surface_add_alpha (surface, 1.0, &alpha);
 	if (status)
@@ -2602,6 +2603,7 @@ _cairo_pdf_surface_select_pattern (cairo_pdf_surface_t *surface,
 	_cairo_output_stream_printf (surface->output,
 				     "/a%d gs\r\n",
 				     alpha);
+	surface->select_pattern_gstate_saved = TRUE;
     }
 
     return _cairo_output_stream_get_status (surface->output);
@@ -2610,7 +2612,8 @@ _cairo_pdf_surface_select_pattern (cairo_pdf_surface_t *surface,
 static void
 _cairo_pdf_surface_unselect_pattern (cairo_pdf_surface_t *surface)
 {
-    _cairo_output_stream_printf (surface->output, "Q\r\n");
+    if (surface->select_pattern_gstate_saved)
+	_cairo_output_stream_printf (surface->output, "Q\r\n");
 }
 
 static cairo_int_status_t
