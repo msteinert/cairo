@@ -267,6 +267,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
     surface->paginated_mode = CAIRO_PAGINATED_MODE_ANALYZE;
 
     surface->force_fallbacks = FALSE;
+    surface->select_pattern_gstate_saved = FALSE;
 
     _cairo_pdf_operators_init (&surface->pdf_operators,
 			       surface->output,
@@ -2591,13 +2592,18 @@ _cairo_pdf_surface_select_pattern (cairo_pdf_surface_t *surface,
 	if (status)
 	    return status;
 
+	/* fill-stroke calls select_pattern twice. Don't save if the
+	 * gstate is already saved. */
+	if (!surface->select_pattern_gstate_saved)
+	    _cairo_output_stream_printf (surface->output, "q ");
+
 	if (is_stroke) {
 	    _cairo_output_stream_printf (surface->output,
-					 "q /Pattern CS /p%d SCN ",
+					 "/Pattern CS /p%d SCN ",
 					 pattern_res.id);
 	} else {
 	    _cairo_output_stream_printf (surface->output,
-					 "q /Pattern cs /p%d scn ",
+					 "/Pattern cs /p%d scn ",
 					 pattern_res.id);
 	}
 	_cairo_output_stream_printf (surface->output,
@@ -2614,6 +2620,7 @@ _cairo_pdf_surface_unselect_pattern (cairo_pdf_surface_t *surface)
 {
     if (surface->select_pattern_gstate_saved)
 	_cairo_output_stream_printf (surface->output, "Q\r\n");
+    surface->select_pattern_gstate_saved = FALSE;
 }
 
 static cairo_int_status_t
