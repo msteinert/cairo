@@ -31,6 +31,7 @@ cairo_base_sources =				\
 	cairo-hull.c				\
 	cairo-image-surface.c			\
 	cairo-lzw.c				\
+	cairo-misc.c				\
 	cairo-malloc-private.h			\
 	cairo-matrix.c				\
 	cairo-mutex.c				\
