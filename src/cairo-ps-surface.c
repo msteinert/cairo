@@ -43,6 +43,7 @@
 #include "cairoint.h"
 #include "cairo-ps.h"
 #include "cairo-ps-surface-private.h"
+#include "cairo-pdf-operators-private.h"
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-paginated-private.h"
 #include "cairo-meta-surface-private.h"
@@ -730,7 +731,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 
     _cairo_pdf_operators_init (&surface->pdf_operators,
 			       surface->stream,
-			       surface->cairo_to_ps,
+			       &surface->cairo_to_ps,
 			       surface->font_subsets);
     surface->num_pages = 0;
 
@@ -1040,7 +1041,7 @@ cairo_ps_surface_set_size (cairo_surface_t	*surface,
     ps_surface->height = height_in_points;
     cairo_matrix_init (&ps_surface->cairo_to_ps, 1, 0, 0, -1, 0, height_in_points);
     _cairo_pdf_operators_set_cairo_to_pdf_matrix (&ps_surface->pdf_operators,
-						  ps_surface->cairo_to_ps);
+						  &ps_surface->cairo_to_ps);
     status = _cairo_paginated_surface_set_size (ps_surface->paginated_surface,
 						width_in_points,
 						height_in_points);
@@ -2077,7 +2078,7 @@ _cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
     surface->height = meta_extents.height;
     cairo_matrix_init (&surface->cairo_to_ps, 1, 0, 0, -1, 0, surface->height);
     _cairo_pdf_operators_set_cairo_to_pdf_matrix (&surface->pdf_operators,
-						  surface->cairo_to_ps);
+						  &surface->cairo_to_ps);
     _cairo_output_stream_printf (surface->stream,
 				 "  gsave\n"
 				 "  0 0 %f %f rectclip\n",
@@ -2105,7 +2106,7 @@ _cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
     surface->height = old_height;
     surface->cairo_to_ps = old_cairo_to_ps;
     _cairo_pdf_operators_set_cairo_to_pdf_matrix (&surface->pdf_operators,
-						  surface->cairo_to_ps);
+						  &surface->cairo_to_ps);
 
     return CAIRO_STATUS_SUCCESS;
 }

@@ -50,11 +50,11 @@
 void
 _cairo_pdf_operators_init (cairo_pdf_operators_t	*pdf_operators,
 			   cairo_output_stream_t	*stream,
-			   cairo_matrix_t		 cairo_to_pdf,
+			   cairo_matrix_t		*cairo_to_pdf,
 			   cairo_scaled_font_subsets_t  *font_subsets)
 {
     pdf_operators->stream = stream;
-    pdf_operators->cairo_to_pdf = cairo_to_pdf;
+    pdf_operators->cairo_to_pdf = *cairo_to_pdf;
     pdf_operators->font_subsets = font_subsets;
     pdf_operators->use_font_subset = NULL;
     pdf_operators->use_font_subset_closure = NULL;
@@ -83,9 +83,9 @@ _cairo_pdf_operators_set_stream (cairo_pdf_operators_t	 *pdf_operators,
 
 void
 _cairo_pdf_operators_set_cairo_to_pdf_matrix (cairo_pdf_operators_t *pdf_operators,
-					      cairo_matrix_t	     cairo_to_pdf)
+					      cairo_matrix_t	    *cairo_to_pdf)
 {
-    pdf_operators->cairo_to_pdf = cairo_to_pdf;
+    pdf_operators->cairo_to_pdf = *cairo_to_pdf;
 }
 
 /* A word wrap stream can be used as a filter to do word wrapping on

@@ -270,7 +270,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
 
     _cairo_pdf_operators_init (&surface->pdf_operators,
 			       surface->output,
-			       surface->cairo_to_pdf,
+			       &surface->cairo_to_pdf,
 			       surface->font_subsets);
     _cairo_pdf_operators_set_font_subsets_callback (&surface->pdf_operators,
 						    _cairo_pdf_surface_add_font,
@@ -439,7 +439,7 @@ cairo_pdf_surface_set_size (cairo_surface_t	*surface,
     pdf_surface->height = height_in_points;
     cairo_matrix_init (&pdf_surface->cairo_to_pdf, 1, 0, 0, -1, 0, height_in_points);
     _cairo_pdf_operators_set_cairo_to_pdf_matrix (&pdf_surface->pdf_operators,
-						  pdf_surface->cairo_to_pdf);
+						  &pdf_surface->cairo_to_pdf);
     status = _cairo_paginated_surface_set_size (pdf_surface->paginated_surface,
 						width_in_points,
 						height_in_points);
@@ -1513,7 +1513,7 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
     surface->paginated_mode = CAIRO_PAGINATED_MODE_RENDER;
     cairo_matrix_init (&surface->cairo_to_pdf, 1, 0, 0, -1, 0, surface->height);
     _cairo_pdf_operators_set_cairo_to_pdf_matrix (&surface->pdf_operators,
-						  surface->cairo_to_pdf);
+						  &surface->cairo_to_pdf);
 
     _cairo_pdf_group_resources_clear (&surface->resources);
     status = _cairo_pdf_surface_open_content_stream (surface, TRUE);
@@ -1547,7 +1547,7 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
     surface->paginated_mode = old_paginated_mode;
     surface->cairo_to_pdf = old_cairo_to_pdf;
     _cairo_pdf_operators_set_cairo_to_pdf_matrix (&surface->pdf_operators,
-						  surface->cairo_to_pdf);
+						  &surface->cairo_to_pdf);
 
     return status;
 }
@@ -3825,7 +3825,7 @@ _cairo_pdf_surface_write_smask_group (cairo_pdf_surface_t     *surface,
     surface->height = group->height;
     cairo_matrix_init (&surface->cairo_to_pdf, 1, 0, 0, -1, 0, surface->height);
     _cairo_pdf_operators_set_cairo_to_pdf_matrix (&surface->pdf_operators,
-						  surface->cairo_to_pdf);
+						  &surface->cairo_to_pdf);
 
     /* _mask is a special case that requires two groups - source
      * and mask as well as a smask and gstate dictionary */
@@ -3881,7 +3881,7 @@ _cairo_pdf_surface_write_smask_group (cairo_pdf_surface_t     *surface,
     surface->height = old_height;
     surface->cairo_to_pdf = old_cairo_to_pdf;
     _cairo_pdf_operators_set_cairo_to_pdf_matrix (&surface->pdf_operators,
-						  surface->cairo_to_pdf);
+						  &surface->cairo_to_pdf);
 
     return status;
 }
