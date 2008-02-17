@@ -3029,15 +3029,6 @@ _cairo_ps_surface_fill (void		*abstract_surface,
     return status;
 }
 
-/* This size keeps the length of the hex encoded string of glyphs
- * within 80 columns. */
-#define MAX_GLYPHS_PER_SHOW  36
-
-typedef struct _cairo_ps_glyph_id {
-    unsigned int subset_id;
-    unsigned int glyph_id;
-} cairo_ps_glyph_id_t;
-
 static cairo_int_status_t
 _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 			       cairo_operator_t	      op,
