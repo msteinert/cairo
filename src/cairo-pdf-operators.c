@@ -3,7 +3,7 @@
  *
  * Copyright © 2004 Red Hat, Inc
  * Copyright © 2006 Red Hat, Inc
- * Copyright © 2007 Adrian Johnson
+ * Copyright © 2007, 2008 Adrian Johnson
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -607,6 +607,55 @@ _cairo_pdf_operators_fill (cairo_pdf_operators_t	*pdf_operators,
 
     _cairo_output_stream_printf (pdf_operators->stream,
 				 "%s\r\n",
+				 pdf_operator);
+
+    return _cairo_output_stream_get_status (pdf_operators->stream);
+}
+
+cairo_int_status_t
+_cairo_pdf_operators_fill_stroke (cairo_pdf_operators_t 	*pdf_operators,
+				  cairo_path_fixed_t		*path,
+				  cairo_fill_rule_t	 	 fill_rule,
+				  cairo_stroke_style_t	        *style,
+				  cairo_matrix_t		*ctm,
+				  cairo_matrix_t		*ctm_inverse)
+{
+    const char *pdf_operator;
+    cairo_status_t status;
+    cairo_matrix_t m;
+
+    status = _cairo_pdf_operators_emit_stroke_style (pdf_operators, style);
+    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	return CAIRO_STATUS_SUCCESS;
+    if (status)
+	return status;
+
+    cairo_matrix_multiply (&m, ctm, &pdf_operators->cairo_to_pdf);
+    _cairo_output_stream_printf (pdf_operators->stream,
+				 "q %f %f %f %f %f %f cm\r\n",
+				 m.xx, m.yx, m.xy, m.yy,
+				 m.x0, m.y0);
+
+    status = _cairo_pdf_operators_emit_path (pdf_operators,
+					     path,
+					     ctm_inverse,
+					     style->line_cap);
+    if (status)
+	return status;
+
+    switch (fill_rule) {
+    case CAIRO_FILL_RULE_WINDING:
+	pdf_operator = "B";
+	break;
+    case CAIRO_FILL_RULE_EVEN_ODD:
+	pdf_operator = "B*";
+	break;
+    default:
+	ASSERT_NOT_REACHED;
+    }
+
+    _cairo_output_stream_printf (pdf_operators->stream,
+				 "%s Q\r\n",
 				 pdf_operator);
 
     return _cairo_output_stream_get_status (pdf_operators->stream);

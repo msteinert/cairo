@@ -4456,6 +4456,97 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
 }
 
 static cairo_int_status_t
+_cairo_pdf_surface_fill_stroke (void		     *abstract_surface,
+				cairo_operator_t      fill_op,
+				cairo_pattern_t	     *fill_source,
+				cairo_fill_rule_t     fill_rule,
+				double		      fill_tolerance,
+				cairo_antialias_t     fill_antialias,
+				cairo_path_fixed_t   *path,
+				cairo_operator_t      stroke_op,
+				cairo_pattern_t	     *stroke_source,
+				cairo_stroke_style_t *stroke_style,
+				cairo_matrix_t	     *stroke_ctm,
+				cairo_matrix_t	     *stroke_ctm_inverse,
+				double		      stroke_tolerance,
+				cairo_antialias_t     stroke_antialias)
+{
+    cairo_pdf_surface_t *surface = abstract_surface;
+    cairo_status_t status;
+    cairo_pdf_resource_t fill_pattern_res, stroke_pattern_res, gstate_res;
+
+    /* During analysis we return unsupported and let the _fill and
+     * _stroke functions that are on the fallback path do the analysis
+     * for us. During render we may still encounter unsupported
+     * combinations of fill/stroke patterns. However we can return
+     * unsupported anytime to let the _fill and _stroke functions take
+     * over.
+     */
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* Fill-stroke with patterns requiring an SMask are not currently
+     * implemented. Non opaque stroke patterns are not supported
+     * because the PDF fill-stroke operator does not blend a
+     * transparent stroke with the fill.
+     */
+    if (fill_source->type == CAIRO_PATTERN_TYPE_LINEAR ||
+        fill_source->type == CAIRO_PATTERN_TYPE_RADIAL)
+    {
+        if (!_cairo_pattern_is_opaque (fill_source))
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+    if (!_cairo_pattern_is_opaque (stroke_source))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    fill_pattern_res.id = 0;
+    gstate_res.id = 0;
+    status = _cairo_pdf_surface_add_pdf_pattern (surface, fill_source,
+						 &fill_pattern_res,
+						 &gstate_res);
+    if (status)
+	return status;
+
+    assert (gstate_res.id == 0);
+
+    stroke_pattern_res.id = 0;
+    gstate_res.id = 0;
+    status = _cairo_pdf_surface_add_pdf_pattern (surface,
+						 stroke_source,
+						 &stroke_pattern_res,
+						 &gstate_res);
+    if (status)
+	return status;
+
+    assert (gstate_res.id == 0);
+
+    /* As PDF has separate graphics state for fill and stroke we can
+     * select both at the same time */
+    status = _cairo_pdf_surface_select_pattern (surface, fill_source,
+						fill_pattern_res, FALSE);
+    if (status)
+	return status;
+
+    status = _cairo_pdf_surface_select_pattern (surface, stroke_source,
+						stroke_pattern_res, TRUE);
+    if (status)
+	return status;
+
+    status = _cairo_pdf_operators_fill_stroke (&surface->pdf_operators,
+					       path,
+					       fill_rule,
+					       stroke_style,
+					       stroke_ctm,
+					       stroke_ctm_inverse);
+    if (status)
+	return status;
+
+    _cairo_pdf_surface_unselect_pattern (surface);
+
+    return _cairo_output_stream_get_status (surface->output);
+}
+
+static cairo_int_status_t
 _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
 				cairo_operator_t	 op,
 				cairo_pattern_t		*source,
@@ -4572,6 +4663,7 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend = {
 
     NULL, /* is_compatible */
     NULL, /* reset */
+    _cairo_pdf_surface_fill_stroke,
 };
 
 static const cairo_paginated_surface_backend_t cairo_pdf_surface_paginated_backend = {

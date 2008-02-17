@@ -97,6 +97,14 @@ _cairo_pdf_operators_fill (cairo_pdf_operators_t 	*pdf_operators,
 			   cairo_path_fixed_t		*path,
 			   cairo_fill_rule_t	 	fill_rule);
 
+cairo_int_status_t
+_cairo_pdf_operators_fill_stroke (cairo_pdf_operators_t 	*pdf_operators,
+				  cairo_path_fixed_t		*path,
+				  cairo_fill_rule_t	 	 fill_rule,
+				  cairo_stroke_style_t	        *style,
+				  cairo_matrix_t		*ctm,
+				  cairo_matrix_t		*ctm_inverse);
+
 cairo_private cairo_int_status_t
 _cairo_pdf_operators_show_glyphs (cairo_pdf_operators_t *pdf_operators,
 				  cairo_glyph_t		*glyphs,
