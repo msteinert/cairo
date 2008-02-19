@@ -672,7 +672,7 @@ _cairo_pdf_operators_show_glyphs (cairo_pdf_operators_t		*pdf_operators,
     unsigned int current_subset_id = (unsigned int)-1;
     cairo_scaled_font_subsets_glyph_t subset_glyph;
     cairo_bool_t diagonal, in_TJ;
-    cairo_status_t status;
+    cairo_status_t status, status_ignored;
     double Tlm_x = 0, Tlm_y = 0;
     double Tm_x = 0, y;
     int i, hex_width;
@@ -700,8 +700,10 @@ _cairo_pdf_operators_show_glyphs (cairo_pdf_operators_t		*pdf_operators,
         status = _cairo_scaled_font_subsets_map_glyph (pdf_operators->font_subsets,
                                                        scaled_font, glyphs[i].index,
                                                        &subset_glyph);
-	if (status)
+	if (status) {
+	    status_ignored = _cairo_output_stream_destroy (word_wrap_stream);
             return status;
+	}
 
         if (subset_glyph.is_composite)
             hex_width = 4;
@@ -728,8 +730,10 @@ _cairo_pdf_operators_show_glyphs (cairo_pdf_operators_t		*pdf_operators,
 		status = pdf_operators->use_font_subset (subset_glyph.font_id,
 							 subset_glyph.subset_id,
 							 pdf_operators->use_font_subset_closure);
-		if (status)
+		if (status) {
+		    status_ignored = _cairo_output_stream_destroy (word_wrap_stream);
 		    return status;
+		}
 	    }
         }
 
