@@ -1,8 +1,10 @@
 Regression test suite for cairo.
 
+How to use cairo's test suite
+=============================
 Using this test should be as simple as running:
 
-	make check
+	make test
 
 assuming that the cairo distribution in the directory above has been
 configured and built. The test suite here goes through some effort to
@@ -10,14 +12,17 @@ run against the locally compiled library rather than any installed
 version, but those efforts may fall short depending on the level of your
 libtool madness.
 
-The test suite needs to be run before any code is committed and before
-any release. Here are the rules governing the use of the suite:
+The results of the test suite run are summarized in an index.html
+file, which, when viewed in a web browser makes it quite easy to
+visually see any failed renderings alongside the corresponding
+reference image, (and a diff image as well).
 
+The test suite needs to be run before any code is committed and before
+any release. See below for hints and rules governing the use of the suite:
 
 Tailoring tests running
 -----------------------
-
-There are some mechanisms to limit the tests run during "make check".
+There are some mechanisms to limit the tests run during "make test".
 These come very handy when doing development, but should not be used
 to circumvent the "pass" requirements listed below.
 
@@ -27,12 +32,86 @@ It should contain a (space-, comma-, etc-separated) list of backends to test.
 To limit the tests run, use the TESTS make variable, which should be a
 space-separated list of tests to run.  For example:
 
-  make check TARGETS=image,ps TESTS="zero-alpha"
+  make test TARGETS=image,ps TESTS="zero-alpha"
 
+Another very handy mechanism when trying to fix bugs is:
+
+  make retest
+
+This will re-run the test suite, but only on tests that failed on the
+last run. So this is a much faster way of checking if changes actually
+fix bugs rather than running the entire test suite again.
+
+Getting the elusive zero failures
+---------------------------------
+It's generally been very difficult to achieve a test run with zero
+failures. The difficulties stem from the various versions of the many
+libraries that the test suite depends on, (it depends on a lot more
+than cairo itself), as well as fonts and other system-specific
+settings. If your system differs significantly from the system on
+which the reference images were generated, then you will likely see
+the test suite reporting "failures", (even if cairo is working just
+fine).
+
+We are constantly working to reduce the number of variables that need
+to be tweaked to get a clean run, (for example, by bundling fonts with
+the test suite itself), and also working to more carefully document
+the software configuration used to generate the reference images.
+
+Here are some of the relevant details:
+
+  * Your system must have a copy of the Bitstream Vera font, (this is
+    a free software font that is often in a file named Vera.ttf).
+
+  * Currently, you must be using a build of cairo using freetype
+    (cairo-ft) as the default font backend. Otherwise all tests
+    involving text are likely to fail.
+
+  * To test the pdf backend, you will want the very latest version of
+    poppler as made available via git:
+
+	git clone git://anongit.freedesktop.org/git/poppler/poppler
+
+    As of this writing, no released version of poppler contains all
+    the fixes you will need to avoid false negatives from the test
+    suite.
+
+  * To test the ps backend, you will need ghostscript version 8.61.
+
+What if I can't make my system match?
+-------------------------------------
+For one reason or another, you may be unable to get a clean run of the
+test suite even if cairo is working properly, (for example, you might
+be on a system without freetype). In this case, it's still useful to
+be able to determine if code changes you make to cairo result in any
+regressions to the test suite. But it's hard to notice regressions if
+there are many failures both before and after your changes.
+
+For this scenario, you can capture the output of a run of the test
+suite before your changes, and then use the CAIRO_REF_DIR environment
+variable to use that output as the reference images for a run after
+your changes. The process looks like this:
+
+        # Before code change there may be failures we don't care about
+        make test
+
+        # Let's save those output images
+        mkdir /some/directory/
+        cp test/*-out.png /some/directory/
+
+        # hack, hack, hack
+
+        # Now to see if nothing changed:
+        CAIRO_REF_DIR=/some/directory/ make test
+
+Best practices for cairo developers
+===================================
+If we all follow the guidelines below, then both the test suite and
+cairo itself will stay much healthier, and we'll all have a lot more
+fun hacking on cairo.
 
 Before committing
 -----------------
-
 All tests should return a result of PASS or XFAIL. The XFAIL results
 indicate known bugs. The final message should be one of the following:
 
@@ -41,7 +120,6 @@ indicate known bugs. The final message should be one of the following:
 
 If any tests have a status of FAIL, then the new code has caused a
 regression error which should be fixed before the code is committed.
-
 
 When a new bug is found
 -----------------------
@@ -60,7 +138,6 @@ XFAIL_TESTS lists and new-bug-ref.png to EXTRA_DIST. Add new-bug to
 .gitignore, and last but not least, don't forget to "git add" the new
 files.
 
-
 When a new feature is added
 ---------------------------
 It's important for the regression suite to keep pace with development
@@ -77,14 +154,12 @@ CAIRO_REF_DIR to point at a previous test directory, relative
 to the current test directory, and any previous output will be
 used by preference as reference images.
 
-
 When a bug is fixed
 -------------------
 The fix should be verified by running the test suite which should
 result in an "unexpected pass" for the test of interest. Rejoice as
 appropriate, then remove the relevant file name from the XFAIL_TESTS
 variable in Makefile.am.
-
 
 Before releasing
 ----------------
@@ -95,7 +170,7 @@ message:
 	All XX tests passed
 
 Some notes on limitations in poppler
-------------------------------------
+====================================
 One of the difficulties of our current test infrastructure is that we
 rely on external tools to convert cairo's vector output (PDF,
 PostScript, and SVG), into an image that can be used for the image
