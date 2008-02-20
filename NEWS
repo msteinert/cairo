@@ -19,6 +19,10 @@ cairo_new_path() or cairo_new_sub_path(). There is a current point
 after any of the path-creation functions, (cairo_move_to,
 cairo_line_to, cairo_curve_to, etc.).
 
+With this new function, we also revert the change of the return type
+of cairo_get_current_point from cairo 1.5.8, (it's now a void function
+again).
+
 Optimizations
 -------------
 Optimize stroking code to avoid repeated calculation of redundant
