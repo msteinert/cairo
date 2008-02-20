@@ -743,9 +743,9 @@ _cairo_svg_document_emit_font_subsets (cairo_svg_document_t *document)
 static cairo_bool_t cairo_svg_force_fallbacks = FALSE;
 
 static cairo_int_status_t
-_cairo_svg_surface_operation_supported (cairo_svg_surface_t	*surface,
-					cairo_operator_t	 op,
-					const cairo_pattern_t	*pattern)
+_cairo_svg_surface_analyze_operation (cairo_svg_surface_t   *surface,
+				      cairo_operator_t	     op,
+				      const cairo_pattern_t *pattern)
 {
     cairo_svg_document_t *document = surface->document;
 
@@ -754,20 +754,23 @@ _cairo_svg_surface_operation_supported (cairo_svg_surface_t	*surface,
 
     if (document->svg_version < CAIRO_SVG_VERSION_1_2)
 	if (op != CAIRO_OPERATOR_OVER)
-	    return FALSE;
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    return TRUE;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
-_cairo_svg_surface_analyze_operation (cairo_svg_surface_t   *surface,
-				      cairo_operator_t	     op,
-				      const cairo_pattern_t *pattern)
+_cairo_svg_surface_operation_supported (cairo_svg_surface_t	*surface,
+					cairo_operator_t	 op,
+					const cairo_pattern_t	*pattern)
 {
-    if (_cairo_svg_surface_operation_supported (surface, op, pattern))
-	return CAIRO_STATUS_SUCCESS;
-    else
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+    if (_cairo_svg_surface_analyze_operation (surface, op, pattern)
+	!= CAIRO_INT_STATUS_UNSUPPORTED)
+    {
+	return TRUE;
+    } else {
+	return FALSE;
+    }
 }
 
 static cairo_surface_t *
