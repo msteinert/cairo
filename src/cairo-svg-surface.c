@@ -2008,13 +2008,22 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
     cairo_svg_document_t *document = surface->document;
     cairo_output_stream_t *mask_stream;
     char buffer[64];
+    cairo_bool_t discard_filter = FALSE;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _cairo_svg_surface_analyze_operation (surface, op, source);
 
     assert (_cairo_svg_surface_operation_supported (surface, op, source));
 
-    _cairo_svg_surface_emit_alpha_filter (document);
+    if (cairo_pattern_get_type (mask) == CAIRO_PATTERN_TYPE_SURFACE) {
+	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t*) mask;
+	cairo_content_t content = cairo_surface_get_content (surface_pattern->surface);
+	if (content == CAIRO_CONTENT_ALPHA)
+	    discard_filter = TRUE;
+    }
+
+    if (!discard_filter)
+	_cairo_svg_surface_emit_alpha_filter (document);
 
     /* _cairo_svg_surface_emit_paint() will output a pattern definition to
      * document->xml_node_defs so we need to write the mask element to
@@ -2025,8 +2034,9 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
 
     _cairo_output_stream_printf (mask_stream,
 				 "<mask id=\"mask%d\">\n"
-				 "  <g filter=\"url(#alpha)\">\n",
-				 document->mask_id);
+				 "%s",
+				 document->mask_id,
+				 discard_filter ? "" : "  <g filter=\"url(#alpha)\">\n");
     status = _cairo_svg_surface_emit_paint (mask_stream, surface, op, mask, NULL);
     if (status) {
 	cairo_status_t ignore = _cairo_output_stream_destroy (mask_stream);
@@ -2035,8 +2045,9 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
     }
 
     _cairo_output_stream_printf (mask_stream,
-				 "  </g>\n"
-				 "</mask>\n");
+				 "%s"
+				 "</mask>\n",
+				 discard_filter ? "" : "  </g>\n");
     _cairo_memory_stream_copy (mask_stream, document->xml_node_defs);
 
     status = _cairo_output_stream_destroy (mask_stream);
