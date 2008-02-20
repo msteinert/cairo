@@ -752,13 +752,18 @@ _cairo_svg_surface_analyze_operation (cairo_svg_surface_t   *surface,
     if (cairo_svg_force_fallbacks)
 	return FALSE;
 
+    /* SVG doesn't support extend reflect for image pattern */
+    if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE &&
+	pattern->extend == CAIRO_EXTEND_REFLECT)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     if (document->svg_version >= CAIRO_SVG_VERSION_1_2)
 	return CAIRO_STATUS_SUCCESS;
 
     if (op == CAIRO_OPERATOR_OVER)
 	return CAIRO_STATUS_SUCCESS;
 
-    /* The SOURCE operator is onlysupported if there is nothing
+    /* The SOURCE operator is only supported if there is nothing
      * painted underneath. */
     if (op == CAIRO_OPERATOR_SOURCE)
 	return CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY;
