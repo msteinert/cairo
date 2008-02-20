@@ -78,6 +78,15 @@ generate simple masks.
 @path: 
 
 
+<!-- ##### FUNCTION cairo_has_current_point ##### -->
+<para>
+
+</para>
+
+@cr: 
+@Returns: 
+
+
 <!-- ##### FUNCTION cairo_get_current_point ##### -->
 <para>
 
@@ -86,7 +95,6 @@ generate simple masks.
 @cr: 
 @x: 
 @y: 
-@Returns: 
 
 
 <!-- ##### FUNCTION cairo_new_path ##### -->
