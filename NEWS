@@ -1,3 +1,92 @@
+Snapshot 1.5.10 (2009-02-20 Carl Worth <cworth@cworth.org>)
+===========================================================
+This is the fifth snapshot in cairo's unstable 1.5 series. It comes 3
+weeks after the 1.5.8 snapshot. This snapshot adds one new API
+function, (cairo_has_current_point), and the usual mix of
+improvements, (more efficient PostScript/PDF output, optimized
+stroking), and fixes (more robust error-handling, etc.). See below for
+details.
+
+New API
+-------
+Add a new function to query if there is a current point:
+
+	cairo_bool_t
+	cairo_has_current_point (cairo_t *cr);
+
+There is no current point immediately after cairo_create(), nor after
+cairo_new_path() or cairo_new_sub_path(). There is a current point
+after any of the path-creation functions, (cairo_move_to,
+cairo_line_to, cairo_curve_to, etc.).
+
+Optimizations
+-------------
+Optimize stroking code to avoid repeated calculation of redundant
+values, (particularly significant for very large, offscreen paths).
+
+General fixes
+-------------
+Patch a few more potential buffer overruns, (due to integer
+overflow).
+
+Many fixes and improvements to cairo's error-handling, (ensure that
+correct error values are returned, clean up memory leaks on
+error-handling paths, etc.).
+
+Fix a potential infinite loop when stroking a spline with a pen that
+has been transformed to a line segment.
+
+Remove treating NULL as a synonym for a valid cairo_font_options_t*
+with default values, (a change that had been introduced as of cairo
+1.5.8).
+
+Remove the altered handling of tolerance and fallback-resolution that
+had been introduced as of cairo 1.5.4.
+
+cairo-xlib
+----------
+Pass the original Drawable, (as opposed to the root window), to
+XCreatePixmap when creating a similar surface. This gives the X server
+more information so that it can be clever and efficient.
+
+cairo-pdf
+---------
+Fix the rendering of repeating and reflecting patterns.
+
+Ensure miter limit is always >= 1, (smaller limits are not meaningful,
+but they can cause some PDF viewers to fail to display pages).
+
+Generate more efficient output when the same path is used for both
+fill and stroke.
+
+cairo-ps
+--------
+Start sharing much of the cairo-pdf code rather than implementing very
+similar code in cairo-ps.
+
+Implement native support for repeating and reflecting linear
+gradients.
+
+Implement reflected surface patterns.
+
+Ensure miter limit is always >= 1, (smaller limits are not meaningful,
+but they can cause some PostScript viewers to crash).
+
+Generate PostScript that will perform more efficiently and use less
+memory on printers, (use currentfile instead of a giant string array
+for image data, and avoid using PostScript patterns for paint() and
+fill() when possible).
+
+cairo-svg
+---------
+Avoid unnecessary rasterization when copying a "similar" surface to
+another svg surface, (allow the SOURCE operator to be implemented with
+all-vector operations if there are no underlying objects).
+
+cairo-atsui
+-----------
+Eliminate infinite loop when attempting to render an empty string.
+
 Snapshot 1.5.8 (2008-01-30 Carl Worth <cworth@cworth.org>)
 ==========================================================
 This is the fourth snapshot in cairo's unstable 1.5 series. It comes 2
@@ -53,9 +142,9 @@ General bug fixes
 Fix various cairo_*_extents functions to initialize the return-value
 variables even in the case of a cairo_t in error.
 
-Treat NULL as a legitimate value for cairo_font_options_t*. [XXX: On
-discussion afterwards, we decided against this change so we plan to
-remove this again before 1.6.0]
+Treat NULL as a legitimate value for cairo_font_options_t*. [NOTE:
+On discussion afterwards, we decided against this change so it has
+been removed as of cairo 1.5.10.]
 
 Fix rendering with CAIRO_ANTIALIAS_NONE to be more predictable, (that
 is, to avoid seams appearing when geometry and imagery share an
@@ -209,8 +298,8 @@ General improvements
 Use less memory for spline approximation calculations.
 
 Change how the tolerance value is interpreted with regard to
-fallback-resolution. [XXX: Is this user-visible? If so, how? Will
-follow up on the cairo mailing list for more details.]
+fallback-resolution. [Note: On further discussion, we decided against
+this change for now. It is removed as of cairo 1.5.10.]
 
 Fix precision of floating-point values in vector-output backends to
 avoid rounding errors with very small numbers.
