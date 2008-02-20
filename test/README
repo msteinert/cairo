@@ -140,4 +140,10 @@ trap-clip
 linear-gradient
 linear-gradient-reflect
 
+Poppler renders patterned text as black
+https://bugs.freedesktop.org/show_bug.cgi?id=14577
+--------------------------------------------------
+text-pattern
+
+
 
