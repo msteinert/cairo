@@ -77,19 +77,6 @@ static const char *pdf_ignored_tests[] = {
     "radial-gradient",
     "text-pattern",
     "trap-clip",
-    /* These next 7 failures are due to:
-     *
-     *	Poppler does not correctly handle knockout groups
-     *	https://bugs.freedesktop.org/show_bug.cgi?id=12185
-     */
-    "clip-operator",
-    "operator-clear",
-    "operator-source",
-    "over-above-source",
-    "over-around-source",
-    "over-below-source",
-    "over-between-source",
-    "unbounded-operator"
 };
 
 cairo_surface_t *
