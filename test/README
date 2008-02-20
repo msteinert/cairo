@@ -94,3 +94,50 @@ message:
 
 	All XX tests passed
 
+Some notes on limitations in poppler
+------------------------------------
+One of the difficulties of our current test infrastructure is that we
+rely on external tools to convert cairo's vector output (PDF,
+PostScript, and SVG), into an image that can be used for the image
+comparison. This means that any bugs in that conversion tool will
+result in false negatives in the test suite.
+
+We've identified several such bugs in the poppler library which is
+used to convert PDF to an image. This is particularly discouraging
+because 1) poppler is free software that will be used by *many* cairo
+users, and 2) poppler calls into cairo for its rendering so it should
+be able to do a 100% faithful conversion.
+
+So we have an interest in ensuring that these poppler bugs get fixed
+sooner rather than later. As such, we're trying to be good citizens by
+reporting all such poppler bugs that we identify to the poppler
+bugzilla. Here's a tracking bug explaining the situation:
+
+	Poppler does not yet handle everything in the cairo test suite
+	https://bugs.freedesktop.org/show_bug.cgi?id=12143
+
+Here's the rule: If a cairo-pdf test reports a failure, but viewing
+the resulting PDF file with acroread suggests that the PDF itself is
+correct, then there's likely a bug in poppler. In this case, we can
+simply report the poppler bug, (making it block 12143 above), post the
+PDF result from the test suite, and list the bug in this file. Once
+we've done this, we can capture poppler's buggy output as a
+pdf-specific reference image so that the test suite will regard the
+test as passing, (and we'll ensure there is no regression).
+
+Once the poppler bug gets fixed, the test suite will start reporting a
+false negative again, and this will be easy to fix by simply removing
+the pdf-specific reference image.
+
+Here are the reported poppler bugs and the tests they affect:
+
+Poppler doesn't correctly handle gradients with transparency
+https://bugs.freedesktop.org/show_bug.cgi?id=12144
+--------------------------------------------------
+gradient-alpha
+linear-gradient
+trap-clip
+linear-gradient
+linear-gradient-reflect
+
+
