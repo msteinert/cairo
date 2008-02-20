@@ -152,3 +152,8 @@ paint-source-alpha
 paint-with-alpha
 rotate-image-surface-paint
 scale-source-surface-paint
+
+Incorrect clipping of group object (regression?)
+https://bugs.freedesktop.org/show_bug.cgi?id=14580
+--------------------------------------------------
+push-group
