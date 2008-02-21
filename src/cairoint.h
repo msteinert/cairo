@@ -1027,7 +1027,7 @@ _cairo_gstate_backend_to_user_rectangle (cairo_gstate_t *gstate,
                                          double *x2, double *y2,
                                          cairo_bool_t *is_tight);
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_gstate_path_extents (cairo_gstate_t     *gstate,
 			    cairo_path_fixed_t *path,
 			    double *x1, double *y1,
@@ -1382,7 +1382,7 @@ _cairo_path_fixed_interpret_flat (cairo_path_fixed_t	  *path,
 		       void				  *closure,
 		       double				  tolerance);
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_path_fixed_bounds (cairo_path_fixed_t *path,
 			  double *x1, double *y1,
 			  double *x2, double *y2,

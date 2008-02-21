@@ -248,7 +248,11 @@ _cairo_analysis_surface_intersect_clip_path (void		*abstract_surface,
 	surface->current_clip.width  = surface->width;
 	surface->current_clip.height = surface->height;
     } else {
-	_cairo_path_fixed_bounds (path, &x1, &y1, &x2, &y2, tolerance);
+	cairo_status_t status;
+
+	status = _cairo_path_fixed_bounds (path, &x1, &y1, &x2, &y2, tolerance);
+	if (status)
+	    return status;
 
 	extent.x = floor (x1);
 	extent.y = floor (y1);
@@ -262,7 +266,7 @@ _cairo_analysis_surface_intersect_clip_path (void		*abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_analysis_surface_get_extents (void	 		*abstract_surface,
+_cairo_analysis_surface_get_extents (void			*abstract_surface,
 				     cairo_rectangle_int_t	*rectangle)
 {
     cairo_analysis_surface_t *surface = abstract_surface;
