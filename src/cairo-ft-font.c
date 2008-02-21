@@ -594,6 +594,7 @@ _compute_transform (cairo_ft_font_transform_t *sf,
 		    cairo_matrix_t      *scale)
 {
     cairo_status_t status;
+    double x_scale, y_scale;
     cairo_matrix_t normalized = *scale;
 
     /* The font matrix has x and y "scale" components which we extract and
@@ -603,23 +604,30 @@ _compute_transform (cairo_ft_font_transform_t *sf,
      * freetype's transformation.
      */
 
-    status = _cairo_matrix_compute_scale_factors (&normalized,
-						  &sf->x_scale, &sf->y_scale,
+    status = _cairo_matrix_compute_scale_factors (scale,
+						  &x_scale, &y_scale,
 						  /* XXX */ 1);
     if (status)
 	return status;
 
-    if (sf->x_scale != 0 && sf->y_scale != 0) {
-	cairo_matrix_scale (&normalized, 1.0 / sf->x_scale, 1.0 / sf->y_scale);
+    /* FreeType docs say this about x_scale and y_scale:
+     * "A character width or height smaller than 1pt is set to 1pt;"
+     * So, we cap them from below at 1.0 and let the FT transform
+     * take care of sub-1.0 scaling. */
+    if (x_scale < 1.0)
+      x_scale = 1.0;
+    if (y_scale < 1.0)
+      y_scale = 1.0;
 
-	_cairo_matrix_get_affine (&normalized,
-				  &sf->shape[0][0], &sf->shape[0][1],
-				  &sf->shape[1][0], &sf->shape[1][1],
-				  NULL, NULL);
-    } else {
-	sf->shape[0][0] = sf->shape[1][1] = 1.0;
-	sf->shape[0][1] = sf->shape[1][0] = 0.0;
-    }
+    sf->x_scale = x_scale;
+    sf->y_scale = y_scale;
+
+    cairo_matrix_scale (&normalized, 1.0 / x_scale, 1.0 / y_scale);
+
+    _cairo_matrix_get_affine (&normalized,
+			      &sf->shape[0][0], &sf->shape[0][1],
+			      &sf->shape[1][0], &sf->shape[1][1],
+			      NULL, NULL);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -675,8 +683,8 @@ _cairo_ft_unscaled_font_set_scale (cairo_ft_unscaled_font_t *unscaled,
 
     if ((unscaled->face->face_flags & FT_FACE_FLAG_SCALABLE) != 0) {
 	error = FT_Set_Char_Size (unscaled->face,
-				  sf.x_scale * 64.0,
-				  sf.y_scale * 64.0,
+				  sf.x_scale * 64.0 + .5,
+				  sf.y_scale * 64.0 + .5,
 				  0, 0);
 	if (error)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
