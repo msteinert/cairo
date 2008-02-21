@@ -1323,7 +1323,7 @@ static void
 _cairo_ps_surface_end_page (cairo_ps_surface_t *surface)
 {
     _cairo_output_stream_printf (surface->stream,
-				 "grestore\n");
+				 "Q\n");
 }
 
 static cairo_int_status_t
@@ -2080,7 +2080,7 @@ _cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
     _cairo_pdf_operators_set_cairo_to_pdf_matrix (&surface->pdf_operators,
 						  &surface->cairo_to_ps);
     _cairo_output_stream_printf (surface->stream,
-				 "  gsave\n"
+				 "  q\n"
 				 "  0 0 %f %f rectclip\n",
 				 surface->width,
 				 surface->height);
@@ -2100,7 +2100,7 @@ _cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
 	return status;
 
     _cairo_output_stream_printf (surface->stream,
-				 "  grestore\n");
+				 "  Q\n");
     surface->content = old_content;
     surface->width = old_width;
     surface->height = old_height;
@@ -3120,7 +3120,7 @@ _cairo_ps_surface_set_bounding_box (void		*abstract_surface,
 
     _cairo_output_stream_printf (surface->stream,
                                  "%%%%EndPageSetup\n"
-				 "gsave\n");
+				 "q\n");
 
     if (surface->num_pages == 1) {
 	surface->bbox_x1 = x1;
