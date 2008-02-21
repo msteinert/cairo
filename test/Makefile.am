@@ -462,6 +462,7 @@ REFERENCE_IMAGES = \
 	push-group-rgb24-ref.png	\
 	push-group-svg-argb32-ref.png	\
 	radial-gradient-ref.png	\
+	radial-gradient-pdf-ref.png \
 	radial-gradient-svg-ref.png	\
 	random-intersections-ref.png	\
 	random-intersections-ps-ref.png \
