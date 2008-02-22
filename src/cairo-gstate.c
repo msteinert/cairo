@@ -206,9 +206,6 @@ _cairo_gstate_fini (cairo_gstate_t *gstate)
 static void
 _cairo_gstate_destroy (cairo_gstate_t *gstate)
 {
-    if (gstate == NULL)
-	return;
-
     _cairo_gstate_fini (gstate);
     free (gstate);
 }
@@ -448,9 +445,6 @@ _cairo_gstate_set_source (cairo_gstate_t  *gstate,
 cairo_pattern_t *
 _cairo_gstate_get_source (cairo_gstate_t *gstate)
 {
-    if (gstate == NULL)
-	return NULL;
-
     return gstate->source;
 }
 
