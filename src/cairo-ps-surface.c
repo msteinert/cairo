@@ -2958,7 +2958,7 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
     assert (_cairo_ps_surface_operation_supported (surface, op, source));
 
 #if DEBUG_PS
-    _cairo_output_stream_printf (stream,
+    _cairo_output_stream_printf (surface->stream,
 				 "%% _cairo_ps_surface_stroke\n");
 #endif
 
@@ -2991,7 +2991,7 @@ _cairo_ps_surface_fill (void		*abstract_surface,
     assert (_cairo_ps_surface_operation_supported (surface, op, source));
 
 #if DEBUG_PS
-    _cairo_output_stream_printf (stream,
+    _cairo_output_stream_printf (surface->stream,
 				 "%% _cairo_ps_surface_fill\n");
 #endif
 
@@ -3046,7 +3046,7 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     assert (_cairo_ps_surface_operation_supported (surface, op, source));
 
 #if DEBUG_PS
-    _cairo_output_stream_printf (stream,
+    _cairo_output_stream_printf (surface->stream,
 				 "%% _cairo_ps_surface_show_glyphs\n");
 #endif
 
