@@ -225,8 +225,8 @@ _cairo_gstate_destroy (cairo_gstate_t *gstate)
  * Return value: a new #cairo_gstate_t or %NULL if there is insufficient
  * memory.
  **/
-static cairo_gstate_t*
-_cairo_gstate_clone (cairo_gstate_t *other)
+static cairo_status_t
+_cairo_gstate_clone (cairo_gstate_t *other, cairo_gstate_t **out)
 {
     cairo_status_t status;
     cairo_gstate_t *gstate;
@@ -234,18 +234,17 @@ _cairo_gstate_clone (cairo_gstate_t *other)
     assert (other != NULL);
 
     gstate = malloc (sizeof (cairo_gstate_t));
-    if (gstate == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return NULL;
-    }
+    if (gstate == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     status = _cairo_gstate_init_copy (gstate, other);
     if (status) {
 	free (gstate);
-	return NULL;
+	return status;
     }
 
-    return gstate;
+    *out = gstate;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 /**
@@ -260,10 +259,11 @@ cairo_status_t
 _cairo_gstate_save (cairo_gstate_t **gstate)
 {
     cairo_gstate_t *top;
+    cairo_status_t status;
 
-    top = _cairo_gstate_clone (*gstate);
-    if (top == NULL)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    status = _cairo_gstate_clone (*gstate, &top);
+    if (status)
+	return status;
 
     top->next = *gstate;
     *gstate = top;
