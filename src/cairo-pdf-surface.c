@@ -4129,10 +4129,14 @@ _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t  *surface,
     if (op == CAIRO_OPERATOR_OVER)
 	return CAIRO_STATUS_SUCCESS;
 
-    /* The SOURCE operator is only if there is nothing painted
-     * underneath. */
-    if (op == CAIRO_OPERATOR_SOURCE)
-	return CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY;
+    /* The SOURCE operator supported if the pattern is opaque or if
+     * there is nothing painted underneath. */
+    if (op == CAIRO_OPERATOR_SOURCE) {
+	if (_cairo_pattern_is_opaque (pattern))
+	    return CAIRO_STATUS_SUCCESS;
+	else
+	    return CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY;
+    }
 
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
