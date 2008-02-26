@@ -1654,6 +1654,52 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
     return status;
 }
 
+/* This is somewhat less than ideal, but it gets the job done;
+ * it would be better to avoid calling back into cairo.  This
+ * creates a temporary surface to use as the mask.
+ */
+static cairo_int_status_t
+_cairo_quartz_surface_mask_with_generic (cairo_quartz_surface_t *surface,
+					 cairo_operator_t op,
+					 cairo_pattern_t *source,
+					 cairo_pattern_t *mask)
+{
+    int width = surface->extents.width - surface->extents.x;
+    int height = surface->extents.height - surface->extents.y;
+
+    cairo_surface_t *gradient_surf = NULL;
+    cairo_t *gradient_surf_cr = NULL;
+
+    cairo_pattern_union_t surface_pattern;
+    cairo_int_status_t status;
+
+    /* Render the gradient to a surface */
+    gradient_surf = cairo_quartz_surface_create (CAIRO_FORMAT_ARGB32,
+						 width,
+						 height);
+    gradient_surf_cr = cairo_create(gradient_surf);
+    cairo_set_source (gradient_surf_cr, mask);
+    cairo_set_operator (gradient_surf_cr, CAIRO_OPERATOR_SOURCE);
+    cairo_paint (gradient_surf_cr);
+    status = cairo_status (gradient_surf_cr);
+    cairo_destroy (gradient_surf_cr);
+
+    if (status)
+	goto BAIL;
+
+    _cairo_pattern_init_for_surface (&surface_pattern.surface, gradient_surf);
+
+    status = _cairo_quartz_surface_mask_with_surface (surface, op, source, &surface_pattern.surface);
+
+    _cairo_pattern_fini (&surface_pattern.base);
+
+  BAIL:
+    if (gradient_surf)
+	cairo_surface_destroy (gradient_surf);
+
+    return status;
+}
+
 static cairo_int_status_t
 _cairo_quartz_surface_mask (void *abstract_surface,
 			    cairo_operator_t op,
@@ -1673,30 +1719,29 @@ _cairo_quartz_surface_mask (void *abstract_surface,
 	cairo_solid_pattern_t *solid_mask = (cairo_solid_pattern_t *) mask;
 
 	CGContextSetAlpha (surface->cgContext, solid_mask->color.alpha);
-    } else if (CGContextClipToMaskPtr &&
-               mask->type == CAIRO_PATTERN_TYPE_SURFACE &&
-	       mask->extend == CAIRO_EXTEND_NONE) {
-	return _cairo_quartz_surface_mask_with_surface (surface, op, source, (cairo_surface_pattern_t *) mask);
-    } else {
-	/* So, CGContextClipToMask is not present in 10.3.9, so we're
-	 * doomed; if we have imageData, we can do fallback, otherwise
-	 * just pretend success.
-	 */
-	if (surface->imageData)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-
-	return CAIRO_STATUS_SUCCESS;
-    }
-
-    rv = _cairo_quartz_surface_paint (surface, op, source);
-
-    if (mask->type == CAIRO_PATTERN_TYPE_SOLID) {
+	rv = _cairo_quartz_surface_paint (surface, op, source);
 	CGContextSetAlpha (surface->cgContext, 1.0);
+
+	return rv;
     }
 
-    ND((stderr, "-- mask\n"));
+    /* If we have CGContextClipToMask, we can do more complex masks */
+    if (CGContextClipToMaskPtr) {
+	/* For these, we can skip creating a temporary surface, since we already have one */
+	if (mask->type == CAIRO_PATTERN_TYPE_SURFACE && mask->extend == CAIRO_EXTEND_NONE)
+	    return _cairo_quartz_surface_mask_with_surface (surface, op, source, (cairo_surface_pattern_t *) mask);
 
-    return rv;
+	return _cairo_quartz_surface_mask_with_generic (surface, op, source, mask);
+    }
+
+    /* So, CGContextClipToMask is not present in 10.3.9, so we're
+     * doomed; if we have imageData, we can do fallback, otherwise
+     * just pretend success.
+     */
+    if (surface->imageData)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
