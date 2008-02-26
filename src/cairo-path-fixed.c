@@ -802,3 +802,27 @@ _cairo_path_fixed_is_box (cairo_path_fixed_t *path,
 
     return FALSE;
 }
+
+/**
+ * Check whether the given path contains a single rectangle
+ * that is logically equivalent to:
+ *   cairo_move_to (cr, x, y);
+ *   cairo_rel_line_to (cr, width, 0);
+ *   cairo_rel_line_to (cr, 0, height);
+ *   cairo_rel_line_to (cr, -width, 0);
+ *   cairo_close_path (cr);
+ */
+cairo_bool_t
+_cairo_path_fixed_is_rectangle (cairo_path_fixed_t *path,
+				cairo_box_t        *box)
+{
+    cairo_path_buf_t *buf = &path->buf_head.base;
+
+    if (!_cairo_path_fixed_is_box (path, box))
+	return FALSE;
+
+    if (buf->points[0].y == buf->points[1].y)
+	return TRUE;
+
+    return FALSE;
+}

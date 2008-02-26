@@ -1399,6 +1399,10 @@ cairo_private cairo_bool_t
 _cairo_path_fixed_is_box (cairo_path_fixed_t *path,
                           cairo_box_t *box);
 
+cairo_private cairo_bool_t
+_cairo_path_fixed_is_rectangle (cairo_path_fixed_t *path,
+				cairo_box_t        *box);
+
 /* cairo_path_fill.c */
 cairo_private cairo_status_t
 _cairo_path_fixed_fill_to_traps (cairo_path_fixed_t *path,

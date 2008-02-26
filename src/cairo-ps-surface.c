@@ -169,6 +169,8 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 				 "/l { lineto } bind def\n"
 				 "/c { curveto } bind def\n"
 				 "/h { closepath } bind def\n"
+				 "/re { exch dup neg 3 1 roll 5 3 roll moveto 0 rlineto\n"
+				 "      0 exch rlineto 0 rlineto closepath } bind def\n"
 				 "/S { stroke } bind def\n"
 				 "/f { fill } bind def\n"
 				 "/f* { eofill } bind def\n"

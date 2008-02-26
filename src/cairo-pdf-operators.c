@@ -328,6 +328,23 @@ _cairo_pdf_path_close_path (void *closure)
     return _cairo_output_stream_get_status (info->output);
 }
 
+static cairo_status_t
+_cairo_pdf_path_rectangle (pdf_path_info_t *info, cairo_box_t *box)
+{
+    double x1 = _cairo_fixed_to_double (box->p1.x);
+    double y1 = _cairo_fixed_to_double (box->p1.y);
+    double x2 = _cairo_fixed_to_double (box->p2.x);
+    double y2 = _cairo_fixed_to_double (box->p2.y);
+
+    cairo_matrix_transform_point (info->path_transform, &x1, &y1);
+    cairo_matrix_transform_point (info->path_transform, &x2, &y2);
+    _cairo_output_stream_printf (info->output,
+				 "%f %f %f %f re ",
+				 x1, y1, x2 - x1, y2 - y1);
+
+    return _cairo_output_stream_get_status (info->output);
+}
+
 /* The line cap value is needed to workaround the fact that PostScript
  * and PDF semantics for stroking degenerate sub-paths do not match
  * cairo semantics. (PostScript draws something for any line cap
@@ -346,6 +363,7 @@ _cairo_pdf_operators_emit_path (cairo_pdf_operators_t 	*pdf_operators,
     cairo_output_stream_t *word_wrap;
     cairo_status_t status, status2;
     pdf_path_info_t info;
+    cairo_box_t box;
 
     word_wrap = _word_wrap_stream_create (pdf_operators->stream, 79);
     status = _cairo_output_stream_get_status (word_wrap);
@@ -355,13 +373,17 @@ _cairo_pdf_operators_emit_path (cairo_pdf_operators_t 	*pdf_operators,
     info.output = word_wrap;
     info.path_transform = path_transform;
     info.line_cap = line_cap;
-    status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
-					  _cairo_pdf_path_move_to,
-					  _cairo_pdf_path_line_to,
-					  _cairo_pdf_path_curve_to,
-					  _cairo_pdf_path_close_path,
-					  &info);
+    if (_cairo_path_fixed_is_rectangle (path, &box)) {
+	status = _cairo_pdf_path_rectangle (&info, &box);
+    } else {
+	status = _cairo_path_fixed_interpret (path,
+					      CAIRO_DIRECTION_FORWARD,
+					      _cairo_pdf_path_move_to,
+					      _cairo_pdf_path_line_to,
+					      _cairo_pdf_path_curve_to,
+					      _cairo_pdf_path_close_path,
+					      &info);
+    }
 
     status2 = _cairo_output_stream_destroy (word_wrap);
     if (status == CAIRO_STATUS_SUCCESS)
