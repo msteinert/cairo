@@ -331,10 +331,9 @@ _cairo_quartz_filter_to_quartz (cairo_filter_t filter)
 	    return kCGInterpolationLow;
 
 	case CAIRO_FILTER_BEST:
-	    return kCGInterpolationHigh;
-
 	case CAIRO_FILTER_GOOD:
 	case CAIRO_FILTER_BILINEAR:
+	case CAIRO_FILTER_GAUSSIAN:
 	    return kCGInterpolationDefault;
     }
 
@@ -343,7 +342,7 @@ _cairo_quartz_filter_to_quartz (cairo_filter_t filter)
 
 static inline void
 _cairo_quartz_cairo_matrix_to_quartz (const cairo_matrix_t *src,
-				       CGAffineTransform *dst)
+				      CGAffineTransform *dst)
 {
     dst->a = src->xx;
     dst->b = src->yx;
@@ -513,33 +512,6 @@ SurfacePatternReleaseInfoFunc (void *ainfo)
 
     CGImageRelease (info->image);
     free (info);
-}
-
-/* Borrowed from cairo-meta-surface */
-static cairo_status_t
-_init_pattern_with_snapshot (cairo_pattern_t *pattern,
-			     const cairo_pattern_t *other)
-{
-    cairo_status_t status;
-
-    status = _cairo_pattern_init_copy (pattern, other);
-    if (status)
-	return status;
-
-    if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
-	cairo_surface_pattern_t *surface_pattern =
-	    (cairo_surface_pattern_t *) pattern;
-	cairo_surface_t *surface = surface_pattern->surface;
-
-	surface_pattern->surface = _cairo_surface_snapshot (surface);
-
-	cairo_surface_destroy (surface);
-
-	if (surface_pattern->surface->status)
-	    return surface_pattern->surface->status;
-    }
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
@@ -1641,6 +1613,7 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
     CGImageRef img;
     cairo_surface_t *pat_surf = mask->surface;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    CGAffineTransform ctm, mask_matrix;
 
     status = _cairo_surface_get_extents (pat_surf, &extents);
     if (status)
@@ -1656,13 +1629,16 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
 	goto BAIL;
     }
 
-    rect = CGRectMake (-mask->base.matrix.x0, -mask->base.matrix.y0, extents.width, extents.height);
+    rect = CGRectMake (0.0f, 0.0f, extents.width, extents.height);
 
     CGContextSaveGState (surface->cgContext);
 
     /* ClipToMask is essentially drawing an image, so we need to flip the CTM
      * to get the image to appear oriented the right way */
-    CGAffineTransform ctm = CGContextGetCTM (surface->cgContext);
+    ctm = CGContextGetCTM (surface->cgContext);
+
+    _cairo_quartz_cairo_matrix_to_quartz (&mask->base.matrix, &mask_matrix);
+    CGContextConcatCTM (surface->cgContext, CGAffineTransformInvert(mask_matrix));
     CGContextTranslateCTM (surface->cgContext, 0.0f, rect.size.height);
     CGContextScaleCTM (surface->cgContext, 1.0f, -1.0f);
 
