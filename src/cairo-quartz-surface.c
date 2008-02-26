@@ -1297,6 +1297,7 @@ _cairo_quartz_surface_fill (void *abstract_surface,
     cairo_int_status_t rv = CAIRO_STATUS_SUCCESS;
     cairo_quartz_action_t action;
     quartz_stroke_t stroke;
+    cairo_box_t box;
 
     ND((stderr, "%p _cairo_quartz_surface_fill op %d source->type %d\n", surface, op, source->type));
 
@@ -1305,6 +1306,16 @@ _cairo_quartz_surface_fill (void *abstract_surface,
 
     if (op == CAIRO_OPERATOR_DEST)
 	return CAIRO_STATUS_SUCCESS;
+
+    /* Check whether the path would be a no-op */
+    /* XXX handle unbounded ops */
+    if (_cairo_path_fixed_is_empty(path) ||
+	(_cairo_path_fixed_is_box(path, &box) &&
+	 box.p1.x == box.p2.x &&
+	 box.p1.y == box.p2.y))
+    {
+	return CAIRO_STATUS_SUCCESS;
+    }
 
     CGContextSaveGState (surface->cgContext);
 
