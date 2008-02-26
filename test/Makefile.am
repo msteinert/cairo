@@ -71,6 +71,7 @@ line-width-scale$(EXEEXT)				\
 line-width-zero$(EXEEXT)				\
 linear-gradient$(EXEEXT)				\
 linear-gradient-reflect$(EXEEXT)			\
+long-dashed-lines$(EXEEXT)				\
 long-lines$(EXEEXT)					\
 mask$(EXEEXT)						\
 mask-alpha$(EXEEXT)					\
@@ -387,6 +388,7 @@ REFERENCE_IMAGES = \
 	line-width-ref.png	\
 	line-width-scale-ps-ref.png	\
 	line-width-scale-ref.png	\
+	long-dashed-lines-ref.png	\
 	long-lines-ref.png	\
 	mask-alpha-ref.png	\
 	mask-alpha-svg-argb32-ref.png	\
