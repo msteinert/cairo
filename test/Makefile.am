@@ -101,6 +101,7 @@ random-intersections$(EXEEXT)				\
 rectangle-rounding-error$(EXEEXT)			\
 rectilinear-miter-limit$(EXEEXT)			\
 rectilinear-stroke$(EXEEXT)				\
+reflected-stroke$(EXEEXT)				\
 rel-path$(EXEEXT)					\
 rgb24-ignore-alpha$(EXEEXT)				\
 rotate-image-surface-paint$(EXEEXT)			\
@@ -472,6 +473,7 @@ REFERENCE_IMAGES = \
 	rectangle-rounding-error-ref.png	\
 	rectilinear-miter-limit-ref.png		\
 	rectilinear-stroke-ref.png	\
+	reflected-stroke-ref.png	\
 	rel-path-quartz-ref.png	\
 	rel-path-quartz-rgb24-ref.png	\
 	rel-path-ps-rgb24-ref.png	\

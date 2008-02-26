@@ -140,6 +140,7 @@ pthread-show-text
 rectangle-rounding-error
 rectilinear-miter-limit
 rectilinear-stroke
+reflected-stroke
 rel-path
 rotate-image-surface-paint
 scale-down-source-surface-paint
