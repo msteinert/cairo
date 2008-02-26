@@ -178,7 +178,7 @@ backend_pkgconfigs += cairo-xcb.pc
 endif
 
 quartz_headers = cairo-quartz.h
-quartz_sources = cairo-quartz-surface.c cairo-quartz-private.h
+quartz_sources = cairo-quartz-surface.c cairo-quartz-image-surface.c cairo-quartz-private.h
 cairo_all_sources += $(quartz_headers) $(quartz_sources)
 if CAIRO_HAS_QUARTZ_SURFACE
 cairo_headers += $(quartz_headers)

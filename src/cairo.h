@@ -1491,6 +1491,7 @@ cairo_surface_status (cairo_surface_t *surface);
  * @CAIRO_SURFACE_TYPE_SVG: The surface is of type svg
  * @CAIRO_SURFACE_TYPE_OS2: The surface is of type os2
  * @CAIRO_SURFACE_TYPE_WIN32_PRINTING: The surface is a win32 printing surface
+ * @CAIRO_SURFACE_TYPE_QUARTZ_IMAGE: The surface is of type quartz_image
  *
  * #cairo_surface_type_t is used to describe the type of a given
  * surface. The surface types are also known as "backends" or "surface
@@ -1528,7 +1529,8 @@ typedef enum _cairo_surface_type {
     CAIRO_SURFACE_TYPE_DIRECTFB,
     CAIRO_SURFACE_TYPE_SVG,
     CAIRO_SURFACE_TYPE_OS2,
-    CAIRO_SURFACE_TYPE_WIN32_PRINTING
+    CAIRO_SURFACE_TYPE_WIN32_PRINTING,
+    CAIRO_SURFACE_TYPE_QUARTZ_IMAGE
 } cairo_surface_type_t;
 
 cairo_public cairo_surface_type_t
