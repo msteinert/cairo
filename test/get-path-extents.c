@@ -92,7 +92,7 @@ check_extents (const char *message, cairo_t *cr, enum ExtentsType type,
         break;
     }
 
-    cairo_test_log ("Error: %s; %s extents (%f, %f) x (%f, %f) should %s (%f, %f) x (%f, %f)\n",
+    cairo_test_log ("Error: %s; %s extents (%g, %g) x (%g, %g) should %s (%g, %g) x (%g, %g)\n",
                     message, type_string,
                     ext_x1, ext_y1, ext_x2 - ext_x1, ext_y2 - ext_y1,
                     relation_string,
