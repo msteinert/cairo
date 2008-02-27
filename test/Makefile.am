@@ -394,6 +394,7 @@ REFERENCE_IMAGES = \
 	line-width-scale-ps-ref.png	\
 	line-width-scale-ref.png	\
 	long-dashed-lines-ref.png	\
+	long-dashed-lines-ps-ref.png	\
 	long-lines-ref.png	\
 	mask-alpha-ref.png	\
 	mask-alpha-svg-argb32-ref.png	\
@@ -479,6 +480,7 @@ REFERENCE_IMAGES = \
 	rectilinear-miter-limit-ps-ref.png	\
 	rectilinear-stroke-ref.png	\
 	reflected-stroke-ref.png	\
+	reflected-stroke-ps-ref.png	\
 	rel-path-quartz-ref.png	\
 	rel-path-quartz-rgb24-ref.png	\
 	rel-path-ps-rgb24-ref.png	\
