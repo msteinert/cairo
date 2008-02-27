@@ -549,6 +549,7 @@ REFERENCE_IMAGES = \
 	text-rotate-ref.png	\
 	text-rotate-svg-ref.png	\
 	text-zero-len-ref.png	\
+	text-zero-len-ps-ref.png	\
 	transforms-ref.png	\
 	transforms-ps-ref.png	\
 	translate-show-surface-ref.png	\
