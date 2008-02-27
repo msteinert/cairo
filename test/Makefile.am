@@ -251,6 +251,7 @@ REFERENCE_IMAGES = \
 	caps-joins-alpha-ref.png	\
 	caps-joins-alpha-svg-ref.png	\
 	caps-joins-ref.png	\
+	caps-joins-ps-ref.png	\
 	caps-sub-paths-ref.png	\
 	clip-all-ref.png	\
 	clip-empty-ref.png	\
@@ -281,6 +282,7 @@ REFERENCE_IMAGES = \
 	clip-twice-ref.png	\
 	clip-twice-rgb24-ref.png	\
 	close-path-ref.png	\
+	close-path-ps-ref.png	\
 	composite-integer-translate-over-ref.png	\
 	composite-integer-translate-over-repeat-ref.png	\
 	composite-integer-translate-source-ref.png	\
@@ -374,10 +376,12 @@ REFERENCE_IMAGES = \
 	gradient-zero-stops-rgb24-ref.png	\
 	image-surface-source-ref.png \
 	infinite-join-ref.png	\
+	infinite-join-ps-ref.png	\
 	leaky-dash-ps-argb32-ref.png	\
 	leaky-dash-ps-rgb24-ref.png	\
 	leaky-dash-ref.png	\
 	leaky-polygon-ref.png	\
+	leaky-polygon-ps-ref.png	\
 	linear-gradient-reflect-ref.png	\
 	linear-gradient-reflect-pdf-argb32-ref.png	\
 	linear-gradient-reflect-pdf-rgb24-ref.png	\
@@ -472,6 +476,7 @@ REFERENCE_IMAGES = \
 	rgb24-ignore-alpha-ref.png \
 	rectangle-rounding-error-ref.png	\
 	rectilinear-miter-limit-ref.png		\
+	rectilinear-miter-limit-ps-ref.png	\
 	rectilinear-stroke-ref.png	\
 	reflected-stroke-ref.png	\
 	rel-path-quartz-ref.png	\
@@ -494,6 +499,7 @@ REFERENCE_IMAGES = \
 	select-font-face-ref.png	\
 	select-font-face-ps-ref.png \
 	self-copy-ref.png	\
+	self-copy-ps-ref.png	\
 	self-intersecting-ref.png	\
 	self-intersecting-rgb24-ref.png	\
 	set-source-ref.png	\
@@ -503,6 +509,7 @@ REFERENCE_IMAGES = \
 	show-text-current-point-ref.png	\
 	show-text-current-point-ps-ref.png \
 	skew-extreme-ref.png \
+	skew-extreme-ps-ref.png \
 	source-clip-ref.png	\
 	source-clip-scale-quartz-ref.png	\
 	source-clip-scale-ps-argb32-ref.png	\
@@ -541,6 +548,7 @@ REFERENCE_IMAGES = \
 	text-rotate-svg-ref.png	\
 	text-zero-len-ref.png	\
 	transforms-ref.png	\
+	transforms-ps-ref.png	\
 	translate-show-surface-ref.png	\
 	trap-clip-quartz-ref.png	\
 	trap-clip-quartz-rgb24-ref.png	\
