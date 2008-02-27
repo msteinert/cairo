@@ -2261,7 +2261,7 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
     int pattern_height = 0; /* squelch bogus compiler warning */
     double xstep, ystep;
     cairo_matrix_t cairo_p2d, ps_p2d;
-    cairo_rectangle_int16_t surface_extents;
+    cairo_rectangle_int_t surface_extents;
     cairo_bool_t old_use_string_datasource;
 
     cairo_p2d = pattern->base.matrix;
