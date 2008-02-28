@@ -236,6 +236,7 @@ release-publish-message: releases/$(sha1_file)
 release-publish: release-upload release-publish-message
 
 doc-publish: doc
+	rm -rf ./$(MANUAL_DATED)
 	cp -a doc/public/html $(MANUAL_DATED)
 	tar czf $(MANUAL_TAR_FILE) $(MANUAL_DATED)
 	scp $(MANUAL_TAR_FILE) $(RELEASE_UPLOAD_HOST):$(MANUAL_UPLOAD_DIR)
