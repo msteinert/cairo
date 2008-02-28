@@ -59,7 +59,6 @@ _cairo_format_from_pixman_format (pixman_format_code_t pixman_format)
     case PIXMAN_a4:       case PIXMAN_r1g2b1:   case PIXMAN_b1g2r1:
     case PIXMAN_a1r1g1b1: case PIXMAN_a1b1g1r1: case PIXMAN_c4:
     case PIXMAN_g4:       case PIXMAN_g1:
-    case PIXMAN_yuy2:     case PIXMAN_yv12:
     default:
 	return CAIRO_FORMAT_INVALID;
     }
@@ -101,8 +100,6 @@ _cairo_content_from_pixman_format (pixman_format_code_t pixman_format)
     case PIXMAN_c4:
     case PIXMAN_g4:
     case PIXMAN_g1:
-    case PIXMAN_yuy2:
-    case PIXMAN_yv12:
 	return CAIRO_CONTENT_COLOR;
     case PIXMAN_a8:
     case PIXMAN_a1:
