@@ -5,6 +5,7 @@ TESTS =							\
 a1-image-sample$(EXEEXT)				\
 a1-traps-sample$(EXEEXT)				\
 a8-mask$(EXEEXT)					\
+big-line$(EXEEXT)					\
 big-trap$(EXEEXT)					\
 caps-joins$(EXEEXT)					\
 caps-joins-alpha$(EXEEXT)				\
@@ -244,6 +245,10 @@ REFERENCE_IMAGES = \
 	a1-image-sample-ref.png		\
 	a1-traps-sample-ref.png		\
 	a8-mask-ref.png	\
+	big-line-ref.png		\
+	big-line-rgb24-ref.png		\
+	big-line-ps-ref.png		\
+	big-line-ps-rgb24-ref.png	\
 	bitmap-font-pdf-argb32-ref.png	\
 	bitmap-font-ref.png	\
 	bitmap-font-rgb24-ref.png	\
