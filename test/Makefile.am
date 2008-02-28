@@ -606,6 +606,7 @@ $(REFERENCE_IMAGES)
 # everything from this list by fixing the bugs. (We don't necessarily
 # have to be that strict for "snapshots" though.)
 XFAIL_TESTS =					\
+big-line$(EXEEXT)				\
 big-trap$(EXEEXT)				\
 extend-pad$(EXEEXT)				\
 filter-nearest-offset$(EXEEXT)			\
