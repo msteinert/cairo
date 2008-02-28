@@ -36,7 +36,7 @@
     <xi:include href="xml/cairo-win32.xml"/>
     <!--xi:include href="xml/cairo-beos.xml"/-->
     <xi:include href="xml/cairo-svg.xml"/>
-    <!--xi:include href="xml/cairo-quartz.xml"-->
+    <xi:include href="xml/cairo-quartz.xml" />
     <!--xi:include href="xml/cairo-xcb.xml"/-->
     <xi:include href="xml/cairo-xlib.xml"/>
   </chapter>

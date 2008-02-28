@@ -89,6 +89,17 @@ cairo_win32_surface_get_image
 </SECTION>
 
 <SECTION>
+<FILE>cairo-quartz</FILE>
+<TITLE>Quartz Surfaces</TITLE>
+CAIRO_HAS_QUARTZ_SURFACE
+cairo_quartz_surface_create
+cairo_quartz_surface_create_for_cg_context
+cairo_quartz_surface_get_cg_context
+cairo_quartz_image_surface_create
+cairo_quartz_image_surface_get_image
+</SECTION>
+
+<SECTION>
 <FILE>cairo-xlib</FILE>
 <TITLE>XLib Surfaces</TITLE>
 CAIRO_HAS_XLIB_SURFACE
