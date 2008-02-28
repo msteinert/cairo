@@ -23,21 +23,22 @@ that extends beyond the surface bounds and expect it to fill the
 surface completely, (rather than overflowing and triggering random
 behavior).
 
-Meanwhile, nobody has ever really needed 16 bits of sub-pixel precision.
+Meanwhile, nobody has ever really needed 16 bits of sub-pixel
+precision.
 
 With this snapshot, the fixed-point system is still in place and is
 still using a 32-bit representation, (future versions of cairo might
 move entirely to floating-point when targeting PDF output for
 example). But the representation now provides 24 bits of pixel
-addressing and only 8 bits of sub-pixel positioning. It is hoped that
-this larger space is adequate to avoid pain for many application
-developers.
+addressing and only 8 bits of sub-pixel positioning. This should give
+a much less stifling space to many applications.
 
-Note that the 24-bit limitation is only on the range of the allowable
-device space. It is still legitimate to arrange a transformation
-matrix that provides an arbitrarily large user-space, (the space in
-which floating-point values are provided to cairo), as long as the
-post-transformed values fit within the 24.8 representation.
+However, the underlying pixman library still has 16-bit limitations in
+many places, (it has its roots in the X server as well). Until those
+are also fixed, applications targeting cairo image surfaces, or
+hitting software fallbacks when targeting other surfaces will still
+encounter problems with device-space values needing more than 16
+integer bits.
 
 generic fixes
 -------------
