@@ -72,7 +72,7 @@ get-and-set
 get-clip
 get-group-target
 get-path-extents
-get-render-format
+get-xrender-format
 glitz-surface-source
 glyph-cache-pressure
 gradient-alpha
@@ -121,10 +121,12 @@ pdf2png
 pdf-features
 pdf-features.pdf
 pdf-surface-source
+pdf-surface-source.pdf
 png-flatten
 ps-features
 ps-features.ps
 ps-surface-source
+ps-surface-source.ps
 push-group
 radial-gradient
 random-intersections
@@ -135,6 +137,7 @@ svg-clip.svg
 svg-surface
 svg-surface.svg
 svg-surface-source
+svg-surface-source.svg
 pixman-rotate
 pthread-show-text
 rectangle-rounding-error
