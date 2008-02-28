@@ -7,7 +7,7 @@ dnl For the micro number: odd => in-progress development (from git)
 dnl			  even => tar-file snapshot or release
 m4_define(cairo_version_major, 1)
 m4_define(cairo_version_minor, 5)
-m4_define(cairo_version_micro, 11)
+m4_define(cairo_version_micro, 12)
 
 AC_INIT([cairo],
       cairo_version_major.cairo_version_minor.cairo_version_micro,
@@ -26,7 +26,7 @@ dnl ===========================================================================
 # libtool shared library version
 
 # Increment if the interface has additions, changes, removals.
-LT_CURRENT=17
+LT_CURRENT=18
 
 # Increment any time the source changes; set to
 # 0 if you increment CURRENT
@@ -35,7 +35,7 @@ LT_REVISION=0
 # Increment if any interfaces have been added; set to 0
 # if any interfaces have been removed. removal has
 # precedence over adding, so set to 0 if both happened.
-LT_AGE=15
+LT_AGE=16
 
 dnl ===========================================================================
 
