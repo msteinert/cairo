@@ -274,7 +274,7 @@ static const cairo_surface_backend_t cairo_quartz_image_surface_backend = {
  * Creates a Quartz surface backed by a CGImageRef that references the
  * given image surface. The resulting surface can be rendered quickly
  * when used as a source when rendering to a #cairo_quartz_surface.  If
- * the data in the image surface is every updated, cairo_surface_flush()
+ * the data in the image surface is ever updated, cairo_surface_flush()
  * must be called on the #cairo_quartz_image_surface to ensure that the
  * CGImageRef refers to the updated data.
  *
