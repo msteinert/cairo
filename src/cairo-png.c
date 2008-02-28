@@ -108,6 +108,13 @@ static void
 png_simple_warning_callback (png_structp png,
 	                     png_const_charp error_msg)
 {
+    cairo_status_t *error = png_get_error_ptr (png);
+
+    /* default to the most likely error */
+    if (*error == CAIRO_STATUS_SUCCESS)
+	*error = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    /* png does not expect to abort and will try to tidy up after a warning */
 }
 
 
@@ -138,8 +145,10 @@ write_png (cairo_surface_t	*surface,
         return status;
 
     /* PNG complains about "Image width or height is zero in IHDR" */
-    if (image->width == 0 || image->height == 0)
-	return _cairo_error (CAIRO_STATUS_WRITE_ERROR);
+    if (image->width == 0 || image->height == 0) {
+	status = _cairo_error (CAIRO_STATUS_WRITE_ERROR);
+	goto BAIL1;
+    }
 
     rows = _cairo_malloc_ab (image->height, sizeof (png_byte*));
     if (rows == NULL) {
@@ -222,8 +231,7 @@ write_png (cairo_surface_t	*surface,
     if (image->format == CAIRO_FORMAT_RGB24)
 	png_set_filler (png, 0, PNG_FILLER_AFTER);
 
-    if (rows)
-	png_write_image (png, rows);
+    png_write_image (png, rows);
     png_write_end (png, info);
 
 BAIL3:
@@ -248,7 +256,8 @@ stdio_write_func (png_structp png, png_bytep data, png_size_t size)
 	data += ret;
 	if (size && ferror (fp)) {
 	    cairo_status_t *error = png_get_error_ptr (png);
-	    *error = _cairo_error (CAIRO_STATUS_WRITE_ERROR);
+	    if (*error == CAIRO_STATUS_SUCCESS)
+		*error = _cairo_error (CAIRO_STATUS_WRITE_ERROR);
 	    png_error (png, NULL);
 	}
     }
@@ -309,7 +318,8 @@ stream_write_func (png_structp png, png_bytep data, png_size_t size)
     status = png_closure->write_func (png_closure->closure, data, size);
     if (status) {
 	cairo_status_t *error = png_get_error_ptr (png);
-	*error = status;
+	if (*error == CAIRO_STATUS_SUCCESS)
+	    *error = status;
 	png_error (png, NULL);
     }
 }
@@ -426,7 +436,10 @@ read_png (png_rw_ptr	read_func,
     png_get_IHDR (png, info,
                   &png_width, &png_height, &depth,
                   &color_type, &interlace, NULL, NULL);
-    stride = 4 * png_width;
+    if (status) { /* catch any early warnings */
+	surface = _cairo_surface_create_in_error (status);
+	goto BAIL;
+    }
 
     /* convert palette/gray image to rgb */
     if (color_type == PNG_COLOR_TYPE_PALETTE)
@@ -482,6 +495,11 @@ read_png (png_rw_ptr	read_func,
     png_read_image (png, row_pointers);
     png_read_end (png, info);
 
+    if (status) { /* catch any late warnings - probably hit an error already */
+	surface = _cairo_surface_create_in_error (status);
+	goto BAIL;
+    }
+
     surface = cairo_image_surface_create_for_data (data,
 						   CAIRO_FORMAT_ARGB32,
 						   png_width, png_height, stride);
@@ -514,7 +532,8 @@ stdio_read_func (png_structp png, png_bytep data, png_size_t size)
 	data += ret;
 	if (size && (feof (fp) || ferror (fp))) {
 	    cairo_status_t *error = png_get_error_ptr (png);
-	    *error = _cairo_error (CAIRO_STATUS_READ_ERROR);
+	    if (*error == CAIRO_STATUS_SUCCESS)
+		*error = _cairo_error (CAIRO_STATUS_READ_ERROR);
 	    png_error (png, NULL);
 	}
     }
@@ -581,7 +600,8 @@ stream_read_func (png_structp png, png_bytep data, png_size_t size)
     status = png_closure->read_func (png_closure->closure, data, size);
     if (status) {
 	cairo_status_t *error = png_get_error_ptr (png);
-	*error = status;
+	if (*error == CAIRO_STATUS_SUCCESS)
+	    *error = status;
 	png_error (png, NULL);
     }
 }
