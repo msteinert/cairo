@@ -286,8 +286,7 @@ REFERENCE_IMAGES = \
 	composite-integer-translate-over-ref.png	\
 	composite-integer-translate-over-repeat-ref.png	\
 	composite-integer-translate-source-ref.png	\
-	copy-path-ps-argb32-ref.png	\
-	copy-path-ps-rgb24-ref.png	\
+	copy-path-ps-ref.png	\
 	copy-path-ref.png	\
 	create-from-png-ref.png	\
 	create-from-png-stream-ref.png	\
@@ -301,6 +300,7 @@ REFERENCE_IMAGES = \
 	dash-offset-negative-ref.png	\
 	dash-scale-ps-argb32-ref.png	\
 	dash-scale-ps-rgb24-ref.png	\
+	dash-scale-quartz-ref.png	\
 	dash-scale-ref.png	\
 	dash-state-ps-ref.png	\
 	dash-state-ref.png	\
@@ -309,7 +309,8 @@ REFERENCE_IMAGES = \
 	dash-zero-length-ref.png	\
 	dash-zero-length-rgb24-ref.png	\
 	degenerate-pen-ref.png		\
-	degenerate-pen-ps-argb32-ref.png	\
+	degenerate-pen-ps-ref.png	\
+	degenerate-pen-quartz-ref.png	\
 	degenerate-path-ps-argb32-ref.png	\
 	degenerate-path-ps-rgb24-ref.png	\
 	degenerate-path-ref.png	\
@@ -379,6 +380,7 @@ REFERENCE_IMAGES = \
 	infinite-join-ps-ref.png	\
 	leaky-dash-ps-argb32-ref.png	\
 	leaky-dash-ps-rgb24-ref.png	\
+	leaky-dash-quartz-ref.png	\
 	leaky-dash-ref.png	\
 	leaky-polygon-ref.png	\
 	leaky-polygon-ps-ref.png	\
@@ -392,6 +394,7 @@ REFERENCE_IMAGES = \
 	linear-gradient-svg-ref.png	\
 	line-width-ref.png	\
 	line-width-scale-ps-ref.png	\
+	line-width-scale-quartz-ref.png	\
 	line-width-scale-ref.png	\
 	long-dashed-lines-ref.png	\
 	long-dashed-lines-ps-ref.png	\
@@ -399,11 +402,16 @@ REFERENCE_IMAGES = \
 	mask-alpha-ref.png	\
 	mask-alpha-svg-argb32-ref.png	\
 	mask-alpha-rgb24-ref.png	\
+	mask-alpha-quartz-argb32-ref.png \
 	mask-ctm-ref.png	\
 	mask-ctm-rgb24-ref.png	\
 	mask-ctm-svg-argb32-ref.png	\
 	mask-ref.png	\
 	mask-rgb24-ref.png	\
+	mask-pdf-argb32-ref.png	\
+	mask-pdf-rgb24-ref.png	\
+	mask-quartz-ref.png	\
+	mask-quartz-rgb24-ref.png	\
 	mask-surface-ctm-ref.png	\
 	mask-surface-ctm-rgb24-ref.png	\
 	mask-surface-ctm-svg-argb32-ref.png	\
@@ -415,6 +423,8 @@ REFERENCE_IMAGES = \
 	meta-surface-pattern-pdf-rgb24-ref.png	\
 	meta-surface-pattern-ps-argb32-ref.png	\
 	meta-surface-pattern-ps-rgb24-ref.png	\
+	meta-surface-pattern-quartz-ref.png	\
+	meta-surface-pattern-quartz-rgb24-ref.png	\
 	meta-surface-pattern-svg-argb32-ref.png	\
 	meta-surface-pattern-svg-rgb24-ref.png	\
 	miter-precision-ref.png \
@@ -439,15 +449,21 @@ REFERENCE_IMAGES = \
 	operator-source-ref.png	\
 	operator-source-rgb24-ref.png	\
 	over-above-source-ps-argb32-ref.png       \
+	over-above-source-quartz-ref.png	  \
+	over-above-source-quartz-rgb24-ref.png	  \
 	over-above-source-ref.png                 \
 	over-above-source-rgb24-ref.png           \
 	over-around-source-ps-argb32-ref.png       \
+	over-around-source-quartz-ref.png	   \
+	over-around-source-quartz-rgb24-ref.png	   \
 	over-around-source-ref.png                 \
 	over-around-source-rgb24-ref.png           \
 	over-below-source-ps-argb32-ref.png       \
 	over-below-source-ref.png                 \
 	over-below-source-rgb24-ref.png           \
-	over-between-source-ps-argb32-ref.png       \
+	over-between-source-ps-argb32-ref.png     \
+	over-between-source-quartz-ref.png        \
+	over-between-source-quartz-rgb24-ref.png  \
 	over-between-source-ref.png                 \
 	over-between-source-rgb24-ref.png           \
 	paint-ref.png	\
@@ -489,6 +505,7 @@ REFERENCE_IMAGES = \
 	rotate-image-surface-paint-pdf-rgb24-ref.png \
 	rotate-image-surface-paint-ps-ref.png \
 	rotate-image-surface-paint-pdf-argb32-ref.png	\
+	rotate-image-surface-paint-quartz-ref.png	\
 	rotate-image-surface-paint-ref.png	\
 	rotate-image-surface-paint-svg-ref.png	\
 	scale-down-source-surface-paint-ref.png	\
@@ -547,9 +564,8 @@ REFERENCE_IMAGES = \
 	text-pattern-pdf-argb32-ref.png \
 	text-pattern-pdf-rgb24-ref.png \
 	text-rotate-ref.png	\
+	text-rotate-ps-ref.png	\
 	text-rotate-svg-ref.png	\
-	text-zero-len-ref.png	\
-	text-zero-len-ps-ref.png	\
 	transforms-ref.png	\
 	transforms-ps-ref.png	\
 	translate-show-surface-ref.png	\
