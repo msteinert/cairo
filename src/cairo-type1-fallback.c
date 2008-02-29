@@ -78,6 +78,7 @@ cairo_type1_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     cairo_matrix_t font_matrix;
     cairo_matrix_t ctm;
     cairo_font_options_t font_options;
+    cairo_status_t status;
 
     font = calloc (1, sizeof (cairo_type1_font_t));
     if (font == NULL)
@@ -106,7 +107,8 @@ cairo_type1_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
 							&font_matrix,
 							&ctm,
 							&font_options);
-    if (font->type1_scaled_font->status)
+    status = font->type1_scaled_font->status;
+    if (status)
         goto fail;
 
     _cairo_array_init (&font->contents, sizeof (unsigned char));
@@ -120,7 +122,7 @@ fail:
     free (font->widths);
     free (font);
 
-    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    return status;
 }
 
 /* Charstring commands. If the high byte is 0 the command is encoded
@@ -795,7 +797,7 @@ _cairo_type1_fallback_init_internal (cairo_type1_subset_t	*type1_subset,
     /* status is already set, ignore further errors */
     cairo_type1_font_destroy (font);
 
-    return _cairo_error (status);
+    return status;
 }
 
 cairo_status_t
@@ -886,7 +888,7 @@ fail2:
     _cairo_type2_charstrings_fini (type2_subset);
 fail1:
     cairo_type1_font_destroy (font);
-    return _cairo_error (status);
+    return status;
 }
 
 void
