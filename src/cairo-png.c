@@ -399,10 +399,9 @@ read_png (png_rw_ptr	read_func,
     png_info *info;
     png_byte *data = NULL;
     png_byte **row_pointers = NULL;
-    png_uint_32 png_width, png_height, stride;
-    int depth, color_type, interlace;
+    png_uint_32 png_width, png_height;
+    int depth, color_type, interlace, stride;
     unsigned int i;
-    unsigned int pixel_size;
     cairo_status_t status;
 
     /* XXX: Perhaps we'll want some other error handlers? */
@@ -476,8 +475,13 @@ read_png (png_rw_ptr	read_func,
 
     png_read_update_info (png, info);
 
-    pixel_size = 4;
-    data = _cairo_malloc_abc (png_height, png_width, pixel_size);
+    stride = cairo_format_stride_for_width (CAIRO_FORMAT_ARGB32, png_width);
+    if (stride < 0) {
+	surface = _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_STRIDE));
+	goto BAIL;
+    }
+
+    data = _cairo_malloc_ab (png_height, stride);
     if (data == NULL) {
 	surface = _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 	goto BAIL;
@@ -490,7 +494,7 @@ read_png (png_rw_ptr	read_func,
     }
 
     for (i = 0; i < png_height; i++)
-        row_pointers[i] = &data[i * png_width * pixel_size];
+        row_pointers[i] = &data[i * stride];
 
     png_read_image (png, row_pointers);
     png_read_end (png, info);

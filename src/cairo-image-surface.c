@@ -440,6 +440,7 @@ cairo_format_stride_for_width (cairo_format_t	format,
 
     return ((bpp*width+7)/8 + STRIDE_ALIGNMENT-1) & ~(STRIDE_ALIGNMENT-1);
 }
+slim_hidden_def (cairo_format_stride_for_width);
 
 /**
  * cairo_image_surface_create_for_data:

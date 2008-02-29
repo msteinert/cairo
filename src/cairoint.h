@@ -2244,6 +2244,7 @@ slim_hidden_proto (cairo_image_surface_create);
 slim_hidden_proto (cairo_image_surface_create_for_data);
 slim_hidden_proto (cairo_image_surface_get_height);
 slim_hidden_proto (cairo_image_surface_get_width);
+slim_hidden_proto (cairo_format_stride_for_width);
 slim_hidden_proto (cairo_line_to);
 slim_hidden_proto (cairo_mask);
 slim_hidden_proto (cairo_matrix_init);
