@@ -314,9 +314,15 @@ draw (cairo_t *cr, int width, int height)
     cairo_move_to (cr2, -extents.x_bearing, -extents.y_bearing);
     cairo_text_path (cr2, string);
     cairo_set_line_width (cr2, 2.0);
-    errors += !check_extents (phase, cr2, FILL, EQUALS, 0, 0, extents.width, extents.height);
-    errors += !check_extents (phase, cr2, STROKE, EQUALS, -1, -1, extents.width+2, extents.height+2);
-    errors += !check_extents (phase, cr2, PATH, EQUALS, 0, 0, extents.width, extents.height);
+    /* XXX: We'd like to be able to use EQUALS here, but currently
+     * when hinting is enabled freetype returns integer extents. See
+     * http://cairographics.org/todo */
+    errors += !check_extents (phase, cr2, FILL, APPROX_EQUALS,
+			      0, 0, extents.width, extents.height);
+    errors += !check_extents (phase, cr2, STROKE, APPROX_EQUALS,
+			      -1, -1, extents.width+2, extents.height+2);
+    errors += !check_extents (phase, cr2, PATH, APPROX_EQUALS,
+			      0, 0, extents.width, extents.height);
     cairo_new_path (cr2);
     cairo_restore (cr2);
 
