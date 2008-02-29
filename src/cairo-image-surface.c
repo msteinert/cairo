@@ -418,7 +418,8 @@ _cairo_image_surface_create_with_content (cairo_content_t	content,
  * </programlisting></informalexample>
  *
  * Return value: the appropriate stride to use given the desired
- * format and width.
+ * format and width, or -1 if either the format is invalid or the width
+ * too large.
  *
  * Since: 1.6
  **/
@@ -426,7 +427,16 @@ int
 cairo_format_stride_for_width (cairo_format_t	format,
 			       int		width)
 {
-    int bpp = _cairo_format_bits_per_pixel (format);
+    int bpp;
+
+    if (! CAIRO_FORMAT_VALID (format)) {
+	_cairo_error_throw (CAIRO_STATUS_INVALID_FORMAT);
+	return -1;
+    }
+
+    bpp = _cairo_format_bits_per_pixel (format);
+    if ((unsigned) (width) >= (INT32_MAX - 7) / (unsigned) (bpp))
+	return -1;
 
     return ((bpp*width+7)/8 + STRIDE_ALIGNMENT-1) & ~(STRIDE_ALIGNMENT-1);
 }
