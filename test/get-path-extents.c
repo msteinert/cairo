@@ -289,7 +289,6 @@ draw (cairo_t *cr, int width, int height)
 
     phase = "Text";
     cairo_save (cr2);
-    cairo_set_tolerance (cr2, 100.0);
     cairo_select_font_face (cr2, "Bitstream Vera Sans",
 			    CAIRO_FONT_SLANT_NORMAL,
 			    CAIRO_FONT_WEIGHT_NORMAL);
