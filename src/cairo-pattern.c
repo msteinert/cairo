@@ -341,9 +341,10 @@ _cairo_pattern_create_solid (const cairo_color_t *color,
 	pattern = malloc (sizeof (cairo_solid_pattern_t));
     }
 
-    if (pattern == NULL)
+    if (pattern == NULL) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	pattern = (cairo_solid_pattern_t *) &_cairo_pattern_nil;
-    else
+    } else
 	_cairo_pattern_init_solid (pattern, color, content);
 
     return &pattern->base;
