@@ -106,6 +106,7 @@ CG_EXTERN CGImageRef CGBitmapContextCreateImage (CGContextRef);
 static void (*CGContextClipToMaskPtr) (CGContextRef, CGRect, CGImageRef) = NULL;
 /* Only present in 10.5+ */
 static void (*CGContextDrawTiledImagePtr) (CGContextRef, CGRect, CGImageRef) = NULL;
+static unsigned int (*CGContextGetTypePtr) (CGContextRef) = NULL;
 
 static cairo_bool_t _cairo_quartz_symbol_lookup_done = FALSE;
 
@@ -130,8 +131,22 @@ static void quartz_ensure_symbols(void)
 
     CGContextClipToMaskPtr = dlsym(RTLD_DEFAULT, "CGContextClipToMask");
     CGContextDrawTiledImagePtr = dlsym(RTLD_DEFAULT, "CGContextDrawTiledImage");
+    CGContextGetTypePtr = dlsym(RTLD_DEFAULT, "CGContextGetTypePtr");
 
     _cairo_quartz_symbol_lookup_done = TRUE;
+}
+
+static inline cairo_bool_t
+_cairo_quartz_is_cgcontext_bitmap_context (CGContextRef cgc) {
+    if (CGContextGetTypePtr) {
+	/* 4 is the type value of a bitmap context */
+	if (CGContextGetTypePtr(cgc) == 4)
+	    return TRUE;
+	return FALSE;
+    }
+
+    /* This will cause a (harmless) warning to be printed if called on a non-bitmap context */
+    return CGBitmapContextGetBitsPerPixel(surface->cgContext) != 0;
 }
 
 /* CoreGraphics limitation with flipped CTM surfaces: height must be less than signed 16-bit max */
@@ -924,7 +939,7 @@ _cairo_quartz_get_image (cairo_quartz_surface_t *surface,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    if (CGBitmapContextGetBitsPerPixel(surface->cgContext) != 0) {
+    if (_cairo_quartz_is_cgcontext_bitmap_context(surface->cgContext)) {
 	unsigned int stride;
 	unsigned int bitinfo;
 	unsigned int bpc, bpp;
