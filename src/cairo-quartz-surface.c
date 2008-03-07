@@ -1390,9 +1390,10 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
 
     CGContextSaveGState (surface->cgContext);
 
-    // Turning antialiasing off causes misrendering with
-    // single-pixel lines (e.g. 20,10.5 -> 21,10.5 end up being rendered as 2 pixels)
-    //CGContextSetShouldAntialias (surface->cgContext, (antialias != CAIRO_ANTIALIAS_NONE));
+    // Turning antialiasing off used to cause misrendering with
+    // single-pixel lines (e.g. 20,10.5 -> 21,10.5 end up being rendered as 2 pixels).
+    // That's been since fixed in at least 10.5, and in the latest 10.4 dot releases.
+    CGContextSetShouldAntialias (surface->cgContext, (antialias != CAIRO_ANTIALIAS_NONE));
     CGContextSetLineWidth (surface->cgContext, style->line_width);
     CGContextSetLineCap (surface->cgContext, _cairo_quartz_cairo_line_cap_to_quartz (style->line_cap));
     CGContextSetLineJoin (surface->cgContext, _cairo_quartz_cairo_line_join_to_quartz (style->line_join));
@@ -1797,6 +1798,8 @@ _cairo_quartz_surface_intersect_clip_path (void *abstract_surface,
 	CGContextBeginPath (surface->cgContext);
 	stroke.cgContext = surface->cgContext;
 	stroke.ctm_inverse = NULL;
+
+	CGContextSetShouldAntialias (surface->cgContext, (antialias != CAIRO_ANTIALIAS_NONE));
 
 	/* path must not be empty. */
 	CGContextMoveToPoint (surface->cgContext, 0, 0);
