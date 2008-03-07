@@ -133,7 +133,7 @@ static void quartz_ensure_symbols(void)
 
     CGContextClipToMaskPtr = dlsym(RTLD_DEFAULT, "CGContextClipToMask");
     CGContextDrawTiledImagePtr = dlsym(RTLD_DEFAULT, "CGContextDrawTiledImage");
-    CGContextGetTypePtr = dlsym(RTLD_DEFAULT, "CGContextGetTypePtr");
+    CGContextGetTypePtr = dlsym(RTLD_DEFAULT, "CGContextGetType");
 
     _cairo_quartz_symbol_lookup_done = TRUE;
 }
