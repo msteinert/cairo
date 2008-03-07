@@ -1473,8 +1473,7 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 				    int num_glyphs,
 				    cairo_scaled_font_t *scaled_font)
 {
-    CGAffineTransform cairoTextTransform, textTransform, ctm;
-    // XXXtodo/perf: stack storage for glyphs/sizes
+    CGAffineTransform textTransform, ctm;
 #define STATIC_BUF_SIZE 64
     CGGlyph glyphs_static[STATIC_BUF_SIZE];
     CGSize cg_advances_static[STATIC_BUF_SIZE];
@@ -1487,6 +1486,8 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
     float xprev, yprev;
     int i;
     CGFontRef cgfref;
+
+    cairo_bool_t isClipping = FALSE;
 
     if (IS_EMPTY(surface))
 	return CAIRO_STATUS_SUCCESS;
@@ -1507,6 +1508,7 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 	CGContextSetTextDrawingMode (surface->cgContext, kCGTextFill);
     } else if (action == DO_IMAGE || action == DO_TILED_IMAGE || action == DO_SHADING) {
 	CGContextSetTextDrawingMode (surface->cgContext, kCGTextClip);
+	isClipping = TRUE;
     } else {
 	if (action != DO_NOTHING)
 	    rv = CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1518,31 +1520,6 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
     /* this doesn't addref */
     cgfref = _cairo_atsui_scaled_font_get_cg_font_ref (scaled_font);
     CGContextSetFont (surface->cgContext, cgfref);
-
-    /* So this should include the size; I don't know if I need to extract the
-     * size from this and call CGContextSetFontSize.. will I get crappy hinting
-     * with this 1.0 size business?  Or will CG just multiply that size into the
-     * text matrix?
-     */
-    //ND((stderr, "show_glyphs: glyph 0 at: %f, %f\n", glyphs[0].x, glyphs[0].y));
-    cairoTextTransform = CGAffineTransformMake (scaled_font->font_matrix.xx,
-						scaled_font->font_matrix.yx,
-						scaled_font->font_matrix.xy,
-						scaled_font->font_matrix.yy,
-						0., 0.);
-
-    textTransform = CGAffineTransformMakeTranslation (glyphs[0].x, glyphs[0].y);
-    textTransform = CGAffineTransformScale (textTransform, 1.0, -1.0);
-    textTransform = CGAffineTransformConcat (cairoTextTransform, textTransform);
-
-    ctm = CGAffineTransformMake (scaled_font->ctm.xx,
-				 -scaled_font->ctm.yx,
-				 -scaled_font->ctm.xy,
-				 scaled_font->ctm.yy,
-				 0., 0.);
-    textTransform = CGAffineTransformConcat (ctm, textTransform);
-
-    CGContextSetTextMatrix (surface->cgContext, textTransform);
     CGContextSetFontSize (surface->cgContext, 1.0);
 
     if (num_glyphs > STATIC_BUF_SIZE) {
@@ -1559,12 +1536,27 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 	}
     }
 
+    textTransform = CGAffineTransformMake (scaled_font->font_matrix.xx,
+					   scaled_font->font_matrix.yx,
+					   scaled_font->font_matrix.xy,
+					   scaled_font->font_matrix.yy,
+					   0., 0.);
+    textTransform = CGAffineTransformScale (textTransform, 1.0, -1.0);
+    textTransform = CGAffineTransformConcat (CGAffineTransformMake(scaled_font->ctm.xx,
+								   -scaled_font->ctm.yx,
+								   -scaled_font->ctm.xy,
+								   scaled_font->ctm.yy,
+								   0., 0.),
+					     textTransform);
+
+    CGContextSetTextMatrix (surface->cgContext, textTransform);
+
+    /* Convert our glyph positions to glyph advances.  We need n-1 advances,
+     * since the advance at index 0 is applied after glyph 0. */
     xprev = glyphs[0].x;
     yprev = glyphs[0].y;
 
     cg_glyphs[0] = glyphs[0].index;
-    cg_advances[0].width = 0;
-    cg_advances[0].height = 0;
 
     for (i = 1; i < num_glyphs; i++) {
 	float xf = glyphs[i].x;
@@ -1576,16 +1568,30 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 	yprev = yf;
     }
 
+    if (isClipping) {
+	/* If we're clipping, we get multiplied by the inverse of our text matrix; no,
+	 * I don't understand why this is any different.  So pre-apply our textTransform.
+	 * Note that the new CGContextShowGlyphsAtPositions has a similar problem. */
+	for (i = 0; i < num_glyphs - 1; i++)
+	    cg_advances[i] = CGSizeApplyAffineTransform(cg_advances[i], textTransform);
+    }
+
 #if 0
     for (i = 0; i < num_glyphs; i++) {
 	ND((stderr, "[%d: %d %f,%f]\n", i, cg_glyphs[i], cg_advances[i].width, cg_advances[i].height));
     }
 #endif
 
+    /* Translate to the first glyph's position before drawing */
+    ctm = CGContextGetCTM (surface->cgContext);
+    CGContextTranslateCTM (surface->cgContext, glyphs[0].x, glyphs[0].y);
+
     CGContextShowGlyphsWithAdvances (surface->cgContext,
 				     cg_glyphs,
 				     cg_advances,
 				     num_glyphs);
+
+    CGContextSetCTM (surface->cgContext, ctm);
 
     if (action == DO_IMAGE || action == DO_TILED_IMAGE) {
 	CGContextConcatCTM (surface->cgContext, surface->sourceImageTransform);
@@ -2123,6 +2129,7 @@ void ExportCGImageToPNGFile(CGImageRef inImageRef, char* dest)
 	DisposeHandle(dataRef);
     }
 }
+
 #endif
 
 void
