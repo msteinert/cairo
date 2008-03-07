@@ -114,8 +114,10 @@ static cairo_bool_t _cairo_quartz_symbol_lookup_done = FALSE;
  * Utility functions
  */
 
+#ifdef QUARTZ_DEBUG
 static void quartz_surface_to_png (cairo_quartz_surface_t *nq, char *dest);
 static void quartz_image_to_png (CGImageRef, char *dest);
+#endif
 
 static cairo_quartz_surface_t *
 _cairo_quartz_surface_create_internal (CGContextRef cgContext,
@@ -2130,12 +2132,9 @@ void ExportCGImageToPNGFile(CGImageRef inImageRef, char* dest)
     }
 }
 
-#endif
-
 void
 quartz_image_to_png (CGImageRef imgref, char *dest)
 {
-#if 0
     static int sctr = 0;
     char sptr[] = "/Users/vladimir/Desktop/barXXXXX.png";
 
@@ -2147,13 +2146,11 @@ quartz_image_to_png (CGImageRef imgref, char *dest)
     }
 
     ExportCGImageToPNGFile(imgref, dest);
-#endif
 }
 
 void
 quartz_surface_to_png (cairo_quartz_surface_t *nq, char *dest)
 {
-#if 0
     static int sctr = 0;
     char sptr[] = "/Users/vladimir/Desktop/fooXXXXX.png";
 
@@ -2178,5 +2175,6 @@ quartz_surface_to_png (cairo_quartz_surface_t *nq, char *dest)
     ExportCGImageToPNGFile(imgref, dest);
 
     CGImageRelease(imgref);
-#endif
 }
+
+#endif /* QUARTZ_DEBUG */

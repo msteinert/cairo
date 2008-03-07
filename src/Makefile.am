@@ -186,6 +186,11 @@ cairo_sources += $(quartz_sources)
 backend_pkgconfigs += cairo-quartz.pc
 endif
 
+if CAIRO_HAS_QUARTZ_IMAGE_SURFACE
+cairo_headers += cairo-quartz-image.h
+backend_pkgconfigs += cairo-quartz-image.pc
+endif
+
 os_win32_sources = cairo-win32.c
 cairo_all_sources += $(os_win32_sources)
 if OS_WIN32

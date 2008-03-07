@@ -342,6 +342,16 @@ CAIRO_BACKEND_ENABLE(quartz, Quartz, quartz, QUARTZ_SURFACE, no, [
   quartz_LIBS="-Xlinker -framework -Xlinker Carbon"
 ])
 
+CAIRO_BACKEND_ENABLE(quartz_image, Quartz Image, quartz-image, QUARTZ_IMAGE_SURFACE, no, [
+  dnl There is no pkgconfig for quartz; lets do a header check
+  if test "x$use_quartz" != "xyes"; then
+    use_quartz_image="no (requires --enable-quartz)"
+  else
+    dnl we already have the header check and libs required from the quartz surface
+    use_quartz_image="yes"
+  fi
+])
+
 dnl ===========================================================================
 
 AC_MSG_CHECKING([for native Win32])
@@ -1060,6 +1070,7 @@ echo "  image:         yes (always builtin)"
 echo "  Xlib:          $use_xlib"
 echo "  Xlib Xrender:  $use_xlib_xrender"
 echo "  Quartz:        $use_quartz"
+echo "  Quartz-image:  $use_quartz_image"
 echo "  XCB:           $use_xcb"
 echo "  Win32:         $use_win32"
 echo "  OS2:           $use_os2"
@@ -1119,6 +1130,10 @@ fi
 
 if test x"$use_quartz" = "xyes" ; then
    echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/Quartz/'
+fi
+
+if test x"$use_quartz_image" = "xyes" ; then
+   echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/Quartz Image/'
 fi
 
 if test x"$use_atsui" = "xyes" ; then
