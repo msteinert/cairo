@@ -361,6 +361,7 @@ REFERENCE_IMAGES = \
 	font-matrix-translation-ps-rgb24-ref.png	\
 	font-matrix-translation-ref.png	\
 	font-matrix-translation-svg-ref.png	\
+	font-matrix-translation-quartz-ref.png \
 	ft-text-antialias-none-ps-argb32-ref.png	\
 	ft-text-antialias-none-ref.png	\
 	ft-text-vertical-layout-type1-ps-ref.png	\
@@ -373,6 +374,7 @@ REFERENCE_IMAGES = \
 	glitz-surface-source-ref.png \
 	glyph-cache-pressure-ref.png	\
 	glyph-cache-pressure-ps-ref.png	\
+	glyph-cache-pressure-quartz-ref.png	\
 	gradient-alpha-pdf-argb32-ref.png	\
 	gradient-alpha-pdf-rgb24-ref.png	\
 	gradient-alpha-ps-argb32-ref.png	\
@@ -396,6 +398,7 @@ REFERENCE_IMAGES = \
 	linear-gradient-reflect-ps-ref.png	\
 	linear-gradient-pdf-ref.png	\
 	linear-gradient-ps-ref.png	\
+	linear-gradient-quartz-ref.png	\
 	linear-gradient-ref.png	\
 	linear-gradient-svg-ref.png	\
 	line-width-ref.png	\
@@ -404,6 +407,7 @@ REFERENCE_IMAGES = \
 	line-width-scale-ref.png	\
 	long-dashed-lines-ref.png	\
 	long-dashed-lines-ps-ref.png	\
+	long-dashed-lines-quartz-ref.png	\
 	long-lines-ref.png	\
 	mask-alpha-ref.png	\
 	mask-alpha-svg-argb32-ref.png	\
@@ -493,9 +497,11 @@ REFERENCE_IMAGES = \
 	push-group-svg-argb32-ref.png	\
 	radial-gradient-ref.png	\
 	radial-gradient-pdf-ref.png \
+	radial-gradient-quartz-ref.png \
 	radial-gradient-svg-ref.png	\
 	random-intersections-ref.png	\
 	random-intersections-ps-ref.png \
+	random-intersections-quartz-ref.png \
 	rgb24-ignore-alpha-ref.png \
 	rectangle-rounding-error-ref.png	\
 	rectilinear-miter-limit-ref.png		\
@@ -503,6 +509,7 @@ REFERENCE_IMAGES = \
 	rectilinear-stroke-ref.png	\
 	reflected-stroke-ref.png	\
 	reflected-stroke-ps-ref.png	\
+	reflected-stroke-quartz-ref.png	\
 	rel-path-quartz-ref.png	\
 	rel-path-quartz-rgb24-ref.png	\
 	rel-path-ps-rgb24-ref.png	\
@@ -523,6 +530,7 @@ REFERENCE_IMAGES = \
 	scale-source-surface-paint-pdf-rgb24-ref.png \
 	select-font-face-ref.png	\
 	select-font-face-ps-ref.png \
+	select-font-face-quartz-ref.png \
 	self-copy-ref.png	\
 	self-copy-ps-ref.png	\
 	self-intersecting-ref.png	\
@@ -533,6 +541,7 @@ REFERENCE_IMAGES = \
 	show-glyphs-many-ref.png	\
 	show-text-current-point-ref.png	\
 	show-text-current-point-ps-ref.png \
+	show-text-current-point-quartz-ref.png \
 	skew-extreme-ref.png \
 	skew-extreme-ps-ref.png \
 	source-clip-ref.png	\
@@ -557,6 +566,7 @@ REFERENCE_IMAGES = \
 	surface-pattern-svg-ref.png	\
 	svg-surface-source-ref.png \
 	text-antialias-gray-ref.png	\
+	text-antialias-gray-quartz-ref.png	\
 	text-antialias-none-ref.png	\
 	text-antialias-subpixel-ref.png	\
 	text-glyph-range-ref.png	\
@@ -569,9 +579,12 @@ REFERENCE_IMAGES = \
 	text-pattern-svg-rgb24-ref.png	\
 	text-pattern-pdf-argb32-ref.png \
 	text-pattern-pdf-rgb24-ref.png \
+	text-pattern-quartz-argb32-ref.png \
+	text-pattern-quartz-rgb24-ref.png \
 	text-rotate-ref.png	\
 	text-rotate-ps-ref.png	\
 	text-rotate-svg-ref.png	\
+	text-rotate-quartz-ref.png \
 	transforms-ref.png	\
 	transforms-ps-ref.png	\
 	translate-show-surface-ref.png	\
@@ -584,6 +597,7 @@ REFERENCE_IMAGES = \
 	trap-clip-pdf-argb32-ref.png \
 	trap-clip-pdf-rgb24-ref.png \
 	unantialiased-shapes-ref.png	\
+	unantialiased-shapes-quartz-ref.png \
 	unbounded-operator-ref.png	\
 	unbounded-operator-rgb24-ref.png	\
 	xlib-surface-source-ref.png \
