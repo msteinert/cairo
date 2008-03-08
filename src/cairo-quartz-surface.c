@@ -643,7 +643,6 @@ _cairo_quartz_setup_linear_source (cairo_quartz_surface_t *surface,
 {
     cairo_pattern_t *abspat = (cairo_pattern_t *) lpat;
     cairo_matrix_t mat;
-    double x0, y0;
     CGPoint start, end;
     CGFunctionRef gradFunc;
     CGColorSpaceRef rgb;
@@ -656,31 +655,22 @@ _cairo_quartz_setup_linear_source (cairo_quartz_surface_t *surface,
 	abspat->extend == CAIRO_EXTEND_REPEAT)
 	return DO_UNSUPPORTED;
 
-    /* We can only do this if we have an identity pattern matrix;
-     * otherwise fall back through to the generic pattern case.
-     * XXXperf we could optimize this by creating a pattern with the shading;
-     * but we'd need to know the extents to do that.
-     * ... but we don't care; we can use the surface extents for it
-     * XXXtodo - implement gradients with non-identity pattern matrices
-     */
-    cairo_pattern_get_matrix (abspat, &mat);
-    if (mat.xx != 1.0 || mat.yy != 1.0 || mat.xy != 0.0 || mat.yx != 0.0)
-	return DO_UNSUPPORTED;
-
-    if (!lpat->base.n_stops) {
+    if (lpat->base.n_stops == 0) {
 	CGContextSetRGBStrokeColor (surface->cgContext, 0., 0., 0., 0.);
 	CGContextSetRGBFillColor (surface->cgContext, 0., 0., 0., 0.);
 	return DO_SOLID;
     }
 
-    x0 = mat.x0;
-    y0 = mat.y0;
+    cairo_pattern_get_matrix (abspat, &mat);
+    cairo_matrix_invert (&mat);
+    _cairo_quartz_cairo_matrix_to_quartz (&mat, &surface->sourceTransform);
+
     rgb = CGColorSpaceCreateDeviceRGB();
 
-    start = CGPointMake (_cairo_fixed_to_double (lpat->p1.x) - x0,
-			 _cairo_fixed_to_double (lpat->p1.y) - y0);
-    end = CGPointMake (_cairo_fixed_to_double (lpat->p2.x) - x0,
-		       _cairo_fixed_to_double (lpat->p2.y) - y0);
+    start = CGPointMake (_cairo_fixed_to_double (lpat->p1.x),
+			 _cairo_fixed_to_double (lpat->p1.y));
+    end = CGPointMake (_cairo_fixed_to_double (lpat->p2.x),
+		       _cairo_fixed_to_double (lpat->p2.y));
 
     cairo_pattern_reference (abspat);
     gradFunc = CreateGradientFunction ((cairo_gradient_pattern_t*) lpat);
@@ -700,7 +690,7 @@ _cairo_quartz_setup_radial_source (cairo_quartz_surface_t *surface,
 {
     cairo_pattern_t *abspat = (cairo_pattern_t *)rpat;
     cairo_matrix_t mat;
-    double x0, y0;
+    CGAffineTransform cgmat;
     CGPoint start, end;
     CGFunctionRef gradFunc;
     CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
@@ -713,26 +703,22 @@ _cairo_quartz_setup_radial_source (cairo_quartz_surface_t *surface,
 	abspat->extend == CAIRO_EXTEND_REPEAT)
 	return DO_UNSUPPORTED;
 
-    /* XXXtodo - implement gradients with non-identity pattern matrices
-     */
-    cairo_pattern_get_matrix (abspat, &mat);
-    if (mat.xx != 1.0 || mat.yy != 1.0 || mat.xy != 0.0 || mat.yx != 0.0)
-	return DO_UNSUPPORTED;
-
-    if (!rpat->base.n_stops) {
+    if (rpat->base.n_stops == 0) {
 	CGContextSetRGBStrokeColor (surface->cgContext, 0., 0., 0., 0.);
 	CGContextSetRGBFillColor (surface->cgContext, 0., 0., 0., 0.);
 	return DO_SOLID;
     }
 
-    x0 = mat.x0;
-    y0 = mat.y0;
+    cairo_pattern_get_matrix (abspat, &mat);
+    cairo_matrix_invert (&mat);
+    _cairo_quartz_cairo_matrix_to_quartz (&mat, &surface->sourceTransform);
+
     rgb = CGColorSpaceCreateDeviceRGB();
 
-    start = CGPointMake (_cairo_fixed_to_double (rpat->c1.x) - x0,
-			 _cairo_fixed_to_double (rpat->c1.y) - y0);
-    end = CGPointMake (_cairo_fixed_to_double (rpat->c2.x) - x0,
-		       _cairo_fixed_to_double (rpat->c2.y) - y0);
+    start = CGPointMake (_cairo_fixed_to_double (rpat->c1.x),
+			 _cairo_fixed_to_double (rpat->c1.y));
+    end = CGPointMake (_cairo_fixed_to_double (rpat->c2.x),
+		       _cairo_fixed_to_double (rpat->c2.y));
 
     cairo_pattern_reference (abspat);
     gradFunc = CreateGradientFunction ((cairo_gradient_pattern_t*) rpat);
@@ -807,7 +793,7 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
 	surface->sourceImage = img;
 
 	cairo_matrix_invert(&m);
-	_cairo_quartz_cairo_matrix_to_quartz (&m, &surface->sourceImageTransform);
+	_cairo_quartz_cairo_matrix_to_quartz (&m, &surface->sourceTransform);
 
 	status = _cairo_surface_get_extents (pat_surf, &extents);
 	if (status)
@@ -826,7 +812,7 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
 	 */
 
 	xform = CGAffineTransformConcat (CGContextGetCTM (surface->cgContext),
-					 surface->sourceImageTransform);
+					 surface->sourceTransform);
 
 	srcRect = CGRectMake (0, 0, extents.width, extents.height);
 	srcRect = CGRectApplyAffineTransform (srcRect, xform);
@@ -1250,11 +1236,12 @@ _cairo_quartz_surface_paint (void *abstract_surface,
 							  surface->extents.width,
 							  surface->extents.height));
     } else if (action == DO_SHADING) {
+	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
 	CGContextDrawShading (surface->cgContext, surface->sourceShading);
     } else if (action == DO_IMAGE || action == DO_TILED_IMAGE) {
 	CGContextSaveGState (surface->cgContext);
 
-	CGContextConcatCTM (surface->cgContext, surface->sourceImageTransform);
+	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
 	CGContextTranslateCTM (surface->cgContext, 0, surface->sourceImageRect.size.height);
 	CGContextScaleCTM (surface->cgContext, 1, -1);
 
@@ -1335,6 +1322,7 @@ _cairo_quartz_surface_fill (void *abstract_surface,
 	else
 	    CGContextEOClip (surface->cgContext);
 
+	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
 	CGContextDrawShading (surface->cgContext, surface->sourceShading);
     } else if (action == DO_IMAGE || action == DO_TILED_IMAGE) {
 	if (fill_rule == CAIRO_FILL_RULE_WINDING)
@@ -1342,7 +1330,7 @@ _cairo_quartz_surface_fill (void *abstract_surface,
 	else
 	    CGContextEOClip (surface->cgContext);
 
-	CGContextConcatCTM (surface->cgContext, surface->sourceImageTransform);
+	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
 	CGContextTranslateCTM (surface->cgContext, 0, surface->sourceImageRect.size.height);
 	CGContextScaleCTM (surface->cgContext, 1, -1);
 
@@ -1441,7 +1429,7 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
 	CGContextReplacePathWithStrokedPath (surface->cgContext);
 	CGContextClip (surface->cgContext);
 
-	CGContextConcatCTM (surface->cgContext, surface->sourceImageTransform);
+	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
 	CGContextTranslateCTM (surface->cgContext, 0, surface->sourceImageRect.size.height);
 	CGContextScaleCTM (surface->cgContext, 1, -1);
 
@@ -1453,6 +1441,7 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
 	CGContextReplacePathWithStrokedPath (surface->cgContext);
 	CGContextClip (surface->cgContext);
 
+	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
 	CGContextDrawShading (surface->cgContext, surface->sourceShading);
     } else if (action != DO_NOTHING) {
 	rv = CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1597,7 +1586,7 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
     CGContextSetCTM (surface->cgContext, ctm);
 
     if (action == DO_IMAGE || action == DO_TILED_IMAGE) {
-	CGContextConcatCTM (surface->cgContext, surface->sourceImageTransform);
+	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
 	CGContextTranslateCTM (surface->cgContext, 0, surface->sourceImageRect.size.height);
 	CGContextScaleCTM (surface->cgContext, 1, -1);
 
@@ -1606,6 +1595,7 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 	else
 	    CGContextDrawTiledImagePtr (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
     } else if (action == DO_SHADING) {
+	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
 	CGContextDrawShading (surface->cgContext, surface->sourceShading);
     }
 
