@@ -549,9 +549,11 @@ _cairo_surface_to_cgimage (cairo_surface_t *target,
 
     if (stype == CAIRO_SURFACE_TYPE_QUARTZ) {
 	cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) source;
-	image = CGBitmapContextCreateImage (surface->cgContext);
-	if (image)
-	    return image;
+	if (_cairo_quartz_is_cgcontext_bitmap_context (surface->cgContext)) {
+	    image = CGBitmapContextCreateImage (surface->cgContext);
+	    if (image)
+		return image;
+	}
     }
 
     if (stype != CAIRO_SURFACE_TYPE_IMAGE) {
