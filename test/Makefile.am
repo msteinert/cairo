@@ -250,6 +250,8 @@ REFERENCE_IMAGES = \
 	big-line-rgb24-ref.png		\
 	big-line-ps-ref.png		\
 	big-line-ps-rgb24-ref.png	\
+	big-line-quartz-ref.png		\
+	big-line-quartz-rgb24-ref.png	\
 	bitmap-font-pdf-argb32-ref.png	\
 	bitmap-font-ref.png	\
 	bitmap-font-rgb24-ref.png	\
