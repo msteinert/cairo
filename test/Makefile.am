@@ -570,7 +570,9 @@ REFERENCE_IMAGES = \
 	text-antialias-gray-ref.png	\
 	text-antialias-gray-quartz-ref.png	\
 	text-antialias-none-ref.png	\
+	text-antialias-none-quartz-ref.png	\
 	text-antialias-subpixel-ref.png	\
+	text-antialias-subpixel-quartz-ref.png	\
 	text-glyph-range-ref.png	\
 	text-glyph-range-rgb24-ref.png	\
 	text-pattern-ps-argb32-ref.png	\

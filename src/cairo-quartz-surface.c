@@ -107,6 +107,10 @@ static void (*CGContextClipToMaskPtr) (CGContextRef, CGRect, CGImageRef) = NULL;
 /* Only present in 10.5+ */
 static void (*CGContextDrawTiledImagePtr) (CGContextRef, CGRect, CGImageRef) = NULL;
 static unsigned int (*CGContextGetTypePtr) (CGContextRef) = NULL;
+static void (*CGContextSetShouldAntialiasFontsPtr) (CGContextRef, bool) = NULL;
+static void (*CGContextSetShouldSmoothFontsPtr) (CGContextRef, bool) = NULL;
+static void (*CGContextGetShouldAntialiasFontsPtr) (CGContextRef, bool) = NULL;
+static void (*CGContextGetShouldSmoothFontsPtr) (CGContextRef, bool) = NULL;
 
 static cairo_bool_t _cairo_quartz_symbol_lookup_done = FALSE;
 
@@ -134,6 +138,10 @@ static void quartz_ensure_symbols(void)
     CGContextClipToMaskPtr = dlsym(RTLD_DEFAULT, "CGContextClipToMask");
     CGContextDrawTiledImagePtr = dlsym(RTLD_DEFAULT, "CGContextDrawTiledImage");
     CGContextGetTypePtr = dlsym(RTLD_DEFAULT, "CGContextGetType");
+    CGContextSetShouldAntialiasFontsPtr = dlsym(RTLD_DEFAULT, "CGContextSetShouldAntialiasFonts");
+    CGContextSetShouldSmoothFontsPtr = dlsym(RTLD_DEFAULT, "CGContextSetShouldSmoothFonts");
+    CGContextGetShouldAntialiasFontsPtr = dlsym(RTLD_DEFAULT, "CGContextGetShouldAntialiasFonts");
+    CGContextGetShouldSmoothFontsPtr = dlsym(RTLD_DEFAULT, "CGContextGetShouldSmoothFonts");
 
     _cairo_quartz_symbol_lookup_done = TRUE;
 }
@@ -1614,11 +1622,11 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
 #if CAIRO_HAS_ATSUI_FONT
 static cairo_int_status_t
 _cairo_quartz_surface_show_glyphs (void *abstract_surface,
-				    cairo_operator_t op,
-				    cairo_pattern_t *source,
-				    cairo_glyph_t *glyphs,
-				    int num_glyphs,
-				    cairo_scaled_font_t *scaled_font)
+				   cairo_operator_t op,
+				   cairo_pattern_t *source,
+				   cairo_glyph_t *glyphs,
+				   int num_glyphs,
+				   cairo_scaled_font_t *scaled_font)
 {
     CGAffineTransform textTransform, ctm;
 #define STATIC_BUF_SIZE 64
@@ -1668,6 +1676,23 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
     cgfref = _cairo_atsui_scaled_font_get_cg_font_ref (scaled_font);
     CGContextSetFont (surface->cgContext, cgfref);
     CGContextSetFontSize (surface->cgContext, 1.0);
+
+    if (CGContextSetShouldAntialiasFontsPtr) {
+	switch (scaled_font->options.antialias) {
+	    case CAIRO_ANTIALIAS_SUBPIXEL:
+		CGContextSetShouldAntialiasFontsPtr (surface->cgContext, TRUE);
+		CGContextSetShouldSmoothFontsPtr (surface->cgContext, TRUE);
+		break;
+	    case CAIRO_ANTIALIAS_NONE:
+		CGContextSetShouldAntialiasFontsPtr (surface->cgContext, FALSE);
+		break;
+	    case CAIRO_ANTIALIAS_GRAY:
+	    case CAIRO_ANTIALIAS_DEFAULT:
+		CGContextSetShouldAntialiasFontsPtr (surface->cgContext, TRUE);
+		CGContextSetShouldSmoothFontsPtr (surface->cgContext, FALSE);
+		break;
+	}
+    }
 
     if (num_glyphs > STATIC_BUF_SIZE) {
 	cg_glyphs = (CGGlyph*) _cairo_malloc_ab (num_glyphs, sizeof(CGGlyph));
