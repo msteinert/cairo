@@ -2230,6 +2230,20 @@ _cairo_ps_surface_paint_surface (cairo_ps_surface_t      *surface,
 	return status;
 
     cairo_p2d = pattern->base.matrix;
+
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_FALLBACK) {
+	double scale = cairo_p2d.xx;
+
+	_cairo_output_stream_printf (surface->stream,
+				     "%% Fallback Image: x=%f, y=%f, w=%d, h=%d res=%fdpi size=%ld\n",
+				     -cairo_p2d.x0/scale,
+				     -cairo_p2d.y0/scale,
+				     (int)(width/scale),
+				     (int)(height/scale),
+				     scale*72,
+				     (long)width*height*3);
+    }
+
     status = cairo_matrix_invert (&cairo_p2d);
     /* cairo_pattern_set_matrix ensures the matrix is invertible */
     assert (status == CAIRO_STATUS_SUCCESS);
