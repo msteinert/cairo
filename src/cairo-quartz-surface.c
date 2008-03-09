@@ -2164,16 +2164,23 @@ cairo_quartz_surface_create (cairo_format_t format,
 									 width, height);
     }
 
-    if (format == CAIRO_FORMAT_ARGB32) {
+    if (format == CAIRO_FORMAT_ARGB32 ||
+	format == CAIRO_FORMAT_RGB24)
+    {
 	cgColorspace = CGColorSpaceCreateDeviceRGB();
-	stride = width * 4;
-	bitinfo = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host;
+	bitinfo = kCGBitmapByteOrder32Host;
+	if (format == CAIRO_FORMAT_ARGB32)
+	    bitinfo |= kCGImageAlphaPremultipliedFirst;
+	else
+	    bitinfo |= kCGImageAlphaNoneSkipFirst;
 	bitsPerComponent = 8;
-    } else if (format == CAIRO_FORMAT_RGB24) {
-	cgColorspace = CGColorSpaceCreateDeviceRGB();
+
+	/* The Apple docs say that for best performance, the stride and the data
+	 * pointer should be 16-byte aligned.  malloc already aligns to 16-bytes,
+	 * so we don't have to anything special on allocation.
+	 */
 	stride = width * 4;
-	bitinfo = kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Host;
-	bitsPerComponent = 8;
+	stride += (16 - (stride & 15)) & 15;
     } else if (format == CAIRO_FORMAT_A8) {
 	cgColorspace = CGColorSpaceCreateDeviceGray();
 	if (width % 4 == 0)
