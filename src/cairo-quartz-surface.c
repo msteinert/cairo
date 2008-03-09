@@ -570,7 +570,7 @@ _cairo_surface_to_cgimage (cairo_surface_t *target,
 					   isurf->height,
 					   isurf->stride,
 					   isurf->data,
-					   FALSE,
+					   TRUE,
 					   NULL, NULL, NULL);
 
     image = CGImageCreateCopy (image2);

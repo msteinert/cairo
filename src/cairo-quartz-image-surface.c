@@ -225,7 +225,7 @@ _cairo_quartz_image_surface_flush (void *asurface)
 					     surface->imageSurface->height,
 					     surface->imageSurface->stride,
 					     surface->imageSurface->data,
-					     FALSE,
+					     TRUE,
 					     NULL,
 					     DataProviderReleaseCallback,
 					     surface->imageSurface);
@@ -338,7 +338,7 @@ cairo_quartz_image_surface_create (cairo_surface_t *surface)
 					  width, height,
 					  stride,
 					  data,
-					  FALSE,
+					  TRUE,
 					  NULL,
 					  DataProviderReleaseCallback,
 					  surface);
