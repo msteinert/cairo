@@ -376,10 +376,24 @@ _cairo_quartz_cairo_matrix_to_quartz (const cairo_matrix_t *src,
 static void
 ComputeGradientValue (void *info, const float *in, float *out)
 {
-    float fdist = *in; /* 0.0 .. 1.0 */
-    cairo_fixed_t fdist_fix = _cairo_fixed_from_double(*in);
+    double fdist = *in;
+    cairo_fixed_t fdist_fix;
     cairo_gradient_pattern_t *grad = (cairo_gradient_pattern_t*) info;
     unsigned int i;
+
+    /* Put fdist back in the 0.0..1.0 range if we're doing
+     * REPEAT/REFLECT
+     */
+    if (grad->base.extend == CAIRO_EXTEND_REPEAT) {
+	fdist = fdist - floor(fdist);
+    } else if (grad->base.extend == CAIRO_EXTEND_REFLECT) {
+	fdist = fmod(fabs(fdist), 2.0);
+	if (fdist > 1.0) {
+	    fdist = 2.0 - fdist;
+	}
+    }
+
+    fdist_fix = _cairo_fixed_from_double(fdist);
 
     for (i = 0; i < grad->n_stops; i++) {
 	if (grad->stops[i].x > fdist_fix)
@@ -417,11 +431,89 @@ ComputeGradientValue (void *info, const float *in, float *out)
 static CGFunctionRef
 CreateGradientFunction (cairo_gradient_pattern_t *gpat)
 {
-    static const float input_value_range[2] = { 0.f, 1.f };
-    static const float output_value_ranges[8] = { 0.f, 1.f, 0.f, 1.f, 0.f, 1.f, 0.f, 1.f };
-    static const CGFunctionCallbacks callbacks = {
+    float input_value_range[2] = { 0.f, 1.f };
+    float output_value_ranges[8] = { 0.f, 1.f, 0.f, 1.f, 0.f, 1.f, 0.f, 1.f };
+    CGFunctionCallbacks callbacks = {
 	0, ComputeGradientValue, (CGFunctionReleaseInfoCallback) cairo_pattern_destroy
     };
+
+    return CGFunctionCreate (gpat,
+			     1,
+			     input_value_range,
+			     4,
+			     output_value_ranges,
+			     &callbacks);
+}
+
+static CGFunctionRef
+CreateRepeatingGradientFunction (cairo_quartz_surface_t *surface,
+				 cairo_gradient_pattern_t *gpat,
+				 CGPoint *start, CGPoint *end,
+				 CGAffineTransform matrix)
+{
+    float input_value_range[2];
+    float output_value_ranges[8] = { 0.f, 1.f, 0.f, 1.f, 0.f, 1.f, 0.f, 1.f };
+    CGFunctionCallbacks callbacks = {
+	0, ComputeGradientValue, (CGFunctionReleaseInfoCallback) cairo_pattern_destroy
+    };
+
+    CGPoint mstart, mend;
+
+    double dx, dy;
+    int x_rep_start = 0, x_rep_end = 0;
+    int y_rep_start = 0, y_rep_end = 0;
+
+    int rep_start, rep_end;
+
+    // figure out how many times we'd need to repeat the gradient pattern
+    // to cover the whole (transformed) surface area
+    mstart = CGPointApplyAffineTransform (*start, matrix);
+    mend = CGPointApplyAffineTransform (*end, matrix);
+
+    dx = fabs (mend.x - mstart.x);
+    dy = fabs (mend.y - mstart.y);
+
+    if (dx > 1e-6) {
+	x_rep_start = (int) ceil(MIN(mstart.x, mend.x) / dx);
+	x_rep_end = (int) ceil((surface->extents.width - MAX(mstart.x, mend.x)) / dx);
+
+	if (mend.x < mstart.x) {
+	    int swap = x_rep_end;
+	    x_rep_end = x_rep_start;
+	    x_rep_start = swap;
+	}
+    }
+
+    if (dy > 1e-6) {
+	y_rep_start = (int) ceil(MIN(mstart.y, mend.y) / dy);
+	y_rep_end = (int) ceil((surface->extents.width - MAX(mstart.y, mend.y)) / dy);
+
+	if (mend.y < mstart.y) {
+	    int swap = y_rep_end;
+	    y_rep_end = y_rep_start;
+	    y_rep_start = swap;
+	}
+    }
+
+    rep_start = MAX(x_rep_start, y_rep_start);
+    rep_end = MAX(x_rep_end, y_rep_end);
+
+    // extend the line between start and end by rep_start times from the start
+    // and rep_end times from the end
+
+    dx = end->x - start->x;
+    dy = end->y - start->y;
+
+    start->x = start->x - dx * rep_start;
+    start->y = start->y - dy * rep_start;
+
+    end->x = end->x + dx * rep_end;
+    end->y = end->y + dy * rep_end;
+
+    // set the input range for the function -- the function knows how to
+    // map values outside of 0.0 .. 1.0 to that range for REPEAT/REFLECT.
+    input_value_range[0] = 0.0 - 1.0 * rep_start;
+    input_value_range[1] = 1.0 + 1.0 * rep_end;
 
     return CGFunctionCreate (gpat,
 			     1,
@@ -638,6 +730,57 @@ typedef enum {
 } cairo_quartz_action_t;
 
 static cairo_quartz_action_t
+_cairo_quartz_setup_fallback_source (cairo_quartz_surface_t *surface,
+				     cairo_pattern_t *source)
+{
+    CGRect clipBox = CGContextGetClipBoundingBox (surface->cgContext);
+    CGAffineTransform ctm;
+    double x0, y0, w, h;
+
+    cairo_surface_t *fallback;
+    cairo_t *fallback_cr;
+    CGImageRef img;
+
+    if (clipBox.size.width == 0.0f ||
+	clipBox.size.height == 0.0f)
+	return DO_NOTHING;
+
+    // the clipBox is in userspace, so:
+    ctm = CGContextGetCTM (surface->cgContext);
+    ctm = CGAffineTransformInvert (ctm);
+    clipBox = CGRectApplyAffineTransform (clipBox, ctm);
+
+    // get the Y flip right -- the CTM will always have a Y flip in place
+    clipBox.origin.y = surface->extents.height - (clipBox.origin.y + clipBox.size.height);
+
+    x0 = floor(clipBox.origin.x);
+    y0 = floor(clipBox.origin.y);
+    w = ceil(clipBox.origin.x + clipBox.size.width) - x0;
+    h = ceil(clipBox.origin.y + clipBox.size.height) - y0;
+
+    /* Create a temporary the size of the clip surface, and position
+     * it so that the device origin coincides with the original surface */
+    fallback = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, (int) w, (int) h);
+    cairo_surface_set_device_offset (fallback, -x0, -y0);
+
+    /* Paint the source onto our temporary */
+    fallback_cr = cairo_create (fallback);
+    cairo_set_operator (fallback_cr, CAIRO_OPERATOR_SOURCE);
+    cairo_set_source (fallback_cr, source);
+    cairo_paint (fallback_cr);
+    cairo_destroy (fallback_cr);
+
+    img = _cairo_surface_to_cgimage ((cairo_surface_t*) surface, fallback);
+
+    surface->sourceImageRect = CGRectMake (0.0, 0.0, w, h);
+    surface->sourceImage = img;
+    surface->sourceImageSurface = fallback;
+    surface->sourceTransform = CGAffineTransformMakeTranslation (x0, y0);
+
+    return DO_IMAGE;
+}
+
+static cairo_quartz_action_t
 _cairo_quartz_setup_linear_source (cairo_quartz_surface_t *surface,
 				   cairo_linear_pattern_t *lpat)
 {
@@ -647,13 +790,6 @@ _cairo_quartz_setup_linear_source (cairo_quartz_surface_t *surface,
     CGFunctionRef gradFunc;
     CGColorSpaceRef rgb;
     bool extend = abspat->extend == CAIRO_EXTEND_PAD;
-
-    /* bandaid for mozilla bug 379321, also visible in the
-     * linear-gradient-reflect test.
-     */
-    if (abspat->extend == CAIRO_EXTEND_REFLECT ||
-	abspat->extend == CAIRO_EXTEND_REPEAT)
-	return DO_UNSUPPORTED;
 
     if (lpat->base.n_stops == 0) {
 	CGContextSetRGBStrokeColor (surface->cgContext, 0., 0., 0., 0.);
@@ -672,12 +808,24 @@ _cairo_quartz_setup_linear_source (cairo_quartz_surface_t *surface,
     end = CGPointMake (_cairo_fixed_to_double (lpat->p2.x),
 		       _cairo_fixed_to_double (lpat->p2.y));
 
-    cairo_pattern_reference (abspat);
-    gradFunc = CreateGradientFunction ((cairo_gradient_pattern_t*) lpat);
+    // ref will be released by the CGShading's destructor
+    cairo_pattern_reference ((cairo_pattern_t*) lpat);
+
+    if (abspat->extend == CAIRO_EXTEND_NONE ||
+	abspat->extend == CAIRO_EXTEND_PAD)
+    {
+	gradFunc = CreateGradientFunction ((cairo_gradient_pattern_t*) lpat);
+    } else {
+	gradFunc = CreateRepeatingGradientFunction (surface,
+						    (cairo_gradient_pattern_t*) lpat,
+						    &start, &end, surface->sourceTransform);
+    }
+
     surface->sourceShading = CGShadingCreateAxial (rgb,
 						   start, end,
 						   gradFunc,
 						   extend, extend);
+
     CGColorSpaceRelease(rgb);
     CGFunctionRelease(gradFunc);
 
@@ -690,23 +838,26 @@ _cairo_quartz_setup_radial_source (cairo_quartz_surface_t *surface,
 {
     cairo_pattern_t *abspat = (cairo_pattern_t *)rpat;
     cairo_matrix_t mat;
-    CGAffineTransform cgmat;
     CGPoint start, end;
     CGFunctionRef gradFunc;
-    CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
+    CGColorSpaceRef rgb;
     bool extend = abspat->extend == CAIRO_EXTEND_PAD;
-
-    /* bandaid for mozilla bug 379321, also visible in the
-     * linear-gradient-reflect test.
-     */
-    if (abspat->extend == CAIRO_EXTEND_REFLECT ||
-	abspat->extend == CAIRO_EXTEND_REPEAT)
-	return DO_UNSUPPORTED;
 
     if (rpat->base.n_stops == 0) {
 	CGContextSetRGBStrokeColor (surface->cgContext, 0., 0., 0., 0.);
 	CGContextSetRGBFillColor (surface->cgContext, 0., 0., 0., 0.);
 	return DO_SOLID;
+    }
+
+    if (abspat->extend == CAIRO_EXTEND_REPEAT ||
+	abspat->extend == CAIRO_EXTEND_REFLECT)
+    {
+	/* I started trying to map these to Quartz, but it's much harder
+	 * then the linear case (I think it would involve doing multiple
+	 * Radial shadings).  So, instead, let's just render an image
+	 * for pixman to draw the shading into, and use that.
+	 */
+	return _cairo_quartz_setup_fallback_source (surface, (cairo_pattern_t*) rpat);
     }
 
     cairo_pattern_get_matrix (abspat, &mat);
@@ -720,8 +871,11 @@ _cairo_quartz_setup_radial_source (cairo_quartz_surface_t *surface,
     end = CGPointMake (_cairo_fixed_to_double (rpat->c2.x),
 		       _cairo_fixed_to_double (rpat->c2.y));
 
-    cairo_pattern_reference (abspat);
+    // ref will be released by the CGShading's destructor
+    cairo_pattern_reference ((cairo_pattern_t*) rpat);
+
     gradFunc = CreateGradientFunction ((cairo_gradient_pattern_t*) rpat);
+
     surface->sourceShading = CGShadingCreateRadial (rgb,
 						    start,
 						    _cairo_fixed_to_double (rpat->r1),
@@ -729,6 +883,7 @@ _cairo_quartz_setup_radial_source (cairo_quartz_surface_t *surface,
 						    _cairo_fixed_to_double (rpat->r2),
 						    gradFunc,
 						    extend, extend);
+
     CGColorSpaceRelease(rgb);
     CGFunctionRelease(gradFunc);
 
