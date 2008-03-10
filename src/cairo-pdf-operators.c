@@ -575,7 +575,18 @@ _cairo_pdf_operators_stroke (cairo_pdf_operators_t	*pdf_operators,
 			     cairo_matrix_t		*ctm_inverse)
 {
     cairo_status_t status;
-    cairo_matrix_t m;
+    cairo_matrix_t m, path_transform;
+    cairo_bool_t has_ctm = TRUE;
+
+    /* Optimize away the stroke ctm when it does not affect the
+     * stroke. There are other ctm cases that could be optimized
+     * however this is the most common.
+     */
+    if (fabs(ctm->xx) == 1.0 && fabs(ctm->yy) == 1.0 &&
+	fabs(ctm->xy) == 0.0 && fabs(ctm->yx) == 0.0)
+    {
+	has_ctm = FALSE;
+    }
 
     status = _cairo_pdf_operators_emit_stroke_style (pdf_operators, style);
     if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
@@ -583,20 +594,29 @@ _cairo_pdf_operators_stroke (cairo_pdf_operators_t	*pdf_operators,
     if (status)
 	return status;
 
-    cairo_matrix_multiply (&m, ctm, &pdf_operators->cairo_to_pdf);
-    _cairo_output_stream_printf (pdf_operators->stream,
-				 "q %f %f %f %f %f %f cm\n",
-				 m.xx, m.yx, m.xy, m.yy,
-				 m.x0, m.y0);
+    if (has_ctm) {
+	cairo_matrix_multiply (&m, ctm, &pdf_operators->cairo_to_pdf);
+	path_transform = *ctm_inverse;
+	_cairo_output_stream_printf (pdf_operators->stream,
+				     "q %f %f %f %f %f %f cm\n",
+				     m.xx, m.yx, m.xy, m.yy,
+				     m.x0, m.y0);
+    } else {
+	path_transform = pdf_operators->cairo_to_pdf;
+    }
 
     status = _cairo_pdf_operators_emit_path (pdf_operators,
 					     path,
-					     ctm_inverse,
+					     &path_transform,
 					     style->line_cap);
     if (status)
 	return status;
 
-    _cairo_output_stream_printf (pdf_operators->stream, "S Q\n");
+    _cairo_output_stream_printf (pdf_operators->stream, "S");
+    if (has_ctm)
+	_cairo_output_stream_printf (pdf_operators->stream, " Q");
+
+    _cairo_output_stream_printf (pdf_operators->stream, "\n");
 
     return _cairo_output_stream_get_status (pdf_operators->stream);
 }
