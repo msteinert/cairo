@@ -33,6 +33,7 @@
  *	Adrian Johnson <ajohnson@redneon.com>
  */
 
+#define _BSD_SOURCE /* for snprintf(), strdup() */
 #include "cairoint.h"
 #include "cairo-type1-private.h"
 #include "cairo-scaled-font-subsets-private.h"

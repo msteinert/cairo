@@ -37,6 +37,7 @@
  *      Carl Worth <cworth@cworth.org>
  */
 
+#define _BSD_SOURCE /* for strdup() */
 #include "cairoint.h"
 
 #include "cairo-ft-private.h"

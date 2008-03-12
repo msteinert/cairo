@@ -34,6 +34,7 @@
  *      Eugeniy Meshcheryakov <eugen@debian.org>
  */
 
+#define _BSD_SOURCE /* for snprintf(), strdup() */
 #include "cairoint.h"
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-truetype-subset-private.h"
