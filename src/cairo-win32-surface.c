@@ -386,9 +386,19 @@ _cairo_win32_surface_create_similar_internal (void	    *abstract_src,
     cairo_format_t format = _cairo_format_from_content (content);
     cairo_win32_surface_t *new_surf;
 
-    /* if the parent is a DIB or if we need alpha, then
-     * we have to create a dib */
-    if (force_dib || src->is_dib || (content & CAIRO_CONTENT_ALPHA)) {
+    /* We force a DIB always if:
+     * - we need alpha; or
+     * - the parent is a DIB; or
+     * - the parent is for printing (because we don't care about the bit depth at that point)
+     */
+    if (src->is_dib ||
+	(content & CAIRO_CONTENT_ALPHA) ||
+	src->base.backend->type == CAIRO_SURFACE_TYPE_WIN32_PRINTING)
+    {
+	force_dib = TRUE;
+    }
+
+    if (force_dib) {
 	new_surf = (cairo_win32_surface_t*)
 	    _cairo_win32_surface_create_for_dc (src->dc, format, width, height);
     } else {
