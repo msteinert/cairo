@@ -109,8 +109,10 @@ static void (*CGContextDrawTiledImagePtr) (CGContextRef, CGRect, CGImageRef) = N
 static unsigned int (*CGContextGetTypePtr) (CGContextRef) = NULL;
 static void (*CGContextSetShouldAntialiasFontsPtr) (CGContextRef, bool) = NULL;
 static void (*CGContextSetShouldSmoothFontsPtr) (CGContextRef, bool) = NULL;
-static void (*CGContextGetShouldAntialiasFontsPtr) (CGContextRef, bool) = NULL;
-static void (*CGContextGetShouldSmoothFontsPtr) (CGContextRef, bool) = NULL;
+static bool (*CGContextGetShouldAntialiasFontsPtr) (CGContextRef) = NULL;
+static bool (*CGContextGetShouldSmoothFontsPtr) (CGContextRef) = NULL;
+static void (*CGContextSetAllowsFontSmoothingPtr) (CGContextRef, bool) = NULL;
+static bool (*CGContextGetAllowsFontSmoothingPtr) (CGContextRef) = NULL;
 static CGPathRef (*CGContextCopyPathPtr) (CGContextRef) = NULL;
 static void (*CGContextReplacePathWithClipPathPtr) (CGContextRef) = NULL;
 
@@ -146,6 +148,8 @@ static void quartz_ensure_symbols(void)
     CGContextGetShouldSmoothFontsPtr = dlsym(RTLD_DEFAULT, "CGContextGetShouldSmoothFonts");
     CGContextCopyPathPtr = dlsym(RTLD_DEFAULT, "CGContextCopyPath");
     CGContextReplacePathWithClipPathPtr = dlsym(RTLD_DEFAULT, "CGContextReplacePathWithClipPath");
+    CGContextGetAllowsFontSmoothingPtr = dlsym(RTLD_DEFAULT, "CGContextGetAllowsFontSmoothing");
+    CGContextSetAllowsFontSmoothingPtr = dlsym(RTLD_DEFAULT, "CGContextSetAllowsFontSmoothing");
 
     _cairo_quartz_symbol_lookup_done = TRUE;
 }
@@ -1840,6 +1844,7 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
     CGFontRef cgfref = NULL;
 
     cairo_bool_t isClipping = FALSE;
+    cairo_bool_t didForceFontSmoothing = TRUE;
 
     if (IS_EMPTY(surface))
 	return CAIRO_STATUS_SUCCESS;
@@ -1879,14 +1884,22 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 	    case CAIRO_ANTIALIAS_SUBPIXEL:
 		CGContextSetShouldAntialiasFontsPtr (surface->cgContext, TRUE);
 		CGContextSetShouldSmoothFontsPtr (surface->cgContext, TRUE);
+		if (CGContextSetAllowsFontSmoothingPtr &&
+		    !CGContextGetAllowsFontSmoothingPtr (surface->cgContext))
+		{
+		    didForceFontSmoothing = TRUE;
+		    CGContextSetAllowsFontSmoothingPtr (surface->cgContext, TRUE);
+		}
 		break;
 	    case CAIRO_ANTIALIAS_NONE:
 		CGContextSetShouldAntialiasFontsPtr (surface->cgContext, FALSE);
 		break;
 	    case CAIRO_ANTIALIAS_GRAY:
-	    case CAIRO_ANTIALIAS_DEFAULT:
 		CGContextSetShouldAntialiasFontsPtr (surface->cgContext, TRUE);
 		CGContextSetShouldSmoothFontsPtr (surface->cgContext, FALSE);
+		break;
+	    case CAIRO_ANTIALIAS_DEFAULT:
+		/* Don't do anything */
 		break;
 	}
     }
@@ -1978,6 +1991,9 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 
 BAIL:
     _cairo_quartz_teardown_source (surface, source);
+
+    if (didForceFontSmoothing)
+	CGContextSetAllowsFontSmoothingPtr (surface->cgContext, FALSE);
 
     CGContextRestoreGState (surface->cgContext);
 
