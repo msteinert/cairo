@@ -294,10 +294,6 @@ cairo_quartz_image_surface_create (cairo_surface_t *surface)
 
     CGImageRef image;
 
-    CGContextRef cgContext;
-    CGColorSpaceRef cgColorspace;
-    CGBitmapInfo bitinfo;
-
     cairo_image_surface_t *image_surface;
     int width, height, stride;
     cairo_format_t format;
