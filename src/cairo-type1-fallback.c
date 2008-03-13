@@ -347,9 +347,9 @@ create_notdef_charstring (cairo_array_t *data, cairo_charstring_type_t type)
         charstring_encode_integer (data, 0, type);
         charstring_encode_integer (data, 0, type);
 
-        /* The width and height is arbitrary. */
+        /* The width is arbitrary. */
         charstring_encode_integer (data, 500, type);
-        charstring_encode_integer (data, 500, type);
+        charstring_encode_integer (data, 0, type);
         charstring_encode_command (data, CHARSTRING_sbw);
     }
 
@@ -404,8 +404,8 @@ cairo_type1_font_create_charstring (cairo_type1_font_t      *font,
     if (type == CAIRO_CHARSTRING_TYPE1) {
         charstring_encode_integer (data, (int) scaled_glyph->metrics.x_bearing, type);
         charstring_encode_integer (data, (int) scaled_glyph->metrics.y_bearing, type);
-        charstring_encode_integer (data, (int) scaled_glyph->metrics.width, type);
-        charstring_encode_integer (data, (int) scaled_glyph->metrics.height, type);
+        charstring_encode_integer (data, (int) scaled_glyph->metrics.x_advance, type);
+        charstring_encode_integer (data, (int) scaled_glyph->metrics.y_advance, type);
         charstring_encode_command (data, CHARSTRING_sbw);
 
         path_info.current_x = (int) scaled_glyph->metrics.x_bearing;
