@@ -403,9 +403,6 @@ _cairo_image_surface_create_with_content (cairo_content_t	content,
 				       width, height);
 }
 
-/* pixman required stride alignment in bytes.  should be power of two. */
-#define STRIDE_ALIGNMENT (sizeof (uint32_t))
-
 /**
  * cairo_format_stride_for_width:
  * @format: A #cairo_format_t value
@@ -447,7 +444,7 @@ cairo_format_stride_for_width (cairo_format_t	format,
     if ((unsigned) (width) >= (INT32_MAX - 7) / (unsigned) (bpp))
 	return -1;
 
-    return ((bpp*width+7)/8 + STRIDE_ALIGNMENT-1) & ~(STRIDE_ALIGNMENT-1);
+    return CAIRO_STRIDE_FOR_WIDTH_BPP (width, bpp);
 }
 slim_hidden_def (cairo_format_stride_for_width);
 
@@ -506,7 +503,7 @@ cairo_image_surface_create_for_data (unsigned char     *data,
     if (! CAIRO_FORMAT_VALID (format))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
 
-    if ((stride & (STRIDE_ALIGNMENT-1)) != 0)
+    if ((stride & (CAIRO_STRIDE_ALIGNMENT-1)) != 0)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_STRIDE));
 
     pixman_format = _cairo_format_to_pixman_format_code (format);
