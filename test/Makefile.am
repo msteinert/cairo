@@ -109,6 +109,7 @@ rgb24-ignore-alpha$(EXEEXT)				\
 rotate-image-surface-paint$(EXEEXT)			\
 scale-down-source-surface-paint$(EXEEXT)		\
 scale-source-surface-paint$(EXEEXT)			\
+stroke-ctm-caps$(EXEEXT)				\
 select-font-face$(EXEEXT)				\
 select-font-no-show-text$(EXEEXT)			\
 self-copy$(EXEEXT)					\
@@ -530,6 +531,8 @@ REFERENCE_IMAGES = \
 	scale-source-surface-paint-svg-argb32-ref.png	\
 	scale-source-surface-paint-svg-rgb24-ref.png	\
 	scale-source-surface-paint-pdf-rgb24-ref.png \
+	stroke-ctm-caps-ref.png \
+	stroke-ctm-caps-quartz-ref.png \
 	select-font-face-ref.png	\
 	select-font-face-ps-ref.png \
 	select-font-face-quartz-ref.png \
