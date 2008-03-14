@@ -65,8 +65,26 @@ AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL dnl required version (1.4) DON'T REMOVE!
 AC_STDC_HEADERS
 AC_C_INLINE
+
+case $host_os in
+	darwin*) XORG="no" ;;
+AH_VERBATIM([X_BYTE_ORDER],[
+/* Deal with multiple architecture compiles on Mac OS X */
+#ifdef __APPLE_CC__
+#ifdef __BIG_ENDIAN__
+#define WORDS_BIGENDIAN 1
+#define FLOAT_WORDS_BIGENDIAN 1
+#else
+#undef WORDS_BIGENDIAN
+#undef FLOAT_WORDS_BIGENDIAN
+#endif
+#endif
+])
+	*) 
 AC_C_BIGENDIAN
 AX_C_FLOAT_WORDS_BIGENDIAN
+	;;
+esac
 
 dnl ===========================================================================
 dnl === Local macros
