@@ -4536,19 +4536,14 @@ _cairo_pdf_surface_fill_stroke (void		     *abstract_surface,
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    /* Fill-stroke with patterns requiring an SMask are not currently
-     * implemented. Non opaque stroke patterns are not supported
-     * because the PDF fill-stroke operator does not blend a
-     * transparent stroke with the fill.
+    /* PDF rendering of fill-stroke is not the same as cairo when
+     * either the fill or stroke is not opaque.
      */
-    if (fill_source->type == CAIRO_PATTERN_TYPE_LINEAR ||
-        fill_source->type == CAIRO_PATTERN_TYPE_RADIAL)
+    if ( !_cairo_pattern_is_opaque (fill_source) ||
+	 !_cairo_pattern_is_opaque (stroke_source))
     {
-        if (!_cairo_pattern_is_opaque (fill_source))
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
-    if (!_cairo_pattern_is_opaque (stroke_source))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     fill_pattern_res.id = 0;
     gstate_res.id = 0;
