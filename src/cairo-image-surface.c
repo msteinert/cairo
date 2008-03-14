@@ -221,58 +221,54 @@ _pixman_format_from_masks (cairo_format_masks_t *masks,
 /* XXX: This function should really live inside pixman. */
 void
 _pixman_format_to_masks (pixman_format_code_t	 pixman_format,
-			 uint32_t		*bpp,
-			 uint32_t		*red,
-			 uint32_t		*green,
-			 uint32_t		*blue)
+			 cairo_format_masks_t	*masks)
 {
-    *red = 0x0;
-    *green = 0x0;
-    *blue = 0x0;
+    masks->red_mask   = 0x0;
+    masks->green_mask = 0x0;
+    masks->blue_mask  = 0x0;
 
     switch (pixman_format)
     {
     case PIXMAN_a8r8g8b8:
     case PIXMAN_x8r8g8b8:
     default:
-	*bpp   = 32;
-	*red   = 0x00ff0000;
-	*green = 0x0000ff00;
-	*blue  = 0x000000ff;
+	masks->bpp        = 32;
+	masks->red_mask   = 0x00ff0000;
+	masks->green_mask = 0x0000ff00;
+	masks->blue_mask  = 0x000000ff;
 	break;
 
     case PIXMAN_a8b8g8r8:
     case PIXMAN_x8b8g8r8:
-	*bpp   = 32;
-	*red   = 0x000000ff;
-	*green = 0x0000ff00;
-	*blue  = 0x00ff0000;
+	masks->bpp        = 32;
+	masks->red_mask   = 0x000000ff;
+	masks->green_mask = 0x0000ff00;
+	masks->blue_mask  = 0x00ff0000;
 	break;
 
     case PIXMAN_r5g6b5:
-	*bpp   = 16;
-	*red   = 0xf800;
-	*green = 0x07e0;
-	*blue  = 0x001f;
+	masks->bpp        = 16;
+	masks->red_mask   = 0xf800;
+	masks->green_mask = 0x07e0;
+	masks->blue_mask  = 0x001f;
 	break;
 
     case PIXMAN_x1r5g5b5:
-	*bpp   = 16;
-	*red   = 0x7c00;
-	*green = 0x03e0;
-	*blue  = 0x001f;
+	masks->bpp        = 16;
+	masks->red_mask   = 0x7c00;
+	masks->green_mask = 0x03e0;
+	masks->blue_mask  = 0x001f;
 	break;
 
     case PIXMAN_a8:
-	*bpp = 8;
+	masks->bpp = 8;
 	break;
 
     case PIXMAN_a1:
-	*bpp = 1;
+	masks->bpp = 1;
 	break;
     }
 }
-
 
 /* XXX: This function really should be eliminated. We don't really
  * want to advertise a cairo image surface that supports any possible

@@ -735,11 +735,11 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 		     int                    dst_y)
 {
     XImage ximage;
-    uint32_t bpp, red, green, blue;
+    cairo_format_masks_t image_masks;
     int native_byte_order = _native_byte_order_lsb () ? LSBFirst : MSBFirst;
     cairo_status_t status;
 
-    _pixman_format_to_masks (image->pixman_format, &bpp, &red, &green, &blue);
+    _pixman_format_to_masks (image->pixman_format, &image_masks);
     
     ximage.width = image->width;
     ximage.height = image->height;
@@ -751,10 +751,10 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
     ximage.bitmap_pad = 32;	/* always for libpixman */
     ximage.depth = image->depth;
     ximage.bytes_per_line = image->stride;
-    ximage.bits_per_pixel = bpp;
-    ximage.red_mask = red;
-    ximage.green_mask = green;
-    ximage.blue_mask = blue;
+    ximage.bits_per_pixel = image_masks.bpp;
+    ximage.red_mask = image_masks.red_mask;
+    ximage.green_mask = image_masks.green_mask;
+    ximage.blue_mask = image_masks.blue_mask;
     ximage.xoffset = 0;
 
     XInitImage (&ximage);

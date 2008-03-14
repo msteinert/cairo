@@ -1854,10 +1854,7 @@ _pixman_format_from_masks (cairo_format_masks_t *masks,
 
 cairo_private void
 _pixman_format_to_masks (pixman_format_code_t	 pixman_format,
-			 uint32_t		*bpp,
-			 uint32_t		*red,
-			 uint32_t		*green,
-			 uint32_t		*blue);
+			 cairo_format_masks_t	*masks);
 
 cairo_private cairo_surface_t *
 _cairo_image_surface_create_with_pixman_format (unsigned char		*data,
