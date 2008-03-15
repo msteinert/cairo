@@ -108,6 +108,7 @@ typedef struct _word_wrap_stream {
     int column;
     cairo_bool_t last_write_was_space;
     cairo_bool_t in_hexstring;
+    cairo_bool_t empty_hexstring;
 } word_wrap_stream_t;
 
 static int
@@ -136,10 +137,14 @@ _count_hexstring_up_to (const unsigned char *s, int length, int columns)
 {
     int word = 0;
 
-    while (length-- && columns--) {
+    while (length--) {
 	if (*s++ != '>')
 	    word++;
 	else
+	    return word;
+
+	columns--;
+	if (columns < 0 && word > 1)
 	    return word;
     }
 
@@ -158,14 +163,19 @@ _word_wrap_stream_write (cairo_output_stream_t  *base,
     while (length) {
 	if (*data == '<') {
 	    stream->in_hexstring = TRUE;
+	    stream->empty_hexstring = TRUE;
+	    stream->last_write_was_space = FALSE;
 	    data++;
 	    length--;
 	    _cairo_output_stream_printf (stream->output, "<");
+	    stream->column++;
 	} else if (*data == '>') {
 	    stream->in_hexstring = FALSE;
+	    stream->last_write_was_space = FALSE;
 	    data++;
 	    length--;
 	    _cairo_output_stream_printf (stream->output, ">");
+	    stream->column++;
 	} else if (isspace (*data)) {
 	    newline =  (*data == '\n' || *data == '\r');
 	    if (! newline && stream->column >= stream->max_column) {
@@ -175,8 +185,9 @@ _word_wrap_stream_write (cairo_output_stream_t  *base,
 	    _cairo_output_stream_write (stream->output, data, 1);
 	    data++;
 	    length--;
-	    if (newline)
+	    if (newline) {
 		stream->column = 0;
+	    }
 	    else
 		stream->column++;
 	    stream->last_write_was_space = TRUE;
@@ -189,17 +200,21 @@ _word_wrap_stream_write (cairo_output_stream_t  *base,
 	    }
 	    /* Don't wrap if this word is a continuation of a non hex
 	     * string word from a previous call to write. */
-	    if (stream->column + word >= stream->max_column &&
-		(stream->last_write_was_space || stream->in_hexstring))
-	    {
-		_cairo_output_stream_printf (stream->output, "\n");
-		stream->column = 0;
+	    if (stream->column + word >= stream->max_column) {
+		if (stream->last_write_was_space ||
+		    (stream->in_hexstring && !stream->empty_hexstring))
+		{
+		    _cairo_output_stream_printf (stream->output, "\n");
+		    stream->column = 0;
+		}
 	    }
 	    _cairo_output_stream_write (stream->output, data, word);
 	    data += word;
 	    length -= word;
 	    stream->column += word;
 	    stream->last_write_was_space = FALSE;
+	    if (stream->in_hexstring)
+		stream->empty_hexstring = FALSE;
 	}
     }
 
@@ -236,6 +251,7 @@ _word_wrap_stream_create (cairo_output_stream_t *output, int max_column)
     stream->column = 0;
     stream->last_write_was_space = FALSE;
     stream->in_hexstring = FALSE;
+    stream->empty_hexstring = TRUE;
 
     return &stream->base;
 }
@@ -365,7 +381,7 @@ _cairo_pdf_operators_emit_path (cairo_pdf_operators_t 	*pdf_operators,
     pdf_path_info_t info;
     cairo_box_t box;
 
-    word_wrap = _word_wrap_stream_create (pdf_operators->stream, 79);
+    word_wrap = _word_wrap_stream_create (pdf_operators->stream, 72);
     status = _cairo_output_stream_get_status (word_wrap);
     if (status)
 	return status;
@@ -723,7 +739,7 @@ _cairo_pdf_operators_show_glyphs (cairo_pdf_operators_t		*pdf_operators,
     for (i = 0; i < num_glyphs; i++)
 	cairo_matrix_transform_point (&pdf_operators->cairo_to_pdf, &glyphs[i].x, &glyphs[i].y);
 
-    word_wrap_stream = _word_wrap_stream_create (pdf_operators->stream, 79);
+    word_wrap_stream = _word_wrap_stream_create (pdf_operators->stream, 72);
     status = _cairo_output_stream_get_status (word_wrap_stream);
     if (status)
 	return status;
