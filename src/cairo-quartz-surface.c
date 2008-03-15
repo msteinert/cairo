@@ -537,7 +537,6 @@ static void
 ComputeGradientValue (void *info, const float *in, float *out)
 {
     double fdist = *in;
-    cairo_fixed_t fdist_fix;
     cairo_gradient_pattern_t *grad = (cairo_gradient_pattern_t*) info;
     unsigned int i;
 
@@ -553,10 +552,8 @@ ComputeGradientValue (void *info, const float *in, float *out)
 	}
     }
 
-    fdist_fix = _cairo_fixed_from_double(fdist);
-
     for (i = 0; i < grad->n_stops; i++) {
-	if (grad->stops[i].x > fdist_fix)
+	if (_cairo_fixed_to_double (grad->stops[i].x) > fdist)
 	    break;
     }
 
