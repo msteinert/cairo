@@ -162,6 +162,7 @@ solid-pattern-cache-stress
 source-clip
 source-clip-scale
 source-surface-scale-paint
+stroke-ctm-caps
 surface-finish-twice
 surface-pattern
 surface-pattern-big-scale-down
