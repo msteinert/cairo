@@ -583,12 +583,13 @@ _cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t	*pdf_operators,
 }
 
 
-cairo_int_status_t
-_cairo_pdf_operators_stroke (cairo_pdf_operators_t	*pdf_operators,
-			     cairo_path_fixed_t		*path,
-			     cairo_stroke_style_t	*style,
-			     cairo_matrix_t		*ctm,
-			     cairo_matrix_t		*ctm_inverse)
+static cairo_int_status_t
+_cairo_pdf_operators_emit_stroke (cairo_pdf_operators_t	*pdf_operators,
+				  cairo_path_fixed_t	*path,
+				  cairo_stroke_style_t	*style,
+				  cairo_matrix_t	*ctm,
+				  cairo_matrix_t	*ctm_inverse,
+				  const char 		*pdf_operator)
 {
     cairo_status_t status;
     cairo_matrix_t m, path_transform;
@@ -628,13 +629,28 @@ _cairo_pdf_operators_stroke (cairo_pdf_operators_t	*pdf_operators,
     if (status)
 	return status;
 
-    _cairo_output_stream_printf (pdf_operators->stream, "S");
+    _cairo_output_stream_printf (pdf_operators->stream, "%s", pdf_operator);
     if (has_ctm)
 	_cairo_output_stream_printf (pdf_operators->stream, " Q");
 
     _cairo_output_stream_printf (pdf_operators->stream, "\n");
 
     return _cairo_output_stream_get_status (pdf_operators->stream);
+}
+
+cairo_int_status_t
+_cairo_pdf_operators_stroke (cairo_pdf_operators_t	*pdf_operators,
+			     cairo_path_fixed_t		*path,
+			     cairo_stroke_style_t	*style,
+			     cairo_matrix_t		*ctm,
+			     cairo_matrix_t		*ctm_inverse)
+{
+    return _cairo_pdf_operators_emit_stroke (pdf_operators,
+					     path,
+					     style,
+					     ctm,
+					     ctm_inverse,
+					     "S");
 }
 
 cairo_int_status_t
@@ -678,45 +694,25 @@ _cairo_pdf_operators_fill_stroke (cairo_pdf_operators_t 	*pdf_operators,
 				  cairo_matrix_t		*ctm,
 				  cairo_matrix_t		*ctm_inverse)
 {
-    const char *pdf_operator;
-    cairo_status_t status;
-    cairo_matrix_t m;
-
-    status = _cairo_pdf_operators_emit_stroke_style (pdf_operators, style);
-    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
-	return CAIRO_STATUS_SUCCESS;
-    if (status)
-	return status;
-
-    cairo_matrix_multiply (&m, ctm, &pdf_operators->cairo_to_pdf);
-    _cairo_output_stream_printf (pdf_operators->stream,
-				 "q %f %f %f %f %f %f cm\n",
-				 m.xx, m.yx, m.xy, m.yy,
-				 m.x0, m.y0);
-
-    status = _cairo_pdf_operators_emit_path (pdf_operators,
-					     path,
-					     ctm_inverse,
-					     style->line_cap);
-    if (status)
-	return status;
+    const char *operator;
 
     switch (fill_rule) {
     case CAIRO_FILL_RULE_WINDING:
-	pdf_operator = "B";
+	operator = "B";
 	break;
     case CAIRO_FILL_RULE_EVEN_ODD:
-	pdf_operator = "B*";
+	operator = "B*";
 	break;
     default:
 	ASSERT_NOT_REACHED;
     }
 
-    _cairo_output_stream_printf (pdf_operators->stream,
-				 "%s Q\n",
-				 pdf_operator);
-
-    return _cairo_output_stream_get_status (pdf_operators->stream);
+    return _cairo_pdf_operators_emit_stroke (pdf_operators,
+					     path,
+					     style,
+					     ctm,
+					     ctm_inverse,
+					     operator);
 }
 
 #define GLYPH_POSITION_TOLERANCE 0.001
