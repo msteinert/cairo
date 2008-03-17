@@ -2885,7 +2885,8 @@ _cairo_ps_surface_paint (void			*abstract_surface,
     _cairo_rectangle_intersect (&extents, &surface_extents);
 
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
-	source->extend == CAIRO_EXTEND_NONE)
+	(source->extend == CAIRO_EXTEND_NONE ||
+	 source->extend == CAIRO_EXTEND_PAD))
     {
 	_cairo_output_stream_printf (stream, "q %d %d %d %d rectclip\n",
 				     extents.x,
@@ -2976,7 +2977,8 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 #endif
 
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
-	source->extend == CAIRO_EXTEND_NONE)
+	(source->extend == CAIRO_EXTEND_NONE ||
+	 source->extend == CAIRO_EXTEND_PAD))
     {
 	_cairo_output_stream_printf (surface->stream, "q\n");
 
