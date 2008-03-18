@@ -480,7 +480,8 @@ _cairo_pdf_line_join (cairo_line_join_t join)
 
 static cairo_int_status_t
 _cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t	*pdf_operators,
-					cairo_stroke_style_t	*style)
+					cairo_stroke_style_t	*style,
+					double			 scale)
 {
     double *dash = style->dash;
     int num_dashes = style->num_dashes;
@@ -551,7 +552,7 @@ _cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t	*pdf_operators,
 
     _cairo_output_stream_printf (pdf_operators->stream,
 				 "%f w\n",
-				 style->line_width);
+				 style->line_width * scale);
 
     _cairo_output_stream_printf (pdf_operators->stream,
 				 "%d J\n",
@@ -566,9 +567,9 @@ _cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t	*pdf_operators,
 
 	_cairo_output_stream_printf (pdf_operators->stream, "[");
 	for (d = 0; d < num_dashes; d++)
-	    _cairo_output_stream_printf (pdf_operators->stream, " %f", dash[d]);
+	    _cairo_output_stream_printf (pdf_operators->stream, " %f", dash[d] * scale);
 	_cairo_output_stream_printf (pdf_operators->stream, "] %f d\n",
-				     dash_offset);
+				     dash_offset * scale);
     } else {
 	_cairo_output_stream_printf (pdf_operators->stream, "[] 0.0 d\n");
     }
@@ -582,6 +583,31 @@ _cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t	*pdf_operators,
     return _cairo_output_stream_get_status (pdf_operators->stream);
 }
 
+/* Scale the matrix so the largest absolute value of the non
+ * translation components is 1.0. Return the scale required to restore
+ * the matrix to the original values.
+ *
+ * eg the matrix  [ 100  0  0  50   20   10  ]
+ *
+ * is rescaled to [  1   0  0  0.5  0.2  0.1 ]
+ * and the scale returned is 100
+ */
+static void
+_cairo_matrix_factor_out_scale (cairo_matrix_t *m, double *scale)
+{
+    double s;
+
+    s = fabs (m->xx);
+    if (fabs (m->xy) > s)
+	s = fabs (m->xy);
+    if (fabs (m->yx) > s)
+	s = fabs (m->yx);
+    if (fabs (m->yy) > s)
+	s = fabs (m->yy);
+    *scale = s;
+    s = 1.0/s;
+    cairo_matrix_scale (m, s, s);
+}
 
 static cairo_int_status_t
 _cairo_pdf_operators_emit_stroke (cairo_pdf_operators_t	*pdf_operators,
@@ -594,6 +620,7 @@ _cairo_pdf_operators_emit_stroke (cairo_pdf_operators_t	*pdf_operators,
     cairo_status_t status;
     cairo_matrix_t m, path_transform;
     cairo_bool_t has_ctm = TRUE;
+    double scale = 1.0;
 
     /* Optimize away the stroke ctm when it does not affect the
      * stroke. There are other ctm cases that could be optimized
@@ -605,15 +632,44 @@ _cairo_pdf_operators_emit_stroke (cairo_pdf_operators_t	*pdf_operators,
 	has_ctm = FALSE;
     }
 
-    status = _cairo_pdf_operators_emit_stroke_style (pdf_operators, style);
+    /* The PDF CTM is transformed to the user space CTM when stroking
+     * so the corect pen shape will be used. This also requires that
+     * the path be transformed to user space when emitted. The
+     * conversion of path coordinates to user space may cause rounding
+     * errors. For example the device space point (1.234, 3.142) when
+     * transformed to a user space CTM of [100 0 0 100 0 0] will be
+     * emitted as (0.012, 0.031).
+     *
+     * To avoid the rounding problem we scale the user space CTM
+     * matrix so that all the non translation components of the matrix
+     * are <= 1. The line width and and dashes are scaled by the
+     * inverse of the scale applied to the CTM. This maintains the
+     * shape of the stroke pen while keeping the user space CTM within
+     * the range that maximizes the precision of the emitted path.
+     */
+    if (has_ctm) {
+	m = *ctm;
+	/* Zero out the translation since it does not affect the pen
+	 * shape however it may cause unnecessary digits to be emitted.
+	 */
+	m.x0 = 0.0;
+	m.y0 = 0.0;
+	_cairo_matrix_factor_out_scale (&m, &scale);
+	path_transform = m;
+	status = cairo_matrix_invert (&path_transform);
+	if (status)
+	    return status;
+
+	cairo_matrix_multiply (&m, &m, &pdf_operators->cairo_to_pdf);
+    }
+
+    status = _cairo_pdf_operators_emit_stroke_style (pdf_operators, style, scale);
     if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
 	return CAIRO_STATUS_SUCCESS;
     if (status)
 	return status;
 
     if (has_ctm) {
-	cairo_matrix_multiply (&m, ctm, &pdf_operators->cairo_to_pdf);
-	path_transform = *ctm_inverse;
 	_cairo_output_stream_printf (pdf_operators->stream,
 				     "q %f %f %f %f %f %f cm\n",
 				     m.xx, m.yx, m.xy, m.yy,
