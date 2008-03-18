@@ -275,7 +275,7 @@ _cairo_pdf_path_move_to (void *closure, cairo_point_t *point)
     info->has_sub_path = FALSE;
     cairo_matrix_transform_point (info->path_transform, &x, &y);
     _cairo_output_stream_printf (info->output,
-				 "%f %f m ", x, y);
+				 "%g %g m ", x, y);
 
     return _cairo_output_stream_get_status (info->output);
 }
@@ -298,7 +298,7 @@ _cairo_pdf_path_line_to (void *closure, cairo_point_t *point)
     info->has_sub_path = TRUE;
     cairo_matrix_transform_point (info->path_transform, &x, &y);
     _cairo_output_stream_printf (info->output,
-				 "%f %f l ", x, y);
+				 "%g %g l ", x, y);
 
     return _cairo_output_stream_get_status (info->output);
 }
@@ -322,7 +322,7 @@ _cairo_pdf_path_curve_to (void          *closure,
     cairo_matrix_transform_point (info->path_transform, &cx, &cy);
     cairo_matrix_transform_point (info->path_transform, &dx, &dy);
     _cairo_output_stream_printf (info->output,
-				 "%f %f %f %f %f %f c ",
+				 "%g %g %g %g %g %g c ",
 				 bx, by, cx, cy, dx, dy);
     return _cairo_output_stream_get_status (info->output);
 }
@@ -355,7 +355,7 @@ _cairo_pdf_path_rectangle (pdf_path_info_t *info, cairo_box_t *box)
     cairo_matrix_transform_point (info->path_transform, &x1, &y1);
     cairo_matrix_transform_point (info->path_transform, &x2, &y2);
     _cairo_output_stream_printf (info->output,
-				 "%f %f %f %f re ",
+				 "%g %g %g %g re ",
 				 x1, y1, x2 - x1, y2 - y1);
 
     return _cairo_output_stream_get_status (info->output);
