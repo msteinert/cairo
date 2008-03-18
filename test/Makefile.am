@@ -280,6 +280,8 @@ REFERENCE_IMAGES = \
 	clip-operator-pdf-argb32-ref.png \
 	clip-operator-ps-argb32-ref.png	\
 	clip-operator-rgb24-ref.png	\
+	clip-operator-quartz-ref.png	\
+	clip-operator-quartz-rgb24ref.png	\
 	clip-push-group-ps-argb32-ref.png	\
 	clip-push-group-ps-rgb24-ref.png	\
 	clip-push-group-quartz-ref.png	\
@@ -305,6 +307,7 @@ REFERENCE_IMAGES = \
 	dash-caps-joins-ref.png	\
 	dash-curve-ref.png	\
 	dash-curve-ps-ref.png \
+	dash-curve-quartz-ref.png \
 	dash-no-dash-ref.png	\
 	dash-offset-negative-ref.png	\
 	dash-scale-ps-argb32-ref.png	\
@@ -313,6 +316,7 @@ REFERENCE_IMAGES = \
 	dash-scale-ref.png	\
 	dash-state-ps-ref.png	\
 	dash-state-ref.png	\
+	dash-state-quartz-ref.png	\
 	dash-zero-length-ps-ref.png	\
 	dash-zero-length-ps-rgb24-ref.png	\
 	dash-zero-length-ref.png	\
@@ -324,6 +328,8 @@ REFERENCE_IMAGES = \
 	degenerate-path-ps-rgb24-ref.png	\
 	degenerate-path-ref.png	\
 	degenerate-path-rgb24-ref.png	\
+	degenerate-path-quartz-ref.png	\
+	degenerate-path-quartz-rgb24-ref.png	\
 	device-offset-positive-ref.png	\
 	device-offset-positive-rgb24-ref.png	\
 	device-offset-ref.png	\
@@ -461,6 +467,8 @@ REFERENCE_IMAGES = \
 	operator-source-ps-rgb24-ref.png	\
 	operator-source-ref.png	\
 	operator-source-rgb24-ref.png	\
+	operator-source-quartz-ref.png \
+	operator-source-quartz-rgb24-ref.png \
 	over-above-source-ps-argb32-ref.png       \
 	over-above-source-quartz-ref.png	  \
 	over-above-source-quartz-rgb24-ref.png	  \
@@ -607,6 +615,8 @@ REFERENCE_IMAGES = \
 	unantialiased-shapes-quartz-ref.png \
 	unbounded-operator-ref.png	\
 	unbounded-operator-rgb24-ref.png	\
+	unbounded-operator-quartz-ref.png	\
+	unbounded-operator-quartz-rgb24-ref.png	\
 	xlib-surface-source-ref.png \
 	zero-alpha-ref.png
 
