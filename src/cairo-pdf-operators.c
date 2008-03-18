@@ -887,10 +887,28 @@ _cairo_pdf_operators_show_glyphs (cairo_pdf_operators_t		*pdf_operators,
                 } else {
                     if (fabs((glyphs[i].x - Tm_x)/scaled_font->scale.xx) > GLYPH_POSITION_TOLERANCE) {
                         double delta = glyphs[i].x - Tm_x;
+			int rounded_delta;
 
-                        _cairo_output_stream_printf (word_wrap_stream,
-                                                     "> %f <",
-                                                     -1000.0*delta/scaled_font->scale.xx);
+			delta = -1000.0*delta/scaled_font->scale.xx;
+			/* As the delta is in 1/1000 of a unit of text
+			 * space, rounding to an integer should still
+			 * provide sufficient precision. We round the
+			 * delta before adding to Tm_x so that we keep
+			 * track of the accumulated rounding error in
+			 * the PDF interpreter and compensate for it
+			 * when calculating subsequent deltas.
+			 */
+			rounded_delta = _cairo_lround (delta);
+			if (rounded_delta != 0) {
+			    _cairo_output_stream_printf (word_wrap_stream,
+							 "> %d <",
+							 rounded_delta);
+			}
+
+			/* Convert the rounded delta back to cairo
+			 * space before adding to the current text
+			 * position. */
+			delta = rounded_delta*scaled_font->scale.xx/-1000.0;
                         Tm_x += delta;
                     }
                     _cairo_output_stream_printf (word_wrap_stream,
