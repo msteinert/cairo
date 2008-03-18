@@ -246,7 +246,7 @@ _cairo_output_stream_write_hex_string (cairo_output_stream_t *stream,
  * has been relicensed under the LGPL/MPL dual license for inclusion
  * into cairo (see COPYING). -- Kristian Høgsberg <krh@redhat.com>
  */
-void
+static void
 _cairo_dtostr (char *buffer, size_t size, double d)
 {
     struct lconv *locale_data;
