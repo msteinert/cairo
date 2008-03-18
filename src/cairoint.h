@@ -432,7 +432,7 @@ extern const cairo_private struct _cairo_scaled_font_backend cairo_win32_scaled_
 
 #endif
 
-#if CAIRO_HAS_ATSUI_FONT
+#if CAIRO_HAS_QUARTZ_FONT
 
 extern const cairo_private struct _cairo_scaled_font_backend cairo_atsui_scaled_font_backend;
 
@@ -841,7 +841,7 @@ typedef struct _cairo_traps {
 #define CAIRO_FONT_WEIGHT_DEFAULT  CAIRO_FONT_WEIGHT_NORMAL
 
 #define CAIRO_WIN32_FONT_FAMILY_DEFAULT "Arial"
-#define CAIRO_ATSUI_FONT_FAMILY_DEFAULT  "Helvetica"
+#define CAIRO_QUARTZ_FONT_FAMILY_DEFAULT  "Helvetica"
 #define CAIRO_FT_FONT_FAMILY_DEFAULT     ""
 
 #if   CAIRO_HAS_WIN32_FONT
@@ -849,9 +849,9 @@ typedef struct _cairo_traps {
 #define CAIRO_FONT_FAMILY_DEFAULT CAIRO_WIN32_FONT_FAMILY_DEFAULT
 #define CAIRO_SCALED_FONT_BACKEND_DEFAULT &cairo_win32_scaled_font_backend
 
-#elif CAIRO_HAS_ATSUI_FONT
+#elif CAIRO_HAS_QUARTZ_FONT
 
-#define CAIRO_FONT_FAMILY_DEFAULT CAIRO_ATSUI_FONT_FAMILY_DEFAULT
+#define CAIRO_FONT_FAMILY_DEFAULT CAIRO_QUARTZ_FONT_FAMILY_DEFAULT
 #define CAIRO_SCALED_FONT_BACKEND_DEFAULT &cairo_atsui_scaled_font_backend
 
 #elif CAIRO_HAS_FT_FONT
@@ -2202,7 +2202,7 @@ _cairo_utf8_to_ucs4 (const unsigned char *str,
 		     uint32_t	        **result,
 		     int		 *items_written);
 
-#if CAIRO_HAS_WIN32_FONT+0 || CAIRO_HAS_ATSUI_FONT+0
+#if CAIRO_HAS_WIN32_FONT+0 || CAIRO_HAS_QUARTZ_FONT+0
 # define CAIRO_HAS_UTF8_TO_UTF16 1
 #endif
 #if CAIRO_HAS_UTF8_TO_UTF16

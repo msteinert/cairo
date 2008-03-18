@@ -57,10 +57,23 @@ cairo_quartz_surface_create_for_cg_context (CGContextRef cgContext,
 cairo_public CGContextRef
 cairo_quartz_surface_get_cg_context (cairo_surface_t *surface);
 
+/*
+ * Quartz font support
+ */
+
+#ifdef CAIRO_HAS_QUARTZ_FONT
+
+cairo_public cairo_font_face_t *
+cairo_quartz_font_face_create_for_atsu_font_id (ATSUFontID font_id);
+
+#endif /* CAIRO_HAS_QUARTZ_FONT */
+
 CAIRO_END_DECLS
 
-#else  /* CAIRO_HAS_QUARTZ_SURFACE */
+#else
+
 # error Cairo was not compiled with support for the quartz backend
+
 #endif /* CAIRO_HAS_QUARTZ_SURFACE */
 
 #endif /* CAIRO_QUARTZ_H */

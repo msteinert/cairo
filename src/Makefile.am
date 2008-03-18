@@ -185,10 +185,16 @@ cairo_headers += $(quartz_headers)
 cairo_sources += $(quartz_sources)
 backend_pkgconfigs += cairo-quartz.pc
 endif
-
 if CAIRO_HAS_QUARTZ_IMAGE_SURFACE
 cairo_headers += cairo-quartz-image.h
 backend_pkgconfigs += cairo-quartz-image.pc
+endif
+
+quartz_font_sources = cairo-atsui-font.c
+cairo_all_sources += $(quartz_font_sources)
+if CAIRO_HAS_QUARTZ_FONT
+cairo_sources += $(quartz_font_sources)
+backend_pkgconfigs += cairo-quartz-font.pc
 endif
 
 os_win32_sources = cairo-win32.c
@@ -263,15 +269,6 @@ if CAIRO_HAS_FT_FONT
 cairo_headers += $(ft_headers)
 cairo_sources += $(ft_sources)
 backend_pkgconfigs += cairo-ft.pc
-endif
-
-atsui_headers = cairo-atsui.h
-atsui_sources = cairo-atsui-font.c
-cairo_all_sources += $(atsui_headers) $(atsui_sources)
-if CAIRO_HAS_ATSUI_FONT
-cairo_headers += $(atsui_headers)
-cairo_sources += $(atsui_sources)
-backend_pkgconfigs += cairo-atsui.pc
 endif
 
 # These names match automake style variable definition conventions so

@@ -37,7 +37,7 @@
 #include "cairoint.h"
 
 #include "cairo.h"
-#include "cairo-atsui.h"
+#include "cairo-quartz.h"
 #include "cairo-quartz-private.h"
 
 /*
@@ -140,7 +140,7 @@ _cairo_atsui_font_face_scaled_font_create (void	*abstract_face,
 }
 
 static const cairo_font_face_backend_t _cairo_atsui_font_face_backend = {
-    CAIRO_FONT_TYPE_ATSUI,
+    CAIRO_FONT_TYPE_QUARTZ,
     _cairo_atsui_font_face_destroy,
     _cairo_atsui_font_face_scaled_font_create
 };
@@ -149,17 +149,17 @@ static const cairo_font_face_backend_t _cairo_atsui_font_face_backend = {
  * cairo_atsui_font_face_create_for_atsu_font_id
  * @font_id: an ATSUFontID for the font.
  *
- * Creates a new font for the ATSUI font backend based on an
+ * Creates a new font for the Quartz font backend based on an
  * #ATSUFontID. This font can then be used with
  * cairo_set_font_face() or cairo_scaled_font_create().
  *
  * Return value: a newly created #cairo_font_face_t. Free with
  *  cairo_font_face_destroy() when you are done using it.
  *
- * Since: 1.4
+ * Since: 1.6
  **/
 cairo_font_face_t *
-cairo_atsui_font_face_create_for_atsu_font_id (ATSUFontID font_id)
+cairo_quartz_font_face_create_for_atsu_font_id (ATSUFontID font_id)
 {
   cairo_atsui_font_face_t *font_face;
 
@@ -174,6 +174,15 @@ cairo_atsui_font_face_create_for_atsu_font_id (ATSUFontID font_id)
     _cairo_font_face_init (&font_face->base, &_cairo_atsui_font_face_backend);
 
     return &font_face->base;
+}
+
+/* This is the old name for the above function, exported for compat purposes */
+cairo_font_face_t *cairo_atsui_font_face_create_for_atsu_font_id (ATSUFontID font_id);
+
+cairo_font_face_t *
+cairo_atsui_font_face_create_for_atsu_font_id (ATSUFontID font_id)
+{
+    return cairo_quartz_font_face_create_for_atsu_font_id (font_id);
 }
 
 static OSStatus
@@ -968,24 +977,8 @@ _cairo_atsui_font_text_to_glyphs (void		*abstract_font,
     return status;
 }
 
-ATSUStyle
-_cairo_atsui_scaled_font_get_atsu_style (cairo_scaled_font_t *sfont)
-{
-    cairo_atsui_font_t *afont = (cairo_atsui_font_t *) sfont;
-
-    return afont->style;
-}
-
-ATSUFontID
-_cairo_atsui_scaled_font_get_atsu_font_id (cairo_scaled_font_t *sfont)
-{
-    cairo_atsui_font_t *afont = (cairo_atsui_font_t *) sfont;
-
-    return afont->fontID;
-}
-
 CGFontRef
-_cairo_atsui_scaled_font_get_cg_font_ref (cairo_scaled_font_t *sfont)
+_cairo_quartz_scaled_font_get_cg_font_ref (cairo_scaled_font_t *sfont)
 {
     cairo_atsui_font_t *afont = (cairo_atsui_font_t *) sfont;
 
@@ -1022,7 +1015,7 @@ _cairo_atsui_load_truetype_table (void	           *abstract_font,
 }
 
 const cairo_scaled_font_backend_t cairo_atsui_scaled_font_backend = {
-    CAIRO_FONT_TYPE_ATSUI,
+    CAIRO_FONT_TYPE_QUARTZ,
     _cairo_atsui_font_create_toy,
     _cairo_atsui_font_fini,
     _cairo_atsui_font_scaled_glyph_init,

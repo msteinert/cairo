@@ -1817,7 +1817,7 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
     return rv;
 }
 
-#if CAIRO_HAS_ATSUI_FONT
+#if CAIRO_HAS_QUARTZ_FONT
 static cairo_int_status_t
 _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 				   cairo_operator_t op,
@@ -1852,7 +1852,7 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
     if (op == CAIRO_OPERATOR_DEST)
 	return CAIRO_STATUS_SUCCESS;
 
-    if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_ATSUI)
+    if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_QUARTZ)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     CGContextSaveGState (surface->cgContext);
@@ -1872,7 +1872,7 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
     CGContextSetCompositeOperation (surface->cgContext, _cairo_quartz_cairo_operator_to_quartz (op));
 
     /* this doesn't addref */
-    cgfref = _cairo_atsui_scaled_font_get_cg_font_ref (scaled_font);
+    cgfref = _cairo_quartz_scaled_font_get_cg_font_ref (scaled_font);
     CGContextSetFont (surface->cgContext, cgfref);
     CGContextSetFontSize (surface->cgContext, 1.0);
 
@@ -2023,7 +2023,7 @@ BAIL:
 
     return rv;
 }
-#endif /* CAIRO_HAS_ATSUI_FONT */
+#endif /* CAIRO_HAS_QUARTZ_FONT */
 
 static cairo_int_status_t
 _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
@@ -2256,11 +2256,11 @@ static const struct _cairo_surface_backend cairo_quartz_surface_backend = {
     _cairo_quartz_surface_mask,
     _cairo_quartz_surface_stroke,
     _cairo_quartz_surface_fill,
-#if CAIRO_HAS_ATSUI_FONT
+#if CAIRO_HAS_QUARTZ_FONT
     _cairo_quartz_surface_show_glyphs,
 #else
-    NULL, /* surface_show_glyphs */
-#endif /* CAIRO_HAS_ATSUI_FONT */
+    NULL, /* show_glyphs */
+#endif
 
     NULL, /* snapshot */
     NULL, /* is_similar */

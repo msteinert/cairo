@@ -360,14 +360,12 @@ CAIRO_BACKEND_ENABLE(quartz, Quartz, quartz, QUARTZ_SURFACE, no, [
   quartz_LIBS="-Xlinker -framework -Xlinker Carbon"
 ])
 
+CAIRO_BACKEND_ENABLE(quartz_font, Quartz font, quartz-font, QUARTZ_FONT, auto, [
+  use_quartz_font=$use_quartz
+])
+
 CAIRO_BACKEND_ENABLE(quartz_image, Quartz Image, quartz-image, QUARTZ_IMAGE_SURFACE, no, [
-  dnl There is no pkgconfig for quartz; lets do a header check
-  if test "x$use_quartz" != "xyes"; then
-    use_quartz_image="no (requires --enable-quartz)"
-  else
-    dnl we already have the header check and libs required from the quartz surface
-    use_quartz_image="yes"
-  fi
+  use_quartz_image=$use_quartz
 ])
 
 dnl ===========================================================================
@@ -701,17 +699,6 @@ fi
 AM_CONDITIONAL(CAIRO_CAN_TEST_SVG_SURFACE, test "x$test_svg" = "xyes")
 AC_SUBST(LIBRSVG_CFLAGS)
 AC_SUBST(LIBRSVG_LIBS)
-
-dnl ===========================================================================
-
-dnl This check should default to 'auto' once we have code to actually
-dnl check for the atsui font backend.
-
-CAIRO_BACKEND_ENABLE(atsui, ATSUI font, atsui, ATSUI_FONT, no, [
-  dnl There is no pkgconfig for atsui; lets do a header check
-  AC_CHECK_HEADER(Carbon/Carbon.h, , [use_atsui="no (Carbon headers not found)"])
-  atsui_LIBS="-Xlinker -framework -Xlinker Carbon"
-])
 
 dnl ===========================================================================
 dnl dump backend checking results
@@ -1102,7 +1089,7 @@ echo ""
 echo "the following font backends:"
 echo "  FreeType:      $use_ft"
 echo "  Win32:         $use_win32_font"
-echo "  ATSUI:         $use_atsui"
+echo "  Quartz:        $use_quartz_font"
 echo ""
 echo "the following features:"
 echo "  PNG functions: $use_png"
@@ -1121,9 +1108,9 @@ echo "using CFLAGS:"
 echo $CAIRO_CFLAGS
 echo ""
 
-if test x"$use_ft"         != "xyes" && \
-   test x"$use_win32_font" != "xyes" && \
-   test x"$use_atsui"      != "xyes" ; then
+if test x"$use_ft"          != "xyes" && \
+   test x"$use_win32_font"  != "xyes" && \
+   test x"$use_quartz_font" != "xyes" ; then
 
    AC_MSG_ERROR([Cairo requires at least one font backend.
 		  Please install freetype and fontconfig, then try again:
@@ -1152,10 +1139,6 @@ fi
 
 if test x"$use_quartz_image" = "xyes" ; then
    echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/Quartz Image/'
-fi
-
-if test x"$use_atsui" = "xyes" ; then
-   echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/ATSUI/'
 fi
 
 if test x"$use_os2" = "xyes" ; then
