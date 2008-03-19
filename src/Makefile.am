@@ -152,6 +152,7 @@ xlib_sources =  cairo-xlib-surface.c \
 		cairo-xlib-surface-private.h \
 		cairo-xlib-display.c \
 		cairo-xlib-screen.c \
+		cairo-xlib-visual.c \
 		cairo-xlib-private.h \
 		cairo-xlib-xrender-private.h
 cairo_all_sources += $(xlib_headers) $(xlib_sources)

@@ -665,8 +665,6 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	ximage->data = NULL;
     } else {
 	cairo_format_t format;
-	cairo_bool_t has_color;
-	cairo_bool_t has_alpha;
 	unsigned char *data;
 	uint32_t *row;
 	uint32_t in_pixel, out_pixel;
@@ -675,32 +673,53 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	int a_width, r_width, g_width, b_width;
 	int a_shift, r_shift, g_shift, b_shift;
 	int x, y;
+	XColor *colors;
 
 	/* The visual we are dealing with is not supported by the
 	 * standard pixman formats. So we must first convert the data
 	 * to a supported format. */
-	has_color = (surface->r_mask ||
-		     surface->g_mask ||
-		     surface->b_mask);
-	has_alpha = surface->a_mask;
+	if (surface->visual->class == TrueColor) {
+	    cairo_bool_t has_color;
+	    cairo_bool_t has_alpha;
 
-	if (has_color) {
-	    if (has_alpha) {
-		format = CAIRO_FORMAT_ARGB32;
+	    has_color = (surface->r_mask ||
+			 surface->g_mask ||
+			 surface->b_mask);
+	    has_alpha = surface->a_mask;
+
+	    if (has_color) {
+		if (has_alpha) {
+		    format = CAIRO_FORMAT_ARGB32;
+		} else {
+		    format = CAIRO_FORMAT_RGB24;
+		}
 	    } else {
-		format = CAIRO_FORMAT_RGB24;
-	    }
-	} else {
-	    if (has_alpha) {
 		/* XXX: Using CAIRO_FORMAT_A8 here would be more
 		 * efficient, but would require slightly different code in
 		 * the image conversion to put the alpha channel values
 		 * into the right place. */
 		format = CAIRO_FORMAT_ARGB32;
-	    } else {
-		fprintf (stderr, "Cairo does not (yet) support pseudocolor visuals.\n");
-		exit (1);
 	    }
+
+	    a_mask = surface->a_mask;
+	    r_mask = surface->r_mask;
+	    g_mask = surface->g_mask;
+	    b_mask = surface->b_mask;
+
+	    _characterize_field (a_mask, &a_width, &a_shift);
+	    _characterize_field (r_mask, &r_width, &r_shift);
+	    _characterize_field (g_mask, &g_width, &g_shift);
+	    _characterize_field (b_mask, &b_width, &b_shift);
+
+	} else {
+	    cairo_xlib_visual_info_t *visual_info;
+
+	    format = CAIRO_FORMAT_RGB24;
+
+	    visual_info = _cairo_xlib_screen_get_visual_info (surface->screen_info,
+							      surface->visual);
+
+	    colors = visual_info->colors;
 	}
 
 	image = (cairo_image_surface_t *) cairo_image_surface_create
@@ -711,27 +730,26 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	    return status;
 	}
 
-	a_mask = surface->a_mask;
-	r_mask = surface->r_mask;
-	g_mask = surface->g_mask;
-	b_mask = surface->b_mask;
-
-	_characterize_field (a_mask, &a_width, &a_shift);
-	_characterize_field (r_mask, &r_width, &r_shift);
-	_characterize_field (g_mask, &g_width, &g_shift);
-	_characterize_field (b_mask, &b_width, &b_shift);
-
 	data = cairo_image_surface_get_data (&image->base);
 	rowstride = cairo_image_surface_get_stride (&image->base) >> 2;
 	row = (uint32_t *) data;
 	for (y = 0; y < ximage->height; y++) {
 	    for (x = 0; x < ximage->width; x++) {
 		in_pixel = XGetPixel (ximage, x, y);
-		out_pixel = (
-		    _field_to_8 (in_pixel & a_mask, a_width, a_shift) << 24 |
-		    _field_to_8 (in_pixel & r_mask, r_width, r_shift) << 16 |
-		    _field_to_8 (in_pixel & g_mask, g_width, g_shift) << 8 |
-		    _field_to_8 (in_pixel & b_mask, b_width, b_shift));
+		if (surface->visual->class == TrueColor) {
+		    out_pixel = (
+			_field_to_8 (in_pixel & a_mask, a_width, a_shift) << 24 |
+			_field_to_8 (in_pixel & r_mask, r_width, r_shift) << 16 |
+			_field_to_8 (in_pixel & g_mask, g_width, g_shift) << 8 |
+			_field_to_8 (in_pixel & b_mask, b_width, b_shift));
+		} else {
+		    XColor *color;
+		    color = &colors[in_pixel & 0xff];
+		    out_pixel = (
+			_field_to_8 (color->red,   16, 0) << 16 |
+			_field_to_8 (color->green, 16, 0) << 8 |
+			_field_to_8 (color->blue,  16, 0));
+		}
 		row[x] = out_pixel;
 	    }
 	    row += rowstride;
@@ -845,6 +863,7 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
     int native_byte_order = _native_byte_order_lsb () ? LSBFirst : MSBFirst;
     cairo_status_t status;
     cairo_bool_t own_data;
+    unsigned long *rgb333_to_pseudocolor;
 
     _pixman_format_to_masks (image->pixman_format, &image_masks);
     
@@ -876,15 +895,12 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 	uint32_t in_pixel, out_pixel, *row;
 	int a_width, r_width, g_width, b_width;
 	int a_shift, r_shift, g_shift, b_shift;
-	uint32_t combined_mask;
 
-	combined_mask = (surface->a_mask | surface->r_mask |
-			 surface->g_mask | surface->b_mask);
-	if (combined_mask > 0xffff) {
+	if (surface->depth > 16) {
 	    ximage.bits_per_pixel = 32;
-	} else if (combined_mask > 0xff) {
+	} else if (surface->depth > 8) {
 	    ximage.bits_per_pixel = 16;
-	} else if (combined_mask > 0x1) {
+	} else if (surface->depth > 1) {
 	    ximage.bits_per_pixel = 8;
 	} else {
 	    ximage.bits_per_pixel = 1;
@@ -897,10 +913,19 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 
 	XInitImage (&ximage);
 
-	_characterize_field (surface->a_mask, &a_width, &a_shift);
-	_characterize_field (surface->r_mask, &r_width, &r_shift);
-	_characterize_field (surface->g_mask, &g_width, &g_shift);
-	_characterize_field (surface->b_mask, &b_width, &b_shift);
+	if (surface->visual->class == TrueColor) {
+	    _characterize_field (surface->a_mask, &a_width, &a_shift);
+	    _characterize_field (surface->r_mask, &r_width, &r_shift);
+	    _characterize_field (surface->g_mask, &g_width, &g_shift);
+	    _characterize_field (surface->b_mask, &b_width, &b_shift);
+	} else {
+	    cairo_xlib_visual_info_t *visual_info;
+
+	    visual_info = _cairo_xlib_screen_get_visual_info (surface->screen_info,
+							      surface->visual);
+
+	    rgb333_to_pseudocolor = visual_info->rgb333_to_pseudocolor;
+	}
 
 	rowstride = cairo_image_surface_get_stride (&image->base) >> 2;
 	row = (uint32_t *) cairo_image_surface_get_data (&image->base);
@@ -912,10 +937,15 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 		r = (in_pixel >> 16) & 0xff;
 		g = (in_pixel >>  8) & 0xff;
 		b = (in_pixel      ) & 0xff;
-		out_pixel = (_field_from_8 (a, a_width, a_shift) |
-			     _field_from_8 (r, r_width, r_shift) |
-			     _field_from_8 (g, g_width, g_shift) |
-			     _field_from_8 (b, b_width, b_shift));
+		if (surface->visual->class == TrueColor)
+		    out_pixel = (_field_from_8 (a, a_width, a_shift) |
+				 _field_from_8 (r, r_width, r_shift) |
+				 _field_from_8 (g, g_width, g_shift) |
+				 _field_from_8 (b, b_width, b_shift));
+		else
+		    out_pixel = rgb333_to_pseudocolor[_field_from_8 (r, 3, 6) |
+						      _field_from_8 (g, 3, 3) |
+						      _field_from_8 (b, 3, 0)];
 		XPutPixel (&ximage, x, y, out_pixel);
 	    }
 	    row += rowstride;

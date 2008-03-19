@@ -269,6 +269,8 @@ _cairo_xlib_screen_info_destroy (cairo_xlib_screen_info_t *info)
 {
     cairo_xlib_screen_info_t **prev;
     cairo_xlib_screen_info_t *list;
+    cairo_xlib_visual_info_t **visuals;
+    int i;
 
     assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&info->ref_count));
 
@@ -282,11 +284,16 @@ _cairo_xlib_screen_info_destroy (cairo_xlib_screen_info_t *info)
 	    break;
 	}
     }
+    visuals = _cairo_array_index (&info->visuals, 0);
+    for (i = 0; i < _cairo_array_num_elements (&info->visuals); i++)
+	free (visuals[i]);
     CAIRO_MUTEX_UNLOCK (info->display->mutex);
 
     _cairo_xlib_screen_info_close_display (info);
 
     _cairo_xlib_display_destroy (info->display);
+
+    _cairo_array_fini (&info->visuals);
 
     free (info);
 }
@@ -334,6 +341,9 @@ _cairo_xlib_screen_info_get (Display *dpy, Screen *screen)
 	    _cairo_font_options_init_default (&info->font_options);
 	    memset (info->gc, 0, sizeof (info->gc));
 	    info->gc_needs_clip_reset = 0;
+
+	    _cairo_array_init (&info->visuals,
+			       sizeof (cairo_xlib_visual_info_t*));
 
 	    if (screen) {
 		int event_base, error_base;
@@ -410,4 +420,43 @@ _cairo_xlib_screen_put_gc (cairo_xlib_screen_info_t *info, int depth, GC gc, cai
 	info->gc_needs_clip_reset &= ~(1 << depth);
 
     return status;
+}
+
+cairo_xlib_visual_info_t *
+_cairo_xlib_screen_get_visual_info (cairo_xlib_screen_info_t *info,
+				    Visual *visual)
+{
+    cairo_xlib_visual_info_t **visuals, *ret = NULL;
+    cairo_status_t status;
+    int i;
+
+    CAIRO_MUTEX_LOCK (info->display->mutex);
+    visuals = _cairo_array_index (&info->visuals, 0);
+    for (i = 0; i < _cairo_array_num_elements (&info->visuals); i++) {
+	if (visuals[i]->visualid == visual->visualid) {
+	    ret = visuals[i];
+	    break;
+	}
+    }
+    CAIRO_MUTEX_UNLOCK (info->display->mutex);
+
+    if (ret)
+	return ret;
+
+    ret = _cairo_xlib_visual_info_create (info->display->display,
+					  XScreenNumberOfScreen (info->screen),
+					  visual->visualid);
+    if (ret == NULL)
+	return ret;
+
+    CAIRO_MUTEX_LOCK (info->display->mutex);
+    status = _cairo_array_append (&info->visuals, &ret);
+    CAIRO_MUTEX_UNLOCK (info->display->mutex);
+
+    if (status) {
+	free (ret);
+	ret = NULL;
+    }
+
+    return ret;
 }
