@@ -281,7 +281,7 @@ REFERENCE_IMAGES = \
 	clip-operator-ps-argb32-ref.png	\
 	clip-operator-rgb24-ref.png	\
 	clip-operator-quartz-ref.png	\
-	clip-operator-quartz-rgb24ref.png	\
+	clip-operator-quartz-rgb24-ref.png	\
 	clip-push-group-ps-argb32-ref.png	\
 	clip-push-group-ps-rgb24-ref.png	\
 	clip-push-group-quartz-ref.png	\
@@ -566,6 +566,7 @@ REFERENCE_IMAGES = \
 	source-clip-scale-pdf-ref.png \
 	source-surface-scale-paint-ref.png	\
 	source-surface-scale-paint-rgb24-ref.png	\
+	stroke-ctm-caps-ps-ref.png \
 	surface-pattern-big-scale-down-ref.png	\
 	surface-pattern-pdf-argb32-ref.png	\
 	surface-pattern-ps-argb32-ref.png	\
@@ -594,7 +595,6 @@ REFERENCE_IMAGES = \
 	text-pattern-svg-rgb24-ref.png	\
 	text-pattern-pdf-argb32-ref.png \
 	text-pattern-pdf-rgb24-ref.png \
-	text-pattern-quartz-argb32-ref.png \
 	text-pattern-quartz-rgb24-ref.png \
 	text-rotate-ref.png	\
 	text-rotate-ps-ref.png	\
