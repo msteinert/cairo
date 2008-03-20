@@ -552,6 +552,7 @@ cairo_image_surface_get_data (cairo_surface_t *surface)
 
     return image_surface->data;
 }
+slim_hidden_def (cairo_image_surface_get_data);
 
 /**
  * cairo_image_surface_get_format:
@@ -648,6 +649,7 @@ cairo_image_surface_get_stride (cairo_surface_t *surface)
 
     return image_surface->stride;
 }
+slim_hidden_def (cairo_image_surface_get_stride);
 
 cairo_format_t
 _cairo_format_from_content (cairo_content_t content)
