@@ -133,11 +133,11 @@ _cairo_xlib_screen_get_gc (cairo_xlib_screen_info_t *info, int depth);
 cairo_private cairo_status_t
 _cairo_xlib_screen_put_gc (cairo_xlib_screen_info_t *info, int depth, GC gc, cairo_bool_t reset_clip);
 
-cairo_xlib_visual_info_t *
+cairo_private cairo_xlib_visual_info_t *
 _cairo_xlib_screen_get_visual_info (cairo_xlib_screen_info_t *info,
 				    Visual *visual);
 
-cairo_xlib_visual_info_t *
+cairo_private cairo_xlib_visual_info_t *
 _cairo_xlib_visual_info_create (Display *dpy, int screen, VisualID visualid);
 
 #endif /* CAIRO_XLIB_PRIVATE_H */
