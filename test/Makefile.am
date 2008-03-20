@@ -774,6 +774,7 @@ CLEANFILES =					\
 	valgrind-log				\
 	index.html				\
 	ref.hash				\
+	png-test.png				\
 	$(EXTRA_LTLIBRARIES)			\
 	$(EXTRA_PROGRAMS)
 
