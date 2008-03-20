@@ -1268,7 +1268,7 @@ _cairo_svg_surface_emit_surface_pattern (cairo_svg_surface_t	 *surface,
 
     _cairo_output_stream_printf (style,
 				 "%s: url(#pattern%d);",
-				 is_stroke ? "color" : "fill",
+				 is_stroke ? "stroke" : "fill",
 				 pattern_id);
 
     return CAIRO_STATUS_SUCCESS;
@@ -1500,7 +1500,7 @@ _cairo_svg_surface_emit_linear_pattern (cairo_svg_surface_t    *surface,
 
     _cairo_output_stream_printf (style,
 				 "%s: url(#linear%d);",
-				 is_stroke ? "color" : "fill",
+				 is_stroke ? "stroke" : "fill",
 				 document->linear_pattern_id);
 
     document->linear_pattern_id++;
@@ -1684,7 +1684,7 @@ _cairo_svg_surface_emit_radial_pattern (cairo_svg_surface_t    *surface,
 
     _cairo_output_stream_printf (style,
 				 "%s: url(#radial%d);",
-				 is_stroke ? "color" : "fill",
+				 is_stroke ? "stroke" : "fill",
 				 document->radial_pattern_id);
 
     document->radial_pattern_id++;
