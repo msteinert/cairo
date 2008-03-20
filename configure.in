@@ -357,8 +357,14 @@ dnl ===========================================================================
 
 CAIRO_BACKEND_ENABLE(quartz, Quartz, quartz, QUARTZ_SURFACE, no, [
   dnl There is no pkgconfig for quartz; lets do a header check
-  AC_CHECK_HEADER(Carbon/Carbon.h, , [use_quartz="no (Carbon headers not found)"])
-  quartz_LIBS="-Xlinker -framework -Xlinker Carbon"
+  AC_CHECK_HEADER(ApplicationServices/ApplicationServices.h, , [use_quartz="no (ApplicationServices framework not found)"])
+  if test "x$use_quartz" != "xyes" ; then
+    dnl check for CoreGraphics as a separate framework
+    AC_CHECK_HEADER(CoreGraphics/CoreGraphics.h, , [use_quartz="no (CoreGraphics framework not found)"])
+    quartz_LIBS="-Xlinker -framework -Xlinker CoreGraphics"
+  else
+    quartz_LIBS="-Xlinker -framework -Xlinker ApplicationServices"
+  fi
 ])
 
 CAIRO_BACKEND_ENABLE(quartz_font, Quartz font, quartz-font, QUARTZ_FONT, auto, [

@@ -641,7 +641,7 @@ _cairo_atsui_scaled_font_init_glyph_path (cairo_atsui_font_t *scaled_font,
     cairo_matrix_t unscaled_font_to_device;
     double xscale;
     double yscale;
-    
+
     scaled_path.path = _cairo_path_fixed_create ();
     if (!scaled_path.path)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);

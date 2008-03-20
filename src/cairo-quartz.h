@@ -40,7 +40,7 @@
 
 #if CAIRO_HAS_QUARTZ_SURFACE
 
-#include <Carbon/Carbon.h>
+#include <ApplicationServices/ApplicationServices.h>
 
 CAIRO_BEGIN_DECLS
 
@@ -62,6 +62,9 @@ cairo_quartz_surface_get_cg_context (cairo_surface_t *surface);
  */
 
 #ifdef CAIRO_HAS_QUARTZ_FONT
+
+cairo_public cairo_font_face_t *
+cairo_quartz_font_face_create_for_cgfont (CGFontRef font);
 
 cairo_public cairo_font_face_t *
 cairo_quartz_font_face_create_for_atsu_font_id (ATSUFontID font_id);

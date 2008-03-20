@@ -48,7 +48,6 @@
 #define FloatToFixed(a)     ((Fixed)((float)(a) * fixed1))
 #endif
 
-#include <Carbon/Carbon.h>
 #include <limits.h>
 
 #undef QUARTZ_DEBUG

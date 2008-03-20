@@ -97,4 +97,9 @@ _cairo_quartz_scaled_font_get_cg_font_ref (cairo_scaled_font_t *sfont);
 
 #endif /* CAIRO_HAS_QUARTZ_SURFACE */
 
+#if CAIRO_HAS_CGFONT_FONT
+CGFontRef
+_cairo_cgfont_scaled_font_get_cg_font_ref (cairo_scaled_font_t *sfont);
+#endif /* CAIRO_HAS_CGFONT_FONT */
+
 #endif /* CAIRO_QUARTZ_PRIVATE_H */
