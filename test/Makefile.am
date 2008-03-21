@@ -375,6 +375,8 @@ REFERENCE_IMAGES = \
 	ft-text-antialias-none-ps-argb32-ref.png	\
 	ft-text-antialias-none-ref.png	\
 	ft-show-glyphs-positioning-ref.png		\
+	ft-show-glyphs-positioning-pdf-ref.png		\
+	ft-show-glyphs-positioning-ps-ref.png		\
 	ft-text-vertical-layout-type1-ps-ref.png	\
 	ft-text-vertical-layout-type1-ref.png	\
 	ft-text-vertical-layout-type1-svg-ref.png	\
