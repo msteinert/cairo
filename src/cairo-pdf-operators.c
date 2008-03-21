@@ -923,10 +923,16 @@ _cairo_pdf_operators_show_glyphs (cairo_pdf_operators_t		*pdf_operators,
                 if (in_TJ) {
                     if (fabs((glyphs[i].x - Tm_x)/scaled_font->scale.xx) > GLYPH_POSITION_TOLERANCE) {
                         double delta = glyphs[i].x - Tm_x;
+			int rounded_delta;
 
-                        _cairo_output_stream_printf (word_wrap_stream,
-                                                     "> %f <",
-                                                     -1000.0*delta/scaled_font->scale.xx);
+			delta = -1000.0*delta/scaled_font->scale.xx;
+			rounded_delta = _cairo_lround (delta);
+			if (rounded_delta != 0) {
+			    _cairo_output_stream_printf (word_wrap_stream,
+							 "> %d <",
+							 rounded_delta);
+			}
+			delta = rounded_delta*scaled_font->scale.xx/-1000.0;
                         Tm_x += delta;
                     }
                     _cairo_output_stream_printf (word_wrap_stream,
