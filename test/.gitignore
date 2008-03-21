@@ -64,6 +64,7 @@ fill-rule
 filter-nearest-offset
 ft-text-antialias-none
 ft-font-create-for-ft-face
+ft-show-glyphs-positioning
 ft-text-vertical-layout-type1
 ft-text-vertical-layout-type3
 font-face-get-type

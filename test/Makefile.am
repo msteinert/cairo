@@ -195,6 +195,7 @@ endif
 if CAIRO_HAS_FT_FONT
 TESTS += bitmap-font$(EXEEXT)
 TESTS += ft-font-create-for-ft-face$(EXEEXT)
+TESTS += ft-show-glyphs-positioning$(EXEEXT)
 TESTS += ft-text-vertical-layout-type1$(EXEEXT)
 TESTS += ft-text-vertical-layout-type3$(EXEEXT)
 TESTS += ft-text-antialias-none$(EXEEXT)
@@ -373,6 +374,7 @@ REFERENCE_IMAGES = \
 	font-matrix-translation-quartz-ref.png \
 	ft-text-antialias-none-ps-argb32-ref.png	\
 	ft-text-antialias-none-ref.png	\
+	ft-show-glyphs-positioning-ref.png		\
 	ft-text-vertical-layout-type1-ps-ref.png	\
 	ft-text-vertical-layout-type1-ref.png	\
 	ft-text-vertical-layout-type1-svg-ref.png	\
