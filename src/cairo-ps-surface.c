@@ -180,11 +180,12 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 				 "  {\n"
 				 "    dup\n"
 				 "    type /stringtype eq\n"
-				 "    { show } { -0.0001 mul 0 rmoveto } ifelse\n"
+				 "    { show } { -0.001 mul 0 cairo_font_matrix dtransform rmoveto } ifelse\n"
 				 "  } forall\n"
 				 "} bind def\n"
 				 "/Td { moveto } bind def\n"
-				 "/Tm { 6 array astore cairo_font exch selectfont 0 0 moveto } bind def\n"
+				 "/Tm { 6 array astore dup /cairo_font_matrix exch def\n"
+				 "      cairo_font exch selectfont 0 0 moveto } bind def\n"
 				 "/g { setgray } bind def\n"
 				 "/rg { setrgbcolor } bind def\n");
 
