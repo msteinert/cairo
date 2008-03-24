@@ -370,6 +370,8 @@ REFERENCE_IMAGES = \
 	filter-nearest-offset-ref.png	\
 	finer-grained-fallbacks-ref.png			\
 	finer-grained-fallbacks-rgb24-ref.png		\
+	finer-grained-fallbacks-ps-argb32-ref.png	\
+	finer-grained-fallbacks-ps-rgb24-ref.png	\
 	font-matrix-translation-ps-argb32-ref.png	\
 	font-matrix-translation-ps-rgb24-ref.png	\
 	font-matrix-translation-ref.png	\
