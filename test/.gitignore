@@ -62,6 +62,7 @@ fill-degenerate-sort-order
 fill-missed-stop
 fill-rule
 filter-nearest-offset
+finer-grained-fallbacks
 ft-text-antialias-none
 ft-font-create-for-ft-face
 ft-show-glyphs-positioning

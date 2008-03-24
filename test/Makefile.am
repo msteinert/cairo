@@ -50,6 +50,7 @@ fill-degenerate-sort-order$(EXEEXT)			\
 fill-missed-stop$(EXEEXT)				\
 fill-rule$(EXEEXT)					\
 filter-nearest-offset$(EXEEXT)				\
+finer-grained-fallbacks$(EXEEXT)			\
 font-face-get-type$(EXEEXT)				\
 font-matrix-translation$(EXEEXT)			\
 font-options$(EXEEXT)					\
@@ -367,6 +368,8 @@ REFERENCE_IMAGES = \
 	fill-rule-rgb24-ref.png	\
 	fill-rule-ps-rgb24-ref.png \
 	filter-nearest-offset-ref.png	\
+	finer-grained-fallbacks-ref.png			\
+	finer-grained-fallbacks-rgb24-ref.png		\
 	font-matrix-translation-ps-argb32-ref.png	\
 	font-matrix-translation-ps-rgb24-ref.png	\
 	font-matrix-translation-ref.png	\
