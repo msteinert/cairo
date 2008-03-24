@@ -177,6 +177,7 @@ text-cache-crash
 text-glyph-range
 text-pattern
 text-rotate
+text-transform
 text-zero-len
 transforms
 translate-show-surface

@@ -133,6 +133,7 @@ text-antialias-subpixel$(EXEEXT)			\
 text-cache-crash$(EXEEXT)				\
 text-pattern$(EXEEXT)					\
 text-rotate$(EXEEXT)					\
+text-transform$(EXEEXT)					\
 text-zero-len$(EXEEXT)					\
 transforms$(EXEEXT)					\
 translate-show-surface$(EXEEXT)				\
