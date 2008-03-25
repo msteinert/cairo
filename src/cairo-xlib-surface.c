@@ -455,36 +455,15 @@ _swap_ximage_to_native (XImage *ximage)
     }
 }
 
-/* Return the number of 1 bits in mask.
- *
- * GCC 3.4 supports a "population count" builtin, which on many targets is
- * implemented with a single instruction. There is a fallback definition
- * in libgcc in case a target does not have one, which should be just as
- * good as the open-coded solution below, (which is "HACKMEM 169").
- */
-static inline int
-_popcount (uint32_t mask)
-{
-#if __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 4)
-    return __builtin_popcount (mask);
-#else
-    register int y;
-
-    y = (mask >> 1) &033333333333;
-    y = mask - y - ((y >>1) & 033333333333);
-    return (((y + (y >> 3)) & 030707070707) % 077);
-#endif
-}
-
 /* Given a mask, (with a single sequence of contiguous 1 bits), return
  * the number of 1 bits in 'width' and the number of 0 bits to its
  * right in 'shift'. */
 static inline void
 _characterize_field (uint32_t mask, int *width, int *shift)
 {
-    *width = _popcount (mask);
+    *width = _cairo_popcount (mask);
     /* The final '& 31' is to force a 0 mask to result in 0 shift. */
-    *shift = _popcount ((mask - 1) & ~mask) & 31;
+    *shift = _cairo_popcount ((mask - 1) & ~mask) & 31;
 }
 
 /* Convert a field of 'width' bits to 'new_width' bits with correct
