@@ -69,7 +69,7 @@ _cairo_xlib_visual_info_create (Display *dpy,
     int i, index, distance, min_distance = 0;
 
     const unsigned short index5_to_short[5] = {
-	0x0000, 0x4000, 0x8000, 0xc000, 0xffff
+	0x0000, 0x36db, 0x8000, 0xc925, 0xffff
     };
     const unsigned short index8_to_short[8] = {
 	0x0000, 0x2492, 0x4924, 0x6db6,
