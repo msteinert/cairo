@@ -73,10 +73,18 @@ struct _cairo_xlib_display {
     unsigned int closed :1;
 };
 
+/* size of color cube */
+#define CUBE_SIZE 6
+/* size of gray ramp */
+#define RAMP_SIZE 16
+
 typedef struct _cairo_xlib_visual_info {
     VisualID visualid;
-    XColor colors[256];
-    unsigned long rgb333_to_pseudocolor[512];
+    struct { uint8_t a, r, g, b; } colors[256];
+    uint8_t cube_to_pseudocolor[CUBE_SIZE][CUBE_SIZE][CUBE_SIZE];
+    uint8_t field8_to_cube[256];
+    int8_t  dither8_to_cube[256];
+    uint8_t gray8_to_pseudocolor[256];
 } cairo_xlib_visual_info_t;
 
 struct _cairo_xlib_screen_info {

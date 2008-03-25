@@ -430,16 +430,18 @@ _swap_ximage_to_native (XImage *ximage)
     }
 }
 
+
 /* Given a mask, (with a single sequence of contiguous 1 bits), return
  * the number of 1 bits in 'width' and the number of 0 bits to its
  * right in 'shift'. */
-static inline void
+static void
 _characterize_field (uint32_t mask, int *width, int *shift)
 {
     *width = _cairo_popcount (mask);
     /* The final '& 31' is to force a 0 mask to result in 0 shift. */
     *shift = _cairo_popcount ((mask - 1) & ~mask) & 31;
 }
+
 
 /* Convert a field of 'width' bits to 'new_width' bits with correct
  * rounding. */
@@ -462,6 +464,12 @@ _resize_field (uint32_t field, int width, int new_width)
     }
 }
 
+static inline uint32_t
+_adjust_field (uint32_t field, int adjustment)
+{
+    return MIN (255, MAX(0, (int)field + adjustment));
+}
+
 /* Given a shifted field value, (described by 'width' and 'shift),
  * resize it 8-bits and return that value.
  *
@@ -474,6 +482,13 @@ _field_to_8 (uint32_t field, int width, int shift)
     return _resize_field (field >> shift, width, 8);
 }
 
+static inline uint32_t
+_field_to_8_undither (uint32_t field, int width, int shift,
+		      int dither_adjustment)
+{
+    return _adjust_field (_field_to_8 (field, width, shift), - dither_adjustment>>width);
+}
+
 /* Given an 8-bit value, convert it to a field of 'width', shift it up
  *  to 'shift, and return it. */
 static inline uint32_t
@@ -482,6 +497,62 @@ _field_from_8 (uint32_t field, int width, int shift)
     return _resize_field (field, 8, width) << shift;
 }
 
+static inline uint32_t
+_field_from_8_dither (uint32_t field, int width, int shift,
+		      int8_t dither_adjustment)
+{
+    return _field_from_8 (_adjust_field (field, dither_adjustment>>width), width, shift);
+}
+
+static inline uint32_t
+_pseudocolor_from_rgb888_dither (cairo_xlib_visual_info_t *visual_info,
+				 uint32_t r, uint32_t g, uint32_t b,
+				 int8_t dither_adjustment)
+{
+    if (r == g && g == b) {
+	dither_adjustment /= RAMP_SIZE;
+	return visual_info->gray8_to_pseudocolor[_adjust_field (r, dither_adjustment)];
+    } else {
+	dither_adjustment = visual_info->dither8_to_cube[dither_adjustment+128];
+	return visual_info->cube_to_pseudocolor[visual_info->field8_to_cube[_adjust_field (r, dither_adjustment)]]
+					       [visual_info->field8_to_cube[_adjust_field (g, dither_adjustment)]]
+					       [visual_info->field8_to_cube[_adjust_field (b, dither_adjustment)]];
+    }
+}
+
+static inline uint32_t
+_pseudocolor_to_rgb888_undither (cairo_xlib_visual_info_t *visual_info,
+				 uint32_t pixel,
+				 int8_t dither_adjustment)
+{
+    uint32_t r, g, b;
+    pixel &= 0xff;
+    r = visual_info->colors[pixel].r;
+    g = visual_info->colors[pixel].g;
+    b = visual_info->colors[pixel].b;
+    if (r == g && g == b) {
+	dither_adjustment /= RAMP_SIZE;
+	return _adjust_field (r, - dither_adjustment) * 0x010101;
+    } else {
+	dither_adjustment = - visual_info->dither8_to_cube[dither_adjustment+128];
+	return (_adjust_field (r, dither_adjustment) << 16) |
+	       (_adjust_field (g, dither_adjustment) <<  8) |
+	       (_adjust_field (b, dither_adjustment)      );
+    }
+}
+
+
+/* should range from -128 to 127 */
+#define X 16
+static const int8_t dither_pattern[4][4] = {
+    {-8*X, +0*X, -6*X, +2*X},
+    {+4*X, -4*X, +6*X, -2*X},
+    {-5*X, +4*X, -7*X, +1*X},
+    {+7*X, -1*X, +5*X, -3*X}
+};
+#undef X
+
+
 static cairo_status_t
 _get_image_surface (cairo_xlib_surface_t    *surface,
 		    cairo_rectangle_int_t   *interest_rect,
@@ -489,7 +560,7 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 		    cairo_rectangle_int_t   *image_rect)
 {
     cairo_int_status_t status;
-    cairo_image_surface_t *image;
+    cairo_image_surface_t *image = NULL;
     XImage *ximage;
     unsigned short x1, y1, x2, y2;
     pixman_format_code_t pixman_format;
@@ -609,15 +680,17 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 							    ximage->height,
 							    ximage->bytes_per_line);
 	status = image->base.status;
-	if (status) {
-	    XDestroyImage (ximage);
-	    return status;
-	}
+	if (status)
+	    goto BAIL;
 
 	/* Let the surface take ownership of the data */
 	_cairo_image_surface_assume_ownership_of_data (image);
 	ximage->data = NULL;
     } else {
+	/* The visual we are dealing with is not supported by the
+	 * standard pixman formats. So we must first convert the data
+	 * to a supported format. */
+
 	cairo_format_t format;
 	unsigned char *data;
 	uint32_t *row;
@@ -626,20 +699,17 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	uint32_t a_mask=0, r_mask=0, g_mask=0, b_mask=0;
 	int a_width=0, r_width=0, g_width=0, b_width=0;
 	int a_shift=0, r_shift=0, g_shift=0, b_shift=0;
-	int x, y;
-	XColor *colors = NULL;
+	int x, y, x0, y0, x_off, y_off;
+	cairo_xlib_visual_info_t *visual_info;
 
-	/* The visual we are dealing with is not supported by the
-	 * standard pixman formats. So we must first convert the data
-	 * to a supported format. */
 	if (surface->visual->class == TrueColor) {
-	    cairo_bool_t has_color;
 	    cairo_bool_t has_alpha;
+	    cairo_bool_t has_color;
 
+	    has_alpha =  surface->a_mask;
 	    has_color = (surface->r_mask ||
 			 surface->g_mask ||
 			 surface->b_mask);
-	    has_alpha = surface->a_mask;
 
 	    if (has_color) {
 		if (has_alpha) {
@@ -666,48 +736,44 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	    _characterize_field (b_mask, &b_width, &b_shift);
 
 	} else {
-	    cairo_xlib_visual_info_t *visual_info;
-
 	    format = CAIRO_FORMAT_RGB24;
 
 	    status = _cairo_xlib_screen_get_visual_info (surface->screen_info,
 							 surface->visual,
 							 &visual_info);
-	    if (status) {
-		XDestroyImage (ximage);
-		return status;
-	    }
-
-	    colors = visual_info->colors;
+	    if (status)
+		goto BAIL;
 	}
 
 	image = (cairo_image_surface_t *) cairo_image_surface_create
 	    (format, ximage->width, ximage->height);
 	status = image->base.status;
-	if (status) {
-	    XDestroyImage (ximage);
-	    return status;
-	}
+	if (status)
+	    goto BAIL;
 
 	data = cairo_image_surface_get_data (&image->base);
 	rowstride = cairo_image_surface_get_stride (&image->base) >> 2;
 	row = (uint32_t *) data;
-	for (y = 0; y < ximage->height; y++) {
-	    for (x = 0; x < ximage->width; x++) {
+	x0 = x1 + surface->base.device_transform.x0;
+	y0 = y1 + surface->base.device_transform.y0;
+	for (y = 0, y_off = y0 % ARRAY_LENGTH (dither_pattern);
+	     y < ximage->height;
+	     y++, y_off = (y_off+1) % ARRAY_LENGTH (dither_pattern)) {
+	    const int8_t *dither_row = dither_pattern[y_off];
+	    for (x = 0, x_off = x0 % ARRAY_LENGTH (dither_pattern[0]);
+		 x < ximage->width;
+		 x++, x_off = (x_off+1) % ARRAY_LENGTH (dither_pattern[0])) {
+		int dither_adjustment = dither_row[x_off];
+
 		in_pixel = XGetPixel (ximage, x, y);
 		if (surface->visual->class == TrueColor) {
 		    out_pixel = (
 			_field_to_8 (in_pixel & a_mask, a_width, a_shift) << 24 |
-			_field_to_8 (in_pixel & r_mask, r_width, r_shift) << 16 |
-			_field_to_8 (in_pixel & g_mask, g_width, g_shift) << 8 |
-			_field_to_8 (in_pixel & b_mask, b_width, b_shift));
+			_field_to_8_undither (in_pixel & r_mask, r_width, r_shift, dither_adjustment) << 16 |
+			_field_to_8_undither (in_pixel & g_mask, g_width, g_shift, dither_adjustment) << 8 |
+			_field_to_8_undither (in_pixel & b_mask, b_width, b_shift, dither_adjustment));
 		} else {
-		    XColor *color;
-		    color = &colors[in_pixel & 0xff];
-		    out_pixel = (
-			_field_to_8 (color->red,   16, 0) << 16 |
-			_field_to_8 (color->green, 16, 0) << 8 |
-			_field_to_8 (color->blue,  16, 0));
+		    out_pixel = _pseudocolor_to_rgb888_undither (visual_info, in_pixel, dither_adjustment);
 		}
 		row[x] = out_pixel;
 	    }
@@ -715,10 +781,17 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	}
     }
 
+ BAIL:
     XDestroyImage (ximage);
 
+    if (status) {
+	if (image) {
+	    cairo_surface_destroy (&image->base);
+	    image = NULL;
+	}
+    }
     *image_out = image;
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static void
@@ -822,7 +895,6 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
     int native_byte_order = _native_byte_order_lsb () ? LSBFirst : MSBFirst;
     cairo_status_t status;
     cairo_bool_t own_data;
-    unsigned long *rgb333_to_pseudocolor = NULL;
 
     _pixman_format_to_masks (image->pixman_format, &image_masks);
 
@@ -850,10 +922,11 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 	XInitImage (&ximage);
     } else {
 	unsigned int stride, rowstride;
-	int x, y;
+	int x, y, x0, y0, x_off, y_off;
 	uint32_t in_pixel, out_pixel, *row;
 	int a_width=0, r_width=0, g_width=0, b_width=0;
 	int a_shift=0, r_shift=0, g_shift=0, b_shift=0;
+	cairo_xlib_visual_info_t *visual_info = NULL;
 
 	if (surface->depth > 16) {
 	    ximage.bits_per_pixel = 32;
@@ -876,12 +949,13 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 	XInitImage (&ximage);
 
 	if (surface->visual->class == TrueColor) {
+
 	    _characterize_field (surface->a_mask, &a_width, &a_shift);
 	    _characterize_field (surface->r_mask, &r_width, &r_shift);
 	    _characterize_field (surface->g_mask, &g_width, &g_shift);
 	    _characterize_field (surface->b_mask, &b_width, &b_shift);
+
 	} else {
-	    cairo_xlib_visual_info_t *visual_info;
 
 	    status = _cairo_xlib_screen_get_visual_info (surface->screen_info,
 							 surface->visual,
@@ -889,28 +963,36 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 	    if (status)
 		goto BAIL;
 
-	    rgb333_to_pseudocolor = visual_info->rgb333_to_pseudocolor;
 	}
 
 	rowstride = cairo_image_surface_get_stride (&image->base) >> 2;
 	row = (uint32_t *) cairo_image_surface_get_data (&image->base);
-	for (y = 0; y < ximage.height; y++) {
-	    for (x = 0; x < ximage.width; x++) {
+	x0 = dst_x + surface->base.device_transform.x0;
+	y0 = dst_y + surface->base.device_transform.y0;
+	for (y = 0, y_off = y0 % ARRAY_LENGTH (dither_pattern);
+	     y < ximage.height;
+	     y++, y_off = (y_off+1) % ARRAY_LENGTH (dither_pattern)) {
+	    const int8_t *dither_row = dither_pattern[y_off];
+	    for (x = 0, x_off = x0 % ARRAY_LENGTH (dither_pattern[0]);
+		 x < ximage.width;
+		 x++, x_off = (x_off+1) % ARRAY_LENGTH (dither_pattern[0])) {
+		int dither_adjustment = dither_row[x_off];
+
 		int a, r, g, b;
+
 		in_pixel = row[x];
 		a = (in_pixel >> 24) & 0xff;
 		r = (in_pixel >> 16) & 0xff;
 		g = (in_pixel >>  8) & 0xff;
 		b = (in_pixel      ) & 0xff;
-		if (surface->visual->class == TrueColor)
+		if (surface->visual->class == TrueColor) {
 		    out_pixel = (_field_from_8 (a, a_width, a_shift) |
-				 _field_from_8 (r, r_width, r_shift) |
-				 _field_from_8 (g, g_width, g_shift) |
-				 _field_from_8 (b, b_width, b_shift));
-		else
-		    out_pixel = rgb333_to_pseudocolor[_field_from_8 (r, 3, 6) |
-						      _field_from_8 (g, 3, 3) |
-						      _field_from_8 (b, 3, 0)];
+				 _field_from_8_dither (r, r_width, r_shift, dither_adjustment) |
+				 _field_from_8_dither (g, g_width, g_shift, dither_adjustment) |
+				 _field_from_8_dither (b, b_width, b_shift, dither_adjustment));
+		} else {
+		    out_pixel = _pseudocolor_from_rgb888_dither (visual_info, r, g, b, dither_adjustment);
+		}
 		XPutPixel (&ximage, x, y, out_pixel);
 	    }
 	    row += rowstride;
@@ -1644,10 +1726,7 @@ _cairo_xlib_surface_solid_fill_rectangles (cairo_xlib_surface_t    *surface,
 	if (status)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
-	gcv.foreground =
-	    visual_info->rgb333_to_pseudocolor[_field_from_8 (r, 3, 6) |
-					       _field_from_8 (g, 3, 3) |
-					       _field_from_8 (b, 3, 0)];
+	gcv.foreground = _pseudocolor_from_rgb888 (visual_info, r, g, b);
     }
 
     xgc = XCreateGC (surface->dpy, surface->drawable, GCForeground, &gcv);
