@@ -1728,7 +1728,7 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
     cairo_int_status_t rv = CAIRO_STATUS_SUCCESS;
     cairo_quartz_action_t action;
     quartz_stroke_t stroke;
-    CGAffineTransform strokeTransform;
+    CGAffineTransform origCTM, strokeTransform;
     CGPathRef path_for_unbounded = NULL;
 
     ND((stderr, "%p _cairo_quartz_surface_stroke op %d source->type %d\n", surface, op, source->type));
@@ -1749,6 +1749,9 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
     CGContextSetLineCap (surface->cgContext, _cairo_quartz_cairo_line_cap_to_quartz (style->line_cap));
     CGContextSetLineJoin (surface->cgContext, _cairo_quartz_cairo_line_join_to_quartz (style->line_join));
     CGContextSetMiterLimit (surface->cgContext, style->miter_limit);
+
+    origCTM = CGContextGetCTM (surface->cgContext);
+
     _cairo_quartz_cairo_matrix_to_quartz (ctm, &strokeTransform);
     CGContextConcatCTM (surface->cgContext, strokeTransform);
 
@@ -1795,6 +1798,8 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
 	CGContextReplacePathWithStrokedPath (surface->cgContext);
 	CGContextClip (surface->cgContext);
 
+	CGContextSetCTM (surface->cgContext, origCTM);
+
 	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
 	CGContextTranslateCTM (surface->cgContext, 0, surface->sourceImageRect.size.height);
 	CGContextScaleCTM (surface->cgContext, 1, -1);
@@ -1806,6 +1811,8 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
     } else if (action == DO_SHADING) {
 	CGContextReplacePathWithStrokedPath (surface->cgContext);
 	CGContextClip (surface->cgContext);
+
+	CGContextSetCTM (surface->cgContext, origCTM);
 
 	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
 	CGContextDrawShading (surface->cgContext, surface->sourceShading);

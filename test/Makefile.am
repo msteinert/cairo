@@ -111,6 +111,7 @@ rotate-image-surface-paint$(EXEEXT)			\
 scale-down-source-surface-paint$(EXEEXT)		\
 scale-source-surface-paint$(EXEEXT)			\
 stroke-ctm-caps$(EXEEXT)				\
+stroke-image$(EXEEXT)				        \
 select-font-face$(EXEEXT)				\
 select-font-no-show-text$(EXEEXT)			\
 self-copy$(EXEEXT)					\
@@ -567,6 +568,8 @@ REFERENCE_IMAGES = \
 	show-text-current-point-quartz-ref.png \
 	skew-extreme-ref.png \
 	skew-extreme-ps-ref.png \
+	stroke-image-ref.png \
+	stroke-image-quartz-ref.png \
 	source-clip-ref.png	\
 	source-clip-scale-quartz-ref.png	\
 	source-clip-scale-ps-argb32-ref.png	\
