@@ -290,27 +290,6 @@ _cairo_gstate_restore (cairo_gstate_t **gstate)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
-_cairo_gstate_recursive_apply_clip_path (cairo_gstate_t *gstate,
-					 cairo_clip_path_t *cpath)
-{
-    cairo_status_t status;
-
-    if (cpath == NULL)
-	return CAIRO_STATUS_SUCCESS;
-
-    status = _cairo_gstate_recursive_apply_clip_path (gstate, cpath->prev);
-    if (status)
-	return status;
-
-    return _cairo_clip_clip (&gstate->clip,
-			     &cpath->path,
-			     cpath->fill_rule,
-			     cpath->tolerance,
-			     cpath->antialias,
-			     gstate->target);
-}
-
 /**
  * _cairo_gstate_redirect_target:
  * @gstate: a #cairo_gstate_t
