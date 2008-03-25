@@ -141,132 +141,102 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
     return &surface->base;
 }
 
-/* XXX: This function should really live inside pixman. */
 cairo_int_status_t
 _pixman_format_from_masks (cairo_format_masks_t *masks,
-			   pixman_format_code_t	*format_ret)
+			   pixman_format_code_t *format_ret)
 {
-    switch (masks->bpp) {
-    case 32:
-	if (masks->alpha_mask == 0xff000000 &&
-	    masks->red_mask   == 0x00ff0000 &&
-	    masks->green_mask == 0x0000ff00 &&
-	    masks->blue_mask  == 0x000000ff)
-	{
-	    *format_ret = PIXMAN_a8r8g8b8;
-	    return CAIRO_STATUS_SUCCESS;
-	}
-	if (masks->alpha_mask == 0x00000000 &&
-	    masks->red_mask   == 0x00ff0000 &&
-	    masks->green_mask == 0x0000ff00 &&
-	    masks->blue_mask  == 0x000000ff)
-	{
-	    *format_ret = PIXMAN_x8r8g8b8;
-	    return CAIRO_STATUS_SUCCESS;
-	}
-	if (masks->alpha_mask == 0xff000000 &&
-	    masks->red_mask   == 0x000000ff &&
-	    masks->green_mask == 0x0000ff00 &&
-	    masks->blue_mask  == 0x00ff0000)
-	{
-	    *format_ret = PIXMAN_a8b8g8r8;
-	    return CAIRO_STATUS_SUCCESS;
-	}
-	if (masks->alpha_mask == 0x00000000 &&
-	    masks->red_mask   == 0x000000ff &&
-	    masks->green_mask == 0x0000ff00 &&
-	    masks->blue_mask  == 0x00ff0000)
-	{
-	    *format_ret = PIXMAN_x8b8g8r8;
-	    return CAIRO_STATUS_SUCCESS;
-	}
-	break;
-    case 16:
-	if (masks->alpha_mask == 0x0000 &&
-	    masks->red_mask   == 0xf800 &&
-	    masks->green_mask == 0x07e0 &&
-	    masks->blue_mask  == 0x001f)
-	{
-	    *format_ret = PIXMAN_r5g6b5;
-	    return CAIRO_STATUS_SUCCESS;
-	}
-	if (masks->alpha_mask == 0x0000 &&
-	    masks->red_mask   == 0x7c00 &&
-	    masks->green_mask == 0x03e0 &&
-	    masks->blue_mask  == 0x001f)
-	{
-	    *format_ret = PIXMAN_x1r5g5b5;
-	    return CAIRO_STATUS_SUCCESS;
-	}
-	break;
-    case 8:
-	if (masks->alpha_mask == 0xff)
-	{
-	    *format_ret = PIXMAN_a8;
-	    return CAIRO_STATUS_SUCCESS;
-	}
-	break;
-    case 1:
-	if (masks->alpha_mask == 0x1)
-	{
-	    *format_ret = PIXMAN_a1;
-	    return CAIRO_STATUS_SUCCESS;
-	}
-	break;
+    pixman_format_code_t format;
+    int format_type;
+    uint32_t color_masks;
+    int a, r, g, b;
+    cairo_format_masks_t format_masks;
+
+    a = _cairo_popcount (masks->alpha_mask);
+    r = _cairo_popcount (masks->red_mask);
+    g = _cairo_popcount (masks->green_mask);
+    b = _cairo_popcount (masks->blue_mask);
+
+    if (masks->red_mask) {
+	if (masks->red_mask > masks->blue_mask)
+	    format_type = PIXMAN_TYPE_ARGB;
+	else
+	    format_type = PIXMAN_TYPE_ABGR;
+    } else if (masks->alpha_mask) {
+	format_type = PIXMAN_TYPE_A;
+    } else {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    return CAIRO_INT_STATUS_UNSUPPORTED;
+    format = PIXMAN_FORMAT (masks->bpp, format_type, a, r, g, b);
+
+    if (! pixman_format_supported_destination (format))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* Sanity check that we got out of PIXMAN_FORMAT exactly what we
+     * expected. This avoid any problems from something bizarre like
+     * alpha in the least-significant bits, or insane channel order,
+     * or whatever. */
+     _pixman_format_to_masks (format, &format_masks);
+
+     if (masks->bpp        != format_masks.bpp        ||
+	 masks->red_mask   != format_masks.red_mask   ||
+	 masks->green_mask != format_masks.green_mask ||
+	 masks->blue_mask  != format_masks.blue_mask)
+     {
+	 return CAIRO_INT_STATUS_UNSUPPORTED;
+     }
+
+    *format_ret = format;
+    return CAIRO_STATUS_SUCCESS;
 }
 
-/* XXX: This function should really live inside pixman. */
+/* A mask consisting of N bits set to 1. */
+#define MASK(N) ((1 << (N))-1)
+
 void
-_pixman_format_to_masks (pixman_format_code_t	 pixman_format,
+_pixman_format_to_masks (pixman_format_code_t	 format,
 			 cairo_format_masks_t	*masks)
 {
-    masks->red_mask   = 0x0;
-    masks->green_mask = 0x0;
-    masks->blue_mask  = 0x0;
+    int a, r, g, b;
 
-    switch (pixman_format)
-    {
-    case PIXMAN_a8r8g8b8:
-    case PIXMAN_x8r8g8b8:
+    masks->bpp = PIXMAN_FORMAT_BPP (format);
+
+    /* Number of bits in each channel */
+    a = PIXMAN_FORMAT_A (format);
+    r = PIXMAN_FORMAT_R (format);
+    g = PIXMAN_FORMAT_G (format);
+    b = PIXMAN_FORMAT_B (format);
+
+    switch (PIXMAN_FORMAT_TYPE (format)) {
+    case PIXMAN_TYPE_ARGB:
+        masks->alpha_mask = MASK (a) << (r + g + b);
+        masks->red_mask   = MASK (r) << (g + b);
+        masks->green_mask = MASK (g) << (b);
+        masks->blue_mask  = MASK (b);
+        return;
+    case PIXMAN_TYPE_ABGR:
+        masks->alpha_mask = MASK (a) << (b + g + r);
+        masks->blue_mask  = MASK (b) << (g +r);
+        masks->green_mask = MASK (g) << (r);
+        masks->red_mask   = MASK (r);
+        return;
+    case PIXMAN_TYPE_A:
+        masks->alpha_mask = MASK (a);
+        masks->red_mask   = 0;
+        masks->green_mask = 0;
+        masks->blue_mask  = 0;
+        return;
+    case PIXMAN_TYPE_OTHER:
+    case PIXMAN_TYPE_COLOR:
+    case PIXMAN_TYPE_GRAY:
+    case PIXMAN_TYPE_YUY2:
+    case PIXMAN_TYPE_YV12:
     default:
-	masks->bpp        = 32;
-	masks->red_mask   = 0x00ff0000;
-	masks->green_mask = 0x0000ff00;
-	masks->blue_mask  = 0x000000ff;
-	break;
-
-    case PIXMAN_a8b8g8r8:
-    case PIXMAN_x8b8g8r8:
-	masks->bpp        = 32;
-	masks->red_mask   = 0x000000ff;
-	masks->green_mask = 0x0000ff00;
-	masks->blue_mask  = 0x00ff0000;
-	break;
-
-    case PIXMAN_r5g6b5:
-	masks->bpp        = 16;
-	masks->red_mask   = 0xf800;
-	masks->green_mask = 0x07e0;
-	masks->blue_mask  = 0x001f;
-	break;
-
-    case PIXMAN_x1r5g5b5:
-	masks->bpp        = 16;
-	masks->red_mask   = 0x7c00;
-	masks->green_mask = 0x03e0;
-	masks->blue_mask  = 0x001f;
-	break;
-
-    case PIXMAN_a8:
-	masks->bpp = 8;
-	break;
-
-    case PIXMAN_a1:
-	masks->bpp = 1;
-	break;
+        masks->alpha_mask = 0;
+        masks->red_mask   = 0;
+        masks->green_mask = 0;
+        masks->blue_mask  = 0;
+        return;
     }
 }
 
