@@ -82,12 +82,10 @@ _cairo_xlib_visual_info_create (Display *dpy,
 
     info->visualid = visualid;
 
-    /* Allocate a 16-entry gray ramp and a 5x5x5 color cube. Give up
+    /* Allocate a 8-entry gray ramp and a 5x5x5 color cube. Give up
      * as soon as failures start. */
-    for (gray = 0; gray < 16; gray++) {
-	color.red   = (gray << 12) | (gray << 8) | (gray << 4) | gray;
-	color.green = (gray << 12) | (gray << 8) | (gray << 4) | gray;
-	color.blue  = (gray << 12) | (gray << 8) | (gray << 4) | gray;
+    for (gray = 0; gray < 8; gray++) {
+	color.red = color.green = color.blue = index8_to_short[gray];
 	if (! XAllocColor (dpy, colormap, &color))
 	    goto DONE_ALLOCATE;
     }
