@@ -651,7 +651,7 @@ CAIRO_BACKEND_ENABLE(pdf, PDF, pdf, PDF_SURFACE, yes, [
     pdf_NONPKGCONFIG_LIBS=-lz
 ])
 
-POPPLER_VERSION_REQUIRED=0.4.1
+POPPLER_VERSION_REQUIRED=0.8.0
 test_pdf=no
 if test "x$use_pdf" = "xyes"; then
   poppler_DEPENDENCY="poppler-glib >= $POPPLER_VERSION_REQUIRED"
