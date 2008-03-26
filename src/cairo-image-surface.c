@@ -150,7 +150,6 @@ _pixman_format_from_masks (cairo_format_masks_t *masks,
 {
     pixman_format_code_t format;
     int format_type;
-    uint32_t color_masks;
     int a, r, g, b;
     cairo_format_masks_t format_masks;
 
