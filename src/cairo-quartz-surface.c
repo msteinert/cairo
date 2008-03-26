@@ -556,7 +556,7 @@ ComputeGradientValue (void *info, const float *in, float *out)
     }
 
     for (i = 0; i < grad->n_stops; i++) {
-	if (_cairo_fixed_to_double (grad->stops[i].x) > fdist)
+	if (grad->stops[i].offset > fdist)
 	    break;
     }
 
@@ -568,8 +568,8 @@ ComputeGradientValue (void *info, const float *in, float *out)
 	out[2] = grad->stops[i].color.blue;
 	out[3] = grad->stops[i].color.alpha;
     } else {
-	float ax = _cairo_fixed_to_double(grad->stops[i-1].x);
-	float bx = _cairo_fixed_to_double(grad->stops[i].x) - ax;
+	float ax = grad->stops[i-1].offset;
+	float bx = grad->stops[i].offset - ax;
 	float bp = (fdist - ax)/bx;
 	float ap = 1.0 - bp;
 

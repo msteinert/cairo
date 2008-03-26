@@ -790,7 +790,7 @@ typedef struct _cairo_surface_pattern {
 } cairo_surface_pattern_t;
 
 typedef struct _cairo_gradient_stop {
-    cairo_fixed_t x;
+    double offset;
     cairo_color_t color;
 } cairo_gradient_stop_t;
 

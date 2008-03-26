@@ -757,7 +757,7 @@ _cairo_win32_printing_surface_paint_linear_pattern (cairo_win32_surface_t *surfa
 	}
 
 	stop = i%num_rects + 1;
-	vert[i*2+1].x = (LONG)(d*(range_start + i/num_rects + _cairo_fixed_to_double (pattern->base.stops[stop].x)));
+	vert[i*2+1].x = (LONG)(d*(range_start + i/num_rects + pattern->base.stops[stop].offset));
 	vert[i*2+1].y = (LONG) clip.bottom;
 	if (extend == CAIRO_EXTEND_REFLECT && (range_start+(i/num_rects))%2)
 	    stop = num_rects - stop;

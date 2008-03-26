@@ -1981,7 +1981,7 @@ _cairo_pdf_surface_emit_pattern_stops (cairo_pdf_surface_t      *surface,
 	stops[i].color[3] = pattern->stops[i].color.alpha;
         if (!CAIRO_ALPHA_IS_OPAQUE (stops[i].color[3]))
             emit_alpha = TRUE;
-	stops[i].offset = _cairo_fixed_to_double (pattern->stops[i].x);
+	stops[i].offset = pattern->stops[i].offset;
     }
 
     if (pattern->base.extend == CAIRO_EXTEND_REPEAT ||
@@ -2220,8 +2220,8 @@ _cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t    *surface,
     assert (status == CAIRO_STATUS_SUCCESS);
 
     cairo_matrix_multiply (&pat_to_pdf, &pat_to_pdf, &surface->cairo_to_pdf);
-    first_stop = _cairo_fixed_to_double (gradient->stops[0].x);
-    last_stop = _cairo_fixed_to_double (gradient->stops[gradient->n_stops - 1].x);
+    first_stop = gradient->stops[0].offset;
+    last_stop = gradient->stops[gradient->n_stops - 1].offset;
 
     if (pattern->base.base.extend == CAIRO_EXTEND_REPEAT ||
 	pattern->base.base.extend == CAIRO_EXTEND_REFLECT) {

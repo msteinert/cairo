@@ -2467,7 +2467,7 @@ _cairo_ps_surface_emit_pattern_stops (cairo_ps_surface_t       *surface,
 	stops[i].color[1] = stop->color.green;
 	stops[i].color[2] = stop->color.blue;
 	stops[i].color[3] = stop->color.alpha;
-	stops[i].offset = _cairo_fixed_to_double (pattern->stops[i].x);
+	stops[i].offset = pattern->stops[i].offset;
     }
 
     if (pattern->base.extend == CAIRO_EXTEND_REPEAT ||
@@ -2586,8 +2586,8 @@ _cairo_ps_surface_emit_linear_pattern (cairo_ps_surface_t     *surface,
     assert (status == CAIRO_STATUS_SUCCESS);
 
     cairo_matrix_multiply (&pat_to_ps, &pat_to_ps, &surface->cairo_to_ps);
-    first_stop = _cairo_fixed_to_double (gradient->stops[0].x);
-    last_stop = _cairo_fixed_to_double (gradient->stops[gradient->n_stops - 1].x);
+    first_stop = gradient->stops[0].offset;
+    last_stop = gradient->stops[gradient->n_stops - 1].offset;
 
     if (pattern->base.base.extend == CAIRO_EXTEND_REPEAT ||
 	pattern->base.base.extend == CAIRO_EXTEND_REFLECT) {
