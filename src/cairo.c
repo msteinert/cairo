@@ -2295,11 +2295,11 @@ cairo_in_fill (cairo_t *cr, double x, double y)
  * taken into account.
  *
  * Note that if the line width is set to exactly zero, then
- * cairo_stroke_extents will return an empty rectangle. Contrast with
+ * cairo_stroke_extents() will return an empty rectangle. Contrast with
  * cairo_path_extents() which can be used to compute the non-empty
  * bounds as the line width approaches zero.
  *
- * Note that cairo_stroke_extents must necessarily do more work to
+ * Note that cairo_stroke_extents() must necessarily do more work to
  * compute the precise inked areas in light of the stroke parameters,
  * so cairo_path_extents() may be more desirable for sake of
  * performance if non-inked path extents are desired.
@@ -2352,7 +2352,7 @@ cairo_stroke_extents (cairo_t *cr,
  * non-zero extents for some paths with no inked area, (such as a
  * simple line segment).
  *
- * Note that cairo_fill_extents must necessarily do more work to
+ * Note that cairo_fill_extents() must necessarily do more work to
  * compute the precise inked areas in light of the fill rule, so
  * cairo_path_extents() may be more desirable for sake of performance
  * if the non-inked path extents are desired.
