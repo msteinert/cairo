@@ -548,7 +548,7 @@ _cairo_quartz_init_glyph_surface (cairo_quartz_scaled_font_t *font,
     height = ceil(glyphRect.size.height);
 
     //fprintf (stderr, "glyphRect[n]: %f %f %f %f\n", glyphRect.origin.x, glyphRect.origin.y, glyphRect.size.width, glyphRect.size.height);
-    
+
     surface = (cairo_image_surface_t*) cairo_image_surface_create (CAIRO_FORMAT_A8, width, height);
     if (surface->base.status)
 	return surface->base.status;
@@ -570,7 +570,7 @@ _cairo_quartz_init_glyph_surface (cairo_quartz_scaled_font_t *font,
     CGContextClearRect (cgContext, CGRectMake (0.0f, 0.0f, width, height));
 
     if (font->base.options.antialias == CAIRO_ANTIALIAS_NONE)
-    	CGContextSetShouldAntialias (cgContext, false);
+	CGContextSetShouldAntialias (cgContext, false);
 
     CGContextSetRGBFillColor (cgContext, 1.0, 1.0, 1.0, 1.0);
     CGContextShowGlyphsAtPoint (cgContext, - glyphOrigin.x, - glyphOrigin.y, &glyph, 1);
