@@ -335,20 +335,46 @@ _cairo_quartz_init_glyph_metrics (cairo_quartz_scaled_font_t *font,
 
     cairo_quartz_font_face_t *font_face = _cairo_quartz_scaled_to_face(font);
     cairo_text_extents_t extents = {0, 0, 0, 0, 0, 0};
+    CGAffineTransform textMatrix;
     CGGlyph glyph = _cairo_quartz_scaled_glyph_index (scaled_glyph);
     int advance;
     CGRect bbox;
     double emscale = CGFontGetUnitsPerEmPtr (font_face->cgFont);
+    double xscale, yscale;
     double xmin, ymin, xmax, ymax;
 
     if (glyph == INVALID_GLYPH)
 	goto FAIL;
 
-    if (!CGFontGetGlyphAdvancesPtr (font_face->cgFont, &glyph, 1, &advance))
+    if (!CGFontGetGlyphAdvancesPtr (font_face->cgFont, &glyph, 1, &advance) ||
+	!CGFontGetGlyphBBoxesPtr (font_face->cgFont, &glyph, 1, &bbox))
 	goto FAIL;
 
-    if (!CGFontGetGlyphBBoxesPtr (font_face->cgFont, &glyph, 1, &bbox))
+    status = _cairo_matrix_compute_scale_factors (&font->base.scale,
+						  &xscale, &yscale, 1);
+    if (status)
 	goto FAIL;
+
+    bbox = CGRectMake (bbox.origin.x / emscale,
+		       bbox.origin.y / emscale,
+		       bbox.size.width / emscale,
+		       bbox.size.height / emscale);
+
+    /* Should we want to always integer-align glyph extents, we can do so in this way */
+#if 0
+    {
+	CGAffineTransform textMatrix;
+	textMatrix = CGAffineTransformMake (font->base.scale.xx,
+					    -font->base.scale.yx,
+					    -font->base.scale.xy,
+					    font->base.scale.yy,
+					    0.0f, 0.0f);
+
+	bbox = CGRectApplyAffineTransform (bbox, textMatrix);
+	bbox = CGRectIntegral (bbox);
+	bbox = CGRectApplyAffineTransform (bbox, CGAffineTransformInvert (textMatrix));
+    }
+#endif
 
 #if 0
     fprintf (stderr, "[0x%04x] bbox: %f %f %f %f\n", glyph,
@@ -356,10 +382,10 @@ _cairo_quartz_init_glyph_metrics (cairo_quartz_scaled_font_t *font,
 	     bbox.size.width / emscale, bbox.size.height / emscale);
 #endif
 
-    xmin = CGRectGetMinX(bbox) / emscale;
-    ymin = CGRectGetMinY(bbox) / emscale;
-    xmax = CGRectGetMaxX(bbox) / emscale;
-    ymax = CGRectGetMaxY(bbox) / emscale;
+    xmin = CGRectGetMinX(bbox);
+    ymin = CGRectGetMinY(bbox);
+    xmax = CGRectGetMaxX(bbox);
+    ymax = CGRectGetMaxY(bbox);
 
     extents.x_bearing = xmin;
     extents.y_bearing = - ymax;
@@ -494,7 +520,7 @@ _cairo_quartz_init_glyph_surface (cairo_quartz_scaled_font_t *font,
     CGColorSpaceRef gray;
     CGContextRef cgContext = NULL;
     CGAffineTransform textMatrix;
-    CGRect glyphRect;
+    CGRect glyphRect, glyphRectInt;
     CGPoint glyphOrigin;
 
     //fprintf (stderr, "scaled_glyph: %p surface: %p\n", scaled_glyph, scaled_glyph->surface);
@@ -536,16 +562,26 @@ _cairo_quartz_init_glyph_surface (cairo_quartz_scaled_font_t *font,
 			    bbox.size.width / emscale,
 			    bbox.size.height / emscale);
 
-    //fprintf (stderr, "glyphRect[o]: %f %f %f %f\n", glyphRect.origin.x, glyphRect.origin.y, glyphRect.size.width, glyphRect.size.height);
-
     glyphRect = CGRectApplyAffineTransform (glyphRect, textMatrix);
 
-    glyphOrigin = glyphRect.origin;
+    /* Round the rectangle outwards, so that we don't have to deal
+     * with non-integer-pixel origins or dimensions.
+     */
+    glyphRectInt = CGRectIntegral (glyphRect);
+
+#if 0
+    fprintf (stderr, "glyphRect[o]: %f %f %f %f\n",
+	     glyphRect.origin.x, glyphRect.origin.y, glyphRect.size.width, glyphRect.size.height);
+    fprintf (stderr, "glyphRectInt: %f %f %f %f\n",
+	     glyphRectInt.origin.x, glyphRectInt.origin.y, glyphRectInt.size.width, glyphRectInt.size.height);
+#endif
+
+    glyphOrigin = glyphRectInt.origin;
 
     //textMatrix = CGAffineTransformConcat (textMatrix, CGAffineTransformInvert (ctm));
 
-    width = ceil(glyphRect.size.width);
-    height = ceil(glyphRect.size.height);
+    width = glyphRectInt.size.width;
+    height = glyphRectInt.size.height;
 
     //fprintf (stderr, "glyphRect[n]: %f %f %f %f\n", glyphRect.origin.x, glyphRect.origin.y, glyphRect.size.width, glyphRect.size.height);
 
