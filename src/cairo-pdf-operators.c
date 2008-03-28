@@ -371,7 +371,7 @@ _cairo_pdf_path_rectangle (pdf_path_info_t *info, cairo_box_t *box)
  * the stroke workaround will not modify the path being emitted.
  */
 static cairo_status_t
-_cairo_pdf_operators_emit_path (cairo_pdf_operators_t 	*pdf_operators,
+_cairo_pdf_operators_emit_path (cairo_pdf_operators_t	*pdf_operators,
 				cairo_path_fixed_t      *path,
 				cairo_matrix_t          *path_transform,
 				cairo_line_cap_t         line_cap)
@@ -384,7 +384,7 @@ _cairo_pdf_operators_emit_path (cairo_pdf_operators_t 	*pdf_operators,
     word_wrap = _word_wrap_stream_create (pdf_operators->stream, 72);
     status = _cairo_output_stream_get_status (word_wrap);
     if (status)
-	return status;
+	return _cairo_output_stream_destroy (word_wrap);
 
     info.output = word_wrap;
     info.path_transform = path_transform;
@@ -794,7 +794,7 @@ _cairo_pdf_operators_show_glyphs (cairo_pdf_operators_t		*pdf_operators,
     word_wrap_stream = _word_wrap_stream_create (pdf_operators->stream, 72);
     status = _cairo_output_stream_get_status (word_wrap_stream);
     if (status)
-	return status;
+	return _cairo_output_stream_destroy (word_wrap_stream);
 
     _cairo_output_stream_printf (word_wrap_stream,
 				 "BT\n");
