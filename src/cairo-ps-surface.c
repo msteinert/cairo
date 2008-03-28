@@ -2030,6 +2030,7 @@ _cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
     double old_width, old_height;
     cairo_matrix_t old_cairo_to_ps;
     cairo_content_t old_content;
+    cairo_clip_t *old_clip;
     cairo_rectangle_int_t meta_extents;
     cairo_status_t status;
 
@@ -2041,6 +2042,7 @@ _cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
     old_width = surface->width;
     old_height = surface->height;
     old_cairo_to_ps = surface->cairo_to_ps;
+    old_clip = _cairo_surface_get_clip (&surface->base);
     surface->width = meta_extents.width;
     surface->height = meta_extents.height;
     cairo_matrix_init (&surface->cairo_to_ps, 1, 0, 0, -1, 0, surface->height);
@@ -2072,6 +2074,10 @@ _cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
     surface->width = old_width;
     surface->height = old_height;
     surface->cairo_to_ps = old_cairo_to_ps;
+    status = _cairo_surface_set_clip (&surface->base, old_clip);
+    if (status)
+	return status;
+
     _cairo_pdf_operators_set_cairo_to_pdf_matrix (&surface->pdf_operators,
 						  &surface->cairo_to_ps);
 

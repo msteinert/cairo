@@ -1985,6 +1985,12 @@ _cairo_surface_set_empty_clip_path (cairo_surface_t *surface,
     return _cairo_surface_set_error (surface, status);
 }
 
+cairo_clip_t *
+_cairo_surface_get_clip (cairo_surface_t *surface)
+{
+    return surface->clip;
+}
+
 cairo_status_t
 _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
 {

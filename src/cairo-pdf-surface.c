@@ -1494,6 +1494,7 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
     double old_width, old_height;
     cairo_matrix_t old_cairo_to_pdf;
     cairo_paginated_mode_t old_paginated_mode;
+    cairo_clip_t *old_clip;
     cairo_rectangle_int_t meta_extents;
     cairo_status_t status;
     int alpha = 0;
@@ -1506,6 +1507,7 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
     old_height = surface->height;
     old_cairo_to_pdf = surface->cairo_to_pdf;
     old_paginated_mode = surface->paginated_mode;
+    old_clip = _cairo_surface_get_clip (&surface->base);
     surface->width = meta_extents.width;
     surface->height = meta_extents.height;
     /* Patterns are emitted after fallback images. The paginated mode
@@ -1548,6 +1550,10 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
     surface->height = old_height;
     surface->paginated_mode = old_paginated_mode;
     surface->cairo_to_pdf = old_cairo_to_pdf;
+    status = _cairo_surface_set_clip (&surface->base, old_clip);
+    if (status)
+	return status;
+
     _cairo_pdf_operators_set_cairo_to_pdf_matrix (&surface->pdf_operators,
 						  &surface->cairo_to_pdf);
 

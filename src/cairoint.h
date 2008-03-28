@@ -1750,6 +1750,9 @@ _cairo_surface_intersect_clip_path (cairo_surface_t    *surface,
 				    double		tolerance,
 				    cairo_antialias_t	antialias);
 
+cairo_private cairo_clip_t *
+_cairo_surface_get_clip (cairo_surface_t *surface);
+
 cairo_private cairo_status_t
 _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip);
 
