@@ -4154,9 +4154,10 @@ _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t  *surface,
     if (! _pattern_supported (pattern))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (op == CAIRO_OPERATOR_OVER || op == CAIRO_OPERATOR_SOURCE) {
+    if (op == CAIRO_OPERATOR_OVER) {
 	if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	    cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
+
 	    if ( _cairo_surface_is_meta (surface_pattern->surface))
 		return CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN;
 	}
@@ -4171,8 +4172,13 @@ _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t  *surface,
 	if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	    cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
 
-	    return _cairo_pdf_surface_analyze_surface_pattern_transparency (surface,
-									    surface_pattern);
+	    if (_cairo_surface_is_meta (surface_pattern->surface)) {
+		if (_cairo_pattern_is_opaque (pattern))
+		    return CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN;
+	    } else {
+		return _cairo_pdf_surface_analyze_surface_pattern_transparency (surface,
+										surface_pattern);
+	    }
 	}
 
 	if (_cairo_pattern_is_opaque (pattern))
