@@ -2213,6 +2213,14 @@ _cairo_ps_surface_paint_surface (cairo_ps_surface_t      *surface,
 				     (int)(height/scale),
 				     scale*72,
 				     (long)width*height*3);
+    } else {
+	if (op == CAIRO_OPERATOR_SOURCE) {
+	    _cairo_output_stream_printf (surface->stream,
+					 "%d g 0 0 %f %f rectfill\n",
+					 surface->content == CAIRO_CONTENT_COLOR ? 0 : 1,
+					 surface->width,
+					 surface->height);
+	}
     }
 
     status = cairo_matrix_invert (&cairo_p2d);
@@ -2319,6 +2327,12 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
 
     old_use_string_datasource = surface->use_string_datasource;
     surface->use_string_datasource = TRUE;
+    if (op == CAIRO_OPERATOR_SOURCE) {
+	_cairo_output_stream_printf (surface->stream,
+				     "%d g 0 0 %f %f rectfill\n",
+				     surface->content == CAIRO_CONTENT_COLOR ? 0 : 1,
+				     xstep, ystep);
+    }
     status = _cairo_ps_surface_emit_surface (surface, pattern, op);
     if (status)
 	return status;
@@ -2350,10 +2364,17 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
 				     pattern_height*2,
 				     pattern_width*2);
     } else {
+	if (op == CAIRO_OPERATOR_SOURCE) {
+	    _cairo_output_stream_printf (surface->stream,
+					 "   /BBox [0 0 %f %f]\n",
+					 xstep, ystep);
+	} else {
+	    _cairo_output_stream_printf (surface->stream,
+					 "   /BBox [0 0 %d %d]\n",
+					 pattern_width, pattern_height);
+	}
 	_cairo_output_stream_printf (surface->stream,
-				     "   /BBox [0 0 %d %d]\n"
-				     "   /PaintProc { CairoPattern }\n",
-				     pattern_width, pattern_height);
+				     "   /PaintProc { CairoPattern }\n");
     }
 
     _cairo_output_stream_printf (surface->stream,
@@ -2881,23 +2902,15 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 				 "%% _cairo_ps_surface_paint\n");
 #endif
 
-    status = _cairo_surface_get_extents (&surface->base, &surface_extents);
+    status = _cairo_surface_get_extents (&surface->base, &extents);
     if (status)
 	return status;
-
-    status = _cairo_pattern_get_extents (source, &extents);
-    if (status)
-	return status;
-
-    _cairo_rectangle_intersect (&extents, &surface_extents);
 
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
 	(source->extend == CAIRO_EXTEND_NONE ||
 	 source->extend == CAIRO_EXTEND_PAD))
     {
-	_cairo_output_stream_printf (stream, "q %d %d %d %d rectclip\n",
-				     extents.x,
-				     surface_extents.height - extents.y - extents.height,
+	_cairo_output_stream_printf (stream, "q 0 0 %d %d rectclip\n",
 				     extents.width,
 				     extents.height);
 
@@ -2916,9 +2929,7 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 	if (status)
 	    return status;
 
-	_cairo_output_stream_printf (stream, "%d %d %d %d rectfill\n",
-				     extents.x,
-				     surface_extents.height - extents.y - extents.height,
+	_cairo_output_stream_printf (stream, "0 0 %d %d rectfill\n",
 				     extents.width,
 				     extents.height);
     }
