@@ -282,7 +282,9 @@ REFERENCE_IMAGES = \
 	clip-nesting-rgb24-ref.png	\
 	clip-operator-ref.png	\
 	clip-operator-pdf-argb32-ref.png \
+	clip-operator-pdf-rgb24-ref.png \
 	clip-operator-ps-argb32-ref.png	\
+	clip-operator-ps-rgb24-ref.png	\
 	clip-operator-rgb24-ref.png	\
 	clip-operator-quartz-ref.png	\
 	clip-operator-quartz-rgb24-ref.png	\
@@ -384,6 +386,7 @@ REFERENCE_IMAGES = \
 	ft-show-glyphs-positioning-ref.png		\
 	ft-show-glyphs-positioning-pdf-ref.png		\
 	ft-show-glyphs-positioning-ps-ref.png		\
+	ft-show-glyphs-positioning-svg-ref.png		\
 	ft-text-vertical-layout-type1-ps-ref.png	\
 	ft-text-vertical-layout-type1-ref.png	\
 	ft-text-vertical-layout-type1-svg-ref.png	\
@@ -475,6 +478,8 @@ REFERENCE_IMAGES = \
 	operator-clear-pdf-argb32-ref.png	\
 	operator-clear-pdf-rgb24-ref.png	\
 	operator-clear-ps-argb32-ref.png	\
+	operator-source-pdf-argb32-ref.png	\
+	operator-source-pdf-rgb24-ref.png	\
 	operator-source-ps-argb32-ref.png	\
 	operator-source-ps-rgb24-ref.png	\
 	operator-source-ref.png	\
@@ -570,6 +575,8 @@ REFERENCE_IMAGES = \
 	skew-extreme-ref.png \
 	skew-extreme-ps-ref.png \
 	stroke-image-ref.png \
+	stroke-image-pdf-ref.png \
+	stroke-image-ps-ref.png \
 	stroke-image-quartz-ref.png \
 	source-clip-ref.png	\
 	source-clip-scale-quartz-ref.png	\
@@ -616,6 +623,9 @@ REFERENCE_IMAGES = \
 	text-rotate-ps-ref.png	\
 	text-rotate-svg-ref.png	\
 	text-rotate-quartz-ref.png \
+	text-transform-ref.png		\
+	text-transform-pdf-ref.png	\
+	text-transform-ps-ref.png	\
 	transforms-ref.png	\
 	transforms-ps-ref.png	\
 	translate-show-surface-ref.png	\
