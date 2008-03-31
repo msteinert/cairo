@@ -1501,7 +1501,7 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
     cairo_paginated_mode_t old_paginated_mode;
     cairo_clip_t *old_clip;
     cairo_rectangle_int_t meta_extents;
-    cairo_status_t status;
+    cairo_status_t status, status2;
     int alpha = 0;
 
     status = _cairo_surface_get_extents (meta_surface, &meta_extents);
@@ -1555,9 +1555,9 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
     surface->height = old_height;
     surface->paginated_mode = old_paginated_mode;
     surface->cairo_to_pdf = old_cairo_to_pdf;
-    status = _cairo_surface_set_clip (&surface->base, old_clip);
-    if (status)
-	return status;
+    status2 = _cairo_surface_set_clip (&surface->base, old_clip);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = status2;
 
     _cairo_pdf_operators_set_cairo_to_pdf_matrix (&surface->pdf_operators,
 						  &surface->cairo_to_pdf);
