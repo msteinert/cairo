@@ -956,7 +956,7 @@ static cairo_status_t
 _cairo_svg_surface_emit_composite_image_pattern (cairo_output_stream_t   *output,
 						 cairo_svg_surface_t	 *svg_surface,
 						 cairo_surface_pattern_t *pattern,
-						 int	 		  pattern_id,
+						 int			  pattern_id,
 						 const cairo_matrix_t	 *parent_matrix,
 						 const char		 *extra_attributes)
 {
@@ -975,7 +975,7 @@ _cairo_svg_surface_emit_composite_image_pattern (cairo_output_stream_t   *output
 
     status = _cairo_surface_get_extents (surface, &extents);
     if (status)
-	return status;
+	goto FAIL;
 
     p2u = pattern->base.matrix;
     status = cairo_matrix_invert (&p2u);
@@ -1012,6 +1012,7 @@ _cairo_svg_surface_emit_composite_image_pattern (cairo_output_stream_t   *output
     if (pattern_id != invalid_pattern_id)
 	_cairo_output_stream_printf (output, "</pattern>\n");
 
+  FAIL:
     _cairo_pattern_release_surface ((cairo_pattern_t *)pattern,
 				    surface, &surface_attr);
 
