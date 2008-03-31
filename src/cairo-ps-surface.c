@@ -2142,17 +2142,23 @@ _cairo_ps_surface_acquire_surface (cairo_ps_surface_t      *surface,
 	cairo_rectangle_int_t pattern_extents;
 
 	status = _cairo_surface_get_extents (meta_surface, &pattern_extents);
+	if (status)
+	    return status;
+
 	*width = pattern_extents.width;
 	*height = pattern_extents.height;
     } else {
 	status = _cairo_surface_acquire_source_image (pattern->surface,
 						      &surface->image,
 						      &surface->image_extra);
+	if (status)
+	    return status;
+
 	*width = surface->image->width;
 	*height = surface->image->height;
     }
 
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
