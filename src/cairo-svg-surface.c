@@ -2109,6 +2109,9 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
     _cairo_output_stream_printf (surface->xml_node, "<path style=\"fill: none; ");
     status = _cairo_svg_surface_emit_stroke_style (surface->xml_node, surface, op,
 						   source, stroke_style, ctm_inverse);
+    if (status)
+	return status;
+
     _cairo_output_stream_printf (surface->xml_node, "\" ");
 
     status = _cairo_svg_surface_emit_path (surface->xml_node, path, ctm_inverse);
