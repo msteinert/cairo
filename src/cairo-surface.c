@@ -2120,19 +2120,16 @@ _cairo_surface_show_glyphs (cairo_surface_t	*surface,
     if (_cairo_surface_has_device_transform (surface) &&
 	! _cairo_matrix_is_integer_translation (&surface->device_transform, NULL, NULL))
     {
-	cairo_font_options_t *font_options;
+	cairo_font_options_t font_options;
 	cairo_matrix_t dev_ctm;
-
-	font_options = cairo_font_options_create ();
 
 	cairo_scaled_font_get_ctm (scaled_font, &dev_ctm);
 	cairo_matrix_multiply (&dev_ctm, &dev_ctm, &surface->device_transform);
-	cairo_scaled_font_get_font_options (scaled_font, font_options);
+	cairo_scaled_font_get_font_options (scaled_font, &font_options);
 	dev_scaled_font = cairo_scaled_font_create (cairo_scaled_font_get_font_face (scaled_font),
 						    &font_matrix,
 						    &dev_ctm,
-						    font_options);
-	cairo_font_options_destroy (font_options);
+						    &font_options);
     }
     status = cairo_scaled_font_status (dev_scaled_font);
     if (status) {
