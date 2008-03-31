@@ -56,8 +56,11 @@ _color_distance (unsigned short r1, unsigned short g1, unsigned short b1,
 	    (b2 - b1) * (b2 - b1));
 }
 
-cairo_xlib_visual_info_t *
-_cairo_xlib_visual_info_create (Display *dpy, int screen, VisualID visualid)
+cairo_status_t
+_cairo_xlib_visual_info_create (Display *dpy,
+	                        int screen,
+				VisualID visualid,
+				cairo_xlib_visual_info_t **out)
 {
     cairo_xlib_visual_info_t *info;
     Colormap colormap = DefaultColormap (dpy, screen);
@@ -75,7 +78,7 @@ _cairo_xlib_visual_info_create (Display *dpy, int screen, VisualID visualid)
 
     info = malloc (sizeof (cairo_xlib_visual_info_t));
     if (info == NULL)
-	return NULL;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     info->visualid = visualid;
 
@@ -133,5 +136,13 @@ _cairo_xlib_visual_info_create (Display *dpy, int screen, VisualID visualid)
 	}
     }
 
-    return info;
+    *out = info;
+    return CAIRO_STATUS_SUCCESS;
+}
+
+void
+_cairo_xlib_visual_info_destroy (Display *dpy, cairo_xlib_visual_info_t *info)
+{
+    /* No need for XFreeColors() whilst using DefaultColormap */
+    free (info);
 }

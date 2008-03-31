@@ -695,8 +695,13 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 
 	    format = CAIRO_FORMAT_RGB24;
 
-	    visual_info = _cairo_xlib_screen_get_visual_info (surface->screen_info,
-							      surface->visual);
+	    status = _cairo_xlib_screen_get_visual_info (surface->screen_info,
+							 surface->visual,
+							 &visual_info);
+	    if (status) {
+		XDestroyImage (ximage);
+		return status;
+	    }
 
 	    colors = visual_info->colors;
 	}
@@ -845,7 +850,7 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
     unsigned long *rgb333_to_pseudocolor = NULL;
 
     _pixman_format_to_masks (image->pixman_format, &image_masks);
-    
+
     ximage.width = image->width;
     ximage.height = image->height;
     ximage.format = ZPixmap;
@@ -859,7 +864,7 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
     ximage.blue_mask = surface->b_mask;
     ximage.xoffset = 0;
 
-    if (image_masks.red_mask   == surface->r_mask   &&
+    if (image_masks.red_mask   == surface->r_mask &&
 	image_masks.green_mask == surface->g_mask &&
 	image_masks.blue_mask  == surface->b_mask)
     {
@@ -887,7 +892,10 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 	stride = CAIRO_STRIDE_FOR_WIDTH_BPP (ximage.width,
 					     ximage.bits_per_pixel);
 	ximage.bytes_per_line = stride;
-	ximage.data = malloc (stride * ximage.height);
+	ximage.data = _cairo_malloc_ab (stride, ximage.height);
+	if (ximage.data == NULL)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
 	own_data = TRUE;
 
 	XInitImage (&ximage);
@@ -900,8 +908,11 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 	} else {
 	    cairo_xlib_visual_info_t *visual_info;
 
-	    visual_info = _cairo_xlib_screen_get_visual_info (surface->screen_info,
-							      surface->visual);
+	    status = _cairo_xlib_screen_get_visual_info (surface->screen_info,
+							 surface->visual,
+							 &visual_info);
+	    if (status)
+		goto BAIL;
 
 	    rgb333_to_pseudocolor = visual_info->rgb333_to_pseudocolor;
 	}
@@ -933,16 +944,17 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 
     status = _cairo_xlib_surface_ensure_gc (surface);
     if (status)
-	return status;
+	goto BAIL;
 
     XPutImage(surface->dpy, surface->drawable, surface->gc,
 	      &ximage, src_x, src_y, dst_x, dst_y,
 	      width, height);
 
+  BAIL:
     if (own_data)
 	free (ximage.data);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static cairo_status_t
