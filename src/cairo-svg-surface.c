@@ -233,10 +233,15 @@ _extract_svg_surface (cairo_surface_t		 *surface,
 {
     cairo_surface_t *target;
 
+    if (surface->status)
+	return surface->status;
+
     if (! _cairo_surface_is_paginated (surface))
 	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 
     target = _cairo_paginated_surface_get_target (surface);
+    if (target->status)
+	return target->status;
 
     if (! _cairo_surface_is_svg (target))
 	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
