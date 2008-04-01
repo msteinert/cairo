@@ -355,7 +355,7 @@ CAIRO_BACKEND_ENABLE(xcb, XCB, xcb, XCB_SURFACE, no, [
 
 dnl ===========================================================================
 
-CAIRO_BACKEND_ENABLE(quartz, Quartz, quartz, QUARTZ_SURFACE, no, [
+CAIRO_BACKEND_ENABLE(quartz, Quartz, quartz, QUARTZ_SURFACE, auto, [
   dnl There is no pkgconfig for quartz; lets do a header check
   AC_CHECK_HEADER(ApplicationServices/ApplicationServices.h, , [use_quartz="no (ApplicationServices framework not found)"])
   if test "x$use_quartz" != "xyes" ; then
@@ -1138,10 +1138,6 @@ fi
 
 if test x"$use_xcb" = "xyes" ; then
    echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/XCB/'
-fi
-
-if test x"$use_quartz" = "xyes" ; then
-   echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/Quartz/'
 fi
 
 if test x"$use_quartz_image" = "xyes" ; then
