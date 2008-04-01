@@ -63,7 +63,7 @@ _cairo_xlib_visual_info_create (Display *dpy, int screen, VisualID visualid)
     Colormap colormap = DefaultColormap (dpy, screen);
     XColor color;
     int gray, red, green, blue;
-    int i, distance, min_distance, index;
+    int i, index, distance, min_distance = 0;
 
     const unsigned short index5_to_short[5] = {
 	0x0000, 0x4000, 0x8000, 0xc000, 0xffff

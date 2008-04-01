@@ -255,7 +255,7 @@ _cairo_gstate_clone (cairo_gstate_t *other, cairo_gstate_t **out)
 cairo_status_t
 _cairo_gstate_save (cairo_gstate_t **gstate)
 {
-    cairo_gstate_t *top;
+    cairo_gstate_t *top = NULL;
     cairo_status_t status;
 
     status = _cairo_gstate_clone (*gstate, &top);

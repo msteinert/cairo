@@ -2889,7 +2889,7 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_output_stream_t *stream = surface->stream;
-    cairo_rectangle_int_t extents, surface_extents;
+    cairo_rectangle_int_t extents;
     cairo_status_t status;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
