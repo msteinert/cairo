@@ -20,14 +20,6 @@ systems, but can be used on other platforms too.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
-<!-- ##### MACRO CAIRO_HAS_FT_FONT ##### -->
-<para>
-Defined if the FreeType font backend is available.
-This macro can be used to conditionally compile backend-specific code.
-</para>
-
-
-
 <!-- ##### FUNCTION cairo_ft_font_face_create_for_ft_face ##### -->
 <para>
 

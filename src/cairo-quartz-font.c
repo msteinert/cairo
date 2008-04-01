@@ -156,7 +156,16 @@ static const cairo_font_face_backend_t _cairo_quartz_font_face_backend = {
 
 /**
  * cairo_quartz_font_face_create_for_cgfont
- * @font: a CGFontRef obtained through other means
+ * @font: a #CGFontRef obtained through a method external to cairo.
+ *
+ * Creates a new font for the Quartz font backend based on a
+ * #CGFontRef.  This font can then be used with
+ * cairo_set_font_face() or cairo_scaled_font_create().
+ *
+ * Return value: a newly created #cairo_font_face_t. Free with
+ *  cairo_font_face_destroy() when you are done using it.
+ *
+ * Since: 1.6
  */
 cairo_font_face_t *
 cairo_quartz_font_face_create_for_cgfont (CGFontRef font)
@@ -684,8 +693,9 @@ _cairo_quartz_scaled_font_get_cg_font_ref (cairo_scaled_font_t *abstract_font)
 /*
  * compat with old ATSUI backend
  */
+
 /**
- * cairo_atsui_font_face_create_for_atsu_font_id
+ * cairo_quartz_font_face_create_for_atsu_font_id
  * @font_id: an ATSUFontID for the font.
  *
  * Creates a new font for the Quartz font backend based on an

@@ -2373,22 +2373,20 @@ _cairo_quartz_surface_create_internal (CGContextRef cgContext,
  * @height: height of the surface, in pixels
  *
  * Creates a Quartz surface that wraps the given CGContext.  The
- * CGContext is assumed to be in the QuickDraw coordinate space (that
- * is, with the origin at the upper left and the Y axis increasing
- * downward.)  If the CGContext is in the Quartz coordinate space (with
- * the origin at the bottom left), then it should be flipped before
- * this function is called:
+ * CGContext is assumed to be in the standard Cairo coordinate space
+ * (that is, with the origin at the upper left and the Y axis
+ * increasing downward).  If the CGContext is in the Quartz coordinate
+ * space (with the origin at the bottom left), then it should be
+ * flipped before this function is called.  The flip can be accomplished
+ * using a translate and a scale; for example:
  *
  * <informalexample><programlisting>
  * CGContextTranslateCTM (cgContext, 0.0, height);
  * CGContextScaleCTM (cgContext, 1.0, -1.0);
  * </programlisting></informalexample>
  *
- * A very small number of Cairo operations cannot be translated to
- * Quartz operations; those operations will fail on this surface.
- * If all Cairo operations are required to succeed, consider rendering
- * to a surface created by cairo_quartz_surface_create() and then copying
- * the result to the CGContext.
+ * All Cairo operations are implemented in terms of Quartz operations,
+ * as long as Quartz-compatible elements are used (such as Quartz fonts).
  *
  * Return value: the newly created Cairo surface.
  *
