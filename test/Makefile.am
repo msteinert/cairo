@@ -416,6 +416,7 @@ REFERENCE_IMAGES = \
 	linear-gradient-reflect-pdf-argb32-ref.png	\
 	linear-gradient-reflect-pdf-rgb24-ref.png	\
 	linear-gradient-reflect-ps-ref.png	\
+	linear-gradient-reflect-quartz-ref.png	\
 	linear-gradient-pdf-ref.png	\
 	linear-gradient-ps-ref.png	\
 	linear-gradient-quartz-ref.png	\
@@ -587,6 +588,7 @@ REFERENCE_IMAGES = \
 	surface-pattern-scale-down-pdf-argb32-ref.png	\
 	surface-pattern-scale-down-ps-argb32-ref.png	\
 	surface-pattern-scale-down-ref.png	\
+	surface-pattern-scale-down-quartz-ref.png	\
 	surface-pattern-scale-up-pdf-argb32-ref.png	\
 	surface-pattern-scale-up-ps-argb32-ref.png	\
 	surface-pattern-scale-up-ref.png	\
@@ -608,6 +610,7 @@ REFERENCE_IMAGES = \
 	text-pattern-svg-rgb24-ref.png	\
 	text-pattern-pdf-argb32-ref.png \
 	text-pattern-pdf-rgb24-ref.png \
+	text-pattern-quartz-ref.png \
 	text-pattern-quartz-rgb24-ref.png \
 	text-rotate-ref.png	\
 	text-rotate-ps-ref.png	\
