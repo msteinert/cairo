@@ -34,9 +34,9 @@
  *	Vladimir Vukicevic <vladimir@mozilla.com>
  */
 
-#include <dlfcn.h>
-
 #include "cairoint.h"
+
+#include <dlfcn.h>
 
 #include "cairo-quartz.h"
 #include "cairo-quartz-private.h"
