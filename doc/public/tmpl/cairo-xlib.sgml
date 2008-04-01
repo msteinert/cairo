@@ -24,6 +24,13 @@ if it is available.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### MACRO CAIRO_HAS_XLIB_SURFACE ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### FUNCTION cairo_xlib_surface_create ##### -->
 <para>
 

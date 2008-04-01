@@ -20,6 +20,13 @@ systems, but can be used on other platforms too.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### MACRO CAIRO_HAS_FT_FONT ##### -->
+<para>
+
+</para>
+
+
+
 <!-- ##### FUNCTION cairo_ft_font_face_create_for_ft_face ##### -->
 <para>
 
