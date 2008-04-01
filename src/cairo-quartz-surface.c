@@ -101,19 +101,22 @@ CG_EXTERN void CGContextReplacePathWithStrokedPath (CGContextRef);
 CG_EXTERN CGImageRef CGBitmapContextCreateImage (CGContextRef);
 #endif
 
-/* Only present in 10.4+ */
+/* Some of these are present in earlier versions of the OS than where
+ * they are public; others are not public at all (CGContextCopyPath,
+ * CGContextReplacePathWithClipPath, many of the getters, etc.)
+ */
 static void (*CGContextClipToMaskPtr) (CGContextRef, CGRect, CGImageRef) = NULL;
-/* Only present in 10.5+ */
 static void (*CGContextDrawTiledImagePtr) (CGContextRef, CGRect, CGImageRef) = NULL;
 static unsigned int (*CGContextGetTypePtr) (CGContextRef) = NULL;
 static void (*CGContextSetShouldAntialiasFontsPtr) (CGContextRef, bool) = NULL;
-static void (*CGContextSetShouldSmoothFontsPtr) (CGContextRef, bool) = NULL;
 static bool (*CGContextGetShouldAntialiasFontsPtr) (CGContextRef) = NULL;
 static bool (*CGContextGetShouldSmoothFontsPtr) (CGContextRef) = NULL;
 static void (*CGContextSetAllowsFontSmoothingPtr) (CGContextRef, bool) = NULL;
 static bool (*CGContextGetAllowsFontSmoothingPtr) (CGContextRef) = NULL;
 static CGPathRef (*CGContextCopyPathPtr) (CGContextRef) = NULL;
 static void (*CGContextReplacePathWithClipPathPtr) (CGContextRef) = NULL;
+
+static SInt32 _cairo_quartz_osx_version = 0x0;
 
 static cairo_bool_t _cairo_quartz_symbol_lookup_done = FALSE;
 
@@ -142,13 +145,17 @@ static void quartz_ensure_symbols(void)
     CGContextDrawTiledImagePtr = dlsym(RTLD_DEFAULT, "CGContextDrawTiledImage");
     CGContextGetTypePtr = dlsym(RTLD_DEFAULT, "CGContextGetType");
     CGContextSetShouldAntialiasFontsPtr = dlsym(RTLD_DEFAULT, "CGContextSetShouldAntialiasFonts");
-    CGContextSetShouldSmoothFontsPtr = dlsym(RTLD_DEFAULT, "CGContextSetShouldSmoothFonts");
     CGContextGetShouldAntialiasFontsPtr = dlsym(RTLD_DEFAULT, "CGContextGetShouldAntialiasFonts");
     CGContextGetShouldSmoothFontsPtr = dlsym(RTLD_DEFAULT, "CGContextGetShouldSmoothFonts");
     CGContextCopyPathPtr = dlsym(RTLD_DEFAULT, "CGContextCopyPath");
     CGContextReplacePathWithClipPathPtr = dlsym(RTLD_DEFAULT, "CGContextReplacePathWithClipPath");
     CGContextGetAllowsFontSmoothingPtr = dlsym(RTLD_DEFAULT, "CGContextGetAllowsFontSmoothing");
     CGContextSetAllowsFontSmoothingPtr = dlsym(RTLD_DEFAULT, "CGContextSetAllowsFontSmoothing");
+
+    if (Gestalt(gestaltSystemVersion, &_cairo_quartz_osx_version) != noErr) {
+	// assume 10.4
+	_cairo_quartz_osx_version = 0x1040;
+    }
 
     _cairo_quartz_symbol_lookup_done = TRUE;
 }
@@ -478,6 +485,10 @@ _cairo_quartz_fixup_unbounded_operation (cairo_quartz_surface_t *surface,
 	CGContextTranslateCTM (cgc, op->u.show_glyphs.origin.x, op->u.show_glyphs.origin.y);
 
 	if (op->u.show_glyphs.isClipping) {
+	    /* Note that the comment in show_glyphs about kCGTextClip
+	     * and the text transform still applies here; however, the
+	     * cg_advances we have were already transformed, so we
+	     * don't have to do anything. */
 	    CGContextSetTextDrawingMode (cgc, kCGTextClip);
 	    CGContextSaveGState (cgc);
 	}
@@ -1916,29 +1927,27 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
     CGContextSetFont (surface->cgContext, cgfref);
     CGContextSetFontSize (surface->cgContext, 1.0);
 
-    if (CGContextSetShouldAntialiasFontsPtr) {
-	switch (scaled_font->options.antialias) {
-	    case CAIRO_ANTIALIAS_SUBPIXEL:
-		CGContextSetShouldAntialiasFontsPtr (surface->cgContext, TRUE);
-		CGContextSetShouldSmoothFontsPtr (surface->cgContext, TRUE);
-		if (CGContextSetAllowsFontSmoothingPtr &&
-		    !CGContextGetAllowsFontSmoothingPtr (surface->cgContext))
-		{
-		    didForceFontSmoothing = TRUE;
-		    CGContextSetAllowsFontSmoothingPtr (surface->cgContext, TRUE);
-		}
-		break;
-	    case CAIRO_ANTIALIAS_NONE:
-		CGContextSetShouldAntialiasFontsPtr (surface->cgContext, FALSE);
-		break;
-	    case CAIRO_ANTIALIAS_GRAY:
-		CGContextSetShouldAntialiasFontsPtr (surface->cgContext, TRUE);
-		CGContextSetShouldSmoothFontsPtr (surface->cgContext, FALSE);
-		break;
-	    case CAIRO_ANTIALIAS_DEFAULT:
-		/* Don't do anything */
-		break;
-	}
+    switch (scaled_font->options.antialias) {
+	case CAIRO_ANTIALIAS_SUBPIXEL:
+	    CGContextSetShouldAntialias (surface->cgContext, TRUE);
+	    CGContextSetShouldSmoothFonts (surface->cgContext, TRUE);
+	    if (CGContextSetAllowsFontSmoothingPtr &&
+		!CGContextGetAllowsFontSmoothingPtr (surface->cgContext))
+	    {
+		didForceFontSmoothing = TRUE;
+		CGContextSetAllowsFontSmoothingPtr (surface->cgContext, TRUE);
+	    }
+	    break;
+	case CAIRO_ANTIALIAS_NONE:
+	    CGContextSetShouldAntialias (surface->cgContext, FALSE);
+	    break;
+	case CAIRO_ANTIALIAS_GRAY:
+	    CGContextSetShouldAntialias (surface->cgContext, TRUE);
+	    CGContextSetShouldSmoothFonts (surface->cgContext, FALSE);
+	    break;
+	case CAIRO_ANTIALIAS_DEFAULT:
+	    /* Don't do anything */
+	    break;
     }
 
     if (num_glyphs > STATIC_BUF_SIZE) {
@@ -1987,10 +1996,13 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 	yprev = yf;
     }
 
-    if (isClipping) {
-	/* If we're clipping, we get multiplied by the inverse of our text matrix; no,
-	 * I don't understand why this is any different.  So pre-apply our textTransform.
-	 * Note that the new CGContextShowGlyphsAtPositions has a similar problem. */
+    if (_cairo_quartz_osx_version >= 0x1050 && isClipping) {
+	/* If we're clipping, OSX 10.5 (at least as of 10.5.2) has a
+	 * bug (apple bug ID #5834794) where the glyph
+	 * advances/positions are not transformed by the text matrix
+	 * if kCGTextClip is being used.  So, we pre-transform here.
+	 * 10.4 does not have this problem (as of 10.4.11).
+	 */
 	for (i = 0; i < num_glyphs - 1; i++)
 	    cg_advances[i] = CGSizeApplyAffineTransform(cg_advances[i], textTransform);
     }
