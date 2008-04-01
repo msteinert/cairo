@@ -648,11 +648,11 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	uint32_t *row;
 	uint32_t in_pixel, out_pixel;
 	unsigned int rowstride;
-	uint32_t a_mask, r_mask, g_mask, b_mask;
-	int a_width, r_width, g_width, b_width;
-	int a_shift, r_shift, g_shift, b_shift;
+	uint32_t a_mask=0, r_mask=0, g_mask=0, b_mask=0;
+	int a_width=0, r_width=0, g_width=0, b_width=0;
+	int a_shift=0, r_shift=0, g_shift=0, b_shift=0;
 	int x, y;
-	XColor *colors;
+	XColor *colors = NULL;
 
 	/* The visual we are dealing with is not supported by the
 	 * standard pixman formats. So we must first convert the data
@@ -842,7 +842,7 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
     int native_byte_order = _native_byte_order_lsb () ? LSBFirst : MSBFirst;
     cairo_status_t status;
     cairo_bool_t own_data;
-    unsigned long *rgb333_to_pseudocolor;
+    unsigned long *rgb333_to_pseudocolor = NULL;
 
     _pixman_format_to_masks (image->pixman_format, &image_masks);
     
@@ -872,8 +872,8 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 	unsigned int stride, rowstride;
 	int x, y;
 	uint32_t in_pixel, out_pixel, *row;
-	int a_width, r_width, g_width, b_width;
-	int a_shift, r_shift, g_shift, b_shift;
+	int a_width=0, r_width=0, g_width=0, b_width=0;
+	int a_shift=0, r_shift=0, g_shift=0, b_shift=0;
 
 	if (surface->depth > 16) {
 	    ximage.bits_per_pixel = 32;
