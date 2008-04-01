@@ -7,7 +7,7 @@ dnl For the micro number: odd => in-progress development (from git)
 dnl			  even => tar-file snapshot or release
 m4_define(cairo_version_major, 1)
 m4_define(cairo_version_minor, 5)
-m4_define(cairo_version_micro, 16)
+m4_define(cairo_version_micro, 17)
 
 AC_INIT([cairo],
       cairo_version_major.cairo_version_minor.cairo_version_micro,
