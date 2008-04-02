@@ -41,9 +41,7 @@ cairo_test_t test = {
     draw
 };
 
-void draw_text (cairo_t *cr);
-
-void
+static void
 draw_text (cairo_t *cr)
 {
     cairo_matrix_t tm;
@@ -82,9 +80,6 @@ draw (cairo_t *cr, int width, int height)
 {
     cairo_pattern_t *pattern;
 
-    pattern = cairo_test_create_pattern_from_png (png_filename);
-    cairo_pattern_set_extend (pattern, CAIRO_EXTEND_REPEAT);
-
     cairo_set_source_rgb (cr, 1., 1., 1.);
     cairo_paint (cr);
 
@@ -99,7 +94,10 @@ draw (cairo_t *cr, int width, int height)
     cairo_translate (cr, SIZE, SIZE);
     cairo_rotate (cr, M_PI);
 
+    pattern = cairo_test_create_pattern_from_png (png_filename);
+    cairo_pattern_set_extend (pattern, CAIRO_EXTEND_REPEAT);
     cairo_set_source (cr, pattern);
+    cairo_pattern_destroy (pattern);
 
     draw_text (cr);
 
