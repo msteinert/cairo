@@ -2910,7 +2910,6 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
     cairo_xlib_font_glyphset_info_t *glyphset_info;
 
     if (!glyph_surface) {
-
 	status = _cairo_scaled_glyph_lookup (scaled_font,
 					     _cairo_scaled_glyph_index (scaled_glyph),
 					     CAIRO_SCALED_GLYPH_INFO_METRICS |
@@ -2939,17 +2938,18 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
     /* If the glyph surface has zero height or width, we create
      * a clear 1x1 surface, to avoid various X server bugs.
      */
-    if ((glyph_surface->width == 0) || (glyph_surface->height == 0)) {
+    if (glyph_surface->width == 0 || glyph_surface->height == 0) {
 	cairo_t *cr;
 	cairo_surface_t *tmp_surface;
 
 	tmp_surface = cairo_image_surface_create (glyphset_info->format, 1, 1);
+	if (tmp_surface->status)
+	    goto BAIL;
+
 	cr = cairo_create (tmp_surface);
 	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
 	cairo_paint (cr);
-
 	status = cairo_status (cr);
-
 	cairo_destroy (cr);
 
 	tmp_surface->device_transform = glyph_surface->base.device_transform;
@@ -2972,17 +2972,17 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 	tmp_surface = cairo_image_surface_create (glyphset_info->format,
 						  glyph_surface->width,
 						  glyph_surface->height);
+	if (tmp_surface->status)
+	    goto BAIL;
+
 	tmp_surface->device_transform = glyph_surface->base.device_transform;
 	tmp_surface->device_transform_inverse = glyph_surface->base.device_transform_inverse;
 
 	cr = cairo_create (tmp_surface);
-
 	cairo_set_source_surface (cr, &glyph_surface->base, 0, 0);
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 	cairo_paint (cr);
-
 	status = cairo_status (cr);
-
 	cairo_destroy (cr);
 
 	glyph_surface = (cairo_image_surface_t *) tmp_surface;
@@ -3066,7 +3066,7 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
     glyph_index = _cairo_scaled_glyph_index (scaled_glyph);
 
     XRenderAddGlyphs (dpy, glyphset_info->glyphset,
-		      &glyph_index, &(glyph_info), 1,
+		      &glyph_index, &glyph_info, 1,
 		      (char *) data,
 		      glyph_surface->stride * glyph_surface->height);
 
