@@ -49,12 +49,24 @@ static CGFontRef (*CGFontCreateWithNamePtr) (const char *) = NULL;
 static int (*CGFontGetUnitsPerEmPtr) (CGFontRef) = NULL;
 static bool (*CGFontGetGlyphAdvancesPtr) (CGFontRef, const CGGlyph[], size_t, int[]) = NULL;
 static bool (*CGFontGetGlyphBBoxesPtr) (CGFontRef, const CGGlyph[], size_t, CGRect[]) = NULL;
+static CGRect (*CGFontGetFontBBoxPtr) (CGFontRef) = NULL;
 
 /* Not public, but present */
 static void (*CGFontGetGlyphsForUnicharsPtr) (CGFontRef, const UniChar[], const CGGlyph[], size_t) = NULL;
 
 /* Not public in the least bit */
 static CGPathRef (*CGFontGetGlyphPathPtr) (CGFontRef fontRef, CGAffineTransform *textTransform, int unknown, CGGlyph glyph) = NULL;
+
+/* CGFontGetHMetrics isn't public, but the other functions are public/present in 10.5 */
+typedef struct {
+    int ascent;
+    int descent;
+    int leading;
+} quartz_CGFontMetrics;
+static quartz_CGFontMetrics* (*CGFontGetHMetricsPtr) (CGFontRef fontRef) = NULL;
+static int (*CGFontGetAscentPtr) (CGFontRef fontRef) = NULL;
+static int (*CGFontGetDescentPtr) (CGFontRef fontRef) = NULL;
+static int (*CGFontGetLeadingPtr) (CGFontRef fontRef) = NULL;
 
 static cairo_bool_t _cairo_quartz_font_symbol_lookup_done = FALSE;
 static cairo_bool_t _cairo_quartz_font_symbols_present = FALSE;
@@ -74,6 +86,8 @@ quartz_font_ensure_symbols(void)
     if (!CGFontGetGlyphsForUnicharsPtr)
 	CGFontGetGlyphsForUnicharsPtr = dlsym(RTLD_DEFAULT, "CGFontGetGlyphsForUnicodes");
 
+    CGFontGetFontBBoxPtr = dlsym(RTLD_DEFAULT, "CGFontGetFontBBox");
+
     /* We just need one of these two */
     CGFontCreateWithFontNamePtr = dlsym(RTLD_DEFAULT, "CGFontCreateWithFontName");
     CGFontCreateWithNamePtr = dlsym(RTLD_DEFAULT, "CGFontCreateWithName");
@@ -83,12 +97,18 @@ quartz_font_ensure_symbols(void)
     CGFontGetGlyphAdvancesPtr = dlsym(RTLD_DEFAULT, "CGFontGetGlyphAdvances");
     CGFontGetGlyphPathPtr = dlsym(RTLD_DEFAULT, "CGFontGetGlyphPath");
 
+    CGFontGetHMetricsPtr = dlsym(RTLD_DEFAULT, "CGFontGetHMetrics");
+    CGFontGetAscentPtr = dlsym(RTLD_DEFAULT, "CGFontGetAscent");
+    CGFontGetDescentPtr = dlsym(RTLD_DEFAULT, "CGFontGetDescent");
+    CGFontGetLeadingPtr = dlsym(RTLD_DEFAULT, "CGFontGetLeading");
+
     if ((CGFontCreateWithFontNamePtr || CGFontCreateWithNamePtr) &&
 	CGFontGetGlyphBBoxesPtr &&
 	CGFontGetGlyphsForUnicharsPtr &&
 	CGFontGetUnitsPerEmPtr &&
 	CGFontGetGlyphAdvancesPtr &&
-	CGFontGetGlyphPathPtr)
+	CGFontGetGlyphPathPtr &&
+	(CGFontGetHMetricsPtr || (CGFontGetAscentPtr && CGFontGetDescentPtr && CGFontGetLeadingPtr))
 	_cairo_quartz_font_symbols_present = TRUE;
 
     _cairo_quartz_font_symbol_lookup_done = TRUE;
@@ -127,8 +147,11 @@ _cairo_quartz_font_face_scaled_font_create (void *abstract_face,
 					    cairo_scaled_font_t **font_out)
 {
     cairo_quartz_font_face_t *font_face = abstract_face;
-    cairo_quartz_scaled_font_t *font;
+    cairo_quartz_scaled_font_t *font = NULL;
     cairo_status_t status;
+    cairo_font_extents_t fs_metrics;
+    double ems;
+    CGRect bbox;
 
     quartz_font_ensure_symbols();
     if (!_cairo_quartz_font_symbols_present)
@@ -143,8 +166,53 @@ _cairo_quartz_font_face_scaled_font_create (void *abstract_face,
     status = _cairo_scaled_font_init (&font->base,
 				      &font_face->base, font_matrix, ctm, options,
 				      &cairo_quartz_scaled_font_backend);
+    if (status)
+	goto FINISH;
 
-    *font_out = (cairo_scaled_font_t*) font;
+    ems = CGFontGetUnitsPerEmPtr (font_face->cgFont);
+
+    /* initialize metrics */
+    if (CGFontGetFontBBoxPtr && CGFontGetAscentPtr) {
+	fs_metrics.ascent = (CGFontGetAscentPtr (font_face->cgFont) / ems);
+	fs_metrics.descent = - (CGFontGetDescentPtr (font_face->cgFont) / ems);
+	fs_metrics.height = fs_metrics.ascent + fs_metrics.descent +
+	    (CGFontGetLeadingPtr (font_face->cgFont) / ems);
+
+	bbox = CGFontGetFontBBoxPtr (font_face->cgFont);
+	fs_metrics.max_x_advance = CGRectGetMaxX(bbox) / ems;
+	fs_metrics.max_y_advance = 0.0;
+    } else {
+	CGGlyph wGlyph;
+	UniChar u;
+
+	quartz_CGFontMetrics *m;
+	m = CGFontGetHMetricsPtr (font_face->cgFont);
+
+	fs_metrics.ascent = (m->ascent / ems);
+	fs_metrics.descent = - (m->descent / ems);
+	fs_metrics.height = fs_metrics.ascent + fs_metrics.descent + (m->leading / ems);
+
+	/* We kind of have to guess here; W's big, right? */
+	u = (UniChar) 'W';
+	CGFontGetGlyphsForUnicharsPtr (font_face->cgFont, &u, &wGlyph, 1);
+	if (wGlyph && CGFontGetGlyphBBoxesPtr (font_face->cgFont, &wGlyph, 1, &bbox)) {
+	    fs_metrics.max_x_advance = CGRectGetMaxX(bbox) / ems;
+	    fs_metrics.max_y_advance = 0.0;
+	} else {
+	    fs_metrics.max_x_advance = 0.0;
+	    fs_metrics.max_y_advance = 0.0;
+	}
+    }
+
+    status = _cairo_scaled_font_set_metrics (&font->base, &fs_metrics);
+
+FINISH:
+    if (status != CAIRO_STATUS_SUCCESS) {
+	free (font);
+    } else {
+	*font_out = (cairo_scaled_font_t*) font;
+    }
+
     return status;
 }
 
