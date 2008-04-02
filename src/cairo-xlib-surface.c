@@ -48,6 +48,16 @@
 typedef int (*cairo_xlib_error_func_t) (Display     *display,
 					XErrorEvent *event);
 
+static cairo_surface_t *
+_cairo_xlib_surface_create_internal (Display		       *dpy,
+				     Drawable		        drawable,
+				     Screen		       *screen,
+				     Visual		       *visual,
+				     XRenderPictFormat	       *xrender_format,
+				     int			width,
+				     int			height,
+				     int			depth);
+
 static cairo_status_t
 _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface);
 
@@ -70,10 +80,6 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 cairo_glyph_t       *glyphs,
 				 int		      num_glyphs,
 				 cairo_scaled_font_t *scaled_font);
-
-#if CAIRO_HAS_XLIB_XRENDER_SURFACE
-slim_hidden_proto (cairo_xlib_surface_create_with_xrender_format);
-#endif
 
 /*
  * Instead of taking two round trips for each blending request,
@@ -173,9 +179,11 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
 			 depth);
 
     surface = (cairo_xlib_surface_t *)
-	cairo_xlib_surface_create_with_xrender_format (dpy, pix, src->screen,
-						       xrender_format,
-						       width, height);
+	      _cairo_xlib_surface_create_internal (dpy, pix,
+		                                   src->screen, src->visual,
+						   xrender_format,
+						   width, height,
+						   depth);
     if (surface->base.status) {
 	XFreePixmap (dpy, pix);
 	return &surface->base;
@@ -251,10 +259,11 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
 			 xrender_format->depth);
 
     surface = (cairo_xlib_surface_t *)
-	cairo_xlib_surface_create_with_xrender_format (src->dpy, pix,
-						       src->screen,
-						       xrender_format,
-						       width, height);
+	      _cairo_xlib_surface_create_internal (src->dpy, pix,
+		                                   src->screen, src->visual,
+						   xrender_format,
+						   width, height,
+						   xrender_format->depth);
     if (surface->base.status != CAIRO_STATUS_SUCCESS) {
 	XFreePixmap (src->dpy, pix);
 	return &surface->base;
@@ -2392,7 +2401,6 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
     return _cairo_xlib_surface_create_internal (dpy, drawable, screen,
 						NULL, format, width, height, 0);
 }
-slim_hidden_def (cairo_xlib_surface_create_with_xrender_format);
 
 /**
  * cairo_xlib_surface_get_xrender_format:
