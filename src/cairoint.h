@@ -231,7 +231,7 @@ cairo_private void
 _cairo_array_fini (cairo_array_t *array);
 
 cairo_private cairo_status_t
-_cairo_array_grow_by (cairo_array_t *array, int additional);
+_cairo_array_grow_by (cairo_array_t *array, unsigned int additional);
 
 cairo_private void
 _cairo_array_truncate (cairo_array_t *array, unsigned int num_elements);
