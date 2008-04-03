@@ -494,11 +494,12 @@ cairo_truetype_font_write_generic_table (cairo_truetype_font_t *font,
 }
 
 static cairo_status_t
-cairo_truetype_font_remap_composite_glyph (cairo_truetype_font_t *font,
-					   unsigned char         *buffer)
+cairo_truetype_font_remap_composite_glyph (cairo_truetype_font_t	*font,
+					   unsigned char		*buffer,
+					   unsigned long		 size)
 {
     tt_glyph_data_t *glyph_data;
-    tt_composite_glyph_t *composite_glyph;
+    tt_composite_glyph_t *composite_glyph, *last_glyph;
     int num_args;
     int has_more_components;
     unsigned short flags;
@@ -508,11 +509,15 @@ cairo_truetype_font_remap_composite_glyph (cairo_truetype_font_t *font,
     if (font->status)
 	return font->status;
 
+    if (size < sizeof (tt_glyph_data_t))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     glyph_data = (tt_glyph_data_t *) buffer;
     if ((int16_t)be16_to_cpu (glyph_data->num_contours) >= 0)
         return CAIRO_STATUS_SUCCESS;
 
     composite_glyph = &glyph_data->glyph;
+    last_glyph = (tt_composite_glyph_t *) (buffer + size);
     do {
         flags = be16_to_cpu (composite_glyph->flags);
         has_more_components = flags & TT_MORE_COMPONENTS;
@@ -531,6 +536,9 @@ cairo_truetype_font_remap_composite_glyph (cairo_truetype_font_t *font,
         else if (flags & TT_WE_HAVE_A_TWO_BY_TWO)
             num_args += 3;
         composite_glyph = (tt_composite_glyph_t *) &(composite_glyph->args[num_args]);
+
+	if (has_more_components && composite_glyph >= last_glyph)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
     } while (has_more_components);
 
     return CAIRO_STATUS_SUCCESS;
@@ -615,7 +623,7 @@ cairo_truetype_font_write_glyf_table (cairo_truetype_font_t *font,
 	    if (status)
 		goto FAIL;
 
-            status = cairo_truetype_font_remap_composite_glyph (font, buffer);
+            status = cairo_truetype_font_remap_composite_glyph (font, buffer, size);
 	    if (status)
 		goto FAIL;
         }
