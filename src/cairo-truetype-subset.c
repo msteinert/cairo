@@ -85,8 +85,10 @@ struct _cairo_truetype_font {
 
 };
 
-static int
-cairo_truetype_font_use_glyph (cairo_truetype_font_t *font, int glyph);
+static cairo_status_t
+cairo_truetype_font_use_glyph (cairo_truetype_font_t	    *font,
+	                       unsigned short		     glyph,
+			       unsigned short		    *out);
 
 #define SFNT_VERSION			0x00010000
 #define SFNT_STRING_MAX_LENGTH  65535
@@ -491,7 +493,7 @@ cairo_truetype_font_write_generic_table (cairo_truetype_font_t *font,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void
+static cairo_status_t
 cairo_truetype_font_remap_composite_glyph (cairo_truetype_font_t *font,
 					   unsigned char         *buffer)
 {
@@ -501,19 +503,23 @@ cairo_truetype_font_remap_composite_glyph (cairo_truetype_font_t *font,
     int has_more_components;
     unsigned short flags;
     unsigned short index;
+    cairo_status_t status;
 
     if (font->status)
-	return;
+	return font->status;
 
     glyph_data = (tt_glyph_data_t *) buffer;
     if ((int16_t)be16_to_cpu (glyph_data->num_contours) >= 0)
-        return;
+        return CAIRO_STATUS_SUCCESS;
 
     composite_glyph = &glyph_data->glyph;
     do {
         flags = be16_to_cpu (composite_glyph->flags);
         has_more_components = flags & TT_MORE_COMPONENTS;
-        index = cairo_truetype_font_use_glyph (font, be16_to_cpu (composite_glyph->index));
+        status = cairo_truetype_font_use_glyph (font, be16_to_cpu (composite_glyph->index), &index);
+	if (status)
+	    return status;
+
         composite_glyph->index = cpu_to_be16 (index);
         num_args = 1;
         if (flags & TT_ARG_1_AND_2_ARE_WORDS)
@@ -526,6 +532,8 @@ cairo_truetype_font_remap_composite_glyph (cairo_truetype_font_t *font,
             num_args += 3;
         composite_glyph = (tt_composite_glyph_t *) &(composite_glyph->args[num_args]);
     } while (has_more_components);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -607,7 +615,9 @@ cairo_truetype_font_write_glyf_table (cairo_truetype_font_t *font,
 	    if (status)
 		goto FAIL;
 
-            cairo_truetype_font_remap_composite_glyph (font, buffer);
+            status = cairo_truetype_font_remap_composite_glyph (font, buffer);
+	    if (status)
+		goto FAIL;
         }
     }
 
@@ -938,16 +948,22 @@ cairo_truetype_font_generate (cairo_truetype_font_t  *font,
     return _cairo_truetype_font_set_error (font, status);
 }
 
-static int
-cairo_truetype_font_use_glyph (cairo_truetype_font_t *font, int glyph)
+static cairo_status_t
+cairo_truetype_font_use_glyph (cairo_truetype_font_t	    *font,
+	                       unsigned short		     glyph,
+			       unsigned short		    *out)
 {
+    if (glyph >= font->num_glyphs_in_face)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     if (font->parent_to_subset[glyph] == 0) {
 	font->parent_to_subset[glyph] = font->base.num_glyphs;
 	font->glyphs[font->base.num_glyphs].parent_index = glyph;
 	font->base.num_glyphs++;
     }
 
-    return font->parent_to_subset[glyph];
+    *out = font->parent_to_subset[glyph];
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -1043,7 +1059,7 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
     cairo_status_t status;
     const char *data = NULL; /* squelch bogus compiler warning */
     unsigned long length = 0; /* squelch bogus compiler warning */
-    unsigned long parent_glyph, offsets_length;
+    unsigned long offsets_length;
     unsigned int i;
     const unsigned long *string_offsets = NULL;
     unsigned long num_strings = 0;
@@ -1053,8 +1069,9 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
 	return status;
 
     for (i = 0; i < font->scaled_font_subset->num_glyphs; i++) {
-	parent_glyph = font->scaled_font_subset->glyphs[i];
-	cairo_truetype_font_use_glyph (font, parent_glyph);
+	unsigned short parent_glyph = font->scaled_font_subset->glyphs[i];
+	status = cairo_truetype_font_use_glyph (font, parent_glyph, &parent_glyph);
+	assert (status == CAIRO_STATUS_SUCCESS);
     }
 
     cairo_truetype_font_create_truetype_table_list (font);
