@@ -3,6 +3,7 @@ SUBDIRS=pdiff .
 # Here are all the tests that are run unconditionally
 TESTS =							\
 a1-image-sample$(EXEEXT)				\
+a1-mask$(EXEEXT)					\
 a1-traps-sample$(EXEEXT)				\
 a8-mask$(EXEEXT)					\
 big-line$(EXEEXT)					\
@@ -249,6 +250,7 @@ endif
 # All tests which have a reference image go here.
 REFERENCE_IMAGES = \
 	a1-image-sample-ref.png		\
+	a1-mask-ref.png	\
 	a1-traps-sample-ref.png		\
 	a8-mask-ref.png	\
 	big-line-ref.png		\

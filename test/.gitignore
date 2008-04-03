@@ -5,6 +5,7 @@ Makefile.in
 index.html
 ref.hash
 a1-image-sample
+a1-mask
 a1-traps-sample
 a8-mask
 big-line
