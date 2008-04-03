@@ -1250,7 +1250,6 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
     int i, x, y;
     cairo_bool_t opaque;
     uint8_t a;
-    int src_bit, dst_bit;
 
     /* This is the only image format we support, which simplifies things. */
     assert (image->format == CAIRO_FORMAT_ARGB32 ||
@@ -1260,11 +1259,7 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
     stream_ret->id = 0;
 
     if (image->format == CAIRO_FORMAT_A1) {
-	/* We allocate using slightly different math so that we can get
-	 * the overflow checking from _cairo_malloc_ab, but alpha_size
-	 * needs to be the correct size for emitting the data in the PDF.
-	 */
-	alpha_size = (image->width*image->height + 7) / 8;
+	alpha_size = (image->width + 7) / 8 * image->height;
 	alpha = _cairo_malloc_ab ((image->width+7) / 8, image->height);
     } else {
 	alpha_size = image->height * image->width;
@@ -1278,8 +1273,6 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 
     opaque = TRUE;
     i = 0;
-    src_bit = 0;
-    dst_bit = 7;
     for (y = 0; y < image->height; y++) {
 	if (image->format == CAIRO_FORMAT_ARGB32) {
 	    pixel32 = (uint32_t *) (image->data + y * image->stride);
@@ -1302,21 +1295,12 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 	} else { /* image->format == CAIRO_FORMAT_A1 */
 	    pixel8 = (uint8_t *) (image->data + y * image->stride);
 
-	    for (x = 0; x < image->width; x++, pixel8++) {
-		if (dst_bit == 7)
-		    alpha[i] = 0;
-		if ((*pixel8 >> src_bit) & 1) {
-			opaque = FALSE;
-			alpha[i] |= (1 << dst_bit);
-		}
-		if (++src_bit > 7) {
-		    src_bit = 0;
-		    pixel8++;
-		}
-		if (--dst_bit < 0) {
-		    dst_bit = 7;
-		    i++;
-		}
+	    for (x = 0; x < (image->width + 7) / 8; x++, pixel8++) {
+		a = *pixel8;
+		a = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (a);
+		alpha[i++] = a;
+		if (a != 0xff)
+		    opaque = FALSE;
 	    }
 	}
     }
