@@ -108,7 +108,7 @@ quartz_font_ensure_symbols(void)
 	CGFontGetUnitsPerEmPtr &&
 	CGFontGetGlyphAdvancesPtr &&
 	CGFontGetGlyphPathPtr &&
-	(CGFontGetHMetricsPtr || (CGFontGetAscentPtr && CGFontGetDescentPtr && CGFontGetLeadingPtr))
+	(CGFontGetHMetricsPtr || (CGFontGetAscentPtr && CGFontGetDescentPtr && CGFontGetLeadingPtr)))
 	_cairo_quartz_font_symbols_present = TRUE;
 
     _cairo_quartz_font_symbol_lookup_done = TRUE;
