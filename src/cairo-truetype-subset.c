@@ -580,6 +580,12 @@ cairo_truetype_font_write_glyf_table (cairo_truetype_font_t *font,
 	    end = be32_to_cpu (u.long_offsets[index + 1]);
 	}
 
+	/* quick sanity check... */
+	if (end < begin) {
+	    status = CAIRO_INT_STATUS_UNSUPPORTED;
+	    goto FAIL;
+	}
+
 	size = end - begin;
         status = cairo_truetype_font_align_output (font, &next);
 	if (status)
