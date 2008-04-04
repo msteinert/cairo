@@ -8,6 +8,7 @@ a1-traps-sample$(EXEEXT)				\
 a8-mask$(EXEEXT)					\
 big-line$(EXEEXT)					\
 big-trap$(EXEEXT)					\
+bilevel-image$(EXEEXT)					\
 caps-joins$(EXEEXT)					\
 caps-joins-alpha$(EXEEXT)				\
 caps-sub-paths$(EXEEXT)					\
@@ -267,6 +268,7 @@ REFERENCE_IMAGES = \
 	big-line-ps-rgb24-ref.png	\
 	big-line-quartz-ref.png		\
 	big-line-quartz-rgb24-ref.png	\
+	bilevel-image-ref.png		\
 	bitmap-font-pdf-argb32-ref.png	\
 	bitmap-font-ref.png	\
 	bitmap-font-rgb24-ref.png	\
