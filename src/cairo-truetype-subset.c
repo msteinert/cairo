@@ -34,6 +34,12 @@
  *	Adrian Johnson <ajohnson@redneon.com>
  */
 
+/*
+ * Useful links:
+ * http://developer.apple.com/textfonts/TTRefMan/RM06/Chap6.html
+ * http://www.microsoft.com/typography/specs/default.htm
+ */
+
 #define _BSD_SOURCE /* for snprintf(), strdup() */
 #include "cairoint.h"
 
