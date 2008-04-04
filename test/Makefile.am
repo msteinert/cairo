@@ -391,6 +391,7 @@ REFERENCE_IMAGES = \
 	ft-show-glyphs-positioning-ps-ref.png		\
 	ft-show-glyphs-positioning-svg-ref.png		\
 	ft-show-glyphs-table-ref.png			\
+	ft-show-glyphs-table-ps-ref.png			\
 	ft-text-vertical-layout-type1-ps-ref.png	\
 	ft-text-vertical-layout-type1-ref.png	\
 	ft-text-vertical-layout-type1-svg-ref.png	\
