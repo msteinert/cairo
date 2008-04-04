@@ -1085,7 +1085,8 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
     for (i = 0; i < font->scaled_font_subset->num_glyphs; i++) {
 	unsigned short parent_glyph = font->scaled_font_subset->glyphs[i];
 	status = cairo_truetype_font_use_glyph (font, parent_glyph, &parent_glyph);
-	assert (status == CAIRO_STATUS_SUCCESS);
+	if (status)
+	    goto fail1;
     }
 
     cairo_truetype_font_create_truetype_table_list (font);
