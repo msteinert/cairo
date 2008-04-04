@@ -902,23 +902,24 @@ if test "x$use_gcov" = "xyes"; then
         fi
       done
     ])
-  else
-    ltp_msg="To enable code coverage reporting you must have one of the following LTP versions installed: $ltp_version_list"
-    AC_MSG_ERROR([$ltp_msg])
   fi
 
   case $cairo_cv_ltp_version in
     ""|invalid[)]
-      ltp_msg="You must have one of the following versions of LTP: $ltp_version_list (found: $ltp_version)."
-      AC_MSG_ERROR([$ltp_msg])
-      LTP="exit 0;"
       ;;
     *)
       cairo_has_lcov=yes
+      ;;
   esac
 
+  if test "x$cairo_has_lcov" != "xyes"; then
+    AC_MSG_ERROR([[To enable code coverage reporting you must have one of the following LTP versions installed: $ltp_version_list.
+Please install the Linux Test Project [http://ltp.sourceforge.net/], and try again.]])
+   fi
+
   if test -z "$LTP_GENHTML"; then
-    AC_MSG_ERROR([Could not find genhtml from the LTP package])
+    AC_MSG_ERROR([[Could not find genhtml from the LTP package.
+Please install the Linux Test Project [http://ltp.sourceforge.net/], and try again.]])
   fi
 
   AC_DEFINE(HAVE_GCOV, 1, [Whether you have gcov])
