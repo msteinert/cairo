@@ -731,6 +731,8 @@ _cairo_pdf_smask_group_destroy (cairo_pdf_smask_group_t *group)
 	cairo_pattern_destroy (group->source);
     if (group->mask)
 	cairo_pattern_destroy (group->mask);
+    if (group->glyphs)
+	free (group->glyphs);
     if (group->scaled_font)
 	cairo_scaled_font_destroy (group->scaled_font);
     free (group);
@@ -4627,7 +4629,12 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
 	group->operation = PDF_SHOW_GLYPHS;
 	group->source = cairo_pattern_reference (source);
 	group->source_res = pattern_res;
-	group->glyphs = glyphs;
+	group->glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
+	if (group->glyphs == NULL) {
+	    _cairo_pdf_smask_group_destroy (group);
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	}
+	memcpy (group->glyphs, glyphs, sizeof (cairo_glyph_t) * num_glyphs);
 	group->num_glyphs = num_glyphs;
 	group->scaled_font = cairo_scaled_font_reference (scaled_font);
 	status = _cairo_pdf_surface_add_smask_group (surface, group);
