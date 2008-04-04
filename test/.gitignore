@@ -162,6 +162,13 @@ set-source
 show-glyphs-many
 show-text-current-point
 skew-extreme
+smask
+smask-fill
+smask-image-mask
+smask-mask
+smask-paint
+smask-stroke
+smask-text
 solid-pattern-cache-stress
 source-clip
 source-clip-scale

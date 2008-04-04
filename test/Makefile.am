@@ -120,6 +120,13 @@ self-intersecting$(EXEEXT)				\
 set-source$(EXEEXT)					\
 show-text-current-point$(EXEEXT)			\
 skew-extreme$(EXEEXT)					\
+smask$(EXEEXT)						\
+smask-fill$(EXEEXT)					\
+smask-image-mask$(EXEEXT)				\
+smask-mask$(EXEEXT)					\
+smask-paint$(EXEEXT)					\
+smask-stroke$(EXEEXT)					\
+smask-text$(EXEEXT)					\
 solid-pattern-cache-stress$(EXEEXT)			\
 source-clip$(EXEEXT)					\
 source-clip-scale$(EXEEXT)				\
@@ -579,6 +586,13 @@ REFERENCE_IMAGES = \
 	show-text-current-point-quartz-ref.png \
 	skew-extreme-ref.png \
 	skew-extreme-ps-ref.png \
+	smask-ref.png			\
+	smask-fill-ref.png		\
+	smask-image-mask-ref.png	\
+	smask-mask-ref.png		\
+	smask-paint-ref.png		\
+	smask-stroke-ref.png		\
+	smask-text-ref.png		\
 	stroke-image-ref.png \
 	stroke-image-pdf-ref.png \
 	stroke-image-ps-ref.png \
