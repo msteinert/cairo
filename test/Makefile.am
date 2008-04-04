@@ -200,6 +200,7 @@ if CAIRO_HAS_FT_FONT
 TESTS += bitmap-font$(EXEEXT)
 TESTS += ft-font-create-for-ft-face$(EXEEXT)
 TESTS += ft-show-glyphs-positioning$(EXEEXT)
+TESTS += ft-show-glyphs-table$(EXEEXT)
 TESTS += ft-text-vertical-layout-type1$(EXEEXT)
 TESTS += ft-text-vertical-layout-type3$(EXEEXT)
 TESTS += ft-text-antialias-none$(EXEEXT)
@@ -389,6 +390,7 @@ REFERENCE_IMAGES = \
 	ft-show-glyphs-positioning-pdf-ref.png		\
 	ft-show-glyphs-positioning-ps-ref.png		\
 	ft-show-glyphs-positioning-svg-ref.png		\
+	ft-show-glyphs-table-ref.png			\
 	ft-text-vertical-layout-type1-ps-ref.png	\
 	ft-text-vertical-layout-type1-ref.png	\
 	ft-text-vertical-layout-type1-svg-ref.png	\
