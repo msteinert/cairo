@@ -411,7 +411,7 @@ cairo_type1_font_create_charstring (cairo_type1_font_t      *font,
         path_info.current_x = (int) scaled_glyph->metrics.x_bearing;
         path_info.current_y = (int) scaled_glyph->metrics.y_bearing;
     } else {
-        charstring_encode_integer (data, (int) scaled_glyph->metrics.width, type);
+        charstring_encode_integer (data, (int) scaled_glyph->metrics.x_advance, type);
 
         path_info.current_x = 0;
         path_info.current_y = 0;
