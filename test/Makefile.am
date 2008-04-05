@@ -729,8 +729,8 @@ check-local:
 		grep -e '\<FAIL\>' $$t.log | sed -e 's/.*TARGET: \([^ ]*\).*/\1/' | sort | uniq | tr '\n' ' '; \
 		echo; \
 		for s in `grep -e '\<FAIL\>' $$t.log | sed -e 's/.*TARGET: \([^ ]*\).*/\1/' | sort | uniq`; do \
-		    eval ss=`echo $$s | tr '-' '_'`; \
-		    eval tt=`echo $$t | tr '-' '_'`; \
+		    ss=`echo $$s | tr '-' '_'`; \
+		    tt=`echo $$t | tr '-' '_'`; \
 		    eval $$ss=\""$${!ss} $$tt"\"; \
 		    echo $$surfaces | grep $$ss >/dev/null || surfaces="$$surfaces $$ss"; \
 		done; \
@@ -738,7 +738,7 @@ check-local:
 	    echo -n "Failures per surface - "; \
 	    first=""; \
 	    for s in $$surfaces; do \
-	        eval ss=`echo $$s | tr '_' '-'`; \
+	        ss=`echo $$s | tr '_' '-'`; \
 		test -n "$$first" && echo -n ", "; \
 		cnt=`echo $${!s} | wc -w`; \
 	        echo -n "$$ss: $$cnt"; \
@@ -746,7 +746,7 @@ check-local:
 	    done; \
 	    echo "."; \
 	    for s in $$surfaces; do \
-	        eval ss=`echo $$s | tr '_' '-'`; \
+	        ss=`echo $$s | tr '_' '-'`; \
 		cnt=`echo $${!s} | wc -w`; \
 	        echo -n "	$$ss [$$cnt]: "; \
 		echo $${!s} | tr '_' '-'; \
