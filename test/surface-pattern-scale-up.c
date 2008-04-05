@@ -24,6 +24,9 @@
  * Author: Behdad Esfahbod <behdad@behdad.org>
  */
 
+/* Exhibits nasty behaviour with GS due as their /Interpolate implementation
+ * does not function for rotated images. */
+
 #include <math.h>
 #include "cairo-test.h"
 #include <stdio.h>
@@ -34,8 +37,7 @@ static cairo_test_draw_function_t draw;
 
 static const cairo_test_t test = {
     "surface-pattern-scale-up",
-    "Test scaled-up transformed not-repeated surface patterns"
-    "\nFails xlib backend (with argb32) with inexplicable alpha in result",
+    "Test scaled-up transformed not-repeated surface patterns",
     SIZE, SIZE,
     draw
 };

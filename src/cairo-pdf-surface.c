@@ -1411,9 +1411,10 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 /* Emit image data into the given surface, providing a resource that
  * can be used to reference the data in image_ret. */
 static cairo_status_t
-_cairo_pdf_surface_emit_image (cairo_pdf_surface_t   *surface,
-                               cairo_image_surface_t *image,
-                               cairo_pdf_resource_t  *image_ret)
+_cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
+                               cairo_image_surface_t   *image,
+                               cairo_pdf_resource_t    *image_ret,
+			       cairo_filter_t           filter)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     char *rgb;
@@ -1422,6 +1423,7 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t   *surface,
     int i, x, y;
     cairo_pdf_resource_t smask = {0}; /* squelch bogus compiler warning */
     cairo_bool_t need_smask;
+    const char *interpolate;
 
     /* These are the only image formats we currently support, (which
      * makes things a lot simpler here). This is enforced through
@@ -1486,11 +1488,25 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t   *surface,
 	    need_smask = TRUE;
     }
 
+    switch (filter) {
+    case CAIRO_FILTER_GOOD:
+    case CAIRO_FILTER_BEST:
+    case CAIRO_FILTER_BILINEAR:
+	interpolate = "true";
+	break;
+    case CAIRO_FILTER_FAST:
+    case CAIRO_FILTER_NEAREST:
+    case CAIRO_FILTER_GAUSSIAN:
+	interpolate = "false";
+	break;
+    }
+
 #define IMAGE_DICTIONARY	"   /Type /XObject\n"		\
 				"   /Subtype /Image\n"	\
 				"   /Width %d\n"		\
 				"   /Height %d\n"		\
 				"   /ColorSpace /DeviceRGB\n"	\
+	                        "   /Interpolate %s\n" \
 				"   /BitsPerComponent 8\n"
 
     if (need_smask)
@@ -1500,13 +1516,15 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t   *surface,
 						 IMAGE_DICTIONARY
 						 "   /SMask %d 0 R\n",
 						 image->width, image->height,
+						 interpolate,
 						 smask.id);
     else
 	status = _cairo_pdf_surface_open_stream (surface,
 						 NULL,
 						 TRUE,
 						 IMAGE_DICTIONARY,
-						 image->width, image->height);
+						 image->width, image->height,
+						 interpolate);
     if (status)
 	goto CLEANUP_RGB;
 
@@ -1537,7 +1555,7 @@ _cairo_pdf_surface_emit_image_surface (cairo_pdf_surface_t     *surface,
     if (status)
 	goto BAIL;
 
-    status = _cairo_pdf_surface_emit_image (surface, image, resource);
+    status = _cairo_pdf_surface_emit_image (surface, image, resource, pattern->base.filter);
     if (status)
 	goto BAIL;
 

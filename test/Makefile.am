@@ -359,8 +359,14 @@ REFERENCE_IMAGES = \
 	close-path-ps2-ref.png	\
 	close-path-ps3-ref.png	\
 	composite-integer-translate-over-ref.png	\
+	composite-integer-translate-over-ps2-ref.png	\
+	composite-integer-translate-over-ps3-ref.png	\
 	composite-integer-translate-over-repeat-ref.png	\
+	composite-integer-translate-over-repeat-ps2-ref.png	\
+	composite-integer-translate-over-repeat-ps3-ref.png	\
 	composite-integer-translate-source-ref.png	\
+	composite-integer-translate-source-ps2-ref.png	\
+	composite-integer-translate-source-ps3-ref.png	\
 	copy-path-ps2-ref.png	\
 	copy-path-ps3-ref.png	\
 	copy-path-ref.png	\
@@ -432,7 +438,11 @@ REFERENCE_IMAGES = \
 	extend-reflect-ps2-ref.png \
 	extend-reflect-ps3-ref.png \
 	extend-repeat-ref.png	\
+	extend-repeat-ps2-ref.png	\
+	extend-repeat-ps3-ref.png	\
 	extend-repeat-similar-ref.png	\
+	extend-repeat-similar-ps2-ref.png	\
+	extend-repeat-similar-ps3-ref.png	\
 	fallback-resolution-ppi37.5x37.5-ref.png \
 	fallback-resolution-ppi37.5x72-ref.png \
 	fallback-resolution-ppi37.5x75-ref.png \
@@ -584,6 +594,8 @@ REFERENCE_IMAGES = \
 	huge-pattern-pdf-ref.png	\
 	huge-pattern-pdf-rgb24-ref.png	\
 	image-surface-source-ref.png \
+	image-surface-source-ps2-ref.png \
+	image-surface-source-ps3-ref.png \
 	infinite-join-ref.png	\
 	infinite-join-ps2-ref.png	\
 	infinite-join-ps3-ref.png	\
@@ -869,18 +881,20 @@ REFERENCE_IMAGES = \
 	stroke-ctm-caps-ps2-ref.png \
 	stroke-ctm-caps-ps3-ref.png \
 	surface-pattern-big-scale-down-ref.png	\
-	surface-pattern-pdf-argb32-ref.png	\
-	surface-pattern-ps2-argb32-ref.png	\
-	surface-pattern-ps3-argb32-ref.png	\
+	surface-pattern-pdf-ref.png	\
+	surface-pattern-ps2-ref.png	\
+	surface-pattern-ps3-ref.png	\
 	surface-pattern-ref.png	\
-	surface-pattern-scale-down-pdf-argb32-ref.png	\
-	surface-pattern-scale-down-ps2-argb32-ref.png	\
-	surface-pattern-scale-down-ps3-argb32-ref.png	\
+	surface-pattern-scale-down-pdf-argb24-ref.png	\
+	surface-pattern-scale-down-pdf-rgb24-ref.png	\
+	surface-pattern-scale-down-ps2-ref.png	\
+	surface-pattern-scale-down-ps3-ref.png	\
 	surface-pattern-scale-down-ref.png	\
 	surface-pattern-scale-down-quartz-ref.png	\
 	surface-pattern-scale-up-pdf-argb32-ref.png	\
-	surface-pattern-scale-up-ps2-argb32-ref.png	\
-	surface-pattern-scale-up-ps3-argb32-ref.png	\
+	surface-pattern-scale-up-pdf-rgb24-ref.png	\
+	surface-pattern-scale-up-ps2-ref.png	\
+	surface-pattern-scale-up-ps3-ref.png	\
 	surface-pattern-scale-up-ref.png	\
 	surface-pattern-svg12-ref.png	\
 	surface-pattern-svg11-ref.png	\
@@ -964,6 +978,8 @@ REFERENCE_IMAGES = \
 	unbounded-operator-quartz-rgb24-ref.png	\
 	xlib-expose-event-ref.png \
 	xlib-surface-source-ref.png \
+	xlib-surface-source-ps2-ref.png \
+	xlib-surface-source-ps3-ref.png \
 	zero-alpha-ref.png
 
 EXTRA_DIST +=		\
@@ -1023,10 +1039,7 @@ $(REFERENCE_IMAGES)
 #                         on cairo_traps_t after strokes.
 #                         Test case should also be expanded to hit special-case
 #                         tessellators as well.
-# surface-pattern*      - old bugs in pixman, but fails PS/PDF due to lack of
-#                         /Interpolate support - which causes a half-pixel
-#                         shift in GS (and consequently virtually every
-#                         image/fallback-image using test to FAIL).
+# surface-pattern-big...- Strange, unexplained results for SVG/PS.
 XFAIL_TESTS =					\
 alpha-similar$(EXEEXT)				\
 big-line$(EXEEXT)				\
@@ -1039,10 +1052,7 @@ fallback-resolution$(EXEEXT)			\
 long-lines$(EXEEXT)				\
 self-copy-overlap$(EXEEXT)			\
 self-intersecting$(EXEEXT)			\
-surface-pattern$(EXEEXT)			\
 surface-pattern-big-scale-down$(EXEEXT)		\
-surface-pattern-scale-down$(EXEEXT)		\
-surface-pattern-scale-up$(EXEEXT)		\
 $(NULL)
 
 # Any test that doesn't generate a log file goes here
@@ -1289,7 +1299,6 @@ check-ref-dups:
 check-ref-missing:
 	@cd "$(srcdir)"; \
 	REFS=`git ls-files "*-ref.png"`; \
-	test x = "x$$REFS" && REFS=`ls *-ref.png`; \
 	ret=true; \
 	missing=""; \
 	for i in $$REFS; do \
@@ -1301,6 +1310,19 @@ check-ref-missing:
 		echo "You probably need to add these to Makefile.am's REFERENCE_IMAGES."; \
 		echo "Missing: $$missing"; \
 		ret=false; \
+	fi >&2; \
+	if $$ret; then \
+	    REFS=`ls *-ref.png`; \
+	    for i in $$REFS; do \
+		echo "" $(REFERENCE_IMAGES) "" | grep -sq " $$i " || missing="$$missing $$i" ; \
+	    done ; \
+	    if test -n "$$missing"; then \
+		    echo "*** Error: Sanity check failed"; \
+		    echo "Some local reference files are not included in the distribution or been added to git."; \
+		    echo "You probably need to add these to git and Makefile.am's REFERENCE_IMAGES."; \
+		    echo "Missing: $$missing"; \
+		    ret=false; \
+	    fi >&2; \
 	fi >&2; \
 	missing=""; \
 	for i in $(REFERENCE_IMAGES); do \

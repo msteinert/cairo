@@ -72,6 +72,7 @@ draw (cairo_t *cr, int width, int height)
     free (filename);
 
     cairo_set_source_surface (cr, surface, 0, 0);
+    cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_NEAREST);
     cairo_paint (cr);
 
     cairo_surface_destroy (surface);

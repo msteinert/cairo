@@ -54,6 +54,7 @@ draw (cairo_t *cr, int width, int height)
 						CAIRO_FORMAT_ARGB32, 12, 4, 48);
 
     cairo_set_source_surface (cr, mask, 0, 0);
+    cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_NEAREST);
     cairo_surface_destroy (mask);
 
     cairo_paint (cr);

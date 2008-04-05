@@ -1863,7 +1863,8 @@ _cairo_ps_surface_emit_base85_string (cairo_ps_surface_t    *surface,
 static cairo_status_t
 _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 			      cairo_image_surface_t *image,
-			      cairo_operator_t	     op)
+			      cairo_operator_t	     op,
+			      cairo_filter_t         filter)
 {
     cairo_status_t status;
     unsigned char *data, *data_compressed;
@@ -1874,9 +1875,23 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
     cairo_bool_t use_mask;
     uint32_t *pixel;
     int bit;
+    const char *interpolate;
 
     if (image->base.status)
 	return image->base.status;
+
+    switch (filter) {
+    case CAIRO_FILTER_GOOD:
+    case CAIRO_FILTER_BEST:
+    case CAIRO_FILTER_BILINEAR:
+	interpolate = "true";
+	break;
+    case CAIRO_FILTER_FAST:
+    case CAIRO_FILTER_NEAREST:
+    case CAIRO_FILTER_GAUSSIAN:
+	interpolate = "false";
+	break;
+    }
 
     transparency = _cairo_image_analyze_transparency (image);
 
@@ -1998,10 +2013,12 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 				     "    /ImageType 1 def\n"
 				     "    /Width %d def\n"
 				     "    /Height %d def\n"
+				     "    /Interpolate %s def\n"
 				     "    /BitsPerComponent 8 def\n"
 				     "    /Decode [ 0 1 0 1 0 1 ] def\n",
 				     image->width,
-				     image->height);
+				     image->height,
+				     interpolate);
 
 	if (surface->use_string_datasource) {
 	    _cairo_output_stream_printf (surface->stream,
@@ -2024,6 +2041,7 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 				     "    /ImageType 1 def\n"
 				     "    /Width %d def\n"
 				     "    /Height %d def\n"
+				     "    /Interpolate %s def\n"
 				     "    /BitsPerComponent 1 def\n"
 				     "    /Decode [ 1 0 ] def\n"
 				     "    /ImageMatrix [ 1 0 0 -1 0 %d ] def\n"
@@ -2033,6 +2051,7 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 				     image->height,
 				     image->width,
 				     image->height,
+				     interpolate,
 				     image->height);
     } else {
 	_cairo_output_stream_printf (surface->stream,
@@ -2059,9 +2078,11 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 	}
 
 	_cairo_output_stream_printf (surface->stream,
+				     "  /Interpolate %s def\n"
 				     "  /ImageMatrix [ 1 0 0 -1 0 %d ] def\n"
 				     "end\n"
 				     "image\n",
+				     interpolate,
 				     opaque_image->height);
     }
 
@@ -2246,7 +2267,8 @@ _cairo_ps_surface_emit_surface (cairo_ps_surface_t      *surface,
 	status = _cairo_ps_surface_emit_meta_surface (surface,
 						      meta_surface);
     } else {
-	status = _cairo_ps_surface_emit_image (surface, surface->image, op);
+	status = _cairo_ps_surface_emit_image (surface, surface->image,
+					       op, pattern->base.filter);
     }
 
     return status;

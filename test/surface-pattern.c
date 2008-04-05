@@ -30,12 +30,14 @@
 
 #define SIZE 140
 
+/* Not GhostScript does not support /Interpolate on rotated images, so the PS
+ * output looks terrible, but is a known issue. */
+
 static cairo_test_draw_function_t draw;
 
 static const cairo_test_t test = {
     "surface-pattern",
-    "Test transformed repeated surface patterns"
-    "\nExhibiting a strange (very minor) failure in ps backend with device-offset",
+    "Test transformed repeated surface patterns",
     SIZE, SIZE,
     draw
 };
