@@ -711,7 +711,9 @@ svg-surface			\
 user-data
 
 # A hook that summarises the failures
-check: AM_MAKEFLAGS+=-k
+# We need to both force make to keep going after failures and to disable the
+# jobserver (parallel builds).
+check: AM_MAKEFLAGS+=-k -j1
 check-local:
 	@FAILED_TESTS=""; \
 	for t in $(TESTS:$(EXEEXT)=.log); do \
