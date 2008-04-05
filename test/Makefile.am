@@ -728,7 +728,8 @@ check-local:
 		echo; \
 		for s in `grep -e '\<FAIL\>' $$t.log | sed -e 's/.*TARGET: \([^ ]*\).*/\1/' | sort | uniq`; do \
 		    eval ss=`echo $$s | tr '-' '_'`; \
-		    eval $$ss=$$[$$ss + 1]; \
+		    eval tt=`echo $$t | tr '-' '_'`; \
+		    eval $$ss=\""$${!ss} $$tt"\"; \
 		    echo $$surfaces | grep $$ss >/dev/null || surfaces="$$surfaces $$ss"; \
 		done; \
 	    done; \
@@ -737,10 +738,17 @@ check-local:
 	    for s in $$surfaces; do \
 	        eval ss=`echo $$s | tr '_' '-'`; \
 		test -n "$$first" && echo -n ", "; \
-	        echo -n "$$ss: $$[$$s + 0]"; \
+		cnt=`echo $${!s} | wc -w`; \
+	        echo -n "$$ss: $$cnt"; \
 		first="false"; \
 	    done; \
 	    echo "."; \
+	    for s in $$surfaces; do \
+	        eval ss=`echo $$s | tr '_' '-'`; \
+		cnt=`echo $${!s} | wc -w`; \
+	        echo -n "	$$ss [$$cnt]: "; \
+		echo $${!s} | tr '_' '-'; \
+	    done; \
 	fi
 
 check_PROGRAMS =
