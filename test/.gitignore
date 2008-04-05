@@ -63,6 +63,7 @@ fill-and-stroke-alpha-add
 fill-degenerate-sort-order
 fill-missed-stop
 fill-rule
+filter-bilinear-extents
 filter-nearest-offset
 finer-grained-fallbacks
 ft-text-antialias-none
