@@ -339,6 +339,7 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
                                              scaled_font_glyph_index,
                                              CAIRO_SCALED_GLYPH_INFO_METRICS,
                                              &scaled_glyph);
+	assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
 	if (status)
 	    return status;
 
