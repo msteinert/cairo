@@ -664,6 +664,9 @@ slim_hidden_def (cairo_set_operator);
  * The color components are floating point numbers in the range 0 to
  * 1. If the values passed in are outside that range, they will be
  * clamped.
+ *
+ * The default source pattern is opaque black, (that is, it is
+ * equivalent to cairo_set_source_rgb (cr, 0.0, 0.0, 0.0)).
  **/
 void
 cairo_set_source_rgb (cairo_t *cr, double red, double green, double blue)
@@ -696,6 +699,9 @@ cairo_set_source_rgb (cairo_t *cr, double red, double green, double blue)
  * The color and alpha components are floating point numbers in the
  * range 0 to 1. If the values passed in are outside that range, they
  * will be clamped.
+ *
+ * The default source pattern is opaque black, (that is, it is
+ * equivalent to cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0)).
  **/
 void
 cairo_set_source_rgba (cairo_t *cr,
@@ -778,9 +784,9 @@ slim_hidden_def (cairo_set_source_surface);
  * that further modifications of the current transformation matrix
  * will not affect the source pattern. See cairo_pattern_set_matrix().
  *
- * XXX: I'd also like to direct the reader's attention to some
- * (not-yet-written) section on cairo's imaging model. How would I do
- * that if such a section existed? (cworth).
+ * The default source pattern is a solid pattern that is opaque black,
+ * (that is, it is equivalent to cairo_set_source_rgb (cr, 0.0, 0.0,
+ * 0.0)).
  **/
 void
 cairo_set_source (cairo_t *cr, cairo_pattern_t *source)
