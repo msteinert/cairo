@@ -2571,13 +2571,33 @@ cairo_copy_clip_rectangle_list (cairo_t *cr)
  * @slant: the slant for the font
  * @weight: the weight for the font
  *
+ * Note: The cairo_select_font_face() function call is part of what
+ * the cairo designers call the "toy" text API. It is convenient for
+ * short demos and simple programs, but it is not expected to be
+ * adequate for serious text-using applications.
+ *
  * Selects a family and style of font from a simplified description as
- * a family name, slant and weight. This function is meant to be used
- * only for applications with simple font needs: Cairo doesn't provide
- * for operations such as listing all available fonts on the system,
- * and it is expected that most applications will need to use a more
- * comprehensive font handling and text layout library in addition to
- * cairo.
+ * a family name, slant and weight. Cairo provides no operation to
+ * list available family names on the system (this is a "toy",
+ * remember"), but the standard CSS2 generic family names, ("serif",
+ * "sans-serif", "cursive", "fantasy", "monospace"), are likely to
+ * work as expected.
+ *
+ * For "real" font selection, see the font-backend-specific
+ * font_face_create functions for the font backend you are using. (For
+ * example, if you are using the freetype-based cairo-ft font backend,
+ * see cairo_ft_font_face_create_for_ft_face() or
+ * cairo_ft_font_face_create_for_pattern().) The resulting font face
+ * could then be used with cairo_scaled_font_create and
+ * cairo_set_scaled_font().
+ *
+ * Similarly, when using the "real" font support, you can call
+ * directly into the underlying font system, (such as fontconfig or
+ * freetype), for operations such as listing available fonts, etc.
+ *
+ * It is expected that most applications will need to use a more
+ * comprehensive font handling and text layout library, (for example,
+ * pango), in conjunction with cairo.
  **/
 void
 cairo_select_font_face (cairo_t              *cr,
