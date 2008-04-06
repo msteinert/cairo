@@ -373,6 +373,8 @@ cairo_pop_group_to_source (cairo_t *cr);
  * #cairo_operator_t is used to set the compositing operator for all cairo
  * drawing operations.
  *
+ * The default operator is %CAIRO_OPERATOR_OVER.
+ *
  * The operators marked as <firstterm>unbounded</firstterm> modify their
  * destination even outside of the mask layer (that is, their effect is not
  * bound by the mask layer).  However, their effect can still be limited by
@@ -473,6 +475,8 @@ cairo_set_antialias (cairo_t *cr, cairo_antialias_t antialias);
  * (Note that filling is not actually implemented in this way. This
  * is just a description of the rule that is applied.)
  *
+ * The default fill rule is %CAIRO_FILL_RULE_WINDING.
+ *
  * New entries may be added in future versions.
  **/
 typedef enum _cairo_fill_rule {
@@ -492,7 +496,9 @@ cairo_set_line_width (cairo_t *cr, double width);
  * @CAIRO_LINE_CAP_ROUND: use a round ending, the center of the circle is the end point
  * @CAIRO_LINE_CAP_SQUARE: use squared ending, the center of the square is the end point
  *
- * Specifies how to render the endpoint of a line when stroking.
+ * Specifies how to render the endpoints of the path when stroking.
+ *
+ * The default line cap style is %CAIRO_LINE_CAP_BUTT.
  **/
 typedef enum _cairo_line_cap {
     CAIRO_LINE_CAP_BUTT,
@@ -513,6 +519,8 @@ cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap);
  * the line width from the joint point
  *
  * Specifies how to render the junction of two lines when stroking.
+ *
+ * The default line join style is %CAIRO_LINE_JOIN_MITER.
  **/
 typedef enum _cairo_line_join {
     CAIRO_LINE_JOIN_MITER,
