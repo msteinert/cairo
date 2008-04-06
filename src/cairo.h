@@ -1794,8 +1794,13 @@ cairo_pattern_get_matrix (cairo_pattern_t *pattern,
  *   the closest pixel from the source (Since 1.2; but only
  *   implemented for surface patterns since 1.6)
  *
- * #cairo_extend_t is used to describe how the area outside
- * of a pattern will be drawn.
+ * #cairo_extend_t is used to describe how pattern color/alpha will be
+ * determined for areas "outside" the pattern's natural area, (for
+ * example, outside the surface bounds or outside the gradient
+ * geometry).
+ *
+ * The default extend mode is %CAIRO_EXTEND_NONE for surface patterns
+ * and %CAIRO_EXTEND_PAD for gradient patterns.
  *
  * New entries may be added in future versions.
  **/

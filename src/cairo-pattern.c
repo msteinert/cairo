@@ -1084,6 +1084,9 @@ cairo_pattern_get_filter (cairo_pattern_t *pattern)
  * Sets the mode to be used for drawing outside the area of a pattern.
  * See #cairo_extend_t for details on the semantics of each extend
  * strategy.
+ *
+ * The default extend mode is %CAIRO_EXTEND_NONE for surface patterns
+ * and %CAIRO_EXTEND_PAD for gradient patterns.
  **/
 void
 cairo_pattern_set_extend (cairo_pattern_t *pattern, cairo_extend_t extend)
