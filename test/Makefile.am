@@ -591,12 +591,19 @@ REFERENCE_IMAGES = \
 	skew-extreme-ref.png \
 	skew-extreme-ps-ref.png \
 	smask-ref.png			\
+	smask-pdf-ref.png		\
 	smask-fill-ref.png		\
+	smask-fill-pdf-ref.png		\
 	smask-image-mask-ref.png	\
+	smask-image-mask-pdf-ref.png	\
 	smask-mask-ref.png		\
+	smask-mask-pdf-ref.png		\
 	smask-paint-ref.png		\
+	smask-paint-pdf-ref.png		\
 	smask-stroke-ref.png		\
+	smask-stroke-pdf-ref.png	\
 	smask-text-ref.png		\
+	smask-text-pdf-ref.png		\
 	stroke-image-ref.png \
 	stroke-image-pdf-ref.png \
 	stroke-image-ps-ref.png \
