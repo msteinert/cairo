@@ -2607,7 +2607,7 @@ cairo_copy_clip_rectangle_list (cairo_t *cr)
  * example, if you are using the freetype-based cairo-ft font backend,
  * see cairo_ft_font_face_create_for_ft_face() or
  * cairo_ft_font_face_create_for_pattern().) The resulting font face
- * could then be used with cairo_scaled_font_create and
+ * could then be used with cairo_scaled_font_create() and
  * cairo_set_scaled_font().
  *
  * Similarly, when using the "real" font support, you can call
