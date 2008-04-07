@@ -705,6 +705,7 @@ big-line$(EXEEXT)				\
 big-trap$(EXEEXT)				\
 extend-pad$(EXEEXT)				\
 filter-nearest-offset$(EXEEXT)			\
+filter-bilinear-extents$(EXEEXT)		\
 long-lines$(EXEEXT)				\
 self-intersecting$(EXEEXT)			\
 surface-pattern$(EXEEXT)			\
