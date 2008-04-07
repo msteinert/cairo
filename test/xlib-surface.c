@@ -210,6 +210,19 @@ check_visual (Display *dpy)
 	return 0;
 }
 
+#undef xcalloc
+static void *
+xcalloc (size_t a, size_t b)
+{
+    void *ptr = calloc (a, b);
+    if (ptr == NULL) {
+	cairo_test_log ("xlib-surface: unable to allocate memory, skipping\n");
+	cairo_test_fini ();
+	exit (0);
+    }
+    return ptr;
+}
+
 int
 main (void)
 {
@@ -222,6 +235,7 @@ main (void)
     cairo_bool_t set_size;
     cairo_bool_t offscreen;
     cairo_test_status_t status, result = CAIRO_TEST_SUCCESS;
+    int stride;
 
     cairo_test_init ("xlib-surface");
 
@@ -238,14 +252,16 @@ main (void)
 	return 0;
     }
 
-    reference_data = malloc (SIZE * SIZE * 4);
-    test_data = malloc (SIZE * SIZE * 4);
-    diff_data = malloc (SIZE * SIZE * 4);
+    stride = cairo_format_stride_for_width (CAIRO_FORMAT_RGB24, SIZE);
+
+    reference_data = xcalloc (SIZE, stride);
+    test_data = xcalloc (SIZE, stride);
+    diff_data = xcalloc (SIZE, stride);
 
     reference_surface = cairo_image_surface_create_for_data (reference_data,
 							     CAIRO_FORMAT_RGB24,
 							     SIZE, SIZE,
-							     SIZE * 4);
+							     stride);
 
     draw_pattern (reference_surface);
     cairo_surface_destroy (reference_surface);
