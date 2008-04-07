@@ -170,9 +170,8 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
      * using image surfaces for all temporary operations, so return NULL
      * and let the fallback code happen.
      */
-    if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE(src)) {
+    if (xrender_format == NULL || ! CAIRO_SURFACE_RENDER_HAS_COMPOSITE (src))
 	return NULL;
-    }
 
     pix = XCreatePixmap (dpy, src->drawable,
 			 width <= 0 ? 1 : width, height <= 0 ? 1 : height,
@@ -1080,6 +1079,9 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	clone = (cairo_xlib_surface_t *)
 	    _cairo_xlib_surface_create_similar_with_format (surface, image_src->format,
 						image_src->width, image_src->height);
+	if (clone == NULL)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
 	if (clone->base.status)
 	    return clone->base.status;
 
