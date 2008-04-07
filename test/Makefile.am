@@ -69,6 +69,7 @@ infinite-join$(EXEEXT)					\
 in-fill-empty-trapezoid$(EXEEXT)			\
 in-fill-trapezoid$(EXEEXT)				\
 invalid-matrix$(EXEEXT)					\
+large-source$(EXEEXT)					\
 leaky-dash$(EXEEXT)					\
 leaky-polygon$(EXEEXT)					\
 line-width$(EXEEXT)					\
@@ -427,6 +428,7 @@ REFERENCE_IMAGES = \
 	image-surface-source-ref.png \
 	infinite-join-ref.png	\
 	infinite-join-ps-ref.png	\
+	large-source-ref.png	\
 	leaky-dash-ps-argb32-ref.png	\
 	leaky-dash-ps-rgb24-ref.png	\
 	leaky-dash-quartz-ref.png	\
@@ -708,6 +710,7 @@ big-trap$(EXEEXT)				\
 extend-pad$(EXEEXT)				\
 filter-nearest-offset$(EXEEXT)			\
 filter-bilinear-extents$(EXEEXT)		\
+large-source$(EXEEXT)				\
 long-lines$(EXEEXT)				\
 self-intersecting$(EXEEXT)			\
 surface-pattern$(EXEEXT)			\
