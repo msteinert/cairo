@@ -593,6 +593,7 @@ REFERENCE_IMAGES = \
 	smask-ref.png			\
 	smask-pdf-ref.png		\
 	smask-ps-ref.png		\
+	smask-svg-ref.png		\
 	smask-fill-ref.png		\
 	smask-fill-pdf-ref.png		\
 	smask-fill-svg-ref.png		\
@@ -600,6 +601,7 @@ REFERENCE_IMAGES = \
 	smask-image-mask-pdf-ref.png	\
 	smask-mask-ref.png		\
 	smask-mask-pdf-ref.png		\
+	smask-mask-svg-ref.png		\
 	smask-paint-ref.png		\
 	smask-paint-pdf-ref.png		\
 	smask-paint-svg-ref.png		\
