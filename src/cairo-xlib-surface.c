@@ -162,7 +162,7 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
 
     surface = (cairo_xlib_surface_t *)
 	      _cairo_xlib_surface_create_internal (dpy, pix,
-		                                   src->screen, src->visual,
+		                                   src->screen, NULL,
 						   xrender_format,
 						   width, height,
 						   xrender_format->depth);
