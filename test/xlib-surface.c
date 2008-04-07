@@ -39,6 +39,63 @@
 
 cairo_bool_t result = 0;
 
+#if CAIRO_HAS_XLIB_XRENDER_SURFACE
+
+#include "cairo-xlib-xrender.h"
+
+/* Vladimir Vukicevic reported that surfaces were being created with
+ * mismatching Visuals and XRenderPictFormats.
+ */
+static cairo_bool_t
+surface_compare_visual_and_format (cairo_surface_t *surface)
+{
+    Display *dpy;
+    Visual *visual;
+    XRenderPictFormat *format;
+
+    dpy = cairo_xlib_surface_get_display (surface);
+
+    visual = cairo_xlib_surface_get_visual (surface);
+    if (visual == NULL)
+	return TRUE;
+
+    format = cairo_xlib_surface_get_xrender_format (surface);
+    if (format == NULL)
+	return TRUE;
+
+    return format == XRenderFindVisualFormat (dpy, visual);
+
+}
+#else
+
+static cairo_bool_t
+surface_compare_visual_and_format (cairo_surface_t *surface)
+{
+    return TRUE;
+}
+
+#endif
+
+static cairo_bool_t
+check_similar_visual_and_format (cairo_surface_t *surface)
+{
+    cairo_surface_t *similar;
+    cairo_bool_t ret;
+
+    similar = cairo_surface_create_similar (surface,
+	                                    CAIRO_CONTENT_COLOR_ALPHA,
+					    1, 1);
+    if (cairo_surface_status (similar))
+	return FALSE;
+
+    ret = surface_compare_visual_and_format (similar);
+
+    cairo_surface_destroy (similar);
+
+    return ret;
+}
+
+
 static void
 draw_pattern (cairo_surface_t *surface)
 {
@@ -123,6 +180,9 @@ do_test (Display        *dpy,
 					 DefaultVisual (dpy, screen),
 					 SIZE, SIZE);
 
+    if (! surface_compare_visual_and_format (surface))
+	return CAIRO_TEST_FAILURE;
+
     if (!use_render)
 	cairo_boilerplate_xlib_surface_disable_render (surface);
 
@@ -133,6 +193,9 @@ do_test (Display        *dpy,
 	    cairo_xlib_surface_get_height (surface) != SIZE)
 	    return CAIRO_TEST_FAILURE;
     }
+
+    if (! check_similar_visual_and_format (surface))
+	return CAIRO_TEST_FAILURE;
 
     draw_pattern (surface);
 
