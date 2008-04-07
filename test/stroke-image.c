@@ -61,12 +61,13 @@ draw (cairo_t *cr, int width, int height)
     cairo_translate (cr, PAD, PAD);
 
     cairo_set_source_surface (cr, isurf, 0, 0);
+    cairo_surface_destroy (isurf);
 
     cairo_new_path (cr);
     cairo_set_line_width (cr, LINE_WIDTH);
     cairo_arc (cr, IMAGE_SIZE/2, IMAGE_SIZE/2, IMAGE_SIZE/2 - LINE_WIDTH/2, 0, M_PI * 2.0);
     cairo_stroke (cr);
-    
+
     return CAIRO_TEST_SUCCESS;
 }
 
