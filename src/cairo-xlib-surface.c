@@ -117,22 +117,6 @@ static const XTransform identity = { {
 #define CAIRO_SURFACE_RENDER_HAS_PICTURE_TRANSFORM(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 6)
 #define CAIRO_SURFACE_RENDER_HAS_FILTERS(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 6)
 
-static int
-_CAIRO_FORMAT_DEPTH (cairo_format_t format)
-{
-    switch (format) {
-    case CAIRO_FORMAT_A1:
-	return 1;
-    case CAIRO_FORMAT_A8:
-	return 8;
-    case CAIRO_FORMAT_RGB24:
-	return 24;
-    case CAIRO_FORMAT_ARGB32:
-    default:
-	return 32;
-    }
-}
-
 static XRenderPictFormat *
 _CAIRO_FORMAT_TO_XRENDER_FORMAT(Display *dpy, cairo_format_t format)
 {
@@ -161,7 +145,6 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
     Display *dpy = src->dpy;
     Pixmap pix;
     cairo_xlib_surface_t *surface;
-    int depth = _CAIRO_FORMAT_DEPTH (format);
     XRenderPictFormat *xrender_format = _CAIRO_FORMAT_TO_XRENDER_FORMAT (dpy,
 									 format);
 
@@ -175,14 +158,14 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
 
     pix = XCreatePixmap (dpy, src->drawable,
 			 width <= 0 ? 1 : width, height <= 0 ? 1 : height,
-			 depth);
+			 xrender_format->depth);
 
     surface = (cairo_xlib_surface_t *)
 	      _cairo_xlib_surface_create_internal (dpy, pix,
 		                                   src->screen, src->visual,
 						   xrender_format,
 						   width, height,
-						   depth);
+						   xrender_format->depth);
     if (surface->base.status) {
 	XFreePixmap (dpy, pix);
 	return &surface->base;
