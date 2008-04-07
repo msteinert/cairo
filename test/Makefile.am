@@ -595,17 +595,20 @@ REFERENCE_IMAGES = \
 	smask-ps-ref.png		\
 	smask-fill-ref.png		\
 	smask-fill-pdf-ref.png		\
+	smask-fill-svg-ref.png		\
 	smask-image-mask-ref.png	\
 	smask-image-mask-pdf-ref.png	\
 	smask-mask-ref.png		\
 	smask-mask-pdf-ref.png		\
 	smask-paint-ref.png		\
 	smask-paint-pdf-ref.png		\
+	smask-paint-svg-ref.png		\
 	smask-stroke-ref.png		\
 	smask-stroke-pdf-ref.png	\
 	smask-text-ref.png		\
 	smask-text-pdf-ref.png		\
 	smask-text-ps-ref.png		\
+	smask-text-svg-ref.png		\
 	stroke-image-ref.png \
 	stroke-image-pdf-ref.png \
 	stroke-image-ps-ref.png \
