@@ -1,3 +1,50 @@
+Snapshot 1.5.20 (2008-04-04 Carl Worth <cworth@cworth.org>)
+===========================================================
+This is the tenth snapshot in cairo's unstable 1.5 series. It comes
+just two days (and only one working day) after the 1.5.18
+snapshot. The quick snapshot is due to two embarrassing bugs (both
+affecting cairo-xlib) that had been introduced in the 1.5.18
+snapshot. The fixes for these are described below along with a few
+other fixes, (which hopefully aren't introducing new bugs this time).
+
+cairo-xlib
+----------
+Revert fix from 1.5.18 to allow pattern expansion based on the filter
+mode. This fix seemed so boring, (the use case it addresses is almost
+never used in practice), that it didn't even get mentioned in the
+1.5.18 release notes. However, the "fix" happened to break rendering
+that is always used resulting in corrupt image rendering in mozilla,
+evolution, and probably everything else that uses cairo.
+
+Fix to avoid BadMatch errors in cairo_surface_create_similar. These
+were introduced, (inadvertently, of course), as part of the fix in
+1.5.18 for creating similar surfaces without the Render
+extension. Again, thanks to mozilla, (and Vladimir Vukicevic in
+particular), for noticing our mistake.
+
+general
+-------
+Correctly handle an in-error surface in
+cairo_surface_write_to_png. Previously this function would cause an
+assertion failure if you gave it a finished surface. Now it cleanly
+returns a CAIRO_STATUS_SURFACE_FINISHED result instead.
+
+Avoid potentially infinite wandering through memory inside
+_cairo_hull_prev_valid. Thanks to Jonathan Watt for noticing this
+problem:
+
+	https://bugzilla.mozilla.org/show_bug.cgi?id=306649#c21
+
+cairo-pdf
+---------
+Fix generation of "soft" masks made by drawing to a similar surface
+and then calling cairo_mask_surface() with it.
+
+cairo-svg
+---------
+Fix for code that uses cairo_mask() on an intermediate surface which
+is later passed to cairo_mask_surface().
+
 Snapshot 1.5.18 (2008-04-05 Carl Worth <cworth@cworth.org>)
 ===========================================================
 This is the ninth snapshot in cairo's unstable 1.5 series. It comes
