@@ -64,6 +64,7 @@ get-group-target$(EXEEXT)				\
 get-path-extents$(EXEEXT)				\
 gradient-alpha$(EXEEXT)					\
 gradient-zero-stops$(EXEEXT)				\
+group-paint$(EXEEXT)					\
 image-surface-source$(EXEEXT)				\
 infinite-join$(EXEEXT)					\
 in-fill-empty-trapezoid$(EXEEXT)			\
@@ -425,6 +426,7 @@ REFERENCE_IMAGES = \
 	gradient-alpha-rgb24-ref.png	\
 	gradient-zero-stops-ref.png	\
 	gradient-zero-stops-rgb24-ref.png	\
+	group-paint-ref.png	\
 	image-surface-source-ref.png \
 	infinite-join-ref.png	\
 	infinite-join-ps-ref.png	\
