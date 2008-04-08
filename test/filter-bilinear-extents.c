@@ -81,6 +81,8 @@ draw (cairo_t *cr, int width, int height)
     cairo_paint (cr);
     cairo_restore (cr);
 
+    cairo_surface_destroy (checker);
+
     return CAIRO_TEST_SUCCESS;
 }
 
