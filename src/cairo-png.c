@@ -351,6 +351,12 @@ cairo_surface_write_to_png_stream (cairo_surface_t	*surface,
 {
     struct png_write_closure_t png_closure;
 
+    if (surface->status)
+	return surface->status;
+
+    if (surface->finished)
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
+
     png_closure.write_func = write_func;
     png_closure.closure = closure;
 
