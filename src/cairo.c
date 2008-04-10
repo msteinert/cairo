@@ -3258,7 +3258,7 @@ cairo_operator_t
 cairo_get_operator (cairo_t *cr)
 {
     if (cr->status)
-	return (cairo_operator_t) 0;
+        return CAIRO_GSTATE_OPERATOR_DEFAULT;
 
     return _cairo_gstate_get_operator (cr->gstate);
 }
@@ -3275,7 +3275,7 @@ double
 cairo_get_tolerance (cairo_t *cr)
 {
     if (cr->status)
-	return 0.;
+        return CAIRO_GSTATE_TOLERANCE_DEFAULT;
 
     return _cairo_gstate_get_tolerance (cr->gstate);
 }
@@ -3293,7 +3293,7 @@ cairo_antialias_t
 cairo_get_antialias (cairo_t *cr)
 {
     if (cr->status)
-	return (cairo_antialias_t) 0;
+        return CAIRO_ANTIALIAS_DEFAULT;
 
     return _cairo_gstate_get_antialias (cr->gstate);
 }
@@ -3386,7 +3386,7 @@ cairo_fill_rule_t
 cairo_get_fill_rule (cairo_t *cr)
 {
     if (cr->status)
-	return (cairo_fill_rule_t) 0;
+        return CAIRO_GSTATE_FILL_RULE_DEFAULT;
 
     return _cairo_gstate_get_fill_rule (cr->gstate);
 }
@@ -3406,7 +3406,7 @@ double
 cairo_get_line_width (cairo_t *cr)
 {
     if (cr->status)
-	return 0.;
+        return CAIRO_GSTATE_LINE_WIDTH_DEFAULT;
 
     return _cairo_gstate_get_line_width (cr->gstate);
 }
@@ -3423,7 +3423,7 @@ cairo_line_cap_t
 cairo_get_line_cap (cairo_t *cr)
 {
     if (cr->status)
-	return (cairo_line_cap_t) 0;
+        return CAIRO_GSTATE_LINE_CAP_DEFAULT;
 
     return _cairo_gstate_get_line_cap (cr->gstate);
 }
@@ -3440,7 +3440,7 @@ cairo_line_join_t
 cairo_get_line_join (cairo_t *cr)
 {
     if (cr->status)
-	return (cairo_line_join_t) 0;
+        return CAIRO_GSTATE_LINE_JOIN_DEFAULT;
 
     return _cairo_gstate_get_line_join (cr->gstate);
 }
@@ -3457,7 +3457,7 @@ double
 cairo_get_miter_limit (cairo_t *cr)
 {
     if (cr->status)
-	return 0.;
+        return CAIRO_GSTATE_MITER_LIMIT_DEFAULT;
 
     return _cairo_gstate_get_miter_limit (cr->gstate);
 }
