@@ -254,6 +254,7 @@ _cairo_xlib_screen_info_reference (cairo_xlib_screen_info_t *info)
 void
 _cairo_xlib_screen_info_close_display (cairo_xlib_screen_info_t *info)
 {
+    cairo_xlib_visual_info_t **visuals;
     int i;
 
     CAIRO_MUTEX_LOCK (info->mutex);
@@ -263,6 +264,12 @@ _cairo_xlib_screen_info_close_display (cairo_xlib_screen_info_t *info)
 	    info->gc[i] = NULL;
 	}
     }
+
+    visuals = _cairo_array_index (&info->visuals, 0);
+    for (i = 0; i < _cairo_array_num_elements (&info->visuals); i++)
+	_cairo_xlib_visual_info_destroy (info->display->display, visuals[i]);
+    _cairo_array_truncate (&info->visuals, 0);
+
     CAIRO_MUTEX_UNLOCK (info->mutex);
 }
 
@@ -271,8 +278,6 @@ _cairo_xlib_screen_info_destroy (cairo_xlib_screen_info_t *info)
 {
     cairo_xlib_screen_info_t **prev;
     cairo_xlib_screen_info_t *list;
-    cairo_xlib_visual_info_t **visuals;
-    int i;
 
     assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&info->ref_count));
 
@@ -290,12 +295,9 @@ _cairo_xlib_screen_info_destroy (cairo_xlib_screen_info_t *info)
 
     _cairo_xlib_screen_info_close_display (info);
 
-    visuals = _cairo_array_index (&info->visuals, 0);
-    for (i = 0; i < _cairo_array_num_elements (&info->visuals); i++)
-	_cairo_xlib_visual_info_destroy (info->display->display, visuals[i]);
-    _cairo_array_fini (&info->visuals);
-
     _cairo_xlib_display_destroy (info->display);
+
+    _cairo_array_fini (&info->visuals);
 
     CAIRO_MUTEX_FINI (info->mutex);
 
