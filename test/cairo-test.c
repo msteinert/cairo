@@ -242,7 +242,7 @@ cairo_test_target_has_similar (const cairo_test_t *test, cairo_boilerplate_targe
     if (surface != NULL) {
 	cairo_t * cr = cairo_create (surface);
 	cairo_surface_t *similar;
-	cairo_push_group_with_content (cr, target->content);
+	cairo_push_group_with_content (cr, cairo_boilerplate_content (target->content));
 	similar = cairo_get_group_target (cr);
 	has_similar = cairo_surface_get_type (similar) == cairo_surface_get_type (surface);
 
@@ -342,9 +342,7 @@ cairo_test_for_target (cairo_test_t			 *test,
      * (ignore the articifical
      * CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED value).
      */
-    expected_content = target->content;
-    if (expected_content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
-	expected_content = CAIRO_CONTENT_COLOR_ALPHA;
+    expected_content = cairo_boilerplate_content (target->content);
 
     if (cairo_surface_get_content (surface) != expected_content) {
 	cairo_test_log ("Error: Created surface has content %d (expected %d)\n",
@@ -357,7 +355,7 @@ cairo_test_for_target (cairo_test_t			 *test,
 
     cr = cairo_create (surface);
     if (similar)
-	cairo_push_group_with_content (cr, target->content);
+	cairo_push_group_with_content (cr, expected_content);
 
     /* Clear to transparent (or black) depending on whether the target
      * surface supports alpha. */

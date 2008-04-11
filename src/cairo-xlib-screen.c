@@ -254,6 +254,7 @@ _cairo_xlib_screen_info_reference (cairo_xlib_screen_info_t *info)
 void
 _cairo_xlib_screen_info_close_display (cairo_xlib_screen_info_t *info)
 {
+    cairo_xlib_visual_info_t **visuals;
     int i;
 
     CAIRO_MUTEX_LOCK (info->mutex);
@@ -263,6 +264,12 @@ _cairo_xlib_screen_info_close_display (cairo_xlib_screen_info_t *info)
 	    info->gc[i] = NULL;
 	}
     }
+
+    visuals = _cairo_array_index (&info->visuals, 0);
+    for (i = 0; i < _cairo_array_num_elements (&info->visuals); i++)
+	_cairo_xlib_visual_info_destroy (info->display->display, visuals[i]);
+    _cairo_array_truncate (&info->visuals, 0);
+
     CAIRO_MUTEX_UNLOCK (info->mutex);
 }
 
@@ -271,8 +278,6 @@ _cairo_xlib_screen_info_destroy (cairo_xlib_screen_info_t *info)
 {
     cairo_xlib_screen_info_t **prev;
     cairo_xlib_screen_info_t *list;
-    cairo_xlib_visual_info_t **visuals;
-    int i;
 
     assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&info->ref_count));
 
@@ -286,9 +291,6 @@ _cairo_xlib_screen_info_destroy (cairo_xlib_screen_info_t *info)
 	    break;
 	}
     }
-    visuals = _cairo_array_index (&info->visuals, 0);
-    for (i = 0; i < _cairo_array_num_elements (&info->visuals); i++)
-	_cairo_xlib_visual_info_destroy (info->display->display, visuals[i]);
     CAIRO_MUTEX_UNLOCK (info->display->mutex);
 
     _cairo_xlib_screen_info_close_display (info);
@@ -438,11 +440,12 @@ _cairo_xlib_screen_get_visual_info (cairo_xlib_screen_info_t *info,
 				    Visual *visual,
 				    cairo_xlib_visual_info_t **out)
 {
+    Display *dpy = info->display->display;
     cairo_xlib_visual_info_t **visuals, *ret = NULL;
     cairo_status_t status;
     int i, n_visuals;
 
-    CAIRO_MUTEX_LOCK (info->display->mutex);
+    CAIRO_MUTEX_LOCK (info->mutex);
     visuals = _cairo_array_index (&info->visuals, 0);
     n_visuals = _cairo_array_num_elements (&info->visuals);
     for (i = 0; i < n_visuals; i++) {
@@ -451,28 +454,28 @@ _cairo_xlib_screen_get_visual_info (cairo_xlib_screen_info_t *info,
 	    break;
 	}
     }
-    CAIRO_MUTEX_UNLOCK (info->display->mutex);
+    CAIRO_MUTEX_UNLOCK (info->mutex);
 
     if (ret != NULL) {
 	*out = ret;
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    status = _cairo_xlib_visual_info_create (info->display->display,
+    status = _cairo_xlib_visual_info_create (dpy,
 					     XScreenNumberOfScreen (info->screen),
 					     visual->visualid,
 					     &ret);
     if (status)
 	return status;
 
-    CAIRO_MUTEX_LOCK (info->display->mutex);
+    CAIRO_MUTEX_LOCK (info->mutex);
     if (n_visuals != _cairo_array_num_elements (&info->visuals)) {
 	/* check that another thread has not added our visual */
 	int new_visuals = _cairo_array_num_elements (&info->visuals);
 	visuals = _cairo_array_index (&info->visuals, 0);
 	for (i = n_visuals; i < new_visuals; i++) {
 	    if (visuals[i]->visualid == visual->visualid) {
-		_cairo_xlib_visual_info_destroy (info->display->display, ret);
+		_cairo_xlib_visual_info_destroy (dpy, ret);
 		ret = visuals[i];
 		break;
 	    }
@@ -481,10 +484,10 @@ _cairo_xlib_screen_get_visual_info (cairo_xlib_screen_info_t *info,
 	    status = _cairo_array_append (&info->visuals, &ret);
     } else
 	status = _cairo_array_append (&info->visuals, &ret);
-    CAIRO_MUTEX_UNLOCK (info->display->mutex);
+    CAIRO_MUTEX_UNLOCK (info->mutex);
 
     if (status) {
-	_cairo_xlib_visual_info_destroy (info->display->display, ret);
+	_cairo_xlib_visual_info_destroy (dpy, ret);
 	return status;
     }
 

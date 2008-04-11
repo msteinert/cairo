@@ -95,6 +95,9 @@
  * PDF surfaces. */
 #define CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED ((unsigned int) -1)
 
+cairo_content_t
+cairo_boilerplate_content (cairo_content_t content);
+
 const char *
 cairo_boilerplate_content_name (cairo_content_t content);
 

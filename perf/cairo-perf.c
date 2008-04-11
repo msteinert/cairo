@@ -176,7 +176,8 @@ cairo_perf_run (cairo_perf_t		*perf,
 	/* We run one iteration in advance to warm caches, etc. */
 	cairo_perf_yield ();
 	if (similar)
-	    cairo_push_group_with_content (perf->cr, perf->target->content);
+	    cairo_push_group_with_content (perf->cr,
+		                           cairo_boilerplate_content (perf->target->content));
 	(perf_func) (perf->cr, perf->size, perf->size);
 	if (similar)
 	    cairo_pattern_destroy (cairo_pop_group (perf->cr));
@@ -185,7 +186,8 @@ cairo_perf_run (cairo_perf_t		*perf,
 	for (i =0; i < perf->iterations; i++) {
 	    cairo_perf_yield ();
 	    if (similar)
-		cairo_push_group_with_content (perf->cr, perf->target->content);
+		cairo_push_group_with_content (perf->cr,
+			                       cairo_boilerplate_content (perf->target->content));
 	    times[i] = (perf_func) (perf->cr, perf->size, perf->size);
 	    if (similar)
 		cairo_pattern_destroy (cairo_pop_group (perf->cr));

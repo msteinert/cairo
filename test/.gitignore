@@ -84,6 +84,7 @@ glitz-surface-source
 glyph-cache-pressure
 gradient-alpha
 gradient-zero-stops
+group-paint
 imagediff
 image-surface-source
 infinite-join

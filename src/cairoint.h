@@ -2258,8 +2258,6 @@ slim_hidden_proto (cairo_destroy);
 slim_hidden_proto (cairo_fill_preserve);
 slim_hidden_proto (cairo_font_face_destroy);
 slim_hidden_proto_no_warn (cairo_font_face_reference);
-slim_hidden_proto (cairo_font_options_create);
-slim_hidden_proto (cairo_font_options_destroy);
 slim_hidden_proto (cairo_font_options_equal);
 slim_hidden_proto (cairo_font_options_hash);
 slim_hidden_proto (cairo_font_options_merge);

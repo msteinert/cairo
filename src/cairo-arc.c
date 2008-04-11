@@ -181,6 +181,9 @@ _cairo_arc_in_direction (cairo_t	  *cr,
 			 double		   angle_max,
 			 cairo_direction_t dir)
 {
+    if (cairo_status (cr))
+        return;
+
     while (angle_max - angle_min > 4 * M_PI)
 	angle_max -= 2 * M_PI;
 
