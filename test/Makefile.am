@@ -239,6 +239,7 @@ TESTS += svg-surface-source$(EXEEXT)
 endif
 
 if CAIRO_HAS_XLIB_SURFACE
+TESTS += xlib-expose-event$(EXEEXT)
 TESTS += xlib-surface$(EXEEXT)
 TESTS += xlib-surface-source$(EXEEXT)
 endif
@@ -686,6 +687,7 @@ REFERENCE_IMAGES = \
 	unbounded-operator-rgb24-ref.png	\
 	unbounded-operator-quartz-ref.png	\
 	unbounded-operator-quartz-rgb24-ref.png	\
+	xlib-expose-event-ref.png \
 	xlib-surface-source-ref.png \
 	zero-alpha-ref.png
 
