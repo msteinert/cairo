@@ -713,6 +713,10 @@ _cairo_matrix_is_integer_translation (const cairo_matrix_t *matrix,
 
   (Note that the minor axis length is at the minimum of the above solution,
   which is just sqrt ( f - sqrt(g² + h²) ) given the symmetry of (D)).
+
+
+  For another derivation of the same result, using Singular Value Decomposition,
+  see doc/tutorial/src/singular.c.
 */
 
 /* determine the length of the major axis of a circle of the given radius
