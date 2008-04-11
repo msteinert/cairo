@@ -68,16 +68,22 @@
 #include <ctype.h>
 #include <assert.h>
 
+cairo_content_t
+cairo_boilerplate_content (cairo_content_t content)
+{
+    if (content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
+	content = CAIRO_CONTENT_COLOR_ALPHA;
+
+    return content;
+}
+
 const char *
 cairo_boilerplate_content_name (cairo_content_t content)
 {
     /* For the purpose of the content name, we don't distinguish the
      * flattened content value.
      */
-    if (content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
-	content = CAIRO_CONTENT_COLOR_ALPHA;
-
-    switch (content) {
+    switch (cairo_boilerplate_content (content)) {
     case CAIRO_CONTENT_COLOR:
 	return "rgb24";
     case CAIRO_CONTENT_COLOR_ALPHA:
