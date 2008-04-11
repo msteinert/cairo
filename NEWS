@@ -1,3 +1,38 @@
+Release 1.6.2 (2008-04-11 Carl Worth <cworth@cworth.org>)
+=========================================================
+The cairo community is pleased (but somewhat sheepish) to announce the
+1.6.2 release of the cairo graphics library. This is an update to
+yesterday's 1.6.0 release with an important fix to prevent cairo's
+PostScript output from crashing some printers. This release also
+includes a locking fix for cairo's xlib backend to improve thread
+safety. There are no changes beyond these two fixes.
+
+Fix for PostScript printer crash
+--------------------------------
+Adrian Johnson discovered that cairo 1.6.0 was being a bit hard on
+PostScript printers, by changing the font matrix very frequently. This
+causes some PostScript interpreters to allocate new font objects every
+few glyphs, eventually exhausting available resources. The fix
+involves leaving translational components of the font matrix as zero,
+so that the PostScript interpreter sees an identical font matrix
+repeatedly, and can more easily share internal font object resources.
+
+This fix has been tested to resolve the bugs posted here, (for both
+Xerox and Dell printers):
+
+	Printing some PDFs from evince is crashing our Xerox printer
+	http://bugs.freedesktop.org/show_bug.cgi?id=15348
+
+	Cairo-generated postscript blocks Dell 5100cn
+	http://bugs.freedesktop.org/show_bug.cgi?id=15445
+
+Add missing locking in cairo-xlib
+---------------------------------
+Chris Wilson noticed that cairo 1.6.0 was manipulating an internal
+cache of GC object within cairo's Xlib backend without proper
+locking. The missing locking could cause failures for multi-threaded
+applications. He fixed this in 1.6.2 by adding the missing locks.
+
 Release 1.6.0 (2008-04-10 Carl Worth <cworth@cworth.org>)
 =========================================================
 The cairo community is quite pleased to announce the 1.6.0 release of
