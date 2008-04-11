@@ -400,6 +400,7 @@ _cairo_xlib_screen_get_gc (cairo_xlib_screen_info_t *info, int depth)
     gc = info->gc[depth];
     info->gc[depth] = NULL;
     needs_reset = info->gc_needs_clip_reset & (1 << depth);
+    info->gc_needs_clip_reset &= ~(1 << depth);
     CAIRO_MUTEX_UNLOCK (info->mutex);
 
     if (needs_reset)
