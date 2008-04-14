@@ -235,7 +235,6 @@ beos_sources = cairo-beos-surface.cpp
 cairo_all_sources += $(beos_headers) $(beos_sources)
 if CAIRO_HAS_BEOS_SURFACE
 cairo_headers += $(beos_headers)
-cairo_sources += $(beos_sources)
 backend_pkgconfigs += cairo-beos.pc
 
 noinst_LTLIBRARIES = libcairo_beos.la
