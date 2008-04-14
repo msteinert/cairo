@@ -105,49 +105,9 @@ test_surface_with_width_and_stride (int width, int stride,
 static cairo_test_status_t
 draw (cairo_t *cr, int dst_width, int dst_height)
 {
-    int test_width, stride, row;
+    int stride, row;
     unsigned char *src, *dst, *mask_aligned;
     cairo_surface_t *surface;
-    cairo_pattern_t *pattern;
-    cairo_test_status_t status;
-    cairo_status_t expected;
-
-    for (test_width = 0; test_width < 40; test_width++) {
-	stride = cairo_format_stride_for_width (CAIRO_FORMAT_A8,
-						test_width);
-
-	/* First create a surface using the width as the stride, (most
-	 * of these should fail). */
-	expected = (stride == test_width) ?
-	    CAIRO_STATUS_SUCCESS : CAIRO_STATUS_INVALID_STRIDE;
-
-	status = test_surface_with_width_and_stride (test_width,
-						     test_width,
-						     expected);
-	if (status)
-	    return status;
-
-	status = test_surface_with_width_and_stride (test_width,
-						     -test_width,
-						     expected);
-	if (status)
-	    return status;
-
-
-	/* Then create a surface using the correct stride, (should
-	   always succeed).*/
-	status = test_surface_with_width_and_stride (test_width,
-						     stride,
-						     CAIRO_STATUS_SUCCESS);
-	if (status)
-	    return status;
-
-	status = test_surface_with_width_and_stride (test_width,
-						     -stride,
-						     CAIRO_STATUS_SUCCESS);
-	if (status)
-	    return status;
-    }
 
     /* Now test actually drawing through our mask data, allocating and
      * copying with the proper stride. */
@@ -164,7 +124,7 @@ draw (cairo_t *cr, int dst_width, int dst_height)
 	dst += stride;
     }
 
-    surface = cairo_image_surface_create_for_data (mask,
+    surface = cairo_image_surface_create_for_data (mask_aligned,
 						   CAIRO_FORMAT_A8,
 						   MASK_WIDTH,
 						   MASK_HEIGHT,
@@ -175,12 +135,8 @@ draw (cairo_t *cr, int dst_width, int dst_height)
     cairo_paint (cr);
 
     /* Then paint red through our mask */
-    pattern = cairo_pattern_create_for_surface (surface);
-
     cairo_set_source_rgb (cr, 1, 0, 0); /* red */
-    cairo_mask (cr, pattern);
-
-    cairo_pattern_destroy (pattern);
+    cairo_mask_surface (cr, surface, 0, 0);
     cairo_surface_destroy (surface);
 
     free (mask_aligned);
@@ -191,5 +147,52 @@ draw (cairo_t *cr, int dst_width, int dst_height)
 int
 main (void)
 {
+    int test_width;
+
+    cairo_test_init ("a8-mask");
+
+    for (test_width = 0; test_width < 40; test_width++) {
+	int stride = cairo_format_stride_for_width (CAIRO_FORMAT_A8,
+						test_width);
+	cairo_test_status_t status;
+	cairo_status_t expected;
+
+	/* First create a surface using the width as the stride,
+	 * (most of these should fail).
+	 */
+	expected = (stride == test_width) ?
+	    CAIRO_STATUS_SUCCESS : CAIRO_STATUS_INVALID_STRIDE;
+
+	status = test_surface_with_width_and_stride (test_width,
+						     test_width,
+						     expected);
+	if (status)
+	    return status;
+
+	status = test_surface_with_width_and_stride (test_width,
+						     -test_width,
+						     expected);
+	if (status)
+	    return status;
+
+
+	/* Then create a surface using the correct stride,
+	 * (should always succeed).
+	 */
+	status = test_surface_with_width_and_stride (test_width,
+						     stride,
+						     CAIRO_STATUS_SUCCESS);
+	if (status)
+	    return status;
+
+	status = test_surface_with_width_and_stride (test_width,
+						     -stride,
+						     CAIRO_STATUS_SUCCESS);
+	if (status)
+	    return status;
+    }
+
+    cairo_test_fini ();
+
     return cairo_test (&test);
 }
