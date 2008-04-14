@@ -185,7 +185,7 @@ cairo_ref_name_for_test_target_format (const char *test_name,
     else
 	goto done;
 
-    /* Next, look for taget-specifc reference image. */
+    /* Next, look for target-specific reference image. */
     xasprintf (&ref_name, "%s/%s-%s%s", srcdir,
 	       test_name,
 	       target_name,
@@ -195,7 +195,7 @@ cairo_ref_name_for_test_target_format (const char *test_name,
     else
 	goto done;
 
-    /* Next, look for format-specifc reference image. */
+    /* Next, look for format-specific reference image. */
     xasprintf (&ref_name, "%s/%s-%s%s", srcdir,
 	       test_name,
 	       format,
@@ -339,8 +339,7 @@ cairo_test_for_target (cairo_test_t			 *test,
     }
 
     /* Check that we created a surface of the expected content,
-     * (ignore the articifical
-     * CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED value).
+     * (ignore the artificial CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED value).
      */
     expected_content = cairo_boilerplate_content (target->content);
 
