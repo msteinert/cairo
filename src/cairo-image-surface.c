@@ -392,7 +392,8 @@ _cairo_image_surface_create_with_content (cairo_content_t	content,
  * stride = cairo_format_stride_for_width (format, width);
  * data = malloc (stride * height);
  * surface = cairo_image_surface_create_for_data (data, format,
- *						  width, height);
+ *						  width, height,
+ *						  stride);
  * </programlisting></informalexample>
  *
  * Return value: the appropriate stride to use given the desired
