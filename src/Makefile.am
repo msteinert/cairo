@@ -195,6 +195,7 @@ quartz_font_sources = cairo-quartz-font.c
 cairo_all_sources += $(quartz_font_sources)
 if CAIRO_HAS_QUARTZ_FONT
 cairo_sources += $(quartz_font_sources)
+backend_pkgconfigs += cairo-quartz-font.pc
 endif
 
 os_win32_sources = cairo-win32.c
