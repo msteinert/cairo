@@ -58,19 +58,21 @@ get_singular_values (const cairo_matrix_t *matrix,
 		     double *major,
 		     double *minor)
 {
-  double xx = matrix->xx, xy = matrix->xy;
-  double yx = matrix->yx, yy = matrix->yy;
+    double xx = matrix->xx, xy = matrix->xy;
+    double yx = matrix->yx, yy = matrix->yy;
 
-  double a = xx*xx+yx*yx;
-  double b = xy*xy+yy*yy;
-  double k = xx*xy+yx*yy;
+    double a = xx*xx+yx*yx;
+    double b = xy*xy+yy*yy;
+    double k = xx*xy+yx*yy;
 
-  double f = (a+b) * .5;
-  double g = (a-b) * .5;
-  double delta = sqrt (g + k*k);
+    double f = (a+b) * .5;
+    double g = (a-b) * .5;
+    double delta = sqrt (g*g + k*k);
 
-  *major = sqrt (f + delta);
-  *minor = sqrt (f - delta);
+    if (major)
+	*major = sqrt (f + delta);
+    if (minor)
+	*minor = sqrt (f - delta);
 }
 
 /*
@@ -84,16 +86,18 @@ get_pen_axes (cairo_t *cr,
 	      double *major,
 	      double *minor)
 {
-  double width;
-  cairo_matrix_t matrix;
+    double width;
+    cairo_matrix_t matrix;
 
-  width = cairo_get_line_width (cr);
-  cairo_get_matrix (cr, &matrix);
+    width = cairo_get_line_width (cr);
+    cairo_get_matrix (cr, &matrix);
 
-  get_singular_values (&matrix, major, minor);
+    get_singular_values (&matrix, major, minor);
 
-  *major *= width;
-  *minor *= width;
+    if (major)
+	*major *= width;
+    if (minor)
+	*minor *= width;
 }
 
 static void
