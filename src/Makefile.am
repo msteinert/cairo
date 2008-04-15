@@ -236,12 +236,10 @@ beos_sources = cairo-beos-surface.cpp
 cairo_all_sources += $(beos_headers) $(beos_sources)
 if CAIRO_HAS_BEOS_SURFACE
 cairo_headers += $(beos_headers)
+# automake is stupid enough to always use c++ linker if we enable the
+# following line, even if beos surface is not enabled.  Disable it for now.
+#cairo_sources += $(beos_sources)
 backend_pkgconfigs += cairo-beos.pc
-
-noinst_LTLIBRARIES = libcairo_beos.la
-libcairo_beos_la_SOURCES = $(libcairo_beos_sources)
-# BeOS system headers trigger this warning
-libcairo_beos_la_CXXFLAGS = -Wno-multichar
 endif
 
 glitz_headers = cairo-glitz.h
