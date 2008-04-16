@@ -99,7 +99,8 @@ font_subset_sources += $(font_subset_sources_ft)
 endif
 
 ps_headers = cairo-ps.h
-ps_sources = cairo-ps-surface.c cairo-ps-surface-private.h
+ps_sources = cairo-ps-surface.c cairo-ps-surface-private.h \
+	     cairo-pdf-operators.c cairo-pdf-operators-private.h
 cairo_all_sources += $(ps_headers) $(ps_sources)
 if CAIRO_HAS_PS_SURFACE
 libcairo_font_subset_sources =	$(font_subset_sources)
