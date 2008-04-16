@@ -98,11 +98,13 @@ if CAIRO_HAS_FT_FONT
 font_subset_sources += $(font_subset_sources_ft)
 endif
 
+pdf_operators_sources = cairo-pdf-operators.c cairo-pdf-operators-private.h
+
 ps_headers = cairo-ps.h
-ps_sources = cairo-ps-surface.c cairo-ps-surface-private.h \
-	     cairo-pdf-operators.c cairo-pdf-operators-private.h
+ps_sources = cairo-ps-surface.c cairo-ps-surface-private.h
 cairo_all_sources += $(ps_headers) $(ps_sources)
 if CAIRO_HAS_PS_SURFACE
+libcairo_pdf_operators_sources = $(pdf_operators_sources)
 libcairo_font_subset_sources =	$(font_subset_sources)
 cairo_headers += $(ps_headers)
 cairo_sources += $(ps_sources)
@@ -111,10 +113,10 @@ endif
 
 pdf_headers = cairo-pdf.h
 pdf_sources = cairo-pdf-surface.c cairo-pdf-surface-private.h \
-	      cairo-pdf-operators.c cairo-pdf-operators-private.h \
 	      cairo-deflate-stream.c
 cairo_all_sources += $(pdf_headers) $(pdf_sources)
 if CAIRO_HAS_PDF_SURFACE
+libcairo_pdf_operators_sources = $(pdf_operators_sources)
 libcairo_font_subset_sources =	$(font_subset_sources)
 cairo_headers += $(pdf_headers)
 cairo_sources += $(pdf_sources)
@@ -138,6 +140,7 @@ cairo_sources += $(svg_sources)
 backend_pkgconfigs += cairo-svg.pc
 endif
 
+cairo_sources += $(libcairo_pdf_operators_sources)
 cairo_sources += $(libcairo_font_subset_sources)
 
 test_sources = test-fallback-surface.c test-fallback-surface.h \
