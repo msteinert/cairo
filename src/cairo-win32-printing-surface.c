@@ -1478,6 +1478,8 @@ _cairo_win32_printing_surface_set_paginated_mode (void *abstract_surface,
  * associated methods must be used for correct output.
  *
  * Return value: the newly created surface
+ *
+ * Since: 1.6
  **/
 cairo_surface_t *
 cairo_win32_printing_surface_create (HDC hdc)
