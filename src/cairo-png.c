@@ -434,7 +434,6 @@ read_png (png_rw_ptr	read_func,
     unsigned int i;
     cairo_format_t format;
     cairo_status_t status;
-    cairo_bool_t need_alpha;
 
     /* XXX: Perhaps we'll want some other error handlers? */
     png = png_create_read_struct (PNG_LIBPNG_VER_STRING,
@@ -486,11 +485,8 @@ read_png (png_rw_ptr	read_func,
     }
 
     /* transform transparency to alpha */
-    need_alpha = FALSE;
-    if (png_get_valid (png, info, PNG_INFO_tRNS)) {
+    if (png_get_valid (png, info, PNG_INFO_tRNS))
         png_set_tRNS_to_alpha (png);
-	need_alpha = TRUE;
-    }
 
     if (depth == 16)
         png_set_strip_16 (png);
@@ -508,29 +504,35 @@ read_png (png_rw_ptr	read_func,
     if (interlace != PNG_INTERLACE_NONE)
         png_set_interlace_handling (png);
 
+    /* recheck header after setting EXPAND options */
+    png_read_update_info (png, info);
+    png_get_IHDR (png, info,
+                  &png_width, &png_height, &depth,
+                  &color_type, &interlace, NULL, NULL);
+    if (depth != 8 || interlace != PNG_INTERLACE_NONE ||
+	! (color_type == PNG_COLOR_TYPE_RGB ||
+	   color_type == PNG_COLOR_TYPE_RGB_ALPHA))
+    {
+	surface = _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_READ_ERROR));
+	goto BAIL;
+    }
+
     switch (color_type) {
 	default:
-	case PNG_COLOR_TYPE_GRAY_ALPHA:
+	    ASSERT_NOT_REACHED;
+	    /* fall-through just in case ;-) */
+
 	case PNG_COLOR_TYPE_RGB_ALPHA:
 	    format = CAIRO_FORMAT_ARGB32;
 	    png_set_read_user_transform_fn (png, premultiply_data);
 	    break;
 
-	case PNG_COLOR_TYPE_GRAY:
 	case PNG_COLOR_TYPE_RGB:
-	case PNG_COLOR_TYPE_PALETTE:
-	    if (need_alpha) {
-		format = CAIRO_FORMAT_ARGB32;
-		png_set_read_user_transform_fn (png, premultiply_data);
-	    } else {
-		format = CAIRO_FORMAT_RGB24;
-		png_set_read_user_transform_fn (png, convert_bytes_to_data);
-		png_set_filler (png, 0xff, PNG_FILLER_AFTER);
-	    }
+	    format = CAIRO_FORMAT_RGB24;
+	    png_set_read_user_transform_fn (png, convert_bytes_to_data);
+	    png_set_filler (png, 0xff, PNG_FILLER_AFTER);
 	    break;
     }
-
-    png_read_update_info (png, info);
 
     stride = cairo_format_stride_for_width (format, png_width);
     if (stride < 0) {
