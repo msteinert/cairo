@@ -145,5 +145,126 @@ main (void)
     }
     cairo_surface_destroy (surface);
 
+    /* check that loading alpha/opaque PNGs generate the correct surfaces */
+    xasprintf (&filename, "%s/%s", srcdir ? srcdir : ".",
+	       "create-from-png-alpha-ref.png");
+    surface = cairo_image_surface_create_from_png (filename);
+    if (cairo_surface_status (surface)) {
+	cairo_test_log ("Error reading PNG image %s: %s\n",
+			filename,
+			cairo_status_to_string (cairo_surface_status (surface)));
+	free (filename);
+	return CAIRO_TEST_FAILURE;
+    }
+    if (cairo_image_surface_get_format (surface) != CAIRO_FORMAT_ARGB32) {
+	cairo_test_log ("Error reading PNG image %s: did not create an ARGB32 image\n",
+		filename);
+	cairo_surface_destroy (surface);
+	return CAIRO_TEST_FAILURE;
+    }
+    free (filename);
+    cairo_surface_destroy (surface);
+
+    xasprintf (&filename, "%s/%s", srcdir ? srcdir : ".",
+	       "create-from-png-ref.png");
+    surface = cairo_image_surface_create_from_png (filename);
+    if (cairo_surface_status (surface)) {
+	cairo_test_log ("Error reading PNG image %s: %s\n",
+			filename,
+			cairo_status_to_string (cairo_surface_status (surface)));
+	free (filename);
+	return CAIRO_TEST_FAILURE;
+    }
+    if (cairo_image_surface_get_format (surface) != CAIRO_FORMAT_RGB24) {
+	cairo_test_log ("Error reading PNG image %s: did not create an RGB24 image\n",
+		filename);
+	cairo_surface_destroy (surface);
+	return CAIRO_TEST_FAILURE;
+    }
+    free (filename);
+    cairo_surface_destroy (surface);
+
+    /* check paletted PNGs */
+    xasprintf (&filename, "%s/%s", srcdir ? srcdir : ".",
+	       "create-from-png-indexed-alpha-ref.png");
+    surface = cairo_image_surface_create_from_png (filename);
+    if (cairo_surface_status (surface)) {
+	cairo_test_log ("Error reading PNG image %s: %s\n",
+			filename,
+			cairo_status_to_string (cairo_surface_status (surface)));
+	free (filename);
+	return CAIRO_TEST_FAILURE;
+    }
+    if (cairo_image_surface_get_format (surface) != CAIRO_FORMAT_ARGB32) {
+	cairo_test_log ("Error reading PNG image %s: did not create an ARGB32 image\n",
+		filename);
+	free (filename);
+	cairo_surface_destroy (surface);
+	return CAIRO_TEST_FAILURE;
+    }
+    free (filename);
+    cairo_surface_destroy (surface);
+
+    xasprintf (&filename, "%s/%s", srcdir ? srcdir : ".",
+	       "create-from-png-indexed-ref.png");
+    surface = cairo_image_surface_create_from_png (filename);
+    if (cairo_surface_status (surface)) {
+	cairo_test_log ("Error reading PNG image %s: %s\n",
+			filename,
+			cairo_status_to_string (cairo_surface_status (surface)));
+	free (filename);
+	return CAIRO_TEST_FAILURE;
+    }
+    if (cairo_image_surface_get_format (surface) != CAIRO_FORMAT_RGB24) {
+	cairo_test_log ("Error reading PNG image %s: did not create an RGB24 image\n",
+		filename);
+	free (filename);
+	cairo_surface_destroy (surface);
+	return CAIRO_TEST_FAILURE;
+    }
+    free (filename);
+    cairo_surface_destroy (surface);
+
+    /* check grayscale PNGs */
+    xasprintf (&filename, "%s/%s", srcdir ? srcdir : ".",
+	       "create-from-png-gray-alpha-ref.png");
+    surface = cairo_image_surface_create_from_png (filename);
+    if (cairo_surface_status (surface)) {
+	cairo_test_log ("Error reading PNG image %s: %s\n",
+			filename,
+			cairo_status_to_string (cairo_surface_status (surface)));
+	free (filename);
+	return CAIRO_TEST_FAILURE;
+    }
+    if (cairo_image_surface_get_format (surface) != CAIRO_FORMAT_ARGB32) {
+	cairo_test_log ("Error reading PNG image %s: did not create an ARGB32 image\n",
+		filename);
+	free (filename);
+	cairo_surface_destroy (surface);
+	return CAIRO_TEST_FAILURE;
+    }
+    free (filename);
+    cairo_surface_destroy (surface);
+
+    xasprintf (&filename, "%s/%s", srcdir ? srcdir : ".",
+	       "create-from-png-gray-ref.png");
+    surface = cairo_image_surface_create_from_png (filename);
+    if (cairo_surface_status (surface)) {
+	cairo_test_log ("Error reading PNG image %s: %s\n",
+			filename,
+			cairo_status_to_string (cairo_surface_status (surface)));
+	free (filename);
+	return CAIRO_TEST_FAILURE;
+    }
+    if (cairo_image_surface_get_format (surface) != CAIRO_FORMAT_RGB24) {
+	cairo_test_log ("Error reading PNG image %s: did not create an RGB24 image\n",
+		filename);
+	free (filename);
+	cairo_surface_destroy (surface);
+	return CAIRO_TEST_FAILURE;
+    }
+    free (filename);
+    cairo_surface_destroy (surface);
+
     return cairo_test (&test);
 }
