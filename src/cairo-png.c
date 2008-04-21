@@ -434,6 +434,7 @@ read_png (png_rw_ptr	read_func,
     unsigned int i;
     cairo_format_t format;
     cairo_status_t status;
+    cairo_bool_t need_alpha;
 
     /* XXX: Perhaps we'll want some other error handlers? */
     png = png_create_read_struct (PNG_LIBPNG_VER_STRING,
@@ -485,8 +486,11 @@ read_png (png_rw_ptr	read_func,
     }
 
     /* transform transparency to alpha */
-    if (png_get_valid (png, info, PNG_INFO_tRNS))
+    need_alpha = FALSE;
+    if (png_get_valid (png, info, PNG_INFO_tRNS)) {
         png_set_tRNS_to_alpha (png);
+	need_alpha = TRUE;
+    }
 
     if (depth == 16)
         png_set_strip_16 (png);
@@ -513,11 +517,16 @@ read_png (png_rw_ptr	read_func,
 	    break;
 
 	case PNG_COLOR_TYPE_GRAY:
-	case PNG_COLOR_TYPE_PALETTE:
 	case PNG_COLOR_TYPE_RGB:
-	    format = CAIRO_FORMAT_RGB24;
-	    png_set_read_user_transform_fn (png, convert_bytes_to_data);
-	    png_set_filler (png, 0xff, PNG_FILLER_AFTER);
+	case PNG_COLOR_TYPE_PALETTE:
+	    if (need_alpha) {
+		format = CAIRO_FORMAT_ARGB32;
+		png_set_read_user_transform_fn (png, premultiply_data);
+	    } else {
+		format = CAIRO_FORMAT_RGB24;
+		png_set_read_user_transform_fn (png, convert_bytes_to_data);
+		png_set_filler (png, 0xff, PNG_FILLER_AFTER);
+	    }
 	    break;
     }
 
