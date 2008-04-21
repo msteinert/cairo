@@ -504,6 +504,8 @@ read_png (png_rw_ptr	read_func,
     if (interlace != PNG_INTERLACE_NONE)
         png_set_interlace_handling (png);
 
+    png_set_filler (png, 0xff, PNG_FILLER_AFTER);
+
     /* recheck header after setting EXPAND options */
     png_read_update_info (png, info);
     png_get_IHDR (png, info,
@@ -530,7 +532,6 @@ read_png (png_rw_ptr	read_func,
 	case PNG_COLOR_TYPE_RGB:
 	    format = CAIRO_FORMAT_RGB24;
 	    png_set_read_user_transform_fn (png, convert_bytes_to_data);
-	    png_set_filler (png, 0xff, PNG_FILLER_AFTER);
 	    break;
     }
 
