@@ -321,7 +321,12 @@ REFERENCE_IMAGES = \
 	composite-integer-translate-source-ref.png	\
 	copy-path-ps-ref.png	\
 	copy-path-ref.png	\
-	create-from-png-ref.png	\
+	create-from-png-ref.png			\
+	create-from-png-alpha-ref.png		\
+	create-from-png-gray-ref.png		\
+	create-from-png-gray-alpha-ref.png	\
+	create-from-png-indexed-ref.png		\
+	create-from-png-indexed-alpha-ref.png	\
 	create-from-png-stream-ref.png	\
 	dash-caps-joins-ps-argb32-ref.png	\
 	dash-caps-joins-ps-rgb24-ref.png	\
