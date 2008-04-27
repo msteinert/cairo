@@ -2610,7 +2610,6 @@ _cairo_pdf_surface_select_pattern (cairo_pdf_surface_t *surface,
         _cairo_output_stream_printf (surface->output,
                                      "/a%d gs\n",
                                      alpha);
-	surface->select_pattern_gstate_saved = FALSE;
     } else {
 	status = _cairo_pdf_surface_add_alpha (surface, 1.0, &alpha);
 	if (status)
