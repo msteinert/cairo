@@ -771,15 +771,23 @@ _cairo_pdf_surface_add_pdf_pattern (cairo_pdf_surface_t		*surface,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    /* Gradients with zero stops do not produce any output */
     if (pattern->type == CAIRO_PATTERN_TYPE_LINEAR ||
         pattern->type == CAIRO_PATTERN_TYPE_RADIAL)
     {
 	cairo_gradient_pattern_t *gradient;
 
 	gradient = (cairo_gradient_pattern_t *) pattern;
+
+	/* Gradients with zero stops do not produce any output */
 	if (gradient->n_stops == 0)
 	    return CAIRO_INT_STATUS_NOTHING_TO_DO;
+
+	/* Gradients with one stop are the same as solid colors */
+	if (gradient->n_stops == 1) {
+	    pattern_res->id = 0;
+	    gstate_res->id = 0;
+	    return CAIRO_STATUS_SUCCESS;
+	}
     }
 
     pdf_pattern.pattern = cairo_pattern_reference (pattern);
@@ -2562,19 +2570,37 @@ _cairo_pdf_surface_select_pattern (cairo_pdf_surface_t *surface,
 {
     cairo_status_t status;
     int alpha;
+    cairo_bool_t is_solid_color = FALSE;
+    cairo_color_t *solid_color;
 
     if (pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
-	cairo_solid_pattern_t *solid_pattern = (cairo_solid_pattern_t *) pattern;
+	cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *) pattern;
 
-	status = _cairo_pdf_surface_add_alpha (surface, solid_pattern->color.alpha, &alpha);
+	is_solid_color = TRUE;
+	solid_color = &solid->color;
+    }
+
+    if (pattern->type == CAIRO_PATTERN_TYPE_LINEAR ||
+	pattern->type == CAIRO_PATTERN_TYPE_RADIAL)
+    {
+	cairo_gradient_pattern_t *gradient = (cairo_gradient_pattern_t *) pattern;
+
+	if (gradient->n_stops == 1) {
+	    is_solid_color = TRUE;
+	    solid_color = &gradient->stops[0].color;
+	}
+    }
+
+    if (is_solid_color) {
+	status = _cairo_pdf_surface_add_alpha (surface, solid_color->alpha, &alpha);
 	if (status)
 	    return status;
 
 	_cairo_output_stream_printf (surface->output,
 				     "%f %f %f ",
-				     solid_pattern->color.red,
-				     solid_pattern->color.green,
-				     solid_pattern->color.blue);
+				     solid_color->red,
+				     solid_color->green,
+				     solid_color->blue);
 
 	if (is_stroke)
             _cairo_output_stream_printf (surface->output, "RG ");
