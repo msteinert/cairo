@@ -2618,6 +2618,19 @@ _cairo_ps_surface_emit_linear_pattern (cairo_ps_surface_t     *surface,
     if (pattern->base.n_stops == 0)
         return CAIRO_INT_STATUS_NOTHING_TO_DO;
 
+    if (pattern->base.n_stops == 1) {
+	cairo_solid_pattern_t solid;
+
+	_cairo_pattern_init_solid (&solid,
+				   &pattern->base.stops[0].color,
+				   CAIRO_CONTENT_COLOR_ALPHA);
+	_cairo_ps_surface_emit_solid_pattern (surface,
+					      &solid);
+	_cairo_pattern_fini (&solid.base);
+
+	return CAIRO_STATUS_SUCCESS;
+    }
+
     extend = cairo_pattern_get_extend (&pattern->base.base);
 
     pat_to_ps = pattern->base.base.matrix;
@@ -2744,6 +2757,19 @@ _cairo_ps_surface_emit_radial_pattern (cairo_ps_surface_t     *surface,
 
     if (pattern->base.n_stops == 0)
         return CAIRO_INT_STATUS_NOTHING_TO_DO;
+
+    if (pattern->base.n_stops == 1) {
+	cairo_solid_pattern_t solid;
+
+	_cairo_pattern_init_solid (&solid,
+				   &pattern->base.stops[0].color,
+				   CAIRO_CONTENT_COLOR_ALPHA);
+	_cairo_ps_surface_emit_solid_pattern (surface,
+					      &solid);
+	_cairo_pattern_fini (&solid.base);
+
+	return CAIRO_STATUS_SUCCESS;
+    }
 
     extend = cairo_pattern_get_extend (&pattern->base.base);
 
