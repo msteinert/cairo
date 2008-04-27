@@ -4186,8 +4186,19 @@ _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t  *surface,
 	    cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
 
 	    if (_cairo_surface_is_meta (surface_pattern->surface)) {
-		if (_cairo_pattern_is_opaque (pattern))
+		if (_cairo_pattern_is_opaque (pattern)) {
 		    return CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN;
+		} else {
+		    /* FIXME: The analysis surface does not yet have
+		     * the capability to analyze a non opaque meta
+		     * surface and mark it supported if there is
+		     * nothing underneath. For now meta surfaces of
+		     * type CONTENT_COLOR_ALPHA painted with
+		     * OPERATOR_SOURCE will result in a fallback
+		     * image. */
+
+		    return CAIRO_INT_STATUS_UNSUPPORTED;
+		}
 	    } else {
 		return _cairo_pdf_surface_analyze_surface_pattern_transparency (surface,
 										surface_pattern);
