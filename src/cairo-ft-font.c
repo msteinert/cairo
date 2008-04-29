@@ -2481,7 +2481,7 @@ cairo_ft_font_options_substitute (const cairo_font_options_t *options,
  * cairo_set_font_face() or cairo_scaled_font_create(). The
  * #cairo_scaled_font_t returned from cairo_scaled_font_create() is
  * also for the FreeType backend and can be used with functions such
- * as cairo_ft_font_lock_face().
+ * as cairo_ft_scaled_font_lock_face().
  *
  * Font rendering options are represented both here and when you
  * call cairo_scaled_font_create(). Font options that have a representation
@@ -2533,7 +2533,7 @@ cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
  * cairo_set_font_face() or cairo_scaled_font_create(). The
  * #cairo_scaled_font_t returned from cairo_scaled_font_create() is
  * also for the FreeType backend and can be used with functions such
- * as cairo_ft_font_lock_face().
+ * as cairo_ft_scaled_font_lock_face().
  *
  * Return value: a newly created #cairo_font_face_t. Free with
  *  cairo_font_face_destroy() when you are done using it.
@@ -2569,14 +2569,14 @@ cairo_ft_font_face_create_for_ft_face (FT_Face         face,
  *   FreeType backend font face (see cairo_ft_font_face_create_for_pattern(),
  *   cairo_ft_font_face_create_for_face()).
  *
- * cairo_ft_font_lock_face() gets the #FT_Face object from a FreeType
+ * cairo_ft_scaled_font_lock_face() gets the #FT_Face object from a FreeType
  * backend font and scales it appropriately for the font. You must
- * release the face with cairo_ft_font_unlock_face()
+ * release the face with cairo_ft_scaled_font_unlock_face()
  * when you are done using it.  Since the #FT_Face object can be
  * shared between multiple #cairo_scaled_font_t objects, you must not
  * lock any other font objects until you unlock this one. A count is
- * kept of the number of times cairo_ft_font_lock_face() is
- * called. cairo_ft_font_unlock_face() must be called the same number
+ * kept of the number of times cairo_ft_scaled_font_lock_face() is
+ * called. cairo_ft_scaled_font_unlock_face() must be called the same number
  * of times.
  *
  * You must be careful when using this function in a library or in a
