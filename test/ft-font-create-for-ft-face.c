@@ -50,7 +50,9 @@ draw (cairo_t *cr, int width, int height)
     /* We're trying here to get our hands on _some_ FT_Face but we do
      * not at all care which one. So we start with an empty pattern
      * and do the minimal substitution on it in order to get a valid
-     * pattern. */
+     * pattern.
+     *
+     * Do not use this in production code! */
     pattern = FcPatternCreate ();
     if (! pattern) {
 	cairo_test_log ("FcPatternCreate failed.\n");
@@ -117,8 +119,10 @@ draw (cairo_t *cr, int width, int height)
 
     /* Set the font_face and force cairo to actually use it for
      * something. */
+    cairo_save (cr);
     cairo_set_font_face (cr, font_face);
     cairo_font_extents (cr, &font_extents);
+    cairo_restore (cr);
 
     /* Finally, even more cleanup */
     cairo_font_face_destroy (font_face);
