@@ -44,7 +44,10 @@ if test "x$SGML_DOCS" = x; then
 else
 	type_regexp='\(.'$type_regexp'\)\|\('$type_regexp'.\)'
 fi
-if grep "$type_regexp" $FILES | grep -v '#####'; then
+
+# We need to filter out gtk-doc markup errors for program listings.
+files=`grep "$type_regexp" $FILES | grep -v '#####' | cut -d: -f1 | sort | uniq`
+if test -n "$files" && sed -e '/<programlisting>/,/<\/programlisting>/d' $files | grep "$type_regexp" | grep -v '#####'; then
 	status=1
 	echo Error: some type names in the docs are not prefixed by hash sign,
 	echo neither are the only token in the doc line followed by colon.
@@ -56,7 +59,10 @@ func_regexp='\([^#]\|^\)\<\(cairo_[][<>/0-9a-z_]*\> \?[^][ <>(]\)'
 if test "x$SGML_DOCS" = x; then
 	func_regexp='^[/ ][*] .*'$func_regexp
 fi
-if grep "$func_regexp" $FILES | grep -v '#####'; then
+
+# We need to filter out gtk-doc markup errors for program listings.
+files=`grep "$func_regexp" $FILES | grep -v '#####' | cut -d: -f1 | sort | uniq`
+if test -n "$files" && sed -e '/<programlisting>/,/<\/programlisting>/d' $files | grep "$func_regexp" | grep -v '#####'; then
 	status=1
 	echo Error: some function names in the docs are not followed by parentheses.
 	echo Fix this by searching for the following regexp in the above files:
