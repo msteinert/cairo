@@ -2567,7 +2567,7 @@ cairo_ft_font_face_create_for_ft_face (FT_Face         face,
  * @scaled_font: A #cairo_scaled_font_t from the FreeType font backend. Such an
  *   object can be created by calling cairo_scaled_font_create() on a
  *   FreeType backend font face (see cairo_ft_font_face_create_for_pattern(),
- *   cairo_ft_font_face_create_for_face()).
+ *   cairo_ft_font_face_create_for_ft_face()).
  *
  * cairo_ft_scaled_font_lock_face() gets the #FT_Face object from a FreeType
  * backend font and scales it appropriately for the font. You must
