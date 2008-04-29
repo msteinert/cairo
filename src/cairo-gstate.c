@@ -204,47 +204,6 @@ _cairo_gstate_fini (cairo_gstate_t *gstate)
     gstate->source = NULL;
 }
 
-static void
-_cairo_gstate_destroy (cairo_gstate_t *gstate)
-{
-    _cairo_gstate_fini (gstate);
-    free (gstate);
-}
-
-/**
- * _cairo_gstate_clone:
- * @other: a #cairo_gstate_t to be copied, not %NULL.
- *
- * Create a new #cairo_gstate_t setting all graphics state parameters
- * to the same values as contained in @other. gstate->next will be set
- * to %NULL and may be used by the caller to chain #cairo_gstate_t
- * objects together.
- *
- * Return value: a new #cairo_gstate_t or %NULL if there is insufficient
- * memory.
- **/
-static cairo_status_t
-_cairo_gstate_clone (cairo_gstate_t *other, cairo_gstate_t **out)
-{
-    cairo_status_t status;
-    cairo_gstate_t *gstate;
-
-    assert (other != NULL);
-
-    gstate = malloc (sizeof (cairo_gstate_t));
-    if (gstate == NULL)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    status = _cairo_gstate_init_copy (gstate, other);
-    if (status) {
-	free (gstate);
-	return status;
-    }
-
-    *out = gstate;
-    return CAIRO_STATUS_SUCCESS;
-}
-
 /**
  * _cairo_gstate_save:
  * @gstate: input/output gstate pointer
@@ -254,14 +213,25 @@ _cairo_gstate_clone (cairo_gstate_t *other, cairo_gstate_t **out)
  * copy into @gstate.  _cairo_gstate_restore() reverses this.
  **/
 cairo_status_t
-_cairo_gstate_save (cairo_gstate_t **gstate)
+_cairo_gstate_save (cairo_gstate_t **gstate, cairo_gstate_t **freelist)
 {
-    cairo_gstate_t *top = NULL;
+    cairo_gstate_t *top;
     cairo_status_t status;
 
-    status = _cairo_gstate_clone (*gstate, &top);
-    if (status)
+    top = *freelist;
+    if (top == NULL) {
+	top = malloc (sizeof (cairo_gstate_t));
+	if (top == NULL)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    } else
+	*freelist = top->next;
+
+    status = _cairo_gstate_init_copy (top, *gstate);
+    if (status) {
+	top->next = *freelist;
+	*freelist = top;
 	return status;
+    }
 
     top->next = *gstate;
     *gstate = top;
@@ -276,7 +246,7 @@ _cairo_gstate_save (cairo_gstate_t **gstate)
  * Reverses the effects of one _cairo_gstate_save() call.
  **/
 cairo_status_t
-_cairo_gstate_restore (cairo_gstate_t **gstate)
+_cairo_gstate_restore (cairo_gstate_t **gstate, cairo_gstate_t **freelist)
 {
     cairo_gstate_t *top;
 
@@ -286,7 +256,9 @@ _cairo_gstate_restore (cairo_gstate_t **gstate)
 
     *gstate = top->next;
 
-    _cairo_gstate_destroy (top);
+    _cairo_gstate_fini (top);
+    top->next = *freelist;
+    *freelist = top;
 
     return CAIRO_STATUS_SUCCESS;
 }

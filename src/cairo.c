@@ -52,7 +52,8 @@ static const cairo_t _cairo_nil = {
   {{				/* gstate_tail */
     0
   }},
-  {{ 				/* path */
+  NULL,				/* gstate_freelist */
+  {{				/* path */
     { 0, 0 },			/* last_move_point */
     { 0, 0 },			/* current point */
     FALSE,			/* has_current_point */
@@ -205,6 +206,7 @@ cairo_create (cairo_surface_t *target)
     _cairo_path_fixed_init (cr->path);
 
     cr->gstate = cr->gstate_tail;
+    cr->gstate_freelist = NULL;
     status = _cairo_gstate_init (cr->gstate, target);
 
     if (status)
@@ -260,11 +262,16 @@ cairo_destroy (cairo_t *cr)
 	return;
 
     while (cr->gstate != cr->gstate_tail) {
-	if (_cairo_gstate_restore (&cr->gstate))
+	if (_cairo_gstate_restore (&cr->gstate, &cr->gstate_freelist))
 	    break;
     }
 
     _cairo_gstate_fini (cr->gstate);
+    while (cr->gstate_freelist != NULL) {
+	cairo_gstate_t *gstate = cr->gstate_freelist;
+	cr->gstate_freelist = gstate->next;
+	free (gstate);
+    }
 
     _cairo_path_fixed_fini (cr->path);
 
@@ -371,10 +378,9 @@ cairo_save (cairo_t *cr)
     if (cr->status)
 	return;
 
-    status = _cairo_gstate_save (&cr->gstate);
-    if (status) {
+    status = _cairo_gstate_save (&cr->gstate, &cr->gstate_freelist);
+    if (status)
 	_cairo_set_error (cr, status);
-    }
 }
 slim_hidden_def(cairo_save);
 
@@ -394,10 +400,9 @@ cairo_restore (cairo_t *cr)
     if (cr->status)
 	return;
 
-    status = _cairo_gstate_restore (&cr->gstate);
-    if (status) {
+    status = _cairo_gstate_restore (&cr->gstate, &cr->gstate_freelist);
+    if (status)
 	_cairo_set_error (cr, status);
-    }
 }
 slim_hidden_def(cairo_restore);
 
