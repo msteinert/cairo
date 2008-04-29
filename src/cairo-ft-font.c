@@ -2535,6 +2535,22 @@ cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
  * also for the FreeType backend and can be used with functions such
  * as cairo_ft_scaled_font_lock_face().
  *
+ * As an example, here is how one might correctly couple the lifetime of
+ * the FreeType face object to the #cairo_font_face_t:
+ *
+ * <informalexample><programlisting>
+ * static const cairo_user_data_key_t key;
+ *
+ * font_face = cairo_ft_font_face_create_for_ft_face (ft_face, 0);
+ * status = cairo_font_face_set_user_data (font_face, &key,
+ *                                ft_face, (cairo_destroy_func_t) FT_Done_Face);
+ * if (status) {
+ *    cairo_font_face_destroy (font_face);
+ *    FT_Done_Face (ft_face);
+ *    return ERROR;
+ * }
+ * </programlisting></informalexample>
+ *
  * Return value: a newly created #cairo_font_face_t. Free with
  *  cairo_font_face_destroy() when you are done using it.
  **/
