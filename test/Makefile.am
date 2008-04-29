@@ -72,6 +72,7 @@ in-fill-trapezoid$(EXEEXT)				\
 invalid-matrix$(EXEEXT)					\
 large-source$(EXEEXT)					\
 leaky-dash$(EXEEXT)					\
+leaky-dashed-rectangle$(EXEEXT)				\
 leaky-polygon$(EXEEXT)					\
 line-width$(EXEEXT)					\
 line-width-scale$(EXEEXT)				\
@@ -441,6 +442,7 @@ REFERENCE_IMAGES = \
 	leaky-dash-ps-rgb24-ref.png	\
 	leaky-dash-quartz-ref.png	\
 	leaky-dash-ref.png	\
+	leaky-dashed-rectangle-ref.png	\
 	leaky-polygon-ref.png	\
 	leaky-polygon-ps-ref.png	\
 	linear-gradient-reflect-ref.png	\

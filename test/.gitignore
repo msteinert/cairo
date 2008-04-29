@@ -93,6 +93,7 @@ in-fill-trapezoid
 invalid-matrix
 large-source
 leaky-dash
+leaky-dashed-rectangle
 leaky-polygon
 line-width
 line-width-scale
