@@ -575,7 +575,7 @@ _cairo_ft_unscaled_font_lock_face (cairo_ft_unscaled_font_t *unscaled)
 
     return face;
 }
-slim_hidden_def (cairo_ft_scaled_font_lock_face);
+
 
 /* Unlock unscaled font locked with _cairo_ft_unscaled_font_lock_face
  */
@@ -588,7 +588,7 @@ _cairo_ft_unscaled_font_unlock_face (cairo_ft_unscaled_font_t *unscaled)
 
     CAIRO_MUTEX_UNLOCK (unscaled->mutex);
 }
-slim_hidden_def (cairo_ft_scaled_font_unlock_face);
+
 
 static cairo_status_t
 _compute_transform (cairo_ft_font_transform_t *sf,
