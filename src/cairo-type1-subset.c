@@ -345,12 +345,36 @@ cairo_type1_font_subset_write_header (cairo_type1_font_subset_t *font,
 
     segment_end = font->header_segment + font->header_segment_size;
 
-    start = find_token (font->header_segment, segment_end, "/FontName");
+    /* Type 1 fonts created by Fontforge have some PostScript code at
+     * the start of the font that skips the font if the printer has a
+     * cached copy of the font with the same unique id. This breaks
+     * our subsetted font so we disable it by searching for the
+     * PostScript operator "known" when used to check for the
+     * "/UniqueID" dictionary key. We append " pop false " after it to
+     * pop the result of this check off the stack and replace it with
+     * "false" to make the PostScript code think "/UniqueID" does not
+     * exist.
+     */
+    end = font->header_segment;
+    start = find_token (font->header_segment, segment_end, "/UniqueID");
+    if (start) {
+	start += 9;
+	while (start < segment_end && isspace (*start))
+	    start++;
+	if (start + 5 < segment_end && memcmp(start, "known", 5) == 0) {
+	    _cairo_output_stream_write (font->output, font->header_segment,
+					start + 5 - font->header_segment);
+	    _cairo_output_stream_printf (font->output, " pop false ");
+	    end = start + 5;
+	}
+    }
+
+    start = find_token (end, segment_end, "/FontName");
     if (start == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    _cairo_output_stream_write (font->output, font->header_segment,
-				start - font->header_segment);
+    _cairo_output_stream_write (font->output, end,
+				start - end);
 
     _cairo_output_stream_printf (font->output, "/FontName /%s def", name);
 
