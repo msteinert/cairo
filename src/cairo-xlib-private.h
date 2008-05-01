@@ -34,6 +34,7 @@
 #define CAIRO_XLIB_PRIVATE_H
 
 #include "cairo-xlib.h"
+#include "cairo-xlib-xrender-private.h"
 
 #include "cairo-compiler-private.h"
 #include "cairo-freelist-private.h"
@@ -60,6 +61,8 @@ struct _cairo_xlib_display {
 
     Display *display;
     cairo_xlib_screen_info_t *screens;
+
+    XRenderPictFormat *cached_xrender_formats[CAIRO_FORMAT_A1 + 1];
 
     cairo_xlib_job_t *workqueue;
     cairo_freelist_t wq_freelist;
@@ -117,6 +120,10 @@ _cairo_xlib_display_queue_resource (cairo_xlib_display_t *display,
 				   XID resource);
 cairo_private void
 _cairo_xlib_display_notify (cairo_xlib_display_t *display);
+
+cairo_private XRenderPictFormat *
+_cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
+	                                cairo_format_t		 format);
 
 cairo_private cairo_xlib_screen_info_t *
 _cairo_xlib_screen_info_get (Display *display, Screen *screen);
