@@ -276,12 +276,71 @@ cairo_type1_font_subset_find_segments (cairo_type1_font_subset_t *font)
     return CAIRO_STATUS_SUCCESS;
 }
 
+/* Search for the definition of key and erase it by overwriting with spaces.
+ * This function is looks for definitions of the form:
+ *
+ * /key1 1234 def
+ * /key2 [12 34 56] def
+ *
+ * ie a key defined as an integer or array of integers.
+ *
+ */
+static void
+cairo_type1_font_erase_dict_key (cairo_type1_font_subset_t *font,
+				 const char *key)
+{
+    const char *start, *p, *segment_end;
+
+    segment_end = font->header_segment + font->header_segment_size;
+
+    start = font->header_segment;
+    do {
+	start = find_token (start, segment_end, key);
+	if (start) {
+	    p = start + strlen(key);
+	    /* skip integers or array of integers */
+	    while (p < segment_end &&
+		   (isspace(*p) ||
+		    isdigit(*p) ||
+		    *p == '[' ||
+		    *p == ']'))
+	    {
+		p++;
+	    }
+
+	    if (p + 3 < segment_end && memcmp(p, "def", 3) == 0) {
+		/* erase definition of the key */
+		memset((char *) start, ' ', p + 3 - start);
+	    }
+	    start += strlen(key);
+	}
+    } while (start);
+}
+
 static cairo_status_t
 cairo_type1_font_subset_write_header (cairo_type1_font_subset_t *font,
 					 const char *name)
 {
     const char *start, *end, *segment_end;
     unsigned int i;
+
+    /* FIXME:
+     * This function assumes that /FontName always appears
+     * before /Encoding. This appears to always be the case with Type1
+     * fonts.
+     *
+     * The more recently added code for removing the UniqueID key can
+     * not make any assumptions about the position of the UniqueID key
+     * in the dictionary so it is implemented by overwriting the key
+     * definition with spaces before we start copying the font to the
+     * output.
+     *
+     * This code should be rewritten to not make any assumptions about
+     * the order of dictionary keys. This will allow UniqueID to be
+     * stripped out instead of leaving a bunch of spaces in the
+     * output.
+     */
+    cairo_type1_font_erase_dict_key (font, "/UniqueID");
 
     segment_end = font->header_segment + font->header_segment_size;
 
