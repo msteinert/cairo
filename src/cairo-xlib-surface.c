@@ -1621,7 +1621,7 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
 {
     cairo_xlib_surface_t *surface = abstract_surface;
     XRenderColor render_color;
-    XRectangle static_xrects[16];
+    XRectangle static_xrects[CAIRO_STACK_ARRAY_LENGTH (XRectangle)];
     XRectangle *xrects = static_xrects;
     int i;
 
@@ -1635,8 +1635,8 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
     render_color.blue  = color->blue_short;
     render_color.alpha = color->alpha_short;
 
-    if (num_rects > ARRAY_LENGTH(static_xrects)) {
-        xrects = _cairo_malloc_ab (num_rects, sizeof(XRectangle));
+    if (num_rects > ARRAY_LENGTH (static_xrects)) {
+        xrects = _cairo_malloc_ab (num_rects, sizeof (XRectangle));
 	if (xrects == NULL)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
@@ -1655,7 +1655,7 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
 			   &render_color, xrects, num_rects);
 
     if (xrects != static_xrects)
-        free(xrects);
+        free (xrects);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1869,12 +1869,12 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
 								 dst_x, dst_y, width, height);
 
     } else {
-        XTrapezoid xtraps_stack[16];
+        XTrapezoid xtraps_stack[CAIRO_STACK_ARRAY_LENGTH (XTrapezoid)];
         XTrapezoid *xtraps = xtraps_stack;
         int i;
 
-        if (num_traps > ARRAY_LENGTH(xtraps_stack)) {
-            xtraps = _cairo_malloc_ab (num_traps, sizeof(XTrapezoid));
+        if (num_traps > ARRAY_LENGTH (xtraps_stack)) {
+            xtraps = _cairo_malloc_ab (num_traps, sizeof (XTrapezoid));
             if (xtraps == NULL) {
                 status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
                 goto BAIL;
@@ -1940,7 +1940,7 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
             return status;
 
 	if (n_boxes > ARRAY_LENGTH (surface->embedded_clip_rects)) {
-	    rects = _cairo_malloc_ab (n_boxes, sizeof(XRectangle));
+	    rects = _cairo_malloc_ab (n_boxes, sizeof (XRectangle));
 	    if (rects == NULL) {
                 _cairo_region_boxes_fini (region, boxes);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
