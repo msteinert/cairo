@@ -329,11 +329,11 @@ cairo_type1_font_subset_write_header (cairo_type1_font_subset_t *font,
      * before /Encoding. This appears to always be the case with Type1
      * fonts.
      *
-     * The more recently added code for removing the UniqueID key can
-     * not make any assumptions about the position of the UniqueID key
-     * in the dictionary so it is implemented by overwriting the key
-     * definition with spaces before we start copying the font to the
-     * output.
+     * The more recently added code for removing the UniqueID and XUID
+     * keys can not make any assumptions about the position of the
+     * keys in the dictionary so it is implemented by overwriting the
+     * key definition with spaces before we start copying the font to
+     * the output.
      *
      * This code should be rewritten to not make any assumptions about
      * the order of dictionary keys. This will allow UniqueID to be
@@ -341,6 +341,7 @@ cairo_type1_font_subset_write_header (cairo_type1_font_subset_t *font,
      * output.
      */
     cairo_type1_font_erase_dict_key (font, "/UniqueID");
+    cairo_type1_font_erase_dict_key (font, "/XUID");
 
     segment_end = font->header_segment + font->header_segment_size;
 
