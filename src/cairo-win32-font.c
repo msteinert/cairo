@@ -933,9 +933,9 @@ _cairo_win32_scaled_font_init_glyph_metrics (cairo_win32_scaled_font_t *scaled_f
 	cairo_win32_scaled_font_done_font (&scaled_font->base);
 
 	extents.x_bearing = 0;
-	extents.y_bearing = -font_extents.ascent / scaled_font->y_scale;
+	extents.y_bearing = scaled_font->base.ctm.yy * (-font_extents.ascent / scaled_font->y_scale);
 	extents.width = width / scaled_font->x_scale;
-	extents.height = (font_extents.ascent + font_extents.descent) / scaled_font->y_scale;
+	extents.height = scaled_font->base.ctm.yy * (font_extents.ascent + font_extents.descent) / scaled_font->y_scale;
 	extents.x_advance = extents.width;
 	extents.y_advance = 0;
     } else if (scaled_font->preserve_axes && scaled_font->base.options.hint_style != CAIRO_HINT_METRICS_OFF) {
