@@ -1435,7 +1435,7 @@ _cairo_win32_scaled_font_load_truetype_table (void	       *abstract_font,
                                              unsigned long     *length)
 {
     HDC hdc;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_status_t status;
 
     cairo_win32_scaled_font_t *scaled_font = abstract_font;
     hdc = _get_global_font_dc ();
@@ -1444,6 +1444,8 @@ _cairo_win32_scaled_font_load_truetype_table (void	       *abstract_font,
 
     tag = (tag&0x000000ff)<<24 | (tag&0x0000ff00)<<8 | (tag&0x00ff0000)>>8 | (tag&0xff000000)>>24;
     status = cairo_win32_scaled_font_select_font (&scaled_font->base, hdc);
+    if (status)
+	return status;
 
     *length = GetFontData (hdc, tag, offset, buffer, *length);
     if (*length == GDI_ERROR)
