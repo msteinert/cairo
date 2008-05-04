@@ -934,7 +934,7 @@ _cairo_win32_scaled_font_init_glyph_metrics (cairo_win32_scaled_font_t *scaled_f
 
 	extents.x_bearing = 0;
 	extents.y_bearing = scaled_font->base.ctm.yy * (-font_extents.ascent / scaled_font->y_scale);
-	extents.width = width / scaled_font->x_scale;
+	extents.width = width / (WIN32_FONT_LOGICAL_SCALE * scaled_font->x_scale);
 	extents.height = scaled_font->base.ctm.yy * (font_extents.ascent + font_extents.descent) / scaled_font->y_scale;
 	extents.x_advance = extents.width;
 	extents.y_advance = 0;
