@@ -1443,13 +1443,13 @@ _cairo_win32_scaled_font_load_truetype_table (void	       *abstract_font,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     tag = (tag&0x000000ff)<<24 | (tag&0x0000ff00)<<8 | (tag&0x00ff0000)>>8 | (tag&0xff000000)>>24;
-    status = _cairo_win32_scaled_font_select_unscaled_font (&scaled_font->base, hdc);
+    status = cairo_win32_scaled_font_select_font (&scaled_font->base, hdc);
 
     *length = GetFontData (hdc, tag, offset, buffer, *length);
     if (*length == GDI_ERROR)
         status = CAIRO_INT_STATUS_UNSUPPORTED;
 
-    _cairo_win32_scaled_font_done_unscaled_font (&scaled_font->base);
+    cairo_win32_scaled_font_done_font (&scaled_font->base);
 
     return status;
 }
