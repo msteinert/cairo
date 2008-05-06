@@ -41,6 +41,7 @@
 #include "cairo-xlib-private.h"
 #include "cairo-xlib-surface-private.h"
 #include "cairo-clip-private.h"
+#include "cairo-scaled-font-private.h"
 
 #include <X11/Xutil.h> /* for XDestroyImage */
 
@@ -2814,6 +2815,9 @@ _cairo_xlib_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 {
     cairo_xlib_surface_font_private_t	*font_private;
     cairo_xlib_font_glyphset_info_t *glyphset_info;
+
+    if (scaled_font->finished)
+	return;
 
     font_private = scaled_font->surface_private;
     glyphset_info = _cairo_xlib_scaled_glyph_get_glyphset_info (scaled_glyph);

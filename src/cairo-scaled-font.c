@@ -190,6 +190,7 @@ static const cairo_scaled_font_t _cairo_scaled_font_nil = {
       CAIRO_SUBPIXEL_ORDER_DEFAULT,
       CAIRO_HINT_STYLE_DEFAULT,
       CAIRO_HINT_METRICS_DEFAULT} ,
+    TRUE,			/* finished */
     { 1., 0., 0., 1., 0, 0},	/* scale */
     { 1., 0., 0., 1., 0, 0},	/* scale_inverse */
     { 0., 0., 0., 0., 0. },	/* extents */
@@ -499,6 +500,8 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 	    return status;
     }
 
+    scaled_font->finished = FALSE;
+
     scaled_font->glyphs = _cairo_cache_create (_cairo_scaled_glyph_keys_equal,
 					       _cairo_scaled_glyph_destroy,
 					       MAX_GLYPHS_CACHED_PER_FONT);
@@ -572,6 +575,8 @@ _cairo_scaled_font_set_metrics (cairo_scaled_font_t	    *scaled_font,
 void
 _cairo_scaled_font_fini (cairo_scaled_font_t *scaled_font)
 {
+    scaled_font->finished = TRUE;
+
     if (scaled_font->font_face != NULL)
 	cairo_font_face_destroy (scaled_font->font_face);
 
