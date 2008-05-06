@@ -36,6 +36,7 @@ dash-offset-negative$(EXEEXT)				\
 dash-scale$(EXEEXT)					\
 dash-state$(EXEEXT)					\
 dash-zero-length$(EXEEXT)				\
+degenerate-arc$(EXEEXT)					\
 degenerate-path$(EXEEXT)				\
 degenerate-pen$(EXEEXT)					\
 device-offset$(EXEEXT)					\
@@ -349,6 +350,8 @@ REFERENCE_IMAGES = \
 	dash-zero-length-ps-rgb24-ref.png	\
 	dash-zero-length-ref.png	\
 	dash-zero-length-rgb24-ref.png	\
+	degenerate-arc-ref.png		\
+	degenerate-arc-ps-ref.png	\
 	degenerate-pen-ref.png		\
 	degenerate-pen-ps-ref.png	\
 	degenerate-pen-quartz-ref.png	\
