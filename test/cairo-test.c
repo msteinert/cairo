@@ -35,6 +35,9 @@
 #ifdef HAVE_SIGNAL_H
 #include <signal.h>
 #endif
+#if HAVE_FEENABLEEXCEPT
+#include <fenv.h>
+#endif
 #include <assert.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -109,6 +112,10 @@ void
 cairo_test_init (const char *test_name)
 {
     char *log_name;
+
+#if HAVE_FEENABLEEXCEPT
+    feenableexcept (FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
+#endif
 
     xasprintf (&log_name, "%s%s", test_name, CAIRO_TEST_LOG_SUFFIX);
     xunlink (log_name);

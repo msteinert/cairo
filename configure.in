@@ -108,6 +108,9 @@ AC_DEFUN([_CHECK_FUNCS_WITH_FLAGS],
 
 dnl ===========================================================================
 
+AC_CHECK_LIBM
+LIBS="$LIBS $LIBM"
+
 AC_CHECK_FUNCS(vasnprintf ctime_r drand48)
 
 AC_MSG_CHECKING([for Sun Solaris (non-POSIX ctime_r)])
@@ -121,6 +124,9 @@ case "$host" in
 	;;
 esac
 AC_MSG_RESULT([$solaris_posix_pthread])
+
+# check for GNU-extensions to fenv
+AC_CHECK_HEADER(fenv.h, [AC_CHECK_FUNCS(feenableexcept)])
 
 dnl ===========================================================================
 dnl
@@ -158,9 +164,6 @@ fi
 AC_MSG_RESULT([$cairo_atomic_op_needs_memory_barrier])
 
 dnl ===========================================================================
-
-AC_CHECK_LIBM
-LIBS="$LIBS $LIBM"
 
 AC_CHECK_LIB(z, compress,
 	 [AC_CHECK_HEADER(zlib.h, [have_libz=yes],
