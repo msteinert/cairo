@@ -126,7 +126,7 @@ esac
 AC_MSG_RESULT([$solaris_posix_pthread])
 
 # check for GNU-extensions to fenv
-AC_CHECK_HEADER(fenv.h, [AC_CHECK_FUNCS(feenableexcept)])
+AC_CHECK_HEADER(fenv.h, [AC_CHECK_FUNCS(feenableexcept fedisableexcept)])
 
 dnl ===========================================================================
 dnl

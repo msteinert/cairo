@@ -30,6 +30,10 @@
 #define HAVE_INFINITY 1
 #endif
 
+#if HAVE_FEDISABLEEXCEPT
+#include <fenv.h>
+#endif
+
 static cairo_test_draw_function_t draw;
 
 cairo_test_t test = {
@@ -68,6 +72,11 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
 		    cairo_status_to_string (status));					\
     return CAIRO_TEST_FAILURE;								\
 }
+
+    /* clear floating point exceptions (added by cairo_test_init()) */
+#if HAVE_FEDISABLEEXCEPT
+    fedisableexcept (FE_INVALID);
+#endif
 
     /* create a bogus matrix and check results of attempted inversion */
     bogus.x0 = bogus.xy = bogus.xx = strtod ("NaN", NULL);
