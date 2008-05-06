@@ -208,7 +208,7 @@ _cairo_arc_in_direction (cairo_t	  *cr,
 				     angle_min, angle_mid,
 				     dir);
 	}
-    } else {
+    } else if (angle_max != angle_min) {
 	cairo_matrix_t ctm;
 	int i, segments;
 	double angle, angle_step;
