@@ -284,8 +284,9 @@ typedef struct _cairo_pen {
     double radius;
     double tolerance;
 
-    cairo_pen_vertex_t *vertices;
     int num_vertices;
+    cairo_pen_vertex_t *vertices;
+    cairo_pen_vertex_t  vertices_embedded[32];
 } cairo_pen_t;
 
 typedef struct _cairo_color cairo_color_t;
