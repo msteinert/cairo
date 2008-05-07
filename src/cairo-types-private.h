@@ -255,7 +255,7 @@ typedef struct _cairo_polygon {
     int num_edges;
     int edges_size;
     cairo_edge_t *edges;
-    cairo_edge_t  edges_embedded[8];
+    cairo_edge_t  edges_embedded[32];
 } cairo_polygon_t;
 
 typedef struct _cairo_spline_knots {
@@ -270,7 +270,7 @@ typedef struct _cairo_spline {
     int num_points;
     int points_size;
     cairo_point_t *points;
-    cairo_point_t  points_embedded[8];
+    cairo_point_t  points_embedded[64];
 } cairo_spline_t;
 
 typedef struct _cairo_pen_vertex {
