@@ -94,7 +94,7 @@ static int permute_argv_once()
 }
 
 
-int _cairo_getopt(int argc, char** argv, char* optstr)
+int _cairo_getopt(int argc, char** argv, const char* optstr)
 {
 	int c = 0;
 
