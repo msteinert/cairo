@@ -304,7 +304,7 @@ libcairo_la_SOURCES =				\
 	$(cairo_sources)			\
 	$(cairo_special_sources)
 
-cairo_all_source_file =				\
+cairo_all_source_files =			\
 	$(cairo_all_sources)			\
 	$(cairo_special_sources)
 
@@ -354,7 +354,7 @@ install-data-local:
 	  false ;									\
         fi
 
-TESTS_ENVIRONMENT = srcdir="$(srcdir)" MAKE="$(MAKE)" cairo_all_source_file="$(cairo_all_source_file)"
+TESTS_ENVIRONMENT = srcdir="$(srcdir)" MAKE="$(MAKE)" cairo_all_source_files="$(cairo_all_source_files)"
 TESTS = check-def.sh check-plt.sh check-headers.sh check-cairoint.sh check-doc-syntax.sh
 EXTRA_DIST += $(TESTS) check-has-hidden-symbols.c
 DISTCLEANFILES += check-has-hidden-symbols.i
