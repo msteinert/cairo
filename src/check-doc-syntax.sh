@@ -15,7 +15,10 @@ echo Checking documentation for incorrect syntax
 # Note: this test is also run from doc/public/ to check the SGML files
 
 if test "x$SGML_DOCS" = x; then
-    FILES=`find "$srcdir" -name '*.h' -or -name '*.c' -or -name '*.cpp'`
+    FILES=$cairo_all_source_files
+    if test "x$FILES" = x; then
+        FILES=`find "$srcdir" -name '*.h' -or -name '*.c' -or -name '*.cpp'`
+    fi
 fi
 
 # Note: This test reports false positives on non-gtk-doc comments and
