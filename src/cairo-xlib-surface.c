@@ -2990,6 +2990,71 @@ _cairo_xlib_scaled_font_get_glyphset_info_for_format (cairo_scaled_font_t *scale
     return glyphset_info;
 }
 
+static cairo_bool_t
+_cairo_xlib_glyphset_info_has_pending_free_glyph (
+				cairo_xlib_font_glyphset_info_t *glyphset_info,
+				unsigned long glyph_index)
+{
+    if (glyphset_info->pending_free_glyphs != NULL) {
+	cairo_xlib_font_glyphset_free_glyphs_t *to_free;
+	int i;
+
+	to_free = glyphset_info->pending_free_glyphs;
+	for (i = 0; i < to_free->glyph_count; i++) {
+	    if (to_free->glyph_indices[i] == glyph_index) {
+		to_free->glyph_count--;
+		memmove (&to_free->glyph_indices[i],
+			 &to_free->glyph_indices[i+1],
+			 (to_free->glyph_count - i) * sizeof (to_free->glyph_indices[0]));
+		return TRUE;
+	    }
+	}
+    }
+
+    return FALSE;
+}
+
+static cairo_xlib_font_glyphset_info_t *
+_cairo_xlib_scaled_font_get_glyphset_info_for_pending_free_glyph (
+					       cairo_scaled_font_t *scaled_font,
+					       unsigned long glyph_index,
+					       cairo_image_surface_t *surface)
+{
+    cairo_xlib_surface_font_private_t *font_private;
+    int i;
+
+    font_private = scaled_font->surface_private;
+    if (font_private == NULL)
+	return NULL;
+
+    if (surface != NULL) {
+	switch (surface->format) {
+	default:
+	case CAIRO_FORMAT_RGB24:
+	case CAIRO_FORMAT_ARGB32: i = GLYPHSET_INDEX_ARGB32; break;
+	case CAIRO_FORMAT_A8:     i = GLYPHSET_INDEX_A8;     break;
+	case CAIRO_FORMAT_A1:     i = GLYPHSET_INDEX_A1;     break;
+	}
+	if (_cairo_xlib_glyphset_info_has_pending_free_glyph (
+						&font_private->glyphset_info[i],
+						glyph_index))
+	{
+	    return &font_private->glyphset_info[i];
+	}
+    } else {
+	for (i = 0; i < NUM_GLYPHSETS; i++) {
+	    if (_cairo_xlib_glyphset_info_has_pending_free_glyph (
+						&font_private->glyphset_info[i],
+						glyph_index))
+	    {
+		return &font_private->glyphset_info[i];
+	    }
+	}
+    }
+
+    return NULL;
+}
+
 static cairo_status_t
 _cairo_xlib_surface_add_glyph (Display *dpy,
 			       cairo_scaled_font_t   *scaled_font,
@@ -3005,6 +3070,13 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
     cairo_xlib_font_glyphset_info_t *glyphset_info;
 
     glyph_index = _cairo_scaled_glyph_index (scaled_glyph);
+
+    /* check to see if we have a pending XRenderFreeGlyph for this glyph */
+    glyphset_info = _cairo_xlib_scaled_font_get_glyphset_info_for_pending_free_glyph (scaled_font, glyph_index, glyph_surface);
+    if (glyphset_info != NULL) {
+	_cairo_xlib_scaled_glyph_set_glyphset_info (scaled_glyph, glyphset_info);
+	return CAIRO_STATUS_SUCCESS;
+    }
 
     if (!glyph_surface) {
 	status = _cairo_scaled_glyph_lookup (scaled_font,
@@ -3040,23 +3112,6 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 			       8;
 	if (len >= max_request_size)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
-
-    /* check to see if we have a pending XRenderFreeGlyph for this glyph */
-    if (glyphset_info->pending_free_glyphs != NULL) {
-	cairo_xlib_font_glyphset_free_glyphs_t *to_free;
-	int i;
-
-	to_free = glyphset_info->pending_free_glyphs;
-	for (i = 0; i < to_free->glyph_count; i++) {
-	    if (to_free->glyph_indices[i] == glyph_index) {
-		to_free->glyph_count--;
-		memmove (&to_free->glyph_indices[i],
-			 &to_free->glyph_indices[i+1],
-			 (to_free->glyph_count - i) * sizeof (to_free->glyph_indices[0]));
-		goto DONE;
-	    }
-	}
     }
 
     /* If the glyph surface has zero height or width, we create
@@ -3195,7 +3250,6 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
     if (data != glyph_surface->data)
 	free (data);
 
- DONE:
     _cairo_xlib_scaled_glyph_set_glyphset_info (scaled_glyph, glyphset_info);
 
  BAIL:
