@@ -169,7 +169,7 @@ cairo_perf_run (cairo_perf_t		*perf,
 	first_run = FALSE;
     }
 
-    times = xmalloc (perf->iterations * sizeof (cairo_perf_ticks_t));
+    times = perf->times;
 
     has_similar = cairo_perf_has_similar (perf);
     for (similar = 0; similar <= has_similar; similar++) {
@@ -199,7 +199,7 @@ cairo_perf_run (cairo_perf_t		*perf,
 			    _content_to_string (perf->target->content, similar),
 			    name, perf->size,
 			    cairo_perf_ticks_per_second () / 1000.0);
-		printf (" %lld", times[i]);
+		printf (" %lld", (long long) times[i]);
 	    } else if (! perf->exact_iterations) {
 		if (i > 0) {
 		    _cairo_stats_compute (&stats, times, i+1);
@@ -226,7 +226,7 @@ cairo_perf_run (cairo_perf_t		*perf,
 		    name, perf->size);
 
 	    printf ("%10lld %#8.3f %#8.3f %#5.2f%% %3d\n",
-		    stats.min_ticks,
+		    (long long) stats.min_ticks,
 		    (stats.min_ticks * 1000.0) / cairo_perf_ticks_per_second (),
 		    (stats.median_ticks * 1000.0) / cairo_perf_ticks_per_second (),
 		    stats.std_dev * 100.0, stats.iterations);
@@ -234,7 +234,6 @@ cairo_perf_run (cairo_perf_t		*perf,
 
 	perf->test_number++;
     }
-    free (times);
 }
 
 static void
@@ -344,8 +343,10 @@ check_cpu_affinity(void)
 }
 
 static void
-cairo_perf_fini (void)
+cairo_perf_fini (cairo_perf_t *perf)
 {
+    cairo_boilerplate_free_targets (perf->targets);
+    free (perf->times);
     cairo_debug_reset_static_data ();
 #if HAVE_FCFINI
     FcFini ();
@@ -356,10 +357,9 @@ cairo_perf_fini (void)
 int
 main (int argc, char *argv[])
 {
-    int i, j, num_targets;
+    int i, j;
     cairo_perf_case_t *perf_case;
     cairo_perf_t perf;
-    cairo_boilerplate_target_t **targets;
     cairo_surface_t *surface;
 
     parse_options (&perf, argc, argv);
@@ -377,10 +377,11 @@ main (int argc, char *argv[])
             stderr);
     }
 
-    targets = cairo_boilerplate_get_targets (&num_targets, NULL);
+    perf.targets = cairo_boilerplate_get_targets (&perf.num_targets, NULL);
+    perf.times = xmalloc (perf.iterations * sizeof (cairo_perf_ticks_t));
 
-    for (i = 0; i < num_targets; i++) {
-        cairo_boilerplate_target_t *target = targets[i];
+    for (i = 0; i < perf.num_targets; i++) {
+        cairo_boilerplate_target_t *target = perf.targets[i];
 
 	if (! target_is_measurable (target))
 	    continue;
@@ -405,8 +406,7 @@ main (int argc, char *argv[])
 		    fprintf (stderr,
 			     "Error: Failed to create target surface: %s\n",
 			     target->name);
-		    cairo_boilerplate_free_targets (targets);
-		    cairo_perf_fini ();
+		    cairo_perf_fini (&perf);
 		    exit (1);
 		}
 
@@ -420,8 +420,7 @@ main (int argc, char *argv[])
 		if (cairo_status (perf.cr)) {
 		    fprintf (stderr, "Error: Test left cairo in an error state: %s\n",
 			     cairo_status_to_string (cairo_status (perf.cr)));
-		    cairo_boilerplate_free_targets (targets);
-		    cairo_perf_fini ();
+		    cairo_perf_fini (&perf);
 		    exit (1);
 		}
 
@@ -434,8 +433,7 @@ main (int argc, char *argv[])
 	}
     }
 
-    cairo_boilerplate_free_targets (targets);
-    cairo_perf_fini ();
+    cairo_perf_fini (&perf);
 
     return 0;
 }
