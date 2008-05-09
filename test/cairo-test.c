@@ -151,6 +151,37 @@ cairo_test_log (const char *fmt, ...)
     va_end (va);
 }
 
+void
+cairo_test_log_path (const cairo_path_t *path)
+{
+  int i;
+
+  for (i = 0; i < path->num_data; i += path->data[i].header.length) {
+    cairo_path_data_t *data = &path->data[i];
+    switch (data->header.type) {
+    case CAIRO_PATH_MOVE_TO:
+	cairo_test_log ("    cairo_move_to (cr, %g, %g);\n",
+			data[1].point.x, data[1].point.y);
+        break;
+    case CAIRO_PATH_LINE_TO:
+	cairo_test_log ("    cairo_line_to (cr, %g, %g);\n",
+			data[1].point.x, data[1].point.y);
+	break;
+    case CAIRO_PATH_CURVE_TO:
+	cairo_test_log ("    cairo_curve_to (cr, %g, %g, %g, %g, %g, %g);\n",
+			data[1].point.x, data[1].point.y,
+			data[2].point.x, data[2].point.y,
+			data[3].point.x, data[3].point.y);
+	break;
+    case CAIRO_PATH_CLOSE_PATH:
+	cairo_test_log ("    cairo_close_path (cr);\n\n");
+	break;
+    default:
+	assert (0);
+    }
+  }
+}
+
 static void
 xunlink (const char *pathname)
 {
