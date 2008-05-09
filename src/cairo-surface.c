@@ -500,17 +500,17 @@ cairo_surface_finish (cairo_surface_t *surface)
 	return;
     }
 
-    if (surface->backend->finish == NULL) {
-	surface->finished = TRUE;
-	return;
-    }
-
     if (!surface->status && surface->backend->flush) {
 	status = surface->backend->flush (surface);
 	if (status) {
 	    status = _cairo_surface_set_error (surface, status);
 	    return;
 	}
+    }
+
+    if (surface->backend->finish == NULL) {
+	surface->finished = TRUE;
+	return;
     }
 
     status = surface->backend->finish (surface);
