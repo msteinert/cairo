@@ -449,6 +449,9 @@ cairo_pattern_create_rgba (double red, double green, double blue,
 {
     cairo_color_t color;
 
+    if (alpha >= 1.0)
+	return cairo_pattern_create_rgb (red, green, blue);
+
     _cairo_restrict_value (&red,   0.0, 1.0);
     _cairo_restrict_value (&green, 0.0, 1.0);
     _cairo_restrict_value (&blue,  0.0, 1.0);
