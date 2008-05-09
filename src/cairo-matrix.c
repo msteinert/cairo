@@ -423,6 +423,18 @@ _cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
     }
 }
 
+cairo_private void
+_cairo_matrix_transform_bounding_box_fixed (const cairo_matrix_t *matrix,
+					    cairo_box_t          *bbox,
+					    cairo_bool_t *is_tight)
+{
+    double x1, y1, x2, y2;
+
+    _cairo_box_to_doubles (bbox, &x1, &y1, &x2, &y2);
+    _cairo_matrix_transform_bounding_box (matrix, &x1, &y1, &x2, &y2, is_tight);
+    _cairo_box_from_doubles (bbox, &x1, &y1, &x2, &y2);
+}
+
 static void
 _cairo_matrix_scalar_multiply (cairo_matrix_t *matrix, double scalar)
 {
