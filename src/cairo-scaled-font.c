@@ -818,6 +818,7 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
 	     * the reference count). To make room for it, we do actually
 	     * destroy the least-recently-used holdover.
 	     */
+
 	    if (font_map->num_holdovers == CAIRO_SCALED_FONT_MAX_HOLDOVERS)
 	    {
 		lru = font_map->holdovers[0];
@@ -1217,7 +1218,7 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
 	if (status)
 	    return _cairo_scaled_font_set_error (scaled_font, status);
 
-	/* glyph images are snapped to pixel locations */
+	/* XXX glyph images are snapped to pixel locations */
 	x = _cairo_lround (glyphs[i].x);
 	y = _cairo_lround (glyphs[i].y);
 
