@@ -103,6 +103,10 @@ cairo_status_to_string (cairo_status_t status)
 	return "invalid value for stride";
     case CAIRO_STATUS_FONT_TYPE_MISMATCH:
 	return "the font type is not appropriate for the operation";
+    case CAIRO_STATUS_USER_FONT_IMMUTABLE:
+	return "the user-font is immutable";
+    case CAIRO_STATUS_USER_FONT_ERROR:
+	return "error occurred in a user-font callback function";
     }
 
     return "<unknown error status>";

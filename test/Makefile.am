@@ -157,6 +157,7 @@ truetype-tables$(EXEEXT)				\
 unantialiased-shapes$(EXEEXT)				\
 unbounded-operator$(EXEEXT)				\
 user-data$(EXEEXT)					\
+user-font$(EXEEXT)					\
 zero-alpha$(EXEEXT)
 
 # XXX: Here are some existing tests that are currently disabled for
@@ -695,6 +696,9 @@ REFERENCE_IMAGES = \
 	unantialiased-shapes-quartz-ref.png \
 	unbounded-operator-ref.png	\
 	unbounded-operator-rgb24-ref.png	\
+	user-font-ref.png	\
+	user-font-pdf-ref.png	\
+	user-font-svg-ref.png	\
 	unbounded-operator-quartz-ref.png	\
 	unbounded-operator-quartz-rgb24-ref.png	\
 	xlib-expose-event-ref.png \

@@ -202,6 +202,7 @@ truetype-tables
 unantialiased-shapes
 unbounded-operator
 user-data
+user-font
 xlib-expose-event
 xlib-surface
 xlib-surface-source

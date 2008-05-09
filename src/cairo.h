@@ -204,6 +204,8 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_TEMP_FILE_ERROR: error creating or writing to a temporary file (Since 1.6)
  * @CAIRO_STATUS_INVALID_STRIDE: invalid value for stride (Since 1.6)
  * @CAIRO_STATUS_FONT_TYPE_MISMATCH: the font type is not appropriate for the operation (Since 1.8)
+ * @CAIRO_STATUS_USER_FONT_IMMUTABLE: the user-font is immutable (Since 1.8)
+ * @CAIRO_STATUS_USER_FONT_ERROR: error occurred in a user-font callback function (Since 1.8)
  *
  * #cairo_status_t is used to indicate errors that can occur when
  * using Cairo. In some cases it is returned directly by functions.
@@ -239,7 +241,9 @@ typedef enum _cairo_status {
     CAIRO_STATUS_CLIP_NOT_REPRESENTABLE,
     CAIRO_STATUS_TEMP_FILE_ERROR,
     CAIRO_STATUS_INVALID_STRIDE,
-    CAIRO_STATUS_FONT_TYPE_MISMATCH
+    CAIRO_STATUS_FONT_TYPE_MISMATCH,
+    CAIRO_STATUS_USER_FONT_IMMUTABLE,
+    CAIRO_STATUS_USER_FONT_ERROR
     /* after adding a new error: update CAIRO_STATUS_LAST_STATUS in cairoint.h */
 } cairo_status_t;
 
@@ -1153,12 +1157,14 @@ cairo_font_face_get_reference_count (cairo_font_face_t *font_face);
 cairo_public cairo_status_t
 cairo_font_face_status (cairo_font_face_t *font_face);
 
+
 /**
  * cairo_font_type_t:
  * @CAIRO_FONT_TYPE_TOY: The font was created using cairo's toy font api
  * @CAIRO_FONT_TYPE_FT: The font is of type FreeType
  * @CAIRO_FONT_TYPE_WIN32: The font is of type Win32
  * @CAIRO_FONT_TYPE_QUARTZ: The font is of type Quartz (Since: 1.6)
+ * @CAIRO_FONT_TYPE_USER: The font was create using cairo's user font api (Since: 1.8)
  *
  * #cairo_font_type_t is used to describe the type of a given font
  * face or scaled font. The font types are also known as "font
@@ -1193,7 +1199,8 @@ typedef enum _cairo_font_type {
     CAIRO_FONT_TYPE_TOY,
     CAIRO_FONT_TYPE_FT,
     CAIRO_FONT_TYPE_WIN32,
-    CAIRO_FONT_TYPE_QUARTZ
+    CAIRO_FONT_TYPE_QUARTZ,
+    CAIRO_FONT_TYPE_USER
 } cairo_font_type_t;
 
 cairo_public cairo_font_type_t
@@ -1271,6 +1278,63 @@ cairo_scaled_font_get_ctm (cairo_scaled_font_t	*scaled_font,
 cairo_public void
 cairo_scaled_font_get_font_options (cairo_scaled_font_t		*scaled_font,
 				    cairo_font_options_t	*options);
+
+/* User fonts */
+
+cairo_public cairo_font_face_t *
+cairo_user_font_face_create (void);
+
+/* User-font method signatures */
+
+typedef cairo_status_t (*cairo_user_scaled_font_init_func_t) (cairo_scaled_font_t  *scaled_font,
+							      cairo_font_extents_t *extents);
+
+typedef cairo_status_t (*cairo_user_scaled_font_render_glyph_func_t) (cairo_scaled_font_t  *scaled_font,
+								      unsigned long         glyph,
+								      cairo_t              *cr,
+								      cairo_text_extents_t *extents);
+
+typedef cairo_status_t (*cairo_user_scaled_font_unicode_to_glyph_func_t) (cairo_scaled_font_t *scaled_font,
+									  unsigned long        unicode,
+									  unsigned long       *glyph_index);
+
+typedef cairo_status_t (*cairo_user_scaled_font_text_to_glyphs_func_t) (cairo_scaled_font_t   *scaled_font,
+									const char            *utf8,
+									cairo_glyph_t        **glyphs,
+									int                   *num_glyphs);
+
+/* User-font method setters */
+
+cairo_public void
+cairo_user_font_face_set_init_func (cairo_font_face_t                  *font_face,
+				    cairo_user_scaled_font_init_func_t  init_func);
+
+cairo_public void
+cairo_user_font_face_set_render_glyph_func (cairo_font_face_t                          *font_face,
+					    cairo_user_scaled_font_render_glyph_func_t  render_glyph_func);
+
+cairo_public void
+cairo_user_font_face_set_unicode_to_glyph_func (cairo_font_face_t                              *font_face,
+					        cairo_user_scaled_font_unicode_to_glyph_func_t  unicode_to_glyph_func);
+
+cairo_public void
+cairo_user_font_face_set_text_to_glyphs_func (cairo_font_face_t                            *font_face,
+					      cairo_user_scaled_font_text_to_glyphs_func_t  text_to_glyphs_func);
+
+/* User-font method getters */
+
+cairo_public cairo_user_scaled_font_init_func_t
+cairo_user_font_face_get_init_func (cairo_font_face_t *font_face);
+
+cairo_public cairo_user_scaled_font_render_glyph_func_t
+cairo_user_font_face_get_render_glyph_func (cairo_font_face_t *font_face);
+
+cairo_public cairo_user_scaled_font_unicode_to_glyph_func_t
+cairo_user_font_face_get_unicode_to_glyph_func (cairo_font_face_t *font_face);
+
+cairo_public cairo_user_scaled_font_text_to_glyphs_func_t
+cairo_user_font_face_get_text_to_glyphs_func (cairo_font_face_t *font_face);
+
 
 /* Query functions */
 

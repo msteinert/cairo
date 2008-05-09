@@ -63,6 +63,7 @@ cairo_base_sources =				\
 	cairo-surface-fallback-private.h	\
 	cairo-surface-private.h			\
 	cairo-traps.c				\
+	cairo-user-font.c			\
 	cairo-unicode.c				\
 	cairo-output-stream.c			\
 	cairo-output-stream-private.h		\
