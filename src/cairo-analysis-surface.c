@@ -673,6 +673,26 @@ _cairo_analysis_surface_create (cairo_surface_t		*target,
     return &surface->base;
 }
 
+cairo_private void
+_cairo_analysis_surface_set_ctm (cairo_surface_t *abstract_surface,
+				 cairo_matrix_t  *ctm)
+{
+    cairo_analysis_surface_t	*surface = (cairo_analysis_surface_t *) abstract_surface;
+
+    surface->ctm = *ctm;
+    surface->has_ctm = !_cairo_matrix_is_identity (&surface->ctm);
+}
+
+cairo_private void
+_cairo_analysis_surface_get_ctm (cairo_surface_t *abstract_surface,
+				 cairo_matrix_t  *ctm)
+{
+    cairo_analysis_surface_t	*surface = (cairo_analysis_surface_t *) abstract_surface;
+
+    *ctm = surface->ctm;
+}
+
+
 cairo_region_t *
 _cairo_analysis_surface_get_supported (cairo_surface_t *abstract_surface)
 {
