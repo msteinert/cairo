@@ -238,6 +238,8 @@ _cairo_analysis_surface_finish (void *abstract_surface)
     _cairo_region_fini (&surface->supported_region);
     _cairo_region_fini (&surface->fallback_region);
 
+    cairo_surface_destroy (surface->target);
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -658,7 +660,7 @@ _cairo_analysis_surface_create (cairo_surface_t		*target,
     cairo_matrix_init_identity (&surface->ctm);
     surface->has_ctm = FALSE;
 
-    surface->target = target;
+    surface->target = cairo_surface_reference (target);
     surface->first_op  = TRUE;
     surface->has_supported = FALSE;
     surface->has_unsupported = FALSE;
