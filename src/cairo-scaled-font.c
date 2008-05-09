@@ -1863,6 +1863,29 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 		  scaled_glyph_init) (scaled_font, scaled_glyph, need_info);
 	if (status)
 	    goto CLEANUP;
+
+	/* Don't trust the scaled_glyph_init() return value, the font
+	 * backend may not even know about some of the info.  For example,
+	 * no backend other than the user-fonts knows about meta-surface
+	 * glyph info. */
+
+	if ((info & CAIRO_SCALED_GLYPH_INFO_SURFACE) != 0 &&
+	    scaled_glyph->surface == NULL) {
+	    status = CAIRO_INT_STATUS_UNSUPPORTED;
+	    goto CLEANUP;
+	}
+
+	if ((info & CAIRO_SCALED_GLYPH_INFO_PATH) != 0 &&
+	    scaled_glyph->path == NULL) {
+	    status = CAIRO_INT_STATUS_UNSUPPORTED;
+	    goto CLEANUP;
+	}
+
+	if ((info & CAIRO_SCALED_GLYPH_INFO_META_SURFACE) != 0 &&
+	    scaled_glyph->meta_surface == NULL) {
+	    status = CAIRO_INT_STATUS_UNSUPPORTED;
+	    goto CLEANUP;
+	}
     }
 
   CLEANUP:
