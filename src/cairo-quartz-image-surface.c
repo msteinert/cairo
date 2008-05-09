@@ -274,7 +274,7 @@ static const cairo_surface_backend_t cairo_quartz_image_surface_backend = {
 
 /**
  * cairo_quartz_image_surface_create
- * @surface: a cairo image surface to wrap with a quartz image surface
+ * @image_surface: a cairo image surface to wrap with a quartz image surface
  *
  * Creates a Quartz surface backed by a CGImageRef that references the
  * given image surface. The resulting surface can be rendered quickly
@@ -288,7 +288,7 @@ static const cairo_surface_backend_t cairo_quartz_image_surface_backend = {
  * Since: 1.6
  */
 cairo_surface_t *
-cairo_quartz_image_surface_create (cairo_surface_t *surface)
+cairo_quartz_image_surface_create (cairo_surface_t *image_surface)
 {
     cairo_quartz_image_surface_t *qisurf;
 
@@ -299,10 +299,10 @@ cairo_quartz_image_surface_create (cairo_surface_t *surface)
     cairo_format_t format;
     unsigned char *data;
 
-    if (cairo_surface_get_type(surface) != CAIRO_SURFACE_TYPE_IMAGE)
+    if (cairo_surface_get_type(image_surface) != CAIRO_SURFACE_TYPE_IMAGE)
 	return SURFACE_ERROR_NO_MEMORY;
 
-    image_surface = (cairo_image_surface_t*) surface;
+    image_surface = (cairo_image_surface_t*) image_surface;
     width = image_surface->width;
     height = image_surface->height;
     stride = image_surface->stride;
@@ -328,7 +328,7 @@ cairo_quartz_image_surface_create (cairo_surface_t *surface)
      * be released via the callback (which will be called in
      * case of failure.)
      */
-    cairo_surface_reference (surface);
+    cairo_surface_reference (image_surface);
 
     image = _cairo_quartz_create_cgimage (format,
 					  width, height,
@@ -337,7 +337,7 @@ cairo_quartz_image_surface_create (cairo_surface_t *surface)
 					  TRUE,
 					  NULL,
 					  DataProviderReleaseCallback,
-					  surface);
+					  image_surface);
 
     if (!image) {
 	free (qisurf);

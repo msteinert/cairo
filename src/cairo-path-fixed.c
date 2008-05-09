@@ -851,7 +851,7 @@ _cairo_path_fixed_is_box (cairo_path_fixed_t *path,
     return FALSE;
 }
 
-/**
+/*
  * Check whether the given path contains a single rectangle
  * that is logically equivalent to:
  *   cairo_move_to (cr, x, y);

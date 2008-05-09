@@ -127,9 +127,9 @@ struct _cairo_quartz_font_face {
     CGFontRef cgFont;
 };
 
-/**
- ** font face backend
- **/
+/*
+ * font face backend
+ */
 
 static void
 _cairo_quartz_font_face_destroy (void *abstract_face)
@@ -255,9 +255,9 @@ cairo_quartz_font_face_create_for_cgfont (CGFontRef font)
     return &font_face->base;
 }
 
-/**
- ** scaled font backend
- **/
+/*
+ * scaled font backend
+ */
 
 static cairo_quartz_font_face_t *
 _cairo_quartz_scaled_to_face (void *abstract_font)
