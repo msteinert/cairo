@@ -1420,6 +1420,11 @@ _cairo_path_fixed_interpret_flat (const cairo_path_fixed_t *path,
 		       double				  tolerance);
 
 cairo_private cairo_status_t
+_cairo_path_fixed_append (cairo_path_fixed_t		  *path,
+			  const cairo_path_fixed_t	  *other,
+			  cairo_direction_t		   dir);
+
+cairo_private cairo_status_t
 _cairo_path_fixed_bounds (cairo_path_fixed_t *path,
 			  double *x1, double *y1,
 			  double *x2, double *y2,

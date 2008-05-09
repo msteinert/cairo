@@ -541,6 +541,52 @@ _cairo_path_fixed_interpret (const cairo_path_fixed_t		*path,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_status_t
+_append_move_to (void		 *closure,
+	  cairo_point_t  *point)
+{
+    cairo_path_fixed_t *path = (cairo_path_fixed_t *) closure;
+    return _cairo_path_fixed_move_to (path, point->x, point->y);
+}
+
+static cairo_status_t
+_append_line_to (void		 *closure,
+	  cairo_point_t *point)
+{
+    cairo_path_fixed_t *path = (cairo_path_fixed_t *) closure;
+    return _cairo_path_fixed_line_to (path, point->x, point->y);
+}
+
+static cairo_status_t
+_append_curve_to (void	  *closure,
+	   cairo_point_t *p0,
+	   cairo_point_t *p1,
+	   cairo_point_t *p2)
+{
+    cairo_path_fixed_t *path = (cairo_path_fixed_t *) closure;
+    return _cairo_path_fixed_curve_to (path, p0->x, p0->y, p1->x, p1->y, p2->x, p2->y);
+}
+
+static cairo_status_t
+_append_close_path (void *closure)
+{
+    cairo_path_fixed_t *path = (cairo_path_fixed_t *) closure;
+    return _cairo_path_fixed_close_path (path);
+}
+
+cairo_private cairo_status_t
+_cairo_path_fixed_append (cairo_path_fixed_t		  *path,
+			  const cairo_path_fixed_t	  *other,
+			  cairo_direction_t		   dir)
+{
+    return _cairo_path_fixed_interpret (other, dir,
+					_append_move_to,
+					_append_line_to,
+					_append_curve_to,
+					_append_close_path,
+					path);
+}
+
 static void
 _cairo_path_fixed_offset_and_scale (cairo_path_fixed_t *path,
 				    cairo_fixed_t offx,
