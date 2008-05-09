@@ -748,3 +748,58 @@ _cairo_analysis_surface_get_bounding_box (cairo_surface_t *abstract_surface,
 
     *bbox = surface->page_bbox;
 }
+
+/* null surface type: a surface that does nothing (has no side effects, yay!) */
+
+static cairo_int_status_t
+_return_success (void)
+{
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static const cairo_surface_backend_t cairo_null_surface_backend = {
+    CAIRO_INTERNAL_SURFACE_TYPE_NULL,
+
+    NULL, /* create_similar */
+    NULL, /* finish */
+    NULL, /* acquire_source_image */
+    NULL, /* release_source_image */
+    NULL, /* acquire_dest_image */
+    NULL, /* release_dest_image */
+    NULL, /* clone_similar */
+    NULL, /* composite */
+    NULL, /* fill_rectangles */
+    NULL, /* composite_trapezoids */
+    NULL, /* copy_page */
+    NULL, /* show_page */
+    _return_success, /* set_clip_region */
+    NULL, /* intersect_clip_path */
+    NULL, /* get_extents */
+    NULL, /* old_show_glyphs */
+    NULL, /* get_font_options */
+    NULL, /* flush */
+    NULL, /* mark_dirty_rectangle */
+    NULL, /* scaled_font_fini */
+    NULL, /* scaled_glyph_fini */
+    _return_success, /* paint */
+    _return_success, /* mask */
+    _return_success, /* stroke */
+    _return_success, /* fill */
+    _return_success, /* show_glyphs */
+    NULL  /* snapshot */
+};
+
+cairo_surface_t *
+_cairo_null_surface_create (cairo_content_t content)
+{
+    cairo_surface_t *surface;
+
+    surface = malloc (sizeof (cairo_surface_t));
+    if (surface == NULL) {
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+    }
+
+    _cairo_surface_init (surface, &cairo_null_surface_backend, content);
+
+    return surface;
+}

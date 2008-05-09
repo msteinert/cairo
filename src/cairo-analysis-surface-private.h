@@ -66,4 +66,8 @@ cairo_private void
 _cairo_analysis_surface_get_bounding_box (cairo_surface_t *surface,
 					  cairo_box_t     *bbox);
 
+
+cairo_private cairo_surface_t *
+_cairo_null_surface_create (cairo_content_t content);
+
 #endif /* CAIRO_ANALYSIS_SURFACE_H */
