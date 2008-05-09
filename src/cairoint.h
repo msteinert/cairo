@@ -739,7 +739,7 @@ struct _cairo_image_surface {
     pixman_image_t *pixman_image;
 };
 
-extern const cairo_private cairo_surface_backend_t cairo_image_surface_backend;
+extern const cairo_private cairo_surface_backend_t _cairo_image_surface_backend;
 
 /* XXX: Right now, the _cairo_color structure puts unpremultiplied
    color in the doubles and premultiplied color in the shorts. Yes,

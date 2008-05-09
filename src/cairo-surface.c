@@ -43,7 +43,7 @@
 
 #define DEFINE_NIL_SURFACE(status, name)			\
 const cairo_surface_t name = {					\
-    &cairo_image_surface_backend,	/* backend */		\
+    &_cairo_image_surface_backend,	/* backend */		\
     CAIRO_SURFACE_TYPE_IMAGE,					\
     CAIRO_CONTENT_COLOR,					\
     CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */		\

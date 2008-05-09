@@ -124,7 +124,7 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
     if (surface == NULL)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    _cairo_surface_init (&surface->base, &cairo_image_surface_backend,
+    _cairo_surface_init (&surface->base, &_cairo_image_surface_backend,
 			 _cairo_content_from_pixman_format (pixman_format));
 
     surface->pixman_image = pixman_image;
@@ -1247,10 +1247,10 @@ _cairo_image_surface_reset (void *abstract_surface)
 cairo_bool_t
 _cairo_surface_is_image (const cairo_surface_t *surface)
 {
-    return surface->backend == &cairo_image_surface_backend;
+    return surface->backend == &_cairo_image_surface_backend;
 }
 
-const cairo_surface_backend_t cairo_image_surface_backend = {
+const cairo_surface_backend_t _cairo_image_surface_backend = {
     CAIRO_SURFACE_TYPE_IMAGE,
     _cairo_image_surface_create_similar,
     _cairo_image_surface_finish,
