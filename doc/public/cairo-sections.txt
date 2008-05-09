@@ -103,12 +103,7 @@ CAIRO_HAS_QUARTZ_SURFACE
 cairo_quartz_surface_create
 cairo_quartz_surface_create_for_cg_context
 cairo_quartz_surface_get_cg_context
-</SECTION>
-
-<SECTION>
-<FILE>cairo-quartz-image</FILE>
-<TITLE>Quartz Image Surfaces</TITLE>
-CAIRO_HAS_QUARTZ_IMAGE_SURFACE
+<SUBSECTION Private>
 cairo_quartz_image_surface_create
 cairo_quartz_image_surface_get_image
 </SECTION>
@@ -528,4 +523,6 @@ cairo_set_target_drawable
 cairo_get_status_string
 cairo_status_string
 CAIRO_FORMAT_RGB16_565
+CAIRO_FONT_TYPE_ATSUI
+cairo_atsui_font_face_create_for_atsu_font_id
 </SECTION>
