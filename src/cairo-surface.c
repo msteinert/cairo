@@ -476,7 +476,7 @@ cairo_surface_get_reference_count (cairo_surface_t *surface)
  * After calling cairo_surface_finish() the only valid operations on a
  * surface are getting and setting user data and referencing and
  * destroying it.  Further drawing to the surface will not affect the
- * surface but will instead trigger a CAIRO_STATUS_SURFACE_FINISHED
+ * surface but will instead trigger a %CAIRO_STATUS_SURFACE_FINISHED
  * error.
  *
  * When the last call to cairo_surface_destroy() decreases the
@@ -2081,7 +2081,7 @@ _cairo_surface_get_extents (cairo_surface_t         *surface,
 }
 
 /* Note: the backends may modify the contents of the glyph array as long as
- * they do not return %CAIRO_STATUS_UNSUPPORTED. This makes it possible to
+ * they do not return %CAIRO_INT_STATUS_UNSUPPORTED. This makes it possible to
  * avoid copying the array again and again, and edit it in-place.
  * Backends are in fact free to use the array as a generic buffer as they
  * see fit.

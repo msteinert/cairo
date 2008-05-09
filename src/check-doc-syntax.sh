@@ -21,36 +21,25 @@ if test "x$SGML_DOCS" = x; then
     fi
 fi
 
-# Note: This test reports false positives on non-gtk-doc comments and
-# non-public enum values, (such as CAIRO_FIXED_FRAC_BITS in the comment
-# for _cairo_output_stream_init). I'm opposed to uglifying those comments
-# with % just to shut this warning up. So instead, I'm turning this check
-# off. (cworth 2008-03-02)
-#
-# Meanwhile, I'd love to see a system that would just link things like
-# enums up without any decoration.
-#
-#enum_regexp='\([^%@]\|^\)\<\(FALSE\|TRUE\|NULL\|CAIRO_[0-9A-Z_]*[^(0-9A-Z_]\)'
-#if test "x$SGML_DOCS" = x; then
-#	enum_regexp='^[/ ][*] .*'$enum_regexp
-#fi
-#if grep "$enum_regexp" $FILES | grep -v '#####'; then
-#	status=1
-#	echo Error: some macros in the docs are not prefixed by percent sign.
-#	echo Fix this by searching for the following regexp in the above files:
-#	echo "	'$enum_regexp'"
-#fi
+enum_regexp='\([^%@]\|^\)\<\(FALSE\|TRUE\|NULL\|CAIRO_[0-9A-Z_]*\)\($\|[^(A-Za-z0-9_]\)'
+if test "x$SGML_DOCS" = x; then
+	enum_regexp='^[^:]*:[/ ][*] .*'$enum_regexp
+fi
+if grep . /dev/null $FILES | sed -e '/<programlisting>/,/<\/programlisting>/d' | grep "$enum_regexp" | grep -v '#####'; then
+	status=1
+	echo Error: some macros in the docs are not prefixed by percent sign.
+	echo Fix this by searching for the following regexp in the above files:
+	echo "	'$enum_regexp'"
+fi
 
 type_regexp='\( .*[^#]\| \|^\)\<cairo[0-9a-z_]*_t\>\($\|[^:]$\|[^:].\)'
 if test "x$SGML_DOCS" = x; then
-	type_regexp='^[/ ][*]'$type_regexp
+	type_regexp='^[^:]*:[/ ][*]'$type_regexp
 else
 	type_regexp='\(.'$type_regexp'\)\|\('$type_regexp'.\)'
 fi
 
-# We need to filter out gtk-doc markup errors for program listings.
-files=`grep "$type_regexp" $FILES | grep -v '#####' | cut -d: -f1 | sort | uniq`
-if test -n "$files" && sed -e '/<programlisting>/,/<\/programlisting>/d' $files | grep "$type_regexp" | grep -v '#####'; then
+if grep . /dev/null $FILES | sed -e '/<programlisting>/,/<\/programlisting>/d' | grep "$type_regexp" | grep -v '#####'; then
 	status=1
 	echo Error: some type names in the docs are not prefixed by hash sign,
 	echo neither are the only token in the doc line followed by colon.
@@ -60,12 +49,11 @@ fi
 
 func_regexp='\([^#]\|^\)\<\(cairo_[][<>/0-9a-z_]*\> \?[^][ <>(]\)'
 if test "x$SGML_DOCS" = x; then
-	func_regexp='^[/ ][*] .*'$func_regexp
+	func_regexp='^[^:]*:[/ ][*] .*'$func_regexp
 fi
 
 # We need to filter out gtk-doc markup errors for program listings.
-files=`grep "$func_regexp" $FILES | grep -v '#####' | cut -d: -f1 | sort | uniq`
-if test -n "$files" && sed -e '/<programlisting>/,/<\/programlisting>/d' $files | grep "$func_regexp" | grep -v '#####'; then
+if grep . /dev/null $FILES | sed -e '/<programlisting>/,/<\/programlisting>/d' | grep "$func_regexp" | grep -v '#####'; then
 	status=1
 	echo Error: some function names in the docs are not followed by parentheses.
 	echo Fix this by searching for the following regexp in the above files:

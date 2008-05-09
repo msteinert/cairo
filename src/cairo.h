@@ -1369,26 +1369,26 @@ typedef enum _cairo_path_data_type {
  *
  * <informalexample><programlisting>
  *      int i;
- *      #cairo_path_t *path;
- *      #cairo_path_data_t *data;
+ *      cairo_path_t *path;
+ *      cairo_path_data_t *data;
  * &nbsp;
  *      path = cairo_copy_path (cr);
  * &nbsp;
  *      for (i=0; i < path->num_data; i += path->data[i].header.length) {
  *          data = &amp;path->data[i];
  *          switch (data->header.type) {
- *          case %CAIRO_PATH_MOVE_TO:
+ *          case CAIRO_PATH_MOVE_TO:
  *              do_move_to_things (data[1].point.x, data[1].point.y);
  *              break;
- *          case %CAIRO_PATH_LINE_TO:
+ *          case CAIRO_PATH_LINE_TO:
  *              do_line_to_things (data[1].point.x, data[1].point.y);
  *              break;
- *          case %CAIRO_PATH_CURVE_TO:
+ *          case CAIRO_PATH_CURVE_TO:
  *              do_curve_to_things (data[1].point.x, data[1].point.y,
  *                                  data[2].point.x, data[2].point.y,
  *                                  data[3].point.x, data[3].point.y);
  *              break;
- *          case %CAIRO_PATH_CLOSE_PATH:
+ *          case CAIRO_PATH_CLOSE_PATH:
  *              do_close_path_things ();
  *              break;
  *          }
