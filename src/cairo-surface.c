@@ -763,11 +763,8 @@ slim_hidden_def (cairo_surface_mark_dirty_rectangle);
  * different backend space, (differing by the fallback resolution
  * scale factors), we need a scale factor correction.
  *
- * Caution: There is no guarantee that a surface with both a
- * device_scale and a device_offset will be treated in consistent
- * fashion. So, for now, just don't do that. (And we'll need to
- * examine this issue in more detail if we were to ever want to export
- * support for device scaling.)
+ * Caution: Not all places we use device transform correctly handle
+ * both a translate and a scale.  An audit would be nice.
  **/
 void
 _cairo_surface_set_device_scale (cairo_surface_t *surface,
