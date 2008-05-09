@@ -132,7 +132,8 @@ cairo_font_face_destroy (cairo_font_face_t *font_face)
     if (! _cairo_reference_count_dec_and_test (&font_face->ref_count))
 	return;
 
-    font_face->backend->destroy (font_face);
+    if (font_face->backend->destroy)
+	font_face->backend->destroy (font_face);
 
     /* We allow resurrection to deal with some memory management for the
      * FreeType backend where cairo_ft_font_face_t and cairo_ft_unscaled_font_t
