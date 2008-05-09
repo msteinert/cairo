@@ -657,3 +657,49 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
 
     return status;
 }
+
+/* moves trap points such that they become the actual corners of the trapezoid */
+static void
+_sanitize_trap (cairo_trapezoid_t *trap)
+{
+/* XXX the math here is fragile.  can overflow in extreme cases */
+#define FIX(t, lr, tb, p) \
+    if (t->lr.p.y != t->tb) { \
+        t->lr.p.x = t->lr.p2.x + (t->lr.p1.x - t->lr.p2.x) * (t->tb - t->lr.p2.y) / (t->lr.p1.y - t->lr.p2.y); \
+        t->lr.p.y = t->tb; \
+    }
+    FIX (trap, left,  top,    p1);
+    FIX (trap, left,  bottom, p2);
+    FIX (trap, right, top,    p1);
+    FIX (trap, right, bottom, p2);
+}
+
+cairo_private cairo_status_t
+_cairo_traps_path (const cairo_traps_t *traps,
+		   cairo_path_fixed_t  *path)
+{
+    int i;
+
+    for (i = 0; i < traps->num_traps; i++) {
+	cairo_status_t status;
+	cairo_trapezoid_t trap = traps->traps[i];
+
+	if (trap.top == trap.bottom)
+	    continue;
+
+	_sanitize_trap (&trap);
+
+	status = _cairo_path_fixed_move_to (path, trap.left.p1.x, trap.top);
+	if (status) return status;
+	status = _cairo_path_fixed_line_to (path, trap.right.p1.x, trap.top);
+	if (status) return status;
+	status = _cairo_path_fixed_line_to (path, trap.right.p2.x, trap.bottom);
+	if (status) return status;
+	status = _cairo_path_fixed_line_to (path, trap.left.p2.x, trap.bottom);
+	if (status) return status;
+	status = _cairo_path_fixed_close_path (path);
+	if (status) return status;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}

@@ -2140,6 +2140,10 @@ cairo_private cairo_int_status_t
 _cairo_traps_extract_region (const cairo_traps_t *tr,
 			     cairo_region_t      *region);
 
+cairo_private cairo_status_t
+_cairo_traps_path (const cairo_traps_t *traps,
+		   cairo_path_fixed_t  *path);
+
 cairo_private void
 _cairo_trapezoid_array_translate_and_scale (cairo_trapezoid_t *offset_traps,
 					    cairo_trapezoid_t *src_traps,
