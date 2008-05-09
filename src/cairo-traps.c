@@ -557,7 +557,8 @@ _cairo_trap_contains (cairo_trapezoid_t *t, cairo_point_t *pt)
 }
 
 cairo_bool_t
-_cairo_traps_contain (cairo_traps_t *traps, double x, double y)
+_cairo_traps_contain (const cairo_traps_t *traps,
+		      double x, double y)
 {
     int i;
     cairo_point_t point;
@@ -574,7 +575,8 @@ _cairo_traps_contain (cairo_traps_t *traps, double x, double y)
 }
 
 void
-_cairo_traps_extents (cairo_traps_t *traps, cairo_box_t *extents)
+_cairo_traps_extents (const cairo_traps_t *traps,
+		      cairo_box_t         *extents)
 {
     if (traps->num_traps == 0) {
 	extents->p1.x = extents->p1.y = _cairo_fixed_from_int (0);
@@ -598,8 +600,8 @@ _cairo_traps_extents (cairo_traps_t *traps, cairo_box_t *extents)
  * or %CAIRO_STATUS_NO_MEMORY
  **/
 cairo_int_status_t
-_cairo_traps_extract_region (cairo_traps_t  *traps,
-			     cairo_region_t *region)
+_cairo_traps_extract_region (const cairo_traps_t  *traps,
+			     cairo_region_t       *region)
 {
     cairo_box_int_t stack_boxes[CAIRO_STACK_ARRAY_LENGTH (cairo_box_int_t)];
     cairo_box_int_t *boxes = stack_boxes;

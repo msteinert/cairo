@@ -1415,9 +1415,9 @@ update_minmax(cairo_fixed_t *inout_min,
 }
 
 cairo_status_t
-_cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	*traps,
-					   cairo_polygon_t	*polygon,
-					   cairo_fill_rule_t	 fill_rule)
+_cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	 *traps,
+					   const cairo_polygon_t *polygon,
+					   cairo_fill_rule_t	  fill_rule)
 {
     int intersections;
     cairo_status_t status;

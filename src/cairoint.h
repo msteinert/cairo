@@ -2109,30 +2109,27 @@ _cairo_traps_tessellate_triangle (cairo_traps_t *traps, cairo_point_t t[3]);
 cairo_private cairo_status_t
 _cairo_traps_tessellate_convex_quad (cairo_traps_t *traps, cairo_point_t q[4]);
 
-cairo_private cairo_status_t
-_cairo_traps_tessellate_polygon (cairo_traps_t *traps,
-				 cairo_polygon_t *poly,
-				 cairo_fill_rule_t fill_rule);
-
 cairo_private void
 _cairo_traps_add_trap_from_points (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
 				   cairo_point_t left_p1, cairo_point_t left_p2,
 				   cairo_point_t right_p1, cairo_point_t right_p2);
 
 cairo_private cairo_status_t
-_cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t      *traps,
-					   cairo_polygon_t      *polygon,
-					   cairo_fill_rule_t     fill_rule);
+_cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t         *traps,
+					   const cairo_polygon_t *polygon,
+					   cairo_fill_rule_t      fill_rule);
 
 cairo_private int
-_cairo_traps_contain (cairo_traps_t *traps, double x, double y);
+_cairo_traps_contain (const cairo_traps_t *traps,
+		      double x, double y);
 
 cairo_private void
-_cairo_traps_extents (cairo_traps_t *traps, cairo_box_t *extents);
+_cairo_traps_extents (const cairo_traps_t *traps,
+		      cairo_box_t         *extents);
 
 cairo_private cairo_int_status_t
-_cairo_traps_extract_region (cairo_traps_t     *tr,
-			     cairo_region_t *region);
+_cairo_traps_extract_region (const cairo_traps_t *tr,
+			     cairo_region_t      *region);
 
 cairo_private void
 _cairo_trapezoid_array_translate_and_scale (cairo_trapezoid_t *offset_traps,
