@@ -664,6 +664,12 @@ _cairo_analysis_surface_create (cairo_surface_t		*target,
     surface->first_op  = TRUE;
     surface->has_supported = FALSE;
     surface->has_unsupported = FALSE;
+
+    surface->page_bbox.p1.x = 0;
+    surface->page_bbox.p1.y = 0;
+    surface->page_bbox.p2.x = 0;
+    surface->page_bbox.p2.y = 0;
+
     _cairo_region_init (&surface->supported_region);
     _cairo_region_init (&surface->fallback_region);
 
