@@ -110,7 +110,7 @@ _cairo_win32_tmpfile (void);
  * a bit of a pain, but it should be easy to always catch as long as
  * one adds a new test case to test a trigger of the new status value.
  */
-#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_STRIDE
+#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_FONT_TYPE_MISMATCH
 
 
 /* Size in bytes of buffer to use off the stack per functions.

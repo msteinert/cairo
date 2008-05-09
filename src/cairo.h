@@ -203,6 +203,7 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_CLIP_NOT_REPRESENTABLE: clip region not representable in desired format (Since 1.4)
  * @CAIRO_STATUS_TEMP_FILE_ERROR: error creating or writing to a temporary file (Since 1.6)
  * @CAIRO_STATUS_INVALID_STRIDE: invalid value for stride (Since 1.6)
+ * @CAIRO_STATUS_FONT_TYPE_MISMATCH: the font type is not appropriate for the operation (Since 1.8)
  *
  * #cairo_status_t is used to indicate errors that can occur when
  * using Cairo. In some cases it is returned directly by functions.
@@ -237,7 +238,8 @@ typedef enum _cairo_status {
     CAIRO_STATUS_INVALID_INDEX,
     CAIRO_STATUS_CLIP_NOT_REPRESENTABLE,
     CAIRO_STATUS_TEMP_FILE_ERROR,
-    CAIRO_STATUS_INVALID_STRIDE
+    CAIRO_STATUS_INVALID_STRIDE,
+    CAIRO_STATUS_FONT_TYPE_MISMATCH
     /* after adding a new error: update CAIRO_STATUS_LAST_STATUS in cairoint.h */
 } cairo_status_t;
 

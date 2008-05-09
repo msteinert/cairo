@@ -101,6 +101,8 @@ cairo_status_to_string (cairo_status_t status)
 	return "error creating or writing to a temporary file";
     case CAIRO_STATUS_INVALID_STRIDE:
 	return "invalid value for stride";
+    case CAIRO_STATUS_FONT_TYPE_MISMATCH:
+	return "the font type is not appropriate for the operation";
     }
 
     return "<unknown error status>";
