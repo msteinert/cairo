@@ -2066,15 +2066,10 @@ _cairo_pattern_get_extents (cairo_pattern_t         *pattern,
      * horizontal/vertical linear gradients).
      */
 
-    /* XXX: because extents are represented as x, y, w, h we can't
-     * actually have a rectangle that covers our entire valid
-     * coordinate space, since we'd need width/height to be 2*INT_MAX.
-     */
-
-    extents->x = 0;
-    extents->y = 0;
-    extents->width = CAIRO_RECT_INT_MAX;
-    extents->height = CAIRO_RECT_INT_MAX;
+    extents->x = CAIRO_RECT_INT_MIN;
+    extents->y = CAIRO_RECT_INT_MIN;
+    extents->width = CAIRO_RECT_INT_MIN + CAIRO_RECT_INT_MAX;
+    extents->height = CAIRO_RECT_INT_MIN + CAIRO_RECT_INT_MAX;
 
     return CAIRO_STATUS_SUCCESS;
 }
