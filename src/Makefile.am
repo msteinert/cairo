@@ -44,6 +44,7 @@ cairo_base_sources =				\
 	cairo-path-fixed.c			\
 	cairo-path-fixed-private.h		\
 	cairo-path-stroke.c			\
+	cairo-pattern.c				\
 	cairo-pen.c				\
 	cairo-polygon.c				\
 	cairo-rectangle.c			\
@@ -62,7 +63,6 @@ cairo_base_sources =				\
 	cairo-surface-fallback-private.h	\
 	cairo-surface-private.h			\
 	cairo-traps.c				\
-	cairo-pattern.c				\
 	cairo-unicode.c				\
 	cairo-output-stream.c			\
 	cairo-output-stream-private.h		\
