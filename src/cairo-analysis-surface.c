@@ -140,22 +140,13 @@ _cairo_analysis_surface_add_operation  (cairo_analysis_surface_t *surface,
 	}
     }
 
+    _cairo_box_from_rectangle (&bbox, rect);
+
     if (surface->has_ctm) {
-	double x1, y1, x2, y2;
 
-	x1 = rect->x;
-	y1 = rect->y;
-	x2 = rect->x + rect->width;
-	y2 = rect->y + rect->height;
-	_cairo_matrix_transform_bounding_box (&surface->ctm,
-					      &x1, &y1, &x2, &y2,
-					      NULL);
-	rect->x = floor (x1);
-	rect->y = floor (y1);
+	_cairo_matrix_transform_bounding_box_fixed (&surface->ctm, &bbox, NULL);
 
-	x2 = ceil (x2) - rect->x;
-	y2 = ceil (y2) - rect->y;
-	if (x2 <= 0 || y2 <= 0) {
+	if (bbox.p1.x == bbox.p2.x || bbox.p1.y == bbox.p2.y) {
 	    /* Even though the operation is not visible we must be
 	     * careful to not allow unsupported operations to be
 	     * replayed to the backend during
@@ -171,14 +162,8 @@ _cairo_analysis_surface_add_operation  (cairo_analysis_surface_t *surface,
 	    }
 	}
 
-	rect->width  = x2;
-	rect->height = y2;
+	_cairo_box_round_to_rectangle (&bbox, rect);
     }
-
-    bbox.p1.x = _cairo_fixed_from_int (rect->x);
-    bbox.p1.y = _cairo_fixed_from_int (rect->y);
-    bbox.p2.x = _cairo_fixed_from_int (rect->x + rect->width);
-    bbox.p2.y = _cairo_fixed_from_int (rect->y + rect->height);
 
     if (surface->first_op) {
 	surface->first_op = FALSE;
