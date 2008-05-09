@@ -207,13 +207,13 @@ struct _cairo_point_int32 {
 #if CAIRO_FIXED_BITS == 32 && CAIRO_FIXED_FRAC_BITS >= 16
 typedef struct _cairo_rectangle_int16 cairo_rectangle_int_t;
 typedef struct _cairo_point_int16 cairo_point_int_t;
-#define CAIRO_RECT_INT_MIN INT16_MIN
-#define CAIRO_RECT_INT_MAX INT16_MAX
+#define CAIRO_RECT_INT_MIN (INT16_MIN >> (CAIRO_FIXED_FRAC_BITS - 16))
+#define CAIRO_RECT_INT_MAX (INT16_MAX >> (CAIRO_FIXED_FRAC_BITS - 16))
 #elif CAIRO_FIXED_BITS == 32
 typedef struct _cairo_rectangle_int32 cairo_rectangle_int_t;
 typedef struct _cairo_point_int32 cairo_point_int_t;
-#define CAIRO_RECT_INT_MIN INT32_MIN
-#define CAIRO_RECT_INT_MAX INT32_MAX
+#define CAIRO_RECT_INT_MIN (INT32_MIN >> CAIRO_FIXED_FRAC_BITS)
+#define CAIRO_RECT_INT_MAX (INT32_MAX >> CAIRO_FIXED_FRAC_BITS)
 #else
 #error Not sure how to pick a cairo_rectangle_int_t and cairo_point_int_t for your CAIRO_FIXED_BITS!
 #endif
