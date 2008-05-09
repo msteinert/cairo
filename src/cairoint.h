@@ -207,7 +207,22 @@ be32_to_cpu(uint32_t v)
 #include "cairo-reference-count-private.h"
 
 cairo_private void
-_cairo_box_round_to_rectangle (cairo_box_t *box, cairo_rectangle_int_t *rectangle);
+_cairo_box_from_doubles (cairo_box_t *box,
+			 double *x1, double *y1,
+			 double *x2, double *y2);
+
+cairo_private void
+_cairo_box_to_doubles (const cairo_box_t *box,
+		       double *x1, double *y1,
+		       double *x2, double *y2);
+
+cairo_private void
+_cairo_box_from_rectangle (cairo_box_t                 *box,
+			   const cairo_rectangle_int_t *rectangle);
+
+cairo_private void
+_cairo_box_round_to_rectangle (const cairo_box_t     *box,
+			       cairo_rectangle_int_t *rectangle);
 
 cairo_private void
 _cairo_rectangle_intersect (cairo_rectangle_int_t *dest, cairo_rectangle_int_t *src);
