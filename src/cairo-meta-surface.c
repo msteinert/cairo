@@ -652,6 +652,77 @@ _cairo_command_get_path (cairo_command_t *command)
     return NULL;
 }
 
+cairo_int_status_t
+_cairo_meta_surface_get_path (cairo_surface_t	 *surface,
+			      cairo_path_fixed_t *path)
+{
+    cairo_meta_surface_t *meta;
+    cairo_command_t *command, **elements;
+    int i, num_elements;
+    cairo_int_status_t status;
+
+    if (surface->status)
+	return surface->status;
+
+    meta = (cairo_meta_surface_t *) surface;
+    status = CAIRO_STATUS_SUCCESS;
+
+    num_elements = meta->commands.num_elements;
+    elements = _cairo_array_index (&meta->commands, 0);
+    for (i = meta->replay_start_idx; i < num_elements; i++) {
+	command = elements[i];
+
+	switch (command->header.type) {
+	case CAIRO_COMMAND_PAINT:
+	case CAIRO_COMMAND_MASK:
+	case CAIRO_COMMAND_INTERSECT_CLIP_PATH:
+	    status = CAIRO_INT_STATUS_UNSUPPORTED;
+	    break;
+
+	case CAIRO_COMMAND_STROKE:
+	{
+	    cairo_traps_t traps;
+
+	    _cairo_traps_init (&traps);
+
+	    /* XXX call cairo_stroke_to_path() when that is implemented */
+	    status = _cairo_path_fixed_stroke_to_traps (&command->stroke.path,
+							&command->stroke.style,
+							&command->stroke.ctm,
+							&command->stroke.ctm_inverse,
+							command->stroke.tolerance,
+							&traps);
+
+	    if (status == CAIRO_STATUS_SUCCESS)
+		status = _cairo_traps_path (&traps, path);
+
+	    _cairo_traps_fini (&traps);
+	    break;
+	}
+	case CAIRO_COMMAND_FILL:
+	{
+	    status = _cairo_path_fixed_append (path, &command->fill.path, CAIRO_DIRECTION_FORWARD);
+	    break;
+	}
+	case CAIRO_COMMAND_SHOW_GLYPHS:
+	{
+	    status = _cairo_scaled_font_glyph_path (command->show_glyphs.scaled_font,
+						    command->show_glyphs.glyphs,
+						    command->show_glyphs.num_glyphs,
+						    path);
+	    break;
+	}
+	default:
+	    ASSERT_NOT_REACHED;
+	}
+
+	if (status)
+	    break;
+    }
+
+    return _cairo_surface_set_error (surface, status);
+}
+
 static cairo_status_t
 _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 				     cairo_surface_t	     *target,

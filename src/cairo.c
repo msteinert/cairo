@@ -1827,7 +1827,8 @@ cairo_rectangle (cairo_t *cr,
     cairo_close_path (cr);
 }
 
-/* XXX: NYI
+#if 0
+/* XXX: NYI */
 void
 cairo_stroke_to_path (cairo_t *cr)
 {
@@ -1836,11 +1837,13 @@ cairo_stroke_to_path (cairo_t *cr)
     if (cr->status)
 	return;
 
+    /* The code in _cairo_meta_surface_get_path has a poorman's stroke_to_path */
+
     status = _cairo_gstate_stroke_path (cr->gstate);
     if (status)
 	_cairo_set_error (cr, status);
 }
-*/
+#endif
 
 /**
  * cairo_close_path:

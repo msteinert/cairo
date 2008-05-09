@@ -159,6 +159,10 @@ _cairo_meta_surface_create (cairo_content_t	content,
 			    int			width_pixels,
 			    int			height_pixels);
 
+cairo_private cairo_int_status_t
+_cairo_meta_surface_get_path (cairo_surface_t	 *surface,
+			      cairo_path_fixed_t *path);
+
 cairo_private cairo_status_t
 _cairo_meta_surface_replay (cairo_surface_t *surface,
 			    cairo_surface_t *target);
