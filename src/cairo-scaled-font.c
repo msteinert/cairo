@@ -167,6 +167,8 @@ _cairo_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph)
 	cairo_surface_destroy (&scaled_glyph->surface->base);
     if (scaled_glyph->path != NULL)
 	_cairo_path_fixed_destroy (scaled_glyph->path);
+    if (scaled_glyph->meta_surface != NULL)
+	cairo_surface_destroy (scaled_glyph->meta_surface);
 }
 
 static void
@@ -1751,6 +1753,16 @@ _cairo_scaled_glyph_set_path (cairo_scaled_glyph_t *scaled_glyph,
     scaled_glyph->path = path;
 }
 
+void
+_cairo_scaled_glyph_set_meta_surface (cairo_scaled_glyph_t *scaled_glyph,
+				      cairo_scaled_font_t *scaled_font,
+				      cairo_surface_t *meta_surface)
+{
+    if (scaled_glyph->meta_surface != NULL)
+	cairo_surface_destroy (meta_surface);
+    scaled_glyph->meta_surface = meta_surface;
+}
+
 /**
  * _cairo_scaled_glyph_lookup:
  * @scaled_font: a #cairo_scaled_font_t
@@ -1810,6 +1822,7 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 	scaled_glyph->scaled_font = scaled_font;
 	scaled_glyph->surface = NULL;
 	scaled_glyph->path = NULL;
+	scaled_glyph->meta_surface = NULL;
 	scaled_glyph->surface_private = NULL;
 
 	/* ask backend to initialize metrics and shape fields */
@@ -1840,6 +1853,10 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
     if (((info & CAIRO_SCALED_GLYPH_INFO_PATH) != 0 &&
 	 scaled_glyph->path == NULL))
 	need_info |= CAIRO_SCALED_GLYPH_INFO_PATH;
+
+    if (((info & CAIRO_SCALED_GLYPH_INFO_META_SURFACE) != 0 &&
+	 scaled_glyph->path == NULL))
+	need_info |= CAIRO_SCALED_GLYPH_INFO_META_SURFACE;
 
     if (need_info) {
 	status = (*scaled_font->backend->

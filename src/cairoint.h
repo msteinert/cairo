@@ -316,6 +316,7 @@ typedef struct _cairo_scaled_glyph {
     int16_t                 y_advance;		/* device-space rounded Y advance */
     cairo_image_surface_t   *surface;		/* device-space image */
     cairo_path_fixed_t	    *path;		/* device-space outline */
+    cairo_surface_t         *meta_surface;	/* device-space meta-surface */
     void		    *surface_private;	/* for the surface backend */
 } cairo_scaled_glyph_t;
 
@@ -358,9 +359,10 @@ typedef struct _cairo_toy_font_face {
 } cairo_toy_font_face_t;
 
 typedef enum _cairo_scaled_glyph_info {
-    CAIRO_SCALED_GLYPH_INFO_METRICS	= (1 << 0),
-    CAIRO_SCALED_GLYPH_INFO_SURFACE	= (1 << 1),
-    CAIRO_SCALED_GLYPH_INFO_PATH	= (1 << 2)
+    CAIRO_SCALED_GLYPH_INFO_METRICS	 = (1 << 0),
+    CAIRO_SCALED_GLYPH_INFO_SURFACE	 = (1 << 1),
+    CAIRO_SCALED_GLYPH_INFO_PATH	 = (1 << 2),
+    CAIRO_SCALED_GLYPH_INFO_META_SURFACE = (1 << 3),
 } cairo_scaled_glyph_info_t;
 
 typedef struct _cairo_scaled_font_subset {
@@ -1534,6 +1536,11 @@ cairo_private void
 _cairo_scaled_glyph_set_path (cairo_scaled_glyph_t *scaled_glyph,
 			      cairo_scaled_font_t *scaled_font,
 			      cairo_path_fixed_t *path);
+
+cairo_private void
+_cairo_scaled_glyph_set_meta_surface (cairo_scaled_glyph_t *scaled_glyph,
+				      cairo_scaled_font_t *scaled_font,
+				      cairo_surface_t *meta_surface);
 
 cairo_private cairo_int_status_t
 _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
