@@ -1941,6 +1941,12 @@ cairo_win32_font_face_create_for_hfont (HFONT font)
     return cairo_win32_font_face_create_for_logfontw_hfont (&logfont, font);
 }
 
+static cairo_bool_t
+_cairo_scaled_font_is_win32 (cairo_scaled_font_t *scaled_font)
+{
+    return scaled_font->backend == &cairo_win32_scaled_font_backend;
+}
+
 /**
  * cairo_win32_scaled_font_select_font:
  * @scaled_font: A #cairo_scaled_font_t from the Win32 font backend. Such an
@@ -1973,6 +1979,10 @@ cairo_win32_scaled_font_select_font (cairo_scaled_font_t *scaled_font,
     HFONT hfont;
     HFONT old_hfont = NULL;
     int old_mode;
+
+    if (! _cairo_scaled_font_is_win32 (scaled_font)) {
+	return _cairo_error (CAIRO_STATUS_FONT_TYPE_MISMATCH);
+    }
 
     if (scaled_font->status)
 	return scaled_font->status;
@@ -2013,6 +2023,9 @@ cairo_win32_scaled_font_select_font (cairo_scaled_font_t *scaled_font,
 void
 cairo_win32_scaled_font_done_font (cairo_scaled_font_t *scaled_font)
 {
+    if (! _cairo_scaled_font_is_win32 (scaled_font)) {
+	_cairo_error_throw (CAIRO_STATUS_FONT_TYPE_MISMATCH);
+    }
 }
 
 /**
@@ -2030,6 +2043,10 @@ cairo_win32_scaled_font_done_font (cairo_scaled_font_t *scaled_font)
 double
 cairo_win32_scaled_font_get_metrics_factor (cairo_scaled_font_t *scaled_font)
 {
+    if (! _cairo_scaled_font_is_win32 (scaled_font)) {
+	_cairo_error_throw (CAIRO_STATUS_FONT_TYPE_MISMATCH);
+	return 1.;
+    }
     return 1. / ((cairo_win32_scaled_font_t *)scaled_font)->logical_scale;
 }
 
@@ -2048,6 +2065,11 @@ cairo_win32_scaled_font_get_logical_to_device (cairo_scaled_font_t *scaled_font,
 					       cairo_matrix_t *logical_to_device)
 {
     cairo_win32_scaled_font_t *win_font = (cairo_win32_scaled_font_t *)scaled_font;
+    if (! _cairo_scaled_font_is_win32 (scaled_font)) {
+	_cairo_error_throw (CAIRO_STATUS_FONT_TYPE_MISMATCH);
+	cairo_matrix_init_identity (logical_to_device);
+	return;
+    }
     *logical_to_device = win_font->logical_to_device;
 }
 
@@ -2066,5 +2088,10 @@ cairo_win32_scaled_font_get_device_to_logical (cairo_scaled_font_t *scaled_font,
 					       cairo_matrix_t *device_to_logical)
 {
     cairo_win32_scaled_font_t *win_font = (cairo_win32_scaled_font_t *)scaled_font;
+    if (! _cairo_scaled_font_is_win32 (scaled_font)) {
+	_cairo_error_throw (CAIRO_STATUS_FONT_TYPE_MISMATCH);
+	cairo_matrix_init_identity (device_to_logical);
+	return;
+    }
     *device_to_logical = win_font->device_to_logical;
 }
