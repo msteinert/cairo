@@ -1297,7 +1297,7 @@ cairo_private void
 _cairo_font_options_init_copy (cairo_font_options_t		*options,
 			       const cairo_font_options_t	*other);
 
-/* cairo_hull.c */
+/* cairo-hull.c */
 cairo_private cairo_status_t
 _cairo_hull_compute (cairo_pen_vertex_t *vertices, int *num_vertices);
 
@@ -1305,7 +1305,7 @@ _cairo_hull_compute (cairo_pen_vertex_t *vertices, int *num_vertices);
 cairo_private unsigned char *
 _cairo_lzw_compress (unsigned char *data, unsigned long *size_in_out);
 
-/* cairo_path.c */
+/* cairo-path-fixed.c */
 cairo_private void
 _cairo_path_fixed_init (cairo_path_fixed_t *path);
 
@@ -1425,14 +1425,14 @@ cairo_private cairo_bool_t
 _cairo_path_fixed_is_rectangle (cairo_path_fixed_t *path,
 				cairo_box_t        *box);
 
-/* cairo_path_fill.c */
+/* cairo-path-fill.c */
 cairo_private cairo_status_t
 _cairo_path_fixed_fill_to_traps (cairo_path_fixed_t *path,
 				 cairo_fill_rule_t   fill_rule,
 				 double              tolerance,
 				 cairo_traps_t      *traps);
 
-/* cairo_path_stroke.c */
+/* cairo-path-stroke.c */
 cairo_private cairo_status_t
 _cairo_path_fixed_stroke_to_traps (cairo_path_fixed_t	*path,
 				   cairo_stroke_style_t	*stroke_style,
