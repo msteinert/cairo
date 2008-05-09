@@ -673,10 +673,17 @@ _cairo_analysis_surface_create (cairo_surface_t		*target,
     _cairo_region_init (&surface->supported_region);
     _cairo_region_init (&surface->fallback_region);
 
-    surface->current_clip.x = 0;
-    surface->current_clip.y = 0;
-    surface->current_clip.width = width;
-    surface->current_clip.height = height;
+    if (width == -1 && height == -1) {
+	surface->current_clip.x      = CAIRO_RECT_INT_MIN;
+	surface->current_clip.y      = CAIRO_RECT_INT_MIN;
+	surface->current_clip.width  = CAIRO_RECT_INT_MAX - CAIRO_RECT_INT_MIN;
+	surface->current_clip.height = CAIRO_RECT_INT_MAX - CAIRO_RECT_INT_MIN;
+    } else {
+	surface->current_clip.x = 0;
+	surface->current_clip.y = 0;
+	surface->current_clip.width = width;
+	surface->current_clip.height = height;
+    }
 
     return &surface->base;
 }

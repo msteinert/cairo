@@ -570,6 +570,9 @@ _cairo_meta_surface_get_extents (void			 *abstract_surface,
 {
     cairo_meta_surface_t *surface = abstract_surface;
 
+    if (surface->width_pixels == -1 && surface->height_pixels == -1)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     rectangle->x = 0;
     rectangle->y = 0;
     rectangle->width = surface->width_pixels;
