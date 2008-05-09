@@ -619,10 +619,14 @@ struct _cairo_surface_backend {
      * saves those, and the generic get_clip_extents will only call
      * into the specific surface->get_extents if there is no current
      * clip.
+     *
+     * If this function is not implemented, or if it returns
+     * %CAIRO_INT_STATUS_UNSUPPORTED, the surface is considered to be
+     * boundless and inifnite bounds are used for it.
      */
     cairo_warn cairo_int_status_t
     (*get_extents)		(void			 *surface,
-				 cairo_rectangle_int_t   *rectangle);
+				 cairo_rectangle_int_t   *extents);
 
     /*
      * This is an optional entry to let the surface manage its own glyph
@@ -1776,9 +1780,9 @@ _cairo_surface_get_clip (cairo_surface_t *surface);
 cairo_private cairo_status_t
 _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip);
 
-cairo_private cairo_status_t
+cairo_private cairo_int_status_t
 _cairo_surface_get_extents (cairo_surface_t         *surface,
-			    cairo_rectangle_int_t   *rectangle);
+			    cairo_rectangle_int_t   *extents);
 
 cairo_private cairo_status_t
 _cairo_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,

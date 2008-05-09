@@ -84,7 +84,7 @@ _cairo_analysis_surface_analyze_meta_surface_pattern (cairo_analysis_surface_t *
     old_height = surface->height;
     old_clip = surface->current_clip;
     status = _cairo_surface_get_extents (surface_pattern->surface, &meta_extents);
-    if (status)
+    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
     surface->width = meta_extents.width;
@@ -306,7 +306,7 @@ _cairo_analysis_surface_paint (void			*abstract_surface,
 									       source);
 
     status = _cairo_surface_get_extents (&surface->base, &extents);
-    if (status)
+    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
     if (_cairo_operator_bounded_by_source (op)) {
@@ -364,7 +364,7 @@ _cairo_analysis_surface_mask (void		*abstract_surface,
     }
 
     status = _cairo_surface_get_extents (&surface->base, &extents);
-    if (status)
+    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
     if (_cairo_operator_bounded_by_source (op)) {
@@ -419,7 +419,7 @@ _cairo_analysis_surface_stroke (void			*abstract_surface,
 									       source);
 
     status = _cairo_surface_get_extents (&surface->base, &extents);
-    if (status)
+    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
     if (_cairo_operator_bounded_by_source (op)) {
@@ -498,7 +498,7 @@ _cairo_analysis_surface_fill (void			*abstract_surface,
 									       source);
 
     status = _cairo_surface_get_extents (&surface->base, &extents);
-    if (status)
+    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
     if (_cairo_operator_bounded_by_source (op)) {
@@ -575,7 +575,7 @@ _cairo_analysis_surface_show_glyphs (void		  *abstract_surface,
 									       source);
 
     status = _cairo_surface_get_extents (&surface->base, &extents);
-    if (status)
+    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
     if (_cairo_operator_bounded_by_source (op)) {

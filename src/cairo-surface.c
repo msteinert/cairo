@@ -2067,18 +2067,31 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
  * This behavior would have to be changed is we ever exported a public
  * variant of this function.
  */
-cairo_status_t
+cairo_int_status_t
 _cairo_surface_get_extents (cairo_surface_t         *surface,
-			    cairo_rectangle_int_t   *rectangle)
+			    cairo_rectangle_int_t   *extents)
 {
+    cairo_int_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
+
     if (surface->status)
 	return surface->status;
 
     if (surface->finished)
 	return _cairo_surface_set_error (surface,CAIRO_STATUS_SURFACE_FINISHED);
 
-    return _cairo_surface_set_error (surface,
-	    surface->backend->get_extents (surface, rectangle));
+    if (surface->backend->get_extents) {
+	status = _cairo_surface_set_error (surface,
+					   surface->backend->get_extents (surface, extents));
+    }
+
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+	extents->x      = CAIRO_RECT_INT_MIN;
+	extents->y      = CAIRO_RECT_INT_MIN;
+	extents->width  = CAIRO_RECT_INT_MAX - CAIRO_RECT_INT_MIN;
+	extents->height = CAIRO_RECT_INT_MAX - CAIRO_RECT_INT_MIN;
+    }
+
+    return status;
 }
 
 /* Note: the backends may modify the contents of the glyph array as long as
