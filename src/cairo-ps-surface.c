@@ -747,8 +747,11 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 					   width, height,
 					   &cairo_ps_surface_paginated_backend);
     status = surface->paginated_surface->status;
-    if (status == CAIRO_STATUS_SUCCESS)
+    if (status == CAIRO_STATUS_SUCCESS) {
+	/* paginated keeps the only reference to surface now, drop ours */
+	cairo_surface_destroy (&surface->base);
 	return surface->paginated_surface;
+    }
 
     _cairo_scaled_font_subsets_destroy (surface->font_subsets);
  CLEANUP_OUTPUT_STREAM:

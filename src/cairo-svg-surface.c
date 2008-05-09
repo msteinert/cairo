@@ -384,8 +384,11 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
 						 surface->height,
 						 &cairo_svg_surface_paginated_backend);
     status = paginated->status;
-    if (status == CAIRO_STATUS_SUCCESS)
+    if (status == CAIRO_STATUS_SUCCESS) {
+	/* paginated keeps the only reference to surface now, drop ours */
+	cairo_surface_destroy (&surface->base);
 	return paginated;
+    }
 
     /* ignore status as we are on the error path */
 CLEANUP:

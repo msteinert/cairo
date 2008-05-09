@@ -1500,6 +1500,7 @@ cairo_surface_t *
 cairo_win32_printing_surface_create (HDC hdc)
 {
     cairo_win32_surface_t *surface;
+    cairo_surface_t *paginated;
     RECT rect;
 
     surface = malloc (sizeof (cairo_win32_surface_t));
@@ -1535,11 +1536,16 @@ cairo_win32_printing_surface_create (HDC hdc)
     _cairo_surface_init (&surface->base, &cairo_win32_printing_surface_backend,
                          CAIRO_CONTENT_COLOR_ALPHA);
 
-    return _cairo_paginated_surface_create (&surface->base,
-                                            CAIRO_CONTENT_COLOR_ALPHA,
-					    surface->extents.width,
-					    surface->extents.height,
-                                            &cairo_win32_surface_paginated_backend);
+    paginated = _cairo_paginated_surface_create (&surface->base,
+						 CAIRO_CONTENT_COLOR_ALPHA,
+						 surface->extents.width,
+						 surface->extents.height,
+						 &cairo_win32_surface_paginated_backend);
+
+    /* paginated keeps the only reference to surface now, drop ours */
+    cairo_surface_destroy (&surface->base);
+
+    return paginated;
 }
 
 cairo_bool_t

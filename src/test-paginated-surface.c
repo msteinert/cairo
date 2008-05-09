@@ -93,9 +93,12 @@ _cairo_test_paginated_surface_create_for_data (unsigned char		*data,
     paginated =  _cairo_paginated_surface_create (&surface->base,
 	                                          content, width, height,
 						  &test_paginated_surface_paginated_backend);
+
+    /* paginated keeps the only reference to surface now, drop ours */
+    cairo_surface_destroy (&surface->base);
+
     if (paginated->status) {
 	cairo_surface_destroy (target);
-	free (surface);
     }
     return paginated;
 }

@@ -89,7 +89,7 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
      * evidence of the paginated wrapper out to the user. */
     surface->base.type = cairo_surface_get_type (target);
 
-    surface->target = target;
+    surface->target = cairo_surface_reference (target);
 
     surface->content = content;
     surface->width = width;
