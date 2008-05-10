@@ -759,6 +759,50 @@ _return_success (void)
     return CAIRO_STATUS_SUCCESS;
 }
 
+/* These typedefs are just to silence the compiler... */
+typedef cairo_int_status_t
+(*_set_clip_region_func)	(void			*surface,
+				 cairo_region_t		*region);
+typedef cairo_int_status_t
+(*_paint_func)			(void			*surface,
+			         cairo_operator_t	 op,
+				 cairo_pattern_t	*source);
+
+typedef cairo_int_status_t
+(*_mask_func)			(void			*surface,
+			         cairo_operator_t	 op,
+				 cairo_pattern_t	*source,
+				 cairo_pattern_t	*mask);
+
+typedef cairo_int_status_t
+(*_stroke_func)			(void			*surface,
+			         cairo_operator_t	 op,
+				 cairo_pattern_t	*source,
+				 cairo_path_fixed_t	*path,
+				 cairo_stroke_style_t	*style,
+				 cairo_matrix_t		*ctm,
+				 cairo_matrix_t		*ctm_inverse,
+				 double			 tolerance,
+				 cairo_antialias_t	 antialias);
+
+typedef cairo_int_status_t
+(*_fill_func)			(void			*surface,
+			         cairo_operator_t	 op,
+				 cairo_pattern_t	*source,
+				 cairo_path_fixed_t	*path,
+				 cairo_fill_rule_t	 fill_rule,
+				 double			 tolerance,
+				 cairo_antialias_t	 antialias);
+
+typedef cairo_int_status_t
+(*_show_glyphs_func)		(void			*surface,
+			         cairo_operator_t	 op,
+				 cairo_pattern_t	*source,
+				 cairo_glyph_t		*glyphs,
+				 int			 num_glyphs,
+				 cairo_scaled_font_t	*scaled_font,
+				 int			*remaining_glyphs);
+
 static const cairo_surface_backend_t cairo_null_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_NULL,
 
@@ -774,7 +818,7 @@ static const cairo_surface_backend_t cairo_null_surface_backend = {
     NULL, /* composite_trapezoids */
     NULL, /* copy_page */
     NULL, /* show_page */
-    _return_success, /* set_clip_region */
+    (_set_clip_region_func) _return_success, /* set_clip_region */
     NULL, /* intersect_clip_path */
     NULL, /* get_extents */
     NULL, /* old_show_glyphs */
@@ -783,11 +827,11 @@ static const cairo_surface_backend_t cairo_null_surface_backend = {
     NULL, /* mark_dirty_rectangle */
     NULL, /* scaled_font_fini */
     NULL, /* scaled_glyph_fini */
-    _return_success, /* paint */
-    _return_success, /* mask */
-    _return_success, /* stroke */
-    _return_success, /* fill */
-    _return_success, /* show_glyphs */
+    (_paint_func) _return_success,	    /* paint */
+    (_mask_func) _return_success,	    /* mask */
+    (_stroke_func) _return_success,	    /* stroke */
+    (_fill_func) _return_success,	    /* fill */
+    (_show_glyphs_func) _return_success,    /* show_glyphs */
     NULL  /* snapshot */
 };
 

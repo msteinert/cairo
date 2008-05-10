@@ -1616,14 +1616,14 @@ _cairo_xlib_surface_solid_fill_rectangles (cairo_xlib_surface_t    *surface,
 					   cairo_rectangle_int_t   *rects,
 					   int			   num_rects)
 {
-    XGCValues gcv;
     GC xgc;
+    XGCValues gcv;
     int a_width=0, r_width=0, g_width=0, b_width=0;
     int a_shift=0, r_shift=0, g_shift=0, b_shift=0;
     int a = color->alpha_short >> 8;
-    int r = color->red_short >> 8;
+    int r = color->red_short   >> 8;
     int g = color->green_short >> 8;
-    int b = color->blue_short >> 8;
+    int b = color->blue_short  >> 8;
     int i;
 
     if (surface->visual->class == TrueColor) {
@@ -1651,9 +1651,8 @@ _cairo_xlib_surface_solid_fill_rectangles (cairo_xlib_surface_t    *surface,
 					       _field_from_8 (b, 3, 0)];
     }
 
-    xgc = XCreateGC (surface->dpy, surface->drawable, GCForeground,
-			&gcv);
-    if (!xgc)
+    xgc = XCreateGC (surface->dpy, surface->drawable, GCForeground, &gcv);
+    if (xgc == NULL)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     for (i = 0; i < num_rects; i++) {
@@ -1661,7 +1660,7 @@ _cairo_xlib_surface_solid_fill_rectangles (cairo_xlib_surface_t    *surface,
 			rects[i].x, rects[i].y,
 			rects[i].width, rects[i].height);
     }
-    XFreeGC(surface->dpy, xgc);
+    XFreeGC (surface->dpy, xgc);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1681,13 +1680,15 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
 
     _cairo_xlib_display_notify (surface->screen_info->display);
 
-    if (!CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLE (surface)) {
+    if (! CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLE (surface)) {
 	if (op == CAIRO_OPERATOR_CLEAR ||
-	   ((op == CAIRO_OPERATOR_SOURCE || op == CAIRO_OPERATOR_OVER) &&
-	    CAIRO_COLOR_IS_OPAQUE(color))) {
-	    return _cairo_xlib_surface_solid_fill_rectangles(surface, color,
-							     rects, num_rects);
+	    ((op == CAIRO_OPERATOR_SOURCE || op == CAIRO_OPERATOR_OVER) &&
+	     CAIRO_COLOR_IS_OPAQUE (color)))
+	{
+	    return _cairo_xlib_surface_solid_fill_rectangles (surface, color,
+							      rects, num_rects);
 	}
+
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
