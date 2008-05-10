@@ -153,8 +153,8 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	surface = cairo_image_surface_create (CAIRO_FORMAT_A8, width, height);
 
 	cairo_surface_set_device_offset (surface,
-					 -scaled_glyph->metrics.x_bearing,
-					 -scaled_glyph->metrics.y_bearing);
+					 _cairo_lround (-scaled_glyph->metrics.x_bearing),
+					 _cairo_lround (-scaled_glyph->metrics.y_bearing));
 	status = _cairo_meta_surface_replay (meta_surface, surface);
 
 	if (status) {
