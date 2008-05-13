@@ -34,9 +34,9 @@
 
 #define BORDER 10
 #define TEXT_SIZE 64
-#define WIDTH  (TEXT_SIZE * 9.75 + 2*BORDER)
+#define WIDTH  (TEXT_SIZE * 15 + 2*BORDER)
 #define HEIGHT ((TEXT_SIZE + 2*BORDER)*2)
-#define TEXT   "cairo user font"
+#define TEXT   "geez... cairo user-font"
 
 static cairo_test_draw_function_t draw;
 
@@ -51,6 +51,10 @@ cairo_test_t test = {
     draw
 };
 
+#define END_GLYPH 0
+#define STROKE 126
+#define CLOSE 127
+
 /* Simple glyph definition: 1 - 15 means lineto (or moveto for first
  * point) for one of the points on this grid:
  *
@@ -61,32 +65,31 @@ cairo_test_t test = {
  *     13 14 15
  */
 
-#define END_GLYPH 0
-#define STROKE 13
-#define CLOSE 14
-
 static const struct {
     unsigned long ucs4;
     int width;
     char data[16];
 } glyphs [] = {
-    { -1 ,  0, { END_GLYPH } },
-    { ' ',  1, { END_GLYPH } },
-    { 'c',  3, { 6, 4, 10, 12, STROKE, END_GLYPH } },
-    { 'a',  3, { 4, 6, 12, 10, 7, 8, STROKE, END_GLYPH } },
-    { 'i',  1, { 1, 1, STROKE, 4, 10, STROKE, END_GLYPH } },
-    { 'r',  3, { 4, 10, STROKE, 7, 5, 6, STROKE, END_GLYPH } },
-    { 'o',  3, { 4, 10, 12, 6, CLOSE, END_GLYPH } },
-    { 'u',  3, { 4, 10, 12, 6, STROKE, END_GLYPH } },
-    { 's',  3, { 6, 4, 7, 9, 12, 10, STROKE, END_GLYPH } },
-    { 'e',  3, { 12, 10, 4, 6, 9, 8, STROKE, END_GLYPH } },
-    { 'f',  3, { 3, 2, 11, STROKE, 4, 6, STROKE, END_GLYPH } },
-    { 'n',  3, { 10, 4, STROKE, 7, 5, 6, 12, STROKE, END_GLYPH } },
-    { 't',  3, { 2, 11, 12, STROKE, 4, 6, STROKE, END_GLYPH } },
-    { 'h',  3, { 1, 10, STROKE, 7, 5, 6, 12, STROKE, END_GLYPH } },
-    { 'l',  1, { 1, 10, STROKE, END_GLYPH } },
-    { '-',  2, { 7, 8, STROKE, END_GLYPH } },
     { '\0', 0, { END_GLYPH } },
+    { ' ',  1, { END_GLYPH } },
+    { '-',  2, { 7, 8, STROKE, END_GLYPH } },
+    { '.',  1, { 10, 10, STROKE, END_GLYPH } },
+    { 'a',  3, { 4, 6, 12, 10, 7, 8, STROKE, END_GLYPH } },
+    { 'c',  3, { 6, 4, 10, 12, STROKE, END_GLYPH } },
+    { 'e',  3, { 12, 10, 4, 6, 9, 7, STROKE, END_GLYPH } },
+    { 'f',  3, { 3, 2, 11, STROKE, 4, 6, STROKE, END_GLYPH } },
+    { 'g',  3, { 12, 10, 4, 6, 15, 13, STROKE, END_GLYPH } },
+    { 'h',  3, { 1, 10, STROKE, 7, 5, 6, 12, STROKE, END_GLYPH } },
+    { 'i',  1, { 1, 1, STROKE, 4, 10, STROKE, END_GLYPH } },
+    { 'l',  1, { 1, 10, STROKE, END_GLYPH } },
+    { 'n',  3, { 10, 4, STROKE, 7, 5, 6, 12, STROKE, END_GLYPH } },
+    { 'o',  3, { 4, 10, 12, 6, CLOSE, END_GLYPH } },
+    { 'r',  3, { 4, 10, STROKE, 7, 5, 6, STROKE, END_GLYPH } },
+    { 's',  3, { 6, 4, 7, 9, 12, 10, STROKE, END_GLYPH } },
+    { 't',  3, { 2, 11, 12, STROKE, 4, 6, STROKE, END_GLYPH } },
+    { 'u',  3, { 4, 10, 12, 6, STROKE, END_GLYPH } },
+    { 'z',  3, { 4, 6, 10, 12, STROKE, END_GLYPH } },
+    {  -1,  0, { END_GLYPH } },
 };
 
 static cairo_status_t
@@ -105,7 +108,7 @@ test_scaled_font_unicode_to_glyph (cairo_scaled_font_t *scaled_font,
 {
     int i;
 
-    for (i = 0; glyphs[i].ucs4 != '\0'; i++)
+    for (i = 0; glyphs[i].ucs4 != -1; i++)
 	if (glyphs[i].ucs4 == unicode) {
 	    *glyph = i;
 	    return CAIRO_STATUS_SUCCESS;
