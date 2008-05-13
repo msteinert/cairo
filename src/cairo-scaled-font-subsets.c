@@ -53,18 +53,6 @@ typedef enum {
     CAIRO_SUBSETS_COMPOSITE
 } cairo_subsets_type_t;
 
-struct _cairo_scaled_font_subsets {
-    cairo_subsets_type_t type;
-
-    int max_glyphs_per_unscaled_subset_used;
-    cairo_hash_table_t *unscaled_sub_fonts;
-
-    int max_glyphs_per_scaled_subset_used;
-    cairo_hash_table_t *scaled_sub_fonts;
-
-    int num_sub_fonts;
-};
-
 typedef struct _cairo_sub_font {
     cairo_hash_entry_t base;
 
@@ -79,7 +67,24 @@ typedef struct _cairo_sub_font {
     int max_glyphs_per_subset;
 
     cairo_hash_table_t *sub_font_glyphs;
+    struct _cairo_sub_font *next;
 } cairo_sub_font_t;
+
+struct _cairo_scaled_font_subsets {
+    cairo_subsets_type_t type;
+
+    int max_glyphs_per_unscaled_subset_used;
+    cairo_hash_table_t *unscaled_sub_fonts;
+    cairo_sub_font_t *unscaled_sub_fonts_list;
+    cairo_sub_font_t *unscaled_sub_fonts_list_end;
+
+    int max_glyphs_per_scaled_subset_used;
+    cairo_hash_table_t *scaled_sub_fonts;
+    cairo_sub_font_t *scaled_sub_fonts_list;
+    cairo_sub_font_t *scaled_sub_fonts_list_end;
+
+    int num_sub_fonts;
+};
 
 typedef struct _cairo_sub_font_glyph {
     cairo_hash_entry_t base;
@@ -252,6 +257,7 @@ _cairo_sub_font_create (cairo_scaled_font_subsets_t	*parent,
 	free (sub_font);
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
+    sub_font->next = NULL;
 
     /* Reserve first glyph in subset for the .notdef glyph */
     status = _cairo_sub_font_map_glyph (sub_font, 0, &subset_glyph);
@@ -461,6 +467,8 @@ _cairo_scaled_font_subsets_create_internal (cairo_subsets_type_t type)
 	free (subsets);
 	return NULL;
     }
+    subsets->unscaled_sub_fonts_list = NULL;
+    subsets->unscaled_sub_fonts_list_end = NULL;
 
     subsets->scaled_sub_fonts = _cairo_hash_table_create (_cairo_sub_fonts_equal);
     if (! subsets->scaled_sub_fonts) {
@@ -468,6 +476,8 @@ _cairo_scaled_font_subsets_create_internal (cairo_subsets_type_t type)
 	free (subsets);
 	return NULL;
     }
+    subsets->scaled_sub_fonts_list = NULL;
+    subsets->scaled_sub_fonts_list_end = NULL;
 
     return subsets;
 }
@@ -611,11 +621,16 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
 
             status = _cairo_hash_table_insert (subsets->unscaled_sub_fonts,
                                                &sub_font->base);
+
             if (status) {
 		_cairo_sub_font_destroy (sub_font);
                 return status;
 	    }
-
+	    if (!subsets->unscaled_sub_fonts_list)
+		subsets->unscaled_sub_fonts_list = sub_font;
+	    else
+		subsets->unscaled_sub_fonts_list_end->next = sub_font;
+	    subsets->unscaled_sub_fonts_list_end = sub_font;
 	    subsets->num_sub_fonts++;
         }
     } else {
@@ -650,7 +665,11 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
 		_cairo_sub_font_destroy (sub_font);
                 return status;
 	    }
-
+	    if (!subsets->scaled_sub_fonts_list)
+		subsets->scaled_sub_fonts_list = sub_font;
+	    else
+		subsets->scaled_sub_fonts_list_end->next = sub_font;
+	    subsets->scaled_sub_fonts_list_end = sub_font;
 	    subsets->num_sub_fonts++;
         }
     }
@@ -667,6 +686,7 @@ _cairo_scaled_font_subsets_foreach_internal (cairo_scaled_font_subsets_t        
                                              cairo_bool_t                              is_scaled)
 {
     cairo_sub_font_collection_t collection;
+    cairo_sub_font_t *sub_font;
 
     if (is_scaled)
         collection.glyphs_size = font_subsets->max_glyphs_per_scaled_subset_used;
@@ -685,12 +705,14 @@ _cairo_scaled_font_subsets_foreach_internal (cairo_scaled_font_subsets_t        
     collection.status = CAIRO_STATUS_SUCCESS;
 
     if (is_scaled)
-        _cairo_hash_table_foreach (font_subsets->scaled_sub_fonts,
-                                   _cairo_sub_font_collect, &collection);
+	sub_font = font_subsets->scaled_sub_fonts_list;
     else
-        _cairo_hash_table_foreach (font_subsets->unscaled_sub_fonts,
-                                   _cairo_sub_font_collect, &collection);
+	sub_font = font_subsets->unscaled_sub_fonts_list;
 
+    while (sub_font) {
+	_cairo_sub_font_collect (sub_font, &collection);
+	sub_font = sub_font->next;
+    }
     free (collection.glyphs);
 
     return collection.status;
