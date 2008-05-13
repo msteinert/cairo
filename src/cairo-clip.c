@@ -630,7 +630,7 @@ _cairo_clip_translate (cairo_clip_t  *clip,
 				     _cairo_fixed_to_double (ty));
 
         while (clip_path) {
-            _cairo_path_fixed_device_transform (&clip_path->path, &matrix);
+            _cairo_path_fixed_transform (&clip_path->path, &matrix);
             clip_path = clip_path->prev;
         }
     }

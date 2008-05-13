@@ -612,29 +612,47 @@ _cairo_path_fixed_offset_and_scale (cairo_path_fixed_t *path,
     }
 }
 
-
 /**
- * _cairo_path_fixed_device_transform:
+ * _cairo_path_fixed_transform:
  * @path: a #cairo_path_fixed_t to be transformed
- * @device_transform: a matrix with only scaling/translation (no rotation or shear)
+ * @matrix: a #cairo_matrix_t
  *
- * Transform the fixed-point path according to the scaling and
- * translation of the given matrix. This function assert()s that the
- * given matrix has no rotation or shear elements, (that is, xy and yx
- * are 0.0).
+ * Transform the fixed-point path according to the given matrix.
+ * There is a fast path for the case where @matrix has no rotation
+ * or shear.
  **/
 void
-_cairo_path_fixed_device_transform (cairo_path_fixed_t	*path,
-				    cairo_matrix_t	*device_transform)
+_cairo_path_fixed_transform (cairo_path_fixed_t	*path,
+			     cairo_matrix_t     *matrix)
 {
-    assert (device_transform->yx == 0.0 && device_transform->xy == 0.0);
-    /* XXX: Support freeform matrices someday (right now, only translation and scale
-     * work. */
-    _cairo_path_fixed_offset_and_scale (path,
-					_cairo_fixed_from_double (device_transform->x0),
-					_cairo_fixed_from_double (device_transform->y0),
-					_cairo_fixed_from_double (device_transform->xx),
-					_cairo_fixed_from_double (device_transform->yy));
+    cairo_path_buf_t *buf;
+    int i;
+    double dx, dy;
+
+    if (matrix->yx == 0.0 && matrix->xy == 0.0) {
+	/* Fast path for the common case of scale+transform */
+	_cairo_path_fixed_offset_and_scale (path,
+					    _cairo_fixed_from_double (matrix->x0),
+					    _cairo_fixed_from_double (matrix->y0),
+					    _cairo_fixed_from_double (matrix->xx),
+					    _cairo_fixed_from_double (matrix->yy));
+	return;
+    }
+
+    buf = &path->buf_head.base;
+    while (buf) {
+	 for (i = 0; i < buf->num_points; i++) {
+	    dx = _cairo_fixed_to_double (buf->points[i].x);
+	    dy = _cairo_fixed_to_double (buf->points[i].y);
+
+	    cairo_matrix_transform_point (matrix, &dx, &dy);
+
+	    buf->points[i].x = _cairo_fixed_from_double (dx);
+	    buf->points[i].y = _cairo_fixed_from_double (dy);
+	 }
+
+	 buf = buf->next;
+    }
 }
 
 cairo_bool_t

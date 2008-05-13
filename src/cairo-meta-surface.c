@@ -773,7 +773,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 	    status = _cairo_path_fixed_init_copy (&path_copy, dev_path);
 	    if (status)
 		break;
-	    _cairo_path_fixed_device_transform (&path_copy, device_transform);
+	    _cairo_path_fixed_transform (&path_copy, device_transform);
 	    dev_path = &path_copy;
 	}
 

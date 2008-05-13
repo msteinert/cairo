@@ -1437,8 +1437,8 @@ _cairo_path_fixed_bounds (cairo_path_fixed_t *path,
 			  double tolerance);
 
 cairo_private void
-_cairo_path_fixed_device_transform (cairo_path_fixed_t	*path,
-				    cairo_matrix_t	*device_transform);
+_cairo_path_fixed_transform (cairo_path_fixed_t	*path,
+			     cairo_matrix_t	*matrix);
 
 cairo_private cairo_bool_t
 _cairo_path_fixed_is_empty (cairo_path_fixed_t *path);
