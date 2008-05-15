@@ -358,7 +358,8 @@ _cairo_pattern_reset_solid_pattern_cache (void)
     CAIRO_MUTEX_LOCK (_cairo_pattern_solid_pattern_cache_lock);
 
     for (i = 0; i < MIN (ARRAY_LENGTH (solid_pattern_cache.patterns), solid_pattern_cache.size); i++) {
-	free (solid_pattern_cache.patterns[i]);
+	if (solid_pattern_cache.patterns[i])
+	    free (solid_pattern_cache.patterns[i]);
 	solid_pattern_cache.patterns[i] = NULL;
     }
     solid_pattern_cache.size = 0;
