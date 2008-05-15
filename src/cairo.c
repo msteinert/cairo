@@ -1268,6 +1268,7 @@ cairo_set_matrix (cairo_t	       *cr,
     if (status)
 	_cairo_set_error (cr, status);
 }
+slim_hidden_def (cairo_set_matrix);
 
 /**
  * cairo_identity_matrix:
@@ -2756,6 +2757,7 @@ cairo_set_font_size (cairo_t *cr, double size)
     if (status)
 	_cairo_set_error (cr, status);
 }
+slim_hidden_def (cairo_set_font_size);
 
 /**
  * cairo_set_font_matrix
@@ -2831,6 +2833,7 @@ cairo_set_font_options (cairo_t                    *cr,
 
     _cairo_gstate_set_font_options (cr->gstate, options);
 }
+slim_hidden_def (cairo_set_font_options);
 
 /**
  * cairo_get_font_options:

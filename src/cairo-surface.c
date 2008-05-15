@@ -915,6 +915,29 @@ cairo_surface_set_fallback_resolution (cairo_surface_t	*surface,
 }
 slim_hidden_def (cairo_surface_set_fallback_resolution);
 
+/**
+ * cairo_surface_get_fallback_resolution:
+ * @surface: a #cairo_surface_t
+ * @x_pixels_per_inch: horizontal pixels per inch
+ * @y_pixels_per_inch: vertical pixels per inch
+ *
+ * This function returns the previous fallback resolution set by
+ * cairo_surface_set_fallback_resolution(), or default fallback
+ * resolution if never set.
+ *
+ * Since: 1.8
+ **/
+void
+cairo_surface_get_fallback_resolution (cairo_surface_t	*surface,
+				       double		*x_pixels_per_inch,
+				       double		*y_pixels_per_inch)
+{
+    if (x_pixels_per_inch)
+	*x_pixels_per_inch = surface->x_fallback_resolution;
+    if (y_pixels_per_inch)
+	*y_pixels_per_inch = surface->y_fallback_resolution;
+}
+
 cairo_bool_t
 _cairo_surface_has_device_transform (cairo_surface_t *surface)
 {
