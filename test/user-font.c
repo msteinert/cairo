@@ -74,7 +74,7 @@ static const struct {
     { ' ',  1, { END_GLYPH } },
     { '-',  2, { 7, 8, STROKE, END_GLYPH } },
     { '.',  1, { 10, 10, STROKE, END_GLYPH } },
-    { 'a',  3, { 4, 6, 12, 10, 7, 8, STROKE, END_GLYPH } },
+    { 'a',  3, { 4, 6, 12, 10, 7, 9, STROKE, END_GLYPH } },
     { 'c',  3, { 6, 4, 10, 12, STROKE, END_GLYPH } },
     { 'e',  3, { 12, 10, 4, 6, 9, 7, STROKE, END_GLYPH } },
     { 'f',  3, { 3, 2, 11, STROKE, 4, 6, STROKE, END_GLYPH } },
