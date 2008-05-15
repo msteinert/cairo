@@ -2975,7 +2975,7 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 		to_free->glyph_count--;
 		memmove (&to_free->glyph_indices[i],
 			 &to_free->glyph_indices[i+1],
-			 (to_free->glyph_count - i) * sizeof (to_free->glyph_indices));
+			 (to_free->glyph_count - i) * sizeof (to_free->glyph_indices[0]));
 		goto DONE;
 	    }
 	}
