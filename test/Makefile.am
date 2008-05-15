@@ -860,7 +860,10 @@ EXTRA_PROGRAMS += $(TESTS) $(DISABLED_TESTS)
 TARGETS = $(CAIRO_TEST_TARGET)
 TARGETS_EXCLUDE = $(CAIRO_TEST_TARGET_EXCLUDE)
 
-TESTS_ENVIRONMENT = CAIRO_XFAIL_TESTS="$(XFAIL_TESTS:$(EXEEXT)=)" CAIRO_TEST_TARGET="$(TARGETS)" CAIRO_TEST_TARGET_EXCLUDE="$(TARGETS_EXCLUDE)"
+# Same about ENV vs CAIRO_TEST_ENV.  ENV is used with "make run" only
+ENV = $(CAIRO_TEST_ENV)
+
+TESTS_ENVIRONMENT = CAIRO_XFAIL_TESTS="$(XFAIL_TESTS:$(EXEEXT)=)" CAIRO_TEST_TARGET="$(TARGETS)" CAIRO_TEST_TARGET_EXCLUDE="$(TARGETS_EXCLUDE)" $(ENV)
 
 EXTRA_VALGRIND_FLAGS = $(CAIRO_EXTRA_VALGRIND_FLAGS)
 VALGRIND_FLAGS = \
@@ -886,11 +889,6 @@ clean-local:
 	-${FIND} . -name '*-out.png'  -print | ${XARGS} ${RM}
 	-${FIND} . -name '*-diff.png' -print | ${XARGS} ${RM}
 	-${FIND} . -name '*.log'      -print | ${XARGS} ${RM}
-
-# Check tests under valgrind
-# Saves log to valgrind-log
-check-valgrind:
-	$(MAKE) $(AM_MAKEFLAGS) check TESTS_ENVIRONMENT='$(TESTS_ENVIRONMENT) $(top_builddir)/libtool --mode=execute valgrind $(VALGRIND_FLAGS)' 2>&1 | tee valgrind-log
 
 # The following definitions both should work.
 #FAILED_TESTS = `grep -l '\<FAIL\>' $(TESTS:$(EXEEXT)=.log) 2>/dev/null | sed -e 's/[.]log$$//' | xargs echo`
@@ -925,6 +923,15 @@ html:
 rehtml:
 	@$(MAKE) $(AM_MAKEFLAGS) TESTS="$(FAILED_TESTS)" html
 
+# Run tests under a tool specified by TOOL.  For example, make run TOOL=gdb
+run:
+	$(MAKE) $(AM_MAKEFLAGS) check TESTS_ENVIRONMENT='$(TESTS_ENVIRONMENT) $(top_builddir)/libtool --mode=execute env $(TOOL)'
+
+# Check tests under valgrind.  Saves log to valgrind-log
+check-valgrind:
+	$(MAKE) $(AM_MAKEFLAGS) check TESTS_ENVIRONMENT='$(TESTS_ENVIRONMENT) $(top_builddir)/libtool --mode=execute valgrind $(VALGRIND_FLAGS)' 2>&1 | tee valgrind-log
+
+
 %.log: % $(check_PROGRAMS)
 	-./$<
 
@@ -936,6 +943,7 @@ $(NOLOG_TESTS_LOG):
 index.html: $(srcdir)/make-html.pl $(TESTS:$(EXEEXT)=.log)
 	@echo Creating index.html
 	@perl $^ > $@
+
 
 # Identify identical reference images
 check-ref-dups:

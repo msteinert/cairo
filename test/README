@@ -42,6 +42,25 @@ This will re-run the test suite, but only on tests that failed on the
 last run. So this is a much faster way of checking if changes actually
 fix bugs rather than running the entire test suite again.
 
+Running tests under modified enviroments or tools
+-------------------------------------------------
+To run tests under a tool like gdb, one can use the run target and
+the TOOL variable.  For example:
+
+  make run TOOL=gdb TARGETS=pdf TESTS=user-font
+
+If you want to run under valgrind, there is a specific target for that
+that also sets a bunch of useful valgrind options.  Try:
+
+  make check-valgrind TESTS=user-font
+
+You can run tests under a modified environment you can use the ENV
+make variable.  However, that environment will also affect the libtool
+wrapper of the tests.  To only affect the actual test binaries, pass
+such environment as TOOL:
+
+  make run TOOL="LD_PRELOAD=/path/to/something.so" TEST=user-font
+
 Getting the elusive zero failures
 ---------------------------------
 It's generally been very difficult to achieve a test run with zero
