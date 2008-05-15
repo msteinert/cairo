@@ -170,13 +170,14 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	  _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.x);
 	height = _cairo_fixed_integer_ceil (scaled_glyph->bbox.p2.y) -
 	  _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.y);
+
 	/* XXX handle / figure out antialias/subpixel font options to choose
 	 * the right format here? */
 	surface = cairo_image_surface_create (CAIRO_FORMAT_A8, width, height);
 
 	cairo_surface_set_device_offset (surface,
-					 _cairo_lround (-scaled_glyph->metrics.x_bearing),
-					 _cairo_lround (-scaled_glyph->metrics.y_bearing));
+	                                 - _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.x),
+	                                 - _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.y));
 	status = _cairo_meta_surface_replay (meta_surface, surface);
 
 	if (status) {
