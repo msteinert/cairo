@@ -205,7 +205,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_rel_line_to (cr, 0, 2*BORDER + TEXT_SIZE);
     cairo_move_to (cr, BORDER + extents.x_advance, 0);
     cairo_rel_line_to (cr, 0, 2*BORDER + TEXT_SIZE);
-    cairo_set_source_rgba (cr, 1, 0, 0, .8);
+    cairo_set_source_rgb (cr, 1, 0, 0);
     cairo_set_line_width (cr, 2);
     cairo_stroke (cr);
 
@@ -213,18 +213,18 @@ draw (cairo_t *cr, int width, int height)
     cairo_rectangle (cr,
 		     BORDER + extents.x_bearing, BORDER + font_extents.ascent + extents.y_bearing,
 		     extents.width, extents.height);
-    cairo_set_source_rgba (cr, 0, 1, 0, .8);
+    cairo_set_source_rgb (cr, 0, 1, 0);
     cairo_set_line_width (cr, 2);
     cairo_stroke (cr);
 
     /* text in gray */
-    cairo_set_source_rgba (cr, 0, 0, 0, 0.5);
+    cairo_set_source_rgb (cr, 0, 0, 0);
     cairo_move_to (cr, BORDER, BORDER + font_extents.ascent);
     cairo_show_text (cr, text);
 
 
     /* filled version of text in light blue */
-    cairo_set_source_rgba (cr, 0, 0, 1, 0.5);
+    cairo_set_source_rgb (cr, 0, 0, 1);
     cairo_move_to (cr, BORDER, BORDER + font_extents.height + 2*BORDER + font_extents.ascent);
     cairo_text_path (cr, text);
     cairo_fill (cr);
