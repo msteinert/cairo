@@ -660,18 +660,19 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
 
 /* moves trap points such that they become the actual corners of the trapezoid */
 static void
-_sanitize_trap (cairo_trapezoid_t *trap)
+_sanitize_trap (cairo_trapezoid_t *t)
 {
-/* XXX the math here is fragile.  can overflow in extreme cases */
-#define FIX(t, lr, tb, p) \
+    cairo_trapezoid_t s = *t;
+
+#define FIX(lr, tb, p) \
     if (t->lr.p.y != t->tb) { \
-        t->lr.p.x = t->lr.p2.x + (t->lr.p1.x - t->lr.p2.x) * (t->tb - t->lr.p2.y) / (t->lr.p1.y - t->lr.p2.y); \
-        t->lr.p.y = t->tb; \
+        t->lr.p.x = s.lr.p2.x + _cairo_fixed_mul_div (s.lr.p1.x - s.lr.p2.x, s.tb - s.lr.p2.y, s.lr.p1.y - s.lr.p2.y); \
+        t->lr.p.y = s.tb; \
     }
-    FIX (trap, left,  top,    p1);
-    FIX (trap, left,  bottom, p2);
-    FIX (trap, right, top,    p1);
-    FIX (trap, right, bottom, p2);
+    FIX (left,  top,    p1);
+    FIX (left,  bottom, p2);
+    FIX (right, top,    p1);
+    FIX (right, bottom, p2);
 }
 
 cairo_private cairo_status_t
