@@ -474,8 +474,9 @@ cairo_surface_get_reference_count (cairo_surface_t *surface)
  * external resources.  For example, for the Xlib backend it means
  * that cairo will no longer access the drawable, which can be freed.
  * After calling cairo_surface_finish() the only valid operations on a
- * surface are getting and setting user data and referencing and
- * destroying it.  Further drawing to the surface will not affect the
+ * surface are getting and setting user, referencing and
+ * destroying, and flushing and finishing it.
+ * Further drawing to the surface will not affect the
  * surface but will instead trigger a %CAIRO_STATUS_SURFACE_FINISHED
  * error.
  *
@@ -495,27 +496,17 @@ cairo_surface_finish (cairo_surface_t *surface)
     if (CAIRO_REFERENCE_COUNT_IS_INVALID (&surface->ref_count))
 	return;
 
-    if (surface->finished) {
-	status = _cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
+    if (surface->finished)
 	return;
-    }
 
-    if (!surface->status && surface->backend->flush) {
-	status = surface->backend->flush (surface);
-	if (status) {
+    cairo_surface_flush (surface);
+
+    /* call finish even if in error mode */
+    if (surface->backend->finish) {
+	status = surface->backend->finish (surface);
+	if (status)
 	    status = _cairo_surface_set_error (surface, status);
-	    return;
-	}
     }
-
-    if (surface->backend->finish == NULL) {
-	surface->finished = TRUE;
-	return;
-    }
-
-    status = surface->backend->finish (surface);
-    if (status)
-	status = _cairo_surface_set_error (surface, status);
 
     surface->finished = TRUE;
 }
@@ -662,10 +653,8 @@ cairo_surface_flush (cairo_surface_t *surface)
     if (surface->status)
 	return;
 
-    if (surface->finished) {
-	status = _cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
+    if (surface->finished)
 	return;
-    }
 
     if (surface->backend->flush) {
 	status = surface->backend->flush (surface);
