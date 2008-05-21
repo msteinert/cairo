@@ -1702,9 +1702,12 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
     {
 	cairo_image_surface_t *image;
 
-	status = _cairo_surface_acquire_source_image (pattern->surface,
-						      &image,
-						      &attr->extra);
+	status = _cairo_surface_acquire_source_image_transformed (
+	    pattern->surface,
+	    &dst->device_transform,
+	    &image,
+	    &attr->extra);
+
 	if (status)
 	    return status;
 
