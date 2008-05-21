@@ -129,7 +129,33 @@ main (void)
 	{
 	    cairo_surface_set_fallback_resolution (surface, ppi[page], ppi[page]);
 
-	    draw_with_ppi (cr, SIZE, SIZE, ppi[page]);
+	    /* First draw the top half in a conventional way. */
+	    cairo_save (cr);
+	    {
+		cairo_rectangle (cr, 0, 0, SIZE, SIZE / 2.0);
+		cairo_clip (cr);
+
+		draw_with_ppi (cr, SIZE, SIZE, ppi[page]);
+	    }
+	    cairo_restore (cr);
+
+	    /* Then draw the bottom half in a separate group,
+	     * (exposing a bug in 1.6.4 with the group not being
+	     * rendered with the correct fallback resolution). */
+	    cairo_save (cr);
+	    {
+		cairo_rectangle (cr, 0, SIZE / 2.0, SIZE, SIZE / 2.0);
+		cairo_clip (cr);
+
+		cairo_push_group (cr);
+		{
+		    draw_with_ppi (cr, SIZE, SIZE, ppi[page]);
+		}
+		cairo_pop_group_to_source (cr);
+
+		cairo_paint (cr);
+	    }
+	    cairo_restore (cr);
 
 	    cairo_show_page (cr);
 	}
