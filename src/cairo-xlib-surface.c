@@ -2916,7 +2916,6 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
     unsigned long glyph_index;
     unsigned char *data;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    cairo_xlib_surface_font_private_t *font_private;
     cairo_scaled_glyph_t *scaled_glyph = *pscaled_glyph;
     cairo_image_surface_t *glyph_surface = scaled_glyph->surface;
     cairo_bool_t already_had_glyph_surface;
@@ -2959,7 +2958,6 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 	if (status)
 	    return status;
     }
-    font_private = scaled_font->surface_private;
 
     glyphset_info = _cairo_xlib_scaled_font_get_glyphset_info_for_format (scaled_font,
 									  glyph_surface->format);
