@@ -71,6 +71,7 @@ infinite-join$(EXEEXT)					\
 in-fill-empty-trapezoid$(EXEEXT)			\
 in-fill-trapezoid$(EXEEXT)				\
 invalid-matrix$(EXEEXT)					\
+large-font$(EXEEXT)					\
 large-source$(EXEEXT)					\
 leaky-dash$(EXEEXT)					\
 leaky-dashed-rectangle$(EXEEXT)				\
@@ -441,6 +442,8 @@ REFERENCE_IMAGES = \
 	image-surface-source-ref.png \
 	infinite-join-ref.png	\
 	infinite-join-ps-ref.png	\
+	large-font-ref.png	\
+	large-font-ps-ref.png	\
 	large-source-ref.png	\
 	leaky-dash-ps-argb32-ref.png	\
 	leaky-dash-ps-rgb24-ref.png	\
