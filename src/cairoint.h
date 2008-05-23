@@ -738,12 +738,6 @@ struct _cairo_surface_backend {
 				 cairo_matrix_t		*stroke_ctm_inverse,
 				 double			 stroke_tolerance,
 				 cairo_antialias_t	 stroke_antialias);
-
-    cairo_warn cairo_status_t
-    (*acquire_source_image_transformed)	(void                    *abstract_surface,
-					 cairo_matrix_t		 *device_trasnform,
-					 cairo_image_surface_t  **image_out,
-					 void                   **image_extra);
 };
 
 #include "cairo-surface-private.h"
@@ -1726,12 +1720,6 @@ cairo_private cairo_status_t
 _cairo_surface_acquire_source_image (cairo_surface_t         *surface,
 				     cairo_image_surface_t  **image_out,
 				     void                   **image_extra);
-
-cairo_private cairo_status_t
-_cairo_surface_acquire_source_image_transformed (cairo_surface_t         *surface,
-						 cairo_matrix_t		 *device_trasnform,
-						 cairo_image_surface_t  **image_out,
-						 void                   **image_extra);
 
 cairo_private void
 _cairo_surface_release_source_image (cairo_surface_t        *surface,

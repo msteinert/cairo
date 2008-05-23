@@ -182,26 +182,17 @@ _cairo_meta_surface_finish (void *abstract_surface)
 }
 
 static cairo_status_t
-_cairo_meta_surface_acquire_source_image_transformed (
-    void			 *abstract_surface,
-    cairo_matrix_t		 *device_transform,
-    cairo_image_surface_t	**image_out,
-    void			**image_extra)
+_cairo_meta_surface_acquire_source_image (void			 *abstract_surface,
+					  cairo_image_surface_t	**image_out,
+					  void			**image_extra)
 {
     cairo_status_t status;
     cairo_meta_surface_t *surface = abstract_surface;
     cairo_surface_t *image;
-    double width = surface->width_pixels;
-    double height = surface->height_pixels;
-
-    cairo_matrix_transform_distance (device_transform, &width, &height);
 
     image = _cairo_image_surface_create_with_content (surface->content,
-						      ceil (width),
-						      ceil (height));
-
-    _cairo_surface_set_device_scale (image,
-				     device_transform->xx, device_transform->yy);
+						      surface->width_pixels,
+						      surface->height_pixels);
 
     status = _cairo_meta_surface_replay (&surface->base, image);
     if (status) {
@@ -213,19 +204,6 @@ _cairo_meta_surface_acquire_source_image_transformed (
     *image_extra = NULL;
 
     return status;
-}
-
-static cairo_status_t
-_cairo_meta_surface_acquire_source_image (void			 *abstract_surface,
-					  cairo_image_surface_t	**image_out,
-					  void			**image_extra)
-{
-    cairo_matrix_t identity;
-
-    cairo_matrix_init_identity (&identity);
-
-    return _cairo_meta_surface_acquire_source_image_transformed (
-	abstract_surface, &identity, image_out, image_extra);
 }
 
 static void
@@ -651,13 +629,7 @@ static const cairo_surface_backend_t cairo_meta_surface_backend = {
     _cairo_meta_surface_fill,
     _cairo_meta_surface_show_glyphs,
 
-    _cairo_meta_surface_snapshot,
-
-    NULL, /* is_similar */
-    NULL, /* reset */
-    NULL, /* fill_stroke */
-
-    _cairo_meta_surface_acquire_source_image_transformed
+    _cairo_meta_surface_snapshot
 };
 
 static cairo_path_fixed_t *

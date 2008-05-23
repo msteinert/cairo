@@ -968,26 +968,6 @@ _cairo_surface_acquire_source_image (cairo_surface_t         *surface,
 						    image_out, image_extra));
 }
 
-cairo_status_t
-_cairo_surface_acquire_source_image_transformed (cairo_surface_t	 *surface,
-						 cairo_matrix_t		 *device_transform,
-						 cairo_image_surface_t  **image_out,
-						 void                   **image_extra)
-{
-    assert (!surface->finished);
-
-    if (surface->status)
-	return surface->status;
-
-    if (surface->backend->acquire_source_image_transformed == NULL)
-	return _cairo_surface_acquire_source_image (surface,
-						    image_out, image_extra);
-
-    return _cairo_surface_set_error (surface,
-	    surface->backend->acquire_source_image_transformed (
-		surface, device_transform, image_out, image_extra));
-}
-
 /**
  * _cairo_surface_release_source_image:
  * @surface: a #cairo_surface_t
