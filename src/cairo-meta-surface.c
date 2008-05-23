@@ -432,7 +432,8 @@ _cairo_meta_surface_show_glyphs (void			*abstract_surface,
 				 cairo_pattern_t	*source,
 				 cairo_glyph_t		*glyphs,
 				 int			 num_glyphs,
-				 cairo_scaled_font_t	*scaled_font)
+				 cairo_scaled_font_t	*scaled_font,
+				 int			*remaining_glyphs)
 {
     cairo_status_t status;
     cairo_meta_surface_t *meta = abstract_surface;

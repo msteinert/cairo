@@ -2310,7 +2310,8 @@ _cairo_xcb_surface_show_glyphs (void                *abstract_dst,
 				 cairo_pattern_t     *src_pattern,
 				 cairo_glyph_t       *glyphs,
 				 int		      num_glyphs,
-				 cairo_scaled_font_t *scaled_font)
+				 cairo_scaled_font_t *scaled_font,
+				 int		     *remaining_glyphs)
 {
     cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_xcb_surface_t *dst = abstract_dst;

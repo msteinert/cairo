@@ -2111,6 +2111,12 @@ _cairo_surface_get_extents (cairo_surface_t         *surface,
  * avoid copying the array again and again, and edit it in-place.
  * Backends are in fact free to use the array as a generic buffer as they
  * see fit.
+ *
+ * When they do return UNSUPPORTED, they may adjust remaining_glyphs to notify
+ * that they have successfully rendered some of the glyphs (from the beginning
+ * of the array), but not all.  If they don't touch remaining_glyphs, it
+ * defaults to all glyphs.
+ *
  * See commits 5a9642c5746fd677aed35ce620ce90b1029b1a0c and
  * 1781e6018c17909311295a9cc74b70500c6b4d0a for the rationale.
  */
@@ -2167,10 +2173,17 @@ _cairo_surface_show_glyphs (cairo_surface_t	*surface,
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (surface->backend->show_glyphs)
+    if (surface->backend->show_glyphs) {
+	int remaining_glyphs = num_glyphs;
 	status = surface->backend->show_glyphs (surface, op, dev_source,
 						glyphs, num_glyphs,
-                                                dev_scaled_font);
+                                                dev_scaled_font,
+						&remaining_glyphs);
+	glyphs += num_glyphs - remaining_glyphs;
+	num_glyphs = remaining_glyphs;
+	if (remaining_glyphs == 0)
+	    status = CAIRO_STATUS_SUCCESS;
+    }
 
     if (status == CAIRO_INT_STATUS_UNSUPPORTED)
 	status = _cairo_surface_fallback_show_glyphs (surface, op, dev_source,

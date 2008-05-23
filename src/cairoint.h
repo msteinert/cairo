@@ -425,7 +425,8 @@ struct _cairo_scaled_font_backend {
 			 unsigned int		 width,
 			 unsigned int		 height,
 			 cairo_glyph_t		*glyphs,
-			 int			 num_glyphs);
+			 int			 num_glyphs,
+			 int			*remaining_glyphs);
 
     cairo_warn cairo_int_status_t
     (*load_truetype_table)(void		        *scaled_font,
@@ -710,7 +711,8 @@ struct _cairo_surface_backend {
 				 cairo_pattern_t	*source,
 				 cairo_glyph_t		*glyphs,
 				 int			 num_glyphs,
-				 cairo_scaled_font_t	*scaled_font);
+				 cairo_scaled_font_t	*scaled_font,
+				 int			*remaining_glyphs);
 
     cairo_surface_t *
     (*snapshot)			(void			*surface);

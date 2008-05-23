@@ -80,7 +80,8 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 cairo_pattern_t     *src_pattern,
 				 cairo_glyph_t       *glyphs,
 				 int		      num_glyphs,
-				 cairo_scaled_font_t *scaled_font);
+				 cairo_scaled_font_t *scaled_font,
+				 int		     *remaining_glyphs);
 
 /*
  * Instead of taking two round trips for each blending request,
@@ -3289,7 +3290,8 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 				 cairo_scaled_font_t *scaled_font,
 				 cairo_operator_t op,
 				 cairo_xlib_surface_t *src,
-				 cairo_surface_attributes_t *attributes)
+				 cairo_surface_attributes_t *attributes,
+				 int *remaining_glyphs)
 {
     int i;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
@@ -3351,8 +3353,22 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 	    status = _cairo_xlib_surface_add_glyph (dst->dpy,
 		                                    scaled_font,
 						    &scaled_glyph);
-	    if (status)
+	    if (status) {
+	        if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+		    /* Glyph image too big to send to server.  Flush what we
+		     * got and let fallback code handle the rest.
+		     */
+		    if (num_elts)
+			status = _cairo_xlib_surface_emit_glyphs_chunk (dst, glyphs, i,
+									scaled_font, op, src, attributes,
+									num_elts, width, glyphset_info);
+		    *remaining_glyphs = num_glyphs - i;
+
+		    if (status == CAIRO_STATUS_SUCCESS)
+			status = CAIRO_INT_STATUS_UNSUPPORTED;
+		}
 		return status;
+	    }
 	}
 
 	this_glyphset_info = _cairo_xlib_scaled_glyph_get_glyphset_info (scaled_glyph);
@@ -3439,7 +3455,8 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 cairo_pattern_t     *src_pattern,
 				 cairo_glyph_t       *glyphs,
 				 int		      num_glyphs,
-				 cairo_scaled_font_t *scaled_font)
+				 cairo_scaled_font_t *scaled_font,
+				 int		     *remaining_glyphs)
 {
     cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_xlib_surface_t *dst = (cairo_xlib_surface_t*) abstract_dst;
@@ -3554,7 +3571,8 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 					      scaled_font,
 					      op,
 					      src,
-					      &attributes);
+					      &attributes,
+					      remaining_glyphs);
 
   BAIL1:
     if (src)

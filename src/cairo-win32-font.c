@@ -1320,7 +1320,8 @@ _cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
 				      unsigned int		width,
 				      unsigned int		height,
 				      cairo_glyph_t	       *glyphs,
-				      int                 	num_glyphs)
+				      int                 	num_glyphs,
+				      int		       *remaining_glyphs)
 {
     cairo_win32_scaled_font_t *scaled_font = abstract_font;
     cairo_win32_surface_t *surface = (cairo_win32_surface_t *)generic_surface;

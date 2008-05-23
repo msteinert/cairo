@@ -556,7 +556,8 @@ _cairo_analysis_surface_show_glyphs (void		  *abstract_surface,
 				     cairo_pattern_t	  *source,
 				     cairo_glyph_t	  *glyphs,
 				     int		   num_glyphs,
-				     cairo_scaled_font_t  *scaled_font)
+				     cairo_scaled_font_t  *scaled_font,
+				     int                  *remaining_glyphs)
 {
     cairo_analysis_surface_t *surface = abstract_surface;
     cairo_status_t	     status, backend_status;
@@ -566,9 +567,10 @@ _cairo_analysis_surface_show_glyphs (void		  *abstract_surface,
 	backend_status = CAIRO_INT_STATUS_UNSUPPORTED;
     else
 	backend_status = (*surface->target->backend->show_glyphs) (surface->target, op,
-							   source,
-							   glyphs, num_glyphs,
-							   scaled_font);
+								   source,
+								   glyphs, num_glyphs,
+								   scaled_font,
+								   remaining_glyphs);
 
     if (backend_status == CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN)
 	backend_status = _cairo_analysis_surface_analyze_meta_surface_pattern (surface,

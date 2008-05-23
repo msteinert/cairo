@@ -1280,13 +1280,18 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 	return CAIRO_STATUS_SUCCESS;
 
     if (scaled_font->backend->show_glyphs != NULL) {
+	int remaining_glyphs = num_glyphs;
 	status = scaled_font->backend->show_glyphs (scaled_font,
 						    op, pattern,
 						    surface,
 						    source_x, source_y,
 						    dest_x, dest_y,
 						    width, height,
-						    glyphs, num_glyphs);
+						    glyphs, num_glyphs, &remaining_glyphs);
+	glyphs += num_glyphs - remaining_glyphs;
+	num_glyphs = remaining_glyphs;
+	if (remaining_glyphs == 0)
+	    status = CAIRO_STATUS_SUCCESS;
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	    return _cairo_scaled_font_set_error (scaled_font, status);
     }
