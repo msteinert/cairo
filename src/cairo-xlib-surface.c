@@ -2940,20 +2940,6 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 	already_had_glyph_surface = TRUE;
     }
 
-    /* XXX XRenderAddGlyph does not handle a glyph surface larger than the
-     * maximum XRequest size.
-     */
-    {
-	/* pessimistic length estimation in case we need to change formats */
-	int len = 4 * glyph_surface->width * glyph_surface->height;
-	int max_request_size = XMaxRequestSize (dpy)  -
-	                       sz_xRenderAddGlyphsReq -
-	                       sz_xGlyphInfo          -
-			       4;
-	if (len >= max_request_size)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
-
     if (scaled_font->surface_private == NULL) {
 	status = _cairo_xlib_surface_font_init (dpy, scaled_font);
 	if (status)
@@ -2962,6 +2948,17 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 
     glyphset_info = _cairo_xlib_scaled_font_get_glyphset_info_for_format (scaled_font,
 									  glyph_surface->format);
+
+    /* XRenderAddGlyph does not handle a glyph surface larger than the extended maximum XRequest size.  */
+    {
+	int len = cairo_format_stride_for_width (glyphset_info->format, glyph_surface->width) * glyph_surface->height;
+	int max_request_size = (XExtendedMaxRequestSize (dpy) ? XExtendedMaxRequestSize (dpy) : XMaxRequestSize (dpy)) * 4 -
+	                       sz_xRenderAddGlyphsReq -
+	                       sz_xGlyphInfo          -
+			       8;
+	if (len >= max_request_size)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     /* check to see if we have a pending XRenderFreeGlyph for this glyph */
     if (glyphset_info->pending_free_glyphs != NULL) {
@@ -3304,7 +3301,7 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
     int num_elts = 0;
     int num_out_glyphs = 0;
 
-    int max_request_size = XMaxRequestSize (dst->dpy)
+    int max_request_size = XMaxRequestSize (dst->dpy) * 4
 			 - MAX (sz_xRenderCompositeGlyphs8Req,
 				MAX(sz_xRenderCompositeGlyphs16Req,
 				    sz_xRenderCompositeGlyphs32Req));
