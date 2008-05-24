@@ -3351,19 +3351,11 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 		                                    scaled_font,
 						    &scaled_glyph);
 	    if (status) {
-	        if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
-		    /* Glyph image too big to send to server.  Flush what we
-		     * got and let fallback code handle the rest.
-		     */
-		    if (num_elts)
-			status = _cairo_xlib_surface_emit_glyphs_chunk (dst, glyphs, i,
-									scaled_font, op, src, attributes,
-									num_elts, width, glyphset_info);
-		    *remaining_glyphs = num_glyphs - i;
+	        if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+		    /* Break so we flush glyphs so far and let fallback code
+		     * handle the rest */
+		    break;
 
-		    if (status == CAIRO_STATUS_SUCCESS)
-			status = CAIRO_INT_STATUS_UNSUPPORTED;
-		}
 		return status;
 	    }
 	}
@@ -3436,10 +3428,16 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 	request_size += width;
     }
 
-    if (num_elts)
-	status = _cairo_xlib_surface_emit_glyphs_chunk (dst, glyphs, num_glyphs,
-							scaled_font, op, src, attributes,
-							num_elts, width, glyphset_info);
+    if (num_elts) {
+	/* status may be UNSUPPORTED.  Shouldn't override that to SUCCESS */
+	cairo_status_t status2;
+	status2 = _cairo_xlib_surface_emit_glyphs_chunk (dst, glyphs, num_glyphs,
+							 scaled_font, op, src, attributes,
+							 num_elts, width, glyphset_info);
+	if (status2 != CAIRO_STATUS_SUCCESS)
+	    status = status2;
+    }
+    *remaining_glyphs = num_glyphs - i;
 
     return status;
 }
