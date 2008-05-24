@@ -3337,10 +3337,10 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 	 * negative value of -8192 on the other hand, is absolutely useless.
 	 * Note that we do want to allow some negative positions.  The glyph
 	 * may start off the screen but part of it make it to the screen.
-	 * Anyway, we will allow positions in the range -1024..15359.  That
+	 * Anyway, we will allow positions in the range -4096..122887.  That
 	 * will buy us a few more years before this stops working.
 	 */
-	if (((this_x+1024)|(this_y+1024))&~0x3fffu) {
+	if (((this_x+4096)|(this_y+4096))&~0x3fffu) {
 	    glyphs[i].index = GLYPH_INDEX_SKIP;
 	    continue;
 	}
