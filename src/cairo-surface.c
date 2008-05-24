@@ -2131,7 +2131,6 @@ _cairo_surface_show_glyphs (cairo_surface_t	*surface,
     cairo_status_t status;
     cairo_scaled_font_t *dev_scaled_font = scaled_font;
     cairo_pattern_t *dev_source;
-    cairo_matrix_t font_matrix;
 
     assert (! surface->is_snapshot);
 
@@ -2147,14 +2146,13 @@ _cairo_surface_show_glyphs (cairo_surface_t	*surface,
     if (status)
 	return _cairo_surface_set_error (surface, status);
 
-    cairo_scaled_font_get_font_matrix (scaled_font, &font_matrix);
-
     if (_cairo_surface_has_device_transform (surface) &&
 	! _cairo_matrix_is_integer_translation (&surface->device_transform, NULL, NULL))
     {
 	cairo_font_options_t font_options;
-	cairo_matrix_t dev_ctm;
+	cairo_matrix_t dev_ctm, font_matrix;
 
+	cairo_scaled_font_get_font_matrix (scaled_font, &font_matrix);
 	cairo_scaled_font_get_ctm (scaled_font, &dev_ctm);
 	cairo_matrix_multiply (&dev_ctm, &dev_ctm, &surface->device_transform);
 	cairo_scaled_font_get_font_options (scaled_font, &font_options);
