@@ -1551,6 +1551,9 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 			    cairo_scaled_glyph_info_t info,
 			    cairo_scaled_glyph_t **scaled_glyph_ret);
 
+cairo_private double
+_cairo_scaled_font_get_max_scale (cairo_scaled_font_t *scaled_font);
+
 cairo_private void
 _cairo_scaled_font_map_destroy (void);
 

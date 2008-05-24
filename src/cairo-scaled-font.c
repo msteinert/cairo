@@ -195,6 +195,7 @@ static const cairo_scaled_font_t _cairo_scaled_font_nil = {
     TRUE,			/* finished */
     { 1., 0., 0., 1., 0, 0},	/* scale */
     { 1., 0., 0., 1., 0, 0},	/* scale_inverse */
+    1.,				/* max_scale */
     { 0., 0., 0., 0., 0. },	/* extents */
     CAIRO_MUTEX_NIL_INITIALIZER,/* mutex */
     NULL,			/* glyphs */
@@ -480,6 +481,8 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 			   &scaled_font->font_matrix,
 			   &scaled_font->ctm);
 
+    scaled_font->max_scale = MAX (fabs (scaled_font->scale.xx) + fabs (scaled_font->scale.xy),
+				  fabs (scaled_font->scale.yx) + fabs (scaled_font->scale.yy));
     scaled_font->scale_inverse = scaled_font->scale;
     status = cairo_matrix_invert (&scaled_font->scale_inverse);
     if (status) {
@@ -1905,6 +1908,13 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 
     return status;
 }
+
+double
+_cairo_scaled_font_get_max_scale (cairo_scaled_font_t *scaled_font)
+{
+    return scaled_font->max_scale;
+}
+
 
 /**
  * cairo_scaled_font_get_font_face:
