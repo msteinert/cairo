@@ -64,7 +64,8 @@ static void
 _cairo_gstate_transform_glyphs_to_backend (cairo_gstate_t      *gstate,
                                            const cairo_glyph_t *glyphs,
                                            int                  num_glyphs,
-                                           cairo_glyph_t       *transformed_glyphs);
+                                           cairo_glyph_t       *transformed_glyphs,
+					   int		       *num_transformed_glyphs);
 
 cairo_status_t
 _cairo_gstate_init (cairo_gstate_t  *gstate,
@@ -1543,7 +1544,7 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     }
 
     _cairo_gstate_transform_glyphs_to_backend (gstate, glyphs, num_glyphs,
-                                               transformed_glyphs);
+                                               transformed_glyphs, &num_glyphs);
 
     status = _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
     if (status)
@@ -1587,7 +1588,7 @@ _cairo_gstate_glyph_path (cairo_gstate_t      *gstate,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     _cairo_gstate_transform_glyphs_to_backend (gstate, glyphs, num_glyphs,
-                                               transformed_glyphs);
+                                               transformed_glyphs, NULL);
 
     CAIRO_MUTEX_LOCK (gstate->scaled_font->mutex);
     status = _cairo_scaled_font_glyph_path (gstate->scaled_font,
@@ -1623,39 +1624,94 @@ _cairo_gstate_get_antialias (cairo_gstate_t *gstate)
  * @num_glyphs: the number of elements in @glyphs
  * @transformed_glyphs: a pre-allocated array of at least @num_glyphs
  * #cairo_glyph_t objects
+ * @num_transformed_glyphs: the number of elements in @transformed_glyphs
+ * after dropping out of bounds glyphs, or %NULL if glyphs shouldn't be
+ * dropped
  *
  * Transform an array of glyphs to backend space by first adding the offset
  * of the font matrix, then transforming from user space to backend space.
  * The result of the transformation is placed in @transformed_glyphs.
+ *
+ * This also uses information from the scaled font and the surface to
+ * cull/drop glyphs that will not be visible.
  **/
 static void
 _cairo_gstate_transform_glyphs_to_backend (cairo_gstate_t      *gstate,
                                            const cairo_glyph_t *glyphs,
                                            int                  num_glyphs,
-                                           cairo_glyph_t *transformed_glyphs)
+                                           cairo_glyph_t       *transformed_glyphs,
+					   int		       *num_transformed_glyphs)
 {
-    int i;
+    int i, j;
     cairo_matrix_t *ctm = &gstate->ctm;
+    cairo_matrix_t *font_matrix = &gstate->font_matrix;
     cairo_matrix_t *device_transform = &gstate->target->device_transform;
+    cairo_bool_t drop = FALSE;
+    double x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+
+    if (num_transformed_glyphs != NULL) {
+	cairo_rectangle_int_t surface_extents;
+	double scale = _cairo_scaled_font_get_max_scale (gstate->scaled_font);
+
+	drop = TRUE;
+
+	if (_cairo_surface_get_extents (gstate->target, &surface_extents))
+	    drop = FALSE; /* unbounded surface */
+	else {
+	    /* XXX We currently drop any glyphs that has its position outside
+	     * of the surface boundaries by a safety margin depending on the
+	     * font scale.  This however can fail in extreme cases where the
+	     * font has really long swashes for example...  We can correctly
+	     * handle that by looking the glyph up and using its device bbox
+	     * to device if it's going to be visible, but I'm not inclined to
+	     * do that now.
+	     */
+	    x1 = surface_extents.x - 2*scale;
+	    y1 = surface_extents.y - 2*scale;
+	    x2 = surface_extents.x + surface_extents.width  + scale;
+	    y2 = surface_extents.y + surface_extents.height + scale;
+	}
+
+	if (!drop)
+	    *num_transformed_glyphs = num_glyphs;
+    } else
+	num_transformed_glyphs = &j;
+
+#define KEEP_GLYPH(glyph) (x1 <= glyph.x && glyph.x <= x2 && y1 <= glyph.y && glyph.y <= y2)
 
     if (_cairo_matrix_is_identity (ctm) &&
         _cairo_matrix_is_identity (device_transform) &&
-	gstate->font_matrix.x0 == 0 && gstate->font_matrix.y0 == 0)
+	font_matrix->x0 == 0 && font_matrix->y0 == 0)
     {
-        memcpy (transformed_glyphs, glyphs, num_glyphs * sizeof (cairo_glyph_t));
+	if (!drop)
+	    memcpy (transformed_glyphs, glyphs, num_glyphs * sizeof (cairo_glyph_t));
+	else {
+	    for (j = 0, i = 0; i < num_glyphs; i++)
+	    {
+		transformed_glyphs[j].index = glyphs[i].index;
+		transformed_glyphs[j].x = glyphs[i].x;
+		transformed_glyphs[j].y = glyphs[i].y;
+		if (KEEP_GLYPH (transformed_glyphs[j]))
+		    j++;
+	    }
+	    *num_transformed_glyphs = j;
+	}
     }
     else if (_cairo_matrix_is_translation (ctm) &&
              _cairo_matrix_is_translation (device_transform))
     {
-        double tx = gstate->font_matrix.x0 + ctm->x0 + device_transform->x0;
-        double ty = gstate->font_matrix.y0 + ctm->y0 + device_transform->y0;
+        double tx = font_matrix->x0 + ctm->x0 + device_transform->x0;
+        double ty = font_matrix->y0 + ctm->y0 + device_transform->y0;
 
-        for (i = 0; i < num_glyphs; i++)
+        for (j = 0, i = 0; i < num_glyphs; i++)
         {
-            transformed_glyphs[i].index = glyphs[i].index;
-            transformed_glyphs[i].x = glyphs[i].x + tx;
-            transformed_glyphs[i].y = glyphs[i].y + ty;
+            transformed_glyphs[j].index = glyphs[i].index;
+            transformed_glyphs[j].x = glyphs[i].x + tx;
+            transformed_glyphs[j].y = glyphs[i].y + ty;
+	    if (!drop || KEEP_GLYPH (transformed_glyphs[j]))
+		j++;
         }
+	*num_transformed_glyphs = j;
     }
     else
     {
@@ -1669,12 +1725,15 @@ _cairo_gstate_transform_glyphs_to_backend (cairo_gstate_t      *gstate,
         cairo_matrix_multiply (&aggregate_transform,
                                &aggregate_transform, device_transform);
 
-        for (i = 0; i < num_glyphs; i++)
+        for (j = 0, i = 0; i < num_glyphs; i++)
         {
-            transformed_glyphs[i] = glyphs[i];
+            transformed_glyphs[j] = glyphs[i];
             cairo_matrix_transform_point (&aggregate_transform,
-                                          &transformed_glyphs[i].x,
-                                          &transformed_glyphs[i].y);
+                                          &transformed_glyphs[j].x,
+                                          &transformed_glyphs[j].y);
+	    if (!drop || KEEP_GLYPH (transformed_glyphs[j]))
+		j++;
         }
+	*num_transformed_glyphs = j;
     }
 }
