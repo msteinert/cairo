@@ -3165,8 +3165,6 @@ typedef struct {
 /* compile-time assert that #cairo_xlib_glyph_t is the same size as #cairo_glyph_t */
 typedef int cairo_xlib_glyph_t_size_assertion [sizeof (cairo_xlib_glyph_t) == sizeof (cairo_glyph_t) ? 1 : -1];
 
-#define GLYPH_INDEX_SKIP ((unsigned long) -1)
-
 static cairo_status_t
 _cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
 				       cairo_xlib_glyph_t *glyphs,
@@ -3228,10 +3226,6 @@ _cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
     n = 0;
     j = 0;
     for (i = 0; i < num_glyphs; i++) {
-
-      /* Skip glyphs marked so */
-      if (glyphs[i].index == GLYPH_INDEX_SKIP)
-	continue;
 
       /* Start a new element for first output glyph, and for glyphs with
        * unexpected position */
@@ -3339,11 +3333,12 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 	 * may start off the screen but part of it make it to the screen.
 	 * Anyway, we will allow positions in the range -4096..122887.  That
 	 * will buy us a few more years before this stops working.
+	 *
+	 * Update: upon seeing weird glyphs, we just return and let fallback
+	 * code do the job.
 	 */
-	if (((this_x+4096)|(this_y+4096))&~0x3fffu) {
-	    glyphs[i].index = GLYPH_INDEX_SKIP;
-	    continue;
-	}
+	if (((this_x+4096)|(this_y+4096))&~0x3fffu)
+	    break;
 
 	/* Send unsent glyphs to the server */
 	if (_cairo_xlib_scaled_glyph_get_glyphset_info (scaled_glyph) == NULL) {
@@ -3428,21 +3423,17 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 	request_size += width;
     }
 
-    if (num_elts) {
-	/* status may be UNSUPPORTED.  Shouldn't override that to SUCCESS */
-	cairo_status_t status2;
-	status2 = _cairo_xlib_surface_emit_glyphs_chunk (dst, glyphs, num_glyphs,
-							 scaled_font, op, src, attributes,
-							 num_elts, width, glyphset_info);
-	if (status2 != CAIRO_STATUS_SUCCESS)
-	    status = status2;
-    }
+    if (num_elts)
+	status = _cairo_xlib_surface_emit_glyphs_chunk (dst, glyphs, num_glyphs,
+							scaled_font, op, src, attributes,
+							num_elts, width, glyphset_info);
+
     *remaining_glyphs = num_glyphs - i;
+    if (*remaining_glyphs && status == CAIRO_STATUS_SUCCESS)
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
 
     return status;
 }
-
-#undef GLYPH_INDEX_SKIP
 
 static cairo_int_status_t
 _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
