@@ -41,9 +41,9 @@
 
 #include "cairo-test.h"
 
-#define WIDTH  400
-#define HEIGHT 200
-#define TEXT_SIZE 160
+#define WIDTH  800
+#define HEIGHT 800
+#define TEXT_SIZE 10000
 
 static cairo_test_draw_function_t draw;
 
@@ -69,19 +69,9 @@ draw (cairo_t *cr, int width, int height)
 			    CAIRO_FONT_WEIGHT_NORMAL);
     cairo_set_font_size (cr, TEXT_SIZE);
 
-    font_options = cairo_font_options_create ();
-
-    cairo_get_font_options (cr, font_options);
-    cairo_font_options_set_hint_metrics (font_options, CAIRO_HINT_METRICS_OFF);
-
-    cairo_set_font_options (cr, font_options);
-    cairo_font_options_destroy (font_options);
-
     cairo_set_source_rgb (cr, 0, 0, 0);
-
-    cairo_set_font_size (cr, 160);
-    cairo_move_to (cr, 5, 160);
-    cairo_show_text (cr, "MoW");
+    cairo_move_to (cr, -TEXT_SIZE / 2, TEXT_SIZE / 2);
+    cairo_show_text (cr, "xW");
 
     return CAIRO_TEST_SUCCESS;
 }

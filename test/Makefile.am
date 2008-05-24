@@ -443,7 +443,6 @@ REFERENCE_IMAGES = \
 	infinite-join-ref.png	\
 	infinite-join-ps-ref.png	\
 	large-font-ref.png	\
-	large-font-ps-ref.png	\
 	large-source-ref.png	\
 	leaky-dash-ps-argb32-ref.png	\
 	leaky-dash-ps-rgb24-ref.png	\
