@@ -1267,25 +1267,6 @@ _cairo_color_equal (const cairo_color_t *color_a,
 
 /* cairo-font-face.c */
 
-cairo_private void
-_cairo_scaled_font_freeze_cache (cairo_scaled_font_t *scaled_font);
-
-cairo_private void
-_cairo_scaled_font_thaw_cache (cairo_scaled_font_t *scaled_font);
-
-cairo_private void
-_cairo_scaled_font_reset_cache (cairo_scaled_font_t *scaled_font);
-
-cairo_private cairo_status_t
-_cairo_scaled_font_set_error (cairo_scaled_font_t *scaled_font,
-			      cairo_status_t status);
-
-cairo_private cairo_scaled_font_t *
-_cairo_scaled_font_create_in_error (cairo_status_t status);
-
-cairo_private void
-_cairo_scaled_font_reset_static_data (void);
-
 extern const cairo_private cairo_font_face_t _cairo_font_face_nil;
 
 cairo_private void
@@ -1470,6 +1451,26 @@ _cairo_path_fixed_stroke_to_traps (cairo_path_fixed_t	*path,
 				   cairo_traps_t	*traps);
 
 /* cairo-scaled-font.c */
+
+cairo_private void
+_cairo_scaled_font_freeze_cache (cairo_scaled_font_t *scaled_font);
+
+cairo_private void
+_cairo_scaled_font_thaw_cache (cairo_scaled_font_t *scaled_font);
+
+cairo_private void
+_cairo_scaled_font_reset_cache (cairo_scaled_font_t *scaled_font);
+
+cairo_private cairo_status_t
+_cairo_scaled_font_set_error (cairo_scaled_font_t *scaled_font,
+			      cairo_status_t status);
+
+cairo_private cairo_scaled_font_t *
+_cairo_scaled_font_create_in_error (cairo_status_t status);
+
+cairo_private void
+_cairo_scaled_font_reset_static_data (void);
+
 
 cairo_private cairo_status_t
 _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
