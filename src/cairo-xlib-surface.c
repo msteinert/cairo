@@ -3424,7 +3424,7 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
     }
 
     if (num_elts)
-	status = _cairo_xlib_surface_emit_glyphs_chunk (dst, glyphs, num_glyphs,
+	status = _cairo_xlib_surface_emit_glyphs_chunk (dst, glyphs, i,
 							scaled_font, op, src, attributes,
 							num_elts, width, glyphset_info);
 
