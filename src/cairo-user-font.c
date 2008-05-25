@@ -332,7 +332,7 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
 	 *
 	 * To fix that, we should make _cairo_scaled_font_init() insert
 	 * scaled_font in the fontmap, then lock the scaled_font lock here and
-	 * release the fontmaps.
+	 * release the fontmap's.
 	 */
 	CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
 	status = font_face->scaled_font_methods.init (&user_scaled_font->base,

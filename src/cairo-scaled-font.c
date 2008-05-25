@@ -498,7 +498,7 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 	 * producing an error.
 	 *
 	 * FIXME:  If the scale is rank 1, we still go into error mode.  But then
-	 * again, that's what we doo everywhere in cairo.
+	 * again, that's what we do everywhere in cairo.
 	 *
 	 * Also, the check for == 0. below may bee too harsh...
 	 */
