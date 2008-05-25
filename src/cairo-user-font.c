@@ -327,21 +327,19 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
     }
 
     if (font_face->scaled_font_methods.init != NULL) {
-	/* XXX by releasing fontmap lock here, we open up the case for having
-	 * two scaled fonts with the same key to be inserted in the fontmap.
-	 *
-	 * To fix that, we should make _cairo_scaled_font_init() insert
-	 * scaled_font in the fontmap, then lock the scaled_font lock here and
-	 * release the fontmap's.
-	 */
+
 	/* Lock the scaled_font mutex such that user doesn't accidentally try
-	 * to use it just yet.
-	 */
+         * to use it just yet. */
 	CAIRO_MUTEX_LOCK (user_scaled_font->base.mutex);
-	CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
+
+	/* Give away fontmap lock such that user-font can use other fonts */
+	_cairo_scaled_font_unlock_font_map (&user_scaled_font->base);
+
 	status = font_face->scaled_font_methods.init (&user_scaled_font->base,
 						      &font_extents);
-	CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
+
+	_cairo_scaled_font_lock_font_map (&user_scaled_font->base);
+
 	CAIRO_MUTEX_UNLOCK (user_scaled_font->base.mutex);
     }
 
