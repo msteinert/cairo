@@ -485,7 +485,7 @@ _cairo_scaled_font_placeholder_wait_for_creation_to_finish (cairo_scaled_font_t 
     /* now unlock the fontmap mutex so creation has a chance to finish */
     CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
 
-    /* wait on placeholde mutex until we are awaken */
+    /* wait on placeholder mutex until we are awaken */
     CAIRO_MUTEX_LOCK (scaled_font->mutex);
 
     /* ok, creation done.  just clean up and back out */
