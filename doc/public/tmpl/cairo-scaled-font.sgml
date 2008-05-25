@@ -155,6 +155,15 @@ size and transformation and a certain set of font options.
 @ctm: 
 
 
+<!-- ##### FUNCTION cairo_scaled_font_get_scale_matrix ##### -->
+<para>
+
+</para>
+
+@scaled_font: 
+@scale_matrix: 
+
+
 <!-- ##### FUNCTION cairo_scaled_font_get_type ##### -->
 <para>
 

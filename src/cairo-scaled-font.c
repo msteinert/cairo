@@ -1990,6 +1990,30 @@ cairo_scaled_font_get_ctm (cairo_scaled_font_t	*scaled_font,
 slim_hidden_def (cairo_scaled_font_get_ctm);
 
 /**
+ * cairo_scaled_font_get_scale_matrix:
+ * @scaled_font: a #cairo_scaled_font_t
+ * @scale_matrix: return value for the matrix
+ *
+ * Stores the scale matrix of @scaled_font into @matrix.
+ * The scale matrix is product of the font matrix and the ctm
+ * associated with the scaled font, and hence is the matrix mapping from
+ * font space to device space.
+ *
+ * Since: 1.8
+ **/
+void
+cairo_scaled_font_get_scale_matrix (cairo_scaled_font_t	*scaled_font,
+				    cairo_matrix_t	*scale_matrix)
+{
+    if (scaled_font->status) {
+	cairo_matrix_init_identity (scale_matrix);
+	return;
+    }
+
+    *scale_matrix = scaled_font->scale;
+}
+
+/**
  * cairo_scaled_font_get_font_options:
  * @scaled_font: a #cairo_scaled_font_t
  * @options: return value for the font options
