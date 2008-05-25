@@ -326,9 +326,12 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
 	return status;
     }
 
-    if (font_face->scaled_font_methods.init != NULL)
+    if (font_face->scaled_font_methods.init != NULL) {
+	CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
 	status = font_face->scaled_font_methods.init (&user_scaled_font->base,
 						      &font_extents);
+	CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
+    }
 
     if (status == CAIRO_STATUS_SUCCESS)
 	status = _cairo_scaled_font_set_metrics (&user_scaled_font->base, &font_extents);
