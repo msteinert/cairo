@@ -490,10 +490,10 @@ cairo_matrix_invert (cairo_matrix_t *matrix)
 
     _cairo_matrix_compute_determinant (matrix, &det);
 
-    if (det == 0)
+    if (! ISFINITE (det))
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
-    if (! ISFINITE (det))
+    if (det == 0)
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
 
     _cairo_matrix_compute_adjoint (matrix);
@@ -510,7 +510,7 @@ _cairo_matrix_is_invertible (const cairo_matrix_t *matrix)
 
     _cairo_matrix_compute_determinant (matrix, &det);
 
-    return det != 0. && ISFINITE (det);
+    return ISFINITE (det) && det != 0.;
 }
 
 void
