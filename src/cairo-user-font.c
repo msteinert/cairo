@@ -334,10 +334,15 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
 	 * scaled_font in the fontmap, then lock the scaled_font lock here and
 	 * release the fontmap's.
 	 */
+	/* Lock the scaled_font mutex such that user doesn't accidentally try
+	 * to use it just yet.
+	 */
+	CAIRO_MUTEX_LOCK (user_scaled_font->base.mutex);
 	CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
 	status = font_face->scaled_font_methods.init (&user_scaled_font->base,
 						      &font_extents);
 	CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
+	CAIRO_MUTEX_UNLOCK (user_scaled_font->base.mutex);
     }
 
     if (status == CAIRO_STATUS_SUCCESS)
