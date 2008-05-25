@@ -1472,10 +1472,10 @@ cairo_private void
 _cairo_scaled_font_reset_static_data (void);
 
 cairo_private void
-_cairo_scaled_font_unlock_font_map (cairo_scaled_font_t *scaled_font);
+_cairo_scaled_font_register_placeholder_and_unlock_font_map (cairo_scaled_font_t *scaled_font);
 
 cairo_private void
-_cairo_scaled_font_lock_font_map (cairo_scaled_font_t *scaled_font);
+_cairo_scaled_font_unregister_placeholder_and_lock_font_map (cairo_scaled_font_t *scaled_font);
 
 cairo_private cairo_status_t
 _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,

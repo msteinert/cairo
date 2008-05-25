@@ -333,12 +333,12 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
 	CAIRO_MUTEX_LOCK (user_scaled_font->base.mutex);
 
 	/* Give away fontmap lock such that user-font can use other fonts */
-	_cairo_scaled_font_unlock_font_map (&user_scaled_font->base);
+	_cairo_scaled_font_register_placeholder_and_unlock_font_map (&user_scaled_font->base);
 
 	status = font_face->scaled_font_methods.init (&user_scaled_font->base,
 						      &font_extents);
 
-	_cairo_scaled_font_lock_font_map (&user_scaled_font->base);
+	_cairo_scaled_font_unregister_placeholder_and_lock_font_map (&user_scaled_font->base);
 
 	CAIRO_MUTEX_UNLOCK (user_scaled_font->base.mutex);
     }

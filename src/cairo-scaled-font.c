@@ -192,7 +192,7 @@ static const cairo_scaled_font_t _cairo_scaled_font_nil = {
       CAIRO_SUBPIXEL_ORDER_DEFAULT,
       CAIRO_HINT_STYLE_DEFAULT,
       CAIRO_HINT_METRICS_DEFAULT} ,
-    TRUE,			/* created */
+    FALSE,			/* placeholder */
     TRUE,			/* finished */
     { 1., 0., 0., 1., 0, 0},	/* scale */
     { 1., 0., 0., 1., 0, 0},	/* scale_inverse */
@@ -392,90 +392,107 @@ _cairo_scaled_font_map_destroy (void)
  * created (needed for user-fonts), we need to take extra care not
  * ending up with multiple identical scaled fonts being created.
  *
- * What we do is, we create a dummy identical scaled font, also marked
- * as being created, lock its mutex, and insert that in the fontmap
+ * What we do is, we create a fake identical scaled font, and mark
+ * it as placeholder, lock its mutex, and insert that in the fontmap
  * hash table.  This makes other code trying to create an identical
  * scaled font to just wait and retry.
  *
- * The reason we have to create a new key instead of just using
+ * The reason we have to create a fake scaled font instead of just using
  * scaled_font is for lifecycle management: we need to (or rather,
- * other code needs to) reference the key.  We can't do that on the
- * input scaled_font as it may be freed by font backend upon error.
+ * other code needs to) reference the scaked_font in the hash.
+ * We can't do that on the input scaled_font as it may be freed by
+ * font backend upon error.
  */
 
 void
-_cairo_scaled_font_unlock_font_map (cairo_scaled_font_t *scaled_font)
+_cairo_scaled_font_register_placeholder_and_unlock_font_map (cairo_scaled_font_t *scaled_font)
 {
-    if (!scaled_font->created) {
-        cairo_status_t status = CAIRO_STATUS_SUCCESS;
-	cairo_scaled_font_t *key;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_scaled_font_t *placeholder_scaled_font;
 
-	key = malloc (sizeof (cairo_scaled_font_t));
-	if (!key) {
-	    status = CAIRO_STATUS_NO_MEMORY;
-	    goto FREE;
-	}
-
-	/* full initialization is wasteful, but who cares... */
-	status = _cairo_scaled_font_init (key,
-					  scaled_font->font_face,
-					  &scaled_font->font_matrix,
-					  &scaled_font->ctm,
-					  &scaled_font->options,
-					  NULL);
-	if (status)
-	    goto FINI;
-
-	CAIRO_MUTEX_LOCK (key->mutex);
-
-	status = _cairo_hash_table_insert (cairo_scaled_font_map->hash_table,
-					   &key->hash_entry);
-	if (status)
-	    goto UNLOCK_KEY;
-
-	goto UNLOCK;
-
-       UNLOCK_KEY:
-	CAIRO_MUTEX_UNLOCK (key->mutex);
-
-       FINI:
-	_cairo_scaled_font_fini (key);
-
-       FREE:
-	free (key);
-
-	status = _cairo_scaled_font_set_error (scaled_font, status);
+    placeholder_scaled_font = malloc (sizeof (cairo_scaled_font_t));
+    if (!placeholder_scaled_font) {
+	status = CAIRO_STATUS_NO_MEMORY;
+	goto FREE;
     }
+
+    /* full initialization is wasteful, but who cares... */
+    status = _cairo_scaled_font_init (placeholder_scaled_font,
+				      scaled_font->font_face,
+				      &scaled_font->font_matrix,
+				      &scaled_font->ctm,
+				      &scaled_font->options,
+				      NULL);
+    if (status)
+	goto FINI;
+
+    placeholder_scaled_font->placeholder = TRUE;
+
+    CAIRO_MUTEX_LOCK (placeholder_scaled_font->mutex);
+
+    status = _cairo_hash_table_insert (cairo_scaled_font_map->hash_table,
+				       &placeholder_scaled_font->hash_entry);
+    if (status)
+	goto UNLOCK_KEY;
+
+    goto UNLOCK;
+
+   UNLOCK_KEY:
+    CAIRO_MUTEX_UNLOCK (placeholder_scaled_font->mutex);
+
+   FINI:
+    _cairo_scaled_font_fini (placeholder_scaled_font);
+
+   FREE:
+    free (placeholder_scaled_font);
+
+    status = _cairo_scaled_font_set_error (scaled_font, status);
 
  UNLOCK:
     CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
 }
 
 void
-_cairo_scaled_font_lock_font_map (cairo_scaled_font_t *scaled_font)
+_cairo_scaled_font_unregister_placeholder_and_lock_font_map (cairo_scaled_font_t *scaled_font)
 {
+    cairo_scaled_font_t *placeholder_scaled_font;
+    cairo_bool_t found;
+
     CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
 
-    if (!scaled_font->created) {
-	cairo_scaled_font_t *key;
-	cairo_bool_t found;
+    found = _cairo_hash_table_lookup (cairo_scaled_font_map->hash_table,
+				      &scaled_font->hash_entry,
+				      (cairo_hash_entry_t**) &placeholder_scaled_font);
+    assert (found);
+    assert (placeholder_scaled_font->placeholder);
 
-	found = _cairo_hash_table_lookup (cairo_scaled_font_map->hash_table,
-					  &scaled_font->hash_entry,
-					  (cairo_hash_entry_t**) &key);
-	assert (found);
+    _cairo_hash_table_remove (cairo_scaled_font_map->hash_table,
+			      &scaled_font->hash_entry);
 
-	_cairo_hash_table_remove (cairo_scaled_font_map->hash_table,
-				  &scaled_font->hash_entry);
+    CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
 
-	CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
-
-	CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
-	cairo_scaled_font_destroy (key);
-	CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
-    }
+    CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
+    cairo_scaled_font_destroy (placeholder_scaled_font);
+    CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
 }
 
+static void
+_cairo_scaled_font_placeholder_wait_for_creation_to_finish (cairo_scaled_font_t *scaled_font)
+{
+    /* reference the place holder so it doesn't go away */
+    cairo_scaled_font_reference (scaled_font);
+
+    /* now unlock the fontmap mutex so creation has a chance to finish */
+    CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
+
+    /* wait on placeholde mutex until we are awaken */
+    CAIRO_MUTEX_LOCK (scaled_font->mutex);
+
+    /* ok, creation done.  just clean up and back out */
+    CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
+    CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
+    cairo_scaled_font_destroy (scaled_font);
+}
 
 /* Fowler / Noll / Vo (FNV) Hash (http://www.isthe.com/chongo/tech/comp/fnv/)
  *
@@ -509,7 +526,7 @@ _cairo_scaled_font_init_key (cairo_scaled_font_t        *scaled_font,
     uint32_t hash = FNV1_32_INIT;
 
     scaled_font->status = CAIRO_STATUS_SUCCESS;
-    scaled_font->created = FALSE;
+    scaled_font->placeholder = FALSE;
     scaled_font->font_face = font_face;
     scaled_font->font_matrix = *font_matrix;
     scaled_font->ctm = *ctm;
@@ -751,17 +768,12 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     while (_cairo_hash_table_lookup (font_map->hash_table, &key.hash_entry,
 				     (cairo_hash_entry_t**) &scaled_font))
     {
-	if (scaled_font->created)
+	if (!scaled_font->placeholder)
 	    break;
 
 	/* If the scaled font is being created (happens for user-font),
 	 * just wait until it's done, then retry */
-	cairo_scaled_font_reference (scaled_font);
-	CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
-	CAIRO_MUTEX_LOCK (scaled_font->mutex);
-	CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
-	CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
-	cairo_scaled_font_destroy (scaled_font);
+	_cairo_scaled_font_placeholder_wait_for_creation_to_finish (scaled_font);
     }
 
     /* Return existing scaled_font if it exists in the hash table. */
@@ -812,7 +824,6 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	return _cairo_scaled_font_create_in_error (status);
     }
 
-    scaled_font->created = TRUE;
     status = _cairo_hash_table_insert (font_map->hash_table,
 				       &scaled_font->hash_entry);
     _cairo_scaled_font_map_unlock ();
@@ -937,7 +948,7 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
 	CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
 	font_map = cairo_scaled_font_map;
 
-	if (scaled_font->created && font_map && scaled_font->hash_entry.hash != ZOMBIE) {
+	if (!scaled_font->placeholder && font_map && scaled_font->hash_entry.hash != ZOMBIE) {
 	    /* Rather than immediately destroying this object, we put it into
 	     * the font_map->holdovers array in case it will get used again
 	     * soon (and is why we must hold the lock over the atomic op on
