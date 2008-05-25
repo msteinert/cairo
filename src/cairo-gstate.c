@@ -1550,12 +1550,43 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     if (status)
 	goto CLEANUP_GLYPHS;
 
-    status = _cairo_surface_show_glyphs (gstate->target,
-					 gstate->op,
-					 &source_pattern.base,
-					 transformed_glyphs,
-					 num_glyphs,
-					 gstate->scaled_font);
+    /* For really huge font sizes, we can just do path;fill instead of
+     * show_glyphs, as show_glyphs would put excess pressure on the cache,
+     * and moreover, not all components below us correctly handle huge font
+     * sizes.  I wanted to set the limit at 256.  But alas, seems like cairo's
+     * rasterizer is something like ten times slower than freetype's for huge
+     * sizes.  So, no win just yet.  For now, do it for insanely-huge sizes,
+     * just to make sure we don't make anyone unhappy.  When we get a really
+     * fast rasterizer in cairo, we may want to readjust this. */
+    if (_cairo_scaled_font_get_max_scale (gstate->scaled_font) <= 10240) {
+	status = _cairo_surface_show_glyphs (gstate->target,
+					     gstate->op,
+					     &source_pattern.base,
+					     transformed_glyphs,
+					     num_glyphs,
+					     gstate->scaled_font);
+    } else {
+	cairo_path_fixed_t path;
+
+	_cairo_path_fixed_init (&path);
+
+	CAIRO_MUTEX_LOCK (gstate->scaled_font->mutex);
+	status = _cairo_scaled_font_glyph_path (gstate->scaled_font,
+						transformed_glyphs, num_glyphs,
+						&path);
+	CAIRO_MUTEX_UNLOCK (gstate->scaled_font->mutex);
+
+	if (status == CAIRO_STATUS_SUCCESS)
+	  status = _cairo_surface_fill (gstate->target,
+					gstate->op,
+					&source_pattern.base,
+					&path,
+					gstate->fill_rule,
+					gstate->tolerance,
+					gstate->antialias);
+
+	_cairo_path_fixed_fini (&path);
+    }
 
     _cairo_pattern_fini (&source_pattern.base);
 
