@@ -811,20 +811,24 @@ slim_hidden_def (cairo_scaled_font_reference);
 void
 cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
 {
-    cairo_scaled_font_map_t *font_map;
     cairo_scaled_font_t *lru = NULL;
 
     if (scaled_font == NULL ||
 	    CAIRO_REFERENCE_COUNT_IS_INVALID (&scaled_font->ref_count))
 	return;
 
-    font_map = _cairo_scaled_font_map_lock ();
-    assert (font_map != NULL);
-
     assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&scaled_font->ref_count));
 
     if (_cairo_reference_count_dec_and_test (&scaled_font->ref_count)) {
-	if (scaled_font->hash_entry.hash != ZOMBIE) {
+	cairo_scaled_font_map_t *font_map;
+
+	/* don't use _cairo_scaled_font_map_lock() to not create it if it's
+	 * NULL. if font_map is NULL, it means we are in the process of
+	 * destructing it.  don't err and continue */
+	CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
+	font_map = cairo_scaled_font_map;
+
+	if (font_map && scaled_font->hash_entry.hash != ZOMBIE) {
 	    /* Rather than immediately destroying this object, we put it into
 	     * the font_map->holdovers array in case it will get used again
 	     * soon (and is why we must hold the lock over the atomic op on
@@ -849,8 +853,9 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
 	    font_map->num_holdovers++;
 	} else
 	    lru = scaled_font;
+
+	CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
     }
-    _cairo_scaled_font_map_unlock ();
 
     /* If we pulled an item from the holdovers array, (while the font
      * map lock was held, of course), then there is no way that anyone
