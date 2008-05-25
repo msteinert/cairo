@@ -500,7 +500,7 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 	 * FIXME:  If the scale is rank 1, we still go into error mode.  But then
 	 * again, that's what we do everywhere in cairo.
 	 *
-	 * Also, the check for == 0. below may bee too harsh...
+	 * Also, the check for == 0. below may be too harsh...
 	 */
         if (scaled_font->scale.xx == 0. && scaled_font->scale.xy == 0. &&
 	    scaled_font->scale.yx == 0. && scaled_font->scale.yy == 0.)
