@@ -347,7 +347,6 @@ _cairo_scaled_font_map_unlock (void)
 void
 _cairo_scaled_font_map_destroy (void)
 {
-    int i;
     cairo_scaled_font_map_t *font_map;
     cairo_scaled_font_t *scaled_font;
 
@@ -358,15 +357,23 @@ _cairo_scaled_font_map_destroy (void)
         goto CLEANUP_MUTEX_LOCK;
     }
 
-    for (i = 0; i < font_map->num_holdovers; i++) {
-	scaled_font = font_map->holdovers[i];
-	/* We should only get here through the reset_static_data path
-	 * and there had better not be any active references at that
-	 * point. */
+    /* remove scaled_fonts starting from the end so that font_map->holdovers
+     * is always in a consistent state when we release the mutex. */
+    while (font_map->num_holdovers) {
+	scaled_font = font_map->holdovers[font_map->num_holdovers-1];
+
 	assert (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&scaled_font->ref_count));
 	_cairo_hash_table_remove (font_map->hash_table,
 				  &scaled_font->hash_entry);
+
+	font_map->num_holdovers--;
+
+	/* release the lock to avoid the possibility of a recursive
+	 * deadlock when the scaled font destroy closure gets called */
+	CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
 	_cairo_scaled_font_fini (scaled_font);
+	CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
+
 	free (scaled_font);
     }
 

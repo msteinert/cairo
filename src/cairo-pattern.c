@@ -1516,13 +1516,20 @@ UNLOCK:
 static void
 _cairo_pattern_reset_solid_surface_cache (void)
 {
-    int i;
-
     CAIRO_MUTEX_LOCK (_cairo_pattern_solid_surface_cache_lock);
 
-    for (i = 0; i < solid_surface_cache.size; i++)
-	cairo_surface_destroy (solid_surface_cache.cache[i].surface);
-    solid_surface_cache.size = 0;
+    /* remove surfaces starting from the end so that solid_surface_cache.cache
+     * is always in a consistent state when we release the mutex. */
+    while (solid_surface_cache.size) {
+	cairo_surface_t *surface = solid_surface_cache.cache[solid_surface_cache.size-1].surface;
+	solid_surface_cache.size--;
+
+	/* release the lock to avoid the possibility of a recursive
+	 * deadlock when the scaled font destroy closure gets called */
+	CAIRO_MUTEX_UNLOCK (_cairo_pattern_solid_surface_cache_lock);
+	cairo_surface_destroy (surface);
+	CAIRO_MUTEX_LOCK (_cairo_pattern_solid_surface_cache_lock);
+    }
 
     CAIRO_MUTEX_UNLOCK (_cairo_pattern_solid_surface_cache_lock);
 }
