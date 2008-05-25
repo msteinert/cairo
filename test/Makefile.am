@@ -159,6 +159,7 @@ unantialiased-shapes$(EXEEXT)				\
 unbounded-operator$(EXEEXT)				\
 user-data$(EXEEXT)					\
 user-font$(EXEEXT)					\
+user-font-proxy$(EXEEXT)				\
 zero-alpha$(EXEEXT)
 
 # XXX: Here are some existing tests that are currently disabled for
@@ -701,6 +702,9 @@ REFERENCE_IMAGES = \
 	user-font-ref.png	\
 	user-font-pdf-ref.png	\
 	user-font-svg-ref.png	\
+	user-font-proxy-ref.png	\
+	user-font-proxy-ps-ref.png	\
+	user-font-proxy-svg-ref.png	\
 	unbounded-operator-quartz-ref.png	\
 	unbounded-operator-quartz-rgb24-ref.png	\
 	xlib-expose-event-ref.png \
