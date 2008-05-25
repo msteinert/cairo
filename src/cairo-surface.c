@@ -662,6 +662,7 @@ cairo_surface_flush (cairo_surface_t *surface)
 	    status = _cairo_surface_set_error (surface, status);
     }
 }
+slim_hidden_def (cairo_surface_flush);
 
 /**
  * cairo_surface_mark_dirty:

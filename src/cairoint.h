@@ -2375,6 +2375,7 @@ slim_hidden_proto (cairo_stroke_preserve);
 slim_hidden_proto (cairo_surface_create_similar);
 slim_hidden_proto (cairo_surface_destroy);
 slim_hidden_proto (cairo_surface_finish);
+slim_hidden_proto (cairo_surface_flush);
 slim_hidden_proto (cairo_surface_get_content);
 slim_hidden_proto (cairo_surface_get_device_offset);
 slim_hidden_proto (cairo_surface_get_font_options);
