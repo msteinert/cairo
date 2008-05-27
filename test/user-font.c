@@ -64,33 +64,13 @@ cairo_test_t test = {
  * ----10 11 12----(baseline)
  *     13 14 15
  */
-
-static const struct {
+typedef struct {
     unsigned long ucs4;
     int width;
     char data[16];
-} glyphs [] = {
-    { '\0', 0, { END_GLYPH } },
-    { ' ',  1, { END_GLYPH } },
-    { '-',  2, { 7, 8, STROKE, END_GLYPH } },
-    { '.',  1, { 10, 10, STROKE, END_GLYPH } },
-    { 'a',  3, { 4, 6, 12, 10, 7, 9, STROKE, END_GLYPH } },
-    { 'c',  3, { 6, 4, 10, 12, STROKE, END_GLYPH } },
-    { 'e',  3, { 12, 10, 4, 6, 9, 7, STROKE, END_GLYPH } },
-    { 'f',  3, { 3, 2, 11, STROKE, 4, 6, STROKE, END_GLYPH } },
-    { 'g',  3, { 12, 10, 4, 6, 15, 13, STROKE, END_GLYPH } },
-    { 'h',  3, { 1, 10, STROKE, 7, 5, 6, 12, STROKE, END_GLYPH } },
-    { 'i',  1, { 1, 1, STROKE, 4, 10, STROKE, END_GLYPH } },
-    { 'l',  1, { 1, 10, STROKE, END_GLYPH } },
-    { 'n',  3, { 10, 4, STROKE, 7, 5, 6, 12, STROKE, END_GLYPH } },
-    { 'o',  3, { 4, 10, 12, 6, CLOSE, END_GLYPH } },
-    { 'r',  3, { 4, 10, STROKE, 7, 5, 6, STROKE, END_GLYPH } },
-    { 's',  3, { 6, 4, 7, 9, 12, 10, STROKE, END_GLYPH } },
-    { 't',  3, { 2, 11, 12, STROKE, 4, 6, STROKE, END_GLYPH } },
-    { 'u',  3, { 4, 10, 12, 6, STROKE, END_GLYPH } },
-    { 'z',  3, { 4, 6, 10, 12, STROKE, END_GLYPH } },
-    {  -1,  0, { END_GLYPH } },
-};
+} test_scaled_font_glyph_t;
+
+static cairo_user_data_key_t test_font_face_glyphs_key;
 
 static cairo_status_t
 test_scaled_font_init (cairo_scaled_font_t  *scaled_font,
@@ -106,6 +86,8 @@ test_scaled_font_unicode_to_glyph (cairo_scaled_font_t *scaled_font,
 				   unsigned long        unicode,
 				   unsigned long       *glyph)
 {
+    test_scaled_font_glyph_t *glyphs = cairo_font_face_get_user_data (cairo_scaled_font_get_font_face (scaled_font),
+								      &test_font_face_glyphs_key);
     int i;
 
     for (i = 0; glyphs[i].ucs4 != -1; i++)
@@ -124,6 +106,8 @@ test_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 			       cairo_t              *cr,
 			       cairo_text_extents_t *metrics)
 {
+    test_scaled_font_glyph_t *glyphs = cairo_font_face_get_user_data (cairo_scaled_font_get_font_face (scaled_font),
+								      &test_font_face_glyphs_key);
     int i;
     const char *data;
     div_t d;
@@ -164,10 +148,45 @@ get_user_font_face (void)
     static cairo_font_face_t *user_font_face = NULL;
 
     if (!user_font_face) {
+
+	/* Simple glyph definition: 1 - 15 means lineto (or moveto for first
+	 * point) for one of the points on this grid:
+	 *
+	 *      1  2  3
+	 *      4  5  6
+	 *      7  8  9
+	 * ----10 11 12----(baseline)
+	 *     13 14 15
+	 */
+	static const test_scaled_font_glyph_t glyphs [] = {
+	    { '\0', 0, { END_GLYPH } },
+	    { ' ',  1, { END_GLYPH } },
+	    { '-',  2, { 7, 8, STROKE, END_GLYPH } },
+	    { '.',  1, { 10, 10, STROKE, END_GLYPH } },
+	    { 'a',  3, { 4, 6, 12, 10, 7, 9, STROKE, END_GLYPH } },
+	    { 'c',  3, { 6, 4, 10, 12, STROKE, END_GLYPH } },
+	    { 'e',  3, { 12, 10, 4, 6, 9, 7, STROKE, END_GLYPH } },
+	    { 'f',  3, { 3, 2, 11, STROKE, 4, 6, STROKE, END_GLYPH } },
+	    { 'g',  3, { 12, 10, 4, 6, 15, 13, STROKE, END_GLYPH } },
+	    { 'h',  3, { 1, 10, STROKE, 7, 5, 6, 12, STROKE, END_GLYPH } },
+	    { 'i',  1, { 1, 1, STROKE, 4, 10, STROKE, END_GLYPH } },
+	    { 'l',  1, { 1, 10, STROKE, END_GLYPH } },
+	    { 'n',  3, { 10, 4, STROKE, 7, 5, 6, 12, STROKE, END_GLYPH } },
+	    { 'o',  3, { 4, 10, 12, 6, CLOSE, END_GLYPH } },
+	    { 'r',  3, { 4, 10, STROKE, 7, 5, 6, STROKE, END_GLYPH } },
+	    { 's',  3, { 6, 4, 7, 9, 12, 10, STROKE, END_GLYPH } },
+	    { 't',  3, { 2, 11, 12, STROKE, 4, 6, STROKE, END_GLYPH } },
+	    { 'u',  3, { 4, 10, 12, 6, STROKE, END_GLYPH } },
+	    { 'z',  3, { 4, 6, 10, 12, STROKE, END_GLYPH } },
+	    {  -1,  0, { END_GLYPH } },
+	};
+
 	user_font_face = cairo_user_font_face_create ();
 	cairo_user_font_face_set_init_func             (user_font_face, test_scaled_font_init);
 	cairo_user_font_face_set_render_glyph_func     (user_font_face, test_scaled_font_render_glyph);
 	cairo_user_font_face_set_unicode_to_glyph_func (user_font_face, test_scaled_font_unicode_to_glyph);
+
+	cairo_font_face_set_user_data (user_font_face, &test_font_face_glyphs_key, glyphs, NULL);
     }
 
     return user_font_face;
