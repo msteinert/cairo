@@ -36,6 +36,7 @@ cairo_base_sources =				\
 	cairo-matrix.c				\
 	cairo-mutex.c				\
 	cairo-mutex-private.h			\
+	cairo-mutex-impl-private.h		\
 	cairo-mutex-type-private.h		\
 	cairo-path.c				\
 	cairo-path-private.h			\
