@@ -1407,6 +1407,9 @@ _recategorize_composite_operation (cairo_xlib_surface_t	      *dst,
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE (src))
 	return DO_UNSUPPORTED;
 
+    if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst))
+	return DO_UNSUPPORTED;
+
     return DO_RENDER;
 }
 
@@ -1474,9 +1477,6 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
     cairo_bool_t		is_integer_translation;
 
     _cairo_xlib_display_notify (dst->screen_info->display);
-
-    if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     operation = _categorize_composite_operation (dst, op, src_pattern,
 						 mask_pattern != NULL);
