@@ -1615,11 +1615,66 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 }
 
 static cairo_int_status_t
+_cairo_xlib_surface_solid_fill_rectangles (cairo_xlib_surface_t    *surface,
+					   const cairo_color_t     *color,
+					   cairo_rectangle_int_t   *rects,
+					   int			   num_rects)
+{
+    XGCValues gcv;
+    int a_width=0, r_width=0, g_width=0, b_width=0;
+    int a_shift=0, r_shift=0, g_shift=0, b_shift=0;
+    int a = color->alpha_short >> 8;
+    int r = color->red_short >> 8;
+    int g = color->green_short >> 8;
+    int b = color->blue_short >> 8;
+    int i;
+
+    if (surface->visual->class == TrueColor) {
+	_characterize_field (surface->a_mask, &a_width, &a_shift);
+	_characterize_field (surface->r_mask, &r_width, &r_shift);
+	_characterize_field (surface->g_mask, &g_width, &g_shift);
+	_characterize_field (surface->b_mask, &b_width, &b_shift);
+	gcv.foreground = (_field_from_8 (a, a_width, a_shift) |
+			  _field_from_8 (r, r_width, r_shift) |
+			  _field_from_8 (g, g_width, g_shift) |
+			  _field_from_8 (b, b_width, b_shift));
+    } else {
+	cairo_xlib_visual_info_t *visual_info;
+	cairo_int_status_t status;
+
+	status = _cairo_xlib_screen_get_visual_info (surface->screen_info,
+						     surface->visual,
+						     &visual_info);
+	if (status)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+	gcv.foreground =
+	    visual_info->rgb333_to_pseudocolor[_field_from_8 (r, 3, 6) |
+					       _field_from_8 (g, 3, 3) |
+					       _field_from_8 (b, 3, 0)];
+    }
+
+    GC xgc = XCreateGC (surface->dpy, surface->drawable, GCForeground,
+			&gcv);
+    if (!xgc)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    for (i = 0; i < num_rects; i++) {
+	XFillRectangle (surface->dpy, surface->drawable, xgc,
+			rects[i].x, rects[i].y,
+			rects[i].width, rects[i].height);
+    }
+    XFreeGC(surface->dpy, xgc);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
 _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
 				     cairo_operator_t	      op,
 				     const cairo_color_t     *color,
 				     cairo_rectangle_int_t   *rects,
-				     int			      num_rects)
+				     int		      num_rects)
 {
     cairo_xlib_surface_t *surface = abstract_surface;
     XRenderColor render_color;
@@ -1629,8 +1684,15 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
 
     _cairo_xlib_display_notify (surface->screen_info->display);
 
-    if (!CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLE (surface))
+    if (!CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLE (surface)) {
+	if (op == CAIRO_OPERATOR_CLEAR ||
+	   ((op == CAIRO_OPERATOR_SOURCE || op == CAIRO_OPERATOR_OVER) &&
+	    CAIRO_COLOR_IS_OPAQUE(color))) {
+	    return _cairo_xlib_surface_solid_fill_rectangles(surface, color,
+							     rects, num_rects);
+	}
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     render_color.red   = color->red_short;
     render_color.green = color->green_short;
