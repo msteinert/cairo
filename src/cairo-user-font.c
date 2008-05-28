@@ -157,6 +157,8 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	    extents.height    = (y2 - y1) * y_scale;
 	}
 
+	/* XXX round advance to device-space-ints if metrics-hinting enabled? */
+
 	_cairo_scaled_glyph_set_metrics (scaled_glyph,
 					 &scaled_font->base,
 					 &extents);
