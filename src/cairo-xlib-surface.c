@@ -1626,7 +1626,7 @@ _cairo_xlib_surface_solid_fill_rectangles (cairo_xlib_surface_t    *surface,
     int b = color->blue_short  >> 8;
     int i;
 
-    if (surface->visual->class == TrueColor) {
+    if (surface->visual == NULL || surface->visual->class == TrueColor) {
 	_characterize_field (surface->a_mask, &a_width, &a_shift);
 	_characterize_field (surface->r_mask, &r_width, &r_shift);
 	_characterize_field (surface->g_mask, &g_width, &g_shift);
