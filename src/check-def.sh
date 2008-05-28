@@ -37,7 +37,7 @@ for def in $defs; do
 
 	{
 		echo EXPORTS
-		eval $get_cairo_syms | grep -v '^_cairo_test_\|^_fini\|^_init' | sort -u
+		eval $get_cairo_syms | grep -v '^_cairo_test_\|^_fini\|^_init\|^_save[fg]pr\|^_rest[fg]pr' | sort -u
 		# cheat: copy the last line from the def file!
 		tail -n1 "$def"
 	} | diff "$def" - || stat=1
