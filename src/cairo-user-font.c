@@ -90,9 +90,12 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	cairo_set_font_size (cr, 1.0);
 	cairo_set_font_options (cr, &scaled_font->base.options);
 
-	status = face->scaled_font_methods.render_glyph ((cairo_scaled_font_t *)scaled_font,
-							 _cairo_scaled_glyph_index(scaled_glyph),
-							 cr, &extents);
+	if (face->scaled_font_methods.render_glyph)
+	    status = face->scaled_font_methods.render_glyph ((cairo_scaled_font_t *)scaled_font,
+							     _cairo_scaled_glyph_index(scaled_glyph),
+							     cr, &extents);
+	else
+	    status = CAIRO_STATUS_USER_FONT_ERROR;
 
 	if (status == CAIRO_STATUS_SUCCESS)
 	    status = cairo_status (cr);
