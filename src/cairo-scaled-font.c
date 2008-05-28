@@ -675,7 +675,7 @@ _cairo_scaled_font_set_metrics (cairo_scaled_font_t	    *scaled_font,
 
     status = _cairo_matrix_compute_scale_factors (&scaled_font->font_matrix,
 						  &font_scale_x, &font_scale_y,
-						  /* XXX */ 1);
+						  1);
     if (status)
 	return status;
 
@@ -1957,7 +1957,7 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 	}
 
 	_cairo_scaled_glyph_set_index(scaled_glyph, index);
-	scaled_glyph->cache_entry.size = 1;	/* XXX */
+	scaled_glyph->cache_entry.size = 1;	/* We currently don't differentiate on glyph size at all */
 	scaled_glyph->scaled_font = scaled_font;
 	scaled_glyph->surface = NULL;
 	scaled_glyph->path = NULL;

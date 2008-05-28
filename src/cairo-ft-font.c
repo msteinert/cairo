@@ -601,7 +601,7 @@ _compute_transform (cairo_ft_font_transform_t *sf,
 
     status = _cairo_matrix_compute_scale_factors (scale,
 						  &x_scale, &y_scale,
-						  /* XXX */ 1);
+						  1);
     if (status)
 	return status;
 

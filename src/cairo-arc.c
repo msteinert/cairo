@@ -190,7 +190,6 @@ _cairo_arc_in_direction (cairo_t	  *cr,
     /* Recurse if drawing arc larger than pi */
     if (angle_max - angle_min > M_PI) {
 	double angle_mid = angle_min + (angle_max - angle_min) / 2.0;
-	/* XXX: Something tells me this block could be condensed. */
 	if (dir == CAIRO_DIRECTION_FORWARD) {
 	    _cairo_arc_in_direction (cr, xc, yc, radius,
 				     angle_min, angle_mid,

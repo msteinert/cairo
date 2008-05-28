@@ -127,7 +127,7 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	     * representation. */
 
 	    matrix = scaled_font->base.scale_inverse;
-	    status = _cairo_matrix_compute_scale_factors (&matrix, &x_scale, &y_scale, /* XXX */ 1);
+	    status = _cairo_matrix_compute_scale_factors (&matrix, &x_scale, &y_scale, 1);
 	    if (status)
 		return status;
 
@@ -356,7 +356,7 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
         user_scaled_font->default_glyph_extents.width = 0.;
         user_scaled_font->default_glyph_extents.height = font_extents.ascent + font_extents.descent;
         user_scaled_font->default_glyph_extents.x_advance = font_extents.max_x_advance;
-        user_scaled_font->default_glyph_extents.y_advance = 0.; /* XXX */
+        user_scaled_font->default_glyph_extents.y_advance = 0.;
 
 	*scaled_font = &user_scaled_font->base;
     }
