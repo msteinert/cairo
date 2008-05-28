@@ -90,7 +90,7 @@ test_scaled_font_unicode_to_glyph (cairo_scaled_font_t *scaled_font,
 								      &test_font_face_glyphs_key);
     int i;
 
-    for (i = 0; glyphs[i].ucs4 != -1; i++)
+    for (i = 0; glyphs[i].ucs4 != (unsigned long) -1; i++)
 	if (glyphs[i].ucs4 == unicode) {
 	    *glyph = i;
 	    return CAIRO_STATUS_SUCCESS;
@@ -186,7 +186,7 @@ get_user_font_face (void)
 	cairo_user_font_face_set_render_glyph_func     (user_font_face, test_scaled_font_render_glyph);
 	cairo_user_font_face_set_unicode_to_glyph_func (user_font_face, test_scaled_font_unicode_to_glyph);
 
-	cairo_font_face_set_user_data (user_font_face, &test_font_face_glyphs_key, glyphs, NULL);
+	cairo_font_face_set_user_data (user_font_face, &test_font_face_glyphs_key, (void*) glyphs, NULL);
     }
 
     return user_font_face;
