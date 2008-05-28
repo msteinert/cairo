@@ -143,7 +143,8 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 				  cairo_pattern_t	*source,
 				  cairo_glyph_t		*glyphs,
 				  int			 num_glyphs,
-				  cairo_scaled_font_t	*scaled_font);
+				  cairo_scaled_font_t	*scaled_font,
+				  int			*remaining_glyphs);
 
 cairo_surface_t *
 _cairo_win32_surface_create_similar (void	    *abstract_src,
