@@ -334,8 +334,7 @@ _swap_ximage_2bytes (XImage *ximage)
     for (j = ximage->height; j; j--) {
 	uint16_t *p = (uint16_t *)line;
 	for (i = ximage->width; i; i--) {
-	    *p = (((*p & 0x00ff) << 8) |
-		  ((*p)          >> 8));
+	    *p = bswap_16 (*p);
 	    p++;
 	}
 
@@ -352,10 +351,7 @@ _swap_ximage_4bytes (XImage *ximage)
     for (j = ximage->height; j; j--) {
 	uint32_t *p = (uint32_t *)line;
 	for (i = ximage->width; i; i--) {
-	    *p = (((*p & 0x000000ff) << 24) |
-		  ((*p & 0x0000ff00) << 8) |
-		  ((*p & 0x00ff0000) >> 8) |
-		  ((*p)              >> 24));
+	    *p = bswap_32 (*p);
 	    p++;
 	}
 
