@@ -61,8 +61,6 @@ typedef struct _cairo_user_scaled_font {
     cairo_text_extents_t default_glyph_extents;
 } cairo_user_scaled_font_t;
 
-/* TODO test user fonts using other fonts in the render_glyph */
-
 /* #cairo_user_scaled_font_t */
 
 static const cairo_scaled_font_backend_t cairo_user_scaled_font_backend;
