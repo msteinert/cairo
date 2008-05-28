@@ -75,9 +75,9 @@
 #  define CAIRO_MUTEX_IMPL_INITIALIZE() do {	\
        if (!_cairo_mutex_initialized)	\
            _cairo_mutex_initialize ();	\
-   } while(0)
+    } while(0)
 
-   /* and make sure we implement the above */
+/* and make sure we implement the above */
 #  define _CAIRO_MUTEX_IMPL_USE_STATIC_INITIALIZER 1
 # endif /* CAIRO_MUTEX_IMPL_INITIALIZE */
 
@@ -105,9 +105,9 @@
 #  define CAIRO_MUTEX_IMPL_FINALIZE() do {	\
        if (_cairo_mutex_initialized)	\
            _cairo_mutex_finalize ();	\
-   } while(0)
+    } while(0)
 
-   /* and make sure we implement the above */
+/* and make sure we implement the above */
 #  define _CAIRO_MUTEX_IMPL_USE_STATIC_FINALIZER 1
 # endif /* CAIRO_MUTEX_IMPL_FINALIZE */
 

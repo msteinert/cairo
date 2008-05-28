@@ -817,9 +817,9 @@ typedef struct _cairo_font_face cairo_font_face_t;
  * with respect to the overall origin
  **/
 typedef struct {
-  unsigned long        index;
-  double               x;
-  double               y;
+    unsigned long        index;
+    double               x;
+    double               y;
 } cairo_glyph_t;
 
 /**
@@ -916,9 +916,9 @@ typedef struct {
  * Specifies variants of a font face based on their slant.
  **/
 typedef enum _cairo_font_slant {
-  CAIRO_FONT_SLANT_NORMAL,
-  CAIRO_FONT_SLANT_ITALIC,
-  CAIRO_FONT_SLANT_OBLIQUE
+    CAIRO_FONT_SLANT_NORMAL,
+    CAIRO_FONT_SLANT_ITALIC,
+    CAIRO_FONT_SLANT_OBLIQUE
 } cairo_font_slant_t;
 
 /**
@@ -929,8 +929,8 @@ typedef enum _cairo_font_slant {
  * Specifies variants of a font face based on their weight.
  **/
 typedef enum _cairo_font_weight {
-  CAIRO_FONT_WEIGHT_NORMAL,
-  CAIRO_FONT_WEIGHT_BOLD
+    CAIRO_FONT_WEIGHT_NORMAL,
+    CAIRO_FONT_WEIGHT_BOLD
 } cairo_font_weight_t;
 
 /**

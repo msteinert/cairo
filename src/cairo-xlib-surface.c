@@ -2727,10 +2727,10 @@ cairo_xlib_surface_get_height (cairo_surface_t *abstract_surface)
 }
 
 enum {
-  GLYPHSET_INDEX_ARGB32,
-  GLYPHSET_INDEX_A8,
-  GLYPHSET_INDEX_A1,
-  NUM_GLYPHSETS
+    GLYPHSET_INDEX_ARGB32,
+    GLYPHSET_INDEX_A8,
+    GLYPHSET_INDEX_A1,
+    NUM_GLYPHSETS
 };
 
 typedef struct _cairo_xlib_font_glyphset_free_glyphs {
@@ -2870,14 +2870,14 @@ _cairo_xlib_render_free_glyphs (Display *dpy,
 static cairo_xlib_font_glyphset_info_t *
 _cairo_xlib_scaled_glyph_get_glyphset_info (cairo_scaled_glyph_t            *scaled_glyph)
 {
-  return scaled_glyph->surface_private;
+    return scaled_glyph->surface_private;
 }
 
 static void
 _cairo_xlib_scaled_glyph_set_glyphset_info (cairo_scaled_glyph_t            *scaled_glyph,
 					    cairo_xlib_font_glyphset_info_t *glyphset_info)
 {
-  scaled_glyph->surface_private = glyphset_info;
+    scaled_glyph->surface_private = glyphset_info;
 }
 
 static void
@@ -3208,13 +3208,13 @@ typedef void (*cairo_xrender_composite_text_func_t)
  * an input glyph with double coordinates, and as "working" glyph with
  * integer from-current-point offsets. */
 typedef union {
-  cairo_glyph_t d;
-  unsigned long index;
-  struct {
+    cairo_glyph_t d;
     unsigned long index;
-    int x;
-    int y;
-  } i;
+    struct {
+        unsigned long index;
+        int x;
+        int y;
+    } i;
 } cairo_xlib_glyph_t;
 
 /* compile-time assert that #cairo_xlib_glyph_t is the same size as #cairo_glyph_t */

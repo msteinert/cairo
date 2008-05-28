@@ -130,8 +130,8 @@ typedef enum _cairo_paginated_mode {
 } cairo_paginated_mode_t;
 
 /* Sure wish C had a real enum type so that this would be distinct
-   from cairo_status_t. Oh well, without that, I'll use this bogus 1000
-   offset */
+ * from cairo_status_t. Oh well, without that, I'll use this bogus 1000
+ * offset */
 typedef enum _cairo_int_status {
     CAIRO_INT_STATUS_DEGENERATE = 1000,
     CAIRO_INT_STATUS_UNSUPPORTED,
