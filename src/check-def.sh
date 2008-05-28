@@ -29,10 +29,9 @@ for def in $defs; do
 	lib=`echo "$lib" | sed 's@.*/@@'`
 	so=.libs/lib${lib}.so
 
-	echo Checking that $so has the same symbol list as $def
-
-
 	test -f "$so" || continue
+
+	echo Checking that $so has the same symbol list as $def
 
 	{
 		echo EXPORTS
