@@ -1617,6 +1617,7 @@ _cairo_xlib_surface_solid_fill_rectangles (cairo_xlib_surface_t    *surface,
 					   int			   num_rects)
 {
     XGCValues gcv;
+    GC xgc;
     int a_width=0, r_width=0, g_width=0, b_width=0;
     int a_shift=0, r_shift=0, g_shift=0, b_shift=0;
     int a = color->alpha_short >> 8;
@@ -1650,7 +1651,7 @@ _cairo_xlib_surface_solid_fill_rectangles (cairo_xlib_surface_t    *surface,
 					       _field_from_8 (b, 3, 0)];
     }
 
-    GC xgc = XCreateGC (surface->dpy, surface->drawable, GCForeground,
+    xgc = XCreateGC (surface->dpy, surface->drawable, GCForeground,
 			&gcv);
     if (!xgc)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
