@@ -1175,6 +1175,21 @@ _cairo_gstate_clip (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 			     gstate->antialias, gstate->target);
 }
 
+static cairo_status_t
+_cairo_gstate_int_clip_extents (cairo_gstate_t        *gstate,
+				cairo_rectangle_int_t *extents)
+{
+    cairo_status_t status;
+
+    status = _cairo_surface_get_extents (gstate->target, extents);
+    if (status)
+        return status;
+
+    status = _cairo_clip_intersect_to_rectangle (&gstate->clip, extents);
+
+    return status;
+}
+
 cairo_status_t
 _cairo_gstate_clip_extents (cairo_gstate_t *gstate,
 		            double         *x1,
@@ -1185,11 +1200,7 @@ _cairo_gstate_clip_extents (cairo_gstate_t *gstate,
     cairo_rectangle_int_t extents;
     cairo_status_t status;
     
-    status = _cairo_surface_get_extents (gstate->target, &extents);
-    if (status)
-        return status;
-
-    status = _cairo_clip_intersect_to_rectangle (&gstate->clip, &extents);
+    status = _cairo_gstate_int_clip_extents (gstate, &extents);
     if (status)
         return status;
 
