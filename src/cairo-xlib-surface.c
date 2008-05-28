@@ -3222,7 +3222,7 @@ typedef struct {
 } cairo_xlib_glyph_t;
 
 /* compile-time assert that #cairo_xlib_glyph_t is the same size as #cairo_glyph_t */
-typedef int cairo_xlib_glyph_t_size_assertion [sizeof (cairo_xlib_glyph_t) == sizeof (cairo_glyph_t) ? 1 : -1];
+COMPILE_TIME_ASSERT (sizeof (cairo_xlib_glyph_t) == sizeof (cairo_glyph_t));
 
 static cairo_status_t
 _cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
