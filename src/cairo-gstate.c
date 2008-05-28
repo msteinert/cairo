@@ -1697,7 +1697,7 @@ _cairo_gstate_transform_glyphs_to_backend (cairo_gstate_t      *gstate,
 
 	drop = TRUE;
 
-	if (_cairo_surface_get_extents (gstate->target, &surface_extents))
+	if (_cairo_gstate_int_clip_extents (gstate, &surface_extents))
 	    drop = FALSE; /* unbounded surface */
 	else {
 	    /* XXX We currently drop any glyphs that has its position outside
