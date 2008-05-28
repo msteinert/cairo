@@ -215,20 +215,21 @@ _utf8_get_char_extended (const unsigned char *p,
  *   an invalid sequence was found.
  **/
 cairo_status_t
-_cairo_utf8_to_ucs4 (const unsigned char *str,
-		     int		  len,
-		     uint32_t		**result,
-		     int		 *items_written)
+_cairo_utf8_to_ucs4 (const char *str,
+		     int	 len,
+		     uint32_t  **result,
+		     int	*items_written)
 {
     uint32_t *str32 = NULL;
     int n_chars, i;
     const unsigned char *in;
+    const unsigned char * const ustr = (const unsigned char *) str;
 
-    in = str;
+    in = ustr;
     n_chars = 0;
-    while ((len < 0 || str + len - in > 0) && *in)
+    while ((len < 0 || ustr + len - in > 0) && *in)
     {
-	uint32_t wc = _utf8_get_char_extended (in, str + len - in);
+	uint32_t wc = _utf8_get_char_extended (in, ustr + len - in);
 	if (wc & 0x80000000 || !UNICODE_VALID (wc))
 	    return _cairo_error (CAIRO_STATUS_INVALID_STRING);
 
@@ -243,7 +244,7 @@ _cairo_utf8_to_ucs4 (const unsigned char *str,
     if (!str32)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    in = str;
+    in = ustr;
     for (i=0; i < n_chars; i++) {
 	str32[i] = _utf8_get_char (in);
 	in = UTF8_NEXT_CHAR (in);
@@ -280,19 +281,20 @@ _cairo_utf8_to_ucs4 (const unsigned char *str,
  *   an invalid sequence was found.
  **/
 cairo_status_t
-_cairo_utf8_to_utf16 (const unsigned char *str,
-		      int		   len,
-		      uint16_t		 **result,
-		      int		  *items_written)
+_cairo_utf8_to_utf16 (const char *str,
+		      int	  len,
+		      uint16_t **result,
+		      int	*items_written)
 {
     uint16_t *str16 = NULL;
     int n16, i;
     const unsigned char *in;
+    const unsigned char * const ustr = (const unsigned char *) str;
 
-    in = str;
+    in = ustr;
     n16 = 0;
-    while ((len < 0 || str + len - in > 0) && *in) {
-	uint32_t wc = _utf8_get_char_extended (in, str + len - in);
+    while ((len < 0 || ustr + len - in > 0) && *in) {
+	uint32_t wc = _utf8_get_char_extended (in, ustr + len - in);
 	if (wc & 0x80000000 || !UNICODE_VALID (wc))
 	    return _cairo_error (CAIRO_STATUS_INVALID_STRING);
 
@@ -311,7 +313,7 @@ _cairo_utf8_to_utf16 (const unsigned char *str,
     if (!str16)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    in = str;
+    in = ustr;
     for (i = 0; i < n16;) {
 	uint32_t wc = _utf8_get_char (in);
 

@@ -1284,7 +1284,7 @@ _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
             goto DONE;
     }
 
-    status = _cairo_utf8_to_ucs4 ((unsigned char*)utf8, -1, &ucs4, num_glyphs);
+    status = _cairo_utf8_to_ucs4 (utf8, -1, &ucs4, num_glyphs);
     if (status)
 	goto DONE;
 
