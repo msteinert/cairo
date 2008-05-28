@@ -1688,7 +1688,7 @@ _cairo_ps_surface_flatten_image_transparency (cairo_ps_surface_t    *surface,
 {
     const cairo_color_t *background_color;
     cairo_surface_t *opaque;
-    cairo_pattern_union_t pattern;
+    cairo_surface_pattern_t pattern;
     cairo_status_t status;
 
     if (surface->content == CAIRO_CONTENT_COLOR_ALPHA)
@@ -1702,7 +1702,7 @@ _cairo_ps_surface_flatten_image_transparency (cairo_ps_surface_t    *surface,
     if (opaque->status)
 	return opaque->status;
 
-    _cairo_pattern_init_for_surface (&pattern.surface, &image->base);
+    _cairo_pattern_init_for_surface (&pattern, &image->base);
 
     status = _cairo_surface_fill_rectangle (opaque,
 					    CAIRO_OPERATOR_SOURCE,

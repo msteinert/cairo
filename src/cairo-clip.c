@@ -274,13 +274,13 @@ _cairo_clip_combine_to_surface (cairo_clip_t                  *clip,
 				int                           dst_y,
 				const cairo_rectangle_int_t *extents)
 {
-    cairo_pattern_union_t pattern;
+    cairo_surface_pattern_t pattern;
     cairo_status_t status;
 
     if (clip->all_clipped)
 	return CAIRO_STATUS_SUCCESS;
 
-    _cairo_pattern_init_for_surface (&pattern.surface, clip->surface);
+    _cairo_pattern_init_for_surface (&pattern, clip->surface);
 
     status = _cairo_surface_composite (op,
 				       &pattern.base,

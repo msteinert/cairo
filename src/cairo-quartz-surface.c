@@ -2155,7 +2155,7 @@ _cairo_quartz_surface_mask_with_generic (cairo_quartz_surface_t *surface,
     cairo_surface_t *gradient_surf = NULL;
     cairo_t *gradient_surf_cr = NULL;
 
-    cairo_pattern_union_t surface_pattern;
+    cairo_surface_pattern_t surface_pattern;
     cairo_int_status_t status;
 
     /* Render the gradient to a surface */
@@ -2172,9 +2172,9 @@ _cairo_quartz_surface_mask_with_generic (cairo_quartz_surface_t *surface,
     if (status)
 	goto BAIL;
 
-    _cairo_pattern_init_for_surface (&surface_pattern.surface, gradient_surf);
+    _cairo_pattern_init_for_surface (&surface_pattern, gradient_surf);
 
-    status = _cairo_quartz_surface_mask_with_surface (surface, op, source, &surface_pattern.surface);
+    status = _cairo_quartz_surface_mask_with_surface (surface, op, source, &surface_pattern);
 
     _cairo_pattern_fini (&surface_pattern.base);
 

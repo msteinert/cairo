@@ -494,7 +494,6 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
     cairo_image_surface_t *image;
     void *image_extra;
     cairo_surface_t *opaque_surface;
-    cairo_pattern_union_t opaque_pattern;
     cairo_image_surface_t *opaque_image = NULL;
     BITMAPINFO bi;
     cairo_matrix_t m;
@@ -538,6 +537,8 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
     }
 
     if (image->format != CAIRO_FORMAT_RGB24) {
+	cairo_surface_pattern_t opaque_pattern;
+
 	opaque_surface = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
 						     image->width,
 						     image->height);
@@ -546,7 +547,7 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
 	    goto FINISH3;
 	}
 
-	_cairo_pattern_init_for_surface (&opaque_pattern.surface, &image->base);
+	_cairo_pattern_init_for_surface (&opaque_pattern, &image->base);
 
 	status = _cairo_surface_fill_rectangle (opaque_surface,
 				                CAIRO_OPERATOR_SOURCE,

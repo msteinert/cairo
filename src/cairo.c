@@ -1985,7 +1985,7 @@ cairo_paint_with_alpha (cairo_t *cr,
 {
     cairo_status_t status;
     cairo_color_t color;
-    cairo_pattern_union_t pattern;
+    cairo_solid_pattern_t pattern;
 
     if (cr->status)
 	return;
@@ -2000,7 +2000,7 @@ cairo_paint_with_alpha (cairo_t *cr,
     }
 
     _cairo_color_init_rgba (&color, 1., 1., 1., alpha);
-    _cairo_pattern_init_solid (&pattern.solid, &color, CAIRO_CONTENT_ALPHA);
+    _cairo_pattern_init_solid (&pattern, &color, CAIRO_CONTENT_ALPHA);
 
     status = _cairo_gstate_mask (cr->gstate, &pattern.base);
     if (status)

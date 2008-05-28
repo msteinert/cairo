@@ -446,7 +446,7 @@ _cairo_win32_surface_clone_similar (void *abstract_surface,
     cairo_content_t src_content;
     cairo_surface_t *new_surface;
     cairo_status_t status;
-    cairo_pattern_union_t pattern;
+    cairo_surface_pattern_t pattern;
 
     src_content = cairo_surface_get_content(src);
     new_surface =
@@ -455,7 +455,7 @@ _cairo_win32_surface_clone_similar (void *abstract_surface,
     if (cairo_surface_status(new_surface))
 	return cairo_surface_status(new_surface);
 
-    _cairo_pattern_init_for_surface (&pattern.surface, src);
+    _cairo_pattern_init_for_surface (&pattern, src);
 
     status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
 				       &pattern.base,
