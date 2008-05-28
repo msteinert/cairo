@@ -745,7 +745,7 @@ CAIROPERF_LIBS=$RT_LIBS
 
 dnl ===========================================================================
 dnl Checks for misc headers
-AC_CHECK_HEADERS([libgen.h])
+AC_CHECK_HEADERS([libgen.h byteswap.h])
 
 dnl ===========================================================================
 dnl check compiler flags
