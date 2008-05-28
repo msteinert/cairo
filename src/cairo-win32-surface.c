@@ -1707,7 +1707,6 @@ cairo_win32_surface_create (HDC hdc)
 {
     cairo_win32_surface_t *surface;
 
-    int depth;
     cairo_format_t format;
     RECT rect;
 
