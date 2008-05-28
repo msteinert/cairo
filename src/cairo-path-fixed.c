@@ -485,7 +485,7 @@ _cairo_path_fixed_interpret (const cairo_path_fixed_t		*path,
 			     void				*closure)
 {
     cairo_status_t status;
-    cairo_path_buf_t *buf;
+    const cairo_path_buf_t *buf;
     cairo_path_op_t op;
     cairo_bool_t forward = (dir == CAIRO_DIRECTION_FORWARD);
     int step = forward ? 1 : -1;
