@@ -1373,7 +1373,8 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
 	}
 	status = _cairo_win32_surface_show_glyphs (surface, op,
 						   source, glyphs,
-						   num_glyphs, scaled_font);
+						   num_glyphs, scaled_font,
+						   remaining_glyphs);
 	if (surface->has_ctm)
 	    cairo_scaled_font_destroy (scaled_font);
 
