@@ -17,9 +17,9 @@ if tail -1 check-has-hidden-symbols.i | grep CAIRO_HAS_HIDDEN_SYMBOLS >/dev/null
 	exit 0
 fi
 
-get_cairo_syms='nm "$so" | grep " T " | cut -d" " -f3'
+get_cairo_syms='nm "$so" | grep " [BCDGINRSTVW] " | cut -d" " -f3'
 if [ "`uname -s`" = "Linux" ]; then
-       get_cairo_syms='objdump -t "$so" | sed -n "/.*g *F *\.\(opd\|text\).* \(.*cairo_.*\)$/s//\2/p"'
+       get_cairo_syms='objdump -t "$so" | grep "^[^ ]* [^l.*]*[.]" | sed "s/.* //"'
 fi
 
 defs="cairo.def"
