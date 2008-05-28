@@ -65,7 +65,7 @@ typedef struct _cairo_user_scaled_font {
 
 /* #cairo_user_scaled_font_t */
 
-const cairo_scaled_font_backend_t cairo_user_scaled_font_backend;
+static const cairo_scaled_font_backend_t cairo_user_scaled_font_backend;
 
 static cairo_int_status_t
 _cairo_user_scaled_glyph_init (void			 *abstract_font,
@@ -284,7 +284,7 @@ _cairo_user_text_to_glyphs (void           *abstract_font,
     return status;
 }
 
-const cairo_scaled_font_backend_t cairo_user_scaled_font_backend = {
+static const cairo_scaled_font_backend_t cairo_user_scaled_font_backend = {
     CAIRO_FONT_TYPE_USER,
     NULL,	/* create_toy */
     NULL,	/* scaled_font_fini */
