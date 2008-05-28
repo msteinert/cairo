@@ -80,9 +80,12 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	cairo_user_font_face_t *face =
 	    (cairo_user_font_face_t *) scaled_font->base.font_face;
 	cairo_text_extents_t extents = scaled_font->default_glyph_extents;
+	cairo_content_t content = scaled_font->base.options.antialias == CAIRO_ANTIALIAS_SUBPIXEL ?
+									 CAIRO_CONTENT_COLOR_ALPHA :
+									 CAIRO_CONTENT_ALPHA;
 	cairo_t *cr;
 
-	meta_surface = _cairo_meta_surface_create (CAIRO_CONTENT_COLOR_ALPHA, -1, -1);
+	meta_surface = _cairo_meta_surface_create (content, -1, -1);
 	cr = cairo_create (meta_surface);
 
 	cairo_set_matrix (cr, &scaled_font->base.scale);
@@ -162,18 +165,28 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
     if (info & CAIRO_SCALED_GLYPH_INFO_SURFACE) {
 	cairo_surface_t	*surface;
 	cairo_status_t status = CAIRO_STATUS_SUCCESS;
+	cairo_format_t format;
 	int width, height;
 
-	/* TODO: extend the glyph cache to support argb glyphs */
+	/* TODO
+	 * extend the glyph cache to support argb glyphs.
+	 * need to figure out the semantics and interaction with subpixel
+	 * rendering first.
+	 */
 
 	width = _cairo_fixed_integer_ceil (scaled_glyph->bbox.p2.x) -
 	  _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.x);
 	height = _cairo_fixed_integer_ceil (scaled_glyph->bbox.p2.y) -
 	  _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.y);
 
-	/* XXX handle / figure out antialias/subpixel font options to choose
-	 * the right format here? */
-	surface = cairo_image_surface_create (CAIRO_FORMAT_A8, width, height);
+	switch (scaled_font->base.options.antialias) {
+	default:
+	case CAIRO_ANTIALIAS_DEFAULT:
+	case CAIRO_ANTIALIAS_GRAY:	format = CAIRO_FORMAT_A8;	break;
+	case CAIRO_ANTIALIAS_NONE:	format = CAIRO_FORMAT_A1;	break;
+	case CAIRO_ANTIALIAS_SUBPIXEL:	format = CAIRO_FORMAT_ARGB32;	break;
+	}
+	surface = cairo_image_surface_create (format, width, height);
 
 	cairo_surface_set_device_offset (surface,
 	                                 - _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.x),
