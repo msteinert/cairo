@@ -127,6 +127,10 @@ do {					\
     static const int NOT_REACHED = 0;	\
     assert (NOT_REACHED);		\
 } while (0)
+#define COMPILE_TIME_ASSERT1(condition, line)		\
+    typedef int compile_time_assertion_at_line_##line##_failed [(condition)?1:-1];
+#define COMPILE_TIME_ASSERT0(condition, line)	COMPILE_TIME_ASSERT1(condition, line)
+#define COMPILE_TIME_ASSERT(condition)		COMPILE_TIME_ASSERT0(condition, __LINE__)
 
 #define CAIRO_ALPHA_IS_OPAQUE(alpha) ((alpha) >= ((double)0xff00 / (double)0xffff))
 #define CAIRO_ALPHA_SHORT_IS_OPAQUE(alpha) ((alpha) >= 0xff00)
