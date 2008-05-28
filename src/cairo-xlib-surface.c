@@ -3207,18 +3207,14 @@ typedef void (*cairo_xrender_composite_text_func_t)
 /* Build a struct of the same size of #cairo_glyph_t that can be used both as
  * an input glyph with double coordinates, and as "working" glyph with
  * integer from-current-point offsets. */
-typedef struct {
+typedef union {
+  cairo_glyph_t d;
   unsigned long index;
-  union {
-    struct {
-      double x;
-      double y;
-    } d;
-    struct {
-      int x;
-      int y;
-    } i;
-  } p;
+  struct {
+    unsigned long index;
+    int x;
+    int y;
+  } i;
 } cairo_xlib_glyph_t;
 
 /* compile-time assert that #cairo_xlib_glyph_t is the same size as #cairo_glyph_t */
@@ -3288,7 +3284,7 @@ _cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
 
       /* Start a new element for first output glyph, and for glyphs with
        * unexpected position */
-      if (!j || glyphs[i].p.i.x || glyphs[i].p.i.y) {
+      if (!j || glyphs[i].i.x || glyphs[i].i.y) {
 	  if (j) {
 	    elts[nelt].nchars = n;
 	    nelt++;
@@ -3296,8 +3292,8 @@ _cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
 	  }
 	  elts[nelt].chars = char8 + size * j;
 	  elts[nelt].glyphset = glyphset_info->glyphset;
-	  elts[nelt].xOff = glyphs[i].p.i.x;
-	  elts[nelt].yOff = glyphs[i].p.i.y;
+	  elts[nelt].xOff = glyphs[i].i.x;
+	  elts[nelt].yOff = glyphs[i].i.y;
       }
 
       switch (width) {
@@ -3374,8 +3370,8 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 	if (status != CAIRO_STATUS_SUCCESS)
 	    return status;
 
-	this_x = _cairo_lround (glyphs[i].p.d.x);
-	this_y = _cairo_lround (glyphs[i].p.d.y);
+	this_x = _cairo_lround (glyphs[i].d.x);
+	this_y = _cairo_lround (glyphs[i].d.y);
 
 	/* Glyph skipping:
 	 *
@@ -3464,12 +3460,12 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 
 	/* Convert absolute glyph position to relative-to-current-point
 	 * position */
-	glyphs[i].p.i.x = this_x - x;
-	glyphs[i].p.i.y = this_y - y;
+	glyphs[i].i.x = this_x - x;
+	glyphs[i].i.y = this_y - y;
 
 	/* Start a new element for the first glyph, or for any glyph that
 	 * has unexpected position */
-	if (!num_out_glyphs || glyphs[i].p.i.x || glyphs[i].p.i.y) {
+	if (!num_out_glyphs || glyphs[i].i.x || glyphs[i].i.y) {
 	    num_elts++;
 	    request_size += sz_xGlyphElt;
 	}
