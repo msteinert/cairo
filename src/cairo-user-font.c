@@ -412,12 +412,21 @@ static const cairo_font_face_backend_t _cairo_user_font_face_backend = {
 };
 
 
+static cairo_bool_t
+_cairo_font_face_is_user (cairo_font_face_t *font_face)
+{
+    return font_face->backend == &_cairo_user_font_face_backend;
+}
+
 /* Implement the public interface */
 
 /**
  * cairo_user_font_face_create:
  *
- * TODO: document this
+ * Creates a new user font-face.
+ *
+ * Use the setter functions to associate callbacks with the returned
+ * user font.  The only mandatory callback is render_glyph.
  *
  * Return value: a newly created #cairo_font_face_t. Free with
  *  cairo_font_face_destroy() when you are done using it.
@@ -445,13 +454,22 @@ cairo_user_font_face_create (void)
 
 /* User-font method setters */
 
-static cairo_bool_t
-_cairo_font_face_is_user (cairo_font_face_t *font_face)
-{
-    return font_face->backend == &_cairo_user_font_face_backend;
-}
 
-
+/**
+ * cairo_user_font_face_set_init_func:
+ * @font_face: A user font face
+ * @init_func: The init callback, or %NULL
+ *
+ * Sets the scaled-font initialization function of a user-font.
+ * See #cairo_user_scaled_font_init_func_t for details of how the callback
+ * works.
+ *
+ * The font-face should not be immutable or a %CAIRO_STATUS_USER_FONT_IMMUTABLE
+ * error will occur.  A user font-face is immutable as soon as a scaled-font
+ * is created from it.
+ *
+ * Since: 1.8
+ **/
 void
 cairo_user_font_face_set_init_func (cairo_font_face_t                  *font_face,
 				    cairo_user_scaled_font_init_func_t  init_func)
@@ -468,6 +486,25 @@ cairo_user_font_face_set_init_func (cairo_font_face_t                  *font_fac
     user_font_face->scaled_font_methods.init = init_func;
 }
 
+/**
+ * cairo_user_font_face_set_render_glyph_func:
+ * @font_face: A user font face
+ * @render_glyph_func: The render_glyph callback, or %NULL
+ *
+ * Sets the glyph rendering function of a user-font.
+ * See #cairo_user_scaled_font_render_glyph_func_t for details of how the callback
+ * works.
+ *
+ * The font-face should not be immutable or a %CAIRO_STATUS_USER_FONT_IMMUTABLE
+ * error will occur.  A user font-face is immutable as soon as a scaled-font
+ * is created from it.
+ *
+ * The render_glyph callback is the only mandatory callback of a user-font.
+ * If the callback is %NULL and a glyph is tried to be rendered using
+ * @font_face, a %CAIRO_STATUS_USER_FONT_ERROR will occur.
+ *
+ * Since: 1.8
+ **/
 void
 cairo_user_font_face_set_render_glyph_func (cairo_font_face_t                          *font_face,
 					    cairo_user_scaled_font_render_glyph_func_t  render_glyph_func)
@@ -484,6 +521,21 @@ cairo_user_font_face_set_render_glyph_func (cairo_font_face_t                   
     user_font_face->scaled_font_methods.render_glyph = render_glyph_func;
 }
 
+/**
+ * cairo_user_font_face_set_unicode_to_glyph_func:
+ * @font_face: A user font face
+ * @unicode_to_glyph_func: The unicode_to_glyph callback, or %NULL
+ *
+ * Sets the unicode-to-glyph conversion function of a user-font.
+ * See #cairo_user_scaled_font_unicode_to_glyph_func_t for details of how the callback
+ * works.
+ *
+ * The font-face should not be immutable or a %CAIRO_STATUS_USER_FONT_IMMUTABLE
+ * error will occur.  A user font-face is immutable as soon as a scaled-font
+ * is created from it.
+ *
+ * Since: 1.8
+ **/
 void
 cairo_user_font_face_set_unicode_to_glyph_func (cairo_font_face_t                              *font_face,
 						cairo_user_scaled_font_unicode_to_glyph_func_t  unicode_to_glyph_func)
@@ -500,6 +552,21 @@ cairo_user_font_face_set_unicode_to_glyph_func (cairo_font_face_t               
     user_font_face->scaled_font_methods.unicode_to_glyph = unicode_to_glyph_func;
 }
 
+/**
+ * cairo_user_font_face_set_text_to_glyphs_func:
+ * @font_face: A user font face
+ * @text_to_glyphs_func: The text_to_glyphs callback, or %NULL
+ *
+ * Sets th text-to-glyphs conversion function of a user-font.
+ * See #cairo_user_scaled_font_text_to_glyphs_func_t for details of how the callback
+ * works.
+ *
+ * The font-face should not be immutable or a %CAIRO_STATUS_USER_FONT_IMMUTABLE
+ * error will occur.  A user font-face is immutable as soon as a scaled-font
+ * is created from it.
+ *
+ * Since: 1.8
+ **/
 void
 cairo_user_font_face_set_text_to_glyphs_func (cairo_font_face_t                            *font_face,
 					      cairo_user_scaled_font_text_to_glyphs_func_t  text_to_glyphs_func)
@@ -518,6 +585,17 @@ cairo_user_font_face_set_text_to_glyphs_func (cairo_font_face_t                 
 
 /* User-font method getters */
 
+/**
+ * cairo_user_font_face_get_init_func:
+ * @font_face: A user font face
+ *
+ * Gets the scaled-font initialization function of a user-font.
+ *
+ * Return value: The init callback of @font_face
+ * or %NULL if none set.
+ *
+ * Since: 1.8
+ **/
 cairo_user_scaled_font_init_func_t
 cairo_user_font_face_get_init_func (cairo_font_face_t *font_face)
 {
@@ -529,6 +607,17 @@ cairo_user_font_face_get_init_func (cairo_font_face_t *font_face)
     return user_font_face->scaled_font_methods.init;
 }
 
+/**
+ * cairo_user_font_face_get_render_glyph_func:
+ * @font_face: A user font face
+ *
+ * Gets the glyph rendering function of a user-font.
+ *
+ * Return value: The render_glyph callback of @font_face
+ * or %NULL if none set.
+ *
+ * Since: 1.8
+ **/
 cairo_user_scaled_font_render_glyph_func_t
 cairo_user_font_face_get_render_glyph_func (cairo_font_face_t *font_face)
 {
@@ -540,6 +629,17 @@ cairo_user_font_face_get_render_glyph_func (cairo_font_face_t *font_face)
     return user_font_face->scaled_font_methods.render_glyph;
 }
 
+/**
+ * cairo_user_font_face_get_unicode_to_glyph_func:
+ * @font_face: A user font face
+ *
+ * Gets the unicode-to-glyph conversion function of a user-font.
+ *
+ * Return value: The unicode_to_glyph callback of @font_face
+ * or %NULL if none set.
+ *
+ * Since: 1.8
+ **/
 cairo_user_scaled_font_unicode_to_glyph_func_t
 cairo_user_font_face_get_unicode_to_glyph_func (cairo_font_face_t *font_face)
 {
@@ -551,6 +651,17 @@ cairo_user_font_face_get_unicode_to_glyph_func (cairo_font_face_t *font_face)
     return user_font_face->scaled_font_methods.unicode_to_glyph;
 }
 
+/**
+ * cairo_user_font_face_get_text_to_glyphs_func:
+ * @font_face: A user font face
+ *
+ * Gets the text-to-glyphs conversion function of a user-font.
+ *
+ * Return value: The text_to_glyphs callback of @font_face
+ * or %NULL if none set.
+ *
+ * Since: 1.8
+ **/
 cairo_user_scaled_font_text_to_glyphs_func_t
 cairo_user_font_face_get_text_to_glyphs_func (cairo_font_face_t *font_face)
 {
