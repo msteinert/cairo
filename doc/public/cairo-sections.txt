@@ -32,6 +32,24 @@ cairo_quartz_font_face_create_for_atsu_font_id
 </SECTION>
 
 <SECTION>
+<FILE>cairo-user-fonts</FILE>
+<TITLE>User Fonts</TITLE>
+cairo_user_scaled_font_init_func_t
+cairo_user_scaled_font_render_glyph_func_t
+cairo_user_scaled_font_text_to_glyphs_func_t
+cairo_user_scaled_font_unicode_to_glyph_func_t
+cairo_user_font_face_create
+cairo_user_font_face_set_init_func
+cairo_user_font_face_get_init_func
+cairo_user_font_face_set_render_glyph_func
+cairo_user_font_face_get_render_glyph_func
+cairo_user_font_face_set_unicode_to_glyph_func
+cairo_user_font_face_get_unicode_to_glyph_func
+cairo_user_font_face_set_text_to_glyphs_func
+cairo_user_font_face_get_text_to_glyphs_func
+</SECTION>
+
+<SECTION>
 <FILE>cairo-image</FILE>
 <TITLE>Image Surfaces</TITLE>
 cairo_format_t

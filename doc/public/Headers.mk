@@ -14,6 +14,7 @@ PRIVATE_TEST_HFILES = \
 	cairo-hash-private.h \
 	cairo-malloc-private.h \
 	cairo-meta-surface-private.h \
+	cairo-mutex-impl-private.h \
 	cairo-mutex-list-private.h \
 	cairo-mutex-private.h \
 	cairo-mutex-type-private.h \
