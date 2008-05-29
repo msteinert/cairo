@@ -59,6 +59,16 @@ typedef struct _cairo_user_scaled_font {
     cairo_scaled_font_t  base;
 
     cairo_text_extents_t default_glyph_extents;
+
+    /* space to compute extents in, and factors to convert back to user space */
+    cairo_matrix_t extent_scale;
+    double extent_x_scale;
+    double extent_y_scale;
+
+    /* multiplier for metrics hinting */
+    double snap_x_scale;
+    double snap_y_scale;
+
 } cairo_user_scaled_font_t;
 
 /* #cairo_user_scaled_font_t */
@@ -117,41 +127,22 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	if (extents.width == 0.) {
 	    /* Compute extents.x/y/width/height from meta_surface, in font space */
 
-	    cairo_matrix_t matrix;
-	    double fixed_scale, x_scale, y_scale;
-
 	    cairo_box_t bbox;
 	    double x1, y1, x2, y2;
+	    double x_scale, y_scale;
 	    cairo_surface_t *null_surface = _cairo_null_surface_create (cairo_surface_get_content (meta_surface));
 	    cairo_surface_t *analysis_surface = _cairo_analysis_surface_create (null_surface, -1, -1);
 	    cairo_surface_destroy (null_surface);
 
-	    /* compute a normalized version of font scale matrix to compute
-	     * extents in.  This is to minimize error caused by the cairo_fixed_t
-	     * representation. */
-
-	    matrix = scaled_font->base.scale_inverse;
-	    status = _cairo_matrix_compute_scale_factors (&matrix, &x_scale, &y_scale, 1);
-	    if (status)
-		return status;
-
-	    /* since glyphs are pretty much 1.0x1.0, we can reduce error by
-	     * scaling to a larger square.  say, 1024.x1024. */
-	    fixed_scale = 1024.;
-	    x_scale /= fixed_scale;
-	    y_scale /= fixed_scale;
-	    if (x_scale == 0) x_scale = 1. / fixed_scale;
-	    if (y_scale == 0) y_scale = 1. / fixed_scale;
-
-	    cairo_matrix_scale (&matrix, 1. / x_scale, 1. / y_scale);
-
-	    _cairo_analysis_surface_set_ctm (analysis_surface, &matrix);
+	    _cairo_analysis_surface_set_ctm (analysis_surface, &scaled_font->extent_scale);
 	    status = _cairo_meta_surface_replay (meta_surface, analysis_surface);
 	    _cairo_analysis_surface_get_bounding_box (analysis_surface, &bbox);
 	    cairo_surface_destroy (analysis_surface);
 
 	    _cairo_box_to_doubles (&bbox, &x1, &y1, &x2, &y2);
 
+	    x_scale = scaled_font->extent_x_scale;
+	    y_scale = scaled_font->extent_y_scale;
 	    extents.x_bearing = x1 * x_scale;
 	    extents.y_bearing = y1 * y_scale;
 	    extents.width     = (x2 - x1) * x_scale;
@@ -342,7 +333,38 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
 	return status;
     }
 
-    if (font_face->scaled_font_methods.init != NULL) {
+    /* compute a normalized version of font scale matrix to compute
+     * extents in.  This is to minimize error caused by the cairo_fixed_t
+     * representation. */
+    {
+	double fixed_scale, x_scale, y_scale;
+
+	user_scaled_font->extent_scale = user_scaled_font->base.scale_inverse;
+	status = _cairo_matrix_compute_scale_factors (&user_scaled_font->extent_scale,
+						      &x_scale, &y_scale,
+						      1);
+	if (status == CAIRO_STATUS_SUCCESS) {
+
+	    if (x_scale == 0) x_scale = 1.;
+	    if (y_scale == 0) y_scale = 1.;
+
+	    user_scaled_font->snap_x_scale = x_scale;
+	    user_scaled_font->snap_y_scale = y_scale;
+
+	    /* since glyphs are pretty much 1.0x1.0, we can reduce error by
+	     * scaling to a larger square.  say, 1024.x1024. */
+	    fixed_scale = 1024.;
+	    x_scale /= fixed_scale;
+	    y_scale /= fixed_scale;
+
+	    cairo_matrix_scale (&user_scaled_font->extent_scale, 1. / x_scale, 1. / y_scale);
+
+	    user_scaled_font->extent_x_scale = x_scale;
+	    user_scaled_font->extent_y_scale = y_scale;
+	}
+    }
+
+    if (status == CAIRO_STATUS_SUCCESS && font_face->scaled_font_methods.init != NULL) {
 
 	/* Lock the scaled_font mutex such that user doesn't accidentally try
          * to use it just yet. */
