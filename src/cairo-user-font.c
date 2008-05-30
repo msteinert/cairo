@@ -428,6 +428,12 @@ _cairo_font_face_is_user (cairo_font_face_t *font_face)
  * Use the setter functions to associate callbacks with the returned
  * user font.  The only mandatory callback is render_glyph.
  *
+ * After the font-face is created, the user can attach arbitrary data
+ * (the actual font data) to it using cairo_font_face_set_user_data()
+ * and access it from the user-font callbacks by using
+ * cairo_scaled_font_get_font_face() followed by
+ * cairo_font_face_get_user_data().
+ *
  * Return value: a newly created #cairo_font_face_t. Free with
  *  cairo_font_face_destroy() when you are done using it.
  *
