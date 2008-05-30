@@ -1628,7 +1628,7 @@ _cairo_xcb_surface_show_glyphs (void                *abstract_dst,
 				 cairo_glyph_t       *glyphs,
 				 int		      num_glyphs,
 				 cairo_scaled_font_t *scaled_font,
-				 int		     *remaining_glyphs):
+				 int		     *remaining_glyphs);
 
 static cairo_bool_t
 _cairo_xcb_surface_is_similar (void *surface_a,
