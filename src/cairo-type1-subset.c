@@ -382,6 +382,7 @@ cairo_type1_font_subset_decrypt_eexec_segment (cairo_type1_font_subset_t *font)
     unsigned char *in, *end;
     char *out;
     int c, p;
+    int i;
 
     in = (unsigned char *) font->eexec_segment;
     end = (unsigned char *) in + font->eexec_segment_size;
@@ -406,6 +407,23 @@ cairo_type1_font_subset_decrypt_eexec_segment (cairo_type1_font_subset_t *font)
 	*out++ = p;
     }
     font->cleartext_end = out;
+
+    /* Overwrite random bytes with spaces.
+     *
+     * The first 4 bytes of the cleartext are the random bytes
+     * required by the encryption algorithm. When encrypting the
+     * cleartext, the first ciphertext byte must not be a white space
+     * character and the first 4 bytes must not be an ASCII Hex
+     * character. Some fonts do not check that their randomly chosen
+     * bytes results in ciphertext that complies with this
+     * restriction. This may cause problems for some PDF consumers. By
+     * replacing the random bytes with spaces, the first four bytes of
+     * ciphertext will always be 0xf9, 0x83, 0xef, 0x00 which complies
+     * with this restriction. Using spaces also means we don't have to
+     * skip over the random bytes when parsing the cleartext.
+     */
+    for (i = 0; i < 4 && i < font->eexec_segment_size; i++)
+	font->cleartext[i] = ' ';
 
     return CAIRO_STATUS_SUCCESS;
 }
