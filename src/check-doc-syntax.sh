@@ -23,7 +23,7 @@ fi
 
 enum_regexp='\([^%@]\|^\)\<\(FALSE\|TRUE\|NULL\|CAIRO_[0-9A-Z_]*\)\($\|[^(A-Za-z0-9_]\)'
 if test "x$SGML_DOCS" = x; then
-	enum_regexp='^[^:]*:[/ ][*] .*'$enum_regexp
+	enum_regexp='^[^:]*:[/ ][*]\(\|[ \t].*\)'$enum_regexp
 fi
 if grep . /dev/null $FILES | sed -e '/<programlisting>/,/<\/programlisting>/d' | grep "$enum_regexp" | grep -v '#####'; then
 	status=1
