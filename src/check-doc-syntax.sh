@@ -47,13 +47,13 @@ if grep . /dev/null $FILES | sed -e '/<programlisting>/,/<\/programlisting>/d' |
 	echo "	'$type_regexp'"
 fi
 
-func_regexp='\([^#]\|^\)\<\(cairo_[][<>/0-9a-z_]*\> \?[^][ <>(]\)'
+func_regexp='\([^#]\|^\)\<\(cairo_[][<>/0-9a-z_]*\>[^][<>(]\)'
 if test "x$SGML_DOCS" = x; then
-	func_regexp='^[^:]*:[/ ][*] .*'$func_regexp
+	func_regexp='^[^:]*:[/ ][*]\(\|[ \t].*\)'$func_regexp
 fi
 
 # We need to filter out gtk-doc markup errors for program listings.
-if grep . /dev/null $FILES | sed -e '/<programlisting>/,/<\/programlisting>/d' | grep "$func_regexp" | grep -v '#####'; then
+if grep . /dev/null $FILES | sed -e '/<programlisting>/,/<\/programlisting>/d' | grep "$func_regexp" | grep -v '^[^:]*: [*] [a-z_0-9]*:$' | grep -v '#####'; then
 	status=1
 	echo Error: some function names in the docs are not followed by parentheses.
 	echo Fix this by searching for the following regexp in the above files:
