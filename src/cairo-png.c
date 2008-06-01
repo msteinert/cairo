@@ -274,7 +274,7 @@ stdio_write_func (png_structp png, png_bytep data, png_size_t size)
  * Return value: %CAIRO_STATUS_SUCCESS if the PNG file was written
  * successfully. Otherwise, %CAIRO_STATUS_NO_MEMORY if memory could not
  * be allocated for the operation or
- * CAIRO_STATUS_SURFACE_TYPE_MISMATCH if the surface does not have
+ * %CAIRO_STATUS_SURFACE_TYPE_MISMATCH if the surface does not have
  * pixel contents, or %CAIRO_STATUS_WRITE_ERROR if an I/O error occurs
  * while attempting to write the file.
  **/
@@ -341,7 +341,7 @@ stream_write_func (png_structp png, png_bytep data, png_size_t size)
  * Return value: %CAIRO_STATUS_SUCCESS if the PNG file was written
  * successfully.  Otherwise, %CAIRO_STATUS_NO_MEMORY is returned if
  * memory could not be allocated for the operation,
- * CAIRO_STATUS_SURFACE_TYPE_MISMATCH if the surface does not have
+ * %CAIRO_STATUS_SURFACE_TYPE_MISMATCH if the surface does not have
  * pixel contents.
  **/
 cairo_status_t
@@ -615,9 +615,9 @@ stdio_read_func (png_structp png, png_bytep data, png_size_t size)
  * surface can be checked for with cairo_surface_status(surface) which
  * may return one of the following values:
  *
- *	CAIRO_STATUS_NO_MEMORY
- *	CAIRO_STATUS_FILE_NOT_FOUND
- *	CAIRO_STATUS_READ_ERROR
+ *	%CAIRO_STATUS_NO_MEMORY
+ *	%CAIRO_STATUS_FILE_NOT_FOUND
+ *	%CAIRO_STATUS_READ_ERROR
  **/
 cairo_surface_t *
 cairo_image_surface_create_from_png (const char *filename)

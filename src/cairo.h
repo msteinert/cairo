@@ -278,8 +278,8 @@ typedef enum _cairo_content {
  * closure which was specified by the user at the time the write
  * function was registered, the data to write and the length of the
  * data in bytes.  The write function should return
- * CAIRO_STATUS_SUCCESS if all the data was successfully written,
- * CAIRO_STATUS_WRITE_ERROR otherwise.
+ * %CAIRO_STATUS_SUCCESS if all the data was successfully written,
+ * %CAIRO_STATUS_WRITE_ERROR otherwise.
  *
  * Returns: the status code of the write operation
  **/
@@ -298,8 +298,8 @@ typedef cairo_status_t (*cairo_write_func_t) (void		  *closure,
  * closure which was specified by the user at the time the read
  * function was registered, the buffer to read the data into and the
  * length of the data in bytes.  The read function should return
- * CAIRO_STATUS_SUCCESS if all the data was successfully read,
- * CAIRO_STATUS_READ_ERROR otherwise.
+ * %CAIRO_STATUS_SUCCESS if all the data was successfully read,
+ * %CAIRO_STATUS_READ_ERROR otherwise.
  *
  * Returns: the status code of the read operation
  **/

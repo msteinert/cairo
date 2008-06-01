@@ -97,7 +97,7 @@ _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
  * _cairo_surface_set_error:
  * @surface: a surface
  * @status: a status value indicating an error, (eg. not
- * CAIRO_STATUS_SUCCESS)
+ * %CAIRO_STATUS_SUCCESS)
  *
  * Atomically sets surface->status to @status and calls _cairo_error;
  *
@@ -1788,7 +1788,7 @@ _cairo_surface_get_current_clip_serial (cairo_surface_t *surface)
  * this function allocates one from the specified surface.  As zero is
  * reserved for the special no-clipping case, this function will not
  * return that except for an in-error surface, (ie. surface->status !=
- * CAIRO_STATUS_SUCCESS).
+ * %CAIRO_STATUS_SUCCESS).
  */
 unsigned int
 _cairo_surface_allocate_clip_serial (cairo_surface_t *surface)

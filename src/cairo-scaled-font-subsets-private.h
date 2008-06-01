@@ -180,7 +180,7 @@ _cairo_scaled_font_subsets_destroy (cairo_scaled_font_subsets_t *font_subsets);
  *
  * Return value: %CAIRO_STATUS_SUCCESS if successful, or a non-zero
  * value indicating an error. Possible errors include
- * CAIRO_STATUS_NO_MEMORY.
+ * %CAIRO_STATUS_NO_MEMORY.
  **/
 cairo_private cairo_status_t
 _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*font_subsets,
@@ -220,7 +220,7 @@ typedef cairo_status_t
  *
  * Return value: %CAIRO_STATUS_SUCCESS if successful, or a non-zero
  * value indicating an error. Possible errors include
- * CAIRO_STATUS_NO_MEMORY.
+ * %CAIRO_STATUS_NO_MEMORY.
  **/
 cairo_private cairo_status_t
 _cairo_scaled_font_subsets_foreach_scaled (cairo_scaled_font_subsets_t		    *font_subsets,
@@ -255,7 +255,7 @@ _cairo_scaled_font_subsets_foreach_scaled (cairo_scaled_font_subsets_t		    *fon
  *
  * Return value: %CAIRO_STATUS_SUCCESS if successful, or a non-zero
  * value indicating an error. Possible errors include
- * CAIRO_STATUS_NO_MEMORY.
+ * %CAIRO_STATUS_NO_MEMORY.
  **/
 cairo_private cairo_status_t
 _cairo_scaled_font_subsets_foreach_unscaled (cairo_scaled_font_subsets_t              *font_subsets,
@@ -270,7 +270,7 @@ _cairo_scaled_font_subsets_foreach_unscaled (cairo_scaled_font_subsets_t        
  * in @font_subsets. The array as store in font_subsets->glyph_names.
  *
  * Return value: %CAIRO_STATUS_SUCCESS if successful,
- * CAIRO_INT_STATUS_UNSUPPORTED if the font backend does not support
+ * %CAIRO_INT_STATUS_UNSUPPORTED if the font backend does not support
  * mapping the glyph indices to unicode characters. Possible errors
  * include %CAIRO_STATUS_NO_MEMORY.
  **/
@@ -298,7 +298,7 @@ typedef struct _cairo_cff_subset {
  * data.
  *
  * Return value: %CAIRO_STATUS_SUCCESS if successful,
- * CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a
+ * %CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a
  * cff file, or an non-zero value indicating an error.  Possible
  * errors include %CAIRO_STATUS_NO_MEMORY.
  **/
@@ -329,7 +329,7 @@ _cairo_cff_subset_fini (cairo_cff_subset_t *cff_subset);
  * with information about the subset and the cff data.
  *
  * Return value: %CAIRO_STATUS_SUCCESS if successful,
- * CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a
+ * %CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a
  * cff file, or an non-zero value indicating an error.  Possible
  * errors include %CAIRO_STATUS_NO_MEMORY.
  **/
@@ -372,7 +372,7 @@ typedef struct _cairo_truetype_subset {
  * data.
  *
  * Return value: %CAIRO_STATUS_SUCCESS if successful,
- * CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a
+ * %CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a
  * truetype file, or an non-zero value indicating an error.  Possible
  * errors include %CAIRO_STATUS_NO_MEMORY.
  **/
@@ -416,7 +416,7 @@ typedef struct _cairo_type1_subset {
  * with information about the subset and the type1 data.
  *
  * Return value: %CAIRO_STATUS_SUCCESS if successful,
- * CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a type1
+ * %CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a type1
  * file, or an non-zero value indicating an error.  Possible errors
  * include %CAIRO_STATUS_NO_MEMORY.
  **/
@@ -458,7 +458,7 @@ _cairo_type1_scaled_font_is_type1 (cairo_scaled_font_t	*scaled_font);
  * part of the font is binary encoded.
  *
  * Return value: %CAIRO_STATUS_SUCCESS if successful,
- * CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a type1
+ * %CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a type1
  * file, or an non-zero value indicating an error.  Possible errors
  * include %CAIRO_STATUS_NO_MEMORY.
  **/
@@ -479,7 +479,7 @@ _cairo_type1_fallback_init_binary (cairo_type1_subset_t	      *type_subset,
  * part of the font is hex encoded.
  *
  * Return value: %CAIRO_STATUS_SUCCESS if successful,
- * CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a type1
+ * %CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a type1
  * file, or an non-zero value indicating an error.  Possible errors
  * include %CAIRO_STATUS_NO_MEMORY.
  **/
@@ -517,7 +517,7 @@ typedef struct _cairo_type2_charstrings {
  * with information about the subset.
  *
  * Return value: %CAIRO_STATUS_SUCCESS if successful,
- * CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a type2
+ * %CAIRO_INT_STATUS_UNSUPPORTED if the font can't be subset as a type2
  * charstrings, or an non-zero value indicating an error.  Possible errors
  * include %CAIRO_STATUS_NO_MEMORY.
  **/
@@ -546,9 +546,9 @@ _cairo_type2_charstrings_fini (cairo_type2_charstrings_t *charstrings);
  * fontsubset->to_unicode.
  *
  * Return value: %CAIRO_STATUS_SUCCESS if successful,
- * CAIRO_INT_STATUS_UNSUPPORTED if the unicode encoding of
+ * %CAIRO_INT_STATUS_UNSUPPORTED if the unicode encoding of
  * the glyphs is not available.  Possible  errors include
- * CAIRO_STATUS_NO_MEMORY.
+ * %CAIRO_STATUS_NO_MEMORY.
  **/
 cairo_private cairo_int_status_t
 _cairo_truetype_create_glyph_to_unicode_map (cairo_scaled_font_subset_t	*font_subset);

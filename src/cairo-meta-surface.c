@@ -962,7 +962,7 @@ _cairo_meta_surface_replay (cairo_surface_t *surface,
 
 /* Replay meta to surface. When the return status of each operation is
  * one of %CAIRO_STATUS_SUCCESS, %CAIRO_INT_STATUS_UNSUPPORTED, or
- * CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY the status of each operation
+ * %CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY the status of each operation
  * will be stored in the meta surface. Any other status will abort the
  * replay and return the status.
  */

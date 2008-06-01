@@ -66,7 +66,7 @@ static const cairo_t _cairo_nil = {
 /**
  * _cairo_error:
  * @status: a status value indicating an error, (eg. not
- * CAIRO_STATUS_SUCCESS)
+ * %CAIRO_STATUS_SUCCESS)
  *
  * Checks that status is an error status, but does nothing else.
  *
@@ -93,7 +93,7 @@ _cairo_error (cairo_status_t status)
  * _cairo_set_error:
  * @cr: a cairo context
  * @status: a status value indicating an error, (eg. not
- * CAIRO_STATUS_SUCCESS)
+ * %CAIRO_STATUS_SUCCESS)
  *
  * Atomically sets cr->status to @status and calls _cairo_error;
  *
@@ -426,7 +426,7 @@ slim_hidden_def(cairo_restore);
  * group, (the pop_group functions call cairo_restore()).
  *
  * By default the intermediate group will have a content type of
- * CAIRO_CONTENT_COLOR_ALPHA. Other content types can be chosen for
+ * %CAIRO_CONTENT_COLOR_ALPHA. Other content types can be chosen for
  * the group by using cairo_push_group_with_content() instead.
  *
  * As an example, here is how one might fill and stroke a path with
@@ -1673,7 +1673,7 @@ cairo_arc_to (cairo_t *cr,
  *
  * It is an error to call this function with no current point. Doing
  * so will cause @cr to shutdown with a status of
- * CAIRO_STATUS_NO_CURRENT_POINT.
+ * %CAIRO_STATUS_NO_CURRENT_POINT.
  **/
 void
 cairo_rel_move_to (cairo_t *cr, double dx, double dy)
@@ -1710,7 +1710,7 @@ cairo_rel_move_to (cairo_t *cr, double dx, double dy)
  *
  * It is an error to call this function with no current point. Doing
  * so will cause @cr to shutdown with a status of
- * CAIRO_STATUS_NO_CURRENT_POINT.
+ * %CAIRO_STATUS_NO_CURRENT_POINT.
  **/
 void
 cairo_rel_line_to (cairo_t *cr, double dx, double dy)
@@ -1756,7 +1756,7 @@ slim_hidden_def(cairo_rel_line_to);
  *
  * It is an error to call this function with no current point. Doing
  * so will cause @cr to shutdown with a status of
- * CAIRO_STATUS_NO_CURRENT_POINT.
+ * %CAIRO_STATUS_NO_CURRENT_POINT.
  **/
 void
 cairo_rel_curve_to (cairo_t *cr,
@@ -2098,7 +2098,7 @@ cairo_mask_surface (cairo_t         *cr,
  * 2. A sub-path created by cairo_move_to() followed by either a
  * cairo_close_path() or one or more calls to cairo_line_to() to the
  * same coordinate as the cairo_move_to(). If the cap style is
- * CAIRO_LINE_CAP_ROUND then these sub-paths will be drawn as circular
+ * %CAIRO_LINE_CAP_ROUND then these sub-paths will be drawn as circular
  * dots. Note that in the case of %CAIRO_LINE_CAP_SQUARE a degenerate
  * sub-path will not be drawn at all, (since the correct orientation
  * is indeterminate).

@@ -508,7 +508,7 @@ det64_128 (cairo_int64_t a,
  * result is provided as a coordinate pair of 128-bit integers.
  *
  * Returns %CAIRO_BO_STATUS_INTERSECTION if there is an intersection or
- * CAIRO_BO_STATUS_PARALLEL if the two lines are exactly parallel.
+ * %CAIRO_BO_STATUS_PARALLEL if the two lines are exactly parallel.
  */
 static cairo_bo_status_t
 intersect_lines (cairo_bo_edge_t		*a,

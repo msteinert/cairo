@@ -209,7 +209,7 @@ static const cairo_scaled_font_t _cairo_scaled_font_nil = {
  * _cairo_scaled_font_set_error:
  * @scaled_font: a scaled_font
  * @status: a status value indicating an error, (eg. not
- * CAIRO_STATUS_SUCCESS)
+ * %CAIRO_STATUS_SUCCESS)
  *
  * Atomically sets scaled_font->status to @status and calls _cairo_error;
  *
@@ -1789,7 +1789,7 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
 }
 
 /**
- * cairo_scaled_glyph_set_metrics:
+ * _cairo_scaled_glyph_set_metrics:
  * @scaled_glyph: a #cairo_scaled_glyph_t
  * @scaled_font: a #cairo_scaled_font_t
  * @fs_metrics: a #cairo_text_extents_t in font space
@@ -1797,7 +1797,7 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
  * _cairo_scaled_glyph_set_metrics() stores user space metrics
  * for the specified glyph given font space metrics. It is
  * called by the font backend when initializing a glyph with
- * CAIRO_SCALED_GLYPH_INFO_METRICS.
+ * %CAIRO_SCALED_GLYPH_INFO_METRICS.
  **/
 void
 _cairo_scaled_glyph_set_metrics (cairo_scaled_glyph_t *scaled_glyph,
@@ -1921,7 +1921,7 @@ _cairo_scaled_glyph_set_meta_surface (cairo_scaled_glyph_t *scaled_glyph,
  *
  * If the desired info is not available, (for example, when trying to
  * get INFO_PATH with a bitmapped font), this function will return
- * CAIRO_INT_STATUS_UNSUPPORTED.
+ * %CAIRO_INT_STATUS_UNSUPPORTED.
  *
  * Note: This function must be called with scaled_font->mutex held.
  **/

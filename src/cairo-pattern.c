@@ -64,7 +64,7 @@ const cairo_solid_pattern_t cairo_pattern_none = {
  * _cairo_pattern_set_error:
  * @pattern: a pattern
  * @status: a status value indicating an error, (eg. not
- * CAIRO_STATUS_SUCCESS)
+ * %CAIRO_STATUS_SUCCESS)
  *
  * Atomically sets pattern->status to @status and calls _cairo_error;
  *
