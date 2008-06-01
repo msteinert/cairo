@@ -1172,7 +1172,7 @@ cairo_font_face_status (cairo_font_face_t *font_face);
  *
  * The type of a font face is determined by the function used to
  * create it, which will generally be of the form
- * cairo_<emphasis>type</emphasis>_font_face_create. The font face type can be queried
+ * cairo_<emphasis>type</emphasis>_font_face_create(). The font face type can be queried
  * with cairo_font_face_get_type()
  *
  * The various #cairo_font_face_t functions can be used with a font face
@@ -1186,7 +1186,7 @@ cairo_font_face_status (cairo_font_face_t *font_face);
  * fonts of any type, but some font backends also provide
  * type-specific functions that must only be called with a scaled font
  * of the appropriate type. These functions have names that begin with
- * cairo_<emphasis>type</emphasis>_scaled_font such as cairo_ft_scaled_font_lock_face().
+ * cairo_<emphasis>type</emphasis>_scaled_font() such as cairo_ft_scaled_font_lock_face().
  *
  * The behavior of calling a type-specific function with a scaled font
  * of the wrong type is undefined.
@@ -1585,7 +1585,7 @@ cairo_surface_status (cairo_surface_t *surface);
  * any type, but some backends also provide type-specific functions
  * that must only be called with a surface of the appropriate
  * type. These functions have names that begin with
- * cairo_<emphasis>type</emphasis>_surface such as cairo_image_surface_get_width().
+ * cairo_<emphasis>type</emphasis>_surface<!-- --> such as cairo_image_surface_get_width().
  *
  * The behavior of calling a type-specific function with a surface of
  * the wrong type is undefined.
@@ -1820,7 +1820,7 @@ cairo_pattern_set_user_data (cairo_pattern_t		 *pattern,
  * The type of a pattern is determined by the function used to create
  * it. The cairo_pattern_create_rgb() and cairo_pattern_create_rgba()
  * functions create SOLID patterns. The remaining
- * cairo_pattern_create functions map to pattern types in obvious
+ * cairo_pattern_create<!-- --> functions map to pattern types in obvious
  * ways.
  *
  * The pattern type can be queried with cairo_pattern_get_type()

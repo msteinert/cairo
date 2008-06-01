@@ -166,7 +166,7 @@ slim_hidden_def (cairo_version_string);
  * default values and with @target as a target surface. The target
  * surface should be constructed with a backend-specific function such
  * as cairo_image_surface_create() (or any other
- * cairo_<emphasis>backend</emphasis>_surface_create variant).
+ * cairo_<emphasis>backend</emphasis>_surface_create() variant).
  *
  * This function references @target, so you can immediately
  * call cairo_surface_destroy() on it if you don't need to
@@ -666,7 +666,7 @@ slim_hidden_def (cairo_set_operator);
  * clamped.
  *
  * The default source pattern is opaque black, (that is, it is
- * equivalent to cairo_set_source_rgb (cr, 0.0, 0.0, 0.0)).
+ * equivalent to cairo_set_source_rgb(cr, 0.0, 0.0, 0.0)).
  **/
 void
 cairo_set_source_rgb (cairo_t *cr, double red, double green, double blue)
@@ -701,7 +701,7 @@ cairo_set_source_rgb (cairo_t *cr, double red, double green, double blue)
  * will be clamped.
  *
  * The default source pattern is opaque black, (that is, it is
- * equivalent to cairo_set_source_rgba (cr, 0.0, 0.0, 0.0, 1.0)).
+ * equivalent to cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0)).
  **/
 void
 cairo_set_source_rgba (cairo_t *cr,
@@ -785,7 +785,7 @@ slim_hidden_def (cairo_set_source_surface);
  * will not affect the source pattern. See cairo_pattern_set_matrix().
  *
  * The default source pattern is a solid pattern that is opaque black,
- * (that is, it is equivalent to cairo_set_source_rgb (cr, 0.0, 0.0,
+ * (that is, it is equivalent to cairo_set_source_rgb(cr, 0.0, 0.0,
  * 0.0)).
  **/
 void
@@ -1449,7 +1449,7 @@ cairo_new_sub_path (cairo_t *cr)
  * will be (@x, @y).
  *
  * If there is no current point before the call to cairo_line_to()
- * this function will behave as cairo_move_to (@cr, @x, @y).
+ * this function will behave as cairo_move_to(@cr, @x, @y).
  **/
 void
 cairo_line_to (cairo_t *cr, double x, double y)
@@ -1487,7 +1487,7 @@ slim_hidden_def (cairo_line_to);
  *
  * If there is no current point before the call to cairo_curve_to()
  * this function will behave as if preceded by a call to
- * cairo_move_to (@cr, @x1, @y1).
+ * cairo_move_to(@cr, @x1, @y1).
  **/
 void
 cairo_curve_to (cairo_t *cr,
@@ -1669,7 +1669,7 @@ cairo_arc_to (cairo_t *cr,
  * by (@x, @y).
  *
  * Given a current point of (x, y), cairo_rel_move_to(@cr, @dx, @dy)
- * is logically equivalent to cairo_move_to (@cr, x + @dx, y + @dy).
+ * is logically equivalent to cairo_move_to(@cr, x + @dx, y + @dy).
  *
  * It is an error to call this function with no current point. Doing
  * so will cause @cr to shutdown with a status of
@@ -1706,7 +1706,7 @@ cairo_rel_move_to (cairo_t *cr, double dx, double dy)
  * current point will be offset by (@dx, @dy).
  *
  * Given a current point of (x, y), cairo_rel_line_to(@cr, @dx, @dy)
- * is logically equivalent to cairo_line_to (@cr, x + @dx, y + @dy).
+ * is logically equivalent to cairo_line_to(@cr, x + @dx, y + @dy).
  *
  * It is an error to call this function with no current point. Doing
  * so will cause @cr to shutdown with a status of
@@ -1749,10 +1749,9 @@ slim_hidden_def(cairo_rel_line_to);
  * (@dx2, @dy2) as the control points. After this call the current
  * point will be offset by (@dx3, @dy3).
  *
- * Given a current point of (x, y), cairo_rel_curve_to (@cr, @dx1,
+ * Given a current point of (x, y), cairo_rel_curve_to(@cr, @dx1,
  * @dy1, @dx2, @dy2, @dx3, @dy3) is logically equivalent to
- * cairo_curve_to (@cr, x + @dx1, y + @dy1, x + @dx2, y + @dy2, x +
- * @dx3, y + @dy3).
+ * cairo_curve_to(@cr, x+@dx1, y+@dy1, x+@dx2, y+@dy2, x+@dx3, y+@dy3).
  *
  * It is an error to call this function with no current point. Doing
  * so will cause @cr to shutdown with a status of
@@ -2080,7 +2079,7 @@ cairo_mask_surface (cairo_t         *cr,
  *
  * A drawing operator that strokes the current path according to the
  * current line width, line join, line cap, and dash settings. After
- * cairo_stroke, the current path will be cleared from the cairo
+ * cairo_stroke(), the current path will be cleared from the cairo
  * context. See cairo_set_line_width(), cairo_set_line_join(),
  * cairo_set_line_cap(), cairo_set_dash(), and
  * cairo_stroke_preserve().
@@ -2702,7 +2701,7 @@ cairo_set_font_face (cairo_t           *cr,
  *
  * Return value: the current font face.  This object is owned by
  * cairo. To keep a reference to it, you must call
- * cairo_font_face_reference.
+ * cairo_font_face_reference().
  *
  * This function never returns %NULL. If memory cannot be allocated, a
  * special "nil" #cairo_font_face_t object will be returned on which
@@ -3015,7 +3014,7 @@ cairo_text_extents (cairo_t              *cr,
  * glyphs, (as they would be drawn by cairo_show_glyphs()).
  * Additionally, the x_advance and y_advance values indicate the
  * amount by which the current point would be advanced by
- * cairo_show_glyphs.
+ * cairo_show_glyphs().
  *
  * Note that whitespace glyphs do not contribute to the size of the
  * rectangle (extents.width and extents.height).

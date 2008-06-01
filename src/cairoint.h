@@ -237,7 +237,7 @@ _cairo_box_intersects_line_segment (cairo_box_t *box, cairo_line_t *line);
 cairo_private cairo_bool_t
 _cairo_box_contains_point (cairo_box_t *box, cairo_point_t *point);
 
-/* cairo_array.c structures and functions */
+/* cairo-array.c structures and functions */
 
 cairo_private void
 _cairo_array_init (cairo_array_t *array, int element_size);
@@ -943,7 +943,7 @@ _cairo_restrict_value (double *value, double min, double max);
 cairo_private int
 _cairo_lround (double d);
 
-/* cairo_gstate.c */
+/* cairo-gstate.c */
 cairo_private cairo_status_t
 _cairo_gstate_init (cairo_gstate_t  *gstate,
 		    cairo_surface_t *target);
@@ -1224,7 +1224,7 @@ _cairo_operator_bounded_by_mask (cairo_operator_t op);
 cairo_private cairo_bool_t
 _cairo_operator_bounded_by_source (cairo_operator_t op);
 
-/* cairo_color.c */
+/* cairo-color.c */
 cairo_private const cairo_color_t *
 _cairo_stock_color (cairo_stock_t stock);
 
@@ -1864,7 +1864,7 @@ _cairo_surface_set_device_scale (cairo_surface_t *surface,
 cairo_private cairo_bool_t
 _cairo_surface_has_device_transform (cairo_surface_t *surface);
 
-/* cairo_image_surface.c */
+/* cairo-image-surface.c */
 
 /* XXX: In cairo 1.2.0 we added a new %CAIRO_FORMAT_RGB16_565 but
  * neglected to adjust this macro. The net effect is that it's
@@ -1986,7 +1986,7 @@ _cairo_surface_is_image (const cairo_surface_t *surface);
 cairo_private cairo_bool_t
 _cairo_surface_is_meta (const cairo_surface_t *surface);
 
-/* cairo_pen.c */
+/* cairo-pen.c */
 cairo_private cairo_status_t
 _cairo_pen_init (cairo_pen_t	*pen,
 		 double		 radius,
@@ -2028,7 +2028,7 @@ _cairo_pen_stroke_spline (cairo_pen_t *pen,
 			  double tolerance,
 			  cairo_traps_t *traps);
 
-/* cairo_polygon.c */
+/* cairo-polygon.c */
 cairo_private void
 _cairo_polygon_init (cairo_polygon_t *polygon);
 
@@ -2050,7 +2050,7 @@ _cairo_polygon_line_to (cairo_polygon_t *polygon, cairo_point_t *point);
 cairo_private void
 _cairo_polygon_close (cairo_polygon_t *polygon);
 
-/* cairo_spline.c */
+/* cairo-spline.c */
 cairo_private cairo_int_status_t
 _cairo_spline_init (cairo_spline_t *spline,
 		    const cairo_point_t *a,
@@ -2064,7 +2064,7 @@ _cairo_spline_decompose (cairo_spline_t *spline, double tolerance);
 cairo_private void
 _cairo_spline_fini (cairo_spline_t *spline);
 
-/* cairo_matrix.c */
+/* cairo-matrix.c */
 cairo_private void
 _cairo_matrix_get_affine (const cairo_matrix_t *matrix,
 			  double *xx, double *yx,
@@ -2109,7 +2109,7 @@ cairo_private void
 _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
 				pixman_transform_t	*pixman_transform);
 
-/* cairo_traps.c */
+/* cairo-traps.c */
 cairo_private void
 _cairo_traps_init (cairo_traps_t *traps);
 
@@ -2173,14 +2173,14 @@ _cairo_trapezoid_array_translate_and_scale (cairo_trapezoid_t *offset_traps,
 					    double tx, double ty,
 					    double sx, double sy);
 
-/* cairo_slope.c */
+/* cairo-slope.c */
 cairo_private void
 _cairo_slope_init (cairo_slope_t *slope, cairo_point_t *a, cairo_point_t *b);
 
 cairo_private int
 _cairo_slope_compare (cairo_slope_t *a, cairo_slope_t *b);
 
-/* cairo_pattern.c */
+/* cairo-pattern.c */
 
 cairo_private cairo_status_t
 _cairo_pattern_create_copy (cairo_pattern_t	  **pattern,
@@ -2273,7 +2273,7 @@ _cairo_gstate_get_antialias (cairo_gstate_t *gstate);
 
 #include "cairo-region-private.h"
 
-/* cairo_unicode.c */
+/* cairo-unicode.c */
 
 cairo_private cairo_status_t
 _cairo_utf8_to_ucs4 (const char *str,

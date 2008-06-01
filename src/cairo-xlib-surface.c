@@ -2353,7 +2353,7 @@ _cairo_xlib_screen_from_visual (Display *dpy, Visual *visual)
  * by the provided visual.
  *
  * Note: If @drawable is a Window, then the function
- * cairo_xlib_surface_set_size must be called whenever the size of the
+ * cairo_xlib_surface_set_size() must be called whenever the size of the
  * window changes.
  *
  * When @drawable is a Window containing child windows then drawing to
@@ -2419,7 +2419,7 @@ cairo_xlib_surface_create_for_bitmap (Display  *dpy,
  * by the provided picture format.
  *
  * Note: If @drawable is a Window, then the function
- * cairo_xlib_surface_set_size must be called whenever the size of the
+ * cairo_xlib_surface_set_size() must be called whenever the size of the
  * window changes.
  *
  * Return value: the newly created surface

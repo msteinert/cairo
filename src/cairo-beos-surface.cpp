@@ -946,7 +946,7 @@ _cairo_beos_surface_create_internal (BView*   view,
  * Creates a Cairo surface that draws onto a BeOS BView.
  * The caller must ensure that the view does not get deleted before the surface.
  * If the view is attached to a bitmap rather than an on-screen window, use
- * cairo_beos_surface_create_for_bitmap instead of this function.
+ * cairo_beos_surface_create_for_bitmap() instead of this function.
  **/
 cairo_surface_t *
 cairo_beos_surface_create (BView* view)

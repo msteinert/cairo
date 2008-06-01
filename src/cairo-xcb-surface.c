@@ -1856,7 +1856,7 @@ _cairo_xcb_screen_from_visual (xcb_connection_t *c, xcb_visualtype_t *visual)
  * by the provided visual.
  *
  * Note: If @drawable is a window, then the function
- * cairo_xcb_surface_set_size must be called whenever the size of the
+ * cairo_xcb_surface_set_size() must be called whenever the size of the
  * window changes.
  *
  * Return value: the newly created surface
@@ -1918,7 +1918,7 @@ cairo_xcb_surface_create_for_bitmap (xcb_connection_t     *c,
  * by the provided picture format.
  *
  * Note: If @drawable is a Window, then the function
- * cairo_xcb_surface_set_size must be called whenever the size of the
+ * cairo_xcb_surface_set_size() must be called whenever the size of the
  * window changes.
  *
  * Return value: the newly created surface.

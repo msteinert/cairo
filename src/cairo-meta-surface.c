@@ -486,7 +486,7 @@ _cairo_meta_surface_show_glyphs (void			*abstract_surface,
  * surface-modifying function on the result of this function.
  *
  * The caller owns the return value and should call
- * cairo_surface_destroy when finished with it. This function will not
+ * cairo_surface_destroy() when finished with it. This function will not
  * return %NULL, but will return a nil surface instead.
  *
  * Return value: The snapshot surface.

@@ -80,7 +80,7 @@ struct _cairo_paginated_surface_backend {
  * _cairo_paginated_surface_create which takes its own, much simpler,
  * #cairo_paginated_surface_backend_t. You are free to return the result
  * of _cairo_paginated_surface_create() from your public
- * cairo_<foo>_surface_create. The paginated backend will be careful
+ * cairo_<foo>_surface_create(). The paginated backend will be careful
  * to not let the user see that they really got a "wrapped"
  * surface. See test-paginated-surface.c for a fairly minimal example
  * of a paginated-using surface. That should be a reasonable example
@@ -88,7 +88,7 @@ struct _cairo_paginated_surface_backend {
  *
  * What the paginated surface does is first save all drawing
  * operations for a page into a meta-surface. Then when the user calls
- * cairo_show_page, the paginated surface performs the following
+ * cairo_show_page(), the paginated surface performs the following
  * sequence of operations (using the backend functions passed to
  * cairo_paginated_surface_create()):
  *
