@@ -181,26 +181,7 @@ typedef cairo_mutex_impl_t cairo_mutex_t;
 
 #ifdef CAIRO_MUTEX_DEBUG
 
-# undef CAIRO_MUTEX_LOCK
-# undef CAIRO_MUTEX_UNLOCK
-# define CAIRO_MUTEX_LOCK(mutex)	CAIRO_MUTEX_LOG_OP(mutex, "LOCK",   CAIRO_MUTEX_IMPL_LOCK)
-# define CAIRO_MUTEX_UNLOCK(mutex)	CAIRO_MUTEX_LOG_OP(mutex, "UNLOCK", CAIRO_MUTEX_IMPL_UNLOCK)
-
-#define CAIRO_MUTEX_LOG_OP(mutex, msg, op) \
-	do { cairo_mutex_t *__m = &(mutex); CAIRO_MUTEX_LOG(__m, msg); op(*__m); } while (0)
-
-
-#include <execinfo.h>
-#define CAIRO_MUTEX_LOG(mutex, msg) CAIRO_MUTEX_LOG0(mutex, CAIRO_MUTEX_DEBUG, msg)
-#define CAIRO_MUTEX_LOG0(mutex, which, msg) if (mutex == &which) CAIRO_MUTEX_LOG1(mutex, which, msg)
-#define CAIRO_MUTEX_LOG1(mutex, which, msg) \
-	do {	\
-		void *buffer[10];	\
-		int nptrs;	\
-		fprintf (stderr, "" #which " %s\n", msg);	\
-		nptrs = backtrace(buffer, ARRAY_LENGTH (buffer));	\
-		backtrace_symbols_fd (buffer, nptrs, 2);	\
-	} while (0)
+/* TODO add mutex debugging facilities here (eg deadlock detection) */
 
 #endif /* CAIRO_MUTEX_DEBUG */
 
