@@ -60,9 +60,10 @@ _cairo_pdf_operators_init (cairo_pdf_operators_t	*pdf_operators,
     pdf_operators->use_font_subset_closure = NULL;
 }
 
-void
+cairo_status_t
 _cairo_pdf_operators_fini (cairo_pdf_operators_t	*pdf_operators)
 {
+    return _cairo_pdf_operators_flush (pdf_operators);
 }
 
 void
@@ -74,6 +75,10 @@ _cairo_pdf_operators_set_font_subsets_callback (cairo_pdf_operators_t		     *pdf
     pdf_operators->use_font_subset_closure = closure;
 }
 
+/* Change the output stream to a different stream.
+ * _cairo_pdf_operators_flush() should always be called before calling
+ * this function.
+ */
 void
 _cairo_pdf_operators_set_stream (cairo_pdf_operators_t	 *pdf_operators,
 				 cairo_output_stream_t   *stream)
@@ -86,6 +91,23 @@ _cairo_pdf_operators_set_cairo_to_pdf_matrix (cairo_pdf_operators_t *pdf_operato
 					      cairo_matrix_t	    *cairo_to_pdf)
 {
     pdf_operators->cairo_to_pdf = *cairo_to_pdf;
+}
+
+/* Finish writing out any pending commands to the stream. This
+ * function must be called by the surface before emitting anything
+ * into the PDF stream.
+ *
+ * pdf_operators may leave the emitted PDF for some operations
+ * unfinished in case subsequent operations can be merged. This
+ * function will finish off any incomplete operation so the stream
+ * will be in a state where the surface may emit it's own PDF
+ * operations (eg changing patterns).
+ *
+ */
+cairo_int_status_t
+_cairo_pdf_operators_flush (cairo_pdf_operators_t	 *pdf_operators)
+{
+    return CAIRO_STATUS_SUCCESS;
 }
 
 /* A word wrap stream can be used as a filter to do word wrapping on

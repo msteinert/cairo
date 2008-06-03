@@ -63,7 +63,7 @@ _cairo_pdf_operators_init (cairo_pdf_operators_t       *pdf_operators,
 			   cairo_matrix_t 	       *cairo_to_pdf,
 			   cairo_scaled_font_subsets_t *font_subsets);
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_pdf_operators_fini (cairo_pdf_operators_t       *pdf_operators);
 
 cairo_private void
@@ -79,6 +79,9 @@ _cairo_pdf_operators_set_stream (cairo_pdf_operators_t 	 *pdf_operators,
 cairo_private void
 _cairo_pdf_operators_set_cairo_to_pdf_matrix (cairo_pdf_operators_t *pdf_operators,
 					      cairo_matrix_t 	    *cairo_to_pdf);
+
+cairo_private cairo_int_status_t
+_cairo_pdf_operators_flush (cairo_pdf_operators_t	 *pdf_operators);
 
 cairo_private cairo_int_status_t
 _cairo_pdf_operators_clip (cairo_pdf_operators_t 	*pdf_operators,

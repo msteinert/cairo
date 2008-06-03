@@ -1327,19 +1327,30 @@ _cairo_ps_surface_start_page (void *abstract_surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void
+static cairo_int_status_t
 _cairo_ps_surface_end_page (cairo_ps_surface_t *surface)
 {
+    cairo_int_status_t status;
+
+    status = _cairo_pdf_operators_flush (&surface->pdf_operators);
+    if (status)
+	return status;
+
     _cairo_output_stream_printf (surface->stream,
 				 "Q\n");
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
 _cairo_ps_surface_show_page (void *abstract_surface)
 {
     cairo_ps_surface_t *surface = abstract_surface;
+    cairo_int_status_t status;
 
-    _cairo_ps_surface_end_page (surface);
+    status = _cairo_ps_surface_end_page (surface);
+    if (status)
+	return status;
 
     _cairo_output_stream_printf (surface->stream, "showpage\n");
 
@@ -2075,6 +2086,10 @@ _cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
     status = _cairo_meta_surface_replay_region (meta_surface, &surface->base,
 						CAIRO_META_REGION_NATIVE);
     assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
+    if (status)
+	return status;
+
+    status = _cairo_pdf_operators_flush (&surface->pdf_operators);
     if (status)
 	return status;
 
@@ -2835,6 +2850,10 @@ _cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface,
      * different pattern. */
     cairo_status_t status;
 
+    status = _cairo_pdf_operators_flush (&surface->pdf_operators);
+    if (status)
+	    return status;
+
     switch (pattern->type) {
     case CAIRO_PATTERN_TYPE_SOLID:
 	_cairo_ps_surface_emit_solid_pattern (surface, (cairo_solid_pattern_t *) pattern);
@@ -2875,6 +2894,7 @@ _cairo_ps_surface_intersect_clip_path (void		   *abstract_surface,
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_output_stream_t *stream = surface->stream;
+    cairo_status_t status;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return CAIRO_STATUS_SUCCESS;
@@ -2885,6 +2905,10 @@ _cairo_ps_surface_intersect_clip_path (void		   *abstract_surface,
 #endif
 
     if (path == NULL) {
+	status = _cairo_pdf_operators_flush (&surface->pdf_operators);
+	if (status)
+	    return status;
+
 	_cairo_output_stream_printf (stream, "Q q\n");
 	return CAIRO_STATUS_SUCCESS;
     }
@@ -2945,6 +2969,10 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 #endif
 
     status = _cairo_surface_get_extents (&surface->base, &extents);
+    if (status)
+	return status;
+
+    status = _cairo_pdf_operators_flush (&surface->pdf_operators);
     if (status)
 	return status;
 
@@ -3040,6 +3068,10 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 	(source->extend == CAIRO_EXTEND_NONE ||
 	 source->extend == CAIRO_EXTEND_PAD))
     {
+	status = _cairo_pdf_operators_flush (&surface->pdf_operators);
+	if (status)
+	    return status;
+
 	_cairo_output_stream_printf (surface->stream, "q\n");
 
 	status =  _cairo_pdf_operators_clip (&surface->pdf_operators,
