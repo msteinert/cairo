@@ -153,6 +153,13 @@ struct _cairo_pdf_surface {
 
     cairo_bool_t force_fallbacks;
 
+    cairo_bool_t current_pattern_is_solid_color;
+    cairo_bool_t current_color_is_stroke;
+    double current_color_red;
+    double current_color_green;
+    double current_color_blue;
+    double current_color_alpha;
+
     cairo_surface_t *paginated_surface;
 };
 

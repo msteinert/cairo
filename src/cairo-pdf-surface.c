@@ -281,6 +281,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
 
     surface->force_fallbacks = FALSE;
     surface->select_pattern_gstate_saved = FALSE;
+    surface->current_pattern_is_solid_color = FALSE;
 
     _cairo_pdf_operators_init (&surface->pdf_operators,
 			       surface->output,
@@ -863,6 +864,7 @@ _cairo_pdf_surface_open_stream (cairo_pdf_surface_t	*surface,
     surface->pdf_stream.self = self;
     surface->pdf_stream.length = length;
     surface->pdf_stream.compressed = compressed;
+    surface->current_pattern_is_solid_color = FALSE;
 
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\n"
@@ -998,6 +1000,7 @@ _cairo_pdf_surface_open_group (cairo_pdf_surface_t  *surface,
     assert (surface->group_stream.active == FALSE);
 
     surface->group_stream.active = TRUE;
+    surface->current_pattern_is_solid_color = FALSE;
 
     surface->group_stream.mem_stream = _cairo_memory_stream_create ();
 
@@ -2592,10 +2595,6 @@ _cairo_pdf_surface_select_pattern (cairo_pdf_surface_t *surface,
     cairo_bool_t is_solid_color = FALSE;
     cairo_color_t *solid_color;
 
-    status = _cairo_pdf_operators_flush (&surface->pdf_operators);
-    if (status)
-	return status;
-
     if (pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
 	cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *) pattern;
 
@@ -2615,30 +2614,61 @@ _cairo_pdf_surface_select_pattern (cairo_pdf_surface_t *surface,
     }
 
     if (is_solid_color) {
-	status = _cairo_pdf_surface_add_alpha (surface, solid_color->alpha, &alpha);
-	if (status)
-	    return status;
+	if (surface->current_pattern_is_solid_color == FALSE ||
+	    surface->current_color_red != solid_color->red ||
+	    surface->current_color_green != solid_color->green ||
+	    surface->current_color_blue != solid_color->blue ||
+	    surface->current_color_is_stroke != is_stroke)
+	{
+	    status = _cairo_pdf_operators_flush (&surface->pdf_operators);
+	    if (status)
+		return status;
 
-	_cairo_output_stream_printf (surface->output,
-				     "%f %f %f ",
-				     solid_color->red,
-				     solid_color->green,
-				     solid_color->blue);
+	    _cairo_output_stream_printf (surface->output,
+					 "%f %f %f ",
+					 solid_color->red,
+					 solid_color->green,
+					 solid_color->blue);
 
-	if (is_stroke)
-            _cairo_output_stream_printf (surface->output, "RG ");
-        else
-            _cairo_output_stream_printf (surface->output, "rg ");
+	    if (is_stroke)
+		_cairo_output_stream_printf (surface->output, "RG ");
+	    else
+		_cairo_output_stream_printf (surface->output, "rg ");
 
-        _cairo_output_stream_printf (surface->output,
-                                     "/a%d gs\n",
-                                     alpha);
+	    surface->current_color_red = solid_color->red;
+	    surface->current_color_green = solid_color->green;
+	    surface->current_color_blue = solid_color->blue;
+	    surface->current_color_is_stroke = is_stroke;
+	}
+
+	if (surface->current_pattern_is_solid_color == FALSE ||
+	    surface->current_color_alpha != solid_color->alpha)
+	{
+	    status = _cairo_pdf_surface_add_alpha (surface, solid_color->alpha, &alpha);
+	    if (status)
+		return status;
+
+	    status = _cairo_pdf_operators_flush (&surface->pdf_operators);
+	    if (status)
+		return status;
+
+	    _cairo_output_stream_printf (surface->output,
+					 "/a%d gs\n",
+					 alpha);
+	    surface->current_color_alpha = solid_color->alpha;
+	}
+
+	surface->current_pattern_is_solid_color = TRUE;
     } else {
 	status = _cairo_pdf_surface_add_alpha (surface, 1.0, &alpha);
 	if (status)
 	    return status;
 
 	status = _cairo_pdf_surface_add_pattern (surface, pattern_res);
+	if (status)
+	    return status;
+
+	status = _cairo_pdf_operators_flush (&surface->pdf_operators);
 	if (status)
 	    return status;
 
@@ -2660,6 +2690,7 @@ _cairo_pdf_surface_select_pattern (cairo_pdf_surface_t *surface,
 				     "/a%d gs\n",
 				     alpha);
 	surface->select_pattern_gstate_saved = TRUE;
+	surface->current_pattern_is_solid_color = FALSE;
     }
 
     return _cairo_output_stream_get_status (surface->output);
@@ -2736,6 +2767,8 @@ _cairo_pdf_surface_intersect_clip_path (void			*abstract_surface,
 	    return status;
 
 	_cairo_output_stream_printf (surface->output, "Q q\n");
+	surface->current_pattern_is_solid_color = FALSE;
+
 	return CAIRO_STATUS_SUCCESS;
     }
 
