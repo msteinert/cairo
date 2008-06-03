@@ -55,6 +55,7 @@ typedef struct _cairo_pdf_operators {
     cairo_scaled_font_subsets_t *font_subsets;
     cairo_pdf_operators_use_font_subset_t use_font_subset;
     void *use_font_subset_closure;
+    cairo_bool_t in_text;
 } cairo_pdf_operators_t;
 
 cairo_private void

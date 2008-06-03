@@ -4799,6 +4799,16 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
 	if (status)
 	    return status;
 
+	/* Each call to show_glyphs() with a transclucent pattern must
+	 * be in a separate text object otherwise overlapping text
+	 * from separate calls to show_glyphs will not composite with
+	 * each other. */
+	if (! _cairo_pattern_is_opaque (source)) {
+	    status = _cairo_pdf_operators_flush (&surface->pdf_operators);
+	    if (status)
+		return status;
+	}
+
 	status = _cairo_pdf_operators_show_glyphs (&surface->pdf_operators,
 						   glyphs,
 						   num_glyphs,

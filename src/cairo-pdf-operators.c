@@ -47,6 +47,10 @@
 
 #include <ctype.h>
 
+static cairo_int_status_t
+_cairo_pdf_operators_end_text (cairo_pdf_operators_t    *pdf_operators);
+
+
 void
 _cairo_pdf_operators_init (cairo_pdf_operators_t	*pdf_operators,
 			   cairo_output_stream_t	*stream,
@@ -58,6 +62,7 @@ _cairo_pdf_operators_init (cairo_pdf_operators_t	*pdf_operators,
     pdf_operators->font_subsets = font_subsets;
     pdf_operators->use_font_subset = NULL;
     pdf_operators->use_font_subset_closure = NULL;
+    pdf_operators->in_text = FALSE;
 }
 
 cairo_status_t
@@ -107,6 +112,9 @@ _cairo_pdf_operators_set_cairo_to_pdf_matrix (cairo_pdf_operators_t *pdf_operato
 cairo_int_status_t
 _cairo_pdf_operators_flush (cairo_pdf_operators_t	 *pdf_operators)
 {
+    if (pdf_operators->in_text)
+	_cairo_pdf_operators_end_text (pdf_operators);
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -793,6 +801,16 @@ _cairo_pdf_operators_fill_stroke (cairo_pdf_operators_t 	*pdf_operators,
 					     operator);
 }
 
+static cairo_int_status_t
+_cairo_pdf_operators_end_text (cairo_pdf_operators_t    *pdf_operators)
+{
+    _cairo_output_stream_printf (pdf_operators->stream, "\nET\n");
+
+    pdf_operators->in_text = FALSE;
+
+    return _cairo_output_stream_get_status (pdf_operators->stream);
+}
+
 #define GLYPH_POSITION_TOLERANCE 0.001
 
 cairo_int_status_t
@@ -818,8 +836,10 @@ _cairo_pdf_operators_show_glyphs (cairo_pdf_operators_t		*pdf_operators,
     if (status)
 	return _cairo_output_stream_destroy (word_wrap_stream);
 
-    _cairo_output_stream_printf (word_wrap_stream,
-				 "BT\n");
+    if (pdf_operators->in_text == FALSE) {
+	_cairo_output_stream_printf (word_wrap_stream,
+				     "BT\n");
+    }
 
     if (scaled_font->scale.xy == 0.0 &&
         scaled_font->scale.yx == 0.0)
@@ -988,8 +1008,7 @@ _cairo_pdf_operators_show_glyphs (cairo_pdf_operators_t		*pdf_operators,
         }
     }
 
-    _cairo_output_stream_printf (word_wrap_stream,
-				 "ET\n");
+    pdf_operators->in_text = TRUE;
 
     status = _cairo_output_stream_destroy (word_wrap_stream);
     if (status)
