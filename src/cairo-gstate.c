@@ -1557,6 +1557,9 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
     _cairo_gstate_transform_glyphs_to_backend (gstate, glyphs, num_glyphs,
                                                transformed_glyphs, &num_glyphs);
 
+    if (!num_glyphs)
+	goto CLEANUP_GLYPHS;
+
     status = _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
     if (status)
 	goto CLEANUP_GLYPHS;
@@ -1700,6 +1703,11 @@ _cairo_gstate_transform_glyphs_to_backend (cairo_gstate_t      *gstate,
 	if (_cairo_gstate_int_clip_extents (gstate, &surface_extents))
 	    drop = FALSE; /* unbounded surface */
 	else {
+	    if (surface_extents.width == 0 || surface_extents.height == 0) {
+	      /* No visible area.  Don't draw anything */
+	      *num_transformed_glyphs = 0;
+	      return;
+	    }
 	    /* XXX We currently drop any glyphs that has its position outside
 	     * of the surface boundaries by a safety margin depending on the
 	     * font scale.  This however can fail in extreme cases where the
