@@ -197,6 +197,9 @@ write_png (cairo_surface_t	*surface,
     case CAIRO_FORMAT_A1:
 	depth = 1;
 	png_color_type = PNG_COLOR_TYPE_GRAY;
+#ifndef WORDS_BIGENDIAN
+	png_set_packswap (png);
+#endif
 	break;
     default:
 	status = _cairo_error (CAIRO_STATUS_INVALID_FORMAT);
