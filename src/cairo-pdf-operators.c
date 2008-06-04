@@ -806,6 +806,27 @@ _cairo_pdf_operators_fill_stroke (cairo_pdf_operators_t 	*pdf_operators,
 
 #define GLYPH_POSITION_TOLERANCE 0.001
 
+/* Emit the string of glyphs using the 'Tj' operator. This requires
+ * that the glyphs are positioned at their natural glyph advances. */
+static cairo_status_t
+_cairo_pdf_operators_emit_glyph_string (cairo_pdf_operators_t   *pdf_operators,
+					cairo_output_stream_t  	*stream)
+{
+    int i;
+
+    _cairo_output_stream_printf (stream, "<");
+    for (i = 0; i < pdf_operators->num_glyphs; i++) {
+	_cairo_output_stream_printf (stream,
+				     "%0*x",
+				     pdf_operators->hex_width,
+				     pdf_operators->glyphs[i].glyph_index);
+	pdf_operators->cur_x += pdf_operators->glyphs[i].x_advance;
+    }
+    _cairo_output_stream_printf (stream, ">Tj\n");
+
+    return _cairo_output_stream_get_status (stream);
+}
+
 /* Emit the string of glyphs using the 'TJ' operator.
  *
  * The TJ operator takes an array of strings of glyphs. Each string of
@@ -867,6 +888,8 @@ _cairo_pdf_operators_flush_glyphs (cairo_pdf_operators_t    *pdf_operators)
 {
     cairo_output_stream_t *word_wrap_stream;
     cairo_status_t status;
+    int i;
+    double x;
 
     if (pdf_operators->num_glyphs == 0)
 	return 0;
@@ -876,8 +899,20 @@ _cairo_pdf_operators_flush_glyphs (cairo_pdf_operators_t    *pdf_operators)
     if (status)
 	return _cairo_output_stream_destroy (word_wrap_stream);
 
-    status = _cairo_pdf_operators_emit_glyph_string_with_positioning (
-	pdf_operators, word_wrap_stream);
+    /* Check if glyph advance used to position every glyph */
+    x = pdf_operators->glyphs[0].x_position;
+    for (i = 0; i < pdf_operators->num_glyphs; i++) {
+	if (fabs(pdf_operators->glyphs[i].x_position - x) > GLYPH_POSITION_TOLERANCE)
+	    break;
+	x += pdf_operators->glyphs[i].x_advance;
+    }
+    if (i == pdf_operators->num_glyphs) {
+	status = _cairo_pdf_operators_emit_glyph_string (pdf_operators,
+							 word_wrap_stream);
+    } else {
+	status = _cairo_pdf_operators_emit_glyph_string_with_positioning (
+	    pdf_operators, word_wrap_stream);
+    }
 
     pdf_operators->num_glyphs = 0;
     status = _cairo_output_stream_destroy (word_wrap_stream);
