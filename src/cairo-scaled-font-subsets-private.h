@@ -46,6 +46,7 @@ typedef struct _cairo_scaled_font_subsets_glyph {
     cairo_bool_t is_scaled;
     cairo_bool_t is_composite;
     double       x_advance;
+    double       y_advance;
 } cairo_scaled_font_subsets_glyph_t;
 
 /**

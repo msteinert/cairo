@@ -92,6 +92,7 @@ typedef struct _cairo_sub_font_glyph {
     unsigned int subset_id;
     unsigned int subset_glyph_index;
     double       x_advance;
+    double       y_advance;
 } cairo_sub_font_glyph_t;
 
 typedef struct _cairo_sub_font_collection {
@@ -137,7 +138,8 @@ static cairo_sub_font_glyph_t *
 _cairo_sub_font_glyph_create (unsigned long	scaled_font_glyph_index,
 			      unsigned int	subset_id,
 			      unsigned int	subset_glyph_index,
-                              double            x_advance)
+                              double            x_advance,
+                              double            y_advance)
 {
     cairo_sub_font_glyph_t *sub_font_glyph;
 
@@ -151,6 +153,7 @@ _cairo_sub_font_glyph_create (unsigned long	scaled_font_glyph_index,
     sub_font_glyph->subset_id = subset_id;
     sub_font_glyph->subset_glyph_index = subset_glyph_index;
     sub_font_glyph->x_advance = x_advance;
+    sub_font_glyph->y_advance = y_advance;
 
     return sub_font_glyph;
 }
@@ -309,6 +312,7 @@ _cairo_sub_font_lookup_glyph (cairo_sub_font_t	                *sub_font,
         subset_glyph->is_scaled = sub_font->is_scaled;
         subset_glyph->is_composite = sub_font->is_composite;
         subset_glyph->x_advance = sub_font_glyph->x_advance;
+        subset_glyph->y_advance = sub_font_glyph->y_advance;
 
         return TRUE;
     }
@@ -352,7 +356,8 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
         sub_font_glyph = _cairo_sub_font_glyph_create (scaled_font_glyph_index,
 						       sub_font->current_subset,
 						       sub_font->num_glyphs_in_current_subset,
-                                                       scaled_glyph->metrics.x_advance);
+                                                       scaled_glyph->metrics.x_advance,
+                                                       scaled_glyph->metrics.y_advance);
 	if (sub_font_glyph == NULL)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -382,6 +387,7 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
     subset_glyph->is_scaled = sub_font->is_scaled;
     subset_glyph->is_composite = sub_font->is_composite;
     subset_glyph->x_advance = sub_font_glyph->x_advance;
+    subset_glyph->y_advance = sub_font_glyph->y_advance;
 
     return CAIRO_STATUS_SUCCESS;
 }
