@@ -45,9 +45,22 @@
 #include "cairo-compiler-private.h"
 #include "cairo-types-private.h"
 
+/* The glyph buffer size is based on the expected maximum glyphs in a
+ * line so that an entire line can be emitted in as one string. If the
+ * glyphs in a line exceeds this size the only downside is the slight
+ * overhead of emitting two strings.
+ */
+#define PDF_GLYPH_BUFFER_SIZE 200
+
 typedef cairo_status_t (*cairo_pdf_operators_use_font_subset_t) (unsigned int  font_id,
 								 unsigned int  subset_id,
 								 void         *closure);
+
+typedef struct _cairo_pdf_glyph {
+    unsigned int glyph_index;
+    double x_position;
+    double x_advance;
+} cairo_pdf_glyph_t;
 
 typedef struct _cairo_pdf_operators {
     cairo_output_stream_t *stream;
@@ -55,7 +68,18 @@ typedef struct _cairo_pdf_operators {
     cairo_scaled_font_subsets_t *font_subsets;
     cairo_pdf_operators_use_font_subset_t use_font_subset;
     void *use_font_subset_closure;
-    cairo_bool_t in_text;
+    cairo_bool_t in_text_object; /* inside BT/ET pair */
+
+    /* PDF text state */
+    unsigned int font_id;
+    unsigned int subset_id;
+    cairo_matrix_t text_matrix; /* PDF text matrix (Tlm in the PDF reference) */
+    cairo_matrix_t cairo_to_pdftext; /* translate cairo coords to PDF text space */
+    double cur_x; /* Current position in PDF text space (Tm in the PDF reference) */
+    double cur_y;
+    int hex_width;
+    int num_glyphs;
+    cairo_pdf_glyph_t glyphs[PDF_GLYPH_BUFFER_SIZE];
 } cairo_pdf_operators_t;
 
 cairo_private void
@@ -81,7 +105,7 @@ cairo_private void
 _cairo_pdf_operators_set_cairo_to_pdf_matrix (cairo_pdf_operators_t *pdf_operators,
 					      cairo_matrix_t 	    *cairo_to_pdf);
 
-cairo_private cairo_int_status_t
+cairo_private cairo_status_t
 _cairo_pdf_operators_flush (cairo_pdf_operators_t	 *pdf_operators);
 
 cairo_private cairo_int_status_t
