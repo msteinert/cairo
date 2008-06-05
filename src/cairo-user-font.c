@@ -265,6 +265,7 @@ _cairo_user_text_to_glyphs (void           *abstract_font,
 	int i;
 
 	*glyphs = NULL;
+	*num_glyphs = -1;
 
 	status = face->scaled_font_methods.text_to_glyphs (&scaled_font->base,
 							   utf8, glyphs, num_glyphs);
@@ -277,6 +278,9 @@ _cairo_user_text_to_glyphs (void           *abstract_font,
 	    }
 	    return status;
 	}
+
+	if (*num_glyphs < 0)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
 	/* Convert from font space to user space and add x,y */
 	for (i = 0; i < *num_glyphs; i++) {
