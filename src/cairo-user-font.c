@@ -336,6 +336,8 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
 	return status;
     }
 
+    /* XXX metrics hinting? */
+
     /* compute a normalized version of font scale matrix to compute
      * extents in.  This is to minimize error caused by the cairo_fixed_t
      * representation. */
