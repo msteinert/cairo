@@ -267,6 +267,7 @@ _cairo_user_text_to_glyphs (void           *abstract_font,
 	*glyphs = NULL;
 	*num_glyphs = -1;
 
+	/* XXX currently user allocs glyphs array but cairo frees it */
 	status = face->scaled_font_methods.text_to_glyphs (&scaled_font->base,
 							   utf8, glyphs, num_glyphs);
 
