@@ -1298,14 +1298,14 @@ typedef cairo_status_t (*cairo_user_scaled_font_render_glyph_func_t) (cairo_scal
 								      cairo_t              *cr,
 								      cairo_text_extents_t *extents);
 
-typedef cairo_status_t (*cairo_user_scaled_font_unicode_to_glyph_func_t) (cairo_scaled_font_t *scaled_font,
-									  unsigned long        unicode,
-									  unsigned long       *glyph_index);
-
 typedef cairo_status_t (*cairo_user_scaled_font_text_to_glyphs_func_t) (cairo_scaled_font_t   *scaled_font,
 									const char            *utf8,
 									cairo_glyph_t        **glyphs,
 									int                   *num_glyphs);
+
+typedef cairo_status_t (*cairo_user_scaled_font_unicode_to_glyph_func_t) (cairo_scaled_font_t *scaled_font,
+									  unsigned long        unicode,
+									  unsigned long       *glyph_index);
 
 /* User-font method setters */
 
@@ -1318,12 +1318,12 @@ cairo_user_font_face_set_render_glyph_func (cairo_font_face_t                   
 					    cairo_user_scaled_font_render_glyph_func_t  render_glyph_func);
 
 cairo_public void
-cairo_user_font_face_set_unicode_to_glyph_func (cairo_font_face_t                              *font_face,
-					        cairo_user_scaled_font_unicode_to_glyph_func_t  unicode_to_glyph_func);
-
-cairo_public void
 cairo_user_font_face_set_text_to_glyphs_func (cairo_font_face_t                            *font_face,
 					      cairo_user_scaled_font_text_to_glyphs_func_t  text_to_glyphs_func);
+
+cairo_public void
+cairo_user_font_face_set_unicode_to_glyph_func (cairo_font_face_t                              *font_face,
+					        cairo_user_scaled_font_unicode_to_glyph_func_t  unicode_to_glyph_func);
 
 /* User-font method getters */
 
@@ -1333,11 +1333,11 @@ cairo_user_font_face_get_init_func (cairo_font_face_t *font_face);
 cairo_public cairo_user_scaled_font_render_glyph_func_t
 cairo_user_font_face_get_render_glyph_func (cairo_font_face_t *font_face);
 
-cairo_public cairo_user_scaled_font_unicode_to_glyph_func_t
-cairo_user_font_face_get_unicode_to_glyph_func (cairo_font_face_t *font_face);
-
 cairo_public cairo_user_scaled_font_text_to_glyphs_func_t
 cairo_user_font_face_get_text_to_glyphs_func (cairo_font_face_t *font_face);
+
+cairo_public cairo_user_scaled_font_unicode_to_glyph_func_t
+cairo_user_font_face_get_unicode_to_glyph_func (cairo_font_face_t *font_face);
 
 
 /* Query functions */
