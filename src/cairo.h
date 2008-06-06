@@ -1290,19 +1290,152 @@ cairo_user_font_face_create (void);
 
 /* User-font method signatures */
 
+/**
+ * cairo_user_scaled_font_init_func_t:
+ * @scaled_font: the scaled-font being created
+ * @extents: font extents to fill in, in font space
+ *
+ * #cairo_user_scaled_font_init_func_t is the type of function which is
+ * called when a scaled-font needs to be created for a user font-face.
+ *
+ * The @extents argument is where the user font sets the font extents for
+ * @scaled_font.  It is in font space, which means that for most cases its
+ * ascent and descent members should add to 1.0.  @extents is preset to
+ * hold a value of 1.0 for ascent, height, and max_x_advance, and 0.0 for
+ * descent and max_y_advance members.
+ *
+ * The callback is optional.  If not set, default font extents as described
+ * in the previous paragraph will be used.
+ *
+ * Note that @scaled_font is not fully initialized at this
+ * point and trying to use it for text operations in the callback will result
+ * in deadlock.
+ *
+ * Returns: %CAIRO_STATUS_SUCCESS upon success, or
+ * %CAIRO_STATUS_USER_FONT_ERROR or any other error status on error.
+ *
+ * Returns: the status code of the operation
+ *
+ * Since: 1.8
+ **/
 typedef cairo_status_t (*cairo_user_scaled_font_init_func_t) (cairo_scaled_font_t  *scaled_font,
 							      cairo_font_extents_t *extents);
 
+/**
+ * cairo_user_scaled_font_render_glyph_func_t:
+ * @scaled_font: user scaled-font
+ * @glyph: glyph code to render
+ * @cr: cairo context to draw to, in font space
+ * @extents: glyph extents to fill in, in font space
+ *
+ * #cairo_user_scaled_font_render_glyph_func_t is the type of function which
+ * is called when a user scaled-font needs to render a glyph.
+ *
+ * The callback is mandatory, and expected to draw the glyph with code @glyph to
+ * the cairo context @cr.  @cr is prepared such that the glyph drawing is done in
+ * font space.  That is, the matrix set on @cr is the scale matrix of @scaled_font,
+ * The @extents argument is where the user font sets the font extents for
+ * @scaled_font.  However, if user prefers to draw in user space, they can
+ * achieve that by changing the matrix on @cr.  All cairo rendering operations
+ * to @cr are permitted, however, the result is undefined if any source other
+ * than the default source on @cr is used.  That means, glyph bitmaps should
+ * be rendered using cairo_mask() instead of cairo_paint().
+ *
+ * Other non-default settings on @cr include a font size of 1.0 (given that
+ * it is set up to be in font space), and font options corresponding to
+ * @scaled_font.
+ *
+ * The @extents argument is preset to have <literal>x_bearing</literal>,
+ * <literal>width</literal>, and <literal>y_advance</literal> of zero,
+ * <literal>y_bearing</literal> set to <literal>-font_extents.ascent</literal>,
+ * <literal>height</literal> to <literal>font_extents.ascent+font_extents.descent</literal>,
+ * and <literal>x_advance</literal> to <literal>font_extents.max_x_advance</literal>.
+ * The only field user needs to set in majority of cases is
+ * <literal>x_advance</literal>.
+ * If the <literal>width</literal> field is zero upon the callback returning
+ * (which is its preset value), the glyph extents are automatically computed
+ * based on the drawings done to @cr.  This is in most cases exactly what the
+ * desired behavior is.  However, if for any reason the callback sets the
+ * extents, it must be ink extents, and include the extents of all drawing
+ * done to @cr in the callback.
+ *
+ * Returns: %CAIRO_STATUS_SUCCESS upon success, or
+ * %CAIRO_STATUS_USER_FONT_ERROR or any other error status on error.
+ *
+ * Since: 1.8
+ **/
 typedef cairo_status_t (*cairo_user_scaled_font_render_glyph_func_t) (cairo_scaled_font_t  *scaled_font,
 								      unsigned long         glyph,
 								      cairo_t              *cr,
 								      cairo_text_extents_t *extents);
 
+/**
+ * cairo_user_scaled_font_text_to_glyphs_func_t:
+ * @scaled_font: the scaled-font being created
+ * @utf8: input string of text, encoded in UTF-8
+ * @glyphs: output array of glyphs, in font space
+ * @num_glyphs: number of output glyphs
+ *
+ * #cairo_user_scaled_font_text_to_glyphs_func_t is the type of function which
+ * is called to convert input text to an array of glyphs.  This is used by the
+ * cairo_show_text() operation.
+ *
+ * Using this callback the user font has full control on glyphs and their
+ * positions.  That means, it allows for features like ligatures and kerning,
+ * as well as complex <firstterm>shaping</firstterm> required for scripts like
+ * Arabic and Indic.
+ *
+ * The @num_glyphs argument is preset to -1.  The callback should allocate an
+ * array for the resulting glyphs (using malloc()), and populate the glyph indices and
+ * positions (in font space) assuming that the text is to be shown at the
+ * origin.  Cairo will free the glyph array when done with it, no matter what
+ * the return value of the callback is.
+ *
+ * The callback is optional.  If not set, or if @num_glyphs is negative upon
+ * the callback returning (which by default is), the unicode_to_glyph callback
+ * is tried.  See #cairo_user_scaled_font_unicode_to_glyph_func_t.
+ *
+ * Note: The signature and details of this callback is expected to change
+ * before cairo 1.8.0 is released.
+ *
+ * Returns: %CAIRO_STATUS_SUCCESS upon success, or
+ * %CAIRO_STATUS_USER_FONT_ERROR or any other error status on error.
+ *
+ * Since: 1.8
+ **/
 typedef cairo_status_t (*cairo_user_scaled_font_text_to_glyphs_func_t) (cairo_scaled_font_t   *scaled_font,
 									const char            *utf8,
 									cairo_glyph_t        **glyphs,
 									int                   *num_glyphs);
 
+/**
+ * cairo_user_scaled_font_unicode_to_glyph_func_t:
+ * @scaled_font: the scaled-font being created
+ * @unicode: input unicode character code-point
+ * @glyph_index: output glyph index
+ *
+ * #cairo_user_scaled_font_unicode_to_glyph_func_t is the type of function which
+ * is called to convert an input Unicode character to a single glyph.
+ * This is used by the cairo_show_text() operation.
+ *
+ * This callback is used to provide the same functionality as the
+ * text_to_glyphs callback does (see #cairo_user_scaled_font_text_to_glyphs_func_t)
+ * but has much less control on the output,
+ * in exchange for increased ease of use.  The inherent assumption to using
+ * this callback is that each character maps to one glyph, and that the
+ * mapping is context independent.  It also assumes that glyphs are positioned
+ * according to their advance width.  These mean no ligatures, kerning, or
+ * complex scripts can be implemented using this callback.
+ *
+ * The callback is optional, and only used if text_to_glyphs callback is not
+ * set or fails to return glyphs.  If this callback is not set, an identity
+ * mapping from Unicode code-points to glyph indices is assumed.
+ *
+ * Returns: %CAIRO_STATUS_SUCCESS upon success, or
+ * %CAIRO_STATUS_USER_FONT_ERROR or any other error status on error.
+ *
+ * Since: 1.8
+ **/
 typedef cairo_status_t (*cairo_user_scaled_font_unicode_to_glyph_func_t) (cairo_scaled_font_t *scaled_font,
 									  unsigned long        unicode,
 									  unsigned long       *glyph_index);
