@@ -1323,20 +1323,26 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
 	 * non Windows fonts. ie filled outlines for Type 1 fonts and
 	 * fallback images for bitmap fonts.
 	 */
-	if (_cairo_win32_scaled_font_is_bitmap (scaled_font))
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	if (cairo_scaled_font_get_type (scaled_font) == CAIRO_FONT_TYPE_WIN32) {
+	    if (_cairo_win32_scaled_font_is_bitmap (scaled_font))
+		return CAIRO_INT_STATUS_UNSUPPORTED;
+	    else
+		return _cairo_win32_printing_surface_analyze_operation (surface, op, source);
+	}
 
-	if (!(cairo_scaled_font_get_type (scaled_font) == CAIRO_FONT_TYPE_WIN32 &&
-	      ! _cairo_win32_scaled_font_is_type1 (scaled_font) &&
-	      source->type == CAIRO_PATTERN_TYPE_SOLID)) {
-	    for (i = 0; i < num_glyphs; i++) {
-		status = _cairo_scaled_glyph_lookup (scaled_font,
-						     glyphs[i].index,
-						     CAIRO_SCALED_GLYPH_INFO_PATH,
-						     &scaled_glyph);
-		if (status)
-		    return status;
-	    }
+	/* For non win32 fonts we need to check that each glyph has a
+	 * path available. If a path is not available,
+	 * _cairo_scaled_glyph_lookup() will return
+	 * CAIRO_INT_STATUS_UNSUPPORTED and a fallback image will be
+	 * used.
+	 */
+	for (i = 0; i < num_glyphs; i++) {
+	    status = _cairo_scaled_glyph_lookup (scaled_font,
+						 glyphs[i].index,
+						 CAIRO_SCALED_GLYPH_INFO_PATH,
+						 &scaled_glyph);
+	    if (status)
+		return status;
 	}
 
 	return _cairo_win32_printing_surface_analyze_operation (surface, op, source);
