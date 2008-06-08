@@ -42,8 +42,9 @@
 static const cairo_surface_backend_t cairo_type3_glyph_surface_backend;
 
 cairo_surface_t *
-_cairo_type3_glyph_surface_create (cairo_scaled_font_t	 *scaled_font,
-				   cairo_output_stream_t *stream)
+_cairo_type3_glyph_surface_create (cairo_scaled_font_t	 		 *scaled_font,
+				   cairo_output_stream_t 		 *stream,
+				   cairo_type3_glyph_surface_emit_image_t emit_image)
 {
     cairo_type3_glyph_surface_t *surface;
     cairo_matrix_t invert_y_axis;
@@ -57,6 +58,7 @@ _cairo_type3_glyph_surface_create (cairo_scaled_font_t	 *scaled_font,
 
     surface->scaled_font = scaled_font;
     surface->stream = stream;
+    surface->emit_image = emit_image;
 
     /* Setup the transform from the user-font device space to Type 3
      * font space. The Type 3 font space is defined by the FontMatrix
@@ -81,8 +83,6 @@ _cairo_type3_glyph_surface_emit_image (cairo_type3_glyph_surface_t *surface,
 {
     cairo_status_t status;
     cairo_image_surface_t *image_mask;
-    unsigned char *byte, output_byte;
-    int row, col, num_cols;
 
     /* The only image type supported by Type 3 fonts are 1-bit image
      * masks */
@@ -104,30 +104,10 @@ _cairo_type3_glyph_surface_emit_image (cairo_type3_glyph_surface_t *surface,
 				 image_matrix->x0,
 				 image_matrix->y0);
 
-    _cairo_output_stream_printf (surface->stream,
-				 "BI\n"
-				 "/IM true\n"
-				 "/W %d\n"
-				 "/H %d\n"
-				 "/BPC 1\n"
-				 "/D [1 0]\n",
-				 image_mask->width,
-				 image_mask->height);
+    status = surface->emit_image (image_mask, surface->stream);
 
     _cairo_output_stream_printf (surface->stream,
-				 "ID ");
-
-    num_cols = (image_mask->width + 7) / 8;
-    for (row = 0; row < image_mask->height; row++) {
-	byte = image_mask->data + row * image_mask->stride;
-	for (col = 0; col < num_cols; col++) {
-	    output_byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte);
-	    _cairo_output_stream_write (surface->stream, &output_byte, 1);
-	    byte++;
-	}
-    }
-    _cairo_output_stream_printf (surface->stream,
-				 "\nEI Q\n");
+				 "Q\n");
 
     if (image_mask != image)
 	cairo_surface_destroy (&image_mask->base);

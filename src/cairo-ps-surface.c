@@ -375,6 +375,51 @@ _cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,
 }
 
 static cairo_status_t
+_cairo_ps_emit_imagemask (cairo_image_surface_t *image,
+			  cairo_output_stream_t *stream)
+{
+    unsigned char *row, *byte;
+    int rows, cols;
+
+    /* The only image type supported by Type 3 fonts are 1-bit image
+     * masks */
+    assert (image->format == CAIRO_FORMAT_A1);
+
+    _cairo_output_stream_printf (stream,
+				 "<<\n"
+				 "   /ImageType 1\n"
+				 "   /Width %d\n"
+				 "   /Height %d\n"
+				 "   /ImageMatrix [%d 0 0 %d 0 %d]\n"
+				 "   /Decode [1 0]\n"
+				 "   /BitsPerComponent 1\n",
+				 image->width,
+				 image->height,
+				 image->width,
+				 -image->height,
+				 image->height);
+
+    _cairo_output_stream_printf (stream,
+				 "   /DataSource   {<");
+    for (row = image->data, rows = image->height; rows; row += image->stride, rows--) {
+	for (byte = row, cols = (image->width + 7) / 8; cols; byte++, cols--) {
+	    unsigned char output_byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte);
+	    _cairo_output_stream_printf (stream, "%02x ", output_byte);
+	}
+	_cairo_output_stream_printf (stream, "\n   ");
+    }
+    _cairo_output_stream_printf (stream,
+				 "   >}\n");
+    _cairo_output_stream_printf (stream,
+				 ">>\n");
+
+    _cairo_output_stream_printf (stream,
+				 "imagemask\n");
+
+    return _cairo_output_stream_get_status (stream);
+}
+
+static cairo_status_t
 _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
 					  cairo_scaled_font_subset_t	*font_subset)
 
@@ -401,7 +446,9 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
 				 "/Encoding 256 array def\n"
 				 "0 1 255 { Encoding exch /.notdef put } for\n");
 
-    type3_surface = _cairo_type3_glyph_surface_create (font_subset->scaled_font, NULL);
+    type3_surface = _cairo_type3_glyph_surface_create (font_subset->scaled_font,
+						       NULL,
+						       _cairo_ps_emit_imagemask);
 
     for (i = 1; i < font_subset->num_glyphs; i++) {
 	if (font_subset->glyph_names != NULL) {

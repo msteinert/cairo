@@ -3398,6 +3398,46 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 }
 
 static cairo_status_t
+_cairo_pdf_emit_imagemask (cairo_image_surface_t *image,
+			     cairo_output_stream_t *stream)
+{
+    unsigned char *byte, output_byte;
+    int row, col, num_cols;
+
+    /* The only image type supported by Type 3 fonts are 1-bit image
+     * masks */
+    assert (image->format == CAIRO_FORMAT_A1);
+
+    _cairo_output_stream_printf (stream,
+				 "BI\n"
+				 "/IM true\n"
+				 "/W %d\n"
+				 "/H %d\n"
+				 "/BPC 1\n"
+				 "/D [1 0]\n",
+				 image->width,
+				 image->height);
+
+    _cairo_output_stream_printf (stream,
+				 "ID ");
+
+    num_cols = (image->width + 7) / 8;
+    for (row = 0; row < image->height; row++) {
+	byte = image->data + row * image->stride;
+	for (col = 0; col < num_cols; col++) {
+	    output_byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte);
+	    _cairo_output_stream_write (stream, &output_byte, 1);
+	    byte++;
+	}
+    }
+
+    _cairo_output_stream_printf (stream,
+				 "\nEI\n");
+
+    return _cairo_output_stream_get_status (stream);
+}
+
+static cairo_status_t
 _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 					   cairo_scaled_font_subset_t	*font_subset)
 {
@@ -3430,7 +3470,9 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
-    type3_surface = _cairo_type3_glyph_surface_create (font_subset->scaled_font, NULL);
+    type3_surface = _cairo_type3_glyph_surface_create (font_subset->scaled_font,
+						       NULL,
+						       _cairo_pdf_emit_imagemask);
 
     for (i = 0; i < font_subset->num_glyphs; i++) {
 	status = _cairo_pdf_surface_open_stream (surface,

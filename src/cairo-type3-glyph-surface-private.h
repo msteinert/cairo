@@ -40,6 +40,9 @@
 #include "cairo-surface-private.h"
 #include "cairo-pdf-operators-private.h"
 
+typedef cairo_status_t (*cairo_type3_glyph_surface_emit_image_t) (cairo_image_surface_t *image,
+								  cairo_output_stream_t	*stream);
+
 typedef struct cairo_type3_glyph_surface {
     cairo_surface_t base;
 
@@ -47,11 +50,13 @@ typedef struct cairo_type3_glyph_surface {
     cairo_output_stream_t *stream;
     cairo_pdf_operators_t pdf_operators;
     cairo_matrix_t cairo_to_pdf;
+    cairo_type3_glyph_surface_emit_image_t emit_image;
 } cairo_type3_glyph_surface_t;
 
 cairo_private cairo_surface_t *
-_cairo_type3_glyph_surface_create (cairo_scaled_font_t	 *scaled_font,
-				   cairo_output_stream_t *stream);
+_cairo_type3_glyph_surface_create (cairo_scaled_font_t	 		 *scaled_font,
+				   cairo_output_stream_t		 *stream,
+				   cairo_type3_glyph_surface_emit_image_t emit_image);
 
 cairo_private cairo_status_t
 _cairo_type3_glyph_surface_emit_notdef_glyph (void		    *abstract_surface,
