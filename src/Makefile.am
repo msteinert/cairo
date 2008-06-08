@@ -89,6 +89,8 @@ font_subset_sources_base =			\
 	cairo-type1-fallback.c			\
 	cairo-type1-private.h			\
 	cairo-truetype-subset-private.h		\
+        cairo-type3-glyph-surface.c             \
+        cairo-type3-glyph-surface-private.h     \
 	cairo-scaled-font-subsets.c		\
 	cairo-scaled-font-subsets-private.h
 cairo_all_sources += $(font_subset_sources_base)

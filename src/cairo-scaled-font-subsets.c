@@ -43,6 +43,7 @@
 #define _BSD_SOURCE /* for snprintf(), strdup() */
 #include "cairoint.h"
 #include "cairo-scaled-font-subsets-private.h"
+#include "cairo-user-font-private.h"
 
 #define MAX_GLYPHS_PER_SIMPLE_FONT 256
 #define MAX_GLYPHS_PER_COMPOSITE_FONT 65536
@@ -580,7 +581,8 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
         return status;
 
     if (status == CAIRO_STATUS_SUCCESS &&
-	subsets->type != CAIRO_SUBSETS_SCALED)
+	subsets->type != CAIRO_SUBSETS_SCALED &&
+	! _cairo_font_face_is_user (scaled_font->font_face))
     {
         /* Path available. Add to unscaled subset. */
         key.is_scaled = FALSE;

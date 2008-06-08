@@ -48,6 +48,7 @@
 #include "cairo-paginated-private.h"
 #include "cairo-output-stream-private.h"
 #include "cairo-meta-surface-private.h"
+#include "cairo-type3-glyph-surface-private.h"
 
 #include <time.h>
 #include <zlib.h>
@@ -3396,99 +3397,6 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
     return status;
 }
 
-static cairo_int_status_t
-_cairo_pdf_surface_emit_bitmap_glyph (cairo_pdf_surface_t	*surface,
-				      cairo_scaled_font_t	*scaled_font,
-				      unsigned long		 glyph_index,
-				      cairo_pdf_resource_t	*glyph_ret,
-                                      cairo_box_t               *bbox,
-                                      double                    *width)
-{
-    cairo_scaled_glyph_t *scaled_glyph;
-    cairo_status_t status;
-    cairo_image_surface_t *image;
-    unsigned char *row, *byte;
-    int rows, cols;
-    double x_advance, y_advance;
-
-    status = _cairo_scaled_glyph_lookup (scaled_font,
-					 glyph_index,
-					 CAIRO_SCALED_GLYPH_INFO_METRICS|
-					 CAIRO_SCALED_GLYPH_INFO_SURFACE,
-					 &scaled_glyph);
-    if (status)
-	return status;
-
-    x_advance = scaled_glyph->metrics.x_advance;
-    y_advance = scaled_glyph->metrics.y_advance;
-    cairo_matrix_transform_distance (&scaled_font->ctm, &x_advance, &y_advance);
-    *bbox = scaled_glyph->bbox;
-    *width = x_advance;
-
-    image = scaled_glyph->surface;
-    if (image->format != CAIRO_FORMAT_A1) {
-	image = _cairo_image_surface_clone (image, CAIRO_FORMAT_A1);
-	status = cairo_surface_status (&image->base);
-	if (status)
-	    return status;
-    }
-
-    status = _cairo_pdf_surface_open_stream (surface,
-				             NULL,
-					     surface->compress_content,
-					     NULL);
-    if (status) {
-	if (image != scaled_glyph->surface)
-	    cairo_surface_destroy (&image->base);
-	return status;
-    }
-
-    *glyph_ret = surface->pdf_stream.self;
-
-    _cairo_output_stream_printf (surface->output,
-				 "%f 0 %f %f %f %f d1\n",
-                                 x_advance,
-				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
-				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
-				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x),
-				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.y));
-
-    _cairo_output_stream_printf (surface->output,
-				 "%f 0 0 %f %f %f cm\n",
-				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.x) - _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
-				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.y) - _cairo_fixed_to_double (scaled_glyph->bbox.p2.y),
-				 _cairo_fixed_to_double (scaled_glyph->bbox.p1.x),
-				 _cairo_fixed_to_double (scaled_glyph->bbox.p2.y));
-
-    _cairo_output_stream_printf (surface->output,
-				 "BI\n"
-				 "/IM true\n"
-				 "/W %d\n"
-				 "/H %d\n"
-				 "/BPC 1\n"
-				 "/D [1 0]\n",
-				 image->width,
-				 image->height);
-
-    _cairo_output_stream_printf (surface->output,
-				 "ID ");
-    for (row = image->data, rows = image->height; rows; row += image->stride, rows--) {
-	for (byte = row, cols = (image->width + 7) / 8; cols; byte++, cols--) {
-	    unsigned char output_byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte);
-	    _cairo_output_stream_write (surface->output, &output_byte, 1);
-	}
-    }
-    _cairo_output_stream_printf (surface->output,
-				 "\nEI\n");
-
-    status = _cairo_pdf_surface_close_stream (surface);
-
-    if (image != scaled_glyph->surface)
-	cairo_surface_destroy (&image->base);
-
-    return status;
-}
-
 static cairo_status_t
 _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 					   cairo_scaled_font_subset_t	*font_subset)
@@ -3501,6 +3409,7 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
     unsigned int i;
     cairo_box_t font_bbox = {{0,0},{0,0}};
     cairo_box_t bbox = {{0,0},{0,0}};
+    cairo_surface_t *type3_surface;
 
     if (font_subset->num_glyphs == 0)
 	return CAIRO_STATUS_SUCCESS;
@@ -3521,13 +3430,27 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
+    type3_surface = _cairo_type3_glyph_surface_create (font_subset->scaled_font, NULL);
+
     for (i = 0; i < font_subset->num_glyphs; i++) {
-        status = _cairo_pdf_surface_emit_bitmap_glyph (surface,
-                                                       font_subset->scaled_font,
-                                                       font_subset->glyphs[i],
-                                                       &glyphs[i],
-                                                       &bbox,
-                                                       &widths[i]);
+	status = _cairo_pdf_surface_open_stream (surface,
+						 NULL,
+						 surface->compress_content,
+						 NULL);
+	glyphs[i] = surface->pdf_stream.self;
+	if (i == 0) {
+	    status = _cairo_type3_glyph_surface_emit_notdef_glyph (type3_surface,
+								   surface->output,
+								   &bbox,
+								   &widths[i]);
+	} else {
+	    status = _cairo_type3_glyph_surface_emit_glyph (type3_surface,
+							    surface->output,
+							    font_subset->glyphs[i],
+							    &bbox,
+							    &widths[i]);
+	}
+	status = _cairo_pdf_surface_close_stream (surface);
 	if (status)
 	    break;
 
@@ -3547,6 +3470,7 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
                 font_bbox.p2.y = bbox.p2.y;
         }
     }
+    cairo_surface_destroy (type3_surface);
     if (status) {
 	free (glyphs);
 	free (widths);
@@ -3607,20 +3531,16 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 				 "<< /Type /Font\n"
 				 "   /Subtype /Type3\n"
 				 "   /FontBBox [%f %f %f %f]\n"
-				 "   /FontMatrix [ %f %f %f %f 0 0 ]\n"
+				 "   /FontMatrix [ 1 0 0 1 0 0 ]\n"
 				 "   /Encoding %d 0 R\n"
 				 "   /CharProcs %d 0 R\n"
 				 "   /FirstChar 0\n"
 				 "   /LastChar %d\n",
 				 subset_resource.id,
 				 _cairo_fixed_to_double (font_bbox.p1.x),
-				 _cairo_fixed_to_double (font_bbox.p1.y),
+				 - _cairo_fixed_to_double (font_bbox.p2.y),
 				 _cairo_fixed_to_double (font_bbox.p2.x),
-				 _cairo_fixed_to_double (font_bbox.p2.y),
-				 matrix.xx,
-				 matrix.yx,
-				 -matrix.xy,
-				 -matrix.yy,
+				 - _cairo_fixed_to_double (font_bbox.p1.y),
 				 encoding.id,
 				 char_procs.id,
 				 font_subset->num_glyphs - 1);
@@ -3677,6 +3597,7 @@ _cairo_pdf_surface_emit_unscaled_font_subset (cairo_scaled_font_subset_t *font_s
         status = _cairo_pdf_surface_emit_type1_fallback_font (surface, font_subset);
         if (status != CAIRO_INT_STATUS_UNSUPPORTED)
             return status;
+
     }
 
     ASSERT_NOT_REACHED;

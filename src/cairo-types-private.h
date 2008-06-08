@@ -149,7 +149,8 @@ typedef enum _cairo_internal_surface_type {
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED,
-    CAIRO_INTERNAL_SURFACE_TYPE_NULL
+    CAIRO_INTERNAL_SURFACE_TYPE_NULL,
+    CAIRO_INTERNAL_SURFACE_TYPE_TYPE3_GLYPH
 } cairo_internal_surface_type_t;
 
 typedef struct _cairo_region cairo_region_t;
