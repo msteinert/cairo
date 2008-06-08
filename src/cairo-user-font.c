@@ -35,6 +35,7 @@
  */
 
 #include "cairoint.h"
+#include "cairo-user-font-private.h"
 #include "cairo-meta-surface-private.h"
 #include "cairo-analysis-surface-private.h"
 
@@ -419,7 +420,7 @@ static const cairo_font_face_backend_t _cairo_user_font_face_backend = {
 };
 
 
-static cairo_bool_t
+cairo_bool_t
 _cairo_font_face_is_user (cairo_font_face_t *font_face)
 {
     return font_face->backend == &_cairo_user_font_face_backend;
