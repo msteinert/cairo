@@ -737,7 +737,6 @@ extend-pad$(EXEEXT)				\
 filter-nearest-offset$(EXEEXT)			\
 filter-bilinear-extents$(EXEEXT)		\
 large-source$(EXEEXT)				\
-large-clip$(EXEEXT)				\
 long-lines$(EXEEXT)				\
 self-intersecting$(EXEEXT)			\
 surface-pattern$(EXEEXT)			\
