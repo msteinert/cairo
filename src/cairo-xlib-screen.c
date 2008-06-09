@@ -111,8 +111,10 @@ get_integer_default (Display    *dpy,
 
     v = XGetDefault (dpy, "Xft", option);
     if (v) {
+#if CAIRO_HAS_FT_FONT
 	if (FcNameConstant ((FcChar8 *) v, value))
 	    return TRUE;
+#endif
 
 	i = strtol (v, &e, 0);
 	if (e != v)
