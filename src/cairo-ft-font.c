@@ -388,9 +388,9 @@ _cairo_ft_unscaled_font_keys_equal (const void *key_a,
     if (unscaled_a->id == unscaled_b->id &&
 	unscaled_a->face == unscaled_b->face)
     {
-	if (unscaled_a->filename == NULL && unscaled_a->filename == NULL)
+	if (unscaled_a->filename == NULL && unscaled_b->filename == NULL)
 	    return TRUE;
-	else if (unscaled_a->filename == NULL || unscaled_a->filename == NULL)
+	else if (unscaled_a->filename == NULL || unscaled_b->filename == NULL)
 	    return FALSE;
 	else
 	    return (strcmp (unscaled_a->filename, unscaled_b->filename) == 0);
