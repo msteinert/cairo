@@ -105,7 +105,6 @@ static const XTransform identity = { {
 #define CAIRO_SURFACE_RENDER_HAS_COMPOSITE(surface)		CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 0)
 #define CAIRO_SURFACE_RENDER_HAS_COMPOSITE_TEXT(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 0)
 
-#define CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLE(surface)		CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 1)
 #define CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLES(surface)		CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 1)
 
 #define CAIRO_SURFACE_RENDER_HAS_DISJOINT(surface)			CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 2)
@@ -1680,7 +1679,7 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
 
     _cairo_xlib_display_notify (surface->screen_info->display);
 
-    if (! CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLE (surface)) {
+    if (!CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLES (surface)) {
 	if (op == CAIRO_OPERATOR_CLEAR ||
 	    ((op == CAIRO_OPERATOR_SOURCE || op == CAIRO_OPERATOR_OVER) &&
 	     CAIRO_COLOR_IS_OPAQUE (color)))
