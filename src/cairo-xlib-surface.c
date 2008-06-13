@@ -1642,9 +1642,9 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 	break;
 
     case DO_XTILE:
-	/* This case is only used for bug fallbacks, though it is theoretically
-	 * applicable to the case where we don't have the RENDER extension as
-	 * well.
+	/* This case is only used for bug fallbacks, though we also use it for
+	 * the case where we don't have the RENDER extension, by forcing
+	 * buggy_repeat to TRUE.
 	 *
 	 * We've checked that we have a repeating unscaled source in
 	 * _recategorize_composite_operation.
@@ -2381,6 +2381,10 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     surface->height = height;
 
     surface->buggy_repeat = screen_info->display->buggy_repeat;
+    if (!CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLES (surface)) {
+	/* so we can use the XTile fallback */
+	surface->buggy_repeat = TRUE;
+    }
 
     surface->dst_picture = None;
     surface->src_picture = None;
