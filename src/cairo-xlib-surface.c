@@ -924,8 +924,10 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 	unsigned int stride, rowstride;
 	int x, y, x0, y0, x_off, y_off;
 	uint32_t in_pixel, out_pixel, *row;
-	int a_width=0, r_width=0, g_width=0, b_width=0;
-	int a_shift=0, r_shift=0, g_shift=0, b_shift=0;
+	int i_a_width=0, i_r_width=0, i_g_width=0, i_b_width=0;
+	int i_a_shift=0, i_r_shift=0, i_g_shift=0, i_b_shift=0;
+	int o_a_width=0, o_r_width=0, o_g_width=0, o_b_width=0;
+	int o_a_shift=0, o_r_shift=0, o_g_shift=0, o_b_shift=0;
 	cairo_xlib_visual_info_t *visual_info = NULL;
 
 	if (surface->depth > 16) {
@@ -948,12 +950,17 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 
 	XInitImage (&ximage);
 
+	_characterize_field (image_masks.alpha_mask, &i_a_width, &i_a_shift);
+	_characterize_field (image_masks.red_mask  , &i_r_width, &i_r_shift);
+	_characterize_field (image_masks.green_mask, &i_g_width, &i_g_shift);
+	_characterize_field (image_masks.blue_mask , &i_b_width, &i_b_shift);
+
 	if (surface->visual->class == TrueColor) {
 
-	    _characterize_field (surface->a_mask, &a_width, &a_shift);
-	    _characterize_field (surface->r_mask, &r_width, &r_shift);
-	    _characterize_field (surface->g_mask, &g_width, &g_shift);
-	    _characterize_field (surface->b_mask, &b_width, &b_shift);
+	    _characterize_field (surface->a_mask, &o_a_width, &o_a_shift);
+	    _characterize_field (surface->r_mask, &o_r_width, &o_r_shift);
+	    _characterize_field (surface->g_mask, &o_g_width, &o_g_shift);
+	    _characterize_field (surface->b_mask, &o_b_width, &o_b_shift);
 
 	} else {
 
@@ -980,16 +987,21 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 
 		int a, r, g, b;
 
-		in_pixel = row[x];
-		a = (in_pixel >> 24) & 0xff;
-		r = (in_pixel >> 16) & 0xff;
-		g = (in_pixel >>  8) & 0xff;
-		b = (in_pixel      ) & 0xff;
+		if (image_masks.bpp <= 8)
+		    in_pixel = ((uint8_t*)row)[x];
+		else if (image_masks.bpp <= 16)
+		    in_pixel = ((uint16_t*)row)[x];
+		else
+		    in_pixel = row[x];
+		a = _field_to_8 (in_pixel & image_masks.alpha_mask, i_a_width, i_a_shift);
+		r = _field_to_8 (in_pixel & image_masks.red_mask  , i_r_width, i_r_shift);
+		g = _field_to_8 (in_pixel & image_masks.green_mask, i_g_width, i_g_shift);
+		b = _field_to_8 (in_pixel & image_masks.blue_mask , i_b_width, i_b_shift);
 		if (surface->visual->class == TrueColor) {
-		    out_pixel = (_field_from_8 (a, a_width, a_shift) |
-				 _field_from_8_dither (r, r_width, r_shift, dither_adjustment) |
-				 _field_from_8_dither (g, g_width, g_shift, dither_adjustment) |
-				 _field_from_8_dither (b, b_width, b_shift, dither_adjustment));
+		    out_pixel = (_field_from_8        (a, o_a_width, o_a_shift) |
+				 _field_from_8_dither (r, o_r_width, o_r_shift, dither_adjustment) |
+				 _field_from_8_dither (g, o_g_width, o_g_shift, dither_adjustment) |
+				 _field_from_8_dither (b, o_b_width, o_b_shift, dither_adjustment));
 		} else {
 		    out_pixel = _pseudocolor_from_rgb888_dither (visual_info, r, g, b, dither_adjustment);
 		}
