@@ -1193,7 +1193,7 @@ _cairo_image_surface_set_clip_region (void *abstract_surface,
 {
     cairo_image_surface_t *surface = (cairo_image_surface_t *) abstract_surface;
 
-    if (! pixman_image_set_clip_region (surface->pixman_image, &region->rgn))
+    if (! pixman_image_set_clip_region32 (surface->pixman_image, &region->rgn))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     surface->has_clip = region != NULL;
