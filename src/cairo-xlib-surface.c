@@ -672,7 +672,7 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
     xlib_masks.blue_mask = surface->b_mask;
 
     status = _pixman_format_from_masks (&xlib_masks, &pixman_format);
-    if (status == CAIRO_STATUS_SUCCESS) {
+    if (xlib_masks.bpp >= 24 &&status == CAIRO_STATUS_SUCCESS) {
 	image = (cairo_image_surface_t*)
 	    _cairo_image_surface_create_with_pixman_format ((unsigned char *) ximage->data,
 							    pixman_format,
