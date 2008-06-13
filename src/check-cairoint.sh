@@ -3,7 +3,7 @@
 LANG=C
 
 test -z "$srcdir" && srcdir=.
-status=0
+stat=0
 
 echo 'Checking source files for missing or misplaced #include "cairoint.h"'
 
@@ -12,6 +12,6 @@ while read x; do
 	grep '\<include\>' "$x" /dev/null | head -n 1
 done |
 grep -v '"cairoint.h"' |
-grep . && status=1
+grep . && stat=1
 
-exit $status
+exit $stat

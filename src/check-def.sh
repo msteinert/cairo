@@ -2,14 +2,16 @@
 
 LANG=C
 
-if ! which nm 2>/dev/null >/dev/null; then
+if which nm 2>/dev/null >/dev/null; then
+	:
+else
 	echo "'nm' not found; skipping test"
 	exit 0
 fi
 
 test -z "$srcdir" && srcdir=.
 test -z "$MAKE" && MAKE=make
-status=0
+stat=0
 
 $MAKE check-has-hidden-symbols.i > /dev/null || exit 1
 if tail -1 check-has-hidden-symbols.i | grep CAIRO_HAS_HIDDEN_SYMBOLS >/dev/null; then
@@ -38,7 +40,7 @@ for def in $defs; do
 		eval $get_cairo_syms | grep -v '^_cairo_test_\|^_fini\|^_init' | sort -u
 		# cheat: copy the last line from the def file!
 		tail -n1 "$def"
-	} | diff "$def" - || status=1
+	} | diff "$def" - || stat=1
 done
 
-exit $status
+exit $stat

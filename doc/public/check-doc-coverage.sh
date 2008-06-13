@@ -13,31 +13,33 @@ fi
 
 
 test -z "$srcdir" && srcdir=.
-status=0
+stat=0
 
-if ! test -f "$DOC_MODULE-undocumented.txt" -a -f "$DOC_MODULE-unused.txt"; then
+if test -f "$DOC_MODULE-undocumented.txt" -a -f "$DOC_MODULE-unused.txt"; then
+	:
+else
 	echo At least one of "$DOC_MODULE-undocumented.txt" and "$DOC_MODULE-unused.txt" not found.
 	echo Skipping test.
 	exit 0
 fi
-
-status=0
 
 if test -f "$DOC_MODULE-unused.txt"; then
 	unused=`cat "$DOC_MODULE-unused.txt"`
 	if test -n "$unused"; then
 		echo Unused documentated symbols: 1>&2
 		cat "$DOC_MODULE-unused.txt" 1>&2
-		status=1
+		stat=1
 	fi
 fi
 if test -f "$DOC_MODULE-undocumented.txt"; then
-	if ! grep '^0 symbols incomplete' "$DOC_MODULE-undocumented.txt" >/dev/null ||
-	   ! grep '^0 not documented'     "$DOC_MODULE-undocumented.txt" >/dev/null; then
+	if grep '^0 symbols incomplete' "$DOC_MODULE-undocumented.txt" >/dev/null &&
+	   grep '^0 not documented'     "$DOC_MODULE-undocumented.txt" >/dev/null; then
+		:
+	else
 		echo Incomplete or undocumented symbols: 1>&2
 		cat "$DOC_MODULE-undocumented.txt" 1>&2
-		status=1
+		stat=1
 	fi
 fi
 
-exit $status
+exit $stat

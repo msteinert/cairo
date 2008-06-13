@@ -3,7 +3,7 @@
 LANG=C
 
 test -z "$srcdir" && srcdir=.
-status=0
+stat=0
 
 echo Checking public headers for missing cairo_public decorators
 
@@ -16,6 +16,6 @@ awk '
 { context=$0; }
 ' |
 sed 's/[.]h-/.h:/' |
-grep . && status=1
+grep . && stat=1
 
-exit $status
+exit $stat
