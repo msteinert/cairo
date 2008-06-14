@@ -1161,6 +1161,75 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
+static cairo_surface_t *
+_cairo_xlib_surface_create_solid_pattern_surface (void                  *abstract_surface,
+						  cairo_solid_pattern_t *solid_pattern)
+{
+    /* This function's only responsibility is to create a proper surface
+     * for when XRender is not available.  The proper surface is a xlib
+     * surface (as opposed to image surface which is what create_similar
+     * returns in those cases) and the size of the dithering pattern, not
+     * 1x1.  This surface can then be used in
+     * _cairo_xlib_surface_solid_fill_rectangles() to do dithered "solid"
+     * fills using core protocol */
+
+    cairo_xlib_surface_t *other = abstract_surface;
+    cairo_image_surface_t *image;
+    cairo_xlib_surface_t *surface = NULL;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+
+    Pixmap pixmap;
+
+    if (CAIRO_SURFACE_RENDER_HAS_COMPOSITE (other))
+	return NULL;
+
+    image = (cairo_image_surface_t *)
+	    _cairo_image_surface_create_with_content (solid_pattern->content,
+						      ARRAY_LENGTH (dither_pattern[0]),
+						      ARRAY_LENGTH (dither_pattern));
+    status = image->base.status;
+    if (status)
+	goto BAIL;
+
+    pixmap = XCreatePixmap (other->dpy,
+			    other->drawable,
+			    image->width, image->height,
+			    other->depth);
+
+    surface = (cairo_xlib_surface_t *)
+	      cairo_xlib_surface_create (other->dpy,
+					 pixmap,
+					 other->visual,
+					 image->width, image->height);
+    status = surface->base.status;
+    if (status)
+	goto BAIL;
+    surface->owns_pixmap = TRUE;
+
+    status = _cairo_surface_paint (&image->base, CAIRO_OPERATOR_SOURCE, &solid_pattern->base);
+    if (status)
+	goto BAIL;
+
+    status = _draw_image_surface (surface, image,
+				  0, 0,
+				  image->width, image->height,
+				  0, 0);
+    if (status)
+	goto BAIL;
+
+
+  BAIL:
+    cairo_surface_destroy (&image->base);
+
+    if (status && surface) {
+	XFreePixmap (other->dpy, pixmap);
+	cairo_surface_destroy (&surface->base);
+	surface = NULL;
+    }
+
+    return (cairo_surface_t *) surface;
+}
+
 static cairo_status_t
 _cairo_xlib_surface_set_matrix (cairo_xlib_surface_t *surface,
 				cairo_matrix_t	     *matrix)
@@ -2260,10 +2329,11 @@ static const cairo_surface_backend_t cairo_xlib_surface_backend = {
     NULL, /* stroke */
     NULL, /* fill */
     _cairo_xlib_surface_show_glyphs,
-    NULL,  /* snapshot */
+    NULL, /* snapshot */
     _cairo_xlib_surface_is_similar,
-
-    _cairo_xlib_surface_reset
+    _cairo_xlib_surface_reset,
+    NULL, /* fill_stroke */
+    _cairo_xlib_surface_create_solid_pattern_surface
 };
 
 /**
