@@ -481,6 +481,8 @@ extern const cairo_private struct _cairo_scaled_font_backend cairo_quartz_scaled
 
 #endif
 
+typedef struct _cairo_solid_pattern cairo_solid_pattern_t;
+
 struct _cairo_surface_backend {
     cairo_surface_type_t type;
 
@@ -744,6 +746,11 @@ struct _cairo_surface_backend {
 				 cairo_matrix_t		*stroke_ctm_inverse,
 				 double			 stroke_tolerance,
 				 cairo_antialias_t	 stroke_antialias);
+
+    cairo_surface_t *
+    (*create_solid_pattern_surface)
+			        (void			*surface,
+				 cairo_solid_pattern_t  *solid_pattern);
 };
 
 #include "cairo-surface-private.h"
@@ -801,11 +808,11 @@ struct _cairo_pattern {
     cairo_extend_t		extend;
 };
 
-typedef struct _cairo_solid_pattern {
+struct _cairo_solid_pattern {
     cairo_pattern_t base;
     cairo_color_t color;
     cairo_content_t content;
-} cairo_solid_pattern_t;
+};
 
 extern const cairo_private cairo_solid_pattern_t _cairo_pattern_nil;
 extern const cairo_private cairo_solid_pattern_t _cairo_pattern_none;
@@ -1609,6 +1616,15 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
 				     int		  width,
 				     int		  height,
 				     const cairo_color_t *color);
+
+cairo_private cairo_surface_t *
+_cairo_surface_create_solid_pattern_surface (cairo_surface_t	   *other,
+					     cairo_solid_pattern_t *solid_pattern);
+
+cairo_private cairo_int_status_t
+_cairo_surface_repaint_solid_pattern_surface (cairo_surface_t	    *other,
+					      cairo_surface_t       *solid_surface,
+					      cairo_solid_pattern_t *solid_pattern);
 
 cairo_private void
 _cairo_surface_init (cairo_surface_t			*surface,

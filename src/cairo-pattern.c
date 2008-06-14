@@ -1463,10 +1463,7 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 	    if (status)
 		goto EVICT;
 
-	    status = _cairo_surface_paint (surface,
-					   &pattern->color == CAIRO_COLOR_TRANSPARENT ?
-					   CAIRO_OPERATOR_CLEAR :
-					   CAIRO_OPERATOR_SOURCE, &pattern->base);
+	    status = _cairo_surface_repaint_solid_pattern_surface (dst, surface, pattern);
 	    if (status)
 		goto EVICT;
 
@@ -1485,10 +1482,7 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 
     if (surface == NULL) {
 	/* Not cached, need to create new */
-	surface = _cairo_surface_create_similar_solid (dst,
-						       pattern->content,
-						       1, 1,
-						       &pattern->color);
+	surface = _cairo_surface_create_solid_pattern_surface (dst, pattern);
 	if (surface->status) {
 	    status = surface->status;
 	    goto UNLOCK;

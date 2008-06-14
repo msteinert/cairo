@@ -338,6 +338,43 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
     return surface;
 }
 
+cairo_surface_t *
+_cairo_surface_create_solid_pattern_surface (cairo_surface_t	   *other,
+					     cairo_solid_pattern_t *solid_pattern)
+{
+    cairo_surface_t *surface;
+
+    if (other->backend->create_solid_pattern_surface) {
+	surface = other->backend->create_solid_pattern_surface (other, solid_pattern);
+	if (surface)
+	    return surface;
+    }
+
+    surface = _cairo_surface_create_similar_solid (other,
+						   solid_pattern->content,
+						   1, 1,
+						   &solid_pattern->color);
+    return surface;
+}
+
+cairo_int_status_t
+_cairo_surface_repaint_solid_pattern_surface (cairo_surface_t	    *other,
+					      cairo_surface_t       *solid_surface,
+					      cairo_solid_pattern_t *solid_pattern)
+{
+    if (other->backend->create_solid_pattern_surface)
+	/* Solid pattern surface for this backend are not trivial to make.
+	 * Skip repainting.
+	 *
+	 * This does not work optimally with things like analysis surface that
+	 * are proxies.  But returning UNSUPPORTED is *safe* as it only
+	 * disables some caching.
+	 */
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    return _cairo_surface_paint (solid_surface, CAIRO_OPERATOR_SOURCE, &solid_pattern->base);
+}
+
 cairo_clip_mode_t
 _cairo_surface_get_clip_mode (cairo_surface_t *surface)
 {
