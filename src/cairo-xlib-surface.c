@@ -702,7 +702,7 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	int x, y, x0, y0, x_off, y_off;
 	cairo_xlib_visual_info_t *visual_info;
 
-	if (surface->visual->class == TrueColor) {
+	if (surface->visual == NULL || surface->visual->class == TrueColor) {
 	    cairo_bool_t has_alpha;
 	    cairo_bool_t has_color;
 
@@ -766,7 +766,7 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 		int dither_adjustment = dither_row[x_off];
 
 		in_pixel = XGetPixel (ximage, x, y);
-		if (surface->visual->class == TrueColor) {
+		if (surface->visual == NULL || surface->visual->class == TrueColor) {
 		    out_pixel = (
 			_field_to_8 (in_pixel & a_mask, a_width, a_shift) << 24 |
 			_field_to_8_undither (in_pixel & r_mask, r_width, r_shift, dither_adjustment) << 16 |
@@ -955,7 +955,7 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 	_characterize_field (image_masks.green_mask, &i_g_width, &i_g_shift);
 	_characterize_field (image_masks.blue_mask , &i_b_width, &i_b_shift);
 
-	if (surface->visual->class == TrueColor) {
+	if (surface->visual == NULL || surface->visual->class == TrueColor) {
 
 	    _characterize_field (surface->a_mask, &o_a_width, &o_a_shift);
 	    _characterize_field (surface->r_mask, &o_r_width, &o_r_shift);
@@ -997,7 +997,7 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 		r = _field_to_8 (in_pixel & image_masks.red_mask  , i_r_width, i_r_shift);
 		g = _field_to_8 (in_pixel & image_masks.green_mask, i_g_width, i_g_shift);
 		b = _field_to_8 (in_pixel & image_masks.blue_mask , i_b_width, i_b_shift);
-		if (surface->visual->class == TrueColor) {
+		if (surface->visual == NULL || surface->visual->class == TrueColor) {
 		    out_pixel = (_field_from_8        (a, o_a_width, o_a_shift) |
 				 _field_from_8_dither (r, o_r_width, o_r_shift, dither_adjustment) |
 				 _field_from_8_dither (g, o_g_width, o_g_shift, dither_adjustment) |
@@ -1778,50 +1778,48 @@ _cairo_xlib_surface_solid_fill_rectangles (cairo_xlib_surface_t    *surface,
 					   cairo_rectangle_int_t   *rects,
 					   int			   num_rects)
 {
-    GC xgc;
-    XGCValues gcv;
-    int a_width=0, r_width=0, g_width=0, b_width=0;
-    int a_shift=0, r_shift=0, g_shift=0, b_shift=0;
-    int a = color->alpha_short >> 8;
-    int r = color->red_short   >> 8;
-    int g = color->green_short >> 8;
-    int b = color->blue_short  >> 8;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_solid_pattern_t solid;
+    cairo_surface_t *solid_surface = NULL;
+    cairo_surface_attributes_t attrs;
     int i;
 
-    if (surface->visual == NULL || surface->visual->class == TrueColor) {
-	_characterize_field (surface->a_mask, &a_width, &a_shift);
-	_characterize_field (surface->r_mask, &r_width, &r_shift);
-	_characterize_field (surface->g_mask, &g_width, &g_shift);
-	_characterize_field (surface->b_mask, &b_width, &b_shift);
-	gcv.foreground = (_field_from_8 (a, a_width, a_shift) |
-			  _field_from_8 (r, r_width, r_shift) |
-			  _field_from_8 (g, g_width, g_shift) |
-			  _field_from_8 (b, b_width, b_shift));
-    } else {
-	cairo_xlib_visual_info_t *visual_info;
-	cairo_int_status_t status;
+    _cairo_pattern_init_solid (&solid, color, CAIRO_CONTENT_COLOR);
 
-	status = _cairo_xlib_screen_get_visual_info (surface->screen_info,
-						     surface->visual,
-						     &visual_info);
-	if (status)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
+    status = _cairo_xlib_surface_ensure_gc (surface);
+    if (status)
+        return status;
 
-	gcv.foreground = _pseudocolor_from_rgb888 (visual_info, r, g, b);
+    status = _cairo_pattern_acquire_surface (&solid.base, (cairo_surface_t *) surface,
+					     0, 0,
+					     ARRAY_LENGTH (dither_pattern[0]),
+					     ARRAY_LENGTH (dither_pattern),
+					     &solid_surface,
+					     &attrs);
+    if (status)
+        return status;
+
+    if (!_cairo_surface_is_xlib (solid_surface)) {
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
+	goto BAIL;
     }
 
-    xgc = XCreateGC (surface->dpy, surface->drawable, GCForeground, &gcv);
-    if (xgc == NULL)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    XSetTSOrigin (surface->dpy, surface->gc,
+		  - (surface->base.device_transform.x0 + attrs.x_offset),
+		  - (surface->base.device_transform.y0 + attrs.y_offset));
+    XSetTile (surface->dpy, surface->gc, ((cairo_xlib_surface_t *) solid_surface)->drawable);
+    XSetFillStyle (surface->dpy, surface->gc, FillTiled);
 
     for (i = 0; i < num_rects; i++) {
-	XFillRectangle (surface->dpy, surface->drawable, xgc,
+	XFillRectangle (surface->dpy, surface->drawable, surface->gc,
 			rects[i].x, rects[i].y,
 			rects[i].width, rects[i].height);
     }
-    XFreeGC (surface->dpy, xgc);
 
-    return CAIRO_STATUS_SUCCESS;
+  BAIL:
+    _cairo_pattern_release_surface (&solid.base, solid_surface, &attrs);
+
+    return status;
 }
 
 static cairo_int_status_t
