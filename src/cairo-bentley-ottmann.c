@@ -1214,7 +1214,7 @@ _active_edges_to_traps (cairo_bo_edge_t		*head,
     int in_out = 0;
     cairo_bo_edge_t *edge;
 
-    for (edge = head; edge && edge->next; edge = edge->next) {
+    for (edge = head; edge; edge = edge->next) {
 	if (fill_rule == CAIRO_FILL_RULE_WINDING) {
 	    if (edge->reversed)
 		in_out++;
