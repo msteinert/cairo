@@ -21,7 +21,7 @@ fi
 
 get_cairo_syms='nm "$so" | grep " [BCDGINRSTVW] " | cut -d" " -f3'
 if [ "`uname -s`" = "Linux" ]; then
-       get_cairo_syms='objdump -t "$so" | grep "^[^ ]* [^l.*]*[.]" | sed "s/.* //"'
+       get_cairo_syms='( objdump -t "$so" | grep "^[^ ]* [^l.*]*[.]"; objdump -t "$so" | grep "[.]hidden.*\\<cairo"; ) | sed "s/.* //"'
 fi
 
 defs="cairo.def"
