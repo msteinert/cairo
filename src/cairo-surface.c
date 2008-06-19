@@ -417,7 +417,7 @@ cairo_surface_destroy (cairo_surface_t *surface)
 slim_hidden_def(cairo_surface_destroy);
 
 /**
- * cairo_surface_reset:
+ * _cairo_surface_reset:
  * @surface: a #cairo_surface_t
  *
  * Resets the surface back to defaults such that it may be reused in lieu
