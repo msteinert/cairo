@@ -53,6 +53,7 @@ cleanup (void *data)
 static cairo_surface_t *
 create_source_surface (int size)
 {
+#if CAIRO_HAS_XLIB_XRENDER_SURFACE
     XRenderPictFormat *xrender_format;
     struct closure *data;
     cairo_surface_t *surface;
@@ -73,4 +74,7 @@ create_source_surface (int size)
     cairo_surface_set_user_data (surface, &closure_key, data, cleanup);
 
     return surface;
+#else
+    return NULL;
+#endif
 }
