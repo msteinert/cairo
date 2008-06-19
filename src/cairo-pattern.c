@@ -1368,6 +1368,7 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
 #define MAX_SURFACE_CACHE_SIZE 16
 static struct {
     struct _cairo_pattern_solid_surface_cache{
+	cairo_content_t  content;
 	cairo_color_t    color;
 	cairo_surface_t *surface;
     } cache[MAX_SURFACE_CACHE_SIZE];
@@ -1381,6 +1382,9 @@ _cairo_pattern_solid_surface_matches (
 	cairo_surface_t					    *dst)
 {
     if (CAIRO_REFERENCE_COUNT_GET_VALUE (&cache->surface->ref_count) != 1)
+	return FALSE;
+
+    if (cache->content != pattern->content)
 	return FALSE;
 
     if (! _cairo_color_equal (&cache->color, &pattern->color))
@@ -1404,7 +1408,7 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 {
     static int i;
 
-    cairo_surface_t *surface;
+    cairo_surface_t *surface, *to_destroy = NULL;
     cairo_status_t   status;
 
     CAIRO_MUTEX_LOCK (_cairo_pattern_solid_surface_cache_lock);
@@ -1442,6 +1446,7 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 	surface = solid_surface_cache.cache[i].surface;
 
 	if (CAIRO_REFERENCE_COUNT_GET_VALUE (&surface->ref_count) == 1 &&
+	    solid_surface_cache.cache[i].content == pattern->content &&
 	    _cairo_surface_is_similar (surface, dst, pattern->content))
 	{
 	    status = _cairo_surface_reset (surface);
@@ -1449,8 +1454,9 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 		goto UNLOCK;
 
 	    status = _cairo_surface_paint (surface,
-					   CAIRO_OPERATOR_SOURCE,
-					   &pattern->base);
+					   &pattern->color == CAIRO_COLOR_TRANSPARENT ?
+					   CAIRO_OPERATOR_CLEAR :
+					   CAIRO_OPERATOR_SOURCE, &pattern->base);
 	    if (status)
 		goto UNLOCK;
 
@@ -1485,9 +1491,10 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
     if (solid_surface_cache.size < MAX_SURFACE_CACHE_SIZE)
 	i = solid_surface_cache.size++;
 
-    solid_surface_cache.cache[i].color   = pattern->color;
-    cairo_surface_destroy (solid_surface_cache.cache[i].surface);
+    to_destroy = solid_surface_cache.cache[i].surface;
     solid_surface_cache.cache[i].surface = surface;
+    solid_surface_cache.cache[i].color   = pattern->color;
+    solid_surface_cache.cache[i].content = pattern->content;
 
 DONE:
     *out = cairo_surface_reference (solid_surface_cache.cache[i].surface);
@@ -1503,6 +1510,9 @@ NOCACHE:
 
 UNLOCK:
     CAIRO_MUTEX_UNLOCK (_cairo_pattern_solid_surface_cache_lock);
+
+    if (to_destroy)
+      cairo_surface_destroy (to_destroy);
 
     return status;
 }
