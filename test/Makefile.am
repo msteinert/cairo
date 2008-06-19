@@ -638,6 +638,7 @@ REFERENCE_IMAGES = \
 	stroke-image-pdf-ref.png \
 	stroke-image-ps-ref.png \
 	stroke-image-quartz-ref.png \
+	solid-pattern-cache-stress-ref.png	\
 	source-clip-ref.png	\
 	source-clip-scale-quartz-ref.png	\
 	source-clip-scale-ps-argb32-ref.png	\
