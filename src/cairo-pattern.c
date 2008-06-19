@@ -1380,19 +1380,28 @@ _cairo_pattern_solid_surface_matches (
 	const cairo_solid_pattern_t			    *pattern,
 	cairo_surface_t					    *dst)
 {
-    if (CAIRO_REFERENCE_COUNT_GET_VALUE (&cache->surface->ref_count) != 1)
-	return FALSE;
-
     if (cache->content != pattern->content)
 	return FALSE;
 
-    if (! _cairo_color_equal (&cache->color, &pattern->color))
+    if (CAIRO_REFERENCE_COUNT_GET_VALUE (&cache->surface->ref_count) != 1)
 	return FALSE;
 
     if (! _cairo_surface_is_similar (cache->surface, dst, pattern->content))
 	return FALSE;
 
     return TRUE;
+}
+
+static cairo_bool_t
+_cairo_pattern_solid_surface_matches_color (
+	const struct _cairo_pattern_solid_surface_cache	    *cache,
+	const cairo_solid_pattern_t			    *pattern,
+	cairo_surface_t					    *dst)
+{
+    if (! _cairo_color_equal (&cache->color, &pattern->color))
+	return FALSE;
+
+    return _cairo_pattern_solid_surface_matches (cache, pattern, dst);
 }
 
 static cairo_int_status_t
@@ -1414,9 +1423,9 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 
     /* Check cache first */
     if (i < solid_surface_cache.size &&
-	_cairo_pattern_solid_surface_matches (&solid_surface_cache.cache[i],
-		                              pattern,
-					      dst))
+	_cairo_pattern_solid_surface_matches_color (&solid_surface_cache.cache[i],
+						    pattern,
+						    dst))
     {
 	status = _cairo_surface_reset (solid_surface_cache.cache[i].surface);
 	if (status)
@@ -1426,9 +1435,9 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
     }
 
     for (i = 0 ; i < solid_surface_cache.size; i++) {
-	if (_cairo_pattern_solid_surface_matches (&solid_surface_cache.cache[i],
-		                                  pattern,
-						  dst))
+	if (_cairo_pattern_solid_surface_matches_color (&solid_surface_cache.cache[i],
+							pattern,
+							dst))
 	{
 	    status = _cairo_surface_reset (solid_surface_cache.cache[i].surface);
 	    if (status)
@@ -1444,26 +1453,34 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 	i = rand () % MAX_SURFACE_CACHE_SIZE;
 	surface = solid_surface_cache.cache[i].surface;
 
-	if (CAIRO_REFERENCE_COUNT_GET_VALUE (&surface->ref_count) == 1 &&
-	    solid_surface_cache.cache[i].content == pattern->content &&
-	    _cairo_surface_is_similar (surface, dst, pattern->content))
+	if (_cairo_pattern_solid_surface_matches (&solid_surface_cache.cache[i],
+						  pattern,
+						  dst))
 	{
+	    /* Reuse the surface instead of evicting */
+
 	    status = _cairo_surface_reset (surface);
 	    if (status)
-		goto UNLOCK;
+		goto EVICT;
 
 	    status = _cairo_surface_paint (surface,
 					   &pattern->color == CAIRO_COLOR_TRANSPARENT ?
 					   CAIRO_OPERATOR_CLEAR :
 					   CAIRO_OPERATOR_SOURCE, &pattern->base);
 	    if (status)
-		goto UNLOCK;
+		goto EVICT;
 
 	    cairo_surface_reference (surface);
-	} else {
-	    /* Unable to reuse, evict */
+	}
+	else
+	{
+	  EVICT:
 	    surface = NULL;
 	}
+    }
+    else
+    {
+	i = solid_surface_cache.size++;
     }
 
     if (surface == NULL) {
@@ -1485,9 +1502,6 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 	    goto NOCACHE;
 	}
     }
-
-    if (solid_surface_cache.size < MAX_SURFACE_CACHE_SIZE)
-	i = solid_surface_cache.size++;
 
     to_destroy = solid_surface_cache.cache[i].surface;
     solid_surface_cache.cache[i].surface = surface;
