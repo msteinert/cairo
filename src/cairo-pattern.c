@@ -1453,9 +1453,10 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 					   &pattern->base);
 	    if (status)
 		goto UNLOCK;
+
+	    cairo_surface_reference (surface);
 	} else {
 	    /* Unable to reuse, evict */
-	    cairo_surface_destroy (surface);
 	    surface = NULL;
 	}
     }
@@ -1485,6 +1486,7 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 	i = solid_surface_cache.size++;
 
     solid_surface_cache.cache[i].color   = pattern->color;
+    cairo_surface_destroy (solid_surface_cache.cache[i].surface);
     solid_surface_cache.cache[i].surface = surface;
 
 DONE:
@@ -1513,8 +1515,11 @@ _cairo_pattern_reset_solid_surface_cache (void)
     /* remove surfaces starting from the end so that solid_surface_cache.cache
      * is always in a consistent state when we release the mutex. */
     while (solid_surface_cache.size) {
-	cairo_surface_t *surface = solid_surface_cache.cache[solid_surface_cache.size-1].surface;
+	cairo_surface_t *surface;
+
 	solid_surface_cache.size--;
+	surface = solid_surface_cache.cache[solid_surface_cache.size].surface;
+	solid_surface_cache.cache[solid_surface_cache.size].surface = NULL;
 
 	/* release the lock to avoid the possibility of a recursive
 	 * deadlock when the scaled font destroy closure gets called */
