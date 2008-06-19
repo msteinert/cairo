@@ -1487,7 +1487,6 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 	}
     }
 
-    /* Increment after recursion by _cairo_surface_create_similar_solid() */
     if (solid_surface_cache.size < MAX_SURFACE_CACHE_SIZE)
 	i = solid_surface_cache.size++;
 
