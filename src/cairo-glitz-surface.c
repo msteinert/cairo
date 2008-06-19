@@ -977,10 +977,7 @@ _cairo_glitz_pattern_acquire_surfaces (cairo_pattern_t	                *src,
 	combined = src_solid->color;
 	_cairo_color_multiply_alpha (&combined, mask_solid->color.alpha);
 
-	_cairo_pattern_init_solid (&tmp, &combined,
-				   CAIRO_COLOR_IS_OPAQUE (&combined) ?
-				   CAIRO_CONTENT_COLOR :
-				   CAIRO_CONTENT_COLOR_ALPHA);
+	_cairo_pattern_init_solid (&tmp, &combined, CAIRO_CONTENT_COLOR_ALPHA);
 
 	mask = NULL;
     } else {
