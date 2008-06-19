@@ -252,6 +252,9 @@ _cairo_pattern_init_solid (cairo_solid_pattern_t *pattern,
 			   const cairo_color_t	 *color,
 			   cairo_content_t	  content)
 {
+    if (content == CAIRO_CONTENT_COLOR_ALPHA && CAIRO_COLOR_IS_OPAQUE (color))
+	content = CAIRO_CONTENT_COLOR;
+
     _cairo_pattern_init (&pattern->base, CAIRO_PATTERN_TYPE_SOLID);
     pattern->color = *color;
     pattern->content = content;
@@ -447,9 +450,6 @@ cairo_pattern_create_rgba (double red, double green, double blue,
 			   double alpha)
 {
     cairo_color_t color;
-
-    if (alpha >= 1.0)
-	return cairo_pattern_create_rgb (red, green, blue);
 
     _cairo_restrict_value (&red,   0.0, 1.0);
     _cairo_restrict_value (&green, 0.0, 1.0);
