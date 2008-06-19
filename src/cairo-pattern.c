@@ -377,8 +377,7 @@ _cairo_pattern_create_in_error (cairo_status_t status)
 
     CAIRO_MUTEX_INITIALIZE ();
 
-    pattern = _cairo_pattern_create_solid (_cairo_stock_color (CAIRO_STOCK_BLACK),
-					   CAIRO_CONTENT_COLOR);
+    pattern = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK, CAIRO_CONTENT_COLOR);
     if (pattern->status == CAIRO_STATUS_SUCCESS)
 	status = _cairo_pattern_set_error (pattern, status);
 
@@ -1852,11 +1851,7 @@ _cairo_pattern_acquire_surface (cairo_pattern_t		   *pattern,
 	    }
 	    else
 	    {
-		const cairo_color_t *color;
-
-		color =	_cairo_stock_color (CAIRO_STOCK_TRANSPARENT);
-		_cairo_pattern_init_solid (&solid, color,
-					   CAIRO_CONTENT_ALPHA);
+		_cairo_pattern_init_solid (&solid, CAIRO_COLOR_TRANSPARENT, CAIRO_CONTENT_ALPHA);
 	    }
 
 	    status = _cairo_pattern_acquire_surface_for_solid (&solid, dst,
