@@ -50,7 +50,7 @@ static const cairo_solid_pattern_t _cairo_pattern_nil_null_pointer = {
       CAIRO_EXTEND_GRADIENT_DEFAULT },	/* extend */
 };
 
-const cairo_solid_pattern_t cairo_pattern_none = {
+const cairo_solid_pattern_t _cairo_pattern_none = {
     { CAIRO_PATTERN_TYPE_SOLID, 	/* type */
       CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
       CAIRO_STATUS_SUCCESS,		/* status */

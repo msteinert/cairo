@@ -1281,7 +1281,7 @@ typedef struct _cairo_ft_scaled_font {
     cairo_ft_options_t ft_options;
 } cairo_ft_scaled_font_t;
 
-const cairo_scaled_font_backend_t cairo_ft_scaled_font_backend;
+const cairo_scaled_font_backend_t _cairo_ft_scaled_font_backend;
 
 /* The load flags passed to FT_Load_Glyph control aspects like hinting and
  * antialiasing. Here we compute them from the fields of a FcPattern.
@@ -1526,7 +1526,7 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
     status = _cairo_scaled_font_init (&scaled_font->base,
 			              font_face,
 				      font_matrix, ctm, options,
-				      &cairo_ft_scaled_font_backend);
+				      &_cairo_ft_scaled_font_backend);
     if (status) {
 	_cairo_unscaled_font_destroy (&unscaled->base);
 	free (scaled_font);
@@ -1604,7 +1604,7 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
 cairo_bool_t
 _cairo_scaled_font_is_ft (cairo_scaled_font_t *scaled_font)
 {
-    return scaled_font->backend == &cairo_ft_scaled_font_backend;
+    return scaled_font->backend == &_cairo_ft_scaled_font_backend;
 }
 
 static cairo_status_t
@@ -2209,7 +2209,7 @@ _cairo_ft_map_glyphs_to_unicode (void	                    *abstract_font,
     return CAIRO_STATUS_SUCCESS;
 }
 
-const cairo_scaled_font_backend_t cairo_ft_scaled_font_backend = {
+const cairo_scaled_font_backend_t _cairo_ft_scaled_font_backend = {
     CAIRO_FONT_TYPE_FT,
     _cairo_ft_scaled_font_create_toy,
     _cairo_ft_scaled_font_fini,

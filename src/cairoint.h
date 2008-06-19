@@ -465,7 +465,7 @@ struct _cairo_font_face_backend {
 /* concrete font backends */
 #if CAIRO_HAS_FT_FONT
 
-extern const cairo_private struct _cairo_scaled_font_backend cairo_ft_scaled_font_backend;
+extern const cairo_private struct _cairo_scaled_font_backend _cairo_ft_scaled_font_backend;
 
 #endif
 
@@ -808,7 +808,7 @@ typedef struct _cairo_solid_pattern {
 } cairo_solid_pattern_t;
 
 extern const cairo_private cairo_solid_pattern_t _cairo_pattern_nil;
-extern const cairo_private cairo_solid_pattern_t cairo_pattern_none;
+extern const cairo_private cairo_solid_pattern_t _cairo_pattern_none;
 
 typedef struct _cairo_surface_pattern {
     cairo_pattern_t base;
@@ -905,7 +905,7 @@ typedef struct _cairo_traps {
 #elif CAIRO_HAS_FT_FONT
 
 #define CAIRO_FONT_FAMILY_DEFAULT CAIRO_FT_FONT_FAMILY_DEFAULT
-#define CAIRO_SCALED_FONT_BACKEND_DEFAULT &cairo_ft_scaled_font_backend
+#define CAIRO_SCALED_FONT_BACKEND_DEFAULT &_cairo_ft_scaled_font_backend
 
 #else
 
