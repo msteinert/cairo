@@ -1488,8 +1488,7 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 	surface = _cairo_surface_create_similar_solid (dst,
 						       pattern->content,
 						       1, 1,
-						       &pattern->color,
-						       &pattern->base);
+						       &pattern->color);
 	if (surface->status) {
 	    status = surface->status;
 	    goto UNLOCK;

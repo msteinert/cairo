@@ -1161,8 +1161,7 @@ _cairo_glitz_surface_fill_rectangles (void		      *abstract_dst,
 	    _cairo_surface_create_similar_solid (&dst->base,
 						 CAIRO_CONTENT_COLOR_ALPHA,
 						 1, 1,
-						 (cairo_color_t *) color,
-						 NULL);
+						 (cairo_color_t *) color);
 	if (src->base.status)
 	    return src->base.status;
 

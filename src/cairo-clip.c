@@ -485,8 +485,7 @@ _cairo_clip_intersect_mask (cairo_clip_t      *clip,
 						   CAIRO_CONTENT_ALPHA,
 						   surface_rect.width,
 						   surface_rect.height,
-						   CAIRO_COLOR_TRANSPARENT,
-						   &pattern.base);
+						   CAIRO_COLOR_TRANSPARENT);
     if (surface->status) {
 	_cairo_pattern_fini (&pattern.base);
 	return surface->status;

@@ -301,8 +301,7 @@ cairo_surface_create_similar (cairo_surface_t  *other,
 
     return _cairo_surface_create_similar_solid (other, content,
 						width, height,
-						CAIRO_COLOR_TRANSPARENT,
-						NULL);
+						CAIRO_COLOR_TRANSPARENT);
 }
 slim_hidden_def (cairo_surface_create_similar);
 
@@ -311,34 +310,25 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
 				     cairo_content_t	  content,
 				     int		  width,
 				     int		  height,
-				     const cairo_color_t *color,
-				     cairo_pattern_t	 *pattern)
+				     const cairo_color_t *color)
 {
     cairo_status_t status;
     cairo_surface_t *surface;
-    cairo_pattern_t *source;
+    cairo_solid_pattern_t solid_pattern;
 
     surface = _cairo_surface_create_similar_scratch (other, content,
 						     width, height);
     if (surface->status)
 	return surface;
 
-    if (pattern == NULL) {
-	source = _cairo_pattern_create_solid (color, content);
-	if (source->status) {
-	    cairo_surface_destroy (surface);
-	    return _cairo_surface_create_in_error (source->status);
-	}
-    } else
-	source = pattern;
+    _cairo_pattern_init_solid (&solid_pattern, color, content);
 
     status = _cairo_surface_paint (surface,
 				   color == CAIRO_COLOR_TRANSPARENT ?
-				   CAIRO_OPERATOR_CLEAR :
-				   CAIRO_OPERATOR_SOURCE, source);
+				   CAIRO_OPERATOR_CLEAR : CAIRO_OPERATOR_SOURCE,
+				   &solid_pattern.base);
 
-    if (source != pattern)
-	cairo_pattern_destroy (source);
+    _cairo_pattern_fini (&solid_pattern.base);
 
     if (status) {
 	cairo_surface_destroy (surface);
