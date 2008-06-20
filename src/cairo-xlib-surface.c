@@ -521,24 +521,17 @@ _pseudocolor_from_rgb888_dither (cairo_xlib_visual_info_t *visual_info,
 }
 
 static inline uint32_t
-_pseudocolor_to_rgb888_undither (cairo_xlib_visual_info_t *visual_info,
-				 uint32_t pixel,
-				 int8_t dither_adjustment)
+_pseudocolor_to_rgb888 (cairo_xlib_visual_info_t *visual_info,
+			uint32_t pixel)
 {
     uint32_t r, g, b;
     pixel &= 0xff;
     r = visual_info->colors[pixel].r;
     g = visual_info->colors[pixel].g;
     b = visual_info->colors[pixel].b;
-    if (r == g && g == b) {
-	dither_adjustment /= RAMP_SIZE;
-	return _adjust_field (r, - dither_adjustment) * 0x010101;
-    } else {
-	dither_adjustment = - visual_info->dither8_to_cube[dither_adjustment+128];
-	return (_adjust_field (r, dither_adjustment) << 16) |
-	       (_adjust_field (g, dither_adjustment) <<  8) |
-	       (_adjust_field (b, dither_adjustment)      );
-    }
+    return (r << 16) |
+	   (g <<  8) |
+	   (b      );
 }
 
 
@@ -773,7 +766,8 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 			_field_to_8_undither (in_pixel & g_mask, g_width, g_shift, dither_adjustment) << 8 |
 			_field_to_8_undither (in_pixel & b_mask, b_width, b_shift, dither_adjustment));
 		} else {
-		    out_pixel = _pseudocolor_to_rgb888_undither (visual_info, in_pixel, dither_adjustment);
+		    /* Undithering pseudocolor does not look better */
+		    out_pixel = _pseudocolor_to_rgb888 (visual_info, in_pixel);
 		}
 		row[x] = out_pixel;
 	    }
