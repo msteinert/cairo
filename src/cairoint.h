@@ -471,7 +471,7 @@ extern const cairo_private struct _cairo_scaled_font_backend _cairo_ft_scaled_fo
 
 #if CAIRO_HAS_WIN32_FONT
 
-extern const cairo_private struct _cairo_scaled_font_backend cairo_win32_scaled_font_backend;
+extern const cairo_private struct _cairo_scaled_font_backend _cairo_win32_scaled_font_backend;
 
 #endif
 
@@ -902,7 +902,7 @@ typedef struct _cairo_traps {
 #if   CAIRO_HAS_WIN32_FONT
 
 #define CAIRO_FONT_FAMILY_DEFAULT CAIRO_WIN32_FONT_FAMILY_DEFAULT
-#define CAIRO_SCALED_FONT_BACKEND_DEFAULT &cairo_win32_scaled_font_backend
+#define CAIRO_SCALED_FONT_BACKEND_DEFAULT &_cairo_win32_scaled_font_backend
 
 #elif CAIRO_HAS_QUARTZ_FONT
 

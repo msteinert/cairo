@@ -61,7 +61,7 @@
 
 #define CMAP_TAG 0x70616d63
 
-const cairo_scaled_font_backend_t cairo_win32_scaled_font_backend;
+const cairo_scaled_font_backend_t _cairo_win32_scaled_font_backend;
 
 typedef struct {
     cairo_scaled_font_t base;
@@ -322,7 +322,7 @@ _win32_scaled_font_create (LOGFONTW                   *logfont,
 
     status = _cairo_scaled_font_init (&f->base, font_face,
 				      font_matrix, ctm, options,
-				      &cairo_win32_scaled_font_backend);
+				      &_cairo_win32_scaled_font_backend);
     if (status)
 	goto FAIL;
 
@@ -1778,7 +1778,7 @@ _cairo_win32_scaled_font_init_glyph_path (cairo_win32_scaled_font_t *scaled_font
     return status;
 }
 
-const cairo_scaled_font_backend_t cairo_win32_scaled_font_backend = {
+const cairo_scaled_font_backend_t _cairo_win32_scaled_font_backend = {
     CAIRO_FONT_TYPE_WIN32,
     _cairo_win32_scaled_font_create_toy,
     _cairo_win32_scaled_font_fini,
@@ -1945,7 +1945,7 @@ cairo_win32_font_face_create_for_hfont (HFONT font)
 static cairo_bool_t
 _cairo_scaled_font_is_win32 (cairo_scaled_font_t *scaled_font)
 {
-    return scaled_font->backend == &cairo_win32_scaled_font_backend;
+    return scaled_font->backend == &_cairo_win32_scaled_font_backend;
 }
 
 /**
