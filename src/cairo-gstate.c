@@ -1567,9 +1567,9 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
 					gstate->op,
 					&source_pattern.base,
 					&path,
-					gstate->fill_rule,
+					CAIRO_FILL_RULE_WINDING,
 					gstate->tolerance,
-					gstate->antialias);
+					gstate->scaled_font->options.antialias);
 
 	_cairo_path_fixed_fini (&path);
     }
