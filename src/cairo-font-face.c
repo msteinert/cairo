@@ -535,7 +535,7 @@ _cairo_unscaled_font_destroy (cairo_unscaled_font_t *unscaled_font)
 }
 
 void
-_cairo_font_reset_static_data (void)
+_cairo_font_face_reset_static_data (void)
 {
     _cairo_scaled_font_map_destroy ();
 
