@@ -3045,6 +3045,11 @@ cairo_glyph_extents (cairo_t                *cr,
     if (num_glyphs == 0)
 	return;
 
+    if (num_glyphs < 0) {
+	_cairo_set_error (cr, CAIRO_STATUS_NEGATIVE_COUNT);
+	return;
+    }
+
     if (glyphs == NULL) {
 	_cairo_set_error (cr, CAIRO_STATUS_NULL_POINTER);
 	return;
@@ -3152,6 +3157,11 @@ cairo_show_glyphs (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
 
     if (num_glyphs == 0)
 	return;
+
+    if (num_glyphs < 0) {
+	_cairo_set_error (cr, CAIRO_STATUS_NEGATIVE_COUNT);
+	return;
+    }
 
     if (glyphs == NULL) {
 	_cairo_set_error (cr, CAIRO_STATUS_NULL_POINTER);
@@ -3261,6 +3271,11 @@ cairo_glyph_path (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
 
     if (num_glyphs == 0)
 	return;
+
+    if (num_glyphs < 0) {
+	_cairo_set_error (cr, CAIRO_STATUS_NEGATIVE_COUNT);
+	return;
+    }
 
     if (glyphs == NULL) {
 	_cairo_set_error (cr, CAIRO_STATUS_NULL_POINTER);
