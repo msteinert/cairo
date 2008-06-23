@@ -39,7 +39,9 @@ PRIVATE_TEST_HFILES = \
 	cairo-svg-surface-private.h \
 	cairo-truetype-subset-private.h \
 	cairo-type1-private.h \
+	cairo-type3-glyph-surface-private.h \
 	cairo-types-private.h \
+	cairo-user-font-private.h \
 	cairo-wideint-private.h \
 	cairo-wideint-type-private.h \
 	cairo-win32-private.h \
