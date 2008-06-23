@@ -2579,6 +2579,7 @@ _cairo_surface_create_in_error (cairo_status_t status)
     case CAIRO_STATUS_FONT_TYPE_MISMATCH:
     case CAIRO_STATUS_USER_FONT_IMMUTABLE:
     case CAIRO_STATUS_USER_FONT_ERROR:
+    case CAIRO_STATUS_NEGATIVE_COUNT:
     default:
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t *) &_cairo_surface_nil;

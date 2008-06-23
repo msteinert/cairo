@@ -107,6 +107,8 @@ cairo_status_to_string (cairo_status_t status)
 	return "the user-font is immutable";
     case CAIRO_STATUS_USER_FONT_ERROR:
 	return "error occurred in a user-font callback function";
+    case CAIRO_STATUS_NEGATIVE_COUNT:
+	return "negative number used where it is not allowed";
     }
 
     return "<unknown error status>";

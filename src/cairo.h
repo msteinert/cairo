@@ -206,6 +206,7 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_FONT_TYPE_MISMATCH: the font type is not appropriate for the operation (Since 1.8)
  * @CAIRO_STATUS_USER_FONT_IMMUTABLE: the user-font is immutable (Since 1.8)
  * @CAIRO_STATUS_USER_FONT_ERROR: error occurred in a user-font callback function (Since 1.8)
+ * @CAIRO_STATUS_NEGATIVE_COUNT: negative number used where it is not allowed (Since 1.8)
  *
  * #cairo_status_t is used to indicate errors that can occur when
  * using Cairo. In some cases it is returned directly by functions.
@@ -243,7 +244,8 @@ typedef enum _cairo_status {
     CAIRO_STATUS_INVALID_STRIDE,
     CAIRO_STATUS_FONT_TYPE_MISMATCH,
     CAIRO_STATUS_USER_FONT_IMMUTABLE,
-    CAIRO_STATUS_USER_FONT_ERROR
+    CAIRO_STATUS_USER_FONT_ERROR,
+    CAIRO_STATUS_NEGATIVE_COUNT
     /* after adding a new error: update CAIRO_STATUS_LAST_STATUS in cairoint.h */
 } cairo_status_t;
 
