@@ -1176,6 +1176,15 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 	return;
     }
 
+    if (num_glyphs == 0)
+	return;
+
+    if (glyphs == NULL) {
+	cairo_status_t status = _cairo_error (CAIRO_STATUS_NULL_POINTER);
+	/* XXX Can't propagate error */
+	return;
+    }
+
     CAIRO_MUTEX_LOCK (scaled_font->mutex);
     _cairo_scaled_font_freeze_cache (scaled_font);
 

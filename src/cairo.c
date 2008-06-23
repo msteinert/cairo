@@ -2949,7 +2949,7 @@ cairo_get_scaled_font (cairo_t *cr)
 /**
  * cairo_text_extents:
  * @cr: a #cairo_t
- * @utf8: a string of text, encoded in UTF-8
+ * @utf8: a string of text encoded in UTF-8, or %NULL
  * @extents: a #cairo_text_extents_t object into which the results
  * will be stored
  *
@@ -3042,6 +3042,14 @@ cairo_glyph_extents (cairo_t                *cr,
     if (cr->status)
 	return;
 
+    if (num_glyphs == 0)
+	return;
+
+    if (glyphs == NULL) {
+	_cairo_set_error (cr, CAIRO_STATUS_NULL_POINTER);
+	return;
+    }
+
     status = _cairo_gstate_glyph_extents (cr->gstate, glyphs, num_glyphs,
 					  extents);
     if (status)
@@ -3051,7 +3059,7 @@ cairo_glyph_extents (cairo_t                *cr,
 /**
  * cairo_show_text:
  * @cr: a cairo context
- * @utf8: a string of text encoded in UTF-8
+ * @utf8: a string of text encoded in UTF-8, or %NULL
  *
  * A drawing operator that generates the shape from a string of UTF-8
  * characters, rendered according to the current font_face, font_size
@@ -3145,6 +3153,11 @@ cairo_show_glyphs (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
     if (num_glyphs == 0)
 	return;
 
+    if (glyphs == NULL) {
+	_cairo_set_error (cr, CAIRO_STATUS_NULL_POINTER);
+	return;
+    }
+
     status = _cairo_gstate_show_glyphs (cr->gstate, glyphs, num_glyphs);
     if (status)
 	_cairo_set_error (cr, status);
@@ -3153,7 +3166,7 @@ cairo_show_glyphs (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
 /**
  * cairo_text_path:
  * @cr: a cairo context
- * @utf8: a string of text encoded in UTF-8
+ * @utf8: a string of text encoded in UTF-8, or %NULL
  *
  * Adds closed paths for text to the current path.  The generated
  * path if filled, achieves an effect similar to that of
@@ -3248,6 +3261,11 @@ cairo_glyph_path (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
 
     if (num_glyphs == 0)
 	return;
+
+    if (glyphs == NULL) {
+	_cairo_set_error (cr, CAIRO_STATUS_NULL_POINTER);
+	return;
+    }
 
     status = _cairo_gstate_glyph_path (cr->gstate,
 				       glyphs, num_glyphs,
