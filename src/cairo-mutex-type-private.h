@@ -45,7 +45,7 @@
 #include "config.h"
 #endif
 
-#include <cairo-features.h>
+#include "cairo-features.h"
 
 #include "cairo-compiler-private.h"
 #include "cairo-mutex-impl-private.h"

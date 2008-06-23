@@ -36,8 +36,8 @@
 #ifndef CAIRO_WIN32_PRIVATE_H
 #define CAIRO_WIN32_PRIVATE_H
 
-#include <cairo-win32.h>
-#include <cairoint.h>
+#include "cairo-win32.h"
+#include "cairoint.h"
 
 #ifndef SHADEBLENDCAPS
 #define SHADEBLENDCAPS 120

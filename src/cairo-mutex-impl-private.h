@@ -45,7 +45,7 @@
 #include "config.h"
 #endif
 
-#include <cairo-features.h>
+#include "cairo-features.h"
 
 CAIRO_BEGIN_DECLS
 

@@ -38,8 +38,8 @@
 #ifndef CAIRO_H
 #define CAIRO_H
 
-#include <cairo-features.h>
-#include <cairo-deprecated.h>
+#include "cairo-features.h"
+#include "cairo-deprecated.h"
 
 CAIRO_BEGIN_DECLS
 
