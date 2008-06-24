@@ -110,7 +110,7 @@ static void
 _cairo_set_error (cairo_t *cr, cairo_status_t status)
 {
     if (status == CAIRO_STATUS_SUCCESS)
-	return status;
+	return;
 
     /* Don't overwrite an existing error. This preserves the first
      * error, which is the most significant. */
