@@ -130,16 +130,19 @@ typedef enum _cairo_paginated_mode {
 } cairo_paginated_mode_t;
 
 /* Sure wish C had a real enum type so that this would be distinct
- * from #cairo_status_t. Oh well, without that, I'll use this bogus 1000
- * offset */
+ * from #cairo_status_t. Oh well, without that, I'll use this bogus 100
+ * offset.  We want to keep it fit in int8_t as the compiler may choose
+ * that for cairo_status_t */
 typedef enum _cairo_int_status {
-    CAIRO_INT_STATUS_DEGENERATE = 1000,
-    CAIRO_INT_STATUS_UNSUPPORTED,
+    CAIRO_INT_STATUS_UNSUPPORTED = 100,
+    CAIRO_INT_STATUS_DEGENERATE,
     CAIRO_INT_STATUS_NOTHING_TO_DO,
     CAIRO_INT_STATUS_CACHE_EMPTY,
     CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY,
     CAIRO_INT_STATUS_IMAGE_FALLBACK,
-    CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN
+    CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN,
+
+    CAIRO_INT_STATUS_LAST_STATUS
 } cairo_int_status_t;
 
 typedef enum _cairo_internal_surface_type {
