@@ -63,6 +63,8 @@ _cairo_font_face_set_error (cairo_font_face_t *font_face,
     if (status == CAIRO_STATUS_SUCCESS)
 	return status;
 
+    /* Don't overwrite an existing error. This preserves the first
+     * error, which is the most significant. */
     _cairo_status_set_error (&font_face->status, status);
 
     return _cairo_error (status);

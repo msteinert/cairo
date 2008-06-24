@@ -96,10 +96,11 @@ _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
 /**
  * _cairo_surface_set_error:
  * @surface: a surface
- * @status: a status value indicating an error, (eg. not
- * %CAIRO_STATUS_SUCCESS)
+ * @status: a status value indicating an error
  *
  * Atomically sets surface->status to @status and calls _cairo_error;
+ * Does nothing if status is %CAIRO_STATUS_SUCCESS or any of the internal
+ * status values.
  *
  * All assignments of an error status to surface->status should happen
  * through _cairo_surface_set_error(). Note that due to the nature of

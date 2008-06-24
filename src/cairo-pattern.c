@@ -63,10 +63,10 @@ const cairo_solid_pattern_t _cairo_pattern_none = {
 /**
  * _cairo_pattern_set_error:
  * @pattern: a pattern
- * @status: a status value indicating an error, (eg. not
- * %CAIRO_STATUS_SUCCESS)
+ * @status: a status value indicating an error
  *
  * Atomically sets pattern->status to @status and calls _cairo_error;
+ * Does nothing if status is %CAIRO_STATUS_SUCCESS.
  *
  * All assignments of an error status to pattern->status should happen
  * through _cairo_pattern_set_error(). Note that due to the nature of
@@ -81,6 +81,9 @@ static cairo_status_t
 _cairo_pattern_set_error (cairo_pattern_t *pattern,
 			  cairo_status_t status)
 {
+    if (status == CAIRO_STATUS_SUCCESS)
+	return status;
+
     /* Don't overwrite an existing error. This preserves the first
      * error, which is the most significant. */
     _cairo_status_set_error (&pattern->status, status);

@@ -208,10 +208,10 @@ static const cairo_scaled_font_t _cairo_scaled_font_nil = {
 /**
  * _cairo_scaled_font_set_error:
  * @scaled_font: a scaled_font
- * @status: a status value indicating an error, (eg. not
- * %CAIRO_STATUS_SUCCESS)
+ * @status: a status value indicating an error
  *
  * Atomically sets scaled_font->status to @status and calls _cairo_error;
+ * Does nothing if status is %CAIRO_STATUS_SUCCESS.
  *
  * All assignments of an error status to scaled_font->status should happen
  * through _cairo_scaled_font_set_error(). Note that due to the nature of

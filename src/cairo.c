@@ -93,10 +93,10 @@ _cairo_error (cairo_status_t status)
 /**
  * _cairo_set_error:
  * @cr: a cairo context
- * @status: a status value indicating an error, (eg. not
- * %CAIRO_STATUS_SUCCESS)
+ * @status: a status value indicating an error
  *
  * Atomically sets cr->status to @status and calls _cairo_error;
+ * Does nothing if status is %CAIRO_STATUS_SUCCESS.
  *
  * All assignments of an error status to cr->status should happen
  * through _cairo_set_error(). Note that due to the nature of the atomic
@@ -109,6 +109,9 @@ _cairo_error (cairo_status_t status)
 static void
 _cairo_set_error (cairo_t *cr, cairo_status_t status)
 {
+    if (status == CAIRO_STATUS_SUCCESS)
+	return status;
+
     /* Don't overwrite an existing error. This preserves the first
      * error, which is the most significant. */
     _cairo_status_set_error (&cr->status, status);
