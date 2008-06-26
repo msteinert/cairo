@@ -46,7 +46,7 @@ typedef enum {
     CAIRO_COMMAND_MASK,
     CAIRO_COMMAND_STROKE,
     CAIRO_COMMAND_FILL,
-    CAIRO_COMMAND_SHOW_GLYPHS,
+    CAIRO_COMMAND_SHOW_TEXT_GLYPHS,
 
     /* Other junk. For most of these, we should be able to assert that
      * they never get called except as part of fallbacks for the 5
@@ -104,14 +104,19 @@ typedef struct _cairo_command_fill {
     cairo_antialias_t		 antialias;
 } cairo_command_fill_t;
 
-typedef struct _cairo_command_show_glyphs {
+typedef struct _cairo_command_show_text_glyphs {
     cairo_command_header_t       header;
     cairo_operator_t		 op;
     cairo_pattern_union_t	 source;
+    char			*utf8;
+    int				 utf8_len;
     cairo_glyph_t		*glyphs;
     unsigned int		 num_glyphs;
+    cairo_text_cluster_t	*clusters;
+    int				 num_clusters;
+    cairo_bool_t		 backward;
     cairo_scaled_font_t		*scaled_font;
-} cairo_command_show_glyphs_t;
+} cairo_command_show_text_glyphs_t;
 
 typedef struct _cairo_command_intersect_clip_path {
     cairo_command_header_t      header;
@@ -130,7 +135,7 @@ typedef union _cairo_command {
     cairo_command_mask_t			mask;
     cairo_command_stroke_t			stroke;
     cairo_command_fill_t			fill;
-    cairo_command_show_glyphs_t			show_glyphs;
+    cairo_command_show_text_glyphs_t		show_text_glyphs;
 
     /* The other junk. */
     cairo_command_intersect_clip_path_t		intersect_clip_path;
