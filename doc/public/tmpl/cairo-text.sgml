@@ -70,6 +70,14 @@ Cairo has two sets of text rendering capabilities:
 @CAIRO_FONT_WEIGHT_NORMAL: 
 @CAIRO_FONT_WEIGHT_BOLD: 
 
+<!-- ##### STRUCT cairo_text_cluster_t ##### -->
+<para>
+
+</para>
+
+@num_bytes: 
+@num_glyphs: 
+
 <!-- ##### FUNCTION cairo_select_font_face ##### -->
 <para>
 
@@ -179,6 +187,29 @@ Cairo has two sets of text rendering capabilities:
 @cr: 
 @glyphs: 
 @num_glyphs: 
+
+
+<!-- ##### FUNCTION cairo_has_show_text_glyphs ##### -->
+<para>
+
+</para>
+
+@cr: 
+
+
+<!-- ##### FUNCTION cairo_show_text_glyphs ##### -->
+<para>
+
+</para>
+
+@cr: 
+@utf8: 
+@utf8_len: 
+@glyphs: 
+@num_glyphs: 
+@clusters: 
+@num_clusters: 
+@backward: 
 
 
 <!-- ##### FUNCTION cairo_font_extents ##### -->

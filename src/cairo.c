@@ -3109,15 +3109,19 @@ cairo_show_text (cairo_t *cr, const char *utf8)
     cairo_get_current_point (cr, &x, &y);
 
     status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8,
-					       x, y,
-					       &glyphs, &num_glyphs);
+					   x, y,
+					   &glyphs, &num_glyphs);
     if (status)
 	goto BAIL;
 
     if (num_glyphs == 0)
 	return;
 
-    status = _cairo_gstate_show_glyphs (cr->gstate, glyphs, num_glyphs);
+    status = _cairo_gstate_show_text_glyphs (cr->gstate,
+					     NULL, 0,
+					     glyphs, num_glyphs,
+					     NULL, 0,
+					     FALSE);
     if (status)
 	goto BAIL;
 
@@ -3171,7 +3175,104 @@ cairo_show_glyphs (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
 	return;
     }
 
-    status = _cairo_gstate_show_glyphs (cr->gstate, glyphs, num_glyphs);
+    status = _cairo_gstate_show_text_glyphs (cr->gstate,
+					     NULL, 0,
+					     glyphs, num_glyphs,
+					     NULL, 0,
+					     FALSE);
+    if (status)
+	_cairo_set_error (cr, status);
+}
+
+cairo_bool_t
+cairo_has_show_text_glyphs (cairo_t			   *cr)
+{
+    return _cairo_gstate_has_show_text_glyphs (cr->gstate);
+}
+
+void
+cairo_show_text_glyphs (cairo_t			   *cr,
+			const char		   *utf8,
+			int			    utf8_len,
+			const cairo_glyph_t	   *glyphs,
+			int			    num_glyphs,
+			const cairo_text_cluster_t *clusters,
+			int			    num_clusters,
+			cairo_bool_t		    backward)
+{
+    cairo_status_t status;
+
+    if (cr->status)
+	return;
+
+    /* A slew of sanity checks */
+
+    /* A -1 for utf8_len means NUL-terminated */
+    if (utf8_len == -1)
+	utf8_len = strlen (utf8);
+
+    /* Apart from that, no negatives */
+    if (num_glyphs < 0 || utf8_len < 0 || num_clusters < 0) {
+	_cairo_set_error (cr, CAIRO_STATUS_NEGATIVE_COUNT);
+	return;
+    }
+
+    /* And no NULLs for non-zeros */
+    if ((num_glyphs   && glyphs   == NULL) ||
+	(utf8_len     && utf8     == NULL) ||
+	(num_clusters && clusters == NULL)) {
+	_cairo_set_error (cr, CAIRO_STATUS_NULL_POINTER);
+	return;
+    }
+
+    /* Make sure clusters cover the entire glyphs and utf8 arrays,
+     * and that cluster boundaries are UTF-8 boundaries. */
+    {
+	unsigned int n_bytes  = 0;
+	unsigned int n_glyphs = 0;
+	int i;
+
+	for (i = 0; i < num_clusters; i++) {
+	    unsigned int cluster_bytes  = clusters[i].num_bytes;
+	    unsigned int cluster_glyphs = clusters[i].num_glyphs;
+
+	    /* A cluster should cover at least one byte or glyph. */
+	    if (cluster_bytes == 0 && cluster_glyphs == 0)
+	        goto BAD;
+
+	    /* Since utf8_len and num_glyphs are signed, but the rest of
+	     * values involved here unsigned, we can avoid overflow easily */
+	    if (cluster_bytes > (unsigned int)utf8_len || cluster_glyphs > (unsigned int)num_glyphs)
+	        goto BAD;
+	    if (n_bytes+cluster_bytes > (unsigned int)utf8_len || n_glyphs+cluster_glyphs > (unsigned int)num_glyphs)
+	        goto BAD;
+
+	    /* Make sure we've got valid UTF-8 for the cluster */
+	    status = _cairo_utf8_to_ucs4 (utf8+n_bytes, cluster_bytes, NULL, NULL);
+	    if (status) {
+		_cairo_set_error (cr, status);
+		return;
+	    }
+
+	    n_bytes  += cluster_bytes ;
+	    n_glyphs += cluster_glyphs;
+	}
+
+	if (n_bytes != (unsigned int)utf8_len || n_glyphs != (unsigned int)num_glyphs) {
+	  BAD:
+	    _cairo_set_error (cr, CAIRO_STATUS_INVALID_CLUSTERS);
+	    return;
+	}
+    }
+
+    if (num_glyphs == 0 && utf8_len == 0)
+	return;
+
+    status = _cairo_gstate_show_text_glyphs (cr->gstate,
+					     utf8, utf8_len,
+					     glyphs, num_glyphs,
+					     clusters, num_clusters,
+					     !!backward);
     if (status)
 	_cairo_set_error (cr, status);
 }

@@ -110,7 +110,7 @@ _cairo_win32_tmpfile (void);
  * a bit of a pain, but it should be easy to always catch as long as
  * one adds a new test case to test a trigger of the new status value.
  */
-#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_NEGATIVE_COUNT
+#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_CLUSTERS
 
 
 /* Size in bytes of buffer to use off the stack per functions.
@@ -751,6 +751,22 @@ struct _cairo_surface_backend {
     (*create_solid_pattern_surface)
 			        (void			*surface,
 				 cairo_solid_pattern_t  *solid_pattern);
+
+    cairo_bool_t
+    (*has_show_text_glyphs)	(void			    *surface);
+
+    cairo_warn cairo_int_status_t
+    (*show_text_glyphs)		(void			    *surface,
+				 cairo_operator_t	     op,
+				 cairo_pattern_t	    *source,
+				 const char		    *utf8,
+				 int			     utf8_len,
+				 cairo_glyph_t		    *glyphs,
+				 int			     num_glyphs,
+				 const cairo_text_cluster_t *clusters,
+				 int			     num_clusters,
+				 cairo_bool_t		     backward,
+				 cairo_scaled_font_t	    *scaled_font);
 };
 
 #include "cairo-surface-private.h"
@@ -1214,10 +1230,18 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
 			     int num_glyphs,
 			     cairo_text_extents_t *extents);
 
+cairo_private cairo_bool_t
+_cairo_gstate_has_show_text_glyphs (cairo_gstate_t *gstate);
+
 cairo_private cairo_status_t
-_cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
-			   const cairo_glyph_t *glyphs,
-			   int num_glyphs);
+_cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
+				const char		   *utf8,
+				int			    utf8_len,
+				const cairo_glyph_t	   *glyphs,
+				int			    num_glyphs,
+				const cairo_text_cluster_t *clusters,
+				int			    num_clusters,
+				cairo_bool_t		    backward);
 
 cairo_private cairo_status_t
 _cairo_gstate_glyph_path (cairo_gstate_t      *gstate,
@@ -1728,6 +1752,22 @@ _cairo_surface_show_glyphs (cairo_surface_t	*surface,
 			    cairo_glyph_t	*glyphs,
 			    int			 num_glyphs,
 			    cairo_scaled_font_t	*scaled_font);
+
+cairo_private cairo_bool_t
+_cairo_surface_has_show_text_glyphs (cairo_surface_t	    *surface);
+
+cairo_private cairo_status_t
+_cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
+				 cairo_operator_t	     op,
+				 cairo_pattern_t	    *source,
+				 const char		    *utf8,
+				 int			     utf8_len,
+				 cairo_glyph_t		    *glyphs,
+				 int			     num_glyphs,
+				 const cairo_text_cluster_t *clusters,
+				 int			     num_clusters,
+				 cairo_bool_t		     backward,
+				 cairo_scaled_font_t	    *scaled_font);
 
 cairo_private cairo_status_t
 _cairo_surface_composite_trapezoids (cairo_operator_t	op,

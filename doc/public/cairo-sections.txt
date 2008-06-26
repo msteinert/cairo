@@ -387,6 +387,7 @@ cairo_path_extents
 cairo_glyph_t
 cairo_font_slant_t
 cairo_font_weight_t
+cairo_text_cluster_t
 cairo_select_font_face
 cairo_set_font_size
 cairo_set_font_matrix
@@ -399,6 +400,8 @@ cairo_set_scaled_font
 cairo_get_scaled_font
 cairo_show_text
 cairo_show_glyphs
+cairo_has_show_text_glyphs
+cairo_show_text_glyphs
 cairo_font_extents
 cairo_text_extents
 cairo_glyph_extents

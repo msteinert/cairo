@@ -1277,20 +1277,26 @@ _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
     cairo_status_t status;
     cairo_scaled_glyph_t *scaled_glyph;
 
+    *num_glyphs = 0;
+    *glyphs = NULL;
+
     status = scaled_font->status;
     if (status)
 	return status;
 
-    if (utf8[0] == '\0') {
-	*num_glyphs = 0;
-	*glyphs = NULL;
+    if (utf8[0] == '\0')
 	return CAIRO_STATUS_SUCCESS;
-    }
 
     CAIRO_MUTEX_LOCK (scaled_font->mutex);
     _cairo_scaled_font_freeze_cache (scaled_font);
 
     if (scaled_font->backend->text_to_glyphs) {
+
+	/* validate input so backend does not have to */
+	status = _cairo_utf8_to_ucs4 (utf8, -1, NULL, NULL);
+	if (status)
+	    goto DONE;
+
 	status = scaled_font->backend->text_to_glyphs (scaled_font,
 						       x, y, utf8,
 						       glyphs, num_glyphs);

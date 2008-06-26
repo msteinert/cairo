@@ -111,6 +111,8 @@ cairo_status_to_string (cairo_status_t status)
 	return "error occurred in a user-font callback function";
     case CAIRO_STATUS_NEGATIVE_COUNT:
 	return "negative number used where it is not allowed";
+    case CAIRO_STATUS_INVALID_CLUSTERS:
+	return "input clusters do not represent the accompanying text and glyph arrays";
     }
 
     return "<unknown error status>";

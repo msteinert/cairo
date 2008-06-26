@@ -207,6 +207,7 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_USER_FONT_IMMUTABLE: the user-font is immutable (Since 1.8)
  * @CAIRO_STATUS_USER_FONT_ERROR: error occurred in a user-font callback function (Since 1.8)
  * @CAIRO_STATUS_NEGATIVE_COUNT: negative number used where it is not allowed (Since 1.8)
+ * @CAIRO_STATUS_INVALID_CLUSTERS: input clusters do not represent the accompanying text and glyph array (Since 1.8)
  *
  * #cairo_status_t is used to indicate errors that can occur when
  * using Cairo. In some cases it is returned directly by functions.
@@ -245,7 +246,8 @@ typedef enum _cairo_status {
     CAIRO_STATUS_FONT_TYPE_MISMATCH,
     CAIRO_STATUS_USER_FONT_IMMUTABLE,
     CAIRO_STATUS_USER_FONT_ERROR,
-    CAIRO_STATUS_NEGATIVE_COUNT
+    CAIRO_STATUS_NEGATIVE_COUNT,
+    CAIRO_STATUS_INVALID_CLUSTERS,
     /* after adding a new error: update CAIRO_STATUS_LAST_STATUS in cairoint.h */
 } cairo_status_t;
 
@@ -824,6 +826,11 @@ typedef struct {
     double               y;
 } cairo_glyph_t;
 
+typedef struct {
+    unsigned int        num_bytes;
+    unsigned int        num_glyphs;
+} cairo_text_cluster_t;
+
 /**
  * cairo_text_extents_t:
  * @x_bearing: the horizontal distance from the origin to the
@@ -1123,6 +1130,19 @@ cairo_show_text (cairo_t *cr, const char *utf8);
 
 cairo_public void
 cairo_show_glyphs (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs);
+
+cairo_public cairo_bool_t
+cairo_has_show_text_glyphs (cairo_t *cr);
+
+cairo_public void
+cairo_show_text_glyphs (cairo_t			   *cr,
+			const char		   *utf8,
+			int			    utf8_len,
+			const cairo_glyph_t	   *glyphs,
+			int			    num_glyphs,
+			const cairo_text_cluster_t *clusters,
+			int			    num_clusters,
+			cairo_bool_t		    backward);
 
 cairo_public void
 cairo_text_path  (cairo_t *cr, const char *utf8);

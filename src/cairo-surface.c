@@ -2135,13 +2135,41 @@ _cairo_surface_get_extents (cairo_surface_t         *surface,
     return status;
 }
 
+cairo_status_t
+_cairo_surface_show_glyphs (cairo_surface_t	*surface,
+			    cairo_operator_t	 op,
+			    cairo_pattern_t	*source,
+			    cairo_glyph_t	*glyphs,
+			    int			 num_glyphs,
+			    cairo_scaled_font_t	*scaled_font)
+{
+    return _cairo_surface_show_text_glyphs (surface,
+					    op,
+					    source,
+					    NULL, 0,
+					    glyphs, num_glyphs,
+					    NULL, 0,
+					    FALSE,
+					    scaled_font);
+}
+
+cairo_bool_t
+_cairo_surface_has_show_text_glyphs (cairo_surface_t	    *surface)
+{
+    if (surface->backend->has_show_text_glyphs)
+	return surface->backend->has_show_text_glyphs (surface);
+    else
+	return surface->backend->show_text_glyphs != NULL;
+}
+
 /* Note: the backends may modify the contents of the glyph array as long as
  * they do not return %CAIRO_INT_STATUS_UNSUPPORTED. This makes it possible to
  * avoid copying the array again and again, and edit it in-place.
  * Backends are in fact free to use the array as a generic buffer as they
  * see fit.
  *
- * When they do return UNSUPPORTED, they may adjust remaining_glyphs to notify
+ * For show_glyphs backend method, and NOT for show_text_glyphs method,
+ * when they do return UNSUPPORTED, they may adjust remaining_glyphs to notify
  * that they have successfully rendered some of the glyphs (from the beginning
  * of the array), but not all.  If they don't touch remaining_glyphs, it
  * defaults to all glyphs.
@@ -2150,12 +2178,17 @@ _cairo_surface_get_extents (cairo_surface_t         *surface,
  * 1781e6018c17909311295a9cc74b70500c6b4d0a for the rationale.
  */
 cairo_status_t
-_cairo_surface_show_glyphs (cairo_surface_t	*surface,
-			    cairo_operator_t	 op,
-			    cairo_pattern_t	*source,
-			    cairo_glyph_t	*glyphs,
-			    int			 num_glyphs,
-			    cairo_scaled_font_t	*scaled_font)
+_cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
+				 cairo_operator_t	     op,
+				 cairo_pattern_t	    *source,
+				 const char		    *utf8,
+				 int			     utf8_len,
+				 cairo_glyph_t		    *glyphs,
+				 int			     num_glyphs,
+				 const cairo_text_cluster_t *clusters,
+				 int			     num_clusters,
+				 cairo_bool_t		     backward,
+				 cairo_scaled_font_t	    *scaled_font)
 {
     cairo_status_t status;
     cairo_scaled_font_t *dev_scaled_font = scaled_font;
@@ -2166,7 +2199,7 @@ _cairo_surface_show_glyphs (cairo_surface_t	*surface,
     if (surface->status)
 	return surface->status;
 
-    if (!num_glyphs)
+    if (!num_glyphs && !utf8_len)
 	return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_surface_copy_pattern_for_destination (source,
@@ -2200,16 +2233,56 @@ _cairo_surface_show_glyphs (cairo_surface_t	*surface,
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (surface->backend->show_glyphs) {
-	int remaining_glyphs = num_glyphs;
-	status = surface->backend->show_glyphs (surface, op, dev_source,
-						glyphs, num_glyphs,
-                                                dev_scaled_font,
-						&remaining_glyphs);
-	glyphs += num_glyphs - remaining_glyphs;
-	num_glyphs = remaining_glyphs;
-	if (remaining_glyphs == 0)
-	    status = CAIRO_STATUS_SUCCESS;
+    if (clusters) {
+	/* A real show_text_glyphs call.  Try show_text_glyphs backend
+	 * method first */
+	if (surface->backend->show_text_glyphs) {
+	    status = surface->backend->show_text_glyphs (surface, op, dev_source,
+							 utf8, utf8_len,
+							 glyphs, num_glyphs,
+							 clusters, num_clusters,
+							 backward,
+							 dev_scaled_font);
+	}
+	if (status == CAIRO_INT_STATUS_UNSUPPORTED && surface->backend->show_glyphs) {
+	    int remaining_glyphs = num_glyphs;
+	    status = surface->backend->show_glyphs (surface, op, dev_source,
+						    glyphs, num_glyphs,
+						    dev_scaled_font,
+						    &remaining_glyphs);
+	    glyphs += num_glyphs - remaining_glyphs;
+	    num_glyphs = remaining_glyphs;
+	    if (remaining_glyphs == 0)
+		status = CAIRO_STATUS_SUCCESS;
+	}
+    } else {
+	/* A mere show_glyphs call.  Try show_glyphs backend method first */
+	if (surface->backend->show_glyphs) {
+	    int remaining_glyphs = num_glyphs;
+	    status = surface->backend->show_glyphs (surface, op, dev_source,
+						    glyphs, num_glyphs,
+						    dev_scaled_font,
+						    &remaining_glyphs);
+	    glyphs += num_glyphs - remaining_glyphs;
+	    num_glyphs = remaining_glyphs;
+	    if (remaining_glyphs == 0)
+		status = CAIRO_STATUS_SUCCESS;
+	} else if (surface->backend->show_text_glyphs) {
+	    /* Intentionally only try show_text_glyphs method for show_glyphs
+	     * calls if backend does not have show_glyphs.  If backend has
+	     * both methods implemented, we don't fallback from show_glyphs to
+	     * show_text_glyphs, and hence the backend an assume in its
+	     * show_text_glyphs call that clusters is not NULL (which also
+	     * implies that UTF-8 is not NULL, unless the text is
+	     * zero-length).
+	     */
+	    status = surface->backend->show_text_glyphs (surface, op, dev_source,
+							 utf8, utf8_len,
+							 glyphs, num_glyphs,
+							 clusters, num_clusters,
+							 backward,
+							 dev_scaled_font);
+	}
     }
 
     if (status == CAIRO_INT_STATUS_UNSUPPORTED)
@@ -2581,6 +2654,7 @@ _cairo_surface_create_in_error (cairo_status_t status)
     case CAIRO_STATUS_USER_FONT_IMMUTABLE:
     case CAIRO_STATUS_USER_FONT_ERROR:
     case CAIRO_STATUS_NEGATIVE_COUNT:
+    case CAIRO_STATUS_INVALID_CLUSTERS:
     default:
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t *) &_cairo_surface_nil;

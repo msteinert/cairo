@@ -1497,10 +1497,21 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
     return cairo_scaled_font_status (gstate->scaled_font);
 }
 
+cairo_bool_t
+_cairo_gstate_has_show_text_glyphs (cairo_gstate_t *gstate)
+{
+    return _cairo_surface_has_show_text_glyphs (gstate->target);
+}
+
 cairo_status_t
-_cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
-			   const cairo_glyph_t *glyphs,
-			   int num_glyphs)
+_cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
+				const char		   *utf8,
+				int			    utf8_len,
+				const cairo_glyph_t	   *glyphs,
+				int			    num_glyphs,
+				const cairo_text_cluster_t *clusters,
+				int			    num_clusters,
+				cairo_bool_t		    backward)
 {
     cairo_status_t status;
     cairo_pattern_union_t source_pattern;
@@ -1543,14 +1554,19 @@ _cairo_gstate_show_glyphs (cairo_gstate_t *gstate,
      * rasterizer is something like ten times slower than freetype's for huge
      * sizes.  So, no win just yet.  For now, do it for insanely-huge sizes,
      * just to make sure we don't make anyone unhappy.  When we get a really
-     * fast rasterizer in cairo, we may want to readjust this. */
-    if (_cairo_scaled_font_get_max_scale (gstate->scaled_font) <= 10240) {
-	status = _cairo_surface_show_glyphs (gstate->target,
-					     gstate->op,
-					     &source_pattern.base,
-					     transformed_glyphs,
-					     num_glyphs,
-					     gstate->scaled_font);
+     * fast rasterizer in cairo, we may want to readjust this.
+     *
+     * Needless to say, do this only if show_text_glyphs is not available. */
+    if (_cairo_gstate_has_show_text_glyphs (gstate) ||
+	_cairo_scaled_font_get_max_scale (gstate->scaled_font) <= 10240) {
+	status = _cairo_surface_show_text_glyphs (gstate->target,
+						  gstate->op,
+						  &source_pattern.base,
+						  utf8, utf8_len,
+						  transformed_glyphs, num_glyphs,
+						  clusters, num_clusters,
+						  backward,
+						  gstate->scaled_font);
     } else {
 	cairo_path_fixed_t path;
 
