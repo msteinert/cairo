@@ -4,6 +4,7 @@ Makefile.in
 cairo-decl-list.txt
 cairo-decl.txt
 cairo-docs.sgml
+cairo-undeclared.txt
 cairo-undocumented.txt
 cairo-unused.txt
 cairo.hierarchy
