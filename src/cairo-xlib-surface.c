@@ -1191,10 +1191,12 @@ _cairo_xlib_surface_create_solid_pattern_surface (void                  *abstrac
 			    other->depth);
 
     surface = (cairo_xlib_surface_t *)
-	      cairo_xlib_surface_create (other->dpy,
-					 pixmap,
-					 other->visual,
-					 image->width, image->height);
+	      _cairo_xlib_surface_create_internal (other->dpy,
+						   pixmap,
+						   other->screen, other->visual,
+						   NULL,
+						   image->width, image->height,
+						   0);
     status = surface->base.status;
     if (status)
 	goto BAIL;
