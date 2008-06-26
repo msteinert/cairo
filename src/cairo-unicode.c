@@ -202,7 +202,7 @@ _utf8_get_char_extended (const unsigned char *p,
  *   If @len is supplied and the string has an embedded nul
  *   byte, only the portion before the nul byte is converted.
  * @result: location to store a pointer to a newly allocated UTF-32
- *   string (always native endian). Free with free(). A 0
+ *   string (always native endian), or %NULL. Free with free(). A 0
  *   word will be written after the last character.
  * @items_written: location to store number of 32-bit words
  *   written. (Not including the trailing 0)
@@ -241,18 +241,21 @@ _cairo_utf8_to_ucs4 (const char *str,
 	in = UTF8_NEXT_CHAR (in);
     }
 
-    str32 = _cairo_malloc_ab (n_chars + 1, sizeof (uint32_t));
-    if (!str32)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    if (result) {
+	str32 = _cairo_malloc_ab (n_chars + 1, sizeof (uint32_t));
+	if (!str32)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    in = ustr;
-    for (i=0; i < n_chars; i++) {
-	str32[i] = _utf8_get_char (in);
-	in = UTF8_NEXT_CHAR (in);
+	in = ustr;
+	for (i=0; i < n_chars; i++) {
+	    str32[i] = _utf8_get_char (in);
+	    in = UTF8_NEXT_CHAR (in);
+	}
+	str32[i] = 0;
+
+	*result = str32;
     }
-    str32[i] = 0;
 
-    *result = str32;
     if (items_written)
 	*items_written = n_chars;
 
