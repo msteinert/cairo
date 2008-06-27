@@ -827,8 +827,8 @@ typedef struct {
 } cairo_glyph_t;
 
 typedef struct {
-    unsigned int        num_bytes;
-    unsigned int        num_glyphs;
+    int        num_bytes;
+    int        num_glyphs;
 } cairo_text_cluster_t;
 
 /**

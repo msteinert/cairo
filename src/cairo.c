@@ -3233,17 +3233,18 @@ cairo_show_text_glyphs (cairo_t			   *cr,
 	int i;
 
 	for (i = 0; i < num_clusters; i++) {
-	    unsigned int cluster_bytes  = clusters[i].num_bytes;
-	    unsigned int cluster_glyphs = clusters[i].num_glyphs;
+	    int cluster_bytes  = clusters[i].num_bytes;
+	    int cluster_glyphs = clusters[i].num_glyphs;
 
-	    /* A cluster should cover at least one byte or glyph. */
-	    if (cluster_bytes == 0 && cluster_glyphs == 0)
+	    /* A cluster should cover at least one byte.
+	     * I can't see any use for a 0,0 cluster.
+	     * Zero-glyph clusters on the other hand are useful for
+	     * things like U+200C ZERO WIDTH NON-JOINER */
+	    if (cluster_bytes < 1 || cluster_glyphs < 0)
 	        goto BAD;
 
-	    /* Since utf8_len and num_glyphs are signed, but the rest of
-	     * values involved here unsigned, we can avoid overflow easily */
-	    if (cluster_bytes > (unsigned int)utf8_len || cluster_glyphs > (unsigned int)num_glyphs)
-	        goto BAD;
+	    /* Since n_bytes and n_glyphs are unsigned, but the rest of
+	     * values involved are signed, we can detect overflow easily */
 	    if (n_bytes+cluster_bytes > (unsigned int)utf8_len || n_glyphs+cluster_glyphs > (unsigned int)num_glyphs)
 	        goto BAD;
 
