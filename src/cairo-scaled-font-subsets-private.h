@@ -554,4 +554,26 @@ _cairo_type2_charstrings_fini (cairo_type2_charstrings_t *charstrings);
 cairo_private cairo_int_status_t
 _cairo_truetype_create_glyph_to_unicode_map (cairo_scaled_font_subset_t	*font_subset);
 
+/**
+ * _cairo_truetype_index_to_ucs4:
+ * @scaled_font: the #cairo_scaled_font_t
+ * @index: the glyph index
+ * @ucs4: return value for the unicode value of the glyph
+ *
+ * If possible (depending on the format of the underlying
+ * #cairo_scaled_font_t and the font backend in use) assign
+ * the unicode character of the glyph to @ucs4.
+ *
+ * If mapping glyph indices to unicode is supported but the unicode
+ * value of the specified glyph is not available, @ucs4 is set to -1.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS if successful,
+ * %CAIRO_INT_STATUS_UNSUPPORTED if mapping glyph indices to unicode
+ * is not supported.  Possible errors include %CAIRO_STATUS_NO_MEMORY.
+ **/
+cairo_private cairo_int_status_t
+_cairo_truetype_index_to_ucs4 (cairo_scaled_font_t *scaled_font,
+                               unsigned long        index,
+                               uint32_t            *ucs4);
+
 #endif /* CAIRO_SCALED_FONT_SUBSETS_PRIVATE_H */
