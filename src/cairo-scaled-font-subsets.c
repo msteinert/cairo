@@ -893,29 +893,14 @@ create_string_entry (char *s, cairo_string_entry_t **entry)
 cairo_int_status_t
 _cairo_scaled_font_subset_create_glyph_names (cairo_scaled_font_subset_t *subset)
 {
-    const cairo_scaled_font_backend_t *backend;
     unsigned int i;
     cairo_status_t status;
     cairo_hash_table_t *names;
     cairo_string_entry_t key, *entry;
     char buf[30];
-
-    if (subset->to_unicode == NULL)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    status = _cairo_truetype_create_glyph_to_unicode_map (subset);
-    if (status) {
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
-
-        backend = subset->scaled_font->backend;
-        if (backend->map_glyphs_to_unicode == NULL)
-            return CAIRO_INT_STATUS_UNSUPPORTED;
-
-        status = backend->map_glyphs_to_unicode (subset->scaled_font, subset);
-	if (status)
-	    return status;
-    }
+    char *utf8;
+    uint16_t *utf16;
+    int utf16_len;
 
     names = _cairo_hash_table_create (_cairo_string_equal);
     if (names == NULL)
@@ -944,8 +929,17 @@ _cairo_scaled_font_subset_create_glyph_names (cairo_scaled_font_subset_t *subset
     }
 
     for (i = 1; i < subset->num_glyphs; i++) {
-	if (subset->to_unicode[i] <= 0xffff) {
-	    snprintf (buf, sizeof(buf), "uni%04X", (unsigned int)(subset->to_unicode[i]));
+	utf8 = subset->utf8[i];
+	utf16 = NULL;
+	utf16_len = 0;
+	if (utf8 && *utf8) {
+	    status = _cairo_utf8_to_utf16 (utf8, -1, &utf16, &utf16_len);
+	    if (status && status != CAIRO_STATUS_INVALID_STRING)
+		return status; // FIXME
+	}
+
+	if (utf16_len == 1) {
+	    snprintf (buf, sizeof(buf), "uni%04X", (int)(utf16[0]));
 	    _cairo_string_init_key (&key, buf);
 	    if (_cairo_hash_table_lookup (names, &key.base,
 					  (cairo_hash_entry_t **) &entry)) {
@@ -954,6 +948,8 @@ _cairo_scaled_font_subset_create_glyph_names (cairo_scaled_font_subset_t *subset
 	} else {
 	    snprintf (buf, sizeof(buf), "g%d", i);
 	}
+	if (utf16)
+	    free (utf16);
 
 	subset->glyph_names[i] = strdup (buf);
 	if (subset->glyph_names[i] == NULL) {
