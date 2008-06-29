@@ -810,8 +810,14 @@ _cairo_scaled_font_subsets_foreach_internal (cairo_scaled_font_subsets_t        
 
     collection.glyphs = _cairo_malloc_ab (collection.glyphs_size, sizeof(unsigned long));
     collection.utf8 = _cairo_malloc_ab (collection.glyphs_size, sizeof(char *));
-    if (collection.glyphs == NULL || collection.utf8 == NULL)
+    if (collection.glyphs == NULL || collection.utf8 == NULL) {
+	if (collection.glyphs != NULL)
+	    free (collection.glyphs);
+	if (collection.utf8 != NULL)
+	    free (collection.utf8);
+
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
 
     collection.font_subset_callback = font_subset_callback;
     collection.font_subset_callback_closure = closure;
