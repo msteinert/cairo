@@ -1180,13 +1180,13 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 	return;
 
     if (num_glyphs < 0) {
-	cairo_status_t status = _cairo_error (CAIRO_STATUS_NEGATIVE_COUNT);
+	_cairo_error_throw (CAIRO_STATUS_NEGATIVE_COUNT);
 	/* XXX Can't propagate error */
 	return;
     }
 
     if (glyphs == NULL) {
-	cairo_status_t status = _cairo_error (CAIRO_STATUS_NULL_POINTER);
+	_cairo_error_throw (CAIRO_STATUS_NULL_POINTER);
 	/* XXX Can't propagate error */
 	return;
     }
