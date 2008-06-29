@@ -1457,101 +1457,6 @@ _cairo_win32_scaled_font_load_truetype_table (void	       *abstract_font,
     return status;
 }
 
-static cairo_int_status_t
-_cairo_win32_scaled_font_map_glyphs_to_unicode (void *abstract_font,
-						cairo_scaled_font_subset_t *font_subset)
-{
-    cairo_win32_scaled_font_t *scaled_font = abstract_font;
-    GLYPHSET *glyph_set;
-    uint16_t *utf16 = NULL;
-    WORD *glyph_indices = NULL;
-    HDC hdc = NULL;
-    int res;
-    unsigned int i, j, k, count, num_glyphs;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
-
-    hdc = _get_global_font_dc ();
-    if (!hdc)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    status = cairo_win32_scaled_font_select_font (&scaled_font->base, hdc);
-    if (status)
-	return status;
-
-    res = GetFontUnicodeRanges(hdc, NULL);
-    if (res == 0) {
-	status = _cairo_win32_print_gdi_error (
-	    "_cairo_win32_scaled_font_map_glyphs_to_unicode:GetFontUnicodeRanges");
-	goto fail1;
-    }
-
-    glyph_set = malloc (res);
-    if (glyph_set == NULL) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto fail1;
-    }
-
-    res = GetFontUnicodeRanges(hdc, glyph_set);
-    if (res == 0) {
-	status = _cairo_win32_print_gdi_error (
-	    "_cairo_win32_scaled_font_map_glyphs_to_unicode:GetFontUnicodeRanges");
-	goto fail2;
-    }
-
-    count = font_subset->num_glyphs;
-    for (i = 0; i < glyph_set->cRanges && count > 0; i++) {
-	num_glyphs = glyph_set->ranges[i].cGlyphs;
-
-	utf16 = _cairo_malloc_ab (num_glyphs + 1, sizeof (uint16_t));
-	if (utf16 == NULL) {
-	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    goto fail2;
-	}
-
-	glyph_indices = _cairo_malloc_ab (num_glyphs + 1, sizeof (WORD));
-	if (glyph_indices == NULL) {
-	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    goto fail2;
-	}
-
-	for (j = 0; j < num_glyphs; j++)
-	    utf16[j] = glyph_set->ranges[i].wcLow + j;
-	utf16[j] = 0;
-
-	if (GetGlyphIndicesW (hdc, utf16, num_glyphs, glyph_indices, 0) == GDI_ERROR) {
-	    status = _cairo_win32_print_gdi_error (
-		"_cairo_win32_scaled_font_map_glyphs_to_unicode:GetGlyphIndicesW");
-	    goto fail2;
-	}
-
-	for (j = 0; j < num_glyphs; j++) {
-	    for (k = 0; k < font_subset->num_glyphs; k++) {
-		if (font_subset->glyphs[k] == glyph_indices[j]) {
-		    font_subset->to_unicode[k] = utf16[j];
-		    count--;
-		    break;
-		}
-	    }
-	}
-
-	free (glyph_indices);
-	glyph_indices = NULL;
-	free (utf16);
-	utf16= NULL;
-    }
-
-fail2:
-    if (glyph_indices)
-	free (glyph_indices);
-    if (utf16)
-	free (utf16);
-    free (glyph_set);
-fail1:
-    cairo_win32_scaled_font_done_font (&scaled_font->base);
-
-    return status;
-}
-
 static cairo_status_t
 _cairo_win32_scaled_font_index_to_ucs4 (void 		*abstract_font,
 					unsigned long    index,
@@ -1879,7 +1784,6 @@ const cairo_scaled_font_backend_t _cairo_win32_scaled_font_backend = {
     NULL,			/* ucs4_to_index */
     _cairo_win32_scaled_font_show_glyphs,
     _cairo_win32_scaled_font_load_truetype_table,
-    _cairo_win32_scaled_font_map_glyphs_to_unicode,
     _cairo_win32_scaled_font_index_to_ucs4,
 };
 
