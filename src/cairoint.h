@@ -441,8 +441,13 @@ struct _cairo_scaled_font_backend {
 
     cairo_warn cairo_int_status_t
     (*map_glyphs_to_unicode)(void                       *scaled_font,
-                                   cairo_scaled_font_subset_t *font_subset);
+                             cairo_scaled_font_subset_t *font_subset);
 
+    /* returns -1 if the unicode character could not be found for the glyph */
+    cairo_warn cairo_int_status_t
+    (*index_to_ucs4)(void                       *scaled_font,
+		     unsigned long               index,
+                     uint32_t                   *ucs4);
 };
 
 struct _cairo_font_face_backend {
