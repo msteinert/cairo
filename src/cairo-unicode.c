@@ -262,6 +262,45 @@ _cairo_utf8_to_ucs4 (const char *str,
     return CAIRO_STATUS_SUCCESS;
 }
 
+/**
+ * _cairo_ucs4_to_utf8:
+ * @unicode: a UCS-4 character
+ * @utf8: buffer to write utf8 string into. Must have at least 4 bytes
+ * space available.
+ *
+ * Return value: Number of bytes in the utf8 string or 0 if an invalid
+ * unicode character
+ **/
+int
+_cairo_ucs4_to_utf8 (uint32_t  unicode,
+		     char     *utf8)
+{
+    int bytes;
+    char *p;
+
+    if (unicode < 0x80) {
+	*utf8 = unicode;
+	return 1;
+    } else if (unicode < 0x800) {
+	bytes = 2;
+    } else if (unicode < 0x10000) {
+	bytes = 3;
+    } else if (unicode < 0x200000) {
+	bytes = 4;
+    } else {
+	return 0;
+    }
+
+    p = utf8 + bytes;
+    while (p > utf8) {
+	*--p = 0x80 | (unicode & 0x3f);
+	unicode >>= 6;
+    }
+    *p |= 0xf0 << (4 - bytes);
+
+    return bytes;
+}
+
 #if CAIRO_HAS_UTF8_TO_UTF16
 /**
  * _cairo_utf8_to_utf16:
