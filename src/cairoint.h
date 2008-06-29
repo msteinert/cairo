@@ -2343,7 +2343,7 @@ cairo_private int
 _cairo_ucs4_to_utf8 (uint32_t    unicode,
 		     char       *utf8);
 
-#if CAIRO_HAS_WIN32_FONT+0 || CAIRO_HAS_QUARTZ_FONT+0
+#if CAIRO_HAS_WIN32_FONT+0 || CAIRO_HAS_QUARTZ_FONT+0 || CAIRO_HAS_PDF_SURFACE+0
 # define CAIRO_HAS_UTF8_TO_UTF16 1
 #endif
 #if CAIRO_HAS_UTF8_TO_UTF16

@@ -2839,34 +2839,54 @@ _cairo_pdf_surface_write_pages (cairo_pdf_surface_t *surface)
 				 "endobj\n");
 }
 
+static cairo_status_t
+_cairo_pdf_surface_emit_unicode_for_glyph (cairo_pdf_surface_t	*surface,
+					   const char 		*utf8)
+{
+    uint16_t *utf16 = NULL;
+    int utf16_len = 0;
+    cairo_status_t status;
+    int i;
+
+    if (utf8 && *utf8) {
+	status = _cairo_utf8_to_utf16 (utf8, -1, &utf16, &utf16_len);
+	if (status && status != CAIRO_STATUS_INVALID_STRING)
+	    return status;
+    }
+
+    _cairo_output_stream_printf (surface->output, "<");
+    if (utf16 == NULL || utf16_len == 0) {
+	/* According to the "ToUnicode Mapping File Tutorial"
+	 * http://www.adobe.com/devnet/acrobat/pdfs/5411.ToUnicode.pdf
+	 *
+	 * Glyphs that do not map to a Unicode code point must be
+	 * mapped to 0xfffd "REPLACEMENT CHARACTER".
+	 */
+	_cairo_output_stream_printf (surface->output,
+				     "fffd");
+    } else {
+	for (i = 0; i < utf16_len; i++)
+	    _cairo_output_stream_printf (surface->output,
+					 "%04x", (int) (utf16[i]));
+    }
+    _cairo_output_stream_printf (surface->output, ">");
+
+    if (utf16)
+	free (utf16);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_int_status_t
 _cairo_pdf_surface_emit_to_unicode_stream (cairo_pdf_surface_t		*surface,
 					   cairo_scaled_font_subset_t	*font_subset,
                                            cairo_bool_t                  is_composite,
 					   cairo_pdf_resource_t         *stream)
 {
-    const cairo_scaled_font_backend_t *backend;
     unsigned int i, num_bfchar;
     cairo_int_status_t status;
 
     stream->id = 0;
-    if (font_subset->to_unicode == NULL)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    status = _cairo_truetype_create_glyph_to_unicode_map (font_subset);
-    if (status) {
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
-
-        backend = font_subset->scaled_font->backend;
-        if (backend->map_glyphs_to_unicode == NULL)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-
-        status = backend->map_glyphs_to_unicode (font_subset->scaled_font,
-		                                 font_subset);
-	if (status)
-	    return status;
-    }
 
     status = _cairo_pdf_surface_open_stream (surface,
 					      NULL,
@@ -2900,10 +2920,12 @@ _cairo_pdf_surface_emit_to_unicode_stream (cairo_pdf_surface_t		*surface,
                                   "endcodespacerange\n");
 
     num_bfchar = font_subset->num_glyphs - 1;
+
     /* The CMap specification has a limit of 100 characters per beginbfchar operator */
     _cairo_output_stream_printf (surface->output,
                                  "%d beginbfchar\n",
                                  num_bfchar > 100 ? 100 : num_bfchar);
+
     for (i = 0; i < num_bfchar; i++) {
         if (i != 0 && i % 100 == 0) {
             _cairo_output_stream_printf (surface->output,
@@ -2913,13 +2935,16 @@ _cairo_pdf_surface_emit_to_unicode_stream (cairo_pdf_surface_t		*surface,
         }
         if (is_composite) {
             _cairo_output_stream_printf (surface->output,
-                                         "<%04x> <%04lx>\n",
-                                         i + 1, font_subset->to_unicode[i + 1]);
+                                         "<%04x> ",
+                                         i + 1);
         } else {
             _cairo_output_stream_printf (surface->output,
-                                         "<%02x> <%04lx>\n",
-                                         i + 1, font_subset->to_unicode[i + 1]);
+                                         "<%02x> ",
+                                         i + 1);
         }
+	_cairo_pdf_surface_emit_unicode_for_glyph (surface, font_subset->utf8[i + 1]);
+	_cairo_output_stream_printf (surface->output,
+				     "\n");
     }
     _cairo_output_stream_printf (surface->output,
                                  "endbfchar\n");
