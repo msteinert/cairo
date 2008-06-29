@@ -175,6 +175,11 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 				 "/W* { eoclip } bind def\n"
 				 "/BT { } bind def\n"
 				 "/ET { } bind def\n"
+				 "/pdfmark where { pop globaldict /?pdfmark /exec load put }\n"
+				 "    { globaldict begin /?pdfmark /pop load def /pdfmark\n"
+				 "    /cleartomark load def end } ifelse\n"
+				 "/BDC { mark 3 1 roll /BDC pdfmark } bind def\n"
+				 "/EMC { mark /EMC pdfmark } bind def\n"
 				 "/Tj { show } bind def\n"
 				 "/TJ {\n"
 				 "  {\n"
@@ -3091,10 +3096,12 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     if (status)
 	return status;
 
-    return _cairo_pdf_operators_show_glyphs (&surface->pdf_operators,
-					     glyphs,
-					     num_glyphs,
-					     scaled_font);
+    return _cairo_pdf_operators_show_text_glyphs (&surface->pdf_operators,
+						  NULL, 0,
+						  glyphs, num_glyphs,
+						  NULL, 0,
+						  FALSE,
+						  scaled_font);
 }
 
 static void

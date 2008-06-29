@@ -3959,10 +3959,12 @@ _cairo_pdf_surface_write_smask_group (cairo_pdf_surface_t     *surface,
 					      &group->ctm_inverse);
 	break;
     case PDF_SHOW_GLYPHS:
-	status = _cairo_pdf_operators_show_glyphs (&surface->pdf_operators,
-						   group->glyphs,
-						   group->num_glyphs,
-						   group->scaled_font);
+	status = _cairo_pdf_operators_show_text_glyphs (&surface->pdf_operators,
+							NULL, 0,
+							group->glyphs, group->num_glyphs,
+							NULL, 0,
+							FALSE,
+							group->scaled_font);
 	break;
     }
     if (status)
@@ -4797,10 +4799,12 @@ _cairo_pdf_surface_show_glyphs (void			*abstract_surface,
 		return status;
 	}
 
-	status = _cairo_pdf_operators_show_glyphs (&surface->pdf_operators,
-						   glyphs,
-						   num_glyphs,
-						   scaled_font);
+	status = _cairo_pdf_operators_show_text_glyphs (&surface->pdf_operators,
+							NULL, 0,
+							glyphs, num_glyphs,
+							NULL, 0,
+							FALSE,
+							scaled_font);
 	if (status)
 	    return status;
 
