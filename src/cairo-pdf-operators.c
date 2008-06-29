@@ -655,6 +655,9 @@ _cairo_pdf_operators_emit_stroke (cairo_pdf_operators_t	*pdf_operators,
     cairo_bool_t has_ctm = TRUE;
     double scale = 1.0;
 
+    if (pdf_operators->in_text_object)
+	status = _cairo_pdf_operators_end_text (pdf_operators);
+
     /* Optimize away the stroke ctm when it does not affect the
      * stroke. There are other ctm cases that could be optimized
      * however this is the most common.
@@ -749,6 +752,9 @@ _cairo_pdf_operators_fill (cairo_pdf_operators_t	*pdf_operators,
 {
     const char *pdf_operator;
     cairo_status_t status;
+
+    if (pdf_operators->in_text_object)
+	status = _cairo_pdf_operators_end_text (pdf_operators);
 
     status = _cairo_pdf_operators_emit_path (pdf_operators,
 					     path,
