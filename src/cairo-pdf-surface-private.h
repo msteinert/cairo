@@ -90,8 +90,13 @@ typedef struct _cairo_pdf_smask_group
     cairo_stroke_style_t *style;
     cairo_matrix_t	  ctm;
     cairo_matrix_t	  ctm_inverse;
+    char           	 *utf8;
+    int                   utf8_len;
     cairo_glyph_t	 *glyphs;
     int			  num_glyphs;
+    cairo_text_cluster_t *clusters;
+    int                   num_clusters;
+    cairo_bool_t          backward;
     cairo_scaled_font_t	 *scaled_font;
 } cairo_pdf_smask_group_t;
 
