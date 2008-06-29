@@ -2177,6 +2177,7 @@ _cairo_svg_surface_show_glyphs (void			*abstract_surface,
     for (i = 0; i < num_glyphs; i++) {
 	status = _cairo_scaled_font_subsets_map_glyph (document->font_subsets,
 						       scaled_font, glyphs[i].index,
+						       NULL, 0,
                                                        &subset_glyph);
 	if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 	    _cairo_output_stream_printf (surface->xml_node, "</g>\n");

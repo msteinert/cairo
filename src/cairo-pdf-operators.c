@@ -1151,6 +1151,7 @@ _cairo_pdf_operators_show_glyphs (cairo_pdf_operators_t	*pdf_operators,
     for (i = 0; i < num_glyphs; i++) {
         status = _cairo_scaled_font_subsets_map_glyph (pdf_operators->font_subsets,
                                                        scaled_font, glyphs[i].index,
+						       NULL, 0,
                                                        &subset_glyph);
 	if (status)
             return status;

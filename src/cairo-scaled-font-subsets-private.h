@@ -47,6 +47,8 @@ typedef struct _cairo_scaled_font_subsets_glyph {
     cairo_bool_t is_composite;
     double       x_advance;
     double       y_advance;
+    cairo_bool_t utf8_is_mapped;
+    uint32_t 	 unicode;
 } cairo_scaled_font_subsets_glyph_t;
 
 /**
@@ -176,8 +178,14 @@ _cairo_scaled_font_subsets_destroy (cairo_scaled_font_subsets_t *font_subsets);
  * @is_scaled: If true, the mapped glyph is from a bitmap font, and separate font
  * subset is created for each font scale used. If false, the outline of the mapped glyph
  * is available. One font subset for each font face is created.
- * @x_advance: When @is_scaled is true, @x_advance contains the x_advance for the mapped glyph in device space.
- * When @is_scaled is false, @x_advance contains the x_advance for the the mapped glyph from an unhinted 1 point font.
+ * @x_advance, @y_advance: When @is_scaled is true, @x_advance and @y_advance contain
+ * the x and y advance for the mapped glyph in device space.
+ * When @is_scaled is false, @x_advance and @y_advance contain the x and y advance for
+ * the the mapped glyph from an unhinted 1 point font.
+ * @utf8_is_mapped: If true the utf8 string provided to _cairo_scaled_font_subsets_map_glyph()
+ * is (or already was) the utf8 string mapped to this glyph. If false the glyph is already
+ * mapped to a different utf8 string.
+ * @unicode: the unicode character mapped to this glyph by the font backend.
  *
  * Return value: %CAIRO_STATUS_SUCCESS if successful, or a non-zero
  * value indicating an error. Possible errors include
@@ -187,6 +195,8 @@ cairo_private cairo_status_t
 _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*font_subsets,
 				      cairo_scaled_font_t		*scaled_font,
 				      unsigned long			 scaled_font_glyph_index,
+				      const char * 			 utf8,
+				      int				 utf8_len,
                                       cairo_scaled_font_subsets_glyph_t *subset_glyph_ret);
 
 typedef cairo_status_t
