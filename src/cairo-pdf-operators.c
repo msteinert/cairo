@@ -1335,10 +1335,12 @@ _cairo_pdf_operators_show_text_glyphs (cairo_pdf_operators_t	  *pdf_operators,
     if (num_clusters > 0) {
 	cur_text = utf8;
 	if (backward)
-	    cur_glyph = glyphs + num_glyphs - 1;
+	    cur_glyph = glyphs + num_glyphs;
 	else
 	    cur_glyph = glyphs;
 	for (i = 0; i < num_clusters; i++) {
+	    if (backward)
+		cur_glyph -= clusters[i].num_glyphs;
 	    status = _cairo_pdf_operators_emit_cluster (pdf_operators,
 							cur_text,
 							clusters[i].num_bytes,
@@ -1347,9 +1349,7 @@ _cairo_pdf_operators_show_text_glyphs (cairo_pdf_operators_t	  *pdf_operators,
 							backward,
 							scaled_font);
 	    cur_text += clusters[i].num_bytes;
-	    if (backward)
-		cur_glyph -= clusters[i].num_glyphs;
-	    else
+	    if (!backward)
 		cur_glyph += clusters[i].num_glyphs;
 	}
     } else {
