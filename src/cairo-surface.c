@@ -2135,24 +2135,6 @@ _cairo_surface_get_extents (cairo_surface_t         *surface,
     return status;
 }
 
-cairo_status_t
-_cairo_surface_show_glyphs (cairo_surface_t	*surface,
-			    cairo_operator_t	 op,
-			    cairo_pattern_t	*source,
-			    cairo_glyph_t	*glyphs,
-			    int			 num_glyphs,
-			    cairo_scaled_font_t	*scaled_font)
-{
-    return _cairo_surface_show_text_glyphs (surface,
-					    op,
-					    source,
-					    NULL, 0,
-					    glyphs, num_glyphs,
-					    NULL, 0,
-					    FALSE,
-					    scaled_font);
-}
-
 cairo_bool_t
 _cairo_surface_has_show_text_glyphs (cairo_surface_t	    *surface)
 {
@@ -2301,8 +2283,8 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 }
 
 /* XXX: Previously, we had a function named _cairo_surface_show_glyphs
- * with not-so-useful semantics. We've now got a new
- * _cairo_surface_show_glyphs with the proper semantics, and its
+ * with not-so-useful semantics. We've now got a
+ * _cairo_surface_show_text_glyphs with the proper semantics, and its
  * fallback still uses this old function (which still needs to be
  * cleaned up in terms of both semantics and naming). */
 cairo_status_t

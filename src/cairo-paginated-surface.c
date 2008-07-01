@@ -595,43 +595,6 @@ _cairo_paginated_surface_fill (void			*abstract_surface,
 				tolerance, antialias);
 }
 
-static cairo_int_status_t
-_cairo_paginated_surface_show_glyphs (void			*abstract_surface,
-				      cairo_operator_t		 op,
-				      cairo_pattern_t		*source,
-				      cairo_glyph_t		*glyphs,
-				      int			 num_glyphs,
-				      cairo_scaled_font_t	*scaled_font,
-				      int			*remaining_glyphs)
-{
-    cairo_paginated_surface_t *surface = abstract_surface;
-    cairo_int_status_t status;
-
-    /* Optimize away erasing of nothing. */
-    if (surface->page_is_blank && op == CAIRO_OPERATOR_CLEAR)
-	return CAIRO_STATUS_SUCCESS;
-
-    surface->page_is_blank = FALSE;
-
-    /* Since this is a "wrapping" surface, we're calling back into
-     * _cairo_surface_show_glyphs from within a call to the same.
-     * Since _cairo_surface_show_glyphs acquires a mutex, we release
-     * and re-acquire the mutex around this nested call.
-     *
-     * Yes, this is ugly, but we consider it pragmatic as compared to
-     * adding locking code to all 18 surface-backend-specific
-     * show_glyphs functions, (which would get less testing and likely
-     * lead to bugs).
-     */
-    CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
-    status = _cairo_surface_show_glyphs (surface->meta, op, source,
-					 glyphs, num_glyphs,
-					 scaled_font);
-    CAIRO_MUTEX_LOCK (scaled_font->mutex);
-
-    return status;
-}
-
 static cairo_bool_t
 _cairo_paginated_surface_has_show_text_glyphs (void *abstract_surface)
 {
@@ -663,8 +626,8 @@ _cairo_paginated_surface_show_text_glyphs (void			    *abstract_surface,
     surface->page_is_blank = FALSE;
 
     /* Since this is a "wrapping" surface, we're calling back into
-     * _cairo_surface_show_glyphs from within a call to the same.
-     * Since _cairo_surface_show_glyphs acquires a mutex, we release
+     * _cairo_surface_show_text_glyphs from within a call to the same.
+     * Since _cairo_surface_show_text_glyphs acquires a mutex, we release
      * and re-acquire the mutex around this nested call.
      *
      * Yes, this is ugly, but we consider it pragmatic as compared to
@@ -719,7 +682,7 @@ static const cairo_surface_backend_t cairo_paginated_surface_backend = {
     _cairo_paginated_surface_mask,
     _cairo_paginated_surface_stroke,
     _cairo_paginated_surface_fill,
-    _cairo_paginated_surface_show_glyphs,
+    NULL, /* show_glyphs */
     _cairo_paginated_surface_snapshot,
     NULL, /* is_similar */
     NULL, /* reset */

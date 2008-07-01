@@ -1747,14 +1747,6 @@ _cairo_surface_fill (cairo_surface_t	*surface,
 		     double		 tolerance,
 		     cairo_antialias_t	 antialias);
 
-cairo_private cairo_status_t
-_cairo_surface_show_glyphs (cairo_surface_t	*surface,
-			    cairo_operator_t	 op,
-			    cairo_pattern_t	*source,
-			    cairo_glyph_t	*glyphs,
-			    int			 num_glyphs,
-			    cairo_scaled_font_t	*scaled_font);
-
 cairo_private cairo_bool_t
 _cairo_surface_has_show_text_glyphs (cairo_surface_t	    *surface);
 

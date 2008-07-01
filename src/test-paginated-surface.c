@@ -232,14 +232,26 @@ _test_paginated_surface_fill (void			*abstract_surface,
 				tolerance, antialias);
 }
 
+static cairo_bool_t
+_test_paginated_surface_has_show_text_glyphs (void *abstract_surface)
+{
+    test_paginated_surface_t *surface = abstract_surface;
+
+    return _cairo_surface_has_show_text_glyphs (surface->target);
+}
+
 static cairo_int_status_t
-_test_paginated_surface_show_glyphs (void			*abstract_surface,
-				     cairo_operator_t		 op,
-				     cairo_pattern_t		*source,
-				     cairo_glyph_t		*glyphs,
-				     int			 num_glyphs,
-				     cairo_scaled_font_t	*scaled_font,
-				     int			*remaining_glyphs)
+_test_paginated_surface_show_text_glyphs (void			    *abstract_surface,
+					  cairo_operator_t	     op,
+					  cairo_pattern_t	    *source,
+					  const char		    *utf8,
+					  int			     utf8_len,
+					  cairo_glyph_t		    *glyphs,
+					  int			     num_glyphs,
+					  const cairo_text_cluster_t *clusters,
+					  int			     num_clusters,
+					  cairo_bool_t		     backward,
+					  cairo_scaled_font_t	    *scaled_font)
 {
     test_paginated_surface_t *surface = abstract_surface;
     cairo_int_status_t status;
@@ -248,8 +260,8 @@ _test_paginated_surface_show_glyphs (void			*abstract_surface,
 	return CAIRO_STATUS_SUCCESS;
 
     /* Since this is a "wrapping" surface, we're calling back into
-     * _cairo_surface_show_glyphs from within a call to the same.
-     * Since _cairo_surface_show_glyphs acquires a mutex, we release
+     * _cairo_surface_show_text_glyphs from within a call to the same.
+     * Since _cairo_surface_show_text_glyphs acquires a mutex, we release
      * and re-acquire the mutex around this nested call.
      *
      * Yes, this is ugly, but we consider it pragmatic as compared to
@@ -258,12 +270,17 @@ _test_paginated_surface_show_glyphs (void			*abstract_surface,
      * lead to bugs).
      */
     CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
-    status = _cairo_surface_show_glyphs (surface->target, op, source,
-					 glyphs, num_glyphs, scaled_font);
+    status = _cairo_surface_show_text_glyphs (surface->target, op, source,
+					      utf8, utf8_len,
+					      glyphs, num_glyphs,
+					      clusters, num_clusters,
+					      backward,
+					      scaled_font);
     CAIRO_MUTEX_LOCK (scaled_font->mutex);
 
     return status;
 }
+
 
 static void
 _test_paginated_surface_set_paginated_mode (void			*abstract_surface,
@@ -309,8 +326,16 @@ static const cairo_surface_backend_t test_paginated_surface_backend = {
     _test_paginated_surface_mask,
     _test_paginated_surface_stroke,
     _test_paginated_surface_fill,
-    _test_paginated_surface_show_glyphs,
-    NULL /* snapshot */
+    NULL, /* show_glyphs */
+
+    NULL, /* snapshot */
+    NULL, /* is_similar */
+    NULL, /* reset */
+    NULL, /* fill_stroke */
+    NULL, /* create_solid_pattern_surface */
+
+    _test_paginated_surface_has_show_text_glyphs,
+    _test_paginated_surface_show_text_glyphs
 };
 
 static const cairo_paginated_surface_backend_t test_paginated_surface_paginated_backend = {
