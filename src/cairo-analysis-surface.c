@@ -563,14 +563,23 @@ _cairo_analysis_surface_show_glyphs (void		  *abstract_surface,
     cairo_status_t	     status, backend_status;
     cairo_rectangle_int_t    extents, glyph_extents;
 
-    if (!surface->target->backend->show_glyphs)
-	backend_status = CAIRO_INT_STATUS_UNSUPPORTED;
-    else
+    /* Adapted from _cairo_surface_show_glyphs */
+    if (surface->target->backend->show_glyphs)
 	backend_status = (*surface->target->backend->show_glyphs) (surface->target, op,
 								   source,
 								   glyphs, num_glyphs,
 								   scaled_font,
 								   remaining_glyphs);
+    else if (surface->target->backend->show_text_glyphs)
+	backend_status = surface->target->backend->show_text_glyphs (surface, op,
+								     source,
+								     NULL, 0,
+								     glyphs, num_glyphs,
+								     NULL, 0,
+								     FALSE,
+								     scaled_font);
+    else
+	backend_status = CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (backend_status == CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN)
 	backend_status = _cairo_analysis_surface_analyze_meta_surface_pattern (surface,
@@ -632,16 +641,28 @@ _cairo_analysis_surface_show_text_glyphs (void			    *abstract_surface,
     cairo_status_t	     status, backend_status;
     cairo_rectangle_int_t    extents, glyph_extents;
 
-    if (!surface->target->backend->show_text_glyphs)
-	backend_status = CAIRO_INT_STATUS_UNSUPPORTED;
-    else
-	backend_status = (*surface->target->backend->show_text_glyphs) (surface->target, op,
-									source,
-									utf8, utf8_len,
-									glyphs, num_glyphs,
-									clusters, num_clusters,
-									backward,
-									scaled_font);
+    /* Adapted from _cairo_surface_show_glyphs */
+    backend_status = CAIRO_INT_STATUS_UNSUPPORTED;
+    if (surface->target->backend->show_text_glyphs)
+	backend_status = surface->target->backend->show_text_glyphs (surface->target, op,
+								     source,
+								     utf8, utf8_len,
+								     glyphs, num_glyphs,
+								     clusters, num_clusters,
+								     backward,
+								     scaled_font);
+    if (backend_status == CAIRO_INT_STATUS_UNSUPPORTED && surface->target->backend->show_glyphs) {
+	int remaining_glyphs = num_glyphs;
+	backend_status = surface->target->backend->show_glyphs (surface, op,
+								source,
+								glyphs, num_glyphs,
+								scaled_font,
+								&remaining_glyphs);
+	glyphs += num_glyphs - remaining_glyphs;
+	num_glyphs = remaining_glyphs;
+	if (remaining_glyphs == 0)
+	    backend_status = CAIRO_STATUS_SUCCESS;
+    }
 
     if (backend_status == CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN)
 	backend_status = _cairo_analysis_surface_analyze_meta_surface_pattern (surface,

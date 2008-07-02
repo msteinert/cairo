@@ -2215,6 +2215,8 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
 
+    /* The logic here is duplicated in _cairo_analysis_surface show_glyphs and
+     * show_text_glyphs.  Keep in synch. */
     if (clusters) {
 	/* A real show_text_glyphs call.  Try show_text_glyphs backend
 	 * method first */
@@ -2234,7 +2236,7 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 						    &remaining_glyphs);
 	    glyphs += num_glyphs - remaining_glyphs;
 	    num_glyphs = remaining_glyphs;
-	    if (remaining_glyphs == 0)
+	    if (status == CAIRO_INT_STATUS_UNSUPPORTED && remaining_glyphs == 0)
 		status = CAIRO_STATUS_SUCCESS;
 	}
     } else {
@@ -2247,13 +2249,13 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 						    &remaining_glyphs);
 	    glyphs += num_glyphs - remaining_glyphs;
 	    num_glyphs = remaining_glyphs;
-	    if (remaining_glyphs == 0)
+	    if (status == CAIRO_INT_STATUS_UNSUPPORTED && remaining_glyphs == 0)
 		status = CAIRO_STATUS_SUCCESS;
 	} else if (surface->backend->show_text_glyphs) {
 	    /* Intentionally only try show_text_glyphs method for show_glyphs
 	     * calls if backend does not have show_glyphs.  If backend has
 	     * both methods implemented, we don't fallback from show_glyphs to
-	     * show_text_glyphs, and hence the backend an assume in its
+	     * show_text_glyphs, and hence the backend can assume in its
 	     * show_text_glyphs call that clusters is not NULL (which also
 	     * implies that UTF-8 is not NULL, unless the text is
 	     * zero-length).
