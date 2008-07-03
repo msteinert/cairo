@@ -1478,10 +1478,6 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 	    surface = NULL;
 	}
     }
-    else
-    {
-	i = solid_surface_cache.size++;
-    }
 
     if (surface == NULL) {
 	/* Not cached, need to create new */
@@ -1498,6 +1494,9 @@ _cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
 	    goto NOCACHE;
 	}
     }
+
+    if (i == solid_surface_cache.size)
+	solid_surface_cache.size++;
 
     to_destroy = solid_surface_cache.cache[i].surface;
     solid_surface_cache.cache[i].surface = surface;
