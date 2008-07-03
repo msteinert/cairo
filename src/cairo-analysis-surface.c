@@ -571,7 +571,7 @@ _cairo_analysis_surface_show_glyphs (void		  *abstract_surface,
 								   scaled_font,
 								   remaining_glyphs);
     else if (surface->target->backend->show_text_glyphs)
-	backend_status = surface->target->backend->show_text_glyphs (surface, op,
+	backend_status = surface->target->backend->show_text_glyphs (surface->target, op,
 								     source,
 								     NULL, 0,
 								     glyphs, num_glyphs,
@@ -653,7 +653,7 @@ _cairo_analysis_surface_show_text_glyphs (void			    *abstract_surface,
 								     scaled_font);
     if (backend_status == CAIRO_INT_STATUS_UNSUPPORTED && surface->target->backend->show_glyphs) {
 	int remaining_glyphs = num_glyphs;
-	backend_status = surface->target->backend->show_glyphs (surface, op,
+	backend_status = surface->target->backend->show_glyphs (surface->target, op,
 								source,
 								glyphs, num_glyphs,
 								scaled_font,
