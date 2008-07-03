@@ -1348,6 +1348,9 @@ _cairo_pdf_operators_show_text_glyphs (cairo_pdf_operators_t	  *pdf_operators,
 							clusters[i].num_glyphs,
 							backward,
 							scaled_font);
+	    if (status)
+		return status;
+
 	    cur_text += clusters[i].num_bytes;
 	    if (!backward)
 		cur_glyph += clusters[i].num_glyphs;
@@ -1361,6 +1364,8 @@ _cairo_pdf_operators_show_text_glyphs (cairo_pdf_operators_t	  *pdf_operators,
 							1,
 							FALSE,
 							scaled_font);
+	    if (status)
+		return status;
 	}
     }
 
