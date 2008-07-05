@@ -691,6 +691,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     surface->force_fallbacks = FALSE;
     surface->content = CAIRO_CONTENT_COLOR_ALPHA;
     surface->use_string_datasource = FALSE;
+    surface->current_pattern_is_solid_color = FALSE;
 
     _cairo_pdf_operators_init (&surface->pdf_operators,
 			       surface->stream,
@@ -2029,6 +2030,7 @@ _cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
     old_clip = _cairo_surface_get_clip (&surface->base);
     surface->width = meta_extents.width;
     surface->height = meta_extents.height;
+    surface->current_pattern_is_solid_color = FALSE;
     cairo_matrix_init (&surface->cairo_to_ps, 1, 0, 0, -1, 0, surface->height);
     _cairo_pdf_operators_set_cairo_to_pdf_matrix (&surface->pdf_operators,
 						  &surface->cairo_to_ps);
@@ -2061,6 +2063,7 @@ _cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
     surface->content = old_content;
     surface->width = old_width;
     surface->height = old_height;
+    surface->current_pattern_is_solid_color = FALSE;
     surface->cairo_to_ps = old_cairo_to_ps;
     status = _cairo_surface_set_clip (&surface->base, old_clip);
     if (status)
@@ -2808,17 +2811,41 @@ _cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface,
 				cairo_pattern_t *pattern,
 				cairo_operator_t op)
 {
-    /* FIXME: We should keep track of what pattern is currently set in
-     * the postscript file and only emit code if we're setting a
-     * different pattern. */
     cairo_status_t status;
 
+    if (pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
+	cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *) pattern;
+
+	if (surface->current_pattern_is_solid_color == FALSE ||
+	    surface->current_color_red != solid->color.red ||
+	    surface->current_color_green != solid->color.green ||
+	    surface->current_color_blue != solid->color.blue ||
+	    surface->current_color_alpha != solid->color.alpha)
+	{
+	    status = _cairo_pdf_operators_flush (&surface->pdf_operators);
+	    if (status)
+		return status;
+
+	    _cairo_ps_surface_emit_solid_pattern (surface, (cairo_solid_pattern_t *) pattern);
+
+	    surface->current_pattern_is_solid_color = TRUE;
+	    surface->current_color_red = solid->color.red;
+	    surface->current_color_green = solid->color.green;
+	    surface->current_color_blue = solid->color.blue;
+	    surface->current_color_alpha = solid->color.alpha;
+	}
+
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    surface->current_pattern_is_solid_color = FALSE;
     status = _cairo_pdf_operators_flush (&surface->pdf_operators);
     if (status)
 	    return status;
 
     switch (pattern->type) {
     case CAIRO_PATTERN_TYPE_SOLID:
+
 	_cairo_ps_surface_emit_solid_pattern (surface, (cairo_solid_pattern_t *) pattern);
 	break;
 
@@ -3177,6 +3204,7 @@ _cairo_ps_surface_set_bounding_box (void		*abstract_surface,
 	if (y2 > surface->bbox_y2)
 	    surface->bbox_y2 = y2;
     }
+    surface->current_pattern_is_solid_color = FALSE;
 
     return _cairo_output_stream_get_status (surface->stream);
 }
