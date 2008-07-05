@@ -850,8 +850,7 @@ _cairo_pdf_operators_emit_glyph_string_with_positioning (
 
     _cairo_output_stream_printf (stream, "[<");
     for (i = 0; i < pdf_operators->num_glyphs; i++) {
-	if (i != 0 &&
-	    pdf_operators->glyphs[i].x_position != pdf_operators->cur_x)
+	if (pdf_operators->glyphs[i].x_position != pdf_operators->cur_x)
 	{
 	    double delta = pdf_operators->glyphs[i].x_position - pdf_operators->cur_x;
 	    int rounded_delta;
