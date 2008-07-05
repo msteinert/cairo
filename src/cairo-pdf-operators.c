@@ -905,7 +905,7 @@ _cairo_pdf_operators_flush_glyphs (cairo_pdf_operators_t    *pdf_operators)
 	return _cairo_output_stream_destroy (word_wrap_stream);
 
     /* Check if glyph advance used to position every glyph */
-    x = pdf_operators->glyphs[0].x_position;
+    x = pdf_operators->cur_x;
     for (i = 0; i < pdf_operators->num_glyphs; i++) {
 	if (fabs(pdf_operators->glyphs[i].x_position - x) > GLYPH_POSITION_TOLERANCE)
 	    break;
