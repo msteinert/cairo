@@ -487,6 +487,7 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
     subset_glyph->is_composite = sub_font->is_composite;
     subset_glyph->x_advance = sub_font_glyph->x_advance;
     subset_glyph->y_advance = sub_font_glyph->y_advance;
+    subset_glyph->utf8_is_mapped = FALSE;
 
     return CAIRO_STATUS_SUCCESS;
 }
