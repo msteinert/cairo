@@ -174,6 +174,9 @@ _cairo_sub_font_glyph_create (unsigned long	scaled_font_glyph_index,
 static void
 _cairo_sub_font_glyph_destroy (cairo_sub_font_glyph_t *sub_font_glyph)
 {
+    if (sub_font_glyph->utf8 != NULL)
+	free (sub_font_glyph->utf8);
+
     free (sub_font_glyph);
 }
 
