@@ -82,6 +82,14 @@ typedef struct _cairo_pdf_operators {
     int hex_width;
     int num_glyphs;
     cairo_pdf_glyph_t glyphs[PDF_GLYPH_BUFFER_SIZE];
+
+    /* PDF line style */
+    cairo_bool_t         has_line_style;
+    double		 line_width;
+    cairo_line_cap_t	 line_cap;
+    cairo_line_join_t	 line_join;
+    double		 miter_limit;
+    cairo_bool_t         has_dashes;
 } cairo_pdf_operators_t;
 
 cairo_private void
@@ -117,6 +125,11 @@ cairo_private cairo_int_status_t
 _cairo_pdf_operators_clip (cairo_pdf_operators_t 	*pdf_operators,
 			   cairo_path_fixed_t		*path,
 			   cairo_fill_rule_t		 fill_rule);
+
+cairo_private cairo_int_status_t
+_cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t	*pdf_operators,
+					cairo_stroke_style_t	*style,
+					double			 scale);
 
 cairo_private cairo_int_status_t
 _cairo_pdf_operators_stroke (cairo_pdf_operators_t 	*pdf_operators,

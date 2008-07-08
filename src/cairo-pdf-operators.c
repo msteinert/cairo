@@ -64,6 +64,7 @@ _cairo_pdf_operators_init (cairo_pdf_operators_t	*pdf_operators,
     pdf_operators->use_font_subset_closure = NULL;
     pdf_operators->in_text_object = FALSE;
     pdf_operators->num_glyphs = 0;
+    pdf_operators->has_line_style = FALSE;
 }
 
 cairo_status_t
@@ -90,6 +91,7 @@ _cairo_pdf_operators_set_stream (cairo_pdf_operators_t	 *pdf_operators,
 				 cairo_output_stream_t   *stream)
 {
     pdf_operators->stream = stream;
+    pdf_operators->has_line_style = FALSE;
 }
 
 void
@@ -97,6 +99,7 @@ _cairo_pdf_operators_set_cairo_to_pdf_matrix (cairo_pdf_operators_t *pdf_operato
 					      cairo_matrix_t	    *cairo_to_pdf)
 {
     pdf_operators->cairo_to_pdf = *cairo_to_pdf;
+    pdf_operators->has_line_style = FALSE;
 }
 
 /* Finish writing out any pending commands to the stream. This
@@ -134,6 +137,7 @@ _cairo_pdf_operators_flush (cairo_pdf_operators_t	 *pdf_operators)
 void
 _cairo_pdf_operators_reset (cairo_pdf_operators_t *pdf_operators)
 {
+    pdf_operators->has_line_style = FALSE;
 }
 
 /* A word wrap stream can be used as a filter to do word wrapping on
@@ -526,7 +530,7 @@ _cairo_pdf_line_join (cairo_line_join_t join)
     }
 }
 
-static cairo_int_status_t
+cairo_int_status_t
 _cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t	*pdf_operators,
 					cairo_stroke_style_t	*style,
 					double			 scale)
@@ -534,6 +538,7 @@ _cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t	*pdf_operators,
     double *dash = style->dash;
     int num_dashes = style->num_dashes;
     double dash_offset = style->dash_offset;
+    double line_width = style->line_width * scale;
 
     /* PostScript has "special needs" when it comes to zero-length
      * dash segments with butt caps. It apparently (at least
@@ -598,17 +603,26 @@ _cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t	*pdf_operators,
 	}
     }
 
-    _cairo_output_stream_printf (pdf_operators->stream,
-				 "%f w\n",
-				 style->line_width * scale);
+    if (!pdf_operators->has_line_style || pdf_operators->line_width != line_width) {
+	_cairo_output_stream_printf (pdf_operators->stream,
+				     "%f w\n",
+				     line_width);
+	pdf_operators->line_width = line_width;
+    }
 
-    _cairo_output_stream_printf (pdf_operators->stream,
-				 "%d J\n",
-				 _cairo_pdf_line_cap (style->line_cap));
+    if (!pdf_operators->has_line_style || pdf_operators->line_cap != style->line_cap) {
+	_cairo_output_stream_printf (pdf_operators->stream,
+				     "%d J\n",
+				     _cairo_pdf_line_cap (style->line_cap));
+	pdf_operators->line_cap = style->line_cap;
+    }
 
-    _cairo_output_stream_printf (pdf_operators->stream,
-				 "%d j\n",
-				 _cairo_pdf_line_join (style->line_join));
+    if (!pdf_operators->has_line_style || pdf_operators->line_join != style->line_join) {
+	_cairo_output_stream_printf (pdf_operators->stream,
+				     "%d j\n",
+				     _cairo_pdf_line_join (style->line_join));
+	pdf_operators->line_join = style->line_join;
+    }
 
     if (num_dashes) {
 	int d;
@@ -618,15 +632,21 @@ _cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t	*pdf_operators,
 	    _cairo_output_stream_printf (pdf_operators->stream, " %f", dash[d] * scale);
 	_cairo_output_stream_printf (pdf_operators->stream, "] %f d\n",
 				     dash_offset * scale);
-    } else {
+	pdf_operators->has_dashes = TRUE;
+    } else if (!pdf_operators->has_line_style || pdf_operators->has_dashes) {
 	_cairo_output_stream_printf (pdf_operators->stream, "[] 0.0 d\n");
+	pdf_operators->has_dashes = FALSE;
     }
     if (dash != style->dash)
         free (dash);
 
-    _cairo_output_stream_printf (pdf_operators->stream,
-				 "%f M ",
-				 style->miter_limit < 1.0 ? 1.0 : style->miter_limit);
+    if (!pdf_operators->has_line_style || pdf_operators->miter_limit != style->miter_limit) {
+	_cairo_output_stream_printf (pdf_operators->stream,
+				     "%f M ",
+				     style->miter_limit < 1.0 ? 1.0 : style->miter_limit);
+	pdf_operators->miter_limit = style->miter_limit;
+    }
+    pdf_operators->has_line_style = TRUE;
 
     return _cairo_output_stream_get_status (pdf_operators->stream);
 }
