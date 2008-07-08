@@ -271,7 +271,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
         goto BAIL1;
     }
 
-    surface->compress_content = TRUE;
+    surface->compress_content = 0;
     surface->pdf_stream.active = FALSE;
     surface->pdf_stream.old_output = NULL;
     surface->group_stream.active = FALSE;
@@ -1559,7 +1559,7 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
     if (cairo_surface_get_content (meta_surface) == CAIRO_CONTENT_COLOR) {
 	status = _cairo_pdf_surface_add_alpha (surface, 1.0, &alpha);
 	if (status)
-	    goto CLEANUP_GROUP;
+	    return status;
 
 	_cairo_output_stream_printf (surface->output,
 				     "q /a%d gs 0 0 0 rg 0 0 %f %f re f Q\n",
@@ -1572,11 +1572,10 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
 						CAIRO_META_REGION_NATIVE);
     assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
     if (status)
-	goto CLEANUP_GROUP;
+	return status;
 
     status = _cairo_pdf_surface_close_content_stream (surface);
 
- CLEANUP_GROUP:
     _cairo_pdf_surface_set_size_internal (surface,
 					  old_width,
 					  old_height);
