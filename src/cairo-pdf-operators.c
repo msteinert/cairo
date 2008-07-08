@@ -985,6 +985,8 @@ _cairo_pdf_operators_set_text_matrix (cairo_pdf_operators_t  *pdf_operators,
     return _cairo_output_stream_get_status (pdf_operators->stream);
 }
 
+#define TEXT_MATRIX_TOLERANCE 1e-6
+
 /* Set the translation components of the PDF text matrix to x, y. The
  * 'Td' operator is used to transform the text matrix.
  */
@@ -1009,6 +1011,10 @@ _cairo_pdf_operators_set_text_position (cairo_pdf_operators_t  *pdf_operators,
     pdf_operators->text_matrix.x0 = x;
     pdf_operators->text_matrix.y0 = y;
     cairo_matrix_multiply (&translate, &pdf_operators->text_matrix, &inverse);
+    if (fabs(translate.x0) < TEXT_MATRIX_TOLERANCE)
+	translate.x0 = 0.0;
+    if (fabs(translate.y0) < TEXT_MATRIX_TOLERANCE)
+	translate.y0 = 0.0;
     _cairo_output_stream_printf (pdf_operators->stream,
 				 "%f %f Td\n",
 				 translate.x0,
