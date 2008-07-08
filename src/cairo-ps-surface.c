@@ -2900,6 +2900,8 @@ _cairo_ps_surface_intersect_clip_path (void		   *abstract_surface,
 	    return status;
 
 	_cairo_output_stream_printf (stream, "Q q\n");
+	surface->current_pattern_is_solid_color = FALSE;
+
 	return CAIRO_STATUS_SUCCESS;
     }
 
