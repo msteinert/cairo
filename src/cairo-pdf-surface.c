@@ -1531,7 +1531,7 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
     cairo_paginated_mode_t old_paginated_mode;
     cairo_clip_t *old_clip;
     cairo_rectangle_int_t meta_extents;
-    cairo_status_t status, status2;
+    cairo_status_t status;
     int alpha = 0;
 
     status = _cairo_surface_get_extents (meta_surface, &meta_extents);
@@ -1574,15 +1574,16 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
     if (status)
 	return status;
 
+    status = _cairo_surface_set_clip (&surface->base, old_clip);
+    if (status)
+	return status;
+
     status = _cairo_pdf_surface_close_content_stream (surface);
 
     _cairo_pdf_surface_set_size_internal (surface,
 					  old_width,
 					  old_height);
     surface->paginated_mode = old_paginated_mode;
-    status2 = _cairo_surface_set_clip (&surface->base, old_clip);
-    if (status == CAIRO_STATUS_SUCCESS)
-	status = status2;
 
     return status;
 }
