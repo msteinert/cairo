@@ -316,6 +316,15 @@ _paint_page (cairo_paginated_surface_t *surface)
 	     goto FAIL;
      }
 
+    if (surface->backend->set_fallback_images_required) {
+	cairo_bool_t has_fallbacks = _cairo_analysis_surface_has_unsupported (analysis);
+
+	status = surface->backend->set_fallback_images_required (surface->target,
+								 has_fallbacks);
+	if (status)
+	    goto FAIL;
+    }
+
     surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_RENDER);
 
     /* Finer grained fallbacks are currently only supported for some
