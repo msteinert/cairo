@@ -110,6 +110,9 @@ _cairo_pdf_operators_set_cairo_to_pdf_matrix (cairo_pdf_operators_t *pdf_operato
 cairo_private cairo_status_t
 _cairo_pdf_operators_flush (cairo_pdf_operators_t	 *pdf_operators);
 
+cairo_private void
+_cairo_pdf_operators_reset (cairo_pdf_operators_t	 *pdf_operators);
+
 cairo_private cairo_int_status_t
 _cairo_pdf_operators_clip (cairo_pdf_operators_t 	*pdf_operators,
 			   cairo_path_fixed_t		*path,

@@ -2031,6 +2031,7 @@ _cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
     surface->width = meta_extents.width;
     surface->height = meta_extents.height;
     surface->current_pattern_is_solid_color = FALSE;
+    _cairo_pdf_operators_reset (&surface->pdf_operators);
     cairo_matrix_init (&surface->cairo_to_ps, 1, 0, 0, -1, 0, surface->height);
     _cairo_pdf_operators_set_cairo_to_pdf_matrix (&surface->pdf_operators,
 						  &surface->cairo_to_ps);
@@ -2064,6 +2065,7 @@ _cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
     surface->width = old_width;
     surface->height = old_height;
     surface->current_pattern_is_solid_color = FALSE;
+    _cairo_pdf_operators_reset (&surface->pdf_operators);
     surface->cairo_to_ps = old_cairo_to_ps;
     status = _cairo_surface_set_clip (&surface->base, old_clip);
     if (status)
@@ -2901,6 +2903,7 @@ _cairo_ps_surface_intersect_clip_path (void		   *abstract_surface,
 
 	_cairo_output_stream_printf (stream, "Q q\n");
 	surface->current_pattern_is_solid_color = FALSE;
+	_cairo_pdf_operators_reset (&surface->pdf_operators);
 
 	return CAIRO_STATUS_SUCCESS;
     }
@@ -3079,6 +3082,7 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 	    return status;
 
 	_cairo_output_stream_printf (surface->stream, "Q\n");
+	_cairo_pdf_operators_reset (&surface->pdf_operators);
     } else {
 	status = _cairo_ps_surface_emit_pattern (surface, source, op);
 	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
@@ -3207,6 +3211,7 @@ _cairo_ps_surface_set_bounding_box (void		*abstract_surface,
 	    surface->bbox_y2 = y2;
     }
     surface->current_pattern_is_solid_color = FALSE;
+    _cairo_pdf_operators_reset (&surface->pdf_operators);
 
     return _cairo_output_stream_get_status (surface->stream);
 }

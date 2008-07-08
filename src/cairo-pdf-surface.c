@@ -870,6 +870,7 @@ _cairo_pdf_surface_open_stream (cairo_pdf_surface_t	*surface,
     surface->pdf_stream.length = length;
     surface->pdf_stream.compressed = compressed;
     surface->current_pattern_is_solid_color = FALSE;
+    _cairo_pdf_operators_reset (&surface->pdf_operators);
 
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\n"
@@ -1006,6 +1007,7 @@ _cairo_pdf_surface_open_group (cairo_pdf_surface_t  *surface,
 
     surface->group_stream.active = TRUE;
     surface->current_pattern_is_solid_color = FALSE;
+    _cairo_pdf_operators_reset (&surface->pdf_operators);
 
     surface->group_stream.mem_stream = _cairo_memory_stream_create ();
 
@@ -2722,6 +2724,7 @@ _cairo_pdf_surface_unselect_pattern (cairo_pdf_surface_t *surface)
 	    return status;
 
 	_cairo_output_stream_printf (surface->output, "Q\n");
+	_cairo_pdf_operators_reset (&surface->pdf_operators);
     }
     surface->select_pattern_gstate_saved = FALSE;
 
@@ -2783,6 +2786,7 @@ _cairo_pdf_surface_intersect_clip_path (void			*abstract_surface,
 
 	_cairo_output_stream_printf (surface->output, "Q q\n");
 	surface->current_pattern_is_solid_color = FALSE;
+	_cairo_pdf_operators_reset (&surface->pdf_operators);
 
 	return CAIRO_STATUS_SUCCESS;
     }

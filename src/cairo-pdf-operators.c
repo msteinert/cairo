@@ -121,6 +121,21 @@ _cairo_pdf_operators_flush (cairo_pdf_operators_t	 *pdf_operators)
     return status;
 }
 
+/* Reset the known graphics state of the PDF consumer. ie no
+ * assumptions will be made about the state. The next time a
+ * particular graphics state is required (eg line width) the state
+ * operator is always emitted and then remembered for subsequent
+ * operatations.
+ *
+ * This should be called when starting a new stream or after emitting
+ * the 'Q' operator (where pdf-operators functions were called inside
+ * the q/Q pair).
+ */
+void
+_cairo_pdf_operators_reset (cairo_pdf_operators_t *pdf_operators)
+{
+}
+
 /* A word wrap stream can be used as a filter to do word wrapping on
  * top of an existing output stream. The word wrapping is quite
  * simple, using isspace to determine characters that separate
