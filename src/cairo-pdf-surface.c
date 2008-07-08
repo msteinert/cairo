@@ -1266,12 +1266,22 @@ _cairo_pdf_surface_finish (void *abstract_surface)
 static cairo_int_status_t
 _cairo_pdf_surface_start_page (void *abstract_surface)
 {
+    cairo_pdf_surface_t *surface = abstract_surface;
+
+    _cairo_pdf_group_resources_clear (&surface->resources);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
+_cairo_pdf_surface_has_fallback_images (void 		*abstract_surface,
+					cairo_bool_t 	 has_fallbacks)
+{
     cairo_status_t status;
     cairo_pdf_surface_t *surface = abstract_surface;
 
-    surface->has_fallback_images = FALSE;
-    _cairo_pdf_group_resources_clear (&surface->resources);
-    status = _cairo_pdf_surface_open_content_stream (surface, TRUE);
+    surface->has_fallback_images = has_fallbacks;
+    status = _cairo_pdf_surface_open_content_stream (surface, has_fallbacks);
     if (status)
 	return status;
 
@@ -4309,7 +4319,6 @@ _cairo_pdf_surface_start_fallback (cairo_pdf_surface_t *surface)
     if (status)
 	return status;
 
-    surface->has_fallback_images = TRUE;
     _cairo_pdf_group_resources_clear (&surface->resources);
     return _cairo_pdf_surface_open_content_stream (surface, TRUE);
 }
@@ -4907,5 +4916,7 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend = {
 
 static const cairo_paginated_surface_backend_t cairo_pdf_surface_paginated_backend = {
     _cairo_pdf_surface_start_page,
-    _cairo_pdf_surface_set_paginated_mode
+    _cairo_pdf_surface_set_paginated_mode,
+    NULL, /* set_bounding_box */
+    _cairo_pdf_surface_has_fallback_images,
 };
