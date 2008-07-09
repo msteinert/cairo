@@ -695,6 +695,13 @@ CreateRepeatingGradientFunction (cairo_quartz_surface_t *surface,
 
 /* Obtain a CGImageRef from a #cairo_surface_t * */
 
+static void
+DataProviderReleaseCallback (void *info, const void *data, size_t size)
+{
+    cairo_surface_t *surface = (cairo_surface_t *) info;
+    cairo_surface_destroy (surface);
+}
+
 static cairo_status_t
 _cairo_surface_to_cgimage (cairo_surface_t *target,
 			   cairo_surface_t *source,
@@ -737,17 +744,22 @@ _cairo_surface_to_cgimage (cairo_surface_t *target,
     if (isurf->width == 0 || isurf->height == 0) {
 	*image_out = NULL;
     } else {
-	image = _cairo_quartz_create_cgimage (isurf->format,
-					      isurf->width,
-					      isurf->height,
-					      isurf->stride,
-					      isurf->data,
-					      TRUE,
-					      NULL, NULL, NULL);
+	cairo_image_surface_t *isurf_snap = NULL;
+	isurf_snap = _cairo_surface_snapshot (isurf);
+	if (isurf_snap == NULL)
+	    return CAIRO_STATUS_NO_MEMORY;
 
-	/* Create a copy to ensure that the CGImageRef doesn't depend on the image surface's backing store */
-	*image_out = CGImageCreateCopy (image);
-	CGImageRelease (image);
+	image = _cairo_quartz_create_cgimage (isurf_snap->format,
+					      isurf_snap->width,
+					      isurf_snap->height,
+					      isurf_snap->stride,
+					      isurf_snap->data,
+					      TRUE,
+					      NULL,
+					      DataProviderReleaseCallback,
+					      isurf_snap);
+
+	*image_out = image;
     }
 
     if ((cairo_surface_t*) isurf != source)
