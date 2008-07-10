@@ -895,6 +895,8 @@ static const struct _cairo_surface_backend cairo_beos_surface_backend = {
     _cairo_beos_surface_composite, /* composite */
     _cairo_beos_surface_fill_rectangles,
     NULL, /* composite_trapezoids */
+    NULL, /* create_span_renderer */
+    NULL, /* check_span_renderer */
     NULL, /* copy_page */
     NULL, /* show_page */
     _cairo_beos_surface_set_clip_region,

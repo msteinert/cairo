@@ -1953,6 +1953,59 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		op,
 							  traps, num_traps));
 }
 
+cairo_span_renderer_t *
+_cairo_surface_create_span_renderer (cairo_operator_t		op,
+				     const cairo_pattern_t     	*pattern,
+				     cairo_surface_t		*dst,
+				     cairo_antialias_t	        antialias,
+				     const cairo_composite_rectangles_t *rects)
+{
+    assert (! dst->is_snapshot);
+
+    if (dst->status)
+	return _cairo_span_renderer_create_in_error (dst->status);
+
+    if (dst->finished)
+	return _cairo_span_renderer_create_in_error (CAIRO_STATUS_SURFACE_FINISHED);
+
+    if (dst->backend->create_span_renderer) {
+	return dst->backend->create_span_renderer (op,
+						   pattern, dst,
+						   antialias,
+						   rects);
+    }
+    ASSERT_NOT_REACHED;
+    return _cairo_span_renderer_create_in_error (CAIRO_INT_STATUS_UNSUPPORTED);
+}
+
+cairo_bool_t
+_cairo_surface_check_span_renderer   (cairo_operator_t		op,
+				      const cairo_pattern_t     *pattern,
+				      cairo_surface_t		*dst,
+				      cairo_antialias_t	        antialias,
+				      const cairo_composite_rectangles_t *rects)
+{
+    cairo_int_status_t status;
+
+    assert (! dst->is_snapshot);
+
+    if (dst->status)
+	return FALSE;
+
+    if (dst->finished) {
+	status = _cairo_surface_set_error (dst, CAIRO_STATUS_SURFACE_FINISHED);
+	return FALSE;
+    }
+
+    if (dst->backend->check_span_renderer) {
+	return dst->backend->check_span_renderer (op,
+						  pattern, dst,
+						  antialias,
+						  rects);
+    }
+    return FALSE;
+}
+
 /**
  * cairo_surface_copy_page:
  * @surface: a #cairo_surface_t

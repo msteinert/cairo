@@ -1752,6 +1752,8 @@ static const cairo_surface_backend_t cairo_win32_printing_surface_backend = {
     NULL, /* composite */
     NULL, /* fill_rectangles */
     NULL, /* composite_trapezoids */
+    NULL, /* create_span_renderer */
+    NULL, /* check_span_renderer */
     NULL, /* copy_page */
     _cairo_win32_printing_surface_show_page,
     NULL, /* set_clip_region */

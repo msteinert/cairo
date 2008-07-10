@@ -315,6 +315,8 @@ static const cairo_surface_backend_t cairo_type3_glyph_surface_backend = {
     NULL, /* composite */
     NULL, /* fill_rectangles */
     NULL, /* composite_trapezoids */
+    NULL, /* create_span_renderer */
+    NULL, /* check_span_renderer */
     NULL, /* cairo_type3_glyph_surface_copy_page */
     NULL, /* _cairo_type3_glyph_surface_show_page */
     NULL, /* set_clip_region */

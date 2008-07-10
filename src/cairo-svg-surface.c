@@ -2422,6 +2422,8 @@ static const cairo_surface_backend_t cairo_svg_surface_backend = {
 	NULL, /* _cairo_svg_surface_composite, */
 	NULL, /* _cairo_svg_surface_fill_rectangles, */
 	NULL, /* _cairo_svg_surface_composite_trapezoids,*/
+	NULL, /* create_span_renderer */
+	NULL, /* check_span_renderer */
 	_cairo_svg_surface_copy_page,
 	_cairo_svg_surface_show_page,
 	NULL, /* set_clip_region */

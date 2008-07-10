@@ -357,6 +357,8 @@ static const cairo_surface_backend_t _cairo_sdl_surface_backend = {
     _cairo_sdl_surface_composite,
     NULL, /* fill rectangles */
     NULL, /* composite traps */
+    NULL, /* create_span_renderer */
+    NULL, /* check_span_renderer */
     NULL, /* copy_page */
     NULL, /* show_page */
     _cairo_sdl_surface_set_clip_region,

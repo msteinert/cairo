@@ -1815,6 +1815,8 @@ _cairo_directfb_surface_backend = {
 #else
         NULL,/*composite_trapezoids*/
 #endif
+        NULL, /* create_span_renderer */
+        NULL, /* check_span_renderer */
         NULL, /* copy_page */
         NULL, /* show_page */
         _cairo_directfb_surface_set_clip_region,/* set_clip_region */

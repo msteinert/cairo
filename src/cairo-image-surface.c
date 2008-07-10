@@ -1303,6 +1303,8 @@ const cairo_surface_backend_t _cairo_image_surface_backend = {
     _cairo_image_surface_composite,
     _cairo_image_surface_fill_rectangles,
     _cairo_image_surface_composite_trapezoids,
+    NULL, /* create_span_renderer */
+    NULL, /* check_span_renderer */
     NULL, /* copy_page */
     NULL, /* show_page */
     _cairo_image_surface_set_clip_region,

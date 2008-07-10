@@ -634,6 +634,20 @@ struct _cairo_surface_backend {
 				 cairo_trapezoid_t	*traps,
 				 int			 num_traps);
 
+    cairo_warn cairo_span_renderer_t *
+    (*create_span_renderer)	(cairo_operator_t			 op,
+				 const cairo_pattern_t			*pattern,
+                                 void					*dst,
+                                 cairo_antialias_t			 antialias,
+                                 const cairo_composite_rectangles_t	*rects);
+
+    cairo_warn cairo_bool_t
+    (*check_span_renderer)	(cairo_operator_t			 op,
+				 const cairo_pattern_t			*pattern,
+                                 void					*dst,
+                                 cairo_antialias_t			 antialias,
+                                 const cairo_composite_rectangles_t	*rects);
+
     cairo_warn cairo_int_status_t
     (*copy_page)		(void			*surface);
 
@@ -1862,6 +1876,22 @@ _cairo_surface_composite_trapezoids (cairo_operator_t	op,
 				     unsigned int	height,
 				     cairo_trapezoid_t	*traps,
 				     int		ntraps);
+
+cairo_private cairo_span_renderer_t *
+_cairo_surface_create_span_renderer (
+        cairo_operator_t			 op,
+        const cairo_pattern_t			*pattern,
+        cairo_surface_t				*dst,
+        cairo_antialias_t			 antialias,
+        const cairo_composite_rectangles_t	*rects);
+
+cairo_private cairo_bool_t
+_cairo_surface_check_span_renderer (
+        cairo_operator_t			 op,
+        const cairo_pattern_t			*pattern,
+        cairo_surface_t				*dst,
+        cairo_antialias_t			 antialias,
+        const cairo_composite_rectangles_t	*rects);
 
 cairo_private cairo_status_t
 _cairo_surface_acquire_source_image (cairo_surface_t         *surface,
