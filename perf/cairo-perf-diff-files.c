@@ -96,12 +96,26 @@ typedef struct _cairo_perf_diff_files_args {
     cairo_perf_report_options_t options;
 } cairo_perf_diff_files_args_t;
 
+/* 'ssize_t' does not exist in the C standard on win32. 
+ * We use 'ptrdiff_t', which is nearly equivalent. */
+#ifdef _MSC_VER
+typedef ptrdiff_t ssize_t;
+#endif
+
 #ifndef __USE_GNU
 static ssize_t
 getline (char **lineptr, size_t *n, FILE *stream);
 
 static char *
 strndup (const char *s, size_t n);
+#endif
+
+#ifdef _MSC_VER
+static long long
+strtoll(const char *nptr, char **endptr, int base);
+
+static char *
+basename(char *path);
 #endif
 
 /* Ad-hoc parsing, macros with a strong dependence on the calling
@@ -304,6 +318,40 @@ strndup (const char *s, size_t n)
 }
 #endif /* ifndef __USE_GNU */
 
+/* We provide hereafter a win32 implementation of the basename
+ * and strtoll functions which are not available otherwise.
+ * The basename function is fully compliant to its GNU specs.
+ */
+#ifdef _MSC_VER
+long long
+strtoll(const char *nptr, char **endptr, int base)
+{
+    return _atoi64(nptr);
+}
+
+static char *
+basename(char *path)
+{
+    char *end, *s;
+
+    end = (path + strlen(path) - 1);
+    while (end && (end >= path + 1) && (*end == '/')) {
+	*end = '\0';
+	end--;
+    }
+
+    s = strrchr(path, '/');
+    if (s) {
+	if (s == end) {
+	    return s;
+	} else {
+	    return s+1;
+	}
+    } else {
+	return path;
+    }
+}
+#endif /* ifndef _MSC_VER */
 
 static int
 test_report_cmp_backend_then_name (const void *a, const void *b)
@@ -397,9 +445,13 @@ cairo_perf_report_load (cairo_perf_report_t *report, const char *filename)
     size_t line_size = 0;
     char *configuration;
     char *dot;
+    char *baseName;
 
-    configuration = strdup (filename);
-    report->configuration = strdup (basename (configuration));
+    configuration = xmalloc (strlen (filename) * sizeof (char) + 1);
+    strcpy (configuration, filename);
+    baseName = strdup (basename (configuration));
+    report->configuration = xmalloc (strlen (filename) * sizeof (char) + 1);
+    strcpy(report->configuration, baseName);
     free (configuration);
     dot = strrchr (report->configuration, '.');
     if (dot)

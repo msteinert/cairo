@@ -41,6 +41,10 @@ $(CFG)/cairo-perf.exe: $(OBJECTS)
 	@mkdir -p $(CFG)
 	@$(CC) $(CFLAGS) -Fe"$@" $^ -link $(LDFLAGS)
 
+cairo-perf-diff-files:
+	@mkdir -p $(CFG)
+	@$(CC) $(CFLAGS) -Fe"$@" cairo-perf-diff-files.c cairo-stats.c -link $(LDFLAGS)
+
 clean:
 	@rm -f $(CFG)/*.obj $(CFG)/*.exe $(CFG)/*.dll $(CFG)/*.lib $(CFG)/*.pdb $(CFG)/*.ilk || exit 0
 
