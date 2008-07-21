@@ -651,6 +651,8 @@ CAIRO_BACKEND_ENABLE(ps, PostScript, ps, PS_SURFACE, yes, [
     ps_NONPKGCONFIG_LIBS=-lz
 ])
 
+dnl ===========================================================================
+
 test_ps=no
 if test "x$use_ps" = "xyes"; then
   AC_CHECK_PROG(GS, gs, gs)
@@ -672,6 +674,8 @@ CAIRO_BACKEND_ENABLE(pdf, PDF, pdf, PDF_SURFACE, yes, [
     use_pdf=$have_libz
     pdf_NONPKGCONFIG_LIBS=-lz
 ])
+
+dnl ===========================================================================
 
 POPPLER_VERSION_REQUIRED=0.8.0
 test_pdf=no
