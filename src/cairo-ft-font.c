@@ -2140,7 +2140,11 @@ _cairo_ft_ucs4_to_index (void	    *abstract_font,
     face = _cairo_ft_unscaled_font_lock_face (unscaled);
     if (!face)
 	return 0;
-    index = FT_Get_Char_Index (face, ucs4);
+
+    /* If making this compile without fontconfig, use:
+     * index = FT_Get_Char_Index (face, ucs4); */
+    index = FcFreeTypeCharIndex (face, ucs4);
+
     _cairo_ft_unscaled_font_unlock_face (unscaled);
     return index;
 }
