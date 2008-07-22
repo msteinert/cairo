@@ -795,14 +795,15 @@ _cairo_gstate_copy_transformed_pattern (cairo_gstate_t  *gstate,
     if (status)
 	return status;
 
-    _cairo_pattern_transform (pattern, ctm_inverse);
-
+    /* apply device_transform first so that it is transformed by ctm_inverse */
     if (cairo_pattern_get_type (original) == CAIRO_PATTERN_TYPE_SURFACE) {
         surface_pattern = (cairo_surface_pattern_t *) original;
         surface = surface_pattern->surface;
         if (_cairo_surface_has_device_transform (surface))
             _cairo_pattern_transform (pattern, &surface->device_transform);
     }
+
+    _cairo_pattern_transform (pattern, ctm_inverse);
 
     return CAIRO_STATUS_SUCCESS;
 }
