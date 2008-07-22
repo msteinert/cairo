@@ -41,6 +41,7 @@ degenerate-path$(EXEEXT)				\
 degenerate-pen$(EXEEXT)					\
 device-offset$(EXEEXT)					\
 device-offset-positive$(EXEEXT)				\
+device-offset-scale$(EXEEXT)				\
 extend-pad$(EXEEXT)					\
 extend-reflect$(EXEEXT)					\
 extend-reflect-similar$(EXEEXT)				\
@@ -369,6 +370,7 @@ REFERENCE_IMAGES = \
 	device-offset-positive-rgb24-ref.png	\
 	device-offset-ref.png	\
 	device-offset-rgb24-ref.png	\
+	device-offset-scale-ref.png	\
 	extend-pad-ref.png	\
 	extend-reflect-ref.png	\
 	extend-reflect-similar-ref.png	\
