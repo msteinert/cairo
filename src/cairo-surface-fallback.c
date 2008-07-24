@@ -670,6 +670,53 @@ out:
     return status;
 }
 
+typedef struct {
+    cairo_path_fixed_t		*path;
+    cairo_fill_rule_t		 fill_rule;
+    double			 tolerance;
+    cairo_antialias_t		 antialias;
+} cairo_composite_spans_fill_info_t;
+
+static cairo_status_t
+_composite_spans_fill_func (void                          *closure,
+			    cairo_operator_t               op,
+			    const cairo_pattern_t         *src,
+			    cairo_surface_t               *dst,
+			    int                            dst_x,
+			    int                            dst_y,
+			    const cairo_rectangle_int_t   *extents)
+{
+    cairo_composite_rectangles_t rects;
+    cairo_composite_spans_fill_info_t *info = closure;
+    cairo_pattern_union_t pattern;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+
+    _cairo_composite_rectangles_init (
+	&rects, extents->x, extents->y,
+	extents->width, extents->height);
+
+    /* The incoming dst_x/y are where we're pretending the origin of
+     * the dst surface is -- *not* the offset of a rectangle where
+     * we'd like to place the result. */
+    rects.dst.x -= dst_x;
+    rects.dst.y -= dst_y;
+
+    /* We're called without a source pattern from
+     * _create_composite_mask_pattern(). */
+    _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE,
+			       CAIRO_CONTENT_COLOR);
+    if (src == NULL)
+	src = &pattern.base;
+
+    status = _cairo_path_fixed_fill_using_spans (
+	op, src, info->path, dst,
+	info->fill_rule, info->tolerance, info->antialias,
+	&rects);
+
+    _cairo_pattern_fini (&pattern.base);
+    return status;
+}
+
 cairo_status_t
 _cairo_surface_fallback_paint (cairo_surface_t		*surface,
 			       cairo_operator_t		 op,
@@ -886,8 +933,45 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
     if (extents.width == 0 || extents.height == 0)
 	return CAIRO_STATUS_SUCCESS;
 
-    _cairo_box_from_rectangle (&box, &extents);
+    /* Ask if the surface would like to render this combination of
+     * op/source/dst/antialias with spans or not, but don't actually
+     * make a renderer yet.  We'll try to hit the region optimisations
+     * in _clip_and_composite_trapezoids() if it looks like the path
+     * is a region. */
+    /* TODO: Until we have a mono scan converter we won't even try
+     * to use spans for CAIRO_ANTIALIAS_NONE. */
+    /* TODO: The region filling code should be lifted from
+     * _clip_and_composite_trapezoids() and given first priority
+     * explicitly before deciding between spans and trapezoids. */
+    if (antialias != CAIRO_ANTIALIAS_NONE &&
+	!_cairo_path_fixed_is_box (path, &box) &&
+	!_cairo_path_fixed_is_region (path) &&
+	_cairo_surface_check_span_renderer (
+	    op, source, surface, antialias, NULL))
+    {
+	cairo_composite_spans_fill_info_t info;
+	info.path = path;
+	info.fill_rule = fill_rule;
+	info.tolerance = tolerance;
+	info.antialias = antialias;
 
+	if (_cairo_operator_bounded_by_mask (op)) {
+	    cairo_rectangle_int_t path_extents;
+	    _cairo_path_fixed_approximate_extents (path, &path_extents);
+	    if (! _cairo_rectangle_intersect (&extents, &path_extents))
+		return CAIRO_STATUS_SUCCESS;
+	}
+
+	return _clip_and_composite (
+	    surface->clip, op, source,
+	    _composite_spans_fill_func,
+	    &info,
+	    surface,
+	    &extents);
+    }
+
+    /* Fall back to trapezoid fills. */
+    _cairo_box_from_rectangle (&box, &extents);
     _cairo_traps_init (&traps);
     _cairo_traps_limit (&traps, &box);
 
