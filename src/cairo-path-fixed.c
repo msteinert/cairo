@@ -1179,3 +1179,99 @@ _cairo_path_fixed_iter_at_end (const cairo_path_fixed_iter_t *iter)
 
     return FALSE;
 }
+
+/* Closure for path region testing.  Every move_to must be to integer
+ * coordinates, there must be no curves, and every line_to or
+ * close_path must represent an axis aligned line to an integer point.
+ * We're relying on the path interpreter always sending a single
+ * move_to at the start of any subpath, not receiving having any
+ * superfluous move_tos, and the path intepreter bailing with our
+ * first non-successful error. */
+typedef struct cairo_path_region_tester {
+    cairo_point_t last_move_point;
+    cairo_point_t current_point;
+} cprt_t;
+
+static cairo_status_t
+_cprt_line_to (void          *closure,
+	       cairo_point_t *p2)
+{
+    cprt_t *self = closure;
+    cairo_point_t *p1 = &self->current_point;
+    if (p2->x == p1->x) {
+	if (_cairo_fixed_is_integer(p2->y)) {
+	    *p1 = *p2;
+	    return CAIRO_STATUS_SUCCESS;
+	}
+    }
+    else if (p2->y == p1->y) {
+	if (_cairo_fixed_is_integer(p2->x)) {
+	    *p1 = *p2;
+	    return CAIRO_STATUS_SUCCESS;
+	}
+    }
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
+static cairo_status_t
+_cprt_close_path (void *closure)
+{
+    cprt_t *self = closure;
+    return _cprt_line_to (closure, &self->last_move_point);
+}
+
+static cairo_status_t
+_cprt_move_to (void          *closure,
+	       cairo_point_t *p)
+{
+    cprt_t *self = closure;
+    cairo_status_t status = _cprt_close_path (closure);
+    if (status) return status;
+    if (_cairo_fixed_is_integer(p->x) &&
+	_cairo_fixed_is_integer(p->y))
+    {
+	self->current_point = *p;
+	self->last_move_point = *p;
+	return CAIRO_STATUS_SUCCESS;
+    }
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
+static cairo_status_t
+_cprt_curve_to (void *closure,
+		cairo_point_t *p0,
+		cairo_point_t *p1,
+		cairo_point_t *p2)
+{
+    (void)closure;
+    (void)p0;
+    (void)p1;
+    (void)p2;
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
+/**
+ * Check whether the given path is representable as a region.
+ * That is, if the path contains only axis aligned lines between
+ * integer coordinates in device space.
+ */
+cairo_bool_t
+_cairo_path_fixed_is_region (cairo_path_fixed_t *path)
+{
+    cprt_t cprt;
+    cairo_status_t status;
+    if (path->has_curve_to)
+	return FALSE;
+    cprt.current_point.x = 0;
+    cprt.current_point.y = 0;
+    cprt.last_move_point.x = 0;
+    cprt.last_move_point.y = 0;
+    status = _cairo_path_fixed_interpret (path,
+					  CAIRO_DIRECTION_FORWARD,
+					  _cprt_move_to,
+					  _cprt_line_to,
+					  _cprt_curve_to,
+					  _cprt_close_path,
+					  &cprt);
+    return status == CAIRO_STATUS_SUCCESS;
+}
