@@ -121,4 +121,14 @@ cairo_private cairo_status_t
 _cairo_span_renderer_set_error (void *abstract_renderer,
 				cairo_status_t error);
 
+cairo_private cairo_status_t
+_cairo_path_fixed_fill_using_spans (
+    cairo_operator_t		 op,
+    const cairo_pattern_t	*pattern,
+    cairo_path_fixed_t		*path,
+    cairo_surface_t		*dst,
+    cairo_fill_rule_t		 fill_rule,
+    double			 tolerance,
+    cairo_antialias_t		 antialias,
+    const cairo_composite_rectangles_t *rects);
 #endif /* CAIRO_SPANS_PRIVATE_H */

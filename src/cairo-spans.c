@@ -26,6 +26,151 @@
  */
 #include "cairoint.h"
 
+typedef struct {
+    cairo_scan_converter_t *converter;
+    cairo_point_t current_point;
+    cairo_point_t first_point;
+} scan_converter_filler_t;
+
+static void
+scan_converter_filler_init (
+    scan_converter_filler_t		*filler,
+    cairo_scan_converter_t		*converter)
+{
+    filler->converter = converter;
+    filler->current_point.x = 0;
+    filler->current_point.y = 0;
+    filler->first_point = filler->current_point;
+}
+
+static cairo_status_t
+scan_converter_filler_move_to (
+    void *closure,
+    cairo_point_t *p)
+{
+    scan_converter_filler_t *filler = closure;
+    filler->current_point.x = p->x;
+    filler->current_point.y = p->y;
+    filler->first_point = filler->current_point;
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+scan_converter_filler_line_to (
+    void *closure,
+    cairo_point_t *p)
+{
+    scan_converter_filler_t *filler = closure;
+    cairo_status_t status;
+    cairo_point_t to;
+
+    to.x = p->x;
+    to.y = p->y;
+
+    status = filler->converter->add_edge (
+	filler->converter,
+	filler->current_point.x, filler->current_point.y,
+	to.x, to.y);
+
+    filler->current_point = to;
+
+    return status;
+}
+
+static cairo_status_t
+scan_converter_filler_close_path (
+    void *closure)
+{
+    scan_converter_filler_t *filler = closure;
+    cairo_status_t status;
+
+    if (filler->first_point.x == filler->current_point.x &&
+	filler->first_point.y == filler->current_point.y)
+    {
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    status = filler->converter->add_edge (
+	filler->converter,
+	filler->current_point.x, filler->current_point.y,
+	filler->first_point.x, filler->first_point.y);
+
+    filler->current_point = filler->first_point;
+
+    return status;
+}
+
+static cairo_status_t
+_cairo_path_fixed_fill_to_scan_converter (
+    cairo_path_fixed_t			*path,
+    double				 tolerance,
+    cairo_scan_converter_t		*converter)
+{
+    scan_converter_filler_t filler;
+    cairo_status_t status;
+
+    scan_converter_filler_init (&filler, converter);
+
+    status = _cairo_path_fixed_interpret_flat (
+	path, CAIRO_DIRECTION_FORWARD,
+	scan_converter_filler_move_to,
+	scan_converter_filler_line_to,
+	scan_converter_filler_close_path,
+	&filler, tolerance);
+    if (status)
+	return status;
+
+    return scan_converter_filler_close_path (&filler);
+}
+
+static cairo_scan_converter_t *
+_create_scan_converter (cairo_fill_rule_t			 fill_rule,
+			cairo_antialias_t			 antialias,
+			const cairo_composite_rectangles_t	*rects)
+{
+    /* Until we get a scan converter implementation we're going to
+     * fail. */
+    ASSERT_NOT_REACHED;
+    return _cairo_scan_converter_create_in_error (
+	CAIRO_INT_STATUS_UNSUPPORTED);
+}
+
+cairo_status_t
+_cairo_path_fixed_fill_using_spans (
+    cairo_operator_t		 op,
+    const cairo_pattern_t	*pattern,
+    cairo_path_fixed_t		*path,
+    cairo_surface_t		*dst,
+    cairo_fill_rule_t		 fill_rule,
+    double			 tolerance,
+    cairo_antialias_t		 antialias,
+    const cairo_composite_rectangles_t *rects)
+{
+    cairo_status_t status;
+    cairo_span_renderer_t *renderer = _cairo_surface_create_span_renderer (
+	op, pattern, dst, antialias, rects);
+    cairo_scan_converter_t *converter = _create_scan_converter (
+	fill_rule, antialias, rects);
+
+    status = _cairo_path_fixed_fill_to_scan_converter (
+	path, tolerance, converter);
+    if (status)
+	goto BAIL;
+
+    status = converter->generate (converter, renderer);
+    if (status)
+	goto BAIL;
+
+    status = renderer->finish (renderer);
+    if (status)
+	goto BAIL;
+
+ BAIL:
+    renderer->destroy (renderer);
+    converter->destroy (converter);
+    return status;
+}
+
 static void
 _cairo_nil_destroy (void *abstract)
 {
