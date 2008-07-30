@@ -1166,15 +1166,15 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
     cairo_bool_t visible = FALSE;
     cairo_scaled_glyph_t *scaled_glyph = NULL;
 
-    if (scaled_font->status) {
-	extents->x_bearing = 0.0;
-	extents->y_bearing = 0.0;
-	extents->width  = 0.0;
-	extents->height = 0.0;
-	extents->x_advance = 0.0;
-	extents->y_advance = 0.0;
+    extents->x_bearing = 0.0;
+    extents->y_bearing = 0.0;
+    extents->width  = 0.0;
+    extents->height = 0.0;
+    extents->x_advance = 0.0;
+    extents->y_advance = 0.0;
+
+    if (scaled_font->status)
 	return;
-    }
 
     if (num_glyphs == 0)
 	return;
