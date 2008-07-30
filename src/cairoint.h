@@ -263,6 +263,13 @@ _cairo_box_intersects_line_segment (cairo_box_t *box, cairo_line_t *line);
 cairo_private cairo_bool_t
 _cairo_box_contains_point (cairo_box_t *box, cairo_point_t *point);
 
+cairo_private void
+_cairo_composite_rectangles_init (cairo_composite_rectangles_t	*rects,
+                                  int				 all_x,
+                                  int				 all_y,
+                                  int				 width,
+                                  int				 height);
+
 /* cairo-array.c structures and functions */
 
 cairo_private void

@@ -252,6 +252,30 @@ typedef struct _cairo_box_int {
     cairo_point_int_t p2;
 } cairo_box_int_t;
 
+
+/* Rectangles that take part in a composite operation.
+ *
+ * This defines four translations that define which pixels of the
+ * source pattern, mask, clip and destination surface take part in a
+ * general composite operation.  The idea is that the pixels at
+ *
+ *	(i,j)+(src.x, src.y) of the source,
+ *      (i,j)+(mask.x, mask.y) of the mask,
+ *      (i,j)+(clip.x, clip.y) of the clip and
+ *      (i,j)+(dst.x, dst.y) of the destination
+ *
+ * all combine together to form the result at (i,j)+(dst.x,dst.y),
+ * for i,j ranging in [0,width) and [0,height) respectively.
+ */
+typedef struct _cairo_composite_rectangles {
+        cairo_point_int_t src;
+        cairo_point_int_t mask;
+        cairo_point_int_t clip;
+        cairo_point_int_t dst;
+        int width;
+        int height;
+} cairo_composite_rectangles_t;
+
 typedef enum _cairo_direction {
     CAIRO_DIRECTION_FORWARD,
     CAIRO_DIRECTION_REVERSE
