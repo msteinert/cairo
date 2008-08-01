@@ -534,6 +534,133 @@ _cairo_clip_intersect_mask (cairo_clip_t      *clip,
     return status;
 }
 
+static cairo_status_t
+_cairo_clip_intersect_mask_using_spans (cairo_clip_t       *clip,
+					cairo_path_fixed_t *path,
+					cairo_fill_rule_t   fill_rule,
+					double		    tolerance,
+					cairo_antialias_t   antialias,
+					cairo_surface_t    *target)
+{
+    cairo_span_renderer_t *renderer = NULL;
+    cairo_pattern_union_t pattern;
+    cairo_rectangle_int_t surface_rect;
+    cairo_surface_t *surface = NULL;
+    cairo_status_t status;
+    cairo_operator_t op;
+    cairo_composite_rectangles_t rects;
+
+    if (clip->all_clipped)
+	return CAIRO_STATUS_SUCCESS;
+
+    _cairo_pattern_init_solid (&pattern.solid, CAIRO_COLOR_WHITE,
+			       CAIRO_CONTENT_COLOR);
+
+    /* If we have a clip surface we're going to use IN to combine our
+     * new clip with the old clip.  The ADD is done to a transparent
+     * surface, as that's a fast way of doing it currently.  We should
+     * really be using SOURCE instead, but _cairo_surface_composite()
+     * checks that it's not called with SOURCE or DEST. */
+    op = clip->surface ? CAIRO_OPERATOR_IN : CAIRO_OPERATOR_ADD;
+
+    /* Test if the target can composite spans.  We're going to assume
+     * this is a good indicator of whether a similar surface is going
+     * to be able to composite spans too. */
+    if ( !_cairo_surface_check_span_renderer (op,
+					      &pattern.base,
+					      target,
+					      antialias,
+					      NULL))
+    {
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
+	goto BAIL;
+    }
+
+    /* We'll create a new surface the size of the intersection of the
+     * old mask surface and the extents of the new clip path. */
+    {
+	cairo_rectangle_int_t target_rect;
+
+	_cairo_path_fixed_approximate_extents (path, &surface_rect);
+
+	if (clip->surface != NULL &&
+	    !_cairo_rectangle_intersect (&surface_rect, &clip->surface_rect))
+	    goto SUCCESS;
+
+	status = _cairo_surface_get_extents (target, &target_rect);
+	if (status != CAIRO_STATUS_SUCCESS &&
+	    !_cairo_rectangle_intersect (&surface_rect, &target_rect))
+	    goto SUCCESS;
+    }
+
+    /* Make the new mask surface and optionally initialise it from the
+     * previous clip if we have one. */
+    surface = _cairo_surface_create_similar_solid (target,
+						   CAIRO_CONTENT_ALPHA,
+						   surface_rect.width,
+						   surface_rect.height,
+						   CAIRO_COLOR_TRANSPARENT);
+    if (surface->status) {
+	_cairo_pattern_fini (&pattern.base);
+	return surface->status;
+    }
+
+    if (clip->surface) {
+	cairo_surface_pattern_t old_clip;
+	_cairo_pattern_init_for_surface (&old_clip, clip->surface);
+	status = _cairo_surface_composite (CAIRO_OPERATOR_ADD,
+					   &old_clip.base,
+					   NULL,
+					   surface,
+					   surface_rect.x - clip->surface_rect.x,
+					   surface_rect.y - clip->surface_rect.y,
+					   0, 0,
+					   0, 0,
+					   surface_rect.width,
+					   surface_rect.height);
+	_cairo_pattern_fini (&old_clip.base);
+	if (status)
+	    goto BAIL;
+    }
+
+    _cairo_composite_rectangles_init (&rects,
+				      surface_rect.x,
+				      surface_rect.y,
+				      surface_rect.width,
+				      surface_rect.height);
+    rects.dst.x = 0;
+    rects.dst.y = 0;
+
+    /* Render the new clipping path into the new mask surface. We've
+     * chosen op to either combine the new clip path with the existing
+     * clip mask (if there is one) or just render it. */
+    status =_cairo_path_fixed_fill_using_spans (op, &pattern.base,
+						path, surface,
+						fill_rule, tolerance,
+						antialias, &rects);
+    if (status)
+	goto BAIL;
+
+ SUCCESS:
+    if (clip->surface != NULL)
+	cairo_surface_destroy (clip->surface);
+    clip->surface = surface;
+    clip->surface_rect = surface_rect;
+    clip->serial = _cairo_surface_allocate_clip_serial (target);
+    surface = NULL;
+
+    if (surface_rect.width == 0 || surface_rect.height == 0)
+	_cairo_clip_set_all_clipped (clip, target);
+
+ BAIL:
+    if (renderer)
+	renderer->destroy(renderer);
+    if (surface)
+	cairo_surface_destroy (surface);
+    _cairo_pattern_fini (&pattern.base);
+    return status;
+}
+
 cairo_status_t
 _cairo_clip_clip (cairo_clip_t       *clip,
 		  cairo_path_fixed_t *path,
@@ -545,6 +672,7 @@ _cairo_clip_clip (cairo_clip_t       *clip,
     cairo_status_t status;
     cairo_rectangle_int_t rectangle;
     cairo_traps_t traps;
+    cairo_box_t ignored_box;
 
     if (clip->all_clipped)
 	return CAIRO_STATUS_SUCCESS;
@@ -563,6 +691,18 @@ _cairo_clip_clip (cairo_clip_t       *clip,
 
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
+
+    /* TODO: allow ANTIALIAS_NONE when we have a mono scan converter
+     * again. */
+    if (antialias != CAIRO_ANTIALIAS_NONE &&
+	!_cairo_path_fixed_is_box (path, &ignored_box) &&
+	!_cairo_path_fixed_is_region (path))
+    {
+	status = _cairo_clip_intersect_mask_using_spans (
+	    clip, path, fill_rule, tolerance, antialias, target);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
 
     _cairo_traps_init (&traps);
 
