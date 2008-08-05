@@ -343,6 +343,8 @@ cairo_font_options_get_subpixel_order (const cairo_font_options_t *options)
  * specifies how pixels are filtered when rendered with an antialiasing
  * mode of %CAIRO_ANTIALIAS_SUBPIXEL. See the documentation for
  * #cairo_lcd_filter_t for full details.
+ *
+ * Since: 1.8
  **/
 void
 cairo_font_options_set_lcd_filter (cairo_font_options_t *options,
@@ -362,6 +364,8 @@ cairo_font_options_set_lcd_filter (cairo_font_options_t *options,
  * See the documentation for #cairo_lcd_filter_t for full details.
  *
  * Return value: the LCD filter for the font options object
+ *
+ * Since: 1.8
  **/
 cairo_lcd_filter_t
 cairo_font_options_get_lcd_filter (const cairo_font_options_t *options)

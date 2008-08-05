@@ -57,7 +57,26 @@
 #include FT_SYNTHESIS_H
 #endif
 
+#if HAVE_FT_LIBRARY_SETLCDFILTER
 #include FT_LCD_FILTER_H
+#endif
+
+/* Fontconfig version older than 2.6 didn't have these options */
+#ifndef FC_LCD_FILTER
+#define FC_LCD_FILTER	"lcdfilter"
+#define FC_LCD_NONE	0
+#define FC_LCD_DEFAULT	1
+#define FC_LCD_LIGHT	2
+#define FC_LCD_LEGACY	3
+#endif
+
+/* FreeType version older than 2.3.5(?) didn't have these options */
+#ifndef FT_LCD_FILTER_NONE
+#define FT_LCD_FILTER_NONE	0
+#define FT_LCD_FILTER_DEFAULT	1
+#define FT_LCD_FILTER_LIGHT	2
+#define FT_LCD_FILTER_LEGACY	16
+#endif
 
 #define DOUBLE_TO_26_6(d) ((FT_F26Dot6)((d) * 64.0))
 #define DOUBLE_FROM_26_6(t) ((double)(t) / 64.0)
@@ -773,7 +792,7 @@ _compute_xrender_bitmap_size(FT_Bitmap      *target,
     if (slot->format != FT_GLYPH_FORMAT_BITMAP)
 	return -1;
 
-    // compute the size of the final bitmap
+    /* compute the size of the final bitmap */
     ftbit = &slot->bitmap;
 
     width = ftbit->width;
@@ -1101,9 +1120,9 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 	    }
 	    format = CAIRO_FORMAT_A8;
 	} else {
-	    // if we get there, the  data from the source bitmap
-	    // really comes from _fill_xrender_bitmap, and is
-	    // made of 32-bit ARGB or ABGR values
+	    /* if we get there, the  data from the source bitmap
+	     * really comes from _fill_xrender_bitmap, and is
+	     * made of 32-bit ARGB or ABGR values */
 	    assert (own_buffer != 0);
 	    assert (bitmap->pixel_mode != FT_PIXEL_MODE_GRAY);
 
@@ -1274,11 +1293,15 @@ _render_glyph_outline (FT_Face                    face,
 	    break;
 	}
 
+#if HAVE_FT_LIBRARY_SETLCDFILTER
 	FT_Library_SetLcdFilter (library, lcd_filter);
+#endif
 
 	fterror = FT_Render_Glyph (face->glyph, render_mode);
 
+#if HAVE_FT_LIBRARY_SETLCDFILTER
 	FT_Library_SetLcdFilter (library, FT_LCD_FILTER_NONE);
+#endif
 
 	if (fterror != 0)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -1296,13 +1319,14 @@ _render_glyph_outline (FT_Face                    face,
 	_fill_xrender_bitmap (&bitmap, face->glyph, render_mode,
 			      (rgba == FC_RGBA_BGR || rgba == FC_RGBA_VBGR));
 
-	// NOTE: _get_bitmap_surface will free bitmap.buffer if there is an error
+	/* Note:
+	 * _get_bitmap_surface will free bitmap.buffer if there is an error
+	 */
 	status = _get_bitmap_surface (&bitmap, TRUE, font_options, surface);
 	if (status)
 	    return status;
 
-	/*
-	 * Note: the font's coordinate system is upside down from ours, so the
+	/* Note: the font's coordinate system is upside down from ours, so the
 	 * Y coordinate of the control box needs to be negated.  Moreover, device
 	 * offsets are position of glyph origin relative to top left while xMin
 	 * and yMax are offsets of top left relative to origin.  Another negation.
@@ -1496,15 +1520,6 @@ typedef struct _cairo_ft_scaled_font {
 } cairo_ft_scaled_font_t;
 
 const cairo_scaled_font_backend_t _cairo_ft_scaled_font_backend;
-
-/* Fontconfig version older than 2.6 didn't have these options */
-#ifndef FC_LCD_FILTER
-#define FC_LCD_FILTER	"lcdfilter"
-#define FC_LCD_NONE	0
-#define FC_LCD_DEFAULT	1
-#define FC_LCD_LIGHT	2
-#define FC_LCD_LEGACY	3
-#endif
 
 /* The load flags passed to FT_Load_Glyph control aspects like hinting and
  * antialiasing. Here we compute them from the fields of a FcPattern.
@@ -2687,6 +2702,7 @@ _cairo_ft_font_options_substitute (const cairo_font_options_t *options,
 	    case CAIRO_LCD_FILTER_FIR3:
 		lcd_filter = FT_LCD_FILTER_LIGHT;
 		break;
+	    default:
 	    case CAIRO_LCD_FILTER_FIR5:
 		lcd_filter = FT_LCD_FILTER_DEFAULT;
 		break;

@@ -978,6 +978,8 @@ typedef enum _cairo_subpixel_order {
  *
  * The LCD filter specifies the low-pass filter applied to LCD-optimized
  * bitmaps generated with an antialiasing mode of %CAIRO_ANTIALIAS_SUBPIXEL.
+ *
+ * Since: 1.8
  **/
 typedef enum _cairo_lcd_filter {
     CAIRO_LCD_FILTER_DEFAULT,
