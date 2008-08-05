@@ -3,7 +3,6 @@ SUBMAKEFILE = 1
 
 include ../Makefile.win32
 
-DEFFILE = cairo.def
 srcdir = `pwd`
 
 SOURCES = \
@@ -55,12 +54,13 @@ SOURCES = \
 	cairo-truetype-subset.c \
 	cairo-type1-fallback.c \
 	cairo-unicode.c \
+	cairo-user-font.c \
+	cairo-type3-glyph-surface.c \
 	cairo-wideint.c \
 	cairo-win32-font.c \
 	cairo.c \
 	cairo-svg-surface.c \
 	cairo-ps-surface.c \
-	cairo-pdf-surface.c \
 	cairo-scaled-font-subsets.c \
 	cairo-paginated-surface.c \
 	cairo-analysis-surface.c \
@@ -91,20 +91,8 @@ all: inform $(CFG)/cairo.dll $(CFG)/cairo-static.lib
 static: inform $(CFG)/cairo-static.lib
 dynamic: inform $(CFG)/cairo.dll
 
-$(DEFFILE):
-	(echo EXPORTS; \
-	(cd $(srcdir); cat $(cairo_headers) || echo 'cairo_ERROR ()' ) | \
-	grep -v -E '^# *include' | \
-	( gcc -include cairo-features.h -E - || echo 'cairo_ERROR ()' ) | \
-	grep -E '^_?cairo_.* \(' | \
-	sed -e 's/[ 	].*//' | \
-	sort; \
-	echo LIBRARY cairo.dll; \
-	) >$@
-	@ ! grep -q cairo_ERROR $@ || ($(RM) $@; false)
-
-$(CFG)/cairo.dll: $(OBJECTS) $(SHARED_OBJECTS) $(DEFFILE)
-	$(CC) -MD -LD -Fe$@ $(PIXMAN_LIBS) $(OBJECTS) $(SHARED_OBJECTS) -link -DEF:$(DEFFILE) user32.lib gdi32.lib libpng.lib zdll.lib msimg32.lib
+$(CFG)/cairo.dll: $(OBJECTS) $(SHARED_OBJECTS)
+	$(CC) -MD -LD -Fe$@ $(PIXMAN_LIBS) $(OBJECTS) $(SHARED_OBJECTS) -link user32.lib gdi32.lib libpng.lib zdll.lib msimg32.lib
 
 $(CFG)/cairo-static.lib: $(OBJECTS) $(STATIC_OBJECTS)
 	lib -NOLOGO -OUT:$@ $(PIXMAN_LIBS) $(OBJECTS) $(STATIC_OBJECTS)
