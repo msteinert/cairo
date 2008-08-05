@@ -149,6 +149,10 @@ text-antialias-gray$(EXEEXT)				\
 text-antialias-none$(EXEEXT)				\
 text-antialias-subpixel$(EXEEXT)			\
 text-cache-crash$(EXEEXT)				\
+text-lcd-filter-fir3$(EXEEXT)				\
+text-lcd-filter-fir5$(EXEEXT)				\
+text-lcd-filter-intra-pixel$(EXEEXT)			\
+text-lcd-filter-none$(EXEEXT)				\
 text-pattern$(EXEEXT)					\
 text-rotate$(EXEEXT)					\
 text-transform$(EXEEXT)					\

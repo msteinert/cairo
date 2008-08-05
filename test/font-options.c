@@ -72,7 +72,11 @@ main (void)
 
     cairo_font_options_set_subpixel_order (NULL, CAIRO_SUBPIXEL_ORDER_DEFAULT);
     cairo_font_options_get_subpixel_order (NULL);
-    assert (cairo_font_options_get_subpixel_order (default_options) ==  CAIRO_SUBPIXEL_ORDER_DEFAULT);
+    assert (cairo_font_options_get_subpixel_order (default_options) == CAIRO_SUBPIXEL_ORDER_DEFAULT);
+
+    cairo_font_options_set_lcd_filter (NULL, CAIRO_LCD_FILTER_DEFAULT);
+    cairo_font_options_get_lcd_filter (NULL);
+    assert (cairo_font_options_get_lcd_filter (default_options) == CAIRO_LCD_FILTER_DEFAULT);
 
     cairo_font_options_set_hint_style (NULL, CAIRO_HINT_STYLE_DEFAULT);
     cairo_font_options_get_hint_style (NULL);
