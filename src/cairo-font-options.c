@@ -355,6 +355,7 @@ cairo_font_options_set_lcd_filter (cairo_font_options_t *options,
 
     options->lcd_filter = lcd_filter;
 }
+slim_hidden_def (cairo_font_options_set_lcd_filter);
 
 /**
  * cairo_font_options_get_lcd_filter:

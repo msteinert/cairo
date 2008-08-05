@@ -2366,6 +2366,7 @@ slim_hidden_proto (cairo_font_options_merge);
 slim_hidden_proto (cairo_font_options_set_antialias);
 slim_hidden_proto (cairo_font_options_set_hint_metrics);
 slim_hidden_proto (cairo_font_options_set_hint_style);
+slim_hidden_proto (cairo_font_options_set_lcd_filter);
 slim_hidden_proto (cairo_font_options_set_subpixel_order);
 slim_hidden_proto (cairo_font_options_status);
 slim_hidden_proto (cairo_get_current_point);
