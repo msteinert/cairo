@@ -323,7 +323,7 @@ libcairo_la_DEPENDENCIES = $(cairo_def_dependency) $(noinst_LTLIBRARIES)
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = cairo.pc $(backend_pkgconfigs)
 DISTCLEANFILES = $(backend_pkgconfigs)
-EXTRA_DIST = cairo-backend.pc.in
+EXTRA_DIST = cairo-backend.pc.in cairo-features-win32.h
 $(backend_pkgconfigs): $(top_srcdir)/configure
 	cd $(top_builddir) && ./config.status --recheck
 
