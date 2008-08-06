@@ -4783,8 +4783,8 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
 	group->source_res = pattern_res;
 
 	if (utf8_len) {
-	    group->utf8 = malloc(utf8_len);
-	    if (group->utf8) {
+	    group->utf8 = malloc (utf8_len);
+	    if (group->utf8 == NULL) {
 		_cairo_pdf_smask_group_destroy (group);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    }
@@ -4804,7 +4804,7 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
 
 	if (num_clusters) {
 	    group->clusters = _cairo_malloc_ab (num_clusters, sizeof (cairo_text_cluster_t));
-	    if (group->clusters) {
+	    if (group->clusters == NULL) {
 		_cairo_pdf_smask_group_destroy (group);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    }
