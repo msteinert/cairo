@@ -159,7 +159,7 @@ get_user_font_face (void)
 	 *     13 14 15
 	 */
 	static const test_scaled_font_glyph_t glyphs [] = {
-	    { '\0', 0, { END_GLYPH } },
+	    { '\0', 0, { END_GLYPH } }, /* Poppler has a bug assuming glyph 0 is .notdef */
 	    { ' ',  1, { END_GLYPH } },
 	    { '-',  2, { 7, 8, STROKE, END_GLYPH } },
 	    { '.',  1, { 10, 10, STROKE, END_GLYPH } },
