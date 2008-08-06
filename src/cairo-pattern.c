@@ -1318,14 +1318,19 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
 	}
     }
 
+    if (! pixman_image_set_filter (pixman_image, PIXMAN_FILTER_BILINEAR,
+				   NULL, 0))
+    {
+	pixman_image_unref (pixman_image);
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+
     image = (cairo_image_surface_t *)
 	cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
     if (image->base.status) {
 	pixman_image_unref (pixman_image);
 	return image->base.status;
     }
-
-    pixman_image_set_filter (pixman_image, PIXMAN_FILTER_BILINEAR, NULL, 0);
 
     _cairo_matrix_to_pixman_matrix (&pattern->base.matrix, &pixman_transform);
     if (!pixman_image_set_transform (pixman_image, &pixman_transform)) {

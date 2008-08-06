@@ -792,8 +792,9 @@ _cairo_image_surface_set_matrix (cairo_image_surface_t	*surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void
-_cairo_image_surface_set_filter (cairo_image_surface_t *surface, cairo_filter_t filter)
+static cairo_status_t
+_cairo_image_surface_set_filter (cairo_image_surface_t *surface,
+				 cairo_filter_t filter)
 {
     pixman_filter_t pixman_filter;
 
@@ -823,7 +824,14 @@ _cairo_image_surface_set_filter (cairo_image_surface_t *surface, cairo_filter_t 
 	pixman_filter = PIXMAN_FILTER_BEST;
     }
 
-    pixman_image_set_filter (surface->pixman_image, pixman_filter, NULL, 0);
+    if (! pixman_image_set_filter (surface->pixman_image,
+				   pixman_filter,
+				   NULL, 0))
+    {
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -851,7 +859,9 @@ _cairo_image_surface_set_attributes (cairo_image_surface_t      *surface,
 	break;
     }
 
-    _cairo_image_surface_set_filter (surface, attributes->filter);
+    status = _cairo_image_surface_set_filter (surface, attributes->filter);
+    if (status)
+	return status;
 
     return CAIRO_STATUS_SUCCESS;
 }
