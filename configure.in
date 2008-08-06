@@ -14,6 +14,7 @@ AC_INIT([cairo],
       [http://bugs.freedesktop.org/enter_bug.cgi?product=cairo])
 AC_CONFIG_SRCDIR(src/cairo.h)
 AC_CONFIG_HEADERS(config.h)
+AC_CONFIG_MACRO_DIR([m4])
 
 dnl automake 1.8 requires autoconf 2.58
 dnl automake 1.7 requires autoconf 2.54
@@ -26,23 +27,23 @@ dnl ===========================================================================
 # libtool shared library version
 
 # Increment if the interface has additions, changes, removals.
-LT_CURRENT=20
+m4_define(LT_CURRENT, 20)
 
 # Increment any time the source changes; set to
 # 0 if you increment CURRENT
-LT_REVISION=0
+m4_define(LT_REVISION, 0)
 
 # Increment if any interfaces have been added; set to 0
 # if any interfaces have been removed. removal has
 # precedence over adding, so set to 0 if both happened.
-LT_AGE=18
+m4_define(LT_AGE, 18)
 
 dnl ===========================================================================
 
-VERSION_INFO="$LT_CURRENT:$LT_REVISION:$LT_AGE"
+VERSION_INFO=LT_CURRENT():LT_REVISION():LT_AGE()
 AC_SUBST(VERSION_INFO)
 
-LT_CURRENT_MINUS_AGE=`expr $LT_CURRENT - $LT_AGE`
+LT_CURRENT_MINUS_AGE=m4_eval(LT_CURRENT() - LT_AGE())
 AC_SUBST(LT_CURRENT_MINUS_AGE)
 
 CAIRO_VERSION_MAJOR=cairo_version_major()
@@ -61,6 +62,7 @@ dnl ===========================================================================
 
 AC_PROG_CC
 AC_PROG_CPP
+AC_PROG_CXX dnl required for BeOS (and cannot be a conditional dependency)
 AC_LIBTOOL_WIN32_DLL
 AC_PROG_LIBTOOL dnl required version (1.4) DON'T REMOVE!
 AC_STDC_HEADERS
@@ -458,10 +460,6 @@ CAIRO_BACKEND_ENABLE(beos, BeOS/Zeta, beos, BEOS_SURFACE, no, [
       ;;
   esac
 ])
-
-if test "x$use_beos" = "xyes"; then
-  AC_PROG_CXX
-fi
 
 dnl ===========================================================================
 
