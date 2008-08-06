@@ -932,7 +932,7 @@ _cairo_pdf_operators_flush_glyphs (cairo_pdf_operators_t    *pdf_operators)
     double x;
 
     if (pdf_operators->num_glyphs == 0)
-	return 0;
+	return CAIRO_STATUS_SUCCESS;
 
     word_wrap_stream = _word_wrap_stream_create (pdf_operators->stream, 72);
     status = _cairo_output_stream_get_status (word_wrap_stream);
@@ -959,7 +959,7 @@ _cairo_pdf_operators_flush_glyphs (cairo_pdf_operators_t    *pdf_operators)
     if (status)
 	return status;
 
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -1275,7 +1275,10 @@ _cairo_pdf_operators_emit_cluster (cairo_pdf_operators_t      *pdf_operators,
 	    status = _cairo_pdf_operators_emit_glyph (pdf_operators,
 						      glyphs,
 						      &subset_glyph);
-	    return 0;
+	    if (status)
+		return status;
+
+	    return CAIRO_STATUS_SUCCESS;
 	}
     }
 
