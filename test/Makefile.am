@@ -21,6 +21,7 @@ clip-operator$(EXEEXT)					\
 clip-push-group$(EXEEXT)				\
 clip-twice$(EXEEXT)					\
 clip-zero$(EXEEXT)					\
+clipped-group$(EXEEXT)					\
 close-path$(EXEEXT)					\
 composite-integer-translate-source$(EXEEXT)		\
 composite-integer-translate-over$(EXEEXT)		\
@@ -325,6 +326,8 @@ REFERENCE_IMAGES = \
 	clip-twice-quartz-rgb24-ref.png	\
 	clip-twice-ref.png	\
 	clip-twice-rgb24-ref.png	\
+	clipped-group-ref.png	\
+	clipped-group-ps-ref.png	\
 	close-path-ref.png	\
 	close-path-ps-ref.png	\
 	composite-integer-translate-over-ref.png	\
