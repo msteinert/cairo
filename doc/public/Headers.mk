@@ -48,4 +48,5 @@ PRIVATE_TEST_HFILES = \
 	cairo-xlib-private.h \
 	cairo-xlib-surface-private.h \
 	cairo-xlib-xrender-private.h \
+	cairo-features-win32.h \
 	cairoint.h

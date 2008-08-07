@@ -39,6 +39,7 @@ Headers.mk:
 		-name '*-test.h' | \
 	sed 's@.*/@	@; s@$$@ \\@' | \
 	LANG=C sort; \
+	echo '	cairo-features-win32.h \'; \
 	echo '	cairoint.h' ) > $@.tmp
 	mv $@.tmp $@
 
