@@ -587,7 +587,17 @@ cairo_pop_group (cairo_t *cr)
     }
 
     _cairo_gstate_get_matrix (cr->gstate, &group_matrix);
-    cairo_pattern_set_matrix (group_pattern, &group_matrix);
+    /* Transform by group_matrix centered around device_transform so that when
+     * we call _cairo_gstate_copy_transformed_pattern the result is a pattern
+     * with a matrix equivalent to the device_transform of group_surface. */
+    if (_cairo_surface_has_device_transform (group_surface)) {
+	cairo_pattern_set_matrix (group_pattern, &group_surface->device_transform);
+	_cairo_pattern_transform (group_pattern, &group_matrix);
+	_cairo_pattern_transform (group_pattern, &group_surface->device_transform_inverse);
+    } else {
+	cairo_pattern_set_matrix (group_pattern, &group_matrix);
+    }
+
 done:
     cairo_surface_destroy (group_surface);
 
