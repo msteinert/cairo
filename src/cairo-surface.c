@@ -2558,15 +2558,8 @@ _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t *pattern,
 	return status;
 
     if (_cairo_surface_has_device_transform (destination)) {
-	cairo_matrix_t device_to_surface = destination->device_transform;
-
-	status = cairo_matrix_invert (&device_to_surface);
-	/* We only ever allow for scaling (under the implementation's
-	 * control) or translation (under the user's control). So the
-	 * matrix should always be invertible. */
-	assert (status == CAIRO_STATUS_SUCCESS);
-
-	_cairo_pattern_transform (*pattern_out, &device_to_surface);
+	_cairo_pattern_transform (*pattern_out,
+		                  &destination->device_transform_inverse);
     }
 
     return CAIRO_STATUS_SUCCESS;
