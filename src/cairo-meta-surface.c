@@ -973,7 +973,6 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 					   command->intersect_clip_path.tolerance,
 					   command->intersect_clip_path.antialias,
 					   target);
-            assert (status == 0);
 	    break;
 	default:
 	    ASSERT_NOT_REACHED;
