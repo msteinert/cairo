@@ -74,6 +74,7 @@ static cairo_user_data_key_t test_font_face_glyphs_key;
 
 static cairo_status_t
 test_scaled_font_init (cairo_scaled_font_t  *scaled_font,
+		       cairo_t              *cr,
 		       cairo_font_extents_t *metrics)
 {
   metrics->ascent  = .75;

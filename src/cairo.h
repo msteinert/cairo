@@ -1365,10 +1365,17 @@ cairo_user_font_face_create (void);
 /**
  * cairo_user_scaled_font_init_func_t:
  * @scaled_font: the scaled-font being created
+ * @cr: a cairo context, in font space
  * @extents: font extents to fill in, in font space
  *
  * #cairo_user_scaled_font_init_func_t is the type of function which is
  * called when a scaled-font needs to be created for a user font-face.
+ *
+ * The cairo context @cr is not used by the caller, but is prepared in font
+ * space, similar to what the cairo contexts passed to the render_glyph
+ * method will look like.  The callback can use this context for extents
+ * computation for example.  After the callback is called, @cr is checked
+ * for any error status.
  *
  * The @extents argument is where the user font sets the font extents for
  * @scaled_font.  It is in font space, which means that for most cases its
@@ -1391,6 +1398,7 @@ cairo_user_font_face_create (void);
  * Since: 1.8
  **/
 typedef cairo_status_t (*cairo_user_scaled_font_init_func_t) (cairo_scaled_font_t  *scaled_font,
+							      cairo_t              *cr,
 							      cairo_font_extents_t *extents);
 
 /**

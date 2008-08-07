@@ -55,40 +55,16 @@ static cairo_user_data_key_t fallback_font_face_key;
 
 static cairo_status_t
 test_scaled_font_init (cairo_scaled_font_t  *scaled_font,
+		       cairo_t              *cr,
 		       cairo_font_extents_t *extents)
 {
-  cairo_font_face_t *font_face;
-  cairo_matrix_t font_matrix, ctm;
-  cairo_font_options_t *font_options;
-  cairo_scaled_font_t *fallback_scaled_font;
+    cairo_set_font_face (cr,
+			 cairo_font_face_get_user_data (cairo_scaled_font_get_font_face (scaled_font),
+							&fallback_font_face_key));
 
-  font_face = cairo_toy_font_face_create ("",
-					  CAIRO_FONT_SLANT_NORMAL,
-					  CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_font_extents (cr, extents);
 
-  cairo_matrix_init_identity (&font_matrix);
-  cairo_scaled_font_get_scale_matrix (scaled_font, &ctm);
-
-  font_options = cairo_font_options_create ();
-  cairo_scaled_font_get_font_options (scaled_font, font_options);
-
-  fallback_scaled_font = cairo_scaled_font_create (font_face,
-						   &font_matrix,
-						   &ctm,
-						   font_options);
-
-  cairo_font_options_destroy (font_options);
-
-  cairo_scaled_font_extents (fallback_scaled_font, extents);
-
-  cairo_scaled_font_destroy (fallback_scaled_font);
-
-  cairo_scaled_font_set_user_data (scaled_font,
-				   &fallback_font_face_key,
-				   font_face,
-				   cairo_font_face_destroy);
-
-  return CAIRO_STATUS_SUCCESS;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -103,23 +79,38 @@ test_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     text[0] = glyph;
 
     cairo_set_font_face (cr,
-			 cairo_scaled_font_get_user_data (scaled_font,
-							  &fallback_font_face_key));
+			 cairo_font_face_get_user_data (cairo_scaled_font_get_font_face (scaled_font),
+							&fallback_font_face_key));
+
     cairo_show_text (cr, text);
     cairo_text_extents (cr, text, extents);
 
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_font_face_t *user_font_face = NULL;
+
 static cairo_font_face_t *
 get_user_font_face (void)
 {
-    static cairo_font_face_t *user_font_face = NULL;
-
     if (!user_font_face) {
+	cairo_font_face_t *fallback_font_face;
+
 	user_font_face = cairo_user_font_face_create ();
 	cairo_user_font_face_set_init_func             (user_font_face, test_scaled_font_init);
 	cairo_user_font_face_set_render_glyph_func     (user_font_face, test_scaled_font_render_glyph);
+
+	/* This also happens to be default font face on cairo_t, so does
+	 * not make much sense here.  For demonstration only.
+	 */
+	fallback_font_face = cairo_toy_font_face_create ("",
+							 CAIRO_FONT_SLANT_NORMAL,
+							 CAIRO_FONT_WEIGHT_NORMAL);
+
+	cairo_font_face_set_user_data (user_font_face,
+				       &fallback_font_face_key,
+				       fallback_font_face,
+				       cairo_font_face_destroy);
     }
 
     return user_font_face;
@@ -180,6 +171,11 @@ draw (cairo_t *cr, int width, int height)
     cairo_move_to (cr, BORDER, BORDER + font_extents.height + BORDER + font_extents.ascent);
     cairo_text_path (cr, text);
     cairo_fill (cr);
+
+    if (user_font_face) {
+        cairo_font_face_destroy (user_font_face);
+	user_font_face = NULL;
+    }
 
     return CAIRO_TEST_SUCCESS;
 }
