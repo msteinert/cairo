@@ -244,3 +244,41 @@ Cairo has two sets of text rendering capabilities:
 @extents: 
 
 
+<!-- ##### FUNCTION cairo_toy_font_face_create ##### -->
+<para>
+
+</para>
+
+@family:
+@slant:
+@weight:
+@Returns:
+
+
+<!-- ##### FUNCTION cairo_toy_font_face_get_family ##### -->
+<para>
+
+</para>
+
+@font_face:
+@Returns:
+
+
+<!-- ##### FUNCTION cairo_toy_font_face_get_slant ##### -->
+<para>
+
+</para>
+
+@font_face:
+@Returns:
+
+
+<!-- ##### FUNCTION cairo_toy_font_face_get_weight ##### -->
+<para>
+
+</para>
+
+@font_face:
+@Returns:
+
+

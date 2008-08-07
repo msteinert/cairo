@@ -110,7 +110,7 @@ _cairo_win32_tmpfile (void);
  * a bit of a pain, but it should be easy to always catch as long as
  * one adds a new test case to test a trigger of the new status value.
  */
-#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_CLUSTERS
+#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_SLANT
 
 
 /* Size in bytes of buffer to use off the stack per functions.
@@ -1304,7 +1304,7 @@ _cairo_color_equal (const cairo_color_t *color_a,
 
 /* cairo-font-face.c */
 
-extern const cairo_private cairo_font_face_t _cairo_font_face_nil;
+extern const cairo_private cairo_toy_font_face_t _cairo_font_face_nil;
 
 cairo_private void
 _cairo_font_face_init (cairo_font_face_t               *font_face,
@@ -1313,11 +1313,6 @@ _cairo_font_face_init (cairo_font_face_t               *font_face,
 cairo_private cairo_status_t
 _cairo_font_face_set_error (cairo_font_face_t *font_face,
 	                    cairo_status_t     status);
-
-cairo_private cairo_font_face_t *
-_cairo_toy_font_face_create (const char           *family,
-			     cairo_font_slant_t    slant,
-			     cairo_font_weight_t   weight);
 
 cairo_private void
 _cairo_unscaled_font_init (cairo_unscaled_font_t               *font,
@@ -2447,6 +2442,7 @@ slim_hidden_proto (cairo_surface_set_fallback_resolution);
 slim_hidden_proto (cairo_surface_copy_page);
 slim_hidden_proto (cairo_surface_show_page);
 slim_hidden_proto (cairo_surface_status);
+slim_hidden_proto (cairo_toy_font_face_create);
 slim_hidden_proto (cairo_version_string);
 
 #if CAIRO_HAS_PNG_FUNCTIONS

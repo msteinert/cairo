@@ -51,41 +51,42 @@ cairo_test_t test = {
     draw
 };
 
-static cairo_user_data_key_t fallback_scaled_font_key;
+static cairo_user_data_key_t fallback_font_face_key;
 
 static cairo_status_t
 test_scaled_font_init (cairo_scaled_font_t  *scaled_font,
 		       cairo_font_extents_t *extents)
 {
-  cairo_t *cr;
-  cairo_surface_t *surface;
-  cairo_matrix_t ctm;
+  cairo_font_face_t *font_face;
+  cairo_matrix_t font_matrix, ctm;
   cairo_font_options_t *font_options;
   cairo_scaled_font_t *fallback_scaled_font;
 
-  /* painful way to get default font face used by toy api */
-  surface = cairo_image_surface_create (CAIRO_FORMAT_A8, 0, 0);
-  cr = cairo_create (surface);
-  cairo_surface_destroy (surface);
+  font_face = cairo_toy_font_face_create ("",
+					  CAIRO_FONT_SLANT_NORMAL,
+					  CAIRO_FONT_WEIGHT_NORMAL);
 
-  cairo_set_font_size (cr, 1.);
+  cairo_matrix_init_identity (&font_matrix);
   cairo_scaled_font_get_scale_matrix (scaled_font, &ctm);
-  cairo_set_matrix (cr, &ctm);
 
   font_options = cairo_font_options_create ();
   cairo_scaled_font_get_font_options (scaled_font, font_options);
-  cairo_set_font_options (cr, font_options);
+
+  fallback_scaled_font = cairo_scaled_font_create (font_face,
+						   &font_matrix,
+						   &ctm,
+						   font_options);
+
   cairo_font_options_destroy (font_options);
 
-  fallback_scaled_font = cairo_scaled_font_reference (cairo_get_scaled_font (cr)),
-  cairo_scaled_font_set_user_data (scaled_font,
-				   &fallback_scaled_font_key,
-				   fallback_scaled_font,
-				   cairo_scaled_font_destroy);
-
-  cairo_destroy (cr);
-
   cairo_scaled_font_extents (fallback_scaled_font, extents);
+
+  cairo_scaled_font_destroy (fallback_scaled_font);
+
+  cairo_scaled_font_set_user_data (scaled_font,
+				   &fallback_font_face_key,
+				   font_face,
+				   cairo_font_face_destroy);
 
   return CAIRO_STATUS_SUCCESS;
 }
@@ -101,9 +102,9 @@ test_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     /* XXX only works for ASCII.  need ucs4_to_utf8 :( */
     text[0] = glyph;
 
-    cairo_set_scaled_font (cr,
-			   cairo_scaled_font_get_user_data (scaled_font,
-							    &fallback_scaled_font_key));
+    cairo_set_font_face (cr,
+			 cairo_scaled_font_get_user_data (scaled_font,
+							  &fallback_font_face_key));
     cairo_show_text (cr, text);
     cairo_text_extents (cr, text, extents);
 

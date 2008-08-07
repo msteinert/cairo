@@ -408,6 +408,10 @@ cairo_show_text_glyphs
 cairo_font_extents
 cairo_text_extents
 cairo_glyph_extents
+cairo_toy_font_face_create
+cairo_toy_font_face_get_family
+cairo_toy_font_face_get_slant
+cairo_toy_font_face_get_weight
 </SECTION>
 
 <SECTION>

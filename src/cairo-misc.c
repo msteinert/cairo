@@ -113,6 +113,10 @@ cairo_status_to_string (cairo_status_t status)
 	return "negative number used where it is not allowed";
     case CAIRO_STATUS_INVALID_CLUSTERS:
 	return "input clusters do not represent the accompanying text and glyph arrays";
+    case CAIRO_STATUS_INVALID_SLANT:
+	return "invalid value for an input #cairo_font_slant_t";
+    case CAIRO_STATUS_INVALID_WEIGHT:
+	return "input value for an input #cairo_font_weight_t";
     }
 
     return "<unknown error status>";

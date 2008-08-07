@@ -158,6 +158,7 @@ text-pattern$(EXEEXT)					\
 text-rotate$(EXEEXT)					\
 text-transform$(EXEEXT)					\
 text-zero-len$(EXEEXT)					\
+toy-font-face$(EXEEXT)					\
 transforms$(EXEEXT)					\
 translate-show-surface$(EXEEXT)				\
 trap-clip$(EXEEXT)					\
@@ -715,6 +716,7 @@ REFERENCE_IMAGES = \
 	user-font-pdf-ref.png	\
 	user-font-svg-ref.png	\
 	user-font-proxy-ref.png	\
+	user-font-proxy-pdf-ref.png	\
 	user-font-proxy-ps-ref.png	\
 	user-font-proxy-svg-ref.png	\
 	unbounded-operator-quartz-ref.png	\
@@ -764,6 +766,7 @@ png				\
 ps-features			\
 svg-clip			\
 svg-surface			\
+toy-font-face			\
 user-data
 
 # A hook that summarises the failures

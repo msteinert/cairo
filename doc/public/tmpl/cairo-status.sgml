@@ -68,6 +68,8 @@ code is required before or after each individual cairo function call.
 @CAIRO_STATUS_USER_FONT_ERROR: 
 @CAIRO_STATUS_NEGATIVE_COUNT: 
 @CAIRO_STATUS_INVALID_CLUSTERS: 
+@CAIRO_STATUS_INVALID_SLANT:
+@CAIRO_STATUS_INVALID_WEIGHT:
 
 <!-- ##### FUNCTION cairo_status_to_string ##### -->
 <para>

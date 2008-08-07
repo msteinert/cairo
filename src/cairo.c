@@ -2641,8 +2641,12 @@ cairo_copy_clip_rectangle_list (cairo_t *cr)
  *
  * If text is drawn without a call to cairo_select_font_face(), (nor
  * cairo_set_font_face() nor cairo_set_scaled_font()), the default
- * family is "sans", slant is %CAIRO_FONT_SLANT_NORMAL, and weight is
+ * family is platform-specific, but is essentially "sans-serif".
+ * Default slant is %CAIRO_FONT_SLANT_NORMAL, and default weight is
  * %CAIRO_FONT_WEIGHT_NORMAL.
+ *
+ * This function is equivalent to a call to cairo_toy_font_face_create()
+ * followed by cairo_set_font_face().
  **/
 void
 cairo_select_font_face (cairo_t              *cr,

@@ -197,6 +197,7 @@ text-pattern
 text-rotate
 text-transform
 text-zero-len
+toy-font-face
 transforms
 translate-show-surface
 trap-clip

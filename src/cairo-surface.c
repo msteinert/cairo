@@ -2632,6 +2632,8 @@ _cairo_surface_create_in_error (cairo_status_t status)
     case CAIRO_STATUS_USER_FONT_ERROR:
     case CAIRO_STATUS_NEGATIVE_COUNT:
     case CAIRO_STATUS_INVALID_CLUSTERS:
+    case CAIRO_STATUS_INVALID_SLANT:
+    case CAIRO_STATUS_INVALID_WEIGHT:
     default:
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_surface_t *) &_cairo_surface_nil;
