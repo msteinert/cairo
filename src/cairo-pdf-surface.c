@@ -2868,7 +2868,7 @@ _cairo_pdf_surface_emit_unicode_for_glyph (cairo_pdf_surface_t	*surface,
 
     if (utf8 && *utf8) {
 	status = _cairo_utf8_to_utf16 (utf8, -1, &utf16, &utf16_len);
-	if (status && status != CAIRO_STATUS_INVALID_STRING)
+	if (status)
 	    return status;
     }
 
