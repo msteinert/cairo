@@ -488,7 +488,7 @@ cairo_matrix_invert (cairo_matrix_t *matrix)
     /* inv (A) = 1/det (A) * adj (A) */
     double det;
 
-    _cairo_matrix_compute_determinant (matrix, &det);
+    det = _cairo_matrix_compute_determinant (matrix);
 
     if (! ISFINITE (det))
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
@@ -508,21 +508,20 @@ _cairo_matrix_is_invertible (const cairo_matrix_t *matrix)
 {
     double det;
 
-    _cairo_matrix_compute_determinant (matrix, &det);
+    det = _cairo_matrix_compute_determinant (matrix);
 
     return ISFINITE (det) && det != 0.;
 }
 
-void
-_cairo_matrix_compute_determinant (const cairo_matrix_t *matrix,
-				   double		*det)
+double
+_cairo_matrix_compute_determinant (const cairo_matrix_t *matrix)
 {
     double a, b, c, d;
 
     a = matrix->xx; b = matrix->yx;
     c = matrix->xy; d = matrix->yy;
 
-    *det = a*d - b*c;
+    return a*d - b*c;
 }
 
 /* Compute the amount that each basis vector is scaled by. */
@@ -532,7 +531,7 @@ _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
 {
     double det;
 
-    _cairo_matrix_compute_determinant (matrix, &det);
+    det = _cairo_matrix_compute_determinant (matrix);
 
     if (! ISFINITE (det))
 	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);

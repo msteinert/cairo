@@ -2136,8 +2136,8 @@ _cairo_matrix_transform_bounding_box_fixed (const cairo_matrix_t *matrix,
 cairo_private cairo_bool_t
 _cairo_matrix_is_invertible (const cairo_matrix_t *matrix);
 
-cairo_private void
-_cairo_matrix_compute_determinant (const cairo_matrix_t *matrix, double *det);
+cairo_private double
+_cairo_matrix_compute_determinant (const cairo_matrix_t *matrix);
 
 cairo_private cairo_status_t
 _cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
