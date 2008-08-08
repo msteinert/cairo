@@ -97,8 +97,8 @@ test_scaled_font_unicode_to_glyph (cairo_scaled_font_t *scaled_font,
 	    return CAIRO_STATUS_SUCCESS;
 	}
 
-    /* Fall through and default to undefined glyph. */
-    return CAIRO_STATUS_INVALID_INDEX;
+    /* Not found.  Default to glyph 0 */
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -113,6 +113,8 @@ test_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     const char *data;
     div_t d;
     double x, y;
+
+    /* FIXME: We simply crash on out-of-bound glyph indices */
 
     metrics->x_advance = glyphs[glyph].width / 4.0;
 
@@ -160,7 +162,7 @@ get_user_font_face (void)
 	 *     13 14 15
 	 */
 	static const test_scaled_font_glyph_t glyphs [] = {
-	    { '\0', 0, { END_GLYPH } }, /* Poppler has a bug assuming glyph 0 is .notdef */
+	    { '\0', 1, { END_GLYPH } }, /* Poppler has a bug assuming glyph 0 is .notdef */
 	    { ' ',  1, { END_GLYPH } },
 	    { '-',  2, { 7, 8, STROKE, END_GLYPH } },
 	    { '.',  1, { 10, 10, STROKE, END_GLYPH } },
