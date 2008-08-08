@@ -1349,6 +1349,16 @@ _cairo_hull_compute (cairo_pen_vertex_t *vertices, int *num_vertices);
 cairo_private unsigned char *
 _cairo_lzw_compress (unsigned char *data, unsigned long *size_in_out);
 
+/* cairo-misc.c */
+cairo_private cairo_status_t
+_cairo_validate_text_clusters (const char		   *utf8,
+			       int			    utf8_len,
+			       const cairo_glyph_t	   *glyphs,
+			       int			    num_glyphs,
+			       const cairo_text_cluster_t  *clusters,
+			       int			    num_clusters,
+			       cairo_bool_t		    backward);
+
 /* cairo-path-fixed.c */
 cairo_private void
 _cairo_path_fixed_init (cairo_path_fixed_t *path);
@@ -2370,7 +2380,11 @@ slim_hidden_proto (cairo_font_options_set_subpixel_order);
 slim_hidden_proto (cairo_font_options_status);
 slim_hidden_proto (cairo_get_current_point);
 slim_hidden_proto (cairo_get_matrix);
+slim_hidden_proto (cairo_get_target);
 slim_hidden_proto (cairo_get_tolerance);
+slim_hidden_proto (cairo_has_show_text_glyphs);
+slim_hidden_proto (cairo_glyph_allocate);
+slim_hidden_proto (cairo_glyph_free);
 slim_hidden_proto (cairo_image_surface_create);
 slim_hidden_proto (cairo_image_surface_create_for_data);
 slim_hidden_proto (cairo_image_surface_get_data);
@@ -2419,6 +2433,7 @@ slim_hidden_proto (cairo_scaled_font_get_ctm);
 slim_hidden_proto (cairo_scaled_font_get_font_face);
 slim_hidden_proto (cairo_scaled_font_get_font_matrix);
 slim_hidden_proto (cairo_scaled_font_get_font_options);
+slim_hidden_proto (cairo_scaled_font_text_to_glyphs);
 slim_hidden_proto (cairo_scaled_font_glyph_extents);
 slim_hidden_proto_no_warn (cairo_scaled_font_reference);
 slim_hidden_proto (cairo_scaled_font_status);
@@ -2446,6 +2461,8 @@ slim_hidden_proto (cairo_surface_set_fallback_resolution);
 slim_hidden_proto (cairo_surface_copy_page);
 slim_hidden_proto (cairo_surface_show_page);
 slim_hidden_proto (cairo_surface_status);
+slim_hidden_proto (cairo_text_cluster_allocate);
+slim_hidden_proto (cairo_text_cluster_free);
 slim_hidden_proto (cairo_toy_font_face_create);
 slim_hidden_proto (cairo_version_string);
 

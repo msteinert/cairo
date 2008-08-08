@@ -282,3 +282,37 @@ Cairo has two sets of text rendering capabilities:
 @Returns:
 
 
+<!-- ##### FUNCTION cairo_glyph_allocate ##### -->
+<para>
+
+</para>
+
+@num_glyphs: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_glyph_free ##### -->
+<para>
+
+</para>
+
+@glyphs: 
+
+
+<!-- ##### FUNCTION cairo_text_cluster_allocate ##### -->
+<para>
+
+</para>
+
+@num_clusters: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_text_cluster_free ##### -->
+<para>
+
+</para>
+
+@clusters: 
+
+

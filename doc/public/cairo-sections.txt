@@ -292,6 +292,7 @@ cairo_scaled_font_extents
 cairo_text_extents_t
 cairo_scaled_font_text_extents
 cairo_scaled_font_glyph_extents
+cairo_scaled_font_text_to_glyphs
 cairo_scaled_font_get_font_face
 cairo_scaled_font_get_font_options
 cairo_scaled_font_get_font_matrix
@@ -412,6 +413,10 @@ cairo_toy_font_face_create
 cairo_toy_font_face_get_family
 cairo_toy_font_face_get_slant
 cairo_toy_font_face_get_weight
+cairo_glyph_allocate
+cairo_glyph_free
+cairo_text_cluster_allocate
+cairo_text_cluster_free
 </SECTION>
 
 <SECTION>

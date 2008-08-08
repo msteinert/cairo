@@ -209,7 +209,7 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_NEGATIVE_COUNT: negative number used where it is not allowed (Since 1.8)
  * @CAIRO_STATUS_INVALID_CLUSTERS: input clusters do not represent the accompanying text and glyph array (Since 1.8)
  * @CAIRO_STATUS_INVALID_SLANT: invalid value for an input #cairo_font_slant_t (Since 1.8)
- * @CAIRO_STATUS_INVALID_CLUSTERS: input value for an input #cairo_font_weight_t (Since 1.8)
+ * @CAIRO_STATUS_INVALID_WEIGHT: invalid value for an input #cairo_font_weight_t (Since 1.8)
  *
  * #cairo_status_t is used to indicate errors that can occur when
  * using Cairo. In some cases it is returned directly by functions.
@@ -836,6 +836,23 @@ cairo_glyph_allocate (int num_glyphs);
 cairo_public void
 cairo_glyph_free (cairo_glyph_t *glyphs);
 
+/**
+ * cairo_text_cluster_t:
+ * @num_bytes: the number of bytes of UTF-8 text covered by cluster
+ * @num_glyphs: the number of glyphs covered by cluster
+ *
+ * The #cairo_text_cluster_t structure holds information about a single
+ * <firstterm>text cluster</firstterm>.  A text cluster is a minimal
+ * mapping of some glyphs corresponding to some UTF-8 text.
+ *
+ * For a cluster to be valid, both @num_bytes and @num_glyphs should
+ * be non-negative, and at least one should be non-zero.
+ *
+ * See cairo_show_text_glyphs() for how clusters are used in advanced
+ * text operations.
+ *
+ * Since: 1.8
+ **/
 typedef struct {
     int        num_bytes;
     int        num_glyphs;
@@ -1417,8 +1434,6 @@ cairo_user_font_face_create (void);
  * Returns: %CAIRO_STATUS_SUCCESS upon success, or
  * %CAIRO_STATUS_USER_FONT_ERROR or any other error status on error.
  *
- * Returns: the status code of the operation
- *
  * Since: 1.8
  **/
 typedef cairo_status_t (*cairo_user_scaled_font_init_func_t) (cairo_scaled_font_t  *scaled_font,
@@ -1476,16 +1491,19 @@ typedef cairo_status_t (*cairo_user_scaled_font_render_glyph_func_t) (cairo_scal
 /**
  * cairo_user_scaled_font_text_to_glyphs_func_t:
  * @scaled_font: the scaled-font being created
- * @utf8: input string of text, encoded in UTF-8
- * @glyphs: output array of glyphs, in font space
- * @num_glyphs: number of output glyphs
+ * @utf8: a string of text encoded in UTF-8
+ * @utf8_len: length of @utf8 in bytes
+ * @glyphs: pointer to array of glyphs to fill, in font space
+ * @num_glyphs: pointer to number of glyphs
+ * @clusters: pointer to array of cluster mapping information to fill, or %NULL
+ * @num_clusters: pointer to number of clusters
+ * @backward: pointer to whether the text to glyphs mapping goes backward
  *
- * XXXXXXXXXXXXX
  * #cairo_user_scaled_font_text_to_glyphs_func_t is the type of function which
  * is called to convert input text to an array of glyphs.  This is used by the
  * cairo_show_text() operation.
  *
- * Using this callback the user font has full control on glyphs and their
+ * Using this callback the user-font has full control on glyphs and their
  * positions.  That means, it allows for features like ligatures and kerning,
  * as well as complex <firstterm>shaping</firstterm> required for scripts like
  * Arabic and Indic.
@@ -1496,12 +1514,39 @@ typedef cairo_status_t (*cairo_user_scaled_font_render_glyph_func_t) (cairo_scal
  * origin.  Cairo will free the glyph array when done with it, no matter what
  * the return value of the callback is.
  *
+ * If @glyphs initially points to a non-%NULL value, that array can be used
+ * as a glyph buffer, and @num_glyphs points to the number of glyph
+ * entries available there.  If the provided glyph array is too short for
+ * the conversion (or for convenience), a new glyph array may be allocated
+ * using cairo_glyph_allocate() and placed in @glyphs.  Upon return,
+ * @num_glyphs should contain the number of generated glyphs.
+ * If the value @glyphs points at has changed after the call, cairo will
+ * free the allocated glyph array using cairo_glyph_free().
+ *
+ * If @clusters is not %NULL, @num_clusters and @backward are also non-%NULL,
+ * and cluster mapping should be computed.
+ * The semantics of how cluster array allocation works is similar to the glyph
+ * array.  That is,
+ * if @clusters initially points to a non-%NULL value, that array may be used
+ * as a cluster buffer, and @num_clusters points to the number of cluster
+ * entries available there.  If the provided cluster array is too short for
+ * the conversion (or for convenience), a new cluster array may be allocated
+ * using cairo_text_cluster_allocate() and placed in @clusters.  Upon return,
+ * @num_clusters should contain the number of generated clusters.
+ * If the value @clusters points at has changed after the call, cairo will
+ * free the allocated cluster array using cairo_text_cluster_free().
+ *
  * The callback is optional.  If not set, or if @num_glyphs is negative upon
- * the callback returning (which by default is), the unicode_to_glyph callback
+ * the callback returning, the unicode_to_glyph callback
  * is tried.  See #cairo_user_scaled_font_unicode_to_glyph_func_t.
  *
- * Note: The signature and details of this callback is expected to change
- * before cairo 1.8.0 is released.
+ * Note: While cairo does not impose any limitation on glyph indices,
+ * some applications may assume that a glyph index fits in a 16-bit
+ * unsigned integer.  As such, it is advised that user-fonts keep their
+ * glyphs in the 0 to 65535 range.  Furthermore, some applications may
+ * assume that glyph 0 is a special glyph-not-found glyph.  User-fonts
+ * are advised to use glyph 0 for such purposes and do not use that
+ * glyph value for other purposes.
  *
  * Returns: %CAIRO_STATUS_SUCCESS upon success, or
  * %CAIRO_STATUS_USER_FONT_ERROR or any other error status on error.
@@ -1539,6 +1584,14 @@ typedef cairo_status_t (*cairo_user_scaled_font_text_to_glyphs_func_t) (cairo_sc
  * The callback is optional, and only used if text_to_glyphs callback is not
  * set or fails to return glyphs.  If this callback is not set, an identity
  * mapping from Unicode code-points to glyph indices is assumed.
+ *
+ * Note: While cairo does not impose any limitation on glyph indices,
+ * some applications may assume that a glyph index fits in a 16-bit
+ * unsigned integer.  As such, it is advised that user-fonts keep their
+ * glyphs in the 0 to 65535 range.  Furthermore, some applications may
+ * assume that glyph 0 is a special glyph-not-found glyph.  User-fonts
+ * are advised to use glyph 0 for such purposes and do not use that
+ * glyph value for other purposes.
  *
  * Returns: %CAIRO_STATUS_SUCCESS upon success, or
  * %CAIRO_STATUS_USER_FONT_ERROR or any other error status on error.

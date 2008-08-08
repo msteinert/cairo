@@ -153,6 +153,7 @@ cairo_glyph_allocate (int num_glyphs)
 
     return _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
 }
+slim_hidden_def (cairo_glyph_allocate);
 
 /**
  * cairo_glyph_free:
@@ -173,6 +174,7 @@ cairo_glyph_free (cairo_glyph_t *glyphs)
     if (glyphs)
 	free (glyphs);
 }
+slim_hidden_def (cairo_glyph_free);
 
 /**
  * cairo_text_cluster_allocate:
@@ -202,10 +204,11 @@ cairo_text_cluster_allocate (int num_clusters)
 
     return _cairo_malloc_ab (num_clusters, sizeof (cairo_text_cluster_t));
 }
+slim_hidden_def (cairo_text_cluster_allocate);
 
 /**
  * cairo_text_cluster_free:
- * @text_clusters: array of text clusters to free, or %NULL
+ * @clusters: array of text clusters to free, or %NULL
  *
  * Frees an array of #cairo_text_cluster's allocated using cairo_text_cluster_allocate().
  * This function is only useful to free text cluster array returned
@@ -222,9 +225,80 @@ cairo_text_cluster_free (cairo_text_cluster_t *clusters)
     if (clusters)
 	free (clusters);
 }
+slim_hidden_def (cairo_text_cluster_free);
 
 
 /* Private stuff */
+
+/**
+ * _cairo_validate_text_clusters:
+ * @utf8: UTF-8 text
+ * @utf8_len: length of @utf8 in bytes
+ * @glyphs: array of glyphs
+ * @num_glyphs: number of glyphs
+ * @clusters: array of cluster mapping information
+ * @num_clusters: number of clusters in the mapping
+ * @backward: whether the text to glyphs mapping goes backward
+ *
+ * Check that clusters cover the entire glyphs and utf8 arrays,
+ * and that cluster boundaries are UTF-8 boundaries.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS upon success, or
+ *               %CAIRO_STATUS_INVALID_CLUSTERS on error.
+ *               The error is either invalid UTF-8 input,
+ *               or bad cluster mapping.
+ */
+cairo_status_t
+_cairo_validate_text_clusters (const char		   *utf8,
+			       int			    utf8_len,
+			       const cairo_glyph_t	   *glyphs,
+			       int			    num_glyphs,
+			       const cairo_text_cluster_t  *clusters,
+			       int			    num_clusters,
+			       cairo_bool_t		    backward)
+{
+    cairo_status_t status;
+    unsigned int n_bytes  = 0;
+    unsigned int n_glyphs = 0;
+    int i;
+
+    for (i = 0; i < num_clusters; i++) {
+	int cluster_bytes  = clusters[i].num_bytes;
+	int cluster_glyphs = clusters[i].num_glyphs;
+
+	if (cluster_bytes < 0 || cluster_glyphs < 0)
+	    goto BAD;
+
+	/* A cluster should cover at least one character or glyph.
+	 * I can't see any use for a 0,0 cluster.
+	 * I can't see an immediate use for a zero-text cluster
+	 * right now either, but they don't harm.
+	 * Zero-glyph clusters on the other hand are useful for
+	 * things like U+200C ZERO WIDTH NON-JOINER */
+	if (cluster_bytes == 0 && cluster_glyphs == 0)
+	    goto BAD;
+
+	/* Since n_bytes and n_glyphs are unsigned, but the rest of
+	 * values involved are signed, we can detect overflow easily */
+	if (n_bytes+cluster_bytes > (unsigned int)utf8_len || n_glyphs+cluster_glyphs > (unsigned int)num_glyphs)
+	    goto BAD;
+
+	/* Make sure we've got valid UTF-8 for the cluster */
+	status = _cairo_utf8_to_ucs4 (utf8+n_bytes, cluster_bytes, NULL, NULL);
+	if (status)
+	    return CAIRO_STATUS_INVALID_CLUSTERS;
+
+	n_bytes  += cluster_bytes ;
+	n_glyphs += cluster_glyphs;
+    }
+
+    if (n_bytes != (unsigned int) utf8_len || n_glyphs != (unsigned int) num_glyphs) {
+      BAD:
+	return CAIRO_STATUS_INVALID_CLUSTERS;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
 
 /**
  * _cairo_operator_bounded_by_mask:

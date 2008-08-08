@@ -23,6 +23,7 @@ User Fonts
 </para>
 
 @scaled_font: 
+@cr: 
 @extents: 
 @Returns: 
 
@@ -46,8 +47,12 @@ User Fonts
 
 @scaled_font: 
 @utf8: 
+@utf8_len: 
 @glyphs: 
 @num_glyphs: 
+@clusters: 
+@num_clusters: 
+@backward: 
 @Returns: 
 
 
