@@ -372,7 +372,7 @@ _cairo_sub_font_glyph_map_to_unicode (cairo_sub_font_glyph_t *sub_font_glyph,
 	    }
 	} else {
 	    /* No existing mapping. Use the requested mapping */
-	    if (sub_font_glyph->utf8[utf8_len - 1] != 0)
+	    if (utf8[utf8_len - 1] != 0)
 		add_zero_byte = 1;
 	    sub_font_glyph->utf8 = malloc (utf8_len + add_zero_byte);
 	    memcpy (sub_font_glyph->utf8, utf8, utf8_len);
