@@ -830,10 +830,22 @@ typedef struct {
     double               y;
 } cairo_glyph_t;
 
+cairo_public cairo_glyph_t *
+cairo_glyph_allocate (int num_glyphs);
+
+cairo_public void
+cairo_glyph_free (cairo_glyph_t *glyphs);
+
 typedef struct {
     int        num_bytes;
     int        num_glyphs;
 } cairo_text_cluster_t;
+
+cairo_public cairo_text_cluster_t *
+cairo_text_cluster_allocate (int num_clusters);
+
+cairo_public void
+cairo_text_cluster_free (cairo_text_cluster_t *clusters);
 
 /**
  * cairo_text_extents_t:

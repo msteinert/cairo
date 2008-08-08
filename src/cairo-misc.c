@@ -41,6 +41,8 @@
 COMPILE_TIME_ASSERT (CAIRO_STATUS_LAST_STATUS < CAIRO_INT_STATUS_UNSUPPORTED);
 COMPILE_TIME_ASSERT (CAIRO_INT_STATUS_LAST_STATUS <= 127);
 
+/* Public stuff */
+
 /**
  * cairo_status_to_string:
  * @status: a cairo status
@@ -121,6 +123,108 @@ cairo_status_to_string (cairo_status_t status)
 
     return "<unknown error status>";
 }
+
+
+/**
+ * cairo_glyph_allocate:
+ * @num_glyphs: number of glyphs to allocate
+ *
+ * Allocates an array of #cairo_glyph_t's.
+ * This function is only useful in implementations of
+ * #cairo_user_scaled_font_text_to_glyphs_func_t where the user
+ * needs to allocate an array of glyphs that cairo will free.
+ * For all other uses, user can use their own allocation method
+ * for glyphs.
+ *
+ * This function returns %NULL if @num_glyphs is not positive,
+ * or if out of memory.  That means, the %NULL return value
+ * signals out-of-memory only if @num_glyphs was positive.
+ *
+ * Returns: the newly allocated array of glyphs that should be
+ *          freed using cairo_glyph_free()
+ *
+ * Since: 1.8
+ */
+cairo_glyph_t *
+cairo_glyph_allocate (int num_glyphs)
+{
+    if (num_glyphs <= 0)
+	return NULL;
+
+    return _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
+}
+
+/**
+ * cairo_glyph_free:
+ * @glyphs: array of glyphs to free, or %NULL
+ *
+ * Frees an array of #cairo_glyph_t's allocated using cairo_glyph_allocate().
+ * This function is only useful to free glyph array returned
+ * by cairo_scaled_font_text_to_glyphs() where cairo returns
+ * an array of glyphs that the user will free.
+ * For all other uses, user can use their own allocation method
+ * for glyphs.
+ *
+ * Since: 1.8
+ */
+void
+cairo_glyph_free (cairo_glyph_t *glyphs)
+{
+    if (glyphs)
+	free (glyphs);
+}
+
+/**
+ * cairo_text_cluster_allocate:
+ * @num_clusters: number of text_clusters to allocate
+ *
+ * Allocates an array of #cairo_text_cluster_t's.
+ * This function is only useful in implementations of
+ * #cairo_user_scaled_font_text_to_glyphs_func_t where the user
+ * needs to allocate an array of text clusters that cairo will free.
+ * For all other uses, user can use their own allocation method
+ * for text clusters.
+ *
+ * This function returns %NULL if @num_clusters is not positive,
+ * or if out of memory.  That means, the %NULL return value
+ * signals out-of-memory only if @num_clusters was positive.
+ *
+ * Returns: the newly allocated array of text clusters that should be
+ *          freed using cairo_text_cluster_free()
+ *
+ * Since: 1.8
+ */
+cairo_text_cluster_t *
+cairo_text_cluster_allocate (int num_clusters)
+{
+    if (num_clusters <= 0)
+	return NULL;
+
+    return _cairo_malloc_ab (num_clusters, sizeof (cairo_text_cluster_t));
+}
+
+/**
+ * cairo_text_cluster_free:
+ * @text_clusters: array of text clusters to free, or %NULL
+ *
+ * Frees an array of #cairo_text_cluster's allocated using cairo_text_cluster_allocate().
+ * This function is only useful to free text cluster array returned
+ * by cairo_scaled_font_text_to_glyphs() where cairo returns
+ * an array of text clusters that the user will free.
+ * For all other uses, user can use their own allocation method
+ * for text clusters.
+ *
+ * Since: 1.8
+ */
+void
+cairo_text_cluster_free (cairo_text_cluster_t *clusters)
+{
+    if (clusters)
+	free (clusters);
+}
+
+
+/* Private stuff */
 
 /**
  * _cairo_operator_bounded_by_mask:
