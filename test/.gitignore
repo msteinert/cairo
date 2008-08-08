@@ -25,6 +25,7 @@ clip-operator
 clip-push-group
 clip-twice
 clip-zero
+clipped-group
 close-path
 composite-integer-translate-over
 composite-integer-translate-over-repeat
@@ -49,6 +50,7 @@ degenerate-path
 degenerate-pen
 device-offset
 device-offset-positive
+device-offset-scale
 extend-pad
 extend-pad-similar
 extend-reflect
@@ -93,6 +95,7 @@ infinite-join
 in-fill-empty-trapezoid
 in-fill-trapezoid
 invalid-matrix
+large-clip
 large-font
 large-source
 leaky-dash
@@ -193,6 +196,10 @@ text-antialias-none
 text-antialias-subpixel
 text-cache-crash
 text-glyph-range
+text-lcd-filter-fir3
+text-lcd-filter-fir5
+text-lcd-filter-intra-pixel
+text-lcd-filter-none
 text-pattern
 text-rotate
 text-transform
