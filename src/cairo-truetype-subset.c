@@ -1245,12 +1245,13 @@ _cairo_truetype_reverse_cmap (cairo_scaled_font_t *scaled_font,
 	    uint16_t g_id_be = cpu_to_be16 (index);
 	    int j;
 
-	    for (j = 0; j < range_size; j++) {
-		if (glyph_ids[j] == g_id_be) {
-		    *ucs4 = be16_to_cpu (start_code[i]) + j;
-		    goto found;
+	    if (range_size > 0)
+		for (j = 0; j < range_size; j++) {
+		    if (glyph_ids[j] == g_id_be) {
+			*ucs4 = be16_to_cpu (start_code[i]) + j;
+			goto found;
+		    }
 		}
-	    }
 	}
     }
 
