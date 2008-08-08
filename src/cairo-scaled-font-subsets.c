@@ -280,7 +280,7 @@ _cairo_sub_font_create (cairo_scaled_font_subsets_t	*parent,
     sub_font->next = NULL;
 
     /* Reserve first glyph in subset for the .notdef glyph */
-    status = _cairo_sub_font_map_glyph (sub_font, 0, NULL, 0, &subset_glyph);
+    status = _cairo_sub_font_map_glyph (sub_font, 0, NULL, -1, &subset_glyph);
     if (status) {
 	_cairo_hash_table_destroy (sub_font->sub_font_glyphs);
 	free (sub_font);
@@ -355,6 +355,9 @@ _cairo_sub_font_glyph_map_to_unicode (cairo_sub_font_glyph_t *sub_font_glyph,
 				      const char 	     *utf8,
 				      int 		      utf8_len)
 {
+    if (utf8_len < 0)
+	return FALSE;
+
     if (utf8 != NULL && utf8_len != 0 && utf8[utf8_len - 1] == '\0')
 	utf8_len--;
 
@@ -436,7 +439,7 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
 	    sub_font->num_glyphs_in_current_subset = 0;
 
 	    /* Reserve first glyph in subset for the .notdef glyph */
-	    status = _cairo_sub_font_map_glyph (sub_font, 0, NULL, 0, &tmp_subset_glyph);
+	    status = _cairo_sub_font_map_glyph (sub_font, 0, NULL, -1, &tmp_subset_glyph);
 	    if (status)
 		return status;
 	}

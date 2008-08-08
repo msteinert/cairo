@@ -1266,7 +1266,7 @@ _cairo_pdf_operators_emit_cluster (cairo_pdf_operators_t      *pdf_operators,
 						       scaled_font,
 						       glyphs->index,
 						       utf8,
-						       utf8_len < 0 ? 0 : utf8_len,
+						       utf8_len,
 						       &subset_glyph);
 	if (status)
 	    return status;
@@ -1291,7 +1291,7 @@ _cairo_pdf_operators_emit_cluster (cairo_pdf_operators_t      *pdf_operators,
 	status = _cairo_scaled_font_subsets_map_glyph (pdf_operators->font_subsets,
 						       scaled_font,
 						       cur_glyph->index,
-						       NULL, 0,
+						       NULL, -1,
 						       &subset_glyph);
 	if (status)
 	    return status;
