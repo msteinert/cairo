@@ -239,13 +239,13 @@ draw (cairo_t *cr, int width, int height)
     cairo_set_line_width (cr, 2);
     cairo_stroke (cr);
 
-    /* text in gray */
+    /* text in black */
     cairo_set_source_rgb (cr, 0, 0, 0);
     cairo_move_to (cr, BORDER, BORDER + font_extents.ascent);
     cairo_show_text (cr, text);
 
 
-    /* filled version of text in light blue */
+    /* filled version of text in blue */
     cairo_set_source_rgb (cr, 0, 0, 1);
     cairo_move_to (cr, BORDER, BORDER + font_extents.height + 2*BORDER + font_extents.ascent);
     cairo_text_path (cr, text);
