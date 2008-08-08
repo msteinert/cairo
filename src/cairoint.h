@@ -2316,6 +2316,10 @@ _cairo_gstate_get_antialias (cairo_gstate_t *gstate);
 
 /* cairo-unicode.c */
 
+cairo_private int
+_cairo_utf8_get_char_validated (const char *p,
+				uint32_t   *unicode);
+
 cairo_private cairo_status_t
 _cairo_utf8_to_ucs4 (const char *str,
 		     int	 len,
