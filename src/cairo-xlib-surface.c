@@ -2171,8 +2171,11 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 	}
 
 	status = _cairo_region_get_boxes (&bounded, &n_boxes, &boxes);
-        if (status)
-            return status;
+	if (status) {
+	    _cairo_region_fini (&bound);
+	    _cairo_region_fini (&bounded);
+	    return status;
+	}
 
 	if (n_boxes > ARRAY_LENGTH (surface->embedded_clip_rects)) {
 	    rects = _cairo_malloc_ab (n_boxes, sizeof (XRectangle));
