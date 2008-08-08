@@ -408,12 +408,16 @@ struct _cairo_scaled_font_backend {
      * then just converting characters one by one.
      */
     cairo_warn cairo_int_status_t
-    (*text_to_glyphs) (void                *scaled_font,
-		       double		    x,
-		       double		    y,
-		       const char          *utf8,
-		       cairo_glyph_t      **glyphs,
-		       int 		   *num_glyphs);
+    (*text_to_glyphs) (void                  *scaled_font,
+		       double		      x,
+		       double		      y,
+		       const char	     *utf8,
+		       int		      utf8_len,
+		       cairo_glyph_t	    **glyphs,
+		       int		     *num_glyphs,
+		       cairo_text_cluster_t **clusters,
+		       int		     *num_clusters,
+		       cairo_bool_t	     *backward);
 
     unsigned long
     (*ucs4_to_index)		(void			     *scaled_font,
@@ -1219,12 +1223,16 @@ _cairo_gstate_set_font_face (cairo_gstate_t    *gstate,
 			     cairo_font_face_t *font_face);
 
 cairo_private cairo_status_t
-_cairo_gstate_text_to_glyphs (cairo_gstate_t *font,
-			      const char     *utf8,
-			      double	      x,
-			      double	      y,
-			      cairo_glyph_t **glyphs,
-			      int	     *num_glyphs);
+_cairo_gstate_text_to_glyphs (cairo_gstate_t	    *gstate,
+			      double		     x,
+			      double		     y,
+			      const char	    *utf8,
+			      int		     utf8_len,
+			      cairo_glyph_t	   **glyphs,
+			      int		    *num_glyphs,
+			      cairo_text_cluster_t **clusters,
+			      int		    *num_clusters,
+			      cairo_bool_t	    *backward);
 
 cairo_private cairo_status_t
 _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
@@ -1527,14 +1535,6 @@ _cairo_scaled_font_fini (cairo_scaled_font_t *scaled_font);
 cairo_private cairo_status_t
 _cairo_scaled_font_font_extents (cairo_scaled_font_t  *scaled_font,
 				 cairo_font_extents_t *extents);
-
-cairo_private cairo_status_t
-_cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t	*scaled_font,
-				   double		x,
-				   double		y,
-				   const char           *utf8,
-				   cairo_glyph_t       **glyphs,
-				   int 		        *num_glyphs);
 
 cairo_private cairo_status_t
 _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,

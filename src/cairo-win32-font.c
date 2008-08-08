@@ -1780,7 +1780,7 @@ const cairo_scaled_font_backend_t _cairo_win32_scaled_font_backend = {
     _cairo_win32_scaled_font_create_toy,
     _cairo_win32_scaled_font_fini,
     _cairo_win32_scaled_font_glyph_init,
-    _cairo_win32_scaled_font_text_to_glyphs,
+    /* _cairo_win32_scaled_font_text_to_glyphs, FIXME */
     NULL,			/* ucs4_to_index */
     _cairo_win32_scaled_font_show_glyphs,
     _cairo_win32_scaled_font_load_truetype_table,

@@ -51,7 +51,7 @@ cairo_test_t test = {
     draw
 };
 
-static cairo_user_data_key_t fallback_font_face_key;
+static cairo_user_data_key_t fallback_font_key;
 
 static cairo_status_t
 test_scaled_font_init (cairo_scaled_font_t  *scaled_font,
@@ -60,7 +60,12 @@ test_scaled_font_init (cairo_scaled_font_t  *scaled_font,
 {
     cairo_set_font_face (cr,
 			 cairo_font_face_get_user_data (cairo_scaled_font_get_font_face (scaled_font),
-							&fallback_font_face_key));
+							&fallback_font_key));
+
+    cairo_scaled_font_set_user_data (scaled_font,
+				     &fallback_font_key,
+				     cairo_scaled_font_reference (cairo_get_scaled_font (cr)),
+				     (cairo_destroy_func_t) cairo_scaled_font_destroy);
 
     cairo_font_extents (cr, extents);
 
@@ -73,19 +78,42 @@ test_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 			       cairo_t              *cr,
 			       cairo_text_extents_t *extents)
 {
-    char text[2] = "\0";
+    cairo_glyph_t cairo_glyph;
 
-    /* XXX only works for ASCII.  need ucs4_to_utf8 :( */
-    text[0] = glyph;
+    cairo_glyph.index = glyph;
+    cairo_glyph.x = 0;
+    cairo_glyph.y = 0;
 
     cairo_set_font_face (cr,
 			 cairo_font_face_get_user_data (cairo_scaled_font_get_font_face (scaled_font),
-							&fallback_font_face_key));
+							&fallback_font_key));
 
-    cairo_show_text (cr, text);
-    cairo_text_extents (cr, text, extents);
+    cairo_show_glyphs (cr, &cairo_glyph, 1);
+    cairo_glyph_extents (cr, &cairo_glyph, 1, extents);
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+test_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
+				 const char	       *utf8,
+				 int		        utf8_len,
+				 cairo_glyph_t	      **glyphs,
+				 int		       *num_glyphs,
+				 cairo_text_cluster_t **clusters,
+				 int		       *num_clusters,
+				 cairo_bool_t	       *backward)
+{
+  cairo_scaled_font_t *fallback_scaled_font;
+
+  fallback_scaled_font = cairo_scaled_font_get_user_data (scaled_font,
+							  &fallback_font_key);
+
+  return cairo_scaled_font_text_to_glyphs (fallback_scaled_font, 0, 0,
+					   utf8, utf8_len,
+					   glyphs, num_glyphs,
+					   clusters, num_clusters,
+					   backward);
 }
 
 static cairo_font_face_t *user_font_face = NULL;
@@ -99,6 +127,7 @@ get_user_font_face (void)
 	user_font_face = cairo_user_font_face_create ();
 	cairo_user_font_face_set_init_func             (user_font_face, test_scaled_font_init);
 	cairo_user_font_face_set_render_glyph_func     (user_font_face, test_scaled_font_render_glyph);
+	cairo_user_font_face_set_text_to_glyphs_func   (user_font_face, test_scaled_font_text_to_glyphs);
 
 	/* This also happens to be default font face on cairo_t, so does
 	 * not make much sense here.  For demonstration only.
@@ -108,9 +137,9 @@ get_user_font_face (void)
 							 CAIRO_FONT_WEIGHT_NORMAL);
 
 	cairo_font_face_set_user_data (user_font_face,
-				       &fallback_font_face_key,
+				       &fallback_font_key,
 				       fallback_font_face,
-				       cairo_font_face_destroy);
+				       (cairo_destroy_func_t) cairo_font_face_destroy);
     }
 
     return user_font_face;

@@ -1330,6 +1330,18 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 				 int                   num_glyphs,
 				 cairo_text_extents_t  *extents);
 
+cairo_public cairo_status_t
+cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
+				  double		 x,
+				  double		 y,
+				  const char	        *utf8,
+				  int		         utf8_len,
+				  cairo_glyph_t	       **glyphs,
+				  int		        *num_glyphs,
+				  cairo_text_cluster_t **clusters,
+				  int		        *num_clusters,
+				  cairo_bool_t	        *backward);
+
 cairo_public cairo_font_face_t *
 cairo_scaled_font_get_font_face (cairo_scaled_font_t *scaled_font);
 
@@ -1468,6 +1480,7 @@ typedef cairo_status_t (*cairo_user_scaled_font_render_glyph_func_t) (cairo_scal
  * @glyphs: output array of glyphs, in font space
  * @num_glyphs: number of output glyphs
  *
+ * XXXXXXXXXXXXX
  * #cairo_user_scaled_font_text_to_glyphs_func_t is the type of function which
  * is called to convert input text to an array of glyphs.  This is used by the
  * cairo_show_text() operation.
@@ -1496,9 +1509,13 @@ typedef cairo_status_t (*cairo_user_scaled_font_render_glyph_func_t) (cairo_scal
  * Since: 1.8
  **/
 typedef cairo_status_t (*cairo_user_scaled_font_text_to_glyphs_func_t) (cairo_scaled_font_t   *scaled_font,
-									const char            *utf8,
-									cairo_glyph_t        **glyphs,
-									int                   *num_glyphs);
+									const char	      *utf8,
+									int		       utf8_len,
+									cairo_glyph_t	     **glyphs,
+									int		      *num_glyphs,
+									cairo_text_cluster_t **clusters,
+									int		      *num_clusters,
+									cairo_bool_t	      *backward);
 
 /**
  * cairo_user_scaled_font_unicode_to_glyph_func_t:

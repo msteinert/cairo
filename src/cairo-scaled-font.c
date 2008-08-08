@@ -1109,7 +1109,7 @@ cairo_scaled_font_text_extents (cairo_scaled_font_t   *scaled_font,
 				cairo_text_extents_t  *extents)
 {
     cairo_status_t status;
-    cairo_glyph_t *glyphs;
+    cairo_glyph_t *glyphs = NULL;
     int num_glyphs;
 
     if (scaled_font->status)
@@ -1118,7 +1118,11 @@ cairo_scaled_font_text_extents (cairo_scaled_font_t   *scaled_font,
     if (utf8 == NULL)
 	goto ZERO_EXTENTS;
 
-    status = _cairo_scaled_font_text_to_glyphs (scaled_font, 0., 0., utf8, &glyphs, &num_glyphs);
+    status = cairo_scaled_font_text_to_glyphs (scaled_font, 0., 0.,
+					       utf8, -1,
+					       &glyphs, &num_glyphs,
+					       NULL, NULL,
+					       NULL);
     if (status)
 	goto ZERO_EXTENTS;
 
@@ -1265,70 +1269,148 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 slim_hidden_def (cairo_scaled_font_glyph_extents);
 
 cairo_status_t
-_cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
-				   double		x,
-				   double		y,
-				   const char          *utf8,
-				   cairo_glyph_t      **glyphs,
-				   int 		       *num_glyphs)
+cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
+				  double		 x,
+				  double		 y,
+				  const char	        *utf8,
+				  int		         utf8_len,
+				  cairo_glyph_t	       **glyphs,
+				  int		        *num_glyphs,
+				  cairo_text_cluster_t **clusters,
+				  int		        *num_clusters,
+				  cairo_bool_t	        *backward)
 {
     int i;
-    uint32_t *ucs4 = NULL;
+    int num_chars = 0;
+    const char *p;
     cairo_status_t status;
-    cairo_scaled_glyph_t *scaled_glyph;
-
-    *num_glyphs = 0;
-    *glyphs = NULL;
+    cairo_glyph_t *orig_glyphs;
+    cairo_text_cluster_t *orig_clusters;
 
     status = scaled_font->status;
     if (status)
 	return status;
 
-    if (utf8[0] == '\0')
-	return CAIRO_STATUS_SUCCESS;
+    /* A slew of sanity checks */
+
+    /* glyphs and num_glyphs can't be NULL */
+    if (glyphs     == NULL ||
+	num_glyphs == NULL) {
+	status = CAIRO_STATUS_NULL_POINTER;
+	goto BAIL;
+    }
+
+    /* No NULLs for non-NULLs! */
+    if ((utf8_len && utf8         == NULL) ||
+	(clusters && num_clusters == NULL) ||
+	(clusters && backward     == NULL)) {
+	status = CAIRO_STATUS_NULL_POINTER;
+	goto BAIL;
+    }
+
+    /* A -1 for utf8_len means NUL-terminated */
+    if (utf8_len == -1)
+	utf8_len = strlen (utf8);
+
+    /* A NULL *glyphs means no prealloced glyphs array */
+    if (glyphs && *glyphs == NULL)
+	*num_glyphs = 0;
+
+    /* A NULL *clusters means no prealloced clusters array */
+    if (clusters && *clusters == NULL)
+	*num_clusters = 0;
+
+    if (!clusters && num_clusters) {
+	num_clusters = NULL;
+    }
+
+    if (backward) {
+	*backward = FALSE;
+    }
+
+    if (!clusters && backward) {
+	backward = NULL;
+    }
+
+    /* Apart from that, no negatives */
+    if (utf8_len < 0 ||
+	*num_glyphs < 0 ||
+	(num_clusters && *num_clusters < 0)) {
+	status = CAIRO_STATUS_NEGATIVE_COUNT;
+	goto BAIL;
+    }
+
+    if (utf8_len == 0) {
+	status = CAIRO_STATUS_SUCCESS;
+	goto BAIL;
+    }
+
+    /* validate input so backend does not have to */
+    status = _cairo_utf8_to_ucs4 (utf8, utf8_len, NULL, &num_chars);
+    if (status)
+	goto BAIL;
 
     CAIRO_MUTEX_LOCK (scaled_font->mutex);
     _cairo_scaled_font_freeze_cache (scaled_font);
 
+    orig_glyphs = *glyphs;
+    orig_clusters = clusters ? *clusters : NULL;
+
     if (scaled_font->backend->text_to_glyphs) {
 
-	/* validate input so backend does not have to */
-	status = _cairo_utf8_to_ucs4 (utf8, -1, NULL, NULL);
-	if (status)
-	    goto DONE;
-
-	status = scaled_font->backend->text_to_glyphs (scaled_font,
-						       x, y, utf8,
-						       glyphs, num_glyphs);
+	status = scaled_font->backend->text_to_glyphs (scaled_font, x, y,
+						       utf8, utf8_len,
+						       glyphs, num_glyphs,
+						       clusters, num_clusters,
+						       backward);
 
         if (status != CAIRO_INT_STATUS_UNSUPPORTED)
             goto DONE;
     }
 
-    status = _cairo_utf8_to_ucs4 (utf8, -1, &ucs4, num_glyphs);
-    if (status)
-	goto DONE;
+    if (*num_glyphs < num_chars) {
+	*glyphs = cairo_glyph_allocate (num_chars);
+	if (*glyphs == NULL) {
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto DONE;
+	}
+    }
+    *num_glyphs = num_chars;
 
-    *glyphs = (cairo_glyph_t *) _cairo_malloc_ab ((*num_glyphs), sizeof (cairo_glyph_t));
-
-    if (*glyphs == NULL) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto DONE;
+    if (clusters) {
+	if (*num_clusters < num_chars) {
+	    *clusters = cairo_text_cluster_allocate (num_chars);
+	    if (*clusters == NULL) {
+		status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+		goto DONE;
+	    }
+	}
+	*num_clusters = num_chars;
     }
 
-    for (i = 0; i < *num_glyphs; i++) {
-        (*glyphs)[i].index = (*scaled_font->backend->
-			      ucs4_to_index) (scaled_font, ucs4[i]);
+    p = utf8;
+    for (i = 0; i < num_chars; i++) {
+	int num_bytes;
+	uint32_t unicode;
+	cairo_scaled_glyph_t *scaled_glyph;
+
+	num_bytes = _cairo_utf8_get_char_validated (p, &unicode);
+	p += num_bytes;
+
+        (*glyphs)[i].index = (*scaled_font->backend->ucs4_to_index) (scaled_font, unicode);
 	(*glyphs)[i].x = x;
 	(*glyphs)[i].y = y;
+
+	if (clusters) {
+	    (*clusters)[i].num_bytes  = num_bytes;
+	    (*clusters)[i].num_glyphs = 1;
+	}
 
 	status = _cairo_scaled_glyph_lookup (scaled_font,
 					     (*glyphs)[i].index,
 					     CAIRO_SCALED_GLYPH_INFO_METRICS,
 					     &scaled_glyph);
 	if (status) {
-	    free (*glyphs);
-	    *glyphs = NULL;
 	    goto DONE;
 	}
 
@@ -1336,14 +1418,37 @@ _cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t *scaled_font,
         y += scaled_glyph->metrics.y_advance;
     }
 
- DONE:
+ DONE: /* error that should be logged on scaled_font happened */
     _cairo_scaled_font_thaw_cache (scaled_font);
     CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
 
-    if (ucs4)
-	free (ucs4);
+    if (status) {
+	*num_glyphs = 0;
+	if (*glyphs != orig_glyphs) {
+	    cairo_glyph_free (*glyphs);
+	    *glyphs = orig_glyphs;
+	}
+
+	if (clusters) {
+	    *num_clusters = 0;
+	    if (*clusters != orig_clusters) {
+		cairo_text_cluster_free (*clusters);
+		*clusters = orig_clusters;
+	    }
+	}
+    }
 
     return _cairo_scaled_font_set_error (scaled_font, status);
+
+ BAIL: /* error with input arguments */
+
+    if (num_glyphs)
+	*num_glyphs = 0;
+
+    if (num_clusters)
+	*num_clusters = 0;
+
+    return status;
 }
 
 /*

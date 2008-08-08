@@ -265,12 +265,16 @@ _cairo_user_ucs4_to_index (void	    *abstract_font,
 }
 
 static cairo_int_status_t
-_cairo_user_text_to_glyphs (void           *abstract_font,
-			    double          x,
-			    double          y,
-			    const char     *utf8,
-			    cairo_glyph_t **glyphs,
-			    int	           *num_glyphs)
+_cairo_user_text_to_glyphs (void		 *abstract_font,
+			    double		  x,
+			    double		  y,
+			    const char		 *utf8,
+			    int			  utf8_len,
+			    cairo_glyph_t	**glyphs,
+			    int			  *num_glyphs,
+			    cairo_text_cluster_t **clusters,
+			    int			  *num_clusters,
+			    cairo_bool_t	  *backward)
 {
     cairo_int_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -280,25 +284,21 @@ _cairo_user_text_to_glyphs (void           *abstract_font,
 
     if (face->scaled_font_methods.text_to_glyphs) {
 	int i;
+	int orig_num_glyphs = *num_glyphs;
 
-	*glyphs = NULL;
-	*num_glyphs = -1;
-
-	/* XXX currently user allocs glyphs array but cairo frees it */
 	status = face->scaled_font_methods.text_to_glyphs (&scaled_font->base,
-							   utf8, glyphs, num_glyphs);
+							   utf8, utf8_len,
+							   glyphs, num_glyphs,
+							   clusters, num_clusters,
+							   backward);
 
-	if (status != CAIRO_STATUS_SUCCESS) {
-	    status = _cairo_scaled_font_set_error (&scaled_font->base, status);
-	    if (*glyphs) {
-		free (*glyphs);
-		*glyphs = NULL;
-	    }
+	if (status != CAIRO_STATUS_SUCCESS)
 	    return status;
-	}
 
-	if (*num_glyphs < 0)
+	if (*num_glyphs < 0) {
+	    *num_glyphs = orig_num_glyphs;
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
 
 	/* Convert from font space to user space and add x,y */
 	for (i = 0; i < *num_glyphs; i++) {

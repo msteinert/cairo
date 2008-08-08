@@ -1445,12 +1445,16 @@ _cairo_gstate_get_font_extents (cairo_gstate_t *gstate,
 }
 
 cairo_status_t
-_cairo_gstate_text_to_glyphs (cairo_gstate_t *gstate,
-			      const char     *utf8,
-			      double	      x,
-			      double	      y,
-			      cairo_glyph_t **glyphs,
-			      int	     *num_glyphs)
+_cairo_gstate_text_to_glyphs (cairo_gstate_t	    *gstate,
+			      double		     x,
+			      double		     y,
+			      const char	    *utf8,
+			      int		     utf8_len,
+			      cairo_glyph_t	   **glyphs,
+			      int		    *num_glyphs,
+			      cairo_text_cluster_t **clusters,
+			      int		    *num_clusters,
+			      cairo_bool_t	    *backward)
 {
     cairo_status_t status;
 
@@ -1458,8 +1462,11 @@ _cairo_gstate_text_to_glyphs (cairo_gstate_t *gstate,
     if (status)
 	return status;
 
-    return _cairo_scaled_font_text_to_glyphs (gstate->scaled_font, x, y,
-					      utf8, glyphs, num_glyphs);
+    return cairo_scaled_font_text_to_glyphs (gstate->scaled_font, x, y,
+					     utf8, utf8_len,
+					     glyphs, num_glyphs,
+					     clusters, num_clusters,
+					     backward);
 }
 
 cairo_status_t
@@ -1536,7 +1543,7 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
     if (num_glyphs <= ARRAY_LENGTH (stack_transformed_glyphs)) {
 	transformed_glyphs = stack_transformed_glyphs;
     } else {
-	transformed_glyphs = _cairo_malloc_ab (num_glyphs, sizeof(cairo_glyph_t));
+	transformed_glyphs = cairo_glyph_allocate (num_glyphs);
 	if (transformed_glyphs == NULL)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
@@ -1550,6 +1557,10 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
     status = _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
     if (status)
 	goto CLEANUP_GLYPHS;
+
+    /* Just in case */
+    if (!clusters)
+	num_clusters = 0;
 
     /* For really huge font sizes, we can just do path;fill instead of
      * show_glyphs, as show_glyphs would put excess pressure on the cache,
@@ -1598,7 +1609,7 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
 
 CLEANUP_GLYPHS:
     if (transformed_glyphs != stack_transformed_glyphs)
-      free (transformed_glyphs);
+      cairo_glyph_free (transformed_glyphs);
 
     return status;
 }
@@ -1620,7 +1631,7 @@ _cairo_gstate_glyph_path (cairo_gstate_t      *gstate,
     if (num_glyphs < ARRAY_LENGTH (stack_transformed_glyphs))
       transformed_glyphs = stack_transformed_glyphs;
     else
-      transformed_glyphs = _cairo_malloc_ab (num_glyphs, sizeof(cairo_glyph_t));
+      transformed_glyphs = cairo_glyph_allocate (num_glyphs);
     if (transformed_glyphs == NULL)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -1634,7 +1645,7 @@ _cairo_gstate_glyph_path (cairo_gstate_t      *gstate,
     CAIRO_MUTEX_UNLOCK (gstate->scaled_font->mutex);
 
     if (transformed_glyphs != stack_transformed_glyphs)
-      free (transformed_glyphs);
+      cairo_glyph_free (transformed_glyphs);
 
     return status;
 }

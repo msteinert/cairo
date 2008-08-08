@@ -3013,16 +3013,18 @@ cairo_text_extents (cairo_t              *cr,
 
     cairo_get_current_point (cr, &x, &y);
 
-    status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8,
+    status = _cairo_gstate_text_to_glyphs (cr->gstate,
 					   x, y,
-					   &glyphs, &num_glyphs);
+					   utf8, strlen (utf8),
+					   &glyphs, &num_glyphs,
+					   NULL, NULL,
+					   NULL);
 
     if (status == CAIRO_STATUS_SUCCESS)
 	status = _cairo_gstate_glyph_extents (cr->gstate,
 		                              glyphs, num_glyphs,
 					      extents);
-    if (glyphs)
-	free (glyphs);
+    cairo_glyph_free (glyphs);
 
     if (status)
 	_cairo_set_error (cr, status);
@@ -3116,7 +3118,9 @@ cairo_show_text (cairo_t *cr, const char *utf8)
     cairo_text_extents_t extents;
     cairo_status_t status;
     cairo_glyph_t *glyphs = NULL, *last_glyph;
-    int num_glyphs;
+    cairo_text_cluster_t *clusters = NULL;
+    int utf8_len, num_glyphs, num_clusters;
+    cairo_bool_t backward;
     double x, y;
 
     if (cr->status)
@@ -3127,9 +3131,14 @@ cairo_show_text (cairo_t *cr, const char *utf8)
 
     cairo_get_current_point (cr, &x, &y);
 
-    status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8,
+    utf8_len = strlen (utf8);
+
+    status = _cairo_gstate_text_to_glyphs (cr->gstate,
 					   x, y,
-					   &glyphs, &num_glyphs);
+					   utf8, utf8_len,
+					   &glyphs, &num_glyphs,
+					   cairo_has_show_text_glyphs (cr) ? &clusters : NULL, &num_clusters,
+					   &backward);
     if (status)
 	goto BAIL;
 
@@ -3137,10 +3146,10 @@ cairo_show_text (cairo_t *cr, const char *utf8)
 	return;
 
     status = _cairo_gstate_show_text_glyphs (cr->gstate,
-					     NULL, 0,
+					     utf8, utf8_len,
 					     glyphs, num_glyphs,
-					     NULL, 0,
-					     FALSE);
+					     clusters, num_clusters,
+					     backward);
     if (status)
 	goto BAIL;
 
@@ -3156,8 +3165,8 @@ cairo_show_text (cairo_t *cr, const char *utf8)
     cairo_move_to (cr, x, y);
 
  BAIL:
-    if (glyphs)
-	free (glyphs);
+    cairo_glyph_free (glyphs);
+    cairo_text_cluster_free (clusters);
 
     if (status)
 	_cairo_set_error (cr, status);
@@ -3226,6 +3235,14 @@ cairo_show_text_glyphs (cairo_t			   *cr,
 
     /* A slew of sanity checks */
 
+    /* No NULLs for non-zeros */
+    if ((num_glyphs   && glyphs   == NULL) ||
+	(utf8_len     && utf8     == NULL) ||
+	(num_clusters && clusters == NULL)) {
+	_cairo_set_error (cr, CAIRO_STATUS_NULL_POINTER);
+	return;
+    }
+
     /* A -1 for utf8_len means NUL-terminated */
     if (utf8_len == -1)
 	utf8_len = strlen (utf8);
@@ -3233,14 +3250,6 @@ cairo_show_text_glyphs (cairo_t			   *cr,
     /* Apart from that, no negatives */
     if (num_glyphs < 0 || utf8_len < 0 || num_clusters < 0) {
 	_cairo_set_error (cr, CAIRO_STATUS_NEGATIVE_COUNT);
-	return;
-    }
-
-    /* And no NULLs for non-zeros */
-    if ((num_glyphs   && glyphs   == NULL) ||
-	(utf8_len     && utf8     == NULL) ||
-	(num_clusters && clusters == NULL)) {
-	_cairo_set_error (cr, CAIRO_STATUS_NULL_POINTER);
 	return;
     }
 
@@ -3343,9 +3352,12 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
 
     cairo_get_current_point (cr, &x, &y);
 
-    status = _cairo_gstate_text_to_glyphs (cr->gstate, utf8,
+    status = _cairo_gstate_text_to_glyphs (cr->gstate,
 					   x, y,
-					   &glyphs, &num_glyphs);
+					   utf8, strlen (utf8),
+					   &glyphs, &num_glyphs,
+					   NULL, NULL,
+					   NULL);
 
     if (status)
 	goto BAIL;
@@ -3373,8 +3385,7 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
     cairo_move_to (cr, x, y);
 
  BAIL:
-    if (glyphs)
-	free (glyphs);
+    cairo_glyph_free (glyphs);
 
     if (status)
 	_cairo_set_error (cr, status);
