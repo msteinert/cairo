@@ -355,7 +355,8 @@ _cairo_sub_font_glyph_map_to_unicode (cairo_sub_font_glyph_t *sub_font_glyph,
 				      const char 	     *utf8,
 				      int 		      utf8_len)
 {
-    int add_zero_byte = 0;
+    if (utf8 != NULL && utf8_len != 0 && utf8[utf8_len - 1] == '\0')
+	utf8_len--;
 
     if (utf8 != NULL && utf8_len != 0) {
 	if (sub_font_glyph->utf8 != NULL) {
@@ -372,12 +373,9 @@ _cairo_sub_font_glyph_map_to_unicode (cairo_sub_font_glyph_t *sub_font_glyph,
 	    }
 	} else {
 	    /* No existing mapping. Use the requested mapping */
-	    if (utf8[utf8_len - 1] != 0)
-		add_zero_byte = 1;
-	    sub_font_glyph->utf8 = malloc (utf8_len + add_zero_byte);
+	    sub_font_glyph->utf8 = malloc (utf8_len + 1);
 	    memcpy (sub_font_glyph->utf8, utf8, utf8_len);
-	    if (add_zero_byte)
-		sub_font_glyph->utf8[utf8_len] = 0;
+	    sub_font_glyph->utf8[utf8_len] = 0;
 	    sub_font_glyph->utf8_len = utf8_len;
 	    return TRUE;
 	}
