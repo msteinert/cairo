@@ -847,6 +847,9 @@ cairo_glyph_free (cairo_glyph_t *glyphs);
  *
  * For a cluster to be valid, both @num_bytes and @num_glyphs should
  * be non-negative, and at least one should be non-zero.
+ * Note that clusters with zero glyphs are not as well supported as
+ * normal clusters.  For example, PDF rendering applications typically
+ * ignore those clusters when PDF text is being selected.
  *
  * See cairo_show_text_glyphs() for how clusters are used in advanced
  * text operations.
