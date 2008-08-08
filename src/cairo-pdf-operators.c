@@ -1287,6 +1287,8 @@ _cairo_pdf_operators_emit_cluster (cairo_pdf_operators_t      *pdf_operators,
     _cairo_pdf_operators_flush_glyphs (pdf_operators);
     status = _cairo_pdf_operators_begin_actualtext (pdf_operators, utf8, utf8_len);
     cur_glyph = glyphs;
+    /* XXX
+     * If no glyphs, we should put *something* here for the text to be selectable. */
     for (i = 0; i < num_glyphs; i++) {
 	status = _cairo_scaled_font_subsets_map_glyph (pdf_operators->font_subsets,
 						       scaled_font,
