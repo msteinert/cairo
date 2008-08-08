@@ -460,9 +460,10 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
 	if (sub_font_glyph == NULL)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-	_cairo_sub_font_glyph_lookup_unicode (sub_font_glyph,
-					      sub_font->scaled_font,
-					      scaled_font_glyph_index);
+	if (utf8_len < 0)
+	    _cairo_sub_font_glyph_lookup_unicode (sub_font_glyph,
+						  sub_font->scaled_font,
+						  scaled_font_glyph_index);
 
 	status = _cairo_hash_table_insert (sub_font->sub_font_glyphs, &sub_font_glyph->base);
 	if (status) {
@@ -491,7 +492,7 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
     subset_glyph->is_composite = sub_font->is_composite;
     subset_glyph->x_advance = sub_font_glyph->x_advance;
     subset_glyph->y_advance = sub_font_glyph->y_advance;
-    subset_glyph->utf8_is_mapped = FALSE;
+    subset_glyph->utf8_is_mapped = _cairo_sub_font_glyph_map_to_unicode (sub_font_glyph, utf8, utf8_len);
 
     return CAIRO_STATUS_SUCCESS;
 }
