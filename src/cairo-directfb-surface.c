@@ -1384,21 +1384,29 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
     int                          h         = 8;
     int                          i;
     
+    D_DEBUG_AT (CairoDFB_Font, "%s( %p [%d] )\n", __FUNCTION__, glyphs, num_glyphs );
+
     if (scaled_font->surface_private) {
         cache = scaled_font->surface_private;
         x = cache->x;
         y = cache->y;
     }
-    
+
+    _cairo_cache_freeze( scaled_font->glyphs );
+
     for (i = 0; i < num_glyphs; i++) {
         cairo_scaled_glyph_t  *scaled_glyph;
         cairo_image_surface_t *img;
         
+        D_DEBUG_AT (CairoDFB_Font, "  -> [%2d] = %4lu\n", i, glyphs[i].index );
+
         ret = _cairo_scaled_glyph_lookup (scaled_font, glyphs[i].index,
                                           CAIRO_SCALED_GLYPH_INFO_SURFACE,
                                           &scaled_glyph);
-        if (ret)
+        if (ret) {
+            _cairo_cache_thaw( scaled_font->glyphs );
             return ret;
+        }
         
         img = scaled_glyph->surface;
         switch (img->format) {
@@ -1408,18 +1416,25 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
                 break;
             default:
                 D_DEBUG_AT (CairoDFB_Font,
-                            "Unsupported font format %d!\n", img->format);
+                            "  -> Unsupported font format %d!\n", img->format);
+                _cairo_cache_thaw( scaled_font->glyphs );
                 return CAIRO_INT_STATUS_UNSUPPORTED;
         }
         
         points[n].x = _cairo_lround (glyphs[i].x - img->base.device_transform.x0);
         points[n].y = _cairo_lround (glyphs[i].y - img->base.device_transform.y0);
         
+//        D_DEBUG_AT (CairoDFB_Font, "            (%4d,%4d) [%2d]\n", points[n].x, points[n].y, n );
+
         if (points[n].x >= surface->width  ||
             points[n].y >= surface->height ||
             points[n].x+img->width  <= 0   ||
             points[n].y+img->height <= 0)
-            continue;
+        {
+             D_DEBUG_AT (CairoDFB_Font,
+                         "  -> Unsupported font format %d!\n", img->format);
+             continue;
+        }
         
         if (!scaled_glyph->surface_private) {
             DFBRectangle *rect;
@@ -1441,30 +1456,31 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
             
             /* Remember glyph location */ 
             rect = malloc (sizeof(DFBRectangle));
-            if (!rect)
+            if (!rect) {
+                _cairo_cache_thaw( scaled_font->glyphs );
                 return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+            }
             *rect = rects[n];
             
             scaled_glyph->surface_private = rect;
             chars[num_chars++] = scaled_glyph;
             
-            /*D_DEBUG_AT (CairoDFB_Font, 
-                        "Glyph %lu will be loaded at (%d,%d).\n",
-                        glyphs[i].index, rects[n].x, rects[n].y);*/
+            D_DEBUG_AT (CairoDFB_Font, "  -> loading at %4d,%2d <- rect %p, img %p, entry %p\n",
+                        rects[n].x, rects[n].y, rect, scaled_glyph->surface, scaled_glyph);
         }
         else {
             rects[n] = *((DFBRectangle *)scaled_glyph->surface_private);
             
-            /*D_DEBUG_AT (CairoDFB_Font, 
-                        "Glyph %lu already loaded at (%d,%d).\n",
-                        glyphs[i].index, rects[n].x, rects[n].y);*/
+            D_DEBUG_AT (CairoDFB_Font, "  -> exists at  %4d,%2d\n", rects[n].x, rects[n].y);
         }
             
         n++;
     }
     
-    if (!n)
+    if (!n) {
+        _cairo_cache_thaw( scaled_font->glyphs );
         return CAIRO_INT_STATUS_NOTHING_TO_DO;
+    }
     
     h += y;
     w = MAX (w, 8);
@@ -1477,12 +1493,13 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
             w = MAX (w, cache->width);
             h = MAX (h, cache->height);
             
-            D_DEBUG_AT (CairoDFB_Font,
-                        "Reallocating font cache (%dx%d).\n", w, h);
+            D_DEBUG_AT (CairoDFB_Font, "  -> Reallocating font cache (%dx%d).\n", w, h);
             
             new_cache = _directfb_allocate_font_cache (surface->dfb, w, h);
-            if (!new_cache)
+            if (!new_cache) {
+                _cairo_cache_thaw( scaled_font->glyphs );
                 return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+            }
             
             new_cache->dfbsurface->Blit (new_cache->dfbsurface,
                                          cache->dfbsurface, NULL, 0, 0);
@@ -1492,12 +1509,13 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
         }
     }
     else {
-        D_DEBUG_AT (CairoDFB_Font,
-                    "Allocating font cache (%dx%d).\n", w, h);
+        D_DEBUG_AT (CairoDFB_Font, "  -> Allocating font cache (%dx%d).\n", w, h);
         
         cache = _directfb_allocate_font_cache (surface->dfb, w, h);
-        if (!cache)
+        if (!cache) {
+            _cairo_cache_thaw( scaled_font->glyphs );
             return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+        }
             
         scaled_font->surface_backend = &cairo_directfb_surface_backend;
         scaled_font->surface_private = cache;
@@ -1509,17 +1527,30 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
     
         if (cache->dfbsurface->Lock (cache->dfbsurface, 
                                      DSLF_WRITE, (void *)&data, &pitch))
+        {
+            _cairo_cache_thaw( scaled_font->glyphs );
             return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+        }
             
+        D_DEBUG_AT (CairoDFB_Font, "  => %d chars to load, cache %dx%d\n", num_chars, cache->width, cache->height);
+
         for (i = 0; i < num_chars; i++) {
             cairo_image_surface_t *img  = chars[i]->surface;
             DFBRectangle          *rect = chars[i]->surface_private;
             unsigned char         *dst  = data;
-            unsigned char         *src  = img->data;
+            unsigned char         *src;
             int                    j;
             
+            D_DEBUG_AT (CairoDFB_Font, "  -> loading [%2d] <- rect %p, img %p, entry %p\n", i, rect, img, chars[i]);
+
+            src = img->data;
+
+            D_DEBUG_AT (CairoDFB_Font, "     from %p\n", src);
+
             dst += rect->y * pitch + (_directfb_argb_font ? (rect->x<<2) : rect->x);
                         
+            D_DEBUG_AT (CairoDFB_Font, "     to %4d,%2d (%p)\n", rect->x, rect->y, dst);
+
             if (img->format == CAIRO_FORMAT_A1) {
                 for (h = rect->h; h; h--) {
                     if (_directfb_argb_font) {
@@ -1568,9 +1599,13 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
         cache->dfbsurface->Unlock (cache->dfbsurface);
     }
 
+    _cairo_cache_thaw( scaled_font->glyphs );
+
     cache->x = x;
     cache->y = y;
     
+    D_DEBUG_AT (CairoDFB_Font, "  => cache %d,%d, %p [%d]\n", x, y, cache, n);
+
     *ret_cache = cache;
     *ret_num   = n;
 
