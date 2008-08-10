@@ -909,11 +909,15 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 	image_masks.green_mask == surface->g_mask &&
 	image_masks.blue_mask  == surface->b_mask)
     {
+	int ret;
+
 	ximage.bits_per_pixel = image_masks.bpp;
 	ximage.bytes_per_line = image->stride;
 	ximage.data = (char *)image->data;
 	own_data = FALSE;
-	XInitImage (&ximage);
+
+	ret = XInitImage (&ximage);
+	assert (ret != 0);
     } else {
 	unsigned int stride, rowstride;
 	int x, y, x0, y0, x_off, y_off;
@@ -923,6 +927,8 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 	int o_a_width=0, o_r_width=0, o_g_width=0, o_b_width=0;
 	int o_a_shift=0, o_r_shift=0, o_g_shift=0, o_b_shift=0;
 	cairo_xlib_visual_info_t *visual_info = NULL;
+	cairo_bool_t true_color;
+	int ret;
 
 	if (surface->depth > 16) {
 	    ximage.bits_per_pixel = 32;
@@ -942,28 +948,27 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 
 	own_data = TRUE;
 
-	XInitImage (&ximage);
+	ret = XInitImage (&ximage);
+	assert (ret != 0);
 
 	_characterize_field (image_masks.alpha_mask, &i_a_width, &i_a_shift);
 	_characterize_field (image_masks.red_mask  , &i_r_width, &i_r_shift);
 	_characterize_field (image_masks.green_mask, &i_g_width, &i_g_shift);
 	_characterize_field (image_masks.blue_mask , &i_b_width, &i_b_shift);
 
-	if (surface->visual == NULL || surface->visual->class == TrueColor) {
-
+	true_color = surface->visual == NULL ||
+	             surface->visual->class == TrueColor;
+	if (true_color) {
 	    _characterize_field (surface->a_mask, &o_a_width, &o_a_shift);
 	    _characterize_field (surface->r_mask, &o_r_width, &o_r_shift);
 	    _characterize_field (surface->g_mask, &o_g_width, &o_g_shift);
 	    _characterize_field (surface->b_mask, &o_b_width, &o_b_shift);
-
 	} else {
-
 	    status = _cairo_xlib_screen_get_visual_info (surface->screen_info,
 							 surface->visual,
 							 &visual_info);
 	    if (status)
 		goto BAIL;
-
 	}
 
 	rowstride = cairo_image_surface_get_stride (&image->base) >> 2;
@@ -972,13 +977,15 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 	y0 = dst_y + surface->base.device_transform.y0;
 	for (y = 0, y_off = y0 % ARRAY_LENGTH (dither_pattern);
 	     y < ximage.height;
-	     y++, y_off = (y_off+1) % ARRAY_LENGTH (dither_pattern)) {
+	     y++, y_off = (y_off+1) % ARRAY_LENGTH (dither_pattern))
+	{
 	    const int8_t *dither_row = dither_pattern[y_off];
+
 	    for (x = 0, x_off = x0 % ARRAY_LENGTH (dither_pattern[0]);
 		 x < ximage.width;
-		 x++, x_off = (x_off+1) % ARRAY_LENGTH (dither_pattern[0])) {
+		 x++, x_off = (x_off+1) % ARRAY_LENGTH (dither_pattern[0]))
+	    {
 		int dither_adjustment = dither_row[x_off];
-
 		int a, r, g, b;
 
 		if (image_masks.bpp <= 8)
@@ -987,20 +994,24 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 		    in_pixel = ((uint16_t*)row)[x];
 		else
 		    in_pixel = row[x];
+
 		a = _field_to_8 (in_pixel & image_masks.alpha_mask, i_a_width, i_a_shift);
 		r = _field_to_8 (in_pixel & image_masks.red_mask  , i_r_width, i_r_shift);
 		g = _field_to_8 (in_pixel & image_masks.green_mask, i_g_width, i_g_shift);
 		b = _field_to_8 (in_pixel & image_masks.blue_mask , i_b_width, i_b_shift);
-		if (surface->visual == NULL || surface->visual->class == TrueColor) {
-		    out_pixel = (_field_from_8        (a, o_a_width, o_a_shift) |
-				 _field_from_8_dither (r, o_r_width, o_r_shift, dither_adjustment) |
-				 _field_from_8_dither (g, o_g_width, o_g_shift, dither_adjustment) |
-				 _field_from_8_dither (b, o_b_width, o_b_shift, dither_adjustment));
+
+		if (true_color) {
+		    out_pixel = _field_from_8        (a, o_a_width, o_a_shift) |
+				_field_from_8_dither (r, o_r_width, o_r_shift, dither_adjustment) |
+				_field_from_8_dither (g, o_g_width, o_g_shift, dither_adjustment) |
+				_field_from_8_dither (b, o_b_width, o_b_shift, dither_adjustment);
 		} else {
 		    out_pixel = _pseudocolor_from_rgb888_dither (visual_info, r, g, b, dither_adjustment);
 		}
+
 		XPutPixel (&ximage, x, y, out_pixel);
 	    }
+
 	    row += rowstride;
 	}
     }
@@ -1194,9 +1205,9 @@ _cairo_xlib_surface_create_solid_pattern_surface (void                  *abstrac
 	      _cairo_xlib_surface_create_internal (other->dpy,
 						   pixmap,
 						   other->screen, other->visual,
-						   NULL,
+						   other->xrender_format,
 						   image->width, image->height,
-						   0);
+						   other->depth);
     status = surface->base.status;
     if (status)
 	goto BAIL;
@@ -2391,6 +2402,33 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 
     CAIRO_MUTEX_INITIALIZE ();
 
+    if (xrender_format) {
+	depth = xrender_format->depth;
+
+	/* XXX find matching visual for core/dithering fallbacks? */
+    } else if (visual) {
+	int j, k;
+
+	/* This is ugly, but we have to walk over all visuals
+	 * for the display to find the correct depth.
+	 */
+	depth = 0;
+	for (j = 0; j < screen->ndepths; j++) {
+	    Depth *d = &screen->depths[j];
+	    for (k = 0; k < d->nvisuals; k++) {
+		if (&d->visuals[k] == visual) {
+		    depth = d->depth;
+		    goto found;
+		}
+	    }
+	}
+    found:
+	;
+    }
+
+    if (depth == 0)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_VISUAL));
+
     screen_info = _cairo_xlib_screen_info_get (dpy, screen);
     if (screen_info == NULL)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
@@ -2406,27 +2444,6 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 	free (surface);
 	_cairo_xlib_screen_info_destroy (screen_info);
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
-    }
-
-    if (xrender_format) {
-	depth = xrender_format->depth;
-    } else if (visual) {
-	int j, k;
-
-	/* This is ugly, but we have to walk over all visuals
-	 * for the display to find the depth.
-	 */
-	for (j = 0; j < screen->ndepths; j++) {
-	    Depth *d = &screen->depths[j];
-	    for (k = 0; k < d->nvisuals; k++) {
-		if (&d->visuals[k] == visual) {
-		    depth = d->depth;
-		    goto found;
-		}
-	    }
-	}
-    found:
-	;
     }
 
     if (! XRenderQueryVersion (dpy, &surface->render_major, &surface->render_minor)) {
