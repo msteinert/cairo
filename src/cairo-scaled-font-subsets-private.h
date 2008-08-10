@@ -127,11 +127,9 @@ _cairo_scaled_font_subsets_destroy (cairo_scaled_font_subsets_t *font_subsets);
  * @font_subsets: a #cairo_scaled_font_subsets_t
  * @scaled_font: the font of the glyph to be mapped
  * @scaled_font_glyph_index: the index of the glyph to be mapped
+ * @utf8: a string of text encoded in UTF-8
+ * @utf8_len: length of @utf8 in bytes
  * @subset_glyph_ret: return structure containing subset font and glyph id
- *
- * @font_id_ret: return value giving the font ID of the mapped glyph
- * @subset_id_ret: return value giving the subset ID of the mapped glyph within the @font_id_ret
- * @subset_glyph_index_ret: return value giving the index of the mapped glyph within the @subset_id_ret subset
  *
  * Map a glyph from a #cairo_scaled_font to a new index within a
  * subset of that font. The mapping performed is from the tuple:
@@ -169,6 +167,14 @@ _cairo_scaled_font_subsets_destroy (cairo_scaled_font_subsets_t *font_subsets);
  * This final description of a font subset is the same representation
  * used by #cairo_scaled_font_subset_t as provided by
  * _cairo_scaled_font_subsets_foreach.
+ *
+ * @utf8 and @utf8_len specify a string of unicode characters that the
+ * glyph @scaled_font_glyph_index maps to. If @utf8_is_mapped in
+ * @subset_glyph_ret is TRUE, the font subsetting will (where index to
+ * unicode mapping is supported) ensure that @scaled_font_glyph_index
+ * maps to @utf8. If @utf8_is_mapped is FALSE,
+ * @scaled_font_glyph_index has already been mapped to a different
+ * unicode string.
  *
  * The returned values in the #cairo_scaled_font_subsets_glyph_t struct are:
  *
