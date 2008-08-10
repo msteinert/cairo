@@ -687,7 +687,8 @@ _cairo_directfb_surface_acquire_dest_image (void                     *abstract_s
                                             void                    **image_extra)
 {
     cairo_directfb_surface_t *surface = abstract_surface;
-    
+    cairo_status_t status;
+
     D_DEBUG_AT (Cairo_DirectFB, 
                 "%s( surface=%p, interest_rect={ %d %d %d %d } ).\n", 
                 __FUNCTION__, surface, 
@@ -696,8 +697,47 @@ _cairo_directfb_surface_acquire_dest_image (void                     *abstract_s
                 interest_rect ? interest_rect->width : surface->width,
                 interest_rect ? interest_rect->height : surface->height);
     
-    return _directfb_acquire_surface (surface, interest_rect, image_out, 
-                                      image_rect_out, image_extra, DSLF_READ | DSLF_WRITE);
+    status = _directfb_acquire_surface (surface, interest_rect, image_out,
+                                        image_rect_out, image_extra, DSLF_READ | DSLF_WRITE);
+    if (status)
+        return status;
+
+    /* Ensure that the new image has the same clip, if it's the same buffer */
+    if ((IDirectFBSurface*) *image_extra == surface->dfbsurface &&
+        surface->clips)
+    {
+        cairo_surface_t *s = (cairo_surface_t*) *image_out;
+
+        unsigned int clip_serial = _cairo_surface_allocate_clip_serial (s);
+
+        cairo_region_t clip_region;
+
+        if (surface->n_clips == 1) {
+            cairo_rectangle_int_t rect = { surface->clips[0].x1, surface->clips[0].y1,
+                                           surface->clips[0].x2 - surface->clips[0].x1,
+                                           surface->clips[0].y2 - surface->clips[0].y1 };
+            _cairo_region_init_rect (&clip_region, &rect);
+        } else {
+            cairo_box_int_t *boxes = _cairo_malloc_ab (surface->n_clips, sizeof(cairo_box_int_t));
+            int k;
+
+            for (k = 0; k < surface->n_clips; k++) {
+                boxes[k].p1.x = surface->clips[k].x1;
+                boxes[k].p1.y = surface->clips[k].y1;
+                boxes[k].p2.x = surface->clips[k].x2;
+                boxes[k].p2.y = surface->clips[k].y2;
+            }
+
+            _cairo_region_init_boxes (&clip_region, boxes, surface->n_clips);
+            free (boxes);
+        }
+
+        _cairo_surface_set_clip_region (s, &clip_region, clip_serial);
+
+        _cairo_region_fini (&clip_region);
+    }
+
+    return status;
 }
 
 static void
@@ -716,13 +756,18 @@ _cairo_directfb_surface_release_dest_image (void                  *abstract_surf
     buffer->Unlock (buffer);
 
     if (surface->dfbsurface != buffer) {
-        DFBRegion region = { .x1 = interest_rect->x, .y1 = interest_rect->y,
-                             .x2 = interest_rect->x+interest_rect->width-1,
-                             .y2 = interest_rect->y+interest_rect->height-1 };
-        surface->dfbsurface->SetClip (surface->dfbsurface, &region);
+        DFBRegion region = { interest_rect->x, interest_rect->y,
+                             interest_rect->x+interest_rect->width-1,
+                             interest_rect->y+interest_rect->height-1 };
+
+        DFBRectangle dr = { image_rect->x, image_rect->y,
+                            image_rect->width, image_rect->height };
+
+        _dfb_blit_op op = { FALSE, buffer, { 0, 0, dr.w, dr.h }, dr };
+
         surface->dfbsurface->SetBlittingFlags (surface->dfbsurface, DSBLIT_NOFX);
-        surface->dfbsurface->Blit (surface->dfbsurface, buffer,
-                                   NULL, image_rect->x, image_rect->y);
+
+        _cairo_directfb_run_clipped (surface, &region, _dfb_clip_func_blit, &op);
     }
     
     cairo_surface_destroy (&image->base);
