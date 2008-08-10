@@ -46,9 +46,6 @@ Known issues:
   PDF as fallback bitmap glyphs.  This will be (hopefully) fixed before 1.8.
   The test case test/user-font-proxy.c demonstrates this.
 
-- The win32 font backend does not work in this version.  This will be fixed
-  as soon as possible.
-
 
 Release 1.6.4 (2008-04-11 Carl Worth <cworth@cworth.org>)
 =========================================================
