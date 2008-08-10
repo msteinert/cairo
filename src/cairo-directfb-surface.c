@@ -120,38 +120,160 @@ static int _directfb_argb_font = 0;
 
 /*****************************************************************************/
 
+typedef cairo_bool_t (*clipped_draw_func) (cairo_directfb_surface_t *dfs,
+                                           void *closure);
 
-#define RUN_CLIPPED( surface, clip, func ) {\
-    if ((surface)->clips) {\
-        int k;\
-        for (k = 0; k < (surface)->n_clips; k++) {\
-            if (clip) {\
-                DFBRegion  reg = (surface)->clips[k];\
-                DFBRegion *cli = (clip);\
-                if (reg.x2 < cli->x1 || reg.y2 < cli->y1 ||\
-                    reg.x1 > cli->x2 || reg.y1 > cli->y2)\
-                    continue;\
-                if (reg.x1 < cli->x1)\
-                    reg.x1 = cli->x1;\
-                if (reg.y1 < cli->y1)\
-                    reg.y1 = cli->y1;\
-                if (reg.x2 > cli->x2)\
-                    reg.x2 = cli->x2;\
-                if (reg.y2 > cli->y2)\
-                    reg.y2 = cli->y2;\
-                (surface)->dfbsurface->SetClip ((surface)->dfbsurface, &reg);\
-            }\
-            else {\
-                (surface)->dfbsurface->SetClip ((surface)->dfbsurface,\
-                                           &(surface)->clips[k]);\
-            }\
-            func;\
-        }\
-    }\
-    else {\
-        (surface)->dfbsurface->SetClip ((surface)->dfbsurface, clip);\
-        func;\
-    }\
+static cairo_bool_t
+_cairo_directfb_run_clipped (cairo_directfb_surface_t *surface,
+                             const DFBRegion *clip,
+                             clipped_draw_func draw_func,
+                             void *draw_closure)
+{
+    cairo_bool_t ok = TRUE;
+
+    if (surface->clips) {
+        int k;
+        for (k = 0; k < surface->n_clips; k++) {
+            DFBRegion reg = surface->clips[k];
+
+            if (clip) {
+                if (reg.x2 < clip->x1 || reg.y2 < clip->y1 ||
+                    reg.x1 > clip->x2 || reg.y1 > clip->y2)
+                    continue;
+                if (reg.x1 < clip->x1)
+                    reg.x1 = clip->x1;
+                if (reg.y1 < clip->y1)
+                    reg.y1 = clip->y1;
+                if (reg.x2 > clip->x2)
+                    reg.x2 = clip->x2;
+                if (reg.y2 > clip->y2)
+                    reg.y2 = clip->y2;
+            }
+
+            surface->dfbsurface->SetClip (surface->dfbsurface, &reg);
+
+            ok = draw_func (surface, draw_closure);
+            if (!ok)
+                goto FAIL;
+        }
+    } else {
+        surface->dfbsurface->SetClip (surface->dfbsurface, clip);
+
+        ok = draw_func (surface, draw_closure);
+    }
+
+FAIL:
+
+    surface->dfbsurface->SetClip (surface->dfbsurface, NULL);
+
+    return ok;
+}
+
+// TextureTriangles
+
+typedef struct {
+    cairo_bool_t tile;
+    IDirectFBSurface *src;
+    DFBRectangle src_rect;
+    DFBRectangle dst_rect;
+} _dfb_blit_op;
+
+static cairo_bool_t
+_dfb_clip_func_blit (cairo_directfb_surface_t *dfs,
+                     void *closure)
+{
+    _dfb_blit_op *op = (_dfb_blit_op*) closure;
+    DFBResult rv;
+
+    if (op->tile) {
+        rv = dfs->dfbsurface->TileBlit (dfs->dfbsurface,
+                                        op->src,
+                                        &op->src_rect,
+                                        op->dst_rect.x,
+                                        op->dst_rect.y);
+    } else if (op->dst_rect.w != op->src_rect.w ||
+               op->dst_rect.h != op->src_rect.h)
+    {
+        rv = dfs->dfbsurface->StretchBlit (dfs->dfbsurface,
+                                           op->src,
+                                           &op->src_rect,
+                                           &op->dst_rect);
+    } else {
+        rv = dfs->dfbsurface->Blit (dfs->dfbsurface,
+                                    op->src,
+                                    &op->src_rect,
+                                    op->dst_rect.x,
+                                    op->dst_rect.y);
+    }
+
+    return (rv == DFB_OK);
+}
+
+typedef struct {
+    IDirectFBSurface *src;
+    int count;
+    const DFBRectangle *src_rects;
+    const DFBPoint *dst_points;
+} _dfb_batch_blit_op;
+
+static cairo_bool_t
+_dfb_clip_func_batch_blit (cairo_directfb_surface_t *dfs,
+                           void *closure)
+{
+    _dfb_batch_blit_op *op = (_dfb_batch_blit_op*) closure;
+    DFBResult rv;
+
+    rv = dfs->dfbsurface->BatchBlit (dfs->dfbsurface,
+                                     op->src,
+                                     op->src_rects,
+                                     op->dst_points,
+                                     op->count);
+
+    return (rv == DFB_OK);
+}
+
+typedef struct {
+    int count;
+    const DFBRectangle *rects;
+} _dfb_fill_rects_op;
+
+static cairo_bool_t
+_dfb_clip_func_fill_rects (cairo_directfb_surface_t *dfs,
+                           void *closure)
+{
+    _dfb_fill_rects_op *op = (_dfb_fill_rects_op*) closure;
+    DFBResult rv;
+
+    rv = dfs->dfbsurface->FillRectangles (dfs->dfbsurface,
+                                          op->rects,
+                                          op->count);
+
+    return (rv == DFB_OK);
+}
+
+typedef struct {
+    IDirectFBSurface *src;
+    const DFBVertex *vertices;
+    const int *indices;
+    int count;
+    DFBTriangleFormation formation;
+} _dfb_texture_triangles_op;
+
+static cairo_bool_t
+_dfb_clip_func_texture_triangles (cairo_directfb_surface_t *dfs,
+                                  void *closure)
+{
+    _dfb_texture_triangles_op *op = (_dfb_texture_triangles_op*) closure;
+    DFBResult rv;
+
+    rv = dfs->dfbsurface->TextureTriangles (dfs->dfbsurface,
+                                            op->src,
+                                            op->vertices,
+                                            op->indices,
+                                            op->count,
+                                            op->formation);
+
+    return (rv == DFB_OK);
 }
 
 #define TRANSFORM_POINT2X( m, x, y, ret_x, ret_y ) {\
@@ -921,10 +1043,11 @@ _cairo_directfb_surface_composite (cairo_operator_t  op,
         
             if (src_attr.extend == CAIRO_EXTEND_NONE) {
                 D_DEBUG_AT (Cairo_DirectFB, "Running Blit().\n");
-        
-                RUN_CLIPPED( dst, NULL,
-                             dst->dfbsurface->Blit (dst->dfbsurface,
-                                            src->dfbsurface, &sr, dst_x, dst_y));
+
+                {
+                    _dfb_blit_op op = { FALSE, src->dfbsurface, sr, { dst_x, dst_y, width, height } };
+                    _cairo_directfb_run_clipped (dst, NULL, _dfb_clip_func_blit, &op);
+                }
             }
             else if (src_attr.extend == CAIRO_EXTEND_REPEAT) {
                 DFBRegion clip;
@@ -936,9 +1059,10 @@ _cairo_directfb_surface_composite (cairo_operator_t  op,
             
                 D_DEBUG_AT (Cairo_DirectFB, "Running TileBlit().\n");
             
-                RUN_CLIPPED( dst, &clip,
-                             dst->dfbsurface->TileBlit (dst->dfbsurface, 
-                                            src->dfbsurface, &sr, dst_x, dst_y));
+                {
+                    _dfb_blit_op op = { TRUE, src->dfbsurface, sr, { dst_x, dst_y, width, height } };
+                    _cairo_directfb_run_clipped (dst, &clip, _dfb_clip_func_blit, &op);
+                }
             }
         }   break;
         
@@ -963,9 +1087,10 @@ _cairo_directfb_surface_composite (cairo_operator_t  op,
             
             D_DEBUG_AT (Cairo_DirectFB, "Running StretchBlit().\n");
 
-            RUN_CLIPPED (dst, NULL,
-                         dst->dfbsurface->StretchBlit (dst->dfbsurface, 
-                                                       src->dfbsurface, &sr, &dr));
+            {
+                _dfb_blit_op op = { FALSE, src->dfbsurface, sr, dr };
+                _cairo_directfb_run_clipped (dst, NULL, _dfb_clip_func_blit, &op);
+            }
         }   break;
         
         case DFXL_TEXTRIANGLES: {
@@ -1021,9 +1146,11 @@ _cairo_directfb_surface_composite (cairo_operator_t  op,
         
             D_DEBUG_AT (Cairo_DirectFB, "Running TextureTriangles().\n");
             
-            RUN_CLIPPED (dst, &clip,
-                         dst->dfbsurface->TextureTriangles (dst->dfbsurface, 
-                                            src->dfbsurface, v, NULL, 4, DTTF_FAN));
+            {
+                _dfb_texture_triangles_op op = { src->dfbsurface, v, NULL, 4, DTTF_FAN };
+                _cairo_directfb_run_clipped (dst, &clip, _dfb_clip_func_texture_triangles, &op);
+            }
+
         }   break;
         
         default:
@@ -1101,9 +1228,11 @@ _cairo_directfb_surface_fill_rectangles (void                  *abstract_surface
         r[i].w = rects[i].width;
         r[i].h = rects[i].height;
     }
-     
-    RUN_CLIPPED (dst, NULL,
-                 dst->dfbsurface->FillRectangles (dst->dfbsurface, r, n_rects));
+
+    {
+        _dfb_fill_rects_op op = { n_rects, r };
+        _cairo_directfb_run_clipped (dst, NULL, _dfb_clip_func_fill_rects, &op);
+    }
     
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1237,10 +1366,11 @@ _cairo_directfb_surface_composite_trapezoids (cairo_operator_t   op,
               
         D_DEBUG_AT (Cairo_DirectFB, "Running TextureTriangles().\n");
             
-        RUN_CLIPPED (dst, NULL,
-                     dst->dfbsurface->TextureTriangles (dst->dfbsurface, src->dfbsurface, 
-                                                    vertex, NULL, n, DTTF_LIST));
-                                            
+        {
+            _dfb_texture_triangles_op op = { src->dfbsurface, vertex, NULL, n, DTTF_LIST };
+            _cairo_directfb_run_clipped (dst, &clip, _dfb_clip_func_texture_triangles, &op);
+        }
+
         ret = CAIRO_STATUS_SUCCESS;
     }
     
@@ -1662,10 +1792,11 @@ _cairo_directfb_surface_show_glyphs (void                *abstract_dst,
     dst->dfbsurface->SetColor (dst->dfbsurface, color.r, color.g, color.b, color.a);
     
     D_DEBUG_AT (Cairo_DirectFB, "Running BatchBlit().\n");
-        
-    RUN_CLIPPED (dst, NULL,
-                 dst->dfbsurface->BatchBlit (dst->dfbsurface,
-                                         cache->dfbsurface, rects, points, num));
+
+    {
+        _dfb_batch_blit_op op = { cache->dfbsurface, num, rects, points };
+        _cairo_directfb_run_clipped (dst, NULL, _dfb_clip_func_batch_blit, &op);
+    }
         
     return CAIRO_STATUS_SUCCESS;
 }
