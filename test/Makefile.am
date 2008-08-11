@@ -960,7 +960,7 @@ check-valgrind:
 NOLOG_TESTS_LOG = $(NOLOG_TESTS:=.log)
 
 $(NOLOG_TESTS_LOG):
-	echo dummy > $@
+	@echo dummy > $@
 
 index.html: $(srcdir)/make-html.pl $(TESTS:$(EXEEXT)=.log)
 	@echo Creating index.html
