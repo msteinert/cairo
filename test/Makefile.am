@@ -681,6 +681,10 @@ REFERENCE_IMAGES = \
 	text-antialias-subpixel-quartz-ref.png	\
 	text-glyph-range-ref.png	\
 	text-glyph-range-rgb24-ref.png	\
+	text-lcd-filter-fir3-ref.png \
+	text-lcd-filter-fir5-ref.png \
+	text-lcd-filter-intra-pixel-ref.png \
+	text-lcd-filter-none-ref.png \
 	text-pattern-ps-argb32-ref.png	\
 	text-pattern-ps-rgb24-ref.png	\
 	text-pattern-ref.png	\
@@ -692,6 +696,7 @@ REFERENCE_IMAGES = \
 	text-pattern-quartz-ref.png \
 	text-pattern-quartz-rgb24-ref.png \
 	text-rotate-ref.png	\
+	text-rotate-pdf-ref.png \
 	text-rotate-ps-ref.png	\
 	text-rotate-svg-ref.png	\
 	text-rotate-quartz-ref.png \
@@ -714,7 +719,7 @@ REFERENCE_IMAGES = \
 	unbounded-operator-ref.png	\
 	unbounded-operator-rgb24-ref.png	\
 	user-font-ref.png	\
-	user-font-pdf-ref.png	\
+	user-font-ps-ref.png \
 	user-font-svg-ref.png	\
 	user-font-proxy-ref.png	\
 	user-font-proxy-pdf-ref.png	\
