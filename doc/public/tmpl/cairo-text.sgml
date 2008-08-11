@@ -50,7 +50,7 @@ Cairo has two sets of text rendering capabilities:
 
 </para>
 
-@index:
+@index: 
 @x: 
 @y: 
 
@@ -196,7 +196,7 @@ Cairo has two sets of text rendering capabilities:
 </para>
 
 @cr: 
-@Returns:
+@Returns: 
 
 
 <!-- ##### FUNCTION cairo_show_text_glyphs ##### -->
@@ -249,10 +249,10 @@ Cairo has two sets of text rendering capabilities:
 
 </para>
 
-@family:
-@slant:
-@weight:
-@Returns:
+@family: 
+@slant: 
+@weight: 
+@Returns: 
 
 
 <!-- ##### FUNCTION cairo_toy_font_face_get_family ##### -->
@@ -260,8 +260,8 @@ Cairo has two sets of text rendering capabilities:
 
 </para>
 
-@font_face:
-@Returns:
+@font_face: 
+@Returns: 
 
 
 <!-- ##### FUNCTION cairo_toy_font_face_get_slant ##### -->
@@ -269,8 +269,8 @@ Cairo has two sets of text rendering capabilities:
 
 </para>
 
-@font_face:
-@Returns:
+@font_face: 
+@Returns: 
 
 
 <!-- ##### FUNCTION cairo_toy_font_face_get_weight ##### -->
@@ -278,8 +278,8 @@ Cairo has two sets of text rendering capabilities:
 
 </para>
 
-@font_face:
-@Returns:
+@font_face: 
+@Returns: 
 
 
 <!-- ##### FUNCTION cairo_glyph_allocate ##### -->

@@ -142,19 +142,19 @@ output on a particular display.
 
 </para>
 
-@CAIRO_LCD_FILTER_DEFAULT:
-@CAIRO_LCD_FILTER_NONE:
-@CAIRO_LCD_FILTER_INTRA_PIXEL:
-@CAIRO_LCD_FILTER_FIR3:
-@CAIRO_LCD_FILTER_FIR5:
+@CAIRO_LCD_FILTER_DEFAULT: 
+@CAIRO_LCD_FILTER_NONE: 
+@CAIRO_LCD_FILTER_INTRA_PIXEL: 
+@CAIRO_LCD_FILTER_FIR3: 
+@CAIRO_LCD_FILTER_FIR5: 
 
 <!-- ##### FUNCTION cairo_font_options_set_lcd_filter ##### -->
 <para>
 
 </para>
 
-@options:
-@lcd_filter:
+@options: 
+@lcd_filter: 
 
 
 <!-- ##### FUNCTION cairo_font_options_get_lcd_filter ##### -->
@@ -162,8 +162,8 @@ output on a particular display.
 
 </para>
 
-@options:
-@Returns:
+@options: 
+@Returns: 
 
 
 <!-- ##### ENUM cairo_hint_style_t ##### -->
