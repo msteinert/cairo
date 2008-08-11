@@ -25,6 +25,16 @@ Here are the steps to follow to create a new cairo release:
 	slim_hidden_def and slim_hidden_proto is needed in the cairo
 	implementation in the style of other similar calls.
 
+	In the unfortunate case that you have to push a snapshot out
+	(note, I said snapshot, not release) without the entire test
+	suite passing, here's the magic env vars to set when doing
+	'make distcheck' and 'make release-publish' that will let you
+	get away with it.  At any cost, never ever release without
+	(implied) distchecking.  Every time we got around it, it turned
+	out to be a disaster.  Anyway, here's the pass code:
+
+		DISPLAY= CAIRO_TEST_TARGET=" "
+
 3) Fill out an entry in the NEWS file
 
 	Sift through the logs since the last release. This is most
