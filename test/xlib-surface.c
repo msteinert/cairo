@@ -306,7 +306,7 @@ main (void)
     if (!dpy) {
 	cairo_test_log ("xlib-surface: Cannot open display, skipping\n");
 	cairo_test_fini ();
-	return 0;
+	return CAIRO_TEST_SUCCESS;
     }
 
     if (!check_visual (dpy)) {
