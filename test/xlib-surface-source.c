@@ -61,6 +61,10 @@ create_source_surface (int size)
     data = xmalloc (sizeof (struct closure));
 
     data->dpy = XOpenDisplay (NULL);
+    if (!data->dpy) {
+	return NULL;
+    }
+
     xrender_format = XRenderFindStandardFormat (data->dpy, PictStandardARGB32);
 
     data->pix = XCreatePixmap (data->dpy, DefaultRootWindow (data->dpy),
