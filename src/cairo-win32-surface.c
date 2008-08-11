@@ -1751,6 +1751,7 @@ cairo_win32_surface_create (HDC hdc)
     surface->saved_dc_bitmap = NULL;
     surface->brush = NULL;
     surface->old_brush = NULL;
+    surface->font_subsets = NULL;
 
     GetClipBox(hdc, &rect);
     surface->extents.x = rect.left;
