@@ -21,9 +21,9 @@ Here are the steps to follow to create a new cairo release:
 	some more steps to follow).
 
 	If you get errors about local PLT entries, you get the list of
-	cairo and pixman entries with the error.  For each of these, a
-	call to slim_hidden_def and slim_hidden_proto is needed in the
-	cairo or pixman implementation in the style of other similar calls.
+	cairo entries with the error.  For each of these, a call to
+	slim_hidden_def and slim_hidden_proto is needed in the cairo
+	implementation in the style of other similar calls.
 
 3) Fill out an entry in the NEWS file
 
