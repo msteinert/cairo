@@ -48,7 +48,7 @@ static unsigned char mask[(MASK_WIDTH + 7) / 8 * MASK_HEIGHT] = {
     MASK,
 };
 
-cairo_test_t test = {
+static const cairo_test_t test = {
     "a1-mask",
     "test masks of CAIRO_FORMAT_A1",
     MASK_WIDTH, MASK_HEIGHT,
@@ -57,12 +57,15 @@ cairo_test_t test = {
 
 
 static cairo_test_status_t
-check_status (cairo_status_t status, cairo_status_t expected)
+check_status (const cairo_test_context_t *ctx,
+	      cairo_status_t status,
+	      cairo_status_t expected)
 {
     if (status == expected)
 	return CAIRO_TEST_SUCCESS;
 
-    cairo_test_log ("Error: Expected status value %d (%s), received %d (%s)\n",
+    cairo_test_log (ctx,
+		    "Error: Expected status value %d (%s), received %d (%s)\n",
 		    expected,
 		    cairo_status_to_string (expected),
 		    status,
@@ -71,7 +74,8 @@ check_status (cairo_status_t status, cairo_status_t expected)
 }
 
 static cairo_test_status_t
-test_surface_with_width_and_stride (int width, int stride,
+test_surface_with_width_and_stride (const cairo_test_context_t *ctx,
+				    int width, int stride,
 				    cairo_status_t expected)
 {
     cairo_test_status_t status;
@@ -80,7 +84,8 @@ test_surface_with_width_and_stride (int width, int stride,
     int len;
     unsigned char *data;
 
-    cairo_test_log ("Creating surface with width %d and stride %d\n",
+    cairo_test_log (ctx,
+		    "Creating surface with width %d and stride %d\n",
 		    width, stride);
 
     len = stride;
@@ -94,11 +99,11 @@ test_surface_with_width_and_stride (int width, int stride,
 
     cairo_paint (cr);
 
-    status = check_status (cairo_surface_status (surface), expected);
+    status = check_status (ctx, cairo_surface_status (surface), expected);
     if (status)
 	goto BAIL;
 
-    status = check_status (cairo_status (cr), expected);
+    status = check_status (ctx, cairo_status (cr), expected);
     if (status)
 	goto BAIL;
 
@@ -146,9 +151,10 @@ draw (cairo_t *cr, int dst_width, int dst_height)
 int
 main (void)
 {
+    cairo_test_context_t ctx;
     int test_width;
 
-    cairo_test_init ("a1-mask");
+    cairo_test_init (&ctx, "a1-mask");
 
     /* first check the API strictness */
     for (test_width = 0; test_width < 40; test_width++) {
@@ -164,13 +170,15 @@ main (void)
 	expected = (stride == test_stride) ?
 	    CAIRO_STATUS_SUCCESS : CAIRO_STATUS_INVALID_STRIDE;
 
-	status = test_surface_with_width_and_stride (test_width,
+	status = test_surface_with_width_and_stride (&ctx,
+						     test_width,
 						     test_stride,
 						     expected);
 	if (status)
 	    return status;
 
-	status = test_surface_with_width_and_stride (test_width,
+	status = test_surface_with_width_and_stride (&ctx,
+						     test_width,
 						     -test_stride,
 						     expected);
 	if (status)
@@ -180,20 +188,22 @@ main (void)
 	/* Then create a surface using the correct stride,
 	 * (should always succeed).
 	 */
-	status = test_surface_with_width_and_stride (test_width,
+	status = test_surface_with_width_and_stride (&ctx,
+						     test_width,
 						     stride,
 						     CAIRO_STATUS_SUCCESS);
 	if (status)
 	    return status;
 
-	status = test_surface_with_width_and_stride (test_width,
+	status = test_surface_with_width_and_stride (&ctx,
+						     test_width,
 						     -stride,
 						     CAIRO_STATUS_SUCCESS);
 	if (status)
 	    return status;
     }
 
-    cairo_test_fini ();
+    cairo_test_fini (&ctx);
 
     return cairo_test (&test);
 }

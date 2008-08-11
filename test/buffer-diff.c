@@ -47,12 +47,12 @@
 #define PERCEPTUAL_DIFF_THRESHOLD 25
 
 static void
-xunlink (const char *pathname)
+xunlink (const cairo_test_context_t *ctx, const char *pathname)
 {
     if (unlink (pathname) < 0 && errno != ENOENT) {
-	cairo_test_log ("  Error: Cannot remove %s: %s\n",
+	cairo_test_log (ctx, "  Error: Cannot remove %s: %s\n",
 			pathname, strerror (errno));
-	exit (1);
+	exit (CAIRO_TEST_FAILURE);
     }
 }
 
@@ -122,7 +122,8 @@ buffer_diff_core (unsigned char *_buf_a,
 }
 
 void
-compare_surfaces (cairo_surface_t	*surface_a,
+compare_surfaces (const cairo_test_context_t  *ctx,
+	          cairo_surface_t	*surface_a,
 		  cairo_surface_t	*surface_b,
 		  cairo_surface_t	*surface_diff,
 		  buffer_diff_result_t	*result)
@@ -150,14 +151,15 @@ compare_surfaces (cairo_surface_t	*surface_a,
     if (result->pixels_changed == 0)
 	return;
 
-    cairo_test_log ("%d pixels differ (with maximum difference of %d) from reference image\n",
+    cairo_test_log (ctx,
+	            "%d pixels differ (with maximum difference of %d) from reference image\n",
 		    result->pixels_changed, result->max_diff);
 
     /* Then, if there are any different pixels, we give the pdiff code
      * a crack at the images. If it decides that there are no visually
      * discernible differences in any pixels, then we accept this
      * result as good enough.
-     * 
+     *
      * Only let pdiff have a crack at the comparison if the max difference
      * is lower than a threshold, otherwise some problems could be masked.
      */
@@ -166,7 +168,8 @@ compare_surfaces (cairo_surface_t	*surface_a,
                                                     gamma, luminance, field_of_view);
         if (discernible_pixels_changed == 0) {
             result->pixels_changed = 0;
-            cairo_test_log ("But perceptual diff finds no visually discernible difference.\n"
+            cairo_test_log (ctx,
+		            "But perceptual diff finds no visually discernible difference.\n"
                             "Accepting result.\n");
         }
     }
@@ -208,7 +211,9 @@ stdio_write_func (void *closure, const unsigned char *data, unsigned int length)
  * extending from (x,y) to (width,height).
  */
 static void
-flatten_surface (cairo_surface_t **surface, int x, int y)
+flatten_surface (const cairo_test_context_t *ctx,
+	         cairo_surface_t **surface,
+		 int x, int y)
 {
     cairo_surface_t *flat;
     cairo_t *cr;
@@ -219,14 +224,17 @@ flatten_surface (cairo_surface_t **surface, int x, int y)
     cairo_surface_set_device_offset (flat, -x, -y);
 
     cr = cairo_create (flat);
+    cairo_surface_destroy (flat);
+
     cairo_set_source_rgb (cr, 1, 1, 1);
     cairo_paint (cr);
-    cairo_set_source_surface (cr, *surface, 0, 0);
-    cairo_paint (cr);
-    cairo_destroy (cr);
 
+    cairo_set_source_surface (cr, *surface, 0, 0);
     cairo_surface_destroy (*surface);
-    *surface = flat;
+    cairo_paint (cr);
+
+    *surface = cairo_surface_reference (cairo_get_target (cr));
+    cairo_destroy (cr);
 }
 
 /* Given an image surface, create a new surface that has the same
@@ -235,7 +243,9 @@ flatten_surface (cairo_surface_t **surface, int x, int y)
  * The original surface will be destroyed.
  */
 static void
-extract_sub_surface (cairo_surface_t **surface, int x, int y)
+extract_sub_surface (const cairo_test_context_t *ctx,
+	             cairo_surface_t **surface,
+		     int x, int y)
 {
     cairo_surface_t *sub;
     cairo_t *cr;
@@ -250,13 +260,15 @@ extract_sub_surface (cairo_surface_t **surface, int x, int y)
      * time, so I'm leaving both here so I can look at both to see
      * which I like better. */
     cr = cairo_create (sub);
+    cairo_surface_destroy (sub);
+
     cairo_set_source_surface (cr, *surface, -x, -y);
+    cairo_surface_destroy (*surface);
     cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
     cairo_paint (cr);
-    cairo_destroy (cr);
 
-    cairo_surface_destroy (*surface);
-    *surface = sub;
+    *surface = cairo_surface_reference (cairo_get_target (cr));
+    cairo_destroy (cr);
 }
 
 /* Image comparison code courtesy of Richard Worth <richard@theworths.org>
@@ -275,7 +287,8 @@ extract_sub_surface (cairo_surface_t **surface, int x, int y)
  * oh well).
  */
 static cairo_status_t
-image_diff_core (const char *filename_a,
+image_diff_core (const cairo_test_context_t *ctx,
+	         const char *filename_a,
 		 const char *filename_b,
 		 const char *filename_diff,
 		 int		ax,
@@ -293,7 +306,7 @@ image_diff_core (const char *filename_a,
     surface_a = cairo_image_surface_create_from_png (filename_a);
     status = cairo_surface_status (surface_a);
     if (status) {
-	cairo_test_log ("Error: Failed to create surface from %s: %s\n",
+	cairo_test_log (ctx, "Error: Failed to create surface from %s: %s\n",
 			filename_a, cairo_status_to_string (status));
 	return status;
     }
@@ -301,26 +314,43 @@ image_diff_core (const char *filename_a,
     surface_b = cairo_image_surface_create_from_png (filename_b);
     status = cairo_surface_status (surface_b);
     if (status) {
-	cairo_test_log ("Error: Failed to create surface from %s: %s\n",
+	cairo_test_log (ctx, "Error: Failed to create surface from %s: %s\n",
 			filename_b, cairo_status_to_string (status));
 	cairo_surface_destroy (surface_a);
 	return status;
     }
 
     if (flatten) {
-	flatten_surface (&surface_a, ax, ay);
-	flatten_surface (&surface_b, bx, by);
+	flatten_surface (ctx, &surface_a, ax, ay);
+	flatten_surface (ctx, &surface_b, bx, by);
 	ax = ay = bx = by = 0;
     }
 
     if (ax || ay) {
-	extract_sub_surface (&surface_a, ax, ay);
+	extract_sub_surface (ctx, &surface_a, ax, ay);
 	ax = ay = 0;
     }
 
     if (bx || by) {
-	extract_sub_surface (&surface_b, bx, by);
+	extract_sub_surface (ctx, &surface_b, bx, by);
 	bx = by = 0;
+    }
+
+    status = cairo_surface_status (surface_a);
+    if (status) {
+	cairo_test_log (ctx, "Error: Failed to extract surface from %s: %s\n",
+			filename_a, cairo_status_to_string (status));
+	cairo_surface_destroy (surface_a);
+	cairo_surface_destroy (surface_b);
+	return status;
+    }
+    status = cairo_surface_status (surface_b);
+    if (status) {
+	cairo_test_log (ctx, "Error: Failed to extract surface from %s: %s\n",
+			filename_b, cairo_status_to_string (status));
+	cairo_surface_destroy (surface_a);
+	cairo_surface_destroy (surface_b);
+	return status;
     }
 
     width_a = cairo_image_surface_get_width (surface_a);
@@ -334,7 +364,7 @@ image_diff_core (const char *filename_a,
 	height_a != height_b ||
 	stride_a != stride_b)
     {
-	cairo_test_log ("Error: Image size mismatch: (%dx%d) vs. (%dx%d)\n"
+	cairo_test_log (ctx, "Error: Image size mismatch: (%dx%d) vs. (%dx%d)\n"
 			"       for %s vs. %s\n",
 			width_a, height_a,
 			width_b, height_b,
@@ -346,25 +376,49 @@ image_diff_core (const char *filename_a,
 
     surface_diff = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
 					       width_a, height_a);
+    status = cairo_surface_status (surface_diff);
+    if (status) {
+	cairo_test_log (ctx, "Error: Failed to allocate surface to hold differences\n");
+	cairo_surface_destroy (surface_a);
+	cairo_surface_destroy (surface_b);
+	return CAIRO_STATUS_NO_MEMORY;
+    }
 
-    compare_surfaces (surface_a, surface_b, surface_diff, result);
+
+    compare_surfaces (ctx, surface_a, surface_b, surface_diff, result);
 
     status = CAIRO_STATUS_SUCCESS;
     if (result->pixels_changed) {
 	FILE *png_file;
 
-	if (filename_diff)
+	if (filename_diff) {
 	    png_file = fopen (filename_diff, "wb");
-	else
+	    if (png_file == NULL) {
+		int err = errno;
+
+		cairo_surface_destroy (surface_a);
+		cairo_surface_destroy (surface_b);
+		cairo_surface_destroy (surface_diff);
+
+		switch (err) {
+		    case ENOMEM:
+			return CAIRO_STATUS_NO_MEMORY;
+		    default:
+			return CAIRO_STATUS_WRITE_ERROR;
+		}
+	    }
+	} else
 	    png_file = stdout;
 
-	status = cairo_surface_write_to_png_stream (surface_diff, stdio_write_func, png_file);
+	status = cairo_surface_write_to_png_stream (surface_diff,
+						    stdio_write_func,
+						    png_file);
 
 	if (png_file != stdout)
 	    fclose (png_file);
     } else {
 	if (filename_diff)
-	    xunlink (filename_diff);
+	    xunlink (ctx, filename_diff);
     }
 
     cairo_surface_destroy (surface_a);
@@ -375,7 +429,8 @@ image_diff_core (const char *filename_a,
 }
 
 cairo_status_t
-image_diff (const char *filename_a,
+image_diff (const cairo_test_context_t *ctx,
+	    const char *filename_a,
 	    const char *filename_b,
 	    const char *filename_diff,
 	    int		ax,
@@ -384,13 +439,15 @@ image_diff (const char *filename_a,
 	    int		by,
 	    buffer_diff_result_t *result)
 {
-    return image_diff_core (filename_a, filename_b, filename_diff,
+    return image_diff_core (ctx,
+	                    filename_a, filename_b, filename_diff,
 			    ax, ay, bx, by,
 			    result, FALSE);
 }
 
 cairo_status_t
-image_diff_flattened (const char *filename_a,
+image_diff_flattened (const cairo_test_context_t *ctx,
+	              const char *filename_a,
 		      const char *filename_b,
 		      const char *filename_diff,
 		      int	  ax,
@@ -399,7 +456,8 @@ image_diff_flattened (const char *filename_a,
 		      int	  by,
 		      buffer_diff_result_t *result)
 {
-    return image_diff_core (filename_a, filename_b, filename_diff,
+    return image_diff_core (ctx,
+	                    filename_a, filename_b, filename_diff,
 			    ax, ay, bx, by,
 			    result, TRUE);
 }

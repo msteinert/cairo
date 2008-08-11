@@ -30,7 +30,7 @@
 
 static cairo_test_draw_function_t draw;
 
-cairo_test_t test = {
+static const cairo_test_t test = {
     "clipped-group",
     "Test that a clipped group ends up in the right place",
     WIDTH, HEIGHT,

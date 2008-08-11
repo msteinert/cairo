@@ -34,37 +34,39 @@
 int
 main (void)
 {
+    cairo_test_context_t ctx;
     Display *dpy;
     XRenderPictFormat *orig_format, *format;
     cairo_surface_t *surface;
     Pixmap pixmap;
     int screen;
 
-    cairo_test_init ("get-xrender-format");
+    cairo_test_init (&ctx, "get-xrender-format");
 
     dpy = XOpenDisplay (NULL);
     if (! dpy) {
-	cairo_test_log ("Error: Cannot open display: %s.\n",
+	cairo_test_log (&ctx, "Error: Cannot open display: %s.\n",
 			XDisplayName (NULL));
-	cairo_test_fini ();
+	cairo_test_fini (&ctx);
 	return CAIRO_TEST_SUCCESS;
     }
 
     screen = DefaultScreen (dpy);
 
-    cairo_test_log ("Testing with image surface.\n");
+    cairo_test_log (&ctx, "Testing with image surface.\n");
 
     surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
 
     format = cairo_xlib_surface_get_xrender_format (surface);
     if (format != NULL) {
-	cairo_test_log ("Error: expected NULL for image surface\n");
+	cairo_test_log (&ctx, "Error: expected NULL for image surface\n");
+	cairo_test_fini (&ctx);
 	return CAIRO_TEST_FAILURE;
     }
 
     cairo_surface_destroy (surface);
 
-    cairo_test_log ("Testing with non-xrender xlib surface.\n");
+    cairo_test_log (&ctx, "Testing with non-xrender xlib surface.\n");
 
     pixmap = XCreatePixmap (dpy, DefaultRootWindow (dpy),
 			    1, 1, DefaultDepth (dpy, screen));
@@ -74,13 +76,14 @@ main (void)
     orig_format = XRenderFindVisualFormat (dpy, DefaultVisual (dpy, screen));
     format = cairo_xlib_surface_get_xrender_format (surface);
     if (format != orig_format) {
-	cairo_test_log ("Error: did not receive the same format as XRenderFindVisualFormat\n");
+	cairo_test_log (&ctx, "Error: did not receive the same format as XRenderFindVisualFormat\n");
+	cairo_test_fini (&ctx);
 	return CAIRO_TEST_FAILURE;
     }
     cairo_surface_destroy (surface);
     XFreePixmap (dpy, pixmap);
 
-    cairo_test_log ("Testing with xlib xrender surface.\n");
+    cairo_test_log (&ctx, "Testing with xlib xrender surface.\n");
 
     orig_format = XRenderFindStandardFormat (dpy, PictStandardARGB32);
     pixmap = XCreatePixmap (dpy, DefaultRootWindow (dpy),
@@ -92,17 +95,18 @@ main (void)
 							     1, 1);
     format = cairo_xlib_surface_get_xrender_format (surface);
     if (format != orig_format) {
-	cairo_test_log ("Error: did not receive the same format originally set\n");
+	cairo_test_log (&ctx, "Error: did not receive the same format originally set\n");
 	return CAIRO_TEST_FAILURE;
     }
 
-    cairo_test_log ("Testing without the X Render extension.\n");
+    cairo_test_log (&ctx, "Testing without the X Render extension.\n");
 
     cairo_boilerplate_xlib_surface_disable_render (surface);
 
     format = cairo_xlib_surface_get_xrender_format (surface);
     if (format != NULL) {
-	cairo_test_log ("Error: did not receive a NULL format as expected\n");
+	cairo_test_log (&ctx, "Error: did not receive a NULL format as expected\n");
+	cairo_test_fini (&ctx);
 	return CAIRO_TEST_FAILURE;
     }
 
@@ -110,9 +114,7 @@ main (void)
 
     XCloseDisplay (dpy);
 
-    cairo_debug_reset_static_data ();
-
-    cairo_test_fini ();
+    cairo_test_fini (&ctx);
 
     return CAIRO_TEST_SUCCESS;
 }

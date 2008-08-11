@@ -114,7 +114,10 @@ typedef cairo_surface_t *
 				       cairo_content_t		  content,
 				       int			  width,
 				       int			  height,
+				       int			  max_width,
+				       int			  max_height,
 				       cairo_boilerplate_mode_t	  mode,
+				       int                        id,
 				       void			**closure);
 
 typedef cairo_status_t
@@ -137,7 +140,6 @@ typedef struct _cairo_boilerplate_target
     cairo_boilerplate_cleanup_t		cleanup;
     cairo_boilerplate_wait_t		synchronize;
     cairo_bool_t			is_vector;
-    void			       *closure;
 } cairo_boilerplate_target_t;
 
 cairo_boilerplate_target_t **
@@ -146,11 +148,8 @@ cairo_boilerplate_get_targets (int *num_targets, cairo_bool_t *limited_targets);
 void
 cairo_boilerplate_free_targets (cairo_boilerplate_target_t **targets);
 
-void
-cairo_boilerplate_surface_set_user_data (cairo_surface_t		*surface,
-					 const cairo_user_data_key_t	*key,
-					 void				*user_data,
-					 cairo_destroy_func_t		 destroy);
+cairo_surface_t *
+cairo_boilerplate_surface_create_in_error (cairo_status_t status);
 
 #include "xmalloc.h"
 

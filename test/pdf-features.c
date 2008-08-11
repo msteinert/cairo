@@ -86,13 +86,14 @@ struct {
 int
 main (void)
 {
+    cairo_test_context_t ctx;
     cairo_surface_t *surface;
     cairo_t *cr;
     cairo_status_t status;
     const char *filename;
     size_t i;
 
-    cairo_test_init ("pdf-features");
+    cairo_test_init (&ctx, "pdf-features");
 
     filename = "pdf-features.pdf";
 
@@ -130,14 +131,14 @@ main (void)
     cairo_surface_destroy (surface);
 
     if (status) {
-	cairo_test_log ("Failed to create pdf surface for file %s: %s\n",
+	cairo_test_log (&ctx, "Failed to create pdf surface for file %s: %s\n",
 			filename, cairo_status_to_string (status));
 	return CAIRO_TEST_FAILURE;
     }
 
     printf ("pdf-features: Please check %s to ensure it looks/prints correctly.\n", filename);
 
-    cairo_test_fini ();
+    cairo_test_fini (&ctx);
 
     return CAIRO_TEST_SUCCESS;
 }

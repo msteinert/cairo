@@ -131,7 +131,8 @@ erase_pattern (cairo_surface_t *surface)
 }
 
 static cairo_test_status_t
-do_test (Display        *dpy,
+do_test (const cairo_test_context_t *ctx,
+	 Display        *dpy,
 	 unsigned char  *reference_data,
 	 unsigned char  *test_data,
 	 unsigned char  *diff_data,
@@ -242,7 +243,7 @@ do_test (Display        *dpy,
 			     &result);
     }
 
-    cairo_test_log ("xlib-surface: %s, %s, %s%s: %s\n",
+    cairo_test_log (ctx, "xlib-surface: %s, %s, %s%s: %s\n",
 		    use_render ? "   render" : "no-render",
 		    set_size ? "   size" : "no-size",
 		    use_pixmap ? "pixmap" : "window",
@@ -275,13 +276,13 @@ check_visual (Display *dpy)
 
 #undef xcalloc
 static void *
-xcalloc (size_t a, size_t b)
+xcalloc (cairo_test_context_t *ctx, size_t a, size_t b)
 {
     void *ptr = calloc (a, b);
     if (ptr == NULL) {
-	cairo_test_log ("xlib-surface: unable to allocate memory, skipping\n");
-	cairo_test_fini ();
-	exit (0);
+	cairo_test_log (ctx, "xlib-surface: unable to allocate memory, skipping\n");
+	cairo_test_fini (ctx);
+	exit (CAIRO_TEST_SUCCESS);
     }
     return ptr;
 }
@@ -289,6 +290,7 @@ xcalloc (size_t a, size_t b)
 int
 main (void)
 {
+    cairo_test_context_t ctx;
     Display *dpy;
     unsigned char *reference_data;
     unsigned char *test_data;
@@ -300,26 +302,26 @@ main (void)
     cairo_test_status_t status, result = CAIRO_TEST_SUCCESS;
     int stride;
 
-    cairo_test_init ("xlib-surface");
+    cairo_test_init (&ctx, "xlib-surface");
 
     dpy = XOpenDisplay (NULL);
     if (!dpy) {
-	cairo_test_log ("xlib-surface: Cannot open display, skipping\n");
-	cairo_test_fini ();
+	cairo_test_log (&ctx, "xlib-surface: Cannot open display, skipping\n");
+	cairo_test_fini (&ctx);
 	return CAIRO_TEST_SUCCESS;
     }
 
     if (!check_visual (dpy)) {
-	cairo_test_log ("xlib-surface: default visual is not RGB24 or BGR24, skipping\n");
-	cairo_test_fini ();
-	return 0;
+	cairo_test_log (&ctx, "xlib-surface: default visual is not RGB24 or BGR24, skipping\n");
+	cairo_test_fini (&ctx);
+	return CAIRO_TEST_SUCCESS;
     }
 
     stride = cairo_format_stride_for_width (CAIRO_FORMAT_RGB24, SIZE);
 
-    reference_data = xcalloc (SIZE, stride);
-    test_data = xcalloc (SIZE, stride);
-    diff_data = xcalloc (SIZE, stride);
+    reference_data = xcalloc (&ctx, SIZE, stride);
+    test_data = xcalloc (&ctx, SIZE, stride);
+    diff_data = xcalloc (&ctx, SIZE, stride);
 
     reference_surface = cairo_image_surface_create_for_data (reference_data,
 							     CAIRO_FORMAT_RGB24,
@@ -332,7 +334,7 @@ main (void)
     for (set_size = 0; set_size <= 1; set_size++)
 	for (use_pixmap = 0; use_pixmap <= 1; use_pixmap++)
 	    for (offscreen = 0; offscreen <= 1; offscreen++) {
-		status = do_test (dpy,
+		status = do_test (&ctx, dpy,
 				  reference_data, test_data, diff_data,
 				  1, use_pixmap, set_size, offscreen);
 		if (status)
@@ -342,7 +344,7 @@ main (void)
     for (set_size = 0; set_size <= 1; set_size++)
 	for (use_pixmap = 0; use_pixmap <= 1; use_pixmap++)
 	    for (offscreen = 0; offscreen <= 1; offscreen++) {
-		status = do_test (dpy,
+		status = do_test (&ctx, dpy,
 				  reference_data, test_data, diff_data,
 				  0, use_pixmap, set_size, offscreen);
 		if (status)
@@ -355,9 +357,7 @@ main (void)
 
     XCloseDisplay (dpy);
 
-    cairo_debug_reset_static_data ();
-
-    cairo_test_fini ();
+    cairo_test_fini (&ctx);
 
     return result;
 }

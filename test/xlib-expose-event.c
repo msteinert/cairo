@@ -131,11 +131,11 @@ clone_similar_surface (cairo_surface_t * target, cairo_surface_t *surface)
 }
 
 static void
-draw_image (cairo_t *cr)
+draw_image (const cairo_test_context_t *ctx, cairo_t *cr)
 {
     cairo_surface_t *surface, *similar;
 
-    surface = cairo_test_create_surface_from_png (png_filename);
+    surface = cairo_test_create_surface_from_png (ctx, png_filename);
     similar = clone_similar_surface (cairo_get_group_target (cr), surface);
     cairo_surface_destroy (surface);
 
@@ -146,7 +146,10 @@ draw_image (cairo_t *cr)
 }
 
 static void
-draw (cairo_surface_t *surface, cairo_rectangle_t *region, int n_regions)
+draw (const cairo_test_context_t *ctx,
+      cairo_surface_t *surface,
+      cairo_rectangle_t *region,
+      int n_regions)
 {
     cairo_t *cr = cairo_create (surface);
     if (region != NULL) {
@@ -159,7 +162,7 @@ draw (cairo_surface_t *surface, cairo_rectangle_t *region, int n_regions)
 	cairo_clip (cr);
     }
     cairo_push_group (cr);
-    draw_image (cr);
+    draw_image (ctx, cr);
     draw_mask (cr);
     cairo_pop_group_to_source (cr);
     cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
@@ -168,7 +171,7 @@ draw (cairo_surface_t *surface, cairo_rectangle_t *region, int n_regions)
 }
 
 static cairo_test_status_t
-compare (cairo_surface_t *surface)
+compare (const cairo_test_context_t *ctx, cairo_surface_t *surface)
 {
     cairo_t *cr;
     cairo_surface_t *image, *reference, *diff;
@@ -183,12 +186,12 @@ compare (cairo_surface_t *surface)
     cairo_paint (cr);
     cairo_destroy (cr);
 
-    reference = cairo_test_create_surface_from_png ("xlib-expose-event-ref.png");
+    reference = cairo_test_create_surface_from_png (ctx, "xlib-expose-event-ref.png");
     if (cairo_image_surface_get_width (image) != cairo_image_surface_get_width (reference) ||
         cairo_image_surface_get_height (image) != cairo_image_surface_get_height (reference))
 	return CAIRO_TEST_FAILURE;
 
-    compare_surfaces (reference, image, diff, &result);
+    compare_surfaces (ctx, reference, image, diff, &result);
 
     cairo_surface_destroy (reference);
     cairo_surface_destroy (image);
@@ -200,6 +203,7 @@ compare (cairo_surface_t *surface)
 int
 main (void)
 {
+    cairo_test_context_t ctx;
     Display *dpy;
     Drawable drawable;
     int screen;
@@ -208,16 +212,16 @@ main (void)
     int i, j;
     cairo_test_status_t result = CAIRO_TEST_SUCCESS;
 
-    cairo_test_init ("xlib-expose-event");
+    cairo_test_init (&ctx, "xlib-expose-event");
 
     dpy = XOpenDisplay (NULL);
     if (dpy == NULL) {
-	cairo_test_log ("xlib-expose-event: Cannot open display, skipping\n");
+	cairo_test_log (&ctx, "xlib-expose-event: Cannot open display, skipping\n");
 	goto CLEANUP_TEST;
     }
 
     if (! check_visual (dpy)) {
-	cairo_test_log ("xlib-expose-event: default visual is not RGB24 or BGR24, skipping\n");
+	cairo_test_log (&ctx, "xlib-expose-event: default visual is not RGB24 or BGR24, skipping\n");
 	goto CLEANUP_DISPLAY;
     }
 
@@ -229,7 +233,7 @@ main (void)
 					 DefaultVisual (dpy, screen),
 					 SIZE, SIZE);
     clear (surface);
-    draw (surface, NULL, 0);
+    draw (&ctx, surface, NULL, 0);
     for (i = 0; i < NLOOPS; i++) {
 	for (j = 0; j < NLOOPS; j++) {
 	    region[0].x = i * SIZE / NLOOPS;
@@ -252,11 +256,11 @@ main (void)
 	    region[3].width = SIZE / 4;
 	    region[3].height = SIZE / 4;
 
-	    draw (surface, region, 4);
+	    draw (&ctx, surface, region, 4);
 	}
     }
 
-    result = compare (surface);
+    result = compare (&ctx, surface);
 
     cairo_surface_destroy (surface);
 
@@ -268,7 +272,7 @@ main (void)
   CLEANUP_TEST:
     cairo_debug_reset_static_data ();
 
-    cairo_test_fini ();
+    cairo_test_fini (&ctx);
 
     return result;
 }

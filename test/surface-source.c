@@ -30,7 +30,7 @@ static cairo_surface_t *create_source_surface (int size);
 
 #define SIZE 90
 
-cairo_test_t test = {
+static const cairo_test_t test = {
     NAME "-surface-source",
     "Test using various surfaces as the source",
     SIZE, SIZE,

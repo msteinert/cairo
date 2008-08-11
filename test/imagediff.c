@@ -54,7 +54,7 @@ main (int argc, char *argv[])
 	ax = ay = bx = by = 0;
     }
 
-    status = image_diff (argv[1], argv[2], NULL, ax, ay, bx, by, &result);
+    status = image_diff (NULL, argv[1], argv[2], NULL, ax, ay, bx, by, &result);
 
     if (status) {
 	fprintf (stderr, "Error comparing images: %s\n",

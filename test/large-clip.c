@@ -29,7 +29,7 @@
 
 static cairo_test_draw_function_t draw;
 
-cairo_test_t test = {
+static const cairo_test_t test = {
     "large-clip",
     "Incorrect clipping when the clip rectangle doesn't fit in 16 bits signed",
     SIZE, SIZE,

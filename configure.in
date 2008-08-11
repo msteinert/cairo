@@ -113,7 +113,7 @@ dnl ===========================================================================
 AC_CHECK_LIBM
 LIBS="$LIBS $LIBM"
 
-AC_CHECK_FUNCS(vasnprintf ctime_r drand48)
+AC_CHECK_FUNCS(vasnprintf ctime_r drand48 flockfile)
 
 AC_MSG_CHECKING([for Sun Solaris (non-POSIX ctime_r)])
 case "$host" in
@@ -731,7 +731,7 @@ AC_CACHE_SAVE
 
 dnl ===========================================================================
 dnl Checks for precise integer types
-AC_CHECK_HEADERS([stdint.h signal.h inttypes.h sys/int_types.h])
+AC_CHECK_HEADERS([stdint.h signal.h setjmp.h inttypes.h sys/int_types.h])
 AC_CHECK_TYPES([uint64_t, uint128_t])
 
 dnl ===========================================================================

@@ -30,7 +30,7 @@
 
 static cairo_test_draw_function_t draw;
 
-cairo_test_t test = {
+static const cairo_test_t test = {
     "device-offset-scale",
     "Test that the device-offset transform is transformed by the ctm.",
     WIDTH, HEIGHT,

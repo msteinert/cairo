@@ -118,10 +118,14 @@ _cairo_boilerplate_image_create_surface (const char			 *name,
 					 cairo_content_t		  content,
 					 int				  width,
 					 int				  height,
+					 int				  max_width,
+					 int				  max_height,
 					 cairo_boilerplate_mode_t	  mode,
+					 int                              id,
 					 void				**closure)
 {
     cairo_format_t format;
+
     *closure = NULL;
 
     if (content == CAIRO_CONTENT_COLOR_ALPHA) {
@@ -448,22 +452,29 @@ cairo_boilerplate_free_targets (cairo_boilerplate_target_t **targets)
     free (targets);
 }
 
-void
-cairo_boilerplate_surface_set_user_data (cairo_surface_t		*surface,
-					 const cairo_user_data_key_t	*key,
-					 void				*user_data,
-					 cairo_destroy_func_t		 destroy)
+cairo_surface_t *
+cairo_boilerplate_surface_create_in_error (cairo_status_t status)
 {
-    cairo_status_t status;
+    cairo_surface_t *surface = NULL;
 
-    status = cairo_surface_set_user_data (surface,
-					  key, user_data,
-					  destroy);
-    if (status) {
-	CAIRO_BOILERPLATE_LOG ("Error: %s. Exiting\n",
-			       cairo_status_to_string (status));
-	exit (1);
-    }
+    do {
+	cairo_surface_t *intermediate;
+	cairo_t *cr;
+	cairo_path_t path;
+
+	intermediate = cairo_image_surface_create (CAIRO_FORMAT_A8, 0, 0);
+	cr = cairo_create (intermediate);
+	cairo_surface_destroy (intermediate);
+
+	path.status = status;
+	cairo_append_path (cr, &path);
+
+	cairo_surface_destroy (surface);
+	surface = cairo_get_target (cr);
+	cairo_destroy (cr);
+    } while (cairo_surface_status (surface) != status);
+
+    return surface;
 }
 
 void

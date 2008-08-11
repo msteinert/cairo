@@ -43,7 +43,7 @@ static DFBInfo *init(void) {
 	DFBDisplayLayerConfig        layer_config;
 	DFBGraphicsDeviceDescription desc;
 	int err;
-	DFBInfo *info = calloc(1,sizeof(DFBInfo));
+	DFBInfo *info = xcalloc(1,sizeof(DFBInfo));
 	if( !info )
 		return NULL;
 
@@ -142,7 +142,10 @@ _cairo_boilerplate_directfb_create_surface (const char			 *name,
 					    cairo_content_t		  content,
 					    int				  width,
 					    int				  height,
+					    int				  max_width,
+					    int				  max_height,
 					    cairo_boilerplate_mode_t	  mode,
+					    int                           id,
 					    void			**closure)
 {
 

@@ -28,7 +28,7 @@
 
 static cairo_test_draw_function_t draw;
 
-cairo_test_t test = {
+static const cairo_test_t test = {
     "ft-font-create-for-ft-face",
     "Simple test to verify that cairo_ft_font_create_for_ft_face doesn't crash.",
     0, 0,
@@ -38,6 +38,7 @@ cairo_test_t test = {
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
+    const cairo_test_context_t *ctx = cairo_test_get_context (cr);
     FcPattern *pattern, *resolved;
     FcResult result;
     cairo_font_face_t *font_face;
@@ -55,7 +56,7 @@ draw (cairo_t *cr, int width, int height)
      * Do not use this in production code! */
     pattern = FcPatternCreate ();
     if (! pattern) {
-	cairo_test_log ("FcPatternCreate failed.\n");
+	cairo_test_log (ctx, "FcPatternCreate failed.\n");
 	return CAIRO_TEST_FAILURE;
     }
 
@@ -63,14 +64,14 @@ draw (cairo_t *cr, int width, int height)
     FcDefaultSubstitute (pattern);
     resolved = FcFontMatch (NULL, pattern, &result);
     if (! resolved) {
-	cairo_test_log ("FcFontMatch failed.\n");
+	cairo_test_log (ctx, "FcFontMatch failed.\n");
 	return CAIRO_TEST_FAILURE;
     }
 
     font_face = cairo_ft_font_face_create_for_pattern (resolved);
 
     if (cairo_font_face_get_type (font_face) != CAIRO_FONT_TYPE_FT) {
-	cairo_test_log ("Unexpected value from cairo_font_face_get_type: %d (expected %d)\n",
+	cairo_test_log (ctx, "Unexpected value from cairo_font_face_get_type: %d (expected %d)\n",
 			cairo_font_face_get_type (font_face), CAIRO_FONT_TYPE_FT);
 	cairo_font_face_destroy (font_face);
 	return CAIRO_TEST_FAILURE;
@@ -97,14 +98,14 @@ draw (cairo_t *cr, int width, int height)
     FcPatternDestroy (resolved);
 
     if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_FT) {
-	cairo_test_log ("Unexpected value from cairo_scaled_font_get_type: %d (expected %d)\n",
+	cairo_test_log (ctx, "Unexpected value from cairo_scaled_font_get_type: %d (expected %d)\n",
 			cairo_scaled_font_get_type (scaled_font), CAIRO_FONT_TYPE_FT);
 	cairo_scaled_font_destroy (scaled_font);
 	return CAIRO_TEST_FAILURE;
     }
 
     if (!ft_face) {
-	cairo_test_log ("Failed to get an ft_face with cairo_ft_scaled_font_lock_face\n");
+	cairo_test_log (ctx, "Failed to get an ft_face with cairo_ft_scaled_font_lock_face\n");
 	cairo_scaled_font_destroy (scaled_font);
 	return CAIRO_TEST_FAILURE;
     }

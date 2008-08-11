@@ -39,7 +39,7 @@
 
 static cairo_test_draw_function_t draw;
 
-cairo_test_t test = {
+static const cairo_test_t test = {
     "solid-pattern-cache-stress",
     "Stress the solid pattern cache and ensure it behaves",
     1, 1,

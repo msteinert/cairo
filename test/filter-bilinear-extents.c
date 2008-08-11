@@ -44,7 +44,7 @@ static cairo_test_draw_function_t draw;
 #define WIDTH	(PAD + 3 * SCALE + PAD)
 #define HEIGHT	WIDTH
 
-cairo_test_t test = {
+static const cairo_test_t test = {
     "filter-bilinear-extents",
     "Test that pattern extents are properly computed for CAIRO_FILTER_BILINEAR",
     WIDTH, HEIGHT,

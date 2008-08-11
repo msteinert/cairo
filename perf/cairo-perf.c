@@ -397,11 +397,15 @@ main (int argc, char *argv[])
 		 perf.size <= perf_case->max_size;
 		 perf.size *= 2)
 	    {
+		void *closure;
+
 		surface = (target->create_surface) (NULL,
 						    target->content,
 						    perf.size, perf.size,
+						    perf.size, perf.size,
 						    CAIRO_BOILERPLATE_MODE_PERF,
-						    &target->closure);
+						    0,
+						    &closure);
 		if (surface == NULL) {
 		    fprintf (stderr,
 			     "Error: Failed to create target surface: %s\n",
@@ -410,8 +414,7 @@ main (int argc, char *argv[])
 		    exit (1);
 		}
 
-		cairo_perf_timer_set_synchronize (target->synchronize,
-						  target->closure);
+		cairo_perf_timer_set_synchronize (target->synchronize, closure);
 
 		perf.cr = cairo_create (surface);
 
@@ -428,7 +431,7 @@ main (int argc, char *argv[])
 		cairo_surface_destroy (surface);
 
 		if (target->cleanup)
-		    target->cleanup (target->closure);
+		    target->cleanup (closure);
 	    }
 	}
     }

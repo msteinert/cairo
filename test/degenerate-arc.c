@@ -32,7 +32,7 @@
 
 static cairo_test_draw_function_t draw;
 
-cairo_test_t test = {
+static const cairo_test_t test = {
     "degenerate-arc",
     "Tests the behaviour of degenerate arcs",
     40, 40,

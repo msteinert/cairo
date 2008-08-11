@@ -40,7 +40,7 @@
 
 static cairo_test_draw_function_t draw;
 
-cairo_test_t test = {
+static const cairo_test_t test = {
     "user-font-proxy",
     "Tests a user-font using a native font in its render_glyph",
 #ifndef ROTATED

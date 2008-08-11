@@ -49,11 +49,15 @@ _cairo_boilerplate_pdf_create_surface (const char		 *name,
 				       cairo_content_t		  content,
 				       int			  width,
 				       int			  height,
+				       int			  max_width,
+				       int			  max_height,
 				       cairo_boilerplate_mode_t	  mode,
+				       int                        id,
 				       void			**closure)
 {
     pdf_target_closure_t *ptc;
     cairo_surface_t *surface;
+    cairo_status_t status;
 
     /* Sanitize back to a real cairo_content_t value. */
     if (content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED)
@@ -64,15 +68,13 @@ _cairo_boilerplate_pdf_create_surface (const char		 *name,
     ptc->width = width;
     ptc->height = height;
 
-    xasprintf (&ptc->filename, "%s-pdf-%s-out.pdf",
-	       name, cairo_boilerplate_content_name (content));
+    xasprintf (&ptc->filename, "%s-pdf-%s-%d-out.pdf",
+	       name, cairo_boilerplate_content_name (content), id);
 
     surface = cairo_pdf_surface_create (ptc->filename, width, height);
-    if (cairo_surface_status (surface)) {
-	free (ptc->filename);
-	free (ptc);
-	return NULL;
-    }
+    if (cairo_surface_status (surface))
+	goto CLEANUP_FILENAME;
+
     cairo_surface_set_fallback_resolution (surface, 72., 72.);
 
     if (content == CAIRO_CONTENT_COLOR) {
@@ -80,14 +82,24 @@ _cairo_boilerplate_pdf_create_surface (const char		 *name,
 	surface = cairo_surface_create_similar (ptc->target,
 						CAIRO_CONTENT_COLOR,
 						width, height);
+	if (cairo_surface_status (surface))
+	    goto CLEANUP_TARGET;
     } else {
 	ptc->target = NULL;
     }
 
-    cairo_boilerplate_surface_set_user_data (surface,
-					     &pdf_closure_key,
-					     ptc, NULL);
+    status = cairo_surface_set_user_data (surface, &pdf_closure_key, ptc, NULL);
+    if (status == CAIRO_STATUS_SUCCESS)
+	return surface;
 
+    cairo_surface_destroy (surface);
+    surface = cairo_boilerplate_surface_create_in_error (status);
+
+  CLEANUP_TARGET:
+    cairo_surface_destroy (ptc->target);
+  CLEANUP_FILENAME:
+    free (ptc->filename);
+    free (ptc);
     return surface;
 }
 
@@ -96,6 +108,7 @@ _cairo_boilerplate_pdf_surface_write_to_png (cairo_surface_t *surface, const cha
 {
     pdf_target_closure_t *ptc = cairo_surface_get_user_data (surface, &pdf_closure_key);
     char    command[4096];
+    cairo_status_t status;
 
     /* Both surface and ptc->target were originally created at the
      * same dimensions. We want a 1:1 copy here, so we first clear any
@@ -112,13 +125,25 @@ _cairo_boilerplate_pdf_surface_write_to_png (cairo_surface_t *surface, const cha
 	cairo_set_source_surface (cr, surface, 0, 0);
 	cairo_paint (cr);
 	cairo_show_page (cr);
+	status = cairo_status (cr);
 	cairo_destroy (cr);
 
+	if (status)
+	    return status;
+
 	cairo_surface_finish (surface);
+	status = cairo_surface_status (surface);
+	if (status)
+	    return status;
+
 	surface = ptc->target;
     }
 
     cairo_surface_finish (surface);
+    status = cairo_surface_status (surface);
+    if (status)
+	return status;
+
     sprintf (command, "./pdf2png %s %s 1",
 	     ptc->filename, filename);
 

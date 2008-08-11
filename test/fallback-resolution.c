@@ -88,6 +88,7 @@ static const char *backend_filename[NUM_BACKENDS] = {
 int
 main (void)
 {
+    cairo_test_context_t ctx;
     cairo_surface_t *surface = NULL;
     cairo_t *cr;
     cairo_status_t status;
@@ -98,7 +99,7 @@ main (void)
 
     num_pages = sizeof (ppi) / sizeof (ppi[0]);
 
-    cairo_test_init ("fallback-resolution");
+    cairo_test_init (&ctx, "fallback-resolution");
 
     for (backend=0; backend < NUM_BACKENDS; backend++) {
 
@@ -166,7 +167,7 @@ main (void)
 	cairo_surface_destroy (surface);
 
 	if (status) {
-	    cairo_test_log ("Failed to create pdf surface for file %s: %s\n",
+	    cairo_test_log (&ctx, "Failed to create pdf surface for file %s: %s\n",
 			    backend_filename[backend],
 			    cairo_status_to_string (status));
 	    ret = CAIRO_TEST_FAILURE;
@@ -177,7 +178,7 @@ main (void)
 		backend_filename[backend]);
     }
 
-    cairo_test_fini ();
+    cairo_test_fini (&ctx);
 
     return ret;
 }

@@ -47,7 +47,7 @@
 
 static cairo_test_draw_function_t draw;
 
-cairo_test_t test = {
+static const cairo_test_t test = {
     "large-font",
     "Draws a very large font to exercise a glyph-positioning bug",
     WIDTH, HEIGHT,
@@ -57,8 +57,6 @@ cairo_test_t test = {
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
-    cairo_font_options_t *font_options;
-
     /* paint white so we don't need separate ref images for
      * RGB24 and ARGB32 */
     cairo_set_source_rgb (cr, 1., 1., 1.);

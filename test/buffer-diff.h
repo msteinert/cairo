@@ -45,7 +45,8 @@ typedef struct _buffer_diff_result {
  * images differ.
  */
 void
-compare_surfaces (cairo_surface_t	*surface_a,
+compare_surfaces (const cairo_test_context_t  *ctx,
+	          cairo_surface_t	*surface_a,
 		  cairo_surface_t	*surface_b,
 		  cairo_surface_t	*surface_diff,
 		  buffer_diff_result_t *result);
@@ -81,7 +82,8 @@ buffer_diff_noalpha (unsigned char *buf_a,
  * images differ.
  */
 cairo_status_t
-image_diff (const char *filename_a,
+image_diff (const cairo_test_context_t *ctx,
+	    const char *filename_a,
 	    const char *filename_b,
 	    const char *filename_diff,
 	    int		ax,
@@ -92,7 +94,8 @@ image_diff (const char *filename_a,
 
 /* Like image_diff, but blending the contents of b over white first. */
 cairo_status_t
-image_diff_flattened (const char *filename_a,
+image_diff_flattened (const cairo_test_context_t *ctx,
+	              const char *filename_a,
 		      const char *filename_b,
 		      const char *filename_diff,
                       int         ax,

@@ -38,7 +38,10 @@ _cairo_boilerplate_test_fallback_create_surface (const char			 *name,
 						 cairo_content_t		  content,
 						 int				  width,
 						 int				  height,
+						 int				  max_width,
+						 int				  max_height,
 						 cairo_boilerplate_mode_t	  mode,
+						 int                              id,
 						 void				**closure)
 {
     *closure = NULL;
@@ -50,7 +53,10 @@ _cairo_boilerplate_test_meta_create_surface (const char			 *name,
 					     cairo_content_t		  content,
 					     int			  width,
 					     int			  height,
+					     int			  max_width,
+					     int			  max_height,
 					     cairo_boilerplate_mode_t	  mode,
+					     int                          id,
 					     void			**closure)
 {
     *closure = NULL;
@@ -72,11 +78,15 @@ _cairo_boilerplate_test_paginated_create_surface (const char			 *name,
 						  cairo_content_t		  content,
 						  int				  width,
 						  int				  height,
+						  int				  max_width,
+						  int				  max_height,
 						  cairo_boilerplate_mode_t	  mode,
+						  int                             id,
 						  void				**closure)
 {
     test_paginated_closure_t *tpc;
     cairo_surface_t *surface;
+    cairo_status_t status;
 
     *closure = tpc = xmalloc (sizeof (test_paginated_closure_t));
 
@@ -92,11 +102,21 @@ _cairo_boilerplate_test_paginated_create_surface (const char			 *name,
 						       tpc->width,
 						       tpc->height,
 						       tpc->stride);
+    if (cairo_surface_status (surface))
+	goto CLEANUP;
 
-    cairo_boilerplate_surface_set_user_data (surface,
-					     &test_paginated_closure_key,
-					     tpc, NULL);
+    status = cairo_surface_set_user_data (surface,
+					  &test_paginated_closure_key,
+					  tpc, NULL);
+    if (status == CAIRO_STATUS_SUCCESS)
+	return surface;
 
+    cairo_surface_destroy (surface);
+    surface = cairo_boilerplate_surface_create_in_error (status);
+
+  CLEANUP:
+    free (tpc->data);
+    free (tpc);
     return surface;
 }
 
@@ -137,16 +157,9 @@ _cairo_boilerplate_test_paginated_surface_write_to_png (cairo_surface_t	*surface
 						 tpc->stride);
 
     status = cairo_surface_write_to_png (image, filename);
-    if (status) {
-	CAIRO_BOILERPLATE_LOG ("Error writing %s: %s. Exiting\n",
-			       filename,
-			       cairo_status_to_string (status));
-	exit (1);
-    }
-
     cairo_surface_destroy (image);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 void
