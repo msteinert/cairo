@@ -82,6 +82,7 @@ static const char *vector_ignored_tests[] = {
     /* We can't match the results of tests that depend on
      * CAIRO_ANTIALIAS_NONE/SUBPIXEL for vector backends
      * (nor do we care). */
+    /* XXX Perhaps this should be moved to a flag in cairo_test_t? */
     "a1-image-sample",
     "a1-traps-sample",
     "ft-text-antialias-none",
@@ -89,6 +90,10 @@ static const char *vector_ignored_tests[] = {
     "text-antialias-gray",
     "text-antialias-none",
     "text-antialias-subpixel",
+    "text-lcd-filter-fir3",
+    "text-lcd-filter-fir5",
+    "text-lcd-filter-intra-pixel",
+    "text-lcd-filter-none",
     "unantialiased-shapes",
 
     /* Nor do we care about rendering anomalies in external renderers. */
