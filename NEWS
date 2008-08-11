@@ -1,3 +1,11 @@
+Release 1.7.4 (2008-08-11 Behdad Esfahbod <behdad@behdad.org>)
+==============================================================
+The cairo community is embarrassed to announce availability of the 1.7.4
+snapshot of the cairo graphics library.  This is a followup release to the
+1.7.2 snapshot to ship a tarball that can actually be built.  The only
+change since 1.7.4 is including the missing header file
+cairo-user-font-private.h in the distribution.
+
 Release 1.7.2 (2008-08-11 Behdad Esfahbod <behdad@behdad.org>)
 ==============================================================
 The cairo community is finally ready to announce availability of the 1.7.2
