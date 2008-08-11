@@ -170,9 +170,9 @@ _cairo_scaled_font_subsets_destroy (cairo_scaled_font_subsets_t *font_subsets);
  *
  * @utf8 and @utf8_len specify a string of unicode characters that the
  * glyph @scaled_font_glyph_index maps to. If @utf8_is_mapped in
- * @subset_glyph_ret is TRUE, the font subsetting will (where index to
+ * @subset_glyph_ret is %TRUE, the font subsetting will (where index to
  * unicode mapping is supported) ensure that @scaled_font_glyph_index
- * maps to @utf8. If @utf8_is_mapped is FALSE,
+ * maps to @utf8. If @utf8_is_mapped is %FALSE,
  * @scaled_font_glyph_index has already been mapped to a different
  * unicode string.
  *
