@@ -2093,10 +2093,11 @@ _cairo_pattern_get_extents (cairo_pattern_t         *pattern,
      * horizontal/vertical linear gradients).
      */
 
+    /* unbounded patterns -> 'infinite' extents */
     extents->x = CAIRO_RECT_INT_MIN;
     extents->y = CAIRO_RECT_INT_MIN;
-    extents->width = CAIRO_RECT_INT_MIN + CAIRO_RECT_INT_MAX;
-    extents->height = CAIRO_RECT_INT_MIN + CAIRO_RECT_INT_MAX;
+    extents->width = CAIRO_RECT_INT_MAX - CAIRO_RECT_INT_MIN;
+    extents->height = CAIRO_RECT_INT_MAX - CAIRO_RECT_INT_MIN;
 
     return CAIRO_STATUS_SUCCESS;
 }
