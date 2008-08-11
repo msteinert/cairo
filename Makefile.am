@@ -5,8 +5,6 @@ if CAIRO_HAS_PNG_FUNCTIONS
 SUBDIRS += boilerplate test perf
 endif
 
-ACLOCAL_AMFLAGS=-I m4
-
 
 .PHONY: doc test retest recheck check-valgrind
 # We have some generated header files, so we really need to build the
