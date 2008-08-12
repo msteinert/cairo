@@ -134,14 +134,16 @@ main (void)
     cairo_surface_t *surface;
     cairo_status_t status;
     const char *filename;
-    cairo_test_status_t result = CAIRO_TEST_SUCCESS;
+    cairo_test_status_t result = CAIRO_TEST_UNTESTED;
 
     cairo_test_init (&ctx, "multi-page");
 
 #if CAIRO_HAS_PS_SURFACE
     if (cairo_test_is_target_enabled (&ctx, "ps")) {
-	filename = "multi-page.ps";
+	if (result == CAIRO_TEST_UNTESTED)
+	    result = CAIRO_TEST_SUCCESS;
 
+	filename = "multi-page.ps";
 	surface = cairo_ps_surface_create (filename,
 					   WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
 	status = cairo_surface_status (surface);
@@ -161,8 +163,10 @@ main (void)
 
 #if CAIRO_HAS_PDF_SURFACE
     if (cairo_test_is_target_enabled (&ctx, "pdf")) {
-	filename = "multi-page.pdf";
+	if (result == CAIRO_TEST_UNTESTED)
+	    result = CAIRO_TEST_SUCCESS;
 
+	filename = "multi-page.pdf";
 	surface = cairo_pdf_surface_create (filename,
 					    WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
 	status = cairo_surface_status (surface);

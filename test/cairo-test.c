@@ -877,14 +877,6 @@ cairo_test_expecting (const cairo_test_t *test,
      * behave slightly differently, to ensure that limiting the targets does
      * not increase the number of tests failing. */
     if (ctx.limited_targets) {
-
-	/* if all untested, success */
-	if (ret == CAIRO_TEST_UNTESTED) {
-	    printf ("None of the tested backends passed, but tested targets are manually limited.\n"
-		    "Passing the test, to not fail the suite.\n");
-	    ret = CAIRO_TEST_SUCCESS;
-	}
-
 	/* if all passed, but expecting failure, return failure to not
 	 * trigger an XPASS failure */
 	if (expectation == CAIRO_TEST_FAILURE && ret == CAIRO_TEST_SUCCESS) {
@@ -893,11 +885,6 @@ cairo_test_expecting (const cairo_test_t *test,
 		    "Intentionally failing the test, to not fail the suite.\n");
 	    ret = CAIRO_TEST_FAILURE;
 	}
-
-    } else {
-	if (ret == CAIRO_TEST_UNTESTED)
-	    ret = CAIRO_TEST_FAILURE;
-
     }
 
     cairo_test_fini (&ctx);

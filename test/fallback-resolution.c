@@ -91,7 +91,7 @@ main (void)
     cairo_test_context_t ctx;
     cairo_t *cr;
     cairo_status_t status;
-    cairo_test_status_t ret = CAIRO_TEST_SUCCESS;
+    cairo_test_status_t ret = CAIRO_TEST_UNTESTED;
     double ppi[] = { 600., 300., 150., 75., 37.5 };
     backend_t backend;
     int page, num_pages;
@@ -131,6 +131,9 @@ main (void)
 
 	if (surface == NULL)
 	    continue;
+
+	if (ret == CAIRO_TEST_UNTESTED)
+	    ret = CAIRO_TEST_SUCCESS;
 
 	cr = cairo_create (surface);
 	cairo_set_tolerance (cr, 3.0);

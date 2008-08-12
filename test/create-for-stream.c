@@ -236,7 +236,7 @@ int
 main (void)
 {
     cairo_test_context_t ctx;
-    cairo_test_status_t status = CAIRO_TEST_SUCCESS;
+    cairo_test_status_t status = CAIRO_TEST_UNTESTED;
     cairo_test_status_t test_status;
     const char test_name[] = "create-for-stream";
 
@@ -244,6 +244,9 @@ main (void)
 
 #if CAIRO_HAS_PS_SURFACE
     if (cairo_test_is_target_enabled (&ctx, "ps")) {
+	if (status == CAIRO_TEST_UNTESTED)
+	    status = CAIRO_TEST_SUCCESS;
+
 	test_status = test_surface (&ctx, "ps", "create-for-stream.ps",
 				    cairo_ps_surface_create,
 				    cairo_ps_surface_create_for_stream);
@@ -257,6 +260,9 @@ main (void)
 
 #if CAIRO_HAS_PDF_SURFACE
     if (cairo_test_is_target_enabled (&ctx, "pdf")) {
+	if (status == CAIRO_TEST_UNTESTED)
+	    status = CAIRO_TEST_SUCCESS;
+
 	test_status = test_surface (&ctx, "pdf", "create-for-stream.pdf",
 				    cairo_pdf_surface_create,
 				    cairo_pdf_surface_create_for_stream);
@@ -270,6 +276,9 @@ main (void)
 
 #if CAIRO_HAS_SVG_SURFACE
     if (cairo_test_is_target_enabled (&ctx, "svg")) {
+	if (status == CAIRO_TEST_UNTESTED)
+	    status = CAIRO_TEST_SUCCESS;
+
 	test_status = test_surface (&ctx, "svg", "create-for-stream.svg",
 				    cairo_svg_surface_create,
 				    cairo_svg_surface_create_for_stream);

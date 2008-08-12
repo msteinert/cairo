@@ -299,26 +299,22 @@ main (void)
     cairo_bool_t use_pixmap;
     cairo_bool_t set_size;
     cairo_bool_t offscreen;
-    cairo_test_status_t status, result = CAIRO_TEST_SUCCESS;
+    cairo_test_status_t status, result = CAIRO_TEST_UNTESTED;
     int stride;
 
     cairo_test_init (&ctx, "xlib-surface");
-    if (! cairo_test_is_target_enabled (&ctx, "xlib")) {
-	cairo_test_fini (&ctx);
-	return CAIRO_TEST_UNTESTED;
-    }
+    if (! cairo_test_is_target_enabled (&ctx, "xlib"))
+	goto CLEANUP_TEST;
 
     dpy = XOpenDisplay (NULL);
     if (!dpy) {
 	cairo_test_log (&ctx, "xlib-surface: Cannot open display, skipping\n");
-	cairo_test_fini (&ctx);
-	return CAIRO_TEST_SUCCESS;
+	goto CLEANUP_TEST;
     }
 
     if (!check_visual (dpy)) {
 	cairo_test_log (&ctx, "xlib-surface: default visual is not RGB24 or BGR24, skipping\n");
-	cairo_test_fini (&ctx);
-	return CAIRO_TEST_SUCCESS;
+	goto CLEANUP_DISPLAY;
     }
 
     stride = cairo_format_stride_for_width (CAIRO_FORMAT_RGB24, SIZE);
@@ -334,6 +330,8 @@ main (void)
 
     draw_pattern (reference_surface);
     cairo_surface_destroy (reference_surface);
+
+    result = CAIRO_TEST_SUCCESS;
 
     for (set_size = 0; set_size <= 1; set_size++)
 	for (use_pixmap = 0; use_pixmap <= 1; use_pixmap++)
@@ -359,8 +357,10 @@ main (void)
     free (test_data);
     free (diff_data);
 
+  CLEANUP_DISPLAY:
     XCloseDisplay (dpy);
 
+  CLEANUP_TEST:
     cairo_test_fini (&ctx);
 
     return result;

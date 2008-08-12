@@ -40,20 +40,22 @@ main (void)
     cairo_surface_t *surface;
     Pixmap pixmap;
     int screen;
+    cairo_test_status_t result;
+
+    result = CAIRO_TEST_UNTESTED;
 
     cairo_test_init (&ctx, "get-xrender-format");
-    if (! cairo_test_is_target_enabled (&ctx, "xlib")) {
-	cairo_test_fini (&ctx);
-	return CAIRO_TEST_UNTESTED;
-    }
+    if (! cairo_test_is_target_enabled (&ctx, "xlib"))
+	goto CLEANUP_TEST;
 
     dpy = XOpenDisplay (NULL);
     if (! dpy) {
-	cairo_test_log (&ctx, "Error: Cannot open display: %s.\n",
+	cairo_test_log (&ctx, "Error: Cannot open display: %s, skipping.\n",
 			XDisplayName (NULL));
-	cairo_test_fini (&ctx);
-	return CAIRO_TEST_SUCCESS;
+	goto CLEANUP_TEST;
     }
+
+    result = CAIRO_TEST_FAILURE;
 
     screen = DefaultScreen (dpy);
 
@@ -64,8 +66,7 @@ main (void)
     format = cairo_xlib_surface_get_xrender_format (surface);
     if (format != NULL) {
 	cairo_test_log (&ctx, "Error: expected NULL for image surface\n");
-	cairo_test_fini (&ctx);
-	return CAIRO_TEST_FAILURE;
+	goto CLEANUP_SURFACE;
     }
 
     cairo_surface_destroy (surface);
@@ -81,8 +82,7 @@ main (void)
     format = cairo_xlib_surface_get_xrender_format (surface);
     if (format != orig_format) {
 	cairo_test_log (&ctx, "Error: did not receive the same format as XRenderFindVisualFormat\n");
-	cairo_test_fini (&ctx);
-	return CAIRO_TEST_FAILURE;
+	goto CLEANUP_PIXMAP;
     }
     cairo_surface_destroy (surface);
     XFreePixmap (dpy, pixmap);
@@ -100,7 +100,7 @@ main (void)
     format = cairo_xlib_surface_get_xrender_format (surface);
     if (format != orig_format) {
 	cairo_test_log (&ctx, "Error: did not receive the same format originally set\n");
-	return CAIRO_TEST_FAILURE;
+	goto CLEANUP_PIXMAP;
     }
 
     cairo_test_log (&ctx, "Testing without the X Render extension.\n");
@@ -110,15 +110,20 @@ main (void)
     format = cairo_xlib_surface_get_xrender_format (surface);
     if (format != NULL) {
 	cairo_test_log (&ctx, "Error: did not receive a NULL format as expected\n");
-	cairo_test_fini (&ctx);
-	return CAIRO_TEST_FAILURE;
+	goto CLEANUP_PIXMAP;
     }
 
+    result = CAIRO_TEST_SUCCESS;
+
+  CLEANUP_PIXMAP:
+    XFreePixmap (dpy, pixmap);
+  CLEANUP_SURFACE:
     cairo_surface_destroy (surface);
 
     XCloseDisplay (dpy);
 
+  CLEANUP_TEST:
     cairo_test_fini (&ctx);
 
-    return CAIRO_TEST_SUCCESS;
+    return result;
 }

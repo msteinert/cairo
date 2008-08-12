@@ -210,13 +210,11 @@ main (void)
     cairo_surface_t *surface;
     cairo_rectangle_t region[4];
     int i, j;
-    cairo_test_status_t result = CAIRO_TEST_SUCCESS;
+    cairo_test_status_t result = CAIRO_TEST_UNTESTED;
 
     cairo_test_init (&ctx, "xlib-expose-event");
-    if (! cairo_test_is_target_enabled (&ctx, "xlib")) {
-	cairo_test_fini (&ctx);
-	return CAIRO_TEST_UNTESTED;
-    }
+    if (! cairo_test_is_target_enabled (&ctx, "xlib"))
+	goto CLEANUP_TEST;
 
     dpy = XOpenDisplay (NULL);
     if (dpy == NULL) {
@@ -274,8 +272,6 @@ main (void)
     XCloseDisplay (dpy);
 
   CLEANUP_TEST:
-    cairo_debug_reset_static_data ();
-
     cairo_test_fini (&ctx);
 
     return result;

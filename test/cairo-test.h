@@ -62,8 +62,8 @@ typedef unsigned __int64 uint64_t;
 typedef enum cairo_test_status {
     CAIRO_TEST_SUCCESS = 0,
     CAIRO_TEST_FAILURE,
-    CAIRO_TEST_UNTESTED,
-    CAIRO_TEST_CRASHED
+    CAIRO_TEST_CRASHED,
+    CAIRO_TEST_UNTESTED = 77 /* match automake's skipped exit status */
 } cairo_test_status_t;
 
 typedef struct _cairo_test_context cairo_test_context_t;
