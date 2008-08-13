@@ -26,18 +26,32 @@
 #include <stdio.h>
 #include <cairo.h>
 
+#if CAIRO_HAS_PDF_SURFACE
 #include <cairo-pdf.h>
 #include <cairo-boilerplate-pdf.h>
+#endif
 
+#if CAIRO_HAS_PS_SURFACE
 #include <cairo-ps.h>
 #include <cairo-boilerplate-ps.h>
+#endif
 
+#if CAIRO_HAS_SVG_SURFACE
 #include <cairo-svg.h>
 #include <cairo-boilerplate-svg.h>
+#endif
 
 #include "cairo-test.h"
 
 /* This test exists to test cairo_surface_set_fallback_resolution
+ *
+ * <behdad> one more thing.
+ *          if you can somehow incorporate cairo_show_page stuff in the
+ *          test suite.  such that fallback-resolution can actually be
+ *          automated..
+ *          if we could get a callback on surface when that function is
+ *          called, we could do cool stuff like making other backends
+ *          draw a long strip of images, one for each page...
  */
 
 #define INCHES_TO_POINTS(in) ((in) * 72.0)
@@ -75,9 +89,8 @@ draw_with_ppi (cairo_t *cr, double width, double height, double ppi)
     cairo_restore (cr);
 }
 
-#define NUM_BACKENDS 3
 typedef enum {
-    PDF, PS, SVG
+    PDF, PS, SVG, NUM_BACKENDS
 } backend_t;
 static const char *backend_filename[NUM_BACKENDS] = {
     "fallback-resolution.pdf",
@@ -106,26 +119,35 @@ main (void)
 	/* Create backend-specific surface and force image fallbacks. */
 	switch (backend) {
 	case PDF:
+#if CAIRO_HAS_PDF_SURFACE
 	    if (cairo_test_is_target_enabled (&ctx, "pdf")) {
 		surface = cairo_pdf_surface_create (backend_filename[backend],
 						    SIZE, SIZE);
 		cairo_boilerplate_pdf_surface_force_fallbacks (surface);
 	    }
+#endif
 	    break;
 	case PS:
+#if CAIRO_HAS_PS_SURFACE
 	    if (cairo_test_is_target_enabled (&ctx, "ps")) {
 		surface = cairo_ps_surface_create (backend_filename[backend],
 						   SIZE, SIZE);
 		cairo_boilerplate_ps_surface_force_fallbacks (surface);
 	    }
+#endif
 	    break;
 	case SVG:
+#if CAIRO_HAS_SVG_SURFACE
 	    if (cairo_test_is_target_enabled (&ctx, "svg")) {
 		surface = cairo_svg_surface_create (backend_filename[backend],
 						    SIZE, SIZE);
 		cairo_boilerplate_svg_surface_force_fallbacks (surface);
 		cairo_svg_surface_restrict_to_version (surface, CAIRO_SVG_VERSION_1_2);
 	    }
+#endif
+	    break;
+
+	case NUM_BACKENDS:
 	    break;
 	}
 

@@ -265,13 +265,17 @@ if CAIRO_HAS_MULTI_PAGE_SURFACES
 TESTS += multi-page$(EXEEXT)
 endif
 
+# Include fallback-resolution (once!) if we have any of the vector surfaces
 if CAIRO_HAS_SVG_SURFACE
+test = fallback-resolution$(EXEEXT)
+endif
 if CAIRO_HAS_PDF_SURFACE
+test = fallback-resolution$(EXEEXT)
+endif
 if CAIRO_HAS_PS_SURFACE
-TESTS += fallback-resolution$(EXEEXT)
+test = fallback-resolution$(EXEEXT)
 endif
-endif
-endif
+TESTS += $(test)
 
 # All tests which have a reference image go here.
 REFERENCE_IMAGES = \
