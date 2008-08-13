@@ -360,8 +360,9 @@ cairo_test_for_target (const cairo_test_context_t		 *ctx,
     cairo_test_status_t status;
     cairo_surface_t *surface = NULL;
     cairo_t *cr;
-    const char *no_offset_str = "";
-    char *png_name, *ref_name, *diff_name, *offset_str;
+    const char *empty_str = "";
+    char *offset_str, *thread_str;
+    char *base_name, *png_name, *ref_name, *diff_name;
     cairo_test_status_t ret;
     cairo_content_t expected_content;
     cairo_font_options_t *font_options;
@@ -373,43 +374,35 @@ cairo_test_for_target (const cairo_test_context_t		 *ctx,
 
     /* Get the strings ready that we'll need. */
     format = cairo_boilerplate_content_name (target->content);
+    ref_name = cairo_ref_name_for_test_target_format (ctx,
+						      ctx->test->name,
+						      target->name,
+						      format);
+
     if (dev_offset)
 	xasprintf (&offset_str, "-%d", dev_offset);
     else
-	offset_str = (char *) no_offset_str;
+	offset_str = (char *) empty_str;
+    if (ctx->thread)
+	xasprintf (&thread_str, "-thread%d", ctx->thread);
+    else
+	thread_str = (char *) empty_str;
 
-    ref_name = cairo_ref_name_for_test_target_format (ctx, ctx->test->name, target->name, format);
-    if (ctx->thread == 0) {
-	xasprintf (&png_name, "%s-%s-%s%s%s%s",
-		   ctx->test->name,
-		   target->name,
-		   format,
-		   similar ? "-similar" : "",
-		   offset_str, CAIRO_TEST_PNG_SUFFIX);
-	xasprintf (&diff_name, "%s-%s-%s%s%s%s",
-		   ctx->test->name,
-		   target->name,
-		   format,
-		   similar ? "-similar" : "",
-		   offset_str, CAIRO_TEST_DIFF_SUFFIX);
-    } else {
-	xasprintf (&png_name, "%s-%s-%s%s%s-%d%s",
-		   ctx->test->name,
-		   target->name,
-		   format,
-		   similar ? "-similar" : "",
-		   offset_str,
-		   ctx->thread,
-		   CAIRO_TEST_PNG_SUFFIX);
-	xasprintf (&diff_name, "%s-%s-%s%s%s-%d%s",
-		   ctx->test->name,
-		   target->name,
-		   format,
-		   similar ? "-similar" : "",
-		   offset_str,
-		   ctx->thread,
-		   CAIRO_TEST_DIFF_SUFFIX);
-    }
+    xasprintf (&base_name, "%s-%s-%s%s%s%s",
+	       ctx->test->name,
+	       target->name,
+	       format,
+	       similar ? "-similar" : "",
+	       offset_str,
+	       thread_str);
+
+    if (offset_str != empty_str)
+      free (offset_str);
+    if (thread_str != empty_str)
+      free (thread_str);
+
+    xasprintf (&png_name,  "%s%s", base_name, CAIRO_TEST_PNG_SUFFIX);
+    xasprintf (&diff_name, "%s%s", base_name, CAIRO_TEST_DIFF_SUFFIX);
 
     if (target->is_vector) {
 	int i;
@@ -434,7 +427,7 @@ cairo_test_for_target (const cairo_test_context_t		 *ctx,
 
     /* Run the actual drawing code. */
     ret = CAIRO_TEST_SUCCESS;
-    surface = (target->create_surface) (ctx->test->name,
+    surface = (target->create_surface) (base_name,
 					target->content,
 					width, height,
 					ctx->test->width + 25 * NUM_DEVICE_OFFSETS,
@@ -601,8 +594,8 @@ UNWIND_STRINGS:
       free (ref_name);
     if (diff_name)
       free (diff_name);
-    if (offset_str != no_offset_str)
-      free (offset_str);
+    if (base_name)
+      free (base_name);
 
     return ret;
 }

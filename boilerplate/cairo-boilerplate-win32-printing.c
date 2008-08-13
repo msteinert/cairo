@@ -178,8 +178,7 @@ _cairo_boilerplate_win32_printing_create_surface (const char              *name,
 
     *closure = ptc = xmalloc (sizeof (win32_target_closure_t));
 
-    xasprintf (&ptc->filename, "%s-win32-printing-%s-out.ps",
-	       name, cairo_boilerplate_content_name (content));
+    xasprintf (&ptc->filename, "%s-out.ps", name);
     memset (&di, 0, sizeof (DOCINFO));
     di.cbSize = sizeof (DOCINFO);
     di.lpszDocName = ptc->filename;
