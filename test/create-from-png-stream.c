@@ -67,6 +67,7 @@ draw (cairo_t *cr, int width, int height)
     file = fopen (filename, "rb");
     if (file == NULL) {
 	cairo_test_log (ctx, "Error: failed to open file: %s\n", filename);
+	free (filename);
 	return CAIRO_TEST_FAILURE;
     }
 
@@ -75,10 +76,11 @@ draw (cairo_t *cr, int width, int height)
 
     fclose (file);
 
-    if (surface == NULL) {
+    if (cairo_surface_status (surface)) {
 	cairo_test_log (ctx,
-			"Error: failed to create surface from PNG: %s\n",
-			filename);
+			"Error: failed to create surface from PNG: %s - %s\n",
+			filename,
+			cairo_status_to_string (cairo_surface_status (surface)));
 	free (filename);
 	return CAIRO_TEST_FAILURE;
     }
