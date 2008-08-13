@@ -915,9 +915,9 @@ CLEANFILES =					\
 # Then it became a fancy find using many GNU extensions, but then the ugly
 # reality of portability was raised and it became....
 clean-local:
-	-${FIND} . -name '*.ps'       -print | ${XARGS} ${RM}
-	-${FIND} . -name '*.pdf'      -print | ${XARGS} ${RM}
-	-${FIND} . -name '*.svg'      -print | ${XARGS} ${RM}
+	-${FIND} . -name '*-out.ps'   -print | ${XARGS} ${RM}
+	-${FIND} . -name '*-out.pdf'  -print | ${XARGS} ${RM}
+	-${FIND} . -name '*-out.svg'  -print | ${XARGS} ${RM}
 	-${FIND} . -name '*-out.png'  -print | ${XARGS} ${RM}
 	-${FIND} . -name '*-diff.png' -print | ${XARGS} ${RM}
 	-${FIND} . -name '*.log'      -print | ${XARGS} ${RM}
