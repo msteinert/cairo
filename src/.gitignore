@@ -11,6 +11,8 @@ Makefile.in
 cairo-features.h
 cairo-no-features.h
 cairo.def
+*.i
+*.s
 *.o
 *.obj
 *.pdb
