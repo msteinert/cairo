@@ -2992,6 +2992,9 @@ _cairo_xlib_surface_remove_scaled_font (Display *dpy,
 	    glyphset_info = &font_private->glyphset_info[i];
 	    if (glyphset_info->glyphset)
 		XRenderFreeGlyphSet (dpy, glyphset_info->glyphset);
+
+	    if (glyphset_info->pending_free_glyphs != NULL)
+		free (glyphset_info->pending_free_glyphs);
 	}
 
 	_cairo_xlib_display_destroy (font_private->display);
