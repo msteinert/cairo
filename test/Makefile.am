@@ -921,6 +921,7 @@ clean-local:
 	-${FIND} . -name '*-out.png'  -print | ${XARGS} ${RM}
 	-${FIND} . -name '*-diff.png' -print | ${XARGS} ${RM}
 	-${FIND} . -name '*.log'      -print | ${XARGS} ${RM}
+	-${FIND} . -name '*.[is]'     -print | ${XARGS} ${RM}
 
 # The following definitions both should work.
 #FAILED_TESTS = `grep -l '\<FAIL\>' $(TESTS:$(EXEEXT)=.log) 2>/dev/null | sed -e 's/[.]log$$//' | xargs echo`

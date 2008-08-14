@@ -364,6 +364,10 @@ TESTS = check-def.sh check-plt.sh check-headers.sh check-cairoint.sh check-doc-s
 EXTRA_DIST += $(TESTS) check-has-hidden-symbols.c
 DISTCLEANFILES += check-has-hidden-symbols.i
 
+# Delete intermediate files as well
+clean-local:
+	-${FIND} . -name '*.[is]'   -print | ${XARGS} ${RM}
+
 # The pre-processed result is used by check-{def,plt}.sh to determine whether
 # cairo has been compiled with symbol hiding.
 .c.i: $(cairoinclude_HEADERS) $(nodist_cairoinclude_HEADERS) cairoint.h $(top_builddir)/config.h

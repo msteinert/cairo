@@ -102,4 +102,8 @@ INCLUDES =					\
 CLEANFILES =					\
 	$(EXTRA_LTLIBRARIES)
 
+# Delete intermediate files as well
+clean-local:
+	-${FIND} . -name '*.[is]'   -print | ${XARGS} ${RM}
+
 check test: libcairoboilerplate.la

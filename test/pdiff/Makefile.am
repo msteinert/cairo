@@ -15,3 +15,7 @@ perceptualdiff_SOURCES =	\
 
 INCLUDES = -I$(top_srcdir)/src -I$(top_builddir)/src $(CAIRO_CFLAGS)
 LDADD = libpdiff.la $(top_builddir)/src/libcairo.la
+#
+# Delete intermediate files as well
+clean-local:
+	-${FIND} . -name '*.[is]'   -print | ${XARGS} ${RM}
