@@ -51,7 +51,6 @@ struct _cairo_xlib_hook {
     cairo_xlib_hook_t *next;
     void (*func) (Display *display, void *data);
     void *data;
-    const void *key;
 };
 
 struct _cairo_xlib_display {
@@ -113,9 +112,9 @@ cairo_private void
 _cairo_xlib_display_destroy (cairo_xlib_display_t *info);
 
 cairo_private cairo_bool_t
-_cairo_xlib_add_close_display_hook (Display *display, void (*func) (Display *, void *), void *data, const void *key);
+_cairo_xlib_add_close_display_hook (Display *display, void (*func) (Display *, void *), void *data);
 cairo_private void
-_cairo_xlib_remove_close_display_hooks (Display *display, const void *key);
+_cairo_xlib_remove_close_display_hooks (Display *display, const void *data);
 
 cairo_private cairo_status_t
 _cairo_xlib_display_queue_work (cairo_xlib_display_t *display,

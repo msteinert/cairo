@@ -2436,7 +2436,8 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     }
 
     if (! _cairo_xlib_add_close_display_hook (dpy,
-	    _cairo_xlib_surface_detach_display, surface, surface)) {
+	    _cairo_xlib_surface_detach_display, surface))
+    {
 	free (surface);
 	_cairo_xlib_screen_info_destroy (screen_info);
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
@@ -3011,7 +3012,7 @@ _cairo_xlib_surface_font_init (Display		    *dpy,
 
     if (! _cairo_xlib_add_close_display_hook (dpy,
 		                         _cairo_xlib_surface_remove_scaled_font,
-					 scaled_font, scaled_font))
+					 scaled_font))
     {
 	free (font_private);
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);

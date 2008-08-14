@@ -326,7 +326,7 @@ UNLOCK:
 }
 
 cairo_bool_t
-_cairo_xlib_add_close_display_hook (Display *dpy, void (*func) (Display *, void *), void *data, const void *key)
+_cairo_xlib_add_close_display_hook (Display *dpy, void (*func) (Display *, void *), void *data)
 {
     cairo_xlib_display_t *display;
     cairo_xlib_hook_t *hook;
@@ -342,7 +342,6 @@ _cairo_xlib_add_close_display_hook (Display *dpy, void (*func) (Display *, void 
 	if (hook != NULL) {
 	    hook->func = func;
 	    hook->data = data;
-	    hook->key = key;
 
 	    hook->next = display->close_display_hooks;
 	    display->close_display_hooks = hook;
@@ -357,7 +356,7 @@ _cairo_xlib_add_close_display_hook (Display *dpy, void (*func) (Display *, void 
 }
 
 void
-_cairo_xlib_remove_close_display_hooks (Display *dpy, const void *key)
+_cairo_xlib_remove_close_display_hooks (Display *dpy, const void *data)
 {
     cairo_xlib_display_t *display;
     cairo_xlib_hook_t *hook, *next, **prev;
@@ -370,13 +369,13 @@ _cairo_xlib_remove_close_display_hooks (Display *dpy, const void *key)
     prev = &display->close_display_hooks;
     for (hook = display->close_display_hooks; hook != NULL; hook = next) {
 	next = hook->next;
-	if (hook->key == key) {
+	if (hook->data == data) {
 	    *prev = hook->next;
 	    _cairo_freelist_free (&display->hook_freelist, hook);
-	} else
-	    prev = &hook->next;
+	    break;
+	}
+	prev = &hook->next;
     }
-    *prev = NULL;
     CAIRO_MUTEX_UNLOCK (display->mutex);
 
     _cairo_xlib_display_destroy (display);
