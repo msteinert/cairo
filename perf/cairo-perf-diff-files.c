@@ -566,28 +566,28 @@ print_change_bar (double change, double max_change, int use_utf)
     change -= 1.0;
 
     while (change > units_per_cell) {
-	printf(boxes[0]);
+	printf ("%s", boxes[0]);
 	change -= units_per_cell;
     }
 
     change /= units_per_cell;
 
     if (change > 7.5/8.0)
-	printf(boxes[0]);
+	printf ("%s", boxes[0]);
     else if (change > 6.5/8.0)
-	printf(boxes[1]);
+	printf ("%s", boxes[1]);
     else if (change > 5.5/8.0)
-	printf(boxes[2]);
+	printf ("%s", boxes[2]);
     else if (change > 4.5/8.0)
-	printf(boxes[3]);
+	printf ("%s", boxes[3]);
     else if (change > 3.5/8.0)
-	printf(boxes[4]);
+	printf ("%s", boxes[4]);
     else if (change > 2.5/8.0)
-	printf(boxes[5]);
+	printf ("%s", boxes[5]);
     else if (change > 1.5/8.0)
-	printf(boxes[6]);
+	printf ("%s", boxes[6]);
     else if (change > 0.5/8.0)
-	printf(boxes[7]);
+	printf ("%s", boxes[7]);
 
     printf ("\n");
 }
