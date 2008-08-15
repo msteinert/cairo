@@ -410,7 +410,7 @@ _cairo_ps_emit_imagemask (cairo_image_surface_t *image,
 				 "   /DataSource   {<");
     for (row = image->data, rows = image->height; rows; row += image->stride, rows--) {
 	for (byte = row, cols = (image->width + 7) / 8; cols; byte++, cols--) {
-	    unsigned char output_byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte);
+	    unsigned int output_byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte);
 	    _cairo_output_stream_printf (stream, "%02x ", output_byte);
 	}
 	_cairo_output_stream_printf (stream, "\n   ");
