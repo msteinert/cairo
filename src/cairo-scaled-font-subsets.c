@@ -345,7 +345,10 @@ _cairo_sub_font_glyph_lookup_unicode (cairo_sub_font_glyph_t *sub_font_glyph,
     if (unicode != (uint32_t)-1) {
 	len = _cairo_ucs4_to_utf8 (unicode, buf);
 	if (len > 0) {
-	    sub_font_glyph->utf8 = malloc(len + 1);
+	    sub_font_glyph->utf8 = malloc (len + 1);
+	    if (sub_font_glyph->utf8 == NULL)
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
 	    memcpy (sub_font_glyph->utf8, buf, len);
 	    sub_font_glyph->utf8[len] = 0;
 	    sub_font_glyph->utf8_len = len;
