@@ -112,7 +112,7 @@ _cairo_type3_glyph_surface_emit_image (cairo_type3_glyph_surface_t *surface,
     if (image_mask != image)
 	cairo_surface_destroy (&image_mask->base);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static cairo_status_t
