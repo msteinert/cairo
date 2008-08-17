@@ -146,51 +146,48 @@ test_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 }
 
 static cairo_font_face_t *
-get_user_font_face (void)
+_user_font_face_create (void)
 {
-    static cairo_font_face_t *user_font_face = NULL;
+    /* Simple glyph definition: 1 - 15 means lineto (or moveto for first
+     * point) for one of the points on this grid:
+     *
+     *      1  2  3
+     *      4  5  6
+     *      7  8  9
+     * ----10 11 12----(baseline)
+     *     13 14 15
+     */
+    static const test_scaled_font_glyph_t glyphs [] = {
+	{ '\0', 1, { END_GLYPH } }, /* Poppler has a bug assuming glyph 0 is .notdef */
+	{ ' ',  1, { END_GLYPH } },
+	{ '-',  2, { 7, 8, STROKE, END_GLYPH } },
+	{ '.',  1, { 10, 10, STROKE, END_GLYPH } },
+	{ 'a',  3, { 4, 6, 12, 10, 7, 9, STROKE, END_GLYPH } },
+	{ 'c',  3, { 6, 4, 10, 12, STROKE, END_GLYPH } },
+	{ 'e',  3, { 12, 10, 4, 6, 9, 7, STROKE, END_GLYPH } },
+	{ 'f',  3, { 3, 2, 11, STROKE, 4, 6, STROKE, END_GLYPH } },
+	{ 'g',  3, { 12, 10, 4, 6, 15, 13, STROKE, END_GLYPH } },
+	{ 'h',  3, { 1, 10, STROKE, 7, 5, 6, 12, STROKE, END_GLYPH } },
+	{ 'i',  1, { 1, 1, STROKE, 4, 10, STROKE, END_GLYPH } },
+	{ 'l',  1, { 1, 10, STROKE, END_GLYPH } },
+	{ 'n',  3, { 10, 4, STROKE, 7, 5, 6, 12, STROKE, END_GLYPH } },
+	{ 'o',  3, { 4, 10, 12, 6, CLOSE, END_GLYPH } },
+	{ 'r',  3, { 4, 10, STROKE, 7, 5, 6, STROKE, END_GLYPH } },
+	{ 's',  3, { 6, 4, 7, 9, 12, 10, STROKE, END_GLYPH } },
+	{ 't',  3, { 2, 11, 12, STROKE, 4, 6, STROKE, END_GLYPH } },
+	{ 'u',  3, { 4, 10, 12, 6, STROKE, END_GLYPH } },
+	{ 'z',  3, { 4, 6, 10, 12, STROKE, END_GLYPH } },
+	{  -1,  0, { END_GLYPH } },
+    };
 
-    if (!user_font_face) {
+    cairo_font_face_t *user_font_face;
 
-	/* Simple glyph definition: 1 - 15 means lineto (or moveto for first
-	 * point) for one of the points on this grid:
-	 *
-	 *      1  2  3
-	 *      4  5  6
-	 *      7  8  9
-	 * ----10 11 12----(baseline)
-	 *     13 14 15
-	 */
-	static const test_scaled_font_glyph_t glyphs [] = {
-	    { '\0', 1, { END_GLYPH } }, /* Poppler has a bug assuming glyph 0 is .notdef */
-	    { ' ',  1, { END_GLYPH } },
-	    { '-',  2, { 7, 8, STROKE, END_GLYPH } },
-	    { '.',  1, { 10, 10, STROKE, END_GLYPH } },
-	    { 'a',  3, { 4, 6, 12, 10, 7, 9, STROKE, END_GLYPH } },
-	    { 'c',  3, { 6, 4, 10, 12, STROKE, END_GLYPH } },
-	    { 'e',  3, { 12, 10, 4, 6, 9, 7, STROKE, END_GLYPH } },
-	    { 'f',  3, { 3, 2, 11, STROKE, 4, 6, STROKE, END_GLYPH } },
-	    { 'g',  3, { 12, 10, 4, 6, 15, 13, STROKE, END_GLYPH } },
-	    { 'h',  3, { 1, 10, STROKE, 7, 5, 6, 12, STROKE, END_GLYPH } },
-	    { 'i',  1, { 1, 1, STROKE, 4, 10, STROKE, END_GLYPH } },
-	    { 'l',  1, { 1, 10, STROKE, END_GLYPH } },
-	    { 'n',  3, { 10, 4, STROKE, 7, 5, 6, 12, STROKE, END_GLYPH } },
-	    { 'o',  3, { 4, 10, 12, 6, CLOSE, END_GLYPH } },
-	    { 'r',  3, { 4, 10, STROKE, 7, 5, 6, STROKE, END_GLYPH } },
-	    { 's',  3, { 6, 4, 7, 9, 12, 10, STROKE, END_GLYPH } },
-	    { 't',  3, { 2, 11, 12, STROKE, 4, 6, STROKE, END_GLYPH } },
-	    { 'u',  3, { 4, 10, 12, 6, STROKE, END_GLYPH } },
-	    { 'z',  3, { 4, 6, 10, 12, STROKE, END_GLYPH } },
-	    {  -1,  0, { END_GLYPH } },
-	};
+    user_font_face = cairo_user_font_face_create ();
+    cairo_user_font_face_set_init_func             (user_font_face, test_scaled_font_init);
+    cairo_user_font_face_set_render_glyph_func     (user_font_face, test_scaled_font_render_glyph);
+    cairo_user_font_face_set_unicode_to_glyph_func (user_font_face, test_scaled_font_unicode_to_glyph);
 
-	user_font_face = cairo_user_font_face_create ();
-	cairo_user_font_face_set_init_func             (user_font_face, test_scaled_font_init);
-	cairo_user_font_face_set_render_glyph_func     (user_font_face, test_scaled_font_render_glyph);
-	cairo_user_font_face_set_unicode_to_glyph_func (user_font_face, test_scaled_font_unicode_to_glyph);
-
-	cairo_font_face_set_user_data (user_font_face, &test_font_face_glyphs_key, (void*) glyphs, NULL);
-    }
+    cairo_font_face_set_user_data (user_font_face, &test_font_face_glyphs_key, (void*) glyphs, NULL);
 
     return user_font_face;
 }
@@ -198,6 +195,7 @@ get_user_font_face (void)
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
+    cairo_font_face_t *font_face;
     const char text[] = TEXT;
     cairo_font_extents_t font_extents;
     cairo_text_extents_t extents;
@@ -210,7 +208,10 @@ draw (cairo_t *cr, int width, int height)
     cairo_rotate (cr, .6);
 #endif
 
-    cairo_set_font_face (cr, get_user_font_face ());
+    font_face = _user_font_face_create ();
+    cairo_set_font_face (cr, font_face);
+    cairo_font_face_destroy (font_face);
+
     cairo_set_font_size (cr, TEXT_SIZE);
 
     cairo_font_extents (cr, &font_extents);
