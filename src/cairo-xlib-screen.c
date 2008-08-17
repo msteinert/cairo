@@ -106,7 +106,6 @@ get_integer_default (Display    *dpy,
 		     const char *option,
 		     int        *value)
 {
-    int i;
     char *v, *e;
 
     v = XGetDefault (dpy, "Xft", option);
@@ -116,7 +115,7 @@ get_integer_default (Display    *dpy,
 	    return TRUE;
 #endif
 
-	i = strtol (v, &e, 0);
+	*value = strtol (v, &e, 0);
 	if (e != v)
 	    return TRUE;
     }
