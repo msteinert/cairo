@@ -239,8 +239,8 @@ _cairo_cache_lookup (cairo_cache_t	  *cache,
  *
  * Remove a random entry from the cache.
  *
- * Return value: TRUE if an entry was successfully removed.
- * FALSE if there are no entries that can be removed.
+ * Return value: %TRUE if an entry was successfully removed.
+ * %FALSE if there are no entries that can be removed.
  **/
 static cairo_bool_t
 _cairo_cache_remove_random (cairo_cache_t *cache)
