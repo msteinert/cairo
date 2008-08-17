@@ -1286,6 +1286,9 @@ _cairo_pdf_operators_emit_cluster (cairo_pdf_operators_t      *pdf_operators,
      * unicode string. */
     _cairo_pdf_operators_flush_glyphs (pdf_operators);
     status = _cairo_pdf_operators_begin_actualtext (pdf_operators, utf8, utf8_len);
+    if (status)
+	return status;
+
     cur_glyph = glyphs;
     /* XXX
      * If no glyphs, we should put *something* here for the text to be selectable. */
