@@ -1782,8 +1782,6 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 
     /* Font display routine either does not exist or failed. */
 
-    status = CAIRO_STATUS_SUCCESS;
-
     _cairo_pattern_init_solid (&white_pattern, CAIRO_COLOR_WHITE, CAIRO_CONTENT_COLOR);
 
     _cairo_cache_freeze (scaled_font->glyphs);
