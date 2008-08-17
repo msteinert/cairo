@@ -423,7 +423,6 @@ _cairo_output_stream_vprintf (cairo_output_stream_t *stream,
 
 	/* Flush contents of buffer before snprintf()'ing into it. */
 	_cairo_output_stream_write (stream, buffer, p - buffer);
-	p = buffer;
 
 	/* We group signed and unsigned together in this switch, the
 	 * only thing that matters here is the size of the arguments,
