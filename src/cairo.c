@@ -2619,7 +2619,7 @@ cairo_copy_clip_rectangle_list (cairo_t *cr)
  * Selects a family and style of font from a simplified description as
  * a family name, slant and weight. Cairo provides no operation to
  * list available family names on the system (this is a "toy",
- * remember"), but the standard CSS2 generic family names, ("serif",
+ * remember), but the standard CSS2 generic family names, ("serif",
  * "sans-serif", "cursive", "fantasy", "monospace"), are likely to
  * work as expected.
  *
