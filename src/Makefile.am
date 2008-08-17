@@ -388,4 +388,10 @@ splint:
 		$(SPLINT) -I$(top_builddir) $(libcairo_la_CFLAGS) -DHAVE_CONFIG_H $$f || status=false; \
 	done; $$status
 
+UNO = uno
+uno:
+	@cpp_flags=`echo $(libcairo_la_CFLAGS) | sed 's/\(-I.*\) /\1 /g'`; \
+	files=`echo $(cairo_sources) | sed 's/[^ ]*\.h//g'`; \
+	$(UNO) -I$(top_builddir) $$cpp_flags -DHAVE_CONFIG_H -U__GNUC__ $$files
+
 EXTRA_DIST += Makefile.win32
