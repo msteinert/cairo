@@ -3521,6 +3521,9 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 						 NULL,
 						 surface->compress_content,
 						 NULL);
+	if (status)
+	    break;
+
 	glyphs[i] = surface->pdf_stream.self;
 	if (i == 0) {
 	    status = _cairo_type3_glyph_surface_emit_notdef_glyph (type3_surface,
