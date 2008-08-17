@@ -1391,7 +1391,7 @@ slim_hidden_def (cairo_scaled_font_glyph_extents);
  * }
  * </programlisting></informalexample>
  *
- * For details of how (@clusters, @num_clusters, and @backward map input
+ * For details of how @clusters, @num_clusters, and @backward map input
  * UTF-8 text to the output glyphs see cairo_show_text_glyphs().
  *
  * The output values can be readily passed to cairo_show_text_glyphs()
