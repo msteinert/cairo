@@ -3487,7 +3487,6 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_pdf_resource_t *glyphs, encoding, char_procs, subset_resource, to_unicode_stream;
     cairo_pdf_font_t font;
-    cairo_matrix_t matrix;
     double *widths;
     unsigned int i;
     cairo_box_t font_bbox = {{0,0},{0,0}};
@@ -3610,7 +3609,6 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
     }
 
     _cairo_pdf_surface_update_object (surface, subset_resource);
-    matrix = font_subset->scaled_font->scale_inverse;
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\n"
 				 "<< /Type /Font\n"
