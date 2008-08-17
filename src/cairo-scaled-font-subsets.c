@@ -331,8 +331,13 @@ _cairo_sub_font_glyph_lookup_unicode (cairo_sub_font_glyph_t *sub_font_glyph,
     if (status == CAIRO_INT_STATUS_UNSUPPORTED)
 	unicode = -1;
 
-    if (unicode == (uint32_t)-1 && scaled_font->backend->index_to_ucs4)
-	status = scaled_font->backend->index_to_ucs4 (scaled_font, scaled_font_glyph_index, &unicode);
+    if (unicode == (uint32_t)-1 && scaled_font->backend->index_to_ucs4) {
+	status = scaled_font->backend->index_to_ucs4 (scaled_font,
+						      scaled_font_glyph_index,
+						      &unicode);
+	if (status)
+	    return status;
+    }
 
     sub_font_glyph->unicode = unicode;
     sub_font_glyph->utf8 = NULL;
