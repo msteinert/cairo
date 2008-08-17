@@ -2045,7 +2045,7 @@ _trace_mask_to_path (cairo_image_surface_t *mask,
 
     bytes_per_row = (a1_mask->width + 7) / 8;
     for (y = 0, row = a1_mask->data, rows = a1_mask->height; rows; row += a1_mask->stride, rows--, y++) {
-	for (x = 0, byte_ptr = row, cols = (a1_mask->width + 7) / 8; cols; byte_ptr++, cols--) {
+	for (x = 0, byte_ptr = row, cols = bytes_per_row; cols; byte_ptr++, cols--) {
 	    byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte_ptr);
 	    for (bit = 7; bit >= 0 && x < a1_mask->width; bit--, x++) {
 		if (byte & (1 << bit)) {
