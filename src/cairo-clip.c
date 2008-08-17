@@ -381,8 +381,6 @@ _cairo_clip_intersect_region (cairo_clip_t    *clip,
     if (status)
 	return status;
 
-    status = CAIRO_STATUS_SUCCESS;
-
     if (!clip->has_region) {
         status = _cairo_region_copy (&clip->region, &region);
 	if (status == CAIRO_STATUS_SUCCESS)
