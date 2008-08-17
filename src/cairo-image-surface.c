@@ -1068,8 +1068,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     pixman_trapezoid_t		 stack_traps[CAIRO_STACK_ARRAY_LENGTH (pixman_trapezoid_t)];
     pixman_trapezoid_t		*pixman_traps = stack_traps;
     int				 mask_stride;
-    int				 mask_bpp;
-    int				 ret, i;
+    int				 i;
 
     if (height == 0 || width == 0)
 	return CAIRO_STATUS_SUCCESS;
@@ -1133,18 +1132,14 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     switch (antialias) {
     case CAIRO_ANTIALIAS_NONE:
 	format = PIXMAN_a1;
-	ret = 1;
 	mask_stride = ((width + 31) / 8) & ~0x03;
-	mask_bpp = 1;
 	break;
     case CAIRO_ANTIALIAS_GRAY:
     case CAIRO_ANTIALIAS_SUBPIXEL:
     case CAIRO_ANTIALIAS_DEFAULT:
     default:
 	format = PIXMAN_a8;
-	ret = 1;
 	mask_stride = (width + 3) & ~3;
-	mask_bpp = 8;
 	break;
     }
 
