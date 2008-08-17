@@ -756,7 +756,7 @@ AC_DEFUN([CAIRO_CC_TRY_FLAG], [
   AC_MSG_CHECKING([whether $CC supports $1])
 
   cairo_save_CFLAGS="$CFLAGS"
-  CFLAGS="$CFLAGS $1"
+  CFLAGS="$CFLAGS -Werror $1"
 
   AC_COMPILE_IFELSE([ ], [cairo_cc_flag=yes], [cairo_cc_flag=no])
   CFLAGS="$cairo_save_CFLAGS"
