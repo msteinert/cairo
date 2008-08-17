@@ -433,7 +433,6 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
 
 {
     cairo_status_t status;
-    cairo_matrix_t matrix;
     unsigned int i;
     cairo_box_t font_bbox = {{0,0},{0,0}};
     cairo_box_t bbox = {{0,0},{0,0}};
@@ -445,7 +444,6 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
 				 "%% _cairo_ps_surface_emit_type3_font_subset\n");
 #endif
 
-    matrix = font_subset->scaled_font->scale_inverse;
     _cairo_output_stream_printf (surface->final_stream,
 				 "8 dict begin\n"
 				 "/FontType 3 def\n"
