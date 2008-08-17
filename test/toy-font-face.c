@@ -28,21 +28,21 @@
 #include "config.h"
 #endif
 
+#include "cairo-test.h"
+
 #include <cairo.h>
 #include <assert.h>
-#include <stdlib.h>
 #include <string.h>
-
-#if HAVE_FCFINI
-#include <fontconfig/fontconfig.h>
-#endif
 
 int
 main (void)
 {
+    cairo_test_context_t ctx;
     cairo_t *cr;
     cairo_surface_t *surface;
     cairo_font_face_t *font_face;
+
+    cairo_test_init (&ctx, "toy-font-face");
 
     surface = cairo_image_surface_create (CAIRO_FORMAT_RGB24, 0, 0);
     cr = cairo_create (surface);
@@ -120,10 +120,7 @@ main (void)
 
     cairo_destroy (cr);
 
-    cairo_debug_reset_static_data ();
-#if HAVE_FCFINI
-    FcFini ();
-#endif
+    cairo_test_fini (&ctx);
 
-    return 0;
+    return CAIRO_TEST_SUCCESS;
 }
