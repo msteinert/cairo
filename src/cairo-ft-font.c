@@ -1187,7 +1187,7 @@ _render_glyph_outline (FT_Face                    face,
     FT_Outline *outline = &glyphslot->outline;
     FT_Bitmap bitmap;
     FT_BBox cbox;
-    unsigned int width, height, stride;
+    unsigned int width, height;
     cairo_status_t status;
     FT_Error fterror;
     FT_Library library = glyphslot->library;
@@ -1244,7 +1244,6 @@ _render_glyph_outline (FT_Face                    face,
 
     width = (unsigned int) ((cbox.xMax - cbox.xMin) >> 6);
     height = (unsigned int) ((cbox.yMax - cbox.yMin) >> 6);
-    stride = (width + 3) & ~3;
 
     if (width * height == 0) {
 	cairo_format_t format;
