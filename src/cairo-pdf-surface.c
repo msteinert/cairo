@@ -3534,6 +3534,9 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 							    &bbox,
 							    &widths[i]);
 	}
+	if (status)
+	    break;
+
 	status = _cairo_pdf_surface_close_stream (surface);
 	if (status)
 	    break;
