@@ -683,15 +683,18 @@ _cairo_pdf_operators_emit_stroke (cairo_pdf_operators_t	*pdf_operators,
 				  cairo_stroke_style_t	*style,
 				  cairo_matrix_t	*ctm,
 				  cairo_matrix_t	*ctm_inverse,
-				  const char 		*pdf_operator)
+				  const char		*pdf_operator)
 {
     cairo_status_t status;
     cairo_matrix_t m, path_transform;
     cairo_bool_t has_ctm = TRUE;
     double scale = 1.0;
 
-    if (pdf_operators->in_text_object)
+    if (pdf_operators->in_text_object) {
 	status = _cairo_pdf_operators_end_text (pdf_operators);
+	if (status)
+	    return status;
+    }
 
     /* Optimize away the stroke ctm when it does not affect the
      * stroke. There are other ctm cases that could be optimized
@@ -788,8 +791,11 @@ _cairo_pdf_operators_fill (cairo_pdf_operators_t	*pdf_operators,
     const char *pdf_operator;
     cairo_status_t status;
 
-    if (pdf_operators->in_text_object)
+    if (pdf_operators->in_text_object) {
 	status = _cairo_pdf_operators_end_text (pdf_operators);
+	if (status)
+	    return status;
+    }
 
     status = _cairo_pdf_operators_emit_path (pdf_operators,
 					     path,
