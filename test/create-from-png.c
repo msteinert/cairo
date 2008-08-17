@@ -254,5 +254,8 @@ main (void)
 
     cairo_test_fini (&ctx);
 
+    if (result != CAIRO_TEST_SUCCESS)
+	return result;
+
     return cairo_test (&test);
 }
