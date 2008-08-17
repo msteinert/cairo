@@ -411,7 +411,7 @@ cairo_boilerplate_get_targets (int *pnum_targets, cairo_bool_t *plimited_targets
 	limited_targets = TRUE;
 
 	while (*tname) {
-	    int j, found = 0;
+	    int j;
 	    const char *end = strpbrk (tname, " \t\r\n;:,");
 	    if (!end)
 	        end = tname + strlen (tname);
@@ -422,10 +422,9 @@ cairo_boilerplate_get_targets (int *pnum_targets, cairo_bool_t *plimited_targets
 	    }
 
 	    for (i = j = 0; i < num_targets; i++) {
-		if (0 == strncmp (targets_to_test[i]->name, tname, end - tname) &&
-		    !isalnum (targets_to_test[i]->name[end - tname])) {
-		    found = 1;
-		} else {
+		if (strncmp (targets_to_test[i]->name, tname, end - tname) ||
+		    isalnum (targets_to_test[i]->name[end - tname]))
+		{
 		    targets_to_test[j++] = targets_to_test[i];
 		}
 	    }
