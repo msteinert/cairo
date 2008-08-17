@@ -927,7 +927,7 @@ static cairo_status_t
 _cairo_pdf_operators_flush_glyphs (cairo_pdf_operators_t    *pdf_operators)
 {
     cairo_output_stream_t *word_wrap_stream;
-    cairo_status_t status;
+    cairo_status_t status, status2;
     int i;
     double x;
 
@@ -955,11 +955,11 @@ _cairo_pdf_operators_flush_glyphs (cairo_pdf_operators_t    *pdf_operators)
     }
 
     pdf_operators->num_glyphs = 0;
-    status = _cairo_output_stream_destroy (word_wrap_stream);
-    if (status)
-	return status;
+    status2 = _cairo_output_stream_destroy (word_wrap_stream);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = status2;
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static cairo_status_t
