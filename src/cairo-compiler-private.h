@@ -108,6 +108,7 @@ CAIRO_BEGIN_DECLS
 #endif
 
 #ifndef __GNUC__
+#undef __attribute__
 #define __attribute__(x)
 #endif
 
