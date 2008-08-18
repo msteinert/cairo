@@ -169,6 +169,13 @@ cairo_boilerplate_get_image_surface_from_png (const char *filename,
 cairo_surface_t *
 cairo_boilerplate_surface_create_in_error (cairo_status_t status);
 
+FILE *
+cairo_boilerplate_open_any2ppm (const char *filename,
+				int page);
+
+cairo_surface_t *
+cairo_boilerplate_image_surface_create_from_ppm_stream (FILE *file);
+
 #include "xmalloc.h"
 
 #endif

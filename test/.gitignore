@@ -9,6 +9,9 @@ a1-image-sample
 a1-mask
 a1-traps-sample
 a8-mask
+any2ppm
+.any2ppm
+.any2ppm.pid
 big-line
 big-trap
 bilevel-image

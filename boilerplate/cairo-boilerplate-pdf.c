@@ -107,13 +107,11 @@ _cairo_boilerplate_pdf_create_surface (const char		 *name,
     return surface;
 }
 
-cairo_status_t
-_cairo_boilerplate_pdf_surface_write_to_png (cairo_surface_t *surface, const char *filename)
+static cairo_status_t
+_cairo_boilerplate_pdf_finish (pdf_target_closure_t	*ptc,
+			       cairo_surface_t		*surface)
 {
-    pdf_target_closure_t *ptc = cairo_surface_get_user_data (surface, &pdf_closure_key);
-    char    command[4096];
     cairo_status_t status;
-    int exitstatus;
 
     /* Both surface and ptc->target were originally created at the
      * same dimensions. We want a 1:1 copy here, so we first clear any
@@ -149,6 +147,21 @@ _cairo_boilerplate_pdf_surface_write_to_png (cairo_surface_t *surface, const cha
     if (status)
 	return status;
 
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_boilerplate_pdf_surface_write_to_png (cairo_surface_t *surface, const char *filename)
+{
+    pdf_target_closure_t *ptc = cairo_surface_get_user_data (surface, &pdf_closure_key);
+    char    command[4096];
+    cairo_status_t status;
+    int exitstatus;
+
+    status = _cairo_boilerplate_pdf_finish (ptc, surface);
+    if (status)
+	return status;
+
     sprintf (command, "./pdf2png %s %s 1",
 	     ptc->filename, filename);
 
@@ -163,28 +176,42 @@ _cairo_boilerplate_pdf_surface_write_to_png (cairo_surface_t *surface, const cha
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_surface_t *
+_cairo_boilerplate_pdf_convert_to_image (cairo_surface_t *surface)
+{
+    pdf_target_closure_t *ptc = cairo_surface_get_user_data (surface,
+							     &pdf_closure_key);
+    cairo_status_t status;
+    FILE *file;
+    cairo_surface_t *image;
+
+    status = _cairo_boilerplate_pdf_finish (ptc, surface);
+    if (status)
+	return cairo_boilerplate_surface_create_in_error (status);
+
+    file = cairo_boilerplate_open_any2ppm (ptc->filename, 1);
+    if (file == NULL)
+	return cairo_boilerplate_surface_create_in_error (CAIRO_STATUS_READ_ERROR);
+
+    image = cairo_boilerplate_image_surface_create_from_ppm_stream (file);
+    fclose (file);
+
+    return image;
+}
+
 cairo_surface_t *
 _cairo_boilerplate_pdf_get_image_surface (cairo_surface_t *surface,
 					  int width,
 					  int height)
 {
-    pdf_target_closure_t *ptc = cairo_surface_get_user_data (surface,
-							     &pdf_closure_key);
-    char *filename;
-    cairo_status_t status;
+    cairo_surface_t *image;
 
-    xasprintf (&filename, "%s.png", ptc->filename);
-    status = _cairo_boilerplate_pdf_surface_write_to_png (surface, filename);
-    if (status)
-	return cairo_boilerplate_surface_create_in_error (status);
-
-    surface = cairo_boilerplate_get_image_surface_from_png (filename,
-							    width,
-							    height,
-							    ptc->target == NULL);
-
-    remove (filename);
-    free (filename);
+    image = _cairo_boilerplate_pdf_convert_to_image (surface);
+    cairo_surface_set_device_offset (image,
+				     cairo_image_surface_get_width (image) - width,
+				     cairo_image_surface_get_height (image) - height);
+    surface = _cairo_boilerplate_get_image_surface (image, width, height);
+    cairo_surface_destroy (image);
 
     return surface;
 }

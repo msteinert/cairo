@@ -733,6 +733,12 @@ AC_SUBST(LIBRSVG_CFLAGS)
 AC_SUBST(LIBRSVG_LIBS)
 
 dnl ===========================================================================
+dnl Build the external converter if we have any of the test backends
+AM_CONDITIONAL(BUILD_ANY2PPM,
+	       test "x$test_svg" = "xyes" \
+	         -o "x$test_pdf" = "xyes" ) # -o "x$test_ps"  = "xyes")
+
+dnl ===========================================================================
 dnl dump backend checking results
 AC_CACHE_SAVE
 
@@ -740,6 +746,9 @@ dnl ===========================================================================
 dnl Checks for precise integer types
 AC_CHECK_HEADERS([stdint.h signal.h setjmp.h inttypes.h sys/int_types.h])
 AC_CHECK_TYPES([uint64_t, uint128_t])
+
+dnl Check for socket support for any2ppm daemon
+AC_CHECK_HEADERS([fcntl.h unistd.h signal.h sys/stat.h sys/socket.h sys/poll.h sys/un.h])
 
 dnl ===========================================================================
 dnl check for CPU affinity support

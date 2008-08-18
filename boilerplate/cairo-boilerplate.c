@@ -68,6 +68,18 @@
 #include <ctype.h>
 #include <assert.h>
 
+#if HAVE_UNISTD_H && HAVE_FCNTL_H && HAVE_SIGNAL_H && HAVE_SYS_STAT_H && HAVE_SYS_SOCKET_H && HAVE_SYS_UN_H
+#include <unistd.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <sys/stat.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+
+#define HAS_DAEMON 1
+#define SOCKET_PATH "./.any2ppm"
+#endif
+
 cairo_content_t
 cairo_boilerplate_content (cairo_content_t content)
 {
@@ -619,4 +631,133 @@ cairo_boilerplate_scaled_font_set_max_glyphs_cached (cairo_scaled_font_t *scaled
 	return;
 
     scaled_font->glyphs->max_size = max_glyphs;
+}
+
+#if HAS_DAEMON
+static int
+any2ppm_daemon_exists (void)
+{
+    struct stat st;
+    int fd;
+    char buf[80];
+    int pid;
+    int ret;
+
+    if (stat (SOCKET_PATH, &st) < 0)
+	return 0;
+
+    fd = open (SOCKET_PATH ".pid", O_RDONLY);
+    if (fd < 0)
+	return 0;
+
+    pid = 0;
+    ret = read (fd, buf, sizeof (buf) - 1);
+    if (ret > 0) {
+	buf[ret] = '\0';
+	pid = atoi (buf);
+    }
+    close (fd);
+
+    return pid > 0 && kill (pid, 0) != -1;
+}
+#endif
+
+FILE *
+cairo_boilerplate_open_any2ppm (const char *filename,
+				int page)
+{
+    char command[4096];
+#if HAS_DAEMON
+    int sk;
+    struct sockaddr_un addr;
+    int len;
+
+    if (! any2ppm_daemon_exists ()) {
+	if (system ("./any2ppm") != 0)
+	    goto POPEN;
+    }
+
+    sk = socket (PF_UNIX, SOCK_STREAM, 0);
+    if (sk == -1)
+	goto POPEN;
+
+    memset (&addr, 0, sizeof (addr));
+    addr.sun_family = AF_UNIX;
+    strcpy (addr.sun_path, SOCKET_PATH);
+
+    if (connect (sk, (struct sockaddr *) &addr, sizeof (addr)) == -1) {
+	close (sk);
+	goto POPEN;
+    }
+
+    len = sprintf (command, "%s %d\n", filename, page);
+    if (write (sk, command, len) != len) {
+	close (sk);
+	goto POPEN;
+    }
+
+    return fdopen (sk, "r");
+
+POPEN:
+#endif
+    sprintf (command, "./any2ppm %s %d", filename, page);
+    return popen (command, "r");
+}
+
+cairo_surface_t *
+cairo_boilerplate_image_surface_create_from_ppm_stream (FILE *file)
+{
+    char format;
+    int width, height, stride;
+    int x, y;
+    unsigned char *data;
+    cairo_surface_t *image = NULL;
+
+    if (fscanf (file, "P%c %d %d 255\n", &format, &width, &height) != 3)
+	goto FAIL;
+
+    switch (format) {
+    case '7': /* XXX */
+	image = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+	break;
+    case '6':
+	image = cairo_image_surface_create (CAIRO_FORMAT_RGB24, width, height);
+	break;
+    case '5':
+	image = cairo_image_surface_create (CAIRO_FORMAT_A8, width, height);
+	break;
+    default:
+	goto FAIL;
+    }
+    if (cairo_surface_status (image))
+	goto FAIL;
+
+    data = cairo_image_surface_get_data (image);
+    stride = cairo_image_surface_get_stride (image);
+    for (y = 0; y < height; y++) {
+	unsigned char *buf = data + y *stride;
+	switch (format) {
+	case '7':
+	    if (fread (buf, 4, width, file) != (size_t) width)
+		goto FAIL;
+	    break;
+	case '6':
+	    for (x = 0; x < width; x++) {
+		if (fread (buf, 1, 3, file) != 3)
+		    goto FAIL;
+		buf += 4;
+	    }
+	    break;
+	case '5':
+	    if (fread (buf, 1, width, file) != (size_t) width)
+		goto FAIL;
+	    break;
+	}
+    }
+
+    return image;
+
+FAIL:
+    cairo_surface_destroy (image);
+    return cairo_boilerplate_surface_create_in_error (CAIRO_STATUS_READ_ERROR);
 }
