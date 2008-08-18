@@ -9,6 +9,11 @@ m4_define(cairo_version_major, 1)
 m4_define(cairo_version_minor, 7)
 m4_define(cairo_version_micro, 5)
 
+m4_define([cairo_release_status],
+	  [m4_if(m4_eval(cairo_version_micro % 2), [1], [git],
+	         [m4_if(m4_eval(cairo_version_minor % 2), [1], [snapshot],
+		                                               [release])])])
+
 AC_INIT([cairo],
       cairo_version_major.cairo_version_minor.cairo_version_micro,
       [http://bugs.freedesktop.org/enter_bug.cgi?product=cairo])
@@ -49,9 +54,11 @@ AC_SUBST(LT_CURRENT_MINUS_AGE)
 CAIRO_VERSION_MAJOR=cairo_version_major()
 CAIRO_VERSION_MINOR=cairo_version_minor()
 CAIRO_VERSION_MICRO=cairo_version_micro()
+CAIRO_RELEASE_STATUS=cairo_release_status()
 AC_SUBST(CAIRO_VERSION_MAJOR)
 AC_SUBST(CAIRO_VERSION_MINOR)
 AC_SUBST(CAIRO_VERSION_MICRO)
+AC_SUBST(CAIRO_RELEASE_STATUS)
 
 dnl ===========================================================================
 
@@ -1096,7 +1103,7 @@ dnl ===========================================================================
 
 V="$CAIRO_VERSION_MAJOR.$CAIRO_VERSION_MINOR.$CAIRO_VERSION_MICRO"
 echo ""
-echo "cairo (version $V) will be compiled with the following surface backends:"
+echo "cairo (version $V [[$CAIRO_RELEASE_STATUS]]) will be compiled with the following surface backends:"
 echo "  image:         yes (always builtin)"
 echo "  Xlib:          $use_xlib"
 echo "  Xlib Xrender:  $use_xlib_xrender"
