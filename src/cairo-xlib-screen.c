@@ -135,7 +135,7 @@ get_integer_default (Display    *dpy,
 #ifndef FC_LCD_FILTER
 #define FC_LCD_FILTER	"lcdfilter"
 #endif
-/* Stupid Ubuntu defined FC_LCD_FILTER without defining the following */
+/* Some Ubuntu versions defined FC_LCD_FILTER without defining the following */
 #ifndef FC_LCD_NONE
 #define FC_LCD_NONE	0
 #define FC_LCD_DEFAULT	1
