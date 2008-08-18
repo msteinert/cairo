@@ -32,6 +32,11 @@
 #include <cairo-pdf-surface-private.h>
 #include <cairo-paginated-surface-private.h>
 
+#if HAVE_SIGNAL_H
+#include <stdlib.h>
+#include <signal.h>
+#endif
+
 cairo_user_data_key_t pdf_closure_key;
 
 typedef struct _pdf_target_closure
@@ -108,6 +113,7 @@ _cairo_boilerplate_pdf_surface_write_to_png (cairo_surface_t *surface, const cha
     pdf_target_closure_t *ptc = cairo_surface_get_user_data (surface, &pdf_closure_key);
     char    command[4096];
     cairo_status_t status;
+    int exitstatus;
 
     /* Both surface and ptc->target were originally created at the
      * same dimensions. We want a 1:1 copy here, so we first clear any
@@ -146,7 +152,12 @@ _cairo_boilerplate_pdf_surface_write_to_png (cairo_surface_t *surface, const cha
     sprintf (command, "./pdf2png %s %s 1",
 	     ptc->filename, filename);
 
-    if (system (command) != 0)
+    exitstatus = system (command);
+#if _XOPEN_SOURCE && HAVE_SIGNAL_H
+    if (WIFSIGNALED (exitstatus))
+	raise (WTERMSIG (exitstatus));
+#endif
+    if (exitstatus)
 	return CAIRO_STATUS_WRITE_ERROR;
 
     return CAIRO_STATUS_SUCCESS;

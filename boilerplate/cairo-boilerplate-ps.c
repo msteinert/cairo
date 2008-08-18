@@ -32,6 +32,11 @@
 #include <cairo-ps-surface-private.h>
 #include <cairo-paginated-surface-private.h>
 
+#if HAVE_SIGNAL_H
+#include <stdlib.h>
+#include <signal.h>
+#endif
+
 cairo_user_data_key_t	ps_closure_key;
 
 typedef struct _ps_target_closure
@@ -107,6 +112,7 @@ _cairo_boilerplate_ps_surface_write_to_png (cairo_surface_t *surface, const char
 							    &ps_closure_key);
     char    command[4096];
     cairo_status_t status;
+    int exitstatus;
 
     /* Both surface and ptc->target were originally created at the
      * same dimensions. We want a 1:1 copy here, so we first clear any
@@ -144,10 +150,15 @@ _cairo_boilerplate_ps_surface_write_to_png (cairo_surface_t *surface, const char
 
     sprintf (command, "gs -q -r72 -g%dx%d -dSAFER -dBATCH -dNOPAUSE -sDEVICE=pngalpha -sOutputFile=%s %s",
 	     ptc->width, ptc->height, filename, ptc->filename);
-    if (system (command) == 0)
-	return CAIRO_STATUS_SUCCESS;
+    exitstatus = system (command);
+#if _XOPEN_SOURCE && HAVE_SIGNAL_H
+    if (WIFSIGNALED (exitstatus))
+	raise (WTERMSIG (exitstatus));
+#endif
+    if (exitstatus)
+	return CAIRO_STATUS_WRITE_ERROR;
 
-    return CAIRO_STATUS_WRITE_ERROR;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_surface_t *
