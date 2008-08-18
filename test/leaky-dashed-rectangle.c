@@ -26,6 +26,8 @@
 
 /* Test case for bug reported by Franz Schmid <Franz.Schmid@altmuehlnet.de>
  * http://lists.cairographics.org/archives/cairo/2008-April/013912.html
+ *
+ * See also: http://bugs.freedesktop.org/show_bug.cgi?id=17177
  */
 
 #include "cairo-test.h"
