@@ -1525,7 +1525,7 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
 cairo_bool_t
 _cairo_gstate_has_show_text_glyphs (cairo_gstate_t *gstate)
 {
-    return _cairo_surface_has_show_text_glyphs (gstate->target);
+    return cairo_surface_has_show_text_glyphs (gstate->target);
 }
 
 cairo_status_t

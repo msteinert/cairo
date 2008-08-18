@@ -1738,6 +1738,9 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		op,
  * be retained for the next page.  Use cairo_surface_show_page() if you
  * want to get an empty page after the emission.
  *
+ * There is a convenience function for this that takes a #cairo_t,
+ * namely cairo_copy_page().
+ *
  * Since: 1.6
  */
 void
@@ -1771,6 +1774,9 @@ slim_hidden_def (cairo_surface_copy_page);
  *
  * Emits and clears the current page for backends that support multiple
  * pages.  Use cairo_surface_copy_page() if you don't want to clear the page.
+ *
+ * There is a convenience function for this that takes a #cairo_t,
+ * namely cairo_show_page().
  *
  * Since: 1.6
  **/
@@ -2141,14 +2147,50 @@ _cairo_surface_get_extents (cairo_surface_t         *surface,
     return status;
 }
 
+/**
+ * cairo_surface_has_show_text_glyphs:
+ * @surface: a #cairo_surface_t
+ *
+ * Returns whether the surface supports
+ * sophisticated cairo_show_text_glyphs() operations.  That is,
+ * whether it actually uses the provided text and cluster data
+ * to a cairo_show_text_glyphs() call.
+ *
+ * Note: Even if this function returns %FALSE, a
+ * cairo_show_text_glyphs() operation targeted at @surface will
+ * still succeed.  It just will
+ * act like a cairo_show_glyphs() operation.  Users can use this
+ * function to avoid computing UTF-8 text and cluster mapping if the
+ * target surface does not use it.
+ *
+ * There is a convenience function for this that takes a #cairo_t,
+ * namely cairo_has_show_text_glyphs().
+ *
+ * Return value: %TRUE if @surface supports
+ *               cairo_show_text_glyphs(), %FALSE otherwise
+ *
+ * Since: 1.8
+ **/
 cairo_bool_t
-_cairo_surface_has_show_text_glyphs (cairo_surface_t	    *surface)
+cairo_surface_has_show_text_glyphs (cairo_surface_t	    *surface)
 {
+    cairo_status_t status_ignored;
+
+    if (surface->status)
+	return FALSE;
+
+    if (surface->finished) {
+	status_ignored = _cairo_surface_set_error (surface,
+						   CAIRO_STATUS_SURFACE_FINISHED);
+	return FALSE;
+    }
+
     if (surface->backend->has_show_text_glyphs)
 	return surface->backend->has_show_text_glyphs (surface);
     else
 	return surface->backend->show_text_glyphs != NULL;
 }
+slim_hidden_def (cairo_surface_has_show_text_glyphs);
 
 /* Note: the backends may modify the contents of the glyph array as long as
  * they do not return %CAIRO_INT_STATUS_UNSUPPORTED. This makes it possible to

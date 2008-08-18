@@ -1752,9 +1752,6 @@ _cairo_surface_fill (cairo_surface_t	*surface,
 		     double		 tolerance,
 		     cairo_antialias_t	 antialias);
 
-cairo_private cairo_bool_t
-_cairo_surface_has_show_text_glyphs (cairo_surface_t	    *surface);
-
 cairo_private cairo_status_t
 _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 				 cairo_operator_t	     op,
@@ -2454,6 +2451,7 @@ slim_hidden_proto (cairo_surface_get_content);
 slim_hidden_proto (cairo_surface_get_device_offset);
 slim_hidden_proto (cairo_surface_get_font_options);
 slim_hidden_proto (cairo_surface_get_type);
+slim_hidden_proto (cairo_surface_has_show_text_glyphs);
 slim_hidden_proto (cairo_surface_mark_dirty_rectangle);
 slim_hidden_proto_no_warn (cairo_surface_reference);
 slim_hidden_proto (cairo_surface_set_device_offset);

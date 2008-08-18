@@ -1981,6 +1981,9 @@ cairo_surface_copy_page (cairo_surface_t *surface);
 cairo_public void
 cairo_surface_show_page (cairo_surface_t *surface);
 
+cairo_public cairo_bool_t
+cairo_surface_has_show_text_glyphs (cairo_surface_t *surface);
+
 /* Image-surface functions */
 
 /**

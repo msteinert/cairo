@@ -3227,6 +3227,9 @@ cairo_show_glyphs (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
  * function to avoid computing UTF-8 text and cluster mapping if the
  * target surface does not use it.
  *
+ * This is a convenience function that simply calls
+ * cairo_surface_has_show_text_glyphs() on @cr's target.
+ *
  * Return value: %TRUE if the target surface of @cr supports
  *               cairo_show_text_glyphs(), %FALSE otherwise
  *
