@@ -103,7 +103,8 @@ _cairo_boilerplate_ps_create_surface (const char		 *name,
 cairo_status_t
 _cairo_boilerplate_ps_surface_write_to_png (cairo_surface_t *surface, const char *filename)
 {
-    ps_target_closure_t *ptc = cairo_surface_get_user_data (surface, &ps_closure_key);
+    ps_target_closure_t *ptc = cairo_surface_get_user_data (surface,
+							    &ps_closure_key);
     char    command[4096];
     cairo_status_t status;
 
@@ -147,6 +148,32 @@ _cairo_boilerplate_ps_surface_write_to_png (cairo_surface_t *surface, const char
 	return CAIRO_STATUS_SUCCESS;
 
     return CAIRO_STATUS_WRITE_ERROR;
+}
+
+cairo_surface_t *
+_cairo_boilerplate_ps_get_image_surface (cairo_surface_t *surface,
+					  int width,
+					  int height)
+{
+    ps_target_closure_t *ptc = cairo_surface_get_user_data (surface,
+							    &ps_closure_key);
+    char *filename;
+    cairo_status_t status;
+
+    xasprintf (&filename, "%s.png", ptc->filename);
+    status = _cairo_boilerplate_ps_surface_write_to_png (surface, filename);
+    if (status)
+	return cairo_boilerplate_surface_create_in_error (status);
+
+    surface = cairo_boilerplate_get_image_surface_from_png (filename,
+							    width,
+							    height,
+							    ptc->target == NULL);
+
+    remove (filename);
+    free (filename);
+
+    return surface;
 }
 
 void

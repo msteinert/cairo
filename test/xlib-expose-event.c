@@ -175,6 +175,7 @@ compare (const cairo_test_context_t *ctx, cairo_surface_t *surface)
 {
     cairo_t *cr;
     cairo_surface_t *image, *reference, *diff;
+    cairo_status_t status;
     buffer_diff_result_t result;
 
     diff = cairo_image_surface_create (CAIRO_FORMAT_RGB24, SIZE, SIZE);
@@ -187,17 +188,14 @@ compare (const cairo_test_context_t *ctx, cairo_surface_t *surface)
     cairo_destroy (cr);
 
     reference = cairo_test_create_surface_from_png (ctx, "xlib-expose-event-ref.png");
-    if (cairo_image_surface_get_width (image) != cairo_image_surface_get_width (reference) ||
-        cairo_image_surface_get_height (image) != cairo_image_surface_get_height (reference))
-	return CAIRO_TEST_FAILURE;
-
-    compare_surfaces (ctx, reference, image, diff, &result);
+    status = image_diff (ctx, reference, image, diff, &result);
 
     cairo_surface_destroy (reference);
     cairo_surface_destroy (image);
     cairo_surface_destroy (diff);
 
-    return result.pixels_changed ? CAIRO_TEST_FAILURE : CAIRO_TEST_SUCCESS;
+    return status == CAIRO_STATUS_SUCCESS && ! result.pixels_changed ?
+	CAIRO_TEST_SUCCESS : CAIRO_TEST_FAILURE;
 }
 
 int

@@ -44,4 +44,9 @@ _cairo_boilerplate_pdf_cleanup (void *closure);
 cairo_status_t
 _cairo_boilerplate_pdf_surface_write_to_png (cairo_surface_t *surface, const char *filename);
 
+cairo_surface_t *
+_cairo_boilerplate_pdf_get_image_surface (cairo_surface_t *surface,
+					  int width,
+					  int height);
+
 #endif

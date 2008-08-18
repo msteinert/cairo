@@ -120,6 +120,10 @@ struct _cairo_test_context {
     const char *srcdir; /* directory containing sources and input data */
     const char *refdir; /* directory containing reference images */
 
+    char *ref_name; /* cache of the current reference image */
+    cairo_surface_t *ref_image;
+    cairo_surface_t *ref_image_flattened;
+
     size_t num_targets;
     cairo_bool_t limited_targets;
     cairo_boilerplate_target_t **targets_to_test;

@@ -134,6 +134,10 @@ _cairo_test_init (cairo_test_context_t *ctx,
 
     ctx->refdir = getenv ("CAIRO_REF_DIR");
 
+    ctx->ref_name = NULL;
+    ctx->ref_image = NULL;
+    ctx->ref_image_flattened = NULL;
+
     ctx->thread = 0;
 
     {
@@ -173,6 +177,11 @@ cairo_test_fini (cairo_test_context_t *ctx)
     if (ctx->log_file != stderr)
 	fclose (ctx->log_file);
     ctx->log_file = NULL;
+
+    if (ctx->ref_name != NULL)
+	free (ctx->ref_name);
+    cairo_surface_destroy (ctx->ref_image);
+    cairo_surface_destroy (ctx->ref_image_flattened);
 
     cairo_boilerplate_free_targets (ctx->targets_to_test);
 
@@ -351,8 +360,75 @@ cairo_test_target_has_similar (const cairo_test_context_t *ctx,
     return has_similar;
 }
 
+static cairo_surface_t *
+_cairo_test_flatten_reference_image (cairo_test_context_t *ctx,
+				     cairo_bool_t flatten)
+{
+    cairo_surface_t *surface;
+    cairo_t *cr;
+
+    if (! flatten)
+	return ctx->ref_image;
+
+    if (ctx->ref_image_flattened != NULL)
+	return ctx->ref_image_flattened;
+
+    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
+					  cairo_image_surface_get_width (ctx->ref_image),
+					  cairo_image_surface_get_height (ctx->ref_image));
+    cr = cairo_create (surface);
+    cairo_surface_destroy (surface);
+
+    cairo_set_source_rgb (cr, 1, 1, 1);
+    cairo_paint (cr);
+
+    cairo_set_source_surface (cr, ctx->ref_image, 0, 0);
+    cairo_paint (cr);
+
+    surface = cairo_surface_reference (cairo_get_target (cr));
+    cairo_destroy (cr);
+
+    if (cairo_surface_status (surface) == CAIRO_STATUS_SUCCESS)
+	ctx->ref_image_flattened = surface;
+    return surface;
+}
+
+static cairo_surface_t *
+cairo_test_get_reference_image (cairo_test_context_t *ctx,
+				const char *filename,
+				cairo_bool_t flatten)
+{
+    cairo_surface_t *surface;
+    int len;
+
+    if (ctx->ref_name != NULL) {
+	if (strcmp (ctx->ref_name, filename) == 0)
+	    return _cairo_test_flatten_reference_image (ctx, flatten);
+
+	cairo_surface_destroy (ctx->ref_image);
+	ctx->ref_image = NULL;
+
+	cairo_surface_destroy (ctx->ref_image_flattened);
+	ctx->ref_image_flattened = NULL;
+
+	free (ctx->ref_name);
+	ctx->ref_name = NULL;
+    }
+
+    surface = cairo_image_surface_create_from_png (filename);
+    if (cairo_surface_status (surface))
+	return surface;
+
+    len = strlen (filename);
+    ctx->ref_name = xmalloc (len + 1);
+    memcpy (ctx->ref_name, filename, len + 1);
+
+    ctx->ref_image = surface;
+    return _cairo_test_flatten_reference_image (ctx, flatten);
+}
+
 static cairo_test_status_t
-cairo_test_for_target (const cairo_test_context_t		 *ctx,
+cairo_test_for_target (cairo_test_context_t		 *ctx,
 		       const cairo_boilerplate_target_t	 *target,
 		       int				  dev_offset,
 		       cairo_bool_t                       similar)
@@ -378,7 +454,6 @@ cairo_test_for_target (const cairo_test_context_t		 *ctx,
 						      ctx->test->name,
 						      target->name,
 						      format);
-
     if (dev_offset)
 	xasprintf (&offset_str, "-%d", dev_offset);
     else
@@ -520,23 +595,15 @@ cairo_test_for_target (const cairo_test_context_t		 *ctx,
 
     /* Skip image check for tests with no image (width,height == 0,0) */
     if (ctx->test->width != 0 && ctx->test->height != 0) {
+	cairo_surface_t *ref_image;
+	cairo_surface_t *test_image;
+	cairo_surface_t *diff_image;
 	buffer_diff_result_t result;
 	cairo_status_t diff_status;
 
-	xunlink (ctx, png_name);
-
-	diff_status = (target->write_to_png) (surface, png_name);
-	if (diff_status) {
-	    cairo_test_log (ctx, "Error: Failed to compare images: %s\n",
-			    cairo_status_to_string (diff_status));
-	    ret = CAIRO_TEST_FAILURE;
-	    goto UNWIND_CAIRO;
-	}
-	have_output = TRUE;
-
-	if (!ref_name) {
+	if (ref_name == NULL) {
 	    cairo_test_log (ctx, "Error: Cannot find reference image for %s/%s-%s-%s%s\n",
-		            ctx->srcdir,
+			    ctx->srcdir,
 			    ctx->test->name,
 			    target->name,
 			    format,
@@ -545,27 +612,64 @@ cairo_test_for_target (const cairo_test_context_t		 *ctx,
 	    goto UNWIND_CAIRO;
 	}
 
-	if (target->content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED) {
-	    diff_status = image_diff_flattened (ctx,
-		                               png_name, ref_name, diff_name,
-					       dev_offset, dev_offset, 0, 0, &result);
-	} else {
-	    diff_status = image_diff (ctx,
-		                      png_name, ref_name, diff_name,
-				      dev_offset, dev_offset, 0, 0, &result);
-	}
-	if (diff_status) {
-	    cairo_test_log (ctx, "Error: Failed to compare images: %s\n",
-			    cairo_status_to_string (diff_status));
+	ref_image = cairo_test_get_reference_image (ctx, ref_name,
+						    target->content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED);
+	if (cairo_surface_status (ref_image)) {
+	    cairo_test_log (ctx, "Error: Cannot open reference image for %s: %s\n",
+			    ref_name,
+			    cairo_status_to_string (cairo_surface_status (ref_image)));
 	    ret = CAIRO_TEST_FAILURE;
 	    goto UNWIND_CAIRO;
 	}
 
-	have_result = TRUE;
-	if (result.pixels_changed && result.max_diff > target->error_tolerance) {
+	xunlink (ctx, png_name);
+	xunlink (ctx, diff_name);
+
+	test_image = target->get_image_surface (surface,
+					       ctx->test->width,
+					       ctx->test->height);
+	if (cairo_surface_status (test_image)) {
+	    cairo_test_log (ctx, "Error: Failed to extract image: %s\n",
+			    cairo_status_to_string (cairo_surface_status (test_image)));
 	    ret = CAIRO_TEST_FAILURE;
 	    goto UNWIND_CAIRO;
 	}
+
+	diff_image = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
+						 ctx->test->width,
+						 ctx->test->height);
+
+	diff_status = image_diff (ctx,
+				  test_image, ref_image,
+				  diff_image,
+				  &result);
+	if (diff_status) {
+	    cairo_test_log (ctx, "Error: Failed to compare images: %s\n",
+			    cairo_status_to_string (diff_status));
+	    ret = CAIRO_TEST_FAILURE;
+	}
+	else if (result.pixels_changed &&
+		 result.max_diff > target->error_tolerance)
+	{
+	    ret = CAIRO_TEST_FAILURE;
+
+	    diff_status = cairo_surface_write_to_png (test_image, png_name);
+	    if (diff_status) {
+		cairo_test_log (ctx, "Error: Failed to write output image: %s\n",
+				cairo_status_to_string (diff_status));
+	    } else
+		have_output = TRUE;
+
+	    diff_status = cairo_surface_write_to_png (diff_image, diff_name);
+	    if (diff_status) {
+		cairo_test_log (ctx, "Error: Failed to write differences image: %s\n",
+				cairo_status_to_string (diff_status));
+	    } else
+		have_result = TRUE;
+	}
+
+	cairo_surface_destroy (test_image);
+	cairo_surface_destroy (diff_image);
     }
 
 UNWIND_CAIRO:

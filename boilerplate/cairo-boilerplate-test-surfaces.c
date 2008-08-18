@@ -85,23 +85,25 @@ _cairo_boilerplate_test_paginated_create_surface (const char			 *name,
 						  void				**closure)
 {
     test_paginated_closure_t *tpc;
+    cairo_format_t format;
     cairo_surface_t *surface;
     cairo_status_t status;
 
     *closure = tpc = xmalloc (sizeof (test_paginated_closure_t));
 
+    format = cairo_boilerplate_format_from_content (content);
+
     tpc->content = content;
     tpc->width = width;
     tpc->height = height;
-    tpc->stride = width * 4;
-
-    tpc->data = xcalloc (tpc->stride * height, 1);
+    tpc->stride = cairo_format_stride_for_width (format, width);
+    tpc->data = xcalloc (tpc->stride, height);
 
     surface = _cairo_test_paginated_surface_create_for_data (tpc->data,
-						       tpc->content,
-						       tpc->width,
-						       tpc->height,
-						       tpc->stride);
+							     tpc->content,
+							     tpc->width,
+							     tpc->height,
+							     tpc->stride);
     if (cairo_surface_status (surface))
 	goto CLEANUP;
 
@@ -160,6 +162,48 @@ _cairo_boilerplate_test_paginated_surface_write_to_png (cairo_surface_t	*surface
     cairo_surface_destroy (image);
 
     return status;
+}
+
+cairo_surface_t *
+_cairo_boilerplate_test_paginated_get_image_surface (cairo_surface_t *surface,
+						     int width,
+						     int height)
+{
+    cairo_format_t format;
+    test_paginated_closure_t *tpc;
+    cairo_status_t status;
+
+    /* show page first.  the automatic show_page is too late for us */
+    cairo_surface_show_page (surface);
+    status = cairo_surface_status (surface);
+    if (status)
+	return cairo_boilerplate_surface_create_in_error (status);
+
+    tpc = cairo_surface_get_user_data (surface, &test_paginated_closure_key);
+
+    format = cairo_boilerplate_format_from_content (tpc->content);
+
+    if (0) {
+	return cairo_image_surface_create_for_data (tpc->data + tpc->stride * (tpc->height - height) + 4 * (tpc->width - width), /* hide the device offset */
+						    format,
+						    width,
+						    height,
+						    tpc->stride);
+    } else {
+	cairo_surface_t *image, *surface;
+
+	image = cairo_image_surface_create_for_data (tpc->data,
+						     format,
+						     tpc->width,
+						     tpc->height,
+						     tpc->stride);
+	cairo_surface_set_device_offset (image,
+					 tpc->width - width,
+					 tpc->height - height);
+	surface = _cairo_boilerplate_get_image_surface (image, width, height);
+	cairo_surface_destroy (image);
+	return surface;
+    }
 }
 
 void

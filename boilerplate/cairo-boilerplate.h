@@ -51,20 +51,21 @@
   typedef unsigned __int32 uint32_t;
   typedef __int64 int64_t;
   typedef unsigned __int64 uint64_t;
-# ifndef HAVE_UINT64_T
-#  define HAVE_UINT64_T 1
-# endif
-# ifndef INT16_MIN
-#  define INT16_MIN	(-32767-1)
-# endif
-# ifndef INT16_MAX
-#  define INT16_MAX	(32767)
-# endif
-# ifndef UINT16_MAX
-#  define UINT16_MAX	(65535)
-# endif
 #else
 #error Cannot find definitions for fixed-width integral types (uint8_t, uint32_t, etc.)
+#endif
+
+#ifndef HAVE_UINT64_T
+# define HAVE_UINT64_T 1
+#endif
+#ifndef INT16_MIN
+# define INT16_MIN	(-32767-1)
+#endif
+#ifndef INT16_MAX
+# define INT16_MAX	(32767)
+#endif
+#ifndef UINT16_MAX
+# define UINT16_MAX	(65535)
 #endif
 
 #ifndef CAIRO_BOILERPLATE_LOG
@@ -120,8 +121,14 @@ typedef cairo_surface_t *
 				       int                        id,
 				       void			**closure);
 
+typedef cairo_surface_t *
+(*cairo_boilerplate_get_image_surface_t) (cairo_surface_t *surface,
+					  int width,
+					  int height);
+
 typedef cairo_status_t
-(*cairo_boilerplate_write_to_png_t) (cairo_surface_t *surface, const char *filename);
+(*cairo_boilerplate_write_to_png_t) (cairo_surface_t *surface,
+				     const char *filename);
 
 typedef void
 (*cairo_boilerplate_cleanup_t) (void *closure);
@@ -131,15 +138,16 @@ typedef void
 
 typedef struct _cairo_boilerplate_target
 {
-    const char		       	       *name;
-    cairo_surface_type_t		expected_type;
-    cairo_content_t			content;
-    unsigned int			error_tolerance;
-    cairo_boilerplate_create_surface_t	create_surface;
-    cairo_boilerplate_write_to_png_t	write_to_png;
-    cairo_boilerplate_cleanup_t		cleanup;
-    cairo_boilerplate_wait_t		synchronize;
-    cairo_bool_t			is_vector;
+    const char					*name;
+    cairo_surface_type_t			 expected_type;
+    cairo_content_t				 content;
+    unsigned int				 error_tolerance;
+    cairo_boilerplate_create_surface_t		 create_surface;
+    cairo_boilerplate_get_image_surface_t	 get_image_surface;
+    cairo_boilerplate_write_to_png_t		 write_to_png;
+    cairo_boilerplate_cleanup_t			 cleanup;
+    cairo_boilerplate_wait_t			 synchronize;
+    cairo_bool_t				 is_vector;
 } cairo_boilerplate_target_t;
 
 cairo_boilerplate_target_t **
@@ -147,6 +155,16 @@ cairo_boilerplate_get_targets (int *num_targets, cairo_bool_t *limited_targets);
 
 void
 cairo_boilerplate_free_targets (cairo_boilerplate_target_t **targets);
+
+cairo_surface_t *
+_cairo_boilerplate_get_image_surface (cairo_surface_t *src,
+				      int width,
+				      int height);
+cairo_surface_t *
+cairo_boilerplate_get_image_surface_from_png (const char *filename,
+					      int width,
+					      int height,
+					      cairo_bool_t flatten);
 
 cairo_surface_t *
 cairo_boilerplate_surface_create_in_error (cairo_status_t status);

@@ -152,6 +152,32 @@ _cairo_boilerplate_pdf_surface_write_to_png (cairo_surface_t *surface, const cha
     return CAIRO_STATUS_SUCCESS;
 }
 
+cairo_surface_t *
+_cairo_boilerplate_pdf_get_image_surface (cairo_surface_t *surface,
+					  int width,
+					  int height)
+{
+    pdf_target_closure_t *ptc = cairo_surface_get_user_data (surface,
+							     &pdf_closure_key);
+    char *filename;
+    cairo_status_t status;
+
+    xasprintf (&filename, "%s.png", ptc->filename);
+    status = _cairo_boilerplate_pdf_surface_write_to_png (surface, filename);
+    if (status)
+	return cairo_boilerplate_surface_create_in_error (status);
+
+    surface = cairo_boilerplate_get_image_surface_from_png (filename,
+							    width,
+							    height,
+							    ptc->target == NULL);
+
+    remove (filename);
+    free (filename);
+
+    return surface;
+}
+
 void
 _cairo_boilerplate_pdf_cleanup (void *closure)
 {

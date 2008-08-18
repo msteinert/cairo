@@ -66,6 +66,11 @@ cairo_status_t
 _cairo_boilerplate_test_paginated_surface_write_to_png (cairo_surface_t	*surface,
 						        const char	*filename);
 
+cairo_surface_t *
+_cairo_boilerplate_test_paginated_get_image_surface (cairo_surface_t *surface,
+						     int width,
+						     int height);
+
 void
 _cairo_boilerplate_test_paginated_cleanup (void *closure);
 
