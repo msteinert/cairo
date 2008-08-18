@@ -561,7 +561,7 @@ _has_unlocked_face (void *entry)
  * This differs from _cairo_ft_scaled_font_lock_face in that it doesn't
  * set the scale on the face, but just returns it at the last scale.
  */
-FT_Face
+cairo_warn FT_Face
 _cairo_ft_unscaled_font_lock_face (cairo_ft_unscaled_font_t *unscaled)
 {
     cairo_ft_unscaled_font_map_t *font_map;
