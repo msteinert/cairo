@@ -53,7 +53,7 @@ typedef struct _cairo_perf_case {
     unsigned int max_size;
 } cairo_perf_case_t;
 
-cairo_perf_case_t perf_cases[];
+const cairo_perf_case_t perf_cases[];
 
 /* Some targets just aren't that interesting for performance testing,
  * (not least because many of these surface types use a meta-surface
@@ -358,7 +358,6 @@ int
 main (int argc, char *argv[])
 {
     int i, j;
-    cairo_perf_case_t *perf_case;
     cairo_perf_t perf;
     cairo_surface_t *surface;
 
@@ -390,8 +389,7 @@ main (int argc, char *argv[])
 	perf.test_number = 0;
 
 	for (j = 0; perf_cases[j].run; j++) {
-
-	    perf_case = &perf_cases[j];
+	    const cairo_perf_case_t *perf_case = &perf_cases[j];
 
 	    for (perf.size = perf_case->min_size;
 		 perf.size <= perf_case->max_size;
@@ -410,8 +408,7 @@ main (int argc, char *argv[])
 		    fprintf (stderr,
 			     "Error: Failed to create target surface: %s\n",
 			     target->name);
-		    cairo_perf_fini (&perf);
-		    exit (1);
+		    continue;
 		}
 
 		cairo_perf_timer_set_synchronize (target->synchronize, closure);
@@ -423,8 +420,6 @@ main (int argc, char *argv[])
 		if (cairo_status (perf.cr)) {
 		    fprintf (stderr, "Error: Test left cairo in an error state: %s\n",
 			     cairo_status_to_string (cairo_status (perf.cr)));
-		    cairo_perf_fini (&perf);
-		    exit (1);
 		}
 
 		cairo_destroy (perf.cr);
@@ -441,7 +436,7 @@ main (int argc, char *argv[])
     return 0;
 }
 
-cairo_perf_case_t perf_cases[] = {
+const cairo_perf_case_t perf_cases[] = {
     { paint,  256, 512},
     { paint_with_alpha,  256, 512},
     { fill,   64, 256},
