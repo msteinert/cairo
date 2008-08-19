@@ -250,6 +250,7 @@ xunlink (const cairo_test_context_t *ctx, const char *pathname)
 
 static char *
 cairo_ref_name_for_test_target_format (const cairo_test_context_t *ctx,
+	                               const char *base_name,
 	                               const char *test_name,
 				       const char *target_name,
 				       const char *format)
@@ -258,10 +259,9 @@ cairo_ref_name_for_test_target_format (const cairo_test_context_t *ctx,
 
     /* First look for a previous build for comparison. */
     if (ctx->refdir != NULL) {
-	xasprintf (&ref_name, "%s/%s-%s-%s%s", ctx->refdir,
-		   test_name,
-		   target_name,
-		   format,
+	xasprintf (&ref_name, "%s/%s%s",
+		   ctx->refdir,
+		   base_name,
 		   CAIRO_TEST_PNG_SUFFIX);
 	if (access (ref_name, F_OK) != 0)
 	    free (ref_name);
@@ -450,10 +450,6 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 
     /* Get the strings ready that we'll need. */
     format = cairo_boilerplate_content_name (target->content);
-    ref_name = cairo_ref_name_for_test_target_format (ctx,
-						      ctx->test->name,
-						      target->name,
-						      format);
     if (dev_offset)
 	xasprintf (&offset_str, "-%d", dev_offset);
     else
@@ -476,6 +472,12 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
     if (thread_str != empty_str)
       free (thread_str);
 
+
+    ref_name = cairo_ref_name_for_test_target_format (ctx,
+						      base_name,
+						      ctx->test->name,
+						      target->name,
+						      format);
     xasprintf (&png_name,  "%s%s", base_name, CAIRO_TEST_PNG_SUFFIX);
     xasprintf (&diff_name, "%s%s", base_name, CAIRO_TEST_DIFF_SUFFIX);
 
