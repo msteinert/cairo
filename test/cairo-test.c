@@ -637,6 +637,15 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 	    goto UNWIND_CAIRO;
 	}
 
+	diff_status = cairo_surface_write_to_png (test_image, png_name);
+	if (diff_status) {
+	    cairo_test_log (ctx, "Error: Failed to write output image: %s\n",
+			    cairo_status_to_string (diff_status));
+	    ret = CAIRO_TEST_FAILURE;
+	    goto UNWIND_CAIRO;
+	}
+	have_output = TRUE;
+
 	diff_image = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
 						 ctx->test->width,
 						 ctx->test->height);
@@ -654,13 +663,6 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 		 result.max_diff > target->error_tolerance)
 	{
 	    ret = CAIRO_TEST_FAILURE;
-
-	    diff_status = cairo_surface_write_to_png (test_image, png_name);
-	    if (diff_status) {
-		cairo_test_log (ctx, "Error: Failed to write output image: %s\n",
-				cairo_status_to_string (diff_status));
-	    } else
-		have_output = TRUE;
 
 	    diff_status = cairo_surface_write_to_png (diff_image, diff_name);
 	    if (diff_status) {
