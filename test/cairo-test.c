@@ -641,6 +641,7 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 	if (diff_status) {
 	    cairo_test_log (ctx, "Error: Failed to write output image: %s\n",
 			    cairo_status_to_string (diff_status));
+	    cairo_surface_destroy (test_image);
 	    ret = CAIRO_TEST_FAILURE;
 	    goto UNWIND_CAIRO;
 	}
