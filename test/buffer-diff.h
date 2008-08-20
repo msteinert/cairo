@@ -53,42 +53,6 @@ buffer_diff_noalpha (const unsigned char *buf_a,
 		     int	    stride,
 		     buffer_diff_result_t *result);
 
-/* Compares two image buffers ignoring the alpha channel. A return
- * value of CAIRO_STATUS_SUCCESS indicates that a comparison was made,
- * (but the images may or may not differ). Failure modes include
- * CAIRO_STATUS_FILE_NOT_FOUND, CAIRO_STATUS_READ_ERROR,
- * CAIRO_STATUS_NO_MEMORY, and CAIRO_STATUS_SURFACE_TYPE_MISMATCH
- * (which is used if the image sizes differ).
- *
- * Provides number of pixels changed and maximum single-channel
- * difference in result.
- *
- * Also saves a "diff" image intended to visually show where the
- * images differ.
- */
-cairo_status_t
-png_diff (const cairo_test_context_t *ctx,
-	    const char *filename_a,
-	    const char *filename_b,
-	    const char *filename_diff,
-	    int		ax,
-	    int		ay,
-	    int		bx,
-	    int		by,
-	    buffer_diff_result_t *result);
-
-/* Like png_diff, but blending the contents of b over white first. */
-cairo_status_t
-png_diff_flattened (const cairo_test_context_t *ctx,
-	              const char *filename_a,
-		      const char *filename_b,
-		      const char *filename_diff,
-                      int         ax,
-                      int         ay,
-                      int         bx,
-                      int         by,
-		      buffer_diff_result_t *result);
-
 /* The central algorithm to compare two images, and return the differences
  * in the surface_diff.
  *
