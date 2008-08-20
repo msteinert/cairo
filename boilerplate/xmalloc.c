@@ -29,6 +29,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#include <errno.h>
 
 void *
 xmalloc (size_t size)
@@ -128,4 +132,14 @@ xasprintf (char **strp, const char *fmt, ...)
     }
     memset (*strp + ret, 0, len-ret);
 #endif /* !HAVE_VASNPRINTF */
+}
+
+void
+xunlink (const char *pathname)
+{
+    if (unlink (pathname) < 0 && errno != ENOENT) {
+	CAIRO_BOILERPLATE_LOG ("Error: Cannot remove %s: %s\n",
+			       pathname, strerror (errno));
+	exit (1);
+    }
 }

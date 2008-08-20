@@ -921,14 +921,14 @@ CLEANFILES =					\
 # most systems cannot handle all of our clean files together.
 # Then it became a fancy find using many GNU extensions, but then the ugly
 # reality of portability was raised and it became....
-clean-local:
-	-${FIND} . -name '*-out.ps'   -print | ${XARGS} ${RM}
-	-${FIND} . -name '*-out.pdf'  -print | ${XARGS} ${RM}
-	-${FIND} . -name '*-out.svg'  -print | ${XARGS} ${RM}
-	-${FIND} . -name '*-out.png'  -print | ${XARGS} ${RM}
+clean-local: clean-caches
+	-${FIND} . -name '*-out.*'    -print | ${XARGS} ${RM}
 	-${FIND} . -name '*-diff.png' -print | ${XARGS} ${RM}
 	-${FIND} . -name '*.log'      -print | ${XARGS} ${RM}
 	-${FIND} . -name '*.[is]'     -print | ${XARGS} ${RM}
+clean-caches:
+	-${FIND} . -name '*-pass.*' -print | ${XARGS} ${RM}
+	-${FIND} . -name '*-last.*' -print | ${XARGS} ${RM}
 
 # The following definitions both should work.
 #FAILED_TESTS = `grep -l '\<FAIL\>' $(TESTS:$(EXEEXT)=.log) 2>/dev/null | sed -e 's/[.]log$$//' | xargs echo`

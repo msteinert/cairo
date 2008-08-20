@@ -38,8 +38,8 @@ _cairo_boilerplate_svg_create_surface (const char		 *name,
 				       int                        id,
 				       void			**closure);
 
-void
-_cairo_boilerplate_svg_cleanup (void *closure);
+cairo_status_t
+_cairo_boilerplate_svg_finish_surface (cairo_surface_t		*surface);
 
 cairo_status_t
 _cairo_boilerplate_svg_surface_write_to_png (cairo_surface_t *surface, const char *filename);
@@ -48,5 +48,8 @@ cairo_surface_t *
 _cairo_boilerplate_svg_get_image_surface (cairo_surface_t *surface,
 					  int width,
 					  int height);
+
+void
+_cairo_boilerplate_svg_cleanup (void *closure);
 
 #endif

@@ -68,7 +68,7 @@
 static cairo_user_data_key_t _cairo_test_context_key;
 
 static void
-xunlink (const cairo_test_context_t *ctx, const char *pathname);
+_xunlink (const cairo_test_context_t *ctx, const char *pathname);
 
 static const char *fail_face = "", *normal_face = "";
 
@@ -119,7 +119,7 @@ _cairo_test_init (cairo_test_context_t *ctx,
     ctx->expectation = expectation;
 
     xasprintf (&log_name, "%s%s", test_name, CAIRO_TEST_LOG_SUFFIX);
-    xunlink (NULL, log_name);
+    _xunlink (NULL, log_name);
 
     ctx->log_file = fopen (log_name, "a");
     if (ctx->log_file == NULL) {
@@ -239,7 +239,7 @@ cairo_test_log_path (const cairo_test_context_t *ctx,
 }
 
 static void
-xunlink (const cairo_test_context_t *ctx, const char *pathname)
+_xunlink (const cairo_test_context_t *ctx, const char *pathname)
 {
     if (unlink (pathname) < 0 && errno != ENOENT) {
 	cairo_test_log (ctx, "Error: Cannot remove %s: %s\n",
@@ -427,6 +427,71 @@ cairo_test_get_reference_image (cairo_test_context_t *ctx,
     return _cairo_test_flatten_reference_image (ctx, flatten);
 }
 
+static cairo_bool_t
+cairo_test_files_equal (const char *test_filename,
+			const char *pass_filename)
+{
+    FILE *test, *pass;
+    int t, p;
+
+    test = fopen (test_filename, "rb");
+    if (test == NULL)
+	return FALSE;
+
+    pass = fopen (pass_filename, "rb");
+    if (pass == NULL) {
+	fclose (test);
+	return FALSE;
+    }
+
+    /* as simple as it gets */
+    do {
+	t = getc (test);
+	p = getc (pass);
+	if (t != p)
+	    break;
+    } while (t != EOF && p != EOF);
+
+    fclose (pass);
+    fclose (test);
+
+    return t == p; /* both EOF */
+}
+
+static cairo_bool_t
+cairo_test_copy_file (const char *src_filename,
+		      const char *dst_filename)
+{
+    FILE *src, *dst;
+    int c;
+
+#if HAVE_LINK
+    if (link (src_filename, dst_filename) == 0)
+	return TRUE;
+
+    unlink (dst_filename);
+#endif
+
+    src = fopen (src_filename, "rb");
+    if (src == NULL)
+	return FALSE;
+
+    dst = fopen (dst_filename, "wb");
+    if (dst == NULL) {
+	fclose (src);
+	return FALSE;
+    }
+
+    /* as simple as it gets */
+    while ((c = getc (src)) != EOF)
+	putc (c, dst);
+
+    fclose (src);
+    fclose (dst);
+
+    return TRUE;
+}
+
 static cairo_test_status_t
 cairo_test_for_target (cairo_test_context_t		 *ctx,
 		       const cairo_boilerplate_target_t	 *target,
@@ -439,6 +504,7 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
     const char *empty_str = "";
     char *offset_str, *thread_str;
     char *base_name, *png_name, *ref_name, *diff_name;
+    char *test_filename = NULL, *pass_filename = NULL, *last_filename = NULL;
     cairo_test_status_t ret;
     cairo_content_t expected_content;
     cairo_font_options_t *font_options;
@@ -604,28 +670,45 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 	cairo_status_t diff_status;
 
 	if (ref_name == NULL) {
-	    cairo_test_log (ctx, "Error: Cannot find reference image for %s/%s-%s-%s%s\n",
-			    ctx->srcdir,
-			    ctx->test->name,
-			    target->name,
-			    format,
-			    CAIRO_TEST_REF_SUFFIX);
+	    cairo_test_log (ctx, "Error: Cannot find reference image for %s\n",
+			    base_name);
 	    ret = CAIRO_TEST_FAILURE;
 	    goto UNWIND_CAIRO;
 	}
 
-	ref_image = cairo_test_get_reference_image (ctx, ref_name,
-						    target->content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED);
-	if (cairo_surface_status (ref_image)) {
-	    cairo_test_log (ctx, "Error: Cannot open reference image for %s: %s\n",
-			    ref_name,
-			    cairo_status_to_string (cairo_surface_status (ref_image)));
-	    ret = CAIRO_TEST_FAILURE;
-	    goto UNWIND_CAIRO;
+	if (target->finish_surface != NULL) {
+	    diff_status = target->finish_surface (surface);
+	    if (diff_status) {
+		cairo_test_log (ctx, "Error: Failed to finish surface: %s\n",
+				cairo_status_to_string (diff_status));
+		ret = CAIRO_TEST_FAILURE;
+		goto UNWIND_CAIRO;
+	    }
 	}
 
-	xunlink (ctx, png_name);
-	xunlink (ctx, diff_name);
+	if (target->file_extension != NULL) { /* compare vector surfaces */
+	    xasprintf (&test_filename, "%s-out%s",
+		       base_name, target->file_extension);
+	    xasprintf (&pass_filename, "%s-pass%s",
+		       base_name, target->file_extension);
+	    xasprintf (&last_filename, "%s-last%s",
+		       base_name, target->file_extension);
+	    if (cairo_test_files_equal (test_filename, pass_filename)) {
+		/* identical output as last known PASS */
+		cairo_test_log (ctx, "Vector surface matches last pass.\n");
+		ret = CAIRO_TEST_SUCCESS;
+		goto UNWIND_CAIRO;
+	    }
+	    if (cairo_test_files_equal (test_filename, last_filename)) {
+		/* identical output as last time, fail */
+		cairo_test_log (ctx, "Vector surface matches last fail.\n");
+		have_result = TRUE; /* presume these were kept around as well */
+		ret = CAIRO_TEST_FAILURE;
+		goto UNWIND_CAIRO;
+	    }
+	}
+
+	_xunlink (ctx, png_name);
 
 	test_image = target->get_image_surface (surface,
 					       ctx->test->width,
@@ -646,6 +729,57 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 	    goto UNWIND_CAIRO;
 	}
 	have_output = TRUE;
+
+	/* binary compare png files (no decompression) */
+	if (target->file_extension == NULL) {
+	    xasprintf (&test_filename, "%s", png_name);
+	    xasprintf (&pass_filename, "%s-pass.png", base_name);
+	    xasprintf (&last_filename, "%s-last.png", base_name);
+
+	    if (cairo_test_files_equal (test_filename, pass_filename)) {
+		/* identical output as last known PASS, pass */
+		cairo_test_log (ctx, "PNG file exactly matches last pass.\n");
+		cairo_surface_destroy (test_image);
+		ret = CAIRO_TEST_SUCCESS;
+		goto UNWIND_CAIRO;
+	    }
+	    if (cairo_test_files_equal (png_name, ref_name)) {
+		/* identical output as reference image */
+		cairo_test_log (ctx, "PNG file exactly reference image.\n");
+		cairo_surface_destroy (test_image);
+		ret = CAIRO_TEST_SUCCESS;
+		goto UNWIND_CAIRO;
+	    }
+
+	    if (cairo_test_files_equal (test_filename, last_filename)) {
+		cairo_test_log (ctx, "PNG file exactly matches last fail.\n");
+		/* identical output as last known time, fail */
+		have_result = TRUE; /* presume these were kept around as well */
+		cairo_surface_destroy (test_image);
+		ret = CAIRO_TEST_FAILURE;
+		goto UNWIND_CAIRO;
+	    }
+	} else {
+	    if (cairo_test_files_equal (png_name, ref_name)) {
+		cairo_test_log (ctx, "PNG file exactly matches reference image.\n");
+		cairo_surface_destroy (test_image);
+		ret = CAIRO_TEST_SUCCESS;
+		goto UNWIND_CAIRO;
+	    }
+	}
+
+	ref_image = cairo_test_get_reference_image (ctx, ref_name,
+						    target->content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED);
+	if (cairo_surface_status (ref_image)) {
+	    cairo_test_log (ctx, "Error: Cannot open reference image for %s: %s\n",
+			    ref_name,
+			    cairo_status_to_string (cairo_surface_status (ref_image)));
+	    cairo_surface_destroy (test_image);
+	    ret = CAIRO_TEST_FAILURE;
+	    goto UNWIND_CAIRO;
+	}
+
+	_xunlink (ctx, diff_name);
 
 	diff_image = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
 						 ctx->test->width,
@@ -671,7 +805,11 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 				cairo_status_to_string (diff_status));
 	    } else
 		have_result = TRUE;
+	} else { /* success */
+	    cairo_test_copy_file (test_filename, pass_filename);
 	}
+
+	cairo_test_copy_file (test_filename, last_filename);
 
 	cairo_surface_destroy (test_image);
 	cairo_surface_destroy (diff_image);
@@ -697,6 +835,12 @@ UNWIND_SURFACE:
     }
 
 UNWIND_STRINGS:
+    if (test_filename != NULL)
+	free (test_filename);
+    if (last_filename != NULL)
+	free (last_filename);
+    if (pass_filename != NULL)
+	free (pass_filename);
     if (png_name)
       free (png_name);
     if (ref_name)
@@ -769,12 +913,12 @@ cairo_test_run (cairo_test_context_t *ctx)
 
 	    has_similar = cairo_test_target_has_similar (ctx, target);
 	    for (similar = 0; similar <= has_similar ; similar++) {
-		cairo_test_log (ctx, "Testing %s with %s%s target (dev offset %d)\n", ctx->test_name, similar ? " (similar)" : "", target->name, dev_offset);
+		cairo_test_log (ctx, "Testing %s with %s%s target (dev offset %d)\n", ctx->test_name, similar ? " (similar) " : "", target->name, dev_offset);
 		if (ctx->thread == 0) {
 		    printf ("%s-%s-%s [%d]%s:\t", ctx->test->name, target->name,
 			    cairo_boilerplate_content_name (target->content),
 			    dev_offset,
-			    similar ? " (similar)": "");
+			    similar ? " (similar) ": "");
 		    fflush (stdout);
 		}
 

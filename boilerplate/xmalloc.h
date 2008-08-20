@@ -44,4 +44,8 @@ xrealloc (void *buf, size_t size);
 void
 xasprintf (char **strp, const char *fmt, ...) CAIRO_BOILERPLATE_PRINTF_FORMAT(2, 3);
 
+#define xunlink cairo_boilerplate_xunlink
+void
+xunlink (const char *path);
+
 #endif

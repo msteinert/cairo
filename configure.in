@@ -120,7 +120,7 @@ dnl ===========================================================================
 AC_CHECK_LIBM
 LIBS="$LIBS $LIBM"
 
-AC_CHECK_FUNCS(vasnprintf ctime_r drand48 flockfile)
+AC_CHECK_FUNCS(vasnprintf link ctime_r drand48 flockfile)
 
 AC_MSG_CHECKING([for Sun Solaris (non-POSIX ctime_r)])
 case "$host" in

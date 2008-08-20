@@ -74,6 +74,7 @@ _cairo_boilerplate_pdf_create_surface (const char		 *name,
     ptc->height = height;
 
     xasprintf (&ptc->filename, "%s-out.pdf", name);
+    xunlink (ptc->filename);
 
     surface = cairo_pdf_surface_create (ptc->filename, width, height);
     if (cairo_surface_status (surface))
@@ -107,10 +108,11 @@ _cairo_boilerplate_pdf_create_surface (const char		 *name,
     return surface;
 }
 
-static cairo_status_t
-_cairo_boilerplate_pdf_finish (pdf_target_closure_t	*ptc,
-			       cairo_surface_t		*surface)
+cairo_status_t
+_cairo_boilerplate_pdf_finish_surface (cairo_surface_t		*surface)
 {
+    pdf_target_closure_t *ptc = cairo_surface_get_user_data (surface,
+							     &pdf_closure_key);
     cairo_status_t status;
 
     /* Both surface and ptc->target were originally created at the
@@ -155,12 +157,7 @@ _cairo_boilerplate_pdf_surface_write_to_png (cairo_surface_t *surface, const cha
 {
     pdf_target_closure_t *ptc = cairo_surface_get_user_data (surface, &pdf_closure_key);
     char    command[4096];
-    cairo_status_t status;
     int exitstatus;
-
-    status = _cairo_boilerplate_pdf_finish (ptc, surface);
-    if (status)
-	return status;
 
     sprintf (command, "./pdf2png %s %s 1",
 	     ptc->filename, filename);
@@ -181,13 +178,8 @@ _cairo_boilerplate_pdf_convert_to_image (cairo_surface_t *surface)
 {
     pdf_target_closure_t *ptc = cairo_surface_get_user_data (surface,
 							     &pdf_closure_key);
-    cairo_status_t status;
     FILE *file;
     cairo_surface_t *image;
-
-    status = _cairo_boilerplate_pdf_finish (ptc, surface);
-    if (status)
-	return cairo_boilerplate_surface_create_in_error (status);
 
     file = cairo_boilerplate_open_any2ppm (ptc->filename, 1);
     if (file == NULL)

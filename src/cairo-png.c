@@ -137,7 +137,6 @@ write_png (cairo_surface_t	*surface,
     void *image_extra;
     png_struct *png;
     png_info *info;
-    png_time pt;
     png_byte **volatile rows = NULL;
     png_color_16 white;
     int png_color_type;
@@ -225,8 +224,12 @@ write_png (cairo_surface_t	*surface,
     white.red = white.blue = white.green = white.gray;
     png_set_bKGD (png, info, &white);
 
-    png_convert_from_time_t (&pt, time (NULL));
-    png_set_tIME (png, info, &pt);
+    if (0) { /* XXX extract meta-data from surface (i.e. creation date) */
+	png_time pt;
+
+	png_convert_from_time_t (&pt, time (NULL));
+	png_set_tIME (png, info, &pt);
+    }
 
     /* We have to call png_write_info() before setting up the write
      * transformation, since it stores data internally in 'png'

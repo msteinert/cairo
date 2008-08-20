@@ -42,6 +42,9 @@ void
 _cairo_boilerplate_ps_cleanup (void *closure);
 
 cairo_status_t
+_cairo_boilerplate_ps_finish_surface (cairo_surface_t		*surface);
+
+cairo_status_t
 _cairo_boilerplate_ps_surface_write_to_png (cairo_surface_t *surface, const char *filename);
 
 cairo_surface_t *

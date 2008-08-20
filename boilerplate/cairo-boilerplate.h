@@ -121,6 +121,9 @@ typedef cairo_surface_t *
 				       int                        id,
 				       void			**closure);
 
+typedef cairo_status_t
+(*cairo_boilerplate_finish_surface_t) (cairo_surface_t *surface);
+
 typedef cairo_surface_t *
 (*cairo_boilerplate_get_image_surface_t) (cairo_surface_t *surface,
 					  int width,
@@ -139,10 +142,12 @@ typedef void
 typedef struct _cairo_boilerplate_target
 {
     const char					*name;
+    const char					*file_extension;
     cairo_surface_type_t			 expected_type;
     cairo_content_t				 content;
     unsigned int				 error_tolerance;
     cairo_boilerplate_create_surface_t		 create_surface;
+    cairo_boilerplate_finish_surface_t		 finish_surface;
     cairo_boilerplate_get_image_surface_t	 get_image_surface;
     cairo_boilerplate_write_to_png_t		 write_to_png;
     cairo_boilerplate_cleanup_t			 cleanup;

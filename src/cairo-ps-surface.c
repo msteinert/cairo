@@ -90,7 +90,10 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
     int level;
     const char *eps_header = "";
 
-    now = time (NULL);
+    if (surface->has_creation_date)
+	now = surface->creation_date;
+    else
+	now = time (NULL);
 
     if (surface->ps_level_used == CAIRO_PS_LEVEL_2)
 	level = 2;

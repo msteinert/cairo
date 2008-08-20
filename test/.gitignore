@@ -222,10 +222,9 @@ xlib-surface
 xlib-surface-source
 zero-alpha
 valgrind-log
-*-out.pdf
-*-out.png
-*-out.ps
-*-out.svg
+*-out.*
+*-pass.*
+*-last.*
 *-diff.png
 *.manifest
 *.gcda

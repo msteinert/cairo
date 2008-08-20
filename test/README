@@ -42,6 +42,12 @@ This will re-run the test suite, but only on tests that failed on the
 last run. So this is a much faster way of checking if changes actually
 fix bugs rather than running the entire test suite again.
 
+The test suite first compares the output from the current run against the
+previous in order to skip more expensive image comparisons . If you think
+this is interfering with the results, you can clear the cached results using:
+
+  make clean-caches
+
 Running tests under modified enviroments or tools
 -------------------------------------------------
 To run tests under a tool like gdb, one can use the run target and

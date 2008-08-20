@@ -67,6 +67,7 @@ _cairo_boilerplate_svg_create_surface (const char		 *name,
     ptc->height = height;
 
     xasprintf (&ptc->filename, "%s-out.svg", name);
+    xunlink (ptc->filename);
 
     surface = cairo_svg_surface_create (ptc->filename, width, height);
     if (cairo_surface_status (surface))
@@ -100,10 +101,10 @@ _cairo_boilerplate_svg_create_surface (const char		 *name,
     return surface;
 }
 
-static cairo_status_t
-_cairo_boilerplate_svg_finish (svg_target_closure_t	*ptc,
-			       cairo_surface_t		*surface)
+cairo_status_t
+_cairo_boilerplate_svg_finish_surface (cairo_surface_t		*surface)
 {
+    svg_target_closure_t *ptc = cairo_surface_get_user_data (surface, &svg_closure_key);
     cairo_status_t status;
 
     /* Both surface and ptc->target were originally created at the
@@ -148,12 +149,7 @@ _cairo_boilerplate_svg_surface_write_to_png (cairo_surface_t *surface, const cha
 {
     svg_target_closure_t *ptc = cairo_surface_get_user_data (surface, &svg_closure_key);
     char    command[4096];
-    cairo_status_t status;
     int exitstatus;
-
-    status = _cairo_boilerplate_svg_finish (ptc, surface);
-    if (status)
-	return status;
 
     sprintf (command, "./svg2png %s %s",
 	     ptc->filename, filename);
@@ -174,13 +170,8 @@ _cairo_boilerplate_svg_convert_to_image (cairo_surface_t *surface)
 {
     svg_target_closure_t *ptc = cairo_surface_get_user_data (surface,
 							     &svg_closure_key);
-    cairo_status_t status;
     FILE *file;
     cairo_surface_t *image;
-
-    status = _cairo_boilerplate_svg_finish (ptc, surface);
-    if (status)
-	return cairo_boilerplate_surface_create_in_error (status);
 
     file = cairo_boilerplate_open_any2ppm (ptc->filename, 0);
     if (file == NULL)
