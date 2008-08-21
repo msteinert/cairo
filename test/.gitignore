@@ -224,7 +224,7 @@ zero-alpha
 valgrind-log
 *-out.*
 *-pass.*
-*-last.*
+*-fail.*
 *-diff.png
 *.manifest
 *.gcda

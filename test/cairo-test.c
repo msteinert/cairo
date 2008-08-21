@@ -504,7 +504,7 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
     const char *empty_str = "";
     char *offset_str, *thread_str;
     char *base_name, *png_name, *ref_name, *diff_name;
-    char *test_filename = NULL, *pass_filename = NULL, *last_filename = NULL;
+    char *test_filename = NULL, *pass_filename = NULL, *fail_filename = NULL;
     cairo_test_status_t ret;
     cairo_content_t expected_content;
     cairo_font_options_t *font_options;
@@ -691,7 +691,7 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 		       base_name, target->file_extension);
 	    xasprintf (&pass_filename, "%s-pass%s",
 		       base_name, target->file_extension);
-	    xasprintf (&last_filename, "%s-last%s",
+	    xasprintf (&fail_filename, "%s-fail%s",
 		       base_name, target->file_extension);
 	    if (cairo_test_files_equal (test_filename, pass_filename)) {
 		/* identical output as last known PASS */
@@ -699,8 +699,8 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 		ret = CAIRO_TEST_SUCCESS;
 		goto UNWIND_CAIRO;
 	    }
-	    if (cairo_test_files_equal (test_filename, last_filename)) {
-		/* identical output as last time, fail */
+	    if (cairo_test_files_equal (test_filename, fail_filename)) {
+		/* identical output as last known FAIL, fail */
 		cairo_test_log (ctx, "Vector surface matches last fail.\n");
 		have_result = TRUE; /* presume these were kept around as well */
 		ret = CAIRO_TEST_FAILURE;
@@ -734,7 +734,7 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 	if (target->file_extension == NULL) {
 	    xasprintf (&test_filename, "%s", png_name);
 	    xasprintf (&pass_filename, "%s-pass.png", base_name);
-	    xasprintf (&last_filename, "%s-last.png", base_name);
+	    xasprintf (&fail_filename, "%s-fail.png", base_name);
 
 	    if (cairo_test_files_equal (test_filename, pass_filename)) {
 		/* identical output as last known PASS, pass */
@@ -751,9 +751,9 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 		goto UNWIND_CAIRO;
 	    }
 
-	    if (cairo_test_files_equal (test_filename, last_filename)) {
+	    if (cairo_test_files_equal (test_filename, fail_filename)) {
 		cairo_test_log (ctx, "PNG file exactly matches last fail.\n");
-		/* identical output as last known time, fail */
+		/* identical output as last known FAIL, fail */
 		have_result = TRUE; /* presume these were kept around as well */
 		cairo_surface_destroy (test_image);
 		ret = CAIRO_TEST_FAILURE;
@@ -805,11 +805,11 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 				cairo_status_to_string (diff_status));
 	    } else
 		have_result = TRUE;
+
+	    cairo_test_copy_file (test_filename, fail_filename);
 	} else { /* success */
 	    cairo_test_copy_file (test_filename, pass_filename);
 	}
-
-	cairo_test_copy_file (test_filename, last_filename);
 
 	cairo_surface_destroy (test_image);
 	cairo_surface_destroy (diff_image);
@@ -837,8 +837,8 @@ UNWIND_SURFACE:
 UNWIND_STRINGS:
     if (test_filename != NULL)
 	free (test_filename);
-    if (last_filename != NULL)
-	free (last_filename);
+    if (fail_filename != NULL)
+	free (fail_filename);
     if (pass_filename != NULL)
 	free (pass_filename);
     if (png_name)

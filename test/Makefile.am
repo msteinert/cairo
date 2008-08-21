@@ -927,8 +927,8 @@ clean-local: clean-caches
 	-${FIND} . -name '*.log'      -print | ${XARGS} ${RM}
 	-${FIND} . -name '*.[is]'     -print | ${XARGS} ${RM}
 clean-caches:
-	-${FIND} . -name '*-pass.*' -print | ${XARGS} ${RM}
-	-${FIND} . -name '*-last.*' -print | ${XARGS} ${RM}
+	-${FIND} . -name '*-pass.*'   -print | ${XARGS} ${RM}
+	-${FIND} . -name '*-fail.*'   -print | ${XARGS} ${RM}
 
 # The following definitions both should work.
 #FAILED_TESTS = `grep -l '\<FAIL\>' $(TESTS:$(EXEEXT)=.log) 2>/dev/null | sed -e 's/[.]log$$//' | xargs echo`
