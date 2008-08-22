@@ -2709,17 +2709,17 @@ _cairo_ps_surface_emit_linear_pattern (cairo_ps_surface_t     *surface,
 				 "   << /ShadingType 2\n"
 				 "      /ColorSpace /DeviceRGB\n"
 				 "      /Coords [ %f %f %f %f ]\n"
-                                 "      /Domain [ %f %f ]\r\n"
+                                 "      /Domain [ %f %f ]\n"
 				 "      /Function CairoFunction\n",
 				 x1, y1, x2, y2,
 				 first_stop, last_stop);
 
     if (extend == CAIRO_EXTEND_PAD) {
 	_cairo_output_stream_printf (surface->stream,
-                                     "      /Extend [ true true ]\r\n");
+                                     "      /Extend [ true true ]\n");
     } else {
 	_cairo_output_stream_printf (surface->stream,
-                                     "      /Extend [ false false ]\r\n");
+                                     "      /Extend [ false false ]\n");
     }
 
     _cairo_output_stream_printf (surface->stream,
@@ -2791,10 +2791,10 @@ _cairo_ps_surface_emit_radial_pattern (cairo_ps_surface_t     *surface,
 
     if (extend == CAIRO_EXTEND_PAD) {
 	_cairo_output_stream_printf (surface->stream,
-                                     "      /Extend [ true true ]\r\n");
+                                     "      /Extend [ true true ]\n");
     } else {
 	_cairo_output_stream_printf (surface->stream,
-                                     "      /Extend [ false false ]\r\n");
+                                     "      /Extend [ false false ]\n");
     }
 
     _cairo_output_stream_printf (surface->stream,
