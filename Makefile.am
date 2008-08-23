@@ -56,6 +56,7 @@ endif
 	-$(FIND) -name '*.gcda' -print | $(XARGS) $(RM)
 
 EXTRA_DIST = \
+	autogen.sh \
 	AUTHORS \
 	BIBLIOGRAPHY \
 	BUGS \
