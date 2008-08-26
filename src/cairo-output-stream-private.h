@@ -107,7 +107,7 @@ _cairo_output_stream_write (cairo_output_stream_t *stream,
 
 cairo_private void
 _cairo_output_stream_write_hex_string (cairo_output_stream_t *stream,
-				       const char *data,
+				       const unsigned char *data,
 				       size_t length);
 
 cairo_private void

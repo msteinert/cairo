@@ -367,7 +367,7 @@ _cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,
                                                subset.data + begin, end - begin);
         _cairo_output_stream_printf (surface->final_stream,"00>\n");
         begin = end;
-    } 
+    }
     if (subset.data_length > end) {
         _cairo_output_stream_printf (surface->final_stream,"<");
         _cairo_output_stream_write_hex_string (surface->final_stream,

@@ -371,7 +371,7 @@ typedef struct _cairo_truetype_subset {
     double *widths;
     double x_min, y_min, x_max, y_max;
     double ascent, descent;
-    char *data;
+    unsigned char *data;
     unsigned long data_length;
     unsigned long *string_offsets;
     unsigned long num_string_offsets;
