@@ -13,7 +13,7 @@ libcairoboilerplate_la_SOURCES =	\
 libcairoboilerplate_la_LIBADD = $(top_builddir)/src/libcairo.la $(CAIRO_LDADD)
 
 if CAIRO_HAS_BEOS_SURFACE
-libcairoboilerplate_la_SOURCES += cairo-boilerplate-beos.cpp
+#libcairoboilerplate_la_SOURCES += cairo-boilerplate-beos.cpp
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-beos-private.h
 # BeOS system headers trigger this warning
 libcairoboilerplate_la_CXXFLAGS = -Wno-multichar
