@@ -341,7 +341,7 @@ cairo.def: $(cairo_headers) cairo-features.h
 	@(echo EXPORTS; \
 	(cd $(srcdir); cat $(cairo_headers) || echo 'cairo_ERROR ()' ) | \
 	grep -v -E '^# *include' | \
-	( gcc -include cairo-features.h -E - || echo 'cairo_ERROR ()' ) | \
+	( cat cairo-features.h - | $(CPP) - || echo 'cairo_ERROR ()' ) | \
 	grep -E '^cairo_.* \(' | \
 	sed -e 's/[ 	].*//' | \
 	sort; \
