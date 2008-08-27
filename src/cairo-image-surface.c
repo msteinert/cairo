@@ -60,6 +60,10 @@ _cairo_format_from_pixman_format (pixman_format_code_t pixman_format)
     case PIXMAN_a1r1g1b1: case PIXMAN_a1b1g1r1: case PIXMAN_c4:
     case PIXMAN_g4:       case PIXMAN_g1:
     case PIXMAN_yuy2:     case PIXMAN_yv12:
+#if PIXMAN_VERSION >= PIXMAN_VERSION_ENCODE(0,11,9)
+    case PIXMAN_x2b10g10r10:
+    case PIXMAN_a2b10g10r10:
+#endif
     default:
 	return CAIRO_FORMAT_INVALID;
     }
@@ -81,6 +85,9 @@ _cairo_content_from_pixman_format (pixman_format_code_t pixman_format)
     case PIXMAN_a2b2g2r2:
     case PIXMAN_a1r1g1b1:
     case PIXMAN_a1b1g1r1:
+#if PIXMAN_VERSION >= PIXMAN_VERSION_ENCODE(0,11,9)
+    case PIXMAN_a2b10g10r10:
+#endif
 	return CAIRO_CONTENT_COLOR_ALPHA;
     case PIXMAN_x8r8g8b8:
     case PIXMAN_x8b8g8r8:
@@ -103,6 +110,9 @@ _cairo_content_from_pixman_format (pixman_format_code_t pixman_format)
     case PIXMAN_g1:
     case PIXMAN_yuy2:
     case PIXMAN_yv12:
+#if PIXMAN_VERSION >= PIXMAN_VERSION_ENCODE(0,11,9)
+    case PIXMAN_x2b10g10r10:
+#endif
 	return CAIRO_CONTENT_COLOR;
     case PIXMAN_a8:
     case PIXMAN_a1:
