@@ -192,6 +192,36 @@ _cairo_pattern_init_copy (cairo_pattern_t	*pattern,
     return CAIRO_STATUS_SUCCESS;
 }
 
+cairo_status_t
+_cairo_pattern_init_snapshot (cairo_pattern_t       *pattern,
+			      const cairo_pattern_t *other)
+{
+    cairo_status_t status;
+
+    /* We don't bother doing any fancy copy-on-write implementation
+     * for the pattern's data. It's generally quite tiny. */
+    status = _cairo_pattern_init_copy (pattern, other);
+    if (status)
+	return status;
+
+    /* But we do let the surface snapshot stuff be as fancy as it
+     * would like to be. */
+    if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	cairo_surface_pattern_t *surface_pattern =
+	    (cairo_surface_pattern_t *) pattern;
+	cairo_surface_t *surface = surface_pattern->surface;
+
+	surface_pattern->surface = _cairo_surface_snapshot (surface);
+
+	cairo_surface_destroy (surface);
+
+	if (surface_pattern->surface->status)
+	    return surface_pattern->surface->status;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 void
 _cairo_pattern_fini (cairo_pattern_t *pattern)
 {
