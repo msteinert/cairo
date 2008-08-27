@@ -14,7 +14,6 @@ cd $srcdir
 
 PACKAGE=cairo
 
-LIBTOOLIZE=${LIBTOOLIZE-libtoolize}
 LIBTOOLIZE_FLAGS="--copy --force"
 AUTOHEADER=${AUTOHEADER-autoheader}
 AUTOMAKE_FLAGS="--add-missing --foreign"
@@ -142,7 +141,7 @@ version_check automake AUTOMAKE "$AUTOMAKE automake automake-1.10 automake-1.9 a
 ACLOCAL=`echo $AUTOMAKE | sed s/automake/aclocal/`
 
 
-version_check libtool LIBTOOLIZE $LIBTOOLIZE $libtoolize_min_vers \
+version_check libtool LIBTOOLIZE "$LIBTOOLIZE glibtoolize libtoolize" $libtoolize_min_vers \
     "http://ftp.gnu.org/pub/gnu/libtool/libtool-${libtool_min_vers}.tar.gz" || DIE=1
 
 if test -z "$ACLOCAL_FLAGS"; then

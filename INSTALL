@@ -172,11 +172,6 @@ the autogen.sh script. That can be as simple as:
 
 	./autogen.sh
 
-Or, if you're using Mac OS X, you'll have to let it know to use
-glibtool by instead doing:
-
-	LIBTOOLIZE=glibtoolize ./autogen.sh
-
 But before you run that command, note that the autogen.sh script
 accepts all the same arguments as the configure script, (and in fact,
 will generate the configure script and run it with the arguments you
