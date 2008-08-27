@@ -1,15 +1,11 @@
 AC_PREREQ(2.58)
 
+dnl Parse Version.mk and declare m4 variables out of it
 m4_define([cairo_version_macro],
 		m4_bpatsubst(m4_include(Version.mk),
 			     [^\([a-zA-Z0-9_]*\) *= *\(.*\)],
 			     [[m4_define(\1, \[\2\])]]))
 cairo_version_macro
-
-m4_define([cairo_release_status],
-	  [m4_if(m4_eval(cairo_version_micro % 2), [1], [git],
-	         [m4_if(m4_eval(cairo_version_minor % 2), [1], [snapshot],
-		                                               [release])])])
 
 AC_INIT([cairo],
       cairo_version_major.cairo_version_minor.cairo_version_micro,
@@ -26,36 +22,40 @@ AM_INIT_AUTOMAKE([1.8])
 
 dnl ===========================================================================
 
-# libtool shared library version
+dnl This macro expands to one of 'git', 'snapshot', or 'release'
+m4_define([cairo_release_status],
+	  [m4_if(m4_eval(cairo_version_micro % 2), [1], [git],
+	         [m4_if(m4_eval(cairo_version_minor % 2), [1], [snapshot],
+		                                               [release])])])
 
-# Increment if the interface has additions, changes, removals.
-m4_define(LT_CURRENT, 22)
+dnl This is the .so/dll number.  2 for cairo-1.x.x
+m4_define(cairo_version_sonum, m4_eval(cairo_version_major + 1))
 
-# Increment any time the source changes; set to
-# 0 if you increment CURRENT
-m4_define(LT_REVISION, 0)
+dnl libtool shared library version
 
-# Increment if any interfaces have been added; set to 0
-# if any interfaces have been removed. removal has
-# precedence over adding, so set to 0 if both happened.
-m4_define(LT_AGE, 20)
+dnl Increment if the interface has additions, changes, removals.
+m4_define(cairo_libtool_current, 22)
+
+dnl Increment any time the source changes;
+dnl set to 0 if you increment cairo_libtool_current
+m4_define(cairo_libtool_revision, 0)
+
+m4_define(cairo_libtool_age, m4_eval(cairo_libtool_current - cairo_version_sonum))
 
 dnl ===========================================================================
 
-VERSION_INFO=LT_CURRENT():LT_REVISION():LT_AGE()
-AC_SUBST(VERSION_INFO)
-
-LT_CURRENT_MINUS_AGE=m4_eval(LT_CURRENT() - LT_AGE())
-AC_SUBST(LT_CURRENT_MINUS_AGE)
-
-CAIRO_VERSION_MAJOR=cairo_version_major()
-CAIRO_VERSION_MINOR=cairo_version_minor()
-CAIRO_VERSION_MICRO=cairo_version_micro()
-CAIRO_RELEASE_STATUS=cairo_release_status()
+CAIRO_VERSION_MAJOR=cairo_version_major
+CAIRO_VERSION_MINOR=cairo_version_minor
+CAIRO_VERSION_MICRO=cairo_version_micro
+CAIRO_VERSION_SONUM=cairo_version_sonum
+CAIRO_RELEASE_STATUS=cairo_release_status
+CAIRO_LIBTOOL_VERSION_INFO=cairo_libtool_current:cairo_libtool_revision:cairo_libtool_age
 AC_SUBST(CAIRO_VERSION_MAJOR)
 AC_SUBST(CAIRO_VERSION_MINOR)
 AC_SUBST(CAIRO_VERSION_MICRO)
+AC_SUBST(CAIRO_VERSION_SONUM)
 AC_SUBST(CAIRO_RELEASE_STATUS)
+AC_SUBST(CAIRO_LIBTOOL_VERSION_INFO)
 
 dnl ===========================================================================
 

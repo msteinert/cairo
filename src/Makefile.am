@@ -313,7 +313,7 @@ cairo_all_source_files =			\
 	$(cairo_all_sources)			\
 	$(cairo_special_sources)
 
-libcairo_la_LDFLAGS = -version-info @VERSION_INFO@ -no-undefined $(export_symbols)
+libcairo_la_LDFLAGS = -version-info $(CAIRO_LIBTOOL_VERSION_INFO) -no-undefined $(export_symbols)
 
 libcairo_la_CFLAGS = -I$(srcdir) $(CAIRO_CFLAGS)
 
@@ -345,7 +345,7 @@ cairo.def: $(cairo_headers) cairo-features.h
 	grep -E '^cairo_.* \(' | \
 	sed -e 's/[ 	].*//' | \
 	sort; \
-	echo LIBRARY libcairo-$(LT_CURRENT_MINUS_AGE).dll; \
+	echo LIBRARY libcairo-$(CAIRO_VERSION_SONUM).dll; \
 	) >$@
 	@ ! grep -q cairo_ERROR $@ || ($(RM) $@; false)
 

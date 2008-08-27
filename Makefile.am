@@ -135,7 +135,7 @@ developer_zip_file = /tmp/$(PACKAGE)-dev-$(VERSION).zip
 $(runtime_zip_file): install
 	-$(RM) $@
 	cd $(prefix); \
-	zip $@ bin/libcairo-$(LT_CURRENT_MINUS_AGE).dll
+	zip $@ bin/libcairo-$(CAIRO_VERSION_SONUM).dll
 
 $(developer_zip_file): install
 	-$(RM) $@
@@ -155,14 +155,6 @@ release-verify-sane-changelogs: changelogs
 release-verify-sane-tests:
 	@echo "Checking that the test suite is sane..."
 	@cd test && $(MAKE) $(AM_MAKEFLAGS) release-verify-sane-tests
-
-release-verify-soname-major:
-	@echo -n "Checking that the cairo soname major number is 2..."
-	@test "$(LT_CURRENT_MINUS_AGE)" = "2" \
-		|| (echo "Ouch." && echo "The soname major number is $(LT_CURRENT_MINUS_AGE) instead of 2." \
-		&& echo "The libtool shared library version numbers in configure.in must be incremented properly." \
-		&& false)
-	@echo "Good."
 
 release-verify-even-micro:
 	@echo -n "Checking that $(VERSION) has an even micro component..."
@@ -191,7 +183,7 @@ release-remove-old:
 release-cleanup-group-sticky:
 	find . -type f | xargs chmod g-s
 
-release-check: release-verify-sane-changelogs release-verify-sane-tests release-verify-soname-major release-verify-even-micro release-verify-newer release-remove-old release-cleanup-group-sticky distcheck
+release-check: release-verify-sane-changelogs release-verify-sane-tests release-verify-even-micro release-verify-newer release-remove-old release-cleanup-group-sticky distcheck
 
 release-upload: release-check $(tar_file) $(sha1_file) $(gpg_file)
 	mkdir -p releases
