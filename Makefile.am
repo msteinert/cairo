@@ -57,6 +57,7 @@ endif
 
 EXTRA_DIST = \
 	autogen.sh \
+	Version.mk \
 	AUTHORS \
 	BIBLIOGRAPHY \
 	BUGS \

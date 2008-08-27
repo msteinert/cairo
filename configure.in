@@ -1,13 +1,10 @@
 AC_PREREQ(2.58)
 
-dnl cairo package version number, (as distinct from shared library version)
-dnl For the minor number: odd => unstable series
-dnl			  even => stable series
-dnl For the micro number: odd => in-progress development (from git)
-dnl			  even => tar-file snapshot or release
-m4_define(cairo_version_major, 1)
-m4_define(cairo_version_minor, 7)
-m4_define(cairo_version_micro, 5)
+m4_define([cairo_version_macro],
+		m4_bpatsubst(m4_include(Version.mk),
+			     [^\([a-zA-Z0-9_]*\) *= *\(.*\)],
+			     [[m4_define(\1, \[\2\])]]))
+cairo_version_macro
 
 m4_define([cairo_release_status],
 	  [m4_if(m4_eval(cairo_version_micro % 2), [1], [git],
