@@ -1,3 +1,4 @@
+/* -*- Mode: c; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 8; -*- */
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2002 University of Southern California
@@ -44,6 +45,8 @@
 #include "cairo-scaled-font-private.h"
 
 #include <X11/Xutil.h> /* for XDestroyImage */
+
+#define XLIB_COORD_MAX 32767
 
 /* Xlib doesn't define a typedef, so define one ourselves */
 typedef int (*cairo_xlib_error_func_t) (Display     *display,
@@ -130,6 +133,9 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
     cairo_xlib_surface_t *surface;
     XRenderPictFormat *xrender_format;
 
+    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
+	return NULL;
+
     /* As a good first approximation, if the display doesn't have even
      * the most elementary RENDER operation, then we're better off
      * using image surfaces for all temporary operations, so return NULL
@@ -199,6 +205,9 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
     XRenderPictFormat *xrender_format = src->xrender_format;
     cairo_xlib_surface_t *surface;
     Pixmap pix;
+
+    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
+	return _cairo_surface_create_in_error (_cairo_error(CAIRO_STATUS_NO_MEMORY));
 
     _cairo_xlib_display_notify (src->screen_info->display);
 
@@ -637,9 +646,9 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	    return status;
 
 	pixmap = XCreatePixmap (surface->dpy,
-				       surface->drawable,
-				       x2 - x1, y2 - y1,
-				       surface->depth);
+				surface->drawable,
+				x2 - x1, y2 - y1,
+				surface->depth);
 	if (pixmap) {
 	    XCopyArea (surface->dpy, surface->drawable, pixmap, surface->gc,
 		       x1, y1, x2 - x1, y2 - y1, 0, 0);
@@ -1183,22 +1192,27 @@ _cairo_xlib_surface_create_solid_pattern_surface (void                  *abstrac
     cairo_xlib_surface_t *surface = NULL;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
-    Pixmap pixmap;
+    int width = ARRAY_LENGTH (dither_pattern[0]);
+    int height = ARRAY_LENGTH (dither_pattern);
+
+    Pixmap pixmap = None;
 
     if (CAIRO_SURFACE_RENDER_HAS_COMPOSITE (other))
 	return NULL;
 
+    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
+	return NULL;
+
     image = (cairo_image_surface_t *)
 	    _cairo_image_surface_create_with_content (solid_pattern->content,
-						      ARRAY_LENGTH (dither_pattern[0]),
-						      ARRAY_LENGTH (dither_pattern));
+						      width, height);
     status = image->base.status;
     if (status)
 	goto BAIL;
 
     pixmap = XCreatePixmap (other->dpy,
 			    other->drawable,
-			    image->width, image->height,
+			    width, height,
 			    other->depth);
 
     surface = (cairo_xlib_surface_t *)
@@ -1206,7 +1220,7 @@ _cairo_xlib_surface_create_solid_pattern_surface (void                  *abstrac
 						   pixmap,
 						   other->screen, other->visual,
 						   other->xrender_format,
-						   image->width, image->height,
+						   width, height,
 						   other->depth);
     status = surface->base.status;
     if (status)
@@ -1219,7 +1233,7 @@ _cairo_xlib_surface_create_solid_pattern_surface (void                  *abstrac
 
     status = _draw_image_surface (surface, image,
 				  0, 0,
-				  image->width, image->height,
+				  width, height,
 				  0, 0);
     if (status)
 	goto BAIL;
@@ -1894,11 +1908,16 @@ _create_a8_picture (cairo_xlib_surface_t *surface,
     XRenderPictureAttributes pa;
     unsigned long mask = 0;
 
-    Pixmap pixmap = XCreatePixmap (surface->dpy, surface->drawable,
-				   width <= 0 ? 1 : width,
-				   height <= 0 ? 1 : height,
-				   8);
+    Pixmap pixmap;
     Picture picture;
+
+    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
+	return None;
+
+    pixmap = XCreatePixmap (surface->dpy, surface->drawable,
+			    width <= 0 ? 1 : width,
+			    height <= 0 ? 1 : height,
+			    8);
 
     if (repeat) {
 	pa.repeat = TRUE;
@@ -1942,7 +1961,7 @@ _create_trapezoid_mask (cairo_xlib_surface_t *dst,
      * the servers that have XRenderAddTraps().
      */
     mask_picture = _create_a8_picture (dst, &transparent, width, height, FALSE);
-    if (num_traps == 0)
+    if (mask_picture == None || num_traps == 0)
 	return mask_picture;
 
     offset_traps = _cairo_malloc_ab (num_traps, sizeof (XTrapezoid));
