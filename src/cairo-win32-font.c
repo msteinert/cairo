@@ -197,7 +197,7 @@ _compute_transform (cairo_win32_scaled_font_t *scaled_font,
 		       sc->xx, sc->yx, sc->xy, sc->yy, 0, 0);
 
     if (!scaled_font->preserve_axes) {
-	status = _cairo_matrix_compute_scale_factors (&scaled_font->logical_to_device,
+	status = _cairo_matrix_compute_basis_scale_factors (&scaled_font->logical_to_device,
 						      &scaled_font->x_scale, &scaled_font->y_scale,
 						      TRUE);	/* XXX: Handle vertical text */
 	if (status)

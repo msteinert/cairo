@@ -681,7 +681,7 @@ _cairo_scaled_font_set_metrics (cairo_scaled_font_t	    *scaled_font,
     cairo_status_t status;
     double  font_scale_x, font_scale_y;
 
-    status = _cairo_matrix_compute_scale_factors (&scaled_font->font_matrix,
+    status = _cairo_matrix_compute_basis_scale_factors (&scaled_font->font_matrix,
 						  &font_scale_x, &font_scale_y,
 						  1);
     if (status)

@@ -2137,7 +2137,7 @@ cairo_private double
 _cairo_matrix_compute_determinant (const cairo_matrix_t *matrix);
 
 cairo_private cairo_status_t
-_cairo_matrix_compute_scale_factors (const cairo_matrix_t *matrix,
+_cairo_matrix_compute_basis_scale_factors (const cairo_matrix_t *matrix,
 				     double *sx, double *sy, int x_major);
 
 cairo_private cairo_bool_t

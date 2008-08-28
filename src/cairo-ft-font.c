@@ -642,7 +642,7 @@ _compute_transform (cairo_ft_font_transform_t *sf,
      * freetype's transformation.
      */
 
-    status = _cairo_matrix_compute_scale_factors (scale,
+    status = _cairo_matrix_compute_basis_scale_factors (scale,
 						  &x_scale, &y_scale,
 						  1);
     if (status)
