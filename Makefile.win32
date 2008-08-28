@@ -2,12 +2,6 @@
 # Win32 makefile
 #
 
-ifeq ($(SUBMAKEFILE),1)
-  include ../Version.mk
-else
-  include Version.mk
-endif
-
 CC := cl
 LINK := link
 
@@ -24,15 +18,13 @@ EXE_LDFLAGS = libpng.lib zlib.lib gdi32.lib msimg32.lib user32.lib
 
 DEFAULT_CFLAGS = -MD -nologo $(OPT)
 DEFAULT_CFLAGS += -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
-DEFAULT_CFLAGS += -DPACKAGE_VERSION="" -DPACKAGE_BUGREPORT="" -DCAIRO_BUILD
+DEFAULT_CFLAGS += -DPACKAGE_BUGREPORT="" -DCAIRO_BUILD
 DEFAULT_CFLAGS += -I. 
 DEFAULT_CFLAGS += $(PIXMAN_CFLAGS)
 DEFAULT_CFLAGS += -DCAIRO_NO_MUTEX=1  -DLIBCAIRO_EXPORTS
 
 CFLAGS := $(DEFAULT_CFLAGS)
 
-
-CAIRO_VERSION = $(CAIRO_VERSION_MAJOR).$(CAIRO_VERSION_MINOR).$(CAIRO_VERSION_MICRO)
 
 # Only if this was called as the top-level makefile
 ifeq ($(SUBMAKEFILE),)
@@ -45,10 +37,7 @@ all: inform cairo
 
 src/cairo-features.h:
 	@echo Warning: creating default cairo-features.h
-	@(cat src/cairo-features-win32.h | \
-	      sed 's,@CAIRO_VERSION_MAJOR@,'$(CAIRO_VERSION_MAJOR)',g' | \
-	      sed 's,@CAIRO_VERSION_MINOR@,'$(CAIRO_VERSION_MINOR)',g' | \
-	      sed 's,@CAIRO_VERSION_MICRO@,'$(CAIRO_VERSION_MICRO)',g' > src/cairo-features.h)
+	@cp src/cairo-features-win32.h src/cairo-features.h
 
 cairo: src/cairo-features.h
 	@list='$(SUBDIRS)'; for f in $$list ; do \

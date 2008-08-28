@@ -166,6 +166,22 @@ that later versions compare greater than earlier versions.
 @minor: the minor component of the version number
 @micro: the micro component of the version number
 
+@Returns: the encoded version.
+
+<!-- ##### MACRO CAIRO_VERSION_STRINGIZE ##### -->
+<para>
+This macro encodes the given cairo version into an string.  The numbers
+returned by %CAIRO_VERSION_STRING and cairo_version_string() are encoded using this macro.
+The parameters to this macro must expand to numerical literals.
+</para>
+
+@major: the major component of the version number
+@minor: the minor component of the version number
+@micro: the micro component of the version number
+
+@Returns: a string literal containing the version.
+@Since: 1.8
+
 
 <!-- ##### FUNCTION cairo_version ##### -->
 <para>

@@ -38,20 +38,45 @@
 #ifndef CAIRO_H
 #define CAIRO_H
 
+#include "cairo-version.h"
 #include "cairo-features.h"
 #include "cairo-deprecated.h"
 
+#ifdef  __cplusplus
+# define CAIRO_BEGIN_DECLS  extern "C" {
+# define CAIRO_END_DECLS    }
+#else
+# define CAIRO_BEGIN_DECLS
+# define CAIRO_END_DECLS
+#endif
+
+#ifndef cairo_public
+# define cairo_public
+#endif
+
 CAIRO_BEGIN_DECLS
 
-#define CAIRO_VERSION_ENCODE(major, minor, micro) (     \
-	  ((major) * 10000)                             \
-	+ ((minor) *   100)                             \
+#define CAIRO_VERSION_ENCODE(major, minor, micro) (	\
+	  ((major) * 10000)				\
+	+ ((minor) *   100)				\
 	+ ((micro) *     1))
 
-#define CAIRO_VERSION CAIRO_VERSION_ENCODE(     \
-	CAIRO_VERSION_MAJOR,                    \
-	CAIRO_VERSION_MINOR,                    \
+#define CAIRO_VERSION CAIRO_VERSION_ENCODE(	\
+	CAIRO_VERSION_MAJOR,			\
+	CAIRO_VERSION_MINOR,			\
 	CAIRO_VERSION_MICRO)
+
+
+#define CAIRO_VERSION_STRINGIZE_(major, minor, micro)	\
+	#major"."#minor"."#micro
+#define CAIRO_VERSION_STRINGIZE(major, minor, micro)	\
+	CAIRO_VERSION_STRINGIZE_(major, minor, micro)
+
+#define CAIRO_VERSION_STRING CAIRO_VERSION_STRINGIZE(	\
+	CAIRO_VERSION_MAJOR,				\
+	CAIRO_VERSION_MINOR,				\
+	CAIRO_VERSION_MICRO)
+
 
 cairo_public int
 cairo_version (void);

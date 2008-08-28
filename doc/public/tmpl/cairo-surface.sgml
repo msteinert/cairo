@@ -255,7 +255,7 @@ cairo_<emphasis>backend</emphasis>_surface_create().
 
 </para>
 
-@surface:
-@Returns:
+@surface: 
+@Returns: 
 
 

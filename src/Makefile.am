@@ -79,6 +79,7 @@ cairo_base_sources =				\
 	cairo-paginated-surface-private.h	\
 	cairo-analysis-surface.c		\
 	cairo-analysis-surface-private.h	\
+	cairo-version.h				\
 	cairoint.h
 cairo_all_sources = $(cairo_base_sources) $(cairo_base_headers)
 cairo_headers = $(cairo_base_headers)

@@ -5,6 +5,7 @@ if CAIRO_HAS_PNG_FUNCTIONS
 SUBDIRS += boilerplate test perf
 endif
 
+configure: src/cairo-version.h
 
 .PHONY: doc test retest recheck check-valgrind
 # We have some generated header files, so we really need to build the
@@ -57,7 +58,6 @@ endif
 
 EXTRA_DIST = \
 	autogen.sh \
-	Version.mk \
 	AUTHORS \
 	BIBLIOGRAPHY \
 	BUGS \

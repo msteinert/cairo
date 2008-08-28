@@ -259,7 +259,7 @@ _cairo_image_surface_create_with_masks (unsigned char	       *data,
     status = _pixman_format_from_masks (masks, &pixman_format);
     if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 	fprintf (stderr,
-		 "Error: Cairo " PACKAGE_VERSION " does not yet support the requested image format:\n"
+		 "Error: Cairo %s does not yet support the requested image format:\n"
 		 "\tDepth: %d\n"
 		 "\tAlpha mask: 0x%08lx\n"
 		 "\tRed   mask: 0x%08lx\n"
@@ -267,6 +267,7 @@ _cairo_image_surface_create_with_masks (unsigned char	       *data,
 		 "\tBlue  mask: 0x%08lx\n"
 		 "Please file an enhancement request (quoting the above) at:\n"
 		 PACKAGE_BUGREPORT "\n",
+		 cairo_version_string (),
 		 masks->bpp, masks->alpha_mask,
 		 masks->red_mask, masks->green_mask, masks->blue_mask);
 
