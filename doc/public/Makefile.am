@@ -13,8 +13,8 @@ SCAN_OPTIONS=--deprecated-guards="CAIRO_DISABLE_DEPRECATED" --ignore-decorators=
 DOC_SOURCE_DIR=../../src
 
 # Used for dependencies
-HFILE_GLOB=$(top_srcdir)/src/*.h
-CFILE_GLOB=$(top_srcdir)/src/*.c $(top_srcdir)/src/*.h
+HFILE_GLOB=$(top_srcdir)/src/cairo-*.h
+CFILE_GLOB=$(top_srcdir)/src/cairo-*.c $(top_srcdir)/src/cairo-*.h
 
 include $(srcdir)/Headers.mk
 
@@ -35,8 +35,7 @@ IGNORE_HFILES=					\
 Headers.mk:
 	( echo "PRIVATE_TEST_HFILES = \\"; \
 	find $(top_srcdir)/src \
-		-name '*-private.h' -o \
-		-name '*-test.h' | \
+		-name '*-private.h' | \
 	sed 's@.*/@	@; s@$$@ \\@' | \
 	LANG=C sort; \
 	echo '	cairo-features-win32.h \'; \
