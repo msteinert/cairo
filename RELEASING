@@ -54,7 +54,7 @@ Here are the steps to follow to create a new cairo release:
 		find src/ -name '*.h' ! -name '*-private.h' ! -name 'cairoint.h' ! -name 'cairo-features-win32.h' | \
 		xargs git diff X.Y.Z.. --
 
-4) Increment cairo_version_{minor|micro} in src/cairo-version.h:
+4) Increment cairo_version_{minor|micro} in cairo-version.h:
 
 	If there are backward-incompatible changes in the API, stop
 	now and don't release. Go back and fix the API instead. Cairo
@@ -70,7 +70,7 @@ Here are the steps to follow to create a new cairo release:
 	Otherwise, (ie. there are only bug fixes), increment
 	cairo_version_micro to the next larger (even) number.
 
-5) Commit the changes to NEWS and src/cairo-version.h
+5) Commit the changes to NEWS and cairo-version.h
 
 	It's especially important to mention the new version number in your
 	commit log.
@@ -98,7 +98,7 @@ Here are the steps to follow to create a new cairo release:
 	  prints it for you.
 
 7) Increment cairo_version_micro to the next larger (odd) number in
-   src/cairo-version.h, commit, and push.
+   cairo-version.h, commit, and push.
 
 8) Push the newly created tag out to the central tree with a command
    something like:

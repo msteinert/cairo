@@ -3,7 +3,7 @@ AC_PREREQ(2.58)
 dnl Parse Version.mk and declare m4 variables out of it
 m4_define([cairo_version_macro],
 		m4_translit(
-		m4_bpatsubst(m4_include(src/cairo-version.h),
+		m4_bpatsubst(m4_include(cairo-version.h),
 			     [^.define \([a-zA-Z0-9_]*\)  *\([0-9][0-9]*\)],
 			     [[m4_define(\1, \[\2\])]]),
 			    [A-Z], [a-z]))

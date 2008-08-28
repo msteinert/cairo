@@ -79,6 +79,7 @@ cairo_base_sources =				\
 	cairo-paginated-surface-private.h	\
 	cairo-analysis-surface.c		\
 	cairo-analysis-surface-private.h	\
+	cairo-version.c				\
 	cairo-version.h				\
 	cairoint.h
 cairo_all_sources = $(cairo_base_sources) $(cairo_base_headers)
@@ -289,6 +290,7 @@ XRENDER_LIBS=@XRENDER_LIBS@
 cairoincludedir = $(includedir)/cairo
 cairoinclude_HEADERS =			\
 	cairo-deprecated.h		\
+	$(top_srcdir)/cairo-version.h	\
 	$(cairo_headers)
 
 nodist_cairoinclude_HEADERS =		\
