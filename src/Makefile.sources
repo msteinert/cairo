@@ -138,6 +138,7 @@ cairo_sources = \
 	cairo-stroke-style.c \
 	cairo-surface.c \
 	cairo-surface-fallback.c \
+	cairo-tor-scan-converter.c \
 	cairo-system.c \
 	cairo-traps.c \
 	cairo-unicode.c \

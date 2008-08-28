@@ -128,11 +128,19 @@ _create_scan_converter (cairo_fill_rule_t			 fill_rule,
 			cairo_antialias_t			 antialias,
 			const cairo_composite_rectangles_t	*rects)
 {
-    /* Until we get a scan converter implementation we're going to
-     * fail. */
-    ASSERT_NOT_REACHED;
-    return _cairo_scan_converter_create_in_error (
-	CAIRO_INT_STATUS_UNSUPPORTED);
+    if (antialias == CAIRO_ANTIALIAS_NONE) {
+	ASSERT_NOT_REACHED;
+	return _cairo_scan_converter_create_in_error (
+	    CAIRO_INT_STATUS_UNSUPPORTED);
+    }
+    else {
+	return _cairo_tor_scan_converter_create (
+	    rects->mask.x,
+	    rects->mask.y,
+	    rects->mask.x + rects->width,
+	    rects->mask.y + rects->height,
+	    fill_rule);
+    }
 }
 
 cairo_status_t

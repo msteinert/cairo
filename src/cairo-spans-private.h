@@ -96,6 +96,16 @@ struct _cairo_scan_converter {
     cairo_status_t status;
 };
 
+/* Scan converter constructors. */
+
+cairo_private cairo_scan_converter_t *
+_cairo_tor_scan_converter_create(
+    int			xmin,
+    int			ymin,
+    int			xmax,
+    int			ymax,
+    cairo_fill_rule_t	fill_rule);
+
 /* cairo-spans.c: */
 
 cairo_private cairo_scan_converter_t *
