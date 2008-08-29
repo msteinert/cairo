@@ -1151,6 +1151,9 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	if (! CAIRO_FORMAT_VALID (image_src->format))
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
+	if (image_src->width > XLIB_COORD_MAX || image_src->height > XLIB_COORD_MAX)
+	    return CAIRO_STATUS_NO_MEMORY;
+
 	clone = (cairo_xlib_surface_t *)
 	    _cairo_xlib_surface_create_similar_with_format (surface, image_src->format,
 						image_src->width, image_src->height);
