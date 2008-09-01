@@ -682,6 +682,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 	goto CLEANUP_OUTPUT_STREAM;
     }
 
+    surface->has_creation_date = FALSE;
     surface->eps = FALSE;
     surface->ps_level = CAIRO_PS_LEVEL_3;
     surface->ps_level_used = CAIRO_PS_LEVEL_2;
