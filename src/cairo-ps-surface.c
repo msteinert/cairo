@@ -388,7 +388,7 @@ static cairo_status_t
 _cairo_ps_emit_imagemask (cairo_image_surface_t *image,
 			  cairo_output_stream_t *stream)
 {
-    unsigned char *row, *byte;
+    uint8_t *row, *byte;
     int rows, cols;
 
     /* The only image type supported by Type 3 fonts are 1-bit image
@@ -410,18 +410,15 @@ _cairo_ps_emit_imagemask (cairo_image_surface_t *image,
 				 image->height);
 
     _cairo_output_stream_printf (stream,
-				 "   /DataSource   {<");
+				 "   /DataSource {<\n   ");
     for (row = image->data, rows = image->height; rows; row += image->stride, rows--) {
 	for (byte = row, cols = (image->width + 7) / 8; cols; byte++, cols--) {
-	    unsigned int output_byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte);
+	    uint8_t output_byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte);
 	    _cairo_output_stream_printf (stream, "%02x ", output_byte);
 	}
 	_cairo_output_stream_printf (stream, "\n   ");
     }
-    _cairo_output_stream_printf (stream,
-				 "   >}\n");
-    _cairo_output_stream_printf (stream,
-				 ">>\n");
+    _cairo_output_stream_printf (stream, ">}\n>>\n");
 
     _cairo_output_stream_printf (stream,
 				 "imagemask\n");
@@ -2238,11 +2235,13 @@ _cairo_ps_surface_paint_surface (cairo_ps_surface_t      *surface,
     cairo_matrix_translate (&ps_p2d, 0.0, height);
     cairo_matrix_scale (&ps_p2d, 1.0, -1.0);
 
-    _cairo_output_stream_printf (surface->stream,
-				 "[ %f %f %f %f %f %f ] concat\n",
-				 ps_p2d.xx, ps_p2d.yx,
-				 ps_p2d.xy, ps_p2d.yy,
-				 ps_p2d.x0, ps_p2d.y0);
+    if (! _cairo_matrix_is_identity (&ps_p2d)) {
+	_cairo_output_stream_printf (surface->stream,
+				     "[ %f %f %f %f %f %f ] concat\n",
+				     ps_p2d.xx, ps_p2d.yx,
+				     ps_p2d.xy, ps_p2d.yy,
+				     ps_p2d.x0, ps_p2d.y0);
+    }
 
     status = _cairo_ps_surface_emit_surface (surface, pattern, op);
     _cairo_ps_surface_release_surface (surface, pattern);

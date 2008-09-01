@@ -1095,7 +1095,7 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 
 #ifndef WORDS_BIGENDIAN
 	{
-	    unsigned char   *d = data;
+	    uint8_t   *d = data;
 	    int		count = stride * height;
 
 	    while (count--) {

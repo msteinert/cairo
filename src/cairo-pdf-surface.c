@@ -3444,7 +3444,7 @@ static cairo_status_t
 _cairo_pdf_emit_imagemask (cairo_image_surface_t *image,
 			     cairo_output_stream_t *stream)
 {
-    unsigned char *byte, output_byte;
+    uint8_t *byte, output_byte;
     int row, col, num_cols;
 
     /* The only image type supported by Type 3 fonts are 1-bit image

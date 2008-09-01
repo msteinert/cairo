@@ -2023,7 +2023,7 @@ _trace_mask_to_path (cairo_image_surface_t *mask,
 {
     cairo_status_t status;
     cairo_image_surface_t *a1_mask;
-    unsigned char *row, *byte_ptr, byte;
+    uint8_t *row, *byte_ptr, byte;
     int rows, cols, bytes_per_row;
     int x, y, bit;
     double xoff, yoff;
