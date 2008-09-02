@@ -689,6 +689,7 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 	if (cairo_surface_status (test_image)) {
 	    cairo_test_log (ctx, "Error: Failed to extract image: %s\n",
 			    cairo_status_to_string (cairo_surface_status (test_image)));
+	    cairo_surface_destroy (test_image);
 	    ret = CAIRO_TEST_FAILURE;
 	    goto UNWIND_CAIRO;
 	}
@@ -713,6 +714,7 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 	    if (cairo_test_files_equal (test_filename, pass_filename)) {
 		/* identical output as last known PASS */
 		cairo_test_log (ctx, "Vector surface matches last pass.\n");
+		cairo_surface_destroy (test_image);
 		ret = CAIRO_TEST_SUCCESS;
 		goto UNWIND_CAIRO;
 	    }
@@ -720,6 +722,7 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 		/* identical output as last known FAIL, fail */
 		cairo_test_log (ctx, "Vector surface matches last fail.\n");
 		have_result = TRUE; /* presume these were kept around as well */
+		cairo_surface_destroy (test_image);
 		ret = CAIRO_TEST_FAILURE;
 		goto UNWIND_CAIRO;
 	    }
@@ -728,6 +731,7 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 	if (ref_name == NULL) {
 	    cairo_test_log (ctx, "Error: Cannot find reference image for %s\n",
 			    base_name);
+	    cairo_surface_destroy (test_image);
 	    ret = CAIRO_TEST_FAILURE;
 	    goto UNWIND_CAIRO;
 	}
@@ -776,6 +780,7 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 	    cairo_test_log (ctx, "Error: Cannot open reference image for %s: %s\n",
 			    ref_name,
 			    cairo_status_to_string (cairo_surface_status (ref_image)));
+	    cairo_surface_destroy (ref_image);
 	    cairo_surface_destroy (test_image);
 	    ret = CAIRO_TEST_FAILURE;
 	    goto UNWIND_CAIRO;
