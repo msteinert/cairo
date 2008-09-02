@@ -353,8 +353,17 @@ AC_DEFUN([CAIRO_BACKEND_ENABLE],
 	    fi
 	  fi
 	  AM_CONDITIONAL(CAIRO_HAS_$4, test "x$use_$1" = xyes)
+	  AS_IF([test "x$use_[]$1" = xyes && test "x$5" = xno],[
+	    CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE
+*** The $2 backend is still under active development and
+*** is included in this release only as a preview. It does not
+*** fully work yet and incompatible changes may yet be made
+*** to $2-backend specific API.
+"
+	  ],)
 	])
 
+CAIRO_WARNING_MESSAGE=""
 CAIRO_FEATURES=""
 CAIRO_NO_FEATURES=""
 CAIRO_REQUIRES=""
@@ -1153,33 +1162,4 @@ if test x"$use_ft"          != "xyes" && \
 		])
 fi
 
-WARNING_MESSAGE='
-*** The @BACKEND@ backend is still under active development and
-*** is included in this release only as a preview. It does not
-*** fully work yet and incompatible changes may yet be made
-*** to @BACKEND@-backend specific API.
-'
-
-if test x"$use_glitz" = "xyes" ; then
-   echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/Glitz/'
-fi
-
-if test x"$use_xcb" = "xyes" ; then
-   echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/XCB/'
-fi
-
-if test x"$use_quartz_image" = "xyes" ; then
-   echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/Quartz Image/'
-fi
-
-if test x"$use_os2" = "xyes" ; then
-   echo "$WARNING_MESSAGE" | sed 's,@BACKEND@,OS/2,'
-fi
-
-if test x"$use_beos" = "xyes" ; then
-   echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/BeOS/'
-fi
-
-if test x"$use_directfb" = "xyes" ; then
-     echo "$WARNING_MESSAGE" | sed 's/@BACKEND@/DirectFB/'
-fi
+echo "$CAIRO_WARNING_MESSAGE"
