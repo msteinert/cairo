@@ -90,7 +90,7 @@ _cairo_xlib_call_close_display_hooks (cairo_xlib_display_t *display)
 	_cairo_xlib_remove_close_display_hook_internal (display, hook);
 
 	CAIRO_MUTEX_UNLOCK (display->mutex);
-	hook->func (display->display, hook);
+	hook->func (display, hook);
 	CAIRO_MUTEX_LOCK (display->mutex);
     }
     display->closed = TRUE;
@@ -317,15 +317,10 @@ UNLOCK:
     return display;
 }
 
-cairo_bool_t
-_cairo_xlib_add_close_display_hook (Display *dpy, cairo_xlib_hook_t *hook)
+void
+_cairo_xlib_add_close_display_hook (cairo_xlib_display_t	*display,
+				    cairo_xlib_hook_t		*hook)
 {
-    cairo_xlib_display_t *display;
-
-    display = _cairo_xlib_display_get (dpy);
-    if (display == NULL)
-	return FALSE;
-
     CAIRO_MUTEX_LOCK (display->mutex);
     hook->prev = NULL;
     hook->next = display->close_display_hooks;
@@ -333,10 +328,6 @@ _cairo_xlib_add_close_display_hook (Display *dpy, cairo_xlib_hook_t *hook)
 	hook->next->prev = hook;
     display->close_display_hooks = hook;
     CAIRO_MUTEX_UNLOCK (display->mutex);
-
-    _cairo_xlib_display_destroy (display);
-
-    return TRUE;
 }
 
 /* display->mutex must be held */
@@ -357,20 +348,12 @@ _cairo_xlib_remove_close_display_hook_internal (cairo_xlib_display_t *display,
 }
 
 void
-_cairo_xlib_remove_close_display_hook (Display *dpy,
-				       cairo_xlib_hook_t *hook)
+_cairo_xlib_remove_close_display_hook (cairo_xlib_display_t	*display,
+				       cairo_xlib_hook_t	*hook)
 {
-    cairo_xlib_display_t *display;
-
-    display = _cairo_xlib_display_get (dpy);
-    if (display == NULL)
-	return;
-
     CAIRO_MUTEX_LOCK (display->mutex);
     _cairo_xlib_remove_close_display_hook_internal (display, hook);
     CAIRO_MUTEX_UNLOCK (display->mutex);
-
-    _cairo_xlib_display_destroy (display);
 }
 
 cairo_status_t

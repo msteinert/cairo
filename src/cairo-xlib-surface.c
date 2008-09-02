@@ -320,11 +320,13 @@ _cairo_xlib_surface_finish (void *abstract_surface)
     if (surface->screen_info != NULL)
 	_cairo_xlib_screen_info_destroy (surface->screen_info);
 
-    if (surface->dpy != NULL) {
-	_cairo_xlib_remove_close_display_hook (surface->dpy,
+    if (surface->display != NULL) {
+	_cairo_xlib_remove_close_display_hook (surface->display,
 					       &surface->close_display_hook);
-	surface->dpy = NULL;
+	_cairo_xlib_display_destroy (surface->display);
     }
+
+    surface->dpy = NULL;
 
     return status;
 }
@@ -2381,12 +2383,14 @@ _cairo_surface_is_xlib (cairo_surface_t *surface)
 
 /* callback from CloseDisplay */
 static void
-_cairo_xlib_surface_detach_display (Display *dpy, void *data)
+_cairo_xlib_surface_detach_display (cairo_xlib_display_t *display, void *data)
 {
     cairo_xlib_surface_t *surface = cairo_container_of (data,
 							cairo_xlib_surface_t,
 							close_display_hook);
+    Display *dpy;
 
+    dpy = surface->dpy;
     surface->dpy = NULL;
 
     if (surface->dst_picture != None) {
@@ -2422,6 +2426,7 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 				     int			depth)
 {
     cairo_xlib_surface_t *surface;
+    cairo_xlib_display_t *display;
     cairo_xlib_screen_info_t *screen_info;
 
     CAIRO_MUTEX_INITIALIZE ();
@@ -2453,25 +2458,26 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     if (depth == 0)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_VISUAL));
 
-    screen_info = _cairo_xlib_screen_info_get (dpy, screen);
-    if (screen_info == NULL)
+    display = _cairo_xlib_display_get (dpy);
+    if (display == NULL)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+
+    screen_info = _cairo_xlib_screen_info_get (display, screen);
+    if (screen_info == NULL) {
+	_cairo_xlib_display_destroy (display);
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+    }
 
     surface = malloc (sizeof (cairo_xlib_surface_t));
     if (surface == NULL) {
 	_cairo_xlib_screen_info_destroy (screen_info);
+	_cairo_xlib_display_destroy (display);
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
     /* initialize and hook into the CloseDisplay callback */
     surface->close_display_hook.func = _cairo_xlib_surface_detach_display;
-    if (! _cairo_xlib_add_close_display_hook (dpy,
-					      &surface->close_display_hook))
-    {
-	free (surface);
-	_cairo_xlib_screen_info_destroy (screen_info);
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
-    }
+    _cairo_xlib_add_close_display_hook (display, &surface->close_display_hook);
 
     if (! XRenderQueryVersion (dpy, &surface->render_major, &surface->render_minor)) {
 	surface->render_major = -1;
@@ -2493,6 +2499,7 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 			 _xrender_format_to_content (xrender_format));
 
     surface->dpy = dpy;
+    surface->display = display;
     surface->screen_info = screen_info;
 
     surface->gc = NULL;
@@ -3000,8 +3007,8 @@ typedef struct _cairo_xlib_surface_font_private {
 
 /* callback from CloseDisplay */
 static void
-_cairo_xlib_surface_remove_scaled_font (Display *dpy,
-	                                void    *data)
+_cairo_xlib_surface_remove_scaled_font (cairo_xlib_display_t	*display,
+	                                void			*data)
 {
     cairo_xlib_surface_font_private_t	*font_private;
     cairo_scaled_font_t			*scaled_font;
@@ -3019,8 +3026,10 @@ _cairo_xlib_surface_remove_scaled_font (Display *dpy,
     CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
 
     if (font_private != NULL) {
+	Display *dpy;
 	int i;
 
+	dpy = display->display;
 	for (i = 0; i < NUM_GLYPHSETS; i++) {
 	    cairo_xlib_font_glyphset_info_t *glyphset_info;
 
@@ -3049,19 +3058,19 @@ _cairo_xlib_surface_font_init (Display		    *dpy,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     font_private->scaled_font = scaled_font;
-
-    /* initialize and hook into the CloseDisplay callback */
-    font_private->close_display_hook.func =
-	_cairo_xlib_surface_remove_scaled_font;
-    if (! _cairo_xlib_add_close_display_hook (dpy,
-					      &font_private->close_display_hook))
-    {
+    font_private->display = _cairo_xlib_display_get (dpy);
+    if (font_private->display == NULL) {
 	free (font_private);
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
+    /* initialize and hook into the CloseDisplay callback */
+    font_private->close_display_hook.func =
+	_cairo_xlib_surface_remove_scaled_font;
+    _cairo_xlib_add_close_display_hook (font_private->display,
+					&font_private->close_display_hook);
 
-    font_private->display = _cairo_xlib_display_get (dpy);
+
     for (i = 0; i < NUM_GLYPHSETS; i++) {
 	cairo_xlib_font_glyphset_info_t *glyphset_info = &font_private->glyphset_info[i];
 	switch (i) {
@@ -3092,7 +3101,7 @@ _cairo_xlib_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font)
 	int i;
 
 	display = font_private->display;
-	_cairo_xlib_remove_close_display_hook (display->display,
+	_cairo_xlib_remove_close_display_hook (display,
 					       &font_private->close_display_hook);
 
 	for (i = 0; i < NUM_GLYPHSETS; i++) {

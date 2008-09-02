@@ -346,19 +346,14 @@ _cairo_xlib_screen_info_destroy (cairo_xlib_screen_info_t *info)
 }
 
 cairo_xlib_screen_info_t *
-_cairo_xlib_screen_info_get (Display *dpy, Screen *screen)
+_cairo_xlib_screen_info_get (cairo_xlib_display_t *display, Screen *screen)
 {
-    cairo_xlib_display_t *display;
     cairo_xlib_screen_info_t *info = NULL, **prev;
-
-    display = _cairo_xlib_display_get (dpy);
-    if (display == NULL)
-	return NULL;
 
     CAIRO_MUTEX_LOCK (display->mutex);
     if (display->closed) {
 	CAIRO_MUTEX_UNLOCK (display->mutex);
-	goto DONE;
+	return NULL;
     }
 
     for (prev = &display->screens; (info = *prev); prev = &(*prev)->next) {
@@ -394,7 +389,9 @@ _cairo_xlib_screen_info_get (Display *dpy, Screen *screen)
 			       sizeof (cairo_xlib_visual_info_t*));
 
 	    if (screen) {
+		Display *dpy = display->display;
 		int event_base, error_base;
+
 		info->has_render = (XRenderQueryExtension (dpy, &event_base, &error_base) &&
 			(XRenderFindVisualFormat (dpy, DefaultVisual (dpy, DefaultScreen (dpy))) != 0));
 		_cairo_xlib_init_screen_font_options (dpy, info);
@@ -406,9 +403,6 @@ _cairo_xlib_screen_info_get (Display *dpy, Screen *screen)
 	    CAIRO_MUTEX_UNLOCK (display->mutex);
 	}
     }
-
-DONE:
-    _cairo_xlib_display_destroy (display);
 
     return info;
 }

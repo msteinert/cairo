@@ -53,7 +53,7 @@ typedef void (*cairo_xlib_notify_resource_func) (Display *, XID);
 
 struct _cairo_xlib_hook {
     cairo_xlib_hook_t *prev, *next; /* private */
-    void (*func) (Display *display, void *data);
+    void (*func) (cairo_xlib_display_t *display, void *data);
 };
 
 struct _cairo_xlib_display {
@@ -113,11 +113,11 @@ _cairo_xlib_display_reference (cairo_xlib_display_t *info);
 cairo_private void
 _cairo_xlib_display_destroy (cairo_xlib_display_t *info);
 
-cairo_private cairo_bool_t
-_cairo_xlib_add_close_display_hook (Display *display, cairo_xlib_hook_t *hook);
+cairo_private void
+_cairo_xlib_add_close_display_hook (cairo_xlib_display_t *display, cairo_xlib_hook_t *hook);
 
 cairo_private void
-_cairo_xlib_remove_close_display_hook (Display *display, cairo_xlib_hook_t *hook);
+_cairo_xlib_remove_close_display_hook (cairo_xlib_display_t *display, cairo_xlib_hook_t *hook);
 
 cairo_private cairo_status_t
 _cairo_xlib_display_queue_work (cairo_xlib_display_t *display,
@@ -136,7 +136,7 @@ _cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
 	                                cairo_format_t		 format);
 
 cairo_private cairo_xlib_screen_info_t *
-_cairo_xlib_screen_info_get (Display *display, Screen *screen);
+_cairo_xlib_screen_info_get (cairo_xlib_display_t *display, Screen *screen);
 
 cairo_private cairo_xlib_screen_info_t *
 _cairo_xlib_screen_info_reference (cairo_xlib_screen_info_t *info);
