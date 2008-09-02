@@ -158,36 +158,37 @@ dnl ===========================================================================
 dnl
 dnl Test for native atomic operations.
 dnl
-AC_MSG_CHECKING([for native atomic primitives])
-cairo_atomic_primitives="none"
+AC_CACHE_CHECK([for native atomic primitives], cairo_cv_atomic_primitives, [
+cairo_cv_atomic_primitives="none"
 
 AC_TRY_LINK([int atomic_add(int i) { return __sync_fetch_and_add (&i, 1); }], [],
-  AC_DEFINE(CAIRO_HAS_INTEL_ATOMIC_PRIMITIVES, 1, [Enable if your compiler supports the Intel __sync_* atomic primitives])
-  cairo_atomic_primitives="Intel"
+  cairo_cv_atomic_primitives="Intel"
   )
+])
+if test "x$cairo_cv_atomic_primitives" = xIntel; then
+	AC_DEFINE(CAIRO_HAS_INTEL_ATOMIC_PRIMITIVES, 1, [Enable if your compiler supports the Intel __sync_* atomic primitives])
+fi
 
-AC_MSG_RESULT([$cairo_atomic_primitives])
-
-AC_MSG_CHECKING([whether atomic ops require a memory barrier])
+AC_CACHE_CHECK([whether atomic ops require a memory barrier], cairo_cv_atomic_op_needs_memory_barrier, [
 case $host_cpu in
     i?86)
-	cairo_atomic_op_needs_memory_barrier="no"
+	cairo_cv_atomic_op_needs_memory_barrier="no"
 	;;
     x86_64)
-	cairo_atomic_op_needs_memory_barrier="no"
+	cairo_cv_atomic_op_needs_memory_barrier="no"
 	;;
     arm*)
-	cairo_atomic_op_needs_memory_barrier="no"
+	cairo_cv_atomic_op_needs_memory_barrier="no"
 	;;
     *)
-	cairo_atomic_op_needs_memory_barrier="yes"
+	cairo_cv_atomic_op_needs_memory_barrier="yes"
 	;;
 esac
-if test "x$cairo_atomic_op_needs_memory_barrier" = "xyes"; then
+])
+if test "x$cairo_cv_atomic_op_needs_memory_barrier" = "xyes"; then
     AC_DEFINE_UNQUOTED(CAIRO_ATOMIC_OP_NEEDS_MEMORY_BARRIER, 1,
 		       [whether Cairo needs memory barriers around atomic ops])
 fi
-AC_MSG_RESULT([$cairo_atomic_op_needs_memory_barrier])
 
 dnl ===========================================================================
 
