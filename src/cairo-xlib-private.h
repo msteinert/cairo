@@ -28,6 +28,10 @@
  * The Original Code is the cairo graphics library.
  *
  * The Initial Developer of the Original Code is Red Hat, Inc.
+ *
+ * Contributors(s):
+ *	Chris Wilson <chris@chris-wilson.co.uk>
+ *	Karl Tomlinson <karlt+@karlt.net>, Mozilla Corporation
  */
 
 #ifndef CAIRO_XLIB_PRIVATE_H
@@ -48,9 +52,8 @@ typedef void (*cairo_xlib_notify_func) (Display *, void *);
 typedef void (*cairo_xlib_notify_resource_func) (Display *, XID);
 
 struct _cairo_xlib_hook {
-    cairo_xlib_hook_t *next;
+    cairo_xlib_hook_t *prev, *next; /* private */
     void (*func) (Display *display, void *data);
-    void *data;
 };
 
 struct _cairo_xlib_display {
@@ -66,7 +69,6 @@ struct _cairo_xlib_display {
     cairo_xlib_job_t *workqueue;
     cairo_freelist_t wq_freelist;
 
-    cairo_freelist_t hook_freelist;
     cairo_xlib_hook_t *close_display_hooks;
     unsigned int buggy_repeat :1;
     unsigned int closed :1;
@@ -112,9 +114,10 @@ cairo_private void
 _cairo_xlib_display_destroy (cairo_xlib_display_t *info);
 
 cairo_private cairo_bool_t
-_cairo_xlib_add_close_display_hook (Display *display, void (*func) (Display *, void *), void *data);
+_cairo_xlib_add_close_display_hook (Display *display, cairo_xlib_hook_t *hook);
+
 cairo_private void
-_cairo_xlib_remove_close_display_hooks (Display *display, const void *data);
+_cairo_xlib_remove_close_display_hook (Display *display, cairo_xlib_hook_t *hook);
 
 cairo_private cairo_status_t
 _cairo_xlib_display_queue_work (cairo_xlib_display_t *display,

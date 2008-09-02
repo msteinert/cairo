@@ -119,6 +119,16 @@ _cairo_win32_tmpfile (void);
  */
 #define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_SLANT
 
+#ifdef __GNUC__
+#define cairo_container_of(ptr, type, member) ({ \
+    const typeof(((type *) 0)->member) *mptr__ = (ptr); \
+    (type *) ((char *) mptr__ - offsetof (type, member)); \
+})
+#else
+#define cairo_container_of(ptr, type, member) \
+    (type *)((char *) (ptr) - (char *) &((type *)0)->member)
+#endif
+
 
 /* Size in bytes of buffer to use off the stack per functions.
  * Mostly used by text functions.  For larger allocations, they'll
