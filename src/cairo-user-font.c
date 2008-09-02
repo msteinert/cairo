@@ -147,14 +147,20 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	    cairo_box_t bbox;
 	    double x1, y1, x2, y2;
 	    double x_scale, y_scale;
-	    cairo_surface_t *null_surface = _cairo_null_surface_create (cairo_surface_get_content (meta_surface));
-	    cairo_surface_t *analysis_surface = _cairo_analysis_surface_create (null_surface, -1, -1);
+	    cairo_surface_t *null_surface;
+	    cairo_surface_t *analysis_surface;
+
+	    null_surface = _cairo_null_surface_create (cairo_surface_get_content (meta_surface));
+	    analysis_surface = _cairo_analysis_surface_create (null_surface, -1, -1);
 	    cairo_surface_destroy (null_surface);
 
 	    _cairo_analysis_surface_set_ctm (analysis_surface, &scaled_font->extent_scale);
 	    status = _cairo_meta_surface_replay (meta_surface, analysis_surface);
 	    _cairo_analysis_surface_get_bounding_box (analysis_surface, &bbox);
 	    cairo_surface_destroy (analysis_surface);
+
+	    if (status)
+		return status;
 
 	    _cairo_box_to_doubles (&bbox, &x1, &y1, &x2, &y2);
 
