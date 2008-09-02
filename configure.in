@@ -123,13 +123,13 @@ dnl Like AC_CHECK_FUNCS but with additional CFLAGS and LIBS
 dnl --------------------------------------------------------------------
 AC_DEFUN([_CHECK_FUNCS_WITH_FLAGS],
 [ 
-  save_cflags="$CFLAGS"
-  save_libs="$LIBS"
+  _save_cflags="$CFLAGS"
+  _save_libs="$LIBS"
   CFLAGS="$CFLAGS $2"
   LIBS="$LIBS $3"
   AC_CHECK_FUNCS($1, $4, $5)
-  CFLAGS="$save_cflags"
-  LIBS="$save_libs"
+  CFLAGS="$_save_cflags"
+  LIBS="$_save_libs"
 ])
 
 dnl ===========================================================================
@@ -667,8 +667,8 @@ CAIRO_BACKEND_ENABLE(ft, FreeType font, freetype, FT_FONT, auto, [
 ])
 
 if test "x$use_ft" = "xyes"; then
-  temp_save_libs="$LIBS"
-  temp_save_cflags="$CFLAGS"
+  _save_libs="$LIBS"
+  _save_cflags="$CFLAGS"
   LIBS="$LIBS $ft_LIBS"
   CFLAGS="$CFLAGS $ft_CFLAGS"
   AC_CHECK_MEMBER(FT_Bitmap_Size.y_ppem,
@@ -681,8 +681,8 @@ if test "x$use_ft" = "xyes"; then
 
   AC_CHECK_FUNCS(FT_GlyphSlot_Embolden FT_Load_Sfnt_Table FT_Library_SetLcdFilter)
 
-  LIBS="$temp_save_libs"
-  CFLAGS="$temp_save_cflags"
+  LIBS="$_save_libs"
+  CFLAGS="$_save_cflags"
 fi
 
 dnl ===========================================================================
@@ -824,11 +824,11 @@ dnl check compiler flags
 AC_DEFUN([CAIRO_CC_TRY_FLAG], [
   AC_MSG_CHECKING([whether $CC supports $1])
 
-  cairo_save_CFLAGS="$CFLAGS"
+  _save_cflags="$CFLAGS"
   CFLAGS="$CFLAGS -Werror $1"
 
   AC_COMPILE_IFELSE([ ], [cairo_cc_flag=yes], [cairo_cc_flag=no])
-  CFLAGS="$cairo_save_CFLAGS"
+  CFLAGS="$_save_cflags"
 
   if test "x$cairo_cc_flag" = "xyes"; then
     ifelse([$2], , :, [$2])
