@@ -340,8 +340,8 @@ AC_DEFUN([CAIRO_BACKEND_ENABLE],
 			-e "s,@BACKEND_REQUIRES@,$$1_REQUIRES,g" \
 			-e "s%@BACKEND_NONPKGCONFIG_LIBS@%$$1_NONPKGCONFIG_LIBS%g" \
 			-e "s,@BACKEND_NONPKGCONFIG_CFLAGS@,$$1_NONPKGCONFIG_CFLAGS,g" \
-			-i "cairo_backend_pc()" ||
-			AC_MSG_ERROR(failed to update cairo_backend_pc())
+			-i "]cairo_backend_pc()[" ||
+			AC_MSG_ERROR(failed to update ]cairo_backend_pc()[)
 		      ],
 		      [
 		       SED='$SED'
