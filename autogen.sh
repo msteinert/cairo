@@ -182,6 +182,9 @@ do_cmd $ACLOCAL $ACLOCAL_FLAGS
 
 do_cmd $AUTOHEADER
 
+# create dummy src/Config.mk, which will later be created by configure
+echo > src/Config.mk
+
 do_cmd $AUTOMAKE $AUTOMAKE_FLAGS
 
 do_cmd $AUTOCONF
