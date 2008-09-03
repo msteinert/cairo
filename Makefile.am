@@ -74,6 +74,7 @@ MAINTAINERCLEANFILES += \
 DISTCHECK_CONFIGURE_FLAGS = \
 	--enable-gtk-doc \
 	--enable-test-surfaces \
+	--enable-full-testing \
 	$(NULL)
 
 include $(srcdir)/build/Makefile.am.changelog

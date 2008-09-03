@@ -36,7 +36,7 @@
  *			https://bugzilla.redhat.com/show_bug.cgi?id=448104
  *
  * 2008-05-23: Carl Worth wrote this test for the cairo test suite to
- *             exercise the bug.k
+ *             exercise the bug.
  */
 
 #include "cairo-test.h"
@@ -44,15 +44,6 @@
 #define WIDTH  800
 #define HEIGHT 800
 #define TEXT_SIZE 10000
-
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "large-font",
-    "Draws a very large font to exercise a glyph-positioning bug",
-    WIDTH, HEIGHT,
-    draw
-};
 
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
@@ -74,8 +65,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (large_font,
+	    "Draws a very large font to exercise a glyph-positioning bug",
+	    "stress, font", /* keywords */
+	    NULL, /* requirements */
+	    WIDTH, HEIGHT,
+	    NULL, draw)

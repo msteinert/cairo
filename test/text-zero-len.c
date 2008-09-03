@@ -43,15 +43,6 @@
 #define NUM_TEXT 20
 #define TEXT_SIZE 12
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "text-zero-len",
-    "Tests show_text and text_path with a zero-sized string",
-    0, 0,
-    draw
-};
-
 static cairo_bool_t
 text_extents_equal (const cairo_text_extents_t *A,
 	            const cairo_text_extents_t *B)
@@ -204,8 +195,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (text_zero_len,
+	    "Tests show_text and text_path with a zero-sized string",
+	    "text, stress, extents", /* keywords */
+	    NULL, /* requirements */
+	    0, 0,
+	    NULL, draw)

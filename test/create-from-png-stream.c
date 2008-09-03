@@ -31,15 +31,6 @@
 #define WIDTH 2
 #define HEIGHT 2
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "create-from-png-stream",
-    "Tests the creation of an image surface from a PNG using a FILE *",
-    WIDTH, HEIGHT,
-    draw
-};
-
 static cairo_status_t
 read_png_from_file (void *closure, unsigned char *data, unsigned int length)
 {
@@ -96,8 +87,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (create_from_png_stream,
+	    "Tests the creation of an image surface from a PNG using a FILE *",
+	    "png", /* keywords */
+	    NULL, /* requirements */
+	    WIDTH, HEIGHT,
+	    NULL, draw)

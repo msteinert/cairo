@@ -25,15 +25,6 @@
 
 #include "cairo-test.h"
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "bilevel-image",
-    "Test that PS can embed an RGB image with a bilevel alpha channel.",
-    12, 4,
-    draw
-};
-
 #define RGBx 0xffff0000, 0xff00ff00, 0xff0000ff, 0x00000000
 
 static cairo_test_status_t
@@ -62,8 +53,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (bilevel_image,
+	    "Test that PS can embed an RGB image with a bilevel alpha channel.",
+	    "alpha, ps", /* keywords */
+	    NULL, /* requirements */
+	    12, 4,
+	    NULL, draw)

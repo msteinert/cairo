@@ -2,286 +2,293 @@ include $(top_srcdir)/build/Makefile.am.common
 
 SUBDIRS=pdiff .
 
-# Here are all the tests that are run unconditionally
-TESTS +=						\
-a1-image-sample$(EXEEXT)				\
-a1-mask$(EXEEXT)					\
-a1-traps-sample$(EXEEXT)				\
-a8-mask$(EXEEXT)					\
-alpha-similar$(EXEEXT)					\
-big-line$(EXEEXT)					\
-big-trap$(EXEEXT)					\
-bilevel-image$(EXEEXT)					\
-caps-joins$(EXEEXT)					\
-caps-joins-alpha$(EXEEXT)				\
-caps-sub-paths$(EXEEXT)					\
-clip-all$(EXEEXT)					\
-clip-empty$(EXEEXT)					\
-clip-fill-rule$(EXEEXT)					\
-clip-fill-rule-pixel-aligned$(EXEEXT)			\
-clip-nesting$(EXEEXT)					\
-clip-operator$(EXEEXT)					\
-clip-push-group$(EXEEXT)				\
-clip-twice$(EXEEXT)					\
-clip-zero$(EXEEXT)					\
-clipped-group$(EXEEXT)					\
-clipped-surface$(EXEEXT)				\
-close-path$(EXEEXT)					\
-composite-integer-translate-source$(EXEEXT)		\
-composite-integer-translate-over$(EXEEXT)		\
-composite-integer-translate-over-repeat$(EXEEXT)	\
-copy-path$(EXEEXT)					\
-create-for-stream$(EXEEXT)				\
-create-from-png$(EXEEXT)				\
-create-from-png-stream$(EXEEXT)				\
-dash-caps-joins$(EXEEXT)				\
-dash-curve$(EXEEXT)					\
-dash-no-dash$(EXEEXT)					\
-dash-offset-negative$(EXEEXT)				\
-dash-scale$(EXEEXT)					\
-dash-state$(EXEEXT)					\
-dash-zero-length$(EXEEXT)				\
-degenerate-arc$(EXEEXT)					\
-degenerate-dash$(EXEEXT)				\
-degenerate-path$(EXEEXT)				\
-degenerate-pen$(EXEEXT)					\
-device-offset$(EXEEXT)					\
-device-offset-fractional$(EXEEXT)			\
-device-offset-positive$(EXEEXT)				\
-device-offset-scale$(EXEEXT)				\
-extend-pad$(EXEEXT)					\
-extend-reflect$(EXEEXT)					\
-extend-reflect-similar$(EXEEXT)				\
-extend-repeat$(EXEEXT)					\
-extend-repeat-similar$(EXEEXT)				\
-fill-alpha$(EXEEXT)					\
-fill-alpha-pattern$(EXEEXT)				\
-fill-and-stroke$(EXEEXT)				\
-fill-and-stroke-alpha$(EXEEXT)				\
-fill-and-stroke-alpha-add$(EXEEXT)			\
-fill-degenerate-sort-order$(EXEEXT)			\
-fill-missed-stop$(EXEEXT)				\
-fill-rule$(EXEEXT)					\
-filter-bilinear-extents$(EXEEXT)			\
-filter-nearest-offset$(EXEEXT)				\
-filter-nearest-transformed$(EXEEXT)			\
-finer-grained-fallbacks$(EXEEXT)			\
-font-face-get-type$(EXEEXT)				\
-font-matrix-translation$(EXEEXT)			\
-font-options$(EXEEXT)					\
-glyph-cache-pressure$(EXEEXT)				\
-get-and-set$(EXEEXT)					\
-get-clip$(EXEEXT)					\
-get-group-target$(EXEEXT)				\
-get-path-extents$(EXEEXT)				\
-gradient-alpha$(EXEEXT)					\
-gradient-constant-alpha$(EXEEXT)			\
-gradient-zero-stops$(EXEEXT)				\
-group-paint$(EXEEXT)					\
-huge-pattern$(EXEEXT)					\
-image-surface-source$(EXEEXT)				\
-infinite-join$(EXEEXT)					\
-in-fill-empty-trapezoid$(EXEEXT)			\
-in-fill-trapezoid$(EXEEXT)				\
-invalid-matrix$(EXEEXT)					\
-large-clip$(EXEEXT)					\
-large-font$(EXEEXT)					\
-large-source$(EXEEXT)					\
-leaky-dash$(EXEEXT)					\
-leaky-dashed-rectangle$(EXEEXT)				\
-leaky-dashed-stroke$(EXEEXT)				\
-leaky-polygon$(EXEEXT)					\
-line-width$(EXEEXT)					\
-line-width-scale$(EXEEXT)				\
-line-width-zero$(EXEEXT)				\
-linear-gradient$(EXEEXT)				\
-linear-gradient-reflect$(EXEEXT)			\
-long-dashed-lines$(EXEEXT)				\
-long-lines$(EXEEXT)					\
-mask$(EXEEXT)						\
-mask-alpha$(EXEEXT)					\
-mask-ctm$(EXEEXT)					\
-mask-surface-ctm$(EXEEXT)				\
-mask-transformed-image$(EXEEXT)				\
-mask-transformed-similar$(EXEEXT)			\
-meta-surface-pattern$(EXEEXT)				\
-miter-precision$(EXEEXT)				\
-move-to-show-surface$(EXEEXT)				\
-new-sub-path$(EXEEXT)					\
-nil-surface$(EXEEXT)					\
-operator$(EXEEXT)					\
-operator-alpha$(EXEEXT)					\
-operator-clear$(EXEEXT)					\
-operator-source$(EXEEXT)				\
-over-above-source$(EXEEXT)				\
-over-around-source$(EXEEXT)				\
-over-below-source$(EXEEXT)				\
-over-between-source$(EXEEXT)				\
-paint$(EXEEXT)						\
-paint-repeat$(EXEEXT)					\
-paint-source-alpha$(EXEEXT)				\
-paint-with-alpha$(EXEEXT)				\
-pass-through$(EXEEXT)					\
-pattern-get-type$(EXEEXT)				\
-pattern-getters$(EXEEXT)				\
-pixman-rotate$(EXEEXT)					\
-png$(EXEEXT)						\
-push-group$(EXEEXT)					\
-radial-gradient$(EXEEXT)				\
-random-intersections$(EXEEXT)				\
-rectangle-rounding-error$(EXEEXT)			\
-rectilinear-fill$(EXEEXT)				\
-rectilinear-miter-limit$(EXEEXT)			\
-rectilinear-stroke$(EXEEXT)				\
-reflected-stroke$(EXEEXT)				\
-rel-path$(EXEEXT)					\
-rgb24-ignore-alpha$(EXEEXT)				\
-rotate-image-surface-paint$(EXEEXT)			\
-scale-down-source-surface-paint$(EXEEXT)		\
-scale-source-surface-paint$(EXEEXT)			\
-stroke-ctm-caps$(EXEEXT)				\
-stroke-image$(EXEEXT)				        \
-select-font-face$(EXEEXT)				\
-select-font-no-show-text$(EXEEXT)			\
-self-copy$(EXEEXT)					\
-self-copy-overlap$(EXEEXT)				\
-self-intersecting$(EXEEXT)				\
-set-source$(EXEEXT)					\
-show-glyphs-many$(EXEEXT)				\
-show-text-current-point$(EXEEXT)			\
-skew-extreme$(EXEEXT)					\
-smask$(EXEEXT)						\
-smask-fill$(EXEEXT)					\
-smask-image-mask$(EXEEXT)				\
-smask-mask$(EXEEXT)					\
-smask-paint$(EXEEXT)					\
-smask-stroke$(EXEEXT)					\
-smask-text$(EXEEXT)					\
-solid-pattern-cache-stress$(EXEEXT)			\
-source-clip$(EXEEXT)					\
-source-clip-scale$(EXEEXT)				\
-source-surface-scale-paint$(EXEEXT)			\
-spline-decomposition$(EXEEXT)				\
-surface-finish-twice$(EXEEXT)				\
-surface-pattern$(EXEEXT)				\
-surface-pattern-big-scale-down$(EXEEXT)			\
-surface-pattern-scale-down$(EXEEXT)			\
-surface-pattern-scale-up$(EXEEXT)			\
-text-antialias-gray$(EXEEXT)				\
-text-antialias-none$(EXEEXT)				\
-text-antialias-subpixel$(EXEEXT)			\
-text-cache-crash$(EXEEXT)				\
-text-pattern$(EXEEXT)					\
-text-rotate$(EXEEXT)					\
-text-transform$(EXEEXT)					\
-text-zero-len$(EXEEXT)					\
-toy-font-face$(EXEEXT)					\
-transforms$(EXEEXT)					\
-translate-show-surface$(EXEEXT)				\
-trap-clip$(EXEEXT)					\
-truetype-tables$(EXEEXT)				\
-twin$(EXEEXT)						\
-unantialiased-shapes$(EXEEXT)				\
-unbounded-operator$(EXEEXT)				\
-user-data$(EXEEXT)					\
-user-font$(EXEEXT)					\
-user-font-mask$(EXEEXT)					\
-user-font-proxy$(EXEEXT)				\
-user-font-rescale$(EXEEXT)				\
-zero-alpha$(EXEEXT)
+CLEANFILES += have-similar.*
 
-# XXX: Here are some existing tests that are currently disabled for
-# one reason or another. They can still be built and run (manually)
-# but we don't currently run them as part of 'make check' to avoid
-# inflicting some particularly nasty problems on the user of the test
-# suite (described below).
-#
-# It would definitely be worthwhile to address these problems so that
-# these tests can get back into the test suite proper, (since the
-# problems do indicated bugs somewhere and we're less likely to get
-# those bugs fixed without the attention due to having these tests in
-# the suite).
-#
-# The reasons for disabling the tests are as follows:
-#
-# extend-reflect - Triggers an infinite (or near-infinite) bug in some
-#	X servers in some circumstances. Details and cause unknown.
-#
-# text-glyph-range - This test triggers the following assertion in cairo:
-#
-#	lt-text-glyph-range: cairo-scaled-font-subsets.c:350:
-#	_cairo_sub_font_collect: Assertion `collection->num_glyphs ==
-#	collection->max_glyph + 1' failed.
-#
-#	And as a result causes a failure to be recorded by the test
-#	suite, (in spite of the XFAIL status of the test). So maybe
-#	that's just a bug in the test rig that should just consider
-#	the abort an XFAIL like any other.
-DISABLED_TESTS =			\
-text-glyph-range$(EXEEXT)
+test_sources = \
+	a1-image-sample.c 				\
+	a1-mask.c					\
+	a1-traps-sample.c				\
+	a8-mask.c					\
+	alpha-similar.c					\
+	big-line.c					\
+	big-trap.c					\
+	bilevel-image.c					\
+	caps-joins.c					\
+	caps-joins-alpha.c				\
+	caps-sub-paths.c				\
+	clip-all.c					\
+	clip-empty.c					\
+	clip-fill-rule.c				\
+	clip-fill-rule-pixel-aligned.c			\
+	clip-nesting.c					\
+	clip-operator.c					\
+	clip-push-group.c				\
+	clip-twice.c					\
+	clip-zero.c					\
+	clipped-group.c					\
+	clipped-surface.c				\
+	close-path.c					\
+	composite-integer-translate-source.c		\
+	composite-integer-translate-over.c		\
+	composite-integer-translate-over-repeat.c	\
+	copy-path.c					\
+	create-for-stream.c				\
+	create-from-png.c				\
+	create-from-png-stream.c			\
+	dash-caps-joins.c				\
+	dash-curve.c					\
+	dash-no-dash.c					\
+	dash-offset-negative.c				\
+	dash-scale.c					\
+	dash-state.c					\
+	dash-zero-length.c				\
+	degenerate-arc.c				\
+	degenerate-dash.c				\
+	degenerate-path.c				\
+	degenerate-pen.c				\
+	device-offset.c					\
+	device-offset-fractional.c			\
+	device-offset-positive.c			\
+	device-offset-scale.c				\
+	extend-pad.c					\
+	extend-reflect.c				\
+	extend-reflect-similar.c			\
+	extend-repeat.c					\
+	extend-repeat-similar.c				\
+	fill-alpha.c					\
+	fill-alpha-pattern.c				\
+	fill-and-stroke.c				\
+	fill-and-stroke-alpha.c				\
+	fill-and-stroke-alpha-add.c			\
+	fill-degenerate-sort-order.c			\
+	fill-missed-stop.c				\
+	fill-rule.c					\
+	filter-bilinear-extents.c			\
+	filter-nearest-offset.c				\
+	filter-nearest-transformed.c			\
+	finer-grained-fallbacks.c			\
+	font-face-get-type.c				\
+	font-matrix-translation.c			\
+	font-options.c					\
+	glyph-cache-pressure.c				\
+	get-and-set.c					\
+	get-clip.c					\
+	get-group-target.c				\
+	get-path-extents.c				\
+	gradient-alpha.c				\
+	gradient-constant-alpha.c			\
+	gradient-zero-stops.c				\
+	group-paint.c					\
+	huge-pattern.c					\
+	image-surface-source.c				\
+	infinite-join.c					\
+	in-fill-empty-trapezoid.c			\
+	in-fill-trapezoid.c				\
+	invalid-matrix.c				\
+	large-clip.c					\
+	large-font.c					\
+	large-source.c					\
+	leaky-dash.c					\
+	leaky-dashed-rectangle.c			\
+	leaky-dashed-stroke.c				\
+	leaky-polygon.c					\
+	line-width.c					\
+	line-width-scale.c				\
+	line-width-zero.c				\
+	linear-gradient.c				\
+	linear-gradient-reflect.c			\
+	long-dashed-lines.c				\
+	long-lines.c					\
+	mask.c						\
+	mask-alpha.c					\
+	mask-ctm.c					\
+	mask-surface-ctm.c				\
+	mask-transformed-image.c			\
+	mask-transformed-similar.c			\
+	meta-surface-pattern.c				\
+	miter-precision.c				\
+	move-to-show-surface.c				\
+	new-sub-path.c					\
+	nil-surface.c					\
+	operator.c					\
+	operator-alpha.c				\
+	operator-clear.c				\
+	operator-source.c				\
+	over-above-source.c				\
+	over-around-source.c				\
+	over-below-source.c				\
+	over-between-source.c				\
+	paint.c						\
+	paint-repeat.c					\
+	paint-source-alpha.c				\
+	paint-with-alpha.c				\
+	pattern-get-type.c				\
+	pattern-getters.c				\
+	pixman-rotate.c					\
+	png.c						\
+	push-group.c					\
+	radial-gradient.c				\
+	random-intersections.c				\
+	rectangle-rounding-error.c			\
+	rectilinear-fill.c				\
+	rectilinear-miter-limit.c			\
+	rectilinear-stroke.c				\
+	reflected-stroke.c				\
+	rel-path.c					\
+	rgb24-ignore-alpha.c				\
+	rotate-image-surface-paint.c			\
+	scale-down-source-surface-paint.c		\
+	scale-source-surface-paint.c			\
+	stroke-ctm-caps.c				\
+	stroke-image.c				        \
+	select-font-face.c				\
+	select-font-no-show-text.c			\
+	self-copy.c					\
+	self-copy-overlap.c				\
+	self-intersecting.c				\
+	set-source.c					\
+	show-glyphs-many.c				\
+	show-text-current-point.c			\
+	skew-extreme.c					\
+	smask.c						\
+	smask-fill.c					\
+	smask-image-mask.c				\
+	smask-mask.c					\
+	smask-paint.c					\
+	smask-stroke.c					\
+	smask-text.c					\
+	solid-pattern-cache-stress.c			\
+	source-clip.c					\
+	source-clip-scale.c				\
+	source-surface-scale-paint.c			\
+	spline-decomposition.c				\
+	surface-finish-twice.c				\
+	surface-pattern.c				\
+	surface-pattern-big-scale-down.c		\
+	surface-pattern-scale-down.c			\
+	surface-pattern-scale-up.c			\
+	text-antialias-gray.c				\
+	text-antialias-none.c				\
+	text-antialias-subpixel.c			\
+	text-cache-crash.c				\
+	text-glyph-range.c				\
+	text-pattern.c					\
+	text-rotate.c					\
+	text-transform.c				\
+	text-zero-len.c					\
+	toy-font-face.c					\
+	transforms.c					\
+	translate-show-surface.c			\
+	trap-clip.c					\
+	truetype-tables.c				\
+	twin.c						\
+	unantialiased-shapes.c				\
+	unbounded-operator.c				\
+	user-data.c					\
+	user-font.c					\
+	user-font-mask.c				\
+	user-font-proxy.c				\
+	user-font-rescale.c				\
+	zero-alpha.c
 
 # Then we have a collection of tests that are only run if certain
 # features are compiled into cairo
 if HAVE_PTHREAD
-TESTS += pthread-show-text$(EXEEXT)
+test_sources += pthread-show-text.c
 endif
 
 if CAIRO_HAS_FT_FONT
-TESTS += bitmap-font$(EXEEXT)
-TESTS += ft-font-create-for-ft-face$(EXEEXT)
-TESTS += ft-show-glyphs-positioning$(EXEEXT)
-TESTS += ft-show-glyphs-table$(EXEEXT)
-TESTS += ft-text-vertical-layout-type1$(EXEEXT)
-TESTS += ft-text-vertical-layout-type3$(EXEEXT)
-TESTS += ft-text-antialias-none$(EXEEXT)
+test_sources += bitmap-font.c
+test_sources += ft-font-create-for-ft-face.c
+test_sources += ft-show-glyphs-positioning.c
+test_sources += ft-show-glyphs-table.c
+test_sources += ft-text-vertical-layout-type1.c
+test_sources += ft-text-vertical-layout-type3.c
+test_sources += ft-text-antialias-none.c
 endif
 
 # Need to add win32-surface-source, quartz-surface-source
 if CAIRO_HAS_GLITZ_SURFACE
-TESTS += glitz-surface-source$(EXEEXT)
+test_sources += glitz-surface-source.c
 endif
 
 if CAIRO_HAS_PDF_SURFACE
-TESTS += pdf-features$(EXEEXT)
-TESTS += pdf-surface-source$(EXEEXT)
+test_sources += pdf-features.c
+test_sources += pdf-surface-source.c
 endif
 
 if CAIRO_HAS_PS_SURFACE
-TESTS += ps-features$(EXEEXT)
-TESTS += ps-surface-source$(EXEEXT)
+test_sources += ps-features.c
+test_sources += ps-surface-source.c
 endif
 
 if CAIRO_HAS_SVG_SURFACE
-TESTS += svg-surface$(EXEEXT)
-TESTS += svg-clip$(EXEEXT)
-TESTS += svg-surface-source$(EXEEXT)
+test_sources += svg-surface.c
+test_sources += svg-clip.c
+test_sources += svg-surface-source.c
 endif
 
 if CAIRO_HAS_XLIB_SURFACE
-TESTS += xlib-expose-event$(EXEEXT)
-TESTS += xlib-surface$(EXEEXT)
-TESTS += xlib-surface-source$(EXEEXT)
+test_sources += xlib-expose-event.c
+test_sources += xlib-surface.c
+test_sources += xlib-surface-source.c
 endif
 
 if CAIRO_HAS_XLIB_XRENDER_SURFACE
-TESTS += get-xrender-format$(EXEEXT)
+test_sources += get-xrender-format.c
 endif
 
 if CAIRO_HAS_MULTI_PAGE_SURFACES
-TESTS += multi-page$(EXEEXT)
+test_sources += multi-page.c
 endif
 
 # Include fallback-resolution (once!) if we have any of the vector surfaces
 if CAIRO_HAS_SVG_SURFACE
-test = fallback-resolution$(EXEEXT)
+test = fallback-resolution.c
 endif
 if CAIRO_HAS_PDF_SURFACE
-test = fallback-resolution$(EXEEXT)
+test = fallback-resolution.c
 endif
 if CAIRO_HAS_PS_SURFACE
-test = fallback-resolution$(EXEEXT)
+test = fallback-resolution.c
 endif
-TESTS += $(test)
+test_sources += $(test)
+
+TESTS += cairo-test-suite$(EXEEXT)
+
+cairo-test-constructors.c: Makefile $(test_sources) make-cairo-test-constructors.pl
+	@(cd $(srcdir) && ./make-cairo-test-constructors.pl $(test_sources)) > $@
+
+cairo_test_suite_SOURCES = 		\
+	buffer-diff.c			\
+	buffer-diff.h			\
+	cairo-test.c			\
+	cairo-test.h			\
+	cairo-test-private.h		\
+	cairo-test-runner.c		\
+	$(test_sources)
+if CAIRO_HAS_CONSTRUCTOR_ATTRIBUTE
+else
+cairo_test_suite_SOURCES += cairo-test-constructors.c
+endif
+cairo_test_suite_LDADD = 					\
+	$(top_builddir)/test/pdiff/libpdiff.la 			\
+        $(top_builddir)/boilerplate/libcairoboilerplate.la	\
+	$(top_builddir)/src/libcairo.la 			\
+	$(CAIRO_LDADD)
+cairo_test_suite_DEPENDENCIES = \
+	$(top_builddir)/test/pdiff/libpdiff.la 			\
+        $(top_builddir)/boilerplate/libcairoboilerplate.la	\
+	$(top_builddir)/src/libcairo.la 			\
+	any2ppm
+if HAVE_PTHREAD
+cairo_test_suite_LDADD += -lpthread
+endif
+
+BUILT_SOURCES += cairo-test-constructors.c
+noinst_SCRIPTS = make-cairo-test-constructors.pl
+EXTRA_DIST += $(BUILT_SOURCES) $(noinst_SCRIPTS)
+CLEANFILES += $(BUILT_SOURCES)
 
 # All tests which have a reference image go here.
 REFERENCE_IMAGES = \
@@ -885,7 +892,7 @@ REFERENCE_IMAGES = \
 	surface-pattern-ps2-ref.png	\
 	surface-pattern-ps3-ref.png	\
 	surface-pattern-ref.png	\
-	surface-pattern-scale-down-pdf-argb24-ref.png	\
+	surface-pattern-scale-down-pdf-argb32-ref.png	\
 	surface-pattern-scale-down-pdf-rgb24-ref.png	\
 	surface-pattern-scale-down-ps2-ref.png	\
 	surface-pattern-scale-down-ps3-ref.png	\
@@ -906,7 +913,8 @@ REFERENCE_IMAGES = \
 	text-antialias-subpixel-ref.png	\
 	text-antialias-subpixel-quartz-ref.png	\
 	text-glyph-range-ref.png	\
-	text-glyph-range-rgb24-ref.png	\
+	text-glyph-range-ps2-ref.png	\
+	text-glyph-range-ps3-ref.png	\
 	text-pattern-ps3-argb32-ref.png	\
 	text-pattern-ps3-rgb24-ref.png	\
 	text-pattern-ref.png	\
@@ -1068,13 +1076,10 @@ svg-surface			\
 toy-font-face			\
 user-data
 
-# A hook that summarises the failures
-# We need to both force make to keep going after failures and to disable the
-# jobserver (parallel builds).
-check: AM_MAKEFLAGS+=-k -j1
-check-local:
+# A target to summarise the failures
+check-summary:
 	@FAILED_TESTS=""; \
-	for t in $(TESTS:$(EXEEXT)=.log); do \
+	for t in $(test_sources:.c=.log); do \
 	    if grep -e '\<FAIL\>' $$t >/dev/null 2>&1; then \
 		FAILED_TESTS="$$FAILED_TESTS $${t%.log}"; \
 	    fi; \
@@ -1119,21 +1124,6 @@ AM_CPPFLAGS =					\
 	-I$(top_builddir)/src			\
 	$(CAIRO_CFLAGS)
 
-EXTRA_LTLIBRARIES += libcairotest.la
-
-libcairotest_la_SOURCES =\
-	buffer-diff.c	\
-	buffer-diff.h	\
-	cairo-test.c	\
-	cairo-test.h
-libcairotest_la_LIBADD =\
-	$(top_builddir)/test/pdiff/libpdiff.la \
-        $(top_builddir)/boilerplate/libcairoboilerplate.la \
-	$(top_builddir)/src/libcairo.la \
-	$(CAIRO_LDADD)
-
-LDADD = $(CAIRO_LDADD) libcairotest.la
-
 $(top_builddir)/boilerplate/libcairoboilerplate.la: $(top_builddir)/src/libcairo.la
 	cd $(top_builddir)/boilerplate && $(MAKE) $(AM_MAKEFLAGS) libcairoboilerplate.la
 
@@ -1143,18 +1133,24 @@ $(top_builddir)/src/libcairo.la:
 $(top_builddir)/test/pdiff/libpdiff.la:
 	cd $(top_builddir)/test/pdiff && $(MAKE) $(AM_MAKEFLAGS) libpdiff.la
 
-if HAVE_PTHREAD
-LDADD += -lpthread
-endif
+EXTRA_PROGRAMS += imagediff png-flatten
 
-check_PROGRAMS += imagediff png-flatten
+imagediff_SOURCES = \
+	imagediff.c	\
+	buffer-diff.c	\
+	buffer-diff.h
+imagediff_LDADD = \
+	$(top_builddir)/test/pdiff/libpdiff.la
+
+png_flatten_SOURCES = png-flatten.c
+png_flatten_LDADD = $(top_builddir)/src/libcairo.la $(CAIRO_LDADD)
 
 if BUILD_ANY2PPM
 check_PROGRAMS += any2ppm
 any2ppm_CFLAGS = $(POPPLER_CFLAGS) $(LIBRSVG_CFLAGS) $(LIBSPECTRE_CFLAGS)
 # add LDADD, so poppler/librsvg uses "our" cairo
 any2ppm_LDFLAGS = $(CAIRO_TEST_UNDEFINED_LDFLAGS)
-any2ppm_LDADD  = $(LDADD) $(POPPLER_LIBS) $(LIBRSVG_LIBS) $(LIBSPECTRE_LIBS)
+any2ppm_LDADD  = $(top_builddir)/src/libcairo.la $(CAIRO_LDADD) $(POPPLER_LIBS) $(LIBRSVG_LIBS) $(LIBSPECTRE_LIBS)
 endif
 
 if CAIRO_CAN_TEST_PDF_SURFACE
@@ -1162,7 +1158,7 @@ check_PROGRAMS += pdf2png
 pdf2png_CFLAGS = $(POPPLER_CFLAGS)
 # add LDADD, so poppler uses "our" cairo
 pdf2png_LDFLAGS = $(CAIRO_TEST_UNDEFINED_LDFLAGS)
-pdf2png_LDADD  = $(LDADD) $(POPPLER_LIBS)
+pdf2png_LDADD  = $(top_builddir)/src/libcairo.la $(CAIRO_LDADD) $(POPPLER_LIBS)
 endif
 
 if CAIRO_CAN_TEST_SVG_SURFACE
@@ -1170,7 +1166,7 @@ check_PROGRAMS += svg2png
 svg2png_CFLAGS = $(LIBRSVG_CFLAGS)
 # add LDADD, so librsvg uses "our" cairo
 svg2png_LDFLAGS = $(CAIRO_TEST_UNDEFINED_LDFLAGS)
-svg2png_LDADD  = $(LDADD) $(LIBRSVG_LIBS)
+svg2png_LDADD  = $(top_builddir)/src/libcairo.la $(CAIRO_LDADD) $(LIBRSVG_LIBS)
 endif
 
 if CAIRO_HAS_SPECTRE
@@ -1178,10 +1174,10 @@ check_PROGRAMS += ps2png
 ps2png_CFLAGS = $(LIBSPECTRE_CFLAGS)
 # add LDADD, so ps2png uses "our" cairo
 ps2png_LDFLAGS = $(CAIRO_TEST_UNDEFINED_LDFLAGS)
-ps2png_LDADD  = $(LDADD) $(LIBSPECTRE_LIBS)
+ps2png_LDADD  = $(top_builddir)/src/libcairo.la $(CAIRO_LDADD) $(LIBSPECTRE_LIBS)
 endif
 
-EXTRA_PROGRAMS += $(TESTS) $(DISABLED_TESTS)
+EXTRA_PROGRAMS += $(TESTS)
 
 # Do a funny transition of CAIRO_TEST_TARGET through TARGETS such that
 # one can limit tested targets both through CAIRO_TEST_TARGET env var
@@ -1189,11 +1185,12 @@ EXTRA_PROGRAMS += $(TESTS) $(DISABLED_TESTS)
 TARGETS = $(CAIRO_TEST_TARGET)
 TARGETS_EXCLUDE = $(CAIRO_TEST_TARGET_EXCLUDE)
 NUM_THREADS = $(CAIRO_TEST_NUM_THREADS)
+MODE = $(CAIRO_TEST_MODE)
 
 # Same about ENV vs CAIRO_TEST_ENV.  ENV is used with "make run" only
 ENV = $(CAIRO_TEST_ENV)
 
-TESTS_ENVIRONMENT = CAIRO_XFAIL_TESTS="$(XFAIL_TESTS:$(EXEEXT)=)" CAIRO_TEST_TARGET="$(TARGETS)" CAIRO_TEST_TARGET_EXCLUDE="$(TARGETS_EXCLUDE)" CAIRO_TEST_NUM_THREADS="$(NUM_THREADS)" $(ENV)
+TESTS_ENVIRONMENT = CAIRO_TEST_MODE="$(MODE)" CAIRO_TEST_TARGET="$(TARGETS)" CAIRO_TEST_TARGET_EXCLUDE="$(TARGETS_EXCLUDE)" CAIRO_TEST_NUM_THREADS="$(NUM_THREADS)" $(ENV)
 
 EXTRA_VALGRIND_FLAGS = $(CAIRO_EXTRA_VALGRIND_FLAGS)
 VALGRIND_FLAGS = \
@@ -1224,8 +1221,8 @@ CLEANFILES +=					\
 # Then it became a fancy find using many GNU extensions, but then the ugly
 # reality of portability was raised and it became....
 clean-local: clean-caches
+	rm -rf output
 	-${FIND} . -name '*-out.*'    -print | ${XARGS} ${RM}
-	-${FIND} . -name '*-diff.png' -print | ${XARGS} ${RM}
 	-${FIND} . -name '*.log'      -print | ${XARGS} ${RM}
 	-${FIND} . -name '*.[is]'     -print | ${XARGS} ${RM}
 clean-caches:
@@ -1233,10 +1230,10 @@ clean-caches:
 	-${FIND} . -name '*-fail.*'   -print | ${XARGS} ${RM}
 
 # The following definitions both should work.
-#FAILED_TESTS = `grep -l '\<FAIL\>' $(TESTS:$(EXEEXT)=.log) 2>/dev/null | sed -e 's/[.]log$$//' | xargs echo`
-FAILED_TESTS = `grep -l '\<FAIL\>' $(TESTS:$(EXEEXT)=.log) 2>/dev/null | tr '\n' ' ' | sed -e 's/[.]log  */ /g; s/^ //; s/ $$//'`
+#FAILED_TESTS = `grep -l '\<FAIL\>' $(test_sources:.c=.log) 2>/dev/null | sed -e 's/[.]log$$//' | xargs echo`
+FAILED_TESTS = `grep -l '\<FAIL\>' $(test_sources:.c=.log) 2>/dev/null | tr '\n' ' ' | sed -e 's/[.]log  */ /g; s/^ //; s/ $$//'`
 
-recheck = check TESTS="$(FAILED_TESTS)"
+recheck = check CAIRO_TESTS="$(FAILED_TESTS)"
 
 # Re-checks all failed tests, i.e. tests with a log file that has a failure
 recheck:
@@ -1252,18 +1249,18 @@ test:
 # Re-checks tests and creates index.html.
 # Target doesn't fail if tests fail.
 retest:
-	@TESTS="$(FAILED_TESTS)"; \
-	$(MAKE) $(AM_MAKEFLAGS) TESTS="$$TESTS" check; \
-	$(MAKE) $(AM_MAKEFLAGS) TESTS="$$TESTS" html
+	@CAIRO_TESTS="$(FAILED_TESTS)"; \
+	$(MAKE) $(AM_MAKEFLAGS) check; \
+	$(MAKE) $(AM_MAKEFLAGS) html
 
 # Make index.html with no dependency tracking.
 html-local:
 	@echo Creating index.html
-	@perl $(srcdir)/make-html.pl $(TESTS:$(EXEEXT)=.log) > index.html
+	@perl $(srcdir)/make-html.pl $(test_sources:.c=.log) > index.html
 
 # Make index.html with no dependency tracking, containing only the failed tests.
 rehtml:
-	@$(MAKE) $(AM_MAKEFLAGS) TESTS="$(FAILED_TESTS)" html
+	@CAIRO_TESTS="$(FAILED_TESTS)" $(MAKE) $(AM_MAKEFLAGS) html
 
 # Run tests under a tool specified by TOOL.  For example, make run TOOL=gdb
 run:
@@ -1273,18 +1270,15 @@ run:
 check-valgrind:
 	$(MAKE) $(AM_MAKEFLAGS) check TESTS_ENVIRONMENT='$(TESTS_ENVIRONMENT) $(top_builddir)/libtool --mode=execute valgrind $(VALGRIND_FLAGS)' 2>&1 | tee valgrind-log
 
-
-$(TESTS): $(check_PROGRAMS)
-
-%.log: % $(check_PROGRAMS)
-	-./$<
+%.log: %.c cairo-test-suite
+	-./cairo-test-suite $(<:.c=)
 
 NOLOG_TESTS_LOG = $(NOLOG_TESTS:=.log)
 
 $(NOLOG_TESTS_LOG):
 	@echo dummy > $@
 
-index.html: $(srcdir)/make-html.pl $(TESTS:$(EXEEXT)=.log)
+index.html: $(srcdir)/make-html.pl $(test_sources:.c=.log)
 	@echo Creating index.html
 	@perl $^ > $@
 

@@ -36,16 +36,6 @@
 #define FONT "6x13.pcf"
 #define TEXT_SIZE 13
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "bitmap-font",
-    "Test drawing with a font consisting only of bitmaps"
-    "\nThe PDF and PS backends embed a slightly distorted font for the rotated case.",
-    246 + 1, 2 * TEXT_SIZE,
-    draw
-};
-
 static cairo_bool_t
 font_extents_equal (const cairo_font_extents_t *A,
 	            const cairo_font_extents_t *B)
@@ -215,8 +205,10 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (bitmap_font,
+	    "Test drawing with a font consisting only of bitmaps"
+	    "\nThe PDF and PS backends embed a slightly distorted font for the rotated case.",
+	    "text", /* keywords */
+	    "ft", /* requirements */
+	    246 + 1, 2 * TEXT_SIZE,
+	    NULL, draw)

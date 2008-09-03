@@ -25,16 +25,6 @@
 
 #include "cairo-test.h"
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "big-line",
-    "Test drawing of simple lines with positive and negative coordinates > 2^16\n"
-    "This currently fails because of 16-bit limitations in pixman.",
-    100, 100,
-    draw
-};
-
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
@@ -63,8 +53,10 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (big_line,
+	    "Test drawing of simple lines with positive and negative coordinates > 2^16\n"
+	    "This currently fails because of 16-bit limitations in pixman.",
+	    "XFAIL line", /* keywords */
+	    NULL, /* requirements */
+	    100, 100,
+	    NULL, draw)

@@ -29,15 +29,6 @@
 #define SIZE 10
 #define PAD 2
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "device-offset-positive",
-    "Simple test using a surface with a positive device-offset as a source.",
-    SIZE, SIZE,
-    draw
-};
-
 static void
 draw_square (cairo_t *cr)
 {
@@ -82,8 +73,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (device_offset_positive,
+	    "Simple test using a surface with a positive device-offset as a source.",
+	    "device-offset", /* keywords */
+	    NULL, /* requirements */
+	    SIZE, SIZE,
+	    NULL, draw)

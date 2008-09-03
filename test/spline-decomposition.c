@@ -25,15 +25,6 @@
 
 #include "cairo-test.h"
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "spline-decomposition",
-    "Tests splines with various inflection points",
-    390, 260,
-    draw
-};
-
 typedef struct _point {
     double x,y;
 } point_t;
@@ -409,8 +400,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (spline_decomposition,
+	    "Tests splines with various inflection points",
+	    "stroke, spline", /* keywords */
+	    NULL, /* requirements */
+	    390, 260,
+	    NULL, draw)

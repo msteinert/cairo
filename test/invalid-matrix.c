@@ -37,15 +37,6 @@
 #include <fenv.h>
 #endif
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "invalid-matrix",
-    "Test that all relevant public functions return CAIRO_STATUS_INVALID_MATRIX as appropriate",
-    0, 0,
-    draw
-};
-
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
@@ -393,8 +384,9 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (invalid_matrix,
+	    "Test that all relevant public functions return CAIRO_STATUS_INVALID_MATRIX as appropriate",
+	    "api, matrix", /* keywords */
+	    NULL, /* requirements */
+	    0, 0,
+	    NULL, draw)

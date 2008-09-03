@@ -29,7 +29,6 @@
 #include <cairo-xlib-xrender.h>
 #endif
 
-#define NAME "xlib"
 #include "surface-source.c"
 
 static cairo_user_data_key_t closure_key;
@@ -82,3 +81,10 @@ create_source_surface (int size)
     return NULL;
 #endif
 }
+
+CAIRO_TEST (xlib_surface_source,
+	    "Test using a Xlib surface as the source",
+	    "source", /* keywords */
+	    NULL, /* requirements */
+	    SIZE, SIZE,
+	    preamble, draw)

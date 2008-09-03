@@ -33,16 +33,6 @@
  */
 #include "cairo-test.h"
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "miter-precision",
-    "test how cairo deals with small miters"
-    "\nPS backend currently fails due to GS bug.",
-    120, 100,
-    draw
-};
-
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
@@ -73,8 +63,10 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (miter_precision,
+	    "test how cairo deals with small miters"
+	    "\ncurrent code draws inappropriate bevels at times",
+	    "stoke, stress", /* keywords */
+	    NULL, /* requirements */
+	    120, 100,
+	    NULL, draw)

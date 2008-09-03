@@ -25,15 +25,6 @@
 
 #include "cairo-test.h"
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "smask",
-    "Test the support of \"soft\" masks",
-    60, 60,
-    draw
-};
-
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
@@ -122,8 +113,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (smask,
+	    "Test the support of \"soft\" masks",
+	    "smask", /* keywords */
+	    NULL, /* requirements */
+	    60, 60,
+	    NULL, draw)

@@ -27,15 +27,6 @@
 #include <stdlib.h>
 #include "cairo-test.h"
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "pattern-getters",
-    "Tests calls to pattern getter functions",
-    1, 1,
-    draw
-};
-
 #define CHECK_SUCCESS do { if (status) return CAIRO_TEST_FAILURE; } while (0)
 
 static int
@@ -177,8 +168,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (pattern_getters,
+	    "Tests calls to pattern getter functions",
+	    "pattern, api", /* keywords */
+	    NULL, /* requirements */
+	    1, 1,
+	    NULL, draw)

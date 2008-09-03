@@ -26,23 +26,14 @@
 
 #include "cairo-test.h"
 
-static cairo_test_draw_function_t draw;
-
 #define NUM_GRADIENTS 4
 #define NUM_EXTEND 4
 #define SIZE 60
 #define WIDTH (SIZE * NUM_GRADIENTS)
 #define HEIGHT (SIZE * NUM_EXTEND)
 
-static const cairo_test_t test = {
-    "radial-gradient",
-    "Simple test of radial gradients",
-    WIDTH, HEIGHT,
-    draw
-};
-
 static void
-draw_gradient (cairo_t 		*cr,
+draw_gradient (cairo_t		*cr,
 	       int		x,
 	       int		y,
 	       int		size,
@@ -103,8 +94,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (radial_gradient,
+	    "Simple test of radial gradients",
+	    "gradient", /* keywords */
+	    NULL, /* requirements */
+	    WIDTH, HEIGHT,
+	    NULL, draw)

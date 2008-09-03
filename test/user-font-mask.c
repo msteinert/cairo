@@ -39,19 +39,6 @@
 #define HEIGHT ((TEXT_SIZE + 2*BORDER)*2)
 #define TEXT   "cairo"
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "user-font-mask",
-    "Tests a user-font using cairo_mask with bitmap images",
-#ifndef ROTATED
-    WIDTH, HEIGHT,
-#else
-    WIDTH, WIDTH,
-#endif
-    draw
-};
-
 /* Reverse the bits in a byte with 7 operations (no 64-bit):
  * Devised by Sean Anderson, July 13, 2001.
  * Source: http://graphics.stanford.edu/~seander/bithacks.html#ReverseByteWith32Bits
@@ -247,8 +234,13 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (user_font_mask,
+	    "Tests a user-font using cairo_mask with bitmap images",
+	    "user-font, mask", /* keywords */
+	    NULL, /* requirements */
+#ifndef ROTATED
+	    WIDTH, HEIGHT,
+#else
+	    WIDTH, WIDTH,
+#endif
+	    NULL, draw)

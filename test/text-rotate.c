@@ -78,7 +78,7 @@
  *
  * 2007-02-21
  *
- *   Seems like all the "bugs" have been fixed and all remainint is
+ *   Seems like all the "bugs" have been fixed and all remaining is
  *   missing support for subpixel glyph positioning.  Removing from
  *   XFAIL now.
  */
@@ -89,15 +89,6 @@
 #define HEIGHT 150
 #define NUM_TEXT 20
 #define TEXT_SIZE 12
-
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "text-rotate",
-    "Tests show_text under various rotations",
-    WIDTH, HEIGHT,
-    draw
-};
 
 /* Draw the word cairo at NUM_TEXT different angles */
 static cairo_test_status_t
@@ -160,8 +151,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (text_rotate,
+	    "Tests show_text under various rotations",
+	    "text, transform", /* keywords */
+	    NULL, /* requirements */
+	    WIDTH, HEIGHT,
+	    NULL, draw)

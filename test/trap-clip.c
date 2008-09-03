@@ -31,7 +31,7 @@
 #define HEIGHT 16
 #define PAD 2
 
-static const char	png_filename[]	= "romedalen.png";
+static const char *png_filename = "romedalen.png";
 
 static void
 set_solid_pattern (const cairo_test_context_t *ctx, cairo_t *cr, int x, int y)
@@ -164,15 +164,6 @@ static void (* const clip_funcs[])(cairo_t *cr, int x, int y) = {
 #define IMAGE_WIDTH (ARRAY_SIZE (pattern_funcs) * (WIDTH + PAD) + PAD)
 #define IMAGE_HEIGHT (ARRAY_SIZE (draw_funcs) * ARRAY_SIZE (clip_funcs) * (HEIGHT + PAD) + PAD)
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "trap-clip",
-    "Trapezoid clipping\n",
-    IMAGE_WIDTH, IMAGE_HEIGHT,
-    draw
-};
-
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
@@ -205,8 +196,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (trap_clip,
+	    "Trapezoid clipping",
+	    "clip, trap", /* keywords */
+	    NULL, /* requirements */
+	    IMAGE_WIDTH, IMAGE_HEIGHT,
+	    NULL, draw)

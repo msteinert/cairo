@@ -26,15 +26,6 @@
 
 #include "cairo-test.h"
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "in-fill-trapezoid",
-    "Test _cairo_trap_contains via cairo_in_fill",
-    0, 0,
-    draw
-};
-
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
@@ -80,8 +71,9 @@ draw (cairo_t *cr, int width, int height)
     return ret;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (in_fill_trapezoid,
+	    "Test _cairo_trap_contains via cairo_in_fill",
+	    "in, trap", /* keywords */
+	    NULL, /* requirements */
+	    0, 0,
+	    NULL, draw)

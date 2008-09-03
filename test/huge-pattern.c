@@ -26,16 +26,6 @@
 
 #include "cairo-test.h"
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "huge-pattern",
-    "Test huge linear patterns"
-    "\nhuge patterns seem to not be drawn correctly",
-    600, 350,
-    draw
-};
-
 /* set this to 0.1 to make this test work */
 #define FACTOR 1
 
@@ -67,8 +57,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (huge_pattern,
+	    "Test huge linear patterns",
+	    "gradient", /* keywords */
+	    NULL, /* requirements */
+	    600, 350,
+	    NULL, draw)

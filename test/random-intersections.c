@@ -25,18 +25,11 @@
  */
 #include "cairo-test.h"
 
-static cairo_test_draw_function_t draw;
 #define SIZE 512
 #define NUM_SEGMENTS 128
 
-static const cairo_test_t test = {
-    "random-intersections",
-    "Tests the tessellator trapezoid generation and intersection computation",
-    SIZE+3, SIZE+3,
-    draw
-};
-
 static uint32_t state;
+
 static double
 uniform_random (double minval, double maxval)
 {
@@ -76,8 +69,10 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (random_intersections,
+	    "Tests the tessellator trapezoid generation and intersection computation",
+	    "trap", /* keywords */
+	    NULL, /* requirements */
+	    SIZE+3, SIZE+3,
+	    NULL, draw)
+

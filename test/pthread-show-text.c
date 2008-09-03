@@ -71,31 +71,29 @@ start (void *closure)
     return NULL;
 }
 
-int
-main (int argc, char *argv[])
+static cairo_test_status_t
+preamble (cairo_test_context_t *ctx)
 {
-    cairo_test_context_t ctx;
-    int err;
-    int i, num_threads;
     pthread_t *pthread;
+    int i, num_threads;
+    cairo_test_status_t status = CAIRO_TEST_SUCCESS;
 
-    if (argc > 1) {
-	num_threads = atoi (argv[1]);
-    } else {
+    num_threads = 0;
+    if (getenv ("CAIRO_TEST_NUM_THREADS"))
+	num_threads = atoi (getenv ("CAIRO_TEST_NUM_THREADS"));
+    if (num_threads == 0)
 	num_threads = NUM_THREADS_DEFAULT;
-    }
-
-    cairo_test_init (&ctx, "pthread-show-text");
-    cairo_test_log (&ctx, "Running with %d threads.\n", num_threads);
+    cairo_test_log (ctx, "Running with %d threads.\n", num_threads);
 
     pthread = xmalloc (num_threads * sizeof (pthread_t));
 
     for (i = 0; i < num_threads; i++) {
-	err = pthread_create (&pthread[i], NULL, start, NULL);
+	int err = pthread_create (&pthread[i], NULL, start, NULL);
 	if (err) {
-	    cairo_test_log (&ctx, "pthread_create failed: %s\n", strerror(err));
-	    cairo_test_fini (&ctx);
-	    return CAIRO_TEST_FAILURE;
+	    cairo_test_log (ctx, "pthread_create failed: %s\n", strerror(err));
+	    num_threads = i;
+	    status = CAIRO_TEST_FAILURE;
+	    break;
 	}
     }
 
@@ -104,7 +102,12 @@ main (int argc, char *argv[])
 
     free (pthread);
 
-    cairo_test_fini (&ctx);
-
-    return CAIRO_TEST_SUCCESS;
+    return status;
 }
+
+CAIRO_TEST (pthread_show_text,
+	    "Concurrent stress test of the cairo_show_text().",
+	    "thread, text", /* keywords */
+	    NULL, /* requirements */
+	    0, 0,
+	    preamble, NULL)

@@ -25,19 +25,9 @@
 
 #include "cairo-test.h"
 
-#define LINE_WIDTH 	10.
-#define SIZE 		(5 * LINE_WIDTH)
+#define LINE_WIDTH	10.
+#define SIZE		(5 * LINE_WIDTH)
 #define PAD		(2 * LINE_WIDTH)
-
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "caps-joins",
-    "Test caps and joins",
-    3 * (PAD + SIZE) + PAD,
-    PAD + SIZE + PAD,
-    draw
-};
 
 static void
 make_path (cairo_t *cr)
@@ -87,8 +77,11 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (caps_joins,
+	    "Test caps and joins",
+	    "stroke", /* keywords */
+	    NULL, /* requirements */
+	    3 * (PAD + SIZE) + PAD,
+	    PAD + SIZE + PAD,
+	    NULL, draw)
+

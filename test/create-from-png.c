@@ -30,15 +30,6 @@
 #define WIDTH 2
 #define HEIGHT 2
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "create-from-png",
-    "Tests the creation of an image surface from a PNG file",
-    WIDTH, HEIGHT,
-    draw
-};
-
 static cairo_status_t
 no_memory_error (void *closure, unsigned char *data, unsigned int size)
 {
@@ -80,20 +71,17 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
+static cairo_test_status_t
+preamble (cairo_test_context_t *ctx)
 {
-    cairo_test_context_t ctx;
     char *filename;
     cairo_surface_t *surface;
     cairo_status_t status;
     cairo_test_status_t result = CAIRO_TEST_SUCCESS;
 
-    cairo_test_init (&ctx, "create-from-png");
-
     surface = cairo_image_surface_create_from_png ("___THIS_FILE_DOES_NOT_EXIST___");
     if (cairo_surface_status (surface) != CAIRO_STATUS_FILE_NOT_FOUND) {
-	cairo_test_log (&ctx, "Error: expected \"file not found\", but got: %s\n",
+	cairo_test_log (ctx, "Error: expected \"file not found\", but got: %s\n",
 			cairo_status_to_string (cairo_surface_status (surface)));
 	result = CAIRO_TEST_FAILURE;
     }
@@ -101,7 +89,7 @@ main (void)
 
     surface = cairo_image_surface_create_from_png_stream (no_memory_error, NULL);
     if (cairo_surface_status (surface) != CAIRO_STATUS_NO_MEMORY) {
-	cairo_test_log (&ctx, "Error: expected \"out of memory\", but got: %s\n",
+	cairo_test_log (ctx, "Error: expected \"out of memory\", but got: %s\n",
 			cairo_status_to_string (cairo_surface_status (surface)));
 	result = CAIRO_TEST_FAILURE;
     }
@@ -109,19 +97,19 @@ main (void)
 
     surface = cairo_image_surface_create_from_png_stream (read_error, NULL);
     if (cairo_surface_status (surface) != CAIRO_STATUS_READ_ERROR) {
-	cairo_test_log (&ctx, "Error: expected \"read error\", but got: %s\n",
+	cairo_test_log (ctx, "Error: expected \"read error\", but got: %s\n",
 			cairo_status_to_string (cairo_surface_status (surface)));
 	result = CAIRO_TEST_FAILURE;
     }
     cairo_surface_destroy (surface);
 
     /* cheekily test error propagation from the user write funcs as well ... */
-    xasprintf (&filename, "%s/%s", ctx.srcdir,
+    xasprintf (&filename, "%s/%s", ctx->srcdir,
 	       "create-from-png-ref.png");
 
     surface = cairo_image_surface_create_from_png (filename);
     if (cairo_surface_status (surface)) {
-	cairo_test_log (&ctx, "Error reading PNG image %s: %s\n",
+	cairo_test_log (ctx, "Error reading PNG image %s: %s\n",
 			filename,
 			cairo_status_to_string (cairo_surface_status (surface)));
 	result = CAIRO_TEST_FAILURE;
@@ -130,7 +118,7 @@ main (void)
 					       (cairo_write_func_t) no_memory_error,
 					       NULL);
 	if (status != CAIRO_STATUS_NO_MEMORY) {
-	    cairo_test_log (&ctx, "Error: expected \"out of memory\", but got: %s\n",
+	    cairo_test_log (ctx, "Error: expected \"out of memory\", but got: %s\n",
 			    cairo_status_to_string (status));
 	    result = CAIRO_TEST_FAILURE;
 	}
@@ -139,14 +127,14 @@ main (void)
 						    (cairo_write_func_t) read_error,
 						    NULL);
 	if (status != CAIRO_STATUS_READ_ERROR) {
-	    cairo_test_log (&ctx, "Error: expected \"read error\", but got: %s\n",
+	    cairo_test_log (ctx, "Error: expected \"read error\", but got: %s\n",
 			    cairo_status_to_string (status));
 	    result = CAIRO_TEST_FAILURE;
 	}
 
 	/* and check that error has not propagated to the surface */
 	if (cairo_surface_status (surface)) {
-	    cairo_test_log (&ctx, "Error: user write error propagated to surface: %s",
+	    cairo_test_log (ctx, "Error: user write error propagated to surface: %s",
 			    cairo_status_to_string (cairo_surface_status (surface)));
 	    result = CAIRO_TEST_FAILURE;
 	}
@@ -155,32 +143,32 @@ main (void)
     free (filename);
 
     /* check that loading alpha/opaque PNGs generate the correct surfaces */
-    xasprintf (&filename, "%s/%s", ctx.srcdir,
+    xasprintf (&filename, "%s/%s", ctx->srcdir,
 	       "create-from-png-alpha-ref.png");
     surface = cairo_image_surface_create_from_png (filename);
     if (cairo_surface_status (surface)) {
-	cairo_test_log (&ctx, "Error reading PNG image %s: %s\n",
+	cairo_test_log (ctx, "Error reading PNG image %s: %s\n",
 			filename,
 			cairo_status_to_string (cairo_surface_status (surface)));
 	result = CAIRO_TEST_FAILURE;
     } else if (cairo_image_surface_get_format (surface) != CAIRO_FORMAT_ARGB32) {
-	cairo_test_log (&ctx, "Error reading PNG image %s: did not create an ARGB32 image\n",
+	cairo_test_log (ctx, "Error reading PNG image %s: did not create an ARGB32 image\n",
 			filename);
 	result = CAIRO_TEST_FAILURE;
     }
     free (filename);
     cairo_surface_destroy (surface);
 
-    xasprintf (&filename, "%s/%s", ctx.srcdir,
+    xasprintf (&filename, "%s/%s", ctx->srcdir,
 	       "create-from-png-ref.png");
     surface = cairo_image_surface_create_from_png (filename);
     if (cairo_surface_status (surface)) {
-	cairo_test_log (&ctx, "Error reading PNG image %s: %s\n",
+	cairo_test_log (ctx, "Error reading PNG image %s: %s\n",
 			filename,
 			cairo_status_to_string (cairo_surface_status (surface)));
 	result = CAIRO_TEST_FAILURE;
     } else if (cairo_image_surface_get_format (surface) != CAIRO_FORMAT_RGB24) {
-	cairo_test_log (&ctx, "Error reading PNG image %s: did not create an RGB24 image\n",
+	cairo_test_log (ctx, "Error reading PNG image %s: did not create an RGB24 image\n",
 			filename);
 	result = CAIRO_TEST_FAILURE;
     }
@@ -188,32 +176,32 @@ main (void)
     cairo_surface_destroy (surface);
 
     /* check paletted PNGs */
-    xasprintf (&filename, "%s/%s", ctx.srcdir,
+    xasprintf (&filename, "%s/%s", ctx->srcdir,
 	       "create-from-png-indexed-alpha-ref.png");
     surface = cairo_image_surface_create_from_png (filename);
     if (cairo_surface_status (surface)) {
-	cairo_test_log (&ctx, "Error reading PNG image %s: %s\n",
+	cairo_test_log (ctx, "Error reading PNG image %s: %s\n",
 			filename,
 			cairo_status_to_string (cairo_surface_status (surface)));
 	result = CAIRO_TEST_FAILURE;
     } else if (cairo_image_surface_get_format (surface) != CAIRO_FORMAT_ARGB32) {
-	cairo_test_log (&ctx, "Error reading PNG image %s: did not create an ARGB32 image\n",
+	cairo_test_log (ctx, "Error reading PNG image %s: did not create an ARGB32 image\n",
 			filename);
 	result = CAIRO_TEST_FAILURE;
     }
     free (filename);
     cairo_surface_destroy (surface);
 
-    xasprintf (&filename, "%s/%s", ctx.srcdir,
+    xasprintf (&filename, "%s/%s", ctx->srcdir,
 	       "create-from-png-indexed-ref.png");
     surface = cairo_image_surface_create_from_png (filename);
     if (cairo_surface_status (surface)) {
-	cairo_test_log (&ctx, "Error reading PNG image %s: %s\n",
+	cairo_test_log (ctx, "Error reading PNG image %s: %s\n",
 			filename,
 			cairo_status_to_string (cairo_surface_status (surface)));
 	result = CAIRO_TEST_FAILURE;
     } else if (cairo_image_surface_get_format (surface) != CAIRO_FORMAT_RGB24) {
-	cairo_test_log (&ctx, "Error reading PNG image %s: did not create an RGB24 image\n",
+	cairo_test_log (ctx, "Error reading PNG image %s: did not create an RGB24 image\n",
 			filename);
 	result = CAIRO_TEST_FAILURE;
     }
@@ -221,42 +209,44 @@ main (void)
     cairo_surface_destroy (surface);
 
     /* check grayscale PNGs */
-    xasprintf (&filename, "%s/%s", ctx.srcdir,
+    xasprintf (&filename, "%s/%s", ctx->srcdir,
 	       "create-from-png-gray-alpha-ref.png");
     surface = cairo_image_surface_create_from_png (filename);
     if (cairo_surface_status (surface)) {
-	cairo_test_log (&ctx, "Error reading PNG image %s: %s\n",
+	cairo_test_log (ctx, "Error reading PNG image %s: %s\n",
 			filename,
 			cairo_status_to_string (cairo_surface_status (surface)));
 	result = CAIRO_TEST_FAILURE;
     } else if (cairo_image_surface_get_format (surface) != CAIRO_FORMAT_ARGB32) {
-	cairo_test_log (&ctx, "Error reading PNG image %s: did not create an ARGB32 image\n",
+	cairo_test_log (ctx, "Error reading PNG image %s: did not create an ARGB32 image\n",
 			filename);
 	result = CAIRO_TEST_FAILURE;
     }
     free (filename);
     cairo_surface_destroy (surface);
 
-    xasprintf (&filename, "%s/%s", ctx.srcdir,
+    xasprintf (&filename, "%s/%s", ctx->srcdir,
 	       "create-from-png-gray-ref.png");
     surface = cairo_image_surface_create_from_png (filename);
     if (cairo_surface_status (surface)) {
-	cairo_test_log (&ctx, "Error reading PNG image %s: %s\n",
+	cairo_test_log (ctx, "Error reading PNG image %s: %s\n",
 			filename,
 			cairo_status_to_string (cairo_surface_status (surface)));
 	result = CAIRO_TEST_FAILURE;
     } else if (cairo_image_surface_get_format (surface) != CAIRO_FORMAT_RGB24) {
-	cairo_test_log (&ctx, "Error reading PNG image %s: did not create an RGB24 image\n",
+	cairo_test_log (ctx, "Error reading PNG image %s: did not create an RGB24 image\n",
 			filename);
 	result = CAIRO_TEST_FAILURE;
     }
     free (filename);
     cairo_surface_destroy (surface);
 
-    cairo_test_fini (&ctx);
-
-    if (result != CAIRO_TEST_SUCCESS)
-	return result;
-
-    return cairo_test (&test);
+    return result;
 }
+
+CAIRO_TEST (create_from_png,
+	    "Tests the creation of an image surface from a PNG file",
+	    "png", /* keywords */
+	    NULL, /* requirements */
+	    WIDTH, HEIGHT,
+	    preamble, draw)

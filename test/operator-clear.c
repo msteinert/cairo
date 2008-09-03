@@ -142,15 +142,6 @@ static void (* const draw_funcs[])(cairo_t *cr, int x, int y) = {
 #define IMAGE_WIDTH (ARRAY_SIZE (pattern_funcs) * (WIDTH + PAD) + PAD)
 #define IMAGE_HEIGHT (ARRAY_SIZE (draw_funcs) * (HEIGHT + PAD) + PAD)
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "operator-clear",
-    "Test of CAIRO_OPERATOR_CLEAR",
-    IMAGE_WIDTH, IMAGE_HEIGHT,
-    draw
-};
-
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
@@ -198,8 +189,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (operator_clear,
+	    "Test of CAIRO_OPERATOR_CLEAR",
+	    "XFAIL=svg12 operator", /* keywords */
+	    NULL, /* requirements */
+	    IMAGE_WIDTH, IMAGE_HEIGHT,
+	    NULL, draw)

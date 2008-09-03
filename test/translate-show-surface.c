@@ -43,15 +43,6 @@
 
 #include "cairo-test.h"
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "translate-show-surface",
-    "Tests calls to cairo_show_surface after cairo_translate",
-    2, 2,
-    draw
-};
-
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
@@ -79,8 +70,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (translate_show_surface,
+	    "Tests calls to cairo_show_surface after cairo_translate",
+	    "transform", /* keywords */
+	    NULL, /* requirements */
+	    2, 2,
+	    NULL, draw)

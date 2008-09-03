@@ -72,3 +72,60 @@ AC_CHECK_FUNCS([vasnprintf link ctime_r drand48 flockfile])
 dnl check for win32 headers (this detects mingw as well)
 AC_CHECK_HEADERS([windows.h], have_windows=yes, have_windows=no)
 
+
+dnl Possible headers for mkdir
+AC_CHECK_HEADERS([sys/stat.h io.h])
+AC_CHECK_FUNC(mkdir,
+	      [AC_MSG_CHECKING([mkdir variant])
+	      mkdir_variant="unknown"
+	      save_CFLAGS="$CFLAGS"
+	      CFLAGS="-Werror -Wall $CFLAGS" # non-gcc compilers?
+	      AC_TRY_COMPILE([
+#ifdef HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
+#ifdef HAVE_IO_H
+#include <io.h>
+#endif
+		      ],
+		      [mkdir ("hello.world", 0777)],
+		      mkdir_variant="mkdir(path, mode)",
+		      [AC_TRY_COMPILE([
+#ifdef HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
+#ifdef HAVE_IO_H
+#include <io.h>
+#endif
+			      ],
+			      [mkdir ("hello.world")],
+			      mkdir_variant="mkdir(path)")])
+	      AC_MSG_RESULT([$mkdir_variant])
+	      CFLAGS="$save_CFLAGS"
+	      if test "x$mkdir_variant" = "xmkdir(path, mode)"; then
+		  AC_DEFINE(HAVE_MKDIR, 2,
+			    [Define to non-zero if your system has mkdir, and to 2 if your version of mkdir requires a mode parameter])
+	      else
+		  AC_DEFINE(HAVE_MKDIR, 1,
+			    [Define to non-zero if your system has mkdir, and to 2 if your version of mkdir requires a mode parameter])
+	      fi])
+
+# check for GNU-extensions to fenv
+AC_CHECK_HEADER(fenv.h, [AC_CHECK_FUNCS(feenableexcept fedisableexcept)])
+
+dnl ===========================================================================
+dnl
+dnl Test for the tools required for building one big test binary
+dnl
+AC_MSG_CHECKING([for the constructor attribute])
+cairo_has_constructor_attribute="no"
+AC_TRY_LINK([static void __attribute__((constructor)) constructor(void) {}], [],
+    cairo_has_constructor_attribute="yes"
+  )
+AC_MSG_RESULT([$cairo_has_constructor_attribute])
+if test "x$cairo_has_constructor_attribute" = "xyes"; then
+    AC_DEFINE(CAIRO_HAS_CONSTRUCTOR_ATTRIBUTE, 1, [Define to 1 if your compiler supports __attribute__(constructor)])
+fi
+AM_CONDITIONAL(CAIRO_HAS_CONSTRUCTOR_ATTRIBUTE, test "x$cairo_has_constructor_attribute" = "xyes")
+
+AC_CHECK_FUNCS(fork waitpid raise)

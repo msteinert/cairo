@@ -26,15 +26,6 @@
 #include <stdlib.h>
 #include "cairo-test.h"
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "copy-path",
-    "Tests calls to path_data functions: cairo_copy_path, cairo_copy_path_flat, and cairo_append_path",
-    45, 53,
-    draw
-};
-
 static void
 scale_by_two (double *x, double *y)
 {
@@ -200,17 +191,14 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
+static cairo_test_status_t
+preamble (cairo_test_context_t *ctx)
 {
-    cairo_test_context_t ctx;
     cairo_t *cr;
     cairo_path_data_t data;
     cairo_path_t path;
     cairo_surface_t *surface;
     cairo_status_t status;
-
-    cairo_test_init (&ctx, "copy-path");
 
     surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
 
@@ -221,7 +209,6 @@ main (void)
     cairo_destroy (cr);
     if (status != CAIRO_STATUS_NULL_POINTER) {
 	cairo_surface_destroy (surface);
-	cairo_test_fini (&ctx);
 	return CAIRO_TEST_FAILURE;
     }
 
@@ -232,7 +219,6 @@ main (void)
     cairo_destroy (cr);
     if (status != CAIRO_STATUS_INVALID_STATUS) {
 	cairo_surface_destroy (surface);
-	cairo_test_fini (&ctx);
 	return CAIRO_TEST_FAILURE;
     }
 
@@ -243,7 +229,6 @@ main (void)
     cairo_destroy (cr);
     if (status != CAIRO_STATUS_NO_MEMORY) {
 	cairo_surface_destroy (surface);
-	cairo_test_fini (&ctx);
 	return CAIRO_TEST_FAILURE;
     }
 
@@ -256,7 +241,6 @@ main (void)
     cairo_destroy (cr);
     if (status != CAIRO_STATUS_SUCCESS) {
 	cairo_surface_destroy (surface);
-	cairo_test_fini (&ctx);
 	return CAIRO_TEST_FAILURE;
     }
 
@@ -269,7 +253,6 @@ main (void)
     cairo_destroy (cr);
     if (status != CAIRO_STATUS_NULL_POINTER) {
 	cairo_surface_destroy (surface);
-	cairo_test_fini (&ctx);
 	return CAIRO_TEST_FAILURE;
     }
 
@@ -284,7 +267,6 @@ main (void)
     cairo_destroy (cr);
     if (status != CAIRO_STATUS_INVALID_PATH_DATA) {
 	cairo_surface_destroy (surface);
-	cairo_test_fini (&ctx);
 	return CAIRO_TEST_FAILURE;
     }
 
@@ -296,12 +278,17 @@ main (void)
     cairo_destroy (cr);
     if (status != CAIRO_STATUS_SUCCESS) {
 	cairo_surface_destroy (surface);
-	cairo_test_fini (&ctx);
 	return CAIRO_TEST_FAILURE;
     }
 
     cairo_surface_destroy (surface);
-    cairo_test_fini (&ctx);
 
-    return cairo_test (&test);
+    return CAIRO_TEST_SUCCESS;
 }
+
+CAIRO_TEST (copy_path,
+	    "Tests calls to path_data functions: cairo_copy_path, cairo_copy_path_flat, and cairo_append_path",
+	    "path", /* keywords */
+	    NULL, /* requirements */
+	    45, 53,
+	    preamble, draw)

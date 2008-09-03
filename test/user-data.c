@@ -25,7 +25,6 @@
 
 #include "cairo-test.h"
 
-#include <cairo.h>
 #include <assert.h>
 
 static void
@@ -40,15 +39,12 @@ destroy_data2 (void *p)
     *(int *) p = 2;
 }
 
-int
-main (void)
+static cairo_test_status_t
+preamble (cairo_test_context_t *ctx)
 {
-    cairo_test_context_t ctx;
     cairo_surface_t *surface;
     static const cairo_user_data_key_t key1, key2;
     int data1, data2;
-
-    cairo_test_init (&ctx, "user-data");
 
     data1 = 0;
     data2 = 0;
@@ -82,7 +78,12 @@ main (void)
     assert (data1 == 1);
     assert (data2 == 2);
 
-    cairo_test_fini (&ctx);
-
     return CAIRO_TEST_SUCCESS;
 }
+
+CAIRO_TEST (user_data,
+	    "Test setting and getting random bits of user data.",
+	    "api", /* keywords */
+	    NULL, /* requirements */
+	    0, 0,
+	    preamble, NULL)

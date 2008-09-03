@@ -295,10 +295,9 @@ generate_reference (double ppi_x, double ppi_y, const char *filename)
 }
 #endif
 
-int
-main (void)
+static cairo_test_status_t
+preamble (cairo_test_context_t *ctx)
 {
-    cairo_test_context_t ctx;
     cairo_t *cr;
     cairo_test_status_t ret = CAIRO_TEST_UNTESTED;
     double ppi[] = { 600., 300., 150., 75., 72, 37.5 };
@@ -306,8 +305,6 @@ main (void)
     int ppi_x, ppi_y, num_ppi;
 
     num_ppi = sizeof (ppi) / sizeof (ppi[0]);
-
-    cairo_test_init (&ctx, "fallback-resolution");
 
 #if GENERATE_REFERENCE
     for (ppi_x = 0; ppi_x < num_ppi; ppi_x++) {
@@ -321,8 +318,8 @@ main (void)
     }
 #endif
 
-    for (i = 0; i < ctx.num_targets; i++) {
-	const cairo_boilerplate_target_t *target = ctx.targets_to_test[i];
+    for (i = 0; i < ctx->num_targets; i++) {
+	const cairo_boilerplate_target_t *target = ctx->targets_to_test[i];
 	cairo_surface_t *surface = NULL;
 	char *base_name;
 	void *closure;
@@ -381,7 +378,7 @@ main (void)
 						    0,
 						    &closure);
 		if (surface == NULL || cairo_surface_status (surface)) {
-		    cairo_test_log (&ctx, "Failed to generate surface: %s-%s\n",
+		    cairo_test_log (ctx, "Failed to generate surface: %s-%s\n",
 				    target->name,
 				    format);
 		    free (base_name);
@@ -389,7 +386,7 @@ main (void)
 		    continue;
 		}
 
-		cairo_test_log (&ctx,
+		cairo_test_log (ctx,
 				"Testing fallback-resolution %gx%g with %s target\n",
 				ppi[ppi_x], ppi[ppi_y], target->name);
 		printf ("%s:\t", base_name);
@@ -438,12 +435,12 @@ main (void)
 
 		pass = FALSE;
 		if (status) {
-		    cairo_test_log (&ctx, "Error: Failed to create target surface: %s\n",
+		    cairo_test_log (ctx, "Error: Failed to create target surface: %s\n",
 				    cairo_status_to_string (status));
 		    ret = CAIRO_TEST_FAILURE;
 		} else {
 		    /* extract the image and compare it to our reference */
-		    if (! check_result (&ctx, target, test_name, base_name, surface))
+		    if (! check_result (ctx, target, test_name, base_name, surface))
 			ret = CAIRO_TEST_FAILURE;
 		    else
 			pass = TRUE;
@@ -464,7 +461,12 @@ main (void)
 	}
     }
 
-    cairo_test_fini (&ctx);
-
     return ret;
 }
+
+CAIRO_TEST (fallback_resolution,
+	    "Check handling of fallback resolutions",
+	    "fallback", /* keywords */
+	    NULL, /* requirements */
+	    0, 0,
+	    preamble, NULL)

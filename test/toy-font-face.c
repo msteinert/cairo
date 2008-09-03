@@ -34,15 +34,12 @@
 #include <assert.h>
 #include <string.h>
 
-int
-main (void)
+static cairo_test_status_t
+preamble (cairo_test_context_t *ctx)
 {
-    cairo_test_context_t ctx;
     cairo_t *cr;
     cairo_surface_t *surface;
     cairo_font_face_t *font_face;
-
-    cairo_test_init (&ctx, "toy-font-face");
 
     surface = cairo_image_surface_create (CAIRO_FORMAT_RGB24, 0, 0);
     cr = cairo_create (surface);
@@ -120,7 +117,12 @@ main (void)
 
     cairo_destroy (cr);
 
-    cairo_test_fini (&ctx);
-
     return CAIRO_TEST_SUCCESS;
 }
+
+CAIRO_TEST (toy_font_face,
+	    "Check the construction of 'toy' font faces",
+	    "font, api", /* keywords */
+	    NULL, /* requirements */
+	    0, 0,
+	    preamble, NULL)

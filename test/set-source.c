@@ -25,15 +25,6 @@
 
 #include "cairo-test.h"
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "set-source",
-    "Tests calls to various set_source functions",
-    5, 5,
-    draw
-};
-
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
@@ -81,8 +72,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (set_source,
+	    "Tests calls to various set_source functions",
+	    "api", /* keywords */
+	    NULL, /* requirements */
+	    5, 5,
+	    NULL, draw)

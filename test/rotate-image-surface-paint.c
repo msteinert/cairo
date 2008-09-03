@@ -26,18 +26,8 @@
 
 #include "cairo-test.h"
 
-static cairo_test_draw_function_t draw;
-
 #define SIZE 20
 #define PAD 2
-
-static const cairo_test_t test = {
-    "rotate-image-surface-paint",
-    "Test call sequence: image_surface_create; rotate; set_source_surface; paint"
-    "\nThis test is known to fail on the ps backend currently",
-    SIZE, SIZE,
-    draw
-};
 
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
@@ -92,8 +82,10 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (rotate_image_surface_paint,
+	    "Test call sequence: image_surface_create; rotate; set_source_surface; paint"
+	    "\nThis test is known to fail on the ps backend currently",
+	    "image, transform, paint", /* keywords */
+	    NULL, /* requirements */
+	    SIZE, SIZE,
+	    NULL, draw)

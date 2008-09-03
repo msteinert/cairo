@@ -79,15 +79,6 @@
 #define TEXT_SIZE 12
 #define NUM_GLYPHS 65535
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "show-glyphs-many",
-    "Test that cairo_show_glyphs works when handed 'many' glyphs",
-    9, 11,
-    draw
-};
-
 static cairo_test_status_t
 get_glyph (cairo_t *cr, const char *utf8, cairo_glyph_t *glyph)
 {
@@ -169,8 +160,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (show_glyphs_many,
+	    "Test that cairo_show_glyphs works when handed 'many' glyphs",
+	    "text, stress", /* keywords */
+	    NULL, /* requirements */
+	    9, 11,
+	    NULL, draw)

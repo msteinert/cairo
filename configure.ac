@@ -23,6 +23,7 @@ m4_include(build/configure.ac.system)	dnl checks for system functions, headers, 
 m4_include(build/configure.ac.features)	dnl macros for backend/feature handling
 m4_include(build/configure.ac.warnings)	dnl checks for compiler warning
 m4_include(build/configure.ac.analysis)	dnl checks for analysis tools (lcov, etc)
+m4_include(build/configure.ac.noversion) dnl disable builtin libtool versioning
 AC_CACHE_SAVE
 
 dnl ===========================================================================
@@ -456,6 +457,21 @@ CAIRO_ENABLE_SURFACE_BACKEND(image, image, always, [
 dnl ===========================================================================
 
 CAIRO_ENABLE_FONT_BACKEND(user, user, always)
+
+dnl ===========================================================================
+dnl Default to quick testing during development, but force a full test before
+dnl release
+
+AC_ARG_ENABLE(full-testing,
+  AS_HELP_STRING([--enable-full-testing],
+                 [Sets the test suite to perform full testing by default, which
+		  will dramatically slow down make check, but is a
+		  *requirement* before release.]), [
+if test "x$enableval" = "xyes"; then
+    CAIRO_TEST_MODE=full
+    AC_SUBST(CAIRO_TEST_MODE)
+fi
+])
 
 dnl ===========================================================================
 dnl Build the external converter if we have any of the test backends

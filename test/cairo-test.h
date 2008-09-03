@@ -29,6 +29,8 @@
 #define CAIRO_BOILERPLATE_LOG(...) cairo_test_log (__VA_ARGS__)
 #include "cairo-boilerplate.h"
 
+#include <stdarg.h>
+
 CAIRO_BEGIN_DECLS
 
 #if   HAVE_STDINT_H
@@ -70,31 +72,42 @@ typedef enum cairo_test_status {
 typedef struct _cairo_test_context cairo_test_context_t;
 typedef struct _cairo_test cairo_test_t;
 
-typedef cairo_test_status_t  (cairo_test_draw_function_t) (cairo_t *cr, int width, int height);
+typedef cairo_test_status_t
+(cairo_test_preamble_function_t) (cairo_test_context_t *ctx);
+
+typedef cairo_test_status_t
+(cairo_test_draw_function_t) (cairo_t *cr, int width, int height);
 
 struct _cairo_test {
     const char *name;
     const char *description;
+    const char *keywords;
+    const char *requirements;
     int width;
     int height;
+    cairo_test_preamble_function_t *preamble;
     cairo_test_draw_function_t *draw;
 };
 
 /* The standard test interface which works by examining result image.
  *
- * cairo_test() accepts a test struct which will be called once for
- * each testable backend. The following checks will be performed for
- * each backend:
+ * CAIRO_TEST() constructs a test which will be called once before (the
+ * preamble callback), and then once for each testable backend (the draw
+ * callback). The following checks will be performed for each backend:
  *
- * 1) If draw() does not return CAIRO_TEST_SUCCESS then this backend
+ * 1) If preamble() returns CAIRO_TEST_UNTESTED, the test is skipped.
+ *
+ * 2) If preamble() does not return CAIRO_TEST_SUCCESS, the test fails.
+ *
+ * 3) If draw() does not return CAIRO_TEST_SUCCESS then this backend
  *    fails.
  *
- * 2) Otherwise, if cairo_status(cr) indicates an error then this
+ * 4) Otherwise, if cairo_status(cr) indicates an error then this
  *    backend fails.
  *
- * 3) Otherwise, if the image size is 0, then this backend passes.
+ * 5) Otherwise, if the image size is 0, then this backend passes.
  *
- * 4) Otherwise, if every channel of every pixel exactly matches the
+ * 6) Otherwise, if every channel of every pixel exactly matches the
  *    reference image then this backend passes. If not, this backend
  *    fails.
  *
@@ -102,15 +115,44 @@ struct _cairo_test {
  * one backend that is tested and if all tested backend pass according
  * to the four criteria above.
  */
-cairo_test_status_t
-cairo_test (const cairo_test_t *test);
+#if CAIRO_HAS_CONSTRUCTOR_ATTRIBUTE
+#define CAIRO_TEST(name, description, keywords, requirements, width, height, preamble, draw) \
+static void __attribute__((constructor)) _register_##name (void) \
+{\
+    static const cairo_test_t test = { \
+	#name, description, \
+	keywords, requirements, \
+	width, height, \
+	preamble, draw \
+    }; \
+    cairo_test_register (&test); \
+}
+#else
+#define CAIRO_TEST(name, description, keywords, requirements, width, height, preamble, draw) \
+void _register_##name (void); \
+void _register_##name (void) { \
+    static const cairo_test_t test = { \
+	#name, description, \
+	keywords, requirements, \
+	width, height, \
+	preamble, draw \
+    }; \
+    cairo_test_register (&test); \
+}
+#endif
+
+void
+cairo_test_register (const cairo_test_t *test);
 
 /* The full context for the test.
- * For ordinary tests (using cairo_test()) the context is passed to the draw
- * routine via user_data on the cairo_t.  The reason why the context is not
- * passed as an explicit parameter is that it is rarely required by the test
- * itself and by removing the parameter we can keep the draw routines simple
- * and serve as example code.
+ * For ordinary tests (using the CAIRO_TEST()->draw interface) the context
+ * is passed to the draw routine via user_data on the cairo_t.
+ * The reason why the context is not passed as an explicit parameter is that
+ * it is rarely required by the test itself and by removing the parameter
+ * we can keep the draw routines simple and serve as example code.
+ *
+ * In contrast, for the preamble phase the context is passed as the only
+ * parameter.
  */
 struct _cairo_test_context {
     const cairo_test_t *test;
@@ -128,6 +170,7 @@ struct _cairo_test_context {
     size_t num_targets;
     cairo_bool_t limited_targets;
     cairo_boilerplate_target_t **targets_to_test;
+    cairo_bool_t own_targets;
 
     int malloc_failure;
     int last_fault_count;
@@ -140,35 +183,20 @@ const cairo_test_context_t *
 cairo_test_get_context (cairo_t *cr);
 
 
-/* cairo_test_init(), cairo_test_log(), and cairo_test_fini() exist to
- * help in writing tests for which cairo_test() is not appropriate for
- * one reason or another. For example, some tests might not be doing
- * any drawing at all, or may need to create their own cairo_t rather
- * than be handed one by cairo_test.
- */
-
-
-/* Initialize test-specific resources, (log files, etc.) */
-void
-cairo_test_init (cairo_test_context_t *ctx,
-		 const char *test_name);
-
-/* Finalize test-specific resource. */
-void
-cairo_test_fini (cairo_test_context_t *ctx);
-
-
 /* Print a message to the log file, ala printf. */
 void
 cairo_test_log (const cairo_test_context_t *ctx,
 	        const char *fmt, ...) CAIRO_BOILERPLATE_PRINTF_FORMAT(2, 3);
+void
+cairo_test_logv (const cairo_test_context_t *ctx,
+	        const char *fmt, va_list ap) CAIRO_BOILERPLATE_PRINTF_FORMAT(2, 0);
 
 void
 cairo_test_log_path (const cairo_test_context_t *ctx,
 		     const cairo_path_t *path);
 
 /* Helper functions that take care of finding source images even when
- * building in a non-srcdir manner, (ie. the tests will be run in a
+ * building in a non-srcdir manner, (i.e. the tests will be run in a
  * directory that is different from the one where the source image
  * exists). */
 cairo_surface_t *
@@ -187,6 +215,9 @@ cairo_test_paint_checkered (cairo_t *cr);
 cairo_bool_t
 cairo_test_is_target_enabled (const cairo_test_context_t *ctx,
 	                      const char *target);
+
+char *
+cairo_test_get_name (const cairo_test_t *test);
 
 cairo_bool_t
 cairo_test_malloc_failure (const cairo_test_context_t *ctx,

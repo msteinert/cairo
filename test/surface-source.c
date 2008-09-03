@@ -25,7 +25,6 @@
 
 #include "cairo-test.h"
 
-static cairo_test_draw_function_t draw;
 static cairo_surface_t *create_source_surface (int size);
 
 /* We use a relatively large source to exercise bug:
@@ -35,13 +34,7 @@ static cairo_surface_t *create_source_surface (int size);
  */
 #define SOURCE_SIZE 2000
 #define INTER_SIZE 512
-
-static const cairo_test_t test = {
-    NAME "-surface-source",
-    "Test using various surfaces as the source",
-    90, 90,
-    draw
-};
+#define SIZE 90
 
 static void
 draw_pattern (cairo_surface_t **surface_inout, int surface_size)
@@ -117,8 +110,8 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
+static cairo_test_status_t
+preamble (cairo_test_context_t *ctx)
 {
     cairo_surface_t *surface;
 
@@ -128,5 +121,5 @@ main (void)
 
     cairo_surface_destroy (surface);
 
-    return cairo_test (&test);
+    return CAIRO_TEST_SUCCESS;
 }

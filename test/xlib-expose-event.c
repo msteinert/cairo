@@ -46,7 +46,7 @@
 #define SIZE 160
 #define NLOOPS 10
 
-static const char	png_filename[]	= "romedalen.png";
+static const char *png_filename = "romedalen.png";
 
 static cairo_bool_t
 check_visual (Display *dpy)
@@ -203,10 +203,9 @@ compare (const cairo_test_context_t *ctx, cairo_surface_t *surface)
 	CAIRO_TEST_SUCCESS : CAIRO_TEST_FAILURE;
 }
 
-int
-main (void)
+static cairo_test_status_t
+preamble (cairo_test_context_t *ctx)
 {
-    cairo_test_context_t ctx;
     Display *dpy;
     Drawable drawable;
     int screen;
@@ -215,18 +214,17 @@ main (void)
     int i, j;
     cairo_test_status_t result = CAIRO_TEST_UNTESTED;
 
-    cairo_test_init (&ctx, "xlib-expose-event");
-    if (! cairo_test_is_target_enabled (&ctx, "xlib"))
+    if (! cairo_test_is_target_enabled (ctx, "xlib"))
 	goto CLEANUP_TEST;
 
     dpy = XOpenDisplay (NULL);
     if (dpy == NULL) {
-	cairo_test_log (&ctx, "xlib-expose-event: Cannot open display, skipping\n");
+	cairo_test_log (ctx, "xlib-expose-event: Cannot open display, skipping\n");
 	goto CLEANUP_TEST;
     }
 
     if (! check_visual (dpy)) {
-	cairo_test_log (&ctx, "xlib-expose-event: default visual is not RGB24 or BGR24, skipping\n");
+	cairo_test_log (ctx, "xlib-expose-event: default visual is not RGB24 or BGR24, skipping\n");
 	goto CLEANUP_DISPLAY;
     }
 
@@ -238,7 +236,7 @@ main (void)
 					 DefaultVisual (dpy, screen),
 					 SIZE, SIZE);
     clear (surface);
-    draw (&ctx, surface, NULL, 0);
+    draw (ctx, surface, NULL, 0);
     for (i = 0; i < NLOOPS; i++) {
 	for (j = 0; j < NLOOPS; j++) {
 	    region[0].x = i * SIZE / NLOOPS;
@@ -261,11 +259,11 @@ main (void)
 	    region[3].width = SIZE / 4;
 	    region[3].height = SIZE / 4;
 
-	    draw (&ctx, surface, region, 4);
+	    draw (ctx, surface, region, 4);
 	}
     }
 
-    result = compare (&ctx, surface);
+    result = compare (ctx, surface);
 
     cairo_surface_destroy (surface);
 
@@ -275,8 +273,12 @@ main (void)
     XCloseDisplay (dpy);
 
   CLEANUP_TEST:
-    cairo_test_fini (&ctx);
-
     return result;
 }
 
+CAIRO_TEST (xlib_expose_event,
+	    "Emulate a typical expose event",
+	    "xlib", /* keywords */
+	    NULL, /* requirements */
+	    0, 0,
+	    preamble, NULL)

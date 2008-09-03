@@ -33,15 +33,6 @@
 #define HEIGHT 200
 #define TEXT_SIZE 30
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "ft-text-vertical-layout-type3",
-    "Tests text rendering for vertical layout with TrueType fonts",
-    WIDTH, HEIGHT,
-    draw
-};
-
 static cairo_status_t
 create_scaled_font (cairo_t * cr,
 		    cairo_scaled_font_t **out)
@@ -168,8 +159,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (ft_text_vertical_layout_type3,
+	    "Tests text rendering for vertical layout with TrueType fonts",
+	    "ft, text", /* keywords */
+	    NULL, /* requirements */
+	    WIDTH, HEIGHT,
+	    NULL, draw)

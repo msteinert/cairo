@@ -24,15 +24,6 @@
 
 #define SIZE 10
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "rel-path",
-    "Tests calls to various relative path functions",
-    SIZE, SIZE,
-    draw
-};
-
 static cairo_status_t
 invalid_rel_move_to (cairo_surface_t *target)
 {
@@ -117,8 +108,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (rel_path,
+	    "Tests calls to various relative path functions",
+	    "path", /* keywords */
+	    NULL, /* requirements */
+	    SIZE, SIZE,
+	    NULL, draw)

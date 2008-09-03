@@ -34,15 +34,6 @@
 #define IMAGE_WIDTH  (PAD + STEPS * (STAMP_WIDTH  + PAD) + PAD)
 #define IMAGE_HEIGHT (PAD + STEPS * (STAMP_HEIGHT + PAD) + PAD)
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "filter-nearest-offset",
-    "Test sampling offset of CAIRO_FILTER_NEAREST",
-    IMAGE_WIDTH, IMAGE_HEIGHT,
-    draw
-};
-
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
@@ -108,8 +99,10 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (filter_nearest_offset,
+	    "Test sampling offset of CAIRO_FILTER_NEAREST"
+	    "\nwrong sampling location for nearest-neighbor filter in libpixman and Render",
+	    "filter", /* keywords */
+	    NULL, /* requirements */
+	    IMAGE_WIDTH, IMAGE_HEIGHT,
+	    NULL, draw)

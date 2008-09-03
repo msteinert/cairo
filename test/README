@@ -18,7 +18,16 @@ visually see any failed renderings alongside the corresponding
 reference image, (and a diff image as well).
 
 The test suite needs to be run before any code is committed and before
-any release. See below for hints and rules governing the use of the suite:
+any release. See below for hints and rules governing the use of the suite.
+
+The test suite is built as a single binary, which allows you to choose
+individual or categories of tests to run. For example, if you want to
+run all text related tests you can use:
+    ./cairo-test-suite text
+Or if you want to check the current status of known failures:
+    ./cairo-test-suite XFAIL
+This binary should be backwards-compatible with all library versions,
+allowing you to compare current versus past behaviour for any test.
 
 Tailoring tests running
 -----------------------
@@ -29,10 +38,10 @@ to circumvent the "pass" requirements listed below.
 To limit the backends that the tests are run against, use the
 TARGETS make variable, that can also be passed to make.
 It should contain a (space-, comma-, etc-separated) list of backends to test.
-To limit the tests run, use the TESTS make variable, which should be a
-space-separated list of tests to run.  For example:
+To limit the tests run, use the CAIRO_TESTS environment variable, which
+should be a space-separated list of tests to run.  For example:
 
-  make test TARGETS=image,ps3 TESTS="zero-alpha"
+  CAIRO_TEST="zero-alpha" make test TARGETS=image,ps
 
 Another very handy mechanism when trying to fix bugs is:
 
@@ -53,19 +62,19 @@ Running tests under modified enviroments or tools
 To run tests under a tool like gdb, one can use the run target and
 the TOOL variable.  For example:
 
-  make run TOOL=gdb TARGETS=pdf TESTS=user-font
+  CAIRO_TESTS=user-font make run TOOL=gdb TARGETS=pdf
 
 If you want to run under valgrind, there is a specific target for that
 that also sets a bunch of useful valgrind options.  Try:
 
-  make check-valgrind TESTS=user-font
+  CAIRO_TESTS=user-font make check-valgrind
 
 You can run tests under a modified environment you can use the ENV
 make variable.  However, that environment will also affect the libtool
 wrapper of the tests.  To only affect the actual test binaries, pass
 such environment as TOOL:
 
-  make run TOOL="LD_PRELOAD=/path/to/something.so" TEST=user-font
+  CAIRO_TESTS=user-font make run TOOL="LD_PRELOAD=/path/to/something.so"
 
 Getting the elusive zero failures
 ---------------------------------
@@ -211,7 +220,7 @@ variable in Makefile.am.
 Before releasing
 ----------------
 All tests should return a result of PASS for all supported (those enabled by
-default) backends,  meaning all known bugs are fixed, resulting in the happy
+default) backends, meaning all known bugs are fixed, resulting in the happy
 message:
 
 	All XX tests passed
@@ -260,10 +269,9 @@ fill-alpha-pattern
 gradient-alpha
 gradient-constant-alpha
 linear-gradient
-trap-clip
-linear-gradient
 linear-gradient-reflect
 radial-gradient
+trap-clip
 
 Poppler renders patterned text as black
 https://bugs.freedesktop.org/show_bug.cgi?id=14577

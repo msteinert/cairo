@@ -26,8 +26,6 @@
 
 #include "cairo-test.h"
 
-static cairo_test_draw_function_t draw;
-
 #define PAT_WIDTH  120
 #define PAT_HEIGHT 120
 #define SIZE (PAT_WIDTH*2)
@@ -39,13 +37,6 @@ static cairo_test_draw_function_t draw;
 /* This test is designed to test painting a meta surface pattern with
  * CAIRO_EXTEND_NONE and a non identity pattern matrix.
  */
-
-static const cairo_test_t test = {
-    "meta-surface-pattern",
-    "Paint meta surface pattern with non identity pattern matrix",
-    WIDTH, HEIGHT,
-    draw
-};
 
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
@@ -122,8 +113,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (meta_surface_pattern,
+	    "Paint meta surface pattern with non identity pattern matrix",
+	    "meta", /* keywords */
+	    NULL, /* requirements */
+	    WIDTH, HEIGHT,
+	    NULL, draw)

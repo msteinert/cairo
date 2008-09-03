@@ -29,15 +29,6 @@
 #define PAD 4
 #define TEXT "text"
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "font-matrix-translation",
-    "Test that translation in a font matrix can be used to offset a string",
-    38, 34,
-    draw
-};
-
 static cairo_bool_t
 text_extents_equal (const cairo_text_extents_t *A,
 	            const cairo_text_extents_t *B)
@@ -142,8 +133,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (font_matrix_translation,
+	    "Test that translation in a font matrix can be used to offset a string",
+	    "font", /* keywords */
+	    NULL, /* requirements */
+	    38, 34,
+	    NULL, draw)

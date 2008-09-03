@@ -149,6 +149,7 @@ typedef void
 typedef struct _cairo_boilerplate_target
 {
     const char					*name;
+    const char					*basename;
     const char					*file_extension;
     cairo_surface_type_t			 expected_type;
     cairo_content_t				 content;

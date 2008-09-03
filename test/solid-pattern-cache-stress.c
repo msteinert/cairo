@@ -37,15 +37,6 @@
 #define drand48() (rand () / (double) RAND_MAX)
 #endif
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "solid-pattern-cache-stress",
-    "Stress the solid pattern cache and ensure it behaves",
-    1, 1,
-    draw
-};
-
 static cairo_t *
 _cairo_create_similar (cairo_t *cr, int width, int height)
 {
@@ -170,8 +161,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (solid_pattern_cache_stress,
+	    "Stress the solid pattern cache and ensure it behaves",
+	    "stress", /* keywords */
+	    NULL, /* requirements */
+	    1, 1,
+	    NULL, draw)

@@ -27,15 +27,6 @@
 #include <stddef.h>
 #include <math.h>
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "get-path-extents",
-    "Test cairo_fill_extents and cairo_stroke_extents",
-    0, 0,
-    draw
-};
-
 enum ExtentsType { FILL, STROKE, PATH };
 
 enum Relation { EQUALS, APPROX_EQUALS, CONTAINS };
@@ -379,8 +370,9 @@ draw (cairo_t *cr, int width, int height)
     return errors == 0 ? CAIRO_TEST_SUCCESS : CAIRO_TEST_FAILURE;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (get_path_extents,
+	    "Test cairo_fill_extents and cairo_stroke_extents",
+	    "extents, path", /* keywords */
+	    NULL, /* requirements */
+	    0, 0,
+	    NULL, draw)

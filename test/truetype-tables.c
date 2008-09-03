@@ -31,18 +31,14 @@
 
 #include <cairo-truetype-subset-private.h>
 
-int
-main (void)
+static cairo_test_status_t
+preamble (cairo_test_context_t *ctx)
 {
-    cairo_test_context_t ctx;
     cairo_test_status_t ret = CAIRO_TEST_SUCCESS;
-
-    cairo_test_init (&ctx, "truetype-tables");
-    cairo_test_log (&ctx, "Test that the size of TrueType table structs is correct\n");
 
 #define check(st, sz) \
 	if (sizeof (st) != (sz)) { \
-	    cairo_test_log (&ctx, "sizeof (%s): got %d, expected %d", #st, (int)sizeof (st), sz); \
+	    cairo_test_log (ctx, "sizeof (%s): got %d, expected %d", #st, (int)sizeof (st), sz); \
 	    ret = CAIRO_TEST_FAILURE; \
 	}
 #if CAIRO_HAS_FONT_SUBSET
@@ -55,7 +51,13 @@ main (void)
     check (tt_composite_glyph_t,	18);
     check (tt_glyph_data_t,	28);
 #endif
-    cairo_test_fini (&ctx);
 
     return ret;
 }
+
+CAIRO_TEST (truetype_tables,
+	    "Test that the size of TrueType table structs is correct",
+	    "ft, api", /* keywords */
+	    NULL, /* requirements */
+	    0, 0,
+	    preamble, NULL)

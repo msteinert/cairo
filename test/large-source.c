@@ -32,15 +32,6 @@
  *	https://bugzilla.mozilla.org/show_bug.cgi?id=424333
  */
 
-static cairo_test_draw_function_t draw;
-
-static const cairo_test_t test = {
-    "large-source",
-    "Exercises mozilla bug 424333 - handling of massive images",
-    20, 20,
-    draw
-};
-
 #ifdef WORDS_BIGENDIAN
 #define RED_MASK 0xA0
 #define GREEN_MASK 0xA
@@ -99,8 +90,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-int
-main (void)
-{
-    return cairo_test (&test);
-}
+CAIRO_TEST (large_source,
+	    "Exercises mozilla bug 424333 - handling of massive images",
+	    "stress, source", /* keywords */
+	    NULL, /* requirements */
+	    20, 20,
+	    NULL, draw)
