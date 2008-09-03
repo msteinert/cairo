@@ -333,14 +333,14 @@ AC_DEFUN([CAIRO_BACKEND_ENABLE],
 	      CAIRO_NONPKGCONFIG_LIBS="$$1_NONPKGCONFIG_LIBS$CAIRO_NONPKGCONFIG_LIBS"
 	      m4_define([cairo_backend_pc], m4_bpatsubst(src/cairo-$1.pc,_,-))
 	      AC_CONFIG_FILES(cairo_backend_pc():src/cairo-backend.pc.in,
-		      [$SED -i "\
-			s,@backend_name@,$1,g
-			s,@Backend_Name@,$2,g
-			s,@BACKEND_BASE@,$$1_BASE,g
-			s,@BACKEND_REQUIRES@,$$1_REQUIRES,g
-			s%@BACKEND_NONPKGCONFIG_LIBS@%$$1_NONPKGCONFIG_LIBS%g
-			s,@BACKEND_NONPKGCONFIG_CFLAGS@,$$1_NONPKGCONFIG_CFLAGS,g
-			" "]cairo_backend_pc()[" ||
+		      [$SED -i \
+			-e "s,@backend_name@,$1,g" \
+			-e "s,@Backend_Name@,$2,g" \
+			-e "s,@BACKEND_BASE@,$$1_BASE,g" \
+			-e "s,@BACKEND_REQUIRES@,$$1_REQUIRES,g" \
+			-e "s%@BACKEND_NONPKGCONFIG_LIBS@%$$1_NONPKGCONFIG_LIBS%g" \
+			-e "s,@BACKEND_NONPKGCONFIG_CFLAGS@,$$1_NONPKGCONFIG_CFLAGS,g" \
+			"]cairo_backend_pc()[" ||
 			AC_MSG_ERROR(failed to update ]cairo_backend_pc()[)
 		      ],
 		      [
