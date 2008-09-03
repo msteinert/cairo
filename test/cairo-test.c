@@ -23,6 +23,8 @@
  * Author: Carl D. Worth <cworth@cworth.org>
  */
 
+#define _GNU_SOURCE 1	/* for feenableexcept() et al */
+
 #if HAVE_CONFIG_H
 #include "config.h"
 #endif

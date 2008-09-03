@@ -53,6 +53,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+#define _XOPEN_SOURCE 600	/* for round() */
+
 #include <signal.h>
 #include <sys/time.h>
 #include <unistd.h>

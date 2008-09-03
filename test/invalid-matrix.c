@@ -24,9 +24,12 @@
  * Author: Carl Worth <cworth@cworth.org>
  */
 
+#define _ISOC99_SOURCE	/* for INFINITY */
+#define _GNU_SOURCE 1	/* for fedisableeexcept() et al */
+
 #include "cairo-test.h"
 
-#if _XOPEN_SOURCE >= 600 || defined (_ISOC99_SOURCE)
+#ifdef INFINITY
 #define HAVE_INFINITY 1
 #endif
 

@@ -825,16 +825,10 @@ check-local:
 check_PROGRAMS =
 EXTRA_PROGRAMS =
 
-# We're using _GNU_SOURCE to get the prototype for asprintf. This may
-# not be the most portable approach, but it is pragmatic and I'm
-# willing to do something cleaner as soon as it causes someone a
-# problem.
 INCLUDES =					\
-	-D_GNU_SOURCE				\
 	-I$(srcdir)				\
 	-I$(srcdir)/pdiff			\
 	-I$(top_srcdir)/boilerplate		\
-	-I$(top_srcdir)/pixman/src		\
 	-I$(top_srcdir)/src			\
 	-I$(top_builddir)/src			\
 	$(CAIRO_CFLAGS)
