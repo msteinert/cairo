@@ -28,3 +28,4 @@ cairo.def
 TAGS
 tags
 check-has-hidden-symbols.i
+check-link

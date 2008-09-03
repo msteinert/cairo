@@ -34,7 +34,8 @@ libcairo_la_SOURCES = \
 	$(enabled_cairo_sources) \
 	$(NULL)
 libcairo_la_LDFLAGS = -version-info $(CAIRO_LIBTOOL_VERSION_INFO) -no-undefined $(export_symbols)
-libcairo_la_CFLAGS = -I$(srcdir) $(CAIRO_CFLAGS)
+#libcairo_la_CFLAGS = -I$(srcdir) $(CAIRO_CFLAGS)
+INCLUDES = -I$(srcdir) $(CAIRO_CFLAGS)
 libcairo_la_LIBADD = $(CAIRO_LIBS) $(CAIRO_LDADD)
 libcairo_la_DEPENDENCIES = $(cairo_def_dependency)
 
@@ -64,9 +65,30 @@ cairo.def: cairo-features.h $(enabled_cairo_headers)
 	) >$@
 	@ ! grep -q cairo_ERROR $@ || ($(RM) $@; false)
 
-TESTS_ENVIRONMENT = srcdir="$(srcdir)" MAKE="$(MAKE)" all_cairo_files="$(all_cairo_files)" enabled_cairo_files="$(enabled_cairo_files)"
-TESTS = check-def.sh check-plt.sh check-headers.sh check-cairoint.sh check-doc-syntax.sh
-EXTRA_DIST += $(TESTS) check-has-hidden-symbols.c
+TESTS_ENVIRONMENT = \
+	srcdir="$(srcdir)" \
+	MAKE="$(MAKE) $(AM_MAKEFLAGS)" \
+	all_cairo_files="$(all_cairo_files)" \
+	enabled_cairo_files="$(enabled_cairo_files)" \
+	$(NULL)
+TESTS =
+TESTS_SH = \
+	check-def.sh \
+	check-plt.sh \
+	check-headers.sh \
+	check-cairoint.sh \
+	check-doc-syntax.sh\
+	$(NULL)
+TESTS += TESTS_SH
+if CROSS_COMPILING
+else
+TESTS += check-link
+endif
+
+EXTRA_DIST += $(TESTS_SH) check-has-hidden-symbols.c
+EXTRA_PROGRAMS = check-link
+check_link_LDADD = libcairo.la
+CLEANFILES += check-link
 
 
 # The pre-processed result is used by check-{def,plt}.sh to determine whether
