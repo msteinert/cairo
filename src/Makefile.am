@@ -14,7 +14,7 @@ cairo_def_dependency = cairo.def
 endif
 
 EXTRA_DIST           += cairo-features-win32.h Config.mk.win32
-MAINTAINERCLEANFILES += cairo-features-win32.h Config.mk.win32
+MAINTAINERCLEANFILES += $(srcdir)/cairo-features-win32.h $(srcdir)/Config.mk.win32
 
 $(top_builddir)/config.h: $(top_srcdir)/config.h.in
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) config.h
