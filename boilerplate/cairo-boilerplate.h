@@ -181,6 +181,12 @@ cairo_boilerplate_open_any2ppm (const char *filename,
 cairo_surface_t *
 cairo_boilerplate_image_surface_create_from_ppm_stream (FILE *file);
 
+int
+cairo_boilerplate_version (void);
+
+const char*
+cairo_boilerplate_version_string (void);
+
 #include "xmalloc.h"
 
 #endif

@@ -24,6 +24,8 @@
  * Author: Carl D. Worth <cworth@cworth.org>
  */
 
+#define CAIRO_VERSION_H 1
+
 #include "cairo-boilerplate.h"
 #include "cairo-boilerplate-scaled-font.h"
 
@@ -63,6 +65,10 @@
 
 #include <cairo-types-private.h>
 #include <cairo-scaled-font-private.h>
+
+/* get the "real" version info instead of dummy cairo-version.h */
+#undef CAIRO_VERSION_H
+#include "../cairo-version.h"
 
 #include <stdlib.h>
 #include <ctype.h>
@@ -795,4 +801,16 @@ cairo_boilerplate_image_surface_create_from_ppm_stream (FILE *file)
 FAIL:
     cairo_surface_destroy (image);
     return cairo_boilerplate_surface_create_in_error (CAIRO_STATUS_READ_ERROR);
+}
+
+int
+cairo_boilerplate_version (void)
+{
+    return CAIRO_VERSION;
+}
+
+const char*
+cairo_boilerplate_version_string (void)
+{
+    return CAIRO_VERSION_STRING;
 }
