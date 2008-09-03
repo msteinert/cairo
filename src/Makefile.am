@@ -79,7 +79,7 @@ TESTS_SH = \
 	check-cairoint.sh \
 	check-doc-syntax.sh\
 	$(NULL)
-TESTS += TESTS_SH
+TESTS += $(TESTS_SH)
 if CROSS_COMPILING
 check: check-link
 else
