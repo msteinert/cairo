@@ -87,12 +87,7 @@ libcairoboilerplate_la_SOURCES += cairo-boilerplate-xlib.h
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-xlib-private.h
 endif
 
-# We're using _GNU_SOURCE to get the prototype for asprintf. This may
-# not be the most portable approach, but it is pragmatic and I'm
-# willing to do something cleaner as soon as it causes someone a
-# problem.
 INCLUDES =					\
-	-D_GNU_SOURCE				\
 	-I$(srcdir)				\
 	-I$(top_srcdir)/pixman/src		\
 	-I$(top_builddir)/src			\
