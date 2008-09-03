@@ -75,6 +75,14 @@
 
 #include "cairo-compiler-private.h"
 
+#if defined(CAIRO_HAS_PS_SURFACE) || defined(CAIRO_HAS_PDF_SURFACE) || defined(CAIRO_HAS_SVG_SURFACE)
+#define CAIRO_HAS_FONT_SUBSET 1
+#endif
+
+#if defined(CAIRO_HAS_PS_SURFACE) || defined(CAIRO_HAS_PDF_SURFACE)
+#define CAIRO_HAS_PDF_OPERATORS 1
+#endif
+
 CAIRO_BEGIN_DECLS
 
 #ifdef _WIN32
@@ -316,8 +324,6 @@ _cairo_user_data_array_set_data (cairo_user_data_array_t     *array,
 cairo_private unsigned long
 _cairo_hash_string (const char *c);
 
-typedef struct _cairo_unscaled_font_backend cairo_unscaled_font_backend_t;
-
 /*
  * A #cairo_unscaled_font_t is just an opaque handle we use in the
  * glyph cache.
@@ -503,8 +509,6 @@ extern const cairo_private struct _cairo_scaled_font_backend _cairo_win32_scaled
 extern const cairo_private struct _cairo_scaled_font_backend _cairo_quartz_scaled_font_backend;
 
 #endif
-
-typedef struct _cairo_solid_pattern cairo_solid_pattern_t;
 
 struct _cairo_surface_backend {
     cairo_surface_type_t type;
@@ -971,8 +975,6 @@ typedef struct _cairo_traps {
 
 #define CAIRO_SURFACE_RESOLUTION_DEFAULT 72.0
 #define CAIRO_SURFACE_FALLBACK_RESOLUTION_DEFAULT 300.0
-
-typedef struct _cairo_gstate cairo_gstate_t;
 
 typedef struct _cairo_stroke_face {
     cairo_point_t ccw;

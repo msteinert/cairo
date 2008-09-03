@@ -914,6 +914,9 @@ CLEANFILES =					\
 	index.html				\
 	ref.hash				\
 	png-test.png				\
+	svg-surface-source.svg			\
+	pdf-surface-source.pdf			\
+	ps-surface-source.ps			\
 	$(EXTRA_LTLIBRARIES)			\
 	$(EXTRA_PROGRAMS)
 

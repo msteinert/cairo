@@ -46,6 +46,8 @@
 #include "cairo-surface-private.h"
 #include "cairo-pdf-operators-private.h"
 
+#include <time.h>
+
 typedef struct cairo_ps_surface {
     cairo_surface_t base;
 

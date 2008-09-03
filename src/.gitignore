@@ -8,8 +8,10 @@ Makefile.in
 *.lo
 *.loT
 *.pc
+Config.mk
+Config.mk.win32
 cairo-features.h
-cairo-no-features.h
+cairo-supported-features.h
 cairo.def
 *.i
 *.s
@@ -24,4 +26,5 @@ cairo.def
 *~
 .*.sw?
 TAGS
+tags
 check-has-hidden-symbols.i

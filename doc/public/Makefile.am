@@ -16,31 +16,15 @@ DOC_SOURCE_DIR=../../src
 HFILE_GLOB=$(top_srcdir)/src/cairo-*.h
 CFILE_GLOB=$(top_srcdir)/src/cairo-*.c $(top_srcdir)/src/cairo-*.h
 
-include $(srcdir)/Headers.mk
-
-UNSUPPORTED_HFILES=		\
-	cairo-atsui.h		\
-	cairo-beos.h		\
-	cairo-directfb.h	\
-	cairo-glitz.h		\
-	cairo-os2.h		\
-	cairo-xcb.h		\
-	cairo-xcb-xrender.h
+include $(top_srcdir)/src/Config.mk
 
 # Headers to ignore
-IGNORE_HFILES=					\
-	$(PRIVATE_TEST_HFILES)			\
-	$(UNSUPPORTED_HFILES)
-
-Headers.mk:
-	( echo "PRIVATE_TEST_HFILES = \\"; \
-	find $(top_srcdir)/src \
-		-name '*-private.h' | \
-	sed 's@.*/@	@; s@$$@ \\@' | \
-	LANG=C sort; \
-	echo '	cairo-features-win32.h \'; \
-	echo '	cairoint.h' ) > $@.tmp
-	mv $@.tmp $@
+IGNORE_HFILES= \
+	cairo-features.h \
+	cairo-features-win32.h \
+	$(all_cairo_private) \
+	$(unsupported_cairo_headers) \
+	$(NULL)
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed
 # if $(DOC_MODULE).types is non-empty.

@@ -39,6 +39,8 @@
 
 #include "cairoint.h"
 
+#if CAIRO_HAS_FONT_SUBSET
+
 typedef struct _cairo_scaled_font_subsets_glyph {
     unsigned int font_id;
     unsigned int subset_id;
@@ -421,6 +423,9 @@ typedef struct _cairo_type1_subset {
     unsigned long trailer_length;
 } cairo_type1_subset_t;
 
+
+#if CAIRO_HAS_FT_FONT
+
 /**
  * _cairo_type1_subset_init:
  * @type1_subset: a #cairo_type1_subset_t to initialize
@@ -453,6 +458,9 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type_subset,
  **/
 cairo_private void
 _cairo_type1_subset_fini (cairo_type1_subset_t *subset);
+
+#endif /* CAIRO_HAS_FT_FONT */
+
 
 /**
  * _cairo_type1_scaled_font_is_type1:
@@ -591,5 +599,7 @@ cairo_private cairo_int_status_t
 _cairo_truetype_index_to_ucs4 (cairo_scaled_font_t *scaled_font,
                                unsigned long        index,
                                uint32_t            *ucs4);
+
+#endif /* CAIRO_HAS_FONT_SUBSET */
 
 #endif /* CAIRO_SCALED_FONT_SUBSETS_PRIVATE_H */

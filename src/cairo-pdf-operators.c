@@ -40,6 +40,9 @@
  */
 
 #include "cairoint.h"
+
+#if CAIRO_HAS_PDF_OPERATORS
+
 #include "cairo-pdf-operators-private.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-output-stream-private.h"
@@ -1425,3 +1428,5 @@ _cairo_pdf_operators_show_text_glyphs (cairo_pdf_operators_t	  *pdf_operators,
 
     return _cairo_output_stream_get_status (pdf_operators->stream);
 }
+
+#endif /* CAIRO_HAS_PDF_OPERATORS */

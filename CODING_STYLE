@@ -268,3 +268,10 @@ for overflow and will return NULL in that case.
 In general, be wary of performing any arithmetic operations in an
 argument to malloc.  You should explicitly check for integer overflow
 yourself in any more complex situations.
+
+
+TODO
+----
+
+Write rules for common editors to use this style.  Also cleanup/unify
+the modlines in the source files.

@@ -1,7 +1,8 @@
-
 SUBMAKEFILE = 1
 
 include ../Makefile.win32
+
+include Config.mk.win32
 
 srcdir = `pwd`
 
