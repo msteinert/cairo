@@ -42,22 +42,22 @@ DISTCLEANFILES = config.cache
 MAINTAINERCLEANFILES = \
 	$(srcdir)/aclocal.m4 \
 	$(srcdir)/autoscan.log \
-	$(srcdir)/compile \
-	$(srcdir)/config.guess \
+	$(srcdir)/build/compile \
+	$(srcdir)/build/config.guess \
+	$(srcdir)/build/config.sub \
+	$(srcdir)/build/depcomp \
+	$(srcdir)/build/install-sh \
+	$(srcdir)/build/ltmain.sh \
+	$(srcdir)/build/missing \
+	$(srcdir)/build/mkinstalldirs \
 	$(srcdir)/config.h.in \
-	$(srcdir)/config.sub \
 	$(srcdir)/configure.scan \
-	$(srcdir)/depcomp \
-	$(srcdir)/install-sh \
-	$(srcdir)/ltmain.sh \
-	$(srcdir)/missing \
-	$(srcdir)/mkinstalldirs \
 	`find "$(srcdir)" -type f -name Makefile.in -print`
 
 DISTCHECK_CONFIGURE_FLAGS = \
 	--enable-gtk-doc \
 	--enable-test-surfaces
 
-include $(srcdir)/ChangeLog.mk
-include $(srcdir)/Releasing.mk
-include $(srcdir)/Analysis.mk
+include $(srcdir)/build/ChangeLog.mk
+include $(srcdir)/build/Releasing.mk
+include $(srcdir)/build/Analysis.mk

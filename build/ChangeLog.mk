@@ -71,7 +71,7 @@ $(srcdir)/ChangeLog.cache-% $(srcdir)/ChangeLog.pre-%:
 		test "x$$from" = xinitial || from=$$from.0; \
 		spec=$$from..$$to; \
 	  fi; \
-	  ./missing --run git-log --stat "$$spec") > $@.tmp \
+	  $(srcdir)/build/missing --run git-log --stat "$$spec") > $@.tmp \
 	  && mv -f $@.tmp $@ \
 	  || ($(RM) $@.tmp; \
 	      echo Failed to generate $@, your $@ may be outdated >&2); \

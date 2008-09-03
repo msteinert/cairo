@@ -14,7 +14,7 @@ AC_INIT([cairo],
       [http://bugs.freedesktop.org/enter_bug.cgi?product=cairo])
 AC_CONFIG_SRCDIR(src/cairo.h)
 AC_CONFIG_HEADERS(config.h)
-dnl AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_AUX_DIR(build)
 
 dnl automake 1.8 requires autoconf 2.58
 dnl automake 1.7 requires autoconf 2.54
