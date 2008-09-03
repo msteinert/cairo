@@ -88,7 +88,7 @@ To bootstrap the build system run ./autogen.sh.  After that the
 regular "./configure; make; make install" sequence can be used.
 
 There is limited support for a win32 build system.
-See src/Makefile.win32.
+See Makefile.win32 files in various directories.
 
 
 ChangeLog
