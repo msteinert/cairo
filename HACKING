@@ -50,7 +50,8 @@ We use a standard bugzilla bug tracking system available at:
 
 	http://bugs.freedesktop.org/
 
-For straight bug reports, it's best to report them there such that they
+See file named BUGS for detailed information on reporting bugs.  In short,
+for straight bug reports, it's best to report them there such that they
 are not lost or forgotten.  For discussion of new features or
 complicated issues, use the mailing list.
 
@@ -86,6 +87,7 @@ best bet to understanding it, or just ask on IRC.
 
 To bootstrap the build system run ./autogen.sh.  After that the
 regular "./configure; make; make install" sequence can be used.
+See file named INSTALL for more details.
 
 There is limited support for a win32 build system.
 See Makefile.win32 files in various directories.
@@ -96,6 +98,19 @@ ChangeLog
 
 We generate ChangeLog files automatically from the git commit log.
 No manual ChangeLog writing is necessary.
+
+
+Copyrights and Licensing
+------------------------
+
+The cairo library is dual-licensed under LGPL and MPL.  See file named
+COPYING for details.  The test suites are more liberal.  For example,
+GPL code is allowed in the test suites, though it's always better to
+keep things simple.
+
+When writing new code, update the file headers to add your (or your
+employers) copyright line and contributor line.  If adding new files
+or splitting a file, copy the file header from other files.
 
 
 Source Code
@@ -162,4 +177,10 @@ There are a few useful utilities we have developed that are either
 useful when writing code using cairo, or writing cairo, or useful in
 general.  These tools can be found under the util/ directory.
 See util/README for more information.
+
+
+Releasing
+---------
+
+Now you are a cairo maintainer, so what?  See file named RELEASING.
 
