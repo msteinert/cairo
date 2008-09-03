@@ -1226,8 +1226,7 @@ _cairo_truetype_reverse_cmap (cairo_scaled_font_t *scaled_font,
     range_offset = &(delta[num_segments]);
     glyph_array = &(range_offset[num_segments]);
 
-    /* search for glyph in segments
-     * with rangeOffset=0 */
+    /* search for glyph in segments with rangeOffset=0 */
     for (i = 0; i < num_segments; i++) {
 	c = index - be16_to_cpu (delta[i]);
 	if (range_offset[i] == 0 &&
@@ -1296,7 +1295,7 @@ _cairo_truetype_index_to_ucs4 (cairo_scaled_font_t *scaled_font,
     cmap = (tt_cmap_t *) buf;
     num_tables = be16_to_cpu (cmap->num_tables);
     size = 4 + num_tables*sizeof(tt_cmap_index_t);
-    cmap = malloc (size);
+    cmap = _cairo_malloc_ab_plus_c (num_tables, sizeof (tt_cmap_index_t), 4);
     if (cmap == NULL)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 

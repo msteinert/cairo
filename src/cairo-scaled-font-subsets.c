@@ -327,12 +327,12 @@ _cairo_sub_font_glyph_lookup_unicode (cairo_sub_font_glyph_t *sub_font_glyph,
 
     /* Do a reverse lookup on the glyph index. unicode is -1 if the
      * index could not be mapped to a unicode character. */
-    status = _cairo_truetype_index_to_ucs4 (scaled_font, scaled_font_glyph_index, &unicode);
+    unicode = -1;
+    status = _cairo_truetype_index_to_ucs4 (scaled_font,
+					    scaled_font_glyph_index,
+					    &unicode);
     if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
-
-    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
-	unicode = -1;
 
     if (unicode == (uint32_t)-1 && scaled_font->backend->index_to_ucs4) {
 	status = scaled_font->backend->index_to_ucs4 (scaled_font,
@@ -345,7 +345,7 @@ _cairo_sub_font_glyph_lookup_unicode (cairo_sub_font_glyph_t *sub_font_glyph,
     sub_font_glyph->unicode = unicode;
     sub_font_glyph->utf8 = NULL;
     sub_font_glyph->utf8_len = 0;
-    if (unicode != (uint32_t)-1) {
+    if (unicode != (uint32_t) -1) {
 	len = _cairo_ucs4_to_utf8 (unicode, buf);
 	if (len > 0) {
 	    sub_font_glyph->utf8 = malloc (len + 1);
@@ -363,8 +363,8 @@ _cairo_sub_font_glyph_lookup_unicode (cairo_sub_font_glyph_t *sub_font_glyph,
 
 static cairo_bool_t
 _cairo_sub_font_glyph_map_to_unicode (cairo_sub_font_glyph_t *sub_font_glyph,
-				      const char 	     *utf8,
-				      int 		      utf8_len)
+				      const char	     *utf8,
+				      int		      utf8_len)
 {
     if (utf8_len < 0)
 	return FALSE;
@@ -402,7 +402,7 @@ _cairo_sub_font_glyph_map_to_unicode (cairo_sub_font_glyph_t *sub_font_glyph,
 static cairo_bool_t
 _cairo_sub_font_lookup_glyph (cairo_sub_font_t	                *sub_font,
                               unsigned long	                 scaled_font_glyph_index,
-			      const char * 			 utf8,
+			      const char			*utf8,
 			      int				 utf8_len,
                               cairo_scaled_font_subsets_glyph_t *subset_glyph)
 {
@@ -431,14 +431,13 @@ _cairo_sub_font_lookup_glyph (cairo_sub_font_t	                *sub_font,
 static cairo_status_t
 _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
 			   unsigned long	 scaled_font_glyph_index,
-			   const char * 	 utf8,
+			   const char		*utf8,
 			   int			 utf8_len,
                            cairo_scaled_font_subsets_glyph_t *subset_glyph)
 {
     cairo_sub_font_glyph_t key, *sub_font_glyph;
     cairo_status_t status;
     cairo_scaled_glyph_t *scaled_glyph;
-    cairo_scaled_font_subsets_glyph_t tmp_subset_glyph;
 
     _cairo_sub_font_glyph_init_key (&key, scaled_font_glyph_index);
     if (! _cairo_hash_table_lookup (sub_font->sub_font_glyphs, &key.base,
@@ -446,6 +445,8 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
     {
 	if (sub_font->num_glyphs_in_current_subset == sub_font->max_glyphs_per_subset)
 	{
+	    cairo_scaled_font_subsets_glyph_t tmp_subset_glyph;
+
 	    sub_font->current_subset++;
 	    sub_font->num_glyphs_in_current_subset = 0;
 
@@ -471,9 +472,13 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
 	if (sub_font_glyph == NULL)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-	_cairo_sub_font_glyph_lookup_unicode (sub_font_glyph,
-					      sub_font->scaled_font,
-					      scaled_font_glyph_index);
+	status = _cairo_sub_font_glyph_lookup_unicode (sub_font_glyph,
+						       sub_font->scaled_font,
+						       scaled_font_glyph_index);
+	if (status) {
+	    _cairo_sub_font_glyph_destroy (sub_font_glyph);
+	    return status;
+	}
 
 	status = _cairo_hash_table_insert (sub_font->sub_font_glyphs, &sub_font_glyph->base);
 	if (status) {
@@ -483,13 +488,10 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
 
 	sub_font->num_glyphs_in_current_subset++;
 
-        if (sub_font->is_scaled)
-        {
+        if (sub_font->is_scaled) {
             if (sub_font->num_glyphs_in_current_subset > sub_font->parent->max_glyphs_per_scaled_subset_used)
                 sub_font->parent->max_glyphs_per_scaled_subset_used = sub_font->num_glyphs_in_current_subset;
-        }
-        else
-        {
+        } else {
             if (sub_font->num_glyphs_in_current_subset > sub_font->parent->max_glyphs_per_unscaled_subset_used)
                 sub_font->parent->max_glyphs_per_unscaled_subset_used = sub_font->num_glyphs_in_current_subset;
         }
