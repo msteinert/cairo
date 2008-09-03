@@ -81,6 +81,7 @@ TESTS_SH = \
 	$(NULL)
 TESTS += TESTS_SH
 if CROSS_COMPILING
+check: check-link
 else
 TESTS += check-link
 endif
