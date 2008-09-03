@@ -56,3 +56,14 @@ a good idea to run that test suite for any changes made to the source
 code.  Moreover, for any new feature, API, or bug fix, new tests should
 be added to the regression test suite to test the new code.
 
+
+Bibliography
+------------
+
+A detailed list of academic publications used in cairo code is availagle
+in the file $(top_srcdir)/BIBLIOGRAPHY.  Feel free to update as you
+implement more papers.
+
+For more technical publications (eg. Adobe technical reports) just
+point them out in a comment in the header of the file implementing them.
+
