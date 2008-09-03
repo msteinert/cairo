@@ -160,6 +160,87 @@ static void quartz_ensure_symbols(void)
     _cairo_quartz_symbol_lookup_done = TRUE;
 }
 
+CGImageRef
+_cairo_quartz_create_cgimage (cairo_format_t format,
+			      unsigned int width,
+			      unsigned int height,
+			      unsigned int stride,
+			      void *data,
+			      cairo_bool_t interpolate,
+			      CGColorSpaceRef colorSpaceOverride,
+			      CGDataProviderReleaseDataCallback releaseCallback,
+			      void *releaseInfo)
+{
+    CGImageRef image = NULL;
+    CGDataProviderRef dataProvider = NULL;
+    CGColorSpaceRef colorSpace = colorSpaceOverride;
+    CGBitmapInfo bitinfo;
+    int bitsPerComponent, bitsPerPixel;
+
+    switch (format) {
+	case CAIRO_FORMAT_ARGB32:
+	    if (colorSpace == NULL)
+		colorSpace = CGColorSpaceCreateDeviceRGB();
+	    bitinfo = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host;
+	    bitsPerComponent = 8;
+	    bitsPerPixel = 32;
+	    break;
+
+	case CAIRO_FORMAT_RGB24:
+	    if (colorSpace == NULL)
+		colorSpace = CGColorSpaceCreateDeviceRGB();
+	    bitinfo = kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Host;
+	    bitsPerComponent = 8;
+	    bitsPerPixel = 32;
+	    break;
+
+	/* XXX -- should use CGImageMaskCreate! */
+	case CAIRO_FORMAT_A8:
+	    if (colorSpace == NULL)
+		colorSpace = CGColorSpaceCreateDeviceGray();
+	    bitinfo = kCGImageAlphaNone;
+	    bitsPerComponent = 8;
+	    bitsPerPixel = 8;
+	    break;
+
+	case CAIRO_FORMAT_A1:
+	default:
+	    return NULL;
+    }
+
+    dataProvider = CGDataProviderCreateWithData (releaseInfo,
+						 data,
+						 height * stride,
+						 releaseCallback);
+
+    if (!dataProvider) {
+	// manually release
+	if (releaseCallback)
+	    releaseCallback (releaseInfo, data, height * stride);
+	goto FINISH;
+    }
+
+    image = CGImageCreate (width, height,
+			   bitsPerComponent,
+			   bitsPerPixel,
+			   stride,
+			   colorSpace,
+			   bitinfo,
+			   dataProvider,
+			   NULL,
+			   interpolate,
+			   kCGRenderingIntentDefault);
+
+FINISH:
+
+    CGDataProviderRelease (dataProvider);
+
+    if (colorSpace != colorSpaceOverride)
+	CGColorSpaceRelease (colorSpace);
+
+    return image;
+}
+
 static inline cairo_bool_t
 _cairo_quartz_is_cgcontext_bitmap_context (CGContextRef cgc) {
     if (cgc == NULL)
@@ -745,9 +826,12 @@ _cairo_surface_to_cgimage (cairo_surface_t *target,
 	*image_out = NULL;
     } else {
 	cairo_image_surface_t *isurf_snap = NULL;
-	isurf_snap = _cairo_surface_snapshot (isurf);
+	isurf_snap = (cairo_image_surface_t*) _cairo_surface_snapshot ((cairo_surface_t*) isurf);
 	if (isurf_snap == NULL)
 	    return CAIRO_STATUS_NO_MEMORY;
+
+	if (isurf_snap->base.type != CAIRO_SURFACE_TYPE_IMAGE)
+	    return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
 
 	image = _cairo_quartz_create_cgimage (isurf_snap->format,
 					      isurf_snap->width,
