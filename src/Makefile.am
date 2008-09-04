@@ -36,7 +36,7 @@ libcairo_la_SOURCES = \
 	$(enabled_cairo_sources) \
 	$(NULL)
 libcairo_la_LDFLAGS = -version-info $(CAIRO_LIBTOOL_VERSION_INFO) -no-undefined $(export_symbols)
-libcairo_la_LIBADD = $(CAIRO_LIBS) $(CAIRO_LDADD)
+libcairo_la_LIBADD = $(CAIRO_LIBS)
 libcairo_la_DEPENDENCIES = $(cairo_def_dependency)
 
 # Special headers

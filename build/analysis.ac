@@ -70,7 +70,7 @@ dnl  PHP_ADD_MAKEFILE_FRAGMENT($abs_srcdir/Makefile.gcov, $abs_srcdir)
 
   dnl Add the special gcc flags
   CAIRO_CFLAGS="$CAIRO_CFLAGS -O0 -fprofile-arcs -ftest-coverage"
-  CAIRO_LDADD="$CAIRO_LDADD -lgcov"
+  CAIRO_LIBS="$CAIRO_LIBS -lgcov"
 fi
 AM_CONDITIONAL(CAIRO_HAS_LCOV, test "x$cairo_has_lcov" = "xyes")
 
