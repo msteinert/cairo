@@ -38,75 +38,78 @@ dnl		appropriately.  Look at the macro definition for more details,
 dnl		or ask if in doubt.
 dnl
 AC_DEFUN([CAIRO_BACKEND_ENABLE],
-         [AC_ARG_ENABLE([$3],
-                         AS_HELP_STRING([--enable-$3=@<:@no/auto/yes@:>@],
-                                        [Enable cairo's $2 backend @<:@default=$5@:>@]),
-                         enable_$1=$enableval, enable_$1=$5)
-	  if test "x$enable_$1" = xno; then
-	    use_$1="no (disabled, use --enable-$3 to enable)"
-	  else
-	    if test "x$cairo_cv_backend_[]$1[]_cache_version" != "x[]cairo_cache_version"; then
-	      # cached results for this backend (if any) are stale.  force rechecking.
-	      unset cairo_cv_backend_[]$1[]_use
-	    fi
-            AC_CACHE_CHECK([for cairo's $2 backend], cairo_cv_backend_[]$1[]_use,
-	    		   [echo
-			    use_[]$1=yes
-			    $1[]_REQUIRES=$ac_env_[]$1[]_REQUIRES_value
-			    $1[]_CFLAGS=$ac_env_[]$1[]_CFLAGS_value
-			    $1[]_LIBS=$ac_env_[]$1[]_LIBS_value
-			    $1[]_NONPKGCONFIG_CFLAGS=$ac_env_[]$1[]_NONPKGCONFIG_CFLAGS_value
-			    $1[]_NONPKGCONFIG_LIBS=$ac_env_[]$1[]_NONPKGCONFIG_LIBS_value
-			    $1[]_BASE=cairo
-			    $6
-			    cairo_cv_backend_[]$1[]_use=$use_[]$1
-			    cairo_cv_backend_[]$1[]_cache_version=cairo_cache_version
-			    cairo_cv_backend_[]$1[]_requires=$[]$1[]_REQUIRES
-			    cairo_cv_backend_[]$1[]_cflags=$[]$1[]_CFLAGS
-			    cairo_cv_backend_[]$1[]_libs=$[]$1[]_LIBS
-			    cairo_cv_backend_[]$1[]_nonpkgconfig_cflags=$[]$1[]_NONPKGCONFIG_CFLAGS
-			    cairo_cv_backend_[]$1[]_nonpkgconfig_libs=$[]$1[]_NONPKGCONFIG_LIBS
-			    cairo_cv_backend_[]$1[]_base=$[]$1[]_BASE
-			    AC_MSG_CHECKING([whether cairo's $2 backend could be enabled])])
-
-	    use_[]$1=$cairo_cv_backend_[]$1[]_use
-	    $1[]_BASE=$cairo_cv_backend_[]$1[]_base
-
-	    $1[]_REQUIRES="$cairo_cv_backend_[]$1[]_requires "
-	    $1[]_CFLAGS="$cairo_cv_backend_[]$1[]_cflags "
-	    $1[]_LIBS="$cairo_cv_backend_[]$1[]_libs "
-	    $1[]_NONPKGCONFIG_CFLAGS="$cairo_cv_backend_[]$1[]_nonpkgconfig_cflags "
-	    $1[]_NONPKGCONFIG_LIBS="$cairo_cv_backend_[]$1[]_nonpkgconfig_libs "
-
-	    # null the ones that only have space
-	    test "x$$1[]_REQUIRES" = "x " && $1[]_REQUIRES=""
-	    test "x$$1[]_CFLAGS" = "x " && $1[]_CFLAGS=""
-	    test "x$$1[]_LIBS" = "x " && $1[]_LIBS=""
-	    test "x$$1[]_NONPKGCONFIG_CFLAGS" = "x " && $1[]_NONPKGCONFIG_CFLAGS=""
-	    test "x$$1[]_NONPKGCONFIG_LIBS" = "x " && $1[]_NONPKGCONFIG_LIBS=""
-
-	    case $enable_[]$1 in
-	      yes)
-	        AS_IF([test "x$use_[]$1" = xyes],,[
-	          AC_MSG_ERROR([requested $2 backend could not be enabled])
+[	AC_ARG_ENABLE([$3],
+                      AS_HELP_STRING([--enable-$3=@<:@no/auto/yes@:>@],
+                                     [Enable cairo's $2 backend @<:@default=$5@:>@]),
+                      enable_$1=$enableval, enable_$1=$5)
+	case $enable_$1 in
+	no)
+		use_$1="no (disabled, use --enable-$3 to enable)"
+	;;
+	yes|auto)
+		if test "x$cairo_cv_backend_[]$1[]_cache_version" != "x[]cairo_cache_version"; then
+			# cached results for this backend (if any) are stale.  force rechecking.
+			unset cairo_cv_backend_[]$1[]_use
+		fi
+		AC_CACHE_CHECK([for cairo's $2 backend], cairo_cv_backend_[]$1[]_use,
+		[
+			echo
+			use_[]$1=yes
+			$1[]_REQUIRES=$ac_env_[]$1[]_REQUIRES_value
+			$1[]_CFLAGS=$ac_env_[]$1[]_CFLAGS_value
+			$1[]_LIBS=$ac_env_[]$1[]_LIBS_value
+			$1[]_NONPKGCONFIG_CFLAGS=$ac_env_[]$1[]_NONPKGCONFIG_CFLAGS_value
+			$1[]_NONPKGCONFIG_LIBS=$ac_env_[]$1[]_NONPKGCONFIG_LIBS_value
+			$1[]_BASE=cairo
+			$6
+			cairo_cv_backend_[]$1[]_use=$use_[]$1
+			cairo_cv_backend_[]$1[]_cache_version=cairo_cache_version
+			cairo_cv_backend_[]$1[]_requires=$[]$1[]_REQUIRES
+			cairo_cv_backend_[]$1[]_cflags=$[]$1[]_CFLAGS
+			cairo_cv_backend_[]$1[]_libs=$[]$1[]_LIBS
+			cairo_cv_backend_[]$1[]_nonpkgconfig_cflags=$[]$1[]_NONPKGCONFIG_CFLAGS
+			cairo_cv_backend_[]$1[]_nonpkgconfig_libs=$[]$1[]_NONPKGCONFIG_LIBS
+			cairo_cv_backend_[]$1[]_base=$[]$1[]_BASE
+			AC_MSG_CHECKING([whether cairo's $2 backend could be enabled])
 		])
-		;;
-	      auto)
-		;;
-	      *)
-	        AC_MSG_ERROR([invalid argument passed to --enable-$3: $use_$1, should be one of @<:@no/auto/yes@:>@])
-		;;
-	    esac
-	    if test "x$use_[]$1" = xyes; then
-	      CAIRO_FEATURES="$4 $CAIRO_FEATURES"
-	      CAIRO_REQUIRES="$$1_REQUIRES$CAIRO_REQUIRES"
-	      CAIRO_CFLAGS="$$1_NONPKGCONFIG_CFLAGS$$1_CFLAGS$CAIRO_CFLAGS"
-	      CAIRO_LIBS="$$1_NONPKGCONFIG_LIBS$$1_LIBS$CAIRO_LIBS"
-	      CAIRO_NONPKGCONFIG_CFLAGS="$$1_NONPKGCONFIG_CFLAGS$CAIRO_NONPKGCONFIG_CFLAGS"
-	      CAIRO_NONPKGCONFIG_LIBS="$$1_NONPKGCONFIG_LIBS$CAIRO_NONPKGCONFIG_LIBS"
-	      m4_define([cairo_backend_pc], m4_bpatsubst(src/cairo-$1.pc,_,-))
-	      AC_CONFIG_FILES(cairo_backend_pc():src/cairo-backend.pc.in,
-		      [$SED -i -e "
+
+		use_[]$1=$cairo_cv_backend_[]$1[]_use
+		$1[]_BASE=$cairo_cv_backend_[]$1[]_base
+
+		$1[]_REQUIRES="$cairo_cv_backend_[]$1[]_requires "
+		$1[]_CFLAGS="$cairo_cv_backend_[]$1[]_cflags "
+		$1[]_LIBS="$cairo_cv_backend_[]$1[]_libs "
+		$1[]_NONPKGCONFIG_CFLAGS="$cairo_cv_backend_[]$1[]_nonpkgconfig_cflags "
+		$1[]_NONPKGCONFIG_LIBS="$cairo_cv_backend_[]$1[]_nonpkgconfig_libs "
+
+		# null the ones that only have space
+		test "x$$1[]_REQUIRES" = "x " && $1[]_REQUIRES=""
+		test "x$$1[]_CFLAGS" = "x " && $1[]_CFLAGS=""
+		test "x$$1[]_LIBS" = "x " && $1[]_LIBS=""
+		test "x$$1[]_NONPKGCONFIG_CFLAGS" = "x " && $1[]_NONPKGCONFIG_CFLAGS=""
+		test "x$$1[]_NONPKGCONFIG_LIBS" = "x " && $1[]_NONPKGCONFIG_LIBS=""
+
+		AS_IF([test "x$enable_$1" = "xyes" -a "x$use_$1" != xyes],
+		[
+			AC_MSG_ERROR([requested $2 backend could not be enabled])
+		])
+	;;
+	*)
+		AC_MSG_ERROR([invalid argument passed to --enable-$3: $use_$1, should be one of @<:@no/auto/yes@:>@])
+	;;
+	esac
+
+	if test "x$use_$1" = xyes; then
+		CAIRO_FEATURES="$4 $CAIRO_FEATURES"
+		CAIRO_REQUIRES="$$1_REQUIRES$CAIRO_REQUIRES"
+		CAIRO_CFLAGS="$$1_NONPKGCONFIG_CFLAGS$$1_CFLAGS$CAIRO_CFLAGS"
+		CAIRO_LIBS="$$1_NONPKGCONFIG_LIBS$$1_LIBS$CAIRO_LIBS"
+		CAIRO_NONPKGCONFIG_CFLAGS="$$1_NONPKGCONFIG_CFLAGS$CAIRO_NONPKGCONFIG_CFLAGS"
+		CAIRO_NONPKGCONFIG_LIBS="$$1_NONPKGCONFIG_LIBS$CAIRO_NONPKGCONFIG_LIBS"
+		m4_define([cairo_backend_pc], m4_bpatsubst(src/cairo-$1.pc,_,-))
+		AC_CONFIG_FILES(cairo_backend_pc():src/cairo-backend.pc.in,
+		[
+			$SED -i -e "
 			s,@backend_name@,$1,g;
 			s,@Backend_Name@,$2,g;
 			s,@BACKEND_BASE@,$$1_BASE,g;
@@ -115,37 +118,40 @@ AC_DEFUN([CAIRO_BACKEND_ENABLE],
 			s,@BACKEND_NONPKGCONFIG_CFLAGS@,$$1_NONPKGCONFIG_CFLAGS,g;
 			" "]cairo_backend_pc()[" ||
 			AC_MSG_ERROR(failed to update ]cairo_backend_pc()[)
-		      ],
-		      [
-		       SED='$SED'
-		       $1_BASE='$$1_BASE'
-		       $1_REQUIRES='$$1_REQUIRES'
-		       $1_NONPKGCONFIG_LIBS='$$1_NONPKGCONFIG_LIBS'
-		       $1_NONPKGCONFIG_CFLAGS='$$1_NONPKGCONFIG_CFLAGS'
-		      ])
-	    else
-	      # Collect list of all supported but disabled features
-	      AS_IF([test "x$5" = xno],,[
-	        CAIRO_NO_FEATURES="$4 $CAIRO_NO_FEATURES"
-	      ])
-	    fi
-	  fi
-	  AM_CONDITIONAL(CAIRO_HAS_$4, test "x$use_$1" = xyes)
-	  # Collect list of all supported features and cairo headers
-	  AS_IF([test "x$5" = xno],[
-	    CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
+		],[
+			SED='$SED'
+			$1_BASE='$$1_BASE'
+			$1_REQUIRES='$$1_REQUIRES'
+			$1_NONPKGCONFIG_LIBS='$$1_NONPKGCONFIG_LIBS'
+			$1_NONPKGCONFIG_CFLAGS='$$1_NONPKGCONFIG_CFLAGS'
+		])
+	fi
+
+	AM_CONDITIONAL(CAIRO_HAS_$4, test "x$use_$1" = xyes)
+
+	dnl Collect list of all supported but disabled features
+	AS_IF([test "x$use_$1" != xyes -a "x$5" != xno],
+	[
+		CAIRO_NO_FEATURES="$4 $CAIRO_NO_FEATURES"
+	])
+
+	dnl Collect list of all (un)supported features and cairo headers
+	AS_IF([test "x$5" = xno],
+	[
+		CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
 unsupported_cairo_headers += $(cairo_$1_headers)'
-	    CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
+		CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
 unsupported_cairo_headers += $(cairo_$1_headers)'
-	  ],[
-	    CAIRO_SUPPORTED_FEATURES="$4 $CAIRO_SUPPORTED_FEATURES"
-	    CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
+	],[
+		CAIRO_SUPPORTED_FEATURES="$4 $CAIRO_SUPPORTED_FEATURES"
+		CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
 supported_cairo_headers += $(cairo_$1_headers)'
-	    CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
+		CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
 supported_cairo_headers += $(cairo_$1_headers)'
 	  ])
-	  # Collect list of all/enabled cairo source files
-	  CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
+
+	dnl Collect list of all/enabled cairo source files
+	CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
 all_cairo_pkgconf += $(cairo_$1_pkgconf)
 all_cairo_headers += $(cairo_$1_headers)
 all_cairo_private += $(cairo_$1_private)
@@ -157,7 +163,7 @@ enabled_cairo_private += $(cairo_$1_private)
 enabled_cairo_sources += $(cairo_$1_sources)
 endif
 '
-	  CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
+	CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
 all_cairo_pkgconf += $(cairo_$1_pkgconf)
 all_cairo_headers += $(cairo_$1_headers)
 all_cairo_private += $(cairo_$1_private)
@@ -169,24 +175,26 @@ enabled_cairo_private += $(cairo_$1_private)
 enabled_cairo_sources += $(cairo_$1_sources)
 endif
 '
-	  # Collect warning message for enabled unsupported backends
-	  AS_IF([test "x$use_[]$1" = xyes && test "x$5" = xno],[
-	    CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE
+	dnl Collect warning message for enabled unsupported backends
+	AS_IF([test "x$use_$1" = xyes -a "x$5" = xno],
+	[
+		CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE
 *** The $2 backend is still under active development and
 *** is included in this release only as a preview. It does NOT
 *** fully work yet and incompatible changes may yet be made
 *** to $2-backend specific API.
 "
-	  ],)
-	  # Collect warning message for disabled recommended backends
-	  AS_IF([test "x$use_[]$1" != xyes && test "x$5" = xyes],[
-	    CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE
+	])
+
+	dnl Collect warning message for disabled recommended backends
+	AS_IF([test "x$use_$1" != xyes -a "x$5" = xyes],
+	[
+		CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE
 *** It is strictly recommended that you do NOT disable
 *** the $2 backend.
 "
-	  ],)
 	])
-
+])
 
 
 
