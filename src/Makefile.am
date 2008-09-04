@@ -81,13 +81,12 @@ TESTS_SH = \
 	$(NULL)
 TESTS += $(TESTS_SH)
 if CROSS_COMPILING
-check: check-link
 else
 TESTS += check-link
 endif
 
 EXTRA_DIST += $(TESTS_SH) check-has-hidden-symbols.c
-EXTRA_PROGRAMS = check-link
+check_PROGRAMS = check-link
 check_link_LDADD = libcairo.la
 CLEANFILES += check-link
 

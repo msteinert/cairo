@@ -107,6 +107,6 @@ else
 TESTS += check-link
 endif
 
-EXTRA_PROGRAMS = check-link
+check_PROGRAMS = check-link
 check_link_LDADD = libcairoboilerplate.la
 CLEANFILES += check-link
