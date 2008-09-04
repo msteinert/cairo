@@ -15,14 +15,14 @@ fi
 test -z "$srcdir" && srcdir=.
 stat=0
 
-if test -f "$DOC_MODULE-undocumented.txt" -a -f "$DOC_MODULE-unused.txt"; then
-	:
-else
-	echo At least one of "$DOC_MODULE-undocumented.txt" and "$DOC_MODULE-unused.txt" not found.
-	echo Skipping test.
-	exit 0
+if test -f "$DOC_MODULE-undeclared.txt"; then
+	undeclared=`cat "$DOC_MODULE-unused.txt"`
+	if test -n "$undeclared"; then
+		echo Undeclared documentation symbols: 1>&2
+		cat "$DOC_MODULE-undeclared.txt" 1>&2
+		stat=1
+	fi
 fi
-
 if test -f "$DOC_MODULE-unused.txt"; then
 	unused=`cat "$DOC_MODULE-unused.txt"`
 	if test -n "$unused"; then
