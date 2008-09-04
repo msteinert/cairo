@@ -302,9 +302,7 @@ all_cairo_sources = $(cairo_sources)
 supported_cairo_headers = $(cairo_headers)
 unsupported_cairo_headers =
 '
-CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_AMAKE'
-enabled_cairo_headers += $(_cairo_nodist_headers) $(_cairo_extra_headers)
-'
+CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_AMAKE
 
 dnl Generate
 CAIRO_CONFIG_COMMANDS([$srcdir/src/Config.mk],
