@@ -29,7 +29,7 @@ if test "X$CONFIGURE_IN" = X; then
 fi
 
 extract_version() {
-	grep "^ *$1" $CONFIGURE_IN | sed 's/.*(\[*\([^])]*\)]*).*/\1/'
+	grep "^ *$1" -r $CONFIGURE_IN build | sed 's/.*(\[*\([^])]*\)]*).*/\1/'
 }
 
 autoconf_min_vers=`extract_version AC_PREREQ`
