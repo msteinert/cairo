@@ -1,86 +1,15 @@
 dnl
-dnl Check for functions, headers, libraries, etc go here
+dnl Non-failing checks for functions, headers, libraries, etc go here
 dnl
+
+dnl ====================================================================
+dnl Feature checks
+dnl ====================================================================
 
 AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
-
 CAIRO_BIGENDIAN
-
-AC_STDC_HEADERS
-
-dnl Checks for precise integer types
-AC_CHECK_HEADERS([stdint.h signal.h setjmp.h inttypes.h sys/int_types.h])
-AC_CHECK_TYPES([uint64_t, uint128_t])
-
-dnl Check for socket support for any2ppm daemon
-AC_CHECK_HEADERS([fcntl.h unistd.h signal.h sys/stat.h sys/socket.h sys/poll.h sys/un.h])
-
-dnl Checks for misc headers
-AC_CHECK_HEADERS([libgen.h byteswap.h])
-
-dnl check for CPU affinity support
-AC_CHECK_HEADERS([sched.h], [
-  AC_CHECK_FUNCS([sched_getaffinity], [
-    AC_DEFINE([HAVE_SCHED_GETAFFINITY], [1],
-	      [Define to 1 if you have Linux compatible sched_getaffinity])
-  ])
-])
-
-AC_CHECK_FUNCS(vasnprintf link ctime_r drand48 flockfile)
-
-AC_CHECK_LIB(rt, sched_yield, [RT_LIBS=-lrt], [RT_LIBS=])
-CAIROPERF_LIBS=$RT_LIBS
-
-# check for GNU-extensions to fenv
-AC_CHECK_HEADER(fenv.h, [AC_CHECK_FUNCS(feenableexcept fedisableexcept)])
-
-AC_MSG_CHECKING([for Sun Solaris (non-POSIX ctime_r)])
-case "$host" in
-    *-*-solaris*)
-	CFLAGS="$CFLAGS -D_POSIX_PTHREAD_SEMANTICS"
-	solaris_posix_pthread=yes
-	;;
-    *)
-	solaris_posix_pthread=no
-	;;
-esac
-AC_MSG_RESULT([$solaris_posix_pthread])
-
-dnl ===========================================================================
-dnl
-dnl Test for native atomic operations.
-dnl
-AC_CACHE_CHECK([for native atomic primitives], cairo_cv_atomic_primitives, [
-cairo_cv_atomic_primitives="none"
-
-AC_TRY_LINK([int atomic_add(int i) { return __sync_fetch_and_add (&i, 1); }], [],
-  cairo_cv_atomic_primitives="Intel"
-  )
-])
-if test "x$cairo_cv_atomic_primitives" = xIntel; then
-	AC_DEFINE(CAIRO_HAS_INTEL_ATOMIC_PRIMITIVES, 1, [Enable if your compiler supports the Intel __sync_* atomic primitives])
-fi
-
-AC_CACHE_CHECK([whether atomic ops require a memory barrier], cairo_cv_atomic_op_needs_memory_barrier, [
-case $host_cpu in
-    i?86)
-	cairo_cv_atomic_op_needs_memory_barrier="no"
-	;;
-    x86_64)
-	cairo_cv_atomic_op_needs_memory_barrier="no"
-	;;
-    arm*)
-	cairo_cv_atomic_op_needs_memory_barrier="no"
-	;;
-    *)
-	cairo_cv_atomic_op_needs_memory_barrier="yes"
-	;;
-esac
-])
-if test "x$cairo_cv_atomic_op_needs_memory_barrier" = "xyes"; then
-    AC_DEFINE_UNQUOTED(CAIRO_ATOMIC_OP_NEEDS_MEMORY_BARRIER, 1,
-		       [whether Cairo needs memory barriers around atomic ops])
-fi
+CAIRO_CHECK_NATIVE_ATOMIC_PRIMITIVES
+CAIRO_CHECK_ATOMIC_OP_NEEDS_MEMORY_BARRIER
 
 AC_MSG_CHECKING([for native Win32])
 case "$host" in
@@ -94,5 +23,52 @@ esac
 AC_MSG_RESULT([$cairo_os_win32])
 AM_CONDITIONAL(OS_WIN32, test "$cairo_os_win32" = "yes")
 
+AC_MSG_CHECKING([for Sun Solaris (non-POSIX ctime_r)])
+case "$host" in
+    *-*-solaris*)
+	CFLAGS="$CFLAGS -D_POSIX_PTHREAD_SEMANTICS"
+	solaris_posix_pthread=yes
+	;;
+    *)
+	solaris_posix_pthread=no
+	;;
+esac
+AC_MSG_RESULT([$solaris_posix_pthread])
+
+dnl ====================================================================
+dnl Library checks
+dnl ====================================================================
+
+AC_CHECK_LIBM
+LIBS="$LIBS $LIBM"
+
+AC_CHECK_LIB(rt, sched_yield, [RT_LIBS=-lrt], [RT_LIBS=])
+CAIROPERF_LIBS=$RT_LIBS
+AC_SUBST(CAIROPERF_LIBS)
+
+dnl ====================================================================
+dnl Header/function checks
+dnl ====================================================================
+
+dnl Checks for precise integer types
+AC_CHECK_HEADERS([stdint.h inttypes.h sys/int_types.h])
+AC_CHECK_TYPES([uint64_t, uint128_t])
+
+dnl Check for socket support for any2ppm daemon
+AC_CHECK_HEADERS([fcntl.h unistd.h signal.h sys/stat.h sys/socket.h sys/poll.h sys/un.h])
+
+dnl check for CPU affinity support
+AC_CHECK_HEADERS([sched.h],
+	[AC_CHECK_FUNCS([sched_getaffinity])])
+
+dnl check for GNU-extensions to fenv
+AC_CHECK_HEADER(fenv.h,
+	[AC_CHECK_FUNCS(feenableexcept fedisableexcept)])
+
+dnl check for misc headers and functions
+AC_CHECK_HEADERS([libgen.h byteswap.h signal.h setjmp.h])
+AC_CHECK_FUNCS([vasnprintf link ctime_r drand48 flockfile])
+
+dnl check for win32 headers (this detects mingw as well)
 AC_CHECK_HEADERS([windows.h], have_windows=yes, have_windows=no)
 

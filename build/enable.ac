@@ -1,5 +1,9 @@
-AC_CHECK_LIBM
-LIBS="$LIBS $LIBM"
+dnl
+dnl These are the facilities for enable/disabling various backends/features,
+dnl and for collecting CFLAGS/LIBS and generating per backend/feature .pc
+dnl files, assembling list of source files to compile, and creating
+dnl cairo-features.h and other generated files.
+dnl
 
 dnl ===========================================================================
 dnl
@@ -189,7 +193,7 @@ CAIRO_NO_FEATURES=""
 CAIRO_SUPPORTED_FEATURES=""
 CAIRO_REQUIRES=""
 CAIRO_NONPKGCONFIG_CFLAGS=""
-CAIRO_NONPKGCONFIG_LIBS="$LIBM"
+CAIRO_NONPKGCONFIG_LIBS="$LIBS"
 CAIRO_LDADD=""
 CAIRO_CFLAGS=$CAIRO_NONPKGCONFIG_CFLAGS
 CAIRO_LIBS=$CAIRO_NONPKGCONFIG_LIBS
@@ -218,7 +222,6 @@ AC_SUBST(CAIRO_NONPKGCONFIG_LIBS)
 AC_SUBST(CAIRO_CFLAGS)
 AC_SUBST(CAIRO_LDADD)
 AC_SUBST(CAIRO_LIBS)
-AC_SUBST(CAIROPERF_LIBS)
 
 CAIRO_CONFIG_COMMANDS([$srcdir/src/Config.mk],
 		      [echo "$CAIRO_CONFIG_AMAKE"],
