@@ -116,3 +116,96 @@ ax_cv_c_float_words_bigendian=no (or yes) according to your system.
 esac
 
 ])# AX_C_FLOAT_WORDS_BIGENDIAN
+
+
+dnl Usage:
+dnl   CAIRO_BIGENDIAN
+dnl
+AC_DEFUN([CAIRO_BIGENDIAN], [
+	case $host_os in
+		darwin*)
+	AH_VERBATIM([X_BYTE_ORDER],[
+	/* Deal with multiple architecture compiles on Mac OS X */
+	#ifdef __APPLE_CC__
+	#ifdef __BIG_ENDIAN__
+	#define WORDS_BIGENDIAN 1
+	#define FLOAT_WORDS_BIGENDIAN 1
+	#else
+	#undef WORDS_BIGENDIAN
+	#undef FLOAT_WORDS_BIGENDIAN
+	#endif
+	#endif
+	])
+		;;
+		*) 
+	AC_C_BIGENDIAN
+	AX_C_FLOAT_WORDS_BIGENDIAN
+		;;
+	esac
+])
+
+dnl CAIRO_CHECK_FUNCS_WITH_FLAGS(FUNCTION..., CFLAGS, LIBS
+dnl                              [, ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]])
+dnl Like AC_CHECK_FUNCS but with additional CFLAGS and LIBS
+dnl --------------------------------------------------------------------
+AC_DEFUN([CAIRO_CHECK_FUNCS_WITH_FLAGS],
+[ 
+  _save_cflags="$CFLAGS"
+  _save_libs="$LIBS"
+  CFLAGS="$CFLAGS $2"
+  LIBS="$LIBS $3"
+  AC_CHECK_FUNCS($1, $4, $5)
+  CFLAGS="$_save_cflags"
+  LIBS="$_save_libs"
+])
+
+dnl CAIRO_CONFIG_COMMANDS is like AC_CONFIG_COMMANDS, except that:
+dnl
+dnl	1) It redirects the stdout of the command to the file.
+dnl	2) It does not recreate the file if contents didn't change.
+dnl
+AC_DEFUN([CAIRO_CONFIG_COMMANDS], [
+	AC_CONFIG_COMMANDS($1,
+	[
+		_config_file=$1
+		_tmp_file=cairoconf.tmp
+		AC_MSG_NOTICE([creating $_config_file])
+		{
+			$2
+		} >> "$_tmp_file"
+		if cmp -s "$_tmp_file" "$_config_file"; then
+		  AC_MSG_NOTICE([$_config_file is unchanged])
+		  rm -f "$_tmp_file"
+		else
+		  mv "$_tmp_file" "$_config_file" ||
+	          AC_MSG_ERROR([failed to update $_config_file])
+		fi
+	], $3)
+])
+
+dnl check compiler flags
+AC_DEFUN([CAIRO_CC_TRY_FLAG], [
+  AC_MSG_CHECKING([whether $CC supports $1])
+
+  _save_cflags="$CFLAGS"
+  CFLAGS="$CFLAGS -Werror $1"
+
+  AC_COMPILE_IFELSE([ ], [cairo_cc_flag=yes], [cairo_cc_flag=no])
+  CFLAGS="$_save_cflags"
+
+  if test "x$cairo_cc_flag" = "xyes"; then
+    ifelse([$2], , :, [$2])
+  else
+    ifelse([$3], , :, [$3])
+  fi
+  AC_MSG_RESULT([$cairo_cc_flag])
+])
+
+dnl Parse Version.mk and declare m4 variables out of it
+m4_define([CAIRO_PARSE_VERSION],
+		m4_translit(
+		m4_bpatsubst(m4_include(cairo-version.h),
+			     [^.define \([a-zA-Z0-9_]*\)  *\([0-9][0-9]*\)],
+			     [[m4_define(\1, \[\2\])]]),
+			    [A-Z], [a-z])
+)

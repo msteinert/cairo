@@ -1,0 +1,28 @@
+
+AC_PATH_PROG(FIND, find)
+AC_PATH_PROG(XARGS, xargs)
+
+GTK_DOC_CHECK([1.6])
+
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_CXX dnl required for BeOS (and cannot be a conditional dependency)
+AC_LIBTOOL_WIN32_DLL
+AC_PROG_LIBTOOL dnl required version (1.4) DON'T REMOVE!
+AC_C_INLINE
+
+dnl ===========================================================================
+
+PKG_PROG_PKG_CONFIG()
+if test "x$PKG_CONFIG" = x; then
+	AC_MSG_ERROR([pkg-config >= $PKGCONFIG_REQUIRED required but not found (http://pkgconfig.freedesktop.org/)])
+fi
+
+dnl Check for recent pkg-config which supports Requires.private
+case `$PKG_CONFIG --version` in
+[0.?|0.?.?|0.1[0-7]|0.1[0-7].?]) PKGCONFIG_REQUIRES="Requires"; ;;
+*) PKGCONFIG_REQUIRES="Requires.private"; ;;
+esac
+
+AC_SUBST(PKGCONFIG_REQUIRES)
+

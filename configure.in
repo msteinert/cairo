@@ -1,195 +1,24 @@
 AC_PREREQ(2.58)
-
-dnl Parse Version.mk and declare m4 variables out of it
-m4_define([cairo_version_macro],
-		m4_translit(
-		m4_bpatsubst(m4_include(cairo-version.h),
-			     [^.define \([a-zA-Z0-9_]*\)  *\([0-9][0-9]*\)],
-			     [[m4_define(\1, \[\2\])]]),
-			    [A-Z], [a-z]))
-cairo_version_macro
-
+CAIRO_PARSE_VERSION
 AC_INIT([cairo],
       cairo_version_major.cairo_version_minor.cairo_version_micro,
       [http://bugs.freedesktop.org/enter_bug.cgi?product=cairo])
 AC_CONFIG_SRCDIR(src/cairo.h)
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_AUX_DIR(build)
-
-dnl automake 1.8 requires autoconf 2.58
-dnl automake 1.7 requires autoconf 2.54
-dnl automake < 1.8 does not handle TESTS=some-test$(EXEXT) as used
-dnl in test/Makefile.am and perf/Makefile.am
 AM_INIT_AUTOMAKE([1.8])
 
 dnl ===========================================================================
-
 dnl
-dnl Version stuff
+dnl The order of the includes here is rather important
 dnl
-
-dnl This macro expands to one of 'git', 'snapshot', or 'release'
-m4_define([cairo_release_status],
-	  [m4_if(m4_eval(cairo_version_micro % 2), [1], [git],
-	         [m4_if(m4_eval(cairo_version_minor % 2), [1], [snapshot],
-		                                               [release])])])
-
-dnl This is the .so/dll number.  2 for cairo-1.x.x
-m4_define(cairo_version_sonum, m4_eval(cairo_version_major + 1))
-
-dnl The libtool shared library version stuff
-m4_define(cairo_version,
-	  m4_eval(cairo_version_major*10000 + cairo_version_minor*100 + cairo_version_micro))
-m4_if(m4_eval(cairo_version_minor % 2), [1],
-      [
-	dnl for unstable releases
-	m4_define(cairo_libtool_revision, 0)
-      ],
-      [
-	dnl for stable releases
-	m4_define(cairo_libtool_revision, cairo_version_micro)
-      ])
-m4_define(cairo_libtool_current,
-	  m4_eval(cairo_version_sonum + cairo_version - cairo_libtool_revision))
-m4_define(cairo_libtool_age,
-	  m4_eval(cairo_libtool_current - cairo_version_sonum))
-
-CAIRO_VERSION_MAJOR=cairo_version_major
-CAIRO_VERSION_MINOR=cairo_version_minor
-CAIRO_VERSION_MICRO=cairo_version_micro
-CAIRO_VERSION_SONUM=cairo_version_sonum
-CAIRO_RELEASE_STATUS=cairo_release_status
-CAIRO_LIBTOOL_VERSION_INFO=cairo_libtool_current:cairo_libtool_revision:cairo_libtool_age
-AC_SUBST(CAIRO_VERSION_MAJOR)
-AC_SUBST(CAIRO_VERSION_MINOR)
-AC_SUBST(CAIRO_VERSION_MICRO)
-AC_SUBST(CAIRO_VERSION_SONUM)
-AC_SUBST(CAIRO_RELEASE_STATUS)
-AC_SUBST(CAIRO_LIBTOOL_VERSION_INFO)
-
-dnl ===========================================================================
-
-AC_PATH_PROG(FIND, find)
-AC_PATH_PROG(XARGS, xargs)
-
-dnl ===========================================================================
-
-AC_PROG_CC
-AC_PROG_CPP
-AC_PROG_CXX dnl required for BeOS (and cannot be a conditional dependency)
-AC_LIBTOOL_WIN32_DLL
-AC_PROG_LIBTOOL dnl required version (1.4) DON'T REMOVE!
-AC_STDC_HEADERS
-AC_C_INLINE
-AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
-
-case $host_os in
-	darwin*)
-AH_VERBATIM([X_BYTE_ORDER],[
-/* Deal with multiple architecture compiles on Mac OS X */
-#ifdef __APPLE_CC__
-#ifdef __BIG_ENDIAN__
-#define WORDS_BIGENDIAN 1
-#define FLOAT_WORDS_BIGENDIAN 1
-#else
-#undef WORDS_BIGENDIAN
-#undef FLOAT_WORDS_BIGENDIAN
-#endif
-#endif
-])
-	;;
-	*) 
-AC_C_BIGENDIAN
-AX_C_FLOAT_WORDS_BIGENDIAN
-	;;
-esac
-
-AH_BOTTOM([
-#ifdef  __cplusplus
-# define CAIRO_BEGIN_DECLS  extern "C" {
-# define CAIRO_END_DECLS    }
-#else
-# define CAIRO_BEGIN_DECLS
-# define CAIRO_END_DECLS
-#endif
-])
-
-dnl ===========================================================================
-dnl === Local macros
-dnl ===========================================================================
-
-dnl _CHECK_FUNCS_WITH_FLAGS(FUNCTION..., CFLAGS, LIBS
-dnl                         [, ACTION-IF-FOUND [, ACTION-IF-NOT-FOUND]])
-dnl Like AC_CHECK_FUNCS but with additional CFLAGS and LIBS
-dnl --------------------------------------------------------------------
-AC_DEFUN([_CHECK_FUNCS_WITH_FLAGS],
-[ 
-  _save_cflags="$CFLAGS"
-  _save_libs="$LIBS"
-  CFLAGS="$CFLAGS $2"
-  LIBS="$LIBS $3"
-  AC_CHECK_FUNCS($1, $4, $5)
-  CFLAGS="$_save_cflags"
-  LIBS="$_save_libs"
-])
-
-dnl ===========================================================================
-
-AC_CHECK_LIBM
-LIBS="$LIBS $LIBM"
-
-AC_CHECK_FUNCS(vasnprintf link ctime_r drand48 flockfile)
-
-AC_MSG_CHECKING([for Sun Solaris (non-POSIX ctime_r)])
-case "$host" in
-    *-*-solaris*)
-	CFLAGS="$CFLAGS -D_POSIX_PTHREAD_SEMANTICS"
-	solaris_posix_pthread=yes
-	;;
-    *)
-	solaris_posix_pthread=no
-	;;
-esac
-AC_MSG_RESULT([$solaris_posix_pthread])
-
-# check for GNU-extensions to fenv
-AC_CHECK_HEADER(fenv.h, [AC_CHECK_FUNCS(feenableexcept fedisableexcept)])
-
-dnl ===========================================================================
-dnl
-dnl Test for native atomic operations.
-dnl
-AC_CACHE_CHECK([for native atomic primitives], cairo_cv_atomic_primitives, [
-cairo_cv_atomic_primitives="none"
-
-AC_TRY_LINK([int atomic_add(int i) { return __sync_fetch_and_add (&i, 1); }], [],
-  cairo_cv_atomic_primitives="Intel"
-  )
-])
-if test "x$cairo_cv_atomic_primitives" = xIntel; then
-	AC_DEFINE(CAIRO_HAS_INTEL_ATOMIC_PRIMITIVES, 1, [Enable if your compiler supports the Intel __sync_* atomic primitives])
-fi
-
-AC_CACHE_CHECK([whether atomic ops require a memory barrier], cairo_cv_atomic_op_needs_memory_barrier, [
-case $host_cpu in
-    i?86)
-	cairo_cv_atomic_op_needs_memory_barrier="no"
-	;;
-    x86_64)
-	cairo_cv_atomic_op_needs_memory_barrier="no"
-	;;
-    arm*)
-	cairo_cv_atomic_op_needs_memory_barrier="no"
-	;;
-    *)
-	cairo_cv_atomic_op_needs_memory_barrier="yes"
-	;;
-esac
-])
-if test "x$cairo_cv_atomic_op_needs_memory_barrier" = "xyes"; then
-    AC_DEFINE_UNQUOTED(CAIRO_ATOMIC_OP_NEEDS_MEMORY_BARRIER, 1,
-		       [whether Cairo needs memory barriers around atomic ops])
-fi
+m4_include(build/version.ac)	dnl macros setting up various version declares
+m4_include(build/tools.ac)	dnl checks for tools we use
+m4_include(build/system.ac)	dnl checks for system functions, headers, libs
+m4_include(build/enable.ac)	dnl macros for backend/feature enablement
+m4_include(build/warnings.ac)	dnl checks for compiler warning
+m4_include(build/analysis.ac)	dnl checks for analysis tools (lcov, etc)
+AC_CACHE_SAVE
 
 dnl ===========================================================================
 
@@ -197,244 +26,6 @@ AC_CHECK_LIB(z, compress,
 	 [AC_CHECK_HEADER(zlib.h, [have_libz=yes],
 	 [have_libz="no (requires zlib http://www.gzip.org/zlib/)"])],
 	 [have_libz="no (requires zlib http://www.gzip.org/zlib/)"])
-
-dnl ===========================================================================
-
-PKG_PROG_PKG_CONFIG()
-if test "x$PKG_CONFIG" = x; then
-	AC_MSG_ERROR([pkg-config >= $PKGCONFIG_REQUIRED required but not found (http://pkgconfig.freedesktop.org/)])
-fi
-
-
-dnl ===========================================================================
-dnl
-dnl CAIRO_CONFIG_COMMANDS is like AC_CONFIG_COMMANDS, except that:
-dnl
-dnl	1) It redirects the stdout of the command to the file.
-dnl	2) It does not recreate the file if contents didn't change.
-dnl
-AC_DEFUN([CAIRO_CONFIG_COMMANDS], [
-	AC_CONFIG_COMMANDS($1,
-	[
-		_config_file=$1
-		_tmp_file=cairoconf.tmp
-		AC_MSG_NOTICE([creating $_config_file])
-		{
-			$2
-		} >> "$_tmp_file"
-		if cmp -s "$_tmp_file" "$_config_file"; then
-		  AC_MSG_NOTICE([$_config_file is unchanged])
-		  rm -f "$_tmp_file"
-		else
-		  mv "$_tmp_file" "$_config_file" ||
-	          AC_MSG_ERROR([failed to update $_config_file])
-		fi
-	], $3)
-])
-
-dnl ===========================================================================
-dnl
-dnl cairo_cache_version should be increased every time that the backend
-dnl detection stuff changes in a way that removing the config.cache file may be
-dnl needed for correct operation. (this is only for the backend detection
-dnl changes;  it doesn't have any effect on any other cached thing.)
-dnl
-m4_define(cairo_cache_version, 4)
-
-dnl ===========================================================================
-dnl
-dnl Define a macro to enable backends.
-dnl  - Macro: CAIRO_BACKEND_ENABLE (NAMESPACE, NAME, ARG, FEATURE_NAME, DEFAULT, COMMANDS)
-dnl
-dnl where:
-dnl
-dnl	NAMESPACE is the sub-namespace in function names, eg. "ft" for cairo_ft_...
-dnl	NAME is the human-readable name of the backend, eg. "FreeType font"
-dnl	ARG is what enables the backend, eg. "freetype" for --enable-freetype
-dnl	FEATURE_NAME is what's used in cairo-features.h, eg. FT_FONT for CAIRO_HAS_FT_FONT
-dnl	DEFAULT is the default state of the backend:
-dnl		"no" for experimental backends, eg. your favorite new backend
-dnl		"yes" for mandatory backends, eg. png
-dnl		"auto" for other supported backends, eg. xlib
-dnl	COMMANDS are run to check whether the backend can be enabled.  Their
-dnl		result may be cached, so user should not count on them being run.
-dnl		They should set use_$(NAMESPACE) to something other than yes if the
-dnl		backend cannot be built, eg. "no (requires SomeThing)".  It then
-dnl		should also set $(NAMESPACE)_REQUIRES/CFLAGS/LIBS/...
-dnl		appropriately.  Look at the macro definition for more details,
-dnl		or ask if in doubt.
-dnl
-AC_DEFUN([CAIRO_BACKEND_ENABLE],
-         [AC_ARG_ENABLE([$3],
-                         AS_HELP_STRING([--enable-$3=@<:@no/auto/yes@:>@],
-                                        [Enable cairo's $2 backend @<:@default=$5@:>@]),
-                         enable_$1=$enableval, enable_$1=$5)
-	  if test "x$enable_$1" = xno; then
-	    use_$1="no (disabled, use --enable-$3 to enable)"
-	  else
-	    if test "x$cairo_cv_backend_[]$1[]_cache_version" != "x[]cairo_cache_version"; then
-	      # cached results for this backend (if any) are stale.  force rechecking.
-	      unset cairo_cv_backend_[]$1[]_use
-	    fi
-            AC_CACHE_CHECK([for cairo's $2 backend], cairo_cv_backend_[]$1[]_use,
-	    		   [echo
-			    use_[]$1=yes
-			    $1[]_REQUIRES=$ac_env_[]$1[]_REQUIRES_value
-			    $1[]_CFLAGS=$ac_env_[]$1[]_CFLAGS_value
-			    $1[]_LIBS=$ac_env_[]$1[]_LIBS_value
-			    $1[]_NONPKGCONFIG_CFLAGS=$ac_env_[]$1[]_NONPKGCONFIG_CFLAGS_value
-			    $1[]_NONPKGCONFIG_LIBS=$ac_env_[]$1[]_NONPKGCONFIG_LIBS_value
-			    $1[]_BASE=cairo
-			    $6
-			    cairo_cv_backend_[]$1[]_use=$use_[]$1
-			    cairo_cv_backend_[]$1[]_cache_version=cairo_cache_version
-			    cairo_cv_backend_[]$1[]_requires=$[]$1[]_REQUIRES
-			    cairo_cv_backend_[]$1[]_cflags=$[]$1[]_CFLAGS
-			    cairo_cv_backend_[]$1[]_libs=$[]$1[]_LIBS
-			    cairo_cv_backend_[]$1[]_nonpkgconfig_cflags=$[]$1[]_NONPKGCONFIG_CFLAGS
-			    cairo_cv_backend_[]$1[]_nonpkgconfig_libs=$[]$1[]_NONPKGCONFIG_LIBS
-			    cairo_cv_backend_[]$1[]_base=$[]$1[]_BASE
-			    AC_MSG_CHECKING([whether cairo's $2 backend could be enabled])])
-
-	    use_[]$1=$cairo_cv_backend_[]$1[]_use
-	    $1[]_BASE=$cairo_cv_backend_[]$1[]_base
-
-	    $1[]_REQUIRES="$cairo_cv_backend_[]$1[]_requires "
-	    $1[]_CFLAGS="$cairo_cv_backend_[]$1[]_cflags "
-	    $1[]_LIBS="$cairo_cv_backend_[]$1[]_libs "
-	    $1[]_NONPKGCONFIG_CFLAGS="$cairo_cv_backend_[]$1[]_nonpkgconfig_cflags "
-	    $1[]_NONPKGCONFIG_LIBS="$cairo_cv_backend_[]$1[]_nonpkgconfig_libs "
-
-	    # null the ones that only have space
-	    test "x$$1[]_REQUIRES" = "x " && $1[]_REQUIRES=""
-	    test "x$$1[]_CFLAGS" = "x " && $1[]_CFLAGS=""
-	    test "x$$1[]_LIBS" = "x " && $1[]_LIBS=""
-	    test "x$$1[]_NONPKGCONFIG_CFLAGS" = "x " && $1[]_NONPKGCONFIG_CFLAGS=""
-	    test "x$$1[]_NONPKGCONFIG_LIBS" = "x " && $1[]_NONPKGCONFIG_LIBS=""
-
-	    case $enable_[]$1 in
-	      yes)
-	        AS_IF([test "x$use_[]$1" = xyes],,[
-	          AC_MSG_ERROR([requested $2 backend could not be enabled])
-		])
-		;;
-	      auto)
-		;;
-	      *)
-	        AC_MSG_ERROR([invalid argument passed to --enable-$3: $use_$1, should be one of @<:@no/auto/yes@:>@])
-		;;
-	    esac
-	    if test "x$use_[]$1" = xyes; then
-	      CAIRO_FEATURES="$4 $CAIRO_FEATURES"
-	      CAIRO_REQUIRES="$$1_REQUIRES$CAIRO_REQUIRES"
-	      CAIRO_CFLAGS="$$1_NONPKGCONFIG_CFLAGS$$1_CFLAGS$CAIRO_CFLAGS"
-	      CAIRO_LIBS="$$1_NONPKGCONFIG_LIBS$$1_LIBS$CAIRO_LIBS"
-	      CAIRO_NONPKGCONFIG_CFLAGS="$$1_NONPKGCONFIG_CFLAGS$CAIRO_NONPKGCONFIG_CFLAGS"
-	      CAIRO_NONPKGCONFIG_LIBS="$$1_NONPKGCONFIG_LIBS$CAIRO_NONPKGCONFIG_LIBS"
-	      m4_define([cairo_backend_pc], m4_bpatsubst(src/cairo-$1.pc,_,-))
-	      AC_CONFIG_FILES(cairo_backend_pc():src/cairo-backend.pc.in,
-		      [$SED -i -e "
-			s,@backend_name@,$1,g;
-			s,@Backend_Name@,$2,g;
-			s,@BACKEND_BASE@,$$1_BASE,g;
-			s,@BACKEND_REQUIRES@,$$1_REQUIRES,g;
-			s%@BACKEND_NONPKGCONFIG_LIBS@%$$1_NONPKGCONFIG_LIBS%g;
-			s,@BACKEND_NONPKGCONFIG_CFLAGS@,$$1_NONPKGCONFIG_CFLAGS,g;
-			" "]cairo_backend_pc()[" ||
-			AC_MSG_ERROR(failed to update ]cairo_backend_pc()[)
-		      ],
-		      [
-		       SED='$SED'
-		       $1_BASE='$$1_BASE'
-		       $1_REQUIRES='$$1_REQUIRES'
-		       $1_NONPKGCONFIG_LIBS='$$1_NONPKGCONFIG_LIBS'
-		       $1_NONPKGCONFIG_CFLAGS='$$1_NONPKGCONFIG_CFLAGS'
-		      ])
-	    else
-	      # Collect list of all supported but disabled features
-	      AS_IF([test "x$5" = xno],,[
-	        CAIRO_NO_FEATURES="$4 $CAIRO_NO_FEATURES"
-	      ])
-	    fi
-	  fi
-	  AM_CONDITIONAL(CAIRO_HAS_$4, test "x$use_$1" = xyes)
-	  # Collect list of all supported features and cairo headers
-	  AS_IF([test "x$5" = xno],[
-	    CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
-unsupported_cairo_headers += $(cairo_$1_headers)'
-	    CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
-unsupported_cairo_headers += $(cairo_$1_headers)'
-	  ],[
-	    CAIRO_SUPPORTED_FEATURES="$4 $CAIRO_SUPPORTED_FEATURES"
-	    CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
-supported_cairo_headers += $(cairo_$1_headers)'
-	    CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
-supported_cairo_headers += $(cairo_$1_headers)'
-	  ])
-	  # Collect list of all/enabled cairo source files
-	  CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
-all_cairo_pkgconf += $(cairo_$1_pkgconf)
-all_cairo_headers += $(cairo_$1_headers)
-all_cairo_private += $(cairo_$1_private)
-all_cairo_sources += $(cairo_$1_sources)
-if CAIRO_HAS_$4
-enabled_cairo_pkgconf += $(cairo_$1_pkgconf)
-enabled_cairo_headers += $(cairo_$1_headers)
-enabled_cairo_private += $(cairo_$1_private)
-enabled_cairo_sources += $(cairo_$1_sources)
-endif
-'
-	  CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
-all_cairo_pkgconf += $(cairo_$1_pkgconf)
-all_cairo_headers += $(cairo_$1_headers)
-all_cairo_private += $(cairo_$1_private)
-all_cairo_sources += $(cairo_$1_sources)
-ifeq ($(CAIRO_HAS_$4),1)
-enabled_cairo_pkgconf += $(cairo_$1_pkgconf)
-enabled_cairo_headers += $(cairo_$1_headers)
-enabled_cairo_private += $(cairo_$1_private)
-enabled_cairo_sources += $(cairo_$1_sources)
-endif
-'
-	  # Collect warning message for enabled unsupported backends
-	  AS_IF([test "x$use_[]$1" = xyes && test "x$5" = xno],[
-	    CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE
-*** The $2 backend is still under active development and
-*** is included in this release only as a preview. It does not
-*** fully work yet and incompatible changes may yet be made
-*** to $2-backend specific API.
-"
-	  ],)
-	])
-
-CAIRO_WARNING_MESSAGE=""
-CAIRO_FEATURES=""
-CAIRO_NO_FEATURES=""
-CAIRO_SUPPORTED_FEATURES=""
-CAIRO_REQUIRES=""
-CAIRO_NONPKGCONFIG_CFLAGS=""
-CAIRO_NONPKGCONFIG_LIBS="$LIBM"
-CAIRO_LDADD=""
-CAIRO_CFLAGS=$CAIRO_NONPKGCONFIG_CFLAGS
-CAIRO_LIBS=$CAIRO_NONPKGCONFIG_LIBS
-CAIRO_CONFIG_AMAKE='# Generated by configure.  Do not edit.
-
-include $(top_srcdir)/src/Sources.mk
-
-enabled_cairo_pkgconf = cairo.pc
-enabled_cairo_headers = $(cairo_headers)
-enabled_cairo_private = $(cairo_private)
-enabled_cairo_sources = $(cairo_sources)
-all_cairo_pkgconf =
-all_cairo_headers = $(cairo_headers)
-all_cairo_private = $(cairo_private)
-all_cairo_sources = $(cairo_sources)
-supported_cairo_headers = $(cairo_headers)
-unsupported_cairo_headers =
-'
-CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_AMAKE'
-enabled_cairo_headers += $(_cairo_nodist_headers) $(_cairo_extra_headers)
-'
 
 dnl ===========================================================================
 
@@ -504,20 +95,6 @@ CAIRO_BACKEND_ENABLE(quartz_image, Quartz Image, quartz-image, QUARTZ_IMAGE_SURF
 
 dnl ===========================================================================
 
-AC_MSG_CHECKING([for native Win32])
-case "$host" in
-  *-*-mingw*)
-    cairo_os_win32=yes
-    ;;
-  *)
-    cairo_os_win32=no
-    ;;
-esac
-AC_MSG_RESULT([$cairo_os_win32])
-AM_CONDITIONAL(OS_WIN32, test "$cairo_os_win32" = "yes")
-
-AC_CHECK_HEADERS([windows.h], have_windows=yes, have_windows=no)
-
 CAIRO_BACKEND_ENABLE(win32, Microsoft Windows, win32, WIN32_SURFACE, auto, [
   if test "x$have_windows" != xyes; then
     use_win32="no (requires a Win32 platform)"
@@ -573,7 +150,7 @@ CAIRO_BACKEND_ENABLE(beos, BeOS/Zeta, beos, BEOS_SURFACE, no, [
 
 dnl ===========================================================================
 
-CAIRO_BACKEND_ENABLE(png, PNG, png, PNG_FUNCTIONS, yes, [
+CAIRO_BACKEND_ENABLE(png, PNG functions, png, PNG_FUNCTIONS, yes, [
   use_png=no
   AC_ARG_VAR([png_REQUIRES], [module name for libpng to search for using pkg-config])
   if test "x$png_REQUIRES" = x; then
@@ -595,12 +172,6 @@ CAIRO_BACKEND_ENABLE(png, PNG, png, PNG_FUNCTIONS, yes, [
     AC_MSG_WARN([Could not find libpng in the pkg-config search path])
   fi    
 ])
-
-if test "x$use_png" = "xyes"; then
-  :
-else
-  AC_MSG_WARN([*** To run the tests, cairo must be built with png support ***])
-fi
 
 dnl ===========================================================================
 
@@ -677,7 +248,7 @@ CAIRO_BACKEND_ENABLE(ft, FreeType font, freetype, FT_FONT, auto, [
 
   if test "x$use_ft" = "xyes"; then
 
-    _CHECK_FUNCS_WITH_FLAGS(FcFini, [$FONTCONFIG_CFLAGS], [$FONTCONFIG_LIBS])
+    CAIRO_CHECK_FUNCS_WITH_FLAGS(FcFini, [$FONTCONFIG_CFLAGS], [$FONTCONFIG_LIBS])
 
     PKG_CHECK_MODULES(FREETYPE, freetype2 >= $FREETYPE_MIN_VERSION,
                       [freetype_pkgconfig=yes],
@@ -790,7 +361,7 @@ test_pdf=no
 if test "x$use_pdf" = "xyes"; then
   poppler_DEPENDENCY="poppler-glib >= $POPPLER_VERSION_REQUIRED"
   PKG_CHECK_MODULES(POPPLER, $poppler_DEPENDENCY pango gtk+-2.0,
-		    [_CHECK_FUNCS_WITH_FLAGS(poppler_page_render_to_pixbuf, [$POPPLER_CFLAGS], [$POPPLER_LIBS],
+		    [CAIRO_CHECK_FUNCS_WITH_FLAGS(poppler_page_render_to_pixbuf, [$POPPLER_CFLAGS], [$POPPLER_LIBS],
                     [test_pdf=yes],
 		    [AC_MSG_RESULT(no); test_pdf="no (requires $poppler_DEPENDENCY)"])],
 		    [AC_MSG_RESULT(no); test_pdf="no (requires $poppler_DEPENDENCY)"])
@@ -820,7 +391,7 @@ test_svg=no
 if test "x$use_svg" = "xyes"; then
   librsvg_DEPENDENCY="librsvg-2.0 >= $LIBRSVG_VERSION_REQUIRED"
   PKG_CHECK_MODULES(LIBRSVG, $librsvg_DEPENDENCY gdk-2.0,
-		    [_CHECK_FUNCS_WITH_FLAGS(rsvg_pixbuf_from_file, [$LIBRSVG_CFLAGS], [$LIBRSVG_LIBS],
+		    [CAIRO_CHECK_FUNCS_WITH_FLAGS(rsvg_pixbuf_from_file, [$LIBRSVG_CFLAGS], [$LIBRSVG_LIBS],
                     [test_svg=yes],
 		    [AC_MSG_RESULT(no); test_svg="no (requires $librsvg_DEPENDENCY)"])],
 		    [AC_MSG_RESULT(no); test_svg="no (requires $librsvg_DEPENDENCY)"])
@@ -859,219 +430,6 @@ AM_CONDITIONAL(BUILD_ANY2PPM,
 	         -o "x$test_pdf" = "xyes" ) # -o "x$test_ps"  = "xyes")
 
 dnl ===========================================================================
-dnl dump backend checking results
-AC_CACHE_SAVE
-
-dnl ===========================================================================
-dnl Checks for precise integer types
-AC_CHECK_HEADERS([stdint.h signal.h setjmp.h inttypes.h sys/int_types.h])
-AC_CHECK_TYPES([uint64_t, uint128_t])
-
-dnl Check for socket support for any2ppm daemon
-AC_CHECK_HEADERS([fcntl.h unistd.h signal.h sys/stat.h sys/socket.h sys/poll.h sys/un.h])
-
-dnl ===========================================================================
-dnl check for CPU affinity support
-AC_CHECK_HEADERS([sched.h], [
-  AC_CHECK_FUNCS([sched_getaffinity], [
-    AC_DEFINE([HAVE_SCHED_GETAFFINITY], [1],
-	      [Define to 1 if you have Linux compatible sched_getaffinity])
-  ])
-])
-
-AC_CHECK_LIB(rt, sched_yield, [RT_LIBS=-lrt], [RT_LIBS=])
-CAIROPERF_LIBS=$RT_LIBS
-
-dnl ===========================================================================
-dnl Checks for misc headers
-AC_CHECK_HEADERS([libgen.h byteswap.h])
-
-dnl ===========================================================================
-dnl check compiler flags
-AC_DEFUN([CAIRO_CC_TRY_FLAG], [
-  AC_MSG_CHECKING([whether $CC supports $1])
-
-  _save_cflags="$CFLAGS"
-  CFLAGS="$CFLAGS -Werror $1"
-
-  AC_COMPILE_IFELSE([ ], [cairo_cc_flag=yes], [cairo_cc_flag=no])
-  CFLAGS="$_save_cflags"
-
-  if test "x$cairo_cc_flag" = "xyes"; then
-    ifelse([$2], , :, [$2])
-  else
-    ifelse([$3], , :, [$3])
-  fi
-  AC_MSG_RESULT([$cairo_cc_flag])
-])
-
-
-dnl Use lots of warning flags with with gcc and compatible compilers
-
-dnl Note: if you change the following variable, the cache is automatically
-dnl skipped and all flags rechecked.  So there's no need to do anything
-dnl else.  If for any reason you need to force a recheck, just change
-dnl MAYBE_WARN in an ignorable way (like adding whitespace)
-
-MAYBE_WARN="-Wall -Wextra \
--Wsign-compare -Werror-implicit-function-declaration \
--Wpointer-arith -Wwrite-strings -Wstrict-prototypes \
--Wmissing-prototypes -Wmissing-declarations -Wnested-externs \
--Wpacked -Wswitch-enum -Wmissing-format-attribute \
--Wstrict-aliasing=2 -Winit-self -Wunsafe-loop-optimizations \
--Wdeclaration-after-statement -Wold-style-definition \
--Wno-missing-field-initializers -Wno-unused-parameter \
--Wno-attributes -Wno-long-long -Winline"
-
-dnl We also abuse the warning-flag facility to enable other compiler
-dnl options.  Namely, the following:
-MAYBE_WARN="$MAYBE_WARN -fno-strict-aliasing"
-
-# invalidate cached value if MAYBE_WARN has changed
-if test "x$cairo_cv_warn_maybe" != "x$MAYBE_WARN"; then
-	unset cairo_cv_warn_cflags
-fi
-AC_CACHE_CHECK([for supported warning flags], cairo_cv_warn_cflags, [
-	echo
-	WARN_CFLAGS=""
-
-	# Some warning options are not supported by all versions of
-	# gcc, so test all desired options against the current
-	# compiler.
-	#
-	# Note that there are some order dependencies
-	# here. Specifically, an option that disables a warning will
-	# have no net effect if a later option then enables that
-	# warnings, (perhaps implicitly). So we put some grouped
-	# options (-Wall and -Wextra) up front and the -Wno options
-	# last.
-
-	for W in $MAYBE_WARN; do
-		CAIRO_CC_TRY_FLAG([$W], [WARN_CFLAGS="$WARN_CFLAGS $W"])
-	done
-
-	cairo_cv_warn_cflags=$WARN_CFLAGS
-	cairo_cv_warn_maybe=$MAYBE_WARN
-
-	AC_MSG_CHECKING([which warning flags were supported])
-])
-WARN_CFLAGS="$cairo_cv_warn_cflags"
-CAIRO_CFLAGS="$CAIRO_CFLAGS $WARN_CFLAGS"
-
-# We only wish to enable attribute(warn_unused_result) if we can prevent
-# gcc from generating thousands of warnings about the misapplication of the
-# attribute to void functions and variables.
-AC_CACHE_CHECK([how to enable unused result warnings], cairo_cv_warn_unused_result, [
-	cairo_cv_warn_unused_result=""
-	if echo $WARN_CFLAGS | grep -e '-Wno-attributes' >/dev/null; then
-	    AC_TRY_COMPILE([__attribute__((__warn_unused_result__))
-		int f (int i) { return i; }], [],
-		[cairo_cv_warn_unused_result="__attribute__((__warn_unused_result__))"])
-	fi
-])
-AC_DEFINE_UNQUOTED([WARN_UNUSED_RESULT], [$cairo_cv_warn_unused_result],
-	  [Define to the value your compiler uses to support the warn-unused-result attribute])
-
-dnl ===========================================================================
-
-AC_SUBST(CAIRO_REQUIRES)
-AC_SUBST(CAIRO_NONPKGCONFIG_CFLAGS)
-AC_SUBST(CAIRO_NONPKGCONFIG_LIBS)
-AC_SUBST(CAIRO_CFLAGS)
-AC_SUBST(CAIRO_LDADD)
-AC_SUBST(CAIRO_LIBS)
-AC_SUBST(CAIROPERF_LIBS)
-
-dnl ===========================================================================
-dnl Check for gtk-doc and docbook
-
-GTK_DOC_CHECK([1.6])
-
-dnl ===========================================================================
-dnl Check for recent pkg-config which supports Requires.private
-
-case `$PKG_CONFIG --version` in
-[0.?|0.?.?|0.1[0-7]|0.1[0-7].?]) PKGCONFIG_REQUIRES="Requires"; ;;
-*) PKGCONFIG_REQUIRES="Requires.private"; ;;
-esac
-
-AC_SUBST(PKGCONFIG_REQUIRES)
-
-dnl ===========================================================================
-
-cairo_has_lcov=no
-AC_ARG_ENABLE(gcov,
-  AS_HELP_STRING([--enable-gcov],
-		 [Enable gcov]),
-  [use_gcov=$enableval], [use_gcov=no])
-
-if test "x$use_gcov" = "xyes"; then
-  dnl we need gcc:
-  if test "$GCC" != "yes"; then
-    AC_MSG_ERROR([GCC is required for --enable-gcov])
-  fi
-
-  dnl Check if ccache is being used
-  AC_CHECK_PROG(SHTOOL, shtool, shtool)
-  case `$SHTOOL path $CC` in
-    *ccache*[)] gcc_ccache=yes;;
-    *[)] gcc_ccache=no;;
-  esac
-
-  if test "$gcc_ccache" = "yes" && (test -z "$CCACHE_DISABLE" || test "$CCACHE_DISABLE" != "1"); then
-    AC_MSG_ERROR([ccache must be disabled when --enable-gcov option is used. You can disable ccache by setting environment variable CCACHE_DISABLE=1.])
-  fi
-
-  ltp_version_list="1.6 1.5 1.4"
-  AC_CHECK_PROG(LTP, lcov, lcov)
-  AC_CHECK_PROG(LTP_GENHTML, genhtml, genhtml)
-
-  if test "$LTP"; then
-    AC_CACHE_CHECK([for ltp version], cairo_cv_ltp_version, [
-      cairo_cv_ltp_version=invalid
-      ltp_version=`$LTP -v 2>/dev/null | $SED -e 's/^.* //'`
-      for ltp_check_version in $ltp_version_list; do
-        if test "$ltp_version" = "$ltp_check_version"; then
-          cairo_cv_ltp_version="$ltp_check_version (ok)"
-        fi
-      done
-    ])
-  fi
-
-  case $cairo_cv_ltp_version in
-    ""|invalid[)]
-      ;;
-    *)
-      cairo_has_lcov=yes
-      ;;
-  esac
-
-  if test "x$cairo_has_lcov" != "xyes"; then
-    AC_MSG_ERROR([[To enable code coverage reporting you must have one of the following LTP versions installed: $ltp_version_list.
-Please install the Linux Test Project [http://ltp.sourceforge.net/], and try again.]])
-   fi
-
-  if test -z "$LTP_GENHTML"; then
-    AC_MSG_ERROR([[Could not find genhtml from the LTP package.
-Please install the Linux Test Project [http://ltp.sourceforge.net/], and try again.]])
-  fi
-
-  AC_DEFINE(HAVE_GCOV, 1, [Whether you have gcov])
-dnl  PHP_ADD_MAKEFILE_FRAGMENT($abs_srcdir/Makefile.gcov, $abs_srcdir)
-
-  dnl Remove all optimization flags from CFLAGS
-  changequote({,})
-  CFLAGS=`echo "$CFLAGS" | $SED -e 's/-O[0-9]*//g'`
-  CAIRO_CFLAGS=`echo "$CAIRO_CFLAGS" | $SED -e 's/-O[0-9]*//g'`
-  changequote([,])
-
-  dnl Add the special gcc flags
-  CAIRO_CFLAGS="$CAIRO_CFLAGS -O0 -fprofile-arcs -ftest-coverage"
-  CAIRO_LDADD="$CAIRO_LDADD -lgcov"
-fi
-AM_CONDITIONAL(CAIRO_HAS_LCOV, test "x$cairo_has_lcov" = "xyes")
-
-dnl ===========================================================================
 
 AC_ARG_ENABLE(some-floating-point,
   AS_HELP_STRING([--disable-some-floating-point],
@@ -1096,47 +454,16 @@ fi
 
 dnl ===========================================================================
 
-CAIRO_CONFIG_COMMANDS([$srcdir/src/Config.mk],
-		      [echo "$CAIRO_CONFIG_AMAKE"],
-		      [CAIRO_CONFIG_AMAKE='$CAIRO_CONFIG_AMAKE'])
-CAIRO_CONFIG_COMMANDS([$srcdir/src/Config.mk.win32],
-		      [echo "$CAIRO_CONFIG_WIN32"],
-		      [CAIRO_CONFIG_WIN32='$CAIRO_CONFIG_WIN32'])
-CAIRO_CONFIG_COMMANDS([src/cairo-features.h],
-[
-	echo '/* Generated by configure.  Do not edit. */'
-	echo '#ifndef CAIRO_FEATURES_H'
-	echo '#define CAIRO_FEATURES_H'
-	echo ''
-	for FEATURE in $CAIRO_FEATURES; do
-		echo "#define CAIRO_HAS_$FEATURE 1"
-	done | LANG=C sort
-	echo ''
-	for FEATURE in $CAIRO_NO_FEATURES; do
-		echo "/*#undef CAIRO_HAS_$FEATURE */"
-	done | LANG=C sort
-	echo ''
-	echo '#endif'
-],[
-	CAIRO_FEATURES='$CAIRO_FEATURES'
-	CAIRO_NO_FEATURES='$CAIRO_NO_FEATURES'
+AH_BOTTOM([
+#ifdef  __cplusplus
+# define CAIRO_BEGIN_DECLS  extern "C" {
+# define CAIRO_END_DECLS    }
+#else
+# define CAIRO_BEGIN_DECLS
+# define CAIRO_END_DECLS
+#endif
 ])
-CAIRO_CONFIG_COMMANDS([src/cairo-supported-features.h],
-[
-	echo '/* Generated by configure.  Do not edit. */'
-	echo '#ifndef CAIRO_SUPPORTED_FEATURES_H'
-	echo '#define CAIRO_SUPPORTED_FEATURES_H'
-	echo ''
-	echo '/* This is a dummy header, to trick gtk-doc only */'
-	echo ''
-	for FEATURE in $CAIRO_SUPPORTED_FEATURES; do
-		echo "#define CAIRO_HAS_$FEATURE 1"
-	done
-	echo ''
-	echo '#endif'
-],[
-	CAIRO_SUPPORTED_FEATURES='$CAIRO_SUPPORTED_FEATURES'
-])
+
 AC_CONFIG_FILES([
 Makefile
 boilerplate/Makefile
