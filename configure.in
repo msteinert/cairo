@@ -29,7 +29,7 @@ AC_CHECK_LIB(z, compress,
 
 dnl ===========================================================================
 
-CAIRO_BACKEND_ENABLE(xlib, Xlib, xlib, XLIB_SURFACE, auto, [
+CAIRO_ENABLE_SURFACE_BACKEND(xlib, Xlib, auto, [
   xlib_REQUIRES="x11"
   PKG_CHECK_MODULES(xlib, $xlib_REQUIRES, ,
 		    [AC_MSG_RESULT(no)
@@ -43,7 +43,7 @@ CAIRO_BACKEND_ENABLE(xlib, Xlib, xlib, XLIB_SURFACE, auto, [
 		     fi])
 ])
 
-CAIRO_BACKEND_ENABLE(xlib_xrender, Xlib Xrender, xlib-xrender, XLIB_XRENDER_SURFACE, auto, [
+CAIRO_ENABLE_SURFACE_BACKEND(xlib_xrender, Xlib Xrender, auto, [
   if test "x$use_xlib" != "xyes"; then
     use_xlib_xrender="no (requires --enable-xlib)"
   else
@@ -65,7 +65,7 @@ CAIRO_BACKEND_ENABLE(xlib_xrender, Xlib Xrender, xlib-xrender, XLIB_XRENDER_SURF
 
 dnl ===========================================================================
 
-CAIRO_BACKEND_ENABLE(xcb, XCB, xcb, XCB_SURFACE, no, [
+CAIRO_ENABLE_SURFACE_BACKEND(xcb, XCB, no, [
   xcb_REQUIRES="xcb >= 0.9.92 xcb-render >= 0.9.92 xcb-renderutil"
   PKG_CHECK_MODULES(xcb, $xcb_REQUIRES, , [AC_MSG_RESULT(no)
   use_xcb="no (requires XCB http://xcb.freedesktop.org)"])
@@ -73,7 +73,7 @@ CAIRO_BACKEND_ENABLE(xcb, XCB, xcb, XCB_SURFACE, no, [
 
 dnl ===========================================================================
 
-CAIRO_BACKEND_ENABLE(quartz, Quartz, quartz, QUARTZ_SURFACE, auto, [
+CAIRO_ENABLE_SURFACE_BACKEND(quartz, Quartz, auto, [
   dnl There is no pkgconfig for quartz; lets do a header check
   AC_CHECK_HEADER(ApplicationServices/ApplicationServices.h, , [use_quartz="no (ApplicationServices framework not found)"])
   if test "x$use_quartz" != "xyes" ; then
@@ -85,24 +85,24 @@ CAIRO_BACKEND_ENABLE(quartz, Quartz, quartz, QUARTZ_SURFACE, auto, [
   fi
 ])
 
-CAIRO_BACKEND_ENABLE(quartz_font, Quartz font, quartz-font, QUARTZ_FONT, auto, [
+CAIRO_ENABLE_FONT_BACKEND(quartz_font, Quartz, auto, [
   use_quartz_font=$use_quartz
 ])
 
-CAIRO_BACKEND_ENABLE(quartz_image, Quartz Image, quartz-image, QUARTZ_IMAGE_SURFACE, no, [
+CAIRO_ENABLE_SURFACE_BACKEND(quartz_image, Quartz Image, no, [
   use_quartz_image=$use_quartz
 ])
 
 dnl ===========================================================================
 
-CAIRO_BACKEND_ENABLE(win32, Microsoft Windows, win32, WIN32_SURFACE, auto, [
+CAIRO_ENABLE_SURFACE_BACKEND(win32, Microsoft Windows, auto, [
   if test "x$have_windows" != xyes; then
     use_win32="no (requires a Win32 platform)"
   fi
   win32_LIBS="-lgdi32 -lmsimg32"
 ])
 
-CAIRO_BACKEND_ENABLE(win32_font, Microsoft Windows font, win32-font, WIN32_FONT, auto, [
+CAIRO_ENABLE_FONT_BACKEND(win32_font, Microsoft Windows, auto, [
   use_win32_font=$use_win32
 ])
 
@@ -122,7 +122,7 @@ AM_CONDITIONAL(CAIRO_CAN_TEST_WIN32_PRINTING_SURFACE, test "x$test_win32_printin
 
 dnl ===========================================================================
 
-CAIRO_BACKEND_ENABLE(os2, OS/2, os2, OS2_SURFACE, no, [
+CAIRO_ENABLE_SURFACE_BACKEND(os2, OS/2, no, [
   case "$host" in
     *-*-os2*)
       :
@@ -135,9 +135,10 @@ CAIRO_BACKEND_ENABLE(os2, OS/2, os2, OS2_SURFACE, no, [
 
 dnl ===========================================================================
 
-CAIRO_BACKEND_ENABLE(beos, BeOS/Zeta, beos, BEOS_SURFACE, no, [
+CAIRO_ENABLE_SURFACE_BACKEND(beos, BeOS/Zeta, no, [
   case "$host" in
     *-*-beos)
+      beos_LIBS=""
       dnl Add libbe and libzeta if available
       AC_CHECK_LIB(be,main,beos_LIBS="$beos_LIBS -lbe")
       AC_CHECK_LIB(zeta,main,beos_LIBS="$beos_LIBS -lzeta")
@@ -150,7 +151,7 @@ CAIRO_BACKEND_ENABLE(beos, BeOS/Zeta, beos, BEOS_SURFACE, no, [
 
 dnl ===========================================================================
 
-CAIRO_BACKEND_ENABLE(png, PNG functions, png, PNG_FUNCTIONS, yes, [
+CAIRO_ENABLE_FUNCTIONS(png, PNG, yes, [
   use_png=no
   AC_ARG_VAR([png_REQUIRES], [module name for libpng to search for using pkg-config])
   if test "x$png_REQUIRES" = x; then
@@ -176,7 +177,7 @@ CAIRO_BACKEND_ENABLE(png, PNG functions, png, PNG_FUNCTIONS, yes, [
 dnl ===========================================================================
 
 GLITZ_MIN_VERSION=0.5.1
-CAIRO_BACKEND_ENABLE(glitz, glitz, glitz, GLITZ_SURFACE, no, [
+CAIRO_ENABLE_SURFACE_BACKEND(glitz, glitz, no, [
   glitz_REQUIRES="glitz >= $GLITZ_MIN_VERSION"
   PKG_CHECK_MODULES(glitz, $glitz_REQUIRES, , [AC_MSG_RESULT(no)
   use_glitz="no (requires glitz http://freedesktop.org/Software/glitz)"])
@@ -213,7 +214,7 @@ AM_CONDITIONAL(CAIRO_CAN_TEST_GLITZ_WGL_SURFACE, test "x$have_glitz_wgl" = "xyes
 
 dnl ===========================================================================
 
-CAIRO_BACKEND_ENABLE(directfb, directfb, directfb, DIRECTFB_SURFACE, no, [
+CAIRO_ENABLE_SURFACE_BACKEND(directfb, directfb, no, [
   directfb_REQUIRES=directfb
   PKG_CHECK_MODULES(directfb, $directfb_REQUIRES, , AC_MSG_RESULT(no)
 		    [use_directfb="no (requires directfb http://www.directfb.org)"])
@@ -241,7 +242,7 @@ FREETYPE_MIN_RELEASE=2.1.9
 # libtool-specific version - this is what is checked
 FREETYPE_MIN_VERSION=9.7.3
 
-CAIRO_BACKEND_ENABLE(ft, FreeType font, freetype, FT_FONT, auto, [
+CAIRO_ENABLE_FONT_BACKEND(ft, FreeType, auto, [
   ft_REQUIRES="fontconfig"
   PKG_CHECK_MODULES(FONTCONFIG, $ft_REQUIRES,,
 		    [AC_MSG_RESULT(no); use_ft="no (requires fontconfig)"])
@@ -324,7 +325,7 @@ fi
 
 dnl ===========================================================================
 
-CAIRO_BACKEND_ENABLE(ps, PostScript, ps, PS_SURFACE, yes, [
+CAIRO_ENABLE_SURFACE_BACKEND(ps, PostScript, yes, [
     # The ps backend requires zlib.
     use_ps=$have_libz
     ps_NONPKGCONFIG_LIBS=-lz
@@ -348,7 +349,7 @@ AM_CONDITIONAL(CAIRO_CAN_TEST_PS_SURFACE, test "x$test_ps" = "xyes")
 
 dnl ===========================================================================
 
-CAIRO_BACKEND_ENABLE(pdf, PDF, pdf, PDF_SURFACE, yes, [
+CAIRO_ENABLE_SURFACE_BACKEND(pdf, PDF, yes, [
     # The pdf backend requires zlib.
     use_pdf=$have_libz
     pdf_NONPKGCONFIG_LIBS=-lz
@@ -380,7 +381,7 @@ AM_CONDITIONAL(CAIRO_HAS_MULTI_PAGE_SURFACES, test "x$use_ps" = "xyes" -o "x$use
 
 dnl ===========================================================================
 
-CAIRO_BACKEND_ENABLE(svg, SVG, svg, SVG_SURFACE, yes, [
+CAIRO_ENABLE_SURFACE_BACKEND(svg, SVG, yes, [
   if test "x$use_png" != "xyes"; then
     use_svg="no (requires --enable-png)"
   fi
@@ -409,7 +410,7 @@ AC_SUBST(LIBRSVG_LIBS)
 dnl ===========================================================================
 
 dnl XXX make this a private feature?
-CAIRO_BACKEND_ENABLE(test_surfaces, test surfaces, test-surfaces, TEST_SURFACES, no)
+CAIRO_ENABLE(test_surfaces, test surfaces, no)
 
 dnl ===========================================================================
 
