@@ -8,8 +8,9 @@ libcairoboilerplate_la_SOURCES =	\
 	cairo-boilerplate-getopt.c	\
 	cairo-boilerplate-getopt.h	\
 	cairo-boilerplate-scaled-font.h	\
-	xmalloc.c			\
-	xmalloc.h
+	cairo-boilerplate-system.c	\
+	cairo-boilerplate-system.h	\
+	$(NULL)
 libcairoboilerplate_la_LIBADD = $(top_builddir)/src/libcairo.la $(CAIRO_LDADD)
 
 if CAIRO_HAS_BEOS_SURFACE

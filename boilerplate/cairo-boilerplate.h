@@ -187,6 +187,6 @@ cairo_boilerplate_version (void);
 const char*
 cairo_boilerplate_version_string (void);
 
-#include "xmalloc.h"
+#include "cairo-boilerplate-system.h"
 
 #endif

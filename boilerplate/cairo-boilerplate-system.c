@@ -26,7 +26,7 @@
 #define _GNU_SOURCE 1 /* for vasprintf */
 
 #include "cairo-boilerplate.h"
-#include "xmalloc.h"
+#include "cairo-boilerplate-system.h"
 
 #include <stdio.h>
 #include <stdlib.h>
