@@ -52,7 +52,6 @@
 #include "cairo-test.h"
 
 #include "buffer-diff.h"
-#include "xmalloc.h"
 
 #ifdef _MSC_VER
 #include <crtdbg.h>

@@ -40,7 +40,6 @@
 
 #include "pdiff.h"
 #include "buffer-diff.h"
-#include "xmalloc.h"
 
 /* Don't allow any differences greater than this value, even if pdiff
  * claims that the images are identical */

@@ -30,7 +30,6 @@
 */
 
 #include "cairo-test.h"
-#include "xmalloc.h"
 
 #include <string.h>
 #include <stdlib.h>

@@ -35,7 +35,6 @@
 #include <errno.h>
 
 #include "buffer-diff.h"
-#include "xmalloc.h"
 
 static void
 _xunlink (const char *pathname)
