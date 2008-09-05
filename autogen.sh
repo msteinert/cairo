@@ -19,17 +19,16 @@ AUTOHEADER=${AUTOHEADER-autoheader}
 AUTOMAKE_FLAGS="--add-missing --foreign"
 AUTOCONF=${AUTOCONF-autoconf}
 
-CONFIGURE_IN=
-test -f configure.in && CONFIGURE_IN=configure.in
-test -f configure.ac && CONFIGURE_IN=configure.ac
+CONFIGURE_AC=
+test -f configure.ac && CONFIGURE_AC=configure.ac
 
-if test "X$CONFIGURE_IN" = X; then
+if test "X$CONFIGURE_AC" = X; then
   echo "$ARGV0: ERROR: No $srcdir/configure.in or $srcdir/configure.ac found."
   exit 1
 fi
 
 extract_version() {
-	grep "^ *$1" $CONFIGURE_IN build/*.ac | sed 's/.*(\[*\([^])]*\)]*).*/\1/'
+	grep "^ *$1" $CONFIGURE_AC build/configure.ac.* | sed 's/.*(\[*\([^])]*\)]*).*/\1/'
 }
 
 autoconf_min_vers=`extract_version AC_PREREQ`
