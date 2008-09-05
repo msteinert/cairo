@@ -2818,10 +2818,7 @@ _cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface,
 	cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *) pattern;
 
 	if (surface->current_pattern_is_solid_color == FALSE ||
-	    surface->current_color_red != solid->color.red ||
-	    surface->current_color_green != solid->color.green ||
-	    surface->current_color_blue != solid->color.blue ||
-	    surface->current_color_alpha != solid->color.alpha)
+	    ! _cairo_color_equal (&surface->current_color, &solid->color))
 	{
 	    status = _cairo_pdf_operators_flush (&surface->pdf_operators);
 	    if (status)
@@ -2830,10 +2827,7 @@ _cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface,
 	    _cairo_ps_surface_emit_solid_pattern (surface, (cairo_solid_pattern_t *) pattern);
 
 	    surface->current_pattern_is_solid_color = TRUE;
-	    surface->current_color_red = solid->color.red;
-	    surface->current_color_green = solid->color.green;
-	    surface->current_color_blue = solid->color.blue;
-	    surface->current_color_alpha = solid->color.alpha;
+	    surface->current_color = solid->color;
 	}
 
 	return CAIRO_STATUS_SUCCESS;

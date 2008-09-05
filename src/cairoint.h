@@ -818,24 +818,6 @@ struct _cairo_image_surface {
 
 extern const cairo_private cairo_surface_backend_t _cairo_image_surface_backend;
 
-/* XXX: Right now, the _cairo_color structure puts unpremultiplied
-   color in the doubles and premultiplied color in the shorts. Yes,
-   this is crazy insane, (but at least we don't export this
-   madness). I'm still working on a cleaner API, but in the meantime,
-   at least this does prevent precision loss in color when changing
-   alpha. */
-struct _cairo_color {
-    double red;
-    double green;
-    double blue;
-    double alpha;
-
-    unsigned short red_short;
-    unsigned short green_short;
-    unsigned short blue_short;
-    unsigned short alpha_short;
-};
-
 #define CAIRO_EXTEND_SURFACE_DEFAULT CAIRO_EXTEND_NONE
 #define CAIRO_EXTEND_GRADIENT_DEFAULT CAIRO_EXTEND_PAD
 #define CAIRO_FILTER_DEFAULT CAIRO_FILTER_GOOD
