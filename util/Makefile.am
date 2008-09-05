@@ -1,7 +1,7 @@
 
 util: malloc-stats.so
 
-%.so: %.la
+.la.so:
 	$(RM) $@
 	$(LN_S) .libs/$*.so $@
 
