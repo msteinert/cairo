@@ -546,6 +546,7 @@ REFERENCE_IMAGES = \
 	over-above-source-ref.png                 \
 	over-above-source-rgb24-ref.png           \
 	over-around-source-ps-argb32-ref.png       \
+	over-around-source-ps-rgb24-ref.png        \
 	over-around-source-quartz-ref.png	   \
 	over-around-source-quartz-rgb24-ref.png	   \
 	over-around-source-ref.png                 \

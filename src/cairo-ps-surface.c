@@ -1504,7 +1504,7 @@ _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
      * surface. If the analysis surface determines that there is
      * anything drawn under this operation, a fallback image will be
      * used. Otherwise the operation will be replayed during the
-     * render stage and we blend the transarency into the white
+     * render stage and we blend the transparency into the white
      * background to convert the pattern to opaque.
      */
 
@@ -2089,21 +2089,19 @@ _cairo_ps_surface_flatten_transparency (cairo_ps_surface_t	*surface,
 					double			*green,
 					double			*blue)
 {
-    *red = color->red;
+    *red   = color->red;
     *green = color->green;
-    *blue = color->blue;
+    *blue  = color->blue;
 
-    if (!CAIRO_COLOR_IS_OPAQUE(color)) {
+    if (! CAIRO_COLOR_IS_OPAQUE (color)) {
+	*red   *= color->alpha;
+	*green *= color->alpha;
+	*blue  *= color->alpha;
 	if (surface->content == CAIRO_CONTENT_COLOR_ALPHA) {
-	    uint8_t one_minus_alpha = 255 - (color->alpha_short >> 8);
-
-	    *red   = ((color->red_short   >> 8) + one_minus_alpha) / 255.0;
-	    *green = ((color->green_short >> 8) + one_minus_alpha) / 255.0;
-	    *blue  = ((color->blue_short  >> 8) + one_minus_alpha) / 255.0;
-	} else {
-	    *red   = (color->red_short   >> 8) / 255.0;
-	    *green = (color->green_short >> 8) / 255.0;
-	    *blue  = (color->blue_short  >> 8) / 255.0;
+	    double one_minus_alpha = 1. - color->alpha;
+	    *red   += one_minus_alpha;
+	    *green += one_minus_alpha;
+	    *blue  += one_minus_alpha;
 	}
     }
 }
