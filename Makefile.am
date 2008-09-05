@@ -58,6 +58,6 @@ DISTCHECK_CONFIGURE_FLAGS = \
 	--enable-gtk-doc \
 	--enable-test-surfaces
 
-include $(srcdir)/build/ChangeLog.mk
-include $(srcdir)/build/Releasing.mk
-include $(srcdir)/build/Analysis.mk
+include $(srcdir)/build/Makefile.am.changelog
+include $(srcdir)/build/Makefile.am.releasing
+include $(srcdir)/build/Makefile.am.analysis
