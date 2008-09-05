@@ -206,19 +206,27 @@ m4_define([_CAIRO_BUILD_FEATURE_NAME_NORMALIZED],
 	[CAIRO_HAS_[$1]m4_bmatch([$1],[$2$],,[$2])])
 
 m4_define([_CAIRO_BUILD_FEATURE_NAME],
-[_CAIRO_BUILD_FEATURE_NAME_NORMALIZED(AS_TR_CPP([$1]),AS_TR_CPP(m4_ifval([$2],[ $2])))])
+	[_CAIRO_BUILD_FEATURE_NAME_NORMALIZED(AS_TR_CPP([$1]),AS_TR_CPP(m4_ifval([$2],[ $2])))])
 
 dnl Like _CAIRO_ENABLE*, but takes an object type too
 AC_DEFUN([_CAIRO_ENABLE],
-[m4_if([$1],m4_tolower(AS_TR_SH([$1])),,[m4_fatal([invalid feature name `$1'])])_CAIRO_ENABLE_FULL(
-	[$1],
-	m4_normalize([$2]),
-	m4_translit([$1],[_],[-]),
-	_CAIRO_BUILD_FEATURE_NAME([$1],m4_normalize([$3])),
-	m4_normalize([$3]),
-	m4_normalize([$4]),
-	[$5]
-)])
+[
+	m4_if(
+		[$1],
+		m4_tolower(AS_TR_SH([$1])),
+		,
+		[m4_fatal([invalid feature name `$1'])]
+	)
+	_CAIRO_ENABLE_FULL(
+		[$1],
+		m4_normalize([$2]),
+		m4_translit([$1],[_],[-]),
+		_CAIRO_BUILD_FEATURE_NAME([$1],m4_normalize([$3])),
+		m4_normalize([$3]),
+		m4_normalize([$4]),
+		[$5]
+	)dnl
+])
 
 dnl ===========================================================================
 dnl
@@ -241,14 +249,19 @@ dnl		should also set $(NAMESPACE)_REQUIRES/CFLAGS/LIBS/...
 dnl		appropriately.  Look at the macro definition for more details,
 dnl		or ask if in doubt.
 dnl
+
 AC_DEFUN([CAIRO_ENABLE],
-[_CAIRO_ENABLE([$1],[$2],,[$3],[$4])])
+	[_CAIRO_ENABLE([$1],	[$2],			,		[$3],[$4])])
+
 AC_DEFUN([CAIRO_ENABLE_SURFACE_BACKEND],
-[_CAIRO_ENABLE([$1],[$2 surface backend],surface,[$3],[$4])])
+	[_CAIRO_ENABLE([$1],	[$2 surface backend],	surface,	[$3],[$4])])
+
 AC_DEFUN([CAIRO_ENABLE_FONT_BACKEND],
-[_CAIRO_ENABLE([$1],[$2 font backend],font,[$3],[$4])])
+	[_CAIRO_ENABLE([$1],	[$2 font backend],	font,	  	[$3],[$4])])
+
 AC_DEFUN([CAIRO_ENABLE_FUNCTIONS],
-[_CAIRO_ENABLE([$1],[$2 functions],functions,[$3],[$4])])
+	[_CAIRO_ENABLE([$1],	[$2 functions],		functions,	[$3],[$4])])
+
 
 dnl ===========================================================================
 dnl
