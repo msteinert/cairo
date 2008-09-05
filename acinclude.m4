@@ -2,8 +2,6 @@ dnl -*- mode: autoconf -*-
 
 # serial 1
 
-m4_pattern_forbid([_CAIRO])
-
 dnl Usage:
 dnl   GTK_DOC_CHECK([minimum-gtk-doc-version])
 AC_DEFUN([GTK_DOC_CHECK],
@@ -119,6 +117,15 @@ esac
 
 ])# AX_C_FLOAT_WORDS_BIGENDIAN
 
+
+
+dnl ==========================================================================
+dnl
+dnl Cairo-specific macros
+dnl
+m4_pattern_forbid([CAIRO])
+
+dnl ==========================================================================
 
 dnl Usage:
 dnl   CAIRO_BIGENDIAN
