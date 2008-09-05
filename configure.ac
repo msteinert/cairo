@@ -1,8 +1,8 @@
 AC_PREREQ(2.58)
 CAIRO_PARSE_VERSION
 AC_INIT([cairo],
-      cairo_version_major.cairo_version_minor.cairo_version_micro,
-      [http://bugs.freedesktop.org/enter_bug.cgi?product=cairo])
+	[cairo_version_major.cairo_version_minor.cairo_version_micro],
+	[http://bugs.freedesktop.org/enter_bug.cgi?product=cairo])
 AC_CONFIG_SRCDIR(src/cairo.h)
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_AUX_DIR(build)
