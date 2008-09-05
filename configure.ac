@@ -6,7 +6,7 @@ AC_INIT([cairo],
 AC_CONFIG_SRCDIR(src/cairo.h)
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_AUX_DIR(build)
-AM_INIT_AUTOMAKE([1.8])
+AM_INIT_AUTOMAKE([1.8 foreign no-define])
 
 dnl ===========================================================================
 dnl
