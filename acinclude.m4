@@ -2,6 +2,8 @@ dnl -*- mode: autoconf -*-
 
 # serial 1
 
+m4_pattern_forbid([_CAIRO])
+
 dnl Usage:
 dnl   GTK_DOC_CHECK([minimum-gtk-doc-version])
 AC_DEFUN([GTK_DOC_CHECK],
