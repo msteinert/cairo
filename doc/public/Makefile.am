@@ -16,7 +16,7 @@ DOC_SOURCE_DIR=../../src
 HFILE_GLOB=$(top_srcdir)/src/cairo-*.h
 CFILE_GLOB=$(top_srcdir)/src/cairo-*.c $(top_srcdir)/src/cairo-*.h
 
-include $(top_srcdir)/src/Config.mk
+include $(top_srcdir)/src/Makefile.am.config
 
 # Headers to ignore
 IGNORE_HFILES= \

@@ -22,7 +22,7 @@ To add new backends you need to basically:
 
   * Modify $(top_srcdir)/configure.in to add checks for your backend.
 
-  * Modify Sources.mk to add source files for your backend,
+  * Modify Makefile.sources to add source files for your backend,
 
   * Modify $(top_srcdir)/boilerplate/ to add boilerplate code for
     testing your new backend.

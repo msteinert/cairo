@@ -2,14 +2,14 @@
 .libs
 Makefile
 Makefile.in
+Makefile.am.config
+Makefile.win32.config
 *.gcda
 *.gcno
 *.la
 *.lo
 *.loT
 *.pc
-Config.mk
-Config.mk.win32
 cairo-features.h
 cairo-supported-features.h
 cairo.def
