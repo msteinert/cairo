@@ -103,97 +103,6 @@ AC_DEFUN([_CAIRO_ENABLE_FULL],
 
 
 	_CAIRO_FEATURE_HOOKS(cr_feature, cr_feature_name, cr_feature_default, cr_feature_what)
-
-
-	if test "x$use_$1" = xyes; then
-
-		CAIRO_FEATURE_VARS_FOREACH([cr_var], [[test -n "$]cr_feature[_]cr_var[" && CAIRO_]cr_var[="$]cr_feature[_]cr_var[ $CAIRO_]cr_var["]
-		])
-		CAIRO_FEATURES="cr_feature_tag $CAIRO_FEATURES"
-		m4_define([cairo_backend_pc], m4_bpatsubst(src/cairo-$1.pc,_,-))
-		AC_CONFIG_FILES(cairo_backend_pc():src/cairo-backend.pc.in,
-		[
-			$SED -i -e "
-			s,@backend_name@,$1,g;
-			s,@Backend_Name@,cr_feature_name,g;
-			s,@BACKEND_BASE@,$$1_BASE,g;
-			s,@BACKEND_REQUIRES@,$$1_REQUIRES,g;
-			s%@BACKEND_NONPKGCONFIG_LIBS@%$$1_NONPKGCONFIG_LIBS%g;
-			s,@BACKEND_NONPKGCONFIG_CFLAGS@,$$1_NONPKGCONFIG_CFLAGS,g;
-			" "]cairo_backend_pc()[" ||
-			AC_MSG_ERROR(failed to update ]cairo_backend_pc()[)
-		],[
-			SED='$SED'
-			$1_BASE='$$1_BASE'
-			$1_REQUIRES='$$1_REQUIRES'
-			$1_NONPKGCONFIG_LIBS='$$1_NONPKGCONFIG_LIBS'
-			$1_NONPKGCONFIG_CFLAGS='$$1_NONPKGCONFIG_CFLAGS'
-		])
-	fi
-
-	AM_CONDITIONAL(cr_feature_tag, test "x$use_$1" = xyes)
-
-	dnl Collect list of all supported but disabled features
-	AS_IF([test "x$use_$1" != xyes -a "x]cr_feature_default[" != xno],
-	[
-		CAIRO_NO_FEATURES="cr_feature_tag $CAIRO_NO_FEATURES"
-	])
-
-	dnl Collect list of all (un)supported features and cairo headers
-	AS_IF([test "x]cr_feature_default[" = xno],
-	[
-		CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
-unsupported_cairo_headers += $(cairo_$1_headers)'
-		CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
-unsupported_cairo_headers += $(cairo_$1_headers)'
-	],[
-		CAIRO_SUPPORTED_FEATURES="cr_feature_tag $CAIRO_SUPPORTED_FEATURES"
-		CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
-supported_cairo_headers += $(cairo_$1_headers)'
-		CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
-supported_cairo_headers += $(cairo_$1_headers)'
-	  ])
-
-	dnl Collect list of all/enabled cairo source files
-	CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
-all_cairo_pkgconf += $(cairo_$1_pkgconf)
-all_cairo_headers += $(cairo_$1_headers)
-all_cairo_private += $(cairo_$1_private)
-all_cairo_sources += $(cairo_$1_sources)
-if cr_feature_tag
-enabled_cairo_pkgconf += $(cairo_$1_pkgconf)
-enabled_cairo_headers += $(cairo_$1_headers)
-enabled_cairo_private += $(cairo_$1_private)
-enabled_cairo_sources += $(cairo_$1_sources)
-endif
-'
-	CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
-all_cairo_pkgconf += $(cairo_$1_pkgconf)
-all_cairo_headers += $(cairo_$1_headers)
-all_cairo_private += $(cairo_$1_private)
-all_cairo_sources += $(cairo_$1_sources)
-ifeq ($(cr_feature_tag),1)
-enabled_cairo_pkgconf += $(cairo_$1_pkgconf)
-enabled_cairo_headers += $(cairo_$1_headers)
-enabled_cairo_private += $(cairo_$1_private)
-enabled_cairo_sources += $(cairo_$1_sources)
-endif
-'
-	dnl Collect warning message for enabled unsupported backends
-	AS_IF([test "x$use_$1" = xyes -a "x]cr_feature_default[" = xno],
-	[
-		CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE
-m4_text_wrap([The ]cr_feature_name[ feature is still under active development and is included in this release only as a preview. It does NOT fully work yet and incompatible changes may yet be made to ]cr_feature_name[ specific API.], [--- ],, 72)
-"
-	])
-
-	dnl Collect warning message for disabled recommended backends
-	AS_IF([test "x$use_$1" != xyes -a "x]cr_feature_default[" = xyes],
-	[
-		CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE
-m4_text_wrap([It is strictly recommended that you do NOT disable the ]cr_feature_name[ backend.], [+++ ],, 72)
-"
-	])
 ])
 
 m4_pattern_allow(^CAIRO_HAS_)
@@ -302,11 +211,16 @@ m4_define([_CAIRO_FEATURE_HOOK_MATCH],
 m4_define([_CAIRO_FEATURE_HOOKS])
 
 dnl
-dnl CAIRO_FEATURE_HOOK_REGISTER(WHAT, DEFAULT, COMMANDS)
+dnl CAIRO_FEATURE_HOOK_REGISTER(DEFAULT, WHAT, COMMANDS)
 dnl
-dnl Runs COMMANDS for features matching WHAT and DEFAULT.
+dnl	DEFAULT is the default value of features to match
+dnl	WHAT is the type of features to match
+dnl	COMMANDS is commands to run for matched features.
 dnl
-dnl WHAT and DEFAULT are matched like this:
+dnl Runs COMMANDS for features matching DEFAULT and WHAT.  Hooks are run for
+dnl each feature in the order they are added.
+dnl
+dnl DEFAULT and WHAT are matched like this:
 dnl	[*]	matches all values
 dnl	[val]	matches [val]
 dnl	[!val]	matches anything other than [val]
@@ -333,19 +247,118 @@ dnl	[
 dnl		code goes here...
 dnl	])
 dnl
-dnl Hooks are run for each feature in the order they are added.
-dnl
 AC_DEFUN([CAIRO_FEATURE_HOOK_REGISTER],
 [
 	m4_append([_CAIRO_FEATURE_HOOKS],
 	[
-		_CAIRO_FEATURE_HOOK_MATCH(m4_expand([$1]), cr_feature_what,
-		[_CAIRO_FEATURE_HOOK_MATCH(m4_expand([$2]), cr_feature_default,
+		_CAIRO_FEATURE_HOOK_MATCH(m4_expand([$1]), cr_feature_default,
+		[_CAIRO_FEATURE_HOOK_MATCH(m4_expand([$2]), cr_feature_what,
 		 [$3]
 		)])
 	], m4_newline)
 ])
 
+
+dnl ===========================================================================
+dnl
+dnl Hooks
+dnl
+
+
+CAIRO_FEATURE_HOOK_REGISTER(*,*,
+[
+
+	if test "x$use_$1" = xyes; then
+
+		CAIRO_FEATURE_VARS_FOREACH([cr_var], [[test -n "$]cr_feature[_]cr_var[" && CAIRO_]cr_var[="$]cr_feature[_]cr_var[ $CAIRO_]cr_var["]
+		])
+		CAIRO_FEATURES="cr_feature_tag $CAIRO_FEATURES"
+		m4_define([cairo_backend_pc], m4_bpatsubst(src/cairo-$1.pc,_,-))
+		AC_CONFIG_FILES(cairo_backend_pc():src/cairo-backend.pc.in,
+		[
+			$SED -i -e "
+			s,@backend_name@,$1,g;
+			s,@Backend_Name@,cr_feature_name,g;
+			s,@BACKEND_BASE@,$$1_BASE,g;
+			s,@BACKEND_REQUIRES@,$$1_REQUIRES,g;
+			s%@BACKEND_NONPKGCONFIG_LIBS@%$$1_NONPKGCONFIG_LIBS%g;
+			s,@BACKEND_NONPKGCONFIG_CFLAGS@,$$1_NONPKGCONFIG_CFLAGS,g;
+			" "]cairo_backend_pc()[" ||
+			AC_MSG_ERROR(failed to update ]cairo_backend_pc()[)
+		],[
+			SED='$SED'
+			$1_BASE='$$1_BASE'
+			$1_REQUIRES='$$1_REQUIRES'
+			$1_NONPKGCONFIG_LIBS='$$1_NONPKGCONFIG_LIBS'
+			$1_NONPKGCONFIG_CFLAGS='$$1_NONPKGCONFIG_CFLAGS'
+		])
+	fi
+
+	AM_CONDITIONAL(cr_feature_tag, test "x$use_$1" = xyes)
+
+	dnl Collect list of all supported but disabled features
+	AS_IF([test "x$use_$1" != xyes -a "x]cr_feature_default[" != xno],
+	[
+		CAIRO_NO_FEATURES="cr_feature_tag $CAIRO_NO_FEATURES"
+	])
+
+	dnl Collect list of all (un)supported features and cairo headers
+	AS_IF([test "x]cr_feature_default[" = xno],
+	[
+		CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
+unsupported_cairo_headers += $(cairo_$1_headers)'
+		CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
+unsupported_cairo_headers += $(cairo_$1_headers)'
+	],[
+		CAIRO_SUPPORTED_FEATURES="cr_feature_tag $CAIRO_SUPPORTED_FEATURES"
+		CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
+supported_cairo_headers += $(cairo_$1_headers)'
+		CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
+supported_cairo_headers += $(cairo_$1_headers)'
+	  ])
+
+	dnl Collect list of all/enabled cairo source files
+	CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
+all_cairo_pkgconf += $(cairo_$1_pkgconf)
+all_cairo_headers += $(cairo_$1_headers)
+all_cairo_private += $(cairo_$1_private)
+all_cairo_sources += $(cairo_$1_sources)
+if cr_feature_tag
+enabled_cairo_pkgconf += $(cairo_$1_pkgconf)
+enabled_cairo_headers += $(cairo_$1_headers)
+enabled_cairo_private += $(cairo_$1_private)
+enabled_cairo_sources += $(cairo_$1_sources)
+endif
+'
+	CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
+all_cairo_pkgconf += $(cairo_$1_pkgconf)
+all_cairo_headers += $(cairo_$1_headers)
+all_cairo_private += $(cairo_$1_private)
+all_cairo_sources += $(cairo_$1_sources)
+ifeq ($(cr_feature_tag),1)
+enabled_cairo_pkgconf += $(cairo_$1_pkgconf)
+enabled_cairo_headers += $(cairo_$1_headers)
+enabled_cairo_private += $(cairo_$1_private)
+enabled_cairo_sources += $(cairo_$1_sources)
+endif
+'
+	dnl Collect warning message for enabled unsupported backends
+	AS_IF([test "x$use_$1" = xyes -a "x]cr_feature_default[" = xno],
+	[
+		CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE
+m4_text_wrap([The ]cr_feature_name[ feature is still under active development and is included in this release only as a preview. It does NOT fully work yet and incompatible changes may yet be made to ]cr_feature_name[ specific API.], [--- ],, 72)
+"
+	])
+
+	dnl Collect warning message for disabled recommended backends
+	AS_IF([test "x$use_$1" != xyes -a "x]cr_feature_default[" = xyes],
+	[
+		CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE
+m4_text_wrap([It is strictly recommended that you do NOT disable the ]cr_feature_name[ backend.], [+++ ],, 72)
+"
+	])
+
+])
 
 dnl ===========================================================================
 dnl
