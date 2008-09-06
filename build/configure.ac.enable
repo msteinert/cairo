@@ -199,6 +199,11 @@ AC_DEFUN([CAIRO_FEATURE_VARS_FOREACH],
 
 dnl ===========================================================================
 
+AC_DEFUN([CAIRO_FEATURE_IF_ENABLED],
+[
+	AS_IF([test "x$use_]m4_default([$1], cr_feature)[" = xyes], [$2], [$3])
+])
+
 m4_define([_CAIRO_FEATURE_HOOK_MATCH],
 [
 	m4_case([$1],
@@ -240,12 +245,13 @@ dnl		"functions" for set of functions
 dnl		"" for private configurations
 dnl
 dnl These four values are also set as $1 to $4.  To know if feature was
-dnl enabled, compare $use_$1 to string "yes".  As in:
+dnl enabled use CAIRO_FEATURE_IF_ENABLED:
 dnl
-dnl	AS_IF([test "x$use_$1" = "xyes"],
-dnl	[
-dnl		code goes here...
-dnl	])
+dnl	CAIRO_FEATURE_IF_ENABLED($1, [IF-ENABLED], [IF-DISABLED])
+dnl
+dnl or compare $use_$1 to string "yes".  As in:
+dnl
+dnl	AS_IF([test "x$use_$1" = "xyes"], [IF-ENABLED], [IF-DISABLED])
 dnl
 AC_DEFUN([CAIRO_FEATURE_HOOK_REGISTER],
 [
