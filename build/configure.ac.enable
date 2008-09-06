@@ -348,23 +348,8 @@ enabled_cairo_private += $(cairo_$1_private)
 enabled_cairo_sources += $(cairo_$1_sources)
 endif
 '
-	dnl Collect warning message for enabled unsupported backends
-	AS_IF([test "x$use_$1" = xyes -a "x]cr_feature_default[" = xno],
-	[
-		CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE
-m4_text_wrap([The ]cr_feature_name[ feature is still under active development and is included in this release only as a preview. It does NOT fully work yet and incompatible changes may yet be made to ]cr_feature_name[ specific API.], [--- ],, 72)
-"
-	])
-
-	dnl Collect warning message for disabled recommended backends
-	AS_IF([test "x$use_$1" != xyes -a "x]cr_feature_default[" = xyes],
-	[
-		CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE
-m4_text_wrap([It is strictly recommended that you do NOT disable the ]cr_feature_name[ backend.], [+++ ],, 72)
-"
-	])
-
 ])
+
 
 dnl ===========================================================================
 dnl
@@ -373,6 +358,27 @@ dnl
 
 dnl Accumulator for warning messages
 CAIRO_FEATURE_VARS_REGISTER([WARNING_MESSAGE])
+
+dnl Collect warning message for enabled unsupported backends
+CAIRO_FEATURE_HOOK_REGISTER(no,*,
+[
+	CAIRO_FEATURE_IF_ENABLED($1,
+	[
+		CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE]m4_newline[m4_text_wrap([The ]cr_feature_name[ feature is still under active development and is included in this release only as a preview. It does NOT fully work yet and incompatible changes may yet be made to ]cr_feature_name[ specific API.], [--- ],, 78)
+"
+	])
+])
+
+dnl Collect warning message for disabled recommended backends
+CAIRO_FEATURE_HOOK_REGISTER(yes,*,
+[
+	CAIRO_FEATURE_IF_ENABLED($1,
+	[],[
+		CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE]m4_newline[m4_text_wrap([It is strictly recommended that you do NOT disable the ]cr_feature_name[ backend.], [+++ ],, 78)
+"
+	])
+])
+
 
 AC_DEFUN([CAIRO_REPORT],
 [
