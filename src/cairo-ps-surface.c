@@ -1427,6 +1427,10 @@ _gradient_pattern_supported (cairo_ps_surface_t    *surface,
     if (surface->ps_level == CAIRO_PS_LEVEL_2)
 	return FALSE;
 
+    /* alpha-blended gradients cannot be expressed as a linear function */
+    if (! _cairo_pattern_is_opaque (pattern))
+	return FALSE;
+
     surface->ps_level_used = CAIRO_PS_LEVEL_3;
     extend = cairo_pattern_get_extend (pattern);
 
@@ -2413,7 +2417,7 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
 
 typedef struct _cairo_ps_color_stop {
     double offset;
-    double color[4];
+    double color[3];
 } cairo_ps_color_stop_t;
 
 static void
@@ -2438,7 +2442,7 @@ _cairo_ps_surface_emit_linear_colorgradient (cairo_ps_surface_t     *surface,
 
 static void
 _cairo_ps_surface_emit_stitched_colorgradient (cairo_ps_surface_t    *surface,
-					       unsigned int 	      n_stops,
+					       unsigned int	      n_stops,
 					       cairo_ps_color_stop_t  stops[])
 {
     unsigned int i;
@@ -2468,11 +2472,14 @@ calc_gradient_color (cairo_ps_color_stop_t *new_stop,
 		     cairo_ps_color_stop_t *stop1,
 		     cairo_ps_color_stop_t *stop2)
 {
-    int i;
     double offset = stop1->offset / (stop1->offset + 1.0 - stop2->offset);
+    double one_minus_offset = 1. - offset;
+    int i;
 
-    for (i = 0; i < 4; i++)
-	new_stop->color[i] = stop1->color[i] + offset*(stop2->color[i] - stop1->color[i]);
+    for (i = 0; i < 3; i++) {
+	new_stop->color[i] = stop1->color[i] * one_minus_offset +
+	                     stop2->color[i] * offset;
+    }
 }
 
 #define COLOR_STOP_EPSILON 1e-6
@@ -2484,7 +2491,8 @@ _cairo_ps_surface_emit_pattern_stops (cairo_ps_surface_t       *surface,
     cairo_ps_color_stop_t *allstops, *stops;
     unsigned int i, n_stops;
 
-    allstops = _cairo_malloc_ab ((pattern->n_stops + 2), sizeof (cairo_ps_color_stop_t));
+    allstops = _cairo_malloc_ab (pattern->n_stops + 2,
+				 sizeof (cairo_ps_color_stop_t));
     if (allstops == NULL)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -2497,7 +2505,6 @@ _cairo_ps_surface_emit_pattern_stops (cairo_ps_surface_t       *surface,
 	stops[i].color[0] = stop->color.red;
 	stops[i].color[1] = stop->color.green;
 	stops[i].color[2] = stop->color.blue;
-	stops[i].color[3] = stop->color.alpha;
 	stops[i].offset = pattern->stops[i].offset;
     }
 
@@ -2507,7 +2514,8 @@ _cairo_ps_surface_emit_pattern_stops (cairo_ps_surface_t       *surface,
 	    if (pattern->base.extend == CAIRO_EXTEND_REFLECT)
 		memcpy (allstops, stops, sizeof (cairo_ps_color_stop_t));
 	    else
-		calc_gradient_color (&allstops[0], &stops[0], &stops[n_stops-1]);
+		calc_gradient_color (&allstops[0], &stops[0],
+				     &stops[n_stops-1]);
 	    stops = allstops;
 	    n_stops++;
 	}
@@ -2519,34 +2527,20 @@ _cairo_ps_surface_emit_pattern_stops (cairo_ps_surface_t       *surface,
 			&stops[n_stops - 1],
 			sizeof (cairo_ps_color_stop_t));
 	    } else {
-		calc_gradient_color (&stops[n_stops], &stops[0], &stops[n_stops-1]);
+		calc_gradient_color (&stops[n_stops], &stops[0],
+				     &stops[n_stops-1]);
 	    }
 	    n_stops++;
 	}
 	stops[n_stops-1].offset = 1.0;
     }
 
-    for (i = 0; i < n_stops; i++) {
-	double red, green, blue;
-	cairo_color_t color;
-
-	_cairo_color_init_rgba (&color,
-				stops[i].color[0],
-				stops[i].color[1],
-				stops[i].color[2],
-				stops[i].color[3]);
-	_cairo_ps_surface_flatten_transparency (surface, &color,
-						&red, &green, &blue);
-	stops[i].color[0] = red;
-	stops[i].color[1] = green;
-	stops[i].color[2] = blue;
-    }
-
     _cairo_output_stream_printf (surface->stream,
 				 "/CairoFunction\n");
     if (n_stops == 2) {
 	/* no need for stitched function */
-	_cairo_ps_surface_emit_linear_colorgradient (surface, &stops[0], &stops[1]);
+	_cairo_ps_surface_emit_linear_colorgradient (surface,
+						     &stops[0], &stops[1]);
     } else {
 	/* multiple stops: stitch. XXX possible optimization: regulary spaced
 	 * stops do not require stitching. XXX */
