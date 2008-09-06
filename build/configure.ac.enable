@@ -48,6 +48,15 @@ AC_DEFUN([_CAIRO_ENABLE],
 	m4_define([cr_feature_commands], [$5])
 	m4_define([cr_feature_commands_len], m4_len([$5]))
 
+	dnl Sanity check default
+	m4_case(
+		cr_feature_default,
+		[no],,
+		[yes],,
+		[auto],,
+		[m4_fatal([Invalid default value `]cr_feature_default[' for feature `]cr_feature['])]
+	)
+
 	m4_define([cr_feature_arg], m4_translit([$1],[_],[-]))
 
 	AC_ARG_ENABLE(cr_feature_arg,
