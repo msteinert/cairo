@@ -8,14 +8,6 @@ dnl
 dnl ===========================================================================
 
 dnl
-dnl cairo_cache_version should be increased every time that the feature
-dnl detection stuff changes in a way that removing the config.cache file may be
-dnl needed for correct operation. (this is only for the feature detection
-dnl changes;  it doesn't have any effect on any other cached thing.)
-dnl
-m4_define(cairo_cache_version, 5)
-
-dnl
 dnl Define a macro to enable features
 dnl  - Macro: _CAIRO_ENABLE (ID, NAME, WHAT, DEFAULT, COMMANDS)
 dnl
@@ -54,6 +46,7 @@ AC_DEFUN([_CAIRO_ENABLE],
 	m4_define([cr_feature_what], m4_normalize(m4_expand([$3])))
 	m4_define([cr_feature_default], m4_normalize(m4_expand([$4])))
 	m4_define([cr_feature_commands], [$5])
+	m4_define([cr_feature_commands_len], m4_len([$5]))
 
 	m4_define([cr_feature_arg], m4_translit([$1],[_],[-]))
 
@@ -66,10 +59,39 @@ AC_DEFUN([_CAIRO_ENABLE],
 		use_$1="no (disabled, use --enable-cr_feature_arg to enable)"
 	;;
 	yes|auto)
-		if test "x$cairo_cv_[]$1[]_cache_version" != "x[]cairo_cache_version"; then
-			# cached results for this feature (if any) are stale.  force rechecking.
-			unset cairo_cv_[]$1[]_use
-		fi
+		dnl Cache invalidating:
+		dnl
+		dnl To be extremely user-friendly, we discard cache results if
+		dnl any of the following conditions happens:
+		dnl
+		dnl   - Set of cached variables changes
+		dnl     (XXX should also do if the default value of such
+		dnl     variables changes.  Argh...)
+		dnl
+		dnl   - Length of the COMMANDS string changes!
+		dnl     (This is much more friendly to the cache than caching
+		dnl     the commands string itself.  Note that this still does
+		dnl     not catch all valid cases where we should be
+		dnl     invalidting.  For example if COMMANDS uses
+		dnl     variables/macros defined outside, we don't detect changes
+		dnl     in those variables.  Also doesn't detect in-place
+		dnl     modifications like bumping verson numbers.
+		dnl     Just modify COMMANDS in an obvious way to force recheck.
+		dnl     Hashing sounds a bit too harsh to do here...)
+		dnl
+		dnl  - If feature is requested and cached results for enabling
+		dnl    feature is no.  We are going to terminate with an error
+		dnl    if this happens anyway, so we can be more friendly by
+		dnl    assuming that user installed some missing pieces since
+		dnl    last time and so we recheck.  Although even in that
+		dnl    case other cached values probably get in the way...
+		dnl
+		AS_IF([test "x$cairo_cv_[]$1[]_cache_commands_len" != "x[]cr_feature_commands_len" -o \
+			    "x$cairo_cv_[]$1[]_cache_vars" != "x[]CAIRO_FEATURE_VARS"],
+		      [unset cairo_cv_[]$1[]_use])
+		AS_IF([test "x$enable_$1" = xyes -a "x$cairo_cv_[]$1[]_use" != xyes],
+		      [unset cairo_cv_[]$1[]_use])
+
 		AC_CACHE_CHECK([for cairo's ]cr_feature_name[ feature], cairo_cv_[]$1[]_use,
 		[
 			echo
@@ -78,7 +100,8 @@ AC_DEFUN([_CAIRO_ENABLE],
 			])
 			cr_feature_commands
 			cairo_cv_[]$1[]_use=$use_[]$1
-			cairo_cv_[]$1[]_cache_version=cairo_cache_version
+			cairo_cv_[]$1[]_cache_vars="CAIRO_FEATURE_VARS"
+			cairo_cv_[]$1[]_cache_commands_len="cr_feature_commands_len"
 			CAIRO_FEATURE_VARS_FOREACH([cr_var], [[cairo_cv_]cr_feature[_]cr_var[=$]cr_feature[_]cr_var
 			])
 			AC_MSG_CHECKING([whether cairo's ]cr_feature_name[ feature could be enabled])
