@@ -124,6 +124,7 @@ dnl
 dnl Cairo-specific macros
 dnl
 m4_pattern_forbid([CAIRO])
+m4_pattern_forbid([^cr_])
 
 dnl ==========================================================================
 
