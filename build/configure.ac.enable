@@ -17,14 +17,12 @@ m4_define(cairo_cache_version, 5)
 
 dnl
 dnl Define a macro to enable features
-dnl  - Macro: _CAIRO_ENABLE_FULL (ID, NAME, ARG, TAG, WHAT, DEFAULT, COMMANDS)
+dnl  - Macro: _CAIRO_ENABLE (ID, NAME, WHAT, DEFAULT, COMMANDS)
 dnl
 dnl where:
 dnl
 dnl	ID is the sub-namespace in function names, eg. "ft" for cairo_ft_...
 dnl	NAME is the human-readable name of the feature, eg. "FreeType font"
-dnl	ARG is what enables the feature, eg. "ft" for --enable-ft
-dnl	TAG is the feature conditional, eg. CAIRO_HAS_FT_FONT
 dnl	WHAT is the type of feature:
 dnl		"surface" for surface backends
 dnl		"font" for font backends
@@ -42,15 +40,22 @@ dnl		should also set $(ID)_REQUIRES/CFLAGS/LIBS/...
 dnl		appropriately.  Look at the macro definition for more details,
 dnl		or ask if in doubt.
 dnl
-AC_DEFUN([_CAIRO_ENABLE_FULL],
+AC_DEFUN([_CAIRO_ENABLE],
 [
+	dnl Sanity check ID
+	m4_if(
+		[$1],
+		m4_tolower(AS_TR_SH([$1])),
+		,
+		[m4_fatal([invalid feature name `$1'])]
+	)
 	m4_define([cr_feature], [$1])
-	m4_define([cr_feature_name], m4_expand([$2]))
-	m4_define([cr_feature_arg], m4_expand([$3]))
-	m4_define([cr_feature_tag], m4_expand([$4]))
-	m4_define([cr_feature_what], m4_expand([$5]))
-	m4_define([cr_feature_default], m4_expand([$6]))
-	m4_define([cr_feature_commands], [$7])
+	m4_define([cr_feature_name], m4_normalize(m4_expand([$2])))
+	m4_define([cr_feature_what], m4_normalize(m4_expand([$3])))
+	m4_define([cr_feature_default], m4_normalize(m4_expand([$4])))
+	m4_define([cr_feature_commands], [$5])
+
+	m4_define([cr_feature_arg], m4_translit([$1],[_],[-]))
 
 	AC_ARG_ENABLE(cr_feature_arg,
 		      AS_HELP_STRING([--enable-]cr_feature_arg[=@<:@no/auto/yes@:>@],
@@ -103,33 +108,6 @@ AC_DEFUN([_CAIRO_ENABLE_FULL],
 
 
 	_CAIRO_FEATURE_HOOKS(cr_feature, cr_feature_name, cr_feature_default, cr_feature_what)
-])
-
-m4_pattern_allow(^CAIRO_HAS_)
-m4_define([_CAIRO_BUILD_FEATURE_TAG_NORMALIZED],
-	[CAIRO_HAS_[$1]m4_bmatch([$1],[$2$],,[$2])])
-
-m4_define([_CAIRO_BUILD_FEATURE_TAG],
-	[_CAIRO_BUILD_FEATURE_TAG_NORMALIZED(AS_TR_CPP([$1]),AS_TR_CPP(m4_ifval([$2],[ $2])))])
-
-dnl Like _CAIRO_ENABLE*, but takes an object type too
-AC_DEFUN([_CAIRO_ENABLE],
-[
-	m4_if(
-		[$1],
-		m4_tolower(AS_TR_SH([$1])),
-		,
-		[m4_fatal([invalid feature name `$1'])]
-	)
-	_CAIRO_ENABLE_FULL(
-		[$1],
-		m4_normalize([$2]),
-		m4_translit([$1],[_],[-]),
-		_CAIRO_BUILD_FEATURE_TAG([$1],m4_normalize([$3])),
-		m4_normalize([$3]),
-		m4_normalize([$4]),
-		[$5]
-	)dnl
 ])
 
 dnl
@@ -270,6 +248,15 @@ dnl
 dnl Hooks
 dnl
 
+m4_pattern_allow(^CAIRO_HAS_)
+m4_define([_CAIRO_BUILD_FEATURE_TAG_NORMALIZED],
+	[CAIRO_HAS_[$1]m4_bmatch([$1],[$2$],,[$2])])
+
+m4_define([_CAIRO_BUILD_FEATURE_TAG],
+	[_CAIRO_BUILD_FEATURE_TAG_NORMALIZED(AS_TR_CPP([$1]),AS_TR_CPP(m4_ifval([$2],[ $2])))])
+
+m4_define([cr_feature_tag],
+	[_CAIRO_BUILD_FEATURE_TAG(cr_feature,cr_feature_what)])
 
 CAIRO_FEATURE_HOOK_REGISTER(*,*,
 [
