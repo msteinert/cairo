@@ -238,6 +238,9 @@ dnl ===========================================================================
 dnl
 dnl Cairo-specific configuration facilities
 dnl
+dnl ===========================================================================
+
+
 
 dnl
 dnl Define macros to enable various features.
@@ -273,126 +276,64 @@ AC_DEFUN([CAIRO_ENABLE_FUNCTIONS],
 	[_CAIRO_ENABLE([$1],	[$2 functions],		functions,	[$3],[$4])])
 
 
+dnl
+dnl Define cr_feature_tag ala other cr_feature_* macros
+dnl Expands to CAIRO_HAS_FEATURE_ID
+dnl
+m4_define([_CAIRO_BUILD_FEATURE_TAG_NORMALIZED],
+	[CAIRO_HAS_[$1]m4_bmatch([$1],[$2$],,[$2])])
+m4_define([_CAIRO_BUILD_FEATURE_TAG],
+	[_CAIRO_BUILD_FEATURE_TAG_NORMALIZED(AS_TR_CPP([$1]),AS_TR_CPP(m4_ifval([$2],[ $2])))])
+m4_define([cr_feature_tag],
+	[_CAIRO_BUILD_FEATURE_TAG(cr_feature,cr_feature_what)])
+
+dnl Allow feature tags in the output
+m4_pattern_allow(^CAIRO_HAS_)
+
+
 
 dnl ===========================================================================
 dnl
 dnl Hooks
 dnl
+dnl ===========================================================================
 
-m4_pattern_allow(^CAIRO_HAS_)
-m4_define([_CAIRO_BUILD_FEATURE_TAG_NORMALIZED],
-	[CAIRO_HAS_[$1]m4_bmatch([$1],[$2$],,[$2])])
 
-m4_define([_CAIRO_BUILD_FEATURE_TAG],
-	[_CAIRO_BUILD_FEATURE_TAG_NORMALIZED(AS_TR_CPP([$1]),AS_TR_CPP(m4_ifval([$2],[ $2])))])
-
-m4_define([cr_feature_tag],
-	[_CAIRO_BUILD_FEATURE_TAG(cr_feature,cr_feature_what)])
-
+dnl ===========================================================================
+dnl
+dnl Automake conditionals for all features
+dnl
 CAIRO_FEATURE_HOOK_REGISTER(*,*,
 [
-
-	if test "x$use_$1" = xyes; then
-
-		CAIRO_FEATURE_VARS_FOREACH([cr_var], [[test -n "$]cr_feature[_]cr_var[" && CAIRO_]cr_var[="$]cr_feature[_]cr_var[ $CAIRO_]cr_var["]
-		])
-		CAIRO_FEATURES="cr_feature_tag $CAIRO_FEATURES"
-		m4_define([cairo_backend_pc], m4_bpatsubst(src/cairo-$1.pc,_,-))
-		AC_CONFIG_FILES(cairo_backend_pc():src/cairo-backend.pc.in,
-		[
-			$SED -i -e "
-			s,@backend_name@,$1,g;
-			s,@Backend_Name@,cr_feature_name,g;
-			s,@BACKEND_BASE@,$$1_BASE,g;
-			s,@BACKEND_REQUIRES@,$$1_REQUIRES,g;
-			s%@BACKEND_NONPKGCONFIG_LIBS@%$$1_NONPKGCONFIG_LIBS%g;
-			s,@BACKEND_NONPKGCONFIG_CFLAGS@,$$1_NONPKGCONFIG_CFLAGS,g;
-			" "]cairo_backend_pc()[" ||
-			AC_MSG_ERROR(failed to update ]cairo_backend_pc()[)
-		],[
-			SED='$SED'
-			$1_BASE='$$1_BASE'
-			$1_REQUIRES='$$1_REQUIRES'
-			$1_NONPKGCONFIG_LIBS='$$1_NONPKGCONFIG_LIBS'
-			$1_NONPKGCONFIG_CFLAGS='$$1_NONPKGCONFIG_CFLAGS'
-		])
-	fi
-
 	AM_CONDITIONAL(cr_feature_tag, test "x$use_$1" = xyes)
-
-	dnl Collect list of all supported but disabled features
-	AS_IF([test "x$use_$1" != xyes -a "x]cr_feature_default[" != xno],
-	[
-		CAIRO_NO_FEATURES="cr_feature_tag $CAIRO_NO_FEATURES"
-	])
-
-	dnl Collect list of all (un)supported features and cairo headers
-	AS_IF([test "x]cr_feature_default[" = xno],
-	[
-		CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
-unsupported_cairo_headers += $(cairo_$1_headers)'
-		CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
-unsupported_cairo_headers += $(cairo_$1_headers)'
-	],[
-		CAIRO_SUPPORTED_FEATURES="cr_feature_tag $CAIRO_SUPPORTED_FEATURES"
-		CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
-supported_cairo_headers += $(cairo_$1_headers)'
-		CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
-supported_cairo_headers += $(cairo_$1_headers)'
-	  ])
-
-	dnl Collect list of all/enabled cairo source files
-	CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
-all_cairo_pkgconf += $(cairo_$1_pkgconf)
-all_cairo_headers += $(cairo_$1_headers)
-all_cairo_private += $(cairo_$1_private)
-all_cairo_sources += $(cairo_$1_sources)
-if cr_feature_tag
-enabled_cairo_pkgconf += $(cairo_$1_pkgconf)
-enabled_cairo_headers += $(cairo_$1_headers)
-enabled_cairo_private += $(cairo_$1_private)
-enabled_cairo_sources += $(cairo_$1_sources)
-endif
-'
-	CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
-all_cairo_pkgconf += $(cairo_$1_pkgconf)
-all_cairo_headers += $(cairo_$1_headers)
-all_cairo_private += $(cairo_$1_private)
-all_cairo_sources += $(cairo_$1_sources)
-ifeq ($(cr_feature_tag),1)
-enabled_cairo_pkgconf += $(cairo_$1_pkgconf)
-enabled_cairo_headers += $(cairo_$1_headers)
-enabled_cairo_private += $(cairo_$1_private)
-enabled_cairo_sources += $(cairo_$1_sources)
-endif
-'
 ])
 
 
 dnl ===========================================================================
 dnl
-dnl All .pc files are generated automatically except for this one
-dnl
-AC_CONFIG_FILES([src/cairo.pc])
-
-
-dnl ===========================================================================
-dnl
-dnl pkg-config requires, non-pkgconfig cflags and libs, and total cflags and libs
-dnl
-
-dnl Accumulators
-CAIRO_FEATURE_VARS_REGISTER([REQUIRES BASE])
-CAIRO_FEATURE_VARS_REGISTER([CFLAGS NONPKGCONFIG_CFLAGS])
-CAIRO_FEATURE_VARS_REGISTER([LIBS NONPKGCONFIG_LIBS], [$LIBS])
-
 dnl Substitute vars
+dnl
 AC_SUBST(CAIRO_REQUIRES)
 AC_SUBST(CAIRO_BASE)
 AC_SUBST(CAIRO_CFLAGS)
 AC_SUBST(CAIRO_NONPKGCONFIG_CFLAGS)
 AC_SUBST(CAIRO_LIBS)
 AC_SUBST(CAIRO_NONPKGCONFIG_LIBS)
+
+
+dnl ===========================================================================
+dnl
+dnl Accumulate values for all feature vars
+dnl
+
+CAIRO_FEATURE_HOOK_REGISTER(*,*,
+[
+	CAIRO_FEATURE_IF_ENABLED($1,
+	[
+		CAIRO_FEATURE_VARS_FOREACH([cr_var], [[test -n "$]cr_feature[_]cr_var[" && CAIRO_]cr_var[="$]cr_feature[_]cr_var[ $CAIRO_]cr_var["]
+		])
+	])
+])
 
 
 dnl ===========================================================================
@@ -428,11 +369,116 @@ CAIRO_CONFIG_COMMANDS([$srcdir/src/Makefile.win32.config],
 		      [echo "$CAIRO_CONFIG_WIN32"],
 		      [CAIRO_CONFIG_WIN32='$CAIRO_CONFIG_WIN32'])
 
+dnl Collect list of all supported cairo headers
+CAIRO_FEATURE_HOOK_REGISTER(!no,*,
+[
+	CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'm4_newline()supported_cairo_headers += $(cairo_$1_headers)'
+	CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'm4_newline()supported_cairo_headers += $(cairo_$1_headers)'
+])
+
+dnl Collect list of all unsupported cairo headers
+CAIRO_FEATURE_HOOK_REGISTER(no,*,
+[
+	CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'm4_newline()unsupported_cairo_headers += $(cairo_$1_headers)'
+	CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'm4_newline()unsupported_cairo_headers += $(cairo_$1_headers)'
+])
+
+dnl Collect list of all/enabled cairo source files
+CAIRO_FEATURE_HOOK_REGISTER(*,*,
+[
+	CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
+all_cairo_pkgconf += $(cairo_$1_pkgconf)
+all_cairo_headers += $(cairo_$1_headers)
+all_cairo_private += $(cairo_$1_private)
+all_cairo_sources += $(cairo_$1_sources)
+if cr_feature_tag
+enabled_cairo_pkgconf += $(cairo_$1_pkgconf)
+enabled_cairo_headers += $(cairo_$1_headers)
+enabled_cairo_private += $(cairo_$1_private)
+enabled_cairo_sources += $(cairo_$1_sources)
+endif
+'
+	CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
+all_cairo_pkgconf += $(cairo_$1_pkgconf)
+all_cairo_headers += $(cairo_$1_headers)
+all_cairo_private += $(cairo_$1_private)
+all_cairo_sources += $(cairo_$1_sources)
+ifeq ($(cr_feature_tag),1)
+enabled_cairo_pkgconf += $(cairo_$1_pkgconf)
+enabled_cairo_headers += $(cairo_$1_headers)
+enabled_cairo_private += $(cairo_$1_private)
+enabled_cairo_sources += $(cairo_$1_sources)
+endif
+'
+])
+
 
 dnl ===========================================================================
 dnl
-dnl List of enabled, supported but disabled, and all supported features
+dnl Generate .pc files
 dnl
+
+dnl All .pc files are generated automatically except for this one
+AC_CONFIG_FILES([src/cairo.pc])
+
+dnl pkg-config requires, non-pkgconfig cflags and libs, and total cflags and libs
+CAIRO_FEATURE_VARS_REGISTER([REQUIRES BASE])
+CAIRO_FEATURE_VARS_REGISTER([CFLAGS NONPKGCONFIG_CFLAGS])
+CAIRO_FEATURE_VARS_REGISTER([LIBS NONPKGCONFIG_LIBS], [$LIBS])
+
+dnl Generate .pc files for enabled features
+CAIRO_FEATURE_HOOK_REGISTER(*,*,
+[
+	CAIRO_FEATURE_IF_ENABLED($1,
+	[
+		m4_define([cairo_backend_pc], m4_bpatsubst(src/cairo-$1.pc,_,-))
+		AC_CONFIG_FILES(cairo_backend_pc():src/cairo-backend.pc.in,
+		[
+			$SED -i -e "
+			s,@backend_name@,$1,g;
+			s,@Backend_Name@,cr_feature_name,g;
+			s,@BACKEND_BASE@,$$1_BASE,g;
+			s,@BACKEND_REQUIRES@,$$1_REQUIRES,g;
+			s%@BACKEND_NONPKGCONFIG_LIBS@%$$1_NONPKGCONFIG_LIBS%g;
+			s,@BACKEND_NONPKGCONFIG_CFLAGS@,$$1_NONPKGCONFIG_CFLAGS,g;
+			" "]cairo_backend_pc()[" ||
+			AC_MSG_ERROR(failed to update ]cairo_backend_pc()[)
+		],[
+			SED='$SED'
+			$1_BASE='$$1_BASE'
+			$1_REQUIRES='$$1_REQUIRES'
+			$1_NONPKGCONFIG_LIBS='$$1_NONPKGCONFIG_LIBS'
+			$1_NONPKGCONFIG_CFLAGS='$$1_NONPKGCONFIG_CFLAGS'
+		])
+	])
+])
+
+
+dnl ===========================================================================
+dnl
+dnl Generate src/cairo-features.h src/cairo-supported-features.h
+dnl
+
+dnl Collect list of enabled features
+CAIRO_FEATURE_HOOK_REGISTER(*,*,
+[
+	CAIRO_FEATURE_IF_ENABLED($1,
+	[
+		CAIRO_FEATURES="cr_feature_tag $CAIRO_FEATURES"
+	])
+])
+CAIRO_FEATURE_HOOK_REGISTER(!no,*,
+[
+	dnl Collect list of all supported features
+	CAIRO_SUPPORTED_FEATURES="cr_feature_tag $CAIRO_SUPPORTED_FEATURES"
+
+	dnl Collect list of all supported but disabled features
+	CAIRO_FEATURE_IF_ENABLED($1,[],
+	[
+		CAIRO_NO_FEATURES="cr_feature_tag $CAIRO_NO_FEATURES"
+	])
+
+])
 
 dnl Accumulators
 m4_pattern_allow(^CAIRO_FEATURES$)
@@ -563,5 +609,4 @@ AC_DEFUN([CAIRO_REPORT],
 	fi
 	echo "$CAIRO_WARNING_MESSAGE"
 ])
-
 
