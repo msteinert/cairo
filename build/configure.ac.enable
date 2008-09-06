@@ -133,40 +133,6 @@ AC_DEFUN([_CAIRO_ENABLE],
 	_CAIRO_FEATURE_HOOKS(cr_feature, cr_feature_name, cr_feature_default, cr_feature_what)
 ])
 
-dnl
-dnl Define macros to enable various features.
-dnl  - Macro: CAIRO_ENABLE_* (ID, NAME, DEFAULT, COMMANDS)
-dnl
-dnl where:
-dnl
-dnl	ID is the feature id, eg. "ft" for cairo_ft_...
-dnl	NAME is the human-readable name of the feature, eg. "FreeType"
-dnl	DEFAULT is the default state of the feature:
-dnl		"no" for experimental backends, eg. your favorite new backend
-dnl		"yes" for mandatory backends, eg. png
-dnl		"auto" for other supported backends, eg. xlib
-dnl	COMMANDS are run to check whether the feature can be enabled.  Their
-dnl		result may be cached, so user should not count on them being run.
-dnl		They should set use_$(ID) to something other than yes if the
-dnl		feature cannot be built, eg. "no (requires SomeThing)".  It then
-dnl		should also set $(ID)_REQUIRES/CFLAGS/LIBS/...
-dnl		appropriately.  Look at the macro definition for more details,
-dnl		or ask if in doubt.
-dnl
-
-AC_DEFUN([CAIRO_ENABLE],
-	[_CAIRO_ENABLE([$1],	[$2],			,		[$3],[$4])])
-
-AC_DEFUN([CAIRO_ENABLE_SURFACE_BACKEND],
-	[_CAIRO_ENABLE([$1],	[$2 surface backend],	surface,	[$3],[$4])])
-
-AC_DEFUN([CAIRO_ENABLE_FONT_BACKEND],
-	[_CAIRO_ENABLE([$1],	[$2 font backend],	font,	  	[$3],[$4])])
-
-AC_DEFUN([CAIRO_ENABLE_FUNCTIONS],
-	[_CAIRO_ENABLE([$1],	[$2 functions],		functions,	[$3],[$4])])
-
-
 
 dnl ===========================================================================
 
@@ -197,6 +163,7 @@ AC_DEFUN([CAIRO_FEATURE_VARS_FOREACH],
 [
 	m4_foreach_w([$1], m4_expand(CAIRO_FEATURE_VARS), [$2])
 ])
+
 
 dnl ===========================================================================
 
@@ -264,6 +231,47 @@ AC_DEFUN([CAIRO_FEATURE_HOOK_REGISTER],
 		)])
 	], m4_newline)
 ])
+
+
+
+dnl ===========================================================================
+dnl
+dnl Cairo-specific configuration facilities
+dnl
+
+dnl
+dnl Define macros to enable various features.
+dnl  - Macro: CAIRO_ENABLE_* (ID, NAME, DEFAULT, COMMANDS)
+dnl
+dnl where:
+dnl
+dnl	ID is the feature id, eg. "ft" for cairo_ft_...
+dnl	NAME is the human-readable name of the feature, eg. "FreeType"
+dnl	DEFAULT is the default state of the feature:
+dnl		"no" for experimental backends, eg. your favorite new backend
+dnl		"yes" for mandatory backends, eg. png
+dnl		"auto" for other supported backends, eg. xlib
+dnl	COMMANDS are run to check whether the feature can be enabled.  Their
+dnl		result may be cached, so user should not count on them being run.
+dnl		They should set use_$(ID) to something other than yes if the
+dnl		feature cannot be built, eg. "no (requires SomeThing)".  It then
+dnl		should also set $(ID)_REQUIRES/CFLAGS/LIBS/...
+dnl		appropriately.  Look at the macro definition for more details,
+dnl		or ask if in doubt.
+dnl
+
+AC_DEFUN([CAIRO_ENABLE],
+	[_CAIRO_ENABLE([$1],	[$2],			,		[$3],[$4])])
+
+AC_DEFUN([CAIRO_ENABLE_SURFACE_BACKEND],
+	[_CAIRO_ENABLE([$1],	[$2 surface backend],	surface,	[$3],[$4])])
+
+AC_DEFUN([CAIRO_ENABLE_FONT_BACKEND],
+	[_CAIRO_ENABLE([$1],	[$2 font backend],	font,	  	[$3],[$4])])
+
+AC_DEFUN([CAIRO_ENABLE_FUNCTIONS],
+	[_CAIRO_ENABLE([$1],	[$2 functions],		functions,	[$3],[$4])])
+
 
 
 dnl ===========================================================================
@@ -358,91 +366,6 @@ enabled_cairo_private += $(cairo_$1_private)
 enabled_cairo_sources += $(cairo_$1_sources)
 endif
 '
-])
-
-
-dnl ===========================================================================
-dnl
-dnl Report
-dnl
-
-dnl Accumulator for warning messages
-CAIRO_FEATURE_VARS_REGISTER([WARNING_MESSAGE])
-
-dnl Collect warning message for enabled unsupported backends
-CAIRO_FEATURE_HOOK_REGISTER(no,*,
-[
-	CAIRO_FEATURE_IF_ENABLED($1,
-	[
-		CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE]m4_newline[m4_text_wrap([The ]cr_feature_name[ feature is still under active development and is included in this release only as a preview. It does NOT fully work yet and incompatible changes may yet be made to ]cr_feature_name[ specific API.], [--- ],, 78)
-"
-	])
-])
-
-dnl Collect warning message for disabled recommended backends
-CAIRO_FEATURE_HOOK_REGISTER(yes,*,
-[
-	CAIRO_FEATURE_IF_ENABLED($1,
-	[],[
-		CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE]m4_newline[m4_text_wrap([It is strictly recommended that you do NOT disable the ]cr_feature_name[ backend.], [+++ ],, 78)
-"
-	])
-])
-
-
-AC_DEFUN([CAIRO_REPORT],
-[
-	V="$CAIRO_VERSION_MAJOR.$CAIRO_VERSION_MINOR.$CAIRO_VERSION_MICRO"
-	echo ""
-	echo "cairo (version $V [[$CAIRO_RELEASE_STATUS]]) will be compiled with the following surface backends:"
-	echo "  Image:         yes (always builtin)"
-	echo "  Xlib:          $use_xlib"
-	echo "  Xlib Xrender:  $use_xlib_xrender"
-	echo "  Quartz:        $use_quartz"
-	echo "  Quartz-image:  $use_quartz_image"
-	echo "  XCB:           $use_xcb"
-	echo "  Win32:         $use_win32"
-	echo "  OS2:           $use_os2"
-	echo "  PostScript:    $use_ps"
-	echo "  PDF:           $use_pdf"
-	echo "  SVG:           $use_svg"
-	echo "  glitz:         $use_glitz"
-	echo "  BeOS:          $use_beos"
-	echo "  DirectFB:      $use_directfb"
-	echo ""
-	echo "the following font backends:"
-	echo "  User:          yes (always builtin)"
-	echo "  FreeType:      $use_ft"
-	echo "  Win32:         $use_win32_font"
-	echo "  Quartz:        $use_quartz_font"
-	echo ""
-	echo "the following features:"
-	echo "  PNG functions: $use_png"
-	echo ""
-	echo "and the following debug options:"
-	echo "  gcov support:  $use_gcov"
-	echo "  test surfaces: $use_test_surfaces"
-	echo "  ps testing:    $test_ps"
-	echo "  pdf testing:   $test_pdf"
-	echo "  svg testing:   $test_svg"
-	if test x"$use_win32" = "xyes"; then
-		echo "  win32 printing testing:    $test_win32_printing"
-	fi
-	echo ""
-	echo "using CFLAGS:"
-	echo $CAIRO_CFLAGS
-	echo ""
-
-	if test x"$use_ft"          != "xyes" && \
-	   test x"$use_win32_font"  != "xyes" && \
-	   test x"$use_quartz_font" != "xyes" ; then
-
-	   AC_MSG_ERROR([Cairo requires at least one font backend.
-			  Please install freetype and fontconfig, then try again:
-			  http://freetype.org/	http://fontconfig.org/
-			])
-	fi
-	echo "$CAIRO_WARNING_MESSAGE"
 ])
 
 
@@ -555,4 +478,90 @@ CAIRO_CONFIG_COMMANDS([$srcdir/src/cairo-supported-features.h],
 ],[
 	CAIRO_SUPPORTED_FEATURES='$CAIRO_SUPPORTED_FEATURES'
 ])
+
+
+dnl ===========================================================================
+dnl
+dnl Report
+dnl
+
+dnl Accumulator for warning messages
+CAIRO_FEATURE_VARS_REGISTER([WARNING_MESSAGE])
+
+dnl Collect warning message for enabled unsupported backends
+CAIRO_FEATURE_HOOK_REGISTER(no,*,
+[
+	CAIRO_FEATURE_IF_ENABLED($1,
+	[
+		CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE]m4_newline[m4_text_wrap([The ]cr_feature_name[ feature is still under active development and is included in this release only as a preview. It does NOT fully work yet and incompatible changes may yet be made to ]cr_feature_name[ specific API.], [--- ],, 78)
+"
+	])
+])
+
+dnl Collect warning message for disabled recommended backends
+CAIRO_FEATURE_HOOK_REGISTER(yes,*,
+[
+	CAIRO_FEATURE_IF_ENABLED($1,
+	[],[
+		CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE]m4_newline[m4_text_wrap([It is strictly recommended that you do NOT disable the ]cr_feature_name[ backend.], [+++ ],, 78)
+"
+	])
+])
+
+
+AC_DEFUN([CAIRO_REPORT],
+[
+	V="$CAIRO_VERSION_MAJOR.$CAIRO_VERSION_MINOR.$CAIRO_VERSION_MICRO"
+	echo ""
+	echo "cairo (version $V [[$CAIRO_RELEASE_STATUS]]) will be compiled with the following surface backends:"
+	echo "  Image:         yes (always builtin)"
+	echo "  Xlib:          $use_xlib"
+	echo "  Xlib Xrender:  $use_xlib_xrender"
+	echo "  Quartz:        $use_quartz"
+	echo "  Quartz-image:  $use_quartz_image"
+	echo "  XCB:           $use_xcb"
+	echo "  Win32:         $use_win32"
+	echo "  OS2:           $use_os2"
+	echo "  PostScript:    $use_ps"
+	echo "  PDF:           $use_pdf"
+	echo "  SVG:           $use_svg"
+	echo "  glitz:         $use_glitz"
+	echo "  BeOS:          $use_beos"
+	echo "  DirectFB:      $use_directfb"
+	echo ""
+	echo "the following font backends:"
+	echo "  User:          yes (always builtin)"
+	echo "  FreeType:      $use_ft"
+	echo "  Win32:         $use_win32_font"
+	echo "  Quartz:        $use_quartz_font"
+	echo ""
+	echo "the following features:"
+	echo "  PNG functions: $use_png"
+	echo ""
+	echo "and the following debug options:"
+	echo "  gcov support:  $use_gcov"
+	echo "  test surfaces: $use_test_surfaces"
+	echo "  ps testing:    $test_ps"
+	echo "  pdf testing:   $test_pdf"
+	echo "  svg testing:   $test_svg"
+	if test x"$use_win32" = "xyes"; then
+		echo "  win32 printing testing:    $test_win32_printing"
+	fi
+	echo ""
+	echo "using CFLAGS:"
+	echo $CAIRO_CFLAGS
+	echo ""
+
+	if test x"$use_ft"          != "xyes" && \
+	   test x"$use_win32_font"  != "xyes" && \
+	   test x"$use_quartz_font" != "xyes" ; then
+
+	   AC_MSG_ERROR([Cairo requires at least one font backend.
+			  Please install freetype and fontconfig, then try again:
+			  http://freetype.org/	http://fontconfig.org/
+			])
+	fi
+	echo "$CAIRO_WARNING_MESSAGE"
+])
+
 
