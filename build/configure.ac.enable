@@ -181,7 +181,16 @@ AC_DEFUN([CAIRO_FEATURE_IF_ENABLED],
 	AS_IF([test "x$use_]m4_default([$1], cr_feature)[" = xyes], [$2], [$3])
 ])
 
-m4_define([_CAIRO_FEATURE_HOOK_MATCH],
+m4_define([_CAIRO_FEATURE_HOOK_MATCH_SH_BOOL],
+[
+	m4_case([$1],
+		[*],	[$3],
+		[no],	[AS_IF([test "x$2" != xyes], [:m4_newline$3])],
+		[yes],	[AS_IF([test "x$2" = xyes], [:m4_newline$3])],
+			[m4_fatal([Invalid ENABLED value `]$1['])])
+])
+
+m4_define([_CAIRO_FEATURE_HOOK_MATCH_M4],
 [
 	m4_case([$1],
 		[*],	[$3],
@@ -193,19 +202,25 @@ m4_define([_CAIRO_FEATURE_HOOK_MATCH],
 m4_define([_CAIRO_FEATURE_HOOKS])
 
 dnl
-dnl CAIRO_FEATURE_HOOK_REGISTER(DEFAULT, WHAT, COMMANDS)
+dnl CAIRO_FEATURE_HOOK_REGISTER(ENABLED, DEFAULT, WHAT, COMMANDS)
 dnl
+dnl	ENABLED is the feature enabledness to match
 dnl	DEFAULT is the default value of features to match
 dnl	WHAT is the type of features to match
 dnl	COMMANDS is commands to run for matched features.
 dnl
-dnl Runs COMMANDS for features matching DEFAULT and WHAT.  Hooks are run for
-dnl each feature in the order they are added.
+dnl Runs COMMANDS for features matching ENABLED, DEFAULT, and WHAT.
+dnl Hooks are run for each feature in the order they are added.
 dnl
 dnl DEFAULT and WHAT are matched like this:
 dnl	[*]	matches all values
 dnl	[val]	matches [val]
 dnl	[!val]	matches anything other than [val]
+dnl
+dnl ENABLED is matched like this:
+dnl 	[yes]	matches enabled features
+dnl 	[no]	matches disabled features
+dnl 	[*]	matches all features
 dnl
 dnl The following macros can be used in COMMANDS:
 dnl
@@ -222,7 +237,7 @@ dnl		"functions" for set of functions
 dnl		"" for private configurations
 dnl
 dnl These four values are also set as $1 to $4.  To know if feature was
-dnl enabled use CAIRO_FEATURE_IF_ENABLED:
+dnl enabled from within COMMANDS, use CAIRO_FEATURE_IF_ENABLED:
 dnl
 dnl	CAIRO_FEATURE_IF_ENABLED($1, [IF-ENABLED], [IF-DISABLED])
 dnl
@@ -234,10 +249,11 @@ AC_DEFUN([CAIRO_FEATURE_HOOK_REGISTER],
 [
 	m4_append([_CAIRO_FEATURE_HOOKS],
 	[
-		_CAIRO_FEATURE_HOOK_MATCH([$1], cr_feature_default,
-		[_CAIRO_FEATURE_HOOK_MATCH([$2], cr_feature_what,
-		 [$3]
-		)])
+		_CAIRO_FEATURE_HOOK_MATCH_M4([$2], cr_feature_default,
+		[_CAIRO_FEATURE_HOOK_MATCH_M4([$3], cr_feature_what,
+		 [_CAIRO_FEATURE_HOOK_MATCH_SH_BOOL([$1], [$use_]cr_feature,
+		  [$4]
+		)])])
 	], m4_newline)
 ])
 
@@ -312,7 +328,7 @@ dnl ===========================================================================
 dnl
 dnl Automake conditionals for all features
 dnl
-CAIRO_FEATURE_HOOK_REGISTER(*,*,
+CAIRO_FEATURE_HOOK_REGISTER(*,*,*,
 [
 	AM_CONDITIONAL(cr_feature_tag, test "x$use_$1" = xyes)
 ])
@@ -332,16 +348,12 @@ AC_SUBST(CAIRO_NONPKGCONFIG_LIBS)
 
 dnl ===========================================================================
 dnl
-dnl Accumulate values for all feature vars
+dnl Accumulate values for all feature vars for enabled features
 dnl
 
-CAIRO_FEATURE_HOOK_REGISTER(*,*,
+CAIRO_FEATURE_HOOK_REGISTER(yes,*,*,
 [
-	CAIRO_FEATURE_IF_ENABLED($1,
-	[
-		CAIRO_FEATURE_VARS_FOREACH([cr_var], [[test -n "$]cr_feature[_]cr_var[" && CAIRO_]cr_var[="$]cr_feature[_]cr_var[ $CAIRO_]cr_var["]
-		])
-	])
+	CAIRO_FEATURE_VARS_FOREACH([cr_var], [[test -n "$]cr_feature[_]cr_var[" && CAIRO_]cr_var[="$]cr_feature[_]cr_var[ $CAIRO_]cr_var["]]m4_newline)
 ])
 
 
@@ -379,21 +391,21 @@ CAIRO_CONFIG_COMMANDS([$srcdir/src/Makefile.win32.config],
 		      [CAIRO_CONFIG_WIN32='$CAIRO_CONFIG_WIN32'])
 
 dnl Collect list of all supported cairo headers
-CAIRO_FEATURE_HOOK_REGISTER(!no,*,
+CAIRO_FEATURE_HOOK_REGISTER(*,!no,*,
 [
 	CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'm4_newline()supported_cairo_headers += $(cairo_$1_headers)'
 	CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'm4_newline()supported_cairo_headers += $(cairo_$1_headers)'
 ])
 
 dnl Collect list of all unsupported cairo headers
-CAIRO_FEATURE_HOOK_REGISTER(no,*,
+CAIRO_FEATURE_HOOK_REGISTER(*,no,*,
 [
 	CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'm4_newline()unsupported_cairo_headers += $(cairo_$1_headers)'
 	CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'm4_newline()unsupported_cairo_headers += $(cairo_$1_headers)'
 ])
 
 dnl Collect list of all/enabled cairo source files
-CAIRO_FEATURE_HOOK_REGISTER(*,*,
+CAIRO_FEATURE_HOOK_REGISTER(*,*,*,
 [
 	CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
 all_cairo_pkgconf += $(cairo_$1_pkgconf)
@@ -436,29 +448,26 @@ CAIRO_FEATURE_VARS_REGISTER([CFLAGS NONPKGCONFIG_CFLAGS])
 CAIRO_FEATURE_VARS_REGISTER([LIBS NONPKGCONFIG_LIBS], [$LIBS])
 
 dnl Generate .pc files for enabled features
-CAIRO_FEATURE_HOOK_REGISTER(*,*,
+CAIRO_FEATURE_HOOK_REGISTER(yes,*,*,
 [
-	CAIRO_FEATURE_IF_ENABLED($1,
+	m4_define([cairo_backend_pc], m4_bpatsubst(src/cairo-$1.pc,_,-))
+	AC_CONFIG_FILES(cairo_backend_pc():src/cairo-backend.pc.in,
 	[
-		m4_define([cairo_backend_pc], m4_bpatsubst(src/cairo-$1.pc,_,-))
-		AC_CONFIG_FILES(cairo_backend_pc():src/cairo-backend.pc.in,
-		[
-			$SED -i -e "
-			s,@backend_name@,$1,g;
-			s,@Backend_Name@,cr_feature_name,g;
-			s,@BACKEND_BASE@,$$1_BASE,g;
-			s,@BACKEND_REQUIRES@,$$1_REQUIRES,g;
-			s%@BACKEND_NONPKGCONFIG_LIBS@%$$1_NONPKGCONFIG_LIBS%g;
-			s,@BACKEND_NONPKGCONFIG_CFLAGS@,$$1_NONPKGCONFIG_CFLAGS,g;
-			" "]cairo_backend_pc()[" ||
-			AC_MSG_ERROR(failed to update ]cairo_backend_pc()[)
-		],[
-			SED='$SED'
-			$1_BASE='$$1_BASE'
-			$1_REQUIRES='$$1_REQUIRES'
-			$1_NONPKGCONFIG_LIBS='$$1_NONPKGCONFIG_LIBS'
-			$1_NONPKGCONFIG_CFLAGS='$$1_NONPKGCONFIG_CFLAGS'
-		])
+		$SED -i -e "
+		s,@backend_name@,$1,g;
+		s,@Backend_Name@,cr_feature_name,g;
+		s,@BACKEND_BASE@,$$1_BASE,g;
+		s,@BACKEND_REQUIRES@,$$1_REQUIRES,g;
+		s%@BACKEND_NONPKGCONFIG_LIBS@%$$1_NONPKGCONFIG_LIBS%g;
+		s,@BACKEND_NONPKGCONFIG_CFLAGS@,$$1_NONPKGCONFIG_CFLAGS,g;
+		" "]cairo_backend_pc()[" ||
+		AC_MSG_ERROR(failed to update ]cairo_backend_pc()[)
+	],[
+		SED='$SED'
+		$1_BASE='$$1_BASE'
+		$1_REQUIRES='$$1_REQUIRES'
+		$1_NONPKGCONFIG_LIBS='$$1_NONPKGCONFIG_LIBS'
+		$1_NONPKGCONFIG_CFLAGS='$$1_NONPKGCONFIG_CFLAGS'
 	])
 ])
 
@@ -469,24 +478,19 @@ dnl Generate src/cairo-features.h src/cairo-supported-features.h
 dnl
 
 dnl Collect list of enabled features
-CAIRO_FEATURE_HOOK_REGISTER(*,*,
+CAIRO_FEATURE_HOOK_REGISTER(yes,*,*,
 [
-	CAIRO_FEATURE_IF_ENABLED($1,
-	[
-		CAIRO_FEATURES="cr_feature_tag $CAIRO_FEATURES"
-	])
+	CAIRO_FEATURES="cr_feature_tag $CAIRO_FEATURES"
 ])
-CAIRO_FEATURE_HOOK_REGISTER(!no,*,
+dnl Collect list of all supported features
+CAIRO_FEATURE_HOOK_REGISTER(*,!no,*,
 [
-	dnl Collect list of all supported features
 	CAIRO_SUPPORTED_FEATURES="cr_feature_tag $CAIRO_SUPPORTED_FEATURES"
-
-	dnl Collect list of all supported but disabled features
-	CAIRO_FEATURE_IF_ENABLED($1,[],
-	[
-		CAIRO_NO_FEATURES="cr_feature_tag $CAIRO_NO_FEATURES"
-	])
-
+])
+dnl Collect list of all supported but disabled features
+CAIRO_FEATURE_HOOK_REGISTER(no,!no,*,
+[
+	CAIRO_NO_FEATURES="cr_feature_tag $CAIRO_NO_FEATURES"
 ])
 
 dnl Accumulators
@@ -544,23 +548,15 @@ dnl Accumulator for warning messages
 CAIRO_FEATURE_VARS_REGISTER([WARNING_MESSAGE])
 
 dnl Collect warning message for enabled unsupported backends
-CAIRO_FEATURE_HOOK_REGISTER(no,*,
+CAIRO_FEATURE_HOOK_REGISTER(yes,no,*,
 [
-	CAIRO_FEATURE_IF_ENABLED($1,
-	[
-		CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE]m4_newline[m4_text_wrap([The ]cr_feature_name[ feature is still under active development and is included in this release only as a preview. It does NOT fully work yet and incompatible changes may yet be made to ]cr_feature_name[ specific API.], [--- ],, 78)
-"
-	])
+	CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE]m4_newline[m4_text_wrap([The ]cr_feature_name[ feature is still under active development and is included in this release only as a preview. It does NOT fully work yet and incompatible changes may yet be made to ]cr_feature_name[ specific API.], [--- ],, 78)m4_newline"
 ])
 
 dnl Collect warning message for disabled recommended backends
-CAIRO_FEATURE_HOOK_REGISTER(yes,*,
+CAIRO_FEATURE_HOOK_REGISTER(no,yes,*,
 [
-	CAIRO_FEATURE_IF_ENABLED($1,
-	[],[
-		CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE]m4_newline[m4_text_wrap([It is strictly recommended that you do NOT disable the ]cr_feature_name[ backend.], [+++ ],, 78)
-"
-	])
+	CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE]m4_newline[m4_text_wrap([It is strictly recommended that you do NOT disable the ]cr_feature_name[ backend.], [+++ ],, 78)m4_newline"
 ])
 
 
