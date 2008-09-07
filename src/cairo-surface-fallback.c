@@ -1075,6 +1075,21 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
     snapshot->device_transform = surface->device_transform;
     snapshot->device_transform_inverse = surface->device_transform_inverse;
 
+    if (surface->jpeg_destroy &&
+	surface->jpeg_data != NULL &&
+	surface->jpeg_data_length != 0)
+    {
+	snapshot->jpeg_data = malloc (surface->jpeg_data_length);
+	if (snapshot->jpeg_data == NULL) {
+	    cairo_surface_destroy (snapshot);
+	    return _cairo_surface_create_in_error (CAIRO_STATUS_NO_MEMORY);
+	}
+
+	memcpy (snapshot->jpeg_data, surface->jpeg_data, surface->jpeg_data_length);
+	snapshot->jpeg_data_length = surface->jpeg_data_length;
+	snapshot->jpeg_destroy = free;
+    }
+
     snapshot->is_snapshot = TRUE;
 
     return snapshot;

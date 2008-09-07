@@ -1947,6 +1947,21 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
 			     void			 *user_data,
 			     cairo_destroy_func_t	 destroy);
 
+#define CAIRO_MIME_TYPE_JPEG "image/jpeg"
+
+cairo_public void
+cairo_surface_get_mime_data (cairo_surface_t		*surface,
+                             const char 		*mime_type,
+                             const unsigned char       **data,
+                             unsigned int		*length);
+
+cairo_public void
+cairo_surface_set_mime_data (cairo_surface_t		 *surface,
+                             const char			 *mime_type,
+                             const unsigned char         *data,
+                             unsigned int                 length,
+			     cairo_destroy_func_t	  destroy);
+
 cairo_public void
 cairo_surface_get_font_options (cairo_surface_t      *surface,
 				cairo_font_options_t *options);

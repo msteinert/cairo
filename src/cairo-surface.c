@@ -220,6 +220,10 @@ _cairo_surface_init (cairo_surface_t			*surface,
     surface->is_snapshot = FALSE;
 
     surface->has_font_options = FALSE;
+
+    surface->jpeg_data = NULL;
+    surface->jpeg_data_length = 0;
+    surface->jpeg_destroy = NULL;
 }
 
 cairo_surface_t *
@@ -440,6 +444,9 @@ cairo_surface_destroy (cairo_surface_t *surface)
 
     _cairo_user_data_array_fini (&surface->user_data);
 
+    if (surface->jpeg_data)
+	surface->jpeg_destroy (surface->jpeg_data);
+
     free (surface);
 }
 slim_hidden_def(cairo_surface_destroy);
@@ -587,6 +594,66 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
 
     return _cairo_user_data_array_set_data (&surface->user_data,
 					    key, user_data, destroy);
+}
+
+/**
+ * cairo_surface_get_mime_data:
+ * @surface: a #cairo_surface_t
+ * @mime_type: the mime type of the image data
+ * @data: the image data to attached to the surface
+ * @length: the length of the image data
+ *
+ * Return mime data previously attached to @surface using the
+ * specified mime type.  If no data has been attached with the given
+ * mime type, @data is set NULL.
+ *
+ * Since: 1.10
+ **/
+void
+cairo_surface_get_mime_data (cairo_surface_t		*surface,
+                             const char 		*mime_type,
+                             const unsigned char       **data,
+                             unsigned int		*length)
+{
+    if (strcmp (mime_type, CAIRO_MIME_TYPE_JPEG) == 0) {
+	*data = surface->jpeg_data;
+	*length = surface->jpeg_data_length;
+    } else {
+	*data = NULL;
+    }
+}
+
+/**
+ * cairo_surface_set_mime_data:
+ * @surface: a #cairo_surface_t
+ * @mime_type: the mime type of the image data
+ * @data: the image data to attach to the surface
+ * @length: the length of the image data
+ * @destroy: a #cairo_destroy_func_t which will be called when the
+ * surface is destroyed or when new image data is attached using the
+ * same mime type.
+ *
+ * Attach an image in the format @mime_type to @surface. To remove
+ * the data from a surface, call this function with same mime type
+ * and %NULL for @data.
+ *
+ * Since: 1.10
+ **/
+void
+cairo_surface_set_mime_data (cairo_surface_t		*surface,
+                             const char			*mime_type,
+                             const unsigned char	*data,
+                             unsigned int		 length,
+			     cairo_destroy_func_t	 destroy)
+{
+    if (strcmp (mime_type, CAIRO_MIME_TYPE_JPEG) == 0) {
+	if (surface->jpeg_data)
+	    surface->jpeg_destroy (surface->jpeg_data);
+
+	surface->jpeg_data = data;
+	surface->jpeg_data_length = length;
+	surface->jpeg_destroy = destroy;
+    }
 }
 
 /**
