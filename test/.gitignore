@@ -91,6 +91,7 @@ get-xrender-format
 glitz-surface-source
 glyph-cache-pressure
 gradient-alpha
+gradient-constant-alpha
 gradient-zero-stops
 group-paint
 imagediff
