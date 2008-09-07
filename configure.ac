@@ -1,4 +1,4 @@
-AC_PREREQ(2.62)
+AC_PREREQ(2.58)
 CAIRO_PARSE_VERSION
 AC_INIT([cairo],
 	[cairo_version_major.cairo_version_minor.cairo_version_micro],

@@ -260,3 +260,7 @@ m4_define([CAIRO_PARSE_VERSION],
 			     [[m4_define(\1, \[\2\])]]),
 			    [A-Z], [a-z])
 )
+
+dnl [m4_newline] didn't appear until autoconf 2.62
+m4_ifdef([m4_newline],,m4_define([m4_newline],[
+]))

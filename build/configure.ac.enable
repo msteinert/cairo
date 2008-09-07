@@ -42,9 +42,9 @@ AC_DEFUN([_CAIRO_ENABLE],
 		[m4_fatal([invalid feature name `$1'])]
 	)
 	m4_define([cr_feature], [$1])
-	m4_define([cr_feature_name], m4_normalize(m4_expand([$2])))
-	m4_define([cr_feature_what], m4_normalize(m4_expand([$3])))
-	m4_define([cr_feature_default], m4_normalize(m4_expand([$4])))
+	m4_define([cr_feature_name], m4_normalize([$2]))
+	m4_define([cr_feature_what], m4_normalize([$3]))
+	m4_define([cr_feature_default], m4_normalize([$4]))
 	m4_define([cr_feature_commands], [$5])
 	m4_define([cr_feature_commands_len], m4_len([$5]))
 
@@ -170,7 +170,7 @@ AC_DEFUN([CAIRO_FEATURE_VARS_REGISTER],
 
 AC_DEFUN([CAIRO_FEATURE_VARS_FOREACH],
 [
-	m4_foreach_w([$1], m4_expand(CAIRO_FEATURE_VARS), [$2])
+	m4_foreach_w([$1], m4_quote(CAIRO_FEATURE_VARS), [$2])
 ])
 
 
@@ -234,8 +234,8 @@ AC_DEFUN([CAIRO_FEATURE_HOOK_REGISTER],
 [
 	m4_append([_CAIRO_FEATURE_HOOKS],
 	[
-		_CAIRO_FEATURE_HOOK_MATCH(m4_expand([$1]), cr_feature_default,
-		[_CAIRO_FEATURE_HOOK_MATCH(m4_expand([$2]), cr_feature_what,
+		_CAIRO_FEATURE_HOOK_MATCH([$1], cr_feature_default,
+		[_CAIRO_FEATURE_HOOK_MATCH([$2], cr_feature_what,
 		 [$3]
 		)])
 	], m4_newline)
