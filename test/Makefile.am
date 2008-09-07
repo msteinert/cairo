@@ -66,6 +66,7 @@ get-clip$(EXEEXT)					\
 get-group-target$(EXEEXT)				\
 get-path-extents$(EXEEXT)				\
 gradient-alpha$(EXEEXT)					\
+gradient-constant-alpha$(EXEEXT)			\
 gradient-zero-stops$(EXEEXT)				\
 group-paint$(EXEEXT)					\
 image-surface-source$(EXEEXT)				\
@@ -452,6 +453,12 @@ REFERENCE_IMAGES = \
 	gradient-alpha-ps-rgb24-ref.png	\
 	gradient-alpha-ref.png	\
 	gradient-alpha-rgb24-ref.png	\
+	gradient-constant-alpha-pdf-argb32-ref.png	\
+	gradient-constant-alpha-pdf-rgb24-ref.png	\
+	gradient-constant-alpha-ps-argb32-ref.png	\
+	gradient-constant-alpha-ps-rgb24-ref.png	\
+	gradient-constant-alpha-ref.png	\
+	gradient-constant-alpha-rgb24-ref.png	\
 	gradient-zero-stops-ref.png	\
 	gradient-zero-stops-rgb24-ref.png	\
 	group-paint-ref.png	\
