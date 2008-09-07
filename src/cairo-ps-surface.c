@@ -1456,7 +1456,6 @@ _gradient_pattern_supported (cairo_ps_surface_t    *surface,
 	    return FALSE;
     }
 
-    surface->ps_level_used = CAIRO_PS_LEVEL_3;
     extend = cairo_pattern_get_extend (pattern);
 
     /* Radial gradients are currently only supported when one circle
@@ -1482,6 +1481,8 @@ _gradient_pattern_supported (cairo_ps_surface_t    *surface,
             return FALSE;
         }
     }
+
+    surface->ps_level_used = CAIRO_PS_LEVEL_3;
 
     return TRUE;
 }
