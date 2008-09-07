@@ -40,6 +40,19 @@
  *	Adrian Johnson <ajohnson@redneon.com>
  */
 
+
+/*
+ * Design of the PS output:
+ *
+ * The PS output is harmonised with the PDF operations using PS procedures
+ * to emulate the PDF operators.
+ *
+ * This has a number of advantages:
+ *   1. A large chunk of code is shared between the PDF and PS backends.
+ *      See cairo-pdf-operators.
+ *   2. Using gs to do PS -> PDF and PDF -> PS will always work well.
+ */
+
 #define _BSD_SOURCE /* for ctime_r(), snprintf(), strdup() */
 #include "cairoint.h"
 #include "cairo-ps.h"
