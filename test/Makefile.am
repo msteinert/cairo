@@ -448,6 +448,8 @@ REFERENCE_IMAGES = \
 	glyph-cache-pressure-quartz-ref.png	\
 	gradient-alpha-pdf-argb32-ref.png	\
 	gradient-alpha-pdf-rgb24-ref.png	\
+	gradient-alpha-ps-argb32-ref.png	\
+	gradient-alpha-ps-rgb24-ref.png	\
 	gradient-alpha-ref.png	\
 	gradient-alpha-rgb24-ref.png	\
 	gradient-zero-stops-ref.png	\
