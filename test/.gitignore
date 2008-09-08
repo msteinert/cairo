@@ -65,6 +65,7 @@ fallback-resolution
 fallback-resolution.pdf
 fallback-resolution.ps
 fallback-resolution.svg
+fill-alpha
 fill-and-stroke
 fill-and-stroke-alpha
 fill-and-stroke-alpha-add
