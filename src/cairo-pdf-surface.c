@@ -50,6 +50,7 @@
 #include "cairo-paginated-private.h"
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-type3-glyph-surface-private.h"
+#include "cairo-jpeg-info-private.h"
 
 #include <time.h>
 #include <zlib.h>
@@ -1550,6 +1551,55 @@ CLEANUP:
     return status;
 }
 
+static cairo_int_status_t
+_cairo_pdf_surface_emit_jpeg_image (cairo_pdf_surface_t   *surface,
+				    cairo_surface_t 	  *source,
+				    cairo_pdf_resource_t  *res,
+				    int                   *width,
+				    int                   *height)
+{
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_jpeg_info_t info;
+
+    if (source->jpeg_data == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    status = _cairo_jpeg_get_info (source->jpeg_data,
+				   source->jpeg_data_length,
+				   &info);
+    if (status)
+	return status;
+
+    if (info.num_components != 1 && info.num_components != 3)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    status = _cairo_pdf_surface_open_stream (surface,
+					     NULL,
+					     FALSE,
+					     "   /Type /XObject\n"
+					     "   /Subtype /Image\n"
+					     "   /Width %d\n"
+					     "   /Height %d\n"
+					     "   /ColorSpace %s\n"
+					     "   /BitsPerComponent %d\n"
+					     "   /Filter /DCTDecode\n",
+					     info.width,
+					     info.height,
+					     info.num_components == 1 ? "/DeviceGray" : "/DeviceRGB",
+					     info.bits_per_component);
+
+    *res = surface->pdf_stream.self;
+    _cairo_output_stream_write (surface->output,
+				source->jpeg_data,
+				source->jpeg_data_length);
+    status = _cairo_pdf_surface_close_stream (surface);
+
+    *width = info.width;
+    *height = info.height;
+
+    return status;
+}
+
 static cairo_status_t
 _cairo_pdf_surface_emit_image_surface (cairo_pdf_surface_t     *surface,
 				       cairo_pdf_pattern_t     *pdf_pattern,
@@ -1566,6 +1616,11 @@ _cairo_pdf_surface_emit_image_surface (cairo_pdf_surface_t     *surface,
     cairo_surface_pattern_t *pattern = (cairo_surface_pattern_t *) pdf_pattern->pattern;
     int x = 0;
     int y = 0;
+
+    status = _cairo_pdf_surface_emit_jpeg_image (surface, pattern->surface,
+						 resource, width, height);
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
 
     status = _cairo_surface_acquire_source_image (pattern->surface, &image, &image_extra);
     if (status)

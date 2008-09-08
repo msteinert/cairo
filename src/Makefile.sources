@@ -64,6 +64,7 @@ cairo_private = \
 	cairo-freelist-private.h \
 	cairo-gstate-private.h \
 	cairo-hash-private.h \
+	cairo-jpeg-info-private.h \
 	cairo-malloc-private.h \
 	cairo-meta-surface-private.h \
 	cairo-mutex-impl-private.h \
@@ -109,6 +110,7 @@ cairo_sources = \
 	cairo-hash.c \
 	cairo-hull.c \
 	cairo-image-surface.c \
+	cairo-jpeg-info.c \
 	cairo-lzw.c \
 	cairo-matrix.c \
 	cairo-meta-surface.c \
