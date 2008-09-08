@@ -26,11 +26,6 @@ IGNORE_HFILES= \
 	$(unsupported_cairo_headers) \
 	$(NULL)
 
-# CFLAGS and LDFLAGS for compiling scan program. Only needed
-# if $(DOC_MODULE).types is non-empty.
-INCLUDES =
-GTKDOC_LIBS =
-
 # Extra options to supply to gtkdoc-mkdb
 MKDB_OPTIONS=--sgml-mode --output-format=xml
 

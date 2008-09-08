@@ -88,7 +88,7 @@ libcairoboilerplate_la_SOURCES += cairo-boilerplate-xlib.h
 libcairoboilerplate_la_SOURCES += cairo-boilerplate-xlib-private.h
 endif
 
-INCLUDES =					\
+AM_CPPFLAGS =					\
 	-I$(srcdir)				\
 	-I$(top_builddir)/src			\
 	-I$(top_srcdir)/src			\

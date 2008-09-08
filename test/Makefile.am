@@ -837,7 +837,7 @@ check-local:
 check_PROGRAMS =
 EXTRA_PROGRAMS =
 
-INCLUDES =					\
+AM_CPPFLAGS =					\
 	-I$(srcdir)				\
 	-I$(srcdir)/pdiff			\
 	-I$(top_srcdir)/boilerplate		\

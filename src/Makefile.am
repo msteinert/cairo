@@ -6,7 +6,7 @@ DISTCLEANFILES =
 MAINTAINERCLEANFILES =
 BUILT_SOURCES =
 
-INCLUDES = -I$(srcdir) $(CAIRO_CFLAGS)
+AM_CPPFLAGS = -I$(srcdir) $(CAIRO_CFLAGS)
 
 if OS_WIN32
 export_symbols = -export-symbols cairo.def
@@ -94,14 +94,14 @@ CLEANFILES += check-link
 # The pre-processed result is used by check-{def,plt}.sh to determine whether
 # cairo has been compiled with symbol hiding.
 .c.i: $(cairoinclude_HEADERS) $(nodist_cairoinclude_HEADERS) cairoint.h $(top_builddir)/config.h
-	$(CPP) -DHAVE_CONFIG_H -I$(top_builddir) -I. $(INCLUDES) $< -o $@
+	$(CPP) -DHAVE_CONFIG_H -I$(top_builddir) -I. $(AM_CPPFLAGS) $< -o $@
 CLEANFILES += *.i *.s
 
 SPARSE = sparse
 sparse:
 	@status=true; for f in $(enabled_cairo_sources); do \
 		echo sparse $$f; \
-		$(SPARSE) -I$(top_builddir) $(INCLUDES) -DHAVE_CONFIG_H $$f || status=false; \
+		$(SPARSE) -I$(top_builddir) $(AM_CPPFLAGS) -DHAVE_CONFIG_H $$f || status=false; \
 	done; $$status
 
 SPLINT = splint -badflag
@@ -109,12 +109,12 @@ splint:
 	@status=true; for f in $(enabled_cairo_sources); do \
 		test "$$f" = "`echo "$$f" | sed 's/[.]h$$//'`" || continue; \
 		echo sparse $$f; \
-		$(SPLINT) -I$(top_builddir) $(INCLUDES) -DHAVE_CONFIG_H $$f || status=false; \
+		$(SPLINT) -I$(top_builddir) $(AM_CPPFLAGS) -DHAVE_CONFIG_H $$f || status=false; \
 	done; $$status
 
 UNO = uno
 uno:
-	@cpp_flags=`echo $(INCLUDES) | sed 's/\(-I.*\) /\1 /g'`; \
+	@cpp_flags=`echo $(AM_CPPFLAGS) | sed 's/\(-I.*\) /\1 /g'`; \
 	files=`echo $(enabled_cairo_sources) | sed 's/[^ ]*\.h//g'`; \
 	$(UNO) -I$(top_builddir) $$cpp_flags -DHAVE_CONFIG_H -U__GNUC__ $$files
 
