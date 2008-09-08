@@ -77,7 +77,7 @@ TESTS = cairo-perf$(EXEEXT)
 perf: cairo-perf$(EXEEXT)
 	$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf$(EXEEXT)
 
-html: index.html
+html-local: index.html
 
 index.html: cairo-perf$(EXEEXT)
 	$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf-diff -h HEAD > $@
@@ -109,6 +109,6 @@ perf-callgrind:
 	    $(top_builddir)/libtool --mode=execute \
 	    valgrind $(VALGRIND_CALLGRIND_FLAGS) $(EXTRA_VALGRIND_FLAGS)'
 
-.PHONY: perf html check-valgrind perf-valgrind perf-callgrind
+.PHONY: perf check-valgrind perf-valgrind perf-callgrind
 
 EXTRA_DIST += Makefile.win32

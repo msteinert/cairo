@@ -964,7 +964,7 @@ retest:
 	$(MAKE) $(AM_MAKEFLAGS) TESTS="$$TESTS" html
 
 # Make index.html with no dependency tracking.
-html:
+html-local:
 	@echo Creating index.html
 	@perl $(srcdir)/make-html.pl $(TESTS:$(EXEEXT)=.log) > index.html
 
@@ -1032,6 +1032,6 @@ check-ref-missing:
 
 release-verify-sane-tests: check-ref-missing
 
-.PHONY: check-valgrind test recheck retest html rehtml check-ref-dups check-ref-missing release-verify-sane-tests
+.PHONY: check-valgrind test recheck retest rehtml check-ref-dups check-ref-missing release-verify-sane-tests
 
 EXTRA_DIST += Makefile.win32
