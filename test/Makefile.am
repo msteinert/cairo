@@ -49,6 +49,7 @@ extend-reflect-similar$(EXEEXT)				\
 extend-repeat$(EXEEXT)					\
 extend-repeat-similar$(EXEEXT)				\
 fill-alpha$(EXEEXT)					\
+fill-alpha-pattern$(EXEEXT)				\
 fill-and-stroke$(EXEEXT)				\
 fill-and-stroke-alpha$(EXEEXT)				\
 fill-and-stroke-alpha-add$(EXEEXT)			\
@@ -393,6 +394,8 @@ REFERENCE_IMAGES = \
 	extend-repeat-ref.png	\
 	extend-repeat-similar-ref.png	\
 	fill-alpha-ref.png	\
+	fill-alpha-pattern-ref.png	\
+	fill-alpha-pattern-ps-ref.png	\
 	fill-and-stroke-alpha-add-quartz-ref.png	\
 	fill-and-stroke-alpha-add-ref.png	\
 	fill-and-stroke-alpha-quartz-ref.png	\
