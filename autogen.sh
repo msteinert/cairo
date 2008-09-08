@@ -16,7 +16,7 @@ PACKAGE=cairo
 
 LIBTOOLIZE_FLAGS="--copy --force"
 AUTOHEADER=${AUTOHEADER-autoheader}
-AUTOMAKE_FLAGS="--add-missing --foreign"
+AUTOMAKE_FLAGS="--add-missing --gnu -Wall"
 AUTOCONF=${AUTOCONF-autoconf}
 
 CONFIGURE_AC=
