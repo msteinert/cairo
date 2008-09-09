@@ -40,6 +40,7 @@ static const cairo_test_t test = {
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
+    const double alpha = 1./3;
     int n;
 
     /* flatten to white */
@@ -48,13 +49,13 @@ draw (cairo_t *cr, int width, int height)
 
     /* square */
     cairo_rectangle (cr, PAD, PAD, SIZE, SIZE);
-    cairo_set_source_rgba (cr, 1, 0, 0, .5);
+    cairo_set_source_rgba (cr, 1, 0, 0, alpha);
     cairo_fill (cr);
 
     /* circle */
     cairo_translate (cr, SIZE + 2 * PAD, 0);
     cairo_arc (cr, PAD + SIZE / 2., PAD + SIZE / 2., SIZE / 2., 0, 2 * M_PI);
-    cairo_set_source_rgba (cr, 0, 1, 0, .5);
+    cairo_set_source_rgba (cr, 0, 1, 0, alpha);
     cairo_fill (cr);
 
     /* triangle */
@@ -62,7 +63,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_move_to (cr, PAD + SIZE / 2, PAD);
     cairo_line_to (cr, PAD + SIZE, PAD + SIZE);
     cairo_line_to (cr, PAD, PAD + SIZE);
-    cairo_set_source_rgba (cr, 0, 0, 1, .5);
+    cairo_set_source_rgba (cr, 0, 0, 1, alpha);
     cairo_fill (cr);
 
     /* star */
@@ -76,7 +77,7 @@ draw (cairo_t *cr, int width, int height)
 		       SIZE/4 * cos ((2*n+1)*2*M_PI / 10),
 		       SIZE/4 * sin ((2*n+1)*2*M_PI / 10));
     }
-    cairo_set_source_rgba (cr, 0, 0, 0, .5);
+    cairo_set_source_rgba (cr, 0, 0, 0, alpha);
     cairo_fill (cr);
 
     return CAIRO_TEST_SUCCESS;
