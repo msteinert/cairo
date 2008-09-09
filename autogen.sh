@@ -181,8 +181,9 @@ do_cmd $ACLOCAL $ACLOCAL_FLAGS
 
 do_cmd $AUTOHEADER
 
-# create dummy src/Makefile.am.config, which will later be created by configure
-echo > src/Makefile.am.config
+# create dummy src/Makefile.am.config and ChangeLog to make automake happy
+touch src/Makefile.am.config
+touch ChangeLog
 
 do_cmd $AUTOMAKE $AUTOMAKE_FLAGS
 
