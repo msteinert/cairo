@@ -319,7 +319,6 @@ REFERENCE_IMAGES = \
 	clip-operator-ref.png	\
 	clip-operator-pdf-argb32-ref.png \
 	clip-operator-pdf-rgb24-ref.png \
-	clip-operator-ps-argb32-ref.png	\
 	clip-operator-ps-rgb24-ref.png	\
 	clip-operator-rgb24-ref.png	\
 	clip-operator-quartz-ref.png	\
