@@ -3722,6 +3722,12 @@ _cairo_pdf_surface_emit_font_subsets (cairo_pdf_surface_t *surface)
     status = _cairo_scaled_font_subsets_foreach_scaled (surface->font_subsets,
                                                         _cairo_pdf_surface_emit_scaled_font_subset,
                                                         surface);
+    if (status)
+	goto BAIL;
+
+    status = _cairo_scaled_font_subsets_foreach_user (surface->font_subsets,
+						      _cairo_pdf_surface_emit_scaled_font_subset,
+						      surface);
 
 BAIL:
     _cairo_scaled_font_subsets_destroy (surface->font_subsets);

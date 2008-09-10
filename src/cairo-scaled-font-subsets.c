@@ -62,6 +62,7 @@ typedef struct _cairo_sub_font {
 
     cairo_bool_t is_scaled;
     cairo_bool_t is_composite;
+    cairo_bool_t is_user;
     cairo_scaled_font_subsets_t *parent;
     cairo_scaled_font_t *scaled_font;
     unsigned int font_id;
@@ -265,6 +266,7 @@ _cairo_sub_font_create (cairo_scaled_font_subsets_t	*parent,
 
     sub_font->is_scaled = is_scaled;
     sub_font->is_composite = is_composite;
+    sub_font->is_user = _cairo_font_face_is_user (scaled_font->font_face);
     _cairo_sub_font_init_key (sub_font, scaled_font);
 
     sub_font->parent = parent;
@@ -814,7 +816,8 @@ static cairo_status_t
 _cairo_scaled_font_subsets_foreach_internal (cairo_scaled_font_subsets_t              *font_subsets,
                                              cairo_scaled_font_subset_callback_func_t  font_subset_callback,
                                              void				      *closure,
-                                             cairo_bool_t                              is_scaled)
+                                             cairo_bool_t                              is_scaled,
+                                             cairo_bool_t                              is_user)
 {
     cairo_sub_font_collection_t collection;
     cairo_sub_font_t *sub_font;
@@ -848,7 +851,9 @@ _cairo_scaled_font_subsets_foreach_internal (cairo_scaled_font_subsets_t        
 	sub_font = font_subsets->unscaled_sub_fonts_list;
 
     while (sub_font) {
-	_cairo_sub_font_collect (sub_font, &collection);
+	if (sub_font->is_user == is_user)
+	    _cairo_sub_font_collect (sub_font, &collection);
+
 	sub_font = sub_font->next;
     }
     free (collection.utf8);
@@ -865,6 +870,7 @@ _cairo_scaled_font_subsets_foreach_scaled (cairo_scaled_font_subsets_t		    *fon
     return _cairo_scaled_font_subsets_foreach_internal (font_subsets,
                                                         font_subset_callback,
                                                         closure,
+                                                        FALSE,
                                                         TRUE);
 }
 
@@ -876,7 +882,20 @@ _cairo_scaled_font_subsets_foreach_unscaled (cairo_scaled_font_subsets_t	    *fo
     return _cairo_scaled_font_subsets_foreach_internal (font_subsets,
                                                         font_subset_callback,
                                                         closure,
+                                                        FALSE,
                                                         FALSE);
+}
+
+cairo_status_t
+_cairo_scaled_font_subsets_foreach_user (cairo_scaled_font_subsets_t		  *font_subsets,
+					 cairo_scaled_font_subset_callback_func_t  font_subset_callback,
+					 void					  *closure)
+{
+    return _cairo_scaled_font_subsets_foreach_internal (font_subsets,
+                                                        font_subset_callback,
+                                                        closure,
+                                                        TRUE,
+                                                        TRUE);
 }
 
 static cairo_bool_t
