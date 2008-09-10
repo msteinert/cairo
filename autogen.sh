@@ -14,7 +14,7 @@ cd $srcdir
 
 PACKAGE=cairo
 
-LIBTOOLIZE_FLAGS="--copy --force"
+LIBTOOLIZE_FLAGS="--copy --force --automake"
 AUTOHEADER=${AUTOHEADER-autoheader}
 AUTOMAKE_FLAGS="--add-missing --gnu -Wall"
 AUTOCONF=${AUTOCONF-autoconf}
