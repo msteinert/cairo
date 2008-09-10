@@ -41,12 +41,14 @@ AC_DEFUN([_CAIRO_ENABLE],
 		,
 		[m4_fatal([invalid feature name `$1'])]
 	)
-	m4_define([cr_feature], [$1])
-	m4_define([cr_feature_name], m4_normalize([$2]))
-	m4_define([cr_feature_what], m4_normalize([$3]))
-	m4_define([cr_feature_default], m4_normalize([$4]))
-	m4_define([cr_feature_commands], [$5])
-	m4_define([cr_feature_commands_len], m4_len([$5]))
+	m4_pushdef([cr_feature], [$1])dnl
+	m4_pushdef([cr_feature_name], m4_normalize([$2]))dnl
+	m4_pushdef([cr_feature_what], m4_normalize([$3]))dnl
+	m4_pushdef([cr_feature_default], m4_normalize([$4]))dnl
+	m4_pushdef([cr_feature_commands], [$5])dnl
+	m4_pushdef([cr_feature_commands_len], m4_len([$5]))dnl
+
+	m4_pushdef([cr_feature_arg], m4_translit([$1],_,-))dnl
 
 	dnl Sanity check default
 	m4_case(
@@ -56,8 +58,6 @@ AC_DEFUN([_CAIRO_ENABLE],
 		[auto],,
 		[m4_fatal([Invalid default value `]cr_feature_default[' for feature `]cr_feature['])]
 	)
-
-	m4_define([cr_feature_arg], m4_translit([$1],[_],[-]))
 
 	AC_ARG_ENABLE(cr_feature_arg,
 		      AS_HELP_STRING([--enable-]cr_feature_arg[=@<:@no/auto/yes@:>@],
@@ -140,6 +140,15 @@ AC_DEFUN([_CAIRO_ENABLE],
 
 
 	_CAIRO_FEATURE_HOOKS(cr_feature, cr_feature_name, cr_feature_default, cr_feature_what)
+
+
+	m4_popdef([cr_feature])dnl
+	m4_popdef([cr_feature_name])dnl
+	m4_popdef([cr_feature_what])dnl
+	m4_popdef([cr_feature_default])dnl
+	m4_popdef([cr_feature_commands])dnl
+	m4_popdef([cr_feature_commands_len])dnl
+	m4_popdef([cr_feature_arg])dnl
 ])
 
 
@@ -317,9 +326,12 @@ m4_pattern_allow(^CAIRO_HAS_)
 
 
 dnl
-dnl Define cr_feature_pc ala other cr_feature_* macros
+dnl Define cr_feature_pc_modname and cr_feature_pc ala other cr_feature_* macros
+dnl
+m4_define([cr_feature_pc_modname],
+	[[cairo-]m4_translit(cr_feature,_,-)])
 m4_define([cr_feature_pc],
-	[m4_bpatsubst([cairo-]cr_feature[.pc],_,-)])
+	[cr_feature_pc_modname[.pc]])
 
 
 dnl ===========================================================================
@@ -458,12 +470,12 @@ CAIRO_FEATURE_HOOK_REGISTER(yes,*,*,
 	AC_CONFIG_FILES(src/cr_feature_pc:src/cairo-features.pc.in,
 	[
 		$SED -i -e "
-		s,@backend_name@,$1,g;
-		s,@Backend_Name@,cr_feature_name,g;
-		s,@BACKEND_BASE@,$$1_BASE,g;
-		s,@BACKEND_REQUIRES@,$$1_REQUIRES,g;
-		s%@BACKEND_NONPKGCONFIG_LIBS@%$$1_NONPKGCONFIG_LIBS%g;
-		s,@BACKEND_NONPKGCONFIG_CFLAGS@,$$1_NONPKGCONFIG_CFLAGS,g;
+		s%@FEATURE_PC@%]cr_feature_pc_modname[%g;
+		s%@FEATURE_NAME@%]cr_feature_name[%g;
+		s%@FEATURE_BASE@%$$1_BASE%g;
+		s%@FEATURE_REQUIRES@%$$1_REQUIRES%g;
+		s%@FEATURE_NONPKGCONFIG_LIBS@%$$1_NONPKGCONFIG_LIBS%g;
+		s%@FEATURE_NONPKGCONFIG_CFLAGS@%$$1_NONPKGCONFIG_CFLAGS%g;
 		" "]src/cr_feature_pc[" ||
 		AC_MSG_ERROR(failed to update ]src/cr_feature_pc[)
 	],[
