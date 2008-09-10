@@ -615,9 +615,6 @@ AC_DEFUN([CAIRO_REPORT],
 		echo "  win32 printing testing:    $test_win32_printing"
 	fi
 	echo ""
-	echo "using CFLAGS:"
-	echo $CAIRO_CFLAGS
-	echo ""
 
 	if test x"$use_ft"          != "xyes" && \
 	   test x"$use_win32_font"  != "xyes" && \
