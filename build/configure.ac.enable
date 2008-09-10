@@ -551,16 +551,16 @@ dnl
 dnl Accumulator for warning messages
 CAIRO_FEATURE_VARS_REGISTER([WARNING_MESSAGE])
 
-dnl Collect warning message for enabled unsupported backends
+dnl Collect warning message for enabled unsupported features
 CAIRO_FEATURE_HOOK_REGISTER(yes,no,*,
 [
 	CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE]m4_newline[m4_text_wrap([The ]cr_feature_name[ feature is still under active development and is included in this release only as a preview. It does NOT fully work yet and incompatible changes may yet be made to ]cr_feature_name[ specific API.], [--- ],, 78)m4_newline"
 ])
 
-dnl Collect warning message for disabled recommended backends
+dnl Collect warning message for disabled recommended features
 CAIRO_FEATURE_HOOK_REGISTER(no,yes,*,
 [
-	CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE]m4_newline[m4_text_wrap([It is strictly recommended that you do NOT disable the ]cr_feature_name[ backend.], [+++ ],, 78)m4_newline"
+	CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE]m4_newline[m4_text_wrap([It is strictly recommended that you do NOT disable the ]cr_feature_name[ feature.], [+++ ],, 78)m4_newline"
 ])
 
 
