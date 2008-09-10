@@ -36,6 +36,8 @@
 #include <cairo.h>
 #include <string.h>
 
+#include "cairo-compiler-private.h"
+
 #if   HAVE_STDINT_H
 # include <stdint.h>
 #elif HAVE_INTTYPES_H
