@@ -316,6 +316,11 @@ dnl Allow feature tags in the output
 m4_pattern_allow(^CAIRO_HAS_)
 
 
+dnl
+dnl Define cr_feature_pc ala other cr_feature_* macros
+m4_define([cr_feature_pc],
+	[m4_bpatsubst([cairo-]cr_feature[.pc],_,-)])
+
 
 dnl ===========================================================================
 dnl
@@ -408,24 +413,24 @@ dnl Collect list of all/enabled cairo source files
 CAIRO_FEATURE_HOOK_REGISTER(*,*,*,
 [
 	CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
-all_cairo_pkgconf += $(cairo_$1_pkgconf)
+all_cairo_pkgconf += cr_feature_pc
 all_cairo_headers += $(cairo_$1_headers)
 all_cairo_private += $(cairo_$1_private)
 all_cairo_sources += $(cairo_$1_sources)
 if cr_feature_tag
-enabled_cairo_pkgconf += $(cairo_$1_pkgconf)
+enabled_cairo_pkgconf += cr_feature_pc
 enabled_cairo_headers += $(cairo_$1_headers)
 enabled_cairo_private += $(cairo_$1_private)
 enabled_cairo_sources += $(cairo_$1_sources)
 endif
 '
 	CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
-all_cairo_pkgconf += $(cairo_$1_pkgconf)
+all_cairo_pkgconf += cr_feature_pc
 all_cairo_headers += $(cairo_$1_headers)
 all_cairo_private += $(cairo_$1_private)
 all_cairo_sources += $(cairo_$1_sources)
 ifeq ($(cr_feature_tag),1)
-enabled_cairo_pkgconf += $(cairo_$1_pkgconf)
+enabled_cairo_pkgconf += cr_feature_pc
 enabled_cairo_headers += $(cairo_$1_headers)
 enabled_cairo_private += $(cairo_$1_private)
 enabled_cairo_sources += $(cairo_$1_sources)
@@ -450,8 +455,7 @@ CAIRO_FEATURE_VARS_REGISTER([LIBS NONPKGCONFIG_LIBS], [$LIBS])
 dnl Generate .pc files for enabled features
 CAIRO_FEATURE_HOOK_REGISTER(yes,*,*,
 [
-	m4_define([cairo_backend_pc], m4_bpatsubst(src/cairo-$1.pc,_,-))
-	AC_CONFIG_FILES(cairo_backend_pc():src/cairo-backend.pc.in,
+	AC_CONFIG_FILES(src/cr_feature_pc:src/cairo-backend.pc.in,
 	[
 		$SED -i -e "
 		s,@backend_name@,$1,g;
@@ -460,8 +464,8 @@ CAIRO_FEATURE_HOOK_REGISTER(yes,*,*,
 		s,@BACKEND_REQUIRES@,$$1_REQUIRES,g;
 		s%@BACKEND_NONPKGCONFIG_LIBS@%$$1_NONPKGCONFIG_LIBS%g;
 		s,@BACKEND_NONPKGCONFIG_CFLAGS@,$$1_NONPKGCONFIG_CFLAGS,g;
-		" "]cairo_backend_pc()[" ||
-		AC_MSG_ERROR(failed to update ]cairo_backend_pc()[)
+		" "]src/cr_feature_pc[" ||
+		AC_MSG_ERROR(failed to update ]src/cr_feature_pc[)
 	],[
 		SED='$SED'
 		$1_BASE='$$1_BASE'
