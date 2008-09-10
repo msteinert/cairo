@@ -455,7 +455,7 @@ CAIRO_FEATURE_VARS_REGISTER([LIBS NONPKGCONFIG_LIBS], [$LIBS])
 dnl Generate .pc files for enabled features
 CAIRO_FEATURE_HOOK_REGISTER(yes,*,*,
 [
-	AC_CONFIG_FILES(src/cr_feature_pc:src/cairo-backend.pc.in,
+	AC_CONFIG_FILES(src/cr_feature_pc:src/cairo-features.pc.in,
 	[
 		$SED -i -e "
 		s,@backend_name@,$1,g;
