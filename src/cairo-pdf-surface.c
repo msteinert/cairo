@@ -3484,13 +3484,21 @@ static cairo_status_t
 _cairo_pdf_surface_analyze_user_font_subset (cairo_scaled_font_subset_t *font_subset,
 					     void		        *closure)
 {
+    cairo_pdf_surface_t *surface = closure;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     unsigned int i;
     cairo_surface_t *type3_surface;
+    cairo_output_stream_t *null_stream;
 
+    null_stream = _cairo_null_stream_create ();
     type3_surface = _cairo_type3_glyph_surface_create (font_subset->scaled_font,
-						       NULL,
-						       _cairo_pdf_emit_imagemask);
+						       null_stream,
+						       _cairo_pdf_emit_imagemask,
+						       surface->font_subsets);
+    _cairo_type3_glyph_surface_set_font_subsets_callback (type3_surface,
+							  _cairo_pdf_surface_add_font,
+							  surface);
+
     for (i = 1; i < font_subset->num_glyphs; i++) {
 	status = _cairo_type3_glyph_surface_analyze_glyph (type3_surface,
 							   font_subset->glyphs[i]);
@@ -3498,6 +3506,7 @@ _cairo_pdf_surface_analyze_user_font_subset (cairo_scaled_font_subset_t *font_su
 	    break;
     }
     cairo_surface_destroy (type3_surface);
+    status = _cairo_output_stream_destroy (null_stream);
 
     return status;
 }
@@ -3534,9 +3543,14 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
+    _cairo_pdf_group_resources_clear (&surface->resources);
     type3_surface = _cairo_type3_glyph_surface_create (font_subset->scaled_font,
 						       NULL,
-						       _cairo_pdf_emit_imagemask);
+						       _cairo_pdf_emit_imagemask,
+						       surface->font_subsets);
+    _cairo_type3_glyph_surface_set_font_subsets_callback (type3_surface,
+							  _cairo_pdf_surface_add_font,
+							  surface);
 
     for (i = 0; i < font_subset->num_glyphs; i++) {
 	status = _cairo_pdf_surface_open_stream (surface,
@@ -3663,6 +3677,10 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
     _cairo_output_stream_printf (surface->output,
 				 "]\n");
     free (widths);
+
+    _cairo_output_stream_printf (surface->output,
+				 "   /Resources\n");
+    _cairo_pdf_surface_emit_group_resources (surface, &surface->resources);
 
     if (to_unicode_stream.id != 0)
         _cairo_output_stream_printf (surface->output,

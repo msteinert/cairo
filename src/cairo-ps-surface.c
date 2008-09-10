@@ -445,13 +445,15 @@ static cairo_status_t
 _cairo_ps_surface_analyze_user_font_subset (cairo_scaled_font_subset_t *font_subset,
 					    void		       *closure)
 {
+    cairo_ps_surface_t *surface = closure;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     unsigned int i;
     cairo_surface_t *type3_surface;
 
     type3_surface = _cairo_type3_glyph_surface_create (font_subset->scaled_font,
 						       NULL,
-						       _cairo_ps_emit_imagemask);
+						       _cairo_ps_emit_imagemask,
+						       surface->font_subsets);
 
     for (i = 1; i < font_subset->num_glyphs; i++) {
 	status = _cairo_type3_glyph_surface_analyze_glyph (type3_surface,
@@ -492,7 +494,8 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
 
     type3_surface = _cairo_type3_glyph_surface_create (font_subset->scaled_font,
 						       NULL,
-						       _cairo_ps_emit_imagemask);
+						       _cairo_ps_emit_imagemask,
+						       surface->font_subsets);
 
     for (i = 1; i < font_subset->num_glyphs; i++) {
 	if (font_subset->glyph_names != NULL) {
