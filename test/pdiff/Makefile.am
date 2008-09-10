@@ -13,7 +13,7 @@ perceptualdiff_SOURCES =	\
 	args.h			\
 	perceptualdiff.c
 
-INCLUDES = -I$(top_srcdir)/src -I$(top_builddir)/src $(CAIRO_CFLAGS)
+AC_CPPFLAGS = -I$(top_srcdir)/src -I$(top_builddir)/src $(CAIRO_CFLAGS)
 LDADD = libpdiff.la $(top_builddir)/src/libcairo.la
 #
 # Delete intermediate files as well
