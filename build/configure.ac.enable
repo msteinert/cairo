@@ -464,8 +464,8 @@ CAIRO_FEATURE_VARS_REGISTER([REQUIRES BASE])
 CAIRO_FEATURE_VARS_REGISTER([CFLAGS NONPKGCONFIG_CFLAGS])
 CAIRO_FEATURE_VARS_REGISTER([LIBS NONPKGCONFIG_LIBS], [$LIBS])
 
-dnl Generate .pc files for enabled features
-CAIRO_FEATURE_HOOK_REGISTER(yes,*,*,
+dnl Generate .pc files for enabled public features
+CAIRO_FEATURE_HOOK_REGISTER(yes,*,!,
 [
 	AC_CONFIG_FILES(src/cr_feature_pc:src/cairo-features.pc.in,
 	[
@@ -493,18 +493,18 @@ dnl
 dnl Generate src/cairo-features.h src/cairo-supported-features.h
 dnl
 
-dnl Collect list of enabled features
-CAIRO_FEATURE_HOOK_REGISTER(yes,*,*,
+dnl Collect list of enabled public features
+CAIRO_FEATURE_HOOK_REGISTER(yes,*,!,
 [
 	CAIRO_FEATURES="cr_feature_tag $CAIRO_FEATURES"
 ])
-dnl Collect list of all supported features
-CAIRO_FEATURE_HOOK_REGISTER(*,!no,*,
+dnl Collect list of all supported public features
+CAIRO_FEATURE_HOOK_REGISTER(*,!no,!,
 [
 	CAIRO_SUPPORTED_FEATURES="cr_feature_tag $CAIRO_SUPPORTED_FEATURES"
 ])
-dnl Collect list of all supported but disabled features
-CAIRO_FEATURE_HOOK_REGISTER(no,!no,*,
+dnl Collect list of all supported disabled public features
+CAIRO_FEATURE_HOOK_REGISTER(no,!no,!,
 [
 	CAIRO_NO_FEATURES="cr_feature_tag $CAIRO_NO_FEATURES"
 ])
@@ -554,6 +554,11 @@ CAIRO_CONFIG_COMMANDS([$srcdir/src/cairo-supported-features.h],
 	CAIRO_SUPPORTED_FEATURES='$CAIRO_SUPPORTED_FEATURES'
 ])
 
+dnl For enabled private features just define them in config.h.  No fanfare!
+CAIRO_FEATURE_HOOK_REGISTER(yes,*,,
+[
+	AC_DEFINE(cr_feature_tag, 1, [Define to 1 to enable cairo's ]cr_feature_name[ feature])
+])
 
 dnl ===========================================================================
 dnl
@@ -563,8 +568,8 @@ dnl
 dnl Accumulator for warning messages
 CAIRO_FEATURE_VARS_REGISTER([WARNING_MESSAGE])
 
-dnl Collect warning message for enabled unsupported features
-CAIRO_FEATURE_HOOK_REGISTER(yes,no,*,
+dnl Collect warning message for enabled unsupported public features
+CAIRO_FEATURE_HOOK_REGISTER(yes,no,!,
 [
 	CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE]m4_newline[m4_text_wrap([The ]cr_feature_name[ feature is still under active development and is included in this release only as a preview. It does NOT fully work yet and incompatible changes may yet be made to ]cr_feature_name[ specific API.], [--- ],, 78)m4_newline"
 ])
