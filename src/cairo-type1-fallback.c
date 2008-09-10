@@ -590,7 +590,7 @@ cairo_type1_font_write_private_dict (cairo_type1_font_t *font,
     _cairo_output_stream_printf (encrypted_output,
                                  "    dup /Private 9 dict dup begin\n"
                                  "/RD {string currentfile exch readstring pop}"
-                                 " executeonly def\n"
+                                 " bind executeonly def\n"
                                  "/ND {noaccess def} executeonly def\n"
                                  "/NP {noaccess put} executeonly def\n"
                                  "/BlueValues [] def\n"
