@@ -457,8 +457,7 @@ REFERENCE_IMAGES = \
 	gradient-alpha-ps-rgb24-ref.png	\
 	gradient-alpha-ref.png	\
 	gradient-alpha-rgb24-ref.png	\
-	gradient-constant-alpha-pdf-argb32-ref.png	\
-	gradient-constant-alpha-pdf-rgb24-ref.png	\
+	gradient-constant-alpha-ps-ref.png		\
 	gradient-constant-alpha-ps-rgb24-ref.png	\
 	gradient-constant-alpha-ref.png	\
 	gradient-constant-alpha-rgb24-ref.png	\
@@ -541,11 +540,8 @@ REFERENCE_IMAGES = \
 	operator-clear-rgb24-ref.png	\
 	operator-clear-pdf-argb32-ref.png	\
 	operator-clear-pdf-rgb24-ref.png	\
-	operator-clear-ps-argb32-ref.png	\
 	operator-source-pdf-argb32-ref.png	\
 	operator-source-pdf-rgb24-ref.png	\
-	operator-source-ps-argb32-ref.png	\
-	operator-source-ps-rgb24-ref.png	\
 	operator-source-ref.png	\
 	operator-source-rgb24-ref.png	\
 	operator-source-quartz-ref.png \
