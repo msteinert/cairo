@@ -116,6 +116,7 @@
 
 #if (defined(__WIN32__) && !defined(__WINE__)) || defined(_MSC_VER)
 #define snprintf _snprintf
+#define popen _popen
 #endif
 
 #ifdef _MSC_VER
