@@ -41,6 +41,7 @@
 #include "cairo-type3-glyph-surface-private.h"
 #include "cairo-output-stream-private.h"
 #include "cairo-meta-surface-private.h"
+#include "cairo-analysis-surface-private.h"
 
 static const cairo_surface_backend_t cairo_type3_glyph_surface_backend;
 
@@ -346,6 +347,44 @@ _cairo_type3_glyph_surface_emit_fallback_image (cairo_type3_glyph_surface_t *sur
     mat.y0 *= -1;
 
     return _cairo_type3_glyph_surface_emit_image (surface, image, &mat);
+}
+
+cairo_status_t
+_cairo_type3_glyph_surface_analyze_glyph (void		     *abstract_surface,
+					  unsigned long	      glyph_index)
+{
+    cairo_type3_glyph_surface_t *surface = abstract_surface;
+    cairo_scaled_glyph_t *scaled_glyph;
+    cairo_status_t status, status2;
+    cairo_output_stream_t *null_stream;
+
+    null_stream = _cairo_null_stream_create ();
+    _cairo_type3_glyph_surface_set_stream (surface, null_stream);
+    status = _cairo_scaled_glyph_lookup (surface->scaled_font,
+					 glyph_index,
+					 CAIRO_SCALED_GLYPH_INFO_METRICS |
+					 CAIRO_SCALED_GLYPH_INFO_META_SURFACE,
+					 &scaled_glyph);
+    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+	goto cleanup;
+
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+	status = CAIRO_STATUS_SUCCESS;
+	goto cleanup;
+    }
+
+    status = _cairo_meta_surface_replay (scaled_glyph->meta_surface,
+					 &surface->base);
+
+    if (status == CAIRO_INT_STATUS_IMAGE_FALLBACK)
+	status = CAIRO_STATUS_SUCCESS;
+
+cleanup:
+    status2 = _cairo_output_stream_destroy (null_stream);
+    if (status)
+	return status;
+
+    return status2;
 }
 
 cairo_status_t
