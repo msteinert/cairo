@@ -161,7 +161,7 @@ _cairo_memory_stream_copy (cairo_output_stream_t *base,
 cairo_private int
 _cairo_memory_stream_length (cairo_output_stream_t *stream);
 
-cairo_output_stream_t *
+cairo_private cairo_output_stream_t *
 _cairo_null_stream_create (void);
 
 /* cairo-base85-stream.c */
