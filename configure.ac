@@ -415,9 +415,12 @@ CAIRO_ENABLE(test_surfaces, test surfaces, no)
 dnl ===========================================================================
 
 CAIRO_ENABLE_SURFACE_BACKEND(image, image, always, [
-  image_REQUIRES="pixman-1 >= 0.11.2"
-  PKG_CHECK_MODULES(pixman, $image_REQUIRES, , [AC_MSG_RESULT(no)
-  use_image="no (requires $image_REQUIRES http://cairographics.org/releases/)"])
+  pixman_REQUIRES="pixman-1 >= 0.11.2"
+  PKG_CHECK_MODULES(pixman, $pixman_REQUIRES, , [AC_MSG_RESULT(no)
+  use_image="no (requires $pixman_REQUIRES http://cairographics.org/releases/)"])
+  image_REQUIRES=$pixman_REQUIRES
+  image_CFLAGS=$pixman_CFLAGS
+  image_LIBS=$pixman_LIBS
 ])
 
 dnl ===========================================================================
