@@ -3486,6 +3486,7 @@ _cairo_pdf_surface_analyze_user_font_subset (cairo_scaled_font_subset_t *font_su
 {
     cairo_pdf_surface_t *surface = closure;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_status_t status2;
     unsigned int i;
     cairo_surface_t *type3_surface;
     cairo_output_stream_t *null_stream;
@@ -3505,10 +3506,13 @@ _cairo_pdf_surface_analyze_user_font_subset (cairo_scaled_font_subset_t *font_su
 	if (status)
 	    break;
     }
-    cairo_surface_destroy (type3_surface);
-    status = _cairo_output_stream_destroy (null_stream);
 
-    return status;
+    cairo_surface_destroy (type3_surface);
+    status2 = _cairo_output_stream_destroy (null_stream);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = status2;
+
+    return status2;
 }
 
 static cairo_status_t
