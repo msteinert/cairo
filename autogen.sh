@@ -175,7 +175,7 @@ do_cmd $AUTOMAKE $AUTOMAKE_FLAGS
 
 do_cmd $AUTOCONF
 
-cd $ORIGDIR || exit 1
+cd "$ORIGDIR" || exit 1
 
 rm -f config.cache
 
