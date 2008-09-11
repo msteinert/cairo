@@ -102,7 +102,6 @@ CLEANFILES +=					\
 test: check
 
 if CROSS_COMPILING
-check: check-link
 else
 TESTS += check-link
 endif
