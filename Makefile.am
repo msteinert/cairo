@@ -1,3 +1,5 @@
+ACLOCAL_AMFLAGS = -I build
+
 DIST_SUBDIRS = src boilerplate test perf doc util
 SUBDIRS = src doc
 # libpng is required for our test programs

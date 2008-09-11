@@ -15,6 +15,7 @@ cd $srcdir
 PACKAGE=cairo
 
 LIBTOOLIZE_FLAGS="--copy --force --automake"
+ACLOCAL_FLAGS="-I build"
 AUTOHEADER=${AUTOHEADER-autoheader}
 AUTOMAKE_FLAGS="--add-missing --gnu -Wall"
 AUTOCONF=${AUTOCONF-autoconf}
@@ -142,21 +143,6 @@ ACLOCAL=`echo $AUTOMAKE | sed s/automake/aclocal/`
 
 version_check libtool LIBTOOLIZE "$LIBTOOLIZE glibtoolize libtoolize" $libtoolize_min_vers \
     "http://ftp.gnu.org/pub/gnu/libtool/libtool-${libtool_min_vers}.tar.gz" || DIE=1
-
-if test -n "$ACLOCAL" && test -z "$ACLOCAL_FLAGS"; then
-    acdir=`$ACLOCAL --print-ac-dir`
-    if [ ! -f $acdir/pkg.m4 ]; then
-	echo "$ARGV0: Error: Could not find pkg-config macros."
-	echo "        (Looked in $acdir/pkg.m4)"
-	echo "        If pkg.m4 is available in /another/directory, please set"
-	echo "        ACLOCAL_FLAGS=\"-I /another/directory\""
-	echo "        Otherwise, please install pkg-config."
-	echo ""
-	echo "pkg-config is available from:"
-	echo "http://www.freedesktop.org/software/pkgconfig/"
-	DIE=1
-    fi
-fi
 
 if test -n "$DIE"; then
   exit 1
