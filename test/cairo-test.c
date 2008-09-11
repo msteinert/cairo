@@ -680,9 +680,6 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 	    }
 	}
 
-	_xunlink (ctx, png_name);
-	_xunlink (ctx, diff_name);
-
 	/* first *always* save the test output */
 	test_image = target->get_image_surface (surface,
 					       ctx->test->width,
@@ -695,6 +692,7 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 	    goto UNWIND_CAIRO;
 	}
 
+	_xunlink (ctx, png_name);
 	diff_status = cairo_surface_write_to_png (test_image, png_name);
 	if (diff_status) {
 	    cairo_test_log (ctx, "Error: Failed to write output image: %s\n",
@@ -795,6 +793,7 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 				  test_image, ref_image,
 				  diff_image,
 				  &result);
+	_xunlink (ctx, diff_name);
 	if (diff_status) {
 	    cairo_test_log (ctx, "Error: Failed to compare images: %s\n",
 			    cairo_status_to_string (diff_status));
