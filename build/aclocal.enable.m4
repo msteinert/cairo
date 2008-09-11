@@ -123,7 +123,7 @@ AC_DEFUN([_CAIRO_ENABLE],
 		[dnl
 			echo
 			use_[]$1=yes
-			CAIRO_FEATURE_VARS_FOREACH(cr_var, [cr_feature[_]cr_var[=]m4_do([cr_var_default_]cr_var[_value])]m4_newline)
+			CAIRO_FEATURE_VARS_FOREACH(cr_var, [cr_feature[_]cr_var[=]_CAIRO_SH_ESCAPE_UNQUOTED(m4_do([cr_var_default_]cr_var[_value]))]m4_newline)
 			cr_feature_commands
 			cairo_cv_[]$1[]_use=$use_[]$1
 			cairo_cv_[]$1[]_cache_vars="_CAIRO_FEATURE_VARS"
@@ -222,6 +222,9 @@ m4_define([_CAIRO_ACCUMULATORS_REGISTER],
 	m4_foreach_w([cr_var], [$1], [m4_pattern_allow([CAIRO_]cr_var)])dnl
 ])dnl
 
+m4_define([_CAIRO_SH_ESCAPE],['m4_bpatsubst([$1],['],[\'])'])dnl
+m4_define([_CAIRO_SH_ESCAPE_UNQUOTED],["m4_bpatsubst([$1],["],[\"])"])dnl
+
 dnl
 dnl CAIRO_ACCUMULATORS_REGISTER(VARS, SEPARATOR=[], INITIAL-VALUE=[])
 dnl
@@ -234,7 +237,7 @@ dnl shell variable resulting for each variable is prefixed with CAIRO_.
 dnl
 AC_DEFUN([CAIRO_ACCUMULATORS_REGISTER],
 [dnl
-	_CAIRO_ACCUMULATORS_REGISTER([$1],[$2],['$3'])dnl
+	_CAIRO_ACCUMULATORS_REGISTER([$1],[$2],_CAIRO_SH_ESCAPE([$3]))dnl
 ])dnl
 
 dnl
@@ -243,7 +246,7 @@ dnl so it can reference other shell variables for example.
 dnl
 AC_DEFUN([CAIRO_ACCUMULATORS_REGISTER_UNQUOTED],
 [dnl
-	_CAIRO_ACCUMULATORS_REGISTER([$1],[$2],["$3"])dnl
+	_CAIRO_ACCUMULATORS_REGISTER([$1],[$2],_CAIRO_SH_ESCAPE_UNQUOTED[$3])dnl
 ])dnl
 
 m4_define([_CAIRO_ACCUMULATOR_CHECK],
@@ -264,7 +267,7 @@ dnl Appends VALUE to accumulator VAR
 dnl
 AC_DEFUN([CAIRO_ACCUMULATE],
 [dnl
-	_CAIRO_ACCUMULATE([$1], [$2], [CAIRO_$1="${CAIRO_$1}]m4_do([cr_acc_$1_sep])["'$2'])dnl
+	_CAIRO_ACCUMULATE([$1], [$2], [CAIRO_$1="${CAIRO_$1}]m4_do([cr_acc_$1_sep])["_CAIRO_SH_ESCAPE([$2])])dnl
 ])dnl
 
 dnl
@@ -274,7 +277,7 @@ dnl Prepends VALUE to accumulator VAR
 dnl
 AC_DEFUN([CAIRO_ACCUMULATE_BEFORE],
 [dnl
-	_CAIRO_ACCUMULATE([$1], [$2], [CAIRO_$1='$2'"]m4_do([cr_acc_$1_sep])[${CAIRO_$1}"])dnl
+	_CAIRO_ACCUMULATE([$1], [$2], [CAIRO_$1=_CAIRO_SH_ESCAPE([$2])"]m4_do([cr_acc_$1_sep])[${CAIRO_$1}"])dnl
 ])dnl
 
 m4_define([_CAIRO_ACCUMULATE_UNQUOTED],
@@ -291,7 +294,7 @@ dnl so it can reference other shell variables for example.
 dnl
 AC_DEFUN([CAIRO_ACCUMULATE_UNQUOTED],
 [dnl
-	_CAIRO_ACCUMULATE_UNQUOTED([$1], [$2], [CAIRO_$1="${CAIRO_$1}]m4_do([cr_acc_$1_sep])[$2"])dnl
+	_CAIRO_ACCUMULATE_UNQUOTED([$1], [$2], [CAIRO_$1="${CAIRO_$1}]m4_do([cr_acc_$1_sep])["]_CAIRO_SH_ESCAPE_UNQUOTED([$2]))dnl
 ])dnl
 
 dnl
@@ -302,7 +305,7 @@ dnl so it can reference other shell variables for example.
 dnl
 AC_DEFUN([CAIRO_ACCUMULATE_UNQUOTED_BEFORE],
 [dnl
-	_CAIRO_ACCUMULATE_UNQUOTED([$1], [$2], [CAIRO_$1="$2]m4_do([cr_acc_$1_sep])[${CAIRO_$1}"])dnl
+	_CAIRO_ACCUMULATE_UNQUOTED([$1], [$2], [CAIRO_$1=]_CAIRO_SH_ESCAPE_UNQUOTED([$2])["]m4_do([cr_acc_$1_sep])[${CAIRO_$1}"])dnl
 ])dnl
 
 dnl
