@@ -326,12 +326,14 @@ m4_pattern_allow(^CAIRO_HAS_)
 
 
 dnl
-dnl Define cr_feature_pc_modname and cr_feature_pc ala other cr_feature_* macros
+dnl Define cr_feature_pc and friends ala other cr_feature_* macros
 dnl
 m4_define([cr_feature_pc_modname],
 	[[cairo-]m4_translit(cr_feature,_,-)])
 m4_define([cr_feature_pc],
 	[cr_feature_pc_modname[.pc]])
+m4_define([cr_feature_uninstalled_pc],
+	[cr_feature_pc_modname[-uninstalled.pc]])
 
 
 dnl ===========================================================================
@@ -478,6 +480,7 @@ dnl
 
 dnl All .pc files are generated automatically except for this one
 AC_CONFIG_FILES([src/cairo.pc])
+AC_CONFIG_FILES([cairo-uninstalled.pc:src/cairo-uninstalled.pc.in])
 
 dnl pkg-config requires, non-pkgconfig cflags and libs, and total cflags and libs
 CAIRO_FEATURE_VARS_REGISTER([REQUIRES BASE])
@@ -488,6 +491,29 @@ dnl Generate .pc files for enabled public features
 CAIRO_FEATURE_HOOK_REGISTER(yes,*,!,
 [
 	AC_CONFIG_FILES(src/cr_feature_pc:src/cairo-features.pc.in,
+	[
+		$SED -i -e "
+		s%@FEATURE_PC@%]cr_feature_pc_modname[%g;
+		s%@FEATURE_NAME@%]cr_feature_name[%g;
+		s%@FEATURE_BASE@%$$1_BASE%g;
+		s%@FEATURE_REQUIRES@%$$1_REQUIRES%g;
+		s%@FEATURE_NONPKGCONFIG_LIBS@%$$1_NONPKGCONFIG_LIBS%g;
+		s%@FEATURE_NONPKGCONFIG_CFLAGS@%$$1_NONPKGCONFIG_CFLAGS%g;
+		" "]src/cr_feature_pc[" ||
+		AC_MSG_ERROR(failed to update ]src/cr_feature_pc[)
+	],[
+		SED='$SED'
+		$1_BASE='$$1_BASE'
+		$1_REQUIRES='$$1_REQUIRES'
+		$1_NONPKGCONFIG_LIBS='$$1_NONPKGCONFIG_LIBS'
+		$1_NONPKGCONFIG_CFLAGS='$$1_NONPKGCONFIG_CFLAGS'
+	])
+])
+
+dnl Generate -uninstalled.pc files for enabled public features
+CAIRO_FEATURE_HOOK_REGISTER(yes,*,!,
+[
+	AC_CONFIG_FILES(cr_feature_uninstalled_pc:src/cairo-features-uninstalled.pc.in,
 	[
 		$SED -i -e "
 		s%@FEATURE_PC@%]cr_feature_pc_modname[%g;
