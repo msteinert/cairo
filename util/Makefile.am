@@ -6,7 +6,7 @@ util: malloc-stats.so
 	$(RM) $@
 	$(LN_S) .libs/$*.so $@
 
-CLEANFILES += *.so *.la
+CLEANFILES += *.so
 
 SOLDFLAGS = -module -avoid-version -export-dynamic -rpath /dev/null
 

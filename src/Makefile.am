@@ -39,7 +39,6 @@ cairoinclude_HEADERS += $(top_srcdir)/cairo-version.h
 nodist_cairoinclude_HEADERS = cairo-features.h
 libcairo_la_SOURCES += cairo-version.h cairo-features.h
 BUILT_SOURCES  += cairo-features.h cairo-supported-features.h
-DISTCLEANFILES += cairo-features.h cairo-supported-features.h
 cairo-features.h cairo-supported-features.h:
 	cd $(top_builddir) && ./config.status src/$@
 
@@ -82,7 +81,6 @@ endif
 EXTRA_DIST += $(TESTS_SH) check-has-hidden-symbols.c
 check_PROGRAMS += check-link
 check_link_LDADD = libcairo.la
-CLEANFILES += check-link
 
 
 # The pre-processed result is used by check-{def,plt}.sh to determine whether

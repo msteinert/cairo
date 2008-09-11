@@ -96,9 +96,6 @@ AM_CPPFLAGS =					\
 	-I$(top_srcdir)/src			\
 	$(CAIRO_CFLAGS)
 
-CLEANFILES +=					\
-	$(EXTRA_LTLIBRARIES)
-
 test: check
 
 if CROSS_COMPILING
@@ -108,4 +105,3 @@ endif
 
 check_PROGRAMS += check-link
 check_link_LDADD = libcairoboilerplate.la
-CLEANFILES += check-link

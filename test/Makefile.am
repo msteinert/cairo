@@ -917,8 +917,7 @@ CLEANFILES +=					\
 	svg-surface-source.svg			\
 	pdf-surface-source.pdf			\
 	ps-surface-source.ps			\
-	$(EXTRA_LTLIBRARIES)			\
-	$(EXTRA_PROGRAMS)
+	$(NULL)
 
 # This used to be a simple 'echo ${RM} *.ps *.pdf *.svg *.etc', but
 # most systems cannot handle all of our clean files together.
