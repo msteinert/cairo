@@ -429,6 +429,26 @@ cairo_test_get_reference_image (cairo_test_context_t *ctx,
 }
 
 static cairo_bool_t
+cairo_test_file_is_older (const char *filename,
+	                  const char *ref_filename)
+{
+#ifdef HAVE_STAT
+    struct stat st, ref;
+
+    if (stat (filename, &st) < 0)
+	return FALSE;
+
+    if (stat (ref_filename, &ref) < 0)
+	return TRUE;
+
+    return st.m_time < ref.m_time;
+#else
+    /* XXX */
+    return FALSE;
+#endif
+}
+
+static cairo_bool_t
 cairo_test_files_equal (const char *test_filename,
 			const char *pass_filename)
 {
@@ -680,7 +700,57 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 	    }
 	}
 
-	/* first *always* save the test output */
+	if (ref_name == NULL) {
+	    cairo_test_log (ctx, "Error: Cannot find reference image for %s\n",
+			    base_name);
+
+	    /* we may be running this test to generate reference images */
+	    _xunlink (ctx, png_name);
+	    test_image = target->get_image_surface (surface,
+		    ctx->test->width,
+		    ctx->test->height);
+	    diff_status = cairo_surface_write_to_png (test_image, png_name);
+	    if (diff_status) {
+		cairo_test_log (ctx,
+			        "Error: Failed to write output image: %s\n",
+			        cairo_status_to_string (diff_status));
+	    }
+	    cairo_surface_destroy (test_image);
+
+	    ret = CAIRO_TEST_FAILURE;
+	    goto UNWIND_CAIRO;
+	}
+
+	if (target->file_extension != NULL) { /* compare vector surfaces */
+	    xasprintf (&test_filename, "%s-out%s",
+		       base_name, target->file_extension);
+	    xasprintf (&pass_filename, "%s-pass%s",
+		       base_name, target->file_extension);
+	    xasprintf (&fail_filename, "%s-fail%s",
+		       base_name, target->file_extension);
+
+	    if (cairo_test_file_is_older (pass_filename, ref_name))
+		_xunlink (ctx, pass_filename);
+	    if (cairo_test_file_is_older (fail_filename, ref_name))
+		_xunlink (ctx, pass_filename);
+
+	    if (cairo_test_files_equal (test_filename, pass_filename)) {
+		/* identical output as last known PASS */
+		cairo_test_log (ctx, "Vector surface matches last pass.\n");
+		cairo_surface_destroy (test_image);
+		ret = CAIRO_TEST_SUCCESS;
+		goto UNWIND_CAIRO;
+	    }
+	    if (cairo_test_files_equal (test_filename, fail_filename)) {
+		/* identical output as last known FAIL, fail */
+		cairo_test_log (ctx, "Vector surface matches last fail.\n");
+		have_result = TRUE; /* presume these were kept around as well */
+		cairo_surface_destroy (test_image);
+		ret = CAIRO_TEST_FAILURE;
+		goto UNWIND_CAIRO;
+	    }
+	}
+
 	test_image = target->get_image_surface (surface,
 					       ctx->test->width,
 					       ctx->test->height);
@@ -703,43 +773,16 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 	}
 	have_output = TRUE;
 
-	if (target->file_extension != NULL) { /* compare vector surfaces */
-	    xasprintf (&test_filename, "%s-out%s",
-		       base_name, target->file_extension);
-	    xasprintf (&pass_filename, "%s-pass%s",
-		       base_name, target->file_extension);
-	    xasprintf (&fail_filename, "%s-fail%s",
-		       base_name, target->file_extension);
-	    if (cairo_test_files_equal (test_filename, pass_filename)) {
-		/* identical output as last known PASS */
-		cairo_test_log (ctx, "Vector surface matches last pass.\n");
-		cairo_surface_destroy (test_image);
-		ret = CAIRO_TEST_SUCCESS;
-		goto UNWIND_CAIRO;
-	    }
-	    if (cairo_test_files_equal (test_filename, fail_filename)) {
-		/* identical output as last known FAIL, fail */
-		cairo_test_log (ctx, "Vector surface matches last fail.\n");
-		have_result = TRUE; /* presume these were kept around as well */
-		cairo_surface_destroy (test_image);
-		ret = CAIRO_TEST_FAILURE;
-		goto UNWIND_CAIRO;
-	    }
-	}
-
-	if (ref_name == NULL) {
-	    cairo_test_log (ctx, "Error: Cannot find reference image for %s\n",
-			    base_name);
-	    cairo_surface_destroy (test_image);
-	    ret = CAIRO_TEST_FAILURE;
-	    goto UNWIND_CAIRO;
-	}
-
 	/* binary compare png files (no decompression) */
 	if (target->file_extension == NULL) {
 	    xasprintf (&test_filename, "%s", png_name);
 	    xasprintf (&pass_filename, "%s-pass.png", base_name);
 	    xasprintf (&fail_filename, "%s-fail.png", base_name);
+
+	    if (cairo_test_file_is_older (pass_filename, ref_name))
+		_xunlink (ctx, pass_filename);
+	    if (cairo_test_file_is_older (fail_filename, ref_name))
+		_xunlink (ctx, pass_filename);
 
 	    if (cairo_test_files_equal (test_filename, pass_filename)) {
 		/* identical output as last known PASS, pass */
