@@ -437,12 +437,10 @@ enabled_cairo_sources += $(cairo_$1_sources)
 endif
 '
 	CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
-all_cairo_pkgconf += cr_feature_pc
 all_cairo_headers += $(cairo_$1_headers)
 all_cairo_private += $(cairo_$1_private)
 all_cairo_sources += $(cairo_$1_sources)
 ifeq ($(cr_feature_tag),1)
-enabled_cairo_pkgconf += cr_feature_pc
 enabled_cairo_headers += $(cairo_$1_headers)
 enabled_cairo_private += $(cairo_$1_private)
 enabled_cairo_sources += $(cairo_$1_sources)
