@@ -8,6 +8,11 @@ dnl
 dnl ===========================================================================
 
 dnl
+dnl Used to force cache invalidation
+dnl
+m4_define([cr_cache_version], [6])
+
+dnl
 dnl Define a macro to enable features
 dnl  - Macro: _CAIRO_ENABLE (ID, NAME, WHAT, DEFAULT, COMMANDS)
 dnl
@@ -80,6 +85,10 @@ AC_DEFUN([_CAIRO_ENABLE],
 		dnl To be extremely user-friendly, we discard cache results if
 		dnl any of the following conditions happens:
 		dnl
+		dnl   - Global cache version changes
+		dnl     This is used to force a cache invalidation for these
+		dnl     macros
+		dnl
 		dnl   - Set of cached variables changes
 		dnl     (XXX should also do if the default value of such
 		dnl     variables changes.  Argh...)
@@ -102,8 +111,9 @@ AC_DEFUN([_CAIRO_ENABLE],
 		dnl    last time and so we recheck.  Although even in that
 		dnl    case other cached values probably get in the way...
 		dnl
-		AS_IF([test "x$cairo_cv_[]$1[]_cache_commands_len" != "x[]cr_feature_commands_len" -o \
-			    "x$cairo_cv_[]$1[]_cache_vars" != "x[]CAIRO_FEATURE_VARS"],
+		AS_IF([test "x$cairo_cv_[]$1[]_cache_version" != "x[]cr_cache_version" -o \
+			    "x$cairo_cv_[]$1[]_cache_commands_len" != "x[]cr_feature_commands_len" -o \
+			    "x$cairo_cv_[]$1[]_cache_vars" != "x[]_CAIRO_FEATURE_VARS"],
 		      [unset cairo_cv_[]$1[]_use])
 		AS_IF([test "x$enable_$1" = xyes -a "x$cairo_cv_[]$1[]_use" != xyes],
 		      [unset cairo_cv_[]$1[]_use])
@@ -112,14 +122,13 @@ AC_DEFUN([_CAIRO_ENABLE],
 		[
 			echo
 			use_[]$1=yes
-			CAIRO_FEATURE_VARS_FOREACH(cr_var, [cr_feature[_]cr_var[=$ac_env_]cr_feature[_]cr_var[_value]
-			])
+			CAIRO_FEATURE_VARS_FOREACH(cr_var, [cr_feature[_]cr_var[=]m4_do([cr_var_default_]cr_var[_value])]m4_newline)
 			cr_feature_commands
 			cairo_cv_[]$1[]_use=$use_[]$1
-			cairo_cv_[]$1[]_cache_vars="CAIRO_FEATURE_VARS"
+			cairo_cv_[]$1[]_cache_vars="_CAIRO_FEATURE_VARS"
 			cairo_cv_[]$1[]_cache_commands_len="cr_feature_commands_len"
-			CAIRO_FEATURE_VARS_FOREACH([cr_var], [[cairo_cv_]cr_feature[_]cr_var[=$]cr_feature[_]cr_var
-			])
+			cairo_cv_[]$1[]_cache_version="cr_cache_version"
+			CAIRO_FEATURE_VARS_FOREACH([cr_var], [[cairo_cv_]cr_feature[_]cr_var[=$]cr_feature[_]cr_var]m4_newline)
 			AC_MSG_CHECKING([whether cairo's ]cr_feature_name[ feature could be enabled])
 		])
 
@@ -142,12 +151,14 @@ AC_DEFUN([_CAIRO_ENABLE],
 
 	AS_IF([test "x$use_$1" = "xyes"],
 	[
-		CAIRO_FEATURE_VARS_FOREACH([cr_var], [cr_feature[_]cr_var[=$cairo_cv_]cr_feature[_]cr_var
+		CAIRO_FEATURE_VARS_FOREACH([cr_var], [cr_feature[_]cr_var[=$cairo_cv_]cr_feature[_]cr_var]m4_newline)
+		CAIRO_ACCUMULATED_FEATURE_VARS_FOREACH([cr_var],
+		[
+			CAIRO_ACCUMULATE_UNQUOTED_BEFORE(cr_var, [$]cr_feature[_]cr_var)
 		])
 	],[
 		dnl If not enabled, empty the vars so no one accidentally uses them.
-		CAIRO_FEATURE_VARS_FOREACH([cr_var], [cr_feature[_]cr_var[=$cairo_cv_]cr_feature[_]cr_var
-		])
+		CAIRO_FEATURE_VARS_FOREACH([cr_var], [cr_feature[_]cr_var[=$cairo_cv_]cr_feature[_]cr_var]m4_newline)
 	])
 
 
@@ -166,37 +177,185 @@ AC_DEFUN([_CAIRO_ENABLE],
 
 dnl ===========================================================================
 
+m4_define([_CAIRO_FEATURE_VARS])
+
 dnl
-dnl CAIRO_FEATURE_VARS_REGISTER(VARS, INITIAL-VALUE=[])
+dnl CAIRO_FEATURE_VARS_REGISTER(VARS, DEFAULT-VALUE=[])
 dnl
 dnl Registers variables to be collected from feature-enabling code segments.
 dnl VARS should be a whitespace-separate list of variable names.
 dnl
-dnl XXX Should be able to set default value
-dnl
-dnl XXX Set separator.  Also, prepend/append setting
-dnl
-dnl XXX An aggregate of the values from all enabled features is collected in
-dnl variables named as VARS but prefixed with CAIRO_.
+dnl DEFAULT-VALUE is m4 macros to set default value of VARS
 dnl
 AC_DEFUN([CAIRO_FEATURE_VARS_REGISTER],
 [
 	m4_foreach_w([cr_var], [$1],
-		     [m4_append_uniq([CAIRO_FEATURE_VARS], cr_var, [ ],,
+		     [m4_append_uniq([_CAIRO_FEATURE_VARS], cr_var, [ ],,
 				     [m4_fatal([Feature variable `]cr_var[' already registered])])])
-	m4_foreach_w([cr_var], [$1], [[CAIRO_]cr_var[="$2"]
+	m4_foreach_w([cr_var], [$1],
+	[
+		m4_define([cr_var_default_]cr_var[_value], m4_default([$2],[[$ac_env_[]]cr_feature[[]_]]cr_var[[_value]]))
 	])
-	m4_foreach_w([cr_var], [$1], [m4_pattern_allow([CAIRO_]cr_var)])
 ])
 
+dnl
+dnl CAIRO_FEATURE_VARS_FOREACH(VAR, COMMANDS)
+dnl 
+dnl Run COMMANDS for each registered feature variable.
+dnl Defines VAR to the variable being processed.
+dnl
 AC_DEFUN([CAIRO_FEATURE_VARS_FOREACH],
 [
-	m4_foreach_w([$1], m4_quote(CAIRO_FEATURE_VARS), [$2])
+	m4_foreach_w([$1], m4_defn([_CAIRO_FEATURE_VARS]), [$2])
 ])
 
 
 dnl ===========================================================================
 
+m4_define([_CAIRO_ACCUMULATORS])
+
+m4_define([_CAIRO_ACCUMULATORS_REGISTER],
+[
+	m4_foreach_w([cr_var], [$1],
+		     [m4_append_uniq([_CAIRO_ACCUMULATORS], cr_var, [ ],,
+				     [m4_fatal([Accumulator `]cr_var[' already registered])])])dnl
+	m4_foreach_w([cr_var], [$1], [m4_define([cr_acc_]cr_var[_sep], [$2])])dnl
+	m4_foreach_w([cr_var], [$1], [[CAIRO_]cr_var[=$3]]m4_newline)dnl
+	m4_foreach_w([cr_var], [$1], [m4_pattern_allow([CAIRO_]cr_var)])dnl
+])
+
+dnl
+dnl CAIRO_ACCUMULATORS_REGISTER(VARS, SEPARATOR=[], INITIAL-VALUE=[])
+dnl
+dnl Registers accumulators.  An accumulator is a shell variable that can
+dnl be accumulated to.  The macros take care of adding a SEPARATOR between
+dnl accumulated values.
+dnl
+dnl VARS should be a whitespace-separate list of variable names.  The actual
+dnl shell variable resulting for each variable is prefixed with CAIRO_.
+dnl
+AC_DEFUN([CAIRO_ACCUMULATORS_REGISTER],
+[
+	_CAIRO_ACCUMULATORS_REGISTER([$1],[$2],['$3'])
+])
+
+dnl
+dnl Like CAIRO_ACCUMULATORS_REGISTER but INITIAL-VALUE is left unquoted,
+dnl so it can reference other shell variables for example.
+dnl
+AC_DEFUN([CAIRO_ACCUMULATORS_REGISTER_UNQUOTED],
+[
+	_CAIRO_ACCUMULATORS_REGISTER([$1],[$2],["$3"])
+])
+
+m4_define([_CAIRO_ACCUMULATOR_CHECK],
+[
+        m4_ifdef([cr_acc_$1_sep],,[m4_fatal([Accumulator ]$1[ not defined.])])
+])
+
+m4_define([_CAIRO_ACCUMULATE],
+[
+	_CAIRO_ACCUMULATOR_CHECK([$1])
+	m4_ifval([$2], [$3])
+])
+
+dnl
+dnl CAIRO_ACCUMULATE(VAR, VALUE)
+dnl
+dnl Appends VALUE to accumulator VAR
+dnl
+AC_DEFUN([CAIRO_ACCUMULATE],
+[
+	_CAIRO_ACCUMULATE([$1], [$2], [CAIRO_$1="${CAIRO_$1}]m4_do([cr_acc_$1_sep])["'$2'])
+])
+
+dnl
+dnl CAIRO_ACCUMULATE(VAR, VALUE)
+dnl
+dnl Prepends VALUE to accumulator VAR
+dnl
+AC_DEFUN([CAIRO_ACCUMULATE_BEFORE],
+[
+	_CAIRO_ACCUMULATE([$1], [$2], [CAIRO_$1='$2'"]m4_do([cr_acc_$1_sep])[${CAIRO_$1}"])
+])
+
+m4_define([_CAIRO_ACCUMULATE_UNQUOTED],
+[
+	_CAIRO_ACCUMULATOR_CHECK([$1])
+	m4_ifval([$2], [m4_bmatch([$2],[[$]],[test -n "$2" &&]) $3])
+])
+
+dnl
+dnl CAIRO_ACCUMULATE_UNQUOTED(VAR, VALUE)
+dnl
+dnl Like CAIRO_ACCUMULATE but VALUE is left unquoted,
+dnl so it can reference other shell variables for example.
+dnl
+AC_DEFUN([CAIRO_ACCUMULATE_UNQUOTED],
+[
+	_CAIRO_ACCUMULATE_UNQUOTED([$1], [$2], [CAIRO_$1="${CAIRO_$1}]m4_do([cr_acc_$1_sep])[$2"])
+])
+
+dnl
+dnl CAIRO_ACCUMULATE_UNQUOTED_BEFORE(VAR, VALUE)
+dnl
+dnl Like CAIRO_ACCUMULATE_BEFORE but VALUE is left unquoted,
+dnl so it can reference other shell variables for example.
+dnl
+AC_DEFUN([CAIRO_ACCUMULATE_UNQUOTED_BEFORE],
+[
+	_CAIRO_ACCUMULATE_UNQUOTED([$1], [$2], [CAIRO_$1="$2]m4_do([cr_acc_$1_sep])[${CAIRO_$1}"])
+])
+
+dnl
+dnl CAIRO_ACCUMULATORS_FOREACH(VAR, COMMANDS)
+dnl 
+dnl Run COMMANDS for each registered accumulator.
+dnl Defines VAR to the accumulator being processed.
+dnl
+AC_DEFUN([CAIRO_ACCUMULATORS_FOREACH],
+[
+	m4_foreach_w([$1], m4_defn([_CAIRO_ACCUMULATORS]), [$2])
+])
+
+
+dnl ===========================================================================
+
+m4_define([_CAIRO_ACCUMULATED_FEATURE_VARS])
+
+dnl
+dnl CAIRO_ACCUMULATED_FEATURE_VARS_REGISTER(VARS, DEFAULT-VALUE=[], SEPARATOR=[], INITIAL-VALUE=[])
+dnl
+dnl Defines VARS as feature variables and accumulators.  Also accumulates
+dnl (prepending, not appending) feature values for VARS.
+dnl
+AC_DEFUN([CAIRO_ACCUMULATED_FEATURE_VARS_REGISTER],
+[
+	m4_foreach_w([cr_var], [$1],
+		     [m4_append_uniq([_CAIRO_ACCUMULATED_FEATURE_VARS], cr_var, [ ],,
+				     [m4_fatal([Accumulated feature variable `]cr_var[' already registered])])])dnl
+	CAIRO_FEATURE_VARS_REGISTER([$1],[$2])dnl
+	CAIRO_ACCUMULATORS_REGISTER_UNQUOTED([$1],[$3],[$4])dnl
+])
+
+dnl
+dnl CAIRO_ACCUMULATED_FEATURE_VARS_FOREACH(VAR, COMMANDS)
+dnl 
+dnl Run COMMANDS for each registered accumulated feature variable.
+dnl Defines VAR to the variable being processed.
+dnl
+AC_DEFUN([CAIRO_ACCUMULATED_FEATURE_VARS_FOREACH],
+[
+	m4_foreach_w([$1], m4_defn([_CAIRO_ACCUMULATED_FEATURE_VARS]), [$2])
+])
+
+dnl ===========================================================================
+
+dnl
+dnl CAIRO_FEATURE_IF_ENABLED(FEATURE=cr_feature, COMMANDS)
+dnl
+dnl Run COMMANDS if FEATURE is enabled.
+dnl
 AC_DEFUN([CAIRO_FEATURE_IF_ENABLED],
 [
 	AS_IF([test "x$use_]m4_default([$1], cr_feature)[" = xyes], [$2], [$3])
@@ -368,36 +527,12 @@ CAIRO_FEATURE_HOOK_REGISTER(*,*,*,
 
 dnl ===========================================================================
 dnl
-dnl Substitute vars
-dnl
-AC_SUBST(CAIRO_REQUIRES)
-AC_SUBST(CAIRO_BASE)
-AC_SUBST(CAIRO_CFLAGS)
-AC_SUBST(CAIRO_NONPKGCONFIG_CFLAGS)
-AC_SUBST(CAIRO_LIBS)
-AC_SUBST(CAIRO_NONPKGCONFIG_LIBS)
-
-
-dnl ===========================================================================
-dnl
-dnl Accumulate values for all feature vars for enabled features
-dnl
-
-CAIRO_FEATURE_HOOK_REGISTER(yes,*,*,
-[
-	CAIRO_FEATURE_VARS_FOREACH([cr_var], [[test -n "$]cr_feature[_]cr_var[" && CAIRO_]cr_var[="$]cr_feature[_]cr_var[ $CAIRO_]cr_var["]]m4_newline)
-])
-
-
-dnl ===========================================================================
-dnl
 dnl Generate {src,boilerplate}/Makefile.{am,win32}.config
 dnl
 
 dnl Accumulators
-m4_pattern_allow(^CAIRO_CONFIG_AMAKE$)
-CAIRO_CONFIG_AMAKE='# Generated by configure.  Do not edit.
-
+dnl	CAIRO_ACCUMULATE(FEATURES, cr_feature_tag)
+CAIRO_ACCUMULATORS_REGISTER(CONFIG_AMAKE,m4_newline,[# Generated by configure.  Do not edit.
 include $(top_srcdir)/src/Makefile.sources
 
 enabled_cairo_pkgconf = cairo.pc
@@ -409,10 +544,9 @@ all_cairo_headers = $(cairo_headers)
 all_cairo_private = $(cairo_private)
 all_cairo_sources = $(cairo_sources)
 supported_cairo_headers = $(cairo_headers)
-unsupported_cairo_headers =
-'
-m4_pattern_allow(^CAIRO_CONFIG_WIN32$)
-CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_AMAKE
+unsupported_cairo_headers =])
+
+CAIRO_ACCUMULATORS_REGISTER_UNQUOTED(CONFIG_WIN32,m4_newline,[$CAIRO_CONFIG_AMAKE])
 
 dnl Generate
 CAIRO_CONFIG_COMMANDS([$srcdir/src/Makefile.am.config],
@@ -425,21 +559,21 @@ CAIRO_CONFIG_COMMANDS([$srcdir/src/Makefile.win32.config],
 dnl Collect list of all supported public cairo headers
 CAIRO_FEATURE_HOOK_REGISTER(*,!no,!,
 [
-	CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'm4_newline()supported_cairo_headers += $(cairo_$1_headers)'
-	CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'm4_newline()supported_cairo_headers += $(cairo_$1_headers)'
+	CAIRO_ACCUMULATE(CONFIG_AMAKE, [supported_cairo_headers += $(cairo_$1_headers)])
+	CAIRO_ACCUMULATE(CONFIG_WIN32, [supported_cairo_headers += $(cairo_$1_headers)])
 ])
 
 dnl Collect list of all unsupported public cairo headers
 CAIRO_FEATURE_HOOK_REGISTER(*,no,!,
 [
-	CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'm4_newline()unsupported_cairo_headers += $(cairo_$1_headers)'
-	CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'm4_newline()unsupported_cairo_headers += $(cairo_$1_headers)'
+	CAIRO_ACCUMULATE(CONFIG_AMAKE, [unsupported_cairo_headers += $(cairo_$1_headers)])
+	CAIRO_ACCUMULATE(CONFIG_WIN32, [unsupported_cairo_headers += $(cairo_$1_headers)])
 ])
 
 dnl Collect list of source files for all/enabled public features
 CAIRO_FEATURE_HOOK_REGISTER(*,*,!,
 [
-	CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
+	CAIRO_ACCUMULATE(CONFIG_AMAKE, [
 all_cairo_headers += $(cairo_$1_headers)
 all_cairo_private += $(cairo_$1_private)
 all_cairo_sources += $(cairo_$1_sources)
@@ -448,8 +582,8 @@ enabled_cairo_headers += $(cairo_$1_headers)
 enabled_cairo_private += $(cairo_$1_private)
 enabled_cairo_sources += $(cairo_$1_sources)
 endif
-'
-	CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
+])
+	CAIRO_ACCUMULATE(CONFIG_WIN32, [
 all_cairo_headers += $(cairo_$1_headers)
 all_cairo_private += $(cairo_$1_private)
 all_cairo_sources += $(cairo_$1_sources)
@@ -458,29 +592,29 @@ enabled_cairo_headers += $(cairo_$1_headers)
 enabled_cairo_private += $(cairo_$1_private)
 enabled_cairo_sources += $(cairo_$1_sources)
 endif
-'
+])
 ])
 
 dnl Collect list of source files for all/enabled private features
 CAIRO_FEATURE_HOOK_REGISTER(*,*,,
 [
 	dnl No public headers for private features
-	CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
+	CAIRO_ACCUMULATE(CONFIG_AMAKE, [
 all_cairo_private += $(cairo_$1_private) $(cairo_$1_headers)
 all_cairo_sources += $(cairo_$1_sources)
 if cr_feature_tag
 enabled_cairo_private += $(cairo_$1_private) $(cairo_$1_headers)
 enabled_cairo_sources += $(cairo_$1_sources)
 endif
-'
-	CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
+])
+	CAIRO_ACCUMULATE(CONFIG_WIN32, [
 all_cairo_private += $(cairo_$1_private) $(cairo_$1_headers)
 all_cairo_sources += $(cairo_$1_sources)
 ifeq ($(cr_feature_tag),1)
 enabled_cairo_private += $(cairo_$1_private) $(cairo_$1_headers)
 enabled_cairo_sources += $(cairo_$1_sources)
 endif
-'
+])
 ])
 
 
@@ -494,9 +628,17 @@ AC_CONFIG_FILES([src/cairo.pc])
 AC_CONFIG_FILES([cairo-uninstalled.pc:src/cairo-uninstalled.pc.in])
 
 dnl pkg-config requires, non-pkgconfig cflags and libs, and total cflags and libs
-CAIRO_FEATURE_VARS_REGISTER([REQUIRES BASE])
-CAIRO_FEATURE_VARS_REGISTER([CFLAGS NONPKGCONFIG_CFLAGS])
-CAIRO_FEATURE_VARS_REGISTER([LIBS NONPKGCONFIG_LIBS], [$LIBS])
+CAIRO_FEATURE_VARS_REGISTER([BASE],[cairo])
+CAIRO_ACCUMULATED_FEATURE_VARS_REGISTER([REQUIRES],,[ ])
+CAIRO_ACCUMULATED_FEATURE_VARS_REGISTER([CFLAGS NONPKGCONFIG_CFLAGS],,[ ])
+CAIRO_ACCUMULATED_FEATURE_VARS_REGISTER([LIBS NONPKGCONFIG_LIBS],,[ ],[$LIBS])
+AC_SUBST(CAIRO_REQUIRES)
+AC_SUBST(CAIRO_BASE)
+AC_SUBST(CAIRO_CFLAGS)
+AC_SUBST(CAIRO_NONPKGCONFIG_CFLAGS)
+AC_SUBST(CAIRO_LIBS)
+AC_SUBST(CAIRO_NONPKGCONFIG_LIBS)
+
 
 dnl Generate .pc files for enabled non-builtin public features
 CAIRO_FEATURE_HOOK_REGISTER(yes,!always,!,
@@ -562,28 +704,23 @@ dnl Generate src/cairo-features.h src/cairo-supported-features.h
 dnl
 
 dnl Collect list of enabled public features
+CAIRO_ACCUMULATORS_REGISTER(FEATURES,[ ])
 CAIRO_FEATURE_HOOK_REGISTER(yes,*,!,
 [
-	CAIRO_FEATURES="cr_feature_tag $CAIRO_FEATURES"
+	CAIRO_ACCUMULATE(FEATURES, cr_feature_tag)
 ])
 dnl Collect list of all supported public features
+CAIRO_ACCUMULATORS_REGISTER(SUPPORTED_FEATURES,[ ])
 CAIRO_FEATURE_HOOK_REGISTER(*,!no,!,
 [
-	CAIRO_SUPPORTED_FEATURES="cr_feature_tag $CAIRO_SUPPORTED_FEATURES"
+	CAIRO_ACCUMULATE(SUPPORTED_FEATURES, cr_feature_tag)
 ])
 dnl Collect list of all supported disabled public features
+CAIRO_ACCUMULATORS_REGISTER(NO_FEATURES,[ ])
 CAIRO_FEATURE_HOOK_REGISTER(no,!no,!,
 [
-	CAIRO_NO_FEATURES="cr_feature_tag $CAIRO_NO_FEATURES"
+	CAIRO_ACCUMULATE(NO_FEATURES, cr_feature_tag)
 ])
-
-dnl Accumulators
-m4_pattern_allow(^CAIRO_FEATURES$)
-CAIRO_FEATURES=""
-m4_pattern_allow(^CAIRO_NO_FEATURES$)
-CAIRO_NO_FEATURES=""
-m4_pattern_allow(^CAIRO_SUPPORTED_FEATURES$)
-CAIRO_SUPPORTED_FEATURES=""
 
 dnl Generate src/cairo-features.h and src/cairo-supported-features.h
 CAIRO_CONFIG_COMMANDS([src/cairo-features.h],
@@ -633,19 +770,18 @@ dnl
 dnl Report
 dnl
 
-dnl Accumulator for warning messages
-CAIRO_FEATURE_VARS_REGISTER([WARNING_MESSAGE])
+CAIRO_ACCUMULATORS_REGISTER([WARNING_MESSAGE],m4_newline()m4_newline)
 
 dnl Collect warning message for enabled unsupported public features
 CAIRO_FEATURE_HOOK_REGISTER(yes,no,!,
 [
-	CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE]m4_newline[m4_text_wrap([The ]cr_feature_name[ feature is still under active development and is included in this release only as a preview. It does NOT fully work yet and incompatible changes may yet be made to ]cr_feature_name[ specific API.], [--- ],, 78)m4_newline"
+	CAIRO_ACCUMULATE([WARNING_MESSAGE], m4_text_wrap([The ]cr_feature_name[ feature is still under active development and is included in this release only as a preview. It does NOT fully work yet and incompatible changes may yet be made to ]cr_feature_name[ specific API.], [--- ],, 78))
 ])
 
 dnl Collect warning message for disabled recommended features
 CAIRO_FEATURE_HOOK_REGISTER(no,yes,*,
 [
-	CAIRO_WARNING_MESSAGE="$CAIRO_WARNING_MESSAGE]m4_newline[m4_text_wrap([It is strictly recommended that you do NOT disable the ]cr_feature_name[ feature.], [+++ ],, 78)m4_newline"
+	CAIRO_ACCUMULATE([WARNING_MESSAGE], m4_text_wrap([It is strictly recommended that you do NOT disable the ]cr_feature_name[ feature.], [+++ ],, 78))
 ])
 
 
