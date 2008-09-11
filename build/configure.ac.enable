@@ -440,12 +440,10 @@ dnl Collect list of source files for all/enabled public features
 CAIRO_FEATURE_HOOK_REGISTER(*,*,!,
 [
 	CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
-all_cairo_pkgconf += cr_feature_pc
 all_cairo_headers += $(cairo_$1_headers)
 all_cairo_private += $(cairo_$1_private)
 all_cairo_sources += $(cairo_$1_sources)
 if cr_feature_tag
-enabled_cairo_pkgconf += cr_feature_pc
 enabled_cairo_headers += $(cairo_$1_headers)
 enabled_cairo_private += $(cairo_$1_private)
 enabled_cairo_sources += $(cairo_$1_sources)
@@ -544,6 +542,17 @@ CAIRO_FEATURE_HOOK_REGISTER(yes,!always,!,
 		$1_NONPKGCONFIG_LIBS='$$1_NONPKGCONFIG_LIBS'
 		$1_NONPKGCONFIG_CFLAGS='$$1_NONPKGCONFIG_CFLAGS'
 	])
+])
+
+dnl Collect list of .pc files for all/enabled non-builtin public features
+CAIRO_FEATURE_HOOK_REGISTER(*,!always,!,
+[
+	CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
+all_cairo_pkgconf += cr_feature_pc
+if cr_feature_tag
+enabled_cairo_pkgconf += cr_feature_pc
+endif
+'
 ])
 
 
