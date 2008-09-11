@@ -22,6 +22,18 @@ other application to draw "funky" fonts.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### MACRO CAIRO_HAS_USER_FONT ##### -->
+<para>
+Defined if the user font backend is available.
+This macro can be used to conditionally compile backend-specific code.
+The user font backend is always built in versions of cairo that support
+this feature (1.8 and later).
+</para>
+
+@Since: 1.8
+
+
+
 <!-- ##### USER_FUNCTION cairo_user_scaled_font_init_func_t ##### -->
 <para>
 

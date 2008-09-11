@@ -34,6 +34,7 @@ cairo_quartz_font_face_create_for_atsu_font_id
 <SECTION>
 <FILE>cairo-user-fonts</FILE>
 <TITLE>user-font</TITLE>
+CAIRO_HAS_USER_FONT
 cairo_user_scaled_font_init_func_t
 cairo_user_scaled_font_render_glyph_func_t
 cairo_user_scaled_font_text_to_glyphs_func_t
@@ -52,6 +53,7 @@ cairo_user_font_face_get_text_to_glyphs_func
 <SECTION>
 <FILE>cairo-image</FILE>
 <TITLE>image-surface</TITLE>
+CAIRO_HAS_IMAGE_SURFACE
 cairo_format_t
 cairo_format_stride_for_width
 cairo_image_surface_create

@@ -57,7 +57,7 @@ CAIRO_ENABLE_SURFACE_BACKEND(xlib_xrender, Xlib Xrender, auto, [
 		       CPPFLAGS="$CPPFLAGS $xlib_CFLAGS $xlib_NONPKGCONFIG_CFLAGS"
 		       AC_CHECK_HEADER(X11/extensions/Xrender.h,
 				       [xlib_xrender_NONPKGCONFIG_LIBS="-lXrender"],
-				       [use_xlib_xrender="no (requires Xrender http://freedesktop.org/Software/xlibs)"])
+				       [use_xlib_xrender="no (requires $xlib_xrender_REQUIRES http://freedesktop.org/Software/xlibs)"])
 		       CPPFLAGS=$old_CPPFLAGS
 		      ])
   fi
@@ -68,17 +68,17 @@ dnl ===========================================================================
 CAIRO_ENABLE_SURFACE_BACKEND(xcb, XCB, no, [
   xcb_REQUIRES="xcb >= 0.9.92 xcb-render >= 0.9.92 xcb-renderutil"
   PKG_CHECK_MODULES(xcb, $xcb_REQUIRES, , [AC_MSG_RESULT(no)
-  use_xcb="no (requires XCB http://xcb.freedesktop.org)"])
+  use_xcb="no (requires $xcb_REQUIRES http://xcb.freedesktop.org)"])
 ])
 
 dnl ===========================================================================
 
 CAIRO_ENABLE_SURFACE_BACKEND(quartz, Quartz, auto, [
   dnl There is no pkgconfig for quartz; lets do a header check
-  AC_CHECK_HEADER(ApplicationServices/ApplicationServices.h, , [use_quartz="no (ApplicationServices framework not found)"])
+  AC_CHECK_HEADER(ApplicationServices/ApplicationServices.h, , [use_quartz="no (requires ApplicationServices framework)"])
   if test "x$use_quartz" != "xyes" ; then
     dnl check for CoreGraphics as a separate framework
-    AC_CHECK_HEADER(CoreGraphics/CoreGraphics.h, , [use_quartz="no (CoreGraphics framework not found)"])
+    AC_CHECK_HEADER(CoreGraphics/CoreGraphics.h, , [use_quartz="no (requires CoreGraphics framework)"])
     quartz_LIBS="-Xlinker -framework -Xlinker CoreGraphics"
   else
     quartz_LIBS="-Xlinker -framework -Xlinker ApplicationServices"
@@ -180,7 +180,7 @@ GLITZ_MIN_VERSION=0.5.1
 CAIRO_ENABLE_SURFACE_BACKEND(glitz, glitz, no, [
   glitz_REQUIRES="glitz >= $GLITZ_MIN_VERSION"
   PKG_CHECK_MODULES(glitz, $glitz_REQUIRES, , [AC_MSG_RESULT(no)
-  use_glitz="no (requires glitz http://freedesktop.org/Software/glitz)"])
+  use_glitz="no (requires $glitz_REQUIRES http://freedesktop.org/Software/glitz)"])
 ])
 
 if test "x$use_glitz" = "xyes";then
@@ -217,7 +217,7 @@ dnl ===========================================================================
 CAIRO_ENABLE_SURFACE_BACKEND(directfb, directfb, no, [
   directfb_REQUIRES=directfb
   PKG_CHECK_MODULES(directfb, $directfb_REQUIRES, , AC_MSG_RESULT(no)
-		    [use_directfb="no (requires directfb http://www.directfb.org)"])
+		    [use_directfb="no (requires $directfb_REQUIRES http://www.directfb.org)"])
 ])
 
 dnl ===========================================================================
@@ -245,7 +245,7 @@ FREETYPE_MIN_VERSION=9.7.3
 CAIRO_ENABLE_FONT_BACKEND(ft, FreeType, auto, [
   ft_REQUIRES="fontconfig"
   PKG_CHECK_MODULES(FONTCONFIG, $ft_REQUIRES,,
-		    [AC_MSG_RESULT(no); use_ft="no (requires fontconfig)"])
+		    [AC_MSG_RESULT(no); use_ft="no (requires $ft_REQUIRES)"])
 
   if test "x$use_ft" = "xyes"; then
 
@@ -414,15 +414,15 @@ CAIRO_ENABLE(test_surfaces, test surfaces, no)
 
 dnl ===========================================================================
 
-PIXMAN_VERSION="0.11.2"
-PIXMAN_REQUIRES="pixman-1 >= $PIXMAN_VERSION"
-PKG_CHECK_MODULES(pixman, $PIXMAN_REQUIRES, ,
-	[AC_MSG_ERROR([pixman >= $PIXMAN_VERSION is required
-(http://cairographics.org/releases/)])])
+CAIRO_ENABLE_SURFACE_BACKEND(image, image, always, [
+  pixman_REQUIRES="pixman-1 >= 0.11.2"
+  PKG_CHECK_MODULES(pixman, $pixman_REQUIRES, , [AC_MSG_RESULT(no)
+  use_image="no (requires $pixman_REQUIRES http://cairographics.org/releases/)"])
+])
 
-CAIRO_REQUIRES="$PIXMAN_REQUIRES $CAIRO_REQUIRES"
-CAIRO_CFLAGS="$pixman_CFLAGS $CAIRO_CFLAGS"
-CAIRO_LIBS="$pixman_LIBS $CAIRO_LIBS"
+dnl ===========================================================================
+
+CAIRO_ENABLE_FONT_BACKEND(user, user, always)
 
 dnl ===========================================================================
 dnl Build the external converter if we have any of the test backends
