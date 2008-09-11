@@ -1,4 +1,5 @@
-## Process this file with automake to create Makefile.in.
+include $(top_srcdir)/build/Makefile.am.common
+include $(top_srcdir)/src/Makefile.am.config
 
 # The name of the module.
 DOC_MODULE=cairo
@@ -15,8 +16,6 @@ DOC_SOURCE_DIR=../../src
 # Used for dependencies
 HFILE_GLOB=$(top_srcdir)/src/cairo-*.h
 CFILE_GLOB=$(top_srcdir)/src/cairo-*.c
-
-include $(top_srcdir)/src/Makefile.am.config
 
 # Headers to ignore
 IGNORE_HFILES= \
@@ -53,5 +52,5 @@ check: doc
 endif
 
 TESTS_ENVIRONMENT = srcdir="$(srcdir)" top_srcdir="$(top_srcdir)" MAKE="$(MAKE)"
-TESTS = check-doc-coverage.sh check-doc-syntax.sh
+TESTS += check-doc-coverage.sh check-doc-syntax.sh
 EXTRA_DIST += $(TESTS)

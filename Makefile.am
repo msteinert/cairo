@@ -1,3 +1,5 @@
+include $(top_srcdir)/build/Makefile.am.common
+
 ACLOCAL_AMFLAGS = -I build
 
 DIST_SUBDIRS = src boilerplate test perf doc util
@@ -21,7 +23,7 @@ check-valgrind: all
 .PHONY: doc test retest recheck perf check-valgrind
 
 
-EXTRA_DIST = \
+EXTRA_DIST += \
 	AUTHORS \
 	BIBLIOGRAPHY \
 	BUGS \
@@ -40,8 +42,8 @@ EXTRA_DIST = \
 	cairo-version.h \
 	$(NULL)
 
-DISTCLEANFILES = config.cache
-MAINTAINERCLEANFILES = \
+DISTCLEANFILES += config.cache
+MAINTAINERCLEANFILES += \
 	$(srcdir)/aclocal.m4 \
 	$(srcdir)/autoscan.log \
 	$(srcdir)/build/compile \
@@ -54,11 +56,12 @@ MAINTAINERCLEANFILES = \
 	$(srcdir)/build/mkinstalldirs \
 	$(srcdir)/config.h.in \
 	$(srcdir)/configure.scan \
-	`find "$(srcdir)" -type f -name Makefile.in -print`
+	$(NULL)
 
 DISTCHECK_CONFIGURE_FLAGS = \
 	--enable-gtk-doc \
-	--enable-test-surfaces
+	--enable-test-surfaces \
+	$(NULL)
 
 include $(srcdir)/build/Makefile.am.changelog
 include $(srcdir)/build/Makefile.am.releasing

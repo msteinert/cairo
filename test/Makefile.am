@@ -1,7 +1,9 @@
+include $(top_srcdir)/build/Makefile.am.common
+
 SUBDIRS=pdiff .
 
 # Here are all the tests that are run unconditionally
-TESTS =							\
+TESTS +=						\
 a1-image-sample$(EXEEXT)				\
 a1-mask$(EXEEXT)					\
 a1-traps-sample$(EXEEXT)				\
@@ -742,7 +744,7 @@ REFERENCE_IMAGES = \
 	xlib-surface-source-ref.png \
 	zero-alpha-ref.png
 
-EXTRA_DIST =		\
+EXTRA_DIST +=		\
 6x13.pcf		\
 make-html.pl		\
 romedalen.png		\
@@ -829,9 +831,6 @@ check-local:
 	    done; \
 	fi
 
-check_PROGRAMS =
-EXTRA_PROGRAMS =
-
 AM_CPPFLAGS =					\
 	-I$(srcdir)				\
 	-I$(srcdir)/pdiff			\
@@ -840,7 +839,7 @@ AM_CPPFLAGS =					\
 	-I$(top_builddir)/src			\
 	$(CAIRO_CFLAGS)
 
-EXTRA_LTLIBRARIES = libcairotest.la
+EXTRA_LTLIBRARIES += libcairotest.la
 
 libcairotest_la_SOURCES =\
 	buffer-diff.c	\
@@ -910,7 +909,7 @@ VALGRIND_FLAGS = \
 	--tool=memcheck --suppressions=$(srcdir)/.valgrind-suppressions \
 	--leak-check=yes --show-reachable=yes $(EXTRA_VALGRIND_FLAGS)
 
-CLEANFILES =					\
+CLEANFILES +=					\
 	valgrind-log				\
 	index.html				\
 	ref.hash				\

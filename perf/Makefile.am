@@ -1,3 +1,5 @@
+include $(top_srcdir)/build/Makefile.am.common
+
 AM_CPPFLAGS =					\
 	-I$(srcdir)				\
 	-I$(top_srcdir)/boilerplate		\
@@ -5,8 +7,8 @@ AM_CPPFLAGS =					\
 	-I$(top_builddir)/src			\
 	$(CAIRO_CFLAGS)
 
-EXTRA_PROGRAMS = cairo-perf cairo-perf-diff-files
-EXTRA_DIST = cairo-perf-diff
+EXTRA_PROGRAMS += cairo-perf cairo-perf-diff-files
+EXTRA_DIST += cairo-perf-diff
 
 cairo_perf_SOURCES =		\
 	cairo-perf.c		\
@@ -72,7 +74,7 @@ CAIRO_PERF_ENVIRONMENT = CAIRO_PERF_ITERATIONS="$(ITERS)" CAIRO_TEST_TARGET="$(T
 # Cap the maximum number of iterations during 'make check'
 TESTS_ENVIRONMENT = CAIRO_TEST_TARGET="$(TARGETS)" CAIRO_PERF_ITERATIONS="10"
 
-TESTS = cairo-perf$(EXEEXT)
+TESTS += cairo-perf$(EXEEXT)
 
 perf: cairo-perf$(EXEEXT)
 	$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf$(EXEEXT)
@@ -90,7 +92,7 @@ VALGRIND_MEMCHECK_FLAGS = \
 	--leak-check=yes --show-reachable=yes
 VALGRIND_CALLGRIND_FLAGS = \
 	--tool=callgrind
-CLEANFILES = \
+CLEANFILES += \
 	$(EXTRA_PROGRAMS) \
 	valgrind-log \
 	callgrind.out.* \

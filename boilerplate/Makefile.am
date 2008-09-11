@@ -1,6 +1,8 @@
-EXTRA_DIST = Makefile.win32
+include $(top_srcdir)/build/Makefile.am.common
 
-EXTRA_LTLIBRARIES = libcairoboilerplate.la
+EXTRA_DIST += Makefile.win32
+
+EXTRA_LTLIBRARIES += libcairoboilerplate.la
 
 libcairoboilerplate_la_SOURCES =	\
 	cairo-boilerplate.c		\
@@ -94,20 +96,17 @@ AM_CPPFLAGS =					\
 	-I$(top_srcdir)/src			\
 	$(CAIRO_CFLAGS)
 
-CLEANFILES =					\
+CLEANFILES +=					\
 	$(EXTRA_LTLIBRARIES)
-
-CLEANFILES += *.i *.s
 
 test: check
 
-TESTS =
 if CROSS_COMPILING
 check: check-link
 else
 TESTS += check-link
 endif
 
-check_PROGRAMS = check-link
+check_PROGRAMS += check-link
 check_link_LDADD = libcairoboilerplate.la
 CLEANFILES += check-link

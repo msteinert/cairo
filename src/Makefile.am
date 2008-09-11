@@ -1,10 +1,5 @@
+include $(top_srcdir)/build/Makefile.am.common
 include $(srcdir)/Makefile.am.config
-
-EXTRA_DIST =
-CLEANFILES =
-DISTCLEANFILES =
-MAINTAINERCLEANFILES =
-BUILT_SOURCES =
 
 AM_CPPFLAGS = -I$(srcdir) $(CAIRO_CFLAGS)
 
@@ -71,7 +66,6 @@ TESTS_ENVIRONMENT = \
 	all_cairo_files="$(all_cairo_files)" \
 	enabled_cairo_files="$(enabled_cairo_files)" \
 	$(NULL)
-TESTS =
 TESTS_SH = \
 	check-def.sh \
 	check-plt.sh \
@@ -86,7 +80,7 @@ TESTS += check-link
 endif
 
 EXTRA_DIST += $(TESTS_SH) check-has-hidden-symbols.c
-check_PROGRAMS = check-link
+check_PROGRAMS += check-link
 check_link_LDADD = libcairo.la
 CLEANFILES += check-link
 
@@ -95,7 +89,6 @@ CLEANFILES += check-link
 # cairo has been compiled with symbol hiding.
 .c.i: $(cairoinclude_HEADERS) $(nodist_cairoinclude_HEADERS) cairoint.h $(top_builddir)/config.h
 	$(CPP) -DHAVE_CONFIG_H -I$(top_builddir) -I. $(AM_CPPFLAGS) $< -o $@
-CLEANFILES += *.i *.s
 
 SPARSE = sparse
 sparse:

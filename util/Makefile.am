@@ -1,3 +1,4 @@
+include $(top_srcdir)/build/Makefile.am.common
 
 util: malloc-stats.so
 
@@ -5,11 +6,11 @@ util: malloc-stats.so
 	$(RM) $@
 	$(LN_S) .libs/$*.so $@
 
-CLEANFILES = *.so *.la
+CLEANFILES += *.so *.la
 
 SOLDFLAGS = -module -avoid-version -export-dynamic -rpath /dev/null
 
-EXTRA_LTLIBRARIES = malloc-stats.la backtrace-symbols.la
+EXTRA_LTLIBRARIES += malloc-stats.la backtrace-symbols.la
 
 
 backtrace_symbols_la_LDFLAGS = $(SOLDFLAGS)
@@ -20,7 +21,6 @@ malloc_stats_la_LDFLAGS = $(SOLDFLAGS)
 malloc_stats_la_LIBADD  = $(backtrace_symbols_la_LIBADD)
 malloc_stats_la_SOURCES = $(backtrace_symbols_la_SOURCES) malloc-stats.c
 
-EXTRA_DIST = \
+EXTRA_DIST += \
 	xr2cairo \
 	cairo-api-update
-
