@@ -407,22 +407,22 @@ CAIRO_CONFIG_COMMANDS([$srcdir/src/Makefile.win32.config],
 		      [echo "$CAIRO_CONFIG_WIN32"],
 		      [CAIRO_CONFIG_WIN32='$CAIRO_CONFIG_WIN32'])
 
-dnl Collect list of all supported cairo headers
-CAIRO_FEATURE_HOOK_REGISTER(*,!no,*,
+dnl Collect list of all supported public cairo headers
+CAIRO_FEATURE_HOOK_REGISTER(*,!no,!,
 [
 	CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'm4_newline()supported_cairo_headers += $(cairo_$1_headers)'
 	CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'm4_newline()supported_cairo_headers += $(cairo_$1_headers)'
 ])
 
-dnl Collect list of all unsupported cairo headers
-CAIRO_FEATURE_HOOK_REGISTER(*,no,*,
+dnl Collect list of all unsupported public cairo headers
+CAIRO_FEATURE_HOOK_REGISTER(*,no,!,
 [
 	CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'm4_newline()unsupported_cairo_headers += $(cairo_$1_headers)'
 	CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'm4_newline()unsupported_cairo_headers += $(cairo_$1_headers)'
 ])
 
-dnl Collect list of all/enabled cairo source files
-CAIRO_FEATURE_HOOK_REGISTER(*,*,*,
+dnl Collect list of source files for all/enabled public features
+CAIRO_FEATURE_HOOK_REGISTER(*,*,!,
 [
 	CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
 all_cairo_pkgconf += cr_feature_pc
@@ -443,6 +443,28 @@ all_cairo_sources += $(cairo_$1_sources)
 ifeq ($(cr_feature_tag),1)
 enabled_cairo_headers += $(cairo_$1_headers)
 enabled_cairo_private += $(cairo_$1_private)
+enabled_cairo_sources += $(cairo_$1_sources)
+endif
+'
+])
+
+dnl Collect list of source files for all/enabled private features
+CAIRO_FEATURE_HOOK_REGISTER(*,*,,
+[
+	dnl No public headers for private features
+	CAIRO_CONFIG_AMAKE=$CAIRO_CONFIG_AMAKE'
+all_cairo_private += $(cairo_$1_private) $(cairo_$1_headers)
+all_cairo_sources += $(cairo_$1_sources)
+if cr_feature_tag
+enabled_cairo_private += $(cairo_$1_private) $(cairo_$1_headers)
+enabled_cairo_sources += $(cairo_$1_sources)
+endif
+'
+	CAIRO_CONFIG_WIN32=$CAIRO_CONFIG_WIN32'
+all_cairo_private += $(cairo_$1_private) $(cairo_$1_headers)
+all_cairo_sources += $(cairo_$1_sources)
+ifeq ($(cr_feature_tag),1)
+enabled_cairo_private += $(cairo_$1_private) $(cairo_$1_headers)
 enabled_cairo_sources += $(cairo_$1_sources)
 endif
 '
