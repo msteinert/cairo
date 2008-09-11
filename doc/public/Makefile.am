@@ -14,7 +14,7 @@ DOC_SOURCE_DIR=../../src
 
 # Used for dependencies
 HFILE_GLOB=$(top_srcdir)/src/cairo-*.h
-CFILE_GLOB=$(top_srcdir)/src/cairo-*.c $(top_srcdir)/src/cairo-*.h
+CFILE_GLOB=$(top_srcdir)/src/cairo-*.c
 
 include $(top_srcdir)/src/Makefile.am.config
 
