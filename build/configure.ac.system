@@ -2,6 +2,8 @@ dnl
 dnl Non-failing checks for functions, headers, libraries, etc go here
 dnl
 
+CAIRO_BEGINEND_DECLS
+
 dnl ====================================================================
 dnl Feature checks
 dnl ====================================================================

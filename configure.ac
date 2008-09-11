@@ -459,16 +459,6 @@ fi
 
 dnl ===========================================================================
 
-AH_BOTTOM([
-#ifdef  __cplusplus
-# define CAIRO_BEGIN_DECLS  extern "C" {
-# define CAIRO_END_DECLS    }
-#else
-# define CAIRO_BEGIN_DECLS
-# define CAIRO_END_DECLS
-#endif
-])
-
 AC_CONFIG_FILES([
 Makefile
 boilerplate/Makefile
