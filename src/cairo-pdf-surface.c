@@ -3512,7 +3512,7 @@ _cairo_pdf_surface_analyze_user_font_subset (cairo_scaled_font_subset_t *font_su
     if (status == CAIRO_STATUS_SUCCESS)
 	status = status2;
 
-    return status2;
+    return status;
 }
 
 static cairo_status_t
