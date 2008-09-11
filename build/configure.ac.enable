@@ -75,11 +75,12 @@ AC_DEFUN([_CAIRO_ENABLE],
 					     [Enable cairo's ]cr_feature_name[ feature @<:@default=]cr_feature_default[@:>@]),
 			      enable_$1=$enableval, enable_$1=cr_feature_default)
 	])dnl
-	case $enable_$1 in
-	no)
+	dnl
+	AS_CASE([$enable_$1],
+	[no],[dnl
 		use_$1="no (disabled, use --enable-cr_feature_arg to enable)"
-	;;
-	yes|auto)
+	],dnl
+	[yes|auto],[dnl
 		dnl Cache invalidating:
 		dnl
 		dnl To be extremely user-friendly, we discard cache results if
@@ -143,11 +144,10 @@ AC_DEFUN([_CAIRO_ENABLE],
 					,		[requested]
 				) cr_feature_name[ feature could not be enabled])
 		])dnl
-	;;
-	*)
+	],dnl
+	[dnl	
 		AC_MSG_ERROR([invalid argument passed to --enable-]cr_feature_arg[: `$use_$1', should be one of @<:@no/auto/yes@:>@])
-	;;
-	esac
+	])dnl
 
 	AS_IF([test "x$use_$1" = "xyes"],
 	[dnl
