@@ -2,14 +2,10 @@
 AC_PATH_PROG(FIND, find)
 AC_PATH_PROG(XARGS, xargs)
 
-GTK_DOC_CHECK([1.6])
-
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_CXX dnl required for BeOS (and cannot be a conditional dependency)
 AM_PROG_CC_C_O
-AC_LIBTOOL_WIN32_DLL
-AC_PROG_LIBTOOL dnl required version (1.4) DON'T REMOVE!
 AC_C_INLINE
 
 dnl ===========================================================================

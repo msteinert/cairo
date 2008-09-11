@@ -42,14 +42,14 @@ HTML_IMAGES =
 # Extra options to supply to gtkdoc-fixref
 FIXXREF_OPTIONS=
 
-include $(top_srcdir)/gtk-doc.make
+include $(top_srcdir)/build/Makefile.am.gtk-doc
+
+dist-hook: doc
 
 # Version information for marking the documentation
 EXTRA_DIST += version.xml.in
 
-if ENABLE_GTK_DOC
 check: doc
-endif
 
 TESTS_ENVIRONMENT = srcdir="$(srcdir)" top_srcdir="$(top_srcdir)" MAKE="$(MAKE)"
 TESTS += check-doc-coverage.sh check-doc-syntax.sh

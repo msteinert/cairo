@@ -17,6 +17,8 @@ PACKAGE=cairo
 LIBTOOLIZE_FLAGS="--copy --force --automake"
 ACLOCAL_FLAGS="-I build"
 AUTOHEADER=${AUTOHEADER-autoheader}
+GTKDOCIZE_FLAGS="--copy"
+GTKDOCIZE=${GTKDOCIZE-gtkdocize}
 AUTOMAKE_FLAGS="--add-missing --gnu -Wall"
 AUTOCONF=${AUTOCONF-autoconf}
 
@@ -29,7 +31,7 @@ if test "X$CONFIGURE_AC" = X; then
 fi
 
 extract_version() {
-	grep "^ *$1" $CONFIGURE_AC build/configure.ac.* | sed 's/.*(\[*\([^])]*\)]*).*/\1/'
+	grep "^ *$1" "$CONFIGURE_AC" | sed 's/.*(\[*\([^])]*\)]*).*/\1/'
 }
 
 autoconf_min_vers=`extract_version AC_PREREQ`
@@ -170,6 +172,11 @@ do_cmd $AUTOHEADER
 # create dummy src/Makefile.am.config and ChangeLog to make automake happy
 touch src/Makefile.am.config
 touch ChangeLog
+
+# We don't call gtkdocize right now.  When we do, we should then modify
+# the generated gtk-doc.make and move it to build/Makefile.am.gtk-doc.
+# See that file for details.
+#do_cmd $GTKDOCIZE $GTKDOCIZE_FLAGS
 
 do_cmd $AUTOMAKE $AUTOMAKE_FLAGS
 
