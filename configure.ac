@@ -472,7 +472,6 @@ perf/Makefile
 util/Makefile
 doc/Makefile
 doc/public/Makefile
-doc/public/version.xml
 ])
 
 AC_OUTPUT
