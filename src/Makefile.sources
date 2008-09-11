@@ -1,4 +1,4 @@
-# Makefile.am.sources
+# Makefile.sources
 #
 # This file is the canonical location listing all the source files used
 # to build the cairo library.  Every source file is categorized as one of:

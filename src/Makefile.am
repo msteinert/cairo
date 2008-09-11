@@ -14,12 +14,6 @@ MAINTAINERCLEANFILES += cairo-supported-features.h $(srcdir)/cairo-features-win3
 $(top_builddir)/config.h: $(top_srcdir)/config.h.in
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) config.h
 
-all_cairo_files = \
-	$(cairo_all_headers) \
-	$(cairo_all_private) \
-	$(cairo_all_sources) \
-	$(NULL)
-
 cairoincludedir = $(includedir)/cairo
 cairoinclude_HEADERS = $(enabled_cairo_headers)
 
