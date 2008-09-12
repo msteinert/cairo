@@ -930,6 +930,15 @@ _cairo_path_fixed_interpret_flat (const cairo_path_fixed_t		*path,
 {
     cpf_t flattener;
 
+    if (!path->has_curve_to) {
+	return _cairo_path_fixed_interpret (path, dir,
+					    move_to,
+					    line_to,
+					    NULL,
+					    close_path,
+					    closure);
+    }
+
     flattener.tolerance = tolerance;
     flattener.move_to = move_to;
     flattener.line_to = line_to;
