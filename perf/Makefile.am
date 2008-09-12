@@ -43,7 +43,8 @@ cairo_perf_SOURCES =		\
 	zrusin-another.h	\
 	long-dashed-lines.c	\
 	dragon.c		\
-	pythagoras-tree.c
+	pythagoras-tree.c	\
+	intersections.c
 
 if CAIRO_HAS_WIN32_SURFACE
 cairo_perf_SOURCES += cairo-perf-win32.c
