@@ -44,7 +44,8 @@ cairo_perf_SOURCES =		\
 	long-dashed-lines.c	\
 	dragon.c		\
 	pythagoras-tree.c	\
-	intersections.c
+	intersections.c		\
+	spiral.c
 
 if CAIRO_HAS_WIN32_SURFACE
 cairo_perf_SOURCES += cairo-perf-win32.c
