@@ -45,7 +45,7 @@ main (void)
 	    cairo_test_log (&ctx, "sizeof (%s): got %d, expected %d", #st, (int)sizeof (st), sz); \
 	    ret = CAIRO_TEST_FAILURE; \
 	}
-
+#if CAIRO_HAS_FONT_SUBSET
     check (tt_head_t,	54);
     check (tt_hhea_t,	36);
     check (tt_maxp_t,	32);
@@ -54,7 +54,7 @@ main (void)
     check (tt_name_t,	18);
     check (tt_composite_glyph_t,	18);
     check (tt_glyph_data_t,	28);
-
+#endif
     cairo_test_fini (&ctx);
 
     return ret;
