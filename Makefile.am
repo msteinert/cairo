@@ -3,7 +3,11 @@ include $(top_srcdir)/build/Makefile.am.common
 ACLOCAL_AMFLAGS = -I build
 
 DIST_SUBDIRS = src boilerplate test perf doc util
-SUBDIRS = src doc
+SUBDIRS = src
+# gtk-doc is required for our documentation
+if ENABLE_GTK_DOC
+SUBDIRS += doc
+endif
 # libpng is required for our test programs
 if CAIRO_HAS_PNG_FUNCTIONS
 SUBDIRS += boilerplate test perf
