@@ -366,7 +366,7 @@ test_pdf=no
 if test "x$use_pdf" = "xyes"; then
   poppler_DEPENDENCY="poppler-glib >= $POPPLER_VERSION_REQUIRED"
   PKG_CHECK_MODULES(POPPLER, $poppler_DEPENDENCY pango gtk+-2.0,
-		    [CAIRO_CHECK_FUNCS_WITH_FLAGS(poppler_page_render_to_pixbuf, [$POPPLER_CFLAGS], [$POPPLER_LIBS],
+		    [CAIRO_CHECK_FUNCS_WITH_FLAGS(poppler_page_render, [$POPPLER_CFLAGS], [$POPPLER_LIBS],
                     [test_pdf=yes],
 		    [AC_MSG_RESULT(no); test_pdf="no (requires $poppler_DEPENDENCY)"])],
 		    [AC_MSG_RESULT(no); test_pdf="no (requires $poppler_DEPENDENCY)"])
