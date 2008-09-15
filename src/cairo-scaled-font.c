@@ -485,21 +485,21 @@ _cairo_scaled_font_unregister_placeholder_and_lock_font_map (cairo_scaled_font_t
 }
 
 static void
-_cairo_scaled_font_placeholder_wait_for_creation_to_finish (cairo_scaled_font_t *scaled_font)
+_cairo_scaled_font_placeholder_wait_for_creation_to_finish (cairo_scaled_font_t *placeholder_scaled_font)
 {
     /* reference the place holder so it doesn't go away */
-    cairo_scaled_font_reference (scaled_font);
+    cairo_scaled_font_reference (placeholder_scaled_font);
 
     /* now unlock the fontmap mutex so creation has a chance to finish */
     CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
 
     /* wait on placeholder mutex until we are awaken */
-    CAIRO_MUTEX_LOCK (scaled_font->mutex);
+    CAIRO_MUTEX_LOCK (placeholder_scaled_font->mutex);
 
     /* ok, creation done.  just clean up and back out */
-    CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
+    CAIRO_MUTEX_UNLOCK (placeholder_scaled_font->mutex);
     CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
-    cairo_scaled_font_destroy (scaled_font);
+    cairo_scaled_font_destroy (placeholder_scaled_font);
 }
 
 /* Fowler / Noll / Vo (FNV) Hash (http://www.isthe.com/chongo/tech/comp/fnv/)
