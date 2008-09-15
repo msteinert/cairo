@@ -7,7 +7,7 @@ This directory contains the source code to the cairo library.
 Source Code Listing
 -------------------
 
-The canonical list of source files is the file Source.mk.  See that
+The canonical list of source files is the file Makefile.sources.  See that
 file for how it works.
 
 
