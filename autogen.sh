@@ -170,6 +170,7 @@ do_cmd $ACLOCAL $ACLOCAL_FLAGS
 do_cmd $AUTOHEADER
 
 # create dummy src/Makefile.am.config and ChangeLog to make automake happy
+rm -f src/Makefile.am.config
 touch src/Makefile.am.config
 touch ChangeLog
 
