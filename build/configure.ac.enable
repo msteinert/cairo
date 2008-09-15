@@ -197,14 +197,15 @@ m4_define([_CAIRO_FEATURE_CONFIG_PKGCONFIG_FILE],
 [dnl
 	AC_CONFIG_FILES([$3:$4],
 	[dnl
-		$SED -i -e "dnl
+		mv "$3" "$3.tmp" &&
+		$SED "dnl
 		s%@FEATURE_PC@%]cr_pc_modname([$1])[%g;dnl
 		s%@FEATURE_NAME@%$2%g;dnl
 		s%@FEATURE_BASE@%$$1_BASE%g;dnl
 		s%@FEATURE_REQUIRES@%$$1_REQUIRES%g;dnl
 		s%@FEATURE_NONPKGCONFIG_LIBS@%$$1_NONPKGCONFIG_LIBS%g;dnl
 		s%@FEATURE_NONPKGCONFIG_CFLAGS@%$$1_NONPKGCONFIG_CFLAGS%g;dnl
-		" "$3" ||
+		" < "$3.tmp" > "$3" && rm -f "$3.tmp" ||
 		AC_MSG_ERROR(failed to update $3)
 	],[dnl
 		SED='$SED'
