@@ -204,7 +204,7 @@ dnl Defines VAR to the variable being processed.
 dnl
 AC_DEFUN([CAIRO_FEATURE_VARS_FOREACH],
 [dnl
-	m4_foreach_w([$1], m4_defn([_CAIRO_FEATURE_VARS]), [$2])dnl
+	m4_foreach_w([$1], _CAIRO_FEATURE_VARS, [$2])dnl
 ])
 
 
@@ -316,7 +316,7 @@ dnl Defines VAR to the accumulator being processed.
 dnl
 AC_DEFUN([CAIRO_ACCUMULATORS_FOREACH],
 [dnl
-	m4_foreach_w([$1], m4_defn([_CAIRO_ACCUMULATORS]), [$2])dnl
+	m4_foreach_w([$1], _CAIRO_ACCUMULATORS, [$2])dnl
 ])dnl
 
 
@@ -347,7 +347,7 @@ dnl Defines VAR to the variable being processed.
 dnl
 AC_DEFUN([CAIRO_ACCUMULATED_FEATURE_VARS_FOREACH],
 [dnl
-	m4_foreach_w([$1], m4_defn([_CAIRO_ACCUMULATED_FEATURE_VARS]), [$2])dnl
+	m4_foreach_w([$1], _CAIRO_ACCUMULATED_FEATURE_VARS, [$2])dnl
 ])dnl
 
 dnl ===========================================================================
