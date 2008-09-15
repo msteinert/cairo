@@ -821,6 +821,9 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
     if (status)
         return status;
 
+    if (extents.width == 0 || extents.height == 0)
+	return CAIRO_STATUS_SUCCESS;
+
     box.p1.x = _cairo_fixed_from_int (extents.x);
     box.p1.y = _cairo_fixed_from_int (extents.y);
     box.p2.x = _cairo_fixed_from_int (extents.x + extents.width);
@@ -882,6 +885,9 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
     status = _cairo_clip_intersect_to_rectangle (surface->clip, &extents);
     if (status)
         return status;
+
+    if (extents.width == 0 || extents.height == 0)
+	return CAIRO_STATUS_SUCCESS;
 
     box.p1.x = _cairo_fixed_from_int (extents.x);
     box.p1.y = _cairo_fixed_from_int (extents.y);
