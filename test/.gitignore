@@ -53,6 +53,7 @@ degenerate-arc
 degenerate-path
 degenerate-pen
 device-offset
+device-offset-fractional
 device-offset-positive
 device-offset-scale
 extend-pad

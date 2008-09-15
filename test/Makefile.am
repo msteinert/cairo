@@ -43,6 +43,7 @@ degenerate-arc$(EXEEXT)					\
 degenerate-path$(EXEEXT)				\
 degenerate-pen$(EXEEXT)					\
 device-offset$(EXEEXT)					\
+device-offset-fractional$(EXEEXT)			\
 device-offset-positive$(EXEEXT)				\
 device-offset-scale$(EXEEXT)				\
 extend-pad$(EXEEXT)					\
@@ -382,6 +383,7 @@ REFERENCE_IMAGES = \
 	degenerate-path-rgb24-ref.png	\
 	degenerate-path-quartz-ref.png	\
 	degenerate-path-quartz-rgb24-ref.png	\
+	device-offset-fractional-ref.png	\
 	device-offset-positive-ref.png	\
 	device-offset-positive-rgb24-ref.png	\
 	device-offset-ref.png	\
