@@ -477,7 +477,7 @@ _cairo_scaled_font_unregister_placeholder_and_lock_font_map (cairo_scaled_font_t
     _cairo_hash_table_remove (cairo_scaled_font_map->hash_table,
 			      &scaled_font->hash_entry);
 
-    CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
+    CAIRO_MUTEX_UNLOCK (placeholder_scaled_font->mutex);
 
     CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
     cairo_scaled_font_destroy (placeholder_scaled_font);
