@@ -51,12 +51,12 @@ m4_pattern_allow(^CAIRO_HAS_)dnl
 dnl
 dnl Define cr_feature_pc and friends ala other cr_feature_* macros
 dnl
-m4_define([cr_feature_pc_modname],
-	[[cairo-]m4_translit(cr_feature,_,-)])dnl
+m4_define([cr_pc_modname],
+	[[cairo-]m4_translit([$1],_,-)])dnl
 m4_define([cr_feature_pc],
-	[cr_feature_pc_modname[.pc]])dnl
+	[cr_pc_modname(cr_feature)[.pc]])dnl
 m4_define([cr_feature_uninstalled_pc],
-	[cr_feature_pc_modname[-uninstalled.pc]])dnl
+	[cr_pc_modname(cr_feature)[-uninstalled.pc]])dnl
 
 
 dnl ===========================================================================
@@ -193,21 +193,19 @@ AC_SUBST(CAIRO_NONPKGCONFIG_CFLAGS)dnl
 AC_SUBST(CAIRO_LIBS)dnl
 AC_SUBST(CAIRO_NONPKGCONFIG_LIBS)dnl
 
-
-dnl Generate .pc files for enabled non-builtin public features
-CAIRO_FEATURE_HOOK_REGISTER(yes,!always,!,
+m4_define([_CAIRO_FEATURE_CONFIG_PKGCONFIG_FILE],
 [dnl
-	AC_CONFIG_FILES(src/cr_feature_pc:src/cairo-features.pc.in,
+	AC_CONFIG_FILES([$3:$4],
 	[dnl
 		$SED -i -e "dnl
-		s%@FEATURE_PC@%]cr_feature_pc_modname[%g;dnl
-		s%@FEATURE_NAME@%]cr_feature_name[%g;dnl
+		s%@FEATURE_PC@%]cr_pc_modname([$1])[%g;dnl
+		s%@FEATURE_NAME@%$2%g;dnl
 		s%@FEATURE_BASE@%$$1_BASE%g;dnl
 		s%@FEATURE_REQUIRES@%$$1_REQUIRES%g;dnl
 		s%@FEATURE_NONPKGCONFIG_LIBS@%$$1_NONPKGCONFIG_LIBS%g;dnl
 		s%@FEATURE_NONPKGCONFIG_CFLAGS@%$$1_NONPKGCONFIG_CFLAGS%g;dnl
-		" "]src/cr_feature_pc[" ||
-		AC_MSG_ERROR(failed to update ]src/cr_feature_pc[)
+		" "$3" ||
+		AC_MSG_ERROR(failed to update $3)
 	],[dnl
 		SED='$SED'
 		$1_BASE='$$1_BASE'
@@ -217,27 +215,26 @@ CAIRO_FEATURE_HOOK_REGISTER(yes,!always,!,
 	])dnl
 ])dnl
 
+dnl Generate .pc files for enabled non-builtin public features
+CAIRO_FEATURE_HOOK_REGISTER(yes,!always,!,
+[dnl
+	_CAIRO_FEATURE_CONFIG_PKGCONFIG_FILE(
+		[$1],
+		cr_feature_name,
+		[src/]cr_feature_pc,
+		[src/cairo-features.pc.in]
+	)dnl
+])dnl
+
 dnl Generate -uninstalled.pc files for enabled non-builtin public features
 CAIRO_FEATURE_HOOK_REGISTER(yes,!always,!,
 [dnl
-	AC_CONFIG_FILES(cr_feature_uninstalled_pc:src/cairo-features-uninstalled.pc.in,
-	[dnl
-		$SED -i -e "dnl
-		s%@FEATURE_PC@%]cr_feature_pc_modname[%g;dnl
-		s%@FEATURE_NAME@%]cr_feature_name[%g;dnl
-		s%@FEATURE_BASE@%$$1_BASE%g;dnl
-		s%@FEATURE_REQUIRES@%$$1_REQUIRES%g;dnl
-		s%@FEATURE_NONPKGCONFIG_LIBS@%$$1_NONPKGCONFIG_LIBS%g;dnl
-		s%@FEATURE_NONPKGCONFIG_CFLAGS@%$$1_NONPKGCONFIG_CFLAGS%g;dnl
-		" "]src/cr_feature_pc[" ||
-		AC_MSG_ERROR(failed to update ]src/cr_feature_pc[)
-	],[dnl
-		SED='$SED'
-		$1_BASE='$$1_BASE'
-		$1_REQUIRES='$$1_REQUIRES'
-		$1_NONPKGCONFIG_LIBS='$$1_NONPKGCONFIG_LIBS'
-		$1_NONPKGCONFIG_CFLAGS='$$1_NONPKGCONFIG_CFLAGS'
-	])dnl
+	_CAIRO_FEATURE_CONFIG_PKGCONFIG_FILE(
+		[$1],
+		cr_feature_name,
+		cr_feature_uninstalled_pc,
+		[src/cairo-features-uninstalled.pc.in]
+	)dnl
 ])dnl
 
 
