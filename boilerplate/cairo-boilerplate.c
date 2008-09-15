@@ -643,6 +643,7 @@ cairo_surface_t *
 cairo_boilerplate_surface_create_in_error (cairo_status_t status)
 {
     cairo_surface_t *surface = NULL;
+    int loop = 5;
 
     do {
 	cairo_surface_t *intermediate;
@@ -657,9 +658,9 @@ cairo_boilerplate_surface_create_in_error (cairo_status_t status)
 	cairo_append_path (cr, &path);
 
 	cairo_surface_destroy (surface);
-	surface = cairo_get_target (cr);
+	surface = cairo_surface_reference (cairo_get_target (cr));
 	cairo_destroy (cr);
-    } while (cairo_surface_status (surface) != status);
+    } while (cairo_surface_status (surface) != status && --loop);
 
     return surface;
 }
