@@ -8,17 +8,6 @@ m4_pattern_forbid([^cr_])
 
 dnl ==========================================================================
 
-dnl Parse Version.mk and declare m4 variables out of it
-m4_define([CAIRO_PARSE_VERSION],dnl
-		m4_translit(dnl
-		m4_bpatsubst(m4_include(cairo-version.h),
-			     [^.define \([a-zA-Z0-9_]*\)  *\([0-9][0-9]*\)],
-			     [[m4_define(\1, \[\2\])]]),
-			    [A-Z], [a-z])dnl
-)dnl
-
-dnl ==========================================================================
-
 dnl Usage:
 dnl   CAIRO_BIGENDIAN
 dnl
