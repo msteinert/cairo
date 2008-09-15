@@ -407,7 +407,7 @@ _cairo_scaled_font_map_destroy (void)
  *
  * The reason we have to create a fake scaled font instead of just using
  * scaled_font is for lifecycle management: we need to (or rather,
- * other code needs to) reference the scaked_font in the hash.
+ * other code needs to) reference the scaked_font in the hash table.
  * We can't do that on the input scaled_font as it may be freed by
  * font backend upon error.
  */
