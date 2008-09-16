@@ -1,87 +1,18 @@
 SUBMAKEFILE = 1
 
 include ../Makefile.win32
-
 include Makefile.win32.config
 
-srcdir = `pwd`
-
 SOURCES = \
-	cairo-analysis-surface.c \
-	cairo-arc.c \
-	cairo-array.c \
-	cairo-atomic.c \
-	cairo-base85-stream.c \
-	cairo-bentley-ottmann.c \
-	cairo.c \
-	cairo-cache.c \
-	cairo-cff-subset.c \
-	cairo-clip.c \
-	cairo-color.c \
-	cairo-debug.c \
-	cairo-deflate-stream.c \
-	cairo-fixed.c \
-	cairo-font-face.c \
-	cairo-font-options.c \
-	cairo-freelist.c \
-	cairo-gstate.c \
-	cairo-hash.c \
-	cairo-hull.c \
-	cairo-image-surface.c \
-	cairo-lzw.c \
-	cairo-matrix.c \
-	cairo-meta-surface.c \
-	cairo-misc.c \
-	cairo-mutex.c \
-	cairo-output-stream.c \
-	cairo-paginated-surface.c \
-	cairo-path-bounds.c \
-	cairo-path.c \
-	cairo-path-fill.c \
-	cairo-path-fixed.c \
-	cairo-path-stroke.c \
-	cairo-pattern.c \
-	cairo-pdf-operators.c \
-	cairo-pdf-surface.c \
-	cairo-pen.c \
-	cairo-png.c \
-	cairo-polygon.c \
-	cairo-ps-surface.c \
-	cairo-rectangle.c \
-	cairo-region.c \
-	cairo-scaled-font.c \
-	cairo-scaled-font-subsets.c \
-	cairo-skiplist.c \
-	cairo-slope.c \
-	cairo-spline.c \
-	cairo-stroke-style.c \
-	cairo-surface.c \
-	cairo-surface-fallback.c \
-	cairo-svg-surface.c \
-	cairo-traps.c \
-	cairo-truetype-subset.c \
-	cairo-type1-fallback.c \
-	cairo-type3-glyph-surface.c \
-	cairo-unicode.c \
-	cairo-user-font.c \
-	cairo-wideint.c \
-	cairo-win32.c \
-	cairo-win32-font.c \
-	cairo-win32-printing-surface.c \
+	$(enabled_cairo_headers) \
+	$(enabled_cairo_private) \
+	$(enabled_cairo_sources) \
 	$(NULL)
 
 STATIC_SOURCES = cairo-win32-surface.c 
 
 cairo_headers = \
-	cairo.h \
-	cairo-pdf.h \
-	cairo-ps.h \
-	cairo-svg.h \
-	cairo-win32.h \
-	cairo-pdf-test.h \
-	cairo-ps-test.h \
-	cairo-scaled-font-test.h \
-	cairo-svg-test.h \
+	$(enabled_cairo_headers) \
 	$(NULL)
 
 OBJECTS = $(patsubst %.c, $(CFG)/%.obj, $(SOURCES))

@@ -1,18 +1,14 @@
-
 SUBMAKEFILE = 1
 
 include ../Makefile.win32
+include Makefile.win32.config
 
 CFLAGS += -I../src
 
 SOURCES = \
-	cairo-boilerplate.c \
-	cairo-boilerplate-win32.c \
-	cairo-boilerplate-ps.c \
-	cairo-boilerplate-svg.c \
-	cairo-boilerplate-pdf.c \
-	cairo-boilerplate-getopt.c \
-	xmalloc.c \
+	$(enabled_cairo_boilerplate_headers) \
+	$(enabled_cairo_boilerplate_private) \
+	$(enabled_cairo_boilerplate_sources) \
 	$(NULL)
 
 OBJECTS = $(patsubst %.c, $(CFG)/%.obj, $(SOURCES))
