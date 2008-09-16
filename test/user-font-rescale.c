@@ -311,7 +311,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_font_extents (cr, &font_extents);
     cairo_text_extents (cr, text, &extents);
 
-    cairo_set_source_rgba (cr, 0, 0, 0, 0.5);
+    cairo_set_source_rgb (cr, 0, 0, 0);
     cairo_move_to (cr, BORDER, BORDER + font_extents.ascent);
     cairo_show_text (cr, text);
 
@@ -324,7 +324,7 @@ draw (cairo_t *cr, int width, int height)
     rescaled = get_user_font_face (cairo_get_font_face (cr), text, old);
     cairo_set_font_face (cr, rescaled);
 
-    cairo_set_source_rgba (cr, 0, 0, 1, 0.5);
+    cairo_set_source_rgb (cr, 0, 0, 1);
     cairo_move_to (cr, BORDER, BORDER + font_extents.height + 2*BORDER + font_extents.ascent);
     cairo_show_text (cr, text);
 
@@ -336,7 +336,7 @@ draw (cairo_t *cr, int width, int height)
 			    CAIRO_FONT_SLANT_NORMAL,
 			    CAIRO_FONT_WEIGHT_NORMAL);
 
-    cairo_set_source_rgba (cr, 0, 0, 1, 0.5);
+    cairo_set_source_rgb (cr, 0, 0, 1);
     cairo_move_to (cr, BORDER, BORDER + 2*font_extents.height + 4*BORDER + font_extents.ascent);
     cairo_show_text (cr, text);
 
