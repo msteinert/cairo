@@ -1,5 +1,9 @@
 TAGS
 tags
+Makefile
+Makefile.in
+Makefile.am.config
+Makefile.win32.config
 *.lo
 *.la
 *.exe
