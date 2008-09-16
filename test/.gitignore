@@ -222,6 +222,7 @@ unbounded-operator
 user-data
 user-font
 user-font-proxy
+user-font-rescale
 xlib-expose-event
 xlib-surface
 xlib-surface-source
