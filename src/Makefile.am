@@ -10,6 +10,7 @@ export_symbols = -export-symbols cairo.def
 cairo_def_dependency = cairo.def
 endif
 
+EXTRA_DIST += Makefile.win32
 EXTRA_DIST           += cairo-supported-features.h cairo-features-win32.h Makefile.win32.config
 MAINTAINERCLEANFILES += cairo-supported-features.h $(srcdir)/cairo-features-win32.h $(srcdir)/Makefile.win32.config
 
@@ -104,5 +105,3 @@ uno:
 	@cpp_flags=`echo $(AM_CPPFLAGS) | sed 's/\(-I.*\) /\1 /g'`; \
 	files=`echo $(enabled_cairo_sources) | sed 's/[^ ]*\.h//g'`; \
 	$(UNO) -I$(top_builddir) $$cpp_flags -DHAVE_CONFIG_H -U__GNUC__ $$files
-
-EXTRA_DIST += Makefile.win32

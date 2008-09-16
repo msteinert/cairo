@@ -11,6 +11,8 @@ AM_CPPFLAGS = \
 	$(NULL)
 
 EXTRA_DIST += Makefile.win32
+EXTRA_DIST           += Makefile.win32.config
+MAINTAINERCLEANFILES += $(srcdir)/Makefile.win32.config
 
 EXTRA_LTLIBRARIES += libcairoboilerplate.la
 
