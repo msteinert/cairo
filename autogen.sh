@@ -190,6 +190,5 @@ rm -f config.cache
 do_cmd $srcdir/configure \
 	--cache-file=config.cache \
 	--disable-static \
-	--enable-gtk-doc \
 	--enable-test-surfaces \
 	${1+"$@"} && echo "Now type \`make' to compile $PROJECT." || exit 1
