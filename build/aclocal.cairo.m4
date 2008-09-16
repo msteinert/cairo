@@ -146,3 +146,4 @@ AH_BOTTOM([
 ])dnl
 ])
 
+AC_DEFUN([CAIRO_TEXT_WRAP], [m4_text_wrap([$1], [$2],, 78)])
