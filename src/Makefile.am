@@ -71,7 +71,7 @@ TESTS_SH = \
 TESTS += $(TESTS_SH)
 if CROSS_COMPILING
 else
-TESTS += check-link
+TESTS += check-link$(EXEEXT)
 endif
 
 EXTRA_DIST += $(TESTS_SH) check-has-hidden-symbols.c
