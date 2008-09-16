@@ -28,7 +28,6 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#define __USE_ISOC99
 #include <math.h>
 
 #include "cairo-test.h"
@@ -206,8 +205,8 @@ create_rescaled_font (cairo_font_face_t *substitute_font, int glyph_start, int g
 
     for (i=0; i<r->glyph_count; i++) {
 	r->desired_width[i] = desired_width[i];
-	/* use NAN to specify unset */
-	r->rescale_factor[i] = NAN;
+	/* use NaN to specify unset */
+	r->rescale_factor[i] = strtod ("NaN", NULL);
     }
 
     cairo_font_options_destroy (options);
