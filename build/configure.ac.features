@@ -200,13 +200,13 @@ CAIRO_FEATURE_HOOK_REGISTER(yes,!always,!,
 dnl Collect list of .pc files for all non-builtin public features
 CAIRO_MAKEFILE_ACCUMULATE(cairo,
 [all_$1_pkgconf = cairo.pc])dnl
-CAIRO_MAKEFILE_ACCUMULATE_FEATURE(cairo,*,*,!,
+CAIRO_MAKEFILE_ACCUMULATE_FEATURE(cairo,*,!always,!,
 [all_$1_pkgconf += cr_feature_pc])dnl
 
 dnl Collect list of .pc files for enabled non-builtin public features
 CAIRO_MAKEFILE_ACCUMULATE(cairo,
 [enabled_$1_pkgconf = cairo.pc])dnl
-CAIRO_MAKEFILE_ACCUMULATE_FEATURE(cairo,yes,*,!,
+CAIRO_MAKEFILE_ACCUMULATE_FEATURE(cairo,yes,!always,!,
 [enabled_$1_pkgconf += cr_feature_pc])dnl
 
 

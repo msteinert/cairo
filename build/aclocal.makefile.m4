@@ -146,12 +146,13 @@ dnl
 AC_DEFUN([CAIRO_MAKEFILE_ACCUMULATE_FEATURE],
 [dnl
 	m4_if([$1],[*],,[_CAIRO_MAKEFILE_CHECK([$1])])dnl
-	m4_pushdef([cr_make_acc_contents],[$5])dnl
+	m4_append([cr_make_acc_counter],[1],[])dnl
+	m4_define([cr_make_acc_contents]m4_len(cr_make_acc_counter), [$5])dnl
 	CAIRO_FEATURE_HOOK_REGISTER(*,[$3],[$4],
 	[dnl
 		m4_foreach_w([cr_makefile], m4_if([$1],[*],_CAIRO_MAKEFILES,[$1]),
 		[dnl
-			cr_make_tmp=_CAIRO_SH_ESCAPE(]]cr_make_acc_contents([[[[]]]]cr_makefile(),[$][1],[$][2],[$][3],[$][4])[[)
+			cr_make_tmp=_CAIRO_SH_ESCAPE(cr_make_acc_contents]]m4_len(cr_make_acc_counter)([[cr_makefile,]][$][1],[$][2],[$][3],[$][4])[[)
 			_CAIRO_MAKEFILE_ACCUMULATE_FEATURE(
 				[MAKEFILE_]cr_makefile[_AMAKE],
 				[$2],
@@ -164,6 +165,6 @@ AC_DEFUN([CAIRO_MAKEFILE_ACCUMULATE_FEATURE],
 				[$cr_make_tmp])dnl
 		])dnl
 	])dnl
-	m4_popdef([cr_make_acc_contents])dnl
 ])dnl
 
+m4_define([cr_make_acc_counter])dnl
