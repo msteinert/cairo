@@ -978,6 +978,8 @@ check-valgrind:
 	$(MAKE) $(AM_MAKEFLAGS) check TESTS_ENVIRONMENT='$(TESTS_ENVIRONMENT) $(top_builddir)/libtool --mode=execute valgrind $(VALGRIND_FLAGS)' 2>&1 | tee valgrind-log
 
 
+$(TESTS): $(check_PROGRAMS)
+
 %.log: % $(check_PROGRAMS)
 	-./$<
 
