@@ -2609,13 +2609,11 @@ _cairo_pdf_surface_select_pattern (cairo_pdf_surface_t *surface,
 {
     cairo_status_t status;
     int alpha;
-    cairo_bool_t is_solid_color = FALSE;
-    cairo_color_t *solid_color;
+    cairo_color_t *solid_color = NULL;
 
     if (pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
 	cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *) pattern;
 
-	is_solid_color = TRUE;
 	solid_color = &solid->color;
     }
 
@@ -2624,13 +2622,11 @@ _cairo_pdf_surface_select_pattern (cairo_pdf_surface_t *surface,
     {
 	cairo_gradient_pattern_t *gradient = (cairo_gradient_pattern_t *) pattern;
 
-	if (gradient->n_stops == 1) {
-	    is_solid_color = TRUE;
+	if (gradient->n_stops == 1)
 	    solid_color = &gradient->stops[0].color;
-	}
     }
 
-    if (is_solid_color) {
+    if (solid_color != NULL) {
 	if (surface->current_pattern_is_solid_color == FALSE ||
 	    surface->current_color_red != solid_color->red ||
 	    surface->current_color_green != solid_color->green ||
