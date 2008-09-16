@@ -222,8 +222,8 @@ m4_define([_CAIRO_ACCUMULATORS_REGISTER],
 	m4_foreach_w([cr_var], [$1], [m4_pattern_allow([CAIRO_]cr_var)])dnl
 ])dnl
 
-m4_define([_CAIRO_SH_ESCAPE],['m4_bpatsubst([$1],['],[\'])'])dnl
-m4_define([_CAIRO_SH_ESCAPE_UNQUOTED],["m4_bpatsubst([$1],["],[\"])"])dnl
+m4_define([_CAIRO_SH_ESCAPE],['m4_bpatsubst([$1],['],[\\'])'])dnl
+m4_define([_CAIRO_SH_ESCAPE_UNQUOTED],["m4_bpatsubst([$1],["],[\\"])"])dnl
 
 dnl
 dnl CAIRO_ACCUMULATORS_REGISTER(VARS, SEPARATOR=[], INITIAL-VALUE=[])
@@ -246,12 +246,12 @@ dnl so it can reference other shell variables for example.
 dnl
 AC_DEFUN([CAIRO_ACCUMULATORS_REGISTER_UNQUOTED],
 [dnl
-	_CAIRO_ACCUMULATORS_REGISTER([$1],[$2],_CAIRO_SH_ESCAPE_UNQUOTED[$3])dnl
+	_CAIRO_ACCUMULATORS_REGISTER([$1],[$2],_CAIRO_SH_ESCAPE_UNQUOTED([$3]))dnl
 ])dnl
 
 m4_define([_CAIRO_ACCUMULATOR_CHECK],
 [dnl
-        m4_ifdef([cr_acc_$1_sep],,[m4_fatal([Accumulator ]$1[ not defined.])])dnl
+        m4_ifdef([cr_acc_$1_sep],,[m4_fatal([Accumulator `]$1[' not defined.])])dnl
 ])dnl
 
 m4_define([_CAIRO_ACCUMULATE],
@@ -306,6 +306,26 @@ dnl
 AC_DEFUN([CAIRO_ACCUMULATE_UNQUOTED_BEFORE],
 [dnl
 	_CAIRO_ACCUMULATE_UNQUOTED([$1], [$2], [CAIRO_$1=]_CAIRO_SH_ESCAPE_UNQUOTED([$2])["]m4_do([cr_acc_$1_sep])[${CAIRO_$1}"])dnl
+])dnl
+
+dnl
+dnl CAIRO_ACCUMULATE_UNQUOTED_UNCHECKED(VAR, VALUE)
+dnl
+dnl Like CAIRO_ACCUMULATE_UNQUOTED but VALUE is not tested for emptiness.
+dnl
+AC_DEFUN([CAIRO_ACCUMULATE_UNQUOTED_UNCHECKED],
+[dnl
+	_CAIRO_ACCUMULATE([$1], [$2], [CAIRO_$1="${CAIRO_$1}]m4_do([cr_acc_$1_sep])["]_CAIRO_SH_ESCAPE_UNQUOTED([$2]))dnl
+])dnl
+
+dnl
+dnl CAIRO_ACCUMULATE_UNQUOTED_UNCHECKED_BEFORE(VAR, VALUE)
+dnl
+dnl Like CAIRO_ACCUMULATE_UNQUOTED_BEFORE but VALUE is not tested for emptiness.
+dnl
+AC_DEFUN([CAIRO_ACCUMULATE_UNQUOTED_BEFORE],
+[dnl
+	_CAIRO_ACCUMULATE([$1], [$2], [CAIRO_$1=]_CAIRO_SH_ESCAPE_UNQUOTED([$2])["]m4_do([cr_acc_$1_sep])[${CAIRO_$1}"])dnl
 ])dnl
 
 dnl
@@ -438,5 +458,4 @@ AC_DEFUN([CAIRO_FEATURE_HOOK_REGISTER],
 		)])])dnl
 	], m4_newline)dnl
 ])dnl
-
 
