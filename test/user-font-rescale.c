@@ -26,11 +26,9 @@
  *	Behdad Esfahbod <behdad@behdad.org>
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-
 #include "cairo-test.h"
+
+#include <math.h>
 
 #define BORDER 10
 #define TEXT_SIZE 32
@@ -64,14 +62,16 @@ test_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 			       cairo_t              *cr,
 			       cairo_text_extents_t *metrics)
 {
-    cairo_font_face_t *user_font = cairo_scaled_font_get_font_face (scaled_font);
-    struct rescaled_font *r = cairo_font_face_get_user_data (user_font, &rescale_font_closure_key);
+    cairo_font_face_t *user_font;
+    struct rescaled_font *r;
     cairo_glyph_t cairo_glyph;
 
     cairo_glyph.index = glyph;
     cairo_glyph.x = 0;
     cairo_glyph.y = 0;
 
+    user_font = cairo_scaled_font_get_font_face (scaled_font);
+    r = cairo_font_face_get_user_data (user_font, &rescale_font_closure_key);
     cairo_set_font_face (cr, r->substitute_font);
 
     if (glyph - r->start < r->glyph_count) {
@@ -83,7 +83,9 @@ test_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 	    cairo_text_extents_t extents;
 
 	    /* measure the glyph and compute the necessary rescaling factor */
-	    cairo_scaled_font_glyph_extents (r->measuring_font, &cairo_glyph, 1, &extents);
+	    cairo_scaled_font_glyph_extents (r->measuring_font,
+					     &cairo_glyph, 1,
+					     &extents);
 
 	    desired_width = r->desired_width[glyph - r->start];
 	    actual_width = extents.x_advance;
@@ -103,61 +105,60 @@ test_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     return CAIRO_STATUS_SUCCESS;
 }
 
-/* UNICHAR_TO_UTF8 from Behdad
- * http://mces.blogspot.com/2004/07/static-unicode-to-utf-8-converter.html */
-#define UNICHAR_TO_UTF8(Char)                                                 \
-  (const char [])                                                             \
-    {                                                                         \
-      /* first octet */                                                       \
-      (Char) < 0x00000080 ?   (Char)                       :                  \
-      (Char) < 0x00000800 ?  ((Char) >>  6)         | 0xC0 :                  \
-      (Char) < 0x00010000 ?  ((Char) >> 12)         | 0xE0 :                  \
-      (Char) < 0x00200000 ?  ((Char) >> 18)         | 0xF0 :                  \
-      (Char) < 0x04000000 ?  ((Char) >> 24)         | 0xF8 :                  \
-                             ((Char) >> 30)         | 0xFC,                   \
-      /* second octet */                                                      \
-      (Char) < 0x00000080 ?    0 /* null-terminator */     :                  \
-      (Char) < 0x00000800 ?  ((Char)        & 0x3F) | 0x80 :                  \
-      (Char) < 0x00010000 ? (((Char) >>  6) & 0x3F) | 0x80 :                  \
-      (Char) < 0x00200000 ? (((Char) >> 12) & 0x3F) | 0x80 :                  \
-      (Char) < 0x04000000 ? (((Char) >> 18) & 0x3F) | 0x80 :                  \
-                            (((Char) >> 24) & 0x3F) | 0x80,                   \
-      /* third octet */                                                       \
-      (Char) < 0x00000800 ?    0 /* null-terminator */     :                  \
-      (Char) < 0x00010000 ?  ((Char)        & 0x3F) | 0x80 :                  \
-      (Char) < 0x00200000 ? (((Char) >>  6) & 0x3F) | 0x80 :                  \
-      (Char) < 0x04000000 ? (((Char) >> 12) & 0x3F) | 0x80 :                  \
-                            (((Char) >> 18) & 0x3F) | 0x80,                   \
-      /* fourth octet */                                                      \
-      (Char) < 0x00010000 ?    0 /* null-terminator */     :                  \
-      (Char) < 0x00200000 ?  ((Char)        & 0x3F) | 0x80 :                  \
-      (Char) < 0x04000000 ? (((Char) >>  6) & 0x3F) | 0x80 :                  \
-                            (((Char) >> 12) & 0x3F) | 0x80,                   \
-      /* fifth octet */                                                       \
-      (Char) < 0x00200000 ?    0 /* null-terminator */     :                  \
-      (Char) < 0x04000000 ?  ((Char)        & 0x3F) | 0x80 :                  \
-                            (((Char) >>  6) & 0x3F) | 0x80,                   \
-      /* sixth octet */                                                       \
-      (Char) < 0x04000000 ?    0 /* null-terminator */     :                  \
-                             ((Char)        & 0x3F) | 0x80,                   \
-                               0 /* null-terminator */                        \
+static void
+unichar_to_utf8 (uint32_t ucs4, char utf8[7])
+{
+    int i, charlen, first;
+
+    if (ucs4 < 0x80) {
+	first = 0;
+	charlen = 1;
+    } else if (ucs4 < 0x800) {
+	first = 0xc0;
+	charlen = 2;
+    } else if (ucs4 < 0x10000) {
+	first = 0xe0;
+	charlen = 3;
+    } else if (ucs4 < 0x200000) {
+	first = 0xf0;
+	charlen = 4;
+    } else if (ucs4 < 0x4000000) {
+	first = 0xf8;
+	charlen = 5;
+    } else {
+	first = 0xfc;
+	charlen = 6;
     }
 
+    for (i = charlen - 1; i > 0; --i) {
+	utf8[i] = (ucs4 & 0x3f) | 0x80;
+	ucs4 >>= 6;
+    }
+    utf8[0] = ucs4 | first;
+    utf8[charlen] = '\0';
+}
 
 static cairo_status_t
 test_scaled_font_unicode_to_glyph (cairo_scaled_font_t *scaled_font,
-									  unsigned long        unicode,
-									  unsigned long       *glyph_index) {
-    cairo_font_face_t *user_font = cairo_scaled_font_get_font_face (scaled_font);
-    struct rescaled_font *r = cairo_font_face_get_user_data (user_font, &rescale_font_closure_key);
+				   unsigned long        unicode,
+				   unsigned long       *glyph_index)
+{
+    cairo_font_face_t *user_font;
+    struct rescaled_font *r;
     int num_glyphs;
     cairo_glyph_t *glyphs = NULL;
+    cairo_status_t status;
+    char utf8[7];
 
-    cairo_status_t status = cairo_scaled_font_text_to_glyphs (r->measuring_font, 0, 0,
-					   UNICHAR_TO_UTF8(unicode), -1,
-					   &glyphs, &num_glyphs,
-					   NULL, NULL,
-					   NULL);
+    user_font = cairo_scaled_font_get_font_face (scaled_font);
+
+    unichar_to_utf8 (unicode, utf8);
+    r = cairo_font_face_get_user_data (user_font, &rescale_font_closure_key);
+    status  = cairo_scaled_font_text_to_glyphs (r->measuring_font, 0, 0,
+						utf8, -1,
+						&glyphs, &num_glyphs,
+						NULL, NULL,
+						NULL);
     if (status)
 	return status;
 
@@ -167,8 +168,10 @@ test_scaled_font_unicode_to_glyph (cairo_scaled_font_t *scaled_font,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void rescale_font_closure_destroy (void *data) {
+static void rescale_font_closure_destroy (void *data)
+{
     struct rescaled_font *r = data;
+
     cairo_scaled_font_destroy (r->measuring_font);
     free (r->desired_width);
     free (r->rescale_factor);
@@ -176,11 +179,14 @@ static void rescale_font_closure_destroy (void *data) {
 }
 
 static cairo_font_face_t *
-create_rescaled_font (cairo_font_face_t *substitute_font, int glyph_start, int glyph_count, double *desired_width)
+create_rescaled_font (cairo_font_face_t *substitute_font,
+		      int glyph_start,
+		      int glyph_count,
+		      double *desired_width)
 {
-    cairo_font_face_t *user_font_face = NULL;
-    struct rescaled_font *r = xmalloc (sizeof(struct rescaled_font));
-    cairo_font_options_t *options = cairo_font_options_create ();
+    cairo_font_face_t *user_font_face;
+    struct rescaled_font *r;
+    cairo_font_options_t *options;
     cairo_matrix_t m;
     unsigned long i;
 
@@ -188,31 +194,35 @@ create_rescaled_font (cairo_font_face_t *substitute_font, int glyph_start, int g
     cairo_user_font_face_set_render_glyph_func (user_font_face, test_scaled_font_render_glyph);
     cairo_user_font_face_set_unicode_to_glyph_func (user_font_face, test_scaled_font_unicode_to_glyph);
 
+    r = xmalloc (sizeof (struct rescaled_font));
     r->substitute_font = substitute_font;
 
     /* we don't want any hinting when doing the measuring */
+    options = cairo_font_options_create ();
     cairo_font_options_set_hint_style (options, CAIRO_HINT_STYLE_NONE);
     cairo_font_options_set_hint_metrics (options, CAIRO_HINT_METRICS_OFF);
 
     cairo_matrix_init_identity (&m);
 
-    r->measuring_font = cairo_scaled_font_create (r->substitute_font, &m, &m, options);
+    r->measuring_font = cairo_scaled_font_create (r->substitute_font,
+						  &m, &m,
+						  options);
+    cairo_font_options_destroy (options);
+
 
     r->start = glyph_start;
     r->glyph_count = glyph_count;
-    r->desired_width = xcalloc (sizeof(double), r->glyph_count);
-    r->rescale_factor = xcalloc (sizeof(double), r->glyph_count);
+    r->desired_width = xcalloc (sizeof (double), r->glyph_count);
+    r->rescale_factor = xcalloc (sizeof (double), r->glyph_count);
 
-    for (i=0; i<r->glyph_count; i++) {
+    for (i = 0; i < r->glyph_count; i++) {
 	r->desired_width[i] = desired_width[i];
 	/* use NaN to specify unset */
 	r->rescale_factor[i] = strtod ("NaN", NULL);
     }
 
-    cairo_font_options_destroy (options);
-
     cairo_font_face_set_user_data (user_font_face, &rescale_font_closure_key,
-	    r, rescale_font_closure_destroy);
+				   r, rescale_font_closure_destroy);
 
     return user_font_face;
 }
@@ -220,9 +230,11 @@ create_rescaled_font (cairo_font_face_t *substitute_font, int glyph_start, int g
 
 
 static cairo_font_face_t *
-get_user_font_face (cairo_font_face_t *substitute_font, const char *text, cairo_font_face_t *old)
+get_user_font_face (cairo_font_face_t *substitute_font,
+		    const char *text,
+		    cairo_font_face_t *old)
 {
-    cairo_font_options_t *options = cairo_font_options_create ();
+    cairo_font_options_t *options;
     cairo_matrix_t m;
     cairo_scaled_font_t *measure;
     int i;
@@ -235,6 +247,7 @@ get_user_font_face (cairo_font_face_t *substitute_font, const char *text, cairo_
     cairo_glyph_t *glyphs = NULL;
 
     /* we don't want any hinting when doing the measuring */
+    options = cairo_font_options_create ();
     cairo_font_options_set_hint_style (options, CAIRO_HINT_STYLE_NONE);
     cairo_font_options_set_hint_metrics (options, CAIRO_HINT_METRICS_OFF);
 
@@ -242,10 +255,10 @@ get_user_font_face (cairo_font_face_t *substitute_font, const char *text, cairo_
     measure = cairo_scaled_font_create (old, &m, &m, options);
 
     cairo_scaled_font_text_to_glyphs (measure, 0, 0,
-					   text, -1,
-					   &glyphs, &num_glyphs,
-					   NULL, NULL,
-					   NULL);
+				      text, -1,
+				      &glyphs, &num_glyphs,
+				      NULL, NULL,
+				      NULL);
 
     /* find the glyph range the text covers */
     max_index = glyphs[0].index;
@@ -288,7 +301,10 @@ draw (cairo_t *cr, int width, int height)
     cairo_set_source_rgb (cr, 1, 1, 1);
     cairo_paint (cr);
 
-    cairo_select_font_face (cr, "Bitstream Vera Sans", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_select_font_face (cr,
+			    "Bitstream Vera Sans",
+			    CAIRO_FONT_SLANT_NORMAL,
+			    CAIRO_FONT_WEIGHT_NORMAL);
 
     cairo_set_font_size (cr, TEXT_SIZE);
 
@@ -301,7 +317,10 @@ draw (cairo_t *cr, int width, int height)
 
     /* same text in 'mono' with widths that match the 'sans' version */
     old = cairo_get_font_face (cr);
-    cairo_select_font_face (cr, "Bitstream Vera Sans Mono", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_select_font_face (cr,
+			    "Bitstream Vera Sans Mono",
+			    CAIRO_FONT_SLANT_NORMAL,
+			    CAIRO_FONT_WEIGHT_NORMAL);
     rescaled = get_user_font_face (cairo_get_font_face (cr), text, old);
     cairo_set_font_face (cr, rescaled);
 
@@ -312,7 +331,10 @@ draw (cairo_t *cr, int width, int height)
     cairo_font_face_destroy (rescaled);
 
     /* mono text */
-    cairo_select_font_face (cr, "Bitstream Vera Sans Mono", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_select_font_face (cr,
+			    "Bitstream Vera Sans Mono",
+			    CAIRO_FONT_SLANT_NORMAL,
+			    CAIRO_FONT_WEIGHT_NORMAL);
 
     cairo_set_source_rgba (cr, 0, 0, 1, 0.5);
     cairo_move_to (cr, BORDER, BORDER + 2*font_extents.height + 4*BORDER + font_extents.ascent);
