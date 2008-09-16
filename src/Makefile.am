@@ -77,7 +77,7 @@ endif
 
 EXTRA_DIST += $(TESTS_SH) check-has-hidden-symbols.c
 check_PROGRAMS += check-link
-check_link_LDADD = libcairo.la
+check_link_LDADD = libcairo.la $(CAIRO_LIBS)
 
 
 # The pre-processed result is used by check-{def,plt}.sh to determine whether
