@@ -85,23 +85,4 @@ check_link_LDADD = libcairo.la
 .c.i: $(cairoinclude_HEADERS) $(nodist_cairoinclude_HEADERS) cairoint.h $(top_builddir)/config.h
 	$(CPP) -DHAVE_CONFIG_H -I$(top_builddir) -I. $(AM_CPPFLAGS) $< -o $@
 
-SPARSE = sparse
-sparse:
-	@status=true; for f in $(enabled_cairo_sources); do \
-		echo sparse $$f; \
-		$(SPARSE) -I$(top_builddir) $(AM_CPPFLAGS) -DHAVE_CONFIG_H $$f || status=false; \
-	done; $$status
-
-SPLINT = splint -badflag
-splint:
-	@status=true; for f in $(enabled_cairo_sources); do \
-		test "$$f" = "`echo "$$f" | sed 's/[.]h$$//'`" || continue; \
-		echo sparse $$f; \
-		$(SPLINT) -I$(top_builddir) $(AM_CPPFLAGS) -DHAVE_CONFIG_H $$f || status=false; \
-	done; $$status
-
-UNO = uno
-uno:
-	@cpp_flags=`echo $(AM_CPPFLAGS) | sed 's/\(-I.*\) /\1 /g'`; \
-	files=`echo $(enabled_cairo_sources) | sed 's/[^ ]*\.h//g'`; \
-	$(UNO) -I$(top_builddir) $$cpp_flags -DHAVE_CONFIG_H -U__GNUC__ $$files
+include $(srcdir)/Makefile.am.analysis
