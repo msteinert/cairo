@@ -158,10 +158,6 @@ text-antialias-gray$(EXEEXT)				\
 text-antialias-none$(EXEEXT)				\
 text-antialias-subpixel$(EXEEXT)			\
 text-cache-crash$(EXEEXT)				\
-text-lcd-filter-fir3$(EXEEXT)				\
-text-lcd-filter-fir5$(EXEEXT)				\
-text-lcd-filter-intra-pixel$(EXEEXT)			\
-text-lcd-filter-none$(EXEEXT)				\
 text-pattern$(EXEEXT)					\
 text-rotate$(EXEEXT)					\
 text-transform$(EXEEXT)					\
@@ -703,10 +699,6 @@ REFERENCE_IMAGES = \
 	text-antialias-subpixel-quartz-ref.png	\
 	text-glyph-range-ref.png	\
 	text-glyph-range-rgb24-ref.png	\
-	text-lcd-filter-fir3-ref.png \
-	text-lcd-filter-fir5-ref.png \
-	text-lcd-filter-intra-pixel-ref.png \
-	text-lcd-filter-none-ref.png \
 	text-pattern-ps-argb32-ref.png	\
 	text-pattern-ps-rgb24-ref.png	\
 	text-pattern-ref.png	\
