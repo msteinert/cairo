@@ -883,6 +883,7 @@ if BUILD_ANY2PPM
 check_PROGRAMS += any2ppm
 any2ppm_CFLAGS = $(POPPLER_CFLAGS) $(LIBRSVG_CFLAGS)
 # add LDADD, so poppler/librsvg uses "our" cairo
+any2ppm_LDFLAGS = $(CAIRO_TEST_UNDEFINED_LDFLAGS)
 any2ppm_LDADD  = $(LDADD) $(POPPLER_LIBS) $(LIBRSVG_LIBS)
 endif
 
@@ -890,6 +891,7 @@ if CAIRO_CAN_TEST_PDF_SURFACE
 check_PROGRAMS += pdf2png
 pdf2png_CFLAGS = $(POPPLER_CFLAGS)
 # add LDADD, so poppler uses "our" cairo
+pdf2png_LDFLAGS = $(CAIRO_TEST_UNDEFINED_LDFLAGS)
 pdf2png_LDADD  = $(LDADD) $(POPPLER_LIBS)
 endif
 
@@ -897,6 +899,7 @@ if CAIRO_CAN_TEST_SVG_SURFACE
 check_PROGRAMS += svg2png
 svg2png_CFLAGS = $(LIBRSVG_CFLAGS)
 # add LDADD, so librsvg uses "our" cairo
+svg2png_LDFLAGS = $(CAIRO_TEST_UNDEFINED_LDFLAGS)
 svg2png_LDADD  = $(LDADD) $(LIBRSVG_LIBS)
 endif
 
