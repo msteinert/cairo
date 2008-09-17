@@ -870,8 +870,8 @@ _cairo_scaled_font_subsets_foreach_scaled (cairo_scaled_font_subsets_t		    *fon
     return _cairo_scaled_font_subsets_foreach_internal (font_subsets,
                                                         font_subset_callback,
                                                         closure,
-                                                        FALSE,
-                                                        TRUE);
+                                                        TRUE,
+                                                        FALSE);
 }
 
 cairo_status_t
