@@ -1479,7 +1479,7 @@ _gradient_pattern_supported (cairo_ps_surface_t    *surface,
     cairo_gradient_pattern_t *gradient = (cairo_gradient_pattern_t *) pattern;
     uint16_t alpha;
     cairo_extend_t extend;
-    int i;
+    unsigned int i;
 
     if (surface->ps_level == CAIRO_PS_LEVEL_2)
 	return FALSE;
