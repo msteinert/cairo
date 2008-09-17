@@ -1042,28 +1042,6 @@ typedef enum _cairo_subpixel_order {
 } cairo_subpixel_order_t;
 
 /**
- * cairo_lcd_filter_t:
- * @CAIRO_LCD_FILTER_DEFAULT: Use the default LCD filter for
- *   font backend and target device
- * @CAIRO_LCD_FILTER_NONE: Do not perform LCD filtering
- * @CAIRO_LCD_FILTER_INTRA_PIXEL: Intra-pixel filter
- * @CAIRO_LCD_FILTER_FIR3: FIR filter with a 3x3 kernel
- * @CAIRO_LCD_FILTER_FIR5: FIR filter with a 5x5 kernel
- *
- * The LCD filter specifies the low-pass filter applied to LCD-optimized
- * bitmaps generated with an antialiasing mode of %CAIRO_ANTIALIAS_SUBPIXEL.
- *
- * Since: 1.8
- **/
-typedef enum _cairo_lcd_filter {
-    CAIRO_LCD_FILTER_DEFAULT,
-    CAIRO_LCD_FILTER_NONE,
-    CAIRO_LCD_FILTER_INTRA_PIXEL,
-    CAIRO_LCD_FILTER_FIR3,
-    CAIRO_LCD_FILTER_FIR5
-} cairo_lcd_filter_t;
-
-/**
  * cairo_hint_style_t:
  * @CAIRO_HINT_STYLE_DEFAULT: Use the default hint style for
  *   font backend and target device
@@ -1167,12 +1145,6 @@ cairo_font_options_set_subpixel_order (cairo_font_options_t   *options,
 				       cairo_subpixel_order_t  subpixel_order);
 cairo_public cairo_subpixel_order_t
 cairo_font_options_get_subpixel_order (const cairo_font_options_t *options);
-
-cairo_public void
-cairo_font_options_set_lcd_filter (cairo_font_options_t   *options,
-				   cairo_lcd_filter_t  lcd_filter);
-cairo_public cairo_lcd_filter_t
-cairo_font_options_get_lcd_filter (const cairo_font_options_t *options);
 
 cairo_public void
 cairo_font_options_set_hint_style (cairo_font_options_t *options,

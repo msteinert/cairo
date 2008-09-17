@@ -57,7 +57,6 @@ draw (cairo_t *cr, int width, int height)
     cairo_get_font_options (cr, font_options);
     cairo_font_options_set_antialias (font_options, CAIRO_ANTIALIAS_SUBPIXEL);
     cairo_font_options_set_subpixel_order (font_options, CAIRO_SUBPIXEL_ORDER_RGB);
-    cairo_font_options_set_lcd_filter (font_options, CAIRO_LCD_FILTER_NONE);
     cairo_set_font_options (cr, font_options);
 
     cairo_font_options_destroy (font_options);
