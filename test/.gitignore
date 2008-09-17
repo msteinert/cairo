@@ -128,6 +128,8 @@ multi-page.pdf
 multi-page.ps
 new-sub-path
 nil-surface
+operator
+operator-alpha
 operator-clear
 operator-source
 over-above-source

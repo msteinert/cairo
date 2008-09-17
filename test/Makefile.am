@@ -101,6 +101,8 @@ miter-precision$(EXEEXT)				\
 move-to-show-surface$(EXEEXT)				\
 new-sub-path$(EXEEXT)					\
 nil-surface$(EXEEXT)					\
+operator$(EXEEXT)					\
+operator-alpha$(EXEEXT)					\
 operator-clear$(EXEEXT)					\
 operator-source$(EXEEXT)				\
 over-above-source$(EXEEXT)				\
@@ -539,6 +541,10 @@ REFERENCE_IMAGES = \
 	new-sub-path-rgb24-ref.png	\
 	nil-surface-ref.png	\
 	nil-surface-rgb24-ref.png	\
+	operator-ref.png	\
+	operator-rgb24-ref.png	\
+	operator-alpha-ref.png	\
+	operator-alpha-rgb24-ref.png	\
 	operator-clear-quartz-ref.png	\
 	operator-clear-quartz-rgb24-ref.png	\
 	operator-clear-ref.png	\
