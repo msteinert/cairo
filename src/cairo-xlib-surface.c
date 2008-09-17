@@ -1267,25 +1267,18 @@ _cairo_xlib_surface_set_matrix (cairo_xlib_surface_t *surface,
 
     if (!surface->src_picture)
 	return CAIRO_STATUS_SUCCESS;
-
-    xtransform.matrix[0][0] = _cairo_fixed_16_16_from_double (matrix->xx);
-    xtransform.matrix[0][1] = _cairo_fixed_16_16_from_double (matrix->xy);
-    xtransform.matrix[0][2] = _cairo_fixed_16_16_from_double (matrix->x0);
-
-    xtransform.matrix[1][0] = _cairo_fixed_16_16_from_double (matrix->yx);
-    xtransform.matrix[1][1] = _cairo_fixed_16_16_from_double (matrix->yy);
-    xtransform.matrix[1][2] = _cairo_fixed_16_16_from_double (matrix->y0);
-
-    xtransform.matrix[2][0] = 0;
-    xtransform.matrix[2][1] = 0;
-    xtransform.matrix[2][2] = 1 << 16;
+    
+    /* Casting between pixman_transform_t and XTransform is safe because
+     * they happen to be the exact same type.
+     */
+    _cairo_matrix_to_pixman_matrix (matrix, (pixman_transform_t *)&xtransform);
 
     if (memcmp (&xtransform, &surface->xtransform, sizeof (XTransform)) == 0)
 	return CAIRO_STATUS_SUCCESS;
 
     if (!CAIRO_SURFACE_RENDER_HAS_PICTURE_TRANSFORM (surface))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
-
+    
     XRenderSetPictureTransform (surface->dpy, surface->src_picture, &xtransform);
     surface->xtransform = xtransform;
 
