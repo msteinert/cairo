@@ -53,4 +53,4 @@ TESTS += check-link$(EXEEXT)
 endif
 
 check_PROGRAMS += check-link
-check_link_LDADD = libcairoboilerplate.la $(CAIRO_LIBS)
+check_link_LDADD = libcairoboilerplate.la
