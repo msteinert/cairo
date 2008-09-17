@@ -752,7 +752,14 @@ _cairo_svg_document_emit_font_subsets (cairo_svg_document_t *document)
     status = _cairo_scaled_font_subsets_foreach_scaled (document->font_subsets,
                                                         _cairo_svg_document_emit_font_subset,
                                                         document);
+    if (status)
+	goto FAIL;
 
+    status = _cairo_scaled_font_subsets_foreach_user (document->font_subsets,
+						      _cairo_svg_document_emit_font_subset,
+						      document);
+
+  FAIL:
     _cairo_scaled_font_subsets_destroy (document->font_subsets);
     document->font_subsets = NULL;
 
