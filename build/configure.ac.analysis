@@ -69,8 +69,10 @@ dnl  PHP_ADD_MAKEFILE_FRAGMENT($abs_srcdir/Makefile.gcov, $abs_srcdir)
   changequote([,])
 
   dnl Add the special gcc flags
-  CAIRO_CFLAGS="$CAIRO_CFLAGS -O0 -fprofile-arcs -ftest-coverage"
-  CAIRO_LIBS="$CAIRO_LIBS -lgcov"
+  dnl In order to workaround a debian bug in libtool where they strip
+  dnl $dependency_libs from the link line and CFLAGS, we need to pass
+  dnl --coverage via LDFLAGS.
+  CAIRO_CC_TRY_FLAG([--coverage], [CAIRO_CFLAGS="$CAIRO_CFLAGS -O0 --coverage"])
 fi
 AM_CONDITIONAL(CAIRO_HAS_LCOV, test "x$cairo_has_lcov" = "xyes")
 
