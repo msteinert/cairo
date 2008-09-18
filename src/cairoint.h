@@ -2084,20 +2084,18 @@ _cairo_polygon_init (cairo_polygon_t *polygon);
 cairo_private void
 _cairo_polygon_fini (cairo_polygon_t *polygon);
 
-cairo_private cairo_status_t
-_cairo_polygon_status (cairo_polygon_t *polygon);
+cairo_private void
+_cairo_polygon_move_to (cairo_polygon_t *polygon,
+			const cairo_point_t *point);
 
 cairo_private void
-_cairo_polygon_add_edge (cairo_polygon_t *polygon, cairo_point_t *p1, cairo_point_t *p2);
-
-cairo_private void
-_cairo_polygon_move_to (cairo_polygon_t *polygon, cairo_point_t *point);
-
-cairo_private void
-_cairo_polygon_line_to (cairo_polygon_t *polygon, cairo_point_t *point);
+_cairo_polygon_line_to (cairo_polygon_t *polygon,
+			const cairo_point_t *point);
 
 cairo_private void
 _cairo_polygon_close (cairo_polygon_t *polygon);
+
+#define _cairo_polygon_status(P) (P)->status
 
 /* cairo-spline.c */
 cairo_private cairo_int_status_t
