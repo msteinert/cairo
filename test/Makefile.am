@@ -740,6 +740,7 @@ REFERENCE_IMAGES = \
 	user-font-proxy-ps-ref.png	\
 	user-font-proxy-svg-ref.png	\
 	user-font-rescale-ref.png	\
+	user-font-rescale-ps-ref.png	\
 	unbounded-operator-quartz-ref.png	\
 	unbounded-operator-quartz-rgb24-ref.png	\
 	xlib-expose-event-ref.png \
