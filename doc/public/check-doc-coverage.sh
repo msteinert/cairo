@@ -11,6 +11,9 @@ if test -z "$DOC_MODULE"; then
 	fi
 fi
 
+if test -n "$REPORT_FILES"; then
+	$MAKE $REPORT_FILES || exit 1
+fi
 
 test -z "$srcdir" && srcdir=.
 stat=0

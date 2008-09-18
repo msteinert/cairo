@@ -50,11 +50,13 @@ include $(top_srcdir)/build/Makefile.am.gtk-doc
 
 dist-hook: doc
 
+# This line really belongs in gtk-doc.mk
+$(REPORT_FILES): sgml-build.stamp
+
 if ENABLE_GTK_DOC
-check: doc
 TESTS += check-doc-coverage.sh
 endif
 
 TESTS += check-doc-syntax.sh
 EXTRA_DIST += check-doc-coverage.sh check-doc-syntax.sh
-TESTS_ENVIRONMENT = srcdir="$(srcdir)" top_srcdir="$(top_srcdir)" MAKE="$(MAKE) $(AM_MAKEFLAGS)"
+TESTS_ENVIRONMENT = srcdir="$(srcdir)" top_srcdir="$(top_srcdir)" MAKE="$(MAKE) $(AM_MAKEFLAGS)" DOC_MODULE="$(DOC_MODULE)" REPORT_FILES="$(REPORT_FILES)"
