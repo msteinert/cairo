@@ -1,13 +1,89 @@
-Release 1.7.4 (2008-08-11 Behdad Esfahbod <behdad@behdad.org>)
-==============================================================
+Snapshot 1.7.6 (2008-09-17 Carl Worth <cworth@cworth.org>)
+==========================================================
+The cairo community is happy to announce the 1.7.6 snapshot of the
+cairo graphics library. This is a "release candidate" for the upcoming
+1.8.0 release, so we will greatly appreciate any reports of problems
+in this release, and no major changes are currently planned before
+1.8.
+
+Notable changes in 1.7.6
+------------------------
+The largest number of changes since 1.7.4 did not change the
+implementation of cairo itself, but instead revamped cairo's build
+system. The primary goal of the revamp is to make the build system
+less fragile, (particularly for non-Linux platforms). For example, now
+people building on win32 will no longer need to maintain a
+platform-specific list of files to be built. Also, the .so file will
+now be installed with a different naming scheme, (for example, 1.7.6
+will install with a .10706 suffix). Much thanks, Behdad!
+
+And, as usual, Chris Wilson has made another large round of robustness
+improvements, (eliminating dead code, fixing propagation of error
+status values, test suite improvements, etc. etc.). Thanks as always,
+Chris!
+
+API changes since 1.7.4
+-----------------------
+There have been a few changes of API that was new during the 1.7
+series:
+
+* Remove cairo_font_options_set_lcd_filter
+   and cairo_font_options_get_lcd_filter
+
+  Motivation: At the Cairo Summit, this API was determined to be too
+	specific to the freetype font backend to be in the general
+	API. A similar API with a cairo_ft prefix might be introduced
+	in the future. Note that cairo will still respect the
+	corresponding Xsettting for these options.
+
+* Replace cairo_has_show_glyphs
+     with cairo_surface_has_show_glyphs
+
+  Motivation: This really is a surface-specific interface, and the
+	convenience function on the cairo_t is not obviously
+	necessary. An application can easily call:
+
+	cairo_surface_has_show_glyphs (cairo_get_target (cr));
+
+	as needed.
+
+* Add cairo_text_cluster_flags_t
+   to cairo_show_text_glyphs
+      cairo_scaled_font_text_to_glyphs
+      cairo_user_scaled_font_text_to_glyphs_func_t
+
+  Motivation: This flag, (and specifically the
+	CAIRO_TEXT_CLUSTER_FLAG_BACKWARD value), replaces the
+	cairo_bool_t backward argument in each of the above
+	interfaces. This leads to more readable user code, and also
+	allows future extensibility.
+
+As always, there are no changes to any API from any major cairo
+release, (1.0.x, 1.2.x, 1.4.x, 1.6.x). Cairo maintains the same
+compatibility promise it always has.
+
+Bug fixes since 1.7.4
+---------------------
+xlib: Faster bookkeeping (Karl Tomlinson)
+	https://bugzilla.mozilla.org/show_bug.cgi?id=453199#c5
+
+PS: Fix gradients with non-constant alpha (Chris Wilson)
+
+Fix deadlock in user-font code (Richard Hughes and Behdad Esfahbod)
+	http://bugs.freedesktop.org/show_bug.cgi?id=16819
+
+Several other minor fixes.
+
+Snapshot 1.7.4 (2008-08-11 Behdad Esfahbod <behdad@behdad.org>)
+===============================================================
 The cairo community is embarrassed to announce availability of the 1.7.4
 snapshot of the cairo graphics library.  This is a followup release to the
 1.7.2 snapshot to ship a tarball that can actually be built.  The only
 change since 1.7.4 is including the missing header file
 cairo-user-font-private.h in the distribution.
 
-Release 1.7.2 (2008-08-11 Behdad Esfahbod <behdad@behdad.org>)
-==============================================================
+Snapshot 1.7.2 (2008-08-11 Behdad Esfahbod <behdad@behdad.org>)
+===============================================================
 The cairo community is finally ready to announce availability of the 1.7.2
 snapshot of the cairo graphics library.  This is embarrissingly the first
 snapshot in the 1.7 unstable series of cairo, leading to the eventual release
