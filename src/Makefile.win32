@@ -11,10 +11,6 @@ SOURCES = \
 
 STATIC_SOURCES = cairo-win32-surface.c 
 
-cairo_headers = \
-	$(enabled_cairo_headers) \
-	$(NULL)
-
 OBJECTS = $(patsubst %.c, $(CFG)/%.obj, $(SOURCES))
 SHARED_OBJECTS = $(patsubst %.c, $(CFG)/%.obj, $(STATIC_SOURCES))
 STATIC_OBJECTS = $(patsubst %.c, $(CFG)/%-static.obj, $(STATIC_SOURCES))
