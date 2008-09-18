@@ -95,14 +95,14 @@ test_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 }
 
 static cairo_status_t
-test_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
-				 const char	       *utf8,
-				 int		        utf8_len,
-				 cairo_glyph_t	      **glyphs,
-				 int		       *num_glyphs,
-				 cairo_text_cluster_t **clusters,
-				 int		       *num_clusters,
-				 cairo_bool_t	       *backward)
+test_scaled_font_text_to_glyphs (cairo_scaled_font_t        *scaled_font,
+				 const char	            *utf8,
+				 int		             utf8_len,
+				 cairo_glyph_t	           **glyphs,
+				 int		            *num_glyphs,
+				 cairo_text_cluster_t      **clusters,
+				 int		            *num_clusters,
+				 cairo_text_cluster_flags_t *cluster_flags)
 {
   cairo_scaled_font_t *fallback_scaled_font;
 
@@ -112,8 +112,7 @@ test_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
   return cairo_scaled_font_text_to_glyphs (fallback_scaled_font, 0, 0,
 					   utf8, utf8_len,
 					   glyphs, num_glyphs,
-					   clusters, num_clusters,
-					   backward);
+					   clusters, num_clusters, cluster_flags);
 }
 
 static cairo_font_face_t *user_font_face = NULL;

@@ -157,8 +157,7 @@ test_scaled_font_unicode_to_glyph (cairo_scaled_font_t *scaled_font,
     status  = cairo_scaled_font_text_to_glyphs (r->measuring_font, 0, 0,
 						utf8, -1,
 						&glyphs, &num_glyphs,
-						NULL, NULL,
-						NULL);
+						NULL, NULL, NULL);
     if (status)
 	return status;
 
@@ -257,8 +256,7 @@ get_user_font_face (cairo_font_face_t *substitute_font,
     cairo_scaled_font_text_to_glyphs (measure, 0, 0,
 				      text, -1,
 				      &glyphs, &num_glyphs,
-				      NULL, NULL,
-				      NULL);
+				      NULL, NULL, NULL);
 
     /* find the glyph range the text covers */
     max_index = glyphs[0].index;
