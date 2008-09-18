@@ -34,7 +34,7 @@ series:
 	specific to the freetype font backend to be in the general
 	API. A similar API with a cairo_ft prefix might be introduced
 	in the future. Note that cairo will still respect the
-	corresponding Xsettting for these options.
+	corresponding fontconfig settings for these options.
 
 * Replace cairo_has_show_glyphs
      with cairo_surface_has_show_glyphs
