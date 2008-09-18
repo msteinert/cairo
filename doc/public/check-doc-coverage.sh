@@ -16,7 +16,7 @@ test -z "$srcdir" && srcdir=.
 stat=0
 
 if test -f "$DOC_MODULE-undeclared.txt"; then
-	undeclared=`cat "$DOC_MODULE-unused.txt"`
+	undeclared=`cat "$DOC_MODULE-undeclared.txt"`
 	if test -n "$undeclared"; then
 		echo Undeclared documentation symbols: 1>&2
 		cat "$DOC_MODULE-undeclared.txt" 1>&2
