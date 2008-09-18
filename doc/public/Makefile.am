@@ -14,8 +14,8 @@ SCAN_OPTIONS=--deprecated-guards="CAIRO_DISABLE_DEPRECATED" --ignore-decorators=
 DOC_SOURCE_DIR=../../src
 
 # Used for dependencies
-HFILE_GLOB=$(top_srcdir)/src/cairo-*.h
-CFILE_GLOB=$(top_srcdir)/src/cairo-*.c
+HFILE_GLOB=$(top_srcdir)/src/cairo*.h
+CFILE_GLOB=$(top_srcdir)/src/cairo*.c
 
 # Headers to ignore
 IGNORE_HFILES= \
