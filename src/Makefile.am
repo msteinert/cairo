@@ -60,7 +60,13 @@ TESTS_ENVIRONMENT = \
 	srcdir="$(srcdir)" \
 	MAKE="$(MAKE) $(AM_MAKEFLAGS)" \
 	all_cairo_files="$(all_cairo_files)" \
+	all_cairo_headers="$(all_cairo_headers)" \
+	all_cairo_private="$(all_cairo_private)" \
+	all_cairo_sources="$(all_cairo_sources)" \
 	enabled_cairo_files="$(enabled_cairo_files)" \
+	enabled_cairo_headers="$(enabled_cairo_headers)" \
+	enabled_cairo_private="$(enabled_cairo_private)" \
+	enabled_cairo_sources="$(enabled_cairo_sources)" \
 	$(NULL)
 TESTS_SH = \
 	check-def.sh \

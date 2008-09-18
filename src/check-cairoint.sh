@@ -7,8 +7,13 @@ stat=0
 
 echo 'Checking source files for missing or misplaced #include "cairoint.h"'
 
-find "$srcdir" \( -name '*.c' -or -name '*.cpp' \) -and ! \( -name 'check-*.c' -or -name 'lt-check-*.c' \) |
-while read x; do
+cd "$srcdir"
+FILES=$all_cairo_sources
+if test "x$FILES" = x; then
+	FILES=`find . -name 'cairo*.c' -or -name 'cairo*.cpp'`
+fi
+
+for x in $FILES; do
 	grep '\<include\>' "$x" /dev/null | head -n 1
 done |
 grep -v '"cairoint.h"' |
