@@ -50,13 +50,6 @@
 #include "config.h"
 #endif
 
-/* We use our own macros */
-#undef PACKAGE
-#undef PACKAGE_NAME
-#undef PACKAGE_STRING
-#undef PACKAGE_TARNAME
-#undef PACKAGE_VERSION
-
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
