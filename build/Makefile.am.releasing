@@ -75,15 +75,17 @@ release-remove-old:
 	$(RM) $(tar_file) $(sha1_file) $(gpg_file)
 
 
+# Strict ordering enforced for parallel make to work
 release-check: \
+	release-verify-even-micro \
 	release-verify-sane-changelogs \
 	release-verify-sane-tests \
-	release-verify-even-micro \
 	release-verify-newer \
-	release-remove-old \
-	distcheck
+	$(NULL)
+	$(MAKE) $(AM_MAKEFLAGS) release-remove-old
+	$(MAKE) $(AM_MAKEFLAGS) distcheck
 
-release-upload: release-check $(tar_file) $(sha1_file) $(gpg_file)
+release-upload: $(tar_file) $(sha1_file) $(gpg_file)
 	mkdir -p releases
 	scp $(tar_file) $(sha1_file) $(gpg_file) $(RELEASE_UPLOAD_HOST):$(RELEASE_UPLOAD_DIR)
 	mv $(tar_file) $(sha1_file) $(gpg_file) releases
@@ -125,7 +127,10 @@ release-publish-message: releases/$(sha1_file)
 	@echo ""
 	@echo "============================== CUT HERE =============================="
 
-release-publish: release-upload release-publish-message
+# Strict ordering enforced for parallel make to work
+release-publish: release-check
+	$(MAKE) $(AM_MAKEFLAGS) release-upload
+	$(MAKE) $(AM_MAKEFLAGS) release-publish-message
 
 doc-publish: doc
 	rm -rf ./$(MANUAL_DATED)
@@ -157,5 +162,16 @@ zips: $(runtime_zip_file) $(developer_zip_file)
 endif
 
 
-.PHONY: release-verify-even-micro release-verify-newer release-remove-old release-cleanup-group-sticky release-check release-upload release-publish docs-publish
-
+.PHONY: \
+	dist-clear-sticky-bits \
+	docs-publish \
+	release-check \
+	release-publish \
+	release-publish-message \
+	release-remove-old \
+	release-upload \
+	release-verify-even-micro \
+	release-verify-newer \
+	release-verify-sane-changelogs \
+	release-verify-sane-tests \
+	$(NULL)
