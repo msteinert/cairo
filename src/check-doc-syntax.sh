@@ -14,12 +14,14 @@ stat=0
 
 echo Checking documentation for incorrect syntax
 
+cd "$srcdir"
+
 # Note: this test is also run from doc/public/ to check the SGML files
 
 if test "x$SGML_DOCS" = x; then
     FILES=$all_cairo_files
     if test "x$FILES" = x; then
-        FILES=`find "$srcdir" -name '*.h' -or -name '*.c' -or -name '*.cpp'`
+        FILES=`find . -name 'cairo*.h' -or -name 'cairo*.c' -or -name 'cairo*.cpp'`
     fi
 fi
 
