@@ -1,8 +1,13 @@
 dnl -*- mode: autoconf -*-
 
 dnl [m4_newline] didn't appear until autoconf 2.62
-m4_ifdef([m4_newline],,m4_define([m4_newline],[
-]))
+m4_ifdef([m4_newline],,[m4_define([m4_newline],[
+])])
+
+dnl [m4_foreach_w] wasn't available in 2.59
+m4_ifdef([m4_foreach_w],,[m4_define([m4_foreach_w],
+[m4_foreach([$1], m4_split(m4_normalize([$2]), [ ]), [$3])])])
+
 
 dnl ==========================================================================
 
