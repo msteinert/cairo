@@ -271,16 +271,16 @@ _cairo_user_ucs4_to_index (void	    *abstract_font,
 }
 
 static cairo_int_status_t
-_cairo_user_text_to_glyphs (void		 *abstract_font,
-			    double		  x,
-			    double		  y,
-			    const char		 *utf8,
-			    int			  utf8_len,
-			    cairo_glyph_t	**glyphs,
-			    int			  *num_glyphs,
-			    cairo_text_cluster_t **clusters,
-			    int			  *num_clusters,
-			    cairo_bool_t	  *backward)
+_cairo_user_text_to_glyphs (void		      *abstract_font,
+			    double		       x,
+			    double		       y,
+			    const char		      *utf8,
+			    int			       utf8_len,
+			    cairo_glyph_t	     **glyphs,
+			    int			       *num_glyphs,
+			    cairo_text_cluster_t      **clusters,
+			    int			       *num_clusters,
+			    cairo_text_cluster_flags_t *cluster_flags)
 {
     cairo_int_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -295,8 +295,7 @@ _cairo_user_text_to_glyphs (void		 *abstract_font,
 	status = face->scaled_font_methods.text_to_glyphs (&scaled_font->base,
 							   utf8, utf8_len,
 							   glyphs, num_glyphs,
-							   clusters, num_clusters,
-							   backward);
+							   clusters, num_clusters, cluster_flags);
 
 	if (status != CAIRO_STATUS_SUCCESS)
 	    return status;

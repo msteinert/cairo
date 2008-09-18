@@ -418,7 +418,7 @@ _cairo_meta_surface_show_text_glyphs (void			    *abstract_surface,
 				      int			     num_glyphs,
 				      const cairo_text_cluster_t    *clusters,
 				      int			     num_clusters,
-				      cairo_bool_t		     backward,
+				      cairo_text_cluster_flags_t     cluster_flags,
 				      cairo_scaled_font_t	    *scaled_font)
 {
     cairo_status_t status;
@@ -469,7 +469,7 @@ _cairo_meta_surface_show_text_glyphs (void			    *abstract_surface,
 	memcpy (command->clusters, clusters, sizeof (clusters[0]) * num_clusters);
     }
 
-    command->backward = backward;
+    command->cluster_flags = cluster_flags;
 
     command->scaled_font = cairo_scaled_font_reference (scaled_font);
 
@@ -926,7 +926,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 							 command->show_text_glyphs.utf8, command->show_text_glyphs.utf8_len,
 							 dev_glyphs, num_glyphs,
 							 command->show_text_glyphs.clusters, command->show_text_glyphs.num_clusters,
-							 command->show_text_glyphs.backward,
+							 command->show_text_glyphs.cluster_flags,
 							 command->show_text_glyphs.scaled_font);
 
 	    free (dev_glyphs);

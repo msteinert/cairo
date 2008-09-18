@@ -2217,7 +2217,7 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 				 int			     num_glyphs,
 				 const cairo_text_cluster_t *clusters,
 				 int			     num_clusters,
-				 cairo_bool_t		     backward,
+				 cairo_text_cluster_flags_t  cluster_flags,
 				 cairo_scaled_font_t	    *scaled_font)
 {
     cairo_status_t status;
@@ -2272,8 +2272,7 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 	    status = surface->backend->show_text_glyphs (surface, op, dev_source,
 							 utf8, utf8_len,
 							 glyphs, num_glyphs,
-							 clusters, num_clusters,
-							 backward,
+							 clusters, num_clusters, cluster_flags,
 							 dev_scaled_font);
 	}
 	if (status == CAIRO_INT_STATUS_UNSUPPORTED && surface->backend->show_glyphs) {
@@ -2311,8 +2310,7 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 	    status = surface->backend->show_text_glyphs (surface, op, dev_source,
 							 utf8, utf8_len,
 							 glyphs, num_glyphs,
-							 clusters, num_clusters,
-							 backward,
+							 clusters, num_clusters, cluster_flags,
 							 dev_scaled_font);
 	}
     }

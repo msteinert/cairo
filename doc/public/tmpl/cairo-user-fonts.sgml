@@ -68,7 +68,7 @@ this feature (1.8 and later).
 @num_glyphs: 
 @clusters: 
 @num_clusters: 
-@backward: 
+@cluster_flags: 
 @Returns: 
 
 

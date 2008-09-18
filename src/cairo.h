@@ -893,6 +893,19 @@ cairo_public void
 cairo_text_cluster_free (cairo_text_cluster_t *clusters);
 
 /**
+ * cairo_text_cluster_flags_t:
+ * @CAIRO_TEXT_CLUSTER_FLAG_BACKWARD: The clusters in the cluster array
+ * map to glyphs in the glyph array from end to start.
+ *
+ * Specifies properties of a text cluster mapping.
+ *
+ * Since: 1.8
+ **/
+typedef enum _cairo_text_cluster_flags {
+    CAIRO_TEXT_CLUSTER_FLAG_BACKWARD = 0x00000001
+} cairo_text_cluster_flags_t;
+
+/**
  * cairo_text_extents_t:
  * @x_bearing: the horizontal distance from the origin to the
  *   leftmost part of the glyphs as drawn. Positive if the
@@ -1231,7 +1244,7 @@ cairo_show_text_glyphs (cairo_t			   *cr,
 			int			    num_glyphs,
 			const cairo_text_cluster_t *clusters,
 			int			    num_clusters,
-			cairo_bool_t		    backward);
+			cairo_text_cluster_flags_t  cluster_flags);
 
 cairo_public void
 cairo_text_path  (cairo_t *cr, const char *utf8);
@@ -1376,16 +1389,16 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 				 cairo_text_extents_t  *extents);
 
 cairo_public cairo_status_t
-cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
-				  double		 x,
-				  double		 y,
-				  const char	        *utf8,
-				  int		         utf8_len,
-				  cairo_glyph_t	       **glyphs,
-				  int		        *num_glyphs,
-				  cairo_text_cluster_t **clusters,
-				  int		        *num_clusters,
-				  cairo_bool_t	        *backward);
+cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t        *scaled_font,
+				  double		      x,
+				  double		      y,
+				  const char	             *utf8,
+				  int		              utf8_len,
+				  cairo_glyph_t	            **glyphs,
+				  int		             *num_glyphs,
+				  cairo_text_cluster_t      **clusters,
+				  int		             *num_clusters,
+				  cairo_text_cluster_flags_t *cluster_flags);
 
 cairo_public cairo_font_face_t *
 cairo_scaled_font_get_font_face (cairo_scaled_font_t *scaled_font);
@@ -1525,7 +1538,8 @@ typedef cairo_status_t (*cairo_user_scaled_font_render_glyph_func_t) (cairo_scal
  * @num_glyphs: pointer to number of glyphs
  * @clusters: pointer to array of cluster mapping information to fill, or %NULL
  * @num_clusters: pointer to number of clusters
- * @backward: pointer to whether the text to glyphs mapping goes backward
+ * @cluster_flags: pointer to location to store cluster flags corresponding to the
+ *                 output @clusters
  *
  * #cairo_user_scaled_font_text_to_glyphs_func_t is the type of function which
  * is called to convert input text to an array of glyphs.  This is used by the
@@ -1551,7 +1565,7 @@ typedef cairo_status_t (*cairo_user_scaled_font_render_glyph_func_t) (cairo_scal
  * If the value @glyphs points at has changed after the call, cairo will
  * free the allocated glyph array using cairo_glyph_free().
  *
- * If @clusters is not %NULL, @num_clusters and @backward are also non-%NULL,
+ * If @clusters is not %NULL, @num_clusters and @cluster_flags are also non-%NULL,
  * and cluster mapping should be computed.
  * The semantics of how cluster array allocation works is similar to the glyph
  * array.  That is,
@@ -1581,14 +1595,14 @@ typedef cairo_status_t (*cairo_user_scaled_font_render_glyph_func_t) (cairo_scal
  *
  * Since: 1.8
  **/
-typedef cairo_status_t (*cairo_user_scaled_font_text_to_glyphs_func_t) (cairo_scaled_font_t   *scaled_font,
-									const char	      *utf8,
-									int		       utf8_len,
-									cairo_glyph_t	     **glyphs,
-									int		      *num_glyphs,
-									cairo_text_cluster_t **clusters,
-									int		      *num_clusters,
-									cairo_bool_t	      *backward);
+typedef cairo_status_t (*cairo_user_scaled_font_text_to_glyphs_func_t) (cairo_scaled_font_t        *scaled_font,
+									const char	           *utf8,
+									int		            utf8_len,
+									cairo_glyph_t	          **glyphs,
+									int		           *num_glyphs,
+									cairo_text_cluster_t      **clusters,
+									int		           *num_clusters,
+									cairo_text_cluster_flags_t *cluster_flags);
 
 /**
  * cairo_user_scaled_font_unicode_to_glyph_func_t:

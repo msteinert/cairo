@@ -431,16 +431,16 @@ struct _cairo_scaled_font_backend {
      * then just converting characters one by one.
      */
     cairo_warn cairo_int_status_t
-    (*text_to_glyphs) (void                  *scaled_font,
-		       double		      x,
-		       double		      y,
-		       const char	     *utf8,
-		       int		      utf8_len,
-		       cairo_glyph_t	    **glyphs,
-		       int		     *num_glyphs,
-		       cairo_text_cluster_t **clusters,
-		       int		     *num_clusters,
-		       cairo_bool_t	     *backward);
+    (*text_to_glyphs) (void                       *scaled_font,
+		       double		           x,
+		       double		           y,
+		       const char	          *utf8,
+		       int		           utf8_len,
+		       cairo_glyph_t	         **glyphs,
+		       int		          *num_glyphs,
+		       cairo_text_cluster_t      **clusters,
+		       int		          *num_clusters,
+		       cairo_text_cluster_flags_t *cluster_flags);
 
     unsigned long
     (*ucs4_to_index)		(void			     *scaled_font,
@@ -792,7 +792,7 @@ struct _cairo_surface_backend {
 				 int			     num_glyphs,
 				 const cairo_text_cluster_t *clusters,
 				 int			     num_clusters,
-				 cairo_bool_t		     backward,
+				 cairo_text_cluster_flags_t  cluster_flags,
 				 cairo_scaled_font_t	    *scaled_font);
 };
 
@@ -1224,16 +1224,16 @@ _cairo_gstate_set_font_face (cairo_gstate_t    *gstate,
 			     cairo_font_face_t *font_face);
 
 cairo_private cairo_status_t
-_cairo_gstate_text_to_glyphs (cairo_gstate_t	    *gstate,
-			      double		     x,
-			      double		     y,
-			      const char	    *utf8,
-			      int		     utf8_len,
-			      cairo_glyph_t	   **glyphs,
-			      int		    *num_glyphs,
-			      cairo_text_cluster_t **clusters,
-			      int		    *num_clusters,
-			      cairo_bool_t	    *backward);
+_cairo_gstate_text_to_glyphs (cairo_gstate_t	         *gstate,
+			      double		          x,
+			      double		          y,
+			      const char	         *utf8,
+			      int		          utf8_len,
+			      cairo_glyph_t	        **glyphs,
+			      int		         *num_glyphs,
+			      cairo_text_cluster_t      **clusters,
+			      int		         *num_clusters,
+			      cairo_text_cluster_flags_t *cluster_flags);
 
 cairo_private cairo_status_t
 _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
@@ -1252,7 +1252,7 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
 				int			    num_glyphs,
 				const cairo_text_cluster_t *clusters,
 				int			    num_clusters,
-				cairo_bool_t		    backward);
+			        cairo_text_cluster_flags_t  cluster_flags);
 
 cairo_private cairo_status_t
 _cairo_gstate_glyph_path (cairo_gstate_t      *gstate,
@@ -1358,7 +1358,7 @@ _cairo_validate_text_clusters (const char		   *utf8,
 			       int			    num_glyphs,
 			       const cairo_text_cluster_t  *clusters,
 			       int			    num_clusters,
-			       cairo_bool_t		    backward);
+			       cairo_text_cluster_flags_t   cluster_flags);
 
 /* cairo-path-fixed.c */
 cairo_private void
@@ -1763,7 +1763,7 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 				 int			     num_glyphs,
 				 const cairo_text_cluster_t *clusters,
 				 int			     num_clusters,
-				 cairo_bool_t		     backward,
+				 cairo_text_cluster_flags_t  cluster_flags,
 				 cairo_scaled_font_t	    *scaled_font);
 
 cairo_private cairo_status_t

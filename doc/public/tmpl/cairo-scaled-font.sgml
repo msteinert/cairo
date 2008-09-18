@@ -133,7 +133,7 @@ size and transformation and a certain set of font options.
 @num_glyphs: 
 @clusters: 
 @num_clusters: 
-@backward: 
+@cluster_flags: 
 @Returns: 
 
 

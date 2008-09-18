@@ -79,6 +79,13 @@ Cairo has two sets of text rendering capabilities:
 @num_bytes: 
 @num_glyphs: 
 
+<!-- ##### ENUM cairo_text_cluster_flags_t ##### -->
+<para>
+
+</para>
+
+@CAIRO_TEXT_CLUSTER_FLAG_BACKWARD: 
+
 <!-- ##### FUNCTION cairo_select_font_face ##### -->
 <para>
 
@@ -211,7 +218,7 @@ Cairo has two sets of text rendering capabilities:
 @num_glyphs: 
 @clusters: 
 @num_clusters: 
-@backward: 
+@cluster_flags: 
 
 
 <!-- ##### FUNCTION cairo_font_extents ##### -->

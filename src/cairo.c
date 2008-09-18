@@ -3077,7 +3077,7 @@ cairo_show_text (cairo_t *cr, const char *utf8)
     cairo_glyph_t *glyphs = NULL, *last_glyph;
     cairo_text_cluster_t *clusters = NULL;
     int utf8_len, num_glyphs, num_clusters;
-    cairo_bool_t backward;
+    cairo_text_cluster_flags_t cluster_flags;
     double x, y;
 
     if (cr->status)
@@ -3095,7 +3095,7 @@ cairo_show_text (cairo_t *cr, const char *utf8)
 					   utf8, utf8_len,
 					   &glyphs, &num_glyphs,
 					   cairo_has_show_text_glyphs (cr) ? &clusters : NULL, &num_clusters,
-					   &backward);
+					   &cluster_flags);
     if (status)
 	goto BAIL;
 
@@ -3106,7 +3106,7 @@ cairo_show_text (cairo_t *cr, const char *utf8)
 					     utf8, utf8_len,
 					     glyphs, num_glyphs,
 					     clusters, num_clusters,
-					     backward);
+					     cluster_flags);
     if (status)
 	goto BAIL;
 
@@ -3208,7 +3208,7 @@ slim_hidden_def (cairo_has_show_text_glyphs);
  * @num_glyphs: number of glyphs to show
  * @clusters: array of cluster mapping information
  * @num_clusters: number of clusters in the mapping
- * @backward: whether the text to glyphs mapping goes backward
+ * @cluster_flags: cluster mapping flags
  *
  * This operation has rendering effects similar to cairo_show_glyphs()
  * but, if the target surface supports it, uses the provided text and
@@ -3224,7 +3224,8 @@ slim_hidden_def (cairo_has_show_text_glyphs);
  * and @glyphs in entirety.
  *
  * The first cluster always covers bytes from the beginning of @utf8.
- * If @backward is %FALSE, the first cluster also covers the beginning
+ * If @cluster_flags do not have the %CAIRO_TEXT_CLUSTER_FLAG_BACKWARD
+ * set, the first cluster also covers the beginning
  * of @glyphs, otherwise it covers the end of the @glyphs array and
  * following clusters move backward.
  *
@@ -3240,7 +3241,7 @@ cairo_show_text_glyphs (cairo_t			   *cr,
 			int			    num_glyphs,
 			const cairo_text_cluster_t *clusters,
 			int			    num_clusters,
-			cairo_bool_t		    backward)
+			cairo_text_cluster_flags_t  cluster_flags)
 {
     cairo_status_t status;
 
@@ -3275,8 +3276,7 @@ cairo_show_text_glyphs (cairo_t			   *cr,
      * and that cluster boundaries are UTF-8 boundaries. */
     status = _cairo_validate_text_clusters (utf8, utf8_len,
 					    glyphs, num_glyphs,
-					    clusters, num_clusters,
-					    backward);
+					    clusters, num_clusters, cluster_flags);
     if (status == CAIRO_STATUS_INVALID_CLUSTERS) {
 	/* Either got invalid UTF-8 text, or cluster mapping is bad.
 	 * Differentiate those. */
@@ -3297,8 +3297,7 @@ cairo_show_text_glyphs (cairo_t			   *cr,
     status = _cairo_gstate_show_text_glyphs (cr->gstate,
 					     utf8, utf8_len,
 					     glyphs, num_glyphs,
-					     clusters, num_clusters,
-					     !!backward);
+					     clusters, num_clusters, cluster_flags);
     if (status)
 	_cairo_set_error (cr, status);
 }

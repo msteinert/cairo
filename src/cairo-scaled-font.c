@@ -1325,8 +1325,8 @@ slim_hidden_def (cairo_scaled_font_glyph_extents);
  * @num_glyphs: pointer to number of glyphs
  * @clusters: pointer to array of cluster mapping information to fill, or %NULL
  * @num_clusters: pointer to number of clusters, or %NULL
- * @backward: pointer to whether the text to glyphs mapping goes backward, or
- *            %NULL
+ * @cluster_flags: pointer to location to store cluster flags corresponding to the
+ *                 output @clusters, or %NULL
  *
  * Converts UTF-8 text to an array of glyphs, optionally with cluster
  * mapping, that can be used to render later using @scaled_font.
@@ -1340,7 +1340,7 @@ slim_hidden_def (cairo_scaled_font_glyph_extents);
  * after the call, the user is responsible for freeing the allocated glyph
  * array using cairo_glyph_free().
  *
- * If @clusters is not %NULL, @num_clusters and @backward should not be %NULL,
+ * If @clusters is not %NULL, @num_clusters and @cluster_flags should not be %NULL,
  * and cluster mapping will be computed.
  * The semantics of how cluster array allocation works is similar to the glyph
  * array.  That is,
@@ -1362,21 +1362,19 @@ slim_hidden_def (cairo_scaled_font_glyph_extents);
  * int num_glyphs;
  * cairo_text_cluster_t *clusters = NULL;
  * int num_clusters;
- * cairo_bool_t backward;
+ * cairo_text_cluster_flags_t cluster_flags;
  *
  * status = cairo_scaled_font_text_to_glyphs (scaled_font,
  *                                            x, y,
  *                                            utf8, utf8_len,
  *                                            &amp;glyphs, &amp;num_glyphs,
- *                                            &amp;clusters, &amp;num_clusters,
- *                                            &amp;backward);
+ *                                            &amp;clusters, &amp;num_clusters, &amp;cluster_flags);
  *
  * if (status == CAIRO_STATUS_SUCCESS) {
  *     cairo_show_text_glyphs (cr,
  *                             utf8, utf8_len,
  *                             *glyphs, *num_glyphs,
- *                             *clusters, *num_clusters,
- *                             *backward);
+ *                             *clusters, *num_clusters, *cluster_flags);
  *
  *     cairo_glyph_free (*glyphs);
  *     cairo_text_cluster_free (*clusters);
@@ -1414,21 +1412,19 @@ slim_hidden_def (cairo_scaled_font_glyph_extents);
  * cairo_text_cluster_t stack_clusters[40];
  * cairo_text_cluster_t *clusters = stack_clusters;
  * int num_clusters = sizeof (stack_clusters) / sizeof (stack_clusters[0]);
- * cairo_bool_t backward;
+ * cairo_text_cluster_flags_t cluster_flags;
  *
  * status = cairo_scaled_font_text_to_glyphs (scaled_font,
  *                                            x, y,
  *                                            utf8, utf8_len,
  *                                            &amp;glyphs, &amp;num_glyphs,
- *                                            &amp;clusters, &amp;num_clusters,
- *                                            &amp;backward);
+ *                                            &amp;clusters, &amp;num_clusters, &amp;cluster_flags);
  *
  * if (status == CAIRO_STATUS_SUCCESS) {
  *     cairo_show_text_glyphs (cr,
  *                             utf8, utf8_len,
  *                             *glyphs, *num_glyphs,
- *                             *clusters, *num_clusters,
- *                             *backward);
+ *                             *clusters, *num_clusters, *cluster_flags);
  *
  *     if (glyphs != stack_glyphs)
  *         cairo_glyph_free (*glyphs);
@@ -1437,7 +1433,7 @@ slim_hidden_def (cairo_scaled_font_glyph_extents);
  * }
  * </programlisting></informalexample>
  *
- * For details of how @clusters, @num_clusters, and @backward map input
+ * For details of how @clusters, @num_clusters, and @cluster_flags map input
  * UTF-8 text to the output glyphs see cairo_show_text_glyphs().
  *
  * The output values can be readily passed to cairo_show_text_glyphs()
@@ -1461,7 +1457,7 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
 				  int		        *num_glyphs,
 				  cairo_text_cluster_t **clusters,
 				  int		        *num_clusters,
-				  cairo_bool_t	        *backward)
+				  cairo_text_cluster_flags_t *cluster_flags)
 {
     int i;
     int num_chars = 0;
@@ -1488,9 +1484,9 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
 	utf8_len = 0;
 
     /* No NULLs for non-NULLs! */
-    if ((utf8_len && utf8         == NULL) ||
-	(clusters && num_clusters == NULL) ||
-	(clusters && backward     == NULL)) {
+    if ((utf8_len && utf8          == NULL) ||
+	(clusters && num_clusters  == NULL) ||
+	(clusters && cluster_flags == NULL)) {
 	status = CAIRO_STATUS_NULL_POINTER;
 	goto BAIL;
     }
@@ -1511,12 +1507,12 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
 	num_clusters = NULL;
     }
 
-    if (backward) {
-	*backward = FALSE;
+    if (cluster_flags) {
+	*cluster_flags = FALSE;
     }
 
-    if (!clusters && backward) {
-	backward = NULL;
+    if (!clusters && cluster_flags) {
+	cluster_flags = NULL;
     }
 
     /* Apart from that, no negatives */
@@ -1549,7 +1545,7 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
 						       utf8, utf8_len,
 						       glyphs, num_glyphs,
 						       clusters, num_clusters,
-						       backward);
+						       cluster_flags);
 
         if (status != CAIRO_INT_STATUS_UNSUPPORTED) {
 
@@ -1583,7 +1579,7 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
 		    status = _cairo_validate_text_clusters (utf8, utf8_len,
 							    *glyphs, *num_glyphs,
 							    *clusters, *num_clusters,
-							    *backward);
+							    *cluster_flags);
 		}
 	    }
 

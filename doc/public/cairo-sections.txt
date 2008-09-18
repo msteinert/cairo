@@ -398,6 +398,7 @@ cairo_glyph_t
 cairo_font_slant_t
 cairo_font_weight_t
 cairo_text_cluster_t
+cairo_text_cluster_flags_t
 cairo_select_font_face
 cairo_set_font_size
 cairo_set_font_matrix

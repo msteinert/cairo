@@ -1461,16 +1461,16 @@ _cairo_gstate_get_font_extents (cairo_gstate_t *gstate,
 }
 
 cairo_status_t
-_cairo_gstate_text_to_glyphs (cairo_gstate_t	    *gstate,
-			      double		     x,
-			      double		     y,
-			      const char	    *utf8,
-			      int		     utf8_len,
-			      cairo_glyph_t	   **glyphs,
-			      int		    *num_glyphs,
-			      cairo_text_cluster_t **clusters,
-			      int		    *num_clusters,
-			      cairo_bool_t	    *backward)
+_cairo_gstate_text_to_glyphs (cairo_gstate_t	         *gstate,
+			      double		          x,
+			      double		          y,
+			      const char	         *utf8,
+			      int		          utf8_len,
+			      cairo_glyph_t	        **glyphs,
+			      int		         *num_glyphs,
+			      cairo_text_cluster_t      **clusters,
+			      int		         *num_clusters,
+			      cairo_text_cluster_flags_t *cluster_flags)
 {
     cairo_status_t status;
 
@@ -1482,7 +1482,7 @@ _cairo_gstate_text_to_glyphs (cairo_gstate_t	    *gstate,
 					     utf8, utf8_len,
 					     glyphs, num_glyphs,
 					     clusters, num_clusters,
-					     backward);
+					     cluster_flags);
 }
 
 cairo_status_t
@@ -1536,7 +1536,7 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
 				int			    num_glyphs,
 				const cairo_text_cluster_t *clusters,
 				int			    num_clusters,
-				cairo_bool_t		    backward)
+				cairo_text_cluster_flags_t  cluster_flags)
 {
     cairo_status_t status;
     cairo_pattern_union_t source_pattern;
@@ -1594,7 +1594,7 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
 						  utf8, utf8_len,
 						  transformed_glyphs, num_glyphs,
 						  clusters, num_clusters,
-						  backward,
+						  cluster_flags,
 						  gstate->scaled_font);
     } else {
 	cairo_path_fixed_t path;

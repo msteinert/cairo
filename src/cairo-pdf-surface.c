@@ -4037,7 +4037,7 @@ _cairo_pdf_surface_write_smask_group (cairo_pdf_surface_t     *surface,
 							group->utf8, group->utf8_len,
 							group->glyphs, group->num_glyphs,
 							group->clusters, group->num_clusters,
-							group->backward,
+							group->cluster_flags,
 							group->scaled_font);
 	break;
     }
@@ -4808,7 +4808,7 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
 				     int			 num_glyphs,
 				     const cairo_text_cluster_t *clusters,
 				     int                         num_clusters,
-				     cairo_bool_t                backward,
+				     cairo_text_cluster_flags_t  cluster_flags,
 				     cairo_scaled_font_t	*scaled_font)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
@@ -4910,7 +4910,7 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
 							utf8, utf8_len,
 							glyphs, num_glyphs,
 							clusters, num_clusters,
-							backward,
+							cluster_flags,
 							scaled_font);
 	if (status)
 	    return status;

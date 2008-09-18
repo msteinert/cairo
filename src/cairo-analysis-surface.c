@@ -634,7 +634,7 @@ _cairo_analysis_surface_show_text_glyphs (void			    *abstract_surface,
 					  int			     num_glyphs,
 					  const cairo_text_cluster_t *clusters,
 					  int			     num_clusters,
-					  cairo_bool_t		     backward,
+					  cairo_text_cluster_flags_t cluster_flags,
 					  cairo_scaled_font_t	    *scaled_font)
 {
     cairo_analysis_surface_t *surface = abstract_surface;
@@ -648,8 +648,7 @@ _cairo_analysis_surface_show_text_glyphs (void			    *abstract_surface,
 								     source,
 								     utf8, utf8_len,
 								     glyphs, num_glyphs,
-								     clusters, num_clusters,
-								     backward,
+								     clusters, num_clusters, cluster_flags,
 								     scaled_font);
     if (backend_status == CAIRO_INT_STATUS_UNSUPPORTED && surface->target->backend->show_glyphs) {
 	int remaining_glyphs = num_glyphs;

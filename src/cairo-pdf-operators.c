@@ -1251,7 +1251,7 @@ _cairo_pdf_operators_emit_cluster (cairo_pdf_operators_t      *pdf_operators,
 				   int                         utf8_len,
 				   cairo_glyph_t              *glyphs,
 				   int                         num_glyphs,
-				   cairo_bool_t                backward,
+				   cairo_text_cluster_flags_t  cluster_flags,
 				   cairo_scaled_font_t	      *scaled_font)
 {
     cairo_scaled_font_subsets_glyph_t subset_glyph;
@@ -1316,7 +1316,7 @@ _cairo_pdf_operators_emit_cluster (cairo_pdf_operators_t      *pdf_operators,
 	if (status)
 	    return status;
 
-	if (backward)
+	if ((cluster_flags & CAIRO_TEXT_CLUSTER_FLAG_BACKWARD))
 	    cur_glyph--;
 	else
 	    cur_glyph++;
@@ -1338,7 +1338,7 @@ _cairo_pdf_operators_show_text_glyphs (cairo_pdf_operators_t	  *pdf_operators,
 				       int                         num_glyphs,
 				       const cairo_text_cluster_t *clusters,
 				       int                         num_clusters,
-				       cairo_bool_t                backward,
+				       cairo_text_cluster_flags_t  cluster_flags,
 				       cairo_scaled_font_t	  *scaled_font)
 {
     cairo_status_t status;
@@ -1391,25 +1391,25 @@ _cairo_pdf_operators_show_text_glyphs (cairo_pdf_operators_t	  *pdf_operators,
 
     if (num_clusters > 0) {
 	cur_text = utf8;
-	if (backward)
+	if ((cluster_flags & CAIRO_TEXT_CLUSTER_FLAG_BACKWARD))
 	    cur_glyph = glyphs + num_glyphs;
 	else
 	    cur_glyph = glyphs;
 	for (i = 0; i < num_clusters; i++) {
-	    if (backward)
+	    if ((cluster_flags & CAIRO_TEXT_CLUSTER_FLAG_BACKWARD))
 		cur_glyph -= clusters[i].num_glyphs;
 	    status = _cairo_pdf_operators_emit_cluster (pdf_operators,
 							cur_text,
 							clusters[i].num_bytes,
 							cur_glyph,
 							clusters[i].num_glyphs,
-							backward,
+							cluster_flags,
 							scaled_font);
 	    if (status)
 		return status;
 
 	    cur_text += clusters[i].num_bytes;
-	    if (!backward)
+	    if (!(cluster_flags & CAIRO_TEXT_CLUSTER_FLAG_BACKWARD))
 		cur_glyph += clusters[i].num_glyphs;
 	}
     } else {
