@@ -7,6 +7,14 @@
 # To make a quick properly named (date and git hash stamped) tarball:
 #		make snapshot
 
+
+dist-hook: dist-clear-sticky-bits
+
+# Clean up any sticky bits we may inherit from parent dir
+dist-clear-sticky-bits:
+	chmod -R a-s $(distdir)
+
+
 snapshot:
 	distdir="$(distdir)-`date '+%Y%m%d'`"; \
 	test -d "$(srcdir)/.git" && distdir=$$distdir-`cd "$(srcdir)" && git-rev-parse HEAD | cut -c 1-6`; \
@@ -66,14 +74,14 @@ release-verify-newer:
 release-remove-old:
 	$(RM) $(tar_file) $(sha1_file) $(gpg_file)
 
-# Maybe it's just my system, but somehow group sticky bits keep
-# getting set and this causes failures in un-tarring on some systems.
-# Until I figure out where the sticky bit is coming from, just clean
-# these up before building a release.
-release-cleanup-group-sticky:
-	find . -type f | xargs chmod g-s
 
-release-check: release-verify-sane-changelogs release-verify-sane-tests release-verify-even-micro release-verify-newer release-remove-old release-cleanup-group-sticky distcheck
+release-check: \
+	release-verify-sane-changelogs \
+	release-verify-sane-tests \
+	release-verify-even-micro \
+	release-verify-newer \
+	release-remove-old \
+	distcheck
 
 release-upload: release-check $(tar_file) $(sha1_file) $(gpg_file)
 	mkdir -p releases
