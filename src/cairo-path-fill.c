@@ -215,8 +215,20 @@ _cairo_path_fixed_fill_rectangle (cairo_path_fixed_t	*path,
 				  cairo_traps_t		*traps)
 {
     if (_cairo_path_fixed_is_box (path, NULL)) {
-	return _cairo_traps_tessellate_convex_quad (traps,
-                                                    path->buf_head.base.points);
+	cairo_point_t *p = path->buf_head.base.points;
+	cairo_point_t *top_left, *bot_right;
+	int n;
+
+	top_left = &p[0];
+	bot_right = &p[0];
+	for (n = 1; n < 4; n++) {
+	    if (p[n].x <= top_left->x && p[n].y <= top_left->y)
+		top_left = &p[n];
+	    if (p[n].x >= bot_right->x && p[n].y >= bot_right->y)
+		bot_right = &p[n];
+	}
+
+	return _cairo_traps_tessellate_rectangle (traps, top_left, bot_right);
     }
 
     return CAIRO_INT_STATUS_UNSUPPORTED;
