@@ -168,6 +168,7 @@ svg-surface-source.svg
 pixman-rotate
 pthread-show-text
 rectangle-rounding-error
+rectilinear-fill
 rectilinear-miter-limit
 rectilinear-stroke
 reflected-stroke

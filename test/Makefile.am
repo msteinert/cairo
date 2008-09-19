@@ -121,6 +121,7 @@ push-group$(EXEEXT)					\
 radial-gradient$(EXEEXT)				\
 random-intersections$(EXEEXT)				\
 rectangle-rounding-error$(EXEEXT)			\
+rectilinear-fill$(EXEEXT)				\
 rectilinear-miter-limit$(EXEEXT)			\
 rectilinear-stroke$(EXEEXT)				\
 reflected-stroke$(EXEEXT)				\
@@ -600,6 +601,7 @@ REFERENCE_IMAGES = \
 	random-intersections-quartz-ref.png \
 	rgb24-ignore-alpha-ref.png \
 	rectangle-rounding-error-ref.png	\
+	rectilinear-fill-ref.png	\
 	rectilinear-miter-limit-ref.png		\
 	rectilinear-miter-limit-ps-ref.png	\
 	rectilinear-stroke-ref.png	\
