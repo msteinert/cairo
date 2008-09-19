@@ -72,7 +72,7 @@ TESTS_SH = \
 	check-def.sh \
 	check-plt.sh \
 	check-headers.sh \
-	check-cairoint.sh \
+	check-includes.sh \
 	check-doc-syntax.sh\
 	$(NULL)
 TESTS += $(TESTS_SH)

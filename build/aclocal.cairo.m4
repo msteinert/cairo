@@ -130,17 +130,4 @@ AC_DEFUN([CAIRO_CHECK_ATOMIC_OP_NEEDS_MEMORY_BARRIER],
 	fi
 ])
 
-AC_DEFUN([CAIRO_BEGINEND_DECLS],
-[dnl
-AH_BOTTOM([
-#ifdef  __cplusplus
-# define CAIRO_BEGIN_DECLS  extern "C" {
-# define CAIRO_END_DECLS    }
-#else
-# define CAIRO_BEGIN_DECLS
-# define CAIRO_END_DECLS
-#endif
-])dnl
-])
-
 AC_DEFUN([CAIRO_TEXT_WRAP], [m4_text_wrap([$1], [$2],, 78)])

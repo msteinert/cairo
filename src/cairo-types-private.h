@@ -39,8 +39,6 @@
 #ifndef CAIRO_TYPES_PRIVATE_H
 #define CAIRO_TYPES_PRIVATE_H
 
-/* This is the only header file not including cairoint.h.  It only contains
- * typedefs.*/
 #include "cairo.h"
 #include "cairo-fixed-type-private.h"
 
