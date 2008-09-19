@@ -2191,6 +2191,11 @@ cairo_private cairo_status_t
 _cairo_traps_tessellate_convex_quad (cairo_traps_t *traps,
 				     const cairo_point_t q[4]);
 
+cairo_private cairo_status_t
+_cairo_traps_tessellate_rectangle (cairo_traps_t *traps,
+				   const cairo_point_t *top_left,
+				   const cairo_point_t *bottom_right);
+
 cairo_private void
 _cairo_traps_add_trap (cairo_traps_t *traps,
 		       cairo_fixed_t top, cairo_fixed_t bottom,

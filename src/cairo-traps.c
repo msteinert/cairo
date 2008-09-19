@@ -352,6 +352,24 @@ _cairo_traps_tessellate_triangle (cairo_traps_t *traps,
 }
 
 cairo_status_t
+_cairo_traps_tessellate_rectangle (cairo_traps_t *traps,
+				   const cairo_point_t *top_left,
+				   const cairo_point_t *bottom_right)
+{
+    cairo_line_t left;
+    cairo_line_t right;
+
+     left.p1.x =  left.p2.x = top_left->x;
+     left.p1.y = right.p1.y = top_left->y;
+    right.p1.x = right.p2.x = bottom_right->x;
+     left.p2.y = right.p2.y = bottom_right->y;
+
+    _cairo_traps_add_trap (traps, top_left->y, bottom_right->y, &left, &right);
+
+    return traps->status;
+}
+
+cairo_status_t
 _cairo_traps_tessellate_convex_quad (cairo_traps_t *traps,
 				     const cairo_point_t q[4])
 {

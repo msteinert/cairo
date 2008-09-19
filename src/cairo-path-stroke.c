@@ -1257,12 +1257,12 @@ _cairo_rectilinear_stroker_emit_segments (cairo_rectilinear_stroker_t *stroker)
     cairo_status_t status;
     cairo_line_cap_t line_cap = stroker->stroke_style->line_cap;
     cairo_fixed_t half_line_width = stroker->half_line_width;
-    cairo_bool_t lengthen_initial, shorten_final, lengthen_final;
-    cairo_point_t *a, *b;
-    cairo_point_t r[4];
     int i;
 
     for (i = 0; i < stroker->num_segments; i++) {
+	cairo_point_t *a, *b;
+	cairo_bool_t lengthen_initial, shorten_final, lengthen_final;
+
 	a = &stroker->segments[i].p1;
 	b = &stroker->segments[i].p2;
 
@@ -1315,6 +1315,14 @@ _cairo_rectilinear_stroker_emit_segments (cairo_rectilinear_stroker_t *stroker)
 		else if (lengthen_final)
 		    b->x -= half_line_width;
 	    }
+
+	    if (a->x > b->x) {
+		cairo_point_t *t;
+
+		t = a;
+		a = b;
+		b = t;
+	    }
 	} else {
 	    if (a->y < b->y) {
 		if (lengthen_initial)
@@ -1331,27 +1339,27 @@ _cairo_rectilinear_stroker_emit_segments (cairo_rectilinear_stroker_t *stroker)
 		else if (lengthen_final)
 		    b->y -= half_line_width;
 	    }
+
+	    if (a->y > b->y) {
+		cairo_point_t *t;
+
+		t = a;
+		a = b;
+		b = t;
+	    }
 	}
 
 	/* Form the rectangle by expanding by half the line width in
 	 * either perpendicular direction. */
-	r[0] = *a;
-	r[1] = *b;
-	r[2] = *b;
-	r[3] = *a;
 	if (a->y == b->y) {
-	    r[0].y -= half_line_width;
-	    r[1].y -= half_line_width;
-	    r[2].y += half_line_width;
-	    r[3].y += half_line_width;
+	    a->y -= half_line_width;
+	    b->y += half_line_width;
 	} else {
-	    r[0].x -= half_line_width;
-	    r[1].x -= half_line_width;
-	    r[2].x += half_line_width;
-	    r[3].x += half_line_width;
+	    a->x -= half_line_width;
+	    b->x += half_line_width;
 	}
 
-	status = _cairo_traps_tessellate_convex_quad (stroker->traps, r);
+	status = _cairo_traps_tessellate_rectangle (stroker->traps, a, b);
 	if (status)
 	    return status;
     }
@@ -1439,7 +1447,7 @@ _cairo_path_fixed_stroke_rectilinear (cairo_path_fixed_t	*path,
     /* This special-case rectilinear stroker only supports
      * miter-joined lines (not curves) and no dashing and a
      * translation-only matrix (though it could probably be extended
-     * to support a matrix with uniform, integer sacling).
+     * to support a matrix with uniform, integer scaling).
      *
      * It also only supports horizontal and vertical line_to
      * elements. But we don't catch that here, but instead return
