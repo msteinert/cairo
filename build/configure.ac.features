@@ -292,8 +292,6 @@ CAIRO_CONFIG_COMMANDS([$srcdir/src/cairo-features-win32.h],
 	echo '#ifndef CAIRO_FEATURES_H'
 	echo '#define CAIRO_FEATURES_H'
 	echo ''
-	echo '#define HAVE_WINDOWS_H 1'
-	echo ''
 	for FEATURE in $CAIRO_WIN32_FEATURES; do
 		echo "#define $FEATURE 1"
 	done

@@ -174,7 +174,7 @@
 # define CAIRO_MUTEX_IMPL_FINALIZE() CAIRO_MUTEX_IMPL_NOOP
 # define CAIRO_MUTEX_IMPL_NIL_INITIALIZER PTHREAD_MUTEX_INITIALIZER
 
-#elif HAVE_WINDOWS_H /*******************************************************/
+#elif defined(HAVE_WINDOWS_H) || defined(_MSC_VER) /*************************/
 
 # include <windows.h>
 
