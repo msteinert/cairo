@@ -1334,7 +1334,7 @@ _cairo_rectilinear_stroker_emit_segments (cairo_rectilinear_stroker_t *stroker)
 	}
 
 	/* Form the rectangle by expanding by half the line width in
-	 * either perdendicular direction. */
+	 * either perpendicular direction. */
 	r[0] = *a;
 	r[1] = *b;
 	r[2] = *b;
@@ -1484,11 +1484,10 @@ _cairo_path_fixed_stroke_rectilinear (cairo_path_fixed_t	*path,
     status = _cairo_rectilinear_stroker_emit_segments (&rectilinear_stroker);
 
 BAIL:
-
     _cairo_rectilinear_stroker_fini (&rectilinear_stroker);
 
     if (status)
-	_cairo_traps_fini (traps);
+	_cairo_traps_clear (traps);
 
     return status;
 }

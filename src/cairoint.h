@@ -2173,6 +2173,9 @@ _cairo_traps_init_box (cairo_traps_t *traps,
 		       cairo_box_t   *box);
 
 cairo_private void
+_cairo_traps_clear (cairo_traps_t *traps);
+
+cairo_private void
 _cairo_traps_fini (cairo_traps_t *traps);
 
 cairo_private cairo_status_t

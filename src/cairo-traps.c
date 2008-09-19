@@ -84,6 +84,14 @@ _cairo_traps_get_limit (cairo_traps_t *traps,
 }
 
 void
+_cairo_traps_clear (cairo_traps_t *traps)
+{
+    traps->status = CAIRO_STATUS_SUCCESS;
+
+    traps->num_traps = 0;
+}
+
+void
 _cairo_traps_fini (cairo_traps_t *traps)
 {
     if (traps->traps && traps->traps != traps->traps_embedded)
