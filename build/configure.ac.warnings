@@ -19,6 +19,9 @@ dnl We also abuse the warning-flag facility to enable other compiler
 dnl options.  Namely, the following:
 MAYBE_WARN="$MAYBE_WARN -fno-strict-aliasing"
 
+dnl Also to turn various gcc/glibc-specific preprocessor checks
+MAYBE_WARN="$MAYBE_WARN -Wp,-D_FORTIFY_SOURCE=2"
+
 # invalidate cached value if MAYBE_WARN has changed
 if test "x$cairo_cv_warn_maybe" != "x$MAYBE_WARN"; then
 	unset cairo_cv_warn_cflags
