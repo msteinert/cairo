@@ -39,6 +39,9 @@
 #include "cairo-skiplist-private.h"
 #include "cairo-freelist-private.h"
 
+#define DEBUG_VALIDATE 0
+#define DEBUG_PRINT_STATE 0
+
 typedef cairo_point_t cairo_bo_point32_t;
 
 typedef struct _cairo_bo_point128 {
@@ -941,7 +944,6 @@ _cairo_bo_sweep_line_swap (cairo_bo_sweep_line_t	*sweep_line,
     left->prev = right;
 }
 
-#define DEBUG_PRINT_STATE 0
 #if DEBUG_PRINT_STATE
 static void
 _cairo_bo_edge_print (cairo_bo_edge_t *edge)
@@ -1177,6 +1179,7 @@ _cairo_bo_traps_fini (cairo_bo_traps_t *bo_traps)
     _cairo_freelist_fini (&bo_traps->freelist);
 }
 
+#if DEBUG_VALIDATE
 static void
 _cairo_bo_sweep_line_validate (cairo_bo_sweep_line_t *sweep_line)
 {
@@ -1202,6 +1205,7 @@ _cairo_bo_sweep_line_validate (cairo_bo_sweep_line_t *sweep_line)
 	exit (1);
     }
 }
+#endif
 
 
 static cairo_status_t
@@ -1324,9 +1328,8 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
 #if DEBUG_PRINT_STATE
 	    print_state ("After processing start", &event_queue, &sweep_line);
 #endif
-	    _cairo_bo_sweep_line_validate (&sweep_line);
-
 	    break;
+
 	case CAIRO_BO_EVENT_TYPE_STOP:
 	    edge = event->e1;
 
@@ -1346,9 +1349,8 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
 #if DEBUG_PRINT_STATE
 	    print_state ("After processing stop", &event_queue, &sweep_line);
 #endif
-	    _cairo_bo_sweep_line_validate (&sweep_line);
-
 	    break;
+
 	case CAIRO_BO_EVENT_TYPE_INTERSECTION:
 	    edge1 = event->e1;
 	    edge2 = event->e2;
@@ -1382,10 +1384,11 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
 #if DEBUG_PRINT_STATE
 	    print_state ("After processing intersection", &event_queue, &sweep_line);
 #endif
-	    _cairo_bo_sweep_line_validate (&sweep_line);
-
 	    break;
 	}
+#if DEBUG_VALIDATE
+	_cairo_bo_sweep_line_validate (&sweep_line);
+#endif
     }
 
     *num_intersections = intersection_count;
