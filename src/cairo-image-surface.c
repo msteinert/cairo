@@ -275,8 +275,11 @@ _cairo_image_surface_create_with_masks (unsigned char	       *data,
 		 "\tRed   mask: 0x%08lx\n"
 		 "\tGreen mask: 0x%08lx\n"
 		 "\tBlue  mask: 0x%08lx\n"
+#ifdef PACKAGE_BUGGREPORT
 		 "Please file an enhancement request (quoting the above) at:\n"
-		 PACKAGE_BUGREPORT "\n",
+		 PACKAGE_BUGREPORT"\n"
+#endif
+		 ,
 		 cairo_version_string (),
 		 masks->bpp, masks->alpha_mask,
 		 masks->red_mask, masks->green_mask, masks->blue_mask);
