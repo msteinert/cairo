@@ -149,10 +149,6 @@
  *   poke around cairo-mutex-private.h for possible solutions.
  */
 
-#ifndef CAIRO_MUTEX_TYPE_PRIVATE_H
-#error "Do not include cairo-mutex-impl-private.h directly.  Include cairo-mutex-type-private.h instead."
-#endif
-
 #if CAIRO_NO_MUTEX
 
 /* No mutexes */

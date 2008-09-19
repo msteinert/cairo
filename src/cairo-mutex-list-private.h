@@ -31,6 +31,11 @@
  *	Mathias Hasselmann <mathias.hasselmann@gmx.de>
  */
 
+#ifndef CAIRO_FEATURES_H
+/* This block is to just make this header file standalone */
+#define CAIRO_MUTEX_DECLARE(mutex)
+#endif
+
 CAIRO_MUTEX_DECLARE (_cairo_pattern_solid_pattern_cache_lock)
 CAIRO_MUTEX_DECLARE (_cairo_pattern_solid_surface_cache_lock)
 

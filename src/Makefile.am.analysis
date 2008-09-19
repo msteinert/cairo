@@ -1,19 +1,30 @@
 
 SPARSE = sparse
 sparse:
+	@echo Checking enabled sources with sparse checker
 	@status=true; for f in $(enabled_cairo_sources); do \
-		echo $(SPARSE) $$f; \
-		$(SPARSE) -I$(top_builddir) $(AM_CPPFLAGS) -DHAVE_CONFIG_H $$f || status=false; \
+		echo $(SPARSE) $(PREPROCESS_ARGS) $$f; \
+		$(SPARSE) $(PREPROCESS_ARGS) $$f || status=false; \
 	done; $$status
 
 SPLINT = splint -badflag
 splint:
+	@echo Checking enabled sources with splint checker
 	@status=true; for f in $(enabled_cairo_sources); do \
-		echo $(SPLINT) $$f; \
-		$(SPLINT) -I$(top_builddir) $(AM_CPPFLAGS) -DHAVE_CONFIG_H $$f || status=false; \
+		echo $(SPLINT) $(PREPROCESS_ARGS) $$f; \
+		$(SPLINT) $(PREPROCESS_ARGS) $$f || status=false; \
 	done; $$status
 
 UNO = uno
 uno:
-	@cpp_flags=`echo $(AM_CPPFLAGS) | sed 's/\(-I.*\) /\1 /g'`; \
-	$(UNO) -I$(top_builddir) $$cpp_flags -DHAVE_CONFIG_H -U__GNUC__ $(enabled_cairo_sources)
+	@echo Checking enabled sources with uno checker
+	$(UNO) $(PREPROCESS_ARGS) -DHAVE_CONFIG_H -U__GNUC__ $(enabled_cairo_sources)
+
+headers-standalone:
+	@echo Checking that enabled public/private headers can be compiled standalone
+	@status=true; for f in $(enabled_cairo_headers) $(enabled_cairo_private); do \
+		echo $(COMPILE) -o /dev/null $$f; \
+		$(COMPILE) -o /dev/null $$f || status=false; \
+	done; $$status
+
+analysis: all headers-standalone sparse splint uno

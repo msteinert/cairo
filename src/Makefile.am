@@ -85,10 +85,14 @@ EXTRA_DIST += $(TESTS_SH) check-has-hidden-symbols.c
 check_PROGRAMS += check-link
 check_link_LDADD = libcairo.la
 
+check: headers-standalone
+
+PREPROCESS_ARGS = $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS)
+COMPILE_ARGS = $(PREPROCESS_ARGS) $(AM_CFLAGS) $(CFLAGS)
 
 # The pre-processed result is used by check-{def,plt}.sh to determine whether
 # cairo has been compiled with symbol hiding.
 .c.i: $(cairoinclude_HEADERS) $(nodist_cairoinclude_HEADERS) cairoint.h $(top_builddir)/config.h
-	$(CPP) -DHAVE_CONFIG_H -I$(top_builddir) -I. $(AM_CPPFLAGS) $< -o $@
+	$(CPP) $(PREPROCESS_ARGS) $< -o $@
 
 include $(srcdir)/Makefile.am.analysis
