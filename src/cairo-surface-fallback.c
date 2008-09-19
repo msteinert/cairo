@@ -702,9 +702,7 @@ _cairo_surface_fallback_paint (cairo_surface_t	*surface,
     box.p2.x = _cairo_fixed_from_int (extents.x + extents.width);
     box.p2.y = _cairo_fixed_from_int (extents.y + extents.height);
 
-    status = _cairo_traps_init_box (&traps, &box);
-    if (status)
-	return status;
+    _cairo_traps_init_box (&traps, &box);
 
     status = _clip_and_composite_trapezoids (source,
 				             op,
@@ -830,7 +828,6 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
     box.p2.y = _cairo_fixed_from_int (extents.y + extents.height);
 
     _cairo_traps_init (&traps);
-
     _cairo_traps_limit (&traps, &box);
 
     status = _cairo_path_fixed_stroke_to_traps (path,
@@ -838,10 +835,8 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
 						ctm, ctm_inverse,
 						tolerance,
 						&traps);
-    if (status) {
-	_cairo_traps_fini (&traps);
-	return status;
-    }
+    if (status)
+	goto FAIL;
 
     status = _clip_and_composite_trapezoids (source,
 				             op,
@@ -850,6 +845,7 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
 					     surface->clip,
 					     antialias);
 
+FAIL:
     _cairo_traps_fini (&traps);
 
     return status;

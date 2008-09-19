@@ -2168,9 +2168,9 @@ cairo_private cairo_bool_t
 _cairo_traps_get_limit (cairo_traps_t *traps,
                         cairo_box_t   *limits);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_traps_init_box (cairo_traps_t *traps,
-		       cairo_box_t   *box);
+		       const cairo_box_t   *box);
 
 cairo_private void
 _cairo_traps_clear (cairo_traps_t *traps);
@@ -2178,22 +2178,23 @@ _cairo_traps_clear (cairo_traps_t *traps);
 cairo_private void
 _cairo_traps_fini (cairo_traps_t *traps);
 
-cairo_private cairo_status_t
-_cairo_traps_status (cairo_traps_t *traps);
+#define _cairo_traps_status(T) (T)->status
 
 cairo_private void
 _cairo_traps_translate (cairo_traps_t *traps, int x, int y);
 
 cairo_private cairo_status_t
-_cairo_traps_tessellate_triangle (cairo_traps_t *traps, cairo_point_t t[3]);
+_cairo_traps_tessellate_triangle (cairo_traps_t *traps,
+				  const cairo_point_t t[3]);
 
 cairo_private cairo_status_t
-_cairo_traps_tessellate_convex_quad (cairo_traps_t *traps, cairo_point_t q[4]);
+_cairo_traps_tessellate_convex_quad (cairo_traps_t *traps,
+				     const cairo_point_t q[4]);
 
 cairo_private void
-_cairo_traps_add_trap_from_points (cairo_traps_t *traps, cairo_fixed_t top, cairo_fixed_t bottom,
-				   cairo_point_t left_p1, cairo_point_t left_p2,
-				   cairo_point_t right_p1, cairo_point_t right_p2);
+_cairo_traps_add_trap (cairo_traps_t *traps,
+		       cairo_fixed_t top, cairo_fixed_t bottom,
+		       cairo_line_t *left, cairo_line_t *right);
 
 cairo_private cairo_status_t
 _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t         *traps,
@@ -2225,10 +2226,12 @@ _cairo_trapezoid_array_translate_and_scale (cairo_trapezoid_t *offset_traps,
 
 /* cairo-slope.c */
 cairo_private void
-_cairo_slope_init (cairo_slope_t *slope, cairo_point_t *a, cairo_point_t *b);
+_cairo_slope_init (cairo_slope_t *slope,
+		   const cairo_point_t *a,
+		   const cairo_point_t *b);
 
 cairo_private int
-_cairo_slope_compare (cairo_slope_t *a, cairo_slope_t *b);
+_cairo_slope_compare (const cairo_slope_t *a, const cairo_slope_t *b);
 
 /* cairo-pattern.c */
 

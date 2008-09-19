@@ -1078,35 +1078,35 @@ _cairo_bo_edge_end_trap (cairo_bo_edge_t	*left,
 
     /* Only emit trapezoids with positive height. */
     if (fixed_top < fixed_bot) {
-	cairo_point_t left_top, left_bot, right_top, right_bot;
+	cairo_line_t left_line;
+	cairo_line_t right_line;
 	cairo_fixed_t xmin = bo_traps->xmin;
 	cairo_fixed_t ymin = bo_traps->ymin;
 	fixed_top += ymin;
 	fixed_bot += ymin;
 
-	left_top.x = left->top.x + xmin;
-	left_top.y = left->top.y + ymin;
-	right_top.x = right->top.x + xmin;
-	right_top.y = right->top.y + ymin;
-	left_bot.x = left->bottom.x + xmin;
-	left_bot.y = left->bottom.y + ymin;
-	right_bot.x = right->bottom.x + xmin;
-	right_bot.y = right->bottom.y + ymin;
+	left_line.p1.x  = left->top.x + xmin;
+	left_line.p1.y  = left->top.y + ymin;
+	right_line.p1.x = right->top.x + xmin;
+	right_line.p1.y = right->top.y + ymin;
+
+	left_line.p2.x  = left->bottom.x + xmin;
+	left_line.p2.y  = left->bottom.y + ymin;
+	right_line.p2.x = right->bottom.x + xmin;
+	right_line.p2.y = right->bottom.y + ymin;
 
 	/* Avoid emitting the trapezoid if it is obviously degenerate.
 	 * TODO: need a real collinearity test here for the cases
 	 * where the trapezoid is degenerate, yet the top and bottom
 	 * coordinates aren't equal.  */
-	if (left_top.x != right_top.x ||
-	    left_top.y != right_top.y ||
-	    left_bot.x != right_bot.x ||
-	    left_bot.y != right_bot.y)
+	if (left_line.p1.x != right_line.p1.x ||
+	    left_line.p1.y != right_line.p1.y ||
+	    left_line.p2.x != right_line.p2.x ||
+	    left_line.p2.y != right_line.p2.y)
 	{
-	    _cairo_traps_add_trap_from_points (bo_traps->traps,
-					       fixed_top,
-					       fixed_bot,
-					       left_top, left_bot,
-					       right_top, right_bot);
+	    _cairo_traps_add_trap (bo_traps->traps,
+				   fixed_top, fixed_bot,
+				   &left_line, &right_line);
 
 #if DEBUG_PRINT_STATE
 	    printf ("Deferred trap: left=(%08x, %08x)-(%08x,%08x) "
