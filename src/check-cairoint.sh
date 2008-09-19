@@ -16,7 +16,7 @@ fi
 for x in $FILES; do
 	grep '\<include\>' "$x" /dev/null | head -n 1
 done |
-grep -v '"cairoint.h"' |
+grep -v '"cairoint[.]h"' |
 grep . && stat=1
 
 exit $stat
