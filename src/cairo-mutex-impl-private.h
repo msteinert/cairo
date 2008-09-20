@@ -74,7 +74,7 @@
  *	cairo_mutex_impl_t _cairo_some_mutex;
  *   </programlisting>
  *
- * - #define CAIRO_MUTEX_IMP_<NAME> 1 with suitable name for your platform.  You
+ * - #define %CAIRO_MUTEX_IMP_<NAME> 1 with suitable name for your platform.  You
  *   can later use this symbol in cairo-system.c.
  *
  * - #define CAIRO_MUTEX_IMPL_LOCK(mutex) and CAIRO_MUTEX_IMPL_UNLOCK(mutex) to

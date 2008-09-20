@@ -233,8 +233,8 @@ void _buffer_free (void *buffer)
 }
 
 /* XXX
- * The cairo_os2_init/fini() functions should be removed and the LibMain
- * code moved to cairo-system.c.  It should also call
+ * The cairo_os2_ini() and cairo_os2_fini() functions should be removed and
+ * the LibMain code moved to cairo-system.c.  It should also call
  * cairo_debug_reset_static_data() instead of duplicating its logic...
  */
 
