@@ -3,24 +3,19 @@ SUBMAKEFILE = 1
 include ../Makefile.win32
 include Makefile.win32.config
 
-SOURCES = \
-	$(enabled_cairo_headers) \
-	$(enabled_cairo_private) \
-	$(enabled_cairo_sources) \
-	$(NULL)
+SOURCES = $(enabled_cairo_sources)
 
-STATIC_SOURCES = cairo-win32-surface.c 
+STATIC_SOURCES = cairo-system.c
 
 OBJECTS = $(patsubst %.c, $(CFG)/%.obj, $(SOURCES))
-SHARED_OBJECTS = $(patsubst %.c, $(CFG)/%.obj, $(STATIC_SOURCES))
 STATIC_OBJECTS = $(patsubst %.c, $(CFG)/%-static.obj, $(STATIC_SOURCES))
 
 all: inform $(CFG)/cairo.dll $(CFG)/cairo-static.lib
 static: inform $(CFG)/cairo-static.lib
 dynamic: inform $(CFG)/cairo.dll
 
-$(CFG)/cairo.dll: $(OBJECTS) $(SHARED_OBJECTS)
-	$(CC) -MD -LD -Fe$@ $(PIXMAN_LIBS) $(OBJECTS) $(SHARED_OBJECTS) -link user32.lib gdi32.lib libpng.lib zdll.lib msimg32.lib
+$(CFG)/cairo.dll: $(OBJECTS)
+	$(CC) -MD -LD -Fe$@ $(PIXMAN_LIBS) $(OBJECTS) -link user32.lib gdi32.lib libpng.lib zdll.lib msimg32.lib
 
 $(CFG)/cairo-static.lib: $(OBJECTS) $(STATIC_OBJECTS)
 	lib -NOLOGO -OUT:$@ $(PIXMAN_LIBS) $(OBJECTS) $(STATIC_OBJECTS)
