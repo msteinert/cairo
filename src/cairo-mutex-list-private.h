@@ -51,7 +51,7 @@ CAIRO_MUTEX_DECLARE (_cairo_ft_unscaled_font_map_mutex)
 CAIRO_MUTEX_DECLARE (_cairo_xlib_display_mutex)
 #endif
 
-#if !defined (CAIRO_HAS_ATOMIC_OPS) || defined (ATOMIC_OP_NEEDS_MEMORY_BARRIER)
+#if !defined (HAS_ATOMIC_OPS) || defined (ATOMIC_OP_NEEDS_MEMORY_BARRIER)
 CAIRO_MUTEX_DECLARE (_cairo_atomic_mutex)
 #endif
 

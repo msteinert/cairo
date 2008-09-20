@@ -16,6 +16,7 @@ test "x$PRIVATE" = x && PRIVATE=`find . -name 'cairo*-private.h' -or -name 'cair
 SOURCES=$all_cairo_sources
 test "x$SOURCES" = x && SOURCES=`find . -name 'cairo*.c' -or -name 'cairo*.cpp'`
 
+ALL="/dev/null $HEADERS $PRIVATE $SOURCES"
 
 echo 'Checking that public header files #include "cairo.h" first (or none)'
 
@@ -47,12 +48,10 @@ grep . && stat=1
 
 
 echo 'Checking that there is no #include <cairo.*.h>'
-
-for x in $HEADERS $PRIVATE $SOURCES; do
-	grep '\<include\>.*<.*cairo' "$x" /dev/null
-done |
-grep . && stat=1
+grep '\<include\>.*<.*cairo' $ALL && stat=1
 
 
+echo 'Checking that feature conditionals are used with #if only (not #ifdef)'
+grep '#if.*CAIRO_HAS_' $ALL | grep def && stat=1
 
 exit $stat

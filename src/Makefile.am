@@ -70,10 +70,10 @@ TESTS_ENVIRONMENT = \
 	$(NULL)
 TESTS_SH = \
 	check-def.sh \
-	check-plt.sh \
-	check-headers.sh \
-	check-includes.sh \
 	check-doc-syntax.sh\
+	check-headers.sh \
+	check-plt.sh \
+	check-preprocessor-syntax.sh \
 	$(NULL)
 TESTS += $(TESTS_SH)
 if CROSS_COMPILING

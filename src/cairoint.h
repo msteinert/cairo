@@ -68,11 +68,20 @@
 
 #include "cairo-compiler-private.h"
 
-#if defined(CAIRO_HAS_PS_SURFACE) || defined(CAIRO_HAS_PDF_SURFACE) || defined(CAIRO_HAS_SVG_SURFACE)
+#if CAIRO_HAS_PS_SURFACE
+#define CAIRO_HAS_FONT_SUBSET 1
+#endif
+#if CAIRO_HAS_PDF_SURFACE
+#define CAIRO_HAS_FONT_SUBSET 1
+#endif
+#if CAIRO_HAS_SVG_SURFACE
 #define CAIRO_HAS_FONT_SUBSET 1
 #endif
 
-#if defined(CAIRO_HAS_PS_SURFACE) || defined(CAIRO_HAS_PDF_SURFACE)
+#if CAIRO_HAS_PS_SURFACE
+#define CAIRO_HAS_PDF_OPERATORS 1
+#endif
+#if CAIRO_HAS_PDF_SURFACE
 #define CAIRO_HAS_PDF_OPERATORS 1
 #endif
 

@@ -47,7 +47,7 @@ CAIRO_BEGIN_DECLS
 
 #if HAVE_INTEL_ATOMIC_PRIMITIVES
 
-#define CAIRO_HAS_ATOMIC_OPS 1
+#define HAS_ATOMIC_OPS 1
 
 typedef int cairo_atomic_int_t;
 
@@ -58,7 +58,7 @@ typedef int cairo_atomic_int_t;
 #endif
 
 
-#ifndef CAIRO_HAS_ATOMIC_OPS
+#ifndef HAS_ATOMIC_OPS
 
 typedef int cairo_atomic_int_t;
 
