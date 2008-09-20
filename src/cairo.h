@@ -51,7 +51,11 @@
 #endif
 
 #ifndef cairo_public
-# define cairo_public
+# ifdef _MSC_VER
+#  define cairo_public __declspec(dllimport)
+# else
+#  define cairo_public
+# endif
 #endif
 
 CAIRO_BEGIN_DECLS
