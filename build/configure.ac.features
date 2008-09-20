@@ -89,8 +89,8 @@ CAIRO_MAKEFILE_ACCUMULATE_FEATURE(*,*,*,!,
 [dnl
 all_$1_headers += $($1_$2_headers)
 all_$1_private += $($1_$2_private)
-all_$1_sources += $($1_$2_sources)
-])dnl
+all_$1_sources += $($1_$2_sources)]dnl
+)dnl
 
 dnl Collect list of source files for enabled public features
 CAIRO_MAKEFILE_ACCUMULATE(*,
@@ -104,8 +104,8 @@ CAIRO_MAKEFILE_ACCUMULATE_FEATURE(*,yes,*,!,
 [dnl
 enabled_$1_headers += $($1_$2_headers)
 enabled_$1_private += $($1_$2_private)
-enabled_$1_sources += $($1_$2_sources)
-])dnl
+enabled_$1_sources += $($1_$2_sources)]dnl
+)dnl
 
 dnl No public headers for private features
 
@@ -113,15 +113,15 @@ dnl Collect list of source files for all private features
 CAIRO_MAKEFILE_ACCUMULATE_FEATURE(*,*,*,,
 [dnl
 all_$1_private += $($1_$2_private) $($1_$2_headers)
-all_$1_sources += $($1_$2_sources)
-])dnl
+all_$1_sources += $($1_$2_sources)]dnl
+)dnl
 
 dnl Collect list of source files for enabled private features
 CAIRO_MAKEFILE_ACCUMULATE_FEATURE(*,yes,*,,
 [dnl
 enabled_$1_private += $($1_$2_private) $($1_$2_headers)
-enabled_$1_sources += $($1_$2_sources)
-])dnl
+enabled_$1_sources += $($1_$2_sources)]dnl
+)dnl
 
 
 dnl ===========================================================================

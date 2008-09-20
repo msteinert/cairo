@@ -50,6 +50,9 @@ AC_DEFUN([CAIRO_INIT_MAKEFILES],
 		AM_CONDITIONAL(cr_feature_tag, [test "x$use_]cr_feature[" = xyes])dnl
 	])dnl
 
+	dnl An empty line per feature for readability
+	CAIRO_MAKEFILE_ACCUMULATE(*,[]m4_newline[])dnl
+
 	dnl Turn win32 features on
 	CAIRO_FEATURE_HOOK_REGISTER_WIN32(*, [_CAIRO_MAKEFILES_WIN32_DEFINE_FEATURE])dnl
 ])dnl
@@ -58,7 +61,7 @@ m4_define([_CAIRO_MAKEFILES_WIN32_DEFINE_FEATURE],
 [
 	m4_foreach_w([cr_makefile], _CAIRO_MAKEFILES,
 	[dnl
-		CAIRO_ACCUMULATE_UNQUOTED_UNCHECKED([MAKEFILE_]cr_makefile[_WIN32], [cr_feature_tag = 1])dnl
+		CAIRO_ACCUMULATE([MAKEFILE_]cr_makefile[_WIN32], [ifeq ($(]cr_feature_tag[),)]m4_newline[]cr_feature_tag[ = 1]m4_newline[endif])dnl
 	])dnl
 ])dnl
 
