@@ -74,6 +74,9 @@
  *	cairo_mutex_impl_t _cairo_some_mutex;
  *   </programlisting>
  *
+ * - #define CAIRO_MUTEX_IMP_<NAME> 1 with suitable name for your platform.  You
+ *   can later use this symbol in cairo-system.c.
+ *
  * - #define CAIRO_MUTEX_IMPL_LOCK(mutex) and CAIRO_MUTEX_IMPL_UNLOCK(mutex) to
  *   proper statement to lock/unlock the mutex object passed in.
  *   You can (and should) assume that the mutex is already
@@ -155,6 +158,7 @@
 
   typedef int cairo_mutex_impl_t;
 
+# define CAIRO_MUTEX_IMPL_NO 1
 # define CAIRO_MUTEX_IMPL_INITIALIZE() CAIRO_MUTEX_IMPL_NOOP
 # define CAIRO_MUTEX_IMPL_LOCK(mutex) CAIRO_MUTEX_IMPL_NOOP1(mutex)
 # define CAIRO_MUTEX_IMPL_UNLOCK(mutex) CAIRO_MUTEX_IMPL_NOOP1(mutex)
@@ -166,6 +170,7 @@
 
   typedef pthread_mutex_t cairo_mutex_impl_t;
 
+# define CAIRO_MUTEX_IMPL_PTHREAD 1
 # define CAIRO_MUTEX_IMPL_LOCK(mutex) pthread_mutex_lock (&(mutex))
 # define CAIRO_MUTEX_IMPL_UNLOCK(mutex) pthread_mutex_unlock (&(mutex))
 # define CAIRO_MUTEX_IMPL_FINI(mutex) pthread_mutex_destroy (&(mutex))
@@ -178,6 +183,7 @@
 
   typedef CRITICAL_SECTION cairo_mutex_impl_t;
 
+# define CAIRO_MUTEX_IMPL_WIN32 1
 # define CAIRO_MUTEX_IMPL_LOCK(mutex) EnterCriticalSection (&(mutex))
 # define CAIRO_MUTEX_IMPL_UNLOCK(mutex) LeaveCriticalSection (&(mutex))
 # define CAIRO_MUTEX_IMPL_INIT(mutex) InitializeCriticalSection (&(mutex))
@@ -192,6 +198,7 @@
 
   typedef HMTX cairo_mutex_impl_t;
 
+# define CAIRO_MUTEX_IMPL_OS2 1
 # define CAIRO_MUTEX_IMPL_LOCK(mutex) DosRequestMutexSem(mutex, SEM_INDEFINITE_WAIT)
 # define CAIRO_MUTEX_IMPL_UNLOCK(mutex) DosReleaseMutexSem(mutex)
 # define CAIRO_MUTEX_IMPL_INIT(mutex) DosCreateMutexSem (NULL, &(mutex), 0L, FALSE)
@@ -202,6 +209,7 @@
 
   typedef BLocker* cairo_mutex_impl_t;
 
+# define CAIRO_MUTEX_IMPL_BEOS 1
 # define CAIRO_MUTEX_IMPL_LOCK(mutex) (mutex)->Lock()
 # define CAIRO_MUTEX_IMPL_UNLOCK(mutex) (mutex)->Unlock()
 # define CAIRO_MUTEX_IMPL_INIT(mutex) (mutex) = new BLocker()

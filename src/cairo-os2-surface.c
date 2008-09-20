@@ -232,6 +232,12 @@ void _buffer_free (void *buffer)
 #endif
 }
 
+/* XXX
+ * The cairo_os2_init/fini() functions should be removed and the LibMain
+ * code moved to cairo-system.c.  It should also call
+ * cairo_debug_reset_static_data() instead of duplicating its logic...
+ */
+
 #ifdef BUILD_CAIRO_DLL
 /* The main DLL entry for DLL initialization and uninitialization */
 /* Only include this code if we're about to build a DLL.          */
