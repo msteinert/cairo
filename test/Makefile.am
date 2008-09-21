@@ -1094,6 +1094,14 @@ svg2png_LDFLAGS = $(CAIRO_TEST_UNDEFINED_LDFLAGS)
 svg2png_LDADD  = $(LDADD) $(LIBRSVG_LIBS)
 endif
 
+if BUILD_PS2PNG
+check_PROGRAMS += ps2png
+ps2png_CFLAGS = $(LIBSPECTRE_CFLAGS)
+# add LDADD, so ps2png uses "our" cairo
+ps2png_LDFLAGS = $(CAIRO_TEST_UNDEFINED_LDFLAGS)
+ps2png_LDADD  = $(LDADD) $(LIBSPECTRE_LIBS)
+endif
+
 EXTRA_PROGRAMS += $(TESTS) $(DISABLED_TESTS)
 
 # Do a funny transition of CAIRO_TEST_TARGET through TARGETS such that

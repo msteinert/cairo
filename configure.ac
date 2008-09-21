@@ -357,6 +357,7 @@ if test "x$use_ps" = "xyes"; then
 fi
 
 AM_CONDITIONAL(CAIRO_CAN_TEST_PS_SURFACE, test "x$test_ps" = "xyes")
+AM_CONDITIONAL(BUILD_PS2PNG, test "x$any2ppm_ps" = "xyes")
 AC_SUBST(LIBSPECTRE_CFLAGS)
 AC_SUBST(LIBSPECTRE_LIBS)
 
