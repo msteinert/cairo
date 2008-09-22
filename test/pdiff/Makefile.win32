@@ -1,7 +1,5 @@
-
-SUBMAKEFILE = 1
-
-include ../../Makefile.win32
+top_srcdir = ../..
+include $(top_srcdir)/build/Makefile.win32.common
 
 CFLAGS += -I../../src
 

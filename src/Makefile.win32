@@ -1,7 +1,6 @@
-SUBMAKEFILE = 1
-
-include ../Makefile.win32
-include Makefile.win32.config
+top_srcdir = ..
+include $(top_srcdir)/build/Makefile.win32.common
+include Makefile.win32.features
 
 SOURCES = $(enabled_cairo_sources)
 
@@ -19,19 +18,3 @@ $(CFG)/cairo.dll: $(OBJECTS)
 
 $(CFG)/cairo-static.lib: $(OBJECTS) $(STATIC_OBJECTS)
 	lib -NOLOGO -OUT:$@ $(PIXMAN_LIBS) $(OBJECTS) $(STATIC_OBJECTS)
-
-clean:
-	@rm -f $(CFG)/*.obj $(CFG)/*.dll $(CFG)/*.lib $(CFG)/*.pdb $(CFG)/*.ilk || exit 0
-
-inform:
-ifneq ($(CFG),release)
-ifneq ($(CFG),debug)
-	@echo "Invalid configuration "$(CFG)" specified."
-	@echo -n "You must specify a configuration when "
-	@echo "running make, e.g. make CFG=debug"
-	@echo
-	@echo -n "Possible choices for configuration are "
-	@echo "'release' and 'debug'"
-	@exit 1
-endif
-endif
