@@ -3,22 +3,6 @@ dnl These are the facilities for generating Makefile.am.features and
 dnl Makefile.win32.features files.
 dnl
 
-dnl
-dnl CAIRO_FEATURE_HOOK_REGISTER_WIN32(WHAT, COMMANDS)
-dnl
-dnl Like CAIRO_FEATURE_HOOK_REGISTER but only applies to features that
-dnl are by default enabled on win32 build system and match WHAT.
-dnl
-AC_DEFUN([CAIRO_FEATURE_HOOK_REGISTER_WIN32],
-[dnl
-	dnl builtin features
-	CAIRO_FEATURE_HOOK_REGISTER([*], always, [$1], [$2])dnl
-	dnl recommended features
-	CAIRO_FEATURE_HOOK_REGISTER([*], yes, [$1], [$2])dnl
-	dnl native win32 features
-	CAIRO_FEATURE_HOOK_REGISTER([*], auto, [$1], [m4_bmatch(cr_feature, [win32], [$2])])dnl
-])dnl
-
 dnl ===========================================================================
 
 dnl
@@ -52,17 +36,6 @@ AC_DEFUN([CAIRO_INIT_MAKEFILES],
 
 	dnl An empty line per feature for readability
 	CAIRO_MAKEFILE_ACCUMULATE_FEATURE(*,*,*,*,[])dnl
-
-	dnl Turn win32 features on
-	CAIRO_FEATURE_HOOK_REGISTER_WIN32(*, [_CAIRO_MAKEFILES_WIN32_DEFINE_FEATURE])dnl
-])dnl
-
-m4_define([_CAIRO_MAKEFILES_WIN32_DEFINE_FEATURE],
-[
-	m4_foreach_w([cr_makefile], _CAIRO_MAKEFILES,
-	[dnl
-		CAIRO_ACCUMULATE([MAKEFILE_]cr_makefile[_WIN32], [ifeq ($(]cr_feature_tag[),)]m4_newline[]cr_feature_tag[ = 1]m4_newline[endif])dnl
-	])dnl
 ])dnl
 
 dnl ===========================================================================
