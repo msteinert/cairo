@@ -119,6 +119,8 @@ long-lines
 mask
 mask-alpha
 mask-ctm
+mask-ctm-image
+mask-ctm-similar
 mask-surface-ctm
 meta-surface-pattern
 miter-precision

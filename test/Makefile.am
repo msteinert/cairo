@@ -95,6 +95,8 @@ long-lines$(EXEEXT)					\
 mask$(EXEEXT)						\
 mask-alpha$(EXEEXT)					\
 mask-ctm$(EXEEXT)					\
+mask-ctm-image$(EXEEXT)					\
+mask-ctm-similar$(EXEEXT)				\
 mask-surface-ctm$(EXEEXT)				\
 meta-surface-pattern$(EXEEXT)				\
 miter-precision$(EXEEXT)				\
@@ -507,6 +509,8 @@ REFERENCE_IMAGES = \
 	mask-ctm-ref.png	\
 	mask-ctm-rgb24-ref.png	\
 	mask-ctm-svg-argb32-ref.png	\
+	mask-ctm-image-ref.png	\
+	mask-ctm-similar-ref.png	\
 	mask-ref.png	\
 	mask-rgb24-ref.png	\
 	mask-pdf-argb32-ref.png	\
