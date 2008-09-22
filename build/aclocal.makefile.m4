@@ -125,17 +125,20 @@ AC_DEFUN([CAIRO_MAKEFILE_ACCUMULATE],
 
 m4_define([_CAIRO_MAKEFILE_ACCUMULATE_FEATURE],
 [dnl
-	m4_case([$2],
+	dnl Don't do a conditional for default=always features
+	m4_pushdef([_cr_mk_acc_feat_enabled],m4_if([$2],[yes],[m4_if(cr_feature_default,[always],[*],[$2])],[$2]))dnl
+	m4_case(_cr_mk_acc_feat_enabled,
 		[*],,
 		[yes],	[CAIRO_ACCUMULATE([$1], [$3])],
 		[no],	[CAIRO_ACCUMULATE([$1], [$3]m4_newline[$4])],
 			[m4_fatal([Invalid ENABLED value `]$2['])])dnl
 	CAIRO_ACCUMULATE_UNQUOTED_UNCHECKED([$1], [$6])dnl
-	m4_case([$2],
+	m4_case(_cr_mk_acc_feat_enabled,
 		[*],,
 		[yes],	[CAIRO_ACCUMULATE([$1], [$5])],
 		[no],	[CAIRO_ACCUMULATE([$1], [$5])],
 			[m4_fatal([Invalid ENABLED value `]$2['])])dnl
+	m4_popdef([_cr_mk_acc_feat_enabled])dnl
 ])dnl
 
 dnl
