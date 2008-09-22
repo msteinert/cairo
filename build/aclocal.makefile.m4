@@ -51,7 +51,7 @@ AC_DEFUN([CAIRO_INIT_MAKEFILES],
 	])dnl
 
 	dnl An empty line per feature for readability
-	CAIRO_MAKEFILE_ACCUMULATE(*,[]m4_newline[])dnl
+	CAIRO_MAKEFILE_ACCUMULATE_FEATURE(*,*,*,*,[])dnl
 
 	dnl Turn win32 features on
 	CAIRO_FEATURE_HOOK_REGISTER_WIN32(*, [_CAIRO_MAKEFILES_WIN32_DEFINE_FEATURE])dnl
