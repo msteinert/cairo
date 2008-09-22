@@ -1938,6 +1938,7 @@ _cairo_svg_surface_emit_paint (cairo_output_stream_t *output,
 			       cairo_svg_surface_t   *surface,
 			       cairo_operator_t	      op,
 			       cairo_pattern_t	     *source,
+			       cairo_pattern_t	     *mask_source,
 			       const char	     *extra_attributes)
 {
     cairo_status_t status;
@@ -1948,7 +1949,7 @@ _cairo_svg_surface_emit_paint (cairo_output_stream_t *output,
 				       surface,
 				       (cairo_surface_pattern_t *) source,
 				       invalid_pattern_id,
-				       NULL,
+				       mask_source ? &mask_source->matrix :NULL,
 				       extra_attributes);
 
     _cairo_output_stream_printf (output,
@@ -2031,7 +2032,7 @@ _cairo_svg_surface_paint (void		    *abstract_surface,
 	}
     }
 
-    return _cairo_svg_surface_emit_paint (surface->xml_node, surface, op, source, NULL);
+    return _cairo_svg_surface_emit_paint (surface->xml_node, surface, op, source, 0, NULL);
 }
 
 static cairo_int_status_t
@@ -2077,7 +2078,7 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
 				 "%s",
 				 mask_id,
 				 discard_filter ? "" : "  <g filter=\"url(#alpha)\">\n");
-    status = _cairo_svg_surface_emit_paint (mask_stream, surface, op, mask, NULL);
+    status = _cairo_svg_surface_emit_paint (mask_stream, surface, op, mask, source, NULL);
     if (status) {
 	cairo_status_t ignore = _cairo_output_stream_destroy (mask_stream);
 	return status;
@@ -2096,7 +2097,7 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
 
     snprintf (buffer, sizeof buffer, "mask=\"url(#mask%d)\"",
 	      mask_id);
-    status = _cairo_svg_surface_emit_paint (surface->xml_node, surface, op, source, buffer);
+    status = _cairo_svg_surface_emit_paint (surface->xml_node, surface, op, source, 0, buffer);
     if (status)
 	return status;
 

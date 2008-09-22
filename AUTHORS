@@ -4,6 +4,7 @@ Shawn T. Amundson <amundson@gtk.org> Build fix
 Olivier Andrieu <oliv__a@users.sourceforge.net> PNG backend
 Peter Dennis Bartok <peter@novonyx.com> Bug fix for clipping
 Dave Beckett <dajobe@debian.org> Build fixes, Debian packaging
+Kai-Uwe Behrmann <ku.b@gmx.de> SVG bug fixes
 Christian Biesinger <cbiesinger@web.de> BeOS backend
 Billy Biggs <vektor@dumbterm.net> Pixman code merge. Optimization. Fixes for subtle rendering bugs.
 Hans Breuer <hans@breuer.org> win32 bug fixes, build fixes, and improvements
