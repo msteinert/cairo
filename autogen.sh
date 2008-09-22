@@ -169,9 +169,9 @@ do_cmd $ACLOCAL $ACLOCAL_FLAGS
 
 do_cmd $AUTOHEADER
 
-# create dummy */Makefile.am.config and ChangeLog to make automake happy
-> boilerplate/Makefile.am.config
-> src/Makefile.am.config
+# create dummy */Makefile.am.features and ChangeLog to make automake happy
+> boilerplate/Makefile.am.features
+> src/Makefile.am.features
 touch ChangeLog
 
 # We don't call gtkdocize right now.  When we do, we should then modify

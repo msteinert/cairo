@@ -1,7 +1,7 @@
 # Note: All source files are listed in Makefile.sources.
 
 include $(top_srcdir)/build/Makefile.am.common
-include $(srcdir)/Makefile.am.config
+include $(srcdir)/Makefile.am.features
 
 AM_CPPFLAGS = -I$(srcdir) $(CAIRO_CFLAGS)
 

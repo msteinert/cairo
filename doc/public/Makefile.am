@@ -1,5 +1,5 @@
 include $(top_srcdir)/build/Makefile.am.common
-include $(top_srcdir)/src/Makefile.am.config
+include $(top_srcdir)/src/Makefile.am.features
 
 # The name of the module.
 DOC_MODULE=cairo
