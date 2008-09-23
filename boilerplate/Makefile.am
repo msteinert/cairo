@@ -3,16 +3,15 @@
 include $(top_srcdir)/build/Makefile.am.common
 include $(srcdir)/Makefile.am.features
 
+EXTRA_DIST += Makefile.win32      Makefile.win32.features
+MAINTAINERCLEANFILES += $(srcdir)/Makefile.win32.features
+
 AM_CPPFLAGS = \
 	-I$(srcdir) \
 	-I$(top_builddir)/src \
 	-I$(top_srcdir)/src \
 	$(CAIRO_CFLAGS) \
 	$(NULL)
-
-EXTRA_DIST += Makefile.win32
-EXTRA_DIST           += Makefile.win32.config
-MAINTAINERCLEANFILES += $(srcdir)/Makefile.win32.config
 
 EXTRA_LTLIBRARIES += libcairoboilerplate.la
 

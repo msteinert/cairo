@@ -1,5 +1,14 @@
 include $(top_srcdir)/build/Makefile.am.common
 
+EXTRA_DIST += \
+	Makefile.win32 \
+	build/Makefile.win32.common \
+	build/Makefile.win32.features \
+	$(NULL)
+MAINTAINERCLEANFILES += \
+	$(srcdir)/build/Makefile.win32.features \
+	$(NULL)
+
 ACLOCAL_AMFLAGS = -I build
 
 DIST_SUBDIRS = src doc util boilerplate test perf
@@ -33,7 +42,6 @@ EXTRA_DIST += \
 	COPYING-MPL-1.1 \
 	HACKING \
 	INSTALL \
-	Makefile.win32 \
 	NEWS \
 	PORTING_GUIDE \
 	README \

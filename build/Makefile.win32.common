@@ -1,3 +1,4 @@
+include $(top_srcdir)/build/Makefile.win32.features
 
 CC := cl
 LINK := link
@@ -8,8 +9,9 @@ else
 OPT := -O2
 endif
 
-PIXMAN_CFLAGS := -I../../pixman/pixman
-PIXMAN_LIBS := ../../pixman/pixman/$(CFG)/pixman-1.lib
+PIXMAN_DIR = $(top_srcdir)/../pixman
+PIXMAN_CFLAGS := -I$(PIXMAN_DIR)/pixman
+PIXMAN_LIBS := $(PIXMAN_DIR)/pixman/$(CFG)/pixman-1.lib
 
 EXE_LDFLAGS = libpng.lib zlib.lib gdi32.lib msimg32.lib user32.lib
 
