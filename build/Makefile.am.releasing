@@ -86,7 +86,7 @@ release-check: \
 	$(MAKE) $(AM_MAKEFLAGS) distcheck
 
 release-upload: $(tar_file) $(sha1_file) $(gpg_file)
-	mkdir -p releases
+	$(mkdir_p) releases
 	scp $(tar_file) $(sha1_file) $(gpg_file) $(RELEASE_UPLOAD_HOST):$(RELEASE_UPLOAD_DIR)
 	mv $(tar_file) $(sha1_file) $(gpg_file) releases
 	ssh $(RELEASE_UPLOAD_HOST) "rm -f $(RELEASE_UPLOAD_DIR)/LATEST-$(PACKAGE)-[0-9]* && ln -s $(tar_file) $(RELEASE_UPLOAD_DIR)/LATEST-$(PACKAGE)-$(VERSION)"

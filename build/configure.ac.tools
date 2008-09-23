@@ -2,6 +2,7 @@
 AC_PATH_PROG(FIND, find)
 AC_PATH_PROG(XARGS, xargs)
 
+AC_PROG_MKDIR_P
 AC_PROG_CC
 AC_PROG_CPP
 AC_PROG_CXX dnl required for BeOS (and cannot be a conditional dependency)
