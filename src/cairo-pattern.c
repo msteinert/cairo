@@ -1821,8 +1821,8 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 		 */
 		x = MAX (0, floor (x1) - 1);
 		y = MAX (0, floor (y1) - 1);
-		width = MIN (extents.width, ceil (x2) + 1) - x;
-		height = MIN (extents.height, ceil (y2) + 1) - y;
+		width = MAX (MIN (extents.width, ceil (x2) + 1) - x, 0);
+		height = MAX (MIN (extents.height, ceil (y2) + 1) - y, 0);
 	    }
 	    x += tx;
 	    y += ty;
