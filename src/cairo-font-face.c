@@ -306,7 +306,7 @@ cairo_font_face_set_user_data (cairo_font_face_t	   *font_face,
 			       cairo_destroy_func_t	    destroy)
 {
     if (CAIRO_REFERENCE_COUNT_IS_INVALID (&font_face->ref_count))
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return font_face->status;
 
     return _cairo_user_data_array_set_data (&font_face->user_data,
 					    key, user_data, destroy);

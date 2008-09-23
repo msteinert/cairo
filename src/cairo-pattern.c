@@ -814,7 +814,7 @@ cairo_pattern_set_user_data (cairo_pattern_t		 *pattern,
 			     cairo_destroy_func_t	  destroy)
 {
     if (CAIRO_REFERENCE_COUNT_IS_INVALID (&pattern->ref_count))
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return pattern->status;
 
     return _cairo_user_data_array_set_data (&pattern->user_data,
 					    key, user_data, destroy);

@@ -288,7 +288,7 @@ cairo_set_user_data (cairo_t			 *cr,
 		     cairo_destroy_func_t	 destroy)
 {
     if (CAIRO_REFERENCE_COUNT_IS_INVALID (&cr->ref_count))
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return cr->status;
 
     return _cairo_user_data_array_set_data (&cr->user_data,
 					    key, user_data, destroy);

@@ -1103,7 +1103,7 @@ cairo_scaled_font_set_user_data (cairo_scaled_font_t	     *scaled_font,
 				 cairo_destroy_func_t	      destroy)
 {
     if (CAIRO_REFERENCE_COUNT_IS_INVALID (&scaled_font->ref_count))
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return scaled_font->status;
 
     return _cairo_user_data_array_set_data (&scaled_font->user_data,
 					    key, user_data, destroy);
