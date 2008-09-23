@@ -51,8 +51,20 @@ dnl Makefile's.
 dnl
 AC_DEFUN([CAIRO_CONFIG_MAKEFILE],
 [dnl
-	m4_append_uniq([_CAIRO_MAKEFILES], [$1], [ ],,
-		     [m4_fatal([Makefile `$1' already registered])])dnl
+	m4_append([_CAIRO_MAKEFILES], [$1], [ ])dnl
+	CAIRO_CONFIG_MAKEFILE_PRIVATE([$1], [$2])dnl
+])dnl
+
+dnl
+dnl CAIRO_CONFIG_MAKEFILE_PRIVATE(TAG, DIR)
+dnl
+dnl Like CAIRO_CONFIG_MAKEFILE but this makefile tag won't match
+dnl against '*' in makefile accumulators.
+dnl
+AC_DEFUN([CAIRO_CONFIG_MAKEFILE_PRIVATE],
+[dnl
+	m4_ifdef([cr_make_$1_dir],
+		 [m4_fatal([Makefile `$1' already registered])])dnl
 
 	dnl Remember directory for this makefile tag
         m4_define([cr_make_$1_dir],[$2])dnl
@@ -99,19 +111,19 @@ AC_DEFUN([CAIRO_MAKEFILE_ACCUMULATE],
 m4_define([_CAIRO_MAKEFILE_ACCUMULATE_FEATURE],
 [dnl
 	dnl Don't do a conditional for default=always features
-	m4_pushdef([_cr_mk_acc_feat_enabled],m4_if([$2],[yes],[m4_if(cr_feature_default,[always],[*],[$2])],[$2]))dnl
-	m4_case(_cr_mk_acc_feat_enabled,
+	m4_pushdef([cr_mk_acc_feat_enabled],m4_if([$2],[yes],[m4_if(cr_feature_default,[always],[*],[$2])],[$2]))dnl
+	m4_case(cr_mk_acc_feat_enabled,
 		[*],,
 		[yes],	[CAIRO_ACCUMULATE([$1], [$3])],
 		[no],	[CAIRO_ACCUMULATE([$1], [$3]m4_newline[$4])],
 			[m4_fatal([Invalid ENABLED value `]$2['])])dnl
 	CAIRO_ACCUMULATE_UNQUOTED_UNCHECKED([$1], [$6])dnl
-	m4_case(_cr_mk_acc_feat_enabled,
+	m4_case(cr_mk_acc_feat_enabled,
 		[*],,
 		[yes],	[CAIRO_ACCUMULATE([$1], [$5])],
 		[no],	[CAIRO_ACCUMULATE([$1], [$5])],
 			[m4_fatal([Invalid ENABLED value `]$2['])])dnl
-	m4_popdef([_cr_mk_acc_feat_enabled])dnl
+	m4_popdef([cr_mk_acc_feat_enabled])dnl
 ])dnl
 
 dnl
