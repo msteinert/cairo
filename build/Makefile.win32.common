@@ -1,4 +1,10 @@
+default: all
+
 include $(top_srcdir)/build/Makefile.win32.features
+
+ifeq ($(top_builddir),)
+top_builddir = $(top_srcdir)
+endif
 
 CC := cl
 LINK := link
@@ -9,20 +15,27 @@ else
 OPT := -O2
 endif
 
-PIXMAN_DIR = $(top_srcdir)/../pixman
-PIXMAN_CFLAGS := -I$(PIXMAN_DIR)/pixman
-PIXMAN_LIBS := $(PIXMAN_DIR)/pixman/$(CFG)/pixman-1.lib
+PIXMAN_CFLAGS := -I$(top_srcdir)/../pixman/pixman
+PIXMAN_LIBS := $(top_builddir)/../pixman/pixman/$(CFG)/pixman-1.lib
 
-EXE_LDFLAGS = libpng.lib zlib.lib gdi32.lib msimg32.lib user32.lib
+CAIRO_LIBS =  gdi32.lib msimg32.lib user32.lib
+ifeq ($(CAIRO_HAS_PNG_FUNCTIONS),1)
+CAIRO_LIBS += libpng.lib
+endif
+ifeq ($(CAIRO_HAS_PS_SURFACE)$(CAIRO_HAS_PDF_SURFACE),00)
+else
+CAIRO_LIBS += zdll.lib
+endif
 
 DEFAULT_CFLAGS = -MD -nologo $(OPT)
 DEFAULT_CFLAGS += -D_CRT_SECURE_NO_DEPRECATE -D_CRT_NONSTDC_NO_DEPRECATE
-DEFAULT_CFLAGS += -I. 
+DEFAULT_CFLAGS += -I. -I$(top_srcdir)
 DEFAULT_CFLAGS += $(PIXMAN_CFLAGS)
 
-CFLAGS := $(DEFAULT_CFLAGS)
+CAIRO_CFLAGS = $(DEFAULT_CFLAGS) $(CFLAGS)
 
 inform:
+	@echo
 ifneq ($(CFG),release)
 ifneq ($(CFG),debug)
 	@echo "Invalid configuration "$(CFG)" specified."
@@ -39,11 +52,11 @@ endif
 
 $(CFG)/%.obj: %.c
 	@mkdir -p $(CFG)
-	@$(CC) $(CFLAGS) -c -Fo"$@" $<
+	@$(CC) $(CAIRO_CFLAGS) -c -Fo"$@" $<
 
 $(CFG)/%-static.obj: %.c
 	@mkdir -p $(CFG)
-	@$(CC) $(CFLAGS) -c -DCAIRO_WIN32_STATIC_BUILD=1 -Fo"$@" $<
+	@$(CC) $(CAIRO_CFLAGS) -c -DCAIRO_WIN32_STATIC_BUILD=1 -Fo"$@" $<
 
 clean:
 	@rm -f $(CFG)/*.obj $(CFG)/*.dll $(CFG)/*.lib $(CFG)/*.pdb $(CFG)/*.ilk || exit 0
