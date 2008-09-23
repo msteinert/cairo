@@ -562,8 +562,21 @@ _cairo_traps_extents (const cairo_traps_t *traps,
     if (traps->num_traps == 0) {
 	extents->p1.x = extents->p1.y = _cairo_fixed_from_int (0);
 	extents->p2.x = extents->p2.y = _cairo_fixed_from_int (0);
-    } else
+    } else {
 	*extents = traps->extents;
+	if (traps->has_limits) {
+	    /* clip the traps to the imposed limits */
+	    if (extents->p1.x < traps->limits.p1.x)
+		extents->p1.x = traps->limits.p1.x;
+	    if (extents->p2.x > traps->limits.p2.x)
+		extents->p2.x = traps->limits.p2.x;
+
+	    if (extents->p1.y < traps->limits.p1.y)
+		extents->p1.y = traps->limits.p1.y;
+	    if (extents->p2.y > traps->limits.p2.y)
+		extents->p2.y = traps->limits.p2.y;
+	}
+    }
 }
 
 /**
