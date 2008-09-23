@@ -1,5 +1,8 @@
 default: all
 
+#
+# Edit build/Makefile.win32.features to enable features to build
+#
 include $(top_srcdir)/build/Makefile.win32.features
 
 ifeq ($(top_builddir),)
