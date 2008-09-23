@@ -571,6 +571,16 @@ _cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t	*pdf_operators,
 
 	for (i = 0; i < num_dashes; i += 2) {
 	    if (dash[i] == 0.0) {
+		/* Do not modify the dashes in-place, as we may need to also
+		 * replay this stroke to an image fallback.
+		 */
+		if (dash == style->dash) {
+		    dash = _cairo_malloc_ab (num_dashes, sizeof (double));
+		    if (dash == NULL)
+			return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+		    memcpy (dash, style->dash, num_dashes * sizeof (double));
+		}
+
 		/* If we're at the front of the list, we first rotate
 		 * two elements from the end of the list to the front
 		 * of the list before folding away the 0.0. Or, if
@@ -581,10 +591,10 @@ _cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t	*pdf_operators,
 		    double last_two[2];
 
 		    if (num_dashes == 2) {
-			if (dash != style->dash)
-			    free (dash);
+			free (dash);
 			return CAIRO_INT_STATUS_NOTHING_TO_DO;
 		    }
+
 		    /* The cases of num_dashes == 0, 1, or 3 elements
 		     * cannot exist, so the rotation of 2 elements
 		     * will always be safe */
