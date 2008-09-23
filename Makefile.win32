@@ -1,14 +1,11 @@
 top_srcdir = .
 include $(top_srcdir)/build/Makefile.win32.common
+include $(top_srcdir)/build/Makefile.win32.features-h
 
 SUBDIRS = src
 TEST_SUBDIRS = boilerplate test
 
 all: inform cairo
-
-src/cairo-features.h:
-	@echo Warning: creating default cairo-features.h
-	@cp src/cairo-features-win32.h src/cairo-features.h
 
 cairo: src/cairo-features.h
 	@list='$(SUBDIRS)'; for f in $$list ; do \

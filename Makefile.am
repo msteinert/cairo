@@ -4,9 +4,11 @@ EXTRA_DIST += \
 	Makefile.win32 \
 	build/Makefile.win32.common \
 	build/Makefile.win32.features \
+	build/Makefile.win32.features-h \
 	$(NULL)
 MAINTAINERCLEANFILES += \
 	$(srcdir)/build/Makefile.win32.features \
+	$(srcdir)/build/Makefile.win32.features-h \
 	$(NULL)
 
 ACLOCAL_AMFLAGS = -I build
