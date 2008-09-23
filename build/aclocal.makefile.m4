@@ -28,8 +28,8 @@ AC_DEFUN([CAIRO_INIT_MAKEFILES],
 	dnl Allow feature tags in the output
 	m4_pattern_allow(^CAIRO_HAS_)dnl
 
-	dnl Automake conditionals for all features
-	CAIRO_FEATURE_HOOK_REGISTER(*,*,*,
+	dnl Automake conditionals for non-builtin features
+	CAIRO_FEATURE_HOOK_REGISTER(*,!always,*,
 	[dnl
 		AM_CONDITIONAL(cr_feature_tag, [test "x$use_]cr_feature[" = xyes])dnl
 	])dnl
