@@ -3,28 +3,28 @@ SPARSE = sparse
 sparse:
 	@echo Checking enabled sources with sparse checker
 	@status=true; for f in $(enabled_cairo_sources); do \
-		echo $(SPARSE) $(PREPROCESS_ARGS) $$f; \
-		$(SPARSE) $(PREPROCESS_ARGS) $$f || status=false; \
+		echo $(SPARSE) $(PREPROCESS_ARGS) $(srcdir)/$$f; \
+		$(SPARSE) $(PREPROCESS_ARGS) $(srcdir)/$$f || status=false; \
 	done; $$status
 
 SPLINT = splint -badflag
 splint:
 	@echo Checking enabled sources with splint checker
 	@status=true; for f in $(enabled_cairo_sources); do \
-		echo $(SPLINT) $(PREPROCESS_ARGS) $$f; \
-		$(SPLINT) $(PREPROCESS_ARGS) $$f || status=false; \
+		echo $(SPLINT) $(PREPROCESS_ARGS) $(srcdir)/$$f; \
+		$(SPLINT) $(PREPROCESS_ARGS) $(srcdir)/$$f || status=false; \
 	done; $$status
 
 UNO = uno
 uno:
 	@echo Checking enabled sources with uno checker
-	$(UNO) $(PREPROCESS_ARGS) -DHAVE_CONFIG_H -U__GNUC__ $(enabled_cairo_sources)
+	cd $(srcdir); $(UNO) $(PREPROCESS_ARGS) -DHAVE_CONFIG_H -U__GNUC__ $(enabled_cairo_sources)
 
 headers-standalone:
 	@echo Checking that enabled public/private headers can be compiled standalone
 	@status=true; for f in $(enabled_cairo_headers) $(enabled_cairo_private); do \
-		echo $(COMPILE) -o /dev/null $$f; \
-		$(COMPILE) -o /dev/null $$f || status=false; \
+		echo $(COMPILE) -o /dev/null $(srcdir)/$$f; \
+		$(COMPILE) -o /dev/null $(srcdir)/$$f || status=false; \
 	done; $$status
 
 analysis: all headers-standalone sparse splint uno
