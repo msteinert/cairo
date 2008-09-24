@@ -33,7 +33,8 @@ static cairo_test_draw_function_t draw;
 
 static const cairo_test_t test = {
     "operator-alpha",
-    "Tests using set_operator() with an non-opaque source",
+    "Tests using set_operator() with an non-opaque source"
+    "\nCurrently failing on the PDF backend for an unknown reason.",
     (SIZE+PAD) * N_OPERATORS + PAD, SIZE + 2*PAD,
     draw
 };

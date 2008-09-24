@@ -29,7 +29,8 @@ static cairo_test_draw_function_t draw;
 
 static const cairo_test_t test = {
     "alpha-similar",
-    "Tests creation of similar alpha surfaces",
+    "Tests creation of similar alpha surfaces"
+    "\nApplication of a pure-alpha similar source is inconsistent across backends.",
     10, 10,
     draw
 };

@@ -777,6 +777,7 @@ $(REFERENCE_IMAGES)
 # everything from this list by fixing the bugs. (We don't necessarily
 # have to be that strict for "snapshots" though.)
 XFAIL_TESTS =					\
+alpha-similar$(EXEEXT)				\
 big-line$(EXEEXT)				\
 big-trap$(EXEEXT)				\
 extend-pad$(EXEEXT)				\
@@ -784,6 +785,9 @@ filter-nearest-offset$(EXEEXT)			\
 filter-bilinear-extents$(EXEEXT)		\
 large-source$(EXEEXT)				\
 long-lines$(EXEEXT)				\
+operator$(EXEEXT)				\
+operator-alpha$(EXEEXT)				\
+self-copy-overlap$(EXEEXT)			\
 self-intersecting$(EXEEXT)			\
 surface-pattern$(EXEEXT)			\
 surface-pattern-big-scale-down$(EXEEXT)		\

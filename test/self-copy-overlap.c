@@ -32,7 +32,8 @@ static cairo_test_draw_function_t draw;
 /* This test is only interesting if the target has alpha */
 static const cairo_test_t test = {
     "self-copy-overlap",
-    "Tests painting to itself using itself as the source",
+    "Tests painting to itself using itself as the source"
+    "\nBackends treat this case inconsistently---vector backends are creating snapshots.",
     200, 200,
     draw
 };
