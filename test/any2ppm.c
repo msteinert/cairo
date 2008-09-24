@@ -79,6 +79,7 @@
 #include <sys/socket.h>
 #include <sys/poll.h>
 #include <sys/un.h>
+#include <errno.h>
 
 #define SOCKET_PATH "./.any2ppm"
 #define TIMEOUT 60000 /* 60 seconds */
@@ -87,6 +88,30 @@
 #endif
 
 #define ARRAY_LENGTH(A) (sizeof (A) / sizeof (A[0]))
+
+static int
+_writen (int fd, char *buf, int len)
+{
+    while (len) {
+	int ret;
+
+	ret = write (fd, buf, len);
+	if (ret == -1) {
+	    int err = errno;
+	    switch (err) {
+	    case EINTR:
+	    case EAGAIN:
+		continue;
+	    default:
+		return 0;
+	    }
+	}
+	len -= ret;
+	buf += ret;
+    }
+
+    return 1;
+}
 
 static int
 _write (int fd,
@@ -110,8 +135,9 @@ _write (int fd,
 	src += len;
 
 	if (buflen == maxlen) {
-	    if (write (fd, buf, maxlen) != maxlen)
+	    if (! _writen (fd, buf, buflen))
 		return -1;
+
 	    buflen = 0;
 	}
     }
@@ -180,10 +206,8 @@ write_ppm (cairo_surface_t *surface, int fd)
 	    return "write failed";
     }
 
-    if (len) {
-	if (write (fd, buf, len) != len)
-	    return "write failed";
-    }
+    if (len && ! _writen (fd, buf, len))
+	return "write failed";
 
     return NULL;
 }
@@ -548,8 +572,20 @@ any2ppm_daemon (void)
 	    if (_getline (fd, &line, &len) != -1) {
 		char *argv[10];
 
-		if (split_line (line, argv, ARRAY_LENGTH (argv)) > 0)
-		    convert (argv, fd);
+		if (split_line (line, argv, ARRAY_LENGTH (argv)) > 0) {
+		    const char *err;
+
+		    err = convert (argv, fd);
+		    if (err != NULL) {
+			FILE *file = fopen (".any2ppm.errors", "a");
+			if (file != NULL) {
+			    fprintf (file,
+				     "Failed to convert '%s': %s\n",
+				     argv[0], err);
+			    fclose (file);
+			}
+		    }
+		}
 	    }
 	    close (fd);
 	}

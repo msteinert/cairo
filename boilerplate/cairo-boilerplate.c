@@ -746,6 +746,24 @@ POPEN:
     return popen (command, "r");
 }
 
+static cairo_bool_t
+freadn (char *buf, int len, FILE *file)
+{
+    int ret;
+
+    while (len) {
+	ret = fread (buf, 1, len, file);
+	if (ret != len) {
+	    if (ferror (file) || feof (file))
+		return FALSE;
+	}
+	len -= ret;
+	buf += len;
+    }
+
+    return TRUE;
+}
+
 cairo_surface_t *
 cairo_boilerplate_image_surface_create_from_ppm_stream (FILE *file)
 {
@@ -780,18 +798,18 @@ cairo_boilerplate_image_surface_create_from_ppm_stream (FILE *file)
 	unsigned char *buf = data + y *stride;
 	switch (format) {
 	case '7':
-	    if (fread (buf, 4, width, file) != (size_t) width)
+	    if (! freadn (buf, 4 * width, file))
 		goto FAIL;
 	    break;
 	case '6':
 	    for (x = 0; x < width; x++) {
-		if (fread (buf, 1, 3, file) != 3)
+		if (! freadn (buf, 3, file))
 		    goto FAIL;
 		buf += 4;
 	    }
 	    break;
 	case '5':
-	    if (fread (buf, 1, width, file) != (size_t) width)
+	    if (! freadn (buf, width, file))
 		goto FAIL;
 	    break;
 	}
