@@ -42,7 +42,7 @@
 #include "cairo-arc-private.h"
 #include "cairo-path-private.h"
 
-#define CAIRO_TOLERANCE_MINIMUM	0.0002 /* We're limited by 16 bits of sub-pixel precision */
+#define CAIRO_TOLERANCE_MINIMUM	_cairo_fixed_to_double(1)
 
 static const cairo_t _cairo_nil = {
   CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
