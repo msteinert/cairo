@@ -4471,17 +4471,12 @@ _cairo_pdf_surface_mask	(void			*abstract_surface,
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
 	status = _cairo_pdf_surface_analyze_operation (surface, op, source);
 	if (status != CAIRO_STATUS_SUCCESS &&
-	    status <= CAIRO_INT_STATUS_UNSUPPORTED)
+	    status != CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN)
 	    return status;
 
 	status2 = _cairo_pdf_surface_analyze_operation (surface, op, mask);
-	if (status2 == CAIRO_STATUS_SUCCESS)
-	    return status;
-	if (status2 <= CAIRO_INT_STATUS_UNSUPPORTED)
+	if (status2 != CAIRO_STATUS_SUCCESS)
 	    return status2;
-
-	/* XXX At this point, both status and status2 indicate that the
-	 * patterns require further analysis. */
 
 	return status;
     } else if (surface->paginated_mode == CAIRO_PAGINATED_MODE_FALLBACK) {
