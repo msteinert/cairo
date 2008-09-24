@@ -183,6 +183,10 @@ _cairo_traps_add_trap (cairo_traps_t *traps,
 	    return;
 	}
 
+	/* And reject if the trapezoid is entirely above or below */
+	if (top > traps->limits.p2.y || bottom < traps->limits.p1.y)
+	    return;
+
 	/* Otherwise, clip the trapezoid to the limits. We only clip
 	 * where an edge is entirely outside the limits. If we wanted
 	 * to be more clever, we could handle cases where a trapezoid
