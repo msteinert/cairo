@@ -234,6 +234,7 @@ Here are the reported poppler bugs and the tests they affect:
 Poppler doesn't correctly handle gradients with transparency
 https://bugs.freedesktop.org/show_bug.cgi?id=12144
 --------------------------------------------------
+fill-alpha-pattern
 gradient-alpha
 linear-gradient
 trap-clip
