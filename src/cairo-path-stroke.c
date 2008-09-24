@@ -915,6 +915,14 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 		    stroker->has_current_face = FALSE;
 		}
 	    }
+	} else {
+	    if (stroker->has_current_face) {
+		/* Cap final face from previous segment */
+		status = _cairo_stroker_add_trailing_cap (stroker, &stroker->current_face);
+		if (status)
+		    return status;
+		stroker->has_current_face = FALSE;
+	    }
 	}
 
 	_cairo_stroker_step_dash (stroker, step_length);
