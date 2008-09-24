@@ -90,7 +90,7 @@ regular "./configure; make; make install" sequence can be used.
 See file named INSTALL for more details.
 
 There is limited support for a win32 build system.
-See Makefile.win32 files in various directories.
+See README.win32 and Makefile.win32 files in various directories.
 
 
 ChangeLog
