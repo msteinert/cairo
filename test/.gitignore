@@ -120,9 +120,9 @@ long-lines
 mask
 mask-alpha
 mask-ctm
-mask-ctm-image
-mask-ctm-similar
 mask-surface-ctm
+mask-transformed-image
+mask-transformed-similar
 meta-surface-pattern
 miter-precision
 move-to-show-surface

@@ -30,7 +30,7 @@ static cairo_test_draw_function_t draw;
 static const char png_filename[] = "romedalen.png";
 
 static const cairo_test_t test = {
-    "mask-ctm-image",
+    "mask-transformed-similar",
     "Test that cairo_mask() is affected properly by the CTM and not the image",
     80, 80,
     draw
@@ -42,7 +42,9 @@ create_mask (cairo_t *dst, int width, int height)
     cairo_surface_t *mask;
     cairo_t *cr;
 
-    mask = cairo_image_surface_create (CAIRO_FORMAT_A8, width, height);
+    mask = cairo_surface_create_similar (cairo_get_target (dst),
+	                                 CAIRO_CONTENT_ALPHA,
+					 width, height);
     cr = cairo_create (mask);
     cairo_surface_destroy (mask);
 

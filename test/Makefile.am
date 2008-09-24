@@ -96,9 +96,9 @@ long-lines$(EXEEXT)					\
 mask$(EXEEXT)						\
 mask-alpha$(EXEEXT)					\
 mask-ctm$(EXEEXT)					\
-mask-ctm-image$(EXEEXT)					\
-mask-ctm-similar$(EXEEXT)				\
 mask-surface-ctm$(EXEEXT)				\
+mask-transformed-image$(EXEEXT)				\
+mask-transformed-similar$(EXEEXT)			\
 meta-surface-pattern$(EXEEXT)				\
 miter-precision$(EXEEXT)				\
 move-to-show-surface$(EXEEXT)				\
@@ -512,8 +512,6 @@ REFERENCE_IMAGES = \
 	mask-ctm-ref.png	\
 	mask-ctm-rgb24-ref.png	\
 	mask-ctm-svg-argb32-ref.png	\
-	mask-ctm-image-ref.png	\
-	mask-ctm-similar-ref.png	\
 	mask-ref.png	\
 	mask-rgb24-ref.png	\
 	mask-pdf-argb32-ref.png	\
@@ -525,6 +523,8 @@ REFERENCE_IMAGES = \
 	mask-surface-ctm-svg-argb32-ref.png	\
 	mask-svg-rgb24-ref.png	\
 	mask-svg-argb32-ref.png	\
+	mask-transformed-image-ref.png	\
+	mask-transformed-similar-ref.png	\
 	meta-surface-pattern-ref.png		\
 	meta-surface-pattern-rgb24-ref.png	\
 	meta-surface-pattern-pdf-ref.png	\
