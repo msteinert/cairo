@@ -195,15 +195,15 @@ _cairo_traps_add_trap (cairo_traps_t *traps,
 	if (bottom > traps->limits.p2.y)
 	    bottom = traps->limits.p2.y;
 
-	if (left->p1.x < traps->limits.p1.x &&
-	    left->p2.x < traps->limits.p1.x)
+	if (left->p1.x <= traps->limits.p1.x &&
+	    left->p2.x <= traps->limits.p1.x)
 	{
 	    left->p1.x = traps->limits.p1.x;
 	    left->p2.x = traps->limits.p1.x;
 	}
 
-	if (right->p1.x > traps->limits.p2.x &&
-	    right->p2.x > traps->limits.p2.x)
+	if (right->p1.x >= traps->limits.p2.x &&
+	    right->p2.x >= traps->limits.p2.x)
 	{
 	    right->p1.x = traps->limits.p2.x;
 	    right->p2.x = traps->limits.p2.x;
