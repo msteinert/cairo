@@ -1430,11 +1430,15 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	 *traps,
     cairo_fixed_t ymin = 0x7FFFFFFF;
     cairo_fixed_t xmax = -0x80000000;
     cairo_fixed_t ymax = -0x80000000;
+    cairo_box_t limit;
+    cairo_bool_t has_limits;
     int num_bo_edges;
     int i;
 
     if (0 == polygon->num_edges)
 	return CAIRO_STATUS_SUCCESS;
+
+    has_limits = _cairo_traps_get_limit (traps, &limit);
 
     if (polygon->num_edges < ARRAY_LENGTH (stack_edges)) {
 	edges = stack_edges;
@@ -1473,6 +1477,13 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	 *traps,
 	cairo_bo_edge_t *edge = &edges[num_bo_edges];
 	cairo_point_t top = polygon->edges[i].edge.p1;
 	cairo_point_t bot = polygon->edges[i].edge.p2;
+
+	/* Discard the edge if it lies outside the limits of traps. */
+	if (has_limits) {
+	    /* Strictly above or below the limits? */
+	    if (bot.y <= limit.p1.y || top.y >= limit.p2.y)
+		continue;
+	}
 
 	/* Offset coordinates into the non-negative range. */
 	top.x -= xmin;
