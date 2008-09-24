@@ -403,7 +403,6 @@ _cairo_analysis_surface_stroke (void			*abstract_surface,
     cairo_analysis_surface_t *surface = abstract_surface;
     cairo_status_t	     status, backend_status;
     cairo_traps_t            traps;
-    cairo_box_t              box;
     cairo_rectangle_int_t  extents;
 
     if (!surface->target->backend->stroke)
@@ -434,10 +433,9 @@ _cairo_analysis_surface_stroke (void			*abstract_surface,
     _cairo_rectangle_intersect (&extents, &surface->current_clip);
 
     if (_cairo_operator_bounded_by_mask (op)) {
-	box.p1.x = _cairo_fixed_from_int (extents.x);
-	box.p1.y = _cairo_fixed_from_int (extents.y);
-	box.p2.x = _cairo_fixed_from_int (extents.x + extents.width);
-	box.p2.y = _cairo_fixed_from_int (extents.y + extents.height);
+	cairo_box_t box;
+
+	_cairo_box_from_rectangle (&box, &extents);
 
 	_cairo_traps_init (&traps);
 	_cairo_traps_limit (&traps, &box);
@@ -451,19 +449,10 @@ _cairo_analysis_surface_stroke (void			*abstract_surface,
 	    return status;
 	}
 
-	if (traps.num_traps == 0) {
-	    extents.x = 0;
-	    extents.y = 0;
-	    extents.width = 0;
-	    extents.height = 0;
-	} else {
-	    _cairo_traps_extents (&traps, &box);
-	    extents.x = _cairo_fixed_integer_floor (box.p1.x);
-	    extents.y = _cairo_fixed_integer_floor (box.p1.y);
-	    extents.width = _cairo_fixed_integer_ceil (box.p2.x) - extents.x;
-	    extents.height = _cairo_fixed_integer_ceil (box.p2.y) - extents.y;
-	}
+	_cairo_traps_extents (&traps, &box);
 	_cairo_traps_fini (&traps);
+
+        _cairo_box_round_to_rectangle (&box, &extents);
     }
 
     status = _cairo_analysis_surface_add_operation (surface, &extents, backend_status);
@@ -483,7 +472,6 @@ _cairo_analysis_surface_fill (void			*abstract_surface,
     cairo_analysis_surface_t *surface = abstract_surface;
     cairo_status_t	     status, backend_status;
     cairo_traps_t            traps;
-    cairo_box_t              box;
     cairo_rectangle_int_t  extents;
 
     if (!surface->target->backend->fill)
@@ -513,10 +501,9 @@ _cairo_analysis_surface_fill (void			*abstract_surface,
     _cairo_rectangle_intersect (&extents, &surface->current_clip);
 
     if (_cairo_operator_bounded_by_mask (op)) {
-	box.p1.x = _cairo_fixed_from_int (extents.x);
-	box.p1.y = _cairo_fixed_from_int (extents.y);
-	box.p2.x = _cairo_fixed_from_int (extents.x + extents.width);
-	box.p2.y = _cairo_fixed_from_int (extents.y + extents.height);
+	cairo_box_t box;
+
+	_cairo_box_from_rectangle (&box, &extents);
 
 	_cairo_traps_init (&traps);
 	_cairo_traps_limit (&traps, &box);
@@ -529,20 +516,10 @@ _cairo_analysis_surface_fill (void			*abstract_surface,
 	    return status;
 	}
 
-	if (traps.num_traps == 0) {
-	    extents.x = 0;
-	    extents.y = 0;
-	    extents.width = 0;
-	    extents.height = 0;
-	} else {
-	    _cairo_traps_extents (&traps, &box);
-	    extents.x = _cairo_fixed_integer_floor (box.p1.x);
-	    extents.y = _cairo_fixed_integer_floor (box.p1.y);
-	    extents.width = _cairo_fixed_integer_ceil (box.p2.x) - extents.x;
-	    extents.height = _cairo_fixed_integer_ceil (box.p2.y) - extents.y;
-	}
-
+	_cairo_traps_extents (&traps, &box);
 	_cairo_traps_fini (&traps);
+
+        _cairo_box_round_to_rectangle (&box, &extents);
     }
 
     status = _cairo_analysis_surface_add_operation (surface, &extents, backend_status);

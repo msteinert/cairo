@@ -160,10 +160,10 @@ _cairo_clip_path_intersect_to_rectangle (cairo_clip_path_t       *clip_path,
         }
 
         _cairo_traps_extents (&traps, &extents);
+        _cairo_traps_fini (&traps);
+
         _cairo_box_round_to_rectangle (&extents, &extents_rect);
         _cairo_rectangle_intersect (rectangle, &extents_rect);
-
-        _cairo_traps_fini (&traps);
 
         clip_path = clip_path->prev;
     }
