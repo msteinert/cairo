@@ -138,6 +138,7 @@ stroke-image$(EXEEXT)				        \
 select-font-face$(EXEEXT)				\
 select-font-no-show-text$(EXEEXT)			\
 self-copy$(EXEEXT)					\
+self-copy-overlap$(EXEEXT)				\
 self-intersecting$(EXEEXT)				\
 set-source$(EXEEXT)					\
 show-text-current-point$(EXEEXT)			\
@@ -640,6 +641,8 @@ REFERENCE_IMAGES = \
 	select-font-face-quartz-ref.png \
 	self-copy-ref.png	\
 	self-copy-ps-ref.png	\
+	self-copy-overlap-ref.png	\
+	self-copy-overlap-rgb24-ref.png	\
 	self-intersecting-ref.png	\
 	self-intersecting-rgb24-ref.png	\
 	set-source-ref.png	\

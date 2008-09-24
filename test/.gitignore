@@ -182,6 +182,7 @@ scale-source-surface-paint
 select-font-face
 select-font-no-show-text
 self-copy
+self-copy-overlap
 self-intersecting
 set-source
 show-glyphs-many
