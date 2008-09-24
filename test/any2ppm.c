@@ -352,7 +352,7 @@ convert (char **argv, int fd)
     const struct converter *converter = converters;
     char *type;
 
-    type = strchr (argv[0], '.');
+    type = strrchr (argv[0], '.');
     if (type == NULL)
 	return "no file extension";
     type++;
