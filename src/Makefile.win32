@@ -9,7 +9,6 @@ STATIC_SOURCES = cairo-system.c
 OBJECTS = $(patsubst %.c, $(CFG)/%.obj, $(SOURCES))
 OBJECTS_STATIC = $(patsubst %cairo-system.obj, %cairo-system-static.obj, $(OBJECTS))
 
-all: inform $(CFG)/cairo.dll $(CFG)/cairo-static.lib
 static: inform $(CFG)/cairo-static.lib
 dynamic: inform $(CFG)/cairo.dll
 
@@ -18,3 +17,11 @@ $(CFG)/cairo.dll: $(OBJECTS)
 
 $(CFG)/cairo-static.lib: $(OBJECTS_STATIC)
 	lib -NOLOGO -OUT:$@ $(PIXMAN_LIBS) $(OBJECTS_STATIC)
+
+all: inform $(CFG)/cairo.dll $(CFG)/cairo-static.lib
+	@echo "Built successfully!"
+	@echo "You should copy the following files to a proper place now:"
+	@echo ""
+	@echo "	src/$(CFG)/cairo.dll"
+	@echo "	src/$(CFG)/cairo-static.lib"
+	@for x in $(enabled_cairo_headers); do echo "	src/$$x"; done
