@@ -90,6 +90,9 @@ draw (cairo_t *cr, int width, int height)
     /* apply the mask */
     cairo_mask_surface (cr, mask, 0, 0);
 
+    cairo_surface_destroy (mask);
+    cairo_surface_destroy (image);
+
     return CAIRO_TEST_SUCCESS;
 }
 
