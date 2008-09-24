@@ -236,6 +236,7 @@ https://bugs.freedesktop.org/show_bug.cgi?id=12144
 --------------------------------------------------
 fill-alpha-pattern
 gradient-alpha
+gradient-constant-alpha
 linear-gradient
 trap-clip
 linear-gradient
