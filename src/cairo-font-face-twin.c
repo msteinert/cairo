@@ -125,6 +125,9 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 
     for (;;) {
 	switch (*g++) {
+	case 'M':
+	    cairo_close_path (cr);
+	    /* fall through */
 	case 'm':
 	    x1 = FX(*g++);
 	    y1 = FY(*g++);
@@ -135,6 +138,9 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 	    }
 	    cairo_move_to (cr, x1, y1);
 	    continue;
+	case 'L':
+	    cairo_close_path (cr);
+	    /* fall through */
 	case 'l':
 	    x1 = FX(*g++);
 	    y1 = FY(*g++);
@@ -145,6 +151,9 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 	    }
 	    cairo_line_to (cr, x1, y1);
 	    continue;
+	case 'C':
+	    cairo_close_path (cr);
+	    /* fall through */
 	case 'c':
 	    x1 = FX(*g++);
 	    y1 = FY(*g++);
@@ -163,17 +172,18 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 	    }
 	    cairo_curve_to (cr, x1, y1, x2, y2, x3, y3);
 	    continue;
-	case 'o':
+	case 'E':
 	    cairo_close_path (cr);
-	    break;
+	    /* fall through */
 	case 'e':
 	    cairo_stroke (cr);
 	    break;
+	case 'X':
+	    /* filler */
+	    continue;
 	}
 	break;
     }
-
-    cairo_stroke (cr);
 
     metrics->x_advance = FX(twin_glyph_right(b)) + cairo_get_line_width (cr);
     metrics->x_advance +=  cairo_get_line_width (cr)/* XXX 2*x.margin */;
