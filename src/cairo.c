@@ -84,8 +84,7 @@ static const cairo_t _cairo_nil = {
 cairo_status_t
 _cairo_error (cairo_status_t status)
 {
-    assert (status > CAIRO_STATUS_SUCCESS &&
-	    status <= CAIRO_STATUS_LAST_STATUS);
+    assert (_cairo_status_is_error (status));
 
     return status;
 }
