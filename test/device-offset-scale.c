@@ -32,7 +32,8 @@ static cairo_test_draw_function_t draw;
 
 static const cairo_test_t test = {
     "device-offset-scale",
-    "Test that the device-offset transform is transformed by the ctm.",
+    "Test that the device-offset transform is transformed by the ctm."
+    "\nCurrently fails with the SVG backend.",
     WIDTH, HEIGHT,
     draw
 };
