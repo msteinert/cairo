@@ -390,6 +390,8 @@ REFERENCE_IMAGES = \
 	degenerate-path-quartz-ref.png	\
 	degenerate-path-quartz-rgb24-ref.png	\
 	device-offset-fractional-ref.png	\
+	device-offset-fractional-pdf-ref.png	\
+	device-offset-fractional-ps-ref.png	\
 	device-offset-positive-ref.png	\
 	device-offset-positive-rgb24-ref.png	\
 	device-offset-ref.png	\
@@ -404,6 +406,8 @@ REFERENCE_IMAGES = \
 	extend-repeat-similar-ref.png	\
 	fill-alpha-ref.png	\
 	fill-alpha-pattern-ref.png	\
+	fill-alpha-pattern-pdf-argb32-ref.png	\
+	fill-alpha-pattern-pdf-rgb24-ref.png	\
 	fill-alpha-pattern-ps-ref.png	\
 	fill-and-stroke-alpha-add-quartz-ref.png	\
 	fill-and-stroke-alpha-add-ref.png	\
@@ -467,6 +471,8 @@ REFERENCE_IMAGES = \
 	gradient-alpha-ps-rgb24-ref.png	\
 	gradient-alpha-ref.png	\
 	gradient-alpha-rgb24-ref.png	\
+	gradient-constant-alpha-pdf-argb32-ref.png	\
+	gradient-constant-alpha-pdf-rgb24-ref.png	\
 	gradient-constant-alpha-ps-ref.png		\
 	gradient-constant-alpha-ps-rgb24-ref.png	\
 	gradient-constant-alpha-ref.png	\
@@ -526,6 +532,8 @@ REFERENCE_IMAGES = \
 	mask-svg-argb32-ref.png	\
 	mask-transformed-image-ref.png	\
 	mask-transformed-similar-ref.png	\
+	mask-transformed-similar-pdf-ref.png	\
+	mask-transformed-similar-svg-ref.png	\
 	meta-surface-pattern-ref.png		\
 	meta-surface-pattern-rgb24-ref.png	\
 	meta-surface-pattern-pdf-ref.png	\
@@ -753,6 +761,7 @@ REFERENCE_IMAGES = \
 	user-font-proxy-svg-ref.png	\
 	user-font-rescale-ref.png	\
 	user-font-rescale-ps-ref.png	\
+	user-font-rescale-svg-ref.png	\
 	unbounded-operator-quartz-ref.png	\
 	unbounded-operator-quartz-rgb24-ref.png	\
 	xlib-expose-event-ref.png \
