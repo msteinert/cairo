@@ -4466,19 +4466,35 @@ _cairo_pdf_surface_mask	(void			*abstract_surface,
 {
     cairo_pdf_surface_t *surface = abstract_surface;
     cairo_pdf_smask_group_t *group;
-    cairo_status_t status, status2;
+    cairo_status_t status;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
-	status = _cairo_pdf_surface_analyze_operation (surface, op, source);
-	if (status != CAIRO_STATUS_SUCCESS &&
-	    status != CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN)
-	    return status;
+	cairo_status_t source_status, mask_status;
 
-	status2 = _cairo_pdf_surface_analyze_operation (surface, op, mask);
-	if (status2 != CAIRO_STATUS_SUCCESS)
-	    return status2;
+	source_status =  _cairo_pdf_surface_analyze_operation (surface, op, source);
+	if (source_status != CAIRO_STATUS_SUCCESS &&
+	    source_status < CAIRO_INT_STATUS_UNSUPPORTED)
+	    return source_status;
 
-	return status;
+	mask_status = _cairo_pdf_surface_analyze_operation (surface, op, mask);
+	if (mask_status != CAIRO_STATUS_SUCCESS &&
+	    mask_status < CAIRO_INT_STATUS_UNSUPPORTED)
+	    return mask_status;
+
+	/* return the most important status from either the source or mask */
+	if (source_status == CAIRO_INT_STATUS_UNSUPPORTED ||
+	    mask_status == CAIRO_INT_STATUS_UNSUPPORTED)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+	if (source_status == CAIRO_INT_STATUS_IMAGE_FALLBACK ||
+	    mask_status == CAIRO_INT_STATUS_IMAGE_FALLBACK)
+	    return CAIRO_INT_STATUS_IMAGE_FALLBACK;
+
+	if (source_status == CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN ||
+	    mask_status == CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN)
+	    return CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN;
+
+	return CAIRO_STATUS_SUCCESS;
     } else if (surface->paginated_mode == CAIRO_PAGINATED_MODE_FALLBACK) {
 	status = _cairo_pdf_surface_start_fallback (surface);
 	if (status)
