@@ -40,7 +40,8 @@ static cairo_test_draw_function_t draw;
 
 static const cairo_test_t test = {
     "bitmap-font",
-    "Test drawing with a font consisting only of bitmaps",
+    "Test drawing with a font consisting only of bitmaps"
+    "\nThe PDF and PS backends embed a slightly distorted font for the rotated case.",
     246 + 1, 2 * TEXT_SIZE,
     draw
 };

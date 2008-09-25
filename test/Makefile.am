@@ -780,6 +780,7 @@ XFAIL_TESTS =					\
 alpha-similar$(EXEEXT)				\
 big-line$(EXEEXT)				\
 big-trap$(EXEEXT)				\
+bitmap-font$(EXEEXT)				\
 extend-pad$(EXEEXT)				\
 filter-nearest-offset$(EXEEXT)			\
 filter-bilinear-extents$(EXEEXT)		\
