@@ -331,7 +331,7 @@ _cairo_analysis_surface_mask (void		*abstract_surface,
 			      cairo_pattern_t	*mask)
 {
     cairo_analysis_surface_t *surface = abstract_surface;
-    cairo_status_t	      status, backend_status;
+    cairo_int_status_t	      status, backend_status;
     cairo_rectangle_int_t   extents;
 
     if (!surface->target->backend->mask)
@@ -341,22 +341,37 @@ _cairo_analysis_surface_mask (void		*abstract_surface,
                                                             source, mask);
 
     if (backend_status == CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN) {
+	cairo_int_status_t backend_source_status = CAIRO_STATUS_SUCCESS;
+	cairo_int_status_t backend_mask_status = CAIRO_STATUS_SUCCESS;
+
 	if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	    cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) source;
-	    if (_cairo_surface_is_meta (surface_pattern->surface))
-		backend_status = _analyze_meta_surface_pattern (surface, source);
-	    if (backend_status != CAIRO_STATUS_SUCCESS &&
-		backend_status != CAIRO_INT_STATUS_IMAGE_FALLBACK)
-		return backend_status;
+	    if (_cairo_surface_is_meta (surface_pattern->surface)) {
+		backend_source_status =
+		    _analyze_meta_surface_pattern (surface, source);
+		if (backend_source_status != CAIRO_STATUS_SUCCESS &&
+		    backend_source_status != CAIRO_INT_STATUS_IMAGE_FALLBACK)
+		    return backend_source_status;
+	    }
 	}
 
 	if (mask->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	    cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) mask;
-	    if (_cairo_surface_is_meta (surface_pattern->surface))
-		backend_status = _analyze_meta_surface_pattern (surface, mask);
-	    if (backend_status != CAIRO_STATUS_SUCCESS &&
-		backend_status != CAIRO_INT_STATUS_IMAGE_FALLBACK)
-		return backend_status;
+	    if (_cairo_surface_is_meta (surface_pattern->surface)) {
+		backend_mask_status =
+		    _analyze_meta_surface_pattern (surface, mask);
+		if (backend_mask_status != CAIRO_STATUS_SUCCESS &&
+		    backend_mask_status != CAIRO_INT_STATUS_IMAGE_FALLBACK)
+		    return backend_status;
+	    }
+	}
+
+	backend_status = CAIRO_STATUS_SUCCESS;
+
+	if (backend_source_status == CAIRO_INT_STATUS_IMAGE_FALLBACK ||
+	    backend_mask_status == CAIRO_INT_STATUS_IMAGE_FALLBACK)
+	{
+	    backend_status = CAIRO_INT_STATUS_IMAGE_FALLBACK;
 	}
     }
 
