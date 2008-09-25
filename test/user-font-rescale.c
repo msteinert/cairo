@@ -171,6 +171,7 @@ static void rescale_font_closure_destroy (void *data)
 {
     struct rescaled_font *r = data;
 
+    cairo_font_face_destroy (r->substitute_font);
     cairo_scaled_font_destroy (r->measuring_font);
     free (r->desired_width);
     free (r->rescale_factor);
@@ -194,7 +195,7 @@ create_rescaled_font (cairo_font_face_t *substitute_font,
     cairo_user_font_face_set_unicode_to_glyph_func (user_font_face, test_scaled_font_unicode_to_glyph);
 
     r = xmalloc (sizeof (struct rescaled_font));
-    r->substitute_font = substitute_font;
+    r->substitute_font = cairo_font_face_reference (substitute_font);
 
     /* we don't want any hinting when doing the measuring */
     options = cairo_font_options_create ();
@@ -294,6 +295,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_text_extents_t extents;
     cairo_font_face_t *rescaled;
     cairo_font_face_t *old;
+    cairo_font_face_t *substitute;
     const char text[] = TEXT;
 
     cairo_set_source_rgb (cr, 1, 1, 1);
@@ -319,8 +321,12 @@ draw (cairo_t *cr, int width, int height)
 			    "Bitstream Vera Sans Mono",
 			    CAIRO_FONT_SLANT_NORMAL,
 			    CAIRO_FONT_WEIGHT_NORMAL);
-    rescaled = get_user_font_face (cairo_get_font_face (cr), text, old);
+    substitute = cairo_font_face_reference (cairo_get_font_face (cr));
+
+    rescaled = get_user_font_face (substitute, text, old);
     cairo_set_font_face (cr, rescaled);
+
+    cairo_font_face_destroy (substitute);
 
     cairo_set_source_rgb (cr, 0, 0, 1);
     cairo_move_to (cr, BORDER, BORDER + font_extents.height + 2*BORDER + font_extents.ascent);
