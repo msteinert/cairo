@@ -73,7 +73,6 @@ const cairo_surface_t name = {					\
     FALSE,				/* has_font_options */	\
     { CAIRO_ANTIALIAS_DEFAULT,		/* antialias */		\
       CAIRO_SUBPIXEL_ORDER_DEFAULT,	/* subpixel_order */	\
-      CAIRO_LCD_FILTER_DEFAULT,		/* lcd_filter */	\
       CAIRO_HINT_STYLE_DEFAULT,		/* hint_style */	\
       CAIRO_HINT_METRICS_DEFAULT	/* hint_metrics */	\
     }					/* font_options */	\
