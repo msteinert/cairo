@@ -2956,7 +2956,11 @@ _cairo_pdf_surface_emit_to_unicode_stream (cairo_pdf_surface_t		*surface,
                                          "<%02x> ",
                                          i + 1);
         }
-	_cairo_pdf_surface_emit_unicode_for_glyph (surface, font_subset->utf8[i + 1]);
+	status = _cairo_pdf_surface_emit_unicode_for_glyph (surface,
+							    font_subset->utf8[i + 1]);
+	if (status)
+	    return status;
+
 	_cairo_output_stream_printf (surface->output,
 				     "\n");
     }
