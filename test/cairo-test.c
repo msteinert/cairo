@@ -715,6 +715,7 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 			        "Error: Failed to write output image: %s\n",
 			        cairo_status_to_string (diff_status));
 	    }
+	    have_output = TRUE;
 	    cairo_surface_destroy (test_image);
 
 	    ret = CAIRO_TEST_FAILURE;
@@ -737,6 +738,7 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 	    if (cairo_test_files_equal (test_filename, pass_filename)) {
 		/* identical output as last known PASS */
 		cairo_test_log (ctx, "Vector surface matches last pass.\n");
+		have_output = TRUE;
 		ret = CAIRO_TEST_SUCCESS;
 		goto UNWIND_CAIRO;
 	    }
@@ -744,6 +746,7 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 		/* identical output as last known FAIL, fail */
 		cairo_test_log (ctx, "Vector surface matches last fail.\n");
 		have_result = TRUE; /* presume these were kept around as well */
+		have_output = TRUE;
 		ret = CAIRO_TEST_FAILURE;
 		goto UNWIND_CAIRO;
 	    }
