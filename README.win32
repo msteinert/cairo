@@ -1,6 +1,5 @@
 Building Cairo on Windows
 =========================
-
 There are two primary ways to build Cairo on Windows.  You can use a
 UN*X-like setup, such as Cygwin, with the conventional configure
 script shipped with Cairo releases.  In this configuration, you will
@@ -12,20 +11,16 @@ The second way is to use a GNU-compatible make, but build using
 Microsoft's Visual C++ compiler to produce native libraries.  This is
 the setup this README is written for.
 
-
 Tools required
 ==============
-
 You will need GNU make, version 3.80 or later.  Earlier versions or
 other modern make implementations may work, but are not guaranteed to.
 
 You will also need Microsoft Visual C++.  Version 7 has been most
 heavily tested, but other versions are likely to work fine.
 
-
 Libraries required
 ==================
-
 Cairo requires a compatible version of the pixman library.  Full build
 instructions are beyond the scope of this document; however, using the
 same tools, it should be possible to build pixman simply by entering
@@ -33,13 +28,10 @@ the pixman/src directory and typing:
 
     make -f Makefile.win32 CFG=release
 
-
 Depending on your feature set, you may also need zlib and libpng.
-
 
 Building
 ========
-
 There are a few files that you will need to edit.  First, you must
 determine which features will be built.  Edit
 build/Makefile.win32.features and set the features as desired.  Note
@@ -60,7 +52,6 @@ Finally, from the top Cairo directory, type:
 
     make -f Makefile.win32 CFG=release
 
-
 If this command succeeds, you will end up with src/release/cairo.dll.
 To successfully use Cairo from your own programs, you will probably
 want to move this file to some central location.  You will also
@@ -68,4 +59,3 @@ probably want to copy the Cairo header files.  These should be placed
 in a cairo subdirectory (for instance, c:/code/common/include/cairo).
 The exact set to copy depends on your features and is reported to you
 at the end of the build.
-
