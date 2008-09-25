@@ -101,7 +101,7 @@ Here are some of the relevant details:
     the fixes you will need to avoid false negatives from the test
     suite.
 
-  * To test the ps backend, you will need ghostscript version 8.61.
+  * To test the ps backend, you will need ghostscript version 8.62.
 
 What if I can't make my system match?
 -------------------------------------
