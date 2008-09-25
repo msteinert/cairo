@@ -96,8 +96,6 @@ _cairo_user_scaled_font_create_meta_context (cairo_user_scaled_font_t *scaled_fo
     return cr;
 }
 
-static const cairo_scaled_font_backend_t cairo_user_scaled_font_backend;
-
 static cairo_int_status_t
 _cairo_user_scaled_glyph_init (void			 *abstract_font,
 			       cairo_scaled_glyph_t	 *scaled_glyph,
@@ -321,9 +319,54 @@ _cairo_user_text_to_glyphs (void		      *abstract_font,
     return status;
 }
 
-static const cairo_scaled_font_backend_t cairo_user_scaled_font_backend = {
+static cairo_status_t
+_cairo_user_font_face_scaled_font_create (void                        *abstract_face,
+					  const cairo_matrix_t        *font_matrix,
+					  const cairo_matrix_t        *ctm,
+					  const cairo_font_options_t  *options,
+					  cairo_scaled_font_t        **scaled_font);
+
+static cairo_status_t
+_cairo_user_scaled_font_create_toy (cairo_toy_font_face_t     *toy_face,
+				    const cairo_matrix_t      *font_matrix,
+				    const cairo_matrix_t      *ctm,
+				    const cairo_font_options_t *font_options,
+				    cairo_scaled_font_t	     **font)
+{
+    cairo_status_t status;
+    cairo_font_face_t *face;
+
+    static cairo_user_data_key_t twin_font_face_key;
+
+    face = cairo_font_face_get_user_data (&toy_face->base,
+					  &twin_font_face_key);
+    if (!face) {
+	face = _cairo_font_face_twin_create (cairo_toy_font_face_get_slant (&toy_face->base),
+					     cairo_toy_font_face_get_weight (&toy_face->base));
+
+	status = cairo_font_face_set_user_data (&toy_face->base,
+						&twin_font_face_key,
+						face,
+						(cairo_destroy_func_t) cairo_font_face_destroy);
+
+	if (status) {
+	    cairo_font_face_destroy (face);
+	    return status;
+	}
+    }
+
+    status = _cairo_user_font_face_scaled_font_create (face,
+						       font_matrix,
+						       ctm,
+						       font_options,
+						       font);
+
+    return status;
+}
+
+const cairo_scaled_font_backend_t _cairo_user_scaled_font_backend = {
     CAIRO_FONT_TYPE_USER,
-    NULL,	/* create_toy */
+    _cairo_user_scaled_font_create_toy,	/* create_toy */
     NULL,	/* scaled_font_fini */
     _cairo_user_scaled_glyph_init,
     _cairo_user_text_to_glyphs,
@@ -356,7 +399,7 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
     status = _cairo_scaled_font_init (&user_scaled_font->base,
 				      &font_face->base,
 				      font_matrix, ctm, options,
-				      &cairo_user_scaled_font_backend);
+				      &_cairo_user_scaled_font_backend);
 
     if (status) {
 	free (user_scaled_font);

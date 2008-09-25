@@ -488,6 +488,8 @@ struct _cairo_font_face_backend {
 			   cairo_scaled_font_t	       **scaled_font);
 };
 
+extern const cairo_private struct _cairo_scaled_font_backend _cairo_user_scaled_font_backend;
+
 /* concrete font backends */
 #if CAIRO_HAS_FT_FONT
 
@@ -920,6 +922,7 @@ typedef struct _cairo_traps {
 #define CAIRO_WIN32_FONT_FAMILY_DEFAULT "Arial"
 #define CAIRO_QUARTZ_FONT_FAMILY_DEFAULT  "Helvetica"
 #define CAIRO_FT_FONT_FAMILY_DEFAULT     ""
+#define CAIRO_USER_FONT_FAMILY_DEFAULT     "cairo"
 
 #if   CAIRO_HAS_WIN32_FONT
 
@@ -938,8 +941,8 @@ typedef struct _cairo_traps {
 
 #else
 
-/* Paranoia: this should have been caught by configure. */
-#error No font backends are available.
+#define CAIRO_FONT_FAMILY_DEFAULT CAIRO_FT_FONT_FAMILY_DEFAULT
+#define CAIRO_SCALED_FONT_BACKEND_DEFAULT &_cairo_user_scaled_font_backend
 
 #endif
 
@@ -1326,6 +1329,17 @@ _cairo_unscaled_font_reference (cairo_unscaled_font_t *font);
 
 cairo_private void
 _cairo_unscaled_font_destroy (cairo_unscaled_font_t *font);
+
+/* cairo-font-face-twin.c */
+
+cairo_private cairo_font_face_t *
+_cairo_font_face_twin_create (cairo_font_slant_t slant,
+			      cairo_font_weight_t weight);
+
+/* cairo-font-face-twin-data.c */
+
+extern const cairo_private int8_t _cairo_twin_outlines[];
+extern const cairo_private uint16_t _cairo_twin_charmap[128];
 
 /* cairo-font-options.c */
 

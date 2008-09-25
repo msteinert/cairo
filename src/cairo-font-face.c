@@ -574,7 +574,6 @@ _cairo_toy_font_face_scaled_font_create (void                *abstract_font_face
 					 cairo_scaled_font_t	   **scaled_font)
 {
     cairo_toy_font_face_t *font_face = abstract_font_face;
-    const cairo_scaled_font_backend_t * backend = CAIRO_SCALED_FONT_BACKEND_DEFAULT;
     cairo_status_t status;
 
     if (font_face->base.status)
@@ -584,12 +583,32 @@ _cairo_toy_font_face_scaled_font_create (void                *abstract_font_face
     if (status)
 	return status;
 
-    return _cairo_font_face_set_error (&font_face->base,
-	                               backend->create_toy (font_face,
-				                            font_matrix,
-							    ctm,
-							    options,
-							    scaled_font));
+    if (CAIRO_SCALED_FONT_BACKEND_DEFAULT != &_cairo_user_scaled_font_backend &&
+	0 != strcmp (font_face->family, CAIRO_USER_FONT_FAMILY_DEFAULT))
+    {
+	const cairo_scaled_font_backend_t * backend = CAIRO_SCALED_FONT_BACKEND_DEFAULT;
+
+	*scaled_font = NULL;
+	status =  backend->create_toy (font_face,
+				       font_matrix,
+				       ctm,
+				       options,
+				       scaled_font);
+
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return _cairo_font_face_set_error (&font_face->base, status);
+
+	if (*scaled_font)
+	    cairo_scaled_font_destroy (*scaled_font);
+    }
+
+    status = _cairo_user_scaled_font_backend.create_toy (font_face,
+							 font_matrix,
+							 ctm,
+							 options,
+							 scaled_font);
+
+    return _cairo_font_face_set_error (&font_face->base, status);
 }
 
 static cairo_bool_t
