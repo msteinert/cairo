@@ -2,9 +2,7 @@
 .libs
 Makefile
 Makefile.in
-Makefile.am.config
 Makefile.am.features
-Makefile.win32.config
 Makefile.win32.features
 *.gcda
 *.gcno
