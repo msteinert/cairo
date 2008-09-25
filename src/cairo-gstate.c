@@ -1536,12 +1536,6 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
     return cairo_scaled_font_status (gstate->scaled_font);
 }
 
-cairo_bool_t
-_cairo_gstate_has_show_text_glyphs (cairo_gstate_t *gstate)
-{
-    return cairo_surface_has_show_text_glyphs (gstate->target);
-}
-
 cairo_status_t
 _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
 				const char		   *utf8,
@@ -1600,7 +1594,7 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
      * fast rasterizer in cairo, we may want to readjust this.
      *
      * Needless to say, do this only if show_text_glyphs is not available. */
-    if (_cairo_gstate_has_show_text_glyphs (gstate) ||
+    if (cairo_surface_has_show_text_glyphs (gstate->target) ||
 	_cairo_scaled_font_get_max_scale (gstate->scaled_font) <= 10240) {
 	status = _cairo_surface_show_text_glyphs (gstate->target,
 						  gstate->op,

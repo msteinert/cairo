@@ -1209,9 +1209,6 @@ cairo_show_text (cairo_t *cr, const char *utf8);
 cairo_public void
 cairo_show_glyphs (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs);
 
-cairo_public cairo_bool_t
-cairo_has_show_text_glyphs (cairo_t *cr);
-
 cairo_public void
 cairo_show_text_glyphs (cairo_t			   *cr,
 			const char		   *utf8,

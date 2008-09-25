@@ -3079,6 +3079,7 @@ cairo_show_text (cairo_t *cr, const char *utf8)
     int utf8_len, num_glyphs, num_clusters;
     cairo_text_cluster_flags_t cluster_flags;
     double x, y;
+    cairo_bool_t has_show_text_glyphs;
 
     if (cr->status)
 	return;
@@ -3090,11 +3091,14 @@ cairo_show_text (cairo_t *cr, const char *utf8)
 
     utf8_len = strlen (utf8);
 
+    has_show_text_glyphs =
+	cairo_surface_has_show_text_glyphs (cairo_get_target (cr));
+
     status = _cairo_gstate_text_to_glyphs (cr->gstate,
 					   x, y,
 					   utf8, utf8_len,
 					   &glyphs, &num_glyphs,
-					   cairo_has_show_text_glyphs (cr) ? &clusters : NULL, &num_clusters,
+					   has_show_text_glyphs ? &clusters : NULL, &num_clusters,
 					   &cluster_flags);
     if (status)
 	goto BAIL;
@@ -3168,36 +3172,6 @@ cairo_show_glyphs (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
     if (status)
 	_cairo_set_error (cr, status);
 }
-
-/**
- * cairo_has_show_text_glyphs:
- * @cr: a cairo context
- *
- * Returns whether the target surface of a cairo context supports
- * sophisticated cairo_show_text_glyphs() operations.  That is,
- * whether it actually uses the provided text and cluster data
- * to a cairo_show_text_glyphs() call.
- *
- * Note: Even if this function returns %FALSE, a
- * cairo_show_text_glyphs() operation will still succeed.  It just will
- * act like a cairo_show_glyphs() operation.  Users can use this
- * function to avoid computing UTF-8 text and cluster mapping if the
- * target surface does not use it.
- *
- * This is a convenience function that simply calls
- * cairo_surface_has_show_text_glyphs() on @cr's target.
- *
- * Return value: %TRUE if the target surface of @cr supports
- *               cairo_show_text_glyphs(), %FALSE otherwise
- *
- * Since: 1.8
- **/
-cairo_bool_t
-cairo_has_show_text_glyphs (cairo_t			   *cr)
-{
-    return _cairo_gstate_has_show_text_glyphs (cr->gstate);
-}
-slim_hidden_def (cairo_has_show_text_glyphs);
 
 /**
  * cairo_show_text_glyphs:

@@ -408,7 +408,6 @@ cairo_set_scaled_font
 cairo_get_scaled_font
 cairo_show_text
 cairo_show_glyphs
-cairo_has_show_text_glyphs
 cairo_show_text_glyphs
 cairo_font_extents
 cairo_text_extents

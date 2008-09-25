@@ -1238,9 +1238,6 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
 			     int num_glyphs,
 			     cairo_text_extents_t *extents);
 
-cairo_private cairo_bool_t
-_cairo_gstate_has_show_text_glyphs (cairo_gstate_t *gstate);
-
 cairo_private cairo_status_t
 _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
 				const char		   *utf8,
@@ -2389,7 +2386,6 @@ slim_hidden_proto (cairo_get_current_point);
 slim_hidden_proto (cairo_get_matrix);
 slim_hidden_proto (cairo_get_target);
 slim_hidden_proto (cairo_get_tolerance);
-slim_hidden_proto (cairo_has_show_text_glyphs);
 slim_hidden_proto (cairo_glyph_allocate);
 slim_hidden_proto (cairo_glyph_free);
 slim_hidden_proto (cairo_image_surface_create);
