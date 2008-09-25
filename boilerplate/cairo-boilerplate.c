@@ -706,13 +706,17 @@ any2ppm_daemon_exists (void)
 
 FILE *
 cairo_boilerplate_open_any2ppm (const char *filename,
-				int page)
+				int page,
+				unsigned int flags)
 {
     char command[4096];
 #if HAS_DAEMON
     int sk;
     struct sockaddr_un addr;
     int len;
+
+    if (flags & CAIRO_BOILERPLATE_OPEN_NO_DAEMON)
+	goto POPEN;
 
     if (! any2ppm_daemon_exists ()) {
 	if (system ("./any2ppm") != 0)
@@ -747,7 +751,7 @@ POPEN:
 }
 
 static cairo_bool_t
-freadn (char *buf, int len, FILE *file)
+freadn (unsigned char *buf, int len, FILE *file)
 {
     int ret;
 
@@ -820,6 +824,33 @@ cairo_boilerplate_image_surface_create_from_ppm_stream (FILE *file)
 FAIL:
     cairo_surface_destroy (image);
     return cairo_boilerplate_surface_create_in_error (CAIRO_STATUS_READ_ERROR);
+}
+
+cairo_surface_t *
+cairo_boilerplate_convert_to_image (const char *filename, int page)
+{
+    FILE *file;
+    unsigned int flags = 0;
+    cairo_surface_t *image;
+
+  RETRY:
+    file = cairo_boilerplate_open_any2ppm (filename, 1, flags);
+    if (file == NULL)
+	return cairo_boilerplate_surface_create_in_error (CAIRO_STATUS_READ_ERROR);
+
+    image = cairo_boilerplate_image_surface_create_from_ppm_stream (file);
+    fclose (file);
+
+    if (cairo_surface_status (image) == CAIRO_STATUS_READ_ERROR) {
+	if (flags == 0) {
+	    /* Try again in process, e.g. to propagate a CRASH. */
+	    cairo_surface_destroy (image);
+	    flags = CAIRO_BOILERPLATE_OPEN_NO_DAEMON;
+	    goto RETRY;
+	}
+    }
+
+    return image;
 }
 
 int

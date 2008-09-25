@@ -178,17 +178,8 @@ _cairo_boilerplate_pdf_convert_to_image (cairo_surface_t *surface)
 {
     pdf_target_closure_t *ptc = cairo_surface_get_user_data (surface,
 							     &pdf_closure_key);
-    FILE *file;
-    cairo_surface_t *image;
 
-    file = cairo_boilerplate_open_any2ppm (ptc->filename, 1);
-    if (file == NULL)
-	return cairo_boilerplate_surface_create_in_error (CAIRO_STATUS_READ_ERROR);
-
-    image = cairo_boilerplate_image_surface_create_from_ppm_stream (file);
-    fclose (file);
-
-    return image;
+    return cairo_boilerplate_convert_to_image (ptc->filename, 1);
 }
 
 cairo_surface_t *

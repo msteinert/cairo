@@ -176,12 +176,19 @@ cairo_boilerplate_get_image_surface_from_png (const char *filename,
 cairo_surface_t *
 cairo_boilerplate_surface_create_in_error (cairo_status_t status);
 
+enum {
+    CAIRO_BOILERPLATE_OPEN_NO_DAEMON = 0x1,
+};
+
 FILE *
 cairo_boilerplate_open_any2ppm (const char *filename,
-				int page);
-
+				int page,
+				unsigned int flags);
 cairo_surface_t *
 cairo_boilerplate_image_surface_create_from_ppm_stream (FILE *file);
+
+cairo_surface_t *
+cairo_boilerplate_convert_to_image (const char *filename, int page);
 
 int
 cairo_boilerplate_version (void);
