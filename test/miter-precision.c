@@ -38,7 +38,7 @@ static cairo_test_draw_function_t draw;
 static const cairo_test_t test = {
     "miter-precision",
     "test how cairo deals with small miters"
-    "\ncurrent code draws inappropriate bevels at times",
+    "\nPS backend currently fails for unknown reason (cairo? GS?).",
     120, 100,
     draw
 };

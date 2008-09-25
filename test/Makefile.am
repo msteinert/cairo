@@ -781,11 +781,13 @@ alpha-similar$(EXEEXT)				\
 big-line$(EXEEXT)				\
 big-trap$(EXEEXT)				\
 bitmap-font$(EXEEXT)				\
+degenerate-path$(EXEEXT)			\
 extend-pad$(EXEEXT)				\
 filter-nearest-offset$(EXEEXT)			\
 filter-bilinear-extents$(EXEEXT)		\
 large-source$(EXEEXT)				\
 long-lines$(EXEEXT)				\
+miter-precision$(EXEEXT)			\
 operator$(EXEEXT)				\
 operator-alpha$(EXEEXT)				\
 self-copy-overlap$(EXEEXT)			\
