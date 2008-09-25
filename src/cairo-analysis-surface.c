@@ -62,6 +62,38 @@ typedef struct {
 
 } cairo_analysis_surface_t;
 
+cairo_int_status_t
+_cairo_analysis_surface_merge_status (cairo_int_status_t status_a,
+				      cairo_int_status_t status_b)
+{
+    /* fatal errors should be checked and propagated at source */
+    assert (! _cairo_status_is_error (status_a));
+    assert (! _cairo_status_is_error (status_b));
+
+    /* return the most important status */
+    if (status_a == CAIRO_INT_STATUS_UNSUPPORTED ||
+	status_b == CAIRO_INT_STATUS_UNSUPPORTED)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (status_a == CAIRO_INT_STATUS_IMAGE_FALLBACK ||
+	status_b == CAIRO_INT_STATUS_IMAGE_FALLBACK)
+	return CAIRO_INT_STATUS_IMAGE_FALLBACK;
+
+    if (status_a == CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN ||
+	status_b == CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN)
+	return CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN;
+
+    if (status_a == CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY ||
+	status_b == CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY)
+	return CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY;
+
+    /* at this point we have checked all the valid internal codes, so... */
+    assert (status_a == CAIRO_STATUS_SUCCESS &&
+	    status_b == CAIRO_STATUS_SUCCESS);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_int_status_t
 _analyze_meta_surface_pattern (cairo_analysis_surface_t	*surface,
 			       cairo_pattern_t		*pattern)
@@ -349,8 +381,7 @@ _cairo_analysis_surface_mask (void		*abstract_surface,
 	    if (_cairo_surface_is_meta (surface_pattern->surface)) {
 		backend_source_status =
 		    _analyze_meta_surface_pattern (surface, source);
-		if (backend_source_status != CAIRO_STATUS_SUCCESS &&
-		    backend_source_status != CAIRO_INT_STATUS_IMAGE_FALLBACK)
+		if (_cairo_status_is_error (backend_source_status))
 		    return backend_source_status;
 	    }
 	}
@@ -360,19 +391,14 @@ _cairo_analysis_surface_mask (void		*abstract_surface,
 	    if (_cairo_surface_is_meta (surface_pattern->surface)) {
 		backend_mask_status =
 		    _analyze_meta_surface_pattern (surface, mask);
-		if (backend_mask_status != CAIRO_STATUS_SUCCESS &&
-		    backend_mask_status != CAIRO_INT_STATUS_IMAGE_FALLBACK)
-		    return backend_status;
+		if (_cairo_status_is_error (backend_mask_status))
+		    return backend_mask_status;
 	    }
 	}
 
-	backend_status = CAIRO_STATUS_SUCCESS;
-
-	if (backend_source_status == CAIRO_INT_STATUS_IMAGE_FALLBACK ||
-	    backend_mask_status == CAIRO_INT_STATUS_IMAGE_FALLBACK)
-	{
-	    backend_status = CAIRO_INT_STATUS_IMAGE_FALLBACK;
-	}
+	backend_status =
+	    _cairo_analysis_surface_merge_status (backend_source_status,
+						  backend_mask_status);
     }
 
     status = _cairo_surface_get_extents (&surface->base, &extents);

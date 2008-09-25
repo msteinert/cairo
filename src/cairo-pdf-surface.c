@@ -44,10 +44,11 @@
 #include "cairo-pdf.h"
 #include "cairo-pdf-surface-private.h"
 #include "cairo-pdf-operators-private.h"
-#include "cairo-scaled-font-subsets-private.h"
-#include "cairo-paginated-private.h"
-#include "cairo-output-stream-private.h"
+#include "cairo-analysis-surface-private.h"
 #include "cairo-meta-surface-private.h"
+#include "cairo-output-stream-private.h"
+#include "cairo-paginated-private.h"
+#include "cairo-scaled-font-subsets-private.h"
 #include "cairo-type3-glyph-surface-private.h"
 
 #include <time.h>
@@ -4475,30 +4476,16 @@ _cairo_pdf_surface_mask	(void			*abstract_surface,
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
 	cairo_status_t source_status, mask_status;
 
-	source_status =  _cairo_pdf_surface_analyze_operation (surface, op, source);
-	if (source_status != CAIRO_STATUS_SUCCESS &&
-	    source_status < CAIRO_INT_STATUS_UNSUPPORTED)
+	source_status = _cairo_pdf_surface_analyze_operation (surface, op, source);
+	if (_cairo_status_is_error (source_status))
 	    return source_status;
 
 	mask_status = _cairo_pdf_surface_analyze_operation (surface, op, mask);
-	if (mask_status != CAIRO_STATUS_SUCCESS &&
-	    mask_status < CAIRO_INT_STATUS_UNSUPPORTED)
+	if (_cairo_status_is_error (mask_status))
 	    return mask_status;
 
-	/* return the most important status from either the source or mask */
-	if (source_status == CAIRO_INT_STATUS_UNSUPPORTED ||
-	    mask_status == CAIRO_INT_STATUS_UNSUPPORTED)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-
-	if (source_status == CAIRO_INT_STATUS_IMAGE_FALLBACK ||
-	    mask_status == CAIRO_INT_STATUS_IMAGE_FALLBACK)
-	    return CAIRO_INT_STATUS_IMAGE_FALLBACK;
-
-	if (source_status == CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN ||
-	    mask_status == CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN)
-	    return CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN;
-
-	return CAIRO_STATUS_SUCCESS;
+	return _cairo_analysis_surface_merge_status (source_status,
+						     mask_status);
     } else if (surface->paginated_mode == CAIRO_PAGINATED_MODE_FALLBACK) {
 	status = _cairo_pdf_surface_start_fallback (surface);
 	if (status)
