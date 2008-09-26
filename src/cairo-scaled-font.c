@@ -569,7 +569,7 @@ _cairo_scaled_font_keys_equal (const void *abstract_key_a, const void *abstract_
 		    sizeof(cairo_matrix_t)) == 0 &&
 	    memcmp ((unsigned char *)(&key_a->ctm.xx),
 		    (unsigned char *)(&key_b->ctm.xx),
-		    sizeof(double) * 4) == 0 &&
+		    sizeof(cairo_matrix_t)) == 0 &&
 	    cairo_font_options_equal (&key_a->options, &key_b->options));
 }
 
