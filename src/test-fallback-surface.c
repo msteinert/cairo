@@ -176,11 +176,15 @@ _test_fallback_surface_clone_similar (void		  *abstract_surface,
 				      int                  src_y,
 				      int                  width,
 				      int                  height,
+				      int                 *device_offset_x,
+				      int                 *device_offset_y,
 				      cairo_surface_t    **clone_out)
 {
     test_fallback_surface_t *surface = abstract_surface;
 
     if (src->backend == surface->base.backend) {
+	*device_offset_x = 0;
+	*device_offset_y = 0;
 	*clone_out = cairo_surface_reference (src);
 
 	return CAIRO_STATUS_SUCCESS;

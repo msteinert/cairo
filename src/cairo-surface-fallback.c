@@ -1251,6 +1251,8 @@ _cairo_surface_fallback_clone_similar (cairo_surface_t	*surface,
 				       int		 src_y,
 				       int		 width,
 				       int		 height,
+				       int		*device_offset_x,
+				       int		*device_offset_y,
 				       cairo_surface_t **clone_out)
 {
     cairo_status_t status;
@@ -1280,9 +1282,11 @@ _cairo_surface_fallback_clone_similar (cairo_surface_t	*surface,
     status = cairo_status (cr);
     cairo_destroy (cr);
 
-    if (status == CAIRO_STATUS_SUCCESS)
+    if (status == CAIRO_STATUS_SUCCESS) {
+	*device_offset_x = src_x;
+	*device_offset_y = src_y;
 	*clone_out = new_surface;
-    else
+    } else
 	cairo_surface_destroy (new_surface);
 
     return status;

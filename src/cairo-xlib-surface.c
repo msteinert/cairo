@@ -1134,6 +1134,8 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 				   int                   src_y,
 				   int                   width,
 				   int                   height,
+				   int                  *device_offset_x,
+				   int                  *device_offset_y,
 				   cairo_surface_t     **clone_out)
 {
     cairo_xlib_surface_t *surface = abstract_surface;
@@ -1146,6 +1148,8 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	cairo_xlib_surface_t *xlib_src = (cairo_xlib_surface_t *)src;
 
 	if (_cairo_xlib_surface_same_screen (surface, xlib_src)) {
+	    *device_offset_x = 0;
+	    *device_offset_y = 0;
 	    *clone_out = cairo_surface_reference (src);
 
 	    return CAIRO_STATUS_SUCCESS;
@@ -1156,25 +1160,30 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	if (! CAIRO_FORMAT_VALID (image_src->format))
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
-	if (image_src->width > XLIB_COORD_MAX || image_src->height > XLIB_COORD_MAX)
-	    return CAIRO_STATUS_NO_MEMORY;
+	if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	clone = (cairo_xlib_surface_t *)
-	    _cairo_xlib_surface_create_similar_with_format (surface, image_src->format,
-						image_src->width, image_src->height);
+	    _cairo_xlib_surface_create_similar_with_format (surface,
+		                                            image_src->format,
+							    width, height);
 	if (clone == NULL)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
 	if (clone->base.status)
 	    return clone->base.status;
 
-	status = _draw_image_surface (clone, image_src, src_x, src_y,
-			              width, height, src_x, src_y);
+	status = _draw_image_surface (clone, image_src,
+				      src_x, src_y,
+			              width, height,
+				      0, 0);
 	if (status) {
 	    cairo_surface_destroy (&clone->base);
 	    return status;
 	}
 
+	*device_offset_x = src_x;
+	*device_offset_y = src_y;
 	*clone_out = &clone->base;
 
 	return CAIRO_STATUS_SUCCESS;

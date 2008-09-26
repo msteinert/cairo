@@ -908,7 +908,6 @@ device-offset-scale$(EXEEXT)			\
 extend-pad$(EXEEXT)				\
 filter-nearest-offset$(EXEEXT)			\
 filter-bilinear-extents$(EXEEXT)		\
-large-source$(EXEEXT)				\
 long-lines$(EXEEXT)				\
 miter-precision$(EXEEXT)			\
 operator$(EXEEXT)				\

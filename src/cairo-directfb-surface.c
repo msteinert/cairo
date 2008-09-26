@@ -616,6 +616,8 @@ _cairo_directfb_surface_clone_similar (void             *abstract_surface,
                                        int               src_y,
                                        int               width,
                                        int               height,
+                                       int              *device_offset_x,
+                                       int              *device_offset_y,
                                        cairo_surface_t **clone_out)
 {
     cairo_directfb_surface_t *surface = abstract_surface;
@@ -625,9 +627,10 @@ _cairo_directfb_surface_clone_similar (void             *abstract_surface,
                 "%s( surface=%p, src=%p ).\n", __FUNCTION__, surface, src);
 
     if (src->backend == surface->base.backend) {
-        cairo_surface_reference (src);
-        *clone_out = src;
-         
+	*device_offset_x = 0;
+	*device_offset_y = 0;
+	*clone_out = cairo_surface_reference (src);
+
         return CAIRO_STATUS_SUCCESS;
     }
     else if (_cairo_surface_is_image (src)) {
@@ -685,9 +688,10 @@ _cairo_directfb_surface_clone_similar (void             *abstract_surface,
         }
         
         clone->dfbsurface->Unlock (clone->dfbsurface);
-        
+
+	*device_offset_x = 0;
+	*device_offset_y = 0;
         *clone_out = &clone->base;
-                
         return CAIRO_STATUS_SUCCESS;
     }
     

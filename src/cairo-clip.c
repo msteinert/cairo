@@ -690,16 +690,22 @@ _cairo_clip_init_deep_copy (cairo_clip_t    *clip,
         }
 
         if (other->surface) {
+	    int dx, dy;
             status = _cairo_surface_clone_similar (target, other->surface,
 					           0,
 						   0,
 						   other->surface_rect.width,
 						   other->surface_rect.height,
+						   &dx, &dy,
 						   &clip->surface);
 	    if (status)
 		goto BAIL;
 
             clip->surface_rect = other->surface_rect;
+
+	    /* src offset was 0, so we expect an exact replica of the surface */
+	    assert (dx == 0);
+	    assert (dy == 0);
         }
 
         if (other->path) {
