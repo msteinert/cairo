@@ -345,7 +345,7 @@ _cairo_type3_glyph_surface_emit_fallback_image (cairo_type3_glyph_surface_t *sur
     cairo_status_t status;
     cairo_image_surface_t *image;
     cairo_matrix_t mat;
-    double width, height, x, y;
+    double x, y;
 
     status = _cairo_scaled_glyph_lookup (surface->scaled_font,
 					 glyph_index,
@@ -361,14 +361,10 @@ _cairo_type3_glyph_surface_emit_fallback_image (cairo_type3_glyph_surface_t *sur
 
     x = _cairo_fixed_to_double (scaled_glyph->bbox.p1.x);
     y = _cairo_fixed_to_double (scaled_glyph->bbox.p2.y);
-    width = _cairo_fixed_to_double (scaled_glyph->bbox.p2.x) -
-	_cairo_fixed_to_double (scaled_glyph->bbox.p1.x);
-    height = _cairo_fixed_to_double (scaled_glyph->bbox.p2.y) -
-	_cairo_fixed_to_double (scaled_glyph->bbox.p1.y);
-    mat.xx = width;
+    mat.xx = image->width;
     mat.xy = 0;
     mat.yx = 0;
-    mat.yy = height;
+    mat.yy = image->height;
     mat.x0 = x;
     mat.y0 = y;
     cairo_matrix_multiply (&mat, &mat, &surface->scaled_font->scale_inverse);

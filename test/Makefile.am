@@ -789,7 +789,6 @@ XFAIL_TESTS =					\
 alpha-similar$(EXEEXT)				\
 big-line$(EXEEXT)				\
 big-trap$(EXEEXT)				\
-bitmap-font$(EXEEXT)				\
 degenerate-path$(EXEEXT)			\
 device-offset-scale$(EXEEXT)			\
 extend-pad$(EXEEXT)				\
