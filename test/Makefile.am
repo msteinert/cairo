@@ -307,7 +307,8 @@ REFERENCE_IMAGES = \
 	bitmap-font-rgb24-ref.png	\
 	caps-joins-alpha-quartz-ref.png	\
 	caps-joins-alpha-ref.png	\
-	caps-joins-alpha-svg-ref.png	\
+	caps-joins-alpha-svg12-ref.png	\
+	caps-joins-alpha-svg11-ref.png	\
 	caps-joins-ref.png	\
 	caps-joins-ps-ref.png	\
 	caps-sub-paths-ref.png	\
@@ -442,24 +443,28 @@ REFERENCE_IMAGES = \
 	font-matrix-translation-ps-argb32-ref.png	\
 	font-matrix-translation-ps-rgb24-ref.png	\
 	font-matrix-translation-ref.png	\
-	font-matrix-translation-svg-ref.png	\
+	font-matrix-translation-svg12-ref.png	\
+	font-matrix-translation-svg11-ref.png	\
 	font-matrix-translation-quartz-ref.png \
 	ft-text-antialias-none-ps-argb32-ref.png	\
 	ft-text-antialias-none-ref.png	\
 	ft-show-glyphs-positioning-ref.png		\
 	ft-show-glyphs-positioning-pdf-ref.png		\
 	ft-show-glyphs-positioning-ps-ref.png		\
-	ft-show-glyphs-positioning-svg-ref.png		\
+	ft-show-glyphs-positioning-svg12-ref.png		\
+	ft-show-glyphs-positioning-svg11-ref.png		\
 	ft-show-glyphs-table-ref.png			\
 	ft-show-glyphs-table-ps-ref.png			\
 	ft-text-vertical-layout-type1-pdf-ref.png	\
 	ft-text-vertical-layout-type1-ps-ref.png	\
 	ft-text-vertical-layout-type1-ref.png	\
-	ft-text-vertical-layout-type1-svg-ref.png	\
+	ft-text-vertical-layout-type1-svg12-ref.png	\
+	ft-text-vertical-layout-type1-svg11-ref.png	\
 	ft-text-vertical-layout-type3-pdf-ref.png	\
 	ft-text-vertical-layout-type3-ps-ref.png	\
 	ft-text-vertical-layout-type3-ref.png	\
-	ft-text-vertical-layout-type3-svg-ref.png	\
+	ft-text-vertical-layout-type3-svg12-ref.png	\
+	ft-text-vertical-layout-type3-svg11-ref.png	\
 	get-group-target-ref.png	\
 	glitz-surface-source-ref.png \
 	glyph-cache-pressure-ref.png	\
@@ -503,7 +508,8 @@ REFERENCE_IMAGES = \
 	linear-gradient-ps-ref.png	\
 	linear-gradient-quartz-ref.png	\
 	linear-gradient-ref.png	\
-	linear-gradient-svg-ref.png	\
+	linear-gradient-svg12-ref.png	\
+	linear-gradient-svg11-ref.png	\
 	line-width-ref.png	\
 	line-width-scale-ps-ref.png	\
 	line-width-scale-quartz-ref.png	\
@@ -533,7 +539,8 @@ REFERENCE_IMAGES = \
 	mask-transformed-image-ref.png	\
 	mask-transformed-similar-ref.png	\
 	mask-transformed-similar-pdf-ref.png	\
-	mask-transformed-similar-svg-ref.png	\
+	mask-transformed-similar-svg12-ref.png	\
+	mask-transformed-similar-svg11-ref.png	\
 	meta-surface-pattern-ref.png		\
 	meta-surface-pattern-rgb24-ref.png	\
 	meta-surface-pattern-pdf-ref.png	\
@@ -593,9 +600,11 @@ REFERENCE_IMAGES = \
 	paint-repeat-ref.png	\
 	paint-source-alpha-pdf-argb32-ref.png	\
 	paint-source-alpha-ref.png	\
-	paint-source-alpha-svg-ref.png	\
+	paint-source-alpha-svg12-ref.png	\
+	paint-source-alpha-svg11-ref.png	\
 	paint-with-alpha-ref.png	\
-	paint-with-alpha-svg-ref.png	\
+	paint-with-alpha-svg12-ref.png	\
+	paint-with-alpha-svg11-ref.png	\
 	paint-source-alpha-pdf-ref.png \
 	paint-with-alpha-pdf-ref.png \
 	pattern-getters-ref.png	\
@@ -611,7 +620,8 @@ REFERENCE_IMAGES = \
 	radial-gradient-ref.png	\
 	radial-gradient-pdf-ref.png \
 	radial-gradient-quartz-ref.png \
-	radial-gradient-svg-ref.png	\
+	radial-gradient-svg12-ref.png	\
+	radial-gradient-svg11-ref.png	\
 	random-intersections-ref.png	\
 	random-intersections-ps-ref.png \
 	random-intersections-quartz-ref.png \
@@ -634,7 +644,8 @@ REFERENCE_IMAGES = \
 	rotate-image-surface-paint-pdf-argb32-ref.png	\
 	rotate-image-surface-paint-quartz-ref.png	\
 	rotate-image-surface-paint-ref.png	\
-	rotate-image-surface-paint-svg-ref.png	\
+	rotate-image-surface-paint-svg12-ref.png	\
+	rotate-image-surface-paint-svg11-ref.png	\
 	scale-down-source-surface-paint-ref.png	\
 	scale-source-surface-paint-pdf-argb32-ref.png	\
 	scale-source-surface-paint-ref.png	\
@@ -665,24 +676,29 @@ REFERENCE_IMAGES = \
 	smask-ref.png			\
 	smask-pdf-ref.png		\
 	smask-ps-ref.png		\
-	smask-svg-ref.png		\
+	smask-svg12-ref.png		\
+	smask-svg11-ref.png		\
 	smask-fill-ref.png		\
 	smask-fill-pdf-ref.png		\
-	smask-fill-svg-ref.png		\
+	smask-fill-svg12-ref.png	\
+	smask-fill-svg11-ref.png	\
 	smask-image-mask-ref.png	\
 	smask-image-mask-pdf-ref.png	\
 	smask-mask-ref.png		\
 	smask-mask-pdf-ref.png		\
-	smask-mask-svg-ref.png		\
+	smask-mask-svg12-ref.png	\
+	smask-mask-svg11-ref.png	\
 	smask-paint-ref.png		\
 	smask-paint-pdf-ref.png		\
-	smask-paint-svg-ref.png		\
+	smask-paint-svg12-ref.png	\
+	smask-paint-svg11-ref.png	\
 	smask-stroke-ref.png		\
 	smask-stroke-pdf-ref.png	\
 	smask-text-ref.png		\
 	smask-text-pdf-ref.png		\
 	smask-text-ps-ref.png		\
-	smask-text-svg-ref.png		\
+	smask-text-svg12-ref.png	\
+	smask-text-svg11-ref.png	\
 	stroke-image-ref.png \
 	stroke-image-pdf-ref.png \
 	stroke-image-ps-ref.png \
@@ -693,7 +709,8 @@ REFERENCE_IMAGES = \
 	source-clip-scale-ps-argb32-ref.png	\
 	source-clip-scale-ps-rgb24-ref.png	\
 	source-clip-scale-ref.png	\
-	source-clip-scale-svg-ref.png	\
+	source-clip-scale-svg12-ref.png	\
+	source-clip-scale-svg11-ref.png	\
 	source-clip-scale-pdf-ref.png \
 	source-surface-scale-paint-ref.png	\
 	source-surface-scale-paint-rgb24-ref.png	\
@@ -709,7 +726,8 @@ REFERENCE_IMAGES = \
 	surface-pattern-scale-up-pdf-argb32-ref.png	\
 	surface-pattern-scale-up-ps-argb32-ref.png	\
 	surface-pattern-scale-up-ref.png	\
-	surface-pattern-svg-ref.png	\
+	surface-pattern-svg12-ref.png	\
+	surface-pattern-svg11-ref.png	\
 	svg-surface-source-ref.png \
 	text-antialias-gray-ref.png	\
 	text-antialias-gray-quartz-ref.png	\
@@ -732,7 +750,8 @@ REFERENCE_IMAGES = \
 	text-rotate-ref.png	\
 	text-rotate-pdf-ref.png \
 	text-rotate-ps-ref.png	\
-	text-rotate-svg-ref.png	\
+	text-rotate-svg12-ref.png \
+	text-rotate-svg11-ref.png \
 	text-rotate-quartz-ref.png \
 	text-transform-ref.png		\
 	text-transform-pdf-ref.png	\
@@ -754,14 +773,17 @@ REFERENCE_IMAGES = \
 	unbounded-operator-rgb24-ref.png	\
 	user-font-ref.png	\
 	user-font-ps-ref.png \
-	user-font-svg-ref.png	\
+	user-font-svg12-ref.png	\
+	user-font-svg11-ref.png	\
 	user-font-proxy-ref.png	\
 	user-font-proxy-pdf-ref.png	\
 	user-font-proxy-ps-ref.png	\
-	user-font-proxy-svg-ref.png	\
+	user-font-proxy-svg12-ref.png	\
+	user-font-proxy-svg11-ref.png	\
 	user-font-rescale-ref.png	\
 	user-font-rescale-ps-ref.png	\
-	user-font-rescale-svg-ref.png	\
+	user-font-rescale-svg12-ref.png	\
+	user-font-rescale-svg11-ref.png	\
 	unbounded-operator-quartz-ref.png	\
 	unbounded-operator-quartz-rgb24-ref.png	\
 	xlib-expose-event-ref.png \

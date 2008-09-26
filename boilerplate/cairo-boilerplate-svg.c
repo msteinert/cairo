@@ -39,16 +39,16 @@
 
 cairo_user_data_key_t	svg_closure_key;
 
-typedef struct _svg_target_closure
-{
+typedef struct _svg_target_closure {
     char    *filename;
     int	    width, height;
     cairo_surface_t	*target;
 } svg_target_closure_t;
 
-cairo_surface_t *
+static cairo_surface_t *
 _cairo_boilerplate_svg_create_surface (const char		 *name,
 				       cairo_content_t		  content,
+				       cairo_svg_version_t	  version,
 				       int			  width,
 				       int			  height,
 				       int			  max_width,
@@ -73,6 +73,7 @@ _cairo_boilerplate_svg_create_surface (const char		 *name,
     if (cairo_surface_status (surface))
 	goto CLEANUP_FILENAME;
 
+    cairo_svg_surface_restrict_to_version (surface, version);
     cairo_surface_set_fallback_resolution (surface, 72., 72.);
 
     if (content == CAIRO_CONTENT_COLOR) {
@@ -99,6 +100,45 @@ _cairo_boilerplate_svg_create_surface (const char		 *name,
     free (ptc->filename);
     free (ptc);
     return surface;
+}
+
+cairo_surface_t *
+_cairo_boilerplate_svg11_create_surface (const char		 *name,
+					 cairo_content_t	  content,
+					 int			  width,
+					 int			  height,
+					 int			  max_width,
+					 int			  max_height,
+					 cairo_boilerplate_mode_t	  mode,
+					 int                        id,
+					 void			**closure)
+{
+    /* current default, but be explicit in case the default changes */
+    return _cairo_boilerplate_svg_create_surface (name, content,
+						  CAIRO_SVG_VERSION_1_1,
+						  width, height,
+						  max_width, max_height,
+						  mode, id,
+						  closure);
+}
+
+cairo_surface_t *
+_cairo_boilerplate_svg12_create_surface (const char		 *name,
+					 cairo_content_t	  content,
+					 int			  width,
+					 int			  height,
+					 int			  max_width,
+					 int			  max_height,
+					 cairo_boilerplate_mode_t	  mode,
+					 int                        id,
+					 void			**closure)
+{
+    return _cairo_boilerplate_svg_create_surface (name, content,
+						  CAIRO_SVG_VERSION_1_2,
+						  width, height,
+						  max_width, max_height,
+						  mode, id,
+						  closure);
 }
 
 cairo_status_t
@@ -207,7 +247,7 @@ cairo_boilerplate_svg_surface_force_fallbacks (cairo_surface_t *abstract_surface
     cairo_paginated_surface_t *paginated = (cairo_paginated_surface_t*) abstract_surface;
     cairo_svg_surface_t *surface;
 
-    if (cairo_surface_get_type (abstract_surface) != CAIRO_SURFACE_TYPE_PDF)
+    if (cairo_surface_get_type (abstract_surface) != CAIRO_SURFACE_TYPE_SVG)
 	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
 
     surface = (cairo_svg_surface_t*) paginated->target;
