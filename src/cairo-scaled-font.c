@@ -573,7 +573,7 @@ _cairo_scaled_font_keys_equal (const void *abstract_key_a, const void *abstract_
 	    cairo_font_options_equal (&key_a->options, &key_b->options));
 }
 
-/* XXX: This 256 number is arbitary---we've never done any measurement
+/* XXX: This 256 number is arbitrary---we've never done any measurement
  * of this. In fact, having a per-font glyph caches each managed
  * separately is probably not what we want anyway. Would probably be
  * much better to have a single cache for glyphs with random
