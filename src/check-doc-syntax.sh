@@ -34,7 +34,7 @@ if echo $FILES | xargs grep . /dev/null | sed -e '/<programlisting>/,/<\/program
 	echo Error: some macros in the docs are not prefixed by percent sign.
 	echo Fix this by searching for the following regexp in the above files:
 	echo "	'$enum_regexp'"
-fi
+fi >&2
 
 type_regexp='\( .*[^#]\| \|^\)\<cairo[0-9a-z_]*_t\>\($\|[^:]$\|[^:].\)'
 if test "x$SGML_DOCS" = x; then
@@ -49,7 +49,7 @@ if echo $FILES | xargs grep . /dev/null | sed -e '/<programlisting>/,/<\/program
 	echo neither are the only token in the doc line followed by colon.
 	echo Fix this by searching for the following regexp in the above files:
 	echo "	'$type_regexp'"
-fi
+fi >&2
 
 func_regexp='\([^#]\|^\)\<\(cairo_[][<>/0-9a-z_]*\>[^][<>(]\)'
 if test "x$SGML_DOCS" = x; then
@@ -62,13 +62,13 @@ if echo $FILES | xargs grep . /dev/null | sed -e '/<programlisting>/,/<\/program
 	echo Error: some function names in the docs are not followed by parentheses.
 	echo Fix this by searching for the following regexp in the above files:
 	echo "	'$func_regexp'"
-fi
+fi >&2
 
 note_regexp='NOTE'
 if echo $FILES | xargs grep "$note_regexp" /dev/null; then
 	stat=1
 	echo Error: some source files contain the string 'NOTE'.
 	echo Be civil and replace it by 'Note' please.
-fi
+fi >&2
 
 exit $stat
