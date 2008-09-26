@@ -68,8 +68,8 @@ twin_scaled_font_init (cairo_scaled_font_t  *scaled_font,
 		       cairo_t              *cr,
 		       cairo_font_extents_t *metrics)
 {
-  metrics->ascent  = .67;
-  metrics->descent = .33;
+  metrics->ascent  = FY (50);
+  metrics->descent = FY (14);
   return CAIRO_STATUS_SUCCESS;
 }
 
@@ -78,7 +78,7 @@ twin_scaled_font_unicode_to_glyph (cairo_scaled_font_t *scaled_font,
 				   unsigned long        unicode,
 				   unsigned long       *glyph)
 {
-    /* We use an indentity charmap.  Which means we could live
+    /* We use an identity charmap.  Which means we could live
      * with no unicode_to_glyph method too.  But we define this
      * to map all unknown chars to a single unknown glyph to
      * reduce pressure on cache. */
