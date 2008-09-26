@@ -28,15 +28,26 @@
 #define _CAIRO_BOILERPLATE_PS_PRIVATE_H_
 
 cairo_surface_t *
-_cairo_boilerplate_ps_create_surface (const char		 *name,
-				      cairo_content_t		  content,
-				      int			  width,
-				      int			  height,
-				      int			  max_width,
-				      int			  max_height,
-				      cairo_boilerplate_mode_t	  mode,
-				      int                         id,
-				      void			**closure);
+_cairo_boilerplate_ps2_create_surface (const char		 *name,
+				       cairo_content_t		  content,
+				       int			  width,
+				       int			  height,
+				       int			  max_width,
+				       int			  max_height,
+				       cairo_boilerplate_mode_t	  mode,
+				       int                        id,
+				       void			**closure);
+
+cairo_surface_t *
+_cairo_boilerplate_ps3_create_surface (const char		 *name,
+				       cairo_content_t		  content,
+				       int			  width,
+				       int			  height,
+				       int			  max_width,
+				       int			  max_height,
+				       cairo_boilerplate_mode_t	  mode,
+				       int                        id,
+				       void			**closure);
 
 void
 _cairo_boilerplate_ps_cleanup (void *closure);

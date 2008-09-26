@@ -297,8 +297,10 @@ REFERENCE_IMAGES = \
 	alpha-similar-rgb24-ref.png	\
 	big-line-ref.png		\
 	big-line-rgb24-ref.png		\
-	big-line-ps-ref.png		\
-	big-line-ps-rgb24-ref.png	\
+	big-line-ps2-ref.png		\
+	big-line-ps3-ref.png		\
+	big-line-ps2-rgb24-ref.png	\
+	big-line-ps3-rgb24-ref.png	\
 	big-line-quartz-ref.png		\
 	big-line-quartz-rgb24-ref.png	\
 	bilevel-image-ref.png		\
@@ -310,18 +312,23 @@ REFERENCE_IMAGES = \
 	caps-joins-alpha-svg12-ref.png	\
 	caps-joins-alpha-svg11-ref.png	\
 	caps-joins-ref.png	\
-	caps-joins-ps-ref.png	\
+	caps-joins-ps2-ref.png	\
+	caps-joins-ps3-ref.png	\
 	caps-sub-paths-ref.png	\
 	clip-all-ref.png	\
 	clip-empty-ref.png	\
 	clip-fill-rule-pixel-aligned-ref.png	\
 	clip-fill-rule-pixel-aligned-rgb24-ref.png	\
-	clip-fill-rule-ps-argb32-ref.png	\
-	clip-fill-rule-ps-rgb24-ref.png		\
+	clip-fill-rule-ps2-argb32-ref.png	\
+	clip-fill-rule-ps3-argb32-ref.png	\
+	clip-fill-rule-ps2-rgb24-ref.png		\
+	clip-fill-rule-ps3-rgb24-ref.png		\
 	clip-fill-rule-ref.png	\
 	clip-fill-rule-rgb24-ref.png	\
-	clip-nesting-ps-argb32-ref.png	\
-	clip-nesting-ps-rgb24-ref.png	\
+	clip-nesting-ps2-argb32-ref.png	\
+	clip-nesting-ps3-argb32-ref.png	\
+	clip-nesting-ps2-rgb24-ref.png	\
+	clip-nesting-ps3-rgb24-ref.png	\
 	clip-nesting-quartz-ref.png	\
 	clip-nesting-quartz-rgb24-ref.png	\
 	clip-nesting-ref.png	\
@@ -329,28 +336,36 @@ REFERENCE_IMAGES = \
 	clip-operator-ref.png	\
 	clip-operator-pdf-argb32-ref.png \
 	clip-operator-pdf-rgb24-ref.png \
-	clip-operator-ps-rgb24-ref.png	\
+	clip-operator-ps2-rgb24-ref.png	\
+	clip-operator-ps3-rgb24-ref.png	\
 	clip-operator-rgb24-ref.png	\
 	clip-operator-quartz-ref.png	\
 	clip-operator-quartz-rgb24-ref.png	\
-	clip-push-group-ps-argb32-ref.png	\
-	clip-push-group-ps-rgb24-ref.png	\
+	clip-push-group-ps2-argb32-ref.png	\
+	clip-push-group-ps3-argb32-ref.png	\
+	clip-push-group-ps2-rgb24-ref.png	\
+	clip-push-group-ps3-rgb24-ref.png	\
 	clip-push-group-quartz-ref.png	\
 	clip-push-group-ref.png	\
-	clip-twice-ps-argb32-ref.png	\
-	clip-twice-ps-rgb24-ref.png	\
+	clip-twice-ps2-argb32-ref.png	\
+	clip-twice-ps3-argb32-ref.png	\
+	clip-twice-ps2-rgb24-ref.png	\
+	clip-twice-ps3-rgb24-ref.png	\
 	clip-twice-quartz-ref.png	\
 	clip-twice-quartz-rgb24-ref.png	\
 	clip-twice-ref.png	\
 	clip-twice-rgb24-ref.png	\
 	clipped-group-ref.png	\
-	clipped-group-ps-ref.png	\
+	clipped-group-ps2-ref.png	\
+	clipped-group-ps3-ref.png	\
 	close-path-ref.png	\
-	close-path-ps-ref.png	\
+	close-path-ps2-ref.png	\
+	close-path-ps3-ref.png	\
 	composite-integer-translate-over-ref.png	\
 	composite-integer-translate-over-repeat-ref.png	\
 	composite-integer-translate-source-ref.png	\
-	copy-path-ps-ref.png	\
+	copy-path-ps2-ref.png	\
+	copy-path-ps3-ref.png	\
 	copy-path-ref.png	\
 	create-from-png-ref.png			\
 	create-from-png-alpha-ref.png		\
@@ -359,40 +374,53 @@ REFERENCE_IMAGES = \
 	create-from-png-indexed-ref.png		\
 	create-from-png-indexed-alpha-ref.png	\
 	create-from-png-stream-ref.png	\
-	dash-caps-joins-ps-argb32-ref.png	\
-	dash-caps-joins-ps-rgb24-ref.png	\
+	dash-caps-joins-ps2-argb32-ref.png	\
+	dash-caps-joins-ps3-argb32-ref.png	\
+	dash-caps-joins-ps2-rgb24-ref.png	\
+	dash-caps-joins-ps3-rgb24-ref.png	\
 	dash-caps-joins-quartz-ref.png	\
 	dash-caps-joins-ref.png	\
 	dash-curve-ref.png	\
-	dash-curve-ps-ref.png \
+	dash-curve-ps2-ref.png \
+	dash-curve-ps3-ref.png \
 	dash-curve-quartz-ref.png \
 	dash-no-dash-ref.png	\
 	dash-offset-negative-ref.png	\
-	dash-scale-ps-argb32-ref.png	\
-	dash-scale-ps-rgb24-ref.png	\
+	dash-scale-ps2-argb32-ref.png	\
+	dash-scale-ps3-argb32-ref.png	\
+	dash-scale-ps2-rgb24-ref.png	\
+	dash-scale-ps3-rgb24-ref.png	\
 	dash-scale-quartz-ref.png	\
 	dash-scale-ref.png	\
-	dash-state-ps-ref.png	\
+	dash-state-ps2-ref.png	\
+	dash-state-ps3-ref.png	\
 	dash-state-ref.png	\
 	dash-state-quartz-ref.png	\
-	dash-zero-length-ps-ref.png	\
-	dash-zero-length-ps-rgb24-ref.png	\
+	dash-zero-length-ps2-ref.png	\
+	dash-zero-length-ps3-ref.png	\
+	dash-zero-length-ps2-rgb24-ref.png	\
+	dash-zero-length-ps3-rgb24-ref.png	\
 	dash-zero-length-ref.png	\
 	dash-zero-length-rgb24-ref.png	\
 	degenerate-arc-ref.png		\
-	degenerate-arc-ps-ref.png	\
+	degenerate-arc-ps2-ref.png	\
+	degenerate-arc-ps3-ref.png	\
 	degenerate-pen-ref.png		\
-	degenerate-pen-ps-ref.png	\
+	degenerate-pen-ps2-ref.png	\
+	degenerate-pen-ps3-ref.png	\
 	degenerate-pen-quartz-ref.png	\
-	degenerate-path-ps-argb32-ref.png	\
-	degenerate-path-ps-rgb24-ref.png	\
+	degenerate-path-ps2-argb32-ref.png	\
+	degenerate-path-ps3-argb32-ref.png	\
+	degenerate-path-ps2-rgb24-ref.png	\
+	degenerate-path-ps2-rgb24-ref.png	\
 	degenerate-path-ref.png	\
 	degenerate-path-rgb24-ref.png	\
 	degenerate-path-quartz-ref.png	\
 	degenerate-path-quartz-rgb24-ref.png	\
 	device-offset-fractional-ref.png	\
 	device-offset-fractional-pdf-ref.png	\
-	device-offset-fractional-ps-ref.png	\
+	device-offset-fractional-ps2-ref.png	\
+	device-offset-fractional-ps3-ref.png	\
 	device-offset-positive-ref.png	\
 	device-offset-positive-rgb24-ref.png	\
 	device-offset-ref.png	\
@@ -401,21 +429,25 @@ REFERENCE_IMAGES = \
 	extend-pad-ref.png	\
 	extend-reflect-ref.png	\
 	extend-reflect-similar-ref.png	\
-	extend-reflect-similar-ps-ref.png	\
-	extend-reflect-ps-ref.png \
+	extend-reflect-similar-ps2-ref.png	\
+	extend-reflect-similar-ps3-ref.png	\
+	extend-reflect-ps2-ref.png \
+	extend-reflect-ps3-ref.png \
 	extend-repeat-ref.png	\
 	extend-repeat-similar-ref.png	\
 	fill-alpha-ref.png	\
 	fill-alpha-pattern-ref.png	\
 	fill-alpha-pattern-pdf-argb32-ref.png	\
 	fill-alpha-pattern-pdf-rgb24-ref.png	\
-	fill-alpha-pattern-ps-ref.png	\
+	fill-alpha-pattern-ps3-ref.png	\
 	fill-and-stroke-alpha-add-quartz-ref.png	\
 	fill-and-stroke-alpha-add-ref.png	\
 	fill-and-stroke-alpha-quartz-ref.png	\
 	fill-and-stroke-alpha-ref.png	\
-	fill-and-stroke-ps-argb32-ref.png	\
-	fill-and-stroke-ps-rgb24-ref.png	\
+	fill-and-stroke-ps2-argb32-ref.png	\
+	fill-and-stroke-ps3-argb32-ref.png	\
+	fill-and-stroke-ps2-rgb24-ref.png	\
+	fill-and-stroke-ps3-rgb24-ref.png	\
 	fill-and-stroke-quartz-ref.png	\
 	fill-and-stroke-quartz-rgb24-ref.png	\
 	fill-and-stroke-ref.png	\
@@ -424,62 +456,80 @@ REFERENCE_IMAGES = \
 	fill-degenerate-sort-order-quartz-rgb24-ref.png	\
 	fill-degenerate-sort-order-ref.png	\
 	fill-degenerate-sort-order-rgb24-ref.png	\
-	fill-missed-stop-ps-argb32-ref.png	\
-	fill-missed-stop-ps-rgb24-ref.png	\
+	fill-missed-stop-ps2-argb32-ref.png	\
+	fill-missed-stop-ps3-argb32-ref.png	\
+	fill-missed-stop-ps2-rgb24-ref.png	\
+	fill-missed-stop-ps3-rgb24-ref.png	\
 	fill-missed-stop-ref.png	\
 	fill-missed-stop-rgb24-ref.png	\
-	fill-rule-ps-argb32-ref.png	\
+	fill-rule-ps2-argb32-ref.png	\
+	fill-rule-ps3-argb32-ref.png	\
+	fill-rule-ps2-rgb24-ref.png \
+	fill-rule-ps3-rgb24-ref.png \
 	fill-rule-quartz-ref.png	\
 	fill-rule-quartz-rgb24-ref.png	\
 	fill-rule-ref.png	\
 	fill-rule-rgb24-ref.png	\
-	fill-rule-ps-rgb24-ref.png \
 	filter-bilinear-extents-ref.png \
 	filter-nearest-offset-ref.png	\
 	finer-grained-fallbacks-ref.png			\
 	finer-grained-fallbacks-rgb24-ref.png		\
-	finer-grained-fallbacks-ps-argb32-ref.png	\
-	finer-grained-fallbacks-ps-rgb24-ref.png	\
-	font-matrix-translation-ps-argb32-ref.png	\
-	font-matrix-translation-ps-rgb24-ref.png	\
+	finer-grained-fallbacks-ps2-argb32-ref.png	\
+	finer-grained-fallbacks-ps3-argb32-ref.png	\
+	finer-grained-fallbacks-ps2-rgb24-ref.png	\
+	finer-grained-fallbacks-ps3-rgb24-ref.png	\
+	font-matrix-translation-ps2-argb32-ref.png	\
+	font-matrix-translation-ps3-argb32-ref.png	\
+	font-matrix-translation-ps2-rgb24-ref.png	\
+	font-matrix-translation-ps3-rgb24-ref.png	\
 	font-matrix-translation-ref.png	\
 	font-matrix-translation-svg12-ref.png	\
 	font-matrix-translation-svg11-ref.png	\
 	font-matrix-translation-quartz-ref.png \
-	ft-text-antialias-none-ps-argb32-ref.png	\
+	ft-text-antialias-none-ps2-argb32-ref.png	\
+	ft-text-antialias-none-ps3-argb32-ref.png	\
 	ft-text-antialias-none-ref.png	\
 	ft-show-glyphs-positioning-ref.png		\
 	ft-show-glyphs-positioning-pdf-ref.png		\
-	ft-show-glyphs-positioning-ps-ref.png		\
+	ft-show-glyphs-positioning-ps2-ref.png		\
+	ft-show-glyphs-positioning-ps3-ref.png		\
 	ft-show-glyphs-positioning-svg12-ref.png		\
 	ft-show-glyphs-positioning-svg11-ref.png		\
 	ft-show-glyphs-table-ref.png			\
-	ft-show-glyphs-table-ps-ref.png			\
+	ft-show-glyphs-table-ps2-ref.png			\
+	ft-show-glyphs-table-ps3-ref.png			\
 	ft-text-vertical-layout-type1-pdf-ref.png	\
-	ft-text-vertical-layout-type1-ps-ref.png	\
+	ft-text-vertical-layout-type1-ps2-ref.png	\
+	ft-text-vertical-layout-type1-ps3-ref.png	\
 	ft-text-vertical-layout-type1-ref.png	\
 	ft-text-vertical-layout-type1-svg12-ref.png	\
 	ft-text-vertical-layout-type1-svg11-ref.png	\
 	ft-text-vertical-layout-type3-pdf-ref.png	\
-	ft-text-vertical-layout-type3-ps-ref.png	\
+	ft-text-vertical-layout-type3-ps2-ref.png	\
+	ft-text-vertical-layout-type3-ps3-ref.png	\
 	ft-text-vertical-layout-type3-ref.png	\
 	ft-text-vertical-layout-type3-svg12-ref.png	\
 	ft-text-vertical-layout-type3-svg11-ref.png	\
 	get-group-target-ref.png	\
 	glitz-surface-source-ref.png \
 	glyph-cache-pressure-ref.png	\
-	glyph-cache-pressure-ps-ref.png	\
+	glyph-cache-pressure-ps2-ref.png	\
+	glyph-cache-pressure-ps3-ref.png	\
 	glyph-cache-pressure-quartz-ref.png	\
 	gradient-alpha-pdf-argb32-ref.png	\
 	gradient-alpha-pdf-rgb24-ref.png	\
-	gradient-alpha-ps-argb32-ref.png	\
-	gradient-alpha-ps-rgb24-ref.png	\
+	gradient-alpha-ps2-argb32-ref.png	\
+	gradient-alpha-ps3-argb32-ref.png	\
+	gradient-alpha-ps2-rgb24-ref.png	\
+	gradient-alpha-ps3-rgb24-ref.png	\
 	gradient-alpha-ref.png	\
 	gradient-alpha-rgb24-ref.png	\
 	gradient-constant-alpha-pdf-argb32-ref.png	\
 	gradient-constant-alpha-pdf-rgb24-ref.png	\
-	gradient-constant-alpha-ps-ref.png		\
-	gradient-constant-alpha-ps-rgb24-ref.png	\
+	gradient-constant-alpha-ps2-ref.png		\
+	gradient-constant-alpha-ps3-ref.png		\
+	gradient-constant-alpha-ps2-rgb24-ref.png	\
+	gradient-constant-alpha-ps3-rgb24-ref.png	\
 	gradient-constant-alpha-ref.png	\
 	gradient-constant-alpha-rgb24-ref.png	\
 	gradient-zero-stops-ref.png	\
@@ -487,35 +537,42 @@ REFERENCE_IMAGES = \
 	group-paint-ref.png	\
 	image-surface-source-ref.png \
 	infinite-join-ref.png	\
-	infinite-join-ps-ref.png	\
+	infinite-join-ps2-ref.png	\
+	infinite-join-ps3-ref.png	\
 	large-clip-ref.png	\
 	large-font-ref.png	\
 	large-source-ref.png	\
-	leaky-dash-ps-argb32-ref.png	\
-	leaky-dash-ps-rgb24-ref.png	\
+	leaky-dash-ps2-argb32-ref.png	\
+	leaky-dash-ps3-argb32-ref.png	\
+	leaky-dash-ps2-rgb24-ref.png	\
+	leaky-dash-ps3-rgb24-ref.png	\
 	leaky-dash-quartz-ref.png	\
 	leaky-dash-ref.png	\
 	leaky-dashed-rectangle-ref.png		\
-	leaky-dashed-rectangle-ps-ref.png	\
+	leaky-dashed-rectangle-ps2-ref.png	\
+	leaky-dashed-rectangle-ps3-ref.png	\
 	leaky-polygon-ref.png	\
-	leaky-polygon-ps-ref.png	\
+	leaky-polygon-ps2-ref.png	\
+	leaky-polygon-ps3-ref.png	\
 	linear-gradient-reflect-ref.png	\
 	linear-gradient-reflect-pdf-argb32-ref.png	\
 	linear-gradient-reflect-pdf-rgb24-ref.png	\
-	linear-gradient-reflect-ps-ref.png	\
+	linear-gradient-reflect-ps3-ref.png	\
 	linear-gradient-reflect-quartz-ref.png	\
 	linear-gradient-pdf-ref.png	\
-	linear-gradient-ps-ref.png	\
+	linear-gradient-ps3-ref.png	\
 	linear-gradient-quartz-ref.png	\
 	linear-gradient-ref.png	\
 	linear-gradient-svg12-ref.png	\
 	linear-gradient-svg11-ref.png	\
 	line-width-ref.png	\
-	line-width-scale-ps-ref.png	\
+	line-width-scale-ps2-ref.png	\
+	line-width-scale-ps3-ref.png	\
 	line-width-scale-quartz-ref.png	\
 	line-width-scale-ref.png	\
 	long-dashed-lines-ref.png	\
-	long-dashed-lines-ps-ref.png	\
+	long-dashed-lines-ps2-ref.png	\
+	long-dashed-lines-ps3-ref.png	\
 	long-dashed-lines-quartz-ref.png	\
 	long-lines-ref.png	\
 	mask-alpha-ref.png	\
@@ -545,16 +602,20 @@ REFERENCE_IMAGES = \
 	meta-surface-pattern-rgb24-ref.png	\
 	meta-surface-pattern-pdf-ref.png	\
 	meta-surface-pattern-pdf-rgb24-ref.png	\
-	meta-surface-pattern-ps-argb32-ref.png	\
-	meta-surface-pattern-ps-rgb24-ref.png	\
+	meta-surface-pattern-ps2-argb32-ref.png	\
+	meta-surface-pattern-ps3-rgb24-ref.png	\
+	meta-surface-pattern-ps2-argb32-ref.png	\
+	meta-surface-pattern-ps3-rgb24-ref.png	\
 	meta-surface-pattern-quartz-ref.png	\
 	meta-surface-pattern-quartz-rgb24-ref.png	\
 	meta-surface-pattern-svg-argb32-ref.png	\
 	meta-surface-pattern-svg-rgb24-ref.png	\
 	miter-precision-ref.png \
 	move-to-show-surface-ref.png	\
-	new-sub-path-ps-argb32-ref.png	\
-	new-sub-path-ps-rgb24-ref.png	\
+	new-sub-path-ps2-argb32-ref.png	\
+	new-sub-path-ps3-argb32-ref.png	\
+	new-sub-path-ps2-rgb24-ref.png	\
+	new-sub-path-ps3-rgb24-ref.png	\
 	new-sub-path-quartz-ref.png	\
 	new-sub-path-quartz-rgb24-ref.png	\
 	new-sub-path-ref.png	\
@@ -577,21 +638,26 @@ REFERENCE_IMAGES = \
 	operator-source-rgb24-ref.png	\
 	operator-source-quartz-ref.png \
 	operator-source-quartz-rgb24-ref.png \
-	over-above-source-ps-argb32-ref.png       \
+	over-above-source-ps2-argb32-ref.png       \
+	over-above-source-ps3-argb32-ref.png       \
 	over-above-source-quartz-ref.png	  \
 	over-above-source-quartz-rgb24-ref.png	  \
 	over-above-source-ref.png                 \
 	over-above-source-rgb24-ref.png           \
-	over-around-source-ps-argb32-ref.png       \
-	over-around-source-ps-rgb24-ref.png        \
+	over-around-source-ps2-argb32-ref.png       \
+	over-around-source-ps3-argb32-ref.png       \
+	over-around-source-ps2-rgb24-ref.png        \
+	over-around-source-ps3-rgb24-ref.png        \
 	over-around-source-quartz-ref.png	   \
 	over-around-source-quartz-rgb24-ref.png	   \
 	over-around-source-ref.png                 \
 	over-around-source-rgb24-ref.png           \
-	over-below-source-ps-argb32-ref.png       \
+	over-below-source-ps2-argb32-ref.png       \
+	over-below-source-ps3-argb32-ref.png       \
 	over-below-source-ref.png                 \
 	over-below-source-rgb24-ref.png           \
-	over-between-source-ps-argb32-ref.png     \
+	over-between-source-ps2-argb32-ref.png     \
+	over-between-source-ps3-argb32-ref.png     \
 	over-between-source-quartz-ref.png        \
 	over-between-source-quartz-rgb24-ref.png  \
 	over-between-source-ref.png                 \
@@ -623,24 +689,29 @@ REFERENCE_IMAGES = \
 	radial-gradient-svg12-ref.png	\
 	radial-gradient-svg11-ref.png	\
 	random-intersections-ref.png	\
-	random-intersections-ps-ref.png \
+	random-intersections-ps2-ref.png \
+	random-intersections-ps3-ref.png \
 	random-intersections-quartz-ref.png \
 	rgb24-ignore-alpha-ref.png \
 	rectangle-rounding-error-ref.png	\
 	rectilinear-fill-ref.png	\
 	rectilinear-miter-limit-ref.png		\
-	rectilinear-miter-limit-ps-ref.png	\
+	rectilinear-miter-limit-ps2-ref.png	\
+	rectilinear-miter-limit-ps3-ref.png	\
 	rectilinear-stroke-ref.png	\
 	reflected-stroke-ref.png	\
-	reflected-stroke-ps-ref.png	\
+	reflected-stroke-ps2-ref.png	\
+	reflected-stroke-ps3-ref.png	\
 	reflected-stroke-quartz-ref.png	\
 	rel-path-quartz-ref.png	\
 	rel-path-quartz-rgb24-ref.png	\
-	rel-path-ps-rgb24-ref.png	\
+	rel-path-ps2-rgb24-ref.png	\
+	rel-path-ps3-rgb24-ref.png	\
 	rel-path-ref.png	\
 	rel-path-rgb24-ref.png	\
 	rotate-image-surface-paint-pdf-rgb24-ref.png \
-	rotate-image-surface-paint-ps-ref.png \
+	rotate-image-surface-paint-ps2-ref.png \
+	rotate-image-surface-paint-ps3-ref.png \
 	rotate-image-surface-paint-pdf-argb32-ref.png	\
 	rotate-image-surface-paint-quartz-ref.png	\
 	rotate-image-surface-paint-ref.png	\
@@ -656,10 +727,12 @@ REFERENCE_IMAGES = \
 	stroke-ctm-caps-ref.png \
 	stroke-ctm-caps-quartz-ref.png \
 	select-font-face-ref.png	\
-	select-font-face-ps-ref.png \
+	select-font-face-ps2-ref.png \
+	select-font-face-ps3-ref.png \
 	select-font-face-quartz-ref.png \
 	self-copy-ref.png	\
-	self-copy-ps-ref.png	\
+	self-copy-ps2-ref.png	\
+	self-copy-ps3-ref.png	\
 	self-copy-overlap-ref.png	\
 	self-copy-overlap-rgb24-ref.png	\
 	self-intersecting-ref.png	\
@@ -669,13 +742,16 @@ REFERENCE_IMAGES = \
 	set-source-svg-argb32-ref.png	\
 	show-glyphs-many-ref.png	\
 	show-text-current-point-ref.png	\
-	show-text-current-point-ps-ref.png \
+	show-text-current-point-ps2-ref.png \
+	show-text-current-point-ps3-ref.png \
 	show-text-current-point-quartz-ref.png \
 	skew-extreme-ref.png \
-	skew-extreme-ps-ref.png \
+	skew-extreme-ps2-ref.png \
+	skew-extreme-ps3-ref.png \
 	smask-ref.png			\
 	smask-pdf-ref.png		\
-	smask-ps-ref.png		\
+	smask-ps2-ref.png		\
+	smask-ps3-ref.png		\
 	smask-svg12-ref.png		\
 	smask-svg11-ref.png		\
 	smask-fill-ref.png		\
@@ -696,35 +772,43 @@ REFERENCE_IMAGES = \
 	smask-stroke-pdf-ref.png	\
 	smask-text-ref.png		\
 	smask-text-pdf-ref.png		\
-	smask-text-ps-ref.png		\
+	smask-text-ps2-ref.png		\
+	smask-text-ps3-ref.png		\
 	smask-text-svg12-ref.png	\
 	smask-text-svg11-ref.png	\
 	stroke-image-ref.png \
 	stroke-image-pdf-ref.png \
-	stroke-image-ps-ref.png \
+	stroke-image-ps2-ref.png \
+	stroke-image-ps3-ref.png \
 	stroke-image-quartz-ref.png \
 	solid-pattern-cache-stress-ref.png	\
 	source-clip-ref.png	\
 	source-clip-scale-quartz-ref.png	\
-	source-clip-scale-ps-argb32-ref.png	\
-	source-clip-scale-ps-rgb24-ref.png	\
+	source-clip-scale-ps2-argb32-ref.png	\
+	source-clip-scale-ps3-argb32-ref.png	\
+	source-clip-scale-ps2-rgb24-ref.png	\
+	source-clip-scale-ps3-rgb24-ref.png	\
 	source-clip-scale-ref.png	\
 	source-clip-scale-svg12-ref.png	\
 	source-clip-scale-svg11-ref.png	\
 	source-clip-scale-pdf-ref.png \
 	source-surface-scale-paint-ref.png	\
 	source-surface-scale-paint-rgb24-ref.png	\
-	stroke-ctm-caps-ps-ref.png \
+	stroke-ctm-caps-ps2-ref.png \
+	stroke-ctm-caps-ps3-ref.png \
 	surface-pattern-big-scale-down-ref.png	\
 	surface-pattern-pdf-argb32-ref.png	\
-	surface-pattern-ps-argb32-ref.png	\
+	surface-pattern-ps2-argb32-ref.png	\
+	surface-pattern-ps3-argb32-ref.png	\
 	surface-pattern-ref.png	\
 	surface-pattern-scale-down-pdf-argb32-ref.png	\
-	surface-pattern-scale-down-ps-argb32-ref.png	\
+	surface-pattern-scale-down-ps2-argb32-ref.png	\
+	surface-pattern-scale-down-ps3-argb32-ref.png	\
 	surface-pattern-scale-down-ref.png	\
 	surface-pattern-scale-down-quartz-ref.png	\
 	surface-pattern-scale-up-pdf-argb32-ref.png	\
-	surface-pattern-scale-up-ps-argb32-ref.png	\
+	surface-pattern-scale-up-ps2-argb32-ref.png	\
+	surface-pattern-scale-up-ps3-argb32-ref.png	\
 	surface-pattern-scale-up-ref.png	\
 	surface-pattern-svg12-ref.png	\
 	surface-pattern-svg11-ref.png	\
@@ -737,8 +821,8 @@ REFERENCE_IMAGES = \
 	text-antialias-subpixel-quartz-ref.png	\
 	text-glyph-range-ref.png	\
 	text-glyph-range-rgb24-ref.png	\
-	text-pattern-ps-argb32-ref.png	\
-	text-pattern-ps-rgb24-ref.png	\
+	text-pattern-ps3-argb32-ref.png	\
+	text-pattern-ps3-rgb24-ref.png	\
 	text-pattern-ref.png	\
 	text-pattern-rgb24-ref.png	\
 	text-pattern-svg-argb32-ref.png	\
@@ -749,20 +833,25 @@ REFERENCE_IMAGES = \
 	text-pattern-quartz-rgb24-ref.png \
 	text-rotate-ref.png	\
 	text-rotate-pdf-ref.png \
-	text-rotate-ps-ref.png	\
+	text-rotate-ps2-ref.png	\
+	text-rotate-ps3-ref.png	\
 	text-rotate-svg12-ref.png \
 	text-rotate-svg11-ref.png \
 	text-rotate-quartz-ref.png \
 	text-transform-ref.png		\
 	text-transform-pdf-ref.png	\
-	text-transform-ps-ref.png	\
+	text-transform-ps2-ref.png	\
+	text-transform-ps3-ref.png	\
 	transforms-ref.png	\
-	transforms-ps-ref.png	\
+	transforms-ps2-ref.png	\
+	transforms-ps3-ref.png	\
 	translate-show-surface-ref.png	\
 	trap-clip-quartz-ref.png	\
 	trap-clip-quartz-rgb24-ref.png	\
-	trap-clip-ps-argb32-ref.png	\
-	trap-clip-ps-rgb24-ref.png	\
+	trap-clip-ps2-argb32-ref.png	\
+	trap-clip-ps3-argb32-ref.png	\
+	trap-clip-ps2-rgb24-ref.png	\
+	trap-clip-ps3-rgb24-ref.png	\
 	trap-clip-ref.png	\
 	trap-clip-rgb24-ref.png	\
 	trap-clip-pdf-argb32-ref.png \
@@ -772,16 +861,19 @@ REFERENCE_IMAGES = \
 	unbounded-operator-ref.png	\
 	unbounded-operator-rgb24-ref.png	\
 	user-font-ref.png	\
-	user-font-ps-ref.png \
+	user-font-ps2-ref.png \
+	user-font-ps3-ref.png \
 	user-font-svg12-ref.png	\
 	user-font-svg11-ref.png	\
 	user-font-proxy-ref.png	\
 	user-font-proxy-pdf-ref.png	\
-	user-font-proxy-ps-ref.png	\
+	user-font-proxy-ps2-ref.png	\
+	user-font-proxy-ps3-ref.png	\
 	user-font-proxy-svg12-ref.png	\
 	user-font-proxy-svg11-ref.png	\
 	user-font-rescale-ref.png	\
-	user-font-rescale-ps-ref.png	\
+	user-font-rescale-ps2-ref.png	\
+	user-font-rescale-ps3-ref.png	\
 	user-font-rescale-svg12-ref.png	\
 	user-font-rescale-svg11-ref.png	\
 	unbounded-operator-quartz-ref.png	\
