@@ -261,3 +261,8 @@ Incorrect clipping of group object (regression?)
 https://bugs.freedesktop.org/show_bug.cgi?id=14580
 --------------------------------------------------
 push-group
+
+Ghostscript does not correctly render small miters
+http://bugs.ghostscript.com/show_bug.cgi?id=690098
+--------------------------------------------------
+miter-precision

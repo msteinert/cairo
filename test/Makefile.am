@@ -909,7 +909,6 @@ extend-pad$(EXEEXT)				\
 filter-nearest-offset$(EXEEXT)			\
 filter-bilinear-extents$(EXEEXT)		\
 long-lines$(EXEEXT)				\
-miter-precision$(EXEEXT)			\
 operator$(EXEEXT)				\
 operator-alpha$(EXEEXT)				\
 self-copy-overlap$(EXEEXT)			\
