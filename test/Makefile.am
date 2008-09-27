@@ -304,7 +304,6 @@ REFERENCE_IMAGES = \
 	big-line-quartz-ref.png		\
 	big-line-quartz-rgb24-ref.png	\
 	bilevel-image-ref.png		\
-	bitmap-font-pdf-argb32-ref.png	\
 	bitmap-font-ref.png	\
 	bitmap-font-rgb24-ref.png	\
 	caps-joins-alpha-quartz-ref.png	\
@@ -611,6 +610,8 @@ REFERENCE_IMAGES = \
 	meta-surface-pattern-svg-argb32-ref.png	\
 	meta-surface-pattern-svg-rgb24-ref.png	\
 	miter-precision-ref.png \
+	miter-precision-ps2-ref.png	\
+	miter-precision-ps3-ref.png	\
 	move-to-show-surface-ref.png	\
 	new-sub-path-ps2-argb32-ref.png	\
 	new-sub-path-ps3-argb32-ref.png	\
