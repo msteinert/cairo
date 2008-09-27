@@ -337,6 +337,7 @@ REFERENCE_IMAGES = \
 	clip-operator-pdf-rgb24-ref.png \
 	clip-operator-ps2-rgb24-ref.png	\
 	clip-operator-ps3-rgb24-ref.png	\
+	clip-operator-ps3-ref.png	\
 	clip-operator-rgb24-ref.png	\
 	clip-operator-quartz-ref.png	\
 	clip-operator-quartz-rgb24-ref.png	\
@@ -409,9 +410,9 @@ REFERENCE_IMAGES = \
 	degenerate-pen-ps3-ref.png	\
 	degenerate-pen-quartz-ref.png	\
 	degenerate-path-ps2-argb32-ref.png	\
+	degenerate-path-ps2-rgb24-ref.png	\
 	degenerate-path-ps3-argb32-ref.png	\
-	degenerate-path-ps2-rgb24-ref.png	\
-	degenerate-path-ps2-rgb24-ref.png	\
+	degenerate-path-ps3-rgb24-ref.png	\
 	degenerate-path-ref.png	\
 	degenerate-path-rgb24-ref.png	\
 	degenerate-path-quartz-ref.png	\
@@ -573,12 +574,14 @@ REFERENCE_IMAGES = \
 	long-dashed-lines-quartz-ref.png	\
 	long-lines-ref.png	\
 	mask-alpha-ref.png	\
-	mask-alpha-svg-argb32-ref.png	\
+	mask-alpha-svg11-argb32-ref.png	\
+	mask-alpha-svg12-argb32-ref.png	\
 	mask-alpha-rgb24-ref.png	\
 	mask-alpha-quartz-argb32-ref.png \
 	mask-ctm-ref.png	\
 	mask-ctm-rgb24-ref.png	\
-	mask-ctm-svg-argb32-ref.png	\
+	mask-ctm-svg11-argb32-ref.png	\
+	mask-ctm-svg12-argb32-ref.png	\
 	mask-ref.png	\
 	mask-rgb24-ref.png	\
 	mask-pdf-argb32-ref.png	\
@@ -587,9 +590,12 @@ REFERENCE_IMAGES = \
 	mask-quartz-rgb24-ref.png	\
 	mask-surface-ctm-ref.png	\
 	mask-surface-ctm-rgb24-ref.png	\
-	mask-surface-ctm-svg-argb32-ref.png	\
-	mask-svg-rgb24-ref.png	\
-	mask-svg-argb32-ref.png	\
+	mask-surface-ctm-svg11-argb32-ref.png	\
+	mask-surface-ctm-svg12-argb32-ref.png	\
+	mask-svg11-rgb24-ref.png	\
+	mask-svg11-argb32-ref.png	\
+	mask-svg12-rgb24-ref.png	\
+	mask-svg12-argb32-ref.png	\
 	mask-transformed-image-ref.png	\
 	mask-transformed-similar-ref.png	\
 	mask-transformed-similar-pdf-ref.png	\
@@ -600,13 +606,15 @@ REFERENCE_IMAGES = \
 	meta-surface-pattern-pdf-ref.png	\
 	meta-surface-pattern-pdf-rgb24-ref.png	\
 	meta-surface-pattern-ps2-argb32-ref.png	\
-	meta-surface-pattern-ps3-rgb24-ref.png	\
-	meta-surface-pattern-ps2-argb32-ref.png	\
+	meta-surface-pattern-ps2-rgb24-ref.png	\
+	meta-surface-pattern-ps3-argb32-ref.png	\
 	meta-surface-pattern-ps3-rgb24-ref.png	\
 	meta-surface-pattern-quartz-ref.png	\
 	meta-surface-pattern-quartz-rgb24-ref.png	\
-	meta-surface-pattern-svg-argb32-ref.png	\
-	meta-surface-pattern-svg-rgb24-ref.png	\
+	meta-surface-pattern-svg11-argb32-ref.png	\
+	meta-surface-pattern-svg11-rgb24-ref.png	\
+	meta-surface-pattern-svg12-argb32-ref.png	\
+	meta-surface-pattern-svg12-rgb24-ref.png	\
 	miter-precision-ref.png \
 	miter-precision-ps2-ref.png	\
 	miter-precision-ps3-ref.png	\
@@ -681,7 +689,8 @@ REFERENCE_IMAGES = \
 	push-group-pdf-rgb24-ref.png \
 	push-group-ref.png	\
 	push-group-rgb24-ref.png	\
-	push-group-svg-argb32-ref.png	\
+	push-group-svg11-argb32-ref.png	\
+	push-group-svg12-argb32-ref.png	\
 	radial-gradient-ref.png	\
 	radial-gradient-pdf-ref.png \
 	radial-gradient-quartz-ref.png \
@@ -720,8 +729,10 @@ REFERENCE_IMAGES = \
 	scale-source-surface-paint-pdf-argb32-ref.png	\
 	scale-source-surface-paint-ref.png	\
 	scale-source-surface-paint-rgb24-ref.png	\
-	scale-source-surface-paint-svg-argb32-ref.png	\
-	scale-source-surface-paint-svg-rgb24-ref.png	\
+	scale-source-surface-paint-svg11-argb32-ref.png	\
+	scale-source-surface-paint-svg11-rgb24-ref.png	\
+	scale-source-surface-paint-svg12-argb32-ref.png	\
+	scale-source-surface-paint-svg12-rgb24-ref.png	\
 	scale-source-surface-paint-pdf-rgb24-ref.png \
 	stroke-ctm-caps-ref.png \
 	stroke-ctm-caps-quartz-ref.png \
@@ -738,7 +749,8 @@ REFERENCE_IMAGES = \
 	self-intersecting-rgb24-ref.png	\
 	set-source-ref.png	\
 	set-source-rgb24-ref.png	\
-	set-source-svg-argb32-ref.png	\
+	set-source-svg11-argb32-ref.png	\
+	set-source-svg12-argb32-ref.png	\
 	show-glyphs-many-ref.png	\
 	show-text-current-point-ref.png	\
 	show-text-current-point-ps2-ref.png \
@@ -824,8 +836,10 @@ REFERENCE_IMAGES = \
 	text-pattern-ps3-rgb24-ref.png	\
 	text-pattern-ref.png	\
 	text-pattern-rgb24-ref.png	\
-	text-pattern-svg-argb32-ref.png	\
-	text-pattern-svg-rgb24-ref.png	\
+	text-pattern-svg11-argb32-ref.png	\
+	text-pattern-svg11-rgb24-ref.png	\
+	text-pattern-svg12-argb32-ref.png	\
+	text-pattern-svg12-rgb24-ref.png	\
 	text-pattern-pdf-argb32-ref.png \
 	text-pattern-pdf-rgb24-ref.png \
 	text-pattern-quartz-ref.png \
@@ -847,9 +861,7 @@ REFERENCE_IMAGES = \
 	translate-show-surface-ref.png	\
 	trap-clip-quartz-ref.png	\
 	trap-clip-quartz-rgb24-ref.png	\
-	trap-clip-ps2-argb32-ref.png	\
 	trap-clip-ps3-argb32-ref.png	\
-	trap-clip-ps2-rgb24-ref.png	\
 	trap-clip-ps3-rgb24-ref.png	\
 	trap-clip-ref.png	\
 	trap-clip-rgb24-ref.png	\
