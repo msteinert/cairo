@@ -1580,6 +1580,8 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
 				     int              src_y,
 				     int              width,
 				     int              height,
+				     int             *device_offset_x,
+				     int             *device_offset_y,
 				     cairo_surface_t **clone_out)
 {
     cairo_quartz_surface_t *new_surface = NULL;
@@ -1598,6 +1600,8 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
 	*clone_out = (cairo_surface_t*)
 	    _cairo_quartz_surface_create_internal (NULL, CAIRO_CONTENT_COLOR_ALPHA,
 						   width, height);
+	*device_offset_x = 0;
+	*device_offset_y = 0;
 	return CAIRO_STATUS_SUCCESS;
     }
 
@@ -1608,6 +1612,8 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
 	    *clone_out = (cairo_surface_t*)
 		_cairo_quartz_surface_create_internal (NULL, CAIRO_CONTENT_COLOR_ALPHA,
 						       qsurf->extents.width, qsurf->extents.height);
+	    *device_offset_x = 0;
+	    *device_offset_y = 0;
 	    return CAIRO_STATUS_SUCCESS;
 	}
     }
@@ -1646,7 +1652,9 @@ _cairo_quartz_surface_clone_similar (void *abstract_surface,
 
     CGImageRelease (quartz_image);
 
-FINISH:    
+FINISH:
+    *device_offset_x = src_x;
+    *device_offset_y = src_y;
     *clone_out = (cairo_surface_t*) new_surface;
 
     return CAIRO_STATUS_SUCCESS;

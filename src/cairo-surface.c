@@ -1127,6 +1127,8 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 			      int               src_y,
 			      int               width,
 			      int               height,
+			      int              *device_offset_x,
+			      int              *device_offset_y,
 			      cairo_surface_t **clone_out)
 {
     cairo_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1140,8 +1142,12 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
 
     if (surface->backend->clone_similar) {
-	status = surface->backend->clone_similar (surface, src, src_x, src_y,
-						  width, height, clone_out);
+	status = surface->backend->clone_similar (surface, src,
+						  src_x, src_y,
+						  width, height,
+						  device_offset_x,
+						  device_offset_y,
+						  clone_out);
 
 	if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 	    /* If we failed, try again with an image surface */
@@ -1151,6 +1157,8 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 		    surface->backend->clone_similar (surface, &image->base,
 						     src_x, src_y,
 						     width, height,
+						     device_offset_x,
+						     device_offset_y,
 						     clone_out);
 
 		_cairo_surface_release_source_image (src, image, image_extra);
@@ -1161,8 +1169,12 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
     /* If we're still unsupported, hit our fallback path to get a clone */
     if (status == CAIRO_INT_STATUS_UNSUPPORTED)
 	status =
-	    _cairo_surface_fallback_clone_similar (surface, src, src_x, src_y,
-						   width, height, clone_out);
+	    _cairo_surface_fallback_clone_similar (surface, src,
+						   src_x, src_y,
+						   width, height,
+						   device_offset_x,
+						   device_offset_y,
+						   clone_out);
 
     /* We should never get UNSUPPORTED here, so if we have an error, bail. */
     if (status)
@@ -1171,8 +1183,8 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
     /* Update the clone's device_transform (which the underlying surface
      * backend knows nothing about) */
     if (*clone_out != src) {
-        (*clone_out)->device_transform = src->device_transform;
-        (*clone_out)->device_transform_inverse = src->device_transform_inverse;
+	(*clone_out)->device_transform = src->device_transform;
+	(*clone_out)->device_transform_inverse = src->device_transform_inverse;
     }
 
     return status;

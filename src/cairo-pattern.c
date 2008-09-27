@@ -1247,6 +1247,7 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     pixman_gradient_stop_t pixman_stops_static[2];
     pixman_gradient_stop_t *pixman_stops = pixman_stops_static;
     unsigned int i;
+    int device_offset_x, device_offset_y;
 
     if (pattern->n_stops > ARRAY_LENGTH(pixman_stops_static)) {
 	pixman_stops = _cairo_malloc_ab (pattern->n_stops, sizeof(pixman_gradient_stop_t));
@@ -1396,7 +1397,10 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     pixman_image_unref (pixman_image);
 
     status = _cairo_surface_clone_similar (dst, &image->base,
-					   0, 0, width, height, out);
+					   0, 0, width, height,
+					   &device_offset_x,
+					   &device_offset_y,
+					   out);
 
     cairo_surface_destroy (&image->base);
 
@@ -1829,7 +1833,14 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 	}
 
 	status = _cairo_surface_clone_similar (dst, pattern->surface,
-					       x, y, width, height, out);
+					       x, y, width, height,
+					       &x, &y, out);
+	if (status == CAIRO_STATUS_SUCCESS && (x != 0 || y != 0)) {
+	    cairo_matrix_t m;
+
+	    cairo_matrix_init_translate (&m, -x, -y);
+	    cairo_matrix_multiply (&attr->matrix, &attr->matrix, &m);
+	}
     }
 
     return status;
