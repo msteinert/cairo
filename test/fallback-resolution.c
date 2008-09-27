@@ -129,7 +129,9 @@ main (void)
 	    break;
 	case PS:
 #if CAIRO_HAS_PS_SURFACE
-	    if (cairo_test_is_target_enabled (&ctx, "ps")) {
+	    if (cairo_test_is_target_enabled (&ctx, "ps2") ||
+		cairo_test_is_target_enabled (&ctx, "ps3"))
+	    {
 		surface = cairo_ps_surface_create (backend_filename[backend],
 						   SIZE, SIZE);
 		cairo_boilerplate_ps_surface_force_fallbacks (surface);
@@ -138,7 +140,9 @@ main (void)
 	    break;
 	case SVG:
 #if CAIRO_HAS_SVG_SURFACE
-	    if (cairo_test_is_target_enabled (&ctx, "svg")) {
+	    if (cairo_test_is_target_enabled (&ctx, "svg11") ||
+	        cairo_test_is_target_enabled (&ctx, "svg12"))
+	    {
 		surface = cairo_svg_surface_create (backend_filename[backend],
 						    SIZE, SIZE);
 		cairo_boilerplate_svg_surface_force_fallbacks (surface);
