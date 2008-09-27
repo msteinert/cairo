@@ -554,7 +554,7 @@ struct _cairo_surface_backend {
      * 2. It has the same contents as @src within the given rectangle.
      *
      * 3. The offset of the similar surface with respect to the original
-     *    surface is returned in the device transform vector.
+     *    surface is returned in the clone_offset vector.
      *    - if you clone the entire surface, this vector is zero.
      *    - if you clone (src_x, src_y)x(w, h) the vector is (src_x, src_y);
      */
@@ -565,8 +565,8 @@ struct _cairo_surface_backend {
 				 int                     src_y,
 				 int                     width,
 				 int                     height,
-				 int                    *device_offset_x,
-				 int                    *device_offset_y,
+				 int                    *clone_offset_x,
+				 int                    *clone_offset_y,
 				 cairo_surface_t       **clone_out);
 
     /* XXX: dst should be the first argument for consistency */
@@ -1824,8 +1824,8 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 			      int               src_y,
 			      int               width,
 			      int               height,
-			      int              *device_offset_x,
-			      int              *device_offset_y,
+			      int              *clone_offset_x,
+			      int              *clone_offset_y,
 			      cairo_surface_t **clone_out);
 
 cairo_private cairo_surface_t *

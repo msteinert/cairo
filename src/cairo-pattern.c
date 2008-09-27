@@ -1247,7 +1247,7 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     pixman_gradient_stop_t pixman_stops_static[2];
     pixman_gradient_stop_t *pixman_stops = pixman_stops_static;
     unsigned int i;
-    int device_offset_x, device_offset_y;
+    int clone_offset_x, clone_offset_y;
 
     if (pattern->n_stops > ARRAY_LENGTH(pixman_stops_static)) {
 	pixman_stops = _cairo_malloc_ab (pattern->n_stops, sizeof(pixman_gradient_stop_t));
@@ -1398,8 +1398,8 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
 
     status = _cairo_surface_clone_similar (dst, &image->base,
 					   0, 0, width, height,
-					   &device_offset_x,
-					   &device_offset_y,
+					   &clone_offset_x,
+					   &clone_offset_y,
 					   out);
 
     cairo_surface_destroy (&image->base);

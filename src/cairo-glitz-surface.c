@@ -511,8 +511,8 @@ _cairo_glitz_surface_clone_similar (void	    *abstract_surface,
 				    int              src_y,
 				    int              width,
 				    int              height,
-				    int              *device_offset_x,
-				    int              *device_offset_y,
+				    int             *clone_offset_x,
+				    int             *clone_offset_y,
 				    cairo_surface_t **clone_out)
 {
     cairo_glitz_surface_t *surface = abstract_surface;
@@ -524,8 +524,8 @@ _cairo_glitz_surface_clone_similar (void	    *abstract_surface,
 
     if (src->backend == surface->base.backend)
     {
-	*device_offset_x = 0;
-	*device_offset_y = 0;
+	*clone_offset_x = 0;
+	*clone_offset_y = 0;
 	*clone_out = cairo_surface_reference (src);
 
 	return CAIRO_STATUS_SUCCESS;
@@ -2248,7 +2248,7 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
 	    if (!glyph_private || !glyph_private->area)
 	    {
 		int glyph_width, glyph_height;
-		int device_offset_x, device_offset_y;
+		int clone_offset_x, clone_offset_y;
 
 		image = &scaled_glyphs[i]->surface->base;
 		glyph_width = scaled_glyphs[i]->surface->width;
@@ -2260,15 +2260,15 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
 							0,
 							glyph_width,
 							glyph_height,
-							&device_offset_x,
-							&device_offset_y
+							&clone_offset_x,
+							&clone_offset_y
 							(cairo_surface_t **)
 							&clone);
 		if (status)
 		    goto UNLOCK;
 
-		assert (device_offset_x = 0);
-		assert (device_offset_y = 0);
+		assert (clone_offset_x = 0);
+		assert (clone_offset_y = 0);
 
 		x_offset = scaled_glyphs[i]->surface->base.device_transform.x0;
 		y_offset = scaled_glyphs[i]->surface->base.device_transform.y0;

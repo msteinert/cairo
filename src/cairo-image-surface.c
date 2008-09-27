@@ -779,14 +779,14 @@ _cairo_image_surface_clone_similar (void		*abstract_surface,
 				    int                  src_y,
 				    int                  width,
 				    int                  height,
-				    int                 *device_offset_x,
-				    int                 *device_offset_y,
+				    int                 *clone_offset_x,
+				    int                 *clone_offset_y,
 				    cairo_surface_t    **clone_out)
 {
     cairo_image_surface_t *surface = abstract_surface;
 
     if (src->backend == surface->base.backend) {
-	*device_offset_x = *device_offset_y = 0;
+	*clone_offset_x = *clone_offset_y = 0;
 	*clone_out = cairo_surface_reference (src);
 
 	return CAIRO_STATUS_SUCCESS;

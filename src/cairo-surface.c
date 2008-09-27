@@ -1127,8 +1127,8 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 			      int               src_y,
 			      int               width,
 			      int               height,
-			      int              *device_offset_x,
-			      int              *device_offset_y,
+			      int              *clone_offset_x,
+			      int              *clone_offset_y,
 			      cairo_surface_t **clone_out)
 {
     cairo_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1145,8 +1145,8 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 	status = surface->backend->clone_similar (surface, src,
 						  src_x, src_y,
 						  width, height,
-						  device_offset_x,
-						  device_offset_y,
+						  clone_offset_x,
+						  clone_offset_y,
 						  clone_out);
 
 	if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
@@ -1157,8 +1157,8 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 		    surface->backend->clone_similar (surface, &image->base,
 						     src_x, src_y,
 						     width, height,
-						     device_offset_x,
-						     device_offset_y,
+						     clone_offset_x,
+						     clone_offset_y,
 						     clone_out);
 
 		_cairo_surface_release_source_image (src, image, image_extra);
@@ -1172,8 +1172,8 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 	    _cairo_surface_fallback_clone_similar (surface, src,
 						   src_x, src_y,
 						   width, height,
-						   device_offset_x,
-						   device_offset_y,
+						   clone_offset_x,
+						   clone_offset_y,
 						   clone_out);
 
     /* We should never get UNSUPPORTED here, so if we have an error, bail. */

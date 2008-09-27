@@ -1134,8 +1134,8 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 				   int                   src_y,
 				   int                   width,
 				   int                   height,
-				   int                  *device_offset_x,
-				   int                  *device_offset_y,
+				   int                  *clone_offset_x,
+				   int                  *clone_offset_y,
 				   cairo_surface_t     **clone_out)
 {
     cairo_xlib_surface_t *surface = abstract_surface;
@@ -1148,8 +1148,8 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	cairo_xlib_surface_t *xlib_src = (cairo_xlib_surface_t *)src;
 
 	if (_cairo_xlib_surface_same_screen (surface, xlib_src)) {
-	    *device_offset_x = 0;
-	    *device_offset_y = 0;
+	    *clone_offset_x = 0;
+	    *clone_offset_y = 0;
 	    *clone_out = cairo_surface_reference (src);
 
 	    return CAIRO_STATUS_SUCCESS;
@@ -1182,8 +1182,8 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	    return status;
 	}
 
-	*device_offset_x = src_x;
-	*device_offset_y = src_y;
+	*clone_offset_x = src_x;
+	*clone_offset_y = src_y;
 	*clone_out = &clone->base;
 
 	return CAIRO_STATUS_SUCCESS;
