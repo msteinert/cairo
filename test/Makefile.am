@@ -525,9 +525,7 @@ REFERENCE_IMAGES = \
 	gradient-alpha-rgb24-ref.png	\
 	gradient-constant-alpha-pdf-argb32-ref.png	\
 	gradient-constant-alpha-pdf-rgb24-ref.png	\
-	gradient-constant-alpha-ps2-ref.png		\
 	gradient-constant-alpha-ps3-ref.png		\
-	gradient-constant-alpha-ps2-rgb24-ref.png	\
 	gradient-constant-alpha-ps3-rgb24-ref.png	\
 	gradient-constant-alpha-ref.png	\
 	gradient-constant-alpha-rgb24-ref.png	\
