@@ -527,16 +527,14 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
     cairo_rectangle_int_t extents;
     cairo_composite_traps_info_t traps_info;
 
-    if (traps->num_traps == 0)
+    if (_cairo_operator_bounded_by_mask (op) && traps->num_traps == 0)
         return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_surface_get_extents (dst, &extents);
-
     if (status)
         return status;
 
     status = _cairo_traps_extract_region (traps, &trap_region);
-
     if (CAIRO_INT_STATUS_UNSUPPORTED == status) {
         has_trap_region = FALSE;
     } else if (status) {
