@@ -48,6 +48,9 @@
 #ifdef HAVE_PTHREAD_H
 #include <pthread.h>
 #endif
+#ifdef HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
 
 #include "cairo-test.h"
 
@@ -432,7 +435,7 @@ static cairo_bool_t
 cairo_test_file_is_older (const char *filename,
 	                  const char *ref_filename)
 {
-#ifdef HAVE_STAT
+#ifdef HAVE_SYS_STAT_H
     struct stat st, ref;
 
     if (stat (filename, &st) < 0)
@@ -441,7 +444,7 @@ cairo_test_file_is_older (const char *filename,
     if (stat (ref_filename, &ref) < 0)
 	return TRUE;
 
-    return st.m_time < ref.m_time;
+    return st.st_mtime < ref.st_mtime;
 #else
     /* XXX */
     return FALSE;
@@ -733,7 +736,7 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 	    if (cairo_test_file_is_older (pass_filename, ref_name))
 		_xunlink (ctx, pass_filename);
 	    if (cairo_test_file_is_older (fail_filename, ref_name))
-		_xunlink (ctx, pass_filename);
+		_xunlink (ctx, fail_filename);
 
 	    if (cairo_test_files_equal (test_filename, pass_filename)) {
 		/* identical output as last known PASS */
@@ -783,7 +786,7 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 	    if (cairo_test_file_is_older (pass_filename, ref_name))
 		_xunlink (ctx, pass_filename);
 	    if (cairo_test_file_is_older (fail_filename, ref_name))
-		_xunlink (ctx, pass_filename);
+		_xunlink (ctx, fail_filename);
 
 	    if (cairo_test_files_equal (test_filename, pass_filename)) {
 		/* identical output as last known PASS, pass */
