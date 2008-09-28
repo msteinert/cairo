@@ -299,8 +299,10 @@ _paint_page (cairo_paginated_surface_t *surface)
     if (analysis->status)
 	return _cairo_surface_set_error (surface->target, analysis->status);
 
-    surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_ANALYZE);
-    status = _cairo_meta_surface_replay_and_create_regions (surface->meta, analysis);
+    surface->backend->set_paginated_mode (surface->target,
+	                                  CAIRO_PAGINATED_MODE_ANALYZE);
+    status = _cairo_meta_surface_replay_and_create_regions (surface->meta,
+	                                                    analysis);
     if (status || analysis->status) {
 	if (status == CAIRO_STATUS_SUCCESS)
 	    status = analysis->status;
@@ -324,8 +326,6 @@ _paint_page (cairo_paginated_surface_t *surface)
 	if (status)
 	    goto FAIL;
     }
-
-    surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_RENDER);
 
     /* Finer grained fallbacks are currently only supported for some
      * surface types */
@@ -362,6 +362,9 @@ _paint_page (cairo_paginated_surface_t *surface)
     }
 
     if (has_supported) {
+	surface->backend->set_paginated_mode (surface->target,
+		                              CAIRO_PAGINATED_MODE_RENDER);
+
 	status = _cairo_meta_surface_replay_region (surface->meta,
 						    surface->target,
 						    CAIRO_META_REGION_NATIVE);
@@ -370,9 +373,11 @@ _paint_page (cairo_paginated_surface_t *surface)
 	    goto FAIL;
     }
 
-    if (has_page_fallback)
-    {
+    if (has_page_fallback) {
 	cairo_box_int_t box;
+
+	surface->backend->set_paginated_mode (surface->target,
+		                              CAIRO_PAGINATED_MODE_FALLBACK);
 
 	box.p1.x = 0;
 	box.p1.y = 0;
@@ -383,13 +388,13 @@ _paint_page (cairo_paginated_surface_t *surface)
 	    goto FAIL;
     }
 
-    if (has_finegrained_fallback)
-    {
+    if (has_finegrained_fallback) {
         cairo_region_t *region;
         cairo_box_int_t *boxes;
         int num_boxes, i;
 
-	surface->backend->set_paginated_mode (surface->target, CAIRO_PAGINATED_MODE_FALLBACK);
+	surface->backend->set_paginated_mode (surface->target,
+		                              CAIRO_PAGINATED_MODE_FALLBACK);
 
     /* Reset clip region before drawing the fall back images */
 	status = _cairo_surface_intersect_clip_path (surface->target,
