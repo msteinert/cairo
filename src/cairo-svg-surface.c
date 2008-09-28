@@ -965,20 +965,17 @@ _cairo_surface_base64_encode (cairo_surface_t       *surface,
     return status;
 }
 
-static struct {
-    char const *str;
-    cairo_bool_t clip_to_self;
-} _cairo_svg_surface_operators[] = {
-    {"clear", TRUE},
+char const *_cairo_svg_surface_operators[] = {
+    "clear",
 
-    {"src", TRUE},	    {"src-over", FALSE},	    {"src-in", FALSE},
-    {"src-out", FALSE},	    {"src-atop", FALSE},
+    "src", "src-over", "src-in",
+    "src-out", "src-atop",
 
-    {"dst", FALSE},	    {"dst-over", FALSE},	    {"dst-in", FALSE},
-    {"dst-out", FALSE},	    {"dst-atop", FALSE},
+    "dst", "dst-over", "dst-in",
+    "dst-out", "dst-atop",
 
-    {"xor", FALSE},	    {"plus", FALSE},
-    {"color-dodge", FALSE}	/* FIXME: saturate ? */
+    "xor", "plus",
+    "color-dodge", /* FIXME: saturate ? */
 };
 
 static void
@@ -988,8 +985,8 @@ _cairo_svg_surface_emit_operator (cairo_output_stream_t *output,
 {
     if (surface->document->svg_version >= CAIRO_SVG_VERSION_1_2 &&
 	op != CAIRO_OPERATOR_OVER) {
-	_cairo_output_stream_printf (output, " comp-op=\"%s\"", _cairo_svg_surface_operators[op].str);
-	if (_cairo_svg_surface_operators[op].clip_to_self)
+	_cairo_output_stream_printf (output, " comp-op=\"%s\"", _cairo_svg_surface_operators[op]);
+	if (!_cairo_operator_bounded_by_source (op))
 	   _cairo_output_stream_printf (output, " clip-to-self=\"true\"");
     }
 }
@@ -1001,8 +998,8 @@ _cairo_svg_surface_emit_operator_for_style (cairo_output_stream_t *output,
 {
     if (surface->document->svg_version >= CAIRO_SVG_VERSION_1_2 &&
 	op != CAIRO_OPERATOR_OVER) {
-	_cairo_output_stream_printf (output, "comp-op:%s;", _cairo_svg_surface_operators[op].str);
-	if (_cairo_svg_surface_operators[op].clip_to_self)
+	_cairo_output_stream_printf (output, "comp-op:%s;", _cairo_svg_surface_operators[op]);
+	if (!_cairo_operator_bounded_by_source (op))
 	   _cairo_output_stream_printf (output, "clip-to-self:true;");
     }
 }
