@@ -1662,6 +1662,65 @@ _cairo_pattern_is_opaque (const cairo_pattern_t *abstract_pattern)
     return FALSE;
 }
 
+/**
+ * _cairo_pattern_analyze_filter
+ * @pattern: surface pattern
+ * @pad_out: location to store necessary padding in the source image, or %NULL
+ *
+ * Returns the optimized #cairo_filter_t to use with @pattern.
+ *
+ * Analyze the filter to determine how much extra needs to be sampled
+ * from the source image to account for the filter radius and whether
+ * we can optimize the filter to a simpler value.
+ *
+ * XXX: We don't actually have any way of querying the backend for
+ *      the filter radius, so we just guess base on what we know that
+ *      backends do currently (see bug #10508)
+ */
+static cairo_filter_t
+_cairo_pattern_analyze_filter (cairo_surface_pattern_t *pattern,
+			       double                  *pad_out)
+{
+    double pad;
+    cairo_filter_t optimized_filter;
+
+    switch (pattern->base.filter) {
+    case CAIRO_FILTER_GOOD:
+    case CAIRO_FILTER_BEST:
+    case CAIRO_FILTER_BILINEAR:
+	/* If source pixels map 1:1 onto destination pixels, we do
+	 * not need to filter (and do not want to filter, since it
+	 * will cause blurriness)
+	 */
+	if (_cairo_matrix_is_pixel_exact (&pattern->base.matrix)) {
+	    pad = 0.;
+	    optimized_filter = CAIRO_FILTER_NEAREST;
+	} else {
+	    /* 0.5 is enough for a bilinear filter. It's possible we
+	     * should defensively use more for CAIRO_FILTER_BEST, but
+	     * without a single example, it's hard to know how much
+	     * more would be defensive...
+	     */
+	    pad = 0.5;
+	    optimized_filter = pattern->base.filter;
+	}
+	break;
+
+    case CAIRO_FILTER_FAST:
+    case CAIRO_FILTER_NEAREST:
+    case CAIRO_FILTER_GAUSSIAN:
+    default:
+	pad = 0.;
+	optimized_filter = pattern->base.filter;
+	break;
+    }
+
+    if (pad_out)
+	*pad_out = pad;
+
+    return optimized_filter;
+}
+
 static cairo_int_status_t
 _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 					    cairo_surface_t	       *dst,
@@ -1674,18 +1733,20 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 {
     cairo_int_status_t status;
     int tx, ty;
+    double pad;
 
     attr->acquired = FALSE;
 
     attr->extend = pattern->base.extend;
-    attr->filter = pattern->base.filter;
+    attr->filter = _cairo_pattern_analyze_filter (pattern, &pad);
+
     if (_cairo_matrix_is_integer_translation (&pattern->base.matrix,
 					      &tx, &ty))
     {
 	cairo_matrix_init_identity (&attr->matrix);
 	attr->x_offset = tx;
 	attr->y_offset = ty;
-	attr->filter = CAIRO_FILTER_NEAREST;
+	assert (attr->filter == CAIRO_FILTER_NEAREST);
     }
     else
     {
@@ -1812,14 +1873,10 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 						       &x1, &y1, &x2, &y2,
 						       NULL);
 
-		/* XXX: The one padding here is to account for filter
-		 * radius.  It's a workaround right now, until we get a
-		 * proper fix. (see bug #10508)
-		 */
-		sampled_area.x = floor (x1) - 1;
-		sampled_area.y = floor (y1) - 1;
-		sampled_area.width  = ceil (x2) + 1 - sampled_area.x;
-		sampled_area.height = ceil (y2) + 1 - sampled_area.y;
+		sampled_area.x = floor (x1) - pad;
+		sampled_area.y = floor (y1) - pad;
+		sampled_area.width  = ceil (x2) + pad - sampled_area.x;
+		sampled_area.height = ceil (y2) + pad - sampled_area.y;
 	    }
 
 	    sampled_area.x += tx;
@@ -1858,6 +1915,9 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
  *
  * A convenience function to obtain a surface to use as the source for
  * drawing on @dst.
+ *
+ * Note that this function is only suitable for use when the destination
+ * surface is pixel based and 1 device unit maps to one pixel.
  *
  * Return value: %CAIRO_STATUS_SUCCESS if a surface was stored in @surface_out.
  **/
@@ -2088,37 +2148,20 @@ _cairo_pattern_get_extents (cairo_pattern_t         *pattern,
 	cairo_surface_t *surface = surface_pattern->surface;
 	cairo_matrix_t imatrix;
 	double x1, y1, x2, y2;
+	double pad;
 
 	status = _cairo_surface_get_extents (surface, &surface_extents);
 	if (status)
 	    return status;
 
-	x1 = surface_extents.x;
-	y1 = surface_extents.y;
-	x2 = x1 + surface_extents.width;
-	y2 = y1 + surface_extents.height;
-
 	/* The filter can effectively enlarge the extents of the
-	 * pattern, so extend as necessary. Note: We aren't doing any
-	 * backend-specific querying of filter box sizes at this time,
-	 * (since currently no specific backends that could do custom
-	 * filters are calling _cairo_pattern_get_extents). */
-	switch (pattern->filter) {
-	case CAIRO_FILTER_GOOD:
-	case CAIRO_FILTER_BEST:
-	case CAIRO_FILTER_BILINEAR:
-	    x1 -= 0.5;
-	    y1 -= 0.5;
-	    x2 += 0.5;
-	    y2 += 0.5;
-	    break;
-	case CAIRO_FILTER_FAST:
-	case CAIRO_FILTER_NEAREST:
-	case CAIRO_FILTER_GAUSSIAN:
-	default:
-	    /* Nothing to do */
-	    break;
-	}
+	 * pattern, so extend as necessary.
+	 */
+	_cairo_pattern_analyze_filter (surface_pattern, &pad);
+	x1 = surface_extents.x - pad;
+	y1 = surface_extents.y - pad;
+	x2 = surface_extents.x + surface_extents.width + pad;
+	y2 = surface_extents.y + surface_extents.height + pad;
 
 	imatrix = pattern->matrix;
 	status = cairo_matrix_invert (&imatrix);

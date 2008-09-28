@@ -2164,6 +2164,9 @@ cairo_private cairo_bool_t
 _cairo_matrix_is_integer_translation(const cairo_matrix_t *matrix,
 				     int *itx, int *ity);
 
+cairo_private cairo_bool_t
+_cairo_matrix_is_pixel_exact (const cairo_matrix_t *matrix);
+
 cairo_private double
 _cairo_matrix_transformed_circle_major_axis(cairo_matrix_t *matrix, double radius);
 
