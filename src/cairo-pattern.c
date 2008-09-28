@@ -1768,8 +1768,7 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 	return status;
     }
 
-    if (_cairo_surface_is_image (dst))
-    {
+    if (_cairo_surface_is_image (dst)) {
 	cairo_image_surface_t *image;
 
 	status = _cairo_surface_acquire_source_image (pattern->surface,
@@ -1780,57 +1779,59 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 
 	*out = &image->base;
 	attr->acquired = TRUE;
-    }
-    else
-    {
+    } else {
 	cairo_rectangle_int_t extents;
+
 	status = _cairo_surface_get_extents (pattern->surface, &extents);
 	if (status)
 	    return status;
 
-	/* If we're repeating, we just play it safe and clone the entire surface. */
-	if (attr->extend == CAIRO_EXTEND_REPEAT) {
-	    x = extents.x;
-	    y = extents.y;
-	    width = extents.width;
-	    height = extents.height;
-	} else {
+	/* If we're repeating, we just play it safe and clone the
+	 * entire surface - i.e. we use the existing extents.
+	 */
+	if (attr->extend != CAIRO_EXTEND_REPEAT) {
+	    cairo_rectangle_int_t sampled_area;
+
 	    /* Otherwise, we first transform the rectangle to the
 	     * coordinate space of the source surface so that we can
 	     * clone only that portion of the surface that will be
-	     * read. */
-	    if (! _cairo_matrix_is_identity (&attr->matrix)) {
+	     * read.
+	     */
+	    if (_cairo_matrix_is_identity (&attr->matrix)) {
+		sampled_area.x = x;
+		sampled_area.y = y;
+		sampled_area.width  = width;
+		sampled_area.height = height;
+	    } else {
 		double x1 = x;
 		double y1 = y;
 		double x2 = x + width;
 		double y2 = y + height;
-		cairo_bool_t is_tight;
 
 		_cairo_matrix_transform_bounding_box  (&attr->matrix,
 						       &x1, &y1, &x2, &y2,
-						       &is_tight);
+						       NULL);
 
-		/* The transform_bounding_box call may have resulted
-		 * in a region larger than the surface, but we never
-		 * want to clone more than the surface itself, (we
-		 * know we're not repeating at this point due to the
-		 * above.
-		 *
-		 * XXX: The one padding here is to account for filter
+		/* XXX: The one padding here is to account for filter
 		 * radius.  It's a workaround right now, until we get a
 		 * proper fix. (see bug #10508)
 		 */
-		x = MAX (0, floor (x1) - 1);
-		y = MAX (0, floor (y1) - 1);
-		width = MAX (MIN (extents.width, ceil (x2) + 1) - x, 0);
-		height = MAX (MIN (extents.height, ceil (y2) + 1) - y, 0);
+		sampled_area.x = floor (x1) - 1;
+		sampled_area.y = floor (y1) - 1;
+		sampled_area.width  = ceil (x2) + 1 - sampled_area.x;
+		sampled_area.height = ceil (y2) + 1 - sampled_area.y;
 	    }
-	    x += tx;
-	    y += ty;
+
+	    sampled_area.x += tx;
+	    sampled_area.y += ty;
+
+	    /* Never acquire a larger area than the source itself */
+	    _cairo_rectangle_intersect (&extents, &sampled_area);
 	}
 
 	status = _cairo_surface_clone_similar (dst, pattern->surface,
-					       x, y, width, height,
+					       extents.x, extents.y,
+					       extents.width, extents.height,
 					       &x, &y, out);
 	if (status == CAIRO_STATUS_SUCCESS && (x != 0 || y != 0)) {
 	    cairo_matrix_t m;
