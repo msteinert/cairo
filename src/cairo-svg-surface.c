@@ -766,7 +766,8 @@ _cairo_svg_document_emit_font_subsets (cairo_svg_document_t *document)
     return status;
 }
 
-char const *_cairo_svg_surface_operators[] = {
+static char const *
+_cairo_svg_surface_operators[] = {
     "clear",
 
     "src", "src-over", "src-in",
@@ -778,8 +779,6 @@ char const *_cairo_svg_surface_operators[] = {
     "xor", "plus",
     "color-dodge", /* FIXME: saturate ? */
 };
-
-static cairo_bool_t cairo_svg_force_fallbacks = FALSE;
 
 static cairo_bool_t
 _cairo_svg_surface_analyze_operator (cairo_svg_surface_t   *surface,
