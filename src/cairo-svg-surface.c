@@ -2083,10 +2083,23 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
     cairo_bool_t discard_filter = FALSE;
     unsigned int mask_id;
 
-    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return _cairo_svg_surface_analyze_operation (surface, op, source);
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
+	cairo_status_t source_status, mask_status;
+
+	source_status = _cairo_svg_surface_analyze_operation (surface, op, source);
+	if (_cairo_status_is_error (source_status))
+	    return source_status;
+
+	mask_status = _cairo_svg_surface_analyze_operation (surface, op, mask);
+	if (_cairo_status_is_error (mask_status))
+	    return mask_status;
+
+	return _cairo_analysis_surface_merge_status (source_status,
+						     mask_status);
+    }
 
     assert (_cairo_svg_surface_operation_supported (surface, op, source));
+    assert (_cairo_svg_surface_operation_supported (surface, CAIRO_OPERATOR_OVER, mask));
 
     if (cairo_pattern_get_type (mask) == CAIRO_PATTERN_TYPE_SURFACE) {
 	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t*) mask;
