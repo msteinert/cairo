@@ -25,7 +25,6 @@
  */
 
 #include "cairo-boilerplate.h"
-#include "cairo-boilerplate-pdf.h"
 #include "cairo-boilerplate-pdf-private.h"
 
 #include <cairo-pdf.h>
@@ -174,26 +173,27 @@ _cairo_boilerplate_pdf_surface_write_to_png (cairo_surface_t *surface, const cha
 }
 
 static cairo_surface_t *
-_cairo_boilerplate_pdf_convert_to_image (cairo_surface_t *surface)
+_cairo_boilerplate_pdf_convert_to_image (cairo_surface_t *surface, int page)
 {
     pdf_target_closure_t *ptc = cairo_surface_get_user_data (surface,
 							     &pdf_closure_key);
 
-    return cairo_boilerplate_convert_to_image (ptc->filename, 1);
+    return cairo_boilerplate_convert_to_image (ptc->filename, page+1);
 }
 
 cairo_surface_t *
 _cairo_boilerplate_pdf_get_image_surface (cairo_surface_t *surface,
+					  int page,
 					  int width,
 					  int height)
 {
     cairo_surface_t *image;
 
-    image = _cairo_boilerplate_pdf_convert_to_image (surface);
+    image = _cairo_boilerplate_pdf_convert_to_image (surface, page);
     cairo_surface_set_device_offset (image,
 				     cairo_image_surface_get_width (image) - width,
 				     cairo_image_surface_get_height (image) - height);
-    surface = _cairo_boilerplate_get_image_surface (image, width, height);
+    surface = _cairo_boilerplate_get_image_surface (image, 0, width, height);
     cairo_surface_destroy (image);
 
     return surface;
@@ -209,18 +209,21 @@ _cairo_boilerplate_pdf_cleanup (void *closure)
     free (ptc);
 }
 
-cairo_status_t
-cairo_boilerplate_pdf_surface_force_fallbacks (cairo_surface_t *abstract_surface)
+
+void
+_cairo_boilerplate_pdf_force_fallbacks (cairo_surface_t *abstract_surface,
+	                                unsigned int flags)
 {
-    cairo_paginated_surface_t *paginated = (cairo_paginated_surface_t*) abstract_surface;
+    pdf_target_closure_t *ptc = cairo_surface_get_user_data (abstract_surface,
+							     &pdf_closure_key);
+
+    cairo_paginated_surface_t *paginated;
     cairo_pdf_surface_t *surface;
 
-    if (cairo_surface_get_type (abstract_surface) != CAIRO_SURFACE_TYPE_PDF)
-	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+    if (ptc->target)
+	abstract_surface = ptc->target;
 
+    paginated = (cairo_paginated_surface_t*) abstract_surface;
     surface = (cairo_pdf_surface_t*) paginated->target;
-
     surface->force_fallbacks = TRUE;
-
-    return CAIRO_STATUS_SUCCESS;
 }

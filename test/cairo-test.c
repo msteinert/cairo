@@ -252,12 +252,12 @@ _xunlink (const cairo_test_context_t *ctx, const char *pathname)
     }
 }
 
-static char *
-cairo_ref_name_for_test_target_format (const cairo_test_context_t *ctx,
-	                               const char *base_name,
-	                               const char *test_name,
-				       const char *target_name,
-				       const char *format)
+char *
+cairo_test_reference_image_filename (const cairo_test_context_t *ctx,
+	                             const char *base_name,
+				     const char *test_name,
+				     const char *target_name,
+				     const char *format)
 {
     char *ref_name = NULL;
 
@@ -397,7 +397,7 @@ _cairo_test_flatten_reference_image (cairo_test_context_t *ctx,
     return surface;
 }
 
-static cairo_surface_t *
+cairo_surface_t *
 cairo_test_get_reference_image (cairo_test_context_t *ctx,
 				const char *filename,
 				cairo_bool_t flatten)
@@ -563,11 +563,11 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
       free (thread_str);
 
 
-    ref_name = cairo_ref_name_for_test_target_format (ctx,
-						      base_name,
-						      ctx->test->name,
-						      target->name,
-						      format);
+    ref_name = cairo_test_reference_image_filename (ctx,
+						    base_name,
+						    ctx->test->name,
+						    target->name,
+						    format);
     xasprintf (&png_name,  "%s%s", base_name, CAIRO_TEST_PNG_SUFFIX);
     xasprintf (&diff_name, "%s%s", base_name, CAIRO_TEST_DIFF_SUFFIX);
 
@@ -709,9 +709,9 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 
 	    /* we may be running this test to generate reference images */
 	    _xunlink (ctx, png_name);
-	    test_image = target->get_image_surface (surface,
-		    ctx->test->width,
-		    ctx->test->height);
+	    test_image = target->get_image_surface (surface, 0,
+		                                    ctx->test->width,
+						    ctx->test->height);
 	    diff_status = cairo_surface_write_to_png (test_image, png_name);
 	    if (diff_status) {
 		cairo_test_log (ctx,
@@ -755,9 +755,9 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 	    }
 	}
 
-	test_image = target->get_image_surface (surface,
-					       ctx->test->width,
-					       ctx->test->height);
+	test_image = target->get_image_surface (surface, 0,
+					        ctx->test->width,
+						ctx->test->height);
 	if (cairo_surface_status (test_image)) {
 	    cairo_test_log (ctx, "Error: Failed to extract image: %s\n",
 			    cairo_status_to_string (cairo_surface_status (test_image)));

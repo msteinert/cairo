@@ -1,5 +1,6 @@
 /*
  * Copyright © 2006 Red Hat, Inc.
+ * Copyright © 2008 Chris Wilson
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
@@ -21,27 +22,24 @@
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  * Author: Carl D. Worth <cworth@cworth.org>
+ *         Chris Wilson <chris@chris-wilson.co.uk>
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
+#include <stdlib.h>
 #include <cairo.h>
 
-#if CAIRO_HAS_PDF_SURFACE
-#include <cairo-pdf.h>
-#include <cairo-boilerplate-pdf.h>
-#endif
-
-#if CAIRO_HAS_PS_SURFACE
-#include <cairo-ps.h>
-#include <cairo-boilerplate-ps.h>
-#endif
-
-#if CAIRO_HAS_SVG_SURFACE
-#include <cairo-svg.h>
-#include <cairo-boilerplate-svg.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#include <errno.h>
 #endif
 
 #include "cairo-test.h"
+#include "buffer-diff.h"
 
 /* This test exists to test cairo_surface_set_fallback_resolution
  *
@@ -57,10 +55,15 @@
 #define INCHES_TO_POINTS(in) ((in) * 72.0)
 #define SIZE INCHES_TO_POINTS(1)
 
+/* cairo_set_tolerance() is not respected by the PS/PDF backends currently */
+#define SET_TOLERANCE 0
+
+#define GENERATE_REFERENCE 0
+
 static void
-draw_with_ppi (cairo_t *cr, double width, double height, double ppi)
+draw (cairo_t *cr, double width, double height)
 {
-    char message[80];
+    const char *text = "cairo";
     cairo_text_extents_t extents;
 
     cairo_save (cr);
@@ -78,142 +81,344 @@ draw_with_ppi (cairo_t *cr, double width, double height, double ppi)
 	       0, 2.0 * M_PI);
     cairo_fill (cr);
 
-    sprintf (message, "Fallback PPI: %g", ppi);
     cairo_set_source_rgb (cr, 1, 1, 1); /* white */
-    cairo_set_font_size (cr, .1 * SIZE / 2.0);
-    cairo_text_extents (cr, message, &extents);
+    cairo_set_font_size (cr, .25 * SIZE / 2.0);
+    cairo_text_extents (cr, text, &extents);
     cairo_move_to (cr, (SIZE-extents.width)/2.0-extents.x_bearing,
 		       (SIZE-extents.height)/2.0-extents.y_bearing);
-    cairo_show_text (cr, message);
+    cairo_show_text (cr, text);
 
     cairo_restore (cr);
 }
 
-typedef enum {
-    PDF, PS, SVG, NUM_BACKENDS
-} backend_t;
-static const char *backend_filename[NUM_BACKENDS] = {
-    "fallback-resolution.pdf",
-    "fallback-resolution.ps",
-    "fallback-resolution.svg"
-};
+static void
+_xunlink (const cairo_test_context_t *ctx, const char *pathname)
+{
+    if (unlink (pathname) < 0 && errno != ENOENT) {
+	cairo_test_log (ctx, "Error: Cannot remove %s: %s\n",
+			pathname, strerror (errno));
+	exit (1);
+    }
+}
+
+static cairo_bool_t
+check_result (cairo_test_context_t *ctx,
+	      const cairo_boilerplate_target_t *target,
+	      const char *test_name,
+	      const char *base_name,
+	      cairo_surface_t *surface)
+{
+    const char *format;
+    char *ref_name;
+    char *png_name;
+    char *diff_name;
+    cairo_surface_t *test_image, *ref_image, *diff_image;
+    buffer_diff_result_t result;
+    cairo_status_t status;
+    cairo_bool_t ret;
+
+    /* XXX log target, OUTPUT, REFERENCE, DIFFERENCE for index.html */
+
+    if (target->finish_surface != NULL) {
+	status = target->finish_surface (surface);
+	if (status) {
+	    cairo_test_log (ctx, "Error: Failed to finish surface: %s\n",
+		    cairo_status_to_string (status));
+	    cairo_surface_destroy (surface);
+	    return FALSE;
+	}
+    }
+
+    xasprintf (&png_name,  "%s-out.png", base_name);
+    xasprintf (&diff_name, "%s-diff.png", base_name);
+
+    test_image = target->get_image_surface (surface, 0, SIZE, SIZE);
+    if (cairo_surface_status (test_image)) {
+	cairo_test_log (ctx, "Error: Failed to extract page: %s\n",
+		        cairo_status_to_string (cairo_surface_status (test_image)));
+	cairo_surface_destroy (test_image);
+	free (png_name);
+	free (diff_name);
+	return FALSE;
+    }
+
+    _xunlink (ctx, png_name);
+    status = cairo_surface_write_to_png (test_image, png_name);
+    if (status) {
+	cairo_test_log (ctx, "Error: Failed to write output image: %s\n",
+		cairo_status_to_string (status));
+	cairo_surface_destroy (test_image);
+	free (png_name);
+	free (diff_name);
+	return FALSE;
+    }
+
+    format = cairo_boilerplate_content_name (target->content);
+    ref_name = cairo_test_reference_image_filename (ctx,
+	                                            base_name,
+						    test_name,
+						    target->name,
+						    format);
+    if (ref_name == NULL) {
+	cairo_test_log (ctx, "Error: Cannot find reference image for %s\n",
+		        base_name);
+	cairo_surface_destroy (test_image);
+	free (png_name);
+	free (diff_name);
+	return FALSE;
+    }
+
+
+    ref_image = cairo_test_get_reference_image (ctx, ref_name,
+	    target->content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED);
+    if (cairo_surface_status (ref_image)) {
+	cairo_test_log (ctx, "Error: Cannot open reference image for %s: %s\n",
+		        ref_name,
+		cairo_status_to_string (cairo_surface_status (ref_image)));
+	cairo_surface_destroy (ref_image);
+	cairo_surface_destroy (test_image);
+	free (png_name);
+	free (diff_name);
+	return FALSE;
+    }
+
+    diff_image = cairo_image_surface_create (CAIRO_FORMAT_ARGB32,
+	    SIZE, SIZE);
+
+    ret = TRUE;
+    status = image_diff (ctx,
+	    test_image, ref_image, diff_image,
+	    &result);
+    _xunlink (ctx, diff_name);
+    if (status) {
+	cairo_test_log (ctx, "Error: Failed to compare images: %s\n",
+			cairo_status_to_string (status));
+	ret = TRUE;
+    } else if (result.pixels_changed &&
+	       result.max_diff > target->error_tolerance)
+    {
+	ret = FALSE;
+
+	status = cairo_surface_write_to_png (diff_image, diff_name);
+	if (status) {
+	    cairo_test_log (ctx, "Error: Failed to write differences image: %s\n",
+		    cairo_status_to_string (status));
+	}
+    }
+
+    cairo_surface_destroy (test_image);
+    cairo_surface_destroy (diff_image);
+    free (png_name);
+    free (diff_name);
+
+    return ret;
+}
+
+#if GENERATE_REFERENCE
+static void
+generate_reference (double ppi, const char *filename)
+{
+    cairo_surface_t *surface, *target;
+    cairo_t *cr;
+    cairo_status_t status;
+
+    surface = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
+	                                  SIZE*ppi/72, SIZE*ppi/72);
+    cr = cairo_create (surface);
+    cairo_surface_destroy (surface);
+
+#if SET_TOLERANCE
+    cairo_set_tolerance (cr, 3.0);
+#endif
+
+    cairo_save (cr); {
+	cairo_set_source_rgb (cr, 1, 1, 1);
+	cairo_paint (cr);
+    } cairo_restore (cr);
+
+    cairo_scale (cr, ppi/72., ppi/72.);
+    draw (cr, SIZE, SIZE);
+
+    surface = cairo_surface_reference (cairo_get_target (cr));
+    cairo_destroy (cr);
+
+    target = cairo_image_surface_create (CAIRO_FORMAT_RGB24, SIZE, SIZE);
+    cr = cairo_create (target);
+    cairo_scale (cr, 72./ppi, 72./ppi);
+    cairo_set_source_surface (cr, surface, 0, 0);
+    cairo_paint (cr);
+
+    status = cairo_surface_write_to_png (cairo_get_target (cr), filename);
+    cairo_destroy (cr);
+
+    if (status) {
+	fprintf (stderr, "Failed to generate reference image '%s': %s\n",
+		 filename, cairo_status_to_string (status));
+	exit (1);
+    }
+}
+#endif
 
 int
 main (void)
 {
     cairo_test_context_t ctx;
     cairo_t *cr;
-    cairo_status_t status;
     cairo_test_status_t ret = CAIRO_TEST_UNTESTED;
-    double ppi[] = { 600., 300., 150., 75., 37.5 };
-    backend_t backend;
+    double ppi[] = { 600., 300., 150., 75., 72, 37.5 };
+    unsigned int i;
     int page, num_pages;
 
     num_pages = sizeof (ppi) / sizeof (ppi[0]);
 
     cairo_test_init (&ctx, "fallback-resolution");
 
-    for (backend=0; backend < NUM_BACKENDS; backend++) {
+#if GENERATE_REFERENCE
+    for (page = 0; page < num_pages; page++) {
+	char *ref_name;
+	xasprintf (&ref_name, "fallback-resolution-ppi%g-ref.png", ppi[page]);
+	generate_reference (ppi[page], ref_name);
+	free (ref_name);
+    }
+#endif
+
+    for (i = 0; i < ctx.num_targets; i++) {
+	const cairo_boilerplate_target_t *target = ctx.targets_to_test[i];
 	cairo_surface_t *surface = NULL;
+	char *base_name;
+	void *closure;
+	const char *format;
+	cairo_status_t status;
 
-	/* Create backend-specific surface and force image fallbacks. */
-	switch (backend) {
-	case PDF:
-#if CAIRO_HAS_PDF_SURFACE
-	    if (cairo_test_is_target_enabled (&ctx, "pdf")) {
-		surface = cairo_pdf_surface_create (backend_filename[backend],
-						    SIZE, SIZE);
-		cairo_boilerplate_pdf_surface_force_fallbacks (surface);
-	    }
-#endif
-	    break;
-	case PS:
-#if CAIRO_HAS_PS_SURFACE
-	    if (cairo_test_is_target_enabled (&ctx, "ps2") ||
-		cairo_test_is_target_enabled (&ctx, "ps3"))
-	    {
-		surface = cairo_ps_surface_create (backend_filename[backend],
-						   SIZE, SIZE);
-		cairo_boilerplate_ps_surface_force_fallbacks (surface);
-	    }
-#endif
-	    break;
-	case SVG:
-#if CAIRO_HAS_SVG_SURFACE
-	    if (cairo_test_is_target_enabled (&ctx, "svg11") ||
-	        cairo_test_is_target_enabled (&ctx, "svg12"))
-	    {
-		surface = cairo_svg_surface_create (backend_filename[backend],
-						    SIZE, SIZE);
-		cairo_boilerplate_svg_surface_force_fallbacks (surface);
-		cairo_svg_surface_restrict_to_version (surface, CAIRO_SVG_VERSION_1_2);
-	    }
-#endif
-	    break;
-
-	case NUM_BACKENDS:
-	    break;
-	}
-
-	if (surface == NULL)
+	if (! target->is_vector)
 	    continue;
+
+	format = cairo_boilerplate_content_name (target->content);
+	xasprintf (&base_name, "fallback-resolution-%s-%s",
+		   target->name,
+		   format);
+
+	surface = (target->create_surface) (base_name,
+		                            target->content,
+					    SIZE, SIZE,
+					    SIZE, SIZE,
+					    CAIRO_BOILERPLATE_MODE_TEST,
+					    0,
+					    &closure);
+
+	if (surface == NULL) {
+	    free (base_name);
+	    continue;
+	}
 
 	if (ret == CAIRO_TEST_UNTESTED)
 	    ret = CAIRO_TEST_SUCCESS;
 
-	cr = cairo_create (surface);
-	cairo_set_tolerance (cr, 3.0);
+	cairo_surface_destroy (surface);
+	if (target->cleanup)
+	    target->cleanup (closure);
+	free (base_name);
 
-	for (page = 0; page < num_pages; page++)
-	{
-	    cairo_surface_set_fallback_resolution (surface, ppi[page], ppi[page]);
+	/* we need to recreate the surface for each resolution as we include
+	 * SVG in testing which does not support the paginated interface.
+	 */
+	for (page = 0; page < num_pages; page++) {
+	    char *test_name;
+	    cairo_bool_t pass;
+
+	    xasprintf (&test_name, "fallback-resolution-ppi%g",
+		       ppi[page]);
+	    xasprintf (&base_name, "%s-%s-%s",
+		       test_name,
+		       target->name,
+		       format);
+
+	    surface = (target->create_surface) (base_name,
+						target->content,
+						SIZE + 25, SIZE + 25,
+						SIZE + 25, SIZE + 25,
+						CAIRO_BOILERPLATE_MODE_TEST,
+						0,
+						&closure);
+	    if (surface == NULL || cairo_surface_status (surface)) {
+		cairo_test_log (&ctx, "Failed to generate surface: %s-%s\n",
+		    target->name,
+		    format);
+		free (base_name);
+		ret = CAIRO_TEST_FAILURE;
+		continue;
+	    }
+
+	    cairo_test_log (&ctx, "Testing fallback-resolution %g with %s target\n", ppi[page], target->name);
+	    printf ("%s:\t", base_name);
+	    fflush (stdout);
+
+	    if (target->force_fallbacks != NULL)
+		target->force_fallbacks (surface, ~0U);
+	    cr = cairo_create (surface);
+#if SET_TOLERANCE
+	    cairo_set_tolerance (cr, 3.0);
+#endif
+
+	    cairo_surface_set_device_offset (surface, 25, 25);
+	    cairo_surface_set_fallback_resolution (surface,
+		                                   ppi[page], ppi[page]);
+
+	    cairo_save (cr); {
+		cairo_set_source_rgb (cr, 1, 1, 1);
+		cairo_paint (cr);
+	    } cairo_restore (cr);
 
 	    /* First draw the top half in a conventional way. */
-	    cairo_save (cr);
-	    {
+	    cairo_save (cr); {
 		cairo_rectangle (cr, 0, 0, SIZE, SIZE / 2.0);
 		cairo_clip (cr);
 
-		draw_with_ppi (cr, SIZE, SIZE, ppi[page]);
-	    }
-	    cairo_restore (cr);
+		draw (cr, SIZE, SIZE);
+	    } cairo_restore (cr);
 
 	    /* Then draw the bottom half in a separate group,
 	     * (exposing a bug in 1.6.4 with the group not being
 	     * rendered with the correct fallback resolution). */
-	    cairo_save (cr);
-	    {
+	    cairo_save (cr); {
 		cairo_rectangle (cr, 0, SIZE / 2.0, SIZE, SIZE / 2.0);
 		cairo_clip (cr);
 
-		cairo_push_group (cr);
-		{
-		    draw_with_ppi (cr, SIZE, SIZE, ppi[page]);
-		}
-		cairo_pop_group_to_source (cr);
+		cairo_push_group (cr); {
+		    draw (cr, SIZE, SIZE);
+		} cairo_pop_group_to_source (cr);
 
 		cairo_paint (cr);
+	    } cairo_restore (cr);
+
+	    status = cairo_status (cr);
+	    cairo_destroy (cr);
+
+	    pass = FALSE;
+	    if (status) {
+		cairo_test_log (&ctx, "Error: Failed to create target surface: %s\n",
+			        cairo_status_to_string (status));
+		ret = CAIRO_TEST_FAILURE;
+	    } else {
+		/* extract the image and compare it to our reference */
+		if (! check_result (&ctx, target, test_name, base_name, surface))
+		    ret = CAIRO_TEST_FAILURE;
+		else
+		    pass = TRUE;
 	    }
-	    cairo_restore (cr);
+	    cairo_surface_destroy (surface);
+	    if (target->cleanup)
+		target->cleanup (closure);
 
-	    cairo_show_page (cr);
+	    free (base_name);
+
+	    if (pass) {
+		printf ("PASS\n");
+	    } else {
+		printf ("FAIL\n");
+	    }
+	    fflush (stdout);
 	}
-
-	status = cairo_status (cr);
-
-	cairo_destroy (cr);
-	cairo_surface_destroy (surface);
-
-	if (status) {
-	    cairo_test_log (&ctx, "Failed to create pdf surface for file %s: %s\n",
-			    backend_filename[backend],
-			    cairo_status_to_string (status));
-	    ret = CAIRO_TEST_FAILURE;
-	    break;
-	}
-
-	printf ("fallback-resolution: Please check %s to ensure it looks correct.\n",
-		backend_filename[backend]);
     }
 
     cairo_test_fini (&ctx);

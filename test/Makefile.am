@@ -435,6 +435,12 @@ REFERENCE_IMAGES = \
 	extend-reflect-ps3-ref.png \
 	extend-repeat-ref.png	\
 	extend-repeat-similar-ref.png	\
+	fallback-resolution-ppi37.5-ref.png \
+	fallback-resolution-ppi72-ref.png \
+	fallback-resolution-ppi75-ref.png \
+	fallback-resolution-ppi150-ref.png \
+	fallback-resolution-ppi300-ref.png \
+	fallback-resolution-ppi600-ref.png \
 	fill-alpha-ref.png	\
 	fill-alpha-pattern-ref.png	\
 	fill-alpha-pattern-pdf-argb32-ref.png	\

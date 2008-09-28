@@ -50,6 +50,10 @@ _cairo_boilerplate_ps3_create_surface (const char		 *name,
 				       void			**closure);
 
 void
+_cairo_boilerplate_ps_force_fallbacks (cairo_surface_t *abstract_surface,
+	                               unsigned int flags);
+
+void
 _cairo_boilerplate_ps_cleanup (void *closure);
 
 cairo_status_t
@@ -60,7 +64,8 @@ _cairo_boilerplate_ps_surface_write_to_png (cairo_surface_t *surface, const char
 
 cairo_surface_t *
 _cairo_boilerplate_ps_get_image_surface (cairo_surface_t *surface,
-					  int width,
-					  int height);
+					 int page,
+					 int width,
+					 int height);
 
 #endif

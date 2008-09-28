@@ -49,6 +49,10 @@ _cairo_boilerplate_svg12_create_surface (const char		 *name,
 					 int                      id,
 					 void			**closure);
 
+void
+_cairo_boilerplate_svg_force_fallbacks (cairo_surface_t *surface,
+	                                unsigned int flags);
+
 
 cairo_status_t
 _cairo_boilerplate_svg_finish_surface (cairo_surface_t		*surface);
@@ -58,6 +62,7 @@ _cairo_boilerplate_svg_surface_write_to_png (cairo_surface_t *surface, const cha
 
 cairo_surface_t *
 _cairo_boilerplate_svg_get_image_surface (cairo_surface_t *surface,
+					  int page,
 					  int width,
 					  int height);
 

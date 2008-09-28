@@ -184,6 +184,18 @@ cairo_bool_t
 cairo_test_is_target_enabled (const cairo_test_context_t *ctx,
 	                      const char *target);
 
+char *
+cairo_test_reference_image_filename (const cairo_test_context_t *ctx,
+	                             const char *base_name,
+				     const char *test_name,
+				     const char *target_name,
+				     const char *format);
+
+cairo_surface_t *
+cairo_test_get_reference_image (cairo_test_context_t *ctx,
+				const char *filename,
+				cairo_bool_t flatten);
+
 CAIRO_END_DECLS
 
 #endif

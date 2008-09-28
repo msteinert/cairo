@@ -25,7 +25,6 @@
  */
 
 #include "cairo-boilerplate.h"
-#include "cairo-boilerplate-ps.h"
 #include "cairo-boilerplate-ps-private.h"
 
 #include <cairo-ps.h>
@@ -235,19 +234,27 @@ _cairo_boilerplate_ps_surface_write_to_png (cairo_surface_t *surface, const char
 
 cairo_surface_t *
 _cairo_boilerplate_ps_get_image_surface (cairo_surface_t *surface,
-					  int width,
-					  int height)
+					 int page,
+					 int width,
+					 int height)
 {
     ps_target_closure_t *ptc = cairo_surface_get_user_data (surface,
 							    &ps_closure_key);
     char *filename;
     cairo_status_t status;
 
-    xasprintf (&filename, "%s.png", ptc->filename);
+    if (page == 0)
+	xasprintf (&filename, "%s.png", ptc->filename);
+    else
+	xasprintf (&filename, "%s-%%05d.png", ptc->filename);
     status = _cairo_boilerplate_ps_surface_write_to_png (surface, filename);
     if (status)
 	return cairo_boilerplate_surface_create_in_error (status);
 
+    if (page != 0) {
+	free (filename);
+	xasprintf (&filename, "%s-%05d.png", ptc->filename, page);
+    }
     surface = cairo_boilerplate_get_image_surface_from_png (filename,
 							    width,
 							    height,
@@ -269,18 +276,20 @@ _cairo_boilerplate_ps_cleanup (void *closure)
     free (ptc);
 }
 
-cairo_status_t
-cairo_boilerplate_ps_surface_force_fallbacks (cairo_surface_t *abstract_surface)
+void
+_cairo_boilerplate_ps_force_fallbacks (cairo_surface_t *abstract_surface,
+	                               unsigned int flags)
 {
-    cairo_paginated_surface_t *paginated = (cairo_paginated_surface_t*) abstract_surface;
+    ps_target_closure_t *ptc = cairo_surface_get_user_data (abstract_surface,
+							    &ps_closure_key);
+
+    cairo_paginated_surface_t *paginated;
     cairo_ps_surface_t *surface;
 
-    if (cairo_surface_get_type (abstract_surface) != CAIRO_SURFACE_TYPE_PS)
-	return CAIRO_STATUS_SURFACE_TYPE_MISMATCH;
+    if (ptc->target)
+	abstract_surface = ptc->target;
 
+    paginated = (cairo_paginated_surface_t*) abstract_surface;
     surface = (cairo_ps_surface_t*) paginated->target;
-
     surface->force_fallbacks = TRUE;
-
-    return CAIRO_STATUS_SUCCESS;
 }

@@ -766,8 +766,6 @@ _cairo_svg_document_emit_font_subsets (cairo_svg_document_t *document)
     return status;
 }
 
-static cairo_bool_t cairo_svg_force_fallbacks = FALSE;
-
 static cairo_int_status_t
 _cairo_svg_surface_analyze_operation (cairo_svg_surface_t   *surface,
 				      cairo_operator_t	     op,
@@ -775,8 +773,8 @@ _cairo_svg_surface_analyze_operation (cairo_svg_surface_t   *surface,
 {
     cairo_svg_document_t *document = surface->document;
 
-    if (cairo_svg_force_fallbacks)
-	return FALSE;
+    if (surface->force_fallbacks)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* SVG doesn't support extend reflect for image pattern */
     if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE &&
