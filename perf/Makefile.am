@@ -25,6 +25,7 @@ cairo_perf_SOURCES =		\
 	paint-with-alpha.c	\
 	pattern_create_radial.c \
 	rectangles.c		\
+	rounded-rectangles.c	\
 	stroke.c		\
 	subimage_copy.c		\
 	tessellate.c		\
