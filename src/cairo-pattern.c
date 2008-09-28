@@ -1789,10 +1789,7 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 	    return status;
 
 	/* If we're repeating, we just play it safe and clone the entire surface. */
-	/* If requested width and height are -1, clone the entire surface.
-	 * This is relied on in the svg backend. */
-	if (attr->extend == CAIRO_EXTEND_REPEAT ||
-	    (width == (unsigned int) -1 && height == (unsigned int) -1)) {
+	if (attr->extend == CAIRO_EXTEND_REPEAT) {
 	    x = extents.x;
 	    y = extents.y;
 	    width = extents.width;
