@@ -53,7 +53,7 @@
  */
 
 #define INCHES_TO_POINTS(in) ((in) * 72.0)
-#define SIZE INCHES_TO_POINTS(1)
+#define SIZE INCHES_TO_POINTS(2)
 
 /* cairo_set_tolerance() is not respected by the PS/PDF backends currently */
 #define SET_TOLERANCE 0
@@ -65,21 +65,57 @@ draw (cairo_t *cr, double width, double height)
 {
     const char *text = "cairo";
     cairo_text_extents_t extents;
+    const double dash[2] = { 8, 16 };
+    cairo_pattern_t *pattern;
 
     cairo_save (cr);
 
     cairo_new_path (cr);
 
     cairo_set_line_width (cr, .05 * SIZE / 2.0);
+
+    cairo_arc (cr, SIZE / 2.0, SIZE / 2.0,
+	       0.875 * SIZE / 2.0,
+	       0, 2.0 * M_PI);
+    cairo_stroke (cr);
+
+    /* use dashes to demonstrate bugs:
+     *  https://bugs.freedesktop.org/show_bug.cgi?id=9189
+     *  https://bugs.freedesktop.org/show_bug.cgi?id=17223
+     */
+    cairo_save (cr);
+    cairo_set_dash (cr, dash, 2, 0);
     cairo_arc (cr, SIZE / 2.0, SIZE / 2.0,
 	       0.75 * SIZE / 2.0,
 	       0, 2.0 * M_PI);
     cairo_stroke (cr);
+    cairo_restore (cr);
 
+    cairo_save (cr);
+    cairo_rectangle (cr, 0, 0, SIZE/2, SIZE);
+    cairo_clip (cr);
     cairo_arc (cr, SIZE / 2.0, SIZE / 2.0,
 	       0.6 * SIZE / 2.0,
 	       0, 2.0 * M_PI);
     cairo_fill (cr);
+    cairo_restore (cr);
+
+    /* use a pattern to exercise bug:
+     *   https://bugs.launchpad.net/inkscape/+bug/234546
+     */
+    cairo_save (cr);
+    cairo_rectangle (cr, SIZE/2, 0, SIZE/2, SIZE);
+    cairo_clip (cr);
+    pattern = cairo_pattern_create_linear (SIZE/2, 0, SIZE, 0);
+    cairo_pattern_add_color_stop_rgba (pattern, 0, 0, 0, 0, 1.);
+    cairo_pattern_add_color_stop_rgba (pattern, 1, 0, 0, 0, 0.);
+    cairo_set_source (cr, pattern);
+    cairo_pattern_destroy (pattern);
+    cairo_arc (cr, SIZE / 2.0, SIZE / 2.0,
+	       0.6 * SIZE / 2.0,
+	       0, 2.0 * M_PI);
+    cairo_fill (cr);
+    cairo_restore (cr);
 
     cairo_set_source_rgb (cr, 1, 1, 1); /* white */
     cairo_set_font_size (cr, .25 * SIZE / 2.0);
@@ -193,7 +229,7 @@ check_result (cairo_test_context_t *ctx,
     if (status) {
 	cairo_test_log (ctx, "Error: Failed to compare images: %s\n",
 			cairo_status_to_string (status));
-	ret = TRUE;
+	ret = FALSE;
     } else if (result.pixels_changed &&
 	       result.max_diff > target->error_tolerance)
     {
