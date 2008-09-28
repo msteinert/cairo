@@ -889,7 +889,9 @@ _surfaces_compatible (cairo_xcb_surface_t *dst,
 	return FALSE;
 
     /* if Render is supported, match picture formats */
-    if (src->xrender_format.id != XCB_NONE && src->xrender_format.id == dst->xrender_format.id)
+    if (src->xrender_format.id != dst->xrender_format.id)
+	return FALSE;
+    else if (src->xrender_format.id != XCB_NONE)
 	return TRUE;
 
     /* Without Render, match visuals instead */

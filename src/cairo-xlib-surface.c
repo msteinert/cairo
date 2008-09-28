@@ -1416,7 +1416,9 @@ _surfaces_compatible (cairo_xlib_surface_t *dst,
 	return FALSE;
 
     /* if Render is supported, match picture formats */
-    if (src->xrender_format != NULL && src->xrender_format == dst->xrender_format)
+    if (src->xrender_format != dst->xrender_format)
+	return FALSE;
+    else if (src->xrender_format != NULL)
 	return TRUE;
 
     /* Without Render, match visuals instead */
