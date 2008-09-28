@@ -802,8 +802,11 @@ _cairo_svg_surface_analyze_operation (cairo_svg_surface_t   *surface,
 {
     cairo_svg_document_t *document = surface->document;
 
-    if (surface->force_fallbacks)
+    if (surface->force_fallbacks &&
+	surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+    {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     /* SVG doesn't support extend reflect for image pattern */
     if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE &&
@@ -2022,15 +2025,7 @@ _cairo_svg_surface_paint (void		    *abstract_surface,
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _cairo_svg_surface_analyze_operation (surface, op, source);
 
-    /* XXX: It would be nice to be able to assert this condition
-     * here. But, we actually allow one 'cheat' that is used when
-     * painting the final image-based fallbacks. The final fallbacks
-     * do have alpha which we support by blending with white. This is
-     * possible only because there is nothing between the fallback
-     * images and the paper, nor is anything painted above. */
-    /*
     assert (_cairo_svg_surface_operation_supported (surface, op, source));
-    */
 
     /* Emulation of clear and source operators, when no clipping region
      * is defined. We just delete existing content of surface root node,
