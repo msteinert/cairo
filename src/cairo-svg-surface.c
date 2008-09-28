@@ -42,12 +42,13 @@
 #define _BSD_SOURCE /* for snprintf() */
 #include "cairoint.h"
 #include "cairo-svg.h"
+#include "cairo-analysis-surface-private.h"
 #include "cairo-svg-surface-private.h"
-#include "cairo-path-fixed-private.h"
 #include "cairo-meta-surface-private.h"
+#include "cairo-output-stream-private.h"
+#include "cairo-path-fixed-private.h"
 #include "cairo-paginated-private.h"
 #include "cairo-scaled-font-subsets-private.h"
-#include "cairo-output-stream-private.h"
 
 typedef struct cairo_svg_page cairo_svg_page_t;
 
