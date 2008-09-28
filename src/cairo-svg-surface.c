@@ -766,6 +766,36 @@ _cairo_svg_document_emit_font_subsets (cairo_svg_document_t *document)
     return status;
 }
 
+char const *_cairo_svg_surface_operators[] = {
+    "clear",
+
+    "src", "src-over", "src-in",
+    "src-out", "src-atop",
+
+    "dst", "dst-over", "dst-in",
+    "dst-out", "dst-atop",
+
+    "xor", "plus",
+    "color-dodge", /* FIXME: saturate ? */
+};
+
+static cairo_bool_t cairo_svg_force_fallbacks = FALSE;
+
+static cairo_bool_t
+_cairo_svg_surface_analyze_operator (cairo_svg_surface_t   *surface,
+				      cairo_operator_t	     op)
+{
+    /* guard against newly added operators */
+    if (op >= ARRAY_LENGTH (_cairo_svg_surface_operators))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* allow operators being NULL if they are unsupported */
+    if (_cairo_svg_surface_operators[op] == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_int_status_t
 _cairo_svg_surface_analyze_operation (cairo_svg_surface_t   *surface,
 				      cairo_operator_t	     op,
@@ -782,7 +812,7 @@ _cairo_svg_surface_analyze_operation (cairo_svg_surface_t   *surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (document->svg_version >= CAIRO_SVG_VERSION_1_2)
-	return CAIRO_STATUS_SUCCESS;
+	return _cairo_svg_surface_analyze_operator (surface, op);
 
     if (op == CAIRO_OPERATOR_OVER)
 	return CAIRO_STATUS_SUCCESS;
@@ -964,19 +994,6 @@ _cairo_surface_base64_encode (cairo_surface_t       *surface,
 
     return status;
 }
-
-char const *_cairo_svg_surface_operators[] = {
-    "clear",
-
-    "src", "src-over", "src-in",
-    "src-out", "src-atop",
-
-    "dst", "dst-over", "dst-in",
-    "dst-out", "dst-atop",
-
-    "xor", "plus",
-    "color-dodge", /* FIXME: saturate ? */
-};
 
 static void
 _cairo_svg_surface_emit_operator (cairo_output_stream_t *output,
