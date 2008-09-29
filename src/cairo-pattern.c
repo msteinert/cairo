@@ -1989,6 +1989,25 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
 	}
     }
 
+    /* reduce likelihood of range overflow with large downscaling */
+    if (! is_identity) {
+	cairo_matrix_t m;
+	cairo_status_t invert_status;
+
+	m = attr->matrix;
+	invert_status = cairo_matrix_invert (&m);
+	assert (invert_status == CAIRO_STATUS_SUCCESS);
+
+	if (m.x0 != 0. || m.y0 != 0.) {
+	    x = floor (m.x0);
+	    y = floor (m.y0);
+	    attr->x_offset -= x;
+	    attr->y_offset -= y;
+	    cairo_matrix_init_translate (&m, x, y);
+	    cairo_matrix_multiply (&attr->matrix, &m, &attr->matrix);
+	}
+    }
+
   BAIL:
     cairo_surface_destroy (surface);
     return status;
