@@ -288,6 +288,7 @@ _cairo_user_text_to_glyphs (void		      *abstract_font,
 
     if (face->scaled_font_methods.text_to_glyphs) {
 	int i;
+	cairo_glyph_t *orig_glyphs = *glyphs;
 	int orig_num_glyphs = *num_glyphs;
 
 	status = face->scaled_font_methods.text_to_glyphs (&scaled_font->base,
@@ -299,6 +300,10 @@ _cairo_user_text_to_glyphs (void		      *abstract_font,
 	    return status;
 
 	if (*num_glyphs < 0) {
+	    if (orig_glyphs != *glyphs) {
+		cairo_glyph_free (*glyphs);
+		*glyphs = orig_glyphs;
+	    }
 	    *num_glyphs = orig_num_glyphs;
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}

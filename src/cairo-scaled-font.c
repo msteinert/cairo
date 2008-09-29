@@ -1336,9 +1336,10 @@ slim_hidden_def (cairo_scaled_font_glyph_extents);
  * entries available there.  If the provided glyph array is too short for
  * the conversion, a new glyph array is allocated using cairo_glyph_allocate()
  * and placed in @glyphs.  Upon return, @num_glyphs always contains the
- * number of generated glyphs.  If the value @glyphs points at has changed
+ * number of generated glyphs.  If the value @glyphs points to has changed
  * after the call, the user is responsible for freeing the allocated glyph
- * array using cairo_glyph_free().
+ * array using cairo_glyph_free().  This may happen even if the provided
+ * array was large enough.
  *
  * If @clusters is not %NULL, @num_clusters and @cluster_flags should not be %NULL,
  * and cluster mapping will be computed.
@@ -1351,7 +1352,8 @@ slim_hidden_def (cairo_scaled_font_glyph_extents);
  * and placed in @clusters.  Upon return, @num_clusters always contains the
  * number of generated clusters.  If the value @clusters points at has changed
  * after the call, the user is responsible for freeing the allocated cluster
- * array using cairo_text_cluster_free().
+ * array using cairo_text_cluster_free().  This may happen even if the provided
+ * array was large enough.
  *
  * In the simplest case, @glyphs and @clusters can point to %NULL initially
  * and a suitable array will be allocated.  In code:

@@ -1546,7 +1546,7 @@ typedef cairo_status_t (*cairo_user_scaled_font_render_glyph_func_t) (cairo_scal
  * If the value @clusters points at has changed after the call, the caller
  * will free the allocated cluster array using cairo_text_cluster_free().
  *
- * The callback is optional.  If not set, or if @num_glyphs is negative upon
+ * The callback is optional.  If @num_glyphs is negative upon
  * the callback returning, the unicode_to_glyph callback
  * is tried.  See #cairo_user_scaled_font_unicode_to_glyph_func_t.
  *
