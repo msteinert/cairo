@@ -1873,10 +1873,10 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 						       &x1, &y1, &x2, &y2,
 						       NULL);
 
-		sampled_area.x = floor (x1) - pad;
-		sampled_area.y = floor (y1) - pad;
-		sampled_area.width  = ceil (x2) + pad - sampled_area.x;
-		sampled_area.height = ceil (y2) + pad - sampled_area.y;
+		sampled_area.x = floor (x1 - pad);
+		sampled_area.y = floor (y1 - pad);
+		sampled_area.width  = ceil (x2 + pad) - sampled_area.x;
+		sampled_area.height = ceil (y2 + pad) - sampled_area.y;
 	    }
 
 	    sampled_area.x += tx;
