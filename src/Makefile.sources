@@ -15,7 +15,7 @@
 # See how pdf_operators or font_subset are handled.
 #
 # The sources are picked up according to the configured features
-# by the generated file Makefile.am.config or Makefile.win32.config.
+# by the generated file Makefile.am.features or Makefile.win32.features.
 #
 # These are a few special source files.  Those are not included in this
 # file to not confuse build systems.  Each build system must handle them
