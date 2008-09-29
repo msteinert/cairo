@@ -2261,14 +2261,14 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
 							glyph_width,
 							glyph_height,
 							&clone_offset_x,
-							&clone_offset_y
+							&clone_offset_y,
 							(cairo_surface_t **)
 							&clone);
 		if (status)
 		    goto UNLOCK;
 
-		assert (clone_offset_x = 0);
-		assert (clone_offset_y = 0);
+		assert (clone_offset_x == 0);
+		assert (clone_offset_y == 0);
 
 		x_offset = scaled_glyphs[i]->surface->base.device_transform.x0;
 		y_offset = scaled_glyphs[i]->surface->base.device_transform.y0;
