@@ -509,7 +509,7 @@ static cairo_boilerplate_target_t targets[] =
      * systems get an error of 1 for some pixels on some of the text
      * tests. XXX: I'd still like to chase these down at some point.
      * For now just set the svg error tolerance to 1. */
-    { "svg11", ".svg", CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR_ALPHA, 1,
+    { "svg11", NULL, CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR_ALPHA, 1,
       _cairo_boilerplate_svg11_create_surface,
       _cairo_boilerplate_svg_force_fallbacks,
       _cairo_boilerplate_svg_finish_surface,
@@ -517,7 +517,7 @@ static cairo_boilerplate_target_t targets[] =
       _cairo_boilerplate_svg_surface_write_to_png,
       _cairo_boilerplate_svg_cleanup,
       NULL, TRUE },
-    { "svg11", ".svg", CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 1,
+    { "svg11", NULL, CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 1,
       _cairo_boilerplate_svg11_create_surface,
       _cairo_boilerplate_svg_force_fallbacks,
       _cairo_boilerplate_svg_finish_surface,
@@ -525,7 +525,7 @@ static cairo_boilerplate_target_t targets[] =
       _cairo_boilerplate_svg_surface_write_to_png,
       _cairo_boilerplate_svg_cleanup,
       NULL, TRUE },
-    { "svg12", ".svg", CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR_ALPHA, 1,
+    { "svg12", NULL, CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR_ALPHA, 1,
       _cairo_boilerplate_svg12_create_surface,
       _cairo_boilerplate_svg_force_fallbacks,
       _cairo_boilerplate_svg_finish_surface,
@@ -533,7 +533,7 @@ static cairo_boilerplate_target_t targets[] =
       _cairo_boilerplate_svg_surface_write_to_png,
       _cairo_boilerplate_svg_cleanup,
       NULL, TRUE },
-    { "svg12", ".svg", CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 1,
+    { "svg12", NULL, CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 1,
       _cairo_boilerplate_svg12_create_surface,
       _cairo_boilerplate_svg_force_fallbacks,
       _cairo_boilerplate_svg_finish_surface,
