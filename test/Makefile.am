@@ -477,6 +477,9 @@ REFERENCE_IMAGES = \
 	fill-rule-ref.png	\
 	fill-rule-rgb24-ref.png	\
 	filter-bilinear-extents-ref.png \
+	filter-bilinear-extents-pdf-ref.png \
+	filter-bilinear-extents-ps2-ref.png \
+	filter-bilinear-extents-ps3-ref.png \
 	filter-nearest-offset-ref.png	\
 	finer-grained-fallbacks-ref.png			\
 	finer-grained-fallbacks-rgb24-ref.png		\
@@ -916,6 +919,37 @@ $(REFERENCE_IMAGES)
 # Of course, before any "release" of cairo we should eliminate
 # everything from this list by fixing the bugs. (We don't necessarily
 # have to be that strict for "snapshots" though.)
+#
+# Analysis of XFAIL errors:
+# alpha-similar         - discrepancy between backends in applying color
+#                         components of a pure alpha surface
+# big-line              - range overflow of fixed-point
+# big-trap              - range overflow of fixed-point
+# degenerate-path       - undefined behaviour in PS, needs path editing to
+#                         convert degenerate segments into circles/rectangles
+#                         as expected by cairo
+# device-offset-scale   - complication of pre-multiplying device_offset
+#                         into the pattern_matrix and then requiring futher
+#                         manipulation for SVG
+# extend-pad            - lacks implementation in pixman and consequently used
+#                         as an excuse for lack of support in other backends
+# filter-nearest-offset - banker's rounding vs arthimetic rounding in
+#                         double to fixed-point conversion
+# long-lines            - range overflow of fixed-point
+# self-copy-overlap     - vector surfaces take snapshot of patterns in contrast
+#                         to the raster backends which don't. One solution
+#                         would be to clone overlapping areas of dst/source, so
+#                         patterns were effectively snapshotted across all
+#                         backends.
+# self-intersecting     - incremental trapezoidation of strokes can generate
+#                         overlapping traps. Needs self-intersection analysis
+#                         on cairo_traps_t after strokes.
+#                         Test case should also be expanded to hit special-case
+#                         tessellators as well.
+# surface-pattern*      - old bugs in pixman, but fails PS/PDF due to lack of
+#                         /Interpolate support - which causes a half-pixel
+#                         shift in GS (and consequently virtually every
+#                         image/fallback-image using test to FAIL).
 XFAIL_TESTS =					\
 alpha-similar$(EXEEXT)				\
 big-line$(EXEEXT)				\
@@ -924,7 +958,6 @@ degenerate-path$(EXEEXT)			\
 device-offset-scale$(EXEEXT)			\
 extend-pad$(EXEEXT)				\
 filter-nearest-offset$(EXEEXT)			\
-filter-bilinear-extents$(EXEEXT)		\
 long-lines$(EXEEXT)				\
 self-copy-overlap$(EXEEXT)			\
 self-intersecting$(EXEEXT)			\
