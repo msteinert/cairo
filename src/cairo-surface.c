@@ -812,7 +812,9 @@ _cairo_surface_set_device_scale (cairo_surface_t *surface,
     surface->device_transform.yx = 0.0;
 
     surface->device_transform_inverse = surface->device_transform;
-    cairo_matrix_invert (&surface->device_transform_inverse);
+    status = cairo_matrix_invert (&surface->device_transform_inverse);
+    /* should always be invertible unless given pathological input */
+    assert (status == CAIRO_STATUS_SUCCESS);
 }
 
 /**
@@ -854,7 +856,9 @@ cairo_surface_set_device_offset (cairo_surface_t *surface,
     surface->device_transform.y0 = y_offset;
 
     surface->device_transform_inverse = surface->device_transform;
-    cairo_matrix_invert (&surface->device_transform_inverse);
+    status = cairo_matrix_invert (&surface->device_transform_inverse);
+    /* should always be invertible unless given pathological input */
+    assert (status == CAIRO_STATUS_SUCCESS);
 }
 slim_hidden_def (cairo_surface_set_device_offset);
 

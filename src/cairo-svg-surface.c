@@ -1033,7 +1033,6 @@ _cairo_svg_surface_emit_composite_image_pattern (cairo_output_stream_t   *output
 						 const cairo_matrix_t	 *parent_matrix,
 						 const char		 *extra_attributes)
 {
-    cairo_surface_attributes_t surface_attr;
     cairo_rectangle_int_t extents;
     cairo_status_t status;
     cairo_matrix_t p2u;
