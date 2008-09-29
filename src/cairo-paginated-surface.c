@@ -252,7 +252,7 @@ _paint_fallback_image (cairo_paginated_surface_t *surface,
     int x, y, width, height;
     cairo_status_t status;
     cairo_surface_t *image;
-    cairo_pattern_t *pattern;
+    cairo_surface_pattern_t pattern;
 
     x = box->p1.x;
     y = box->p1.y;
@@ -270,15 +270,18 @@ _paint_fallback_image (cairo_paginated_surface_t *surface,
     if (status)
 	goto CLEANUP_IMAGE;
 
-    pattern = cairo_pattern_create_for_surface (image);
+    _cairo_pattern_init_for_surface (&pattern, image);
     cairo_matrix_init (&matrix, x_scale, 0, 0, y_scale, -x*x_scale, -y*y_scale);
-    cairo_pattern_set_matrix (pattern, &matrix);
+    cairo_pattern_set_matrix (&pattern.base, &matrix);
+    /* the fallback should be rendered at native resolution, so disable
+     * filtering (if possible) to avoid introducing potential artifacts. */
+    pattern.base.filter = CAIRO_FILTER_NEAREST;
 
     status = _cairo_surface_paint (surface->target,
 				   CAIRO_OPERATOR_SOURCE,
-				   pattern);
+				   &pattern.base);
 
-    cairo_pattern_destroy (pattern);
+    _cairo_pattern_fini (&pattern.base);
 CLEANUP_IMAGE:
     cairo_surface_destroy (image);
 
