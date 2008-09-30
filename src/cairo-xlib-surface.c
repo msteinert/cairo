@@ -3549,17 +3549,17 @@ typedef union {
 COMPILE_TIME_ASSERT (sizeof (cairo_xlib_glyph_t) == sizeof (cairo_glyph_t));
 
 static cairo_status_t
-_cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
-				       cairo_xlib_glyph_t *glyphs,
-				       int num_glyphs,
-				       cairo_scaled_font_t *scaled_font,
-				       cairo_operator_t op,
-				       cairo_xlib_surface_t *src,
-				       cairo_surface_attributes_t *attributes,
-				       /* info for this chunk */
-				       int num_elts,
-				       int width,
-				       cairo_xlib_font_glyphset_info_t *glyphset_info)
+_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
+		    cairo_xlib_glyph_t *glyphs,
+		    int num_glyphs,
+		    cairo_scaled_font_t *scaled_font,
+		    cairo_operator_t op,
+		    cairo_xlib_surface_t *src,
+		    cairo_surface_attributes_t *attributes,
+		    /* info for this chunk */
+		    int num_elts,
+		    int width,
+		    cairo_xlib_font_glyphset_info_t *glyphset_info)
 {
     /* Which XRenderCompositeText function to use */
     cairo_xrender_composite_text_func_t composite_text_func;
@@ -3772,9 +3772,9 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 	 */
 	if (request_size + width > max_request_size - sz_xGlyphElt ||
 	    (this_glyphset_info != glyphset_info)) {
-	    status = _cairo_xlib_surface_emit_glyphs_chunk (dst, glyphs, i,
-							    scaled_font, op, src, attributes,
-							    num_elts, old_width, glyphset_info);
+	    status = _emit_glyphs_chunk (dst, glyphs, i,
+					 scaled_font, op, src, attributes,
+					 num_elts, old_width, glyphset_info);
 	    if (status != CAIRO_STATUS_SUCCESS)
 		return status;
 
@@ -3811,9 +3811,9 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
     }
 
     if (num_elts)
-	status = _cairo_xlib_surface_emit_glyphs_chunk (dst, glyphs, i,
-							scaled_font, op, src, attributes,
-							num_elts, width, glyphset_info);
+	status = _emit_glyphs_chunk (dst, glyphs, i,
+				     scaled_font, op, src, attributes,
+				     num_elts, width, glyphset_info);
 
     *remaining_glyphs = num_glyphs - i;
     if (*remaining_glyphs && status == CAIRO_STATUS_SUCCESS)
