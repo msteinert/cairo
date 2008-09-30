@@ -3548,6 +3548,17 @@ typedef union {
 /* compile-time assert that #cairo_xlib_glyph_t is the same size as #cairo_glyph_t */
 COMPILE_TIME_ASSERT (sizeof (cairo_xlib_glyph_t) == sizeof (cairo_glyph_t));
 
+/* Start a new element for the first glyph,
+ * or for any glyph that has unexpected position,
+ * or if current element has too many glyphs
+ * (Xrender limits each element to 252 glyphs, we limit them to 128)
+ *
+ * These same conditions need to be mirrored between
+ * _cairo_xlib_surface_emit_glyphs and _emit_glyph_chunks
+ */
+#define _start_new_glyph_elt(count, glyph) \
+    (((count) & 127) == 0 || (glyph)->i.x || (glyph)->i.y)
+
 static cairo_status_t
 _emit_glyphs_chunk (cairo_xlib_surface_t *dst,
 		    cairo_xlib_glyph_t *glyphs,
@@ -3610,19 +3621,13 @@ _emit_glyphs_chunk (cairo_xlib_surface_t *dst,
     j = 0;
     for (i = 0; i < num_glyphs; i++) {
 
-      /* Start a new element for first output glyph, and for glyphs with
-       * unexpected position */
-      /* Start a new element for the first glyph,
+      /* Start a new element for first output glyph,
        * or for any glyph that has unexpected position,
-       * or if current element has too many glyphs
-       * (Xrender limits each element to 252 glyphs, we limit them to 128)
+       * or if current element has too many glyphs.
        *
-       * Note that the first condition is redundant with the introduction
-       * of the third one.  Keep for clarity.
-       *
-       * These same conditions are mirrored in _cairo_xlib_surface_emit_glyphs
+       * These same conditions are mirrored in _cairo_xlib_surface_emit_glyphs()
        */
-      if (!j || glyphs[i].i.x || glyphs[i].i.y || j % 128 == 0) {
+      if (_start_new_glyph_elt (j, &glyphs[i])) {
 	  if (j) {
 	    elts[nelt].nchars = n;
 	    nelt++;
@@ -3650,6 +3655,10 @@ _emit_glyphs_chunk (cairo_xlib_surface_t *dst,
 	nelt++;
 	n = 0;
     }
+
+    /* Check that we agree with _cairo_xlib_surface_emit_glyphs() on the
+     * expected number of xGlyphElts.  */
+    assert (nelt == num_elts);
 
     composite_text_func (dst->dpy,
 			 _render_operator (op),
@@ -3812,15 +3821,11 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 
 	/* Start a new element for the first glyph,
 	 * or for any glyph that has unexpected position,
-	 * or if current element has too many glyphs
-	 * (Xrender limits each element to 252 glyphs, we limit them to 128)
+	 * or if current element has too many glyphs.
 	 *
-	 * Note that the first condition is redundant with the introduction
-	 * of the third one.  Keep for clarity.
-	 *
-	 * These same conditions are mirrored in _emit_glyphs_chunk
+	 * These same conditions are mirrored in _emit_glyphs_chunk().
 	 */
-	if (!num_out_glyphs || glyphs[i].i.x || glyphs[i].i.y || num_out_glyphs % 128 == 0) {
+      if (_start_new_glyph_elt (num_out_glyphs, &glyphs[i])) {
 	    num_elts++;
 	    request_size += _cairo_sz_xGlyphElt;
 	}
