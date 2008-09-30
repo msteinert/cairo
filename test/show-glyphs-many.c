@@ -65,6 +65,15 @@
  *
  *  Status: I replicated bug. The largest value of NUM_GLYPHS for
  *      which I saw success is 21842.
+ *
+ * 2008-30-08 Chris Wilson <chris@chris-wilson.co.uk>
+ *   This is also a valid test case for:
+ *
+ *     Bug 5913 crash on overlong string
+ *     https://bugs.freedesktop.org/show_bug.cgi?id=5913
+ *
+ *  which is still causing a crash in the Xlib backend - presumably, just
+ *  a miscalculation of the length of the available request.
  */
 
 #define TEXT_SIZE 12

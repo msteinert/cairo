@@ -141,6 +141,7 @@ self-copy$(EXEEXT)					\
 self-copy-overlap$(EXEEXT)				\
 self-intersecting$(EXEEXT)				\
 set-source$(EXEEXT)					\
+show-glyphs-many$(EXEEXT)				\
 show-text-current-point$(EXEEXT)			\
 skew-extreme$(EXEEXT)					\
 smask$(EXEEXT)						\
@@ -197,19 +198,6 @@ zero-alpha$(EXEEXT)
 # extend-reflect - Triggers an infinite (or near-infinite) bug in some
 #	X servers in some circumstances. Details and cause unknown.
 #
-# show-glyphs-many - This stress test was exercising a particular bug
-#	in the xlib surface code (exceeding the X11 protocol request
-#	limit) when rendering several thousand glyphs at once. The
-#	original xlib-surface bug is fixed now, but the test continues
-#	to stress some other aspects of the test suite. For example,
-#	when doing text as paths, the resuilting PostScript file is one
-#	giant path that ghostscript has a particularly hard time
-#	with. I'm disabling this test for now, since I don't care about
-#	that performance problem in ghostscript. (But, there is a
-#	similar performance problem when using cairo to rasterize the
-#	equivalen giant path---from an SVG files say---so this might be
-#	a useful kind of test to bring back again for performance (not
-#	correctness) testing.
 # text-glyph-range - This test triggers the following assertion in cairo:
 #
 #	lt-text-glyph-range: cairo-scaled-font-subsets.c:350:
@@ -221,7 +209,6 @@ zero-alpha$(EXEEXT)
 #	that's just a bug in the test rig that should just consider
 #	the abort an XFAIL like any other.
 DISABLED_TESTS =			\
-show-glyphs-many$(EXEEXT)		\
 text-glyph-range$(EXEEXT)
 
 # Then we have a collection of tests that are only run if certain
