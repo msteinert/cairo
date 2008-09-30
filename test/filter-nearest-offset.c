@@ -57,6 +57,12 @@ draw (cairo_t *cr, int width, int height)
     };
     int i, j;
 
+    /* fill with off-white to avoid a separate rgb24 ref image */
+    cairo_save (cr);
+    cairo_set_source_rgb (cr, .7, .7, .7);
+    cairo_paint (cr);
+    cairo_restore (cr);
+
     /* Draw reference lines where the jump should be. */
     cairo_move_to (cr, PAD + STEPS / 2 * (STAMP_WIDTH + PAD), 0);
     cairo_rel_line_to (cr, 0, IMAGE_HEIGHT);
