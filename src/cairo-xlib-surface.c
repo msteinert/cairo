@@ -3657,6 +3657,11 @@ _emit_glyphs_chunk (cairo_xlib_surface_t *dst,
     return CAIRO_STATUS_SUCCESS;
 }
 
+
+/* sz_xGlyphtElt required alignment to a 32-bit boundary, so ensure we have
+ * enough room for padding */
+#define _cairo_sz_xGlyphElt (sz_xGlyphElt + 4)
+
 static cairo_status_t
 _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 				 cairo_xlib_glyph_t *glyphs,
@@ -3770,7 +3775,7 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 	 * to the mask first, and then composes that to final surface,
 	 * though it's not a big deal.
 	 */
-	if (request_size + width > max_request_size - sz_xGlyphElt ||
+	if (request_size + width > max_request_size - _cairo_sz_xGlyphElt ||
 	    (this_glyphset_info != glyphset_info)) {
 	    status = _emit_glyphs_chunk (dst, glyphs, i,
 					 scaled_font, op, src, attributes,
@@ -3799,7 +3804,7 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 	 * has unexpected position */
 	if (!num_out_glyphs || glyphs[i].i.x || glyphs[i].i.y) {
 	    num_elts++;
-	    request_size += sz_xGlyphElt;
+	    request_size += _cairo_sz_xGlyphElt;
 	}
 
 	/* adjust current-position */
