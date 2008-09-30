@@ -3563,10 +3563,11 @@ _cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
 {
     /* Which XRenderCompositeText function to use */
     cairo_xrender_composite_text_func_t composite_text_func;
+    int size;
 
     /* Element buffer stuff */
-    XGlyphElt8 stack_elts[CAIRO_STACK_ARRAY_LENGTH (XGlyphElt8)];
     XGlyphElt8 *elts;
+    XGlyphElt8 stack_elts[CAIRO_STACK_ARRAY_LENGTH (XGlyphElt8)];
 
     /* Reuse the input glyph array for output char generation */
     char *char8 = (char *) glyphs;
@@ -3582,18 +3583,22 @@ _cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
     case 1:
 	/* don't cast the 8-variant, to catch possible mismatches */
 	composite_text_func = XRenderCompositeText8;
+	size = sizeof (char);
 	break;
     case 2:
 	composite_text_func = (cairo_xrender_composite_text_func_t) XRenderCompositeText16;
+	size = sizeof (unsigned short);
 	break;
     default:
     case 4:
 	composite_text_func = (cairo_xrender_composite_text_func_t) XRenderCompositeText32;
+	size = sizeof (unsigned int);
     }
 
     /* Allocate element array */
-    elts = stack_elts;
-    if (num_elts > ARRAY_LENGTH (stack_elts)) {
+    if (num_elts <= ARRAY_LENGTH (stack_elts)) {
+      elts = stack_elts;
+    } else {
       elts = _cairo_malloc_ab (num_elts, sizeof (XGlyphElt8));
       if (elts == NULL)
 	  return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -3604,14 +3609,16 @@ _cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
     n = 0;
     j = 0;
     for (i = 0; i < num_glyphs; i++) {
+
       /* Start a new element for first output glyph, and for glyphs with
        * unexpected position */
       if (!j || glyphs[i].i.x || glyphs[i].i.y) {
 	  if (j) {
-	    elts[nelt++].nchars = n;
+	    elts[nelt].nchars = n;
+	    nelt++;
 	    n = 0;
 	  }
-	  elts[nelt].chars = char8 + width * j;
+	  elts[nelt].chars = char8 + size * j;
 	  elts[nelt].glyphset = glyphset_info->glyphset;
 	  elts[nelt].xOff = glyphs[i].i.x;
 	  elts[nelt].yOff = glyphs[i].i.y;
@@ -3628,9 +3635,11 @@ _cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
       j++;
     }
 
-    if (n)
-	elts[nelt++].nchars = n;
-    assert (nelt == num_elts);
+    if (n) {
+	elts[nelt].nchars = n;
+	nelt++;
+	n = 0;
+    }
 
     composite_text_func (dst->dpy,
 			 _render_operator (op),
@@ -3648,7 +3657,6 @@ _cairo_xlib_surface_emit_glyphs_chunk (cairo_xlib_surface_t *dst,
     return CAIRO_STATUS_SUCCESS;
 }
 
-#define PAD(sz, A) ((A)-((sz)&((A)-1)))
 static cairo_status_t
 _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 				 cairo_xlib_glyph_t *glyphs,
@@ -3668,7 +3676,7 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
     unsigned long max_index = 0;
     int width = 1;
     int num_elts = 0;
-    int num_elt_glyphs = 0;
+    int num_out_glyphs = 0;
 
     int max_request_size = XMaxRequestSize (dst->dpy) * 4
 			 - MAX (sz_xRenderCompositeGlyphs8Req,
@@ -3681,7 +3689,7 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 
     for (i = 0; i < num_glyphs; i++) {
 	int this_x, this_y;
-	int old_width, this_rq_size;
+	int old_width;
 
 	status = _cairo_scaled_glyph_lookup (scaled_font,
 					     glyphs[i].index,
@@ -3743,48 +3751,13 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 	      width = 4;
 	    else if (max_index >= 256)
 	      width = 2;
-	    if (width != old_width) {
-		int expand = (width - old_width) * i;
-
-		/* Check to see if we have enough room within this request
-		 * to convert all the current glyphs to the new width.
-		 */
-		if (request_size + expand > max_request_size) {
-		    status = _cairo_xlib_surface_emit_glyphs_chunk (dst, glyphs, i,
-								    scaled_font, op, src, attributes,
-								    num_elts, old_width, glyphset_info);
-		    if (status)
-			return status;
-
-		    glyphs += i;
-		    num_glyphs -= i;
-		    i = 0;
-
-		    request_size = sz_xGlyphElt + width;
-		    num_elts = 1;
-		    num_elt_glyphs = 1;
-
-		    x = this_x + scaled_glyph->x_advance;
-		    y = this_y + scaled_glyph->y_advance;
-		    glyphset_info = this_glyphset_info;
-
-		    glyphs[i].i.x = 0;
-		    glyphs[i].i.y = 0;
-		    continue;
-		} else
-		    request_size += expand;
-	    }
+	    if (width != old_width)
+	      request_size += (width - old_width) * num_out_glyphs;
 	}
 
-	this_rq_size = width;
-	/* If the glyph is in an unexpected position, we need a new GlyphElt.
-	 * And libXrender inserts a new GlyphElt (at most) every 252 glyphs.
-	 */
-	if ((num_elt_glyphs % 252) == 0 || this_x - x || this_y - y)
-	    this_rq_size += PAD (request_size, 4) + sz_xGlyphElt;
-
 	/* If we will pass the max request size by adding this glyph,
-	 * flush current glyphs.
+	 * flush current glyphs.  Note that we account for a
+	 * possible element being added below.
 	 *
 	 * Also flush if changing glyphsets, as Xrender limits one mask
 	 * format per request, so we can either break up, or use a
@@ -3793,50 +3766,44 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 	 * to the mask first, and then composes that to final surface,
 	 * though it's not a big deal.
 	 */
-	if (request_size + this_rq_size > max_request_size ||
-	    this_glyphset_info != glyphset_info)
-	{
+	if (request_size + width > max_request_size - sz_xGlyphElt ||
+	    (this_glyphset_info != glyphset_info)) {
 	    status = _cairo_xlib_surface_emit_glyphs_chunk (dst, glyphs, i,
 							    scaled_font, op, src, attributes,
 							    num_elts, old_width, glyphset_info);
-	    if (status)
+	    if (status != CAIRO_STATUS_SUCCESS)
 		return status;
 
 	    glyphs += i;
 	    num_glyphs -= i;
 	    i = 0;
-
 	    max_index = glyphs[i].index;
 	    width = max_index < 256 ? 1 : max_index < 65536 ? 2 : 4;
-
-	    request_size = width + sz_xGlyphElt;
-	    num_elts = 1;
-	    num_elt_glyphs = 1;
-
-	    x = this_x;
-	    y = this_y;
+	    request_size = 0;
+	    num_elts = 0;
+	    num_out_glyphs = 0;
+	    x = y = 0;
 	    glyphset_info = this_glyphset_info;
-
-	    glyphs[i].i.x = 0;
-	    glyphs[i].i.y = 0;
-	} else {
-	    request_size += this_rq_size;
-
-	    /* Convert absolute glyph position to relative-to-current-point. */
-	    glyphs[i].i.x = this_x - x;
-	    glyphs[i].i.y = this_y - y;
-
-	    /* Start a new element for any glyph in an unexpected position. */
-	    if (num_elt_glyphs == 0 || glyphs[i].i.x || glyphs[i].i.y) {
-		num_elts++;
-		num_elt_glyphs = 1;
-	    } else
-		num_elt_glyphs++;
 	}
 
-	/* Adjust current-point. */
+	/* Convert absolute glyph position to relative-to-current-point
+	 * position */
+	glyphs[i].i.x = this_x - x;
+	glyphs[i].i.y = this_y - y;
+
+	/* Start a new element for the first glyph, or for any glyph that
+	 * has unexpected position */
+	if (!num_out_glyphs || glyphs[i].i.x || glyphs[i].i.y) {
+	    num_elts++;
+	    request_size += sz_xGlyphElt;
+	}
+
+	/* adjust current-position */
 	x = this_x + scaled_glyph->x_advance;
 	y = this_y + scaled_glyph->y_advance;
+
+	num_out_glyphs++;
+	request_size += width;
     }
 
     if (num_elts)
