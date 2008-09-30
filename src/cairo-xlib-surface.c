@@ -3742,6 +3742,10 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
 	if (!glyphset_info)
 	    glyphset_info = this_glyphset_info;
 
+	/* The invariant here is that we can always flush the glyphs
+	 * accumulated before this one, using old_width, and they
+	 * would fit in the request.
+	 */
 	old_width = width;
 
 	/* Update max glyph index */
