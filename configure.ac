@@ -1,4 +1,4 @@
-AC_PREREQ(2.58)
+AC_PREREQ(2.59)
 CAIRO_PARSE_VERSION
 AC_INIT([cairo],
 	[cairo_version_major.cairo_version_minor.cairo_version_micro],
@@ -7,7 +7,7 @@ AC_CONFIG_SRCDIR(src/cairo.h)
 AC_CONFIG_HEADERS(config.h)
 AC_CONFIG_AUX_DIR(build)
 AC_CONFIG_MACRO_DIR(build)
-AM_INIT_AUTOMAKE([1.8 gnu -Wall no-define])
+AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define])
 AC_LIBTOOL_WIN32_DLL dnl Must be called before AC_PROG_LIBTOOL
 AC_PROG_LIBTOOL dnl ([1.4]) Don't remove!
 GTK_DOC_CHECK([1.6])
