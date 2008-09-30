@@ -481,6 +481,11 @@ REFERENCE_IMAGES = \
 	filter-bilinear-extents-ps2-ref.png \
 	filter-bilinear-extents-ps3-ref.png \
 	filter-nearest-offset-ref.png	\
+	filter-nearest-offset-pdf-ref.png	\
+	filter-nearest-offset-ps2-ref.png	\
+	filter-nearest-offset-ps3-ref.png	\
+	filter-nearest-offset-svg11-ref.png	\
+	filter-nearest-offset-svg12-ref.png	\
 	finer-grained-fallbacks-ref.png			\
 	finer-grained-fallbacks-rgb24-ref.png		\
 	finer-grained-fallbacks-ps2-argb32-ref.png	\
@@ -933,8 +938,6 @@ $(REFERENCE_IMAGES)
 #                         manipulation for SVG
 # extend-pad            - lacks implementation in pixman and consequently used
 #                         as an excuse for lack of support in other backends
-# filter-nearest-offset - banker's rounding vs arthimetic rounding in
-#                         double to fixed-point conversion
 # long-lines            - range overflow of fixed-point
 # self-copy-overlap     - vector surfaces take snapshot of patterns in contrast
 #                         to the raster backends which don't. One solution
@@ -957,7 +960,6 @@ big-trap$(EXEEXT)				\
 degenerate-path$(EXEEXT)			\
 device-offset-scale$(EXEEXT)			\
 extend-pad$(EXEEXT)				\
-filter-nearest-offset$(EXEEXT)			\
 long-lines$(EXEEXT)				\
 self-copy-overlap$(EXEEXT)			\
 self-intersecting$(EXEEXT)			\

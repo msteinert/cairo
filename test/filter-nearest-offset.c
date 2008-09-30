@@ -38,8 +38,7 @@ static cairo_test_draw_function_t draw;
 
 static const cairo_test_t test = {
     "filter-nearest-offset",
-    "Test sampling offset of CAIRO_FILTER_NEAREST"
-    "\nwrong sampling location for nearest-neighbor filter in libpixman and Render",
+    "Test sampling offset of CAIRO_FILTER_NEAREST",
     IMAGE_WIDTH, IMAGE_HEIGHT,
     draw
 };
