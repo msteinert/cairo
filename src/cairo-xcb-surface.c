@@ -197,7 +197,7 @@ _cairo_xcb_surface_create_similar (void		       *abstract_src,
 						      xrender_format,
 						      width, height);
     if (surface->base.status)
-	return surface;
+	return &surface->base;
 
     surface->owns_pixmap = TRUE;
 
@@ -715,6 +715,7 @@ _cairo_xcb_surface_clone_similar (void			*abstract_surface,
     } else if (_cairo_surface_is_image (src)) {
 	cairo_image_surface_t *image_src = (cairo_image_surface_t *)src;
 	cairo_content_t content = _cairo_content_from_format (image_src->format);
+	cairo_status_t status;
 
 	if (surface->base.status)
 	    return surface->base.status;
@@ -726,7 +727,8 @@ _cairo_xcb_surface_clone_similar (void			*abstract_surface,
 
 	status = _draw_image_surface (clone, image_src,
 		                      src_x, src_y,
-		                      width, height, x, y);
+		                      width, height,
+				      0, 0);
 	if (status) {
 	    cairo_surface_destroy (&clone->base);
 	    return status;
@@ -1123,6 +1125,7 @@ _cairo_xcb_surface_composite (cairo_operator_t		op,
     cairo_int_status_t		status;
     composite_operation_t       operation;
     int				itx, ity;
+    cairo_bool_t                is_integer_translation;
 
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1212,7 +1215,9 @@ _cairo_xcb_surface_composite (cairo_operator_t		op,
 	 */
 
 	_cairo_xcb_surface_ensure_gc (dst);
-	_cairo_matrix_is_integer_translation (&src_attr.matrix, &itx, &ity);
+	is_integer_translation =
+	    _cairo_matrix_is_integer_translation (&src_attr.matrix, &itx, &ity);
+	assert (is_integer_translation == TRUE);
 	{
 	    uint32_t mask = XCB_GC_FILL_STYLE | XCB_GC_TILE
 	                  | XCB_GC_TILE_STIPPLE_ORIGIN_X
@@ -1331,7 +1336,7 @@ _create_a8_picture (cairo_xcb_surface_t *surface,
 /* Creates a temporary mask for the trapezoids covering the area
  * [@dst_x, @dst_y, @width, @height] of the destination surface.
  */
-static xcb_render_picture_t
+static cairo_status_t
 _create_trapezoid_mask (cairo_xcb_surface_t *dst,
 			cairo_trapezoid_t    *traps,
 			int                   num_traps,
@@ -1339,7 +1344,8 @@ _create_trapezoid_mask (cairo_xcb_surface_t *dst,
 			int                   dst_y,
 			int                   width,
 			int                   height,
-			xcb_render_pictforminfo_t *pict_format)
+			xcb_render_pictforminfo_t *pict_format,
+			xcb_render_picture_t *mask_picture_out)
 {
     xcb_render_color_t transparent = { 0, 0, 0, 0 };
     xcb_render_color_t solid = { 0xffff, 0xffff, 0xffff, 0xffff };
@@ -1358,10 +1364,8 @@ _create_trapezoid_mask (cairo_xcb_surface_t *dst,
     solid_picture = _create_a8_picture (dst, &solid, width, height, TRUE);
 
     offset_traps = _cairo_malloc_ab (num_traps, sizeof (xcb_render_trapezoid_t));
-    if (!offset_traps) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return XCB_NONE;
-    }
+    if (offset_traps == NULL)
+	return	_cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     for (i = 0; i < num_traps; i++) {
 	offset_traps[i].top = _cairo_fixed_to_16_16(traps[i].top) - 0x10000 * dst_y;
@@ -1385,7 +1389,8 @@ _create_trapezoid_mask (cairo_xcb_surface_t *dst,
     xcb_render_free_picture (dst->dpy, solid_picture);
     free (offset_traps);
 
-    return mask_picture;
+    *mask_picture_out = mask_picture;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
@@ -1472,13 +1477,14 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
 	 * bounds and clip. (xcb_render_add_traps() could be used to make creating
 	 * the mask somewhat cheaper.)
 	 */
-	xcb_render_picture_t mask_picture = _create_trapezoid_mask (dst, traps, num_traps,
-						       dst_x, dst_y, width, height,
-						       render_format);
-	if (!mask_picture) {
-	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	xcb_render_picture_t mask_picture = 0; /* silence compiler */
+
+	status = _create_trapezoid_mask (dst, traps, num_traps,
+		                         dst_x, dst_y, width, height,
+					 render_format,
+					 &mask_picture);
+	if (status)
 	    goto BAIL;
-	}
 
 	xcb_render_composite (dst->dpy,
 			  _render_operator (op),
@@ -1971,9 +1977,10 @@ cairo_xcb_surface_set_size (cairo_surface_t *abstract_surface,
 			     int              height)
 {
     cairo_xcb_surface_t *surface = (cairo_xcb_surface_t *) abstract_surface;
+    cairo_status_t status_ignored;
 
     if (! _cairo_surface_is_xcb (abstract_surface)) {
-	_cairo_surface_set_error (abstract_surface,
+	status_ignored = _cairo_surface_set_error (abstract_surface,
 				  CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 	return;
     }
