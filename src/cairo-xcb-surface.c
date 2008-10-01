@@ -1657,6 +1657,12 @@ _cairo_xcb_surface_is_similar (void *surface_a,
     cairo_xcb_surface_t *b = surface_b;
     xcb_render_pictforminfo_t *xrender_format;
 
+    /* XXX: disable caching by the solid pattern cache until we implement
+     * display notification to avoid issuing xcb calls from the wrong thread
+     * or accessing the surface after the Display has been closed.
+     */
+    return FALSE;
+
     if (! _cairo_xcb_surface_same_screen (a, b))
 	return FALSE;
 
