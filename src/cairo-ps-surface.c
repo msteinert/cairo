@@ -79,6 +79,10 @@
 static const cairo_surface_backend_t cairo_ps_surface_backend;
 static const cairo_paginated_surface_backend_t cairo_ps_surface_paginated_backend;
 
+static void
+_cairo_ps_surface_release_surface (cairo_ps_surface_t      *surface,
+				   cairo_surface_pattern_t *pattern);
+
 static const cairo_ps_level_t _cairo_ps_levels[] =
 {
     CAIRO_PS_LEVEL_2,
@@ -2224,11 +2228,16 @@ _cairo_ps_surface_emit_solid_pattern (cairo_ps_surface_t    *surface,
 static cairo_status_t
 _cairo_ps_surface_acquire_surface (cairo_ps_surface_t      *surface,
 				   cairo_surface_pattern_t *pattern,
+				   cairo_rectangle_int_t   *extents,
 				   int                     *width,
 				   int                     *height,
-				   cairo_operator_t	    op)
+				   int 			   *origin_x,
+				   int 			   *origin_y)
 {
     cairo_status_t          status;
+    cairo_surface_t 	   *pad_image;
+    int x = 0;
+    int y = 0;
 
     if (_cairo_surface_is_meta (pattern->surface)) {
 	cairo_surface_t *meta_surface = pattern->surface;
@@ -2242,16 +2251,62 @@ _cairo_ps_surface_acquire_surface (cairo_ps_surface_t      *surface,
 	*height = pattern_extents.height;
     } else {
 	status = _cairo_surface_acquire_source_image (pattern->surface,
-						      &surface->image,
+						      &surface->acquired_image,
 						      &surface->image_extra);
 	if (status)
 	    return status;
 
+	pad_image = &surface->acquired_image->base;
+	if (cairo_pattern_get_extend (&pattern->base) == CAIRO_EXTEND_PAD) {
+	    cairo_box_t box;
+	    cairo_rectangle_int_t rect;
+	    cairo_surface_pattern_t pad_pattern;
+
+	    /* get the operation extents in pattern space */
+	    _cairo_box_from_rectangle (&box, extents);
+	    _cairo_matrix_transform_bounding_box_fixed (&pattern->base.matrix, &box, NULL);
+	    _cairo_box_round_to_rectangle (&box, &rect);
+	    x = -rect.x;
+	    y = -rect.y;
+
+	    pad_image = _cairo_image_surface_create_with_content (pattern->surface->content,
+								  rect.width,
+								  rect.height);
+	    if (pad_image->status) {
+		status = pad_image->status;
+		goto BAIL;
+	    }
+
+	    _cairo_pattern_init_for_surface (&pad_pattern, &surface->acquired_image->base);
+	    cairo_matrix_init_translate (&pad_pattern.base.matrix, -x, -y);
+	    pad_pattern.base.extend = CAIRO_EXTEND_PAD;
+	    status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
+					       &pad_pattern.base,
+					       NULL,
+					       pad_image,
+					       0, 0,
+					       0, 0,
+					       0, 0,
+					       rect.width,
+					       rect.height);
+	    _cairo_pattern_fini (&pad_pattern.base);
+	    if (status)
+		goto BAIL;
+	}
+
+	surface->image = (cairo_image_surface_t *) pad_image;
 	*width = surface->image->width;
 	*height = surface->image->height;
+	*origin_x = x;
+	*origin_y = y;
     }
 
     return CAIRO_STATUS_SUCCESS;
+
+BAIL:
+    _cairo_ps_surface_release_surface (surface, pattern);
+
+    return status;
 }
 
 static cairo_status_t
@@ -2279,24 +2334,28 @@ _cairo_ps_surface_release_surface (cairo_ps_surface_t      *surface,
 				   cairo_surface_pattern_t *pattern)
 {
     if (!_cairo_surface_is_meta (pattern->surface))
-	_cairo_surface_release_source_image (pattern->surface, surface->image,
+	_cairo_surface_release_source_image (pattern->surface,
+					     surface->acquired_image,
 					     surface->image_extra);
 }
 
 static cairo_status_t
 _cairo_ps_surface_paint_surface (cairo_ps_surface_t      *surface,
 				 cairo_surface_pattern_t *pattern,
+				 cairo_rectangle_int_t   *extents,
 				 cairo_operator_t	  op)
 {
     cairo_status_t status;
     int width, height;
     cairo_matrix_t cairo_p2d, ps_p2d;
+    int origin_x = 0;
+    int origin_y = 0;
 
     status = _cairo_ps_surface_acquire_surface (surface,
 						pattern,
-						&width,
-						&height,
-						op);
+						extents,
+						&width, &height,
+						&origin_x, &origin_y);
     if (status)
 	return status;
 
@@ -2329,6 +2388,7 @@ _cairo_ps_surface_paint_surface (cairo_ps_surface_t      *surface,
 
     ps_p2d = surface->cairo_to_ps;
     cairo_matrix_multiply (&ps_p2d, &cairo_p2d, &ps_p2d);
+    cairo_matrix_translate (&ps_p2d, -origin_x, -origin_y);
     cairo_matrix_translate (&ps_p2d, 0.0, height);
     cairo_matrix_scale (&ps_p2d, 1.0, -1.0);
 
@@ -2349,6 +2409,7 @@ _cairo_ps_surface_paint_surface (cairo_ps_surface_t      *surface,
 static cairo_status_t
 _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
 					cairo_surface_pattern_t *pattern,
+					cairo_rectangle_int_t   *extents,
 					cairo_operator_t	 op)
 {
     cairo_status_t status;
@@ -2358,6 +2419,8 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
     cairo_matrix_t cairo_p2d, ps_p2d;
     cairo_rectangle_int_t surface_extents;
     cairo_bool_t old_use_string_datasource;
+    int origin_x = 0;
+    int origin_y = 0;
 
     cairo_p2d = pattern->base.matrix;
     status = cairo_matrix_invert (&cairo_p2d);
@@ -2366,19 +2429,19 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
 
     ps_p2d = surface->cairo_to_ps;
     cairo_matrix_multiply (&ps_p2d, &cairo_p2d, &ps_p2d);
+    cairo_matrix_translate (&ps_p2d, -origin_x, -origin_y);
     cairo_matrix_translate (&ps_p2d, 0.0, pattern_height);
     cairo_matrix_scale (&ps_p2d, 1.0, -1.0);
 
     status = _cairo_ps_surface_acquire_surface (surface,
 						pattern,
-						&pattern_width,
-						&pattern_height,
-						op);
+						extents,
+						&pattern_width, &pattern_height,
+						&origin_x, &origin_y);
     if (status)
 	return status;
 
     switch (pattern->base.extend) {
-	/* We implement EXTEND_PAD like EXTEND_NONE for now */
     case CAIRO_EXTEND_PAD:
     case CAIRO_EXTEND_NONE:
     {
@@ -2914,7 +2977,8 @@ _cairo_ps_surface_emit_radial_pattern (cairo_ps_surface_t     *surface,
 static cairo_status_t
 _cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface,
 				const cairo_pattern_t *pattern,
-				cairo_operator_t op)
+				cairo_rectangle_int_t *extents,
+				cairo_operator_t       op)
 {
     cairo_status_t status;
 
@@ -2951,6 +3015,7 @@ _cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface,
     case CAIRO_PATTERN_TYPE_SURFACE:
 	status = _cairo_ps_surface_emit_surface_pattern (surface,
 							 (cairo_surface_pattern_t *) pattern,
+							 extents,
 							 op);
 	if (status)
 	    return status;
@@ -3079,13 +3144,13 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 
 	status = _cairo_ps_surface_paint_surface (surface,
 						 (cairo_surface_pattern_t *) source,
-						 op);
+						  paint_extents, op);
 	if (status)
 	    return status;
 
 	_cairo_output_stream_printf (stream, "Q\n");
     } else {
-	status = _cairo_ps_surface_emit_pattern (surface, source, op);
+	status = _cairo_ps_surface_emit_pattern (surface, source, paint_extents, op);
 	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
 	    return CAIRO_STATUS_SUCCESS;
 
@@ -3125,7 +3190,7 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
 				 "%% _cairo_ps_surface_stroke\n");
 #endif
 
-    status = _cairo_ps_surface_emit_pattern (surface, source, op);
+    status = _cairo_ps_surface_emit_pattern (surface, source, extents, op);
     if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
         return CAIRO_STATUS_SUCCESS;
 
@@ -3177,14 +3242,14 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 
 	status = _cairo_ps_surface_paint_surface (surface,
 						 (cairo_surface_pattern_t *) source,
-						 op);
+						  extents, op);
 	if (status)
 	    return status;
 
 	_cairo_output_stream_printf (surface->stream, "Q\n");
 	_cairo_pdf_operators_reset (&surface->pdf_operators);
     } else {
-	status = _cairo_ps_surface_emit_pattern (surface, source, op);
+	status = _cairo_ps_surface_emit_pattern (surface, source, extents, op);
 	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
 	    return CAIRO_STATUS_SUCCESS;
 
@@ -3225,7 +3290,7 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     if (num_glyphs <= 0)
         return CAIRO_STATUS_SUCCESS;
 
-    status = _cairo_ps_surface_emit_pattern (surface, source, op);
+    status = _cairo_ps_surface_emit_pattern (surface, source, extents, op);
     if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
         return CAIRO_STATUS_SUCCESS;
 

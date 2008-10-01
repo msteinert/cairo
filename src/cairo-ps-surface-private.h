@@ -68,6 +68,7 @@ typedef struct cairo_ps_surface {
     int bbox_x1, bbox_y1, bbox_x2, bbox_y2;
     cairo_matrix_t cairo_to_ps;
     cairo_image_surface_t *image;
+    cairo_image_surface_t *acquired_image;
     void *image_extra;
     cairo_bool_t use_string_datasource;
 
