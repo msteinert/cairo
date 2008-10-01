@@ -4420,7 +4420,8 @@ _cairo_pdf_surface_start_fallback (cairo_pdf_surface_t *surface)
 static cairo_int_status_t
 _cairo_pdf_surface_paint (void			*abstract_surface,
 			  cairo_operator_t	 op,
-			  const cairo_pattern_t	*source)
+			  const cairo_pattern_t	*source,
+			  cairo_rectangle_int_t *extents)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
     cairo_status_t status;
@@ -4500,7 +4501,8 @@ static cairo_int_status_t
 _cairo_pdf_surface_mask	(void			*abstract_surface,
 			 cairo_operator_t	 op,
 			 const cairo_pattern_t	*source,
-			 const cairo_pattern_t	*mask)
+			 const cairo_pattern_t	*mask,
+			 cairo_rectangle_int_t  *extents)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
     cairo_pdf_smask_group_t *group;
@@ -4584,7 +4586,8 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 			   cairo_matrix_t	*ctm,
 			   cairo_matrix_t	*ctm_inverse,
 			   double		 tolerance,
-			   cairo_antialias_t	 antialias)
+			   cairo_antialias_t	 antialias,
+			   cairo_rectangle_int_t *extents)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
     cairo_status_t status;
@@ -4675,7 +4678,8 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
 			 cairo_path_fixed_t	*path,
 			 cairo_fill_rule_t	 fill_rule,
 			 double			 tolerance,
-			 cairo_antialias_t	 antialias)
+			 cairo_antialias_t	 antialias,
+			 cairo_rectangle_int_t  *extents)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
     cairo_status_t status;
@@ -4774,7 +4778,8 @@ _cairo_pdf_surface_fill_stroke (void		     *abstract_surface,
 				cairo_matrix_t	     *stroke_ctm,
 				cairo_matrix_t	     *stroke_ctm_inverse,
 				double		      stroke_tolerance,
-				cairo_antialias_t     stroke_antialias)
+				cairo_antialias_t     stroke_antialias,
+				cairo_rectangle_int_t *extents)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
     cairo_status_t status;
@@ -4865,7 +4870,8 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
 				     const cairo_text_cluster_t *clusters,
 				     int                         num_clusters,
 				     cairo_text_cluster_flags_t  cluster_flags,
-				     cairo_scaled_font_t	*scaled_font)
+				     cairo_scaled_font_t	*scaled_font,
+				     cairo_rectangle_int_t      *extents)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
     cairo_status_t status;

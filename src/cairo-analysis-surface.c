@@ -322,7 +322,8 @@ _cairo_analysis_surface_get_extents (void			*abstract_surface,
 static cairo_int_status_t
 _cairo_analysis_surface_paint (void			*abstract_surface,
 			       cairo_operator_t		op,
-			       const cairo_pattern_t		*source)
+			       const cairo_pattern_t	*source,
+			       cairo_rectangle_int_t    *paint_extents)
 {
     cairo_analysis_surface_t *surface = abstract_surface;
     cairo_status_t	     status, backend_status;
@@ -333,7 +334,7 @@ _cairo_analysis_surface_paint (void			*abstract_surface,
 	backend_status = CAIRO_INT_STATUS_UNSUPPORTED;
     else
 	backend_status = (*surface->target->backend->paint) (surface->target, op,
-                                                             source);
+                                                             source, NULL);
 
     if (backend_status == CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN)
 	backend_status = _analyze_meta_surface_pattern (surface, source);
@@ -363,7 +364,8 @@ static cairo_int_status_t
 _cairo_analysis_surface_mask (void		*abstract_surface,
 			      cairo_operator_t	 op,
 			      const cairo_pattern_t	*source,
-			      const cairo_pattern_t	*mask)
+			      const cairo_pattern_t	*mask,
+			      cairo_rectangle_int_t 	*mask_extents)
 {
     cairo_analysis_surface_t *surface = abstract_surface;
     cairo_int_status_t	      status, backend_status;
@@ -374,7 +376,7 @@ _cairo_analysis_surface_mask (void		*abstract_surface,
 	backend_status = CAIRO_INT_STATUS_UNSUPPORTED;
     else
 	backend_status = (*surface->target->backend->mask) (surface->target, op,
-                                                            source, mask);
+                                                            source, mask, NULL);
 
     if (backend_status == CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN) {
 	cairo_int_status_t backend_source_status = CAIRO_STATUS_SUCCESS;
@@ -445,7 +447,8 @@ _cairo_analysis_surface_stroke (void			*abstract_surface,
 				cairo_matrix_t		*ctm,
 				cairo_matrix_t		*ctm_inverse,
 				double			 tolerance,
-				cairo_antialias_t	 antialias)
+				cairo_antialias_t	 antialias,
+				cairo_rectangle_int_t   *stroke_extents)
 {
     cairo_analysis_surface_t *surface = abstract_surface;
     cairo_status_t	     status, backend_status;
@@ -459,7 +462,7 @@ _cairo_analysis_surface_stroke (void			*abstract_surface,
 	backend_status = (*surface->target->backend->stroke) (surface->target, op,
 							      source, path, style,
 							      ctm, ctm_inverse,
-							      tolerance, antialias);
+							      tolerance, antialias, NULL);
 
     if (backend_status == CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN)
 	backend_status = _analyze_meta_surface_pattern (surface, source);
@@ -515,7 +518,8 @@ _cairo_analysis_surface_fill (void			*abstract_surface,
 			      cairo_path_fixed_t	*path,
 			      cairo_fill_rule_t		 fill_rule,
 			      double			 tolerance,
-			      cairo_antialias_t		 antialias)
+			      cairo_antialias_t		 antialias,
+			      cairo_rectangle_int_t     *fill_extents)
 {
     cairo_analysis_surface_t *surface = abstract_surface;
     cairo_status_t	     status, backend_status;
@@ -528,7 +532,7 @@ _cairo_analysis_surface_fill (void			*abstract_surface,
     else
 	backend_status = (*surface->target->backend->fill) (surface->target, op,
 						    source, path, fill_rule,
-						    tolerance, antialias);
+							    tolerance, antialias, NULL);
 
     if (backend_status == CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN)
 	backend_status = _analyze_meta_surface_pattern (surface, source);
@@ -583,7 +587,8 @@ _cairo_analysis_surface_show_glyphs (void		  *abstract_surface,
 				     cairo_glyph_t	  *glyphs,
 				     int		   num_glyphs,
 				     cairo_scaled_font_t  *scaled_font,
-				     int                  *remaining_glyphs)
+				     int                  *remaining_glyphs,
+				     cairo_rectangle_int_t *show_glyphs_extents)
 {
     cairo_analysis_surface_t *surface = abstract_surface;
     cairo_status_t	     status, backend_status;
@@ -596,7 +601,7 @@ _cairo_analysis_surface_show_glyphs (void		  *abstract_surface,
 								   source,
 								   glyphs, num_glyphs,
 								   scaled_font,
-								   remaining_glyphs);
+								   remaining_glyphs, NULL);
     else if (surface->target->backend->show_text_glyphs)
 	backend_status = surface->target->backend->show_text_glyphs (surface->target, op,
 								     source,
@@ -604,7 +609,7 @@ _cairo_analysis_surface_show_glyphs (void		  *abstract_surface,
 								     glyphs, num_glyphs,
 								     NULL, 0,
 								     FALSE,
-								     scaled_font);
+								     scaled_font, NULL);
     else
 	backend_status = CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -662,7 +667,8 @@ _cairo_analysis_surface_show_text_glyphs (void			    *abstract_surface,
 					  const cairo_text_cluster_t *clusters,
 					  int			     num_clusters,
 					  cairo_text_cluster_flags_t cluster_flags,
-					  cairo_scaled_font_t	    *scaled_font)
+					  cairo_scaled_font_t	    *scaled_font,
+					  cairo_rectangle_int_t     *show_text_glyphs_extents)
 {
     cairo_analysis_surface_t *surface = abstract_surface;
     cairo_status_t	     status, backend_status;
@@ -677,14 +683,14 @@ _cairo_analysis_surface_show_text_glyphs (void			    *abstract_surface,
 								     utf8, utf8_len,
 								     glyphs, num_glyphs,
 								     clusters, num_clusters, cluster_flags,
-								     scaled_font);
+								     scaled_font, NULL);
     if (backend_status == CAIRO_INT_STATUS_UNSUPPORTED && surface->target->backend->show_glyphs) {
 	int remaining_glyphs = num_glyphs;
 	backend_status = surface->target->backend->show_glyphs (surface->target, op,
 								source,
 								glyphs, num_glyphs,
 								scaled_font,
-								&remaining_glyphs);
+								&remaining_glyphs, NULL);
 	glyphs += num_glyphs - remaining_glyphs;
 	num_glyphs = remaining_glyphs;
 	if (remaining_glyphs == 0)
@@ -898,13 +904,15 @@ typedef cairo_int_status_t
 typedef cairo_int_status_t
 (*_paint_func)			(void			*surface,
 			         cairo_operator_t	 op,
-				 const cairo_pattern_t	*source);
+				 const cairo_pattern_t	*source,
+				 cairo_rectangle_int_t  *extents);
 
 typedef cairo_int_status_t
 (*_mask_func)			(void			*surface,
 			         cairo_operator_t	 op,
 				 const cairo_pattern_t	*source,
-				 const cairo_pattern_t	*mask);
+				 const cairo_pattern_t	*mask,
+				 cairo_rectangle_int_t  *extents);
 
 typedef cairo_int_status_t
 (*_stroke_func)			(void			*surface,
@@ -915,7 +923,8 @@ typedef cairo_int_status_t
 				 cairo_matrix_t		*ctm,
 				 cairo_matrix_t		*ctm_inverse,
 				 double			 tolerance,
-				 cairo_antialias_t	 antialias);
+				 cairo_antialias_t	 antialias,
+				 cairo_rectangle_int_t  *extents);
 
 typedef cairo_int_status_t
 (*_fill_func)			(void			*surface,
@@ -924,7 +933,8 @@ typedef cairo_int_status_t
 				 cairo_path_fixed_t	*path,
 				 cairo_fill_rule_t	 fill_rule,
 				 double			 tolerance,
-				 cairo_antialias_t	 antialias);
+				 cairo_antialias_t	 antialias,
+				 cairo_rectangle_int_t  *extents);
 
 typedef cairo_int_status_t
 (*_show_glyphs_func)		(void			*surface,
@@ -933,7 +943,8 @@ typedef cairo_int_status_t
 				 cairo_glyph_t		*glyphs,
 				 int			 num_glyphs,
 				 cairo_scaled_font_t	*scaled_font,
-				 int			*remaining_glyphs);
+				 int			*remaining_glyphs,
+				 cairo_rectangle_int_t  *extents);
 
 static const cairo_surface_backend_t cairo_null_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_NULL,

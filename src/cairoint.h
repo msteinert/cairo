@@ -726,13 +726,15 @@ struct _cairo_surface_backend {
     cairo_warn cairo_int_status_t
     (*paint)			(void			*surface,
 				 cairo_operator_t	 op,
-				 const cairo_pattern_t	*source);
+				 const cairo_pattern_t	*source,
+				 cairo_rectangle_int_t  *extents);
 
     cairo_warn cairo_int_status_t
     (*mask)			(void			*surface,
 				 cairo_operator_t	 op,
 				 const cairo_pattern_t	*source,
-				 const cairo_pattern_t	*mask);
+				 const cairo_pattern_t	*mask,
+				 cairo_rectangle_int_t  *extents);
 
     cairo_warn cairo_int_status_t
     (*stroke)			(void			*surface,
@@ -743,7 +745,8 @@ struct _cairo_surface_backend {
 				 cairo_matrix_t		*ctm,
 				 cairo_matrix_t		*ctm_inverse,
 				 double			 tolerance,
-				 cairo_antialias_t	 antialias);
+				 cairo_antialias_t	 antialias,
+				 cairo_rectangle_int_t  *extents);
 
     cairo_warn cairo_int_status_t
     (*fill)			(void			*surface,
@@ -752,7 +755,8 @@ struct _cairo_surface_backend {
 				 cairo_path_fixed_t	*path,
 				 cairo_fill_rule_t	 fill_rule,
 				 double			 tolerance,
-				 cairo_antialias_t	 antialias);
+				 cairo_antialias_t	 antialias,
+				 cairo_rectangle_int_t  *extents);
 
     cairo_warn cairo_int_status_t
     (*show_glyphs)		(void			*surface,
@@ -761,7 +765,8 @@ struct _cairo_surface_backend {
 				 cairo_glyph_t		*glyphs,
 				 int			 num_glyphs,
 				 cairo_scaled_font_t	*scaled_font,
-				 int			*remaining_glyphs);
+				 int			*remaining_glyphs,
+				 cairo_rectangle_int_t	*extents);
 
     cairo_surface_t *
     (*snapshot)			(void			*surface);
@@ -788,7 +793,8 @@ struct _cairo_surface_backend {
 				 cairo_matrix_t		*stroke_ctm,
 				 cairo_matrix_t		*stroke_ctm_inverse,
 				 double			 stroke_tolerance,
-				 cairo_antialias_t	 stroke_antialias);
+				 cairo_antialias_t	 stroke_antialias,
+				 cairo_rectangle_int_t	*extents);
 
     cairo_surface_t *
     (*create_solid_pattern_surface)
@@ -809,7 +815,8 @@ struct _cairo_surface_backend {
 				 const cairo_text_cluster_t *clusters,
 				 int			     num_clusters,
 				 cairo_text_cluster_flags_t  cluster_flags,
-				 cairo_scaled_font_t	    *scaled_font);
+				 cairo_scaled_font_t	    *scaled_font,
+				 cairo_rectangle_int_t	    *extents);
 };
 
 #include "cairo-surface-private.h"
@@ -1734,13 +1741,15 @@ _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
 cairo_private cairo_status_t
 _cairo_surface_paint (cairo_surface_t	*surface,
 		      cairo_operator_t	 op,
-		      const cairo_pattern_t *source);
+		      const cairo_pattern_t *source,
+		      cairo_rectangle_int_t  *extents);
 
 cairo_private cairo_status_t
 _cairo_surface_mask (cairo_surface_t	*surface,
 		     cairo_operator_t	 op,
 		     const cairo_pattern_t	*source,
-		     const cairo_pattern_t	*mask);
+		     const cairo_pattern_t	*mask,
+		     cairo_rectangle_int_t      *extents);
 
 cairo_private cairo_status_t
 _cairo_surface_fill_stroke (cairo_surface_t	    *surface,
@@ -1756,7 +1765,8 @@ _cairo_surface_fill_stroke (cairo_surface_t	    *surface,
 			    cairo_matrix_t	    *stroke_ctm,
 			    cairo_matrix_t	    *stroke_ctm_inverse,
 			    double		     stroke_tolerance,
-			    cairo_antialias_t	     stroke_antialias);
+			    cairo_antialias_t	     stroke_antialias,
+			    cairo_rectangle_int_t   *extents);
 
 cairo_private cairo_status_t
 _cairo_surface_stroke (cairo_surface_t		*surface,
@@ -1767,7 +1777,8 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
 		       cairo_matrix_t		*ctm,
 		       cairo_matrix_t		*ctm_inverse,
 		       double			 tolerance,
-		       cairo_antialias_t	 antialias);
+		       cairo_antialias_t	 antialias,
+		       cairo_rectangle_int_t    *extents);
 
 cairo_private cairo_status_t
 _cairo_surface_fill (cairo_surface_t	*surface,
@@ -1776,7 +1787,8 @@ _cairo_surface_fill (cairo_surface_t	*surface,
 		     cairo_path_fixed_t	*path,
 		     cairo_fill_rule_t	 fill_rule,
 		     double		 tolerance,
-		     cairo_antialias_t	 antialias);
+		     cairo_antialias_t	 antialias,
+		     cairo_rectangle_int_t  *extents);
 
 cairo_private cairo_status_t
 _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
@@ -1789,7 +1801,8 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 				 const cairo_text_cluster_t *clusters,
 				 int			     num_clusters,
 				 cairo_text_cluster_flags_t  cluster_flags,
-				 cairo_scaled_font_t	    *scaled_font);
+				 cairo_scaled_font_t	    *scaled_font,
+				 cairo_rectangle_int_t      *extents);
 
 cairo_private cairo_status_t
 _cairo_surface_composite_trapezoids (cairo_operator_t	op,

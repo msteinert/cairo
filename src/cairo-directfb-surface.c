@@ -1687,7 +1687,8 @@ _cairo_directfb_surface_show_glyphs (void		    *abstract_dst,
                                      cairo_glyph_t	    *glyphs,
                                      int		     num_glyphs,
                                      cairo_scaled_font_t    *scaled_font,
-				     int		    *remaining_glyphs)
+				     int		    *remaining_glyphs,
+				     cairo_rectangle_int_t  *extents)
 {
     cairo_directfb_surface_t    *dst = abstract_dst;
     cairo_directfb_font_cache_t *cache;

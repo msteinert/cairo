@@ -86,7 +86,8 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 cairo_glyph_t       *glyphs,
 				 int		      num_glyphs,
 				 cairo_scaled_font_t *scaled_font,
-				 int		     *remaining_glyphs);
+				 int		     *remaining_glyphs,
+				 cairo_rectangle_int_t *extents);
 
 /*
  * Instead of taking two round trips for each blending request,
@@ -1283,7 +1284,7 @@ _cairo_xlib_surface_create_solid_pattern_surface (void                  *abstrac
 
     status = _cairo_surface_paint (&image->base,
 				   CAIRO_OPERATOR_SOURCE,
-				   &solid_pattern->base);
+				   &solid_pattern->base, NULL);
     if (status)
 	goto BAIL;
 
@@ -3966,7 +3967,8 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 cairo_glyph_t       *glyphs,
 				 int		      num_glyphs,
 				 cairo_scaled_font_t *scaled_font,
-				 int		     *remaining_glyphs)
+				 int		     *remaining_glyphs,
+				 cairo_rectangle_int_t *extents)
 {
     cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_xlib_surface_t *dst = (cairo_xlib_surface_t*) abstract_dst;

@@ -1566,7 +1566,8 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 				  cairo_glyph_t		*glyphs,
 				  int			 num_glyphs,
 				  cairo_scaled_font_t	*scaled_font,
-				  int			*remaining_glyphs)
+				  int			*remaining_glyphs,
+				  cairo_rectangle_int_t *extents)
 {
 #if CAIRO_HAS_WIN32_FONT
     cairo_win32_surface_t *dst = surface;

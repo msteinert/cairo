@@ -219,7 +219,8 @@ _cairo_meta_surface_release_source_image (void			*abstract_surface,
 static cairo_int_status_t
 _cairo_meta_surface_paint (void			*abstract_surface,
 			   cairo_operator_t	 op,
-			   const cairo_pattern_t	*source)
+			   const cairo_pattern_t  *source,
+			   cairo_rectangle_int_t  *extents)
 {
     cairo_status_t status;
     cairo_meta_surface_t *meta = abstract_surface;
@@ -260,7 +261,8 @@ static cairo_int_status_t
 _cairo_meta_surface_mask (void			*abstract_surface,
 			  cairo_operator_t	 op,
 			  const cairo_pattern_t	*source,
-			  const cairo_pattern_t	*mask)
+			  const cairo_pattern_t	*mask,
+			  cairo_rectangle_int_t *extents)
 {
     cairo_status_t status;
     cairo_meta_surface_t *meta = abstract_surface;
@@ -306,7 +308,8 @@ _cairo_meta_surface_stroke (void			*abstract_surface,
 			    cairo_matrix_t		*ctm,
 			    cairo_matrix_t		*ctm_inverse,
 			    double			 tolerance,
-			    cairo_antialias_t		 antialias)
+			    cairo_antialias_t		 antialias,
+			    cairo_rectangle_int_t 	*extents)
 {
     cairo_status_t status;
     cairo_meta_surface_t *meta = abstract_surface;
@@ -361,7 +364,8 @@ _cairo_meta_surface_fill (void			*abstract_surface,
 			  cairo_path_fixed_t	*path,
 			  cairo_fill_rule_t	 fill_rule,
 			  double		 tolerance,
-			  cairo_antialias_t	 antialias)
+			  cairo_antialias_t	 antialias,
+			  cairo_rectangle_int_t  *extents)
 {
     cairo_status_t status;
     cairo_meta_surface_t *meta = abstract_surface;
@@ -419,7 +423,8 @@ _cairo_meta_surface_show_text_glyphs (void			    *abstract_surface,
 				      const cairo_text_cluster_t    *clusters,
 				      int			     num_clusters,
 				      cairo_text_cluster_flags_t     cluster_flags,
-				      cairo_scaled_font_t	    *scaled_font)
+				      cairo_scaled_font_t	    *scaled_font,
+				      cairo_rectangle_int_t 	    *extents)
 {
     cairo_status_t status;
     cairo_meta_surface_t *meta = abstract_surface;
@@ -806,13 +811,13 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 	case CAIRO_COMMAND_PAINT:
 	    status = _cairo_surface_paint (target,
 					   command->paint.op,
-					   &command->paint.source.base);
+					   &command->paint.source.base, NULL);
 	    break;
 	case CAIRO_COMMAND_MASK:
 	    status = _cairo_surface_mask (target,
 					  command->mask.op,
 					  &command->mask.source.base,
-					  &command->mask.mask.base);
+					  &command->mask.mask.base, NULL);
 	    break;
 	case CAIRO_COMMAND_STROKE:
 	{
@@ -834,7 +839,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 					    &dev_ctm,
 					    &dev_ctm_inverse,
 					    command->stroke.tolerance,
-					    command->stroke.antialias);
+					    command->stroke.antialias, NULL);
 	    break;
 	}
 	case CAIRO_COMMAND_FILL:
@@ -881,7 +886,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 						     &dev_ctm,
 						     &dev_ctm_inverse,
 						     stroke_command->stroke.tolerance,
-						     stroke_command->stroke.antialias);
+						     stroke_command->stroke.antialias, NULL);
 		i++;
 	    } else
 		status = _cairo_surface_fill (target,
@@ -890,7 +895,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 					      dev_path,
 					      command->fill.fill_rule,
 					      command->fill.tolerance,
-					      command->fill.antialias);
+					      command->fill.antialias, NULL);
 	    break;
 	}
 	case CAIRO_COMMAND_SHOW_TEXT_GLYPHS:
@@ -927,7 +932,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 							 dev_glyphs, num_glyphs,
 							 command->show_text_glyphs.clusters, command->show_text_glyphs.num_clusters,
 							 command->show_text_glyphs.cluster_flags,
-							 command->show_text_glyphs.scaled_font);
+							 command->show_text_glyphs.scaled_font, NULL);
 
 	    free (dev_glyphs);
 	    break;

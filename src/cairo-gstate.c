@@ -899,7 +899,7 @@ _cairo_gstate_paint (cairo_gstate_t *gstate)
 
     status = _cairo_surface_paint (gstate->target,
 				   gstate->op,
-				   pattern);
+				   pattern, NULL);
 
     if (pattern == &pattern_stack.base)
 	_cairo_pattern_fini (pattern);
@@ -938,7 +938,7 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
     status = _cairo_surface_mask (gstate->target,
 				  gstate->op,
 				  source_pattern,
-				  mask_pattern);
+				  mask_pattern, NULL);
 
     if (mask_pattern == &mask_pattern_stack.base)
 	_cairo_pattern_fini (&mask_pattern_stack.base);
@@ -980,7 +980,7 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 				    &gstate->ctm,
 				    &gstate->ctm_inverse,
 				    gstate->tolerance,
-				    gstate->antialias);
+				    gstate->antialias, NULL);
 
     if (source_pattern == &source_pattern_stack.base)
 	_cairo_pattern_fini (&source_pattern_stack.base);
@@ -1056,7 +1056,7 @@ _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 				  path,
 				  gstate->fill_rule,
 				  gstate->tolerance,
-				  gstate->antialias);
+				  gstate->antialias, NULL);
 
     if (pattern == &pattern_stack.base)
 	_cairo_pattern_fini (&pattern_stack.base);
@@ -1679,7 +1679,7 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
 						  transformed_glyphs, num_glyphs,
 						  clusters, num_clusters,
 						  cluster_flags,
-						  gstate->scaled_font);
+						  gstate->scaled_font, NULL);
     } else {
 	cairo_path_fixed_t path;
 
@@ -1696,7 +1696,7 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
 					&path,
 					CAIRO_FILL_RULE_WINDING,
 					gstate->tolerance,
-					gstate->scaled_font->options.antialias);
+					gstate->scaled_font->options.antialias, NULL);
 
 	_cairo_path_fixed_fini (&path);
     }

@@ -3043,7 +3043,8 @@ _cairo_ps_surface_get_font_options (void                  *abstract_surface,
 static cairo_int_status_t
 _cairo_ps_surface_paint (void			*abstract_surface,
 			 cairo_operator_t	 op,
-			 const cairo_pattern_t	*source)
+			 const cairo_pattern_t	*source,
+			 cairo_rectangle_int_t  *paint_extents)
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_output_stream_t *stream = surface->stream;
@@ -3108,7 +3109,8 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
 			  cairo_matrix_t	*ctm,
 			  cairo_matrix_t	*ctm_inverse,
 			  double		 tolerance,
-			  cairo_antialias_t	 antialias)
+			  cairo_antialias_t	 antialias,
+			  cairo_rectangle_int_t *extents)
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_int_status_t status;
@@ -3141,7 +3143,8 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 			cairo_path_fixed_t	*path,
 			cairo_fill_rule_t	 fill_rule,
 			double			 tolerance,
-			cairo_antialias_t	 antialias)
+			cairo_antialias_t	 antialias,
+			cairo_rectangle_int_t   *extents)
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_int_status_t status;
@@ -3203,7 +3206,8 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 			       cairo_glyph_t         *glyphs,
 			       int		      num_glyphs,
 			       cairo_scaled_font_t   *scaled_font,
-			       int		     *remaining_glyphs)
+			       int		     *remaining_glyphs,
+			       cairo_rectangle_int_t *extents)
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_status_t status;

@@ -1890,7 +1890,8 @@ _cairo_svg_surface_fill_stroke (void			*abstract_surface,
 				cairo_matrix_t		*stroke_ctm,
 				cairo_matrix_t		*stroke_ctm_inverse,
 				double			 stroke_tolerance,
-				cairo_antialias_t	 stroke_antialias)
+				cairo_antialias_t	 stroke_antialias,
+				cairo_rectangle_int_t    *extents)
 {
     cairo_svg_surface_t *surface = abstract_surface;
     cairo_status_t status;
@@ -1925,7 +1926,8 @@ _cairo_svg_surface_fill (void			*abstract_surface,
 			 cairo_path_fixed_t	*path,
 			 cairo_fill_rule_t	 fill_rule,
 			 double			 tolerance,
-			 cairo_antialias_t	 antialias)
+			 cairo_antialias_t	 antialias,
+			 cairo_rectangle_int_t  *extents)
 {
     cairo_svg_surface_t *surface = abstract_surface;
     cairo_status_t status;
@@ -2013,7 +2015,8 @@ _cairo_svg_surface_emit_paint (cairo_output_stream_t *output,
 static cairo_int_status_t
 _cairo_svg_surface_paint (void		    *abstract_surface,
 			  cairo_operator_t   op,
-			  const cairo_pattern_t   *source)
+			  const cairo_pattern_t   *source,
+			  cairo_rectangle_int_t   *extents)
 {
     cairo_status_t status;
     cairo_svg_surface_t *surface = abstract_surface;
@@ -2065,9 +2068,10 @@ _cairo_svg_surface_paint (void		    *abstract_surface,
 
 static cairo_int_status_t
 _cairo_svg_surface_mask (void		    *abstract_surface,
-			cairo_operator_t     op,
-			const cairo_pattern_t	    *source,
-			const cairo_pattern_t	    *mask)
+			 cairo_operator_t     op,
+			 const cairo_pattern_t	    *source,
+			 const cairo_pattern_t	    *mask,
+			 cairo_rectangle_int_t      *extents)
 {
     cairo_status_t status;
     cairo_svg_surface_t *surface = abstract_surface;
@@ -2154,7 +2158,8 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
 			   cairo_matrix_t	*ctm,
 			   cairo_matrix_t	*ctm_inverse,
 			   double		 tolerance,
-			   cairo_antialias_t	 antialias)
+			   cairo_antialias_t	 antialias,
+			   cairo_rectangle_int_t *extents)
 {
     cairo_svg_surface_t *surface = abstract_dst;
     cairo_status_t status;
@@ -2189,7 +2194,8 @@ _cairo_svg_surface_show_glyphs (void			*abstract_surface,
 				cairo_glyph_t		*glyphs,
 				int			 num_glyphs,
 				cairo_scaled_font_t	*scaled_font,
-				int			*remaining_glyphs)
+				int			*remaining_glyphs,
+				cairo_rectangle_int_t   *extents)
 {
     cairo_svg_surface_t *surface = abstract_surface;
     cairo_svg_document_t *document = surface->document;
@@ -2261,7 +2267,7 @@ FALLBACK:
     }
 
     status = _cairo_svg_surface_fill (abstract_surface, op, pattern,
-				      &path, CAIRO_FILL_RULE_WINDING, 0.0, CAIRO_ANTIALIAS_SUBPIXEL);
+				      &path, CAIRO_FILL_RULE_WINDING, 0.0, CAIRO_ANTIALIAS_SUBPIXEL, NULL);
 
     _cairo_path_fixed_fini (&path);
 

@@ -182,7 +182,8 @@ _cairo_type3_glyph_surface_intersect_clip_path (void		   *abstract_surface,
 static cairo_int_status_t
 _cairo_type3_glyph_surface_paint (void			*abstract_surface,
 				  cairo_operator_t	 op,
-				  const cairo_pattern_t	*source)
+				  const cairo_pattern_t	*source,
+				  cairo_rectangle_int_t	*extents)
 {
     cairo_type3_glyph_surface_t *surface = abstract_surface;
     const cairo_surface_pattern_t *pattern;
@@ -212,9 +213,10 @@ static cairo_int_status_t
 _cairo_type3_glyph_surface_mask (void			*abstract_surface,
 				 cairo_operator_t	 op,
 				 const cairo_pattern_t	*source,
-				 const cairo_pattern_t	*mask)
+				 const cairo_pattern_t	*mask,
+				 cairo_rectangle_int_t	*extents)
 {
-    return _cairo_type3_glyph_surface_paint (abstract_surface, op, mask);
+    return _cairo_type3_glyph_surface_paint (abstract_surface, op, mask, extents);
 }
 
 static cairo_int_status_t
@@ -226,7 +228,8 @@ _cairo_type3_glyph_surface_stroke (void			*abstract_surface,
 				   cairo_matrix_t	*ctm,
 				   cairo_matrix_t	*ctm_inverse,
 				   double		 tolerance,
-				   cairo_antialias_t	 antialias)
+				   cairo_antialias_t	 antialias,
+				   cairo_rectangle_int_t *extents)
 {
     cairo_type3_glyph_surface_t *surface = abstract_surface;
 
@@ -244,7 +247,8 @@ _cairo_type3_glyph_surface_fill (void			*abstract_surface,
 				 cairo_path_fixed_t	*path,
 				 cairo_fill_rule_t	 fill_rule,
 				 double			 tolerance,
-				 cairo_antialias_t	 antialias)
+				 cairo_antialias_t	 antialias,
+				 cairo_rectangle_int_t  *extents)
 {
     cairo_type3_glyph_surface_t *surface = abstract_surface;
     cairo_int_status_t status;
@@ -263,7 +267,8 @@ _cairo_type3_glyph_surface_show_glyphs (void		     *abstract_surface,
 					cairo_glyph_t        *glyphs,
 					int		      num_glyphs,
 					cairo_scaled_font_t  *scaled_font,
-					int		     *remaining_glyphs)
+					int		     *remaining_glyphs,
+					cairo_rectangle_int_t *extents)
 {
     cairo_type3_glyph_surface_t *surface = abstract_surface;
     cairo_int_status_t status;

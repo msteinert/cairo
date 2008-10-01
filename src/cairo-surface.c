@@ -327,7 +327,7 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
     status = _cairo_surface_paint (surface,
 				   color == CAIRO_COLOR_TRANSPARENT ?
 				   CAIRO_OPERATOR_CLEAR : CAIRO_OPERATOR_SOURCE,
-				   &solid_pattern.base);
+				   &solid_pattern.base, NULL);
 
     _cairo_pattern_fini (&solid_pattern.base);
 
@@ -373,7 +373,7 @@ _cairo_surface_repaint_solid_pattern_surface (cairo_surface_t	    *other,
 	 */
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    return _cairo_surface_paint (solid_surface, CAIRO_OPERATOR_SOURCE, &solid_pattern->base);
+    return _cairo_surface_paint (solid_surface, CAIRO_OPERATOR_SOURCE, &solid_pattern->base, NULL);
 }
 
 cairo_clip_mode_t
@@ -1473,7 +1473,8 @@ _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
 cairo_status_t
 _cairo_surface_paint (cairo_surface_t	*surface,
 		      cairo_operator_t	 op,
-		      const cairo_pattern_t *source)
+		      const cairo_pattern_t *source,
+		      cairo_rectangle_int_t *extents)
 {
     cairo_status_t status;
     cairo_pattern_union_t dev_source;
@@ -1490,7 +1491,7 @@ _cairo_surface_paint (cairo_surface_t	*surface,
 	return _cairo_surface_set_error (surface, status);
 
     if (surface->backend->paint) {
-	status = surface->backend->paint (surface, op, source);
+	status = surface->backend->paint (surface, op, source, extents);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
             goto FINISH;
     }
@@ -1508,7 +1509,8 @@ cairo_status_t
 _cairo_surface_mask (cairo_surface_t		*surface,
 		     cairo_operator_t		 op,
 		     const cairo_pattern_t	*source,
-		     const cairo_pattern_t	*mask)
+		     const cairo_pattern_t	*mask,
+		     cairo_rectangle_int_t      *extents)
 {
     cairo_status_t status;
     cairo_pattern_union_t dev_source;
@@ -1532,7 +1534,7 @@ _cairo_surface_mask (cairo_surface_t		*surface,
 	goto CLEANUP_SOURCE;
 
     if (surface->backend->mask) {
-	status = surface->backend->mask (surface, op, source, mask);
+	status = surface->backend->mask (surface, op, source, mask, extents);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
             goto CLEANUP_MASK;
     }
@@ -1564,7 +1566,8 @@ _cairo_surface_fill_stroke (cairo_surface_t	    *surface,
 			    cairo_matrix_t	    *stroke_ctm,
 			    cairo_matrix_t	    *stroke_ctm_inverse,
 			    double		     stroke_tolerance,
-			    cairo_antialias_t	     stroke_antialias)
+			    cairo_antialias_t	     stroke_antialias,
+			    cairo_rectangle_int_t   *extents)
 {
     cairo_status_t status;
 
@@ -1600,7 +1603,8 @@ _cairo_surface_fill_stroke (cairo_surface_t	    *surface,
 						stroke_op, stroke_source,
 						stroke_style,
 						&dev_ctm, &dev_ctm_inverse,
-						stroke_tolerance, stroke_antialias);
+						stroke_tolerance, stroke_antialias,
+						extents);
 
 	if (stroke_source == &dev_stroke_source.base)
 	    _cairo_pattern_fini (&dev_stroke_source.base);
@@ -1613,13 +1617,13 @@ _cairo_surface_fill_stroke (cairo_surface_t	    *surface,
     }
 
     status = _cairo_surface_fill (surface, fill_op, fill_source, path,
-				  fill_rule, fill_tolerance, fill_antialias);
+				  fill_rule, fill_tolerance, fill_antialias, NULL);
     if (status)
 	return _cairo_surface_set_error (surface, status);
 
     status = _cairo_surface_stroke (surface, stroke_op, stroke_source, path,
 				    stroke_style, stroke_ctm, stroke_ctm_inverse,
-				    stroke_tolerance, stroke_antialias);
+				    stroke_tolerance, stroke_antialias, NULL);
     if (status)
 	return _cairo_surface_set_error (surface, status);
 
@@ -1635,7 +1639,8 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
 		       cairo_matrix_t		*ctm,
 		       cairo_matrix_t		*ctm_inverse,
 		       double			 tolerance,
-		       cairo_antialias_t	 antialias)
+		       cairo_antialias_t	 antialias,
+		       cairo_rectangle_int_t    *extents)
 {
     cairo_status_t status;
     cairo_pattern_union_t dev_source;
@@ -1659,7 +1664,7 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
 	status = surface->backend->stroke (surface, op, source,
 					   path, stroke_style,
 					   &dev_ctm, &dev_ctm_inverse,
-					   tolerance, antialias);
+					   tolerance, antialias, extents);
 
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
             goto FINISH;
@@ -1687,7 +1692,8 @@ _cairo_surface_fill (cairo_surface_t	*surface,
 		     cairo_path_fixed_t	*path,
 		     cairo_fill_rule_t	 fill_rule,
 		     double		 tolerance,
-		     cairo_antialias_t	 antialias)
+		     cairo_antialias_t	 antialias,
+		     cairo_rectangle_int_t *extents)
 {
     cairo_status_t status;
     cairo_pattern_union_t dev_source;
@@ -1706,7 +1712,7 @@ _cairo_surface_fill (cairo_surface_t	*surface,
     if (surface->backend->fill) {
 	status = surface->backend->fill (surface, op, source,
 					 path, fill_rule,
-					 tolerance, antialias);
+					 tolerance, antialias, extents);
 
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
             goto FINISH;
@@ -2258,7 +2264,8 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 				 const cairo_text_cluster_t *clusters,
 				 int			     num_clusters,
 				 cairo_text_cluster_flags_t  cluster_flags,
-				 cairo_scaled_font_t	    *scaled_font)
+				 cairo_scaled_font_t	    *scaled_font,
+				 cairo_rectangle_int_t      *extents)
 {
     cairo_status_t status;
     cairo_scaled_font_t *dev_scaled_font = scaled_font;
@@ -2314,7 +2321,7 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 							 utf8, utf8_len,
 							 glyphs, num_glyphs,
 							 clusters, num_clusters, cluster_flags,
-							 dev_scaled_font);
+							 dev_scaled_font, extents);
 	}
 	if (status == CAIRO_INT_STATUS_UNSUPPORTED && surface->backend->show_glyphs) {
 	    int remaining_glyphs = num_glyphs;
@@ -2322,7 +2329,7 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 						    source,
 						    glyphs, num_glyphs,
 						    dev_scaled_font,
-						    &remaining_glyphs);
+						    &remaining_glyphs, extents);
 	    glyphs += num_glyphs - remaining_glyphs;
 	    num_glyphs = remaining_glyphs;
 	    if (status == CAIRO_INT_STATUS_UNSUPPORTED && remaining_glyphs == 0)
@@ -2336,7 +2343,7 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 						    source,
 						    glyphs, num_glyphs,
 						    dev_scaled_font,
-						    &remaining_glyphs);
+						    &remaining_glyphs, extents);
 	    glyphs += num_glyphs - remaining_glyphs;
 	    num_glyphs = remaining_glyphs;
 	    if (status == CAIRO_INT_STATUS_UNSUPPORTED && remaining_glyphs == 0)
@@ -2355,7 +2362,7 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 							 utf8, utf8_len,
 							 glyphs, num_glyphs,
 							 clusters, num_clusters, cluster_flags,
-							 dev_scaled_font);
+							 dev_scaled_font, extents);
 	}
     }
 

@@ -279,7 +279,7 @@ _paint_fallback_image (cairo_paginated_surface_t *surface,
 
     status = _cairo_surface_paint (surface->target,
 				   CAIRO_OPERATOR_SOURCE,
-				   &pattern.base);
+				   &pattern.base, NULL);
 
     _cairo_pattern_fini (&pattern.base);
 CLEANUP_IMAGE:
@@ -529,7 +529,8 @@ _cairo_paginated_surface_get_font_options (void                  *abstract_surfa
 static cairo_int_status_t
 _cairo_paginated_surface_paint (void			*abstract_surface,
 				cairo_operator_t	 op,
-				const cairo_pattern_t	*source)
+				const cairo_pattern_t	*source,
+				cairo_rectangle_int_t   *extents)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
 
@@ -539,18 +540,19 @@ _cairo_paginated_surface_paint (void			*abstract_surface,
 
     surface->page_is_blank = FALSE;
 
-    return _cairo_surface_paint (surface->meta, op, source);
+    return _cairo_surface_paint (surface->meta, op, source, NULL);
 }
 
 static cairo_int_status_t
 _cairo_paginated_surface_mask (void		*abstract_surface,
 			       cairo_operator_t	 op,
 			       const cairo_pattern_t	*source,
-			       const cairo_pattern_t	*mask)
+			       const cairo_pattern_t	*mask,
+			       cairo_rectangle_int_t    *extents)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
 
-    return _cairo_surface_mask (surface->meta, op, source, mask);
+    return _cairo_surface_mask (surface->meta, op, source, mask, NULL);
 }
 
 static cairo_int_status_t
@@ -562,7 +564,8 @@ _cairo_paginated_surface_stroke (void			*abstract_surface,
 				 cairo_matrix_t		*ctm,
 				 cairo_matrix_t		*ctm_inverse,
 				 double			 tolerance,
-				 cairo_antialias_t	 antialias)
+				 cairo_antialias_t	 antialias,
+				 cairo_rectangle_int_t  *extents)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
 
@@ -575,7 +578,7 @@ _cairo_paginated_surface_stroke (void			*abstract_surface,
     return _cairo_surface_stroke (surface->meta, op, source,
 				  path, style,
 				  ctm, ctm_inverse,
-				  tolerance, antialias);
+				  tolerance, antialias, NULL);
 }
 
 static cairo_int_status_t
@@ -585,7 +588,8 @@ _cairo_paginated_surface_fill (void			*abstract_surface,
 			       cairo_path_fixed_t	*path,
 			       cairo_fill_rule_t	 fill_rule,
 			       double			 tolerance,
-			       cairo_antialias_t	 antialias)
+			       cairo_antialias_t	 antialias,
+			       cairo_rectangle_int_t    *extents)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
 
@@ -597,7 +601,7 @@ _cairo_paginated_surface_fill (void			*abstract_surface,
 
     return _cairo_surface_fill (surface->meta, op, source,
 				path, fill_rule,
-				tolerance, antialias);
+				tolerance, antialias, NULL);
 }
 
 static cairo_bool_t
@@ -619,7 +623,8 @@ _cairo_paginated_surface_show_text_glyphs (void			    *abstract_surface,
 					  const cairo_text_cluster_t *clusters,
 					  int			     num_clusters,
 					  cairo_text_cluster_flags_t cluster_flags,
-					  cairo_scaled_font_t	    *scaled_font)
+					   cairo_scaled_font_t	    *scaled_font,
+					   cairo_rectangle_int_t    *extents)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
     cairo_int_status_t status;
@@ -645,7 +650,7 @@ _cairo_paginated_surface_show_text_glyphs (void			    *abstract_surface,
 					      glyphs, num_glyphs,
 					      clusters, num_clusters,
 					      cluster_flags,
-					      scaled_font);
+					      scaled_font, NULL);
 
     return status;
 }
