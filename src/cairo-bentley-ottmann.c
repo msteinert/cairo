@@ -547,7 +547,7 @@ intersect_lines (cairo_bo_edge_t		*a,
     qr = _cairo_int_96by64_32x64_divrem (det64_128 (a_det, dx1,
 						    b_det, dx2),
 					 den_det);
-    if (_cairo_int64_eq (qr.rem,den_det))
+    if (_cairo_int64_eq (qr.rem, den_det))
 	return CAIRO_BO_STATUS_NO_INTERSECTION;
     intersection->x.ordinate = qr.quo;
     intersection->x.exactness = qr.rem ? INEXACT : EXACT;
@@ -1196,13 +1196,13 @@ _cairo_bo_sweep_line_validate (cairo_bo_sweep_line_t *sweep_line)
     {
 	if (SKIP_ELT_TO_EDGE (elt) != edge) {
 	    fprintf (stderr, "*** Error: Sweep line fails to validate: Inconsistent data in the two lists.\n");
-	    exit (1);
+	    abort ();
 	}
     }
 
     if (edge || elt) {
 	fprintf (stderr, "*** Error: Sweep line fails to validate: One list ran out before the other.\n");
-	exit (1);
+	abort ();
     }
 }
 #endif
