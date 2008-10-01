@@ -775,6 +775,7 @@ _cairo_pdf_surface_add_smask_group (cairo_pdf_surface_t     *surface,
 static cairo_status_t
 _cairo_pdf_surface_add_pdf_pattern (cairo_pdf_surface_t		*surface,
 				    const cairo_pattern_t	*pattern,
+				    cairo_rectangle_int_t       *extents,
 				    cairo_pdf_resource_t	*pattern_res,
 				    cairo_pdf_resource_t	*gstate_res)
 {
@@ -833,6 +834,15 @@ _cairo_pdf_surface_add_pdf_pattern (cairo_pdf_surface_t		*surface,
 
     pdf_pattern.width = surface->width;
     pdf_pattern.height = surface->height;
+    if (extents) {
+	pdf_pattern.extents = *extents;
+    } else {
+	pdf_pattern.extents.x = 0;
+	pdf_pattern.extents.y = 0;
+	pdf_pattern.extents.width = surface->width;
+	pdf_pattern.extents.height = surface->height;
+    }
+
     *pattern_res = pdf_pattern.pattern_res;
     *gstate_res = pdf_pattern.gstate_res;
 
@@ -3879,7 +3889,8 @@ _cairo_pdf_surface_write_mask_group (cairo_pdf_surface_t	*surface,
 
     pattern_res.id = 0;
     gstate_res.id = 0;
-    status = _cairo_pdf_surface_add_pdf_pattern (surface, group->mask, &pattern_res, &gstate_res);
+    status = _cairo_pdf_surface_add_pdf_pattern (surface, group->mask, NULL,
+						 &pattern_res, &gstate_res);
     if (status)
 	return status;
 
@@ -3934,7 +3945,8 @@ _cairo_pdf_surface_write_mask_group (cairo_pdf_surface_t	*surface,
 
     pattern_res.id = 0;
     gstate_res.id = 0;
-    status = _cairo_pdf_surface_add_pdf_pattern (surface, group->source, &pattern_res, &gstate_res);
+    status = _cairo_pdf_surface_add_pdf_pattern (surface, group->source, NULL,
+						 &pattern_res, &gstate_res);
     if (status)
 	return status;
 
@@ -4440,7 +4452,8 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
 
     pattern_res.id = 0;
     gstate_res.id = 0;
-    status = _cairo_pdf_surface_add_pdf_pattern (surface, source, &pattern_res, &gstate_res);
+    status = _cairo_pdf_surface_add_pdf_pattern (surface, source, extents,
+						 &pattern_res, &gstate_res);
     if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
 	return CAIRO_STATUS_SUCCESS;
     if (status)
@@ -4601,7 +4614,8 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 
     pattern_res.id = 0;
     gstate_res.id = 0;
-    status = _cairo_pdf_surface_add_pdf_pattern (surface, source, &pattern_res, &gstate_res);
+    status = _cairo_pdf_surface_add_pdf_pattern (surface, source, extents,
+						 &pattern_res, &gstate_res);
     if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
 	return CAIRO_STATUS_SUCCESS;
     if (status)
@@ -4698,7 +4712,8 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
 
     pattern_res.id = 0;
     gstate_res.id = 0;
-    status = _cairo_pdf_surface_add_pdf_pattern (surface, source, &pattern_res, &gstate_res);
+    status = _cairo_pdf_surface_add_pdf_pattern (surface, source, extents,
+						 &pattern_res, &gstate_res);
     if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
 	return CAIRO_STATUS_SUCCESS;
     if (status)
@@ -4807,6 +4822,7 @@ _cairo_pdf_surface_fill_stroke (void		     *abstract_surface,
     fill_pattern_res.id = 0;
     gstate_res.id = 0;
     status = _cairo_pdf_surface_add_pdf_pattern (surface, fill_source,
+						 extents,
 						 &fill_pattern_res,
 						 &gstate_res);
     if (status)
@@ -4818,6 +4834,7 @@ _cairo_pdf_surface_fill_stroke (void		     *abstract_surface,
     gstate_res.id = 0;
     status = _cairo_pdf_surface_add_pdf_pattern (surface,
 						 stroke_source,
+						 extents,
 						 &stroke_pattern_res,
 						 &gstate_res);
     if (status)
@@ -4885,7 +4902,8 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
 
     pattern_res.id = 0;
     gstate_res.id = 0;
-    status = _cairo_pdf_surface_add_pdf_pattern (surface, source, &pattern_res, &gstate_res);
+    status = _cairo_pdf_surface_add_pdf_pattern (surface, source, extents,
+						 &pattern_res, &gstate_res);
     if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
 	return CAIRO_STATUS_SUCCESS;
     if (status)

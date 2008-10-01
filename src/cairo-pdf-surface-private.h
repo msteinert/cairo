@@ -63,6 +63,7 @@ typedef struct _cairo_pdf_group_resources {
 typedef struct _cairo_pdf_pattern {
     double width;
     double height;
+    cairo_rectangle_int_t extents;
     cairo_pattern_t *pattern;
     cairo_pdf_resource_t pattern_res;
     cairo_pdf_resource_t gstate_res;
