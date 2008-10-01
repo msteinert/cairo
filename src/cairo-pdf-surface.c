@@ -1552,25 +1552,75 @@ CLEANUP:
 
 static cairo_status_t
 _cairo_pdf_surface_emit_image_surface (cairo_pdf_surface_t     *surface,
-				       cairo_surface_pattern_t *pattern,
+				       cairo_pdf_pattern_t     *pdf_pattern,
 				       cairo_pdf_resource_t    *resource,
 				       int                     *width,
-				       int                     *height)
+				       int                     *height,
+				       int 		       *origin_x,
+				       int 		       *origin_y)
 {
     cairo_image_surface_t *image;
+    cairo_surface_t *pad_image;
     void *image_extra;
     cairo_status_t status;
+    cairo_surface_pattern_t *pattern = (cairo_surface_pattern_t *) pdf_pattern->pattern;
+    int x = 0;
+    int y = 0;
 
     status = _cairo_surface_acquire_source_image (pattern->surface, &image, &image_extra);
     if (status)
 	goto BAIL;
 
-    status = _cairo_pdf_surface_emit_image (surface, image, resource, pattern->base.filter);
+    pad_image = &image->base;
+    if (cairo_pattern_get_extend (&pattern->base) == CAIRO_EXTEND_PAD) {
+	cairo_box_t box;
+	cairo_rectangle_int_t rect;
+	cairo_surface_pattern_t pad_pattern;
+
+	/* get the operation extents in pattern space */
+	_cairo_box_from_rectangle (&box, &pdf_pattern->extents);
+	_cairo_matrix_transform_bounding_box_fixed (&pattern->base.matrix, &box, NULL);
+	_cairo_box_round_to_rectangle (&box, &rect);
+	x = -rect.x;
+	y = -rect.y;
+
+	pad_image = _cairo_image_surface_create_with_content (pattern->surface->content,
+							      rect.width,
+							      rect.height);
+	if (pad_image->status) {
+	    status = pad_image->status;
+	    goto BAIL;
+	}
+
+	_cairo_pattern_init_for_surface (&pad_pattern, &image->base);
+	cairo_matrix_init_translate (&pad_pattern.base.matrix, -x, -y);
+	pad_pattern.base.extend = CAIRO_EXTEND_PAD;
+	status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
+					   &pad_pattern.base,
+					   NULL,
+					   pad_image,
+					   0, 0,
+					   0, 0,
+					   0, 0,
+					   rect.width,
+					   rect.height);
+	_cairo_pattern_fini (&pad_pattern.base);
+	if (status)
+	    goto BAIL;
+    }
+
+    status = _cairo_pdf_surface_emit_image (surface, (cairo_image_surface_t *)pad_image,
+					    resource, pattern->base.filter);
     if (status)
 	goto BAIL;
 
-    *width = image->width;
-    *height = image->height;
+    *width = ((cairo_image_surface_t *)pad_image)->width;
+    *height = ((cairo_image_surface_t *)pad_image)->height;
+    *origin_x = x;
+    *origin_y = y;
+
+    if (pad_image != &image->base)
+	cairo_surface_destroy (pad_image);
 
 BAIL:
     _cairo_surface_release_source_image (pattern->surface, image, image_extra);
@@ -1657,6 +1707,8 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
     cairo_rectangle_int_t surface_extents;
     int pattern_width = 0; /* squelch bogus compiler warning */
     int pattern_height = 0; /* squelch bogus compiler warning */
+    int origin_x = 0; /* squelch bogus compiler warning */
+    int origin_y = 0; /* squelch bogus compiler warning */
     int bbox_x, bbox_y;
     char draw_surface[200];
 
@@ -1678,10 +1730,12 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
 	pattern_height = pattern_extents.height;
     } else {
 	status = _cairo_pdf_surface_emit_image_surface (surface,
-							pattern,
+							pdf_pattern,
 							&pattern_resource,
 							&pattern_width,
-							&pattern_height);
+							&pattern_height,
+							&origin_x,
+							&origin_y);
 	if (status)
 	    return status;
     }
@@ -1693,7 +1747,6 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
     bbox_x = pattern_width;
     bbox_y = pattern_height;
     switch (extend) {
-	/* We implement EXTEND_PAD like EXTEND_NONE for now */
     case CAIRO_EXTEND_PAD:
     case CAIRO_EXTEND_NONE:
     {
@@ -1777,6 +1830,7 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
     cairo_matrix_translate (&pdf_p2d, 0.0, surface_extents.height);
     cairo_matrix_scale (&pdf_p2d, 1.0, -1.0);
     cairo_matrix_multiply (&pdf_p2d, &cairo_p2d, &pdf_p2d);
+    cairo_matrix_translate (&pdf_p2d, -origin_x, -origin_y);
     cairo_matrix_translate (&pdf_p2d, 0.0, pattern_height);
     cairo_matrix_scale (&pdf_p2d, 1.0, -1.0);
 
