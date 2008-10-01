@@ -232,6 +232,10 @@ _cairo_meta_surface_paint (void			*abstract_surface,
 
     command->header.type = CAIRO_COMMAND_PAINT;
     command->header.region = CAIRO_META_REGION_ALL;
+    command->header.extents.x = 0;
+    command->header.extents.y = 0;
+    command->header.extents.width = meta->width_pixels;
+    command->header.extents.height = meta->height_pixels;
     command->op = op;
 
     status = _cairo_pattern_init_snapshot (&command->source.base, source);
@@ -274,6 +278,10 @@ _cairo_meta_surface_mask (void			*abstract_surface,
 
     command->header.type = CAIRO_COMMAND_MASK;
     command->header.region = CAIRO_META_REGION_ALL;
+    command->header.extents.x = 0;
+    command->header.extents.y = 0;
+    command->header.extents.width = meta->width_pixels;
+    command->header.extents.height = meta->height_pixels;
     command->op = op;
 
     status = _cairo_pattern_init_snapshot (&command->source.base, source);
@@ -321,6 +329,10 @@ _cairo_meta_surface_stroke (void			*abstract_surface,
 
     command->header.type = CAIRO_COMMAND_STROKE;
     command->header.region = CAIRO_META_REGION_ALL;
+    command->header.extents.x = 0;
+    command->header.extents.y = 0;
+    command->header.extents.width = meta->width_pixels;
+    command->header.extents.height = meta->height_pixels;
     command->op = op;
 
     status = _cairo_pattern_init_snapshot (&command->source.base, source);
@@ -377,6 +389,10 @@ _cairo_meta_surface_fill (void			*abstract_surface,
 
     command->header.type = CAIRO_COMMAND_FILL;
     command->header.region = CAIRO_META_REGION_ALL;
+    command->header.extents.x = 0;
+    command->header.extents.y = 0;
+    command->header.extents.width = meta->width_pixels;
+    command->header.extents.height = meta->height_pixels;
     command->op = op;
 
     status = _cairo_pattern_init_snapshot (&command->source.base, source);
@@ -436,6 +452,10 @@ _cairo_meta_surface_show_text_glyphs (void			    *abstract_surface,
 
     command->header.type = CAIRO_COMMAND_SHOW_TEXT_GLYPHS;
     command->header.region = CAIRO_META_REGION_ALL;
+    command->header.extents.x = 0;
+    command->header.extents.y = 0;
+    command->header.extents.width = meta->width_pixels;
+    command->header.extents.height = meta->height_pixels;
     command->op = op;
 
     status = _cairo_pattern_init_snapshot (&command->source.base, source);
@@ -811,13 +831,13 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 	case CAIRO_COMMAND_PAINT:
 	    status = _cairo_surface_paint (target,
 					   command->paint.op,
-					   &command->paint.source.base, NULL);
+					   &command->paint.source.base, &command->header.extents);
 	    break;
 	case CAIRO_COMMAND_MASK:
 	    status = _cairo_surface_mask (target,
 					  command->mask.op,
 					  &command->mask.source.base,
-					  &command->mask.mask.base, NULL);
+					  &command->mask.mask.base, &command->header.extents);
 	    break;
 	case CAIRO_COMMAND_STROKE:
 	{
@@ -839,7 +859,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 					    &dev_ctm,
 					    &dev_ctm_inverse,
 					    command->stroke.tolerance,
-					    command->stroke.antialias, NULL);
+					    command->stroke.antialias, &command->header.extents);
 	    break;
 	}
 	case CAIRO_COMMAND_FILL:
@@ -886,7 +906,8 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 						     &dev_ctm,
 						     &dev_ctm_inverse,
 						     stroke_command->stroke.tolerance,
-						     stroke_command->stroke.antialias, NULL);
+						     stroke_command->stroke.antialias,
+						     &stroke_command->header.extents);
 		i++;
 	    } else
 		status = _cairo_surface_fill (target,
@@ -895,7 +916,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 					      dev_path,
 					      command->fill.fill_rule,
 					      command->fill.tolerance,
-					      command->fill.antialias, NULL);
+					      command->fill.antialias, &command->header.extents);
 	    break;
 	}
 	case CAIRO_COMMAND_SHOW_TEXT_GLYPHS:
@@ -932,7 +953,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 							 dev_glyphs, num_glyphs,
 							 command->show_text_glyphs.clusters, command->show_text_glyphs.num_clusters,
 							 command->show_text_glyphs.cluster_flags,
-							 command->show_text_glyphs.scaled_font, NULL);
+							 command->show_text_glyphs.scaled_font, &command->header.extents);
 
 	    free (dev_glyphs);
 	    break;

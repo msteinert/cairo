@@ -354,6 +354,8 @@ _cairo_analysis_surface_paint (void			*abstract_surface,
     }
 
     is_empty = _cairo_rectangle_intersect (&extents, &surface->current_clip);
+    if (paint_extents)
+	*paint_extents = extents;
 
     status = _add_operation (surface, &extents, backend_status);
 
@@ -432,6 +434,8 @@ _cairo_analysis_surface_mask (void		*abstract_surface,
     }
 
     is_empty = _cairo_rectangle_intersect (&extents, &surface->current_clip);
+    if (mask_extents)
+	*mask_extents = extents;
 
     status = _add_operation (surface, &extents, backend_status);
 
@@ -505,6 +509,8 @@ _cairo_analysis_surface_stroke (void			*abstract_surface,
 
         _cairo_box_round_to_rectangle (&box, &extents);
     }
+    if (stroke_extents)
+	*stroke_extents = extents;
 
     status = _add_operation (surface, &extents, backend_status);
 
@@ -574,6 +580,8 @@ _cairo_analysis_surface_fill (void			*abstract_surface,
 
         _cairo_box_round_to_rectangle (&box, &extents);
     }
+    if (fill_extents)
+	*fill_extents = extents;
 
     status = _add_operation (surface, &extents, backend_status);
 
@@ -642,6 +650,8 @@ _cairo_analysis_surface_show_glyphs (void		  *abstract_surface,
 
 	is_empty = _cairo_rectangle_intersect (&extents, &glyph_extents);
     }
+    if (show_glyphs_extents)
+	*show_glyphs_extents = extents;
 
     status = _add_operation (surface, &extents, backend_status);
 
@@ -726,6 +736,8 @@ _cairo_analysis_surface_show_text_glyphs (void			    *abstract_surface,
 
 	is_empty = _cairo_rectangle_intersect (&extents, &glyph_extents);
     }
+    if (show_text_glyphs_extents)
+	*show_text_glyphs_extents = extents;
 
     status = _add_operation (surface, &extents, backend_status);
 
