@@ -82,6 +82,8 @@ _cairo_traps_clear (cairo_traps_t *traps)
     traps->status = CAIRO_STATUS_SUCCESS;
 
     traps->num_traps = 0;
+    traps->extents.p1.x = traps->extents.p1.y = INT32_MAX;
+    traps->extents.p2.x = traps->extents.p2.y = INT32_MIN;
 }
 
 void
