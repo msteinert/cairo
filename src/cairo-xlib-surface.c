@@ -1381,10 +1381,10 @@ _cairo_xlib_surface_set_attributes (cairo_xlib_surface_t	    *surface,
 
     switch (attributes->extend) {
     case CAIRO_EXTEND_NONE:
-	_cairo_xlib_surface_set_repeat (surface, 0);
+	_cairo_xlib_surface_set_repeat (surface, RepeatNone);
 	break;
     case CAIRO_EXTEND_REPEAT:
-	_cairo_xlib_surface_set_repeat (surface, 1);
+	_cairo_xlib_surface_set_repeat (surface, RepeatNormal);
 	break;
     case CAIRO_EXTEND_REFLECT:
     case CAIRO_EXTEND_PAD:
