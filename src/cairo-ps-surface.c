@@ -1571,8 +1571,12 @@ _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
     if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
 
-	if ( _cairo_surface_is_meta (surface_pattern->surface))
-	    return CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN;
+	if ( _cairo_surface_is_meta (surface_pattern->surface)) {
+	    if (cairo_pattern_get_extend (pattern) == CAIRO_EXTEND_PAD)
+		return CAIRO_INT_STATUS_UNSUPPORTED;
+	    else
+		return CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN;
+	}
     }
 
     if (op == CAIRO_OPERATOR_SOURCE)
