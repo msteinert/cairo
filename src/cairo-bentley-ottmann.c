@@ -220,7 +220,7 @@ _slope_compare (cairo_bo_edge_t *a,
 }
 
 /*
- * We need to compare the x-coordinate of a line for a particular y,
+ * We need to compare the x-coordinates of a pair of lines for a particular y,
  * without loss of precision.
  *
  * The x-coordinate along an edge for a given y is:
@@ -244,9 +244,9 @@ _slope_compare (cairo_bo_edge_t *a,
  * See the similar discussion for _slope_compare().
  */
 static int
-edges_compare_x_for_y (const cairo_bo_edge_t *a,
-		       const cairo_bo_edge_t *b,
-		       int32_t y)
+edges_compare_x_for_y_general (const cairo_bo_edge_t *a,
+			       const cairo_bo_edge_t *b,
+			       int32_t y)
 {
     /* XXX: We're assuming here that dx and dy will still fit in 32
      * bits. That's not true in general as there could be overflow. We
@@ -279,6 +279,98 @@ edges_compare_x_for_y (const cairo_bo_edge_t *a,
     if (_cairo_int128_gt (L, R))
 	return 1;
     return 0;
+}
+
+/*
+ * We need to compare the x-coordinate of a line for a particular y wrt to a
+ * given x, without loss of precision.
+ *
+ * The x-coordinate along an edge for a given y is:
+ *   X = A_x + (Y - A_y) * A_dx / A_dy
+ *
+ * So the inequality we wish to test is:
+ *   A_x + (Y - A_y) * A_dx / A_dy -?- X
+ * where -?- is our inequality operator.
+ *
+ * By construction, we know that A_dy (and (Y - A_y)) are
+ * all positive, so we can rearrange it thus without causing a sign change:
+ *   (Y - A_y) * A_dx -?- (X - A_x) * A_dy
+ *
+ * Given the assumption that all the deltas fit within 32 bits, we can compute
+ * this comparison directly using 64 bit arithmetic.
+ *
+ * See the similar discussion for _slope_compare() and
+ * edges_compare_x_for_y_general().
+ */
+static int
+edge_compare_for_y_against_x (const cairo_bo_edge_t *a,
+			      int32_t y,
+			      int32_t x)
+{
+    int32_t adx, ady;
+    int32_t dx, dy;
+    cairo_int64_t L, R;
+
+    adx = a->bottom.x - a->top.x;
+    ady = a->bottom.y - a->top.y;
+
+    dy = y - a->top.y;
+    dx = x - a->top.x;
+
+    L = _cairo_int32x32_64_mul (dy, adx);
+    R = _cairo_int32x32_64_mul (dx, ady);
+
+    /* return _cairo_int64_cmp (L, R); */
+    if (_cairo_int64_lt (L, R))
+	return -1;
+    if (_cairo_int64_gt (L, R))
+	return 1;
+    return 0;
+}
+
+static int
+edges_compare_x_for_y (const cairo_bo_edge_t *a,
+		       const cairo_bo_edge_t *b,
+		       int32_t y)
+{
+    /* If the sweep-line is currently on an end-point of a line,
+     * then we know its precise x value (and considering that we often need to
+     * compare events at end-points, this happens frequently enough to warrant
+     * special casing).
+     */
+    enum {
+       HAVE_NEITHER = 0x0,
+       HAVE_AX      = 0x1,
+       HAVE_BX      = 0x2,
+       HAVE_BOTH    = HAVE_AX | HAVE_BX
+    } have_ax_bx = HAVE_BOTH;
+    int32_t ax, bx;
+
+    if (y == a->top.y)
+	ax = a->top.x;
+    else if (y == a->bottom.y)
+	ax = a->bottom.x;
+    else
+	have_ax_bx &= ~HAVE_AX;
+
+    if (y == b->top.y)
+	bx = b->top.x;
+    else if (y == b->bottom.y)
+	bx = b->bottom.x;
+    else
+	have_ax_bx &= ~HAVE_BX;
+
+    switch (have_ax_bx) {
+    default:
+    case HAVE_NEITHER:
+	return edges_compare_x_for_y_general (a, b, y);
+    case HAVE_AX:
+	return - edge_compare_for_y_against_x (b, y, ax);
+    case HAVE_BX:
+	return edge_compare_for_y_against_x (a, y, bx);
+    case HAVE_BOTH:
+	return ax - bx;
+    }
 }
 
 static int
