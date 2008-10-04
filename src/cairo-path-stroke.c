@@ -872,48 +872,39 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 	segment.p2.x = _cairo_fixed_from_double (dx2) + p1->x;
 	segment.p2.y = _cairo_fixed_from_double (dy2) + p1->y;
 
-	if (fully_in_bounds ||
-	    _cairo_box_intersects_line_segment (&stroker->bounds, &segment))
+	if (stroker->dash_on &&
+	    (fully_in_bounds ||
+	     _cairo_box_intersects_line_segment (&stroker->bounds, &segment)))
 	{
-	    if (stroker->dash_on) {
-		status = _cairo_stroker_add_sub_edge (stroker, &segment.p1, &segment.p2, &dev_slope, slope_dx, slope_dy, &sub_start, &sub_end);
+	    status = _cairo_stroker_add_sub_edge (stroker, &segment.p1, &segment.p2, &dev_slope, slope_dx, slope_dy, &sub_start, &sub_end);
+	    if (status)
+		return status;
+
+	    if (stroker->has_current_face) {
+		/* Join with final face from previous segment */
+		status = _cairo_stroker_join (stroker, &stroker->current_face, &sub_start);
+		stroker->has_current_face = FALSE;
 		if (status)
 		    return status;
-
-		if (stroker->has_current_face) {
-		    /* Join with final face from previous segment */
-		    status = _cairo_stroker_join (stroker, &stroker->current_face, &sub_start);
-		    stroker->has_current_face = FALSE;
-		    if (status)
-			return status;
-		} else if (!stroker->has_first_face && stroker->dash_starts_on) {
-		    /* Save sub path's first face in case needed for closing join */
-		    stroker->first_face = sub_start;
-		    stroker->has_first_face = TRUE;
-		} else {
-		    /* Cap dash start if not connecting to a previous segment */
-		    status = _cairo_stroker_add_leading_cap (stroker, &sub_start);
-		    if (status)
-			return status;
-		}
-
-		if (remain) {
-		    /* Cap dash end if not at end of segment */
-		    status = _cairo_stroker_add_trailing_cap (stroker, &sub_end);
-		    if (status)
-			return status;
-		} else {
-		    stroker->current_face = sub_end;
-		    stroker->has_current_face = TRUE;
-		}
+	    } else if (!stroker->has_first_face && stroker->dash_starts_on) {
+		/* Save sub path's first face in case needed for closing join */
+		stroker->first_face = sub_start;
+		stroker->has_first_face = TRUE;
 	    } else {
-		if (stroker->has_current_face) {
-		    /* Cap final face from previous segment */
-		    status = _cairo_stroker_add_trailing_cap (stroker, &stroker->current_face);
-		    if (status)
-			return status;
-		    stroker->has_current_face = FALSE;
-		}
+		/* Cap dash start if not connecting to a previous segment */
+		status = _cairo_stroker_add_leading_cap (stroker, &sub_start);
+		if (status)
+		    return status;
+	    }
+
+	    if (remain) {
+		/* Cap dash end if not at end of segment */
+		status = _cairo_stroker_add_trailing_cap (stroker, &sub_end);
+		if (status)
+		    return status;
+	    } else {
+		stroker->current_face = sub_end;
+		stroker->has_current_face = TRUE;
 	    }
 	} else {
 	    if (stroker->has_current_face) {
