@@ -378,7 +378,7 @@ const cairo_scaled_font_backend_t _cairo_user_scaled_font_backend = {
     _cairo_user_ucs4_to_index,
     NULL,	/* show_glyphs */
     NULL,	/* load_truetype_table */
-    NULL,	/* map_glyphs_to_unicode */
+    NULL	/* index_to_ucs4 */
 };
 
 /* #cairo_user_font_face_t */
