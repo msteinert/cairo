@@ -197,11 +197,21 @@ _slope_compare (cairo_bo_edge_t *a,
     int32_t bdx = b->bottom.x - b->top.x;
 
     /* Since the dy's are all positive by construction we can fast
-     * path the case where the two edges point in different directions
-     * with respect to x. */
-    if ((adx ^ bdx) < 0) {
-	return adx < 0 ? -1 : +1;
-    } else {
+     * path several common cases.
+     */
+
+    /* First check for vertical lines. */
+    if (adx == 0)
+	return -bdx;
+    if (bdx == 0)
+	return adx;
+
+    /* Then where the two edges point in different directions wrt x. */
+    if ((adx ^ bdx) < 0)
+	return adx;
+
+    /* Finally we actually need to do the general comparison. */
+    {
 	int32_t ady = a->bottom.y - a->top.y;
 	int32_t bdy = b->bottom.y - b->top.y;
 	cairo_int64_t adx_bdy = _cairo_int32x32_64_mul (adx, bdy);
@@ -228,7 +238,9 @@ _slope_compare (cairo_bo_edge_t *a,
  *                                 - (Y - A_y) * A_dx * B_dy
  *
  * Given the assumption that all the deltas fit within 32 bits, we can compute
- * this comparison directly using 128 bit arithmetic.
+ * this comparison directly using 128 bit arithmetic. For certain, but common,
+ * input we can reduce this down to a single 32 bit compare by inspecting the
+ * deltas.
  *
  * (And put the burden of the work on developing fast 128 bit ops, which are
  * required throughout the tessellator.)
@@ -245,32 +257,95 @@ edges_compare_x_for_y_general (const cairo_bo_edge_t *a,
      * should prevent that before the tessellation algorithm
      * begins.
      */
+    int32_t dx;
     int32_t adx, ady;
     int32_t bdx, bdy;
-    cairo_int128_t L, R;
+    enum {
+       HAVE_NONE    = 0x0,
+       HAVE_DX      = 0x1,
+       HAVE_ADX     = 0x2,
+       HAVE_DX_ADX  = HAVE_DX | HAVE_ADX,
+       HAVE_BDX     = 0x4,
+       HAVE_DX_BDX  = HAVE_DX | HAVE_BDX,
+       HAVE_ADX_BDX = HAVE_ADX | HAVE_BDX,
+       HAVE_ALL     = HAVE_DX | HAVE_ADX | HAVE_BDX
+    } have_dx_adx_bdx = HAVE_ALL;
 
-    adx = a->bottom.x - a->top.x;
     ady = a->bottom.y - a->top.y;
+    adx = a->bottom.x - a->top.x;
+    if (adx == 0)
+	have_dx_adx_bdx &= ~HAVE_ADX;
 
-    bdx = b->bottom.x - b->top.x;
     bdy = b->bottom.y - b->top.y;
+    bdx = b->bottom.x - b->top.x;
+    if (bdx == 0)
+	have_dx_adx_bdx &= ~HAVE_BDX;
 
-    L = _cairo_int64x32_128_mul (_cairo_int32x32_64_mul (ady, bdy),
-				 a->top.x - b->top.x);
+    dx = a->top.x - b->top.x;
+    if (dx == 0)
+	have_dx_adx_bdx &= ~HAVE_DX;
 
-    R = _cairo_int128_sub (_cairo_int64x32_128_mul (_cairo_int32x32_64_mul (bdx,
-									    ady),
-						    y - b->top.y),
-			   _cairo_int64x32_128_mul (_cairo_int32x32_64_mul (adx,
-									    bdy),
-						    y - a->top.y));
+#define L _cairo_int64x32_128_mul (_cairo_int32x32_64_mul (ady, bdy), dx)
+#define A _cairo_int64x32_128_mul (_cairo_int32x32_64_mul (adx, bdy), y - a->top.y)
+#define B _cairo_int64x32_128_mul (_cairo_int32x32_64_mul (bdx, ady), y - b->top.y)
+    switch (have_dx_adx_bdx) {
+    default:
+    case HAVE_NONE:
+	return 0;
+    case HAVE_DX:
+	/* A_dy * B_dy * (A_x - B_x) -?- 0 */
+	return dx; /* ady * bdy is positive definite */
+    case HAVE_ADX:
+	/* 0 -?-  - (Y - A_y) * A_dx * B_dy */
+	return adx; /* bdy * (y - a->top.y) is positive definite */
+    case HAVE_BDX:
+	/* 0 -?- (Y - B_y) * B_dx * A_dy */
+	return -bdx; /* ady * (y - b->top.y) is positive definite */
+    case HAVE_ADX_BDX:
+	/*  0 -?- (Y - B_y) * B_dx * A_dy - (Y - A_y) * A_dx * B_dy */
+	if ((adx ^ bdx) < 0) {
+	    return adx;
+	} else if (a->top.y == b->top.y) { /* common origin */
+	    cairo_int64_t adx_bdy, bdx_ady;
 
-    /* return _cairo_int128_cmp (L, R); */
-    if (_cairo_int128_lt (L, R))
-	return -1;
-    if (_cairo_int128_gt (L, R))
-	return 1;
-    return 0;
+	    /* => A_dx * B_dy -?- B_dx * A_dy */
+
+	    adx_bdy = _cairo_int32x32_64_mul (adx, bdy);
+	    bdx_ady = _cairo_int32x32_64_mul (bdx, ady);
+
+	    return _cairo_int64_cmp (adx_bdy, bdx_ady);
+	} else
+	    return _cairo_int128_cmp (A, B);
+    case HAVE_DX_ADX:
+	/* A_dy * (A_x - B_x) -?- - (Y - A_y) * A_dx */
+	if ((-adx ^ dx) < 0) {
+	    return dx;
+	} else {
+	    cairo_int64_t ady_dx, dy_adx;
+
+	    ady_dx = _cairo_int32x32_64_mul (ady, dx);
+	    dy_adx = _cairo_int32x32_64_mul (a->top.y - y, adx);
+
+	    return _cairo_int64_cmp (ady_dx, dy_adx);
+	}
+    case HAVE_DX_BDX:
+	/* B_dy * (A_x - B_x) -?- (Y - B_y) * B_dx */
+	if ((bdx ^ dx) < 0) {
+	    return dx;
+	} else {
+	    cairo_int64_t bdy_dx, dy_bdx;
+
+	    bdy_dx = _cairo_int32x32_64_mul (bdy, dx);
+	    dy_bdx = _cairo_int32x32_64_mul (y - b->top.y, bdx);
+
+	    return _cairo_int64_cmp (bdy_dx, dy_bdx);
+	}
+    case HAVE_ALL:
+	return _cairo_int128_cmp (L, _cairo_int128_sub (B, A));
+    }
+#undef B
+#undef A
+#undef L
 }
 
 /*
@@ -304,10 +379,15 @@ edge_compare_for_y_against_x (const cairo_bo_edge_t *a,
     cairo_int64_t L, R;
 
     adx = a->bottom.x - a->top.x;
-    ady = a->bottom.y - a->top.y;
+    dx = x - a->top.x;
+
+    if (adx == 0)
+	return -dx;
+    if ((adx ^ dx) < 0)
+	return adx;
 
     dy = y - a->top.y;
-    dx = x - a->top.x;
+    ady = a->bottom.y - a->top.y;
 
     L = _cairo_int32x32_64_mul (dy, adx);
     R = _cairo_int32x32_64_mul (dx, ady);
@@ -352,7 +432,7 @@ edges_compare_x_for_y (const cairo_bo_edge_t *a,
     case HAVE_NEITHER:
 	return edges_compare_x_for_y_general (a, b, y);
     case HAVE_AX:
-	return - edge_compare_for_y_against_x (b, y, ax);
+	return -edge_compare_for_y_against_x (b, y, ax);
     case HAVE_BX:
 	return edge_compare_for_y_against_x (a, y, bx);
     case HAVE_BOTH:
