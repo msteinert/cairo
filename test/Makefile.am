@@ -925,6 +925,18 @@ $(REFERENCE_IMAGES)
 #                         manipulation for SVG
 # extend-pad            - lacks implementation in pixman and consequently used
 #                         as an excuse for lack of support in other backends
+# fallback-resolution   - The essential problem here is that the meta-surface
+#                         has recorded a sequence of operations with one device
+#                         transformation, and we attempt to replay it with
+#                         another (basically a scale-factor for the falback
+#                         resolution). Carl begun to look at this with his
+#                         chain-of-bugs, but the can of worms is much bigger.
+#                         It appears to be a design flaw in the meta-surface
+#                         that may spread further...
+#                         My solution would be to lock Behad and Adrian in a
+#                         room, with Carl as a moderator and not let them out
+#                         until they have come up with an interface and
+#                         semantics that actually work. :-)
 # long-lines            - range overflow of fixed-point
 # self-copy-overlap     - vector surfaces take snapshot of patterns in contrast
 #                         to the raster backends which don't. One solution
@@ -947,6 +959,7 @@ big-trap$(EXEEXT)				\
 degenerate-path$(EXEEXT)			\
 device-offset-scale$(EXEEXT)			\
 extend-pad$(EXEEXT)				\
+fallback-resolution$(EXEEXT)			\
 long-lines$(EXEEXT)				\
 self-copy-overlap$(EXEEXT)			\
 self-intersecting$(EXEEXT)			\
