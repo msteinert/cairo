@@ -201,21 +201,13 @@ _slope_compare (cairo_bo_edge_t *a,
      * with respect to x. */
     if ((adx ^ bdx) < 0) {
 	return adx < 0 ? -1 : +1;
-    }
-    else {
+    } else {
 	int32_t ady = a->bottom.y - a->top.y;
 	int32_t bdy = b->bottom.y - b->top.y;
 	int64_t adx_bdy = _cairo_int32x32_64_mul (adx, bdy);
 	int64_t bdx_ady = _cairo_int32x32_64_mul (bdx, ady);
 
-	/* if (adx * bdy > bdx * ady) */
-	if (_cairo_int64_gt (adx_bdy, bdx_ady))
-	    return 1;
-
-	/* if (adx * bdy < bdx * ady) */
-	if (_cairo_int64_lt (adx_bdy, bdx_ady))
-	    return -1;
-	return 0;
+	return _cairo_int64_cmp (adx_bdy, bdx_ady);
     }
 }
 
@@ -320,12 +312,7 @@ edge_compare_for_y_against_x (const cairo_bo_edge_t *a,
     L = _cairo_int32x32_64_mul (dy, adx);
     R = _cairo_int32x32_64_mul (dx, ady);
 
-    /* return _cairo_int64_cmp (L, R); */
-    if (_cairo_int64_lt (L, R))
-	return -1;
-    if (_cairo_int64_gt (L, R))
-	return 1;
-    return 0;
+    return _cairo_int64_cmp (L, R);
 }
 
 static int
