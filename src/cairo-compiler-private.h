@@ -111,6 +111,12 @@
 # define CAIRO_FUNCTION_ALIAS(old, new)
 #endif
 
+#if __GNUC__ >= 3
+#define cairo_pure __attribute__((pure))
+#else
+#define cairo_pure
+#endif
+
 #ifndef __GNUC__
 #undef __attribute__
 #define __attribute__(x)

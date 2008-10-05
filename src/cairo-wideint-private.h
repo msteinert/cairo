@@ -47,7 +47,7 @@
  * as a pair of 32-bit ints
  */
 
-#define I cairo_private
+#define I cairo_private cairo_pure
 
 #if !HAVE_UINT64_T
 
