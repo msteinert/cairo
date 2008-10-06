@@ -1663,11 +1663,10 @@ _cairo_pattern_is_opaque (const cairo_pattern_t *abstract_pattern)
 }
 
 /**
- * _cairo_pattern_analyze_filter
+ * _cairo_pattern_analyze_filter:
  * @pattern: surface pattern
  * @pad_out: location to store necessary padding in the source image, or %NULL
- *
- * Returns the optimized #cairo_filter_t to use with @pattern.
+ * Returns: the optimized #cairo_filter_t to use with @pattern.
  *
  * Analyze the filter to determine how much extra needs to be sampled
  * from the source image to account for the filter radius and whether
