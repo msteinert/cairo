@@ -113,8 +113,10 @@
 
 #if __GNUC__ >= 3
 #define cairo_pure __attribute__((pure))
+#define cairo_const __attribute__((const))
 #else
 #define cairo_pure
+#define cairo_const
 #endif
 
 #ifndef __GNUC__
