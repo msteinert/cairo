@@ -173,6 +173,7 @@ transforms$(EXEEXT)					\
 translate-show-surface$(EXEEXT)				\
 trap-clip$(EXEEXT)					\
 truetype-tables$(EXEEXT)				\
+twin$(EXEEXT)						\
 unantialiased-shapes$(EXEEXT)				\
 unbounded-operator$(EXEEXT)				\
 user-data$(EXEEXT)					\
@@ -868,6 +869,9 @@ REFERENCE_IMAGES = \
 	trap-clip-rgb24-ref.png	\
 	trap-clip-pdf-argb32-ref.png \
 	trap-clip-pdf-rgb24-ref.png \
+	twin-ref.png \
+	twin-ps2-ref.png \
+	twin-ps3-ref.png \
 	unantialiased-shapes-ref.png	\
 	unantialiased-shapes-quartz-ref.png \
 	unbounded-operator-ref.png	\
