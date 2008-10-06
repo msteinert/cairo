@@ -8,6 +8,8 @@
 #		make snapshot
 
 
+TAR_OPTIONS = --owner=0 --group=0
+
 dist-hook: dist-clear-sticky-bits
 
 # Clean up any sticky bits we may inherit from parent dir
@@ -18,7 +20,7 @@ dist-clear-sticky-bits:
 snapshot:
 	distdir="$(distdir)-`date '+%Y%m%d'`"; \
 	test -d "$(srcdir)/.git" && distdir=$$distdir-`cd "$(srcdir)" && git-rev-parse HEAD | cut -c 1-6`; \
-	$(MAKE) $(AM_MAKEFLAGS) distdir="$$distdir" dist
+	TAR_OPTIONS="$(TAR_OPTIONS)" $(MAKE) $(AM_MAKEFLAGS) distdir="$$distdir" dist
 
 RELEASE_OR_SNAPSHOT = $$(if test "x$(CAIRO_VERSION_MINOR)" = "x$$(echo "$(CAIRO_VERSION_MINOR)/2*2" | bc)" ; then echo release; else echo snapshot; fi)
 RELEASE_UPLOAD_HOST =   cairographics.org
@@ -83,7 +85,7 @@ release-check: \
 	release-verify-newer \
 	$(NULL)
 	$(MAKE) $(AM_MAKEFLAGS) release-remove-old
-	$(MAKE) $(AM_MAKEFLAGS) distcheck
+	TAR_OPTIONS="$(TAR_OPTIONS)" $(MAKE) $(AM_MAKEFLAGS) distcheck
 
 release-upload: $(tar_file) $(sha1_file) $(gpg_file)
 	mkdir -p releases
