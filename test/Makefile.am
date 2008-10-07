@@ -25,6 +25,7 @@ clip-push-group$(EXEEXT)				\
 clip-twice$(EXEEXT)					\
 clip-zero$(EXEEXT)					\
 clipped-group$(EXEEXT)					\
+clipped-surface$(EXEEXT)				\
 close-path$(EXEEXT)					\
 composite-integer-translate-source$(EXEEXT)		\
 composite-integer-translate-over$(EXEEXT)		\
@@ -346,6 +347,7 @@ REFERENCE_IMAGES = \
 	clipped-group-ref.png	\
 	clipped-group-ps2-ref.png	\
 	clipped-group-ps3-ref.png	\
+	clipped-surface-ref.png	\
 	close-path-ref.png	\
 	close-path-ps2-ref.png	\
 	close-path-ps3-ref.png	\

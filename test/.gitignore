@@ -31,6 +31,7 @@ clip-push-group
 clip-twice
 clip-zero
 clipped-group
+clipped-surface
 close-path
 composite-integer-translate-over
 composite-integer-translate-over-repeat
