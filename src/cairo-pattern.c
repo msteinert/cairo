@@ -1890,10 +1890,20 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 					       extents.width, extents.height,
 					       &x, &y, out);
 	if (status == CAIRO_STATUS_SUCCESS && (x != 0 || y != 0)) {
-	    cairo_matrix_t m;
+	    if (_cairo_matrix_is_identity (&attr->matrix)) {
+		attr->x_offset -= x;
+		attr->y_offset -= y;
+	    } else {
+		cairo_matrix_t m;
 
-	    cairo_matrix_init_translate (&m, -x, -y);
-	    cairo_matrix_multiply (&attr->matrix, &attr->matrix, &m);
+		x -= attr->x_offset;
+		y -= attr->y_offset;
+		attr->x_offset = 0;
+		attr->y_offset = 0;
+
+		cairo_matrix_init_translate (&m, -x, -y);
+		cairo_matrix_multiply (&attr->matrix, &attr->matrix, &m);
+	    }
 	}
     }
 
