@@ -1741,12 +1741,18 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 	status = _cairo_xlib_surface_ensure_gc (dst);
 	if (status)
 	    goto BAIL;
+
+	is_integer_translation = _cairo_matrix_is_integer_translation (&src_attr.matrix,
+								       &itx, &ity);
+	/* This is a pre-condition for DO_XCOPYAREA. */
+	assert (is_integer_translation);
+
 	XCopyArea (dst->dpy,
 		   src->drawable,
 		   dst->drawable,
 		   dst->gc,
-		   src_x + src_attr.x_offset,
-		   src_y + src_attr.y_offset,
+		   src_x + src_attr.x_offset + itx,
+		   src_y + src_attr.y_offset + ity,
 		   width, height,
 		   dst_x, dst_y);
 	break;
