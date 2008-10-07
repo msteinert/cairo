@@ -704,11 +704,60 @@ intersect_lines (cairo_bo_edge_t		*a,
     int32_t dx2 = b->top.x - b->bottom.x;
     int32_t dy2 = b->top.y - b->bottom.y;
 
-    cairo_int64_t den_det = det32_64 (dx1, dy1, dx2, dy2);
+    cairo_int64_t den_det;
+    cairo_int64_t R;
     cairo_quorem64_t qr;
 
+    den_det = det32_64 (dx1, dy1, dx2, dy2);
     if (_cairo_int64_is_zero (den_det))
 	return CAIRO_BO_STATUS_PARALLEL;
+
+     /* Q: Can we determine that the lines do not intersect (within range)
+      * much more cheaply than computing the intersection point i.e. by
+      * avoiding the division?
+      *
+      *   X = ax + t * adx = bx + s * bdx;
+      *   Y = ay + t * ady = by + s * bdy;
+      *   => t * (ady*bdx - bdy*adx) = bdx * (by - ay) + bdy * (ax - bx)
+      *   => t * L = R
+      *
+      * Therefore we can reject any intersection (under the criteria for
+      * valid intersection events) if:
+      *   L^R < 0 => t < 0
+      *   L<R => t > 1
+      *
+      * (where top/bottom must at least extend to the line endpoints).
+      *
+      * A similar substitution can be performed for s, yielding:
+      *   s * (ady*bdx - bdy*adx) = ady * (ax - bx) - adx * (ay - by)
+      */
+    R = det32_64 (dx2, dy2, b->top.x - a->top.x, b->top.y - a->top.y);
+    if (_cairo_int64_is_zero (R))
+	return CAIRO_BO_STATUS_NO_INTERSECTION;
+    if (_cairo_int64_negative (den_det) ^ _cairo_int64_negative (R))
+	return CAIRO_BO_STATUS_NO_INTERSECTION;
+    if (_cairo_int64_negative (den_det)) {
+	if (_cairo_int64_ge (den_det, R))
+	    return CAIRO_BO_STATUS_NO_INTERSECTION;
+    } else {
+	if (_cairo_int64_le (den_det, R))
+	    return CAIRO_BO_STATUS_NO_INTERSECTION;
+    }
+
+    R = det32_64 (dy1, dx1, a->top.y - b->top.y, a->top.x - b->top.x);
+    if (_cairo_int64_is_zero (R))
+	return CAIRO_BO_STATUS_NO_INTERSECTION;
+    if (_cairo_int64_negative (den_det) ^ _cairo_int64_negative (R))
+	return CAIRO_BO_STATUS_NO_INTERSECTION;
+    if (_cairo_int64_negative (den_det)) {
+	if (_cairo_int64_ge (den_det, R))
+	    return CAIRO_BO_STATUS_NO_INTERSECTION;
+    } else {
+	if (_cairo_int64_le (den_det, R))
+	    return CAIRO_BO_STATUS_NO_INTERSECTION;
+    }
+
+    /* We now know that the two lines should intersect within range. */
 
     a_det = det32_64 (a->top.x, a->top.y,
 		      a->bottom.x, a->bottom.y);
