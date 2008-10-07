@@ -584,17 +584,17 @@ det32_64 (int32_t a,
 }
 
 static inline cairo_int128_t
-det64_128 (cairo_int64_t a,
-	   cairo_int64_t b,
-	   cairo_int64_t c,
-	   cairo_int64_t d)
+det64x32_128 (cairo_int64_t a,
+	      int32_t       b,
+	      cairo_int64_t c,
+	      int32_t       d)
 {
     cairo_int128_t ad;
     cairo_int128_t bc;
 
     /* det = a * d - b * c */
-    ad = _cairo_int64x64_128_mul (a, d);
-    bc = _cairo_int64x64_128_mul (b, c);
+    ad = _cairo_int64x32_128_mul (a, d);
+    bc = _cairo_int64x32_128_mul (c, b);
 
     return _cairo_int128_sub (ad, bc);
 }
@@ -636,8 +636,8 @@ intersect_lines (cairo_bo_edge_t		*a,
 		      b->bottom.x, b->bottom.y);
 
     /* x = det (a_det, dx1, b_det, dx2) / den_det */
-    qr = _cairo_int_96by64_32x64_divrem (det64_128 (a_det, dx1,
-						    b_det, dx2),
+    qr = _cairo_int_96by64_32x64_divrem (det64x32_128 (a_det, dx1,
+						       b_det, dx2),
 					 den_det);
     if (_cairo_int64_eq (qr.rem, den_det))
 	return CAIRO_BO_STATUS_NO_INTERSECTION;
@@ -645,8 +645,8 @@ intersect_lines (cairo_bo_edge_t		*a,
     intersection->x.exactness = qr.rem ? INEXACT : EXACT;
 
     /* y = det (a_det, dy1, b_det, dy2) / den_det */
-    qr = _cairo_int_96by64_32x64_divrem (det64_128 (a_det, dy1,
-						    b_det, dy2),
+    qr = _cairo_int_96by64_32x64_divrem (det64x32_128 (a_det, dy1,
+						       b_det, dy2),
 					 den_det);
     if (_cairo_int64_eq (qr.rem, den_det))
 	return CAIRO_BO_STATUS_NO_INTERSECTION;
