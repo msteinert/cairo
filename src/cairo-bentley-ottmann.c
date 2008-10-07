@@ -38,6 +38,7 @@
 
 #include "cairo-skiplist-private.h"
 #include "cairo-freelist-private.h"
+#include "cairo-combsort-private.h"
 
 #define DEBUG_VALIDATE 0
 #define DEBUG_PRINT_STATE 0
@@ -630,21 +631,18 @@ cairo_bo_event_compare_abstract (void		*list,
 }
 
 static int
-cairo_bo_event_compare_pointers (void const *voida,
-				 void const *voidb)
+cairo_bo_event_compare_pointers (const cairo_bo_event_t *a,
+				 const cairo_bo_event_t *b)
 {
-    cairo_bo_event_t const * const *a = voida;
-    cairo_bo_event_t const * const *b = voidb;
-    if (*a != *b) {
-	int cmp = cairo_bo_event_compare (*a, *b);
-	if (cmp)
-	    return cmp;
-	if (*a < *b)
-	    return -1;
-	if (*a > *b)
-	    return +1;
-    }
-    return 0;
+    int cmp;
+
+    if (a == b)
+	return 0;
+    cmp = cairo_bo_event_compare (a, b);
+    if (cmp)
+	return cmp;
+
+    return a - b;
 }
 
 static inline cairo_int64_t
@@ -957,6 +955,10 @@ _cairo_bo_event_dequeue (cairo_bo_event_queue_t *event_queue)
     return intersection;
 }
 
+CAIRO_COMBSORT_DECLARE (_cairo_bo_event_queue_sort,
+			cairo_bo_event_t *,
+			cairo_bo_event_compare_pointers)
+
 static cairo_status_t
 _cairo_bo_event_queue_init (cairo_bo_event_queue_t	*event_queue,
 			    cairo_bo_edge_t	*edges,
@@ -989,8 +991,8 @@ _cairo_bo_event_queue_init (cairo_bo_event_queue_t	*event_queue,
     event_queue->next_startstop_event_index = 0;
 
     for (i = 0; i < num_edges; i++) {
-	sorted_event_ptrs[2*i] = &events[2*i];
-	sorted_event_ptrs[2*i+1] = &events[2*i+1];
+	sorted_event_ptrs[i] = &events[2*i];
+	sorted_event_ptrs[i+num_edges] = &events[2*i+1];
 
 	/* Initialize "middle" to top */
 	edges[i].middle = edges[i].top;
@@ -1006,9 +1008,8 @@ _cairo_bo_event_queue_init (cairo_bo_event_queue_t	*event_queue,
 			      edges[i].bottom);
     }
 
-    qsort (sorted_event_ptrs, num_events,
-	   sizeof(cairo_bo_event_t *),
-	   cairo_bo_event_compare_pointers);
+    _cairo_bo_event_queue_sort (sorted_event_ptrs, num_events);
+
     return CAIRO_STATUS_SUCCESS;
 }
 
