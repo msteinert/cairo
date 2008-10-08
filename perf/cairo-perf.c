@@ -456,5 +456,6 @@ const cairo_perf_case_t perf_cases[] = {
     { rectangles, 512, 512},
     { rounded_rectangles, 512, 512},
     { long_dashed_lines, 512, 512},
+    { composite_checker, 16, 512},
     { NULL }
 };

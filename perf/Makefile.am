@@ -17,6 +17,7 @@ cairo_perf_SOURCES =		\
 	cairo-stats.c		\
 	cairo-stats.h		\
 	box-outline.c		\
+	composite-checker.c	\
 	fill.c			\
 	long-lines.c		\
 	mosaic.c		\

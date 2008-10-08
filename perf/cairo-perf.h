@@ -112,5 +112,6 @@ CAIRO_PERF_DECL (unaligned_clip);
 CAIRO_PERF_DECL (rectangles);
 CAIRO_PERF_DECL (rounded_rectangles);
 CAIRO_PERF_DECL (long_dashed_lines);
+CAIRO_PERF_DECL (composite_checker);
 
 #endif
