@@ -42,6 +42,7 @@ dash-scale$(EXEEXT)					\
 dash-state$(EXEEXT)					\
 dash-zero-length$(EXEEXT)				\
 degenerate-arc$(EXEEXT)					\
+degenerate-dash$(EXEEXT)				\
 degenerate-path$(EXEEXT)				\
 degenerate-pen$(EXEEXT)					\
 device-offset$(EXEEXT)					\
@@ -395,6 +396,7 @@ REFERENCE_IMAGES = \
 	degenerate-arc-ref.png		\
 	degenerate-arc-ps2-ref.png	\
 	degenerate-arc-ps3-ref.png	\
+	degenerate-dash-ref.png		\
 	degenerate-pen-ref.png		\
 	degenerate-pen-ps2-ref.png	\
 	degenerate-pen-ps3-ref.png	\

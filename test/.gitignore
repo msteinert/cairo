@@ -52,6 +52,7 @@ dash-scale
 dash-state
 dash-zero-length
 degenerate-arc
+degenerate-dash
 degenerate-path
 degenerate-pen
 device-offset
