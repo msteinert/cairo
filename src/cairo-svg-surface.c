@@ -2022,11 +2022,8 @@ _cairo_svg_surface_paint (void		    *abstract_surface,
      * above always return FALSE. In order to make it work, we need a way
      * to know if there's an active clipping path.
      * Optimization of CLEAR works because of a test in paginated surface,
-     * and an optimiszation in meta surface. */
-    if (surface->clip_level == 0 &&
-	(op == CAIRO_OPERATOR_CLEAR ||
-	 op == CAIRO_OPERATOR_SOURCE))
-    {
+     * and an optimization in meta surface. */
+    if (surface->clip_level == 0 && op == CAIRO_OPERATOR_CLEAR) {
 	status = _cairo_output_stream_destroy (surface->xml_node);
 	if (status) {
 	    surface->xml_node = NULL;
@@ -2054,7 +2051,8 @@ _cairo_svg_surface_paint (void		    *abstract_surface,
 	}
     }
 
-    return _cairo_svg_surface_emit_paint (surface->xml_node, surface, op, source, 0, NULL);
+    return _cairo_svg_surface_emit_paint (surface->xml_node,
+					  surface, op, source, 0, NULL);
 }
 
 static cairo_int_status_t
@@ -2551,15 +2549,33 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
 }
 
 static void
-_cairo_svg_surface_set_paginated_mode (void 		      	*abstract_surface,
-				       cairo_paginated_mode_t 	 paginated_mode)
+_cairo_svg_surface_set_paginated_mode (void			*abstract_surface,
+				       cairo_paginated_mode_t	 paginated_mode)
 {
     cairo_svg_surface_t *surface = abstract_surface;
 
     surface->paginated_mode = paginated_mode;
 }
 
+static cairo_bool_t
+_cairo_svg_surface_supports_fine_grained_fallbacks (void	*abstract_surface)
+{
+    cairo_svg_surface_t *surface = abstract_surface;
+    cairo_int_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (surface->document->svg_version >= CAIRO_SVG_VERSION_1_2) {
+	status =  _cairo_svg_surface_analyze_operator (surface,
+						       CAIRO_OPERATOR_SOURCE);
+    }
+
+    return status == CAIRO_STATUS_SUCCESS;
+}
+
 static const cairo_paginated_surface_backend_t cairo_svg_surface_paginated_backend = {
     NULL /*_cairo_svg_surface_start_page*/,
-    _cairo_svg_surface_set_paginated_mode
+    _cairo_svg_surface_set_paginated_mode,
+    NULL, /* _cairo_svg_surface_set_bounding_box */
+    NULL, /* _cairo_svg_surface_set_fallback_images_required */
+    _cairo_svg_surface_supports_fine_grained_fallbacks,
+
 };

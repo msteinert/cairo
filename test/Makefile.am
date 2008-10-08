@@ -478,9 +478,9 @@ REFERENCE_IMAGES = \
 	filter-nearest-offset-svg12-ref.png	\
 	finer-grained-fallbacks-ref.png			\
 	finer-grained-fallbacks-rgb24-ref.png		\
-	finer-grained-fallbacks-ps2-argb32-ref.png	\
-	finer-grained-fallbacks-ps3-argb32-ref.png	\
+	finer-grained-fallbacks-ps2-ref.png	\
 	finer-grained-fallbacks-ps2-rgb24-ref.png	\
+	finer-grained-fallbacks-ps3-ref.png	\
 	finer-grained-fallbacks-ps3-rgb24-ref.png	\
 	font-matrix-translation-ps2-argb32-ref.png	\
 	font-matrix-translation-ps3-argb32-ref.png	\

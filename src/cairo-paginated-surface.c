@@ -329,36 +329,23 @@ _paint_page (cairo_paginated_surface_t *surface)
 
     /* Finer grained fallbacks are currently only supported for some
      * surface types */
-    switch (surface->target->type) {
-        case CAIRO_SURFACE_TYPE_PDF:
-        case CAIRO_SURFACE_TYPE_PS:
-        case CAIRO_SURFACE_TYPE_WIN32_PRINTING:
-            has_supported = _cairo_analysis_surface_has_supported (analysis);
-            has_page_fallback = FALSE;
-            has_finegrained_fallback = _cairo_analysis_surface_has_unsupported (analysis);
-            break;
-
-	case CAIRO_SURFACE_TYPE_IMAGE:
-	case CAIRO_SURFACE_TYPE_XLIB:
-	case CAIRO_SURFACE_TYPE_XCB:
-	case CAIRO_SURFACE_TYPE_GLITZ:
-	case CAIRO_SURFACE_TYPE_QUARTZ:
-	case CAIRO_SURFACE_TYPE_QUARTZ_IMAGE:
-	case CAIRO_SURFACE_TYPE_WIN32:
-	case CAIRO_SURFACE_TYPE_BEOS:
-	case CAIRO_SURFACE_TYPE_DIRECTFB:
-	case CAIRO_SURFACE_TYPE_SVG:
-	case CAIRO_SURFACE_TYPE_OS2:
-        default:
-            if (_cairo_analysis_surface_has_unsupported (analysis)) {
-                has_supported = FALSE;
-                has_page_fallback = TRUE;
-            } else {
-                has_supported = TRUE;
-                has_page_fallback = FALSE;
-            }
-            has_finegrained_fallback = FALSE;
-            break;
+    if (surface->backend->supports_fine_grained_fallbacks != NULL &&
+	surface->backend->supports_fine_grained_fallbacks (surface->target))
+    {
+	has_supported = _cairo_analysis_surface_has_supported (analysis);
+	has_page_fallback = FALSE;
+	has_finegrained_fallback = _cairo_analysis_surface_has_unsupported (analysis);
+    }
+    else
+    {
+	if (_cairo_analysis_surface_has_unsupported (analysis)) {
+	    has_supported = FALSE;
+	    has_page_fallback = TRUE;
+	} else {
+	    has_supported = TRUE;
+	    has_page_fallback = FALSE;
+	}
+	has_finegrained_fallback = FALSE;
     }
 
     if (has_supported) {

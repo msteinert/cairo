@@ -1277,8 +1277,8 @@ _cairo_pdf_surface_start_page (void *abstract_surface)
 }
 
 static cairo_int_status_t
-_cairo_pdf_surface_has_fallback_images (void 		*abstract_surface,
-					cairo_bool_t 	 has_fallbacks)
+_cairo_pdf_surface_has_fallback_images (void		*abstract_surface,
+					cairo_bool_t	 has_fallbacks)
 {
     cairo_status_t status;
     cairo_pdf_surface_t *surface = abstract_surface;
@@ -1289,6 +1289,12 @@ _cairo_pdf_surface_has_fallback_images (void 		*abstract_surface,
 	return status;
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_bool_t
+_cairo_pdf_surface_supports_fine_grained_fallbacks (void *abstract_surface)
+{
+    return TRUE;
 }
 
 /* Emit alpha channel from the image into the given data, providing
@@ -4981,9 +4987,11 @@ static const cairo_surface_backend_t cairo_pdf_surface_backend = {
     _cairo_pdf_surface_show_text_glyphs,
 };
 
-static const cairo_paginated_surface_backend_t cairo_pdf_surface_paginated_backend = {
+static const cairo_paginated_surface_backend_t
+cairo_pdf_surface_paginated_backend = {
     _cairo_pdf_surface_start_page,
     _cairo_pdf_surface_set_paginated_mode,
     NULL, /* set_bounding_box */
     _cairo_pdf_surface_has_fallback_images,
+    _cairo_pdf_surface_supports_fine_grained_fallbacks,
 };

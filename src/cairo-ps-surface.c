@@ -3284,6 +3284,12 @@ _cairo_ps_surface_set_bounding_box (void		*abstract_surface,
     return _cairo_output_stream_get_status (surface->stream);
 }
 
+static cairo_bool_t
+_cairo_ps_surface_supports_fine_grained_fallbacks (void	    *abstract_surface)
+{
+    return TRUE;
+}
+
 static const cairo_surface_backend_t cairo_ps_surface_backend = {
     CAIRO_SURFACE_TYPE_PS,
     _cairo_ps_surface_create_similar,
@@ -3322,4 +3328,6 @@ static const cairo_paginated_surface_backend_t cairo_ps_surface_paginated_backen
     _cairo_ps_surface_start_page,
     _cairo_ps_surface_set_paginated_mode,
     _cairo_ps_surface_set_bounding_box,
+    NULL, /* _cairo_ps_surface_has_fallback_images, */
+    _cairo_ps_surface_supports_fine_grained_fallbacks,
 };
