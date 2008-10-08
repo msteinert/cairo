@@ -51,7 +51,7 @@
 #endif
 
 #ifndef cairo_public
-# if _MSC_VER && !CAIRO_WIN32_STATIC_BUILD
+# if defined (_MSC_VER) && ! defined (CAIRO_WIN32_STATIC_BUILD)
 #  define cairo_public __declspec(dllimport)
 # else
 #  define cairo_public
