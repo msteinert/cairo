@@ -1745,7 +1745,6 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 	cairo_matrix_init_identity (&attr->matrix);
 	attr->x_offset = tx;
 	attr->y_offset = ty;
-	assert (attr->filter == CAIRO_FILTER_NEAREST);
     }
     else
     {
