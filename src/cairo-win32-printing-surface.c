@@ -1522,6 +1522,12 @@ _cairo_win32_printing_surface_set_paginated_mode (void *abstract_surface,
     surface->paginated_mode = paginated_mode;
 }
 
+static cairo_bool_t
+_cairo_win32_printing_surface_supports_fine_grained_fallbacks (void *abstract_surface)
+{
+    return TRUE;
+}
+
 /**
  * cairo_win32_printing_surface_create:
  * @hdc: the DC to create a surface for
@@ -1642,4 +1648,6 @@ static const cairo_paginated_surface_backend_t cairo_win32_surface_paginated_bac
     _cairo_win32_printing_surface_start_page,
     _cairo_win32_printing_surface_set_paginated_mode,
     NULL, /* set_bounding_box */
+    NULL, /* _cairo_win32_printing_surface_has_fallback_images, */
+    _cairo_win32_printing_surface_supports_fine_grained_fallbacks,
 };
