@@ -523,7 +523,8 @@ _cairo_image_surface_create_for_data_with_content (unsigned char	*data,
  * inspection or modification.
  *
  * Return value: a pointer to the image data of this surface or %NULL
- * if @surface is not an image surface.
+ * if @surface is not an image surface, or if cairo_surface_finish()
+ * has been called.
  *
  * Since: 1.2
  **/
