@@ -100,6 +100,7 @@ gradient-alpha
 gradient-constant-alpha
 gradient-zero-stops
 group-paint
+huge-pattern
 imagediff
 image-surface-source
 infinite-join
