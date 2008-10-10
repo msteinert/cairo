@@ -1561,17 +1561,17 @@ _recategorize_composite_operation (cairo_xlib_surface_t	      *dst,
 	_cairo_matrix_is_integer_translation (&src_attr->matrix, NULL, NULL);
     cairo_bool_t needs_alpha_composite;
 
-    if (!_cairo_surface_is_xlib (&src->base))
+    if (! _cairo_surface_is_xlib (&src->base))
 	return DO_UNSUPPORTED;
 
     needs_alpha_composite =
 	_operator_needs_alpha_composite (op, _surface_has_alpha (src));
 
-    if (!have_mask &&
+    if (! have_mask &&
 	is_integer_translation &&
 	src_attr->extend == CAIRO_EXTEND_NONE &&
-	!needs_alpha_composite &&
-	_surfaces_compatible(src, dst))
+	! needs_alpha_composite &&
+	_surfaces_compatible (src, dst))
     {
 	return DO_XCOPYAREA;
     }
@@ -1581,8 +1581,8 @@ _recategorize_composite_operation (cairo_xlib_surface_t	      *dst,
 	src_attr->extend == CAIRO_EXTEND_REPEAT &&
 	(src->width != 1 || src->height != 1))
     {
-	if (!have_mask &&
-	    !needs_alpha_composite &&
+	if (! have_mask &&
+	    ! needs_alpha_composite &&
 	    _surfaces_compatible (dst, src))
 	{
 	    return DO_XTILE;
@@ -1591,10 +1591,10 @@ _recategorize_composite_operation (cairo_xlib_surface_t	      *dst,
 	return DO_UNSUPPORTED;
     }
 
-    if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE (src))
+    if (! CAIRO_SURFACE_RENDER_HAS_COMPOSITE (src))
 	return DO_UNSUPPORTED;
 
-    if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst))
+    if (! CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst))
 	return DO_UNSUPPORTED;
 
     return DO_RENDER;
@@ -1686,7 +1686,10 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
 	goto BAIL;
     }
-    if (mask != NULL && !_cairo_surface_is_xlib (&mask->base)) {
+    if (mask != NULL &&
+	(! _cairo_surface_is_xlib (&mask->base) ||
+	 ! CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst)))
+    {
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
 	goto BAIL;
     }
@@ -1872,7 +1875,7 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
 
     _cairo_xlib_display_notify (surface->screen_info->display);
 
-    if (!CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLES (surface)) {
+    if (! CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLES (surface)) {
 	if (op == CAIRO_OPERATOR_CLEAR ||
 	    ((op == CAIRO_OPERATOR_SOURCE || op == CAIRO_OPERATOR_OVER) &&
 	     CAIRO_COLOR_IS_OPAQUE (color)))
@@ -2055,7 +2058,8 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
     if (status)
 	return status;
 
-    operation = _recategorize_composite_operation (dst, op, src, &attributes, TRUE);
+    operation = _recategorize_composite_operation (dst, op, src,
+						   &attributes, TRUE);
     if (operation == DO_UNSUPPORTED) {
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
 	goto BAIL;
@@ -2503,6 +2507,12 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 	}
     } else {
 	xrender_format = NULL;
+    }
+
+    /* we cannot use XRender for this surface, so ensure we don't try */
+    if (xrender_format == NULL) {
+	surface->render_major = -1;
+	surface->render_minor = -1;
     }
 
     _cairo_surface_init (&surface->base, &cairo_xlib_surface_backend,
@@ -3876,7 +3886,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 
     cairo_solid_pattern_t solid_pattern;
 
-    if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE_TEXT (dst) || !dst->xrender_format)
+    if (! CAIRO_SURFACE_RENDER_HAS_COMPOSITE_TEXT (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* Just let unbounded operators go through the fallback code
@@ -3962,7 +3972,8 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 	    goto BAIL0;
     }
 
-    operation = _recategorize_composite_operation (dst, op, src, &attributes, TRUE);
+    operation = _recategorize_composite_operation (dst, op, src,
+						   &attributes, TRUE);
     if (operation == DO_UNSUPPORTED) {
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
 	goto BAIL1;
