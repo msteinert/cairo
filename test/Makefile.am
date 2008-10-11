@@ -1098,7 +1098,7 @@ svg2png_LDFLAGS = $(CAIRO_TEST_UNDEFINED_LDFLAGS)
 svg2png_LDADD  = $(LDADD) $(LIBRSVG_LIBS)
 endif
 
-if BUILD_PS2PNG
+if CAIRO_HAS_SPECTRE
 check_PROGRAMS += ps2png
 ps2png_CFLAGS = $(LIBSPECTRE_CFLAGS)
 # add LDADD, so ps2png uses "our" cairo

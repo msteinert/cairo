@@ -72,7 +72,7 @@
 #include <librsvg/rsvg-cairo.h>
 #endif
 
-#if CAIRO_CAN_TEST_PS_SURFACE
+#if CAIRO_HAS_SPECTRE
 #include <libspectre/spectre.h>
 #endif
 
@@ -293,6 +293,12 @@ pdf_convert (char **argv, int fd)
 
     return err;
 }
+#else
+static const char *
+pdf_convert (char **argv, int fd)
+{
+    return "compiled without PDF support.";
+}
 #endif
 
 #if CAIRO_CAN_TEST_SVG_SURFACE
@@ -347,9 +353,15 @@ svg_convert (char **argv, int fd)
 
     return err;
 }
+#else
+static const char *
+svg_convert (char **argv, int fd)
+{
+    return "compiled without SVG support.";
+}
 #endif
 
-#if CAIRO_CAN_TEST_PS_SURFACE
+#if CAIRO_HAS_SPECTRE
 static const char *
 _spectre_render_page (const char *filename,
 		      const char *page_label,
@@ -422,6 +434,12 @@ ps_convert (char **argv, int fd)
 
     return err;
 }
+#else
+static const char *
+ps_convert (char **argv, int fd)
+{
+    return "compiled without PostScript support.";
+}
 #endif
 
 static const char *
@@ -431,15 +449,9 @@ convert (char **argv, int fd)
 	const char *type;
 	const char *(*func) (char **, int);
     } converters[] = {
-#if CAIRO_CAN_TEST_PDF_SURFACE
 	{ "pdf", pdf_convert },
-#endif
-#if CAIRO_CAN_TEST_PS_SURFACE
 	{ "ps", ps_convert },
-#endif
-#if CAIRO_CAN_TEST_SVG_SURFACE
 	{ "svg", svg_convert },
-#endif
 	{ NULL, NULL }
     };
     const struct converter *converter = converters;

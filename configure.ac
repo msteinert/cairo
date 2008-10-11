@@ -357,7 +357,10 @@ if test "x$use_ps" = "xyes"; then
 fi
 
 AM_CONDITIONAL(CAIRO_CAN_TEST_PS_SURFACE, test "x$test_ps" = "xyes")
-AM_CONDITIONAL(BUILD_PS2PNG, test "x$any2ppm_ps" = "xyes")
+AM_CONDITIONAL(CAIRO_HAS_SPECTRE, test "x$any2ppm_ps" = "xyes")
+if test "x$any2ppm_ps" = "xyes"; then
+    AC_DEFINE([CAIRO_HAS_SPECTRE], 1, [Define to 1 if libspectre is available])
+fi
 AC_SUBST(LIBSPECTRE_CFLAGS)
 AC_SUBST(LIBSPECTRE_LIBS)
 
