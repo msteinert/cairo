@@ -147,7 +147,7 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
 	return NULL;
 
     xrender_format = _cairo_xlib_display_get_xrender_format (
-	                                              src->screen_info->display,
+	                                              src->display,
 						      format);
     if (xrender_format == NULL)
 	return NULL;
@@ -211,7 +211,7 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
 	return _cairo_surface_create_in_error (_cairo_error(CAIRO_STATUS_NO_MEMORY));
 
-    _cairo_xlib_display_notify (src->screen_info->display);
+    _cairo_xlib_display_notify (src->display);
 
     /* Start by examining the surface's XRenderFormat, or if it
      * doesn't have one, then look one up through its visual (in the
@@ -259,9 +259,7 @@ static cairo_status_t
 _cairo_xlib_surface_finish (void *abstract_surface)
 {
     cairo_xlib_surface_t *surface = abstract_surface;
-    cairo_xlib_display_t *display = surface->screen_info ?
-	                            surface->screen_info->display :
-				    NULL;
+    cairo_xlib_display_t *display = surface->display;
     cairo_status_t        status  = CAIRO_STATUS_SUCCESS;
 
     if (surface->owns_pixmap) {
@@ -1054,7 +1052,7 @@ _cairo_xlib_surface_acquire_source_image (void                    *abstract_surf
     cairo_image_surface_t *image;
     cairo_status_t status;
 
-    _cairo_xlib_display_notify (surface->screen_info->display);
+    _cairo_xlib_display_notify (surface->display);
 
     status = _get_image_surface (surface, NULL, &image, NULL);
     if (status)
@@ -1085,7 +1083,7 @@ _cairo_xlib_surface_acquire_dest_image (void                    *abstract_surfac
     cairo_image_surface_t *image;
     cairo_status_t status;
 
-    _cairo_xlib_display_notify (surface->screen_info->display);
+    _cairo_xlib_display_notify (surface->display);
 
     status = _get_image_surface (surface, interest_rect, &image, image_rect_out);
     if (status)
@@ -1142,7 +1140,7 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
     cairo_xlib_surface_t *clone;
     cairo_status_t status;
 
-    _cairo_xlib_display_notify (surface->screen_info->display);
+    _cairo_xlib_display_notify (surface->display);
 
     if (src->backend == surface->base.backend ) {
 	cairo_xlib_surface_t *xlib_src = (cairo_xlib_surface_t *)src;
@@ -1663,7 +1661,7 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
     int				itx, ity;
     cairo_bool_t		is_integer_translation;
 
-    _cairo_xlib_display_notify (dst->screen_info->display);
+    _cairo_xlib_display_notify (dst->display);
 
     operation = _categorize_composite_operation (dst, op, src_pattern,
 						 mask_pattern != NULL);
@@ -1873,7 +1871,7 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
     XRectangle *xrects = static_xrects;
     int i;
 
-    _cairo_xlib_display_notify (surface->screen_info->display);
+    _cairo_xlib_display_notify (surface->display);
 
     if (! CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLES (surface)) {
 	if (op == CAIRO_OPERATOR_CLEAR ||
@@ -1931,8 +1929,15 @@ _create_a8_picture (cairo_xlib_surface_t *surface,
 
     Pixmap pixmap;
     Picture picture;
+    XRenderPictFormat *xrender_format;
 
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
+	return None;
+
+    xrender_format =
+	_cairo_xlib_display_get_xrender_format (surface->display,
+						CAIRO_FORMAT_A8);
+    if (xrender_format == NULL)
 	return None;
 
     pixmap = XCreatePixmap (surface->dpy, surface->drawable,
@@ -1946,8 +1951,7 @@ _create_a8_picture (cairo_xlib_surface_t *surface,
     }
 
     picture = XRenderCreatePicture (surface->dpy, pixmap,
-				    XRenderFindStandardFormat (surface->dpy, PictStandardA8),
-				    mask, &pa);
+				    xrender_format, mask, &pa);
     XRenderFillRectangle (surface->dpy, PictOpSrc, picture, color,
 			  0, 0, width, height);
     XFreePixmap (surface->dpy, pixmap);
@@ -2006,6 +2010,11 @@ _create_trapezoid_mask (cairo_xlib_surface_t *dst,
     }
 
     solid_picture = _create_a8_picture (dst, &solid, width, height, TRUE);
+    if (solid_picture == None) {
+	XRenderFreePicture (dst->dpy, mask_picture);
+	free (offset_traps);
+	return None;
+    }
 
     XRenderCompositeTrapezoids (dst->dpy, PictOpAdd,
 				solid_picture, mask_picture,
@@ -2042,7 +2051,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
     int				render_src_x, render_src_y;
     XRenderPictFormat		*pict_format;
 
-    _cairo_xlib_display_notify (dst->screen_info->display);
+    _cairo_xlib_display_notify (dst->display);
 
     if (!CAIRO_SURFACE_RENDER_HAS_TRAPEZOIDS (dst))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -2067,13 +2076,17 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
 
     switch (antialias) {
     case CAIRO_ANTIALIAS_NONE:
-	pict_format = XRenderFindStandardFormat (dst->dpy, PictStandardA1);
+	pict_format =
+	    _cairo_xlib_display_get_xrender_format (dst->display,
+						    CAIRO_FORMAT_A1);
 	break;
     case CAIRO_ANTIALIAS_GRAY:
     case CAIRO_ANTIALIAS_SUBPIXEL:
     case CAIRO_ANTIALIAS_DEFAULT:
     default:
-	pict_format = XRenderFindStandardFormat (dst->dpy, PictStandardA8);
+	pict_format =
+	    _cairo_xlib_display_get_xrender_format (dst->display,
+						    CAIRO_FORMAT_A8);
 	break;
     }
 
@@ -2324,7 +2337,7 @@ _cairo_xlib_surface_is_similar (void		*surface_a,
 	_xrender_format_to_content (xrender_format) != content)
     {
 	xrender_format = _cairo_xlib_display_get_xrender_format (
-					  b->screen_info->display,
+					  b->display,
 					  _cairo_format_from_content (content));
     }
 
@@ -2500,10 +2513,13 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 
     if (CAIRO_SURFACE_RENDER_HAS_CREATE_PICTURE (surface)) {
 	if (!xrender_format) {
-	    if (visual)
+	    if (visual) {
 		xrender_format = XRenderFindVisualFormat (dpy, visual);
-	    else if (depth == 1)
-		xrender_format = XRenderFindStandardFormat (dpy, PictStandardA1);
+	    } else if (depth == 1) {
+		xrender_format =
+		    _cairo_xlib_display_get_xrender_format (display,
+							    CAIRO_FORMAT_A1);
+	    }
 	}
     } else {
 	xrender_format = NULL;
@@ -2807,7 +2823,7 @@ cairo_xlib_surface_set_drawable (cairo_surface_t   *abstract_surface,
     if (surface->drawable != drawable) {
 	if (surface->dst_picture != None) {
 	    status = _cairo_xlib_display_queue_resource (
-		                                  surface->screen_info->display,
+		                                  surface->display,
 						  XRenderFreePicture,
 						  surface->dst_picture);
 	    if (status) {
@@ -2820,7 +2836,7 @@ cairo_xlib_surface_set_drawable (cairo_surface_t   *abstract_surface,
 
 	if (surface->src_picture != None) {
 	    status = _cairo_xlib_display_queue_resource (
-		                                  surface->screen_info->display,
+		                                  surface->display,
 						  XRenderFreePicture,
 						  surface->src_picture);
 	    if (status) {
@@ -3725,7 +3741,7 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
     int request_size = 0;
 
     _cairo_xlib_surface_ensure_dst_picture (dst);
-    _cairo_xlib_display_notify (dst->screen_info->display);
+    _cairo_xlib_display_notify (dst->display);
 
     for (i = 0; i < num_glyphs; i++) {
 	int this_x, this_y;
@@ -3920,7 +3936,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
     font_private = scaled_font->surface_private;
     if ((scaled_font->surface_backend != NULL &&
 	 scaled_font->surface_backend != &cairo_xlib_surface_backend) ||
-	(font_private != NULL && font_private->display != dst->screen_info->display))
+	(font_private != NULL && font_private->display != dst->display))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* After passing all those tests, we're now committed to rendering
@@ -3999,7 +4015,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 	_cairo_pattern_fini (&solid_pattern.base);
   BAIL0:
     _cairo_scaled_font_thaw_cache (scaled_font);
-    _cairo_xlib_display_notify (dst->screen_info->display);
+    _cairo_xlib_display_notify (dst->display);
 
     return status;
 }
