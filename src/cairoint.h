@@ -72,7 +72,10 @@
 
 #include "cairo-compiler-private.h"
 
-#if CAIRO_HAS_PS_SURFACE || CAIRO_HAS_PDF_SURFACE || CAIRO_HAS_SVG_SURFACE
+#if CAIRO_HAS_PS_SURFACE  || \
+    CAIRO_HAS_PDF_SURFACE || \
+    CAIRO_HAS_SVG_SURFACE || \
+    CAIRO_HAS_WIN32_SURFACE
 #define CAIRO_HAS_FONT_SUBSET 1
 #endif
 
