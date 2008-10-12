@@ -1248,6 +1248,7 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     pixman_gradient_stop_t *pixman_stops = pixman_stops_static;
     unsigned int i;
     int clone_offset_x, clone_offset_y;
+    cairo_matrix_t matrix = pattern->base.matrix;
 
     if (pattern->n_stops > ARRAY_LENGTH(pixman_stops_static)) {
 	pixman_stops = _cairo_malloc_ab (pattern->n_stops, sizeof(pixman_gradient_stop_t));
@@ -1267,11 +1268,46 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
     {
 	cairo_linear_pattern_t *linear = (cairo_linear_pattern_t *) pattern;
 	pixman_point_fixed_t p1, p2;
+	cairo_fixed_t xdim, ydim;
 
-	p1.x = _cairo_fixed_to_16_16 (linear->p1.x);
-	p1.y = _cairo_fixed_to_16_16 (linear->p1.y);
-	p2.x = _cairo_fixed_to_16_16 (linear->p2.x);
-	p2.y = _cairo_fixed_to_16_16 (linear->p2.y);
+	xdim = linear->p2.x - linear->p1.x;
+	ydim = linear->p2.y - linear->p1.y;
+
+	/*
+	 * Transform the matrix to avoid overflow when converting between
+	 * cairo_fixed_t and pixman_fixed_t (without incurring performance
+	 * loss when the transformation is unnecessary).
+	 *
+	 * XXX: Consider converting out-of-range co-ordinates and transforms.
+	 * Having a function to compute the required transformation to
+	 * "normalize" a given bounding box would be generally useful -
+	 * cf linear patterns, gradient patterns, surface patterns...
+	 */
+#define PIXMAN_MAX_INT ((pixman_fixed_1 >> 1) - pixman_fixed_e) /* need to ensure deltas also fit */
+	if (_cairo_fixed_integer_ceil (xdim) > PIXMAN_MAX_INT ||
+	    _cairo_fixed_integer_ceil (ydim) > PIXMAN_MAX_INT)
+	{
+	    double sf;
+
+	    if (xdim > ydim)
+		sf = PIXMAN_MAX_INT / _cairo_fixed_to_double (xdim);
+	    else
+		sf = PIXMAN_MAX_INT / _cairo_fixed_to_double (ydim);
+
+	    p1.x = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p1.x) * sf);
+	    p1.y = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p1.y) * sf);
+	    p2.x = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p2.x) * sf);
+	    p2.y = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p2.y) * sf);
+
+	    cairo_matrix_scale (&matrix, sf, sf);
+	}
+	else
+	{
+	    p1.x = _cairo_fixed_to_16_16 (linear->p1.x);
+	    p1.y = _cairo_fixed_to_16_16 (linear->p1.y);
+	    p2.x = _cairo_fixed_to_16_16 (linear->p2.x);
+	    p2.y = _cairo_fixed_to_16_16 (linear->p2.y);
+	}
 
 	pixman_image = pixman_image_create_linear_gradient (&p1, &p2,
 							    pixman_stops,
@@ -1315,7 +1351,7 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
 	}
 
 	attr->x_offset = attr->y_offset = 0;
-	attr->matrix = pattern->base.matrix;
+	attr->matrix = matrix;
 	attr->extend = pattern->base.extend;
 	attr->filter = CAIRO_FILTER_NEAREST;
 	attr->acquired = FALSE;
@@ -1363,7 +1399,7 @@ _cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
 	return image->base.status;
     }
 
-    _cairo_matrix_to_pixman_matrix (&pattern->base.matrix, &pixman_transform);
+    _cairo_matrix_to_pixman_matrix (&matrix, &pixman_transform);
     if (!pixman_image_set_transform (pixman_image, &pixman_transform)) {
 	cairo_surface_destroy (&image->base);
 	pixman_image_unref (pixman_image);

@@ -541,6 +541,9 @@ REFERENCE_IMAGES = \
 	gradient-zero-stops-rgb24-ref.png	\
 	group-paint-ref.png	\
 	huge-pattern-ref.png	\
+	huge-pattern-ps3-ref.png	\
+	huge-pattern-pdf-ref.png	\
+	huge-pattern-pdf-rgb24-ref.png	\
 	image-surface-source-ref.png \
 	infinite-join-ref.png	\
 	infinite-join-ps2-ref.png	\
@@ -947,7 +950,6 @@ $(REFERENCE_IMAGES)
 #                         room, with Carl as a moderator and not let them out
 #                         until they have come up with an interface and
 #                         semantics that actually work. :-)
-# huge-pattern          - range overflow of fixed-point
 # long-lines            - range overflow of fixed-point
 # self-copy-overlap     - vector surfaces take snapshot of patterns in contrast
 #                         to the raster backends which don't. One solution
@@ -971,7 +973,6 @@ degenerate-path$(EXEEXT)			\
 device-offset-scale$(EXEEXT)			\
 extend-pad$(EXEEXT)				\
 fallback-resolution$(EXEEXT)			\
-huge-pattern$(EXEEXT)				\
 long-lines$(EXEEXT)				\
 self-copy-overlap$(EXEEXT)			\
 self-intersecting$(EXEEXT)			\
