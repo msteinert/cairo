@@ -735,8 +735,7 @@ _cairo_scaled_font_fini (cairo_scaled_font_t *scaled_font)
  * @ctm: user to device transformation matrix with which the font will
  *       be used.
  * @options: options to use when getting metrics for the font and
- *           rendering with it. A %NULL pointer will be interpreted as
- *           meaning the default options.
+ *           rendering with it.
  *
  * Creates a #cairo_scaled_font_t object from a font face and matrices that
  * describe the size of the font and the environment in which it will
