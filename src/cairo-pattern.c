@@ -1756,6 +1756,13 @@ _cairo_pattern_analyze_filter (cairo_surface_pattern_t *pattern,
     return optimized_filter;
 }
 
+
+static double
+_pixman_nearest_sample (double d)
+{
+    return ceil (d - .5);
+}
+
 static cairo_int_status_t
 _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 					    cairo_surface_t	       *dst,
@@ -1781,6 +1788,34 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 	cairo_matrix_init_identity (&attr->matrix);
 	attr->x_offset = tx;
 	attr->y_offset = ty;
+    }
+    else if (attr->filter == CAIRO_FILTER_NEAREST)
+    {
+	/*
+	 * For NEAREST, we can remove the fractional translation component
+	 * from the transformation - this ensures that the pattern will always
+	 * hit fast-paths in the backends for simple transformations that
+	 * become (almost) identity, without loss of quality.
+	 */
+	attr->matrix = pattern->base.matrix;
+	attr->matrix.x0 = 0;
+	attr->matrix.y0 = 0;
+	if (_cairo_matrix_is_pixel_exact (&attr->matrix)) {
+	    double x1, y1;
+
+	    /* The rounding here is rather peculiar as it needs to match the
+	     * rounding performed on the sample coordinate used by pixman.
+	     */
+	    x1 = _pixman_nearest_sample (pattern->base.matrix.x0);
+	    y1 = _pixman_nearest_sample (pattern->base.matrix.y0);
+	    cairo_matrix_transform_point (&attr->matrix, &x1, &y1);
+	    attr->x_offset = tx = _cairo_lround (x1);
+	    attr->y_offset = ty = _cairo_lround (y1);
+	} else {
+	    attr->matrix = pattern->base.matrix;
+	    attr->x_offset = attr->y_offset = 0;
+	    tx = ty = 0;
+	}
     }
     else
     {

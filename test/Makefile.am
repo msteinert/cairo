@@ -64,6 +64,7 @@ fill-missed-stop$(EXEEXT)				\
 fill-rule$(EXEEXT)					\
 filter-bilinear-extents$(EXEEXT)			\
 filter-nearest-offset$(EXEEXT)				\
+filter-nearest-transformed$(EXEEXT)			\
 finer-grained-fallbacks$(EXEEXT)			\
 font-face-get-type$(EXEEXT)				\
 font-matrix-translation$(EXEEXT)			\
@@ -479,6 +480,10 @@ REFERENCE_IMAGES = \
 	filter-nearest-offset-ps3-ref.png	\
 	filter-nearest-offset-svg11-ref.png	\
 	filter-nearest-offset-svg12-ref.png	\
+	filter-nearest-transformed-ref.png	\
+	filter-nearest-transformed-pdf-ref.png	\
+	filter-nearest-transformed-svg11-ref.png	\
+	filter-nearest-transformed-svg12-ref.png	\
 	finer-grained-fallbacks-ref.png			\
 	finer-grained-fallbacks-rgb24-ref.png		\
 	finer-grained-fallbacks-ps2-ref.png	\

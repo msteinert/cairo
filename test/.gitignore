@@ -79,6 +79,7 @@ fill-missed-stop
 fill-rule
 filter-bilinear-extents
 filter-nearest-offset
+filter-nearest-transformed
 finer-grained-fallbacks
 ft-text-antialias-none
 ft-font-create-for-ft-face
