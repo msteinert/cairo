@@ -3190,9 +3190,9 @@ cairo_show_glyphs (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
  * This operation has rendering effects similar to cairo_show_glyphs()
  * but, if the target surface supports it, uses the provided text and
  * cluster mapping to embed the text for the glyphs shown in the output.
- * The cairo_has_show_text_glyphs() function can be used to query that.
- * If the target does not support it, this function acts like
- * cairo_show_glyphs().
+ * If the target does not support the extended attributes, this function
+ * acts like the basic cairo_show_glyphs() as if it had been passed
+ * @glyphs and @num_glyphs.
  *
  * The mapping between @utf8 and @glyphs is provided by an array of
  * <firstterm>clusters</firstterm>.  Each cluster covers a number of

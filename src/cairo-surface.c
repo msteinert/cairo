@@ -2176,9 +2176,6 @@ _cairo_surface_get_extents (cairo_surface_t         *surface,
  * function to avoid computing UTF-8 text and cluster mapping if the
  * target surface does not use it.
  *
- * There is a convenience function for this that takes a #cairo_t,
- * namely cairo_has_show_text_glyphs().
- *
  * Return value: %TRUE if @surface supports
  *               cairo_show_text_glyphs(), %FALSE otherwise
  *

@@ -369,7 +369,7 @@ cairo_glyph_free
 cairo_text_cluster_t
 cairo_text_cluster_allocate
 cairo_text_cluster_free
-cairo_has_show_text_glyphs
+cairo_surface_has_show_text_glyphs
 
 
 cairo_user_font_face_create
