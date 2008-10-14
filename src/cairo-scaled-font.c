@@ -2253,8 +2253,14 @@ _cairo_scaled_glyph_set_meta_surface (cairo_scaled_glyph_t *scaled_glyph,
  * @index: the glyph to create
  * @info: a #cairo_scaled_glyph_info_t marking which portions of
  * the glyph should be filled in.
- * @scaled_glyph_ret: a #cairo_scaled_glyph_t * where the glyph
+ * @scaled_glyph_ret: a #cairo_scaled_glyph_t where the glyph
  * is returned.
+ *
+ * If the desired info is not available, (for example, when trying to
+ * get INFO_PATH with a bitmapped font), this function will return
+ * %CAIRO_INT_STATUS_UNSUPPORTED.
+ *
+ * Note: This function must be called with scaled_font->mutex held.
  *
  * Returns: a glyph with the requested portions filled in. Glyph
  * lookup is cached and glyph will be automatically freed along
@@ -2263,12 +2269,6 @@ _cairo_scaled_glyph_set_meta_surface (cairo_scaled_glyph_t *scaled_glyph,
  *  %CAIRO_SCALED_GLYPH_INFO_METRICS - glyph metrics and bounding box
  *  %CAIRO_SCALED_GLYPH_INFO_SURFACE - surface holding glyph image
  *  %CAIRO_SCALED_GLYPH_INFO_PATH - path holding glyph outline in device space
- *
- * If the desired info is not available, (for example, when trying to
- * get INFO_PATH with a bitmapped font), this function will return
- * %CAIRO_INT_STATUS_UNSUPPORTED.
- *
- * Note: This function must be called with scaled_font->mutex held.
  **/
 cairo_int_status_t
 _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,

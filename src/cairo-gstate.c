@@ -314,6 +314,8 @@ _cairo_gstate_redirect_target (cairo_gstate_t *gstate, cairo_surface_t *child)
  * _cairo_gstate_is_redirected
  * @gstate: a #cairo_gstate_t
  *
+ * This space left intentionally blank.
+ *
  * Return value: %TRUE if the gstate is redirected to a target
  * different than the original, %FALSE otherwise.
  **/
@@ -371,6 +373,8 @@ _cairo_gstate_get_original_target (cairo_gstate_t *gstate)
 /**
  * _cairo_gstate_get_clip:
  * @gstate: a #cairo_gstate_t
+ *
+ * This space left intentionally blank.
  *
  * Return value: a pointer to the gstate's #cairo_clip_t structure.
  */
