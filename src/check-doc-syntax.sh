@@ -25,7 +25,7 @@ if test "x$SGML_DOCS" = x; then
     fi
 fi
 
-enum_regexp='\([^%@]\|^\)\<\(FALSE\|TRUE\|NULL\|CAIRO_[0-9A-Z_]*\)\($\|[^(A-Za-z0-9_]\)'
+enum_regexp="\([^%@']\|^\)\<\(FALSE\|TRUE\|NULL\|CAIRO_[0-9A-Z_]*\)\($\|[^(A-Za-z0-9_]\)"
 if test "x$SGML_DOCS" = x; then
 	enum_regexp='^[^:]*:[/ ][*]\(\|[ \t].*\)'$enum_regexp
 fi
@@ -36,7 +36,7 @@ if echo $FILES | xargs grep . /dev/null | sed -e '/<programlisting>/,/<\/program
 	echo "	'$enum_regexp'"
 fi >&2
 
-type_regexp='\( .*[^#]\| \|^\)\<cairo[0-9a-z_]*_t\>\($\|[^:]$\|[^:].\)'
+type_regexp="\( .*[^#']\| \|^\)\<cairo[0-9a-z_]*_t\>\($\|[^:]$\|[^:].\)"
 if test "x$SGML_DOCS" = x; then
 	type_regexp='^[^:]*:[/ ][*]'$type_regexp
 else
@@ -51,7 +51,7 @@ if echo $FILES | xargs grep . /dev/null | sed -e '/<programlisting>/,/<\/program
 	echo "	'$type_regexp'"
 fi >&2
 
-func_regexp='\([^#]\|^\)\<\(cairo_[][<>/0-9a-z_]*\>[^][<>(]\)'
+func_regexp="\([^#']\|^\)\<\(cairo_[][<>/0-9a-z_]*\>[^][<>(]\)"
 if test "x$SGML_DOCS" = x; then
 	func_regexp='^[^:]*:[/ ][*]\(\|[ \t].*\)'$func_regexp
 fi

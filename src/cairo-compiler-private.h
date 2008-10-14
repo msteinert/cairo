@@ -115,20 +115,20 @@
  * Cairo uses the following function attributes in order to improve the
  * generated code (effectively by manual inter-procedural analysis).
  *
- *   cairo_pure: The function is only allowed to read from its arguments
- *               and global memory (i.e. following a pointer argument or
- *               accessing a shared variable). The return value should
- *               only depend on its arguments, and for an identical set of
- *               arguments should return the same value.
+ *   'cairo_pure': The function is only allowed to read from its arguments
+ *                 and global memory (i.e. following a pointer argument or
+ *                 accessing a shared variable). The return value should
+ *                 only depend on its arguments, and for an identical set of
+ *                 arguments should return the same value.
  *
- *   cairo_cont: The function is only allowed to read from its arguments.
- *               It is not allowed to access global memory. The return
- *               value should only depend its arguments, and for an identical
- *               set of arguments should return the same value.  This is
- *               currently the most strict function attribute.
+ *   'cairo_const': The function is only allowed to read from its arguments.
+ *                  It is not allowed to access global memory. The return
+ *                  value should only depend its arguments, and for an
+ *                  identical set of arguments should return the same value.
+ *                  This is currently the most strict function attribute.
  *
  * Both these function attributes allow gcc to perform CSE and
- * constant-folding, with cairo_const also guaranteeing that pointer contents
+ * constant-folding, with 'cairo_const 'also guaranteeing that pointer contents
  * do not change across the function call.
  */
 #if __GNUC__ >= 3
