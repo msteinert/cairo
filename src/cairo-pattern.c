@@ -1757,10 +1757,10 @@ _cairo_pattern_analyze_filter (cairo_surface_pattern_t *pattern,
 }
 
 
-static int
+static double
 _pixman_nearest_sample (double d)
 {
-    return _cairo_lround (ceil (d - .5));
+    return ceil (d - .5);
 }
 
 static cairo_int_status_t
@@ -1800,17 +1800,19 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 	attr->matrix = pattern->base.matrix;
 	attr->matrix.x0 = 0;
 	attr->matrix.y0 = 0;
-	if (_cairo_matrix_is_identity (&attr->matrix)) {
+	if (_cairo_matrix_is_pixel_exact (&attr->matrix)) {
 	    /* The rounding here is rather peculiar as it needs to match the
 	     * rounding performed on the sample coordinate used by pixman.
 	     */
-	    attr->x_offset = tx = _pixman_nearest_sample (pattern->base.matrix.x0);
-	    attr->y_offset = ty = _pixman_nearest_sample (pattern->base.matrix.y0);
+	    attr->matrix.x0 = _pixman_nearest_sample (pattern->base.matrix.x0);
+	    attr->matrix.y0 = _pixman_nearest_sample (pattern->base.matrix.y0);
 	} else {
-	    attr->matrix = pattern->base.matrix;
-	    attr->x_offset = attr->y_offset = 0;
-	    tx = ty = 0;
+	    attr->matrix.x0 = pattern->base.matrix.x0;
+	    attr->matrix.y0 = pattern->base.matrix.y0;
 	}
+
+	attr->x_offset = attr->y_offset = 0;
+	tx = ty = 0;
     }
     else
     {
