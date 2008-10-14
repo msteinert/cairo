@@ -31,6 +31,7 @@
  * for NEAREST surface patterns under a few transformations.
  */
 
+static const char png_filename[] = "romedalen.png";
 static cairo_test_draw_function_t draw;
 
 static const cairo_test_t test = {
@@ -46,6 +47,7 @@ static const uint32_t black_pixel = 0xff000000;
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
+    const cairo_test_context_t *ctx = cairo_test_get_context (cr);
     unsigned int i, j, k;
     cairo_surface_t *surface;
     cairo_pattern_t *pattern;
@@ -54,6 +56,12 @@ draw (cairo_t *cr, int width, int height)
 	{ -1, 0, 0,  1,  8, 0 },
 	{  1, 0, 0, -1,  0, 8 },
 	{ -1, 0, 0, -1,  8, 8 },
+    };
+    const cairo_matrix_t ctx_transform[] = {
+	{  1, 0, 0,  1,   0,  0 },
+	{ -1, 0, 0,  1,  14,  0 },
+	{  1, 0, 0, -1,   0, 14 },
+	{ -1, 0, 0, -1,  14, 14 },
     };
     const double colour[][3] = {
 	{0, 0, 0},
@@ -71,6 +79,8 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_pattern_set_filter (pattern, CAIRO_FILTER_NEAREST);
 
+    surface = cairo_test_create_surface_from_png (ctx, png_filename);
+
     /* Fill background white */
     cairo_set_source_rgb (cr, 1, 1, 1);
     cairo_paint (cr);
@@ -78,6 +88,19 @@ draw (cairo_t *cr, int width, int height)
     cairo_set_antialias (cr, CAIRO_ANTIALIAS_NONE);
 
     for (k = 0; k < sizeof (transform) / sizeof (transform[0]); k++) {
+	/* draw a "large" section from an image */
+	cairo_save (cr); {
+	    cairo_set_matrix(cr, &ctx_transform[k]);
+	    cairo_rectangle (cr, 0, 0, 7, 7);
+	    cairo_clip (cr);
+
+	    cairo_set_source_surface (cr, surface,
+				      -cairo_image_surface_get_width (surface)/2.,
+				      -cairo_image_surface_get_height (surface)/2.);
+	    cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_NEAREST);
+	    cairo_paint (cr);
+	} cairo_restore (cr);
+
 	cairo_set_source_rgb (cr, colour[k][0], colour[k][1], colour[k][2]);
 	for (j = 4; j <= 6; j++) {
 	    for (i = 4; i <= 6; i++) {
@@ -92,6 +115,7 @@ draw (cairo_t *cr, int width, int height)
     }
 
     cairo_pattern_destroy (pattern);
+    cairo_surface_destroy (surface);
 
     return CAIRO_TEST_SUCCESS;
 }
