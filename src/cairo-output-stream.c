@@ -583,6 +583,9 @@ _cairo_output_stream_create_for_filename (const char *filename)
     stdio_stream_t *stream;
     FILE *file;
 
+    if (filename == NULL)
+	return _cairo_null_stream_create ();
+
     file = fopen (filename, "wb");
     if (file == NULL) {
 	switch (errno) {
