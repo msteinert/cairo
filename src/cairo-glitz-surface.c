@@ -2381,6 +2381,13 @@ _cairo_glitz_surface_is_similar (void *surface_a,
     glitz_drawable_t *drawable_a = glitz_surface_get_drawable (a->surface);
     glitz_drawable_t *drawable_b = glitz_surface_get_drawable (b->surface);
 
+    /* XXX Disable caching of glitz surfaces by the solid pattern cache.
+     * Until glitz has a mechanism for releasing resources on connection
+     * closure, we will attempt to access invalid pointers when evicting
+     * old surfaces from the solid pattern cache.
+     */
+    return FALSE;
+
     return drawable_a == drawable_b;
 }
 
