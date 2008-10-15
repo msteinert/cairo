@@ -43,6 +43,8 @@
 #define SURFACE_ERROR_TYPE_MISMATCH (_cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_SURFACE_TYPE_MISMATCH)))
 #define SURFACE_ERROR_INVALID_FORMAT (_cairo_surface_create_in_error(_cairo_error(CAIRO_STATUS_INVALID_FORMAT)))
 
+#ifdef CAIRO_HAS_QUARTZ_IMAGE_SURFACE
+
 static void
 DataProviderReleaseCallback (void *info, const void *data, size_t size)
 {
