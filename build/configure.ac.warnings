@@ -17,7 +17,7 @@ MAYBE_WARN="-Wall -Wextra \
 
 dnl We also abuse the warning-flag facility to enable other compiler
 dnl options.  Namely, the following:
-MAYBE_WARN="$MAYBE_WARN -fno-strict-aliasing"
+MAYBE_WARN="$MAYBE_WARN -fno-strict-aliasing -fno-common"
 
 dnl Also to turn various gcc/glibc-specific preprocessor checks
 MAYBE_WARN="$MAYBE_WARN -Wp,-D_FORTIFY_SOURCE=2"
