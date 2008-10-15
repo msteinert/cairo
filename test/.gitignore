@@ -204,6 +204,7 @@ solid-pattern-cache-stress
 source-clip
 source-clip-scale
 source-surface-scale-paint
+spline-decomposition
 stroke-image
 stroke-ctm-caps
 surface-finish-twice

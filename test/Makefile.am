@@ -159,6 +159,7 @@ solid-pattern-cache-stress$(EXEEXT)			\
 source-clip$(EXEEXT)					\
 source-clip-scale$(EXEEXT)				\
 source-surface-scale-paint$(EXEEXT)			\
+spline-decomposition$(EXEEXT)				\
 surface-finish-twice$(EXEEXT)				\
 surface-pattern$(EXEEXT)				\
 surface-pattern-big-scale-down$(EXEEXT)			\
@@ -851,6 +852,12 @@ REFERENCE_IMAGES = \
 	source-clip-scale-pdf-ref.png \
 	source-surface-scale-paint-ref.png	\
 	source-surface-scale-paint-rgb24-ref.png	\
+	spline-decomposition-ref.png \
+	spline-decomposition-ps2-ref.png \
+	spline-decomposition-ps3-ref.png \
+	spline-decomposition-pdf-ref.png \
+	spline-decomposition-svg11-ref.png \
+	spline-decomposition-svg12-ref.png \
 	stroke-ctm-caps-ps2-ref.png \
 	stroke-ctm-caps-ps3-ref.png \
 	surface-pattern-big-scale-down-ref.png	\
