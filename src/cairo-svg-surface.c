@@ -2461,6 +2461,28 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
     if (document->finished)
 	return CAIRO_STATUS_SUCCESS;
 
+    /*
+     * Should we add DOCTYPE?
+     *
+     * Google says no.
+     *
+     * http://tech.groups.yahoo.com/group/svg-developers/message/48562:
+     *   There's a bunch of issues, but just to pick a few:
+     *   - they'll give false positives.
+     *   - they'll give false negatives.
+     *   - they're namespace-unaware.
+     *   - they don't wildcard.
+     *   So when they say OK they really haven't checked anything, when
+     *   they say NOT OK they might be on crack, and like all
+     *   namespace-unaware things they're a dead branch of the XML tree.
+     *
+     * http://jwatt.org/svg/authoring/:
+     *   Unfortunately the SVG DTDs are a source of so many issues that the
+     *   SVG WG has decided not to write one for the upcoming SVG 1.2
+     *   standard. In fact SVG WG members are even telling people not to use
+     *   a DOCTYPE declaration in SVG 1.0 and 1.1 documents.
+     */
+
     _cairo_output_stream_printf (output,
 				 "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 				 "<svg xmlns=\"http://www.w3.org/2000/svg\" "
