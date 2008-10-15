@@ -216,8 +216,8 @@ cairo_quartz_headers = cairo-quartz.h
 cairo_quartz_private = cairo-quartz-private.h
 cairo_quartz_sources = cairo-quartz-surface.c
 
-cairo_quratz_image_headers = cairo-quartz-image.h
-cairo_quratz_image_sources = cairo-quartz-image-surface.c
+cairo_quartz_image_headers = cairo-quartz-image.h
+cairo_quartz_image_sources = cairo-quartz-image-surface.c
 
 cairo_quartz_font_sources = cairo-quartz-font.c
 
