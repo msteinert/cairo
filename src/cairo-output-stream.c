@@ -116,6 +116,9 @@ closure_write (cairo_output_stream_t *stream,
     cairo_output_stream_with_closure_t *stream_with_closure =
 	(cairo_output_stream_with_closure_t *) stream;
 
+    if (stream_with_closure->write_func == NULL)
+	return CAIRO_STATUS_SUCCESS;
+
     return stream_with_closure->write_func (stream_with_closure->closure,
 					    data, length);
 }
