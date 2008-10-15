@@ -154,7 +154,7 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
     return &surface->base;
 }
 
-cairo_int_status_t
+cairo_bool_t
 _pixman_format_from_masks (cairo_format_masks_t *masks,
 			   pixman_format_code_t *format_ret)
 {
@@ -176,13 +176,13 @@ _pixman_format_from_masks (cairo_format_masks_t *masks,
     } else if (masks->alpha_mask) {
 	format_type = PIXMAN_TYPE_A;
     } else {
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return FALSE;
     }
 
     format = PIXMAN_FORMAT (masks->bpp, format_type, a, r, g, b);
 
     if (! pixman_format_supported_destination (format))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return FALSE;
 
     /* Sanity check that we got out of PIXMAN_FORMAT exactly what we
      * expected. This avoid any problems from something bizarre like
@@ -195,11 +195,11 @@ _pixman_format_from_masks (cairo_format_masks_t *masks,
 	 masks->green_mask != format_masks.green_mask ||
 	 masks->blue_mask  != format_masks.blue_mask)
      {
-	 return CAIRO_INT_STATUS_UNSUPPORTED;
+	 return FALSE;
      }
 
     *format_ret = format;
-    return CAIRO_STATUS_SUCCESS;
+    return TRUE;
 }
 
 /* A mask consisting of N bits set to 1. */
@@ -266,8 +266,7 @@ _cairo_image_surface_create_with_masks (unsigned char	       *data,
     cairo_int_status_t status;
     pixman_format_code_t pixman_format;
 
-    status = _pixman_format_from_masks (masks, &pixman_format);
-    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+    if (! _pixman_format_from_masks (masks, &pixman_format)) {
 	fprintf (stderr,
 		 "Error: Cairo %s does not yet support the requested image format:\n"
 		 "\tDepth: %d\n"

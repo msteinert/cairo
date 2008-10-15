@@ -343,10 +343,30 @@ _swap_ximage_2bytes (XImage *ximage)
     char *line = ximage->data;
 
     for (j = ximage->height; j; j--) {
-	uint16_t *p = (uint16_t *)line;
+	uint16_t *p = (uint16_t *) line;
 	for (i = ximage->width; i; i--) {
 	    *p = bswap_16 (*p);
 	    p++;
+	}
+
+	line += ximage->bytes_per_line;
+    }
+}
+
+static void
+_swap_ximage_3bytes (XImage *ximage)
+{
+    int i, j;
+    char *line = ximage->data;
+
+    for (j = ximage->height; j; j--) {
+	uint8_t *p = (uint8_t *) line;
+	for (i = ximage->width; i; i--) {
+	    uint8_t tmp;
+	    tmp = p[2];
+	    p[2] = p[0];
+	    p[0] = tmp;
+	    p += 3;
 	}
 
 	line += ximage->bytes_per_line;
@@ -360,9 +380,26 @@ _swap_ximage_4bytes (XImage *ximage)
     char *line = ximage->data;
 
     for (j = ximage->height; j; j--) {
-	uint32_t *p = (uint32_t *)line;
+	uint32_t *p = (uint32_t *) line;
 	for (i = ximage->width; i; i--) {
 	    *p = bswap_32 (*p);
+	    p++;
+	}
+
+	line += ximage->bytes_per_line;
+    }
+}
+
+static void
+_swap_ximage_nibbles (XImage *ximage)
+{
+    int i, j;
+    char *line = ximage->data;
+
+    for (j = ximage->height; j; j--) {
+	uint8_t *p = (uint8_t *) line;
+	for (i = (ximage->width + 1) / 2; i; i--) {
+	    *p = ((*p >> 4) & 0xf) | ((*p << 4) & ~0xf);
 	    p++;
 	}
 
@@ -402,7 +439,8 @@ _swap_ximage_to_native (XImage *ximage)
     int native_byte_order = _native_byte_order_lsb () ? LSBFirst : MSBFirst;
 
     if (ximage->bits_per_pixel == 1 &&
-	ximage->bitmap_bit_order != native_byte_order) {
+	ximage->bitmap_bit_order != native_byte_order)
+    {
 	_swap_ximage_bits (ximage);
 	if (ximage->bitmap_bit_order == ximage->byte_order)
 	    return;
@@ -415,24 +453,31 @@ _swap_ximage_to_native (XImage *ximage)
     case 1:
 	unit_bytes = ximage->bitmap_unit / 8;
 	break;
+    case 4:
+	_swap_ximage_nibbles (ximage);
+	/* fall-through */
     case 8:
     case 16:
+    case 20:
+    case 24:
+    case 28:
+    case 30:
     case 32:
-	unit_bytes = ximage->bits_per_pixel / 8;
+	unit_bytes = (ximage->bits_per_pixel + 7) / 8;
 	break;
     default:
-        /* This could be hit on some uncommon but possible cases,
-	 * such as bpp=4. These are cases that libpixman can't deal
-	 * with in any case.
-	 */
+        /* This could be hit on some rare but possible cases. */
 	ASSERT_NOT_REACHED;
     }
 
     switch (unit_bytes) {
     case 1:
-	return;
+	break;
     case 2:
 	_swap_ximage_2bytes (ximage);
+	break;
+    case 3:
+	_swap_ximage_3bytes (ximage);
 	break;
     case 4:
 	_swap_ximage_4bytes (ximage);
@@ -676,8 +721,11 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
     xlib_masks.green_mask = surface->g_mask;
     xlib_masks.blue_mask = surface->b_mask;
 
-    status = _pixman_format_from_masks (&xlib_masks, &pixman_format);
-    if (xlib_masks.bpp >= 24 &&status == CAIRO_STATUS_SUCCESS) {
+    if (_pixman_format_from_masks (&xlib_masks, &pixman_format) &&
+	xlib_masks.bpp >= 24 &&
+	ximage->bitmap_unit == 32 &&
+	ximage->bitmap_pad == 32)
+    {
 	image = (cairo_image_surface_t*)
 	    _cairo_image_surface_create_with_pixman_format ((unsigned char *) ximage->data,
 							    pixman_format,
