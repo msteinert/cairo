@@ -733,6 +733,7 @@ _cairo_svg_document_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
     unsigned int i;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
+    CAIRO_MUTEX_LOCK (font_subset->scaled_font->mutex);
     for (i = 0; i < font_subset->num_glyphs; i++) {
 	status = _cairo_svg_document_emit_glyph (document,
 					         font_subset->scaled_font,
@@ -741,6 +742,7 @@ _cairo_svg_document_emit_font_subset (cairo_scaled_font_subset_t	*font_subset,
 	if (status)
 	    break;
     }
+    CAIRO_MUTEX_UNLOCK (font_subset->scaled_font->mutex);
 
     return status;
 }
