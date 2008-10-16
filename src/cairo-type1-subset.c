@@ -1215,6 +1215,11 @@ cairo_type1_font_subset_generate (void       *abstract_font,
     }
 
     if (font->face->stream->read != NULL) {
+	/* Note that read() may be implemented as a macro, thanks POSIX!, so we
+	 * need to wrap the following usage in parentheses in order to
+	 * disambiguate it for the pre-processor - using the verbose function
+	 * pointer dereference for clarity.
+	 */
 	ret = (* font->face->stream->read) (font->face->stream, 0,
 					    (unsigned char *) font->type1_data,
 					    font->type1_length);
