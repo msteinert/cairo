@@ -3419,7 +3419,7 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 					     CAIRO_SCALED_GLYPH_INFO_METRICS |
 					     CAIRO_SCALED_GLYPH_INFO_SURFACE,
 					     pscaled_glyph);
-	if (status != CAIRO_STATUS_SUCCESS)
+	if (status)
 	    return status;
 
 	scaled_glyph = *pscaled_glyph;
@@ -3457,7 +3457,8 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 	cairo_surface_t *tmp_surface;
 
 	tmp_surface = cairo_image_surface_create (glyphset_info->format, 1, 1);
-	if (tmp_surface->status)
+	status = tmp_surface->status;
+	if (status)
 	    goto BAIL;
 
 	cr = cairo_create (tmp_surface);
@@ -3486,7 +3487,8 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 	tmp_surface = cairo_image_surface_create (glyphset_info->format,
 						  glyph_surface->width,
 						  glyph_surface->height);
-	if (tmp_surface->status)
+	status = tmp_surface->status;
+	if (status)
 	    goto BAIL;
 
 	tmp_surface->device_transform = glyph_surface->base.device_transform;
