@@ -238,12 +238,8 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
 
     if (other->backend->create_similar) {
 	surface = other->backend->create_similar (other, content, width, height);
-	/* It's not an error if the backend didn't create a valid
-	 * surface---it may just not be supported. */
-	if (surface && surface->status) {
-	    cairo_surface_destroy (surface);
-	    surface = NULL;
-	}
+	if (surface != NULL && surface->status)
+	    return surface;
     }
 
     if (surface == NULL)

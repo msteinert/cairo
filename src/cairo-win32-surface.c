@@ -446,10 +446,16 @@ _cairo_win32_surface_clone_similar (void *abstract_surface,
 
     src_content = cairo_surface_get_content(src);
     new_surface =
-	_cairo_win32_surface_create_similar_internal (abstract_surface, src_content, width, height, FALSE);
+	_cairo_win32_surface_create_similar_internal (abstract_surface,
+						      src_content,
+						      width, height,
+						      FALSE);
+    if (new_surface == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (cairo_surface_status(new_surface))
-	return cairo_surface_status(new_surface);
+    status = new_surface->status;
+    if (status)
+	return status;
 
     _cairo_pattern_init_for_surface (&pattern, src);
 
@@ -516,8 +522,10 @@ _cairo_win32_surface_get_subimage (cairo_win32_surface_t  *surface,
     local =
 	(cairo_win32_surface_t *) _cairo_win32_surface_create_similar_internal
 	(surface, content, width, height, TRUE);
+    if (local == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
     if (local->base.status)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return local->base.status;
 
     status = CAIRO_INT_STATUS_UNSUPPORTED;
 

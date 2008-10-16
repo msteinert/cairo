@@ -722,6 +722,8 @@ _cairo_xcb_surface_clone_similar (void			*abstract_surface,
 
 	clone = (cairo_xcb_surface_t *)
 	    _cairo_xcb_surface_create_similar (surface, content, width, height);
+	if (clone == NULL)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	if (clone->base.status)
 	    return clone->base.status;
 

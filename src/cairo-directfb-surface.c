@@ -456,10 +456,8 @@ _cairo_directfb_surface_create_similar (void            *abstract_src,
 
     format = _cairo_format_from_content (content);             
     surface = calloc (1, sizeof(cairo_directfb_surface_t));
-    if (!surface) {
-        _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-        return NULL;
-    }
+    if (surface == NULL)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
    
     surface->dfb = source->dfb;
     
@@ -644,8 +642,10 @@ _cairo_directfb_surface_clone_similar (void             *abstract_surface,
                 _cairo_directfb_surface_create_similar (surface, 
                             _cairo_content_from_format (image_src->format),
                             image_src->width, image_src->height);
-        if (!clone)
-            return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+        if (clone == NULL)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	if (clone->base.status)
+	    return clone->base.status;
             
         ret = clone->dfbsurface->Lock (clone->dfbsurface, 
                                    DSLF_WRITE, (void *)&dst, &pitch);
@@ -766,8 +766,10 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
         if (!dst->color) {
             dst->color = _cairo_directfb_surface_create_similar (dst,
                                                 CAIRO_CONTENT_COLOR_ALPHA, 1, 1);
-            if (!dst->color)
-                return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+            if (dst->color == NULL)
+		return CAIRO_INT_STATUS_UNSUPPORTED;
+	    if (dst->color->base.status)
+		return (dst->color->base.status);
         }
         
         src = (cairo_directfb_surface_t *)dst->color;

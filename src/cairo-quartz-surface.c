@@ -1565,8 +1565,8 @@ _cairo_quartz_surface_create_similar (void *abstract_surface,
 
     // verify width and height of surface
     if (!_cairo_quartz_verify_surface_size(width, height)) {
-	_cairo_error (CAIRO_STATUS_NO_MEMORY);
-	return NULL;
+	return _cairo_surface_create_in_error (_cairo_error
+					       (CAIRO_STATUS_NO_MEMORY));
     }
 
     return cairo_quartz_surface_create (format, width, height);
