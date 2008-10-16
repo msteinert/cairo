@@ -301,7 +301,7 @@ main (void)
     cairo_test_context_t ctx;
     cairo_t *cr;
     cairo_test_status_t ret = CAIRO_TEST_UNTESTED;
-    double ppi[] = { 576., 288., 144., 72., 36. };
+    double ppi[] = { 600., 300., 150., 75., 72, 37.5 };
     unsigned int i;
     int ppi_x, ppi_y, num_ppi;
 
