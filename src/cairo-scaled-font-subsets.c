@@ -133,7 +133,7 @@ typedef struct _cairo_string_entry {
 static cairo_status_t
 _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
 			   unsigned long	 scaled_font_glyph_index,
-			   const char * 	 utf8,
+			   const char *		 utf8,
 			   int			 utf8_len,
                            cairo_scaled_font_subsets_glyph_t *subset_glyph);
 
@@ -649,7 +649,7 @@ cairo_status_t
 _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
 				      cairo_scaled_font_t		*scaled_font,
 				      unsigned long			 scaled_font_glyph_index,
-				      const char * 			 utf8,
+				      const char *			 utf8,
 				      int				 utf8_len,
                                       cairo_scaled_font_subsets_glyph_t *subset_glyph)
 {
@@ -745,6 +745,7 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
                 subset_glyph->is_composite = FALSE;
             }
 
+	    CAIRO_MUTEX_LOCK (unscaled_font->mutex);
             status = _cairo_sub_font_create (subsets,
 					     unscaled_font,
 					     subsets->num_sub_fonts,
@@ -752,6 +753,8 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
 					     subset_glyph->is_scaled,
 					     subset_glyph->is_composite,
 					     &sub_font);
+	    CAIRO_MUTEX_UNLOCK (unscaled_font->mutex);
+
             if (status) {
 		cairo_scaled_font_destroy (unscaled_font);
                 return status;
@@ -812,10 +815,18 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
         }
     }
 
-    return _cairo_sub_font_map_glyph (sub_font,
-                                      scaled_font_glyph_index,
-				      utf8, utf8_len,
-                                      subset_glyph);
+    if (sub_font->scaled_font != scaled_font)
+	CAIRO_MUTEX_LOCK (sub_font->scaled_font->mutex);
+
+    status =  _cairo_sub_font_map_glyph (sub_font,
+					 scaled_font_glyph_index,
+					 utf8, utf8_len,
+					 subset_glyph);
+
+    if (sub_font->scaled_font != scaled_font)
+	CAIRO_MUTEX_UNLOCK (sub_font->scaled_font->mutex);
+
+    return status;
 }
 
 static cairo_status_t
