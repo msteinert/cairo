@@ -79,6 +79,7 @@ mask_polygon (cairo_t *cr, int x, int y)
 						 CAIRO_CONTENT_ALPHA,
 						 WIDTH, HEIGHT);
     cr2 = cairo_create (mask_surface);
+    cairo_surface_destroy (mask_surface);
 
     cairo_save (cr2);
     cairo_set_operator (cr2, CAIRO_OPERATOR_CLEAR);
@@ -97,11 +98,8 @@ mask_polygon (cairo_t *cr, int x, int y)
     cairo_close_path (cr2);
     cairo_fill (cr2);
 
+    cairo_mask_surface (cr, cairo_get_target (cr2), x, y);
     cairo_destroy (cr2);
-
-    cairo_mask_surface (cr, mask_surface, x, y);
-
-    cairo_surface_destroy (mask_surface);
 }
 
 static void
