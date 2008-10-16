@@ -1288,9 +1288,10 @@ _cairo_xlib_surface_create_solid_pattern_surface (void                  *abstrac
     status = surface->base.status;
     if (status)
 	goto BAIL;
-    surface->owns_pixmap = TRUE;
 
-    status = _cairo_surface_paint (&image->base, CAIRO_OPERATOR_SOURCE, &solid_pattern->base);
+    status = _cairo_surface_paint (&image->base,
+				   CAIRO_OPERATOR_SOURCE,
+				   &solid_pattern->base);
     if (status)
 	goto BAIL;
 
@@ -1305,13 +1306,16 @@ _cairo_xlib_surface_create_solid_pattern_surface (void                  *abstrac
   BAIL:
     cairo_surface_destroy (&image->base);
 
-    if (status && surface) {
-	XFreePixmap (other->dpy, pixmap);
+    if (status) {
+	if (pixmap != None)
+	    XFreePixmap (other->dpy, pixmap);
 	cairo_surface_destroy (&surface->base);
-	surface = NULL;
+
+	return _cairo_surface_create_in_error (status);
     }
 
-    return (cairo_surface_t *) surface;
+    surface->owns_pixmap = TRUE;
+    return &surface->base;
 }
 
 static cairo_status_t
