@@ -29,6 +29,7 @@
 #define _GNU_SOURCE 1	/* for sched_getaffinity() */
 
 #include "cairo-perf.h"
+#include "cairo-stats.h"
 
 #include "cairo-boilerplate-getopt.h"
 

@@ -2,6 +2,7 @@ TAGS
 tags
 cairo-perf
 cairo-perf-diff-files
+cairo-perf-graph-files
 valgrind-log
 callgrind.out.*
 index.html

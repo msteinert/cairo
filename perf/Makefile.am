@@ -7,15 +7,19 @@ AM_CPPFLAGS =					\
 	-I$(top_builddir)/src			\
 	$(CAIRO_CFLAGS)
 
-EXTRA_PROGRAMS += cairo-perf cairo-perf-diff-files
+EXTRA_PROGRAMS += cairo-perf cairo-perf-diff-files cairo-perf-graph-files
 EXTRA_DIST += cairo-perf-diff
+EXTRA_LTLIBRARIES += libcairoperf.la
+
+LDADD = $(top_builddir)/boilerplate/libcairoboilerplate.la \
+	$(top_builddir)/src/libcairo.la \
+	libcairoperf.la \
+	$(CAIROPERF_LIBS)
 
 cairo_perf_SOURCES =		\
 	cairo-perf.c		\
 	cairo-perf.h		\
 	cairo-perf-cover.c	\
-	cairo-stats.c		\
-	cairo-stats.h		\
 	box-outline.c		\
 	composite-checker.c	\
 	fill.c			\
@@ -48,14 +52,20 @@ cairo_perf_SOURCES += cairo-perf-posix.c
 endif
 endif
 
-cairo_perf_diff_files_SOURCES =	\
-	cairo-perf-diff-files.c \
+libcairoperf_la_SOURCES = \
+	cairo-perf-report.c	\
 	cairo-stats.c		\
 	cairo-stats.h
 
-LDADD = $(top_builddir)/boilerplate/libcairoboilerplate.la \
-	$(top_builddir)/src/libcairo.la \
-	$(CAIROPERF_LIBS)
+cairo_perf_diff_files_SOURCES =	\
+	cairo-perf-diff-files.c
+
+cairo_perf_graph_files_SOURCES = \
+	cairo-perf-graph.h \
+	cairo-perf-graph-files.c \
+	cairo-perf-graph-widget.c
+cairo_perf_graph_files_CFLAGS = @gtk_CFLAGS@
+cairo_perf_graph_files_LDADD = @gtk_LIBS@ $(LDADD)
 
 $(top_builddir)/boilerplate/libcairoboilerplate.la: $(top_builddir)/src/libcairo.la
 	cd $(top_builddir)/boilerplate && $(MAKE) $(AM_MAKEFLAGS) libcairoboilerplate.la

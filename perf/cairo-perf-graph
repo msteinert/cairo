@@ -1,25 +1,21 @@
 #!/bin/sh
 set -e
 
+###
+### XXX Source common functions from cairo-perf-diff
+###
+
 usage() {
     argv0=`basename $0`
 
     cat >&2 << END
 Usage:
-For comparing files created my cairo-perf:
+As opposed to its sibling, cairo-perf-diff, cairo-perf-graph targets
+reviewing changes between series by graphically comparing the performance
+at each commit.
 
-	$argv0 old.perf new.perf
+The two revisions can be any revision accepted by git. For example:
 
-For comparing (cached) performance of revisions:
-
-	$argv0 [OPTIONS] <revision> [-- cairo-perf options]
-	$argv0 [OPTIONS] <rev1> <rev2> [-- cairo-perf-options]
-
-If given a single revision, compares its results to that of its
-(first-parent) predecessor. Otherwise compares the two given revisions.
-The revisions can be any revision accepted by git. For example:
-
-	$argv0 HEAD		# Show impact of latest commit
 	$argv0 1.2.0 1.2.4	# Compare performance of 1.2.0 to 1.2.4
 
 Options:
@@ -66,18 +62,12 @@ if [ $# -eq 0 ] || [ "`echo "$1" | sed 's/^-//'`" != "$1" ]; then
 fi
 
 # Finally, pick up the actual revision arguments
-if [ $# -eq 1 ] || [ "$2" = "--" ]; then
-    old="$1^"
-    new="$1"
-    shift 1
-else
-    old="$1"
-    new="$2"
-    shift 2
-fi
+old="$1"
+new="$2"
+shift 2
 
 # And post-finally, pass anything after -- on to cairo-perf
-CAIRO_PERF_OPTIONS="-r -i 10"
+CAIRO_PERF_OPTIONS="-r -i 25"
 if [ $# -gt 0 ]; then
     if [ "$1" = "--" ]; then
 	shift 1
@@ -194,29 +184,22 @@ run_cairo_perf_if_not_cached() {
 
 git_setup
 
-# Build cairo-perf-diff-files if not available
-if [ ! -e $CAIRO_DIR/perf/cairo-perf-diff-files ]; then
-    echo "Building cairo-perf-diff-files"
+# Build cairo-perf-graph-files if not available
+if [ ! -e $CAIRO_DIR/perf/cairo-perf-graph-files ]; then
+    echo "Building cairo-perf-graph-files"
     if [ "x$OS" = "xWindows_NT" ]; then
-        make -f Makefile.win32 -C $CAIRO_DIR/perf/ cairo-perf-diff-files CFG=debug
+        make -f Makefile.win32 -C $CAIRO_DIR/perf/ cairo-perf-graph-files CFG=debug
     else
-        make -C $CAIRO_DIR/perf/ cairo-perf-diff-files
+        make -C $CAIRO_DIR/perf/ cairo-perf-graph-files
     fi
 fi
 
-if [ ! -e $old ]; then
-    run_cairo_perf_if_not_cached $old old
-    old=`rev2perf $old`
-fi
+revs=""
+for rev in `git rev-list --reverse $old..$new`; do
+    run_cairo_perf_if_not_cached $rev rev
+    perf=`rev2perf $rev`
+    [ -e $perf ] && revs="$revs $perf"
+done
 
-if [ ! -e $new ]; then
-    run_cairo_perf_if_not_cached $new new
-    new=`rev2perf $new`
-fi
-
-if [ "$html_output" != "true" ]; then
-    $CAIRO_DIR/perf/cairo-perf-diff-files $old $new
-else
-    $CAIRO_DIR/perf/cairo-perf-diff-files $old $new |
-    $CAIRO_DIR/perf/make-html.py
-fi
+exec $CAIRO_DIR/perf/cairo-perf-graph-files $revs
+#exec $CAIRO_DIR/libtool --mode=execute gdb --args $CAIRO_DIR/perf/cairo-perf-graph-files $revs
