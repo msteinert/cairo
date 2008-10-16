@@ -1433,7 +1433,6 @@ _draw_check (int width, int height)
 void
 cairo_test_paint_checkered (cairo_t *cr)
 {
-    cairo_status_t status;
     cairo_surface_t *check;
 
     check = _draw_check (12, 12);
@@ -1490,4 +1489,17 @@ cairo_test_malloc_failure (const cairo_test_context_t *ctx,
 #endif
 
     return TRUE;
+}
+
+cairo_test_status_t
+cairo_test_status_from_status (const cairo_test_context_t *ctx,
+			       cairo_status_t status)
+{
+    if (status == CAIRO_STATUS_SUCCESS)
+	return CAIRO_TEST_SUCCESS;
+
+    if (cairo_test_malloc_failure (ctx, status))
+	return CAIRO_TEST_NO_MEMORY;
+
+    return CAIRO_TEST_FAILURE;
 }

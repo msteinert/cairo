@@ -192,6 +192,10 @@ cairo_bool_t
 cairo_test_malloc_failure (const cairo_test_context_t *ctx,
 	                   cairo_status_t status);
 
+cairo_test_status_t
+cairo_test_status_from_status (const cairo_test_context_t *ctx,
+			       cairo_status_t status);
+
 char *
 cairo_test_reference_image_filename (const cairo_test_context_t *ctx,
 	                             const char *base_name,
