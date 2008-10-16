@@ -85,8 +85,12 @@ the software configuration used to generate the reference images.
 
 Here are some of the relevant details:
 
-  * Your system must have a copy of the Bitstream Vera font, (this is
-    a free software font that is often in a file named Vera.ttf).
+  * Your system must have a copy of the Bitstream Vera font. These are
+      "Bitstream Vera Sans" (Vera.ttf);
+      "Bitstream Vera Sans Mono" (VeraMono.ttf);
+      "Bitstream Vera Serif" (VeraSe.ttf);
+    and also
+      "Nimbus Sans L" (n019003l.pfb).
 
   * Currently, you must be using a build of cairo using freetype
     (cairo-ft) as the default font backend. Otherwise all tests
@@ -102,6 +106,7 @@ Here are some of the relevant details:
     suite.
 
   * To test the ps backend, you will need ghostscript version 8.62.
+
 
 What if I can't make my system match?
 -------------------------------------
