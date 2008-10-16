@@ -108,6 +108,7 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
     return &surface->base;
 
   FAIL_CLEANUP_SURFACE:
+    cairo_surface_destroy (target);
     free (surface);
   FAIL:
     return _cairo_surface_create_in_error (status);
