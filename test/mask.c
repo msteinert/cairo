@@ -191,7 +191,6 @@ draw (cairo_t *cr, int width, int height)
 {
     const cairo_test_context_t *ctx = cairo_test_get_context (cr);
     cairo_surface_t *tmp_surface;
-    cairo_pattern_t *tmp_pattern;
     size_t i, j, k;
     cairo_t *cr2;
 
@@ -202,10 +201,6 @@ draw (cairo_t *cr, int width, int height)
 						CAIRO_CONTENT_COLOR_ALPHA,
 						IMAGE_WIDTH, IMAGE_HEIGHT);
     cr2 = cairo_create (tmp_surface);
-
-    tmp_pattern = cairo_pattern_create_for_surface (tmp_surface);
-    cairo_set_source (cr, tmp_pattern);
-    cairo_pattern_destroy (tmp_pattern);
     cairo_surface_destroy (tmp_surface);
 
     for (k = 0; k < ARRAY_SIZE (clip_funcs); k++) {
@@ -230,6 +225,7 @@ draw (cairo_t *cr, int width, int height)
 		cairo_restore (cr2);
 
 		/* Copy back to the main pixmap */
+		cairo_set_source_surface (cr, cairo_get_target (cr2), 0, 0);
 		cairo_rectangle (cr, x, y, WIDTH, HEIGHT);
 		cairo_fill (cr);
 	    }
