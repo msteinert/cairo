@@ -348,6 +348,7 @@ cairo_type1_font_create_charstring (cairo_type1_font_t      *font,
     cairo_bool_t emit_path = TRUE;
 
     /* This call may return CAIRO_INT_STATUS_UNSUPPORTED for bitmap fonts. */
+    CAIRO_MUTEX_LOCK (font->type1_scaled_font->mutex);
     status = _cairo_scaled_glyph_lookup (font->type1_scaled_font,
 					 glyph_index,
 					 CAIRO_SCALED_GLYPH_INFO_METRICS|
@@ -363,6 +364,7 @@ cairo_type1_font_create_charstring (cairo_type1_font_t      *font,
 					     CAIRO_SCALED_GLYPH_INFO_METRICS,
 					     &scaled_glyph);
     }
+    CAIRO_MUTEX_UNLOCK (font->type1_scaled_font->mutex);
     if (status)
         return status;
 
