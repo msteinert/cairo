@@ -527,7 +527,7 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
 							    &width);
 	}
 	if (status)
-	    return status;
+	    break;
 
 	_cairo_output_stream_printf (surface->final_stream,
 				     "    }\n");
@@ -548,6 +548,8 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
         }
     }
     cairo_surface_destroy (type3_surface);
+    if (status)
+	return status;
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "] def\n"
