@@ -1127,6 +1127,15 @@ void
 cairo_scaled_font_extents (cairo_scaled_font_t  *scaled_font,
 			   cairo_font_extents_t *extents)
 {
+    if (scaled_font->status) {
+	extents->ascent  = 0.0;
+	extents->descent = 0.0;
+	extents->height  = 0.0;
+	extents->max_x_advance = 0.0;
+	extents->max_y_advance = 0.0;
+	return;
+    }
+
     *extents = scaled_font->extents;
 }
 slim_hidden_def (cairo_scaled_font_extents);
@@ -1174,8 +1183,10 @@ cairo_scaled_font_text_extents (cairo_scaled_font_t   *scaled_font,
 					       &glyphs, &num_glyphs,
 					       NULL, NULL,
 					       NULL);
-    if (status)
+    if (status) {
+	status = _cairo_scaled_font_set_error (scaled_font, status);
 	goto ZERO_EXTENTS;
+    }
 
     cairo_scaled_font_glyph_extents (scaled_font, glyphs, num_glyphs, extents);
     free (glyphs);
