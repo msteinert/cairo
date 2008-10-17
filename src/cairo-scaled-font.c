@@ -412,17 +412,21 @@ _cairo_scaled_font_map_destroy (void)
  * font backend upon error.
  */
 
-void
+cairo_status_t
 _cairo_scaled_font_register_placeholder_and_unlock_font_map (cairo_scaled_font_t *scaled_font)
 {
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_status_t status;
     cairo_scaled_font_t *placeholder_scaled_font;
 
+    assert (CAIRO_HOLDS_MUTEX (_cairo_scaled_font_map_mutex));
+
+    status = scaled_font->status;
+    if (status)
+	return status;
+
     placeholder_scaled_font = malloc (sizeof (cairo_scaled_font_t));
-    if (!placeholder_scaled_font) {
-	status = CAIRO_STATUS_NO_MEMORY;
-	goto FREE;
-    }
+    if (placeholder_scaled_font == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     /* full initialization is wasteful, but who cares... */
     status = _cairo_scaled_font_init (placeholder_scaled_font,
@@ -432,32 +436,26 @@ _cairo_scaled_font_register_placeholder_and_unlock_font_map (cairo_scaled_font_t
 				      &scaled_font->options,
 				      NULL);
     if (status)
-	goto FINI;
+	goto FREE_PLACEHOLDER;
 
     placeholder_scaled_font->placeholder = TRUE;
-
-    CAIRO_MUTEX_LOCK (placeholder_scaled_font->mutex);
 
     status = _cairo_hash_table_insert (cairo_scaled_font_map->hash_table,
 				       &placeholder_scaled_font->hash_entry);
     if (status)
-	goto UNLOCK_KEY;
+	goto FINI_PLACEHOLDER;
 
-    goto UNLOCK;
+    CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
+    CAIRO_MUTEX_LOCK (placeholder_scaled_font->mutex);
 
-   UNLOCK_KEY:
-    CAIRO_MUTEX_UNLOCK (placeholder_scaled_font->mutex);
+    return CAIRO_STATUS_SUCCESS;
 
-   FINI:
+  FINI_PLACEHOLDER:
     _cairo_scaled_font_fini (placeholder_scaled_font);
-
-   FREE:
+  FREE_PLACEHOLDER:
     free (placeholder_scaled_font);
 
-    status = _cairo_scaled_font_set_error (scaled_font, status);
-
- UNLOCK:
-    CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
+    return _cairo_scaled_font_set_error (scaled_font, status);
 }
 
 void
@@ -473,14 +471,16 @@ _cairo_scaled_font_unregister_placeholder_and_lock_font_map (cairo_scaled_font_t
 				      (cairo_hash_entry_t**) &placeholder_scaled_font);
     assert (found);
     assert (placeholder_scaled_font->placeholder);
+    assert (CAIRO_HOLDS_MUTEX (placeholder_scaled_font->mutex));
 
     _cairo_hash_table_remove (cairo_scaled_font_map->hash_table,
 			      &scaled_font->hash_entry);
 
-    CAIRO_MUTEX_UNLOCK (placeholder_scaled_font->mutex);
-
     CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
+
+    CAIRO_MUTEX_UNLOCK (placeholder_scaled_font->mutex);
     cairo_scaled_font_destroy (placeholder_scaled_font);
+
     CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
 }
 

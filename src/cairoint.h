@@ -1538,7 +1538,7 @@ _cairo_scaled_font_create_in_error (cairo_status_t status);
 cairo_private void
 _cairo_scaled_font_reset_static_data (void);
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_scaled_font_register_placeholder_and_unlock_font_map (cairo_scaled_font_t *scaled_font);
 
 cairo_private void

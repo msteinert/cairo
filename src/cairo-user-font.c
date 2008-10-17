@@ -151,9 +151,14 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	    null_surface = _cairo_null_surface_create (cairo_surface_get_content (meta_surface));
 	    analysis_surface = _cairo_analysis_surface_create (null_surface, -1, -1);
 	    cairo_surface_destroy (null_surface);
+	    status = analysis_surface->status;
+	    if (status)
+		return status;
 
-	    _cairo_analysis_surface_set_ctm (analysis_surface, &scaled_font->extent_scale);
-	    status = _cairo_meta_surface_replay (meta_surface, analysis_surface);
+	    _cairo_analysis_surface_set_ctm (analysis_surface,
+					     &scaled_font->extent_scale);
+	    status = _cairo_meta_surface_replay (meta_surface,
+						 analysis_surface);
 	    _cairo_analysis_surface_get_bounding_box (analysis_surface, &bbox);
 	    cairo_surface_destroy (analysis_surface);
 
@@ -399,7 +404,7 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
 
     user_scaled_font = malloc (sizeof (cairo_user_scaled_font_t));
     if (user_scaled_font == NULL)
-	return CAIRO_STATUS_NO_MEMORY;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     status = _cairo_scaled_font_init (&user_scaled_font->base,
 				      &font_face->base,
@@ -444,29 +449,31 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
 	}
     }
 
-    if (status == CAIRO_STATUS_SUCCESS && font_face->scaled_font_methods.init != NULL) {
-
-	cairo_t *cr;
-
+    if (status == CAIRO_STATUS_SUCCESS &&
+	font_face->scaled_font_methods.init != NULL)
+    {
 	/* Lock the scaled_font mutex such that user doesn't accidentally try
          * to use it just yet. */
 	CAIRO_MUTEX_LOCK (user_scaled_font->base.mutex);
 
 	/* Give away fontmap lock such that user-font can use other fonts */
-	_cairo_scaled_font_register_placeholder_and_unlock_font_map (&user_scaled_font->base);
+	status = _cairo_scaled_font_register_placeholder_and_unlock_font_map (&user_scaled_font->base);
+	if (status == CAIRO_STATUS_SUCCESS) {
+	    cairo_t *cr;
 
-	cr = _cairo_user_scaled_font_create_meta_context (user_scaled_font);
+	    cr = _cairo_user_scaled_font_create_meta_context (user_scaled_font);
 
-	status = font_face->scaled_font_methods.init (&user_scaled_font->base,
-						      cr,
-						      &font_extents);
+	    status = font_face->scaled_font_methods.init (&user_scaled_font->base,
+							  cr,
+							  &font_extents);
 
-	if (status == CAIRO_STATUS_SUCCESS)
-	    status = cairo_status (cr);
+	    if (status == CAIRO_STATUS_SUCCESS)
+		status = cairo_status (cr);
 
-	cairo_destroy (cr);
+	    cairo_destroy (cr);
 
-	_cairo_scaled_font_unregister_placeholder_and_lock_font_map (&user_scaled_font->base);
+	    _cairo_scaled_font_unregister_placeholder_and_lock_font_map (&user_scaled_font->base);
+	}
 
 	CAIRO_MUTEX_UNLOCK (user_scaled_font->base.mutex);
     }
