@@ -568,11 +568,17 @@ void
 cairo_user_font_face_set_init_func (cairo_font_face_t                  *font_face,
 				    cairo_user_scaled_font_init_func_t  init_func)
 {
-    cairo_user_font_face_t *user_font_face = (cairo_user_font_face_t *) font_face;
+    cairo_user_font_face_t *user_font_face;
+
+    if (font_face->status)
+	return;
+
     if (! _cairo_font_face_is_user (font_face)) {
 	if (_cairo_font_face_set_error (font_face, CAIRO_STATUS_FONT_TYPE_MISMATCH))
 	    return;
     }
+
+    user_font_face = (cairo_user_font_face_t *) font_face;
     if (user_font_face->immutable) {
 	if (_cairo_font_face_set_error (font_face, CAIRO_STATUS_USER_FONT_IMMUTABLE))
 	    return;
@@ -604,11 +610,17 @@ void
 cairo_user_font_face_set_render_glyph_func (cairo_font_face_t                          *font_face,
 					    cairo_user_scaled_font_render_glyph_func_t  render_glyph_func)
 {
-    cairo_user_font_face_t *user_font_face = (cairo_user_font_face_t *) font_face;
+    cairo_user_font_face_t *user_font_face;
+
+    if (font_face->status)
+	return;
+
     if (! _cairo_font_face_is_user (font_face)) {
 	if (_cairo_font_face_set_error (font_face, CAIRO_STATUS_FONT_TYPE_MISMATCH))
 	    return;
     }
+
+    user_font_face = (cairo_user_font_face_t *) font_face;
     if (user_font_face->immutable) {
 	if (_cairo_font_face_set_error (font_face, CAIRO_STATUS_USER_FONT_IMMUTABLE))
 	    return;
@@ -636,11 +648,17 @@ void
 cairo_user_font_face_set_text_to_glyphs_func (cairo_font_face_t                            *font_face,
 					      cairo_user_scaled_font_text_to_glyphs_func_t  text_to_glyphs_func)
 {
-    cairo_user_font_face_t *user_font_face = (cairo_user_font_face_t *) font_face;
+    cairo_user_font_face_t *user_font_face;
+
+    if (font_face->status)
+	return;
+
     if (! _cairo_font_face_is_user (font_face)) {
 	if (_cairo_font_face_set_error (font_face, CAIRO_STATUS_FONT_TYPE_MISMATCH))
 	    return;
     }
+
+    user_font_face = (cairo_user_font_face_t *) font_face;
     if (user_font_face->immutable) {
 	if (_cairo_font_face_set_error (font_face, CAIRO_STATUS_USER_FONT_IMMUTABLE))
 	    return;
@@ -667,11 +685,16 @@ void
 cairo_user_font_face_set_unicode_to_glyph_func (cairo_font_face_t                              *font_face,
 						cairo_user_scaled_font_unicode_to_glyph_func_t  unicode_to_glyph_func)
 {
-    cairo_user_font_face_t *user_font_face = (cairo_user_font_face_t *) font_face;
+    cairo_user_font_face_t *user_font_face;
+    if (font_face->status)
+	return;
+
     if (! _cairo_font_face_is_user (font_face)) {
 	if (_cairo_font_face_set_error (font_face, CAIRO_STATUS_FONT_TYPE_MISMATCH))
 	    return;
     }
+
+    user_font_face = (cairo_user_font_face_t *) font_face;
     if (user_font_face->immutable) {
 	if (_cairo_font_face_set_error (font_face, CAIRO_STATUS_USER_FONT_IMMUTABLE))
 	    return;
@@ -689,18 +712,24 @@ slim_hidden_def(cairo_user_font_face_set_unicode_to_glyph_func);
  * Gets the scaled-font initialization function of a user-font.
  *
  * Return value: The init callback of @font_face
- * or %NULL if none set.
+ * or %NULL if none set or an error has occurred.
  *
  * Since: 1.8
  **/
 cairo_user_scaled_font_init_func_t
 cairo_user_font_face_get_init_func (cairo_font_face_t *font_face)
 {
-    cairo_user_font_face_t *user_font_face = (cairo_user_font_face_t *) font_face;
+    cairo_user_font_face_t *user_font_face;
+
+    if (font_face->status)
+	return NULL;
+
     if (! _cairo_font_face_is_user (font_face)) {
 	if (_cairo_font_face_set_error (font_face, CAIRO_STATUS_FONT_TYPE_MISMATCH))
 	    return NULL;
     }
+
+    user_font_face = (cairo_user_font_face_t *) font_face;
     return user_font_face->scaled_font_methods.init;
 }
 
@@ -711,18 +740,24 @@ cairo_user_font_face_get_init_func (cairo_font_face_t *font_face)
  * Gets the glyph rendering function of a user-font.
  *
  * Return value: The render_glyph callback of @font_face
- * or %NULL if none set.
+ * or %NULL if none set or an error has occurred.
  *
  * Since: 1.8
  **/
 cairo_user_scaled_font_render_glyph_func_t
 cairo_user_font_face_get_render_glyph_func (cairo_font_face_t *font_face)
 {
-    cairo_user_font_face_t *user_font_face = (cairo_user_font_face_t *) font_face;
+    cairo_user_font_face_t *user_font_face;
+
+    if (font_face->status)
+	return NULL;
+
     if (! _cairo_font_face_is_user (font_face)) {
 	if (_cairo_font_face_set_error (font_face, CAIRO_STATUS_FONT_TYPE_MISMATCH))
 	    return NULL;
     }
+
+    user_font_face = (cairo_user_font_face_t *) font_face;
     return user_font_face->scaled_font_methods.render_glyph;
 }
 
@@ -733,18 +768,24 @@ cairo_user_font_face_get_render_glyph_func (cairo_font_face_t *font_face)
  * Gets the text-to-glyphs conversion function of a user-font.
  *
  * Return value: The text_to_glyphs callback of @font_face
- * or %NULL if none set.
+ * or %NULL if none set or an error occurred.
  *
  * Since: 1.8
  **/
 cairo_user_scaled_font_text_to_glyphs_func_t
 cairo_user_font_face_get_text_to_glyphs_func (cairo_font_face_t *font_face)
 {
-    cairo_user_font_face_t *user_font_face = (cairo_user_font_face_t *) font_face;
+    cairo_user_font_face_t *user_font_face;
+
+    if (font_face->status)
+	return NULL;
+
     if (! _cairo_font_face_is_user (font_face)) {
 	if (_cairo_font_face_set_error (font_face, CAIRO_STATUS_FONT_TYPE_MISMATCH))
 	    return NULL;
     }
+
+    user_font_face = (cairo_user_font_face_t *) font_face;
     return user_font_face->scaled_font_methods.text_to_glyphs;
 }
 
@@ -755,17 +796,23 @@ cairo_user_font_face_get_text_to_glyphs_func (cairo_font_face_t *font_face)
  * Gets the unicode-to-glyph conversion function of a user-font.
  *
  * Return value: The unicode_to_glyph callback of @font_face
- * or %NULL if none set.
+ * or %NULL if none set or an error occurred.
  *
  * Since: 1.8
  **/
 cairo_user_scaled_font_unicode_to_glyph_func_t
 cairo_user_font_face_get_unicode_to_glyph_func (cairo_font_face_t *font_face)
 {
-    cairo_user_font_face_t *user_font_face = (cairo_user_font_face_t *) font_face;
+    cairo_user_font_face_t *user_font_face;
+
+    if (font_face->status)
+	return NULL;
+
     if (! _cairo_font_face_is_user (font_face)) {
 	if (_cairo_font_face_set_error (font_face, CAIRO_STATUS_FONT_TYPE_MISMATCH))
 	    return NULL;
     }
+
+    user_font_face = (cairo_user_font_face_t *) font_face;
     return user_font_face->scaled_font_methods.unicode_to_glyph;
 }
