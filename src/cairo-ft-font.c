@@ -2561,10 +2561,14 @@ cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
  * cairo_set_font_face() or cairo_scaled_font_create(). The
  * #cairo_scaled_font_t returned from cairo_scaled_font_create() is
  * also for the FreeType backend and can be used with functions such
- * as cairo_ft_scaled_font_lock_face().
+ * as cairo_ft_scaled_font_lock_face(). Note that Cairo may keep a reference
+ * to the FT_Face alive in a font-cache and the exact lifetime of the reference
+ * depends highly upon the exact usage pattern and is subject to external
+ * factors. You must not call FT_Done_Face() before the last reference to the
+ * #cairo_font_face_t has been dropped.
  *
- * As an example, here is how one might correctly couple the lifetime of
- * the FreeType face object to the #cairo_font_face_t:
+ * As an example, below is how one might correctly couple the lifetime of
+ * the FreeType face object to the #cairo_font_face_t.
  *
  * <informalexample><programlisting>
  * static const cairo_user_data_key_t key;
