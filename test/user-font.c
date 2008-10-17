@@ -145,8 +145,8 @@ test_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_font_face_t *
-_user_font_face_create (void)
+static cairo_status_t
+_user_font_face_create (cairo_font_face_t **out)
 {
     /* Simple glyph definition: 1 - 15 means lineto (or moveto for first
      * point) for one of the points on this grid:
@@ -181,15 +181,23 @@ _user_font_face_create (void)
     };
 
     cairo_font_face_t *user_font_face;
+    cairo_status_t status;
 
     user_font_face = cairo_user_font_face_create ();
     cairo_user_font_face_set_init_func             (user_font_face, test_scaled_font_init);
     cairo_user_font_face_set_render_glyph_func     (user_font_face, test_scaled_font_render_glyph);
     cairo_user_font_face_set_unicode_to_glyph_func (user_font_face, test_scaled_font_unicode_to_glyph);
 
-    cairo_font_face_set_user_data (user_font_face, &test_font_face_glyphs_key, (void*) glyphs, NULL);
+    status = cairo_font_face_set_user_data (user_font_face,
+					    &test_font_face_glyphs_key,
+					    (void*) glyphs, NULL);
+    if (status) {
+	cairo_font_face_destroy (user_font_face);
+	return status;
+    }
 
-    return user_font_face;
+    *out = user_font_face;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_test_status_t
@@ -199,6 +207,7 @@ draw (cairo_t *cr, int width, int height)
     const char text[] = TEXT;
     cairo_font_extents_t font_extents;
     cairo_text_extents_t extents;
+    cairo_status_t status;
 
     cairo_set_source_rgb (cr, 1, 1, 1);
     cairo_paint (cr);
@@ -208,7 +217,12 @@ draw (cairo_t *cr, int width, int height)
     cairo_rotate (cr, .6);
 #endif
 
-    font_face = _user_font_face_create ();
+    status = _user_font_face_create (&font_face);
+    if (status) {
+	return cairo_test_status_from_status (cairo_test_get_context (cr),
+					      status);
+    }
+
     cairo_set_font_face (cr, font_face);
     cairo_font_face_destroy (font_face);
 
