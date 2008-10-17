@@ -752,6 +752,11 @@ _cairo_analysis_surface_create (cairo_surface_t		*target,
 				int			 height)
 {
     cairo_analysis_surface_t *surface;
+    cairo_status_t status;
+
+    status = target->status;
+    if (status)
+	return _cairo_surface_create_in_error (status);
 
     surface = malloc (sizeof (cairo_analysis_surface_t));
     if (surface == NULL)
@@ -795,17 +800,22 @@ _cairo_analysis_surface_create (cairo_surface_t		*target,
     return &surface->base;
 }
 
-cairo_private void
+void
 _cairo_analysis_surface_set_ctm (cairo_surface_t *abstract_surface,
 				 cairo_matrix_t  *ctm)
 {
-    cairo_analysis_surface_t	*surface = (cairo_analysis_surface_t *) abstract_surface;
+    cairo_analysis_surface_t	*surface;
+
+    if (abstract_surface->status)
+	return;
+
+    surface = (cairo_analysis_surface_t *) abstract_surface;
 
     surface->ctm = *ctm;
     surface->has_ctm = !_cairo_matrix_is_identity (&surface->ctm);
 }
 
-cairo_private void
+void
 _cairo_analysis_surface_get_ctm (cairo_surface_t *abstract_surface,
 				 cairo_matrix_t  *ctm)
 {
