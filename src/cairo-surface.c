@@ -606,10 +606,10 @@ _cairo_surface_set_font_options (cairo_surface_t       *surface,
 {
     cairo_status_t status;
 
-    assert (! surface->is_snapshot);
-
     if (surface->status)
 	return;
+
+    assert (! surface->is_snapshot);
 
     if (surface->finished) {
 	status = _cairo_surface_set_error (surface,
@@ -704,6 +704,9 @@ slim_hidden_def (cairo_surface_flush);
 void
 cairo_surface_mark_dirty (cairo_surface_t *surface)
 {
+    if (surface->status)
+	return;
+
     assert (! surface->is_snapshot);
 
     cairo_surface_mark_dirty_rectangle (surface, 0, 0, -1, -1);
@@ -734,10 +737,10 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
 {
     cairo_status_t status;
 
-    assert (! surface->is_snapshot);
-
     if (surface->status)
 	return;
+
+    assert (! surface->is_snapshot);
 
     if (surface->finished) {
 	status = _cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
@@ -792,10 +795,10 @@ _cairo_surface_set_device_scale (cairo_surface_t *surface,
 {
     cairo_status_t status;
 
-    assert (! surface->is_snapshot);
-
     if (surface->status)
 	return;
+
+    assert (! surface->is_snapshot);
 
     if (surface->finished) {
 	status = _cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
@@ -838,10 +841,10 @@ cairo_surface_set_device_offset (cairo_surface_t *surface,
 {
     cairo_status_t status;
 
-    assert (! surface->is_snapshot);
-
     if (surface->status)
 	return;
+
+    assert (! surface->is_snapshot);
 
     if (surface->finished) {
 	status = _cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
@@ -921,10 +924,10 @@ cairo_surface_set_fallback_resolution (cairo_surface_t	*surface,
 {
     cairo_status_t status;
 
-    assert (! surface->is_snapshot);
-
     if (surface->status)
 	return;
+
+    assert (! surface->is_snapshot);
 
     if (surface->finished) {
 	status = _cairo_surface_set_error (surface, CAIRO_STATUS_SURFACE_FINISHED);
@@ -987,10 +990,10 @@ _cairo_surface_acquire_source_image (cairo_surface_t         *surface,
 				     cairo_image_surface_t  **image_out,
 				     void                   **image_extra)
 {
-    assert (!surface->finished);
-
     if (surface->status)
 	return surface->status;
+
+    assert (!surface->finished);
 
     if (surface->backend->acquire_source_image == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1056,10 +1059,10 @@ _cairo_surface_acquire_dest_image (cairo_surface_t         *surface,
 				   cairo_rectangle_int_t   *image_rect,
 				   void                   **image_extra)
 {
-    assert (!surface->finished);
-
     if (surface->status)
 	return surface->status;
+
+    assert (!surface->finished);
 
     if (surface->backend->acquire_dest_image == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1265,8 +1268,6 @@ _cairo_surface_composite (cairo_operator_t	op,
 {
     cairo_int_status_t status;
 
-    assert (! dst->is_snapshot);
-
     if (mask) {
 	/* These operators aren't interpreted the same way by the backends;
 	 * they are implemented in terms of other operators in cairo-gstate.c
@@ -1276,6 +1277,8 @@ _cairo_surface_composite (cairo_operator_t	op,
 
     if (dst->status)
 	return dst->status;
+
+    assert (! dst->is_snapshot);
 
     if (dst->finished)
 	return _cairo_surface_set_error (dst, CAIRO_STATUS_SURFACE_FINISHED);
@@ -1326,10 +1329,10 @@ _cairo_surface_fill_rectangle (cairo_surface_t	   *surface,
 {
     cairo_rectangle_int_t rect;
 
-    assert (! surface->is_snapshot);
-
     if (surface->status)
 	return surface->status;
+
+    assert (! surface->is_snapshot);
 
     if (surface->finished)
 	return _cairo_surface_set_error (surface,CAIRO_STATUS_SURFACE_FINISHED);
@@ -1368,10 +1371,10 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
     cairo_status_t status;
     int i;
 
-    assert (! surface->is_snapshot);
-
     if (surface->status)
 	return surface->status;
+
+    assert (! surface->is_snapshot);
 
     num_boxes = _cairo_region_num_boxes (region);
 
@@ -1440,10 +1443,10 @@ _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
 {
     cairo_int_status_t status;
 
-    assert (! surface->is_snapshot);
-
     if (surface->status)
 	return surface->status;
+
+    assert (! surface->is_snapshot);
 
     if (surface->finished)
 	return _cairo_surface_set_error (surface,CAIRO_STATUS_SURFACE_FINISHED);
@@ -1471,10 +1474,10 @@ _cairo_surface_paint (cairo_surface_t	*surface,
     cairo_status_t status;
     cairo_pattern_t *dev_source;
 
-    assert (! surface->is_snapshot);
-
     if (surface->status)
 	return surface->status;
+
+    assert (! surface->is_snapshot);
 
     status = _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source);
     if (status)
@@ -1504,10 +1507,10 @@ _cairo_surface_mask (cairo_surface_t	*surface,
     cairo_pattern_t *dev_source;
     cairo_pattern_t *dev_mask;
 
-    assert (! surface->is_snapshot);
-
     if (surface->status)
 	return surface->status;
+
+    assert (! surface->is_snapshot);
 
     status = _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source);
     if (status)
@@ -1616,10 +1619,10 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
     cairo_matrix_t dev_ctm = *ctm;
     cairo_matrix_t dev_ctm_inverse = *ctm_inverse;
 
-    assert (! surface->is_snapshot);
-
     if (surface->status)
 	return surface->status;
+
+    assert (! surface->is_snapshot);
 
     status = _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source);
     if (status)
@@ -1660,10 +1663,10 @@ _cairo_surface_fill (cairo_surface_t	*surface,
     cairo_status_t status;
     cairo_pattern_t *dev_source;
 
-    assert (! surface->is_snapshot);
-
     if (surface->status)
 	return surface->status;
+
+    assert (! surface->is_snapshot);
 
     status = _cairo_surface_copy_pattern_for_destination (source, surface, &dev_source);
     if (status)
@@ -1704,8 +1707,6 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		op,
 {
     cairo_int_status_t status;
 
-    assert (! dst->is_snapshot);
-
     /* These operators aren't interpreted the same way by the backends;
      * they are implemented in terms of other operators in cairo-gstate.c
      */
@@ -1713,6 +1714,8 @@ _cairo_surface_composite_trapezoids (cairo_operator_t		op,
 
     if (dst->status)
 	return dst->status;
+
+    assert (! dst->is_snapshot);
 
     if (dst->finished)
 	return _cairo_surface_set_error (dst, CAIRO_STATUS_SURFACE_FINISHED);
@@ -1757,10 +1760,10 @@ cairo_surface_copy_page (cairo_surface_t *surface)
 {
     cairo_status_t status_ignored;
 
-    assert (! surface->is_snapshot);
-
     if (surface->status)
 	return;
+
+    assert (! surface->is_snapshot);
 
     if (surface->finished) {
 	status_ignored = _cairo_surface_set_error (surface,
@@ -1794,10 +1797,10 @@ cairo_surface_show_page (cairo_surface_t *surface)
 {
     cairo_status_t status_ignored;
 
-    assert (! surface->is_snapshot);
-
     if (surface->status)
 	return;
+
+    assert (! surface->is_snapshot);
 
     if (surface->finished) {
 	status_ignored = _cairo_surface_set_error (surface,
@@ -1914,9 +1917,6 @@ _cairo_surface_set_clip_region (cairo_surface_t	    *surface,
 
     if (surface->status)
 	return surface->status;
-
-    if (surface->finished)
-	return _cairo_surface_set_error (surface,CAIRO_STATUS_SURFACE_FINISHED);
 
     assert (surface->backend->set_clip_region != NULL);
 
@@ -2232,10 +2232,10 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
     cairo_scaled_font_t *dev_scaled_font = scaled_font;
     cairo_pattern_t *dev_source;
 
-    assert (! surface->is_snapshot);
-
     if (surface->status)
 	return surface->status;
+
+    assert (! surface->is_snapshot);
 
     if (!num_glyphs && !utf8_len)
 	return CAIRO_STATUS_SUCCESS;
@@ -2359,10 +2359,10 @@ _cairo_surface_old_show_glyphs (cairo_scaled_font_t	*scaled_font,
 {
     cairo_status_t status;
 
-    assert (! dst->is_snapshot);
-
     if (dst->status)
 	return dst->status;
+
+    assert (! dst->is_snapshot);
 
     if (dst->finished)
 	return _cairo_surface_set_error (dst, CAIRO_STATUS_SURFACE_FINISHED);
@@ -2483,10 +2483,10 @@ _cairo_surface_composite_fixup_unbounded (cairo_surface_t            *dst,
     cairo_rectangle_int_t *src_rectangle = NULL;
     cairo_rectangle_int_t *mask_rectangle = NULL;
 
-    assert (! dst->is_snapshot);
-
     if (dst->status)
 	return dst->status;
+
+    assert (! dst->is_snapshot);
 
     /* The RENDER/libpixman operators are clipped to the bounds of the untransformed,
      * non-repeating sources and masks. Other sources and masks can be ignored.
@@ -2561,10 +2561,10 @@ _cairo_surface_composite_shape_fixup_unbounded (cairo_surface_t            *dst,
     cairo_rectangle_int_t *src_rectangle = NULL;
     cairo_rectangle_int_t *mask_rectangle = NULL;
 
-    assert (! dst->is_snapshot);
-
     if (dst->status)
 	return dst->status;
+
+    assert (! dst->is_snapshot);
 
     /* The RENDER/libpixman operators are clipped to the bounds of the untransformed,
      * non-repeating sources and masks. Other sources and masks can be ignored.
