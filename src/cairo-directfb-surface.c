@@ -1145,9 +1145,9 @@ _cairo_directfb_surface_composite_trapezoids (cairo_operator_t   op,
     cairo_directfb_surface_t   *dst = abstract_dst;
     cairo_directfb_surface_t   *src;
     cairo_surface_attributes_t  src_attr;
-    cairo_status_t              ret;
+    cairo_status_t              status;
     DFBAccelerationMask         accel;
-    
+
     D_DEBUG_AT (CairoDFB_Render,
                 "%s( op=%d, pattern=%p, dst=%p, antialias=%d,"
                    " src_x=%d, src_y=%d, dst_x=%d, dst_y=%d,"
@@ -1157,116 +1157,114 @@ _cairo_directfb_surface_composite_trapezoids (cairo_operator_t   op,
 
     if (antialias != CAIRO_ANTIALIAS_NONE)
         return CAIRO_INT_STATUS_UNSUPPORTED;
-        
+
     /* Textures are not supported yet. */
     if (pattern->type != CAIRO_PATTERN_TYPE_SOLID)
         return CAIRO_INT_STATUS_UNSUPPORTED;
-    
-    ret = _directfb_prepare_composite (dst, pattern, NULL, op,
-                                       &src_x, &src_y, NULL, NULL, 
-                                       width, height, &src, &src_attr);
-    if (ret)
-        return ret;
-   
-    dst->dfbsurface->GetAccelerationMask (dst->dfbsurface, src->dfbsurface, &accel);
-    
-    ret = CAIRO_INT_STATUS_UNSUPPORTED;
-    
+
+    status = _directfb_prepare_composite (dst, pattern, NULL, op,
+					  &src_x, &src_y, NULL, NULL,
+					  width, height, &src, &src_attr);
+    if (status)
+        return status;
+
+    dst->dfbsurface->GetAccelerationMask (dst->dfbsurface,
+					  src->dfbsurface,
+					  &accel);
+
+    status = CAIRO_INT_STATUS_UNSUPPORTED;
+
     if (accel & DFXL_TEXTRIANGLES) {
         DFBVertex  vertex[6*num_traps];
         DFBVertex *v = &vertex[0];
-        int        n;
-      
+        int        n = 0;
+
 #define ADD_TRI(id, x1, y1, s1, t1, x2, y2, s2, t2, x3, y3, s3, t3) {\
     const int p = (id)*3;\
     v[p+0].x=(x1); v[p+0].y=(y1); v[p+0].z=0; v[p+0].w=1; v[p+0].s=(s1); v[p+0].t=(t1);\
     v[p+1].x=(x2); v[p+1].y=(y2); v[p+1].z=0; v[p+1].w=1; v[p+1].s=(s2); v[p+1].t=(t2);\
     v[p+2].x=(x3); v[p+2].y=(y3); v[p+2].z=0; v[p+2].w=1; v[p+2].s=(s3); v[p+2].t=(t3);\
-}         
-       
-        for (n = 0; num_traps; num_traps--) {
-            float lx1, ly1, lx2, ly2;
-            float rx1, ry1, rx2, ry2;
-            
-            /* XXX: Do we need to validate the trapezoid? */
- 
-            lx1 = traps->left.p1.x/65536.0;
-            ly1 = traps->left.p1.y/65536.0;
-            lx2 = traps->left.p2.x/65536.0;
-            ly2 = traps->left.p2.y/65536.0;
-            rx1 = traps->right.p1.x/65536.0;
-            ry1 = traps->right.p1.y/65536.0;
-            rx2 = traps->right.p2.x/65536.0;
-            ry2 = traps->right.p2.y/65536.0;
-            
+}
+	while (num_traps--) {
+            double lx1, ly1, lx2, ly2;
+            double rx1, ry1, rx2, ry2;
+
+            lx1 = _cairo_fixed_to_double (traps->left.p1.x);
+            ly1 = _cairo_fixed_to_double (traps->left.p1.y);
+            lx2 = _cairo_fixed_to_double (traps->left.p2.x);
+            ly2 = _cairo_fixed_to_double (traps->left.p2.y);
+            rx1 = _cairo_fixed_to_double (traps->right.p1.x);
+            ry1 = _cairo_fixed_to_double (traps->right.p1.y);
+            rx2 = _cairo_fixed_to_double (traps->right.p2.x);
+            ry2 = _cairo_fixed_to_double (traps->right.p2.y);
+
             if (traps->left.p1.y < traps->top) {
-                float y = traps->top/65536.0;
+                double y = _cairo_fixed_to_double (traps->top);
                 if (lx2 != lx1)
                     lx1 = (y - ly1) * (lx2 - lx1) / (ly2 - ly1) + lx1;
                 ly1 = y;
-            } 
+            }
             if (traps->left.p2.y > traps->bottom) {
-                float y = traps->bottom/65536.0;
+                double y = _cairo_fixed_to_double (traps->bottom);
                 if (lx2 != lx1)
                     lx2 = (y - ly1) * (lx2 - lx1) / (ly2 - ly1) + lx1;
                 ly2 = y;
             }
-            
+
             if (traps->right.p1.y < traps->top) {
-                float y = traps->top/65536.0;
+                double y = _cairo_fixed_to_double (traps->top);
                 if (rx2 != rx1)
                     rx1 = (y - ry1) * (rx2 - rx1) / (ry2 - ry1) + rx1;
                 ry1 = y;
             }
             if (traps->right.p2.y > traps->bottom) {
-                float y = traps->bottom/65536.0;
+                double y = _cairo_fixed_to_double (traps->bottom);
                 if (rx2 != rx1)
                     rx2 = (y - ry1) * (rx2 - rx1) / (ry2 - ry1) + rx1;
                 ry2 = y;
             }
-             
+
             if (lx1 == rx1 && ly1 == ry1) {
                 ADD_TRI (0, lx2, ly2, 0, 0,
                             lx1, ly1, 0, 0,
                             rx2, ry2, 0, 0 );
                 v += 3;
                 n += 3;
-            }
-            else if (lx2 == rx2 && ly2 == ry2) {
+            } else if (lx2 == rx2 && ly2 == ry2) {
                 ADD_TRI (0, lx1, ly1, 0, 0,
                             lx2, ly2, 0, 0,
                             rx1, ry1, 0, 0 );
                 v += 3;
                 n += 3;
-            }
-            else {
-                ADD_TRI (0, lx1, ly1, 0, 0, 
+            } else {
+                ADD_TRI (0, lx1, ly1, 0, 0,
                             rx1, ry1, 0, 0,
                             lx2, ly2, 0, 0);
                 ADD_TRI (1, lx2, ly2, 0, 0,
                             rx1, ry1, 0, 0,
-                            rx2, ry2, 0, 0);            
+                            rx2, ry2, 0, 0);
                 v += 6;
                 n += 6;
             }
-            
+
             traps++;
         }
-        
 #undef ADD_TRI
-              
+
         D_DEBUG_AT (CairoDFB_Render, "Running TextureTriangles().\n");
-            
+
         RUN_CLIPPED (dst, NULL,
-                     dst->dfbsurface->TextureTriangles (dst->dfbsurface, src->dfbsurface, 
-                                                    vertex, NULL, n, DTTF_LIST));
-                                            
-        ret = CAIRO_STATUS_SUCCESS;
+                     dst->dfbsurface->TextureTriangles (dst->dfbsurface,
+							src->dfbsurface,
+							vertex, NULL, n,
+							DTTF_LIST));
+
+        status = CAIRO_STATUS_SUCCESS;
     }
-    
+
     _directfb_finish_composite (dst, pattern, &src->base, &src_attr);
 
-    return ret;
+    return status;
 }
 #endif /* DFB_COMPOSITE_TRAPEZOIDS */
 
