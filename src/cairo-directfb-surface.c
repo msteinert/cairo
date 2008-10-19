@@ -405,6 +405,7 @@ _directfb_acquire_surface (cairo_directfb_surface_t  *surface,
 
     if (buffer->Lock (buffer, lock_flags, &data, &pitch)) {
         D_DEBUG_AT (CairoDFB_Acquire, "Couldn't lock surface!\n");
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
         goto ERROR;
     }
 
