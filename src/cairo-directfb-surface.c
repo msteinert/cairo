@@ -768,8 +768,8 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
                                                 CAIRO_CONTENT_COLOR_ALPHA, 1, 1);
             if (dst->color == NULL)
 		return CAIRO_INT_STATUS_UNSUPPORTED;
-	    if (dst->color->base.status)
-		return (dst->color->base.status);
+	    if (dst->color->status)
+		return dst->color->status;
         }
         
         src = (cairo_directfb_surface_t *)dst->color;
