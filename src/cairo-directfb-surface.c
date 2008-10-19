@@ -1180,12 +1180,15 @@ _cairo_directfb_surface_composite_trapezoids (cairo_operator_t   op,
         DFBVertex *v = &vertex[0];
         int        n = 0;
 
-#define ADD_TRI(id, x1, y1, s1, t1, x2, y2, s2, t2, x3, y3, s3, t3) {\
+#define ADD_TRI_V(V, X, Y) do { \
+    (V)->x = (X); (V)->y = (Y); (V)->w = 1; (V)->z = (V)->s = (V)->t = 0; \
+} while (0)
+#define ADD_TRI(id, x1, y1, x2, y2, x3, y3) do {\
     const int p = (id)*3;\
-    v[p+0].x=(x1); v[p+0].y=(y1); v[p+0].z=0; v[p+0].w=1; v[p+0].s=(s1); v[p+0].t=(t1);\
-    v[p+1].x=(x2); v[p+1].y=(y2); v[p+1].z=0; v[p+1].w=1; v[p+1].s=(s2); v[p+1].t=(t2);\
-    v[p+2].x=(x3); v[p+2].y=(y3); v[p+2].z=0; v[p+2].w=1; v[p+2].s=(s3); v[p+2].t=(t3);\
-}
+    ADD_TRI_V (v+p+0, x1, y1); \
+    ADD_TRI_V (v+p+1, x2, y2); \
+    ADD_TRI_V (v+p+2, x3, y3); \
+} while (0)
 	while (num_traps--) {
             double lx1, ly1, lx2, ly2;
             double rx1, ry1, rx2, ry2;
@@ -1226,24 +1229,16 @@ _cairo_directfb_surface_composite_trapezoids (cairo_operator_t   op,
             }
 
             if (lx1 == rx1 && ly1 == ry1) {
-                ADD_TRI (0, lx2, ly2, 0, 0,
-                            lx1, ly1, 0, 0,
-                            rx2, ry2, 0, 0 );
+                ADD_TRI (0, lx2, ly2, lx1, ly1, rx2, ry2);
                 v += 3;
                 n += 3;
             } else if (lx2 == rx2 && ly2 == ry2) {
-                ADD_TRI (0, lx1, ly1, 0, 0,
-                            lx2, ly2, 0, 0,
-                            rx1, ry1, 0, 0 );
+                ADD_TRI (0, lx1, ly1, lx2, ly2, rx1, ry1);
                 v += 3;
                 n += 3;
             } else {
-                ADD_TRI (0, lx1, ly1, 0, 0,
-                            rx1, ry1, 0, 0,
-                            lx2, ly2, 0, 0);
-                ADD_TRI (1, lx2, ly2, 0, 0,
-                            rx1, ry1, 0, 0,
-                            rx2, ry2, 0, 0);
+                ADD_TRI (0, lx1, ly1, rx1, ry1, lx2, ly2);
+                ADD_TRI (1, lx2, ly2, rx1, ry1, rx2, ry2);
                 v += 6;
                 n += 6;
             }
@@ -1251,6 +1246,7 @@ _cairo_directfb_surface_composite_trapezoids (cairo_operator_t   op,
             traps++;
         }
 #undef ADD_TRI
+#undef ADD_TRI_V
 
         D_DEBUG_AT (CairoDFB_Render, "Running TextureTriangles().\n");
 
