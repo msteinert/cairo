@@ -263,7 +263,6 @@ _cairo_image_surface_create_with_masks (unsigned char	       *data,
 					int			height,
 					int			stride)
 {
-    cairo_int_status_t status;
     pixman_format_code_t pixman_format;
 
     if (! _pixman_format_from_masks (masks, &pixman_format)) {
