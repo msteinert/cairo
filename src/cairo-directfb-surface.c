@@ -1848,31 +1848,30 @@ cairo_directfb_surface_backend_init (IDirectFB *dfb)
 
 
 cairo_surface_t *
-cairo_directfb_surface_create (IDirectFB *dfb, IDirectFBSurface *dfbsurface) 
+cairo_directfb_surface_create (IDirectFB *dfb, IDirectFBSurface *dfbsurface)
 {
     cairo_directfb_surface_t *surface;
     DFBSurfacePixelFormat     format;
-   
+
     D_ASSERT (dfb != NULL);
     D_ASSERT (dfbsurface != NULL);
 
     cairo_directfb_surface_backend_init (dfb);
-        
+
     surface = calloc (1, sizeof(cairo_directfb_surface_t));
-    if (!surface)
-        return NULL;
-     
-    dfbsurface->AddRef (dfbsurface);   
+    if (surface == NULL)
+        return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+
+    dfbsurface->AddRef (dfbsurface);
     dfbsurface->GetPixelFormat (dfbsurface, &format);
     dfbsurface->GetSize (dfbsurface, &surface->width, &surface->height);
     surface->dfb = dfb;
-    surface->dfbsurface = dfbsurface;  
+    surface->dfbsurface = dfbsurface;
     surface->format = _directfb_to_cairo_format (format);
     surface->content = _directfb_format_to_content (format);
 
-    _cairo_surface_init (&surface->base, 
-                         &cairo_directfb_surface_backend, surface->content);  
+    _cairo_surface_init (&surface->base,
+                         &cairo_directfb_surface_backend, surface->content);
 
     return &surface->base;
 }
-
