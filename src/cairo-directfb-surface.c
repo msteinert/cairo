@@ -84,26 +84,23 @@ typedef struct _cairo_directfb_surface {
     cairo_surface_t      base;
     cairo_format_t       format;
     cairo_content_t      content;
-    
+
     IDirectFB           *dfb;
     IDirectFBSurface    *dfbsurface;
     IDirectFBSurface    *tmpsurface;
-    
-    /* color buffer */
-    cairo_surface_t     *color;
-        
+
     DFBRegion           *clips;
     int                  n_clips;
-    
+
     int                  width;
     int                  height;
-    
+
     cairo_bool_t         local;
 } cairo_directfb_surface_t;
 
 
 typedef struct _cairo_directfb_font_cache {
-    IDirectFB           *dfb; 
+    IDirectFB           *dfb;
     IDirectFBSurface    *dfbsurface;
 
     int                  width;
@@ -511,20 +508,15 @@ static cairo_status_t
 _cairo_directfb_surface_finish (void *data)
 {
     cairo_directfb_surface_t *surface = (cairo_directfb_surface_t *)data;
-    
+
     D_DEBUG_AT (CairoDFB_Surface, "%s( surface=%p ).\n", __FUNCTION__, surface);
-        
+
     if (surface->clips) {
         free (surface->clips);
         surface->clips   = NULL;
         surface->n_clips = 0;
     }
-    
-    if (surface->color) {
-        cairo_surface_destroy (surface->color);
-        surface->color = NULL;
-    }
-    
+
     if (surface->tmpsurface) {
         surface->tmpsurface->Release (surface->tmpsurface);
         surface->tmpsurface = NULL;
@@ -534,10 +526,10 @@ _cairo_directfb_surface_finish (void *data)
         surface->dfbsurface->Release (surface->dfbsurface);
         surface->dfbsurface = NULL;
     }
-    
+
     if (surface->dfb)
         surface->dfb = NULL;
-        
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -771,40 +763,13 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
     else {
         color.a = color.r = color.g = color.b = 0xff;
     }
-        
-    if (src_pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
-        cairo_solid_pattern_t *pattern = (cairo_solid_pattern_t *)src_pattern;
-         
-        if (!dst->color) {
-            dst->color = _cairo_directfb_surface_create_similar (dst,
-                                                CAIRO_CONTENT_COLOR_ALPHA, 1, 1);
-            if (dst->color == NULL)
-		return CAIRO_INT_STATUS_UNSUPPORTED;
-	    if (dst->color->status)
-		return dst->color->status;
-        }
-        
-        src = (cairo_directfb_surface_t *)dst->color;
-        src->dfbsurface->Clear (src->dfbsurface,
-                                pattern->color.red_short   >> 8,
-                                pattern->color.green_short >> 8,
-                                pattern->color.blue_short  >> 8,
-                                pattern->color.alpha_short >> 8);
-                                  
-        src_attr.matrix   = src_pattern->matrix;
-        src_attr.extend   = CAIRO_EXTEND_NONE;
-        src_attr.filter   = CAIRO_FILTER_NEAREST;
-        src_attr.x_offset =
-        src_attr.y_offset = 0;
-    }
-    else {
-        ret = _cairo_pattern_acquire_surface (src_pattern, &dst->base,
-                                              *src_x, *src_y, width, height,
-                                              (cairo_surface_t **)&src, &src_attr);
-        if (ret)
-            return ret;
-    }
-    
+
+    ret = _cairo_pattern_acquire_surface (src_pattern, &dst->base,
+					  *src_x, *src_y, width, height,
+					  (cairo_surface_t **)&src, &src_attr);
+    if (ret)
+	return ret;
+
     if (src->content == CAIRO_CONTENT_COLOR) {
         if (sblend == DSBF_SRCALPHA)
             sblend = DSBF_ONE;
@@ -857,8 +822,7 @@ _directfb_finish_composite (cairo_directfb_surface_t   *dst,
                             cairo_surface_t            *src,
                             cairo_surface_attributes_t *src_attr)
 {
-    if (src != dst->color)
-         _cairo_pattern_release_surface (src_pattern, src, src_attr);
+    _cairo_pattern_release_surface (src_pattern, src, src_attr);
 }
 #endif /* DFB_COMPOSITE || DFB_COMPOSITE_TRAPEZOIDS */        
 
