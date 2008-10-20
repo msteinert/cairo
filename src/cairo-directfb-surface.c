@@ -1307,8 +1307,8 @@ _cairo_directfb_surface_set_clip_region (void           *abstract_surface,
 	for (i = 0; i < n_boxes; i++) {
 	    surface->clips[i].x1 = boxes[i].p1.x;
 	    surface->clips[i].y1 = boxes[i].p1.y;
-	    surface->clips[i].x2 = boxes[i].p2.x;
-	    surface->clips[i].y2 = boxes[i].p2.y;
+	    surface->clips[i].x2 = boxes[i].p2.x - 1;
+	    surface->clips[i].y2 = boxes[i].p2.y - 1;
 	}
 
 	_cairo_region_boxes_fini (region, boxes);
