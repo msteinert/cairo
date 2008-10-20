@@ -90,6 +90,7 @@ composite_checker (cairo_perf_t *perf,
     checkerboard = cairo_pattern_create_for_surface (image);
     cairo_pattern_set_filter (checkerboard, CAIRO_FILTER_NEAREST);
     cairo_pattern_set_extend (checkerboard, CAIRO_EXTEND_REPEAT);
+    cairo_surface_destroy (image);
 
     /* Create the image source pattern. Again we use the NEAREST
      * filtering which should be fastest.
@@ -99,10 +100,10 @@ composite_checker (cairo_perf_t *perf,
                                         SRC_SIZE);
     src_pattern = cairo_pattern_create_for_surface (image);
     cairo_pattern_set_filter (src_pattern, CAIRO_FILTER_NEAREST);
+    cairo_surface_destroy (image);
 
     cairo_perf_run (perf, "composite-checker", do_composite_checker);
 
-    /* Frees the associated surfaces too. */
     cairo_pattern_destroy (checkerboard);
     cairo_pattern_destroy (src_pattern);
 }
