@@ -1382,7 +1382,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
                               cairo_directfb_font_cache_t **ret_cache,
                               DFBRectangle                 *rects,
                               DFBPoint                     *points,
-			      int                          *ret_num )
+			      int                          *ret_num)
 {
     cairo_status_t               status;
     cairo_scaled_glyph_t        *chars[num_glyphs];
@@ -1442,8 +1442,6 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
 	    points[n].x+img->width  <= 0   ||
 	    points[n].y+img->height <= 0)
 	{
-	    D_DEBUG_AT (CairoDFB_Font,
-			"  -> Unsupported font format %d!\n", img->format);
 	    continue;
 	}
 
@@ -1495,6 +1493,12 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
     h += y;
     w = MAX (w, 8);
     h = MAX (h, 8);
+
+    /* XXX query maximum surface size */
+    if (w > 2048 || h > 2048) {
+	_cairo_cache_thaw (scaled_font->glyphs);
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     if (cache) {
 	if (cache->width < w || cache->height < h) {
