@@ -972,6 +972,9 @@ $(REFERENCE_IMAGES)
 #                         components of a pure alpha surface
 # big-line              - range overflow of fixed-point
 # big-trap              - range overflow of fixed-point
+# degenerate-dash       - needs path editing in PS to convert degenerate
+#                         end-caps into the shapes as expected by cairo
+#                         (Or maybe PS is the correct behaviour?)
 # degenerate-path       - undefined behaviour in PS, needs path editing to
 #                         convert degenerate segments into circles/rectangles
 #                         as expected by cairo
@@ -1011,6 +1014,7 @@ XFAIL_TESTS =					\
 alpha-similar$(EXEEXT)				\
 big-line$(EXEEXT)				\
 big-trap$(EXEEXT)				\
+degenerate-dash$(EXEEXT)			\
 degenerate-path$(EXEEXT)			\
 device-offset-scale$(EXEEXT)			\
 extend-pad$(EXEEXT)				\
