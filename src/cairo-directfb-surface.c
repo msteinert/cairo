@@ -87,6 +87,7 @@ typedef struct _cairo_directfb_surface {
     IDirectFBSurface    *dfbsurface;
     IDirectFBSurface    *tmpsurface;
 
+    cairo_bool_t         has_clip;
     DFBRegion           *clips;
     int                  n_clips;
 
@@ -119,7 +120,7 @@ static int _directfb_argb_font = 0;
 /*****************************************************************************/
 
 #define RUN_CLIPPED(surface, clip, func) {\
-    if ((surface)->clips) {\
+    if ((surface)->has_clip) {\
         int k;\
         for (k = 0; k < (surface)->n_clips; k++) {\
             if (clip) {\
@@ -1276,6 +1277,8 @@ _cairo_directfb_surface_set_clip_region (void           *abstract_surface,
 	cairo_status_t   status;
 	int              i;
 
+	surface->has_clip = TRUE;
+
 	status = _cairo_region_get_boxes (region, &n_boxes, &boxes);
 	if (n_boxes == 0)
 	    return CAIRO_STATUS_SUCCESS;
@@ -1305,6 +1308,7 @@ _cairo_directfb_surface_set_clip_region (void           *abstract_surface,
 
 	_cairo_region_boxes_fini (region, boxes);
     } else {
+	surface->has_clip = FALSE;
 	if (surface->clips) {
 	    free (surface->clips);
 	    surface->clips = NULL;
