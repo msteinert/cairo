@@ -38,14 +38,13 @@
 #include "cairoint.h"
 #include "cairo-directfb.h"
 
-#include <stdlib.h>
-
 #include <directfb.h>
 #include <direct/types.h>
 #include <direct/debug.h>
 #include <direct/memcpy.h>
 #include <direct/util.h>
 
+#include "cairo-clip-private.h"
 
 /*
  * Rectangle works fine.
@@ -1703,6 +1702,17 @@ _cairo_directfb_surface_show_glyphs (void                *abstract_dst,
 
     if (pattern->type != CAIRO_PATTERN_TYPE_SOLID)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* Fallback if we need to emulate clip regions */
+    if (dst->base.clip &&
+        (dst->base.clip->mode != CAIRO_CLIP_MODE_REGION ||
+         dst->base.clip->surface != NULL))
+    {
+        return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    if (! _cairo_operator_bounded_by_mask (op))
+        return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (! _directfb_get_operator (op, &sblend, &dblend) ||
 	sblend == DSBF_DESTALPHA || sblend == DSBF_INVDESTALPHA)
