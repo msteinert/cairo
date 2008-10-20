@@ -226,81 +226,79 @@ _directfb_to_cairo_format (DFBSurfacePixelFormat format)
 }
 
 
-static cairo_status_t
+static cairo_bool_t
 _directfb_get_operator (cairo_operator_t         operator,
                         DFBSurfaceBlendFunction *ret_srcblend,
-                        DFBSurfaceBlendFunction *ret_dstblend )
+                        DFBSurfaceBlendFunction *ret_dstblend)
 {
     DFBSurfaceBlendFunction srcblend = DSBF_ONE;
     DFBSurfaceBlendFunction dstblend = DSBF_ZERO;
-    
+
     switch (operator) {
-        case CAIRO_OPERATOR_CLEAR:
-            srcblend = DSBF_ZERO;
-            dstblend = DSBF_ZERO;
-            break;
-        case CAIRO_OPERATOR_SOURCE:
-            srcblend = DSBF_ONE;
-            dstblend = DSBF_ZERO;
-            break;
-        case CAIRO_OPERATOR_OVER:
-            srcblend = DSBF_ONE;
-            dstblend = DSBF_INVSRCALPHA;
-            break;
-        case CAIRO_OPERATOR_IN:
-            srcblend = DSBF_DESTALPHA;
-            dstblend = DSBF_ZERO;
-            break;
-        case CAIRO_OPERATOR_OUT:
-            srcblend = DSBF_INVDESTALPHA;
-            dstblend = DSBF_ZERO;
-            break;
-        case CAIRO_OPERATOR_ATOP:
-            srcblend = DSBF_DESTALPHA;
-            dstblend = DSBF_INVSRCALPHA;
-            break;
-        case CAIRO_OPERATOR_DEST:
-            srcblend = DSBF_ZERO;
-            dstblend = DSBF_ONE;
-            break;
-        case CAIRO_OPERATOR_DEST_OVER:
-            srcblend = DSBF_INVDESTALPHA;
-            dstblend = DSBF_ONE;
-            break;
-        case CAIRO_OPERATOR_DEST_IN:
-            srcblend = DSBF_ZERO;
-            dstblend = DSBF_SRCALPHA;
-            break;
-        case CAIRO_OPERATOR_DEST_OUT:
-            srcblend = DSBF_ZERO;
-            dstblend = DSBF_INVSRCALPHA;
-            break;
-        case CAIRO_OPERATOR_DEST_ATOP:
-            srcblend = DSBF_INVDESTALPHA;
-            dstblend = DSBF_SRCALPHA;
-            break;                        
-        case CAIRO_OPERATOR_XOR:
-            srcblend = DSBF_INVDESTALPHA;
-            dstblend = DSBF_INVSRCALPHA;
-            break;
-        case CAIRO_OPERATOR_ADD:
-            srcblend = DSBF_ONE;
-            dstblend = DSBF_ONE;
-            break;
-        case CAIRO_OPERATOR_SATURATE:
-            srcblend = DSBF_SRCALPHASAT;
-            dstblend = DSBF_ONE;
-            break;
-        default:
-            return CAIRO_INT_STATUS_UNSUPPORTED;
+    case CAIRO_OPERATOR_CLEAR:
+	srcblend = DSBF_ZERO;
+	dstblend = DSBF_ZERO;
+	break;
+    case CAIRO_OPERATOR_SOURCE:
+	srcblend = DSBF_ONE;
+	dstblend = DSBF_ZERO;
+	break;
+    case CAIRO_OPERATOR_OVER:
+	srcblend = DSBF_ONE;
+	dstblend = DSBF_INVSRCALPHA;
+	break;
+    case CAIRO_OPERATOR_IN:
+	srcblend = DSBF_DESTALPHA;
+	dstblend = DSBF_ZERO;
+	break;
+    case CAIRO_OPERATOR_OUT:
+	srcblend = DSBF_INVDESTALPHA;
+	dstblend = DSBF_ZERO;
+	break;
+    case CAIRO_OPERATOR_ATOP:
+	srcblend = DSBF_DESTALPHA;
+	dstblend = DSBF_INVSRCALPHA;
+	break;
+    case CAIRO_OPERATOR_DEST:
+	srcblend = DSBF_ZERO;
+	dstblend = DSBF_ONE;
+	break;
+    case CAIRO_OPERATOR_DEST_OVER:
+	srcblend = DSBF_INVDESTALPHA;
+	dstblend = DSBF_ONE;
+	break;
+    case CAIRO_OPERATOR_DEST_IN:
+	srcblend = DSBF_ZERO;
+	dstblend = DSBF_SRCALPHA;
+	break;
+    case CAIRO_OPERATOR_DEST_OUT:
+	srcblend = DSBF_ZERO;
+	dstblend = DSBF_INVSRCALPHA;
+	break;
+    case CAIRO_OPERATOR_DEST_ATOP:
+	srcblend = DSBF_INVDESTALPHA;
+	dstblend = DSBF_SRCALPHA;
+	break;
+    case CAIRO_OPERATOR_XOR:
+	srcblend = DSBF_INVDESTALPHA;
+	dstblend = DSBF_INVSRCALPHA;
+	break;
+    case CAIRO_OPERATOR_ADD:
+	srcblend = DSBF_ONE;
+	dstblend = DSBF_ONE;
+	break;
+    case CAIRO_OPERATOR_SATURATE:
+	srcblend = DSBF_SRCALPHASAT;
+	dstblend = DSBF_ONE;
+	break;
+    default:
+	return FALSE;
     }
 
-    if (ret_srcblend)
-        *ret_srcblend = srcblend;
-    if (ret_dstblend)
-        *ret_dstblend = dstblend;
-    
-    return CAIRO_STATUS_SUCCESS;
+    *ret_srcblend = srcblend;
+    *ret_dstblend = dstblend;
+
+    return TRUE;
 }
 
 static cairo_status_t
@@ -723,7 +721,7 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
     DFBSurfaceBlendFunction     dblend;
     DFBColor                    color;
     
-    if (_directfb_get_operator (op, &sblend, &dblend))
+    if (! _directfb_get_operator (op, &sblend, &dblend))
         return CAIRO_INT_STATUS_UNSUPPORTED;
      
     if (mask_pattern) {
@@ -1041,7 +1039,7 @@ _cairo_directfb_surface_fill_rectangles (void                  *abstract_surface
                 "%s( dst=%p, op=%d, color=%p, rects=%p, n_rects=%d ).\n",
                 __FUNCTION__, dst, op, color, rects, n_rects);
 
-    if (_directfb_get_operator (op, &sblend, &dblend))
+    if (! _directfb_get_operator (op, &sblend, &dblend))
         return CAIRO_INT_STATUS_UNSUPPORTED;
         
     if (color->alpha_short >= 0xff00) {
@@ -1652,7 +1650,7 @@ _cairo_directfb_surface_show_glyphs (void                *abstract_dst,
     if (pattern->type != CAIRO_PATTERN_TYPE_SOLID)
         return CAIRO_INT_STATUS_UNSUPPORTED;
         
-    if (_directfb_get_operator (op, &sblend, &dblend) ||
+    if (! _directfb_get_operator (op, &sblend, &dblend) ||
         sblend == DSBF_DESTALPHA || sblend == DSBF_INVDESTALPHA) 
         return CAIRO_INT_STATUS_UNSUPPORTED;
         
