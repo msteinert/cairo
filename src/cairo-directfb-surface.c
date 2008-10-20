@@ -94,7 +94,8 @@ typedef struct _cairo_directfb_surface {
     int                  width;
     int                  height;
 
-    cairo_bool_t         local;
+    unsigned             local : 1;
+    unsigned             blit_premultiplied : 1;
 } cairo_directfb_surface_t;
 
 
@@ -306,6 +307,7 @@ _directfb_buffer_surface_create (IDirectFB             *dfb,
     DFBResult              ret;
 
     dsc.flags       = DSDESC_WIDTH | DSDESC_HEIGHT | DSDESC_PIXELFORMAT;
+    dsc.caps        = DSCAPS_PREMULTIPLIED;
     dsc.width       = width;
     dsc.height      = height;
     dsc.pixelformat = format;
@@ -491,7 +493,8 @@ _cairo_directfb_surface_create_similar (void            *abstract_src,
     surface->content = content;
     surface->width   = width;
     surface->height  = height;
-    surface->local   = true;
+    surface->local   = TRUE;
+    surface->blit_premultiplied = TRUE;
 
     return &surface->base;
 }
@@ -713,7 +716,7 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
     DFBSurfaceBlittingFlags     flags;
     DFBSurfaceBlendFunction     sblend;
     DFBSurfaceBlendFunction     dblend;
-    DFBColor                    color;
+    const cairo_color_t        *color;
 
     if (! _directfb_get_operator (op, &sblend, &dblend))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -721,6 +724,7 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
     if (mask_pattern) {
 	cairo_solid_pattern_t *pattern;
 
+		return CAIRO_INT_STATUS_UNSUPPORTED;
 	if (mask_pattern->type != CAIRO_PATTERN_TYPE_SOLID) {
 	    cairo_pattern_t *tmp;
 	    int              tmp_x, tmp_y;
@@ -746,13 +750,9 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
 	    }
 	}
 
-	pattern = (cairo_solid_pattern_t *)mask_pattern;
-	color.a = pattern->color.alpha_short >> 8;
-	color.r = pattern->color.red_short   >> 8;
-	color.g = pattern->color.green_short >> 8;
-	color.b = pattern->color.blue_short  >> 8;
+	color = &((cairo_solid_pattern_t *) mask_pattern)->color;
     } else {
-	color.a = color.r = color.g = color.b = 0xff;
+	color = _cairo_stock_color (CAIRO_STOCK_WHITE);
     }
 
     /* XXX DirectFB currently does not support filtering, so force NEAREST
@@ -800,9 +800,9 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
 
     flags = (sblend == DSBF_ONE && dblend == DSBF_ZERO)
 	? DSBLIT_NOFX : DSBLIT_BLEND_ALPHACHANNEL;
-    if (color.a != 0xff)
+    if (! CAIRO_COLOR_IS_OPAQUE (color))
 	flags |= DSBLIT_BLEND_COLORALPHA;
-    if (color.r != 0xff || color.g != 0xff || color.b != 0xff)
+    if (! _cairo_color_equal (color, _cairo_stock_color (CAIRO_STOCK_WHITE)))
 	flags |= DSBLIT_COLORIZE;
 
     dst->dfbsurface->SetBlittingFlags (dst->dfbsurface, flags);
@@ -812,9 +812,21 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
 	dst->dfbsurface->SetDstBlendFunction (dst->dfbsurface, dblend);
     }
 
-    if (flags & (DSBLIT_BLEND_COLORALPHA | DSBLIT_COLORIZE))
-	dst->dfbsurface->SetColor (dst->dfbsurface, color.r, color.g, color.b, color.a);
-
+    if (flags & (DSBLIT_BLEND_COLORALPHA | DSBLIT_COLORIZE)) {
+	if (dst->blit_premultiplied) {
+	    dst->dfbsurface->SetColor (dst->dfbsurface,
+				       color->red_short >> 8,
+				       color->green_short >> 8,
+				       color->blue_short >> 8,
+				       color->alpha_short >> 8);
+	} else {
+	    dst->dfbsurface->SetColor (dst->dfbsurface,
+				       color->red * 0xff,
+				       color->green * 0xff,
+				       color->blue * 0xff,
+				       color->alpha * 0xff);
+	}
+    }
 
     *ret_src = src;
     *ret_src_attr = src_attr;
@@ -1086,7 +1098,7 @@ _cairo_directfb_surface_fill_rectangles (void                  *abstract_surface
     if (! _directfb_get_operator (op, &sblend, &dblend))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (color->alpha_short >= 0xff00) {
+    if (CAIRO_COLOR_IS_OPAQUE (color)) {
 	if (sblend == DSBF_SRCALPHA)
 	    sblend = DSBF_ONE;
 	else if (sblend == DSBF_INVSRCALPHA)
@@ -1117,9 +1129,9 @@ _cairo_directfb_surface_fill_rectangles (void                  *abstract_surface
     }
 
     dst->dfbsurface->SetColor (dst->dfbsurface,
-			       color->red_short   >> 8,
+			       color->red_short >> 8,
 			       color->green_short >> 8,
-			       color->blue_short  >> 8,
+			       color->blue_short >> 8,
 			       color->alpha_short >> 8);
 
     for (i = 0; i < n_rects; i++) {
@@ -1679,10 +1691,11 @@ _cairo_directfb_surface_show_glyphs (void                *abstract_dst,
     DFBSurfaceBlittingFlags      flags;
     DFBSurfaceBlendFunction      sblend;
     DFBSurfaceBlendFunction      dblend;
-    DFBColor                     color;
     DFBRectangle                 rects[num_glyphs];
     DFBPoint                     points[num_glyphs];
     int                          num;
+    const cairo_color_t         *color;
+
 
     D_DEBUG_AT (CairoDFB_Font,
 		"%s( dst=%p, op=%d, pattern=%p, glyphs=%p, num_glyphs=%d, scaled_font=%p ).\n",
@@ -1705,13 +1718,10 @@ _cairo_directfb_surface_show_glyphs (void                *abstract_dst,
 	return status;
     }
 
-    color.a = ((cairo_solid_pattern_t *) pattern)->color.alpha_short >> 8;
-    color.r = ((cairo_solid_pattern_t *) pattern)->color.red_short   >> 8;
-    color.g = ((cairo_solid_pattern_t *) pattern)->color.green_short >> 8;
-    color.b = ((cairo_solid_pattern_t *) pattern)->color.blue_short  >> 8;
+    color = &((cairo_solid_pattern_t *) pattern)->color;
 
     flags = DSBLIT_BLEND_ALPHACHANNEL | DSBLIT_COLORIZE;
-    if (color.a != 0xff)
+    if (! CAIRO_COLOR_IS_OPAQUE (color))
 	flags |= DSBLIT_BLEND_COLORALPHA;
 
     if (!_directfb_argb_font) {
@@ -1725,7 +1735,19 @@ _cairo_directfb_surface_show_glyphs (void                *abstract_dst,
     dst->dfbsurface->SetBlittingFlags (dst->dfbsurface, flags);
     dst->dfbsurface->SetSrcBlendFunction (dst->dfbsurface, sblend);
     dst->dfbsurface->SetDstBlendFunction (dst->dfbsurface, dblend);
-    dst->dfbsurface->SetColor (dst->dfbsurface, color.r, color.g, color.b, color.a);
+    if (dst->blit_premultiplied) {
+	dst->dfbsurface->SetColor (dst->dfbsurface,
+				   color->red_short >> 8,
+				   color->green_short >> 8,
+				   color->blue_short >> 8,
+				   color->alpha_short >> 8);
+    } else {
+	dst->dfbsurface->SetColor (dst->dfbsurface,
+				   color->red * 0xff,
+				   color->green * 0xff,
+				   color->blue * 0xff,
+				   color->alpha * 0xff);
+    }
 
     D_DEBUG_AT (CairoDFB_Font, "Running BatchBlit().\n");
 
@@ -1856,6 +1878,7 @@ cairo_directfb_surface_create (IDirectFB *dfb, IDirectFBSurface *dfbsurface)
 {
     cairo_directfb_surface_t *surface;
     DFBSurfacePixelFormat     format;
+    DFBSurfaceCapabilities caps;
 
     D_ASSERT (dfb != NULL);
     D_ASSERT (dfbsurface != NULL);
@@ -1873,6 +1896,10 @@ cairo_directfb_surface_create (IDirectFB *dfb, IDirectFBSurface *dfbsurface)
     surface->dfbsurface = dfbsurface;
     surface->format = _directfb_to_cairo_format (format);
     surface->content = _directfb_format_to_content (format);
+
+    dfbsurface->GetCapabilities (dfbsurface, &caps);
+    if (caps & DSCAPS_PREMULTIPLIED)
+	surface->blit_premultiplied = TRUE;
 
     _cairo_surface_init (&surface->base,
                          &_cairo_directfb_surface_backend,
