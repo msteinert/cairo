@@ -79,8 +79,8 @@ AM_CONDITIONAL(CAIRO_HAS_LCOV, test "x$cairo_has_lcov" = "xyes")
 dnl ===========================================================================
 dnl Check for some custom valgrind modules
 PKG_CHECK_MODULES(VALGRIND, valgrind, [
-	safe_CFLAGS="$CFLAGS"
-	safe_CPPFLAGS="$CPPFLAGS"
+	_save_CFLAGS="$CFLAGS"
+	_save_CPPFLAGS="$CPPFLAGS"
 	CFLAGS="$CFLAGS $VALGRIND_CFLAGS"
 	CPPFLAGS="$CPPFLAGS $VALGRIND_CFLAGS"
 	AC_CHECK_HEADER([valgrind.h], [AC_DEFINE([HAVE_VALGRIND], [1],
@@ -90,6 +90,6 @@ PKG_CHECK_MODULES(VALGRIND, valgrind, [
 	AC_CHECK_HEADER([memfault.h], [AC_DEFINE([HAVE_MEMFAULT], [1],
 			[Define to 1 if you have the Valgrind memfault tool])])
 	CAIRO_CFLAGS="$VALGRIND_CFLAGS $CAIRO_CFLAGS"
-	CFLAGS="$safe_CFLAGS"
-	CPPFLAGS="$safe_CPPFLAGS"
+	CFLAGS="$_save_CFLAGS"
+	CPPFLAGS="$_save_CPPFLAGS"
     ], AC_MSG_RESULT(no))
