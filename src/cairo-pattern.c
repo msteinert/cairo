@@ -1359,7 +1359,6 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
 	attr->matrix = matrix;
 	attr->extend = pattern->base.extend;
 	attr->filter = CAIRO_FILTER_NEAREST;
-	attr->acquired = FALSE;
 
 	*out = &image->base;
 
@@ -1450,7 +1449,6 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
     cairo_matrix_init_identity (&attr->matrix);
     attr->extend = repeat ? CAIRO_EXTEND_REPEAT : CAIRO_EXTEND_NONE;
     attr->filter = CAIRO_FILTER_NEAREST;
-    attr->acquired = FALSE;
 
     return status;
 }
@@ -1601,7 +1599,6 @@ NOCACHE:
     cairo_matrix_init_identity (&attribs->matrix);
     attribs->extend = CAIRO_EXTEND_REPEAT;
     attribs->filter = CAIRO_FILTER_NEAREST;
-    attribs->acquired = FALSE;
 
     status = CAIRO_STATUS_SUCCESS;
 
@@ -1778,31 +1775,36 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
 					    cairo_surface_t	       **out,
 					    cairo_surface_attributes_t *attr)
 {
-    cairo_int_status_t status;
+    cairo_surface_t *surface;
+    cairo_rectangle_int_t extents;
+    cairo_rectangle_int_t sampled_area;
+    double x1, y1, x2, y2;
     int tx, ty;
     double pad;
+    cairo_bool_t is_identity;
+    cairo_bool_t is_empty;
+    cairo_int_status_t status;
 
-    attr->acquired = FALSE;
+    surface = cairo_surface_reference (pattern->surface);
 
+    is_identity = FALSE;
+    attr->matrix = pattern->base.matrix;
     attr->extend = pattern->base.extend;
     attr->filter = _cairo_pattern_analyze_filter (pattern, &pad);
 
-    if (_cairo_matrix_is_integer_translation (&pattern->base.matrix,
-					      &tx, &ty))
-    {
+    attr->x_offset = attr->y_offset = tx = ty = 0;
+    if (_cairo_matrix_is_integer_translation (&attr->matrix, &tx, &ty)) {
 	cairo_matrix_init_identity (&attr->matrix);
 	attr->x_offset = tx;
 	attr->y_offset = ty;
-    }
-    else if (attr->filter == CAIRO_FILTER_NEAREST)
-    {
+	is_identity = TRUE;
+    } else if (attr->filter == CAIRO_FILTER_NEAREST) {
 	/*
 	 * For NEAREST, we can remove the fractional translation component
 	 * from the transformation - this ensures that the pattern will always
 	 * hit fast-paths in the backends for simple transformations that
 	 * become (almost) identity, without loss of quality.
 	 */
-	attr->matrix = pattern->base.matrix;
 	attr->matrix.x0 = 0;
 	attr->matrix.y0 = 0;
 	if (_cairo_matrix_is_pixel_exact (&attr->matrix)) {
@@ -1816,15 +1818,12 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
 	    attr->matrix.y0 = pattern->base.matrix.y0;
 	}
 
-	attr->x_offset = attr->y_offset = 0;
-	tx = ty = 0;
-    }
-    else
-    {
-	attr->matrix = pattern->base.matrix;
-	attr->x_offset = attr->y_offset = 0;
-	tx = 0;
-	ty = 0;
+	if (_cairo_matrix_is_integer_translation (&attr->matrix, &tx, &ty)) {
+	    cairo_matrix_init_identity (&attr->matrix);
+	    attr->x_offset = tx;
+	    attr->y_offset = ty;
+	    is_identity = TRUE;
+	}
     }
 
     /* XXX: Hack:
@@ -1833,156 +1832,165 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
      * an image twice bigger on each side, and create a pattern of four
      * images such that the new image, when repeated, has the same effect
      * of reflecting the original pattern.
-     *
-     * This is because the reflect support in pixman is broken and we
-     * pass repeat instead of reflect to pixman.  See
-     * _cairo_image_surface_set_attributes() for that.
      */
     if (attr->extend == CAIRO_EXTEND_REFLECT) {
 	cairo_t *cr;
-	int w,h;
+	cairo_surface_t *src;
+	int w, h;
 
-	cairo_rectangle_int_t extents;
-	status = _cairo_surface_get_extents (pattern->surface, &extents);
+	status = _cairo_surface_get_extents (surface, &extents);
 	if (status)
-	    return status;
+	    goto BAIL;
 
-	attr->extend = CAIRO_EXTEND_REPEAT;
+	status = _cairo_surface_clone_similar (dst, pattern->surface,
+					       extents.x, extents.y,
+					       extents.width, extents.height,
+					       &extents.x, &extents.y, &src);
+	if (status)
+	    goto BAIL;
 
-	/* TODO: Instead of rendering pattern->surface four times to
-	 * out, we should first copy pattern->surface to surface similar
-	 * to dst and then copy that four times to out.  This may cause
-	 * an extra copy in the case of image destination, but for X servers,
-	 * this will send pattern->surface just once over the wire instead
-	 * of current four.
-	 */
-	x = extents.x;
-	y = extents.y;
 	w = 2 * extents.width;
 	h = 2 * extents.height;
 
-	*out = cairo_surface_create_similar (dst, dst->content, w, h);
-	status = cairo_surface_status (*out);
-	if (status) {
-	    cairo_surface_destroy (*out);
-	    *out = NULL;
-	    return status;
+	if (is_identity) {
+	    attr->x_offset = -x;
+	    x += tx;
+	    while (x <= -w)
+		x += w;
+	    while (x >= w)
+		x -= w;
+	    extents.x += x;
+	    tx = x = 0;
+
+	    attr->y_offset = -y;
+	    y += ty;
+	    while (y <= -h)
+		y += h;
+	    while (y >= h)
+		y -= h;
+	    extents.y += y;
+	    ty = y = 0;
 	}
 
-	(*out)->device_transform = pattern->surface->device_transform;
-	(*out)->device_transform_inverse = pattern->surface->device_transform_inverse;
+	cairo_surface_destroy (surface);
+	surface = cairo_surface_create_similar (dst, dst->content, w, h);
+	if (surface->status) {
+	    cairo_surface_destroy (src);
+	    return surface->status;
+	}
 
-	cr = cairo_create (*out);
+	surface->device_transform = pattern->surface->device_transform;
+	surface->device_transform_inverse = pattern->surface->device_transform_inverse;
 
-	cairo_set_source_surface (cr, pattern->surface, -x, -y);
+	cr = cairo_create (surface);
+
+	cairo_set_source_surface (cr, src, -extents.x, -extents.y);
 	cairo_paint (cr);
 
 	cairo_scale (cr, -1, +1);
-	cairo_set_source_surface (cr, pattern->surface, x-w, -y);
+	cairo_set_source_surface (cr, src, extents.x-w, -extents.y);
+	cairo_paint (cr);
+	cairo_set_source_surface (cr, src, extents.x, -extents.y);
 	cairo_paint (cr);
 
 	cairo_scale (cr, +1, -1);
-	cairo_set_source_surface (cr, pattern->surface, x-w, y-h);
+	cairo_set_source_surface (cr, src, extents.x-w, extents.y-h);
+	cairo_paint (cr);
+	cairo_set_source_surface (cr, src, extents.x, extents.y-h);
+	cairo_paint (cr);
+	cairo_set_source_surface (cr, src, extents.x-w, extents.y);
+	cairo_paint (cr);
+	cairo_set_source_surface (cr, src, extents.x, extents.y);
 	cairo_paint (cr);
 
 	cairo_scale (cr, -1, +1);
-	cairo_set_source_surface (cr, pattern->surface, -x, y-h);
+	cairo_set_source_surface (cr, src, -extents.x, extents.y-h);
+	cairo_paint (cr);
+	cairo_set_source_surface (cr, src, -extents.x, extents.y);
 	cairo_paint (cr);
 
 	status = cairo_status (cr);
 	cairo_destroy (cr);
 
-	if (status) {
-	    cairo_surface_destroy (*out);
-	    *out = NULL;
-	}
+	cairo_surface_destroy (src);
 
-	return status;
+	if (status)
+	    goto BAIL;
+
+	attr->extend = CAIRO_EXTEND_REPEAT;
     }
 
-    if (_cairo_surface_is_image (dst)) {
-	cairo_image_surface_t *image;
+    status = _cairo_surface_get_extents (surface, &extents);
+    if (status)
+	goto BAIL;
 
-	status = _cairo_surface_acquire_source_image (pattern->surface,
-						      &image,
-						      &attr->extra);
-	if (status)
-	    return status;
+    /* We first transform the rectangle to the coordinate space of the
+     * source surface so that we only need to clone that portion of the
+     * surface that will be read.
+     */
+    x1 = x;
+    y1 = y;
+    x2 = x + (int) width;
+    y2 = y + (int) height;
+    if (! is_identity) {
+	_cairo_matrix_transform_bounding_box (&attr->matrix,
+					      &x1, &y1, &x2, &y2,
+					      NULL);
+    }
 
-	*out = &image->base;
-	attr->acquired = TRUE;
+    sampled_area.x = floor (x1 - pad);
+    sampled_area.y = floor (y1 - pad);
+    sampled_area.width  = ceil (x2 + pad) - sampled_area.x;
+    sampled_area.height = ceil (y2 + pad) - sampled_area.y;
+
+    sampled_area.x += tx;
+    sampled_area.y += ty;
+
+    if (attr->extend != CAIRO_EXTEND_REPEAT) {
+	/* Never acquire a larger area than the source itself */
+	is_empty = _cairo_rectangle_intersect (&extents, &sampled_area);
     } else {
-	cairo_rectangle_int_t extents;
-	cairo_bool_t is_empty;
-
-	status = _cairo_surface_get_extents (pattern->surface, &extents);
-	if (status)
-	    return status;
-
-	/* If we're repeating, we just play it safe and clone the
-	 * entire surface - i.e. we use the existing extents.
-	 */
-	if (attr->extend != CAIRO_EXTEND_REPEAT) {
-	    cairo_rectangle_int_t sampled_area;
-
-	    /* Otherwise, we first transform the rectangle to the
-	     * coordinate space of the source surface so that we can
-	     * clone only that portion of the surface that will be
-	     * read.
-	     */
-	    if (_cairo_matrix_is_identity (&attr->matrix)) {
-		sampled_area.x = x;
-		sampled_area.y = y;
-		sampled_area.width  = width;
-		sampled_area.height = height;
-	    } else {
-		double x1 = x;
-		double y1 = y;
-		double x2 = x + (int) width;
-		double y2 = y + (int) height;
-
-		_cairo_matrix_transform_bounding_box  (&attr->matrix,
-						       &x1, &y1, &x2, &y2,
-						       NULL);
-
-		sampled_area.x = floor (x1 - pad);
-		sampled_area.y = floor (y1 - pad);
-		sampled_area.width  = ceil (x2 + pad) - sampled_area.x;
-		sampled_area.height = ceil (y2 + pad) - sampled_area.y;
-
-	    }
-
-	    sampled_area.x += tx;
-	    sampled_area.y += ty;
-
-	    /* Never acquire a larger area than the source itself */
-	    is_empty = _cairo_rectangle_intersect (&extents, &sampled_area);
+	if (sampled_area.x >= extents.x &&
+	    sampled_area.y >= extents.y &&
+	    sampled_area.x + (int) sampled_area.width <= extents.x + (int) extents.width &&
+	    sampled_area.y + (int) sampled_area.height <= extents.y + (int) extents.height)
+	{
+	    /* source is wholly contained within extents, drop the REPEAT */
+	    extents = sampled_area;
+	    attr->extend = CAIRO_EXTEND_NONE;
 	}
 
-	/* XXX can we use is_empty? */
+	is_empty = extents.width == 0 || extents.height == 0;
+    }
 
-	status = _cairo_surface_clone_similar (dst, pattern->surface,
-					       extents.x, extents.y,
-					       extents.width, extents.height,
-					       &x, &y, out);
-	if (status == CAIRO_STATUS_SUCCESS && (x != 0 || y != 0)) {
-	    if (_cairo_matrix_is_identity (&attr->matrix)) {
-		attr->x_offset -= x;
-		attr->y_offset -= y;
-	    } else {
-		cairo_matrix_t m;
+    /* XXX can we use is_empty? */
 
-		x -= attr->x_offset;
-		y -= attr->y_offset;
-		attr->x_offset = 0;
-		attr->y_offset = 0;
+    status = _cairo_surface_clone_similar (dst, surface,
+					   extents.x, extents.y,
+					   extents.width, extents.height,
+					   &x, &y, out);
+    if (status)
+	goto BAIL;
 
-		cairo_matrix_init_translate (&m, -x, -y);
-		cairo_matrix_multiply (&attr->matrix, &attr->matrix, &m);
-	    }
+    if (x != 0 || y != 0) {
+	if (is_identity) {
+	    attr->x_offset -= x;
+	    attr->y_offset -= y;
+	} else {
+	    cairo_matrix_t m;
+
+	    x -= attr->x_offset;
+	    y -= attr->y_offset;
+	    attr->x_offset = 0;
+	    attr->y_offset = 0;
+
+	    cairo_matrix_init_translate (&m, -x, -y);
+	    cairo_matrix_multiply (&attr->matrix, &attr->matrix, &m);
 	}
     }
 
+  BAIL:
+    cairo_surface_destroy (surface);
     return status;
 }
 
@@ -2020,7 +2028,6 @@ _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 
     if (pattern->status) {
 	*surface_out = NULL;
-	attributes->acquired = FALSE;
 	return pattern->status;
     }
 
@@ -2103,21 +2110,7 @@ _cairo_pattern_release_surface (const cairo_pattern_t *pattern,
 				cairo_surface_t		   *surface,
 				cairo_surface_attributes_t *attributes)
 {
-    if (attributes->acquired)
-    {
-	const cairo_surface_pattern_t *surface_pattern;
-
-	assert (pattern->type == CAIRO_PATTERN_TYPE_SURFACE);
-	surface_pattern = (const cairo_surface_pattern_t *) pattern;
-
-	_cairo_surface_release_source_image (surface_pattern->surface,
-					     (cairo_image_surface_t *) surface,
-					     attributes->extra);
-    }
-    else
-    {
-	cairo_surface_destroy (surface);
-    }
+    cairo_surface_destroy (surface);
 }
 
 cairo_int_status_t

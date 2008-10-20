@@ -915,7 +915,6 @@ typedef struct _cairo_surface_attributes {
     cairo_filter_t filter;
     int		   x_offset;
     int		   y_offset;
-    cairo_bool_t   acquired;
     void	   *extra;
 } cairo_surface_attributes_t;
 
