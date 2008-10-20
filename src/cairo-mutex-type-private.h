@@ -168,8 +168,8 @@ typedef cairo_mutex_impl_t cairo_mutex_t;
 #define CAIRO_MUTEX_FINI		CAIRO_MUTEX_IMPL_FINI
 #define CAIRO_MUTEX_NIL_INITIALIZER	CAIRO_MUTEX_IMPL_NIL_INITIALIZER
 
-#ifndef CAIRO_HOLDS_MUTEX
-# define CAIRO_HOLDS_MUTEX(name) 1
+#ifndef CAIRO_MUTEX_IS_LOCKED
+# define CAIRO_MUTEX_IS_LOCKED(name) 1
 #endif
 
 
