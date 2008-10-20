@@ -51,8 +51,6 @@
 #include <lockdep.h>
 #endif
 
-CAIRO_BEGIN_DECLS
-
 /* A fully qualified no-operation statement */
 #define CAIRO_MUTEX_IMPL_NOOP	do {/*no-op*/} while (0)
 /* And one that evaluates it's argument once */
