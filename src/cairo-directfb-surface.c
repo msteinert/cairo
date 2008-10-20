@@ -281,9 +281,12 @@ _directfb_get_operator (cairo_operator_t         operator,
 	dstblend = DSBF_ONE;
 	break;
     case CAIRO_OPERATOR_SATURATE:
+	/* XXX This does not work. */
+#if 0
 	srcblend = DSBF_SRCALPHASAT;
 	dstblend = DSBF_ONE;
 	break;
+#endif
     default:
 	return FALSE;
     }
