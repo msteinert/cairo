@@ -720,6 +720,10 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
     DFBSurfaceBlendFunction     dblend;
     const cairo_color_t        *color;
 
+    /* XXX Unbounded operators are not handled correctly */
+    if (! _cairo_operator_bounded_by_source (op))
+        return CAIRO_INT_STATUS_UNSUPPORTED;
+
     if (! _directfb_get_operator (op, &sblend, &dblend))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
@@ -1096,6 +1100,9 @@ _cairo_directfb_surface_fill_rectangles (void                  *abstract_surface
     D_DEBUG_AT (CairoDFB_Render,
 		"%s( dst=%p, op=%d, color=%p, rects=%p, n_rects=%d ).\n",
 		__FUNCTION__, dst, op, color, rects, n_rects);
+
+    if (! _cairo_operator_bounded_by_source (op))
+        return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (! _directfb_get_operator (op, &sblend, &dblend))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1714,7 +1721,10 @@ _cairo_directfb_surface_show_glyphs (void                *abstract_dst,
         return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
+    /* XXX Unbounded operators are not handled correctly */
     if (! _cairo_operator_bounded_by_mask (op))
+        return CAIRO_INT_STATUS_UNSUPPORTED;
+    if (! _cairo_operator_bounded_by_source (op))
         return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (! _directfb_get_operator (op, &sblend, &dblend) ||
