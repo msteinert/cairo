@@ -336,7 +336,9 @@ _directfb_acquire_surface (cairo_directfb_surface_t  *surface,
     void *data;
     int   pitch;
 
-    if (surface->format == (cairo_format_t) -1) {
+    if (surface->format == (cairo_format_t) -1 ||
+	(lock_flags & DSLF_WRITE && surface->has_clip))
+    {
         DFBSurfaceCapabilities caps;
 
         if (intrest_rec) {
@@ -388,7 +390,6 @@ _directfb_acquire_surface (cairo_directfb_surface_t  *surface,
         cairo_format = surface->format;
         buffer = surface->dfbsurface;
     }
-
 
     if (buffer->Lock (buffer, lock_flags, &data, &pitch)) {
         D_DEBUG_AT (CairoDFB_Acquire, "Couldn't lock surface!\n");
@@ -591,13 +592,17 @@ _cairo_directfb_surface_release_dest_image (void                  *abstract_surf
     buffer->Unlock (buffer);
 
     if (surface->dfbsurface != buffer) {
-	DFBRegion region = { .x1 = interest_rect->x, .y1 = interest_rect->y,
-	    .x2 = interest_rect->x+interest_rect->width-1,
-	    .y2 = interest_rect->y+interest_rect->height-1 };
-	surface->dfbsurface->SetClip (surface->dfbsurface, &region);
+	DFBRegion region = {
+	    .x1 = interest_rect->x,
+	    .y1 = interest_rect->y,
+	    .x2 = interest_rect->x + interest_rect->width - 1,
+	    .y2 = interest_rect->y + interest_rect->height - 1
+	};
 	surface->dfbsurface->SetBlittingFlags (surface->dfbsurface, DSBLIT_NOFX);
-	surface->dfbsurface->Blit (surface->dfbsurface, buffer,
-				   NULL, image_rect->x, image_rect->y);
+	RUN_CLIPPED (surface, &region,
+		     surface->dfbsurface->Blit (surface->dfbsurface,
+						buffer, NULL,
+						image_rect->x, image_rect->y));
     }
 
     cairo_surface_destroy (&image->base);
@@ -1142,7 +1147,7 @@ _cairo_directfb_surface_composite_trapezoids (cairo_operator_t   op,
                                               unsigned int       width,
                                               unsigned int       height,
                                               cairo_trapezoid_t *traps,
-                                              int                num_traps )
+                                              int                num_traps)
 {
     cairo_directfb_surface_t   *dst = abstract_dst;
     cairo_directfb_surface_t   *src;
