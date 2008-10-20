@@ -109,18 +109,18 @@ _cairo_boilerplate_directfb_window_create_surface (DFBInfo		*info,
 		content == CAIRO_CONTENT_COLOR_ALPHA ? "ARGB"  : "unknown content!",
 		width, height);
 
-    desc.flags = DWDESC_POSX | DWDESC_POSY |
-	         DWDESC_WIDTH | DWDESC_HEIGHT
-		 /*| DWDESC_CAPS|DSDESC_PIXELFORMAT*/;
+    desc.flags  = DWDESC_POSX | DWDESC_POSY |
+	          DWDESC_WIDTH | DWDESC_HEIGHT;
+    desc.caps   = DSCAPS_NONE;
     desc.posx   = 0;
     desc.posy   = 0;
     desc.width  = width;
     desc.height = height;
-#if 0 /*Test using native format by default*/
-    desc.caps =  DWCAPS_DOUBLEBUFFER;
-    desc.caps |= DWCAPS_ALPHACHANNEL;
-    desc.pixelformat = DSPF_ARGB;
-#endif
+    if (content == CAIRO_CONTENT_COLOR_ALPHA) {
+	desc.flags |= DWDESC_CAPS | DSDESC_PIXELFORMAT;
+	desc.caps  |= DWCAPS_DOUBLEBUFFER | DWCAPS_ALPHACHANNEL;
+	desc.pixelformat = DSPF_ARGB;
+    }
 
     DFBCHECK (info->layer->CreateWindow (info->layer, &desc, &info->window));
     info->window->SetOpacity (info->window, 0xFF);
@@ -151,11 +151,14 @@ _cairo_boilerplate_directfb_bitmap_create_surface (DFBInfo		*info,
 		content == CAIRO_CONTENT_COLOR_ALPHA ? "ARGB"  : "unknown content!",
 		width, height);
 
-    desc.flags = DSDESC_WIDTH | DSDESC_HEIGHT | DSDESC_PIXELFORMAT;
+    desc.flags = DSDESC_WIDTH | DSDESC_HEIGHT;
     desc.caps = DSCAPS_NONE;
     desc.width  = width;
     desc.height = height;
-    desc.pixelformat = DSPF_ARGB;
+    if (content == CAIRO_CONTENT_COLOR_ALPHA) {
+	desc.flags |= DSDESC_PIXELFORMAT;
+	desc.pixelformat = DSPF_ARGB;
+    }
     DFBCHECK (info->dfb->CreateSurface (info->dfb, &desc, &info->surface));
 
     return cairo_directfb_surface_create (info->dfb, info->surface);
