@@ -804,6 +804,7 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
     if (flags & (DSBLIT_BLEND_COLORALPHA | DSBLIT_COLORIZE))
 	dst->dfbsurface->SetColor (dst->dfbsurface, color.r, color.g, color.b, color.a);
 
+
     *ret_src = src;
     *ret_src_attr = src_attr;
 
@@ -843,7 +844,15 @@ _directfb_categorize_operation (cairo_surface_attributes_t *src_attr)
     switch (src_attr->extend) {
     case CAIRO_EXTEND_NONE:
     case CAIRO_EXTEND_REPEAT:
-	return DFXL_BLIT;
+	if (_cairo_matrix_is_integer_translation (&src_attr->matrix,
+						  NULL, NULL))
+	{
+	    return DFXL_BLIT;
+	}
+	else
+	{
+	    return DFXL_STRETCHBLIT;
+	}
 
     default:
     case CAIRO_EXTEND_REFLECT:
@@ -866,8 +875,10 @@ _cairo_directfb_surface_composite (cairo_operator_t  op,
     cairo_directfb_surface_t   *dst = abstract_dst;
     cairo_directfb_surface_t   *src;
     cairo_surface_attributes_t  src_attr;
+    cairo_bool_t                is_integer_translation;
     DFBAccelerationMask         accel, mask;
     cairo_int_status_t          status;
+    int                         tx, ty;
 
     D_DEBUG_AT (CairoDFB_Render,
 		"%s( op=%d, src_pattern=%p, mask_pattern=%p, dst=%p,"
@@ -907,8 +918,13 @@ _cairo_directfb_surface_composite (cairo_operator_t  op,
 	{
 	    DFBRectangle sr;
 
-	    sr.x = src_x + _cairo_lround (src_attr.matrix.x0);
-	    sr.y = src_y + _cairo_lround (src_attr.matrix.y0);
+	    is_integer_translation =
+		_cairo_matrix_is_integer_translation (&src_attr.matrix,
+						      &tx, &ty);
+	    assert (is_integer_translation);
+
+	    sr.x = src_x + tx;
+	    sr.y = src_y + ty;
 	    sr.w = width;
 	    sr.h = height;
 
@@ -949,10 +965,10 @@ _cairo_directfb_surface_composite (cairo_operator_t  op,
 	    TRANSFORM_POINT2X (src_attr.matrix,
 			       src_x+width, src_y+height, x2, y2);
 
-	    sr.x = _cairo_lround (x1);
-	    sr.y = _cairo_lround (y1);
-	    sr.w = _cairo_lround (x2-x1);
-	    sr.h = _cairo_lround (y2-y1);
+	    sr.x = floor (x1);
+	    sr.y = floor (y1);
+	    sr.w = ceil (x2) - sr.x;
+	    sr.h = ceil (y2) - sr.y;
 
 	    dr.x = dst_x;
 	    dr.y = dst_y;
