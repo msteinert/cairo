@@ -110,7 +110,7 @@ typedef struct _cairo_directfb_font_cache {
     int                  y;
 } cairo_directfb_font_cache_t;
 
-static cairo_surface_backend_t cairo_directfb_surface_backend;
+static cairo_surface_backend_t _cairo_directfb_surface_backend;
 
 /*****************************************************************************/
 
@@ -482,7 +482,9 @@ _cairo_directfb_surface_create_similar (void            *abstract_src,
 	}
     }
 
-    _cairo_surface_init (&surface->base, &cairo_directfb_surface_backend, content);
+    _cairo_surface_init (&surface->base,
+			 &_cairo_directfb_surface_backend,
+			 content);
     surface->format  = format;
     surface->content = content;
     surface->width   = width;
@@ -756,6 +758,13 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
 					     &src_attr);
     if (status)
 	return status;
+
+    if (src->base.backend != &_cairo_directfb_surface_backend ||
+	src->dfb != dst->dfb)
+    {
+	_cairo_pattern_release_surface (src_pattern, &src->base, &src_attr);
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     if (src->content == CAIRO_CONTENT_COLOR) {
 	if (sblend == DSBF_SRCALPHA)
@@ -1493,7 +1502,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
 	    return status;
 	}
 
-	scaled_font->surface_backend = &cairo_directfb_surface_backend;
+	scaled_font->surface_backend = &_cairo_directfb_surface_backend;
 	scaled_font->surface_private = cache;
     }
 
@@ -1694,7 +1703,8 @@ _cairo_directfb_surface_is_similar (void *surface_a, void *surface_b, cairo_cont
     return a->dfb == b->dfb;
 }
 
-static cairo_surface_backend_t cairo_directfb_surface_backend = {
+static cairo_surface_backend_t
+_cairo_directfb_surface_backend = {
          CAIRO_SURFACE_TYPE_DIRECTFB, /*type*/
         _cairo_directfb_surface_create_similar,/*create_similar*/
         _cairo_directfb_surface_finish, /*finish*/
@@ -1759,18 +1769,18 @@ cairo_directfb_surface_backend_init (IDirectFB *dfb)
 
     if (getenv ("CAIRO_DIRECTFB_NO_ACCEL")) {
 #if DFB_RECTANGLES
-	cairo_directfb_surface_backend.fill_rectangles = NULL;
+	_cairo_directfb_surface_backend.fill_rectangles = NULL;
 #endif
 #if DFB_COMPOSITE
-	cairo_directfb_surface_backend.composite = NULL;
+	_cairo_directfb_surface_backend.composite = NULL;
 #endif
 #if DFB_COMPOSITE_TRAPEZOIDS
-	cairo_directfb_surface_backend.composite_trapezoids = NULL;
+	_cairo_directfb_surface_backend.composite_trapezoids = NULL;
 #endif
 #if DFB_SHOW_GLYPHS
-	cairo_directfb_surface_backend.scaled_font_fini = NULL;
-	cairo_directfb_surface_backend.scaled_glyph_fini = NULL;
-	cairo_directfb_surface_backend.show_glyphs = NULL;
+	_cairo_directfb_surface_backend.scaled_font_fini = NULL;
+	_cairo_directfb_surface_backend.scaled_glyph_fini = NULL;
+	_cairo_directfb_surface_backend.show_glyphs = NULL;
 #endif
 	D_DEBUG_AT (CairoDFB_Surface, "Acceleration disabled.\n");
     } else {
@@ -1780,12 +1790,12 @@ cairo_directfb_surface_backend_init (IDirectFB *dfb)
 
 #if DFB_COMPOSITE
 	//        if (!(dsc.acceleration_mask & DFXL_BLIT))
-	//            cairo_directfb_surface_backend.composite = NULL;
+	//            _cairo_directfb_surface_backend.composite = NULL;
 #endif
 
 #if DFB_COMPOSITE_TRAPEZOIDS
 	//        if (!(dsc.acceleration_mask & DFXL_TEXTRIANGLES))
-	//            cairo_directfb_surface_backend.composite_trapezoids = NULL;
+	//            _cairo_directfb_surface_backend.composite_trapezoids = NULL;
 #endif
     }
 
@@ -1821,7 +1831,8 @@ cairo_directfb_surface_create (IDirectFB *dfb, IDirectFBSurface *dfbsurface)
     surface->content = _directfb_format_to_content (format);
 
     _cairo_surface_init (&surface->base,
-                         &cairo_directfb_surface_backend, surface->content);
+                         &_cairo_directfb_surface_backend,
+			 surface->content);
 
     return &surface->base;
 }
