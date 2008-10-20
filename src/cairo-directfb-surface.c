@@ -635,7 +635,7 @@ _cairo_directfb_surface_clone_similar (void             *abstract_surface,
 	clone = (cairo_directfb_surface_t *)
 	    _cairo_directfb_surface_create_similar (surface,
 						    _cairo_content_from_format (image_src->format),
-						    image_src->width, image_src->height);
+						    width, height);
 	if (clone == NULL)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	if (clone->base.status)
@@ -649,11 +649,10 @@ _cairo_directfb_surface_clone_similar (void             *abstract_surface,
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
 
-	dst += pitch * src_y;
 	src += image_src->stride * src_y;
-
 	if (image_src->format == CAIRO_FORMAT_A1) {
 	    /* A1 -> A8 */
+	    dst -= src_x;
 	    for (i = 0; i < height; i++) {
 		for (j = src_x; j < src_x + width; j++)
 		    dst[j] = (src[j>>3] & (1 << (j&7))) ? 0xff : 0x00;
@@ -664,11 +663,9 @@ _cairo_directfb_surface_clone_similar (void             *abstract_surface,
 	    int len;
 
 	    if (image_src->format == CAIRO_FORMAT_A8) {
-		dst += src_x;
 		src += src_x;
 		len  = width;
 	    } else {
-		dst += src_x * 4;
 		src += src_x * 4;
 		len  = width * 4;
 	    }
@@ -682,8 +679,8 @@ _cairo_directfb_surface_clone_similar (void             *abstract_surface,
 
 	clone->dfbsurface->Unlock (clone->dfbsurface);
 
-	*clone_offset_x = 0;
-	*clone_offset_y = 0;
+	*clone_offset_x = src_x;
+	*clone_offset_y = src_y;
 	*clone_out = &clone->base;
 	return CAIRO_STATUS_SUCCESS;
     }
