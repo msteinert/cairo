@@ -840,13 +840,16 @@ _directfb_categorize_operation (cairo_surface_attributes_t *src_attr)
 	return DFXL_STRETCHBLIT;
     }
 
-    if (src_attr->extend != CAIRO_EXTEND_NONE &&
-	src_attr->extend != CAIRO_EXTEND_REPEAT)
-    {
+    switch (src_attr->extend) {
+    case CAIRO_EXTEND_NONE:
+    case CAIRO_EXTEND_REPEAT:
+	return DFXL_BLIT;
+
+    default:
+    case CAIRO_EXTEND_REFLECT:
+    case CAIRO_EXTEND_PAD:
 	return DFXL_NONE;
     }
-
-    return DFXL_BLIT;
 }
 
 static cairo_int_status_t
@@ -880,8 +883,14 @@ _cairo_directfb_surface_composite (cairo_operator_t  op,
 	return status;
 
     accel = _directfb_categorize_operation (&src_attr);
+    if (accel == DFXL_NONE) {
+	_directfb_finish_composite (dst, src_pattern, &src->base, &src_attr);
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
-    dst->dfbsurface->GetAccelerationMask (dst->dfbsurface, src->dfbsurface, &mask);
+    dst->dfbsurface->GetAccelerationMask (dst->dfbsurface,
+					  src->dfbsurface,
+					  &mask);
     if ((mask & accel) == 0) {
 	D_DEBUG_AT (CairoDFB_Render, "No acceleration (%08x)!\n", accel);
 	if (accel != DFXL_BLIT) {
@@ -908,7 +917,9 @@ _cairo_directfb_surface_composite (cairo_operator_t  op,
 
 		RUN_CLIPPED (dst, NULL,
 			     dst->dfbsurface->Blit (dst->dfbsurface,
-						    src->dfbsurface, &sr, dst_x, dst_y));
+						    src->dfbsurface,
+						    &sr,
+						    dst_x, dst_y));
 	    } else if (src_attr.extend == CAIRO_EXTEND_REPEAT) {
 		DFBRegion clip;
 
@@ -921,7 +932,9 @@ _cairo_directfb_surface_composite (cairo_operator_t  op,
 
 		RUN_CLIPPED (dst, &clip,
 			     dst->dfbsurface->TileBlit (dst->dfbsurface,
-							src->dfbsurface, &sr, dst_x, dst_y));
+							src->dfbsurface,
+							&sr,
+							dst_x, dst_y));
 	    }
 	    break;
 	}
@@ -965,10 +978,10 @@ _cairo_directfb_surface_composite (cairo_operator_t  op,
 	    /* guaranteed by cairo_pattern_set_matrix (); */
 	    assert (status == CAIRO_STATUS_SUCCESS);
 
-	    x1 = src_attr.x_offset;
-	    y1 = src_attr.y_offset;
-	    x2 = src->width  - x1;
-	    y2 = src->height - y1;
+	    x1 = src_x;
+	    y1 = src_y;
+	    x2 = width  + x1;
+	    y2 = height + y1;
 
 	    src->dfbsurface->GetSize (src->dfbsurface, &w, &h);
 
