@@ -750,6 +750,11 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
 	color.a = color.r = color.g = color.b = 0xff;
     }
 
+    /* XXX DirectFB currently does not support filtering, so force NEAREST
+     * in order to hit optimisations inside core.
+    */
+    src_pattern->filter = CAIRO_FILTER_NEAREST;
+
     status = _cairo_pattern_acquire_surface (src_pattern, &dst->base,
 					     *src_x, *src_y, width, height,
 					     (cairo_surface_t **) &src,
