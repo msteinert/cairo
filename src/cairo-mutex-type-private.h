@@ -171,6 +171,9 @@ typedef cairo_mutex_impl_t cairo_mutex_t;
 #ifndef CAIRO_MUTEX_IS_LOCKED
 # define CAIRO_MUTEX_IS_LOCKED(name) 1
 #endif
+#ifndef CAIRO_MUTEX_IS_UNLOCKED
+# define CAIRO_MUTEX_IS_UNLOCKED(name) 1
+#endif
 
 
 /* Debugging support */

@@ -1559,6 +1559,10 @@ _cairo_scaled_font_set_metrics (cairo_scaled_font_t	    *scaled_font,
 cairo_private void
 _cairo_scaled_font_fini (cairo_scaled_font_t *scaled_font);
 
+/* This should only be called on an error path by a scaled_font constructor */
+cairo_private void
+_cairo_scaled_font_fini (cairo_scaled_font_t *scaled_font);
+
 cairo_private cairo_status_t
 _cairo_scaled_font_font_extents (cairo_scaled_font_t  *scaled_font,
 				 cairo_font_extents_t *extents);

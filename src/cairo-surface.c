@@ -2267,8 +2267,6 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 	return _cairo_surface_set_error (surface, status);
     }
 
-    CAIRO_MUTEX_LOCK (dev_scaled_font->mutex);
-
     status = CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* The logic here is duplicated in _cairo_analysis_surface show_glyphs and
@@ -2327,8 +2325,6 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 	status = _cairo_surface_fallback_show_glyphs (surface, op, dev_source,
 						      glyphs, num_glyphs,
 						      dev_scaled_font);
-
-    CAIRO_MUTEX_UNLOCK (dev_scaled_font->mutex);
 
     if (dev_scaled_font != scaled_font)
 	cairo_scaled_font_destroy (dev_scaled_font);

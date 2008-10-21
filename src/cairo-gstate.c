@@ -1615,11 +1615,9 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
 
 	_cairo_path_fixed_init (&path);
 
-	CAIRO_MUTEX_LOCK (gstate->scaled_font->mutex);
 	status = _cairo_scaled_font_glyph_path (gstate->scaled_font,
 						transformed_glyphs, num_glyphs,
 						&path);
-	CAIRO_MUTEX_UNLOCK (gstate->scaled_font->mutex);
 
 	if (status == CAIRO_STATUS_SUCCESS)
 	  status = _cairo_surface_fill (gstate->target,
@@ -1670,11 +1668,9 @@ _cairo_gstate_glyph_path (cairo_gstate_t      *gstate,
     if (status)
 	goto CLEANUP_GLYPHS;
 
-    CAIRO_MUTEX_LOCK (gstate->scaled_font->mutex);
     status = _cairo_scaled_font_glyph_path (gstate->scaled_font,
 					    transformed_glyphs, num_glyphs,
 					    path);
-    CAIRO_MUTEX_UNLOCK (gstate->scaled_font->mutex);
 
   CLEANUP_GLYPHS:
     if (transformed_glyphs != stack_transformed_glyphs)

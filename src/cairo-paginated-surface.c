@@ -637,14 +637,12 @@ _cairo_paginated_surface_show_text_glyphs (void			    *abstract_surface,
      * show_glyphs functions, (which would get less testing and likely
      * lead to bugs).
      */
-    CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
     status = _cairo_surface_show_text_glyphs (surface->meta, op, source,
 					      utf8, utf8_len,
 					      glyphs, num_glyphs,
 					      clusters, num_clusters,
 					      cluster_flags,
 					      scaled_font);
-    CAIRO_MUTEX_LOCK (scaled_font->mutex);
 
     return status;
 }

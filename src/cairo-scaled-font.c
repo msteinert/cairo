@@ -145,6 +145,9 @@
  *  and note that glyph origin = device-space origin.
  */
 
+static void
+_cairo_scaled_font_fini_internal (cairo_scaled_font_t *scaled_font);
+
 static cairo_bool_t
 _cairo_scaled_glyph_keys_equal (const void *abstract_key_a, const void *abstract_key_b)
 {
@@ -377,11 +380,11 @@ _cairo_scaled_font_map_destroy (void)
 
 	font_map->num_holdovers--;
 
-	/* release the lock to avoid the possibility of a recursive
-	 * deadlock when the scaled font destroy closure gets called */
-	CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
+	/* This releases the font_map lock to avoid the possibility of a
+	 * recursive deadlock when the scaled font destroy closure gets
+	 * called
+	 */
 	_cairo_scaled_font_fini (scaled_font);
-	CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
 
 	free (scaled_font);
     }
@@ -451,7 +454,7 @@ _cairo_scaled_font_register_placeholder_and_unlock_font_map (cairo_scaled_font_t
     return CAIRO_STATUS_SUCCESS;
 
   FINI_PLACEHOLDER:
-    _cairo_scaled_font_fini (placeholder_scaled_font);
+    _cairo_scaled_font_fini_internal (placeholder_scaled_font);
   FREE_PLACEHOLDER:
     free (placeholder_scaled_font);
 
@@ -498,8 +501,9 @@ _cairo_scaled_font_placeholder_wait_for_creation_to_finish (cairo_scaled_font_t 
 
     /* ok, creation done.  just clean up and back out */
     CAIRO_MUTEX_UNLOCK (placeholder_scaled_font->mutex);
-    CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
     cairo_scaled_font_destroy (placeholder_scaled_font);
+
+    CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
 }
 
 /* Fowler / Noll / Vo (FNV) Hash (http://www.isthe.com/chongo/tech/comp/fnv/)
@@ -656,17 +660,18 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
 void
 _cairo_scaled_font_freeze_cache (cairo_scaled_font_t *scaled_font)
 {
-    assert (CAIRO_MUTEX_IS_LOCKED (scaled_font->mutex));
+    /* ensure we do not modify an error object */
+    assert (scaled_font->status == CAIRO_STATUS_SUCCESS);
 
+    CAIRO_MUTEX_LOCK (scaled_font->mutex);
     _cairo_cache_freeze (scaled_font->glyphs);
 }
 
 void
 _cairo_scaled_font_thaw_cache (cairo_scaled_font_t *scaled_font)
 {
-    assert (CAIRO_MUTEX_IS_LOCKED (scaled_font->mutex));
-
     _cairo_cache_thaw (scaled_font->glyphs);
+    CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
 }
 
 void
@@ -707,8 +712,8 @@ _cairo_scaled_font_set_metrics (cairo_scaled_font_t	    *scaled_font,
     return CAIRO_STATUS_SUCCESS;
 }
 
-void
-_cairo_scaled_font_fini (cairo_scaled_font_t *scaled_font)
+static void
+_cairo_scaled_font_fini_internal (cairo_scaled_font_t *scaled_font)
 {
     scaled_font->finished = TRUE;
 
@@ -728,6 +733,16 @@ _cairo_scaled_font_fini (cairo_scaled_font_t *scaled_font)
 	scaled_font->backend->fini (scaled_font);
 
     _cairo_user_data_array_fini (&scaled_font->user_data);
+}
+
+void
+_cairo_scaled_font_fini (cairo_scaled_font_t *scaled_font)
+{
+    /* Release the lock to avoid the possibility of a recursive
+     * deadlock when the scaled font destroy closure gets called. */
+    CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
+    _cairo_scaled_font_fini_internal (scaled_font);
+    CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
 }
 
 /**
@@ -881,7 +896,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	/* We can't call _cairo_scaled_font_destroy here since it expects
 	 * that the font has already been successfully inserted into the
 	 * hash table. */
-	_cairo_scaled_font_fini (scaled_font);
+	_cairo_scaled_font_fini_internal (scaled_font);
 	free (scaled_font);
 	return _cairo_scaled_font_create_in_error (status);
     }
@@ -985,6 +1000,8 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
     cairo_scaled_font_t *lru = NULL;
     cairo_scaled_font_map_t *font_map;
 
+    assert (CAIRO_MUTEX_IS_UNLOCKED (_cairo_scaled_font_map_mutex));
+
     if (scaled_font == NULL ||
 	    CAIRO_REFERENCE_COUNT_IS_INVALID (&scaled_font->ref_count))
 	return;
@@ -1025,7 +1042,7 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
 
     }
 
-    CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
+    _cairo_scaled_font_map_unlock ();
 
     /* If we pulled an item from the holdovers array, (while the font
      * map lock was held, of course), then there is no way that anyone
@@ -1034,7 +1051,7 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
      * as we never want to call into any backend function with a lock
      * held. */
     if (lru) {
-	_cairo_scaled_font_fini (lru);
+	_cairo_scaled_font_fini_internal (lru);
 	free (lru);
     }
 }
@@ -1112,6 +1129,13 @@ cairo_scaled_font_set_user_data (cairo_scaled_font_t	     *scaled_font,
 
     return _cairo_user_data_array_set_data (&scaled_font->user_data,
 					    key, user_data, destroy);
+}
+
+static cairo_bool_t
+_cairo_scaled_font_is_frozen (cairo_scaled_font_t *scaled_font)
+{
+    return CAIRO_MUTEX_IS_LOCKED (scaled_font->mutex) &&
+	   scaled_font->glyphs->freeze_count > 0;
 }
 
 /* Public font API follows. */
@@ -1257,7 +1281,6 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 	return;
     }
 
-    CAIRO_MUTEX_LOCK (scaled_font->mutex);
     _cairo_scaled_font_freeze_cache (scaled_font);
 
     for (i = 0; i < num_glyphs; i++) {
@@ -1326,7 +1349,6 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 
  UNLOCK:
     _cairo_scaled_font_thaw_cache (scaled_font);
-    CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
 }
 slim_hidden_def (cairo_scaled_font_glyph_extents);
 
@@ -1551,7 +1573,6 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
     if (status)
 	goto BAIL;
 
-    CAIRO_MUTEX_LOCK (scaled_font->mutex);
     _cairo_scaled_font_freeze_cache (scaled_font);
 
     orig_glyphs = *glyphs;
@@ -1657,7 +1678,6 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
 
  DONE: /* error that should be logged on scaled_font happened */
     _cairo_scaled_font_thaw_cache (scaled_font);
-    CAIRO_MUTEX_UNLOCK (scaled_font->mutex);
 
     if (status) {
 	*num_glyphs = 0;
@@ -1706,7 +1726,7 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
     if (scaled_font->status)
 	return scaled_font->status;
 
-    assert (CAIRO_MUTEX_IS_LOCKED (scaled_font->mutex));
+    _cairo_scaled_font_freeze_cache (scaled_font);
 
     for (i = 0; i < num_glyphs; i++) {
 	cairo_scaled_glyph_t	*scaled_glyph;
@@ -1719,7 +1739,7 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
 					     CAIRO_SCALED_GLYPH_INFO_METRICS,
 					     &scaled_glyph);
 	if (status)
-	    return _cairo_scaled_font_set_error (scaled_font, status);
+	    break;
 
 	/* XXX glyph images are snapped to pixel locations */
 	x = _cairo_lround (glyphs[i].x);
@@ -1735,6 +1755,11 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
 	if (top < min.y) min.y = top;
 	if (bottom > max.y) max.y = bottom;
     }
+
+    _cairo_scaled_font_thaw_cache (scaled_font);
+    if (status)
+	return _cairo_scaled_font_set_error (scaled_font, status);
+
     if (min.x < max.x && min.y < max.y) {
 	extents->x = min.x;
 	extents->width = max.x - min.x;
@@ -1744,6 +1769,7 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
 	extents->x = extents->y = 0;
 	extents->width = extents->height = 0;
     }
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -1779,7 +1805,6 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
     if (!num_glyphs)
 	return CAIRO_STATUS_SUCCESS;
 
-    assert (CAIRO_MUTEX_IS_LOCKED (scaled_font->mutex));
     if (scaled_font->backend->show_glyphs != NULL) {
 	int remaining_glyphs = num_glyphs;
 	status = scaled_font->backend->show_glyphs (scaled_font,
@@ -1801,7 +1826,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 
     _cairo_pattern_init_solid (&white_pattern, CAIRO_COLOR_WHITE, CAIRO_CONTENT_COLOR);
 
-    _cairo_cache_freeze (scaled_font->glyphs);
+    _cairo_scaled_font_freeze_cache (scaled_font);
 
     for (i = 0; i < num_glyphs; i++) {
 	int x, y;
@@ -1921,7 +1946,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
     _cairo_pattern_fini (&mask_pattern.base);
 
 CLEANUP_MASK:
-    _cairo_cache_thaw (scaled_font->glyphs);
+    _cairo_scaled_font_thaw_cache (scaled_font);
 
     _cairo_pattern_fini (&white_pattern.base);
 
@@ -2093,8 +2118,6 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
     status = scaled_font->status;
     if (status)
 	return status;
-
-    assert (CAIRO_MUTEX_IS_LOCKED (scaled_font->mutex));
 
     closure.path = path;
     _cairo_scaled_font_freeze_cache (scaled_font);
@@ -2282,7 +2305,11 @@ _cairo_scaled_glyph_set_meta_surface (cairo_scaled_glyph_t *scaled_glyph,
  * get INFO_PATH with a bitmapped font), this function will return
  * %CAIRO_INT_STATUS_UNSUPPORTED.
  *
- * Note: This function must be called with scaled_font->mutex held.
+ * Note: This function must be called with the scaled font frozen, and it must
+ * remain frozen for as long as the @scaled_glyph_ret is alive. (If the scaled
+ * font was not frozen, then there is no guarantee that the glyph would not be
+ * evicted before you tried to access it.) See
+ * _cairo_scaled_font_freeze_cache() and _cairo_scaled_font_thaw_cache().
  *
  * Returns: a glyph with the requested portions filled in. Glyph
  * lookup is cached and glyph will be automatically freed along
@@ -2306,7 +2333,7 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
     if (scaled_font->status)
 	return scaled_font->status;
 
-    assert (CAIRO_MUTEX_IS_LOCKED (scaled_font->mutex));
+    assert (_cairo_scaled_font_is_frozen (scaled_font));
 
     key.hash = index;
     /*

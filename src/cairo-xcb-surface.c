@@ -2332,14 +2332,121 @@ typedef cairo_status_t (*cairo_xcb_surface_show_glyphs_func_t)
     (cairo_xcb_surface_t *, cairo_operator_t, cairo_xcb_surface_t *, int, int,
      const cairo_glyph_t *, int, cairo_scaled_font_t *);
 
+static cairo_bool_t
+_cairo_xcb_surface_owns_font (cairo_xcb_surface_t *dst,
+			      cairo_scaled_font_t *scaled_font)
+{
+    cairo_xcb_surface_font_private_t *font_private;
+
+    font_private = scaled_font->surface_private;
+    if ((scaled_font->surface_backend != NULL &&
+	 scaled_font->surface_backend != &cairo_xcb_surface_backend) ||
+	(font_private != NULL && font_private->dpy != dst->dpy))
+    {
+	return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+
+static cairo_status_t
+_cairo_xcb_surface_emit_glyphs (cairo_xcb_surface_t *dst,
+				cairo_glyph_t       *glyphs,
+				int                  num_glyphs,
+				cairo_scaled_font_t *scaled_font,
+				cairo_operator_t     op,
+				cairo_xcb_surface_t *src,
+				cairo_surface_attributes_t *attributes,
+				int                 *remaining_glyphs)
+{
+    cairo_scaled_glyph_t *scaled_glyph;
+    int i, o;
+    unsigned long max_index = 0;
+    cairo_status_t status;
+    cairo_glyph_t *output_glyphs;
+    const cairo_glyph_t *glyphs_chunk;
+    int glyphs_remaining, chunk_size, max_chunk_size;
+    cairo_xcb_surface_show_glyphs_func_t show_glyphs_func;
+
+    /* We make a copy of the glyphs so that we can elide any size-zero
+     * glyphs to workaround an X server bug, (present in at least Xorg
+     * 7.1 without EXA). */
+    output_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
+    if (output_glyphs == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    for (i = 0, o = 0; i < num_glyphs; i++) {
+	if (glyphs[i].index > max_index)
+	    max_index = glyphs[i].index;
+	status = _cairo_scaled_glyph_lookup (scaled_font,
+					     glyphs[i].index,
+					     CAIRO_SCALED_GLYPH_INFO_SURFACE,
+					     &scaled_glyph);
+	if (status) {
+	    free (output_glyphs);
+	    return status;
+	}
+
+	/* Don't put any size-zero glyphs into output_glyphs to avoid
+	 * an X server bug which stops rendering glyphs after the
+	 * first size-zero glyph. */
+	if (scaled_glyph->surface->width && scaled_glyph->surface->height) {
+	    output_glyphs[o++] = glyphs[i];
+	    if (scaled_glyph->surface_private == NULL) {
+		_cairo_xcb_surface_add_glyph (dst->dpy, scaled_font, scaled_glyph);
+		scaled_glyph->surface_private = (void *) 1;
+	    }
+	}
+    }
+    num_glyphs = o;
+
+    _cairo_xcb_surface_ensure_dst_picture (dst);
+
+    max_chunk_size = xcb_get_maximum_request_length (dst->dpy);
+    if (max_index < 256) {
+	/* XXX: these are all the same size! (28) */
+	max_chunk_size -= sizeof(xcb_render_composite_glyphs_8_request_t);
+	show_glyphs_func = _cairo_xcb_surface_show_glyphs_8;
+    } else if (max_index < 65536) {
+	max_chunk_size -= sizeof(xcb_render_composite_glyphs_16_request_t);
+	show_glyphs_func = _cairo_xcb_surface_show_glyphs_16;
+    } else {
+	max_chunk_size -= sizeof(xcb_render_composite_glyphs_32_request_t);
+	show_glyphs_func = _cairo_xcb_surface_show_glyphs_32;
+    }
+    /* XXX: I think this is wrong; this is only the header size (2 longs) */
+    /*      but should also include the glyph (1 long) */
+    /* max_chunk_size /= sz_xGlyphElt; */
+    max_chunk_size /= 3*sizeof(uint32_t);
+
+    for (glyphs_remaining = num_glyphs, glyphs_chunk = output_glyphs;
+	 glyphs_remaining;
+	 glyphs_remaining -= chunk_size, glyphs_chunk += chunk_size)
+    {
+	chunk_size = MIN (glyphs_remaining, max_chunk_size);
+
+	status = show_glyphs_func (dst, op, src,
+                                   attributes->x_offset, attributes->y_offset,
+                                   glyphs_chunk, chunk_size, scaled_font);
+	if (status) {
+	    free (output_glyphs);
+	    return status;
+	}
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_int_status_t
 _cairo_xcb_surface_show_glyphs (void                *abstract_dst,
-				 cairo_operator_t     op,
-				 cairo_pattern_t     *src_pattern,
-				 cairo_glyph_t       *glyphs,
-				 int		      num_glyphs,
-				 cairo_scaled_font_t *scaled_font,
-				 int		     *remaining_glyphs)
+				cairo_operator_t     op,
+				cairo_pattern_t     *src_pattern,
+				cairo_glyph_t       *glyphs,
+				int		      num_glyphs,
+				cairo_scaled_font_t *scaled_font,
+				int		     *remaining_glyphs)
 {
     cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_xcb_surface_t *dst = abstract_dst;
@@ -2347,17 +2454,6 @@ _cairo_xcb_surface_show_glyphs (void                *abstract_dst,
     composite_operation_t operation;
     cairo_surface_attributes_t attributes;
     cairo_xcb_surface_t *src = NULL;
-
-    cairo_glyph_t *output_glyphs;
-    const cairo_glyph_t *glyphs_chunk;
-    int glyphs_remaining, chunk_size, max_chunk_size;
-    cairo_scaled_glyph_t *scaled_glyph;
-    cairo_xcb_surface_font_private_t *font_private;
-
-    int i, o;
-    unsigned long max_index = 0;
-
-    cairo_xcb_surface_show_glyphs_func_t show_glyphs_func;
 
     cairo_solid_pattern_t solid_pattern;
 
@@ -2392,29 +2488,16 @@ _cairo_xcb_surface_show_glyphs (void                *abstract_dst,
     if (operation == DO_UNSUPPORTED)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    font_private = scaled_font->surface_private;
-    if ((scaled_font->surface_backend != NULL &&
-	 scaled_font->surface_backend != &cairo_xcb_surface_backend) ||
-	(font_private != NULL && font_private->dpy != dst->dpy))
+    if (! _cairo_xcb_surface_owns_font (dst, scaled_font))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    /* We make a copy of the glyphs so that we can elide any size-zero
-     * glyphs to workaround an X server bug, (present in at least Xorg
-     * 7.1 without EXA). */
-    output_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
-    if (output_glyphs == NULL)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     /* After passing all those tests, we're now committed to rendering
      * these glyphs or to fail trying. We first upload any glyphs to
      * the X server that it doesn't have already, then we draw
      * them. We tie into the scaled_font's glyph cache and remove
      * glyphs from the X server when they are ejected from the
-     * scaled_font cache. Because of this we first freeze the
-     * scaled_font's cache so that we don't cause any of our glyphs to
-     * be ejected and removed from the X server before we have a
-     * chance to render them. */
-    _cairo_scaled_font_freeze_cache (scaled_font);
+     * scaled_font cache.
+     */
 
     /* PictOpClear doesn't seem to work with CompositeText; it seems to ignore
      * the mask (the glyphs).  This code below was executed as a side effect
@@ -2464,64 +2547,21 @@ _cairo_xcb_surface_show_glyphs (void                *abstract_dst,
         goto BAIL;
 
     /* Send all unsent glyphs to the server, and count the max of the glyph indices */
-    for (i = 0, o = 0; i < num_glyphs; i++) {
-	if (glyphs[i].index > max_index)
-	    max_index = glyphs[i].index;
-	status = _cairo_scaled_glyph_lookup (scaled_font,
-					     glyphs[i].index,
-					     CAIRO_SCALED_GLYPH_INFO_SURFACE,
-					     &scaled_glyph);
-	if (status != CAIRO_STATUS_SUCCESS)
-	    goto BAIL;
-	/* Don't put any size-zero glyphs into output_glyphs to avoid
-	 * an X server bug which stops rendering glyphs after the
-	 * first size-zero glyph. */
-	if (scaled_glyph->surface->width && scaled_glyph->surface->height) {
-	    output_glyphs[o++] = glyphs[i];
-	    if (scaled_glyph->surface_private == NULL) {
-		_cairo_xcb_surface_add_glyph (dst->dpy, scaled_font, scaled_glyph);
-		scaled_glyph->surface_private = (void *) 1;
-	    }
-	}
-    }
-    num_glyphs = o;
+    _cairo_scaled_font_freeze_cache (scaled_font);
 
-    _cairo_xcb_surface_ensure_dst_picture (dst);
-
-    max_chunk_size = xcb_get_maximum_request_length (dst->dpy);
-    if (max_index < 256) {
-	/* XXX: these are all the same size! (28) */
-	max_chunk_size -= sizeof(xcb_render_composite_glyphs_8_request_t);
-	show_glyphs_func = _cairo_xcb_surface_show_glyphs_8;
-    } else if (max_index < 65536) {
-	max_chunk_size -= sizeof(xcb_render_composite_glyphs_16_request_t);
-	show_glyphs_func = _cairo_xcb_surface_show_glyphs_16;
-    } else {
-	max_chunk_size -= sizeof(xcb_render_composite_glyphs_32_request_t);
-	show_glyphs_func = _cairo_xcb_surface_show_glyphs_32;
-    }
-    /* XXX: I think this is wrong; this is only the header size (2 longs) */
-    /*      but should also include the glyph (1 long) */
-    /* max_chunk_size /= sz_xGlyphElt; */
-    max_chunk_size /= 3*sizeof(uint32_t);
-
-    for (glyphs_remaining = num_glyphs, glyphs_chunk = output_glyphs;
-	 glyphs_remaining;
-	 glyphs_remaining -= chunk_size, glyphs_chunk += chunk_size)
-    {
-	chunk_size = MIN (glyphs_remaining, max_chunk_size);
-
-	status = show_glyphs_func (dst, op, src,
-                                   attributes.x_offset, attributes.y_offset,
-                                   glyphs_chunk, chunk_size, scaled_font);
-	if (status != CAIRO_STATUS_SUCCESS)
-	    break;
-    }
+    if (_cairo_xcb_surface_owns_font (dst, scaled_font))
+	status = _cairo_xcb_surface_emit_glyphs (dst,
+						 glyphs, num_glyphs,
+						 scaled_font,
+						 op,
+						 src,
+						 &attributes,
+						 remaining_glyphs);
+    else
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
+    _cairo_scaled_font_thaw_cache (scaled_font);
 
   BAIL:
-    _cairo_scaled_font_thaw_cache (scaled_font);
-    free (output_glyphs);
-
     if (src)
         _cairo_pattern_release_surface (src_pattern, &src->base, &attributes);
     if (src_pattern == &solid_pattern.base)

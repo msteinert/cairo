@@ -286,14 +286,12 @@ _cairo_type3_glyph_surface_show_glyphs (void		     *abstract_surface,
 				     &new_ctm,
 				     &scaled_font->options);
 
-    CAIRO_MUTEX_LOCK (font->mutex);
     status = _cairo_pdf_operators_show_text_glyphs (&surface->pdf_operators,
 						    NULL, 0,
 						    glyphs, num_glyphs,
 						    NULL, 0,
 						    FALSE,
 						    font);
-    CAIRO_MUTEX_UNLOCK (font->mutex);
 
     cairo_scaled_font_destroy (font);
 
@@ -349,13 +347,11 @@ _cairo_type3_glyph_surface_emit_fallback_image (cairo_type3_glyph_surface_t *sur
     cairo_matrix_t mat;
     double x, y;
 
-    CAIRO_MUTEX_LOCK (surface->scaled_font->mutex);
     status = _cairo_scaled_glyph_lookup (surface->scaled_font,
 					 glyph_index,
 					 CAIRO_SCALED_GLYPH_INFO_METRICS |
 					 CAIRO_SCALED_GLYPH_INFO_SURFACE,
 					 &scaled_glyph);
-    CAIRO_MUTEX_UNLOCK (surface->scaled_font->mutex);
     if (status)
 	return status;
 
@@ -401,13 +397,12 @@ _cairo_type3_glyph_surface_analyze_glyph (void		     *abstract_surface,
     null_stream = _cairo_null_stream_create ();
     _cairo_type3_glyph_surface_set_stream (surface, null_stream);
 
-    CAIRO_MUTEX_LOCK (surface->scaled_font->mutex);
+    _cairo_scaled_font_freeze_cache (surface->scaled_font);
     status = _cairo_scaled_glyph_lookup (surface->scaled_font,
 					 glyph_index,
 					 CAIRO_SCALED_GLYPH_INFO_METRICS |
 					 CAIRO_SCALED_GLYPH_INFO_META_SURFACE,
 					 &scaled_glyph);
-    CAIRO_MUTEX_UNLOCK (surface->scaled_font->mutex);
 
     if (_cairo_status_is_error (status))
 	goto cleanup;
@@ -430,6 +425,8 @@ _cairo_type3_glyph_surface_analyze_glyph (void		     *abstract_surface,
 	status = CAIRO_STATUS_SUCCESS;
 
 cleanup:
+    _cairo_scaled_font_thaw_cache (surface->scaled_font);
+
     status2 = _cairo_output_stream_destroy (null_stream);
     if (status == CAIRO_STATUS_SUCCESS)
 	status = status2;
@@ -469,7 +466,7 @@ _cairo_type3_glyph_surface_emit_glyph (void		     *abstract_surface,
 
     _cairo_type3_glyph_surface_set_stream (surface, stream);
 
-    CAIRO_MUTEX_LOCK (surface->scaled_font->mutex);
+    _cairo_scaled_font_freeze_cache (surface->scaled_font);
     status = _cairo_scaled_glyph_lookup (surface->scaled_font,
 					 glyph_index,
 					 CAIRO_SCALED_GLYPH_INFO_METRICS |
@@ -483,9 +480,10 @@ _cairo_type3_glyph_surface_emit_glyph (void		     *abstract_surface,
 	if (status == CAIRO_STATUS_SUCCESS)
 	    status = CAIRO_INT_STATUS_IMAGE_FALLBACK;
     }
-    CAIRO_MUTEX_UNLOCK (surface->scaled_font->mutex);
-    if (_cairo_status_is_error (status))
+    if (_cairo_status_is_error (status)) {
+	_cairo_scaled_font_thaw_cache (surface->scaled_font);
 	return status;
+    }
 
     x_advance = scaled_glyph->metrics.x_advance;
     y_advance = scaled_glyph->metrics.y_advance;
@@ -537,6 +535,8 @@ _cairo_type3_glyph_surface_emit_glyph (void		     *abstract_surface,
 
     if (status == CAIRO_INT_STATUS_IMAGE_FALLBACK)
 	status = _cairo_type3_glyph_surface_emit_fallback_image (surface, glyph_index);
+
+    _cairo_scaled_font_thaw_cache (surface->scaled_font);
 
     return status;
 }

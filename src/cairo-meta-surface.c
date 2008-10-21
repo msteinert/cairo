@@ -730,12 +730,10 @@ _cairo_meta_surface_get_path (cairo_surface_t	 *surface,
 	}
 	case CAIRO_COMMAND_SHOW_TEXT_GLYPHS:
 	{
-	    CAIRO_MUTEX_LOCK (command->show_text_glyphs.scaled_font->mutex);
 	    status = _cairo_scaled_font_glyph_path (command->show_text_glyphs.scaled_font,
 						    command->show_text_glyphs.glyphs,
 						    command->show_text_glyphs.num_glyphs,
 						    path);
-	    CAIRO_MUTEX_UNLOCK (command->show_text_glyphs.scaled_font->mutex);
 	    break;
 	}
 

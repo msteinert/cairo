@@ -481,7 +481,6 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
     if (status == CAIRO_STATUS_SUCCESS)
 	status = _cairo_scaled_font_set_metrics (&user_scaled_font->base, &font_extents);
 
-
     if (status != CAIRO_STATUS_SUCCESS) {
         _cairo_scaled_font_fini (&user_scaled_font->base);
 	free (user_scaled_font);

@@ -3107,7 +3107,7 @@ _cairo_xlib_surface_remove_scaled_font (cairo_xlib_display_t	*display,
     scaled_font = font_private->scaled_font;
 
     CAIRO_MUTEX_LOCK (scaled_font->mutex);
-    font_private  = scaled_font->surface_private;
+    font_private = scaled_font->surface_private;
     scaled_font->surface_private = NULL;
 
     _cairo_scaled_font_reset_cache (scaled_font);
@@ -3936,6 +3936,23 @@ _cairo_xlib_surface_emit_glyphs (cairo_xlib_surface_t *dst,
     return status;
 }
 
+static cairo_bool_t
+_cairo_xlib_surface_owns_font (cairo_xlib_surface_t *dst,
+			       cairo_scaled_font_t *scaled_font)
+{
+    cairo_xlib_surface_font_private_t *font_private;
+
+    font_private = scaled_font->surface_private;
+    if ((scaled_font->surface_backend != NULL &&
+	 scaled_font->surface_backend != &cairo_xlib_surface_backend) ||
+	(font_private != NULL && font_private->display != dst->display))
+    {
+	return FALSE;
+    }
+
+    return TRUE;
+}
+
 static cairo_int_status_t
 _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 cairo_operator_t     op,
@@ -3951,8 +3968,6 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
     composite_operation_t operation;
     cairo_surface_attributes_t attributes;
     cairo_xlib_surface_t *src = NULL;
-
-    cairo_xlib_surface_font_private_t *font_private;
 
     cairo_solid_pattern_t solid_pattern;
 
@@ -3987,22 +4002,14 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
     if (operation == DO_UNSUPPORTED)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    font_private = scaled_font->surface_private;
-    if ((scaled_font->surface_backend != NULL &&
-	 scaled_font->surface_backend != &cairo_xlib_surface_backend) ||
-	(font_private != NULL && font_private->display != dst->display))
+    if (! _cairo_xlib_surface_owns_font (dst, scaled_font))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* After passing all those tests, we're now committed to rendering
      * these glyphs or to fail trying. We first upload any glyphs to
      * the X server that it doesn't have already, then we draw
-     * them. We tie into the scaled_font's glyph cache and remove
-     * glyphs from the X server when they are ejected from the
-     * scaled_font cache. Because of this we first freeze the
-     * scaled_font's cache so that we don't cause any of our glyphs to
-     * be ejected and removed from the X server before we have a
-     * chance to render them. */
-    _cairo_scaled_font_freeze_cache (scaled_font);
+     * them.
+     */
 
     /* PictOpClear doesn't seem to work with CompositeText; it seems to ignore
      * the mask (the glyphs).  This code below was executed as a side effect
@@ -4053,14 +4060,19 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
     if (status)
         goto BAIL1;
 
-    status = _cairo_xlib_surface_emit_glyphs (dst,
-	                                      (cairo_xlib_glyph_t *) glyphs,
-					      num_glyphs,
-					      scaled_font,
-					      op,
-					      src,
-					      &attributes,
-					      remaining_glyphs);
+    _cairo_scaled_font_freeze_cache (scaled_font);
+    if (_cairo_xlib_surface_owns_font (dst, scaled_font)) {
+	status = _cairo_xlib_surface_emit_glyphs (dst,
+						  (cairo_xlib_glyph_t *) glyphs,
+						  num_glyphs,
+						  scaled_font,
+						  op,
+						  src,
+						  &attributes,
+						  remaining_glyphs);
+    } else
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
+    _cairo_scaled_font_thaw_cache (scaled_font);
 
   BAIL1:
     if (src)
@@ -4068,7 +4080,6 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
     if (src_pattern == &solid_pattern.base)
 	_cairo_pattern_fini (&solid_pattern.base);
   BAIL0:
-    _cairo_scaled_font_thaw_cache (scaled_font);
     _cairo_xlib_display_notify (dst->display);
 
     return status;

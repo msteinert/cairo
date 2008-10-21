@@ -1432,13 +1432,13 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
 
     D_DEBUG_AT (CairoDFB_Font, "%s( %p [%d] )\n", __FUNCTION__, glyphs, num_glyphs );
 
+    _cairo_cache_freeze (scaled_font->glyphs);
+
     if (scaled_font->surface_private) {
 	cache = scaled_font->surface_private;
 	x = cache->x;
 	y = cache->y;
     }
-
-    _cairo_cache_freeze (scaled_font->glyphs);
 
     for (i = 0; i < num_glyphs; i++) {
 	cairo_scaled_glyph_t  *scaled_glyph;

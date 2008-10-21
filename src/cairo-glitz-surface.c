@@ -2020,7 +2020,7 @@ _cairo_glitz_surface_add_glyph (cairo_glitz_surface_t *surface,
 
     if (glyph_surface->width  > GLYPH_CACHE_MAX_WIDTH ||
 	glyph_surface->height > GLYPH_CACHE_MAX_HEIGHT)
-	return CAIRO_STATUS_SUCCESS;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (scaled_font->surface_private == NULL)
     {

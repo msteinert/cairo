@@ -988,6 +988,7 @@ _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
 
     if (_cairo_operator_bounded_by_mask (op)) {
         cairo_rectangle_int_t glyph_extents;
+
 	status = _cairo_scaled_font_glyph_device_extents (scaled_font,
 							  glyphs,
 							  num_glyphs,

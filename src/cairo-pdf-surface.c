@@ -4050,14 +4050,12 @@ _cairo_pdf_surface_write_smask_group (cairo_pdf_surface_t     *surface,
 					      &group->ctm_inverse);
 	break;
     case PDF_SHOW_GLYPHS:
-	CAIRO_MUTEX_LOCK (group->scaled_font->mutex);
 	status = _cairo_pdf_operators_show_text_glyphs (&surface->pdf_operators,
 							group->utf8, group->utf8_len,
 							group->glyphs, group->num_glyphs,
 							group->clusters, group->num_clusters,
 							group->cluster_flags,
 							group->scaled_font);
-	CAIRO_MUTEX_UNLOCK (group->scaled_font->mutex);
 	break;
     }
     if (status)

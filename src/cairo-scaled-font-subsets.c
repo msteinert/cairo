@@ -445,12 +445,13 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
 {
     cairo_sub_font_glyph_t key, *sub_font_glyph;
     cairo_status_t status;
-    cairo_scaled_glyph_t *scaled_glyph;
 
     _cairo_sub_font_glyph_init_key (&key, scaled_font_glyph_index);
     if (! _cairo_hash_table_lookup (sub_font->sub_font_glyphs, &key.base,
 				    (cairo_hash_entry_t **) &sub_font_glyph))
     {
+	cairo_scaled_glyph_t *scaled_glyph;
+
 	if (sub_font->num_glyphs_in_current_subset == sub_font->max_glyphs_per_subset)
 	{
 	    cairo_scaled_font_subsets_glyph_t tmp_subset_glyph;
@@ -464,19 +465,24 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
 		return status;
 	}
 
+	_cairo_scaled_font_freeze_cache (sub_font->scaled_font);
         status = _cairo_scaled_glyph_lookup (sub_font->scaled_font,
                                              scaled_font_glyph_index,
                                              CAIRO_SCALED_GLYPH_INFO_METRICS,
                                              &scaled_glyph);
 	assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
-	if (status)
+	if (status) {
+	    _cairo_scaled_font_thaw_cache (sub_font->scaled_font);
 	    return status;
+	}
 
         sub_font_glyph = _cairo_sub_font_glyph_create (scaled_font_glyph_index,
 						       sub_font->current_subset,
 						       sub_font->num_glyphs_in_current_subset,
                                                        scaled_glyph->metrics.x_advance,
                                                        scaled_glyph->metrics.y_advance);
+	_cairo_scaled_font_thaw_cache (sub_font->scaled_font);
+
 	if (sub_font_glyph == NULL)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -702,10 +708,12 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
     if (scaled_font_glyph_index == 0) {
 	status = CAIRO_STATUS_SUCCESS;
     } else {
+	_cairo_scaled_font_freeze_cache (scaled_font);
 	status = _cairo_scaled_glyph_lookup (scaled_font,
 					     scaled_font_glyph_index,
 					     CAIRO_SCALED_GLYPH_INFO_PATH,
 					     &scaled_glyph);
+	_cairo_scaled_font_thaw_cache (scaled_font);
     }
     if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
         return status;
@@ -745,7 +753,6 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
                 subset_glyph->is_composite = FALSE;
             }
 
-	    CAIRO_MUTEX_LOCK (unscaled_font->mutex);
             status = _cairo_sub_font_create (subsets,
 					     unscaled_font,
 					     subsets->num_sub_fonts,
@@ -753,7 +760,6 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
 					     subset_glyph->is_scaled,
 					     subset_glyph->is_composite,
 					     &sub_font);
-	    CAIRO_MUTEX_UNLOCK (unscaled_font->mutex);
 
             if (status) {
 		cairo_scaled_font_destroy (unscaled_font);
@@ -815,18 +821,10 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
         }
     }
 
-    if (sub_font->scaled_font != scaled_font)
-	CAIRO_MUTEX_LOCK (sub_font->scaled_font->mutex);
-
-    status =  _cairo_sub_font_map_glyph (sub_font,
-					 scaled_font_glyph_index,
-					 utf8, utf8_len,
-					 subset_glyph);
-
-    if (sub_font->scaled_font != scaled_font)
-	CAIRO_MUTEX_UNLOCK (sub_font->scaled_font->mutex);
-
-    return status;
+    return _cairo_sub_font_map_glyph (sub_font,
+				      scaled_font_glyph_index,
+				      utf8, utf8_len,
+				      subset_glyph);
 }
 
 static cairo_status_t
