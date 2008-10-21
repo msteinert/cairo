@@ -480,6 +480,9 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
     cairo_surface_t *type3_surface;
     double width;
 
+    if (font_subset->num_glyphs == 0)
+	return CAIRO_STATUS_SUCCESS;
+
 #if DEBUG_PS
     _cairo_output_stream_printf (surface->final_stream,
 				 "%% _cairo_ps_surface_emit_type3_font_subset\n");
