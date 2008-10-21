@@ -101,7 +101,10 @@ AC_DEFUN([CAIRO_CHECK_NATIVE_ATOMIC_PRIMITIVES],
 	[
 		cairo_cv_atomic_primitives="none"
 
-		AC_TRY_LINK([int atomic_add(int i) { return __sync_fetch_and_add (&i, 1); }], [],
+		AC_TRY_LINK([
+int atomic_add(int i) { return __sync_fetch_and_add (&i, 1); }
+int atomic_cmpxchg(int i, int j, int k) { return __sync_val_compare_and_swap (&i, j, k); }
+], [],
 		  cairo_cv_atomic_primitives="Intel"
 		  )
 	])
