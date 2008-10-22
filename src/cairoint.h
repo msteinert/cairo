@@ -1274,10 +1274,10 @@ _cairo_gstate_glyph_path (cairo_gstate_t      *gstate,
 			  cairo_path_fixed_t  *path);
 
 cairo_private cairo_bool_t
-_cairo_operator_bounded_by_mask (cairo_operator_t op);
+_cairo_operator_bounded_by_mask (cairo_operator_t op) cairo_pure;
 
 cairo_private cairo_bool_t
-_cairo_operator_bounded_by_source (cairo_operator_t op);
+_cairo_operator_bounded_by_source (cairo_operator_t op) cairo_pure;
 
 /* cairo-color.c */
 cairo_private const cairo_color_t *
@@ -1288,7 +1288,7 @@ _cairo_stock_color (cairo_stock_t stock);
 #define CAIRO_COLOR_TRANSPARENT _cairo_stock_color (CAIRO_STOCK_TRANSPARENT)
 
 cairo_private uint16_t
-_cairo_color_double_to_short (double d);
+_cairo_color_double_to_short (double d) cairo_pure;
 
 cairo_private void
 _cairo_color_init (cairo_color_t *color);
@@ -1987,13 +1987,13 @@ _cairo_surface_has_device_transform (cairo_surface_t *surface);
 				       == 0))
 
 cairo_private int
-_cairo_format_bits_per_pixel (cairo_format_t format);
+_cairo_format_bits_per_pixel (cairo_format_t format) cairo_pure;
 
 cairo_private cairo_format_t
-_cairo_format_from_content (cairo_content_t content);
+_cairo_format_from_content (cairo_content_t content) cairo_pure;
 
 cairo_private cairo_content_t
-_cairo_content_from_format (cairo_format_t format);
+_cairo_content_from_format (cairo_format_t format) cairo_pure;
 
 cairo_private cairo_surface_t *
 _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
