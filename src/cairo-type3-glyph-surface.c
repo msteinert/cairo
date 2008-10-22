@@ -435,22 +435,6 @@ cleanup:
 }
 
 cairo_status_t
-_cairo_type3_glyph_surface_emit_notdef_glyph (void		    *abstract_surface,
-					      cairo_output_stream_t *stream,
-					      cairo_box_t           *bbox,
-					      double                *width)
-{
-    bbox->p1.x = 0;
-    bbox->p1.y = 0;
-    bbox->p2.x = 0;
-    bbox->p2.y = 0;
-    *width = 0.0;
-    _cairo_output_stream_printf (stream, "0 0 0 0 0 0 d1\n");
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-cairo_status_t
 _cairo_type3_glyph_surface_emit_glyph (void		     *abstract_surface,
 				       cairo_output_stream_t *stream,
 				       unsigned long	      glyph_index,

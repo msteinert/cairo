@@ -3513,7 +3513,7 @@ _cairo_pdf_surface_analyze_user_font_subset (cairo_scaled_font_subset_t *font_su
 							  _cairo_pdf_surface_add_font,
 							  surface);
 
-    for (i = 1; i < font_subset->num_glyphs; i++) {
+    for (i = 0; i < font_subset->num_glyphs; i++) {
 	status = _cairo_type3_glyph_surface_analyze_glyph (type3_surface,
 							   font_subset->glyphs[i]);
 	if (status)
@@ -3578,18 +3578,11 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 	    break;
 
 	glyphs[i] = surface->pdf_stream.self;
-	if (i == 0) {
-	    status = _cairo_type3_glyph_surface_emit_notdef_glyph (type3_surface,
-								   surface->output,
-								   &bbox,
-								   &widths[i]);
-	} else {
-	    status = _cairo_type3_glyph_surface_emit_glyph (type3_surface,
-							    surface->output,
-							    font_subset->glyphs[i],
-							    &bbox,
-							    &widths[i]);
-	}
+	status = _cairo_type3_glyph_surface_emit_glyph (type3_surface,
+							surface->output,
+							font_subset->glyphs[i],
+							&bbox,
+							&widths[i]);
 	if (status)
 	    break;
 

@@ -455,7 +455,7 @@ _cairo_ps_surface_analyze_user_font_subset (cairo_scaled_font_subset_t *font_sub
 						       _cairo_ps_emit_imagemask,
 						       surface->font_subsets);
 
-    for (i = 1; i < font_subset->num_glyphs; i++) {
+    for (i = 0; i < font_subset->num_glyphs; i++) {
 	status = _cairo_type3_glyph_surface_analyze_glyph (type3_surface,
 							   font_subset->glyphs[i]);
 	if (status)
@@ -500,7 +500,7 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
 						       _cairo_ps_emit_imagemask,
 						       surface->font_subsets);
 
-    for (i = 1; i < font_subset->num_glyphs; i++) {
+    for (i = 0; i < font_subset->num_glyphs; i++) {
 	if (font_subset->glyph_names != NULL) {
 	    _cairo_output_stream_printf (surface->final_stream,
 					 "Encoding %d /%s put\n",
@@ -517,18 +517,11 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
     for (i = 0; i < font_subset->num_glyphs; i++) {
 	_cairo_output_stream_printf (surface->final_stream,
 				     "    { %% %d\n", i);
-	if (i == 0) {
-	    status = _cairo_type3_glyph_surface_emit_notdef_glyph (type3_surface,
-								   surface->final_stream,
-								   &bbox,
-								   &width);
-	} else {
-	    status = _cairo_type3_glyph_surface_emit_glyph (type3_surface,
-							    surface->final_stream,
-							    font_subset->glyphs[i],
-							    &bbox,
-							    &width);
-	}
+	status = _cairo_type3_glyph_surface_emit_glyph (type3_surface,
+							surface->final_stream,
+							font_subset->glyphs[i],
+							&bbox,
+							&width);
 	if (status)
 	    break;
 
