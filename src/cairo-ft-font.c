@@ -2211,6 +2211,7 @@ _cairo_ft_index_to_ucs4(void	        *abstract_font,
 
 const cairo_scaled_font_backend_t _cairo_ft_scaled_font_backend = {
     CAIRO_FONT_TYPE_FT,
+    NULL,
     _cairo_ft_scaled_font_create_toy,
     _cairo_ft_scaled_font_fini,
     _cairo_ft_scaled_glyph_init,
@@ -2317,6 +2318,7 @@ _cairo_ft_font_face_scaled_font_create (void                     *abstract_face,
 static const cairo_font_face_backend_t _cairo_ft_font_face_backend = {
     CAIRO_FONT_TYPE_FT,
     _cairo_ft_font_face_destroy,
+    NULL, /* direct implementation */
     _cairo_ft_font_face_scaled_font_create
 };
 

@@ -412,6 +412,10 @@ struct _cairo_scaled_font_backend {
     cairo_font_type_t type;
 
     cairo_warn cairo_status_t
+    (*get_implementation)  (cairo_toy_font_face_t	*toy_face,
+			    cairo_font_face_t	       **font_face);
+
+    cairo_warn cairo_status_t
     (*create_toy)  (cairo_toy_font_face_t	*toy_face,
 		    const cairo_matrix_t	*font_matrix,
 		    const cairo_matrix_t	*ctm,
@@ -482,6 +486,10 @@ struct _cairo_font_face_backend {
      */
     void
     (*destroy)     (void			*font_face);
+
+    cairo_warn cairo_status_t
+    (*get_implementation)  (void			*font_face,
+			    cairo_font_face_t	       **font_face_out);
 
     cairo_warn cairo_status_t
     (*scaled_font_create) (void				*font_face,

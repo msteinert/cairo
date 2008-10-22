@@ -772,6 +772,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 			  const cairo_font_options_t *options)
 {
     cairo_status_t status;
+    cairo_font_face_t *impl_face;
     cairo_scaled_font_map_t *font_map;
     cairo_scaled_font_t key, *old = NULL, *scaled_font = NULL;
 
@@ -785,11 +786,19 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     /* Note that degenerate ctm or font_matrix *are* allowed.
      * We want to support a font size of 0. */
 
+    if (font_face->backend->get_implementation != NULL) {
+	/* indirect implementation, lookup the face that is used for the key */
+	status = font_face->backend->get_implementation (font_face, &impl_face);
+	if (status)
+	    return _cairo_scaled_font_create_in_error (status);
+    } else
+	impl_face = font_face;
+
     font_map = _cairo_scaled_font_map_lock ();
     if (font_map == NULL)
 	return _cairo_scaled_font_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    _cairo_scaled_font_init_key (&key, font_face,
+    _cairo_scaled_font_init_key (&key, impl_face,
 				 font_matrix, ctm, options);
     scaled_font = font_map->mru_scaled_font;
     if (scaled_font != NULL &&

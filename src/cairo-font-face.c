@@ -569,6 +569,39 @@ _cairo_toy_font_face_destroy (void *abstract_face)
 }
 
 static cairo_status_t
+_cairo_toy_font_face_scaled_font_get_implementation (void                *abstract_font_face,
+						     cairo_font_face_t **font_face_out)
+{
+    cairo_toy_font_face_t *font_face = abstract_font_face;
+    cairo_status_t status;
+
+    if (font_face->base.status)
+	return font_face->base.status;
+
+    if (CAIRO_SCALED_FONT_BACKEND_DEFAULT != &_cairo_user_scaled_font_backend &&
+	0 != strcmp (font_face->family, CAIRO_USER_FONT_FAMILY_DEFAULT))
+    {
+	const cairo_scaled_font_backend_t * backend = CAIRO_SCALED_FONT_BACKEND_DEFAULT;
+
+	if (backend->get_implementation == NULL) {
+	    *font_face_out = &font_face->base;
+	    return CAIRO_STATUS_SUCCESS;
+	}
+
+	status = backend->get_implementation (font_face,
+					      font_face_out);
+
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return _cairo_font_face_set_error (&font_face->base, status);
+    }
+
+    status = _cairo_user_scaled_font_backend.get_implementation (font_face,
+								 font_face_out);
+
+    return _cairo_font_face_set_error (&font_face->base, status);
+}
+
+static cairo_status_t
 _cairo_toy_font_face_scaled_font_create (void                *abstract_font_face,
 					 const cairo_matrix_t       *font_matrix,
 					 const cairo_matrix_t       *ctm,
@@ -689,6 +722,7 @@ slim_hidden_def (cairo_toy_font_face_get_weight);
 static const cairo_font_face_backend_t _cairo_toy_font_face_backend = {
     CAIRO_FONT_TYPE_TOY,
     _cairo_toy_font_face_destroy,
+    _cairo_toy_font_face_scaled_font_get_implementation,
     _cairo_toy_font_face_scaled_font_create
 };
 

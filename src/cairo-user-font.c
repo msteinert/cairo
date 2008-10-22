@@ -337,16 +337,13 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
 					  cairo_scaled_font_t        **scaled_font);
 
 static cairo_status_t
-_cairo_user_scaled_font_create_toy (cairo_toy_font_face_t     *toy_face,
-				    const cairo_matrix_t      *font_matrix,
-				    const cairo_matrix_t      *ctm,
-				    const cairo_font_options_t *font_options,
-				    cairo_scaled_font_t	     **font)
+_cairo_user_scaled_font_get_implementation (cairo_toy_font_face_t *toy_face,
+					    cairo_font_face_t **font_face_out)
 {
-    cairo_status_t status;
-    cairo_font_face_t *face;
-
     static cairo_user_data_key_t twin_font_face_key;
+
+    cairo_font_face_t *face;
+    cairo_status_t status;
 
     face = cairo_font_face_get_user_data (&toy_face->base,
 					  &twin_font_face_key);
@@ -365,17 +362,38 @@ _cairo_user_scaled_font_create_toy (cairo_toy_font_face_t     *toy_face,
 	}
     }
 
+    *font_face_out = face;
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_user_scaled_font_create_toy (cairo_toy_font_face_t     *toy_face,
+				    const cairo_matrix_t      *font_matrix,
+				    const cairo_matrix_t      *ctm,
+				    const cairo_font_options_t *font_options,
+				    cairo_scaled_font_t	     **font)
+{
+    cairo_font_face_t *face;
+    cairo_status_t status;
+
+    status = _cairo_user_scaled_font_get_implementation (toy_face, &face);
+    if (status)
+	return status;
+
     status = _cairo_user_font_face_scaled_font_create (face,
 						       font_matrix,
 						       ctm,
 						       font_options,
 						       font);
+    if (status)
+	return status;
 
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 const cairo_scaled_font_backend_t _cairo_user_scaled_font_backend = {
     CAIRO_FONT_TYPE_USER,
+    _cairo_user_scaled_font_get_implementation,
     _cairo_user_scaled_font_create_toy,	/* create_toy */
     NULL,	/* scaled_font_fini */
     _cairo_user_scaled_glyph_init,
@@ -501,6 +519,7 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
 static const cairo_font_face_backend_t _cairo_user_font_face_backend = {
     CAIRO_FONT_TYPE_USER,
     NULL,	/* destroy */
+    NULL,       /* direct implementation */
     _cairo_user_font_face_scaled_font_create
 };
 
