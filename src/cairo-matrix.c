@@ -813,8 +813,8 @@ _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
         *pixman_transform = pixman_identity_transform;
     }
     else {
-        cairo_matrix_t inv = *matrix;
-        double x = 0, y = 0;
+        cairo_matrix_t inv;
+        double x,y;
         pixman_vector_t vector;
 
         pixman_transform->matrix[0][0] = _cairo_fixed_16_16_from_double (matrix->xx);
@@ -839,11 +839,16 @@ _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
          * space and adjust pixman's transform to agree with cairo's at
          * that point. */
 
+	if (_cairo_matrix_is_translation (matrix))
+	    return;
+
         /* Note: If we can't invert the transformation, skip the adjustment. */
+        inv = *matrix;
         if (cairo_matrix_invert (&inv) != CAIRO_STATUS_SUCCESS)
             return;
 
         /* find the device space coordinate that maps to (0, 0) */
+        x = 0, y = 0;
         cairo_matrix_transform_point (&inv, &x, &y);
 
         /* transform the resulting device space coordinate back
@@ -852,7 +857,7 @@ _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
         vector.vector[1] = _cairo_fixed_16_16_from_double (y);
         vector.vector[2] = 1 << 16;
 
-        if (!pixman_transform_point_3d (pixman_transform, &vector))
+        if (! pixman_transform_point_3d (pixman_transform, &vector))
             return;
 
         /* Ideally, the vector should now be (0, 0). We can now compensate
