@@ -651,7 +651,7 @@ cairo_set_source_rgb (cairo_t *cr, double red, double green, double blue)
 	return;
 
     /* push the current pattern to the freed lists */
-    cairo_set_source (cr, (cairo_pattern_t *) &_cairo_pattern_none);
+    cairo_set_source (cr, (cairo_pattern_t *) &_cairo_pattern_black);
 
     pattern = cairo_pattern_create_rgb (red, green, blue);
     cairo_set_source (cr, pattern);
@@ -688,7 +688,7 @@ cairo_set_source_rgba (cairo_t *cr,
 	return;
 
     /* push the current pattern to the freed lists */
-    cairo_set_source (cr, (cairo_pattern_t *) &_cairo_pattern_none);
+    cairo_set_source (cr, (cairo_pattern_t *) &_cairo_pattern_black);
 
     pattern = cairo_pattern_create_rgba (red, green, blue, alpha);
     cairo_set_source (cr, pattern);
@@ -731,7 +731,7 @@ cairo_set_source_surface (cairo_t	  *cr,
 	return;
 
     /* push the current pattern to the freed lists */
-    cairo_set_source (cr, (cairo_pattern_t *) &_cairo_pattern_none);
+    cairo_set_source (cr, (cairo_pattern_t *) &_cairo_pattern_black);
 
     pattern = cairo_pattern_create_for_surface (surface);
 

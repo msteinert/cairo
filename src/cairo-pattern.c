@@ -31,7 +31,7 @@
 #include "cairoint.h"
 
 const cairo_solid_pattern_t _cairo_pattern_nil = {
-    { CAIRO_PATTERN_TYPE_SOLID, 	/* type */
+    { CAIRO_PATTERN_TYPE_SOLID,		/* type */
       CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
       CAIRO_STATUS_NO_MEMORY,		/* status */
       { 0, 0, 0, NULL },		/* user_data */
@@ -41,7 +41,7 @@ const cairo_solid_pattern_t _cairo_pattern_nil = {
 };
 
 static const cairo_solid_pattern_t _cairo_pattern_nil_null_pointer = {
-    { CAIRO_PATTERN_TYPE_SOLID, 	/* type */
+    { CAIRO_PATTERN_TYPE_SOLID,		/* type */
       CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
       CAIRO_STATUS_NULL_POINTER,	/* status */
       { 0, 0, 0, NULL },		/* user_data */
@@ -50,14 +50,16 @@ static const cairo_solid_pattern_t _cairo_pattern_nil_null_pointer = {
       CAIRO_EXTEND_GRADIENT_DEFAULT },	/* extend */
 };
 
-const cairo_solid_pattern_t _cairo_pattern_none = {
-    { CAIRO_PATTERN_TYPE_SOLID, 	/* type */
+const cairo_solid_pattern_t _cairo_pattern_black = {
+    { CAIRO_PATTERN_TYPE_SOLID,		/* type */
       CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
       CAIRO_STATUS_SUCCESS,		/* status */
       { 0, 0, 0, NULL },		/* user_data */
       { 1., 0., 0., 1., 0., 0., },	/* matrix */
       CAIRO_FILTER_DEFAULT,		/* filter */
-      CAIRO_EXTEND_GRADIENT_DEFAULT },	/* extend */
+      CAIRO_EXTEND_GRADIENT_DEFAULT},	/* extend */
+    { 0., 0., 0., 1., 0, 0, 0, 0xffff },/* color (double rgba, short rgba) */
+    CAIRO_CONTENT_COLOR,                /* content */
 };
 
 /**

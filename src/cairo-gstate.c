@@ -103,8 +103,7 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     gstate->ctm_inverse = gstate->ctm;
     gstate->source_ctm_inverse = gstate->ctm;
 
-    gstate->source = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK,
-						  CAIRO_CONTENT_COLOR);
+    gstate->source = (cairo_pattern_t *) &_cairo_pattern_black.base;
 
     /* Now that the gstate is fully initialized and ready for the eventual
      * _cairo_gstate_fini(), we can check for errors (and not worry about
@@ -402,6 +401,12 @@ _cairo_gstate_set_source (cairo_gstate_t  *gstate,
 cairo_pattern_t *
 _cairo_gstate_get_source (cairo_gstate_t *gstate)
 {
+    if (gstate->source == &_cairo_pattern_black.base) {
+	/* do not expose the static object to the user */
+	gstate->source = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK,
+						      CAIRO_CONTENT_COLOR);
+    }
+
     return gstate->source;
 }
 
