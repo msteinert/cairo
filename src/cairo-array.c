@@ -382,14 +382,18 @@ _cairo_user_data_array_init (cairo_user_data_array_t *array)
 void
 _cairo_user_data_array_fini (cairo_user_data_array_t *array)
 {
-    int i, num_slots;
-    cairo_user_data_slot_t *slots;
+    unsigned int num_slots;
 
     num_slots = array->num_elements;
-    slots = _cairo_array_index (array, 0);
-    for (i = 0; i < num_slots; i++) {
-	if (slots[i].user_data != NULL && slots[i].destroy != NULL)
-	    slots[i].destroy (slots[i].user_data);
+    if (num_slots) {
+	cairo_user_data_slot_t *slots;
+
+	slots = _cairo_array_index (array, 0);
+	do {
+	    if (slots->user_data != NULL && slots->destroy != NULL)
+		slots->destroy (slots->user_data);
+	    slots++;
+	} while (--num_slots);
     }
 
     _cairo_array_fini (array);
