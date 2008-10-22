@@ -672,7 +672,8 @@ _cairo_win32_scaled_font_type1_text_to_glyphs (cairo_win32_scaled_font_t *scaled
 					     &scaled_glyph);
 	if (status) {
 	    free (*glyphs);
-	    goto FAIL3;
+	    *glyphs = NULL;
+	    break;
 	}
 
 	x = scaled_glyph->x_advance;
@@ -682,10 +683,10 @@ _cairo_win32_scaled_font_type1_text_to_glyphs (cairo_win32_scaled_font_t *scaled
 	y_pos += y;
     }
 
-FAIL3:
     _cairo_scaled_font_thaw_cache (&scaled_font->base);
-    cairo_win32_scaled_font_done_font (&scaled_font->base);
 
+FAIL3:
+    cairo_win32_scaled_font_done_font (&scaled_font->base);
 FAIL2:
     free (glyph_indices);
 FAIL1:
