@@ -1757,7 +1757,7 @@ _cairo_svg_surface_emit_radial_pattern (cairo_svg_surface_t    *surface,
 
 static cairo_status_t
 _cairo_svg_surface_emit_pattern (cairo_svg_surface_t   *surface,
-				 cairo_pattern_t       *pattern,
+				 const cairo_pattern_t       *pattern,
 				 cairo_output_stream_t *output,
 				 cairo_bool_t		is_stroke,
 				 const cairo_matrix_t  *parent_matrix)
@@ -1783,12 +1783,12 @@ _cairo_svg_surface_emit_pattern (cairo_svg_surface_t   *surface,
 }
 
 static cairo_status_t
-_cairo_svg_surface_emit_fill_style (cairo_output_stream_t *output,
-				    cairo_svg_surface_t   *surface,
-				    cairo_operator_t       op,
-				    cairo_pattern_t	  *source,
-				    cairo_fill_rule_t	   fill_rule,
-				    cairo_matrix_t	  *parent_matrix)
+_cairo_svg_surface_emit_fill_style (cairo_output_stream_t	*output,
+				    cairo_svg_surface_t		*surface,
+				    cairo_operator_t		 op,
+				    const cairo_pattern_t	*source,
+				    cairo_fill_rule_t		 fill_rule,
+				    cairo_matrix_t		*parent_matrix)
 {
     _cairo_output_stream_printf (output,
 				 "fill-rule:%s;",
@@ -1799,12 +1799,12 @@ _cairo_svg_surface_emit_fill_style (cairo_output_stream_t *output,
 }
 
 static cairo_status_t
-_cairo_svg_surface_emit_stroke_style (cairo_output_stream_t *output,
-				      cairo_svg_surface_t   *surface,
-				      cairo_operator_t	     op,
-				      cairo_pattern_t	    *source,
-				      cairo_stroke_style_t  *stroke_style,
-				      cairo_matrix_t	    *parent_matrix)
+_cairo_svg_surface_emit_stroke_style (cairo_output_stream_t	    *output,
+				      cairo_svg_surface_t	    *surface,
+				      cairo_operator_t		     op,
+				      const cairo_pattern_t	    *source,
+				      cairo_stroke_style_t	    *stroke_style,
+				      cairo_matrix_t		    *parent_matrix)
 {
     cairo_status_t status;
     const char *line_cap, *line_join;
@@ -1879,13 +1879,13 @@ _cairo_svg_surface_emit_stroke_style (cairo_output_stream_t *output,
 static cairo_int_status_t
 _cairo_svg_surface_fill_stroke (void			*abstract_surface,
 				cairo_operator_t	 fill_op,
-				cairo_pattern_t		*fill_source,
+				const cairo_pattern_t	*fill_source,
 				cairo_fill_rule_t	 fill_rule,
 				double			 fill_tolerance,
 				cairo_antialias_t	 fill_antialias,
 				cairo_path_fixed_t	*path,
 				cairo_operator_t	 stroke_op,
-				cairo_pattern_t		*stroke_source,
+				const cairo_pattern_t	*stroke_source,
 				cairo_stroke_style_t	*stroke_style,
 				cairo_matrix_t		*stroke_ctm,
 				cairo_matrix_t		*stroke_ctm_inverse,
@@ -1921,7 +1921,7 @@ _cairo_svg_surface_fill_stroke (void			*abstract_surface,
 static cairo_int_status_t
 _cairo_svg_surface_fill (void			*abstract_surface,
 			 cairo_operator_t	 op,
-			 cairo_pattern_t	*source,
+			 const cairo_pattern_t	*source,
 			 cairo_path_fixed_t	*path,
 			 cairo_fill_rule_t	 fill_rule,
 			 double			 tolerance,
@@ -1974,8 +1974,8 @@ static cairo_status_t
 _cairo_svg_surface_emit_paint (cairo_output_stream_t *output,
 			       cairo_svg_surface_t   *surface,
 			       cairo_operator_t	      op,
-			       cairo_pattern_t	     *source,
-			       cairo_pattern_t	     *mask_source,
+			       const cairo_pattern_t	     *source,
+			       const cairo_pattern_t	     *mask_source,
 			       const char	     *extra_attributes)
 {
     cairo_status_t status;
@@ -2013,7 +2013,7 @@ _cairo_svg_surface_emit_paint (cairo_output_stream_t *output,
 static cairo_int_status_t
 _cairo_svg_surface_paint (void		    *abstract_surface,
 			  cairo_operator_t   op,
-			  cairo_pattern_t   *source)
+			  const cairo_pattern_t   *source)
 {
     cairo_status_t status;
     cairo_svg_surface_t *surface = abstract_surface;
@@ -2066,8 +2066,8 @@ _cairo_svg_surface_paint (void		    *abstract_surface,
 static cairo_int_status_t
 _cairo_svg_surface_mask (void		    *abstract_surface,
 			cairo_operator_t     op,
-			cairo_pattern_t	    *source,
-			cairo_pattern_t	    *mask)
+			const cairo_pattern_t	    *source,
+			const cairo_pattern_t	    *mask)
 {
     cairo_status_t status;
     cairo_svg_surface_t *surface = abstract_surface;
@@ -2095,8 +2095,8 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
     assert (_cairo_svg_surface_operation_supported (surface, op, source));
     assert (_cairo_svg_surface_operation_supported (surface, CAIRO_OPERATOR_OVER, mask));
 
-    if (cairo_pattern_get_type (mask) == CAIRO_PATTERN_TYPE_SURFACE) {
-	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t*) mask;
+    if (mask->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	const cairo_surface_pattern_t *surface_pattern = (const cairo_surface_pattern_t*) mask;
 	cairo_content_t content = cairo_surface_get_content (surface_pattern->surface);
 	if (content == CAIRO_CONTENT_ALPHA)
 	    discard_filter = TRUE;
@@ -2148,7 +2148,7 @@ _cairo_svg_surface_mask (void		    *abstract_surface,
 static cairo_int_status_t
 _cairo_svg_surface_stroke (void			*abstract_dst,
 			   cairo_operator_t      op,
-			   cairo_pattern_t	*source,
+			   const cairo_pattern_t *source,
 			   cairo_path_fixed_t	*path,
 			   cairo_stroke_style_t *stroke_style,
 			   cairo_matrix_t	*ctm,
@@ -2185,7 +2185,7 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
 static cairo_int_status_t
 _cairo_svg_surface_show_glyphs (void			*abstract_surface,
 				cairo_operator_t	 op,
-				cairo_pattern_t		*pattern,
+				const cairo_pattern_t	*pattern,
 				cairo_glyph_t		*glyphs,
 				int			 num_glyphs,
 				cairo_scaled_font_t	*scaled_font,

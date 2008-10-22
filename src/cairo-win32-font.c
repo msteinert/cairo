@@ -1359,19 +1359,19 @@ _cairo_win32_scaled_font_glyph_init (void		       *abstract_font,
 }
 
 static cairo_int_status_t
-_cairo_win32_scaled_font_show_glyphs (void		       *abstract_font,
-				      cairo_operator_t    	op,
-				      cairo_pattern_t          *pattern,
-				      cairo_surface_t          *generic_surface,
-				      int                 	source_x,
-				      int                 	source_y,
-				      int			dest_x,
-				      int			dest_y,
-				      unsigned int		width,
-				      unsigned int		height,
-				      cairo_glyph_t	       *glyphs,
-				      int                 	num_glyphs,
-				      int		       *remaining_glyphs)
+_cairo_win32_scaled_font_show_glyphs (void			*abstract_font,
+				      cairo_operator_t		 op,
+				      const cairo_pattern_t	*pattern,
+				      cairo_surface_t		*generic_surface,
+				      int			 source_x,
+				      int			 source_y,
+				      int			 dest_x,
+				      int			 dest_y,
+				      unsigned int		 width,
+				      unsigned int		 height,
+				      cairo_glyph_t		*glyphs,
+				      int			 num_glyphs,
+				      int			*remaining_glyphs)
 {
     cairo_win32_scaled_font_t *scaled_font = abstract_font;
     cairo_win32_surface_t *surface = (cairo_win32_surface_t *)generic_surface;

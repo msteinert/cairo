@@ -688,7 +688,7 @@ CreateGradientFunction (cairo_gradient_pattern_t *gpat)
 	0, ComputeGradientValue, (CGFunctionReleaseInfoCallback) cairo_pattern_destroy
     };
 
-    return CGFunctionCreate (gpat,
+    return CGFunctionCreate (_cairo_pattern_create_copy (&gpat->base),
 			     1,
 			     input_value_range,
 			     4,
@@ -766,7 +766,7 @@ CreateRepeatingGradientFunction (cairo_quartz_surface_t *surface,
     input_value_range[0] = 0.0 - 1.0 * rep_start;
     input_value_range[1] = 1.0 + 1.0 * rep_end;
 
-    return CGFunctionCreate (gpat,
+    return CGFunctionCreate (_cairo_pattern_create_copy (&gpat->base),
 			     1,
 			     input_value_range,
 			     4,
@@ -1096,9 +1096,6 @@ _cairo_quartz_setup_linear_source (cairo_quartz_surface_t *surface,
     end = CGPointMake (_cairo_fixed_to_double (lpat->p2.x),
 		       _cairo_fixed_to_double (lpat->p2.y));
 
-    // ref will be released by the CGShading's destructor
-    cairo_pattern_reference ((cairo_pattern_t*) lpat);
-
     if (abspat->extend == CAIRO_EXTEND_NONE ||
 	abspat->extend == CAIRO_EXTEND_PAD)
     {
@@ -1158,9 +1155,6 @@ _cairo_quartz_setup_radial_source (cairo_quartz_surface_t *surface,
 			 _cairo_fixed_to_double (rpat->c1.y));
     end = CGPointMake (_cairo_fixed_to_double (rpat->c2.x),
 		       _cairo_fixed_to_double (rpat->c2.y));
-
-    // ref will be released by the CGShading's destructor
-    cairo_pattern_reference ((cairo_pattern_t*) rpat);
 
     gradFunc = CreateGradientFunction ((cairo_gradient_pattern_t*) rpat);
 

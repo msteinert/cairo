@@ -1437,7 +1437,7 @@ _cairo_ps_surface_analyze_surface_pattern_transparency (cairo_ps_surface_t      
 }
 
 static cairo_bool_t
-surface_pattern_supported (cairo_surface_pattern_t *pattern)
+surface_pattern_supported (const cairo_surface_pattern_t *pattern)
 {
     cairo_extend_t extend;
 
@@ -1478,9 +1478,9 @@ surface_pattern_supported (cairo_surface_pattern_t *pattern)
 
 static cairo_bool_t
 _gradient_pattern_supported (cairo_ps_surface_t    *surface,
-			     cairo_pattern_t *pattern)
+			     const cairo_pattern_t *pattern)
 {
-    cairo_gradient_pattern_t *gradient = (cairo_gradient_pattern_t *) pattern;
+    const cairo_gradient_pattern_t *gradient = (const cairo_gradient_pattern_t *) pattern;
     uint16_t alpha;
     cairo_extend_t extend;
     unsigned int i;
@@ -1499,7 +1499,7 @@ _gradient_pattern_supported (cairo_ps_surface_t    *surface,
 	    return FALSE;
     }
 
-    extend = cairo_pattern_get_extend (pattern);
+    extend = cairo_pattern_get_extend ((cairo_pattern_t *) pattern);
 
     /* Radial gradients are currently only supported when one circle
      * is inside the other. */
@@ -1531,7 +1531,7 @@ _gradient_pattern_supported (cairo_ps_surface_t    *surface,
 }
 
 static cairo_bool_t
-pattern_supported (cairo_ps_surface_t *surface, cairo_pattern_t *pattern)
+pattern_supported (cairo_ps_surface_t *surface, const cairo_pattern_t *pattern)
 {
     if (pattern->type == CAIRO_PATTERN_TYPE_SOLID)
 	return TRUE;
@@ -1549,10 +1549,13 @@ pattern_supported (cairo_ps_surface_t *surface, cairo_pattern_t *pattern)
 static cairo_int_status_t
 _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
 				     cairo_operator_t       op,
-				     cairo_pattern_t       *pattern)
+				     const cairo_pattern_t       *pattern)
 {
-    if (surface->force_fallbacks && surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+    if (surface->force_fallbacks &&
+	surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+    {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     if (! pattern_supported (surface, pattern))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1597,7 +1600,7 @@ _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
 static cairo_bool_t
 _cairo_ps_surface_operation_supported (cairo_ps_surface_t    *surface,
 				       cairo_operator_t       op,
-				       cairo_pattern_t       *pattern)
+				       const cairo_pattern_t       *pattern)
 {
     if (_cairo_ps_surface_analyze_operation (surface, op, pattern) != CAIRO_INT_STATUS_UNSUPPORTED)
 	return TRUE;
@@ -2888,7 +2891,7 @@ _cairo_ps_surface_emit_radial_pattern (cairo_ps_surface_t     *surface,
 
 static cairo_status_t
 _cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface,
-				cairo_pattern_t *pattern,
+				const cairo_pattern_t *pattern,
 				cairo_operator_t op)
 {
     cairo_status_t status;
@@ -3018,7 +3021,7 @@ _cairo_ps_surface_get_font_options (void                  *abstract_surface,
 static cairo_int_status_t
 _cairo_ps_surface_paint (void			*abstract_surface,
 			 cairo_operator_t	 op,
-			 cairo_pattern_t	*source)
+			 const cairo_pattern_t	*source)
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_output_stream_t *stream = surface->stream;
@@ -3077,7 +3080,7 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 static cairo_int_status_t
 _cairo_ps_surface_stroke (void			*abstract_surface,
 			  cairo_operator_t	 op,
-			  cairo_pattern_t	*source,
+			  const cairo_pattern_t	*source,
 			  cairo_path_fixed_t	*path,
 			  cairo_stroke_style_t	*style,
 			  cairo_matrix_t	*ctm,
@@ -3111,12 +3114,12 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
 
 static cairo_int_status_t
 _cairo_ps_surface_fill (void		*abstract_surface,
-		 cairo_operator_t	 op,
-		 cairo_pattern_t	*source,
-		 cairo_path_fixed_t	*path,
-		 cairo_fill_rule_t	 fill_rule,
-		 double			 tolerance,
-		 cairo_antialias_t	 antialias)
+			cairo_operator_t	 op,
+			const cairo_pattern_t	*source,
+			cairo_path_fixed_t	*path,
+			cairo_fill_rule_t	 fill_rule,
+			double			 tolerance,
+			cairo_antialias_t	 antialias)
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_int_status_t status;
@@ -3174,7 +3177,7 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 static cairo_int_status_t
 _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 			       cairo_operator_t	      op,
-			       cairo_pattern_t	     *source,
+			       const cairo_pattern_t *source,
 			       cairo_glyph_t         *glyphs,
 			       int		      num_glyphs,
 			       cairo_scaled_font_t   *scaled_font,

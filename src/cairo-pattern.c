@@ -1232,7 +1232,7 @@ _cairo_linear_pattern_classify (cairo_linear_pattern_t *pattern,
 }
 
 static cairo_int_status_t
-_cairo_pattern_acquire_surface_for_gradient (cairo_gradient_pattern_t *pattern,
+_cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pattern,
 					     cairo_surface_t	        *dst,
 					     int			x,
 					     int			y,
@@ -1496,7 +1496,7 @@ _cairo_pattern_solid_surface_matches_color (
 }
 
 static cairo_int_status_t
-_cairo_pattern_acquire_surface_for_solid (cairo_solid_pattern_t	     *pattern,
+_cairo_pattern_acquire_surface_for_solid (const cairo_solid_pattern_t	     *pattern,
 					  cairo_surface_t	     *dst,
 					  int			     x,
 					  int			     y,
@@ -1716,8 +1716,8 @@ _cairo_pattern_is_opaque (const cairo_pattern_t *abstract_pattern)
  *      backends do currently (see bug #10508)
  */
 static cairo_filter_t
-_cairo_pattern_analyze_filter (cairo_surface_pattern_t *pattern,
-			       double                  *pad_out)
+_cairo_pattern_analyze_filter (const cairo_surface_pattern_t *pattern,
+			       double                        *pad_out)
 {
     double pad;
     cairo_filter_t optimized_filter;
@@ -1767,7 +1767,7 @@ _pixman_nearest_sample (double d)
 }
 
 static cairo_int_status_t
-_cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
+_cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pattern,
 					    cairo_surface_t	       *dst,
 					    int			       x,
 					    int			       y,
@@ -2005,7 +2005,7 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
  * Return value: %CAIRO_STATUS_SUCCESS if a surface was stored in @surface_out.
  **/
 cairo_int_status_t
-_cairo_pattern_acquire_surface (cairo_pattern_t		   *pattern,
+_cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 				cairo_surface_t		   *dst,
 				int			   x,
 				int			   y,
@@ -2097,16 +2097,16 @@ _cairo_pattern_acquire_surface (cairo_pattern_t		   *pattern,
  * Releases resources obtained by _cairo_pattern_acquire_surface.
  **/
 void
-_cairo_pattern_release_surface (cairo_pattern_t		   *pattern,
+_cairo_pattern_release_surface (const cairo_pattern_t *pattern,
 				cairo_surface_t		   *surface,
 				cairo_surface_attributes_t *attributes)
 {
     if (attributes->acquired)
     {
-	cairo_surface_pattern_t *surface_pattern;
+	const cairo_surface_pattern_t *surface_pattern;
 
 	assert (pattern->type == CAIRO_PATTERN_TYPE_SURFACE);
-	surface_pattern = (cairo_surface_pattern_t *) pattern;
+	surface_pattern = (const cairo_surface_pattern_t *) pattern;
 
 	_cairo_surface_release_source_image (surface_pattern->surface,
 					     (cairo_image_surface_t *) surface,
@@ -2119,8 +2119,8 @@ _cairo_pattern_release_surface (cairo_pattern_t		   *pattern,
 }
 
 cairo_int_status_t
-_cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
-				 cairo_pattern_t	    *mask,
+_cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
+				 const cairo_pattern_t	    *mask,
 				 cairo_surface_t	    *dst,
 				 int			    src_x,
 				 int			    src_y,
@@ -2134,7 +2134,7 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
 				 cairo_surface_attributes_t *mask_attributes)
 {
     cairo_int_status_t	  status;
-    cairo_pattern_union_t src_tmp, mask_tmp;
+    cairo_pattern_union_t src_tmp;
 
     if (src->status)
 	return src->status;
@@ -2159,48 +2159,32 @@ _cairo_pattern_acquire_surfaces (cairo_pattern_t	    *src,
 
 	_cairo_pattern_init_solid (&src_tmp.solid, &combined, CAIRO_CONTENT_COLOR_ALPHA);
 
+	src = &src_tmp.base;
 	mask = NULL;
     }
-    else
-    {
-	status = _cairo_pattern_init_copy (&src_tmp.base, src);
-	if (status)
-	    return status;
-    }
 
-    status = _cairo_pattern_acquire_surface (&src_tmp.base, dst,
+    status = _cairo_pattern_acquire_surface (src, dst,
 					     src_x, src_y,
 					     width, height,
 					     src_out, src_attributes);
-    if (status) {
-	_cairo_pattern_fini (&src_tmp.base);
-	return status;
-    }
-
-    if (mask == NULL)
-    {
-	_cairo_pattern_fini (&src_tmp.base);
-	*mask_out = NULL;
-	return CAIRO_STATUS_SUCCESS;
-    }
-
-    status = _cairo_pattern_init_copy (&mask_tmp.base, mask);
     if (status)
-	goto CLEANUP_SOURCE;
+	goto BAIL;
 
-    status = _cairo_pattern_acquire_surface (&mask_tmp.base, dst,
+    if (mask == NULL) {
+	*mask_out = NULL;
+	goto BAIL;
+    }
+
+    status = _cairo_pattern_acquire_surface (mask, dst,
 					     mask_x, mask_y,
 					     width, height,
 					     mask_out, mask_attributes);
-
-    _cairo_pattern_fini (&mask_tmp.base);
-
-CLEANUP_SOURCE:
     if (status)
-	_cairo_pattern_release_surface (&src_tmp.base,
-					*src_out, src_attributes);
+	_cairo_pattern_release_surface (src, *src_out, src_attributes);
 
-    _cairo_pattern_fini (&src_tmp.base);
+  BAIL:
+    if (src == &src_tmp.base)
+	_cairo_pattern_fini (&src_tmp.base);
 
     return status;
 }
@@ -2218,16 +2202,16 @@ CLEANUP_SOURCE:
  * with a little more work.
  **/
 cairo_status_t
-_cairo_pattern_get_extents (cairo_pattern_t         *pattern,
-			    cairo_rectangle_int_t   *extents)
+_cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
+			    cairo_rectangle_int_t         *extents)
 {
     if (pattern->extend == CAIRO_EXTEND_NONE &&
 	pattern->type == CAIRO_PATTERN_TYPE_SURFACE)
     {
 	cairo_status_t status;
 	cairo_rectangle_int_t surface_extents;
-	cairo_surface_pattern_t *surface_pattern =
-	    (cairo_surface_pattern_t *) pattern;
+	const cairo_surface_pattern_t *surface_pattern =
+	    (const cairo_surface_pattern_t *) pattern;
 	cairo_surface_t *surface = surface_pattern->surface;
 	cairo_matrix_t imatrix;
 	double x1, y1, x2, y2;

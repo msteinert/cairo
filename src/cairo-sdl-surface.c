@@ -208,18 +208,18 @@ _cairo_sdl_surface_clone_similar (void		*abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_sdl_surface_composite (cairo_operator_t		op,
-			      cairo_pattern_t		*src_pattern,
-			      cairo_pattern_t		*mask_pattern,
+_cairo_sdl_surface_composite (cairo_operator_t		 op,
+			      const cairo_pattern_t	*src_pattern,
+			      const cairo_pattern_t	*mask_pattern,
 			      void			*abstract_dst,
-			      int			src_x,
-			      int			src_y,
-			      int			mask_x,
-			      int			mask_y,
-			      int			dst_x,
-			      int			dst_y,
-			      unsigned int		width,
-			      unsigned int		height)
+			      int			 src_x,
+			      int			 src_y,
+			      int			 mask_x,
+			      int			 mask_y,
+			      int			 dst_x,
+			      int			 dst_y,
+			      unsigned int		 width,
+			      unsigned int		 height)
 {
     cairo_sdl_surface_t *dst = abstract_dst;
     cairo_sdl_surface_t *src;

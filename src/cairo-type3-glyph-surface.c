@@ -123,7 +123,7 @@ _cairo_type3_glyph_surface_emit_image (cairo_type3_glyph_surface_t *surface,
 static cairo_status_t
 _cairo_type3_glyph_surface_emit_image_pattern (cairo_type3_glyph_surface_t *surface,
 					       cairo_image_surface_t       *image,
-					       cairo_matrix_t              *pattern_matrix)
+					       const cairo_matrix_t              *pattern_matrix)
 {
     cairo_matrix_t mat, upside_down;
     cairo_status_t status;
@@ -182,10 +182,10 @@ _cairo_type3_glyph_surface_intersect_clip_path (void		   *abstract_surface,
 static cairo_int_status_t
 _cairo_type3_glyph_surface_paint (void			*abstract_surface,
 				  cairo_operator_t	 op,
-				  cairo_pattern_t	*source)
+				  const cairo_pattern_t	*source)
 {
     cairo_type3_glyph_surface_t *surface = abstract_surface;
-    cairo_surface_pattern_t *pattern;
+    const cairo_surface_pattern_t *pattern;
     cairo_image_surface_t *image;
     void *image_extra;
     cairo_status_t status;
@@ -193,7 +193,7 @@ _cairo_type3_glyph_surface_paint (void			*abstract_surface,
     if (source->type != CAIRO_PATTERN_TYPE_SURFACE)
 	return CAIRO_INT_STATUS_IMAGE_FALLBACK;
 
-    pattern = (cairo_surface_pattern_t *) source;
+    pattern = (const cairo_surface_pattern_t *) source;
     status = _cairo_surface_acquire_source_image (pattern->surface, &image, &image_extra);
     if (status)
 	goto fail;
@@ -211,8 +211,8 @@ fail:
 static cairo_int_status_t
 _cairo_type3_glyph_surface_mask (void			*abstract_surface,
 				 cairo_operator_t	 op,
-				 cairo_pattern_t	*source,
-				 cairo_pattern_t	*mask)
+				 const cairo_pattern_t	*source,
+				 const cairo_pattern_t	*mask)
 {
     return _cairo_type3_glyph_surface_paint (abstract_surface, op, mask);
 }
@@ -220,7 +220,7 @@ _cairo_type3_glyph_surface_mask (void			*abstract_surface,
 static cairo_int_status_t
 _cairo_type3_glyph_surface_stroke (void			*abstract_surface,
 				   cairo_operator_t	 op,
-				   cairo_pattern_t	*source,
+				   const cairo_pattern_t *source,
 				   cairo_path_fixed_t	*path,
 				   cairo_stroke_style_t	*style,
 				   cairo_matrix_t	*ctm,
@@ -240,7 +240,7 @@ _cairo_type3_glyph_surface_stroke (void			*abstract_surface,
 static cairo_int_status_t
 _cairo_type3_glyph_surface_fill (void			*abstract_surface,
 				 cairo_operator_t	 op,
-				 cairo_pattern_t	*source,
+				 const cairo_pattern_t	*source,
 				 cairo_path_fixed_t	*path,
 				 cairo_fill_rule_t	 fill_rule,
 				 double			 tolerance,
@@ -259,7 +259,7 @@ _cairo_type3_glyph_surface_fill (void			*abstract_surface,
 static cairo_int_status_t
 _cairo_type3_glyph_surface_show_glyphs (void		     *abstract_surface,
 					cairo_operator_t      op,
-					cairo_pattern_t	     *source,
+					const cairo_pattern_t *source,
 					cairo_glyph_t        *glyphs,
 					int		      num_glyphs,
 					cairo_scaled_font_t  *scaled_font,

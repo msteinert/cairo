@@ -103,7 +103,7 @@ _fallback_fini (fallback_state_t *state)
 
 typedef cairo_status_t (*cairo_draw_func_t) (void                          *closure,
 					     cairo_operator_t               op,
-					     cairo_pattern_t               *src,
+					     const cairo_pattern_t         *src,
 					     cairo_surface_t               *dst,
 					     int                            dst_x,
 					     int                            dst_y,
@@ -156,7 +156,7 @@ _create_composite_mask_pattern (cairo_surface_pattern_t       *mask_pattern,
 static cairo_status_t
 _clip_and_composite_with_mask (cairo_clip_t                  *clip,
 			       cairo_operator_t               op,
-			       cairo_pattern_t               *src,
+			       const cairo_pattern_t         *src,
 			       cairo_draw_func_t              draw_func,
 			       void                          *draw_closure,
 			       cairo_surface_t               *dst,
@@ -190,7 +190,7 @@ _clip_and_composite_with_mask (cairo_clip_t                  *clip,
 static cairo_status_t
 _clip_and_composite_combine (cairo_clip_t                  *clip,
 			     cairo_operator_t               op,
-			     cairo_pattern_t               *src,
+			     const cairo_pattern_t         *src,
 			     cairo_draw_func_t              draw_func,
 			     void                          *draw_closure,
 			     cairo_surface_t               *dst,
@@ -278,7 +278,7 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
  */
 static cairo_status_t
 _clip_and_composite_source (cairo_clip_t                  *clip,
-			    cairo_pattern_t               *src,
+			    const cairo_pattern_t         *src,
 			    cairo_draw_func_t              draw_func,
 			    void                          *draw_closure,
 			    cairo_surface_t               *dst,
@@ -352,7 +352,7 @@ _cairo_rectangle_empty (const cairo_rectangle_int_t *rect)
 static cairo_status_t
 _clip_and_composite (cairo_clip_t                  *clip,
 		     cairo_operator_t               op,
-		     cairo_pattern_t               *src,
+		     const cairo_pattern_t         *src,
 		     cairo_draw_func_t              draw_func,
 		     void                          *draw_closure,
 		     cairo_surface_t               *dst,
@@ -408,7 +408,7 @@ _clip_and_composite (cairo_clip_t                  *clip,
  */
 static cairo_status_t
 _composite_trap_region (cairo_clip_t            *clip,
-			cairo_pattern_t         *src,
+			const cairo_pattern_t	*src,
 			cairo_operator_t         op,
 			cairo_surface_t         *dst,
 			cairo_region_t          *trap_region,
@@ -480,7 +480,7 @@ typedef struct {
 static cairo_status_t
 _composite_traps_draw_func (void                          *closure,
 			    cairo_operator_t               op,
-			    cairo_pattern_t               *src,
+			    const cairo_pattern_t         *src,
 			    cairo_surface_t               *dst,
 			    int                            dst_x,
 			    int                            dst_y,
@@ -512,7 +512,7 @@ _composite_traps_draw_func (void                          *closure,
 
 /* Warning: This call modifies the coordinates of traps */
 static cairo_status_t
-_clip_and_composite_trapezoids (cairo_pattern_t *src,
+_clip_and_composite_trapezoids (const cairo_pattern_t *src,
 				cairo_operator_t op,
 				cairo_surface_t *dst,
 				cairo_traps_t *traps,
@@ -671,9 +671,9 @@ out:
 }
 
 cairo_status_t
-_cairo_surface_fallback_paint (cairo_surface_t	*surface,
-			       cairo_operator_t	 op,
-			       cairo_pattern_t	*source)
+_cairo_surface_fallback_paint (cairo_surface_t		*surface,
+			       cairo_operator_t		 op,
+			       const cairo_pattern_t	*source)
 {
     cairo_status_t status;
     cairo_rectangle_int_t extents;
@@ -686,6 +686,7 @@ _cairo_surface_fallback_paint (cairo_surface_t	*surface,
 
     if (_cairo_operator_bounded_by_source (op)) {
 	cairo_rectangle_int_t source_extents;
+
 	status = _cairo_pattern_get_extents (source, &source_extents);
 	if (status)
 	    return status;
@@ -717,7 +718,7 @@ _cairo_surface_fallback_paint (cairo_surface_t	*surface,
 static cairo_status_t
 _cairo_surface_mask_draw_func (void                          *closure,
 			       cairo_operator_t               op,
-			       cairo_pattern_t               *src,
+			       const cairo_pattern_t         *src,
 			       cairo_surface_t               *dst,
 			       int                            dst_x,
 			       int                            dst_y,
@@ -744,8 +745,8 @@ _cairo_surface_mask_draw_func (void                          *closure,
 cairo_status_t
 _cairo_surface_fallback_mask (cairo_surface_t		*surface,
 			      cairo_operator_t		 op,
-			      cairo_pattern_t		*source,
-			      cairo_pattern_t		*mask)
+			      const cairo_pattern_t	*source,
+			      const cairo_pattern_t	*mask)
 {
     cairo_status_t status;
     cairo_rectangle_int_t extents, source_extents, mask_extents;
@@ -779,7 +780,7 @@ _cairo_surface_fallback_mask (cairo_surface_t		*surface,
     status = _clip_and_composite (surface->clip, op,
 				  source,
 				  _cairo_surface_mask_draw_func,
-				  mask,
+				  (void *) mask,
 				  surface,
 				  &extents);
 
@@ -789,7 +790,7 @@ _cairo_surface_fallback_mask (cairo_surface_t		*surface,
 cairo_status_t
 _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
 				cairo_operator_t	 op,
-				cairo_pattern_t		*source,
+				const cairo_pattern_t	*source,
 				cairo_path_fixed_t	*path,
 				cairo_stroke_style_t	*stroke_style,
 				cairo_matrix_t		*ctm,
@@ -852,7 +853,7 @@ FAIL:
 cairo_status_t
 _cairo_surface_fallback_fill (cairo_surface_t		*surface,
 			      cairo_operator_t		 op,
-			      cairo_pattern_t		*source,
+			      const cairo_pattern_t	*source,
 			      cairo_path_fixed_t	*path,
 			      cairo_fill_rule_t		 fill_rule,
 			      double			 tolerance,
@@ -920,7 +921,7 @@ typedef struct {
 static cairo_status_t
 _cairo_surface_old_show_glyphs_draw_func (void                          *closure,
 					  cairo_operator_t               op,
-					  cairo_pattern_t               *src,
+					  const cairo_pattern_t         *src,
 					  cairo_surface_t               *dst,
 					  int                            dst_x,
 					  int                            dst_y,
@@ -981,7 +982,7 @@ _cairo_surface_old_show_glyphs_draw_func (void                          *closure
 cairo_status_t
 _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
 				     cairo_operator_t		 op,
-				     cairo_pattern_t		*source,
+				     const cairo_pattern_t	*source,
 				     cairo_glyph_t		*glyphs,
 				     int			 num_glyphs,
 				     cairo_scaled_font_t	*scaled_font)
@@ -1080,18 +1081,18 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
 }
 
 cairo_status_t
-_cairo_surface_fallback_composite (cairo_operator_t	op,
-				   cairo_pattern_t	*src,
-				   cairo_pattern_t	*mask,
-				   cairo_surface_t	*dst,
-				   int			src_x,
-				   int			src_y,
-				   int			mask_x,
-				   int			mask_y,
-				   int			dst_x,
-				   int			dst_y,
-				   unsigned int		width,
-				   unsigned int		height)
+_cairo_surface_fallback_composite (cairo_operator_t		 op,
+				   const cairo_pattern_t	*src,
+				   const cairo_pattern_t	*mask,
+				   cairo_surface_t		*dst,
+				   int				 src_x,
+				   int				 src_y,
+				   int				 mask_x,
+				   int				 mask_y,
+				   int				 dst_x,
+				   int				 dst_y,
+				   unsigned int			 width,
+				   unsigned int			 height)
 {
     fallback_state_t state;
     cairo_status_t status;
@@ -1197,7 +1198,7 @@ _cairo_surface_fallback_fill_rectangles (cairo_surface_t         *surface,
 
 cairo_status_t
 _cairo_surface_fallback_composite_trapezoids (cairo_operator_t		op,
-					      cairo_pattern_t	       *pattern,
+					      const cairo_pattern_t    *pattern,
 					      cairo_surface_t	       *dst,
 					      cairo_antialias_t		antialias,
 					      int			src_x,

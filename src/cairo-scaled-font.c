@@ -1785,7 +1785,7 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
 cairo_status_t
 _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 				cairo_operator_t        op,
-				cairo_pattern_t        *pattern,
+				const cairo_pattern_t	*pattern,
 				cairo_surface_t        *surface,
 				int                     source_x,
 				int                     source_y,

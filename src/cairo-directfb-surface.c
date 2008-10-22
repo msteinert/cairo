@@ -702,8 +702,8 @@ _cairo_directfb_surface_clone_similar (void             *abstract_surface,
 #if DFB_COMPOSITE || DFB_COMPOSITE_TRAPEZOIDS
 static cairo_int_status_t
 _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
-                             cairo_pattern_t             *src_pattern,
-                             cairo_pattern_t             *mask_pattern,
+                             const cairo_pattern_t       *src_pattern,
+                             const cairo_pattern_t       *mask_pattern,
                              cairo_operator_t             op,
                              int *src_x,             int *src_y,
                              int *mask_x,            int *mask_y,
@@ -732,7 +732,7 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
 
 		return CAIRO_INT_STATUS_UNSUPPORTED;
 	if (mask_pattern->type != CAIRO_PATTERN_TYPE_SOLID) {
-	    cairo_pattern_t *tmp;
+	    const cairo_pattern_t *tmp;
 	    int              tmp_x, tmp_y;
 
 	    if (src_pattern->type != CAIRO_PATTERN_TYPE_SOLID ||
@@ -760,11 +760,6 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
     } else {
 	color = _cairo_stock_color (CAIRO_STOCK_WHITE);
     }
-
-    /* XXX DirectFB currently does not support filtering, so force NEAREST
-     * in order to hit optimisations inside core.
-    */
-    src_pattern->filter = CAIRO_FILTER_NEAREST;
 
     status = _cairo_pattern_acquire_surface (src_pattern, &dst->base,
 					     *src_x, *src_y, width, height,
@@ -842,7 +837,7 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
 
 static void
 _directfb_finish_composite (cairo_directfb_surface_t   *dst,
-                            cairo_pattern_t            *src_pattern,
+                            const cairo_pattern_t      *src_pattern,
                             cairo_surface_t            *src,
                             cairo_surface_attributes_t *src_attr)
 {
@@ -892,8 +887,8 @@ _directfb_categorize_operation (cairo_surface_attributes_t *src_attr)
 
 static cairo_int_status_t
 _cairo_directfb_surface_composite (cairo_operator_t  op,
-                                   cairo_pattern_t  *src_pattern,
-                                   cairo_pattern_t  *mask_pattern,
+                                   const cairo_pattern_t  *src_pattern,
+                                   const cairo_pattern_t  *mask_pattern,
                                    void             *abstract_dst,
                                    int  src_x,  int  src_y,
                                    int  mask_x, int  mask_y,
@@ -1160,7 +1155,7 @@ _cairo_directfb_surface_fill_rectangles (void                  *abstract_surface
 #if DFB_COMPOSITE_TRAPEZOIDS
 static cairo_int_status_t
 _cairo_directfb_surface_composite_trapezoids (cairo_operator_t   op,
-                                              cairo_pattern_t   *pattern,
+                                              const cairo_pattern_t   *pattern,
                                               void              *abstract_dst,
                                               cairo_antialias_t  antialias,
                                               int  src_x,   int  src_y,
@@ -1686,13 +1681,13 @@ _cairo_directfb_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 }
 
 static cairo_int_status_t
-_cairo_directfb_surface_show_glyphs (void                *abstract_dst,
-                                     cairo_operator_t     op,
-                                     cairo_pattern_t     *pattern,
-                                     cairo_glyph_t       *glyphs,
-                                     int                  num_glyphs,
-                                     cairo_scaled_font_t *scaled_font,
-				     int		 *remaining_glyphs)
+_cairo_directfb_surface_show_glyphs (void		    *abstract_dst,
+                                     cairo_operator_t	     op,
+                                     const cairo_pattern_t  *pattern,
+                                     cairo_glyph_t	    *glyphs,
+                                     int		     num_glyphs,
+                                     cairo_scaled_font_t    *scaled_font,
+				     int		    *remaining_glyphs)
 {
     cairo_directfb_surface_t    *dst = abstract_dst;
     cairo_directfb_font_cache_t *cache;

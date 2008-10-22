@@ -718,7 +718,7 @@ typedef struct _cairo_glitz_surface_attributes {
 } cairo_glitz_surface_attributes_t;
 
 static cairo_int_status_t
-_cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
+_cairo_glitz_pattern_acquire_surface (const cairo_pattern_t	       *pattern,
 				      cairo_glitz_surface_t	       *dst,
 				      int			       x,
 				      int			       y,
@@ -937,7 +937,7 @@ _cairo_glitz_pattern_acquire_surface (cairo_pattern_t	              *pattern,
 }
 
 static void
-_cairo_glitz_pattern_release_surface (cairo_pattern_t		      *pattern,
+_cairo_glitz_pattern_release_surface (const cairo_pattern_t	      *pattern,
 				      cairo_glitz_surface_t	      *surface,
 				      cairo_glitz_surface_attributes_t *attr)
 {
@@ -948,8 +948,8 @@ _cairo_glitz_pattern_release_surface (cairo_pattern_t		      *pattern,
 }
 
 static cairo_int_status_t
-_cairo_glitz_pattern_acquire_surfaces (cairo_pattern_t	                *src,
-				       cairo_pattern_t	                *mask,
+_cairo_glitz_pattern_acquire_surfaces (const cairo_pattern_t	       *src,
+				       const cairo_pattern_t	       *mask,
 				       cairo_glitz_surface_t	        *dst,
 				       int			        src_x,
 				       int			        src_y,
@@ -985,37 +985,31 @@ _cairo_glitz_pattern_acquire_surfaces (cairo_pattern_t	                *src,
 	_cairo_pattern_init_solid (&tmp, &combined, CAIRO_CONTENT_COLOR_ALPHA);
 
 	mask = NULL;
-    } else {
-	status = _cairo_pattern_init_copy (&tmp.base, src);
-	if (status)
-	    return status;
+	src = &tmp.base;
     }
 
-    status = _cairo_glitz_pattern_acquire_surface (&tmp.base, dst,
+    status = _cairo_glitz_pattern_acquire_surface (src, dst,
 						   src_x, src_y,
 						   width, height,
 						   src_out, sattr);
 
-    _cairo_pattern_fini (&tmp.base);
+    if (src == &tmp.base)
+	_cairo_pattern_fini (&tmp.base);
 
     if (status)
 	return status;
 
     if (mask)
     {
-	status = _cairo_pattern_init_copy (&tmp.base, mask);
-	if (status)
-	    return status;
-
-	status = _cairo_glitz_pattern_acquire_surface (&tmp.base, dst,
+	status = _cairo_glitz_pattern_acquire_surface (mask, dst,
 						       mask_x, mask_y,
 						       width, height,
 						       mask_out, mattr);
 
-	if (status)
-	    _cairo_glitz_pattern_release_surface (&tmp.base, *src_out, sattr);
-
-	_cairo_pattern_fini (&tmp.base);
+	if (status) {
+	    /* XXX src == &tmp.base -> invalid (currently inconsequential) */
+	    _cairo_glitz_pattern_release_surface (src, *src_out, sattr);
+	}
 
 	return status;
     }
@@ -1039,8 +1033,8 @@ _cairo_glitz_surface_set_attributes (cairo_glitz_surface_t	      *surface,
 
 static cairo_int_status_t
 _cairo_glitz_surface_composite (cairo_operator_t op,
-				cairo_pattern_t  *src_pattern,
-				cairo_pattern_t  *mask_pattern,
+				const cairo_pattern_t *src_pattern,
+				const cairo_pattern_t *mask_pattern,
 				void		 *abstract_dst,
 				int		 src_x,
 				int		 src_y,
@@ -1197,7 +1191,7 @@ _cairo_glitz_surface_fill_rectangles (void		      *abstract_dst,
 
 static cairo_int_status_t
 _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
-					   cairo_pattern_t   *pattern,
+					   const cairo_pattern_t *pattern,
 					   void		     *abstract_dst,
 					   cairo_antialias_t antialias,
 					   int		     src_x,
@@ -1210,7 +1204,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 					   int		     n_traps)
 {
     cairo_pattern_union_t	     tmp_src_pattern;
-    cairo_pattern_t		     *src_pattern;
+    const cairo_pattern_t	    *src_pattern;
     cairo_glitz_surface_attributes_t attributes;
     cairo_glitz_surface_t	     *dst = abstract_dst;
     cairo_glitz_surface_t	     *src;
@@ -2101,7 +2095,7 @@ _cairo_glitz_surface_add_glyph (cairo_glitz_surface_t *surface,
 static cairo_int_status_t
 _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
 				      cairo_operator_t     op,
-				      cairo_pattern_t     *pattern,
+				      const cairo_pattern_t *pattern,
 				      void		  *abstract_surface,
 				      int		   src_x,
 				      int		   src_y,

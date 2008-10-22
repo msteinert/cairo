@@ -294,7 +294,7 @@ _cairo_win32_printing_surface_flatten_transparency (cairo_win32_surface_t *surfa
 
 static cairo_status_t
 _cairo_win32_printing_surface_select_solid_brush (cairo_win32_surface_t *surface,
-                                                  cairo_pattern_t       *source)
+                                                  const cairo_pattern_t *source)
 {
     cairo_solid_pattern_t *pattern = (cairo_solid_pattern_t *) source;
     COLORREF color;
@@ -337,7 +337,7 @@ _cairo_win32_printing_surface_get_ctm_clip_box (cairo_win32_surface_t *surface,
 
 static cairo_status_t
 _cairo_win32_printing_surface_paint_solid_pattern (cairo_win32_surface_t *surface,
-                                                   cairo_pattern_t       *pattern)
+                                                   const cairo_pattern_t *pattern)
 {
     RECT clip;
     cairo_status_t status;
@@ -350,7 +350,7 @@ _cairo_win32_printing_surface_paint_solid_pattern (cairo_win32_surface_t *surfac
     FillRect (surface->dc, &clip, surface->brush);
     _cairo_win32_printing_surface_done_solid_brush (surface);
 
-    return 0;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -411,7 +411,9 @@ _cairo_win32_printing_surface_paint_meta_pattern (cairo_win32_surface_t   *surfa
 	surface->content = CAIRO_CONTENT_COLOR;
 	_cairo_pattern_init_solid (&black, CAIRO_COLOR_BLACK, CAIRO_CONTENT_COLOR);
 	source = (cairo_pattern_t*) &black;
-	_cairo_win32_printing_surface_paint_solid_pattern (surface, source);
+	status = _cairo_win32_printing_surface_paint_solid_pattern (surface, source);
+	if (status)
+	    return status;
     }
 
     for (y_tile = top; y_tile < bottom; y_tile++) {
@@ -490,7 +492,6 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
 {
     cairo_status_t status;
     cairo_extend_t extend;
-    cairo_surface_attributes_t pat_attr;
     cairo_image_surface_t *image;
     void *image_extra;
     cairo_surface_t *opaque_surface;
@@ -820,7 +821,7 @@ _cairo_win32_printing_surface_paint_linear_pattern (cairo_win32_surface_t *surfa
 
 static cairo_int_status_t
 _cairo_win32_printing_surface_paint_pattern (cairo_win32_surface_t *surface,
-                                             cairo_pattern_t       *pattern)
+                                             const cairo_pattern_t *pattern)
 {
     cairo_status_t status;
 
@@ -1034,9 +1035,9 @@ _cairo_win32_printing_surface_get_font_options (void                  *abstract_
 }
 
 static cairo_int_status_t
-_cairo_win32_printing_surface_paint (void             *abstract_surface,
-                                     cairo_operator_t  op,
-                                     cairo_pattern_t  *source)
+_cairo_win32_printing_surface_paint (void			*abstract_surface,
+                                     cairo_operator_t		 op,
+                                     const cairo_pattern_t	*source)
 {
     cairo_win32_surface_t *surface = abstract_surface;
     cairo_solid_pattern_t clear;
@@ -1105,15 +1106,15 @@ _cairo_matrix_factor_out_scale (cairo_matrix_t *m, double *scale)
 }
 
 static cairo_int_status_t
-_cairo_win32_printing_surface_stroke (void                 *abstract_surface,
-                                      cairo_operator_t	    op,
-                                      cairo_pattern_t	   *source,
-                                      cairo_path_fixed_t   *path,
-                                      cairo_stroke_style_t *style,
-                                      cairo_matrix_t       *stroke_ctm,
-                                      cairo_matrix_t       *stroke_ctm_inverse,
-                                      double       	    tolerance,
-                                      cairo_antialias_t     antialias)
+_cairo_win32_printing_surface_stroke (void			*abstract_surface,
+                                      cairo_operator_t		 op,
+                                      const cairo_pattern_t	*source,
+                                      cairo_path_fixed_t	*path,
+                                      cairo_stroke_style_t	*style,
+                                      cairo_matrix_t		*stroke_ctm,
+                                      cairo_matrix_t		*stroke_ctm_inverse,
+                                      double			tolerance,
+                                      cairo_antialias_t		antialias)
 {
     cairo_win32_surface_t *surface = abstract_surface;
     cairo_int_status_t status;
@@ -1229,12 +1230,12 @@ _cairo_win32_printing_surface_stroke (void                 *abstract_surface,
 
 static cairo_int_status_t
 _cairo_win32_printing_surface_fill (void		        *abstract_surface,
-				    cairo_operator_t	 op,
-				    cairo_pattern_t	*source,
-				    cairo_path_fixed_t	*path,
-				    cairo_fill_rule_t	 fill_rule,
-				    double		 tolerance,
-				    cairo_antialias_t	 antialias)
+				    cairo_operator_t		 op,
+				    const cairo_pattern_t	*source,
+				    cairo_path_fixed_t		*path,
+				    cairo_fill_rule_t		 fill_rule,
+				    double			 tolerance,
+				    cairo_antialias_t		 antialias)
 {
     cairo_win32_surface_t *surface = abstract_surface;
     cairo_int_status_t status;
@@ -1289,7 +1290,7 @@ _cairo_win32_printing_surface_fill (void		        *abstract_surface,
 static cairo_int_status_t
 _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surface,
                                            cairo_operator_t	 op,
-                                           cairo_pattern_t	*source,
+                                           const cairo_pattern_t *source,
                                            cairo_glyph_t        *glyphs,
                                            int			 num_glyphs,
                                            cairo_scaled_font_t  *scaled_font,

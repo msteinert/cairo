@@ -874,8 +874,8 @@ _cairo_win32_surface_composite_inner (cairo_win32_surface_t *src,
 
 static cairo_int_status_t
 _cairo_win32_surface_composite (cairo_operator_t	op,
-				cairo_pattern_t       	*pattern,
-				cairo_pattern_t		*mask_pattern,
+				const cairo_pattern_t	*pattern,
+				const cairo_pattern_t	*mask_pattern,
 				void			*abstract_dst,
 				int			src_x,
 				int			src_y,
@@ -1562,7 +1562,7 @@ _cairo_win32_surface_flush (void *abstract_surface)
 cairo_int_status_t
 _cairo_win32_surface_show_glyphs (void			*surface,
 				  cairo_operator_t	 op,
-				  cairo_pattern_t	*source,
+				  const cairo_pattern_t	*source,
 				  cairo_glyph_t		*glyphs,
 				  int			 num_glyphs,
 				  cairo_scaled_font_t	*scaled_font,

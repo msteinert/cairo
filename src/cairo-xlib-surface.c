@@ -82,7 +82,7 @@ _native_byte_order_lsb (void);
 static cairo_int_status_t
 _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 cairo_operator_t     op,
-				 cairo_pattern_t     *src_pattern,
+				 const cairo_pattern_t  *src_pattern,
 				 cairo_glyph_t       *glyphs,
 				 int		      num_glyphs,
 				 cairo_scaled_font_t *scaled_font,
@@ -1229,7 +1229,7 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 
 static cairo_surface_t *
 _cairo_xlib_surface_create_solid_pattern_surface (void                  *abstract_surface,
-						  cairo_solid_pattern_t *solid_pattern)
+						  const cairo_solid_pattern_t *solid_pattern)
 {
     /* This function's only responsibility is to create a proper surface
      * for when XRender is not available.  The proper surface is a xlib
@@ -1531,7 +1531,7 @@ typedef enum {
 static composite_operation_t
 _categorize_composite_operation (cairo_xlib_surface_t *dst,
 				 cairo_operator_t      op,
-				 cairo_pattern_t      *src_pattern,
+				 const cairo_pattern_t *src_pattern,
 				 cairo_bool_t	       have_mask)
 
 {
@@ -1680,8 +1680,8 @@ _render_operator (cairo_operator_t op)
 
 static cairo_int_status_t
 _cairo_xlib_surface_composite (cairo_operator_t		op,
-			       cairo_pattern_t		*src_pattern,
-			       cairo_pattern_t		*mask_pattern,
+			       const cairo_pattern_t	*src_pattern,
+			       const cairo_pattern_t	*mask_pattern,
 			       void			*abstract_dst,
 			       int			src_x,
 			       int			src_y,
@@ -2071,7 +2071,7 @@ _create_trapezoid_mask (cairo_xlib_surface_t *dst,
 
 static cairo_int_status_t
 _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
-					  cairo_pattern_t	*pattern,
+					  const cairo_pattern_t	*pattern,
 					  void			*abstract_dst,
 					  cairo_antialias_t	antialias,
 					  int			src_x,
@@ -3945,7 +3945,7 @@ _cairo_xlib_surface_owns_font (cairo_xlib_surface_t *dst,
 static cairo_int_status_t
 _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 				 cairo_operator_t     op,
-				 cairo_pattern_t     *src_pattern,
+				 const cairo_pattern_t *src_pattern,
 				 cairo_glyph_t       *glyphs,
 				 int		      num_glyphs,
 				 cairo_scaled_font_t *scaled_font,

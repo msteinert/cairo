@@ -774,7 +774,7 @@ _cairo_pdf_surface_add_smask_group (cairo_pdf_surface_t     *surface,
 
 static cairo_status_t
 _cairo_pdf_surface_add_pdf_pattern (cairo_pdf_surface_t		*surface,
-				    cairo_pattern_t		*pattern,
+				    const cairo_pattern_t	*pattern,
 				    cairo_pdf_resource_t	*pattern_res,
 				    cairo_pdf_resource_t	*gstate_res)
 {
@@ -807,10 +807,13 @@ _cairo_pdf_surface_add_pdf_pattern (cairo_pdf_surface_t		*surface,
 	}
     }
 
-    pdf_pattern.pattern = cairo_pattern_reference (pattern);
+    status = _cairo_pattern_create_copy (&pdf_pattern.pattern, pattern);
+    if (status)
+	return status;
+
     pdf_pattern.pattern_res = _cairo_pdf_surface_new_object (surface);
     if (pdf_pattern.pattern_res.id == 0) {
-	cairo_pattern_destroy (pattern);
+	cairo_pattern_destroy (pdf_pattern.pattern);
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
@@ -822,7 +825,7 @@ _cairo_pdf_surface_add_pdf_pattern (cairo_pdf_surface_t		*surface,
         if (_cairo_pattern_is_opaque (pattern) == FALSE) {
             pdf_pattern.gstate_res = _cairo_pdf_surface_new_object (surface);
 	    if (pdf_pattern.gstate_res.id == 0) {
-		cairo_pattern_destroy (pattern);
+		cairo_pattern_destroy (pdf_pattern.pattern);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    }
         }
@@ -835,7 +838,7 @@ _cairo_pdf_surface_add_pdf_pattern (cairo_pdf_surface_t		*surface,
 
     status = _cairo_array_append (&surface->patterns, &pdf_pattern);
     if (status) {
-	cairo_pattern_destroy (pattern);
+	cairo_pattern_destroy (pdf_pattern.pattern);
 	return status;
     }
 
@@ -2616,16 +2619,16 @@ _cairo_pdf_surface_emit_pattern (cairo_pdf_surface_t *surface, cairo_pdf_pattern
 
 static cairo_status_t
 _cairo_pdf_surface_select_pattern (cairo_pdf_surface_t *surface,
-				   cairo_pattern_t     *pattern,
+				   const cairo_pattern_t     *pattern,
 				   cairo_pdf_resource_t pattern_res,
 				   cairo_bool_t         is_stroke)
 {
     cairo_status_t status;
     int alpha;
-    cairo_color_t *solid_color = NULL;
+    const cairo_color_t *solid_color = NULL;
 
     if (pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
-	cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *) pattern;
+	const cairo_solid_pattern_t *solid = (const cairo_solid_pattern_t *) pattern;
 
 	solid_color = &solid->color;
     }
@@ -4257,11 +4260,11 @@ _surface_pattern_supported (cairo_surface_pattern_t *pattern)
 }
 
 static cairo_bool_t
-_gradient_pattern_supported (cairo_pattern_t *pattern)
+_gradient_pattern_supported (const cairo_pattern_t *pattern)
 {
     cairo_extend_t extend;
 
-    extend = cairo_pattern_get_extend (pattern);
+    extend = cairo_pattern_get_extend ((cairo_pattern_t *) pattern);
 
 
     /* Radial gradients are currently only supported with EXTEND_NONE
@@ -4292,7 +4295,7 @@ _gradient_pattern_supported (cairo_pattern_t *pattern)
 }
 
 static cairo_bool_t
-_pattern_supported (cairo_pattern_t *pattern)
+_pattern_supported (const cairo_pattern_t *pattern)
 {
     if (pattern->type == CAIRO_PATTERN_TYPE_SOLID)
 	return TRUE;
@@ -4310,10 +4313,13 @@ _pattern_supported (cairo_pattern_t *pattern)
 static cairo_int_status_t
 _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t  *surface,
 				      cairo_operator_t      op,
-				      cairo_pattern_t      *pattern)
+				      const cairo_pattern_t      *pattern)
 {
-    if (surface->force_fallbacks && surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+    if (surface->force_fallbacks &&
+	surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+    {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     if (! _pattern_supported (pattern))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -4368,7 +4374,7 @@ _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t  *surface,
 static cairo_bool_t
 _cairo_pdf_surface_operation_supported (cairo_pdf_surface_t  *surface,
 					cairo_operator_t      op,
-					cairo_pattern_t      *pattern)
+					const cairo_pattern_t      *pattern)
 {
     if (_cairo_pdf_surface_analyze_operation (surface, op, pattern) != CAIRO_INT_STATUS_UNSUPPORTED)
 	return TRUE;
@@ -4396,7 +4402,7 @@ _cairo_pdf_surface_start_fallback (cairo_pdf_surface_t *surface)
 static cairo_int_status_t
 _cairo_pdf_surface_paint (void			*abstract_surface,
 			  cairo_operator_t	 op,
-			  cairo_pattern_t	*source)
+			  const cairo_pattern_t	*source)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
     cairo_status_t status;
@@ -4427,7 +4433,11 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	group->operation = PDF_PAINT;
-	group->source = cairo_pattern_reference (source);
+	status = _cairo_pattern_create_copy (&group->source, source);
+	if (status) {
+	    _cairo_pdf_smask_group_destroy (group);
+	    return status;
+	}
 	group->source_res = pattern_res;
 	status = _cairo_pdf_surface_add_smask_group (surface, group);
 	if (status) {
@@ -4471,8 +4481,8 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
 static cairo_int_status_t
 _cairo_pdf_surface_mask	(void			*abstract_surface,
 			 cairo_operator_t	 op,
-			 cairo_pattern_t	*source,
-			 cairo_pattern_t	*mask)
+			 const cairo_pattern_t	*source,
+			 const cairo_pattern_t	*mask)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
     cairo_pdf_smask_group_t *group;
@@ -4505,8 +4515,16 @@ _cairo_pdf_surface_mask	(void			*abstract_surface,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     group->operation = PDF_MASK;
-    group->source = cairo_pattern_reference (source);
-    group->mask = cairo_pattern_reference (mask);
+    status = _cairo_pattern_create_copy (&group->source, source);
+    if (status) {
+	_cairo_pdf_smask_group_destroy (group);
+	return status;
+    }
+    status = _cairo_pattern_create_copy (&group->mask, mask);
+    if (status) {
+	_cairo_pdf_smask_group_destroy (group);
+	return status;
+    }
     group->source_res = _cairo_pdf_surface_new_object (surface);
     if (group->source_res.id == 0) {
 	_cairo_pdf_smask_group_destroy (group);
@@ -4542,7 +4560,7 @@ _cairo_pdf_surface_mask	(void			*abstract_surface,
 static cairo_int_status_t
 _cairo_pdf_surface_stroke (void			*abstract_surface,
 			   cairo_operator_t	 op,
-			   cairo_pattern_t	*source,
+			   const cairo_pattern_t *source,
 			   cairo_path_fixed_t	*path,
 			   cairo_stroke_style_t	*style,
 			   cairo_matrix_t	*ctm,
@@ -4574,7 +4592,11 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	group->operation = PDF_STROKE;
-	group->source = cairo_pattern_reference (source);
+	status = _cairo_pattern_create_copy (&group->source, source);
+	if (status) {
+	    _cairo_pdf_smask_group_destroy (group);
+	    return status;
+	}
 	group->source_res = pattern_res;
 	status = _cairo_path_fixed_init_copy (&group->path, path);
 	if (status) {
@@ -4631,7 +4653,7 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 static cairo_int_status_t
 _cairo_pdf_surface_fill (void			*abstract_surface,
 			 cairo_operator_t	 op,
-			 cairo_pattern_t	*source,
+			 const cairo_pattern_t	*source,
 			 cairo_path_fixed_t	*path,
 			 cairo_fill_rule_t	 fill_rule,
 			 double			 tolerance,
@@ -4666,7 +4688,11 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	group->operation = PDF_FILL;
-	group->source = cairo_pattern_reference (source);
+	status = _cairo_pattern_create_copy (&group->source, source);
+	if (status) {
+	    _cairo_pdf_smask_group_destroy (group);
+	    return status;
+	}
 	group->source_res = pattern_res;
 	status = _cairo_path_fixed_init_copy (&group->path, path);
 	if (status) {
@@ -4719,13 +4745,13 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
 static cairo_int_status_t
 _cairo_pdf_surface_fill_stroke (void		     *abstract_surface,
 				cairo_operator_t      fill_op,
-				cairo_pattern_t	     *fill_source,
+				const cairo_pattern_t *fill_source,
 				cairo_fill_rule_t     fill_rule,
 				double		      fill_tolerance,
 				cairo_antialias_t     fill_antialias,
 				cairo_path_fixed_t   *path,
 				cairo_operator_t      stroke_op,
-				cairo_pattern_t	     *stroke_source,
+				const cairo_pattern_t *stroke_source,
 				cairo_stroke_style_t *stroke_style,
 				cairo_matrix_t	     *stroke_ctm,
 				cairo_matrix_t	     *stroke_ctm_inverse,
@@ -4812,8 +4838,8 @@ _cairo_pdf_surface_has_show_text_glyphs	(void			*abstract_surface)
 
 static cairo_int_status_t
 _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
-				     cairo_operator_t	 	 op,
-				     cairo_pattern_t	       	*source,
+				     cairo_operator_t		 op,
+				     const cairo_pattern_t	*source,
 				     const char                 *utf8,
 				     int                         utf8_len,
 				     cairo_glyph_t		*glyphs,
@@ -4847,7 +4873,11 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	group->operation = PDF_SHOW_GLYPHS;
-	group->source = cairo_pattern_reference (source);
+	status = _cairo_pattern_create_copy (&group->source, source);
+	if (status) {
+	    _cairo_pdf_smask_group_destroy (group);
+	    return status;
+	}
 	group->source_res = pattern_res;
 
 	if (utf8_len) {

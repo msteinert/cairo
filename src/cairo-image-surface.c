@@ -939,8 +939,8 @@ _pixman_operator (cairo_operator_t op)
 
 static cairo_int_status_t
 _cairo_image_surface_composite (cairo_operator_t	op,
-				cairo_pattern_t		*src_pattern,
-				cairo_pattern_t		*mask_pattern,
+				const cairo_pattern_t	*src_pattern,
+				const cairo_pattern_t	*mask_pattern,
 				void			*abstract_dst,
 				int			src_x,
 				int			src_y,
@@ -1072,7 +1072,7 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
 
 static cairo_int_status_t
 _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
-					   cairo_pattern_t	*pattern,
+					   const cairo_pattern_t *pattern,
 					   void			*abstract_dst,
 					   cairo_antialias_t	antialias,
 					   int			src_x,

@@ -219,7 +219,7 @@ _cairo_meta_surface_release_source_image (void			*abstract_surface,
 static cairo_int_status_t
 _cairo_meta_surface_paint (void			*abstract_surface,
 			   cairo_operator_t	 op,
-			   cairo_pattern_t	*source)
+			   const cairo_pattern_t	*source)
 {
     cairo_status_t status;
     cairo_meta_surface_t *meta = abstract_surface;
@@ -259,8 +259,8 @@ _cairo_meta_surface_paint (void			*abstract_surface,
 static cairo_int_status_t
 _cairo_meta_surface_mask (void			*abstract_surface,
 			  cairo_operator_t	 op,
-			  cairo_pattern_t	*source,
-			  cairo_pattern_t	*mask)
+			  const cairo_pattern_t	*source,
+			  const cairo_pattern_t	*mask)
 {
     cairo_status_t status;
     cairo_meta_surface_t *meta = abstract_surface;
@@ -300,7 +300,7 @@ _cairo_meta_surface_mask (void			*abstract_surface,
 static cairo_int_status_t
 _cairo_meta_surface_stroke (void			*abstract_surface,
 			    cairo_operator_t		 op,
-			    cairo_pattern_t		*source,
+			    const cairo_pattern_t	*source,
 			    cairo_path_fixed_t		*path,
 			    cairo_stroke_style_t	*style,
 			    cairo_matrix_t		*ctm,
@@ -357,7 +357,7 @@ _cairo_meta_surface_stroke (void			*abstract_surface,
 static cairo_int_status_t
 _cairo_meta_surface_fill (void			*abstract_surface,
 			  cairo_operator_t	 op,
-			  cairo_pattern_t	*source,
+			  const cairo_pattern_t	*source,
 			  cairo_path_fixed_t	*path,
 			  cairo_fill_rule_t	 fill_rule,
 			  double		 tolerance,
@@ -411,7 +411,7 @@ _cairo_meta_surface_has_show_text_glyphs (void *abstract_surface)
 static cairo_int_status_t
 _cairo_meta_surface_show_text_glyphs (void			    *abstract_surface,
 				      cairo_operator_t		     op,
-				      cairo_pattern_t		    *source,
+				      const cairo_pattern_t	    *source,
 				      const char		    *utf8,
 				      int			     utf8_len,
 				      cairo_glyph_t		    *glyphs,

@@ -948,10 +948,10 @@ typedef enum {
  * hit the bug and won't be able to use a core protocol fallback.
  */
 static composite_operation_t
-_categorize_composite_operation (cairo_xcb_surface_t *dst,
-				 cairo_operator_t      op,
-				 cairo_pattern_t      *src_pattern,
-				 cairo_bool_t	       have_mask)
+_categorize_composite_operation (cairo_xcb_surface_t	    *dst,
+				 cairo_operator_t	     op,
+				 const cairo_pattern_t	    *src_pattern,
+				 cairo_bool_t		     have_mask)
 
 {
 #if XXX_BUGGY_REPEAT
@@ -1088,8 +1088,8 @@ _render_operator (cairo_operator_t op)
 
 static cairo_int_status_t
 _cairo_xcb_surface_composite (cairo_operator_t		op,
-			      cairo_pattern_t		*src_pattern,
-			      cairo_pattern_t		*mask_pattern,
+			      const cairo_pattern_t	*src_pattern,
+			      const cairo_pattern_t	*mask_pattern,
 			      void			*abstract_dst,
 			      int			src_x,
 			      int			src_y,
@@ -1377,7 +1377,7 @@ _create_trapezoid_mask (cairo_xcb_surface_t *dst,
 
 static cairo_int_status_t
 _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
-					 cairo_pattern_t	*pattern,
+					 const cairo_pattern_t	*pattern,
 					 void			*abstract_dst,
 					 cairo_antialias_t	antialias,
 					 int			src_x,
@@ -1622,13 +1622,13 @@ _cairo_xcb_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 				       cairo_scaled_font_t  *scaled_font);
 
 static cairo_int_status_t
-_cairo_xcb_surface_show_glyphs (void                *abstract_dst,
-				 cairo_operator_t     op,
-				 cairo_pattern_t     *src_pattern,
-				 cairo_glyph_t       *glyphs,
-				 int		      num_glyphs,
-				 cairo_scaled_font_t *scaled_font,
-				 int		     *remaining_glyphs);
+_cairo_xcb_surface_show_glyphs (void			*abstract_dst,
+				cairo_operator_t	 op,
+				const cairo_pattern_t	*src_pattern,
+				cairo_glyph_t		*glyphs,
+				int			 num_glyphs,
+				cairo_scaled_font_t	*scaled_font,
+				int			*remaining_glyphs);
 
 static cairo_bool_t
 _cairo_xcb_surface_is_similar (void *surface_a,
@@ -2420,13 +2420,13 @@ _cairo_xcb_surface_emit_glyphs (cairo_xcb_surface_t *dst,
 }
 
 static cairo_int_status_t
-_cairo_xcb_surface_show_glyphs (void                *abstract_dst,
-				cairo_operator_t     op,
-				cairo_pattern_t     *src_pattern,
-				cairo_glyph_t       *glyphs,
-				int		      num_glyphs,
-				cairo_scaled_font_t *scaled_font,
-				int		     *remaining_glyphs)
+_cairo_xcb_surface_show_glyphs (void			*abstract_dst,
+				cairo_operator_t	 op,
+				const cairo_pattern_t	*src_pattern,
+				cairo_glyph_t		*glyphs,
+				int			 num_glyphs,
+				cairo_scaled_font_t	*scaled_font,
+				int			*remaining_glyphs)
 {
     cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_xcb_surface_t *dst = abstract_dst;

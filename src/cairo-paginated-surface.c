@@ -526,7 +526,7 @@ _cairo_paginated_surface_get_font_options (void                  *abstract_surfa
 static cairo_int_status_t
 _cairo_paginated_surface_paint (void			*abstract_surface,
 				cairo_operator_t	 op,
-				cairo_pattern_t		*source)
+				const cairo_pattern_t	*source)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
 
@@ -542,8 +542,8 @@ _cairo_paginated_surface_paint (void			*abstract_surface,
 static cairo_int_status_t
 _cairo_paginated_surface_mask (void		*abstract_surface,
 			       cairo_operator_t	 op,
-			       cairo_pattern_t	*source,
-			       cairo_pattern_t	*mask)
+			       const cairo_pattern_t	*source,
+			       const cairo_pattern_t	*mask)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
 
@@ -553,7 +553,7 @@ _cairo_paginated_surface_mask (void		*abstract_surface,
 static cairo_int_status_t
 _cairo_paginated_surface_stroke (void			*abstract_surface,
 				 cairo_operator_t	 op,
-				 cairo_pattern_t	*source,
+				 const cairo_pattern_t	*source,
 				 cairo_path_fixed_t	*path,
 				 cairo_stroke_style_t	*style,
 				 cairo_matrix_t		*ctm,
@@ -578,7 +578,7 @@ _cairo_paginated_surface_stroke (void			*abstract_surface,
 static cairo_int_status_t
 _cairo_paginated_surface_fill (void			*abstract_surface,
 			       cairo_operator_t		 op,
-			       cairo_pattern_t		*source,
+			       const cairo_pattern_t	*source,
 			       cairo_path_fixed_t	*path,
 			       cairo_fill_rule_t	 fill_rule,
 			       double			 tolerance,
@@ -608,7 +608,7 @@ _cairo_paginated_surface_has_show_text_glyphs (void *abstract_surface)
 static cairo_int_status_t
 _cairo_paginated_surface_show_text_glyphs (void			    *abstract_surface,
 					  cairo_operator_t	     op,
-					  cairo_pattern_t	    *source,
+					  const cairo_pattern_t	    *source,
 					  const char		    *utf8,
 					  int			     utf8_len,
 					  cairo_glyph_t		    *glyphs,
