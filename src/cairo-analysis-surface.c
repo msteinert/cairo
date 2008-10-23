@@ -416,12 +416,16 @@ _cairo_analysis_surface_mask (void		*abstract_surface,
 	    return status;
 
 	is_empty = _cairo_rectangle_intersect (&extents, &source_extents);
+    }
 
-	status = _cairo_pattern_get_extents (mask, &source_extents);
+    if (_cairo_operator_bounded_by_mask (op)) {
+	cairo_rectangle_int_t mask_extents;
+
+	status = _cairo_pattern_get_extents (mask, &mask_extents);
 	if (status)
 	    return status;
 
-	is_empty = _cairo_rectangle_intersect (&extents, &source_extents);
+	is_empty = _cairo_rectangle_intersect (&extents, &mask_extents);
     }
 
     is_empty = _cairo_rectangle_intersect (&extents, &surface->current_clip);
