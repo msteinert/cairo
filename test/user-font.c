@@ -158,10 +158,6 @@ _user_font_face_create (cairo_font_face_t **out)
      *     13 14 15
      */
     static const test_scaled_font_glyph_t glyphs [] = {
-	{ '\0', 1, { END_GLYPH } }, /* Poppler has a bug assuming glyph 0 is .notdef */
-	{ ' ',  1, { END_GLYPH } },
-	{ '-',  2, { 7, 8, STROKE, END_GLYPH } },
-	{ '.',  1, { 10, 10, STROKE, END_GLYPH } },
 	{ 'a',  3, { 4, 6, 12, 10, 7, 9, STROKE, END_GLYPH } },
 	{ 'c',  3, { 6, 4, 10, 12, STROKE, END_GLYPH } },
 	{ 'e',  3, { 12, 10, 4, 6, 9, 7, STROKE, END_GLYPH } },
@@ -177,6 +173,9 @@ _user_font_face_create (cairo_font_face_t **out)
 	{ 't',  3, { 2, 11, 12, STROKE, 4, 6, STROKE, END_GLYPH } },
 	{ 'u',  3, { 4, 10, 12, 6, STROKE, END_GLYPH } },
 	{ 'z',  3, { 4, 6, 10, 12, STROKE, END_GLYPH } },
+	{ ' ',  1, { END_GLYPH } },
+	{ '-',  2, { 7, 8, STROKE, END_GLYPH } },
+	{ '.',  1, { 10, 10, STROKE, END_GLYPH } },
 	{  -1,  0, { END_GLYPH } },
     };
 
