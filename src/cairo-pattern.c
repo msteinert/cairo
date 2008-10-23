@@ -2250,11 +2250,11 @@ _cairo_pattern_get_extents (cairo_pattern_t         *pattern,
 					      NULL);
 
 	x1 = floor (x1);
-	if (x1 < 0)
-	    x1 = 0;
+	if (x1 < CAIRO_RECT_INT_MIN)
+	    x1 = CAIRO_RECT_INT_MIN;
 	y1 = floor (y1);
-	if (y1 < 0)
-	    y1 = 0;
+	if (y1 < CAIRO_RECT_INT_MIN)
+	    y1 = CAIRO_RECT_INT_MIN;
 
 	x2 = ceil (x2);
 	if (x2 > CAIRO_RECT_INT_MAX)
