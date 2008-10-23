@@ -2220,6 +2220,8 @@ _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
 	double pad;
 
 	status = _cairo_surface_get_extents (surface, &surface_extents);
+	if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+	    goto UNBOUNDED;
 	if (status)
 	    return status;
 
@@ -2266,6 +2268,7 @@ _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
      * horizontal/vertical linear gradients).
      */
 
+  UNBOUNDED:
     /* unbounded patterns -> 'infinite' extents */
     extents->x = CAIRO_RECT_INT_MIN;
     extents->y = CAIRO_RECT_INT_MIN;
