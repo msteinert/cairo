@@ -342,7 +342,7 @@ _cairo_sub_font_glyph_lookup_unicode (cairo_sub_font_glyph_t *sub_font_glyph,
     status = _cairo_truetype_index_to_ucs4 (scaled_font,
 					    scaled_font_glyph_index,
 					    &unicode);
-    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+    if (_cairo_status_is_error (status))
 	return status;
 
     if (unicode == (uint32_t)-1 && scaled_font->backend->index_to_ucs4) {
@@ -722,7 +722,7 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
 					     &scaled_glyph);
 	_cairo_scaled_font_thaw_cache (scaled_font);
     }
-    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+    if (_cairo_status_is_error (status))
         return status;
 
     if (status == CAIRO_STATUS_SUCCESS &&

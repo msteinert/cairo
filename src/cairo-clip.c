@@ -656,7 +656,7 @@ _cairo_clip_path_reapply_clip_path (cairo_clip_t      *clip,
 
     if (clip_path->prev) {
         status = _cairo_clip_path_reapply_clip_path (clip, clip_path->prev);
-	if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+	if (_cairo_status_is_error (status))
 	    return status;
     }
 
@@ -709,7 +709,7 @@ _cairo_clip_init_deep_copy (cairo_clip_t    *clip,
 
         if (other->path) {
             status = _cairo_clip_path_reapply_clip_path (clip, other->path);
-	    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    if (_cairo_status_is_error (status))
 		goto BAIL;
         }
     }

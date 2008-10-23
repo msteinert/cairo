@@ -116,7 +116,7 @@ _analyze_meta_surface_pattern (cairo_analysis_surface_t	*surface,
     old_height = surface->height;
     old_clip = surface->current_clip;
     status = _cairo_surface_get_extents (surface_pattern->surface, &meta_extents);
-    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+    if (_cairo_status_is_error (status))
 	return status;
 
     surface->width = meta_extents.width;
@@ -339,7 +339,7 @@ _cairo_analysis_surface_paint (void			*abstract_surface,
 	backend_status = _analyze_meta_surface_pattern (surface, source);
 
     status = _cairo_surface_get_extents (&surface->base, &extents);
-    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+    if (_cairo_status_is_error (status))
 	return status;
 
     if (_cairo_operator_bounded_by_source (op)) {
@@ -406,7 +406,7 @@ _cairo_analysis_surface_mask (void		*abstract_surface,
     }
 
     status = _cairo_surface_get_extents (&surface->base, &extents);
-    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+    if (_cairo_status_is_error (status))
 	return status;
 
     if (_cairo_operator_bounded_by_source (op)) {
@@ -465,7 +465,7 @@ _cairo_analysis_surface_stroke (void			*abstract_surface,
 	backend_status = _analyze_meta_surface_pattern (surface, source);
 
     status = _cairo_surface_get_extents (&surface->base, &extents);
-    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+    if (_cairo_status_is_error (status))
 	return status;
 
     if (_cairo_operator_bounded_by_source (op)) {
@@ -534,7 +534,7 @@ _cairo_analysis_surface_fill (void			*abstract_surface,
 	backend_status = _analyze_meta_surface_pattern (surface, source);
 
     status = _cairo_surface_get_extents (&surface->base, &extents);
-    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+    if (_cairo_status_is_error (status))
 	return status;
 
     if (_cairo_operator_bounded_by_source (op)) {
@@ -612,7 +612,7 @@ _cairo_analysis_surface_show_glyphs (void		  *abstract_surface,
 	backend_status = _analyze_meta_surface_pattern (surface, source);
 
     status = _cairo_surface_get_extents (&surface->base, &extents);
-    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+    if (_cairo_status_is_error (status))
 	return status;
 
     if (_cairo_operator_bounded_by_source (op)) {
@@ -695,7 +695,7 @@ _cairo_analysis_surface_show_text_glyphs (void			    *abstract_surface,
 	backend_status = _analyze_meta_surface_pattern (surface, source);
 
     status = _cairo_surface_get_extents (&surface->base, &extents);
-    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+    if (_cairo_status_is_error (status))
 	return status;
 
     if (_cairo_operator_bounded_by_source (op)) {

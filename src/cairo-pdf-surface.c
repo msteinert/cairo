@@ -3027,7 +3027,7 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
     status = _cairo_pdf_surface_emit_to_unicode_stream (surface,
 	                                                font_subset, TRUE,
 							&to_unicode_stream);
-    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+    if (_cairo_status_is_error (status))
 	return status;
 
     descriptor = _cairo_pdf_surface_new_object (surface);
@@ -3199,7 +3199,7 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
     status = _cairo_pdf_surface_emit_to_unicode_stream (surface,
 	                                                font_subset, FALSE,
 							&to_unicode_stream);
-    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+    if (_cairo_status_is_error (status))
 	return status;
 
     descriptor = _cairo_pdf_surface_new_object (surface);
@@ -3356,7 +3356,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
     status = _cairo_pdf_surface_emit_to_unicode_stream (surface,
 	                                                font_subset, TRUE,
 							&to_unicode_stream);
-    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED) {
+    if (_cairo_status_is_error (status)) {
 	_cairo_truetype_subset_fini (&subset);
 	return status;
     }
@@ -3658,7 +3658,7 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
     status = _cairo_pdf_surface_emit_to_unicode_stream (surface,
 	                                                font_subset, FALSE,
 							&to_unicode_stream);
-    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED) {
+    if (_cairo_status_is_error (status)) {
 	free (widths);
 	return status;
     }

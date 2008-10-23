@@ -577,7 +577,7 @@ _cairo_ps_surface_emit_unscaled_font_subset (cairo_scaled_font_subset_t	*font_su
 
 
     status = _cairo_scaled_font_subset_create_glyph_names (font_subset);
-    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+    if (_cairo_status_is_error (status))
 	return status;
 
 #if CAIRO_HAS_FT_FONT
@@ -606,7 +606,7 @@ _cairo_ps_surface_emit_scaled_font_subset (cairo_scaled_font_subset_t *font_subs
     cairo_status_t status;
 
     status = _cairo_scaled_font_subset_create_glyph_names (font_subset);
-    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+    if (_cairo_status_is_error (status))
 	return status;
 
     status = _cairo_ps_surface_emit_type3_font_subset (surface, font_subset);
