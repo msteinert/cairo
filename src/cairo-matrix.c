@@ -371,6 +371,46 @@ _cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
     double min_x, max_x;
     double min_y, max_y;
 
+    if (_cairo_matrix_is_identity (matrix)) {
+	if (is_tight)
+	    *is_tight = TRUE;
+
+	return;
+    }
+
+    if (matrix->xy == 0. && matrix->yx == 0.) {
+	/* non-rotation/skew matrix, just map the two extreme points */
+	quad_x[0] = *x1;
+	quad_y[0] = *y1;
+	cairo_matrix_transform_distance (matrix, &quad_x[0], &quad_y[0]);
+
+	quad_x[1] = *x2;
+	quad_y[1] = *y2;
+	cairo_matrix_transform_distance (matrix, &quad_x[1], &quad_y[1]);
+
+	if (quad_x[0] < quad_x[1]) {
+	    *x1 = quad_x[0] + matrix->x0;
+	    *x2 = quad_x[1] + matrix->x0;
+	} else {
+	    *x1 = quad_x[1] + matrix->x0;
+	    *x2 = quad_x[0] + matrix->x0;
+	}
+
+	if (quad_y[0] < quad_y[1]) {
+	    *y1 = quad_y[0] + matrix->y0;
+	    *y2 = quad_y[1] + matrix->y0;
+	} else {
+	    *y1 = quad_y[1] + matrix->y0;
+	    *y2 = quad_y[0] + matrix->y0;
+	}
+
+	if (is_tight)
+	    *is_tight = TRUE;
+
+	return;
+    }
+
+    /* general matrix */
     quad_x[0] = *x1;
     quad_y[0] = *y1;
     cairo_matrix_transform_point (matrix, &quad_x[0], &quad_y[0]);
@@ -406,7 +446,7 @@ _cairo_matrix_transform_bounding_box (const cairo_matrix_t *matrix,
     *y1 = min_y;
     *x2 = max_x;
     *y2 = max_y;
-    
+
     if (is_tight) {
         /* it's tight if and only if the four corner points form an axis-aligned
            rectangle.
