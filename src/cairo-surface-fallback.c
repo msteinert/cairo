@@ -548,7 +548,6 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
 
         if (has_trap_region) {
             status = _cairo_clip_intersect_to_region (clip, &trap_region);
-
             if (status)
                 goto out;
 
@@ -559,9 +558,12 @@ _clip_and_composite_trapezoids (cairo_pattern_t *src,
             _cairo_box_round_to_rectangle (&trap_box, &trap_extents);
         }
 
-        _cairo_rectangle_intersect (&extents, &trap_extents);
-        status = _cairo_clip_intersect_to_rectangle (clip, &extents);
+        if (! _cairo_rectangle_intersect (&extents, &trap_extents)) {
+	    status = CAIRO_STATUS_SUCCESS;
+	    goto out;
+	}
 
+        status = _cairo_clip_intersect_to_rectangle (clip, &extents);
         if (status)
             goto out;
     } else {
@@ -688,7 +690,8 @@ _cairo_surface_fallback_paint (cairo_surface_t	*surface,
 	if (status)
 	    return status;
 
-	_cairo_rectangle_intersect (&extents, &source_extents);
+	if (! _cairo_rectangle_intersect (&extents, &source_extents))
+	    return CAIRO_STATUS_SUCCESS;
     }
 
     status = _cairo_clip_intersect_to_rectangle (surface->clip, &extents);
@@ -756,7 +759,8 @@ _cairo_surface_fallback_mask (cairo_surface_t		*surface,
 	if (status)
 	    return status;
 
-	_cairo_rectangle_intersect (&extents, &source_extents);
+	if (! _cairo_rectangle_intersect (&extents, &source_extents))
+	    return CAIRO_STATUS_SUCCESS;
     }
 
     if (_cairo_operator_bounded_by_mask (op)) {
@@ -764,7 +768,8 @@ _cairo_surface_fallback_mask (cairo_surface_t		*surface,
 	if (status)
 	    return status;
 
-	_cairo_rectangle_intersect (&extents, &mask_extents);
+	if (! _cairo_rectangle_intersect (&extents, &mask_extents))
+	    return CAIRO_STATUS_SUCCESS;
     }
 
     status = _cairo_clip_intersect_to_rectangle (surface->clip, &extents);
@@ -807,7 +812,8 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
 	if (status)
 	    return status;
 
-	_cairo_rectangle_intersect (&extents, &source_extents);
+	if (! _cairo_rectangle_intersect (&extents, &source_extents))
+	    return CAIRO_STATUS_SUCCESS;
     }
 
     status = _cairo_clip_intersect_to_rectangle (surface->clip, &extents);
@@ -863,11 +869,13 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
 
     if (_cairo_operator_bounded_by_source (op)) {
 	cairo_rectangle_int_t source_extents;
+
 	status = _cairo_pattern_get_extents (source, &source_extents);
 	if (status)
 	    return status;
 
-	_cairo_rectangle_intersect (&extents, &source_extents);
+	if (! _cairo_rectangle_intersect (&extents, &source_extents))
+	    return CAIRO_STATUS_SUCCESS;
     }
 
     status = _cairo_clip_intersect_to_rectangle (surface->clip, &extents);
@@ -996,7 +1004,8 @@ _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
 	if (status)
 	    return status;
 
-	_cairo_rectangle_intersect (&extents, &glyph_extents);
+	if (! _cairo_rectangle_intersect (&extents, &glyph_extents))
+	    return CAIRO_STATUS_SUCCESS;
     }
 
     status = _cairo_clip_intersect_to_rectangle (surface->clip, &extents);
@@ -1142,9 +1151,9 @@ _cairo_surface_fallback_fill_rectangles (cairo_surface_t         *surface,
 	if (rects[i].y < y1)
 	    y1 = rects[i].y;
 
-	if ((int)(rects[i].x + rects[i].width) > x2)
+	if ((int) (rects[i].x + rects[i].width) > x2)
 	    x2 = rects[i].x + rects[i].width;
-	if ((int)(rects[i].y + rects[i].height) > y2)
+	if ((int) (rects[i].y + rects[i].height) > y2)
 	    y2 = rects[i].y + rects[i].height;
     }
 

@@ -302,45 +302,25 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
     cairo_image_surface_t *image;
     xcb_get_image_reply_t *imagerep;
     int bpp, bytes_per_line;
-    short x1, y1, x2, y2;
+    cairo_rectangle_int_t extents;
     unsigned char *data;
     cairo_format_masks_t masks;
     cairo_format_t format;
 
-    x1 = 0;
-    y1 = 0;
-    x2 = surface->width;
-    y2 = surface->height;
+    extents.x = 0;
+    extents.y = 0;
+    extents.width  = surface->width;
+    extents.height = surface->height;
 
     if (interest_rect) {
-	cairo_rectangle_int_t rect;
-
-	rect.x = interest_rect->x;
-	rect.y = interest_rect->y;
-	rect.width = interest_rect->width;
-	rect.height = interest_rect->height;
-
-	if (rect.x > x1)
-	    x1 = rect.x;
-	if (rect.y > y1)
-	    y1 = rect.y;
-	if (rect.x + rect.width < x2)
-	    x2 = rect.x + rect.width;
-	if (rect.y + rect.height < y2)
-	    y2 = rect.y + rect.height;
-
-	if (x1 >= x2 || y1 >= y2) {
+	if (! _cairo_rectangle_intersect (&extents, interest_rect)) {
 	    *image_out = NULL;
 	    return CAIRO_STATUS_SUCCESS;
 	}
     }
 
-    if (image_rect) {
-	image_rect->x = x1;
-	image_rect->y = y1;
-	image_rect->width = x2 - x1;
-	image_rect->height = y2 - y1;
-    }
+    if (image_rect)
+	*image_rect = extents;
 
     /* XXX: This should try to use the XShm extension if available */
 
@@ -350,8 +330,8 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
 	imagerep = xcb_get_image_reply(surface->dpy,
 				    xcb_get_image(surface->dpy, XCB_IMAGE_FORMAT_Z_PIXMAP,
 						surface->drawable,
-						x1, y1,
-						x2 - x1, y2 - y1,
+						extents.x, extents.y,
+						extents.width, extents.height,
 						AllPlanes), &error);
 
 	/* If we get an error, the surface must have been a window,
@@ -380,17 +360,17 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
 			 surface->depth,
 			 pixmap,
 			 surface->drawable,
-			 x2 - x1, y2 - y1);
+			 extents.width, extents.height);
 	_cairo_xcb_surface_ensure_gc (surface);
 
 	xcb_copy_area (surface->dpy, surface->drawable, pixmap, surface->gc,
-		     x1, y1, 0, 0, x2 - x1, y2 - y1);
+		     extents.x, extents.y, 0, 0, extents.width, extents.height);
 
 	imagerep = xcb_get_image_reply(surface->dpy,
 				    xcb_get_image(surface->dpy, XCB_IMAGE_FORMAT_Z_PIXMAP,
 						pixmap,
-						x1, y1,
-						x2 - x1, y2 - y1,
+						extents.x, extents.y,
+						extents.width, extents.height,
 						AllPlanes), 0);
 	xcb_free_pixmap (surface->dpy, pixmap);
 
@@ -447,8 +427,8 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
 	image = (cairo_image_surface_t *)
 	    cairo_image_surface_create_for_data (data,
 						 format,
-						 x2 - x1,
-						 y2 - y1,
+						 extents.width,
+						 extents.height,
 						 bytes_per_line);
 	if (image->base.status)
 	    goto FAIL;
@@ -462,8 +442,8 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
 	image = (cairo_image_surface_t *)
 	    _cairo_image_surface_create_with_masks (data,
 						    &masks,
-						    x2 - x1,
-						    y2 - y1,
+						    extents.width,
+						    extents.height,
 						    bytes_per_line);
 	if (image->base.status)
 	    goto FAIL;

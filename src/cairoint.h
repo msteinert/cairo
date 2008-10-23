@@ -253,7 +253,7 @@ cairo_private void
 _cairo_box_round_to_rectangle (const cairo_box_t     *box,
 			       cairo_rectangle_int_t *rectangle);
 
-cairo_private void
+cairo_private cairo_bool_t
 _cairo_rectangle_intersect (cairo_rectangle_int_t *dst,
 			    const cairo_rectangle_int_t *src);
 

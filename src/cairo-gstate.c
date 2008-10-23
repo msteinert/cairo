@@ -1785,8 +1785,8 @@ _cairo_gstate_transform_glyphs_to_backend (cairo_gstate_t      *gstate,
 	     */
 	    x1 = surface_extents.x - 2*scale;
 	    y1 = surface_extents.y - 2*scale;
-	    x2 = surface_extents.x + surface_extents.width  + scale;
-	    y2 = surface_extents.y + surface_extents.height + scale;
+	    x2 = surface_extents.x + (int) surface_extents.width  + scale;
+	    y2 = surface_extents.y + (int) surface_extents.height + scale;
 	}
 
 	if (!drop)

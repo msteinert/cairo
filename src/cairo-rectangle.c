@@ -95,7 +95,7 @@ _cairo_box_round_to_rectangle (const cairo_box_t     *box,
     rectangle->height = _cairo_fixed_integer_ceil (box->p2.y) - rectangle->y;
 }
 
-void
+cairo_bool_t
 _cairo_rectangle_intersect (cairo_rectangle_int_t *dst,
 			    const cairo_rectangle_int_t *src)
 {
@@ -114,11 +114,15 @@ _cairo_rectangle_intersect (cairo_rectangle_int_t *dst,
 	dst->y = 0;
 	dst->width  = 0;
 	dst->height = 0;
+
+	return FALSE;
     } else {
 	dst->x = x1;
 	dst->y = y1;
 	dst->width  = x2 - x1;
 	dst->height = y2 - y1;
+
+	return TRUE;
     }
 }
 

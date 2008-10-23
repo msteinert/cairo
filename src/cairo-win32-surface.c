@@ -638,9 +638,9 @@ _cairo_win32_surface_acquire_dest_image (void                    *abstract_surfa
 	x1 = interest_rect->x;
     if (interest_rect->y > y1)
 	y1 = interest_rect->y;
-    if (interest_rect->x + interest_rect->width < x2)
+    if ((int) (interest_rect->x + interest_rect->width) < x2)
 	x2 = interest_rect->x + interest_rect->width;
-    if (interest_rect->y + interest_rect->height < y2)
+    if ((int) (interest_rect->y + interest_rect->height) < y2)
 	y2 = interest_rect->y + interest_rect->height;
 
     if (x1 >= x2 || y1 >= y2) {
