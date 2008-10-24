@@ -229,9 +229,6 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
 				       int		height)
 {
     cairo_surface_t *surface = NULL;
-    cairo_font_options_t options;
-
-    cairo_format_t format = _cairo_format_from_content (content);
 
     if (other->status)
 	return _cairo_surface_create_in_error (other->status);
@@ -242,15 +239,22 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
 	    return surface;
     }
 
-    if (surface == NULL)
-	surface = cairo_image_surface_create (format, width, height);
+    if (surface == NULL) {
+	surface =
+	    cairo_image_surface_create (_cairo_format_from_content (content),
+					width, height);
+    }
 
     /* If any error occurred, then return the nil surface we received. */
     if (surface->status)
 	return surface;
 
-    cairo_surface_get_font_options (other, &options);
-    _cairo_surface_set_font_options (surface, &options);
+    if (other->has_font_options || other->backend != surface->backend) {
+	cairo_font_options_t options;
+
+	cairo_surface_get_font_options (other, &options);
+	_cairo_surface_set_font_options (surface, &options);
+    }
 
     cairo_surface_set_fallback_resolution (surface,
 					   other->x_fallback_resolution,
