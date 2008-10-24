@@ -2348,7 +2348,7 @@ _cairo_xlib_surface_get_font_options (void                  *abstract_surface,
 {
     cairo_xlib_surface_t *surface = abstract_surface;
 
-    *options = surface->screen_info->font_options;
+    *options = *_cairo_xlib_screen_get_font_options (surface->screen_info);
 }
 
 static void

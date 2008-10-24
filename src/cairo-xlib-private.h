@@ -97,6 +97,7 @@ struct _cairo_xlib_screen_info {
     Screen *screen;
     cairo_bool_t has_render;
 
+    cairo_bool_t has_font_options;
     cairo_font_options_t font_options;
 
     GC gc[9];
@@ -150,6 +151,9 @@ cairo_private GC
 _cairo_xlib_screen_get_gc (cairo_xlib_screen_info_t *info, int depth);
 cairo_private cairo_status_t
 _cairo_xlib_screen_put_gc (cairo_xlib_screen_info_t *info, int depth, GC gc, cairo_bool_t reset_clip);
+
+cairo_private cairo_font_options_t *
+_cairo_xlib_screen_get_font_options (cairo_xlib_screen_info_t *info);
 
 cairo_private cairo_status_t
 _cairo_xlib_screen_get_visual_info (cairo_xlib_screen_info_t *info,
