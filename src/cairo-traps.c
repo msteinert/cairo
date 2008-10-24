@@ -615,18 +615,25 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
     int i, box_count;
     cairo_int_status_t status;
 
-    for (i = 0; i < traps->num_traps; i++)
-	if (!(traps->traps[i].left.p1.x == traps->traps[i].left.p2.x
-	      && traps->traps[i].right.p1.x == traps->traps[i].right.p2.x
-	      && _cairo_fixed_is_integer(traps->traps[i].top)
-	      && _cairo_fixed_is_integer(traps->traps[i].bottom)
-	      && _cairo_fixed_is_integer(traps->traps[i].left.p1.x)
-	      && _cairo_fixed_is_integer(traps->traps[i].right.p1.x))) {
+    if (traps->num_traps == 0) {
+	_cairo_region_init (region);
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    for (i = 0; i < traps->num_traps; i++) {
+	if (traps->traps[i].left.p1.x != traps->traps[i].left.p2.x   ||
+	    traps->traps[i].right.p1.x != traps->traps[i].right.p2.x ||
+	    ! _cairo_fixed_is_integer (traps->traps[i].top)          ||
+	    ! _cairo_fixed_is_integer (traps->traps[i].bottom)       ||
+	    ! _cairo_fixed_is_integer (traps->traps[i].left.p1.x)    ||
+	    ! _cairo_fixed_is_integer (traps->traps[i].right.p1.x))
+	{
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
+    }
 
-    if (traps->num_traps > ARRAY_LENGTH(stack_boxes)) {
-	boxes = _cairo_malloc_ab (traps->num_traps, sizeof(cairo_box_int_t));
+    if (traps->num_traps > ARRAY_LENGTH (stack_boxes)) {
+	boxes = _cairo_malloc_ab (traps->num_traps, sizeof (cairo_box_int_t));
 
 	if (boxes == NULL)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -635,10 +642,10 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
     box_count = 0;
 
     for (i = 0; i < traps->num_traps; i++) {
-	int x1 = _cairo_fixed_integer_part(traps->traps[i].left.p1.x);
-	int y1 = _cairo_fixed_integer_part(traps->traps[i].top);
-	int x2 = _cairo_fixed_integer_part(traps->traps[i].right.p1.x);
-	int y2 = _cairo_fixed_integer_part(traps->traps[i].bottom);
+	int x1 = _cairo_fixed_integer_part (traps->traps[i].left.p1.x);
+	int y1 = _cairo_fixed_integer_part (traps->traps[i].top);
+	int x2 = _cairo_fixed_integer_part (traps->traps[i].right.p1.x);
+	int y2 = _cairo_fixed_integer_part (traps->traps[i].bottom);
 
 	/* XXX: Sometimes we get degenerate trapezoids from the tesellator;
 	 * skip these.

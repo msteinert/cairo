@@ -62,8 +62,8 @@ _cairo_region_init_boxes (cairo_region_t *region,
     cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
     int i;
 
-    if (count > ARRAY_LENGTH(stack_pboxes)) {
-	pboxes = _cairo_malloc_ab (count, sizeof(pixman_box32_t));
+    if (count > ARRAY_LENGTH (stack_pboxes)) {
+	pboxes = _cairo_malloc_ab (count, sizeof (pixman_box32_t));
 	if (pboxes == NULL)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
@@ -75,7 +75,7 @@ _cairo_region_init_boxes (cairo_region_t *region,
 	pboxes[i].y2 = boxes[i].p2.y;
     }
 
-    if (!pixman_region32_init_rects (&region->rgn, pboxes, count))
+    if (! pixman_region32_init_rects (&region->rgn, pboxes, count))
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     if (pboxes != stack_pboxes)
