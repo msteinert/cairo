@@ -234,6 +234,7 @@ be32_to_cpu(uint32_t v)
 #include "cairo-types-private.h"
 #include "cairo-cache-private.h"
 #include "cairo-reference-count-private.h"
+#include "cairo-spans-private.h"
 
 cairo_private void
 _cairo_box_from_doubles (cairo_box_t *box,
