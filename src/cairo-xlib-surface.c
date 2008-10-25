@@ -1931,27 +1931,41 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
     render_color.blue  = color->blue_short;
     render_color.alpha = color->alpha_short;
 
-    if (num_rects > ARRAY_LENGTH (static_xrects)) {
-        xrects = _cairo_malloc_ab (num_rects, sizeof (XRectangle));
-	if (xrects == NULL)
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-    }
-
-    for (i = 0; i < num_rects; i++) {
-        xrects[i].x = rects[i].x;
-        xrects[i].y = rects[i].y;
-        xrects[i].width = rects[i].width;
-        xrects[i].height = rects[i].height;
-    }
-
     _cairo_xlib_surface_ensure_dst_picture (surface);
-    XRenderFillRectangles (surface->dpy,
-			   _render_operator (op),
-			   surface->dst_picture,
-			   &render_color, xrects, num_rects);
+    if (num_rects == 1) {
+	/* Take advantage of the protocol compaction that libXrender performs
+	 * to amalgamate sequences of XRenderFillRectangle().
+	 */
+	XRenderFillRectangle (surface->dpy,
+			      _render_operator (op),
+			      surface->dst_picture,
+			      &render_color,
+			      rects->x,
+			      rects->y,
+			      rects->width,
+			      rects->height);
+    } else {
+	if (num_rects > ARRAY_LENGTH (static_xrects)) {
+	    xrects = _cairo_malloc_ab (num_rects, sizeof (XRectangle));
+	    if (xrects == NULL)
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	}
 
-    if (xrects != static_xrects)
-        free (xrects);
+	for (i = 0; i < num_rects; i++) {
+	    xrects[i].x = rects[i].x;
+	    xrects[i].y = rects[i].y;
+	    xrects[i].width = rects[i].width;
+	    xrects[i].height = rects[i].height;
+	}
+
+	XRenderFillRectangles (surface->dpy,
+			       _render_operator (op),
+			       surface->dst_picture,
+			       &render_color, xrects, num_rects);
+
+	if (xrects != static_xrects)
+	    free (xrects);
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
