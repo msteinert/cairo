@@ -878,6 +878,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 
 	if (stroker->dash_on &&
 	    (fully_in_bounds ||
+	     (! stroker->has_first_face && stroker->dash_starts_on) ||
 	     _cairo_box_intersects_line_segment (&stroker->bounds, &segment)))
 	{
 	    status = _cairo_stroker_add_sub_edge (stroker,
