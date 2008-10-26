@@ -113,6 +113,7 @@ large-font
 large-source
 leaky-dash
 leaky-dashed-rectangle
+leaky-dashed-stroke
 leaky-polygon
 line-width
 line-width-scale

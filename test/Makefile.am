@@ -89,6 +89,7 @@ large-font$(EXEEXT)					\
 large-source$(EXEEXT)					\
 leaky-dash$(EXEEXT)					\
 leaky-dashed-rectangle$(EXEEXT)				\
+leaky-dashed-stroke$(EXEEXT)				\
 leaky-polygon$(EXEEXT)					\
 line-width$(EXEEXT)					\
 line-width-scale$(EXEEXT)				\
@@ -596,6 +597,9 @@ REFERENCE_IMAGES = \
 	leaky-dashed-rectangle-ref.png		\
 	leaky-dashed-rectangle-ps2-ref.png	\
 	leaky-dashed-rectangle-ps3-ref.png	\
+	leaky-dashed-stroke-ref.png		\
+	leaky-dashed-stroke-ps2-ref.png		\
+	leaky-dashed-stroke-ps3-ref.png		\
 	leaky-polygon-ref.png	\
 	leaky-polygon-ps2-ref.png	\
 	leaky-polygon-ps3-ref.png	\
