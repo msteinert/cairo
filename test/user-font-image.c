@@ -116,6 +116,8 @@ test_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     int i;
     unsigned char *data;
     cairo_surface_t *image;
+    cairo_pattern_t *pattern;
+    cairo_matrix_t matrix;
     uint8_t byte;
 
     /* FIXME: We simply crash on out-of-bound glyph indices */
@@ -130,8 +132,15 @@ test_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 	data += cairo_image_surface_get_stride (image);
     }
 
-    cairo_scale (cr, 1.0/8.0, 1.0/8.0);
-    cairo_mask_surface (cr, image, 0, -8);
+    pattern = cairo_pattern_create_for_surface (image);
+    cairo_matrix_init_identity (&matrix);
+    cairo_matrix_scale (&matrix, 1.0/8.0, 1.0/8.0);
+    cairo_matrix_translate (&matrix, 0, -8);
+    cairo_matrix_invert (&matrix);
+    cairo_pattern_set_matrix (pattern, &matrix);
+    cairo_set_source (cr, pattern);
+    cairo_mask (cr, pattern);
+    cairo_pattern_destroy (pattern);
     cairo_surface_destroy (image);
 
     return CAIRO_STATUS_SUCCESS;
