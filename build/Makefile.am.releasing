@@ -34,9 +34,11 @@ RELEASE_UPLOAD_DIR =	$(RELEASE_UPLOAD_BASE)/$(RELEASE_OR_SNAPSHOT)s
 RELEASE_URL_BASE = 	http://cairographics.org/$(RELEASE_OR_SNAPSHOT)s
 RELEASE_ANNOUNCE_LIST = cairo-announce@cairographics.org (and CC gnome-announce-list@gnome.org)
 
-MANUAL_DATED =		cairo-manual-`date +%Y%m%d`
-MANUAL_TAR_FILE = 	$(MANUAL_DATED).tar.gz
-MANUAL_UPLOAD_DIR =	$(RELEASE_UPLOAD_BASE)
+MANUAL_DATED =			cairo-manual-`date +%Y%m%d`
+MANUAL_TAR_FILE = 		$(MANUAL_DATED).tar.gz
+MANUAL_VERSIONED =		manual-$(VERSION)
+MANUAL_VERSIONED_TAR_FILE =	$(MANUAL_VERSIONED).tar.gz
+MANUAL_UPLOAD_DIR =		$(RELEASE_UPLOAD_BASE)
 
 tar_file = $(PACKAGE)-$(VERSION).tar.gz
 sha1_file = $(tar_file).sha1
@@ -134,11 +136,6 @@ release-publish-message: releases/$(sha1_file)
 	@echo ""
 	@echo "============================== CUT HERE =============================="
 
-# Strict ordering enforced for parallel make to work
-release-publish: release-check
-	$(MAKE) $(AM_MAKEFLAGS) release-upload
-	$(MAKE) $(AM_MAKEFLAGS) release-publish-message
-
 doc-publish: doc
 	rm -rf ./$(MANUAL_DATED)
 	cp -a doc/public/html $(MANUAL_DATED)
@@ -146,7 +143,18 @@ doc-publish: doc
 	scp $(MANUAL_TAR_FILE) $(RELEASE_UPLOAD_HOST):$(MANUAL_UPLOAD_DIR)
 	ssh $(RELEASE_UPLOAD_HOST) "cd $(MANUAL_UPLOAD_DIR) && tar xzf $(MANUAL_TAR_FILE) && rm -f manual && ln -s $(MANUAL_DATED) manual && ln -sf $(MANUAL_TAR_FILE) cairo-manual.tar.gz"
 
+doc-publish-versioned: doc
+	rm -rf ./$(MANUAL_VERSIONED)
+	cp -a doc/public/html $(MANUAL_VERSIONED)
+	tar czf $(MANUAL_VERSIONED_TAR_FILE) $(MANUAL_VERSIONED)
+	scp $(MANUAL_VERSIONED_TAR_FILE) $(RELEASE_UPLOAD_HOST):$(MANUAL_UPLOAD_DIR)
+	ssh $(RELEASE_UPLOAD_HOST) "cd $(MANUAL_UPLOAD_DIR) && tar xzf $(MANUAL_VERSIONED_TAR_FILE)"
 
+# Strict ordering enforced for parallel make to work
+release-publish: release-check
+	$(MAKE) $(AM_MAKEFLAGS) release-upload
+	$(MAKE) $(AM_MAKEFLAGS) doc-publis-versioned
+	$(MAKE) $(AM_MAKEFLAGS) release-publish-message
 
 if OS_WIN32
 
@@ -171,7 +179,8 @@ endif
 
 .PHONY: \
 	dist-clear-sticky-bits \
-	docs-publish \
+	doc-publish \
+	doc-publish-versioned \
 	release-check \
 	release-publish \
 	release-publish-message \
