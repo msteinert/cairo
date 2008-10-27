@@ -32,7 +32,7 @@ It should contain a (space-, comma-, etc-separated) list of backends to test.
 To limit the tests run, use the TESTS make variable, which should be a
 space-separated list of tests to run.  For example:
 
-  make test TARGETS=image,ps TESTS="zero-alpha"
+  make test TARGETS=image,ps3 TESTS="zero-alpha"
 
 Another very handy mechanism when trying to fix bugs is:
 
