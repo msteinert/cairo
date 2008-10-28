@@ -572,8 +572,6 @@ cairo_image_surface_get_format (cairo_surface_t *surface)
 	return 0;
     }
 
-    assert (CAIRO_FORMAT_VALID (image_surface->format));
-
     return image_surface->format;
 }
 
