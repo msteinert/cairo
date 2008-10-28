@@ -153,7 +153,7 @@ doc-publish-versioned: doc
 # Strict ordering enforced for parallel make to work
 release-publish: release-check
 	$(MAKE) $(AM_MAKEFLAGS) release-upload
-	$(MAKE) $(AM_MAKEFLAGS) doc-publis-versioned
+	$(MAKE) $(AM_MAKEFLAGS) doc-publish-versioned
 	$(MAKE) $(AM_MAKEFLAGS) release-publish-message
 
 if OS_WIN32
