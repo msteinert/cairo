@@ -484,12 +484,24 @@ cairo_image_surface_create_for_data (unsigned char     *data,
 				     int		stride)
 {
     pixman_format_code_t pixman_format;
+    int minstride;
 
     if (! CAIRO_FORMAT_VALID (format))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
 
     if ((stride & (CAIRO_STRIDE_ALIGNMENT-1)) != 0)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_STRIDE));
+
+    minstride = cairo_format_stride_for_width (format, width);
+    if (stride < 0) {
+	if (stride > -minstride) {
+	    return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_STRIDE));
+	}
+    } else {
+	if (stride < minstride) {
+	    return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_STRIDE));
+	}
+    }
 
     pixman_format = _cairo_format_to_pixman_format_code (format);
 
