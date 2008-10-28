@@ -208,13 +208,15 @@ _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
     return 0;
 }
 
-cairo_xlib_display_t *
-_cairo_xlib_display_get (Display *dpy)
+cairo_status_t
+_cairo_xlib_display_get (Display *dpy,
+			 cairo_xlib_display_t **out)
 {
     cairo_xlib_display_t *display;
     cairo_xlib_display_t **prev;
     XExtCodes *codes;
     int render_major, render_minor;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     /* There is an apparent deadlock between this mutex and the
      * mutex for the display, but it's actually safe. For the
@@ -247,7 +249,7 @@ _cairo_xlib_display_get (Display *dpy)
 
     display = malloc (sizeof (cairo_xlib_display_t));
     if (display == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto UNLOCK;
     }
 
@@ -261,7 +263,7 @@ _cairo_xlib_display_get (Display *dpy)
 
     codes = XAddExtension (dpy);
     if (codes == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	free (display);
 	display = NULL;
 	goto UNLOCK;
@@ -316,7 +318,8 @@ _cairo_xlib_display_get (Display *dpy)
 
 UNLOCK:
     CAIRO_MUTEX_UNLOCK (_cairo_xlib_display_mutex);
-    return display;
+    *out = display;
+    return status;
 }
 
 void

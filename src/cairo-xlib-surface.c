@@ -2510,6 +2510,7 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     cairo_xlib_surface_t *surface;
     cairo_xlib_display_t *display;
     cairo_xlib_screen_info_t *screen_info;
+    cairo_status_t status;
 
     CAIRO_MUTEX_INITIALIZE ();
 
@@ -2540,9 +2541,9 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     if (depth == 0)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_VISUAL));
 
-    display = _cairo_xlib_display_get (dpy);
-    if (display == NULL)
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+    status = _cairo_xlib_display_get (dpy, &display);
+    if (status)
+	return _cairo_surface_create_in_error (status);
 
     screen_info = _cairo_xlib_screen_info_get (display, screen);
     if (screen_info == NULL) {
@@ -3139,6 +3140,7 @@ _cairo_xlib_surface_font_init (Display		    *dpy,
 			       cairo_scaled_font_t  *scaled_font)
 {
     cairo_xlib_surface_font_private_t	*font_private;
+    cairo_status_t status;
     int i;
 
     font_private = malloc (sizeof (cairo_xlib_surface_font_private_t));
@@ -3146,10 +3148,10 @@ _cairo_xlib_surface_font_init (Display		    *dpy,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     font_private->scaled_font = scaled_font;
-    font_private->display = _cairo_xlib_display_get (dpy);
-    if (font_private->display == NULL) {
+    status = _cairo_xlib_display_get (dpy, &font_private->display);
+    if (status) {
 	free (font_private);
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return status;
     }
 
     /* initialize and hook into the CloseDisplay callback */

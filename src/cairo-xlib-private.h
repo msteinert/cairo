@@ -108,8 +108,8 @@ struct _cairo_xlib_screen_info {
     cairo_array_t visuals;
 };
 
-cairo_private cairo_xlib_display_t *
-_cairo_xlib_display_get (Display *display);
+cairo_private cairo_status_t
+_cairo_xlib_display_get (Display *display, cairo_xlib_display_t **out);
 
 cairo_private cairo_xlib_display_t *
 _cairo_xlib_display_reference (cairo_xlib_display_t *info);
