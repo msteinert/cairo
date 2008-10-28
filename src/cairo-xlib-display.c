@@ -214,7 +214,7 @@ _cairo_xlib_display_get (Display *dpy)
     cairo_xlib_display_t *display;
     cairo_xlib_display_t **prev;
     XExtCodes *codes;
-    int major_unused, minor_unused;
+    int render_major, render_minor;
 
     /* There is an apparent deadlock between this mutex and the
      * mutex for the display, but it's actually safe. For the
@@ -257,7 +257,7 @@ _cairo_xlib_display_get (Display *dpy)
      * add our hook. For now, that means Render, so we call into its
      * QueryVersion function to ensure it gets initialized.
      */
-    XRenderQueryVersion (dpy, &major_unused, &minor_unused);
+    XRenderQueryVersion (dpy, &render_major, &render_minor);
 
     codes = XAddExtension (dpy);
     if (codes == NULL) {
@@ -279,6 +279,8 @@ _cairo_xlib_display_get (Display *dpy)
     display->close_display_hooks = NULL;
     display->closed = FALSE;
 
+    display->render_major = render_major;
+    display->render_minor = render_minor;
     memset (display->cached_xrender_formats, 0,
 	    sizeof (display->cached_xrender_formats));
 

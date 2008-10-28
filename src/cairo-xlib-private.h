@@ -64,6 +64,8 @@ struct _cairo_xlib_display {
     Display *display;
     cairo_xlib_screen_info_t *screens;
 
+    int render_major;
+    int render_minor;
     XRenderPictFormat *cached_xrender_formats[CAIRO_FORMAT_A1 + 1];
 
     cairo_xlib_job_t *workqueue;

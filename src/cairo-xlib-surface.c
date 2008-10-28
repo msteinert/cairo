@@ -2561,11 +2561,8 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     surface->close_display_hook.func = _cairo_xlib_surface_detach_display;
     _cairo_xlib_add_close_display_hook (display, &surface->close_display_hook);
 
-    if (! XRenderQueryVersion (dpy, &surface->render_major, &surface->render_minor)) {
-	surface->render_major = -1;
-	surface->render_minor = -1;
-    }
-
+    surface->render_major = display->render_major;
+    surface->render_minor = display->render_minor;
     if (CAIRO_SURFACE_RENDER_HAS_CREATE_PICTURE (surface)) {
 	if (!xrender_format) {
 	    if (visual) {
