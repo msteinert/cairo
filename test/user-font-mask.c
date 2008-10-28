@@ -42,8 +42,8 @@
 static cairo_test_draw_function_t draw;
 
 static const cairo_test_t test = {
-    "user-font-image",
-    "Tests a user-font using bitmap images",
+    "user-font-mask",
+    "Tests a user-font using cairo_mask with bitmap images",
 #ifndef ROTATED
     WIDTH, HEIGHT,
 #else

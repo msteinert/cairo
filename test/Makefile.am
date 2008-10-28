@@ -184,7 +184,7 @@ unantialiased-shapes$(EXEEXT)				\
 unbounded-operator$(EXEEXT)				\
 user-data$(EXEEXT)					\
 user-font$(EXEEXT)					\
-user-font-image$(EXEEXT)				\
+user-font-mask$(EXEEXT)					\
 user-font-proxy$(EXEEXT)				\
 user-font-rescale$(EXEEXT)				\
 zero-alpha$(EXEEXT)
@@ -937,7 +937,7 @@ REFERENCE_IMAGES = \
 	user-font-ps3-ref.png \
 	user-font-svg12-ref.png	\
 	user-font-svg11-ref.png	\
-	user-font-image-ref.png	\
+	user-font-mask-ref.png	\
 	user-font-proxy-ref.png	\
 	user-font-proxy-pdf-ref.png	\
 	user-font-proxy-ps2-ref.png	\
