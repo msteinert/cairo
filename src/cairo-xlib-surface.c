@@ -2545,10 +2545,10 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     if (status)
 	return _cairo_surface_create_in_error (status);
 
-    screen_info = _cairo_xlib_screen_info_get (display, screen);
-    if (screen_info == NULL) {
+    status = _cairo_xlib_screen_info_get (display, screen, &screen_info);
+    if (status) {
 	_cairo_xlib_display_destroy (display);
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+	return _cairo_surface_create_in_error (status);
     }
 
     surface = malloc (sizeof (cairo_xlib_surface_t));

@@ -318,15 +318,17 @@ _cairo_xlib_screen_info_destroy (cairo_xlib_screen_info_t *info)
     free (info);
 }
 
-cairo_xlib_screen_info_t *
-_cairo_xlib_screen_info_get (cairo_xlib_display_t *display, Screen *screen)
+cairo_status_t
+_cairo_xlib_screen_info_get (cairo_xlib_display_t *display,
+			     Screen *screen,
+			     cairo_xlib_screen_info_t **out)
 {
     cairo_xlib_screen_info_t *info = NULL, **prev;
 
     CAIRO_MUTEX_LOCK (display->mutex);
     if (display->closed) {
 	CAIRO_MUTEX_UNLOCK (display->mutex);
-	return NULL;
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
     }
 
     for (prev = &display->screens; (info = *prev); prev = &(*prev)->next) {
@@ -348,35 +350,41 @@ _cairo_xlib_screen_info_get (cairo_xlib_display_t *display, Screen *screen)
 	info = _cairo_xlib_screen_info_reference (info);
     } else {
 	info = malloc (sizeof (cairo_xlib_screen_info_t));
-	if (info != NULL) {
-	    CAIRO_REFERENCE_COUNT_INIT (&info->ref_count, 2); /* Add one for display cache */
-	    CAIRO_MUTEX_INIT (info->mutex);
-	    info->display = _cairo_xlib_display_reference (display);
-	    info->screen = screen;
-	    info->has_render = FALSE;
-	    info->has_font_options = FALSE;
-	    memset (info->gc, 0, sizeof (info->gc));
-	    info->gc_needs_clip_reset = 0;
+	if (info == NULL)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-	    _cairo_array_init (&info->visuals,
-			       sizeof (cairo_xlib_visual_info_t*));
+	CAIRO_REFERENCE_COUNT_INIT (&info->ref_count, 2); /* Add one for display cache */
+	CAIRO_MUTEX_INIT (info->mutex);
+	info->display = _cairo_xlib_display_reference (display);
+	info->screen = screen;
+	info->has_render = FALSE;
+	info->has_font_options = FALSE;
+	memset (info->gc, 0, sizeof (info->gc));
+	info->gc_needs_clip_reset = 0;
 
-	    if (screen) {
-		Display *dpy = display->display;
-		int event_base, error_base;
+	_cairo_array_init (&info->visuals,
+			   sizeof (cairo_xlib_visual_info_t*));
 
-		info->has_render = (XRenderQueryExtension (dpy, &event_base, &error_base) &&
-			(XRenderFindVisualFormat (dpy, DefaultVisual (dpy, DefaultScreen (dpy))) != 0));
-	    }
+	if (screen) {
+	    Display *dpy = display->display;
+	    int event_base, error_base;
 
-	    CAIRO_MUTEX_LOCK (display->mutex);
-	    info->next = display->screens;
-	    display->screens = info;
-	    CAIRO_MUTEX_UNLOCK (display->mutex);
+	    info->has_render = (XRenderQueryExtension (dpy, &event_base, &error_base) &&
+		    (XRenderFindVisualFormat (dpy, DefaultVisual (dpy, DefaultScreen (dpy))) != 0));
 	}
+
+	/* Small window of opportunity for two screen infos for the same
+	 * Screen - just wastes a little bit of memory but should not cause
+	 * any corruption.
+	 */
+	CAIRO_MUTEX_LOCK (display->mutex);
+	info->next = display->screens;
+	display->screens = info;
+	CAIRO_MUTEX_UNLOCK (display->mutex);
     }
 
-    return info;
+    *out = info;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static int
