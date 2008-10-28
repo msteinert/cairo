@@ -900,7 +900,8 @@ _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface)
 
     if (surface->gc == NULL) {
 	surface->gc = _cairo_xlib_screen_get_gc (surface->screen_info,
-						 surface->depth);
+						 surface->depth,
+						 &surface->clip_dirty);
 	if (surface->gc == NULL) {
 	    gcv.graphics_exposures = False;
 	    surface->gc = XCreateGC (surface->dpy, surface->drawable,
@@ -908,9 +909,9 @@ _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface)
 	    if (!surface->gc)
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
+    }
 
-	_cairo_xlib_surface_set_gc_clip_rects (surface);
-    } else if (surface->clip_dirty & CAIRO_XLIB_SURFACE_CLIP_DIRTY_GC)
+    if (surface->clip_dirty & CAIRO_XLIB_SURFACE_CLIP_DIRTY_GC)
 	_cairo_xlib_surface_set_gc_clip_rects (surface);
 
     return CAIRO_STATUS_SUCCESS;

@@ -57,6 +57,8 @@
 #include "cairo-xlib-private.h"
 #include "cairo-xlib-xrender-private.h"
 
+#include "cairo-xlib-surface-private.h"
+
 #include <fontconfig/fontconfig.h>
 
 static int
@@ -404,7 +406,9 @@ depth_to_index (int depth)
 }
 
 GC
-_cairo_xlib_screen_get_gc (cairo_xlib_screen_info_t *info, int depth)
+_cairo_xlib_screen_get_gc (cairo_xlib_screen_info_t *info,
+			   int depth,
+			   unsigned int *dirty)
 {
     GC gc;
     cairo_bool_t needs_reset;
@@ -419,7 +423,7 @@ _cairo_xlib_screen_get_gc (cairo_xlib_screen_info_t *info, int depth)
     CAIRO_MUTEX_UNLOCK (info->mutex);
 
     if (needs_reset)
-	XSetClipMask(info->display->display, gc, None);
+	*dirty |= CAIRO_XLIB_SURFACE_CLIP_DIRTY_GC;
 
     return gc;
 }

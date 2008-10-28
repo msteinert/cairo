@@ -152,9 +152,15 @@ cairo_private void
 _cairo_xlib_screen_info_close_display (cairo_xlib_screen_info_t *info);
 
 cairo_private GC
-_cairo_xlib_screen_get_gc (cairo_xlib_screen_info_t *info, int depth);
+_cairo_xlib_screen_get_gc (cairo_xlib_screen_info_t *info,
+			   int depth,
+			   unsigned int *need_reset);
+
 cairo_private cairo_status_t
-_cairo_xlib_screen_put_gc (cairo_xlib_screen_info_t *info, int depth, GC gc, cairo_bool_t reset_clip);
+_cairo_xlib_screen_put_gc (cairo_xlib_screen_info_t *info,
+			   int depth,
+			   GC gc,
+			   cairo_bool_t reset_clip);
 
 cairo_private cairo_font_options_t *
 _cairo_xlib_screen_get_font_options (cairo_xlib_screen_info_t *info);
