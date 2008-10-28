@@ -888,8 +888,9 @@ _cairo_xlib_surface_ensure_dst_picture (cairo_xlib_surface_t    *surface)
 						     surface->drawable,
 						     surface->xrender_format,
 						     0, NULL);
-	_cairo_xlib_surface_set_picture_clip_rects (surface);
-    } else if (surface->clip_dirty & CAIRO_XLIB_SURFACE_CLIP_DIRTY_PICTURE)
+    }
+
+    if (surface->clip_dirty & CAIRO_XLIB_SURFACE_CLIP_DIRTY_PICTURE)
 	_cairo_xlib_surface_set_picture_clip_rects (surface);
 }
 
