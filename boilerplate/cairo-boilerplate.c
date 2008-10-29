@@ -525,6 +525,10 @@ static cairo_boilerplate_target_t targets[] =
       _cairo_boilerplate_svg_surface_write_to_png,
       _cairo_boilerplate_svg_cleanup,
       NULL, TRUE },
+/* Disable the svg12 testing for the 1.8.2 release, but in a way that it
+ * will come back on immediately afterward even if we forget to remove
+ * this condition. */
+#if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1, 9, 0)
     { "svg12", NULL, CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR_ALPHA, 1,
       _cairo_boilerplate_svg12_create_surface,
       _cairo_boilerplate_svg_force_fallbacks,
@@ -541,6 +545,7 @@ static cairo_boilerplate_target_t targets[] =
       _cairo_boilerplate_svg_surface_write_to_png,
       _cairo_boilerplate_svg_cleanup,
       NULL, TRUE },
+#endif
 #endif
 #if CAIRO_HAS_BEOS_SURFACE
     /* BeOS sometimes produces a slightly different image. Perhaps this
