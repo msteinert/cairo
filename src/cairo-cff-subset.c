@@ -456,7 +456,7 @@ _cairo_dict_init_key (cff_dict_operator_t *key, int operator)
 static cairo_status_t
 cff_dict_create_operator (int            operator,
                           unsigned char *operand,
-                          int            operand_length,
+                          int            size,
 			  cff_dict_operator_t **out)
 {
     cff_dict_operator_t *op;
@@ -466,14 +466,14 @@ cff_dict_create_operator (int            operator,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     _cairo_dict_init_key (op, operator);
-    op->operand = malloc (operand_length);
+    op->operand = malloc (size);
     if (op->operand == NULL) {
         free (op);
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
-    memcpy (op->operand, operand, operand_length);
-    op->operand_length = operand_length;
+    memcpy (op->operand, operand, size);
+    op->operand_length = size;
     op->operand_offset = -1;
 
     *out = op;
