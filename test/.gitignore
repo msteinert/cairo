@@ -148,6 +148,7 @@ paint
 paint-repeat
 paint-source-alpha
 paint-with-alpha
+pass-through
 path-data
 pattern-get-type
 pattern-getters

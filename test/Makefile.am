@@ -121,6 +121,7 @@ paint$(EXEEXT)						\
 paint-repeat$(EXEEXT)					\
 paint-source-alpha$(EXEEXT)				\
 paint-with-alpha$(EXEEXT)				\
+pass-through$(EXEEXT)					\
 pattern-get-type$(EXEEXT)				\
 pattern-getters$(EXEEXT)				\
 pixman-rotate$(EXEEXT)					\
@@ -732,6 +733,8 @@ REFERENCE_IMAGES = \
 	paint-with-alpha-svg11-ref.png	\
 	paint-source-alpha-pdf-ref.png \
 	paint-with-alpha-pdf-ref.png \
+	pass-through-ref.png \
+	pass-through-rgb24-ref.png \
 	pattern-getters-ref.png	\
 	pdf-surface-source-ref.png \
 	pixman-rotate-ref.png	\
