@@ -1872,7 +1872,6 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 	    _cairo_format_bits_per_pixel (glyph_surface->format) )
 	{
 	    cairo_surface_t *new_mask;
-	    cairo_surface_pattern_t mask_pattern;
 
 	    switch (glyph_surface->format) {
 	    case CAIRO_FORMAT_ARGB32:
