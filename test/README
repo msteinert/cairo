@@ -107,6 +107,23 @@ Here are some of the relevant details:
 
   * To test the ps backend, you will need ghostscript version 8.62.
 
+  * Testing the xlib backend is problematic since many X server
+    drivers have bugs that are exercised by the test suite. (Or, if
+    not actual bugs, differ slightly in their output in such a way
+    that the test suite will report errors.) This can be quite handy
+    if you want to debug an X server driver, but since most people
+    don't want to do that, another option is to run against a headless
+    X server that uses only software for all rendering. One such X
+    server is Xvfb which can be started like this:
+
+	Xfvb -screen 0 1280x1024x24 -ac -nolisten tcp :2
+
+    after which the test suite can be run against it like so:
+
+	DISPLAY=:2 make test
+
+    We have been using Xvfb for testing cairo releases and ensuring
+    that all tests behave as expected with this X server.
 
 What if I can't make my system match?
 -------------------------------------
