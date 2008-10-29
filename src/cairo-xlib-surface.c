@@ -669,7 +669,8 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	 * temporary pixmap
 	 */
 	Pixmap pixmap;
-	cairo_status_t status = _cairo_xlib_surface_ensure_gc (surface);
+
+	status = _cairo_xlib_surface_ensure_gc (surface);
 	if (status)
 	    return status;
 
