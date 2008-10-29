@@ -187,7 +187,6 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 
     if (info & CAIRO_SCALED_GLYPH_INFO_SURFACE) {
 	cairo_surface_t	*surface;
-	cairo_status_t status = CAIRO_STATUS_SUCCESS;
 	cairo_format_t format;
 	int width, height;
 
