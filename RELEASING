@@ -20,6 +20,11 @@ Here are the steps to follow to create a new cairo release:
 	(But the tar file isn't actually ready yet, as we still have
 	some more steps to follow).
 
+	Note that it's allowed (and perhaps recommended) to run the
+	"make distcheck" step against an all-software X server such as
+	Xvfb to avoid getting tripped up by any	X-server-driver-specific
+	bugs. See test/README for details
+
 	If you get errors about local PLT entries, you get the list of
 	cairo entries with the error.  For each of these, a call to
 	slim_hidden_def and slim_hidden_proto is needed in the cairo
