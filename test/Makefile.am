@@ -1198,9 +1198,18 @@ CLEANFILES +=					\
 	index.html				\
 	ref.hash				\
 	png-test.png				\
+	create-for-stream.pdf			\
+	create-for-stream.ps			\
+	create-for-stream.svg			\
 	svg-surface-source.svg			\
 	pdf-surface-source.pdf			\
 	ps-surface-source.ps			\
+	pdf-features.pdf			\
+	ps-features.ps				\
+	svg-clip.svg				\
+	svg-surface.svg				\
+	multi-page.pdf				\
+	multi-page.ps				\
 	$(NULL)
 
 # This used to be a simple 'echo ${RM} *.ps *.pdf *.svg *.etc', but
