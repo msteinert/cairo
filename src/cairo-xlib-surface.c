@@ -1302,7 +1302,6 @@ _cairo_xlib_surface_create_solid_pattern_surface (void                  *abstrac
     if (status)
 	goto BAIL;
 
-
   BAIL:
     cairo_surface_destroy (&image->base);
 
@@ -1866,7 +1865,7 @@ _cairo_xlib_surface_solid_fill_rectangles (cairo_xlib_surface_t    *surface,
 					   cairo_rectangle_int_t   *rects,
 					   int			   num_rects)
 {
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_status_t status;
     cairo_solid_pattern_t solid;
     cairo_surface_t *solid_surface = NULL;
     cairo_surface_attributes_t attrs;
@@ -1878,7 +1877,7 @@ _cairo_xlib_surface_solid_fill_rectangles (cairo_xlib_surface_t    *surface,
     if (status)
         return status;
 
-    status = _cairo_pattern_acquire_surface (&solid.base, (cairo_surface_t *) surface,
+    status = _cairo_pattern_acquire_surface (&solid.base, &surface->base,
 					     0, 0,
 					     ARRAY_LENGTH (dither_pattern[0]),
 					     ARRAY_LENGTH (dither_pattern),
@@ -1887,7 +1886,7 @@ _cairo_xlib_surface_solid_fill_rectangles (cairo_xlib_surface_t    *surface,
     if (status)
         return status;
 
-    if (!_cairo_surface_is_xlib (solid_surface)) {
+    if (! _cairo_surface_is_xlib (solid_surface)) {
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
 	goto BAIL;
     }
@@ -1895,7 +1894,8 @@ _cairo_xlib_surface_solid_fill_rectangles (cairo_xlib_surface_t    *surface,
     XSetTSOrigin (surface->dpy, surface->gc,
 		  - (surface->base.device_transform.x0 + attrs.x_offset),
 		  - (surface->base.device_transform.y0 + attrs.y_offset));
-    XSetTile (surface->dpy, surface->gc, ((cairo_xlib_surface_t *) solid_surface)->drawable);
+    XSetTile (surface->dpy, surface->gc,
+	      ((cairo_xlib_surface_t *) solid_surface)->drawable);
     XSetFillStyle (surface->dpy, surface->gc, FillTiled);
 
     for (i = 0; i < num_rects; i++) {
