@@ -242,3 +242,6 @@ cairo_glitz_sources = cairo-glitz-surface.c
 
 cairo_directfb_headers = cairo-directfb.h
 cairo_directfb_sources = cairo-directfb-surface.c
+
+cairo_sdl_headers = cairo-sdl.h
+cairo_sdl_sources = cairo-sdl-surface.c

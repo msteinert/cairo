@@ -373,6 +373,7 @@ AC_DEFUN([CAIRO_REPORT],
 	echo "  glitz:         $use_glitz"
 	echo "  BeOS:          $use_beos"
 	echo "  DirectFB:      $use_directfb"
+	echo "  SDL:           $use_sdl"
 	echo ""
 	echo "The following font backends:"
 	echo "  User:          yes (always builtin)"
