@@ -938,7 +938,11 @@ REFERENCE_IMAGES = \
 	user-font-ps3-ref.png \
 	user-font-svg12-ref.png	\
 	user-font-svg11-ref.png	\
-	user-font-mask-ref.png	\
+	user-font-mask-ref.png		\
+	user-font-mask-pdf-ref.png	\
+	user-font-mask-ps2-ref.png	\
+	user-font-mask-ps3-ref.png	\
+	user-font-mask-svg11-ref.png	\
 	user-font-proxy-ref.png	\
 	user-font-proxy-pdf-ref.png	\
 	user-font-proxy-ps2-ref.png	\
@@ -1017,13 +1021,6 @@ $(REFERENCE_IMAGES)
 #                         /Interpolate support - which causes a half-pixel
 #                         shift in GS (and consequently virtually every
 #                         image/fallback-image using test to FAIL).
-# user-font-mask	- Two bugs here: an unsigned promotion issue and
-#			  non-negative pattern extents. Chris claims
-#			  to have fixes in hand for both, but doesn't
-#			  feel comfortable pushing them just before
-#			  the 1.8.2 release. So if 1.9.x is open and
-#			  this comment is still here, please pester
-#			  Chris.
 XFAIL_TESTS =					\
 alpha-similar$(EXEEXT)				\
 big-line$(EXEEXT)				\
@@ -1040,7 +1037,7 @@ surface-pattern$(EXEEXT)			\
 surface-pattern-big-scale-down$(EXEEXT)		\
 surface-pattern-scale-down$(EXEEXT)		\
 surface-pattern-scale-up$(EXEEXT)		\
-user-font-mask$(EXEEXT)
+$(NULL)
 
 # Any test that doesn't generate a log file goes here
 NOLOG_TESTS =			\
