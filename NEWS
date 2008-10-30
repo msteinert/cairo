@@ -110,7 +110,7 @@ xlib: Avoid crash due to attempting XRender calls on pixmaps with
 formats not supported by the Render extension (Chris Wilson):
 
 	XRender crashes due to NULL pointer from Cairo on SGI O2
-	https://bugs.freedesktop.org/show_bug.cgi?id=1173
+	https://bugs.freedesktop.org/show_bug.cgi?id=11734
 
 xlib: Add support for XImages with depth of 4, 20, 24, or 28 bits
 (Chris Wilson):
