@@ -35,6 +35,7 @@ cairo_perf_SOURCES =		\
 	subimage_copy.c		\
 	tessellate.c		\
 	text.c			\
+	twin.c			\
 	unaligned-clip.c	\
 	world-map.c		\
 	world-map.h		\

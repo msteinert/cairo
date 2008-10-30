@@ -938,6 +938,7 @@ typedef struct _cairo_traps {
 #define CAIRO_WIN32_FONT_FAMILY_DEFAULT "Arial"
 #define CAIRO_QUARTZ_FONT_FAMILY_DEFAULT  "Helvetica"
 #define CAIRO_FT_FONT_FAMILY_DEFAULT     ""
+#define CAIRO_USER_FONT_FAMILY_DEFAULT     "<cairo>"
 
 #if   CAIRO_HAS_WIN32_FONT
 

@@ -578,7 +578,8 @@ _cairo_toy_font_face_scaled_font_get_implementation (void                *abstra
     if (font_face->base.status)
 	return font_face->base.status;
 
-    if (CAIRO_SCALED_FONT_BACKEND_DEFAULT != &_cairo_user_scaled_font_backend)
+    if (CAIRO_SCALED_FONT_BACKEND_DEFAULT != &_cairo_user_scaled_font_backend &&
+	0 != strcmp (font_face->family, CAIRO_USER_FONT_FAMILY_DEFAULT))
     {
 	const cairo_scaled_font_backend_t * backend = CAIRO_SCALED_FONT_BACKEND_DEFAULT;
 
@@ -617,7 +618,8 @@ _cairo_toy_font_face_scaled_font_create (void                *abstract_font_face
     if (status)
 	return status;
 
-    if (CAIRO_SCALED_FONT_BACKEND_DEFAULT != &_cairo_user_scaled_font_backend)
+    if (CAIRO_SCALED_FONT_BACKEND_DEFAULT != &_cairo_user_scaled_font_backend &&
+	0 != strcmp (font_face->family, CAIRO_USER_FONT_FAMILY_DEFAULT))
     {
 	const cairo_scaled_font_backend_t * backend = CAIRO_SCALED_FONT_BACKEND_DEFAULT;
 
