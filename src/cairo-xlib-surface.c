@@ -1055,7 +1055,14 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 		else
 		    in_pixel = row[x];
 
-		a = _field_to_8 (in_pixel & image_masks.alpha_mask, i_a_width, i_a_shift);
+		/* If the incoming image has no alpha channel, then the input
+		 * is opaque and the output should have the maximum alpha value.
+		 * For all other channels, their absence implies 0.
+		 */
+		if (image_masks.alpha_mask == 0x0)
+		    a = 0xff;
+		else
+		    a = _field_to_8 (in_pixel & image_masks.alpha_mask, i_a_width, i_a_shift);
 		r = _field_to_8 (in_pixel & image_masks.red_mask  , i_r_width, i_r_shift);
 		g = _field_to_8 (in_pixel & image_masks.green_mask, i_g_width, i_g_shift);
 		b = _field_to_8 (in_pixel & image_masks.blue_mask , i_b_width, i_b_shift);
