@@ -1,3 +1,113 @@
+Release 1.8.2 (2008-10-29 Carl Worth <cworth@cworth.org>)
+=========================================================
+The cairo community is pleased to announce the 1.8.2 release of the
+cairo graphics library. This is a minor update to cairo, with a large
+number of bug fixes since cairo 1.8.0. It is being released just short
+of one month since cairo 1.8.0.
+
+Allow users to set CAIRO_WIN32_STATIC_BUILD when doing a static build
+on win32 to avoid doing any __declspec(dllimport) on public functions
+(Behdad Esfahbod).
+
+Dramatically speed up compilation with dolt (removes much ot the
+libttol overhead) (Behdad Esfahbod with thanks to Josh Triplett).
+
+Some minor optimizations to tessellator (special-cased comparisons,
+faster insert for skiplist, etc.) (Chris Wilson).
+
+Optimize away fractional translation component when doing
+EXTEND_NEAREST filtering, (for better performance).
+
+Allow cloning sub-regions of similar surfaces to fix this bug:
+(Chris Wilson)
+
+	Crafted gif file will crash firefox
+	[XError: 'BadAlloc (insufficient resources for operation)']
+	https://bugzilla.mozilla.org/show_bug.cgi?id=424333
+
+Fix some matrix confusion to fix this regression (Chris Wilson).
+
+	Transculent star exports in a wrong way to PDF
+	https://bugs.launchpad.net/inkscape/+bug/234546
+
+Fix some long-standing bugs with respect to properly computing the
+extents of transformed, filtered surfaces (Owen Taylor, Carl Worth,
+and Chris Wilson):
+
+	Bad clipping with EXTEND_NONE
+	http://bugs.freedesktop.org/show_bug.cgi?id=15349
+
+	Improve filtering handling in cairo-pattern.c
+	http://bugs.freedesktop.org/show_bug.cgi?id=15367
+
+	Many thanks to Chris Wilson for digging out and cleaning up
+	these fixes.
+
+Avoid crash due to attempting XRender calls on pixmaps with formats
+not supported by the Render extension (Chris Wilson):
+
+	XRender crashes due to NULL pointer from Cairo on SGI O2
+	https://bugs.freedesktop.org/show_bug.cgi?id=1173
+
+Fix compilation on Solaris 10 (Chris Wilson):
+
+	Cairo requires -DREENTRANT (along with	-D_POSIX_THREAD_SEMANTICS)
+	to compile on Solaris 10 with pthreads
+	https://bugs.freedesktop.org/show_bug.cgi?id=18010
+
+xlib: Add support for XImages with dpeth of 4, 20, 24, or 28 bits
+(Chris Wilson):
+
+	cairo doesn't support 24 bits per pixel mode on X11
+	https://bugs.freedesktop.org/show_bug.cgi?id=9102
+
+Fix very old bug causing dashes to be rendered at the wrong length in
+fallback images (Adrian Johnson)
+
+	Dashed strokes too long in fallback images
+	https://bugs.freedesktop.org/show_bug.cgi?id=9189
+
+Fix broken dashing when a dashed path starts outside the clip region
+(Chris Wilson).
+
+Avoid range overflow when computing large patterns (Benjamin Otte and
+Chris Wilson).
+
+Avoid crashing due to an invalid font with an incorrect entry in its
+CMAP table (Adrian Johnson).
+
+Fix bugs in computing maximum size of text requests that can be sent
+with the Render extension, (avoiding potential crashes when rendering
+large amounts of text) (Behdad Esfahbod and Chris Wilson).
+
+Avoid mistakenly considering two xlib surfaces as similar just because
+their depths match (while their Render formats do not) (Karl
+Tomlinson).
+
+Fix rendering of operators unbounded by the mask (Chris Wilson).
+
+Fix compilation on systems without compiler support for a native
+64-bit type (Chris Wilson).
+
+Fix several cases of missing error-status propagation. (Chris Wilson,
+doing the work he seems to never tire of).
+
+Fix several locking issues found with the lockdep valgrind skin (Chris
+Wilson).
+
+PS: Fix slight miscaling of bitmapped fonts (Adrian Johnson)
+
+SVG: Correctly emit comp-op for paint, mask, and show_glyphs
+operations (Emmanuel Pacaud).
+
+SVG: Use finer-grained fallbacks for SVG 1.2 (as PS and PDF backends
+have been doing since .6.0) (Chris Wilson).
+
+Win32: Fallback to DIB if DDB create fails for
+cairo_surface_create_similar (Vladimir Vukicevic).
+
+Win32: Fix compatibility with Windows Mobile (Vladimir Vukicevic).
+
 Release 1.8.0 (2008-09-25 Carl Worth <cworth@cworth.org>)
 =========================================================
 The cairo community is happy (and relieved) to announce the 1.8.0
