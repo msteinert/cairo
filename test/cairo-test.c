@@ -95,7 +95,7 @@ static const char *fail_face = "", *normal_face = "";
 #define CAIRO_TEST_REF_SUFFIX "-ref.png"
 #define CAIRO_TEST_DIFF_SUFFIX "-diff.png"
 
-#define NUM_DEVICE_OFFSETS 1
+#define NUM_DEVICE_OFFSETS 2
 
 static const char *vector_ignored_tests[] = {
     /* We can't match the results of tests that depend on
