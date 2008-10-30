@@ -190,6 +190,7 @@ compare (const cairo_test_context_t *ctx, cairo_surface_t *surface)
     cairo_set_source_surface (cr, surface, 0, 0);
     cairo_paint (cr);
     cairo_destroy (cr);
+    cairo_surface_write_to_png (image, "xlib-expose-event-out.png");
 
     reference = cairo_test_create_surface_from_png (ctx, "xlib-expose-event-ref.png");
     status = image_diff (ctx, reference, image, diff, &result);
