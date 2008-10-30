@@ -9,8 +9,8 @@ Allow users to set CAIRO_WIN32_STATIC_BUILD when doing a static build
 on win32 to avoid doing any __declspec(dllimport) on public functions
 (Behdad Esfahbod).
 
-Dramatically speed up compilation with dolt (removes much ot the
-libttol overhead) (Behdad Esfahbod with thanks to Josh Triplett).
+Dramatically speed up compilation with dolt (removes much of the
+libtool overhead) (Behdad Esfahbod with thanks to Josh Triplett).
 
 Some minor optimizations to tessellator (special-cased comparisons,
 faster insert for skiplist, etc.) (Chris Wilson).
@@ -95,7 +95,7 @@ doing the work he seems to never tire of).
 Fix several locking issues found with the lockdep valgrind skin (Chris
 Wilson).
 
-PS: Fix slight miscaling of bitmapped fonts (Adrian Johnson)
+PS: Fix slight mis-scaling of bitmapped fonts (Adrian Johnson)
 
 SVG: Correctly emit comp-op for paint, mask, and show_glyphs
 operations (Emmanuel Pacaud).
@@ -315,7 +315,7 @@ series:
 	convenience function on the cairo_t is not obviously
 	necessary. An application can easily call:
 
-	cairo_surface_has_show_glyphs (cairo_get_target (Sr));
+	cairo_surface_has_show_glyphs (cairo_get_target (cr));
 
 	as needed.
 
