@@ -612,44 +612,24 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
     cairo_int_status_t status;
     cairo_image_surface_t *image = NULL;
     XImage *ximage;
-    unsigned short x1, y1, x2, y2;
+    cairo_rectangle_int_t extents;
     pixman_format_code_t pixman_format;
     cairo_format_masks_t xlib_masks;
 
-    x1 = 0;
-    y1 = 0;
-    x2 = surface->width;
-    y2 = surface->height;
+    extents.x = 0;
+    extents.y = 0;
+    extents.width  = surface->width;
+    extents.height = surface->height;
 
     if (interest_rect) {
-	cairo_rectangle_int_t rect;
-
-	rect.x = interest_rect->x;
-	rect.y = interest_rect->y;
-	rect.width = interest_rect->width;
-	rect.height = interest_rect->height;
-
-	if (rect.x > x1)
-	    x1 = rect.x;
-	if (rect.y > y1)
-	    y1 = rect.y;
-	if (rect.x + rect.width < x2)
-	    x2 = rect.x + rect.width;
-	if (rect.y + rect.height < y2)
-	    y2 = rect.y + rect.height;
-
-	if (x1 >= x2 || y1 >= y2) {
+	if (! _cairo_rectangle_intersect (&extents, interest_rect)) {
 	    *image_out = NULL;
 	    return CAIRO_STATUS_SUCCESS;
 	}
     }
 
-    if (image_rect) {
-	image_rect->x = x1;
-	image_rect->y = y1;
-	image_rect->width = x2 - x1;
-	image_rect->height = y2 - y1;
-    }
+    if (image_rect)
+	*image_rect = extents;
 
     /* XXX: This should try to use the XShm extension if available */
 
@@ -661,8 +641,8 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 
 	ximage = XGetImage (surface->dpy,
 			    surface->drawable,
-			    x1, y1,
-			    x2 - x1, y2 - y1,
+			    extents.x, extents.y,
+			    extents.width, extents.height,
 			    AllPlanes, ZPixmap);
 
 	XSetErrorHandler (old_handler);
@@ -695,16 +675,18 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 
 	pixmap = XCreatePixmap (surface->dpy,
 				surface->drawable,
-				x2 - x1, y2 - y1,
+				extents.width, extents.height,
 				surface->depth);
 	if (pixmap) {
 	    XCopyArea (surface->dpy, surface->drawable, pixmap, surface->gc,
-		       x1, y1, x2 - x1, y2 - y1, 0, 0);
+		       extents.x, extents.y,
+		       extents.width, extents.height,
+		       0, 0);
 
 	    ximage = XGetImage (surface->dpy,
 				pixmap,
 				0, 0,
-				x2 - x1, y2 - y1,
+				extents.width, extents.height,
 				AllPlanes, ZPixmap);
 
 	    XFreePixmap (surface->dpy, pixmap);
@@ -807,8 +789,8 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	data = cairo_image_surface_get_data (&image->base);
 	rowstride = cairo_image_surface_get_stride (&image->base) >> 2;
 	row = (uint32_t *) data;
-	x0 = x1 + surface->base.device_transform.x0;
-	y0 = y1 + surface->base.device_transform.y0;
+	x0 = extents.x + surface->base.device_transform.x0;
+	y0 = extents.y + surface->base.device_transform.y0;
 	for (y = 0, y_off = y0 % ARRAY_LENGTH (dither_pattern);
 	     y < ximage->height;
 	     y++, y_off = (y_off+1) % ARRAY_LENGTH (dither_pattern)) {

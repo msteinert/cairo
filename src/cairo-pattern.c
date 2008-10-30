@@ -1908,6 +1908,7 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 	attr->acquired = TRUE;
     } else {
 	cairo_rectangle_int_t extents;
+	cairo_bool_t is_empty;
 
 	status = _cairo_surface_get_extents (pattern->surface, &extents);
 	if (status)
@@ -1932,8 +1933,8 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 	    } else {
 		double x1 = x;
 		double y1 = y;
-		double x2 = x + width;
-		double y2 = y + height;
+		double x2 = x + (int) width;
+		double y2 = y + (int) height;
 
 		_cairo_matrix_transform_bounding_box  (&attr->matrix,
 						       &x1, &y1, &x2, &y2,
@@ -1950,8 +1951,10 @@ _cairo_pattern_acquire_surface_for_surface (cairo_surface_pattern_t   *pattern,
 	    sampled_area.y += ty;
 
 	    /* Never acquire a larger area than the source itself */
-	    _cairo_rectangle_intersect (&extents, &sampled_area);
+	    is_empty = _cairo_rectangle_intersect (&extents, &sampled_area);
 	}
+
+	/* XXX can we use is_empty? */
 
 	status = _cairo_surface_clone_similar (dst, pattern->surface,
 					       extents.x, extents.y,
@@ -2237,8 +2240,8 @@ _cairo_pattern_get_extents (cairo_pattern_t         *pattern,
 	_cairo_pattern_analyze_filter (surface_pattern, &pad);
 	x1 = surface_extents.x - pad;
 	y1 = surface_extents.y - pad;
-	x2 = surface_extents.x + surface_extents.width + pad;
-	y2 = surface_extents.y + surface_extents.height + pad;
+	x2 = surface_extents.x + (int) surface_extents.width  + pad;
+	y2 = surface_extents.y + (int) surface_extents.height + pad;
 
 	imatrix = pattern->matrix;
 	status = cairo_matrix_invert (&imatrix);
@@ -2250,11 +2253,11 @@ _cairo_pattern_get_extents (cairo_pattern_t         *pattern,
 					      NULL);
 
 	x1 = floor (x1);
-	if (x1 < 0)
-	    x1 = 0;
+	if (x1 < CAIRO_RECT_INT_MIN)
+	    x1 = CAIRO_RECT_INT_MIN;
 	y1 = floor (y1);
-	if (y1 < 0)
-	    y1 = 0;
+	if (y1 < CAIRO_RECT_INT_MIN)
+	    y1 = CAIRO_RECT_INT_MIN;
 
 	x2 = ceil (x2);
 	if (x2 > CAIRO_RECT_INT_MAX)

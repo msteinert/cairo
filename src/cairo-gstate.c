@@ -785,12 +785,25 @@ _cairo_gstate_path_extents (cairo_gstate_t     *gstate,
 			    double *x2, double *y2)
 {
     cairo_status_t status;
+    double px1, py1, px2, py2;
 
-    status = _cairo_path_fixed_bounds (path, x1, y1, x2, y2, gstate->tolerance);
+    status = _cairo_path_fixed_bounds (path,
+				       &px1, &py1, &px2, &py2,
+				       gstate->tolerance);
     if (status)
 	return status;
 
-    _cairo_gstate_backend_to_user_rectangle (gstate, x1, y1, x2, y2, NULL);
+    _cairo_gstate_backend_to_user_rectangle (gstate,
+					     &px1, &py1, &px2, &py2,
+					     NULL);
+    if (x1)
+	*x1 = px1;
+    if (y1)
+	*y1 = py1;
+    if (x2)
+	*x2 = px2;
+    if (y2)
+	*y2 = py2;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1083,18 +1096,26 @@ _cairo_gstate_traps_extents_to_user_rectangle (cairo_gstate_t	  *gstate,
 	if (y2)
 	    *y2 = 0.0;
     } else {
+	double px1, py1, px2, py2;
+
 	_cairo_traps_extents (traps, &extents);
 
-	if (x1)
-	    *x1 = _cairo_fixed_to_double (extents.p1.x);
-	if (y1)
-	    *y1 = _cairo_fixed_to_double (extents.p1.y);
-	if (x2)
-	    *x2 = _cairo_fixed_to_double (extents.p2.x);
-	if (y2)
-	    *y2 = _cairo_fixed_to_double (extents.p2.y);
+	px1 = _cairo_fixed_to_double (extents.p1.x);
+	py1 = _cairo_fixed_to_double (extents.p1.y);
+	px2 = _cairo_fixed_to_double (extents.p2.x);
+	py2 = _cairo_fixed_to_double (extents.p2.y);
 
-        _cairo_gstate_backend_to_user_rectangle (gstate, x1, y1, x2, y2, NULL);
+        _cairo_gstate_backend_to_user_rectangle (gstate,
+						 &px1, &py1, &px2, &py2,
+						 NULL);
+	if (x1)
+	    *x1 = px1;
+	if (y1)
+	    *y1 = py1;
+	if (x2)
+	    *x2 = px2;
+	if (y2)
+	    *y2 = py2;
     }
 }
 
@@ -1128,7 +1149,8 @@ _cairo_gstate_stroke_extents (cairo_gstate_t	 *gstate,
 						gstate->tolerance,
 						&traps);
     if (status == CAIRO_STATUS_SUCCESS) {
-        _cairo_gstate_traps_extents_to_user_rectangle(gstate, &traps, x1, y1, x2, y2);
+	_cairo_gstate_traps_extents_to_user_rectangle (gstate, &traps,
+						       x1, y1, x2, y2);
     }
 
     _cairo_traps_fini (&traps);
@@ -1152,7 +1174,8 @@ _cairo_gstate_fill_extents (cairo_gstate_t     *gstate,
 					      gstate->tolerance,
 					      &traps);
     if (status == CAIRO_STATUS_SUCCESS) {
-        _cairo_gstate_traps_extents_to_user_rectangle(gstate, &traps, x1, y1, x2, y2);
+	_cairo_gstate_traps_extents_to_user_rectangle (gstate, &traps,
+						       x1, y1, x2, y2);
     }
 
     _cairo_traps_fini (&traps);
@@ -1195,26 +1218,34 @@ cairo_status_t
 _cairo_gstate_clip_extents (cairo_gstate_t *gstate,
 		            double         *x1,
 		            double         *y1,
-        		    double         *x2,
-        		    double         *y2)
+			    double         *x2,
+			    double         *y2)
 {
     cairo_rectangle_int_t extents;
+    double px1, py1, px2, py2;
     cairo_status_t status;
-    
+
     status = _cairo_gstate_int_clip_extents (gstate, &extents);
     if (status)
         return status;
 
-    if (x1)
-	*x1 = extents.x;
-    if (y1)
-	*y1 = extents.y;
-    if (x2)
-	*x2 = extents.x + extents.width;
-    if (y2)
-	*y2 = extents.y + extents.height;
+    px1 = extents.x;
+    py1 = extents.y;
+    px2 = extents.x + (int) extents.width;
+    py2 = extents.y + (int) extents.height;
 
-    _cairo_gstate_backend_to_user_rectangle (gstate, x1, y1, x2, y2, NULL);
+    _cairo_gstate_backend_to_user_rectangle (gstate,
+					     &px1, &py1, &px2, &py2,
+					     NULL);
+
+    if (x1)
+	*x1 = px1;
+    if (y1)
+	*y1 = py1;
+    if (x2)
+	*x2 = px2;
+    if (y2)
+	*y2 = py2;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1754,8 +1785,8 @@ _cairo_gstate_transform_glyphs_to_backend (cairo_gstate_t      *gstate,
 	     */
 	    x1 = surface_extents.x - 2*scale;
 	    y1 = surface_extents.y - 2*scale;
-	    x2 = surface_extents.x + surface_extents.width  + scale;
-	    y2 = surface_extents.y + surface_extents.height + scale;
+	    x2 = surface_extents.x + (int) surface_extents.width  + scale;
+	    y2 = surface_extents.y + (int) surface_extents.height + scale;
 	}
 
 	if (!drop)

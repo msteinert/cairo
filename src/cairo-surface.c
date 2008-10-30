@@ -2388,7 +2388,6 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
     cairo_rectangle_int_t dst_rectangle;
     cairo_rectangle_int_t drawn_rectangle;
     cairo_bool_t has_drawn_region = FALSE;
-    cairo_bool_t has_clear_region = FALSE;
     cairo_region_t drawn_region;
     cairo_region_t clear_region;
     cairo_status_t status;
@@ -2400,36 +2399,40 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
     dst_rectangle.y = dst_y;
     dst_rectangle.width = width;
     dst_rectangle.height = height;
+    _cairo_region_init_rect (&clear_region, &dst_rectangle);
 
     drawn_rectangle = dst_rectangle;
 
-    if (src_rectangle)
-        _cairo_rectangle_intersect (&drawn_rectangle, src_rectangle);
+    if (src_rectangle) {
+        if (! _cairo_rectangle_intersect (&drawn_rectangle, src_rectangle))
+	    goto EMPTY;
+    }
 
-    if (mask_rectangle)
-        _cairo_rectangle_intersect (&drawn_rectangle, mask_rectangle);
+    if (mask_rectangle) {
+        if (! _cairo_rectangle_intersect (&drawn_rectangle, mask_rectangle))
+	    goto EMPTY;
+    }
 
     /* Now compute the area that is in dst_rectangle but not in drawn_rectangle
      */
     _cairo_region_init_rect (&drawn_region, &drawn_rectangle);
-    _cairo_region_init_rect (&clear_region, &dst_rectangle);
-
     has_drawn_region = TRUE;
-    has_clear_region = TRUE;
 
-    status = _cairo_region_subtract (&clear_region, &clear_region, &drawn_region);
+    status = _cairo_region_subtract (&clear_region,
+				     &clear_region,
+				     &drawn_region);
     if (status)
         goto CLEANUP_REGIONS;
 
+  EMPTY:
     status = _cairo_surface_fill_region (dst, CAIRO_OPERATOR_SOURCE,
                                          CAIRO_COLOR_TRANSPARENT,
                                          &clear_region);
 
-CLEANUP_REGIONS:
+  CLEANUP_REGIONS:
     if (has_drawn_region)
         _cairo_region_fini (&drawn_region);
-    if (has_clear_region)
-        _cairo_region_fini (&clear_region);
+    _cairo_region_fini (&clear_region);
 
     return _cairo_surface_set_error (dst, status);
 }
