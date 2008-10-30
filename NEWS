@@ -1,23 +1,48 @@
 Release 1.8.2 (2008-10-29 Carl Worth <cworth@cworth.org>)
 =========================================================
 The cairo community is pleased to announce the 1.8.2 release of the
-cairo graphics library. This is a minor update to cairo, with a large
-number of bug fixes since cairo 1.8.0. It is being released just short
-of one month since cairo 1.8.0.
+cairo graphics library. This is the first update to cairo's stable 1.8
+series and contains a large number of bug fixes. It is being released
+just over one month since cairo 1.8.0.
 
-Allow users to set CAIRO_WIN32_STATIC_BUILD when doing a static build
-on win32 to avoid doing any __declspec(dllimport) on public functions
-(Behdad Esfahbod).
+This release consists primarily of bug fixes, but there is one notable
+new feature, (the ability to build cairo without an external font
+backend), and there are a few optimizations as well. See below for
+details on these changes and the most important bug fixes.
 
+While many people have contributed to this release, Chris Wilson
+deserves particular mention. He has contributed well over twice as
+many changes to cairo since 1.8.0 than everyone else combined. We
+greatly appreciate the tremendous efforts of Chris and all cairo
+contributors.
+
+We recommend everyone upgrade to cairo 1.8.2 and hope that everyone
+will have lots of fun with cairo!
+
+-Carl
+
+New feature
+-----------
+It is now possible to build cairo without any font backend, (such as
+freetype, win32 or quartz). This is most useful when the application
+provides custom font rendering through the user-font API. But in the
+case where no external font backend is available, and no user-font is
+provided, cairo will render with a failsafe font, (a stroked font
+covering visible ASCII character). (Behdad Esfahbod)
+
+Optimizations
+-------------
 Dramatically speed up compilation with dolt (removes much of the
 libtool overhead) (Behdad Esfahbod with thanks to Josh Triplett).
 
-Some minor optimizations to tessellator (special-cased comparisons,
+Several minor optimizations to tessellator (special-cased comparisons,
 faster insert for skiplist, etc.) (Chris Wilson).
 
 Optimize away fractional translation component when doing
 EXTEND_NEAREST filtering, (for better performance).
 
+General bug fixes
+-----------------
 Allow cloning sub-regions of similar surfaces to fix this bug
 (Chris Wilson):
 
@@ -27,7 +52,7 @@ Allow cloning sub-regions of similar surfaces to fix this bug
 
 Fix some matrix confusion to fix this regression (Chris Wilson):
 
-	Transculent star exports in a wrong way to PDF
+	Translucent star exports in a wrong way to PDF
 	https://bugs.launchpad.net/inkscape/+bug/234546
 
 Fix some long-standing bugs with respect to properly computing the
@@ -43,23 +68,11 @@ and Chris Wilson):
 	Many thanks to Chris Wilson for digging out and cleaning up
 	these fixes.
 
-Avoid crash due to attempting XRender calls on pixmaps with formats
-not supported by the Render extension (Chris Wilson):
-
-	XRender crashes due to NULL pointer from Cairo on SGI O2
-	https://bugs.freedesktop.org/show_bug.cgi?id=1173
-
 Fix compilation on Solaris 10 (Chris Wilson):
 
 	Cairo requires -DREENTRANT (along with	-D_POSIX_THREAD_SEMANTICS)
 	to compile on Solaris 10 with pthreads
 	https://bugs.freedesktop.org/show_bug.cgi?id=18010
-
-xlib: Add support for XImages with depth of 4, 20, 24, or 28 bits
-(Chris Wilson):
-
-	cairo doesn't support 24 bits per pixel mode on X11
-	https://bugs.freedesktop.org/show_bug.cgi?id=9102
 
 Fix very old bug causing dashes to be rendered at the wrong length in
 fallback images (Adrian Johnson)
@@ -80,10 +93,6 @@ Fix bugs in computing maximum size of text requests that can be sent
 with the Render extension, (avoiding potential crashes when rendering
 large amounts of text) (Behdad Esfahbod and Chris Wilson).
 
-Avoid mistakenly considering two xlib surfaces as similar just because
-their depths match (while their Render formats do not) (Karl
-Tomlinson).
-
 Fix rendering of operators unbounded by the mask (Chris Wilson).
 
 Fix compilation on systems without compiler support for a native
@@ -95,18 +104,40 @@ doing the work he seems to never tire of).
 Fix several locking issues found with the lockdep valgrind skin (Chris
 Wilson).
 
-PS: Fix slight mis-scaling of bitmapped fonts (Adrian Johnson)
+Backend-specific bug fixes
+--------------------------
+xlib: Avoid crash due to attempting XRender calls on pixmaps with
+formats not supported by the Render extension (Chris Wilson):
 
-SVG: Correctly emit comp-op for paint, mask, and show_glyphs
+	XRender crashes due to NULL pointer from Cairo on SGI O2
+	https://bugs.freedesktop.org/show_bug.cgi?id=1173
+
+xlib: Add support for XImages with depth of 4, 20, 24, or 28 bits
+(Chris Wilson):
+
+	cairo doesn't support 24 bits per pixel mode on X11
+	https://bugs.freedesktop.org/show_bug.cgi?id=9102
+
+xlib: Avoid mistakenly considering two surfaces as similar just
+because their depths match (while their Render formats do not) (Karl
+Tomlinson).
+
+ps: Fix slight mis-scaling of bitmapped fonts (Adrian Johnson)
+
+svg: Correctly emit comp-op for paint, mask, and show_glyphs
 operations (Emmanuel Pacaud).
 
-SVG: Use finer-grained fallbacks for SVG 1.2 (as PS and PDF backends
+svg: Use finer-grained fallbacks for SVG 1.2 (as PS and PDF backends
 have been doing since 1.6.0) (Chris Wilson).
 
-Win32: Fallback to DIB if DDB create fails for
+win32: Fallback to DIB if DDB create fails for
 cairo_surface_create_similar (Vladimir Vukicevic).
 
-Win32: Fix compatibility with Windows Mobile (Vladimir Vukicevic).
+win32: Fix compatibility with Windows Mobile (Vladimir Vukicevic).
+
+win32: Fix static builds to not do __declspec(dllimport) on public
+functions. This requires the user to set a CAIRO_WIN32_STATIC_BUILD
+environment variable when compiling (Behdad Esfahbod).
 
 Release 1.8.0 (2008-09-25 Carl Worth <cworth@cworth.org>)
 =========================================================
