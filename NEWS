@@ -18,14 +18,14 @@ faster insert for skiplist, etc.) (Chris Wilson).
 Optimize away fractional translation component when doing
 EXTEND_NEAREST filtering, (for better performance).
 
-Allow cloning sub-regions of similar surfaces to fix this bug:
-(Chris Wilson)
+Allow cloning sub-regions of similar surfaces to fix this bug
+(Chris Wilson):
 
 	Crafted gif file will crash firefox
 	[XError: 'BadAlloc (insufficient resources for operation)']
 	https://bugzilla.mozilla.org/show_bug.cgi?id=424333
 
-Fix some matrix confusion to fix this regression (Chris Wilson).
+Fix some matrix confusion to fix this regression (Chris Wilson):
 
 	Transculent star exports in a wrong way to PDF
 	https://bugs.launchpad.net/inkscape/+bug/234546
@@ -55,7 +55,7 @@ Fix compilation on Solaris 10 (Chris Wilson):
 	to compile on Solaris 10 with pthreads
 	https://bugs.freedesktop.org/show_bug.cgi?id=18010
 
-xlib: Add support for XImages with dpeth of 4, 20, 24, or 28 bits
+xlib: Add support for XImages with depth of 4, 20, 24, or 28 bits
 (Chris Wilson):
 
 	cairo doesn't support 24 bits per pixel mode on X11
@@ -101,7 +101,7 @@ SVG: Correctly emit comp-op for paint, mask, and show_glyphs
 operations (Emmanuel Pacaud).
 
 SVG: Use finer-grained fallbacks for SVG 1.2 (as PS and PDF backends
-have been doing since .6.0) (Chris Wilson).
+have been doing since 1.6.0) (Chris Wilson).
 
 Win32: Fallback to DIB if DDB create fails for
 cairo_surface_create_similar (Vladimir Vukicevic).
