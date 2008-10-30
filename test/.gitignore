@@ -160,6 +160,7 @@ pdf-surface-source.pdf
 png
 png-test.png
 png-flatten
+ps2png
 ps-features
 ps-features.ps
 ps-surface-source
@@ -236,6 +237,7 @@ unantialiased-shapes
 unbounded-operator
 user-data
 user-font
+user-font-mask
 user-font-proxy
 user-font-rescale
 xlib-expose-event
