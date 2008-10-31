@@ -2621,6 +2621,7 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     surface->have_clip_rects = FALSE;
     surface->clip_rects = surface->embedded_clip_rects;
     surface->num_clip_rects = 0;
+    surface->clip_dirty = 0;
 
     /*
      * Compute the pixel format masks from either a XrenderFormat or
