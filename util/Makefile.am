@@ -1,5 +1,11 @@
 include $(top_srcdir)/build/Makefile.am.common
 
+SUBDIRS = .
+
+if BUILD_TRACE
+SUBDIRS += cairo-trace
+endif
+
 util: malloc-stats.so backtrace-symbols.so
 
 .la.so:

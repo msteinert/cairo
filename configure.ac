@@ -481,6 +481,21 @@ AM_CONDITIONAL(BUILD_ANY2PPM,
 		 -o "x$any2ppm_ps"  = "xyes")
 
 dnl ===========================================================================
+dnl The tracing utility requires LD_PRELOAD, so only build it for systems
+dnl that are known to work.
+
+case $host in
+*-linux*|*-*bsd*)
+	have_ld_preload="yes"
+	;;
+*)
+	have_ld_preload="no"
+	;;
+esac
+
+AM_CONDITIONAL(BUILD_TRACE, test "x$have_ld_preload" = "xyes")
+
+dnl ===========================================================================
 
 AC_ARG_ENABLE(some-floating-point,
   AS_HELP_STRING([--disable-some-floating-point],
@@ -516,6 +531,8 @@ test/Makefile
 test/pdiff/Makefile
 perf/Makefile
 util/Makefile
+util/cairo-trace/Makefile
+util/cairo-trace/cairo-trace
 doc/Makefile
 doc/public/Makefile
 ])

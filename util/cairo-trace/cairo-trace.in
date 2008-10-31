@@ -1,0 +1,58 @@
+#!/bin/sh
+
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+
+nofile=
+silent=
+
+skip=1
+while test $skip -eq 1; do
+    skip=0
+    case $1 in
+    --silent)
+	skip=1
+	silent=1
+	;;
+    --no-file)
+	skip=1
+	nofile=1
+	;;
+    esac
+    if test $skip -eq 1; then
+	shift
+    fi
+done
+
+if test $# -eq 0; then
+cat << EOF
+usage: cairo-trace [--no-file|--silent] command
+cairo-trace will generate a log of all calls made by command to
+cairo. This log will be stored in a file in the local directory
+called command.pid.trace.
+Whatever else happens is driven by its argument:
+  --silent  - disables the overriding of stdout by cairo-trace.
+              The trace file is still generated, but your application
+	      is free to continue to use stdout.
+  --no-file - disables the generation of an output file
+
+Enviroment variables understood by cairo-trace:
+  CAIRO_TRACE_FLUSH - flush the output after every function call.
+EOF
+exit
+fi
+
+#echo $*
+
+filename=""
+if test -z "$nofile"; then
+  filename=`basename $1`.$$.trace
+fi
+
+if test -z "$filename"; then
+  LD_PRELOAD=@libdir@/cairo-trace.so CAIRO_TRACE_FD=3 LC_ALL=C $* 3>&1 >/dev/null
+elif test -n "$silent"; then
+  LD_PRELOAD=@libdir@/cairo-trace.so LC_ALL=C CAIRO_TRACE_OUTFILE_EXACT=$filename $*
+else
+  LD_PRELOAD=@libdir@/cairo-trace.so CAIRO_TRACE_FD=3 LC_ALL=C $* 3>&1 >/dev/null | tee $filename
+fi
