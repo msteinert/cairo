@@ -232,6 +232,7 @@ cairo_test_reference_image_filename (const cairo_test_context_t *ctx,
 	                             const char *base_name,
 				     const char *test_name,
 				     const char *target_name,
+				     const char *base_target_name,
 				     const char *format);
 
 cairo_surface_t *

@@ -33,7 +33,7 @@ create_source_surface (int size)
 {
     cairo_surface_t *surface;
 
-    surface = cairo_svg_surface_create ("svg-surface-source-out.svg",
+    surface = cairo_svg_surface_create ("svg-surface-source.out.svg",
 					size, size);
     cairo_surface_set_fallback_resolution (surface, 72., 72.);
 

@@ -165,8 +165,8 @@ check_result (cairo_test_context_t *ctx,
 	}
     }
 
-    xasprintf (&png_name,  "%s-out.png", base_name);
-    xasprintf (&diff_name, "%s-diff.png", base_name);
+    xasprintf (&png_name,  "%s.out.png", base_name);
+    xasprintf (&diff_name, "%s.diff.png", base_name);
 
     test_image = target->get_image_surface (surface, 0, SIZE, SIZE);
     if (cairo_surface_status (test_image)) {
@@ -194,6 +194,7 @@ check_result (cairo_test_context_t *ctx,
 	                                            base_name,
 						    test_name,
 						    target->name,
+						    target->basename,
 						    format);
     if (ref_name == NULL) {
 	cairo_test_log (ctx, "Error: Cannot find reference image for %s\n",
@@ -310,7 +311,7 @@ preamble (cairo_test_context_t *ctx)
     for (ppi_x = 0; ppi_x < num_ppi; ppi_x++) {
 	for (ppi_y = 0; ppi_y < num_ppi; ppi_y++) {
 	    char *ref_name;
-	    xasprintf (&ref_name, "fallback-resolution-ppi%gx%g-ref.png",
+	    xasprintf (&ref_name, "fallback-resolution.ppi%gx%g.ref.png",
 		       ppi[ppi_x], ppi[ppi_y]);
 	    generate_reference (ppi[ppi_x], ppi[ppi_y], ref_name);
 	    free (ref_name);
@@ -330,7 +331,7 @@ preamble (cairo_test_context_t *ctx)
 	    continue;
 
 	format = cairo_boilerplate_content_name (target->content);
-	xasprintf (&base_name, "fallback-resolution-%s-%s",
+	xasprintf (&base_name, "fallback-resolution.%s-%s",
 		   target->name,
 		   format);
 
@@ -363,7 +364,7 @@ preamble (cairo_test_context_t *ctx)
 		char *test_name;
 		cairo_bool_t pass;
 
-		xasprintf (&test_name, "fallback-resolution-ppi%gx%g",
+		xasprintf (&test_name, "fallback-resolution.ppi%gx%g",
 			   ppi[ppi_x], ppi[ppi_y]);
 		xasprintf (&base_name, "%s-%s-%s",
 			   test_name,

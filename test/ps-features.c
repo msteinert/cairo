@@ -102,7 +102,7 @@ preamble (cairo_test_context_t *ctx)
 	return CAIRO_TEST_UNTESTED;
     }
 
-    filename = "ps-features-out.ps";
+    filename = "ps-features.out.ps";
 
     /* We demonstrate that the initial size doesn't matter (we're
      * passing 0,0), if we use cairo_ps_surface_set_size on the first

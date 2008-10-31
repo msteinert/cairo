@@ -86,7 +86,7 @@ static struct {
 static cairo_test_status_t
 preamble (cairo_test_context_t *ctx)
 {
-    const char *filename = "pdf-features-out.pdf";
+    const char *filename = "pdf-features.out.pdf";
     cairo_surface_t *surface;
     cairo_t *cr;
     cairo_status_t status;

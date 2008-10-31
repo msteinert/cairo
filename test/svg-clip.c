@@ -107,7 +107,7 @@ static cairo_test_status_t
 preamble (cairo_test_context_t *ctx)
 {
     cairo_t *cr;
-    const char *filename = "svg-clip-out.svg";
+    const char *filename = "svg-clip.out.svg";
     cairo_surface_t *surface;
 
     if (! cairo_test_is_target_enabled (ctx, "svg11") &&

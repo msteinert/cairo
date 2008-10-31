@@ -17,10 +17,10 @@ pdf2png
 ps2png
 svg2png
 valgrind-log
-*-out.*
-*-pass.*
-*-fail.*
-*-diff.png
+*.out.*
+*.pass.*
+*.fail.*
+*.diff.png
 *.manifest
 *.gcda
 *.gcno

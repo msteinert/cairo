@@ -33,7 +33,7 @@ create_source_surface (int size)
 {
     cairo_surface_t *surface;
 
-    surface = cairo_pdf_surface_create ("pdf-surface-source-out.pdf", size, size);
+    surface = cairo_pdf_surface_create ("pdf-surface-source.out.pdf", size, size);
     cairo_surface_set_fallback_resolution (surface, 72., 72.);
 
     return surface;

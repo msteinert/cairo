@@ -95,9 +95,9 @@ static const char *fail_face = "", *xfail_face="", *normal_face = "";
 static cairo_bool_t print_fail_on_stdout;
 
 #define CAIRO_TEST_LOG_SUFFIX ".log"
-#define CAIRO_TEST_PNG_SUFFIX "-out.png"
-#define CAIRO_TEST_REF_SUFFIX "-ref.png"
-#define CAIRO_TEST_DIFF_SUFFIX "-diff.png"
+#define CAIRO_TEST_PNG_SUFFIX ".out.png"
+#define CAIRO_TEST_REF_SUFFIX ".ref.png"
+#define CAIRO_TEST_DIFF_SUFFIX ".diff.png"
 #define CAIRO_TEST_OUTPUT_DIR "output"
 
 #define NUM_DEVICE_OFFSETS 2
@@ -325,6 +325,7 @@ cairo_test_reference_image_filename (const cairo_test_context_t *ctx,
 	                             const char *base_name,
 				     const char *test_name,
 				     const char *target_name,
+				     const char *base_target_name,
 				     const char *format)
 {
     char *ref_name = NULL;
@@ -342,7 +343,8 @@ cairo_test_reference_image_filename (const cairo_test_context_t *ctx,
     }
 
     /* Next look for a target/format-specific reference image. */
-    xasprintf (&ref_name, "%s/%s-%s-%s%s", ctx->srcdir,
+    xasprintf (&ref_name, "%s/%s.%s.%s%s",
+	       ctx->srcdir,
 	       test_name,
 	       target_name,
 	       format,
@@ -353,7 +355,8 @@ cairo_test_reference_image_filename (const cairo_test_context_t *ctx,
 	goto done;
 
     /* Next, look for target-specific reference image. */
-    xasprintf (&ref_name, "%s/%s-%s%s", ctx->srcdir,
+    xasprintf (&ref_name, "%s/%s.%s%s",
+	       ctx->srcdir,
 	       test_name,
 	       target_name,
 	       CAIRO_TEST_REF_SUFFIX);
@@ -362,8 +365,32 @@ cairo_test_reference_image_filename (const cairo_test_context_t *ctx,
     else
 	goto done;
 
+    /* Next look for a base/format-specific reference image. */
+    xasprintf (&ref_name, "%s/%s.%s.%s%s",
+	       ctx->srcdir,
+	       test_name,
+	       base_target_name,
+	       format,
+	       CAIRO_TEST_REF_SUFFIX);
+    if (access (ref_name, F_OK) != 0)
+	free (ref_name);
+    else
+	goto done;
+
+    /* Next, look for base-specific reference image. */
+    xasprintf (&ref_name, "%s/%s.%s%s",
+	       ctx->srcdir,
+	       test_name,
+	       base_target_name,
+	       CAIRO_TEST_REF_SUFFIX);
+    if (access (ref_name, F_OK) != 0)
+	free (ref_name);
+    else
+	goto done;
+
     /* Next, look for format-specific reference image. */
-    xasprintf (&ref_name, "%s/%s-%s%s", ctx->srcdir,
+    xasprintf (&ref_name, "%s/%s.%s%s",
+	       ctx->srcdir,
 	       test_name,
 	       format,
 	       CAIRO_TEST_REF_SUFFIX);
@@ -641,19 +668,19 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
     /* Get the strings ready that we'll need. */
     format = cairo_boilerplate_content_name (target->content);
     if (dev_offset)
-	xasprintf (&offset_str, "-%d", dev_offset);
+	xasprintf (&offset_str, ".%d", dev_offset);
     else
 	offset_str = (char *) empty_str;
     if (ctx->thread)
-	xasprintf (&thread_str, "-thread%d", ctx->thread);
+	xasprintf (&thread_str, ".thread%d", ctx->thread);
     else
 	thread_str = (char *) empty_str;
 
-    xasprintf (&base_name, "%s-%s-%s%s%s%s",
+    xasprintf (&base_name, "%s.%s.%s%s%s%s",
 	       ctx->test_name,
 	       target->name,
 	       format,
-	       similar ? "-similar" : "",
+	       similar ? ".similar" : "",
 	       offset_str,
 	       thread_str);
 
@@ -667,6 +694,7 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 						    base_name,
 						    ctx->test_name,
 						    target->name,
+						    target->basename,
 						    format);
     have_output_dir = _cairo_test_mkdir (CAIRO_TEST_OUTPUT_DIR);
     xasprintf (&base_path, "%s/%s",
@@ -890,11 +918,11 @@ REPEAT:
 	}
 
 	if (target->file_extension != NULL) { /* compare vector surfaces */
-	    xasprintf (&test_filename, "%s-out%s",
+	    xasprintf (&test_filename, "%s.out%s",
 		       base_path, target->file_extension);
-	    xasprintf (&pass_filename, "%s-pass%s",
+	    xasprintf (&pass_filename, "%s.pass%s",
 		       base_path, target->file_extension);
-	    xasprintf (&fail_filename, "%s-fail%s",
+	    xasprintf (&fail_filename, "%s.fail%s",
 		       base_path, target->file_extension);
 
 	    if (cairo_test_file_is_older (pass_filename, ref_path))
@@ -944,8 +972,8 @@ REPEAT:
 	/* binary compare png files (no decompression) */
 	if (target->file_extension == NULL) {
 	    xasprintf (&test_filename, "%s", png_path);
-	    xasprintf (&pass_filename, "%s-pass.png", base_path);
-	    xasprintf (&fail_filename, "%s-fail.png", base_path);
+	    xasprintf (&pass_filename, "%s.pass.png", base_path);
+	    xasprintf (&fail_filename, "%s.fail.png", base_path);
 
 	    if (cairo_test_files_equal (test_filename, pass_filename)) {
 		/* identical output as last known PASS, pass */
@@ -1133,7 +1161,7 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 		    dev_offset);
 
     if (ctx->thread == 0) {
-	printf ("%s-%s-%s [%d]%s:\t", ctx->test_name, target->name,
+	printf ("%s.%s.%s [%d]%s:\t", ctx->test_name, target->name,
 		cairo_boilerplate_content_name (target->content),
 		dev_offset,
 		similar ? " (similar)": "");
@@ -1200,7 +1228,7 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 		fflush (stdout);
 	    }
 	    cairo_test_log (ctx, "CRASHED\n");
-	    fprintf (stderr, "%s-%s-%s [%d]%s:\t%s!!!CRASHED!!!%s\n",
+	    fprintf (stderr, "%s.%s.%s [%d]%s:\t%s!!!CRASHED!!!%s\n",
 		     ctx->test_name, target->name,
 		     cairo_boilerplate_content_name (target->content), dev_offset, similar ? " (similar)" : "",
 		     fail_face, normal_face);
@@ -1216,7 +1244,7 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 		    printf ("\r");
 		    fflush (stdout);
 		}
-		fprintf (stderr, "%s-%s-%s [%d]%s:\t%sXFAIL%s\n",
+		fprintf (stderr, "%s.%s.%s [%d]%s:\t%sXFAIL%s\n",
 			 ctx->test_name, target->name,
 			 cairo_boilerplate_content_name (target->content), dev_offset, similar ? " (similar)" : "",
 			 xfail_face, normal_face);
@@ -1229,7 +1257,7 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 		    printf ("\r");
 		    fflush (stdout);
 		}
-		fprintf (stderr, "%s-%s-%s [%d]%s:\t%sFAIL%s\n",
+		fprintf (stderr, "%s.%s.%s [%d]%s:\t%sFAIL%s\n",
 			 ctx->test_name, target->name,
 			 cairo_boilerplate_content_name (target->content), dev_offset, similar ? " (similar)" : "",
 			 fail_face, normal_face);
@@ -1242,7 +1270,7 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 #if _POSIX_THREAD_SAFE_FUNCTIONS
 	flockfile (stdout);
 #endif
-	printf ("%s-%s-%s %d [%d]:\t",
+	printf ("%s.%s.%s %d [%d]:\t",
 		ctx->test_name, target->name,
 		cairo_boilerplate_content_name (target->content),
 		ctx->thread,

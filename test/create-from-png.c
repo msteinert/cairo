@@ -50,7 +50,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_surface_t *surface;
 
     xasprintf (&filename, "%s/%s", ctx->srcdir,
-	       "create-from-png-ref.png");
+	       "create-from-png.ref.png");
 
     surface = cairo_image_surface_create_from_png (filename);
     if (cairo_surface_status (surface)) {
@@ -105,7 +105,7 @@ preamble (cairo_test_context_t *ctx)
 
     /* cheekily test error propagation from the user write funcs as well ... */
     xasprintf (&filename, "%s/%s", ctx->srcdir,
-	       "create-from-png-ref.png");
+	       "create-from-png.ref.png");
 
     surface = cairo_image_surface_create_from_png (filename);
     if (cairo_surface_status (surface)) {
@@ -144,7 +144,7 @@ preamble (cairo_test_context_t *ctx)
 
     /* check that loading alpha/opaque PNGs generate the correct surfaces */
     xasprintf (&filename, "%s/%s", ctx->srcdir,
-	       "create-from-png-alpha-ref.png");
+	       "create-from-png.alpha.ref.png");
     surface = cairo_image_surface_create_from_png (filename);
     if (cairo_surface_status (surface)) {
 	cairo_test_log (ctx, "Error reading PNG image %s: %s\n",
@@ -160,7 +160,7 @@ preamble (cairo_test_context_t *ctx)
     cairo_surface_destroy (surface);
 
     xasprintf (&filename, "%s/%s", ctx->srcdir,
-	       "create-from-png-ref.png");
+	       "create-from-png.ref.png");
     surface = cairo_image_surface_create_from_png (filename);
     if (cairo_surface_status (surface)) {
 	cairo_test_log (ctx, "Error reading PNG image %s: %s\n",
@@ -177,7 +177,7 @@ preamble (cairo_test_context_t *ctx)
 
     /* check paletted PNGs */
     xasprintf (&filename, "%s/%s", ctx->srcdir,
-	       "create-from-png-indexed-alpha-ref.png");
+	       "create-from-png.indexed-alpha.ref.png");
     surface = cairo_image_surface_create_from_png (filename);
     if (cairo_surface_status (surface)) {
 	cairo_test_log (ctx, "Error reading PNG image %s: %s\n",
@@ -193,7 +193,7 @@ preamble (cairo_test_context_t *ctx)
     cairo_surface_destroy (surface);
 
     xasprintf (&filename, "%s/%s", ctx->srcdir,
-	       "create-from-png-indexed-ref.png");
+	       "create-from-png.indexed.ref.png");
     surface = cairo_image_surface_create_from_png (filename);
     if (cairo_surface_status (surface)) {
 	cairo_test_log (ctx, "Error reading PNG image %s: %s\n",
@@ -210,7 +210,7 @@ preamble (cairo_test_context_t *ctx)
 
     /* check grayscale PNGs */
     xasprintf (&filename, "%s/%s", ctx->srcdir,
-	       "create-from-png-gray-alpha-ref.png");
+	       "create-from-png.gray-alpha.ref.png");
     surface = cairo_image_surface_create_from_png (filename);
     if (cairo_surface_status (surface)) {
 	cairo_test_log (ctx, "Error reading PNG image %s: %s\n",
@@ -226,7 +226,7 @@ preamble (cairo_test_context_t *ctx)
     cairo_surface_destroy (surface);
 
     xasprintf (&filename, "%s/%s", ctx->srcdir,
-	       "create-from-png-gray-ref.png");
+	       "create-from-png.gray.ref.png");
     surface = cairo_image_surface_create_from_png (filename);
     if (cairo_surface_status (surface)) {
 	cairo_test_log (ctx, "Error reading PNG image %s: %s\n",

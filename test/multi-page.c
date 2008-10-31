@@ -142,7 +142,7 @@ preamble (cairo_test_context_t *ctx)
 	if (result == CAIRO_TEST_UNTESTED)
 	    result = CAIRO_TEST_SUCCESS;
 
-	filename = "multi-page-out.ps";
+	filename = "multi-page.out.ps";
 	surface = cairo_ps_surface_create (filename,
 					   WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
 	status = cairo_surface_status (surface);
@@ -165,7 +165,7 @@ preamble (cairo_test_context_t *ctx)
 	if (result == CAIRO_TEST_UNTESTED)
 	    result = CAIRO_TEST_SUCCESS;
 
-	filename = "multi-page-out.pdf";
+	filename = "multi-page.out.pdf";
 	surface = cairo_pdf_surface_create (filename,
 					    WIDTH_IN_POINTS, HEIGHT_IN_POINTS);
 	status = cairo_surface_status (surface);

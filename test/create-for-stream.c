@@ -57,7 +57,7 @@
 #define WIDTH_IN_POINTS  (WIDTH_IN_INCHES  * 72.0)
 #define HEIGHT_IN_POINTS (HEIGHT_IN_INCHES * 72.0)
 
-#define BASENAME "create-for-stream-out"
+#define BASENAME "create-for-stream.out"
 
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)

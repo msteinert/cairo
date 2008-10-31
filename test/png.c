@@ -74,7 +74,7 @@ print_surface (const cairo_test_context_t *ctx, cairo_surface_t *surface)
 static cairo_test_status_t
 preamble (cairo_test_context_t *ctx)
 {
-    const char *filename = "png-out.png";
+    const char *filename = "png.out.png";
     cairo_surface_t *surface0, *surface1;
     cairo_status_t status;
     uint32_t argb32 = 0xdeadbede;
