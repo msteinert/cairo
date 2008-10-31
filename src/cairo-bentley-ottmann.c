@@ -228,12 +228,12 @@ _slope_compare (cairo_bo_edge_t *a,
  *   X = A_x + (Y - A_y) * A_dx / A_dy
  *
  * So the inequality we wish to test is:
- *   A_x + (Y - A_y) * A_dx / A_dy -?- B_x + (Y - B_y) * B_dx / B_dy,
- * where -?- is our inequality operator.
+ *   A_x + (Y - A_y) * A_dx / A_dy ∘ B_x + (Y - B_y) * B_dx / B_dy,
+ * where ∘ is our inequality operator.
  *
  * By construction, we know that A_dy and B_dy (and (Y - A_y), (Y - B_y)) are
  * all positive, so we can rearrange it thus without causing a sign change:
- *   A_dy * B_dy * (A_x - B_x) -?- (Y - B_y) * B_dx * A_dy
+ *   A_dy * B_dy * (A_x - B_x) ∘ (Y - B_y) * B_dx * A_dy
  *                                 - (Y - A_y) * A_dx * B_dy
  *
  * Given the assumption that all the deltas fit within 32 bits, we can compute
@@ -292,22 +292,22 @@ edges_compare_x_for_y_general (const cairo_bo_edge_t *a,
     case HAVE_NONE:
 	return 0;
     case HAVE_DX:
-	/* A_dy * B_dy * (A_x - B_x) -?- 0 */
+	/* A_dy * B_dy * (A_x - B_x) ∘ 0 */
 	return dx; /* ady * bdy is positive definite */
     case HAVE_ADX:
-	/* 0 -?-  - (Y - A_y) * A_dx * B_dy */
+	/* 0 ∘  - (Y - A_y) * A_dx * B_dy */
 	return adx; /* bdy * (y - a->top.y) is positive definite */
     case HAVE_BDX:
-	/* 0 -?- (Y - B_y) * B_dx * A_dy */
+	/* 0 ∘ (Y - B_y) * B_dx * A_dy */
 	return -bdx; /* ady * (y - b->top.y) is positive definite */
     case HAVE_ADX_BDX:
-	/*  0 -?- (Y - B_y) * B_dx * A_dy - (Y - A_y) * A_dx * B_dy */
+	/*  0 ∘ (Y - B_y) * B_dx * A_dy - (Y - A_y) * A_dx * B_dy */
 	if ((adx ^ bdx) < 0) {
 	    return adx;
 	} else if (a->top.y == b->top.y) { /* common origin */
 	    cairo_int64_t adx_bdy, bdx_ady;
 
-	    /* => A_dx * B_dy -?- B_dx * A_dy */
+	    /* ∴ A_dx * B_dy ∘ B_dx * A_dy */
 
 	    adx_bdy = _cairo_int32x32_64_mul (adx, bdy);
 	    bdx_ady = _cairo_int32x32_64_mul (bdx, ady);
@@ -316,7 +316,7 @@ edges_compare_x_for_y_general (const cairo_bo_edge_t *a,
 	} else
 	    return _cairo_int128_cmp (A, B);
     case HAVE_DX_ADX:
-	/* A_dy * (A_x - B_x) -?- - (Y - A_y) * A_dx */
+	/* A_dy * (A_x - B_x) ∘ - (Y - A_y) * A_dx */
 	if ((-adx ^ dx) < 0) {
 	    return dx;
 	} else {
@@ -328,7 +328,7 @@ edges_compare_x_for_y_general (const cairo_bo_edge_t *a,
 	    return _cairo_int64_cmp (ady_dx, dy_adx);
 	}
     case HAVE_DX_BDX:
-	/* B_dy * (A_x - B_x) -?- (Y - B_y) * B_dx */
+	/* B_dy * (A_x - B_x) ∘ (Y - B_y) * B_dx */
 	if ((bdx ^ dx) < 0) {
 	    return dx;
 	} else {
@@ -355,12 +355,12 @@ edges_compare_x_for_y_general (const cairo_bo_edge_t *a,
  *   X = A_x + (Y - A_y) * A_dx / A_dy
  *
  * So the inequality we wish to test is:
- *   A_x + (Y - A_y) * A_dx / A_dy -?- X
- * where -?- is our inequality operator.
+ *   A_x + (Y - A_y) * A_dx / A_dy ∘ X
+ * where ∘ is our inequality operator.
  *
  * By construction, we know that A_dy (and (Y - A_y)) are
  * all positive, so we can rearrange it thus without causing a sign change:
- *   (Y - A_y) * A_dx -?- (X - A_x) * A_dy
+ *   (Y - A_y) * A_dx ∘ (X - A_x) * A_dy
  *
  * Given the assumption that all the deltas fit within 32 bits, we can compute
  * this comparison directly using 64 bit arithmetic.
@@ -714,12 +714,12 @@ intersect_lines (cairo_bo_edge_t		*a,
       *
       *   X = ax + t * adx = bx + s * bdx;
       *   Y = ay + t * ady = by + s * bdy;
-      *   => t * (ady*bdx - bdy*adx) = bdx * (by - ay) + bdy * (ax - bx)
+      *   ∴ t * (ady*bdx - bdy*adx) = bdx * (by - ay) + bdy * (ax - bx)
       *   => t * L = R
       *
       * Therefore we can reject any intersection (under the criteria for
       * valid intersection events) if:
-      *   L^R < 0 => t < 0
+      *   L^R < 0 => t < 0, or
       *   L<R => t > 1
       *
       * (where top/bottom must at least extend to the line endpoints).
