@@ -1087,18 +1087,23 @@ _emit_image (cairo_surface_t *image)
 }
 
 static void
-_emit_string_literal (const char *utf8)
+_emit_string_literal (const char *utf8, int len)
 {
     char c;
+    const char *end;
 
     if (utf8 == NULL) {
 	fprintf (logfile, "()");
 	return;
     }
 
+    if (len < 0)
+	len = strlen (utf8);
+    end = utf8 + len;
+
     fprintf (logfile, "(");
-    while ((c = *utf8++)) {
-	switch (c) {
+    while (utf8 < end) {
+	switch ((c = *utf8++)) {
 	case '\n':
 	case '\r':
 	case '\\':
@@ -1847,7 +1852,7 @@ cairo_select_font_face (cairo_t *cr, const char *family, cairo_font_slant_t slan
 {
     if (cr != NULL && _write_lock ()) {
 	_emit_context (cr);
-	_emit_string_literal (family);
+	_emit_string_literal (family, -1);
 	fprintf (logfile, " //%s //%s select_font_face\n",
 		 _slant_to_string (slant),
 		 _weight_to_string (weight));
@@ -2097,7 +2102,7 @@ cairo_show_text (cairo_t *cr, const char *utf8)
 {
     if (cr != NULL && _write_lock ()) {
 	_emit_context (cr);
-	_emit_string_literal (utf8);
+	_emit_string_literal (utf8, -1);
 	fprintf (logfile, " show_text\n");
 	_write_unlock ();
     }
@@ -2226,8 +2231,7 @@ cairo_show_text_glyphs (cairo_t			   *cr,
 
 	_emit_context (cr);
 
-	_emit_string_literal (utf8);
-	fprintf (logfile, " %d ", utf8_len);
+	_emit_string_literal (utf8, utf8_len);
 
 	_emit_glyphs (font, glyphs, num_glyphs);
 	fprintf (logfile, "  [");
@@ -2254,7 +2258,7 @@ cairo_text_path (cairo_t *cr, const char *utf8)
 {
     if (cr != NULL && _write_lock ()) {
 	_emit_context (cr);
-	_emit_string_literal (utf8);
+	_emit_string_literal (utf8, -1);
 	fprintf (logfile, " text_path\n");
 	_write_unlock ();
     }
@@ -2507,7 +2511,7 @@ cairo_surface_write_to_png (cairo_surface_t *surface, const char *filename)
 {
     if (surface != NULL && _write_lock ()) {
 	fprintf (logfile, "%% s%ld ", _get_surface_id (surface));
-	_emit_string_literal (filename);
+	_emit_string_literal (filename, -1);
 	fprintf (logfile, " write_to_png\n");
 	_write_unlock ();
     }
@@ -2524,7 +2528,7 @@ cairo_surface_write_to_png_stream (cairo_surface_t *surface,
 
 	fprintf (logfile, "%% s%ld ", _get_surface_id (surface));
 	lookup_symbol (symbol, sizeof (symbol), write_func);
-	_emit_string_literal (symbol);
+	_emit_string_literal (symbol, -1);
 	fprintf (logfile, " write_to_png_stream\n");
 	_write_unlock ();
     }
@@ -2743,7 +2747,7 @@ cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
 		 "dict\n"
 		 "  /type 42 set\n"
 		 "  /pattern ");
-	_emit_string_literal ((char *) parsed);
+	_emit_string_literal ((char *) parsed, -1);
 	fprintf (logfile,
 		 " set\n"
 		 "  font\n");
@@ -2926,7 +2930,7 @@ cairo_ps_surface_create (const char *filename, double width_in_points, double he
 		 "dict\n"
 		 "  /type (PS) set\n"
 		 "  /filename ");
-	_emit_string_literal (filename);
+	_emit_string_literal (filename, -1);
 	fprintf (logfile,
 		 " set\n"
 		 "  /width %g set\n"
@@ -2993,7 +2997,7 @@ cairo_pdf_surface_create (const char *filename, double width_in_points, double h
 		 "dict\n"
 		 "  /type (PDF) set\n"
 		 "  /filename ");
-	_emit_string_literal (filename);
+	_emit_string_literal (filename, -1);
 	fprintf (logfile,
 		 " set\n"
 		 "  /width %g set\n"
@@ -3058,7 +3062,7 @@ cairo_svg_surface_create (const char *filename, double width, double height)
 		 "dict\n"
 		 "  /type (SVG) set\n"
 		 "  /filename ");
-	_emit_string_literal (filename);
+	_emit_string_literal (filename, -1);
 	fprintf (logfile,
 		 " set\n"
 		 "  /width %g set\n"
@@ -3129,7 +3133,7 @@ cairo_image_surface_create_from_png (const char *filename)
 		 "  /format //%s set\n"
 		 "  /filename ",
 		 width, height, format_str);
-	_emit_string_literal (filename);
+	_emit_string_literal (filename, -1);
 	fprintf (logfile,
 		 " set\n"
 		 "  /source ");
@@ -3297,7 +3301,7 @@ cairo_script_surface_create (const char *filename,
 		 "dict\n"
 		 "  /type (script) set\n"
 		 "  /filename ");
-	_emit_string_literal (filename);
+	_emit_string_literal (filename, -1);
 	fprintf (logfile,
 		 " set\n"
 		 "  /width %g set\n"
