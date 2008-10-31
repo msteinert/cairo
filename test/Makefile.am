@@ -287,7 +287,7 @@ endif
 
 BUILT_SOURCES += cairo-test-constructors.c
 noinst_SCRIPTS = make-cairo-test-constructors.pl
-EXTRA_DIST += $(BUILT_SOURCES) $(noinst_SCRIPTS)
+EXTRA_DIST += $(BUILT_SOURCES) $(noinst_SCRIPTS) COPYING
 CLEANFILES += $(BUILT_SOURCES)
 
 # All tests which have a reference image go here.

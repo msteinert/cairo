@@ -18,4 +18,7 @@ system-install:
 system-uninstall:
 	sed -e '/\/usr\/local\/lib\/cairo-trace.so/d' < /etc/ld.so.preload > /tmp/ld.so.preload && mv /tmp/ld.so.preload /etc/ld.so.preload;
 
-EXTRA_DIST = cairo-trace.in
+EXTRA_DIST = \
+	COPYING \
+	COPYING-GPL-3 \
+	cairo-trace.in

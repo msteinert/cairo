@@ -8,7 +8,7 @@ AM_CPPFLAGS =					\
 	$(CAIRO_CFLAGS)
 
 EXTRA_PROGRAMS += cairo-perf cairo-perf-diff-files cairo-perf-graph-files
-EXTRA_DIST += cairo-perf-diff
+EXTRA_DIST += cairo-perf-diff COPYING
 EXTRA_LTLIBRARIES += libcairoperf.la
 
 LDADD = $(top_builddir)/boilerplate/libcairoboilerplate.la \
