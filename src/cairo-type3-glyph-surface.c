@@ -445,7 +445,6 @@ _cairo_type3_glyph_surface_emit_glyph (void		     *abstract_surface,
     cairo_scaled_glyph_t *scaled_glyph;
     cairo_status_t status, status2;
     double x_advance, y_advance;
-    cairo_output_stream_t *mem_stream;
     cairo_matrix_t font_matrix_inverse;
 
     _cairo_type3_glyph_surface_set_stream (surface, stream);
@@ -495,6 +494,8 @@ _cairo_type3_glyph_surface_emit_glyph (void		     *abstract_surface,
 				 - _cairo_fixed_to_double (bbox->p1.y));
 
     if (status == CAIRO_STATUS_SUCCESS) {
+	cairo_output_stream_t *mem_stream;
+
 	mem_stream = _cairo_memory_stream_create ();
 	_cairo_type3_glyph_surface_set_stream (surface, mem_stream);
 
