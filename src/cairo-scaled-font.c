@@ -2399,7 +2399,7 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 	need_info |= CAIRO_SCALED_GLYPH_INFO_PATH;
 
     if (((info & CAIRO_SCALED_GLYPH_INFO_META_SURFACE) != 0 &&
-	 scaled_glyph->path == NULL))
+	 scaled_glyph->meta_surface == NULL))
 	need_info |= CAIRO_SCALED_GLYPH_INFO_META_SURFACE;
 
     if (need_info) {
