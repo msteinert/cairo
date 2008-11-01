@@ -2235,7 +2235,7 @@ cairo_show_text_glyphs (cairo_t			   *cr,
 
 	_emit_glyphs (font, glyphs, num_glyphs);
 	fprintf (logfile, "  [");
-	for (n = 0; n < num_clusters++; n++) {
+	for (n = 0; n < num_clusters; n++) {
 	    fprintf (logfile, " %d %d",
 		     clusters[n].num_bytes,
 		     clusters[n].num_glyphs);
