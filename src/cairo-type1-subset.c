@@ -553,18 +553,14 @@ cairo_type1_font_subset_get_glyph_names_and_widths (cairo_type1_font_subset_t *f
 	error = FT_Load_Glyph (font->face, i,
 			       FT_LOAD_NO_SCALE | FT_LOAD_NO_HINTING |
 			       FT_LOAD_NO_BITMAP | FT_LOAD_IGNORE_TRANSFORM);
-	if (error != 0) {
-	    printf ("could not load glyph %d\n", i);
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	}
+	if (error != 0)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
 	font->glyphs[i].width = font->face->glyph->metrics.horiAdvance;
 
 	error = FT_Get_Glyph_Name(font->face, i, buffer, sizeof buffer);
-	if (error != 0) {
-	    printf ("could not get glyph name for glyph %d\n", i);
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	}
+	if (error != 0)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
 	font->glyphs[i].name = strdup (buffer);
 	if (font->glyphs[i].name == NULL)
