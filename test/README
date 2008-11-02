@@ -125,7 +125,7 @@ Here are some of the relevant details:
     X server that uses only software for all rendering. One such X
     server is Xvfb which can be started like this:
 
-	Xfvb -screen 0 1280x1024x24 -ac -nolisten tcp :2
+	Xvfb -screen 0 1280x1024x24 -ac -nolisten tcp :2
 
     after which the test suite can be run against it like so:
 
