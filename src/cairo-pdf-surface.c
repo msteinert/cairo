@@ -1553,7 +1553,7 @@ CLEANUP:
 
 static cairo_int_status_t
 _cairo_pdf_surface_emit_jpeg_image (cairo_pdf_surface_t   *surface,
-				    cairo_surface_t 	  *source,
+				    cairo_surface_t	  *source,
 				    cairo_pdf_resource_t  *res,
 				    int                   *width,
 				    int                   *height)
@@ -1587,6 +1587,8 @@ _cairo_pdf_surface_emit_jpeg_image (cairo_pdf_surface_t   *surface,
 					     info.height,
 					     info.num_components == 1 ? "/DeviceGray" : "/DeviceRGB",
 					     info.bits_per_component);
+    if (status)
+	return status;
 
     *res = surface->pdf_stream.self;
     _cairo_output_stream_write (surface->output,
