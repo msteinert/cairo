@@ -192,7 +192,7 @@ _cairo_test_init (cairo_test_context_t *ctx,
 #ifdef HAVE_UNISTD_H
     if (*fail_face == '\0' && isatty (2)) {
 	fail_face = "\033[41;37;1m";
-	xfail_face = "\033[33;1m";
+	xfail_face = "\033[43;37;1m";
 	normal_face = "\033[m";
 	if (isatty (1))
 	    print_fail_on_stdout = FALSE;
