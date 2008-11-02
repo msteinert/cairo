@@ -912,7 +912,9 @@ _write_zlib_data (struct _data_stream *stream, bool flush)
 }
 
 static void
-_write_data (struct _data_stream *stream, void *data, unsigned int length)
+_write_data (struct _data_stream *stream,
+	     const void *data,
+	     unsigned int length)
 {
     unsigned int count;
     const unsigned char *p = data;
@@ -963,7 +965,7 @@ _write_data_end (struct _data_stream *stream)
 }
 
 static void
-_emit_data (void *data, unsigned int length)
+_emit_data (const void *data, unsigned int length)
 {
     struct _data_stream stream;
 
@@ -2504,6 +2506,30 @@ cairo_surface_show_page (cairo_surface_t *surface)
 {
     _emit_surface_op (surface, "show_page\n");
     return DLCALL (cairo_surface_show_page, surface);
+}
+
+void
+cairo_surface_set_mime_data (cairo_surface_t		*surface,
+                             const char			*mime_type,
+                             const unsigned char	*data,
+                             unsigned int		 length,
+			     cairo_destroy_func_t	 destroy)
+{
+    if (surface != NULL && _write_lock ()) {
+	_emit_surface (surface);
+	_emit_string_literal (mime_type, -1);
+	fprintf (logfile, " ");
+	_emit_data (data, length);
+	fprintf (logfile, " /deflate filter set_mime_data\n");
+
+	_write_unlock ();
+    }
+
+    return DLCALL (cairo_surface_set_mime_data,
+		   surface,
+		   mime_type,
+		   data, length,
+		   destroy);
 }
 
 cairo_status_t
