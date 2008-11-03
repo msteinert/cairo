@@ -637,6 +637,9 @@ _cairo_mime_data_destroy (void *ptr)
 {
     cairo_mime_data_t *mime_data = ptr;
 
+    if (! _cairo_reference_count_dec_and_test (&mime_data->ref_count))
+	return;
+
     if (mime_data->destroy && mime_data->data)
 	mime_data->destroy (mime_data->data);
 
@@ -679,35 +682,63 @@ cairo_surface_set_mime_data (cairo_surface_t		*surface,
     if (status)
 	return _cairo_surface_set_error (surface, status);
 
-    mime_data = _cairo_user_data_array_get_data (&surface->user_data,
-						 (cairo_user_data_key_t *) mime_type);
-    if (mime_data != NULL) {
-	if (mime_data->destroy && mime_data->data)
-	    mime_data->destroy (mime_data->data);
+    mime_data = malloc (sizeof (cairo_mime_data_t));
+    if (mime_data == NULL)
+	return _cairo_surface_set_error (surface, _cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-	mime_data->data = (unsigned char *) data;
-	mime_data->length = length;
-	mime_data->destroy = destroy;
-    } else {
-	mime_data = malloc (sizeof (cairo_mime_data_t));
-	if (mime_data == NULL)
-	    return _cairo_surface_set_error (surface, _cairo_error (CAIRO_STATUS_NO_MEMORY));
+    CAIRO_REFERENCE_COUNT_INIT (&mime_data->ref_count, 1);
 
-	mime_data->data = (unsigned char *) data;
-	mime_data->length = length;
-	mime_data->destroy = destroy;
+    mime_data->data = (unsigned char *) data;
+    mime_data->length = length;
+    mime_data->destroy = destroy;
 
-	status = _cairo_user_data_array_set_data (&surface->user_data,
-						  (cairo_user_data_key_t *) mime_type,
-						  mime_data,
-						  _cairo_mime_data_destroy);
-	if (status)
-	    return _cairo_surface_set_error (surface, status);
-    }
+    status = _cairo_user_data_array_set_data (&surface->user_data,
+					      (cairo_user_data_key_t *) mime_type,
+					      mime_data,
+					      _cairo_mime_data_destroy);
+    if (status)
+	return _cairo_surface_set_error (surface, status);
 
     return CAIRO_STATUS_SUCCESS;
 }
 slim_hidden_def (cairo_surface_set_mime_data);
+
+cairo_status_t
+_cairo_surface_copy_mime_data (cairo_surface_t *dst,
+			       cairo_surface_t *src,
+			       const char *mime_type)
+{
+    cairo_status_t status;
+    cairo_mime_data_t *mime_data;
+
+    if (dst->status)
+	return dst->status;
+
+    if (src->status)
+	return _cairo_surface_set_error (dst, src->status);
+
+    status = _cairo_intern_string (&mime_type, -1);
+    if (status)
+	return _cairo_surface_set_error (dst, status);
+
+    mime_data = _cairo_user_data_array_get_data (&src->user_data,
+						 (cairo_user_data_key_t *) mime_type);
+    if (mime_data == NULL)
+	return CAIRO_STATUS_SUCCESS;
+
+    _cairo_reference_count_inc (&mime_data->ref_count);
+
+    status = _cairo_user_data_array_set_data (&dst->user_data,
+					      (cairo_user_data_key_t *) mime_type,
+					      mime_data,
+					      _cairo_mime_data_destroy);
+    if (status) {
+	_cairo_mime_data_destroy (mime_data);
+	return _cairo_surface_set_error (dst, status);
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
 
 /**
  * _cairo_surface_set_font_options:

@@ -1035,8 +1035,6 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
     cairo_status_t status;
     cairo_surface_pattern_t pattern;
     cairo_image_surface_t *image;
-    const unsigned char *mime_data;
-    unsigned int mime_data_length;
     void *image_extra;
 
     status = _cairo_surface_acquire_source_image (surface,
@@ -1081,28 +1079,11 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
      * For now, just copy "image/jpeg", but in future we should construct
      * an array of known types and iterate.
      */
-    cairo_surface_get_mime_data (surface, CAIRO_MIME_TYPE_JPEG,
-				 &mime_data, &mime_data_length);
-    if (mime_data != NULL) {
-	unsigned char *mime_data_copy;
-
-	mime_data_copy = malloc (mime_data_length);
-	if (mime_data == NULL) {
-	    cairo_surface_destroy (snapshot);
-	    return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
-	}
-	memcpy (mime_data_copy, mime_data, mime_data_length);
-
-	status = cairo_surface_set_mime_data (snapshot,
-					      CAIRO_MIME_TYPE_JPEG,
-					      mime_data_copy,
-					      mime_data_length,
-					      free);
-	if (status) {
-	    free (mime_data_copy);
-	    cairo_surface_destroy (snapshot);
-	    return _cairo_surface_create_in_error (status);
-	}
+    status = _cairo_surface_copy_mime_data (snapshot, surface,
+	                                    CAIRO_MIME_TYPE_JPEG);
+    if (status) {
+	cairo_surface_destroy (snapshot);
+	return _cairo_surface_create_in_error (status);
     }
 
     snapshot->is_snapshot = TRUE;

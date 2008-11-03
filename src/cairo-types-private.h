@@ -41,6 +41,7 @@
 
 #include "cairo.h"
 #include "cairo-fixed-type-private.h"
+#include "cairo-reference-count-private.h"
 
 typedef struct _cairo_array cairo_array_t;
 typedef struct _cairo_cache cairo_cache_t;
@@ -344,6 +345,7 @@ typedef enum _cairo_image_transparency {
 } cairo_image_transparency_t;
 
 struct _cairo_mime_data {
+    cairo_reference_count_t ref_count;
     unsigned char *data;
     unsigned int length;
     cairo_destroy_func_t destroy;

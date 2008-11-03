@@ -1666,6 +1666,11 @@ cairo_private cairo_surface_t *
 _cairo_surface_create_in_error (cairo_status_t status);
 
 cairo_private cairo_status_t
+_cairo_surface_copy_mime_data (cairo_surface_t *dst,
+			       cairo_surface_t *src,
+			       const char *mime_type);
+
+cairo_private cairo_status_t
 _cairo_surface_set_error (cairo_surface_t	*surface,
 			  cairo_status_t	 status);
 
