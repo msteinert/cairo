@@ -59,33 +59,32 @@
 #define SOF14 0xce
 #define SOF15 0xcf
 
-static unsigned char *
-_skip_segment (unsigned char *p)
+static const unsigned char *
+_skip_segment (const unsigned char *p)
 {
     int len;
 
     p++;
-    len = p[0] << 8;
-    len |= p[1];
+    len = (p[0] << 8) | p[1];
 
     return p + len;
 }
 
 static void
-_extract_info (cairo_jpeg_info_t *info, unsigned char *p)
+_extract_info (cairo_jpeg_info_t *info, const unsigned char *p)
 {
     info->width = (p[6] << 8) + p[7];
-    info->height = (p[4] << 8) + p[5];;
+    info->height = (p[4] << 8) + p[5];
     info->num_components = p[8];
     info->bits_per_component = p[3];
 }
 
 cairo_int_status_t
-_cairo_jpeg_get_info (unsigned char	*data,
-		      long 	  	 length,
-		      cairo_jpeg_info_t *info)
+_cairo_jpeg_get_info (const unsigned char	*data,
+		      long			length,
+		      cairo_jpeg_info_t		*info)
 {
-    unsigned char *p = data;
+    const unsigned char *p = data;
 
     while (p + 1 < data + length) {
 	if (*p != 0xff)

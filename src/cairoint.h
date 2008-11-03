@@ -1391,6 +1391,12 @@ _cairo_validate_text_clusters (const char		   *utf8,
 			       int			    num_clusters,
 			       cairo_text_cluster_flags_t   cluster_flags);
 
+cairo_private cairo_status_t
+_cairo_intern_string (const char **str_inout, int len);
+
+cairo_private void
+_cairo_intern_string_reset_static_data (void);
+
 /* cairo-path-fixed.c */
 cairo_private void
 _cairo_path_fixed_init (cairo_path_fixed_t *path);
@@ -2515,6 +2521,8 @@ slim_hidden_proto (cairo_surface_flush);
 slim_hidden_proto (cairo_surface_get_content);
 slim_hidden_proto (cairo_surface_get_device_offset);
 slim_hidden_proto (cairo_surface_get_font_options);
+slim_hidden_proto (cairo_surface_get_mime_data);
+slim_hidden_proto (cairo_surface_set_mime_data);
 slim_hidden_proto (cairo_surface_get_type);
 slim_hidden_proto (cairo_surface_has_show_text_glyphs);
 slim_hidden_proto (cairo_surface_mark_dirty_rectangle);

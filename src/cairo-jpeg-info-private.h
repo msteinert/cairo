@@ -46,9 +46,9 @@ typedef struct _cairo_jpeg_info {
 } cairo_jpeg_info_t;
 
 cairo_private cairo_int_status_t
-_cairo_jpeg_get_info (unsigned char	*data,
-		      long 	  	 length,
-		      cairo_jpeg_info_t *info);
+_cairo_jpeg_get_info (const unsigned char	*data,
+		      long			 length,
+		      cairo_jpeg_info_t		*info);
 
 
 #endif /* CAIRO_JPEG_INFO_PRIVATE_H */

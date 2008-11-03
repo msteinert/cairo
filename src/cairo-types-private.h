@@ -52,6 +52,7 @@ typedef struct _cairo_gstate cairo_gstate_t;
 typedef struct _cairo_hash_entry cairo_hash_entry_t;
 typedef struct _cairo_hash_table cairo_hash_table_t;
 typedef struct _cairo_image_surface cairo_image_surface_t;
+typedef struct _cairo_mime_data cairo_mime_data_t;
 typedef struct _cairo_output_stream cairo_output_stream_t;
 typedef struct _cairo_paginated_surface_backend cairo_paginated_surface_backend_t;
 typedef struct _cairo_path_fixed cairo_path_fixed_t;
@@ -341,5 +342,11 @@ typedef enum _cairo_image_transparency {
     CAIRO_IMAGE_HAS_ALPHA,
     CAIRO_IMAGE_UNKNOWN
 } cairo_image_transparency_t;
+
+struct _cairo_mime_data {
+    unsigned char *data;
+    unsigned int length;
+    cairo_destroy_func_t destroy;
+};
 
 #endif /* CAIRO_TYPES_PRIVATE_H */

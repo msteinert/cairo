@@ -1951,11 +1951,11 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
 
 cairo_public void
 cairo_surface_get_mime_data (cairo_surface_t		*surface,
-                             const char 		*mime_type,
+                             const char			*mime_type,
                              const unsigned char       **data,
                              unsigned int		*length);
 
-cairo_public void
+cairo_public cairo_status_t
 cairo_surface_set_mime_data (cairo_surface_t		 *surface,
                              const char			 *mime_type,
                              const unsigned char         *data,

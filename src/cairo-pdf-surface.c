@@ -1558,15 +1558,17 @@ _cairo_pdf_surface_emit_jpeg_image (cairo_pdf_surface_t   *surface,
 				    int                   *width,
 				    int                   *height)
 {
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_status_t status;
+    const unsigned char *mime_data;
+    unsigned int mime_data_length;
     cairo_jpeg_info_t info;
 
-    if (source->jpeg_data == NULL)
+    cairo_surface_get_mime_data (&surface->base, CAIRO_MIME_TYPE_JPEG,
+				 &mime_data, &mime_data_length);
+    if (mime_data == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    status = _cairo_jpeg_get_info (source->jpeg_data,
-				   source->jpeg_data_length,
-				   &info);
+    status = _cairo_jpeg_get_info (mime_data, mime_data_length, &info);
     if (status)
 	return status;
 
@@ -1591,9 +1593,7 @@ _cairo_pdf_surface_emit_jpeg_image (cairo_pdf_surface_t   *surface,
 	return status;
 
     *res = surface->pdf_stream.self;
-    _cairo_output_stream_write (surface->output,
-				source->jpeg_data,
-				source->jpeg_data_length);
+    _cairo_output_stream_write (surface->output, mime_data, mime_data_length);
     status = _cairo_pdf_surface_close_stream (surface);
 
     *width = info.width;

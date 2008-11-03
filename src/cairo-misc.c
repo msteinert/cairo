@@ -667,3 +667,101 @@ _cairo_win32_tmpfile (void)
 }
 
 #endif /* _WIN32 */
+
+typedef struct _cairo_intern_string {
+    cairo_hash_entry_t hash_entry;
+    int len;
+    char *string;
+} cairo_intern_string_t;
+
+static cairo_hash_table_t *_cairo_intern_string_ht;
+
+static unsigned long
+_intern_string_hash (const char *str, int len)
+{
+    const signed char *p = (const signed char *) str;
+    unsigned int h = *p;
+
+    for (p += 1; --len; p++)
+	h = (h << 5) - h + *p;
+
+    return h;
+}
+
+static cairo_bool_t
+_intern_string_equal (const void *_a, const void *_b)
+{
+    const cairo_intern_string_t *a = _a;
+    const cairo_intern_string_t *b = _b;
+
+    if (a->len != b->len)
+	return FALSE;
+
+    return memcmp (a->string, b->string, a->len) == 0;
+}
+
+cairo_status_t
+_cairo_intern_string (const char **str_inout, int len)
+{
+    char *str = (char *) *str_inout;
+    cairo_intern_string_t tmpl, *istring;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+
+    if (len < 0)
+	len = strlen (str);
+    tmpl.hash_entry.hash = _intern_string_hash (str, len);
+    tmpl.len = len;
+    tmpl.string = (char *) str;
+
+    CAIRO_MUTEX_LOCK (_cairo_intern_string_mutex);
+    if (_cairo_intern_string_ht == NULL)
+	_cairo_intern_string_ht = _cairo_hash_table_create (_intern_string_equal);
+
+    if (! _cairo_hash_table_lookup (_cairo_intern_string_ht,
+				    &tmpl.hash_entry,
+				    (cairo_hash_entry_t **) &istring))
+    {
+	istring = malloc (sizeof (cairo_intern_string_t) + len + 1);
+	if (istring != NULL) {
+	    istring->hash_entry.hash = tmpl.hash_entry.hash;
+	    istring->len = tmpl.len;
+	    istring->string = (char *) (istring + 1);
+	    memcpy (istring->string, str, len);
+	    istring->string[len] = '\0';
+
+	    status = _cairo_hash_table_insert (_cairo_intern_string_ht,
+					       &istring->hash_entry);
+	    if (status)
+		free (istring);
+	} else
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+
+    CAIRO_MUTEX_UNLOCK (_cairo_intern_string_mutex);
+
+    if (status == CAIRO_STATUS_SUCCESS)
+	*str_inout = istring->string;
+
+    return status;
+}
+
+static void
+_intern_string_pluck (void *entry, void *closure)
+{
+    _cairo_hash_table_remove (closure, entry);
+    free (entry);
+}
+
+void
+_cairo_intern_string_reset_static_data (void)
+{
+    CAIRO_MUTEX_LOCK (_cairo_intern_string_mutex);
+    if (_cairo_intern_string_ht != NULL) {
+	_cairo_hash_table_foreach (_cairo_intern_string_ht,
+				   _intern_string_pluck,
+				   _cairo_intern_string_ht);
+	_cairo_hash_table_destroy(_cairo_intern_string_ht);
+	_cairo_intern_string_ht = NULL;
+    }
+    CAIRO_MUTEX_UNLOCK (_cairo_intern_string_mutex);
+}

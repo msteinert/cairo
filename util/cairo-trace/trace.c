@@ -2508,7 +2508,7 @@ cairo_surface_show_page (cairo_surface_t *surface)
     return DLCALL (cairo_surface_show_page, surface);
 }
 
-void
+cairo_status_t
 cairo_surface_set_mime_data (cairo_surface_t		*surface,
                              const char			*mime_type,
                              const unsigned char	*data,

@@ -100,10 +100,6 @@ struct _cairo_surface {
      */
     cairo_bool_t has_font_options;
     cairo_font_options_t font_options;
-
-    unsigned char *jpeg_data;
-    unsigned int jpeg_data_length;
-    cairo_destroy_func_t jpeg_destroy;
 };
 
 #endif /* CAIRO_SURFACE_PRIVATE_H */

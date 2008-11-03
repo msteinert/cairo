@@ -106,6 +106,7 @@ test_sources = \
 	mask-transformed-image.c			\
 	mask-transformed-similar.c			\
 	meta-surface-pattern.c				\
+	mime-data.c					\
 	miter-precision.c				\
 	move-to-show-surface.c				\
 	new-sub-path.c					\
@@ -687,6 +688,7 @@ REFERENCE_IMAGES = \
 	meta-surface-pattern.svg11.rgb24.ref.png	\
 	meta-surface-pattern.svg12.argb32.ref.png	\
 	meta-surface-pattern.svg12.rgb24.ref.png	\
+	mime-data.ref.png	\
 	miter-precision.ref.png \
 	miter-precision.ps2.ref.png	\
 	miter-precision.ps3.ref.png	\
@@ -994,6 +996,7 @@ EXTRA_DIST +=		\
 6x13.pcf		\
 make-html.pl		\
 romedalen.png		\
+romedalen.jpg		\
 surface-source.c	\
 $(REFERENCE_IMAGES)
 
