@@ -10,7 +10,7 @@ cairo_trace_la_SOURCES = \
 			 trace.c
 cairo_trace_la_CFLAGS = @FREETYPE_CFLAGS@ @CAIRO_CFLAGS@
 cairo_trace_la_LDFLAGS = -module -no-undefined
-cairo_trace_la_LIBADD = -ldl -lz -lbfd
+cairo_trace_la_LIBADD = -ldl -lz @BFD_LIBS@
 
 system-install:
 	grep -sq @libdir@/cairo-trace.so /etc/ld.so.preload || echo @libdir@/cairo-trace.so >> /etc/ld.so.preload

@@ -495,6 +495,16 @@ esac
 
 AM_CONDITIONAL(BUILD_TRACE, test "x$have_ld_preload" = "xyes")
 
+AC_CHECK_LIB(bfd, bfd_openr,
+	 [AC_CHECK_HEADER(bfd.h, [have_bfd=yes],
+	 [have_bfd="no (requires binutils-dev)"])],
+	 [have_bfd="no (requires binutils-dev)"])
+if test "x$have_bfd" = "xyes"; then
+    AC_DEFINE([HAVE_BFD], [1], [Define to 1 if you have binutils-dev installed])
+    BFD_LIBS=-lbfd
+    AC_SUBST(BFD_LIBS)
+fi
+
 dnl ===========================================================================
 
 AC_ARG_ENABLE(some-floating-point,

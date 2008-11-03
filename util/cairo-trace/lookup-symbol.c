@@ -62,7 +62,7 @@
 #include <link.h>
 #include <string.h>
 
-#ifdef HAVE_LIBBFD
+#if HAVE_BFD
 #include <bfd.h>
 #include <libiberty.h>
 
@@ -255,7 +255,7 @@ char *
 lookup_symbol (char *buf, int buflen, const void *ptr)
 {
     struct file_match match;
-#ifdef HAVE_LIBBFD
+#if HAVE_BFD
     struct symtab symtab;
     struct symbol symbol;
 #endif
@@ -271,7 +271,7 @@ lookup_symbol (char *buf, int buflen, const void *ptr)
     if (match.file == NULL || *match.file == '\0')
 	match.file = "/proc/self/exe";
 
-#ifdef HAVE_LIBBFD
+#if HAVE_BFD
     if (! _symtab_init (&symtab, match.file))
 	return buf;
 
