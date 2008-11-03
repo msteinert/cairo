@@ -36,9 +36,10 @@ draw (cairo_t *cr, int width, int height)
     cairo_surface_t *surface;
     cairo_t *cr_surface;
 
-    /* Create a 4-pixel image surface with my favorite four colors in each
+    /* Create a 4-pixel similar surface with my favorite four colors in each
      * quadrant. */
-    surface = cairo_image_surface_create (CAIRO_FORMAT_RGB24, 2, 2);
+    surface = cairo_surface_create_similar (cairo_get_group_target (cr),
+					    CAIRO_CONTENT_COLOR, 2, 2);
     cr_surface = cairo_create (surface);
     cairo_surface_destroy (surface);
 
@@ -73,8 +74,8 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-CAIRO_TEST (extend_pad,
-	    "Test CAIRO_EXTEND_PAD for surface patterns",
+CAIRO_TEST (extend_pad_similar,
+	    "Test CAIRO_EXTEND_PAD for similar surface patterns",
 	    "extend", /* keywords */
 	    NULL, /* requirements */
 	    SIZE, SIZE,

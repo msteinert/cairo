@@ -51,6 +51,8 @@ test_sources = \
 	device-offset-positive.c			\
 	device-offset-scale.c				\
 	extend-pad.c					\
+	extend-pad-border.c				\
+	extend-pad-similar.c				\
 	extend-reflect.c				\
 	extend-reflect-similar.c			\
 	extend-repeat.c					\
@@ -439,6 +441,8 @@ REFERENCE_IMAGES = \
 	device-offset.rgb24.ref.png	\
 	device-offset-scale.ref.png	\
 	extend-pad.ref.png	\
+	extend-pad-border.ref.png	\
+	extend-pad-similar.ref.png	\
 	extend-reflect.ref.png	\
 	extend-reflect-similar.ref.png	\
 	extend-reflect-similar.ps2.ref.png	\
