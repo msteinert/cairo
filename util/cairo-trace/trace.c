@@ -37,7 +37,7 @@
 #include <ctype.h>
 
 #include <cairo.h>
-#ifdef CAIRO_HAS_FT_FONT
+#if CAIRO_HAS_FT_FONT
 # include <cairo-ft.h>
 #endif
 
@@ -2755,7 +2755,7 @@ cairo_pattern_set_extend (cairo_pattern_t *pattern, cairo_extend_t extend)
     return DLCALL (cairo_pattern_set_extend, pattern, extend);
 }
 
-#ifdef CAIRO_HAS_FT_FONT
+#if CAIRO_HAS_FT_FONT
 cairo_font_face_t *
 cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
 {
@@ -2939,7 +2939,7 @@ FT_Done_Face (FT_Face face)
 }
 #endif
 
-#ifdef CAIRO_HAS_PS_SURFACE
+#if CAIRO_HAS_PS_SURFACE
 #include<cairo-ps.h>
 
 cairo_surface_t *
@@ -3006,7 +3006,7 @@ cairo_ps_surface_set_size (cairo_surface_t *surface, double width_in_points, dou
 
 #endif
 
-#ifdef CAIRO_HAS_PDF_SURFACE
+#if CAIRO_HAS_PDF_SURFACE
 #include <cairo-pdf.h>
 
 cairo_surface_t *
@@ -3071,7 +3071,7 @@ cairo_pdf_surface_set_size (cairo_surface_t *surface, double width_in_points, do
 }
 #endif
 
-#ifdef CAIRO_HAS_SVG_SURFACE
+#if CAIRO_HAS_SVG_SURFACE
 #include <cairo-svg.h>
 
 cairo_surface_t *
@@ -3215,7 +3215,7 @@ cairo_image_surface_create_from_png_stream (cairo_read_func_t read_func, void *c
     return ret;
 }
 
-#ifdef CAIRO_HAS_XLIB_SURFACE
+#if CAIRO_HAS_XLIB_SURFACE
 #include <cairo-xlib.h>
 
 cairo_surface_t *
@@ -3275,7 +3275,7 @@ cairo_xlib_surface_create_for_bitmap (Display *dpy, Pixmap bitmap, Screen *scree
     return ret;
 }
 
-#ifdef CAIRO_HAS_XLIB_XRENDER_SURFACE
+#if CAIRO_HAS_XLIB_XRENDER_SURFACE
 #include <cairo-xlib-xrender.h>
 cairo_surface_t *
 cairo_xlib_surface_create_with_xrender_format (Display *dpy, Drawable drawable, Screen *screen, XRenderPictFormat *format, int width, int height)
@@ -3309,7 +3309,7 @@ cairo_xlib_surface_create_with_xrender_format (Display *dpy, Drawable drawable, 
 #endif
 #endif
 
-#ifdef CAIRO_HAS_SCRIPT_SURFACE
+#if CAIRO_HAS_SCRIPT_SURFACE
 #include <cairo-script.h>
 cairo_surface_t *
 cairo_script_surface_create (const char *filename,
@@ -3363,6 +3363,106 @@ cairo_script_surface_create_for_stream (cairo_write_func_t write_func,
 		 "  /width %g set\n"
 		 "  /height %g set\n"
 		 "  surface dup /s%ld exch def\n",
+		 width, height,
+		 surface_id);
+	_get_object (SURFACE, ret)->defined = true;
+	_push_operand (SURFACE, ret);
+	_write_unlock ();
+    }
+
+    return ret;
+}
+#endif
+
+#if CAIRO_HAS_TEST_SURFACES
+#include <test-fallback-surface.h>
+cairo_surface_t *
+_cairo_test_fallback_surface_create (cairo_content_t	content,
+				     int		width,
+				     int		height)
+{
+    cairo_surface_t *ret;
+    long surface_id;
+
+    ret = DLCALL (_cairo_test_fallback_surface_create, content, width, height);
+    surface_id = _create_surface_id (ret);
+
+    if (_write_lock ()) {
+	fprintf (logfile,
+		 "dict\n"
+		 "  /type (test-fallback) set\n"
+		 "  /content //%s set\n"
+		 "  /width %d set\n"
+		 "  /height %d set\n"
+		 "  surface dup /s%ld exch def\n",
+		 _content_to_string (content),
+		 width, height,
+		 surface_id);
+	_get_object (SURFACE, ret)->defined = true;
+	_push_operand (SURFACE, ret);
+	_write_unlock ();
+    }
+
+    return ret;
+}
+
+#include <test-paginated-surface.h>
+cairo_surface_t *
+_cairo_test_paginated_surface_create_for_data (unsigned char	*data,
+					       cairo_content_t	 content,
+					       int		 width,
+					       int		 height,
+					       int		 stride)
+{
+    cairo_surface_t *ret;
+    long surface_id;
+
+    ret = DLCALL (_cairo_test_paginated_surface_create_for_data,
+		  data, content, width, height, stride);
+    surface_id = _create_surface_id (ret);
+
+    if (_write_lock ()) {
+	/* XXX store initial data? */
+	fprintf (logfile,
+		 "dict\n"
+		 "  /type (test-paginated) set\n"
+		 "  /content //%s set\n"
+		 "  /width %d set\n"
+		 "  /height %d set\n"
+		 "  /stride %d set\n"
+		 "  surface dup /s%ld exch def\n",
+		 _content_to_string (content),
+		 width, height, stride,
+		 surface_id);
+	_get_object (SURFACE, ret)->defined = true;
+	_push_operand (SURFACE, ret);
+	_write_unlock ();
+    }
+
+    return ret;
+}
+
+#include <test-meta-surface.h>
+cairo_surface_t *
+_cairo_test_meta_surface_create (cairo_content_t	content,
+				 int			width,
+				 int			height)
+{
+    cairo_surface_t *ret;
+    long surface_id;
+
+    ret = DLCALL (_cairo_test_meta_surface_create, content, width, height);
+    surface_id = _create_surface_id (ret);
+
+    if (_write_lock ()) {
+	fprintf (logfile,
+		 "dict\n"
+		 "  /type (test-meta) set\n"
+		 "  /content //%s set\n"
+		 "  /width %d set\n"
+		 "  /height %d set\n"
+		 "  surface dup /s%ld exch def\n",
+		 _content_to_string (content),
 		 width, height,
 		 surface_id);
 	_get_object (SURFACE, ret)->defined = true;
