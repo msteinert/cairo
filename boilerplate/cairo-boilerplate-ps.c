@@ -86,7 +86,7 @@ _cairo_boilerplate_ps_create_surface (const char		 *name,
 
     *closure = ptc = xmalloc (sizeof (ps_target_closure_t));
 
-    xasprintf (&ptc->filename, "%s-out.ps", name);
+    xasprintf (&ptc->filename, "%s.out.ps", name);
     xunlink (ptc->filename);
 
     ptc->level = level;

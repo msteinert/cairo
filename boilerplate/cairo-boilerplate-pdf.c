@@ -72,7 +72,7 @@ _cairo_boilerplate_pdf_create_surface (const char		 *name,
     ptc->width = width;
     ptc->height = height;
 
-    xasprintf (&ptc->filename, "%s-out.pdf", name);
+    xasprintf (&ptc->filename, "%s.out.pdf", name);
     xunlink (ptc->filename);
 
     surface = cairo_pdf_surface_create (ptc->filename, width, height);

@@ -65,7 +65,7 @@ _cairo_boilerplate_svg_create_surface (const char		 *name,
     ptc->width = width;
     ptc->height = height;
 
-    xasprintf (&ptc->filename, "%s-out.svg", name);
+    xasprintf (&ptc->filename, "%s.out.svg", name);
     xunlink (ptc->filename);
 
     surface = cairo_svg_surface_create (ptc->filename, width, height);

@@ -1225,12 +1225,12 @@ CLEANFILES +=					\
 # reality of portability was raised and it became....
 clean-local: clean-caches
 	rm -rf output
-	-${FIND} . -name '*-out.*'    -print | ${XARGS} ${RM}
+	-${FIND} . -name '*.out.*'    -print | ${XARGS} ${RM}
 	-${FIND} . -name '*.log'      -print | ${XARGS} ${RM}
 	-${FIND} . -name '*.[is]'     -print | ${XARGS} ${RM}
 clean-caches:
-	-${FIND} . -name '*-pass.*'   -print | ${XARGS} ${RM}
-	-${FIND} . -name '*-fail.*'   -print | ${XARGS} ${RM}
+	-${FIND} . -name '*.pass.*'   -print | ${XARGS} ${RM}
+	-${FIND} . -name '*.fail.*'   -print | ${XARGS} ${RM}
 
 # The following definitions both should work.
 #FAILED_TESTS = `grep -l '\<FAIL\>' $(test_sources:.c=.log) 2>/dev/null | sed -e 's/[.]log$$//' | xargs echo`
