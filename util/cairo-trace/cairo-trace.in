@@ -49,10 +49,17 @@ if test -z "$nofile"; then
   filename=`basename $1`.$$.trace
 fi
 
+LD_PRELOAD=@libdir@/cairo/cairo-trace.so 
+export LD_PRELOAD
+
+# Force the decimal output to the 'C' locale
+LC_ALL=C 
+export LC_ALL
+
 if test -z "$filename"; then
-  LD_PRELOAD=@libdir@/cairo-trace.so CAIRO_TRACE_FD=3 LC_ALL=C $* 3>&1 >/dev/null
+  CAIRO_TRACE_FD=3 $* 3>&1 >/dev/null
 elif test -n "$silent"; then
-  LD_PRELOAD=@libdir@/cairo-trace.so LC_ALL=C CAIRO_TRACE_OUTFILE_EXACT=$filename $*
+  CAIRO_TRACE_OUTFILE_EXACT=$filename $*
 else
-  LD_PRELOAD=@libdir@/cairo-trace.so CAIRO_TRACE_FD=3 LC_ALL=C $* 3>&1 >/dev/null | tee $filename
+  CAIRO_TRACE_FD=3 $* 3>&1 >/dev/null | tee $filename
 fi

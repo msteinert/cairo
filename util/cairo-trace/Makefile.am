@@ -1,5 +1,6 @@
 bin_SCRIPTS = cairo-trace
-lib_LTLIBRARIES = cairo-trace.la
+cairolibdir = @libdir@/cairo
+cairolib_LTLIBRARIES = cairo-trace.la
 
 AM_CPPFLAGS = -I$(top_srcdir)/src \
 	      -I$(top_builddir)/src
@@ -13,10 +14,10 @@ cairo_trace_la_LDFLAGS = -module -no-undefined
 cairo_trace_la_LIBADD = -ldl -lz $(BFD_LIBS)
 
 system-install:
-	grep -sq @libdir@/cairo-trace.so /etc/ld.so.preload || echo @libdir@/cairo-trace.so >> /etc/ld.so.preload
+	grep -sq @cairolibdir@/cairo-trace.so /etc/ld.so.preload || echo @libdir@/cairo-trace.so >> /etc/ld.so.preload
 
 system-uninstall:
-	sed -e '@libdir@\/cairo-trace.so/d' < /etc/ld.so.preload > /tmp/ld.so.preload && mv /tmp/ld.so.preload /etc/ld.so.preload;
+	sed -e '@cairolibdir@\/cairo-trace.so/d' < /etc/ld.so.preload > /tmp/ld.so.preload && mv /tmp/ld.so.preload /etc/ld.so.preload;
 
 EXTRA_DIST = \
 	COPYING \
