@@ -1002,7 +1002,7 @@ _emit_image (cairo_surface_t *image)
 	break;
     case CAIRO_FORMAT_A8:
 	for (row = height; row--; ) {
-	    _write_data (&ouput, data, width);
+	    _write_data (&stream, data, width);
 	    data += stride;
 	}
 	break;
@@ -1011,7 +1011,7 @@ _emit_image (cairo_surface_t *image)
 	    int col;
 	    rowdata = data;
 	    for (col = width; col--; ) {
-		_write_data (&ouput, rowdata, 3);
+		_write_data (&stream, rowdata, 3);
 		rowdata+=4;
 	    }
 	    data += stride;
@@ -1024,8 +1024,8 @@ _emit_image (cairo_surface_t *image)
 	}
 	break;
     default:
-	ASSERT_NOT_REACHED;
-	break;
+	_write_data_end (&stream);
+	return;
     }
 #else
     if (stride > ARRAY_LENGTH (row_stack)) {
