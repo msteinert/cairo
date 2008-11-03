@@ -605,13 +605,13 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
  *
  * Return mime data previously attached to @surface using the
  * specified mime type.  If no data has been attached with the given
- * mime type, @data is set NULL.
+ * mime type, @data is set %NULL.
  *
  * Since: 1.10
  **/
 void
 cairo_surface_get_mime_data (cairo_surface_t		*surface,
-                             const char 		*mime_type,
+                             const char			*mime_type,
                              const unsigned char       **data,
                              unsigned int		*length)
 {
@@ -650,7 +650,7 @@ cairo_surface_set_mime_data (cairo_surface_t		*surface,
 	if (surface->jpeg_data)
 	    surface->jpeg_destroy (surface->jpeg_data);
 
-	surface->jpeg_data = data;
+	surface->jpeg_data = (unsigned char *) data;
 	surface->jpeg_data_length = length;
 	surface->jpeg_destroy = destroy;
     }
