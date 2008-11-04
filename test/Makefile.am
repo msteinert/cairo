@@ -1149,7 +1149,8 @@ imagediff_SOURCES = \
 	buffer-diff.c	\
 	buffer-diff.h
 imagediff_LDADD = \
-	$(top_builddir)/test/pdiff/libpdiff.la
+	$(top_builddir)/test/pdiff/libpdiff.la \
+	$(top_builddir)/src/libcairo.la
 
 png_flatten_SOURCES = png-flatten.c
 png_flatten_LDADD = $(top_builddir)/src/libcairo.la $(CAIRO_LDADD)
