@@ -800,6 +800,14 @@ _get_surface_id (cairo_surface_t *surface)
     return _get_id (SURFACE, surface);
 }
 
+static bool
+_matrix_is_identity (const cairo_matrix_t *m)
+{
+    return m->xx == 1. && m->yx == 0. &&
+	   m->xy == 0. && m->yy == 1. &&
+	   m->x0 == 0. && m->y0 == 0.;
+}
+
 #define BUFFER_SIZE 16384
 struct _data_stream {
     z_stream zlib_stream;
@@ -1558,10 +1566,14 @@ cairo_transform (cairo_t *cr, const cairo_matrix_t *matrix)
 void
 cairo_set_matrix (cairo_t *cr, const cairo_matrix_t *matrix)
 {
-    _emit_cairo_op (cr, "[%g %g %g %g %g %g] set_matrix\n",
-		    matrix->xx, matrix->yx,
-		    matrix->xy, matrix->yy,
-		    matrix->x0, matrix->y0);
+    if (_matrix_is_identity (matrix)) {
+	_emit_cairo_op (cr, "identity set_matrix\n");
+    } else {
+	_emit_cairo_op (cr, "[%g %g %g %g %g %g] set_matrix\n",
+			matrix->xx, matrix->yx,
+			matrix->xy, matrix->yy,
+			matrix->x0, matrix->y0);
+    }
     return DLCALL (cairo_set_matrix, cr, matrix);
 }
 
@@ -2707,11 +2719,15 @@ cairo_pattern_add_color_stop_rgba (cairo_pattern_t *pattern, double offset, doub
 void
 cairo_pattern_set_matrix (cairo_pattern_t *pattern, const cairo_matrix_t *matrix)
 {
-    _emit_pattern_op (pattern,
-		      "[%g %g %g %g %g %g] set_matrix\n",
-		      matrix->xx, matrix->yx,
-		      matrix->xy, matrix->yy,
-		      matrix->x0, matrix->y0);
+    if (_matrix_is_identity (matrix)) {
+	_emit_pattern_op (pattern, "identity set_matrix\n");
+    } else {
+	_emit_pattern_op (pattern,
+			  "[%g %g %g %g %g %g] set_matrix\n",
+			  matrix->xx, matrix->yx,
+			  matrix->xy, matrix->yy,
+			  matrix->x0, matrix->y0);
+    }
     return DLCALL (cairo_pattern_set_matrix, pattern, matrix);
 }
 
