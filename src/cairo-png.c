@@ -190,7 +190,10 @@ write_png (cairo_surface_t	*surface,
     switch (image->format) {
     case CAIRO_FORMAT_ARGB32:
 	depth = 8;
-	png_color_type = PNG_COLOR_TYPE_RGB_ALPHA;
+	if (_cairo_image_analyze_transparency (image) == CAIRO_IMAGE_IS_OPAQUE)
+	    png_color_type = PNG_COLOR_TYPE_RGB;
+	else
+	    png_color_type = PNG_COLOR_TYPE_RGB_ALPHA;
 	break;
     case CAIRO_FORMAT_RGB24:
 	depth = 8;
@@ -237,12 +240,12 @@ write_png (cairo_surface_t	*surface,
      */
     png_write_info (png, info);
 
-    if (image->format == CAIRO_FORMAT_ARGB32)
+    if (png_color_type == PNG_COLOR_TYPE_RGB_ALPHA) {
 	png_set_write_user_transform_fn (png, unpremultiply_data);
-    else if (image->format == CAIRO_FORMAT_RGB24)
+    } else if (png_color_type == PNG_COLOR_TYPE_RGB) {
 	png_set_write_user_transform_fn (png, convert_data_to_bytes);
-    if (image->format == CAIRO_FORMAT_RGB24)
 	png_set_filler (png, 0, PNG_FILLER_AFTER);
+    }
 
     png_write_image (png, rows);
     png_write_end (png, info);
