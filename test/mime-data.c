@@ -35,7 +35,11 @@ read_jpg_file (const cairo_test_context_t *ctx,
 	       unsigned char **data_out,
 	       unsigned int *length_out)
 {
-    const char jpg_filename[] = "romedalen.jpg";
+    /* Deliberately use a non-matching jpeg image, so that we can identify
+     * when the JPEG representation is used in preference to the image
+     * surface.
+     */
+    const char jpg_filename[] = "scarab.jpg";
     FILE *file;
     unsigned char *buf;
     unsigned int len;

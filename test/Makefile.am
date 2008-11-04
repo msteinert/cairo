@@ -694,6 +694,8 @@ REFERENCE_IMAGES = \
 	meta-surface-pattern.svg12.argb32.ref.png	\
 	meta-surface-pattern.svg12.rgb24.ref.png	\
 	mime-data.ref.png	\
+	mime-data.ps.ref.png	\
+	mime-data.pdf.ref.png	\
 	miter-precision.ref.png \
 	miter-precision.ps2.ref.png	\
 	miter-precision.ps3.ref.png	\
@@ -1002,6 +1004,7 @@ EXTRA_DIST +=		\
 make-html.pl		\
 romedalen.jpg		\
 romedalen.png		\
+scarab.jpg		\
 surface-source.c	\
 $(REFERENCE_IMAGES)
 
