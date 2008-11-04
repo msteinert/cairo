@@ -1002,6 +1002,7 @@ REFERENCE_IMAGES = \
 EXTRA_DIST +=		\
 6x13.pcf		\
 make-html.pl		\
+jpeg.jpg		\
 romedalen.jpg		\
 romedalen.png		\
 scarab.jpg		\
