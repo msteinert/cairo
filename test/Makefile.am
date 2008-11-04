@@ -1002,7 +1002,6 @@ EXTRA_DIST +=		\
 make-html.pl		\
 romedalen.jpg		\
 romedalen.png		\
-romedalen.jpg		\
 surface-source.c	\
 $(REFERENCE_IMAGES)
 
@@ -1219,6 +1218,7 @@ CLEANFILES +=					\
 	pdf-surface-source.pdf			\
 	ps-surface-source.ps			\
 	pdf-features.pdf			\
+	pdf-mime-data.out*			\
 	ps-features.ps				\
 	svg-clip.svg				\
 	svg-surface.svg				\

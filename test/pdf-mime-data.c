@@ -24,11 +24,12 @@
  * Author: Adrian Johnson <ajohnson@redneon.com>
  */
 
+#include "cairo-test.h"
+
 #include <stdio.h>
+#include <errno.h>
 #include <cairo.h>
 #include <cairo-pdf.h>
-
-#include "cairo-test.h"
 
 /* This test checks that the mime data is correctly used by the PDF
  * surface when embedding images..
@@ -40,13 +41,30 @@
 
 
 static cairo_test_status_t
-read_file (const char *file, unsigned char **data, unsigned int *len)
+read_file (const cairo_test_context_t *ctx,
+	   const char *file,
+	   unsigned char **data,
+	   unsigned int *len)
 {
     FILE *fp;
 
     fp = fopen (file, "rb");
-    if (fp == NULL)
-	return CAIRO_TEST_FAILURE;
+    if (file == NULL) {
+	char filename[4096];
+
+	/* try again with srcdir */
+	snprintf (filename, sizeof (filename),
+		  "%s/%s", ctx->srcdir, file);
+	fp = fopen (filename, "rb");
+    }
+    if (fp == NULL) {
+	switch (errno) {
+	case ENOMEM:
+	    return CAIRO_TEST_NO_MEMORY;
+	default:
+	    return CAIRO_TEST_FAILURE;
+	}
+    }
 
     fseek (fp, 0, SEEK_END);
     *len = ftell(fp);
@@ -65,7 +83,7 @@ read_file (const char *file, unsigned char **data, unsigned int *len)
 static cairo_test_status_t
 preamble (cairo_test_context_t *ctx)
 {
-    const char *filename = "pdf-mime-data-out.pdf";
+    const char *filename = "pdf-mime-data.out.pdf";
     cairo_surface_t *image;
     cairo_surface_t *surface;
     cairo_t *cr;
@@ -82,7 +100,7 @@ preamble (cairo_test_context_t *ctx)
 	return CAIRO_TEST_UNTESTED;
 
     image = cairo_image_surface_create_from_png (IMAGE_FILE ".png");
-    test_status = read_file (IMAGE_FILE ".jpg", &data, &len);
+    test_status = read_file (ctx, IMAGE_FILE ".jpg", &data, &len);
     if (test_status) {
 	cairo_test_log (ctx, "Could not read input jpeg file %s\n", IMAGE_FILE ".jpg");
 	return test_status;
@@ -114,22 +132,24 @@ preamble (cairo_test_context_t *ctx)
 
     printf ("pdf-mime-data: Please check %s to ensure it looks/prints correctly.\n", filename);
 
-    sprintf (command, "pdfimages -j %s pdf-mime-data-out", filename);
+    sprintf (command, "pdfimages -j %s pdf-mime-data.out", filename);
     exit_status = system (command);
     if (exit_status) {
 	cairo_test_log (ctx, "pdfimages failed with exit status %d\n", exit_status);
 	return CAIRO_TEST_FAILURE;
     }
 
-    test_status = read_file (IMAGE_FILE ".jpg", &data, &len);
+    test_status = read_file (ctx, IMAGE_FILE ".jpg", &data, &len);
     if (test_status) {
 	cairo_test_log (ctx, "Could not read input jpeg file %s\n", IMAGE_FILE ".jpg");
 	return test_status;
     }
 
-    test_status = read_file ("pdf-mime-data-out-000.jpg", &out_data, &out_len);
+    test_status = read_file (ctx, "pdf-mime-data.out-000.jpg", &out_data, &out_len);
     if (test_status) {
-	cairo_test_log (ctx, "Could not read input jpeg file %s\n", "pdf-mime-data-out-000.jpg");
+	cairo_test_log (ctx,
+			"Could not read input jpeg file %s\n",
+			"pdf-mime-data.out-000.jpg");
 	return test_status;
     }
 
@@ -145,7 +165,7 @@ preamble (cairo_test_context_t *ctx)
 
 CAIRO_TEST (pdf_mime_data,
 	    "Check mime data correctly used by PDF surface",
-	    "pdf", /* keywords */
+	    "pdf, mime-data", /* keywords */
 	    NULL, /* requirements */
 	    0, 0,
 	    preamble, NULL)
