@@ -283,8 +283,11 @@ cairo_test_suite_LDADD = 					\
 cairo_test_suite_DEPENDENCIES = \
 	$(top_builddir)/test/pdiff/libpdiff.la 			\
         $(top_builddir)/boilerplate/libcairoboilerplate.la	\
-	$(top_builddir)/src/libcairo.la 			\
+	$(top_builddir)/src/libcairo.la
+if BUILD_ANY2PPM
+cairo_test_suite_DEPENDENCIES += \
 	any2ppm
+endif
 if HAVE_PTHREAD
 cairo_test_suite_LDADD += -lpthread
 endif
