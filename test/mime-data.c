@@ -39,7 +39,7 @@ read_jpg_file (const cairo_test_context_t *ctx,
      * when the JPEG representation is used in preference to the image
      * surface.
      */
-    const char jpg_filename[] = "scarab.jpg";
+    const char jpg_filename[] = "jpeg.jpg";
     FILE *file;
     unsigned char *buf;
     unsigned int len;
@@ -92,7 +92,7 @@ draw (cairo_t *cr, int width, int height)
 	return cairo_test_status_from_status (ctx, status);
     }
 
-    image = cairo_test_create_surface_from_png (ctx, "romedalen.png");
+    image = cairo_image_surface_create (CAIRO_FORMAT_RGB24, 200, 50);
     status = cairo_surface_set_mime_data (image, CAIRO_MIME_TYPE_JPEG,
 					  jpg_data, jpg_len, free);
     if (status) {
@@ -111,5 +111,5 @@ CAIRO_TEST (mime_data,
 	    "Check that the mime-data embedding works",
 	    "jpeg, api", /* keywords */
 	    NULL, /* requirements */
-	    10, 10,
+	    200, 50,
 	    NULL, draw)
