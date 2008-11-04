@@ -217,6 +217,7 @@ endif
 
 if CAIRO_HAS_PDF_SURFACE
 test_sources += pdf-features.c
+test_sources += pdf-mime-data.c
 test_sources += pdf-surface-source.c
 endif
 
@@ -999,6 +1000,7 @@ REFERENCE_IMAGES = \
 EXTRA_DIST +=		\
 6x13.pcf		\
 make-html.pl		\
+romedalen.jpg		\
 romedalen.png		\
 romedalen.jpg		\
 surface-source.c	\
