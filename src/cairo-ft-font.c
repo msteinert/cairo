@@ -2739,6 +2739,18 @@ _cairo_ft_scaled_font_is_vertical (cairo_scaled_font_t *scaled_font)
     return FALSE;
 }
 
+unsigned int
+_cairo_ft_scaled_font_get_load_flags (cairo_scaled_font_t *scaled_font)
+{
+    cairo_ft_scaled_font_t *ft_scaled_font;
+
+    if (! _cairo_scaled_font_is_ft (scaled_font))
+	return 0;
+
+    ft_scaled_font = (cairo_ft_scaled_font_t *) scaled_font;
+    return ft_scaled_font->ft_options.load_flags;
+}
+
 void
 _cairo_ft_font_reset_static_data (void)
 {

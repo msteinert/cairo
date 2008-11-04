@@ -1740,6 +1740,7 @@ _string_array_stream_create (cairo_output_stream_t *output)
 
     _cairo_output_stream_init (&stream->base,
 			       _string_array_stream_write,
+			       NULL,
 			       _string_array_stream_close);
     stream->output = output;
     stream->column = 0;
@@ -1766,6 +1767,7 @@ _base85_array_stream_create (cairo_output_stream_t *output)
 
     _cairo_output_stream_init (&stream->base,
 			       _string_array_stream_write,
+			       NULL,
 			       _string_array_stream_close);
     stream->output = output;
     stream->column = 0;

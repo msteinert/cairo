@@ -44,7 +44,7 @@ _cairo_cache_remove (cairo_cache_t	 *cache,
 
 static void
 _cairo_cache_shrink_to_accommodate (cairo_cache_t *cache,
-				   unsigned long  additional);
+				    unsigned long  additional);
 
 static cairo_status_t
 _cairo_cache_init (cairo_cache_t		*cache,
@@ -67,24 +67,19 @@ _cairo_cache_init (cairo_cache_t		*cache,
 }
 
 static void
+_cairo_cache_pluck (void *entry, void *closure)
+{
+    _cairo_cache_remove (closure, entry);
+}
+
+static void
 _cairo_cache_fini (cairo_cache_t *cache)
 {
-    cairo_cache_entry_t *entry;
-
-    /* We have to manually remove all entries from the cache ourselves
-     * rather than relying on _cairo_hash_table_destroy() to do that
-     * since otherwise the cache->entry_destroy callback would not get
-     * called on each entry. */
-
-    while (1) {
-	entry = _cairo_hash_table_random_entry (cache->hash_table, NULL);
-	if (entry == NULL)
-	    break;
-	_cairo_cache_remove (cache, entry);
-    }
-
+    _cairo_hash_table_foreach (cache->hash_table,
+			       _cairo_cache_pluck,
+			       cache);
+    assert (cache->size == 0);
     _cairo_hash_table_destroy (cache->hash_table);
-    cache->size = 0;
 }
 
 /**
@@ -354,8 +349,20 @@ unsigned long
 _cairo_hash_string (const char *c)
 {
     /* This is the djb2 hash. */
-    unsigned long hash = 5381;
+    unsigned long hash = _CAIRO_HASH_INIT_VALUE;
     while (c && *c)
 	hash = ((hash << 5) + hash) + *c++;
+    return hash;
+}
+
+unsigned long
+_cairo_hash_bytes (unsigned long hash,
+		   const void *ptr,
+		   unsigned int length)
+{
+    const uint8_t *bytes = ptr;
+    /* This is the djb2 hash. */
+    while (length--)
+	hash = ((hash << 5) + hash) + *bytes++;
     return hash;
 }

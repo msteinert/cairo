@@ -322,8 +322,15 @@ _cairo_user_data_array_set_data (cairo_user_data_array_t     *array,
 				 void			     *user_data,
 				 cairo_destroy_func_t	      destroy);
 
+#define _CAIRO_HASH_INIT_VALUE 5381
+
 cairo_private unsigned long
 _cairo_hash_string (const char *c);
+
+cairo_private unsigned long
+_cairo_hash_bytes (unsigned long hash,
+		   const void *bytes,
+		   unsigned int length);
 
 /*
  * A #cairo_unscaled_font_t is just an opaque handle we use in the
@@ -339,6 +346,7 @@ typedef struct _cairo_scaled_glyph {
     cairo_cache_entry_t	    cache_entry;	/* hash is glyph index */
     cairo_scaled_font_t	    *scaled_font;	/* font the glyph lives in */
     cairo_text_extents_t    metrics;		/* user-space metrics */
+    cairo_text_extents_t    fs_metrics;		/* font-space metrics */
     cairo_box_t		    bbox;		/* device-space bounds */
     int16_t                 x_advance;		/* device-space rounded X advance */
     int16_t                 y_advance;		/* device-space rounded Y advance */
@@ -2385,6 +2393,16 @@ _cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
 cairo_private cairo_status_t
 _cairo_pattern_get_extents (const cairo_pattern_t	    *pattern,
 			    cairo_rectangle_int_t           *extents);
+
+cairo_private unsigned long
+_cairo_pattern_hash (const cairo_pattern_t *pattern);
+
+cairo_private unsigned long
+_cairo_pattern_size (const cairo_pattern_t *pattern);
+
+cairo_private cairo_bool_t
+_cairo_pattern_equal (const cairo_pattern_t *a,
+		      const cairo_pattern_t *b);
 
 cairo_private void
 _cairo_pattern_reset_static_data (void);

@@ -249,3 +249,6 @@ cairo_directfb_sources = cairo-directfb-surface.c
 
 cairo_sdl_headers = cairo-sdl.h
 cairo_sdl_sources = cairo-sdl-surface.c
+
+cairo_script_headers = cairo-script.h
+cairo_script_sources = cairo-script-surface.c

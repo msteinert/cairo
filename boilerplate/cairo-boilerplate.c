@@ -47,6 +47,9 @@
 #if CAIRO_HAS_QUARTZ_SURFACE
 #include "cairo-boilerplate-quartz-private.h"
 #endif
+#if CAIRO_HAS_SCRIPT_SURFACE
+#include "cairo-boilerplate-script-private.h"
+#endif
 #if CAIRO_HAS_SDL_SURFACE
 #include "cairo-boilerplate-sdl-private.h"
 #endif
@@ -601,6 +604,19 @@ static cairo_boilerplate_target_t targets[] =
 	_cairo_boilerplate_pdf_surface_write_to_png,
 	_cairo_boilerplate_pdf_cleanup,
 	NULL, TRUE, TRUE
+    },
+#endif
+#if CAIRO_HAS_SCRIPT_SURFACE
+    {
+	"script", "script", ".cs",
+	CAIRO_SURFACE_TYPE_SCRIPT, CAIRO_CONTENT_COLOR_ALPHA, 0,
+	_cairo_boilerplate_script_create_surface,
+	NULL,
+	_cairo_boilerplate_script_finish_surface,
+	_cairo_boilerplate_script_get_image_surface,
+	_cairo_boilerplate_script_surface_write_to_png,
+	_cairo_boilerplate_script_cleanup,
+	NULL, FALSE
     },
 #endif
 #if CAIRO_HAS_SVG_SURFACE && CAIRO_CAN_TEST_SVG_SURFACE

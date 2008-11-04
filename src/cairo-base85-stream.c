@@ -124,6 +124,7 @@ _cairo_base85_stream_create (cairo_output_stream_t *output)
 
     _cairo_output_stream_init (&stream->base,
 			       _cairo_base85_stream_write,
+			       NULL,
 			       _cairo_base85_stream_close);
     stream->output = output;
     stream->pending = 0;

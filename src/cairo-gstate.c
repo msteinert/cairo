@@ -1056,7 +1056,8 @@ _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 				  path,
 				  gstate->fill_rule,
 				  gstate->tolerance,
-				  gstate->antialias, NULL);
+				  gstate->antialias,
+				  NULL);
 
     if (pattern == &pattern_stack.base)
 	_cairo_pattern_fini (&pattern_stack.base);

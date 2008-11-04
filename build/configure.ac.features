@@ -367,6 +367,7 @@ AC_DEFUN([CAIRO_REPORT],
 	echo "  XCB:           $use_xcb"
 	echo "  Win32:         $use_win32"
 	echo "  OS2:           $use_os2"
+	echo "  CairoScript:   $use_script"
 	echo "  PostScript:    $use_ps"
 	echo "  PDF:           $use_pdf"
 	echo "  SVG:           $use_svg"
@@ -389,6 +390,7 @@ AC_DEFUN([CAIRO_REPORT],
 	echo "  test surfaces: $use_test_surfaces"
 	echo "  ps testing:    $test_ps"
 	echo "  pdf testing:   $test_pdf"
+	echo "  cs testing:    $test_script"
 	echo "  svg testing:   $test_svg"
 	if test x"$use_win32" = "xyes"; then
 		echo "  win32 printing testing:    $test_win32_printing"

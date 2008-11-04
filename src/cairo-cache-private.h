@@ -118,7 +118,7 @@ _cairo_cache_insert (cairo_cache_t	 *cache,
 		     cairo_cache_entry_t *entry);
 
 cairo_private void
-_cairo_cache_foreach (cairo_cache_t 	      	 *cache,
+_cairo_cache_foreach (cairo_cache_t		 *cache,
 		      cairo_cache_callback_func_t cache_callback,
 		      void			 *closure);
 

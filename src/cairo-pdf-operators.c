@@ -300,6 +300,7 @@ _word_wrap_stream_create (cairo_output_stream_t *output, int max_column)
 
     _cairo_output_stream_init (&stream->base,
 			       _word_wrap_stream_write,
+			       NULL,
 			       _word_wrap_stream_close);
     stream->output = output;
     stream->max_column = max_column;

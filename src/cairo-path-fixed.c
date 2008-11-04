@@ -144,6 +144,170 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
     return CAIRO_STATUS_SUCCESS;
 }
 
+unsigned long
+_cairo_path_fixed_hash (const cairo_path_fixed_t *path)
+{
+    unsigned long hash = 0;
+    const cairo_path_buf_t *buf;
+    int num_points, num_ops;
+
+    hash = _cairo_hash_bytes (hash,
+			 &path->current_point,
+			 sizeof (path->current_point));
+    hash = _cairo_hash_bytes (hash,
+			 &path->last_move_point,
+			 sizeof (path->last_move_point));
+
+    num_ops = path->buf_head.base.num_ops;
+    num_points = path->buf_head.base.num_points;
+    for (buf = path->buf_head.base.next;
+	 buf != NULL;
+	 buf = buf->next)
+    {
+	hash = _cairo_hash_bytes (hash, buf->op,
+			     buf->num_ops * sizeof (buf->op[0]));
+	hash = _cairo_hash_bytes (hash, buf->points,
+			     buf->num_points * sizeof (buf->points[0]));
+
+	num_ops    += buf->num_ops;
+	num_points += buf->num_points;
+    }
+
+    hash = _cairo_hash_bytes (hash, &num_ops, sizeof (num_ops));
+    hash = _cairo_hash_bytes (hash, &num_points, sizeof (num_points));
+
+    return hash;
+}
+
+unsigned long
+_cairo_path_fixed_size (const cairo_path_fixed_t *path)
+{
+    const cairo_path_buf_t *buf;
+    int num_points, num_ops;
+
+    num_ops = path->buf_head.base.num_ops;
+    num_points = path->buf_head.base.num_points;
+    for (buf = path->buf_head.base.next;
+	 buf != NULL;
+	 buf = buf->next)
+    {
+	num_ops    += buf->num_ops;
+	num_points += buf->num_points;
+    }
+
+    return num_ops * sizeof (buf->op[0]) +
+	   num_points * sizeof (buf->points[0]);
+}
+
+cairo_bool_t
+_cairo_path_fixed_equal (const cairo_path_fixed_t *a,
+			 const cairo_path_fixed_t *b)
+{
+    const cairo_path_buf_t *buf_a, *buf_b;
+    const cairo_path_op_t *ops_a, *ops_b;
+    const cairo_point_t *points_a, *points_b;
+    int num_points_a, num_ops_a;
+    int num_points_b, num_ops_b;
+
+    if (a == b)
+	return TRUE;
+
+    if (a != NULL) {
+	num_ops_a = a->buf_head.base.num_ops;
+	num_points_a = a->buf_head.base.num_points;
+	for (buf_a = a->buf_head.base.next;
+	     buf_a != NULL;
+	     buf_a = buf_a->next)
+	{
+	    num_ops_a    += buf_a->num_ops;
+	    num_points_a += buf_a->num_points;
+	}
+    } else
+	num_ops_a = num_points_a = 0;
+
+    if (b != NULL) {
+	num_ops_b = b->buf_head.base.num_ops;
+	num_points_b = b->buf_head.base.num_points;
+	for (buf_b = b->buf_head.base.next;
+	     buf_b != NULL;
+	     buf_b = buf_b->next)
+	{
+	    num_ops_b    += buf_b->num_ops;
+	    num_points_b += buf_b->num_points;
+	}
+    } else
+	num_ops_b = num_points_b = 0;
+
+    if (num_ops_a == 0 && num_ops_b == 0)
+	return TRUE;
+
+    if (num_ops_a != num_ops_b || num_points_a != num_points_b)
+	return FALSE;
+
+    assert (a != NULL && b != NULL);
+
+    buf_a = &a->buf_head.base;
+    num_points_a = buf_a->num_points;
+    num_ops_a = buf_a->num_ops;
+    ops_a = buf_a->op;
+    points_a = buf_a->points;
+
+    buf_b = &b->buf_head.base;
+    num_points_b = buf_b->num_points;
+    num_ops_b = buf_b->num_ops;
+    ops_b = buf_b->op;
+    points_b = buf_b->points;
+
+    while (TRUE) {
+	int num_ops = MIN (num_ops_a, num_ops_b);
+	int num_points = MIN (num_points_a, num_points_b);
+
+	if (memcmp (ops_a, ops_b, num_ops * sizeof (cairo_path_op_t)))
+	    return FALSE;
+	if (memcmp (points_a, points_b, num_points * sizeof (cairo_point_t)))
+	    return FALSE;
+
+	num_ops_a -= num_ops;
+	ops_a += num_ops;
+	num_points_a -= num_points;
+	points_a += num_points;
+	if (num_ops_a == 0 || num_points_a == 0) {
+	    if (num_ops_a || num_points_a)
+		return FALSE;
+
+	    buf_a = buf_a->next;
+	    if (buf_a == NULL)
+		break;
+
+	    num_points_a = buf_a->num_points;
+	    num_ops_a = buf_a->num_ops;
+	    ops_a = buf_a->op;
+	    points_a = buf_a->points;
+	}
+
+	num_ops_b -= num_ops;
+	ops_b += num_ops;
+	num_points_b -= num_points;
+	points_b += num_points;
+	if (num_ops_b == 0 || num_points_b == 0) {
+	    if (num_ops_b || num_points_b)
+		return FALSE;
+
+	    buf_b = buf_b->next;
+	    if (buf_b == NULL)
+		break;
+
+	    num_points_b = buf_b->num_points;
+	    num_ops_b = buf_b->num_ops;
+	    ops_b = buf_b->op;
+	    points_b = buf_b->points;
+	}
+    }
+
+    return TRUE;
+}
+
+
 cairo_path_fixed_t *
 _cairo_path_fixed_create (void)
 {

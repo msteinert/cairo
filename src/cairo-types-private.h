@@ -44,6 +44,7 @@
 #include "cairo-reference-count-private.h"
 
 typedef struct _cairo_array cairo_array_t;
+typedef struct _cairo_backend cairo_backend_t;
 typedef struct _cairo_cache cairo_cache_t;
 typedef struct _cairo_clip cairo_clip_t;
 typedef struct _cairo_clip_path cairo_clip_path_t;

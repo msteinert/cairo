@@ -1170,10 +1170,10 @@ png_flatten_LDADD = $(top_builddir)/src/libcairo.la $(CAIRO_LDADD)
 
 if BUILD_ANY2PPM
 check_PROGRAMS += any2ppm
-any2ppm_CFLAGS = $(POPPLER_CFLAGS) $(LIBRSVG_CFLAGS) $(LIBSPECTRE_CFLAGS)
+any2ppm_CFLAGS = $(POPPLER_CFLAGS) $(LIBRSVG_CFLAGS) $(LIBSPECTRE_CFLAGS) $(csi_CFLAGS)
 # add LDADD, so poppler/librsvg uses "our" cairo
 any2ppm_LDFLAGS = $(CAIRO_TEST_UNDEFINED_LDFLAGS)
-any2ppm_LDADD  = $(top_builddir)/src/libcairo.la $(CAIRO_LDADD) $(POPPLER_LIBS) $(LIBRSVG_LIBS) $(LIBSPECTRE_LIBS)
+any2ppm_LDADD  = $(top_builddir)/src/libcairo.la $(CAIRO_LDADD) $(POPPLER_LIBS) $(LIBRSVG_LIBS) $(LIBSPECTRE_LIBS) $(csi_LIBS)
 endif
 
 if CAIRO_CAN_TEST_PDF_SURFACE

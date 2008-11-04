@@ -2293,6 +2293,261 @@ _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
     return CAIRO_STATUS_SUCCESS;
 }
 
+
+static unsigned long
+_cairo_solid_pattern_hash (unsigned long hash,
+			   const cairo_pattern_t *pattern)
+{
+    const cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *) pattern;
+
+    hash = _cairo_hash_bytes (hash, &solid->content, sizeof (solid->content));
+    hash = _cairo_hash_bytes (hash, &solid->color, sizeof (solid->color));
+
+    return hash;
+}
+
+static unsigned long
+_cairo_gradient_color_stops_hash (unsigned long hash,
+				  const cairo_gradient_pattern_t *gradient)
+{
+    unsigned int n;
+
+    hash = _cairo_hash_bytes (hash,
+			      &gradient->n_stops,
+			      sizeof (gradient->n_stops));
+
+    for (n = 0; n < gradient->n_stops; n++) {
+	hash = _cairo_hash_bytes (hash,
+				  &gradient->stops[n].offset,
+				  sizeof (double));
+	hash = _cairo_hash_bytes (hash,
+				  &gradient->stops[n].color,
+				  sizeof (cairo_color_t));
+    }
+
+    return hash;
+}
+
+static unsigned long
+_cairo_linear_pattern_hash (unsigned long hash,
+			    const cairo_pattern_t *pattern)
+{
+    const cairo_linear_pattern_t *linear = (cairo_linear_pattern_t *) pattern;
+
+    hash = _cairo_hash_bytes (hash, &linear->p1, sizeof (linear->p1));
+    hash = _cairo_hash_bytes (hash, &linear->p2, sizeof (linear->p2));
+
+    return _cairo_gradient_color_stops_hash (hash, &linear->base);
+}
+
+static unsigned long
+_cairo_radial_pattern_hash (unsigned long hash, const cairo_pattern_t *pattern)
+{
+    const cairo_radial_pattern_t *radial = (cairo_radial_pattern_t *) pattern;
+
+    hash = _cairo_hash_bytes (hash, &radial->c1, sizeof (radial->c1));
+    hash = _cairo_hash_bytes (hash, &radial->r1, sizeof (radial->r1));
+    hash = _cairo_hash_bytes (hash, &radial->c2, sizeof (radial->c2));
+    hash = _cairo_hash_bytes (hash, &radial->r2, sizeof (radial->r2));
+
+    return _cairo_gradient_color_stops_hash (hash, &radial->base);
+}
+
+static unsigned long
+_cairo_surface_pattern_hash (unsigned long hash,
+			     const cairo_pattern_t *pattern)
+{
+    /* XXX requires cow-snapshots */
+    return hash;
+}
+
+unsigned long
+_cairo_pattern_hash (const cairo_pattern_t *pattern)
+{
+    unsigned long hash = _CAIRO_HASH_INIT_VALUE;
+
+    if (pattern->status)
+	return 0;
+
+    hash = _cairo_hash_bytes (hash, &pattern->type, sizeof (pattern->type));
+    hash = _cairo_hash_bytes (hash, &pattern->matrix, sizeof (pattern->matrix));
+    hash = _cairo_hash_bytes (hash, &pattern->filter, sizeof (pattern->filter));
+    hash = _cairo_hash_bytes (hash, &pattern->extend, sizeof (pattern->extend));
+
+    switch (pattern->type) {
+    case CAIRO_PATTERN_TYPE_SOLID:
+	return _cairo_solid_pattern_hash (hash, pattern);
+    case CAIRO_PATTERN_TYPE_LINEAR:
+	return _cairo_linear_pattern_hash (hash, pattern);
+    case CAIRO_PATTERN_TYPE_RADIAL:
+	return _cairo_radial_pattern_hash (hash, pattern);
+    case CAIRO_PATTERN_TYPE_SURFACE:
+	return _cairo_surface_pattern_hash (hash, pattern);
+    default:
+	ASSERT_NOT_REACHED;
+	return FALSE;
+    }
+}
+
+static unsigned long
+_cairo_gradient_pattern_color_stops_size (const cairo_pattern_t *pattern)
+{
+    cairo_gradient_pattern_t *gradient = (cairo_gradient_pattern_t *) pattern;
+
+    return gradient->n_stops * (sizeof (double) + sizeof (cairo_color_t));
+}
+
+unsigned long
+_cairo_pattern_size (const cairo_pattern_t *pattern)
+{
+    if (pattern->status)
+	return 0;
+
+    /* XXX */
+    switch (pattern->type) {
+    case CAIRO_PATTERN_TYPE_SOLID:
+	return sizeof (cairo_solid_pattern_t);
+	break;
+    case CAIRO_PATTERN_TYPE_SURFACE:
+	return sizeof (cairo_surface_pattern_t);
+	break;
+    case CAIRO_PATTERN_TYPE_LINEAR:
+	return sizeof (cairo_linear_pattern_t) +
+	    _cairo_gradient_pattern_color_stops_size (pattern);
+	break;
+    case CAIRO_PATTERN_TYPE_RADIAL:
+	return sizeof (cairo_radial_pattern_t) +
+	    _cairo_gradient_pattern_color_stops_size (pattern);
+    default:
+	ASSERT_NOT_REACHED;
+	return 0;
+    }
+}
+
+
+static cairo_bool_t
+_cairo_solid_pattern_equal (const cairo_pattern_t *A,
+			    const cairo_pattern_t *B)
+{
+    const cairo_solid_pattern_t *a = (cairo_solid_pattern_t *) A;
+    const cairo_solid_pattern_t *b = (cairo_solid_pattern_t *) B;
+
+    if (a->content != b->content)
+	return FALSE;
+
+    return _cairo_color_equal (&a->color, &b->color);
+}
+
+static cairo_bool_t
+_cairo_gradient_color_stops_equal (const cairo_gradient_pattern_t *a,
+				   const cairo_gradient_pattern_t *b)
+{
+    unsigned int n;
+
+    if (a->n_stops != b->n_stops)
+	return FALSE;
+
+    for (n = 0; n < a->n_stops; n++) {
+	if (a->stops[n].offset != b->stops[n].offset)
+	    return FALSE;
+	if (! _cairo_color_equal (&a->stops[n].color, &b->stops[n].color))
+	    return FALSE;
+    }
+
+    return TRUE;
+}
+
+static cairo_bool_t
+_cairo_linear_pattern_equal (const cairo_pattern_t *A,
+			     const cairo_pattern_t *B)
+{
+    const cairo_linear_pattern_t *a = (cairo_linear_pattern_t *) A;
+    const cairo_linear_pattern_t *b = (cairo_linear_pattern_t *) B;
+
+    if (a->p1.x != b->p1.x)
+	return FALSE;
+
+    if (a->p1.y != b->p1.y)
+	return FALSE;
+
+    if (a->p2.x != b->p2.x)
+	return FALSE;
+
+    if (a->p2.y != b->p2.y)
+	return FALSE;
+
+    return _cairo_gradient_color_stops_equal (&a->base, &b->base);
+}
+
+static cairo_bool_t
+_cairo_radial_pattern_equal (const cairo_pattern_t *A,
+			     const cairo_pattern_t *B)
+{
+    const cairo_radial_pattern_t *a = (cairo_radial_pattern_t *) A;
+    const cairo_radial_pattern_t *b = (cairo_radial_pattern_t *) B;
+
+    if (a->c1.x != b->c1.x)
+	return FALSE;
+
+    if (a->c1.y != b->c1.y)
+	return FALSE;
+
+    if (a->r1 != b->r1)
+	return FALSE;
+
+    if (a->c2.x != b->c2.x)
+	return FALSE;
+
+    if (a->c2.y != b->c2.y)
+	return FALSE;
+
+    if (a->r2 != b->r2)
+	return FALSE;
+
+    return _cairo_gradient_color_stops_equal (&a->base, &b->base);
+}
+
+static cairo_bool_t
+_cairo_surface_pattern_equal (const cairo_pattern_t *A,
+			      const cairo_pattern_t *B)
+{
+    /* XXX requires cow-snapshots */
+    return FALSE;
+}
+
+cairo_bool_t
+_cairo_pattern_equal (const cairo_pattern_t *a, const cairo_pattern_t *b)
+{
+    if (a->status || b->status)
+	return FALSE;
+
+    if (a->type != b->type)
+	return FALSE;
+
+    if (memcmp (&a->matrix, &b->matrix, sizeof (cairo_matrix_t)))
+	return FALSE;
+
+    if (a->filter != b->filter)
+	return FALSE;
+
+    if (a->extend != b->extend)
+	return FALSE;
+
+    switch (a->type) {
+    case CAIRO_PATTERN_TYPE_SOLID:
+	return _cairo_solid_pattern_equal (a, b);
+    case CAIRO_PATTERN_TYPE_LINEAR:
+	return _cairo_linear_pattern_equal (a, b);
+    case CAIRO_PATTERN_TYPE_RADIAL:
+	return _cairo_radial_pattern_equal (a, b);
+    case CAIRO_PATTERN_TYPE_SURFACE:
+	return _cairo_surface_pattern_equal (a, b);
+    default:
+	ASSERT_NOT_REACHED;
+	return FALSE;
+    }
+}
+
 /**
  * cairo_pattern_get_rgba
  * @pattern: a #cairo_pattern_t

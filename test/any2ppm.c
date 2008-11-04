@@ -63,6 +63,10 @@
 
 #include <cairo.h>
 
+#if CAIRO_CAN_TEST_SCRIPT_SURFACE
+#include <cairo-script-interpreter.h>
+#endif
+
 #if CAIRO_CAN_TEST_PDF_SURFACE
 #include <poppler.h>
 #endif
@@ -160,7 +164,21 @@ write_ppm (cairo_surface_t *surface, int fd)
     int width, height, stride;
     int i, j;
 
+    data = cairo_image_surface_get_data (surface);
+    height = cairo_image_surface_get_height (surface);
+    width = cairo_image_surface_get_width (surface);
+    stride = cairo_image_surface_get_stride (surface);
     format = cairo_image_surface_get_format (surface);
+    if (format == CAIRO_FORMAT_ARGB32) {
+	/* see if we can convert to a standard ppm type and trim a few bytes */
+	cairo_bool_t uses_alpha = FALSE;
+	const unsigned char *alpha = data;
+	for (j = height * stride; j-- && uses_alpha == FALSE; alpha += 4)
+	    uses_alpha = *alpha != 0xff;
+	if (! uses_alpha)
+	    format = CAIRO_FORMAT_RGB24;
+    }
+
     switch (format) {
     case CAIRO_FORMAT_ARGB32:
 	/* XXX need true alpha for svg */
@@ -176,11 +194,6 @@ write_ppm (cairo_surface_t *surface, int fd)
     default:
 	return "unhandled image format";
     }
-
-    data = cairo_image_surface_get_data (surface);
-    height = cairo_image_surface_get_height (surface);
-    width = cairo_image_surface_get_width (surface);
-    stride = cairo_image_surface_get_stride (surface);
 
     len = sprintf (buf, "%s %d %d 255\n", format_str, width, height);
     for (j = 0; j < height; j++) {
@@ -219,6 +232,69 @@ write_ppm (cairo_surface_t *surface, int fd)
 
     return NULL;
 }
+
+#if CAIRO_CAN_TEST_SCRIPT_SURFACE
+static cairo_surface_t *
+_create_image (void *closure,
+	       double width, double height,
+	       csi_object_t *dictionary)
+{
+    cairo_surface_t **out = closure;
+    cairo_surface_t *surface;
+
+    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+    return *out = cairo_surface_reference (surface);
+}
+
+static const char *
+_cairo_script_render_page (const char *filename,
+			   cairo_surface_t **surface_out)
+{
+    cairo_script_interpreter_t *csi;
+    cairo_surface_t *surface = NULL;
+    cairo_status_t status;
+
+    csi = csi_create ();
+    csi_set_surface_create_function (csi, _create_image, &surface);
+    csi_run (csi, filename);
+    status = csi_destroy (csi);
+    if (status || surface == NULL) {
+	cairo_surface_destroy (surface);
+	return "cairo-script interpreter failed";
+    }
+
+    status = cairo_surface_status (surface);
+    if (status) {
+	cairo_surface_destroy (surface);
+	return cairo_status_to_string (status);
+    }
+
+    *surface_out = surface;
+    return NULL;
+}
+
+static const char *
+cs_convert (char **argv, int fd)
+{
+    const char *err;
+    cairo_surface_t *surface = NULL; /* silence compiler warning */
+
+    err = _cairo_script_render_page (argv[0], &surface);
+    if (err != NULL)
+	return err;
+
+    err = write_ppm (surface, fd);
+    cairo_surface_destroy (surface);
+
+    return err;
+}
+#else
+static const char *
+cs_convert (char **argv, int fd)
+{
+    return "compiled without CairoScript support.";
+}
+#endif
 
 #if CAIRO_CAN_TEST_PDF_SURFACE
 /* adapted from pdf2png.c */
@@ -453,6 +529,7 @@ convert (char **argv, int fd)
 	const char *type;
 	const char *(*func) (char **, int);
     } converters[] = {
+	{ "cs", cs_convert },
 	{ "pdf", pdf_convert },
 	{ "ps", ps_convert },
 	{ "svg", svg_convert },

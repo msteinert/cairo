@@ -201,6 +201,7 @@ static const cairo_scaled_font_t _cairo_scaled_font_nil = {
     { 1., 0., 0., 1., 0, 0},	/* scale_inverse */
     1.,				/* max_scale */
     { 0., 0., 0., 0., 0. },	/* extents */
+    { 0., 0., 0., 0., 0. },	/* fs_extents */
     CAIRO_MUTEX_NIL_INITIALIZER,/* mutex */
     NULL,			/* glyphs */
     NULL,			/* surface_backend */
@@ -690,6 +691,8 @@ _cairo_scaled_font_set_metrics (cairo_scaled_font_t	    *scaled_font,
 {
     cairo_status_t status;
     double  font_scale_x, font_scale_y;
+
+    scaled_font->fs_extents = *fs_metrics;
 
     status = _cairo_matrix_compute_basis_scale_factors (&scaled_font->font_matrix,
 						  &font_scale_x, &font_scale_y,
@@ -2209,6 +2212,8 @@ _cairo_scaled_glyph_set_metrics (cairo_scaled_glyph_t *scaled_glyph,
     double min_user_x = 0.0, max_user_x = 0.0, min_user_y = 0.0, max_user_y = 0.0;
     double min_device_x = 0.0, max_device_x = 0.0, min_device_y = 0.0, max_device_y = 0.0;
     double device_x_advance, device_y_advance;
+
+    scaled_glyph->fs_metrics = *fs_metrics;
 
     for (hm = 0.0; hm <= 1.0; hm += 1.0)
 	for (wm = 0.0; wm <= 1.0; wm += 1.0) {

@@ -128,6 +128,7 @@ _cairo_deflate_stream_create (cairo_output_stream_t *output)
 
     _cairo_output_stream_init (&stream->base,
 			       _cairo_deflate_stream_write,
+			       NULL,
 			       _cairo_deflate_stream_close);
     stream->output = output;
 

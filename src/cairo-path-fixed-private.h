@@ -37,6 +37,7 @@
 #define CAIRO_PATH_FIXED_PRIVATE_H
 
 #include "cairo-types-private.h"
+#include "cairo-compiler-private.h"
 
 enum cairo_path_op {
     CAIRO_PATH_OP_MOVE_TO = 0,
@@ -76,5 +77,15 @@ struct _cairo_path_fixed {
     cairo_path_buf_t       *buf_tail;
     cairo_path_buf_fixed_t  buf_head;
 };
+
+cairo_private unsigned long
+_cairo_path_fixed_hash (const cairo_path_fixed_t *path);
+
+cairo_private unsigned long
+_cairo_path_fixed_size (const cairo_path_fixed_t *path);
+
+cairo_private cairo_bool_t
+_cairo_path_fixed_equal (const cairo_path_fixed_t *a,
+			 const cairo_path_fixed_t *b);
 
 #endif /* CAIRO_PATH_FIXED_PRIVATE_H */

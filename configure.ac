@@ -236,6 +236,22 @@ CAIRO_ENABLE_SURFACE_BACKEND(directfb, directfb, no, [
 
 dnl ===========================================================================
 
+CAIRO_ENABLE_SURFACE_BACKEND(script, script, no, [
+  test_script="yes"
+  csi_CFLAGS=
+  csi_LIBS=-lcairo-script-interpreter
+  if test "x$test_script" = "xyes"; then
+    AC_DEFINE([CAIRO_CAN_TEST_SCRIPT_SURFACE], 1,
+	      [Define to 1 if the CairoScript backend can be tested])
+  else
+    AC_MSG_WARN([CairoScript backend will not be tested])
+  fi
+  AC_SUBST(csi_CFLAGS)
+  AC_SUBST(csi_LIBS)
+])
+
+dnl ===========================================================================
+
 # We use pkg-config to look for freetype2, but fall back to
 # freetype-config if it fails.  We prefer pkg-config, since we can
 # then just put freetype2 >= $FREETYPE_MIN_VERSION in

@@ -194,6 +194,7 @@ cairo_<emphasis>backend</emphasis>_surface_create().
 @CAIRO_SURFACE_TYPE_WIN32_PRINTING: 
 @CAIRO_SURFACE_TYPE_QUARTZ_IMAGE: 
 @CAIRO_SURFACE_TYPE_SDL:
+@CAIRO_SURFACE_TYPE_SCRIPT:
 
 <!-- ##### FUNCTION cairo_surface_get_type ##### -->
 <para>

@@ -43,14 +43,20 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-typedef cairo_status_t (*cairo_output_stream_write_func_t) (cairo_output_stream_t *output_stream,
-							    const unsigned char   *data,
-							    unsigned int           length);
+typedef cairo_status_t
+(*cairo_output_stream_write_func_t) (cairo_output_stream_t *output_stream,
+				     const unsigned char   *data,
+				     unsigned int           length);
 
-typedef cairo_status_t (*cairo_output_stream_close_func_t) (cairo_output_stream_t *output_stream);
+typedef cairo_status_t
+(*cairo_output_stream_flush_func_t) (cairo_output_stream_t *output_stream);
+
+typedef cairo_status_t
+(*cairo_output_stream_close_func_t) (cairo_output_stream_t *output_stream);
 
 struct _cairo_output_stream {
     cairo_output_stream_write_func_t write_func;
+    cairo_output_stream_flush_func_t flush_func;
     cairo_output_stream_close_func_t close_func;
     unsigned long		     position;
     cairo_status_t		     status;
@@ -62,6 +68,7 @@ extern const cairo_private cairo_output_stream_t _cairo_output_stream_nil;
 cairo_private void
 _cairo_output_stream_init (cairo_output_stream_t            *stream,
 			   cairo_output_stream_write_func_t  write_func,
+			   cairo_output_stream_flush_func_t  flush_func,
 			   cairo_output_stream_close_func_t  close_func);
 
 cairo_private cairo_status_t
@@ -92,6 +99,10 @@ _cairo_output_stream_create (cairo_write_func_t		write_func,
 
 cairo_private cairo_output_stream_t *
 _cairo_output_stream_create_in_error (cairo_status_t status);
+
+/* Tries to flush any buffer maintained by the stream or its delegates. */
+cairo_private cairo_status_t
+_cairo_output_stream_flush (cairo_output_stream_t *stream);
 
 /* Returns the final status value associated with this object, just
  * before its last gasp. This final status value will capture any

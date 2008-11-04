@@ -1,6 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2005 Red Hat, Inc
+ * Copyright © 2008 Chris Wilson
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,47 +27,48 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is Red Hat, Inc.
+ * The Initial Developer of the Original Code is Chris Wilson
  *
  * Contributor(s):
- *      Graydon Hoare <graydon@redhat.com>
- *	Owen Taylor <otaylor@redhat.com>
+ *	Chris Wilson <chris@chris-wilson.co.uk>
  */
 
-#ifndef CAIRO_FT_PRIVATE_H
-#define CAIRO_FT_PRIVATE_H
+#ifndef CAIRO_SCRIPT_H
+#define CAIRO_SCRIPT_H
 
-#include "cairo-ft.h"
-#include "cairoint.h"
+#include "cairo.h"
 
-#if CAIRO_HAS_FT_FONT
+#if CAIRO_HAS_SCRIPT_SURFACE
 
 CAIRO_BEGIN_DECLS
 
-typedef struct _cairo_ft_unscaled_font cairo_ft_unscaled_font_t;
+cairo_public cairo_surface_t *
+cairo_script_surface_create (const char		*filename,
+			     double width,
+			     double height);
 
-cairo_private cairo_bool_t
-_cairo_scaled_font_is_ft (cairo_scaled_font_t *scaled_font);
+cairo_public cairo_surface_t *
+cairo_script_surface_create_for_stream (cairo_write_func_t	 write_func,
+					void			*closure,
+					double width,
+					double height);
 
-/* These functions are needed by the PDF backend, which needs to keep track of the
- * the different fonts-on-disk used by a document, so it can embed them
- */
-cairo_private cairo_unscaled_font_t *
-_cairo_ft_scaled_font_get_unscaled_font (cairo_scaled_font_t *scaled_font);
+typedef enum {
+    CAIRO_SCRIPT_MODE_BINARY,
+    CAIRO_SCRIPT_MODE_ASCII
+} cairo_script_mode_t;
 
-cairo_private FT_Face
-_cairo_ft_unscaled_font_lock_face (cairo_ft_unscaled_font_t *unscaled);
+cairo_public void
+cairo_script_surface_set_mode (cairo_surface_t *surface,
+			       cairo_script_mode_t mode);
 
-cairo_private void
-_cairo_ft_unscaled_font_unlock_face (cairo_ft_unscaled_font_t *unscaled);
-
-cairo_private cairo_bool_t
-_cairo_ft_scaled_font_is_vertical (cairo_scaled_font_t *scaled_font);
-
-cairo_private unsigned int
-_cairo_ft_scaled_font_get_load_flags (cairo_scaled_font_t *scaled_font);
+cairo_public cairo_script_mode_t
+cairo_script_surface_get_mode (cairo_surface_t *surface);
 
 CAIRO_END_DECLS
 
-#endif /* CAIRO_HAS_FT_FONT */
-#endif /* CAIRO_FT_PRIVATE_H */
+#else  /*CAIRO_HAS_SCRIPT_SURFACE*/
+# error Cairo was not compiled with support for the CairoScript backend
+#endif /*CAIRO_HAS_SCRIPT_SURFACE*/
+
+#endif /*CAIRO_SCRIPT_H*/
