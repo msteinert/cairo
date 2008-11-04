@@ -1,5 +1,7 @@
-bin_SCRIPTS = cairo-trace
 cairolibdir = $(libdir)/cairo
+cairooutdir = $(localstatedir)/lib/cairo-trace
+
+bin_SCRIPTS = cairo-trace
 cairolib_LTLIBRARIES = cairo-trace.la
 
 AM_CPPFLAGS = -I$(top_srcdir)/src \
@@ -9,15 +11,19 @@ cairo_trace_la_SOURCES = \
 			 lookup-symbol.c \
 			 lookup-symbol.h \
 			 trace.c
+cairo_trace_la_CPPFLAGS = -DCAIRO_TRACE_OUTDIR="\"$(cairooutdir)\"" \
+			  $(AM_CPPFLAGS)
 cairo_trace_la_CFLAGS = $(CAIRO_CFLAGS)
 cairo_trace_la_LDFLAGS = -module -no-undefined
 cairo_trace_la_LIBADD = -ldl -lz $(BFD_LIBS)
 
+
 system-install: install
+	mkdir -p $(cairooutdir)
 	grep -sq $(cairolibdir)/cairo-trace.so /etc/ld.so.preload || echo $(cairolibdir)/cairo-trace.so >> /etc/ld.so.preload
 
 system-uninstall: uninstall
-	sed -e '$(cairolibdir)\/cairo-trace.so/d' < /etc/ld.so.preload > /tmp/ld.so.preload && mv /tmp/ld.so.preload /etc/ld.so.preload;
+	sed -e '/cairo-trace.so/d' < /etc/ld.so.preload > /tmp/ld.so.preload && mv /tmp/ld.so.preload /etc/ld.so.preload;
 
 EXTRA_DIST = \
 	COPYING \

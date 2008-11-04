@@ -41,6 +41,10 @@
 # include <cairo-ft.h>
 #endif
 
+#ifndef CAIRO_TRACE_OUTDIR
+#define CAIRO_TRACE_OUTDIR "."
+#endif
+
 #include "lookup-symbol.h"
 
 /* Reverse the bits in a byte with 7 operations (no 64-bit):
@@ -448,13 +452,13 @@ _init_logfile (void)
 
 	filename = getenv ("CAIRO_TRACE_OUTDIR");
 	if (filename == NULL)
-	    filename = ".";
+	    filename = CAIRO_TRACE_OUTDIR;
 
 	get_prog_name (name, sizeof (name));
 	if (*name == '\0')
 	    strcpy (name, "cairo-trace.dat");
 
-	snprintf (buf, sizeof (buf), "%s/%s.%d.cs",
+	snprintf (buf, sizeof (buf), "%s/%s.%d.trace",
 		filename, name, getpid());
 
 	filename = buf;
