@@ -912,8 +912,7 @@ REFERENCE_IMAGES = \
 	surface-pattern-scale-up.ps2.ref.png	\
 	surface-pattern-scale-up.ps3.ref.png	\
 	surface-pattern-scale-up.ref.png	\
-	surface-pattern.svg12.ref.png	\
-	surface-pattern.svg11.ref.png	\
+	surface-pattern.svg.ref.png	\
 	svg-surface-source.ref.png \
 	text-antialias-gray.ref.png	\
 	text-antialias-gray.quartz.ref.png	\

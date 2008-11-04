@@ -865,7 +865,9 @@ _cairo_matrix_transformed_circle_major_axis (cairo_matrix_t *matrix, double radi
 
 void
 _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
-				pixman_transform_t	*pixman_transform)
+				pixman_transform_t	*pixman_transform,
+				double xc,
+				double yc)
 {
     static const pixman_transform_t pixman_identity_transform = {{
         {1 << 16,        0,       0},
@@ -875,8 +877,7 @@ _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
 
     if (_cairo_matrix_is_identity (matrix)) {
         *pixman_transform = pixman_identity_transform;
-    }
-    else {
+    } else {
         cairo_matrix_t inv;
         double x,y;
         pixman_vector_t vector;
@@ -899,9 +900,10 @@ _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
          * for cairo, while pixman uses rounded versions of xx ... yy.
          * This error increases as a and b get larger.
          *
-         * To compensate for this, we fix the point (0, 0) in pattern
+         * To compensate for this, we fix the point (xc, yc) in pattern
          * space and adjust pixman's transform to agree with cairo's at
-         * that point. */
+         * that point.
+	 */
 
 	if (_cairo_matrix_is_translation (matrix))
 	    return;
@@ -911,8 +913,8 @@ _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
         if (cairo_matrix_invert (&inv) != CAIRO_STATUS_SUCCESS)
             return;
 
-        /* find the device space coordinate that maps to (0, 0) */
-        x = 0, y = 0;
+        /* find the device space coordinate that maps to (xc, yc) */
+        x = xc, y = yc;
         cairo_matrix_transform_point (&inv, &x, &y);
 
         /* transform the resulting device space coordinate back
@@ -924,9 +926,11 @@ _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
         if (! pixman_transform_point_3d (pixman_transform, &vector))
             return;
 
-        /* Ideally, the vector should now be (0, 0). We can now compensate
+        /* Ideally, the vector should now be (xc, yc). We can now compensate
          * for the resulting error */
-        pixman_transform->matrix[0][2] -= vector.vector[0];
-        pixman_transform->matrix[1][2] -= vector.vector[1];
+        pixman_transform->matrix[0][2] +=
+	    _cairo_fixed_16_16_from_double (xc) - vector.vector[0];
+        pixman_transform->matrix[1][2] +=
+	    _cairo_fixed_16_16_from_double (yc) - vector.vector[1];
     }
 }

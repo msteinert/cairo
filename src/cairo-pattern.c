@@ -1403,7 +1403,8 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
 	return image->base.status;
     }
 
-    _cairo_matrix_to_pixman_matrix (&matrix, &pixman_transform);
+    _cairo_matrix_to_pixman_matrix (&matrix, &pixman_transform,
+				    width/2., height/2.);
     if (!pixman_image_set_transform (pixman_image, &pixman_transform)) {
 	cairo_surface_destroy (&image->base);
 	pixman_image_unref (pixman_image);

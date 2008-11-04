@@ -2208,7 +2208,9 @@ _cairo_matrix_transformed_circle_major_axis(cairo_matrix_t *matrix, double radiu
 
 cairo_private void
 _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
-				pixman_transform_t	*pixman_transform);
+				pixman_transform_t	*pixman_transform,
+				double                   xc,
+				double                   yc);
 
 /* cairo-traps.c */
 cairo_private void

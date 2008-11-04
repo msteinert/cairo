@@ -1312,24 +1312,28 @@ _cairo_xlib_surface_create_solid_pattern_surface (void                  *abstrac
 
 static cairo_status_t
 _cairo_xlib_surface_set_matrix (cairo_xlib_surface_t *surface,
-				cairo_matrix_t	     *matrix)
+				cairo_matrix_t	     *matrix,
+				double                xc,
+				double                yc)
 {
     XTransform xtransform;
 
     if (!surface->src_picture)
 	return CAIRO_STATUS_SUCCESS;
-    
+
     /* Casting between pixman_transform_t and XTransform is safe because
      * they happen to be the exact same type.
      */
-    _cairo_matrix_to_pixman_matrix (matrix, (pixman_transform_t *)&xtransform);
+    _cairo_matrix_to_pixman_matrix (matrix,
+				    (pixman_transform_t *) &xtransform,
+				    xc, yc);
 
     if (memcmp (&xtransform, &surface->xtransform, sizeof (XTransform)) == 0)
 	return CAIRO_STATUS_SUCCESS;
 
     if (!CAIRO_SURFACE_RENDER_HAS_PICTURE_TRANSFORM (surface))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
-    
+
     XRenderSetPictureTransform (surface->dpy, surface->src_picture, &xtransform);
     surface->xtransform = xtransform;
 
@@ -1411,13 +1415,16 @@ _cairo_xlib_surface_set_repeat (cairo_xlib_surface_t *surface, int repeat)
 
 static cairo_int_status_t
 _cairo_xlib_surface_set_attributes (cairo_xlib_surface_t	    *surface,
-				    cairo_surface_attributes_t	    *attributes)
+				    cairo_surface_attributes_t	    *attributes,
+				    double			     xc,
+				    double			     yc)
 {
     cairo_int_status_t status;
 
     _cairo_xlib_surface_ensure_src_picture (surface);
 
-    status = _cairo_xlib_surface_set_matrix (surface, &attributes->matrix);
+    status = _cairo_xlib_surface_set_matrix (surface, &attributes->matrix,
+					     xc, yc);
     if (status)
 	return status;
 
@@ -1746,13 +1753,17 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
     switch (operation)
     {
     case DO_RENDER:
-	status = _cairo_xlib_surface_set_attributes (src, &src_attr);
+	status = _cairo_xlib_surface_set_attributes (src, &src_attr,
+						     dst_x + width / 2.,
+						     dst_y + height / 2.);
 	if (status)
 	    goto BAIL;
 
 	_cairo_xlib_surface_ensure_dst_picture (dst);
 	if (mask) {
-	    status = _cairo_xlib_surface_set_attributes (mask, &mask_attr);
+	    status = _cairo_xlib_surface_set_attributes (mask, &mask_attr,
+							 dst_x + width / 2.,
+							 dst_y + height/ 2.);
 	    if (status)
 		goto BAIL;
 
@@ -2161,7 +2172,9 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
     render_src_y = src_y + render_reference_y - dst_y;
 
     _cairo_xlib_surface_ensure_dst_picture (dst);
-    status = _cairo_xlib_surface_set_attributes (src, &attributes);
+    status = _cairo_xlib_surface_set_attributes (src, &attributes,
+						 dst_x + width / 2.,
+						 dst_y + height / 2.);
     if (status)
 	goto BAIL;
 
@@ -4064,7 +4077,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 	goto BAIL1;
     }
 
-    status = _cairo_xlib_surface_set_attributes (src, &attributes);
+    status = _cairo_xlib_surface_set_attributes (src, &attributes, 0, 0);
     if (status)
         goto BAIL1;
 

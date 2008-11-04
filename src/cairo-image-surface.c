@@ -806,11 +806,12 @@ _cairo_image_surface_clone_similar (void		*abstract_surface,
 
 static cairo_status_t
 _cairo_image_surface_set_matrix (cairo_image_surface_t	*surface,
-				 const cairo_matrix_t	*matrix)
+				 const cairo_matrix_t	*matrix,
+				 double xc, double yc)
 {
     pixman_transform_t pixman_transform;
 
-    _cairo_matrix_to_pixman_matrix (matrix, &pixman_transform);
+    _cairo_matrix_to_pixman_matrix (matrix, &pixman_transform, xc, yc);
 
     if (! pixman_image_set_transform (surface->pixman_image, &pixman_transform))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -862,11 +863,13 @@ _cairo_image_surface_set_filter (cairo_image_surface_t *surface,
 
 static cairo_status_t
 _cairo_image_surface_set_attributes (cairo_image_surface_t      *surface,
-				     cairo_surface_attributes_t *attributes)
+				     cairo_surface_attributes_t *attributes,
+				     double xc, double yc)
 {
     cairo_int_status_t status;
 
-    status = _cairo_image_surface_set_matrix (surface, &attributes->matrix);
+    status = _cairo_image_surface_set_matrix (surface, &attributes->matrix,
+					      xc, yc);
     if (status)
 	return status;
 
@@ -968,13 +971,17 @@ _cairo_image_surface_composite (cairo_operator_t	op,
     if (status)
 	return status;
 
-    status = _cairo_image_surface_set_attributes (src, &src_attr);
+    status = _cairo_image_surface_set_attributes (src, &src_attr,
+						  dst_x + width / 2.,
+						  dst_y + height / 2.);
     if (status)
-      goto CLEANUP_SURFACES;
+	goto CLEANUP_SURFACES;
 
     if (mask)
     {
-	status = _cairo_image_surface_set_attributes (mask, &mask_attr);
+	status = _cairo_image_surface_set_attributes (mask, &mask_attr,
+						      dst_x + width / 2.,
+						      dst_y + height / 2.);
 	if (status)
 	    goto CLEANUP_SURFACES;
 
@@ -1151,7 +1158,9 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     if (status)
 	goto finish;
 
-    status = _cairo_image_surface_set_attributes (src, &attributes);
+    status = _cairo_image_surface_set_attributes (src, &attributes,
+						  src_x + width / 2.,
+						  src_y + height / 2.);
     if (status)
 	goto CLEANUP_SOURCE;
 
