@@ -2751,7 +2751,7 @@ _filter_to_string (cairo_filter_t filter)
 void
 cairo_pattern_set_filter (cairo_pattern_t *pattern, cairo_filter_t filter)
 {
-    _emit_pattern_op (pattern, "%s set_filter\n", _filter_to_string (filter));
+    _emit_pattern_op (pattern, "//%s set_filter\n", _filter_to_string (filter));
     return DLCALL (cairo_pattern_set_filter, pattern, filter);
 }
 
