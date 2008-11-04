@@ -63,6 +63,7 @@
 #include "cairo-meta-surface-private.h"
 #include "cairo-output-stream-private.h"
 #include "cairo-type3-glyph-surface-private.h"
+#include "cairo-jpeg-info-private.h"
 
 #include <stdio.h>
 #include <ctype.h>
@@ -2119,6 +2120,93 @@ bail1:
 }
 
 static cairo_status_t
+_cairo_ps_surface_emit_jpeg_image (cairo_ps_surface_t    *surface,
+				   cairo_surface_t	 *source,
+				   int                    width,
+				   int                    height)
+{
+    cairo_status_t status;
+    const unsigned char *mime_data;
+    unsigned int mime_data_length;
+    cairo_jpeg_info_t info;
+
+    cairo_surface_get_mime_data (&surface->base, CAIRO_MIME_TYPE_JPEG,
+				 &mime_data, &mime_data_length);
+    if (mime_data == NULL) {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    status = _cairo_jpeg_get_info (mime_data, mime_data_length, &info);
+    if (status)
+	return status;
+
+    if (info.num_components != 1 && info.num_components != 3)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (surface->use_string_datasource) {
+	/* Emit the image data as a base85-encoded string which will
+	 * be used as the data source for the image operator later. */
+	_cairo_output_stream_printf (surface->stream,
+				     "/CairoImageData [\n");
+
+	status = _cairo_ps_surface_emit_base85_string (surface,
+						       mime_data,
+						       mime_data_length,
+						       TRUE);
+	if (status)
+	    return status;
+
+	_cairo_output_stream_printf (surface->stream,
+				     "] def\n");
+	_cairo_output_stream_printf (surface->stream,
+				     "/CairoImageDataIndex 0 def\n");
+    }
+
+    _cairo_output_stream_printf (surface->stream,
+				 "/%s setcolorspace\n"
+				 "8 dict dup begin\n"
+				 "  /ImageType 1 def\n"
+				 "  /Width %d def\n"
+				 "  /Height %d def\n"
+				 "  /BitsPerComponent %d def\n"
+				 "  /Decode [ 0 1 0 1 0 1 ] def\n",
+				 info.num_components == 1 ? "DeviceGray" : "DeviceRGB",
+				 info.width,
+				 info.height,
+				 info.bits_per_component);
+
+    if (surface->use_string_datasource) {
+	_cairo_output_stream_printf (surface->stream,
+				     "  /DataSource {\n"
+				     "    CairoImageData CairoImageDataIndex get\n"
+				     "    /CairoImageDataIndex CairoImageDataIndex 1 add def\n"
+				     "    CairoImageDataIndex CairoImageData length 1 sub gt\n"
+				     "     { /CairoImageDataIndex 0 def } if\n"
+				     "  } /ASCII85Decode filter /DCTDecode filter def\n");
+    } else {
+	_cairo_output_stream_printf (surface->stream,
+				     "  /DataSource currentfile /ASCII85Decode filter /DCTDecode filter def\n");
+    }
+
+    _cairo_output_stream_printf (surface->stream,
+				 "  /ImageMatrix [ 1 0 0 -1 0 %d ] def\n"
+				 "end\n"
+				 "image\n",
+				 info.height);
+
+    if (!surface->use_string_datasource) {
+	/* Emit the image data as a base85-encoded string which will
+	 * be used as the data source for the image operator. */
+	status = _cairo_ps_surface_emit_base85_string (surface,
+						       mime_data,
+						       mime_data_length,
+						       FALSE);
+    }
+
+    return status;
+}
+
+static cairo_status_t
 _cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
 				     cairo_surface_t      *meta_surface)
 {
@@ -2316,7 +2404,9 @@ BAIL:
 static cairo_status_t
 _cairo_ps_surface_emit_surface (cairo_ps_surface_t      *surface,
 				cairo_surface_pattern_t *pattern,
-				cairo_operator_t	 op)
+				cairo_operator_t	 op,
+				int                      width,
+				int                      height)
 {
     cairo_status_t status;
 
@@ -2326,6 +2416,13 @@ _cairo_ps_surface_emit_surface (cairo_ps_surface_t      *surface,
 	status = _cairo_ps_surface_emit_meta_surface (surface,
 						      meta_surface);
     } else {
+	if (cairo_pattern_get_extend (&pattern->base) != CAIRO_EXTEND_PAD) {
+	    status = _cairo_ps_surface_emit_jpeg_image (surface, pattern->surface,
+							width, height);
+	    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+		return status;
+	}
+
 	status = _cairo_ps_surface_emit_image (surface, surface->image,
 					       op, pattern->base.filter);
     }
@@ -2404,7 +2501,7 @@ _cairo_ps_surface_paint_surface (cairo_ps_surface_t      *surface,
 				     ps_p2d.x0, ps_p2d.y0);
     }
 
-    status = _cairo_ps_surface_emit_surface (surface, pattern, op);
+    status = _cairo_ps_surface_emit_surface (surface, pattern, op, width, height);
     _cairo_ps_surface_release_surface (surface, pattern);
 
     return status;
@@ -2502,7 +2599,8 @@ _cairo_ps_surface_emit_surface_pattern (cairo_ps_surface_t      *surface,
 				     surface->content == CAIRO_CONTENT_COLOR ? 0 : 1,
 				     xstep, ystep);
     }
-    status = _cairo_ps_surface_emit_surface (surface, pattern, op);
+    status = _cairo_ps_surface_emit_surface (surface, pattern, op,
+					     pattern_width, pattern_height);
     if (status)
 	return status;
 
