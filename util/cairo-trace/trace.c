@@ -2089,26 +2089,25 @@ cairo_scaled_font_create (cairo_font_face_t *font_face,
 	options != NULL
 	&& _write_lock ())
     {
-	font_face_id = _get_font_face_id (font_face);
-
-	if (_pop_operands_to (FONT_FACE, font_face)) {
+	if (_pop_operands_to (FONT_FACE, font_face))
 	    _consume_operand ();
-	    _emit_matrix (font_matrix);
-	    fprintf (logfile, " ");
-	    _emit_matrix (ctm);
-	    fprintf (logfile, " ");
-	} else {
-	    _emit_matrix (font_matrix);
-	    fprintf (logfile, " ");
-	    _emit_matrix (ctm);
-	    fprintf (logfile, " ");
-	    _emit_font_options (options);
-	}
+	else
+	    fprintf (logfile, "f%ld ", _get_font_face_id (font_face));
+
+	_emit_matrix (font_matrix);
+	fprintf (logfile, " ");
+
+	_emit_matrix (ctm);
+	fprintf (logfile, " ");
+
 	_emit_font_options (options);
+
 	fprintf (logfile, "  scaled_font dup /sf%ld exch def\n",
 		 scaled_font_id);
+
 	_get_object (SCALED_FONT, ret)->defined = true;
 	_push_operand (SCALED_FONT, ret);
+
 	_write_unlock ();
     }
 
