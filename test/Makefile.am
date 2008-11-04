@@ -141,6 +141,8 @@ test_sources = \
 	rgb24-ignore-alpha.c				\
 	rotate-image-surface-paint.c			\
 	scale-down-source-surface-paint.c		\
+	scale-offset-image.c				\
+	scale-offset-similar.c				\
 	scale-source-surface-paint.c			\
 	stroke-ctm-caps.c				\
 	stroke-image.c				        \
@@ -812,6 +814,10 @@ REFERENCE_IMAGES = \
 	rotate-image-surface-paint.svg12.ref.png	\
 	rotate-image-surface-paint.svg11.ref.png	\
 	scale-down-source-surface-paint.ref.png	\
+	scale-offset-image.ref.png		\
+	scale-offset-image.ps.ref.png		\
+	scale-offset-similar.ref.png		\
+	scale-offset-similar.ps.ref.png		\
 	scale-source-surface-paint.pdf.argb32.ref.png	\
 	scale-source-surface-paint.ref.png	\
 	scale-source-surface-paint.rgb24.ref.png	\
