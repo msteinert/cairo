@@ -493,7 +493,9 @@ case $host in
 	;;
 esac
 
-AM_CONDITIONAL(BUILD_TRACE, test "x$have_ld_preload" = "xyes")
+AM_CONDITIONAL(BUILD_TRACE,
+	       test "x$have_ld_preload" = "xyes" \
+	       -a "x$have_libz" = "xyes")
 
 AC_CHECK_LIB(bfd, bfd_openr,
 	 [AC_CHECK_HEADER(bfd.h, [have_bfd=yes],
