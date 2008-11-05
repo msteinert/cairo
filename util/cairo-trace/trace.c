@@ -2206,7 +2206,10 @@ _emit_glyphs (cairo_scaled_font_t *font,
     x = glyphs->x;
     y = glyphs->y;
     if (n < num_glyphs) { /* need full glyph range */
-	fprintf (logfile, "[ %g %g [", x, y);
+	bool first;
+
+	fprintf (logfile, "[%g %g [", x, y);
+	first = true;
 	while (num_glyphs--) {
 	    cairo_text_extents_t extents;
 
@@ -2215,10 +2218,14 @@ _emit_glyphs (cairo_scaled_font_t *font,
 	    {
 		x = glyphs->x;
 		y = glyphs->y;
-		fprintf (logfile, " ] %g %g [", x, y);
+		fprintf (logfile, "] %g %g [", x, y);
+		first = true;
 	    }
 
-	    fprintf (logfile, " %lu", glyphs->index);
+	    if (! first)
+		fprintf (logfile, " ");
+	    fprintf (logfile, "%lu", glyphs->index);
+	    first = false;
 
 	    cairo_scaled_font_glyph_extents (font, glyphs, 1, &extents);
 	    x += extents.x_advance;
@@ -2226,37 +2233,41 @@ _emit_glyphs (cairo_scaled_font_t *font,
 
 	    glyphs++;
 	}
-	fprintf (logfile, " ] ]");
+	fprintf (logfile, "]]");
     } else {
 	struct _data_stream stream;
 
-	fprintf (logfile, "[ %g %g <~", x, y);
-	_write_base85_data_start (&stream);
-	while (num_glyphs--) {
-	    cairo_text_extents_t extents;
-	    unsigned char c;
+	if (num_glyphs == 1) {
+	    fprintf (logfile, "[%g %g <%x>]", x, y,  glyphs->index);
+	} else {
+	    fprintf (logfile, "[%g %g <~", x, y);
+	    _write_base85_data_start (&stream);
+	    while (num_glyphs--) {
+		cairo_text_extents_t extents;
+		unsigned char c;
 
-	    if (fabs (glyphs->x - x) > TOLERANCE ||
-		fabs (glyphs->y - y) > TOLERANCE)
-	    {
-		x = glyphs->x;
-		y = glyphs->y;
-		_write_base85_data_end (&stream);
-		fprintf (logfile, "~> %g %g <~", x, y);
-		_write_base85_data_start (&stream);
+		if (fabs (glyphs->x - x) > TOLERANCE ||
+		    fabs (glyphs->y - y) > TOLERANCE)
+		{
+		    x = glyphs->x;
+		    y = glyphs->y;
+		    _write_base85_data_end (&stream);
+		    fprintf (logfile, "~> %g %g <~", x, y);
+		    _write_base85_data_start (&stream);
+		}
+
+		c = glyphs->index;
+		_write_base85_data (&stream, &c, 1);
+
+		cairo_scaled_font_glyph_extents (font, glyphs, 1, &extents);
+		x += extents.x_advance;
+		y += extents.y_advance;
+
+		glyphs++;
 	    }
-
-	    c = glyphs->index;
-	    _write_base85_data (&stream, &c, 1);
-
-	    cairo_scaled_font_glyph_extents (font, glyphs, 1, &extents);
-	    x += extents.x_advance;
-	    y += extents.y_advance;
-
-	    glyphs++;
+	    _write_base85_data_end (&stream);
+	    fprintf (logfile, "~>]");
 	}
-	_write_base85_data_end (&stream);
-	fprintf (logfile, "~> ]");
     }
 }
 
