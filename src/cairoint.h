@@ -1522,6 +1522,15 @@ cairo_private cairo_bool_t
 _cairo_path_fixed_is_rectangle (cairo_path_fixed_t *path,
 				cairo_box_t        *box);
 
+/* cairo-path-in-fill.c */
+cairo_private cairo_status_t
+_cairo_path_fixed_in_fill (cairo_path_fixed_t	*path,
+			   cairo_fill_rule_t	 fill_rule,
+			   double		 tolerance,
+			   double		 x,
+			   double		 y,
+			   cairo_bool_t		*is_inside);
+
 /* cairo-path-fill.c */
 cairo_private cairo_status_t
 _cairo_path_fixed_fill_to_traps (cairo_path_fixed_t *path,

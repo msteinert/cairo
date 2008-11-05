@@ -1071,33 +1071,13 @@ _cairo_gstate_in_fill (cairo_gstate_t	  *gstate,
 		       double		   y,
 		       cairo_bool_t	  *inside_ret)
 {
-    cairo_status_t status;
-    cairo_box_t limit;
-    cairo_traps_t traps;
-
     _cairo_gstate_user_to_backend (gstate, &x, &y);
 
-    limit.p1.x = _cairo_fixed_from_double (x) - 1;
-    limit.p1.y = _cairo_fixed_from_double (y) - 1;
-    limit.p2.x = limit.p1.x + 2;
-    limit.p2.y = limit.p1.y + 2;
-
-    _cairo_traps_init (&traps);
-    _cairo_traps_limit (&traps, &limit);
-
-    status = _cairo_path_fixed_fill_to_traps (path,
-					      gstate->fill_rule,
-					      gstate->tolerance,
-					      &traps);
-    if (status)
-	goto BAIL;
-
-    *inside_ret = _cairo_traps_contain (&traps, x, y);
-
-BAIL:
-    _cairo_traps_fini (&traps);
-
-    return status;
+    return _cairo_path_fixed_in_fill (path,
+				      gstate->fill_rule,
+				      gstate->tolerance,
+				      x, y,
+				      inside_ret);
 }
 
 cairo_status_t

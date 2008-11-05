@@ -122,6 +122,7 @@ cairo_sources = \
 	cairo-path.c \
 	cairo-path-fill.c \
 	cairo-path-fixed.c \
+	cairo-path-in-fill.c \
 	cairo-path-stroke.c \
 	cairo-pattern.c \
 	cairo-pen.c \
