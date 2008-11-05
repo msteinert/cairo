@@ -2000,8 +2000,11 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
 	assert (invert_status == CAIRO_STATUS_SUCCESS);
 
 	if (m.x0 != 0. || m.y0 != 0.) {
-	    x = floor (m.x0);
-	    y = floor (m.y0);
+	    /* pixman also limits the [xy]_offset to 16 bits so evenly
+	     * spread the bits between the two.
+	     */
+	    x = floor (m.x0 / 2);
+	    y = floor (m.y0 / 2);
 	    attr->x_offset -= x;
 	    attr->y_offset -= y;
 	    cairo_matrix_init_translate (&m, x, y);
