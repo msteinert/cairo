@@ -107,6 +107,8 @@ struct _object {
     const void *addr;
     Type *type;
     unsigned long int token;
+    int width, height;
+    bool foreign;
     bool defined;
     int operand;
     void *data;
@@ -333,6 +335,7 @@ _object_create (Type *type, const void *ptr)
 
     obj = malloc (sizeof (Object));
     obj->defined = false;
+    obj->foreign = false;
     obj->operand = -1;
     obj->type = type;
     obj->addr = ptr;
@@ -1214,6 +1217,7 @@ cairo_create (cairo_surface_t *target)
 
     if (target != NULL && _write_lock ()) {
 	surface_id = _get_surface_id (target);
+	_get_object (SURFACE, target)->foreign = false;
 
 	/* we presume that we will continue to use the context */
 	if (_pop_operands_to (SURFACE, target)){
@@ -1335,6 +1339,40 @@ cairo_set_source_rgba (cairo_t *cr, double red, double green, double blue, doubl
     return DLCALL (cairo_set_source_rgba, cr, red, green, blue, alpha);
 }
 
+static void
+_emit_source_image (cairo_surface_t *surface)
+{
+    Object *obj;
+    cairo_surface_t *image;
+    cairo_t *cr;
+
+    obj = _get_object (SURFACE, surface);
+
+    image = DLCALL (cairo_image_surface_create,
+		    CAIRO_FORMAT_ARGB32,
+		    obj->width,
+		    obj->height);
+    cr = DLCALL (cairo_create, image);
+    DLCALL (cairo_set_source_surface, cr, surface, 0, 0);
+    DLCALL (cairo_paint, cr);
+    DLCALL (cairo_destroy, cr);
+
+    fprintf (logfile,
+	     "dict\n"
+	     "  /width %d set\n"
+	     "  /height %d set\n"
+	     "  /format //ARGB32 set\n"
+	     "  /source ",
+	     obj->width, obj->height);
+    _emit_image (image);
+    fprintf (logfile,
+	     " /deflate filter set\n"
+	     "  image set_source_image ");
+    DLCALL (cairo_surface_destroy, image);
+
+    _get_object (SURFACE, surface)->foreign = false;
+}
+
 void
 cairo_set_source_surface (cairo_t *cr, cairo_surface_t *surface, double x, double y)
 {
@@ -1354,6 +1392,9 @@ cairo_set_source_surface (cairo_t *cr, cairo_surface_t *surface, double x, doubl
 	    _emit_context (cr);
 	    fprintf (logfile, "s%ld ", _get_surface_id (surface));
 	}
+
+	if (_get_object (SURFACE, surface)->foreign)
+	    _emit_source_image (surface);
 
 	fprintf (logfile, "pattern");
 	if (x != 0. || y != 0.)
@@ -2078,7 +2119,6 @@ cairo_scaled_font_create (cairo_font_face_t *font_face,
 {
     cairo_scaled_font_t *ret;
     long scaled_font_id;
-    long font_face_id;
 
     ret = DLCALL (cairo_scaled_font_create, font_face, font_matrix, ctm, options);
     scaled_font_id = _create_scaled_font_id (ret);
@@ -2395,12 +2435,27 @@ cairo_image_surface_create_for_data (unsigned char *data, cairo_format_t format,
 		 "dict\n"
 		 "  /width %d set\n"
 		 "  /height %d set\n"
-		 "  /format //%s set\n"
-		 "  /source ",
-		 width, height, format_str);
-	_emit_image (ret);
+		 "  /format //%s set\n",
+		 width, height,
+		 format_str);
+
+	/* cairo_image_surface_create_for_data() is both used to supply
+	 * foreign pixel data to cairo and in order to read pixels back.
+	 * Defer grabbing the pixel contents until we have to, but only for
+	 * "large" images, for small images the overhead of embedding pixels
+	 * is negligible.
+	 */
+	if (width * height < 128) {
+	    fprintf (logfile, "  /source ");
+	    _emit_image (ret);
+	    fprintf (logfile, " /deflate filter set\n");
+	} else {
+	    _get_object (SURFACE, ret)->width  = width;
+	    _get_object (SURFACE, ret)->height = height;
+	    _get_object (SURFACE, ret)->foreign = true;
+	}
+
 	fprintf (logfile,
-		 " /deflate filter set\n"
 		 "  image dup /s%ld exch def\n",
 		 surface_id);
 	_get_object (SURFACE, ret)->defined = true;
@@ -2650,6 +2705,10 @@ cairo_pattern_create_for_surface (cairo_surface_t *surface)
 	} else {
 	    fprintf (logfile, "s%ld ", surface_id);
 	}
+
+	if (_get_object (SURFACE, surface)->foreign)
+	    _emit_source_image (surface);
+
 	fprintf (logfile, "pattern %% p%ld\n", pattern_id);
 	_push_operand (PATTERN, ret);
 	_write_unlock ();
@@ -3238,7 +3297,10 @@ cairo_image_surface_create_from_png_stream (cairo_read_func_t read_func, void *c
 #include <cairo-xlib.h>
 
 cairo_surface_t *
-cairo_xlib_surface_create (Display *dpy, Drawable drawable, Visual *visual, int width, int height)
+cairo_xlib_surface_create (Display *dpy,
+			   Drawable drawable,
+			   Visual *visual,
+			   int width, int height)
 {
     cairo_surface_t *ret;
     long surface_id;
@@ -3251,13 +3313,18 @@ cairo_xlib_surface_create (Display *dpy, Drawable drawable, Visual *visual, int 
 	fprintf (logfile,
 		 "dict\n"
 		 "  /type (xlib) set\n"
+		 "  /drawable /%lx set\n"
 		 "  /width %d set\n"
 		 "  /height %d set\n"
 		 "  surface dup /s%ld exch def\n",
+		 drawable,
 		 width,
 		 height,
 		 surface_id);
 	_get_object (SURFACE, ret)->defined = true;
+	_get_object (SURFACE, ret)->width  = width;
+	_get_object (SURFACE, ret)->height = height;
+	_get_object (SURFACE, ret)->foreign = true;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
@@ -3266,7 +3333,10 @@ cairo_xlib_surface_create (Display *dpy, Drawable drawable, Visual *visual, int 
 }
 
 cairo_surface_t *
-cairo_xlib_surface_create_for_bitmap (Display *dpy, Pixmap bitmap, Screen *screen, int width, int height)
+cairo_xlib_surface_create_for_bitmap (Display *dpy,
+				      Pixmap bitmap,
+				      Screen *screen,
+				      int width, int height)
 {
     cairo_surface_t *ret;
     long surface_id;
@@ -3279,14 +3349,19 @@ cairo_xlib_surface_create_for_bitmap (Display *dpy, Pixmap bitmap, Screen *scree
 	fprintf (logfile,
 		 "dict\n"
 		 "  /type (xlib) set\n"
+		 "  /drawable /%lx set\n"
 		 "  /width %d set\n"
 		 "  /height %d set\n"
 		 "  /depth 1 set\n"
 		 "  surface dup /s%ld exch def\n",
+		 bitmap,
 		 width,
 		 height,
 		 surface_id);
 	_get_object (SURFACE, ret)->defined = true;
+	_get_object (SURFACE, ret)->width  = width;
+	_get_object (SURFACE, ret)->height = height;
+	_get_object (SURFACE, ret)->foreign = true;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
@@ -3297,7 +3372,11 @@ cairo_xlib_surface_create_for_bitmap (Display *dpy, Pixmap bitmap, Screen *scree
 #if CAIRO_HAS_XLIB_XRENDER_SURFACE
 #include <cairo-xlib-xrender.h>
 cairo_surface_t *
-cairo_xlib_surface_create_with_xrender_format (Display *dpy, Drawable drawable, Screen *screen, XRenderPictFormat *format, int width, int height)
+cairo_xlib_surface_create_with_xrender_format (Display *dpy,
+					       Drawable drawable,
+					       Screen *screen,
+					       XRenderPictFormat *format,
+					       int width, int height)
 {
     cairo_surface_t *ret;
     long surface_id;
@@ -3310,15 +3389,20 @@ cairo_xlib_surface_create_with_xrender_format (Display *dpy, Drawable drawable, 
 	fprintf (logfile,
 		 "dict\n"
 		 "  /type (xrender) set\n"
+		 "  /drawable /%lx set\n"
 		 "  /width %d set\n"
 		 "  /height %d set\n"
 		 "  /depth %d set\n"
 		 "  surface dup /s%ld exch def\n",
+		 drawable,
 		 width,
 		 height,
 		 format->depth,
 		 surface_id);
 	_get_object (SURFACE, ret)->defined = true;
+	_get_object (SURFACE, ret)->width  = width;
+	_get_object (SURFACE, ret)->height = height;
+	_get_object (SURFACE, ret)->foreign = true;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
