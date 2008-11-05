@@ -1,7 +1,7 @@
 /* -*- Mode: c; tab-width: 8; c-basic-offset: 4; indent-tabs-mode: t; -*- */
 /* Cairo - a vector graphics library with display and print output
  *
- * Copyright © 2007 Adrian Johnson
+ * Copyright © 2007, 2008 Adrian Johnson
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -52,6 +52,7 @@
 #include "cairo-win32-private.h"
 #include "cairo-meta-surface-private.h"
 #include "cairo-scaled-font-subsets-private.h"
+#include "cairo-jpeg-info-private.h"
 
 #include <windows.h>
 
@@ -73,6 +74,10 @@
 
 #if !defined(GRADIENT_FILL_RECT_H)
 # define GRADIENT_FILL_RECT_H 0x00
+#endif
+
+#if !defined(CHECKJPEGFORMAT)
+# define CHECKJPEGFORMAT 0x1017
 #endif
 
 #define PELS_72DPI  ((LONG)(72. / 0.0254))
@@ -97,6 +102,16 @@ _cairo_win32_printing_surface_init_ps_mode (cairo_win32_surface_t *surface)
 
     if (ps_level >= 3)
 	surface->flags |= CAIRO_WIN32_SURFACE_CAN_RECT_GRADIENT;
+}
+
+static void
+_cairo_win32_printing_surface_init_image_support (cairo_win32_surface_t *surface)
+{
+    DWORD word;
+
+    word = CHECKJPEGFORMAT;
+    if (ExtEscape(surface->dc, QUERYESCSUPPORT, sizeof(word), (char *)&word, 0, (char *)NULL) > 0)
+	surface->flags |= CAIRO_WIN32_SURFACE_CAN_CHECK_JPEG;
 }
 
 static cairo_int_status_t
@@ -486,6 +501,48 @@ _cairo_win32_printing_surface_paint_meta_pattern (cairo_win32_surface_t   *surfa
     return status;
 }
 
+static cairo_int_status_t
+_cairo_win32_printing_surface_check_jpeg (cairo_win32_surface_t   *surface,
+					  cairo_surface_t         *source,
+					  const unsigned char    **jpeg_data,
+					  unsigned int            *jpeg_length,
+					  int 			  *jpeg_width,
+					  int 			  *jpeg_height)
+{
+    const unsigned char *mime_data;
+    unsigned int mime_data_length;
+    cairo_jpeg_info_t info;
+    cairo_int_status_t status;
+    DWORD result;
+
+    if (!(surface->flags & CAIRO_WIN32_SURFACE_CAN_CHECK_JPEG))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    cairo_surface_get_mime_data (source, CAIRO_MIME_TYPE_JPEG,
+				 &mime_data, &mime_data_length);
+    if (mime_data == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    status = _cairo_jpeg_get_info (mime_data, mime_data_length, &info);
+    if (status)
+	return status;
+
+    result = 0;
+    if (ExtEscape(surface->dc, CHECKJPEGFORMAT, mime_data_length, (char *) mime_data,
+		  sizeof(result), (char *) &result) <= 0)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (result != 1)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    *jpeg_data = mime_data;
+    *jpeg_length = mime_data_length;
+    *jpeg_width = info.width;
+    *jpeg_height = info.height;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_status_t
 _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surface,
 						   cairo_surface_pattern_t *pattern)
@@ -503,6 +560,10 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
     int x_tile, y_tile, left, right, top, bottom;
     RECT clip;
     const cairo_color_t *background_color;
+    const unsigned char *jpeg_data;
+    unsigned int jpeg_size;
+    int jpeg_width, jpeg_height;
+    cairo_bool_t use_jpeg;
 
     /* If we can't use StretchDIBits with this surface, we can't do anything
      * here.
@@ -532,7 +593,18 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
 	goto CLEANUP_IMAGE;
     }
 
-    if (image->format != CAIRO_FORMAT_RGB24) {
+    status = _cairo_win32_printing_surface_check_jpeg (surface,
+						       pattern->surface,
+						       &jpeg_data,
+						       &jpeg_size,
+						       &jpeg_width,
+						       &jpeg_height);
+    if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
+
+    use_jpeg = (status == CAIRO_STATUS_SUCCESS);
+
+    if (!use_jpeg && image->format != CAIRO_FORMAT_RGB24) {
 	cairo_surface_pattern_t opaque_pattern;
 
 	opaque_surface = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
@@ -577,14 +649,14 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
     }
 
     bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bi.bmiHeader.biWidth = opaque_image->width;
-    bi.bmiHeader.biHeight = -opaque_image->height;
-    bi.bmiHeader.biSizeImage = 0;
+    bi.bmiHeader.biWidth = use_jpeg ? jpeg_width : opaque_image->width;
+    bi.bmiHeader.biHeight = use_jpeg ? - jpeg_height : -opaque_image->height;
+    bi.bmiHeader.biSizeImage = use_jpeg ? jpeg_size : 0;
     bi.bmiHeader.biXPelsPerMeter = PELS_72DPI;
     bi.bmiHeader.biYPelsPerMeter = PELS_72DPI;
     bi.bmiHeader.biPlanes = 1;
     bi.bmiHeader.biBitCount = 32;
-    bi.bmiHeader.biCompression = BI_RGB;
+    bi.bmiHeader.biCompression = use_jpeg ? BI_JPEG : BI_RGB;
     bi.bmiHeader.biClrUsed = 0;
     bi.bmiHeader.biClrImportant = 0;
 
@@ -626,9 +698,9 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
 				opaque_image->height,
 				0,
 				0,
-				opaque_image->width,
-				opaque_image->height,
-				opaque_image->data,
+				use_jpeg ? jpeg_width : opaque_image->width,
+				use_jpeg ? jpeg_height : opaque_image->height,
+				use_jpeg ? jpeg_data : opaque_image->data,
 				&bi,
 				DIB_RGB_COLORS,
 				SRCCOPY))
@@ -1594,6 +1666,7 @@ cairo_win32_printing_surface_create (HDC hdc)
     surface->flags |= CAIRO_WIN32_SURFACE_FOR_PRINTING;
 
     _cairo_win32_printing_surface_init_ps_mode (surface);
+    _cairo_win32_printing_surface_init_image_support (surface);
     _cairo_surface_init (&surface->base, &cairo_win32_printing_surface_backend,
                          CAIRO_CONTENT_COLOR_ALPHA);
 

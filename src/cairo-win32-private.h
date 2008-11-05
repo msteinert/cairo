@@ -117,6 +117,9 @@ enum {
 
     /* Whether we can use GradientFill rectangles with this surface */
     CAIRO_WIN32_SURFACE_CAN_RECT_GRADIENT = (1<<6),
+
+    /* Whether we can use the CHECKJPEGFORMAT escape function */
+    CAIRO_WIN32_SURFACE_CAN_CHECK_JPEG = (1<<7),
 };
 
 cairo_status_t
