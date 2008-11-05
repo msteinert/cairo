@@ -704,10 +704,21 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
     xasprintf (&diff_path, "%s" CAIRO_TEST_DIFF_SUFFIX, base_path);
 
     if (ctx->test->requirements != NULL) {
-	const char *required = target->is_vector ? "target=raster" : "target=vector";
+	const char *required;
+
+	required = target->is_vector ? "target=raster" : "target=vector";
 	if (strstr (ctx->test->requirements, required) != NULL) {
 	    cairo_test_log (ctx, "Error: Skipping for %s target %s\n",
 			    target->is_vector ? "vector" : "raster",
+			    target->name);
+	    ret = CAIRO_TEST_UNTESTED;
+	    goto UNWIND_STRINGS;
+	}
+
+	required = target->is_meta ? "target=!meta" : "target=meta";
+	if (strstr (ctx->test->requirements, required) != NULL) {
+	    cairo_test_log (ctx, "Error: Skipping for %s target %s\n",
+			    target->is_meta ? "meta" : "non-meta",
 			    target->name);
 	    ret = CAIRO_TEST_UNTESTED;
 	    goto UNWIND_STRINGS;

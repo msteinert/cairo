@@ -313,7 +313,9 @@ static cairo_boilerplate_target_t targets[] =
 	_cairo_boilerplate_test_meta_create_surface, NULL,
 	NULL,
 	_cairo_boilerplate_get_image_surface,
-	cairo_surface_write_to_png
+	cairo_surface_write_to_png,
+	NULL, NULL,
+	FALSE, TRUE
     },
     {
 	"test-meta", "image", NULL,
@@ -322,7 +324,9 @@ static cairo_boilerplate_target_t targets[] =
 	_cairo_boilerplate_test_meta_create_surface, NULL,
 	NULL,
 	_cairo_boilerplate_get_image_surface,
-	cairo_surface_write_to_png
+	cairo_surface_write_to_png,
+	NULL, NULL,
+	FALSE, TRUE
     },
     {
 	"test-paginated", "image", NULL,
@@ -332,7 +336,9 @@ static cairo_boilerplate_target_t targets[] =
 	NULL,
 	_cairo_boilerplate_test_paginated_get_image_surface,
 	_cairo_boilerplate_test_paginated_surface_write_to_png,
-	_cairo_boilerplate_test_paginated_cleanup
+	_cairo_boilerplate_test_paginated_cleanup,
+	NULL,
+	FALSE, TRUE,
     },
     {
 	"test-paginated", "image", NULL,
@@ -342,7 +348,9 @@ static cairo_boilerplate_target_t targets[] =
 	NULL,
 	_cairo_boilerplate_test_paginated_get_image_surface,
 	_cairo_boilerplate_test_paginated_surface_write_to_png,
-	_cairo_boilerplate_test_paginated_cleanup
+	_cairo_boilerplate_test_paginated_cleanup,
+	NULL,
+	FALSE, TRUE
     },
 #endif
 #ifdef CAIRO_HAS_GLITZ_SURFACE
@@ -457,7 +465,7 @@ static cairo_boilerplate_target_t targets[] =
 	_cairo_boilerplate_win32_printing_get_image_surface,
 	_cairo_boilerplate_win32_printing_surface_write_to_png,
 	_cairo_boilerplate_win32_printing_cleanup,
-	NULL, TRUE
+	NULL, TRUE, TRUE
     },
     {
 	"win32-printing", "win32"".ps",
@@ -467,7 +475,7 @@ static cairo_boilerplate_target_t targets[] =
 	_cairo_boilerplate_win32_printing_get_image_surface,
 	_cairo_boilerplate_win32_printing_surface_write_to_png,
 	_cairo_boilerplate_win32_printing_cleanup,
-	NULL, TRUE
+	NULL, TRUE, TRUE
     },
 #endif
 #endif
@@ -533,7 +541,7 @@ static cairo_boilerplate_target_t targets[] =
 	_cairo_boilerplate_ps_get_image_surface,
 	_cairo_boilerplate_ps_surface_write_to_png,
 	_cairo_boilerplate_ps_cleanup,
-	NULL, TRUE
+	NULL, TRUE, TRUE
     },
     {
 	"ps2", "ps", ".ps",
@@ -544,7 +552,7 @@ static cairo_boilerplate_target_t targets[] =
 	_cairo_boilerplate_ps_get_image_surface,
 	_cairo_boilerplate_ps_surface_write_to_png,
 	_cairo_boilerplate_ps_cleanup,
-	NULL, TRUE
+	NULL, TRUE, TRUE
     },
     {
 	"ps3", "ps", ".ps",
@@ -556,7 +564,7 @@ static cairo_boilerplate_target_t targets[] =
 	_cairo_boilerplate_ps_get_image_surface,
 	_cairo_boilerplate_ps_surface_write_to_png,
 	_cairo_boilerplate_ps_cleanup,
-	NULL, TRUE
+	NULL, TRUE, TRUE
     },
     {
 	"ps3", "ps", ".ps",
@@ -567,7 +575,7 @@ static cairo_boilerplate_target_t targets[] =
 	_cairo_boilerplate_ps_get_image_surface,
 	_cairo_boilerplate_ps_surface_write_to_png,
 	_cairo_boilerplate_ps_cleanup,
-	NULL, TRUE
+	NULL, TRUE, TRUE
     },
 #endif
 #if CAIRO_HAS_PDF_SURFACE && CAIRO_CAN_TEST_PDF_SURFACE
@@ -581,7 +589,7 @@ static cairo_boilerplate_target_t targets[] =
 	_cairo_boilerplate_pdf_get_image_surface,
 	_cairo_boilerplate_pdf_surface_write_to_png,
 	_cairo_boilerplate_pdf_cleanup,
-	NULL, TRUE
+	NULL, TRUE, TRUE
     },
     {
 	"pdf", "pdf", ".pdf",
@@ -592,7 +600,7 @@ static cairo_boilerplate_target_t targets[] =
 	_cairo_boilerplate_pdf_get_image_surface,
 	_cairo_boilerplate_pdf_surface_write_to_png,
 	_cairo_boilerplate_pdf_cleanup,
-	NULL, TRUE
+	NULL, TRUE, TRUE
     },
 #endif
 #if CAIRO_HAS_SVG_SURFACE && CAIRO_CAN_TEST_SVG_SURFACE
@@ -610,7 +618,7 @@ static cairo_boilerplate_target_t targets[] =
 	_cairo_boilerplate_svg_get_image_surface,
 	_cairo_boilerplate_svg_surface_write_to_png,
 	_cairo_boilerplate_svg_cleanup,
-	NULL, TRUE
+	NULL, TRUE, TRUE
     },
     {
 	"svg11", "svg", NULL,
@@ -621,7 +629,7 @@ static cairo_boilerplate_target_t targets[] =
 	_cairo_boilerplate_svg_get_image_surface,
 	_cairo_boilerplate_svg_surface_write_to_png,
 	_cairo_boilerplate_svg_cleanup,
-	NULL, TRUE
+	NULL, TRUE, TRUE
     },
     {
 	"svg12", "svg", NULL,
@@ -632,7 +640,7 @@ static cairo_boilerplate_target_t targets[] =
 	_cairo_boilerplate_svg_get_image_surface,
 	_cairo_boilerplate_svg_surface_write_to_png,
 	_cairo_boilerplate_svg_cleanup,
-	NULL, TRUE
+	NULL, TRUE, TRUE
     },
     {
 	"svg12", "svg", NULL,
@@ -643,7 +651,7 @@ static cairo_boilerplate_target_t targets[] =
 	_cairo_boilerplate_svg_get_image_surface,
 	_cairo_boilerplate_svg_surface_write_to_png,
 	_cairo_boilerplate_svg_cleanup,
-	NULL, TRUE
+	NULL, TRUE, TRUE
     },
 #endif
 #if CAIRO_HAS_BEOS_SURFACE
