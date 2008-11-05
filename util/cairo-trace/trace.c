@@ -1423,13 +1423,6 @@ cairo_set_source (cairo_t *cr, cairo_pattern_t *source)
 	    _exch_operands ();
 	    _consume_operand ();
 	}
-	else if (_is_current (PATTERN, source, 0))
-	{
-	    _emit_context (cr);
-	    fprintf (logfile, "exch ");
-	    _exch_operands ();
-	    _consume_operand ();
-	}
 	else
 	{
 	    _emit_context (cr);
@@ -1938,8 +1931,33 @@ cairo_get_font_face (cairo_t *cr)
 void
 cairo_set_font_face (cairo_t *cr, cairo_font_face_t *font_face)
 {
-    _emit_cairo_op (cr, "f%ld set_font_face\n",
-		    _get_font_face_id (font_face));
+    if (cr != NULL && font_face != NULL) {
+	if (_pop_operands_to (FONT_FACE, font_face)) {
+	    if (_is_current (CONTEXT, cr, 1)) {
+		if (_write_lock ()) {
+		    _consume_operand ();
+		    fprintf (logfile, "set_font_face\n");
+		    _write_unlock ();
+		}
+	    } else {
+		if (_get_object (CONTEXT, cr)->defined) {
+		    if (_write_lock ()) {
+			_consume_operand ();
+			fprintf (logfile,
+				 "c%ld exch set_font_face pop\n",
+				 _get_context_id (cr));
+			_write_unlock ();
+		    }
+		} else {
+		    _emit_cairo_op (cr, "f%ld set_font_face\n",
+				    _get_font_face_id (font_face));
+		}
+	    }
+	} else {
+	    _emit_cairo_op (cr, "f%ld set_font_face\n",
+			    _get_font_face_id (font_face));
+	}
+    }
 
     return DLCALL (cairo_set_font_face, cr, font_face);
 }
