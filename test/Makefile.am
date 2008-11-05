@@ -701,6 +701,7 @@ REFERENCE_IMAGES = \
 	mime-data.ref.png	\
 	mime-data.ps.ref.png	\
 	mime-data.pdf.ref.png	\
+	mime-data.svg.ref.png	\
 	miter-precision.ref.png \
 	miter-precision.ps2.ref.png	\
 	miter-precision.ps3.ref.png	\

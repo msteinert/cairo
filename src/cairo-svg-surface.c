@@ -43,12 +43,13 @@
 #include "cairoint.h"
 #include "cairo-svg.h"
 #include "cairo-analysis-surface-private.h"
-#include "cairo-svg-surface-private.h"
+#include "cairo-jpeg-info-private.h"
 #include "cairo-meta-surface-private.h"
 #include "cairo-output-stream-private.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-paginated-private.h"
 #include "cairo-scaled-font-subsets-private.h"
+#include "cairo-svg-surface-private.h"
 
 typedef struct cairo_svg_page cairo_svg_page_t;
 
@@ -976,12 +977,54 @@ base64_write_func (void *closure,
 }
 
 static cairo_int_status_t
+_cairo_surface_base64_encode_jpeg (cairo_surface_t       *surface,
+				   cairo_output_stream_t *output)
+{
+    const unsigned char *mime_data;
+    unsigned int mime_data_length;
+    cairo_jpeg_info_t jpeg_info;
+    base64_write_closure_t info;
+    cairo_status_t status;
+
+    cairo_surface_get_mime_data (surface, CAIRO_MIME_TYPE_JPEG,
+				 &mime_data, &mime_data_length);
+    if (mime_data == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    status = _cairo_jpeg_get_info (mime_data, mime_data_length, &jpeg_info);
+    if (status)
+	return status;
+
+    _cairo_output_stream_printf (output, "data:image/jpeg;base64,");
+
+    info.output = output;
+    info.in_mem = 0;
+    info.trailing = 0;
+
+    status = base64_write_func (&info, mime_data, mime_data_length);
+    if (status)
+	return status;
+
+    if (info.in_mem > 0) {
+	memset (info.src + info.in_mem, 0, 3 - info.in_mem);
+	info.trailing = 3 - info.in_mem;
+	info.in_mem = 3;
+	status = base64_write_func (&info, NULL, 0);
+    }
+
+    return status;
+}
+
+static cairo_int_status_t
 _cairo_surface_base64_encode (cairo_surface_t       *surface,
 			      cairo_output_stream_t *output)
 {
     cairo_status_t status;
     base64_write_closure_t info;
-    unsigned int i;
+
+    status = _cairo_surface_base64_encode_jpeg (surface, output);
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
 
     info.output = output;
     info.in_mem = 0;
@@ -996,8 +1039,7 @@ _cairo_surface_base64_encode (cairo_surface_t       *surface,
 	return status;
 
     if (info.in_mem > 0) {
-	for (i = info.in_mem; i < 3; i++)
-	    info.src[i] = '\x0';
+	memset (info.src + info.in_mem, 0, 3 - info.in_mem);
 	info.trailing = 3 - info.in_mem;
 	info.in_mem = 3;
 	status = base64_write_func (&info, NULL, 0);
