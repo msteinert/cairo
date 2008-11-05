@@ -1016,6 +1016,40 @@ _cairo_surface_base64_encode_jpeg (cairo_surface_t       *surface,
 }
 
 static cairo_int_status_t
+_cairo_surface_base64_encode_png (cairo_surface_t       *surface,
+				  cairo_output_stream_t *output)
+{
+    const unsigned char *mime_data;
+    unsigned int mime_data_length;
+    base64_write_closure_t info;
+    cairo_status_t status;
+
+    cairo_surface_get_mime_data (surface, CAIRO_MIME_TYPE_PNG,
+				 &mime_data, &mime_data_length);
+    if (mime_data == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    _cairo_output_stream_printf (output, "data:image/png;base64,");
+
+    info.output = output;
+    info.in_mem = 0;
+    info.trailing = 0;
+
+    status = base64_write_func (&info, mime_data, mime_data_length);
+    if (status)
+	return status;
+
+    if (info.in_mem > 0) {
+	memset (info.src + info.in_mem, 0, 3 - info.in_mem);
+	info.trailing = 3 - info.in_mem;
+	info.in_mem = 3;
+	status = base64_write_func (&info, NULL, 0);
+    }
+
+    return status;
+}
+
+static cairo_int_status_t
 _cairo_surface_base64_encode (cairo_surface_t       *surface,
 			      cairo_output_stream_t *output)
 {
@@ -1023,6 +1057,10 @@ _cairo_surface_base64_encode (cairo_surface_t       *surface,
     base64_write_closure_t info;
 
     status = _cairo_surface_base64_encode_jpeg (surface, output);
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
+
+    status = _cairo_surface_base64_encode_png (surface, output);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
