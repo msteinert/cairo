@@ -929,11 +929,11 @@ _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
 	    y = pixman_fixed_to_double (vector.vector[1]);
 	    cairo_matrix_transform_point (&inv, &x, &y);
 
-	    /* Ideally, the vector should now be (xc, yc) [offset for pixel
-	     * centre]. We can now compensate for the resulting error.
+	    /* Ideally, the vector should now be (xc, yc).
+	     * We can now compensate for the resulting error.
 	     */
-	    x -= xc; x += .5;
-	    y -= yc; y += .5;
+	    x -= xc;
+	    y -= yc;
 	    cairo_matrix_transform_distance (matrix, &x, &y);
 	    dx = _cairo_fixed_16_16_from_double (x);
 	    dy = _cairo_fixed_16_16_from_double (y);
