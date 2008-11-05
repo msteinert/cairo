@@ -1012,6 +1012,7 @@ EXTRA_DIST +=		\
 6x13.pcf		\
 make-html.pl		\
 jpeg.jpg		\
+png.png			\
 romedalen.jpg		\
 romedalen.png		\
 scarab.jpg		\

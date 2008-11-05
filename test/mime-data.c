@@ -31,27 +31,23 @@
 /* Basic test to exercise the new mime-data embedding. */
 
 static cairo_status_t
-read_jpg_file (const cairo_test_context_t *ctx,
-	       unsigned char **data_out,
-	       unsigned int *length_out)
+read_file (const cairo_test_context_t *ctx,
+	   const char *filename,
+	   unsigned char **data_out,
+	   unsigned int *length_out)
 {
-    /* Deliberately use a non-matching jpeg image, so that we can identify
-     * when the JPEG representation is used in preference to the image
-     * surface.
-     */
-    const char jpg_filename[] = "jpeg.jpg";
     FILE *file;
     unsigned char *buf;
     unsigned int len;
 
-    file = fopen (jpg_filename, "rb");
+    file = fopen (filename, "rb");
     if (file == NULL) {
-	char filename[4096];
+	char path[4096];
 
 	/* try again with srcdir */
-	snprintf (filename, sizeof (filename),
-		  "%s/%s", ctx->srcdir, jpg_filename);
-	file = fopen (filename, "rb");
+	snprintf (path, sizeof (path),
+		  "%s/%s", ctx->srcdir, filename);
+	file = fopen (path, "rb");
     }
     if (file == NULL) {
 	switch (errno) {
@@ -79,30 +75,55 @@ read_jpg_file (const cairo_test_context_t *ctx,
 }
 
 static cairo_test_status_t
-draw (cairo_t *cr, int width, int height)
+paint_file (cairo_t *cr,
+	    const char *filename, const char *mime_type,
+	    int x, int y)
 {
     const cairo_test_context_t *ctx = cairo_test_get_context (cr);
     cairo_surface_t *image;
-    unsigned char *jpg_data;
-    unsigned int jpg_len;
+    unsigned char *mime_data;
+    unsigned int mime_length;
     cairo_status_t status;
 
-    status = read_jpg_file (ctx, &jpg_data, &jpg_len);
-    if (status) {
+    /* Deliberately use a non-matching MIME images, so that we can identify
+     * when the MIME representation is used in preference to the plain image
+     * surface.
+     */
+    status = read_file (ctx, filename, &mime_data, &mime_length);
+    if (status)
 	return cairo_test_status_from_status (ctx, status);
-    }
 
     image = cairo_image_surface_create (CAIRO_FORMAT_RGB24, 200, 50);
-    status = cairo_surface_set_mime_data (image, CAIRO_MIME_TYPE_JPEG,
-					  jpg_data, jpg_len, free);
+
+    status = cairo_surface_set_mime_data (image, mime_type,
+					  mime_data, mime_length, free);
     if (status) {
 	cairo_surface_destroy (image);
 	return cairo_test_status_from_status (ctx, status);
     }
 
-    cairo_set_source_surface (cr, image, 0, 0);
+    cairo_set_source_surface (cr, image, x, y);
     cairo_surface_destroy (image);
+
     cairo_paint (cr);
+
+    return CAIRO_TEST_SUCCESS;
+}
+
+static cairo_test_status_t
+draw (cairo_t *cr, int width, int height)
+{
+    const char jpg_filename[] = "jpeg.jpg";
+    const char png_filename[] = "png.png";
+    cairo_test_status_t status;
+
+    status = paint_file (cr, jpg_filename, CAIRO_MIME_TYPE_JPEG, 0, 0);
+    if (status)
+	return status;
+
+    status = paint_file (cr, png_filename, CAIRO_MIME_TYPE_PNG, 0, 50);
+    if (status)
+	return status;
 
     return CAIRO_TEST_SUCCESS;
 }
@@ -111,5 +132,5 @@ CAIRO_TEST (mime_data,
 	    "Check that the mime-data embedding works",
 	    "jpeg, api", /* keywords */
 	    NULL, /* requirements */
-	    200, 50,
+	    200, 100,
 	    NULL, draw)
