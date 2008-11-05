@@ -656,6 +656,32 @@ _cairo_memory_stream_create (void)
     return &stream->base;
 }
 
+cairo_status_t
+_cairo_memory_stream_destroy (cairo_output_stream_t *abstract_stream,
+			      unsigned char **data_out,
+			      unsigned int *length_out)
+{
+    memory_stream_t *stream;
+    cairo_status_t status;
+
+    status = abstract_stream->status;
+    if (status)
+	return _cairo_output_stream_destroy (abstract_stream);
+
+    stream = (memory_stream_t *) abstract_stream;
+
+    *length_out = _cairo_array_num_elements (&stream->array);
+    *data_out = malloc (*length_out);
+    if (*data_out == NULL) {
+	status = _cairo_output_stream_destroy (abstract_stream);
+	assert (status == CAIRO_STATUS_SUCCESS);
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+    memcpy (*data_out, _cairo_array_index (&stream->array, 0), *length_out);
+
+    return _cairo_output_stream_destroy (abstract_stream);
+}
+
 void
 _cairo_memory_stream_copy (cairo_output_stream_t *base,
 			   cairo_output_stream_t *dest)
@@ -670,7 +696,7 @@ _cairo_memory_stream_copy (cairo_output_stream_t *base,
 	return;
     }
 
-    _cairo_output_stream_write (dest, 
+    _cairo_output_stream_write (dest,
 				_cairo_array_index (&stream->array, 0),
 				_cairo_array_num_elements (&stream->array));
 }

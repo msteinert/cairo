@@ -1948,6 +1948,7 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
 			     cairo_destroy_func_t	 destroy);
 
 #define CAIRO_MIME_TYPE_JPEG "image/jpeg"
+#define CAIRO_MIME_TYPE_PNG "image/png"
 
 cairo_public void
 cairo_surface_get_mime_data (cairo_surface_t		*surface,

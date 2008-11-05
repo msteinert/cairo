@@ -1036,6 +1036,11 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
     cairo_surface_pattern_t pattern;
     cairo_image_surface_t *image;
     void *image_extra;
+    const char *mime_types[] = {
+	CAIRO_MIME_TYPE_JPEG,
+	CAIRO_MIME_TYPE_PNG,
+	NULL
+    }, **mime_type;
 
     status = _cairo_surface_acquire_source_image (surface,
 						  &image, &image_extra);
@@ -1075,15 +1080,12 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
     snapshot->device_transform = surface->device_transform;
     snapshot->device_transform_inverse = surface->device_transform_inverse;
 
-    /* XXX Need to copy all known image representations...
-     * For now, just copy "image/jpeg", but in future we should construct
-     * an array of known types and iterate.
-     */
-    status = _cairo_surface_copy_mime_data (snapshot, surface,
-	                                    CAIRO_MIME_TYPE_JPEG);
-    if (status) {
-	cairo_surface_destroy (snapshot);
-	return _cairo_surface_create_in_error (status);
+    for (mime_type = mime_types; *mime_type; mime_type++) {
+	status = _cairo_surface_copy_mime_data (snapshot, surface, *mime_type);
+	if (status) {
+	    cairo_surface_destroy (snapshot);
+	    return _cairo_surface_create_in_error (status);
+	}
     }
 
     snapshot->is_snapshot = TRUE;
