@@ -1159,8 +1159,8 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 	goto finish;
 
     status = _cairo_image_surface_set_attributes (src, &attributes,
-						  src_x + width / 2.,
-						  src_y + height / 2.);
+						  dst_x + width / 2.,
+						  dst_y + height / 2.);
     if (status)
 	goto CLEANUP_SOURCE;
 

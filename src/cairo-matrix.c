@@ -879,8 +879,6 @@ _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
         *pixman_transform = pixman_identity_transform;
     } else {
         cairo_matrix_t inv;
-        double x,y;
-        pixman_vector_t vector;
 
         pixman_transform->matrix[0][0] = _cairo_fixed_16_16_from_double (matrix->xx);
         pixman_transform->matrix[0][1] = _cairo_fixed_16_16_from_double (matrix->xy);
@@ -913,24 +911,37 @@ _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
         if (cairo_matrix_invert (&inv) != CAIRO_STATUS_SUCCESS)
             return;
 
-        /* find the device space coordinate that maps to (xc, yc) */
-        x = xc, y = yc;
-        cairo_matrix_transform_point (&inv, &x, &y);
+        /* find the pattern space coordinate that maps to (xc, yc) */
+	xc += .5; yc += .5; /* offset for the pixel centre */
+	do {
+	    double x,y;
+	    pixman_vector_t vector;
+	    cairo_fixed_16_16_t dx, dy;
 
-        /* transform the resulting device space coordinate back
-         * to the pattern space, using pixman's transform */
-        vector.vector[0] = _cairo_fixed_16_16_from_double (x);
-        vector.vector[1] = _cairo_fixed_16_16_from_double (y);
-        vector.vector[2] = 1 << 16;
+	    vector.vector[0] = _cairo_fixed_16_16_from_double (xc);
+	    vector.vector[1] = _cairo_fixed_16_16_from_double (yc);
+	    vector.vector[2] = 1 << 16;
 
-        if (! pixman_transform_point_3d (pixman_transform, &vector))
-            return;
+	    if (! pixman_transform_point_3d (pixman_transform, &vector))
+		return;
 
-        /* Ideally, the vector should now be (xc, yc). We can now compensate
-         * for the resulting error */
-        pixman_transform->matrix[0][2] +=
-	    _cairo_fixed_16_16_from_double (xc) - vector.vector[0];
-        pixman_transform->matrix[1][2] +=
-	    _cairo_fixed_16_16_from_double (yc) - vector.vector[1];
+	    x = pixman_fixed_to_double (vector.vector[0]);
+	    y = pixman_fixed_to_double (vector.vector[1]);
+	    cairo_matrix_transform_point (&inv, &x, &y);
+
+	    /* Ideally, the vector should now be (xc, yc) [offset for pixel
+	     * centre]. We can now compensate for the resulting error.
+	     */
+	    x -= xc; x += .5;
+	    y -= yc; y += .5;
+	    cairo_matrix_transform_distance (matrix, &x, &y);
+	    dx = _cairo_fixed_16_16_from_double (x);
+	    dy = _cairo_fixed_16_16_from_double (y);
+	    pixman_transform->matrix[0][2] -= dx;
+	    pixman_transform->matrix[1][2] -= dy;
+
+	    if (dx == 0 && dy == 0)
+		break;
+	} while (TRUE);
     }
 }
