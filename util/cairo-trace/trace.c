@@ -989,8 +989,62 @@ _emit_data (const void *data, unsigned int length)
     _write_data_end (&stream);
 }
 
-static void
-_emit_image (cairo_surface_t *image)
+static const char *
+_format_to_string (cairo_format_t format)
+{
+    const char *names[] = {
+	"ARGB32",	/* CAIRO_FORMAT_ARGB32 */
+	"RGB24",	/* CAIRO_FORMAT_RGB24 */
+	"A8",		/* CAIRO_FORMAT_A8 */
+	"A1"		/* CAIRO_FORMAT_A1 */
+    };
+    return names[format];
+}
+
+static const char *
+_status_to_string (cairo_status_t status)
+{
+    const char *names[] = {
+	"STATUS_SUCCESS",
+	"STATUS_NO_MEMORY",
+	"STATUS_INVALID_RESTORE",
+	"STATUS_INVALID_POP_GROUP",
+	"STATUS_NO_CURRENT_POINT",
+	"STATUS_INVALID_MATRIX",
+	"STATUS_INVALID_STATUS",
+	"STATUS_NULL_POINTER",
+	"STATUS_INVALID_STRING",
+	"STATUS_INVALID_PATH_DATA",
+	"STATUS_READ_ERROR",
+	"STATUS_WRITE_ERROR",
+	"STATUS_SURFACE_FINISHED",
+	"STATUS_SURFACE_TYPE_MISMATCH",
+	"STATUS_PATTERN_TYPE_MISMATCH",
+	"STATUS_INVALID_CONTENT",
+	"STATUS_INVALID_FORMAT",
+	"STATUS_INVALID_VISUAL",
+	"STATUS_FILE_NOT_FOUND",
+	"STATUS_INVALID_DASH",
+	"STATUS_INVALID_DSC_COMMENT",
+	"STATUS_INVALID_INDEX",
+	"STATUS_CLIP_NOT_REPRESENTABLE",
+	"STATUS_TEMP_FILE_ERROR",
+	"STATUS_INVALID_STRIDE",
+	"STATUS_FONT_TYPE_MISMATCH",
+	"STATUS_USER_FONT_IMMUTABLE",
+	"STATUS_USER_FONT_ERROR",
+	"STATUS_NEGATIVE_COUNT",
+	"STATUS_INVALID_CLUSTERS",
+	"STATUS_INVALID_SLANT",
+	"STATUS_INVALID_WEIGHT"
+    };
+    return names[status];
+}
+
+static void CAIRO_PRINTF_FORMAT(2, 3)
+_emit_image (cairo_surface_t *image,
+	     const char *info,
+	     ...)
 {
     int stride, row, width, height;
     cairo_format_t format;
@@ -998,6 +1052,20 @@ _emit_image (cairo_surface_t *image)
     uint8_t *rowdata;
     uint8_t *data;
     struct _data_stream stream;
+    const char *mime_types[] = {
+	CAIRO_MIME_TYPE_JPEG,
+	CAIRO_MIME_TYPE_PNG,
+	NULL
+    }, **mime_type;
+
+    if (cairo_surface_status (image)) {
+	fprintf (logfile,
+		 "dict\n"
+		 "  /status //%s set\n"
+		 "  image",
+		 _status_to_string (cairo_surface_status (image)));
+	return;
+    }
 
     width = cairo_image_surface_get_width (image);
     height = cairo_image_surface_get_height (image);
@@ -1005,6 +1073,43 @@ _emit_image (cairo_surface_t *image)
     format = cairo_image_surface_get_format (image);
     data = cairo_image_surface_get_data (image);
 
+    fprintf (logfile,
+	     "dict\n"
+	     "  /width %d set\n"
+	     "  /height %d set\n"
+	     "  /format //%s set\n",
+	     width, height,
+	     _format_to_string (format));
+    if (info != NULL) {
+	va_list ap;
+
+	va_start (ap, info);
+	vfprintf (logfile, info, ap);
+	va_end (ap);
+    }
+
+    for (mime_type = mime_types; *mime_type; mime_type++) {
+	const unsigned char *mime_data;
+	unsigned int mime_length;
+
+	cairo_surface_get_mime_data (image, *mime_type,
+				     &mime_data, &mime_length);
+	if (mime_data != NULL) {
+	    fprintf (logfile,
+		     "  /mime-type (%s) set\n"
+		     "  /source <~",
+		     *mime_type);
+	    _write_base85_data_start (&stream);
+	    _write_base85_data (&stream, mime_data, mime_length);
+	    _write_base85_data_end (&stream);
+	    fprintf (logfile,
+		     "~> set\n"
+		     "  image");
+	    return;
+	}
+    }
+
+    fprintf (logfile, "  /source ");
     _write_data_start (&stream);
 
 #ifdef WORDS_BIGENDIAN
@@ -1039,16 +1144,13 @@ _emit_image (cairo_surface_t *image)
 	}
 	break;
     default:
-	_write_data_end (&stream);
-	return;
+	break;
     }
 #else
     if (stride > ARRAY_LENGTH (row_stack)) {
 	rowdata = malloc (stride);
-	if (rowdata == NULL) {
-	    _write_data_end (&stream);
-	    return;
-	}
+	if (rowdata == NULL)
+	    goto BAIL;
     } else
 	rowdata = row_stack;
 
@@ -1099,8 +1201,87 @@ _emit_image (cairo_surface_t *image)
     if (rowdata != row_stack)
 	free (rowdata);
 
+BAIL:
     _write_data_end (&stream);
 #endif
+    fprintf (logfile,
+	     " /deflate filter set\n"
+	     "  image");
+}
+
+static void
+_encode_string_literal (char *out, int max,
+			const char *utf8, int len)
+{
+    char c;
+    const char *end;
+
+    *out++ = '(';
+    max--;
+
+    if (utf8 == NULL)
+	goto DONE;
+
+    if (len < 0)
+	len = strlen (utf8);
+    end = utf8 + len;
+
+    while (utf8 < end) {
+	if (max < 5)
+	    break;
+
+	switch ((c = *utf8++)) {
+	case '\n':
+	    *out++ = '\\';
+	    *out++ = 'n';
+	    max -= 2;
+	    break;
+	case '\r':
+	    *out++ = '\\';
+	    *out++ = 'n';
+	    max -= 2;
+	case '\t':
+	    *out++ = '\\';
+	    *out++ = 't';
+	    max -= 2;
+	    break;
+	case '\b':
+	    *out++ = '\\';
+	    *out++ = 'b';
+	    max -= 2;
+	    break;
+	case '\f':
+	    *out++ = '\\';
+	    *out++ = 'r';
+	    max -= 2;
+	    break;
+	case '\\':
+	case '(':
+	case ')':
+	    *out++ = '\\';
+	    *out++ = c;
+	    max -= 2;
+	    break;
+	default:
+	    if (isprint (c) || isspace (c)) {
+		*out++ = c;
+	    } else {
+		int octal = 0;
+		while (c) {
+		    octal *= 10;
+		    octal += c&7;
+		    c /= 8;
+		}
+		octal = snprintf (out, max, "\\%03d", octal);
+		out += octal;
+		max -= octal;
+	    }
+	    break;
+	}
+    }
+DONE:
+    *out++ = ')';
+    *out = '\0';
 }
 
 static void
@@ -1357,17 +1538,9 @@ _emit_source_image (cairo_surface_t *surface)
     DLCALL (cairo_paint, cr);
     DLCALL (cairo_destroy, cr);
 
+    _emit_image (image, NULL);
     fprintf (logfile,
-	     "dict\n"
-	     "  /width %d set\n"
-	     "  /height %d set\n"
-	     "  /format //ARGB32 set\n"
-	     "  /source ",
-	     obj->width, obj->height);
-    _emit_image (image);
-    fprintf (logfile,
-	     " /deflate filter set\n"
-	     "  image set_source_image ");
+	     " set_source_image ");
     DLCALL (cairo_surface_destroy, image);
 
     _get_object (SURFACE, surface)->foreign = false;
@@ -2238,7 +2411,7 @@ _emit_glyphs (cairo_scaled_font_t *font,
 	struct _data_stream stream;
 
 	if (num_glyphs == 1) {
-	    fprintf (logfile, "[%g %g <%x>]", x, y,  glyphs->index);
+	    fprintf (logfile, "[%g %g <%lx>]", x, y,  glyphs->index);
 	} else {
 	    fprintf (logfile, "[%g %g <~", x, y);
 	    _write_base85_data_start (&stream);
@@ -2407,18 +2580,6 @@ cairo_append_path (cairo_t *cr, const cairo_path_t *path)
     }
 }
 
-static const char *
-_format_to_string (cairo_format_t format)
-{
-    const char *names[] = {
-	"ARGB32",	/* CAIRO_FORMAT_ARGB32 */
-	"RGB24",	/* CAIRO_FORMAT_RGB24 */
-	"A8",		/* CAIRO_FORMAT_A8 */
-	"A1"		/* CAIRO_FORMAT_A1 */
-    };
-    return names[format];
-}
-
 cairo_surface_t *
 cairo_image_surface_create (cairo_format_t format, int width, int height)
 {
@@ -2452,22 +2613,11 @@ cairo_image_surface_create_for_data (unsigned char *data, cairo_format_t format,
 {
     cairo_surface_t *ret;
     long surface_id;
-    const char *format_str;
 
     ret = DLCALL (cairo_image_surface_create_for_data, data, format, width, height, stride);
     surface_id = _create_surface_id (ret);
 
     if (data != NULL && _write_lock ()) {
-	format_str = _format_to_string (format);
-
-	fprintf (logfile,
-		 "dict\n"
-		 "  /width %d set\n"
-		 "  /height %d set\n"
-		 "  /format //%s set\n",
-		 width, height,
-		 format_str);
-
 	/* cairo_image_surface_create_for_data() is both used to supply
 	 * foreign pixel data to cairo and in order to read pixels back.
 	 * Defer grabbing the pixel contents until we have to, but only for
@@ -2476,17 +2626,26 @@ cairo_image_surface_create_for_data (unsigned char *data, cairo_format_t format,
 	 */
 	if (width * height < 128) {
 	    fprintf (logfile, "  /source ");
-	    _emit_image (ret);
-	    fprintf (logfile, " /deflate filter set\n");
+	    _emit_image (ret, NULL);
+	    fprintf (logfile,
+		     " dup /s%ld exch def\n",
+		     surface_id);
 	} else {
+	    fprintf (logfile,
+		     "dict\n"
+		     "  /width %d set\n"
+		     "  /height %d set\n"
+		     "  /format //%s set\n"
+		     "  image dup /s%ld exch def\n",
+		     width, height,
+		     _format_to_string (format),
+		     surface_id);
+
 	    _get_object (SURFACE, ret)->width  = width;
 	    _get_object (SURFACE, ret)->height = height;
 	    _get_object (SURFACE, ret)->foreign = true;
 	}
 
-	fprintf (logfile,
-		 "  image dup /s%ld exch def\n",
-		 surface_id);
 	_get_object (SURFACE, ret)->defined = true;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
@@ -3243,37 +3402,20 @@ cairo_surface_t *
 cairo_image_surface_create_from_png (const char *filename)
 {
     cairo_surface_t *ret;
-    cairo_format_t format;
-    int width;
-    int height;
     long surface_id;
-    const char *format_str;
 
     ret = DLCALL (cairo_image_surface_create_from_png, filename);
 
-    width = cairo_image_surface_get_width (ret);
-    height = cairo_image_surface_get_height (ret);
-    format = cairo_image_surface_get_format (ret);
-
     surface_id = _create_surface_id (ret);
-    format_str = _format_to_string (format);
 
     if (_write_lock ()) {
+	char filename_string[4096];
+
+	_encode_string_literal (filename_string, sizeof (filename_string),
+				filename, -1);
+	_emit_image (ret, "  /filename %s set\n", filename_string);
 	fprintf (logfile,
-		 "dict\n"
-		 "  /width %d set\n"
-		 "  /height %d set\n"
-		 "  /format //%s set\n"
-		 "  /filename ",
-		 width, height, format_str);
-	_emit_string_literal (filename, -1);
-	fprintf (logfile,
-		 " set\n"
-		 "  /source ");
-	_emit_image (ret);
-	fprintf (logfile,
-		 " /deflate filter set\n"
-		 "  image dup /s%ld exch def\n",
+		 " dup /s%ld exch def\n",
 		 surface_id);
 	_get_object (SURFACE, ret)->defined = true;
 	_push_operand (SURFACE, ret);
@@ -3287,32 +3429,15 @@ cairo_surface_t *
 cairo_image_surface_create_from_png_stream (cairo_read_func_t read_func, void *closure)
 {
     cairo_surface_t *ret;
-    cairo_format_t format;
-    int width;
-    int height;
-    const char *format_str;
     long surface_id;
 
     ret = DLCALL (cairo_image_surface_create_from_png_stream, read_func, closure);
-    width = cairo_image_surface_get_width (ret);
-    height = cairo_image_surface_get_height (ret);
-    format = cairo_image_surface_get_format (ret);
-
     surface_id = _create_surface_id (ret);
-    format_str = _format_to_string (format);
 
     if (_write_lock ()) {
+	_emit_image (ret, NULL);
 	fprintf (logfile,
-		 "dict\n"
-		 "  /width %d set\n"
-		 "  /height %d set\n"
-		 "  /format //%s set\n"
-		 "  /source ",
-		 width, height, format_str);
-	_emit_image (ret);
-	fprintf (logfile,
-		 " /deflate filter set\n"
-		 "  image dup /s%ld exch def\n",
+		 " dup /s%ld exch def\n",
 		 surface_id);
 	_get_object (SURFACE, ret)->defined = true;
 	_push_operand (SURFACE, ret);
