@@ -682,15 +682,18 @@ cairo_surface_set_mime_data (cairo_surface_t		*surface,
     if (status)
 	return _cairo_surface_set_error (surface, status);
 
-    mime_data = malloc (sizeof (cairo_mime_data_t));
-    if (mime_data == NULL)
-	return _cairo_surface_set_error (surface, _cairo_error (CAIRO_STATUS_NO_MEMORY));
+    if (data != NULL) {
+	mime_data = malloc (sizeof (cairo_mime_data_t));
+	if (mime_data == NULL)
+	    return _cairo_surface_set_error (surface, _cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    CAIRO_REFERENCE_COUNT_INIT (&mime_data->ref_count, 1);
+	CAIRO_REFERENCE_COUNT_INIT (&mime_data->ref_count, 1);
 
-    mime_data->data = (unsigned char *) data;
-    mime_data->length = length;
-    mime_data->destroy = destroy;
+	mime_data->data = (unsigned char *) data;
+	mime_data->length = length;
+	mime_data->destroy = destroy;
+    } else
+	mime_data = NULL;
 
     status = _cairo_user_data_array_set_data (&surface->user_data,
 					      (cairo_user_data_key_t *) mime_type,
