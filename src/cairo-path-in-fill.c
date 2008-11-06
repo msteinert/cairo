@@ -125,7 +125,7 @@ _cairo_in_fill_add_edge (cairo_in_fill_t *in_fill,
 	return;
 
     if ((p1->x <= in_fill->x && p2->x <= in_fill->x) ||
-	edge_compare_for_y_against_x (p1, p2, in_fill->x, in_fill->y) <= 0)
+	edge_compare_for_y_against_x (p1, p2, in_fill->y, in_fill->x) <= 0)
     {
 	in_fill->winding += dir;
     }
