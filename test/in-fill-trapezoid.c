@@ -68,6 +68,62 @@ draw (cairo_t *cr, int width, int height)
 	ret = CAIRO_TEST_FAILURE;
     }
 
+
+    cairo_set_fill_rule (cr, CAIRO_FILL_RULE_WINDING);
+
+    /* simple rectangle */
+    cairo_new_path (cr);
+    cairo_rectangle (cr, -10, -10, 20, 20);
+    if (! cairo_in_fill (cr, 0, 0)) {
+	cairo_test_log (ctx, "Error: Failed to find point inside rectangle\n");
+	ret = CAIRO_TEST_FAILURE;
+    }
+
+    /* simple circle */
+    cairo_new_path (cr);
+    cairo_arc (cr, 0, 0, 10, 0, 2 * M_PI);
+    if (! cairo_in_fill (cr, 0, 0)) {
+	cairo_test_log (ctx, "Error: Failed to find point inside circle\n");
+	ret = CAIRO_TEST_FAILURE;
+    }
+
+    /* overlapping circle/rectangle */
+    cairo_new_path (cr);
+    cairo_rectangle (cr, -10, -10, 20, 20);
+    cairo_new_sub_path (cr);
+    cairo_arc (cr, 0, 0, 10, 0, 2 * M_PI);
+    if (! cairo_in_fill (cr, 0, 0)) {
+	cairo_test_log (ctx, "Error: Failed to find point inside circle+rectangle\n");
+	ret = CAIRO_TEST_FAILURE;
+    }
+
+    /* holey rectangle */
+    cairo_new_path (cr);
+    cairo_rectangle (cr, -10, -10, 20, 20);
+    cairo_rectangle (cr, 5, -5, -10, 10);
+    if (cairo_in_fill (cr, 0, 0)) {
+	cairo_test_log (ctx, "Error: Found an unexpected point inside rectangular hole\n");
+	ret = CAIRO_TEST_FAILURE;
+    }
+
+    /* holey circle */
+    cairo_new_path (cr);
+    cairo_arc (cr, 0, 0, 10, 0, 2 * M_PI);
+    cairo_arc_negative (cr, 0, 0, 5, 0, -2 * M_PI);
+    if (cairo_in_fill (cr, 0, 0)) {
+	cairo_test_log (ctx, "Error: Found an unexpected point inside circular hole\n");
+	ret = CAIRO_TEST_FAILURE;
+    }
+
+    /* not a holey circle */
+    cairo_new_path (cr);
+    cairo_arc (cr, 0, 0, 10, 0, 2 * M_PI);
+    cairo_arc (cr, 0, 0, 5, 0, 2 * M_PI);
+    if (! cairo_in_fill (cr, 0, 0)) {
+	cairo_test_log (ctx, "Error: Failed to find point inside two circles\n");
+	ret = CAIRO_TEST_FAILURE;
+    }
+
     return ret;
 }
 
