@@ -1,3 +1,45 @@
+Release 1.9.2 (2008-11-08?)
+===========================
+
+API additions:
+
+  cairo_surface_set_mime_data()
+  cairo_surface_get_mime_data()
+
+    Associate an alternate, compressed, representation for a surface.
+    Currently:
+     "image/jpeg" is understood by PDF,PS,SVG,win32-printing.
+     "image/png" is understood by SVG.
+
+New backend:
+
+   Simple DirectMedia Layer
+
+New utility:
+
+  cairo-trace
+
+    Generates a human-readable, replayable, compact representation of
+    the sequences of drawing commands made by an application.
+    Though currently the replay tools are out-of-tree -
+      people.freedesktop.org:~ickle/cairo-script,
+      people.freedesktop.org:~ickle/sphinx
+
+Test suite overhaul:
+  The test suite is undergoing an overhaul, primarily to improve its speed
+  and utility.
+
+Optimisations:
+Tweaks to tessellator, allocations of patterns, delayed initialisation of
+the xlib backend (reduce the cairo overhead of render_bench by ~80%).
+
+Bug fixes:
+EXTEND_PAD.
+Better handling of large scale-factors on image patterns.
+Emit /Interpolate for PS,PDF images.
+
+
+
 Release 1.8.2 (2008-10-29 Carl Worth <cworth@cworth.org>)
 =========================================================
 The cairo community is pleased to announce the 1.8.2 release of the
