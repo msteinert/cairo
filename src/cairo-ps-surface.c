@@ -1836,7 +1836,7 @@ fail:
 
 static cairo_status_t
 _cairo_ps_surface_emit_base85_string (cairo_ps_surface_t    *surface,
-				      unsigned char	    *data,
+				      const unsigned char   *data,
 				      unsigned long	     length,
 				      cairo_bool_t           use_strings)
 {
