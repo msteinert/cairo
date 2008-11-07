@@ -448,8 +448,8 @@ _cairo_hash_table_random_entry (cairo_hash_table_t	   *hash_table,
  *
  * Insert the entry #key_and_value into the hash table.
  *
- * WARNING: It is a fatal error if an entry exists in the hash table
- * with a matching key, (this function will halt).
+ * WARNING: There must not be an existing entry in the hash table
+ * with a matching key.
  *
  * WARNING: It is a fatal error to insert an element while
  * an iterator is running
@@ -472,13 +472,11 @@ _cairo_hash_table_insert (cairo_hash_table_t *hash_table,
     assert (hash_table->iterating == 0);
 
     entry = _cairo_hash_table_lookup_internal (hash_table,
-					       key_and_value, FALSE);
-
-    if (ENTRY_IS_LIVE(*entry))
-    {
-	/* User is being bad, let's crash. */
-	ASSERT_NOT_REACHED;
-    }
+					       key_and_value,
+					       TRUE);
+    /* _cairo_hash_table_lookup_internal with key_unique = TRUE
+     * aways returns an available entry. */
+    assert (! ENTRY_IS_LIVE(*entry));
 
     *entry = key_and_value;
     hash_table->live_entries++;
