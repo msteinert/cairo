@@ -990,6 +990,8 @@ cairo_boilerplate_image_surface_create_from_ppm_stream (FILE *file)
 	    for (x = 0; x < width; x++) {
 		if (! freadn (buf, 3, file))
 		    goto FAIL;
+		*(uint32_t *) buf =
+		    (buf[0] << 16) | (buf[1] << 8) | (buf[2] << 0);
 		buf += 4;
 	    }
 	    break;
