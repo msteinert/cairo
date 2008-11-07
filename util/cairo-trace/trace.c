@@ -3468,7 +3468,7 @@ cairo_xlib_surface_create (Display *dpy,
 	fprintf (logfile,
 		 "dict\n"
 		 "  /type (xlib) set\n"
-		 "  /drawable /%lx set\n"
+		 "  /drawable 16!%lx set\n"
 		 "  /width %d set\n"
 		 "  /height %d set\n"
 		 "  surface dup /s%ld exch def\n",
@@ -3504,7 +3504,7 @@ cairo_xlib_surface_create_for_bitmap (Display *dpy,
 	fprintf (logfile,
 		 "dict\n"
 		 "  /type (xlib) set\n"
-		 "  /drawable /%lx set\n"
+		 "  /drawable 16!%lx set\n"
 		 "  /width %d set\n"
 		 "  /height %d set\n"
 		 "  /depth 1 set\n"
@@ -3544,7 +3544,7 @@ cairo_xlib_surface_create_with_xrender_format (Display *dpy,
 	fprintf (logfile,
 		 "dict\n"
 		 "  /type (xrender) set\n"
-		 "  /drawable /%lx set\n"
+		 "  /drawable 16!%lx set\n"
 		 "  /width %d set\n"
 		 "  /height %d set\n"
 		 "  /depth %d set\n"
