@@ -529,9 +529,8 @@ cff_dict_remove (cairo_hash_table_t *dict, unsigned short operator)
     cff_dict_operator_t key, *op;
 
     _cairo_dict_init_key (&key, operator);
-    if (_cairo_hash_table_lookup (dict, &key.base,
-                                  (cairo_hash_entry_t **) &op))
-    {
+    op = _cairo_hash_table_lookup (dict, &key.base);
+    if (op != NULL) {
         free (op->operand);
         _cairo_hash_table_remove (dict, (cairo_hash_entry_t *) op);
         free (op);
@@ -546,9 +545,8 @@ cff_dict_get_operands (cairo_hash_table_t *dict,
     cff_dict_operator_t key, *op;
 
     _cairo_dict_init_key (&key, operator);
-    if (_cairo_hash_table_lookup (dict, &key.base,
-                                  (cairo_hash_entry_t **) &op))
-    {
+    op = _cairo_hash_table_lookup (dict, &key.base);
+    if (op != NULL) {
         *size = op->operand_length;
         return op->operand;
     }
@@ -566,9 +564,8 @@ cff_dict_set_operands (cairo_hash_table_t *dict,
     cairo_status_t status;
 
     _cairo_dict_init_key (&key, operator);
-    if (_cairo_hash_table_lookup (dict, &key.base,
-                                  (cairo_hash_entry_t **) &op))
-    {
+    op = _cairo_hash_table_lookup (dict, &key.base);
+    if (op != NULL) {
         free (op->operand);
         op->operand = malloc (size);
 	if (op->operand == NULL)
@@ -599,9 +596,8 @@ cff_dict_get_location (cairo_hash_table_t *dict,
     cff_dict_operator_t key, *op;
 
     _cairo_dict_init_key (&key, operator);
-    if (_cairo_hash_table_lookup (dict, &key.base,
-                                  (cairo_hash_entry_t **) &op))
-    {
+    op = _cairo_hash_table_lookup (dict, &key.base);
+    if (op != NULL) {
         *size = op->operand_length;
         return op->operand_offset;
     }
@@ -660,8 +656,8 @@ cff_dict_write (cairo_hash_table_t *dict, cairo_array_t *output)
     /* The CFF specification requires that the Top Dict of CID fonts
      * begin with the ROS operator. */
     _cairo_dict_init_key (&key, ROS_OP);
-    if (_cairo_hash_table_lookup (dict, &key.base,
-                                  (cairo_hash_entry_t **) &op))
+    op = _cairo_hash_table_lookup (dict, &key.base);
+    if (op != NULL)
         cairo_dict_write_operator (op, &write_info);
 
     _cairo_hash_table_foreach (dict, _cairo_dict_collect, &write_info);

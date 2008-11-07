@@ -499,11 +499,10 @@ cairo_toy_font_face_create (const char          *family,
     _cairo_toy_font_face_init_key (&key, family, slant, weight);
 
     /* Return existing font_face if it exists in the hash table. */
-    if (_cairo_hash_table_lookup (hash_table,
-				  &key.base.hash_entry,
-				  (cairo_hash_entry_t **) &font_face))
-    {
-	if (! font_face->base.status)  {
+    font_face = _cairo_hash_table_lookup (hash_table,
+					  &key.base.hash_entry);
+    if (font_face != NULL) {
+	if (font_face->base.status == CAIRO_STATUS_SUCCESS) {
 	    /* We increment the reference count here manually to avoid
 	       double-locking. */
 	    _cairo_reference_count_inc (&font_face->base.ref_count);

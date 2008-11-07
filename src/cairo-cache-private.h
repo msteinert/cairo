@@ -109,10 +109,9 @@ _cairo_cache_freeze (cairo_cache_t *cache);
 cairo_private void
 _cairo_cache_thaw (cairo_cache_t *cache);
 
-cairo_private cairo_bool_t
+cairo_private void *
 _cairo_cache_lookup (cairo_cache_t	  *cache,
-		     cairo_cache_entry_t  *key,
-		     cairo_cache_entry_t **entry_return);
+		     cairo_cache_entry_t  *key);
 
 cairo_private cairo_status_t
 _cairo_cache_insert (cairo_cache_t	 *cache,

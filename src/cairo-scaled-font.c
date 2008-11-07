@@ -465,14 +465,13 @@ void
 _cairo_scaled_font_unregister_placeholder_and_lock_font_map (cairo_scaled_font_t *scaled_font)
 {
     cairo_scaled_font_t *placeholder_scaled_font;
-    cairo_bool_t found;
 
     CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
 
-    found = _cairo_hash_table_lookup (cairo_scaled_font_map->hash_table,
-				      &scaled_font->hash_entry,
-				      (cairo_hash_entry_t**) &placeholder_scaled_font);
-    assert (found);
+    placeholder_scaled_font =
+	_cairo_hash_table_lookup (cairo_scaled_font_map->hash_table,
+				  &scaled_font->hash_entry);
+    assert (placeholder_scaled_font != NULL);
     assert (placeholder_scaled_font->placeholder);
     assert (CAIRO_MUTEX_IS_LOCKED (placeholder_scaled_font->mutex));
 
@@ -823,8 +822,8 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     }
     else
     {
-	while (_cairo_hash_table_lookup (font_map->hash_table, &key.hash_entry,
-					 (cairo_hash_entry_t**) &scaled_font))
+	while ((scaled_font = _cairo_hash_table_lookup (font_map->hash_table,
+							&key.hash_entry)))
 	{
 	    if (! scaled_font->placeholder)
 		break;
@@ -2348,9 +2347,8 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
      * Check cache for glyph
      */
     info |= CAIRO_SCALED_GLYPH_INFO_METRICS;
-    if (!_cairo_cache_lookup (scaled_font->glyphs, &key,
-			      (cairo_cache_entry_t **) &scaled_glyph))
-    {
+    scaled_glyph = _cairo_cache_lookup (scaled_font->glyphs, &key);
+    if (scaled_glyph == NULL) {
 	/*
 	 * On miss, create glyph and insert into cache
 	 */

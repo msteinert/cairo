@@ -222,14 +222,12 @@ _cairo_cache_thaw (cairo_cache_t *cache)
  * @key, (which will now be in *entry_return). %FALSE otherwise, (in
  * which case *entry_return will be %NULL).
  **/
-cairo_bool_t
+void *
 _cairo_cache_lookup (cairo_cache_t	  *cache,
-		     cairo_cache_entry_t  *key,
-		     cairo_cache_entry_t **entry_return)
+		     cairo_cache_entry_t  *key)
 {
     return _cairo_hash_table_lookup (cache->hash_table,
-				     (cairo_hash_entry_t *) key,
-				     (cairo_hash_entry_t **) entry_return);
+				     (cairo_hash_entry_t *) key);
 }
 
 /**

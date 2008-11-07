@@ -420,9 +420,9 @@ _cairo_sub_font_lookup_glyph (cairo_sub_font_t	                *sub_font,
     cairo_sub_font_glyph_t key, *sub_font_glyph;
 
     _cairo_sub_font_glyph_init_key (&key, scaled_font_glyph_index);
-    if (_cairo_hash_table_lookup (sub_font->sub_font_glyphs, &key.base,
-				    (cairo_hash_entry_t **) &sub_font_glyph))
-    {
+    sub_font_glyph = _cairo_hash_table_lookup (sub_font->sub_font_glyphs,
+					      &key.base);
+    if (sub_font_glyph != NULL) {
         subset_glyph->font_id = sub_font->font_id;
         subset_glyph->subset_id = sub_font_glyph->subset_id;
         subset_glyph->subset_glyph_index = sub_font_glyph->subset_glyph_index;
@@ -450,9 +450,9 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
     cairo_status_t status;
 
     _cairo_sub_font_glyph_init_key (&key, scaled_font_glyph_index);
-    if (! _cairo_hash_table_lookup (sub_font->sub_font_glyphs, &key.base,
-				    (cairo_hash_entry_t **) &sub_font_glyph))
-    {
+    sub_font_glyph = _cairo_hash_table_lookup (sub_font->sub_font_glyphs,
+					       &key.base);
+    if (sub_font_glyph == NULL) {
 	cairo_scaled_glyph_t *scaled_glyph;
 
 	if (sub_font->num_glyphs_in_current_subset == sub_font->max_glyphs_per_subset)
@@ -679,9 +679,9 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
     if (subsets->type != CAIRO_SUBSETS_SCALED) {
         key.is_scaled = FALSE;
         _cairo_sub_font_init_key (&key, scaled_font);
-        if (_cairo_hash_table_lookup (subsets->unscaled_sub_fonts, &key.base,
-                                        (cairo_hash_entry_t **) &sub_font))
-        {
+	sub_font = _cairo_hash_table_lookup (subsets->unscaled_sub_fonts,
+					     &key.base);
+        if (sub_font != NULL) {
             if (_cairo_sub_font_lookup_glyph (sub_font,
                                               scaled_font_glyph_index,
 					      utf8, utf8_len,
@@ -693,9 +693,9 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
     /* Lookup glyph in scaled subsets */
     key.is_scaled = TRUE;
     _cairo_sub_font_init_key (&key, scaled_font);
-    if (_cairo_hash_table_lookup (subsets->scaled_sub_fonts, &key.base,
-                                  (cairo_hash_entry_t **) &sub_font))
-    {
+    sub_font = _cairo_hash_table_lookup (subsets->scaled_sub_fonts,
+					 &key.base);
+    if (sub_font != NULL) {
         if (_cairo_sub_font_lookup_glyph (sub_font,
                                           scaled_font_glyph_index,
 					  utf8, utf8_len,
@@ -732,9 +732,9 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
         /* Path available. Add to unscaled subset. */
         key.is_scaled = FALSE;
         _cairo_sub_font_init_key (&key, scaled_font);
-        if (! _cairo_hash_table_lookup (subsets->unscaled_sub_fonts, &key.base,
-                                        (cairo_hash_entry_t **) &sub_font))
-        {
+	sub_font = _cairo_hash_table_lookup (subsets->unscaled_sub_fonts,
+					     &key.base);
+        if (sub_font == NULL) {
             font_face = cairo_scaled_font_get_font_face (scaled_font);
             cairo_matrix_init_identity (&identity);
             _cairo_font_options_init_default (&font_options);
@@ -791,9 +791,9 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
         /* No path available. Add to scaled subset. */
         key.is_scaled = TRUE;
         _cairo_sub_font_init_key (&key, scaled_font);
-        if (! _cairo_hash_table_lookup (subsets->scaled_sub_fonts, &key.base,
-                                        (cairo_hash_entry_t **) &sub_font))
-        {
+	sub_font = _cairo_hash_table_lookup (subsets->scaled_sub_fonts,
+					     &key.base);
+        if (sub_font == NULL) {
             subset_glyph->is_scaled = TRUE;
             subset_glyph->is_composite = FALSE;
             if (subsets->type == CAIRO_SUBSETS_SCALED)
@@ -1018,14 +1018,13 @@ _cairo_scaled_font_subset_create_glyph_names (cairo_scaled_font_subset_t *subset
 	}
 
 	if (utf16_len == 1) {
-	    snprintf (buf, sizeof(buf), "uni%04X", (int)(utf16[0]));
+	    snprintf (buf, sizeof (buf), "uni%04X", (int) utf16[0]);
 	    _cairo_string_init_key (&key, buf);
-	    if (_cairo_hash_table_lookup (names, &key.base,
-					  (cairo_hash_entry_t **) &entry)) {
-		snprintf (buf, sizeof(buf), "g%d", i);
-	    }
+	    entry = _cairo_hash_table_lookup (names, &key.base);
+	    if (entry != NULL)
+		snprintf (buf, sizeof (buf), "g%d", i);
 	} else {
-	    snprintf (buf, sizeof(buf), "g%d", i);
+	    snprintf (buf, sizeof (buf), "g%d", i);
 	}
 	if (utf16)
 	    free (utf16);

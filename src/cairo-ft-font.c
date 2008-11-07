@@ -422,9 +422,9 @@ _cairo_ft_unscaled_font_create_internal (cairo_bool_t from_face,
     _cairo_ft_unscaled_font_init_key (&key, from_face, filename, id, font_face);
 
     /* Return existing unscaled font if it exists in the hash table. */
-    if (_cairo_hash_table_lookup (font_map->hash_table, &key.base.hash_entry,
-				  (cairo_hash_entry_t **) &unscaled))
-    {
+    unscaled = _cairo_hash_table_lookup (font_map->hash_table,
+					 &key.base.hash_entry);
+    if (unscaled != NULL) {
 	_cairo_unscaled_font_reference (&unscaled->base);
 	_cairo_ft_unscaled_font_map_unlock ();
 	return unscaled;

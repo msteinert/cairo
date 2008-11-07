@@ -52,12 +52,11 @@
  *       Appears in the table as any non-%NULL, non-DEAD_ENTRY pointer.
  */
 
-static cairo_hash_entry_t dead_entry = { 0 };
-#define DEAD_ENTRY (&dead_entry)
+#define DEAD_ENTRY ((cairo_hash_entry_t *) 0x1)
 
 #define ENTRY_IS_FREE(entry) ((entry) == NULL)
 #define ENTRY_IS_DEAD(entry) ((entry) == DEAD_ENTRY)
-#define ENTRY_IS_LIVE(entry) ((entry) && ! ENTRY_IS_DEAD(entry))
+#define ENTRY_IS_LIVE(entry) ((entry) >  DEAD_ENTRY)
 
 /* We expect keys will not be destroyed frequently, so our table does not
  * contain any explicit shrinking code nor any chain-coalescing code for
@@ -355,32 +354,25 @@ _cairo_hash_table_resize  (cairo_hash_table_t *hash_table)
  * _cairo_hash_table_lookup:
  * @hash_table: a hash table
  * @key: the key of interest
- * @entry_return: pointer for return value.
  *
  * Performs a lookup in @hash_table looking for an entry which has a
  * key that matches @key, (as determined by the keys_equal() function
  * passed to _cairo_hash_table_create).
  *
- * Return value: %TRUE if there is an entry in the hash table that
- * matches the given key, (which will now be in *entry_return). %FALSE
- * otherwise, (in which case *entry_return will be %NULL).
+ * Return value: the matching entry, of %NULL if no match was found.
  **/
-cairo_bool_t
+void *
 _cairo_hash_table_lookup (cairo_hash_table_t *hash_table,
-			  cairo_hash_entry_t *key,
-			  cairo_hash_entry_t **entry_return)
+			  cairo_hash_entry_t *key)
 {
     cairo_hash_entry_t **entry;
 
     /* See if we have an entry in the table already. */
     entry = _cairo_hash_table_lookup_internal (hash_table, key, FALSE);
-    if (ENTRY_IS_LIVE(*entry)) {
-	*entry_return = *entry;
-	return TRUE;
-    }
+    if (ENTRY_IS_LIVE (*entry))
+	return *entry;
 
-    *entry_return = NULL;
-    return FALSE;
+    return NULL;
 }
 
 /**

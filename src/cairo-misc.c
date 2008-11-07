@@ -717,10 +717,9 @@ _cairo_intern_string (const char **str_inout, int len)
     if (_cairo_intern_string_ht == NULL)
 	_cairo_intern_string_ht = _cairo_hash_table_create (_intern_string_equal);
 
-    if (! _cairo_hash_table_lookup (_cairo_intern_string_ht,
-				    &tmpl.hash_entry,
-				    (cairo_hash_entry_t **) &istring))
-    {
+    istring = _cairo_hash_table_lookup (_cairo_intern_string_ht,
+					&tmpl.hash_entry);
+    if (istring == NULL) {
 	istring = malloc (sizeof (cairo_intern_string_t) + len + 1);
 	if (istring != NULL) {
 	    istring->hash_entry.hash = tmpl.hash_entry.hash;
