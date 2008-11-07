@@ -96,7 +96,8 @@ paint_file (cairo_t *cr,
     image = cairo_image_surface_create (CAIRO_FORMAT_RGB24, 200, 50);
 
     status = cairo_surface_set_mime_data (image, mime_type,
-					  mime_data, mime_length, free);
+					  mime_data, mime_length,
+					  free, mime_data);
     if (status) {
 	cairo_surface_destroy (image);
 	return cairo_test_status_from_status (ctx, status);

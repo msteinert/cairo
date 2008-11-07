@@ -106,7 +106,9 @@ preamble (cairo_test_context_t *ctx)
 	return test_status;
     }
 
-    cairo_surface_set_mime_data (image, CAIRO_MIME_TYPE_JPEG, data, len, free);
+    cairo_surface_set_mime_data (image, CAIRO_MIME_TYPE_JPEG,
+				 data, len,
+				 free, data);
     width = cairo_image_surface_get_width (image);
     height = cairo_image_surface_get_height (image);
 

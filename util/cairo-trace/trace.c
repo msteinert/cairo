@@ -2771,7 +2771,8 @@ cairo_surface_set_mime_data (cairo_surface_t		*surface,
                              const char			*mime_type,
                              const unsigned char	*data,
                              unsigned int		 length,
-			     cairo_destroy_func_t	 destroy)
+			     cairo_destroy_func_t	 destroy,
+			     void			*closure)
 {
     if (surface != NULL && _write_lock ()) {
 	_emit_surface (surface);
@@ -2787,7 +2788,8 @@ cairo_surface_set_mime_data (cairo_surface_t		*surface,
 		   surface,
 		   mime_type,
 		   data, length,
-		   destroy);
+		   destroy,
+		   closure);
 }
 
 cairo_status_t

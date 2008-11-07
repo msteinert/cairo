@@ -1957,11 +1957,12 @@ cairo_surface_get_mime_data (cairo_surface_t		*surface,
                              unsigned int		*length);
 
 cairo_public cairo_status_t
-cairo_surface_set_mime_data (cairo_surface_t		 *surface,
-                             const char			 *mime_type,
-                             const unsigned char         *data,
-                             unsigned int                 length,
-			     cairo_destroy_func_t	  destroy);
+cairo_surface_set_mime_data (cairo_surface_t		*surface,
+                             const char			*mime_type,
+                             const unsigned char	*data,
+                             unsigned int		 length,
+			     cairo_destroy_func_t	 destroy,
+			     void			*closure);
 
 cairo_public void
 cairo_surface_get_font_options (cairo_surface_t      *surface,

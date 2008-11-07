@@ -349,6 +349,7 @@ struct _cairo_mime_data {
     unsigned char *data;
     unsigned int length;
     cairo_destroy_func_t destroy;
+    void *closure;
 };
 
 #endif /* CAIRO_TYPES_PRIVATE_H */

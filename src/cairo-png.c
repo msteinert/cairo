@@ -662,7 +662,8 @@ read_png (struct png_read_closure_t *png_closure)
 					  CAIRO_MIME_TYPE_PNG,
 					  mime_data,
 					  mime_data_length,
-					  free);
+					  free,
+					  mime_data);
     if (status) {
 	free (mime_data);
 	cairo_surface_destroy (surface);

@@ -640,8 +640,8 @@ _cairo_mime_data_destroy (void *ptr)
     if (! _cairo_reference_count_dec_and_test (&mime_data->ref_count))
 	return;
 
-    if (mime_data->destroy && mime_data->data)
-	mime_data->destroy (mime_data->data);
+    if (mime_data->destroy && mime_data->closure)
+	mime_data->destroy (mime_data->closure);
 
     free (mime_data);
 }
@@ -655,6 +655,7 @@ _cairo_mime_data_destroy (void *ptr)
  * @destroy: a #cairo_destroy_func_t which will be called when the
  * surface is destroyed or when new image data is attached using the
  * same mime type.
+ * @closure: the data to be passed to the @destroy notifier
  *
  * Attach an image in the format @mime_type to @surface. To remove
  * the data from a surface, call this function with same mime type
@@ -670,7 +671,8 @@ cairo_surface_set_mime_data (cairo_surface_t		*surface,
                              const char			*mime_type,
                              const unsigned char	*data,
                              unsigned int		 length,
-			     cairo_destroy_func_t	 destroy)
+			     cairo_destroy_func_t	 destroy,
+			     void			*closure)
 {
     cairo_status_t status;
     cairo_mime_data_t *mime_data;
@@ -692,6 +694,7 @@ cairo_surface_set_mime_data (cairo_surface_t		*surface,
 	mime_data->data = (unsigned char *) data;
 	mime_data->length = length;
 	mime_data->destroy = destroy;
+	mime_data->closure = closure;
     } else
 	mime_data = NULL;
 
