@@ -2416,6 +2416,9 @@ _cairo_xcb_surface_emit_glyphs (cairo_xcb_surface_t *dst,
 	}
     }
 
+    /* We wouldn't want to leak memory, would we? */
+    free(output_glyphs);
+
     return CAIRO_STATUS_SUCCESS;
 }
 
