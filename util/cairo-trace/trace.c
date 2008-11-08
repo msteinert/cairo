@@ -3221,7 +3221,7 @@ cairo_ps_surface_create (const char *filename, double width_in_points, double he
     if (_write_lock ()) {
 	fprintf (logfile,
 		 "dict\n"
-		 "  /type (PS) set\n"
+		 "  /type /PS set\n"
 		 "  /filename ");
 	_emit_string_literal (filename, -1);
 	fprintf (logfile,
@@ -3251,7 +3251,7 @@ cairo_ps_surface_create_for_stream (cairo_write_func_t write_func, void *closure
     if (_write_lock ()) {
 	fprintf (logfile,
 		 "dict\n"
-		 "  /type (PS) set\n"
+		 "  /type /PS set\n"
 		 "  /width %g set\n"
 		 "  /height %g set\n"
 		 "  surface %% s%ld\n",
@@ -3288,7 +3288,7 @@ cairo_pdf_surface_create (const char *filename, double width_in_points, double h
     if (_write_lock ()) {
 	fprintf (logfile,
 		 "dict\n"
-		 "  /type (PDF) set\n"
+		 "  /type /PDF set\n"
 		 "  /filename ");
 	_emit_string_literal (filename, -1);
 	fprintf (logfile,
@@ -3318,7 +3318,7 @@ cairo_pdf_surface_create_for_stream (cairo_write_func_t write_func, void *closur
     if (_write_lock ()) {
 	fprintf (logfile,
 		 "dict\n"
-		 "  /type (PDF) set\n"
+		 "  /type /PDF set\n"
 		 "  /width %g set\n"
 		 "  /height %g set\n"
 		 "  surface %% s%ld\n",
@@ -3353,7 +3353,7 @@ cairo_svg_surface_create (const char *filename, double width, double height)
     if (_write_lock ()) {
 	fprintf (logfile,
 		 "dict\n"
-		 "  /type (SVG) set\n"
+		 "  /type /SVG set\n"
 		 "  /filename ");
 	_emit_string_literal (filename, -1);
 	fprintf (logfile,
@@ -3383,7 +3383,7 @@ cairo_svg_surface_create_for_stream (cairo_write_func_t write_func, void *closur
     if (_write_lock ()) {
 	fprintf (logfile,
 		 "dict\n"
-		 "  /type (SVG) set\n"
+		 "  /type /SVG set\n"
 		 "  /width %g set\n"
 		 "  /height %g set\n"
 		 "  surface %% s%ld\n",
@@ -3467,7 +3467,7 @@ cairo_xlib_surface_create (Display *dpy,
     if (_write_lock ()) {
 	fprintf (logfile,
 		 "dict\n"
-		 "  /type (xlib) set\n"
+		 "  /type /xlib set\n"
 		 "  /drawable 16!%lx set\n"
 		 "  /width %d set\n"
 		 "  /height %d set\n"
@@ -3503,7 +3503,7 @@ cairo_xlib_surface_create_for_bitmap (Display *dpy,
     if (_write_lock ()) {
 	fprintf (logfile,
 		 "dict\n"
-		 "  /type (xlib) set\n"
+		 "  /type /xlib set\n"
 		 "  /drawable 16!%lx set\n"
 		 "  /width %d set\n"
 		 "  /height %d set\n"
@@ -3543,7 +3543,7 @@ cairo_xlib_surface_create_with_xrender_format (Display *dpy,
     if (_write_lock ()) {
 	fprintf (logfile,
 		 "dict\n"
-		 "  /type (xrender) set\n"
+		 "  /type /xrender set\n"
 		 "  /drawable 16!%lx set\n"
 		 "  /width %d set\n"
 		 "  /height %d set\n"
@@ -3583,7 +3583,7 @@ cairo_script_surface_create (const char *filename,
     if (_write_lock ()) {
 	fprintf (logfile,
 		 "dict\n"
-		 "  /type (script) set\n"
+		 "  /type /script set\n"
 		 "  /filename ");
 	_emit_string_literal (filename, -1);
 	fprintf (logfile,
@@ -3617,7 +3617,7 @@ cairo_script_surface_create_for_stream (cairo_write_func_t write_func,
     if (_write_lock ()) {
 	fprintf (logfile,
 		 "dict\n"
-		 "  /type (script) set\n"
+		 "  /type /script set\n"
 		 "  /width %g set\n"
 		 "  /height %g set\n"
 		 "  surface dup /s%ld exch def\n",
@@ -3648,7 +3648,7 @@ _cairo_test_fallback_surface_create (cairo_content_t	content,
     if (_write_lock ()) {
 	fprintf (logfile,
 		 "dict\n"
-		 "  /type (test-fallback) set\n"
+		 "  /type /test-fallback set\n"
 		 "  /content //%s set\n"
 		 "  /width %d set\n"
 		 "  /height %d set\n"
@@ -3683,7 +3683,7 @@ _cairo_test_paginated_surface_create_for_data (unsigned char	*data,
 	/* XXX store initial data? */
 	fprintf (logfile,
 		 "dict\n"
-		 "  /type (test-paginated) set\n"
+		 "  /type /test-paginated set\n"
 		 "  /content //%s set\n"
 		 "  /width %d set\n"
 		 "  /height %d set\n"
@@ -3715,7 +3715,7 @@ _cairo_test_meta_surface_create (cairo_content_t	content,
     if (_write_lock ()) {
 	fprintf (logfile,
 		 "dict\n"
-		 "  /type (test-meta) set\n"
+		 "  /type /test-meta set\n"
 		 "  /content //%s set\n"
 		 "  /width %d set\n"
 		 "  /height %d set\n"
