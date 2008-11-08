@@ -476,7 +476,7 @@ _cairo_scaled_font_unregister_placeholder_and_lock_font_map (cairo_scaled_font_t
     assert (CAIRO_MUTEX_IS_LOCKED (placeholder_scaled_font->mutex));
 
     _cairo_hash_table_remove (cairo_scaled_font_map->hash_table,
-			      &scaled_font->hash_entry);
+			      &placeholder_scaled_font->hash_entry);
 
     CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
 
@@ -817,7 +817,8 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	}
 
 	/* the font has been put into an error status - abandon the cache */
-	_cairo_hash_table_remove (font_map->hash_table, &key.hash_entry);
+	_cairo_hash_table_remove (font_map->hash_table,
+				  &scaled_font->hash_entry);
 	scaled_font->hash_entry.hash = ZOMBIE;
     }
     else
@@ -876,7 +877,8 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	    }
 
 	    /* the font has been put into an error status - abandon the cache */
-	    _cairo_hash_table_remove (font_map->hash_table, &key.hash_entry);
+	    _cairo_hash_table_remove (font_map->hash_table,
+				      &scaled_font->hash_entry);
 	    scaled_font->hash_entry.hash = ZOMBIE;
 	}
     }
@@ -1035,7 +1037,8 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
 		lru = font_map->holdovers[0];
 		assert (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&lru->ref_count));
 
-		_cairo_hash_table_remove (font_map->hash_table, &lru->hash_entry);
+		_cairo_hash_table_remove (font_map->hash_table,
+					  &lru->hash_entry);
 
 		font_map->num_holdovers--;
 		memmove (&font_map->holdovers[0],

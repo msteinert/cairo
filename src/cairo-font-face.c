@@ -511,7 +511,7 @@ cairo_toy_font_face_create (const char          *family,
 	}
 
 	/* remove the bad font from the hash table */
-	_cairo_hash_table_remove (hash_table, &key.base.hash_entry);
+	_cairo_hash_table_remove (hash_table, &font_face->base.hash_entry);
 	font_face->base.hash_entry.hash = 0;
     }
 
