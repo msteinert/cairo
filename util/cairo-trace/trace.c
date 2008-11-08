@@ -2625,7 +2625,6 @@ cairo_image_surface_create_for_data (unsigned char *data, cairo_format_t format,
 	 * is negligible.
 	 */
 	if (width * height < 128) {
-	    fprintf (logfile, "  /source ");
 	    _emit_image (ret, NULL);
 	    fprintf (logfile,
 		     " dup /s%ld exch def\n",
