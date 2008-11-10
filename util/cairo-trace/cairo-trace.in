@@ -55,7 +55,7 @@ fi
 
 filename=""
 if test -z "$nofile"; then
-  filename=`basename $1`.$$.trace
+  filename=`basename -- $1`.$$.trace
 fi
 
 LD_PRELOAD=@libdir@/cairo/cairo-trace.so 
