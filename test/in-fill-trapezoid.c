@@ -42,6 +42,40 @@ draw (cairo_t *cr, int width, int height)
 	ret = CAIRO_TEST_FAILURE;
     }
 
+    /* rectangular boundary tests */
+    if (cairo_in_fill (cr, -10, -10)) {
+	cairo_test_log (ctx, "Error: Found top-left vertex inside rectangle\n");
+	ret = CAIRO_TEST_FAILURE;
+    }
+    if (cairo_in_fill (cr, -10, 10)) {
+	cairo_test_log (ctx, "Error: Found bottom-left vertex inside rectangle\n");
+	ret = CAIRO_TEST_FAILURE;
+    }
+    if (! cairo_in_fill (cr, 10, -10)) {
+	cairo_test_log (ctx, "Error: Failed to find top-right vertex inside rectangle\n");
+	ret = CAIRO_TEST_FAILURE;
+    }
+    if (cairo_in_fill (cr, 10, 10)) {
+	cairo_test_log (ctx, "Error: Found bottom-right vertex inside rectangle\n");
+	ret = CAIRO_TEST_FAILURE;
+    }
+    if (cairo_in_fill (cr, -10, 0)) {
+	cairo_test_log (ctx, "Error: Found left edge inside rectangle\n");
+	ret = CAIRO_TEST_FAILURE;
+    }
+    if (! cairo_in_fill (cr, 0, -10)) {
+	cairo_test_log (ctx, "Error: Failed to find top edge inside rectangle\n");
+	ret = CAIRO_TEST_FAILURE;
+    }
+    if (! cairo_in_fill (cr, 10, 0)) {
+	cairo_test_log (ctx, "Error: Failed to find right edge inside rectangle\n");
+	ret = CAIRO_TEST_FAILURE;
+    }
+    if (cairo_in_fill (cr, 0, 10)) {
+	cairo_test_log (ctx, "Error: Found bottom edge inside rectangle\n");
+	ret = CAIRO_TEST_FAILURE;
+    }
+
     /* simple circle */
     cairo_new_path (cr);
     cairo_arc (cr, 0, 0, 10, 0, 2 * M_PI);
