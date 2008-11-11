@@ -121,7 +121,7 @@ _cairo_in_fill_add_edge (cairo_in_fill_t *in_fill,
 	return;
 
     /* edge lies wholly to the right */
-    if (p1->x > in_fill->x && p2->x > in_fill->x)
+    if (p1->x >= in_fill->x && p2->x >= in_fill->x)
 	return;
 
     if ((p1->x <= in_fill->x && p2->x <= in_fill->x) ||
