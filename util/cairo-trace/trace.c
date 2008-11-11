@@ -419,6 +419,7 @@ _emit_header (void)
     get_prog_name (name, sizeof (name));
 
     fprintf (logfile, "%%!CairoScript - %s\n", name);
+    fprintf (logfile, "%%*** Warning CairoScript is still a new tracing format, and is subject to change.\n");
 }
 
 static bool
