@@ -4,19 +4,42 @@ prefix=@prefix@
 exec_prefix=@exec_prefix@
 
 nofile=
-silent=
+verbose=
+
+usage() {
+cat << EOF
+usage: cairo-trace [--no-file|--verbose] command
+cairo-trace will generate a log of all calls made by command to
+cairo. This log will be stored in a file in the local directory
+called command.pid.trace.
+Whatever else happens is driven by its argument:
+  --verbose - Show the trace on stdout.
+  --no-file - disables the generation of an output file
+
+Enviroment variables understood by cairo-trace:
+  CAIRO_TRACE_FLUSH - flush the output after every function call.
+EOF
+exit
+}
 
 skip=1
 while test $skip -eq 1; do
     skip=0
     case $1 in
-    --silent)
+    --verbose)
 	skip=1
-	silent=1
+	verbose=1
 	;;
     --no-file)
 	skip=1
 	nofile=1
+	;;
+    --version)
+	echo "cairo-trace, version @CAIRO_VERSION_MAJOR@.@CAIRO_VERSION_MINOR@.@CAIRO_VERSION_MICRO@."
+	exit
+	;;
+    --help)
+	usage
 	;;
     esac
     if test $skip -eq 1; then
@@ -25,21 +48,7 @@ while test $skip -eq 1; do
 done
 
 if test $# -eq 0; then
-cat << EOF
-usage: cairo-trace [--no-file|--silent] command
-cairo-trace will generate a log of all calls made by command to
-cairo. This log will be stored in a file in the local directory
-called command.pid.trace.
-Whatever else happens is driven by its argument:
-  --silent  - disables the overriding of stdout by cairo-trace.
-              The trace file is still generated, but your application
-	      is free to continue to use stdout.
-  --no-file - disables the generation of an output file
-
-Enviroment variables understood by cairo-trace:
-  CAIRO_TRACE_FLUSH - flush the output after every function call.
-EOF
-exit
+    usage
 fi
 
 #echo $*
@@ -58,7 +67,8 @@ export LC_ALL
 
 if test -z "$filename"; then
   CAIRO_TRACE_FD=3 $* 3>&1 >/dev/null
-elif test -n "$silent"; then
+elif test -z "$verbose"; then
+  echo "Recording trace in $filename."
   CAIRO_TRACE_OUTFILE_EXACT=$filename $*
 else
   CAIRO_TRACE_FD=3 $* 3>&1 >/dev/null | tee $filename
