@@ -89,7 +89,7 @@ Supported, "standard" surface backends
 ------------------------------------
 	image backend (required)
 	------------------------
-	pixman >= 0.10.0	http://cairographics.org/releases
+	pixman >= 0.12.0	http://cairographics.org/releases
 
 	png support (can be left out if desired, but many
 	-----------  applications expect it to be present)
