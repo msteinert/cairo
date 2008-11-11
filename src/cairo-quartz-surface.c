@@ -2183,21 +2183,22 @@ static cairo_int_status_t
 _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
                                          cairo_operator_t op,
                                          const cairo_pattern_t *source,
-                                         const cairo_surface_pattern_t *mask)
+                                         const cairo_surface_pattern_t *mask,
+                                         cairo_rectangle_int_t *extents)
 {
-    cairo_rectangle_int_t extents;
+    cairo_rectangle_int_t mask_extents;
     CGRect rect;
     CGImageRef img;
     cairo_surface_t *pat_surf = mask->surface;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     CGAffineTransform ctm, mask_matrix;
 
-    status = _cairo_surface_get_extents (pat_surf, &extents);
+    status = _cairo_surface_get_extents (pat_surf, &mask_extents);
     if (status)
 	return status;
 
     // everything would be masked out, so do nothing
-    if (extents.width == 0 || extents.height == 0)
+    if (mask_extents.width == 0 || mask_extents.height == 0)
 	return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_surface_to_cgimage ((cairo_surface_t *) surface, pat_surf, &img);
@@ -2206,7 +2207,7 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
     if (status)
 	return status;
 
-    rect = CGRectMake (0.0f, 0.0f, extents.width, extents.height);
+    rect = CGRectMake (0.0f, 0.0f, mask_extents.width, mask_extents.height);
 
     CGContextSaveGState (surface->cgContext);
 
@@ -2223,7 +2224,7 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
 
     CGContextSetCTM (surface->cgContext, ctm);
 
-    status = _cairo_quartz_surface_paint (surface, op, source);
+    status = _cairo_quartz_surface_paint (surface, op, source, extents);
 
     CGContextRestoreGState (surface->cgContext);
 
@@ -2248,7 +2249,8 @@ static cairo_int_status_t
 _cairo_quartz_surface_mask_with_generic (cairo_quartz_surface_t *surface,
 					 cairo_operator_t op,
 					 const cairo_pattern_t *source,
-					 const cairo_pattern_t *mask)
+					 const cairo_pattern_t *mask,
+					 cairo_rectangle_int_t *extents)
 {
     int width = surface->extents.width - surface->extents.x;
     int height = surface->extents.height - surface->extents.y;
@@ -2282,7 +2284,7 @@ _cairo_quartz_surface_mask_with_generic (cairo_quartz_surface_t *surface,
 
     _cairo_pattern_init_for_surface (&surface_pattern, gradient_surf);
 
-    status = _cairo_quartz_surface_mask_with_surface (surface, op, source, &surface_pattern);
+    status = _cairo_quartz_surface_mask_with_surface (surface, op, source, &surface_pattern, extents);
 
     _cairo_pattern_fini (&surface_pattern.base);
 
@@ -2313,7 +2315,7 @@ _cairo_quartz_surface_mask (void *abstract_surface,
 	cairo_solid_pattern_t *solid_mask = (cairo_solid_pattern_t *) mask;
 
 	CGContextSetAlpha (surface->cgContext, solid_mask->color.alpha);
-	rv = _cairo_quartz_surface_paint (surface, op, source);
+	rv = _cairo_quartz_surface_paint (surface, op, source, extents);
 	CGContextSetAlpha (surface->cgContext, 1.0);
 
 	return rv;
@@ -2323,9 +2325,9 @@ _cairo_quartz_surface_mask (void *abstract_surface,
     if (CGContextClipToMaskPtr) {
 	/* For these, we can skip creating a temporary surface, since we already have one */
 	if (mask->type == CAIRO_PATTERN_TYPE_SURFACE && mask->extend == CAIRO_EXTEND_NONE)
-	    return _cairo_quartz_surface_mask_with_surface (surface, op, source, (cairo_surface_pattern_t *) mask);
+	    return _cairo_quartz_surface_mask_with_surface (surface, op, source, (cairo_surface_pattern_t *) mask, extents);
 
-	return _cairo_quartz_surface_mask_with_generic (surface, op, source, mask);
+	return _cairo_quartz_surface_mask_with_generic (surface, op, source, mask, extents);
     }
 
     /* So, CGContextClipToMask is not present in 10.3.9, so we're
