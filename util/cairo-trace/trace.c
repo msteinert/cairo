@@ -147,7 +147,8 @@ static struct _type_table {
 } Types;
 
 static FILE *logfile;
-static int _flush;
+static bool _flush;
+static bool _error;
 static const cairo_user_data_key_t destroy_key;
 
 static void
@@ -484,6 +485,9 @@ done:
 static bool
 _write_lock (void)
 {
+    if (_error)
+	return false;
+
     if (! _init_logfile ())
 	return false;
 
@@ -529,6 +533,15 @@ _get_object (enum operand_type op_type, const void *ptr)
     pthread_mutex_lock (&type->mutex);
     obj = _type_get_object (type, ptr);
     pthread_mutex_unlock (&type->mutex);
+
+    if (obj == NULL) {
+	if (logfile != NULL) {
+	    fprintf (logfile,
+		     "%% Unknown object of type %s, trace is incomplete.",
+		     type->name);
+	}
+	_error = true;
+    }
 
     return obj;
 }
