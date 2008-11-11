@@ -478,9 +478,10 @@ _cairo_clip_intersect_mask (cairo_clip_t      *clip,
 	I believe the best possible operation would probably an unbounded SRC
 	operator.  Using SRC we could potentially avoid having to initialize
 	the surface which would be ideal from an efficiency point of view.
-	However, _cairo_surface_composite_trapezoids (CAIRO_OPERATOR_SOURCE) is
-	bounded by the mask.
-
+	However, CAIRO_OPERATOR_SOURCE is bounded by the trapezoid mask and
+	_cairo_surface_composite_trapezoids (CAIRO_OPERATOR_SOURCE) will assert
+	because it assumes CAIRO_OPERATOR_SOURCE has been converted into other
+	operations.
     */
 
     surface = _cairo_surface_create_similar_solid (target,
