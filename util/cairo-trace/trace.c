@@ -780,6 +780,22 @@ _get_pattern_id (cairo_pattern_t *pattern)
     return _get_id (PATTERN, pattern);
 }
 
+static void
+_emit_pattern_id (cairo_pattern_t *pattern)
+{
+    Object *obj = _get_object (PATTERN, pattern);
+    if (obj == NULL) {
+	fprintf (logfile, "null ");
+    } else {
+	if (obj->defined) {
+	    fprintf (logfile, "p%ld ", obj->token);
+	} else {
+	    fprintf (logfile, "%d index ",
+		     current_stack_depth - obj->operand - 1);
+	}
+    }
+}
+
 static long
 _create_scaled_font_id (cairo_scaled_font_t *font)
 {
@@ -1662,7 +1678,7 @@ cairo_set_source (cairo_t *cr, cairo_pattern_t *source)
 	else
 	{
 	    _emit_context (cr);
-	    fprintf (logfile, "p%ld ", _get_pattern_id (source));
+	    _emit_pattern_id (source);
 	}
 
 	fprintf (logfile, "set_source\n");
@@ -2010,7 +2026,7 @@ cairo_mask (cairo_t *cr, cairo_pattern_t *pattern)
 	    _consume_operand ();
 	} else {
 	    _emit_context (cr);
-	    fprintf (logfile, "p%ld ", _get_pattern_id (pattern));
+	    _emit_pattern_id (pattern);
 	}
 
 	fprintf (logfile, " mask\n");
