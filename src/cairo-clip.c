@@ -423,7 +423,7 @@ _cairo_clip_intersect_mask (cairo_clip_t      *clip,
     cairo_box_t extents;
     cairo_rectangle_int_t surface_rect, target_rect;
     cairo_surface_t *surface = NULL;
-    cairo_status_t status;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     if (clip->all_clipped)
 	return CAIRO_STATUS_SUCCESS;
