@@ -171,12 +171,15 @@ write_ppm (cairo_surface_t *surface, int fd)
     format = cairo_image_surface_get_format (surface);
     if (format == CAIRO_FORMAT_ARGB32) {
 	/* see if we can convert to a standard ppm type and trim a few bytes */
-	cairo_bool_t uses_alpha = FALSE;
 	const unsigned char *alpha = data;
-	for (j = height * stride; j-- && uses_alpha == FALSE; alpha += 4)
-	    uses_alpha = *alpha != 0xff;
-	if (! uses_alpha)
-	    format = CAIRO_FORMAT_RGB24;
+	for (j = height; j--; alpha += stride) {
+	    for (i = 0; i < width; i++) {
+		if ((*(unsigned int *) (alpha+4*i) & 0xff000000) != 0xff000000)
+		    goto done;
+	    }
+	}
+	format = CAIRO_FORMAT_RGB24;
+ done: ;
     }
 
     switch (format) {
@@ -236,14 +239,12 @@ write_ppm (cairo_surface_t *surface, int fd)
 #if CAIRO_CAN_TEST_SCRIPT_SURFACE
 static cairo_surface_t *
 _create_image (void *closure,
-	       double width, double height,
-	       csi_object_t *dictionary)
+	       double width, double height)
+	       //csi_object_t *dictionary)
 {
     cairo_surface_t **out = closure;
-    cairo_surface_t *surface;
-
-    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
-    return *out = cairo_surface_reference (surface);
+    *out = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+    return cairo_surface_reference (*out);
 }
 
 static const char *
@@ -253,17 +254,21 @@ _cairo_script_render_page (const char *filename,
     cairo_script_interpreter_t *csi;
     cairo_surface_t *surface = NULL;
     cairo_status_t status;
+    const cairo_script_interpreter_hooks_t hooks = {
+	.closure = &surface,
+	.surface_create = _create_image,
+    };
 
-    csi = csi_create ();
-    csi_set_surface_create_function (csi, _create_image, &surface);
-    csi_run (csi, filename);
-    status = csi_destroy (csi);
-    if (status || surface == NULL) {
-	cairo_surface_destroy (surface);
+    csi = cairo_script_interpreter_create ();
+    cairo_script_interpreter_install_hooks (csi, &hooks);
+    cairo_script_interpreter_run (csi, filename);
+    status = cairo_script_interpreter_destroy (csi);
+    if (surface == NULL) {
 	return "cairo-script interpreter failed";
     }
 
-    status = cairo_surface_status (surface);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = cairo_surface_status (surface);
     if (status) {
 	cairo_surface_destroy (surface);
 	return cairo_status_to_string (status);

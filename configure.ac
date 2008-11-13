@@ -236,18 +236,12 @@ CAIRO_ENABLE_SURFACE_BACKEND(directfb, directfb, no, [
 
 dnl ===========================================================================
 
+any2ppm_cs=no
 CAIRO_ENABLE_SURFACE_BACKEND(script, script, no, [
-  test_script="yes"
-  csi_CFLAGS=
-  csi_LIBS=-lcairo-script-interpreter
-  if test "x$test_script" = "xyes"; then
-    AC_DEFINE([CAIRO_CAN_TEST_SCRIPT_SURFACE], 1,
-	      [Define to 1 if the CairoScript backend can be tested])
-  else
-    AC_MSG_WARN([CairoScript backend will not be tested])
-  fi
-  AC_SUBST(csi_CFLAGS)
-  AC_SUBST(csi_LIBS)
+  test_script=yes
+  any2ppm_cs=yes
+  AC_DEFINE([CAIRO_CAN_TEST_SCRIPT_SURFACE], 1,
+	    [Define to 1 if the CairoScript backend can be tested])
 ])
 
 dnl ===========================================================================
@@ -494,7 +488,8 @@ dnl Build the external converter if we have any of the test backends
 AM_CONDITIONAL(BUILD_ANY2PPM,
 	       test "x$any2ppm_svg" = "xyes" \
 	         -o "x$any2ppm_pdf" = "xyes" \
-		 -o "x$any2ppm_ps"  = "xyes")
+		 -o "x$any2ppm_ps"  = "xyes" \
+		 -o "x$any2ppm_cs"  = "xyes")
 
 dnl ===========================================================================
 dnl The tracing utility requires LD_PRELOAD, so only build it for systems
@@ -558,6 +553,7 @@ test/Makefile
 test/pdiff/Makefile
 perf/Makefile
 util/Makefile
+util/cairo-script/Makefile
 util/cairo-trace/Makefile
 util/cairo-trace/cairo-trace
 doc/Makefile

@@ -1,6 +1,6 @@
 include $(top_srcdir)/build/Makefile.am.common
 
-SUBDIRS = .
+SUBDIRS = . cairo-script
 
 if BUILD_TRACE
 SUBDIRS += cairo-trace
