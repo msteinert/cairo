@@ -319,10 +319,17 @@ _cairo_xlib_display_get (Display *dpy)
      *    by using the same buggy_repeat workaround. Confirmed X
      *    servers with this bug include:
      *
-     *		"X.org" < 10400000 (new numbering scheme)
+     *		"X.org" == 60900000 (old versioning scheme)
+     *		"X.org"  < 10400000 (new numbering scheme)
+     *
+     *    For the old-versioning-scheme X servers we don't know
+     *    exactly when second the bug started, but since bug 1 is
+     *    present through 6.8.2 and bug 2 is present in 6.9.0 it seems
+     *    safest to just blacklist all old-versioning-scheme X servers,
+     *    (just using VendorRelase < 70000000), as buggy_repeat=TRUE.
      */
     if (strstr (ServerVendor (dpy), "X.Org") != NULL) {
-	if (VendorRelease (dpy) >= 60700000 && VendorRelease (dpy) <= 60802000)
+	if (VendorRelease (dpy) >= 60700000 && VendorRelease (dpy) < 70000000)
 	    display->buggy_repeat = TRUE;
 	if (VendorRelease (dpy) < 10400000)
 	    display->buggy_repeat = TRUE;
