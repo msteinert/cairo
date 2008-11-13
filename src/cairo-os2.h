@@ -44,9 +44,9 @@
 #define INCL_WIN
 #define INCL_GPI
 
-#include <os2.h>
-
 #include "cairo.h"
+
+#include <os2.h>
 
 CAIRO_BEGIN_DECLS
 
