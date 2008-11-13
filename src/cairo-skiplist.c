@@ -305,3 +305,39 @@ _cairo_skip_list_delete_given (cairo_skip_list_t *list, skip_elt_t *given)
 	list->max_level--;
     free_elt (list, elt);
 }
+
+#if MAIN
+typedef struct {
+    int n;
+    skip_elt_t elt;
+} test_elt_t;
+
+static int
+test_cmp (void *list, void *A, void *B)
+{
+    const test_elt_t *a = A, *b = B;
+    return a->n - b->n;
+}
+
+int
+main (void)
+{
+    cairo_skip_list_t list;
+    test_elt_t elt;
+    int n;
+
+    _cairo_skip_list_init (&list, test_cmp, sizeof (test_elt_t));
+    for (n = 0; n < 10000000; n++) {
+	void *elt_and_data;
+	elt.n = n;
+	elt_and_data = _cairo_skip_list_insert (&list, &elt, TRUE);
+	assert (elt_and_data != NULL);
+    }
+    _cairo_skip_list_fini (&list);
+
+    return 0;
+}
+
+/* required supporting stubs */
+cairo_status_t _cairo_error (cairo_status_t status) { return status; }
+#endif
