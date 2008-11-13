@@ -414,7 +414,6 @@ cairo_push_group (cairo_t *cr)
 {
     cairo_push_group_with_content (cr, CAIRO_CONTENT_COLOR_ALPHA);
 }
-slim_hidden_def(cairo_push_group);
 
 /**
  * cairo_push_group_with_content:
@@ -597,7 +596,6 @@ cairo_pop_group_to_source (cairo_t *cr)
     cairo_set_source (cr, group_pattern);
     cairo_pattern_destroy (group_pattern);
 }
-slim_hidden_def(cairo_pop_group_to_source);
 
 /**
  * cairo_set_operator:
@@ -1918,7 +1916,6 @@ cairo_path_extents (cairo_t *cr,
     if (status)
 	_cairo_set_error (cr, status);
 }
-slim_hidden_def (cairo_path_extents);
 
 /**
  * cairo_paint:

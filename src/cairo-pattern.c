@@ -686,7 +686,6 @@ cairo_pattern_get_type (cairo_pattern_t *pattern)
 {
     return pattern->type;
 }
-slim_hidden_def (cairo_pattern_get_type);
 
 /**
  * cairo_pattern_status:
