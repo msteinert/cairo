@@ -38,8 +38,6 @@
 
 #include <cairo.h>
 
-#if CAIRO_HAS_SCRIPT_SURFACE
-
 CAIRO_BEGIN_DECLS
 
 typedef struct _cairo_script_interpreter cairo_script_interpreter_t;
@@ -96,9 +94,5 @@ cairo_public cairo_status_t
 cairo_script_interpreter_destroy (cairo_script_interpreter_t *ctx);
 
 CAIRO_END_DECLS
-
-#else  /*CAIRO_HAS_SCRIPT_SURFACE*/
-# error Cairo was not compiled with support for the CairoScript backend
-#endif /*CAIRO_HAS_SCRIPT_SURFACE*/
 
 #endif /*CAIRO_SCRIPT_INTERPRETER_H*/
