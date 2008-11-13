@@ -177,43 +177,38 @@ _symbol_init (struct symbol *symbol, struct symtab *symtab, bfd_vma addr)
     symbol->pc = addr;
 }
 
-static int
+static void
 _symbol_print (struct symbol *symbol, char *buf, int buflen, const char *filename)
 {
-    if (! symbol->found) {
-	buflen = snprintf (buf, buflen,
-			"[0x%llx] \?\?() \?\?:0",
-			(long long unsigned int) symbol->pc);
-    } else {
-	const char *name, *h;
-	char path[1024];
+    const char *name, *h;
+    char path[1024];
 
-	name = symbol->functionname;
-	if (name == NULL || *name == '\0')
-	    name = "??";
+    if (! symbol->found)
+	return;
 
-	if (symbol->filename != NULL)
-	    filename = symbol->filename;
-	if (strcmp (filename, "/proc/self/exe") == 0) {
-	    int len = readlink ("/proc/self/exe", path, sizeof (path) - 1);
-	    if (len != -1) {
-		path[len] = '\0';
-		filename = path;
-	    }
-	}
-	h = strrchr (filename, '/');
-	if (h != NULL)
-	    filename = h + 1;
+    name = symbol->functionname;
+    if (name == NULL || *name == '\0')
+	name = "??";
 
-	if (symbol->line) {
-	    buflen = snprintf (buf, buflen, "%s (%s:%u)",
-		               name, filename, symbol->line);
-	} else {
-	    buflen = snprintf (buf, buflen, "%s (%s)", name, filename);
+    if (symbol->filename != NULL)
+	filename = symbol->filename;
+    if (strcmp (filename, "/proc/self/exe") == 0) {
+	int len = readlink ("/proc/self/exe", path, sizeof (path) - 1);
+	if (len != -1) {
+	    path[len] = '\0';
+	    filename = path;
 	}
     }
+    h = strrchr (filename, '/');
+    if (h != NULL)
+	filename = h + 1;
 
-    return buflen;
+    if (symbol->line) {
+	snprintf (buf, buflen, "%s() [%s:%u]",
+		  name, filename, symbol->line);
+    } else {
+	snprintf (buf, buflen, "%s() [%s]", name, filename);
+    }
 }
 #endif
 
@@ -259,14 +254,13 @@ lookup_symbol (char *buf, int buflen, const void *ptr)
     struct symtab symtab;
     struct symbol symbol;
 #endif
-    int i;
 
+    match.file = NULL;
     match.address = (ElfW(Addr)) ptr;
     dl_iterate_phdr (find_matching_file, &match);
 
-    i = snprintf (buf, buflen,
-		  "0x%llx",
-		  (long long unsigned int) match.address);
+    snprintf (buf, buflen, "0x%llx",
+	      (long long unsigned int) match.address);
 
     if (match.file == NULL || *match.file == '\0')
 	match.file = "/proc/self/exe";
@@ -277,10 +271,8 @@ lookup_symbol (char *buf, int buflen, const void *ptr)
 
     _symbol_init (&symbol, &symtab, match.address - match.base);
     bfd_map_over_sections (symtab.bfd, find_address_in_section, &symbol);
-    if (symbol.found) {
-	buf[i++] = ' ';
-	_symbol_print (&symbol, buf + i, buflen - i, match.file);
-    }
+    if (symbol.found)
+	_symbol_print (&symbol, buf, buflen, match.file);
     _symbol_fini (&symbol);
 
     _symtab_fini (&symtab);
