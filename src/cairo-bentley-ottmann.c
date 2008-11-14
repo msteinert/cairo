@@ -87,7 +87,7 @@ struct _cairo_bo_edge {
     cairo_bo_point32_t top;
     cairo_bo_point32_t middle;
     cairo_bo_point32_t bottom;
-    cairo_bool_t reversed;
+    int dir;
     cairo_bo_edge_t *prev;
     cairo_bo_edge_t *next;
     cairo_bo_trap_t *deferred_trap;
@@ -1439,10 +1439,7 @@ _active_edges_to_traps (cairo_bo_edge_t		*head,
 
     for (edge = head; edge; edge = edge->next) {
 	if (fill_rule == CAIRO_FILL_RULE_WINDING) {
-	    if (edge->reversed)
-		in_out++;
-	    else
-		in_out--;
+	    in_out += edge->dir;
 	    if (in_out == 0) {
 		status = _cairo_bo_edge_end_trap (edge, top, bo_traps);
 		if (status)
@@ -1734,10 +1731,7 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	 *traps,
 	edge->top.y = top.y;
 	edge->bottom.x = bot.x;
 	edge->bottom.y = bot.y;
-	/* XXX: The 'clockWise' name that cairo_polygon_t uses is
-	 * totally bogus. It's really a (negated!) description of
-	 * whether the edge is reversed. */
-	edge->reversed = (! polygon->edges[i].clockWise);
+	edge->dir = polygon->edges[i].dir;
 	edge->deferred_trap = NULL;
 	edge->prev = NULL;
 	edge->next = NULL;

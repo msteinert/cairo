@@ -118,30 +118,23 @@ _cairo_filler_curve_to (void *closure,
 			cairo_point_t *c,
 			cairo_point_t *d)
 {
-    int i;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_filler_t *filler = closure;
-    cairo_polygon_t *polygon = &filler->polygon;
     cairo_spline_t spline;
 
-    status = _cairo_spline_init (&spline, &filler->current_point, b, c, d);
-
-    if (status == CAIRO_INT_STATUS_DEGENERATE)
+    if (! _cairo_spline_init (&spline,
+			      (cairo_add_point_func_t) _cairo_polygon_line_to,
+			      &filler->polygon,
+			      &filler->current_point, b, c, d))
+    {
 	return CAIRO_STATUS_SUCCESS;
+    }
 
-    status = _cairo_spline_decompose (&spline, filler->tolerance);
-    if (status)
-	goto CLEANUP_SPLINE;
-
-    for (i = 1; i < spline.num_points; i++)
-	_cairo_polygon_line_to (polygon, &spline.points[i]);
-
-  CLEANUP_SPLINE:
+    _cairo_spline_decompose (&spline, filler->tolerance);
     _cairo_spline_fini (&spline);
 
     filler->current_point = *d;
 
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t

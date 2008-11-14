@@ -890,33 +890,24 @@ _cpf_curve_to (void		*closure,
 	       cairo_point_t	*p3)
 {
     cpf_t *cpf = closure;
-    cairo_status_t status;
     cairo_spline_t spline;
-    int i;
 
     cairo_point_t *p0 = &cpf->current_point;
 
-    status = _cairo_spline_init (&spline, p0, p1, p2, p3);
-    if (status == CAIRO_INT_STATUS_DEGENERATE)
+    if (! _cairo_spline_init (&spline,
+			      (cairo_add_point_func_t) cpf->line_to,
+			      cpf->closure,
+			      p0, p1, p2, p3))
+    {
 	return CAIRO_STATUS_SUCCESS;
-
-    status = _cairo_spline_decompose (&spline, cpf->tolerance);
-    if (status)
-      goto out;
-
-    for (i=1; i < spline.num_points; i++) {
-	status = cpf->line_to (cpf->closure, &spline.points[i]);
-	if (status)
-	    goto out;
     }
+
+    _cairo_spline_decompose (&spline, cpf->tolerance);
+    _cairo_spline_fini (&spline);
 
     cpf->current_point = *p3;
 
-    status = CAIRO_STATUS_SUCCESS;
-
- out:
-    _cairo_spline_fini (&spline);
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t

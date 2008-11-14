@@ -36,29 +36,16 @@
 
 #include "cairoint.h"
 
-static cairo_status_t
-_cairo_spline_grow (cairo_spline_t *spline);
-
-static cairo_status_t
-_cairo_spline_add_point (cairo_spline_t *spline, const cairo_point_t *point);
-
-static void
-_lerp_half (const cairo_point_t *a, const cairo_point_t *b, cairo_point_t *result);
-
-static void
-_de_casteljau (cairo_spline_knots_t *s1, cairo_spline_knots_t *s2);
-
-static double
-_cairo_spline_error_squared (const cairo_spline_knots_t *spline);
-
-static cairo_status_t
-_cairo_spline_decompose_into (cairo_spline_knots_t *spline, double tolerance_squared, cairo_spline_t *result);
-
-cairo_int_status_t
+cairo_bool_t
 _cairo_spline_init (cairo_spline_t *spline,
+		    void (*add_point_func) (void*, const cairo_point_t *),
+		    void *closure,
 		    const cairo_point_t *a, const cairo_point_t *b,
 		    const cairo_point_t *c, const cairo_point_t *d)
 {
+    spline->add_point_func = add_point_func;
+    spline->closure = closure;
+
     spline->knots.a = *a;
     spline->knots.b = *b;
     spline->knots.c = *c;
@@ -71,7 +58,7 @@ _cairo_spline_init (cairo_spline_t *spline,
     else if (a->x != d->x || a->y != d->y)
 	_cairo_slope_init (&spline->initial_slope, &spline->knots.a, &spline->knots.d);
     else
-	return CAIRO_INT_STATUS_DEGENERATE;
+	return FALSE;
 
     if (c->x != d->x || c->y != d->y)
 	_cairo_slope_init (&spline->final_slope, &spline->knots.c, &spline->knots.d);
@@ -80,74 +67,25 @@ _cairo_spline_init (cairo_spline_t *spline,
     else
 	_cairo_slope_init (&spline->final_slope, &spline->knots.a, &spline->knots.d);
 
-    spline->points = spline->points_embedded;
-    spline->points_size = ARRAY_LENGTH (spline->points_embedded);
-    spline->num_points = 0;
-
-    return CAIRO_STATUS_SUCCESS;
+    return TRUE;
 }
 
 void
 _cairo_spline_fini (cairo_spline_t *spline)
 {
-    if (spline->points != spline->points_embedded)
-	free (spline->points);
-
-    spline->points = spline->points_embedded;
-    spline->points_size = ARRAY_LENGTH (spline->points_embedded);
-    spline->num_points = 0;
 }
 
-/* make room for at least one more point */
-static cairo_status_t
-_cairo_spline_grow (cairo_spline_t *spline)
-{
-    cairo_point_t *new_points;
-    int old_size = spline->points_size;
-    int new_size = 2 * MAX (old_size, 16);
-
-    assert (spline->num_points <= spline->points_size);
-
-    if (spline->points == spline->points_embedded) {
-	new_points = _cairo_malloc_ab (new_size, sizeof (cairo_point_t));
-	if (new_points)
-	    memcpy (new_points, spline->points, old_size * sizeof (cairo_point_t));
-    } else {
-	new_points = _cairo_realloc_ab (spline->points,
-		                        new_size, sizeof (cairo_point_t));
-    }
-
-    if (new_points == NULL)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    spline->points = new_points;
-    spline->points_size = new_size;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
+static void
 _cairo_spline_add_point (cairo_spline_t *spline, const cairo_point_t *point)
 {
-    cairo_status_t status;
     cairo_point_t *prev;
 
-    if (spline->num_points) {
-	prev = &spline->points[spline->num_points - 1];
-	if (prev->x == point->x && prev->y == point->y)
-	    return CAIRO_STATUS_SUCCESS;
-    }
+    prev = &spline->last_point;
+    if (prev->x == point->x && prev->y == point->y)
+	return;
 
-    if (spline->num_points >= spline->points_size) {
-	status = _cairo_spline_grow (spline);
-	if (status)
-	    return status;
-    }
-
-    spline->points[spline->num_points] = *point;
-    spline->num_points++;
-
-    return CAIRO_STATUS_SUCCESS;
+    spline->add_point_func (spline->closure, point);
+    spline->last_point = *point;
 }
 
 static void
@@ -243,45 +181,28 @@ _cairo_spline_error_squared (const cairo_spline_knots_t *knots)
 	return cerr;
 }
 
-static cairo_status_t
+static void
 _cairo_spline_decompose_into (cairo_spline_knots_t *s1, double tolerance_squared, cairo_spline_t *result)
 {
     cairo_spline_knots_t s2;
-    cairo_status_t status;
 
     if (_cairo_spline_error_squared (s1) < tolerance_squared)
 	return _cairo_spline_add_point (result, &s1->a);
 
     _de_casteljau (s1, &s2);
 
-    status = _cairo_spline_decompose_into (s1, tolerance_squared, result);
-    if (status)
-	return status;
-
-    status = _cairo_spline_decompose_into (&s2, tolerance_squared, result);
-    if (status)
-	return status;
-
-    return CAIRO_STATUS_SUCCESS;
+    _cairo_spline_decompose_into (s1, tolerance_squared, result);
+    _cairo_spline_decompose_into (&s2, tolerance_squared, result);
 }
 
-cairo_status_t
+void
 _cairo_spline_decompose (cairo_spline_t *spline, double tolerance)
 {
-    cairo_status_t status;
     cairo_spline_knots_t s1;
 
-    /* reset the spline, but keep the buffer */
-    spline->num_points = 0;
-
     s1 = spline->knots;
-    status = _cairo_spline_decompose_into (&s1, tolerance * tolerance, spline);
-    if (status)
-	return status;
+    spline->last_point = s1.a;
+    _cairo_spline_decompose_into (&s1, tolerance * tolerance, spline);
 
-    status = _cairo_spline_add_point (spline, &spline->knots.d);
-    if (status)
-	return status;
-
-    return CAIRO_STATUS_SUCCESS;
+    _cairo_spline_add_point (spline, &spline->knots.d);
 }

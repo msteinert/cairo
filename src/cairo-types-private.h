@@ -265,9 +265,7 @@ typedef enum _cairo_clip_mode {
 
 typedef struct _cairo_edge {
     cairo_line_t edge;
-    int clockWise;
-
-    cairo_fixed_t current_x;
+    int dir;
 } cairo_edge_t;
 
 typedef struct _cairo_polygon {
@@ -287,15 +285,16 @@ typedef struct _cairo_spline_knots {
     cairo_point_t a, b, c, d;
 } cairo_spline_knots_t;
 typedef struct _cairo_spline {
+    void (*add_point_func) (void *, const cairo_point_t *);
+    void *closure;
+
     cairo_spline_knots_t knots;
 
     cairo_slope_t initial_slope;
     cairo_slope_t final_slope;
 
-    int num_points;
-    int points_size;
-    cairo_point_t *points;
-    cairo_point_t  points_embedded[64];
+    cairo_bool_t has_point;
+    cairo_point_t last_point;
 } cairo_spline_t;
 
 typedef struct _cairo_pen_vertex {

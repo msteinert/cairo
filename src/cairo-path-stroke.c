@@ -283,13 +283,17 @@ _cairo_stroker_join (cairo_stroker_t *stroker, cairo_stroke_face_t *in, cairo_st
 
 	tri[0] = in->point;
 	if (clockwise) {
-	    _cairo_pen_find_active_ccw_vertex_index (pen, &in->dev_vector, &start);
+	    start =
+		_cairo_pen_find_active_ccw_vertex_index (pen, &in->dev_vector);
+	    stop =
+		_cairo_pen_find_active_ccw_vertex_index (pen, &out->dev_vector);
 	    step = -1;
-	    _cairo_pen_find_active_ccw_vertex_index (pen, &out->dev_vector, &stop);
 	} else {
-	    _cairo_pen_find_active_cw_vertex_index (pen, &in->dev_vector, &start);
+	    start =
+		_cairo_pen_find_active_cw_vertex_index (pen, &in->dev_vector);
+	    stop =
+		_cairo_pen_find_active_cw_vertex_index (pen, &out->dev_vector);
 	    step = +1;
-	    _cairo_pen_find_active_cw_vertex_index (pen, &out->dev_vector, &stop);
 	}
 
 	i = start;
@@ -494,10 +498,10 @@ _cairo_stroker_add_cap (cairo_stroker_t *stroker, cairo_stroke_face_t *f)
 	cairo_pen_t *pen = &stroker->pen;
 
 	slope = f->dev_vector;
-	_cairo_pen_find_active_cw_vertex_index (pen, &slope, &start);
+	start = _cairo_pen_find_active_cw_vertex_index (pen, &slope);
 	slope.dx = -slope.dx;
 	slope.dy = -slope.dy;
-	_cairo_pen_find_active_cw_vertex_index (pen, &slope, &stop);
+	stop = _cairo_pen_find_active_cw_vertex_index (pen, &slope);
 
 	tri[0] = f->point;
 	tri[1] = f->cw;
@@ -968,40 +972,51 @@ _cairo_stroker_curve_to (void *closure,
 			 cairo_point_t *c,
 			 cairo_point_t *d)
 {
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_stroker_t *stroker = closure;
-    cairo_spline_t spline;
-    cairo_pen_t pen;
+    cairo_pen_stroke_spline_t spline_pen;
     cairo_stroke_face_t start, end;
     cairo_point_t extra_points[4];
     cairo_point_t *a = &stroker->current_point;
     double initial_slope_dx, initial_slope_dy;
     double final_slope_dx, final_slope_dy;
+    cairo_status_t status;
 
-    status = _cairo_spline_init (&spline, a, b, c, d);
+    status = _cairo_pen_stroke_spline_init (&spline_pen,
+					    &stroker->pen,
+					    a, b, c, d);
     if (status == CAIRO_INT_STATUS_DEGENERATE)
 	return _cairo_stroker_line_to (closure, d);
+    else if (status)
+	return status;
 
-    status = _cairo_pen_init_copy (&pen, &stroker->pen);
-    if (status)
-	goto CLEANUP_SPLINE;
+    initial_slope_dx = _cairo_fixed_to_double (spline_pen.spline.initial_slope.dx);
+    initial_slope_dy = _cairo_fixed_to_double (spline_pen.spline.initial_slope.dy);
+    final_slope_dx = _cairo_fixed_to_double (spline_pen.spline.final_slope.dx);
+    final_slope_dy = _cairo_fixed_to_double (spline_pen.spline.final_slope.dy);
 
-    initial_slope_dx = _cairo_fixed_to_double (spline.initial_slope.dx);
-    initial_slope_dy = _cairo_fixed_to_double (spline.initial_slope.dy);
-    final_slope_dx = _cairo_fixed_to_double (spline.final_slope.dx);
-    final_slope_dy = _cairo_fixed_to_double (spline.final_slope.dy);
+    if (_compute_normalized_device_slope (&initial_slope_dx, &initial_slope_dy,
+					  stroker->ctm_inverse, NULL))
+    {
+	_compute_face (a,
+		       &spline_pen.spline.initial_slope,
+		       initial_slope_dx, initial_slope_dy,
+		       stroker, &start);
+    }
 
-    if (_compute_normalized_device_slope (&initial_slope_dx, &initial_slope_dy, stroker->ctm_inverse, NULL))
-	_compute_face (a, &spline.initial_slope, initial_slope_dx, initial_slope_dy, stroker, &start);
-
-    if (_compute_normalized_device_slope (&final_slope_dx, &final_slope_dy, stroker->ctm_inverse, NULL))
-	_compute_face (d, &spline.final_slope, final_slope_dx, final_slope_dy, stroker, &end);
+    if (_compute_normalized_device_slope (&final_slope_dx, &final_slope_dy,
+					  stroker->ctm_inverse, NULL))
+    {
+	_compute_face (d,
+		       &spline_pen.spline.final_slope,
+		       final_slope_dx, final_slope_dy,
+		       stroker, &end);
+    }
 
     if (stroker->has_current_face) {
 	status = _cairo_stroker_join (stroker, &stroker->current_face, &start);
 	if (status)
 	    goto CLEANUP_PEN;
-    } else if (!stroker->has_first_face) {
+    } else if (! stroker->has_first_face) {
 	stroker->first_face = start;
 	stroker->has_first_face = TRUE;
     }
@@ -1021,18 +1036,16 @@ _cairo_stroker_curve_to (void *closure,
     extra_points[3].x -= end.point.x;
     extra_points[3].y -= end.point.y;
 
-    status = _cairo_pen_add_points (&pen, extra_points, 4);
+    status = _cairo_pen_add_points (&spline_pen.pen, extra_points, 4);
     if (status)
 	goto CLEANUP_PEN;
 
-    status = _cairo_pen_stroke_spline (&pen, &spline, stroker->tolerance, stroker->traps);
-    if (status)
-	goto CLEANUP_PEN;
+    status = _cairo_pen_stroke_spline (&spline_pen,
+				       stroker->tolerance,
+				       stroker->traps);
 
   CLEANUP_PEN:
-    _cairo_pen_fini (&pen);
-  CLEANUP_SPLINE:
-    _cairo_spline_fini (&spline);
+    _cairo_pen_stroke_spline_fini (&spline_pen);
 
     stroker->current_point = *d;
 
@@ -1063,16 +1076,20 @@ _cairo_stroker_curve_to_dashed (void *closure,
 				cairo_point_t *c,
 				cairo_point_t *d)
 {
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_stroker_t *stroker = closure;
     cairo_spline_t spline;
     cairo_point_t *a = &stroker->current_point;
     cairo_line_join_t line_join_save;
-    int i;
 
-    status = _cairo_spline_init (&spline, a, b, c, d);
-    if (status == CAIRO_INT_STATUS_DEGENERATE)
+    if (! _cairo_spline_init (&spline,
+			      stroker->dashed ?
+			      (cairo_add_point_func_t) _cairo_stroker_line_to_dashed :
+			      (cairo_add_point_func_t) _cairo_stroker_line_to,
+			      stroker,
+			      a, b, c, d))
+    {
 	return _cairo_stroker_line_to_dashed (closure, d);
+    }
 
     /* If the line width is so small that the pen is reduced to a
        single point, then we have nothing to do. */
@@ -1084,26 +1101,14 @@ _cairo_stroker_curve_to_dashed (void *closure,
     line_join_save = stroker->style->line_join;
     stroker->style->line_join = CAIRO_LINE_JOIN_ROUND;
 
-    status = _cairo_spline_decompose (&spline, stroker->tolerance);
-    if (status)
-	goto CLEANUP_GSTATE;
+    _cairo_spline_decompose (&spline, stroker->tolerance);
 
-    for (i = 1; i < spline.num_points; i++) {
-	if (stroker->dashed)
-	    status = _cairo_stroker_line_to_dashed (stroker, &spline.points[i]);
-	else
-	    status = _cairo_stroker_line_to (stroker, &spline.points[i]);
-	if (status)
-	    break;
-    }
-
-  CLEANUP_GSTATE:
     stroker->style->line_join = line_join_save;
 
   CLEANUP_SPLINE:
     _cairo_spline_fini (&spline);
 
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t

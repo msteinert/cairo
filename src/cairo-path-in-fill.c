@@ -165,8 +165,6 @@ _cairo_in_fill_curve_to (void *closure,
     cairo_in_fill_t *in_fill = closure;
     cairo_spline_t spline;
     cairo_fixed_t top, bot, left;
-    cairo_status_t status;
-    int i;
 
     /* first reject based on bbox */
     bot = top = in_fill->current_point.y;
@@ -187,21 +185,18 @@ _cairo_in_fill_curve_to (void *closure,
 	return CAIRO_STATUS_SUCCESS;
 
     /* XXX Investigate direct inspection of the inflections? */
-    status = _cairo_spline_init (&spline, &in_fill->current_point, b, c, d);
-    if (status == CAIRO_INT_STATUS_DEGENERATE)
+    if (! _cairo_spline_init (&spline,
+			      (cairo_add_point_func_t) _cairo_in_fill_line_to,
+			      in_fill,
+			      &in_fill->current_point, b, c, d))
+    {
 	return CAIRO_STATUS_SUCCESS;
+    }
 
-    status = _cairo_spline_decompose (&spline, in_fill->tolerance);
-    if (status)
-	goto CLEANUP_SPLINE;
-
-    for (i = 1; i < spline.num_points; i++)
-	_cairo_in_fill_line_to (in_fill, &spline.points[i]);
-
-  CLEANUP_SPLINE:
+    _cairo_spline_decompose (&spline, in_fill->tolerance);
     _cairo_spline_fini (&spline);
 
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t

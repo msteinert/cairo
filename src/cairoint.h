@@ -2114,7 +2114,7 @@ cairo_private void
 _cairo_pen_init_empty (cairo_pen_t *pen);
 
 cairo_private cairo_status_t
-_cairo_pen_init_copy (cairo_pen_t *pen, cairo_pen_t *other);
+_cairo_pen_init_copy (cairo_pen_t *pen, const cairo_pen_t *other);
 
 cairo_private void
 _cairo_pen_fini (cairo_pen_t *pen);
@@ -2129,21 +2129,40 @@ _cairo_pen_add_points_for_slopes (cairo_pen_t *pen,
 				  cairo_point_t *c,
 				  cairo_point_t *d);
 
-cairo_private void
-_cairo_pen_find_active_cw_vertex_index (cairo_pen_t *pen,
-					cairo_slope_t *slope,
-					int *active);
+cairo_private int
+_cairo_pen_find_active_cw_vertex_index (const cairo_pen_t *pen,
+					const cairo_slope_t *slope);
 
-cairo_private void
-_cairo_pen_find_active_ccw_vertex_index (cairo_pen_t *pen,
-					 cairo_slope_t *slope,
-					 int *active);
+cairo_private int
+_cairo_pen_find_active_ccw_vertex_index (const cairo_pen_t *pen,
+					 const cairo_slope_t *slope);
+
+typedef struct _cairo_pen_stroke_spline {
+    cairo_pen_t pen;
+    cairo_spline_t spline;
+    cairo_polygon_t polygon;
+    cairo_point_t last_point;
+    cairo_point_t forward_hull_point;
+    cairo_point_t backward_hull_point;
+    int forward_vertex;
+    int backward_vertex;
+} cairo_pen_stroke_spline_t;
+
+cairo_private cairo_int_status_t
+_cairo_pen_stroke_spline_init (cairo_pen_stroke_spline_t *stroker,
+			       const cairo_pen_t *pen,
+			       const cairo_point_t *a,
+			       const cairo_point_t *b,
+			       const cairo_point_t *c,
+			       const cairo_point_t *d);
 
 cairo_private cairo_status_t
-_cairo_pen_stroke_spline (cairo_pen_t *pen,
-			  cairo_spline_t *spline,
-			  double tolerance,
-			  cairo_traps_t *traps);
+_cairo_pen_stroke_spline (cairo_pen_stroke_spline_t	*pen,
+			  double			 tolerance,
+			  cairo_traps_t			*traps);
+
+cairo_private void
+_cairo_pen_stroke_spline_fini (cairo_pen_stroke_spline_t *stroker);
 
 /* cairo-polygon.c */
 cairo_private void
@@ -2151,6 +2170,12 @@ _cairo_polygon_init (cairo_polygon_t *polygon);
 
 cairo_private void
 _cairo_polygon_fini (cairo_polygon_t *polygon);
+
+cairo_private void
+_cairo_polygon_add_edge (cairo_polygon_t *polygon,
+			 const cairo_point_t *p1,
+			 const cairo_point_t *p2,
+			 int dir);
 
 cairo_private void
 _cairo_polygon_move_to (cairo_polygon_t *polygon,
@@ -2166,14 +2191,16 @@ _cairo_polygon_close (cairo_polygon_t *polygon);
 #define _cairo_polygon_status(P) (P)->status
 
 /* cairo-spline.c */
-cairo_private cairo_int_status_t
-_cairo_spline_init (cairo_spline_t *spline,
-		    const cairo_point_t *a,
-		    const cairo_point_t *b,
-		    const cairo_point_t *c,
-		    const cairo_point_t *d);
+typedef void (*cairo_add_point_func_t) (void*, const cairo_point_t *);
 
-cairo_private cairo_status_t
+cairo_private cairo_bool_t
+_cairo_spline_init (cairo_spline_t *spline,
+		    cairo_add_point_func_t add_point_func,
+		    void *closure,
+		    const cairo_point_t *a, const cairo_point_t *b,
+		    const cairo_point_t *c, const cairo_point_t *d);
+
+cairo_private void
 _cairo_spline_decompose (cairo_spline_t *spline, double tolerance);
 
 cairo_private void
