@@ -1,3 +1,55 @@
+Release 1.8.4 (2008-11-14 Carl Worth <cworth@cworth.org>)
+=========================================================
+The cairo community is pleased to announce the 1.8.4 release of the
+cairo graphics library. This is the second update to cairo's stable
+1.8 series and contains a small number of bug fixes, (in particular a
+few fixes for build failures of cairo 1.8.2 on various systems). This
+is being released just over two weeks after cairo 1.8.2.
+
+We recommend that everyone using cairo upgrade to 1.8.4.
+
+-Carl
+
+Build fixes
+-----------
+Fix build with older XRender that doesn't define RepeatNone:
+
+   Build of xlib backend fails against old XRender (RepeatNone undeclared)
+   https://bugs.freedesktop.org/show_bug.cgi?id=18385
+
+Fix build with bash version <= 3.0:
+
+   doltlibtool broken on linux with bash 3.00.0
+   https://bugs.freedesktop.org/show_bug.cgi?id=18363
+
+Bug fixes
+---------
+Avoid triggering a bug in X.org server 6.9 resulting in a hung machine
+requiring a reboot:
+
+    https://bugs.freedesktop.org/show_bug.cgi?id=15628#c2
+
+Fix display of user fonts as exercised by proposed support for type3
+fonts in poppler (unsigned promotion fixes):
+
+    Use cairo user-font for Type 3 fonts
+    http://lists.freedesktop.org/archives/poppler/2008-October/004181.html
+
+Avoid miscomputing size of fallback images required when rendering
+with CLEAR, IN, or SOURCE operator to vector surfaces, (PS, PDF, SVG,
+etc.).
+
+Be more tolerant of broken fonts when subsetting type1 fonts:
+
+   Error handling in cairo_type1_font_subset_get_glyph_names_and_widths
+   http://lists.cairographics.org/archives/cairo/2008-October/015569.html
+
+Fix cairo_fill_extents, cairo_stroke_extents, cairo_path_extents, to
+correctly allow NULL parameters as documented.
+
+Fix potential crash on emitting a type3 glyph after having drawn text
+paths from the same font, (for example with cairo_text_path).
+
 Release 1.8.2 (2008-10-29 Carl Worth <cworth@cworth.org>)
 =========================================================
 The cairo community is pleased to announce the 1.8.2 release of the
