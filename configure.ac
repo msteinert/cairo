@@ -238,10 +238,7 @@ dnl ===========================================================================
 
 any2ppm_cs=no
 CAIRO_ENABLE_SURFACE_BACKEND(script, script, no, [
-  test_script=yes
   any2ppm_cs=yes
-  AC_DEFINE([CAIRO_CAN_TEST_SCRIPT_SURFACE], 1,
-	    [Define to 1 if the CairoScript backend can be tested])
 ])
 
 dnl ===========================================================================

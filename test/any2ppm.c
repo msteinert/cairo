@@ -236,7 +236,6 @@ write_ppm (cairo_surface_t *surface, int fd)
     return NULL;
 }
 
-#if CAIRO_CAN_TEST_SCRIPT_SURFACE
 static cairo_surface_t *
 _create_image (void *closure,
 	       double width, double height)
@@ -293,13 +292,6 @@ cs_convert (char **argv, int fd)
 
     return err;
 }
-#else
-static const char *
-cs_convert (char **argv, int fd)
-{
-    return "compiled without CairoScript support.";
-}
-#endif
 
 #if CAIRO_CAN_TEST_PDF_SURFACE
 /* adapted from pdf2png.c */
