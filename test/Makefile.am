@@ -1155,6 +1155,9 @@ $(top_builddir)/src/libcairo.la:
 $(top_builddir)/test/pdiff/libpdiff.la:
 	cd $(top_builddir)/test/pdiff && $(MAKE) $(AM_MAKEFLAGS) libpdiff.la
 
+$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la: $(top_builddir)/src/libcairo.la
+	cd $(top_builddir)/util/cair-script && $(MAKE) $(AM_MAKEFLAGS) libcairo-script-interpreter.la
+
 EXTRA_PROGRAMS += imagediff png-flatten
 
 imagediff_SOURCES = \
