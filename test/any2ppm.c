@@ -62,10 +62,7 @@
 #include <string.h>
 
 #include <cairo.h>
-
-#if CAIRO_CAN_TEST_SCRIPT_SURFACE
 #include <cairo-script-interpreter.h>
-#endif
 
 #if CAIRO_CAN_TEST_PDF_SURFACE
 #include <poppler.h>

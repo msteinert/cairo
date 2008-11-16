@@ -1142,6 +1142,7 @@ AM_CPPFLAGS =					\
 	-I$(srcdir)				\
 	-I$(srcdir)/pdiff			\
 	-I$(top_srcdir)/boilerplate		\
+	-I$(top_srcdir)/util/cairo-script	\
 	-I$(top_srcdir)/src			\
 	-I$(top_builddir)/src			\
 	$(CAIRO_CFLAGS)
@@ -1156,7 +1157,7 @@ $(top_builddir)/test/pdiff/libpdiff.la:
 	cd $(top_builddir)/test/pdiff && $(MAKE) $(AM_MAKEFLAGS) libpdiff.la
 
 $(top_builddir)/util/cairo-script/libcairo-script-interpreter.la: $(top_builddir)/src/libcairo.la
-	cd $(top_builddir)/util/cair-script && $(MAKE) $(AM_MAKEFLAGS) libcairo-script-interpreter.la
+	cd $(top_builddir)/util/cairo-script && $(MAKE) $(AM_MAKEFLAGS) libcairo-script-interpreter.la
 
 EXTRA_PROGRAMS += imagediff png-flatten
 
