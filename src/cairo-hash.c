@@ -434,7 +434,7 @@ _cairo_hash_table_insert (cairo_hash_table_t *hash_table,
 
     hash_table->live_entries++;
     status = _cairo_hash_table_resize (hash_table);
-    if (_cairo_unlikely (status)) {
+    if (unlikely (status)) {
 	/* abort the insert... */
 	hash_table->live_entries--;
 	return status;

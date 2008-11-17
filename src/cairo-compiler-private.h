@@ -149,11 +149,11 @@
       _cairo_boolean_var_ = 0;                      \
    _cairo_boolean_var_;                             \
 })
-#define _cairo_likely(expr) (__builtin_expect (_CAIRO_BOOLEAN_EXPR(expr), 1))
-#define _cairo_unlikely(expr) (__builtin_expect (_CAIRO_BOOLEAN_EXPR(expr), 0))
+#define likely(expr) (__builtin_expect (_CAIRO_BOOLEAN_EXPR(expr), 1))
+#define unlikely(expr) (__builtin_expect (_CAIRO_BOOLEAN_EXPR(expr), 0))
 #else
-#define _cairo_likely(expr) (expr)
-#define _cairo_unlikely(expr) (expr)
+#define likely(expr) (expr)
+#define unlikely(expr) (expr)
 #endif
 
 #ifndef __GNUC__
