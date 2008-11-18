@@ -157,8 +157,8 @@ static const cairo_user_data_key_t destroy_key;
     if (_line_info && _write_lock ()) { \
 	void *addr = __builtin_return_address(0); \
 	char caller[1024]; \
-	lookup_symbol (caller, sizeof (caller), addr); \
-	fprintf (logfile, "%% %s() called by %s\n", __FUNCTION__, caller); \
+	fprintf (logfile, "%% %s() called by %s\n", __FUNCTION__, \
+		 lookup_symbol (caller, sizeof (caller), addr)); \
 	_write_unlock (); \
     } \
 } while (0)
@@ -2983,8 +2983,9 @@ cairo_surface_write_to_png_stream (cairo_surface_t *surface,
 	char symbol[1024];
 
 	fprintf (logfile, "%% s%ld ", _get_surface_id (surface));
-	lookup_symbol (symbol, sizeof (symbol), write_func);
-	_emit_string_literal (symbol, -1);
+	_emit_string_literal (lookup_symbol (symbol, sizeof (symbol),
+					     write_func),
+			      -1);
 	fprintf (logfile, " write_to_png_stream\n");
 	_write_unlock ();
     }

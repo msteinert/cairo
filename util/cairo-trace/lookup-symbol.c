@@ -61,6 +61,7 @@
 #include <stdlib.h>
 #include <link.h>
 #include <string.h>
+#include <pthread.h>
 
 #if HAVE_BFD
 #include <bfd.h>
@@ -246,6 +247,15 @@ find_matching_file (struct dl_phdr_info *info, size_t size, void *data)
     return 0;
 }
 
+struct symbol_cache_entry {
+    const void *ptr;
+    struct symbol_cache_entry *hash_prev, *hash_next;
+    char name[0];
+};
+
+static struct symbol_cache_entry *symbol_cache_hash[13477];
+static pthread_mutex_t symbol_cache_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 char *
 lookup_symbol (char *buf, int buflen, const void *ptr)
 {
@@ -254,6 +264,32 @@ lookup_symbol (char *buf, int buflen, const void *ptr)
     struct symtab symtab;
     struct symbol symbol;
 #endif
+    struct symbol_cache_entry *cache;
+    int bucket;
+    int len;
+
+    bucket = (unsigned long) ptr % (sizeof (symbol_cache_hash) / sizeof (symbol_cache_hash[0]));
+    pthread_mutex_lock (&symbol_cache_mutex);
+    for (cache = symbol_cache_hash[bucket];
+	 cache != NULL;
+	 cache = cache->hash_next)
+    {
+	if (cache->ptr == ptr) {
+	    if (cache->hash_prev != NULL) {
+		cache->hash_prev->hash_next = cache->hash_next;
+		if (cache->hash_next != NULL)
+		    cache->hash_next->hash_prev = cache->hash_prev;
+		cache->hash_prev = NULL;
+		cache->hash_next = symbol_cache_hash[bucket];
+		symbol_cache_hash[bucket]->hash_prev = cache;
+		symbol_cache_hash[bucket] = cache;
+	    }
+
+	    pthread_mutex_unlock (&symbol_cache_mutex);
+	    return cache->name;
+	}
+    }
+    pthread_mutex_unlock (&symbol_cache_mutex);
 
     match.file = NULL;
     match.address = (ElfW(Addr)) ptr;
@@ -266,17 +302,31 @@ lookup_symbol (char *buf, int buflen, const void *ptr)
 	match.file = "/proc/self/exe";
 
 #if HAVE_BFD
-    if (! _symtab_init (&symtab, match.file))
-	return buf;
+    if (_symtab_init (&symtab, match.file)) {
+	_symbol_init (&symbol, &symtab, match.address - match.base);
+	bfd_map_over_sections (symtab.bfd, find_address_in_section, &symbol);
+	if (symbol.found)
+	    _symbol_print (&symbol, buf, buflen, match.file);
+	_symbol_fini (&symbol);
 
-    _symbol_init (&symbol, &symtab, match.address - match.base);
-    bfd_map_over_sections (symtab.bfd, find_address_in_section, &symbol);
-    if (symbol.found)
-	_symbol_print (&symbol, buf, buflen, match.file);
-    _symbol_fini (&symbol);
-
-    _symtab_fini (&symtab);
+	_symtab_fini (&symtab);
+    }
 #endif
+
+    len = strlen (buf);
+    cache = malloc (sizeof (struct symbol_cache_entry) + len + 1);
+    if (cache != NULL) {
+	cache->ptr = ptr;
+	memcpy (cache->name, buf, len + 1);
+
+	pthread_mutex_lock (&symbol_cache_mutex);
+	cache->hash_prev = NULL;
+	cache->hash_next = symbol_cache_hash[bucket];
+	if (symbol_cache_hash[bucket] != NULL)
+	    symbol_cache_hash[bucket]->hash_prev = cache;
+	symbol_cache_hash[bucket] = cache;
+	pthread_mutex_unlock (&symbol_cache_mutex);
+    }
 
     return buf;
 }
