@@ -965,17 +965,24 @@ create_string_entry (char *s, cairo_string_entry_t **entry)
     return CAIRO_STATUS_SUCCESS;
 }
 
+static void
+_pluck_entry (void *entry, void *closure)
+{
+    _cairo_hash_table_remove (closure, entry);
+    free (entry);
+}
+
 cairo_int_status_t
 _cairo_scaled_font_subset_create_glyph_names (cairo_scaled_font_subset_t *subset)
 {
     unsigned int i;
-    cairo_status_t status;
     cairo_hash_table_t *names;
     cairo_string_entry_t key, *entry;
     char buf[30];
     char *utf8;
     uint16_t *utf16;
     int utf16_len;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     names = _cairo_hash_table_create (_cairo_string_equal);
     if (names == NULL)
@@ -1047,17 +1054,10 @@ _cairo_scaled_font_subset_create_glyph_names (cairo_scaled_font_subset_t *subset
     }
 
 CLEANUP_HASH:
-    while (1) {
-	entry = _cairo_hash_table_random_entry (names, NULL);
-	if (entry == NULL)
-	    break;
-
-        _cairo_hash_table_remove (names, (cairo_hash_entry_t *) entry);
-        free (entry);
-    }
+    _cairo_hash_table_foreach (names, _pluck_entry, names);
     _cairo_hash_table_destroy (names);
 
-    if (status == CAIRO_STATUS_SUCCESS)
+    if (likely (status == CAIRO_STATUS_SUCCESS))
 	return CAIRO_STATUS_SUCCESS;
 
     if (subset->glyph_names != NULL) {
