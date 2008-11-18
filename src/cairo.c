@@ -841,6 +841,7 @@ cairo_set_tolerance (cairo_t *cr, double tolerance)
     if (status)
 	_cairo_set_error (cr, status);
 }
+slim_hidden_def (cairo_set_tolerance);
 
 /**
  * cairo_set_antialias:

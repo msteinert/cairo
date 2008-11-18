@@ -119,6 +119,7 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
       int n_snap_y;
     } info = {FALSE};
 
+    cairo_set_tolerance (cr, 0.01);
     cairo_set_line_width (cr, 0.066);
     cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
     cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
