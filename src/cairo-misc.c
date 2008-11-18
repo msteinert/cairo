@@ -714,14 +714,19 @@ _cairo_intern_string (const char **str_inout, int len)
     tmpl.string = (char *) str;
 
     CAIRO_MUTEX_LOCK (_cairo_intern_string_mutex);
-    if (_cairo_intern_string_ht == NULL)
+    if (_cairo_intern_string_ht == NULL) {
 	_cairo_intern_string_ht = _cairo_hash_table_create (_intern_string_equal);
+	if (unlikely (_cairo_intern_string_ht == NULL)) {
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto BAIL;
+	}
+    }
 
     istring = _cairo_hash_table_lookup (_cairo_intern_string_ht,
 					&tmpl.hash_entry);
     if (istring == NULL) {
 	istring = malloc (sizeof (cairo_intern_string_t) + len + 1);
-	if (istring != NULL) {
+	if (likely (istring != NULL)) {
 	    istring->hash_entry.hash = tmpl.hash_entry.hash;
 	    istring->len = tmpl.len;
 	    istring->string = (char *) (istring + 1);
@@ -730,17 +735,20 @@ _cairo_intern_string (const char **str_inout, int len)
 
 	    status = _cairo_hash_table_insert (_cairo_intern_string_ht,
 					       &istring->hash_entry);
-	    if (unlikely (status))
+	    if (unlikely (status)) {
 		free (istring);
-	} else
+		goto BAIL;
+	    }
+	} else {
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto BAIL;
+	}
     }
 
+    *str_inout = istring->string;
+
+  BAIL:
     CAIRO_MUTEX_UNLOCK (_cairo_intern_string_mutex);
-
-    if (likely (status == CAIRO_STATUS_SUCCESS))
-	*str_inout = istring->string;
-
     return status;
 }
 

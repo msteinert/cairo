@@ -321,14 +321,14 @@ _cairo_scaled_font_map_lock (void)
 
     if (cairo_scaled_font_map == NULL) {
 	cairo_scaled_font_map = malloc (sizeof (cairo_scaled_font_map_t));
-	if (cairo_scaled_font_map == NULL)
+	if (unlikely (cairo_scaled_font_map == NULL))
 	    goto CLEANUP_MUTEX_LOCK;
 
 	cairo_scaled_font_map->mru_scaled_font = NULL;
 	cairo_scaled_font_map->hash_table =
 	    _cairo_hash_table_create (_cairo_scaled_font_keys_equal);
 
-	if (cairo_scaled_font_map->hash_table == NULL)
+	if (unlikely (cairo_scaled_font_map->hash_table == NULL))
 	    goto CLEANUP_SCALED_FONT_MAP;
 
 	cairo_scaled_font_map->num_holdovers = 0;
@@ -360,7 +360,7 @@ _cairo_scaled_font_map_destroy (void)
     CAIRO_MUTEX_LOCK (_cairo_scaled_font_map_mutex);
 
     font_map = cairo_scaled_font_map;
-    if (font_map == NULL) {
+    if (unlikely (font_map == NULL)) {
         goto CLEANUP_MUTEX_LOCK;
     }
 
@@ -429,7 +429,7 @@ _cairo_scaled_font_register_placeholder_and_unlock_font_map (cairo_scaled_font_t
 	return status;
 
     placeholder_scaled_font = malloc (sizeof (cairo_scaled_font_t));
-    if (placeholder_scaled_font == NULL)
+    if (unlikely (placeholder_scaled_font == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     /* full initialization is wasteful, but who cares... */
@@ -638,7 +638,7 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
     scaled_font->glyphs = _cairo_cache_create (_cairo_scaled_glyph_keys_equal,
 					       _cairo_scaled_glyph_destroy,
 					       MAX_GLYPHS_CACHED_PER_FONT);
-    if (scaled_font->glyphs == NULL)
+    if (unlikely (scaled_font->glyphs == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     CAIRO_REFERENCE_COUNT_INIT (&scaled_font->ref_count, 1);
@@ -797,7 +797,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	impl_face = font_face;
 
     font_map = _cairo_scaled_font_map_lock ();
-    if (font_map == NULL)
+    if (unlikely (font_map == NULL))
 	return _cairo_scaled_font_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     _cairo_scaled_font_init_key (&key, impl_face,
@@ -935,9 +935,9 @@ _cairo_scaled_font_create_in_error (cairo_status_t status)
 
     CAIRO_MUTEX_LOCK (_cairo_scaled_font_error_mutex);
     scaled_font = _cairo_scaled_font_nil_objects[status];
-    if (scaled_font == NULL) {
+    if (unlikely (scaled_font == NULL)) {
 	scaled_font = malloc (sizeof (cairo_scaled_font_t));
-	if (scaled_font == NULL) {
+	if (unlikely (scaled_font == NULL)) {
 	    CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_error_mutex);
 	    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	    return (cairo_scaled_font_t *) &_cairo_scaled_font_nil;
@@ -1642,7 +1642,7 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
 
     if (*num_glyphs < num_chars) {
 	*glyphs = cairo_glyph_allocate (num_chars);
-	if (*glyphs == NULL) {
+	if (unlikely (*glyphs == NULL)) {
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto DONE;
 	}
@@ -1652,7 +1652,7 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
     if (clusters) {
 	if (*num_clusters < num_chars) {
 	    *clusters = cairo_text_cluster_allocate (num_chars);
-	    if (*clusters == NULL) {
+	    if (unlikely (*clusters == NULL)) {
 		status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 		goto DONE;
 	    }
@@ -1864,10 +1864,9 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t    *scaled_font,
 	    mask_format = glyph_surface->format;
 	    mask = cairo_image_surface_create (mask_format,
 					       width, height);
-	    if (mask->status) {
-		status = mask->status;
+	    status = mask->status;
+	    if (unlikely (status))
 		goto CLEANUP_MASK;
-	    }
 	}
 
 	/* If we have glyphs of different formats, we "upgrade" the mask
@@ -2157,7 +2156,7 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
 		goto BAIL;
 
 	    glyph_path = _cairo_path_fixed_create ();
-	    if (glyph_path == NULL) {
+	    if (unlikely (glyph_path == NULL)) {
 		status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 		goto BAIL;
 	    }
@@ -2361,7 +2360,7 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 	 * On miss, create glyph and insert into cache
 	 */
 	scaled_glyph = malloc (sizeof (cairo_scaled_glyph_t));
-	if (scaled_glyph == NULL) {
+	if (unlikely (scaled_glyph == NULL)) {
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto CLEANUP;
 	}

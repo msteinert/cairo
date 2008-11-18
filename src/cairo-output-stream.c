@@ -147,7 +147,7 @@ _cairo_output_stream_create (cairo_write_func_t		write_func,
     cairo_output_stream_with_closure_t *stream;
 
     stream = malloc (sizeof (cairo_output_stream_with_closure_t));
-    if (stream == NULL) {
+    if (unlikely (stream == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
     }
@@ -173,7 +173,7 @@ _cairo_output_stream_create_in_error (cairo_status_t status)
 	return (cairo_output_stream_t *) &_cairo_output_stream_nil_write_error;
 
     stream = malloc (sizeof (cairo_output_stream_t));
-    if (stream == NULL) {
+    if (unlikely (stream == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
     }
@@ -598,7 +598,7 @@ _cairo_output_stream_create_for_file (FILE *file)
     }
 
     stream = malloc (sizeof *stream);
-    if (stream == NULL) {
+    if (unlikely (stream == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
     }
@@ -632,7 +632,7 @@ _cairo_output_stream_create_for_filename (const char *filename)
     }
 
     stream = malloc (sizeof *stream);
-    if (stream == NULL) {
+    if (unlikely (stream == NULL)) {
 	fclose (file);
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
@@ -676,7 +676,7 @@ _cairo_memory_stream_create (void)
     memory_stream_t *stream;
 
     stream = malloc (sizeof *stream);
-    if (stream == NULL) {
+    if (unlikely (stream == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
     }
@@ -703,7 +703,7 @@ _cairo_memory_stream_destroy (cairo_output_stream_t *abstract_stream,
 
     *length_out = _cairo_array_num_elements (&stream->array);
     *data_out = malloc (*length_out);
-    if (*data_out == NULL) {
+    if (unlikely (*data_out == NULL)) {
 	status = _cairo_output_stream_destroy (abstract_stream);
 	assert (status == CAIRO_STATUS_SUCCESS);
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -753,7 +753,7 @@ _cairo_null_stream_create (void)
     cairo_output_stream_t *stream;
 
     stream = malloc (sizeof *stream);
-    if (stream == NULL) {
+    if (unlikely (stream == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
     }

@@ -126,7 +126,7 @@ _cairo_type1_font_subset_init (cairo_type1_font_subset_t  *font,
     ft_unscaled_font = (cairo_ft_unscaled_font_t *) unscaled_font;
 
     face = _cairo_ft_unscaled_font_lock_face (ft_unscaled_font);
-    if (face == NULL)
+    if (unlikely (face == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     if (FT_Get_PS_Font_Info(face, &font_info) != 0) {
@@ -154,7 +154,7 @@ _cairo_type1_font_subset_init (cairo_type1_font_subset_t  *font,
 
     if (face->family_name) {
 	font->base.base_font = strdup (face->family_name);
-	if (font->base.base_font == NULL) {
+	if (unlikely (font->base.base_font == NULL)) {
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto fail2;
 	}
@@ -167,7 +167,7 @@ _cairo_type1_font_subset_init (cairo_type1_font_subset_t  *font,
     }
 
     font->glyphs = calloc (face->num_glyphs, sizeof font->glyphs[0]);
-    if (font->glyphs == NULL) {
+    if (unlikely (font->glyphs == NULL)) {
         status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto fail3;
     }
@@ -467,7 +467,7 @@ cairo_type1_font_subset_decrypt_eexec_segment (cairo_type1_font_subset_t *font)
     end = (unsigned char *) in + font->eexec_segment_size;
 
     font->cleartext = malloc (font->eexec_segment_size);
-    if (font->cleartext == NULL)
+    if (unlikely (font->cleartext == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     out = font->cleartext;
@@ -573,7 +573,7 @@ cairo_type1_font_subset_get_glyph_names_and_widths (cairo_type1_font_subset_t *f
 	}
 
 	font->glyphs[i].name = strdup (buffer);
-	if (font->glyphs[i].name == NULL)
+	if (unlikely (font->glyphs[i].name == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
@@ -838,7 +838,7 @@ cairo_type1_font_subset_look_for_seac(cairo_type1_font_subset_t *font,
     int command;
 
     charstring = malloc (encrypted_charstring_length);
-    if (charstring == NULL)
+    if (unlikely (charstring == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     cairo_type1_font_subset_decrypt_charstring ((const unsigned char *)
@@ -1210,12 +1210,12 @@ cairo_type1_font_subset_generate (void       *abstract_font,
 
     ft_unscaled_font = (cairo_ft_unscaled_font_t *) font->base.unscaled_font;
     font->face = _cairo_ft_unscaled_font_lock_face (ft_unscaled_font);
-    if (font->face == NULL)
+    if (unlikely (font->face == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     font->type1_length = font->face->stream->size;
     font->type1_data = malloc (font->type1_length);
-    if (font->type1_data == NULL) {
+    if (unlikely (font->type1_data == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto fail;
     }
@@ -1325,11 +1325,11 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
                  scaled_font_subset->font_id, scaled_font_subset->subset_id);
 	type1_subset->base_font = strdup (buf);
     }
-    if (type1_subset->base_font == NULL)
+    if (unlikely (type1_subset->base_font == NULL))
 	goto fail1;
 
     type1_subset->widths = calloc (sizeof (int), font.num_glyphs);
-    if (type1_subset->widths == NULL)
+    if (unlikely (type1_subset->widths == NULL))
 	goto fail2;
     for (i = 0; i < font.base.num_glyphs; i++) {
 	if (font.glyphs[i].subset_index < 0)
@@ -1349,7 +1349,7 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
 	     font.base.data_size +
 	     font.base.trailer_size;
     type1_subset->data = malloc (length);
-    if (type1_subset->data == NULL)
+    if (unlikely (type1_subset->data == NULL))
 	goto fail3;
 
     memcpy (type1_subset->data,

@@ -248,7 +248,7 @@ _cairo_xlib_display_get (Display *dpy,
     }
 
     display = malloc (sizeof (cairo_xlib_display_t));
-    if (display == NULL) {
+    if (unlikely (display == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto UNLOCK;
     }
@@ -262,7 +262,7 @@ _cairo_xlib_display_get (Display *dpy,
     XRenderQueryVersion (dpy, &render_major, &render_minor);
 
     codes = XAddExtension (dpy);
-    if (codes == NULL) {
+    if (unlikely (codes == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	free (display);
 	display = NULL;

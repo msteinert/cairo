@@ -298,7 +298,7 @@ _cairo_clip_intersect_path (cairo_clip_t       *clip,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     clip_path = malloc (sizeof (cairo_clip_path_t));
-    if (clip_path == NULL)
+    if (likely (clip_path == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     status = _cairo_path_fixed_init_copy (&clip_path->path, path);
@@ -759,7 +759,7 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
 
 	if (n_boxes) {
 	    rectangles = _cairo_malloc_ab (n_boxes, sizeof (cairo_rectangle_t));
-	    if (rectangles == NULL) {
+	    if (unlikely (rectangles == NULL)) {
 		_cairo_region_boxes_fini (&clip->region, boxes);
 		_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 		return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
@@ -789,7 +789,7 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
 	n_boxes = 1;
 
 	rectangles = malloc(sizeof (cairo_rectangle_t));
-	if (rectangles == NULL) {
+	if (unlikely (rectangles == NULL)) {
 	    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	    return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
 	}
@@ -805,7 +805,7 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
 
  DONE:
     list = malloc (sizeof (cairo_rectangle_list_t));
-    if (list == NULL) {
+    if (unlikely (list == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
         free (rectangles);
         return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;

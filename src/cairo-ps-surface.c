@@ -705,7 +705,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     cairo_ps_surface_t *surface;
 
     surface = malloc (sizeof (cairo_ps_surface_t));
-    if (surface == NULL) {
+    if (unlikely (surface == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP;
     }
@@ -734,7 +734,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 	goto CLEANUP_OUTPUT_STREAM;
 
     surface->font_subsets = _cairo_scaled_font_subsets_create_simple ();
-    if (surface->font_subsets == NULL) {
+    if (unlikely (surface->font_subsets == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP_OUTPUT_STREAM;
     }
@@ -1201,7 +1201,7 @@ cairo_ps_surface_dsc_comment (cairo_surface_t	*surface,
 
     /* Then, copy the comment and store it in the appropriate array. */
     comment_copy = strdup (comment);
-    if (comment_copy == NULL) {
+    if (unlikely (comment_copy == NULL)) {
 	status = _cairo_surface_set_error (surface, CAIRO_STATUS_NO_MEMORY);
 	return;
     }
@@ -1733,7 +1733,7 @@ _string_array_stream_create (cairo_output_stream_t *output)
     string_array_stream_t *stream;
 
     stream = malloc (sizeof (string_array_stream_t));
-    if (stream == NULL) {
+    if (unlikely (stream == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
     }
@@ -1760,7 +1760,7 @@ _base85_array_stream_create (cairo_output_stream_t *output)
     string_array_stream_t *stream;
 
     stream = malloc (sizeof (string_array_stream_t));
-    if (stream == NULL) {
+    if (unlikely (stream == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
     }
@@ -1940,7 +1940,7 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 	data_size = image->height * image->width * 3;
     }
     data = malloc (data_size);
-    if (data == NULL) {
+    if (unlikely (data == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto bail1;
     }
@@ -1989,7 +1989,7 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
      * instead. */
     data_compressed_size = data_size;
     data_compressed = _cairo_lzw_compress (data, &data_compressed_size);
-    if (data_compressed == NULL) {
+    if (unlikely (data_compressed == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto bail2;
     }
@@ -2749,7 +2749,7 @@ _cairo_ps_surface_emit_pattern_stops (cairo_ps_surface_t       *surface,
     unsigned int i, n_stops;
 
     allstops = _cairo_malloc_ab ((pattern->n_stops + 2), sizeof (cairo_ps_color_stop_t));
-    if (allstops == NULL)
+    if (unlikely (allstops == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     stops = &allstops[1];

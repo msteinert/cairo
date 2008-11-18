@@ -73,7 +73,7 @@ _lzw_buf_init (lzw_buf_t *buf, int size)
     buf->pending_bits = 0;
 
     buf->data = malloc (size);
-    if (buf->data == NULL) {
+    if (unlikely (buf->data == NULL)) {
 	buf->data_size = 0;
 	buf->status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return;
@@ -98,7 +98,7 @@ _lzw_buf_grow (lzw_buf_t *buf)
     if (new_size / 2 == buf->data_size)
 	new_data = realloc (buf->data, new_size);
 
-    if (new_data == NULL) {
+    if (unlikely (new_data == NULL)) {
 	free (buf->data);
 	buf->data_size = 0;
 	buf->status = _cairo_error (CAIRO_STATUS_NO_MEMORY);

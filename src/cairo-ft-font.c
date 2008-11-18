@@ -182,7 +182,7 @@ _cairo_ft_unscaled_font_map_create (void)
     assert (cairo_ft_unscaled_font_map == NULL);
 
     font_map = malloc (sizeof (cairo_ft_unscaled_font_map_t));
-    if (font_map == NULL) {
+    if (unlikely (font_map == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	goto FAIL;
     }
@@ -190,7 +190,7 @@ _cairo_ft_unscaled_font_map_create (void)
     font_map->hash_table =
 	_cairo_hash_table_create (_cairo_ft_unscaled_font_keys_equal);
 
-    if (font_map->hash_table == NULL)
+    if (unlikely (font_map->hash_table == NULL))
 	goto FAIL;
 
     if (FT_Init_FreeType (&font_map->ft_library))
@@ -261,7 +261,7 @@ _cairo_ft_unscaled_font_map_lock (void)
     {
 	_cairo_ft_unscaled_font_map_create ();
 
-	if (cairo_ft_unscaled_font_map == NULL) {
+	if (unlikely (cairo_ft_unscaled_font_map == NULL)) {
 	    CAIRO_MUTEX_UNLOCK (_cairo_ft_unscaled_font_map_mutex);
 	    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	    return NULL;
@@ -340,8 +340,9 @@ _cairo_ft_unscaled_font_init (cairo_ft_unscaled_font_t *unscaled,
 	unscaled->face = NULL;
 
 	filename_copy = strdup (filename);
-	if (filename_copy == NULL)
+	if (unlikely (filename_copy == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
 	_cairo_ft_unscaled_font_init_key (unscaled, FALSE, filename_copy, id, NULL);
     }
 
@@ -416,7 +417,7 @@ _cairo_ft_unscaled_font_create_internal (cairo_bool_t from_face,
     cairo_status_t status;
 
     font_map = _cairo_ft_unscaled_font_map_lock ();
-    if (font_map == NULL)
+    if (unlikely (font_map == NULL))
 	goto UNWIND;
 
     _cairo_ft_unscaled_font_init_key (&key, from_face, filename, id, font_face);
@@ -432,7 +433,7 @@ _cairo_ft_unscaled_font_create_internal (cairo_bool_t from_face,
 
     /* Otherwise create it and insert into hash table. */
     unscaled = malloc (sizeof (cairo_ft_unscaled_font_t));
-    if (unscaled == NULL) {
+    if (unlikely (unscaled == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	goto UNWIND_FONT_MAP_LOCK;
     }
@@ -874,7 +875,7 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 	    stride = bitmap->pitch;
 	    stride_rgba = (width_rgba * 4 + 3) & ~3;
 	    data_rgba = calloc (stride_rgba, height);
-	    if (data_rgba == NULL) {
+	    if (unlikely (data_rgba == NULL)) {
 		if (own_buffer)
 		    free (bitmap->buffer);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -1073,7 +1074,7 @@ _render_glyph_outline (FT_Face                    face,
 	bitmap.width = width * hmul;
 	bitmap.rows = height * vmul;
 	bitmap.buffer = calloc (stride, bitmap.rows);
-	if (bitmap.buffer == NULL)
+	if (unlikely (bitmap.buffer == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	FT_Outline_Translate (outline, -cbox.xMin*hmul, -cbox.yMin*vmul);
@@ -1512,7 +1513,7 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     scaled_font = malloc (sizeof(cairo_ft_scaled_font_t));
-    if (scaled_font == NULL) {
+    if (unlikely (scaled_font == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FAIL;
     }
@@ -2532,7 +2533,7 @@ cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
     cairo_ft_options_t ft_options;
 
     unscaled = _cairo_ft_unscaled_font_create_for_pattern (pattern);
-    if (unscaled == NULL) {
+    if (unlikely (unscaled == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_font_face_t *)&_cairo_font_face_nil;
     }
@@ -2599,7 +2600,7 @@ cairo_ft_font_face_create_for_ft_face (FT_Face         face,
     cairo_ft_options_t ft_options;
 
     unscaled = _cairo_ft_unscaled_font_create_from_face (face);
-    if (unscaled == NULL) {
+    if (unlikely (unscaled == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_font_face_t *)&_cairo_font_face_nil;
     }
@@ -2660,7 +2661,7 @@ cairo_ft_scaled_font_lock_face (cairo_scaled_font_t *abstract_font)
 	return NULL;
 
     face = _cairo_ft_unscaled_font_lock_face (scaled_font->unscaled);
-    if (face == NULL) {
+    if (unlikely (face == NULL)) {
 	status = _cairo_scaled_font_set_error (&scaled_font->base, CAIRO_STATUS_NO_MEMORY);
 	return NULL;
     }

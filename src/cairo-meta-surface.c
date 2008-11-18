@@ -84,7 +84,7 @@ _cairo_meta_surface_create (cairo_content_t	content,
     cairo_meta_surface_t *meta;
 
     meta = malloc (sizeof (cairo_meta_surface_t));
-    if (meta == NULL)
+    if (unlikely (meta == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     _cairo_surface_init (&meta->base, &cairo_meta_surface_backend,
@@ -227,7 +227,7 @@ _cairo_meta_surface_paint (void			*abstract_surface,
     cairo_command_paint_t *command;
 
     command = malloc (sizeof (cairo_command_paint_t));
-    if (command == NULL)
+    if (unlikely (command == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     command->header.type = CAIRO_COMMAND_PAINT;
@@ -273,7 +273,7 @@ _cairo_meta_surface_mask (void			*abstract_surface,
     cairo_command_mask_t *command;
 
     command = malloc (sizeof (cairo_command_mask_t));
-    if (command == NULL)
+    if (unlikely (command == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     command->header.type = CAIRO_COMMAND_MASK;
@@ -324,7 +324,7 @@ _cairo_meta_surface_stroke (void			*abstract_surface,
     cairo_command_stroke_t *command;
 
     command = malloc (sizeof (cairo_command_stroke_t));
-    if (command == NULL)
+    if (unlikely (command == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     command->header.type = CAIRO_COMMAND_STROKE;
@@ -384,7 +384,7 @@ _cairo_meta_surface_fill (void			*abstract_surface,
     cairo_command_fill_t *command;
 
     command = malloc (sizeof (cairo_command_fill_t));
-    if (command == NULL)
+    if (unlikely (command == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     command->header.type = CAIRO_COMMAND_FILL;
@@ -447,7 +447,7 @@ _cairo_meta_surface_show_text_glyphs (void			    *abstract_surface,
     cairo_command_show_text_glyphs_t *command;
 
     command = malloc (sizeof (cairo_command_show_text_glyphs_t));
-    if (command == NULL)
+    if (unlikely (command == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     command->header.type = CAIRO_COMMAND_SHOW_TEXT_GLYPHS;
@@ -471,7 +471,7 @@ _cairo_meta_surface_show_text_glyphs (void			    *abstract_surface,
 
     if (utf8_len) {
 	command->utf8 = malloc (utf8_len);
-	if (command->utf8 == NULL) {
+	if (unlikely (command->utf8 == NULL)) {
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto CLEANUP_ARRAYS;
 	}
@@ -479,7 +479,7 @@ _cairo_meta_surface_show_text_glyphs (void			    *abstract_surface,
     }
     if (num_glyphs) {
 	command->glyphs = _cairo_malloc_ab (num_glyphs, sizeof (glyphs[0]));
-	if (command->glyphs == NULL) {
+	if (unlikely (command->glyphs == NULL)) {
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto CLEANUP_ARRAYS;
 	}
@@ -487,7 +487,7 @@ _cairo_meta_surface_show_text_glyphs (void			    *abstract_surface,
     }
     if (num_clusters) {
 	command->clusters = _cairo_malloc_ab (num_clusters, sizeof (clusters[0]));
-	if (command->clusters == NULL) {
+	if (unlikely (command->clusters == NULL)) {
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto CLEANUP_ARRAYS;
 	}
@@ -537,7 +537,7 @@ _cairo_meta_surface_snapshot (void *abstract_other)
     cairo_meta_surface_t *meta;
 
     meta = malloc (sizeof (cairo_meta_surface_t));
-    if (meta == NULL)
+    if (unlikely (meta == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     _cairo_surface_init (&meta->base, &cairo_meta_surface_backend,
@@ -567,7 +567,7 @@ _cairo_meta_surface_intersect_clip_path (void		    *dst,
     cairo_status_t status;
 
     command = malloc (sizeof (cairo_command_intersect_clip_path_t));
-    if (command == NULL)
+    if (unlikely (command == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     command->header.type = CAIRO_COMMAND_INTERSECT_CLIP_PATH;
@@ -930,7 +930,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 	     * copy the array before handing it to the backend.
 	     */
 	    dev_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
-	    if (dev_glyphs == NULL) {
+	    if (unlikely (dev_glyphs == NULL)) {
 		status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 		break;
 	    }

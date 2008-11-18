@@ -420,7 +420,7 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
     font_face->immutable = TRUE;
 
     user_scaled_font = malloc (sizeof (cairo_user_scaled_font_t));
-    if (user_scaled_font == NULL)
+    if (unlikely (user_scaled_font == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     status = _cairo_scaled_font_init (&user_scaled_font->base,

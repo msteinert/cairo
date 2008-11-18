@@ -147,9 +147,8 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
     if (! CAIRO_SURFACE_RENDER_HAS_COMPOSITE (src))
 	return NULL;
 
-    xrender_format = _cairo_xlib_display_get_xrender_format (
-	                                              src->display,
-						      format);
+    xrender_format = _cairo_xlib_display_get_xrender_format (src->display,
+							     format);
     if (xrender_format == NULL)
 	return NULL;
 
@@ -910,7 +909,7 @@ _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface)
 	    gcv.graphics_exposures = False;
 	    surface->gc = XCreateGC (surface->dpy, surface->drawable,
 				     GCGraphicsExposures, &gcv);
-	    if (!surface->gc)
+	    if (unlikely (surface->gc == NULL))
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
     }
@@ -990,7 +989,7 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 					     ximage.bits_per_pixel);
 	ximage.bytes_per_line = stride;
 	ximage.data = _cairo_malloc_ab (stride, ximage.height);
-	if (ximage.data == NULL)
+	if (unlikely (ximage.data == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	own_data = TRUE;
@@ -1964,7 +1963,7 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
 
 	if (num_rects > ARRAY_LENGTH (static_xrects)) {
 	    xrects = _cairo_malloc_ab (num_rects, sizeof (XRectangle));
-	    if (xrects == NULL)
+	    if (unlikely (xrects == NULL))
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
 
@@ -2225,7 +2224,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
 
         if (num_traps > ARRAY_LENGTH (xtraps_stack)) {
             xtraps = _cairo_malloc_ab (num_traps, sizeof (XTrapezoid));
-            if (xtraps == NULL) {
+            if (unlikely (xtraps == NULL)) {
                 status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
                 goto BAIL;
             }
@@ -2317,7 +2316,7 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 
 	if (n_boxes > ARRAY_LENGTH (surface->embedded_clip_rects)) {
 	    rects = _cairo_malloc_ab (n_boxes, sizeof (XRectangle));
-	    if (rects == NULL) {
+	    if (unlikely (rects == NULL)) {
                 _cairo_region_boxes_fini (&bounded, boxes);
 		_cairo_region_fini (&bound);
 		_cairo_region_fini (&bounded);
@@ -2574,7 +2573,7 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     }
 
     surface = malloc (sizeof (cairo_xlib_surface_t));
-    if (surface == NULL) {
+    if (unlikely (surface == NULL)) {
 	_cairo_xlib_screen_info_destroy (screen_info);
 	_cairo_xlib_display_destroy (display);
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
@@ -3168,7 +3167,7 @@ _cairo_xlib_surface_font_init (Display		    *dpy,
     int i;
 
     font_private = malloc (sizeof (cairo_xlib_surface_font_private_t));
-    if (font_private == NULL)
+    if (unlikely (font_private == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     font_private->scaled_font = scaled_font;
@@ -3297,7 +3296,7 @@ _cairo_xlib_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 
 	if (to_free == NULL) {
 	    to_free = malloc (sizeof (cairo_xlib_font_glyphset_free_glyphs_t));
-	    if (to_free == NULL) {
+	    if (unlikely (to_free == NULL)) {
 		_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 		return; /* XXX cannot propagate failure */
 	    }
@@ -3579,7 +3578,7 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 	    unsigned char   *new, *n;
 
 	    new = malloc (c);
-	    if (new == NULL) {
+	    if (unlikely (new == NULL)) {
 		status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 		goto BAIL;
 	    }
@@ -3723,7 +3722,7 @@ _emit_glyphs_chunk (cairo_xlib_surface_t *dst,
       elts = stack_elts;
     } else {
       elts = _cairo_malloc_ab (num_elts, sizeof (XGlyphElt8));
-      if (elts == NULL)
+      if (unlikely (elts == NULL))
 	  return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 

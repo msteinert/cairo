@@ -347,7 +347,7 @@ _cairo_svg_surface_create_for_document (cairo_svg_document_t	*document,
     cairo_status_t status, status_ignored;
 
     surface = malloc (sizeof (cairo_svg_surface_t));
-    if (surface == NULL)
+    if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     _cairo_surface_init (&surface->base, &cairo_svg_surface_backend,
@@ -482,7 +482,7 @@ _cairo_svg_surface_copy_page (void *abstract_surface)
     cairo_svg_page_t *page;
 
     page = _cairo_svg_surface_store_page (surface);
-    if (page == NULL)
+    if (unlikely (page == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     _cairo_memory_stream_copy (page->xml_node, surface->xml_node);
@@ -496,7 +496,7 @@ _cairo_svg_surface_show_page (void *abstract_surface)
 {
     cairo_svg_surface_t *surface = abstract_surface;
 
-    if (_cairo_svg_surface_store_page (surface) == NULL)
+    if (unlikely (_cairo_svg_surface_store_page (surface) == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     return CAIRO_STATUS_SUCCESS;
@@ -1268,7 +1268,7 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
     page_set = &svg_surface->page_set;
 
     if (_cairo_memory_stream_length (contents) > 0) {
-	if (_cairo_svg_surface_store_page (svg_surface) == NULL) {
+	if (unlikely (_cairo_svg_surface_store_page (svg_surface) == NULL)) {
 	    cairo_surface_destroy (paginated_surface);
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
@@ -1449,7 +1449,7 @@ _cairo_svg_surface_emit_pattern_stops (cairo_output_stream_t          *output,
     if (emulate_reflect || reverse_stops) {
 	n_stops = emulate_reflect ? pattern->n_stops * 2 - 2: pattern->n_stops;
 	stops = _cairo_malloc_ab (n_stops, sizeof (cairo_gradient_stop_t));
-	if (stops == NULL)
+	if (unlikely (stops == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	for (i = 0; i < pattern->n_stops; i++) {
@@ -2458,12 +2458,12 @@ _cairo_svg_document_create (cairo_output_stream_t	 *output_stream,
 	return output_stream->status;
 
     document = malloc (sizeof (cairo_svg_document_t));
-    if (document == NULL)
+    if (unlikely (document == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     /* The use of defs for font glyphs imposes no per-subset limit. */
     document->font_subsets = _cairo_scaled_font_subsets_create_scaled ();
-    if (document->font_subsets == NULL) {
+    if (unlikely (document->font_subsets == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP_DOCUMENT;
     }
@@ -2607,7 +2607,7 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
 	surface = (cairo_svg_surface_t *) _cairo_paginated_surface_get_target (document->owner);
 	if (surface->xml_node != NULL &&
 		_cairo_memory_stream_length (surface->xml_node) > 0) {
-	    if (_cairo_svg_surface_store_page (surface) == NULL) {
+	    if (unlikely (_cairo_svg_surface_store_page (surface) == NULL)) {
 		if (status == CAIRO_STATUS_SUCCESS)
 		    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    }

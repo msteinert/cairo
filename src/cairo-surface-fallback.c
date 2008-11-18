@@ -1183,7 +1183,7 @@ _cairo_surface_fallback_fill_rectangles (cairo_surface_t         *surface,
 
     if (state.image_rect.x != 0 || state.image_rect.y != 0) {
 	offset_rects = _cairo_malloc_ab (num_rects, sizeof (cairo_rectangle_int_t));
-	if (offset_rects == NULL) {
+	if (unlikely (offset_rects == NULL)) {
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto DONE;
 	}

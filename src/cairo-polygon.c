@@ -73,7 +73,7 @@ _cairo_polygon_grow (cairo_polygon_t *polygon)
 		                       new_size, sizeof (cairo_edge_t));
     }
 
-    if (new_edges == NULL) {
+    if (unlikely (new_edges == NULL)) {
 	polygon->status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return FALSE;
     }

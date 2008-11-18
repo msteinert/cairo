@@ -77,7 +77,7 @@ _cairo_test_meta_surface_create (cairo_content_t	content,
     cairo_status_t status;
 
     surface = malloc (sizeof (test_meta_surface_t));
-    if (surface == NULL) {
+    if (unlikely (surface == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto FAIL;
     }

@@ -173,8 +173,8 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     if (unlikely (status))
 	return status;
 
-    name = malloc(size);
-    if (name == NULL)
+    name = malloc (size);
+    if (unlikely (name == NULL))
         return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     status = backend->load_truetype_table (scaled_font_subset->scaled_font,
@@ -185,7 +185,7 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
 	goto fail0;
 
     font = malloc (sizeof (cairo_truetype_font_t));
-    if (font == NULL) {
+    if (unlikely (font == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto fail0;
     }
@@ -202,13 +202,13 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
 	goto fail1;
 
     font->glyphs = calloc (font->num_glyphs_in_face + 1, sizeof (subset_glyph_t));
-    if (font->glyphs == NULL) {
+    if (unlikely (font->glyphs == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto fail1;
     }
 
     font->parent_to_subset = calloc (font->num_glyphs_in_face, sizeof (int));
-    if (font->parent_to_subset == NULL) {
+    if (unlikely (font->parent_to_subset == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto fail2;
     }
@@ -252,7 +252,7 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
 
     if (font->base.base_font == NULL) {
         font->base.base_font = malloc (30);
-        if (font->base.base_font == NULL) {
+        if (unlikely (font->base.base_font == NULL)) {
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
             goto fail3;
 	}
@@ -270,7 +270,7 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     font->base.base_font[i] = '\0';
 
     font->base.widths = calloc (font->num_glyphs_in_face, sizeof (int));
-    if (font->base.widths == NULL) {
+    if (unlikely (font->base.widths == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto fail4;
     }
@@ -577,14 +577,14 @@ cairo_truetype_font_write_glyf_table (cairo_truetype_font_t *font,
 						 (unsigned char*) &header, &size);
     if (unlikely (status))
 	return _cairo_truetype_font_set_error (font, status);
-    
+
     if (be16_to_cpu (header.index_to_loc_format) == 0)
 	size = sizeof (int16_t) * (font->num_glyphs_in_face + 1);
     else
 	size = sizeof (int32_t) * (font->num_glyphs_in_face + 1);
 
     u.bytes = malloc (size);
-    if (u.bytes == NULL)
+    if (unlikely (u.bytes == NULL))
 	return _cairo_truetype_font_set_error (font, CAIRO_STATUS_NO_MEMORY);
 
     status = font->backend->load_truetype_table (font->scaled_font_subset->scaled_font,
@@ -1098,7 +1098,7 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
 	goto fail1;
 
     truetype_subset->base_font = strdup (font->base.base_font);
-    if (truetype_subset->base_font == NULL) {
+    if (unlikely (truetype_subset->base_font == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto fail1;
     }
@@ -1108,7 +1108,7 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
      * font_subset->num_glyphs are omitted. */
     truetype_subset->widths = calloc (sizeof (double),
                                       font->scaled_font_subset->num_glyphs);
-    if (truetype_subset->widths == NULL) {
+    if (unlikely (truetype_subset->widths == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto fail2;
     }
@@ -1124,7 +1124,7 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
 
     if (length) {
 	truetype_subset->data = malloc (length);
-	if (truetype_subset->data == NULL) {
+	if (unlikely (truetype_subset->data == NULL)) {
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto fail3;
 	}
@@ -1137,7 +1137,7 @@ _cairo_truetype_subset_init (cairo_truetype_subset_t    *truetype_subset,
     if (num_strings) {
 	offsets_length = num_strings * sizeof (unsigned long);
 	truetype_subset->string_offsets = malloc (offsets_length);
-	if (truetype_subset->string_offsets == NULL) {
+	if (unlikely (truetype_subset->string_offsets == NULL)) {
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    goto fail4;
 	}
@@ -1209,7 +1209,7 @@ _cairo_truetype_reverse_cmap (cairo_scaled_font_t *scaled_font,
 
     size = be16_to_cpu (map->length);
     map = malloc (size);
-    if (map == NULL)
+    if (unlikely (map == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     status = backend->load_truetype_table (scaled_font,
@@ -1306,7 +1306,7 @@ _cairo_truetype_index_to_ucs4 (cairo_scaled_font_t *scaled_font,
     num_tables = be16_to_cpu (cmap->num_tables);
     size = 4 + num_tables*sizeof(tt_cmap_index_t);
     cmap = _cairo_malloc_ab_plus_c (num_tables, sizeof (tt_cmap_index_t), 4);
-    if (cmap == NULL)
+    if (unlikely (cmap == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     status = backend->load_truetype_table (scaled_font,

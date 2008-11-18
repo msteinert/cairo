@@ -301,7 +301,7 @@ _word_wrap_stream_create (cairo_output_stream_t *output, int max_column)
 	return _cairo_output_stream_create_in_error (output->status);
 
     stream = malloc (sizeof (word_wrap_stream_t));
-    if (stream == NULL) {
+    if (unlikely (stream == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
     }
@@ -569,7 +569,7 @@ _cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t	*pdf_operators,
 	 */
 	if (num_dashes % 2) {
 	    dash = _cairo_malloc_abc (num_dashes, 2, sizeof (double));
-	    if (dash == NULL)
+	    if (unlikely (dash == NULL))
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	    memcpy (dash, style->dash, num_dashes * sizeof (double));
@@ -585,7 +585,7 @@ _cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t	*pdf_operators,
 		 */
 		if (dash == style->dash) {
 		    dash = _cairo_malloc_ab (num_dashes, sizeof (double));
-		    if (dash == NULL)
+		    if (unlikely (dash == NULL))
 			return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 		    memcpy (dash, style->dash, num_dashes * sizeof (double));
 		}

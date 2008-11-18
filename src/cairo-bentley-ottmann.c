@@ -979,7 +979,7 @@ _cairo_bo_event_queue_init (cairo_bo_event_queue_t	*event_queue,
 				      sizeof (cairo_bo_event_t) +
 				      sizeof (cairo_bo_event_t *),
 				      sizeof (cairo_bo_event_t *));
-    if (events == NULL)
+    if (unlikely (events == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     sorted_event_ptrs = (cairo_bo_event_t **) (events + num_events);
@@ -1079,8 +1079,8 @@ _cairo_bo_sweep_line_insert (cairo_bo_sweep_line_t	*sweep_line,
     cairo_bo_edge_t **prev_of_next, **next_of_prev;
 
     sweep_line_elt = _cairo_skip_list_insert (&sweep_line->active_edges, &edge,
-				       1 /* unique inserts*/);
-    if (sweep_line_elt == NULL)
+					      1 /* unique inserts*/);
+    if (unlikely (sweep_line_elt == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     next_elt = sweep_line_elt->elt.next[0];
@@ -1659,11 +1659,10 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	 *traps,
 
     has_limits = _cairo_traps_get_limit (traps, &limit);
 
-    if (polygon->num_edges < ARRAY_LENGTH (stack_edges)) {
-	edges = stack_edges;
-    } else {
+    edges = stack_edges;
+    if (polygon->num_edges > ARRAY_LENGTH (stack_edges)) {
 	edges = _cairo_malloc_ab (polygon->num_edges, sizeof (cairo_bo_edge_t));
-	if (edges == NULL)
+	if (unlikely (edges == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 

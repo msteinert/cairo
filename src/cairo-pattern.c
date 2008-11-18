@@ -140,7 +140,7 @@ _cairo_gradient_pattern_init_copy (cairo_gradient_pattern_t	  *pattern,
     {
 	pattern->stops = _cairo_malloc_ab (other->stops_size,
 					   sizeof (cairo_gradient_stop_t));
-	if (pattern->stops == NULL) {
+	if (unlikely (pattern->stops == NULL)) {
 	    pattern->stops_size = 0;
 	    pattern->n_stops = 0;
 	    return _cairo_pattern_set_error (&pattern->base, CAIRO_STATUS_NO_MEMORY);
@@ -272,7 +272,7 @@ _cairo_pattern_create_copy (cairo_pattern_t	  **pattern,
 	*pattern = malloc (sizeof (cairo_radial_pattern_t));
 	break;
     }
-    if (*pattern == NULL)
+    if (unlikely (*pattern == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     status = _cairo_pattern_init_copy (*pattern, other);
@@ -379,18 +379,17 @@ _cairo_pattern_create_solid (const cairo_color_t *color,
 
     CAIRO_MUTEX_UNLOCK (_cairo_pattern_solid_pattern_cache_lock);
 
-    if (pattern == NULL) {
+    if (unlikely (pattern == NULL)) {
 	/* None cached, need to create a new pattern. */
 	pattern = malloc (sizeof (cairo_solid_pattern_t));
+	if (unlikely (pattern == NULL)) {
+	    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	    return (cairo_pattern_t *) &_cairo_pattern_nil;
+	}
     }
 
-    if (pattern == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	pattern = (cairo_solid_pattern_t *) &_cairo_pattern_nil;
-    } else {
-	_cairo_pattern_init_solid (pattern, color, content);
-	CAIRO_REFERENCE_COUNT_INIT (&pattern->base.ref_count, 1);
-    }
+    _cairo_pattern_init_solid (pattern, color, content);
+    CAIRO_REFERENCE_COUNT_INIT (&pattern->base.ref_count, 1);
 
     return &pattern->base;
 }
@@ -535,7 +534,7 @@ cairo_pattern_create_for_surface (cairo_surface_t *surface)
 	return (cairo_pattern_t*) _cairo_pattern_create_in_error (surface->status);
 
     pattern = malloc (sizeof (cairo_surface_pattern_t));
-    if (pattern == NULL) {
+    if (unlikely (pattern == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_pattern_t *)&_cairo_pattern_nil.base;
     }
@@ -581,7 +580,7 @@ cairo_pattern_create_linear (double x0, double y0, double x1, double y1)
     cairo_linear_pattern_t *pattern;
 
     pattern = malloc (sizeof (cairo_linear_pattern_t));
-    if (pattern == NULL) {
+    if (unlikely (pattern == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_pattern_t *) &_cairo_pattern_nil.base;
     }
@@ -629,7 +628,7 @@ cairo_pattern_create_radial (double cx0, double cy0, double radius0,
     cairo_radial_pattern_t *pattern;
 
     pattern = malloc (sizeof (cairo_radial_pattern_t));
-    if (pattern == NULL) {
+    if (unlikely (pattern == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_pattern_t *) &_cairo_pattern_nil.base;
     }
@@ -846,11 +845,11 @@ _cairo_pattern_gradient_grow (cairo_gradient_pattern_t *pattern)
 	    memcpy (new_stops, pattern->stops, old_size * sizeof (cairo_gradient_stop_t));
     } else {
 	new_stops = _cairo_realloc_ab (pattern->stops,
-	       	                       new_size,
+				       new_size,
 				       sizeof (cairo_gradient_stop_t));
     }
 
-    if (new_stops == NULL)
+    if (unlikely (new_stops == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     pattern->stops = new_stops;
@@ -1255,8 +1254,9 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
     cairo_matrix_t matrix = pattern->base.matrix;
 
     if (pattern->n_stops > ARRAY_LENGTH(pixman_stops_static)) {
-	pixman_stops = _cairo_malloc_ab (pattern->n_stops, sizeof(pixman_gradient_stop_t));
-	if (pixman_stops == NULL)
+	pixman_stops = _cairo_malloc_ab (pattern->n_stops,
+					 sizeof(pixman_gradient_stop_t));
+	if (unlikely (pixman_stops == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
@@ -1340,7 +1340,7 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
     if (pixman_stops != pixman_stops_static)
 	free (pixman_stops);
 
-    if (pixman_image == NULL)
+    if (unlikely (pixman_image == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     if (_cairo_surface_is_image (dst))

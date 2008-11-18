@@ -55,7 +55,7 @@ _cairo_type3_glyph_surface_create (cairo_scaled_font_t	 		 *scaled_font,
     cairo_matrix_t invert_y_axis;
 
     surface = malloc (sizeof (cairo_type3_glyph_surface_t));
-    if (surface == NULL)
+    if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     _cairo_surface_init (&surface->base, &cairo_type3_glyph_surface_backend,

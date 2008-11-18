@@ -455,7 +455,7 @@ _cairo_directfb_surface_create_similar (void            *abstract_src,
 
     format = _cairo_format_from_content (content);
     surface = calloc (1, sizeof (cairo_directfb_surface_t));
-    if (surface == NULL)
+    if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     surface->dfb = source->dfb;

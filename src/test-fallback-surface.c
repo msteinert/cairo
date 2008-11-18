@@ -79,7 +79,7 @@ _cairo_test_fallback_surface_create (cairo_content_t	content,
 	return backing;
 
     surface = malloc (sizeof (test_fallback_surface_t));
-    if (surface == NULL) {
+    if (unlikely (surface == NULL)) {
 	cairo_surface_destroy (backing);
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }

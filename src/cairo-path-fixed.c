@@ -120,7 +120,7 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
     buf_size = MAX (num_ops, (num_points + 1) / 2);
     if (buf_size) {
 	buf = _cairo_path_buf_create (buf_size);
-	if (buf == NULL) {
+	if (unlikely (buf == NULL)) {
 	    _cairo_path_fixed_fini (path);
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
@@ -557,7 +557,7 @@ _cairo_path_fixed_add (cairo_path_fixed_t *path,
 	buf->num_points + num_points > 2 * buf->buf_size)
     {
 	buf = _cairo_path_buf_create (buf->buf_size * 2);
-	if (buf == NULL)
+	if (unlikely (buf == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	_cairo_path_fixed_add_buf (path, buf);

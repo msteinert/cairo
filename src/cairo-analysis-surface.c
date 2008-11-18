@@ -784,7 +784,7 @@ _cairo_analysis_surface_create (cairo_surface_t		*target,
 	return _cairo_surface_create_in_error (status);
 
     surface = malloc (sizeof (cairo_analysis_surface_t));
-    if (surface == NULL)
+    if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     /* I believe the content type here is truly arbitrary. I'm quite
@@ -992,7 +992,7 @@ _cairo_null_surface_create (cairo_content_t content)
     cairo_surface_t *surface;
 
     surface = malloc (sizeof (cairo_surface_t));
-    if (surface == NULL) {
+    if (unlikely (surface == NULL)) {
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 

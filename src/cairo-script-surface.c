@@ -186,7 +186,7 @@ _bitmap_next_id (struct _bitmap *b,
     } while (b != NULL);
 
     bb = malloc (sizeof (struct _bitmap));
-    if (bb == NULL)
+    if (unlikely (bb == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     *prev = bb;
@@ -852,7 +852,7 @@ _write_image_surface (cairo_output_stream_t *output,
 #else
     if (stride > ARRAY_LENGTH (row_stack)) {
 	rowdata = malloc (stride);
-	if (rowdata == NULL)
+	if (unlikely (rowdata == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     } else
 	rowdata = row_stack;
@@ -1832,7 +1832,7 @@ _emit_type42_font (cairo_script_surface_t *surface,
 	return status;
 
     buf = malloc (size);
-    if (buf == NULL)
+    if (unlikely (buf == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     status = backend->load_truetype_table (scaled_font, 0, 0, buf, NULL);
@@ -1882,7 +1882,7 @@ _emit_scaled_font_init (cairo_script_surface_t *surface,
     cairo_status_t status;
 
     font_private = malloc (sizeof (cairo_script_surface_font_private_t));
-    if (font_private == NULL)
+    if (unlikely (font_private == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     font_private->ctx = surface->ctx;
@@ -2466,7 +2466,7 @@ _cairo_script_vmcontext_create (cairo_output_stream_t *stream)
     cairo_script_vmcontext_t *ctx;
 
     ctx = malloc (sizeof (cairo_script_vmcontext_t));
-    if (ctx == NULL)
+    if (unlikely (ctx == NULL))
 	return NULL;
 
     memset (ctx, 0, sizeof (cairo_script_vmcontext_t));
@@ -2500,11 +2500,11 @@ _cairo_script_surface_create_internal (cairo_script_vmcontext_t *ctx,
 {
     cairo_script_surface_t *surface;
 
-    if (ctx == NULL)
+    if (unlikely (ctx == NULL))
 	return (cairo_script_surface_t *) _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     surface = malloc (sizeof (cairo_script_surface_t));
-    if (surface == NULL)
+    if (unlikely (surface == NULL))
 	return (cairo_script_surface_t *) _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     _cairo_surface_init (&surface->base,

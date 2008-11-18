@@ -131,7 +131,7 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
     cairo_image_surface_t *surface;
 
     surface = malloc (sizeof (cairo_image_surface_t));
-    if (surface == NULL)
+    if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     _cairo_surface_init (&surface->base, &_cairo_image_surface_backend,
@@ -327,7 +327,7 @@ _cairo_image_surface_create_with_pixman_format (unsigned char		*data,
     pixman_image = pixman_image_create_bits (pixman_format, width, height,
 					     (uint32_t *) data, stride);
 
-    if (pixman_image == NULL)
+    if (unlikely (pixman_image == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     surface = _cairo_image_surface_create_for_pixman_image (pixman_image,
@@ -1051,7 +1051,7 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
 
     if (num_rects > ARRAY_LENGTH (stack_rects)) {
 	pixman_rects = _cairo_malloc_ab (num_rects, sizeof (pixman_rectangle16_t));
-	if (pixman_rects == NULL)
+	if (unlikely (pixman_rects == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
@@ -1110,7 +1110,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     /* Convert traps to pixman traps */
     if (num_traps > ARRAY_LENGTH (stack_traps)) {
 	pixman_traps = _cairo_malloc_ab (num_traps, sizeof (pixman_trapezoid_t));
-	if (pixman_traps == NULL)
+	if (unlikely (pixman_traps == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
@@ -1181,14 +1181,14 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 
     /* The image must be initially transparent */
     mask_data = calloc (mask_stride, height);
-    if (mask_data == NULL) {
+    if (unlikely (mask_data == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP_SOURCE;
     }
 
     mask = pixman_image_create_bits (format, width, height,
 				     mask_data, mask_stride);
-    if (mask == NULL) {
+    if (unlikely (mask == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP_IMAGE_DATA;
     }

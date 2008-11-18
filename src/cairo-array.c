@@ -138,7 +138,7 @@ _cairo_array_grow_by (cairo_array_t *array, unsigned int additional)
 
     if (array->elements == NULL) {
 	array->elements = malloc (sizeof (char *));
-	if (array->elements == NULL)
+	if (unlikely (array->elements == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	*array->elements = NULL;
@@ -148,7 +148,7 @@ _cairo_array_grow_by (cairo_array_t *array, unsigned int additional)
     new_elements = _cairo_realloc_ab (*array->elements,
 			              array->size, array->element_size);
 
-    if (new_elements == NULL) {
+    if (unlikely (new_elements == NULL)) {
 	array->size = old_size;
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }

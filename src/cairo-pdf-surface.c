@@ -249,7 +249,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
     cairo_status_t status, status_ignored;
 
     surface = malloc (sizeof (cairo_pdf_surface_t));
-    if (surface == NULL) {
+    if (unlikely (surface == NULL)) {
 	/* destroy stream on behalf of caller */
 	status = _cairo_output_stream_destroy (output);
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
@@ -817,7 +817,7 @@ _cairo_pdf_surface_create_smask_group (cairo_pdf_surface_t	*surface)
     cairo_pdf_smask_group_t	*group;
 
     group = calloc (1, sizeof (cairo_pdf_smask_group_t));
-    if (group == NULL) {
+    if (unlikely (group == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
     }
@@ -1461,7 +1461,7 @@ _cairo_pdf_surface_emit_smask (cairo_pdf_surface_t	*surface,
 	alpha = _cairo_malloc_ab (image->height, image->width);
     }
 
-    if (alpha == NULL) {
+    if (unlikely (alpha == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP;
     }
@@ -1557,7 +1557,7 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
 
     rgb_size = image->height * image->width * 3;
     rgb = _cairo_malloc_abc (image->width, image->height, 3);
-    if (rgb == NULL) {
+    if (unlikely (rgb == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP;
     }
@@ -2333,7 +2333,7 @@ _cairo_pdf_surface_emit_pattern_stops (cairo_pdf_surface_t      *surface,
     alpha_function->id = 0;
 
     allstops = _cairo_malloc_ab ((pattern->n_stops + 2), sizeof (cairo_pdf_color_stop_t));
-    if (allstops == NULL)
+    if (unlikely (allstops == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     stops = &allstops[1];
@@ -3857,11 +3857,11 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 	return CAIRO_STATUS_SUCCESS;
 
     glyphs = _cairo_malloc_ab (font_subset->num_glyphs, sizeof (cairo_pdf_resource_t));
-    if (glyphs == NULL)
+    if (unlikely (glyphs == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     widths = _cairo_malloc_ab (font_subset->num_glyphs, sizeof (double));
-    if (widths == NULL) {
+    if (unlikely (widths == NULL)) {
         free (glyphs);
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
@@ -4171,7 +4171,7 @@ _cairo_pdf_surface_write_mask_group (cairo_pdf_surface_t	*surface,
 
     if (gstate_res.id != 0) {
 	smask_group = _cairo_pdf_surface_create_smask_group (surface);
-	if (smask_group == NULL)
+	if (unlikely (smask_group == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	smask_group->operation = PDF_PAINT;
@@ -4227,7 +4227,7 @@ _cairo_pdf_surface_write_mask_group (cairo_pdf_surface_t	*surface,
 
     if (gstate_res.id != 0) {
 	smask_group = _cairo_pdf_surface_create_smask_group (surface);
-	if (smask_group == NULL)
+	if (unlikely (smask_group == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	smask_group->operation = PDF_PAINT;
@@ -4740,7 +4740,7 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
 
     if (gstate_res.id != 0) {
 	group = _cairo_pdf_surface_create_smask_group (surface);
-	if (group == NULL)
+	if (unlikely (group == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	group->operation = PDF_PAINT;
@@ -4823,7 +4823,7 @@ _cairo_pdf_surface_mask	(void			*abstract_surface,
     assert (_cairo_pdf_surface_operation_supported (surface, op, mask));
 
     group = _cairo_pdf_surface_create_smask_group (surface);
-    if (group == NULL)
+    if (unlikely (group == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     group->operation = PDF_MASK;
@@ -4902,7 +4902,7 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 
     if (gstate_res.id != 0) {
 	group = _cairo_pdf_surface_create_smask_group (surface);
-	if (group == NULL)
+	if (unlikely (group == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	group->operation = PDF_STROKE;
@@ -5000,7 +5000,7 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
 
     if (gstate_res.id != 0) {
 	group = _cairo_pdf_surface_create_smask_group (surface);
-	if (group == NULL)
+	if (unlikely (group == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	group->operation = PDF_FILL;
@@ -5190,7 +5190,7 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
 
     if (gstate_res.id != 0) {
 	group = _cairo_pdf_surface_create_smask_group (surface);
-	if (group == NULL)
+	if (unlikely (group == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	group->operation = PDF_SHOW_GLYPHS;
@@ -5203,7 +5203,7 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
 
 	if (utf8_len) {
 	    group->utf8 = malloc (utf8_len);
-	    if (group->utf8 == NULL) {
+	    if (unlikely (group->utf8 == NULL)) {
 		_cairo_pdf_smask_group_destroy (group);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    }
@@ -5213,7 +5213,7 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
 
 	if (num_glyphs) {
 	    group->glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
-	    if (group->glyphs == NULL) {
+	    if (unlikely (group->glyphs == NULL)) {
 		_cairo_pdf_smask_group_destroy (group);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    }
@@ -5223,7 +5223,7 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
 
 	if (num_clusters) {
 	    group->clusters = _cairo_malloc_ab (num_clusters, sizeof (cairo_text_cluster_t));
-	    if (group->clusters == NULL) {
+	    if (unlikely (group->clusters == NULL)) {
 		_cairo_pdf_smask_group_destroy (group);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    }

@@ -1254,7 +1254,7 @@ _cairo_rectilinear_stroker_add_segment (cairo_rectilinear_stroker_t	*stroker,
 
 	if (stroker->segments == stroker->segments_embedded) {
 	    new_segments = _cairo_malloc_ab (new_size, sizeof (cairo_line_t));
-	    if (new_segments == NULL)
+	    if (unlikely (new_segments == NULL))
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	    memcpy (new_segments, stroker->segments,
@@ -1262,7 +1262,7 @@ _cairo_rectilinear_stroker_add_segment (cairo_rectilinear_stroker_t	*stroker,
 	} else {
 	    new_segments = _cairo_realloc_ab (stroker->segments,
 					      new_size, sizeof (cairo_line_t));
-	    if (new_segments == NULL)
+	    if (unlikely (new_segments == NULL))
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
 

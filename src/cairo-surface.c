@@ -237,7 +237,7 @@ _cairo_surface_create_similar_scratch (cairo_surface_t *other,
     }
 
     /* If any error occurred, then return the nil surface we received. */
-    if (surface->status)
+    if (unlikely (surface->status))
 	return surface;
 
     if (other->has_font_options || other->backend != surface->backend) {
@@ -677,7 +677,7 @@ cairo_surface_set_mime_data (cairo_surface_t		*surface,
 
     if (data != NULL) {
 	mime_data = malloc (sizeof (cairo_mime_data_t));
-	if (mime_data == NULL)
+	if (unlikely (mime_data == NULL))
 	    return _cairo_surface_set_error (surface, _cairo_error (CAIRO_STATUS_NO_MEMORY));
 
 	CAIRO_REFERENCE_COUNT_INIT (&mime_data->ref_count, 1);

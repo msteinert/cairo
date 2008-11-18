@@ -52,7 +52,7 @@ _cairo_sdl_surface_create_internal (SDL_Surface *sdl,
     cairo_sdl_surface_t *surface;
 
     surface = malloc (sizeof (cairo_sdl_surface_t));
-    if (surface == NULL)
+    if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     _cairo_surface_init (&surface->base,

@@ -352,7 +352,7 @@ _cairo_xlib_screen_info_get (cairo_xlib_display_t *display,
 	info = _cairo_xlib_screen_info_reference (info);
     } else {
 	info = malloc (sizeof (cairo_xlib_screen_info_t));
-	if (info == NULL)
+	if (unlikely (info == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	CAIRO_REFERENCE_COUNT_INIT (&info->ref_count, 2); /* Add one for display cache */

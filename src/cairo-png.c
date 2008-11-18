@@ -169,7 +169,7 @@ write_png (cairo_surface_t	*surface,
     }
 
     rows = _cairo_malloc_ab (image->height, sizeof (png_byte*));
-    if (rows == NULL) {
+    if (unlikely (rows == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto BAIL1;
     }
@@ -180,13 +180,13 @@ write_png (cairo_surface_t	*surface,
     png = png_create_write_struct (PNG_LIBPNG_VER_STRING, &status,
 	                           png_simple_error_callback,
 	                           png_simple_warning_callback);
-    if (png == NULL) {
+    if (unlikely (png == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto BAIL2;
     }
 
     info = png_create_info_struct (png);
-    if (info == NULL) {
+    if (unlikely (info == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto BAIL3;
     }
@@ -517,13 +517,13 @@ read_png (struct png_read_closure_t *png_closure)
                                   &status,
 	                          png_simple_error_callback,
 	                          png_simple_warning_callback);
-    if (png == NULL) {
+    if (unlikely (png == NULL)) {
 	surface = _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 	goto BAIL;
     }
 
     info = png_create_info_struct (png);
-    if (info == NULL) {
+    if (unlikely (info == NULL)) {
 	surface = _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 	goto BAIL;
     }
@@ -620,13 +620,13 @@ read_png (struct png_read_closure_t *png_closure)
     }
 
     data = _cairo_malloc_ab (png_height, stride);
-    if (data == NULL) {
+    if (unlikely (data == NULL)) {
 	surface = _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 	goto BAIL;
     }
 
     row_pointers = _cairo_malloc_ab (png_height, sizeof (char *));
-    if (row_pointers == NULL) {
+    if (unlikely (row_pointers == NULL)) {
 	surface = _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 	goto BAIL;
     }

@@ -80,7 +80,7 @@ _cairo_test_paginated_surface_create_for_data (unsigned char		*data,
 	return target;
 
     surface = malloc (sizeof (test_paginated_surface_t));
-    if (surface == NULL) {
+    if (unlikely (surface == NULL)) {
 	cairo_surface_destroy (target);
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }

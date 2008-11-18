@@ -221,7 +221,7 @@ _cairo_gstate_save (cairo_gstate_t **gstate, cairo_gstate_t **freelist)
     top = *freelist;
     if (top == NULL) {
 	top = malloc (sizeof (cairo_gstate_t));
-	if (top == NULL)
+	if (unlikely (top == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     } else
 	*freelist = top->next;
@@ -512,7 +512,7 @@ _cairo_gstate_set_dash (cairo_gstate_t *gstate, const double *dash, int num_dash
     }
 
     gstate->stroke_style.dash = _cairo_malloc_ab (gstate->stroke_style.num_dashes, sizeof (double));
-    if (gstate->stroke_style.dash == NULL) {
+    if (unlikely (gstate->stroke_style.dash == NULL)) {
 	gstate->stroke_style.num_dashes = 0;
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
@@ -1615,7 +1615,7 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
 	transformed_glyphs = stack_transformed_glyphs;
     } else {
 	transformed_glyphs = cairo_glyph_allocate (num_glyphs);
-	if (transformed_glyphs == NULL)
+	if (unlikely (transformed_glyphs == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
@@ -1701,12 +1701,13 @@ _cairo_gstate_glyph_path (cairo_gstate_t      *gstate,
     if (unlikely (status))
 	return status;
 
-    if (num_glyphs < ARRAY_LENGTH (stack_transformed_glyphs))
+    if (num_glyphs < ARRAY_LENGTH (stack_transformed_glyphs)) {
       transformed_glyphs = stack_transformed_glyphs;
-    else
-      transformed_glyphs = cairo_glyph_allocate (num_glyphs);
-    if (transformed_glyphs == NULL)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    } else {
+	transformed_glyphs = cairo_glyph_allocate (num_glyphs);
+	if (unlikely (transformed_glyphs == NULL))
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
 
     status = _cairo_gstate_transform_glyphs_to_backend (gstate,
 							glyphs, num_glyphs,

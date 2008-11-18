@@ -64,7 +64,7 @@ _cairo_region_init_boxes (cairo_region_t *region,
 
     if (count > ARRAY_LENGTH (stack_pboxes)) {
 	pboxes = _cairo_malloc_ab (count, sizeof (pixman_box32_t));
-	if (pboxes == NULL)
+	if (unlikely (pboxes == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
