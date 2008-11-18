@@ -88,7 +88,7 @@ _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other)
 	cairo_status_t status;
 
 	status = _cairo_region_copy (&clip->region, &other->region);
-	if (status) {
+	if (unlikely (status)) {
 	    _cairo_region_fini (&clip->region);
 	    cairo_surface_destroy (clip->surface);
 	    return status;
@@ -174,7 +174,7 @@ _cairo_clip_intersect_to_rectangle (cairo_clip_t            *clip,
     if (clip->path) {
         status = _cairo_clip_path_intersect_to_rectangle (clip->path,
                                                           rectangle);
-        if (status)
+        if (unlikely (status))
             return status;
     }
 
@@ -191,7 +191,7 @@ _cairo_clip_intersect_to_rectangle (cairo_clip_t            *clip,
 
         _cairo_region_fini (&intersection);
 
-        if (status)
+        if (unlikely (status))
             return status;
     }
 
@@ -228,7 +228,7 @@ _cairo_clip_intersect_to_region (cairo_clip_t      *clip,
 
     if (clip->has_region) {
 	status = _cairo_region_intersect (region, &clip->region, region);
-	if (status)
+	if (unlikely (status))
 	    return status;
     }
 
@@ -241,7 +241,7 @@ _cairo_clip_intersect_to_region (cairo_clip_t      *clip,
 
 	_cairo_region_fini (&clip_rect);
 
-        if (status)
+        if (unlikely (status))
             return status;
     }
 
@@ -302,7 +302,7 @@ _cairo_clip_intersect_path (cairo_clip_t       *clip,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     status = _cairo_path_fixed_init_copy (&clip_path->path, path);
-    if (status) {
+    if (unlikely (status)) {
 	free (clip_path);
 	return status;
     }
@@ -362,7 +362,6 @@ _cairo_clip_intersect_region (cairo_clip_t    *clip,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     status = _cairo_traps_extract_region (traps, &region);
-
     if (status)
 	return status;
 
@@ -492,7 +491,7 @@ _cairo_clip_intersect_mask (cairo_clip_t      *clip,
 
     _cairo_pattern_fini (&pattern.base);
 
-    if (status) {
+    if (unlikely (status)) {
 	cairo_surface_destroy (surface);
 	return status;
     }
@@ -517,7 +516,7 @@ _cairo_clip_intersect_mask (cairo_clip_t      *clip,
 
 	_cairo_pattern_fini (&pattern.base);
 
-	if (status) {
+	if (unlikely (status)) {
 	    cairo_surface_destroy (surface);
 	    return status;
 	}
@@ -581,7 +580,7 @@ _cairo_clip_clip (cairo_clip_t       *clip,
 					      fill_rule,
 					      tolerance,
 					      &traps);
-    if (status)
+    if (unlikely (status))
 	goto bail;
 
     status = _cairo_clip_intersect_region (clip, &traps, target);
@@ -664,7 +663,7 @@ _cairo_clip_init_deep_copy (cairo_clip_t    *clip,
     } else {
         if (other->has_region) {
             status = _cairo_region_copy (&clip->region, &other->region);
-	    if (status)
+	    if (unlikely (status))
 		goto BAIL;
 
 	    clip->has_region = TRUE;
@@ -679,7 +678,7 @@ _cairo_clip_init_deep_copy (cairo_clip_t    *clip,
 						   other->surface_rect.height,
 						   &dx, &dy,
 						   &clip->surface);
-	    if (status)
+	    if (unlikely (status))
 		goto BAIL;
 
             clip->surface_rect = other->surface_rect;

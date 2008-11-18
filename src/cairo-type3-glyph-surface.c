@@ -96,7 +96,7 @@ _cairo_type3_glyph_surface_emit_image (cairo_type3_glyph_surface_t *surface,
     } else {
 	image_mask = _cairo_image_surface_clone (image, CAIRO_FORMAT_A1);
 	status = cairo_surface_status (&image->base);
-	if (status)
+	if (unlikely (status))
 	    return status;
     }
 
@@ -196,7 +196,7 @@ _cairo_type3_glyph_surface_paint (void			*abstract_surface,
 
     pattern = (const cairo_surface_pattern_t *) source;
     status = _cairo_surface_acquire_source_image (pattern->surface, &image, &image_extra);
-    if (status)
+    if (unlikely (status))
 	goto fail;
 
     status = _cairo_type3_glyph_surface_emit_image_pattern (surface,
@@ -282,7 +282,7 @@ _cairo_type3_glyph_surface_show_glyphs (void		     *abstract_surface,
     /* We require the matrix to be invertable. */
     ctm_inverse = scaled_font->ctm;
     status = cairo_matrix_invert (&ctm_inverse);
-    if (status)
+    if (unlikely (status))
 	return CAIRO_INT_STATUS_IMAGE_FALLBACK;
 
     cairo_matrix_multiply (&new_ctm, &scaled_font->ctm, &ctm_inverse);
@@ -357,7 +357,7 @@ _cairo_type3_glyph_surface_emit_fallback_image (cairo_type3_glyph_surface_t *sur
 					 CAIRO_SCALED_GLYPH_INFO_METRICS |
 					 CAIRO_SCALED_GLYPH_INFO_SURFACE,
 					 &scaled_glyph);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     image = scaled_glyph->surface;
@@ -419,7 +419,7 @@ _cairo_type3_glyph_surface_analyze_glyph (void		     *abstract_surface,
 
     status = _cairo_meta_surface_replay (scaled_glyph->meta_surface,
 					 &surface->base);
-    if (status)
+    if (unlikely (status))
 	goto cleanup;
 
     status2 = _cairo_pdf_operators_flush (&surface->pdf_operators);

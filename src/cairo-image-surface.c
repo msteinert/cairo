@@ -870,7 +870,7 @@ _cairo_image_surface_set_attributes (cairo_image_surface_t      *surface,
 
     status = _cairo_image_surface_set_matrix (surface, &attributes->matrix,
 					      xc, yc);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     switch (attributes->extend) {
@@ -889,7 +889,7 @@ _cairo_image_surface_set_attributes (cairo_image_surface_t      *surface,
     }
 
     status = _cairo_image_surface_set_filter (surface, attributes->filter);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     return CAIRO_STATUS_SUCCESS;
@@ -968,13 +968,13 @@ _cairo_image_surface_composite (cairo_operator_t	op,
 					      (cairo_surface_t **) &src,
 					      (cairo_surface_t **) &mask,
 					      &src_attr, &mask_attr);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _cairo_image_surface_set_attributes (src, &src_attr,
 						  dst_x + width / 2.,
 						  dst_y + height / 2.);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_SURFACES;
 
     if (mask)
@@ -982,7 +982,7 @@ _cairo_image_surface_composite (cairo_operator_t	op,
 	status = _cairo_image_surface_set_attributes (mask, &mask_attr,
 						      dst_x + width / 2.,
 						      dst_y + height / 2.);
-	if (status)
+	if (unlikely (status))
 	    goto CLEANUP_SURFACES;
 
 	pixman_image_composite (_pixman_operator (op),
@@ -1156,13 +1156,13 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 					     src_x, src_y, width, height,
 					     (cairo_surface_t **) &src,
 					     &attributes);
-    if (status)
+    if (unlikely (status))
 	goto finish;
 
     status = _cairo_image_surface_set_attributes (src, &attributes,
 						  dst_x + width / 2.,
 						  dst_y + height / 2.);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_SOURCE;
 
     switch (antialias) {
@@ -1353,7 +1353,7 @@ _cairo_image_surface_clone (cairo_image_surface_t	*surface,
     status = cairo_status (cr);
     cairo_destroy (cr);
 
-    if (status) {
+    if (unlikely (status)) {
 	cairo_surface_destroy (&clone->base);
 	return (cairo_image_surface_t *) _cairo_surface_create_in_error (status);
     }

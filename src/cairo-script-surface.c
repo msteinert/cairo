@@ -335,7 +335,7 @@ _emit_context (cairo_script_surface_t *surface)
 
 	status = _bitmap_next_id (&surface->ctx->surface_id,
 				  &surface->id);
-	if (status)
+	if (unlikely (status))
 	    return status;
 
 	_cairo_output_stream_printf (surface->ctx->stream,
@@ -586,25 +586,25 @@ _emit_stroke_style (cairo_script_surface_t *surface,
     assert (_cairo_script_surface_owns_context (surface));
 
     status = _emit_line_width (surface, style->line_width, force);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_line_cap (surface, style->line_cap);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_line_join (surface, style->line_join);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_miter_limit (surface, style->miter_limit, force);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_dash (surface,
 			 style->dash, style->num_dashes, style->dash_offset,
 			 force);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     return CAIRO_STATUS_SUCCESS;
@@ -750,13 +750,13 @@ _emit_meta_surface_pattern (cairo_script_surface_t *surface,
     cairo_surface_destroy (null_surface);
 
     status = analysis_surface->status;
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _cairo_meta_surface_replay (source, analysis_surface);
     _cairo_analysis_surface_get_bounding_box (analysis_surface, &bbox);
     cairo_surface_destroy (analysis_surface);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     similar = cairo_surface_create_similar (&surface->base,
@@ -767,13 +767,13 @@ _emit_meta_surface_pattern (cairo_script_surface_t *surface,
 	return similar->status;
 
     status = _cairo_meta_surface_replay (source, similar);
-    if (status) {
+    if (unlikely (status)) {
 	cairo_surface_destroy (similar);
 	return status;
     }
 
     status = _emit_context (surface);
-    if (status) {
+    if (unlikely (status)) {
 	cairo_surface_destroy (similar);
 	return status;
     }
@@ -936,7 +936,7 @@ _emit_png_surface (cairo_script_surface_t *surface,
     base85_stream = _cairo_base85_stream_create (surface->ctx->stream);
     _cairo_output_stream_write (base85_stream, mime_data, mime_data_length);
     status = _cairo_output_stream_destroy (base85_stream);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     _cairo_output_stream_puts (surface->ctx->stream,
@@ -979,7 +979,7 @@ _emit_image_surface (cairo_script_surface_t *surface,
 	    status2 = _cairo_output_stream_destroy (base85_stream);
 	    if (status == CAIRO_STATUS_SUCCESS)
 		status = status2;
-	    if (status)
+	    if (unlikely (status))
 		return status;
 
 	    _cairo_output_stream_puts (surface->ctx->stream,
@@ -1006,7 +1006,7 @@ _emit_image_surface (cairo_script_surface_t *surface,
 	base85_stream = _cairo_base85_stream_create (surface->ctx->stream);
 	_cairo_output_stream_write (base85_stream, mime_data, mime_data_length);
 	status = _cairo_output_stream_destroy (base85_stream);
-	if (status)
+	if (unlikely (status))
 	    return status;
 
 	_cairo_output_stream_puts (surface->ctx->stream,
@@ -1034,7 +1034,7 @@ _emit_image_surface_pattern (cairo_script_surface_t *surface,
 
     /* XXX snapshot-cow */
     status = _cairo_surface_acquire_source_image (source, &image, &image_extra);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_image_surface (surface, image);
@@ -1089,7 +1089,7 @@ _emit_pattern (cairo_script_surface_t *surface,
 	ASSERT_NOT_REACHED;
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
     }
-    if (status)
+    if (unlikely (status))
 	return status;
 
     if (! _cairo_matrix_is_identity (&pattern->matrix)) {
@@ -1151,15 +1151,15 @@ _emit_source (cairo_script_surface_t *surface,
     cairo_pattern_destroy (surface->cr.current_source);
     status = _cairo_pattern_create_copy (&surface->cr.current_source,
 					 source);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_identity (surface, &matrix_updated);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_pattern (surface, source);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     _cairo_output_stream_puts (surface->ctx->stream,
@@ -1242,7 +1242,7 @@ _emit_path (cairo_script_surface_t *surface,
 	double y2 = _cairo_fixed_to_double (box.p2.y);
 
 	status = _cairo_path_fixed_init_copy (&surface->cr.current_path, path);
-	if (status)
+	if (unlikely (status))
 	    return status;
 
 	_cairo_output_stream_printf (surface->ctx->stream,
@@ -1252,7 +1252,7 @@ _emit_path (cairo_script_surface_t *surface,
 	cairo_status_t status;
 
 	status = _cairo_path_fixed_init_copy (&surface->cr.current_path, path);
-	if (status)
+	if (unlikely (status))
 	    return status;
 
 	status = _cairo_path_fixed_interpret (path,
@@ -1262,7 +1262,7 @@ _emit_path (cairo_script_surface_t *surface,
 					      _path_curve_to,
 					      _path_close,
 					      surface->ctx->stream);
-	if (status)
+	if (unlikely (status))
 	    return status;
     }
 
@@ -1356,7 +1356,7 @@ _cairo_script_surface_create_similar (void	       *abstract_surface,
 
 	status = _bitmap_next_id (&ctx->surface_id,
 				  &other->id);
-	if (status)
+	if (unlikely (status))
 	    return _cairo_surface_create_in_error (status);
 
 	_cairo_output_stream_printf (ctx->stream,
@@ -1378,7 +1378,7 @@ _cairo_script_surface_create_similar (void	       *abstract_surface,
 
     status = _bitmap_next_id (&ctx->surface_id,
 			      &surface->id);
-    if (status) {
+    if (unlikely (status)) {
 	cairo_surface_destroy (&surface->base);
 	return _cairo_surface_create_in_error (status);
     }
@@ -1455,7 +1455,7 @@ _cairo_script_surface_copy_page (void *abstract_surface)
     cairo_status_t status;
 
     status = _emit_context (surface);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     _cairo_output_stream_puts (surface->ctx->stream, "copy_page\n");
@@ -1470,7 +1470,7 @@ _cairo_script_surface_show_page (void *abstract_surface)
     cairo_status_t status;
 
     status = _emit_context (surface);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     _cairo_output_stream_puts (surface->ctx->stream, "show_page\n");
@@ -1490,7 +1490,7 @@ _cairo_script_surface_intersect_clip_path (void			*abstract_surface,
     cairo_status_t status;
 
     status = _emit_context (surface);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     if (path == NULL) {
@@ -1499,23 +1499,23 @@ _cairo_script_surface_intersect_clip_path (void			*abstract_surface,
     }
 
     status = _emit_identity (surface, &matrix_updated);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_fill_rule (surface, fill_rule);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_tolerance (surface, tolerance, matrix_updated);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_antialias (surface, antialias);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_path (surface, path);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     _cairo_output_stream_puts (surface->ctx->stream, "clip+\n");
@@ -1533,15 +1533,15 @@ _cairo_script_surface_paint (void			*abstract_surface,
     cairo_status_t status;
 
     status = _emit_context (surface);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_operator (surface, op);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_source (surface, op, source);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     _cairo_output_stream_puts (surface->ctx->stream,
@@ -1561,19 +1561,19 @@ _cairo_script_surface_mask (void			*abstract_surface,
     cairo_status_t status;
 
     status = _emit_context (surface);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_operator (surface, op);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_source (surface, op, source);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_pattern (surface, mask);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     _cairo_output_stream_puts (surface->ctx->stream,
@@ -1599,39 +1599,39 @@ _cairo_script_surface_stroke (void				*abstract_surface,
     cairo_status_t status;
 
     status = _emit_context (surface);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_identity (surface, &matrix_updated);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_path (surface, path);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_source (surface, op, source);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_matrix (surface, ctm, &matrix_updated);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_operator (surface, op);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_stroke_style (surface, style, matrix_updated);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_tolerance (surface, tolerance, matrix_updated);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_antialias (surface, antialias);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     _cairo_output_stream_puts (surface->ctx->stream, "stroke+\n");
@@ -1654,35 +1654,35 @@ _cairo_script_surface_fill (void			*abstract_surface,
     cairo_status_t status;
 
     status = _emit_context (surface);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_operator (surface, op);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_identity (surface, &matrix_updated);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_source (surface, op, source);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_fill_rule (surface, fill_rule);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_tolerance (surface, tolerance, matrix_updated);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_antialias (surface, antialias);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_path (surface, path);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     _cairo_output_stream_puts (surface->ctx->stream, "fill+\n");
@@ -1828,7 +1828,7 @@ _emit_type42_font (cairo_script_surface_t *surface,
 
     size = 0;
     status = backend->load_truetype_table (scaled_font, 0, 0, NULL, &size);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     buf = malloc (size);
@@ -1836,7 +1836,7 @@ _emit_type42_font (cairo_script_surface_t *surface,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     status = backend->load_truetype_table (scaled_font, 0, 0, buf, NULL);
-    if (status) {
+    if (unlikely (status)) {
 	free (buf);
 	return status;
     }
@@ -1898,7 +1898,7 @@ _emit_scaled_font_init (cairo_script_surface_t *surface,
 
     status = _bitmap_next_id (&surface->ctx->font_id,
 			      &font_private->id);
-    if (status) {
+    if (unlikely (status)) {
 	free (font_private);
 	return status;
     }
@@ -1907,7 +1907,7 @@ _emit_scaled_font_init (cairo_script_surface_t *surface,
     scaled_font->surface_backend = &_cairo_script_surface_backend;
 
     status = _emit_context (surface);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_type42_font (surface, scaled_font);
@@ -1943,7 +1943,7 @@ _emit_scaled_font (cairo_script_surface_t *surface,
 
     cairo_scaled_font_get_ctm (scaled_font, &matrix);
     status = _emit_matrix (surface, &matrix, &matrix_updated);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     if (! matrix_updated && surface->cr.current_scaled_font == scaled_font)
@@ -1951,12 +1951,12 @@ _emit_scaled_font (cairo_script_surface_t *surface,
 
     cairo_scaled_font_get_font_matrix (scaled_font, &matrix);
     status = _emit_font_matrix (surface, &matrix);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     cairo_scaled_font_get_font_options (scaled_font, &options);
     status = _emit_font_options (surface, &options);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     surface->cr.current_scaled_font = scaled_font;
@@ -1967,11 +1967,11 @@ _emit_scaled_font (cairo_script_surface_t *surface,
     font_private = scaled_font->surface_private;
     if (font_private == NULL) {
 	status = _emit_scaled_font_init (surface, scaled_font);
-	if (status)
+	if (unlikely (status))
 	    return status;
     } else {
 	status = _emit_context (surface);
-	if (status)
+	if (unlikely (status))
 	    return status;
 
 	_cairo_output_stream_printf (surface->ctx->stream,
@@ -2059,7 +2059,7 @@ _emit_scaled_glyph_bitmap (cairo_script_surface_t *surface,
 				 scaled_glyph->fs_metrics.y_bearing);
 
     status = _emit_image_surface (surface, scaled_glyph->surface);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     if (! _cairo_matrix_is_identity (&scaled_font->font_matrix)) {
@@ -2121,7 +2121,7 @@ _emit_scaled_glyphs (cairo_script_surface_t *surface,
 					     glyphs[n].index,
 					     CAIRO_SCALED_GLYPH_INFO_METRICS,
 					     &scaled_glyph);
-	if (status)
+	if (unlikely (status))
 	    break;
 
 	if (scaled_glyph->surface_private != NULL)
@@ -2137,7 +2137,7 @@ _emit_scaled_glyphs (cairo_script_surface_t *surface,
 	if (status == CAIRO_STATUS_SUCCESS) {
 	    if (! have_glyph_prologue) {
 		status = _emit_scaled_glyph_prologue (surface, scaled_font);
-		if (status)
+		if (unlikely (status))
 		    break;
 
 		have_glyph_prologue = TRUE;
@@ -2146,7 +2146,7 @@ _emit_scaled_glyphs (cairo_script_surface_t *surface,
 	    status = _emit_scaled_glyph_vector (surface,
 						scaled_font,
 						scaled_glyph);
-	    if (status)
+	    if (unlikely (status))
 		break;
 
 	    continue;
@@ -2162,7 +2162,7 @@ _emit_scaled_glyphs (cairo_script_surface_t *surface,
 	if (status == CAIRO_STATUS_SUCCESS) {
 	    if (! have_glyph_prologue) {
 		status = _emit_scaled_glyph_prologue (surface, scaled_font);
-		if (status)
+		if (unlikely (status))
 		    break;
 
 		have_glyph_prologue = TRUE;
@@ -2171,7 +2171,7 @@ _emit_scaled_glyphs (cairo_script_surface_t *surface,
 	    status = _emit_scaled_glyph_bitmap (surface,
 						scaled_font,
 						scaled_glyph);
-	    if (status)
+	    if (unlikely (status))
 		break;
 
 	    continue;
@@ -2210,23 +2210,23 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
     cairo_output_stream_t *base85_stream = NULL;
 
     status = _emit_context (surface);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_operator (surface, op);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_source (surface, op, source);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_scaled_font (surface, scaled_font);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _emit_scaled_glyphs (surface, scaled_font, glyphs, num_glyphs);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     /* (utf8) [cx cy [glyphs]] [clusters] backward show_text_glyphs */
@@ -2264,7 +2264,7 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 						 glyphs[n].index,
 						 CAIRO_SCALED_GLYPH_INFO_METRICS,
 						 &scaled_glyph);
-	    if (status) {
+	    if (unlikely (status)) {
 		_cairo_scaled_font_thaw_cache (scaled_font);
 		return status;
 	    }
@@ -2284,7 +2284,7 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 					     glyphs[n].index,
 					     CAIRO_SCALED_GLYPH_INFO_METRICS,
 					     &scaled_glyph);
-	if (status)
+	if (unlikely (status))
 	    break;
 
 	if (fabs (glyphs[n].x - x) > 1e-5 || fabs (glyphs[n].y - y) > 1e-5) {
@@ -2295,7 +2295,7 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 	    iy -= scaled_font->font_matrix.y0;
 	    if (base85_stream != NULL) {
 		status = _cairo_output_stream_destroy (base85_stream);
-		if (status) {
+		if (unlikely (status)) {
 		    base85_stream = NULL;
 		    break;
 		}
@@ -2345,7 +2345,7 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
     } else {
 	_cairo_output_stream_puts (surface->ctx->stream, " ]");
     }
-    if (status)
+    if (unlikely (status))
 	return status;
 
     if (utf8 != NULL && clusters != NULL) {
@@ -2378,7 +2378,7 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 		_cairo_output_stream_write (base85_stream, c, 2);
 	    }
 	    status = _cairo_output_stream_destroy (base85_stream);
-	    if (status)
+	    if (unlikely (status))
 		return status;
 	}
 

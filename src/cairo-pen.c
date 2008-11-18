@@ -162,7 +162,7 @@ _cairo_pen_add_points (cairo_pen_t *pen, cairo_point_t *point, int num_points)
 	pen->vertices[pen->num_vertices-num_points+i].point = point[i];
 
     status = _cairo_hull_compute (pen->vertices, &pen->num_vertices);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     _cairo_pen_compute_slopes (pen);
@@ -491,7 +491,7 @@ _cairo_pen_stroke_spline (cairo_pen_stroke_spline_t	*stroker,
 			     1);
 
     status = _cairo_polygon_status (&stroker->polygon);
-    if (status)
+    if (unlikely (status))
 	goto BAIL;
 
     status = _cairo_bentley_ottmann_tessellate_polygon (traps,
@@ -548,7 +548,7 @@ _cairo_pen_stroke_spline_init (cairo_pen_stroke_spline_t *stroker,
     }
 
     status = _cairo_pen_init_copy (&stroker->pen, pen);
-    if (status) {
+    if (unlikely (status)) {
 	_cairo_spline_fini (&stroker->spline);
 	return status;
     }

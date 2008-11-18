@@ -287,7 +287,7 @@ _cairo_validate_text_clusters (const char		   *utf8,
 
 	/* Make sure we've got valid UTF-8 for the cluster */
 	status = _cairo_utf8_to_ucs4 (utf8+n_bytes, cluster_bytes, NULL, NULL);
-	if (status)
+	if (unlikely (status))
 	    return CAIRO_STATUS_INVALID_CLUSTERS;
 
 	n_bytes  += cluster_bytes ;
@@ -730,7 +730,7 @@ _cairo_intern_string (const char **str_inout, int len)
 
 	    status = _cairo_hash_table_insert (_cairo_intern_string_ht,
 					       &istring->hash_entry);
-	    if (status)
+	    if (unlikely (status))
 		free (istring);
 	} else
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -738,7 +738,7 @@ _cairo_intern_string (const char **str_inout, int len)
 
     CAIRO_MUTEX_UNLOCK (_cairo_intern_string_mutex);
 
-    if (status == CAIRO_STATUS_SUCCESS)
+    if (likely (status == CAIRO_STATUS_SUCCESS))
 	*str_inout = istring->string;
 
     return status;

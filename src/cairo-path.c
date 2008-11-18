@@ -127,7 +127,7 @@ _cairo_path_count (cairo_path_t		*path,
 					      &cpc);
     }
 
-    if (status)
+    if (unlikely (status))
 	return -1;
 
     return cpc.count;
@@ -283,7 +283,7 @@ _cairo_path_populate (cairo_path_t		*path,
 					  &cpp);
     }
 
-    if (status)
+    if (unlikely (status))
 	return status;
 
     /* Sanity check the count */
@@ -474,7 +474,7 @@ _cairo_path_append_to_context (const cairo_path_t	*path,
 	}
 
 	status = cairo_status (cr);
-	if (status)
+	if (unlikely (status))
 	    return status;
     }
 

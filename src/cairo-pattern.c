@@ -181,7 +181,7 @@ _cairo_pattern_init_copy (cairo_pattern_t	*pattern,
 	cairo_status_t status;
 
 	status = _cairo_gradient_pattern_init_copy (dst, src);
-	if (status)
+	if (unlikely (status))
 	    return status;
 
     } break;
@@ -203,7 +203,7 @@ _cairo_pattern_init_snapshot (cairo_pattern_t       *pattern,
     /* We don't bother doing any fancy copy-on-write implementation
      * for the pattern's data. It's generally quite tiny. */
     status = _cairo_pattern_init_copy (pattern, other);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     /* But we do let the surface snapshot stuff be as fancy as it
@@ -276,7 +276,7 @@ _cairo_pattern_create_copy (cairo_pattern_t	  **pattern,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     status = _cairo_pattern_init_copy (*pattern, other);
-    if (status) {
+    if (unlikely (status)) {
 	free (*pattern);
 	return status;
     }
@@ -872,7 +872,7 @@ _cairo_pattern_add_color_stop (cairo_gradient_pattern_t *pattern,
 
     if (pattern->n_stops >= pattern->stops_size) {
         cairo_status_t status = _cairo_pattern_gradient_grow (pattern);
-	if (status) {
+	if (unlikely (status)) {
 	    status = _cairo_pattern_set_error (&pattern->base, status);
 	    return;
 	}
@@ -1063,7 +1063,7 @@ cairo_pattern_set_matrix (cairo_pattern_t      *pattern,
 
     inverse = *matrix;
     status = cairo_matrix_invert (&inverse);
-    if (status)
+    if (unlikely (status))
 	status = _cairo_pattern_set_error (pattern, status);
 }
 slim_hidden_def (cairo_pattern_set_matrix);
@@ -1519,7 +1519,7 @@ _cairo_pattern_acquire_surface_for_solid (const cairo_solid_pattern_t	     *patt
 						    dst))
     {
 	status = _cairo_surface_reset (solid_surface_cache.cache[i].surface);
-	if (status)
+	if (unlikely (status))
 	    goto UNLOCK;
 
 	goto DONE;
@@ -1531,7 +1531,7 @@ _cairo_pattern_acquire_surface_for_solid (const cairo_solid_pattern_t	     *patt
 							dst))
 	{
 	    status = _cairo_surface_reset (solid_surface_cache.cache[i].surface);
-	    if (status)
+	    if (unlikely (status))
 		goto UNLOCK;
 
 	    goto DONE;
@@ -1551,11 +1551,11 @@ _cairo_pattern_acquire_surface_for_solid (const cairo_solid_pattern_t	     *patt
 	    /* Reuse the surface instead of evicting */
 
 	    status = _cairo_surface_reset (surface);
-	    if (status)
+	    if (unlikely (status))
 		goto EVICT;
 
 	    status = _cairo_surface_repaint_solid_pattern_surface (dst, surface, pattern);
-	    if (status)
+	    if (unlikely (status))
 		goto EVICT;
 
 	    cairo_surface_reference (surface);
@@ -1839,14 +1839,14 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
 	int w, h;
 
 	status = _cairo_surface_get_extents (surface, &extents);
-	if (status)
+	if (unlikely (status))
 	    goto BAIL;
 
 	status = _cairo_surface_clone_similar (dst, surface,
 					       extents.x, extents.y,
 					       extents.width, extents.height,
 					       &extents.x, &extents.y, &src);
-	if (status)
+	if (unlikely (status))
 	    goto BAIL;
 
 	w = 2 * extents.width;
@@ -1914,14 +1914,14 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
 
 	cairo_surface_destroy (src);
 
-	if (status)
+	if (unlikely (status))
 	    goto BAIL;
 
 	attr->extend = CAIRO_EXTEND_REPEAT;
     }
 
     status = _cairo_surface_get_extents (surface, &extents);
-    if (status)
+    if (unlikely (status))
 	goto BAIL;
 
     /* We first transform the rectangle to the coordinate space of the
@@ -1969,7 +1969,7 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
 					   extents.x, extents.y,
 					   extents.width, extents.height,
 					   &x, &y, out);
-    if (status)
+    if (unlikely (status))
 	goto BAIL;
 
     if (x != 0 || y != 0) {
@@ -2184,7 +2184,7 @@ _cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
 					     src_x, src_y,
 					     width, height,
 					     src_out, src_attributes);
-    if (status)
+    if (unlikely (status))
 	goto BAIL;
 
     if (mask == NULL) {
@@ -2196,7 +2196,7 @@ _cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
 					     mask_x, mask_y,
 					     width, height,
 					     mask_out, mask_attributes);
-    if (status)
+    if (unlikely (status))
 	_cairo_pattern_release_surface (src, *src_out, src_attributes);
 
   BAIL:
@@ -2237,7 +2237,7 @@ _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
 	status = _cairo_surface_get_extents (surface, &surface_extents);
 	if (status == CAIRO_INT_STATUS_UNSUPPORTED)
 	    goto UNBOUNDED;
-	if (status)
+	if (unlikely (status))
 	    return status;
 
 	/* The filter can effectively enlarge the extents of the

@@ -113,11 +113,11 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
 	return _cairo_error (CAIRO_STATUS_NULL_POINTER);
 
     status = target->status;
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = gstate->source->status;
-    if (status)
+    if (unlikely (status))
 	return status;
 
     return CAIRO_STATUS_SUCCESS;
@@ -142,7 +142,7 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 
     status = _cairo_stroke_style_init_copy (&gstate->stroke_style,
 					    &other->stroke_style);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     gstate->fill_rule = other->fill_rule;
@@ -155,7 +155,7 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
     _cairo_font_options_init_copy (&gstate->font_options , &other->font_options);
 
     status = _cairo_clip_init_copy (&gstate->clip, &other->clip);
-    if (status) {
+    if (unlikely (status)) {
 	_cairo_stroke_style_fini (&gstate->stroke_style);
 	cairo_font_face_destroy (gstate->font_face);
 	cairo_scaled_font_destroy (gstate->scaled_font);
@@ -227,7 +227,7 @@ _cairo_gstate_save (cairo_gstate_t **gstate, cairo_gstate_t **freelist)
 	*freelist = top->next;
 
     status = _cairo_gstate_init_copy (top, *gstate);
-    if (status) {
+    if (unlikely (status)) {
 	top->next = *freelist;
 	*freelist = top;
 	return status;
@@ -297,7 +297,7 @@ _cairo_gstate_redirect_target (cairo_gstate_t *gstate, cairo_surface_t *child)
 
     _cairo_clip_reset (&gstate->clip);
     status = _cairo_clip_init_deep_copy (&gstate->clip, &gstate->next->clip, child);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     /* The clip is in surface backend coordinates for the previous target;
@@ -668,7 +668,7 @@ _cairo_gstate_transform (cairo_gstate_t	      *gstate,
 
     tmp = *matrix;
     status = cairo_matrix_invert (&tmp);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     _cairo_gstate_unset_scaled_font (gstate);
@@ -827,7 +827,7 @@ _cairo_gstate_copy_transformed_pattern (cairo_gstate_t  *gstate,
 
 	if (_cairo_surface_has_device_transform (surface)) {
 	    status = _cairo_pattern_init_copy (*pattern, original);
-	    if (status)
+	    if (unlikely (status))
 		return status;
 
 	    have_copy = TRUE;
@@ -839,7 +839,7 @@ _cairo_gstate_copy_transformed_pattern (cairo_gstate_t  *gstate,
     if (! _cairo_matrix_is_identity (ctm_inverse)) {
 	if (! have_copy) {
 	    status = _cairo_pattern_init_copy (*pattern, original);
-	    if (status)
+	    if (unlikely (status))
 		return status;
 
 	    have_copy = TRUE;
@@ -884,12 +884,12 @@ _cairo_gstate_paint (cairo_gstate_t *gstate)
 	return gstate->source->status;
 
     status = _cairo_surface_set_clip (gstate->target, &gstate->clip);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     pattern = &pattern_stack.base;
     status = _cairo_gstate_copy_transformed_source (gstate, &pattern);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _cairo_surface_paint (gstate->target,
@@ -917,17 +917,17 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
 	return gstate->source->status;
 
     status = _cairo_surface_set_clip (gstate->target, &gstate->clip);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     source_pattern = &source_pattern_stack.base;
     status = _cairo_gstate_copy_transformed_source (gstate, &source_pattern);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     mask_pattern = &mask_pattern_stack.base;
     status = _cairo_gstate_copy_transformed_mask (gstate, &mask_pattern, mask);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_SOURCE;
 
     status = _cairo_surface_mask (gstate->target,
@@ -958,13 +958,13 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 	return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_surface_set_clip (gstate->target, &gstate->clip);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     source_pattern = &source_pattern_stack.base;
     status = _cairo_gstate_copy_transformed_source (gstate,
 	                                            &source_pattern);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _cairo_surface_stroke (gstate->target,
@@ -1015,7 +1015,7 @@ _cairo_gstate_in_stroke (cairo_gstate_t	    *gstate,
 						&gstate->ctm_inverse,
 						gstate->tolerance,
 						&traps);
-    if (status)
+    if (unlikely (status))
 	goto BAIL;
 
     *inside_ret = _cairo_traps_contain (&traps, x, y);
@@ -1037,12 +1037,12 @@ _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 	return gstate->source->status;
 
     status = _cairo_surface_set_clip (gstate->target, &gstate->clip);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     pattern = &pattern_stack.base;
     status = _cairo_gstate_copy_transformed_source (gstate, &pattern);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _cairo_surface_fill (gstate->target,
@@ -1219,7 +1219,7 @@ _cairo_gstate_int_clip_extents (cairo_gstate_t        *gstate,
     cairo_status_t status;
 
     status = _cairo_surface_get_extents (gstate->target, extents);
-    if (status)
+    if (unlikely (status))
         return status;
 
     status = _cairo_clip_intersect_to_rectangle (&gstate->clip, extents);
@@ -1239,7 +1239,7 @@ _cairo_gstate_clip_extents (cairo_gstate_t *gstate,
     cairo_status_t status;
 
     status = _cairo_gstate_int_clip_extents (gstate, &extents);
-    if (status)
+    if (unlikely (status))
         return status;
 
     px1 = extents.x;
@@ -1358,7 +1358,7 @@ _cairo_gstate_get_font_face (cairo_gstate_t     *gstate,
     cairo_status_t status;
 
     status = _cairo_gstate_ensure_font_face (gstate);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     *font_face = gstate->font_face;
@@ -1373,7 +1373,7 @@ _cairo_gstate_get_scaled_font (cairo_gstate_t       *gstate,
     cairo_status_t status;
 
     status = _cairo_gstate_ensure_scaled_font (gstate);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     *scaled_font = gstate->scaled_font;
@@ -1489,7 +1489,7 @@ _cairo_gstate_ensure_scaled_font (cairo_gstate_t *gstate)
 	return gstate->scaled_font->status;
 
     status = _cairo_gstate_ensure_font_face (gstate);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     cairo_surface_get_font_options (gstate->target, &options);
@@ -1501,7 +1501,7 @@ _cairo_gstate_ensure_scaled_font (cairo_gstate_t *gstate)
 					    &options);
 
     status = cairo_scaled_font_status (scaled_font);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     gstate->scaled_font = scaled_font;
@@ -1514,7 +1514,7 @@ _cairo_gstate_get_font_extents (cairo_gstate_t *gstate,
 				cairo_font_extents_t *extents)
 {
     cairo_status_t status = _cairo_gstate_ensure_scaled_font (gstate);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     cairo_scaled_font_extents (gstate->scaled_font, extents);
@@ -1537,7 +1537,7 @@ _cairo_gstate_text_to_glyphs (cairo_gstate_t	         *gstate,
     cairo_status_t status;
 
     status = _cairo_gstate_ensure_scaled_font (gstate);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     return cairo_scaled_font_text_to_glyphs (gstate->scaled_font, x, y,
@@ -1574,7 +1574,7 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
     cairo_status_t status;
 
     status = _cairo_gstate_ensure_scaled_font (gstate);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     cairo_scaled_font_glyph_extents (gstate->scaled_font,
@@ -1604,11 +1604,11 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
 	return gstate->source->status;
 
     status = _cairo_surface_set_clip (gstate->target, &gstate->clip);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _cairo_gstate_ensure_scaled_font (gstate);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     if (num_glyphs <= ARRAY_LENGTH (stack_transformed_glyphs)) {
@@ -1629,7 +1629,7 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
 
     source_pattern = &source_pattern_stack.base;
     status = _cairo_gstate_copy_transformed_source (gstate, &source_pattern);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_GLYPHS;
 
     /* Just in case */
@@ -1698,7 +1698,7 @@ _cairo_gstate_glyph_path (cairo_gstate_t      *gstate,
     cairo_glyph_t stack_transformed_glyphs[CAIRO_STACK_ARRAY_LENGTH (cairo_glyph_t)];
 
     status = _cairo_gstate_ensure_scaled_font (gstate);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     if (num_glyphs < ARRAY_LENGTH (stack_transformed_glyphs))
@@ -1712,7 +1712,7 @@ _cairo_gstate_glyph_path (cairo_gstate_t      *gstate,
 							glyphs, num_glyphs,
 							transformed_glyphs,
 							NULL);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_GLYPHS;
 
     status = _cairo_scaled_font_glyph_path (gstate->scaled_font,

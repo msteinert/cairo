@@ -127,7 +127,7 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 
 	cairo_destroy (cr);
 
-	if (status) {
+	if (unlikely (status)) {
 	    cairo_surface_destroy (meta_surface);
 	    return status;
 	}
@@ -152,7 +152,7 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	    analysis_surface = _cairo_analysis_surface_create (null_surface, -1, -1);
 	    cairo_surface_destroy (null_surface);
 	    status = analysis_surface->status;
-	    if (status)
+	    if (unlikely (status))
 		return status;
 
 	    _cairo_analysis_surface_set_ctm (analysis_surface,
@@ -162,7 +162,7 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	    _cairo_analysis_surface_get_bounding_box (analysis_surface, &bbox);
 	    cairo_surface_destroy (analysis_surface);
 
-	    if (status)
+	    if (unlikely (status))
 		return status;
 
 	    _cairo_box_to_doubles (&bbox, &x1, &y1, &x2, &y2);
@@ -215,7 +215,7 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	                                 - _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.y));
 	status = _cairo_meta_surface_replay (meta_surface, surface);
 
-	if (status) {
+	if (unlikely (status)) {
 	    cairo_surface_destroy(surface);
 	    return status;
 	}
@@ -232,7 +232,7 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 
 	status = _cairo_meta_surface_get_path (meta_surface, path);
 
-	if (status) {
+	if (unlikely (status)) {
 	    _cairo_path_fixed_destroy (path);
 	    return status;
 	}
@@ -355,7 +355,7 @@ _cairo_user_scaled_font_get_implementation (cairo_toy_font_face_t *toy_face,
 						face,
 						(cairo_destroy_func_t) cairo_font_face_destroy);
 
-	if (status) {
+	if (unlikely (status)) {
 	    cairo_font_face_destroy (face);
 	    return status;
 	}
@@ -376,7 +376,7 @@ _cairo_user_scaled_font_create_toy (cairo_toy_font_face_t     *toy_face,
     cairo_status_t status;
 
     status = _cairo_user_scaled_font_get_implementation (toy_face, &face);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _cairo_user_font_face_scaled_font_create (face,
@@ -384,7 +384,7 @@ _cairo_user_scaled_font_create_toy (cairo_toy_font_face_t     *toy_face,
 						       ctm,
 						       font_options,
 						       font);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     return CAIRO_STATUS_SUCCESS;
@@ -428,7 +428,7 @@ _cairo_user_font_face_scaled_font_create (void                        *abstract_
 				      font_matrix, ctm, options,
 				      &_cairo_user_scaled_font_backend);
 
-    if (status) {
+    if (unlikely (status)) {
 	free (user_scaled_font);
 	return status;
     }

@@ -696,7 +696,7 @@ _cairo_memory_stream_destroy (cairo_output_stream_t *abstract_stream,
     cairo_status_t status;
 
     status = abstract_stream->status;
-    if (status)
+    if (unlikely (status))
 	return _cairo_output_stream_destroy (abstract_stream);
 
     stream = (memory_stream_t *) abstract_stream;

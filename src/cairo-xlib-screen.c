@@ -485,7 +485,7 @@ _cairo_xlib_screen_get_visual_info (cairo_xlib_screen_info_t *info,
 					     XScreenNumberOfScreen (info->screen),
 					     visual->visualid,
 					     &ret);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     CAIRO_MUTEX_LOCK (info->mutex);
@@ -506,7 +506,7 @@ _cairo_xlib_screen_get_visual_info (cairo_xlib_screen_info_t *info,
 	status = _cairo_array_append (&info->visuals, &ret);
     CAIRO_MUTEX_UNLOCK (info->mutex);
 
-    if (status) {
+    if (unlikely (status)) {
 	_cairo_xlib_visual_info_destroy (dpy, ret);
 	return status;
     }

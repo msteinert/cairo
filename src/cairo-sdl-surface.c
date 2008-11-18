@@ -240,7 +240,7 @@ _cairo_sdl_surface_composite (cairo_operator_t		 op,
 					     src_x, src_y, width, height,
 					     (cairo_surface_t **) &src,
 					     &src_attr);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     is_integer_translation =
@@ -324,7 +324,7 @@ _cairo_sdl_surface_flush (void                  *abstract_surface)
 
     n_boxes = 0;
     status = _cairo_region_get_boxes (&surface->update, &n_boxes, &boxes);
-    if (status)
+    if (unlikely (status))
 	return status;
     if (n_boxes == 0)
 	return CAIRO_STATUS_SUCCESS;

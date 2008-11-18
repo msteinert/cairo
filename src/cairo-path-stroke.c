@@ -175,7 +175,7 @@ _cairo_stroker_init (cairo_stroker_t		*stroker,
     status = _cairo_pen_init (&stroker->pen,
 		              stroke_style->line_width / 2.0,
 			      tolerance, ctm);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     stroker->has_current_face = FALSE;
@@ -658,22 +658,22 @@ _cairo_stroker_add_caps (cairo_stroker_t *stroker)
 	_compute_face (&stroker->first_point, &slope, dx, dy, stroker, &face);
 
 	status = _cairo_stroker_add_leading_cap (stroker, &face);
-	if (status)
+	if (unlikely (status))
 	    return status;
 	status = _cairo_stroker_add_trailing_cap (stroker, &face);
-	if (status)
+	if (unlikely (status))
 	    return status;
     }
 
     if (stroker->has_first_face) {
 	status = _cairo_stroker_add_leading_cap (stroker, &stroker->first_face);
-	if (status)
+	if (unlikely (status))
 	    return status;
     }
 
     if (stroker->has_current_face) {
 	status = _cairo_stroker_add_trailing_cap (stroker, &stroker->current_face);
-	if (status)
+	if (unlikely (status))
 	    return status;
     }
 
@@ -761,7 +761,7 @@ _cairo_stroker_move_to (void *closure, cairo_point_t *point)
 
     /* Cap the start and end of the previous sub path as needed */
     status = _cairo_stroker_add_caps (stroker);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     stroker->first_point = *point;
@@ -806,13 +806,13 @@ _cairo_stroker_line_to (void *closure, cairo_point_t *point)
     _compute_normalized_device_slope (&slope_dx, &slope_dy, stroker->ctm_inverse, NULL);
 
     status = _cairo_stroker_add_sub_edge (stroker, p1, p2, &dev_slope, slope_dx, slope_dy, &start, &end);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     if (stroker->has_current_face) {
 	/* Join with final face from previous segment */
 	status = _cairo_stroker_join (stroker, &stroker->current_face, &start);
-	if (status)
+	if (unlikely (status))
 	    return status;
     } else if (!stroker->has_first_face) {
 	/* Save sub path's first face in case needed for closing join */
@@ -890,7 +890,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 						  &dev_slope,
 						  slope_dx, slope_dy,
 						  &sub_start, &sub_end);
-	    if (status)
+	    if (unlikely (status))
 		return status;
 
 	    if (stroker->has_current_face) {
@@ -898,7 +898,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 		status = _cairo_stroker_join (stroker,
 					      &stroker->current_face,
 					      &sub_start);
-		if (status)
+		if (unlikely (status))
 		    return status;
 
 		stroker->has_current_face = FALSE;
@@ -909,14 +909,14 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 	    } else {
 		/* Cap dash start if not connecting to a previous segment */
 		status = _cairo_stroker_add_leading_cap (stroker, &sub_start);
-		if (status)
+		if (unlikely (status))
 		    return status;
 	    }
 
 	    if (remain) {
 		/* Cap dash end if not at end of segment */
 		status = _cairo_stroker_add_trailing_cap (stroker, &sub_end);
-		if (status)
+		if (unlikely (status))
 		    return status;
 	    } else {
 		stroker->current_face = sub_end;
@@ -927,7 +927,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 		/* Cap final face from previous segment */
 		status = _cairo_stroker_add_trailing_cap (stroker,
 							  &stroker->current_face);
-		if (status)
+		if (unlikely (status))
 		    return status;
 
 		stroker->has_current_face = FALSE;
@@ -955,7 +955,7 @@ _cairo_stroker_line_to_dashed (void *closure, cairo_point_t *point)
 
 	status = _cairo_stroker_add_leading_cap (stroker,
 						 &stroker->current_face);
-	if (status)
+	if (unlikely (status))
 	    return status;
 
 	stroker->has_current_face = TRUE;
@@ -986,7 +986,7 @@ _cairo_stroker_curve_to (void *closure,
 					    a, b, c, d);
     if (status == CAIRO_INT_STATUS_DEGENERATE)
 	return _cairo_stroker_line_to (closure, d);
-    else if (status)
+    else if (unlikely (status))
 	return status;
 
     initial_slope_dx = _cairo_fixed_to_double (spline_pen.spline.initial_slope.dx);
@@ -1014,7 +1014,7 @@ _cairo_stroker_curve_to (void *closure,
 
     if (stroker->has_current_face) {
 	status = _cairo_stroker_join (stroker, &stroker->current_face, &start);
-	if (status)
+	if (unlikely (status))
 	    goto CLEANUP_PEN;
     } else if (! stroker->has_first_face) {
 	stroker->first_face = start;
@@ -1037,7 +1037,7 @@ _cairo_stroker_curve_to (void *closure,
     extra_points[3].y -= end.point.y;
 
     status = _cairo_pen_add_points (&spline_pen.pen, extra_points, 4);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_PEN;
 
     status = _cairo_pen_stroke_spline (&spline_pen,
@@ -1121,18 +1121,18 @@ _cairo_stroker_close_path (void *closure)
 	status = _cairo_stroker_line_to_dashed (stroker, &stroker->first_point);
     else
 	status = _cairo_stroker_line_to (stroker, &stroker->first_point);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     if (stroker->has_first_face && stroker->has_current_face) {
 	/* Join first and final faces of sub path */
 	status = _cairo_stroker_join (stroker, &stroker->current_face, &stroker->first_face);
-	if (status)
+	if (unlikely (status))
 	    return status;
     } else {
 	/* Cap the start and end of the sub path as needed */
 	status = _cairo_stroker_add_caps (stroker);
-	if (status)
+	if (unlikely (status))
 	    return status;
     }
 
@@ -1175,7 +1175,7 @@ _cairo_path_fixed_stroke_to_traps (cairo_path_fixed_t	*path,
     status = _cairo_stroker_init (&stroker, stroke_style,
 			          ctm, ctm_inverse, tolerance,
 				  traps);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     if (stroker.style->dash)
@@ -1194,7 +1194,7 @@ _cairo_path_fixed_stroke_to_traps (cairo_path_fixed_t	*path,
 					      _cairo_stroker_curve_to,
 					      _cairo_stroker_close_path,
 					      &stroker);
-    if (status)
+    if (unlikely (status))
 	goto BAIL;
 
     /* Cap the start and end of the final sub path as needed */
@@ -1386,7 +1386,7 @@ _cairo_rectilinear_stroker_emit_segments (cairo_rectilinear_stroker_t *stroker)
 	}
 
 	status = _cairo_traps_tessellate_rectangle (stroker->traps, a, b);
-	if (status)
+	if (unlikely (status))
 	    return status;
     }
 
@@ -1403,7 +1403,7 @@ _cairo_rectilinear_stroker_move_to (void		*closure,
     cairo_status_t status;
 
     status = _cairo_rectilinear_stroker_emit_segments (stroker);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     stroker->current_point = *point;
@@ -1449,13 +1449,13 @@ _cairo_rectilinear_stroker_close_path (void *closure)
 
     status = _cairo_rectilinear_stroker_line_to (stroker,
 						 &stroker->first_point);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     stroker->open_sub_path = FALSE;
 
     status = _cairo_rectilinear_stroker_emit_segments (stroker);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     return CAIRO_STATUS_SUCCESS;
@@ -1512,7 +1512,7 @@ _cairo_path_fixed_stroke_rectilinear (cairo_path_fixed_t	*path,
 					  NULL,
 					  _cairo_rectilinear_stroker_close_path,
 					  &rectilinear_stroker);
-    if (status)
+    if (unlikely (status))
 	goto BAIL;
 
     status = _cairo_rectilinear_stroker_emit_segments (&rectilinear_stroker);
@@ -1520,7 +1520,7 @@ _cairo_path_fixed_stroke_rectilinear (cairo_path_fixed_t	*path,
 BAIL:
     _cairo_rectilinear_stroker_fini (&rectilinear_stroker);
 
-    if (status)
+    if (unlikely (status))
 	_cairo_traps_clear (traps);
 
     return status;

@@ -137,7 +137,7 @@ _lzw_buf_store_bits (lzw_buf_t *buf, uint16_t value, int num_bits)
     while (buf->pending_bits >= 8) {
 	if (buf->num_data >= buf->data_size) {
 	    status = _lzw_buf_grow (buf);
-	    if (status)
+	    if (unlikely (status))
 		return;
 	}
 	buf->data[buf->num_data++] = buf->pending >> (buf->pending_bits - 8);
@@ -167,7 +167,7 @@ _lzw_buf_store_pending  (lzw_buf_t *buf)
 
     if (buf->num_data >= buf->data_size) {
 	status = _lzw_buf_grow (buf);
-	if (status)
+	if (unlikely (status))
 	    return;
     }
 

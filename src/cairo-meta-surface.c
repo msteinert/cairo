@@ -197,7 +197,7 @@ _cairo_meta_surface_acquire_source_image (void			 *abstract_surface,
 						      surface->height_pixels);
 
     status = _cairo_meta_surface_replay (&surface->base, image);
-    if (status) {
+    if (unlikely (status)) {
 	cairo_surface_destroy (image);
 	return status;
     }
@@ -239,11 +239,11 @@ _cairo_meta_surface_paint (void			*abstract_surface,
     command->op = op;
 
     status = _cairo_pattern_init_snapshot (&command->source.base, source);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_COMMAND;
 
     status = _cairo_array_append (&meta->commands, &command);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_SOURCE;
 
     /* An optimisation that takes care to not replay what was done
@@ -285,15 +285,15 @@ _cairo_meta_surface_mask (void			*abstract_surface,
     command->op = op;
 
     status = _cairo_pattern_init_snapshot (&command->source.base, source);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_COMMAND;
 
     status = _cairo_pattern_init_snapshot (&command->mask.base, mask);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_SOURCE;
 
     status = _cairo_array_append (&meta->commands, &command);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_MASK;
 
     return CAIRO_STATUS_SUCCESS;
@@ -336,15 +336,15 @@ _cairo_meta_surface_stroke (void			*abstract_surface,
     command->op = op;
 
     status = _cairo_pattern_init_snapshot (&command->source.base, source);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_COMMAND;
 
     status = _cairo_path_fixed_init_copy (&command->path, path);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_SOURCE;
 
     status = _cairo_stroke_style_init_copy (&command->style, style);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_PATH;
 
     command->ctm = *ctm;
@@ -353,7 +353,7 @@ _cairo_meta_surface_stroke (void			*abstract_surface,
     command->antialias = antialias;
 
     status = _cairo_array_append (&meta->commands, &command);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_STYLE;
 
     return CAIRO_STATUS_SUCCESS;
@@ -396,11 +396,11 @@ _cairo_meta_surface_fill (void			*abstract_surface,
     command->op = op;
 
     status = _cairo_pattern_init_snapshot (&command->source.base, source);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_COMMAND;
 
     status = _cairo_path_fixed_init_copy (&command->path, path);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_SOURCE;
 
     command->fill_rule = fill_rule;
@@ -408,7 +408,7 @@ _cairo_meta_surface_fill (void			*abstract_surface,
     command->antialias = antialias;
 
     status = _cairo_array_append (&meta->commands, &command);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_PATH;
 
     return CAIRO_STATUS_SUCCESS;
@@ -459,7 +459,7 @@ _cairo_meta_surface_show_text_glyphs (void			    *abstract_surface,
     command->op = op;
 
     status = _cairo_pattern_init_snapshot (&command->source.base, source);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_COMMAND;
 
     command->utf8 = NULL;
@@ -499,7 +499,7 @@ _cairo_meta_surface_show_text_glyphs (void			    *abstract_surface,
     command->scaled_font = cairo_scaled_font_reference (scaled_font);
 
     status = _cairo_array_append (&meta->commands, &command);
-    if (status)
+    if (unlikely (status))
 	goto CLEANUP_SCALED_FONT;
 
     return CAIRO_STATUS_SUCCESS;
@@ -575,7 +575,7 @@ _cairo_meta_surface_intersect_clip_path (void		    *dst,
 
     if (path) {
 	status = _cairo_path_fixed_init_copy (&command->path, path);
-	if (status) {
+	if (unlikely (status)) {
 	    free (command);
 	    return status;
 	}
@@ -590,7 +590,7 @@ _cairo_meta_surface_intersect_clip_path (void		    *dst,
     command->antialias = antialias;
 
     status = _cairo_array_append (&meta->commands, &command);
-    if (status) {
+    if (unlikely (status)) {
 	if (path)
 	    _cairo_path_fixed_fini (&command->path);
 	free (command);
@@ -766,7 +766,7 @@ _cairo_meta_surface_get_path (cairo_surface_t	 *surface,
 	    ASSERT_NOT_REACHED;
 	}
 
-	if (status)
+	if (unlikely (status))
 	    break;
     }
 
@@ -814,14 +814,14 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 	 * ensure the current clip gets set on the surface. */
 	if (command->header.type != CAIRO_COMMAND_INTERSECT_CLIP_PATH) {
 	    status = _cairo_surface_set_clip (target, &clip);
-	    if (status)
+	    if (unlikely (status))
 		break;
 	}
 
 	dev_path = _cairo_command_get_path (command);
 	if (dev_path && has_device_transform) {
 	    status = _cairo_path_fixed_init_copy (&path_copy, dev_path);
-	    if (status)
+	    if (unlikely (status))
 		break;
 	    _cairo_path_fixed_transform (&path_copy, device_transform);
 	    dev_path = &path_copy;
@@ -986,7 +986,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 	    }
 	}
 
-	if (status)
+	if (unlikely (status))
 	    break;
     }
 

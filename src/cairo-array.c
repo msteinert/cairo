@@ -279,7 +279,7 @@ _cairo_array_append_multiple (cairo_array_t	*array,
     assert (! array->is_snapshot);
 
     status = _cairo_array_allocate (array, num_elements, &dest);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     memcpy (dest, elements, num_elements * array->element_size);
@@ -310,7 +310,7 @@ _cairo_array_allocate (cairo_array_t	 *array,
     assert (! array->is_snapshot);
 
     status = _cairo_array_grow_by (array, num_elements);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     assert (array->num_elements + num_elements <= array->size);
@@ -489,7 +489,7 @@ _cairo_user_data_array_set_data (cairo_user_data_array_t     *array,
     }
 
     status = _cairo_array_append (array, &new_slot);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     return CAIRO_STATUS_SUCCESS;

@@ -372,7 +372,7 @@ _cairo_path_fixed_move_to (cairo_path_fixed_t  *path,
 	*last_move_to_point = point;
     } else {
 	status = _cairo_path_fixed_add (path, CAIRO_PATH_OP_MOVE_TO, &point, 1);
-	if (status)
+	if (unlikely (status))
 	    return status;
     }
 
@@ -426,7 +426,7 @@ _cairo_path_fixed_line_to (cairo_path_fixed_t *path,
     else
 	status = _cairo_path_fixed_add (path, CAIRO_PATH_OP_LINE_TO, &point, 1);
 
-    if (status)
+    if (unlikely (status))
 	return status;
 
     path->current_point = point;
@@ -467,12 +467,12 @@ _cairo_path_fixed_curve_to (cairo_path_fixed_t	*path,
     if (! path->has_current_point) {
 	status = _cairo_path_fixed_add (path, CAIRO_PATH_OP_MOVE_TO,
 					&point[0], 1);
-	if (status)
+	if (unlikely (status))
 	    return status;
     }
 
     status = _cairo_path_fixed_add (path, CAIRO_PATH_OP_CURVE_TO, point, 3);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     path->current_point = point[2];
@@ -519,13 +519,13 @@ _cairo_path_fixed_close_path (cairo_path_fixed_t *path)
 	return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_path_fixed_add (path, CAIRO_PATH_OP_CLOSE_PATH, NULL, 0);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     status = _cairo_path_fixed_move_to (path,
 					path->last_move_point.x,
 					path->last_move_point.y);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     return CAIRO_STATUS_SUCCESS;
@@ -692,7 +692,7 @@ _cairo_path_fixed_interpret (const cairo_path_fixed_t		*path,
 		status = (*close_path) (closure);
 		break;
 	    }
-	    if (status)
+	    if (unlikely (status))
 		return status;
 
 	    if (forward) {

@@ -337,7 +337,7 @@ _cairo_analysis_surface_paint (void			*abstract_surface,
 	cairo_rectangle_int_t source_extents;
 
 	status = _cairo_pattern_get_extents (source, &source_extents);
-	if (status)
+	if (unlikely (status))
 	    return status;
 
 	is_empty = _cairo_rectangle_intersect (&extents, &source_extents);
@@ -407,7 +407,7 @@ _cairo_analysis_surface_mask (void		*abstract_surface,
 	cairo_rectangle_int_t source_extents;
 
 	status = _cairo_pattern_get_extents (source, &source_extents);
-	if (status)
+	if (unlikely (status))
 	    return status;
 
 	is_empty = _cairo_rectangle_intersect (&extents, &source_extents);
@@ -417,7 +417,7 @@ _cairo_analysis_surface_mask (void		*abstract_surface,
 	cairo_rectangle_int_t mask_extents;
 
 	status = _cairo_pattern_get_extents (mask, &mask_extents);
-	if (status)
+	if (unlikely (status))
 	    return status;
 
 	is_empty = _cairo_rectangle_intersect (&extents, &mask_extents);
@@ -469,7 +469,7 @@ _cairo_analysis_surface_stroke (void			*abstract_surface,
 	cairo_rectangle_int_t source_extents;
 
 	status = _cairo_pattern_get_extents (source, &source_extents);
-	if (status)
+	if (unlikely (status))
 	    return status;
 
 	is_empty = _cairo_rectangle_intersect (&extents, &source_extents);
@@ -489,7 +489,7 @@ _cairo_analysis_surface_stroke (void			*abstract_surface,
 						    ctm, ctm_inverse,
 						    tolerance,
 						    &traps);
-	if (status) {
+	if (unlikely (status)) {
 	    _cairo_traps_fini (&traps);
 	    return status;
 	}
@@ -541,7 +541,7 @@ _cairo_analysis_surface_fill (void			*abstract_surface,
 	cairo_rectangle_int_t source_extents;
 
 	status = _cairo_pattern_get_extents (source, &source_extents);
-	if (status)
+	if (unlikely (status))
 	    return status;
 
 	is_empty = _cairo_rectangle_intersect (&extents, &source_extents);
@@ -560,7 +560,7 @@ _cairo_analysis_surface_fill (void			*abstract_surface,
 						  fill_rule,
 						  tolerance,
 						  &traps);
-	if (status) {
+	if (unlikely (status)) {
 	    _cairo_traps_fini (&traps);
 	    return status;
 	}
@@ -622,7 +622,7 @@ _cairo_analysis_surface_show_glyphs (void		  *abstract_surface,
 	cairo_rectangle_int_t source_extents;
 
 	status = _cairo_pattern_get_extents (source, &source_extents);
-	if (status)
+	if (unlikely (status))
 	    return status;
 
 	is_empty = _cairo_rectangle_intersect (&extents, &source_extents);
@@ -635,7 +635,7 @@ _cairo_analysis_surface_show_glyphs (void		  *abstract_surface,
 							  glyphs,
 							  num_glyphs,
 							  &glyph_extents);
-	if (status)
+	if (unlikely (status))
 	    return status;
 
 	is_empty = _cairo_rectangle_intersect (&extents, &glyph_extents);
@@ -708,7 +708,7 @@ _cairo_analysis_surface_show_text_glyphs (void			    *abstract_surface,
 	cairo_rectangle_int_t source_extents;
 
 	status = _cairo_pattern_get_extents (source, &source_extents);
-	if (status)
+	if (unlikely (status))
 	    return status;
 
 	is_empty = _cairo_rectangle_intersect (&extents, &source_extents);
@@ -721,7 +721,7 @@ _cairo_analysis_surface_show_text_glyphs (void			    *abstract_surface,
 							  glyphs,
 							  num_glyphs,
 							  &glyph_extents);
-	if (status)
+	if (unlikely (status))
 	    return status;
 
 	is_empty = _cairo_rectangle_intersect (&extents, &glyph_extents);
@@ -780,7 +780,7 @@ _cairo_analysis_surface_create (cairo_surface_t		*target,
     cairo_status_t status;
 
     status = target->status;
-    if (status)
+    if (unlikely (status))
 	return _cairo_surface_create_in_error (status);
 
     surface = malloc (sizeof (cairo_analysis_surface_t));

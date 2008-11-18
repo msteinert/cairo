@@ -666,7 +666,7 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
     if (boxes != stack_boxes)
 	free (boxes);
 
-    if (status)
+    if (unlikely (status))
 	_cairo_region_fini (region);
 
     return status;
@@ -705,15 +705,15 @@ _cairo_traps_path (const cairo_traps_t *traps,
 	_sanitize_trap (&trap);
 
 	status = _cairo_path_fixed_move_to (path, trap.left.p1.x, trap.top);
-	if (status) return status;
+	if (unlikely (status)) return status;
 	status = _cairo_path_fixed_line_to (path, trap.right.p1.x, trap.top);
-	if (status) return status;
+	if (unlikely (status)) return status;
 	status = _cairo_path_fixed_line_to (path, trap.right.p2.x, trap.bottom);
-	if (status) return status;
+	if (unlikely (status)) return status;
 	status = _cairo_path_fixed_line_to (path, trap.left.p2.x, trap.bottom);
-	if (status) return status;
+	if (unlikely (status)) return status;
 	status = _cairo_path_fixed_close_path (path);
-	if (status) return status;
+	if (unlikely (status)) return status;
     }
 
     return CAIRO_STATUS_SUCCESS;

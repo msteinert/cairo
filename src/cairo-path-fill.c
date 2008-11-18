@@ -177,18 +177,18 @@ _cairo_path_fixed_fill_to_traps (cairo_path_fixed_t *path,
 					  _cairo_filler_curve_to,
 					  _cairo_filler_close_path,
 					  &filler);
-    if (status)
+    if (unlikely (status))
 	goto BAIL;
 
     _cairo_polygon_close (&filler.polygon);
     status = _cairo_polygon_status (&filler.polygon);
-    if (status)
+    if (unlikely (status))
 	goto BAIL;
 
     status = _cairo_bentley_ottmann_tessellate_polygon (filler.traps,
 							&filler.polygon,
 							fill_rule);
-    if (status)
+    if (unlikely (status))
 	goto BAIL;
 
 BAIL:

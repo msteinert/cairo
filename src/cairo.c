@@ -168,7 +168,7 @@ cairo_create (cairo_surface_t *target)
     cr->gstate_freelist = NULL;
 
     status = _cairo_gstate_init (cr->gstate, target);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 
     return cr;
@@ -349,7 +349,7 @@ cairo_save (cairo_t *cr)
 	return;
 
     status = _cairo_gstate_save (&cr->gstate, &cr->gstate_freelist);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 slim_hidden_def(cairo_save);
@@ -371,7 +371,7 @@ cairo_restore (cairo_t *cr)
 	return;
 
     status = _cairo_gstate_restore (&cr->gstate, &cr->gstate_freelist);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 slim_hidden_def(cairo_restore);
@@ -458,10 +458,10 @@ cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
     parent_surface = _cairo_gstate_get_target (cr->gstate);
     /* Get the extents that we'll use in creating our new group surface */
     status = _cairo_surface_get_extents (parent_surface, &extents);
-    if (status)
+    if (unlikely (status))
 	goto bail;
     status = _cairo_clip_intersect_to_rectangle (_cairo_gstate_get_clip (cr->gstate), &extents);
-    if (status)
+    if (unlikely (status))
 	goto bail;
 
     group_surface = cairo_surface_create_similar (_cairo_gstate_get_target (cr->gstate),
@@ -469,7 +469,7 @@ cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
 						  extents.width,
 						  extents.height);
     status = cairo_surface_status (group_surface);
-    if (status)
+    if (unlikely (status))
 	goto bail;
 
     /* Set device offsets on the new surface so that logically it appears at
@@ -490,7 +490,7 @@ cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
 
 bail:
     cairo_surface_destroy (group_surface);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 slim_hidden_def(cairo_push_group_with_content);
@@ -628,7 +628,7 @@ cairo_set_operator (cairo_t *cr, cairo_operator_t op)
 	return;
 
     status = _cairo_gstate_set_operator (cr->gstate, op);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 slim_hidden_def (cairo_set_operator);
@@ -790,7 +790,7 @@ cairo_set_source (cairo_t *cr, cairo_pattern_t *source)
     }
 
     status = _cairo_gstate_set_source (cr->gstate, source);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 slim_hidden_def (cairo_set_source);
@@ -838,7 +838,7 @@ cairo_set_tolerance (cairo_t *cr, double tolerance)
     _cairo_restrict_value (&tolerance, CAIRO_TOLERANCE_MINIMUM, tolerance);
 
     status = _cairo_gstate_set_tolerance (cr->gstate, tolerance);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 slim_hidden_def (cairo_set_tolerance);
@@ -865,7 +865,7 @@ cairo_set_antialias (cairo_t *cr, cairo_antialias_t antialias)
 	return;
 
     status = _cairo_gstate_set_antialias (cr->gstate, antialias);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -891,7 +891,7 @@ cairo_set_fill_rule (cairo_t *cr, cairo_fill_rule_t fill_rule)
 	return;
 
     status = _cairo_gstate_set_fill_rule (cr->gstate, fill_rule);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -932,7 +932,7 @@ cairo_set_line_width (cairo_t *cr, double width)
     _cairo_restrict_value (&width, 0.0, width);
 
     status = _cairo_gstate_set_line_width (cr->gstate, width);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 slim_hidden_def (cairo_set_line_width);
@@ -962,7 +962,7 @@ cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap)
 	return;
 
     status = _cairo_gstate_set_line_cap (cr->gstate, line_cap);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 slim_hidden_def (cairo_set_line_cap);
@@ -992,7 +992,7 @@ cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
 	return;
 
     status = _cairo_gstate_set_line_join (cr->gstate, line_join);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 slim_hidden_def (cairo_set_line_join);
@@ -1042,7 +1042,7 @@ cairo_set_dash (cairo_t	     *cr,
 
     status = _cairo_gstate_set_dash (cr->gstate,
 				     dashes, num_dashes, offset);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -1132,7 +1132,7 @@ cairo_set_miter_limit (cairo_t *cr, double limit)
 	return;
 
     status = _cairo_gstate_set_miter_limit (cr->gstate, limit);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -1157,7 +1157,7 @@ cairo_translate (cairo_t *cr, double tx, double ty)
 	return;
 
     status = _cairo_gstate_translate (cr->gstate, tx, ty);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -1181,7 +1181,7 @@ cairo_scale (cairo_t *cr, double sx, double sy)
 	return;
 
     status = _cairo_gstate_scale (cr->gstate, sx, sy);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 slim_hidden_def (cairo_scale);
@@ -1207,7 +1207,7 @@ cairo_rotate (cairo_t *cr, double angle)
 	return;
 
     status = _cairo_gstate_rotate (cr->gstate, angle);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -1230,7 +1230,7 @@ cairo_transform (cairo_t	      *cr,
 	return;
 
     status = _cairo_gstate_transform (cr->gstate, matrix);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -1252,7 +1252,7 @@ cairo_set_matrix (cairo_t	       *cr,
 	return;
 
     status = _cairo_gstate_set_matrix (cr->gstate, matrix);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 slim_hidden_def (cairo_set_matrix);
@@ -1393,7 +1393,7 @@ cairo_move_to (cairo_t *cr, double x, double y)
     y_fixed = _cairo_fixed_from_double (y);
 
     status = _cairo_path_fixed_move_to (cr->path, x_fixed, y_fixed);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 slim_hidden_def(cairo_move_to);
@@ -1452,7 +1452,7 @@ cairo_line_to (cairo_t *cr, double x, double y)
     y_fixed = _cairo_fixed_from_double (y);
 
     status = _cairo_path_fixed_line_to (cr->path, x_fixed, y_fixed);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 slim_hidden_def (cairo_line_to);
@@ -1507,7 +1507,7 @@ cairo_curve_to (cairo_t *cr,
 					 x1_fixed, y1_fixed,
 					 x2_fixed, y2_fixed,
 					 x3_fixed, y3_fixed);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 slim_hidden_def (cairo_curve_to);
@@ -1641,7 +1641,7 @@ cairo_arc_to (cairo_t *cr,
 				   x1, y1,
 				   x2, y2,
 				   radius);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 */
@@ -1677,7 +1677,7 @@ cairo_rel_move_to (cairo_t *cr, double dx, double dy)
     dy_fixed = _cairo_fixed_from_double (dy);
 
     status = _cairo_path_fixed_rel_move_to (cr->path, dx_fixed, dy_fixed);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -1714,7 +1714,7 @@ cairo_rel_line_to (cairo_t *cr, double dx, double dy)
     dy_fixed = _cairo_fixed_from_double (dy);
 
     status = _cairo_path_fixed_rel_line_to (cr->path, dx_fixed, dy_fixed);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 slim_hidden_def(cairo_rel_line_to);
@@ -1775,7 +1775,7 @@ cairo_rel_curve_to (cairo_t *cr,
 					     dx1_fixed, dy1_fixed,
 					     dx2_fixed, dy2_fixed,
 					     dx3_fixed, dy3_fixed);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -1827,7 +1827,7 @@ cairo_stroke_to_path (cairo_t *cr)
     /* The code in _cairo_meta_surface_get_path has a poorman's stroke_to_path */
 
     status = _cairo_gstate_stroke_path (cr->gstate);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 #endif
@@ -1867,7 +1867,7 @@ cairo_close_path (cairo_t *cr)
 	return;
 
     status = _cairo_path_fixed_close_path (cr->path);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 slim_hidden_def(cairo_close_path);
@@ -1941,7 +1941,7 @@ cairo_paint (cairo_t *cr)
 	return;
 
     status = _cairo_gstate_paint (cr->gstate);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 slim_hidden_def (cairo_paint);
@@ -1980,7 +1980,7 @@ cairo_paint_with_alpha (cairo_t *cr,
     _cairo_pattern_init_solid (&pattern, &color, CAIRO_CONTENT_ALPHA);
 
     status = _cairo_gstate_mask (cr->gstate, &pattern.base);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 
     _cairo_pattern_fini (&pattern.base);
@@ -2016,7 +2016,7 @@ cairo_mask (cairo_t         *cr,
     }
 
     status = _cairo_gstate_mask (cr->gstate, pattern);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 slim_hidden_def (cairo_mask);
@@ -2118,7 +2118,7 @@ cairo_stroke_preserve (cairo_t *cr)
 	return;
 
     status = _cairo_gstate_stroke (cr->gstate, cr->path);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 slim_hidden_def(cairo_stroke_preserve);
@@ -2161,7 +2161,7 @@ cairo_fill_preserve (cairo_t *cr)
 	return;
 
     status = _cairo_gstate_fill (cr->gstate, cr->path);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 slim_hidden_def(cairo_fill_preserve);
@@ -2187,7 +2187,7 @@ cairo_copy_page (cairo_t *cr)
 	return;
 
     status = _cairo_gstate_copy_page (cr->gstate);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -2210,7 +2210,7 @@ cairo_show_page (cairo_t *cr)
 	return;
 
     status = _cairo_gstate_show_page (cr->gstate);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -2244,7 +2244,7 @@ cairo_in_stroke (cairo_t *cr, double x, double y)
     status = _cairo_gstate_in_stroke (cr->gstate,
 				      cr->path,
 				      x, y, &inside);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 
     return inside;
@@ -2332,7 +2332,7 @@ cairo_stroke_extents (cairo_t *cr,
     status = _cairo_gstate_stroke_extents (cr->gstate,
 					   cr->path,
 					   x1, y1, x2, y2);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -2383,7 +2383,7 @@ cairo_fill_extents (cairo_t *cr,
     status = _cairo_gstate_fill_extents (cr->gstate,
 					 cr->path,
 					 x1, y1, x2, y2);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -2448,7 +2448,7 @@ cairo_clip_preserve (cairo_t *cr)
 	return;
 
     status = _cairo_gstate_clip (cr->gstate, cr->path);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 slim_hidden_def(cairo_clip_preserve);
@@ -2478,7 +2478,7 @@ cairo_reset_clip (cairo_t *cr)
 	return;
 
     status = _cairo_gstate_reset_clip (cr->gstate);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -2516,7 +2516,7 @@ cairo_clip_extents (cairo_t *cr,
     }
 
     status = _cairo_gstate_clip_extents (cr->gstate, x1, y1, x2, y2);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -2622,7 +2622,7 @@ cairo_select_font_face (cairo_t              *cr,
 	return;
 
     status = _cairo_gstate_select_font_face (cr->gstate, family, slant, weight);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -2650,7 +2650,7 @@ cairo_font_extents (cairo_t              *cr,
 	return;
 
     status = _cairo_gstate_get_font_extents (cr->gstate, extents);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -2673,7 +2673,7 @@ cairo_set_font_face (cairo_t           *cr,
 	return;
 
     status = _cairo_gstate_set_font_face (cr->gstate, font_face);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -2705,7 +2705,7 @@ cairo_get_font_face (cairo_t *cr)
 	return (cairo_font_face_t*) &_cairo_font_face_nil;
 
     status = _cairo_gstate_get_font_face (cr->gstate, &font_face);
-    if (status) {
+    if (unlikely (status)) {
 	_cairo_set_error (cr, status);
 	return (cairo_font_face_t*) &_cairo_font_face_nil;
     }
@@ -2737,7 +2737,7 @@ cairo_set_font_size (cairo_t *cr, double size)
 	return;
 
     status = _cairo_gstate_set_font_size (cr->gstate, size);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 slim_hidden_def (cairo_set_font_size);
@@ -2765,7 +2765,7 @@ cairo_set_font_matrix (cairo_t		    *cr,
 	return;
 
     status = _cairo_gstate_set_font_matrix (cr->gstate, matrix);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -2809,7 +2809,7 @@ cairo_set_font_options (cairo_t                    *cr,
 	return;
 
     status = cairo_font_options_status ((cairo_font_options_t *) options);
-    if (status) {
+    if (unlikely (status)) {
 	_cairo_set_error (cr, status);
 	return;
     }
@@ -2873,15 +2873,15 @@ cairo_set_scaled_font (cairo_t                   *cr,
     }
 
     status = scaled_font->status;
-    if (status)
+    if (unlikely (status))
         goto BAIL;
 
     status = _cairo_gstate_set_font_face (cr->gstate, scaled_font->font_face);
-    if (status)
+    if (unlikely (status))
         goto BAIL;
 
     status = _cairo_gstate_set_font_matrix (cr->gstate, &scaled_font->font_matrix);
-    if (status)
+    if (unlikely (status))
         goto BAIL;
 
     _cairo_gstate_set_font_options (cr->gstate, &scaled_font->options);
@@ -2922,7 +2922,7 @@ cairo_get_scaled_font (cairo_t *cr)
 	return _cairo_scaled_font_create_in_error (cr->status);
 
     status = _cairo_gstate_get_scaled_font (cr->gstate, &scaled_font);
-    if (status) {
+    if (unlikely (status)) {
 	_cairo_set_error (cr, status);
 	return _cairo_scaled_font_create_in_error (status);
     }
@@ -2988,7 +2988,7 @@ cairo_text_extents (cairo_t              *cr,
 					      extents);
     cairo_glyph_free (glyphs);
 
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -3043,7 +3043,7 @@ cairo_glyph_extents (cairo_t                *cr,
 
     status = _cairo_gstate_glyph_extents (cr->gstate, glyphs, num_glyphs,
 					  extents);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -3113,7 +3113,7 @@ cairo_show_text (cairo_t *cr, const char *utf8)
 					   &glyphs, &num_glyphs,
 					   has_show_text_glyphs ? &clusters : NULL, &num_clusters,
 					   &cluster_flags);
-    if (status)
+    if (unlikely (status))
 	goto BAIL;
 
     if (num_glyphs == 0)
@@ -3124,14 +3124,14 @@ cairo_show_text (cairo_t *cr, const char *utf8)
 					     glyphs, num_glyphs,
 					     clusters, num_clusters,
 					     cluster_flags);
-    if (status)
+    if (unlikely (status))
 	goto BAIL;
 
     last_glyph = &glyphs[num_glyphs - 1];
     status = _cairo_gstate_glyph_extents (cr->gstate,
 					  last_glyph, 1,
 					  &extents);
-    if (status)
+    if (unlikely (status))
 	goto BAIL;
 
     x = last_glyph->x + extents.x_advance;
@@ -3144,7 +3144,7 @@ cairo_show_text (cairo_t *cr, const char *utf8)
     if (clusters != stack_clusters)
 	cairo_text_cluster_free (clusters);
 
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -3184,7 +3184,7 @@ cairo_show_glyphs (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
 					     glyphs, num_glyphs,
 					     NULL, 0,
 					     FALSE);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -3287,7 +3287,7 @@ cairo_show_text_glyphs (cairo_t			   *cr,
 					     utf8, utf8_len,
 					     glyphs, num_glyphs,
 					     clusters, num_clusters, cluster_flags);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -3339,7 +3339,7 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
 					   NULL, NULL,
 					   NULL);
 
-    if (status)
+    if (unlikely (status))
 	goto BAIL;
 
     if (num_glyphs == 0)
@@ -3349,7 +3349,7 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
 				       glyphs, num_glyphs,
 				       cr->path);
 
-    if (status)
+    if (unlikely (status))
 	goto BAIL;
 
     last_glyph = &glyphs[num_glyphs - 1];
@@ -3357,7 +3357,7 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
 					  last_glyph, 1,
 					  &extents);
 
-    if (status)
+    if (unlikely (status))
 	goto BAIL;
 
     x = last_glyph->x + extents.x_advance;
@@ -3367,7 +3367,7 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
  BAIL:
     cairo_glyph_free (glyphs);
 
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -3405,7 +3405,7 @@ cairo_glyph_path (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
     status = _cairo_gstate_glyph_path (cr->gstate,
 				       glyphs, num_glyphs,
 				       cr->path);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 
@@ -3825,7 +3825,7 @@ cairo_append_path (cairo_t		*cr,
     }
 
     status = _cairo_path_append_to_context (path, cr);
-    if (status)
+    if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
 

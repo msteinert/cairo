@@ -294,7 +294,7 @@ _cairo_sub_font_create (cairo_scaled_font_subsets_t	*parent,
      * Type 3 fonts */
     if (! _cairo_font_face_is_user (scaled_font->font_face)) {
 	status = _cairo_sub_font_map_glyph (sub_font, 0, NULL, -1, &subset_glyph);
-	if (status) {
+	if (unlikely (status)) {
 	    _cairo_hash_table_destroy (sub_font->sub_font_glyphs);
 	    free (sub_font);
 	    return status;
@@ -349,7 +349,7 @@ _cairo_sub_font_glyph_lookup_unicode (cairo_sub_font_glyph_t *sub_font_glyph,
 	status = scaled_font->backend->index_to_ucs4 (scaled_font,
 						      scaled_font_glyph_index,
 						      &unicode);
-	if (status)
+	if (unlikely (status))
 	    return status;
     }
 
@@ -466,7 +466,7 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
 	     * except for Type 3 fonts */
 	    if (! _cairo_font_face_is_user (sub_font->scaled_font->font_face)) {
 		status = _cairo_sub_font_map_glyph (sub_font, 0, NULL, -1, &tmp_subset_glyph);
-		if (status)
+		if (unlikely (status))
 		    return status;
 	    }
 	}
@@ -477,7 +477,7 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
                                              CAIRO_SCALED_GLYPH_INFO_METRICS,
                                              &scaled_glyph);
 	assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
-	if (status) {
+	if (unlikely (status)) {
 	    _cairo_scaled_font_thaw_cache (sub_font->scaled_font);
 	    return status;
 	}
@@ -495,13 +495,13 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
 	status = _cairo_sub_font_glyph_lookup_unicode (sub_font_glyph,
 						       sub_font->scaled_font,
 						       scaled_font_glyph_index);
-	if (status) {
+	if (unlikely (status)) {
 	    _cairo_sub_font_glyph_destroy (sub_font_glyph);
 	    return status;
 	}
 
 	status = _cairo_hash_table_insert (sub_font->sub_font_glyphs, &sub_font_glyph->base);
-	if (status) {
+	if (unlikely (status)) {
 	    _cairo_sub_font_glyph_destroy (sub_font_glyph);
 	    return status;
 	}
@@ -768,7 +768,7 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
 					     subset_glyph->is_composite,
 					     &sub_font);
 
-            if (status) {
+            if (unlikely (status)) {
 		cairo_scaled_font_destroy (unscaled_font);
                 return status;
 	    }
@@ -776,7 +776,7 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
             status = _cairo_hash_table_insert (subsets->unscaled_sub_fonts,
                                                &sub_font->base);
 
-            if (status) {
+            if (unlikely (status)) {
 		_cairo_sub_font_destroy (sub_font);
                 return status;
 	    }
@@ -808,14 +808,14 @@ _cairo_scaled_font_subsets_map_glyph (cairo_scaled_font_subsets_t	*subsets,
 					     subset_glyph->is_scaled,
 					     subset_glyph->is_composite,
 					     &sub_font);
-            if (status) {
+            if (unlikely (status)) {
 		cairo_scaled_font_destroy (scaled_font);
                 return status;
 	    }
 
             status = _cairo_hash_table_insert (subsets->scaled_sub_fonts,
                                                &sub_font->base);
-            if (status) {
+            if (unlikely (status)) {
 		_cairo_sub_font_destroy (sub_font);
                 return status;
 	    }
@@ -1003,11 +1003,11 @@ _cairo_scaled_font_subset_create_glyph_names (cairo_scaled_font_subset_t *subset
 	}
 
 	status = create_string_entry (subset->glyph_names[0], &entry);
-	if (status)
+	if (unlikely (status))
 	    goto CLEANUP_HASH;
 
 	status = _cairo_hash_table_insert (names, &entry->base);
-	if (status) {
+	if (unlikely (status)) {
 	    free (entry);
 	    goto CLEANUP_HASH;
 	}
@@ -1020,7 +1020,7 @@ _cairo_scaled_font_subset_create_glyph_names (cairo_scaled_font_subset_t *subset
 	utf16_len = 0;
 	if (utf8 && *utf8) {
 	    status = _cairo_utf8_to_utf16 (utf8, -1, &utf16, &utf16_len);
-	    if (status)
+	    if (unlikely (status))
 		return status; /* FIXME */
 	}
 
@@ -1043,11 +1043,11 @@ _cairo_scaled_font_subset_create_glyph_names (cairo_scaled_font_subset_t *subset
 	}
 
 	status = create_string_entry (subset->glyph_names[i], &entry);
-	if (status)
+	if (unlikely (status))
 	    goto CLEANUP_HASH;
 
 	status = _cairo_hash_table_insert (names, &entry->base);
-	if (status) {
+	if (unlikely (status)) {
 	    free (entry);
 	    goto CLEANUP_HASH;
 	}

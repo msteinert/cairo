@@ -438,12 +438,12 @@ _cairo_ft_unscaled_font_create_internal (cairo_bool_t from_face,
     }
 
     status = _cairo_ft_unscaled_font_init (unscaled, from_face, filename, id, font_face);
-    if (status)
+    if (unlikely (status))
 	goto UNWIND_UNSCALED_MALLOC;
 
     status = _cairo_hash_table_insert (font_map->hash_table,
 				       &unscaled->base.hash_entry);
-    if (status)
+    if (unlikely (status))
 	goto UNWIND_UNSCALED_FONT_INIT;
 
     _cairo_ft_unscaled_font_map_unlock ();
@@ -621,7 +621,7 @@ _compute_transform (cairo_ft_font_transform_t *sf,
     status = _cairo_matrix_compute_basis_scale_factors (scale,
 						  &x_scale, &y_scale,
 						  1);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     /* FreeType docs say this about x_scale and y_scale:
@@ -671,7 +671,7 @@ _cairo_ft_unscaled_font_set_scale (cairo_ft_unscaled_font_t *unscaled,
     unscaled->current_scale = *scale;
 
     status = _compute_transform (&sf, scale);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     unscaled->x_scale = sf.x_scale;
@@ -1084,7 +1084,7 @@ _render_glyph_outline (FT_Face                    face,
 	}
 
 	status = _get_bitmap_surface (&bitmap, TRUE, font_options, surface);
-	if (status)
+	if (unlikely (status))
 	    return status;
     }
 
@@ -1125,7 +1125,7 @@ _render_glyph_bitmap (FT_Face		      face,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     status = _get_bitmap_surface (&glyphslot->bitmap, FALSE, font_options, surface);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     /*
@@ -1212,13 +1212,13 @@ _transform_glyph_bitmap (cairo_matrix_t         * shape,
 
     transformed_to_original = original_to_transformed;
     status = cairo_matrix_invert (&transformed_to_original);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     /* We need to pad out the width to 32-bit intervals for cairo-xlib-surface.c */
     width = (width + 3) & ~3;
     image = cairo_image_surface_create (CAIRO_FORMAT_A8, width, height);
-    if (image->status)
+    if (unlikely (image->status))
 	return image->status;
 
     /* Initialize it to empty
@@ -1227,7 +1227,7 @@ _transform_glyph_bitmap (cairo_matrix_t         * shape,
 				            CAIRO_COLOR_TRANSPARENT,
 					    0, 0,
 					    width, height);
-    if (status) {
+    if (unlikely (status)) {
 	cairo_surface_destroy (image);
 	return status;
     }
@@ -1245,7 +1245,7 @@ _transform_glyph_bitmap (cairo_matrix_t         * shape,
 
     _cairo_pattern_fini (&pattern.base);
 
-    if (status) {
+    if (unlikely (status)) {
 	cairo_surface_destroy (image);
 	return status;
     }
@@ -1527,7 +1527,7 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
 			              font_face,
 				      font_matrix, ctm, options,
 				      &_cairo_ft_scaled_font_backend);
-    if (status) {
+    if (unlikely (status)) {
 	_cairo_unscaled_font_destroy (&unscaled->base);
 	free (scaled_font);
 	goto FAIL;
@@ -1535,7 +1535,7 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
 
     status = _cairo_ft_unscaled_font_set_scale (unscaled,
 				                &scaled_font->base.scale);
-    if (status) {
+    if (unlikely (status)) {
 	_cairo_unscaled_font_destroy (&unscaled->base);
 	free (scaled_font);
 	goto FAIL;
@@ -1626,7 +1626,7 @@ _cairo_ft_scaled_font_create_toy (cairo_toy_font_face_t	      *toy_face,
 
     cairo_matrix_multiply (&scale, font_matrix, ctm);
     status = _compute_transform (&sf, &scale);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     pattern = FcPatternCreate ();
@@ -1686,7 +1686,7 @@ _cairo_ft_scaled_font_create_toy (cairo_toy_font_face_t	      *toy_face,
     }
 
     status = _cairo_ft_font_options_substitute (font_options, pattern);
-    if (status)
+    if (unlikely (status))
 	goto FREE_PATTERN;
 
     FcDefaultSubstitute (pattern);
@@ -1863,7 +1863,7 @@ _decompose_glyph_outline (FT_Face		  face,
     }
 
     status = _cairo_path_fixed_close_path (path);
-    if (status) {
+    if (unlikely (status)) {
 	_cairo_path_fixed_destroy (path);
 	return status;
     }
@@ -1918,7 +1918,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 
     status = _cairo_ft_unscaled_font_set_scale (scaled_font->unscaled,
 				                &scaled_font->base.scale);
-    if (status)
+    if (unlikely (status))
 	goto FAIL;
 
     /* Ignore global advance unconditionally */
@@ -2066,14 +2066,16 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	} else {
 	    status = _render_glyph_bitmap (face, &scaled_font->ft_options.base,
 					   &surface);
-	    if (status == CAIRO_STATUS_SUCCESS && unscaled->have_shape) {
+	    if (likely (status == CAIRO_STATUS_SUCCESS) &&
+		unscaled->have_shape)
+	    {
 		status = _transform_glyph_bitmap (&unscaled->current_shape,
 						  &surface);
-		if (status)
+		if (unlikely (status))
 		    cairo_surface_destroy (&surface->base);
 	    }
 	}
-	if (status)
+	if (unlikely (status))
 	    goto FAIL;
 
 	_cairo_scaled_glyph_set_surface (scaled_glyph,
@@ -2115,7 +2117,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	else
 	    status = CAIRO_INT_STATUS_UNSUPPORTED;
 
-	if (status)
+	if (unlikely (status))
 	    goto FAIL;
 
 	_cairo_scaled_glyph_set_path (scaled_glyph,
@@ -2665,7 +2667,7 @@ cairo_ft_scaled_font_lock_face (cairo_scaled_font_t *abstract_font)
 
     status = _cairo_ft_unscaled_font_set_scale (scaled_font->unscaled,
 				                &scaled_font->base.scale);
-    if (status) {
+    if (unlikely (status)) {
 	_cairo_ft_unscaled_font_unlock_face (scaled_font->unscaled);
 	status = _cairo_scaled_font_set_error (&scaled_font->base, status);
 	return NULL;

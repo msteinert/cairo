@@ -131,7 +131,7 @@ _cairo_cache_create (cairo_cache_keys_equal_func_t keys_equal,
     }
 
     status = _cairo_cache_init (cache, keys_equal, entry_destroy, max_size);
-    if (status) {
+    if (unlikely (status)) {
 	free (cache);
 	return NULL;
     }
@@ -293,7 +293,7 @@ _cairo_cache_insert (cairo_cache_t	 *cache,
 
     status = _cairo_hash_table_insert (cache->hash_table,
 				       (cairo_hash_entry_t *) entry);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     cache->size += entry->size;

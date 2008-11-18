@@ -467,10 +467,12 @@ cairo_toy_font_face_create (const char          *family,
 
     /* Make sure we've got valid UTF-8 for the family */
     status = _cairo_utf8_to_ucs4 (family, -1, NULL, NULL);
-    if (status == CAIRO_STATUS_INVALID_STRING)
-	return (cairo_font_face_t*) &_cairo_font_face_invalid_string;
-    else if (status)
+    if (unlikely (status)) {
+	if (status == CAIRO_STATUS_INVALID_STRING)
+	    return (cairo_font_face_t*) &_cairo_font_face_invalid_string;
+
 	return (cairo_font_face_t*) &_cairo_font_face_nil;
+    }
 
     switch (slant) {
 	case CAIRO_FONT_SLANT_NORMAL:
@@ -523,11 +525,11 @@ cairo_toy_font_face_create (const char          *family,
     }
 
     status = _cairo_toy_font_face_init (font_face, family, slant, weight);
-    if (status)
+    if (unlikely (status))
 	goto UNWIND_FONT_FACE_MALLOC;
 
     status = _cairo_hash_table_insert (hash_table, &font_face->base.hash_entry);
-    if (status)
+    if (unlikely (status))
 	goto UNWIND_FONT_FACE_INIT;
 
     _cairo_toy_font_face_hash_table_unlock ();
@@ -614,7 +616,7 @@ _cairo_toy_font_face_scaled_font_create (void                *abstract_font_face
 	return font_face->base.status;
 
     status = cairo_font_options_status ((cairo_font_options_t *) options);
-    if (status)
+    if (unlikely (status))
 	return status;
 
     if (CAIRO_SCALED_FONT_BACKEND_DEFAULT != &_cairo_user_scaled_font_backend &&
