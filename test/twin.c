@@ -48,5 +48,5 @@ CAIRO_TEST (twin,
 	    "Tests the internal font",
 	    "twin, font", /* keywords */
 	    NULL, /* requirements */
-	    128, 20,
+	    132, 20,
 	    NULL, draw)
