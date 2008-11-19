@@ -779,6 +779,22 @@ _has_font_face_id (cairo_font_face_t *font_face)
     return _has_id (FONT_FACE, font_face);
 }
 
+static void
+_emit_font_face_id (cairo_font_face_t *font_face)
+{
+    Object *obj = _get_object (FONT_FACE, font_face);
+    if (obj == NULL) {
+	fprintf (logfile, "null ");
+    } else {
+	if (obj->defined) {
+	    fprintf (logfile, "f%ld ", obj->token);
+	} else {
+	    fprintf (logfile, "%d index ",
+		     current_stack_depth - obj->operand - 1);
+	}
+    }
+}
+
 static bool
 _has_pattern_id (cairo_pattern_t *pattern)
 {
@@ -2251,32 +2267,27 @@ void
 cairo_set_font_face (cairo_t *cr, cairo_font_face_t *font_face)
 {
     _emit_line_info ();
-    if (cr != NULL && font_face != NULL) {
-	if (_pop_operands_to (FONT_FACE, font_face)) {
-	    if (_is_current (CONTEXT, cr, 1)) {
-		if (_write_lock ()) {
-		    _consume_operand ();
-		    fprintf (logfile, "set_font_face\n");
-		    _write_unlock ();
-		}
-	    } else {
-		if (_get_object (CONTEXT, cr)->defined) {
-		    if (_write_lock ()) {
-			_consume_operand ();
-			fprintf (logfile,
-				 "c%ld exch set_font_face pop\n",
-				 _get_context_id (cr));
-			_write_unlock ();
-		    }
-		} else {
-		    _emit_cairo_op (cr, "f%ld set_font_face\n",
-				    _get_font_face_id (font_face));
-		}
-	    }
-	} else {
-	    _emit_cairo_op (cr, "f%ld set_font_face\n",
-			    _get_font_face_id (font_face));
+    if (cr != NULL && font_face != NULL && _write_lock ()) {
+	if (_is_current (FONT_FACE, font_face, 0) &&
+	    _is_current (CONTEXT, cr, 1))
+	{
+	    _consume_operand ();
 	}
+	else if (_is_current (FONT_FACE, font_face, 1) &&
+		 _is_current (CONTEXT, cr, 0))
+	{
+	    fprintf (logfile, "exch ");
+	    _exch_operands ();
+	    _consume_operand ();
+	}
+	else
+	{
+	    _emit_context (cr);
+	    _emit_font_face_id (font_face);
+	}
+
+	fprintf (logfile, "set_font_face\n");
+	_write_unlock ();
     }
 
     return DLCALL (cairo_set_font_face, cr, font_face);
