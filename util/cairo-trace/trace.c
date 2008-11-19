@@ -1896,7 +1896,7 @@ void
 cairo_transform (cairo_t *cr, const cairo_matrix_t *matrix)
 {
     _emit_line_info ();
-    _emit_cairo_op (cr, "[%g %g %g %g %g %g] transform\n",
+    _emit_cairo_op (cr, "%g %g %g %g %g %g matrix transform\n",
 		    matrix->xx, matrix->yx,
 		    matrix->xy, matrix->yy,
 		    matrix->x0, matrix->y0);
@@ -1910,7 +1910,7 @@ cairo_set_matrix (cairo_t *cr, const cairo_matrix_t *matrix)
     if (_matrix_is_identity (matrix)) {
 	_emit_cairo_op (cr, "identity set_matrix\n");
     } else {
-	_emit_cairo_op (cr, "[%g %g %g %g %g %g] set_matrix\n",
+	_emit_cairo_op (cr, "%g %g %g %g %g %g matrix set_matrix\n",
 			matrix->xx, matrix->yx,
 			matrix->xy, matrix->yy,
 			matrix->x0, matrix->y0);
@@ -2294,7 +2294,7 @@ void
 cairo_set_font_matrix (cairo_t *cr, const cairo_matrix_t *matrix)
 {
     _emit_line_info ();
-    _emit_cairo_op (cr, "[%g %g %g %g %g %g] set_font_matrix\n",
+    _emit_cairo_op (cr, "%g %g %g %g %g %g matrix set_font_matrix\n",
 		    matrix->xx, matrix->yx,
 		    matrix->xy, matrix->yy,
 		    matrix->x0, matrix->y0);
@@ -2446,7 +2446,7 @@ _emit_matrix (const cairo_matrix_t *m)
     else
     {
 	fprintf (logfile,
-		 "[%g %g %g %g %g %g]",
+		 "%g %g %g %g %g %g matrix",
 		 m->xx, m->yx,
 		 m->xy, m->yy,
 		 m->x0, m->y0);
@@ -3169,7 +3169,7 @@ cairo_pattern_set_matrix (cairo_pattern_t *pattern, const cairo_matrix_t *matrix
 	_emit_pattern_op (pattern, "identity set_matrix\n");
     } else {
 	_emit_pattern_op (pattern,
-			  "[%g %g %g %g %g %g] set_matrix\n",
+			  "%g %g %g %g %g %g matrix set_matrix\n",
 			  matrix->xx, matrix->yx,
 			  matrix->xy, matrix->yy,
 			  matrix->x0, matrix->y0);
