@@ -186,8 +186,10 @@ _cairo_spline_decompose_into (cairo_spline_knots_t *s1, double tolerance_squared
 {
     cairo_spline_knots_t s2;
 
-    if (_cairo_spline_error_squared (s1) < tolerance_squared)
-	return _cairo_spline_add_point (result, &s1->a);
+    if (_cairo_spline_error_squared (s1) < tolerance_squared) {
+	_cairo_spline_add_point (result, &s1->a);
+	return;
+    }
 
     _de_casteljau (s1, &s2);
 
