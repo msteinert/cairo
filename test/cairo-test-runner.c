@@ -51,6 +51,31 @@ typedef struct _cairo_test_list {
     struct _cairo_test_list *next;
 } cairo_test_list_t;
 
+typedef struct _cairo_test_runner {
+    cairo_test_context_t base;
+
+    unsigned int num_device_offsets;
+
+    int num_passed;
+    int num_xpassed;
+    int num_skipped;
+    int num_failed;
+    int num_xfailed;
+    int num_crashed;
+
+    cairo_test_list_t **crashes_per_target;
+    cairo_test_list_t **fails_per_target;
+    cairo_test_list_t **xpasses_per_target;
+
+    int *num_failed_per_target;
+    int *num_crashed_per_target;
+    int *num_xpassed_per_target;
+
+    cairo_bool_t foreground;
+    cairo_bool_t list_only;
+    cairo_bool_t full_test;
+} cairo_test_runner_t;
+
 typedef enum {
     GE,
     GT
@@ -137,50 +162,54 @@ _cairo_test_wait (pid_t pid)
 #endif
 
 static cairo_test_status_t
-_cairo_test_runner_preamble (cairo_test_context_t *ctx)
+_cairo_test_runner_preamble (cairo_test_runner_t *runner,
+			     cairo_test_context_t *ctx)
 {
 #if HAVE_FORK && HAVE_WAITPID
-    pid_t pid;
+    if (! runner->foreground) {
+	pid_t pid;
 
-    switch ((pid = fork ())) {
-    case -1: /* error */
-	return CAIRO_TEST_UNTESTED;
+	switch ((pid = fork ())) {
+	case -1: /* error */
+	    return CAIRO_TEST_UNTESTED;
 
-    case 0: /* child */
-	exit (ctx->test->preamble (ctx));
+	case 0: /* child */
+	    exit (ctx->test->preamble (ctx));
 
-    default:
-	return _cairo_test_wait (pid);
+	default:
+	    return _cairo_test_wait (pid);
+	}
     }
-#else
-    return ctx->test->preamble (ctx);
 #endif
+    return ctx->test->preamble (ctx);
 }
 
 static cairo_test_status_t
-_cairo_test_runner_draw (cairo_test_context_t *ctx,
+_cairo_test_runner_draw (cairo_test_runner_t *runner,
+			 cairo_test_context_t *ctx,
 			 const cairo_boilerplate_target_t *target,
 			 cairo_bool_t similar,
 			 int device_offset)
 {
 #if HAVE_FORK && HAVE_WAITPID
-    pid_t pid;
+    if (! runner->foreground) {
+	pid_t pid;
 
-    switch ((pid = fork ())) {
-    case -1: /* error */
-	return CAIRO_TEST_UNTESTED;
+	switch ((pid = fork ())) {
+	case -1: /* error */
+	    return CAIRO_TEST_UNTESTED;
 
-    case 0: /* child */
-	exit (_cairo_test_context_run_for_target (ctx, target,
-						  similar, device_offset));
+	case 0: /* child */
+	    exit (_cairo_test_context_run_for_target (ctx, target,
+						      similar, device_offset));
 
-    default:
-	return _cairo_test_wait (pid);
+	default:
+	    return _cairo_test_wait (pid);
+	}
     }
-#else
+#endif
     return _cairo_test_context_run_for_target (ctx, target,
 					       similar, device_offset);
-#endif
 }
 
 static void
@@ -243,43 +272,20 @@ append_argv (int *argc, char ***argv, const char *str)
     *argc += i;
 }
 
-typedef struct _cairo_test_runner {
-    cairo_test_context_t base;
-
-    unsigned int num_device_offsets;
-
-    int num_passed;
-    int num_xpassed;
-    int num_skipped;
-    int num_failed;
-    int num_xfailed;
-    int num_crashed;
-
-    cairo_test_list_t **crashes_per_target;
-    cairo_test_list_t **fails_per_target;
-    cairo_test_list_t **xpasses_per_target;
-
-    int *num_failed_per_target;
-    int *num_crashed_per_target;
-    int *num_xpassed_per_target;
-
-    cairo_bool_t list_only;
-    cairo_bool_t full_test;
-} cairo_test_runner_t;
-
 static void
 usage (const char *argv0)
 {
     fprintf (stderr,
-	     "Usage: %s [-f] [test-names|keywords ...]\n"
+	     "Usage: %s [-af] [test-names|keywords ...]\n"
 	     "       %s -l\n"
 	     "\n"
 	     "Run the cairo conformance test suite over the given tests (all by default)\n"
 	     "The command-line arguments are interpreted as follows:\n"
 	     "\n"
-	     "  -l	list only; just list selected test case names without executing\n"
-	     "  -f	full; run the full set of tests. By default the test suite\n"
+	     "  -a	all; run the full set of tests. By default the test suite\n"
 	     "          skips similar surface and device offset testing.\n"
+	     "  -f	foreground; do not fork\n"
+	     "  -l	list only; just list selected test case names without executing\n"
 	     "\n"
 	     "If test names are given they are used as exact matches either to a specific\n"
 	     "test case or to a keyword, so a command such as\n"
@@ -293,16 +299,19 @@ _parse_cmdline (cairo_test_runner_t *runner, int *argc, char **argv[])
     int c;
 
     while (1) {
-	c = _cairo_getopt (*argc, *argv, ":l");
+	c = _cairo_getopt (*argc, *argv, ":afl");
 	if (c == -1)
 	    break;
 
 	switch (c) {
+	case 'a':
+	    runner->full_test = TRUE;
+	    break;
 	case 'l':
 	    runner->list_only = TRUE;
 	    break;
 	case 'f':
-	    runner->full_test = TRUE;
+	    runner->foreground = TRUE;
 	    break;
 	default:
 	    fprintf (stderr, "Internal error: unhandled option: %c\n", c);
@@ -585,6 +594,9 @@ main (int argc, char **argv)
 	if (strstr (env, "full")) {
 	    runner.full_test = TRUE;
 	}
+	if (strstr (env, "foreground")) {
+	    runner.foreground = TRUE;
+	}
     }
 
     _parse_cmdline (&runner, &argc, &argv);
@@ -706,7 +718,7 @@ main (int argc, char **argv)
 		sizeof (cairo_test_status_t) * ctx.num_targets);
 
 	if (ctx.test->preamble != NULL) {
-	    status = _cairo_test_runner_preamble (&ctx);
+	    status = _cairo_test_runner_preamble (&runner, &ctx);
 	    switch (status) {
 	    case CAIRO_TEST_SUCCESS:
 		skipped = FALSE;
@@ -766,7 +778,7 @@ main (int argc, char **argv)
 		int similar;
 
 		for (similar = 0; similar <= has_similar; similar++) {
-		    status = _cairo_test_runner_draw (&ctx, target,
+		    status = _cairo_test_runner_draw (&runner, &ctx, target,
 						      similar, dev_offset);
 		    switch (status) {
 		    case CAIRO_TEST_SUCCESS:
