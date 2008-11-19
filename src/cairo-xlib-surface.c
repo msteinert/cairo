@@ -307,9 +307,7 @@ _cairo_xlib_surface_finish (void *abstract_surface)
 	status2 = _cairo_xlib_screen_put_gc (surface->screen_info,
 		                             surface->depth,
 				             surface->gc,
-				             surface->have_clip_rects |
-					     (surface->clip_dirty &
-					      CAIRO_XLIB_SURFACE_CLIP_DIRTY_GC));
+				             surface->gc_has_clip_rects);
 	surface->gc = NULL;
 	if (status == CAIRO_STATUS_SUCCESS)
 	    status = status2;
@@ -873,6 +871,7 @@ _cairo_xlib_surface_set_picture_clip_rects (cairo_xlib_surface_t *surface)
 static void
 _cairo_xlib_surface_set_gc_clip_rects (cairo_xlib_surface_t *surface)
 {
+    surface->gc_has_clip_rects = surface->have_clip_rects;
     if (surface->have_clip_rects) {
 	XSetClipRectangles(surface->dpy, surface->gc,
 			   0, 0,
@@ -2635,6 +2634,7 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
     surface->xtransform = identity;
 
     surface->have_clip_rects = FALSE;
+    surface->gc_has_clip_rects = FALSE;
     surface->clip_rects = surface->embedded_clip_rects;
     surface->num_clip_rects = 0;
     surface->clip_dirty = 0;
