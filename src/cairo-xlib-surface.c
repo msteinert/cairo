@@ -307,7 +307,9 @@ _cairo_xlib_surface_finish (void *abstract_surface)
 	status2 = _cairo_xlib_screen_put_gc (surface->screen_info,
 		                             surface->depth,
 				             surface->gc,
-				             surface->have_clip_rects);
+				             surface->have_clip_rects |
+					     (surface->clip_dirty &
+					      CAIRO_XLIB_SURFACE_CLIP_DIRTY_GC));
 	surface->gc = NULL;
 	if (status == CAIRO_STATUS_SUCCESS)
 	    status = status2;
