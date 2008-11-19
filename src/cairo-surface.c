@@ -40,6 +40,7 @@
 
 #include "cairo-surface-fallback-private.h"
 #include "cairo-clip-private.h"
+#include "cairo-meta-surface-private.h"
 
 #define DEFINE_NIL_SURFACE(status, name)			\
 const cairo_surface_t name = {					\
@@ -1297,10 +1298,10 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
     cairo_image_surface_t *image;
     void *image_extra;
 
-    if (surface->status)
+    if (unlikely (surface->status))
 	return surface->status;
 
-    if (surface->finished)
+    if (unlikely (surface->finished))
 	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
 
     if (surface->backend->clone_similar) {
@@ -1312,6 +1313,31 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 						  clone_out);
 
 	if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+	    /* First check to see if we can replay to a similar surface */
+	    if (_cairo_surface_is_meta (src)) {
+		cairo_surface_t *similar;
+
+		similar = cairo_surface_create_similar (surface,
+							src->content,
+							width, height);
+		status = similar->status;
+		if (unlikely (status))
+		    return status;
+
+		cairo_surface_set_device_offset (similar, -src_x, -src_y);
+
+		status = _cairo_meta_surface_replay (src, similar);
+		if (unlikely (status)) {
+		    cairo_surface_destroy (similar);
+		    return status;
+		}
+
+		*clone_out = similar;
+		*clone_offset_x = src_x;
+		*clone_offset_y = src_y;
+		return CAIRO_STATUS_SUCCESS;
+	    }
+
 	    /* If we failed, try again with an image surface */
 	    status = _cairo_surface_acquire_source_image (src, &image, &image_extra);
 	    if (status == CAIRO_STATUS_SUCCESS) {
