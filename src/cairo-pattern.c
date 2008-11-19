@@ -1842,7 +1842,7 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
 	if (status)
 	    goto BAIL;
 
-	status = _cairo_surface_clone_similar (dst, pattern->surface,
+	status = _cairo_surface_clone_similar (dst, surface,
 					       extents.x, extents.y,
 					       extents.width, extents.height,
 					       &extents.x, &extents.y, &src);
