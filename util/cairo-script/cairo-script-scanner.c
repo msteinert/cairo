@@ -37,7 +37,6 @@
 #include <stdio.h> /* EOF */
 #include <string.h> /* memset */
 #include <math.h> /* pow */
-#include <byteswap.h> /* bswap_32 */
 
 /*
  * whitespace:

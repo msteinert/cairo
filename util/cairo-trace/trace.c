@@ -31,7 +31,6 @@
 #include <unistd.h>
 #include <errno.h>
 #include <pthread.h>
-#include <byteswap.h>
 #include <zlib.h>
 #include <math.h>
 #include <ctype.h>
@@ -43,6 +42,22 @@
 
 #ifndef CAIRO_TRACE_OUTDIR
 #define CAIRO_TRACE_OUTDIR "."
+#endif
+
+#if HAVE_BYTESWAP_H
+# include <byteswap.h>
+#endif
+#ifndef bswap_16
+# define bswap_16(p) \
+	(((((uint16_t)(p)) & 0x00ff) << 8) | \
+	  (((uint16_t)(p))           >> 8));
+#endif
+#ifndef bswap_32
+# define bswap_32(p) \
+         (((((uint32_t)(p)) & 0x000000ff) << 24) | \
+	  ((((uint32_t)(p)) & 0x0000ff00) << 8)  | \
+	  ((((uint32_t)(p)) & 0x00ff0000) >> 8)  | \
+	  ((((uint32_t)(p)))              >> 24));
 #endif
 
 #include "lookup-symbol.h"

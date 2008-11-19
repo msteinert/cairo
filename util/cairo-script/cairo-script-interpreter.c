@@ -39,7 +39,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <byteswap.h>
 #include <math.h>
 
 csi_status_t

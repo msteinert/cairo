@@ -75,6 +75,23 @@
 #error Cannot find definitions for fixed-width integral types (uint8_t, uint32_t, etc.)
 #endif
 
+#if HAVE_BYTESWAP_H
+# include <byteswap.h>
+#endif
+#ifndef bswap_16
+# define bswap_16(p) \
+	(((((uint16_t)(p)) & 0x00ff) << 8) | \
+	  (((uint16_t)(p))           >> 8));
+#endif
+#ifndef bswap_32
+# define bswap_32(p) \
+         (((((uint32_t)(p)) & 0x000000ff) << 24) | \
+	  ((((uint32_t)(p)) & 0x0000ff00) << 8)  | \
+	  ((((uint32_t)(p)) & 0x00ff0000) >> 8)  | \
+	  ((((uint32_t)(p)))              >> 24));
+#endif
+
+
 #if __GNUC__ >= 3 && defined(__ELF__) && !defined(__sun)
 # define slim_hidden_proto(name)		slim_hidden_proto1(name, slim_hidden_int_name(name)) csi_private
 # define slim_hidden_proto_no_warn(name)	slim_hidden_proto1(name, slim_hidden_int_name(name)) csi_private_no_warn
