@@ -1305,11 +1305,13 @@ _cairo_directfb_surface_set_clip_region (void           *abstract_surface,
 
 	surface->has_clip = TRUE;
 
+	n_boxes = 0;
 	status = _cairo_region_get_boxes (region, &n_boxes, &boxes);
-	if (n_boxes == 0)
-	    return CAIRO_STATUS_SUCCESS;
 	if (status)
 	    return status;
+
+	if (n_boxes == 0)
+	    return CAIRO_STATUS_SUCCESS;
 
 	if (surface->n_clips != n_boxes) {
 	    if (surface->clips)

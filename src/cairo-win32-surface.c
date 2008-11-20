@@ -1469,11 +1469,12 @@ _cairo_win32_surface_set_clip_region (void           *abstract_surface,
 	/* Create a GDI region for the cairo region */
 
 	_cairo_region_get_extents (region, &extents);
+	num_boxes = 0;
 	status = _cairo_region_get_boxes (region, &num_boxes, &boxes);
 	if (status)
 	    return status;
 
-	if (num_boxes == 1 && 
+	if (num_boxes == 1 &&
 	    boxes[0].p1.x == 0 &&
 	    boxes[0].p1.y == 0 &&
 	    boxes[0].p2.x == surface->extents.width &&

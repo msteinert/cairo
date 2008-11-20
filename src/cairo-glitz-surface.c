@@ -153,6 +153,7 @@ _cairo_glitz_get_boxes_from_region (cairo_region_t *region, glitz_box_t **boxes,
     cairo_status_t status;
     int n, i;
 
+    n = 0;
     status = _cairo_region_get_boxes (region, &n, &cboxes);
     if (status)
 	return status;

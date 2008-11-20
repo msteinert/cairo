@@ -1560,6 +1560,7 @@ _cairo_xcb_surface_set_clip_region (void           *abstract_surface,
 	xcb_rectangle_t *rects = NULL;
 	int n_boxes, i;
 
+	n_boxes = 0;
 	status = _cairo_region_get_boxes (region, &n_boxes, &boxes);
         if (status)
             return status;

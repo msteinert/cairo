@@ -114,16 +114,17 @@ _cairo_region_get_boxes (cairo_region_t *region, int *num_boxes, cairo_box_int_t
     int i;
 
     pboxes = pixman_region32_rectangles (&region->rgn, &nboxes);
-
     if (nboxes == 0) {
 	*num_boxes = 0;
-	*boxes = NULL;
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    cboxes = _cairo_malloc_ab (nboxes, sizeof(cairo_box_int_t));
-    if (cboxes == NULL)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    if (nboxes > *num_boxes) {
+	cboxes = _cairo_malloc_ab (nboxes, sizeof (cairo_box_int_t));
+	if (unlikely (cboxes == NULL))
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    } else
+	cboxes = *boxes;
 
     for (i = 0; i < nboxes; i++) {
 	cboxes[i].p1.x = pboxes[i].x1;

@@ -322,6 +322,7 @@ _cairo_sdl_surface_flush (void                  *abstract_surface)
     int n_boxes, i;
     cairo_status_t status;
 
+    n_boxes = 0;
     status = _cairo_region_get_boxes (&surface->update, &n_boxes, &boxes);
     if (status)
 	return status;

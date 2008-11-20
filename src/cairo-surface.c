@@ -1535,6 +1535,7 @@ _cairo_surface_fill_rectangle (cairo_surface_t	   *surface,
  *
  * Return value: %CAIRO_STATUS_SUCCESS or the error that occurred
  **/
+COMPILE_TIME_ASSERT (sizeof (cairo_box_int_t) <= sizeof (cairo_rectangle_int_t));
 cairo_status_t
 _cairo_surface_fill_region (cairo_surface_t	   *surface,
 			    cairo_operator_t	    op,
@@ -1542,8 +1543,8 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
 			    cairo_region_t         *region)
 {
     int num_boxes;
-    cairo_box_int_t *boxes = NULL;
     cairo_rectangle_int_t stack_rects[CAIRO_STACK_ARRAY_LENGTH (cairo_rectangle_int_t)];
+    cairo_box_int_t *boxes = (cairo_box_int_t *) stack_rects;
     cairo_rectangle_int_t *rects = stack_rects;
     cairo_status_t status;
     int i;
@@ -1554,12 +1555,12 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
     assert (! surface->is_snapshot);
 
     num_boxes = _cairo_region_num_boxes (region);
-
     if (num_boxes == 0)
 	return CAIRO_STATUS_SUCCESS;
 
     /* handle the common case of a single box without allocation */
     if (num_boxes > 1) {
+	num_boxes = sizeof (stack_rects) / sizeof (cairo_box_int_t);
 	status = _cairo_region_get_boxes (region, &num_boxes, &boxes);
 	if (status)
 	    return status;
@@ -1567,18 +1568,18 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
 	if (num_boxes > ARRAY_LENGTH (stack_rects)) {
 	    rects = _cairo_malloc_ab (num_boxes,
 		                      sizeof (cairo_rectangle_int_t));
-	    if (!rects) {
+	    if (rects == NULL) {
 		_cairo_region_boxes_fini (region, boxes);
 		return _cairo_surface_set_error (surface,
-			                         CAIRO_STATUS_NO_MEMORY);
+			                         _cairo_error (CAIRO_STATUS_NO_MEMORY));
 	    }
 	}
 
 	for (i = 0; i < num_boxes; i++) {
 	    rects[i].x = boxes[i].p1.x;
 	    rects[i].y = boxes[i].p1.y;
-	    rects[i].width = boxes[i].p2.x - boxes[i].p1.x;
-	    rects[i].height = boxes[i].p2.y - boxes[i].p1.y;
+	    rects[i].width  = boxes[i].p2.x - rects[i].x;
+	    rects[i].height = boxes[i].p2.y - rects[i].y;
 	}
     } else
 	_cairo_region_get_extents (region, &rects[0]);
@@ -1586,7 +1587,7 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
     status =  _cairo_surface_fill_rectangles (surface, op,
 					      color, rects, num_boxes);
 
-    if (boxes != NULL)
+    if (boxes != (cairo_box_int_t *) stack_rects)
 	_cairo_region_boxes_fini (region, boxes);
 
     if (rects != stack_rects)
