@@ -44,25 +44,15 @@
 
 #define DEFINE_NIL_SURFACE(status, name)			\
 const cairo_surface_t name = {					\
-    &_cairo_image_surface_backend,	/* backend */		\
-    CAIRO_SURFACE_TYPE_IMAGE,					\
-    CAIRO_CONTENT_COLOR,					\
+    NULL,				/* backend */		\
+    CAIRO_SURFACE_TYPE_IMAGE,		/* type */		\
+    CAIRO_CONTENT_COLOR,		/* content */		\
     CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */		\
     status,				/* status */		\
     FALSE,				/* finished */		\
-    { 0,	/* size */					\
-      0,	/* num_elements */				\
-      0,	/* element_size */				\
-      NULL,	/* elements */					\
-    },					/* user_data */		\
-    { 1.0, 0.0,							\
-      0.0, 1.0,							\
-      0.0, 0.0							\
-    },					/* device_transform */	\
-    { 1.0, 0.0,							\
-      0.0, 1.0,							\
-      0.0, 0.0							\
-    },					/* device_transform_inverse */	\
+    { 0, 0, 0, NULL, },			/* user_data */		\
+    { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 },   /* device_transform */	\
+    { 1.0, 0.0,	0.0, 1.0, 0.0, 0.0 },	/* device_transform_inverse */	\
     0.0,				/* x_resolution */	\
     0.0,				/* y_resolution */	\
     0.0,				/* x_fallback_resolution */	\
