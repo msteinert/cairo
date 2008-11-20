@@ -942,7 +942,8 @@ typedef struct _cairo_traps {
     int num_traps;
     int traps_size;
     cairo_trapezoid_t *traps;
-    cairo_trapezoid_t  traps_embedded[1];
+    /* embed enough storage for a stroked rectangle */
+    cairo_trapezoid_t  traps_embedded[4];
 
     cairo_bool_t has_limits;
     cairo_box_t limits;
