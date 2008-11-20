@@ -731,7 +731,7 @@ _cairo_image_surface_finish (void *abstract_surface)
 void
 _cairo_image_surface_assume_ownership_of_data (cairo_image_surface_t *surface)
 {
-    surface->owns_data = 1;
+    surface->owns_data = TRUE;
 }
 
 static cairo_status_t
@@ -1064,10 +1064,11 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
 
     /* XXX: pixman_fill_rectangles() should be implemented */
     if (! pixman_image_fill_rectangles (_pixman_operator (op),
-				       surface->pixman_image,
-				       &pixman_color,
-				       num_rects,
-				       pixman_rects)) {
+					surface->pixman_image,
+					&pixman_color,
+					num_rects,
+					pixman_rects))
+    {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 

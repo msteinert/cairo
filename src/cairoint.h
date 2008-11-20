@@ -835,9 +835,6 @@ struct _cairo_image_surface {
     pixman_format_code_t pixman_format;
     cairo_format_t format;
     unsigned char *data;
-    cairo_bool_t owns_data;
-    cairo_bool_t has_clip;
-    cairo_image_transparency_t transparency;
 
     int width;
     int height;
@@ -845,6 +842,10 @@ struct _cairo_image_surface {
     int depth;
 
     pixman_image_t *pixman_image;
+
+    unsigned owns_data : 1;
+    unsigned has_clip : 1;
+    unsigned transparency : 2;
 };
 
 extern const cairo_private cairo_surface_backend_t _cairo_image_surface_backend;
