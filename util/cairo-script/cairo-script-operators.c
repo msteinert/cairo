@@ -32,7 +32,7 @@
  *	Chris Wilson <chris@chris-wilson.co.uk>
  */
 
-/* TODO real matrix and path types */
+/* TODO real path type */
 
 #include "cairo-script-private.h"
 
@@ -1823,8 +1823,7 @@ _ft_type42_create (csi_t *ctx,
     return _csi_error (CSI_STATUS_INVALID_SCRIPT);
 }
 #else
-#define _ft_type1_create(font, face_out) CSI_INT_STATUS_UNSUPPORTED
-#define _ft_type42_create(font, face_out) CSI_INT_STATUS_UNSUPPORTED
+#define _ft_type42_create(ctx, font, face_out) CSI_INT_STATUS_UNSUPPORTED
 #endif
 
 static csi_status_t
