@@ -3086,12 +3086,14 @@ cairo_show_text (cairo_t *cr, const char *utf8)
 {
     cairo_text_extents_t extents;
     cairo_status_t status;
-    cairo_glyph_t *glyphs = NULL, *last_glyph;
-    cairo_text_cluster_t *clusters = NULL;
+    cairo_glyph_t *glyphs, *last_glyph;
+    cairo_text_cluster_t *clusters;
     int utf8_len, num_glyphs, num_clusters;
     cairo_text_cluster_flags_t cluster_flags;
     double x, y;
     cairo_bool_t has_show_text_glyphs;
+    cairo_glyph_t stack_glyphs[CAIRO_STACK_ARRAY_LENGTH (cairo_glyph_t)];
+    cairo_text_cluster_t stack_clusters[CAIRO_STACK_ARRAY_LENGTH (cairo_text_cluster_t)];
 
     if (cr->status)
 	return;
@@ -3105,6 +3107,12 @@ cairo_show_text (cairo_t *cr, const char *utf8)
 
     has_show_text_glyphs =
 	cairo_surface_has_show_text_glyphs (cairo_get_target (cr));
+
+    glyphs = stack_glyphs;
+    num_glyphs = ARRAY_LENGTH (stack_glyphs);
+
+    clusters = stack_clusters;
+    num_clusters = ARRAY_LENGTH (stack_clusters);
 
     status = _cairo_gstate_text_to_glyphs (cr->gstate,
 					   x, y,
@@ -3138,8 +3146,10 @@ cairo_show_text (cairo_t *cr, const char *utf8)
     cairo_move_to (cr, x, y);
 
  BAIL:
-    cairo_glyph_free (glyphs);
-    cairo_text_cluster_free (clusters);
+    if (glyphs != stack_glyphs)
+	cairo_glyph_free (glyphs);
+    if (clusters != stack_clusters)
+	cairo_text_cluster_free (clusters);
 
     if (status)
 	_cairo_set_error (cr, status);
