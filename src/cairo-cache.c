@@ -39,10 +39,6 @@
 #include "cairoint.h"
 
 static void
-_cairo_cache_remove (cairo_cache_t	 *cache,
-		     cairo_cache_entry_t *entry);
-
-static void
 _cairo_cache_shrink_to_accommodate (cairo_cache_t *cache,
 				    unsigned long  additional);
 
@@ -225,6 +221,26 @@ _cairo_cache_lookup (cairo_cache_t	  *cache,
 				     (cairo_hash_entry_t *) key);
 }
 
+void *
+_cairo_cache_steal (cairo_cache_t	  *cache,
+		    cairo_cache_entry_t  *key)
+{
+    cairo_cache_entry_t *entry;
+
+    entry = _cairo_hash_table_steal (cache->hash_table,
+				     (cairo_hash_entry_t *) key);
+    if (entry != NULL)
+	cache->size -= entry->size;
+
+    return entry;
+}
+
+static cairo_bool_t
+_cairo_cache_entry_is_non_zero (void *entry)
+{
+    return ((cairo_cache_entry_t *)entry)->size;
+}
+
 /**
  * _cairo_cache_remove_random:
  * @cache: a cache
@@ -239,7 +255,8 @@ _cairo_cache_remove_random (cairo_cache_t *cache)
 {
     cairo_cache_entry_t *entry;
 
-    entry = _cairo_hash_table_random_entry (cache->hash_table, NULL);
+    entry = _cairo_hash_table_random_entry (cache->hash_table,
+					    _cairo_cache_entry_is_non_zero);
     if (unlikely (entry == NULL))
 	return FALSE;
 
@@ -307,13 +324,8 @@ _cairo_cache_insert (cairo_cache_t	 *cache,
  * @entry: an entry that exists in the cache
  *
  * Remove an existing entry from the cache.
- *
- * (Note: If any caller wanted access to a non-static version of this
- * function, an improved version would require only a key rather than
- * an entry. Fixing that would require fixing _cairo_hash_table_remove
- * to return (a copy of?) the entry being removed.)
  **/
-static void
+void
 _cairo_cache_remove (cairo_cache_t	 *cache,
 		     cairo_cache_entry_t *entry)
 {
@@ -336,7 +348,7 @@ _cairo_cache_remove (cairo_cache_t	 *cache,
  * non-specified order.
  **/
 void
-_cairo_cache_foreach (cairo_cache_t	 	      *cache,
+_cairo_cache_foreach (cairo_cache_t		      *cache,
 		      cairo_cache_callback_func_t      cache_callback,
 		      void			      *closure)
 {

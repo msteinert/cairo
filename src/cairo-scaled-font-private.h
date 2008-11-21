@@ -44,6 +44,8 @@
 #include "cairo-mutex-type-private.h"
 #include "cairo-reference-count-private.h"
 
+typedef struct _cairo_scaled_glyph_page cairo_scaled_glyph_page_t;
+
 struct _cairo_scaled_font {
     /* For most cairo objects, the rule for multiple threads is that
      * the user is responsible for any locking if the same object is
@@ -75,7 +77,6 @@ struct _cairo_scaled_font {
      *    scaled_font->mutex in the generic scaled_font code.
      */
 
-    /* must be first to be stored in a hash table */
     cairo_hash_entry_t hash_entry;
 
     /* useful bits for _cairo_scaled_font_nil */
@@ -103,7 +104,8 @@ struct _cairo_scaled_font {
     /* The mutex protects modification to all subsequent fields. */
     cairo_mutex_t mutex;
 
-    cairo_cache_t *glyphs;	  /* glyph index -> cairo_scaled_glyph_t */
+    int cache_frozen;
+    cairo_scaled_glyph_page_t *mru_page;
 
     /*
      * One surface backend may store data in each glyph.

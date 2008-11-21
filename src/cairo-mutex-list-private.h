@@ -42,6 +42,7 @@ CAIRO_MUTEX_DECLARE (_cairo_pattern_solid_surface_cache_lock)
 CAIRO_MUTEX_DECLARE (_cairo_toy_font_face_mutex)
 CAIRO_MUTEX_DECLARE (_cairo_intern_string_mutex)
 CAIRO_MUTEX_DECLARE (_cairo_scaled_font_map_mutex)
+CAIRO_MUTEX_DECLARE (_cairo_scaled_glyph_page_cache_mutex)
 CAIRO_MUTEX_DECLARE (_cairo_scaled_font_error_mutex)
 
 #if CAIRO_HAS_FT_FONT

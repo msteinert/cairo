@@ -351,21 +351,24 @@ typedef struct _cairo_unscaled_font {
 } cairo_unscaled_font_t;
 
 typedef struct _cairo_scaled_glyph {
-    cairo_cache_entry_t	    cache_entry;	/* hash is glyph index */
+    unsigned long index;
     cairo_scaled_font_t	    *scaled_font;	/* font the glyph lives in */
+
     cairo_text_extents_t    metrics;		/* user-space metrics */
     cairo_text_extents_t    fs_metrics;		/* font-space metrics */
     cairo_box_t		    bbox;		/* device-space bounds */
     int16_t                 x_advance;		/* device-space rounded X advance */
     int16_t                 y_advance;		/* device-space rounded Y advance */
+
     cairo_image_surface_t   *surface;		/* device-space image */
     cairo_path_fixed_t	    *path;		/* device-space outline */
     cairo_surface_t         *meta_surface;	/* device-space meta-surface */
+
     void		    *surface_private;	/* for the surface backend */
 } cairo_scaled_glyph_t;
 
-#define _cairo_scaled_glyph_index(g) ((g)->cache_entry.hash)
-#define _cairo_scaled_glyph_set_index(g,i)  ((g)->cache_entry.hash = (i))
+#define _cairo_scaled_glyph_index(g) ((g)->index)
+#define _cairo_scaled_glyph_set_index(g, i)  ((g)->index = (i))
 
 #include "cairo-scaled-font-private.h"
 

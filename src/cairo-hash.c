@@ -312,17 +312,17 @@ void *
 _cairo_hash_table_lookup (cairo_hash_table_t *hash_table,
 			  cairo_hash_entry_t *key)
 {
-    cairo_hash_entry_t **entry;
+    cairo_hash_entry_t *entry;
     unsigned long table_size, i, idx, step;
 
     table_size = hash_table->arrangement->size;
     idx = key->hash % table_size;
-    entry = &hash_table->entries[idx];
 
-    if (ENTRY_IS_LIVE (*entry)) {
-	if (hash_table->keys_equal (key, *entry))
-	    return *entry;
-    } else if (ENTRY_IS_FREE (*entry))
+    entry = hash_table->entries[idx];
+    if (ENTRY_IS_LIVE (entry)) {
+	if (hash_table->keys_equal (key, entry))
+	    return entry;
+    } else if (ENTRY_IS_FREE (entry))
 	return NULL;
 
     i = 1;
@@ -334,11 +334,66 @@ _cairo_hash_table_lookup (cairo_hash_table_t *hash_table,
 	if (idx >= table_size)
 	    idx -= table_size;
 
-	entry = &hash_table->entries[idx];
-	if (ENTRY_IS_LIVE (*entry)) {
-	    if (hash_table->keys_equal (key, *entry))
-		return *entry;
-	} else if (ENTRY_IS_FREE (*entry))
+	entry = hash_table->entries[idx];
+	if (ENTRY_IS_LIVE (entry)) {
+	    if (hash_table->keys_equal (key, entry))
+		return entry;
+	} else if (ENTRY_IS_FREE (entry))
+	    return NULL;
+    } while (++i < table_size);
+
+    return NULL;
+}
+
+/**
+ * _cairo_hash_table_steal:
+ * @hash_table: a hash table
+ * @key: the key of interest
+ *
+ * Performs a lookup in @hash_table looking for an entry which has a
+ * key that matches @key, (as determined by the keys_equal() function
+ * passed to _cairo_hash_table_create) and removes that entry from the
+ * hash table.
+ *
+ * Return value: the matching entry, of %NULL if no match was found.
+ **/
+void *
+_cairo_hash_table_steal (cairo_hash_table_t *hash_table,
+			 cairo_hash_entry_t *key)
+{
+    cairo_hash_entry_t *entry;
+    unsigned long table_size, i, idx, step;
+
+    table_size = hash_table->arrangement->size;
+    idx = key->hash % table_size;
+
+    entry = hash_table->entries[idx];
+    if (ENTRY_IS_LIVE (entry)) {
+	if (hash_table->keys_equal (key, entry)) {
+	    hash_table->entries[idx] = DEAD_ENTRY;
+	    hash_table->live_entries--;
+	    return entry;
+	}
+    } else if (ENTRY_IS_FREE (entry))
+	return NULL;
+
+    i = 1;
+    step = key->hash % hash_table->arrangement->rehash;
+    if (step == 0)
+	step = 1;
+    do {
+	idx += step;
+	if (idx >= table_size)
+	    idx -= table_size;
+
+	entry = hash_table->entries[idx];
+	if (ENTRY_IS_LIVE (entry)) {
+	    if (hash_table->keys_equal (key, entry)) {
+		hash_table->entries[idx] = DEAD_ENTRY;
+		hash_table->live_entries--;
+		return entry;
+	    }
+	} else if (ENTRY_IS_FREE (entry))
 	    return NULL;
     } while (++i < table_size);
 
@@ -348,11 +403,10 @@ _cairo_hash_table_lookup (cairo_hash_table_t *hash_table,
 /**
  * _cairo_hash_table_random_entry:
  * @hash_table: a hash table
- * @predicate: a predicate function, or %NULL for any entry.
+ * @predicate: a predicate function.
  *
  * Find a random entry in the hash table satisfying the given
- * @predicate. A %NULL @predicate is taken as equivalent to a function
- * which always returns %TRUE, (eg. any entry in the table will do).
+ * @predicate.
  *
  * We use the same algorithm as the lookup algorithm to walk over the
  * entries in the hash table in a pseudo-random order. Walking
@@ -369,36 +423,33 @@ void *
 _cairo_hash_table_random_entry (cairo_hash_table_t	   *hash_table,
 				cairo_hash_predicate_func_t predicate)
 {
-    cairo_hash_entry_t **entry;
+    cairo_hash_entry_t *entry;
     unsigned long hash;
     unsigned long table_size, i, idx, step;
 
-    table_size = hash_table->arrangement->size;
+    assert (predicate != NULL);
 
+    table_size = hash_table->arrangement->size;
     hash = rand ();
     idx = hash % table_size;
-    step = 0;
 
-    for (i = 0; i < table_size; ++i)
-    {
-	entry = &hash_table->entries[idx];
+    entry = hash_table->entries[idx];
+    if (ENTRY_IS_LIVE (entry) && predicate (entry))
+	return entry;
 
-	if (ENTRY_IS_LIVE (*entry) &&
-	    (predicate == NULL || predicate (*entry)))
-	{
-	    return *entry;
-	}
-
-	if (step == 0) {
-	    step = hash % hash_table->arrangement->rehash;
-	    if (step == 0)
-		step = 1;
-	}
-
+    i = 1;
+    step = hash % hash_table->arrangement->rehash;
+    if (step == 0)
+	step = 1;
+    do {
 	idx += step;
 	if (idx >= table_size)
 	    idx -= table_size;
-    }
+
+	entry = hash_table->entries[idx];
+	if (ENTRY_IS_LIVE (entry) && predicate (entry))
+	    return entry;
+    } while (++i < table_size);
 
     return NULL;
 }

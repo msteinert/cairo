@@ -68,6 +68,10 @@ _cairo_hash_table_lookup (cairo_hash_table_t  *hash_table,
 			  cairo_hash_entry_t  *key);
 
 cairo_private void *
+_cairo_hash_table_steal (cairo_hash_table_t *hash_table,
+			 cairo_hash_entry_t *key);
+
+cairo_private void *
 _cairo_hash_table_random_entry (cairo_hash_table_t	   *hash_table,
 				cairo_hash_predicate_func_t predicate);
 

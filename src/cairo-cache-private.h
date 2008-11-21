@@ -113,8 +113,16 @@ cairo_private void *
 _cairo_cache_lookup (cairo_cache_t	  *cache,
 		     cairo_cache_entry_t  *key);
 
+cairo_private void *
+_cairo_cache_steal (cairo_cache_t	  *cache,
+		     cairo_cache_entry_t  *key);
+
 cairo_private cairo_status_t
 _cairo_cache_insert (cairo_cache_t	 *cache,
+		     cairo_cache_entry_t *entry);
+
+cairo_private void
+_cairo_cache_remove (cairo_cache_t	 *cache,
 		     cairo_cache_entry_t *entry);
 
 cairo_private void
