@@ -49,7 +49,7 @@ _cairo_clip_path_destroy (cairo_clip_path_t *clip_path);
 void
 _cairo_clip_init (cairo_clip_t *clip, cairo_surface_t *target)
 {
-    if (target)
+    if (target && target->backend)
 	clip->mode = _cairo_surface_get_clip_mode (target);
     else
 	clip->mode = CAIRO_CLIP_MODE_MASK;

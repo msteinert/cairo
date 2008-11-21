@@ -166,8 +166,8 @@ cairo_create (cairo_surface_t *target)
 
     cr->gstate = cr->gstate_tail;
     cr->gstate_freelist = NULL;
-    status = _cairo_gstate_init (cr->gstate, target);
 
+    status = _cairo_gstate_init (cr->gstate, target);
     if (status)
 	_cairo_set_error (cr, status);
 
