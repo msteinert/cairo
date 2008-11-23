@@ -1588,6 +1588,7 @@ _cairo_pdf_surface_emit_jpx_image (cairo_pdf_surface_t   *surface,
 
     *res = surface->pdf_stream.self;
     _cairo_output_stream_write (surface->output, mime_data, mime_data_length);
+    _cairo_output_stream_printf (surface->output, "\n");
     status = _cairo_pdf_surface_close_stream (surface);
 
     *width = info.width;
@@ -1639,6 +1640,7 @@ _cairo_pdf_surface_emit_jpeg_image (cairo_pdf_surface_t   *surface,
 
     *res = surface->pdf_stream.self;
     _cairo_output_stream_write (surface->output, mime_data, mime_data_length);
+    _cairo_output_stream_printf (surface->output, "\n");
     status = _cairo_pdf_surface_close_stream (surface);
 
     *width = info.width;
