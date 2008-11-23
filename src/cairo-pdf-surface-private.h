@@ -128,12 +128,14 @@ struct _cairo_pdf_surface {
     cairo_pdf_resource_t next_available_resource;
     cairo_pdf_resource_t pages_resource;
 
+    cairo_pdf_version_t pdf_version;
     cairo_bool_t compress_content;
 
     cairo_pdf_resource_t content;
     cairo_pdf_resource_t content_resources;
     cairo_pdf_group_resources_t resources;
     cairo_bool_t has_fallback_images;
+    cairo_bool_t header_emitted;
 
     struct {
 	cairo_bool_t active;

@@ -111,6 +111,20 @@
  *   XObject instead of using an indirect object.
  */
 
+static const cairo_pdf_version_t _cairo_pdf_versions[] =
+{
+    CAIRO_PDF_VERSION_1_4,
+    CAIRO_PDF_VERSION_1_5
+};
+
+#define CAIRO_PDF_VERSION_LAST ARRAY_LENGTH (_cairo_pdf_versions)
+
+static const char * _cairo_pdf_version_strings[CAIRO_PDF_VERSION_LAST] =
+{
+    "PDF 1.4",
+    "PDF 1.5"
+};
+
 typedef struct _cairo_pdf_object {
     long offset;
 } cairo_pdf_object_t;
@@ -273,6 +287,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
         goto BAIL1;
     }
 
+    surface->pdf_version = CAIRO_PDF_VERSION_1_5;
     surface->compress_content = TRUE;
     surface->pdf_stream.active = FALSE;
     surface->pdf_stream.old_output = NULL;
@@ -285,6 +300,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
     surface->force_fallbacks = FALSE;
     surface->select_pattern_gstate_saved = FALSE;
     surface->current_pattern_is_solid_color = FALSE;
+    surface->header_emitted = FALSE;
 
     _cairo_pdf_operators_init (&surface->pdf_operators,
 			       surface->output,
@@ -293,12 +309,6 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
     _cairo_pdf_operators_set_font_subsets_callback (&surface->pdf_operators,
 						    _cairo_pdf_surface_add_font,
 						    surface);
-
-    /* Document header */
-    _cairo_output_stream_printf (surface->output,
-				 "%%PDF-1.5\n");
-    _cairo_output_stream_printf (surface->output,
-				 "%%%c%c%c%c\n", 181, 237, 174, 251);
 
     surface->paginated_surface =  _cairo_paginated_surface_create (
 	                                  &surface->base,
@@ -435,6 +445,80 @@ _extract_pdf_surface (cairo_surface_t		 *surface,
     *pdf_surface = (cairo_pdf_surface_t *) target;
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+/**
+ * cairo_pdf_surface_restrict_to_version:
+ * @surface: a PDF #cairo_surface_t
+ * @version: PDF version
+ *
+ * Restricts the generated PDF file to @version. See cairo_pdf_get_versions()
+ * for a list of available version values that can be used here.
+ *
+ * This function should only be called before any drawing operations
+ * have been performed on the given surface. The simplest way to do
+ * this is to call this function immediately after creating the
+ * surface.
+ *
+ * Since: 1.10
+ **/
+void
+cairo_pdf_surface_restrict_to_version (cairo_surface_t 		*abstract_surface,
+				       cairo_pdf_version_t  	 version)
+{
+    cairo_pdf_surface_t *surface = NULL; /* hide compiler warning */
+    cairo_status_t status;
+
+    status = _extract_pdf_surface (abstract_surface, &surface);
+    if (status) {
+	status = _cairo_surface_set_error (abstract_surface, status);
+	return;
+    }
+
+    if (version < CAIRO_PDF_VERSION_LAST)
+	surface->pdf_version = version;
+}
+
+/**
+ * cairo_pdf_get_versions:
+ * @versions: supported version list
+ * @num_versions: list length
+ *
+ * Used to retrieve the list of supported versions. See
+ * cairo_pdf_surface_restrict_to_version().
+ *
+ * Since: 1.10
+ **/
+void
+cairo_pdf_get_versions (cairo_pdf_version_t const	**versions,
+                        int                     	 *num_versions)
+{
+    if (versions != NULL)
+	*versions = _cairo_pdf_versions;
+
+    if (num_versions != NULL)
+	*num_versions = CAIRO_PDF_VERSION_LAST;
+}
+
+/**
+ * cairo_pdf_version_to_string:
+ * @version: a version id
+ *
+ * Get the string representation of the given @version id. This function
+ * will return %NULL if @version isn't valid. See cairo_pdf_get_versions()
+ * for a way to get the list of valid version ids.
+ *
+ * Return value: the string associated to given version.
+ *
+ * Since: 1.10
+ **/
+const char *
+cairo_pdf_version_to_string (cairo_pdf_version_t version)
+{
+    if (version >= CAIRO_PDF_VERSION_LAST)
+	return NULL;
+
+    return _cairo_pdf_version_strings[version];
 }
 
 /**
@@ -1290,6 +1374,26 @@ static cairo_int_status_t
 _cairo_pdf_surface_start_page (void *abstract_surface)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
+
+    /* Document header */
+    if (! surface->header_emitted) {
+	const char *version;
+
+	switch (surface->pdf_version) {
+	case CAIRO_PDF_VERSION_1_4:
+	    version = "1.4";
+	    break;
+	case CAIRO_PDF_VERSION_1_5:
+	    version = "1.5";
+	    break;
+	}
+
+	_cairo_output_stream_printf (surface->output,
+				     "%%PDF-%s\n", version);
+	_cairo_output_stream_printf (surface->output,
+				     "%%%c%c%c%c\n", 181, 237, 174, 251);
+	surface->header_emitted = TRUE;
+    }
 
     _cairo_pdf_group_resources_clear (&surface->resources);
 
