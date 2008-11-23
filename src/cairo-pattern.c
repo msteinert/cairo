@@ -2174,7 +2174,8 @@ _cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
 	combined = src_solid->color;
 	_cairo_color_multiply_alpha (&combined, mask_solid->color.alpha);
 
-	_cairo_pattern_init_solid (&src_tmp.solid, &combined, CAIRO_CONTENT_COLOR_ALPHA);
+	_cairo_pattern_init_solid (&src_tmp.solid, &combined,
+				   src_solid->content | mask_solid->content);
 
 	src = &src_tmp.base;
 	mask = NULL;
