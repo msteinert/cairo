@@ -116,6 +116,7 @@ draw (cairo_t *cr, int width, int height)
 {
     const char jpg_filename[] = "jpeg.jpg";
     const char png_filename[] = "png.png";
+    const char jp2_filename[] = "jp2.jp2";
     cairo_test_status_t status;
 
     status = paint_file (cr, jpg_filename, CAIRO_MIME_TYPE_JPEG, 0, 0);
@@ -126,6 +127,10 @@ draw (cairo_t *cr, int width, int height)
     if (status)
 	return status;
 
+    status = paint_file (cr, jp2_filename, CAIRO_MIME_TYPE_JP2, 0, 100);
+    if (status)
+	return status;
+
     return CAIRO_TEST_SUCCESS;
 }
 
@@ -133,5 +138,5 @@ CAIRO_TEST (mime_data,
 	    "Check that the mime-data embedding works",
 	    "jpeg, api", /* keywords */
 	    NULL, /* requirements */
-	    200, 100,
+	    200, 150,
 	    NULL, draw)
