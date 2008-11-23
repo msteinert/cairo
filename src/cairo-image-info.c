@@ -36,6 +36,12 @@
 #include "cairoint.h"
 #include "cairo-image-info-private.h"
 
+static uint32_t
+_get_be32 (const unsigned char *p)
+{
+    return p[0] << 24 | p[1] << 16 | p[2] << 8 | p[3];
+}
+
 /* Markers with no parameters. All other markers are followed by a two
  * byte length of the parameters. */
 #define TEM       0x01
@@ -148,12 +154,6 @@ static const unsigned char _jpx_signature[] = {
     0x00, 0x00, 0x00, 0x0c, 0x6a, 0x50, 0x20, 0x20, 0x0d, 0x0a, 0x87, 0x0a
 };
 
-static uint32_t
-_get_be32 (const unsigned char *p)
-{
-    return p[0] << 24 | p[1] << 16 | p[2] << 8 | p[3];
-}
-
 static const unsigned char *
 _jpx_next_box (const unsigned char *p)
 {
@@ -236,6 +236,40 @@ _cairo_image_info_get_jpx_info (cairo_image_info_t	*info,
     /* Get the image info */
     p = _jpx_get_box_contents (p);
     _jpx_extract_info (p, info);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+#define PNG_IHDR 0x49484452
+
+static const unsigned char _png_magic[8] = { 137, 80, 78, 71, 13, 10, 26, 10 };
+
+cairo_int_status_t
+_cairo_image_info_get_png_info (cairo_image_info_t     *info,
+                               const unsigned char     *data,
+                               long                     length)
+{
+    const unsigned char *p = data;
+    const unsigned char *end = data + length;
+
+    if (length < 8 || memcmp (data, _png_magic, 8) != 0)
+       return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    p += 8;
+
+    /* The first chunk must be IDHR. IDHR has 13 bytes of data plus
+     * the 12 bytes of overhead for the chunk. */
+    if (p + 13 + 12 > end)
+       return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    p += 4;
+    if (_get_be32 (p) != PNG_IHDR)
+       return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    p += 4;
+    info->width = _get_be32 (p);
+    p += 4;
+    info->height = _get_be32 (p);
 
     return CAIRO_STATUS_SUCCESS;
 }
