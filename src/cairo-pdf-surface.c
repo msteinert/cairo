@@ -296,7 +296,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
 
     /* Document header */
     _cairo_output_stream_printf (surface->output,
-				 "%%PDF-1.4\n");
+				 "%%PDF-1.5\n");
     _cairo_output_stream_printf (surface->output,
 				 "%%%c%c%c%c\n", 181, 237, 174, 251);
 
@@ -1552,6 +1552,51 @@ CLEANUP:
 }
 
 static cairo_int_status_t
+_cairo_pdf_surface_emit_jpx_image (cairo_pdf_surface_t   *surface,
+				   cairo_surface_t	 *source,
+				   cairo_pdf_resource_t  *res,
+				   int                   *width,
+				   int                   *height)
+{
+    cairo_status_t status;
+    const unsigned char *mime_data;
+    unsigned int mime_data_length;
+    cairo_image_info_t info;
+
+    cairo_surface_get_mime_data (source, CAIRO_MIME_TYPE_JP2,
+				 &mime_data, &mime_data_length);
+    if (mime_data == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    status = _cairo_image_info_get_jpx_info (&info, mime_data, mime_data_length);
+    if (status)
+	return status;
+
+    status = _cairo_pdf_surface_open_stream (surface,
+					     NULL,
+					     FALSE,
+					     "   /Type /XObject\n"
+					     "   /Subtype /Image\n"
+					     "   /Width %d\n"
+					     "   /Height %d\n"
+					     "   /ColorSpace /DeviceRGB\n"
+					     "   /Filter /JPXDecode\n",
+					     info.width,
+					     info.height);
+    if (status)
+	return status;
+
+    *res = surface->pdf_stream.self;
+    _cairo_output_stream_write (surface->output, mime_data, mime_data_length);
+    status = _cairo_pdf_surface_close_stream (surface);
+
+    *width = info.width;
+    *height = info.height;
+
+    return status;
+}
+
+static cairo_int_status_t
 _cairo_pdf_surface_emit_jpeg_image (cairo_pdf_surface_t   *surface,
 				    cairo_surface_t	  *source,
 				    cairo_pdf_resource_t  *res,
@@ -1618,6 +1663,11 @@ _cairo_pdf_surface_emit_image_surface (cairo_pdf_surface_t     *surface,
     cairo_surface_pattern_t *pattern = (cairo_surface_pattern_t *) pdf_pattern->pattern;
     int x = 0;
     int y = 0;
+
+    status = _cairo_pdf_surface_emit_jpx_image (surface, pattern->surface,
+						resource, width, height);
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	return status;
 
     status = _cairo_pdf_surface_emit_jpeg_image (surface, pattern->surface,
 						 resource, width, height);
