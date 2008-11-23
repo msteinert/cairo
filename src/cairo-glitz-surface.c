@@ -261,11 +261,12 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t   *surface,
 				       surface->clip_boxes,
 				       surface->num_clip_boxes);
 
-    status = _pixman_format_from_masks (&masks, &pixman_format);
-    if (status) {
-        free (pixels);
-        return status;
+    if (! _pixman_format_from_masks (&masks, &pixman_format))
+    {
+	status = _cairo_error (CAIRO_STATUS_INVALID_FORMAT);
+	goto FAIL;
     }
+
     image = (cairo_image_surface_t*)
 	_cairo_image_surface_create_with_pixman_format ((unsigned char *) pixels,
 							pixman_format,
@@ -273,7 +274,10 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t   *surface,
 							height,
 							pf.bytes_per_line);
     if (image->base.status)
+    {
+	status = image->base.status;
 	goto FAIL;
+    }
 
     _cairo_image_surface_assume_ownership_of_data (image);
 
@@ -283,7 +287,7 @@ _cairo_glitz_surface_get_image (cairo_glitz_surface_t   *surface,
 
  FAIL:
     free (pixels);
-    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    return status;
 }
 
 static void
