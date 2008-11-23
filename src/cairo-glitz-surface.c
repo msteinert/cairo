@@ -510,6 +510,8 @@ _cairo_glitz_surface_clone_similar (void	    *abstract_surface,
 	}
 
 	*clone_out = &clone->base;
+	*clone_offset_x = 0;
+	*clone_offset_y = 0;
 
 	return CAIRO_STATUS_SUCCESS;
     }
