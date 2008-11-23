@@ -68,6 +68,7 @@ _cairo_pdf_operators_init (cairo_pdf_operators_t	*pdf_operators,
     pdf_operators->in_text_object = FALSE;
     pdf_operators->num_glyphs = 0;
     pdf_operators->has_line_style = FALSE;
+    pdf_operators->use_actual_text = FALSE;
 }
 
 cairo_status_t
@@ -103,6 +104,13 @@ _cairo_pdf_operators_set_cairo_to_pdf_matrix (cairo_pdf_operators_t *pdf_operato
 {
     pdf_operators->cairo_to_pdf = *cairo_to_pdf;
     pdf_operators->has_line_style = FALSE;
+}
+
+cairo_private void
+_cairo_pdf_operators_enable_actual_text (cairo_pdf_operators_t *pdf_operators,
+					 cairo_bool_t 	  	enable)
+{
+    pdf_operators->use_actual_text = enable;
 }
 
 /* Finish writing out any pending commands to the stream. This

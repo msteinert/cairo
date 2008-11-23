@@ -309,6 +309,7 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
     _cairo_pdf_operators_set_font_subsets_callback (&surface->pdf_operators,
 						    _cairo_pdf_surface_add_font,
 						    surface);
+    _cairo_pdf_operators_enable_actual_text(&surface->pdf_operators, TRUE);
 
     surface->paginated_surface =  _cairo_paginated_surface_create (
 	                                  &surface->base,
@@ -477,6 +478,9 @@ cairo_pdf_surface_restrict_to_version (cairo_surface_t 		*abstract_surface,
 
     if (version < CAIRO_PDF_VERSION_LAST)
 	surface->pdf_version = version;
+
+    _cairo_pdf_operators_enable_actual_text(&surface->pdf_operators,
+					    version >= CAIRO_PDF_VERSION_1_5);
 }
 
 /**
@@ -1666,6 +1670,9 @@ _cairo_pdf_surface_emit_jpx_image (cairo_pdf_surface_t   *surface,
     const unsigned char *mime_data;
     unsigned int mime_data_length;
     cairo_image_info_t info;
+
+    if (surface->pdf_version < CAIRO_PDF_VERSION_1_5)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     cairo_surface_get_mime_data (source, CAIRO_MIME_TYPE_JP2,
 				 &mime_data, &mime_data_length);
