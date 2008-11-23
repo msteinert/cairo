@@ -80,6 +80,10 @@
 # define CHECKJPEGFORMAT 0x1017
 #endif
 
+#if !defined(CHECKPNGFORMAT)
+# define CHECKPNGFORMAT 0x1018
+#endif
+
 #define PELS_72DPI  ((LONG)(72. / 0.0254))
 
 static const cairo_surface_backend_t cairo_win32_printing_surface_backend;
@@ -112,6 +116,10 @@ _cairo_win32_printing_surface_init_image_support (cairo_win32_surface_t *surface
     word = CHECKJPEGFORMAT;
     if (ExtEscape(surface->dc, QUERYESCSUPPORT, sizeof(word), (char *)&word, 0, (char *)NULL) > 0)
 	surface->flags |= CAIRO_WIN32_SURFACE_CAN_CHECK_JPEG;
+
+    word = CHECKPNGFORMAT;
+    if (ExtEscape(surface->dc, QUERYESCSUPPORT, sizeof(word), (char *)&word, 0, (char *)NULL) > 0)
+	surface->flags |= CAIRO_WIN32_SURFACE_CAN_CHECK_PNG;
 }
 
 static cairo_int_status_t
@@ -504,14 +512,12 @@ _cairo_win32_printing_surface_paint_meta_pattern (cairo_win32_surface_t   *surfa
 static cairo_int_status_t
 _cairo_win32_printing_surface_check_jpeg (cairo_win32_surface_t   *surface,
 					  cairo_surface_t         *source,
-					  const unsigned char    **jpeg_data,
-					  unsigned int            *jpeg_length,
-					  int 			  *jpeg_width,
-					  int 			  *jpeg_height)
+					  const unsigned char    **data,
+					  unsigned int            *length,
+					  cairo_image_info_t      *info)
 {
     const unsigned char *mime_data;
     unsigned int mime_data_length;
-    cairo_image_info_t info;
     cairo_int_status_t status;
     DWORD result;
 
@@ -523,7 +529,7 @@ _cairo_win32_printing_surface_check_jpeg (cairo_win32_surface_t   *surface,
     if (mime_data == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    status = _cairo_image_info_get_jpeg_info (&info, mime_data, mime_data_length);
+    status = _cairo_image_info_get_jpeg_info (info, mime_data, mime_data_length);
     if (status)
 	return status;
 
@@ -535,10 +541,47 @@ _cairo_win32_printing_surface_check_jpeg (cairo_win32_surface_t   *surface,
     if (result != 1)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    *jpeg_data = mime_data;
-    *jpeg_length = mime_data_length;
-    *jpeg_width = info.width;
-    *jpeg_height = info.height;
+    *data = mime_data;
+    *length = mime_data_length;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
+_cairo_win32_printing_surface_check_png (cairo_win32_surface_t   *surface,
+					 cairo_surface_t         *source,
+					 const unsigned char    **data,
+					 unsigned int            *length,
+					 cairo_image_info_t      *info)
+{
+    const unsigned char *mime_data;
+    unsigned int mime_data_length;
+
+    cairo_int_status_t status;
+    DWORD result;
+
+    if (!(surface->flags & CAIRO_WIN32_SURFACE_CAN_CHECK_PNG))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    cairo_surface_get_mime_data (source, CAIRO_MIME_TYPE_PNG,
+				 &mime_data, &mime_data_length);
+    if (mime_data == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    status = _cairo_image_info_get_png_info (info, mime_data, mime_data_length);
+    if (status)
+	return status;
+
+    result = 0;
+    if (ExtEscape(surface->dc, CHECKPNGFORMAT, mime_data_length, (char *) mime_data,
+		  sizeof(result), (char *) &result) <= 0)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (result != 1)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    *data = mime_data;
+    *length = mime_data_length;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -560,10 +603,11 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
     int x_tile, y_tile, left, right, top, bottom;
     RECT clip;
     const cairo_color_t *background_color;
-    const unsigned char *jpeg_data;
-    unsigned int jpeg_size;
-    int jpeg_width, jpeg_height;
-    cairo_bool_t use_jpeg;
+    const unsigned char *mime_data;
+    unsigned int mime_size;
+    cairo_image_info_t mime_info;
+    cairo_bool_t use_mime;
+    DWORD mime_type;
 
     /* If we can't use StretchDIBits with this surface, we can't do anything
      * here.
@@ -593,18 +637,26 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
 	goto CLEANUP_IMAGE;
     }
 
+    mime_type = BI_JPEG;
     status = _cairo_win32_printing_surface_check_jpeg (surface,
 						       pattern->surface,
-						       &jpeg_data,
-						       &jpeg_size,
-						       &jpeg_width,
-						       &jpeg_height);
+						       &mime_data,
+						       &mime_size,
+						       &mime_info);
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+	mime_type = BI_PNG;
+	status = _cairo_win32_printing_surface_check_png (surface,
+							  pattern->surface,
+							  &mime_data,
+							  &mime_size,
+							  &mime_info);
+    }
     if (status && status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
-    use_jpeg = (status == CAIRO_STATUS_SUCCESS);
+    use_mime = (status == CAIRO_STATUS_SUCCESS);
 
-    if (!use_jpeg && image->format != CAIRO_FORMAT_RGB24) {
+    if (!use_mime && image->format != CAIRO_FORMAT_RGB24) {
 	cairo_surface_pattern_t opaque_pattern;
 
 	opaque_surface = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
@@ -649,14 +701,14 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
     }
 
     bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bi.bmiHeader.biWidth = use_jpeg ? jpeg_width : opaque_image->width;
-    bi.bmiHeader.biHeight = use_jpeg ? - jpeg_height : -opaque_image->height;
-    bi.bmiHeader.biSizeImage = use_jpeg ? jpeg_size : 0;
+    bi.bmiHeader.biWidth = use_mime ? mime_info.width : opaque_image->width;
+    bi.bmiHeader.biHeight = use_mime ? - mime_info.height : -opaque_image->height;
+    bi.bmiHeader.biSizeImage = use_mime ? mime_size : 0;
     bi.bmiHeader.biXPelsPerMeter = PELS_72DPI;
     bi.bmiHeader.biYPelsPerMeter = PELS_72DPI;
     bi.bmiHeader.biPlanes = 1;
     bi.bmiHeader.biBitCount = 32;
-    bi.bmiHeader.biCompression = use_jpeg ? BI_JPEG : BI_RGB;
+    bi.bmiHeader.biCompression = use_mime ? mime_type : BI_RGB;
     bi.bmiHeader.biClrUsed = 0;
     bi.bmiHeader.biClrImportant = 0;
 
@@ -698,9 +750,9 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
 				opaque_image->height,
 				0,
 				0,
-				use_jpeg ? jpeg_width : opaque_image->width,
-				use_jpeg ? jpeg_height : opaque_image->height,
-				use_jpeg ? jpeg_data : opaque_image->data,
+				use_mime ? mime_info.width : opaque_image->width,
+				use_mime ? mime_info.height : opaque_image->height,
+				use_mime ? mime_data : opaque_image->data,
 				&bi,
 				DIB_RGB_COLORS,
 				SRCCOPY))

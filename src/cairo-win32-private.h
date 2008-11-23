@@ -120,6 +120,9 @@ enum {
 
     /* Whether we can use the CHECKJPEGFORMAT escape function */
     CAIRO_WIN32_SURFACE_CAN_CHECK_JPEG = (1<<7),
+
+    /* Whether we can use the CHECKJPEGFORMAT escape function */
+    CAIRO_WIN32_SURFACE_CAN_CHECK_PNG = (1<<8),
 };
 
 cairo_status_t
