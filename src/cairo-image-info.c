@@ -139,3 +139,103 @@ _cairo_image_info_get_jpeg_info (cairo_image_info_t	*info,
 
     return CAIRO_STATUS_SUCCESS;
 }
+
+#define JPX_FILETYPE 0x66747970
+#define JPX_JP2_HEADER 0x6A703268
+#define JPX_IMAGE_HEADER 0x69686472
+
+static const unsigned char _jpx_signature[] = {
+    0x00, 0x00, 0x00, 0x0c, 0x6a, 0x50, 0x20, 0x20, 0x0d, 0x0a, 0x87, 0x0a
+};
+
+static uint32_t
+_get_be32 (const unsigned char *p)
+{
+    return p[0] << 24 | p[1] << 16 | p[2] << 8 | p[3];
+}
+
+static const unsigned char *
+_jpx_next_box (const unsigned char *p)
+{
+    return p + _get_be32 (p);
+}
+
+static const unsigned char *
+_jpx_get_box_contents (const unsigned char *p)
+{
+    return p + 8;
+}
+
+static cairo_bool_t
+_jpx_match_box (const unsigned char *p, const unsigned char *end, uint32_t type)
+{
+    uint length;
+
+    if (p + 8 < end) {
+	length = _get_be32 (p);
+	if (_get_be32 (p + 4) == type &&  p + length < end)
+	    return TRUE;
+    }
+
+    return FALSE;
+}
+
+static const unsigned char *
+_jpx_find_box (const unsigned char *p, const unsigned char *end, uint32_t type)
+{
+    while (p < end) {
+	if (_jpx_match_box (p, end, type))
+	    return p;
+	p = _jpx_next_box (p);
+    }
+
+    return NULL;
+}
+
+static void
+_jpx_extract_info (const unsigned char *p, cairo_image_info_t *info)
+{
+    info->height = _get_be32 (p);
+    info->width = _get_be32 (p + 4);
+    info->num_components = (p[8] << 8) + p[9];
+    info->bits_per_component = p[10];
+}
+
+cairo_int_status_t
+_cairo_image_info_get_jpx_info (cairo_image_info_t	*info,
+				const unsigned char	*data,
+				long			 length)
+{
+    const unsigned char *p = data;
+    const unsigned char *end = data + length;
+
+    /* First 12 bytes must be the JPEG 2000 signature box. */
+    if (length < ARRAY_LENGTH(_jpx_signature) ||
+	memcmp(p, _jpx_signature, ARRAY_LENGTH(_jpx_signature)) != 0)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    p += ARRAY_LENGTH(_jpx_signature);
+
+    /* Next box must be a File Type Box */
+    if (! _jpx_match_box (p, end, JPX_FILETYPE))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    p = _jpx_next_box (p);
+
+    /* Locate the JP2 header box. */
+    p = _jpx_find_box (p, end, JPX_JP2_HEADER);
+    if (!p)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* Step into the JP2 header box. First box must be the Image
+     * Header */
+    p = _jpx_get_box_contents (p);
+    if (! _jpx_match_box (p, end, JPX_IMAGE_HEADER))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* Get the image info */
+    p = _jpx_get_box_contents (p);
+    _jpx_extract_info (p, info);
+
+    return CAIRO_STATUS_SUCCESS;
+}

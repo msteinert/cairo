@@ -1039,6 +1039,7 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
     const char *mime_types[] = {
 	CAIRO_MIME_TYPE_JPEG,
 	CAIRO_MIME_TYPE_PNG,
+	CAIRO_MIME_TYPE_JP2,
 	NULL
     }, **mime_type;
 

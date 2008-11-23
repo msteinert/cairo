@@ -1951,6 +1951,7 @@ cairo_surface_set_user_data (cairo_surface_t		 *surface,
 
 #define CAIRO_MIME_TYPE_JPEG "image/jpeg"
 #define CAIRO_MIME_TYPE_PNG "image/png"
+#define CAIRO_MIME_TYPE_JP2 "image/jp2"
 
 cairo_public void
 cairo_surface_get_mime_data (cairo_surface_t		*surface,
