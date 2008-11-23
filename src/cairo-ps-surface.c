@@ -63,7 +63,7 @@
 #include "cairo-meta-surface-private.h"
 #include "cairo-output-stream-private.h"
 #include "cairo-type3-glyph-surface-private.h"
-#include "cairo-jpeg-info-private.h"
+#include "cairo-image-info-private.h"
 
 #include <stdio.h>
 #include <ctype.h>
@@ -2130,14 +2130,14 @@ _cairo_ps_surface_emit_jpeg_image (cairo_ps_surface_t    *surface,
     cairo_status_t status;
     const unsigned char *mime_data;
     unsigned int mime_data_length;
-    cairo_jpeg_info_t info;
+    cairo_image_info_t info;
 
     cairo_surface_get_mime_data (source, CAIRO_MIME_TYPE_JPEG,
 				 &mime_data, &mime_data_length);
     if (mime_data == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    status = _cairo_jpeg_get_info (mime_data, mime_data_length, &info);
+    status = _cairo_image_info_get_jpeg_info (&info, mime_data, mime_data_length);
     if (status)
 	return status;
 

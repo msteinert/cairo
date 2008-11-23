@@ -34,7 +34,7 @@
  */
 
 #include "cairoint.h"
-#include "cairo-jpeg-info-private.h"
+#include "cairo-image-info-private.h"
 
 /* Markers with no parameters. All other markers are followed by a two
  * byte length of the parameters. */
@@ -60,7 +60,7 @@
 #define SOF15 0xcf
 
 static const unsigned char *
-_skip_segment (const unsigned char *p)
+_jpeg_skip_segment (const unsigned char *p)
 {
     int len;
 
@@ -71,7 +71,7 @@ _skip_segment (const unsigned char *p)
 }
 
 static void
-_extract_info (cairo_jpeg_info_t *info, const unsigned char *p)
+_jpeg_extract_info (cairo_image_info_t *info, const unsigned char *p)
 {
     info->width = (p[6] << 8) + p[7];
     info->height = (p[4] << 8) + p[5];
@@ -80,9 +80,9 @@ _extract_info (cairo_jpeg_info_t *info, const unsigned char *p)
 }
 
 cairo_int_status_t
-_cairo_jpeg_get_info (const unsigned char	*data,
-		      long			length,
-		      cairo_jpeg_info_t		*info)
+_cairo_image_info_get_jpeg_info (cairo_image_info_t	*info,
+				 const unsigned char	*data,
+				 long			 length)
 {
     const unsigned char *p = data;
 
@@ -120,7 +120,7 @@ _cairo_jpeg_get_info (const unsigned char	*data,
 	    if (p + 8 > data + length)
 		return CAIRO_INT_STATUS_UNSUPPORTED;
 
-	    _extract_info (info, p);
+	    _jpeg_extract_info (info, p);
 	    return CAIRO_STATUS_SUCCESS;
 
 	default:
@@ -132,7 +132,7 @@ _cairo_jpeg_get_info (const unsigned char	*data,
 	    if (p + 2 > data + length)
 		return CAIRO_INT_STATUS_UNSUPPORTED;
 
-	    p = _skip_segment (p);
+	    p = _jpeg_skip_segment (p);
 	    break;
 	}
     }

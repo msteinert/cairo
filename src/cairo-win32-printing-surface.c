@@ -52,7 +52,7 @@
 #include "cairo-win32-private.h"
 #include "cairo-meta-surface-private.h"
 #include "cairo-scaled-font-subsets-private.h"
-#include "cairo-jpeg-info-private.h"
+#include "cairo-image-info-private.h"
 
 #include <windows.h>
 
@@ -511,7 +511,7 @@ _cairo_win32_printing_surface_check_jpeg (cairo_win32_surface_t   *surface,
 {
     const unsigned char *mime_data;
     unsigned int mime_data_length;
-    cairo_jpeg_info_t info;
+    cairo_image_info_t info;
     cairo_int_status_t status;
     DWORD result;
 
@@ -523,7 +523,7 @@ _cairo_win32_printing_surface_check_jpeg (cairo_win32_surface_t   *surface,
     if (mime_data == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    status = _cairo_jpeg_get_info (mime_data, mime_data_length, &info);
+    status = _cairo_image_info_get_jpeg_info (&info, mime_data, mime_data_length);
     if (status)
 	return status;
 

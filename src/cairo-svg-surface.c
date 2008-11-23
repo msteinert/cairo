@@ -43,7 +43,7 @@
 #include "cairoint.h"
 #include "cairo-svg.h"
 #include "cairo-analysis-surface-private.h"
-#include "cairo-jpeg-info-private.h"
+#include "cairo-image-info-private.h"
 #include "cairo-meta-surface-private.h"
 #include "cairo-output-stream-private.h"
 #include "cairo-path-fixed-private.h"
@@ -982,7 +982,7 @@ _cairo_surface_base64_encode_jpeg (cairo_surface_t       *surface,
 {
     const unsigned char *mime_data;
     unsigned int mime_data_length;
-    cairo_jpeg_info_t jpeg_info;
+    cairo_image_info_t image_info;
     base64_write_closure_t info;
     cairo_status_t status;
 
@@ -991,7 +991,7 @@ _cairo_surface_base64_encode_jpeg (cairo_surface_t       *surface,
     if (mime_data == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    status = _cairo_jpeg_get_info (mime_data, mime_data_length, &jpeg_info);
+    status = _cairo_image_info_get_jpeg_info (&image_info, mime_data, mime_data_length);
     if (status)
 	return status;
 
