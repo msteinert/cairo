@@ -42,6 +42,11 @@ _get_be32 (const unsigned char *p)
     return p[0] << 24 | p[1] << 16 | p[2] << 8 | p[3];
 }
 
+/* JPEG (image/jpeg)
+ *
+ * http://www.w3.org/Graphics/JPEG/itu-t81.pdf
+ */
+
 /* Markers with no parameters. All other markers are followed by a two
  * byte length of the parameters. */
 #define TEM       0x01
@@ -146,6 +151,11 @@ _cairo_image_info_get_jpeg_info (cairo_image_info_t	*info,
     return CAIRO_STATUS_SUCCESS;
 }
 
+/* JPEG 2000 (image/jp2)
+ *
+ * http://www.jpeg.org/public/15444-1annexi.pdf
+ */
+
 #define JPX_FILETYPE 0x66747970
 #define JPX_JP2_HEADER 0x6A703268
 #define JPX_IMAGE_HEADER 0x69686472
@@ -239,6 +249,11 @@ _cairo_image_info_get_jpx_info (cairo_image_info_t	*info,
 
     return CAIRO_STATUS_SUCCESS;
 }
+
+/* PNG (image/png)
+ *
+ * http://www.w3.org/TR/2003/REC-PNG-20031110/
+ */
 
 #define PNG_IHDR 0x49484452
 
