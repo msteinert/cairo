@@ -617,7 +617,7 @@ _cairo_lround (double d)
 #include <windows.h>
 #include <io.h>
 
-/* tmpfile() replacment for Windows.
+/* tmpfile() replacement for Windows.
  *
  * On Windows tmpfile() creates the file in the root directory. This
  * may fail due to unsufficient privileges.
