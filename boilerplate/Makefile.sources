@@ -25,7 +25,11 @@ cairo_boilerplate_directfb_private = cairo-boilerplate-directfb-private.h
 cairo_boilerplate_directfb_sources = cairo-boilerplate-directfb.c
 
 cairo_boilerplate_glitz_private = cairo-boilerplate-glitz-private.h
-cairo_boilerplate_glitz_sources = cairo-boilerplate-glitz.c
+cairo_boilerplate_glitz_sources = \
+	cairo-boilerplate-glitz-agl.c \
+	cairo-boilerplate-glitz-glx.c \
+	cairo-boilerplate-glitz-wgl.c \
+	$(NULL)
 
 cairo_boilerplate_pdf_private = cairo-boilerplate-pdf-private.h
 cairo_boilerplate_pdf_sources = cairo-boilerplate-pdf.c

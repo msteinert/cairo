@@ -31,6 +31,12 @@
 #include "config.h"
 #endif
 
+typedef struct _glitz_target_closure_base {
+    int width;
+    int height;
+    cairo_content_t content;
+} glitz_target_closure_base_t;
+
 #if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE
 cairo_surface_t *
 _cairo_boilerplate_glitz_glx_create_surface (const char			 *name,
