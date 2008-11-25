@@ -1387,6 +1387,7 @@ _cairo_pdf_surface_start_page (void *abstract_surface)
 	case CAIRO_PDF_VERSION_1_4:
 	    version = "1.4";
 	    break;
+	default:
 	case CAIRO_PDF_VERSION_1_5:
 	    version = "1.5";
 	    break;
