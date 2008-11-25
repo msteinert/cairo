@@ -1924,8 +1924,6 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
 {
     cairo_xlib_surface_t *surface = abstract_surface;
     XRenderColor render_color;
-    XRectangle static_xrects[CAIRO_STACK_ARRAY_LENGTH (XRectangle)];
-    XRectangle *xrects = static_xrects;
     int i;
 
     _cairo_xlib_display_notify (surface->display);
@@ -1961,6 +1959,9 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
 			      rects->width,
 			      rects->height);
     } else {
+	XRectangle static_xrects[CAIRO_STACK_ARRAY_LENGTH (XRectangle)];
+	XRectangle *xrects = static_xrects;
+
 	if (num_rects > ARRAY_LENGTH (static_xrects)) {
 	    xrects = _cairo_malloc_ab (num_rects, sizeof (XRectangle));
 	    if (xrects == NULL)
