@@ -783,20 +783,17 @@ _cairo_gstate_stroke_to_path (cairo_gstate_t *gstate)
 }
 */
 
-cairo_status_t
+void
 _cairo_gstate_path_extents (cairo_gstate_t     *gstate,
 			    cairo_path_fixed_t *path,
 			    double *x1, double *y1,
 			    double *x2, double *y2)
 {
-    cairo_status_t status;
     double px1, py1, px2, py2;
 
-    status = _cairo_path_fixed_bounds (path,
-				       &px1, &py1, &px2, &py2,
-				       gstate->tolerance);
-    if (status)
-	return status;
+    _cairo_path_fixed_bounds (path,
+			      &px1, &py1, &px2, &py2,
+			      gstate->tolerance);
 
     _cairo_gstate_backend_to_user_rectangle (gstate,
 					     &px1, &py1, &px2, &py2,
@@ -809,8 +806,6 @@ _cairo_gstate_path_extents (cairo_gstate_t     *gstate,
 	*x2 = px2;
     if (y2)
 	*y2 = py2;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t

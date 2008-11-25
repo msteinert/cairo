@@ -143,30 +143,11 @@ _cairo_clip_path_intersect_to_rectangle (cairo_clip_path_t       *clip_path,
 				         cairo_rectangle_int_t   *rectangle)
 {
     while (clip_path) {
-        cairo_status_t status;
-        cairo_traps_t traps;
-        cairo_box_t extents;
-        cairo_rectangle_int_t extents_rect;
+        cairo_rectangle_int_t extents;
 
-	_cairo_box_from_rectangle (&extents, rectangle);
+	_cairo_path_fixed_approximate_extents (&clip_path->path, &extents);
 
-        _cairo_traps_init (&traps);
-	_cairo_traps_limit (&traps, &extents);
-
-        status = _cairo_path_fixed_fill_to_traps (&clip_path->path,
-                                                  clip_path->fill_rule,
-                                                  clip_path->tolerance,
-                                                  &traps);
-        if (status) {
-            _cairo_traps_fini (&traps);
-            return status;
-        }
-
-        _cairo_traps_extents (&traps, &extents);
-        _cairo_traps_fini (&traps);
-
-        _cairo_box_round_to_rectangle (&extents, &extents_rect);
-        if (! _cairo_rectangle_intersect (rectangle, &extents_rect))
+        if (! _cairo_rectangle_intersect (rectangle, &extents))
 	    return CAIRO_STATUS_SUCCESS;
 
         clip_path = clip_path->prev;

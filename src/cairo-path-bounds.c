@@ -132,13 +132,67 @@ _cairo_path_bounder_line_to (void *closure, cairo_point_t *point)
 }
 
 static cairo_status_t
+_cairo_path_bounder_curve_to (void *closure,
+			      cairo_point_t *b,
+			      cairo_point_t *c,
+			      cairo_point_t *d)
+{
+    cairo_path_bounder_t *bounder = closure;
+
+    if (bounder->has_move_to_point) {
+	_cairo_path_bounder_add_point (bounder,
+				       &bounder->move_to_point);
+	bounder->has_move_to_point = FALSE;
+    }
+
+    _cairo_path_bounder_add_point (bounder, b);
+    _cairo_path_bounder_add_point (bounder, c);
+    _cairo_path_bounder_add_point (bounder, d);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
 _cairo_path_bounder_close_path (void *closure)
 {
     return CAIRO_STATUS_SUCCESS;
 }
 
-/* XXX: Perhaps this should compute a PixRegion rather than 4 doubles */
-cairo_status_t
+/* This computes the extents of all the points in the path, not those of
+ * the damage area (i.e it does not consider winding and it only inspects
+ * the control points of the curves, not the flattened path).
+ */
+void
+_cairo_path_fixed_approximate_extents (cairo_path_fixed_t *path,
+				       cairo_rectangle_int_t *extents)
+{
+    cairo_path_bounder_t bounder;
+    cairo_status_t status;
+
+    _cairo_path_bounder_init (&bounder);
+
+    status = _cairo_path_fixed_interpret (path, CAIRO_DIRECTION_FORWARD,
+					       _cairo_path_bounder_move_to,
+					       _cairo_path_bounder_line_to,
+					       _cairo_path_bounder_curve_to,
+					       _cairo_path_bounder_close_path,
+					       &bounder);
+    assert (status == CAIRO_STATUS_SUCCESS);
+
+    if (bounder.has_point) {
+	extents->x = bounder.min_x;
+	extents->y = bounder.min_y;
+	extents->width = bounder.max_x - extents->x;
+	extents->height = bounder.max_y - extents->y;
+    } else {
+	extents->x = extents->y = 0;
+	extents->width = extents->height = 0;
+    }
+
+    _cairo_path_bounder_fini (&bounder);
+}
+
+void
 _cairo_path_fixed_bounds (cairo_path_fixed_t *path,
 			  double *x1, double *y1,
 			  double *x2, double *y2,
@@ -155,8 +209,9 @@ _cairo_path_fixed_bounds (cairo_path_fixed_t *path,
 					       _cairo_path_bounder_close_path,
 					       &bounder,
 					       tolerance);
+    assert (status == CAIRO_STATUS_SUCCESS);
 
-    if (status == CAIRO_STATUS_SUCCESS && bounder.has_point) {
+    if (bounder.has_point) {
 	*x1 = _cairo_fixed_to_double (bounder.min_x);
 	*y1 = _cairo_fixed_to_double (bounder.min_y);
 	*x2 = _cairo_fixed_to_double (bounder.max_x);
@@ -169,6 +224,4 @@ _cairo_path_fixed_bounds (cairo_path_fixed_t *path,
     }
 
     _cairo_path_bounder_fini (&bounder);
-
-    return status;
 }

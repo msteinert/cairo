@@ -2132,11 +2132,13 @@ _cairo_surface_set_clip_region (cairo_surface_t	    *surface,
 
     assert (surface->backend->set_clip_region != NULL);
 
+    status = surface->backend->set_clip_region (surface, region);
+    if (unlikely (status))
+	return _cairo_surface_set_error (surface, status);
+
     surface->current_clip_serial = serial;
 
-    status = surface->backend->set_clip_region (surface, region);
-
-    return _cairo_surface_set_error (surface, status);
+    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_int_status_t
