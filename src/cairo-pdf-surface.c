@@ -3210,6 +3210,85 @@ _cairo_pdf_surface_emit_unicode_for_glyph (cairo_pdf_surface_t	*surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+/* Bob Jenkins hash
+ *
+ * Public domain code from:
+ *   http://burtleburtle.net/bob/hash/doobs.html
+ */
+
+#define HASH_MIX(a,b,c) 		\
+{ 					\
+    a -= b; a -= c; a ^= (c>>13);	\
+    b -= c; b -= a; b ^= (a<<8);	\
+    c -= a; c -= b; c ^= (b>>13);	\
+    a -= b; a -= c; a ^= (c>>12);	\
+    b -= c; b -= a; b ^= (a<<16);	\
+    c -= a; c -= b; c ^= (b>>5);	\
+    a -= b; a -= c; a ^= (c>>3);	\
+    b -= c; b -= a; b ^= (a<<10);	\
+    c -= a; c -= b; c ^= (b>>15);	\
+}
+
+static uint32_t
+_hash_data (const unsigned char *data, int length, uint32_t initval)
+{
+    uint32_t a, b, c, len;
+
+    len = length;
+    a = b = 0x9e3779b9;  /* the golden ratio; an arbitrary value */
+    c = initval;         /* the previous hash value */
+
+    while (len >= 12) {
+	a += (data[0] + ((uint32_t)data[1]<<8) + ((uint32_t)data[2]<<16) + ((uint32_t)data[3]<<24));
+	b += (data[4] + ((uint32_t)data[5]<<8) + ((uint32_t)data[6]<<16) + ((uint32_t)data[7]<<24));
+	c += (data[8] + ((uint32_t)data[9]<<8) + ((uint32_t)data[10]<<16)+ ((uint32_t)data[11]<<24));
+	HASH_MIX (a,b,c);
+	data += 12;
+	len -= 12;
+    }
+
+    c += length;
+    switch(len) {
+    case 11: c+= ((uint32_t) data[10] << 24);
+    case 10: c+= ((uint32_t) data[9] << 16);
+    case 9 : c+= ((uint32_t) data[8] << 8);
+    case 8 : b+= ((uint32_t) data[7] << 24);
+    case 7 : b+= ((uint32_t) data[6] << 16);
+    case 6 : b+= ((uint32_t) data[5] << 8);
+    case 5 : b+= data[4];
+    case 4 : a+= ((uint32_t) data[3] << 24);
+    case 3 : a+= ((uint32_t) data[2] << 16);
+    case 2 : a+= ((uint32_t) data[1] << 8);
+    case 1 : a+= data[0];
+    }
+    HASH_MIX (a,b,c);
+
+    return c;
+}
+
+static void
+_create_font_subset_tag (cairo_scaled_font_subset_t	*font_subset,
+			 const char 			*font_name,
+			 char				*tag)
+{
+    uint32_t hash;
+    int i;
+    long numerator;
+    ldiv_t d;
+
+    hash = _hash_data ((unsigned char *) font_name, strlen(font_name), 0);
+    hash = _hash_data ((unsigned char *) (font_subset->glyphs),
+		       font_subset->num_glyphs * sizeof(unsigned long), hash);
+
+    numerator = abs (hash);
+    for (i = 0; i < 6; i++) {
+	d = ldiv (numerator, 26);
+	numerator = d.quot;
+        tag[i] = 'A' + d.rem;
+    }
+    tag[i] = 0;
+}
+
 static cairo_int_status_t
 _cairo_pdf_surface_emit_to_unicode_stream (cairo_pdf_surface_t		*surface,
 					   cairo_scaled_font_subset_t	*font_subset,
@@ -3306,6 +3385,9 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
     cairo_pdf_font_t font;
     unsigned int i;
     cairo_status_t status;
+    char tag[10];
+
+    _create_font_subset_tag (font_subset, subset->base_font, tag);
 
     subset_resource = _cairo_pdf_surface_get_font_resource (surface,
 							    font_subset->font_id,
@@ -3340,7 +3422,7 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\n"
 				 "<< /Type /FontDescriptor\n"
-				 "   /FontName /%s\n"
+				 "   /FontName /%s+%s\n"
 				 "   /Flags 4\n"
 				 "   /FontBBox [ %ld %ld %ld %ld ]\n"
 				 "   /ItalicAngle 0\n"
@@ -3353,6 +3435,7 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
 				 ">>\n"
 				 "endobj\n",
 				 descriptor.id,
+				 tag,
 				 subset->base_font,
 				 subset->x_min,
 				 subset->y_min,
@@ -3370,7 +3453,7 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
                                  "%d 0 obj\n"
                                  "<< /Type /Font\n"
                                  "   /Subtype /CIDFontType0\n"
-                                 "   /BaseFont /%s\n"
+                                 "   /BaseFont /%s+%s\n"
                                  "   /CIDSystemInfo\n"
                                  "   << /Registry (Adobe)\n"
                                  "      /Ordering (Identity)\n"
@@ -3379,6 +3462,7 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
                                  "   /FontDescriptor %d 0 R\n"
                                  "   /W [0 [",
                                  cidfont_dict.id,
+				 tag,
                                  subset->base_font,
                                  descriptor.id);
 
@@ -3397,10 +3481,11 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
 				 "%d 0 obj\n"
 				 "<< /Type /Font\n"
 				 "   /Subtype /Type0\n"
-				 "   /BaseFont /%s\n"
+				 "   /BaseFont /%s+%s\n"
                                  "   /Encoding /Identity-H\n"
 				 "   /DescendantFonts [ %d 0 R]\n",
 				 subset_resource.id,
+				 tag,
 				 subset->base_font,
 				 cidfont_dict.id);
 
@@ -3473,6 +3558,9 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
     cairo_status_t status;
     unsigned long length;
     unsigned int i;
+    char tag[10];
+
+    _create_font_subset_tag (font_subset, subset->base_font, tag);
 
     subset_resource = _cairo_pdf_surface_get_font_resource (surface,
 							    font_subset->font_id,
@@ -3512,7 +3600,7 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\n"
 				 "<< /Type /FontDescriptor\n"
-				 "   /FontName /%s\n"
+				 "   /FontName /%s+%s\n"
 				 "   /Flags 4\n"
 				 "   /FontBBox [ %ld %ld %ld %ld ]\n"
 				 "   /ItalicAngle 0\n"
@@ -3525,6 +3613,7 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
 				 ">>\n"
 				 "endobj\n",
 				 descriptor.id,
+				 tag,
 				 subset->base_font,
 				 subset->x_min,
 				 subset->y_min,
@@ -3539,12 +3628,13 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
 				 "%d 0 obj\n"
 				 "<< /Type /Font\n"
 				 "   /Subtype /Type1\n"
-				 "   /BaseFont /%s\n"
+				 "   /BaseFont /%s+%s\n"
 				 "   /FirstChar 0\n"
 				 "   /LastChar %d\n"
 				 "   /FontDescriptor %d 0 R\n"
 				 "   /Widths [",
 				 subset_resource.id,
+				 tag,
 				 subset->base_font,
 				 font_subset->num_glyphs - 1,
 				 descriptor.id);
@@ -3626,6 +3716,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
     cairo_pdf_font_t font;
     cairo_truetype_subset_t subset;
     unsigned int i;
+    char tag[10];
 
     subset_resource = _cairo_pdf_surface_get_font_resource (surface,
 							    font_subset->font_id,
@@ -3636,6 +3727,8 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
     status = _cairo_truetype_subset_init (&subset, font_subset);
     if (unlikely (status))
 	return status;
+
+    _create_font_subset_tag (font_subset, subset.base_font, tag);
 
     status = _cairo_pdf_surface_open_stream (surface,
 					     NULL,
@@ -3673,7 +3766,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\n"
 				 "<< /Type /FontDescriptor\n"
-				 "   /FontName /%s\n"
+				 "   /FontName /%s+%s\n"
 				 "   /Flags 4\n"
 				 "   /FontBBox [ %ld %ld %ld %ld ]\n"
 				 "   /ItalicAngle 0\n"
@@ -3686,6 +3779,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 				 ">>\n"
 				 "endobj\n",
 				 descriptor.id,
+				 tag,
 				 subset.base_font,
 				 (long)(subset.x_min*PDF_UNITS_PER_EM),
 				 (long)(subset.y_min*PDF_UNITS_PER_EM),
@@ -3706,7 +3800,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
                                  "%d 0 obj\n"
                                  "<< /Type /Font\n"
                                  "   /Subtype /CIDFontType2\n"
-                                 "   /BaseFont /%s\n"
+                                 "   /BaseFont /%s+%s\n"
                                  "   /CIDSystemInfo\n"
                                  "   << /Registry (Adobe)\n"
                                  "      /Ordering (Identity)\n"
@@ -3715,6 +3809,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
                                  "   /FontDescriptor %d 0 R\n"
                                  "   /W [0 [",
                                  cidfont_dict.id,
+				 tag,
                                  subset.base_font,
                                  descriptor.id);
 
@@ -3733,10 +3828,11 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 				 "%d 0 obj\n"
 				 "<< /Type /Font\n"
 				 "   /Subtype /Type0\n"
-				 "   /BaseFont /%s\n"
+				 "   /BaseFont /%s+%s\n"
                                  "   /Encoding /Identity-H\n"
 				 "   /DescendantFonts [ %d 0 R]\n",
 				 subset_resource.id,
+				 tag,
 				 subset.base_font,
 				 cidfont_dict.id);
 
