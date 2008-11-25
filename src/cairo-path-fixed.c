@@ -1002,10 +1002,8 @@ _cairo_path_fixed_is_box (cairo_path_fixed_t *path,
 	buf->points[2].y == buf->points[3].y &&
 	buf->points[3].x == buf->points[0].x)
     {
-	if (box) {
-	    box->p1 = buf->points[0];
-	    box->p2 = buf->points[2];
-	}
+	box->p1 = buf->points[0];
+	box->p2 = buf->points[2];
 	return TRUE;
     }
 
@@ -1014,10 +1012,8 @@ _cairo_path_fixed_is_box (cairo_path_fixed_t *path,
 	buf->points[2].x == buf->points[3].x &&
 	buf->points[3].y == buf->points[0].y)
     {
-	if (box) {
-	    box->p1 = buf->points[0];
-	    box->p2 = buf->points[2];
-	}
+	box->p1 = buf->points[0];
+	box->p2 = buf->points[2];
 	return TRUE;
     }
 
@@ -1046,6 +1042,118 @@ _cairo_path_fixed_is_rectangle (cairo_path_fixed_t *path,
 
     if (buf->points[0].y == buf->points[1].y)
 	return TRUE;
+
+    return FALSE;
+}
+
+void
+_cairo_path_fixed_iter_init (cairo_path_fixed_iter_t *iter,
+			     cairo_path_fixed_t *path)
+{
+    iter->buf = &path->buf_head.base;
+    iter->n_op = 0;
+    iter->n_point = 0;
+}
+
+static cairo_bool_t
+_cairo_path_fixed_iter_next_op (cairo_path_fixed_iter_t *iter)
+{
+    if (++iter->n_op == iter->buf->num_ops) {
+	iter->buf = iter->buf->next;
+	iter->n_op = 0;
+	iter->n_point = 0;
+    }
+
+    return iter->buf != NULL;
+}
+
+cairo_bool_t
+_cairo_path_fixed_iter_is_box (cairo_path_fixed_iter_t *_iter,
+			       cairo_box_t *box)
+{
+    cairo_point_t points[5];
+    cairo_path_fixed_iter_t iter;
+
+    if (_iter->buf == NULL)
+	return FALSE;
+
+    iter = *_iter;
+
+    /* Check whether the ops are those that would be used for a rectangle */
+    if (iter.buf->op[iter.n_op] != CAIRO_PATH_OP_MOVE_TO)
+	return FALSE;
+    points[0] = iter.buf->points[iter.n_point++];
+    if (! _cairo_path_fixed_iter_next_op (&iter))
+	return FALSE;
+
+    if (iter.buf->op[iter.n_op] != CAIRO_PATH_OP_LINE_TO)
+	return FALSE;
+    points[1] = iter.buf->points[iter.n_point++];
+    if (! _cairo_path_fixed_iter_next_op (&iter))
+	return FALSE;
+
+    if (iter.buf->op[iter.n_op] != CAIRO_PATH_OP_LINE_TO)
+	return FALSE;
+    points[2] = iter.buf->points[iter.n_point++];
+    if (! _cairo_path_fixed_iter_next_op (&iter))
+	return FALSE;
+
+    if (iter.buf->op[iter.n_op] != CAIRO_PATH_OP_LINE_TO)
+	return FALSE;
+    points[3] = iter.buf->points[iter.n_point++];
+    if (! _cairo_path_fixed_iter_next_op (&iter))
+	return FALSE;
+
+    /* Now, there are choices. The rectangle might end with a LINE_TO
+     * (to the original point), but this isn't required. If it
+     * doesn't, then it must end with a CLOSE_PATH. */
+    if (iter.buf->op[iter.n_op] == CAIRO_PATH_OP_LINE_TO) {
+	points[4] = iter.buf->points[iter.n_point++];
+	if (points[4].x != points[0].x || points[4].y != points[0].y)
+	    return FALSE;
+    } else if (iter.buf->op[iter.n_op] != CAIRO_PATH_OP_CLOSE_PATH) {
+	return FALSE;
+    }
+    if (! _cairo_path_fixed_iter_next_op (&iter))
+	return FALSE;
+
+    /* Ok, we may have a box, if the points line up */
+    if (points[0].y == points[1].y &&
+	points[1].x == points[2].x &&
+	points[2].y == points[3].y &&
+	points[3].x == points[0].x)
+    {
+	box->p1 = points[0];
+	box->p2 = points[2];
+	*_iter = iter;
+	return TRUE;
+    }
+
+    if (points[0].x == points[1].x &&
+	points[1].y == points[2].y &&
+	points[2].x == points[3].x &&
+	points[3].y == points[0].y)
+    {
+	box->p1 = points[0];
+	box->p2 = points[2];
+	*_iter = iter;
+	return TRUE;
+    }
+
+    return FALSE;
+}
+
+cairo_bool_t
+_cairo_path_fixed_iter_at_end (const cairo_path_fixed_iter_t *iter)
+{
+    if (iter->buf == NULL)
+	return TRUE;
+
+    if (iter->buf->op[iter->n_op] == CAIRO_PATH_OP_MOVE_TO &&
+	iter->buf->num_ops == iter->n_op + 1)
+    {
+	return TRUE;
+    }
 
     return FALSE;
 }

@@ -150,6 +150,7 @@ _cairo_filler_close_path (void *closure)
 
 static cairo_int_status_t
 _cairo_path_fixed_fill_rectangle (cairo_path_fixed_t	*path,
+				  cairo_fill_rule_t	 fill_rule,
 				  cairo_traps_t		*traps);
 
 cairo_status_t
@@ -163,7 +164,7 @@ _cairo_path_fixed_fill_to_traps (cairo_path_fixed_t *path,
 
     /* Before we do anything else, we use a special-case filler for
      * a device-axis aligned rectangle if possible. */
-    status = _cairo_path_fixed_fill_rectangle (path, traps);
+    status = _cairo_path_fixed_fill_rectangle (path, fill_rule, traps);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	return status;
 
@@ -205,27 +206,77 @@ BAIL:
  */
 static cairo_int_status_t
 _cairo_path_fixed_fill_rectangle (cairo_path_fixed_t	*path,
+				  cairo_fill_rule_t	 fill_rule,
 				  cairo_traps_t		*traps)
 {
-    if (_cairo_path_fixed_is_box (path, NULL)) {
-	cairo_point_t *p = path->buf_head.base.points;
-	cairo_point_t *top_left, *bot_right;
+    cairo_box_t box;
 
-	top_left = &p[0];
-	bot_right = &p[2];
-	if (top_left->x > bot_right->x || top_left->y > bot_right->y) {
-	    int n;
+    if (_cairo_path_fixed_is_box (path, &box)) {
+	if (box.p1.x > box.p2.x) {
+	    cairo_fixed_t t;
 
-	    /* not a simple cairo_rectangle() */
-	    for (n = 0; n < 4; n++) {
-		if (p[n].x <= top_left->x && p[n].y <= top_left->y)
-		    top_left = &p[n];
-		if (p[n].x >= bot_right->x && p[n].y >= bot_right->y)
-		    bot_right = &p[n];
-	    }
+	    t = box.p1.x;
+	    box.p1.x = box.p2.x;
+	    box.p2.x = t;
 	}
 
-	return _cairo_traps_tessellate_rectangle (traps, top_left, bot_right);
+	if (box.p1.y > box.p2.y) {
+	    cairo_fixed_t t;
+
+	    t = box.p1.y;
+	    box.p1.y = box.p2.y;
+	    box.p2.y = t;
+	}
+
+	return _cairo_traps_tessellate_rectangle (traps, &box.p1, &box.p2);
+    } else if (fill_rule == CAIRO_FILL_RULE_WINDING) {
+	cairo_path_fixed_iter_t iter;
+	int last_cw = -1;
+
+	/* Support a series of rectangles as can be expected to describe a
+	 * GdkRegion clip region during exposes.
+	 */
+	_cairo_path_fixed_iter_init (&iter, path);
+	while (_cairo_path_fixed_iter_is_box (&iter, &box)) {
+	    cairo_status_t status;
+	    int cw = 0;
+
+	    if (box.p1.x > box.p2.x) {
+		cairo_fixed_t t;
+
+		t = box.p1.x;
+		box.p1.x = box.p2.x;
+		box.p2.x = t;
+
+		cw = ! cw;
+	    }
+
+	    if (box.p1.y > box.p2.y) {
+		cairo_fixed_t t;
+
+		t = box.p1.y;
+		box.p1.y = box.p2.y;
+		box.p2.y = t;
+
+		cw = ! cw;
+	    }
+
+	    if (last_cw < 0) {
+		last_cw = cw;
+	    } else if (last_cw != cw) {
+		_cairo_traps_clear (traps);
+		return CAIRO_INT_STATUS_UNSUPPORTED;
+	    }
+
+	    status = _cairo_traps_tessellate_rectangle (traps,
+							&box.p1, &box.p2);
+	    if (unlikely (status))
+		return status;
+	}
+	if (_cairo_path_fixed_iter_at_end (&iter))
+	    return CAIRO_STATUS_SUCCESS;
+
+	_cairo_traps_clear (traps);
     }
 
     return CAIRO_INT_STATUS_UNSUPPORTED;
