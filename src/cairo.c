@@ -2269,17 +2269,14 @@ cairo_in_stroke (cairo_t *cr, double x, double y)
 cairo_bool_t
 cairo_in_fill (cairo_t *cr, double x, double y)
 {
-    cairo_status_t status;
-    cairo_bool_t inside = FALSE;
+    cairo_bool_t inside;
 
     if (cr->status)
 	return 0;
 
-    status = _cairo_gstate_in_fill (cr->gstate,
-				    cr->path,
-				    x, y, &inside);
-    if (status)
-	_cairo_set_error (cr, status);
+    _cairo_gstate_in_fill (cr->gstate,
+			   cr->path,
+			   x, y, &inside);
 
     return inside;
 }

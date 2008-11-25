@@ -1183,7 +1183,7 @@ _cairo_gstate_in_stroke (cairo_gstate_t	    *gstate,
 			 double		     y,
 			 cairo_bool_t	    *inside_ret);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_gstate_in_fill (cairo_gstate_t	  *gstate,
 		       cairo_path_fixed_t *path,
 		       double		   x,
@@ -1537,7 +1537,7 @@ _cairo_path_fixed_is_rectangle (cairo_path_fixed_t *path,
 				cairo_box_t        *box);
 
 /* cairo-path-in-fill.c */
-cairo_private cairo_status_t
+cairo_private void
 _cairo_path_fixed_in_fill (cairo_path_fixed_t	*path,
 			   cairo_fill_rule_t	 fill_rule,
 			   double		 tolerance,

@@ -136,9 +136,14 @@ _cairo_in_fill_move_to (void *closure, cairo_point_t *point)
 {
     cairo_in_fill_t *in_fill = closure;
 
-    if (! in_fill->has_current_point)
-	in_fill->first_point = *point;
+    /* implicit close path */
+    if (in_fill->has_current_point) {
+	_cairo_in_fill_add_edge (in_fill,
+				 &in_fill->current_point,
+				 &in_fill->first_point);
+    }
 
+    in_fill->first_point = *point;
     in_fill->current_point = *point;
     in_fill->has_current_point = TRUE;
 
@@ -153,7 +158,10 @@ _cairo_in_fill_line_to (void *closure, cairo_point_t *point)
     if (in_fill->has_current_point)
 	_cairo_in_fill_add_edge (in_fill, &in_fill->current_point, point);
 
-    return _cairo_in_fill_move_to (in_fill, point);
+    in_fill->current_point = *point;
+    in_fill->has_current_point = TRUE;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -215,7 +223,7 @@ _cairo_in_fill_close_path (void *closure)
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_status_t
+void
 _cairo_path_fixed_in_fill (cairo_path_fixed_t	*path,
 			   cairo_fill_rule_t	 fill_rule,
 			   double		 tolerance,
@@ -235,8 +243,7 @@ _cairo_path_fixed_in_fill (cairo_path_fixed_t	*path,
 					  _cairo_in_fill_curve_to,
 					  _cairo_in_fill_close_path,
 					  &in_fill);
-    if (status)
-	goto BAIL;
+    assert (status == CAIRO_STATUS_SUCCESS);
 
     switch (fill_rule) {
     case CAIRO_FILL_RULE_EVEN_ODD:
@@ -251,9 +258,5 @@ _cairo_path_fixed_in_fill (cairo_path_fixed_t	*path,
 	break;
     }
 
-    status = CAIRO_STATUS_SUCCESS;
-
-BAIL:
     _cairo_in_fill_fini (&in_fill);
-    return status;
 }

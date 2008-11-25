@@ -1060,7 +1060,7 @@ _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
     return status;
 }
 
-cairo_status_t
+void
 _cairo_gstate_in_fill (cairo_gstate_t	  *gstate,
 		       cairo_path_fixed_t *path,
 		       double		   x,
@@ -1069,11 +1069,11 @@ _cairo_gstate_in_fill (cairo_gstate_t	  *gstate,
 {
     _cairo_gstate_user_to_backend (gstate, &x, &y);
 
-    return _cairo_path_fixed_in_fill (path,
-				      gstate->fill_rule,
-				      gstate->tolerance,
-				      x, y,
-				      inside_ret);
+    _cairo_path_fixed_in_fill (path,
+			       gstate->fill_rule,
+			       gstate->tolerance,
+			       x, y,
+			       inside_ret);
 }
 
 cairo_status_t
