@@ -1024,11 +1024,6 @@ _cairo_glitz_surface_composite (cairo_operator_t op,
 			 mask_y + mask_attr.base.y_offset,
 			 dst_x, dst_y,
 			 width, height);
-
-	if (mask_attr.n_params)
-	    free (mask_attr.params);
-
-	_cairo_glitz_pattern_release_surface (mask_pattern, mask, &mask_attr);
     }
     else
     {
@@ -1043,13 +1038,49 @@ _cairo_glitz_surface_composite (cairo_operator_t op,
 			 width, height);
     }
 
+    if (glitz_surface_get_status (dst->surface) == GLITZ_STATUS_NOT_SUPPORTED)
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (status == CAIRO_STATUS_SUCCESS &&
+	! _cairo_operator_bounded_by_source (op))
+    {
+	int src_width, src_height;
+	int mask_width, mask_height;
+
+	src_width = glitz_surface_get_width (src->surface);
+	src_height = glitz_surface_get_height (src->surface);
+	if (mask)
+	{
+	    mask_width = glitz_surface_get_width (mask->surface);
+	    mask_height = glitz_surface_get_height (mask->surface);
+	}
+	else
+	{
+	    mask_width = 0;
+	    mask_height = 0;
+	}
+	status = _cairo_surface_composite_fixup_unbounded (&dst->base,
+							   &src_attr.base,
+							   src_width, src_height,
+							   mask ? &mask_attr.base : NULL,
+							   mask_width, mask_height,
+							   src_x, src_y,
+							   mask_x, mask_y,
+							   dst_x, dst_y, width, height);
+    }
+
+    if (mask)
+    {
+	if (mask_attr.n_params)
+	    free (mask_attr.params);
+
+	_cairo_glitz_pattern_release_surface (mask_pattern, mask, &mask_attr);
+    }
+
     if (src_attr.n_params)
 	free (src_attr.params);
 
     _cairo_glitz_pattern_release_surface (src_pattern, src, &src_attr);
-
-    if (glitz_surface_get_status (dst->surface) == GLITZ_STATUS_NOT_SUPPORTED)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1286,7 +1317,8 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 	    _cairo_glitz_pattern_release_surface (src_pattern, src, &attributes);
 	    if (src_pattern == &tmp_src_pattern.base)
 		_cairo_pattern_fini (&tmp_src_pattern.base);
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	    status = CAIRO_INT_STATUS_UNSUPPORTED;
+	    goto finish;
 	}
 	if (mask->base.status) {
 	    _cairo_glitz_pattern_release_surface (src_pattern, src, &attributes);
@@ -1322,7 +1354,8 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 							  &attributes);
 		    if (src_pattern == &tmp_src_pattern.base)
 			_cairo_pattern_fini (&tmp_src_pattern.base);
-		    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+		    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+		    goto finish;
 		}
 		data = p;
 
@@ -1441,15 +1474,31 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 
     free (data);
 
+    if (glitz_surface_get_status (dst->surface) == GLITZ_STATUS_NOT_SUPPORTED)
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (status == CAIRO_STATUS_SUCCESS && ! _cairo_operator_bounded_by_mask (op))
+    {
+	int src_width, src_height;
+
+	src_width = glitz_surface_get_width (src->surface);
+	src_height = glitz_surface_get_height (src->surface);
+	status = _cairo_surface_composite_shape_fixup_unbounded (&dst->base,
+								 &attributes.base,
+								 src_width, src_height,
+								 width, height,
+								 src_x, src_y,
+								 0, 0,
+								 dst_x, dst_y,
+								 width, height);
+    }
+
     _cairo_glitz_pattern_release_surface (src_pattern, src, &attributes);
     if (src_pattern == &tmp_src_pattern.base)
 	_cairo_pattern_fini (&tmp_src_pattern.base);
 
     if (mask)
 	cairo_surface_destroy (&mask->base);
-
-    if (glitz_surface_get_status (dst->surface) == GLITZ_STATUS_NOT_SUPPORTED)
-	status = CAIRO_INT_STATUS_UNSUPPORTED;
 
 finish:
     if (pixman_traps != stack_traps)
@@ -2145,6 +2194,10 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
 
     if (op == CAIRO_OPERATOR_SATURATE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* XXX Unbounded operators are not handled correctly */
+    if (! _cairo_operator_bounded_by_mask (op))
+        return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (_glitz_ensure_target (dst->surface))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
