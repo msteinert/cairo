@@ -779,22 +779,22 @@ _cairo_glitz_pattern_acquire_surface (const cairo_pattern_t	       *pattern,
 	{
 	    cairo_linear_pattern_t *grad = (cairo_linear_pattern_t *) pattern;
 
-	    params[0] = grad->p1.x;
-	    params[1] = grad->p1.y;
-	    params[2] = grad->p2.x;
-	    params[3] = grad->p2.y;
+	    params[0] = _cairo_fixed_to_16_16 (grad->p1.x);
+	    params[1] = _cairo_fixed_to_16_16 (grad->p1.y);
+	    params[2] = _cairo_fixed_to_16_16 (grad->p2.x);
+	    params[3] = _cairo_fixed_to_16_16 (grad->p2.y);
 	    attr->filter = GLITZ_FILTER_LINEAR_GRADIENT;
 	}
 	else
 	{
 	    cairo_radial_pattern_t *grad = (cairo_radial_pattern_t *) pattern;
 
-	    params[0] = grad->c1.x;
-	    params[1] = grad->c1.y;
-	    params[2] = grad->r1;
-	    params[3] = grad->c2.x;
-	    params[4] = grad->c2.y;
-	    params[5] = grad->r2;
+	    params[0] = _cairo_fixed_to_16_16 (grad->c1.x);
+	    params[1] = _cairo_fixed_to_16_16 (grad->c1.y);
+	    params[2] = _cairo_fixed_to_16_16 (grad->r1);
+	    params[3] = _cairo_fixed_to_16_16 (grad->c2.x);
+	    params[4] = _cairo_fixed_to_16_16 (grad->c2.y);
+	    params[5] = _cairo_fixed_to_16_16 (grad->r2);
 	    attr->filter = GLITZ_FILTER_RADIAL_GRADIENT;
 	}
 
