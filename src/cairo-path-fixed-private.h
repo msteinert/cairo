@@ -99,8 +99,8 @@ _cairo_path_fixed_iter_init (cairo_path_fixed_iter_t *iter,
 			     cairo_path_fixed_t *path);
 
 cairo_private cairo_bool_t
-_cairo_path_fixed_iter_is_box (cairo_path_fixed_iter_t *_iter,
-			       cairo_box_t *box);
+_cairo_path_fixed_iter_is_fill_box (cairo_path_fixed_iter_t *_iter,
+				    cairo_box_t *box);
 
 cairo_private cairo_bool_t
 _cairo_path_fixed_iter_at_end (const cairo_path_fixed_iter_t *iter);

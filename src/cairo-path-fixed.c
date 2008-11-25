@@ -1068,8 +1068,8 @@ _cairo_path_fixed_iter_next_op (cairo_path_fixed_iter_t *iter)
 }
 
 cairo_bool_t
-_cairo_path_fixed_iter_is_box (cairo_path_fixed_iter_t *_iter,
-			       cairo_box_t *box)
+_cairo_path_fixed_iter_is_fill_box (cairo_path_fixed_iter_t *_iter,
+				    cairo_box_t *box)
 {
     cairo_point_t points[5];
     cairo_path_fixed_iter_t iter;
@@ -1112,12 +1112,16 @@ _cairo_path_fixed_iter_is_box (cairo_path_fixed_iter_t *_iter,
 
     /* Now, there are choices. The rectangle might end with a LINE_TO
      * (to the original point), but this isn't required. If it
-     * doesn't, then it must end with a CLOSE_PATH. */
-    if (iter.buf->op[iter.n_op] == CAIRO_PATH_OP_LINE_TO) {
+     * doesn't, then it must end with a CLOSE_PATH (which may be implicit). */
+    if (iter.buf->op[iter.n_op] == CAIRO_PATH_OP_LINE_TO)
+    {
 	points[4] = iter.buf->points[iter.n_point++];
 	if (points[4].x != points[0].x || points[4].y != points[0].y)
 	    return FALSE;
-    } else if (iter.buf->op[iter.n_op] != CAIRO_PATH_OP_CLOSE_PATH) {
+    }
+    else if (! (iter.buf->op[iter.n_op] == CAIRO_PATH_OP_CLOSE_PATH ||
+		iter.buf->op[iter.n_op] == CAIRO_PATH_OP_MOVE_TO))
+    {
 	return FALSE;
     }
     if (! _cairo_path_fixed_iter_next_op (&iter))

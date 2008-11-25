@@ -237,7 +237,7 @@ _cairo_path_fixed_fill_rectangle (cairo_path_fixed_t	*path,
 	 * GdkRegion clip region during exposes.
 	 */
 	_cairo_path_fixed_iter_init (&iter, path);
-	while (_cairo_path_fixed_iter_is_box (&iter, &box)) {
+	while (_cairo_path_fixed_iter_is_fill_box (&iter, &box)) {
 	    cairo_status_t status;
 	    int cw = 0;
 
