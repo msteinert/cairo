@@ -179,7 +179,7 @@ _jpx_get_box_contents (const unsigned char *p)
 static cairo_bool_t
 _jpx_match_box (const unsigned char *p, const unsigned char *end, uint32_t type)
 {
-    uint length;
+    uint32_t length;
 
     if (p + 8 < end) {
 	length = _get_be32 (p);
