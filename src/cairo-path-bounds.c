@@ -172,18 +172,20 @@ _cairo_path_fixed_approximate_extents (cairo_path_fixed_t *path,
     _cairo_path_bounder_init (&bounder);
 
     status = _cairo_path_fixed_interpret (path, CAIRO_DIRECTION_FORWARD,
-					       _cairo_path_bounder_move_to,
-					       _cairo_path_bounder_line_to,
-					       _cairo_path_bounder_curve_to,
-					       _cairo_path_bounder_close_path,
-					       &bounder);
+					  _cairo_path_bounder_move_to,
+					  _cairo_path_bounder_line_to,
+					  _cairo_path_bounder_curve_to,
+					  _cairo_path_bounder_close_path,
+					  &bounder);
     assert (status == CAIRO_STATUS_SUCCESS);
 
     if (bounder.has_point) {
-	extents->x = bounder.min_x;
-	extents->y = bounder.min_y;
-	extents->width = bounder.max_x - extents->x;
-	extents->height = bounder.max_y - extents->y;
+	extents->x = _cairo_fixed_integer_floor (bounder.min_x);
+	extents->y = _cairo_fixed_integer_floor (bounder.min_y);
+	extents->width =
+	    _cairo_fixed_integer_ceil (bounder.max_x) - extents->x;
+	extents->height =
+	    _cairo_fixed_integer_ceil (bounder.max_y) - extents->y;
     } else {
 	extents->x = extents->y = 0;
 	extents->width = extents->height = 0;

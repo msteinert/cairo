@@ -290,7 +290,7 @@ _cairo_analysis_surface_intersect_clip_path (void		*abstract_surface,
 	surface->current_clip.width  = surface->width;
 	surface->current_clip.height = surface->height;
     } else {
-	cairo_rectangle_int_t   extent;
+	cairo_rectangle_int_t extent;
 	cairo_bool_t is_empty;
 
 	_cairo_path_fixed_approximate_extents (path, &extent);
