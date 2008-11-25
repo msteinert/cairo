@@ -1065,6 +1065,7 @@ _cairo_glitz_surface_fill_rectangles (void		      *abstract_dst,
     cairo_glitz_surface_t *src;
     glitz_rectangle_t stack_rects[CAIRO_STACK_ARRAY_LENGTH (glitz_rectangle_t)];
     glitz_rectangle_t *glitz_rects = stack_rects;
+    glitz_rectangle_t *current_rect;
     int i;
 
     if (n_rects > ARRAY_LENGTH (stack_rects)) {
@@ -1133,6 +1134,7 @@ _cairo_glitz_surface_fill_rectangles (void		      *abstract_dst,
 
 	glitz_surface_set_fill (src->surface, GLITZ_FILL_REPEAT);
 
+	current_rect = glitz_rects;
 	while (n_rects--)
 	{
 	    glitz_composite (_glitz_operator (op),
@@ -1141,9 +1143,9 @@ _cairo_glitz_surface_fill_rectangles (void		      *abstract_dst,
 			     dst->surface,
 			     0, 0,
 			     0, 0,
-			     glitz_rects->x, glitz_rects->y,
-			     glitz_rects->width, glitz_rects->height);
-	    rects++;
+			     current_rect->x, current_rect->y,
+			     current_rect->width, current_rect->height);
+	    current_rect++;
 	}
 
 	cairo_surface_destroy (&src->base);
