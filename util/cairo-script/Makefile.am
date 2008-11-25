@@ -1,7 +1,7 @@
 lib_LTLIBRARIES = libcairo-script-interpreter.la
 noinst_PROGRAMS = csi-replay
 
-AM_CPPFLAGS = -I$(top_srcdir)/src
+AM_CPPFLAGS = -I$(top_srcdir)/src -I$(top_builddir)/src
 
 cairoincludedir=$(includedir)/cairo
 cairoinclude_HEADERS = cairo-script-interpreter.h
