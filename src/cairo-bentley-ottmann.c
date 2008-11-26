@@ -966,10 +966,13 @@ _cairo_bo_event_queue_init (cairo_bo_event_queue_t	*event_queue,
     int i;
     cairo_bo_event_t *events, **sorted_event_ptrs;
     unsigned num_events = 2*num_edges;
+    cairo_status_t status;
 
-    _cairo_skip_list_init (&event_queue->intersection_queue,
-			   cairo_bo_event_compare_abstract,
-			   sizeof (cairo_bo_event_t));
+    status = _cairo_skip_list_init (&event_queue->intersection_queue,
+				    cairo_bo_event_compare_abstract,
+				    sizeof (cairo_bo_event_t));
+    if (unlikely (status))
+	return status;
 
     /* The skip_elt_t field of a cairo_bo_event_t isn't used for start
      * or stop events, so this allocation is safe.  XXX: make the
@@ -1053,15 +1056,22 @@ _cairo_bo_event_queue_insert_if_intersect_below_current_y (cairo_bo_event_queue_
     return _cairo_bo_event_queue_insert (event_queue, &event);
 }
 
-static void
+static cairo_status_t
 _cairo_bo_sweep_line_init (cairo_bo_sweep_line_t *sweep_line)
 {
-    _cairo_skip_list_init (&sweep_line->active_edges,
-		    _sweep_line_elt_compare,
-		    sizeof (sweep_line_elt_t));
+    cairo_status_t status;
+
+    status = _cairo_skip_list_init (&sweep_line->active_edges,
+				    _sweep_line_elt_compare,
+				    sizeof (sweep_line_elt_t));
+    if (unlikely (status))
+	return status;
+
     sweep_line->head = NULL;
     sweep_line->tail = NULL;
     sweep_line->current_y = 0;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -1110,7 +1120,8 @@ _cairo_bo_sweep_line_delete (cairo_bo_sweep_line_t	*sweep_line,
 {
     cairo_bo_edge_t **left_next, **right_prev;
 
-    _cairo_skip_list_delete_given (&sweep_line->active_edges, &edge->sweep_line_elt->elt);
+    _cairo_skip_list_delete_given (&sweep_line->active_edges,
+				   &edge->sweep_line_elt->elt);
 
     left_next = &sweep_line->head;
     if (edge->prev)
@@ -1495,7 +1506,10 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
     if (status)
 	return status;
 
-    _cairo_bo_sweep_line_init (&sweep_line);
+    status = _cairo_bo_sweep_line_init (&sweep_line);
+    if (unlikely (status))
+	goto CLEANUP_EVENT_QUEUE;
+
     _cairo_bo_traps_init (&bo_traps, traps, xmin, ymin, xmax, ymax);
 
 #if DEBUG_PRINT_STATE
@@ -1621,6 +1635,7 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
     }
     _cairo_bo_traps_fini (&bo_traps);
     _cairo_bo_sweep_line_fini (&sweep_line);
+  CLEANUP_EVENT_QUEUE:
     _cairo_bo_event_queue_fini (&event_queue);
     return status;
 }

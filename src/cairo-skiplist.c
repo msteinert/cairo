@@ -38,10 +38,42 @@ hars_petruska_f54_1_random (void)
 #  undef rol
 }
 
+struct pool {
+    struct pool *next;
+    char *ptr;
+    unsigned int rem;
+};
+
+static struct pool *
+pool_new (void)
+{
+    struct pool *pool;
+
+    pool = malloc (8192 - 8);
+    if (unlikely (pool == NULL))
+	return NULL;
+
+    pool->next = NULL;
+    pool->rem = 8192 - 8 - sizeof (struct pool);
+    pool->ptr = (char *) (pool + 1);
+
+    return pool;
+}
+
+static void
+pools_destroy (struct pool *pool)
+{
+    while (pool != NULL) {
+	struct pool *next = pool->next;
+	free (pool);
+	pool = next;
+    }
+}
+
 /*
  * Initialize an empty skip list
  */
-void
+cairo_status_t
 _cairo_skip_list_init (cairo_skip_list_t	*list,
                        cairo_skip_list_compare_t compare,
                        size_t			 elt_size)
@@ -51,6 +83,9 @@ _cairo_skip_list_init (cairo_skip_list_t	*list,
     list->compare = compare;
     list->elt_size = elt_size;
     list->data_size = elt_size - sizeof (skip_elt_t);
+    list->pool = pool_new ();
+    if (unlikely (list->pool == NULL))
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     for (i = 0; i < MAX_LEVEL; i++) {
 	list->chains[i] = NULL;
@@ -61,25 +96,14 @@ _cairo_skip_list_init (cairo_skip_list_t	*list,
     }
 
     list->max_level = 0;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 void
 _cairo_skip_list_fini (cairo_skip_list_t *list)
 {
-    skip_elt_t *elt;
-    int i;
-
-    while ((elt = list->chains[0])) {
-	_cairo_skip_list_delete_given (list, elt);
-    }
-    for (i=0; i<MAX_FREELIST_LEVEL; i++) {
-	elt = list->freelists[i];
-	while (elt) {
-	    skip_elt_t *nextfree = elt->prev;
-	    free (ELT_DATA(elt));
-	    elt = nextfree;
-	}
-    }
+    pools_destroy (list->pool);
 }
 
 /*
@@ -110,6 +134,34 @@ random_level (void)
 }
 
 static void *
+pool_alloc (cairo_skip_list_t *list,
+	    unsigned int level)
+{
+    unsigned int size;
+    struct pool *pool;
+    void *ptr;
+
+    size = list->elt_size +
+	(FREELIST_MAX_LEVEL_FOR (level) - 1) * sizeof (skip_elt_t *);
+
+    pool = list->pool;
+    if (size > pool->rem) {
+	pool = pool_new ();
+	if (unlikely (pool == NULL))
+	    return NULL;
+
+	pool->next = list->pool;
+	list->pool = pool;
+    }
+
+    ptr = pool->ptr;
+    pool->ptr += size;
+    pool->rem -= size;
+
+    return ptr;
+}
+
+static void *
 alloc_node_for_level (cairo_skip_list_t *list, unsigned level)
 {
     int freelist_level = FREELIST_FOR_LEVEL (level);
@@ -118,8 +170,7 @@ alloc_node_for_level (cairo_skip_list_t *list, unsigned level)
 	list->freelists[freelist_level] = elt->prev;
 	return ELT_DATA(elt);
     }
-    return malloc (list->elt_size
-		   + (FREELIST_MAX_LEVEL_FOR (level) - 1) * sizeof (skip_elt_t *));
+    return pool_alloc (list, level);
 }
 
 static void
