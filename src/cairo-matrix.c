@@ -879,6 +879,7 @@ _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
         *pixman_transform = pixman_identity_transform;
     } else {
         cairo_matrix_t inv;
+	unsigned max_iterations;
 
         pixman_transform->matrix[0][0] = _cairo_fixed_16_16_from_double (matrix->xx);
         pixman_transform->matrix[0][1] = _cairo_fixed_16_16_from_double (matrix->xy);
@@ -913,6 +914,7 @@ _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
 
         /* find the pattern space coordinate that maps to (xc, yc) */
 	xc += .5; yc += .5; /* offset for the pixel centre */
+	max_iterations = 5;
 	do {
 	    double x,y;
 	    pixman_vector_t vector;
@@ -942,6 +944,6 @@ _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
 
 	    if (dx == 0 && dy == 0)
 		break;
-	} while (TRUE);
+	} while (--max_iterations);
     }
 }
