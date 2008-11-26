@@ -20,7 +20,7 @@ libcairo_script_interpreter_la_LDFLAGS = -version-info $(CAIRO_LIBTOOL_VERSION_I
 libcairo_script_interpreter_la_LIBADD = $(top_builddir)/src/libcairo.la $(CAIRO_LIBS)
 
 csi_replay_SOURCES = csi-replay.c
-csi_replay_LDADD = libcairo-script-interpreter.la
+csi_replay_LDADD = libcairo-script-interpreter.la $(top_builddir)/src/libcairo.la $(CAIRO_LIBS)
 
 EXTRA_DIST = \
 	COPYING
