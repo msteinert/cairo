@@ -55,6 +55,10 @@ cairo_perf_SOURCES += cairo-perf-posix.c
 endif
 endif
 
+if CAIRO_HAS_SDL_SURFACE
+cairo_perf_LDADD = $(LDADD) $(sdl_LIBS)
+endif
+
 libcairoperf_la_SOURCES = \
 	cairo-perf-report.c	\
 	cairo-stats.c		\
