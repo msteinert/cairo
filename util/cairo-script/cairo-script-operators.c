@@ -1317,7 +1317,9 @@ _filter (csi_t *ctx)
 				       csi_object_t *);
     } filters[] = {
 	{ "ascii85", csi_file_new_ascii85_decode },
+#if HAVE_ZLIB
 	{ "deflate", csi_file_new_deflate_decode },
+#endif
 #if 0
 	{ "lzw", csi_file_new_lzw_decode },
 #endif

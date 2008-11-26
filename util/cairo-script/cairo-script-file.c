@@ -36,7 +36,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <zlib.h>
 
 #define CHUNK_SIZE 32768
 
@@ -372,6 +371,9 @@ csi_file_new_ascii85_decode (csi_t *ctx,
     return _csi_file_new_filter (ctx, obj, src, &funcs, data);
 }
 
+#if HAVE_ZLIB
+#include <zlib.h>
+
 typedef struct _deflate_decode_data {
     z_stream zlib_stream;
 
@@ -503,6 +505,7 @@ csi_file_new_deflate_decode (csi_t *ctx,
 
     return _csi_file_new_filter (ctx, obj, src, &funcs, data);
 }
+#endif
 
 #if 0
 static int

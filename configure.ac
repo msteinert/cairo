@@ -29,7 +29,10 @@ AC_CACHE_SAVE
 dnl ===========================================================================
 
 AC_CHECK_LIB(z, compress,
-	 [AC_CHECK_HEADER(zlib.h, [have_libz=yes],
+	 [AC_CHECK_HEADER(zlib.h, [
+	  have_libz=yes
+	  AC_DEFINE(HAVE_ZLIB, 1, [Define to 1 if you have zlib available])
+	 ],
 	 [have_libz="no (requires zlib http://www.gzip.org/zlib/)"])],
 	 [have_libz="no (requires zlib http://www.gzip.org/zlib/)"])
 
