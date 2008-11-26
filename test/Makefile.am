@@ -212,7 +212,11 @@ test_sources += ft-text-vertical-layout-type3.c
 test_sources += ft-text-antialias-none.c
 endif
 
-# Need to add win32-surface-source, quartz-surface-source
+# Need to add quartz-surface-source
+if CAIRO_HAS_QUARTZ_SURFACE
+test_sources += quartz-surface-source.c
+endif
+
 if CAIRO_HAS_GLITZ_SURFACE
 test_sources += glitz-surface-source.c
 endif
