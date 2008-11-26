@@ -462,14 +462,16 @@ convert_bytes_to_data (png_structp png, png_row_infop row_info, png_bytep data)
 static cairo_status_t
 stdio_read_func (void *closure, unsigned char *data, unsigned int size)
 {
+    FILE *file = closure;
+
     while (size) {
 	size_t ret;
 
-	ret = fread (data, 1, size, closure);
+	ret = fread (data, 1, size, file);
 	size -= ret;
 	data += ret;
 
-	if (size && (feof (closure) || ferror (closure)))
+	if (size && (feof (file) || ferror (file)))
 	    return _cairo_error (CAIRO_STATUS_READ_ERROR);
     }
 
