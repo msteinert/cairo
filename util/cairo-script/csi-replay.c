@@ -68,6 +68,14 @@ _surface_create (void *closure,
 
     return surface;
 }
+#else
+/* fallback: just use an image surface */
+static cairo_surface_t *
+_surface_create (void *closure,
+		 double width, double height)
+{
+    return cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+}
 #endif
 
 int
