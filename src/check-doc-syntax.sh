@@ -64,7 +64,7 @@ if echo $FILES | xargs grep . /dev/null | sed -e '/<programlisting>/,/<\/program
 	echo "	'$func_regexp'"
 fi >&2
 
-note_regexp='NOTE'
+note_regexp='\<NOTE\>'
 if echo $FILES | xargs grep "$note_regexp" /dev/null; then
 	stat=1
 	echo Error: some source files contain the string 'NOTE'.
