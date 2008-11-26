@@ -95,7 +95,18 @@ random_level (void)
      * This works because we only use the lower MAX_LEVEL
      * bits, and MAX_LEVEL < 16 */
     uint32_t bits = hars_petruska_f54_1_random ();
+#if HAVE_FFS
     return ffs (-(1<<MAX_LEVEL) | bits | bits >> 16);
+#else
+    int level = 1;
+
+    bits |= -(1<<MAX_LEVEL) | bits >> 16;
+    while ((bits & 1) == 0) {
+	level++;
+	bits >>= 1;
+    }
+    return level;
+#endif
 }
 
 static void *
