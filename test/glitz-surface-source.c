@@ -25,8 +25,6 @@
 
 #include "cairo-test.h"
 #include <cairo-glitz.h>
-#include <cairo-xlib.h>
-#include <cairo-xlib-xrender.h>
 
 #define NAME "glitz"
 #include "surface-source.c"
@@ -34,6 +32,8 @@
 static cairo_user_data_key_t closure_key;
 
 #if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE
+#include <cairo-xlib.h>
+#include <cairo-xlib-xrender.h>
 #include <glitz-glx.h>
 
 struct closure {
@@ -198,4 +198,96 @@ create_source_surface (int size)
 
     return surface;
 }
+
+#elif CAIRO_CAN_TEST_GLITZ_AGL_SURFACE
+#include <glitz-agl.h>
+
+static void
+cleanup (void *data)
+{
+    glitz_agl_fini ();
+}
+
+static glitz_surface_t *
+_glitz_agl_create_surface (glitz_format_name_t           formatname,
+                          int                            width,
+                          int                            height)
+{
+    glitz_drawable_format_t * dformat = NULL;
+    glitz_drawable_t        * drawable = NULL;
+    glitz_format_t          * format;
+    glitz_format_t           templ;
+    glitz_surface_t         * sr;
+    int                              i;
+    int                              alpha_size;
+
+    glitz_agl_init ();
+
+    /* Find a reasonably lame window format and use it to create a pbuffer.  */
+    i = 0;
+    alpha_size = (formatname == GLITZ_STANDARD_ARGB32) ? 8 : 0;
+    while ((dformat = glitz_agl_find_window_format (0, 0, i)) != NULL
+            && !(dformat->doublebuffer == 0
+                 && dformat->stencil_size == 0
+                 && dformat->depth_size == 0
+                && dformat->color.fourcc == GLITZ_FOURCC_RGB
+                && dformat->color.alpha_size == alpha_size))
+        i++;
+
+    if (!dformat)
+       goto FAIL;
+
+    /* Try for a pbuffer first */
+    drawable = glitz_agl_create_pbuffer_drawable (dformat, width, height);
+    if (!drawable)
+       goto FAIL;
+
+    templ.color = dformat->color;
+    format = glitz_find_format (drawable,
+                                GLITZ_FORMAT_FOURCC_MASK     |
+                                GLITZ_FORMAT_RED_SIZE_MASK   |
+                                GLITZ_FORMAT_GREEN_SIZE_MASK |
+                                GLITZ_FORMAT_BLUE_SIZE_MASK  |
+                                GLITZ_FORMAT_ALPHA_SIZE_MASK,
+                                &templ,
+                                0);
+    if (!format) {
+        fprintf (stderr, "Error: couldn't find surface format\n");
+        return NULL;
+    }
+
+    sr = glitz_surface_create (drawable, format, width, height, 0, NULL);
+    if (!sr)
+       goto DESTROY_DRAWABLE;
+
+    glitz_surface_attach (sr, drawable, GLITZ_DRAWABLE_BUFFER_FRONT_COLOR);
+    glitz_drawable_destroy (drawable);
+
+    return sr;
+ DESTROY_DRAWABLE:
+    glitz_drawable_destroy (drawable);
+ FAIL:
+    return NULL;
+}
+
+static cairo_surface_t *
+create_source_surface (int size)
+{
+    glitz_surface_t  *glitz_surface;
+    cairo_surface_t *surface;
+
+    glitz_surface = _glitz_agl_create_surface (GLITZ_STANDARD_ARGB32,
+                                              size, size);
+
+    surface = cairo_glitz_surface_create (glitz_surface);
+    cairo_surface_set_user_data (surface, &closure_key, NULL, cleanup);
+    return surface;
+}
 #endif
+
+CAIRO_TEST (glitz_surface_source,
+	    "Test using a Glitz surface as the source",
+	    "source", /* keywords */
+	    NULL, /* requirements */
+	    SIZE, SIZE,
+	    preamble, draw)
