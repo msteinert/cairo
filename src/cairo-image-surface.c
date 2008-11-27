@@ -203,7 +203,7 @@ _pixman_format_from_masks (cairo_format_masks_t *masks,
 }
 
 /* A mask consisting of N bits set to 1. */
-#define MASK(N) ((1 << (N))-1)
+#define MASK(N) ((1UL << (N))-1)
 
 void
 _pixman_format_to_masks (pixman_format_code_t	 format,
