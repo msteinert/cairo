@@ -13,6 +13,7 @@ test_sources = \
 	big-line.c					\
 	big-trap.c					\
 	bilevel-image.c					\
+	caps.c						\
 	caps-joins.c					\
 	caps-joins-alpha.c				\
 	caps-sub-paths.c				\
@@ -326,6 +327,8 @@ REFERENCE_IMAGES = \
 	bilevel-image.ref.png		\
 	bitmap-font.ref.png	\
 	bitmap-font.rgb24.ref.png	\
+	caps.ref.png	\
+	caps.ps.ref.png	\
 	caps-joins-alpha.quartz.ref.png	\
 	caps-joins-alpha.ref.png	\
 	caps-joins-alpha.svg12.ref.png	\
