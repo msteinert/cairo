@@ -1,45 +1,53 @@
 /*
- * Copyright © 2005 Red Hat, Inc.
+ * Copyright © 2008 Chris Wilson
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
  * fee, provided that the above copyright notice appear in all copies
  * and that both that copyright notice and this permission notice
  * appear in supporting documentation, and that the name of
- * Red Hat, Inc. not be used in advertising or publicity pertaining to
+ * Chris Wilson not be used in advertising or publicity pertaining to
  * distribution of the software without specific, written prior
- * permission. Red Hat, Inc. makes no representations about the
+ * permission. Chris Wilson makes no representations about the
  * suitability of this software for any purpose.  It is provided "as
  * is" without express or implied warranty.
  *
- * RED HAT, INC. DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+ * CHRIS WILSON DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
  * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
- * FITNESS, IN NO EVENT SHALL RED HAT, INC. BE LIABLE FOR ANY SPECIAL,
+ * FITNESS, IN NO EVENT SHALL CHRIS WILSON BE LIABLE FOR ANY SPECIAL,
  * INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
  * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
  * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
  * IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * Author: Carl D. Worth <cworth@cworth.org>
+ * Author: Chris Wilson <chris@chris-wilson.co.uk>
  */
 
 #include "cairo-test.h"
 
 #define LINE_WIDTH	10.
 #define SIZE		(5 * LINE_WIDTH)
-#define PAD		(2 * LINE_WIDTH)
+#define PAD		(3 * LINE_WIDTH)
 
 static void
 make_path (cairo_t *cr)
 {
-    cairo_move_to (cr, 0., 0.);
-    cairo_rel_line_to (cr, 0., SIZE);
-    cairo_rel_line_to (cr, SIZE, 0.);
+    cairo_move_to (cr, 0, 0);
+    cairo_rel_curve_to (cr,
+			-SIZE/4, SIZE/3,
+			-SIZE/4, SIZE/3,
+			0, SIZE);
+    cairo_rel_curve_to (cr,
+			SIZE/3, -SIZE/4,
+			SIZE/3, -SIZE/4,
+			SIZE, 0);
     cairo_close_path (cr);
 
     cairo_move_to (cr, 5 * LINE_WIDTH, 3 * LINE_WIDTH);
-    cairo_rel_line_to (cr, 0., -3 * LINE_WIDTH);
-    cairo_rel_line_to (cr, -3 * LINE_WIDTH, 0.);
+    cairo_rel_curve_to (cr,
+			0, -3 * LINE_WIDTH,
+			0, -3 * LINE_WIDTH,
+			-3 * LINE_WIDTH, -3 * LINE_WIDTH);
 }
 
 static void
@@ -93,9 +101,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-CAIRO_TEST (caps_joins,
-	    "Test caps and joins",
-	    "stroke", /* keywords */
+CAIRO_TEST (caps_joins_curve,
+	    "Test caps and joins on curves",
+	    "stroke cap join", /* keywords */
 	    NULL, /* requirements */
 	    3 * (PAD + SIZE) + PAD,
 	    2 * (PAD + SIZE) + PAD,

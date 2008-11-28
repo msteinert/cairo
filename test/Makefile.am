@@ -16,6 +16,7 @@ test_sources = \
 	caps.c						\
 	caps-joins.c					\
 	caps-joins-alpha.c				\
+	caps-joins-curve.c				\
 	caps-sub-paths.c				\
 	clip-all.c					\
 	clip-empty.c					\
@@ -333,9 +334,10 @@ REFERENCE_IMAGES = \
 	caps-joins-alpha.ref.png	\
 	caps-joins-alpha.svg12.ref.png	\
 	caps-joins-alpha.svg11.ref.png	\
+	caps-joins-curve.ref.png	\
+	caps-joins-curve.ps.ref.png	\
 	caps-joins.ref.png	\
-	caps-joins.ps2.ref.png	\
-	caps-joins.ps3.ref.png	\
+	caps-joins.ps.ref.png	\
 	caps-sub-paths.ref.png	\
 	clip-all.ref.png	\
 	clip-empty.ref.png	\
