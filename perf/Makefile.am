@@ -54,9 +54,10 @@ else
 cairo_perf_SOURCES += cairo-perf-posix.c
 endif
 endif
+cairo_perf_LDADD = $(LDADD)
 
 if CAIRO_HAS_SDL_SURFACE
-cairo_perf_LDADD = $(LDADD) $(sdl_LIBS)
+cairo_perf_LDADD += $(sdl_LIBS)
 endif
 
 libcairoperf_la_SOURCES = \
