@@ -54,9 +54,9 @@ typedef char cairo_path_op_t;
 
 typedef struct _cairo_path_buf {
     struct _cairo_path_buf *next, *prev;
-    int buf_size;
-    int num_ops;
-    int num_points;
+    unsigned int buf_size;
+    unsigned int num_ops;
+    unsigned int num_points;
 
     cairo_path_op_t *op;
     cairo_point_t *points;
@@ -90,8 +90,8 @@ _cairo_path_fixed_equal (const cairo_path_fixed_t *a,
 
 typedef struct _cairo_path_fixed_iter {
     cairo_path_buf_t *buf;
-    int n_op;
-    int n_point;
+    unsigned int n_op;
+    unsigned int n_point;
 } cairo_path_fixed_iter_t;
 
 cairo_private void

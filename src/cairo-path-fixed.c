@@ -759,7 +759,7 @@ _cairo_path_fixed_offset_and_scale (cairo_path_fixed_t *path,
 				    cairo_fixed_t scaley)
 {
     cairo_path_buf_t *buf = &path->buf_head.base;
-    int i;
+    unsigned int i;
 
     while (buf) {
 	 for (i = 0; i < buf->num_points; i++) {
@@ -790,7 +790,7 @@ _cairo_path_fixed_transform (cairo_path_fixed_t	*path,
 			     cairo_matrix_t     *matrix)
 {
     cairo_path_buf_t *buf;
-    int i;
+    unsigned int i;
     double dx, dy;
 
     if (matrix->yx == 0.0 && matrix->xy == 0.0) {
@@ -1058,7 +1058,7 @@ _cairo_path_fixed_iter_init (cairo_path_fixed_iter_t *iter,
 static cairo_bool_t
 _cairo_path_fixed_iter_next_op (cairo_path_fixed_iter_t *iter)
 {
-    if (++iter->n_op == iter->buf->num_ops) {
+    if (++iter->n_op >= iter->buf->num_ops) {
 	iter->buf = iter->buf->next;
 	iter->n_op = 0;
 	iter->n_point = 0;
@@ -1078,6 +1078,12 @@ _cairo_path_fixed_iter_is_box (cairo_path_fixed_iter_t *_iter,
 	return FALSE;
 
     iter = *_iter;
+
+    if (iter.n_op == iter.buf->num_ops &&
+	! _cairo_path_fixed_iter_next_op (&iter))
+    {
+	return FALSE;
+    }
 
     /* Check whether the ops are those that would be used for a rectangle */
     if (iter.buf->op[iter.n_op] != CAIRO_PATH_OP_MOVE_TO)
@@ -1147,6 +1153,9 @@ cairo_bool_t
 _cairo_path_fixed_iter_at_end (const cairo_path_fixed_iter_t *iter)
 {
     if (iter->buf == NULL)
+	return TRUE;
+
+    if (iter->n_op == iter->buf->num_ops)
 	return TRUE;
 
     if (iter->buf->op[iter->n_op] == CAIRO_PATH_OP_MOVE_TO &&
