@@ -512,6 +512,8 @@ read_png (struct png_read_closure_t *png_closure)
     unsigned char *mime_data;
     unsigned int mime_data_length;
 
+    png_closure->png_data = _cairo_memory_stream_create ();
+
     /* XXX: Perhaps we'll want some other error handlers? */
     png = png_create_read_struct (PNG_LIBPNG_VER_STRING,
                                   &status,
@@ -528,7 +530,6 @@ read_png (struct png_read_closure_t *png_closure)
 	goto BAIL;
     }
 
-    png_closure->png_data = _cairo_memory_stream_create ();
     png_set_read_fn (png, png_closure, stream_read_func);
 
     status = CAIRO_STATUS_SUCCESS;
@@ -659,6 +660,7 @@ read_png (struct png_read_closure_t *png_closure)
 	surface = _cairo_surface_create_in_error (status);
 	goto BAIL;
     }
+    png_closure->png_data = NULL;
 
     status = cairo_surface_set_mime_data (surface,
 					  CAIRO_MIME_TYPE_PNG,
@@ -674,12 +676,17 @@ read_png (struct png_read_closure_t *png_closure)
     }
 
  BAIL:
-    if (row_pointers)
+    if (row_pointers != NULL)
 	free (row_pointers);
-    if (data)
+    if (data != NULL)
 	free (data);
-    if (png)
+    if (png != NULL)
 	png_destroy_read_struct (&png, &info, NULL);
+    if (png_closure->png_data != NULL) {
+	cairo_status_t status_ignored;
+
+	status_ignored = _cairo_output_stream_destroy (png_closure->png_data);
+    }
 
     return surface;
 }
