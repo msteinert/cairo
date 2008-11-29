@@ -67,6 +67,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_destroy (cr2);
     cairo_surface_set_device_offset (surface, + SIZE / 2, + SIZE / 2);
     cairo_set_source_surface (cr, surface, SIZE / 2, SIZE / 2);
+    cairo_surface_destroy (surface);
 
     cairo_paint (cr);
 
