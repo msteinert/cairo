@@ -2233,7 +2233,7 @@ _cairo_cff_fallback_init (cairo_cff_subset_t          *cff_subset,
     }
 
     cff_subset->widths = calloc (sizeof (int), font->scaled_font_subset->num_glyphs);
-    if (likely (cff_subset->widths == NULL)) {
+    if (unlikely (cff_subset->widths == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto fail3;
     }
@@ -2248,7 +2248,7 @@ _cairo_cff_fallback_init (cairo_cff_subset_t          *cff_subset,
     cff_subset->descent = type2_subset.y_min;
 
     cff_subset->data = malloc (length);
-    if (likely (cff_subset->data == NULL)) {
+    if (unlikely (cff_subset->data == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto fail4;
     }

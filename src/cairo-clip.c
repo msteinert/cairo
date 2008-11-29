@@ -298,7 +298,7 @@ _cairo_clip_intersect_path (cairo_clip_t       *clip,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     clip_path = malloc (sizeof (cairo_clip_path_t));
-    if (likely (clip_path == NULL))
+    if (unlikely (clip_path == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     status = _cairo_path_fixed_init_copy (&clip_path->path, path);
