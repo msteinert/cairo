@@ -999,22 +999,28 @@ _cairo_glitz_surface_fill_rectangles (void		      *abstract_dst,
     }
 
     switch (op) {
+    case CAIRO_OPERATOR_CLEAR:
     case CAIRO_OPERATOR_SOURCE: {
 	glitz_color_t glitz_color;
+	glitz_format_t *format;
 
 	glitz_color.red = color->red_short;
 	glitz_color.green = color->green_short;
 	glitz_color.blue = color->blue_short;
 	glitz_color.alpha = color->alpha_short;
 
+	/*
+	 * XXX even if the dst surface don't have an alpha channel, the
+	 * above alpha still effect the dst surface because the
+	 * underlying glitz drawable may have an alpha channel. So
+	 * replacing the color with an opaque one is needed.
+	 */
+	format = glitz_surface_get_format (dst->surface);
+	if (format->color.alpha_size == 0)
+	    glitz_color.alpha = 0xffff;
+
         glitz_set_rectangles (dst->surface, &glitz_color,
                               glitz_rects, n_rects);
-    } break;
-    case CAIRO_OPERATOR_CLEAR: {
-	static const glitz_color_t glitz_color = { 0, 0, 0, 0 };
-
-	glitz_set_rectangles (dst->surface, &glitz_color,
-			      glitz_rects, n_rects);
     } break;
     case CAIRO_OPERATOR_SATURATE:
 	return CAIRO_INT_STATUS_UNSUPPORTED;
