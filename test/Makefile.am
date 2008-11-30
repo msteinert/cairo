@@ -128,6 +128,7 @@ test_sources = \
 	paint-repeat.c					\
 	paint-source-alpha.c				\
 	paint-with-alpha.c				\
+	path-precision.c				\
 	pattern-get-type.c				\
 	pattern-getters.c				\
 	pixman-rotate.c					\
