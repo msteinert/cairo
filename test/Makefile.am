@@ -138,6 +138,7 @@ test_sources = \
 	rectangle-rounding-error.c			\
 	rectilinear-fill.c				\
 	rectilinear-miter-limit.c			\
+	rectilinear-dash.c				\
 	rectilinear-stroke.c				\
 	reflected-stroke.c				\
 	rel-path.c					\
@@ -791,6 +792,7 @@ REFERENCE_IMAGES = \
 	rectilinear-miter-limit.ref.png		\
 	rectilinear-miter-limit.ps2.ref.png	\
 	rectilinear-miter-limit.ps3.ref.png	\
+	rectilinear-dash.ref.png	\
 	rectilinear-stroke.ref.png	\
 	reflected-stroke.ref.png	\
 	reflected-stroke.ps2.ref.png	\
