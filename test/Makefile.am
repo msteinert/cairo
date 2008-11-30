@@ -634,8 +634,8 @@ REFERENCE_IMAGES = \
 	leaky-dash.quartz.ref.png	\
 	leaky-dash.ref.png	\
 	leaky-dashed-rectangle.ref.png		\
-	leaky-dashed-rectangle.ps2.ref.png	\
-	leaky-dashed-rectangle.ps3.ref.png	\
+	leaky-dashed-rectangle.pdf.ref.png	\
+	leaky-dashed-rectangle.ps.ref.png	\
 	leaky-dashed-stroke.ref.png		\
 	leaky-dashed-stroke.ps2.ref.png		\
 	leaky-dashed-stroke.ps3.ref.png		\

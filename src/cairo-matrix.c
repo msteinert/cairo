@@ -839,7 +839,8 @@ _cairo_matrix_is_pixel_exact (const cairo_matrix_t *matrix)
 /* determine the length of the major axis of a circle of the given radius
    after applying the transformation matrix. */
 double
-_cairo_matrix_transformed_circle_major_axis (cairo_matrix_t *matrix, double radius)
+_cairo_matrix_transformed_circle_major_axis (const cairo_matrix_t *matrix,
+					     double radius)
 {
     double  a, b, c, d, f, g, h, i, j;
 

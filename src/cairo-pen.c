@@ -39,7 +39,9 @@
 #include "cairoint.h"
 
 static int
-_cairo_pen_vertices_needed (double tolerance, double radius, cairo_matrix_t *matrix);
+_cairo_pen_vertices_needed (double tolerance,
+			    double radius,
+			    const cairo_matrix_t *matrix);
 
 static void
 _cairo_pen_compute_slopes (cairo_pen_t *pen);
@@ -48,7 +50,7 @@ cairo_status_t
 _cairo_pen_init (cairo_pen_t	*pen,
 		 double		 radius,
 		 double		 tolerance,
-		 cairo_matrix_t	*ctm)
+		 const cairo_matrix_t	*ctm)
 {
     int i;
     int reflect;
@@ -258,7 +260,7 @@ doesn't matter where on the circle the error is computed.
 static int
 _cairo_pen_vertices_needed (double	    tolerance,
 			    double	    radius,
-			    cairo_matrix_t  *matrix)
+			    const cairo_matrix_t  *matrix)
 {
     /*
      * the pen is a circle that gets transformed to an ellipse by matrix.
@@ -266,7 +268,8 @@ _cairo_pen_vertices_needed (double	    tolerance,
      * we don't need the minor axis length.
      */
 
-    double  major_axis = _cairo_matrix_transformed_circle_major_axis(matrix, radius);
+    double  major_axis = _cairo_matrix_transformed_circle_major_axis (matrix,
+								      radius);
 
     /*
      * compute number of vertices needed

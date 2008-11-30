@@ -1599,8 +1599,8 @@ _cairo_path_fixed_fill_to_traps (cairo_path_fixed_t *path,
 cairo_private cairo_status_t
 _cairo_path_fixed_stroke_to_traps (cairo_path_fixed_t	*path,
 				   cairo_stroke_style_t	*stroke_style,
-				   cairo_matrix_t	*ctm,
-				   cairo_matrix_t	*ctm_inverse,
+				   const cairo_matrix_t	*ctm,
+				   const cairo_matrix_t	*ctm_inverse,
 				   double		 tolerance,
 				   cairo_traps_t	*traps);
 
@@ -2173,7 +2173,7 @@ cairo_private cairo_status_t
 _cairo_pen_init (cairo_pen_t	*pen,
 		 double		 radius,
 		 double		 tolerance,
-		 cairo_matrix_t	*ctm);
+		 const cairo_matrix_t	*ctm);
 
 cairo_private void
 _cairo_pen_init_empty (cairo_pen_t *pen);
@@ -2298,7 +2298,7 @@ _cairo_matrix_compute_determinant (const cairo_matrix_t *matrix);
 
 cairo_private cairo_status_t
 _cairo_matrix_compute_basis_scale_factors (const cairo_matrix_t *matrix,
-				     double *sx, double *sy, int x_major);
+					   double *sx, double *sy, int x_major);
 
 cairo_private cairo_bool_t
 _cairo_matrix_is_identity (const cairo_matrix_t *matrix);
@@ -2314,7 +2314,8 @@ cairo_private cairo_bool_t
 _cairo_matrix_is_pixel_exact (const cairo_matrix_t *matrix);
 
 cairo_private double
-_cairo_matrix_transformed_circle_major_axis(cairo_matrix_t *matrix, double radius);
+_cairo_matrix_transformed_circle_major_axis (const cairo_matrix_t *matrix,
+					     double radius);
 
 cairo_private void
 _cairo_matrix_to_pixman_matrix (const cairo_matrix_t	*matrix,
