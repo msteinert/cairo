@@ -90,6 +90,7 @@ test_sources = \
 	in-fill-empty-trapezoid.c			\
 	in-fill-trapezoid.c				\
 	invalid-matrix.c				\
+	joins.c						\
 	large-clip.c					\
 	large-font.c					\
 	large-source.c					\
@@ -615,6 +616,8 @@ REFERENCE_IMAGES = \
 	infinite-join.ref.png	\
 	infinite-join.ps2.ref.png	\
 	infinite-join.ps3.ref.png	\
+	joins.ref.png		\
+	joins.ps.ref.png	\
 	large-clip.ref.png	\
 	large-font.ref.png	\
 	large-source.ref.png	\
