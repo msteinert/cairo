@@ -3422,7 +3422,18 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\n"
 				 "<< /Type /FontDescriptor\n"
-				 "   /FontName /%s+%s\n"
+				 "   /FontName /%s+%s\n",
+				 descriptor.id,
+				 tag,
+				 subset->ps_name);
+
+    if (subset->font_name) {
+	_cairo_output_stream_printf (surface->output,
+				     "   /FontFamily (%s)\n",
+				     subset->font_name);
+    }
+
+    _cairo_output_stream_printf (surface->output,
 				 "   /Flags 4\n"
 				 "   /FontBBox [ %ld %ld %ld %ld ]\n"
 				 "   /ItalicAngle 0\n"
@@ -3434,9 +3445,6 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
 				 "   /FontFile3 %u 0 R\n"
 				 ">>\n"
 				 "endobj\n",
-				 descriptor.id,
-				 tag,
-				 subset->ps_name,
 				 subset->x_min,
 				 subset->y_min,
 				 subset->x_max,
@@ -3766,7 +3774,18 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
     _cairo_output_stream_printf (surface->output,
 				 "%d 0 obj\n"
 				 "<< /Type /FontDescriptor\n"
-				 "   /FontName /%s+%s\n"
+				 "   /FontName /%s+%s\n",
+				 descriptor.id,
+				 tag,
+				 subset.ps_name);
+
+    if (subset.font_name) {
+	_cairo_output_stream_printf (surface->output,
+				     "   /FontFamily (%s)\n",
+				     subset.font_name);
+    }
+
+    _cairo_output_stream_printf (surface->output,
 				 "   /Flags 4\n"
 				 "   /FontBBox [ %ld %ld %ld %ld ]\n"
 				 "   /ItalicAngle 0\n"
@@ -3778,9 +3797,6 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 				 "   /FontFile2 %u 0 R\n"
 				 ">>\n"
 				 "endobj\n",
-				 descriptor.id,
-				 tag,
-				 subset.ps_name,
 				 (long)(subset.x_min*PDF_UNITS_PER_EM),
 				 (long)(subset.y_min*PDF_UNITS_PER_EM),
                                  (long)(subset.x_max*PDF_UNITS_PER_EM),
