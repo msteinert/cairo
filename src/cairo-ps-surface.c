@@ -335,14 +335,13 @@ _cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,
     _cairo_output_stream_printf (surface->final_stream,
 				 "11 dict begin\n"
 				 "/FontType 42 def\n"
-				 "/FontName /f-%d-%d def\n"
+				 "/FontName /%s def\n"
 				 "/PaintType 0 def\n"
 				 "/FontMatrix [ 1 0 0 1 0 0 ] def\n"
 				 "/FontBBox [ 0 0 0 0 ] def\n"
 				 "/Encoding 256 array def\n"
 				 "0 1 255 { Encoding exch /.notdef put } for\n",
-				 font_subset->font_id,
-				 font_subset->subset_id);
+				 subset.ps_name);
 
     /* FIXME: Figure out how subset->x_max etc maps to the /FontBBox */
 
@@ -397,7 +396,9 @@ _cairo_ps_surface_emit_truetype_font_subset (cairo_ps_surface_t		*surface,
 
     _cairo_output_stream_printf (surface->final_stream,
 				 "] def\n"
-				 "FontName currentdict end definefont pop\n");
+				 "/f-%d-%d currentdict end definefont pop\n",
+				 font_subset->font_id,
+				 font_subset->subset_id);
 
     _cairo_truetype_subset_fini (&subset);
 
