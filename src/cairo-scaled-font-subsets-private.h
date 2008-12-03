@@ -635,6 +635,24 @@ _cairo_truetype_index_to_ucs4 (cairo_scaled_font_t *scaled_font,
                                unsigned long        index,
                                uint32_t            *ucs4);
 
+/**
+ * _cairo_truetype_read_font_name:
+ * @scaled_font: the #cairo_scaled_font_t
+ * @font_name: returns the font name or NULL if the name could not be found.
+ *
+ * If possible (depending on the format of the underlying
+ * #cairo_scaled_font_t and the font backend in use) read the
+ * font name from a TrueType/OpenType font.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS if successful,
+ * %CAIRO_INT_STATUS_UNSUPPORTED if the font is not TrueType/OpenType
+ * or the name table is not present.  Possible errors include
+ * %CAIRO_STATUS_NO_MEMORY.
+ **/
+cairo_private cairo_int_status_t
+_cairo_truetype_read_font_name (cairo_scaled_font_t  	 *scaled_font,
+				char 	       		**font_name);
+
 #endif /* CAIRO_HAS_FONT_SUBSET */
 
 #endif /* CAIRO_SCALED_FONT_SUBSETS_PRIVATE_H */

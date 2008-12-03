@@ -123,10 +123,7 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     tt_head_t head;
     tt_hhea_t hhea;
     tt_maxp_t maxp;
-    tt_name_t *name;
-    tt_name_record_t *record;
     unsigned long size;
-    int i, j;
 
     backend = scaled_font_subset->scaled_font->backend;
     if (!backend->load_truetype_table)
@@ -165,30 +162,9 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     if (unlikely (status))
 	return status;
 
-    size = 0;
-    status = backend->load_truetype_table (scaled_font_subset->scaled_font,
-	                                   TT_TAG_name, 0,
-					   NULL,
-					   &size);
-    if (unlikely (status))
-	return status;
-
-    name = malloc (size);
-    if (unlikely (name == NULL))
-        return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    status = backend->load_truetype_table (scaled_font_subset->scaled_font,
-					   TT_TAG_name, 0,
-					   (unsigned char *) name,
-					   &size);
-    if (unlikely (status))
-	goto fail0;
-
     font = malloc (sizeof (cairo_truetype_font_t));
-    if (unlikely (font == NULL)) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto fail0;
-    }
+    if (unlikely (font == NULL))
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     font->backend = backend;
     font->num_glyphs_in_face = be16_to_cpu (maxp.num_glyphs);
@@ -224,32 +200,12 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     if (font->base.units_per_em == 0)
         font->base.units_per_em = 2048;
 
-    /* Extract the font name from the name table. At present this
-     * just looks for the Mac platform/Roman encoded font name. It
-     * should be extended to use any suitable font name in the
-     * name table. If the mac/roman font name is not found a
-     * CairoFont-x-y name is created.
-     */
-    font->base.base_font = NULL;
-    for (i = 0; i < be16_to_cpu(name->num_records); i++) {
-        record = &(name->records[i]);
-        if ((be16_to_cpu (record->platform) == 1) &&
-            (be16_to_cpu (record->encoding) == 0) &&
-            (be16_to_cpu (record->name) == 4)) {
-            font->base.base_font = malloc (be16_to_cpu(record->length) + 1);
-            if (font->base.base_font) {
-                strncpy(font->base.base_font,
-                        ((char*)name) + be16_to_cpu (name->strings_offset) + be16_to_cpu (record->offset),
-                        be16_to_cpu (record->length));
-                font->base.base_font[be16_to_cpu (record->length)] = 0;
-            }
-            break;
-        }
-    }
+    status = _cairo_truetype_read_font_name (scaled_font_subset->scaled_font,
+					     &font->base.base_font);
+    if (_cairo_status_is_error (status))
+	goto fail3;
 
-    free (name);
-    name = NULL;
-
+    /* If the font name is not found, create a CairoFont-x-y name. */
     if (font->base.base_font == NULL) {
         font->base.base_font = malloc (30);
         if (unlikely (font->base.base_font == NULL)) {
@@ -261,13 +217,6 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
                  scaled_font_subset->font_id,
                  scaled_font_subset->subset_id);
     }
-
-    for (i = 0, j = 0; font->base.base_font[j]; j++) {
-	if (font->base.base_font[j] == ' ')
-	    continue;
-	font->base.base_font[i++] = font->base.base_font[j];
-    }
-    font->base.base_font[i] = '\0';
 
     font->base.widths = calloc (font->num_glyphs_in_face, sizeof (int));
     if (unlikely (font->base.widths == NULL)) {
@@ -298,9 +247,6 @@ _cairo_truetype_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
  fail1:
     _cairo_array_fini (&font->output);
     free (font);
- fail0:
-    if (name)
-	free (name);
 
     return status;
 }
@@ -1331,6 +1277,87 @@ _cairo_truetype_index_to_ucs4 (cairo_scaled_font_t *scaled_font,
 
 cleanup:
     free (cmap);
+
+    return status;
+}
+
+cairo_int_status_t
+_cairo_truetype_read_font_name (cairo_scaled_font_t  	 *scaled_font,
+				char 	       		**font_name_out)
+{
+    cairo_status_t status;
+    const cairo_scaled_font_backend_t *backend;
+    tt_name_t *name;
+    tt_name_record_t *record;
+    unsigned long size;
+    int i, j;
+    char *font_name;
+
+    backend = scaled_font->backend;
+    if (!backend->load_truetype_table)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    size = 0;
+    status = backend->load_truetype_table (scaled_font,
+	                                   TT_TAG_name, 0,
+					   NULL,
+					   &size);
+    if (status)
+	return status;
+
+    name = malloc (size);
+    if (name == NULL)
+        return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    status = backend->load_truetype_table (scaled_font,
+					   TT_TAG_name, 0,
+					   (unsigned char *) name,
+					   &size);
+    if (status)
+	goto fail;
+
+    /* Extract the font name and PS name from the name table. At
+     * present this just looks for the Mac platform/Roman encoded font
+     * name. It should be extended to use any suitable font name in
+     * the name table.
+     */
+    font_name = NULL;
+    for (i = 0; i < be16_to_cpu(name->num_records); i++) {
+        record = &(name->records[i]);
+        if ((be16_to_cpu (record->platform) == 1) &&
+            (be16_to_cpu (record->encoding) == 0) &&
+	    (be16_to_cpu (record->name) == 4)) {
+		font_name = malloc (be16_to_cpu(record->length) + 1);
+		if (font_name == NULL) {
+		    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+		    goto fail;
+		}
+		strncpy(font_name,
+			((char*)name) + be16_to_cpu (name->strings_offset) + be16_to_cpu (record->offset),
+			be16_to_cpu (record->length));
+		font_name[be16_to_cpu (record->length)] = 0;
+		break;
+	}
+    }
+
+    free (name);
+
+    /* Ensure font name does not contain any spaces */
+    if (font_name) {
+	for (i = 0, j = 0; font_name[j]; j++) {
+	    if (font_name[j] == ' ')
+		continue;
+	    font_name[i++] = font_name[j];
+	}
+	font_name[i] = '\0';
+    }
+
+    *font_name_out = font_name;
+
+    return CAIRO_STATUS_SUCCESS;
+
+fail:
+    free (name);
 
     return status;
 }
