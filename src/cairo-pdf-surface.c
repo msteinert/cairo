@@ -3387,7 +3387,7 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
     cairo_status_t status;
     char tag[10];
 
-    _create_font_subset_tag (font_subset, subset->base_font, tag);
+    _create_font_subset_tag (font_subset, subset->ps_name, tag);
 
     subset_resource = _cairo_pdf_surface_get_font_resource (surface,
 							    font_subset->font_id,
@@ -3436,7 +3436,7 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
 				 "endobj\n",
 				 descriptor.id,
 				 tag,
-				 subset->base_font,
+				 subset->ps_name,
 				 subset->x_min,
 				 subset->y_min,
 				 subset->x_max,
@@ -3463,7 +3463,7 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
                                  "   /W [0 [",
                                  cidfont_dict.id,
 				 tag,
-                                 subset->base_font,
+                                 subset->ps_name,
                                  descriptor.id);
 
     for (i = 0; i < font_subset->num_glyphs; i++)
@@ -3486,7 +3486,7 @@ _cairo_pdf_surface_emit_cff_font (cairo_pdf_surface_t		*surface,
 				 "   /DescendantFonts [ %d 0 R]\n",
 				 subset_resource.id,
 				 tag,
-				 subset->base_font,
+				 subset->ps_name,
 				 cidfont_dict.id);
 
     if (to_unicode_stream.id != 0)
@@ -3728,7 +3728,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
     if (unlikely (status))
 	return status;
 
-    _create_font_subset_tag (font_subset, subset.base_font, tag);
+    _create_font_subset_tag (font_subset, subset.ps_name, tag);
 
     status = _cairo_pdf_surface_open_stream (surface,
 					     NULL,
@@ -3780,7 +3780,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 				 "endobj\n",
 				 descriptor.id,
 				 tag,
-				 subset.base_font,
+				 subset.ps_name,
 				 (long)(subset.x_min*PDF_UNITS_PER_EM),
 				 (long)(subset.y_min*PDF_UNITS_PER_EM),
                                  (long)(subset.x_max*PDF_UNITS_PER_EM),
@@ -3810,7 +3810,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
                                  "   /W [0 [",
                                  cidfont_dict.id,
 				 tag,
-                                 subset.base_font,
+                                 subset.ps_name,
                                  descriptor.id);
 
     for (i = 0; i < font_subset->num_glyphs; i++)
@@ -3833,7 +3833,7 @@ _cairo_pdf_surface_emit_truetype_font_subset (cairo_pdf_surface_t		*surface,
 				 "   /DescendantFonts [ %d 0 R]\n",
 				 subset_resource.id,
 				 tag,
-				 subset.base_font,
+				 subset.ps_name,
 				 cidfont_dict.id);
 
     if (to_unicode_stream.id != 0)

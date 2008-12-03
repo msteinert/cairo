@@ -108,6 +108,7 @@ typedef struct _cairo_cff_font {
     unsigned char       *data_end;
     cff_header_t        *header;
     char                *font_name;
+    char                *ps_name;
     cairo_hash_table_t  *top_dict;
     cairo_hash_table_t  *private_dict;
     cairo_array_t        strings_index;
@@ -1749,10 +1750,8 @@ _cairo_cff_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
         return status;
 
     font = malloc (sizeof (cairo_cff_font_t));
-    if (unlikely (font == NULL)) {
-        status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto fail1;
-    }
+    if (unlikely (font == NULL))
+        return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     font->backend = backend;
     font->scaled_font_subset = scaled_font_subset;
@@ -1775,19 +1774,20 @@ _cairo_cff_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     font->descent = (int16_t) be16_to_cpu (hhea.descender);
 
     status = _cairo_truetype_read_font_name (scaled_font_subset->scaled_font,
+					     &font->ps_name,
 					     &font->font_name);
     if (_cairo_status_is_error (status))
 	goto fail3;
 
-    /* If the font name is not found, create a CairoFont-x-y name. */
-    if (font->font_name == NULL) {
-        font->font_name = malloc (30);
-        if (unlikely (font->font_name == NULL)) {
-            status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    /* If the PS name is not found, create a CairoFont-x-y name. */
+    if (font->ps_name == NULL) {
+        font->ps_name = malloc (30);
+        if (unlikely (font->ps_name == NULL)) {
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
             goto fail3;
 	}
 
-        snprintf(font->font_name, 30, "CairoFont-%u-%u",
+        snprintf(font->ps_name, 30, "CairoFont-%u-%u",
                  scaled_font_subset->font_id,
                  scaled_font_subset->subset_id);
     }
@@ -1849,7 +1849,8 @@ fail6:
 fail5:
     free (font->widths);
 fail4:
-    free (font->font_name);
+    if (font->font_name)
+	free (font->font_name);
 fail3:
     free (font->subset_font_name);
 fail2:
@@ -1865,7 +1866,8 @@ cairo_cff_font_destroy (cairo_cff_font_t *font)
     unsigned int i;
 
     free (font->widths);
-    free (font->font_name);
+    if (font->font_name)
+	free (font->font_name);
     free (font->subset_font_name);
     _cairo_array_fini (&font->output);
     cff_dict_fini (font->top_dict);
@@ -1935,16 +1937,26 @@ _cairo_cff_subset_init (cairo_cff_subset_t          *cff_subset,
     if (unlikely (status))
 	goto fail1;
 
-    cff_subset->base_font = strdup (font->font_name);
-    if (unlikely (cff_subset->base_font == NULL)) {
+    cff_subset->ps_name = strdup (font->ps_name);
+    if (unlikely (cff_subset->ps_name == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto fail1;
+    }
+
+    if (font->font_name) {
+	cff_subset->font_name = strdup (font->font_name);
+	if (cff_subset->font_name == NULL) {
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto fail2;
+	}
+    } else {
+	cff_subset->font_name = NULL;
     }
 
     cff_subset->widths = calloc (sizeof (int), font->scaled_font_subset->num_glyphs);
     if (unlikely (cff_subset->widths == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto fail2;
+	goto fail3;
     }
     for (i = 0; i < font->scaled_font_subset->num_glyphs; i++)
         cff_subset->widths[i] = font->widths[i];
@@ -1959,7 +1971,7 @@ _cairo_cff_subset_init (cairo_cff_subset_t          *cff_subset,
     cff_subset->data = malloc (length);
     if (unlikely (cff_subset->data == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto fail3;
+	goto fail4;
     }
 
     memcpy (cff_subset->data, data, length);
@@ -1969,10 +1981,13 @@ _cairo_cff_subset_init (cairo_cff_subset_t          *cff_subset,
 
     return CAIRO_STATUS_SUCCESS;
 
- fail3:
+ fail4:
     free (cff_subset->widths);
+ fail3:
+    if (cff_subset->font_name)
+	free (cff_subset->font_name);
  fail2:
-    free (cff_subset->base_font);
+    free (cff_subset->ps_name);
  fail1:
     cairo_cff_font_destroy (font);
 
@@ -1982,7 +1997,9 @@ _cairo_cff_subset_init (cairo_cff_subset_t          *cff_subset,
 void
 _cairo_cff_subset_fini (cairo_cff_subset_t *subset)
 {
-    free (subset->base_font);
+    free (subset->ps_name);
+    if (subset->font_name)
+	free (subset->font_name);
     free (subset->widths);
     free (subset->data);
 }
@@ -2013,11 +2030,12 @@ _cairo_cff_font_fallback_create (cairo_scaled_font_subset_t  *scaled_font_subset
 	goto fail1;
     }
 
-    font->font_name = strdup (subset_name);
+    font->ps_name = strdup (subset_name);
     if (unlikely (font->subset_font_name == NULL)) {
         status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto fail2;
     }
+    font->font_name = NULL;
 
     font->x_min = 0;
     font->y_min = 0;
@@ -2067,7 +2085,8 @@ fail5:
 fail4:
     free (font->widths);
 fail3:
-    free (font->font_name);
+    if (font->font_name)
+	free (font->font_name);
 fail2:
     free (font->subset_font_name);
 fail1:
@@ -2183,8 +2202,8 @@ _cairo_cff_fallback_init (cairo_cff_subset_t          *cff_subset,
     if (unlikely (status))
 	goto fail2;
 
-    cff_subset->base_font = strdup (font->font_name);
-    if (unlikely (cff_subset->base_font == NULL)) {
+    cff_subset->ps_name = strdup (font->ps_name);
+    if (unlikely (cff_subset->ps_name == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto fail2;
     }
@@ -2194,6 +2213,7 @@ _cairo_cff_fallback_init (cairo_cff_subset_t          *cff_subset,
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto fail3;
     }
+
     for (i = 0; i < font->scaled_font_subset->num_glyphs; i++)
         cff_subset->widths[i] = type2_subset.widths[i];
 
@@ -2222,7 +2242,7 @@ _cairo_cff_fallback_init (cairo_cff_subset_t          *cff_subset,
  fail4:
     free (cff_subset->widths);
  fail3:
-    free (cff_subset->base_font);
+    free (cff_subset->ps_name);
  fail2:
     _cairo_type2_charstrings_fini (&type2_subset);
  fail1:
@@ -2234,7 +2254,7 @@ _cairo_cff_fallback_init (cairo_cff_subset_t          *cff_subset,
 void
 _cairo_cff_fallback_fini (cairo_cff_subset_t *subset)
 {
-    free (subset->base_font);
+    free (subset->ps_name);
     free (subset->widths);
     free (subset->data);
 }
