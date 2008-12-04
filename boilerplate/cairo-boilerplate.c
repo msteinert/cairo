@@ -523,7 +523,7 @@ static cairo_boilerplate_target_t targets[] =
     /* This is a fallback surface which uses xlib fallbacks instead of
      * the Render extension. */
     {
-	"xlib-fallback", "xlib", NULL,
+	"xlib-fallback", "image", NULL,
 	CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR, 1,
 	_cairo_boilerplate_xlib_fallback_create_surface, NULL,
 	NULL,
