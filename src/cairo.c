@@ -3104,8 +3104,13 @@ cairo_show_text (cairo_t *cr, const char *utf8)
     glyphs = stack_glyphs;
     num_glyphs = ARRAY_LENGTH (stack_glyphs);
 
-    clusters = stack_clusters;
-    num_clusters = ARRAY_LENGTH (stack_clusters);
+    if (has_show_text_glyphs) {
+	clusters = stack_clusters;
+	num_clusters = ARRAY_LENGTH (stack_clusters);
+    } else {
+	clusters = NULL;
+	num_clusters = 0;
+    }
 
     status = _cairo_gstate_text_to_glyphs (cr->gstate,
 					   x, y,
