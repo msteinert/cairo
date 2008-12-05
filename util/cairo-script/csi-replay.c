@@ -56,8 +56,10 @@ _surface_create (void *closure,
 
     attr.override_redirect = True;
     w = XCreateWindow (dpy, DefaultRootWindow (dpy), 0, 0,
-			width, height, 0, xrender_format->depth,
-			InputOutput, visual, CWOverrideRedirect, &attr);
+		       width <= 0 ? 1 : width,
+		       height <= 0 ? 1 : height,
+		       0, xrender_format->depth,
+		       InputOutput, visual, CWOverrideRedirect, &attr);
     XMapWindow (dpy, w);
 
     surface = cairo_xlib_surface_create_with_xrender_format (dpy, w,
