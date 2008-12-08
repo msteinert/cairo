@@ -720,6 +720,11 @@ csi_private csi_boolean_t
 csi_object_eq (csi_object_t *a,
 	       csi_object_t *b);
 
+csi_private csi_status_t
+csi_object_compare (csi_object_t *a,
+		    csi_object_t *b,
+		    int          *out_cmp);
+
 /* cairo-script-operators.c */
 
 csi_private const csi_operator_def_t *

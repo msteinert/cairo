@@ -756,3 +756,106 @@ csi_object_eq (csi_object_t *a,
 
     return FALSE;
 }
+
+csi_status_t
+csi_object_compare (csi_object_t *a,
+		    csi_object_t *b,
+		    int *out)
+{
+    csi_object_type_t atype = csi_object_get_type (a);
+    csi_object_type_t btype = csi_object_get_type (b);
+    int sign;
+
+    if (csi_object_eq (a, b)){
+	*out = 0;
+	return CSI_STATUS_SUCCESS;
+    }
+
+#define CMP(x,y) ((x) < (y) ? -1 : +1)
+
+    if (atype == btype) {
+	switch (atype) {
+	case CSI_OBJECT_TYPE_BOOLEAN:
+	    *out = CMP (a->datum.boolean, b->datum.boolean);
+	    return CSI_STATUS_SUCCESS;
+	case CSI_OBJECT_TYPE_INTEGER:
+	    *out = CMP (a->datum.integer, b->datum.integer);
+	    return CSI_STATUS_SUCCESS;
+	case CSI_OBJECT_TYPE_REAL:
+	    *out = CMP (a->datum.real, b->datum.real);
+	    return CSI_STATUS_SUCCESS;
+	case CSI_OBJECT_TYPE_NAME: {
+	    const char *x = (char const *) a->datum.name;
+	    const char *y = (char const *) b->datum.name;
+	    *out = lexcmp (x, strlen(x), y, strlen (y));
+	    return CSI_STATUS_SUCCESS;
+	}
+	case CSI_OBJECT_TYPE_STRING:
+	    *out = lexcmp (a->datum.string->string,
+			   a->datum.string->len,
+			   b->datum.string->string,
+			   b->datum.string->len);
+	    return CSI_STATUS_SUCCESS;
+	case CSI_OBJECT_TYPE_NULL:
+	case CSI_OBJECT_TYPE_MARK:
+	case CSI_OBJECT_TYPE_OPERATOR:
+	case CSI_OBJECT_TYPE_ARRAY:
+	case CSI_OBJECT_TYPE_DICTIONARY:
+	case CSI_OBJECT_TYPE_FILE:
+	case CSI_OBJECT_TYPE_MATRIX:
+	case CSI_OBJECT_TYPE_CONTEXT:
+	case CSI_OBJECT_TYPE_FONT:
+	case CSI_OBJECT_TYPE_PATTERN:
+	case CSI_OBJECT_TYPE_SCALED_FONT:
+	case CSI_OBJECT_TYPE_SURFACE:
+	    goto TYPE_CHECK_ERROR;
+	}
+    }
+
+    sign = +1;
+    if (atype < btype) {
+	csi_object_t *c;
+	csi_object_type_t ctype;
+	c = a; a = b; b = c;
+	ctype = atype; atype = btype; btype = ctype;
+	sign = -1;
+    }
+
+    switch ((int) atype) {
+    case CSI_OBJECT_TYPE_INTEGER:
+	if (btype == CSI_OBJECT_TYPE_BOOLEAN) {
+	    *out = sign * CMP (a->datum.integer, !!b->datum.boolean);
+	    return CSI_STATUS_SUCCESS;
+	}
+	break;
+    case CSI_OBJECT_TYPE_REAL:
+	if (btype == CSI_OBJECT_TYPE_INTEGER) {
+	    *out = sign * CMP (a->datum.real, b->datum.integer);
+	    return CSI_STATUS_SUCCESS;
+	}
+	else if (btype == CSI_OBJECT_TYPE_BOOLEAN) {
+	    *out = sign * CMP (a->datum.real, !!b->datum.boolean);
+	    return CSI_STATUS_SUCCESS;
+	}
+	break;
+
+    case CSI_OBJECT_TYPE_STRING:
+	if (btype == CSI_OBJECT_TYPE_NAME) {
+	    const char *bstr = (const char *) b->datum.name;
+	    *out = sign * lexcmp (a->datum.string->string,
+				  a->datum.string->len,
+				  bstr,
+				  strlen (bstr));
+	    return CSI_STATUS_SUCCESS;
+	}
+	break;
+
+    default:
+	break;
+    }
+
+#undef CMP
+
+ TYPE_CHECK_ERROR:
+    return _csi_error (CSI_STATUS_SCRIPT_INVALID_TYPE);
+}

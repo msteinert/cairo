@@ -1885,45 +1885,21 @@ _for (csi_t *ctx)
 static csi_status_t
 _ge (csi_t *ctx)
 {
+    csi_status_t status;
     csi_object_t *a, *b;
-    csi_boolean_t v;
+    int cmp;
 
     check (2);
 
     b = _csi_peek_ostack (ctx, 0);
     a = _csi_peek_ostack (ctx, 1);
 
-    if (csi_object_get_type (a) != csi_object_get_type (b)) {
-	if (csi_object_is_number (a) && csi_object_is_number (b)) {
-	    double ia, ib;
-	    ia = csi_number_get_value (a);
-	    ib = csi_number_get_value (b);
-	    v = ia >= ib;
-	} else {
-	    return _csi_error (CSI_STATUS_INVALID_SCRIPT);
-	}
-    } else switch ((int) csi_object_get_type (a)) {
-    case CSI_OBJECT_TYPE_BOOLEAN:
-	v = a->datum.boolean >= b->datum.boolean;
-	break;
-    case CSI_OBJECT_TYPE_INTEGER:
-	v = a->datum.integer >= b->datum.integer;
-	break;
-    case CSI_OBJECT_TYPE_REAL:
-	v = a->datum.real >= b->datum.real;
-	break;
-    case CSI_OBJECT_TYPE_STRING:
-	v = strcmp (a->datum.string->string, b->datum.string->string) >= 0;
-	break;
-    case CSI_OBJECT_TYPE_NAME:
-	v = strcmp ((char *) a->datum.name, (char *) b->datum.name) >= 0;
-	break;
-    default:
-	return _csi_error (CSI_STATUS_INVALID_SCRIPT);
-    }
+    status = csi_object_compare (a, b, &cmp);
+    if (_csi_unlikely (status))
+	return status;
 
     pop (2);
-    return _csi_push_ostack_boolean (ctx, v);
+    return _csi_push_ostack_boolean (ctx, cmp >= 0);
 }
 
 static csi_status_t
@@ -2335,45 +2311,21 @@ _gray (csi_t *ctx)
 static csi_status_t
 _gt (csi_t *ctx)
 {
+    csi_status_t status;
     csi_object_t *a, *b;
-    csi_boolean_t v;
+    int cmp;
 
     check (2);
 
     b = _csi_peek_ostack (ctx, 0);
     a = _csi_peek_ostack (ctx, 1);
 
-    if (_csi_unlikely (csi_object_get_type (a) != csi_object_get_type (b))) {
-	if (_csi_likely (csi_object_is_number (a) && csi_object_is_number (b))){
-	    double ia, ib;
-	    ia = csi_number_get_value (a);
-	    ib = csi_number_get_value (b);
-	    v = ia > ib;
-	} else {
-	    return _csi_error (CSI_STATUS_INVALID_SCRIPT);
-	}
-    } else switch ((int) csi_object_get_type (a)) {
-    case CSI_OBJECT_TYPE_BOOLEAN:
-	v = a->datum.boolean > b->datum.boolean;
-	break;
-    case CSI_OBJECT_TYPE_INTEGER:
-	v = a->datum.integer > b->datum.integer;
-	break;
-    case CSI_OBJECT_TYPE_REAL:
-	v = a->datum.real > b->datum.real;
-	break;
-    case CSI_OBJECT_TYPE_STRING:
-	v = strcmp (a->datum.string->string, b->datum.string->string) > 0;
-	break;
-    case CSI_OBJECT_TYPE_NAME:
-	v = strcmp ((char *) a->datum.name, (char *) b->datum.name) > 0;
-	break;
-    default:
-	return _csi_error (CSI_STATUS_INVALID_SCRIPT);
-    }
+    status = csi_object_compare (a, b, &cmp);
+    if (_csi_unlikely (status))
+	return status;
 
     pop (2);
-    return _csi_push_ostack_boolean (ctx, v);
+    return _csi_push_ostack_boolean (ctx, cmp > 0);
 }
 
 static csi_status_t
@@ -2863,45 +2815,21 @@ _index (csi_t *ctx)
 static csi_status_t
 _le (csi_t *ctx)
 {
+    csi_status_t status;
     csi_object_t *a, *b;
-    csi_boolean_t v;
+    int cmp;
 
     check (2);
 
     b = _csi_peek_ostack (ctx, 0);
     a = _csi_peek_ostack (ctx, 1);
 
-    if (_csi_unlikely (csi_object_get_type (a) != csi_object_get_type (b))) {
-	if (_csi_likely (csi_object_is_number (a) && csi_object_is_number (b))) {
-	    double ia, ib;
-	    ia = csi_number_get_value (a);
-	    ib = csi_number_get_value (b);
-	    v = ia <= ib;
-	} else {
-	    return _csi_error (CSI_STATUS_INVALID_SCRIPT);
-	}
-    } else switch ((int) csi_object_get_type (a)) {
-    case CSI_OBJECT_TYPE_BOOLEAN:
-	v = a->datum.boolean <= b->datum.boolean;
-	break;
-    case CSI_OBJECT_TYPE_INTEGER:
-	v = a->datum.integer <= b->datum.integer;
-	break;
-    case CSI_OBJECT_TYPE_REAL:
-	v = a->datum.real <= b->datum.real;
-	break;
-    case CSI_OBJECT_TYPE_STRING:
-	v = strcmp (a->datum.string->string, b->datum.string->string) <= 0;
-	break;
-    case CSI_OBJECT_TYPE_NAME:
-	v = strcmp ((char *) a->datum.name, (char *) b->datum.name) <= 0;
-	break;
-    default:
-	return _csi_error (CSI_STATUS_INVALID_SCRIPT);
-    }
+    status = csi_object_compare (a, b, &cmp);
+    if (_csi_unlikely (status))
+	return status;
 
     pop (2);
-    return _csi_push_ostack_boolean (ctx, v);
+    return _csi_push_ostack_boolean (ctx, cmp <= 0);
 }
 
 static csi_status_t
@@ -2962,45 +2890,21 @@ _line_to (csi_t *ctx)
 static csi_status_t
 _lt (csi_t *ctx)
 {
+    csi_status_t status;
     csi_object_t *a, *b;
-    csi_boolean_t v;
+    int cmp;
 
     check (2);
 
     b = _csi_peek_ostack (ctx, 0);
     a = _csi_peek_ostack (ctx, 1);
 
-    if (_csi_unlikely (csi_object_get_type (a) != csi_object_get_type (b))) {
-	if (_csi_likely (csi_object_is_number (a) && csi_object_is_number (b))) {
-	    double ia, ib;
-	    ia = csi_number_get_value (a);
-	    ib = csi_number_get_value (b);
-	    v = ia < ib;
-	} else {
-	    return _csi_error (CSI_STATUS_INVALID_SCRIPT);
-	}
-    } else switch ((int) csi_object_get_type (a)) {
-    case CSI_OBJECT_TYPE_BOOLEAN:
-	v = a->datum.boolean < b->datum.boolean;
-	break;
-    case CSI_OBJECT_TYPE_INTEGER:
-	v = a->datum.integer < b->datum.integer;
-	break;
-    case CSI_OBJECT_TYPE_REAL:
-	v = a->datum.real < b->datum.real;
-	break;
-    case CSI_OBJECT_TYPE_STRING:
-	v = strcmp (a->datum.string->string, b->datum.string->string) < 0;
-	break;
-    case CSI_OBJECT_TYPE_NAME:
-	v = strcmp ((char *) a->datum.name, (char *) b->datum.name) < 0;
-	break;
-    default:
-	return _csi_error (CSI_STATUS_INVALID_SCRIPT);
-    }
+    status = csi_object_compare (a, b, &cmp);
+    if (_csi_unlikely (status))
+	return status;
 
     pop (2);
-    return _csi_push_ostack_boolean (ctx, v);
+    return _csi_push_ostack_boolean (ctx, cmp < 0);
 }
 
 static csi_status_t
