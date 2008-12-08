@@ -544,9 +544,9 @@ end_dict_construction (csi_t *ctx)
 	    break;
 	}
 
-	check (1);
+	check (2);
 
-	name = _csi_peek_ostack (ctx, 0);
+	name = _csi_peek_ostack (ctx, 1);
 	if (_csi_unlikely
 	    (csi_object_get_type (name) != CSI_OBJECT_TYPE_NAME))
 	{
