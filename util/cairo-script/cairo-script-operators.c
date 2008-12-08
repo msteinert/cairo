@@ -3010,6 +3010,23 @@ _mark (csi_t *ctx)
 }
 
 static csi_status_t
+_ne (csi_t *ctx)
+{
+    csi_object_t *a, *b;
+    csi_boolean_t v;
+
+    check (2);
+
+    b = _csi_peek_ostack (ctx, 0);
+    a = _csi_peek_ostack (ctx, 1);
+
+    v = ! csi_object_eq (a, b);
+
+    pop (2);
+    return _csi_push_ostack_boolean (ctx, v);
+}
+
+static csi_status_t
 _neg (csi_t *ctx)
 {
     csi_object_t *obj;
@@ -5552,7 +5569,7 @@ _defs[] = {
     { "multiply", NULL },
     { "n", _new_path },
     { "N", _new_sub_path },
-    { "ne", NULL },
+    { "ne", _ne },
     { "neg", _neg },
     { "new_path", _new_path },
     { "new_sub_path", _new_sub_path },
