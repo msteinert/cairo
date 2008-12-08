@@ -664,3 +664,95 @@ csi_object_as_file (csi_t *ctx,
 	return _csi_error (CSI_STATUS_INVALID_SCRIPT);
     }
 }
+
+static int
+lexcmp (void const *a, size_t alen,
+	void const *b, size_t blen)
+{
+    size_t len = alen < blen ? alen : blen;
+    int cmp = memcmp (a, b, len);
+    if (cmp)
+	return cmp;
+    if (alen == blen)
+	return 0;
+    return alen < blen ? -1 : +1;
+}
+
+csi_boolean_t
+csi_object_eq (csi_object_t *a,
+	       csi_object_t *b)
+{
+    csi_object_type_t atype = csi_object_get_type (a);
+    csi_object_type_t btype = csi_object_get_type (b);
+
+    if (atype == btype) {
+	switch (atype) {
+	case CSI_OBJECT_TYPE_BOOLEAN:
+	    return a->datum.boolean == b->datum.boolean;
+	case CSI_OBJECT_TYPE_INTEGER:
+	    return a->datum.integer == b->datum.integer;
+	case CSI_OBJECT_TYPE_REAL:
+	    return a->datum.real == b->datum.real;
+	case CSI_OBJECT_TYPE_NAME:
+	    return a->datum.name == b->datum.name;
+	case CSI_OBJECT_TYPE_STRING:
+	    return 0 == lexcmp (a->datum.string->string,
+				a->datum.string->len,
+				b->datum.string->string,
+				b->datum.string->len);
+	case CSI_OBJECT_TYPE_NULL:
+	case CSI_OBJECT_TYPE_MARK:
+	    return TRUE;
+	case CSI_OBJECT_TYPE_OPERATOR:
+	    return a->datum.op == b->datum.op;
+	case CSI_OBJECT_TYPE_ARRAY:
+	case CSI_OBJECT_TYPE_DICTIONARY:
+	case CSI_OBJECT_TYPE_FILE:
+	case CSI_OBJECT_TYPE_MATRIX:
+	case CSI_OBJECT_TYPE_CONTEXT:
+	case CSI_OBJECT_TYPE_FONT:
+	case CSI_OBJECT_TYPE_PATTERN:
+	case CSI_OBJECT_TYPE_SCALED_FONT:
+	case CSI_OBJECT_TYPE_SURFACE:
+	    return a->datum.ptr == b->datum.ptr;
+	}
+    }
+
+    if (atype < btype) {
+	csi_object_t *c;
+	csi_object_type_t ctype;
+	c = a; a = b; b = c;
+	ctype = atype; atype = btype; btype = ctype;
+    }
+
+    switch ((int) atype) {
+    case CSI_OBJECT_TYPE_INTEGER:
+	if (btype == CSI_OBJECT_TYPE_BOOLEAN) {
+	    return a->datum.integer == b->datum.boolean;
+	}
+	break;
+    case CSI_OBJECT_TYPE_REAL:
+	if (btype == CSI_OBJECT_TYPE_INTEGER) {
+	    return a->datum.real == b->datum.integer;
+	}
+	else if (btype == CSI_OBJECT_TYPE_BOOLEAN) {
+	    return a->datum.real == b->datum.boolean;
+	}
+	break;
+
+    case CSI_OBJECT_TYPE_STRING:
+	if (btype == CSI_OBJECT_TYPE_NAME) {
+	    const char *bstr = (const char *) b->datum.name;
+	    return 0 == lexcmp (a->datum.string->string,
+				a->datum.string->len,
+				bstr,
+				strlen (bstr));
+	}
+	break;
+
+    default:
+	break;
+    }
+
+    return FALSE;
+}

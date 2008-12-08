@@ -716,6 +716,10 @@ csi_object_as_file (csi_t *ctx,
 		    csi_object_t *src,
 		    csi_object_t *file);
 
+csi_private csi_boolean_t
+csi_object_eq (csi_object_t *a,
+	       csi_object_t *b);
+
 /* cairo-script-operators.c */
 
 csi_private const csi_operator_def_t *

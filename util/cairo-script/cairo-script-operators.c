@@ -1210,69 +1210,7 @@ _eq (csi_t *ctx)
     b = _csi_peek_ostack (ctx, 0);
     a = _csi_peek_ostack (ctx, 1);
 
-    if (csi_object_get_type (a) != csi_object_get_type (b)) {
-	switch ((int) csi_object_get_type (a)) {
-	case CSI_OBJECT_TYPE_BOOLEAN:
-	    switch ((int) csi_object_get_type (b)) {
-	    case CSI_OBJECT_TYPE_INTEGER:
-		v = a->datum.boolean == !! b->datum.integer;
-		break;
-	    case CSI_OBJECT_TYPE_REAL:
-		v = a->datum.boolean == (b->datum.real != 0);
-		break;
-	    default:
-		return _csi_error (CSI_STATUS_INVALID_SCRIPT);
-	    }
-	    break;
-
-	case CSI_OBJECT_TYPE_INTEGER:
-	    switch ((int) csi_object_get_type (b)) {
-	    case CSI_OBJECT_TYPE_BOOLEAN:
-		v = a->datum.integer == b->datum.boolean;
-		break;
-	    case CSI_OBJECT_TYPE_REAL:
-		v = a->datum.integer == b->datum.real;
-		break;
-	    default:
-		return _csi_error (CSI_STATUS_INVALID_SCRIPT);
-	    }
-	    break;
-
-	case CSI_OBJECT_TYPE_REAL:
-	    switch ((int) csi_object_get_type (b)) {
-	    case CSI_OBJECT_TYPE_BOOLEAN:
-		v = a->datum.real == b->datum.boolean;
-		break;
-	    case CSI_OBJECT_TYPE_INTEGER:
-		v = a->datum.real == b->datum.integer;
-		break;
-	    default:
-		return _csi_error (CSI_STATUS_INVALID_SCRIPT);
-	    }
-	    break;
-
-	default:
-	    return _csi_error (CSI_STATUS_INVALID_SCRIPT);
-	}
-    } else {
-	if (CSI_OBJECT_IS_CAIRO (a)) {
-	    v = a->datum.ptr == b->datum.ptr;
-	} else if (CSI_OBJECT_IS_COMPOUND (a)) {
-	    v = a->datum.object == b->datum.object;
-	} else switch ((int) csi_object_get_type (a)) {
-	    case CSI_OBJECT_TYPE_BOOLEAN:
-		v = a->datum.boolean == b->datum.boolean;
-		break;
-	    case CSI_OBJECT_TYPE_INTEGER:
-		v = a->datum.integer == b->datum.integer;
-		break;
-	    case CSI_OBJECT_TYPE_REAL:
-		v = a->datum.real == b->datum.real;
-		break;
-	    default:
-		return _csi_error (CSI_STATUS_INVALID_SCRIPT);
-	}
-    }
+    v = csi_object_eq (a, b);
 
     pop (2);
     return _csi_push_ostack_boolean (ctx, v);
