@@ -221,12 +221,15 @@ static unsigned long
 _intern_string_hash (const char *str, int len)
 {
     const signed char *p = (const signed char *) str;
-    unsigned int h = *p;
+    if (len > 0) {
+	unsigned int h = *p;
 
-    for (p += 1; --len; p++)
-	h = (h << 5) - h + *p;
+	while (--len)
+	    h = (h << 5) - h + *++p;
 
-    return h;
+	return h;
+    }
+    return 0;
 }
 
 static cairo_bool_t
