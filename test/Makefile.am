@@ -479,39 +479,19 @@ REFERENCE_IMAGES = \
 	extend-repeat-similar.ps3.ref.png	\
 	fallback-resolution.ppi37.5x37.5.ref.png \
 	fallback-resolution.ppi37.5x72.ref.png \
-	fallback-resolution.ppi37.5x75.ref.png \
-	fallback-resolution.ppi37.5x150.ref.png \
-	fallback-resolution.ppi37.5x300.ref.png \
-	fallback-resolution.ppi37.5x600.ref.png \
 	fallback-resolution.ppi72x37.5.ref.png \
 	fallback-resolution.ppi72x72.ref.png \
 	fallback-resolution.ppi72x75.ref.png \
 	fallback-resolution.ppi72x150.ref.png \
 	fallback-resolution.ppi72x300.ref.png \
 	fallback-resolution.ppi72x600.ref.png \
-	fallback-resolution.ppi75x37.5.ref.png \
 	fallback-resolution.ppi75x72.ref.png \
 	fallback-resolution.ppi75x75.ref.png \
-	fallback-resolution.ppi75x150.ref.png \
-	fallback-resolution.ppi75x300.ref.png \
-	fallback-resolution.ppi75x600.ref.png \
-	fallback-resolution.ppi150x37.5.ref.png \
 	fallback-resolution.ppi150x72.ref.png \
-	fallback-resolution.ppi150x75.ref.png \
 	fallback-resolution.ppi150x150.ref.png \
-	fallback-resolution.ppi150x300.ref.png \
-	fallback-resolution.ppi150x600.ref.png \
-	fallback-resolution.ppi300x37.5.ref.png \
 	fallback-resolution.ppi300x72.ref.png \
-	fallback-resolution.ppi300x75.ref.png \
-	fallback-resolution.ppi300x150.ref.png \
 	fallback-resolution.ppi300x300.ref.png \
-	fallback-resolution.ppi300x600.ref.png \
-	fallback-resolution.ppi600x37.5.ref.png \
 	fallback-resolution.ppi600x72.ref.png \
-	fallback-resolution.ppi600x75.ref.png \
-	fallback-resolution.ppi600x150.ref.png \
-	fallback-resolution.ppi600x300.ref.png \
 	fallback-resolution.ppi600x600.ref.png \
 	fill-alpha.ref.png	\
 	fill-alpha-pattern.ref.png	\
