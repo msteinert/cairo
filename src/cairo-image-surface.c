@@ -1086,7 +1086,6 @@ _cairo_mask_format_from_antialias (cairo_antialias_t antialias)
     return CAIRO_FORMAT_A8;
 }
 
-
 static cairo_int_status_t
 _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 					   const cairo_pattern_t *pattern,
@@ -1175,7 +1174,8 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 	cairo_image_surface_create (
 	    _cairo_mask_format_from_antialias (antialias),
 	    width, height);
-    if (cairo_surface_status (&mask->base) != CAIRO_STATUS_SUCCESS)
+    status = mask->base.status;
+    if (unlikely (status))
 	goto CLEANUP_SOURCE;
 
     pixman_add_trapezoids (mask->pixman_image, - dst_x, - dst_y,
