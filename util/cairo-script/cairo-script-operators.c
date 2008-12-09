@@ -930,9 +930,9 @@ _bitshift (csi_t *ctx)
 
     if (shift < 0) {
 	shift = -shift;
-	v <<= shift;
-    } else
 	v >>= shift;
+    } else
+	v <<= shift;
 
     pop (1);
     _csi_peek_ostack (ctx, 0)->datum.integer = v;
