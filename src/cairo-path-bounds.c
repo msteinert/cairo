@@ -48,24 +48,6 @@ typedef struct cairo_path_bounder {
 } cairo_path_bounder_t;
 
 static void
-_cairo_path_bounder_init (cairo_path_bounder_t *bounder);
-
-static void
-_cairo_path_bounder_fini (cairo_path_bounder_t *bounder);
-
-static void
-_cairo_path_bounder_add_point (cairo_path_bounder_t *bounder, cairo_point_t *point);
-
-static cairo_status_t
-_cairo_path_bounder_move_to (void *closure, cairo_point_t *point);
-
-static cairo_status_t
-_cairo_path_bounder_line_to (void *closure, cairo_point_t *point);
-
-static cairo_status_t
-_cairo_path_bounder_close_path (void *closure);
-
-static void
 _cairo_path_bounder_init (cairo_path_bounder_t *bounder)
 {
     bounder->has_move_to_point = FALSE;
@@ -80,7 +62,8 @@ _cairo_path_bounder_fini (cairo_path_bounder_t *bounder)
 }
 
 static void
-_cairo_path_bounder_add_point (cairo_path_bounder_t *bounder, cairo_point_t *point)
+_cairo_path_bounder_add_point (cairo_path_bounder_t *bounder,
+			       const cairo_point_t *point)
 {
     if (bounder->has_point) {
 	if (point->x < bounder->min_x)
@@ -105,7 +88,8 @@ _cairo_path_bounder_add_point (cairo_path_bounder_t *bounder, cairo_point_t *poi
 }
 
 static cairo_status_t
-_cairo_path_bounder_move_to (void *closure, cairo_point_t *point)
+_cairo_path_bounder_move_to (void *closure,
+			     const cairo_point_t *point)
 {
     cairo_path_bounder_t *bounder = closure;
 
@@ -116,7 +100,8 @@ _cairo_path_bounder_move_to (void *closure, cairo_point_t *point)
 }
 
 static cairo_status_t
-_cairo_path_bounder_line_to (void *closure, cairo_point_t *point)
+_cairo_path_bounder_line_to (void *closure,
+			     const cairo_point_t *point)
 {
     cairo_path_bounder_t *bounder = closure;
 
@@ -133,9 +118,9 @@ _cairo_path_bounder_line_to (void *closure, cairo_point_t *point)
 
 static cairo_status_t
 _cairo_path_bounder_curve_to (void *closure,
-			      cairo_point_t *b,
-			      cairo_point_t *c,
-			      cairo_point_t *d)
+			      const cairo_point_t *b,
+			      const cairo_point_t *c,
+			      const cairo_point_t *d)
 {
     cairo_path_bounder_t *bounder = closure;
 

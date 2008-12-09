@@ -504,8 +504,8 @@ _cairo_pen_stroke_spline (cairo_pen_stroke_spline_t	*stroker,
 }
 
 static cairo_status_t
-_cairo_pen_stroke_spline_add_point (void *closure,
-				    cairo_point_t		*point)
+_cairo_pen_stroke_spline_add_point (void		    *closure,
+				    const cairo_point_t	    *point)
 {
     cairo_pen_stroke_spline_t	*stroker = closure;
     cairo_slope_t slope;

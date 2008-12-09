@@ -262,7 +262,7 @@ cairo_private cairo_bool_t
 _cairo_box_intersects_line_segment (cairo_box_t *box, cairo_line_t *line);
 
 cairo_private cairo_bool_t
-_cairo_box_contains_point (cairo_box_t *box, cairo_point_t *point);
+_cairo_box_contains_point (cairo_box_t *box, const cairo_point_t *point);
 
 cairo_private void
 _cairo_composite_rectangles_init (cairo_composite_rectangles_t	*rects,
@@ -1502,17 +1502,17 @@ _cairo_path_fixed_get_current_point (cairo_path_fixed_t *path,
 
 typedef cairo_status_t
 (cairo_path_fixed_move_to_func_t) (void		 *closure,
-				   cairo_point_t *point);
+				   const cairo_point_t *point);
 
 typedef cairo_status_t
 (cairo_path_fixed_line_to_func_t) (void		 *closure,
-				   cairo_point_t *point);
+				   const cairo_point_t *point);
 
 typedef cairo_status_t
 (cairo_path_fixed_curve_to_func_t) (void	  *closure,
-				    cairo_point_t *p0,
-				    cairo_point_t *p1,
-				    cairo_point_t *p2);
+				    const cairo_point_t *p0,
+				    const cairo_point_t *p1,
+				    const cairo_point_t *p2);
 
 typedef cairo_status_t
 (cairo_path_fixed_close_path_func_t) (void *closure);

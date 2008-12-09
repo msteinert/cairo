@@ -522,14 +522,14 @@ _cairo_svg_surface_emit_transform (cairo_output_stream_t *output,
 				     matrix.x0, matrix.y0);
 }
 
-typedef struct
-{
+typedef struct {
     cairo_output_stream_t *output;
     cairo_matrix_t *ctm_inverse;
 } svg_path_info_t;
 
 static cairo_status_t
-_cairo_svg_path_move_to (void *closure, cairo_point_t *point)
+_cairo_svg_path_move_to (void *closure,
+			 const cairo_point_t *point)
 {
     svg_path_info_t *info = closure;
     double x = _cairo_fixed_to_double (point->x);
@@ -544,7 +544,8 @@ _cairo_svg_path_move_to (void *closure, cairo_point_t *point)
 }
 
 static cairo_status_t
-_cairo_svg_path_line_to (void *closure, cairo_point_t *point)
+_cairo_svg_path_line_to (void *closure,
+			 const cairo_point_t *point)
 {
     svg_path_info_t *info = closure;
     double x = _cairo_fixed_to_double (point->x);
@@ -560,9 +561,9 @@ _cairo_svg_path_line_to (void *closure, cairo_point_t *point)
 
 static cairo_status_t
 _cairo_svg_path_curve_to (void          *closure,
-			  cairo_point_t *b,
-			  cairo_point_t *c,
-			  cairo_point_t *d)
+			  const cairo_point_t *b,
+			  const cairo_point_t *c,
+			  const cairo_point_t *d)
 {
     svg_path_info_t *info = closure;
     double bx = _cairo_fixed_to_double (b->x);

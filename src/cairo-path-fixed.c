@@ -707,7 +707,7 @@ _cairo_path_fixed_interpret (const cairo_path_fixed_t		*path,
 
 static cairo_status_t
 _append_move_to (void		 *closure,
-	  cairo_point_t  *point)
+		 const cairo_point_t  *point)
 {
     cairo_path_fixed_t *path = (cairo_path_fixed_t *) closure;
     return _cairo_path_fixed_move_to (path, point->x, point->y);
@@ -715,7 +715,7 @@ _append_move_to (void		 *closure,
 
 static cairo_status_t
 _append_line_to (void		 *closure,
-	  cairo_point_t *point)
+		 const cairo_point_t *point)
 {
     cairo_path_fixed_t *path = (cairo_path_fixed_t *) closure;
     return _cairo_path_fixed_line_to (path, point->x, point->y);
@@ -723,9 +723,9 @@ _append_line_to (void		 *closure,
 
 static cairo_status_t
 _append_curve_to (void	  *closure,
-	   cairo_point_t *p0,
-	   cairo_point_t *p1,
-	   cairo_point_t *p2)
+		  const cairo_point_t *p0,
+		  const cairo_point_t *p1,
+		  const cairo_point_t *p2)
 {
     cairo_path_fixed_t *path = (cairo_path_fixed_t *) closure;
     return _cairo_path_fixed_curve_to (path, p0->x, p0->y, p1->x, p1->y, p2->x, p2->y);
@@ -738,7 +738,7 @@ _append_close_path (void *closure)
     return _cairo_path_fixed_close_path (path);
 }
 
-cairo_private cairo_status_t
+cairo_status_t
 _cairo_path_fixed_append (cairo_path_fixed_t		  *path,
 			  const cairo_path_fixed_t	  *other,
 			  cairo_direction_t		   dir)
@@ -864,7 +864,8 @@ typedef struct cairo_path_flattener {
 } cpf_t;
 
 static cairo_status_t
-_cpf_move_to (void *closure, cairo_point_t *point)
+_cpf_move_to (void *closure,
+	      const cairo_point_t *point)
 {
     cpf_t *cpf = closure;
 
@@ -874,7 +875,8 @@ _cpf_move_to (void *closure, cairo_point_t *point)
 }
 
 static cairo_status_t
-_cpf_line_to (void *closure, cairo_point_t *point)
+_cpf_line_to (void *closure,
+	      const cairo_point_t *point)
 {
     cpf_t *cpf = closure;
 
@@ -885,9 +887,9 @@ _cpf_line_to (void *closure, cairo_point_t *point)
 
 static cairo_status_t
 _cpf_curve_to (void		*closure,
-	       cairo_point_t	*p1,
-	       cairo_point_t	*p2,
-	       cairo_point_t	*p3)
+	       const cairo_point_t	*p1,
+	       const cairo_point_t	*p2,
+	       const cairo_point_t	*p3)
 {
     cpf_t *cpf = closure;
     cairo_spline_t spline;
@@ -1191,22 +1193,23 @@ typedef struct cairo_path_region_tester {
 
 static cairo_status_t
 _cprt_line_to (void          *closure,
-	       cairo_point_t *p2)
+	       const cairo_point_t *p2)
 {
     cprt_t *self = closure;
     cairo_point_t *p1 = &self->current_point;
+
     if (p2->x == p1->x) {
-	if (_cairo_fixed_is_integer(p2->y)) {
-	    *p1 = *p2;
+	if (_cairo_fixed_is_integer (p2->y)) {
+	    p1->y = p2->y;
+	    return CAIRO_STATUS_SUCCESS;
+	}
+    } else if (p2->y == p1->y) {
+	if (_cairo_fixed_is_integer (p2->x)) {
+	    p1->x = p2->x;
 	    return CAIRO_STATUS_SUCCESS;
 	}
     }
-    else if (p2->y == p1->y) {
-	if (_cairo_fixed_is_integer(p2->x)) {
-	    *p1 = *p2;
-	    return CAIRO_STATUS_SUCCESS;
-	}
-    }
+
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
@@ -1218,32 +1221,22 @@ _cprt_close_path (void *closure)
 }
 
 static cairo_status_t
-_cprt_move_to (void          *closure,
-	       cairo_point_t *p)
+_cprt_move_to (void		    *closure,
+	       const cairo_point_t  *p)
 {
     cprt_t *self = closure;
-    cairo_status_t status = _cprt_close_path (closure);
-    if (status) return status;
-    if (_cairo_fixed_is_integer(p->x) &&
-	_cairo_fixed_is_integer(p->y))
-    {
+    cairo_status_t status;
+
+    status = _cprt_close_path (closure);
+    if (status)
+	return status;
+
+    if (_cairo_fixed_is_integer (p->x) && _cairo_fixed_is_integer (p->y)) {
 	self->current_point = *p;
 	self->last_move_point = *p;
 	return CAIRO_STATUS_SUCCESS;
     }
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
 
-static cairo_status_t
-_cprt_curve_to (void *closure,
-		cairo_point_t *p0,
-		cairo_point_t *p1,
-		cairo_point_t *p2)
-{
-    (void)closure;
-    (void)p0;
-    (void)p1;
-    (void)p2;
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
@@ -1256,19 +1249,20 @@ cairo_bool_t
 _cairo_path_fixed_is_region (cairo_path_fixed_t *path)
 {
     cprt_t cprt;
-    cairo_status_t status;
+
     if (path->has_curve_to)
 	return FALSE;
+
     cprt.current_point.x = 0;
     cprt.current_point.y = 0;
     cprt.last_move_point.x = 0;
     cprt.last_move_point.y = 0;
-    status = _cairo_path_fixed_interpret (path,
-					  CAIRO_DIRECTION_FORWARD,
-					  _cprt_move_to,
-					  _cprt_line_to,
-					  _cprt_curve_to,
-					  _cprt_close_path,
-					  &cprt);
-    return status == CAIRO_STATUS_SUCCESS;
+
+    return _cairo_path_fixed_interpret (path,
+					CAIRO_DIRECTION_FORWARD,
+					_cprt_move_to,
+					_cprt_line_to,
+					NULL,
+					_cprt_close_path,
+					&cprt) == CAIRO_STATUS_SUCCESS;
 }

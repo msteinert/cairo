@@ -218,8 +218,8 @@ typedef struct _ps_path_info {
 } t1_path_info_t;
 
 static cairo_status_t
-_charstring_move_to (void          *closure,
-                     cairo_point_t *point)
+_charstring_move_to (void		    *closure,
+                     const cairo_point_t    *point)
 {
     t1_path_info_t *path_info = (t1_path_info_t *) closure;
     int dx, dy;
@@ -242,8 +242,8 @@ _charstring_move_to (void          *closure,
 }
 
 static cairo_status_t
-_charstring_line_to (void          *closure,
-                     cairo_point_t *point)
+_charstring_line_to (void		    *closure,
+                     const cairo_point_t    *point)
 {
     t1_path_info_t *path_info = (t1_path_info_t *) closure;
     int dx, dy;
@@ -266,10 +266,10 @@ _charstring_line_to (void          *closure,
 }
 
 static cairo_status_t
-_charstring_curve_to (void	    *closure,
-                      cairo_point_t *point1,
-                      cairo_point_t *point2,
-                      cairo_point_t *point3)
+_charstring_curve_to (void		    *closure,
+                      const cairo_point_t   *point1,
+                      const cairo_point_t   *point2,
+                      const cairo_point_t   *point3)
 {
     t1_path_info_t *path_info = (t1_path_info_t *) closure;
     int dx1, dy1, dx2, dy2, dx3, dy3;

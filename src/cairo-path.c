@@ -48,7 +48,8 @@ typedef struct cairo_path_count {
 } cpc_t;
 
 static cairo_status_t
-_cpc_move_to (void *closure, cairo_point_t *point)
+_cpc_move_to (void *closure,
+	      const cairo_point_t *point)
 {
     cpc_t *cpc = closure;
 
@@ -60,7 +61,8 @@ _cpc_move_to (void *closure, cairo_point_t *point)
 }
 
 static cairo_status_t
-_cpc_line_to (void *closure, cairo_point_t *point)
+_cpc_line_to (void *closure,
+	      const cairo_point_t *point)
 {
     cpc_t *cpc = closure;
 
@@ -73,9 +75,9 @@ _cpc_line_to (void *closure, cairo_point_t *point)
 
 static cairo_status_t
 _cpc_curve_to (void		*closure,
-	       cairo_point_t	*p1,
-	       cairo_point_t	*p2,
-	       cairo_point_t	*p3)
+	       const cairo_point_t	*p1,
+	       const cairo_point_t	*p2,
+	       const cairo_point_t	*p3)
 {
     cpc_t *cpc = closure;
 
@@ -141,7 +143,8 @@ typedef struct cairo_path_populate {
 } cpp_t;
 
 static cairo_status_t
-_cpp_move_to (void *closure, cairo_point_t *point)
+_cpp_move_to (void *closure,
+	      const cairo_point_t *point)
 {
     cpp_t *cpp = closure;
     cairo_path_data_t *data = cpp->data;
@@ -167,7 +170,8 @@ _cpp_move_to (void *closure, cairo_point_t *point)
 }
 
 static cairo_status_t
-_cpp_line_to (void *closure, cairo_point_t *point)
+_cpp_line_to (void *closure,
+	      const cairo_point_t *point)
 {
     cpp_t *cpp = closure;
     cairo_path_data_t *data = cpp->data;
@@ -193,10 +197,10 @@ _cpp_line_to (void *closure, cairo_point_t *point)
 }
 
 static cairo_status_t
-_cpp_curve_to (void		*closure,
-	       cairo_point_t	*p1,
-	       cairo_point_t	*p2,
-	       cairo_point_t	*p3)
+_cpp_curve_to (void			*closure,
+	       const cairo_point_t	*p1,
+	       const cairo_point_t	*p2,
+	       const cairo_point_t	*p3)
 {
     cpp_t *cpp = closure;
     cairo_path_data_t *data = cpp->data;

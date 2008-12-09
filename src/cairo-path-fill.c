@@ -47,27 +47,6 @@ typedef struct cairo_filler {
 } cairo_filler_t;
 
 static void
-_cairo_filler_init (cairo_filler_t *filler, double tolerance, cairo_traps_t *traps);
-
-static void
-_cairo_filler_fini (cairo_filler_t *filler);
-
-static cairo_status_t
-_cairo_filler_move_to (void *closure, cairo_point_t *point);
-
-static cairo_status_t
-_cairo_filler_line_to (void *closure, cairo_point_t *point);
-
-static cairo_status_t
-_cairo_filler_curve_to (void *closure,
-			cairo_point_t *b,
-			cairo_point_t *c,
-			cairo_point_t *d);
-
-static cairo_status_t
-_cairo_filler_close_path (void *closure);
-
-static void
 _cairo_filler_init (cairo_filler_t *filler, double tolerance, cairo_traps_t *traps)
 {
     filler->tolerance = tolerance;
@@ -86,7 +65,8 @@ _cairo_filler_fini (cairo_filler_t *filler)
 }
 
 static cairo_status_t
-_cairo_filler_move_to (void *closure, cairo_point_t *point)
+_cairo_filler_move_to (void *closure,
+		       const cairo_point_t *point)
 {
     cairo_filler_t *filler = closure;
     cairo_polygon_t *polygon = &filler->polygon;
@@ -100,7 +80,8 @@ _cairo_filler_move_to (void *closure, cairo_point_t *point)
 }
 
 static cairo_status_t
-_cairo_filler_line_to (void *closure, cairo_point_t *point)
+_cairo_filler_line_to (void *closure,
+		       const cairo_point_t *point)
 {
     cairo_filler_t *filler = closure;
     cairo_polygon_t *polygon = &filler->polygon;
@@ -114,9 +95,9 @@ _cairo_filler_line_to (void *closure, cairo_point_t *point)
 
 static cairo_status_t
 _cairo_filler_curve_to (void *closure,
-			cairo_point_t *b,
-			cairo_point_t *c,
-			cairo_point_t *d)
+			const cairo_point_t *b,
+			const cairo_point_t *c,
+			const cairo_point_t *d)
 {
     cairo_filler_t *filler = closure;
     cairo_spline_t spline;

@@ -1973,7 +1973,8 @@ typedef struct _cairo_scaled_glyph_path_closure {
 } cairo_scaled_glyph_path_closure_t;
 
 static cairo_status_t
-_scaled_glyph_path_move_to (void *abstract_closure, cairo_point_t *point)
+_scaled_glyph_path_move_to (void *abstract_closure,
+			    const cairo_point_t *point)
 {
     cairo_scaled_glyph_path_closure_t	*closure = abstract_closure;
 
@@ -1983,7 +1984,8 @@ _scaled_glyph_path_move_to (void *abstract_closure, cairo_point_t *point)
 }
 
 static cairo_status_t
-_scaled_glyph_path_line_to (void *abstract_closure, cairo_point_t *point)
+_scaled_glyph_path_line_to (void *abstract_closure,
+			    const cairo_point_t *point)
 {
     cairo_scaled_glyph_path_closure_t	*closure = abstract_closure;
 
@@ -1994,9 +1996,9 @@ _scaled_glyph_path_line_to (void *abstract_closure, cairo_point_t *point)
 
 static cairo_status_t
 _scaled_glyph_path_curve_to (void *abstract_closure,
-			     cairo_point_t *p0,
-			     cairo_point_t *p1,
-			     cairo_point_t *p2)
+			     const cairo_point_t *p0,
+			     const cairo_point_t *p1,
+			     const cairo_point_t *p2)
 {
     cairo_scaled_glyph_path_closure_t	*closure = abstract_closure;
 

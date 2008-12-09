@@ -33,9 +33,8 @@ typedef struct {
 } scan_converter_filler_t;
 
 static void
-scan_converter_filler_init (
-    scan_converter_filler_t		*filler,
-    cairo_scan_converter_t		*converter)
+scan_converter_filler_init (scan_converter_filler_t		*filler,
+			    cairo_scan_converter_t		*converter)
 {
     filler->converter = converter;
     filler->current_point.x = 0;
@@ -44,9 +43,8 @@ scan_converter_filler_init (
 }
 
 static cairo_status_t
-scan_converter_filler_move_to (
-    void *closure,
-    cairo_point_t *p)
+scan_converter_filler_move_to (void *closure,
+			       const cairo_point_t *p)
 {
     scan_converter_filler_t *filler = closure;
     filler->current_point.x = p->x;
@@ -56,9 +54,8 @@ scan_converter_filler_move_to (
 }
 
 static cairo_status_t
-scan_converter_filler_line_to (
-    void *closure,
-    cairo_point_t *p)
+scan_converter_filler_line_to (void *closure,
+			       const cairo_point_t *p)
 {
     scan_converter_filler_t *filler = closure;
     cairo_status_t status;
@@ -78,8 +75,7 @@ scan_converter_filler_line_to (
 }
 
 static cairo_status_t
-scan_converter_filler_close_path (
-    void *closure)
+scan_converter_filler_close_path (void *closure)
 {
     scan_converter_filler_t *filler = closure;
     cairo_status_t status;

@@ -329,7 +329,8 @@ typedef struct _pdf_path_info {
 } pdf_path_info_t;
 
 static cairo_status_t
-_cairo_pdf_path_move_to (void *closure, cairo_point_t *point)
+_cairo_pdf_path_move_to (void *closure,
+			 const cairo_point_t *point)
 {
     pdf_path_info_t *info = closure;
     double x = _cairo_fixed_to_double (point->x);
@@ -345,7 +346,8 @@ _cairo_pdf_path_move_to (void *closure, cairo_point_t *point)
 }
 
 static cairo_status_t
-_cairo_pdf_path_line_to (void *closure, cairo_point_t *point)
+_cairo_pdf_path_line_to (void *closure,
+			 const cairo_point_t *point)
 {
     pdf_path_info_t *info = closure;
     double x = _cairo_fixed_to_double (point->x);
@@ -369,9 +371,9 @@ _cairo_pdf_path_line_to (void *closure, cairo_point_t *point)
 
 static cairo_status_t
 _cairo_pdf_path_curve_to (void          *closure,
-			  cairo_point_t *b,
-			  cairo_point_t *c,
-			  cairo_point_t *d)
+			  const cairo_point_t *b,
+			  const cairo_point_t *c,
+			  const cairo_point_t *d)
 {
     pdf_path_info_t *info = closure;
     double bx = _cairo_fixed_to_double (b->x);

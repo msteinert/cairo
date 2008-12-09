@@ -153,8 +153,8 @@ _cairo_box_intersects_line_segment (cairo_box_t *box, cairo_line_t *line)
 
     cairo_fixed_t xlen, ylen;
 
-    if (_cairo_box_contains_point(box, &line->p1) ||
-	_cairo_box_contains_point(box, &line->p2))
+    if (_cairo_box_contains_point (box, &line->p1) ||
+	_cairo_box_contains_point (box, &line->p2))
 	return TRUE;
 
     xlen = P2x - P1x;
@@ -216,7 +216,7 @@ _cairo_box_intersects_line_segment (cairo_box_t *box, cairo_line_t *line)
 }
 
 cairo_bool_t
-_cairo_box_contains_point (cairo_box_t *box, cairo_point_t *point)
+_cairo_box_contains_point (cairo_box_t *box, const cairo_point_t *point)
 {
     if (point->x < box->p1.x || point->x > box->p2.x ||
 	point->y < box->p1.y || point->y > box->p2.y)

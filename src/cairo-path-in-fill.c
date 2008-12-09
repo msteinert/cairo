@@ -132,7 +132,8 @@ _cairo_in_fill_add_edge (cairo_in_fill_t *in_fill,
 }
 
 static cairo_status_t
-_cairo_in_fill_move_to (void *closure, cairo_point_t *point)
+_cairo_in_fill_move_to (void *closure,
+			const cairo_point_t *point)
 {
     cairo_in_fill_t *in_fill = closure;
 
@@ -151,7 +152,8 @@ _cairo_in_fill_move_to (void *closure, cairo_point_t *point)
 }
 
 static cairo_status_t
-_cairo_in_fill_line_to (void *closure, cairo_point_t *point)
+_cairo_in_fill_line_to (void *closure,
+			const cairo_point_t *point)
 {
     cairo_in_fill_t *in_fill = closure;
 
@@ -166,9 +168,9 @@ _cairo_in_fill_line_to (void *closure, cairo_point_t *point)
 
 static cairo_status_t
 _cairo_in_fill_curve_to (void *closure,
-			 cairo_point_t *b,
-			 cairo_point_t *c,
-			 cairo_point_t *d)
+			 const cairo_point_t *b,
+			 const cairo_point_t *c,
+			 const cairo_point_t *d)
 {
     cairo_in_fill_t *in_fill = closure;
     cairo_spline_t spline;

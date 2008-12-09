@@ -1168,7 +1168,8 @@ _emit_source (cairo_script_surface_t *surface,
 }
 
 static cairo_status_t
-_path_move_to (void *closure, cairo_point_t *point)
+_path_move_to (void *closure,
+	       const cairo_point_t *point)
 {
     _cairo_output_stream_printf (closure,
 				 " %f %f m",
@@ -1179,7 +1180,8 @@ _path_move_to (void *closure, cairo_point_t *point)
 }
 
 static cairo_status_t
-_path_line_to (void *closure, cairo_point_t *point)
+_path_line_to (void *closure,
+	       const cairo_point_t *point)
 {
     _cairo_output_stream_printf (closure,
 				 " %f %f l",
@@ -1191,9 +1193,9 @@ _path_line_to (void *closure, cairo_point_t *point)
 
 static cairo_status_t
 _path_curve_to (void *closure,
-		cairo_point_t *p1,
-		cairo_point_t *p2,
-		cairo_point_t *p3)
+		const cairo_point_t *p1,
+		const cairo_point_t *p2,
+		const cairo_point_t *p3)
 {
     _cairo_output_stream_printf (closure,
 				 " %f %f %f %f %f %f c",

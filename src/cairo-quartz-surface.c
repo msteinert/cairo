@@ -289,7 +289,8 @@ typedef struct _quartz_stroke {
 
 /* cairo path -> execute in context */
 static cairo_status_t
-_cairo_path_to_quartz_context_move_to (void *closure, cairo_point_t *point)
+_cairo_path_to_quartz_context_move_to (void *closure,
+				       const cairo_point_t *point)
 {
     //ND((stderr, "moveto: %f %f\n", _cairo_fixed_to_double(point->x), _cairo_fixed_to_double(point->y)));
     quartz_stroke_t *stroke = (quartz_stroke_t *)closure;
@@ -304,7 +305,8 @@ _cairo_path_to_quartz_context_move_to (void *closure, cairo_point_t *point)
 }
 
 static cairo_status_t
-_cairo_path_to_quartz_context_line_to (void *closure, cairo_point_t *point)
+_cairo_path_to_quartz_context_line_to (void *closure,
+				       const cairo_point_t *point)
 {
     //ND((stderr, "lineto: %f %f\n",  _cairo_fixed_to_double(point->x), _cairo_fixed_to_double(point->y)));
     quartz_stroke_t *stroke = (quartz_stroke_t *)closure;
@@ -322,7 +324,10 @@ _cairo_path_to_quartz_context_line_to (void *closure, cairo_point_t *point)
 }
 
 static cairo_status_t
-_cairo_path_to_quartz_context_curve_to (void *closure, cairo_point_t *p0, cairo_point_t *p1, cairo_point_t *p2)
+_cairo_path_to_quartz_context_curve_to (void *closure,
+					const cairo_point_t *p0,
+					const cairo_point_t *p1,
+					const cairo_point_t *p2)
 {
     //ND( (stderr, "curveto: %f,%f %f,%f %f,%f\n",
     //		   _cairo_fixed_to_double(p0->x), _cairo_fixed_to_double(p0->y),

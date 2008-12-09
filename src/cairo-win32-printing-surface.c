@@ -982,7 +982,8 @@ typedef struct _win32_print_path_info {
 } win32_path_info_t;
 
 static cairo_status_t
-_cairo_win32_printing_surface_path_move_to (void *closure, cairo_point_t *point)
+_cairo_win32_printing_surface_path_move_to (void *closure,
+					    const cairo_point_t *point)
 {
     win32_path_info_t *path_info = closure;
 
@@ -1004,7 +1005,8 @@ _cairo_win32_printing_surface_path_move_to (void *closure, cairo_point_t *point)
 }
 
 static cairo_status_t
-_cairo_win32_printing_surface_path_line_to (void *closure, cairo_point_t *point)
+_cairo_win32_printing_surface_path_line_to (void *closure,
+					    const cairo_point_t *point)
 {
     win32_path_info_t *path_info = closure;
 
@@ -1027,9 +1029,9 @@ _cairo_win32_printing_surface_path_line_to (void *closure, cairo_point_t *point)
 
 static cairo_status_t
 _cairo_win32_printing_surface_path_curve_to (void          *closure,
-                                             cairo_point_t *b,
-                                             cairo_point_t *c,
-                                             cairo_point_t *d)
+                                             const cairo_point_t *b,
+                                             const cairo_point_t *c,
+                                             const cairo_point_t *d)
 {
     win32_path_info_t *path_info = closure;
     POINT points[3];
