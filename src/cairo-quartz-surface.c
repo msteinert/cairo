@@ -1072,7 +1072,7 @@ static cairo_quartz_action_t
 _cairo_quartz_setup_linear_source (cairo_quartz_surface_t *surface,
 				   cairo_linear_pattern_t *lpat)
 {
-    cairo_pattern_t *abspat = (cairo_pattern_t *) lpat;
+    cairo_pattern_t *abspat = &lpat->base.base;
     cairo_matrix_t mat;
     CGPoint start, end;
     CGFunctionRef gradFunc;
@@ -1099,10 +1099,10 @@ _cairo_quartz_setup_linear_source (cairo_quartz_surface_t *surface,
     if (abspat->extend == CAIRO_EXTEND_NONE ||
 	abspat->extend == CAIRO_EXTEND_PAD)
     {
-	gradFunc = CreateGradientFunction ((cairo_gradient_pattern_t*) lpat);
+	gradFunc = CreateGradientFunction (&lpat->base);
     } else {
 	gradFunc = CreateRepeatingGradientFunction (surface,
-						    (cairo_gradient_pattern_t*) lpat,
+						    &lpat->base,
 						    &start, &end, surface->sourceTransform);
     }
 
@@ -1121,7 +1121,7 @@ static cairo_quartz_action_t
 _cairo_quartz_setup_radial_source (cairo_quartz_surface_t *surface,
 				   cairo_radial_pattern_t *rpat)
 {
-    cairo_pattern_t *abspat = (cairo_pattern_t *)rpat;
+    cairo_pattern_t *abspat = &rpat->base.base;
     cairo_matrix_t mat;
     CGPoint start, end;
     CGFunctionRef gradFunc;
@@ -1142,7 +1142,7 @@ _cairo_quartz_setup_radial_source (cairo_quartz_surface_t *surface,
 	 * Radial shadings).  So, instead, let's just render an image
 	 * for pixman to draw the shading into, and use that.
 	 */
-	return _cairo_quartz_setup_fallback_source (surface, (cairo_pattern_t*) rpat);
+	return _cairo_quartz_setup_fallback_source (surface, &rpat->base.base);
     }
 
     cairo_pattern_get_matrix (abspat, &mat);
@@ -1156,7 +1156,7 @@ _cairo_quartz_setup_radial_source (cairo_quartz_surface_t *surface,
     end = CGPointMake (_cairo_fixed_to_double (rpat->c2.x),
 		       _cairo_fixed_to_double (rpat->c2.y));
 
-    gradFunc = CreateGradientFunction ((cairo_gradient_pattern_t*) rpat);
+    gradFunc = CreateGradientFunction (&rpat->base);
 
     surface->sourceShading = CGShadingCreateRadial (rgb,
 						    start,
