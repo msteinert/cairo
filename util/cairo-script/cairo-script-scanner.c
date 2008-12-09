@@ -980,7 +980,7 @@ scan_string (csi_t *ctx, csi_scanner_t *scan, csi_file_t *src)
 		string_add (ctx, scan, '\r');
 		break;
 	    case 't':
-		string_add (ctx, scan, '\r');
+		string_add (ctx, scan, '\t');
 		break;
 	    case 'b':
 		string_add (ctx, scan, '\b');
