@@ -383,6 +383,7 @@ preamble (cairo_test_context_t *ctx)
 				    target->name,
 				    format);
 		    free (base_name);
+		    free (test_name);
 		    ret = CAIRO_TEST_FAILURE;
 		    continue;
 		}
@@ -451,6 +452,7 @@ preamble (cairo_test_context_t *ctx)
 		    target->cleanup (closure);
 
 		free (base_name);
+		free (test_name);
 
 		if (pass) {
 		    printf ("PASS\n");
