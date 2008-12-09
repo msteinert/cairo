@@ -1080,11 +1080,12 @@ _cairo_stroker_curve_to_dashed (void *closure,
     cairo_spline_t spline;
     cairo_point_t *a = &stroker->current_point;
     cairo_line_join_t line_join_save;
+    cairo_status_t status;
 
     if (! _cairo_spline_init (&spline,
 			      stroker->dashed ?
-			      (cairo_add_point_func_t) _cairo_stroker_line_to_dashed :
-			      (cairo_add_point_func_t) _cairo_stroker_line_to,
+			      _cairo_stroker_line_to_dashed :
+			      _cairo_stroker_line_to,
 			      stroker,
 			      a, b, c, d))
     {
@@ -1094,21 +1095,18 @@ _cairo_stroker_curve_to_dashed (void *closure,
     /* If the line width is so small that the pen is reduced to a
        single point, then we have nothing to do. */
     if (stroker->pen.num_vertices <= 1)
-	goto CLEANUP_SPLINE;
+	return CAIRO_STATUS_SUCCESS;
 
     /* Temporarily modify the stroker to use round joins to guarantee
      * smooth stroked curves. */
     line_join_save = stroker->style->line_join;
     stroker->style->line_join = CAIRO_LINE_JOIN_ROUND;
 
-    _cairo_spline_decompose (&spline, stroker->tolerance);
+    status = _cairo_spline_decompose (&spline, stroker->tolerance);
 
     stroker->style->line_join = line_join_save;
 
-  CLEANUP_SPLINE:
-    _cairo_spline_fini (&spline);
-
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static cairo_status_t

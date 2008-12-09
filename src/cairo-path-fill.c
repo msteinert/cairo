@@ -122,19 +122,14 @@ _cairo_filler_curve_to (void *closure,
     cairo_spline_t spline;
 
     if (! _cairo_spline_init (&spline,
-			      (cairo_add_point_func_t) _cairo_polygon_line_to,
-			      &filler->polygon,
+			      _cairo_filler_line_to,
+			      filler,
 			      &filler->current_point, b, c, d))
     {
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    _cairo_spline_decompose (&spline, filler->tolerance);
-    _cairo_spline_fini (&spline);
-
-    filler->current_point = *d;
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_spline_decompose (&spline, filler->tolerance);
 }
 
 static cairo_status_t

@@ -465,7 +465,9 @@ _cairo_pen_stroke_spline (cairo_pen_stroke_spline_t	*stroker,
 			     &stroker->forward_hull_point,
 			     1);
 
-    _cairo_spline_decompose (&stroker->spline, tolerance);
+    status = _cairo_spline_decompose (&stroker->spline, tolerance);
+    if (unlikely (status))
+	return status;
 
     /* close the polygon */
     slope = stroker->spline.final_slope;
@@ -492,20 +494,20 @@ _cairo_pen_stroke_spline (cairo_pen_stroke_spline_t	*stroker,
 
     status = _cairo_polygon_status (&stroker->polygon);
     if (unlikely (status))
-	goto BAIL;
+	return status;
 
     status = _cairo_bentley_ottmann_tessellate_polygon (traps,
 							&stroker->polygon,
 							CAIRO_FILL_RULE_WINDING);
-BAIL:
 
     return status;
 }
 
-static void
-_cairo_pen_stroke_spline_add_point (cairo_pen_stroke_spline_t	*stroker,
-				    const cairo_point_t		*point)
+static cairo_status_t
+_cairo_pen_stroke_spline_add_point (void *closure,
+				    cairo_point_t		*point)
 {
+    cairo_pen_stroke_spline_t	*stroker = closure;
     cairo_slope_t slope;
 
     _cairo_slope_init (&slope, &stroker->last_point, point);
@@ -527,6 +529,8 @@ _cairo_pen_stroke_spline_add_point (cairo_pen_stroke_spline_t	*stroker,
 						      stroker->backward_vertex,
 						      -1);
     stroker->last_point = *point;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_int_status_t
@@ -540,7 +544,7 @@ _cairo_pen_stroke_spline_init (cairo_pen_stroke_spline_t *stroker,
     cairo_int_status_t status;
 
     if (! _cairo_spline_init (&stroker->spline,
-			      (cairo_add_point_func_t) _cairo_pen_stroke_spline_add_point,
+			      _cairo_pen_stroke_spline_add_point,
 			      stroker,
 			      a, b, c, d))
     {
@@ -548,10 +552,8 @@ _cairo_pen_stroke_spline_init (cairo_pen_stroke_spline_t *stroker,
     }
 
     status = _cairo_pen_init_copy (&stroker->pen, pen);
-    if (unlikely (status)) {
-	_cairo_spline_fini (&stroker->spline);
+    if (unlikely (status))
 	return status;
-    }
 
     _cairo_polygon_init (&stroker->polygon);
 
@@ -564,6 +566,5 @@ void
 _cairo_pen_stroke_spline_fini (cairo_pen_stroke_spline_t *stroker)
 {
     _cairo_polygon_fini (&stroker->polygon);
-    _cairo_spline_fini (&stroker->spline);
     _cairo_pen_fini (&stroker->pen);
 }

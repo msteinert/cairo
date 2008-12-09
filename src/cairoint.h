@@ -2245,20 +2245,15 @@ _cairo_polygon_close (cairo_polygon_t *polygon);
 #define _cairo_polygon_status(P) (P)->status
 
 /* cairo-spline.c */
-typedef void (*cairo_add_point_func_t) (void*, const cairo_point_t *);
-
 cairo_private cairo_bool_t
 _cairo_spline_init (cairo_spline_t *spline,
-		    cairo_add_point_func_t add_point_func,
+		    cairo_spline_add_point_func_t add_point_func,
 		    void *closure,
 		    const cairo_point_t *a, const cairo_point_t *b,
 		    const cairo_point_t *c, const cairo_point_t *d);
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_spline_decompose (cairo_spline_t *spline, double tolerance);
-
-cairo_private void
-_cairo_spline_fini (cairo_spline_t *spline);
 
 /* cairo-matrix.c */
 cairo_private void

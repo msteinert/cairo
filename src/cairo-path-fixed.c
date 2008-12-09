@@ -895,19 +895,16 @@ _cpf_curve_to (void		*closure,
     cairo_point_t *p0 = &cpf->current_point;
 
     if (! _cairo_spline_init (&spline,
-			      (cairo_add_point_func_t) cpf->line_to,
+			      cpf->line_to,
 			      cpf->closure,
 			      p0, p1, p2, p3))
     {
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    _cairo_spline_decompose (&spline, cpf->tolerance);
-    _cairo_spline_fini (&spline);
-
     cpf->current_point = *p3;
 
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_spline_decompose (&spline, cpf->tolerance);
 }
 
 static cairo_status_t

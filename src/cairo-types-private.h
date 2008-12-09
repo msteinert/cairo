@@ -305,11 +305,15 @@ typedef struct _cairo_polygon {
     cairo_edge_t  edges_embedded[32];
 } cairo_polygon_t;
 
+typedef cairo_status_t
+(*cairo_spline_add_point_func_t) (void *closure, cairo_point_t *point);
+
 typedef struct _cairo_spline_knots {
     cairo_point_t a, b, c, d;
 } cairo_spline_knots_t;
+
 typedef struct _cairo_spline {
-    void (*add_point_func) (void *, const cairo_point_t *);
+    cairo_spline_add_point_func_t add_point_func;
     void *closure;
 
     cairo_spline_knots_t knots;

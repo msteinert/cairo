@@ -38,7 +38,7 @@
 
 cairo_bool_t
 _cairo_spline_init (cairo_spline_t *spline,
-		    void (*add_point_func) (void*, const cairo_point_t *),
+		    cairo_spline_add_point_func_t add_point_func,
 		    void *closure,
 		    const cairo_point_t *a, const cairo_point_t *b,
 		    const cairo_point_t *c, const cairo_point_t *d)
@@ -70,22 +70,17 @@ _cairo_spline_init (cairo_spline_t *spline,
     return TRUE;
 }
 
-void
-_cairo_spline_fini (cairo_spline_t *spline)
-{
-}
-
-static void
-_cairo_spline_add_point (cairo_spline_t *spline, const cairo_point_t *point)
+static cairo_status_t
+_cairo_spline_add_point (cairo_spline_t *spline, cairo_point_t *point)
 {
     cairo_point_t *prev;
 
     prev = &spline->last_point;
     if (prev->x == point->x && prev->y == point->y)
-	return;
+	return CAIRO_STATUS_SUCCESS;
 
-    spline->add_point_func (spline->closure, point);
     spline->last_point = *point;
+    return spline->add_point_func (spline->closure, point);
 }
 
 static void
@@ -181,30 +176,35 @@ _cairo_spline_error_squared (const cairo_spline_knots_t *knots)
 	return cerr;
 }
 
-static void
+static cairo_status_t
 _cairo_spline_decompose_into (cairo_spline_knots_t *s1, double tolerance_squared, cairo_spline_t *result)
 {
     cairo_spline_knots_t s2;
+    cairo_status_t status;
 
-    if (_cairo_spline_error_squared (s1) < tolerance_squared) {
-	_cairo_spline_add_point (result, &s1->a);
-	return;
-    }
+    if (_cairo_spline_error_squared (s1) < tolerance_squared)
+	return _cairo_spline_add_point (result, &s1->a);
 
     _de_casteljau (s1, &s2);
 
-    _cairo_spline_decompose_into (s1, tolerance_squared, result);
-    _cairo_spline_decompose_into (&s2, tolerance_squared, result);
+    status = _cairo_spline_decompose_into (s1, tolerance_squared, result);
+    if (unlikely (status))
+	return status;
+
+    return _cairo_spline_decompose_into (&s2, tolerance_squared, result);
 }
 
-void
+cairo_status_t
 _cairo_spline_decompose (cairo_spline_t *spline, double tolerance)
 {
     cairo_spline_knots_t s1;
+    cairo_status_t status;
 
     s1 = spline->knots;
     spline->last_point = s1.a;
-    _cairo_spline_decompose_into (&s1, tolerance * tolerance, spline);
+    status = _cairo_spline_decompose_into (&s1, tolerance * tolerance, spline);
+    if (unlikely (status))
+	return status;
 
-    _cairo_spline_add_point (spline, &spline->knots.d);
+    return _cairo_spline_add_point (spline, &spline->knots.d);
 }

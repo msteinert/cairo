@@ -194,17 +194,14 @@ _cairo_in_fill_curve_to (void *closure,
 
     /* XXX Investigate direct inspection of the inflections? */
     if (! _cairo_spline_init (&spline,
-			      (cairo_add_point_func_t) _cairo_in_fill_line_to,
+			      _cairo_in_fill_line_to,
 			      in_fill,
 			      &in_fill->current_point, b, c, d))
     {
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    _cairo_spline_decompose (&spline, in_fill->tolerance);
-    _cairo_spline_fini (&spline);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_spline_decompose (&spline, in_fill->tolerance);
 }
 
 static cairo_status_t
