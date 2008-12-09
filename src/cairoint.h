@@ -1312,6 +1312,13 @@ _cairo_gstate_glyph_path (cairo_gstate_t      *gstate,
 			  int		       num_glyphs,
 			  cairo_path_fixed_t  *path);
 
+cairo_private cairo_status_t
+_cairo_gstate_set_antialias (cairo_gstate_t *gstate,
+			     cairo_antialias_t antialias);
+
+cairo_private cairo_antialias_t
+_cairo_gstate_get_antialias (cairo_gstate_t *gstate);
+
 cairo_private cairo_bool_t
 _cairo_operator_bounded_by_mask (cairo_operator_t op) cairo_pure;
 
@@ -2480,13 +2487,6 @@ _cairo_pattern_equal (const cairo_pattern_t *a,
 
 cairo_private void
 _cairo_pattern_reset_static_data (void);
-
-cairo_private cairo_status_t
-_cairo_gstate_set_antialias (cairo_gstate_t *gstate,
-			     cairo_antialias_t antialias);
-
-cairo_private cairo_antialias_t
-_cairo_gstate_get_antialias (cairo_gstate_t *gstate);
 
 /* cairo-region.c */
 
