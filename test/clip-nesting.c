@@ -31,6 +31,19 @@
 #define BORDER 10
 #define LINE_WIDTH 20
 
+static void
+_propagate_status (cairo_t *dst, cairo_t *src)
+{
+    cairo_path_t path;
+
+    path.status = cairo_status (src);
+    if (path.status) {
+	path.num_data = 0;
+	path.data = NULL;
+	cairo_append_path (dst, &path);
+    }
+}
+
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
@@ -70,7 +83,10 @@ draw (cairo_t *cr, int width, int height)
 		     LINE_WIDTH,                 SIZE - 2 * BORDER);
     cairo_fill (cr3);
 
+    _propagate_status (cr, cr3);
     cairo_destroy (cr3);
+
+    _propagate_status (cr, cr2);
     cairo_destroy (cr2);
 
     /* And doesn't affect anything after this cairo_t is destroyed */
