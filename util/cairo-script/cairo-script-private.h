@@ -770,7 +770,8 @@ csi_private csi_status_t
 _csi_stack_grow (csi_t *ctx, csi_stack_t *stack, csi_integer_t cnt);
 
 csi_private csi_status_t
-_csi_stack_push (csi_t *ctx, csi_stack_t *stack, const csi_object_t *obj);
+_csi_stack_push_internal (csi_t *ctx, csi_stack_t *stack,
+			  const csi_object_t *obj);
 
 csi_private csi_object_t *
 _csi_stack_peek (csi_stack_t *stack, csi_integer_t i);
@@ -815,6 +816,17 @@ csi_number_get_value (const csi_object_t *obj)
     case CSI_OBJECT_TYPE_REAL: return obj->datum.real;
     default: return 0.;
     }
+}
+
+static inline csi_status_t
+_csi_stack_push (csi_t *ctx, csi_stack_t *stack,
+		 const csi_object_t *obj)
+{
+    if (_csi_unlikely (stack->len == stack->size))
+	return _csi_stack_push_internal (ctx, stack, obj);
+
+    stack->objects[stack->len++] = *obj;
+    return CSI_STATUS_SUCCESS;
 }
 
 static inline csi_boolean_t

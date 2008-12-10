@@ -179,16 +179,16 @@ _init_dictionaries (csi_t *ctx)
     stack = &ctx->dstack;
 
     status = _csi_stack_init (ctx, stack, 4);
-    if (status)
+    if (_csi_unlikely (status))
 	return status;
 
     /* systemdict */
     status = csi_dictionary_new (ctx, &obj);
-    if (status)
+    if (_csi_unlikely (status))
 	return status;
 
     status = _csi_stack_push (ctx, stack, &obj);
-    if (status)
+    if (_csi_unlikely (status))
 	return status;
 
     dict = obj.datum.dictionary;
@@ -196,19 +196,19 @@ _init_dictionaries (csi_t *ctx)
     /* fill systemdict with operators */
     for (odef = _csi_operators (); odef->name != NULL; odef++) {
 	status = _add_operator (ctx, dict, odef);
-	if (status)
+	if (_csi_unlikely (status))
 	    return status;
     }
 
     /* add constants */
     for (idef = _csi_integer_constants (); idef->name != NULL; idef++) {
 	status = _add_integer_constant (ctx, dict, idef);
-	if (status)
+	if (_csi_unlikely (status))
 	    return status;
     }
     for (rdef = _csi_real_constants (); rdef->name != NULL; rdef++) {
 	status = _add_real_constant (ctx, dict, rdef);
-	if (status)
+	if (_csi_unlikely (status))
 	    return status;
     }
 
@@ -218,18 +218,18 @@ _init_dictionaries (csi_t *ctx)
 
     /* globaldict */
     status = csi_dictionary_new (ctx, &obj);
-    if (status)
+    if (_csi_unlikely (status))
 	return status;
     status = _csi_stack_push (ctx, stack, &obj);
-    if (status)
+    if (_csi_unlikely (status))
 	return status;
 
     /* userdict */
     status = csi_dictionary_new (ctx, &obj);
-    if (status)
+    if (_csi_unlikely (status))
 	return status;
     status = _csi_stack_push (ctx, stack, &obj);
-    if (status)
+    if (_csi_unlikely (status))
 	return status;
 
     return CSI_STATUS_SUCCESS;

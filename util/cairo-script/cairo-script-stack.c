@@ -145,15 +145,14 @@ _csi_stack_grow (csi_t *ctx, csi_stack_t *stack, csi_integer_t cnt)
 }
 
 csi_status_t
-_csi_stack_push (csi_t *ctx, csi_stack_t *stack, const csi_object_t *obj)
+_csi_stack_push_internal (csi_t *ctx, csi_stack_t *stack,
+			  const csi_object_t *obj)
 {
-    if (_csi_unlikely (stack->len == stack->size)) {
-	csi_status_t status;
+    csi_status_t status;
 
-	status = _csi_stack_grow (ctx, stack, stack->size + 1);
-	if (status)
-	    return status;
-    }
+    status = _csi_stack_grow (ctx, stack, stack->size + 1);
+    if (_csi_unlikely (status))
+	return status;
 
     stack->objects[stack->len++] = *obj;
     return CSI_STATUS_SUCCESS;

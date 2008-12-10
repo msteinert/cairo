@@ -1815,7 +1815,7 @@ _font (csi_t *ctx)
 
     /* transfer ownership of dictionary to cairo_font_face_t */
     proxy = _csi_proxy_create (ctx, font_face, font, NULL, NULL);
-    if (_csi_likely (proxy == NULL)) {
+    if (_csi_unlikely (proxy == NULL)) {
 	cairo_font_face_destroy (font_face);
 	return _csi_error (CSI_STATUS_NO_MEMORY);
     }
@@ -1925,6 +1925,7 @@ _context_get (csi_t *ctx,
 	      csi_name_t key)
 {
     csi_status_t status;
+    csi_object_t obj;
 
     if (strcmp ((char *) key, "current-point") == 0) {
 	double x, y;
@@ -1939,49 +1940,25 @@ _context_get (csi_t *ctx,
 	    return status;
 
 	return CSI_STATUS_SUCCESS;
-    }
-
-    if (strcmp ((char *) key, "source") == 0) {
-	csi_object_t obj;
-
+    } else if (strcmp ((char *) key, "source") == 0) {
 	obj.type = CSI_OBJECT_TYPE_PATTERN;
 	obj.datum.pattern = cairo_pattern_reference (cairo_get_source (cr));
-	return push (&obj);
-    }
-
-    if (strcmp ((char *) key, "target") == 0) {
-	csi_object_t obj;
-
+    } else if (strcmp ((char *) key, "target") == 0) {
 	obj.type = CSI_OBJECT_TYPE_SURFACE;
 	obj.datum.surface = cairo_surface_reference (cairo_get_target (cr));
-	return push (&obj);
-    }
-
-    if (strcmp ((char *) key, "group-target") == 0) {
-	csi_object_t obj;
-
+    } else if (strcmp ((char *) key, "group-target") == 0) {
 	obj.type = CSI_OBJECT_TYPE_SURFACE;
 	obj.datum.surface = cairo_surface_reference (cairo_get_group_target (cr));
-	return push (&obj);
-    }
-
-    if (strcmp ((char *) key, "scaled-font") == 0) {
-	csi_object_t obj;
-
+    } else if (strcmp ((char *) key, "scaled-font") == 0) {
 	obj.type = CSI_OBJECT_TYPE_SCALED_FONT;
 	obj.datum.scaled_font = cairo_scaled_font_reference (cairo_get_scaled_font (cr));
-	return push (&obj);
-    }
-
-    if (strcmp ((char *) key, "font-face") == 0) {
-	csi_object_t obj;
-
+    } else if (strcmp ((char *) key, "font-face") == 0) {
 	obj.type = CSI_OBJECT_TYPE_FONT;
 	obj.datum.font_face = cairo_font_face_reference (cairo_get_font_face (cr));
-	return push (&obj);
-    }
+    } else
+	return _proxy_get (cairo_get_user_data (cr, &_csi_proxy_key), key);
 
-    return _proxy_get (cairo_get_user_data (cr, &_csi_proxy_key), key);
+    return push (&obj);
 }
 
 static csi_status_t
