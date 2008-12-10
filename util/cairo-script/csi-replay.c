@@ -85,9 +85,11 @@ main (int argc, char **argv)
     const cairo_script_interpreter_hooks_t hooks = {
 	.surface_create = _surface_create
     };
+    int i;
 
     csi = cairo_script_interpreter_create ();
     cairo_script_interpreter_install_hooks (csi, &hooks);
-    cairo_script_interpreter_run (csi, argv[1]);
+    for (i = 1; i < argc; i++)
+	cairo_script_interpreter_run (csi, argv[i]);
     return cairo_script_interpreter_destroy (csi);
 }
