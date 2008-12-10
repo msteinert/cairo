@@ -873,6 +873,13 @@ _csi_push_ostack_mark (csi_t *ctx)
     return _csi_stack_push (ctx, &ctx->ostack, &obj);
 }
 static inline csi_status_t
+_csi_push_ostack_null (csi_t *ctx)
+{
+    csi_object_t obj;
+    obj.type = CSI_OBJECT_TYPE_NULL;
+    return _csi_stack_push (ctx, &ctx->ostack, &obj);
+}
+static inline csi_status_t
 _csi_push_ostack_real (csi_t *ctx, csi_real_t v)
 {
     csi_object_t obj;

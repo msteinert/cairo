@@ -3016,6 +3016,12 @@ _new_sub_path (csi_t *ctx)
 }
 
 static csi_status_t
+_null (csi_t *ctx)
+{
+    return _csi_push_ostack_null (ctx);
+}
+
+static csi_status_t
 _mask (csi_t *ctx)
 {
     csi_status_t status;
@@ -5536,7 +5542,7 @@ _defs[] = {
     { "new_path", _new_path },
     { "new_sub_path", _new_sub_path },
     { "not", _not },
-    { "null", NULL },
+    { "null", _null },
     { "or", _or },
     { "paint", _paint },
     { "paint_with_alpha", _paint_with_alpha },
