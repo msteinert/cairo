@@ -2813,6 +2813,28 @@ _index (csi_t *ctx)
 }
 
 static csi_status_t
+_integer (csi_t *ctx)
+{
+    csi_object_t *obj;
+
+    check (1);
+
+    obj = _csi_peek_ostack (ctx, 0);
+    switch ((int) csi_object_get_type (obj)) {
+    case CSI_OBJECT_TYPE_INTEGER:
+	break;
+    case CSI_OBJECT_TYPE_REAL:
+	obj->datum.integer = obj->datum.real;
+	break;
+    default:
+	return _csi_error (CSI_STATUS_INVALID_SCRIPT);
+    }
+    obj->type = CSI_OBJECT_TYPE_INTEGER;
+
+    return CSI_STATUS_SUCCESS;
+}
+
+static csi_status_t
 _le (csi_t *ctx)
 {
     csi_status_t status;
@@ -5481,6 +5503,7 @@ _defs[] = {
     { "ifelse", _ifelse },
     { "image", _image },
     { "index", _index },
+    { "integer", _integer },
     { "invert", NULL },
     { "in_stroke", NULL },
     { "in_fill", NULL },
