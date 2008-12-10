@@ -1362,12 +1362,12 @@ _cairo_surface_fallback_clone_similar (cairo_surface_t	*surface,
 				       int		*clone_offset_y,
 				       cairo_surface_t **clone_out)
 {
+    cairo_surface_t *new_surface;
+    cairo_surface_pattern_t pattern;
     cairo_status_t status;
-    cairo_surface_t *new_surface = NULL;
-    cairo_t *cr;
 
     new_surface = _cairo_surface_create_similar_scratch (surface,
-							 cairo_surface_get_content (src),
+							 src->content,
 							 width, height);
     if (new_surface->status)
 	return new_surface->status;
@@ -1376,25 +1376,22 @@ _cairo_surface_fallback_clone_similar (cairo_surface_t	*surface,
     new_surface->device_transform = src->device_transform;
     new_surface->device_transform_inverse = src->device_transform_inverse;
 
-    /* We can't use _cairo_composite directly, because backends that
-     * implement the "high-level" API may not have it implemented.
-     * (For example, SVG.)  We can fix this by either checking if the
-     * destination supports composite first, or we can make clone a
-     * required "high-level" operation.
-     */
-    cr = cairo_create (new_surface);
-    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-    cairo_set_source_surface (cr, src, -src_x, -src_y);
-    cairo_paint (cr);
-    status = cairo_status (cr);
-    cairo_destroy (cr);
+    _cairo_pattern_init_for_surface (&pattern, src);
+    cairo_matrix_init_translate (&pattern.base.matrix, src_x, src_y);
+    pattern.base.filter = CAIRO_FILTER_NEAREST;
 
-    if (status == CAIRO_STATUS_SUCCESS) {
-	*clone_offset_x = src_x;
-	*clone_offset_y = src_y;
-	*clone_out = new_surface;
-    } else
+    status = _cairo_surface_paint (new_surface,
+				   CAIRO_OPERATOR_SOURCE,
+				   &pattern.base, NULL);
+    _cairo_pattern_fini (&pattern.base);
+
+    if (unlikely (status)) {
 	cairo_surface_destroy (new_surface);
+	return status;
+    }
 
-    return status;
+    *clone_offset_x = src_x;
+    *clone_offset_y = src_y;
+    *clone_out = new_surface;
+    return CAIRO_STATUS_SUCCESS;
 }
