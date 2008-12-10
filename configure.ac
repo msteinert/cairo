@@ -554,6 +554,7 @@ test/pdiff/Makefile
 perf/Makefile
 util/Makefile
 util/cairo-script/Makefile
+util/cairo-script/examples/Makefile
 util/cairo-trace/Makefile
 util/cairo-trace/cairo-trace
 doc/Makefile

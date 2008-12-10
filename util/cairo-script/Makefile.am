@@ -1,3 +1,5 @@
+SUBDIRS = examples
+
 lib_LTLIBRARIES = libcairo-script-interpreter.la
 noinst_PROGRAMS = csi-replay csi-exec
 
