@@ -578,7 +578,6 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
 
             has_clear_region = TRUE;
             status = _cairo_clip_intersect_to_region (clip, &clear_region);
-
             if (unlikely (status))
                 goto out;
 

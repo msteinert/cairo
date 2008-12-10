@@ -179,20 +179,12 @@ _cairo_clip_intersect_to_rectangle (cairo_clip_t            *clip,
     }
 
     if (clip->has_region) {
-	cairo_region_t intersection;
+	cairo_rectangle_int_t extents;
 
-	_cairo_region_init_rect (&intersection, rectangle);
-
-	status = _cairo_region_intersect (&intersection, &clip->region,
-					  &intersection);
-
-	if (!status)
-	    _cairo_region_get_extents (&intersection, rectangle);
-
-        _cairo_region_fini (&intersection);
-
-        if (unlikely (status))
-            return status;
+	_cairo_region_get_extents (&clip->region, &extents);
+	is_empty = _cairo_rectangle_intersect (rectangle, &extents);
+	if (is_empty)
+	    return CAIRO_STATUS_SUCCESS;
     }
 
     if (clip->surface)
