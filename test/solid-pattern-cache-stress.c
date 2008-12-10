@@ -64,6 +64,19 @@ _cairo_create_image (cairo_t *cr, cairo_format_t format, int width, int height)
 }
 
 static void
+_propagate_status (cairo_t *dst, cairo_t *src)
+{
+    cairo_path_t path;
+
+    path.status = cairo_status (src);
+    if (path.status) {
+	path.num_data = 0;
+	path.data = NULL;
+	cairo_append_path (dst, &path);
+    }
+}
+
+static void
 _draw (cairo_t *cr,
        double red,
        double green,
@@ -85,7 +98,6 @@ _draw (cairo_t *cr,
 	           -extents.x_bearing - .5 * extents.width,
 		   -extents.y_bearing - .5 * extents.height);
     cairo_show_text (cr, "cairo");
-
 }
 
 static void
@@ -94,11 +106,14 @@ use_similar (cairo_t *cr,
 	    double green,
 	    double blue)
 {
-    cr = _cairo_create_similar (cr, 1, 1);
+    cairo_t *cr2;
 
-    _draw (cr, red, green, blue);
+    cr2 = _cairo_create_similar (cr, 1, 1);
 
-    cairo_destroy (cr);
+    _draw (cr2, red, green, blue);
+
+    _propagate_status (cr, cr2);
+    cairo_destroy (cr2);
 }
 
 static void
@@ -108,11 +123,14 @@ use_image (cairo_t *cr,
 	   double green,
 	   double blue)
 {
-    cr = _cairo_create_image (cr, format, 1, 1);
+    cairo_t *cr2;
 
-    _draw (cr, red, green, blue);
+    cr2 = _cairo_create_image (cr, format, 1, 1);
 
-    cairo_destroy (cr);
+    _draw (cr2, red, green, blue);
+
+    _propagate_status (cr, cr2);
+    cairo_destroy (cr2);
 }
 
 static void
