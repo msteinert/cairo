@@ -86,6 +86,34 @@ _csi_free (csi_t *ctx, void *ptr)
 }
 
 void *
+_csi_perm_alloc (csi_t *ctx, int size)
+{
+    csi_chunk_t *chunk;
+    void *ptr;
+
+    size = (size + sizeof (void *)-1) & -sizeof (void *);
+
+    chunk = ctx->perm_chunk;
+    if (chunk == NULL || chunk->rem < size) {
+	int chunk_size = (size + 8191) & -8192;
+	chunk = _csi_alloc (ctx, sizeof (csi_chunk_t) + chunk_size);
+	if (_csi_unlikely (chunk == NULL))
+	    return NULL;
+
+	chunk->rem = chunk_size;
+	chunk->ptr = (char *) (chunk + 1);
+	chunk->next = ctx->perm_chunk;
+	ctx->perm_chunk = chunk;
+    }
+
+    ptr = chunk->ptr;
+    chunk->ptr += size;
+    chunk->rem -= size;
+
+    return ptr;
+}
+
+void *
 _csi_slab_alloc (csi_t *ctx, int size)
 {
     int chunk_size;
@@ -139,6 +167,16 @@ _csi_slab_free (csi_t *ctx, void *ptr, int size)
     free_list = ptr;
     *free_list = ctx->slabs[chunk_size].free_list;
     ctx->slabs[chunk_size].free_list = ptr;
+}
+
+static void
+_csi_perm_fini (csi_t *ctx)
+{
+    while (ctx->perm_chunk != NULL) {
+	csi_chunk_t *chunk = ctx->perm_chunk;
+	ctx->perm_chunk = chunk->next;
+	_csi_free (ctx, chunk);
+    }
 }
 
 static void
@@ -351,22 +389,12 @@ FAIL:
 }
 
 static void
-_intern_string_pluck (void *entry, void *closure)
-{
-    csi_t *ctx = closure;
-
-    _csi_hash_table_remove (&ctx->strings, entry);
-    _csi_free (ctx, entry);
-}
-
-static void
 _csi_fini (csi_t *ctx)
 {
     _csi_stack_fini (ctx, &ctx->ostack);
     _csi_stack_fini (ctx, &ctx->dstack);
     _csi_scanner_fini (ctx, &ctx->scanner);
 
-    _csi_hash_table_foreach (&ctx->strings, _intern_string_pluck, ctx);
     _csi_hash_table_fini (&ctx->strings);
 
     if (ctx->free_array != NULL)
@@ -377,6 +405,7 @@ _csi_fini (csi_t *ctx)
 	csi_string_free (ctx, ctx->free_string);
 
     _csi_slab_fini (ctx);
+    _csi_perm_fini (ctx);
 }
 
 csi_status_t
@@ -443,7 +472,8 @@ _csi_intern_string (csi_t *ctx, const char **str_inout, int len)
 
     istring = _csi_hash_table_lookup (&ctx->strings, &tmpl.hash_entry);
     if (istring == NULL) {
-	istring = _csi_alloc (ctx, sizeof (csi_intern_string_t) + len + 1);
+	istring = _csi_perm_alloc (ctx,
+				   sizeof (csi_intern_string_t) + len + 1);
 	if (istring != NULL) {
 	    istring->hash_entry.hash = tmpl.hash_entry.hash;
 	    istring->len = tmpl.len;

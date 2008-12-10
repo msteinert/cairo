@@ -462,6 +462,7 @@ struct _cairo_script_interpreter {
 
     csi_scanner_t scanner;
 
+    csi_chunk_t *perm_chunk;
     struct {
 	csi_chunk_t *chunk;
 	void *free_list;
@@ -588,6 +589,9 @@ _csi_free (csi_t *ctx, void *ptr);
 
 csi_private void *
 _csi_slab_alloc (csi_t *ctx, int size);
+
+csi_private void *
+_csi_perm_alloc (csi_t *ctx, int size);
 
 csi_private void
 _csi_slab_free (csi_t *ctx, void *ptr, int size);
