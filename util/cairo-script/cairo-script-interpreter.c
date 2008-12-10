@@ -55,9 +55,6 @@ _csi_error (csi_status_t status)
 void *
 _csi_alloc (csi_t *ctx, int size)
 {
-    if (_csi_unlikely (ctx->status))
-	return NULL;
-
     return malloc (size);
 }
 
@@ -76,9 +73,6 @@ _csi_alloc0 (csi_t *ctx, int size)
 void *
 _csi_realloc (csi_t *ctx, void *ptr, int size)
 {
-    if (_csi_unlikely (ctx->status))
-	return NULL;
-
     return realloc (ptr, size);
 }
 
@@ -97,9 +91,6 @@ _csi_slab_alloc (csi_t *ctx, int size)
     int chunk_size;
     csi_chunk_t *chunk;
     void *ptr;
-
-    if (_csi_unlikely (ctx->status))
-	return NULL;
 
     chunk_size = 2 * sizeof (void *);
     chunk_size = (size + chunk_size - 1) / chunk_size;
@@ -377,6 +368,13 @@ _csi_fini (csi_t *ctx)
 
     _csi_hash_table_foreach (&ctx->strings, _intern_string_pluck, ctx);
     _csi_hash_table_fini (&ctx->strings);
+
+    if (ctx->free_array != NULL)
+	csi_array_free (ctx, ctx->free_array);
+    if (ctx->free_dictionary != NULL)
+	csi_dictionary_free (ctx, ctx->free_dictionary);
+    if (ctx->free_string != NULL)
+	csi_string_free (ctx, ctx->free_string);
 
     _csi_slab_fini (ctx);
 }

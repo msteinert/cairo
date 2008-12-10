@@ -42,19 +42,26 @@ csi_array_new (csi_t *ctx,
 
 {
     csi_array_t *array;
-    csi_status_t status;
 
-    array = _csi_slab_alloc (ctx, sizeof (csi_array_t));
-    if (_csi_unlikely (array == NULL))
-	return _csi_error (CSI_STATUS_NO_MEMORY);
+    if (ctx->free_array != NULL) {
+	array = ctx->free_array;
+	ctx->free_array = NULL;
+    } else {
+	csi_status_t status;
+
+	array = _csi_slab_alloc (ctx, sizeof (csi_array_t));
+	if (_csi_unlikely (array == NULL))
+	    return _csi_error (CSI_STATUS_NO_MEMORY);
+
+	status = _csi_stack_init (ctx, &array->stack, 32);
+	if (_csi_unlikely (status)) {
+	    _csi_slab_free (ctx, array, sizeof (csi_array_t));
+	    return status;
+	}
+    }
 
     array->base.type = CSI_OBJECT_TYPE_ARRAY;
     array->base.ref = 1;
-    status = _csi_stack_init (ctx, &array->stack, 32);
-    if (_csi_unlikely (status)) {
-	_csi_slab_free (ctx, array, sizeof (csi_array_t));
-	return status;
-    }
 
     obj->type = CSI_OBJECT_TYPE_ARRAY;
     obj->datum.array = array;
@@ -145,8 +152,18 @@ _csi_array_execute (csi_t *ctx, csi_array_t *array)
 void
 csi_array_free (csi_t *ctx, csi_array_t *array)
 {
-    _csi_stack_fini (ctx, &array->stack);
-    _csi_slab_free (ctx, array, sizeof (csi_array_t));
+    if (ctx->free_array != NULL) {
+	_csi_stack_fini (ctx, &array->stack);
+	_csi_slab_free (ctx, array, sizeof (csi_array_t));
+    } else {
+	csi_integer_t n;
+
+	ctx->free_array = array;
+
+	for (n = 0; n < array->stack.len; n++)
+	    csi_object_free (ctx, &array->stack.objects[n]);
+	array->stack.len = 0;
+    }
 }
 
 csi_status_t
@@ -174,19 +191,27 @@ csi_dictionary_new (csi_t *ctx,
 
 {
     csi_dictionary_t *dict;
-    csi_status_t status;
 
-    dict = _csi_slab_alloc (ctx, sizeof (csi_dictionary_t));
-    if (_csi_unlikely (dict == NULL))
-	return _csi_error (CSI_STATUS_NO_MEMORY);
+    if (ctx->free_dictionary != NULL) {
+	dict = ctx->free_dictionary;
+	ctx->free_dictionary = NULL;
+    } else {
+	csi_status_t status;
+
+	dict = _csi_slab_alloc (ctx, sizeof (csi_dictionary_t));
+	if (_csi_unlikely (dict == NULL))
+	    return _csi_error (CSI_STATUS_NO_MEMORY);
+
+	status = _csi_hash_table_init (&dict->hash_table,
+				       _dictionary_name_equal);
+	if (_csi_unlikely (status)) {
+	    _csi_slab_free (ctx, dict, sizeof (csi_dictionary_t));
+	    return status;
+	}
+    }
 
     dict->base.type = CSI_OBJECT_TYPE_DICTIONARY;
     dict->base.ref = 1;
-    status = _csi_hash_table_init (&dict->hash_table, _dictionary_name_equal);
-    if (_csi_unlikely (status)) {
-	_csi_slab_free (ctx, dict, sizeof (csi_dictionary_t));
-	return status;
-    }
 
     obj->type = CSI_OBJECT_TYPE_DICTIONARY;
     obj->datum.dictionary = dict;
@@ -224,9 +249,12 @@ csi_dictionary_free (csi_t *ctx,
     _csi_hash_table_foreach (&dict->hash_table,
 			     _dictionary_entry_pluck,
 			     &data);
-    _csi_hash_table_fini (&dict->hash_table);
 
-    _csi_slab_free (ctx, dict, sizeof (csi_dictionary_t));
+    if (ctx->free_dictionary != NULL) {
+	_csi_hash_table_fini (&dict->hash_table);
+	_csi_slab_free (ctx, dict, sizeof (csi_dictionary_t));
+    } else
+	ctx->free_dictionary = dict;
 }
 
 csi_status_t
@@ -480,27 +508,32 @@ csi_string_new (csi_t *ctx,
 {
     csi_string_t *string;
 
-    string = _csi_slab_alloc (ctx, sizeof (csi_string_t));
-    if (_csi_unlikely (string == NULL))
-	return _csi_error (CSI_STATUS_NO_MEMORY);
-
-    string->base.type = CSI_OBJECT_TYPE_STRING;
-    string->base.ref = 1;
-
     if (len < 0)
 	len = strlen (str);
-    if (_csi_unlikely (len >= INT32_MAX)) {
-	_csi_slab_free (ctx, string, sizeof (csi_string_t));
+    if (_csi_unlikely (len >= INT32_MAX))
 	return _csi_error (CSI_STATUS_NO_MEMORY);
+
+    if (ctx->free_string == NULL || ctx->free_string->len <= len) {
+	string = _csi_slab_alloc (ctx, sizeof (csi_string_t));
+	if (_csi_unlikely (string == NULL))
+	    return _csi_error (CSI_STATUS_NO_MEMORY);
+
+	string->string = _csi_alloc (ctx, len + 1);
+	if (_csi_unlikely (string->string == NULL)) {
+	    _csi_slab_free (ctx, string, sizeof (csi_string_t));
+	    return _csi_error (CSI_STATUS_NO_MEMORY);
+	}
+    } else {
+	string = ctx->free_string;
+	ctx->free_string = NULL;
     }
-    string->string = _csi_alloc (ctx, len + 1);
-    if (_csi_unlikely (string->string == NULL)) {
-	_csi_slab_free (ctx, string, sizeof (csi_string_t));
-	return _csi_error (CSI_STATUS_NO_MEMORY);
-    }
+
     memcpy (string->string, str, len);
     string->string[len] = '\0';
     string->len = len;
+
+    string->base.type = CSI_OBJECT_TYPE_STRING;
+    string->base.ref = 1;
 
     obj->type = CSI_OBJECT_TYPE_STRING;
     obj->datum.string = string;
@@ -530,8 +563,17 @@ _csi_string_execute (csi_t *ctx, csi_string_t *string)
 void
 csi_string_free (csi_t *ctx, csi_string_t *string)
 {
-    _csi_free (ctx, string->string);
-    _csi_slab_free (ctx, string, sizeof (csi_string_t));
+    if (ctx->free_string != NULL) {
+	if (string->len > ctx->free_string->len) {
+	    csi_string_t *tmp = ctx->free_string;
+	    ctx->free_string = string;
+	    string = tmp;
+	}
+
+	_csi_free (ctx, string->string);
+	_csi_slab_free (ctx, string, sizeof (csi_string_t));
+    } else
+	ctx->free_string = string;
 }
 
 csi_status_t

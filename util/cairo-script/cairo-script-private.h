@@ -465,7 +465,10 @@ struct _cairo_script_interpreter {
     struct {
 	csi_chunk_t *chunk;
 	void *free_list;
-    } slabs[(sizeof (union _csi_union_object) + (2*sizeof (void *)-1))/ (2*sizeof (void*))];
+    } slabs[16];
+    csi_array_t *free_array;
+    csi_dictionary_t *free_dictionary;
+    csi_string_t *free_string;
 
     /* caches of live data */
     csi_list_t *_images;

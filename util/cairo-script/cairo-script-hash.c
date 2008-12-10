@@ -426,9 +426,6 @@ _csi_hash_table_foreach (csi_hash_table_t	      *hash_table,
     unsigned long i;
     csi_hash_entry_t *entry;
 
-    if (hash_table == NULL)
-	return;
-
     /* Mark the table for iteration */
     ++hash_table->iterating;
     for (i = 0; i < hash_table->arrangement->size; i++) {
