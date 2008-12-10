@@ -1,5 +1,5 @@
 lib_LTLIBRARIES = libcairo-script-interpreter.la
-noinst_PROGRAMS = csi-replay
+noinst_PROGRAMS = csi-replay csi-exec
 
 AM_CPPFLAGS = -I$(top_srcdir)/src -I$(top_builddir)/src
 
@@ -21,6 +21,9 @@ libcairo_script_interpreter_la_LIBADD = $(top_builddir)/src/libcairo.la $(CAIRO_
 
 csi_replay_SOURCES = csi-replay.c
 csi_replay_LDADD = libcairo-script-interpreter.la $(top_builddir)/src/libcairo.la $(CAIRO_LIBS)
+
+csi_exec_SOURCES = csi-exec.c
+csi_exec_LDADD = libcairo-script-interpreter.la $(top_builddir)/src/libcairo.la $(CAIRO_LIBS)
 
 EXTRA_DIST = \
 	COPYING
