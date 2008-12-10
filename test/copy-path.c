@@ -44,6 +44,11 @@ munge_and_set_path (cairo_t	 *cr,
     cairo_path_data_t *p;
     double x1, y1, x2, y2, x3, y3;
 
+    if (path->status) {
+	cairo_append_path (cr, path);
+	return;
+    }
+
     for (i=0; i < path->num_data; i += path->data[i].header.length) {
 	p = &path->data[i];
 	switch (p->header.type) {
