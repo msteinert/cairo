@@ -3421,6 +3421,41 @@ _rel_move_to (csi_t *ctx)
 }
 
 static csi_status_t
+_repeat (csi_t *ctx)
+{
+    csi_array_t *proc;
+    csi_integer_t count;
+    csi_status_t status;
+
+    check (2);
+
+    status = _csi_ostack_get_procedure (ctx, 0, &proc);
+    if (_csi_unlikely (status))
+	return status;
+
+    status = _csi_ostack_get_integer (ctx, 1, &count);
+    if (_csi_unlikely (status))
+	return status;
+
+    if (_csi_unlikely (count < 0))
+	return _csi_error (CSI_STATUS_INVALID_SCRIPT);
+
+    proc->base.ref++;
+    pop (2);
+
+    while (count--) {
+	status = _csi_array_execute (ctx, proc);
+	if (_csi_unlikely (status))
+	    break;
+    }
+
+    if (--proc->base.ref == 0)
+	csi_array_free (ctx, proc);
+
+    return status;
+}
+
+static csi_status_t
 _reset_clip (csi_t *ctx)
 {
     return _do_cairo_op (ctx, cairo_reset_clip);
@@ -5489,7 +5524,7 @@ _defs[] = {
     { "radial", _radial },
     { "rand", NULL },
     { "rectangle", _rectangle },
-    { "repeat", NULL },
+    { "repeat", _repeat },
     { "restore", _restore },
     { "rel_curve_to", _rel_curve_to },
     { "rel_line_to", _rel_line_to },
