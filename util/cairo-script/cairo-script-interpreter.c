@@ -41,6 +41,10 @@
 #include <string.h>
 #include <math.h>
 
+#ifndef MAX
+#define MAX(a,b) (((a)>=(b))?(a):(b))
+#endif
+
 csi_status_t
 _csi_error (csi_status_t status)
 {
@@ -90,19 +94,74 @@ _csi_free (csi_t *ctx, void *ptr)
 void *
 _csi_slab_alloc (csi_t *ctx, int size)
 {
+    int chunk_size;
+    csi_chunk_t *chunk;
+    void *ptr;
+
     if (_csi_unlikely (ctx->status))
 	return NULL;
 
-    return malloc (size);
+    chunk_size = 2 * sizeof (void *);
+    chunk_size = (size + chunk_size - 1) / chunk_size;
+
+    if (ctx->slabs[chunk_size].free_list) {
+	ptr = ctx->slabs[chunk_size].free_list;
+	ctx->slabs[chunk_size].free_list = *(void **) ptr;
+	return ptr;
+    }
+
+    chunk = ctx->slabs[chunk_size].chunk;
+    if (chunk == NULL || ! chunk->rem) {
+	int cnt = MAX (128, 8192 / (chunk_size * 2 * sizeof (void *)));
+
+	chunk = _csi_alloc (ctx,
+			    sizeof (csi_chunk_t) +
+			    cnt * chunk_size * 2 * sizeof (void *));
+	if (_csi_unlikely (chunk == NULL))
+	    return NULL;
+
+	chunk->rem = cnt;
+	chunk->ptr = (char *) (chunk + 1);
+	chunk->next = ctx->slabs[chunk_size].chunk;
+	ctx->slabs[chunk_size].chunk = chunk;
+    }
+
+    ptr = chunk->ptr;
+    chunk->ptr += chunk_size * 2 * sizeof (void *);
+    chunk->rem--;
+
+    return ptr;
 }
 
 void
 _csi_slab_free (csi_t *ctx, void *ptr, int size)
 {
+    int chunk_size;
+    void **free_list;
+
     if (_csi_unlikely (ptr == NULL))
 	return;
 
-    free (ptr);
+    chunk_size = 2 * sizeof (void *);
+    chunk_size = (size + chunk_size - 1) / chunk_size;
+
+    free_list = ptr;
+    *free_list = ctx->slabs[chunk_size].free_list;
+    ctx->slabs[chunk_size].free_list = ptr;
+}
+
+static void
+_csi_slab_fini (csi_t *ctx)
+{
+    unsigned int i;
+
+    for (i = 0; i < sizeof (ctx->slabs) / sizeof (ctx->slabs[0]); i++) {
+	while (ctx->slabs[i].chunk != NULL) {
+	    csi_chunk_t *chunk = ctx->slabs[i].chunk;
+	    ctx->slabs[i].chunk = chunk->next;
+	    _csi_free (ctx, chunk);
+	}
+    }
 }
 
 static csi_status_t
@@ -318,6 +377,8 @@ _csi_fini (csi_t *ctx)
 
     _csi_hash_table_foreach (&ctx->strings, _intern_string_pluck, ctx);
     _csi_hash_table_fini (&ctx->strings);
+
+    _csi_slab_fini (ctx);
 }
 
 csi_status_t

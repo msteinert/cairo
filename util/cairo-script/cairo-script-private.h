@@ -409,6 +409,17 @@ struct _csi_file {
     const csi_filter_funcs_t *filter;
 };
 
+union _csi_union_object {
+    void *ptr[2];
+    csi_stack_t stack;
+    csi_array_t arry;
+    csi_dictionary_t dictionary;
+    csi_matrix_t matrix;
+    csi_string_t string;
+    csi_file_t file;
+    csi_object_t object;
+};
+
 struct _csi_scanner {
     csi_status_t status;
 
@@ -432,6 +443,12 @@ struct _csi_scanner {
 
 typedef cairo_script_interpreter_hooks_t csi_hooks_t;
 
+typedef struct _csi_chunk {
+    struct _csi_chunk *next;
+    int rem;
+    char *ptr;
+} csi_chunk_t;
+
 struct _cairo_script_interpreter {
     int ref_count;
     csi_status_t status;
@@ -444,6 +461,11 @@ struct _cairo_script_interpreter {
     csi_stack_t dstack;
 
     csi_scanner_t scanner;
+
+    struct {
+	csi_chunk_t *chunk;
+	void *free_list;
+    } slabs[(sizeof (union _csi_union_object) + (2*sizeof (void *)-1))/ (2*sizeof (void*))];
 
     /* caches of live data */
     csi_list_t *_images;
