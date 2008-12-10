@@ -5686,8 +5686,25 @@ _integer_constants[] = {
     { NULL, 0 }
 };
 
+
 const csi_integer_constant_def_t *
 _csi_integer_constants (void)
 {
     return _integer_constants;
+}
+
+static const csi_real_constant_def_t
+_real_constants[] = {
+    { "math.pi",		M_PI },
+    { "math.2pi",		2 * M_PI },
+    { "math.sqrt2",		M_SQRT2 },
+    { "math.ln2",		M_LN2 },
+
+    { NULL, 0 }
+};
+
+const csi_real_constant_def_t *
+_csi_real_constants (void)
+{
+    return _real_constants;
 }

@@ -146,6 +146,26 @@ _add_integer_constant (csi_t *ctx,
 }
 
 static csi_status_t
+_add_real_constant (csi_t *ctx,
+		    csi_dictionary_t *dict,
+		    const csi_real_constant_def_t *def)
+{
+    csi_object_t name;
+    csi_object_t constant;
+    csi_status_t status;
+
+    status = csi_name_new_static (ctx, &name, def->name);
+    if (status)
+	return status;
+
+    status = csi_real_new (ctx, &constant, def->value);
+    if (status)
+	return status;
+
+    return csi_dictionary_put (ctx, dict, name.datum.name, &constant);
+}
+
+static csi_status_t
 _init_dictionaries (csi_t *ctx)
 {
     csi_status_t status;
@@ -154,6 +174,7 @@ _init_dictionaries (csi_t *ctx)
     csi_dictionary_t *dict;
     const csi_operator_def_t *odef;
     const csi_integer_constant_def_t *idef;
+    const csi_real_constant_def_t *rdef;
 
     stack = &ctx->dstack;
 
@@ -182,6 +203,11 @@ _init_dictionaries (csi_t *ctx)
     /* add constants */
     for (idef = _csi_integer_constants (); idef->name != NULL; idef++) {
 	status = _add_integer_constant (ctx, dict, idef);
+	if (status)
+	    return status;
+    }
+    for (rdef = _csi_real_constants (); rdef->name != NULL; rdef++) {
+	status = _add_real_constant (ctx, dict, rdef);
 	if (status)
 	    return status;
     }

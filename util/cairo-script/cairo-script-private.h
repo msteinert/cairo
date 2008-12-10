@@ -460,6 +460,11 @@ typedef struct _csi_integer_constant_def {
     csi_integer_t value;
 } csi_integer_constant_def_t;
 
+typedef struct _csi_real_constant_def {
+    const char *name;
+    csi_real_t value;
+} csi_real_constant_def_t;
+
 /* cairo-script-file.c */
 
 csi_private csi_status_t
@@ -732,6 +737,9 @@ _csi_operators (void);
 
 csi_private const csi_integer_constant_def_t *
 _csi_integer_constants (void);
+
+csi_private const csi_real_constant_def_t *
+_csi_real_constants (void);
 
 /* cairo-script-scanner.c */
 
