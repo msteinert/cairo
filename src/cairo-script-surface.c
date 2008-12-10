@@ -389,7 +389,7 @@ _emit_operator (cairo_script_surface_t *surface,
     surface->cr.current_operator = op;
 
     _cairo_output_stream_printf (surface->ctx->stream,
-				 "//%s set_operator\n",
+				 "//%s set-operator\n",
 				 _operator_to_string (op));
     return CAIRO_STATUS_SUCCESS;
 }
@@ -406,7 +406,7 @@ _emit_fill_rule (cairo_script_surface_t *surface,
     surface->cr.current_fill_rule = fill_rule;
 
     _cairo_output_stream_printf (surface->ctx->stream,
-				 "//%s set_fill_rule\n",
+				 "//%s set-fill-rule\n",
 				 _fill_rule_to_string (fill_rule));
     return CAIRO_STATUS_SUCCESS;
 }
@@ -424,7 +424,7 @@ _emit_tolerance (cairo_script_surface_t *surface,
     surface->cr.current_tolerance = tolerance;
 
     _cairo_output_stream_printf (surface->ctx->stream,
-				 "%f set_tolerance\n",
+				 "%f set-tolerance\n",
 				 tolerance);
     return CAIRO_STATUS_SUCCESS;
 }
@@ -441,7 +441,7 @@ _emit_antialias (cairo_script_surface_t *surface,
     surface->cr.current_antialias = antialias;
 
     _cairo_output_stream_printf (surface->ctx->stream,
-				 "//%s set_antialias\n",
+				 "//%s set-antialias\n",
 				 _antialias_to_string (antialias));
 
     return CAIRO_STATUS_SUCCESS;
@@ -460,7 +460,7 @@ _emit_line_width (cairo_script_surface_t *surface,
     surface->cr.current_style.line_width = line_width;
 
     _cairo_output_stream_printf (surface->ctx->stream,
-				 "%f set_line_width\n",
+				 "%f set-line-width\n",
 				 line_width);
     return CAIRO_STATUS_SUCCESS;
 }
@@ -477,7 +477,7 @@ _emit_line_cap (cairo_script_surface_t *surface,
     surface->cr.current_style.line_cap = line_cap;
 
     _cairo_output_stream_printf (surface->ctx->stream,
-				 "//%s set_line_cap\n",
+				 "//%s set-line-cap\n",
 				 _line_cap_to_string (line_cap));
     return CAIRO_STATUS_SUCCESS;
 }
@@ -494,7 +494,7 @@ _emit_line_join (cairo_script_surface_t *surface,
     surface->cr.current_style.line_join = line_join;
 
     _cairo_output_stream_printf (surface->ctx->stream,
-				 "//%s set_line_join\n",
+				 "//%s set-line-join\n",
 				 _line_join_to_string (line_join));
     return CAIRO_STATUS_SUCCESS;
 }
@@ -512,7 +512,7 @@ _emit_miter_limit (cairo_script_surface_t *surface,
     surface->cr.current_style.miter_limit = miter_limit;
 
     _cairo_output_stream_printf (surface->ctx->stream,
-				 "%f set_miter_limit\n",
+				 "%f set-miter-limit\n",
 				 miter_limit);
     return CAIRO_STATUS_SUCCESS;
 }
@@ -570,7 +570,7 @@ _emit_dash (cairo_script_surface_t *surface,
 	    _cairo_output_stream_puts (surface->ctx->stream, " ");
     }
     _cairo_output_stream_printf (surface->ctx->stream,
-				 "] %f set_dash\n",
+				 "] %f set-dash\n",
 				 offset);
 
     return CAIRO_STATUS_SUCCESS;
@@ -682,7 +682,7 @@ _emit_gradient_color_stops (cairo_gradient_pattern_t *gradient,
 
     for (n = 0; n < gradient->n_stops; n++) {
 	_cairo_output_stream_printf (output,
-				     " %f %f %f %f %f add_color_stop\n ",
+				     " %f %f %f %f %f add-color-stop\n ",
 				     gradient->stops[n].offset,
 				     gradient->stops[n].color.red,
 				     gradient->stops[n].color.green,
@@ -1010,7 +1010,7 @@ _emit_image_surface (cairo_script_surface_t *surface,
 	    return status;
 
 	_cairo_output_stream_puts (surface->ctx->stream,
-				   " set_mime_data\n ");
+				   " set-mime-data\n ");
     }
 
     _cairo_output_stream_puts (surface->ctx->stream,
@@ -1094,15 +1094,15 @@ _emit_pattern (cairo_script_surface_t *surface,
 
     if (! _cairo_matrix_is_identity (&pattern->matrix)) {
 	_cairo_output_stream_printf (surface->ctx->stream,
-				     " [%f %f %f %f %f %f] set_matrix\n ",
+				     " [%f %f %f %f %f %f] set-matrix\n ",
 				     pattern->matrix.xx, pattern->matrix.yx,
 				     pattern->matrix.xy, pattern->matrix.yy,
 				     pattern->matrix.x0, pattern->matrix.y0);
     }
 
     _cairo_output_stream_printf (surface->ctx->stream,
-				 " //%s set_extend\n "
-				 " //%s set_filter\n ",
+				 " //%s set-extend\n "
+				 " //%s set-filter\n ",
 				 _extend_to_string (pattern->extend),
 				 _filter_to_string (pattern->filter));
 
@@ -1119,7 +1119,7 @@ _emit_identity (cairo_script_surface_t *surface,
 	return CAIRO_STATUS_SUCCESS;
 
     _cairo_output_stream_puts (surface->ctx->stream,
-			       "identity set_matrix\n");
+			       "identity set-matrix\n");
 
     *matrix_updated = TRUE;
     cairo_matrix_init_identity (&surface->cr.current_ctm);
@@ -1163,7 +1163,7 @@ _emit_source (cairo_script_surface_t *surface,
 	return status;
 
     _cairo_output_stream_puts (surface->ctx->stream,
-			       " set_source\n");
+			       " set-source\n");
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -1288,10 +1288,10 @@ _emit_matrix (cairo_script_surface_t *surface,
 
     if (_cairo_matrix_is_identity (ctm)) {
 	_cairo_output_stream_puts (surface->ctx->stream,
-				   "identity set_matrix\n");
+				   "identity set-matrix\n");
     } else {
 	_cairo_output_stream_printf (surface->ctx->stream,
-				   "[%f %f %f %f %f %f] set_matrix\n",
+				   "[%f %f %f %f %f %f] set-matrix\n",
 				   ctm->xx, ctm->yx,
 				   ctm->xy, ctm->yy,
 				   ctm->x0, ctm->y0);
@@ -1317,10 +1317,10 @@ _emit_font_matrix (cairo_script_surface_t *surface,
 
     if (_cairo_matrix_is_identity (font_matrix)) {
 	_cairo_output_stream_puts (surface->ctx->stream,
-				   "identity set_font_matrix\n");
+				   "identity set-font-matrix\n");
     } else {
 	_cairo_output_stream_printf (surface->ctx->stream,
-				   "[%f %f %f %f %f %f] set_font_matrix\n",
+				   "[%f %f %f %f %f %f] set-font-matrix\n",
 				   font_matrix->xx, font_matrix->yx,
 				   font_matrix->xy, font_matrix->yy,
 				   font_matrix->x0, font_matrix->y0);
@@ -1460,7 +1460,7 @@ _cairo_script_surface_copy_page (void *abstract_surface)
     if (unlikely (status))
 	return status;
 
-    _cairo_output_stream_puts (surface->ctx->stream, "copy_page\n");
+    _cairo_output_stream_puts (surface->ctx->stream, "copy-page\n");
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1475,7 +1475,7 @@ _cairo_script_surface_show_page (void *abstract_surface)
     if (unlikely (status))
 	return status;
 
-    _cairo_output_stream_puts (surface->ctx->stream, "show_page\n");
+    _cairo_output_stream_puts (surface->ctx->stream, "show-page\n");
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1496,7 +1496,7 @@ _cairo_script_surface_intersect_clip_path (void			*abstract_surface,
 	return status;
 
     if (path == NULL) {
-	_cairo_output_stream_puts (surface->ctx->stream, "reset_clip\n");
+	_cairo_output_stream_puts (surface->ctx->stream, "reset-clip\n");
 	return CAIRO_STATUS_SUCCESS;
     }
 
@@ -1776,7 +1776,7 @@ _emit_font_options (cairo_script_surface_t *surface,
     }
 
     _cairo_output_stream_printf (surface->ctx->stream,
-				 "  set_font_options\n");
+				 "  set-font-options\n");
 
     surface->cr.current_font_options = *font_options;
 
@@ -1870,7 +1870,7 @@ _emit_type42_font (cairo_script_surface_t *surface,
     font_private = scaled_font->surface_private;
     _cairo_output_stream_printf (surface->ctx->stream,
 				 " /deflate filter set\n"
-				 "  font dup /f%lu exch def set_font_face\n",
+				 "  font dup /f%lu exch def set-font-face\n",
 				 font_private->id);
 
     return status;
@@ -1922,7 +1922,7 @@ _emit_scaled_font_init (cairo_script_surface_t *surface,
 				 "  /type 3 set\n"
 				 "  /metrics [%f %f %f %f %f] set\n"
 				 "  /glyphs array set\n"
-				 "  font dup /f%lu exch def set_font_face\n",
+				 "  font dup /f%lu exch def set-font-face\n",
 				 scaled_font->fs_extents.ascent,
 				 scaled_font->fs_extents.descent,
 				 scaled_font->fs_extents.height,
@@ -1977,7 +1977,7 @@ _emit_scaled_font (cairo_script_surface_t *surface,
 	    return status;
 
 	_cairo_output_stream_printf (surface->ctx->stream,
-				     "f%lu set_font_face\n",
+				     "f%lu set-font-face\n",
 				     font_private->id);
     }
 
@@ -2066,7 +2066,7 @@ _emit_scaled_glyph_bitmap (cairo_script_surface_t *surface,
 
     if (! _cairo_matrix_is_identity (&scaled_font->font_matrix)) {
 	_cairo_output_stream_printf (surface->ctx->stream,
-				     "  [%f %f %f %f %f %f] set_matrix\n",
+				     "  [%f %f %f %f %f %f] set-matrix\n",
 				     scaled_font->font_matrix.xx,
 				     scaled_font->font_matrix.yx,
 				     scaled_font->font_matrix.xy,
@@ -2385,11 +2385,11 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 	}
 
 	_cairo_output_stream_printf (surface->ctx->stream,
-				     " //%s show_text_glyphs\n",
+				     " //%s show-text-glyphs\n",
 				     _direction_to_string (backward));
     } else {
 	_cairo_output_stream_puts (surface->ctx->stream,
-				   "] show_glyphs\n");
+				   "] show-glyphs\n");
     }
 
     return CAIRO_STATUS_SUCCESS;

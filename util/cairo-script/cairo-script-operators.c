@@ -4466,6 +4466,63 @@ _set_source_image (csi_t *ctx)
 }
 
 static csi_status_t
+_set_source_rgb (csi_t *ctx)
+{
+    csi_status_t status;
+    double r,g,b;
+    cairo_t *cr;
+
+    check (4);
+
+    status = _csi_ostack_get_number (ctx, 0, &b);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_number (ctx, 1, &g);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_number (ctx, 2, &r);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_context (ctx, 3, &cr);
+    if (_csi_unlikely (status))
+	return status;
+
+    cairo_set_source_rgb (cr, r, g, b);
+    pop (3);
+    return CSI_STATUS_SUCCESS;
+}
+
+static csi_status_t
+_set_source_rgba (csi_t *ctx)
+{
+    csi_status_t status;
+    double r,g,b,a;
+    cairo_t *cr;
+
+    check (5);
+
+    status = _csi_ostack_get_number (ctx, 0, &a);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_number (ctx, 1, &b);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_number (ctx, 2, &g);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_number (ctx, 3, &r);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_context (ctx, 4, &cr);
+    if (_csi_unlikely (status))
+	return status;
+
+    cairo_set_source_rgba (cr, r, g, b, a);
+    pop (4);
+    return CSI_STATUS_SUCCESS;
+}
+
+static csi_status_t
 _set_tolerance (csi_t *ctx)
 {
     csi_status_t status;
@@ -5431,7 +5488,7 @@ _debug_print (csi_t *ctx)
 	fprintf (stderr, "pattern\n");
 	break;
     case CSI_OBJECT_TYPE_SCALED_FONT:
-	fprintf (stderr, "scaled_font\n");
+	fprintf (stderr, "scaled-font\n");
 	break;
     case CSI_OBJECT_TYPE_SURFACE:
 	fprintf (stderr, "surface\n");
@@ -5450,12 +5507,12 @@ _defs[] = {
     { "a", _alpha },
     { "abs", NULL },
     { "add", _add },
-    { "add_color_stop", _add_color_stop },
+    { "add-color-stop", _add_color_stop },
     { "and", _and },
     { "arc", _arc },
-    { "arc_negative", _arc_negative },
+    { "arc-negative", _arc_negative },
     { "arc-", _arc_negative },
-    //{ "arc_to", NULL },
+    //{ "arc-to", NULL },
     { "array", _array },
     { "astore", NULL },
     { "atan", NULL },
@@ -5465,22 +5522,22 @@ _defs[] = {
     { "C", _rel_curve_to },
     { "ceiling", NULL },
     { "clear", NULL },
-    { "clear_to_mark", NULL },
+    { "clear-to-mark", NULL },
     { "clip", _clip },
-    { "clip_extents", NULL },
-    { "clip_preserve", _clip_preserve },
+    { "clip-extents", NULL },
+    { "clip-preserve", _clip_preserve },
     { "clip+", _clip_preserve },
-    { "close_path", _close_path },
+    { "close-path", _close_path },
     { "context", _context },
     { "copy", _copy },
-    { "copy_page", _copy_page },
+    { "copy-page", _copy_page },
     { "cos", NULL },
     { "count", NULL },
-    { "count_to_mark", NULL },
-    { "curve_to", _curve_to },
+    { "count-to-mark", NULL },
+    { "curve-to", _curve_to },
     { "def", _def },
-    { "device_to_user", NULL },
-    { "device_to_user_distance", NULL },
+    { "device-to-user", NULL },
+    { "device-to-user-distance", NULL },
     { "dict", _dict },
     { "div", _div },
     { "dup", _dup },
@@ -5490,8 +5547,8 @@ _defs[] = {
     { "exp", NULL },
     { "false", _false },
     { "fill", _fill },
-    { "fill_extents", NULL },
-    { "fill_preserve", _fill_preserve },
+    { "fill-extents", NULL },
+    { "fill-preserve", _fill_preserve },
     { "fill+", _fill_preserve },
     { "filter", _filter },
     { "floor", NULL },
@@ -5501,7 +5558,7 @@ _defs[] = {
     { "g", _gray },
     { "ge", _ge },
     { "get", _get },
-    { "glyph_path", _glyph_path },
+    { "glyph-path", _glyph_path },
     { "gt", _gt },
     { "h", _close_path },
     { "identity", _identity },
@@ -5511,8 +5568,8 @@ _defs[] = {
     { "index", _index },
     { "integer", _integer },
     { "invert", NULL },
-    { "in_stroke", NULL },
-    { "in_fill", NULL },
+    { "in-stroke", NULL },
+    { "in-fill", NULL },
     { "known", NULL },
     { "l", _line_to },
     { "L", _rel_line_to },
@@ -5520,7 +5577,7 @@ _defs[] = {
     { "le", _le },
     { "length", NULL },
     { "linear", _linear },
-    { "line_to", _line_to },
+    { "line-to", _line_to },
     { "ln", NULL },
     { "load", NULL },
     { "log", NULL },
@@ -5532,33 +5589,33 @@ _defs[] = {
     { "mask", _mask },
     { "matrix", _matrix },
     { "mod", NULL },
-    { "move_to", _move_to },
+    { "move-to", _move_to },
     { "mul", _mul },
     { "multiply", NULL },
     { "n", _new_path },
     { "N", _new_sub_path },
     { "ne", _ne },
     { "neg", _neg },
-    { "new_path", _new_path },
-    { "new_sub_path", _new_sub_path },
+    { "new-path", _new_path },
+    { "new-sub-path", _new_sub_path },
     { "not", _not },
     { "null", _null },
     { "or", _or },
     { "paint", _paint },
-    { "paint_with_alpha", _paint_with_alpha },
+    { "paint-with-alpha", _paint_with_alpha },
     { "pattern", _pattern },
     { "pop", _pop },
-    { "pop_group", _pop_group },
-    { "push_group", _push_group },
+    { "pop-group", _pop_group },
+    { "push-group", _push_group },
     { "radial", _radial },
     { "rand", NULL },
     { "rectangle", _rectangle },
     { "repeat", _repeat },
     { "restore", _restore },
-    { "rel_curve_to", _rel_curve_to },
-    { "rel_line_to", _rel_line_to },
-    { "rel_move_to", _rel_move_to },
-    { "reset_clip", _reset_clip },
+    { "rel-curve-to", _rel_curve_to },
+    { "rel-line-to", _rel_line_to },
+    { "rel-move-to", _rel_move_to },
+    { "reset-clip", _reset_clip },
     { "rgb", _rgb },
     { "rgba", _rgba },
     { "roll", _roll },
@@ -5567,35 +5624,37 @@ _defs[] = {
     { "run", NULL },
     { "save", _save },
     { "scale", _scale },
-    { "scaled_font", _scaled_font },
-    { "select_font_face", _select_font_face },
+    { "scaled-font", _scaled_font },
+    { "select-font-face", _select_font_face },
     { "set", _set },
-    { "set_antialias", _set_antialias },
-    { "set_dash", _set_dash },
-    { "set_device_offset", _set_device_offset },
-    { "set_extend", _set_extend },
-    { "set_fallback_resolution", _set_fallback_resolution },
-    { "set_fill_rule", _set_fill_rule },
-    { "set_filter", _set_filter },
-    { "set_font_face", _set_font_face },
-    { "set_font_options", _set_font_options },
-    { "set_font_matrix", _set_font_matrix },
-    { "set_font_size", _set_font_size },
-    { "set_line_cap", _set_line_cap },
-    { "set_line_join", _set_line_join },
-    { "set_line_width", _set_line_width },
-    { "set_matrix", _set_matrix },
-    { "set_miter_limit", _set_miter_limit },
-    { "set_mime_data", _set_mime_data },
-    { "set_operator", _set_operator },
-    { "set_scaled_font", _set_scaled_font },
-    { "set_source", _set_source },
-    { "set_source_image", _set_source_image },
-    { "set_tolerance", _set_tolerance },
-    { "show_glyphs", _show_glyphs },
-    { "show_text", _show_text },
-    { "show_text_glyphs", _show_text_glyphs },
-    { "show_page", _show_page },
+    { "set-antialias", _set_antialias },
+    { "set-dash", _set_dash },
+    { "set-device-offset", _set_device_offset },
+    { "set-extend", _set_extend },
+    { "set-fallback-resolution", _set_fallback_resolution },
+    { "set-fill-rule", _set_fill_rule },
+    { "set-filter", _set_filter },
+    { "set-font-face", _set_font_face },
+    { "set-font-options", _set_font_options },
+    { "set-font-matrix", _set_font_matrix },
+    { "set-font-size", _set_font_size },
+    { "set-line-cap", _set_line_cap },
+    { "set-line-join", _set_line_join },
+    { "set-line-width", _set_line_width },
+    { "set-matrix", _set_matrix },
+    { "set-miter-limit", _set_miter_limit },
+    { "set-mime-data", _set_mime_data },
+    { "set-operator", _set_operator },
+    { "set-scaled-font", _set_scaled_font },
+    { "set-source", _set_source },
+    { "set-source-image", _set_source_image },
+    { "set-source-rgb", _set_source_rgb },
+    { "set-source-rgba", _set_source_rgba },
+    { "set-tolerance", _set_tolerance },
+    { "show-glyphs", _show_glyphs },
+    { "show-text", _show_text },
+    { "show-text-glyphs", _show_text_glyphs },
+    { "show-page", _show_page },
     { "similar", _similar },
     { "sin", NULL },
     { "sqrt", NULL },
@@ -5603,22 +5662,22 @@ _defs[] = {
     { "surface", _surface },
     { "string", NULL },
     { "stroke", _stroke },
-    { "stroke_extents", NULL },
-    { "stroke_preserve", _stroke_preserve },
+    { "stroke-extents", NULL },
+    { "stroke-preserve", _stroke_preserve },
     { "stroke+", _stroke_preserve },
-    { "text_path", _text_path },
+    { "text-path", _text_path },
     { "transform", _transform },
-    { "transform_distance", NULL },
-    { "transform_point", NULL },
+    { "transform-distance", NULL },
+    { "transform-point", NULL },
     { "translate", _translate },
     { "true", _true },
     { "type", NULL },
     { "undef", _undef },
     { "unset", _unset },
-    { "user_to_device", NULL },
-    { "user_to_device_distance", NULL },
+    { "user-to-device", NULL },
+    { "user-to-device-distance", NULL },
     { "where", NULL },
-    { "write_to_png", _write_to_png },
+    { "write-to-png", _write_to_png },
     { "xor", _xor },
 
     { "=", _debug_print },
