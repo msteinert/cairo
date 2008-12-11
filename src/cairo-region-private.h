@@ -47,27 +47,32 @@ CAIRO_BEGIN_DECLS
 /* #cairo_region_t is defined in cairoint.h */
 
 struct _cairo_region {
+    cairo_status_t status;
+    
     pixman_region32_t rgn;
 };
 
-cairo_private void
-_cairo_region_init (cairo_region_t *region);
+cairo_private cairo_region_t *
+_cairo_region_create (void);
+
+cairo_private cairo_region_t *
+_cairo_region_create_rect (cairo_rectangle_int_t *rect);
+
+cairo_private cairo_status_t
+_cairo_region_status (cairo_region_t *region);
 
 cairo_private void
-_cairo_region_init_rect (cairo_region_t *region,
-			 cairo_rectangle_int_t *rect);
+_cairo_region_clear (cairo_region_t *region);
 
-cairo_private cairo_int_status_t
-_cairo_region_init_boxes (cairo_region_t *region,
-			  cairo_box_int_t *boxes,
-			  int count);
+cairo_private cairo_region_t *
+_cairo_region_create_boxes (cairo_box_int_t *boxes,
+			    int count);
 
 cairo_private void
-_cairo_region_fini (cairo_region_t *region);
+_cairo_region_destroy (cairo_region_t *region);
 
-cairo_private cairo_int_status_t
-_cairo_region_copy (cairo_region_t *dst,
-		    cairo_region_t *src);
+cairo_private cairo_region_t *
+_cairo_region_copy (cairo_region_t *original);
 
 cairo_private int
 _cairo_region_num_boxes (cairo_region_t *region);
@@ -81,19 +86,16 @@ cairo_private void
 _cairo_region_get_extents (cairo_region_t *region,
 			   cairo_rectangle_int_t *extents);
 
-cairo_private cairo_int_status_t
+cairo_private cairo_status_t
 _cairo_region_subtract (cairo_region_t *dst,
-			cairo_region_t *a,
-			cairo_region_t *b);
+			cairo_region_t *other);
 
-cairo_private cairo_int_status_t
+cairo_private cairo_status_t
 _cairo_region_intersect (cairo_region_t *dst,
-			 cairo_region_t *a,
-			 cairo_region_t *b);
+			 cairo_region_t *other);
 
-cairo_private cairo_int_status_t
+cairo_private cairo_status_t
 _cairo_region_union_rect (cairo_region_t *dst,
-			  cairo_region_t *src,
 			  cairo_rectangle_int_t *rect);
 
 cairo_private cairo_bool_t

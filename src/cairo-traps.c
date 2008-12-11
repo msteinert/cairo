@@ -608,7 +608,7 @@ _cairo_traps_extents (const cairo_traps_t *traps,
  **/
 cairo_int_status_t
 _cairo_traps_extract_region (const cairo_traps_t  *traps,
-			     cairo_region_t       *region)
+			     cairo_region_t      **region)
 {
     cairo_box_int_t stack_boxes[CAIRO_STACK_ARRAY_LENGTH (cairo_box_int_t)];
     cairo_box_int_t *boxes = stack_boxes;
@@ -616,7 +616,7 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
     cairo_int_status_t status;
 
     if (traps->num_traps == 0) {
-	_cairo_region_init (region);
+	*region = _cairo_region_create ();
 	return CAIRO_STATUS_SUCCESS;
     }
 
@@ -661,13 +661,17 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
 	box_count++;
     }
 
-    status = _cairo_region_init_boxes (region, boxes, box_count);
-
+    *region = _cairo_region_create_boxes (boxes, box_count);
+    status = _cairo_region_status (*region);
+    
     if (boxes != stack_boxes)
 	free (boxes);
 
     if (unlikely (status))
-	_cairo_region_fini (region);
+    {
+	_cairo_region_destroy (*region);
+	*region = NULL;
+    }
 
     return status;
 }

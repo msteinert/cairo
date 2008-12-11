@@ -2408,7 +2408,7 @@ _cairo_traps_extents (const cairo_traps_t *traps,
 
 cairo_private cairo_int_status_t
 _cairo_traps_extract_region (const cairo_traps_t *tr,
-			     cairo_region_t      *region);
+			     cairo_region_t      **region);
 
 cairo_private cairo_status_t
 _cairo_traps_path (const cairo_traps_t *traps,

@@ -2201,10 +2201,10 @@ _cairo_surface_reset_clip (cairo_surface_t *surface)
 cairo_status_t
 _cairo_surface_set_clip_region (cairo_surface_t	    *surface,
 				cairo_region_t	    *region,
-				unsigned int	    serial)
+				unsigned int	     serial)
 {
     cairo_status_t status;
-
+    
     if (surface->status)
 	return surface->status;
 
@@ -2381,7 +2381,7 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
 
 	    if (surface->backend->set_clip_region != NULL)
 		return _cairo_surface_set_clip_region (surface,
-						       &clip->region,
+						       clip->region,
 						       clip->serial);
 	} else {
 	    if (clip->path)
@@ -2391,7 +2391,7 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
 
 	    if (clip->has_region)
 		return _cairo_surface_set_clip_region (surface,
-						       &clip->region,
+						       clip->region,
 						       clip->serial);
 	}
     }
@@ -2689,8 +2689,8 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
     cairo_rectangle_int_t dst_rectangle;
     cairo_rectangle_int_t drawn_rectangle;
     cairo_bool_t has_drawn_region = FALSE;
-    cairo_region_t drawn_region;
-    cairo_region_t clear_region;
+    cairo_region_t *drawn_region = NULL;
+    cairo_region_t *clear_region = NULL;
     cairo_status_t status;
 
     /* The area that was drawn is the area in the destination rectangle but not within
@@ -2700,7 +2700,8 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
     dst_rectangle.y = dst_y;
     dst_rectangle.width = width;
     dst_rectangle.height = height;
-    _cairo_region_init_rect (&clear_region, &dst_rectangle);
+
+    clear_region = _cairo_region_create_rect (&dst_rectangle);
 
     drawn_rectangle = dst_rectangle;
 
@@ -2716,24 +2717,22 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
 
     /* Now compute the area that is in dst_rectangle but not in drawn_rectangle
      */
-    _cairo_region_init_rect (&drawn_region, &drawn_rectangle);
+    drawn_region = _cairo_region_create_rect (&drawn_rectangle);
     has_drawn_region = TRUE;
 
-    status = _cairo_region_subtract (&clear_region,
-				     &clear_region,
-				     &drawn_region);
+    status = _cairo_region_subtract (clear_region, drawn_region);
     if (unlikely (status))
         goto CLEANUP_REGIONS;
 
   EMPTY:
     status = _cairo_surface_fill_region (dst, CAIRO_OPERATOR_SOURCE,
                                          CAIRO_COLOR_TRANSPARENT,
-                                         &clear_region);
+                                         clear_region);
 
   CLEANUP_REGIONS:
-    if (has_drawn_region)
-        _cairo_region_fini (&drawn_region);
-    _cairo_region_fini (&clear_region);
+    if (drawn_region)
+        _cairo_region_destroy (drawn_region);
+    _cairo_region_destroy (clear_region);
 
     return _cairo_surface_set_error (dst, status);
 }
