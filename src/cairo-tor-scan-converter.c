@@ -1021,7 +1021,7 @@ polygon_init(struct polygon *polygon)
     polygon->ymin = polygon->ymax = 0;
     polygon->y_buckets = NULL;
     pool_init(polygon->edge_pool.base,
-	      (8192 - sizeof(struct _pool_chunk))/sizeof(struct edge),
+	      8192 - sizeof(struct _pool_chunk),
 	      sizeof(polygon->edge_pool.embedded));
 }
 
