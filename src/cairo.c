@@ -3325,7 +3325,8 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
 {
     cairo_status_t status;
     cairo_text_extents_t extents;
-    cairo_glyph_t *glyphs = NULL, *last_glyph;
+    cairo_glyph_t stack_glyphs[CAIRO_STACK_ARRAY_LENGTH (cairo_glyph_t)];
+    cairo_glyph_t *glyphs, *last_glyph;
     int num_glyphs;
     double x, y;
 
@@ -3336,6 +3337,9 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
 	return;
 
     cairo_get_current_point (cr, &x, &y);
+
+    glyphs = stack_glyphs;
+    num_glyphs = ARRAY_LENGTH (stack_glyphs);
 
     status = _cairo_gstate_text_to_glyphs (cr->gstate,
 					   x, y,
@@ -3370,7 +3374,8 @@ cairo_text_path  (cairo_t *cr, const char *utf8)
     cairo_move_to (cr, x, y);
 
  BAIL:
-    cairo_glyph_free (glyphs);
+    if (glyphs != stack_glyphs)
+	cairo_glyph_free (glyphs);
 
     if (unlikely (status))
 	_cairo_set_error (cr, status);
