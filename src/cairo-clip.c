@@ -357,6 +357,8 @@ _cairo_clip_intersect_region (cairo_clip_t    *clip,
 	status = _cairo_region_intersect (clip->region, region);
     } else {
 	clip->region = _cairo_region_copy (region);
+
+	assert (clip->region != NULL);
 	
         if ((status = _cairo_region_status (clip->region)))
 	    clip->region = NULL;

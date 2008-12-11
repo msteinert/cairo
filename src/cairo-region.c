@@ -88,6 +88,8 @@ _cairo_region_create_boxes (cairo_box_int_t *boxes,
     if (!region)
 	return (cairo_region_t *)&_cairo_region_nil;
 
+    region->status = CAIRO_STATUS_SUCCESS;
+    
     if (count > ARRAY_LENGTH (stack_pboxes)) {
 	pboxes = _cairo_malloc_ab (count, sizeof (pixman_box32_t));
 
@@ -144,7 +146,7 @@ _cairo_region_copy (cairo_region_t *original)
 	return (cairo_region_t *)&_cairo_region_nil;
     }
 
-    return CAIRO_STATUS_SUCCESS;
+    return copy;
 }
 
 int
