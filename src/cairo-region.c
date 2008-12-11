@@ -261,12 +261,12 @@ _cairo_region_union_rect (cairo_region_t *dst,
 }
 
 cairo_bool_t
-_cairo_region_not_empty (cairo_region_t *region)
+_cairo_region_empty (cairo_region_t *region)
 {
     if (region->status)
-	return FALSE;
+	return TRUE;
     
-    return (cairo_bool_t) pixman_region32_not_empty (&region->rgn);
+    return !pixman_region32_not_empty (&region->rgn);
 }
 
 void

@@ -99,7 +99,7 @@ _cairo_region_union_rect (cairo_region_t *dst,
 			  cairo_rectangle_int_t *rect);
 
 cairo_private cairo_bool_t
-_cairo_region_not_empty (cairo_region_t *region);
+_cairo_region_empty (cairo_region_t *region);
 
 cairo_private void
 _cairo_region_translate (cairo_region_t *region,

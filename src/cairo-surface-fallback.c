@@ -583,7 +583,7 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
             if (unlikely (status))
                 goto out;
 
-            if (!_cairo_region_not_empty (clear_region)) {
+            if (_cairo_region_empty (clear_region)) {
                 _cairo_region_destroy (clear_region);
 		clear_region = NULL;
             }
