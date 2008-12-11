@@ -2389,7 +2389,7 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
 						     clip->path,
 						     clip->serial);
 
-	    if (clip->has_region)
+	    if (clip->region)
 		return _cairo_surface_set_clip_region (surface,
 						       clip->region,
 						       clip->serial);

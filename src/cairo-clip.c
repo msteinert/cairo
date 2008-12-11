@@ -72,34 +72,30 @@ _cairo_clip_init (cairo_clip_t *clip, cairo_surface_t *target)
 cairo_status_t
 _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other)
 {
-    cairo_status_t status;
-
     clip->mode = other->mode;
 
     clip->all_clipped = other->all_clipped;
-
+    
     clip->surface = cairo_surface_reference (other->surface);
     clip->surface_rect = other->surface_rect;
 
     clip->serial = other->serial;
 
-    if (other->has_region) {
-        clip->has_region = TRUE;
+    if (other->region) {
+	cairo_status_t status;
 	
 	clip->region = _cairo_region_copy (other->region);
-    } else {
-        clip->has_region = FALSE;
-	
-	clip->region = _cairo_region_create ();
-    }
 
-    status = _cairo_region_status (clip->region);
-    if (unlikely (status)) {
-	cairo_surface_destroy (clip->surface);
-	_cairo_region_destroy (clip->region);
+	status = _cairo_region_status (clip->region);
+	if (unlikely (status)) {
+	    cairo_surface_destroy (clip->surface);
+	    _cairo_region_destroy (clip->region);
+	    clip->region = NULL;
+	    
+	    return status;
+	}
+    } else {
 	clip->region = NULL;
-	
-	return status;
     }
     
     clip->path = _cairo_clip_path_reference (other->path);
@@ -118,10 +114,10 @@ _cairo_clip_reset (cairo_clip_t *clip)
 
     clip->serial = 0;
 
-    if (clip->has_region) {
-	_cairo_region_clear (clip->region);
+    if (clip->region) {
+	_cairo_region_destroy (clip->region);
 
-        clip->has_region = FALSE;
+	clip->region = NULL;
     }
 
     _cairo_clip_path_destroy (clip->path);
@@ -788,8 +784,6 @@ _cairo_clip_init_deep_copy (cairo_clip_t    *clip,
 	    clip->region = _cairo_region_copy (other->region);
 	    if (unlikely ((status = _cairo_region_status (clip->region))))
 		goto BAIL;
-
-	    clip->has_region = TRUE;
         }
 
         if (other->surface) {

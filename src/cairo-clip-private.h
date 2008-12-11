@@ -79,7 +79,6 @@ struct _cairo_clip {
      * A clip region that can be placed in the surface
      */
     cairo_region_t *region;
-    cairo_bool_t has_region;
     /*
      * If the surface supports path clipping, we store the list of
      * clipping paths that has been set here as a linked list.
