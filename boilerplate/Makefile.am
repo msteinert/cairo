@@ -12,6 +12,7 @@ AM_CPPFLAGS = \
 	-I$(top_srcdir)/src \
 	$(CAIRO_CFLAGS) \
 	$(NULL)
+AM_LDFLAGS = $(CAIRO_LDFLAGS)
 
 EXTRA_LTLIBRARIES += libcairoboilerplate.la
 
