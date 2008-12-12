@@ -2986,6 +2986,7 @@ cairo_surface_set_mime_data (cairo_surface_t		*surface,
 		   closure);
 }
 
+#if CAIRO_HAS_PNG_FUNCTIONS
 cairo_status_t
 cairo_surface_write_to_png (cairo_surface_t *surface, const char *filename)
 {
@@ -3018,6 +3019,7 @@ cairo_surface_write_to_png_stream (cairo_surface_t *surface,
     return DLCALL (cairo_surface_write_to_png_stream,
 		   surface, write_func, data);
 }
+#endif
 
 static void CAIRO_PRINTF_FORMAT(2, 3)
 _emit_pattern_op (cairo_pattern_t *pattern, const char *fmt, ...)
@@ -3629,6 +3631,7 @@ cairo_svg_surface_create_for_stream (cairo_write_func_t write_func, void *closur
 
 #endif
 
+#if CAIRO_HAS_PNG_FUNCTIONS
 cairo_surface_t *
 cairo_image_surface_create_from_png (const char *filename)
 {
@@ -3683,6 +3686,7 @@ cairo_image_surface_create_from_png_stream (cairo_read_func_t read_func, void *c
 
     return ret;
 }
+#endif
 
 #if CAIRO_HAS_XLIB_SURFACE
 #include <cairo-xlib.h>

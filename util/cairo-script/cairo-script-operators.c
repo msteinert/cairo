@@ -2721,8 +2721,12 @@ png_read_func (void *closure, uint8_t *data, unsigned int len)
 static csi_status_t
 _image_read_png (csi_file_t *src, cairo_surface_t **out)
 {
+#if CAIRO_HAS_PNG_FUNCTIONS
     *out = cairo_image_surface_create_from_png_stream (png_read_func, src);
     return cairo_surface_status (*out);
+#else
+    return CAIRO_STATUS_READ_ERROR;
+#endif
 }
 
 struct _image_tag {
@@ -5401,9 +5405,13 @@ _write_to_png (csi_t *ctx)
     if (_csi_unlikely (status))
 	return status;
 
+#if CAIRO_HAS_PNG_FUNCTIONS
     status = cairo_surface_write_to_png (surface, filename->string);
     if (_csi_unlikely (status))
 	return status;
+#else
+    return CAIRO_STATUS_WRITE_ERROR;
+#endif
 
     pop (1);
     return CSI_STATUS_SUCCESS;
