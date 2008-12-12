@@ -37,6 +37,7 @@ test_sources = \
 	create-for-stream.c				\
 	create-from-png.c				\
 	create-from-png-stream.c			\
+	culled-glyphs.c					\
 	dash-caps-joins.c				\
 	dash-curve.c					\
 	dash-no-dash.c					\
@@ -406,6 +407,8 @@ REFERENCE_IMAGES = \
 	create-from-png.indexed.ref.png		\
 	create-from-png.indexed-alpha.ref.png	\
 	create-from-png-stream.ref.png	\
+	culled-glyphs.ref.png			\
+	culled-glyphs.ps.ref.png		\
 	dash-caps-joins.ps2.argb32.ref.png	\
 	dash-caps-joins.ps3.argb32.ref.png	\
 	dash-caps-joins.ps2.rgb24.ref.png	\
