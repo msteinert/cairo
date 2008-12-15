@@ -120,7 +120,9 @@ cairo_status_to_string (cairo_status_t status)
     case CAIRO_STATUS_INVALID_SLANT:
 	return "invalid value for an input #cairo_font_slant_t";
     case CAIRO_STATUS_INVALID_WEIGHT:
-	return "input value for an input #cairo_font_weight_t";
+	return "invalid value for an input #cairo_font_weight_t";
+    case CAIRO_STATUS_INVALID_SIZE:
+	return "invalid value for the size of the input (surface, pattern, etc.)";
     }
 
     return "<unknown error status>";

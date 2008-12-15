@@ -125,7 +125,7 @@ _cairo_win32_tmpfile (void);
  * a bit of a pain, but it should be easy to always catch as long as
  * one adds a new test case to test a trigger of the new status value.
  */
-#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_WEIGHT
+#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_SIZE
 
 #ifdef __GNUC__
 #define cairo_container_of(ptr, type, member) ({ \

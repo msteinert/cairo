@@ -239,6 +239,7 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_INVALID_CLUSTERS: input clusters do not represent the accompanying text and glyph array (Since 1.8)
  * @CAIRO_STATUS_INVALID_SLANT: invalid value for an input #cairo_font_slant_t (Since 1.8)
  * @CAIRO_STATUS_INVALID_WEIGHT: invalid value for an input #cairo_font_weight_t (Since 1.8)
+ * @CAIRO_STATUS_INVALID_SIZE: invalid value (typically too big) for a size (Since 1.10)
  *
  * #cairo_status_t is used to indicate errors that can occur when
  * using Cairo. In some cases it is returned directly by functions.
@@ -280,8 +281,9 @@ typedef enum _cairo_status {
     CAIRO_STATUS_NEGATIVE_COUNT,
     CAIRO_STATUS_INVALID_CLUSTERS,
     CAIRO_STATUS_INVALID_SLANT,
-    CAIRO_STATUS_INVALID_WEIGHT
-    /* after adding a new error: update CAIRO_STATUS_LAST_STATUS in cairoint.h */
+    CAIRO_STATUS_INVALID_WEIGHT,
+    CAIRO_STATUS_INVALID_SIZE
+    /* after adding a new error: update CAIRO_STATUS_LAST_STATUS in cairoint.h.  */
 } cairo_status_t;
 
 /**

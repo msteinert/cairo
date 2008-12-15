@@ -136,8 +136,7 @@ _cairo_xlib_surface_create_similar_with_format (void	       *abstract_src,
     cairo_xlib_surface_t *surface;
     XRenderPictFormat *xrender_format;
 
-    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
-	return NULL;
+    assert (width <= XLIB_COORD_MAX && height <= XLIB_COORD_MAX);
 
     /* As a good first approximation, if the display doesn't have even
      * the most elementary RENDER operation, then we're better off
@@ -209,7 +208,7 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
     Pixmap pix;
 
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
-	return _cairo_surface_create_in_error (_cairo_error(CAIRO_STATUS_NO_MEMORY));
+	return _cairo_surface_create_in_error (_cairo_error(CAIRO_STATUS_INVALID_SIZE));
 
     _cairo_xlib_display_notify (src->display);
 
@@ -1200,7 +1199,7 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
 	if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    return _cairo_error (CAIRO_STATUS_INVALID_SIZE);
 
 	clone = (cairo_xlib_surface_t *)
 	    _cairo_xlib_surface_create_similar_with_format (surface,

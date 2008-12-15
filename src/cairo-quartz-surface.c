@@ -1589,7 +1589,7 @@ _cairo_quartz_surface_create_similar (void *abstract_surface,
     // verify width and height of surface
     if (!_cairo_quartz_verify_surface_size(width, height)) {
 	return _cairo_surface_create_in_error (_cairo_error
-					       (CAIRO_STATUS_NO_MEMORY));
+					       (CAIRO_STATUS_INVALID_SIZE));
     }
 
     return cairo_quartz_surface_create (format, width, height);
@@ -2586,7 +2586,7 @@ cairo_quartz_surface_create (cairo_format_t format,
 
     // verify width and height of surface
     if (!_cairo_quartz_verify_surface_size(width, height))
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
 
     if (width == 0 || height == 0) {
 	return (cairo_surface_t*) _cairo_quartz_surface_create_internal (NULL, _cairo_content_from_format (format),

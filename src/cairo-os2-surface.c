@@ -770,7 +770,7 @@ cairo_os2_surface_create (HPS hps_client_window,
         (height <= 0))
     {
         /* Invalid window size! */
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
     }
 
     local_os2_surface = (cairo_os2_surface_t *) malloc (sizeof (cairo_os2_surface_t));
@@ -875,8 +875,9 @@ cairo_os2_surface_create (HPS hps_client_window,
  *
  * Return value: %CAIRO_STATUS_SUCCESS if the surface could be resized,
  * %CAIRO_STATUS_SURFACE_TYPE_MISMATCH if the surface is not an OS/2 surface,
- * %CAIRO_STATUS_NO_MEMORY if the new size could not be allocated, for invalid
- * sizes, or if the timeout happened before all the buffers were released
+ * %CAIRO_STATUS_INVALID_SIZE for invalid sizes
+ * %CAIRO_STATUS_NO_MEMORY if the new size could not be allocated, or if the
+ * timeout happened before all the buffers were released
  *
  * Since: 1.4
  **/
@@ -903,7 +904,7 @@ cairo_os2_surface_set_size (cairo_surface_t *surface,
         (new_height <= 0))
     {
         /* Invalid size! */
-        return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+        return _cairo_error (CAIRO_STATUS_INVALID_SIZE);
     }
 
     /* Allocate memory for new stuffs */
