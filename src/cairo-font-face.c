@@ -402,25 +402,22 @@ _cairo_toy_font_face_create_impl_face (cairo_toy_font_face_t *font_face)
 {
     const cairo_font_face_backend_t * backend = CAIRO_FONT_FACE_BACKEND_DEFAULT;
     cairo_font_face_t *impl_font_face;
-    cairo_status_t status;
+    cairo_int_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (font_face->base.status)
 	return NULL;
 
-    if (backend->create_for_toy == NULL ||
-	(CAIRO_FONT_FACE_BACKEND_DEFAULT != &_cairo_user_font_face_backend &&
-	 0 == strncmp (font_face->family, CAIRO_USER_FONT_FAMILY_DEFAULT,
-		       strlen (CAIRO_USER_FONT_FAMILY_DEFAULT))))
+    if (backend->create_for_toy != NULL &&
+	0 != strncmp (font_face->family, CAIRO_USER_FONT_FAMILY_DEFAULT,
+		      strlen (CAIRO_USER_FONT_FAMILY_DEFAULT)))
     {
+	status = backend->create_for_toy (font_face, &impl_font_face);
+    }
+
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 	backend = &_cairo_user_font_face_backend;
+	status = backend->create_for_toy (font_face, &impl_font_face);
     }
-
-    if (backend->create_for_toy == NULL) {
-	ASSERT_NOT_REACHED;
-	return NULL;
-    }
-
-    status = backend->create_for_toy (font_face, &impl_font_face);
 
     if (_cairo_font_face_set_error (&font_face->base, status))
 	return NULL;
