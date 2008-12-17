@@ -1628,8 +1628,7 @@ _ft_create_for_pattern (csi_t *ctx,
     struct _ft_face_data *data;
     csi_list_t *link;
     cairo_font_face_t *font_face;
-    FcPattern *pattern, *resolved;
-    FcResult result;
+    FcPattern *pattern;
     csi_status_t status;
 
     _csi_blob_init (&tmpl, (uint8_t *) string->string, string->len);
@@ -1646,18 +1645,7 @@ _ft_create_for_pattern (csi_t *ctx,
     if (_csi_unlikely (pattern == NULL))
 	return _csi_error (CSI_STATUS_NO_MEMORY);
 
-    FcConfigSubstitute (NULL, pattern, FcMatchPattern);
-    FcDefaultSubstitute (pattern);
-
-    resolved = FcFontMatch (NULL, pattern, &result);
-    if (_csi_unlikely (resolved == NULL)) {
-	FcPatternDestroy (pattern);
-	return _csi_error (CSI_STATUS_NO_MEMORY);
-    }
-
-    font_face = cairo_ft_font_face_create_for_pattern (resolved);
-
-    FcPatternDestroy (resolved);
+    font_face = cairo_ft_font_face_create_for_pattern (pattern);
     FcPatternDestroy (pattern);
 
     data = _csi_slab_alloc (ctx, sizeof (*data));
