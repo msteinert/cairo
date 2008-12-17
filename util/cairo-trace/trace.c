@@ -1137,11 +1137,6 @@ _emit_image (cairo_surface_t *image,
     uint8_t *rowdata;
     uint8_t *data;
     struct _data_stream stream;
-    const char *mime_types[] = {
-	CAIRO_MIME_TYPE_JPEG,
-	CAIRO_MIME_TYPE_PNG,
-	NULL
-    }, **mime_type;
 
     if (cairo_surface_status (image)) {
 	fprintf (logfile,
@@ -1173,24 +1168,32 @@ _emit_image (cairo_surface_t *image,
 	va_end (ap);
     }
 
-    for (mime_type = mime_types; *mime_type; mime_type++) {
-	const unsigned char *mime_data;
-	unsigned int mime_length;
+    if (cairo_version () >= CAIRO_VERSION_ENCODE (1, 9, 0)) {
+	const char *mime_types[] = {
+	    CAIRO_MIME_TYPE_JPEG,
+	    CAIRO_MIME_TYPE_PNG,
+	    NULL
+	}, **mime_type;
 
-	cairo_surface_get_mime_data (image, *mime_type,
-				     &mime_data, &mime_length);
-	if (mime_data != NULL) {
-	    fprintf (logfile,
-		     "  /mime-type (%s) set\n"
-		     "  /source <~",
-		     *mime_type);
-	    _write_base85_data_start (&stream);
-	    _write_base85_data (&stream, mime_data, mime_length);
-	    _write_base85_data_end (&stream);
-	    fprintf (logfile,
-		     "~> set\n"
-		     "  image");
-	    return;
+	for (mime_type = mime_types; *mime_type; mime_type++) {
+	    const unsigned char *mime_data;
+	    unsigned int mime_length;
+
+	    cairo_surface_get_mime_data (image, *mime_type,
+					 &mime_data, &mime_length);
+	    if (mime_data != NULL) {
+		fprintf (logfile,
+			 "  /mime-type (%s) set\n"
+			 "  /source <~",
+			 *mime_type);
+		_write_base85_data_start (&stream);
+		_write_base85_data (&stream, mime_data, mime_length);
+		_write_base85_data_end (&stream);
+		fprintf (logfile,
+			 "~> set\n"
+			 "  image");
+		return;
+	    }
 	}
     }
 
