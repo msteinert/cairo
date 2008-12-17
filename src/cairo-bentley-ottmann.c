@@ -968,12 +968,6 @@ _cairo_bo_event_queue_init (cairo_bo_event_queue_t	*event_queue,
     unsigned num_events = 2*num_edges;
     cairo_status_t status;
 
-    status = _cairo_skip_list_init (&event_queue->intersection_queue,
-				    cairo_bo_event_compare_abstract,
-				    sizeof (cairo_bo_event_t));
-    if (unlikely (status))
-	return status;
-
     /* The skip_elt_t field of a cairo_bo_event_t isn't used for start
      * or stop events, so this allocation is safe.  XXX: make the
      * event type a union so it doesn't always contain the skip
@@ -982,10 +976,8 @@ _cairo_bo_event_queue_init (cairo_bo_event_queue_t	*event_queue,
 				      sizeof (cairo_bo_event_t) +
 				      sizeof (cairo_bo_event_t *),
 				      sizeof (cairo_bo_event_t *));
-    if (unlikely (events == NULL)) {
-	_cairo_skip_list_fini (&event_queue->intersection_queue);
+    if (unlikely (events == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-    }
 
     sorted_event_ptrs = (cairo_bo_event_t **) (events + num_events);
     event_queue->startstop_events = events;
@@ -1011,6 +1003,10 @@ _cairo_bo_event_queue_init (cairo_bo_event_queue_t	*event_queue,
 
     _cairo_bo_event_queue_sort (sorted_event_ptrs, num_events);
     event_queue->sorted_startstop_event_ptrs[num_events] = NULL;
+
+    _cairo_skip_list_init (&event_queue->intersection_queue,
+			   cairo_bo_event_compare_abstract,
+			   sizeof (cairo_bo_event_t));
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1058,22 +1054,16 @@ _cairo_bo_event_queue_insert_if_intersect_below_current_y (cairo_bo_event_queue_
     return _cairo_bo_event_queue_insert (event_queue, &event);
 }
 
-static cairo_status_t
+static void
 _cairo_bo_sweep_line_init (cairo_bo_sweep_line_t *sweep_line)
 {
-    cairo_status_t status;
-
-    status = _cairo_skip_list_init (&sweep_line->active_edges,
-				    _sweep_line_elt_compare,
-				    sizeof (sweep_line_elt_t));
-    if (unlikely (status))
-	return status;
+    _cairo_skip_list_init (&sweep_line->active_edges,
+			   _sweep_line_elt_compare,
+			   sizeof (sweep_line_elt_t));
 
     sweep_line->head = NULL;
     sweep_line->tail = NULL;
     sweep_line->current_y = 0;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -1508,9 +1498,7 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
     if (status)
 	return status;
 
-    status = _cairo_bo_sweep_line_init (&sweep_line);
-    if (unlikely (status))
-	goto CLEANUP_EVENT_QUEUE;
+    _cairo_bo_sweep_line_init (&sweep_line);
 
     _cairo_bo_traps_init (&bo_traps, traps, xmin, ymin, xmax, ymax);
 
@@ -1637,7 +1625,6 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_edge_t	*edges,
     }
     _cairo_bo_traps_fini (&bo_traps);
     _cairo_bo_sweep_line_fini (&sweep_line);
-  CLEANUP_EVENT_QUEUE:
     _cairo_bo_event_queue_fini (&event_queue);
     return status;
 }

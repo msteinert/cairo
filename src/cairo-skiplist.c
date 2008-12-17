@@ -63,7 +63,7 @@ pool_new (void)
 static void
 pools_destroy (struct pool *pool)
 {
-    while (pool != NULL) {
+    while (pool->next != NULL) {
 	struct pool *next = pool->next;
 	free (pool);
 	pool = next;
@@ -73,7 +73,7 @@ pools_destroy (struct pool *pool)
 /*
  * Initialize an empty skip list
  */
-cairo_status_t
+void
 _cairo_skip_list_init (cairo_skip_list_t	*list,
                        cairo_skip_list_compare_t compare,
                        size_t			 elt_size)
@@ -83,9 +83,10 @@ _cairo_skip_list_init (cairo_skip_list_t	*list,
     list->compare = compare;
     list->elt_size = elt_size;
     list->data_size = elt_size - sizeof (skip_elt_t);
-    list->pool = pool_new ();
-    if (unlikely (list->pool == NULL))
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    list->pool = (struct pool *) list->pool_embedded;
+    list->pool->next = NULL;
+    list->pool->rem = sizeof (list->pool_embedded) - sizeof (struct pool);
+    list->pool->ptr = list->pool_embedded + sizeof (struct pool);
 
     for (i = 0; i < MAX_LEVEL; i++) {
 	list->chains[i] = NULL;
@@ -96,8 +97,6 @@ _cairo_skip_list_init (cairo_skip_list_t	*list,
     }
 
     list->max_level = 0;
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 void
