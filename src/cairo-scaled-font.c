@@ -248,6 +248,7 @@ _cairo_scaled_font_set_error (cairo_scaled_font_t *scaled_font,
  *
  * This function returns the type of the backend used to create
  * a scaled font. See #cairo_font_type_t for available types.
+ * However, this function never returns #CAIRO_FONT_TYPE_TOY.
  *
  * Return value: The type of @scaled_font.
  *
@@ -2461,7 +2462,9 @@ _cairo_scaled_font_get_max_scale (cairo_scaled_font_t *scaled_font)
  * cairo_scaled_font_get_font_face:
  * @scaled_font: a #cairo_scaled_font_t
  *
- * Gets the font face that this scaled font was created for.
+ * Gets the font face that this scaled font uses.  This is the
+ * font face passed to cairo_scaled_font_create() if that font face
+ * was not of type #CAIRO_FONT_TYPE_TOY.
  *
  * Return value: The #cairo_font_face_t with which @scaled_font was
  * created.
@@ -2507,6 +2510,9 @@ slim_hidden_def (cairo_scaled_font_get_font_matrix);
  * @ctm: return value for the CTM
  *
  * Stores the CTM with which @scaled_font was created into @ctm.
+ * Note that the translation offsets (x0, y0) of the CTM are ignored
+ * by cairo_scaled_font_create().  So, the matrix this function
+ * returns always has 0,0 as x0,y0.
  *
  * Since: 1.2
  **/
