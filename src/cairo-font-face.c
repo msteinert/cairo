@@ -409,7 +409,8 @@ _cairo_toy_font_face_create_impl_face (cairo_toy_font_face_t *font_face)
 
     if (backend->create_for_toy == NULL ||
 	(CAIRO_FONT_FACE_BACKEND_DEFAULT != &_cairo_user_font_face_backend &&
-	 0 == strcmp (font_face->family, CAIRO_USER_FONT_FAMILY_DEFAULT)))
+	 0 == strncmp (font_face->family, CAIRO_USER_FONT_FAMILY_DEFAULT,
+		       strlen (CAIRO_USER_FONT_FAMILY_DEFAULT))))
     {
 	backend = &_cairo_user_font_face_backend;
     }
