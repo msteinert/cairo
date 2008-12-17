@@ -749,6 +749,7 @@ static const cairo_surface_backend_t cairo_analysis_surface_backend = {
     NULL, /* reset */
     NULL, /* fill_stroke */
     NULL, /* create_solid_pattern_surface */
+    NULL, /* can_repaint_solid_pattern_surface */
     _cairo_analysis_surface_has_show_text_glyphs,
     _cairo_analysis_surface_show_text_glyphs
 };
@@ -966,6 +967,7 @@ static const cairo_surface_backend_t cairo_null_surface_backend = {
     NULL, /* reset */
     NULL, /* fill_stroke */
     NULL, /* create_solid_pattern_surface */
+    NULL, /* can_repaint_solid_pattern_surface */
     NULL, /* has_show_text_glyphs */
     NULL  /* show_text_glyphs */
 };

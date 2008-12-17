@@ -1310,6 +1310,15 @@ _cairo_xlib_surface_create_solid_pattern_surface (void                  *abstrac
     return &surface->base;
 }
 
+static cairo_bool_t
+_cairo_xlib_surface_can_repaint_solid_pattern_surface (void *abstract_surface,
+						       const cairo_solid_pattern_t *solid_pattern)
+{
+    cairo_xlib_surface_t *other = abstract_surface;
+    return CAIRO_SURFACE_RENDER_HAS_COMPOSITE (other);
+}
+
+
 static cairo_status_t
 _cairo_xlib_surface_set_matrix (cairo_xlib_surface_t *surface,
 				cairo_matrix_t	     *matrix,
@@ -2469,7 +2478,8 @@ static const cairo_surface_backend_t cairo_xlib_surface_backend = {
     _cairo_xlib_surface_is_similar,
     _cairo_xlib_surface_reset,
     NULL, /* fill_stroke */
-    _cairo_xlib_surface_create_solid_pattern_surface
+    _cairo_xlib_surface_create_solid_pattern_surface,
+    _cairo_xlib_surface_can_repaint_solid_pattern_surface
 };
 
 /**

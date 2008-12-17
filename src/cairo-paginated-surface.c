@@ -701,6 +701,7 @@ static const cairo_surface_backend_t cairo_paginated_surface_backend = {
     NULL, /* reset */
     NULL, /* fill_stroke */
     NULL, /* create_solid_pattern_surface */
+    NULL, /* can_repaint_solid_pattern_surface */
     _cairo_paginated_surface_has_show_text_glyphs,
     _cairo_paginated_surface_show_text_glyphs
 };

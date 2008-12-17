@@ -334,19 +334,19 @@ cairo_surface_t *
 _cairo_surface_create_solid_pattern_surface (cairo_surface_t	   *other,
 					     const cairo_solid_pattern_t *solid_pattern)
 {
-    cairo_surface_t *surface;
+    if (other->backend->create_solid_pattern_surface != NULL) {
+	cairo_surface_t *surface;
 
-    if (other->backend->create_solid_pattern_surface) {
-	surface = other->backend->create_solid_pattern_surface (other, solid_pattern);
+	surface = other->backend->create_solid_pattern_surface (other,
+								solid_pattern);
 	if (surface)
 	    return surface;
     }
 
-    surface = _cairo_surface_create_similar_solid (other,
-						   solid_pattern->content,
-						   1, 1,
-						   &solid_pattern->color);
-    return surface;
+    return _cairo_surface_create_similar_solid (other,
+						solid_pattern->content,
+						1, 1,
+						&solid_pattern->color);
 }
 
 cairo_int_status_t
@@ -354,17 +354,24 @@ _cairo_surface_repaint_solid_pattern_surface (cairo_surface_t	    *other,
 					      cairo_surface_t       *solid_surface,
 					      const cairo_solid_pattern_t *solid_pattern)
 {
-    if (other->backend->create_solid_pattern_surface)
-	/* Solid pattern surface for this backend are not trivial to make.
-	 * Skip repainting.
-	 *
-	 * This does not work optimally with things like analysis surface that
-	 * are proxies.  But returning UNSUPPORTED is *safe* as it only
-	 * disables some caching.
-	 */
+    /* Solid pattern surface for these backends are special and not trivial
+     * to repaint.  Skip repainting.
+     *
+     * This does not work optimally with things like analysis surface that
+     * are proxies.  But returning UNSUPPORTED is *safe* as it only
+     * disables some caching.
+     */
+    if (other->backend->create_solid_pattern_surface != NULL &&
+	! other->backend->can_repaint_solid_pattern_surface (solid_surface,
+							     solid_pattern))
+    {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
-    return _cairo_surface_paint (solid_surface, CAIRO_OPERATOR_SOURCE, &solid_pattern->base, NULL);
+    return _cairo_surface_paint (solid_surface,
+				 CAIRO_OPERATOR_SOURCE,
+				 &solid_pattern->base,
+				 NULL);
 }
 
 cairo_clip_mode_t

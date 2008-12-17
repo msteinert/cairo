@@ -823,6 +823,11 @@ struct _cairo_surface_backend {
 				 const cairo_solid_pattern_t  *solid_pattern);
 
     cairo_bool_t
+    (*can_repaint_solid_pattern_surface)
+			        (void			      *surface,
+				 const cairo_solid_pattern_t  *solid_pattern);
+
+    cairo_bool_t
     (*has_show_text_glyphs)	(void			    *surface);
 
     cairo_warn cairo_int_status_t

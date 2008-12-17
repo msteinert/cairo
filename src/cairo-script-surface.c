@@ -2452,6 +2452,7 @@ _cairo_script_surface_backend = {
     NULL, /* reset */
     NULL, /* fill_stroke */
     NULL, /* create_solid_pattern_surface */
+    NULL, /* can_repaint_solid_pattern_surface */
 
     /* The alternate high-level text operation */
     _cairo_script_surface_has_show_text_glyphs,
