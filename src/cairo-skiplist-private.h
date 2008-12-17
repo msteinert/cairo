@@ -62,7 +62,7 @@ typedef struct _skip_elt {
 #define SKIP_LIST_ELT_TO_DATA(type, elt) ((type *) ((char *) (elt) - (sizeof (type) - sizeof (skip_elt_t))))
 
 typedef int
-(*cairo_skip_list_compare_t) (void *list, void *a, void *b);
+(*cairo_skip_list_compare_t) (void *list, const void *a, const void *b);
 
 typedef struct _skip_list {
     cairo_skip_list_compare_t compare;
@@ -101,7 +101,7 @@ _cairo_skip_list_fini (cairo_skip_list_t		*list);
  * Otherwise data will be copied (elt_size bytes from <data> via
  * memcpy) and the new element is returned. */
 cairo_private void *
-_cairo_skip_list_insert (cairo_skip_list_t *list, void *data, int unique);
+_cairo_skip_list_insert (cairo_skip_list_t *list, void *data);
 
 /* Find an element which compare considers equal to <data> */
 cairo_private void *

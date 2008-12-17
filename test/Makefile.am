@@ -4,8 +4,6 @@ include $(top_srcdir)/test/Makefile.sources
 
 SUBDIRS=pdiff .
 
-CLEANFILES += have-similar.*
-
 # Then we have a collection of tests that are only run if certain
 # features are compiled into cairo
 if HAVE_PTHREAD
@@ -147,8 +145,10 @@ REFERENCE_IMAGES = \
 	bitmap-font.rgb24.ref.png \
 	caps-joins-alpha.quartz.ref.png \
 	caps-joins-alpha.ref.png \
+	caps-joins-alpha.xlib.ref.png \
 	caps-joins-curve.ps.ref.png \
 	caps-joins-curve.ref.png \
+	caps-joins-curve.xlib.ref.png \
 	caps-joins.ps.ref.png \
 	caps-joins.ref.png \
 	caps-sub-paths.ref.png \
@@ -156,6 +156,8 @@ REFERENCE_IMAGES = \
 	caps.ref.png \
 	clear.argb32.ref.png \
 	clear.rgb24.ref.png \
+	clear.pdf.argb32.ref.png \
+	clear.ps.argb32.ref.png \
 	clear.svg12.argb32.xfail.png \
 	clear.svg12.rgb24.xfail.png \
 	clip-all.ref.png \
@@ -237,6 +239,7 @@ REFERENCE_IMAGES = \
 	clipped-group.ps3.ref.png \
 	clipped-group.ref.png \
 	clipped-surface.ref.png \
+	clipped-trapezoids.ref.png \
 	close-path-current-point.ps.ref.png \
 	close-path-current-point.ref.png \
 	close-path.ps2.ref.png \
@@ -275,6 +278,7 @@ REFERENCE_IMAGES = \
 	dash-curve.ps3.ref.png \
 	dash-curve.quartz.ref.png \
 	dash-curve.ref.png \
+	dash-curve.xlib.ref.png \
 	dash-infinite-loop.ref.png \
 	dash-no-dash.ref.png \
 	dash-offset-negative.ref.png \
@@ -302,16 +306,18 @@ REFERENCE_IMAGES = \
 	degenerate-curve-to.ps.xfail.png \
 	degenerate-dash.ps.xfail.png \
 	degenerate-dash.ref.png \
+	degenerate-dash.xlib.ref.png \
 	degenerate-path.ps.argb32.xfail.png \
 	degenerate-path.ps.rgb24.xfail.png \
 	degenerate-path.quartz.ref.png \
 	degenerate-path.quartz.rgb24.ref.png \
-	degenerate-path.ref.png \
+	degenerate-path.argb32.ref.png \
 	degenerate-path.rgb24.ref.png \
 	degenerate-pen.ps2.ref.png \
 	degenerate-pen.ps3.ref.png \
 	degenerate-pen.quartz.ref.png \
 	degenerate-pen.ref.png \
+	degenerate-pen.xlib.ref.png \
 	degenerate-rel-curve-to.ref.png \
 	degenerate-rel-curve-to.ps.xfail.png \
 	device-offset-fractional.gl.xfail.png \
@@ -389,8 +395,10 @@ REFERENCE_IMAGES = \
 	fill-and-stroke.ps3.rgb24.ref.png \
 	fill-and-stroke.quartz.ref.png \
 	fill-and-stroke.quartz.rgb24.ref.png \
-	fill-and-stroke.ref.png \
+	fill-and-stroke.argb32.ref.png \
 	fill-and-stroke.rgb24.ref.png \
+	fill-and-stroke.xlib.argb32.ref.png \
+	fill-and-stroke.xlib.rgb24.ref.png \
 	fill-degenerate-sort-order.ps.argb32.xfail.png \
 	fill-degenerate-sort-order.ps.rgb24.xfail.png \
 	fill-degenerate-sort-order.quartz.ref.png \
@@ -469,14 +477,12 @@ REFERENCE_IMAGES = \
 	ft-text-antialias-none.ps3.argb32.ref.png \
 	ft-text-antialias-none.ref.png \
 	ft-text-vertical-layout-type1.pdf.ref.png \
-	ft-text-vertical-layout-type1.ps2.ref.png \
-	ft-text-vertical-layout-type1.ps3.ref.png \
+	ft-text-vertical-layout-type1.ps.ref.png \
 	ft-text-vertical-layout-type1.ref.png \
 	ft-text-vertical-layout-type1.svg.ref.png \
 	ft-text-vertical-layout-type1.xlib.ref.png \
 	ft-text-vertical-layout-type3.pdf.ref.png \
-	ft-text-vertical-layout-type3.ps2.ref.png \
-	ft-text-vertical-layout-type3.ps3.ref.png \
+	ft-text-vertical-layout-type3.ps.ref.png \
 	ft-text-vertical-layout-type3.ref.png \
 	ft-text-vertical-layout-type3.svg.ref.png \
 	ft-text-vertical-layout-type3.xlib.ref.png \
@@ -538,9 +544,11 @@ REFERENCE_IMAGES = \
 	leaky-dashed-rectangle.pdf.ref.png \
 	leaky-dashed-rectangle.ps.ref.png \
 	leaky-dashed-rectangle.ref.png \
+	leaky-dashed-rectangle.xlib.ref.png \
 	leaky-dashed-stroke.ps2.ref.png \
 	leaky-dashed-stroke.ps3.ref.png \
 	leaky-dashed-stroke.ref.png \
+	leaky-dashed-stroke.xlib.ref.png \
 	leaky-polygon.ps2.ref.png \
 	leaky-polygon.ps3.ref.png \
 	leaky-polygon.ref.png \
@@ -613,13 +621,14 @@ REFERENCE_IMAGES = \
 	miter-precision.ps3.ref.png \
 	miter-precision.ref.png \
 	move-to-show-surface.ref.png \
+	new-sub-path.pdf.argb32.ref.png \
 	new-sub-path.ps2.argb32.ref.png \
 	new-sub-path.ps2.rgb24.ref.png \
 	new-sub-path.ps3.argb32.ref.png \
 	new-sub-path.ps3.rgb24.ref.png \
 	new-sub-path.quartz.ref.png \
 	new-sub-path.quartz.rgb24.ref.png \
-	new-sub-path.ref.png \
+	new-sub-path.argb32.ref.png \
 	new-sub-path.rgb24.ref.png \
 	nil-surface.ref.png \
 	nil-surface.rgb24.ref.png \
@@ -726,11 +735,13 @@ REFERENCE_IMAGES = \
 	radial-gradient.pdf.ref.png \
 	radial-gradient.quartz.ref.png \
 	radial-gradient.ref.png \
-	random-intersections.ps2.ref.png \
-	random-intersections.ps3.ref.png \
-	random-intersections.quartz.ref.png \
-	random-intersections.ref.png \
-	random-intersections.xlib.ref.png \
+	random-intersections-eo.ps.ref.png \
+	random-intersections-eo.quartz.ref.png \
+	random-intersections-eo.ref.png \
+	random-intersections-eo.xlib.ref.png \
+	random-intersections-nonzero.ref.png \
+	random-intersections-nonzero.ps.ref.png \
+	random-intersections-nonzero.xlib.ref.png \
 	rectangle-rounding-error.ref.png \
 	rectilinear-dash.ref.png \
 	rectilinear-fill.ref.png \
@@ -783,16 +794,9 @@ REFERENCE_IMAGES = \
 	self-copy.ps2.ref.png \
 	self-copy.ps3.ref.png \
 	self-copy.ref.png \
-	self-intersecting.argb32.xfail.png \
-	self-intersecting.pdf.argb32.xfail.png \
-	self-intersecting.pdf.rgb24.xfail.png \
-	self-intersecting.ps.argb32.xfail.png \
-	self-intersecting.ps.rgb24.xfail.png \
+	self-intersecting.ps.ref.png \
 	self-intersecting.ref.png \
-	self-intersecting.rgb24.ref.png \
-	self-intersecting.rgb24.xfail.png \
-	self-intersecting.xlib.argb32.xfail.png \
-	self-intersecting.xlib.rgb24.xfail.png \
+	self-intersecting.xlib.ref.png \
 	set-source.ref.png \
 	set-source.rgb24.ref.png \
 	show-glyphs-many.ref.png \
@@ -815,6 +819,7 @@ REFERENCE_IMAGES = \
 	smask-paint.svg.ref.png \
 	smask-stroke.pdf.xfail.png \
 	smask-stroke.ref.png \
+	smask-stroke.xlib.ref.png \
 	smask-text.pdf.ref.png \
 	smask-text.ps2.ref.png \
 	smask-text.ps3.ref.png \
@@ -822,8 +827,7 @@ REFERENCE_IMAGES = \
 	smask-text.svg.ref.png \
 	smask-text.xlib.ref.png \
 	smask.pdf.xfail.png \
-	smask.ps2.ref.png \
-	smask.ps3.ref.png \
+	smask.ps.ref.png \
 	smask.ref.png \
 	smask.svg.ref.png \
 	smask.xlib.ref.png \
@@ -844,15 +848,16 @@ REFERENCE_IMAGES = \
 	spline-decomposition.ps.ref.png \
 	spline-decomposition.ref.png \
 	spline-decomposition.svg.ref.png \
+	spline-decomposition.xlib.ref.png \
 	stroke-ctm-caps.ps2.ref.png \
 	stroke-ctm-caps.ps3.ref.png \
 	stroke-ctm-caps.quartz.ref.png \
 	stroke-ctm-caps.ref.png \
 	stroke-image.pdf.ref.png \
-	stroke-image.ps2.ref.png \
-	stroke-image.ps3.ref.png \
+	stroke-image.ps.ref.png \
 	stroke-image.quartz.ref.png \
 	stroke-image.ref.png \
+	stroke-image.xlib.ref.png \
 	surface-pattern-big-scale-down.ref.png \
 	surface-pattern-big-scale-down.ps.xfail.png \
 	surface-pattern-scale-down.pdf.ref.png \
@@ -900,6 +905,7 @@ REFERENCE_IMAGES = \
 	text-rotate.quartz.ref.png \
 	text-rotate.ref.png \
 	text-rotate.svg.ref.png \
+	text-rotate.xlib.ref.png \
 	text-transform.pdf.ref.png \
 	text-transform.ps2.ref.png \
 	text-transform.ps3.ref.png \
@@ -923,6 +929,7 @@ REFERENCE_IMAGES = \
 	twin.ps.ref.png \
 	twin.ref.png \
 	twin.svg.ref.png \
+	twin.xlib.ref.png \
 	unantialiased-shapes.quartz.ref.png \
 	unantialiased-shapes.ref.png \
 	unbounded-operator.gl.argb32.xfail.png \
@@ -934,7 +941,7 @@ REFERENCE_IMAGES = \
 	unbounded-operator.quartz.rgb24.ref.png \
 	unbounded-operator.ref.png \
 	unbounded-operator.rgb24.ref.png \
-	unbounded-operator.svg12.argb32.xfail.png \
+	unbounded-operator.svg12.argb32.ref.png \
 	unbounded-operator.svg12.rgb24.xfail.png \
 	unbounded-operator.xlib.rgb24.ref.png \
 	user-font-mask.pdf.ref.png \
@@ -953,8 +960,7 @@ REFERENCE_IMAGES = \
 	user-font-rescale.ps3.ref.png \
 	user-font-rescale.ref.png \
 	user-font-rescale.svg.ref.png \
-	user-font.ps2.ref.png \
-	user-font.ps3.ref.png \
+	user-font.ps.ref.png \
 	user-font.ref.png \
 	user-font.svg.ref.png \
 	user-font.xlib.ref.png \
@@ -1132,14 +1138,22 @@ imagediff_LDADD = \
 	$(top_builddir)/src/libcairo.la
 
 png_flatten_SOURCES = png-flatten.c
-png_flatten_LDADD = $(top_builddir)/src/libcairo.la $(CAIRO_LDADD)
+png_flatten_LDADD = $(top_builddir)/src/libcairo.la \
+		    $(CAIRO_LDADD)
 
 if BUILD_ANY2PPM
 check_PROGRAMS += any2ppm
 any2ppm_CFLAGS = $(AM_CFLAGS) $(POPPLER_CFLAGS) $(LIBRSVG_CFLAGS) $(LIBSPECTRE_CFLAGS)
 # add LDADD, so poppler/librsvg uses "our" cairo
 any2ppm_LDFLAGS = $(AM_LDFLAGS) $(CAIRO_TEST_UNDEFINED_LDFLAGS)
-any2ppm_LDADD = $(top_builddir)/util/cairo-script/libcairo-script-interpreter.la $(top_builddir)/src/libcairo.la $(CAIRO_LDADD) $(CAIROBOILERPLATE_LIBS) $(POPPLER_LIBS) $(LIBRSVG_LIBS) $(LIBSPECTRE_LIBS)
+any2ppm_LDADD = \
+		$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
+		$(top_builddir)/src/libcairo.la \
+		$(CAIRO_LDADD) \
+		$(CAIROBOILERPLATE_LIBS) \
+		$(POPPLER_LIBS) \
+		$(LIBRSVG_LIBS) \
+		$(LIBSPECTRE_LIBS)
 endif
 
 if CAIRO_CAN_TEST_PDF_SURFACE
@@ -1147,7 +1161,9 @@ check_PROGRAMS += pdf2png
 pdf2png_CFLAGS = $(AM_CFLAGS) $(POPPLER_CFLAGS)
 # add LDADD, so poppler uses "our" cairo
 pdf2png_LDFLAGS = $(AM_LDFLAGS) $(CAIRO_TEST_UNDEFINED_LDFLAGS)
-pdf2png_LDADD  = $(top_builddir)/src/libcairo.la $(CAIRO_LDADD) $(POPPLER_LIBS)
+pdf2png_LDADD  = $(top_builddir)/src/libcairo.la \
+		 $(CAIRO_LDADD) \
+		 $(POPPLER_LIBS)
 endif
 
 if CAIRO_CAN_TEST_SVG_SURFACE
@@ -1155,7 +1171,9 @@ check_PROGRAMS += svg2png
 svg2png_CFLAGS = $(AM_CFLAGS) $(LIBRSVG_CFLAGS)
 # add LDADD, so librsvg uses "our" cairo
 svg2png_LDFLAGS = $(AM_LDFLAGS) $(CAIRO_TEST_UNDEFINED_LDFLAGS)
-svg2png_LDADD  = $(top_builddir)/src/libcairo.la $(CAIRO_LDADD) $(LIBRSVG_LIBS)
+svg2png_LDADD  = $(top_builddir)/src/libcairo.la \
+		 $(CAIRO_LDADD) \
+		 $(LIBRSVG_LIBS)
 endif
 
 if CAIRO_HAS_SPECTRE
@@ -1163,7 +1181,9 @@ check_PROGRAMS += ps2png
 ps2png_CFLAGS = $(AM_CFLAGS) $(LIBSPECTRE_CFLAGS)
 # add LDADD, so ps2png uses "our" cairo
 ps2png_LDFLAGS = $(AM_LDFLAGS) $(CAIRO_TEST_UNDEFINED_LDFLAGS)
-ps2png_LDADD  = $(top_builddir)/src/libcairo.la $(CAIRO_LDADD) $(LIBSPECTRE_LIBS)
+ps2png_LDADD  = $(top_builddir)/src/libcairo.la \
+		$(CAIRO_LDADD) \
+		$(LIBSPECTRE_LIBS)
 endif
 
 EXTRA_PROGRAMS += $(TESTS)

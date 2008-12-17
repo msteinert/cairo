@@ -177,13 +177,7 @@ typedef enum _cairo_internal_surface_type {
 #define CAIRO_HAS_TEST_NULL_SURFACE 1
 #define CAIRO_HAS_TEST_WRAPPING_SURFACE 1
 
-typedef struct _cairo_point {
-    cairo_fixed_t x;
-    cairo_fixed_t y;
-} cairo_point_t;
-
-typedef struct _cairo_slope
-{
+typedef struct _cairo_slope {
     cairo_fixed_t dx;
     cairo_fixed_t dy;
 } cairo_slope_t, cairo_distance_t;
@@ -244,7 +238,8 @@ typedef enum _cairo_direction {
 } cairo_direction_t;
 
 typedef struct _cairo_edge {
-    cairo_line_t edge;
+    cairo_line_t line;
+    int top, bottom;
     int dir;
 } cairo_edge_t;
 
@@ -254,6 +249,10 @@ typedef struct _cairo_polygon {
     cairo_point_t first_point;
     cairo_point_t current_point;
     cairo_bool_t has_current_point;
+
+    cairo_box_t extents;
+    cairo_box_t limits;
+    cairo_bool_t has_limits;
 
     int num_edges;
     int edges_size;

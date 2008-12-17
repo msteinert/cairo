@@ -6,6 +6,25 @@ if BUILD_TRACE
 SUBDIRS += cairo-trace
 endif
 
+AM_CPPFLAGS = -I$(top_srcdir)/src
+
+EXTRA_PROGRAMS += show-traps show-edges show-events
+
+show_traps_SOURCES = show-traps.c
+show_traps_CFLAGS = $(gtk_CFLAGS)
+#show_traps_LDADD = $(top_builddir)/src/libcairo.la $(gtk_LIBS)
+show_traps_LDADD = $(gtk_LIBS)
+
+show_edges_SOURCES = show-edges.c
+show_edges_CFLAGS = $(gtk_CFLAGS)
+#show_edges_LDADD = $(top_builddir)/src/libcairo.la $(gtk_LIBS)
+show_edges_LDADD = $(gtk_LIBS)
+
+show_events_SOURCES = show-events.c
+show_events_CFLAGS = $(gtk_CFLAGS)
+#show_events_LDADD = $(top_builddir)/src/libcairo.la $(gtk_LIBS)
+show_events_LDADD = $(gtk_LIBS)
+
 util: malloc-stats.so backtrace-symbols.so
 
 .la.so:
@@ -20,11 +39,9 @@ AM_LDFLAGS = -module -avoid-version -export-dynamic -rpath /dev/null
 
 EXTRA_LTLIBRARIES += malloc-stats.la backtrace-symbols.la
 
-backtrace_symbols_la_LIBADD  = -lbfd -liberty
+backtrace_symbols_la_LIBADD = -lbfd -liberty
 
 #malloc_stats_la_LIBADD  = $(backtrace_symbols_la_LIBADD) backtrace-symbols.lo
-
-noinst_PROGRAMS =
 
 if HAVE_GTK
 EXTRA_PROGRAMS += font-view

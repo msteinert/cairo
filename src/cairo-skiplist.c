@@ -189,7 +189,7 @@ free_elt (cairo_skip_list_t *list, skip_elt_t *elt)
  * Insert 'data' into the list
  */
 void *
-_cairo_skip_list_insert (cairo_skip_list_t *list, void *data, int unique)
+_cairo_skip_list_insert (cairo_skip_list_t *list, void *data)
 {
     skip_elt_t **update[MAX_LEVEL];
     skip_elt_t *prev[MAX_LEVEL];
@@ -209,7 +209,7 @@ _cairo_skip_list_insert (cairo_skip_list_t *list, void *data, int unique)
 	    for (; (elt = next[i]); next = elt->next)
 	    {
 		int cmp = list->compare (list, ELT_DATA(elt), data);
-		if (unique && 0 == cmp)
+		if (0 == cmp)
 		    return ELT_DATA(elt);
 		if (cmp > 0)
 		    break;
@@ -369,7 +369,7 @@ typedef struct {
 } test_elt_t;
 
 static int
-test_cmp (void *list, void *A, void *B)
+test_cmp (void *list, const void *A, const void *B)
 {
     const test_elt_t *a = A, *b = B;
     return a->n - b->n;
@@ -386,7 +386,7 @@ main (void)
     for (n = 0; n < 10000000; n++) {
 	void *elt_and_data;
 	elt.n = n;
-	elt_and_data = _cairo_skip_list_insert (&list, &elt, TRUE);
+	elt_and_data = _cairo_skip_list_insert (&list, &elt);
 	assert (elt_and_data != NULL);
     }
     _cairo_skip_list_fini (&list);

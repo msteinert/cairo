@@ -2,6 +2,9 @@
 .libs
 Makefile
 Makefile.in
+show-edges
+show-events
+show-traps
 *.so
 *.la
 *.lo

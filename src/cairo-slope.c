@@ -94,9 +94,7 @@ _cairo_slope_compare (const cairo_slope_t *a, const cairo_slope_t *b)
      * of b by an infinitesimally small amount, (that is, 'a' will
      * always be considered less than 'b').
      */
-    if (((a->dx > 0) != (b->dx > 0)) ||
-	((a->dy > 0) != (b->dy > 0)))
-    {
+    if ((a->dx ^ b->dx) < 0 || (a->dy ^ b->dy) < 0) {
 	if (a->dx > 0 || (a->dx == 0 && a->dy > 0))
 	    return +1;
 	else

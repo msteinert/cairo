@@ -688,16 +688,9 @@ _cairo_matrix_is_integer_translation (const cairo_matrix_t *matrix,
     return FALSE;
 }
 
-/* By pixel exact here, we mean a matrix that is composed only of
- * 90 degree rotations, flips, and integer translations and produces a 1:1
- * mapping between source and destination pixels. If we transform an image
- * with a pixel-exact matrix, filtering is not useful.
- */
-cairo_private cairo_bool_t
-_cairo_matrix_is_pixel_exact (const cairo_matrix_t *matrix)
+cairo_bool_t
+_cairo_matrix_has_unity_scale (const cairo_matrix_t *matrix)
 {
-    cairo_fixed_t x0_fixed, y0_fixed;
-
     if (matrix->xy == 0.0 && matrix->yx == 0.0) {
 	if (! (matrix->xx == 1.0 || matrix->xx == -1.0))
 	    return FALSE;
@@ -709,6 +702,22 @@ _cairo_matrix_is_pixel_exact (const cairo_matrix_t *matrix)
 	if (! (matrix->yx == 1.0 || matrix->yx == -1.0))
 	    return FALSE;
     } else
+	return FALSE;
+
+    return TRUE;
+}
+
+/* By pixel exact here, we mean a matrix that is composed only of
+ * 90 degree rotations, flips, and integer translations and produces a 1:1
+ * mapping between source and destination pixels. If we transform an image
+ * with a pixel-exact matrix, filtering is not useful.
+ */
+cairo_bool_t
+_cairo_matrix_is_pixel_exact (const cairo_matrix_t *matrix)
+{
+    cairo_fixed_t x0_fixed, y0_fixed;
+
+    if (! _cairo_matrix_has_unity_scale (matrix))
 	return FALSE;
 
     x0_fixed = _cairo_fixed_from_double (matrix->x0);

@@ -39,16 +39,6 @@
 
 #define _cairo_uint32s_to_uint64(h,l) ((uint64_t) (h) << 32 | (l))
 
-cairo_uquorem64_t
-_cairo_uint64_divrem (cairo_uint64_t num, cairo_uint64_t den)
-{
-    cairo_uquorem64_t	qr;
-
-    qr.quo = num / den;
-    qr.rem = num % den;
-    return qr;
-}
-
 #else
 
 cairo_uint64_t
@@ -316,30 +306,6 @@ _cairo_uint64_divrem (cairo_uint64_t num, cairo_uint64_t den)
 }
 
 #endif /* !HAVE_UINT64_T */
-
-cairo_quorem64_t
-_cairo_int64_divrem (cairo_int64_t num, cairo_int64_t den)
-{
-    int			num_neg = _cairo_int64_negative (num);
-    int			den_neg = _cairo_int64_negative (den);
-    cairo_uquorem64_t	uqr;
-    cairo_quorem64_t	qr;
-
-    if (num_neg)
-	num = _cairo_int64_negate (num);
-    if (den_neg)
-	den = _cairo_int64_negate (den);
-    uqr = _cairo_uint64_divrem (num, den);
-    if (num_neg)
-	qr.rem = _cairo_int64_negate (uqr.rem);
-    else
-	qr.rem = uqr.rem;
-    if (num_neg != den_neg)
-	qr.quo = (cairo_int64_t) _cairo_int64_negate (uqr.quo);
-    else
-	qr.quo = (cairo_int64_t) uqr.quo;
-    return qr;
-}
 
 #if HAVE_UINT128_T
 

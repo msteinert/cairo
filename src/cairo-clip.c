@@ -588,17 +588,19 @@ _cairo_clip_path_to_region (cairo_clip_path_t *clip_path)
     _cairo_box_from_rectangle (&box, &clip_path->extents);
     _cairo_traps_limit (&traps, &box);
 
-    status = _cairo_path_fixed_fill_to_traps (&clip_path->path,
-					      clip_path->fill_rule,
-					      clip_path->tolerance,
-					      &traps);
-    if (unlikely (status))
+    status = _cairo_path_fixed_fill_rectilinear_to_traps (&clip_path->path,
+							  clip_path->fill_rule,
+							  &traps);
+    if (status) {
+	_cairo_traps_fini (&traps);
+	clip_path->flags |= CAIRO_CLIP_PATH_REGION_IS_UNSUPPORTED;
 	return status;
+    }
 
     status = _cairo_traps_extract_region (&traps, &clip_path->region);
     _cairo_traps_fini (&traps);
 
-    if (status) {
+    if (unlikely (status)) {
 	clip_path->flags |= CAIRO_CLIP_PATH_REGION_IS_UNSUPPORTED;
 	return status;
     }

@@ -63,6 +63,7 @@ _cairo_traps_init (cairo_traps_t *traps)
     traps->extents.p2.x = traps->extents.p2.y = INT32_MIN;
 
     traps->has_limits = FALSE;
+    traps->has_intersections = FALSE;
 }
 
 void
@@ -74,14 +75,6 @@ _cairo_traps_limit (cairo_traps_t	*traps,
     traps->limits = *limits;
 }
 
-cairo_bool_t
-_cairo_traps_get_limit (cairo_traps_t *traps,
-			cairo_box_t   *limits)
-{
-    *limits = traps->limits;
-    return traps->has_limits;
-}
-
 void
 _cairo_traps_clear (cairo_traps_t *traps)
 {
@@ -90,6 +83,7 @@ _cairo_traps_clear (cairo_traps_t *traps)
     traps->maybe_region = 1;
 
     traps->num_traps = 0;
+    traps->has_intersections = FALSE;
     traps->extents.p1.x = traps->extents.p1.y = INT32_MAX;
     traps->extents.p2.x = traps->extents.p2.y = INT32_MIN;
 }
@@ -165,6 +159,12 @@ _cairo_traps_grow (cairo_traps_t *traps)
     return TRUE;
 }
 
+static cairo_fixed_t
+_line_compute_intersection_x_for_y (const cairo_line_t *line,
+				    cairo_fixed_t y)
+{
+    return _cairo_edge_compute_intersection_x_for_y (&line->p1, &line->p2, y);
+}
 void
 _cairo_traps_add_trap (cairo_traps_t *traps,
 		       cairo_fixed_t top, cairo_fixed_t bottom,
@@ -257,23 +257,44 @@ _cairo_traps_add_trap (cairo_traps_t *traps,
 	traps->extents.p1.y = top;
     if (bottom > traps->extents.p2.y)
 	traps->extents.p2.y = bottom;
-    /*
-     * This isn't generally accurate, but it is close enough for
-     * this purpose.  Assuming that the left and right segments always
-     * contain the trapezoid vertical extents, these compares will
-     * yield a containing box.  Assuming that the points all come from
-     * the same figure which will eventually be completely drawn, then
-     * the compares will yield the correct overall extents
-     */
-    if (left->p1.x < traps->extents.p1.x)
-	traps->extents.p1.x = left->p1.x;
-    if (left->p2.x < traps->extents.p1.x)
-	traps->extents.p1.x = left->p2.x;
 
-    if (right->p1.x > traps->extents.p2.x)
-	traps->extents.p2.x = right->p1.x;
-    if (right->p2.x > traps->extents.p2.x)
-	traps->extents.p2.x = right->p2.x;
+    if (left->p1.x < traps->extents.p1.x) {
+	cairo_fixed_t x = left->p1.x;
+	if (top != left->p1.y) {
+	    x = _line_compute_intersection_x_for_y (left, top);
+	    if (x < traps->extents.p1.x)
+		traps->extents.p1.x = x;
+	} else
+	    traps->extents.p1.x = x;
+    }
+    if (left->p2.x < traps->extents.p1.x) {
+	cairo_fixed_t x = left->p2.x;
+	if (bottom != left->p2.y) {
+	    x = _line_compute_intersection_x_for_y (left, bottom);
+	    if (x < traps->extents.p1.x)
+		traps->extents.p1.x = x;
+	} else
+	    traps->extents.p1.x = x;
+    }
+
+    if (right->p1.x > traps->extents.p2.x) {
+	cairo_fixed_t x = right->p1.x;
+	if (top != right->p1.y) {
+	    x = _line_compute_intersection_x_for_y (right, top);
+	    if (x > traps->extents.p2.x)
+		traps->extents.p2.x = x;
+	} else
+	    traps->extents.p2.x = x;
+    }
+    if (right->p2.x > traps->extents.p2.x) {
+	cairo_fixed_t x = right->p2.x;
+	if (bottom != right->p2.y) {
+	    x = _line_compute_intersection_x_for_y (right, bottom);
+	    if (x > traps->extents.p2.x)
+		traps->extents.p2.x = x;
+	} else
+	    traps->extents.p2.x = x;
+    }
 
     traps->num_traps++;
 }
@@ -284,9 +305,8 @@ _compare_point_fixed_by_y (const void *av, const void *bv)
     const cairo_point_t	*a = av, *b = bv;
 
     int ret = a->y - b->y;
-    if (ret == 0) {
+    if (ret == 0)
 	ret = a->x - b->x;
-    }
     return ret;
 }
 

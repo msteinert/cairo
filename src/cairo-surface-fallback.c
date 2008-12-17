@@ -34,6 +34,8 @@
  *
  * Contributor(s):
  *	Carl D. Worth <cworth@cworth.org>
+ *      Joonas Pihlaja <jpihlaja@cc.helsinki.fi>
+ *	Chris Wilson <chris@chris-wilson.co.uk>
  */
 
 #include "cairoint.h"
@@ -41,6 +43,7 @@
 #include "cairo-surface-fallback-private.h"
 #include "cairo-clip-private.h"
 #include "cairo-region-private.h"
+#include "cairo-spans-private.h"
 
 typedef struct {
     cairo_surface_t *dst;
@@ -739,8 +742,15 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
 	}
     }
 
-    /* Otherwise we need to render the trapezoids to a mask and composite
-     * in the usual fashion.
+    /* No fast path, exclude self-intersections and clip trapezoids. */
+    if (traps->has_intersections) {
+	status = _cairo_bentley_ottmann_tessellate_traps (traps);
+	if (unlikely (status))
+	    return status;
+    }
+
+    /* Otherwise render the trapezoids to a mask and composite in the usual
+     * fashion.
      */
     if (_cairo_operator_bounded_by_mask (op)) {
         cairo_rectangle_int_t trap_extents;
@@ -754,20 +764,20 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
 
     traps_info.traps = traps;
     traps_info.antialias = antialias;
+
     return _clip_and_composite (clip, op, src,
 				_composite_traps_draw_func,
 				&traps_info, dst, extents);
 }
 
 typedef struct {
-    cairo_path_fixed_t		*path;
+    cairo_polygon_t		*polygon;
     cairo_fill_rule_t		 fill_rule;
-    double			 tolerance;
     cairo_antialias_t		 antialias;
-} cairo_composite_spans_fill_info_t;
+} cairo_composite_spans_info_t;
 
 static cairo_status_t
-_composite_spans_fill_func (void                          *closure,
+_composite_spans_draw_func (void                          *closure,
 			    cairo_operator_t               op,
 			    const cairo_pattern_t         *src,
 			    cairo_surface_t               *dst,
@@ -777,7 +787,7 @@ _composite_spans_fill_func (void                          *closure,
 			    cairo_region_t		  *clip_region)
 {
     cairo_composite_rectangles_t rects;
-    cairo_composite_spans_fill_info_t *info = closure;
+    cairo_composite_spans_info_t *info = closure;
 
     _cairo_composite_rectangles_init (
 	&rects, extents->x, extents->y,
@@ -789,12 +799,12 @@ _composite_spans_fill_func (void                          *closure,
     rects.dst.x -= dst_x;
     rects.dst.y -= dst_y;
 
-    return _cairo_path_fixed_fill_using_spans (op, src, info->path, dst,
-					       info->fill_rule,
-					       info->tolerance,
-					       info->antialias,
-					       &rects,
-					       clip_region);
+    return _cairo_surface_composite_polygon (dst, op, src,
+					     info->fill_rule,
+					     info->antialias,
+					     &rects,
+					     info->polygon,
+					     clip_region);
 }
 
 static cairo_bool_t
@@ -930,11 +940,12 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
 				cairo_antialias_t	 antialias,
 				cairo_clip_t		*clip)
 {
-    cairo_status_t status;
+    cairo_polygon_t polygon;
     cairo_traps_t traps;
     cairo_box_t box;
     cairo_rectangle_int_t extents;
     cairo_bool_t is_bounded;
+    cairo_status_t status;
 
     is_bounded = _cairo_surface_get_extents (surface, &extents);
     assert (is_bounded || clip);
@@ -952,22 +963,70 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
 
     _cairo_box_from_rectangle (&box, &extents);
 
+    _cairo_polygon_init (&polygon);
+    _cairo_polygon_limit (&polygon, &box);
+
     _cairo_traps_init (&traps);
     _cairo_traps_limit (&traps, &box);
 
-    status = _cairo_path_fixed_stroke_to_traps (path,
-						stroke_style,
-						ctm, ctm_inverse,
-						tolerance,
-						&traps);
-    if (unlikely (status))
-	goto FAIL;
+    if (path->is_rectilinear) {
+	status = _cairo_path_fixed_stroke_rectilinear_to_traps (path,
+								stroke_style,
+								ctm,
+								&traps);
+	if (likely (status == CAIRO_STATUS_SUCCESS))
+	    goto DO_TRAPS;
 
-    status = _clip_and_composite_trapezoids (source, op,
-					     surface, &traps, antialias,
+	if (_cairo_status_is_error (status))
+	    goto CLEANUP;
+    }
+
+    status = _cairo_path_fixed_stroke_to_polygon (path,
+						  stroke_style,
+						  ctm, ctm_inverse,
+						  tolerance,
+						  &polygon);
+    if (unlikely (status))
+	goto CLEANUP;
+
+    if (_cairo_operator_bounded_by_mask (op)) {
+	cairo_rectangle_int_t polygon_extents;
+
+	_cairo_box_round_to_rectangle (&polygon.extents, &polygon_extents);
+	if (! _cairo_rectangle_intersect (&extents, &polygon_extents))
+	    goto CLEANUP;
+    }
+
+    if (antialias != CAIRO_ANTIALIAS_NONE &&
+	_cairo_surface_check_span_renderer (op, source, surface,
+					    antialias, NULL))
+    {
+	cairo_composite_spans_info_t info;
+
+	info.polygon = &polygon;
+	info.fill_rule = CAIRO_FILL_RULE_WINDING;
+	info.antialias = antialias;
+
+	status = _clip_and_composite (clip, op, source,
+				      _composite_spans_draw_func,
+				      &info, surface, &extents);
+	goto CLEANUP;
+    }
+
+    /* Fall back to trapezoid fills. */
+    status = _cairo_bentley_ottmann_tessellate_polygon (&traps,
+							&polygon,
+							CAIRO_FILL_RULE_WINDING);
+    if (unlikely (status))
+	goto CLEANUP;
+
+  DO_TRAPS:
+    status = _clip_and_composite_trapezoids (source, op, surface,
+					     &traps, antialias,
 					     clip, &extents);
-  FAIL:
+  CLEANUP:
     _cairo_traps_fini (&traps);
+    _cairo_polygon_fini (&polygon);
 
     return status;
 }
@@ -982,11 +1041,12 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
 			      cairo_antialias_t		 antialias,
 			      cairo_clip_t		*clip)
 {
-    cairo_status_t status;
+    cairo_polygon_t polygon;
     cairo_traps_t traps;
     cairo_box_t box;
     cairo_rectangle_int_t extents;
     cairo_bool_t is_bounded;
+    cairo_status_t status;
 
     is_bounded = _cairo_surface_get_extents (surface, &extents);
     assert (is_bounded || clip);
@@ -1002,71 +1062,69 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
     if (! _rectangle_intersect_clip (&extents, clip))
 	return CAIRO_STATUS_SUCCESS;
 
-    /* XXX future direction:
-       status = _cairo_path_fixed_fill_to_region (path, fill_rule, &region);
-       if (status != CAIRO_STATUS_INT_UNSUPPORTED) {
-	   if (unlikely (status))
-	       return status;
-
-         status = _clip_and_composite_region ();
-	 if (status !=  CAIRO_INT_STATUS_UNSUPPORTED)
-	     return status;
-	}
-      */
-
-    /* Ask if the surface would like to render this combination of
-     * op/source/dst/antialias with spans or not, but don't actually
-     * make a renderer yet.  We'll try to hit the region optimisations
-     * in _clip_and_composite_trapezoids() if it looks like the path
-     * is a region. */
-    /* TODO: Until we have a mono scan converter we won't even try
-     * to use spans for CAIRO_ANTIALIAS_NONE. */
-    /* TODO: The region filling code should be lifted from
-     * _clip_and_composite_trapezoids() and given first priority
-     * explicitly before deciding between spans and trapezoids. */
-    if (antialias != CAIRO_ANTIALIAS_NONE && ! path->is_rectilinear &&
-	_cairo_surface_check_span_renderer (
-	    op, source, surface, antialias, NULL))
-    {
-	cairo_composite_spans_fill_info_t info;
-	info.path = path;
-	info.fill_rule = fill_rule;
-	info.tolerance = tolerance;
-	info.antialias = antialias;
-
-	if (_cairo_operator_bounded_by_mask (op)) {
-	    cairo_rectangle_int_t path_extents;
-
-	    _cairo_path_fixed_approximate_clip_extents (path,
-							&path_extents);
-	    if (! _cairo_rectangle_intersect (&extents, &path_extents))
-		return CAIRO_STATUS_SUCCESS;
-	}
-
-	return _clip_and_composite (clip, op, source,
-				    _composite_spans_fill_func,
-				    &info,
-				    surface,
-				    &extents);
-    }
-
-    /* Fall back to trapezoid fills. */
     _cairo_box_from_rectangle (&box, &extents);
+
+    _cairo_polygon_init (&polygon);
+    _cairo_polygon_limit (&polygon, &box);
+
     _cairo_traps_init (&traps);
     _cairo_traps_limit (&traps, &box);
 
-    status = _cairo_path_fixed_fill_to_traps (path,
-					      fill_rule,
-					      tolerance,
-					      &traps);
-    if (unlikely (status))
-	goto FAIL;
+    if (path->is_rectilinear) {
+	status = _cairo_path_fixed_fill_rectilinear_to_traps (path,
+							      fill_rule,
+							      &traps);
+	if (likely (status == CAIRO_STATUS_SUCCESS))
+	    goto DO_TRAPS;
 
+	if (_cairo_status_is_error (status))
+	    goto CLEANUP;
+    }
+
+    status = _cairo_path_fixed_fill_to_polygon (path,
+						tolerance,
+						&polygon);
+    if (unlikely (status))
+	goto CLEANUP;
+
+    if (_cairo_operator_bounded_by_mask (op)) {
+	cairo_rectangle_int_t polygon_extents;
+
+	_cairo_box_round_to_rectangle (&polygon.extents, &polygon_extents);
+	if (! _cairo_rectangle_intersect (&extents, &polygon_extents))
+	    goto CLEANUP;
+    }
+
+    if (antialias != CAIRO_ANTIALIAS_NONE &&
+	_cairo_surface_check_span_renderer (op, source, surface,
+					    antialias, NULL))
+    {
+	cairo_composite_spans_info_t info;
+
+	info.polygon = &polygon;
+	info.fill_rule = fill_rule;
+	info.antialias = antialias;
+
+	status = _clip_and_composite (clip, op, source,
+				      _composite_spans_draw_func,
+				      &info, surface, &extents);
+	goto CLEANUP;
+    }
+
+    /* Fall back to trapezoid fills. */
+    status = _cairo_bentley_ottmann_tessellate_polygon (&traps,
+							&polygon,
+							fill_rule);
+    if (unlikely (status))
+	goto CLEANUP;
+
+  DO_TRAPS:
     status = _clip_and_composite_trapezoids (source, op, surface,
 					     &traps, antialias,
 					     clip, &extents);
-  FAIL:
+  CLEANUP:
     _cairo_traps_fini (&traps);
+    _cairo_polygon_fini (&polygon);
 
     return status;
 }

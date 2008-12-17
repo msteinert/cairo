@@ -69,6 +69,24 @@ New experimental backends:
 	    more offloading onto the GPU.
 	    The initial work on the backend was performed by Eric Anholt.
 
+Long standing bugs fixed:
+
+  Self-intersecting strokes.
+
+    A long standing bug where the coverage from overlapping semi-opaque
+    strokes (including neighbouring edges) was simply summed in lieu of
+    a costly global calculation has been fixed (by performing the costly
+    global calculation!) In order to mitigate the extra cost, the
+    tessellator has been overhauled and tune, which handles the fallback
+    for when we are unable to use the new span rasteriser on the stroke
+    (e.g. when using the current RENDER protocol). The large number of
+    pixel artefacts that implementing self-intersection elimination
+    removes is ample justification for the potential performance
+    regression. If you unfortunately do suffer a substantial performance
+    regression in your application, please consider obtaining a
+    cairo-trace and submitting it to us for analysis and inclusion into
+    our performance suite.
+
 
 Snapshot 1.9.2 (2009-06-12)
 ===========================

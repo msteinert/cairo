@@ -952,6 +952,7 @@ typedef struct _cairo_traps {
     cairo_status_t status;
 
     cairo_box_t extents;
+    cairo_box_t limits;
 
     unsigned int maybe_region : 1; /* hint: 0 implies that it cannot be */
 
@@ -962,7 +963,7 @@ typedef struct _cairo_traps {
     cairo_trapezoid_t  traps_embedded[4];
 
     cairo_bool_t has_limits;
-    cairo_box_t limits;
+    cairo_bool_t has_intersections;
 } cairo_traps_t;
 
 #define CAIRO_FONT_SLANT_DEFAULT   CAIRO_FONT_SLANT_NORMAL
@@ -1609,12 +1610,35 @@ _cairo_path_fixed_in_fill (const cairo_path_fixed_t	*path,
 
 /* cairo-path-fill.c */
 cairo_private cairo_status_t
-_cairo_path_fixed_fill_to_traps (const cairo_path_fixed_t *path,
-				 cairo_fill_rule_t   fill_rule,
-				 double              tolerance,
-				 cairo_traps_t      *traps);
+_cairo_path_fixed_fill_to_polygon (const cairo_path_fixed_t *path,
+				   double              tolerance,
+				   cairo_polygon_t      *polygon);
+
+cairo_private cairo_int_status_t
+_cairo_path_fixed_fill_rectilinear_to_traps (const cairo_path_fixed_t *path,
+					     cairo_fill_rule_t fill_rule,
+					     cairo_traps_t    *traps);
+
+cairo_private cairo_status_t
+_cairo_path_fixed_fill_to_traps (const cairo_path_fixed_t   *path,
+				 cairo_fill_rule_t	     fill_rule,
+				 double			     tolerance,
+				 cairo_traps_t		    *traps);
 
 /* cairo-path-stroke.c */
+cairo_private cairo_status_t
+_cairo_path_fixed_stroke_to_polygon (const cairo_path_fixed_t	*path,
+				     cairo_stroke_style_t	*stroke_style,
+				     const cairo_matrix_t	*ctm,
+				     const cairo_matrix_t	*ctm_inverse,
+				     double		 tolerance,
+				     cairo_polygon_t	*polygon);
+
+cairo_private cairo_int_status_t
+_cairo_path_fixed_stroke_rectilinear_to_traps (const cairo_path_fixed_t	*path,
+					       cairo_stroke_style_t	*stroke_style,
+					       const cairo_matrix_t	*ctm,
+					       cairo_traps_t		*traps);
 cairo_private cairo_status_t
 _cairo_path_fixed_stroke_to_traps (const cairo_path_fixed_t	*path,
 				   cairo_stroke_style_t	*stroke_style,
@@ -1622,6 +1646,22 @@ _cairo_path_fixed_stroke_to_traps (const cairo_path_fixed_t	*path,
 				   const cairo_matrix_t	*ctm_inverse,
 				   double		 tolerance,
 				   cairo_traps_t	*traps);
+
+cairo_private cairo_status_t
+_cairo_path_fixed_stroke_to_shaper (cairo_path_fixed_t	*path,
+				   cairo_stroke_style_t	*stroke_style,
+				   cairo_matrix_t	*ctm,
+				   cairo_matrix_t	*ctm_inverse,
+				   double		 tolerance,
+				   cairo_status_t (*add_triangle) (void *closure,
+								   const cairo_point_t triangle[3]),
+				   cairo_status_t (*add_triangle_fan) (void *closure,
+								       const cairo_point_t *midpt,
+								       const cairo_point_t *points,
+								       int npoints),
+				   cairo_status_t (*add_quad) (void *closure,
+							       const cairo_point_t quad[4]),
+				   void *closure);
 
 /* cairo-scaled-font.c */
 
@@ -2201,45 +2241,21 @@ cairo_private int
 _cairo_pen_find_active_ccw_vertex_index (const cairo_pen_t *pen,
 					 const cairo_slope_t *slope);
 
-typedef struct _cairo_pen_stroke_spline {
-    cairo_pen_t pen;
-    cairo_spline_t spline;
-    cairo_polygon_t polygon;
-    cairo_point_t last_point;
-    cairo_point_t forward_hull_point;
-    cairo_point_t backward_hull_point;
-    int forward_vertex;
-    int backward_vertex;
-} cairo_pen_stroke_spline_t;
-
-cairo_private cairo_int_status_t
-_cairo_pen_stroke_spline_init (cairo_pen_stroke_spline_t *stroker,
-			       const cairo_pen_t *pen,
-			       const cairo_point_t *a,
-			       const cairo_point_t *b,
-			       const cairo_point_t *c,
-			       const cairo_point_t *d);
-
-cairo_private cairo_status_t
-_cairo_pen_stroke_spline (cairo_pen_stroke_spline_t	*pen,
-			  double			 tolerance,
-			  cairo_traps_t			*traps);
-
-cairo_private void
-_cairo_pen_stroke_spline_fini (cairo_pen_stroke_spline_t *stroker);
-
 /* cairo-polygon.c */
 cairo_private void
 _cairo_polygon_init (cairo_polygon_t *polygon);
 
 cairo_private void
-_cairo_polygon_fini (cairo_polygon_t *polygon);
+_cairo_polygon_limit (cairo_polygon_t	*polygon,
+		      const cairo_box_t *limits);
 
 cairo_private void
-_cairo_polygon_add_edge (cairo_polygon_t *polygon,
-			 const cairo_point_t *p1,
-			 const cairo_point_t *p2,
-			 int dir);
+_cairo_polygon_fini (cairo_polygon_t *polygon);
+
+cairo_private cairo_status_t
+_cairo_polygon_add_external_edge (void *polygon,
+				  const cairo_point_t *p1,
+				  const cairo_point_t *p2);
 
 cairo_private void
 _cairo_polygon_move_to (cairo_polygon_t *polygon,
@@ -2252,7 +2268,7 @@ _cairo_polygon_line_to (cairo_polygon_t *polygon,
 cairo_private void
 _cairo_polygon_close (cairo_polygon_t *polygon);
 
-#define _cairo_polygon_status(P) (P)->status
+#define _cairo_polygon_status(P) ((cairo_polygon_t *) (P))->status
 
 /* cairo-spline.c */
 cairo_private cairo_bool_t
@@ -2310,6 +2326,9 @@ _cairo_matrix_is_integer_translation(const cairo_matrix_t *matrix,
 				     int *itx, int *ity);
 
 cairo_private cairo_bool_t
+_cairo_matrix_has_unity_scale (const cairo_matrix_t *matrix);
+
+cairo_private cairo_bool_t
 _cairo_matrix_is_pixel_exact (const cairo_matrix_t *matrix) cairo_pure;
 
 cairo_private double
@@ -2329,10 +2348,6 @@ _cairo_traps_init (cairo_traps_t *traps);
 cairo_private void
 _cairo_traps_limit (cairo_traps_t	*traps,
 		    cairo_box_t		*limits);
-
-cairo_private cairo_bool_t
-_cairo_traps_get_limit (cairo_traps_t *traps,
-                        cairo_box_t   *limits);
 
 cairo_private void
 _cairo_traps_init_box (cairo_traps_t *traps,
@@ -2371,6 +2386,9 @@ cairo_private cairo_status_t
 _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t         *traps,
 					   const cairo_polygon_t *polygon,
 					   cairo_fill_rule_t      fill_rule);
+
+cairo_private cairo_status_t
+_cairo_bentley_ottmann_tessellate_traps (cairo_traps_t *traps);
 
 cairo_private int
 _cairo_traps_contain (const cairo_traps_t *traps,

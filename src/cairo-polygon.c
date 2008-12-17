@@ -49,6 +49,18 @@ _cairo_polygon_init (cairo_polygon_t *polygon)
     polygon->edges_size = ARRAY_LENGTH (polygon->edges_embedded);
 
     polygon->has_current_point = FALSE;
+    polygon->has_limits = FALSE;
+
+    polygon->extents.p1.x = polygon->extents.p1.y = INT32_MAX;
+    polygon->extents.p2.x = polygon->extents.p2.y = INT32_MIN;
+}
+
+void
+_cairo_polygon_limit (cairo_polygon_t	*polygon,
+		      const cairo_box_t *limits)
+{
+    polygon->has_limits = TRUE;
+    polygon->limits = *limits;
 }
 
 void
@@ -93,17 +105,16 @@ _cairo_polygon_grow (cairo_polygon_t *polygon)
     return TRUE;
 }
 
-void
-_cairo_polygon_add_edge (cairo_polygon_t *polygon,
-			 const cairo_point_t *p1,
-			 const cairo_point_t *p2,
-			 int		      dir)
+static void
+_add_edge (cairo_polygon_t *polygon,
+	   const cairo_point_t *p1,
+	   const cairo_point_t *p2,
+	   int top, int bottom,
+	   int dir)
 {
     cairo_edge_t *edge;
 
-    /* drop horizontal edges */
-    if (p1->y == p2->y)
-	return;
+    assert (top < bottom);
 
     if (polygon->num_edges == polygon->edges_size) {
 	if (! _cairo_polygon_grow (polygon))
@@ -111,26 +122,247 @@ _cairo_polygon_add_edge (cairo_polygon_t *polygon,
     }
 
     edge = &polygon->edges[polygon->num_edges++];
-    if (p1->y < p2->y) {
-	edge->edge.p1 = *p1;
-	edge->edge.p2 = *p2;
-	edge->dir = dir;
-    } else {
-	edge->edge.p1 = *p2;
-	edge->edge.p2 = *p1;
-	edge->dir = -dir;
+    edge->line.p1 = *p1;
+    edge->line.p2 = *p2;
+    edge->top = top;
+    edge->bottom = bottom;
+    edge->dir = dir;
+
+    if (top < polygon->extents.p1.y)
+	polygon->extents.p1.y = top;
+    if (bottom > polygon->extents.p2.y)
+	polygon->extents.p2.y = bottom;
+
+    if (p1->x < polygon->extents.p1.x || p1->x > polygon->extents.p2.x) {
+	cairo_fixed_t x = p1->x;
+	if (top != p1->y)
+	    x = _cairo_edge_compute_intersection_x_for_y (p1, p2, top);
+	if (x < polygon->extents.p1.x)
+	    polygon->extents.p1.x = x;
+	if (x > polygon->extents.p2.x)
+	    polygon->extents.p2.x = x;
+    }
+
+    if (p2->x < polygon->extents.p1.x || p2->x > polygon->extents.p2.x) {
+	cairo_fixed_t x = p2->x;
+	if (bottom != p2->y)
+	    x = _cairo_edge_compute_intersection_x_for_y (p1, p2, bottom);
+	if (x < polygon->extents.p1.x)
+	    polygon->extents.p1.x = x;
+	if (x > polygon->extents.p2.x)
+	    polygon->extents.p2.x = x;
     }
 }
+
+static void
+_add_clipped_edge (cairo_polygon_t *polygon,
+		   const cairo_point_t *p1,
+		   const cairo_point_t *p2,
+		   int dir)
+{
+    cairo_point_t p[2];
+    int top_y, bot_y;
+
+    if (p1->x <= polygon->limits.p1.x && p2->x <= polygon->limits.p1.x)
+    {
+	p[0].x = polygon->limits.p1.x;
+	p[0].y = polygon->limits.p1.y;
+	top_y = p1->y;
+	if (top_y < p[0].y)
+	    top_y = p[0].y;
+
+	p[1].x = polygon->limits.p1.x;
+	p[1].y = polygon->limits.p2.y;
+	bot_y = p2->y;
+	if (bot_y > p[1].y)
+	    bot_y = p[1].y;
+
+	_add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
+    }
+    else if (p1->x >= polygon->limits.p2.x && p2->x >= polygon->limits.p2.x)
+    {
+	p[0].x = polygon->limits.p2.x;
+	p[0].y = polygon->limits.p1.y;
+	top_y = p1->y;
+	if (top_y < p[0].y)
+	    top_y = p[0].y;
+
+	p[1].x = polygon->limits.p2.x;
+	p[1].y = polygon->limits.p2.y;
+	bot_y = p2->y;
+	if (bot_y > p[1].y)
+	    bot_y = p[1].y;
+
+	_add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
+    }
+    else if (p1->x >= polygon->limits.p1.x && p2->x >= polygon->limits.p1.x &&
+	     p1->x <= polygon->limits.p2.x && p2->x <= polygon->limits.p2.x)
+    {
+	top_y = p1->y;
+	if (top_y < polygon->limits.p1.y)
+	    top_y = polygon->limits.p1.y;
+
+	bot_y = p2->y;
+	if (bot_y > polygon->limits.p2.y)
+	    bot_y = polygon->limits.p2.y;
+
+	_add_edge (polygon, p1, p2, top_y, bot_y, dir);
+    }
+    else
+    {
+	int left_y, right_y;
+	int p1_y, p2_y;
+
+	left_y = _cairo_edge_compute_intersection_y_for_x (p1, p2,
+						     polygon->limits.p1.x);
+	right_y = _cairo_edge_compute_intersection_y_for_x (p1, p2,
+						      polygon->limits.p2.x);
+
+	if (left_y == right_y) /* horizontal within bounds */
+	    return;
+
+	p1_y = p1->y;
+	p2_y = p2->y;
+
+	if (left_y < right_y) {
+	    if (p1->x < polygon->limits.p1.x && left_y > polygon->limits.p1.y)
+	    {
+		p[0].x = polygon->limits.p1.x;
+		p[0].y = polygon->limits.p1.y;
+		top_y = p1_y;
+		if (top_y < p[0].y)
+		    top_y = p[0].y;
+
+		p[1].x = polygon->limits.p1.x;
+		p[1].y = polygon->limits.p2.y;
+		bot_y = left_y;
+		if (bot_y > p[1].y)
+		    bot_y = p[1].y;
+
+		if (bot_y > top_y)
+		    _add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
+		p1_y = bot_y;
+	    }
+
+	    if (p2->x > polygon->limits.p2.x && right_y < polygon->limits.p2.y)
+	    {
+		p[0].x = polygon->limits.p2.x;
+		p[0].y = polygon->limits.p1.y;
+		top_y = right_y;
+		if (top_y < p[0].y)
+		    top_y = p[0].y;
+
+		p[1].x = polygon->limits.p2.x;
+		p[1].y = polygon->limits.p2.y;
+		bot_y = p2_y;
+		if (bot_y > p[1].y)
+		    bot_y = p[1].y;
+
+		if (bot_y > top_y)
+		    _add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
+		p2_y = top_y;
+	    }
+	} else {
+	    if (p1->x > polygon->limits.p2.x && right_y > polygon->limits.p1.y)
+	    {
+		p[0].x = polygon->limits.p2.x;
+		p[0].y = polygon->limits.p1.y;
+		top_y = p1_y;
+		if (top_y < p[0].y)
+		    top_y = p[0].y;
+
+		p[1].x = polygon->limits.p2.x;
+		p[1].y = polygon->limits.p2.y;
+		bot_y = right_y;
+		if (bot_y > p[1].y)
+		    bot_y = p[1].y;
+
+		if (bot_y > top_y)
+		    _add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
+		p1_y = bot_y;
+	    }
+
+	    if (p2->x < polygon->limits.p1.x && left_y < polygon->limits.p2.y)
+	    {
+		p[0].x = polygon->limits.p1.x;
+		p[0].y = polygon->limits.p1.y;
+		top_y = left_y;
+		if (top_y < p[0].y)
+		    top_y = p[0].y;
+
+		p[1].x = polygon->limits.p1.x;
+		p[1].y = polygon->limits.p2.y;
+		bot_y = p2_y;
+		if (bot_y > p[1].y)
+		    bot_y = p[1].y;
+
+		if (bot_y > top_y)
+		    _add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
+		p2_y = top_y;
+	    }
+	}
+
+	if (p1_y < polygon->limits.p1.y)
+	    p1_y = polygon->limits.p1.y;
+	if (p2_y > polygon->limits.p2.y)
+	    p2_y = polygon->limits.p2.y;
+	if (p2_y > p1_y)
+	    _add_edge (polygon, p1, p2, p1_y, p2_y, dir);
+    }
+}
+
+static void
+_cairo_polygon_add_edge (cairo_polygon_t *polygon,
+			 const cairo_point_t *p1,
+			 const cairo_point_t *p2)
+{
+    int dir;
+
+    /* drop horizontal edges */
+    if (p1->y == p2->y)
+	return;
+
+    if (p1->y < p2->y) {
+	dir = 1;
+    } else {
+	const cairo_point_t *t;
+	t = p1, p1 = p2, p2 = t;
+	dir = -1;
+    }
+
+    if (polygon->has_limits) {
+	if (p2->y <= polygon->limits.p1.y)
+	    return;
+
+	if (p1->y >= polygon->limits.p2.y)
+	    return;
+
+	_add_clipped_edge (polygon, p1, p2, dir);
+    } else
+	_add_edge (polygon, p1, p2, p1->y, p2->y, dir);
+}
+
+cairo_status_t
+_cairo_polygon_add_external_edge (void *polygon,
+				  const cairo_point_t *p1,
+				  const cairo_point_t *p2)
+{
+    _cairo_polygon_add_edge (polygon, p1, p2);
+    return _cairo_polygon_status (polygon);
+}
+
+/* flattened path operations */
 
 void
 _cairo_polygon_move_to (cairo_polygon_t *polygon,
 			const cairo_point_t *point)
 {
-    if (! polygon->has_current_point)
+    if (! polygon->has_current_point) {
 	polygon->first_point = *point;
+	polygon->has_current_point = TRUE;
+    }
 
     polygon->current_point = *point;
-    polygon->has_current_point = TRUE;
 }
 
 void
@@ -138,7 +370,7 @@ _cairo_polygon_line_to (cairo_polygon_t *polygon,
 			const cairo_point_t *point)
 {
     if (polygon->has_current_point)
-	_cairo_polygon_add_edge (polygon, &polygon->current_point, point, 1);
+	_cairo_polygon_add_edge (polygon, &polygon->current_point, point);
 
     _cairo_polygon_move_to (polygon, point);
 }
@@ -149,8 +381,7 @@ _cairo_polygon_close (cairo_polygon_t *polygon)
     if (polygon->has_current_point) {
 	_cairo_polygon_add_edge (polygon,
 				 &polygon->current_point,
-				 &polygon->first_point,
-				 1);
+				 &polygon->first_point);
 
 	polygon->has_current_point = FALSE;
     }

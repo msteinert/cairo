@@ -1184,7 +1184,7 @@ _cairo_gstate_stroke_extents (cairo_gstate_t	 *gstate,
 						&gstate->ctm_inverse,
 						gstate->tolerance,
 						&traps);
-    if (status == CAIRO_STATUS_SUCCESS) {
+    if (likely (status == CAIRO_STATUS_SUCCESS)) {
 	_cairo_gstate_traps_extents_to_user_rectangle (gstate, &traps,
 						       x1, y1, x2, y2);
     }
@@ -1209,7 +1209,7 @@ _cairo_gstate_fill_extents (cairo_gstate_t     *gstate,
 					      gstate->fill_rule,
 					      gstate->tolerance,
 					      &traps);
-    if (status == CAIRO_STATUS_SUCCESS) {
+    if (likely (status == CAIRO_STATUS_SUCCESS)) {
 	_cairo_gstate_traps_extents_to_user_rectangle (gstate, &traps,
 						       x1, y1, x2, y2);
     }

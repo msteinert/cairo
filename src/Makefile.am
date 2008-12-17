@@ -99,5 +99,7 @@ COMPILE_ARGS = $(PREPROCESS_ARGS) $(AM_CFLAGS) $(CFLAGS)
 # cairo has been compiled with symbol hiding.
 .c.i: $(cairoinclude_HEADERS) $(nodist_cairoinclude_HEADERS) cairoint.h $(top_builddir)/config.h
 	$(CPP) $(PREPROCESS_ARGS) $< -o $@
+.c.s: $(cairoinclude_HEADERS) $(nodist_cairoinclude_HEADERS) cairoint.h $(top_builddir)/config.h
+	$(CC) $(COMPILE_ARGS) $< -S -o $@
 
 include $(srcdir)/Makefile.am.analysis

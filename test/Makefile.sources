@@ -150,7 +150,8 @@ test_sources = \
 	png.c						\
 	push-group.c					\
 	radial-gradient.c				\
-	random-intersections.c				\
+	random-intersections-eo.c			\
+	random-intersections-nonzero.c			\
 	rectangle-rounding-error.c			\
 	rectilinear-fill.c				\
 	rectilinear-miter-limit.c			\

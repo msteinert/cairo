@@ -39,29 +39,25 @@
 
 typedef struct cairo_filler {
     double tolerance;
-    cairo_traps_t *traps;
-
     cairo_point_t current_point;
-
-    cairo_polygon_t polygon;
+    cairo_polygon_t *polygon;
 } cairo_filler_t;
 
 static void
-_cairo_filler_init (cairo_filler_t *filler, double tolerance, cairo_traps_t *traps)
+_cairo_filler_init (cairo_filler_t *filler,
+		    double tolerance,
+		    cairo_polygon_t *polygon)
 {
     filler->tolerance = tolerance;
-    filler->traps = traps;
+    filler->polygon = polygon;
 
     filler->current_point.x = 0;
     filler->current_point.y = 0;
-
-    _cairo_polygon_init (&filler->polygon);
 }
 
 static void
 _cairo_filler_fini (cairo_filler_t *filler)
 {
-    _cairo_polygon_fini (&filler->polygon);
 }
 
 static cairo_status_t
@@ -69,14 +65,14 @@ _cairo_filler_move_to (void *closure,
 		       const cairo_point_t *point)
 {
     cairo_filler_t *filler = closure;
-    cairo_polygon_t *polygon = &filler->polygon;
+    cairo_polygon_t *polygon = filler->polygon;
 
     _cairo_polygon_close (polygon);
     _cairo_polygon_move_to (polygon, point);
 
     filler->current_point = *point;
 
-    return _cairo_polygon_status (&filler->polygon);
+    return _cairo_polygon_status (filler->polygon);
 }
 
 static cairo_status_t
@@ -84,13 +80,13 @@ _cairo_filler_line_to (void *closure,
 		       const cairo_point_t *point)
 {
     cairo_filler_t *filler = closure;
-    cairo_polygon_t *polygon = &filler->polygon;
+    cairo_polygon_t *polygon = filler->polygon;
 
     _cairo_polygon_line_to (polygon, point);
 
     filler->current_point = *point;
 
-    return _cairo_polygon_status (&filler->polygon);
+    return _cairo_polygon_status (filler->polygon);
 }
 
 static cairo_status_t
@@ -103,11 +99,10 @@ _cairo_filler_curve_to (void *closure,
     cairo_spline_t spline;
 
     if (! _cairo_spline_init (&spline,
-			      _cairo_filler_line_to,
-			      filler,
+			      _cairo_filler_line_to, filler,
 			      &filler->current_point, b, c, d))
     {
-	return CAIRO_STATUS_SUCCESS;
+	return _cairo_filler_line_to (closure, d);
     }
 
     return _cairo_spline_decompose (&spline, filler->tolerance);
@@ -117,36 +112,22 @@ static cairo_status_t
 _cairo_filler_close_path (void *closure)
 {
     cairo_filler_t *filler = closure;
-    cairo_polygon_t *polygon = &filler->polygon;
+    cairo_polygon_t *polygon = filler->polygon;
 
     _cairo_polygon_close (polygon);
 
     return _cairo_polygon_status (polygon);
 }
 
-static cairo_int_status_t
-_cairo_path_fixed_fill_rectangle (const cairo_path_fixed_t	*path,
-				  cairo_fill_rule_t	 fill_rule,
-				  cairo_traps_t		*traps);
-
 cairo_status_t
-_cairo_path_fixed_fill_to_traps (const cairo_path_fixed_t *path,
-				 cairo_fill_rule_t   fill_rule,
-				 double              tolerance,
-				 cairo_traps_t      *traps)
+_cairo_path_fixed_fill_to_polygon (const cairo_path_fixed_t *path,
+				   double tolerance,
+				   cairo_polygon_t *polygon)
 {
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_filler_t filler;
+    cairo_status_t status;
 
-    traps->maybe_region = path->maybe_fill_region;
-
-    /* Before we do anything else, we use a special-case filler for
-     * a device-axis aligned rectangle if possible. */
-    status = _cairo_path_fixed_fill_rectangle (path, fill_rule, traps);
-    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	return status;
-
-    _cairo_filler_init (&filler, tolerance, traps);
+    _cairo_filler_init (&filler, tolerance, polygon);
 
     status = _cairo_path_fixed_interpret (path,
 					  CAIRO_DIRECTION_FORWARD,
@@ -156,24 +137,47 @@ _cairo_path_fixed_fill_to_traps (const cairo_path_fixed_t *path,
 					  _cairo_filler_close_path,
 					  &filler);
     if (unlikely (status))
-	goto BAIL;
+	return status;
 
-    _cairo_polygon_close (&filler.polygon);
-    status = _cairo_polygon_status (&filler.polygon);
-    if (unlikely (status))
-	goto BAIL;
-
-    status = _cairo_bentley_ottmann_tessellate_polygon (filler.traps,
-							&filler.polygon,
-							fill_rule);
-    if (unlikely (status))
-	goto BAIL;
-
-BAIL:
+    _cairo_polygon_close (polygon);
+    status = _cairo_polygon_status (polygon);
     _cairo_filler_fini (&filler);
 
     return status;
 }
+
+cairo_status_t
+_cairo_path_fixed_fill_to_traps (const cairo_path_fixed_t *path,
+				 cairo_fill_rule_t fill_rule,
+				 double tolerance,
+				 cairo_traps_t *traps)
+{
+    cairo_polygon_t polygon;
+    cairo_status_t status;
+
+    if (path->is_rectilinear) {
+	status = _cairo_path_fixed_fill_rectilinear_to_traps (path,
+							      fill_rule,
+							      traps);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
+
+    _cairo_polygon_init (&polygon);
+    status = _cairo_path_fixed_fill_to_polygon (path,
+						tolerance,
+						&polygon);
+    if (unlikely (status))
+	goto CLEANUP;
+
+    status = _cairo_bentley_ottmann_tessellate_polygon (traps, &polygon,
+							fill_rule);
+
+  CLEANUP:
+    _cairo_polygon_fini (&polygon);
+    return status;
+}
+
 
 /* This special-case filler supports only a path that describes a
  * device-axis aligned rectangle. It exists to avoid the overhead of
@@ -182,15 +186,14 @@ BAIL:
  * If the path described anything but a device-axis aligned rectangle,
  * this function will return %CAIRO_INT_STATUS_UNSUPPORTED.
  */
-static cairo_int_status_t
-_cairo_path_fixed_fill_rectangle (const cairo_path_fixed_t	*path,
-				  cairo_fill_rule_t	 fill_rule,
-				  cairo_traps_t		*traps)
+cairo_int_status_t
+_cairo_path_fixed_fill_rectilinear_to_traps (const cairo_path_fixed_t	*path,
+					     cairo_fill_rule_t	 fill_rule,
+					     cairo_traps_t		*traps)
 {
     cairo_box_t box;
 
-    if (! path->is_rectilinear)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+    assert (path->is_rectilinear);
 
     if (_cairo_path_fixed_is_box (path, &box)) {
 	if (box.p1.x > box.p2.x) {
