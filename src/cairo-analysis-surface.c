@@ -446,7 +446,6 @@ _cairo_analysis_surface_stroke (void			*abstract_surface,
 {
     cairo_analysis_surface_t *surface = abstract_surface;
     cairo_status_t	     status, backend_status;
-    cairo_traps_t            traps;
     cairo_rectangle_int_t    extents;
     cairo_bool_t             is_empty;
 
@@ -478,26 +477,22 @@ _cairo_analysis_surface_stroke (void			*abstract_surface,
     is_empty = _cairo_rectangle_intersect (&extents, &surface->current_clip);
 
     if (_cairo_operator_bounded_by_mask (op)) {
-	cairo_box_t box;
+	cairo_rectangle_int_t mask_extents;
+	double dx, dy;
 
-	_cairo_box_from_rectangle (&box, &extents);
+	_cairo_path_fixed_approximate_extents (path, &mask_extents);
 
-	_cairo_traps_init (&traps);
-	_cairo_traps_limit (&traps, &box);
-	status = _cairo_path_fixed_stroke_to_traps (path,
-						    style,
-						    ctm, ctm_inverse,
-						    tolerance,
-						    &traps);
-	if (unlikely (status)) {
-	    _cairo_traps_fini (&traps);
-	    return status;
-	}
+	_cairo_stroke_style_max_distance_from_path (style, ctm, &dx, &dy);
 
-	_cairo_traps_extents (&traps, &box);
-	_cairo_traps_fini (&traps);
+	mask_extents.width += mask_extents.x + ceil (dx);
+	mask_extents.x -= ceil (dx);
+	mask_extents.width -= mask_extents.x;
 
-        _cairo_box_round_to_rectangle (&box, &extents);
+	mask_extents.height += mask_extents.y + ceil (dy);
+	mask_extents.y -= ceil (dy);
+	mask_extents.height -= mask_extents.y;
+
+	is_empty = _cairo_rectangle_intersect (&extents, &mask_extents);
     }
     if (stroke_extents)
 	*stroke_extents = extents;
@@ -519,7 +514,6 @@ _cairo_analysis_surface_fill (void			*abstract_surface,
 {
     cairo_analysis_surface_t *surface = abstract_surface;
     cairo_status_t	     status, backend_status;
-    cairo_traps_t            traps;
     cairo_rectangle_int_t    extents;
     cairo_bool_t             is_empty;
 
@@ -550,25 +544,11 @@ _cairo_analysis_surface_fill (void			*abstract_surface,
     is_empty = _cairo_rectangle_intersect (&extents, &surface->current_clip);
 
     if (_cairo_operator_bounded_by_mask (op)) {
-	cairo_box_t box;
+	cairo_rectangle_int_t mask_extents;
 
-	_cairo_box_from_rectangle (&box, &extents);
+	_cairo_path_fixed_approximate_extents (path, &mask_extents);
 
-	_cairo_traps_init (&traps);
-	_cairo_traps_limit (&traps, &box);
-	status = _cairo_path_fixed_fill_to_traps (path,
-						  fill_rule,
-						  tolerance,
-						  &traps);
-	if (unlikely (status)) {
-	    _cairo_traps_fini (&traps);
-	    return status;
-	}
-
-	_cairo_traps_extents (&traps, &box);
-	_cairo_traps_fini (&traps);
-
-        _cairo_box_round_to_rectangle (&box, &extents);
+	is_empty = _cairo_rectangle_intersect (&extents, &mask_extents);
     }
     if (fill_extents)
 	*fill_extents = extents;
