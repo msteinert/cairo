@@ -2067,7 +2067,7 @@ _cairo_surface_has_device_transform (cairo_surface_t *surface);
 /* pixman-required stride alignment in bytes. */
 #define CAIRO_STRIDE_ALIGNMENT (sizeof (uint32_t))
 #define CAIRO_STRIDE_FOR_WIDTH_BPP(w,bpp) \
-   (((bpp)*(w)+7)/8 + CAIRO_STRIDE_ALIGNMENT-1) & ~(CAIRO_STRIDE_ALIGNMENT-1)
+   ((((bpp)*(w)+7)/8 + CAIRO_STRIDE_ALIGNMENT-1) & -CAIRO_STRIDE_ALIGNMENT)
 
 #define CAIRO_CONTENT_VALID(content) ((content) && 			         \
 				      (((content) & ~(CAIRO_CONTENT_COLOR |      \
