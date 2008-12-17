@@ -528,7 +528,7 @@ _has_unlocked_face (void *entry)
 {
     cairo_ft_unscaled_font_t *unscaled = entry;
 
-    return (unscaled->lock_count == 0 && unscaled->face);
+    return (!unscaled->from_face && unscaled->lock_count == 0 && unscaled->face);
 }
 
 /* Ensures that an unscaled font has a face object. If we exceed
