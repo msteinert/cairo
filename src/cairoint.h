@@ -400,6 +400,8 @@ typedef struct _cairo_toy_font_face {
     cairo_bool_t owns_family;
     cairo_font_slant_t slant;
     cairo_font_weight_t weight;
+
+    cairo_font_face_t *impl_face; /* The non-toy font face this actually uses */
 } cairo_toy_font_face_t;
 
 typedef enum _cairo_scaled_glyph_info {
@@ -427,17 +429,6 @@ typedef struct _cairo_scaled_font_subset {
 
 struct _cairo_scaled_font_backend {
     cairo_font_type_t type;
-
-    cairo_warn cairo_status_t
-    (*get_implementation)  (cairo_toy_font_face_t	*toy_face,
-			    cairo_font_face_t	       **font_face);
-
-    cairo_warn cairo_status_t
-    (*create_toy)  (cairo_toy_font_face_t	*toy_face,
-		    const cairo_matrix_t	*font_matrix,
-		    const cairo_matrix_t	*ctm,
-		    const cairo_font_options_t	*options,
-		    cairo_scaled_font_t	       **scaled_font);
 
     void
     (*fini)		(void			*scaled_font);
@@ -498,15 +489,15 @@ struct _cairo_scaled_font_backend {
 struct _cairo_font_face_backend {
     cairo_font_type_t	type;
 
+    cairo_warn cairo_status_t
+    (*create_for_toy)  (cairo_toy_font_face_t	*toy_face,
+			cairo_font_face_t      **font_face);
+
     /* The destroy() function is allowed to resurrect the font face
      * by re-referencing. This is needed for the FreeType backend.
      */
     void
     (*destroy)     (void			*font_face);
-
-    cairo_warn cairo_status_t
-    (*get_implementation)  (void			*font_face,
-			    cairo_font_face_t	       **font_face_out);
 
     cairo_warn cairo_status_t
     (*scaled_font_create) (void				*font_face,
@@ -516,24 +507,24 @@ struct _cairo_font_face_backend {
 			   cairo_scaled_font_t	       **scaled_font);
 };
 
-extern const cairo_private struct _cairo_scaled_font_backend _cairo_user_scaled_font_backend;
+extern const cairo_private struct _cairo_font_face_backend _cairo_user_font_face_backend;
 
 /* concrete font backends */
 #if CAIRO_HAS_FT_FONT
 
-extern const cairo_private struct _cairo_scaled_font_backend _cairo_ft_scaled_font_backend;
+extern const cairo_private struct _cairo_font_face_backend _cairo_ft_font_face_backend;
 
 #endif
 
 #if CAIRO_HAS_WIN32_FONT
 
-extern const cairo_private struct _cairo_scaled_font_backend _cairo_win32_scaled_font_backend;
+extern const cairo_private struct _cairo_font_face_backend _cairo_win32_font_face_backend;
 
 #endif
 
 #if CAIRO_HAS_QUARTZ_FONT
 
-extern const cairo_private struct _cairo_scaled_font_backend _cairo_quartz_scaled_font_backend;
+extern const cairo_private struct _cairo_font_face_backend _cairo_quartz_font_face_backend;
 
 #endif
 
@@ -982,22 +973,22 @@ typedef struct _cairo_traps {
 #if   CAIRO_HAS_WIN32_FONT
 
 #define CAIRO_FONT_FAMILY_DEFAULT CAIRO_WIN32_FONT_FAMILY_DEFAULT
-#define CAIRO_SCALED_FONT_BACKEND_DEFAULT &_cairo_win32_scaled_font_backend
+#define CAIRO_FONT_FACE_BACKEND_DEFAULT &_cairo_win32_font_face_backend
 
 #elif CAIRO_HAS_QUARTZ_FONT
 
 #define CAIRO_FONT_FAMILY_DEFAULT CAIRO_QUARTZ_FONT_FAMILY_DEFAULT
-#define CAIRO_SCALED_FONT_BACKEND_DEFAULT &_cairo_quartz_scaled_font_backend
+#define CAIRO_FONT_FACE_BACKEND_DEFAULT &_cairo_quartz_font_face_backend
 
 #elif CAIRO_HAS_FT_FONT
 
 #define CAIRO_FONT_FAMILY_DEFAULT CAIRO_FT_FONT_FAMILY_DEFAULT
-#define CAIRO_SCALED_FONT_BACKEND_DEFAULT &_cairo_ft_scaled_font_backend
+#define CAIRO_FONT_FACE_BACKEND_DEFAULT &_cairo_ft_font_face_backend
 
 #else
 
 #define CAIRO_FONT_FAMILY_DEFAULT CAIRO_FT_FONT_FAMILY_DEFAULT
-#define CAIRO_SCALED_FONT_BACKEND_DEFAULT &_cairo_user_scaled_font_backend
+#define CAIRO_FONT_FACE_BACKEND_DEFAULT &_cairo_user_font_face_backend
 
 #endif
 
@@ -1391,6 +1382,9 @@ _cairo_unscaled_font_reference (cairo_unscaled_font_t *font);
 
 cairo_private void
 _cairo_unscaled_font_destroy (cairo_unscaled_font_t *font);
+
+cairo_private cairo_font_face_t *
+_cairo_toy_font_face_get_implementation (cairo_font_face_t *font_face);
 
 /* cairo-font-face-twin.c */
 

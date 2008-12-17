@@ -519,11 +519,8 @@ _cairo_win32_scaled_font_done_unscaled_font (cairo_scaled_font_t *scaled_font)
 /* implement the font backend interface */
 
 static cairo_status_t
-_cairo_win32_scaled_font_create_toy (cairo_toy_font_face_t *toy_face,
-				     const cairo_matrix_t        *font_matrix,
-				     const cairo_matrix_t        *ctm,
-				     const cairo_font_options_t  *options,
-				     cairo_scaled_font_t        **scaled_font_out)
+_cairo_win32_font_face_create_for_toy (cairo_toy_font_face_t   *toy_face,
+				       cairo_font_face_t      **font_face)
 {
     LOGFONTW logfont;
     uint16_t *face_name;
@@ -542,6 +539,7 @@ _cairo_win32_scaled_font_create_toy (cairo_toy_font_face_t *toy_face,
 
     memcpy (logfont.lfFaceName, face_name, sizeof (uint16_t) * (face_name_len + 1));
     free (face_name);
+    logfont.lfFaceName[ARRAY_LENGTH (logfont.lfFaceName) - 1] = 0;
 
     logfont.lfHeight = 0;	/* filled in later */
     logfont.lfWidth = 0;	/* filled in later */
@@ -581,12 +579,9 @@ _cairo_win32_scaled_font_create_toy (cairo_toy_font_face_t *toy_face,
     logfont.lfQuality = DEFAULT_QUALITY; /* filled in later */
     logfont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
 
-    if (!logfont.lfFaceName)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    *font_face = cairo_win32_font_face_create_for_logfontw (logfont);
 
-    return _win32_scaled_font_create (&logfont, NULL, &toy_face->base,
-			              font_matrix, ctm, options,
-				      scaled_font_out);
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -1836,8 +1831,6 @@ _cairo_win32_scaled_font_init_glyph_path (cairo_win32_scaled_font_t *scaled_font
 
 const cairo_scaled_font_backend_t _cairo_win32_scaled_font_backend = {
     CAIRO_FONT_TYPE_WIN32,
-    NULL,
-    _cairo_win32_scaled_font_create_toy,
     _cairo_win32_scaled_font_fini,
     _cairo_win32_scaled_font_glyph_init,
     NULL, /* _cairo_win32_scaled_font_text_to_glyphs, FIXME */
@@ -1905,6 +1898,7 @@ _cairo_win32_font_face_scaled_font_create (void			*abstract_face,
 
 static const cairo_font_face_backend_t _cairo_win32_font_face_backend = {
     CAIRO_FONT_TYPE_WIN32,
+    _cairo_win32_font_face_create_for_toy,
     _cairo_win32_font_face_destroy,
     NULL, /* direct implementation */
     _cairo_win32_font_face_scaled_font_create
@@ -1913,7 +1907,7 @@ static const cairo_font_face_backend_t _cairo_win32_font_face_backend = {
 /**
  * cairo_win32_font_face_create_for_logfontw_hfont:
  * @logfont: A #LOGFONTW structure specifying the font to use.
- *   If hfont is null then the lfHeight, lfWidth, lfOrientation and lfEscapement
+ *   If @font is %NULL then the lfHeight, lfWidth, lfOrientation and lfEscapement
  *   fields of this structure are ignored. Otherwise lfWidth, lfOrientation and
  *   lfEscapement must be zero.
  * @font: An #HFONT that can be used when the font matrix is a scale by
