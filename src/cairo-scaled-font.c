@@ -1529,7 +1529,7 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
     /* glyphs and num_glyphs can't be NULL */
     if (glyphs     == NULL ||
 	num_glyphs == NULL) {
-	status = CAIRO_STATUS_NULL_POINTER;
+	status = _cairo_error (CAIRO_STATUS_NULL_POINTER);
 	goto BAIL;
     }
 
@@ -1541,7 +1541,7 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
     if ((utf8_len && utf8          == NULL) ||
 	(clusters && num_clusters  == NULL) ||
 	(clusters && cluster_flags == NULL)) {
-	status = CAIRO_STATUS_NULL_POINTER;
+	status = _cairo_error (CAIRO_STATUS_NULL_POINTER);
 	goto BAIL;
     }
 
@@ -1573,7 +1573,7 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
     if (utf8_len < 0 ||
 	*num_glyphs < 0 ||
 	(num_clusters && *num_clusters < 0)) {
-	status = CAIRO_STATUS_NEGATIVE_COUNT;
+	status = _cairo_error (CAIRO_STATUS_NEGATIVE_COUNT);
 	goto BAIL;
     }
 
@@ -1609,22 +1609,22 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
 		 * can be hard to get right. */
 
 	        if (*num_glyphs < 0) {
-		    status = CAIRO_STATUS_NEGATIVE_COUNT;
+		    status = _cairo_error (CAIRO_STATUS_NEGATIVE_COUNT);
 		    goto DONE;
 		}
 		if (num_glyphs && *glyphs == NULL) {
-		    status = CAIRO_STATUS_NULL_POINTER;
+		    status = _cairo_error (CAIRO_STATUS_NULL_POINTER);
 		    goto DONE;
 		}
 
 		if (clusters) {
 
 		    if (*num_clusters < 0) {
-			status = CAIRO_STATUS_NEGATIVE_COUNT;
+			status = _cairo_error (CAIRO_STATUS_NEGATIVE_COUNT);
 			goto DONE;
 		    }
 		    if (num_clusters && *clusters == NULL) {
-			status = CAIRO_STATUS_NULL_POINTER;
+			status = _cairo_error (CAIRO_STATUS_NULL_POINTER);
 			goto DONE;
 		    }
 

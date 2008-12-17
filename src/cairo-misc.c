@@ -288,7 +288,7 @@ _cairo_validate_text_clusters (const char		   *utf8,
 	/* Make sure we've got valid UTF-8 for the cluster */
 	status = _cairo_utf8_to_ucs4 (utf8+n_bytes, cluster_bytes, NULL, NULL);
 	if (unlikely (status))
-	    return CAIRO_STATUS_INVALID_CLUSTERS;
+	    return _cairo_error (CAIRO_STATUS_INVALID_CLUSTERS);
 
 	n_bytes  += cluster_bytes ;
 	n_glyphs += cluster_glyphs;
@@ -296,7 +296,7 @@ _cairo_validate_text_clusters (const char		   *utf8,
 
     if (n_bytes != (unsigned int) utf8_len || n_glyphs != (unsigned int) num_glyphs) {
       BAD:
-	return CAIRO_STATUS_INVALID_CLUSTERS;
+	return _cairo_error (CAIRO_STATUS_INVALID_CLUSTERS);
     }
 
     return CAIRO_STATUS_SUCCESS;

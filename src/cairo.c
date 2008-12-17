@@ -2868,7 +2868,7 @@ cairo_set_scaled_font (cairo_t                   *cr,
 	return;
 
     if (scaled_font == NULL) {
-	status = CAIRO_STATUS_NULL_POINTER;
+	status = _cairo_error (CAIRO_STATUS_NULL_POINTER);
 	goto BAIL;
     }
 
