@@ -30,4 +30,5 @@ TAGS
 tags
 check-has-hidden-symbols.i
 check-link
+check-skiplist
 headers-standalone
