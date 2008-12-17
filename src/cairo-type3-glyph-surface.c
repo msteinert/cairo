@@ -87,18 +87,6 @@ _cairo_type3_glyph_surface_emit_image (cairo_type3_glyph_surface_t *surface,
 				       cairo_matrix_t              *image_matrix)
 {
     cairo_status_t status;
-    cairo_image_surface_t *image_mask;
-
-    /* The only image type supported by Type 3 fonts are 1-bit image
-     * masks */
-    if (image->format == CAIRO_FORMAT_A1) {
-	image_mask = image;
-    } else {
-	image_mask = _cairo_image_surface_clone (image, CAIRO_FORMAT_A1);
-	status = cairo_surface_status (&image->base);
-	if (unlikely (status))
-	    return status;
-    }
 
     _cairo_output_stream_printf (surface->stream,
 				 "q %f %f %f %f %f %f cm\n",
@@ -109,13 +97,13 @@ _cairo_type3_glyph_surface_emit_image (cairo_type3_glyph_surface_t *surface,
 				 image_matrix->x0,
 				 image_matrix->y0);
 
-    status = surface->emit_image (image_mask, surface->stream);
+    /* The only image type supported by Type 3 fonts are 1-bit masks */
+    image = _cairo_image_surface_coerce (image, CAIRO_FORMAT_A1);
+    status = surface->emit_image (image, surface->stream);
+    cairo_surface_destroy (&image->base);
 
     _cairo_output_stream_printf (surface->stream,
 				 "Q\n");
-
-    if (image_mask != image)
-	cairo_surface_destroy (&image_mask->base);
 
     return status;
 }

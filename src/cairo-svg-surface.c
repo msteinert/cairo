@@ -657,8 +657,8 @@ _cairo_svg_document_emit_bitmap_glyph_data (cairo_svg_document_t	*document,
 					    cairo_scaled_font_t		*scaled_font,
 					    unsigned long		 glyph_index)
 {
-    cairo_image_surface_t *image;
     cairo_scaled_glyph_t *scaled_glyph;
+    cairo_image_surface_t *image;
     cairo_status_t status;
     uint8_t *row, *byte;
     int rows, cols;
@@ -666,18 +666,17 @@ _cairo_svg_document_emit_bitmap_glyph_data (cairo_svg_document_t	*document,
 
     status = _cairo_scaled_glyph_lookup (scaled_font,
 					 glyph_index,
-					 CAIRO_SCALED_GLYPH_INFO_METRICS|
+					 CAIRO_SCALED_GLYPH_INFO_METRICS |
 					 CAIRO_SCALED_GLYPH_INFO_SURFACE,
 					 &scaled_glyph);
     if (unlikely (status))
 	return status;
 
-    image = scaled_glyph->surface;
-    if (image->format != CAIRO_FORMAT_A1) {
-	image = _cairo_image_surface_clone (image, CAIRO_FORMAT_A1);
-	if (cairo_surface_status (&image->base))
-	    return cairo_surface_status (&image->base);
-    }
+    image = _cairo_image_surface_coerce (scaled_glyph->surface,
+					 CAIRO_FORMAT_A1);
+    status = image->base.status;
+    if (unlikely (status))
+	return status;
 
     _cairo_output_stream_printf (document->xml_node_glyphs, "<g");
     _cairo_svg_surface_emit_transform (document->xml_node_glyphs, " transform",
@@ -698,8 +697,7 @@ _cairo_svg_document_emit_bitmap_glyph_data (cairo_svg_document_t	*document,
     }
     _cairo_output_stream_printf (document->xml_node_glyphs, "</g>\n");
 
-    if (image != scaled_glyph->surface)
-	cairo_surface_destroy (&image->base);
+    cairo_surface_destroy (&image->base);
 
     return CAIRO_STATUS_SUCCESS;
 }

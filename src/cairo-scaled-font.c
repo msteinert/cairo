@@ -2077,32 +2077,34 @@ static cairo_status_t
 _trace_mask_to_path (cairo_image_surface_t *mask,
 		     cairo_path_fixed_t *path)
 {
-    cairo_status_t status;
-    cairo_image_surface_t *a1_mask;
-    uint8_t *row, *byte_ptr, byte;
+    const uint8_t *row;
     int rows, cols, bytes_per_row;
     int x, y, bit;
     double xoff, yoff;
+    cairo_status_t status;
 
-    if (mask->format == CAIRO_FORMAT_A1)
-	a1_mask = (cairo_image_surface_t *) cairo_surface_reference (&mask->base);
-    else
-	a1_mask = _cairo_image_surface_clone (mask, CAIRO_FORMAT_A1);
-
-    status = cairo_surface_status (&a1_mask->base);
-    if (unlikely (status)) {
-	cairo_surface_destroy (&a1_mask->base);
+    mask = _cairo_image_surface_coerce (mask, CAIRO_FORMAT_A1);
+    status = mask->base.status;
+    if (unlikely (status))
 	return status;
-    }
 
     cairo_surface_get_device_offset (&mask->base, &xoff, &yoff);
 
-    bytes_per_row = (a1_mask->width + 7) / 8;
-    for (y = 0, row = a1_mask->data, rows = a1_mask->height; rows; row += a1_mask->stride, rows--, y++) {
-	for (x = 0, byte_ptr = row, cols = bytes_per_row; cols; byte_ptr++, cols--) {
-	    byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (*byte_ptr);
-	    for (bit = 7; bit >= 0 && x < a1_mask->width; bit--, x++) {
-		if (byte & (1 << bit)) {
+    bytes_per_row = (mask->width + 7) / 8;
+    row = mask->data;
+    for (y = 0, rows = mask->height; rows--; row += mask->stride, y++) {
+	const uint8_t *byte_ptr = row;
+	x = 0;
+	for (cols = bytes_per_row; cols--; ) {
+	    uint8_t byte = *byte_ptr++;
+	    if (byte == 0) {
+		x += 8;
+		continue;
+	    }
+
+	    byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (byte);
+	    for (bit = 1 << 7; bit && x < mask->width; bit >>= 1, x++) {
+		if (byte & bit) {
 		    status = _add_unit_rectangle_to_path (path,
 							  x - xoff, y - yoff);
 		    if (unlikely (status))
@@ -2113,7 +2115,7 @@ _trace_mask_to_path (cairo_image_surface_t *mask,
     }
 
 BAIL:
-    cairo_surface_destroy (&a1_mask->base);
+    cairo_surface_destroy (&mask->base);
 
     return status;
 }

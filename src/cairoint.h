@@ -2139,8 +2139,8 @@ _cairo_image_surface_set_clip_region (void *abstract_surface,
 				      cairo_region_t *region);
 
 cairo_private cairo_image_surface_t *
-_cairo_image_surface_clone (cairo_image_surface_t	*surface,
-			    cairo_format_t		 format);
+_cairo_image_surface_coerce (cairo_image_surface_t	*surface,
+			     cairo_format_t		 format);
 
 cairo_private cairo_image_transparency_t
 _cairo_image_analyze_transparency (cairo_image_surface_t      *image);

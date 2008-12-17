@@ -1524,34 +1524,40 @@ const cairo_surface_backend_t _cairo_image_surface_backend = {
 /* A convenience function for when one needs to coerce an image
  * surface to an alternate format. */
 cairo_image_surface_t *
-_cairo_image_surface_clone (cairo_image_surface_t	*surface,
-			    cairo_format_t		 format)
+_cairo_image_surface_coerce (cairo_image_surface_t	*surface,
+			     cairo_format_t		 format)
 {
     cairo_image_surface_t *clone;
+    cairo_surface_pattern_t pattern;
     cairo_status_t status;
-    cairo_t *cr;
-    double x, y;
+
+    status = surface->base.status;
+    if (unlikely (status))
+	return (cairo_image_surface_t *)_cairo_surface_create_in_error (status);
+
+    if (surface->format == format)
+	return (cairo_image_surface_t *)cairo_surface_reference(&surface->base);
 
     clone = (cairo_image_surface_t *)
-	cairo_image_surface_create (format,
-				    surface->width, surface->height);
+	cairo_image_surface_create (format, surface->width, surface->height);
+    if (unlikely (clone->base.status))
+	return clone;
 
-    cairo_surface_get_device_offset (&surface->base, &x, &y);
-    cairo_surface_set_device_offset (&clone->base, x, y);
-    clone->transparency = CAIRO_IMAGE_UNKNOWN;
-
-    /* XXX Use _cairo_surface_composite directly */
-    cr = cairo_create (&clone->base);
-    cairo_set_source_surface (cr, &surface->base, 0, 0);
-    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-    cairo_paint (cr);
-    status = cairo_status (cr);
-    cairo_destroy (cr);
+    _cairo_pattern_init_for_surface (&pattern, &surface->base);
+    status = _cairo_surface_paint (&clone->base,
+				   CAIRO_OPERATOR_SOURCE,
+				   &pattern.base, NULL);
+    _cairo_pattern_fini (&pattern.base);
 
     if (unlikely (status)) {
 	cairo_surface_destroy (&clone->base);
-	return (cairo_image_surface_t *) _cairo_surface_create_in_error (status);
+	return (cairo_image_surface_t *)_cairo_surface_create_in_error (status);
     }
+
+    clone->base.device_transform =
+	surface->base.device_transform;
+    clone->base.device_transform_inverse =
+	surface->base.device_transform_inverse;
 
     return clone;
 }
