@@ -2267,10 +2267,6 @@ _cairo_ft_font_face_scaled_font_create (void                     *abstract_face,
      * derived from a pattern where the user has called
      * cairo_ft_font_options_substitute(), so *just* use those load
      * flags and ignore the options.
-     *
-     * XXX two points about the above comment:
-     * 1. I don't see how the comment is relevant here,
-     * 2. What if the face is coming from FC_FT_FACE of a pattern?
      */
 
     /* If we have an unresolved pattern, resolve it and create
