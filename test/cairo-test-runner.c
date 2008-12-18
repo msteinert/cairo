@@ -39,7 +39,11 @@
 
 #include <pixman.h> /* for version information */
 
-#if HAVE_FORK && HAVE_WAITPID
+/* Coregraphics doesn't seem to like being forked and reports:
+ * "The process has forked and you cannot use this CoreFoundation functionality safely. You MUST exec()."
+ * so we don't for on OS X */
+#define SHOULD_FORK HAVE_FORK && HAVE_WAITPID && !__APPLE__
+#if SHOULD_FORK
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -140,7 +144,7 @@ _list_free (cairo_test_list_t *list)
     }
 }
 
-#if HAVE_FORK && HAVE_WAITPID
+#if SHOULD_FORK
 static cairo_test_status_t
 _cairo_test_wait (pid_t pid)
 {
@@ -169,7 +173,7 @@ static cairo_test_status_t
 _cairo_test_runner_preamble (cairo_test_runner_t *runner,
 			     cairo_test_context_t *ctx)
 {
-#if HAVE_FORK && HAVE_WAITPID
+#if SHOULD_FORK
     if (! runner->foreground) {
 	pid_t pid;
 
@@ -195,7 +199,7 @@ _cairo_test_runner_draw (cairo_test_runner_t *runner,
 			 cairo_bool_t similar,
 			 int device_offset)
 {
-#if HAVE_FORK && HAVE_WAITPID
+#if SHOULD_FORK
     if (! runner->foreground) {
 	pid_t pid;
 
