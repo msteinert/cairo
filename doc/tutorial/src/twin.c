@@ -20,7 +20,7 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_set_source_rgb (cr, 0, 0, 0);
     cairo_select_font_face (cr,
-			    "<cairo>",
+			    "@cairo:",
 			    CAIRO_FONT_SLANT_NORMAL,
 			    CAIRO_FONT_WEIGHT_NORMAL);
 
