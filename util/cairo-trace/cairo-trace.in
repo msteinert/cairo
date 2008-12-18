@@ -64,10 +64,6 @@ fi
 LD_PRELOAD=@libdir@/cairo/cairo-trace.so 
 export LD_PRELOAD
 
-# Force the decimal output to the 'C' locale
-LC_ALL=C 
-export LC_ALL
-
 if test -n "$nocallers"; then
     CAIRO_TRACE_LINE_INFO=0
     export CAIRO_TRACE_LINE_INFO
