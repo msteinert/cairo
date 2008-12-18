@@ -2073,19 +2073,15 @@ _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 
 	    if (src->n_stops)
 	    {
-		cairo_color_t color;
-
-		_cairo_color_init_rgba (&color,
-					src->stops->color.red,
-					src->stops->color.green,
-					src->stops->color.blue,
-					src->stops->color.alpha);
-
-		_cairo_pattern_init_solid (&solid, &color, CAIRO_CONTENT_COLOR_ALPHA);
+		_cairo_pattern_init_solid (&solid,
+					   &src->stops->color,
+					   CAIRO_CONTENT_COLOR_ALPHA);
 	    }
 	    else
 	    {
-		_cairo_pattern_init_solid (&solid, CAIRO_COLOR_TRANSPARENT, CAIRO_CONTENT_ALPHA);
+		_cairo_pattern_init_solid (&solid,
+					   CAIRO_COLOR_TRANSPARENT,
+					   CAIRO_CONTENT_ALPHA);
 	    }
 
 	    status = _cairo_pattern_acquire_surface_for_solid (&solid, dst,
@@ -2096,11 +2092,39 @@ _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 	}
 	else
 	{
-	    status = _cairo_pattern_acquire_surface_for_gradient (src, dst,
-								  x, y,
-								  width, height,
-								  surface_out,
-								  attributes);
+	    unsigned int i;
+
+	    /* Is the gradient a uniform colour?
+	     * Happens more often than you would believe.
+	     */
+	    for (i = 1; i < src->n_stops; i++) {
+		if (! _cairo_color_equal (&src->stops[0].color,
+					  &src->stops[i].color))
+		{
+		    break;
+		}
+	    }
+	    if (i == src->n_stops) {
+		cairo_solid_pattern_t solid;
+
+		_cairo_pattern_init_solid (&solid,
+					   &src->stops->color,
+					   CAIRO_CONTENT_COLOR_ALPHA);
+
+		status =
+		    _cairo_pattern_acquire_surface_for_solid (&solid, dst,
+							      x, y,
+							      width, height,
+							      surface_out,
+							      attributes);
+	    } else {
+		status =
+		    _cairo_pattern_acquire_surface_for_gradient (src, dst,
+								 x, y,
+								 width, height,
+								 surface_out,
+								 attributes);
+	    }
 	}
     } break;
     case CAIRO_PATTERN_TYPE_SURFACE: {
