@@ -692,7 +692,7 @@ _add_color_stop (csi_t *ctx)
 {
     csi_status_t status;
     double offset, r, g, b, a;
-    cairo_pattern_t *pattern;
+    cairo_pattern_t *pattern = NULL; /* silence the compiler */
 
     check (6);
 
@@ -1103,7 +1103,7 @@ _curve_to (csi_t *ctx)
 static csi_status_t
 _def (csi_t *ctx)
 {
-    csi_name_t name;
+    csi_name_t name = 0; /* silence the compiler */
     csi_status_t status;
 
     check (2);
@@ -1246,7 +1246,7 @@ _filter (csi_t *ctx)
     csi_object_t *src;
     csi_dictionary_t *dict = NULL;
     csi_status_t status;
-    const char *name;
+    const char *name = NULL; /* silence the compiler */
     const struct filters {
 	const char *name;
 	csi_status_t (*constructor) (csi_t *t,
@@ -1771,7 +1771,7 @@ _font (csi_t *ctx)
 {
     csi_dictionary_t *font;
     csi_status_t status;
-    cairo_font_face_t *font_face;
+    cairo_font_face_t *font_face = NULL; /* silence the compiler */
     csi_proxy_t *proxy;
     csi_object_t obj;
     long type;
@@ -2310,7 +2310,7 @@ static csi_status_t
 _if (csi_t *ctx)
 {
     csi_array_t *proc;
-    csi_boolean_t predicate;
+    csi_boolean_t predicate = FALSE; /* silence the compiler */
     csi_status_t status;
 
     check (2);
@@ -2339,7 +2339,7 @@ static csi_status_t
 _ifelse (csi_t *ctx)
 {
     csi_array_t *true_proc, *false_proc;
-    csi_boolean_t predicate;
+    csi_boolean_t predicate = FALSE; /* silence the compiler */
     csi_status_t status;
 
     check (3);
@@ -2654,7 +2654,7 @@ _image_load_from_dictionary (csi_t *ctx,
     long width;
     long height;
     long format;
-    cairo_surface_t *image;
+    cairo_surface_t *image = NULL; /* silence the compiler */
     csi_status_t status;
 
     /* check for "status? */
@@ -2989,9 +2989,9 @@ _null (csi_t *ctx)
 static csi_status_t
 _mask (csi_t *ctx)
 {
-    csi_status_t status;
     cairo_t *cr;
-    cairo_pattern_t *pattern;
+    cairo_pattern_t *pattern = NULL; /* silence the compiler */
+    csi_status_t status;
 
     check (2);
 
@@ -3682,10 +3682,10 @@ _scaled_font (csi_t *ctx)
 {
     csi_object_t obj;
     csi_dictionary_t *dict;
-    csi_status_t status;
-    cairo_font_face_t *font_face;
+    cairo_font_face_t *font_face = NULL; /* silence the compiler */
     cairo_matrix_t font_matrix, ctm;
     cairo_font_options_t *options;
+    csi_status_t status;
 
     check (4);
 
@@ -4063,9 +4063,9 @@ _set_filter (csi_t *ctx)
 static csi_status_t
 _set_font_face (csi_t *ctx)
 {
-    csi_status_t status;
-    cairo_font_face_t *font;
     cairo_t *cr;
+    cairo_font_face_t *font = NULL; /* silence the compiler */
+    csi_status_t status;
 
     check (2);
 
@@ -4264,7 +4264,7 @@ _set_mime_data (csi_t *ctx)
 {
     csi_status_t status;
     csi_object_t *obj;
-    const char *mime;
+    const char *mime = NULL; /* silence the compiler */
     csi_object_t source;
     cairo_surface_t *surface;
     struct _mime_tag *tag;
@@ -4365,9 +4365,9 @@ _set_operator (csi_t *ctx)
 static csi_status_t
 _set_scaled_font (csi_t *ctx)
 {
-    csi_status_t status;
-    cairo_scaled_font_t *font;
     cairo_t *cr;
+    cairo_scaled_font_t *font = NULL; /* silence the compiler */
+    csi_status_t status;
 
     check (2);
 
@@ -4387,7 +4387,7 @@ static csi_status_t
 _set_source (csi_t *ctx)
 {
     cairo_t *cr;
-    cairo_pattern_t *pattern;
+    cairo_pattern_t *pattern = NULL; /* silence the compiler */
     csi_status_t status;
 
     check (2);
@@ -5288,7 +5288,7 @@ _text_path (csi_t *ctx)
 static csi_status_t
 _undef (csi_t *ctx)
 {
-    csi_name_t name;
+    csi_name_t name = 0; /* silence the compiler */
     csi_status_t status;
 
     check (1);
@@ -5309,7 +5309,7 @@ static csi_status_t
 _unset (csi_t *ctx)
 {
     csi_object_t *dst;
-    csi_name_t name;
+    csi_name_t name = 0; /* silence the compiler */
     csi_status_t status;
 
     check (2);
