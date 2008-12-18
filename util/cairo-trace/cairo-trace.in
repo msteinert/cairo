@@ -4,20 +4,19 @@ prefix=@prefix@
 exec_prefix=@exec_prefix@
 
 nofile=
-verbose=
 flush=
 nocallers=
 
 usage() {
 cat << EOF
-usage: cairo-trace [--no-file|--verbose] command
+usage: cairo-trace [--no-file] command
 cairo-trace will generate a log of all calls made by command to
 cairo. This log will be stored in a file in the local directory
 called command.pid.trace.
 Whatever else happens is driven by its argument:
   --flush      - Flush the output trace after every call.
-  --verbose    - Show the trace on stdout.
-  --no-file    - Disable the creation of an output file.
+  --no-file    - Disable the creation of an output file. Outputs to the
+                 terminal instead.
   --no-callers - Do not lookup the caller address/symbol/line whilst tracing.
 
 Enviroment variables understood by cairo-trace:
@@ -31,10 +30,6 @@ skip=1
 while test $skip -eq 1; do
     skip=0
     case $1 in
-    --verbose)
-	skip=1
-	verbose=1
-	;;
     --flush)
 	skip=1
 	flush=1
@@ -66,11 +61,6 @@ fi
 
 #echo $*
 
-filename=""
-if test -z "$nofile"; then
-  filename=`basename -- $1`.$$.trace
-fi
-
 LD_PRELOAD=@libdir@/cairo/cairo-trace.so 
 export LD_PRELOAD
 
@@ -88,11 +78,8 @@ if test -n "$flush"; then
     export CAIRO_TRACE_FLUSH
 fi
 
-if test -z "$filename"; then
-  CAIRO_TRACE_FD=3 "$@" 3>&1 >/dev/null
-elif test -z "$verbose"; then
-  echo "Recording trace in $filename."
-  CAIRO_TRACE_OUTFILE_EXACT=$filename "$@"
+if test -z "$nofile"; then
+    CAIRO_TRACE_OUTDIR=. "$@"
 else
-  CAIRO_TRACE_FD=3 "$@" 3>&1 >/dev/null | tee $filename
+    CAIRO_TRACE_FD=3 "$@" 3>&1 >/dev/null
 fi
