@@ -37,19 +37,19 @@
 #include "cairoint.h"
 
 typedef struct cairo_path_bounder {
+    double tolerance;
+
     cairo_point_t move_to_point;
     cairo_bool_t has_move_to_point;
     cairo_bool_t has_point;
 
-    cairo_fixed_t min_x;
-    cairo_fixed_t min_y;
-    cairo_fixed_t max_x;
-    cairo_fixed_t max_y;
+    cairo_box_t extents;
 } cairo_path_bounder_t;
 
 static void
-_cairo_path_bounder_init (cairo_path_bounder_t *bounder)
+_cairo_path_bounder_init (cairo_path_bounder_t *bounder, double tolerance)
 {
+    bounder->tolerance = tolerance;
     bounder->has_move_to_point = FALSE;
     bounder->has_point = FALSE;
 }
@@ -66,22 +66,22 @@ _cairo_path_bounder_add_point (cairo_path_bounder_t *bounder,
 			       const cairo_point_t *point)
 {
     if (bounder->has_point) {
-	if (point->x < bounder->min_x)
-	    bounder->min_x = point->x;
+	if (point->x < bounder->extents.p1.x)
+	    bounder->extents.p1.x = point->x;
 
-	if (point->y < bounder->min_y)
-	    bounder->min_y = point->y;
+	if (point->y < bounder->extents.p1.y)
+	    bounder->extents.p1.y = point->y;
 
-	if (point->x > bounder->max_x)
-	    bounder->max_x = point->x;
+	if (point->x > bounder->extents.p2.x)
+	    bounder->extents.p2.x = point->x;
 
-	if (point->y > bounder->max_y)
-	    bounder->max_y = point->y;
+	if (point->y > bounder->extents.p2.y)
+	    bounder->extents.p2.y = point->y;
     } else {
-	bounder->min_x = point->x;
-	bounder->min_y = point->y;
-	bounder->max_x = point->x;
-	bounder->max_y = point->y;
+	bounder->extents.p1.x = point->x;
+	bounder->extents.p1.y = point->y;
+	bounder->extents.p2.x = point->x;
+	bounder->extents.p2.y = point->y;
 
 	bounder->has_point = TRUE;
     }
@@ -123,18 +123,21 @@ _cairo_path_bounder_curve_to (void *closure,
 			      const cairo_point_t *d)
 {
     cairo_path_bounder_t *bounder = closure;
+    cairo_spline_t spline;
 
-    if (bounder->has_move_to_point) {
-	_cairo_path_bounder_add_point (bounder,
-				       &bounder->move_to_point);
-	bounder->has_move_to_point = FALSE;
+    /* XXX Is there a faster way to determine the bounding box of a
+     * Bezier curve than its decomposition?
+     *
+     * Using the control points alone can be wildly inaccurate.
+     */
+    if (! _cairo_spline_init (&spline,
+			      _cairo_path_bounder_line_to, bounder,
+			      &bounder->move_to_point, b, c, d))
+    {
+	return _cairo_path_bounder_line_to (bounder, d);
     }
 
-    _cairo_path_bounder_add_point (bounder, b);
-    _cairo_path_bounder_add_point (bounder, c);
-    _cairo_path_bounder_add_point (bounder, d);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_spline_decompose (&spline, bounder->tolerance);
 }
 
 static cairo_status_t
@@ -149,12 +152,13 @@ _cairo_path_bounder_close_path (void *closure)
  */
 void
 _cairo_path_fixed_approximate_extents (cairo_path_fixed_t *path,
-				       cairo_rectangle_int_t *extents)
+				       double tolerance,
+				       cairo_box_t *extents)
 {
     cairo_path_bounder_t bounder;
     cairo_status_t status;
 
-    _cairo_path_bounder_init (&bounder);
+    _cairo_path_bounder_init (&bounder, tolerance);
 
     status = _cairo_path_fixed_interpret (path, CAIRO_DIRECTION_FORWARD,
 					  _cairo_path_bounder_move_to,
@@ -165,15 +169,10 @@ _cairo_path_fixed_approximate_extents (cairo_path_fixed_t *path,
     assert (status == CAIRO_STATUS_SUCCESS);
 
     if (bounder.has_point) {
-	extents->x = _cairo_fixed_integer_floor (bounder.min_x);
-	extents->y = _cairo_fixed_integer_floor (bounder.min_y);
-	extents->width =
-	    _cairo_fixed_integer_ceil (bounder.max_x) - extents->x;
-	extents->height =
-	    _cairo_fixed_integer_ceil (bounder.max_y) - extents->y;
+	*extents = bounder.extents;
     } else {
-	extents->x = extents->y = 0;
-	extents->width = extents->height = 0;
+	extents->p1.x = extents->p1.y = 0;
+	extents->p2.x = extents->p2.y = 0;
     }
 
     _cairo_path_bounder_fini (&bounder);
@@ -188,21 +187,21 @@ _cairo_path_fixed_bounds (cairo_path_fixed_t *path,
     cairo_path_bounder_t bounder;
     cairo_status_t status;
 
-    _cairo_path_bounder_init (&bounder);
+    _cairo_path_bounder_init (&bounder, tolerance);
 
-    status = _cairo_path_fixed_interpret_flat (path, CAIRO_DIRECTION_FORWARD,
-					       _cairo_path_bounder_move_to,
-					       _cairo_path_bounder_line_to,
-					       _cairo_path_bounder_close_path,
-					       &bounder,
-					       tolerance);
+    status = _cairo_path_fixed_interpret (path, CAIRO_DIRECTION_FORWARD,
+					  _cairo_path_bounder_move_to,
+					  _cairo_path_bounder_line_to,
+					  _cairo_path_bounder_curve_to,
+					  _cairo_path_bounder_close_path,
+					  &bounder);
     assert (status == CAIRO_STATUS_SUCCESS);
 
     if (bounder.has_point) {
-	*x1 = _cairo_fixed_to_double (bounder.min_x);
-	*y1 = _cairo_fixed_to_double (bounder.min_y);
-	*x2 = _cairo_fixed_to_double (bounder.max_x);
-	*y2 = _cairo_fixed_to_double (bounder.max_y);
+	*x1 = _cairo_fixed_to_double (bounder.extents.p1.x);
+	*y1 = _cairo_fixed_to_double (bounder.extents.p1.y);
+	*x2 = _cairo_fixed_to_double (bounder.extents.p2.x);
+	*y2 = _cairo_fixed_to_double (bounder.extents.p2.y);
     } else {
 	*x1 = 0.0;
 	*y1 = 0.0;
