@@ -2614,13 +2614,13 @@ _emit_glyphs (cairo_scaled_font_t *font,
 void
 cairo_show_glyphs (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
 {
-    cairo_scaled_font_t *font;
-
-    font = DLCALL (cairo_get_scaled_font, cr);
-
     _emit_line_info ();
     if (cr != NULL && glyphs != NULL && _write_lock ()) {
+	cairo_scaled_font_t *font;
+
 	_emit_context (cr);
+	font = DLCALL (cairo_get_scaled_font, cr);
+
 	_emit_glyphs (font, glyphs, num_glyphs);
 	fprintf (logfile, " show-glyphs\n");
 	_write_unlock ();
