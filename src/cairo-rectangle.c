@@ -126,16 +126,6 @@ _cairo_rectangle_intersect (cairo_rectangle_int_t *dst,
     }
 }
 
-cairo_bool_t
-_cairo_rectangle_intersect_box (cairo_rectangle_int_t *dst,
-				const cairo_box_t *src)
-{
-    cairo_rectangle_int_t rect;
-
-    _cairo_box_round_to_rectangle (src, &rect);
-    return _cairo_rectangle_intersect (dst, &rect);
-}
-
 #define P1x (line->p1.x)
 #define P1y (line->p1.y)
 #define P2x (line->p2.x)

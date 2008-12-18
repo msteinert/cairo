@@ -259,10 +259,6 @@ _cairo_rectangle_intersect (cairo_rectangle_int_t *dst,
 			    const cairo_rectangle_int_t *src);
 
 cairo_private cairo_bool_t
-_cairo_rectangle_intersect_box (cairo_rectangle_int_t *dst,
-				const cairo_box_t *src);
-
-cairo_private cairo_bool_t
 _cairo_box_intersects_line_segment (cairo_box_t *box, cairo_line_t *line);
 
 cairo_private cairo_bool_t
@@ -1545,8 +1541,19 @@ _cairo_path_fixed_append (cairo_path_fixed_t		  *path,
 
 cairo_private void
 _cairo_path_fixed_approximate_extents (cairo_path_fixed_t	*path,
-				       double			 tolerance,
-				       cairo_box_t		*extents);
+				       cairo_rectangle_int_t	*extents);
+
+cairo_private void
+_cairo_path_fixed_approximate_fill_extents (cairo_path_fixed_t *path,
+					    double tolerance,
+					    cairo_rectangle_int_t *extents);
+
+cairo_private void
+_cairo_path_fixed_approximate_stroke_extents (cairo_path_fixed_t *path,
+					      cairo_stroke_style_t *style,
+					      const cairo_matrix_t *ctm,
+					      double tolerance,
+					      cairo_rectangle_int_t *extents);
 
 cairo_private void
 _cairo_path_fixed_bounds (cairo_path_fixed_t *path,

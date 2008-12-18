@@ -143,13 +143,11 @@ _cairo_clip_path_intersect_to_rectangle (cairo_clip_path_t       *clip_path,
 				         cairo_rectangle_int_t   *rectangle)
 {
     while (clip_path) {
-        cairo_box_t extents;
+        cairo_rectangle_int_t extents;
 
-	_cairo_path_fixed_approximate_extents (&clip_path->path,
-					       clip_path->tolerance,
-					       &extents);
+	_cairo_path_fixed_approximate_extents (&clip_path->path, &extents);
 
-        if (! _cairo_rectangle_intersect_box (rectangle, &extents))
+        if (! _cairo_rectangle_intersect (rectangle, &extents))
 	    return CAIRO_STATUS_SUCCESS;
 
         clip_path = clip_path->prev;
@@ -577,10 +575,10 @@ _cairo_clip_intersect_mask_using_spans (cairo_clip_t       *clip,
     /* We'll create a new surface the size of the intersection of the
      * old mask surface and the extents of the new clip path. */
     {
-	cairo_box_t extents;
+	cairo_rectangle_int_t extents;
 
-	_cairo_path_fixed_approximate_extents (path, tolerance, &extents);
-	if (! _cairo_rectangle_intersect_box (&surface_rect, &extents))
+	_cairo_path_fixed_approximate_extents (path, &extents);
+	if (! _cairo_rectangle_intersect (&surface_rect, &extents))
 	    goto SUCCESS;
 
 	if (clip->surface != NULL &&

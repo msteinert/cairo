@@ -290,12 +290,12 @@ _cairo_analysis_surface_intersect_clip_path (void		*abstract_surface,
 	surface->current_clip.width  = surface->width;
 	surface->current_clip.height = surface->height;
     } else {
-	cairo_box_t extents;
+	cairo_rectangle_int_t extents;
 	cairo_bool_t is_empty;
 
-	_cairo_path_fixed_approximate_extents (path, tolerance, &extents);
-	is_empty = _cairo_rectangle_intersect_box (&surface->current_clip,
-						   &extents);
+	_cairo_path_fixed_approximate_extents (path, &extents);
+	is_empty = _cairo_rectangle_intersect (&surface->current_clip,
+					       &extents);
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -478,19 +478,13 @@ _cairo_analysis_surface_stroke (void			*abstract_surface,
     is_empty = _cairo_rectangle_intersect (&extents, &surface->current_clip);
 
     if (_cairo_operator_bounded_by_mask (op)) {
-	cairo_box_t mask_extents;
-	double dx, dy;
+	cairo_rectangle_int_t mask_extents;
 
-	_cairo_path_fixed_approximate_extents (path, tolerance, &mask_extents);
+	_cairo_path_fixed_approximate_stroke_extents (path,
+						      style, ctm, tolerance,
+						      &mask_extents);
 
-	_cairo_stroke_style_max_distance_from_path (style, ctm, &dx, &dy);
-
-	mask_extents.p1.x -= _cairo_fixed_from_double (dx);
-	mask_extents.p2.x += _cairo_fixed_from_double (dx);
-	mask_extents.p1.y -= _cairo_fixed_from_double (dy);
-	mask_extents.p2.y += _cairo_fixed_from_double (dy);
-
-	is_empty = _cairo_rectangle_intersect_box (&extents, &mask_extents);
+	is_empty = _cairo_rectangle_intersect (&extents, &mask_extents);
     }
     if (stroke_extents)
 	*stroke_extents = extents;
@@ -542,11 +536,13 @@ _cairo_analysis_surface_fill (void			*abstract_surface,
     is_empty = _cairo_rectangle_intersect (&extents, &surface->current_clip);
 
     if (_cairo_operator_bounded_by_mask (op)) {
-	cairo_box_t mask_extents;
+	cairo_rectangle_int_t mask_extents;
 
-	_cairo_path_fixed_approximate_extents (path, tolerance, &mask_extents);
+	_cairo_path_fixed_approximate_fill_extents (path,
+						    tolerance,
+						    &mask_extents);
 
-	is_empty = _cairo_rectangle_intersect_box (&extents, &mask_extents);
+	is_empty = _cairo_rectangle_intersect (&extents, &mask_extents);
     }
     if (fill_extents)
 	*fill_extents = extents;

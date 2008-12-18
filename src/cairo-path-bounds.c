@@ -141,6 +141,27 @@ _cairo_path_bounder_curve_to (void *closure,
 }
 
 static cairo_status_t
+_cairo_path_bounder_curve_to_cp (void *closure,
+				 const cairo_point_t *b,
+				 const cairo_point_t *c,
+				 const cairo_point_t *d)
+{
+    cairo_path_bounder_t *bounder = closure;
+
+    if (bounder->has_move_to_point) {
+	_cairo_path_bounder_add_point (bounder,
+				       &bounder->move_to_point);
+	bounder->has_move_to_point = FALSE;
+    }
+
+    _cairo_path_bounder_add_point (bounder, b);
+    _cairo_path_bounder_add_point (bounder, c);
+    _cairo_path_bounder_add_point (bounder, d);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
 _cairo_path_bounder_close_path (void *closure)
 {
     return CAIRO_STATUS_SUCCESS;
@@ -152,8 +173,38 @@ _cairo_path_bounder_close_path (void *closure)
  */
 void
 _cairo_path_fixed_approximate_extents (cairo_path_fixed_t *path,
-				       double tolerance,
-				       cairo_box_t *extents)
+				       cairo_rectangle_int_t *extents)
+{
+    cairo_path_bounder_t bounder;
+    cairo_status_t status;
+
+    _cairo_path_bounder_init (&bounder, 0.);
+
+    status = _cairo_path_fixed_interpret (path, CAIRO_DIRECTION_FORWARD,
+					  _cairo_path_bounder_move_to,
+					  _cairo_path_bounder_line_to,
+					  _cairo_path_bounder_curve_to_cp,
+					  _cairo_path_bounder_close_path,
+					  &bounder);
+    assert (status == CAIRO_STATUS_SUCCESS);
+
+    if (bounder.has_point) {
+	_cairo_box_round_to_rectangle (&bounder.extents, extents);
+    } else {
+	extents->x = extents->y = 0;
+	extents->width = extents->width = 0;
+    }
+
+    _cairo_path_bounder_fini (&bounder);
+}
+
+/* A slightly better approximation than above - we actually decompose the
+ * Bezier, but we continue to ignore winding.
+ */
+void
+_cairo_path_fixed_approximate_fill_extents (cairo_path_fixed_t *path,
+					    double tolerance,
+					    cairo_rectangle_int_t *extents)
 {
     cairo_path_bounder_t bounder;
     cairo_status_t status;
@@ -169,10 +220,50 @@ _cairo_path_fixed_approximate_extents (cairo_path_fixed_t *path,
     assert (status == CAIRO_STATUS_SUCCESS);
 
     if (bounder.has_point) {
-	*extents = bounder.extents;
+	_cairo_box_round_to_rectangle (&bounder.extents, extents);
     } else {
-	extents->p1.x = extents->p1.y = 0;
-	extents->p2.x = extents->p2.y = 0;
+	extents->x = extents->y = 0;
+	extents->width = extents->width = 0;
+    }
+
+    _cairo_path_bounder_fini (&bounder);
+}
+
+/* Adjusts the fill extents (above) by the device-space pen.  */
+void
+_cairo_path_fixed_approximate_stroke_extents (cairo_path_fixed_t *path,
+					      cairo_stroke_style_t *style,
+					      const cairo_matrix_t *ctm,
+					      double tolerance,
+					      cairo_rectangle_int_t *extents)
+{
+    cairo_path_bounder_t bounder;
+    cairo_status_t status;
+
+    _cairo_path_bounder_init (&bounder, tolerance);
+
+    status = _cairo_path_fixed_interpret (path, CAIRO_DIRECTION_FORWARD,
+					  _cairo_path_bounder_move_to,
+					  _cairo_path_bounder_line_to,
+					  _cairo_path_bounder_curve_to,
+					  _cairo_path_bounder_close_path,
+					  &bounder);
+    assert (status == CAIRO_STATUS_SUCCESS);
+
+    if (bounder.has_point) {
+	double dx, dy;
+
+	_cairo_stroke_style_max_distance_from_path (style, ctm, &dx, &dy);
+
+	bounder.extents.p1.x -= _cairo_fixed_from_double (dx);
+	bounder.extents.p2.x += _cairo_fixed_from_double (dx);
+	bounder.extents.p1.y -= _cairo_fixed_from_double (dy);
+	bounder.extents.p2.y += _cairo_fixed_from_double (dy);
+
+	_cairo_box_round_to_rectangle (&bounder.extents, extents);
+    } else {
+	extents->x = extents->y = 0;
+	extents->width = extents->width = 0;
     }
 
     _cairo_path_bounder_fini (&bounder);
