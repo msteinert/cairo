@@ -2589,7 +2589,7 @@ _emit_glyphs (cairo_scaled_font_t *font,
 	struct _data_stream stream;
 
 	if (num_glyphs == 1) {
-	    fprintf (logfile, "[%g %g <%lx>]", x, y,  glyphs->index);
+	    fprintf (logfile, "[%g %g <%02lx>]", x, y,  glyphs->index);
 	} else {
 	    fprintf (logfile, "[%g %g <~", x, y);
 	    _write_base85_data_start (&stream);
@@ -3724,10 +3724,12 @@ cairo_xlib_surface_create (Display *dpy,
 		 "dict\n"
 		 "  /type /xlib set\n"
 		 "  /drawable 16!%lx set\n"
+		 "  /content //%s set\n"
 		 "  /width %d set\n"
 		 "  /height %d set\n"
 		 "  surface dup /s%ld exch def\n",
 		 drawable,
+		 _content_to_string (cairo_surface_get_content (ret)),
 		 width,
 		 height,
 		 surface_id);
@@ -3761,11 +3763,13 @@ cairo_xlib_surface_create_for_bitmap (Display *dpy,
 		 "dict\n"
 		 "  /type /xlib set\n"
 		 "  /drawable 16!%lx set\n"
+		 "  /content //%s set\n"
 		 "  /width %d set\n"
 		 "  /height %d set\n"
 		 "  /depth 1 set\n"
 		 "  surface dup /s%ld exch def\n",
 		 bitmap,
+		 _content_to_string (cairo_surface_get_content (ret)),
 		 width,
 		 height,
 		 surface_id);
@@ -3802,11 +3806,13 @@ cairo_xlib_surface_create_with_xrender_format (Display *dpy,
 		 "dict\n"
 		 "  /type /xrender set\n"
 		 "  /drawable 16!%lx set\n"
+		 "  /content //%s set\n"
 		 "  /width %d set\n"
 		 "  /height %d set\n"
 		 "  /depth %d set\n"
 		 "  surface dup /s%ld exch def\n",
 		 drawable,
+		 _content_to_string (cairo_surface_get_content (ret)),
 		 width,
 		 height,
 		 format->depth,

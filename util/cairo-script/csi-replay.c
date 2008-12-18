@@ -28,6 +28,12 @@ _get_display (void)
 }
 
 static void
+_destroy_pixmap (void *closure)
+{
+    XFreePixmap (_get_display(), (Pixmap) closure);
+}
+
+static void
 _destroy_window (void *closure)
 {
     XFlush (_get_display ());
@@ -36,37 +42,66 @@ _destroy_window (void *closure)
 
 static cairo_surface_t *
 _surface_create (void *closure,
+		 cairo_content_t content,
 		 double width, double height)
 {
     Display *dpy;
-    Visual *visual;
     XRenderPictFormat *xrender_format;
-    XSetWindowAttributes attr;
-    Window w;
     cairo_surface_t *surface;
 
     dpy = _get_display ();
 
-    visual = DefaultVisual (dpy, DefaultScreen (dpy));
-    xrender_format = XRenderFindVisualFormat (dpy, visual);
-    if (xrender_format == NULL) {
-	fprintf (stderr, "X server does not have the Render extension.\n");
-	exit (1);
+    content = CAIRO_CONTENT_COLOR_ALPHA;
+    if (1) {
+	Pixmap pixmap;
+
+	switch (content) {
+	case CAIRO_CONTENT_COLOR_ALPHA:
+	    xrender_format = XRenderFindStandardFormat (dpy, PictStandardARGB32);
+	    break;
+	case CAIRO_CONTENT_COLOR:
+	    xrender_format = XRenderFindStandardFormat (dpy, PictStandardRGB24);
+	    break;
+	case CAIRO_CONTENT_ALPHA:
+	default:
+	    xrender_format = XRenderFindStandardFormat (dpy, PictStandardA8);
+	}
+
+	pixmap = XCreatePixmap (dpy, DefaultRootWindow (dpy),
+			   width, height, xrender_format->depth);
+
+	surface = cairo_xlib_surface_create_with_xrender_format (dpy, pixmap,
+								 DefaultScreenOfDisplay (dpy),
+								 xrender_format,
+								 width, height);
+	cairo_surface_set_user_data (surface, &_key,
+				     (void *) pixmap, _destroy_pixmap);
+    } else {
+	XSetWindowAttributes attr;
+	Visual *visual;
+	Window w;
+
+	visual = DefaultVisual (dpy, DefaultScreen (dpy));
+	xrender_format = XRenderFindVisualFormat (dpy, visual);
+	if (xrender_format == NULL) {
+	    fprintf (stderr, "X server does not have the Render extension.\n");
+	    exit (1);
+	}
+
+	attr.override_redirect = True;
+	w = XCreateWindow (dpy, DefaultRootWindow (dpy), 0, 0,
+			   width <= 0 ? 1 : width,
+			   height <= 0 ? 1 : height,
+			   0, xrender_format->depth,
+			   InputOutput, visual, CWOverrideRedirect, &attr);
+	XMapWindow (dpy, w);
+
+	surface = cairo_xlib_surface_create_with_xrender_format (dpy, w,
+								 DefaultScreenOfDisplay (dpy),
+								 xrender_format,
+								 width, height);
+	cairo_surface_set_user_data (surface, &_key, (void *) w, _destroy_window);
     }
-
-    attr.override_redirect = True;
-    w = XCreateWindow (dpy, DefaultRootWindow (dpy), 0, 0,
-		       width <= 0 ? 1 : width,
-		       height <= 0 ? 1 : height,
-		       0, xrender_format->depth,
-		       InputOutput, visual, CWOverrideRedirect, &attr);
-    XMapWindow (dpy, w);
-
-    surface = cairo_xlib_surface_create_with_xrender_format (dpy, w,
-							     DefaultScreenOfDisplay (dpy),
-							     xrender_format,
-							     width, height);
-    cairo_surface_set_user_data (surface, &_key, (void *) w, _destroy_window);
 
     return surface;
 }
@@ -74,6 +109,7 @@ _surface_create (void *closure,
 /* fallback: just use an image surface */
 static cairo_surface_t *
 _surface_create (void *closure,
+		 cairo_content_t content,
 		 double width, double height)
 {
     return cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);

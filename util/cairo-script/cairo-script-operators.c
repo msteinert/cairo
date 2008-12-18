@@ -5149,6 +5149,7 @@ _surface (csi_t *ctx)
     csi_object_t key;
     double width, height;
     csi_surface_create_func_t hook;
+    long content;
     cairo_surface_t *surface;
     csi_status_t status;
 
@@ -5165,10 +5166,15 @@ _surface (csi_t *ctx)
     if (_csi_unlikely (status))
 	return status;
 
+    content = CAIRO_CONTENT_COLOR_ALPHA;
+    status = _csi_dictionary_get_integer (ctx, dict, "content", TRUE, &content);
+    if (_csi_unlikely (status))
+	return status;
+
     hook = ctx->hooks.surface_create;
     assert (hook != NULL);
 
-    surface = hook (ctx->hooks.closure, width, height);
+    surface = hook (ctx->hooks.closure, content, width, height);
     if (_csi_unlikely (surface == NULL)) {
 	return _csi_error (CSI_STATUS_NULL_POINTER);
     }
