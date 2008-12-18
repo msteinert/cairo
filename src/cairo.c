@@ -2880,6 +2880,9 @@ cairo_set_scaled_font (cairo_t                   *cr,
     if (unlikely (status))
         goto BAIL;
 
+    if (scaled_font == cr->gstate->scaled_font)
+	return;
+
     status = _cairo_gstate_set_font_face (cr->gstate, scaled_font->font_face);
     if (unlikely (status))
         goto BAIL;
