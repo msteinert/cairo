@@ -49,9 +49,7 @@ static const cairo_t _cairo_nil = {
   CAIRO_STATUS_NO_MEMORY,	/* status */
   { 0, 0, 0, NULL },		/* user_data */
   NULL,				/* gstate */
-  {{				/* gstate_tail */
-    0
-  }},
+  {{ 0 }, { 0 }},		/* gstate_tail */
   NULL,				/* gstate_freelist */
   {{				/* path */
     { 0, 0 },			/* last_move_point */
@@ -164,8 +162,9 @@ cairo_create (cairo_surface_t *target)
     _cairo_user_data_array_init (&cr->user_data);
     _cairo_path_fixed_init (cr->path);
 
-    cr->gstate = cr->gstate_tail;
-    cr->gstate_freelist = NULL;
+    cr->gstate = &cr->gstate_tail[0];
+    cr->gstate_freelist = &cr->gstate_tail[1];
+    cr->gstate_tail[1].next = NULL;
 
     status = _cairo_gstate_init (cr->gstate, target);
     if (unlikely (status))
@@ -222,7 +221,7 @@ cairo_destroy (cairo_t *cr)
     if (! _cairo_reference_count_dec_and_test (&cr->ref_count))
 	return;
 
-    while (cr->gstate != cr->gstate_tail) {
+    while (cr->gstate != &cr->gstate_tail[0]) {
 	if (_cairo_gstate_restore (&cr->gstate, &cr->gstate_freelist))
 	    break;
     }
@@ -237,6 +236,7 @@ cairo_destroy (cairo_t *cr)
 	cairo_surface_flush (surface);
 
     _cairo_gstate_fini (cr->gstate);
+    cr->gstate_freelist = cr->gstate_freelist->next; /* skip over tail[1] */
     while (cr->gstate_freelist != NULL) {
 	cairo_gstate_t *gstate = cr->gstate_freelist;
 	cr->gstate_freelist = gstate->next;
