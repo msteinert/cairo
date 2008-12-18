@@ -150,6 +150,7 @@ test_sources = \
 	scale-offset-image.c				\
 	scale-offset-similar.c				\
 	scale-source-surface-paint.c			\
+	scaled-font-zero-matrix.c			\
 	stroke-ctm-caps.c				\
 	stroke-image.c				        \
 	select-font-face.c				\
