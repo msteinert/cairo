@@ -41,9 +41,9 @@ _destroy_window (void *closure)
 }
 
 static cairo_surface_t *
-_surface_create (void *closure,
-		 cairo_content_t content,
-		 double width, double height)
+_xrender_surface_create (void *closure,
+			 cairo_content_t content,
+			 double width, double height)
 {
     Display *dpy;
     XRenderPictFormat *xrender_format;
@@ -105,29 +105,104 @@ _surface_create (void *closure,
 
     return surface;
 }
-#else
-/* fallback: just use an image surface */
+#endif
+
+#if CAIRO_HAS_PDF_SURFACE
+#include <cairo-pdf.h>
 static cairo_surface_t *
-_surface_create (void *closure,
-		 cairo_content_t content,
-		 double width, double height)
+_pdf_surface_create (void *closure,
+		     cairo_content_t content,
+		     double width, double height)
+{
+    return cairo_pdf_surface_create_for_stream (NULL, NULL, width, height);
+}
+#endif
+
+#if CAIRO_HAS_PS_SURFACE
+#include <cairo-ps.h>
+static cairo_surface_t *
+_ps_surface_create (void *closure,
+		    cairo_content_t content,
+		    double width, double height)
+{
+    return cairo_ps_surface_create_for_stream (NULL, NULL, width, height);
+}
+#endif
+
+#if CAIRO_HAS_SVG_SURFACE
+#include <cairo-svg.h>
+static cairo_surface_t *
+_svg_surface_create (void *closure,
+		     cairo_content_t content,
+		     double width, double height)
+{
+    return cairo_svg_surface_create_for_stream (NULL, NULL, width, height);
+}
+#endif
+
+static cairo_surface_t *
+_image_surface_create (void *closure,
+		       cairo_content_t content,
+		       double width, double height)
 {
     return cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
 }
-#endif
 
 int
 main (int argc, char **argv)
 {
     cairo_script_interpreter_t *csi;
-    const cairo_script_interpreter_hooks_t hooks = {
-	.surface_create = _surface_create
+    cairo_script_interpreter_hooks_t hooks = {
+#if CAIRO_HAS_XLIB_XRENDER_SURFACE
+	.surface_create = _xrender_surface_create
+#elif CAIRO_PDF_SURFACE
+	.surface_create = _pdf_surface_create
+#elif CAIRO_PS_SURFACE
+	.surface_create = _ps_surface_create
+#elif CAIRO_SVG_SURFACE
+	.surface_create = _svg_surface_create
+#else
+	.surface_create = _image_surface_create
+#endif
     };
     int i;
+    const struct backends {
+	const char *name;
+	csi_surface_create_func_t create;
+    } backends[] = {
+	{ "--image", _image_surface_create },
+#if CAIRO_HAS_XLIB_XRENDER_SURFACE
+	{ "--xrender", _xrender_surface_create },
+#endif
+#if CAIRO_HAS_PDF_SURFACE
+	{ "--pdf", _pdf_surface_create },
+#endif
+#if CAIRO_HAS_PS_SURFACE
+	{ "--ps", _ps_surface_create },
+#endif
+#if CAIRO_HAS_SVG_SURFACE
+	{ "--svg", _svg_surface_create },
+#endif
+	{ NULL, NULL }
+    };
 
     csi = cairo_script_interpreter_create ();
     cairo_script_interpreter_install_hooks (csi, &hooks);
-    for (i = 1; i < argc; i++)
-	cairo_script_interpreter_run (csi, argv[i]);
+
+    for (i = 1; i < argc; i++) {
+	const struct backends *b;
+
+	for (b = backends; b->name != NULL; b++) {
+	    if (strcmp (b->name, argv[i]) == 0) {
+		hooks.surface_create = b->create;
+		cairo_script_interpreter_install_hooks (csi, &hooks);
+		break;
+	    }
+	}
+
+	if (b->name == NULL)
+	    cairo_script_interpreter_run (csi, argv[i]);
+    }
+
     return cairo_script_interpreter_destroy (csi);
 }
