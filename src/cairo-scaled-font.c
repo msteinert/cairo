@@ -530,6 +530,17 @@ _hash_matrix_fnv (const cairo_matrix_t	*matrix,
     return hval;
 }
 
+static uint32_t
+_hash_mix_bits (uint32_t hash)
+{
+    hash += hash << 12;
+    hash ^= hash >> 7;
+    hash += hash << 3;
+    hash ^= hash >> 17;
+    hash += hash << 5;
+    return hash;
+}
+
 static void
 _cairo_scaled_font_init_key (cairo_scaled_font_t        *scaled_font,
 			     cairo_font_face_t	        *font_face,
@@ -552,9 +563,13 @@ _cairo_scaled_font_init_key (cairo_scaled_font_t        *scaled_font,
     /* We do a bytewise hash on the font matrices */
     hash = _hash_matrix_fnv (&scaled_font->font_matrix, hash);
     hash = _hash_matrix_fnv (&scaled_font->ctm, hash);
+    hash = _hash_mix_bits (hash);
 
     hash ^= (unsigned long) scaled_font->font_face;
     hash ^= cairo_font_options_hash (&scaled_font->options);
+
+    /* final mixing of bits */
+    hash = _hash_mix_bits (hash);
 
     assert (hash != ZOMBIE);
     scaled_font->hash_entry.hash = hash;
