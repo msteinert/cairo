@@ -299,7 +299,6 @@ const cairo_font_face_backend_t _cairo_quartz_font_face_backend = {
     CAIRO_FONT_TYPE_QUARTZ,
     _cairo_quartz_font_face_create_for_toy,
     _cairo_quartz_font_face_destroy,
-    NULL, /* direct implementation */
     _cairo_quartz_font_face_scaled_font_create
 };
 
