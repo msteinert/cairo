@@ -48,6 +48,8 @@ draw (cairo_t *cr, int width, int height)
 	    font_options);
     cairo_set_scaled_font (cr, scaled_font);
     cairo_show_text (cr, "Hello");
+    cairo_scaled_font_destroy (scaled_font);
+    cairo_font_options_destroy (font_options);
     return cairo_status (cr);
 }
 
