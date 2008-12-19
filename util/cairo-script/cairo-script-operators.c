@@ -567,44 +567,35 @@ static csi_status_t
 end_array_construction (csi_t *ctx)
 {
     csi_object_t obj;
-    csi_array_t *array;
     csi_status_t status;
+    int len = 0;
 
-    status = csi_array_new (ctx, &obj);
-    if (_csi_unlikely (status))
-	return status;
-
-    array = obj.datum.array;
     do {
-	csi_object_t *value;
+	check (len + 1);
 
-	check (1);
-
-	value = _csi_peek_ostack (ctx, 0);
-	if (csi_object_get_type (value) == CSI_OBJECT_TYPE_MARK) {
-	    pop (1);
+	if (csi_object_get_type (_csi_peek_ostack (ctx, len)) ==
+	    CSI_OBJECT_TYPE_MARK)
+	{
 	    break;
 	}
 
-	status = csi_array_append (ctx, array, value);
-	if (_csi_unlikely (status))
-	    return status;
-
-	pop (1);
+	len++;
     } while (TRUE);
 
-    /* and reverse */
-    if (array->stack.len) {
-	unsigned int i, j;
+    status = csi_array_new (ctx, len, &obj);
+    if (_csi_unlikely (status))
+	return status;
 
-	for (i = 0, j = array->stack.len; i < --j; i++) {
-	    csi_object_t tmp;
+    if (len != 0) {
+	csi_array_t *array;
 
-	    tmp = array->stack.objects[i];
-	    array->stack.objects[i] = array->stack.objects[j];
-	    array->stack.objects[j] = tmp;
-	}
+	array = obj.datum.array;
+	memcpy (array->stack.objects,
+		_csi_peek_ostack (ctx, len - 1),
+		sizeof (csi_object_t) * len);
+	array->stack.len = len;
     }
+    ctx->ostack.len -= len + 1;
 
     return push (&obj);
 }
@@ -824,7 +815,7 @@ _array (csi_t *ctx)
     csi_object_t obj;
     csi_status_t status;
 
-    status = csi_array_new (ctx, &obj);
+    status = csi_array_new (ctx, 0, &obj);
     if (_csi_unlikely (status))
 	return status;
 

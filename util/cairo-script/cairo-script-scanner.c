@@ -350,7 +350,7 @@ token_end (csi_t *ctx, csi_scanner_t *scan, csi_file_t *src)
 					    &scan->procedure_stack,
 					    &scan->build_procedure);
 
-	scan->status = csi_array_new (ctx, &scan->build_procedure);
+	scan->status = csi_array_new (ctx, 0, &scan->build_procedure);
 	scan->build_procedure.type |= CSI_OBJECT_ATTR_EXECUTABLE;
 	reset (scan);
 	return;

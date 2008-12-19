@@ -618,6 +618,7 @@ _csi_error (csi_status_t status);
 
 csi_private csi_status_t
 csi_array_new (csi_t *ctx,
+	       csi_integer_t initial_size,
 	       csi_object_t *obj);
 
 csi_private csi_status_t

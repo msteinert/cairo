@@ -44,7 +44,7 @@ _csi_stack_init (csi_t *ctx, csi_stack_t *stack, csi_integer_t size)
     stack->len = 0;
     stack->size = size;
     /* assert ((unsigned) size < INT32_MAX / sizeof (csi_object_t)); */
-    stack->objects = _csi_alloc (ctx, stack->size * sizeof (csi_object_t));
+    stack->objects = _csi_alloc (ctx, size * sizeof (csi_object_t));
     if (_csi_unlikely (stack->objects == NULL))
 	status = _csi_error (CSI_STATUS_NO_MEMORY);
 

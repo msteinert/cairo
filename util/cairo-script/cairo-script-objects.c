@@ -38,26 +38,30 @@
 
 csi_status_t
 csi_array_new (csi_t *ctx,
+	       csi_integer_t initial_size,
 	       csi_object_t *obj)
 
 {
     csi_array_t *array;
 
-    if (ctx->free_array != NULL) {
-	array = ctx->free_array;
-	ctx->free_array = NULL;
-    } else {
+    if (ctx->free_array == NULL ||
+	ctx->free_array->stack.size <= initial_size)
+    {
 	csi_status_t status;
 
 	array = _csi_slab_alloc (ctx, sizeof (csi_array_t));
 	if (_csi_unlikely (array == NULL))
 	    return _csi_error (CSI_STATUS_NO_MEMORY);
 
-	status = _csi_stack_init (ctx, &array->stack, 32);
+	status = _csi_stack_init (ctx, &array->stack,
+				  initial_size ? initial_size : 32);
 	if (_csi_unlikely (status)) {
 	    _csi_slab_free (ctx, array, sizeof (csi_array_t));
 	    return status;
 	}
+    } else {
+	array = ctx->free_array;
+	ctx->free_array = NULL;
     }
 
     array->base.type = CSI_OBJECT_TYPE_ARRAY;
@@ -153,16 +157,25 @@ void
 csi_array_free (csi_t *ctx, csi_array_t *array)
 {
     if (ctx->free_array != NULL) {
+	if (array->stack.size > ctx->free_array->stack.size) {
+	    csi_array_t *tmp = ctx->free_array;
+	    ctx->free_array = array;
+	    array = tmp;
+	}
+
 	_csi_stack_fini (ctx, &array->stack);
 	_csi_slab_free (ctx, array, sizeof (csi_array_t));
     } else {
 	csi_integer_t n;
 
-	ctx->free_array = array;
-
 	for (n = 0; n < array->stack.len; n++)
 	    csi_object_free (ctx, &array->stack.objects[n]);
 	array->stack.len = 0;
+
+	if (ctx->free_array == NULL)
+	    ctx->free_array = array;
+	else
+	    csi_array_free (ctx, array);
     }
 }
 
