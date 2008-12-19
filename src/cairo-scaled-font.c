@@ -517,14 +517,15 @@ _cairo_scaled_font_placeholder_wait_for_creation_to_finish (cairo_scaled_font_t 
 #define FNV1_32_INIT ((uint32_t)0x811c9dc5)
 
 static uint32_t
-_hash_bytes_fnv (unsigned char *buffer,
-		 int            len,
-		 uint32_t       hval)
+_hash_matrix_fnv (const cairo_matrix_t	*matrix,
+		  uint32_t		 hval)
 {
-    while (len--) {
+    const uint8_t *buffer = (const uint8_t *) matrix;
+    int len = sizeof (cairo_matrix_t);
+    do {
 	hval *= FNV_32_PRIME;
 	hval ^= *buffer++;
-    }
+    } while (--len);
 
     return hval;
 }
@@ -549,13 +550,10 @@ _cairo_scaled_font_init_key (cairo_scaled_font_t        *scaled_font,
     _cairo_font_options_init_copy (&scaled_font->options, options);
 
     /* We do a bytewise hash on the font matrices */
-    hash = _hash_bytes_fnv ((unsigned char *)(&scaled_font->font_matrix.xx),
-			    sizeof(cairo_matrix_t), hash);
-    hash = _hash_bytes_fnv ((unsigned char *)(&scaled_font->ctm.xx),
-			    sizeof(cairo_matrix_t), hash);
+    hash = _hash_matrix_fnv (&scaled_font->font_matrix, hash);
+    hash = _hash_matrix_fnv (&scaled_font->ctm, hash);
 
     hash ^= (unsigned long) scaled_font->font_face;
-
     hash ^= cairo_font_options_hash (&scaled_font->options);
 
     assert (hash != ZOMBIE);
