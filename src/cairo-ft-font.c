@@ -222,34 +222,35 @@ FAIL:
     cairo_ft_unscaled_font_map = NULL;
 }
 
+
+static void
+_cairo_ft_unscaled_font_map_pluck_entry (void *entry, void *closure)
+{
+    cairo_ft_unscaled_font_t *unscaled = entry;
+    cairo_ft_unscaled_font_map_t *font_map = closure;
+
+    _cairo_hash_table_remove (font_map->hash_table,
+			      &unscaled->base.hash_entry);
+
+    _font_map_release_face_lock_held (font_map, unscaled);
+    _cairo_ft_unscaled_font_fini (unscaled);
+    free (unscaled);
+}
+
 static void
 _cairo_ft_unscaled_font_map_destroy (void)
 {
-    cairo_ft_unscaled_font_t *unscaled;
     cairo_ft_unscaled_font_map_t *font_map;
 
     CAIRO_MUTEX_LOCK (_cairo_ft_unscaled_font_map_mutex);
+    font_map = cairo_ft_unscaled_font_map;
+    cairo_ft_unscaled_font_map = NULL;
+    CAIRO_MUTEX_UNLOCK (_cairo_ft_unscaled_font_map_mutex);
 
-    if (cairo_ft_unscaled_font_map) {
-	font_map = cairo_ft_unscaled_font_map;
-
-	/* This is rather inefficient, but destroying the hash table
-	 * is something we only do during debugging, (during
-	 * cairo_debug_reset_static_data), when efficiency is not
-	 * relevant. */
-        while (1) {
-	    unscaled = _cairo_hash_table_random_entry (font_map->hash_table,
-						       NULL);
-	    if (unscaled == NULL)
-		break;
-	    _cairo_hash_table_remove (font_map->hash_table,
-				      &unscaled->base.hash_entry);
-
-	    _font_map_release_face_lock_held (font_map, unscaled);
-	    _cairo_ft_unscaled_font_fini (unscaled);
-	    free (unscaled);
-	}
-
+    if (font_map != NULL) {
+	_cairo_hash_table_foreach (font_map->hash_table,
+				   _cairo_ft_unscaled_font_map_pluck_entry,
+				   font_map);
 	assert (font_map->num_open_faces == 0);
 
 	FT_Done_FreeType (font_map->ft_library);
@@ -257,11 +258,7 @@ _cairo_ft_unscaled_font_map_destroy (void)
 	_cairo_hash_table_destroy (font_map->hash_table);
 
 	free (font_map);
-
-	cairo_ft_unscaled_font_map = NULL;
     }
-
-    CAIRO_MUTEX_UNLOCK (_cairo_ft_unscaled_font_map_mutex);
 }
 
 static cairo_ft_unscaled_font_map_t *

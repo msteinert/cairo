@@ -666,18 +666,19 @@ cff_dict_write (cairo_hash_table_t *dict, cairo_array_t *output)
 }
 
 static void
+_cff_dict_entry_pluck (void *_entry, void *dict)
+{
+    cff_dict_operator_t *entry = _entry;
+
+    _cairo_hash_table_remove (dict, &entry->base);
+    free (entry->operand);
+    free (entry);
+}
+
+static void
 cff_dict_fini (cairo_hash_table_t *dict)
 {
-    cff_dict_operator_t *entry;
-
-    while (1) {
-	entry = _cairo_hash_table_random_entry (dict, NULL);
-	if (entry == NULL)
-	    break;
-        free (entry->operand);
-        _cairo_hash_table_remove (dict, (cairo_hash_entry_t *) entry);
-        free (entry);
-    }
+    _cairo_hash_table_foreach (dict, _cff_dict_entry_pluck, dict);
     _cairo_hash_table_destroy (dict);
 }
 
