@@ -2539,7 +2539,7 @@ _emit_glyphs (cairo_scaled_font_t *font,
     }
 
     for (n = 0; n < num_glyphs; n++) {
-	if (glyphs[n].index > 256)
+	if (glyphs[n].index > 255)
 	    break;
     }
 
