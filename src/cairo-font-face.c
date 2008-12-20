@@ -45,79 +45,44 @@ static const cairo_font_face_backend_t _cairo_toy_font_face_backend;
 
 /* #cairo_font_face_t */
 
-const cairo_toy_font_face_t _cairo_font_face_nil = {
-    {
+const cairo_font_face_t _cairo_font_face_nil = {
     { 0 },				/* hash_entry */
     CAIRO_STATUS_NO_MEMORY,		/* status */
     CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
     { 0, 0, 0, NULL },			/* user_data */
-    &_cairo_toy_font_face_backend
-    },
-    CAIRO_FONT_FAMILY_DEFAULT,		/* family */
-    TRUE,				/* owns_family */
-    CAIRO_FONT_SLANT_DEFAULT,		/* slant */
-    CAIRO_FONT_WEIGHT_DEFAULT,		/* weight */
-    NULL				/* impl_face */
+    NULL
 };
 
-static const cairo_toy_font_face_t _cairo_font_face_null_pointer = {
-    {
+static const cairo_font_face_t _cairo_font_face_null_pointer = {
     { 0 },				/* hash_entry */
     CAIRO_STATUS_NULL_POINTER,		/* status */
     CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
     { 0, 0, 0, NULL },			/* user_data */
-    &_cairo_toy_font_face_backend
-    },
-    CAIRO_FONT_FAMILY_DEFAULT,		/* family */
-    TRUE,				/* owns_family */
-    CAIRO_FONT_SLANT_DEFAULT,		/* slant */
-    CAIRO_FONT_WEIGHT_DEFAULT,		/* weight */
-    NULL				/* impl_face */
+    NULL
 };
 
-static const cairo_toy_font_face_t _cairo_font_face_invalid_string = {
-    {
+static const cairo_font_face_t _cairo_font_face_invalid_string = {
     { 0 },				/* hash_entry */
     CAIRO_STATUS_INVALID_STRING,	/* status */
     CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
     { 0, 0, 0, NULL },			/* user_data */
-    &_cairo_toy_font_face_backend
-    },
-    CAIRO_FONT_FAMILY_DEFAULT,		/* family */
-    TRUE,				/* owns_family */
-    CAIRO_FONT_SLANT_DEFAULT,		/* slant */
-    CAIRO_FONT_WEIGHT_DEFAULT,		/* weight */
-    NULL				/* impl_face */
+    NULL
 };
 
-static const cairo_toy_font_face_t _cairo_font_face_invalid_slant = {
-    {
+static const cairo_font_face_t _cairo_font_face_invalid_slant = {
     { 0 },				/* hash_entry */
     CAIRO_STATUS_INVALID_SLANT,		/* status */
     CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
     { 0, 0, 0, NULL },			/* user_data */
-    &_cairo_toy_font_face_backend
-    },
-    CAIRO_FONT_FAMILY_DEFAULT,		/* family */
-    TRUE,				/* owns_family */
-    CAIRO_FONT_SLANT_DEFAULT,		/* slant */
-    CAIRO_FONT_WEIGHT_DEFAULT,		/* weight */
-    NULL				/* impl_face */
+    NULL
 };
 
-static const cairo_toy_font_face_t _cairo_font_face_invalid_weight = {
-    {
+static const cairo_font_face_t _cairo_font_face_invalid_weight = {
     { 0 },				/* hash_entry */
     CAIRO_STATUS_INVALID_WEIGHT,	/* status */
     CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
     { 0, 0, 0, NULL },			/* user_data */
-    &_cairo_toy_font_face_backend
-    },
-    CAIRO_FONT_FAMILY_DEFAULT,		/* family */
-    TRUE,				/* owns_family */
-    CAIRO_FONT_SLANT_DEFAULT,		/* slant */
-    CAIRO_FONT_WEIGHT_DEFAULT,		/* weight */
-    NULL				/* impl_face */
+    NULL
 };
 
 cairo_status_t
