@@ -18,7 +18,7 @@ do_twin (cairo_t *cr,
     cairo_perf_timer_start ();
 
     cairo_select_font_face (cr,
-			    "<cairo>",
+			    "@cairo:",
 			    CAIRO_FONT_SLANT_NORMAL,
 			    CAIRO_FONT_WEIGHT_NORMAL);
 
