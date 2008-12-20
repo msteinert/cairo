@@ -56,11 +56,11 @@ int main (int argc, char *argv[])
     } else {
 	gchar *dir = g_get_current_dir ();
 	absolute = g_build_filename (dir, filename, (gchar *) 0);
-	free (dir);
+	g_free (dir);
     }
 
     uri = g_filename_to_uri (absolute, NULL, &error);
-    free (absolute);
+    g_free (absolute);
     if (uri == NULL)
 	FAIL (error->message);
 
