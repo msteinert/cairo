@@ -1326,7 +1326,7 @@ _encode_string_literal (char *out, int max,
 	    break;
 	case '\r':
 	    *out++ = '\\';
-	    *out++ = 'n';
+	    *out++ = 'r';
 	    max -= 2;
 	case '\t':
 	    *out++ = '\\';
@@ -1340,7 +1340,7 @@ _encode_string_literal (char *out, int max,
 	    break;
 	case '\f':
 	    *out++ = '\\';
-	    *out++ = 'r';
+	    *out++ = 'f';
 	    max -= 2;
 	    break;
 	case '\\':
