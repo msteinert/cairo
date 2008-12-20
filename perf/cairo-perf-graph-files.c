@@ -319,7 +319,7 @@ gv_report_selected (GraphView *gv, int i, struct _app_data *app)
 	argv[4] = NULL;
 
 	do_git (app, argv);
-	free (id);
+	g_free (id);
     }
 }
 

@@ -397,10 +397,11 @@ cairo_perf_report_load (cairo_perf_report_t *report,
 
     configuration = xmalloc (strlen (filename) * sizeof (char) + 1);
     strcpy (configuration, filename);
-    baseName = strdup (basename (configuration));
-    report->configuration = xmalloc (strlen (filename) * sizeof (char) + 1);
-    strcpy(report->configuration, baseName);
+    baseName = basename (configuration);
+    report->configuration = xmalloc (strlen (baseName) * sizeof (char) + 1);
+    strcpy (report->configuration, baseName);
     free (configuration);
+
     dot = strrchr (report->configuration, '.');
     if (dot)
 	*dot = '\0';
