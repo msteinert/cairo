@@ -788,6 +788,7 @@ cairo_os2_surface_create (HPS hps_client_window,
                             FALSE);
     if (rc != NO_ERROR) {
         /* Could not create mutex semaphore! */
+        free (local_os2_surface);
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
