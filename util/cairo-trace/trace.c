@@ -1391,13 +1391,24 @@ _emit_string_literal (const char *utf8, int len)
     while (utf8 < end) {
 	switch ((c = *utf8++)) {
 	case '\n':
+	    c = 'n';
+	    goto ESCAPED_CHAR;
 	case '\r':
-	case '\\':
+	    c = 'r';
+	    goto ESCAPED_CHAR;
 	case '\t':
+	    c = 't';
+	    goto ESCAPED_CHAR;
 	case '\b':
+	    c = 'b';
+	    goto ESCAPED_CHAR;
 	case '\f':
+	    c = 'f';
+	    goto ESCAPED_CHAR;
+	case '\\':
 	case '(':
 	case ')':
+ESCAPED_CHAR:
 	    fprintf (logfile, "\\%c", c);
 	    break;
 	default:
