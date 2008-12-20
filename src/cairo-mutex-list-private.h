@@ -39,7 +39,7 @@
 CAIRO_MUTEX_DECLARE (_cairo_pattern_solid_pattern_cache_lock)
 CAIRO_MUTEX_DECLARE (_cairo_pattern_solid_surface_cache_lock)
 
-CAIRO_MUTEX_DECLARE (_cairo_font_face_mutex)
+CAIRO_MUTEX_DECLARE (_cairo_toy_font_face_mutex)
 CAIRO_MUTEX_DECLARE (_cairo_intern_string_mutex)
 CAIRO_MUTEX_DECLARE (_cairo_scaled_font_map_mutex)
 CAIRO_MUTEX_DECLARE (_cairo_scaled_font_error_mutex)

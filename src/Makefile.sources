@@ -141,6 +141,7 @@ cairo_sources = \
 	cairo-tor-scan-converter.c \
 	cairo-system.c \
 	cairo-traps.c \
+	cairo-toy-font-face.c \
 	cairo-unicode.c \
 	cairo-user-font.c \
 	cairo-version.c \
