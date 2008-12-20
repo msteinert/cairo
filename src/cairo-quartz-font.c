@@ -135,8 +135,8 @@ static cairo_status_t
 _cairo_quartz_font_face_create_for_toy (cairo_toy_font_face_t   *toy_face,
 					cairo_font_face_t      **font_face)
 {
-    const char *family = toy_face->family;
-    char *full_name = malloc(strlen(family) + 64); // give us a bit of room to tack on Bold, Oblique, etc.
+    const char *family;
+    char *full_name;
     CFStringRef cgFontName = NULL;
     CGFontRef cgFont = NULL;
     int loop;
@@ -145,6 +145,8 @@ _cairo_quartz_font_face_create_for_toy (cairo_toy_font_face_t   *toy_face,
     if (! _cairo_quartz_font_symbols_present)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
+    family = toy_face->family;
+    full_name = malloc (strlen (family) + 64); // give us a bit of room to tack on Bold, Oblique, etc.
     /* handle CSS-ish faces */
     if (!strcmp(family, "serif") || !strcmp(family, "Times Roman"))
 	family = "Times";
