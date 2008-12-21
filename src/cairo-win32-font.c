@@ -541,7 +541,6 @@ _cairo_win32_font_face_create_for_toy (cairo_toy_font_face_t   *toy_face,
 
     memcpy (logfont.lfFaceName, face_name, sizeof (uint16_t) * (face_name_len + 1));
     free (face_name);
-    logfont.lfFaceName[ARRAY_LENGTH (logfont.lfFaceName) - 1] = 0;
 
     logfont.lfHeight = 0;	/* filled in later */
     logfont.lfWidth = 0;	/* filled in later */
@@ -581,7 +580,7 @@ _cairo_win32_font_face_create_for_toy (cairo_toy_font_face_t   *toy_face,
     logfont.lfQuality = DEFAULT_QUALITY; /* filled in later */
     logfont.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
 
-    *font_face = cairo_win32_font_face_create_for_logfontw (logfont);
+    *font_face = cairo_win32_font_face_create_for_logfontw (&logfont);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1898,11 +1897,10 @@ _cairo_win32_font_face_scaled_font_create (void			*abstract_face,
 				      font);
 }
 
-static const cairo_font_face_backend_t _cairo_win32_font_face_backend = {
+const cairo_font_face_backend_t _cairo_win32_font_face_backend = {
     CAIRO_FONT_TYPE_WIN32,
     _cairo_win32_font_face_create_for_toy,
     _cairo_win32_font_face_destroy,
-    NULL, /* direct implementation */
     _cairo_win32_font_face_scaled_font_create
 };
 
