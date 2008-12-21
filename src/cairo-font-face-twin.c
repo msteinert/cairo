@@ -258,7 +258,7 @@ twin_scaled_font_unicode_to_glyph (cairo_scaled_font_t *scaled_font,
      * to map all unknown chars to a single unknown glyph to
      * reduce pressure on cache. */
 
-    if (unicode < ARRAY_LENGTH (_cairo_twin_charmap))
+    if (likely (unicode < ARRAY_LENGTH (_cairo_twin_charmap)))
 	*glyph = unicode;
     else
 	*glyph = 0;
@@ -283,9 +283,8 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 {
     double x1, y1, x2, y2, x3, y3;
     twin_face_properties_t *props;
-    const int8_t *b = _cairo_twin_outlines +
-		      _cairo_twin_charmap[glyph >= ARRAY_LENGTH (_cairo_twin_charmap) ? 0 : glyph];
-    const int8_t *g = twin_glyph_draw(b);
+    const int8_t *b;
+    const int8_t *g;
 
     struct {
       cairo_bool_t snap;
@@ -294,6 +293,10 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
       int n_snap_x;
       int n_snap_y;
     } info = {FALSE};
+
+    b = _cairo_twin_outlines +
+	_cairo_twin_charmap[unlikely (glyph >= ARRAY_LENGTH (_cairo_twin_charmap)) ? 0 : glyph];
+    g = twin_glyph_draw(b);
 
     props = cairo_font_face_get_user_data (cairo_scaled_font_get_font_face (scaled_font),
 					   &twin_face_properties_key);
