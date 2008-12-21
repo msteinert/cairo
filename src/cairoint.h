@@ -1393,9 +1393,9 @@ _cairo_toy_font_face_get_implementation (cairo_font_face_t *font_face);
 
 /* cairo-font-face-twin.c */
 
-cairo_private cairo_font_face_t *
-_cairo_font_face_twin_create (cairo_font_slant_t slant,
-			      cairo_font_weight_t weight);
+cairo_private cairo_status_t
+_cairo_font_face_twin_create_for_toy (cairo_toy_font_face_t   *toy_face,
+				      cairo_font_face_t      **font_face);
 
 /* cairo-font-face-twin-data.c */
 

@@ -339,9 +339,7 @@ static cairo_status_t
 _cairo_user_font_face_create_for_toy (cairo_toy_font_face_t   *toy_face,
 				      cairo_font_face_t      **font_face)
 {
-    *font_face = _cairo_font_face_twin_create (cairo_toy_font_face_get_slant (&toy_face->base),
-					       cairo_toy_font_face_get_weight (&toy_face->base));
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_font_face_twin_create_for_toy (toy_face, font_face);
 }
 
 static const cairo_scaled_font_backend_t _cairo_user_scaled_font_backend = {

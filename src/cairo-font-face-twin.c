@@ -36,13 +36,186 @@
 
 #include "cairoint.h"
 
+#include <ctype.h>
+
 /*
  * This file implements a user-font rendering the decendant of the Hershey
  * font coded by Keith Packard for use in the Twin window system.
  * The actual font data is in cairo-font-face-twin-data.c
  *
- * Ported to cairo user font by Behdad Esfahbod.
+ * Ported to cairo user font and extended by Behdad Esfahbod.
  */
+
+
+
+/*
+ * Face properties
+ */
+
+/* We synthesize multiple faces from the twin data.  Here is the parameters. */
+
+/* CSS weight */
+typedef enum {
+  TWIN_WEIGHT_ULTRALIGHT = 200,
+  TWIN_WEIGHT_LIGHT = 300,
+  TWIN_WEIGHT_NORMAL = 400,
+  TWIN_WEIGHT_MEDIUM = 500,
+  TWIN_WEIGHT_SEMIBOLD = 600,
+  TWIN_WEIGHT_BOLD = 700,
+  TWIN_WEIGHT_ULTRABOLD = 800,
+  TWIN_WEIGHT_HEAVY = 900
+} twin_face_wight;
+
+/* CSS stretch */
+typedef enum {
+  TWIN_STRETCH_ULTRA_CONDENSED,
+  TWIN_STRETCH_EXTRA_CONDENSED,
+  TWIN_STRETCH_CONDENSED,
+  TWIN_STRETCH_SEMI_CONDENSED,
+  TWIN_STRETCH_NORMAL,
+  TWIN_STRETCH_SEMI_EXPANDED,
+  TWIN_STRETCH_EXPANDED,
+  TWIN_STRETCH_EXTRA_EXPANDED,
+  TWIN_STRETCH_ULTRA_EXPANDED
+} twin_face_stretch;
+
+
+typedef struct _twin_face_properties {
+    cairo_font_slant_t slant;
+    twin_face_wight    weight;
+    twin_face_stretch  stretch;
+
+    /* lets have some fun */
+    cairo_bool_t monospace;
+    cairo_bool_t serif;
+    cairo_bool_t smallcaps;
+} twin_face_properties_t;
+
+cairo_user_data_key_t twin_face_properties_key;
+
+#define TOLOWER(c) \
+   (((c) >= 'A' && (c) <= 'Z') ? (c) - 'A' + 'a' : (c))
+
+static cairo_bool_t
+field_matches (const char *s1,
+               const char *s2,
+               int len)
+{
+  int c1, c2;
+
+  while (len && *s1 && *s2)
+    {
+      c1 = TOLOWER (*s1);
+      c2 = TOLOWER (*s2);
+      if (c1 != c2) {
+        if (c1 == '-') {
+          s1++;
+          continue;
+        }
+        return FALSE;
+      }
+      s1++; s2++;
+      len--;
+    }
+
+  return len == 0 && *s1 == '\0';
+}
+
+
+static void
+parse_field (twin_face_properties_t *props,
+	     const char *s,
+	     int len)
+{
+    cairo_bool_t sans, serif;
+
+#define MATCH(s1, var, value) \
+	if (field_matches (s1, s, len)) var = value
+
+
+         MATCH ("oblique",    props->slant, CAIRO_FONT_SLANT_OBLIQUE);
+    else MATCH ("italic",     props->slant, CAIRO_FONT_SLANT_ITALIC);
+
+
+    else MATCH ("ultra-light", props->weight, TWIN_WEIGHT_ULTRALIGHT);
+    else MATCH ("light",       props->weight, TWIN_WEIGHT_LIGHT);
+    else MATCH ("medium",      props->weight, TWIN_WEIGHT_NORMAL);
+    else MATCH ("semi-bold",   props->weight, TWIN_WEIGHT_SEMIBOLD);
+    else MATCH ("bold",        props->weight, TWIN_WEIGHT_BOLD);
+    else MATCH ("ultra-bold",  props->weight, TWIN_WEIGHT_ULTRABOLD);
+    else MATCH ("heavy",       props->weight, TWIN_WEIGHT_HEAVY);
+
+    else MATCH ("ultra-condensed", props->stretch, TWIN_STRETCH_ULTRA_CONDENSED);
+    else MATCH ("extra-condensed", props->stretch, TWIN_STRETCH_EXTRA_CONDENSED);
+    else MATCH ("condensed",       props->stretch, TWIN_STRETCH_CONDENSED);
+    else MATCH ("semi-condensed",  props->stretch, TWIN_STRETCH_SEMI_CONDENSED);
+    else MATCH ("semi-expanded",   props->stretch, TWIN_STRETCH_SEMI_EXPANDED);
+    else MATCH ("expanded",        props->stretch, TWIN_STRETCH_EXPANDED);
+    else MATCH ("extra-expanded",  props->stretch, TWIN_STRETCH_EXTRA_EXPANDED);
+    else MATCH ("ultra-expanded",  props->stretch, TWIN_STRETCH_ULTRA_EXPANDED);
+
+    else MATCH ("small-caps", props->smallcaps, TRUE);
+
+    else MATCH ("mono",       props->monospace, TRUE);
+    else MATCH ("monospace",  props->monospace, TRUE);
+
+    else MATCH ("sans",       sans, TRUE);
+    else MATCH ("sans-serif", sans, TRUE);
+    else MATCH ("serif",      serif, TRUE);
+
+    props->serif = serif && !sans;
+}
+
+static void
+props_parse (twin_face_properties_t *props,
+	     const char *s)
+{
+    const char *start, *end;
+
+    for (start = end = s; *end; end++) {
+	if (isalpha (*end) || *end == '-')
+	    continue;
+
+	if (start < end)
+		parse_field (props, start, end - start);
+	start = end + 1;
+    }
+}
+
+static cairo_status_t
+twin_set_face_properties_from_toy (cairo_font_face_t *twin_face,
+				   cairo_toy_font_face_t *toy_face)
+{
+    cairo_status_t status;
+    twin_face_properties_t *props;
+
+    props = malloc (sizeof (twin_face_properties_t));
+    if (unlikely (props == NULL))
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    props->stretch  = TWIN_STRETCH_NORMAL;
+    props->monospace = FALSE;
+    props->serif = FALSE;
+    props->smallcaps = FALSE;
+
+    /* fill in props */
+    props->slant = toy_face->slant;
+    props->weight = toy_face->weight == CAIRO_FONT_WEIGHT_NORMAL ?
+		    TWIN_WEIGHT_NORMAL : TWIN_WEIGHT_BOLD;
+    props_parse (props, toy_face->family);
+
+    status = cairo_font_face_set_user_data (twin_face,
+					    &twin_face_properties_key,
+					    props, free);
+    if (status)
+	goto FREE_PROPS;
+
+    return CAIRO_STATUS_SUCCESS;
+
+FREE_PROPS:
+    free (props);
+    return status;
+}
 
 
 #define twin_glyph_left(g)      ((g)[0])
@@ -187,7 +360,7 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     }
 
     metrics->x_advance = FX(twin_glyph_right(b)) + cairo_get_line_width (cr);
-    metrics->x_advance +=  cairo_get_line_width (cr)/* XXX 2*x.margin */;
+    metrics->x_advance +=  2*cairo_get_line_width (cr)/* XXX 2*x.margin */;
     if (info.snap)
 	metrics->x_advance = SNAPI (SNAPX (metrics->x_advance));
 
@@ -195,16 +368,22 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_font_face_t *
-_cairo_font_face_twin_create (cairo_font_slant_t slant,
-			      cairo_font_weight_t weight)
+cairo_status_t
+_cairo_font_face_twin_create_for_toy (cairo_toy_font_face_t   *toy_face,
+				      cairo_font_face_t      **font_face)
 {
+    cairo_status_t status;
     cairo_font_face_t *twin_font_face;
 
     twin_font_face = cairo_user_font_face_create ();
     cairo_user_font_face_set_init_func             (twin_font_face, twin_scaled_font_init);
     cairo_user_font_face_set_render_glyph_func     (twin_font_face, twin_scaled_font_render_glyph);
     cairo_user_font_face_set_unicode_to_glyph_func (twin_font_face, twin_scaled_font_unicode_to_glyph);
+    status = twin_set_face_properties_from_toy (twin_font_face, toy_face);
+    if (status)
+	return status;
 
-    return twin_font_face;
+    *font_face = twin_font_face;
+
+    return CAIRO_STATUS_SUCCESS;
 }
