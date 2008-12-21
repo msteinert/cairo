@@ -127,7 +127,7 @@ parse_field (twin_face_properties_t *props,
 	     const char *s,
 	     int len)
 {
-    cairo_bool_t sans, serif;
+    cairo_bool_t sans = FALSE, serif = FALSE;
 
 #define MATCH(s1, var, value) \
 	if (field_matches (s1, s, len)) var = value
@@ -180,6 +180,8 @@ props_parse (twin_face_properties_t *props,
 		parse_field (props, start, end - start);
 	start = end + 1;
     }
+    if (start < end)
+	    parse_field (props, start, end - start);
 }
 
 static cairo_status_t
@@ -280,6 +282,7 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 			       cairo_text_extents_t *metrics)
 {
     double x1, y1, x2, y2, x3, y3;
+    twin_face_properties_t *props;
     const int8_t *b = _cairo_twin_outlines +
 		      _cairo_twin_charmap[glyph >= ARRAY_LENGTH (_cairo_twin_charmap) ? 0 : glyph];
     const int8_t *g = twin_glyph_draw(b);
@@ -292,10 +295,19 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
       int n_snap_y;
     } info = {FALSE};
 
+    props = cairo_font_face_get_user_data (cairo_scaled_font_get_font_face (scaled_font),
+					   &twin_face_properties_key);
     cairo_set_tolerance (cr, 0.01);
-    cairo_set_line_width (cr, 0.066);
-    cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
-    cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
+    /* The weight is tuned to match DejaVu Sans' */
+    cairo_set_line_width (cr, props->weight * (5.5 / 64 / TWIN_WEIGHT_NORMAL));
+
+    cairo_set_miter_limit (cr, M_SQRT2);
+    cairo_set_line_join (cr, props->serif ?
+			     CAIRO_LINE_JOIN_MITER :
+			     CAIRO_LINE_JOIN_ROUND);
+    cairo_set_line_cap (cr, props->serif ?
+			    CAIRO_LINE_CAP_SQUARE :
+			    CAIRO_LINE_CAP_ROUND);
 
     for (;;) {
 	switch (*g++) {
