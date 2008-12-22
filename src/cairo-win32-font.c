@@ -534,12 +534,11 @@ _cairo_win32_font_face_create_for_toy (cairo_toy_font_face_t   *toy_face,
     if (status)
 	return status;
 
-    if (face_name_len > LF_FACESIZE - 1) {
-	free (face_name);
-	return _cairo_error (CAIRO_STATUS_INVALID_STRING);
-    }
+    if (face_name_len > LF_FACESIZE - 1)
+	face_name_len = LF_FACESIZE - 1;
 
-    memcpy (logfont.lfFaceName, face_name, sizeof (uint16_t) * (face_name_len + 1));
+    memcpy (logfont.lfFaceName, face_name, sizeof (uint16_t) * face_name_len);
+    logfont.lfFaceName[face_name_len] = 0;
     free (face_name);
 
     logfont.lfHeight = 0;	/* filled in later */
