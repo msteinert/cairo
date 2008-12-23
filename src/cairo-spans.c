@@ -30,6 +30,7 @@ typedef struct {
     cairo_scan_converter_t *converter;
     cairo_point_t current_point;
     cairo_point_t first_point;
+    cairo_bool_t has_first_point;
 } scan_converter_filler_t;
 
 static void
@@ -40,6 +41,30 @@ scan_converter_filler_init (scan_converter_filler_t		*filler,
     filler->current_point.x = 0;
     filler->current_point.y = 0;
     filler->first_point = filler->current_point;
+    filler->has_first_point = FALSE;
+}
+
+static cairo_status_t
+scan_converter_filler_close_path (void *closure)
+{
+    scan_converter_filler_t *filler = closure;
+    cairo_status_t status;
+
+    filler->has_first_point = FALSE;
+
+    if (filler->first_point.x == filler->current_point.x &&
+	filler->first_point.y == filler->current_point.y)
+    {
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    status = filler->converter->add_edge (
+	filler->converter,
+	filler->current_point.x, filler->current_point.y,
+	filler->first_point.x, filler->first_point.y);
+
+    filler->current_point = filler->first_point;
+    return status;
 }
 
 static cairo_status_t
@@ -47,9 +72,15 @@ scan_converter_filler_move_to (void *closure,
 			       const cairo_point_t *p)
 {
     scan_converter_filler_t *filler = closure;
+    if (filler->has_first_point) {
+	cairo_status_t status = scan_converter_filler_close_path (closure);
+	if (status)
+	    return status;
+    }
     filler->current_point.x = p->x;
     filler->current_point.y = p->y;
     filler->first_point = filler->current_point;
+    filler->has_first_point = TRUE;
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -70,28 +101,6 @@ scan_converter_filler_line_to (void *closure,
 	to.x, to.y);
 
     filler->current_point = to;
-
-    return status;
-}
-
-static cairo_status_t
-scan_converter_filler_close_path (void *closure)
-{
-    scan_converter_filler_t *filler = closure;
-    cairo_status_t status;
-
-    if (filler->first_point.x == filler->current_point.x &&
-	filler->first_point.y == filler->current_point.y)
-    {
-	return CAIRO_STATUS_SUCCESS;
-    }
-
-    status = filler->converter->add_edge (
-	filler->converter,
-	filler->current_point.x, filler->current_point.y,
-	filler->first_point.x, filler->first_point.y);
-
-    filler->current_point = filler->first_point;
 
     return status;
 }
