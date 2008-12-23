@@ -51,6 +51,41 @@ This macro can be used to conditionally compile backend-specific code.
 @Returns: 
 
 
+<!-- ##### FUNCTION cairo_pdf_surface_restrict_to_version ##### -->
+<para>
+
+</para>
+
+@surface: 
+@version: 
+
+
+<!-- ##### ENUM cairo_pdf_version_t ##### -->
+<para>
+
+</para>
+
+@CAIRO_PDF_VERSION_1_4: 
+@CAIRO_PDF_VERSION_1_5: 
+
+<!-- ##### FUNCTION cairo_pdf_get_versions ##### -->
+<para>
+
+</para>
+
+@versions: 
+@num_versions: 
+
+
+<!-- ##### FUNCTION cairo_pdf_version_to_string ##### -->
+<para>
+
+</para>
+
+@version: 
+@Returns: 
+
+
 <!-- ##### FUNCTION cairo_pdf_surface_set_size ##### -->
 <para>
 
