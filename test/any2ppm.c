@@ -766,7 +766,9 @@ main (int argc, char **argv)
 {
     const char *err;
 
+#if CAIRO_CAN_TEST_PDF_SURFACE || CAIRO_CAN_TEST_SVG_SURFACE
     g_type_init ();
+#endif
 
 #if CAIRO_CAN_TEST_SVG_SURFACE
     rsvg_init ();
