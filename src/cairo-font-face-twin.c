@@ -234,8 +234,8 @@ FREE_PROPS:
 #define SNAPI(p)	(p)
 #define SNAPH(p)	(p)
 
-#define FX(g)		((g) / 64.)
-#define FY(g)		((g) / 64.)
+#define FX(g)		((g) / 72.)
+#define FY(g)		((g) / 72.)
 
 
 static cairo_status_t
@@ -243,8 +243,8 @@ twin_scaled_font_init (cairo_scaled_font_t  *scaled_font,
 		       cairo_t              *cr,
 		       cairo_font_extents_t *metrics)
 {
-  metrics->ascent  = FY (50);
-  metrics->descent = FY (14);
+  metrics->ascent  = FY (52);
+  metrics->descent = 1 - metrics->ascent;
   return CAIRO_STATUS_SUCCESS;
 }
 
