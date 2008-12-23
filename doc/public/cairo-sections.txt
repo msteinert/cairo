@@ -168,6 +168,9 @@ cairo_svg_version_to_string
 <SECTION>
 <FILE>cairo-surface</FILE>
 <TITLE>surface</TITLE>
+CAIRO_MIME_TYPE_JP2
+CAIRO_MIME_TYPE_JPEG
+CAIRO_MIME_TYPE_PNG
 cairo_surface_t
 cairo_content_t
 cairo_surface_create_similar
@@ -192,6 +195,8 @@ cairo_surface_get_user_data
 cairo_surface_copy_page
 cairo_surface_show_page
 cairo_surface_has_show_text_glyphs
+cairo_surface_set_mime_data
+cairo_surface_get_mime_data
 </SECTION>
 
 <SECTION>

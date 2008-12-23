@@ -27,6 +27,27 @@ cairo_<emphasis>backend</emphasis>_surface_create().
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### MACRO CAIRO_MIME_TYPE_JP2 ##### -->
+<para>
+The Joint Photographic Experts Group (JPEG) 2000 image coding standard (ISO/IEC 15444-1). Since 1.10
+</para>
+
+
+
+<!-- ##### MACRO CAIRO_MIME_TYPE_JPEG ##### -->
+<para>
+The Joint Photographic Experts Group (JPEG) image coding standard (ISO/IEC 10918-1). Since 1.10
+</para>
+
+
+
+<!-- ##### MACRO CAIRO_MIME_TYPE_PNG ##### -->
+<para>
+The Portable Network Graphics image file format (ISO/IEC 15948). Since 1.10
+</para>
+
+
+
 <!-- ##### TYPEDEF cairo_surface_t ##### -->
 <para>
 
@@ -193,8 +214,8 @@ cairo_<emphasis>backend</emphasis>_surface_create().
 @CAIRO_SURFACE_TYPE_OS2: 
 @CAIRO_SURFACE_TYPE_WIN32_PRINTING: 
 @CAIRO_SURFACE_TYPE_QUARTZ_IMAGE: 
-@CAIRO_SURFACE_TYPE_SDL:
-@CAIRO_SURFACE_TYPE_SCRIPT:
+@CAIRO_SURFACE_TYPE_SDL: 
+@CAIRO_SURFACE_TYPE_SCRIPT: 
 
 <!-- ##### FUNCTION cairo_surface_get_type ##### -->
 <para>
@@ -259,5 +280,30 @@ cairo_<emphasis>backend</emphasis>_surface_create().
 
 @surface: 
 @Returns: 
+
+
+<!-- ##### FUNCTION cairo_surface_set_mime_data ##### -->
+<para>
+
+</para>
+
+@surface: 
+@mime_type: 
+@data: 
+@length: 
+@destroy: 
+@closure: 
+@Returns: 
+
+
+<!-- ##### FUNCTION cairo_surface_get_mime_data ##### -->
+<para>
+
+</para>
+
+@surface: 
+@mime_type: 
+@data: 
+@length: 
 
 
