@@ -89,7 +89,7 @@ _cairo_glitz_surface_create_similar (void	    *abstract_src,
 	glitz_find_standard_format (drawable,
 				    _glitz_format_from_content (content));
     if (!gformat)
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+	return NULL;
 
     surface = glitz_surface_create (drawable, gformat,
 				    width <= 0 ? 1 : width,
