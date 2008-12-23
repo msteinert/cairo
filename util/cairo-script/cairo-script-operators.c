@@ -956,6 +956,7 @@ _context (csi_t *ctx)
     csi_status_t status;
     cairo_surface_t *surface;
     cairo_t *cr;
+    csi_context_create_func_t hook;
     csi_proxy_t *proxy;
 
     check (1);
@@ -964,7 +965,11 @@ _context (csi_t *ctx)
     if (_csi_unlikely (status))
 	return status;
 
-    cr = cairo_create (surface);
+    hook = ctx->hooks.context_create;
+    if (hook != NULL)
+	cr = hook (ctx->hooks.closure, surface);
+    else
+	cr = cairo_create (surface);
 
     proxy = _csi_proxy_create (ctx, cr, NULL,
 			       ctx->hooks.context_destroy,
