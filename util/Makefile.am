@@ -27,4 +27,5 @@ malloc_stats_la_LIBADD  = $(backtrace_symbols_la_LIBADD) backtrace-symbols.lo
 EXTRA_DIST += \
 	COPYING \
 	xr2cairo \
-	cairo-api-update
+	cairo-api-update \
+	cairo-view
