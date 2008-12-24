@@ -298,11 +298,6 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
       int n_snap_y;
     } info = {FALSE};
 
-    b = _cairo_twin_outlines +
-	_cairo_twin_charmap[unlikely (glyph >= ARRAY_LENGTH (_cairo_twin_charmap)) ? 0 : glyph];
-    g = twin_glyph_draw(b);
-    w = twin_glyph_right(b);
-
     cairo_set_tolerance (cr, 0.01);
 
     /* Prepare face */
@@ -330,8 +325,8 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     /* lock pen matrix */
     cairo_save (cr);
 
-    /* left margin */
-    cairo_translate (cr, lw, 0);
+    /* left margin + pen width */
+    cairo_translate (cr, lw * 1.5, 0);
 
     /* slant */
     if (props->slant != CAIRO_FONT_SLANT_NORMAL) {
@@ -339,22 +334,32 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 	cairo_transform (cr, &shear);
     }
 
+    if (props->smallcaps && glyph >= 'a' && glyph <= 'z') {
+	glyph += 'A' - 'a';
+	cairo_scale (cr, 1, 28. / 42);
+    }
+
+    b = _cairo_twin_outlines +
+	_cairo_twin_charmap[unlikely (glyph >= ARRAY_LENGTH (_cairo_twin_charmap)) ? 0 : glyph];
+    g = twin_glyph_draw(b);
+    w = twin_glyph_right(b);
     gw = FX(w);
 
+    /* monospace */
     if (props->monospace) {
 	double monow = FX(24);
 	cairo_scale (cr, (monow+lw) / (gw+lw), 1);
 	gw = monow;
     }
 
-    cairo_translate (cr, lw * .5, 0); /* for pen width */
-
-    metrics->x_advance = gw + lw;
-    metrics->x_advance +=  2 * lw /* XXX 2*x.margin */;
+    /* advance width */
+    metrics->x_advance = gw + lw * 3; /* pen width + margin */
     metrics->x_advance *= stretch;
     if (info.snap)
 	metrics->x_advance = SNAPI (SNAPX (metrics->x_advance));
 
+
+    /* glyph shape */
     for (;;) {
 	switch (*g++) {
 	case 'M':
