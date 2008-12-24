@@ -221,9 +221,6 @@ FREE_PROPS:
 #define twin_glyph_snap_y(g)    (twin_glyph_snap_x(g) + twin_glyph_n_snap_x(g))
 #define twin_glyph_draw(g)      (twin_glyph_snap_y(g) + twin_glyph_n_snap_y(g))
 
-#define SNAPI(p)	(p)
-#define SNAPH(p)	(p)
-
 #define FX(g)		((g) / 72.)
 #define FY(g)		((g) / 72.)
 
@@ -233,7 +230,7 @@ twin_scaled_font_init (cairo_scaled_font_t  *scaled_font,
 		       cairo_t              *cr,
 		       cairo_font_extents_t *metrics)
 {
-  metrics->ascent  = FY (52);
+  metrics->ascent  = FY (54);
   metrics->descent = 1 - metrics->ascent;
   return CAIRO_STATUS_SUCCESS;
 }
@@ -308,8 +305,8 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     /* lock pen matrix */
     cairo_save (cr);
 
-    /* left margin + pen width */
-    cairo_translate (cr, lw * 1.5, 0);
+    /* left margin + pen width, pen width */
+    cairo_translate (cr, lw * 1.5, -lw * .5);
 
     /* slant */
     if (props->slant != CAIRO_FONT_SLANT_NORMAL) {
@@ -339,7 +336,7 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     metrics->x_advance = gw + lw * 3; /* pen width + margin */
     metrics->x_advance *= stretch;
     if (info.snap)
-	metrics->x_advance = SNAPI (SNAPX (metrics->x_advance));
+	metrics->x_advance = SNAPX (metrics->x_advance);
 
 
     /* glyph shape */
