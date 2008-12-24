@@ -87,7 +87,6 @@ typedef struct _twin_face_properties {
 
     /* lets have some fun */
     cairo_bool_t monospace;
-    cairo_bool_t serif;
     cairo_bool_t smallcaps;
 } twin_face_properties_t;
 
@@ -127,8 +126,6 @@ parse_field (twin_face_properties_t *props,
 	     const char *s,
 	     int len)
 {
-    cairo_bool_t sans = FALSE, serif = FALSE;
-
 #define MATCH(s1, var, value) \
 	if (field_matches (s1, s, len)) var = value
 
@@ -158,12 +155,6 @@ parse_field (twin_face_properties_t *props,
 
     else MATCH ("mono",       props->monospace, TRUE);
     else MATCH ("monospace",  props->monospace, TRUE);
-
-    else MATCH ("sans",       sans, TRUE);
-    else MATCH ("sans-serif", sans, TRUE);
-    else MATCH ("serif",      serif, TRUE);
-
-    props->serif = serif && !sans;
 }
 
 static void
@@ -197,7 +188,6 @@ twin_set_face_properties_from_toy (cairo_font_face_t *twin_face,
 
     props->stretch  = TWIN_STRETCH_NORMAL;
     props->monospace = FALSE;
-    props->serif = FALSE;
     props->smallcaps = FALSE;
 
     /* fill in props */
@@ -299,6 +289,8 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     } info = {FALSE};
 
     cairo_set_tolerance (cr, 0.01);
+    cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
+    cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
 
     /* Prepare face */
 
@@ -308,15 +300,6 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     /* weight */
     lw = props->weight * (5.5 / 64 / TWIN_WEIGHT_NORMAL);
     cairo_set_line_width (cr, lw);
-
-    cairo_set_miter_limit (cr, M_SQRT2);
-    cairo_set_line_join (cr, /* props->serif ?
-			     CAIRO_LINE_JOIN_MITER : */
-			     CAIRO_LINE_JOIN_ROUND);
-    cairo_set_line_cap (cr, /* props->serif ?
-			    CAIRO_LINE_CAP_SQUARE : */
-			    CAIRO_LINE_CAP_ROUND);
-
 
     /* stretch */
     stretch = 1 + .05 * ((int) props->stretch - (int) TWIN_STRETCH_NORMAL);
