@@ -285,6 +285,8 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     twin_face_properties_t *props;
     const int8_t *b;
     const int8_t *g;
+    int8_t w;
+    double lw;
 
     struct {
       cairo_bool_t snap;
@@ -297,12 +299,14 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     b = _cairo_twin_outlines +
 	_cairo_twin_charmap[unlikely (glyph >= ARRAY_LENGTH (_cairo_twin_charmap)) ? 0 : glyph];
     g = twin_glyph_draw(b);
+    w = twin_glyph_right(b);
 
     props = cairo_font_face_get_user_data (cairo_scaled_font_get_font_face (scaled_font),
 					   &twin_face_properties_key);
     cairo_set_tolerance (cr, 0.01);
     /* The weight is tuned to match DejaVu Sans' */
-    cairo_set_line_width (cr, props->weight * (5.5 / 64 / TWIN_WEIGHT_NORMAL));
+    lw = props->weight * (5.5 / 64 / TWIN_WEIGHT_NORMAL);
+    cairo_set_line_width (cr, lw);
 
     cairo_set_miter_limit (cr, M_SQRT2);
     cairo_set_line_join (cr, props->serif ?
@@ -311,6 +315,23 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     cairo_set_line_cap (cr, props->serif ?
 			    CAIRO_LINE_CAP_SQUARE :
 			    CAIRO_LINE_CAP_ROUND);
+
+
+    cairo_translate (cr, lw, 0); /* for margin */
+
+    cairo_save (cr);
+    if (props->monospace) {
+	int8_t monow = 24;
+	cairo_scale (cr, (FX(monow)+lw) / (FX(w)+lw), 1.);
+	w = monow;
+    }
+
+    cairo_translate (cr, lw * .5, 0); /* for pen width */
+
+    metrics->x_advance = FX(w) + lw;
+    metrics->x_advance +=  2 * lw /* XXX 2*x.margin */;
+    if (info.snap)
+	metrics->x_advance = SNAPI (SNAPX (metrics->x_advance));
 
     for (;;) {
 	switch (*g++) {
@@ -365,6 +386,7 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 	    cairo_close_path (cr);
 	    /* fall through */
 	case 'e':
+	    cairo_restore (cr);
 	    cairo_stroke (cr);
 	    break;
 	case 'X':
@@ -373,12 +395,6 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 	}
 	break;
     }
-
-    metrics->x_advance = FX(twin_glyph_right(b)) + cairo_get_line_width (cr);
-    metrics->x_advance +=  2*cairo_get_line_width (cr)/* XXX 2*x.margin */;
-    if (info.snap)
-	metrics->x_advance = SNAPI (SNAPX (metrics->x_advance));
-
 
     return CAIRO_STATUS_SUCCESS;
 }
