@@ -309,11 +309,11 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     cairo_set_line_width (cr, lw);
 
     cairo_set_miter_limit (cr, M_SQRT2);
-    cairo_set_line_join (cr, props->serif ?
-			     CAIRO_LINE_JOIN_MITER :
+    cairo_set_line_join (cr, /* props->serif ?
+			     CAIRO_LINE_JOIN_MITER : */
 			     CAIRO_LINE_JOIN_ROUND);
-    cairo_set_line_cap (cr, props->serif ?
-			    CAIRO_LINE_CAP_SQUARE :
+    cairo_set_line_cap (cr, /* props->serif ?
+			    CAIRO_LINE_CAP_SQUARE : */
 			    CAIRO_LINE_CAP_ROUND);
 
 
