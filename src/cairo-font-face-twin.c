@@ -295,7 +295,7 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 					   &twin_face_properties_key);
 
     /* weight */
-    lw = props->weight * (5.5 / 64 / TWIN_WEIGHT_NORMAL);
+    lw = props->weight * (5. / 64 / TWIN_WEIGHT_NORMAL);
     cairo_set_line_width (cr, lw);
 
     /* stretch */
