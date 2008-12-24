@@ -301,10 +301,13 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     g = twin_glyph_draw(b);
     w = twin_glyph_right(b);
 
+    cairo_set_tolerance (cr, 0.01);
+
+    /* Prepare face */
+
     props = cairo_font_face_get_user_data (cairo_scaled_font_get_font_face (scaled_font),
 					   &twin_face_properties_key);
-    cairo_set_tolerance (cr, 0.01);
-    /* The weight is tuned to match DejaVu Sans' */
+
     lw = props->weight * (5.5 / 64 / TWIN_WEIGHT_NORMAL);
     cairo_set_line_width (cr, lw);
 
@@ -316,6 +319,10 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 			    CAIRO_LINE_CAP_SQUARE : */
 			    CAIRO_LINE_CAP_ROUND);
 
+    if (props->slant != CAIRO_FONT_SLANT_NORMAL) {
+	cairo_matrix_t shear = { 1, 0, -.2, 1, 0, 0};
+	cairo_transform (cr, &shear);
+    }
 
     cairo_translate (cr, lw, 0); /* for margin */
 
