@@ -286,7 +286,9 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     const int8_t *b;
     const int8_t *g;
     int8_t w;
+    double gw;
     double lw;
+    double stretch;
 
     struct {
       cairo_bool_t snap;
@@ -308,6 +310,7 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     props = cairo_font_face_get_user_data (cairo_scaled_font_get_font_face (scaled_font),
 					   &twin_face_properties_key);
 
+    /* weight */
     lw = props->weight * (5.5 / 64 / TWIN_WEIGHT_NORMAL);
     cairo_set_line_width (cr, lw);
 
@@ -319,24 +322,36 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 			    CAIRO_LINE_CAP_SQUARE : */
 			    CAIRO_LINE_CAP_ROUND);
 
+
+    /* stretch */
+    stretch = 1 + .05 * ((int) props->stretch - (int) TWIN_STRETCH_NORMAL);
+    cairo_scale (cr, stretch, 1);
+
+    /* lock pen matrix */
+    cairo_save (cr);
+
+    /* left margin */
+    cairo_translate (cr, lw, 0);
+
+    /* slant */
     if (props->slant != CAIRO_FONT_SLANT_NORMAL) {
 	cairo_matrix_t shear = { 1, 0, -.2, 1, 0, 0};
 	cairo_transform (cr, &shear);
     }
 
-    cairo_translate (cr, lw, 0); /* for margin */
+    gw = FX(w);
 
-    cairo_save (cr);
     if (props->monospace) {
-	int8_t monow = 24;
-	cairo_scale (cr, (FX(monow)+lw) / (FX(w)+lw), 1.);
-	w = monow;
+	double monow = FX(24);
+	cairo_scale (cr, (monow+lw) / (gw+lw), 1);
+	gw = monow;
     }
 
     cairo_translate (cr, lw * .5, 0); /* for pen width */
 
-    metrics->x_advance = FX(w) + lw;
+    metrics->x_advance = gw + lw;
     metrics->x_advance +=  2 * lw /* XXX 2*x.margin */;
+    metrics->x_advance *= stretch;
     if (info.snap)
 	metrics->x_advance = SNAPI (SNAPX (metrics->x_advance));
 
