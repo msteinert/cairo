@@ -281,13 +281,8 @@ _twin_snap (double v, double *snap, double *snapped, int n)
 	    double dist = after - before;
 	    double snap_before = snapped[s];
 	    double snap_after = snapped[s+1];
-	    double move_before = snap_before - before;
-	    double move_after = snap_after - after;
 	    double dist_before = v - before;
-	    double dist_after = after - v;
-	    double move = (dist_before * move_after + dist_after * move_before) / dist;
-	    /* XXX optimize the above */
-	    v += move;
+	    v = snap_before + (snap_after - snap_before) * dist_before / dist;
 	    break;
 	}
     }
