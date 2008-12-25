@@ -10,7 +10,7 @@ import pango
 import gobject
 
 class CairoView(gtk.Window):
-    def __init__(self, family="", slant=0, weight=0, size=18, text="The Quick Brown Fox Jumped Over The Lazy Dog!"):
+    def __init__(self, family="", slant=0, weight=0, size=18, text="The Quick Brown Fox Jumps Over The Lazy Dog!"):
         gtk.Widget.__init__ (self)
 
 	self.family = family
