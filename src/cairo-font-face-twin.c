@@ -223,8 +223,7 @@ FREE_PROPS:
 #define twin_glyph_snap_y(g)    (twin_glyph_snap_x(g) + twin_glyph_n_snap_x(g))
 #define twin_glyph_draw(g)      (twin_glyph_snap_y(g) + twin_glyph_n_snap_y(g))
 
-#define FX(g)		((g) / 72.)
-#define FY(g)		((g) / 72.)
+#define F(g)		((g) / 72.)
 
 
 static cairo_status_t
@@ -232,7 +231,7 @@ twin_scaled_font_init (cairo_scaled_font_t  *scaled_font,
 		       cairo_t              *cr,
 		       cairo_font_extents_t *metrics)
 {
-  metrics->ascent  = FY (54);
+  metrics->ascent  = F (54);
   metrics->descent = 1 - metrics->ascent;
   return CAIRO_STATUS_SUCCESS;
 }
@@ -255,8 +254,8 @@ twin_scaled_font_unicode_to_glyph (cairo_scaled_font_t *scaled_font,
     return CAIRO_STATUS_SUCCESS;
 }
 
-#define SNAPX(p)	_twin_snap (p, info.snap_x, info.snapped_x, info.n_snap_x)
-#define SNAPY(p)	_twin_snap (p, info.snap_y, info.snapped_y, info.n_snap_y)
+#define SNAPX(p)	_twin_snap (p, info.snap, info.snap_x, info.snapped_x, info.n_snap_x)
+#define SNAPY(p)	_twin_snap (p, info.snap, info.snap_y, info.snapped_y, info.n_snap_y)
 
 #define TWIN_GLYPH_MAX_SNAP_X 4
 #define TWIN_GLYPH_MAX_SNAP_Y 7
@@ -265,28 +264,33 @@ twin_scaled_font_unicode_to_glyph (cairo_scaled_font_t *scaled_font,
 #define SNAPYI(p)	(round ((p) * info->y_scale) * info->y_scale_inv)
 
 static double
-_twin_snap (double v, double *snap, double *snapped, int n)
+_twin_snap (int8_t v, cairo_bool_t do_snap, int8_t *snap, double *snapped, int n)
 {
     int	s;
 
+    if (!do_snap)
+	return F(v);
+
+    if (snap[0] == v)
+	return snapped[0];
+
     for (s = 0; s < n - 1; s++)
     {
-	if (snap[s] == v)
-	    return snapped[s];
+	if (snap[s+1] == v)
+	    return snapped[s+1];
 
 	if (snap[s] <= v && v <= snap[s+1])
 	{
-	    double before = snap[s];
-	    double after = snap[s+1];
-	    double dist = after - before;
+	    int before = snap[s];
+	    int after = snap[s+1];
+	    int dist = after - before;
 	    double snap_before = snapped[s];
 	    double snap_after = snapped[s+1];
 	    double dist_before = v - before;
-	    v = snap_before + (snap_after - snap_before) * dist_before / dist;
-	    break;
+	    return snap_before + (snap_after - snap_before) * dist_before / dist;
 	}
     }
-    return v;
+    return F(v);
 }
 
 typedef struct {
@@ -296,10 +300,10 @@ typedef struct {
     double y_scale, y_scale_inv, y_off;
 
     int n_snap_x;
-    double snap_x[TWIN_GLYPH_MAX_SNAP_X];
+    int8_t snap_x[TWIN_GLYPH_MAX_SNAP_X];
     double snapped_x[TWIN_GLYPH_MAX_SNAP_X];
     int n_snap_y;
-    double snap_y[TWIN_GLYPH_MAX_SNAP_Y];
+    int8_t snap_y[TWIN_GLYPH_MAX_SNAP_Y];
     double snapped_y[TWIN_GLYPH_MAX_SNAP_Y];
 } twin_snap_info_t;
 
@@ -333,8 +337,8 @@ _twin_compute_snap (cairo_t             *cr,
     info->n_snap_x = n;
     assert (n <= TWIN_GLYPH_MAX_SNAP_X);
     for (s = 0; s < n; s++) {
-	info->snap_x[s] = FX(snap[s]);
-	info->snapped_x[s] = SNAPXI (info->snap_x[s]);
+	info->snap_x[s] = snap[s];
+	info->snapped_x[s] = SNAPXI (F (snap[s]));
     }
 
     snap = twin_glyph_snap_y (b);
@@ -342,8 +346,8 @@ _twin_compute_snap (cairo_t             *cr,
     info->n_snap_y = n;
     assert (n <= TWIN_GLYPH_MAX_SNAP_Y);
     for (s = 0; s < n; s++) {
-	info->snap_y[s] = FY(snap[s]);
-	info->snapped_y[s] = SNAPYI (info->snap_y[s]);
+	info->snap_y[s] = snap[s];
+	info->snapped_y[s] = SNAPYI (F (snap[s]));
     }
 }
 
@@ -435,11 +439,11 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 	_cairo_twin_charmap[unlikely (glyph >= ARRAY_LENGTH (_cairo_twin_charmap)) ? 0 : glyph];
     g = twin_glyph_draw(b);
     w = twin_glyph_right(b);
-    gw = FX(w);
+    gw = F(w);
 
     /* monospace */
     if (props->monospace) {
-	double monow = FX(24);
+	double monow = F(24);
 	cairo_scale (cr, (monow+penx) / (gw+penx), 1);
 	gw = monow;
     }
@@ -449,9 +453,6 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     /* advance width */
     metrics->x_advance = gw + penx * 3; /* pen width + margin */
     metrics->x_advance *= stretch;
-    if (info.snap)
-	metrics->x_advance = SNAPX (metrics->x_advance);
-
 
     /* glyph shape */
     for (;;) {
@@ -460,47 +461,28 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 	    cairo_close_path (cr);
 	    /* fall through */
 	case 'm':
-	    x1 = FX(*g++);
-	    y1 = FY(*g++);
-	    if (info.snap)
-	    {
-		x1 = SNAPX (x1);
-		y1 = SNAPY (y1);
-	    }
+	    x1 = SNAPX(*g++);
+	    y1 = SNAPY(*g++);
 	    cairo_move_to (cr, x1, y1);
 	    continue;
 	case 'L':
 	    cairo_close_path (cr);
 	    /* fall through */
 	case 'l':
-	    x1 = FX(*g++);
-	    y1 = FY(*g++);
-	    if (info.snap)
-	    {
-		x1 = SNAPX (x1);
-		y1 = SNAPY (y1);
-	    }
+	    x1 = SNAPX(*g++);
+	    y1 = SNAPY(*g++);
 	    cairo_line_to (cr, x1, y1);
 	    continue;
 	case 'C':
 	    cairo_close_path (cr);
 	    /* fall through */
 	case 'c':
-	    x1 = FX(*g++);
-	    y1 = FY(*g++);
-	    x2 = FX(*g++);
-	    y2 = FY(*g++);
-	    x3 = FX(*g++);
-	    y3 = FY(*g++);
-	    if (info.snap)
-	    {
-		x1 = SNAPX (x1);
-		y1 = SNAPY (y1);
-		x2 = SNAPX (x2);
-		y2 = SNAPY (y2);
-		x3 = SNAPX (x3);
-		y3 = SNAPY (y3);
-	    }
+	    x1 = SNAPX(*g++);
+	    y1 = SNAPY(*g++);
+	    x2 = SNAPX(*g++);
+	    y2 = SNAPY(*g++);
+	    x3 = SNAPX(*g++);
+	    y3 = SNAPY(*g++);
 	    cairo_curve_to (cr, x1, y1, x2, y2, x3, y3);
 	    continue;
 	case 'E':
