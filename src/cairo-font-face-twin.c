@@ -317,7 +317,7 @@ _twin_compute_snap (cairo_t             *cr,
     const signed char	*snap;
     double x, y;
 
-    info->snap = scaled_font->options.hint_style != CAIRO_HINT_STYLE_NONE;
+    info->snap = scaled_font->options.hint_style > CAIRO_HINT_STYLE_NONE;
     if (!info->snap)
 	return;
 
@@ -361,7 +361,7 @@ _twin_compute_pen (cairo_t             *cr,
     double scale, inv;
     cairo_bool_t hint;
 
-    hint = scaled_font->options.hint_style != CAIRO_HINT_STYLE_NONE;
+    hint = scaled_font->options.hint_style > CAIRO_HINT_STYLE_SLIGHT;
     if (!hint) {
 	*penx = *peny = width;
 	return;
