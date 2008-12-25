@@ -39,7 +39,7 @@
 #include "cairoint.h"
 
 /*
- * This file implements a user-font rendering the decendant of the Hershey
+ * This file implements a user-font rendering the descendant of the Hershey
  * font coded by Keith Packard for use in the Twin window system.
  * The actual font data is in cairo-font-face-twin-data.c
  *
