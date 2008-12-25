@@ -304,13 +304,18 @@ typedef struct {
 } twin_snap_info_t;
 
 static void
-_twin_compute_snap (cairo_t           *cr,
-		    twin_snap_info_t  *info,
-		    const signed char *b)
+_twin_compute_snap (cairo_t             *cr,
+		    cairo_scaled_font_t *scaled_font,
+		    twin_snap_info_t    *info,
+		    const signed char   *b)
 {
     int			s, n;
     const signed char	*snap;
     double x, y;
+
+    info->snap = scaled_font->options.hint_style != CAIRO_HINT_STYLE_NONE;
+    if (!info->snap)
+	return;
 
     x = 1; y = 0;
     cairo_user_to_device_distance (cr, &x, &y);
@@ -343,12 +348,20 @@ _twin_compute_snap (cairo_t           *cr,
 }
 
 static void
-_twin_compute_pen (cairo_t *cr,
+_twin_compute_pen (cairo_t             *cr,
+		   cairo_scaled_font_t *scaled_font,
 		   double width,
 		   double *penx, double *peny)
 {
     double x, y;
     double scale, inv;
+    cairo_bool_t hint;
+
+    hint = scaled_font->options.hint_style != CAIRO_HINT_STYLE_NONE;
+    if (!hint) {
+	*penx = *peny = width;
+	return;
+    }
 
     x = 1; y = 0;
     cairo_user_to_device_distance (cr, &x, &y);
@@ -401,7 +414,7 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     cairo_scale (cr, stretch, 1);
 
     /* lock pen matrix */
-    _twin_compute_pen (cr, weight, &penx, &peny);
+    _twin_compute_pen (cr, scaled_font, weight, &penx, &peny);
     cairo_save (cr);
 
     /* left margin + pen width, pen width */
@@ -431,9 +444,7 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 	gw = monow;
     }
 
-    info.snap = scaled_font->options.hint_style != CAIRO_HINT_STYLE_NONE;
-    if (info.snap)
-	_twin_compute_snap (cr, &info, b);
+    _twin_compute_snap (cr, scaled_font, &info, b);
 
     /* advance width */
     metrics->x_advance = gw + penx * 3; /* pen width + margin */
