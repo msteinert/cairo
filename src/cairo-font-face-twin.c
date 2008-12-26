@@ -443,20 +443,19 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     /* Save glyph space, we need it when stroking */
     cairo_save (cr);
 
-    /* left margin + pen width, pen width */
-    cairo_translate (cr, props->penx * 1.5, -props->peny * .5);
+    /* center the pen */
+    cairo_translate (cr, props->penx * .5, -props->peny * .5);
 
-    cairo_scale (cr, props->stretch, 1);
+    /* small-caps */
+    if (props->face_props->smallcaps && glyph >= 'a' && glyph <= 'z') {
+	glyph += 'A' - 'a';
+	cairo_scale (cr, 1, 28. / 42);
+    }
 
     /* slant */
     if (props->face_props->slant != CAIRO_FONT_SLANT_NORMAL) {
 	cairo_matrix_t shear = { 1, 0, -.2, 1, 0, 0};
 	cairo_transform (cr, &shear);
-    }
-
-    if (props->face_props->smallcaps && glyph >= 'a' && glyph <= 'z') {
-	glyph += 'A' - 'a';
-	cairo_scale (cr, 1, 28. / 42);
     }
 
     b = _cairo_twin_outlines +
@@ -468,9 +467,15 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     /* monospace */
     if (props->face_props->monospace) {
 	double monow = F(24);
-	cairo_scale (cr, (monow+props->penx) / (gw+props->penx), 1);
+	cairo_scale (cr, (monow+3*props->penx) / (gw+3*props->penx), 1);
 	gw = monow;
     }
+
+    /* left margin */
+    cairo_translate (cr, props->penx, 0);
+
+    /* stretch */
+    cairo_scale (cr, props->stretch, 1);
 
     _twin_compute_snap (cr, scaled_font, &info, b);
 
