@@ -38,8 +38,6 @@
 #include <math.h>
 #include "cairoint.h"
 
-#include <ctype.h>
-
 /*
  * This file implements a user-font rendering the decendant of the Hershey
  * font coded by Keith Packard for use in the Twin window system.
@@ -48,6 +46,9 @@
  * Ported to cairo user font and extended by Behdad Esfahbod.
  */
 
+
+
+cairo_user_data_key_t twin_properties_key;
 
 
 /*
@@ -66,7 +67,7 @@ typedef enum {
   TWIN_WEIGHT_BOLD = 700,
   TWIN_WEIGHT_ULTRABOLD = 800,
   TWIN_WEIGHT_HEAVY = 900
-} twin_face_wight;
+} twin_face_weight_t;
 
 /* CSS stretch */
 typedef enum {
@@ -79,23 +80,18 @@ typedef enum {
   TWIN_STRETCH_EXPANDED,
   TWIN_STRETCH_EXTRA_EXPANDED,
   TWIN_STRETCH_ULTRA_EXPANDED
-} twin_face_stretch;
+} twin_face_stretch_t;
 
 
 typedef struct _twin_face_properties {
-    cairo_font_slant_t slant;
-    twin_face_wight    weight;
-    twin_face_stretch  stretch;
+    cairo_font_slant_t  slant;
+    twin_face_weight_t  weight;
+    twin_face_stretch_t stretch;
 
     /* lets have some fun */
     cairo_bool_t monospace;
     cairo_bool_t smallcaps;
 } twin_face_properties_t;
-
-cairo_user_data_key_t twin_face_properties_key;
-
-#define TOLOWER(c) \
-   (((c) >= 'A' && (c) <= 'Z') ? (c) - 'A' + 'a' : (c))
 
 static cairo_bool_t
 field_matches (const char *s1,
@@ -106,6 +102,9 @@ field_matches (const char *s1,
 
   while (len && *s1 && *s2)
     {
+#define TOLOWER(c) \
+   (((c) >= 'A' && (c) <= 'Z') ? (c) - 'A' + 'a' : (c))
+
       c1 = TOLOWER (*s1);
       c2 = TOLOWER (*s2);
       if (c1 != c2) {
@@ -131,10 +130,10 @@ parse_field (twin_face_properties_t *props,
 #define MATCH(s1, var, value) \
 	if (field_matches (s1, s, len)) var = value
 
+    if (0) ;
 
-         MATCH ("oblique",    props->slant, CAIRO_FONT_SLANT_OBLIQUE);
+    else MATCH ("oblique",    props->slant, CAIRO_FONT_SLANT_OBLIQUE);
     else MATCH ("italic",     props->slant, CAIRO_FONT_SLANT_ITALIC);
-
 
     else MATCH ("ultra-light", props->weight, TWIN_WEIGHT_ULTRALIGHT);
     else MATCH ("light",       props->weight, TWIN_WEIGHT_LIGHT);
@@ -153,10 +152,10 @@ parse_field (twin_face_properties_t *props,
     else MATCH ("extra-expanded",  props->stretch, TWIN_STRETCH_EXTRA_EXPANDED);
     else MATCH ("ultra-expanded",  props->stretch, TWIN_STRETCH_ULTRA_EXPANDED);
 
-    else MATCH ("small-caps", props->smallcaps, TRUE);
-
     else MATCH ("mono",       props->monospace, TRUE);
     else MATCH ("monospace",  props->monospace, TRUE);
+
+    else MATCH ("small-caps", props->smallcaps, TRUE);
 }
 
 static void
@@ -165,8 +164,11 @@ props_parse (twin_face_properties_t *props,
 {
     const char *start, *end;
 
+#define ISALPHA(c) \
+   (((c) >= 'A' && (c) <= 'Z') || ((c) >= 'a' && (c) <= 'z'))
+
     for (start = end = s; *end; end++) {
-	if (isalpha (*end) || *end == '-')
+	if (ISALPHA (*end) || *end == '-')
 	    continue;
 
 	if (start < end)
@@ -192,16 +194,15 @@ twin_set_face_properties_from_toy (cairo_font_face_t *twin_face,
     props->monospace = FALSE;
     props->smallcaps = FALSE;
 
-    /* fill in props */
     props->slant = toy_face->slant;
     props->weight = toy_face->weight == CAIRO_FONT_WEIGHT_NORMAL ?
 		    TWIN_WEIGHT_NORMAL : TWIN_WEIGHT_BOLD;
     props_parse (props, toy_face->family);
 
     status = cairo_font_face_set_user_data (twin_face,
-					    &twin_face_properties_key,
+					    &twin_properties_key,
 					    props, free);
-    if (status)
+    if (unlikely (status))
 	goto FREE_PROPS;
 
     return CAIRO_STATUS_SUCCESS;
@@ -212,19 +213,22 @@ FREE_PROPS:
 }
 
 
-#define twin_glyph_left(g)      ((g)[0])
-#define twin_glyph_right(g)     ((g)[1])
-#define twin_glyph_ascent(g)    ((g)[2])
-#define twin_glyph_descent(g)   ((g)[3])
+/*
+ * Scaled properties
+ */
 
-#define twin_glyph_n_snap_x(g)  ((g)[4])
-#define twin_glyph_n_snap_y(g)  ((g)[5])
-#define twin_glyph_snap_x(g)    (&g[6])
-#define twin_glyph_snap_y(g)    (twin_glyph_snap_x(g) + twin_glyph_n_snap_x(g))
-#define twin_glyph_draw(g)      (twin_glyph_snap_y(g) + twin_glyph_n_snap_y(g))
+typedef struct _twin_scaled_properties {
+	cairo_bool_t snap;
+	double penx, peny;
+} twin_scaled_properties_t;
 
+
+/*
+ * User-font implementation
+ */
+
+/* This controls the global font size */
 #define F(g)		((g) / 72.)
-
 
 static cairo_status_t
 twin_scaled_font_init (cairo_scaled_font_t  *scaled_font,
@@ -233,42 +237,16 @@ twin_scaled_font_init (cairo_scaled_font_t  *scaled_font,
 {
   metrics->ascent  = F (54);
   metrics->descent = 1 - metrics->ascent;
+
   return CAIRO_STATUS_SUCCESS;
 }
-
-static cairo_status_t
-twin_scaled_font_unicode_to_glyph (cairo_scaled_font_t *scaled_font,
-				   unsigned long        unicode,
-				   unsigned long       *glyph)
-{
-    /* We use an identity charmap.  Which means we could live
-     * with no unicode_to_glyph method too.  But we define this
-     * to map all unknown chars to a single unknown glyph to
-     * reduce pressure on cache. */
-
-    if (likely (unicode < ARRAY_LENGTH (_cairo_twin_charmap)))
-	*glyph = unicode;
-    else
-	*glyph = 0;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-#define SNAPX(p)	_twin_snap (p, info.snap, info.snap_x, info.snapped_x, info.n_snap_x)
-#define SNAPY(p)	_twin_snap (p, info.snap, info.snap_y, info.snapped_y, info.n_snap_y)
-
-#define TWIN_GLYPH_MAX_SNAP_X 4
-#define TWIN_GLYPH_MAX_SNAP_Y 7
-
-#define SNAPXI(p)	(round ((p) * info->x_scale) * info->x_scale_inv)
-#define SNAPYI(p)	(round ((p) * info->y_scale) * info->y_scale_inv)
 
 static double
 _twin_snap (int8_t v, cairo_bool_t do_snap, int8_t *snap, double *snapped, int n)
 {
     int	s;
 
-    if (!do_snap)
+    if (!do_snap || !n)
 	return F(v);
 
     if (snap[0] == v)
@@ -293,11 +271,14 @@ _twin_snap (int8_t v, cairo_bool_t do_snap, int8_t *snap, double *snapped, int n
     return F(v);
 }
 
+#define TWIN_GLYPH_MAX_SNAP_X 4
+#define TWIN_GLYPH_MAX_SNAP_Y 7
+
 typedef struct {
     cairo_bool_t snap;
 
-    double x_scale, x_scale_inv, x_off;
-    double y_scale, y_scale_inv, y_off;
+    double x_scale, x_scale_inv;
+    double y_scale, y_scale_inv;
 
     int n_snap_x;
     int8_t snap_x[TWIN_GLYPH_MAX_SNAP_X];
@@ -306,6 +287,20 @@ typedef struct {
     int8_t snap_y[TWIN_GLYPH_MAX_SNAP_Y];
     double snapped_y[TWIN_GLYPH_MAX_SNAP_Y];
 } twin_snap_info_t;
+
+#define SNAPXI(p)	(round ((p) * info->x_scale) * info->x_scale_inv)
+#define SNAPYI(p)	(round ((p) * info->y_scale) * info->y_scale_inv)
+
+#define twin_glyph_left(g)      ((g)[0])
+#define twin_glyph_right(g)     ((g)[1])
+#define twin_glyph_ascent(g)    ((g)[2])
+#define twin_glyph_descent(g)   ((g)[3])
+
+#define twin_glyph_n_snap_x(g)  ((g)[4])
+#define twin_glyph_n_snap_y(g)  ((g)[5])
+#define twin_glyph_snap_x(g)    (&g[6])
+#define twin_glyph_snap_y(g)    (twin_glyph_snap_x(g) + twin_glyph_n_snap_x(g))
+#define twin_glyph_draw(g)      (twin_glyph_snap_y(g) + twin_glyph_n_snap_y(g))
 
 static void
 _twin_compute_snap (cairo_t             *cr,
@@ -384,6 +379,8 @@ _twin_compute_pen (cairo_t             *cr,
 	*peny = inv;
 }
 
+#define SNAPX(p)	_twin_snap (p, info.snap, info.snap_x, info.snapped_x, info.n_snap_x)
+#define SNAPY(p)	_twin_snap (p, info.snap, info.snap_y, info.snapped_y, info.n_snap_y)
 
 static cairo_status_t
 twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
@@ -408,7 +405,7 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     /* Prepare face */
 
     props = cairo_font_face_get_user_data (cairo_scaled_font_get_font_face (scaled_font),
-					   &twin_face_properties_key);
+					   &twin_properties_key);
 
     /* weight */
     weight = props->weight * (4. / 64 / TWIN_WEIGHT_NORMAL);
@@ -503,6 +500,29 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 
     return CAIRO_STATUS_SUCCESS;
 }
+
+static cairo_status_t
+twin_scaled_font_unicode_to_glyph (cairo_scaled_font_t *scaled_font,
+				   unsigned long        unicode,
+				   unsigned long       *glyph)
+{
+    /* We use an identity charmap.  Which means we could live
+     * with no unicode_to_glyph method too.  But we define this
+     * to map all unknown chars to a single unknown glyph to
+     * reduce pressure on cache. */
+
+    if (likely (unicode < ARRAY_LENGTH (_cairo_twin_charmap)))
+	*glyph = unicode;
+    else
+	*glyph = 0;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+
+/*
+ * Face constructor
+ */
 
 cairo_status_t
 _cairo_font_face_twin_create_for_toy (cairo_toy_font_face_t   *toy_face,
