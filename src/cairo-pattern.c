@@ -1626,7 +1626,7 @@ _cairo_pattern_reset_solid_surface_cache (void)
 	solid_surface_cache.cache[solid_surface_cache.size].surface = NULL;
 
 	/* release the lock to avoid the possibility of a recursive
-	 * deadlock when the scaled font destroy closure gets called */
+	 * deadlock when the surface destroy closure gets called */
 	CAIRO_MUTEX_UNLOCK (_cairo_pattern_solid_surface_cache_lock);
 	cairo_surface_destroy (surface);
 	CAIRO_MUTEX_LOCK (_cairo_pattern_solid_surface_cache_lock);
