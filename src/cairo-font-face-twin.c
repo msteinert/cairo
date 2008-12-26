@@ -316,12 +316,79 @@ twin_scaled_font_init (cairo_scaled_font_t  *scaled_font,
   return twin_scaled_font_compute_properties (scaled_font, cr);
 }
 
+#define TWIN_GLYPH_MAX_SNAP_X 4
+#define TWIN_GLYPH_MAX_SNAP_Y 7
+
+typedef struct {
+    double x_scale, x_scale_inv;
+    double y_scale, y_scale_inv;
+
+    int n_snap_x;
+    int8_t snap_x[TWIN_GLYPH_MAX_SNAP_X];
+    double snapped_x[TWIN_GLYPH_MAX_SNAP_X];
+    int n_snap_y;
+    int8_t snap_y[TWIN_GLYPH_MAX_SNAP_Y];
+    double snapped_y[TWIN_GLYPH_MAX_SNAP_Y];
+} twin_snap_info_t;
+
+#define twin_glyph_left(g)      ((g)[0])
+#define twin_glyph_right(g)     ((g)[1])
+#define twin_glyph_ascent(g)    ((g)[2])
+#define twin_glyph_descent(g)   ((g)[3])
+
+#define twin_glyph_n_snap_x(g)  ((g)[4])
+#define twin_glyph_n_snap_y(g)  ((g)[5])
+#define twin_glyph_snap_x(g)    (&g[6])
+#define twin_glyph_snap_y(g)    (twin_glyph_snap_x(g) + twin_glyph_n_snap_x(g))
+#define twin_glyph_draw(g)      (twin_glyph_snap_y(g) + twin_glyph_n_snap_y(g))
+
+static void
+twin_compute_snap (cairo_t             *cr,
+		   twin_snap_info_t    *info,
+		   const signed char   *b)
+{
+    int			s, n;
+    const signed char	*snap;
+    double x, y;
+
+    x = 1; y = 0;
+    cairo_user_to_device_distance (cr, &x, &y);
+    info->x_scale = sqrt (x*x + y*y);
+    info->x_scale_inv = 1 / info->x_scale;
+
+    x = 0; y = 1;
+    cairo_user_to_device_distance (cr, &x, &y);
+    info->y_scale = sqrt (x*x + y*y);
+    info->y_scale_inv = 1 / info->y_scale;
+
+#define SNAPXI(p)	(round ((p) * info->x_scale) * info->x_scale_inv)
+#define SNAPYI(p)	(round ((p) * info->y_scale) * info->y_scale_inv)
+
+    snap = twin_glyph_snap_x (b);
+    n = twin_glyph_n_snap_x (b);
+    info->n_snap_x = n;
+    assert (n <= TWIN_GLYPH_MAX_SNAP_X);
+    for (s = 0; s < n; s++) {
+	info->snap_x[s] = snap[s];
+	info->snapped_x[s] = SNAPXI (F (snap[s]));
+    }
+
+    snap = twin_glyph_snap_y (b);
+    n = twin_glyph_n_snap_y (b);
+    info->n_snap_y = n;
+    assert (n <= TWIN_GLYPH_MAX_SNAP_Y);
+    for (s = 0; s < n; s++) {
+	info->snap_y[s] = snap[s];
+	info->snapped_y[s] = SNAPYI (F (snap[s]));
+    }
+}
+
 static double
-_twin_snap (int8_t v, cairo_bool_t do_snap, int8_t *snap, double *snapped, int n)
+twin_snap (int8_t v, int n, int8_t *snap, double *snapped)
 {
     int	s;
 
-    if (!do_snap || !n)
+    if (!n)
 	return F(v);
 
     if (snap[0] == v)
@@ -346,83 +413,8 @@ _twin_snap (int8_t v, cairo_bool_t do_snap, int8_t *snap, double *snapped, int n
     return F(v);
 }
 
-#define TWIN_GLYPH_MAX_SNAP_X 4
-#define TWIN_GLYPH_MAX_SNAP_Y 7
-
-typedef struct {
-    cairo_bool_t snap;
-
-    double x_scale, x_scale_inv;
-    double y_scale, y_scale_inv;
-
-    int n_snap_x;
-    int8_t snap_x[TWIN_GLYPH_MAX_SNAP_X];
-    double snapped_x[TWIN_GLYPH_MAX_SNAP_X];
-    int n_snap_y;
-    int8_t snap_y[TWIN_GLYPH_MAX_SNAP_Y];
-    double snapped_y[TWIN_GLYPH_MAX_SNAP_Y];
-} twin_snap_info_t;
-
-#define SNAPXI(p)	(round ((p) * info->x_scale) * info->x_scale_inv)
-#define SNAPYI(p)	(round ((p) * info->y_scale) * info->y_scale_inv)
-
-#define twin_glyph_left(g)      ((g)[0])
-#define twin_glyph_right(g)     ((g)[1])
-#define twin_glyph_ascent(g)    ((g)[2])
-#define twin_glyph_descent(g)   ((g)[3])
-
-#define twin_glyph_n_snap_x(g)  ((g)[4])
-#define twin_glyph_n_snap_y(g)  ((g)[5])
-#define twin_glyph_snap_x(g)    (&g[6])
-#define twin_glyph_snap_y(g)    (twin_glyph_snap_x(g) + twin_glyph_n_snap_x(g))
-#define twin_glyph_draw(g)      (twin_glyph_snap_y(g) + twin_glyph_n_snap_y(g))
-
-static void
-_twin_compute_snap (cairo_t             *cr,
-		    cairo_scaled_font_t *scaled_font,
-		    twin_snap_info_t    *info,
-		    const signed char   *b)
-{
-    int			s, n;
-    const signed char	*snap;
-    double x, y;
-
-    info->snap = scaled_font->options.hint_style > CAIRO_HINT_STYLE_NONE;
-    if (!info->snap)
-	return;
-
-    x = 1; y = 0;
-    cairo_user_to_device_distance (cr, &x, &y);
-    info->x_scale = sqrt (x*x + y*y);
-    info->x_scale_inv = 1 / info->x_scale;
-
-    x = 0; y = 1;
-    cairo_user_to_device_distance (cr, &x, &y);
-    info->y_scale = sqrt (x*x + y*y);
-    info->y_scale_inv = 1 / info->y_scale;
-
-
-    snap = twin_glyph_snap_x (b);
-    n = twin_glyph_n_snap_x (b);
-    info->n_snap_x = n;
-    assert (n <= TWIN_GLYPH_MAX_SNAP_X);
-    for (s = 0; s < n; s++) {
-	info->snap_x[s] = snap[s];
-	info->snapped_x[s] = SNAPXI (F (snap[s]));
-    }
-
-    snap = twin_glyph_snap_y (b);
-    n = twin_glyph_n_snap_y (b);
-    info->n_snap_y = n;
-    assert (n <= TWIN_GLYPH_MAX_SNAP_Y);
-    for (s = 0; s < n; s++) {
-	info->snap_y[s] = snap[s];
-	info->snapped_y[s] = SNAPYI (F (snap[s]));
-    }
-}
-
-#define SNAPX(p)	_twin_snap (p, info.snap, info.snap_x, info.snapped_x, info.n_snap_x)
-#define SNAPY(p)	_twin_snap (p, info.snap, info.snap_y, info.snapped_y, info.n_snap_y)
+#define SNAPX(p)	twin_snap (p, info.n_snap_x, info.snap_x, info.snapped_x)
+#define SNAPY(p)	twin_snap (p, info.n_snap_y, info.snap_y, info.snapped_y)
 
 static cairo_status_t
 twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
@@ -472,12 +464,15 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     }
 
     /* left margin */
-    cairo_translate (cr, props->penx, 0);
+    cairo_translate (cr, props->penx, 0); /* XXX if monospace, we need to snap again */
 
     /* stretch */
     cairo_scale (cr, props->stretch, 1);
 
-    _twin_compute_snap (cr, scaled_font, &info, b);
+    if (props->snap)
+	twin_compute_snap (cr, &info, b);
+    else
+	info.n_snap_x = info.n_snap_y = 0;
 
     /* advance width */
     metrics->x_advance = gw * props->stretch + props->penx * 3; /* pen width + margin */
