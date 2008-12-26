@@ -89,10 +89,10 @@ if test -n "$flush"; then
 fi
 
 if test -z "$filename"; then
-  CAIRO_TRACE_FD=3 $* 3>&1 >/dev/null
+  CAIRO_TRACE_FD=3 "$@" 3>&1 >/dev/null
 elif test -z "$verbose"; then
   echo "Recording trace in $filename."
-  CAIRO_TRACE_OUTFILE_EXACT=$filename $*
+  CAIRO_TRACE_OUTFILE_EXACT=$filename "$@"
 else
-  CAIRO_TRACE_FD=3 $* 3>&1 >/dev/null | tee $filename
+  CAIRO_TRACE_FD=3 "$@" 3>&1 >/dev/null | tee $filename
 fi
