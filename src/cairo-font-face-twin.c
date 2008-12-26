@@ -410,16 +410,16 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     /* weight */
     weight = props->weight * (4. / 64 / TWIN_WEIGHT_NORMAL);
 
-    /* stretch */
-    stretch = 1 + .05 * ((int) props->stretch - (int) TWIN_STRETCH_NORMAL);
-    cairo_scale (cr, stretch, 1);
-
     /* lock pen matrix */
     _twin_compute_pen (cr, scaled_font, weight, &penx, &peny);
     cairo_save (cr);
 
     /* left margin + pen width, pen width */
     cairo_translate (cr, penx * 1.5, -peny * .5);
+
+    /* stretch */
+    stretch = 1 + .1 * ((int) props->stretch - (int) TWIN_STRETCH_NORMAL);
+    cairo_scale (cr, stretch, 1);
 
     /* slant */
     if (props->slant != CAIRO_FONT_SLANT_NORMAL) {
@@ -448,8 +448,7 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     _twin_compute_snap (cr, scaled_font, &info, b);
 
     /* advance width */
-    metrics->x_advance = gw + penx * 3; /* pen width + margin */
-    metrics->x_advance *= stretch;
+    metrics->x_advance = gw * stretch + penx * 3; /* pen width + margin */
 
     /* glyph shape */
     for (;;) {
