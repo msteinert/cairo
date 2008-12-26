@@ -159,7 +159,7 @@ parse_field (twin_face_properties_t *props,
 }
 
 static void
-props_parse (twin_face_properties_t *props,
+face_props_parse (twin_face_properties_t *props,
 	     const char *s)
 {
     const char *start, *end;
@@ -180,8 +180,8 @@ props_parse (twin_face_properties_t *props,
 }
 
 static cairo_status_t
-twin_set_face_properties_from_toy (cairo_font_face_t *twin_face,
-				   cairo_toy_font_face_t *toy_face)
+twin_font_face_set_properties_from_toy (cairo_font_face_t *twin_face,
+					cairo_toy_font_face_t *toy_face)
 {
     cairo_status_t status;
     twin_face_properties_t *props;
@@ -197,7 +197,7 @@ twin_set_face_properties_from_toy (cairo_font_face_t *twin_face,
     props->slant = toy_face->slant;
     props->weight = toy_face->weight == CAIRO_FONT_WEIGHT_NORMAL ?
 		    TWIN_WEIGHT_NORMAL : TWIN_WEIGHT_BOLD;
-    props_parse (props, toy_face->family);
+    face_props_parse (props, toy_face->family);
 
     status = cairo_font_face_set_user_data (twin_face,
 					    &twin_properties_key,
@@ -218,9 +218,84 @@ FREE_PROPS:
  */
 
 typedef struct _twin_scaled_properties {
-	cairo_bool_t snap;
-	double penx, peny;
+	twin_face_properties_t *face_props;
+
+	cairo_bool_t snap; /* hint outlines */
+
+	double weight; /* unhinted pen width */
+	double penx, peny; /* hinted pen width */
+
+	double stretch; /* stretch factor */
 } twin_scaled_properties_t;
+
+static void
+twin_compute_pen (cairo_t *cr,
+		  double width,
+		  double *penx, double *peny)
+{
+    double x, y;
+    double scale, inv;
+
+    x = 1; y = 0;
+    cairo_user_to_device_distance (cr, &x, &y);
+    scale = sqrt (x*x + y*y);
+    inv = 1 / scale;
+    *penx = round (width * scale) * inv;
+    if (*penx < inv)
+	*penx = inv;
+
+    x = 0; y = 1;
+    cairo_user_to_device_distance (cr, &x, &y);
+    scale = sqrt (x*x + y*y);
+    inv = 1 / scale;
+    *peny = round (width * scale) * inv;
+    if (*peny < inv)
+	*peny = inv;
+}
+
+static cairo_status_t
+twin_scaled_font_compute_properties (cairo_scaled_font_t *scaled_font,
+				     cairo_t           *cr)
+{
+    cairo_status_t status;
+    twin_scaled_properties_t *props;
+
+    props = malloc (sizeof (twin_scaled_properties_t));
+    if (unlikely (props == NULL))
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+
+    props->face_props = cairo_font_face_get_user_data (cairo_scaled_font_get_font_face (scaled_font),
+						       &twin_properties_key);
+
+    props->snap = scaled_font->options.hint_style > CAIRO_HINT_STYLE_NONE;
+
+    /* weight */
+    props->weight = props->face_props->weight * (4. / 64 / TWIN_WEIGHT_NORMAL);
+
+    /* pen */
+    if (scaled_font->options.hint_style > CAIRO_HINT_STYLE_SLIGHT)
+	twin_compute_pen (cr, props->weight, &props->penx, &props->peny);
+    else
+	props->penx = props->peny = props->weight;
+
+    /* stretch */
+    props->stretch = 1 + .1 * ((int) props->face_props->stretch - (int) TWIN_STRETCH_NORMAL);
+
+
+    /* Save it */
+    status = cairo_scaled_font_set_user_data (scaled_font,
+					      &twin_properties_key,
+					      props, free);
+    if (unlikely (status))
+	goto FREE_PROPS;
+
+    return CAIRO_STATUS_SUCCESS;
+
+FREE_PROPS:
+    free (props);
+    return status;
+}
 
 
 /*
@@ -238,7 +313,7 @@ twin_scaled_font_init (cairo_scaled_font_t  *scaled_font,
   metrics->ascent  = F (54);
   metrics->descent = 1 - metrics->ascent;
 
-  return CAIRO_STATUS_SUCCESS;
+  return twin_scaled_font_compute_properties (scaled_font, cr);
 }
 
 static double
@@ -346,39 +421,6 @@ _twin_compute_snap (cairo_t             *cr,
     }
 }
 
-static void
-_twin_compute_pen (cairo_t             *cr,
-		   cairo_scaled_font_t *scaled_font,
-		   double width,
-		   double *penx, double *peny)
-{
-    double x, y;
-    double scale, inv;
-    cairo_bool_t hint;
-
-    hint = scaled_font->options.hint_style > CAIRO_HINT_STYLE_SLIGHT;
-    if (!hint) {
-	*penx = *peny = width;
-	return;
-    }
-
-    x = 1; y = 0;
-    cairo_user_to_device_distance (cr, &x, &y);
-    scale = sqrt (x*x + y*y);
-    inv = 1 / scale;
-    *penx = round (width * scale) * inv;
-    if (*penx < inv)
-	*penx = inv;
-
-    x = 0; y = 1;
-    cairo_user_to_device_distance (cr, &x, &y);
-    scale = sqrt (x*x + y*y);
-    inv = 1 / scale;
-    *peny = round (width * scale) * inv;
-    if (*peny < inv)
-	*peny = inv;
-}
-
 #define SNAPX(p)	_twin_snap (p, info.snap, info.snap_x, info.snapped_x, info.n_snap_x)
 #define SNAPY(p)	_twin_snap (p, info.snap, info.snap_y, info.snapped_y, info.n_snap_y)
 
@@ -389,45 +431,30 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 			       cairo_text_extents_t *metrics)
 {
     double x1, y1, x2, y2, x3, y3;
-    twin_face_properties_t *props;
+    twin_scaled_properties_t *props;
     twin_snap_info_t info;
     const int8_t *b;
     const int8_t *g;
     int8_t w;
     double gw;
-    double weight, stretch;
-    double penx, peny;
 
-    cairo_set_tolerance (cr, 0.01);
-    cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
-    cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
+    props = cairo_scaled_font_get_user_data (scaled_font, &twin_properties_key);
 
-    /* Prepare face */
-
-    props = cairo_font_face_get_user_data (cairo_scaled_font_get_font_face (scaled_font),
-					   &twin_properties_key);
-
-    /* weight */
-    weight = props->weight * (4. / 64 / TWIN_WEIGHT_NORMAL);
-
-    /* lock pen matrix */
-    _twin_compute_pen (cr, scaled_font, weight, &penx, &peny);
+    /* Save glyph space, we need it when stroking */
     cairo_save (cr);
 
     /* left margin + pen width, pen width */
-    cairo_translate (cr, penx * 1.5, -peny * .5);
+    cairo_translate (cr, props->penx * 1.5, -props->peny * .5);
 
-    /* stretch */
-    stretch = 1 + .1 * ((int) props->stretch - (int) TWIN_STRETCH_NORMAL);
-    cairo_scale (cr, stretch, 1);
+    cairo_scale (cr, props->stretch, 1);
 
     /* slant */
-    if (props->slant != CAIRO_FONT_SLANT_NORMAL) {
+    if (props->face_props->slant != CAIRO_FONT_SLANT_NORMAL) {
 	cairo_matrix_t shear = { 1, 0, -.2, 1, 0, 0};
 	cairo_transform (cr, &shear);
     }
 
-    if (props->smallcaps && glyph >= 'a' && glyph <= 'z') {
+    if (props->face_props->smallcaps && glyph >= 'a' && glyph <= 'z') {
 	glyph += 'A' - 'a';
 	cairo_scale (cr, 1, 28. / 42);
     }
@@ -439,16 +466,16 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     gw = F(w);
 
     /* monospace */
-    if (props->monospace) {
+    if (props->face_props->monospace) {
 	double monow = F(24);
-	cairo_scale (cr, (monow+penx) / (gw+penx), 1);
+	cairo_scale (cr, (monow+props->penx) / (gw+props->penx), 1);
 	gw = monow;
     }
 
     _twin_compute_snap (cr, scaled_font, &info, b);
 
     /* advance width */
-    metrics->x_advance = gw * stretch + penx * 3; /* pen width + margin */
+    metrics->x_advance = gw * props->stretch + props->penx * 3; /* pen width + margin */
 
     /* glyph shape */
     for (;;) {
@@ -485,9 +512,12 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 	    cairo_close_path (cr);
 	    /* fall through */
 	case 'e':
-	    cairo_restore (cr);
-	    cairo_scale (cr, penx, peny);
+	    cairo_restore (cr); /* restore glyph space */
+	    cairo_set_tolerance (cr, 0.01);
+	    cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
+	    cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
 	    cairo_set_line_width (cr, 1);
+	    cairo_scale (cr, props->penx, props->peny);
 	    cairo_stroke (cr);
 	    break;
 	case 'X':
@@ -534,9 +564,11 @@ _cairo_font_face_twin_create_for_toy (cairo_toy_font_face_t   *toy_face,
     cairo_user_font_face_set_init_func             (twin_font_face, twin_scaled_font_init);
     cairo_user_font_face_set_render_glyph_func     (twin_font_face, twin_scaled_font_render_glyph);
     cairo_user_font_face_set_unicode_to_glyph_func (twin_font_face, twin_scaled_font_unicode_to_glyph);
-    status = twin_set_face_properties_from_toy (twin_font_face, toy_face);
-    if (status)
+    status = twin_font_face_set_properties_from_toy (twin_font_face, toy_face);
+    if (status) {
+	cairo_font_face_destroy (twin_font_face);
 	return status;
+    }
 
     *font_face = twin_font_face;
 
