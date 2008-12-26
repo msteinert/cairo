@@ -411,7 +411,7 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 					   &twin_face_properties_key);
 
     /* weight */
-    weight = props->weight * (5. / 64 / TWIN_WEIGHT_NORMAL);
+    weight = props->weight * (4. / 64 / TWIN_WEIGHT_NORMAL);
 
     /* stretch */
     stretch = 1 + .05 * ((int) props->stretch - (int) TWIN_STRETCH_NORMAL);
