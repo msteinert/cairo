@@ -449,6 +449,7 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 			       cairo_text_extents_t *metrics)
 {
     double x1, y1, x2, y2, x3, y3;
+    double marginl;
     twin_scaled_properties_t *props;
     twin_snap_info_t info;
     const int8_t *b;
@@ -467,6 +468,7 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     /* small-caps */
     if (props->face_props->smallcaps && glyph >= 'a' && glyph <= 'z') {
 	glyph += 'A' - 'a';
+	/* 28 and 42 are small and capital letter heights of the glyph data */
 	cairo_scale (cr, 1, 28. / 42);
     }
 
@@ -482,15 +484,25 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     w = twin_glyph_right(b);
     gw = F(w);
 
+    marginl = props->marginl;
+
     /* monospace */
     if (props->face_props->monospace) {
 	double monow = F(24);
 	double extra =  props->penx + props->marginl + props->marginr;
 	cairo_scale (cr, (monow + extra) / (gw + extra), 1);
 	gw = monow;
+
+	/* resnap margin for new transform */
+	{
+	    double x, y, x_scale, x_scale_inv;
+	    x = 1; y = 0;
+	    compute_hinting_scale (cr, x, y, &x_scale, &x_scale_inv);
+	    marginl = SNAPXI (marginl);
+	}
     }
 
-    cairo_translate (cr, props->marginl, 0); /* XXX if monospace, we need to snap again */
+    cairo_translate (cr, marginl, 0);
 
     /* stretch */
     cairo_scale (cr, props->stretch, 1);
