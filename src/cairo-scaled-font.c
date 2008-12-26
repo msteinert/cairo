@@ -352,7 +352,7 @@ _cairo_scaled_font_map_unlock (void)
    CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_map_mutex);
 }
 
-static void
+void
 _cairo_scaled_font_map_destroy (void)
 {
     cairo_scaled_font_map_t *font_map;
@@ -956,8 +956,6 @@ void
 _cairo_scaled_font_reset_static_data (void)
 {
     int status;
-
-    _cairo_scaled_font_map_destroy ();
 
     CAIRO_MUTEX_LOCK (_cairo_scaled_font_error_mutex);
     for (status = CAIRO_STATUS_SUCCESS;
