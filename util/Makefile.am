@@ -28,4 +28,5 @@ EXTRA_DIST += \
 	COPYING \
 	xr2cairo \
 	cairo-api-update \
-	cairo-view
+	cairo-view \
+	waterfall
