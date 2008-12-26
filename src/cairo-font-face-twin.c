@@ -224,33 +224,71 @@ typedef struct _twin_scaled_properties {
 
 	double weight; /* unhinted pen width */
 	double penx, peny; /* hinted pen width */
+	double marginl, marginr; /* hinted side margins */
 
 	double stretch; /* stretch factor */
 } twin_scaled_properties_t;
 
 static void
-twin_compute_pen (cairo_t *cr,
-		  double width,
-		  double *penx, double *peny)
+compute_hinting_scale (cairo_t *cr,
+		       double x, double y,
+		       double *scale, double *inv)
+{
+    cairo_user_to_device_distance (cr, &x, &y);
+    *scale = sqrt (x*x + y*y);
+    *inv = 1 / *scale;
+}
+
+static void
+compute_hinting_scales (cairo_t *cr,
+			double *x_scale, double *x_scale_inv,
+			double *y_scale, double *y_scale_inv)
 {
     double x, y;
-    double scale, inv;
 
     x = 1; y = 0;
-    cairo_user_to_device_distance (cr, &x, &y);
-    scale = sqrt (x*x + y*y);
-    inv = 1 / scale;
-    *penx = round (width * scale) * inv;
-    if (*penx < inv)
-	*penx = inv;
+    compute_hinting_scale (cr, x, y, x_scale, x_scale_inv);
 
     x = 0; y = 1;
-    cairo_user_to_device_distance (cr, &x, &y);
-    scale = sqrt (x*x + y*y);
-    inv = 1 / scale;
-    *peny = round (width * scale) * inv;
-    if (*peny < inv)
-	*peny = inv;
+    compute_hinting_scale (cr, x, y, y_scale, y_scale_inv);
+}
+
+#define SNAPXI(p)	(round ((p) * x_scale) * x_scale_inv)
+#define SNAPYI(p)	(round ((p) * y_scale) * y_scale_inv)
+
+/* This controls the global font size */
+#define F(g)		((g) / 72.)
+
+static void
+twin_hint_pen_and_margins(cairo_t *cr,
+			  double *penx, double *peny,
+			  double *marginl, double *marginr)
+{
+    double x_scale, x_scale_inv;
+    double y_scale, y_scale_inv;
+    double margin;
+
+    compute_hinting_scales (cr,
+			    &x_scale, &x_scale_inv,
+			    &y_scale, &y_scale_inv);
+
+    *penx = SNAPXI (*penx);
+    if (*penx < x_scale_inv)
+	*penx = x_scale_inv;
+
+    *peny = SNAPYI (*peny);
+    if (*peny < y_scale_inv)
+	*peny = y_scale_inv;
+
+    margin = *marginl + *marginr;
+    *marginl = SNAPXI (*marginl);
+    if (*marginl < x_scale_inv)
+	*marginl = x_scale_inv;
+
+    *marginr = margin - *marginl;
+    if (*marginr < 0)
+	*marginr = 0;
+    *marginr = SNAPXI (*marginr);
 }
 
 static cairo_status_t
@@ -271,13 +309,15 @@ twin_scaled_font_compute_properties (cairo_scaled_font_t *scaled_font,
     props->snap = scaled_font->options.hint_style > CAIRO_HINT_STYLE_NONE;
 
     /* weight */
-    props->weight = props->face_props->weight * (4. / 64 / TWIN_WEIGHT_NORMAL);
+    props->weight = props->face_props->weight * (F (4) / TWIN_WEIGHT_NORMAL);
 
-    /* pen */
+    /* pen & margins */
+    props->penx = props->peny = props->weight;
+    props->marginl = props->marginr = F (4);
     if (scaled_font->options.hint_style > CAIRO_HINT_STYLE_SLIGHT)
-	twin_compute_pen (cr, props->weight, &props->penx, &props->peny);
-    else
-	props->penx = props->peny = props->weight;
+	twin_hint_pen_and_margins(cr,
+				  &props->penx, &props->peny,
+				  &props->marginl, &props->marginr);
 
     /* stretch */
     props->stretch = 1 + .1 * ((int) props->face_props->stretch - (int) TWIN_STRETCH_NORMAL);
@@ -302,9 +342,6 @@ FREE_PROPS:
  * User-font implementation
  */
 
-/* This controls the global font size */
-#define F(g)		((g) / 72.)
-
 static cairo_status_t
 twin_scaled_font_init (cairo_scaled_font_t  *scaled_font,
 		       cairo_t              *cr,
@@ -320,9 +357,6 @@ twin_scaled_font_init (cairo_scaled_font_t  *scaled_font,
 #define TWIN_GLYPH_MAX_SNAP_Y 7
 
 typedef struct {
-    double x_scale, x_scale_inv;
-    double y_scale, y_scale_inv;
-
     int n_snap_x;
     int8_t snap_x[TWIN_GLYPH_MAX_SNAP_X];
     double snapped_x[TWIN_GLYPH_MAX_SNAP_X];
@@ -349,20 +383,12 @@ twin_compute_snap (cairo_t             *cr,
 {
     int			s, n;
     const signed char	*snap;
-    double x, y;
+    double x_scale, x_scale_inv;
+    double y_scale, y_scale_inv;
 
-    x = 1; y = 0;
-    cairo_user_to_device_distance (cr, &x, &y);
-    info->x_scale = sqrt (x*x + y*y);
-    info->x_scale_inv = 1 / info->x_scale;
-
-    x = 0; y = 1;
-    cairo_user_to_device_distance (cr, &x, &y);
-    info->y_scale = sqrt (x*x + y*y);
-    info->y_scale_inv = 1 / info->y_scale;
-
-#define SNAPXI(p)	(round ((p) * info->x_scale) * info->x_scale_inv)
-#define SNAPYI(p)	(round ((p) * info->y_scale) * info->y_scale_inv)
+    compute_hinting_scales (cr,
+			    &x_scale, &x_scale_inv,
+			    &y_scale, &y_scale_inv);
 
     snap = twin_glyph_snap_x (b);
     n = twin_glyph_n_snap_x (b);
@@ -459,12 +485,12 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     /* monospace */
     if (props->face_props->monospace) {
 	double monow = F(24);
-	cairo_scale (cr, (monow+3*props->penx) / (gw+3*props->penx), 1);
+	double extra =  props->penx + props->marginl + props->marginr;
+	cairo_scale (cr, (monow + extra) / (gw + extra), 1);
 	gw = monow;
     }
 
-    /* left margin */
-    cairo_translate (cr, props->penx, 0); /* XXX if monospace, we need to snap again */
+    cairo_translate (cr, props->marginl, 0); /* XXX if monospace, we need to snap again */
 
     /* stretch */
     cairo_scale (cr, props->stretch, 1);
@@ -475,7 +501,7 @@ twin_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 	info.n_snap_x = info.n_snap_y = 0;
 
     /* advance width */
-    metrics->x_advance = gw * props->stretch + props->penx * 3; /* pen width + margin */
+    metrics->x_advance = gw * props->stretch + props->penx + props->marginl + props->marginr;
 
     /* glyph shape */
     for (;;) {
