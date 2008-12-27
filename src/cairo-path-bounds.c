@@ -39,9 +39,8 @@
 typedef struct cairo_path_bounder {
     double tolerance;
 
-    cairo_point_t move_to_point;
     cairo_point_t current_point;
-    cairo_bool_t has_move_to_point;
+    cairo_bool_t has_initial_point;
     cairo_bool_t has_point;
 
     cairo_box_t extents;
@@ -51,14 +50,14 @@ static void
 _cairo_path_bounder_init (cairo_path_bounder_t *bounder, double tolerance)
 {
     bounder->tolerance = tolerance;
-    bounder->has_move_to_point = FALSE;
+    bounder->has_initial_point = FALSE;
     bounder->has_point = FALSE;
 }
 
 static void
 _cairo_path_bounder_fini (cairo_path_bounder_t *bounder)
 {
-    bounder->has_move_to_point = FALSE;
+    bounder->has_initial_point = FALSE;
     bounder->has_point = FALSE;
 }
 
@@ -94,8 +93,8 @@ _cairo_path_bounder_move_to (void *closure,
 {
     cairo_path_bounder_t *bounder = closure;
 
-    bounder->move_to_point = *point;
-    bounder->has_move_to_point = TRUE;
+    bounder->current_point = *point;
+    bounder->has_initial_point = TRUE;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -106,10 +105,9 @@ _cairo_path_bounder_line_to (void *closure,
 {
     cairo_path_bounder_t *bounder = closure;
 
-    if (bounder->has_move_to_point) {
-	_cairo_path_bounder_add_point (bounder,
-				       &bounder->move_to_point);
-	bounder->has_move_to_point = FALSE;
+    if (bounder->has_initial_point) {
+	_cairo_path_bounder_add_point (bounder, &bounder->current_point);
+	bounder->has_initial_point = FALSE;
     }
 
     _cairo_path_bounder_add_point (bounder, point);
@@ -150,10 +148,9 @@ _cairo_path_bounder_curve_to_cp (void *closure,
 {
     cairo_path_bounder_t *bounder = closure;
 
-    if (bounder->has_move_to_point) {
-	_cairo_path_bounder_add_point (bounder,
-				       &bounder->move_to_point);
-	bounder->has_move_to_point = FALSE;
+    if (bounder->has_initial_point) {
+	_cairo_path_bounder_add_point (bounder, &bounder->current_point);
+	bounder->has_initial_point = FALSE;
     }
 
     _cairo_path_bounder_add_point (bounder, b);
