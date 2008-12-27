@@ -235,7 +235,7 @@ compute_hinting_scale (cairo_t *cr,
 		       double *scale, double *inv)
 {
     cairo_user_to_device_distance (cr, &x, &y);
-    *scale = sqrt (x*x + y*y);
+    *scale = x == 0 ? y : y == 0 ? x :sqrt (x*x + y*y);
     *inv = 1 / *scale;
 }
 
