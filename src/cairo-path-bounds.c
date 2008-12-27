@@ -40,6 +40,7 @@ typedef struct cairo_path_bounder {
     double tolerance;
 
     cairo_point_t move_to_point;
+    cairo_point_t current_point;
     cairo_bool_t has_move_to_point;
     cairo_bool_t has_point;
 
@@ -112,6 +113,7 @@ _cairo_path_bounder_line_to (void *closure,
     }
 
     _cairo_path_bounder_add_point (bounder, point);
+    bounder->current_point = *point;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -132,7 +134,7 @@ _cairo_path_bounder_curve_to (void *closure,
      */
     if (! _cairo_spline_init (&spline,
 			      _cairo_path_bounder_line_to, bounder,
-			      &bounder->move_to_point, b, c, d))
+			      &bounder->current_point, b, c, d))
     {
 	return _cairo_path_bounder_line_to (bounder, d);
     }
