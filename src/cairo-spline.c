@@ -314,7 +314,7 @@ _cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
 	double x, y;
         double t_1_0, t_0_1;
         double t_2_0, t_0_2;
-        double t_3_0, t_2_1, t_1_2, t_0_3;
+        double t_3_0, t_2_1_3, t_1_2_3, t_0_3;
 
         t_1_0 = t[i];          /*      t  */
         t_0_1 = 1 - t_1_0;     /* (1 - t) */
@@ -322,20 +322,20 @@ _cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
         t_2_0 = t_1_0 * t_1_0; /*      t  *      t  */
         t_0_2 = t_0_1 * t_0_1; /* (1 - t) * (1 - t) */
 
-        t_3_0 = t_2_0 * t_1_0; /*      t  *      t  *      t  */
-        t_2_1 = t_2_0 * t_0_1; /*      t  *      t  * (1 - t) */
-        t_1_2 = t_1_0 * t_0_2; /*      t  * (1 - t) * (1 - t) */
-        t_0_3 = t_0_1 * t_0_2; /* (1 - t) * (1 - t) * (1 - t) */
+        t_3_0   = t_2_0 * t_1_0;     /*      t  *      t  *      t  */
+        t_2_1_3 = t_2_0 * t_0_1 * 3; /*      t  *      t  * (1 - t) * 3 */
+        t_1_2_3 = t_1_0 * t_0_2 * 3; /*      t  * (1 - t) * (1 - t) * 3 */
+        t_0_3   = t_0_1 * t_0_2;     /* (1 - t) * (1 - t) * (1 - t) */
 
         /* Bezier polynomial */
-        x =     x0 * t_0_3
-          + 3 * x1 * t_1_2
-          + 3 * x2 * t_2_1
-          +     x3 * t_3_0;
-        y =     y0 * t_0_3
-          + 3 * y1 * t_1_2
-          + 3 * y2 * t_2_1
-          +     y3 * t_3_0;
+        x = x0 * t_0_3
+          + x1 * t_1_2_3
+          + x2 * t_2_1_3
+          + x3 * t_3_0;
+        y = y0 * t_0_3
+          + y1 * t_1_2_3
+          + y2 * t_2_1_3
+          + y3 * t_3_0;
 
 	p.x = _cairo_fixed_from_double (x);
 	p.y = _cairo_fixed_from_double (y);
