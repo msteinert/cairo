@@ -277,18 +277,22 @@ _cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
 	    double b2 = b * b; \
 	    double delta = b2 - a * c; \
 	    if (delta > 0) { \
-		double a2_b2 = a * a + b2; \
+		cairo_bool_t feasible; \
 		double _2ab = 2 * a * b; \
-	        double _b_a = - b / a; \
 		/* We are only interested in solutions t that satisfy 0<t<1 \
 		 * here.  We do some checks to avoid sqrt if the solutions \
 		 * are not in that range.  The checks can be derived from: \
 		 * \
 		 *   0 < (-b±√delta)/a < 1 \
 		 */ \
-		if ((_2ab >= 0 && delta > b2 && delta < a2_b2 - _2ab) || \
-		    (_2ab <  0 && ((_b_a>=1 && (delta < b2 && delta > a2_b2 + _2ab)) || \
-		                   (_b_a< 1 && (delta < b2 || delta < a2_b2 + _2ab))))) { \
+		if (_2ab >= 0) \
+		    feasible = delta > b2 && delta < a*a + b2 - _2ab; \
+		else if (-b / a >= 1) \
+		    feasible = delta < b2 && delta > a*a + b2 + _2ab; \
+		else \
+		    feasible = delta < b2 || delta < a*a + b2 + _2ab; \
+	        \
+		if (unlikely (feasible)) { \
 		    double sqrt_delta = sqrt (delta); \
 		    ADD ((-b - sqrt_delta) / a); \
 		    ADD ((-b + sqrt_delta) / a); \
