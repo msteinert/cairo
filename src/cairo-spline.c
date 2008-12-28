@@ -263,24 +263,23 @@ _cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
      */
 
 #define ADD(t0) \
-	if (0 < (t0) && (t0) < 1) \
-	    t[t_num++] = (t0);
+    { \
+	double _t0 = (t0); \
+	if (0 < _t0 && _t0 < 1) \
+	    t[t_num++] = _t0; \
+    }
 
 #define FIND_EXTREMES(a,b,c) \
     { \
 	double delta = b * b - a * c; \
 	if (a == 0) { \
-	    double t0 = -c / (2*b); \
-	    ADD (t0); \
+	    ADD (-c / (2*b)); \
 	} else if (delta > 0) { \
 	    double sqrt_delta = sqrt (delta); \
-	    double t1 = (-b - sqrt_delta) / a; \
-	    double t2 = (-b + sqrt_delta) / a; \
-	    ADD (t1); \
-	    ADD (t2); \
+	    ADD ((-b - sqrt_delta) / a); \
+	    ADD ((-b + sqrt_delta) / a); \
 	} else if (delta == 0) { \
-	    double t0 = -b / a; \
-	    ADD (t0); \
+	    ADD (-b / a); \
 	} \
     }
 
