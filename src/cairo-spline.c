@@ -209,6 +209,7 @@ _cairo_spline_decompose (cairo_spline_t *spline, double tolerance)
     return _cairo_spline_add_point (spline, &spline->knots.d);
 }
 
+/* Note: this function is only good for computing bounds in device space. */
 void
 _cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
 		     void *closure,
@@ -272,7 +273,8 @@ _cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
 #define FIND_EXTREMES(a,b,c) \
     { \
 	if (a == 0) { \
-	    ADD (-c / (2*b)); \
+	    if (b != 0) \
+		ADD (-c / (2*b)); \
 	} else { \
 	    double b2 = b * b; \
 	    double delta = b2 - a * c; \
@@ -329,10 +331,10 @@ _cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
         t_2_0 = t_1_0 * t_1_0; /*      t  *      t  */
         t_0_2 = t_0_1 * t_0_1; /* (1 - t) * (1 - t) */
 
-        t_3_0   = t_2_0 * t_1_0;     /*      t  *      t  *      t  */
+        t_3_0   = t_2_0 * t_1_0;     /*      t  *      t  *      t      */
         t_2_1_3 = t_2_0 * t_0_1 * 3; /*      t  *      t  * (1 - t) * 3 */
         t_1_2_3 = t_1_0 * t_0_2 * 3; /*      t  * (1 - t) * (1 - t) * 3 */
-        t_0_3   = t_0_1 * t_0_2;     /* (1 - t) * (1 - t) * (1 - t) */
+        t_0_3   = t_0_1 * t_0_2;     /* (1 - t) * (1 - t) * (1 - t)     */
 
         /* Bezier polynomial */
         x = x0 * t_0_3
