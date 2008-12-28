@@ -271,15 +271,28 @@ _cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
 
 #define FIND_EXTREMES(a,b,c) \
     { \
-	double delta = b * b - a * c; \
 	if (a == 0) { \
 	    ADD (-c / (2*b)); \
-	} else if (delta > 0) { \
-	    double sqrt_delta = sqrt (delta); \
-	    ADD ((-b - sqrt_delta) / a); \
-	    ADD ((-b + sqrt_delta) / a); \
-	} else if (delta == 0) { \
-	    ADD (-b / a); \
+	} else { \
+	    double b2 = b * b; \
+	    double delta = b2 - a * c; \
+	    if (delta > 0) { \
+		double a2 = a * a; \
+		double ab = a * b; \
+		/* We are only interested in solutions t that satisfy 0<t<1 \
+		 * here.  We do some checks to avoid sqrt if the solutions \
+		 * are not in that range.  The checks can be derived from: \
+		 * \
+		 *   0 < (-b±√delta)/a < 1 \
+		 */ \
+		if (delta > (ab >= 0 ? b2 : a2 + b2 + 2*ab)) { \
+		    double sqrt_delta = sqrt (delta); \
+		    ADD ((-b - sqrt_delta) / a); \
+		    ADD ((-b + sqrt_delta) / a); \
+		} \
+	    } else if (delta == 0) { \
+		ADD (-b / a); \
+	    } \
 	} \
     }
 
