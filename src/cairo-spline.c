@@ -208,3 +208,134 @@ _cairo_spline_decompose (cairo_spline_t *spline, double tolerance)
 
     return _cairo_spline_add_point (spline, &spline->knots.d);
 }
+
+void
+_cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
+		     void *closure,
+		     const cairo_point_t *p0, const cairo_point_t *p1,
+		     const cairo_point_t *p2, const cairo_point_t *p3)
+{
+    double x0, x1, x2, x3;
+    double y0, y1, y2, y3;
+    double a, b, c, delta;
+    double t[4];
+    int t_num = 0, i;
+
+    x0 = _cairo_fixed_to_double (p0->x);
+    y0 = _cairo_fixed_to_double (p0->y);
+    x1 = _cairo_fixed_to_double (p1->x);
+    y1 = _cairo_fixed_to_double (p1->y);
+    x2 = _cairo_fixed_to_double (p2->x);
+    y2 = _cairo_fixed_to_double (p2->y);
+    x3 = _cairo_fixed_to_double (p3->x);
+    y3 = _cairo_fixed_to_double (p3->y);
+
+    /* The spline can be written as a polynomial of the four points:
+     *
+     *   (1-t)³p0 + t(1-t)²p1 + t²(1-t)p2 + t³p3
+     *
+     * for 0≤t≤1.  Now, the X and Y components of the spline follow the
+     * same polynomial but with x and y replaced for p.  To find the
+     * bounds of the spline, we just need to find the X and Y bounds.
+     * To find the bound, we take the derivative and equal it to zero,
+     * and solve to find the t's that give the extreme points.
+     *
+     * Here is the derivative of the curve, sorted on t:
+     *
+     *   3t²(-p0+3p1-3p2+p3) + 6t(3p0-6p1+3p2) -3p0+3p1
+     *
+     * Let:
+     *
+     *   a = -p0+3p1-3p2+p3
+     *   b =  3p0-6p1+3p2
+     *   c = -3p0+3p1
+     *
+     * Gives:
+     *
+     *   a.t² + 2b.t + c = 0
+     *
+     * With:
+     *
+     *   delta = b*b - a*c
+     *
+     * the extreme points are at -c/2b if a is zero, at (-b±√delta)/a if
+     * delta is positive, and at -b/a if delta is zero.
+     */
+
+#define ADD(t0) \
+	if (0 < (t0) && (t0) < 1) \
+	    t[t_num++] = (t0);
+
+    /* Find X extremes */
+    a = -x0 + 3*x1 - 3*x2 + x3;
+    b =  x0 - 2*x1 + x2;
+    c = -x0 + x1;
+    delta = b * b - a * c;
+    if (a == 0) {
+	double t0 = -c / (2*b);
+	ADD (t0);
+    } else if (delta > 0) {
+	double sqrt_delta = sqrt (delta);
+	double t1 = (-b - sqrt_delta) / a;
+	double t2 = (-b + sqrt_delta) / a;
+	ADD (t1);
+	ADD (t2);
+    } else if (delta == 0) {
+	double t0 = -b / a;
+	ADD (t0);
+    }
+
+    /* Find Y extremes */
+    a = -y0 + 3*y1 - 3*y2 + y3;
+    b =  y0 - 2*y1 + y2;
+    c = -y0 + y1;
+    delta = b * b - a * c;
+    if (a == 0) {
+	double t0 = -c / (2*b);
+	ADD (t0);
+    } else if (delta > 0) {
+	double sqrt_delta = sqrt (delta);
+	double t1 = (-b - sqrt_delta) / a;
+	double t2 = (-b + sqrt_delta) / a;
+	ADD (t1);
+	ADD (t2);
+    } else if (delta == 0) {
+	double t0 = -b / a;
+	ADD (t0);
+    }
+
+    add_point_func (closure, p0);
+    for (i = 0; i < t_num; i++) {
+	cairo_point_t p;
+	double x, y;
+        double t_1_0, t_0_1;
+        double t_2_0, t_0_2;
+        double t_3_0, t_2_1, t_1_2, t_0_3;
+
+        t_1_0 = t[i];          /*      t  */
+        t_0_1 = 1 - t_1_0;     /* (1 - t) */
+
+        t_2_0 = t_1_0 * t_1_0; /*      t  *      t  */
+        t_0_2 = t_0_1 * t_0_1; /* (1 - t) * (1 - t) */
+
+        t_3_0 = t_2_0 * t_1_0; /*      t  *      t  *      t  */
+        t_2_1 = t_2_0 * t_0_1; /*      t  *      t  * (1 - t) */
+        t_1_2 = t_1_0 * t_0_2; /*      t  * (1 - t) * (1 - t) */
+        t_0_3 = t_0_1 * t_0_2; /* (1 - t) * (1 - t) * (1 - t) */
+
+        /* Bezier polynomial */
+        x =     x0 * t_0_3
+          + 3 * x1 * t_1_2
+          + 3 * x2 * t_2_1
+          +     x3 * t_3_0;
+        y =     y0 * t_0_3
+          + 3 * y1 * t_1_2
+          + 3 * y2 * t_2_1
+          +     y3 * t_3_0;
+
+	p.x = _cairo_fixed_from_double (x);
+	p.y = _cairo_fixed_from_double (y);
+	add_point_func (closure, &p);
+    }
+    add_point_func (closure, p3);
+}

@@ -123,21 +123,11 @@ _cairo_path_bounder_curve_to (void *closure,
 			      const cairo_point_t *d)
 {
     cairo_path_bounder_t *bounder = closure;
-    cairo_spline_t spline;
 
-    /* XXX Is there a faster way to determine the bounding box of a
-     * Bezier curve than its decomposition?
-     *
-     * Using the control points alone can be wildly inaccurate.
-     */
-    if (! _cairo_spline_init (&spline,
-			      _cairo_path_bounder_line_to, bounder,
-			      &bounder->current_point, b, c, d))
-    {
-	return _cairo_path_bounder_line_to (bounder, d);
-    }
+    _cairo_spline_bound (_cairo_path_bounder_line_to, bounder,
+			 &bounder->current_point, b, c, d);
 
-    return _cairo_spline_decompose (&spline, bounder->tolerance);
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t

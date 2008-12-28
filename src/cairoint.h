@@ -2266,6 +2266,12 @@ _cairo_spline_init (cairo_spline_t *spline,
 cairo_private cairo_status_t
 _cairo_spline_decompose (cairo_spline_t *spline, double tolerance);
 
+void
+_cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
+		     void *closure,
+		     const cairo_point_t *p0, const cairo_point_t *p1,
+		     const cairo_point_t *p2, const cairo_point_t *p3);
+
 /* cairo-matrix.c */
 cairo_private void
 _cairo_matrix_get_affine (const cairo_matrix_t *matrix,
