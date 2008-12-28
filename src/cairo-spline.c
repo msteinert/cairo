@@ -217,7 +217,7 @@ _cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
 {
     double x0, x1, x2, x3;
     double y0, y1, y2, y3;
-    double a, b, c, delta;
+    double a, b, c;
     double t[4];
     int t_num = 0, i;
 
@@ -266,43 +266,35 @@ _cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
 	if (0 < (t0) && (t0) < 1) \
 	    t[t_num++] = (t0);
 
+#define FIND_EXTREMES(a,b,c) \
+    { \
+	double delta = b * b - a * c; \
+	if (a == 0) { \
+	    double t0 = -c / (2*b); \
+	    ADD (t0); \
+	} else if (delta > 0) { \
+	    double sqrt_delta = sqrt (delta); \
+	    double t1 = (-b - sqrt_delta) / a; \
+	    double t2 = (-b + sqrt_delta) / a; \
+	    ADD (t1); \
+	    ADD (t2); \
+	} else if (delta == 0) { \
+	    double t0 = -b / a; \
+	    ADD (t0); \
+	} \
+    }
+
     /* Find X extremes */
     a = -x0 + 3*x1 - 3*x2 + x3;
     b =  x0 - 2*x1 + x2;
     c = -x0 + x1;
-    delta = b * b - a * c;
-    if (a == 0) {
-	double t0 = -c / (2*b);
-	ADD (t0);
-    } else if (delta > 0) {
-	double sqrt_delta = sqrt (delta);
-	double t1 = (-b - sqrt_delta) / a;
-	double t2 = (-b + sqrt_delta) / a;
-	ADD (t1);
-	ADD (t2);
-    } else if (delta == 0) {
-	double t0 = -b / a;
-	ADD (t0);
-    }
+    FIND_EXTREMES (a, b, c);
 
     /* Find Y extremes */
     a = -y0 + 3*y1 - 3*y2 + y3;
     b =  y0 - 2*y1 + y2;
     c = -y0 + y1;
-    delta = b * b - a * c;
-    if (a == 0) {
-	double t0 = -c / (2*b);
-	ADD (t0);
-    } else if (delta > 0) {
-	double sqrt_delta = sqrt (delta);
-	double t1 = (-b - sqrt_delta) / a;
-	double t2 = (-b + sqrt_delta) / a;
-	ADD (t1);
-	ADD (t2);
-    } else if (delta == 0) {
-	double t0 = -b / a;
-	ADD (t0);
-    }
+    FIND_EXTREMES (a, b, c);
 
     add_point_func (closure, p0);
     for (i = 0; i < t_num; i++) {
