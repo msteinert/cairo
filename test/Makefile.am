@@ -973,10 +973,8 @@ REFERENCE_IMAGES = \
 	trap-clip.ps2.rgb24.ref.png \
 	twin.ref.png \
 	twin.pdf.ref.png \
-	twin.ps2.ref.png \
-	twin.ps3.ref.png \
-	twin.svg11.ref.png \
-	twin.svg12.ref.png \
+	twin.ps.ref.png \
+	twin.svg.ref.png \
 	unantialiased-shapes.ref.png	\
 	unantialiased-shapes.quartz.ref.png \
 	unbounded-operator.ref.png	\
