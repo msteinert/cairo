@@ -958,7 +958,6 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
 	    cairo_rectangle_int_t path_extents;
 
 	    _cairo_path_fixed_approximate_fill_extents (path,
-							tolerance,
 							&path_extents);
 	    if (! _cairo_rectangle_intersect (&extents, &path_extents))
 		return CAIRO_STATUS_SUCCESS;

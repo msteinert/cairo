@@ -37,8 +37,6 @@
 #include "cairoint.h"
 
 typedef struct cairo_path_bounder {
-    double tolerance;
-
     cairo_point_t current_point;
     cairo_bool_t has_initial_point;
     cairo_bool_t has_point;
@@ -47,9 +45,8 @@ typedef struct cairo_path_bounder {
 } cairo_path_bounder_t;
 
 static void
-_cairo_path_bounder_init (cairo_path_bounder_t *bounder, double tolerance)
+_cairo_path_bounder_init (cairo_path_bounder_t *bounder)
 {
-    bounder->tolerance = tolerance;
     bounder->has_initial_point = FALSE;
     bounder->has_point = FALSE;
 }
@@ -167,7 +164,7 @@ _cairo_path_fixed_approximate_extents (cairo_path_fixed_t *path,
     cairo_path_bounder_t bounder;
     cairo_status_t status;
 
-    _cairo_path_bounder_init (&bounder, 0.);
+    _cairo_path_bounder_init (&bounder);
 
     status = _cairo_path_fixed_interpret (path, CAIRO_DIRECTION_FORWARD,
 					  _cairo_path_bounder_move_to,
@@ -192,13 +189,12 @@ _cairo_path_fixed_approximate_extents (cairo_path_fixed_t *path,
  */
 void
 _cairo_path_fixed_approximate_fill_extents (cairo_path_fixed_t *path,
-					    double tolerance,
 					    cairo_rectangle_int_t *extents)
 {
     cairo_path_bounder_t bounder;
     cairo_status_t status;
 
-    _cairo_path_bounder_init (&bounder, tolerance);
+    _cairo_path_bounder_init (&bounder);
 
     status = _cairo_path_fixed_interpret (path, CAIRO_DIRECTION_FORWARD,
 					  _cairo_path_bounder_move_to,
@@ -223,13 +219,12 @@ void
 _cairo_path_fixed_approximate_stroke_extents (cairo_path_fixed_t *path,
 					      cairo_stroke_style_t *style,
 					      const cairo_matrix_t *ctm,
-					      double tolerance,
 					      cairo_rectangle_int_t *extents)
 {
     cairo_path_bounder_t bounder;
     cairo_status_t status;
 
-    _cairo_path_bounder_init (&bounder, tolerance);
+    _cairo_path_bounder_init (&bounder);
 
     status = _cairo_path_fixed_interpret (path, CAIRO_DIRECTION_FORWARD,
 					  _cairo_path_bounder_move_to,
@@ -261,13 +256,12 @@ _cairo_path_fixed_approximate_stroke_extents (cairo_path_fixed_t *path,
 void
 _cairo_path_fixed_bounds (cairo_path_fixed_t *path,
 			  double *x1, double *y1,
-			  double *x2, double *y2,
-			  double tolerance)
+			  double *x2, double *y2)
 {
     cairo_path_bounder_t bounder;
     cairo_status_t status;
 
-    _cairo_path_bounder_init (&bounder, tolerance);
+    _cairo_path_bounder_init (&bounder);
 
     status = _cairo_path_fixed_interpret (path, CAIRO_DIRECTION_FORWARD,
 					  _cairo_path_bounder_move_to,

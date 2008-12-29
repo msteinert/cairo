@@ -1545,21 +1545,18 @@ _cairo_path_fixed_approximate_extents (cairo_path_fixed_t	*path,
 
 cairo_private void
 _cairo_path_fixed_approximate_fill_extents (cairo_path_fixed_t *path,
-					    double tolerance,
 					    cairo_rectangle_int_t *extents);
 
 cairo_private void
 _cairo_path_fixed_approximate_stroke_extents (cairo_path_fixed_t *path,
 					      cairo_stroke_style_t *style,
 					      const cairo_matrix_t *ctm,
-					      double tolerance,
 					      cairo_rectangle_int_t *extents);
 
 cairo_private void
 _cairo_path_fixed_bounds (cairo_path_fixed_t *path,
 			  double *x1, double *y1,
-			  double *x2, double *y2,
-			  double tolerance);
+			  double *x2, double *y2);
 
 cairo_private void
 _cairo_path_fixed_transform (cairo_path_fixed_t	*path,

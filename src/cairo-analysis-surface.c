@@ -481,7 +481,7 @@ _cairo_analysis_surface_stroke (void			*abstract_surface,
 	cairo_rectangle_int_t mask_extents;
 
 	_cairo_path_fixed_approximate_stroke_extents (path,
-						      style, ctm, tolerance,
+						      style, ctm,
 						      &mask_extents);
 
 	is_empty = _cairo_rectangle_intersect (&extents, &mask_extents);
@@ -539,7 +539,6 @@ _cairo_analysis_surface_fill (void			*abstract_surface,
 	cairo_rectangle_int_t mask_extents;
 
 	_cairo_path_fixed_approximate_fill_extents (path,
-						    tolerance,
 						    &mask_extents);
 
 	is_empty = _cairo_rectangle_intersect (&extents, &mask_extents);
