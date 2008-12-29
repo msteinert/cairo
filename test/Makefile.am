@@ -902,11 +902,9 @@ REFERENCE_IMAGES = \
 	source-surface-scale-paint.ref.png	\
 	source-surface-scale-paint.rgb24.ref.png	\
 	spline-decomposition.ref.png \
-	spline-decomposition.ps2.ref.png \
-	spline-decomposition.ps3.ref.png \
+	spline-decomposition.ps.ref.png \
 	spline-decomposition.pdf.ref.png \
-	spline-decomposition.svg11.ref.png \
-	spline-decomposition.svg12.ref.png \
+	spline-decomposition.svg.ref.png \
 	stroke-ctm-caps.ps2.ref.png \
 	stroke-ctm-caps.ps3.ref.png \
 	surface-pattern-big-scale-down.ref.png	\

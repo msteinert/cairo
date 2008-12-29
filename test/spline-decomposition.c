@@ -310,8 +310,20 @@ thin_splines (cairo_t *cr)
 #endif
 
 static void
+draw_bbox (cairo_t *cr, double x0, double y0, double x1, double y1)
+{
+    cairo_rectangle (cr,
+		     floor (x0) + .5, floor (y0) + .5,
+		     ceil (x1) - floor (x0), ceil (y1) - floor (y0));
+    cairo_stroke (cr);
+}
+
+static void
 stroke_splines (cairo_t *cr)
 {
+    double stroke_x0, stroke_x1, stroke_y0, stroke_y1;
+    double path_x0, path_x1, path_y0, path_y1;
+
     cairo_save (cr);
     cairo_translate (cr, 15, 15);
 
@@ -322,7 +334,17 @@ stroke_splines (cairo_t *cr)
 		    knots[0].b.x, knots[0].b.y,
 		    knots[0].c.x, knots[0].c.y,
 		    knots[0].d.x, knots[0].d.y);
+    cairo_stroke_extents (cr, &stroke_x0, &stroke_y0, &stroke_x1, &stroke_y1);
+    cairo_path_extents (cr, &path_x0, &path_y0, &path_x1, &path_y1);
     cairo_stroke (cr);
+
+    cairo_save (cr); {
+	cairo_set_line_width (cr, 1);
+	cairo_set_source_rgb (cr, 1, 0, 0);
+	draw_bbox (cr, stroke_x0, stroke_y0, stroke_x1, stroke_y1);
+	cairo_set_source_rgb (cr, 0, 0, 1);
+	draw_bbox (cr, path_x0, path_y0, path_x1, path_y1);
+    } cairo_restore (cr);
 
     cairo_translate (cr, 130, 0);
 
@@ -333,7 +355,17 @@ stroke_splines (cairo_t *cr)
 		    knots[1].b.x, knots[1].b.y,
 		    knots[1].c.x, knots[1].c.y,
 		    knots[1].d.x, knots[1].d.y);
+    cairo_stroke_extents (cr, &stroke_x0, &stroke_y0, &stroke_x1, &stroke_y1);
+    cairo_path_extents (cr, &path_x0, &path_y0, &path_x1, &path_y1);
     cairo_stroke (cr);
+
+    cairo_save (cr); {
+	cairo_set_line_width (cr, 1);
+	cairo_set_source_rgb (cr, 1, 0, 0);
+	draw_bbox (cr, stroke_x0, stroke_y0, stroke_x1, stroke_y1);
+	cairo_set_source_rgb (cr, 0, 0, 1);
+	draw_bbox (cr, path_x0, path_y0, path_x1, path_y1);
+    } cairo_restore (cr);
 
     cairo_translate (cr, 130, 0);
 
@@ -344,7 +376,17 @@ stroke_splines (cairo_t *cr)
 		    knots[2].b.x, knots[2].b.y,
 		    knots[2].c.x, knots[2].c.y,
 		    knots[2].d.x, knots[2].d.y);
+    cairo_stroke_extents (cr, &stroke_x0, &stroke_y0, &stroke_x1, &stroke_y1);
+    cairo_path_extents (cr, &path_x0, &path_y0, &path_x1, &path_y1);
     cairo_stroke (cr);
+
+    cairo_save (cr); {
+	cairo_set_line_width (cr, 1);
+	cairo_set_source_rgb (cr, 1, 0, 0);
+	draw_bbox (cr, stroke_x0, stroke_y0, stroke_x1, stroke_y1);
+	cairo_set_source_rgb (cr, 0, 0, 1);
+	draw_bbox (cr, path_x0, path_y0, path_x1, path_y1);
+    } cairo_restore (cr);
 
     cairo_translate (cr, -130 - 65, 130);
 
@@ -355,7 +397,17 @@ stroke_splines (cairo_t *cr)
 		    knots[3].b.x, knots[3].b.y,
 		    knots[3].c.x, knots[3].c.y,
 		    knots[3].d.x, knots[3].d.y);
+    cairo_stroke_extents (cr, &stroke_x0, &stroke_y0, &stroke_x1, &stroke_y1);
+    cairo_path_extents (cr, &path_x0, &path_y0, &path_x1, &path_y1);
     cairo_stroke (cr);
+
+    cairo_save (cr); {
+	cairo_set_line_width (cr, 1);
+	cairo_set_source_rgb (cr, 1, 0, 0);
+	draw_bbox (cr, stroke_x0, stroke_y0, stroke_x1, stroke_y1);
+	cairo_set_source_rgb (cr, 0, 0, 1);
+	draw_bbox (cr, path_x0, path_y0, path_x1, path_y1);
+    } cairo_restore (cr);
 
     cairo_translate (cr, 130, 0);
 
@@ -366,7 +418,18 @@ stroke_splines (cairo_t *cr)
 		    knots[4].b.x, knots[4].b.y,
 		    knots[4].c.x, knots[4].c.y,
 		    knots[4].d.x, knots[4].d.y);
+    cairo_stroke_extents (cr, &stroke_x0, &stroke_y0, &stroke_x1, &stroke_y1);
+    cairo_path_extents (cr, &path_x0, &path_y0, &path_x1, &path_y1);
     cairo_stroke (cr);
+
+    cairo_save (cr); {
+	cairo_set_line_width (cr, 1);
+	cairo_set_source_rgb (cr, 1, 0, 0);
+	draw_bbox (cr, stroke_x0, stroke_y0, stroke_x1, stroke_y1);
+	cairo_set_source_rgb (cr, 0, 0, 1);
+	draw_bbox (cr, path_x0, path_y0, path_x1, path_y1);
+    } cairo_restore (cr);
+
     cairo_restore (cr);
 }
 
