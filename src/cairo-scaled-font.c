@@ -1113,6 +1113,7 @@ cairo_scaled_font_get_user_data (cairo_scaled_font_t	     *scaled_font,
     return _cairo_user_data_array_get_data (&scaled_font->user_data,
 					    key);
 }
+slim_hidden_def (cairo_scaled_font_get_user_data);
 
 /**
  * cairo_scaled_font_set_user_data:
@@ -1144,6 +1145,7 @@ cairo_scaled_font_set_user_data (cairo_scaled_font_t	     *scaled_font,
     return _cairo_user_data_array_set_data (&scaled_font->user_data,
 					    key, user_data, destroy);
 }
+slim_hidden_def (cairo_scaled_font_set_user_data);
 
 static cairo_bool_t
 _cairo_scaled_font_is_frozen (cairo_scaled_font_t *scaled_font)

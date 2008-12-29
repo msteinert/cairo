@@ -35,8 +35,10 @@
  */
 
 #define _ISOC99_SOURCE /* for round() */
-#include <math.h>
+
 #include "cairoint.h"
+
+#include <math.h>
 
 /*
  * This file implements a user-font rendering the descendant of the Hershey
@@ -48,7 +50,7 @@
 
 
 
-cairo_user_data_key_t twin_properties_key;
+static cairo_user_data_key_t twin_properties_key;
 
 
 /*

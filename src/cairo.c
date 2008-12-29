@@ -1160,6 +1160,7 @@ cairo_translate (cairo_t *cr, double tx, double ty)
     if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
+slim_hidden_def (cairo_translate);
 
 /**
  * cairo_scale:
@@ -1233,6 +1234,7 @@ cairo_transform (cairo_t	      *cr,
     if (unlikely (status))
 	_cairo_set_error (cr, status);
 }
+slim_hidden_def (cairo_transform);
 
 /**
  * cairo_set_matrix:
@@ -1293,6 +1295,7 @@ cairo_user_to_device (cairo_t *cr, double *x, double *y)
 
     _cairo_gstate_user_to_device (cr->gstate, x, y);
 }
+slim_hidden_def (cairo_user_to_device);
 
 /**
  * cairo_user_to_device_distance:
@@ -1313,6 +1316,7 @@ cairo_user_to_device_distance (cairo_t *cr, double *dx, double *dy)
 
     _cairo_gstate_user_to_device_distance (cr->gstate, dx, dy);
 }
+slim_hidden_def (cairo_user_to_device_distance);
 
 /**
  * cairo_device_to_user:

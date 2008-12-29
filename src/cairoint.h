@@ -2263,7 +2263,7 @@ _cairo_spline_init (cairo_spline_t *spline,
 cairo_private cairo_status_t
 _cairo_spline_decompose (cairo_spline_t *spline, double tolerance);
 
-void
+cairo_private void
 _cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
 		     void *closure,
 		     const cairo_point_t *p0, const cairo_point_t *p1,
@@ -2613,6 +2613,8 @@ slim_hidden_proto (cairo_scaled_font_get_font_options);
 slim_hidden_proto (cairo_scaled_font_glyph_extents);
 slim_hidden_proto_no_warn (cairo_scaled_font_reference);
 slim_hidden_proto (cairo_scaled_font_status);
+slim_hidden_proto (cairo_scaled_font_get_user_data);
+slim_hidden_proto (cairo_scaled_font_set_user_data);
 slim_hidden_proto (cairo_scaled_font_text_to_glyphs);
 slim_hidden_proto (cairo_set_font_options);
 slim_hidden_proto (cairo_set_font_size);
@@ -2650,10 +2652,14 @@ slim_hidden_proto (cairo_text_cluster_free);
 slim_hidden_proto (cairo_toy_font_face_create);
 slim_hidden_proto (cairo_toy_font_face_get_slant);
 slim_hidden_proto (cairo_toy_font_face_get_weight);
+slim_hidden_proto (cairo_translate);
+slim_hidden_proto (cairo_transform);
 slim_hidden_proto (cairo_user_font_face_create);
 slim_hidden_proto (cairo_user_font_face_set_init_func);
 slim_hidden_proto (cairo_user_font_face_set_render_glyph_func);
 slim_hidden_proto (cairo_user_font_face_set_unicode_to_glyph_func);
+slim_hidden_proto (cairo_user_to_device);
+slim_hidden_proto (cairo_user_to_device_distance);
 slim_hidden_proto (cairo_version_string);
 
 #if CAIRO_HAS_PNG_FUNCTIONS
