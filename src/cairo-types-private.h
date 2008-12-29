@@ -305,7 +305,7 @@ typedef struct _cairo_polygon {
     cairo_edge_t  edges_embedded[32];
 } cairo_polygon_t;
 
-typedef cairo_status_t
+typedef cairo_warn cairo_status_t
 (*cairo_spline_add_point_func_t) (void *closure,
 				  const cairo_point_t *point);
 

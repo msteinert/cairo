@@ -121,10 +121,8 @@ _cairo_path_bounder_curve_to (void *closure,
 {
     cairo_path_bounder_t *bounder = closure;
 
-    _cairo_spline_bound (_cairo_path_bounder_line_to, bounder,
-			 &bounder->current_point, b, c, d);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_spline_bound (_cairo_path_bounder_line_to, bounder,
+				&bounder->current_point, b, c, d);
 }
 
 static cairo_status_t

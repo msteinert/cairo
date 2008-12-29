@@ -2263,7 +2263,7 @@ _cairo_spline_init (cairo_spline_t *spline,
 cairo_private cairo_status_t
 _cairo_spline_decompose (cairo_spline_t *spline, double tolerance);
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
 		     void *closure,
 		     const cairo_point_t *p0, const cairo_point_t *p1,

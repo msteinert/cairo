@@ -210,7 +210,7 @@ _cairo_spline_decompose (cairo_spline_t *spline, double tolerance)
 }
 
 /* Note: this function is only good for computing bounds in device space. */
-void
+cairo_status_t
 _cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
 		     void *closure,
 		     const cairo_point_t *p0, const cairo_point_t *p1,
@@ -221,6 +221,7 @@ _cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
     double a, b, c;
     double t[4];
     int t_num = 0, i;
+    cairo_status_t status;
 
     x0 = _cairo_fixed_to_double (p0->x);
     y0 = _cairo_fixed_to_double (p0->y);
@@ -317,7 +318,10 @@ _cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
     c = -y0 + y1;
     FIND_EXTREMES (a, b, c);
 
-    add_point_func (closure, p0);
+    status = add_point_func (closure, p0);
+    if (unlikely (status))
+	return status;
+
     for (i = 0; i < t_num; i++) {
 	cairo_point_t p;
 	double x, y;
@@ -348,7 +352,10 @@ _cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
 
 	p.x = _cairo_fixed_from_double (x);
 	p.y = _cairo_fixed_from_double (y);
-	add_point_func (closure, &p);
+	status = add_point_func (closure, &p);
+	if (unlikely (status))
+	    return status;
     }
-    add_point_func (closure, p3);
+
+    return add_point_func (closure, p3);
 }
