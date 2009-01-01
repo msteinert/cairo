@@ -633,6 +633,30 @@ cairo_set_operator (cairo_t *cr, cairo_operator_t op)
 }
 slim_hidden_def (cairo_set_operator);
 
+
+static cairo_bool_t
+_current_source_matches_solid (cairo_t *cr,
+			       double red,
+			       double green,
+			       double blue,
+			       double alpha)
+{
+    const cairo_pattern_t *current;
+    cairo_color_t color;
+
+    current = cr->gstate->source;
+    if (current->type != CAIRO_PATTERN_TYPE_SOLID)
+	return FALSE;
+
+    _cairo_restrict_value (&red,   0.0, 1.0);
+    _cairo_restrict_value (&green, 0.0, 1.0);
+    _cairo_restrict_value (&blue,  0.0, 1.0);
+    _cairo_restrict_value (&alpha, 0.0, 1.0);
+
+    _cairo_color_init_rgba (&color, red, green, blue, alpha);
+    return _cairo_color_equal (&color,
+			       &((cairo_solid_pattern_t *) current)->color);
+}
 /**
  * cairo_set_source_rgb
  * @cr: a cairo context
@@ -657,6 +681,9 @@ cairo_set_source_rgb (cairo_t *cr, double red, double green, double blue)
     cairo_pattern_t *pattern;
 
     if (cr->status)
+	return;
+
+    if (_current_source_matches_solid (cr, red, green, blue, 1.))
 	return;
 
     /* push the current pattern to the freed lists */
@@ -694,6 +721,9 @@ cairo_set_source_rgba (cairo_t *cr,
     cairo_pattern_t *pattern;
 
     if (cr->status)
+	return;
+
+    if (_current_source_matches_solid (cr, red, green, blue, alpha))
 	return;
 
     /* push the current pattern to the freed lists */
