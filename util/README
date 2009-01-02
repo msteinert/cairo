@@ -59,3 +59,9 @@ cairo to newer API.  See $(top_srcdir)/PORTING_GUIDE for more information.
 
 These files are obsolete now and may be removed in a future version.
 
+
+cairo-view and waterfall
+------------------------
+
+These are two pycairo scripts useful for testing the toy font backend.
+
