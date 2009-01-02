@@ -1038,7 +1038,7 @@ cairo_boilerplate_convert_to_image (const char *filename, int page)
 	return cairo_boilerplate_surface_create_in_error (CAIRO_STATUS_READ_ERROR);
 
     image = cairo_boilerplate_image_surface_create_from_ppm_stream (file);
-    fclose (file);
+    pclose (file);
 
     if (cairo_surface_status (image) == CAIRO_STATUS_READ_ERROR) {
 	if (flags == 0) {
