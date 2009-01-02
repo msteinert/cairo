@@ -246,6 +246,9 @@ cairo_test_fini (cairo_test_context_t *ctx)
     cairo_surface_destroy (ctx->ref_image);
     cairo_surface_destroy (ctx->ref_image_flattened);
 
+    if (ctx->test_name != NULL)
+	free (ctx->test_name);
+
     if (ctx->own_targets)
 	cairo_boilerplate_free_targets (ctx->targets_to_test);
 
