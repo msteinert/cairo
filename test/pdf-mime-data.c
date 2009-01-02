@@ -149,6 +149,7 @@ preamble (cairo_test_context_t *ctx)
 
     test_status = read_file (ctx, "pdf-mime-data.out-000.jpg", &out_data, &out_len);
     if (test_status) {
+	free (data);
 	cairo_test_log (ctx,
 			"Could not read input jpeg file %s\n",
 			"pdf-mime-data.out-000.jpg");
@@ -156,9 +157,12 @@ preamble (cairo_test_context_t *ctx)
     }
 
     if (len != out_len || memcmp(data, out_data, len) != 0) {
+	free (data);
+	free (out_data);
 	cairo_test_log (ctx, "output mime data does not match source mime data\n");
 	return CAIRO_TEST_FAILURE;
     }
+
     free (data);
     free (out_data);
 
