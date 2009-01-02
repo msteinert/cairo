@@ -176,7 +176,7 @@ _cairo_path_fixed_approximate_extents (cairo_path_fixed_t *path,
 	_cairo_box_round_to_rectangle (&bounder.extents, extents);
     } else {
 	extents->x = extents->y = 0;
-	extents->width = extents->width = 0;
+	extents->width = extents->height = 0;
     }
 
     _cairo_path_bounder_fini (&bounder);
@@ -206,7 +206,7 @@ _cairo_path_fixed_approximate_fill_extents (cairo_path_fixed_t *path,
 	_cairo_box_round_to_rectangle (&bounder.extents, extents);
     } else {
 	extents->x = extents->y = 0;
-	extents->width = extents->width = 0;
+	extents->width = extents->height = 0;
     }
 
     _cairo_path_bounder_fini (&bounder);
@@ -245,7 +245,7 @@ _cairo_path_fixed_approximate_stroke_extents (cairo_path_fixed_t *path,
 	_cairo_box_round_to_rectangle (&bounder.extents, extents);
     } else {
 	extents->x = extents->y = 0;
-	extents->width = extents->width = 0;
+	extents->width = extents->height = 0;
     }
 
     _cairo_path_bounder_fini (&bounder);
