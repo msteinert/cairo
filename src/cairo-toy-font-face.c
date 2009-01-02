@@ -394,7 +394,12 @@ _cairo_font_face_is_toy (cairo_font_face_t *font_face)
 cairo_font_face_t *
 _cairo_toy_font_face_get_implementation (cairo_font_face_t *font_face)
 {
-    cairo_toy_font_face_t *toy_font_face = (cairo_toy_font_face_t *) font_face;
+    cairo_toy_font_face_t *toy_font_face;
+
+    if (font_face->status)
+	return NULL;
+
+    toy_font_face = (cairo_toy_font_face_t *) font_face;
     if (! _cairo_font_face_is_toy (font_face)) {
 	if (_cairo_font_face_set_error (font_face, CAIRO_STATUS_FONT_TYPE_MISMATCH))
 	    return NULL;
@@ -416,7 +421,12 @@ _cairo_toy_font_face_get_implementation (cairo_font_face_t *font_face)
 const char *
 cairo_toy_font_face_get_family (cairo_font_face_t *font_face)
 {
-    cairo_toy_font_face_t *toy_font_face = (cairo_toy_font_face_t *) font_face;
+    cairo_toy_font_face_t *toy_font_face;
+
+    if (font_face->status)
+	return CAIRO_FONT_FAMILY_DEFAULT;
+
+    toy_font_face = (cairo_toy_font_face_t *) font_face;
     if (! _cairo_font_face_is_toy (font_face)) {
 	if (_cairo_font_face_set_error (font_face, CAIRO_STATUS_FONT_TYPE_MISMATCH))
 	    return CAIRO_FONT_FAMILY_DEFAULT;
@@ -438,7 +448,12 @@ cairo_toy_font_face_get_family (cairo_font_face_t *font_face)
 cairo_font_slant_t
 cairo_toy_font_face_get_slant (cairo_font_face_t *font_face)
 {
-    cairo_toy_font_face_t *toy_font_face = (cairo_toy_font_face_t *) font_face;
+    cairo_toy_font_face_t *toy_font_face;
+
+    if (font_face->status)
+	return CAIRO_FONT_SLANT_DEFAULT;
+
+    toy_font_face = (cairo_toy_font_face_t *) font_face;
     if (! _cairo_font_face_is_toy (font_face)) {
 	if (_cairo_font_face_set_error (font_face, CAIRO_STATUS_FONT_TYPE_MISMATCH))
 	    return CAIRO_FONT_SLANT_DEFAULT;
@@ -460,7 +475,12 @@ slim_hidden_def (cairo_toy_font_face_get_slant);
 cairo_font_weight_t
 cairo_toy_font_face_get_weight (cairo_font_face_t *font_face)
 {
-    cairo_toy_font_face_t *toy_font_face = (cairo_toy_font_face_t *) font_face;
+    cairo_toy_font_face_t *toy_font_face;
+
+    if (font_face->status)
+	return CAIRO_FONT_WEIGHT_DEFAULT;
+
+    toy_font_face = (cairo_toy_font_face_t *) font_face;
     if (! _cairo_font_face_is_toy (font_face)) {
 	if (_cairo_font_face_set_error (font_face, CAIRO_STATUS_FONT_TYPE_MISMATCH))
 	    return CAIRO_FONT_WEIGHT_DEFAULT;
