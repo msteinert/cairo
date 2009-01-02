@@ -293,18 +293,12 @@ CAIRO_ENABLE_FONT_BACKEND(ft, FreeType, auto, [
         AC_MSG_CHECKING(freetype2 libtool version)
 
         FREETYPE_VERSION=`$FREETYPE_CONFIG --version`
-
-        VERSION_DEC=`echo $FREETYPE_VERSION | awk -F. '{printf("%d\n", 10000*$1 + 100*$2 + $3)};'`
-        MIN_VERSION_DEC=`echo $FREETYPE_MIN_VERSION | awk -F. '{printf("%d\n", 10000*$1 + 100*$2 + $3)};'`
-        if test $VERSION_DEC -lt $MIN_VERSION_DEC; then
-          AC_MSG_RESULT($FREETYPE_VERSION - Too old)
-          use_ft="no ($FREETYPE_VERSION found; version $FREETYPE_MIN_VERSION from release $FREETYPE_MIN_RELEASE required)"
-        else
-          AC_MSG_RESULT($FREETYPE_VERSION - OK)
-
-	  ft_NONPKGCONFIG_CFLAGS=`$FREETYPE_CONFIG --cflags`
-	  ft_NONPKGCONFIG_LIBS=`$FREETYPE_CONFIG --libs`
-        fi
+	AX_COMPARE_VERSION([$FREETYPE_VERSION], [gt], [$FREETYPE_MIN_VERSION],
+			   [AC_MSG_RESULT($FREETYPE_VERSION - OK)
+			   ft_NONPKGCONFIG_CFLAGS=`$FREETYPE_CONFIG --cflags`
+			   ft_NONPKGCONFIG_LIBS=`$FREETYPE_CONFIG --libs`],
+			   [AC_MSG_RESULT($FREETYPE_VERSION - Too old)
+			   use_ft="no ($FREETYPE_VERSION found; version $FREETYPE_MIN_VERSION from release $FREETYPE_MIN_RELEASE required)"])
       fi
     fi
   fi
