@@ -248,7 +248,7 @@ _cairo_toy_font_face_keys_equal (const void *key_a,
  * cairo_toy_font_face_get_family().
  *
  * The cairo_select_font_face() function uses this to create font faces.
- * See that function for limitations of toy font faces.
+ * See that function for limitations and other details of toy font faces.
  *
  * Return value: a newly created #cairo_font_face_t. Free with
  *  cairo_font_face_destroy() when you are done using it.
