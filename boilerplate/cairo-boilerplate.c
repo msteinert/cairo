@@ -1031,6 +1031,7 @@ cairo_boilerplate_convert_to_image (const char *filename, int page)
     FILE *file;
     unsigned int flags = 0;
     cairo_surface_t *image;
+    int ret;
 
   RETRY:
     file = cairo_boilerplate_open_any2ppm (filename, page, flags);
@@ -1038,16 +1039,22 @@ cairo_boilerplate_convert_to_image (const char *filename, int page)
 	return cairo_boilerplate_surface_create_in_error (CAIRO_STATUS_READ_ERROR);
 
     image = cairo_boilerplate_image_surface_create_from_ppm_stream (file);
-    pclose (file);
+    ret = pclose (file);
 
     if (cairo_surface_status (image) == CAIRO_STATUS_READ_ERROR) {
 	if (flags == 0) {
-	    /* Try again in process, e.g. to propagate a CRASH. */
+	    /* Try again in a standalone process. */
 	    cairo_surface_destroy (image);
 	    flags = CAIRO_BOILERPLATE_OPEN_NO_DAEMON;
 	    goto RETRY;
 	}
     }
+
+    if (cairo_surface_status (image) == CAIRO_STATUS_SUCCESS && ret != 0) {
+	cairo_surface_destroy (image);
+	image =
+	    cairo_boilerplate_surface_create_in_error (CAIRO_STATUS_READ_ERROR);
+    };
 
     return image;
 }
