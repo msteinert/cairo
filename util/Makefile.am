@@ -24,6 +24,11 @@ backtrace_symbols_la_LIBADD  = -lbfd -liberty
 
 #malloc_stats_la_LIBADD  = $(backtrace_symbols_la_LIBADD) backtrace-symbols.lo
 
+noinst_PROGRAMS = font-view
+
+font_view_CFLAGS = $(gtk_CFLAGS)
+font_view_LDADD = ../src/libcairo.la $(gtk_LIBS)
+
 EXTRA_DIST += \
 	COPYING \
 	xr2cairo \
