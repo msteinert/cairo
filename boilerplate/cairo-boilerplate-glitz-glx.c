@@ -176,7 +176,7 @@ _cairo_boilerplate_glitz_glx_create_surface (const char			 *name,
 
     gxtc->dpy = XOpenDisplay (getenv("CAIRO_TEST_GLITZ_DISPLAY"));
     if (!gxtc->dpy) {
-	CAIRO_BOILERPLATE_LOG ("Failed to open display: %s\n", XDisplayName(0));
+	fprintf (stderr, "Failed to open display: %s\n", XDisplayName(0));
 	goto FAIL;
     }
 
@@ -193,11 +193,11 @@ _cairo_boilerplate_glitz_glx_create_surface (const char			 *name,
 	break;
     case CAIRO_CONTENT_ALPHA:
     default:
-	CAIRO_BOILERPLATE_LOG ("Invalid content for glitz-glx test: %d\n", content);
+	fprintf (stderr, "Invalid content for glitz-glx test: %d\n", content);
 	goto FAIL_CLOSE_DISPLAY;
     }
     if (!glitz_surface) {
-	CAIRO_BOILERPLATE_LOG ("Failed to create glitz-glx surface\n");
+	fprintf (stderr, "Failed to create glitz-glx surface\n");
 	goto FAIL_CLOSE_DISPLAY;
     }
 

@@ -73,7 +73,7 @@ _cairo_boilerplate_xcb_create_surface (const char		 *name,
 
     xtc->c = c = xcb_connect(NULL,NULL);
     if (xcb_connection_has_error(c)) {
-	CAIRO_BOILERPLATE_LOG ("Failed to connect to X server through XCB\n");
+	fprintf (stderr, "Failed to connect to X server through XCB\n");
 	return NULL;
     }
 
@@ -92,7 +92,7 @@ _cairo_boilerplate_xcb_create_surface (const char		 *name,
 	break;
     case CAIRO_CONTENT_ALPHA:  /* would be XCB_PICT_STANDARD_A_8 */
     default:
-	CAIRO_BOILERPLATE_LOG ("Invalid content for XCB test: %d\n", content);
+	fprintf (stderr, "Invalid content for XCB test: %d\n", content);
 	return NULL;
     }
 

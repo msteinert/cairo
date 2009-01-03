@@ -38,10 +38,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-// BeOS's C++ compiler does not support varargs in macros
-// So, define CAIRO_BOILERPLATE_LOG here
-#define CAIRO_BOILERPLATE_LOG cairo_beos_boilerplate_log
-
 extern "C" {
 #include "cairo-boilerplate.h"
 }
@@ -56,15 +52,6 @@ extern "C" {
 #include <Window.h>
 #include <View.h>
 #include <Bitmap.h>
-
-static int cairo_beos_boilerplate_log(const char* format, ...) {
-    va_list args;
-    int rv;
-    va_start(args, format);
-    rv = vfprintf(stderr, format, args);
-    va_end(args);
-    return rv;
-}
 
 class CairoTestWindow : public BWindow
 {
@@ -142,18 +129,18 @@ AppRunner::AppRunner()
 
     sem_id initsem = create_sem(0, "Cairo BApplication init");
     if (initsem < B_OK) {
-	CAIRO_BOILERPLATE_LOG("Error creating BeOS initialization semaphore\n");
+	fprintf (stderr, "Error creating BeOS initialization semaphore\n");
         return;
     }
 
     thread_id tid = spawn_thread(nsBeOSApp::Main, "Cairo/BeOS test", B_NORMAL_PRIORITY, (void *)initsem);
     if (tid < B_OK || B_OK != resume_thread(tid)) {
-	CAIRO_BOILERPLATE_LOG("Error spawning thread\n");
+	fprintf (stderr, "Error spawning thread\n");
 	return;
     }
 
     if (B_OK != acquire_sem(initsem)) {
-	CAIRO_BOILERPLATE_LOG("Error acquiring semaphore\n");
+	fprintf (stderr, "Error acquiring semaphore\n");
 	return;
     }
 

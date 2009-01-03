@@ -70,10 +70,6 @@
 # define UINT16_MAX	(65535)
 #endif
 
-#ifndef CAIRO_BOILERPLATE_LOG
-#define CAIRO_BOILERPLATE_LOG(...) fprintf(stderr, __VA_ARGS__)
-#endif
-
 #ifndef CAIRO_BOILERPLATE_DEBUG
 #define CAIRO_BOILERPLATE_DEBUG(x)
 #endif

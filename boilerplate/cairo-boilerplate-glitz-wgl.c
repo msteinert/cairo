@@ -66,25 +66,25 @@ _cairo_boilerplate_glitz_wgl_create_surface_internal (glitz_format_name_t		 form
 
     dformat = glitz_wgl_find_pbuffer_format (mask, &templ, 0);
     if (!dformat) {
-	CAIRO_BOILERPLATE_LOG ("Glitz failed to find pbuffer format for template.");
+	fprintf (stderr, "Glitz failed to find pbuffer format for template.");
 	goto FAIL;
     }
 
     gdraw = glitz_wgl_create_pbuffer_drawable (dformat, width, height);
     if (!gdraw) {
-	CAIRO_BOILERPLATE_LOG ("Glitz failed to create pbuffer drawable.");
+	fprintf (stderr, "Glitz failed to create pbuffer drawable.");
 	goto FAIL;
     }
 
     format = glitz_find_standard_format (gdraw, formatname);
     if (!format) {
-	CAIRO_BOILERPLATE_LOG ("Glitz failed to find standard format for drawable.");
+	fprintf (stderr, "Glitz failed to find standard format for drawable.");
 	goto DESTROY_DRAWABLE;
     }
 
     sr = glitz_surface_create (gdraw, format, width, height, 0, NULL);
     if (!sr) {
-	CAIRO_BOILERPLATE_LOG ("Glitz failed to create a surface.");
+	fprintf (stderr, "Glitz failed to create a surface.");
 	goto DESTROY_DRAWABLE;
     }
 
@@ -124,7 +124,7 @@ _cairo_boilerplate_glitz_wgl_create_surface (const char			 *name,
 	glitz_surface = _cairo_boilerplate_glitz_wgl_create_surface_internal (GLITZ_STANDARD_ARGB32, width, height, NULL);
 	break;
     default:
-	CAIRO_BOILERPLATE_LOG ("Invalid content for glitz-wgl test: %d\n", content);
+	fprintf (stderr, "Invalid content for glitz-wgl test: %d\n", content);
 	goto FAIL;
     }
 

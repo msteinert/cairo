@@ -26,7 +26,6 @@
 #ifndef _CAIRO_TEST_H_
 #define _CAIRO_TEST_H_
 
-#define CAIRO_BOILERPLATE_LOG(...) cairo_test_log (__VA_ARGS__)
 #include "cairo-boilerplate.h"
 
 #include <stdarg.h>
