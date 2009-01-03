@@ -108,11 +108,11 @@ _cairo_boilerplate_xlib_test_create_surface (Display			*dpy,
 	break;
     case CAIRO_CONTENT_ALPHA:
     default:
-	CAIRO_BOILERPLATE_DEBUG ("Invalid content for xlib test: %d\n", content);
+	CAIRO_BOILERPLATE_DEBUG (("Invalid content for xlib test: %d\n", content));
 	return NULL;
     }
     if (xrender_format == NULL) {
-	CAIRO_BOILERPLATE_DEBUG ("X server does not have the Render extension.\n");
+	CAIRO_BOILERPLATE_DEBUG (("X server does not have the Render extension.\n"));
 	return NULL;
     }
 
@@ -141,7 +141,7 @@ _cairo_boilerplate_xlib_perf_create_surface (Display			*dpy,
     case CAIRO_CONTENT_COLOR_ALPHA:
 	xrender_format = XRenderFindStandardFormat (dpy, PictStandardARGB32);
 	if (xrender_format == NULL) {
-	    CAIRO_BOILERPLATE_DEBUG ("X server does not have the Render extension.\n");
+	    CAIRO_BOILERPLATE_DEBUG (("X server does not have the Render extension.\n"));
 	    return NULL;
 	}
 
@@ -154,14 +154,14 @@ _cairo_boilerplate_xlib_perf_create_surface (Display			*dpy,
 	if (! _cairo_boilerplate_xlib_check_screen_size (dpy,
 		                                         DefaultScreen (dpy),
 		                                         width, height)) {
-	    CAIRO_BOILERPLATE_DEBUG ("Surface is larger than the Screen.\n");
+	    CAIRO_BOILERPLATE_DEBUG (("Surface is larger than the Screen.\n"));
 	    return NULL;
 	}
 
 	visual = DefaultVisual (dpy, DefaultScreen (dpy));
 	xrender_format = XRenderFindVisualFormat (dpy, visual);
 	if (xrender_format == NULL) {
-	    CAIRO_BOILERPLATE_DEBUG ("X server does not have the Render extension.\n");
+	    CAIRO_BOILERPLATE_DEBUG (("X server does not have the Render extension.\n"));
 	    return NULL;
 	}
 
@@ -175,7 +175,7 @@ _cairo_boilerplate_xlib_perf_create_surface (Display			*dpy,
 
     case CAIRO_CONTENT_ALPHA:
     default:
-	CAIRO_BOILERPLATE_DEBUG ("Invalid content for xlib test: %d\n", content);
+	CAIRO_BOILERPLATE_DEBUG (("Invalid content for xlib test: %d\n", content));
 	return NULL;
     }
 
@@ -210,7 +210,7 @@ _cairo_boilerplate_xlib_create_surface (const char			 *name,
     xtc->dpy = dpy = XOpenDisplay (NULL);
     if (xtc->dpy == NULL) {
 	free (xtc);
-	CAIRO_BOILERPLATE_DEBUG ("Failed to open display: %s\n", XDisplayName(0));
+	CAIRO_BOILERPLATE_DEBUG (("Failed to open display: %s\n", XDisplayName(0)));
 	return NULL;
     }
 
@@ -272,7 +272,7 @@ _cairo_boilerplate_xlib_fallback_create_surface (const char			 *name,
 
     xtc->dpy = dpy = XOpenDisplay (NULL);
     if (xtc->dpy == NULL) {
-	CAIRO_BOILERPLATE_DEBUG ("Failed to open display: %s\n", XDisplayName(0));
+	CAIRO_BOILERPLATE_DEBUG (("Failed to open display: %s\n", XDisplayName(0)));
 	free (xtc);
 	return NULL;
     }
@@ -285,7 +285,7 @@ _cairo_boilerplate_xlib_fallback_create_surface (const char			 *name,
     screen = DefaultScreen (dpy);
     if (! _cairo_boilerplate_xlib_check_screen_size (dpy, screen,
 		                                     width, height)) {
-	CAIRO_BOILERPLATE_DEBUG ("Surface is larger than the Screen.\n");
+	CAIRO_BOILERPLATE_DEBUG (("Surface is larger than the Screen.\n"));
 	XCloseDisplay (dpy);
 	free (xtc);
 	return NULL;
