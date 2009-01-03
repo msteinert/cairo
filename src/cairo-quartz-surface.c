@@ -34,11 +34,16 @@
  *	Vladimir Vukicevic <vladimir@mozilla.com>
  */
 
+#define _GNU_SOURCE /* required for RTLD_DEFAULT */
 #include "cairoint.h"
 
 #include "cairo-quartz-private.h"
 
 #include <dlfcn.h>
+
+#ifndef RTLD_DEFAULT
+#define RTLD_DEFAULT ((void *) 0)
+#endif
 
 /* The 10.5 SDK includes a funky new definition of FloatToFixed which
  * causes all sorts of breakage; so reset to old-style definition
