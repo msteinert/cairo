@@ -74,6 +74,10 @@
 #define CAIRO_BOILERPLATE_LOG(...) fprintf(stderr, __VA_ARGS__)
 #endif
 
+#ifndef CAIRO_BOILERPLATE_DEBUG
+#define CAIRO_BOILERPLATE_DEBUG(...)
+#endif
+
 #if __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ > 4)
 #define CAIRO_BOILERPLATE_PRINTF_FORMAT(fmt_index, va_index) \
 	__attribute__((__format__(__printf__, fmt_index, va_index)))
