@@ -25,6 +25,24 @@
 /* This test attempts to trigger failures in those clone_similar
  * backend methods that have size restrictions. */
 
+static cairo_surface_t *
+create_large_source (int width, int height)
+{
+    cairo_surface_t *surface;
+    cairo_t *cr;
+
+    surface = cairo_image_surface_create (CAIRO_FORMAT_RGB24, width, height);
+    cr = cairo_create (surface);
+    cairo_surface_destroy (surface);
+
+    cairo_set_source_rgb (cr, 1,0,0); /* red */
+    cairo_paint (cr);
+    surface = cairo_surface_reference (cairo_get_target (cr));
+    cairo_destroy (cr);
+
+    return surface;
+}
+
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
@@ -35,13 +53,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_paint (cr);
 
     /* Create an excessively wide source image, all red. */
-    source = cairo_image_surface_create (CAIRO_FORMAT_RGB24, source_width, height);
-    {
-	cairo_t *cr2 = cairo_create (source);
-	cairo_set_source_rgb (cr2, 1,0,0); /* red */
-	cairo_paint (cr2);
-	cairo_destroy (cr2);
-    }
+    source = create_large_source (source_width, height);
 
     /* Set a transform so that the source is scaled down to fit in the
      * destination horizontally and then paint the entire source to
@@ -58,7 +70,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (large_source_roi,
 	    "Uses a all of a large source image.",
-	    "stress, source", /* keywords */
+	    "XFAIL stress, source", /* keywords */
 	    NULL, /* requirements */
 	    20, 20,
 	    NULL, draw)
