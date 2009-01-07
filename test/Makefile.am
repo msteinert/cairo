@@ -66,6 +66,7 @@ test_sources = \
 	fill-and-stroke-alpha.c				\
 	fill-and-stroke-alpha-add.c			\
 	fill-degenerate-sort-order.c			\
+	fill-image.c				        \
 	fill-missed-stop.c				\
 	fill-rule.c					\
 	filter-bilinear-extents.c			\
@@ -519,6 +520,7 @@ REFERENCE_IMAGES = \
 	fill-degenerate-sort-order.quartz.rgb24.ref.png	\
 	fill-degenerate-sort-order.ref.png	\
 	fill-degenerate-sort-order.rgb24.ref.png	\
+	fill-image.ref.png \
 	fill-missed-stop.ps2.argb32.ref.png	\
 	fill-missed-stop.ps3.argb32.ref.png	\
 	fill-missed-stop.ps2.rgb24.ref.png	\
