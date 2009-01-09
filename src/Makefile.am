@@ -4,7 +4,7 @@ include $(top_srcdir)/build/Makefile.am.common
 include $(srcdir)/Makefile.am.features
 
 EXTRA_DIST += Makefile.win32      Makefile.win32.features
-MAINTAINERCLEANFILES += $(srcdir)/Makefile.win32.features
+#MAINTAINERCLEANFILES += $(srcdir)/Makefile.win32.features
 
 AM_CPPFLAGS = -I$(srcdir) $(CAIRO_CFLAGS)
 AM_LDFLAGS = $(CAIRO_LDFLAGS)

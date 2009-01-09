@@ -3,7 +3,7 @@
 Makefile
 Makefile.in
 Makefile.am.features
-Makefile.win32.features
+#Makefile.win32.features
 *.gcda
 *.gcno
 *.la
@@ -11,7 +11,6 @@ Makefile.win32.features
 *.loT
 *.pc
 cairo-features.h
-cairo-features-win32.h
 cairo-supported-features.h
 cairo.def
 *.i

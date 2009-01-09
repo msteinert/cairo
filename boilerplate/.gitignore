@@ -3,7 +3,7 @@ tags
 Makefile
 Makefile.in
 Makefile.am.features
-Makefile.win32.features
+#Makefile.win32.features
 *.lo
 *.la
 *.exe

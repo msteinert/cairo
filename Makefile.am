@@ -8,8 +8,8 @@ EXTRA_DIST += \
 	build/Makefile.win32.features-h \
 	$(NULL)
 MAINTAINERCLEANFILES += \
-	$(srcdir)/build/Makefile.win32.features \
-	$(srcdir)/build/Makefile.win32.features-h \
+#	$(srcdir)/build/Makefile.win32.features \
+#	$(srcdir)/build/Makefile.win32.features-h \
 	$(NULL)
 
 ACLOCAL_AMFLAGS = -I build
