@@ -1534,6 +1534,12 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
     cairo_status_t status;
     cairo_glyph_t *orig_glyphs;
     cairo_text_cluster_t *orig_clusters;
+    struct glyph_lut_elt {
+	uint32_t unicode;
+	unsigned long index;
+	double x_advance;
+	double y_advance;
+    } glyph_lut[256];
 
     status = scaled_font->status;
     if (unlikely (status))
@@ -1608,17 +1614,13 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
     orig_clusters = clusters ? *clusters : NULL;
 
     if (scaled_font->backend->text_to_glyphs) {
-
 	status = scaled_font->backend->text_to_glyphs (scaled_font, x, y,
 						       utf8, utf8_len,
 						       glyphs, num_glyphs,
 						       clusters, num_clusters,
 						       cluster_flags);
-
         if (status != CAIRO_INT_STATUS_UNSUPPORTED) {
-
 	    if (status == CAIRO_STATUS_SUCCESS) {
-
 	        /* The checks here are crude; we only should do them in
 		 * user-font backend, but they don't hurt here.  This stuff
 		 * can be hard to get right. */
@@ -1633,7 +1635,6 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
 		}
 
 		if (clusters) {
-
 		    if (*num_clusters < 0) {
 			status = _cairo_error (CAIRO_STATUS_NEGATIVE_COUNT);
 			goto DONE;
@@ -1643,11 +1644,12 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
 			goto DONE;
 		    }
 
-		    /* Dont trust the backend, validate clusters! */
-		    status = _cairo_validate_text_clusters (utf8, utf8_len,
-							    *glyphs, *num_glyphs,
-							    *clusters, *num_clusters,
-							    *cluster_flags);
+		    /* Don't trust the backend, validate clusters! */
+		    status =
+			_cairo_validate_text_clusters (utf8, utf8_len,
+						       *glyphs, *num_glyphs,
+						       *clusters, *num_clusters,
+						       *cluster_flags);
 		}
 	    }
 
@@ -1675,34 +1677,51 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
 	*num_clusters = num_chars;
     }
 
+    for (i = 0; i < ARRAY_LENGTH (glyph_lut); i++)
+	glyph_lut[i].unicode = ~0U;
+
     p = utf8;
     for (i = 0; i < num_chars; i++) {
 	int num_bytes;
 	uint32_t unicode;
 	cairo_scaled_glyph_t *scaled_glyph;
+	struct glyph_lut_elt *glyph_slot;
 
 	num_bytes = _cairo_utf8_get_char_validated (p, &unicode);
 	p += num_bytes;
 
-        (*glyphs)[i].index = (*scaled_font->backend->ucs4_to_index) (scaled_font, unicode);
 	(*glyphs)[i].x = x;
 	(*glyphs)[i].y = y;
+
+	glyph_slot = &glyph_lut[unicode % ARRAY_LENGTH (glyph_lut)];
+	if (glyph_slot->unicode == unicode) {
+	    (*glyphs)[i].index = glyph_slot->index;
+	    x += glyph_slot->x_advance;
+	    y += glyph_slot->y_advance;
+	} else {
+	    (*glyphs)[i].index =
+		(*scaled_font->backend->ucs4_to_index) (scaled_font, unicode);
+
+	    status = _cairo_scaled_glyph_lookup (scaled_font,
+						 (*glyphs)[i].index,
+						 CAIRO_SCALED_GLYPH_INFO_METRICS,
+						 &scaled_glyph);
+	    if (unlikely (status))
+		goto DONE;
+
+	    x += scaled_glyph->metrics.x_advance;
+	    y += scaled_glyph->metrics.y_advance;
+
+	    glyph_slot->unicode = unicode;
+	    glyph_slot->index = (*glyphs)[i].index;
+	    glyph_slot->x_advance = scaled_glyph->metrics.x_advance;
+	    glyph_slot->y_advance = scaled_glyph->metrics.y_advance;
+	}
 
 	if (clusters) {
 	    (*clusters)[i].num_bytes  = num_bytes;
 	    (*clusters)[i].num_glyphs = 1;
 	}
-
-	status = _cairo_scaled_glyph_lookup (scaled_font,
-					     (*glyphs)[i].index,
-					     CAIRO_SCALED_GLYPH_INFO_METRICS,
-					     &scaled_glyph);
-	if (unlikely (status)) {
-	    goto DONE;
-	}
-
-        x += scaled_glyph->metrics.x_advance;
-        y += scaled_glyph->metrics.y_advance;
     }
 
  DONE: /* error that should be logged on scaled_font happened */
