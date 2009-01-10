@@ -98,8 +98,8 @@ set_source_image_surface_rgba (cairo_t	*cr,
 
 static void
 set_source_image_surface_rgba_mag (cairo_t	*cr,
-				   int	 	width,
-				   int	 	height)
+				   int		width,
+				   int		height)
 {
     cairo_surface_t *source;
 
@@ -114,8 +114,8 @@ set_source_image_surface_rgba_mag (cairo_t	*cr,
 
 static void
 set_source_image_surface_rgba_min (cairo_t	*cr,
-				   int	 	width,
-				   int	 	height)
+				   int		width,
+				   int		height)
 {
     cairo_surface_t *source;
 
@@ -154,6 +154,40 @@ set_source_similar_surface_rgba (cairo_t	*cr,
 					   CAIRO_CONTENT_COLOR_ALPHA,
 					   width, height);
     init_and_set_source_surface (cr, source, width, height);
+
+    cairo_surface_destroy (source);
+}
+
+static void
+set_source_similar_surface_rgba_mag (cairo_t	*cr,
+				     int	width,
+				     int	height)
+{
+    cairo_surface_t *source;
+
+    source = cairo_surface_create_similar (cairo_get_group_target (cr),
+					   CAIRO_CONTENT_COLOR_ALPHA,
+					   width/2, height/2);
+    cairo_scale(cr, 2.1, 2.1);
+    init_and_set_source_surface (cr, source, width/2, height/2);
+    cairo_scale(cr, 1/2.1, 1/2.1);
+
+    cairo_surface_destroy (source);
+}
+
+static void
+set_source_similar_surface_rgba_min (cairo_t	*cr,
+				     int	width,
+				     int	height)
+{
+    cairo_surface_t *source;
+
+    source = cairo_surface_create_similar (cairo_get_group_target (cr),
+					   CAIRO_CONTENT_COLOR_ALPHA,
+					   width*2, height*2);
+    cairo_scale(cr, 1/1.9, 1/1.9);
+    init_and_set_source_surface (cr, source, width*2, height*2);
+    cairo_scale(cr, 1.9, 1.9);
 
     cairo_surface_destroy (source);
 }
@@ -244,6 +278,8 @@ cairo_perf_cover_sources_and_operators (cairo_perf_t		*perf,
 	{ set_source_image_surface_rgba_min, "image_rgba_min" },
 	{ set_source_similar_surface_rgb, "similar_rgb" },
 	{ set_source_similar_surface_rgba, "similar_rgba" },
+	{ set_source_similar_surface_rgba_mag, "similar_rgba_mag" },
+	{ set_source_similar_surface_rgba_min, "similar_rgba_min" },
 	{ set_source_linear_rgb, "linear_rgb" },
 	{ set_source_linear_rgba, "linear_rgba" },
 	{ set_source_radial_rgb, "radial_rgb" },
