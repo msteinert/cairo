@@ -85,7 +85,8 @@ test_sources = \
 	gradient-constant-alpha.c			\
 	gradient-zero-stops.c				\
 	group-paint.c					\
-	huge-pattern.c					\
+	huge-linear.c					\
+	huge-radial.c					\
 	image-surface-source.c				\
 	infinite-join.c					\
 	in-fill-empty-trapezoid.c			\
@@ -610,10 +611,10 @@ REFERENCE_IMAGES = \
 	gradient-zero-stops.ref.png	\
 	gradient-zero-stops.rgb24.ref.png	\
 	group-paint.ref.png	\
-	huge-pattern.ref.png	\
-	huge-pattern.ps3.ref.png	\
-	huge-pattern.pdf.ref.png	\
-	huge-pattern.pdf.rgb24.ref.png	\
+	huge-linear.ref.png	\
+	huge-linear.ps3.ref.png	\
+	huge-radial.ref.png	\
+	huge-radial.ps3.ref.png	\
 	image-surface-source.ref.png \
 	image-surface-source.ps2.ref.png \
 	image-surface-source.ps3.ref.png \

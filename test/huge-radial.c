@@ -1,5 +1,6 @@
 /*
  * Copyright © 2006 Benjamin Otte
+ * Copyright © 2009 Chris Wilson
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -22,12 +23,15 @@
  * SOFTWARE.
  *
  * Author: Benjamin Otte <otte@gnome.org>
+ *         Chris Wilson <chris@chris-wilson.co.uk>
  */
 
 #include "cairo-test.h"
 
 /* set this to 0.1 to make this test work */
 #define FACTOR 1
+
+/* XXX poppler-cairo doesn't handle gradients very well... */
 
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
@@ -39,8 +43,8 @@ draw (cairo_t *cr, int width, int height)
 	0, 0
     };
 
-    pattern = cairo_pattern_create_linear (-16384 * FACTOR, 0,
-					    16384 * FACTOR, 0);
+    pattern = cairo_pattern_create_radial (0, 0, 0,
+					   0, 0, 16384 * FACTOR);
     cairo_pattern_add_color_stop_rgba (pattern,
 				       0, 0.376471, 0.533333, 0.27451, 1);
     cairo_pattern_add_color_stop_rgba (pattern, 1, 1, 1, 1, 1);
@@ -57,9 +61,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-CAIRO_TEST (huge_pattern,
-	    "Test huge linear patterns",
-	    "gradient", /* keywords */
+CAIRO_TEST (huge_radial,
+	    "Test huge radial patterns",
+	    "XFAIL=pdf gradient, radial", /* keywords */
 	    NULL, /* requirements */
 	    600, 350,
 	    NULL, draw)
