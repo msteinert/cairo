@@ -225,6 +225,40 @@ set_source_linear_rgba (cairo_t *cr,
 }
 
 static void
+set_source_linear3_rgb (cairo_t *cr,
+		       int	width,
+		       int	height)
+{
+    cairo_pattern_t *linear;
+
+    linear = cairo_pattern_create_linear (0.0, 0.0, width, height);
+    cairo_pattern_add_color_stop_rgb (linear, 0.0, 1, 0, 0); /* red */
+    cairo_pattern_add_color_stop_rgb (linear, 0.5, 0, 1, 0); /* green */
+    cairo_pattern_add_color_stop_rgb (linear, 1.0, 0, 0, 1); /* blue */
+
+    cairo_set_source (cr, linear);
+
+    cairo_pattern_destroy (linear);
+}
+
+static void
+set_source_linear3_rgba (cairo_t *cr,
+			int	width,
+			int	height)
+{
+    cairo_pattern_t *linear;
+
+    linear = cairo_pattern_create_linear (0.0, 0.0, width, height);
+    cairo_pattern_add_color_stop_rgba (linear, 0.0, 1, 0, 0, 0.5); /* 50% red */
+    cairo_pattern_add_color_stop_rgba (linear, 0.5, 0, 1, 0, 0.0); /*  0% green */
+    cairo_pattern_add_color_stop_rgba (linear, 1.0, 0, 0, 1, 0.5); /*  50% blue */
+
+    cairo_set_source (cr, linear);
+
+    cairo_pattern_destroy (linear);
+}
+
+static void
 set_source_radial_rgb (cairo_t *cr,
 		       int	width,
 		       int	height)
@@ -282,6 +316,8 @@ cairo_perf_cover_sources_and_operators (cairo_perf_t		*perf,
 	{ set_source_similar_surface_rgba_min, "similar_rgba_min" },
 	{ set_source_linear_rgb, "linear_rgb" },
 	{ set_source_linear_rgba, "linear_rgba" },
+	{ set_source_linear3_rgb, "linear3_rgb" },
+	{ set_source_linear3_rgba, "linear3_rgba" },
 	{ set_source_radial_rgb, "radial_rgb" },
 	{ set_source_radial_rgba, "radial_rgba" }
     };
