@@ -65,7 +65,6 @@ direction (int i)
     return ! direction (2 * pivot - i);
 }
 
-
 static void
 path (cairo_t *cr, int step, int dir, int iterations)
 {
@@ -159,8 +158,49 @@ do_dragon (cairo_t *cr, int width, int height)
     return cairo_perf_timer_elapsed ();
 }
 
+static cairo_perf_ticks_t
+do_dragon_solid (cairo_t *cr, int width, int height)
+{
+    double cx, cy, r;
+
+    cx = cy = .5 * MAX (width, height);
+    r = .5 * MIN (width, height);
+
+    cairo_perf_timer_start ();
+
+    cairo_set_source_rgb (cr, 0, 0, 0);
+    cairo_paint (cr);
+
+    cairo_set_line_width (cr, 4.);
+
+    cairo_move_to (cr, cx, cy);
+    path (cr, 12, 0, 2048);
+    cairo_set_source_rgb (cr, 1, 0, 0);
+    cairo_stroke(cr);
+
+    cairo_move_to (cr, cx, cy);
+    path (cr, 12, 1, 2048);
+    cairo_set_source_rgb (cr, 0, 1, 0);
+    cairo_stroke(cr);
+
+    cairo_move_to (cr, cx, cy);
+    path (cr, 12, 2, 2048);
+    cairo_set_source_rgb (cr, 0, 0, 1);
+    cairo_stroke(cr);
+
+    cairo_move_to (cr, cx, cy);
+    path (cr, 12, 3, 2048);
+    cairo_set_source_rgb (cr, 1, 1, 1);
+    cairo_stroke(cr);
+
+    cairo_perf_timer_stop ();
+
+    return cairo_perf_timer_elapsed ();
+}
+
 void
 dragon (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
+    cairo_perf_run (perf, "dragon-solid", do_dragon_solid);
     cairo_perf_run (perf, "dragon", do_dragon);
 }
