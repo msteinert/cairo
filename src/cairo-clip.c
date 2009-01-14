@@ -145,7 +145,7 @@ _cairo_clip_path_intersect_to_rectangle (cairo_clip_path_t       *clip_path,
     while (clip_path) {
         cairo_rectangle_int_t extents;
 
-	_cairo_path_fixed_approximate_extents (&clip_path->path, &extents);
+	_cairo_path_fixed_approximate_clip_extents (&clip_path->path, &extents);
 
         if (! _cairo_rectangle_intersect (rectangle, &extents))
 	    return CAIRO_STATUS_SUCCESS;
@@ -577,7 +577,7 @@ _cairo_clip_intersect_mask_using_spans (cairo_clip_t       *clip,
     {
 	cairo_rectangle_int_t extents;
 
-	_cairo_path_fixed_approximate_extents (path, &extents);
+	_cairo_path_fixed_approximate_clip_extents (path, &extents);
 	if (! _cairo_rectangle_intersect (&surface_rect, &extents))
 	    goto SUCCESS;
 

@@ -1540,8 +1540,8 @@ _cairo_path_fixed_append (cairo_path_fixed_t		  *path,
 			  cairo_direction_t		   dir);
 
 cairo_private void
-_cairo_path_fixed_approximate_extents (cairo_path_fixed_t	*path,
-				       cairo_rectangle_int_t	*extents);
+_cairo_path_fixed_approximate_clip_extents (cairo_path_fixed_t	*path,
+					    cairo_rectangle_int_t *extents);
 
 cairo_private void
 _cairo_path_fixed_approximate_fill_extents (cairo_path_fixed_t *path,

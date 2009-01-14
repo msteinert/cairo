@@ -156,8 +156,8 @@ _cairo_path_bounder_close_path (void *closure)
  * the control points of the curves, not the flattened path).
  */
 void
-_cairo_path_fixed_approximate_extents (cairo_path_fixed_t *path,
-				       cairo_rectangle_int_t *extents)
+_cairo_path_fixed_approximate_clip_extents (cairo_path_fixed_t *path,
+					    cairo_rectangle_int_t *extents)
 {
     cairo_path_bounder_t bounder;
     cairo_status_t status;
