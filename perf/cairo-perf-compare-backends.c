@@ -1,5 +1,6 @@
 /*
  * Copyright © 2006 Red Hat, Inc.
+ * Copyright © 2009 Chris Wilson
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without
@@ -23,6 +24,7 @@
  * SOFTWARE.
  *
  * Authors: Carl Worth <cworth@cworth.org>
+ *          Chris Wilson <chris@chris-wilson.co.uk>
  */
 
 #include "cairo-perf.h"
@@ -47,29 +49,6 @@ typedef struct _cairo_perf_diff_files_args {
     int num_filenames;
     cairo_perf_report_options_t options;
 } cairo_perf_diff_files_args_t;
-
-static int
-test_diff_cmp_speedup_before_slowdown (const void *a, const void *b)
-{
-    const test_diff_t *a_diff = a;
-    const test_diff_t *b_diff = b;
-
-    /* First make all speedups come before all slowdowns. */
-    if (a_diff->change > 1.0 && b_diff->change < 1.0)
-	return -1;
-    if (a_diff->change < 1.0 && b_diff->change > 1.0)
-	return 1;
-
-    /* Reverse sort by magnitude of change so larger changes come
-     * first */
-    if (fabs (a_diff->change) > fabs (b_diff->change))
-	return -1;
-
-    if (fabs (a_diff->change) < fabs (b_diff->change))
-	return 1;
-
-    return 0;
-}
 
 static int
 test_diff_cmp (const void *a, const void *b)
@@ -135,42 +114,16 @@ print_change_bar (double change, double max_change, int use_utf)
 }
 
 static void
-test_diff_print_binary (test_diff_t			*diff,
-			double				 max_change,
-			cairo_perf_report_options_t	*options)
-{
-    printf ("%5s-%-4s %26s-%-3d  %6.2f %4.2f%% -> %6.2f %4.2f%%: %5.2fx ",
-	    diff->tests[0]->backend, diff->tests[0]->content,
-	    diff->tests[0]->name, diff->tests[0]->size,
-	    diff->tests[0]->stats.median_ticks / diff->tests[0]->stats.ticks_per_ms,
-	    diff->tests[0]->stats.std_dev * 100,
-	    diff->tests[1]->stats.median_ticks / diff->tests[1]->stats.ticks_per_ms,
-	    diff->tests[1]->stats.std_dev * 100,
-	    fabs (diff->change));
-
-    if (diff->change > 1.0)
-	printf ("speedup\n");
-    else
-	printf ("slowdown\n");
-
-    if (options->print_change_bars)
-	print_change_bar (fabs (diff->change), max_change,
-			  options->use_utf);
-}
-
-static void
-test_diff_print_multi (test_diff_t			*diff,
-		       double				 max_change,
-		       cairo_perf_report_options_t	*options)
+test_diff_print (test_diff_t			*diff,
+		 double				 max_change,
+		 cairo_perf_report_options_t	*options)
 {
     int i;
     double test_time;
     double change;
 
-    printf ("%s (backend: %s-%s, size: %d)\n",
+    printf ("(%s, size: %d)\n",
 	    diff->tests[0]->name,
-	    diff->tests[0]->backend,
-	    diff->tests[0]->content,
 	    diff->tests[0]->size);
 
     for (i = 0; i < diff->num_tests; i++) {
@@ -178,7 +131,9 @@ test_diff_print_multi (test_diff_t			*diff,
 	if (options->use_ms)
 	    test_time /= diff->tests[i]->stats.ticks_per_ms;
 	change = diff->max / test_time;
-	printf ("%8s %6.2f: %5.2fx ",
+	printf ("%8s-%s-%s\t%6.2f: %5.2fx ",
+		diff->tests[i]->backend,
+		diff->tests[i]->content,
 		diff->tests[i]->configuration,
 		diff->tests[i]->stats.min_ticks / diff->tests[i]->stats.ticks_per_ms,
 		change);
@@ -203,10 +158,6 @@ cairo_perf_reports_compare (cairo_perf_report_t		*reports,
     double max_change;
     double test_time;
     int seen_non_null;
-    cairo_bool_t printed_speedup = FALSE;
-    cairo_bool_t printed_slowdown = FALSE;
-
-    assert (num_reports >= 2);
 
     tests = xmalloc (num_reports * sizeof (test_report_t *));
 
@@ -221,6 +172,8 @@ cairo_perf_reports_compare (cairo_perf_report_t		*reports,
 
     num_diffs = 0;
     while (1) {
+	int num_tests;
+
 	/* We expect iterations values of 0 when multiple raw reports
 	 * for the same test have been condensed into the stats of the
 	 * first. So we just skip these later reports that have no
@@ -232,8 +185,7 @@ cairo_perf_reports_compare (cairo_perf_report_t		*reports,
 	    if (tests[i]->name)
 		seen_non_null++;
 	}
-
-	if (seen_non_null < 2)
+	if (! seen_non_null)
 	    break;
 
 	/* Find the minimum of all current tests, (we have to do this
@@ -245,20 +197,32 @@ cairo_perf_reports_compare (cairo_perf_report_t		*reports,
 	    }
 	}
 	for (++i; i < num_reports; i++) {
-	    if (tests[i]->name &&
-		test_report_cmp_backend_then_name (tests[i], min_test) < 0)
-	    {
+	    if (tests[i]->name && test_report_cmp_name (tests[i], min_test) < 0)
 		min_test = tests[i];
+	}
+
+	num_tests = 0;
+	for (i = 0; i < num_reports; i++) {
+	    test_report_t *test;
+	    int n = 0;
+
+	    test = tests[i];
+	    while (test[n].name &&
+		    test_report_cmp_name (&test[n], min_test) == 0)
+	    {
+		n++;
 	    }
+
+	    num_tests += n;
 	}
 
 	/* For each report that has the current test, record it into
 	 * the diff structure. */
 	diff->num_tests = 0;
-	diff->tests = xmalloc (num_reports * sizeof (test_diff_t));
+	diff->tests = xmalloc (num_tests * sizeof (test_diff_t));
 	for (i = 0; i < num_reports; i++) {
-	    if (tests[i]->name &&
-		test_report_cmp_backend_then_name (tests[i], min_test) == 0)
+	    while (tests[i]->name &&
+		    test_report_cmp_name (tests[i], min_test) == 0)
 	    {
 		test_time = tests[i]->stats.min_ticks;
 		if (options->use_ms)
@@ -278,49 +242,19 @@ cairo_perf_reports_compare (cairo_perf_report_t		*reports,
 	}
 	diff->change = diff->max / diff->min;
 
-	if (num_reports == 2) {
-	    double old_time, new_time;
-	    if (diff->num_tests == 1) {
-		printf ("Only in %s: %s %s\n",
-			diff->tests[0]->configuration,
-			diff->tests[0]->backend,
-			diff->tests[0]->name);
-		continue;
-	    }
-	    old_time = diff->tests[0]->stats.min_ticks;
-	    new_time = diff->tests[1]->stats.min_ticks;
-	    if (options->use_ms) {
-		old_time /= diff->tests[0]->stats.ticks_per_ms;
-		new_time /= diff->tests[1]->stats.ticks_per_ms;
-	    }
-	    diff->change = old_time / new_time;
-	    if (diff->change < 1.0)
-		diff->change = - 1.0 / diff->change;
-	}
-
 	diff++;
 	num_diffs++;
     }
     if (num_diffs < 2)
 	goto DONE;
 
-    if (num_reports == 2)
-	qsort (diffs, num_diffs, sizeof (test_diff_t),
-	       test_diff_cmp_speedup_before_slowdown);
-    else
-	qsort (diffs, num_diffs, sizeof (test_diff_t), test_diff_cmp);
+    qsort (diffs, num_diffs, sizeof (test_diff_t), test_diff_cmp);
 
     max_change = 1.0;
     for (i = 0; i < num_diffs; i++) {
 	if (fabs (diffs[i].change) > max_change)
 	    max_change = fabs (diffs[i].change);
     }
-
-    if (num_reports == 2)
-	printf ("old: %s\n"
-		"new: %s\n",
-		diffs->tests[0]->configuration,
-		diffs->tests[1]->configuration);
 
     for (i = 0; i < num_diffs; i++) {
 	diff = &diffs[i];
@@ -331,21 +265,7 @@ cairo_perf_reports_compare (cairo_perf_report_t		*reports,
 	if (fabs (diff->change) - 1.0 < options->min_change)
 	    continue;
 
-	if (num_reports == 2) {
-	    if (diff->change > 1.0 && ! printed_speedup) {
-		printf ("Speedups\n"
-			"========\n");
-		printed_speedup = TRUE;
-	    }
-	    if (diff->change < 1.0 && ! printed_slowdown) {
-		printf ("Slowdowns\n"
-			"=========\n");
-		printed_slowdown = TRUE;
-	    }
-	    test_diff_print_binary (diff, max_change, options);
-	} else {
-	    test_diff_print_multi (diff, max_change, options);
-	}
+	test_diff_print (diff, max_change, options);
     }
 
  DONE:
@@ -361,7 +281,7 @@ usage (const char *argv0)
     char const *basename = strrchr(argv0, '/');
     basename = basename ? basename+1 : argv0;
     fprintf (stderr,
-	     "Usage: %s [options] file1 file2 [...]\n\n",
+	     "Usage: %s [options] file [...]\n\n",
 	     basename);
     fprintf (stderr,
 	     "Computes significant performance differences for cairo performance reports.\n"
@@ -443,13 +363,16 @@ main (int argc, const char *argv[])
 
     parse_args (argc, argv, &args);
 
-    if (args.num_filenames < 2)
+    if (args.num_filenames < 1)
 	usage (argv[0]);
 
     reports = xmalloc (args.num_filenames * sizeof (cairo_perf_report_t));
 
-    for (i = 0; i < args.num_filenames; i++ )
-	cairo_perf_report_load (&reports[i], args.filenames[i], NULL);
+    for (i = 0; i < args.num_filenames; i++) {
+	cairo_perf_report_load (&reports[i], args.filenames[i],
+		                test_report_cmp_name);
+	printf ("loaded: %s\n", args.filenames[i]);
+    }
 
     cairo_perf_reports_compare (reports, args.num_filenames, &args.options);
 

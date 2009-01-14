@@ -144,13 +144,18 @@ typedef enum {
 
 void
 cairo_perf_report_load (cairo_perf_report_t *report,
-	                const char *filename);
+	                const char *filename,
+			int (*cmp) (const void *, const void *));
 
 void
-cairo_perf_report_sort_and_compute_stats (cairo_perf_report_t *report);
+cairo_perf_report_sort_and_compute_stats (cairo_perf_report_t *report,
+	                                  int (*cmp) (const void *, const void *));
 
 int
 test_report_cmp_backend_then_name (const void *a, const void *b);
+
+int
+test_report_cmp_name (const void *a, const void *b);
 
 #define CAIRO_PERF_DECL(func) void (func) (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 

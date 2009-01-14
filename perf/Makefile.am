@@ -7,7 +7,10 @@ AM_CPPFLAGS =					\
 	-I$(top_builddir)/src			\
 	$(CAIRO_CFLAGS)
 
-EXTRA_PROGRAMS += cairo-perf cairo-perf-diff-files cairo-perf-graph-files
+EXTRA_PROGRAMS += cairo-perf \
+		  cairo-perf-diff-files \
+		  cairo-perf-compare-backends \
+		  cairo-perf-graph-files
 EXTRA_DIST += cairo-perf-diff COPYING
 EXTRA_LTLIBRARIES += libcairoperf.la
 
@@ -69,6 +72,9 @@ libcairoperf_la_SOURCES = \
 
 cairo_perf_diff_files_SOURCES =	\
 	cairo-perf-diff-files.c
+
+cairo_perf_compare_backends_SOURCES =	\
+	cairo-perf-compare-backends.c
 
 cairo_perf_graph_files_SOURCES = \
 	cairo-perf-graph.h \

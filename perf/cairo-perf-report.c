@@ -337,15 +337,47 @@ test_report_cmp_backend_then_name (const void *a, const void *b)
     return 0;
 }
 
+int
+test_report_cmp_name (const void *a, const void *b)
+{
+    const test_report_t *a_test = a;
+    const test_report_t *b_test = b;
+
+    int cmp;
+
+    /* A NULL name is a list-termination marker, so force it last. */
+    if (a_test->name == NULL)
+	if (b_test->name == NULL)
+	    return 0;
+	else
+	    return 1;
+    else if (b_test->name == NULL)
+	return -1;
+
+    cmp = strcmp (a_test->name, b_test->name);
+    if (cmp)
+	return cmp;
+
+    if (a_test->size < b_test->size)
+	return -1;
+    if (a_test->size > b_test->size)
+	return 1;
+
+    return 0;
+}
+
 void
-cairo_perf_report_sort_and_compute_stats (cairo_perf_report_t *report)
+cairo_perf_report_sort_and_compute_stats (cairo_perf_report_t *report,
+	                                  int (*cmp) (const void*, const void*))
 {
     test_report_t *base, *next, *last, *t;
 
+    if (cmp == NULL)
+	cmp = test_report_cmp_backend_then_name;
+
     /* First we sort, since the diff needs both lists in the same
      * order */
-    qsort (report->tests, report->tests_count, sizeof (test_report_t),
-	   test_report_cmp_backend_then_name);
+    qsort (report->tests, report->tests_count, sizeof (test_report_t), cmp);
 
     /* The sorting also brings all related raw reports together so we
      * can condense them and compute the stats.
@@ -384,7 +416,8 @@ cairo_perf_report_sort_and_compute_stats (cairo_perf_report_t *report)
 
 void
 cairo_perf_report_load (cairo_perf_report_t *report,
-	                const char *filename)
+	                const char *filename,
+			int (*cmp) (const void *, const void *))
 {
     FILE *file;
     test_report_status_t status;
@@ -444,7 +477,7 @@ cairo_perf_report_load (cairo_perf_report_t *report,
 
     fclose (file);
 
-    cairo_perf_report_sort_and_compute_stats (report);
+    cairo_perf_report_sort_and_compute_stats (report, cmp);
 
     /* Add one final report with a NULL name to terminate the list. */
     if (report->tests_count == report->tests_size) {
