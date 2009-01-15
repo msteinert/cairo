@@ -234,7 +234,7 @@ _cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
 
     /* The spline can be written as a polynomial of the four points:
      *
-     *   (1-t)³p0 + t(1-t)²p1 + t²(1-t)p2 + t³p3
+     *   (1-t)³p0 + 3t(1-t)²p1 + 3t²(1-t)p2 + t³p3
      *
      * for 0≤t≤1.  Now, the X and Y components of the spline follow the
      * same polynomial but with x and y replaced for p.  To find the
@@ -244,13 +244,13 @@ _cairo_spline_bound (cairo_spline_add_point_func_t add_point_func,
      *
      * Here is the derivative of the curve, sorted on t:
      *
-     *   3t²(-p0+3p1-3p2+p3) + 6t(3p0-6p1+3p2) -3p0+3p1
+     *   3t²(-p0+3p1-3p2+p3) + 2t(3p0-6p1+3p2) -3p0+3p1
      *
      * Let:
      *
      *   a = -p0+3p1-3p2+p3
-     *   b =  3p0-6p1+3p2
-     *   c = -3p0+3p1
+     *   b =  p0-2p1+p2
+     *   c = -p0+p1
      *
      * Gives:
      *
