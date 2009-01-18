@@ -60,6 +60,25 @@ do_rectangles (cairo_t *cr, int width, int height)
 }
 
 static cairo_perf_ticks_t
+do_rectangles_once (cairo_t *cr, int width, int height)
+{
+    int i;
+
+    cairo_perf_timer_start ();
+
+    for (i = 0; i < RECTANGLE_COUNT; i++)
+    {
+        cairo_rectangle (cr, rects[i].x, rects[i].y,
+                             rects[i].width, rects[i].height);
+    }
+    cairo_fill (cr);
+
+    cairo_perf_timer_stop ();
+
+    return cairo_perf_timer_elapsed ();
+}
+
+static cairo_perf_ticks_t
 do_rectangle (cairo_t *cr, int width, int height)
 {
     cairo_perf_timer_start ();
@@ -88,4 +107,5 @@ rectangles (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 
     MODE (perf, "one-rectangle", do_rectangle);
     MODE (perf, "rectangles", do_rectangles);
+    MODE (perf, "rectangles-once", do_rectangles_once);
 }
