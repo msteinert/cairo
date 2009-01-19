@@ -121,8 +121,25 @@ _cairo_path_bounder_curve_to (void *closure,
 {
     cairo_path_bounder_t *bounder = closure;
 
-    return _cairo_spline_bound (_cairo_path_bounder_line_to, bounder,
-				&bounder->current_point, b, c, d);
+    /* If the bbox of the control points is entirely inside, then we
+     * do not need to further evaluate the spline.
+     */
+    if (! bounder->has_point ||
+	b->x < bounder->extents.p1.x || b->x > bounder->extents.p2.x ||
+	b->y < bounder->extents.p1.y || b->y > bounder->extents.p2.y ||
+	c->x < bounder->extents.p1.x || c->x > bounder->extents.p2.x ||
+	c->y < bounder->extents.p1.y || c->y > bounder->extents.p2.y ||
+	d->x < bounder->extents.p1.x || d->x > bounder->extents.p2.x ||
+	d->y < bounder->extents.p1.y || d->y > bounder->extents.p2.y)
+    {
+	return _cairo_spline_bound (_cairo_path_bounder_line_to, bounder,
+				    &bounder->current_point, b, c, d);
+    }
+    else
+    {
+	/* All control points are within the current extents. */
+	return CAIRO_STATUS_SUCCESS;
+    }
 }
 
 static cairo_status_t
