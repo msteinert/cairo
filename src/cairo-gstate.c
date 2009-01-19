@@ -994,6 +994,7 @@ _cairo_gstate_in_stroke (cairo_gstate_t	    *gstate,
 			 cairo_bool_t	    *inside_ret)
 {
     cairo_status_t status;
+    cairo_rectangle_int_t extents;
     cairo_box_t limit;
     cairo_traps_t traps;
 
@@ -1003,6 +1004,20 @@ _cairo_gstate_in_stroke (cairo_gstate_t	    *gstate,
     }
 
     _cairo_gstate_user_to_backend (gstate, &x, &y);
+
+    /* Before we perform the expensive stroke analysis,
+     * check whether the point is within the extents of the path.
+     */
+    _cairo_path_fixed_approximate_stroke_extents (path,
+						  &gstate->stroke_style,
+						  &gstate->ctm,
+						  &extents);
+    if (x < extents.x || x > extents.x + extents.width ||
+	y < extents.y || y > extents.y + extents.height)
+    {
+	*inside_ret = FALSE;
+	return CAIRO_STATUS_SUCCESS;
+    }
 
     limit.p1.x = _cairo_fixed_from_double (x) - 1;
     limit.p1.y = _cairo_fixed_from_double (y) - 1;
