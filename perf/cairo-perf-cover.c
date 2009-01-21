@@ -35,9 +35,6 @@ init_and_set_source_surface (cairo_t		*cr,
 
     /* Fill it with something known */
     cr2 = cairo_create (source);
-    cairo_set_operator (cr2, CAIRO_OPERATOR_CLEAR);
-    cairo_paint (cr2);
-
     cairo_set_operator (cr2, CAIRO_OPERATOR_SOURCE);
     cairo_set_source_rgb (cr2, 0, 0, 1); /* blue */
     cairo_paint (cr2);
@@ -47,9 +44,9 @@ init_and_set_source_surface (cairo_t		*cr,
     cairo_rectangle (cr2, 0, 0, width/2.0, height/2.0);
     cairo_rectangle (cr2, width/2.0, height/2.0, width/2.0, height/2.0);
     cairo_fill (cr2);
-    cairo_destroy (cr2);
 
-    cairo_set_source_surface (cr, source, 0, 0);
+    cairo_set_source_surface (cr, cairo_get_target (cr2), 0, 0);
+    cairo_destroy (cr2);
 }
 
 static void
