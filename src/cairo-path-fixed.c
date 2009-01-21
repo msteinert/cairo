@@ -901,7 +901,7 @@ _cpf_curve_to (void		*closure,
 			      cpf->closure,
 			      p0, p1, p2, p3))
     {
-	return CAIRO_STATUS_SUCCESS;
+	return _cpf_line_to (closure, p3);
     }
 
     cpf->current_point = *p3;
