@@ -3,3 +3,11 @@ Cairo is free software.
 These tests are mainly available under a liberal MIT license to simplify
 any use of the code for reference purposes. Please check the opening comment
 of each file for copyright and licensing information.
+
+The test suite also bundles some fonts for use by the test suite. The
+fonts included, their licenses, and why we use them in the test suite
+are as follows:
+
+	Font		License		Distinguishing feature
+	--------	-------------	----------------------
+	6x13.pcf	Public Domain	Bitmap font
