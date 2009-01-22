@@ -729,6 +729,9 @@ _init_logfile (void)
 	return false;
     }
 
+    fprintf (stderr, "cairo-trace: Recording cairo trace data to %s\n",
+	     filename);
+
 done:
     atexit (_close_trace);
     _emit_header ();
