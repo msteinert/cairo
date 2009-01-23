@@ -1135,6 +1135,8 @@ void
 _cairo_truetype_subset_fini (cairo_truetype_subset_t *subset)
 {
     free (subset->ps_name);
+    if (subset->font_name)
+	free (subset->font_name);
     free (subset->widths);
     free (subset->data);
     free (subset->string_offsets);
