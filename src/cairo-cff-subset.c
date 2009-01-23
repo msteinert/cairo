@@ -1869,6 +1869,7 @@ cairo_cff_font_destroy (cairo_cff_font_t *font)
     free (font->widths);
     if (font->font_name)
 	free (font->font_name);
+    free (font->ps_name);
     free (font->subset_font_name);
     _cairo_array_fini (&font->output);
     cff_dict_fini (font->top_dict);
@@ -2032,7 +2033,7 @@ _cairo_cff_font_fallback_create (cairo_scaled_font_subset_t  *scaled_font_subset
     }
 
     font->ps_name = strdup (subset_name);
-    if (unlikely (font->subset_font_name == NULL)) {
+    if (unlikely (font->ps_name == NULL)) {
         status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto fail2;
     }
@@ -2088,6 +2089,7 @@ fail4:
 fail3:
     if (font->font_name)
 	free (font->font_name);
+    free (font->ps_name);
 fail2:
     free (font->subset_font_name);
 fail1:
