@@ -53,7 +53,7 @@
 
 /* A fully qualified no-operation statement */
 #define CAIRO_MUTEX_IMPL_NOOP	do {/*no-op*/} while (0)
-/* And one that evaluates it's argument once */
+/* And one that evaluates its argument once */
 #define CAIRO_MUTEX_IMPL_NOOP1(expr)        do { (void)(expr); } while (0)
 /* Note: 'if (expr) {}' is an alternative to '(void)(expr);' that will 'use' the
  * result of __attribute__((warn_used_result)) functions. */

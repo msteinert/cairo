@@ -2706,7 +2706,7 @@ cairo_ft_font_face_create_for_ft_face (FT_Face         face,
  * threaded application, because freetype's design makes it unsafe to
  * call freetype functions simultaneously from multiple threads, (even
  * if using distinct FT_Face objects). Because of this, application
- * code that acquires an FT_Face object with this call must add it's
+ * code that acquires an FT_Face object with this call must add its
  * own locking to protect any use of that object, (and which also must
  * protect any other calls into cairo as almost any cairo function
  * might result in a call into the freetype library).

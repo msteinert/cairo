@@ -513,7 +513,7 @@ _cairo_matrix_compute_adjoint (cairo_matrix_t *matrix)
  * cairo_matrix_invert:
  * @matrix: a #cairo_matrix_t
  *
- * Changes @matrix to be the inverse of it's original value. Not
+ * Changes @matrix to be the inverse of its original value. Not
  * all transformation matrices have inverses; if the matrix
  * collapses points together (it is <firstterm>degenerate</firstterm>),
  * then it has no inverse and this function will fail.

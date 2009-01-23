@@ -120,7 +120,7 @@ _cairo_pdf_operators_enable_actual_text (cairo_pdf_operators_t *pdf_operators,
  * pdf_operators may leave the emitted PDF for some operations
  * unfinished in case subsequent operations can be merged. This
  * function will finish off any incomplete operation so the stream
- * will be in a state where the surface may emit it's own PDF
+ * will be in a state where the surface may emit its own PDF
  * operations (eg changing patterns).
  *
  */

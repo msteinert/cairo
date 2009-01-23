@@ -633,7 +633,7 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
              * If we have a clip surface, we set it as the mask; this only works
              * for bounded operators other than SOURCE; for unbounded operators,
              * clip and mask cannot be interchanged. For SOURCE, the operator
-             * as implemented by the backends is different in it's handling
+             * as implemented by the backends is different in its handling
              * of the mask then what we want.
              *
              * CAIRO_INT_STATUS_UNSUPPORTED will be returned if the region has
