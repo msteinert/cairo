@@ -982,8 +982,10 @@ _cairo_bo_event_queue_init (cairo_bo_event_queue_t	*event_queue,
 				      sizeof (cairo_bo_event_t) +
 				      sizeof (cairo_bo_event_t *),
 				      sizeof (cairo_bo_event_t *));
-    if (unlikely (events == NULL))
+    if (unlikely (events == NULL)) {
+	_cairo_skip_list_fini (&event_queue->intersection_queue);
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
 
     sorted_event_ptrs = (cairo_bo_event_t **) (events + num_events);
     event_queue->startstop_events = events;
