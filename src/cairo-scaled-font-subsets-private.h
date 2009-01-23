@@ -640,8 +640,9 @@ _cairo_truetype_index_to_ucs4 (cairo_scaled_font_t *scaled_font,
 /**
  * _cairo_truetype_read_font_name:
  * @scaled_font: the #cairo_scaled_font_t
- * @ps_name: returns the PostScript name of the font or NULL if the name could not be found.
- * @font_name: returns the font name or NULL if the name could not be found.
+ * @ps_name: returns the PostScript name of the font
+ *           or %NULL if the name could not be found.
+ * @font_name: returns the font name or %NULL if the name could not be found.
  *
  * If possible (depending on the format of the underlying
  * #cairo_scaled_font_t and the font backend in use) read the
@@ -659,8 +660,8 @@ _cairo_truetype_index_to_ucs4 (cairo_scaled_font_t *scaled_font,
  **/
 cairo_private cairo_int_status_t
 _cairo_truetype_read_font_name (cairo_scaled_font_t   *scaled_font,
-				char 	       	     **ps_name,
-				char 	       	     **font_name);
+				char		     **ps_name,
+				char		     **font_name);
 
 #endif /* CAIRO_HAS_FONT_SUBSET */
 
