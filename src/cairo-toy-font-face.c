@@ -151,37 +151,29 @@ _cairo_toy_font_face_init_key (cairo_toy_font_face_t *key,
     key->base.hash_entry.hash = hash;
 }
 
-static cairo_font_face_t *
-_cairo_toy_font_face_create_impl_face (cairo_toy_font_face_t *font_face)
+static cairo_status_t
+_cairo_toy_font_face_create_impl_face (cairo_toy_font_face_t *font_face,
+				       cairo_font_face_t **impl_font_face)
 {
     const cairo_font_face_backend_t * backend = CAIRO_FONT_FACE_BACKEND_DEFAULT;
-    cairo_font_face_t *impl_font_face;
     cairo_int_status_t status = CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (font_face->base.status)
-	return NULL;
+    if (unlikely (font_face->base.status))
+	return font_face->base.status;
 
     if (backend->create_for_toy != NULL &&
 	0 != strncmp (font_face->family, CAIRO_USER_FONT_FAMILY_DEFAULT,
 		      strlen (CAIRO_USER_FONT_FAMILY_DEFAULT)))
     {
-	status = backend->create_for_toy (font_face, &impl_font_face);
+	status = backend->create_for_toy (font_face, impl_font_face);
     }
 
     if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 	backend = &_cairo_user_font_face_backend;
-	status = backend->create_for_toy (font_face, &impl_font_face);
+	status = backend->create_for_toy (font_face, impl_font_face);
     }
 
-    if (_cairo_font_face_set_error (&font_face->base, status))
-	return NULL;
-
-    if (_cairo_font_face_set_error (&font_face->base, impl_font_face->status)) {
-	cairo_font_face_destroy (impl_font_face);
-	return NULL;
-    }
-
-    return impl_font_face;
+    return status;
 }
 
 static cairo_status_t
@@ -191,20 +183,23 @@ _cairo_toy_font_face_init (cairo_toy_font_face_t *font_face,
 			   cairo_font_weight_t	  weight)
 {
     char *family_copy;
+    cairo_status_t status;
 
     family_copy = strdup (family);
     if (unlikely (family_copy == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    _cairo_toy_font_face_init_key (font_face, family_copy,
-				      slant, weight);
+    _cairo_toy_font_face_init_key (font_face, family_copy, slant, weight);
     font_face->owns_family = TRUE;
-
-    font_face->impl_face = NULL;
 
     _cairo_font_face_init (&font_face->base, &_cairo_toy_font_face_backend);
 
-    font_face->impl_face = _cairo_toy_font_face_create_impl_face (font_face);
+    status = _cairo_toy_font_face_create_impl_face (font_face,
+						    &font_face->impl_face);
+    if (unlikely (status)) {
+	free (family_copy);
+	return status;
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -499,11 +494,15 @@ static const cairo_font_face_backend_t _cairo_toy_font_face_backend = {
 void
 _cairo_toy_font_face_reset_static_data (void)
 {
+    cairo_hash_table_t *hash_table;
+
     /* We manually acquire the lock rather than calling
      * cairo_toy_font_face_hash_table_lock simply to avoid
      * creating the table only to destroy it again. */
     CAIRO_MUTEX_LOCK (_cairo_toy_font_face_mutex);
-    _cairo_hash_table_destroy (cairo_toy_font_face_hash_table);
+    hash_table = cairo_toy_font_face_hash_table;
     cairo_toy_font_face_hash_table = NULL;
     CAIRO_MUTEX_UNLOCK (_cairo_toy_font_face_mutex);
+
+    _cairo_hash_table_destroy (hash_table);
 }
