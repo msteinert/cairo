@@ -3598,6 +3598,14 @@ FT_New_Memory_Face (FT_Library library, const FT_Byte *mem, FT_Long size, FT_Lon
     return ret;
 }
 
+/* XXX
+ * FT_New_Memory_Face() and FT_New_Face() appear to wrap FT_Open_Face() so we
+ * get a redundant call to FT_Open_Face() from those paths (no PLT hiding
+ * within FT, naughty library!) but we do not intercept a direct call to
+ * FT_Open_Face(). So far this has not caused any issues, but it will one
+ * day...
+ */
+#if 0
 FT_Error
 FT_Open_Face (FT_Library library, const FT_Open_Args *args, FT_Long index, FT_Face *face)
 {
@@ -3617,6 +3625,7 @@ FT_Open_Face (FT_Library library, const FT_Open_Args *args, FT_Long index, FT_Fa
 
     return ret;
 }
+#endif
 
 FT_Error
 FT_Done_Face (FT_Face face)
