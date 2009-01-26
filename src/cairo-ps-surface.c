@@ -2333,6 +2333,9 @@ _cairo_ps_surface_acquire_surface (cairo_ps_surface_t      *surface,
     int x = 0;
     int y = 0;
 
+    surface->acquired_image = NULL;
+    surface->image = NULL;
+
     if (_cairo_surface_is_meta (pattern->surface)) {
 	cairo_surface_t *meta_surface = pattern->surface;
 	cairo_rectangle_int_t pattern_extents;
@@ -2384,8 +2387,12 @@ _cairo_ps_surface_acquire_surface (cairo_ps_surface_t      *surface,
 					       rect.width,
 					       rect.height);
 	    _cairo_pattern_fini (&pad_pattern.base);
-	    if (unlikely (status))
+	    if (unlikely (status)) {
+		if (pad_image != &surface->acquired_image->base)
+		    cairo_surface_destroy (pad_image);
+
 		goto BAIL;
+	    }
 	}
 
 	surface->image = (cairo_image_surface_t *) pad_image;
@@ -2436,10 +2443,17 @@ static void
 _cairo_ps_surface_release_surface (cairo_ps_surface_t      *surface,
 				   cairo_surface_pattern_t *pattern)
 {
-    if (!_cairo_surface_is_meta (pattern->surface))
+    if (surface->image != &surface->acquired_image->base)
+	cairo_surface_destroy (surface->image);
+
+    if (! _cairo_surface_is_meta (pattern->surface)) {
 	_cairo_surface_release_source_image (pattern->surface,
 					     surface->acquired_image,
 					     surface->image_extra);
+    }
+
+    surface->acquired_image = NULL;
+    surface->image = NULL;
 }
 
 static cairo_status_t
