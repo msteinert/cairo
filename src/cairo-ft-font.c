@@ -513,6 +513,12 @@ _cairo_ft_unscaled_font_destroy (void *abstract_font)
     /* All created objects must have been mapped in the font map. */
     assert (font_map != NULL);
 
+    if (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&unscaled->base.ref_count)) {
+	/* somebody recreated the font whilst we waited for the lock */
+	_cairo_ft_unscaled_font_map_unlock ();
+	return;
+    }
+
     _cairo_hash_table_remove (font_map->hash_table,
 			      &unscaled->base.hash_entry);
 

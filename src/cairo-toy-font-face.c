@@ -358,6 +358,12 @@ _cairo_toy_font_face_destroy (void *abstract_face)
     /* All created objects must have been mapped in the hash table. */
     assert (hash_table != NULL);
 
+    if (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&font_face->base.ref_count)) {
+	/* somebody recreated the font whilst we waited for the lock */
+	_cairo_toy_font_face_hash_table_unlock ();
+	return;
+    }
+
     if (font_face->base.hash_entry.hash != 0)
 	_cairo_hash_table_remove (hash_table, &font_face->base.hash_entry);
 
