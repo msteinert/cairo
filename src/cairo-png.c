@@ -655,12 +655,12 @@ read_png (struct png_read_closure_t *png_closure)
     status = _cairo_memory_stream_destroy (png_closure->png_data,
 					   &mime_data,
 					   &mime_data_length);
+    png_closure->png_data = NULL;
     if (unlikely (status)) {
 	cairo_surface_destroy (surface);
 	surface = _cairo_surface_create_in_error (status);
 	goto BAIL;
     }
-    png_closure->png_data = NULL;
 
     status = cairo_surface_set_mime_data (surface,
 					  CAIRO_MIME_TYPE_PNG,
