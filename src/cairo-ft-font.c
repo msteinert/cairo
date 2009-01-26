@@ -1523,7 +1523,7 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
     cairo_status_t status;
 
     face = _cairo_ft_unscaled_font_lock_face (unscaled);
-    if (!face)
+    if (unlikely (face == NULL)) /* backend error */
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     scaled_font = malloc (sizeof(cairo_ft_scaled_font_t));
@@ -1542,18 +1542,18 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
 			              font_face,
 				      font_matrix, ctm, options,
 				      &_cairo_ft_scaled_font_backend);
-    if (unlikely (status)) {
-	_cairo_unscaled_font_destroy (&unscaled->base);
-	free (scaled_font);
-	goto FAIL;
-    }
+    if (unlikely (status))
+	goto CLEANUP_SCALED_FONT;
 
     status = _cairo_ft_unscaled_font_set_scale (unscaled,
 				                &scaled_font->base.scale);
     if (unlikely (status)) {
+	/* This can only fail if we encounter an error with the underlying
+	 * font, so propagate the error back to the font-face. */
+	_cairo_ft_unscaled_font_unlock_face (unscaled);
 	_cairo_unscaled_font_destroy (&unscaled->base);
 	free (scaled_font);
-	goto FAIL;
+	return status;
     }
 
 
@@ -1607,13 +1607,21 @@ _cairo_ft_scaled_font_create (cairo_ft_unscaled_font_t	 *unscaled,
     }
 
     status = _cairo_scaled_font_set_metrics (&scaled_font->base, &fs_metrics);
+    if (unlikely (status))
+	goto CLEANUP_SCALED_FONT;
 
-    *font_out = &scaled_font->base;
-
- FAIL:
     _cairo_ft_unscaled_font_unlock_face (unscaled);
 
-    return status;
+    *font_out = &scaled_font->base;
+    return CAIRO_STATUS_SUCCESS;
+
+  CLEANUP_SCALED_FONT:
+    _cairo_unscaled_font_destroy (&unscaled->base);
+    free (scaled_font);
+  FAIL:
+    _cairo_ft_unscaled_font_unlock_face (unscaled);
+    *font_out = _cairo_scaled_font_create_in_error (status);
+    return CAIRO_STATUS_SUCCESS; /* non-backend error */
 }
 
 cairo_bool_t
@@ -2284,8 +2292,14 @@ _cairo_ft_font_face_scaled_font_create (void                     *abstract_face,
 					    options,
 					    &unscaled,
 					    &ft_options);
-	if (unlikely (status))
-		return status;
+	if (unlikely (status)) {
+	    /* XXX It is possible for a failure to generate the unscaled font
+	     * here could indicate that the font_face itself is broken - for
+	     * which we should propagate the error.
+	     */
+	    *scaled_font = _cairo_scaled_font_create_in_error (status);
+	    return CAIRO_STATUS_SUCCESS;
+	}
 
     } else {
 	unscaled = font_face->unscaled;
