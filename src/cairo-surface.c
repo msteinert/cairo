@@ -675,7 +675,7 @@ cairo_surface_set_mime_data (cairo_surface_t		*surface,
     cairo_status_t status;
     cairo_mime_data_t *mime_data;
 
-    if (surface->status)
+    if (unlikely (surface->status))
 	return surface->status;
 
     status = _cairo_intern_string (&mime_type, -1);
@@ -700,8 +700,12 @@ cairo_surface_set_mime_data (cairo_surface_t		*surface,
 					      (cairo_user_data_key_t *) mime_type,
 					      mime_data,
 					      _cairo_mime_data_destroy);
-    if (unlikely (status))
+    if (unlikely (status)) {
+	if (mime_data != NULL)
+	    free (mime_data);
+
 	return _cairo_surface_set_error (surface, status);
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
