@@ -38,8 +38,16 @@
  *      Chris Wilson <chris@chris-wilson.co.uk>
  */
 
+#define _GNU_SOURCE
+
 #include "cairoint.h"
 #include "cairo-scaled-font-private.h"
+
+#if _XOPEN_SOURCE >= 600 || defined (_ISOC99_SOURCE)
+#define ISFINITE(x) isfinite (x)
+#else
+#define ISFINITE(x) ((x) * (x) >= 0.) /* check for NaNs */
+#endif
 
 #define CAIRO_SCALED_GLYPH_PAGE_SHIFT 7
 #define CAIRO_SCALED_GLYPH_PAGE_SIZE (1 << CAIRO_SCALED_GLYPH_PAGE_SHIFT)
@@ -909,9 +917,19 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     cairo_status_t status;
     cairo_scaled_font_map_t *font_map;
     cairo_scaled_font_t key, *old = NULL, *scaled_font = NULL;
+    double det;
 
-    if (font_face->status)
-	return _cairo_scaled_font_create_in_error (font_face->status);
+    status = font_face->status;
+    if (unlikely (status))
+	return _cairo_scaled_font_create_in_error (status);
+
+    det = _cairo_matrix_compute_determinant (font_matrix);
+    if (! ISFINITE (det))
+	return _cairo_scaled_font_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_MATRIX));
+
+    det = _cairo_matrix_compute_determinant (ctm);
+    if (! ISFINITE (det))
+	return _cairo_scaled_font_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_MATRIX));
 
     status = cairo_font_options_status ((cairo_font_options_t *) options);
     if (unlikely (status))
