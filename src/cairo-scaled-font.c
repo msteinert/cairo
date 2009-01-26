@@ -1039,15 +1039,21 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     /* Otherwise create it and insert it into the hash table. */
     status = font_face->backend->scaled_font_create (font_face, font_matrix,
 						     ctm, options, &scaled_font);
+    /* Did we leave the backend in an error state? */
     if (unlikely (status)) {
 	_cairo_scaled_font_map_unlock ();
 	status = _cairo_font_face_set_error (font_face, status);
 	return _cairo_scaled_font_create_in_error (status);
     }
+    /* Or did we encounter an error whilst constructing the scaled font? */
+    if (unlikely (scaled_font->status)) {
+	_cairo_scaled_font_map_unlock ();
+	return scaled_font;
+    }
 
     status = _cairo_hash_table_insert (font_map->hash_table,
 				       &scaled_font->hash_entry);
-    if (status == CAIRO_STATUS_SUCCESS) {
+    if (likely (status == CAIRO_STATUS_SUCCESS)) {
 	old = font_map->mru_scaled_font;
 	font_map->mru_scaled_font = scaled_font;
 	_cairo_reference_count_inc (&scaled_font->ref_count);
