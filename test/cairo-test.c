@@ -762,8 +762,12 @@ REPEAT:
 	goto UNWIND_STRINGS;
     }
 
-    if (cairo_test_malloc_failure (ctx, cairo_surface_status (surface)))
+    if (ctx->malloc_failure &&
+	VALGRIND_COUNT_FAULTS () - last_fault_count > 0 &&
+	cairo_surface_status (surface) == CAIRO_STATUS_NO_MEMORY)
+    {
 	goto REPEAT;
+    }
 
     if (cairo_surface_status (surface)) {
 	MF (VALGRIND_PRINT_FAULTS ());
@@ -885,7 +889,9 @@ REPEAT:
     }
 
 #if HAVE_MEMFAULT
-    if (VALGRIND_COUNT_FAULTS () - last_fault_count > 0) {
+    if (VALGRIND_COUNT_FAULTS () - last_fault_count > 0 &&
+	VALGRIND_HAS_FAULTS ())
+    {
 	VALGRIND_PRINTF ("Unreported memfaults...");
 	VALGRIND_PRINT_FAULTS ();
     }
@@ -1494,6 +1500,7 @@ cairo_test_create_surface_from_png (const cairo_test_context_t *ctx,
 	if (ctx->srcdir) {
 	    char *srcdir_filename;
 	    xasprintf (&srcdir_filename, "%s/%s", ctx->srcdir, filename);
+	    cairo_surface_destroy (image);
 	    image = cairo_image_surface_create_from_png (srcdir_filename);
 	    free (srcdir_filename);
 	}
