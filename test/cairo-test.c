@@ -247,7 +247,7 @@ cairo_test_fini (cairo_test_context_t *ctx)
     cairo_surface_destroy (ctx->ref_image_flattened);
 
     if (ctx->test_name != NULL)
-	free (ctx->test_name);
+	free ((char *) ctx->test_name);
 
     if (ctx->own_targets)
 	cairo_boilerplate_free_targets (ctx->targets_to_test);
@@ -662,11 +662,13 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
     const char *format;
     cairo_bool_t have_output = FALSE;
     cairo_bool_t have_result = FALSE;
-    int malloc_failure_iterations = ctx->malloc_failure;
     void *closure;
     int width, height;
     cairo_bool_t have_output_dir;
+#if HAVE_MEMFAULT
+    int malloc_failure_iterations = ctx->malloc_failure;
     int last_fault_count = 0;
+#endif
 
     /* Get the strings ready that we'll need. */
     format = cairo_boilerplate_content_name (target->content);
@@ -735,8 +737,8 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 	height += dev_offset;
     }
 
-REPEAT:
 #if HAVE_MEMFAULT
+REPEAT:
     VALGRIND_CLEAR_FAULTS ();
     VALGRIND_RESET_LEAKS ();
     ctx->last_fault_count = 0;
@@ -762,12 +764,14 @@ REPEAT:
 	goto UNWIND_STRINGS;
     }
 
+#if HAVE_MEMFAULT
     if (ctx->malloc_failure &&
 	VALGRIND_COUNT_FAULTS () - last_fault_count > 0 &&
 	cairo_surface_status (surface) == CAIRO_STATUS_NO_MEMORY)
     {
 	goto REPEAT;
     }
+#endif
 
     if (cairo_surface_status (surface)) {
 	MF (VALGRIND_PRINT_FAULTS ());
@@ -1592,8 +1596,6 @@ cairo_bool_t
 cairo_test_malloc_failure (const cairo_test_context_t *ctx,
 			   cairo_status_t status)
 {
-    int n_faults;
-
     if (! ctx->malloc_failure)
 	return FALSE;
 
@@ -1601,12 +1603,16 @@ cairo_test_malloc_failure (const cairo_test_context_t *ctx,
 	return FALSE;
 
 #if HAVE_MEMFAULT
-    /* prevent infinite loops... */
-    n_faults = VALGRIND_COUNT_FAULTS ();
-    if (n_faults == ctx->last_fault_count)
-	return FALSE;
+    {
+	int n_faults;
 
-    ((cairo_test_context_t *) ctx)->last_fault_count = n_faults;
+	/* prevent infinite loops... */
+	n_faults = VALGRIND_COUNT_FAULTS ();
+	if (n_faults == ctx->last_fault_count)
+	    return FALSE;
+
+	((cairo_test_context_t *) ctx)->last_fault_count = n_faults;
+    }
 #endif
 
     return TRUE;
