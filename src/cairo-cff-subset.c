@@ -1773,6 +1773,7 @@ _cairo_cff_font_create (cairo_scaled_font_subset_t  *scaled_font_subset,
     font->ascent = (int16_t) be16_to_cpu (hhea.ascender);
     font->descent = (int16_t) be16_to_cpu (hhea.descender);
 
+    font->font_name = NULL;
     status = _cairo_truetype_read_font_name (scaled_font_subset->scaled_font,
 					     &font->ps_name,
 					     &font->font_name);
@@ -2202,6 +2203,7 @@ _cairo_cff_fallback_init (cairo_cff_subset_t          *cff_subset,
     if (unlikely (status))
 	goto fail2;
 
+    cff_subset->font_name = NULL;
     cff_subset->ps_name = strdup (font->ps_name);
     if (unlikely (cff_subset->ps_name == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
