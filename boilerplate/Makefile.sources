@@ -24,6 +24,9 @@ cairo_boilerplate_beos_private = cairo-boilerplate-beos-private.h
 cairo_boilerplate_directfb_private = cairo-boilerplate-directfb-private.h
 cairo_boilerplate_directfb_sources = cairo-boilerplate-directfb.c
 
+cairo_boilerplate_gl_private = cairo-boilerplate-gl-private.h
+cairo_boilerplate_gl_sources = cairo-boilerplate-gl.c
+
 cairo_boilerplate_glitz_private = cairo-boilerplate-glitz-private.h
 cairo_boilerplate_glitz_sources = \
 	cairo-boilerplate-glitz-agl.c \

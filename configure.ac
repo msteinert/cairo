@@ -192,6 +192,13 @@ CAIRO_ENABLE_FUNCTIONS(png, PNG, yes, [
 ])
 
 dnl ===========================================================================
+CAIRO_ENABLE_SURFACE_BACKEND(gl, gl, no, [
+  gl_REQUIRES="gl"
+  PKG_CHECK_MODULES(gl, $gl_REQUIRES, , [AC_MSG_RESULT(no)
+  use_gl="no (requires gl.pc)"])
+])
+
+dnl ===========================================================================
 
 GLITZ_MIN_VERSION=0.5.1
 CAIRO_ENABLE_SURFACE_BACKEND(glitz, glitz, no, [

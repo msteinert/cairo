@@ -1,6 +1,6 @@
-/* cairo - a vector graphics library with display and print output
+/* Cairo - a vector graphics library with display and print output
  *
- * Copyright © 2007 Mathias Hasselmann
+ * Copyright © 2009 Chris Wilson
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,39 +27,33 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * Contributor(s):
- *	Mathias Hasselmann <mathias.hasselmann@gmx.de>
+ * The Initial Developer of the Original Code is Chris Wilson.
  */
 
-#ifndef CAIRO_FEATURES_H
-/* This block is to just make this header file standalone */
-#define CAIRO_MUTEX_DECLARE(mutex)
-#endif
+#ifndef CAIRO_BOILERPLATE_GL_PRIVATE_H
+#define CAIRO_BOILERPLATE_GL_PRIVATE_H
 
-CAIRO_MUTEX_DECLARE (_cairo_pattern_solid_pattern_cache_lock)
-CAIRO_MUTEX_DECLARE (_cairo_pattern_solid_surface_cache_lock)
+#include <cairo.h>
 
-CAIRO_MUTEX_DECLARE (_cairo_toy_font_face_mutex)
-CAIRO_MUTEX_DECLARE (_cairo_intern_string_mutex)
-CAIRO_MUTEX_DECLARE (_cairo_scaled_font_map_mutex)
-CAIRO_MUTEX_DECLARE (_cairo_scaled_glyph_page_cache_mutex)
-CAIRO_MUTEX_DECLARE (_cairo_scaled_font_error_mutex)
+CAIRO_BEGIN_DECLS
 
-#if CAIRO_HAS_FT_FONT
-CAIRO_MUTEX_DECLARE (_cairo_ft_unscaled_font_map_mutex)
-#endif
+extern cairo_surface_t *
+_cairo_boilerplate_gl_create_surface (const char		 *name,
+				      cairo_content_t		  content,
+				      int			  width,
+				      int			  height,
+				      int			  max_width,
+				      int			  max_height,
+				      cairo_boilerplate_mode_t	  mode,
+				      int                         id,
+				      void			**closure);
 
-#if CAIRO_HAS_XLIB_SURFACE
-CAIRO_MUTEX_DECLARE (_cairo_xlib_display_mutex)
-#endif
+extern void
+_cairo_boilerplate_gl_cleanup (void* closure);
 
-#if CAIRO_HAS_GL_SURFACE
-CAIRO_MUTEX_DECLARE (_cairo_gl_context_mutex)
-#endif
+extern void
+_cairo_boilerplate_gl_synchronize (void *closure);
 
-#if !defined (HAS_ATOMIC_OPS) || defined (ATOMIC_OP_NEEDS_MEMORY_BARRIER)
-CAIRO_MUTEX_DECLARE (_cairo_atomic_mutex)
-#endif
+CAIRO_END_DECLS
 
-/* Undefine, to err on unintended inclusion */
-#undef   CAIRO_MUTEX_DECLARE
+#endif /* CAIRO_BOILERPLATE_GL_PRIVATE_H */

@@ -35,6 +35,9 @@
 #if CAIRO_HAS_DIRECTFB_SURFACE
 #include "cairo-boilerplate-directfb-private.h"
 #endif
+#if CAIRO_HAS_GL_SURFACE
+#include "cairo-boilerplate-gl-private.h"
+#endif
 #if CAIRO_HAS_GLITZ_SURFACE
 #include "cairo-boilerplate-glitz-private.h"
 #endif
@@ -354,6 +357,28 @@ static cairo_boilerplate_target_t targets[] =
 	_cairo_boilerplate_test_paginated_cleanup,
 	NULL,
 	FALSE, TRUE
+    },
+#endif
+#ifdef CAIRO_HAS_GL_SURFACE
+    {
+	"gl", "gl", NULL,
+	CAIRO_SURFACE_TYPE_GL,CAIRO_CONTENT_COLOR_ALPHA, 0,
+	_cairo_boilerplate_gl_create_surface, NULL,
+	NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	_cairo_boilerplate_gl_cleanup,
+	_cairo_boilerplate_gl_synchronize,
+    },
+    {
+	"gl", "gl", NULL,
+	CAIRO_SURFACE_TYPE_GL, CAIRO_CONTENT_COLOR, 0,
+	_cairo_boilerplate_gl_create_surface, NULL,
+	NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	_cairo_boilerplate_gl_cleanup,
+	_cairo_boilerplate_gl_synchronize,
     },
 #endif
 #ifdef CAIRO_HAS_GLITZ_SURFACE
