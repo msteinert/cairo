@@ -27,6 +27,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
 
 #define WIDTH 2
 #define HEIGHT 2
@@ -51,15 +52,24 @@ draw (cairo_t *cr, int width, int height)
     char *filename;
     FILE *file;
     cairo_surface_t *surface;
+    cairo_status_t status;
 
     xasprintf (&filename, "%s/%s", ctx->srcdir,
 	       "create-from-png-stream.ref.png");
 
     file = fopen (filename, "rb");
     if (file == NULL) {
-	cairo_test_log (ctx, "Error: failed to open file: %s\n", filename);
+	cairo_test_status_t ret;
+
+	ret = CAIRO_TEST_FAILURE;
+	if (errno == ENOMEM)
+	    ret = cairo_test_status_from_status (ctx, CAIRO_STATUS_NO_MEMORY);
+
+	if (ret != CAIRO_TEST_NO_MEMORY)
+	    cairo_test_log (ctx, "Error: failed to open file: %s\n", filename);
+
 	free (filename);
-	return CAIRO_TEST_FAILURE;
+	return ret;
     }
 
     surface = cairo_image_surface_create_from_png_stream (read_png_from_file,
@@ -67,13 +77,23 @@ draw (cairo_t *cr, int width, int height)
 
     fclose (file);
 
-    if (cairo_surface_status (surface)) {
-	cairo_test_log (ctx,
-			"Error: failed to create surface from PNG: %s - %s\n",
-			filename,
-			cairo_status_to_string (cairo_surface_status (surface)));
+    status = cairo_surface_status (surface);
+    if (status) {
+	cairo_test_status_t ret;
+
+	cairo_surface_destroy (surface);
+
+	ret = cairo_test_status_from_status (ctx, status);
+	if (ret != CAIRO_TEST_NO_MEMORY) {
+	    cairo_test_log (ctx,
+			    "Error: failed to create surface from PNG: %s - %s\n",
+			    filename,
+			    cairo_status_to_string (status));
+	}
+
 	free (filename);
-	return CAIRO_TEST_FAILURE;
+
+	return ret;
     }
 
     free (filename);

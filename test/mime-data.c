@@ -44,6 +44,9 @@ read_file (const cairo_test_context_t *ctx,
     if (file == NULL) {
 	char path[4096];
 
+	if (errno == ENOMEM)
+	    return CAIRO_STATUS_NO_MEMORY;
+
 	/* try again with srcdir */
 	snprintf (path, sizeof (path),
 		  "%s/%s", ctx->srcdir, filename);
@@ -100,6 +103,7 @@ paint_file (cairo_t *cr,
 					  free, mime_data);
     if (status) {
 	cairo_surface_destroy (image);
+	free (mime_data);
 	return cairo_test_status_from_status (ctx, status);
     }
 
