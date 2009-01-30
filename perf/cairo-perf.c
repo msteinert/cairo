@@ -444,11 +444,11 @@ main (int argc, char *argv[])
 }
 
 const cairo_perf_case_t perf_cases[] = {
-    { paint,  256, 512},
-    { paint_with_alpha,  256, 512},
-    { fill,   64, 256},
-    { stroke, 64, 256},
-    { text,   64, 256},
+    { paint,  64, 512},
+    { paint_with_alpha,  64, 512},
+    { fill,   64, 512},
+    { stroke, 64, 512},
+    { text,   64, 512},
     { tessellate, 100, 100},
     { subimage_copy, 16, 512},
     { pattern_create_radial, 16, 16},
