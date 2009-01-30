@@ -134,6 +134,9 @@ cairo_perf_has_similar (cairo_perf_t *perf)
 {
     cairo_surface_t *target = cairo_get_target (perf->cr);
 
+    if (getenv ("CAIRO_TEST_IGNORE_SIMILAR"))
+	return FALSE;
+
     /* exclude the image backend */
     if (cairo_surface_get_type (target) == CAIRO_SURFACE_TYPE_IMAGE)
 	return FALSE;
