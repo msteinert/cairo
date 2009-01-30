@@ -148,8 +148,6 @@ write_png (cairo_surface_t	*surface,
     png_info *info;
     png_byte **volatile rows = NULL;
     png_color_16 white;
-    const unsigned char *mime_data;
-    unsigned int mime_data_length;
     int png_color_type;
     int depth;
 
@@ -197,18 +195,6 @@ write_png (cairo_surface_t	*surface,
 #endif
 
     png_set_write_fn (png, closure, write_func, png_simple_output_flush_fn);
-
-    /* XXX This is very questionable.
-     * This breaks the read_from_png(); draw(); write_to_png(); cycle, but
-     * that is affected by mime-data in general. OTOH, by using mime-data
-     * here we are consistent with the other backends.
-     */
-    cairo_surface_get_mime_data (surface, CAIRO_MIME_TYPE_PNG,
-				 &mime_data, &mime_data_length);
-    if (mime_data != NULL) {
-	write_func (png, (png_bytep) mime_data, mime_data_length);
-	goto BAIL3;
-    }
 
     switch (image->format) {
     case CAIRO_FORMAT_ARGB32:
