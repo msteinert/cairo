@@ -1,5 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
+ * Copyright © 2009 Eric Anholt
  * Copyright © 2005 Red Hat, Inc
  *
  * This library is free software; you can redistribute it and/or
@@ -33,6 +34,13 @@
  *	Carl Worth <cworth@cworth.org>
  */
 
+
+#include <X11/Xlib.h>
+
+#define GL_GLEXT_PROTOTYPES
+#include <GL/glx.h>
+#include <GL/glext.h>
+
 #include "cairoint.h"
 
 #include "cairo-gl.h"
@@ -40,8 +48,12 @@
 typedef struct _cairo_gl_surface {
     cairo_surface_t base;
 
-    /* This is a cairo_image_surface to hold the actual contents. */
-    cairo_surface_t *backing;
+    cairo_gl_context_t *ctx;
+    cairo_content_t content;
+    int width, height;
+
+    GLuint tex; /* GL texture object containing our data. */
+    GLuint fb; /* GL framebuffer object wrapping our data. */
 } cairo_gl_surface_t;
 
 struct _cairo_gl_context {
@@ -54,7 +66,7 @@ struct _cairo_gl_context {
     cairo_gl_surface_t *current_target;
 };
 
-static const cairo_surface_backend_t cairo_gl_surface_backend;
+static const cairo_surface_backend_t _cairo_gl_surface_backend;
 
 const cairo_gl_context_t _nil_context = {
     CAIRO_REFERENCE_COUNT_INVALID,
@@ -68,6 +80,7 @@ _cairo_gl_context_create_in_error (cairo_status_t status)
 	return (cairo_gl_context_t *) &_nil_context;
 
     ASSERT_NOT_REACHED;
+    return NULL;
 }
 
 cairo_gl_context_t *
@@ -93,6 +106,21 @@ cairo_gl_glx_context_create (Display *dpy, GLXContext gl_ctx)
     return ctx;
 }
 
+cairo_gl_context_t *
+cairo_gl_context_reference (cairo_gl_context_t *context)
+{
+    if (context == NULL ||
+	CAIRO_REFERENCE_COUNT_IS_INVALID (&context->ref_count))
+    {
+	return context;
+    }
+
+    assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&context->ref_count));
+    _cairo_reference_count_inc (&context->ref_count);
+
+    return context;
+}
+
 void
 cairo_gl_context_destroy (cairo_gl_context_t *context)
 {
@@ -109,6 +137,24 @@ cairo_gl_context_destroy (cairo_gl_context_t *context)
     free (context);
 }
 
+
+static void
+_cairo_gl_set_destination (cairo_gl_surface_t *surface)
+{
+    glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, surface->fb);
+    glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
+    glReadBuffer (GL_COLOR_ATTACHMENT0_EXT);
+
+    glViewport (0, 0, surface->width, surface->height);
+
+    glMatrixMode (GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, surface->width, 0, surface->height, -1.0, 1.0);
+
+    glMatrixMode (GL_MODELVIEW);
+    glLoadIdentity();
+}
+
 cairo_surface_t *
 cairo_gl_surface_create (cairo_gl_context_t   *ctx,
 			 cairo_content_t	content,
@@ -116,22 +162,71 @@ cairo_gl_surface_create (cairo_gl_context_t   *ctx,
 			 int			height)
 {
     cairo_gl_surface_t *surface;
-    cairo_surface_t *backing;
+    GLenum err, format;
+    cairo_status_t status;
 
-    backing = _cairo_image_surface_create_with_content (content, width, height);
-    if (cairo_surface_status (backing))
-	return backing;
+    if (!CAIRO_CONTENT_VALID (content))
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_CONTENT));
 
-    surface = malloc (sizeof (cairo_gl_surface_t));
-    if (unlikely (surface == NULL)) {
-	cairo_surface_destroy (backing);
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+    if (ctx == NULL) {
+	return cairo_image_surface_create (_cairo_format_from_content (content),
+					   width, height);
     }
+    if (ctx->status)
+	return _cairo_surface_create_in_error (ctx->status);
 
-    _cairo_surface_init (&surface->base, &cairo_gl_surface_backend,
+    surface = calloc (1, sizeof (cairo_gl_surface_t));
+    if (unlikely (surface == NULL))
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+
+    _cairo_surface_init (&surface->base,
+			 &_cairo_gl_surface_backend,
 			 content);
 
-    surface->backing = backing;
+    surface->ctx = cairo_gl_context_reference (ctx);
+    surface->content = content;
+
+    switch (content) {
+    default:
+	ASSERT_NOT_REACHED;
+    case CAIRO_CONTENT_COLOR_ALPHA:
+	format = GL_RGBA;
+	break;
+    case CAIRO_CONTENT_ALPHA:
+	format = GL_RGBA;
+	break;
+    case CAIRO_CONTENT_COLOR:
+	format = GL_RGB;
+	break;
+    }
+
+    /* Create the texture used to store the surface's data. */
+    glGenTextures (1, &surface->tex);
+    glBindTexture (GL_TEXTURE_2D, surface->tex);
+    glTexImage2D (GL_TEXTURE_2D, 0, format, width, height, 0,
+		  format, GL_UNSIGNED_BYTE, NULL);
+
+    /* Create a framebuffer object wrapping the texture so that we can render
+     * to it.
+     */
+    glGenFramebuffersEXT(1, &surface->fb);
+    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, surface->fb);
+    glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT,
+			       GL_COLOR_ATTACHMENT0_EXT,
+			       GL_TEXTURE_2D,
+			       surface->tex,
+			       0);
+
+    while ((err = glGetError ())) {
+	fprintf(stderr, "GL error in surface create: 0x%08x\n", err);
+    }
+
+    status = glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT);
+    if (status != GL_FRAMEBUFFER_COMPLETE_EXT)
+	fprintf(stderr, "destination is framebuffer incomplete\n");
+
+    surface->width = width;
+    surface->height = height;
 
     return &surface->base;
 }
@@ -147,12 +242,162 @@ _cairo_gl_surface_create_similar (void		 *abstract_surface,
     return cairo_gl_surface_create (NULL, content, width, height);
 }
 
+
+static cairo_status_t
+_cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
+			      cairo_image_surface_t *src,
+			      int src_x, int src_y,
+			      int width, int height,
+			      int dst_x, int dst_y)
+{
+    char *temp_data;
+    int y;
+    unsigned int cpp;
+    GLenum format, type;
+    char *src_data_start;
+
+    /* Want to use a switch statement here but the compiler gets whiny. */
+    if (src->pixman_format == PIXMAN_a8r8g8b8) {
+	format = GL_BGRA;
+	type = GL_UNSIGNED_INT_8_8_8_8_REV;
+	cpp = 4;
+    } else if (src->pixman_format == PIXMAN_x8r8g8b8) {
+	assert(dst->content != CAIRO_CONTENT_COLOR_ALPHA);
+	assert(dst->content != CAIRO_CONTENT_ALPHA);
+	format = GL_BGRA;
+	type = GL_UNSIGNED_INT_8_8_8_8_REV;
+	cpp = 4;
+    } else if (src->pixman_format == PIXMAN_a8) {
+	format = GL_ALPHA;
+	type = GL_UNSIGNED_BYTE;
+	cpp = 1;
+    } else {
+	fprintf(stderr, "draw_image fallback\n");
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    /* Write the data to a temporary as GL wants bottom-to-top data
+     * screen-wise, and we want top-to-bottom.
+     */
+    temp_data = malloc (width * height * cpp);
+    if (temp_data == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    src_data_start = (char *)src->data + (src_y * src->stride) + (src_x * cpp);
+    for (y = 0; y < height; y++) {
+	memcpy (temp_data + y * width * cpp, src_data_start +
+		y * src->stride,
+		width * cpp);
+    }
+
+    _cairo_gl_set_destination (dst);
+    glRasterPos2i (dst_x, dst_y);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glDrawPixels (width, height, format, type, temp_data);
+
+    free (temp_data);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
+			     cairo_rectangle_int_t   *interest,
+			     cairo_image_surface_t  **image_out,
+			     cairo_rectangle_int_t   *rect_out)
+{
+    cairo_image_surface_t *image;
+    cairo_rectangle_int_t extents;
+    GLenum err;
+    char *temp_data;
+    unsigned int y;
+    unsigned int cpp;
+    GLenum format, type;
+    cairo_format_t cairo_format;
+
+    extents.x = 0;
+    extents.y = 0;
+    extents.width  = surface->width;
+    extents.height = surface->height;
+
+    if (interest != NULL) {
+	if (! _cairo_rectangle_intersect (&extents, interest)) {
+	    *image_out = NULL;
+	    return CAIRO_STATUS_SUCCESS;
+	}
+    }
+
+    if (rect_out != NULL)
+	*rect_out = extents;
+
+    /* Want to use a switch statement here but the compiler gets whiny. */
+    if (surface->content == CAIRO_CONTENT_COLOR_ALPHA) {
+	format = GL_BGRA;
+	cairo_format = CAIRO_FORMAT_ARGB32;
+	type = GL_UNSIGNED_INT_8_8_8_8_REV;
+	cpp = 4;
+    } else if (surface->content == CAIRO_CONTENT_COLOR) {
+	format = GL_BGRA;
+	cairo_format = CAIRO_FORMAT_RGB24;
+	type = GL_UNSIGNED_INT_8_8_8_8_REV;
+	cpp = 4;
+    } else if (surface->content == CAIRO_CONTENT_ALPHA) {
+	format = GL_ALPHA;
+	cairo_format = CAIRO_FORMAT_A8;
+	type = GL_UNSIGNED_BYTE;
+	cpp = 1;
+    } else {
+	fprintf(stderr, "get_image fallback: %d\n", surface->content);
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    image = (cairo_image_surface_t*)
+	cairo_image_surface_create (cairo_format,
+				    extents.width, extents.height);
+    if (image->base.status)
+	return image->base.status;
+
+    /* This is inefficient, as we'd rather just read the thing without making
+     * it the destination.  But then, this is the fallback path, so let's not
+     * fall back instead.
+     */
+    _cairo_gl_set_destination(surface);
+
+    /* Read the data to a temporary as GL gives us bottom-to-top data
+     * screen-wise, and we want top-to-bottom.
+     */
+    temp_data = malloc (extents.width * extents.height * cpp);
+    if (temp_data == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glReadPixels(extents.x, extents.y,
+		 extents.width, extents.height,
+		 format, type, temp_data);
+
+    for (y = 0; y < extents.height; y++) {
+	memcpy ((char *)image->data + y * image->stride,
+		temp_data + y * extents.width * cpp,
+		extents.width * cpp);
+    }
+    free (temp_data);
+
+    *image_out = image;
+
+    while ((err = glGetError ()))
+	fprintf(stderr, "GL error 0x%08x\n", (int) err);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_status_t
 _cairo_gl_surface_finish (void *abstract_surface)
 {
     cairo_gl_surface_t *surface = abstract_surface;
 
-    cairo_surface_destroy (surface->backing);
+    glDeleteFramebuffersEXT (1, &surface->fb);
+    glDeleteTextures (1, &surface->tex);
+    cairo_gl_context_destroy(surface->ctx);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -164,8 +409,9 @@ _cairo_gl_surface_acquire_source_image (void		       *abstract_surface,
 {
     cairo_gl_surface_t *surface = abstract_surface;
 
-    return _cairo_surface_acquire_source_image (surface->backing,
-						image_out, image_extra);
+    *image_extra = NULL;
+
+    return _cairo_gl_surface_get_image (surface, NULL, image_out, NULL);
 }
 
 static void
@@ -173,10 +419,7 @@ _cairo_gl_surface_release_source_image (void		      *abstract_surface,
 					cairo_image_surface_t *image,
 					void		      *image_extra)
 {
-    cairo_gl_surface_t *surface = abstract_surface;
-
-    _cairo_surface_release_source_image (surface->backing,
-					 image, image_extra);
+    cairo_surface_destroy (&image->base);
 }
 
 static cairo_status_t
@@ -188,11 +431,9 @@ _cairo_gl_surface_acquire_dest_image (void		      *abstract_surface,
 {
     cairo_gl_surface_t *surface = abstract_surface;
 
-    return _cairo_surface_acquire_dest_image (surface->backing,
-					      interest_rect,
-					      image_out,
-					      image_rect_out,
-					      image_extra);
+    *image_extra = NULL;
+    return _cairo_gl_surface_get_image (surface, interest_rect, image_out,
+					image_rect_out);
 }
 
 static void
@@ -202,13 +443,16 @@ _cairo_gl_surface_release_dest_image (void		      *abstract_surface,
 				      cairo_rectangle_int_t   *image_rect,
 				      void		      *image_extra)
 {
-    cairo_gl_surface_t *surface = abstract_surface;
+    cairo_status_t status;
 
-    _cairo_surface_release_dest_image (surface->backing,
-				       interest_rect,
-				       image,
-				       image_rect,
-				       image_extra);
+    status = _cairo_gl_surface_draw_image (abstract_surface, image,
+					   0, 0,
+					   image->width, image->height,
+					   image_rect->x, image_rect->y);
+    if (status)
+	status = _cairo_surface_set_error (abstract_surface, status);
+
+    cairo_surface_destroy (&image->base);
 }
 
 static cairo_status_t
@@ -241,10 +485,15 @@ _cairo_gl_surface_get_extents (void		     *abstract_surface,
 {
     cairo_gl_surface_t *surface = abstract_surface;
 
-    return _cairo_surface_get_extents (surface->backing, rectangle);
+    rectangle->x = 0;
+    rectangle->y = 0;
+    rectangle->width  = surface->width;
+    rectangle->height = surface->height;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
-static const cairo_surface_backend_t cairo_gl_surface_backend = {
+static const cairo_surface_backend_t _cairo_gl_surface_backend = {
     CAIRO_SURFACE_TYPE_GL,
     _cairo_gl_surface_create_similar,
     _cairo_gl_surface_finish,
