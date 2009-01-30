@@ -45,6 +45,8 @@
 
 #include "cairo-gl.h"
 
+#define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
+
 typedef struct _cairo_gl_surface {
     cairo_surface_t base;
 
@@ -137,6 +139,18 @@ cairo_gl_context_destroy (cairo_gl_context_t *context)
     free (context);
 }
 
+static cairo_gl_context_t *
+_cairo_gl_context_acquire (cairo_gl_context_t *ctx)
+{
+    CAIRO_MUTEX_LOCK (ctx->mutex);
+    return ctx;
+}
+
+static void
+_cairo_gl_context_release (cairo_gl_context_t *ctx)
+{
+    CAIRO_MUTEX_UNLOCK (ctx->mutex);
+}
 
 static void
 _cairo_gl_set_destination (cairo_gl_surface_t *surface)
@@ -153,6 +167,38 @@ _cairo_gl_set_destination (cairo_gl_surface_t *surface)
 
     glMatrixMode (GL_MODELVIEW);
     glLoadIdentity();
+}
+
+static int
+_cairo_gl_set_operator (cairo_operator_t op)
+{
+    struct {
+	GLenum src;
+	GLenum dst;
+    } blend_factors[] = {
+	{ GL_ZERO, GL_ZERO }, /* Clear */
+	{ GL_ONE, GL_ZERO }, /* Source */
+	{ GL_ONE, GL_ONE_MINUS_SRC_ALPHA }, /* Over */
+	{ GL_DST_ALPHA, GL_ZERO }, /* In */
+	{ GL_ONE_MINUS_DST_ALPHA, GL_ZERO }, /* Out */
+	{ GL_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA }, /* Atop */
+
+	{ GL_ZERO, GL_ONE }, /* Dest */
+	{ GL_ONE_MINUS_DST_ALPHA, GL_ONE }, /* DestOver */
+	{ GL_ZERO, GL_SRC_ALPHA }, /* DestIn */
+	{ GL_ZERO, GL_ONE_MINUS_SRC_ALPHA }, /* DestOut */
+	{ GL_ONE_MINUS_DST_ALPHA, GL_SRC_ALPHA }, /* DestAtop */
+
+	{ GL_ONE_MINUS_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA }, /* Xor */
+	{ GL_ONE, GL_ONE }, /* Add */
+    };
+
+    if (op >= ARRAY_SIZE (blend_factors))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    glBlendFunc (blend_factors[op].src, blend_factors[op].dst);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_surface_t *
@@ -509,6 +555,77 @@ _cairo_gl_surface_clone_similar (void		     *abstract_surface,
 }
 
 static cairo_int_status_t
+_cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
+				   cairo_operator_t	    op,
+				   const cairo_color_t     *color,
+				   cairo_rectangle_int_t   *rects,
+				   int			    num_rects)
+{
+    cairo_gl_surface_t *surface = abstract_surface;
+    cairo_gl_context_t *ctx;
+    cairo_int_status_t status;
+    int i;
+    GLfloat *vertices;
+    GLfloat *colors;
+
+    ctx = _cairo_gl_context_acquire (surface->ctx);
+
+    _cairo_gl_set_destination (surface);
+    status = _cairo_gl_set_operator (op);
+    if (status != CAIRO_STATUS_SUCCESS) {
+	_cairo_gl_context_release (ctx);
+	return status;
+    }
+
+    vertices = _cairo_malloc_ab(num_rects, sizeof(GLfloat) * 4 * 2);
+    colors = _cairo_malloc_ab(num_rects, sizeof(GLfloat) * 4 * 4);
+    if (!vertices || !colors) {
+	_cairo_gl_context_release(ctx);
+	free(vertices);
+	free(colors);
+	return CAIRO_STATUS_NO_MEMORY;
+    }
+
+    /* This should be loaded in as either a blend constant and an operator
+     * setup specific to this, or better, a fragment shader constant.
+     */
+    for (i = 0; i < num_rects * 4; i++) {
+	colors[i * 4 + 0] = color->red * color->alpha;
+	colors[i * 4 + 1] = color->green * color->alpha;
+	colors[i * 4 + 2] = color->blue * color->alpha;
+	colors[i * 4 + 3] = color->alpha;
+    }
+
+    for (i = 0; i < num_rects; i++) {
+	vertices[i * 8 + 0] = rects[i].x;
+	vertices[i * 8 + 1] = rects[i].y;
+	vertices[i * 8 + 2] = rects[i].x + rects[i].width;
+	vertices[i * 8 + 3] = rects[i].y;
+	vertices[i * 8 + 4] = rects[i].x + rects[i].width;
+	vertices[i * 8 + 5] = rects[i].y + rects[i].height;
+	vertices[i * 8 + 6] = rects[i].x;
+	vertices[i * 8 + 7] = rects[i].y + rects[i].height;
+    }
+
+    glEnable (GL_BLEND);
+    glVertexPointer (2, GL_FLOAT, sizeof(GLfloat) * 2, vertices);
+    glEnableClientState (GL_VERTEX_ARRAY);
+    glColorPointer (4, GL_FLOAT, sizeof(GLfloat) * 4, colors);
+    glEnableClientState (GL_COLOR_ARRAY);
+    glDrawArrays (GL_QUADS, 0, 4 * num_rects);
+
+    glDisableClientState (GL_COLOR_ARRAY);
+    glDisableClientState (GL_VERTEX_ARRAY);
+    glDisable (GL_BLEND);
+
+    _cairo_gl_context_release (ctx);
+    free(vertices);
+    free(colors);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
 _cairo_gl_surface_get_extents (void		     *abstract_surface,
 			       cairo_rectangle_int_t *rectangle)
 {
@@ -532,7 +649,7 @@ static const cairo_surface_backend_t _cairo_gl_surface_backend = {
     _cairo_gl_surface_release_dest_image,
     _cairo_gl_surface_clone_similar,
     NULL, /* composite */
-    NULL, /* fill_rectangles */
+    _cairo_gl_surface_fill_rectangles,
     NULL, /* composite_trapezoids */
     NULL, /* create_span_renderer */
     NULL, /* check_span_renderer */
