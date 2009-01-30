@@ -966,7 +966,6 @@ _cairo_bo_event_queue_init (cairo_bo_event_queue_t	*event_queue,
     int i;
     cairo_bo_event_t *events, **sorted_event_ptrs;
     unsigned num_events = 2*num_edges;
-    cairo_status_t status;
 
     /* The skip_elt_t field of a cairo_bo_event_t isn't used for start
      * or stop events, so this allocation is safe.  XXX: make the

@@ -2443,8 +2443,8 @@ static void
 _cairo_ps_surface_release_surface (cairo_ps_surface_t      *surface,
 				   cairo_surface_pattern_t *pattern)
 {
-    if (surface->image != &surface->acquired_image->base)
-	cairo_surface_destroy (surface->image);
+    if (surface->image != surface->acquired_image)
+	cairo_surface_destroy (&surface->image->base);
 
     if (! _cairo_surface_is_meta (pattern->surface)) {
 	_cairo_surface_release_source_image (pattern->surface,
