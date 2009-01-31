@@ -1430,7 +1430,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
 
     D_DEBUG_AT (CairoDFB_Font, "%s( %p [%d] )\n", __FUNCTION__, glyphs, num_glyphs );
 
-    _cairo_cache_freeze (scaled_font->glyphs);
+    _cairo_scaled_font_freeze_cache (scaled_font);
 
     if (scaled_font->surface_private) {
 	cache = scaled_font->surface_private;
@@ -1448,7 +1448,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
 					  CAIRO_SCALED_GLYPH_INFO_SURFACE,
 					  &scaled_glyph);
 	if (status) {
-	    _cairo_cache_thaw (scaled_font->glyphs);
+	    _cairo_scaled_font_thaw_cache (scaled_font);
 	    return status;
 	}
 
@@ -1461,7 +1461,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
 	default:
 	    D_DEBUG_AT (CairoDFB_Font,
 			"  -> Unsupported font format %d!\n", img->format);
-	    _cairo_cache_thaw (scaled_font->glyphs);
+	    _cairo_scaled_font_thaw_cache (scaled_font);
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
 
@@ -1499,7 +1499,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
 	    /* Remember glyph location */
 	    rect = malloc (sizeof (DFBRectangle));
 	    if (rect == NULL) {
-		_cairo_cache_thaw (scaled_font->glyphs);
+		_cairo_scaled_font_thaw_cache (scaled_font);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    }
 	    *rect = rects[n];
@@ -1519,7 +1519,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
     }
 
     if (n == 0) {
-	_cairo_cache_thaw (scaled_font->glyphs);
+	_cairo_scaled_font_thaw_cache (scaled_font);
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
     }
 
@@ -1529,7 +1529,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
 
     /* XXX query maximum surface size */
     if (w > 2048 || h > 2048) {
-	_cairo_cache_thaw (scaled_font->glyphs);
+	_cairo_scaled_font_thaw_cache (scaled_font);
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
@@ -1546,7 +1546,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
 						    w, h,
 						    &new_cache);
 	    if (status) {
-		_cairo_cache_thaw (scaled_font->glyphs);
+		_cairo_scaled_font_thaw_cache (scaled_font);
 		return status;
 	    }
 
@@ -1561,7 +1561,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
 
 	status = _directfb_allocate_font_cache (surface->dfb, w, h, &cache);
 	if (status) {
-	    _cairo_cache_thaw (scaled_font->glyphs);
+	    _cairo_scaled_font_thaw_cache (scaled_font);
 	    return status;
 	}
 
@@ -1576,7 +1576,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
 	if (cache->dfbsurface->Lock (cache->dfbsurface,
 				     DSLF_WRITE, (void *)&data, &pitch))
 	{
-	    _cairo_cache_thaw (scaled_font->glyphs);
+	    _cairo_scaled_font_thaw_cache (scaled_font);
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
 
@@ -1642,7 +1642,7 @@ _directfb_acquire_font_cache (cairo_directfb_surface_t     *surface,
 	cache->dfbsurface->Unlock (cache->dfbsurface);
     }
 
-    _cairo_cache_thaw (scaled_font->glyphs);
+    _cairo_scaled_font_thaw_cache (scaled_font);
 
     cache->x = x;
     cache->y = y;
