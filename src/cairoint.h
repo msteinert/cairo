@@ -1032,8 +1032,17 @@ typedef struct _cairo_stroke_face {
 } cairo_stroke_face_t;
 
 /* cairo.c */
-cairo_private void
-_cairo_restrict_value (double *value, double min, double max);
+
+static inline double
+_cairo_restrict_value (double value, double min, double max)
+{
+    if (value < min)
+	return min;
+    else if (value > max)
+	return max;
+    else
+	return value;
+}
 
 /* C99 round() rounds to the nearest integral value with halfway cases rounded
  * away from 0. _cairo_round rounds halfway cases toward negative infinity.

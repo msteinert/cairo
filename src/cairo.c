@@ -648,10 +648,10 @@ _current_source_matches_solid (cairo_t *cr,
     if (current->type != CAIRO_PATTERN_TYPE_SOLID)
 	return FALSE;
 
-    _cairo_restrict_value (&red,   0.0, 1.0);
-    _cairo_restrict_value (&green, 0.0, 1.0);
-    _cairo_restrict_value (&blue,  0.0, 1.0);
-    _cairo_restrict_value (&alpha, 0.0, 1.0);
+    red   = _cairo_restrict_value (red,   0.0, 1.0);
+    green = _cairo_restrict_value (green, 0.0, 1.0);
+    blue  = _cairo_restrict_value (blue,  0.0, 1.0);
+    alpha = _cairo_restrict_value (alpha, 0.0, 1.0);
 
     _cairo_color_init_rgba (&color, red, green, blue, alpha);
     return _cairo_color_equal (&color,
@@ -868,7 +868,8 @@ cairo_set_tolerance (cairo_t *cr, double tolerance)
     if (cr->status)
 	return;
 
-    _cairo_restrict_value (&tolerance, CAIRO_TOLERANCE_MINIMUM, tolerance);
+    if (tolerance < CAIRO_TOLERANCE_MINIMUM)
+	tolerance = CAIRO_TOLERANCE_MINIMUM;
 
     status = _cairo_gstate_set_tolerance (cr->gstate, tolerance);
     if (unlikely (status))
@@ -962,7 +963,8 @@ cairo_set_line_width (cairo_t *cr, double width)
     if (cr->status)
 	return;
 
-    _cairo_restrict_value (&width, 0.0, width);
+    if (width < 0.)
+	width = 0.;
 
     status = _cairo_gstate_set_line_width (cr->gstate, width);
     if (unlikely (status))

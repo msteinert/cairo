@@ -384,15 +384,6 @@ _cairo_operator_bounded_by_source (cairo_operator_t op)
 }
 
 
-void
-_cairo_restrict_value (double *value, double min, double max)
-{
-    if (*value < min)
-	*value = min;
-    else if (*value > max)
-	*value = max;
-}
-
 /* This function is identical to the C99 function lround(), except that it
  * performs arithmetic rounding (floor(d + .5) instead of away-from-zero rounding) and
  * has a valid input range of (INT_MIN, INT_MAX] instead of

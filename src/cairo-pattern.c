@@ -453,9 +453,9 @@ cairo_pattern_create_rgb (double red, double green, double blue)
 {
     cairo_color_t color;
 
-    _cairo_restrict_value (&red,   0.0, 1.0);
-    _cairo_restrict_value (&green, 0.0, 1.0);
-    _cairo_restrict_value (&blue,  0.0, 1.0);
+    red   = _cairo_restrict_value (red,   0.0, 1.0);
+    green = _cairo_restrict_value (green, 0.0, 1.0);
+    blue  = _cairo_restrict_value (blue,  0.0, 1.0);
 
     _cairo_color_init_rgb (&color, red, green, blue);
 
@@ -492,10 +492,10 @@ cairo_pattern_create_rgba (double red, double green, double blue,
 {
     cairo_color_t color;
 
-    _cairo_restrict_value (&red,   0.0, 1.0);
-    _cairo_restrict_value (&green, 0.0, 1.0);
-    _cairo_restrict_value (&blue,  0.0, 1.0);
-    _cairo_restrict_value (&alpha, 0.0, 1.0);
+    red   = _cairo_restrict_value (red,   0.0, 1.0);
+    green = _cairo_restrict_value (green, 0.0, 1.0);
+    blue  = _cairo_restrict_value (blue,  0.0, 1.0);
+    alpha = _cairo_restrict_value (alpha, 0.0, 1.0);
 
     _cairo_color_init_rgba (&color, red, green, blue, alpha);
 
@@ -949,10 +949,10 @@ cairo_pattern_add_color_stop_rgb (cairo_pattern_t *pattern,
 	return;
     }
 
-    _cairo_restrict_value (&offset, 0.0, 1.0);
-    _cairo_restrict_value (&red,    0.0, 1.0);
-    _cairo_restrict_value (&green,  0.0, 1.0);
-    _cairo_restrict_value (&blue,   0.0, 1.0);
+    offset = _cairo_restrict_value (offset, 0.0, 1.0);
+    red    = _cairo_restrict_value (red,    0.0, 1.0);
+    green  = _cairo_restrict_value (green,  0.0, 1.0);
+    blue   = _cairo_restrict_value (blue,   0.0, 1.0);
 
     _cairo_pattern_add_color_stop ((cairo_gradient_pattern_t *) pattern,
 				   offset, red, green, blue, 1.0);
@@ -1003,11 +1003,11 @@ cairo_pattern_add_color_stop_rgba (cairo_pattern_t *pattern,
 	return;
     }
 
-    _cairo_restrict_value (&offset, 0.0, 1.0);
-    _cairo_restrict_value (&red,    0.0, 1.0);
-    _cairo_restrict_value (&green,  0.0, 1.0);
-    _cairo_restrict_value (&blue,   0.0, 1.0);
-    _cairo_restrict_value (&alpha,  0.0, 1.0);
+    offset = _cairo_restrict_value (offset, 0.0, 1.0);
+    red    = _cairo_restrict_value (red,    0.0, 1.0);
+    green  = _cairo_restrict_value (green,  0.0, 1.0);
+    blue   = _cairo_restrict_value (blue,   0.0, 1.0);
+    alpha  = _cairo_restrict_value (alpha,  0.0, 1.0);
 
     _cairo_pattern_add_color_stop ((cairo_gradient_pattern_t *) pattern,
 				   offset, red, green, blue, alpha);
