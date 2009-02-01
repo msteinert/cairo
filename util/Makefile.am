@@ -22,7 +22,7 @@ EXTRA_LTLIBRARIES += malloc-stats.la backtrace-symbols.la
 
 backtrace_symbols_la_LIBADD  = -lbfd -liberty
 
-malloc_stats_la_LIBADD  = $(backtrace_symbols_la_LIBADD) backtrace-symbols.lo
+#malloc_stats_la_LIBADD  = $(backtrace_symbols_la_LIBADD) backtrace-symbols.lo
 
 EXTRA_DIST += \
 	COPYING \
