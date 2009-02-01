@@ -136,6 +136,40 @@ resolve_addr (const void *addr) {
 }
 
 static void
+resolve_addrs (struct func_stat_t *func_stats, int num)
+{
+	int i;
+	void **addrs;
+	char **strings;
+
+	addrs = malloc (num * sizeof (void *));
+	for (i = 0; i < num; i++)
+		addrs[i] = (void *) func_stats[i].addr;
+
+	strings = backtrace_symbols (addrs, num);
+
+	for (i = 0; i < num; i++) {
+		char *p;
+		char *name;
+		int len;
+
+		p = strchr (strings[i], '\t');
+		if (p)
+			p++;
+		else
+			p = strings[i];
+
+		len = strlen (p) + 1;
+		name = _perm_alloc (len);
+		memcpy (name, p, len);
+		func_stats[i].name = name;
+	}
+
+	free (strings);
+	free (addrs);
+}
+
+static void
 func_stats_add (const void *caller, int is_realloc, size_t size)
 {
 	int i;
@@ -156,7 +190,7 @@ func_stats_add (const void *caller, int is_realloc, size_t size)
 		elt->next = func_stats[i];
 		func_stats[i] = elt;
 		elt->addr = caller;
-		elt->name = resolve_addr (caller);
+		elt->name = NULL;
 		memset (&elt->stat, 0, sizeof (struct alloc_stats_t));
 	}
 
@@ -323,23 +357,29 @@ malloc_stats (void)
 	if (sorted_func_stats == NULL)
 		return;
 
-	sorted_func_stats[0].next = NULL;
-	sorted_func_stats[0].addr = (void *) -1;
-	sorted_func_stats[0].name = "(total)";
-	sorted_func_stats[0].stat = total_allocations;
-
-	for (i = j = 0; i < ARRAY_SIZE (func_stats); i++) {
+	j = 0;
+	for (i = 0; i < ARRAY_SIZE (func_stats); i++) {
 		struct func_stat_t *elt;
 		for (elt = func_stats[i]; elt != NULL; elt = elt->next)
-			sorted_func_stats[++j] = *elt;
+			sorted_func_stats[j++] = *elt;
 	}
+
+	resolve_addrs (sorted_func_stats, j);
 
 	/* merge entries with same name */
 	qsort (sorted_func_stats, j,
 	       sizeof (struct func_stat_t), compare_func_stats_name);
 	j = merge_similar_entries (sorted_func_stats, j);
+
 	qsort (sorted_func_stats, j,
 	       sizeof (struct func_stat_t), compare_func_stats);
+
+	/* add total */
+	sorted_func_stats[j].next = NULL;
+	sorted_func_stats[j].addr = (void *) -1;
+	sorted_func_stats[j].name = "(total)";
+	sorted_func_stats[j].stat = total_allocations;
+	j++;
 
 	setlocale (LC_ALL, "");
 
@@ -350,6 +390,8 @@ malloc_stats (void)
 		dump_alloc_stats (&sorted_func_stats[i].stat,
 				  sorted_func_stats[i].name);
 	}
+
+	/* XXX free other stuff? */
 
 	free (sorted_func_stats);
 }
