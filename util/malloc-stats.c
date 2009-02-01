@@ -39,8 +39,8 @@
 #include <string.h>
 
 struct alloc_stat_t {
-	uint32_t num;
-	uint64_t size;
+	unsigned int num;
+	unsigned long long size;
 };
 
 struct alloc_stats_t {
@@ -139,7 +139,6 @@ static void
 func_stats_add (const void *caller, int is_realloc, size_t size)
 {
 	int i;
-	const char *name;
 	struct func_stat_t *elt;
 
 	alloc_stats_add (&total_allocations, is_realloc, size);
@@ -158,7 +157,7 @@ func_stats_add (const void *caller, int is_realloc, size_t size)
 		func_stats[i] = elt;
 		elt->addr = caller;
 		elt->name = resolve_addr (caller);
-		memset (&elt->stat, 0, sizeof (struct alloc_stat_t));
+		memset (&elt->stat, 0, sizeof (struct alloc_stats_t));
 	}
 
 	alloc_stats_add (&elt->stat, is_realloc, size);
@@ -254,7 +253,7 @@ add_alloc_stats (struct alloc_stats_t *a, struct alloc_stats_t *b)
 static void
 dump_alloc_stats (struct alloc_stats_t *stats, const char *name)
 {
-	printf ("%8d %'11qd	%8d %'11qd	%8d %'11qd	%s\n",
+	printf ("%8u %'11llu	%8u %'11llu	%8u %'11llu	%s\n",
 		stats->total.num, stats->total.size,
 		stats->malloc.num, stats->malloc.size,
 		stats->realloc.num, stats->realloc.size,
