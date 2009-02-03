@@ -201,6 +201,50 @@ _cairo_gl_set_operator (cairo_operator_t op)
     return CAIRO_STATUS_SUCCESS;
 }
 
+static void
+_cairo_gl_set_texture_surface (int tex_unit, cairo_gl_surface_t *surface,
+			       cairo_surface_attributes_t *attributes)
+{
+    assert(surface->base.backend = &_cairo_gl_surface_backend);
+    glActiveTexture (GL_TEXTURE0 + tex_unit);
+    glBindTexture (GL_TEXTURE_2D, surface->tex);
+    switch (attributes->extend) {
+    case CAIRO_EXTEND_NONE:
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	break;
+    case CAIRO_EXTEND_PAD:
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	break;
+    case CAIRO_EXTEND_REPEAT:
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	break;
+    case CAIRO_EXTEND_REFLECT:
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+	break;
+    }
+    switch (attributes->filter) {
+    case CAIRO_FILTER_FAST:
+    case CAIRO_FILTER_NEAREST:
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	break;
+    case CAIRO_FILTER_GOOD:
+    case CAIRO_FILTER_BEST:
+    case CAIRO_FILTER_BILINEAR:
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	break;
+    default:
+    case CAIRO_FILTER_GAUSSIAN:
+	ASSERT_NOT_REACHED;
+    }
+    glEnable (GL_TEXTURE_2D);
+}
+
 cairo_surface_t *
 cairo_gl_surface_create (cairo_gl_context_t   *ctx,
 			 cairo_content_t	content,
@@ -566,6 +610,333 @@ _cairo_gl_surface_clone_similar (void		     *abstract_surface,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
+/** Creates a cairo-gl pattern surface for the given trapezoids */
+static cairo_status_t
+_cairo_gl_get_traps_pattern (cairo_gl_surface_t *dst,
+			     int dst_x, int dst_y,
+			     int width, int height,
+			     cairo_trapezoid_t *traps,
+			     int num_traps,
+			     cairo_pattern_t **pattern)
+{
+    pixman_trapezoid_t stack_traps[CAIRO_STACK_ARRAY_LENGTH (pixman_trapezoid_t)];
+    pixman_trapezoid_t *pixman_traps;
+    cairo_image_surface_t *image_surface;
+    cairo_surface_t *gl_surface;
+    cairo_status_t status;
+    int gl_offset_x, gl_offset_y;
+    int i;
+
+    /* Convert traps to pixman traps */
+    pixman_traps = stack_traps;
+    if (num_traps > ARRAY_LENGTH (stack_traps)) {
+	pixman_traps = _cairo_malloc_ab (num_traps, sizeof (pixman_trapezoid_t));
+	if (unlikely (pixman_traps == NULL))
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+
+    for (i = 0; i < num_traps; i++) {
+	pixman_traps[i].top = _cairo_fixed_to_16_16 (traps[i].top);
+	pixman_traps[i].bottom = _cairo_fixed_to_16_16 (traps[i].bottom);
+	pixman_traps[i].left.p1.x = _cairo_fixed_to_16_16 (traps[i].left.p1.x);
+	pixman_traps[i].left.p1.y = _cairo_fixed_to_16_16 (traps[i].left.p1.y);
+	pixman_traps[i].left.p2.x = _cairo_fixed_to_16_16 (traps[i].left.p2.x);
+	pixman_traps[i].left.p2.y = _cairo_fixed_to_16_16 (traps[i].left.p2.y);
+	pixman_traps[i].right.p1.x = _cairo_fixed_to_16_16 (traps[i].right.p1.x);
+	pixman_traps[i].right.p1.y = _cairo_fixed_to_16_16 (traps[i].right.p1.y);
+	pixman_traps[i].right.p2.x = _cairo_fixed_to_16_16 (traps[i].right.p2.x);
+	pixman_traps[i].right.p2.y = _cairo_fixed_to_16_16 (traps[i].right.p2.y);
+    }
+
+    image_surface = (cairo_image_surface_t*)
+	cairo_image_surface_create (CAIRO_FORMAT_A8, width, height);
+    if (image_surface->base.status) {
+	if (pixman_traps != stack_traps)
+	    free (pixman_traps);
+	return image_surface->base.status;
+    }
+
+    pixman_add_trapezoids (image_surface->pixman_image, -dst_x, -dst_y,
+			   num_traps, pixman_traps);
+
+    if (pixman_traps != stack_traps)
+	free (pixman_traps);
+
+    status = _cairo_surface_clone_similar (&dst->base, &image_surface->base,
+					   0, 0, width, height,
+					   &gl_offset_x, &gl_offset_y,
+					   &gl_surface);
+    cairo_surface_destroy (&image_surface->base);
+    if (status)
+	return status;
+
+    *pattern = cairo_pattern_create_for_surface (gl_surface);
+    cairo_surface_destroy (gl_surface);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+/**
+ * Like cairo_pattern_acquire_surface, but returns a matrix that transforms
+ * from dest to src coords.
+ */
+static cairo_status_t
+_cairo_gl_pattern_acquire_surface (const cairo_pattern_t *src,
+				   cairo_gl_surface_t *dst,
+				   int src_x, int src_y,
+				   int dst_x, int dst_y,
+				   int width, int height,
+				   cairo_gl_surface_t **out_surface,
+				   cairo_surface_attributes_t *out_attributes)
+{
+    cairo_status_t status;
+    cairo_matrix_t m;
+    cairo_gl_surface_t *surface;
+
+    status = _cairo_pattern_acquire_surface (src, &dst->base,
+					     src_x, src_y,
+					     width, height,
+					     (cairo_surface_t **)
+					     &surface,
+					     out_attributes);
+    if (unlikely (status))
+	return status;
+
+    assert(surface->base.backend == &_cairo_gl_surface_backend);
+    *out_surface = surface;
+
+    /* Translate the matrix from
+     * (unnormalized src -> unnormalized src) to
+     * (unnormalized dst -> unnormalized src)
+     */
+    cairo_matrix_init_translate (&m,
+				 src_x - dst_x + out_attributes->x_offset,
+				 src_y - dst_y + out_attributes->y_offset);
+    cairo_matrix_multiply (&out_attributes->matrix,
+			   &m,
+			   &out_attributes->matrix);
+
+
+    /* Translate the matrix from
+     * (unnormalized src -> unnormalized src) to
+     * (unnormalized dst -> normalized src)
+     */
+    cairo_matrix_init_scale (&m,
+			     1.0 / surface->width,
+			     1.0 / surface->height);
+    cairo_matrix_multiply (&out_attributes->matrix,
+			   &out_attributes->matrix,
+			   &m);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
+_cairo_gl_surface_composite (cairo_operator_t		  op,
+			     const cairo_pattern_t	 *src,
+			     const cairo_pattern_t	 *mask,
+			     void			 *abstract_dst,
+			     int			  src_x,
+			     int			  src_y,
+			     int			  mask_x,
+			     int			  mask_y,
+			     int			  dst_x,
+			     int			  dst_y,
+			     unsigned int		  width,
+			     unsigned int		  height)
+{
+    cairo_gl_surface_t	*dst = abstract_dst;
+    cairo_gl_surface_t *src_surface, *mask_surface;
+    cairo_surface_attributes_t src_attributes, mask_attributes;
+    cairo_gl_context_t *ctx;
+    GLfloat vertices[4][2];
+    GLfloat texcoord_src[4][2];
+    GLfloat texcoord_mask[4][2];
+    cairo_status_t status;
+    int i;
+    GLenum err;
+    GLfloat constant_color[4] = {0.0, 0.0, 0.0, 1.0};
+
+    status = _cairo_gl_pattern_acquire_surface(src, dst,
+					       src_x, src_y,
+					       dst_x, dst_y,
+					       width, height,
+					       &src_surface,
+					       &src_attributes);
+    if (unlikely (status))
+	return status;
+
+    if (mask != NULL && _cairo_pattern_is_opaque(mask))
+	mask = NULL;
+
+    if (mask != NULL) {
+	status = _cairo_gl_pattern_acquire_surface(mask, dst,
+						   mask_x, mask_y,
+						   dst_x, dst_y,
+						   width, height,
+						   &mask_surface,
+						   &mask_attributes);
+	if (unlikely (status)) {
+	    _cairo_pattern_release_surface(src,
+					   &src_surface->base,
+					   &src_attributes);
+	    return status;
+	}
+    }
+
+    ctx = _cairo_gl_context_acquire (dst->ctx);
+    _cairo_gl_set_destination (dst);
+    status = _cairo_gl_set_operator (op);
+    if (status != CAIRO_STATUS_SUCCESS) {
+	_cairo_gl_context_release (ctx);
+	return status;
+    }
+
+    glEnable (GL_BLEND);
+
+    /* Set up the constant color we use to set alpha to 1 if needed. */
+    glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, constant_color);
+    _cairo_gl_set_texture_surface (0, src_surface, &src_attributes);
+    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
+    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
+
+    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE0);
+    /* Wire the src alpha to 1 if the surface doesn't have it.
+     * We may have a teximage with alpha bits even though we didn't ask
+     * for it and we don't pay attention to setting alpha to 1 in a dest
+     * that has inadvertent alpha.
+     */
+    if (src_surface->base.content != CAIRO_CONTENT_COLOR)
+	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE0);
+    else
+	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_CONSTANT);
+    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+    if (mask != NULL) {
+	_cairo_gl_set_texture_surface (1, mask_surface, &mask_attributes);
+
+	/* IN: dst.argb = src.argb * mask.aaaa */
+	glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
+	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
+
+	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PREVIOUS);
+	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_PREVIOUS);
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+
+	glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_RGB, GL_TEXTURE1);
+	glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_TEXTURE1);
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_ALPHA);
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA);
+    }
+
+    vertices[0][0] = dst_x;
+    vertices[0][1] = dst_y;
+    vertices[1][0] = dst_x + width;
+    vertices[1][1] = dst_y;
+    vertices[2][0] = dst_x + width;
+    vertices[2][1] = dst_y + height;
+    vertices[3][0] = dst_x;
+    vertices[3][1] = dst_y + height;
+
+    glVertexPointer (2, GL_FLOAT, sizeof(GLfloat) * 2, vertices);
+    glEnableClientState (GL_VERTEX_ARRAY);
+
+    for (i = 0; i < 4; i++) {
+	double s, t;
+
+	s = vertices[i][0];
+	t = vertices[i][1];
+	cairo_matrix_transform_point (&src_attributes.matrix, &s, &t);
+	texcoord_src[i][0] = s;
+	texcoord_src[i][1] = t;
+    }
+
+    glClientActiveTexture (GL_TEXTURE0);
+    glTexCoordPointer (2, GL_FLOAT, sizeof(GLfloat) * 2, texcoord_src);
+    glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+
+    if (mask != NULL) {
+	for (i = 0; i < 4; i++) {
+	    double s, t;
+
+	    s = vertices[i][0];
+	    t = vertices[i][1];
+	    cairo_matrix_transform_point (&mask_attributes.matrix, &s, &t);
+	    texcoord_mask[i][0] = s;
+	    texcoord_mask[i][1] = t;
+	}
+
+	glClientActiveTexture (GL_TEXTURE1);
+	glTexCoordPointer (2, GL_FLOAT, sizeof(GLfloat) * 2, texcoord_mask);
+	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+    }
+
+    glDrawArrays (GL_TRIANGLE_FAN, 0, 4);
+
+    glDisable (GL_BLEND);
+
+    glDisableClientState (GL_VERTEX_ARRAY);
+
+    glClientActiveTexture (GL_TEXTURE0);
+    glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+    glActiveTexture (GL_TEXTURE0);
+    glDisable (GL_TEXTURE_2D);
+
+    glClientActiveTexture (GL_TEXTURE1);
+    glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+    glActiveTexture (GL_TEXTURE1);
+    glDisable (GL_TEXTURE_2D);
+
+    while ((err = glGetError ()))
+	fprintf(stderr, "GL error 0x%08x\n", (int) err);
+
+    _cairo_gl_context_release (ctx);
+
+    _cairo_pattern_release_surface (src, &src_surface->base, &src_attributes);
+    if (mask != NULL)
+	_cairo_pattern_release_surface (mask, &mask_surface->base, &mask_attributes);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
+_cairo_gl_surface_composite_trapezoids (cairo_operator_t op,
+					const cairo_pattern_t *pattern,
+					void *abstract_dst,
+					cairo_antialias_t antialias,
+					int src_x, int src_y,
+					int dst_x, int dst_y,
+					unsigned int width,
+					unsigned int height,
+					cairo_trapezoid_t *traps,
+					int num_traps)
+{
+    cairo_gl_surface_t *dst = abstract_dst;
+    cairo_pattern_t *traps_pattern;
+    cairo_int_status_t status;
+
+    status = _cairo_gl_get_traps_pattern (dst,
+					  dst_x, dst_y, width, height,
+					  traps, num_traps,
+					  &traps_pattern);
+    if (status) {
+	fprintf(stderr, "traps falllback\n");
+	return status;
+    }
+
+    status = _cairo_gl_surface_composite (op, pattern, traps_pattern, dst,
+					  src_x, src_y,
+					  0, 0,
+					  dst_x, dst_y,
+					  width, height);
+    cairo_pattern_destroy (traps_pattern);
+
+    return status;
+}
+
 static cairo_int_status_t
 _cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
 				   cairo_operator_t	    op,
@@ -660,9 +1031,9 @@ static const cairo_surface_backend_t _cairo_gl_surface_backend = {
     _cairo_gl_surface_acquire_dest_image,
     _cairo_gl_surface_release_dest_image,
     _cairo_gl_surface_clone_similar,
-    NULL, /* composite */
+    _cairo_gl_surface_composite,
     _cairo_gl_surface_fill_rectangles,
-    NULL, /* composite_trapezoids */
+    _cairo_gl_surface_composite_trapezoids,
     NULL, /* create_span_renderer */
     NULL, /* check_span_renderer */
     NULL, /* copy_page */
