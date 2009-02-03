@@ -29,8 +29,8 @@
 
 #include "cairo-test.h"
 
-#ifdef INFINITY
-#define HAVE_INFINITY 1
+#if defined(HAVE_IEEE754) && !defined(INFINITY)
+#define INFINITY (0./1.)
 #endif
 
 #if HAVE_FEDISABLEEXCEPT
@@ -79,12 +79,10 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
     status = cairo_matrix_invert (&bogus);
     CHECK_STATUS (status, "cairo_matrix_invert(NaN)");
 
-#if HAVE_INFINITY
     inf.x0 = inf.xy = inf.xx = INFINITY;
     inf.y0 = inf.yx = inf.yy = inf.xx;
     status = cairo_matrix_invert (&inf);
     CHECK_STATUS (status, "cairo_matrix_invert(infinity)");
-#endif
 
     /* test cairo_matrix_invert with invalid matrix */
     status = cairo_matrix_invert (&invalid);
@@ -111,7 +109,6 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
     cairo_destroy (cr2);
     CHECK_STATUS (status, "cairo_transform(NaN)");
 
-#if HAVE_INFINITY
     /* test cairo_transform with ∞ matrix */
     cr2 = cairo_create (target);
     cairo_transform (cr2, &inf);
@@ -119,7 +116,6 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
     status = cairo_status (cr2);
     cairo_destroy (cr2);
     CHECK_STATUS (status, "cairo_transform(infinity)");
-#endif
 
 
     /* test cairo_set_matrix with invalid matrix */
@@ -138,7 +134,6 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
     cairo_destroy (cr2);
     CHECK_STATUS (status, "cairo_set_matrix(NaN)");
 
-#if HAVE_INFINITY
     /* test cairo_set_matrix with ∞ matrix */
     cr2 = cairo_create (target);
     cairo_set_matrix (cr2, &inf);
@@ -146,7 +141,6 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
     status = cairo_status (cr2);
     cairo_destroy (cr2);
     CHECK_STATUS (status, "cairo_set_matrix(infinity)");
-#endif
 
 
     /* test cairo_set_font_matrix with invalid matrix */
@@ -171,7 +165,6 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
     cairo_destroy (cr2);
     CHECK_STATUS (status, "cairo_set_font_matrix(NaN)");
 
-#if HAVE_INFINITY
     /* test cairo_set_font_matrix with ∞ matrix */
     cr2 = cairo_create (target);
     cairo_set_font_matrix (cr2, &inf);
@@ -182,7 +175,6 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
     status = cairo_status (cr2);
     cairo_destroy (cr2);
     CHECK_STATUS (status, "cairo_set_font_matrix(infinity)");
-#endif
 
 
     /* test cairo_scaled_font_create with invalid matrix */
@@ -235,7 +227,6 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
     cairo_font_options_destroy (font_options);
     cairo_destroy (cr2);
 
-#if HAVE_INFINITY
     /* test cairo_scaled_font_create with ∞ matrix */
     cr2 = cairo_create (target);
     font_face = cairo_get_font_face (cr2);
@@ -260,7 +251,6 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
     cairo_scaled_font_destroy (scaled_font);
     cairo_font_options_destroy (font_options);
     cairo_destroy (cr2);
-#endif
 
 
     /* test cairo_pattern_set_matrix with invalid matrix */
@@ -277,14 +267,12 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
     CHECK_STATUS (status, "cairo_pattern_set_matrix(NaN)");
     cairo_pattern_destroy (pattern);
 
-#if HAVE_INFINITY
     /* test cairo_pattern_set_matrix with ∞ matrix */
     pattern = cairo_pattern_create_rgb (1.0, 1.0, 1.0);
     cairo_pattern_set_matrix (pattern, &inf);
     status = cairo_pattern_status (pattern);
     CHECK_STATUS (status, "cairo_pattern_set_matrix(infinity)");
     cairo_pattern_destroy (pattern);
-#endif
 
 
     /* test invalid transformations */
@@ -303,7 +291,6 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
     CHECK_STATUS (status, "cairo_translate(NaN, 0)");
     cairo_destroy (cr2);
 
-#if HAVE_INFINITY
     cr2 = cairo_create (target);
     cairo_translate (cr2, inf.xx, inf.yy);
     CHECK_STATUS (status, "cairo_translate(∞, ∞)");
@@ -318,7 +305,6 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
     cairo_translate (cr2, inf.xx, 0);
     CHECK_STATUS (status, "cairo_translate(∞, 0)");
     cairo_destroy (cr2);
-#endif
 
 
     cr2 = cairo_create (target);
@@ -336,7 +322,6 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
     CHECK_STATUS (status, "cairo_scale(NaN, 1)");
     cairo_destroy (cr2);
 
-#if HAVE_INFINITY
     cr2 = cairo_create (target);
     cairo_scale (cr2, inf.xx, inf.yy);
     CHECK_STATUS (status, "cairo_scale(∞, ∞)");
@@ -351,7 +336,6 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
     cairo_scale (cr2, inf.xx, 1);
     CHECK_STATUS (status, "cairo_scale(∞, 1)");
     cairo_destroy (cr2);
-#endif
 
     cr2 = cairo_create (target);
     cairo_scale (cr2, bogus.xx, bogus.yy);
@@ -374,12 +358,10 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
     CHECK_STATUS (status, "cairo_rotate(NaN)");
     cairo_destroy (cr2);
 
-#if HAVE_INFINITY
     cr2 = cairo_create (target);
     cairo_rotate (cr2, inf.xx);
     CHECK_STATUS (status, "cairo_rotate(∞)");
     cairo_destroy (cr2);
-#endif
 
     return CAIRO_TEST_SUCCESS;
 }
