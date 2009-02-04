@@ -394,7 +394,7 @@ _cairo_restrict_value (double *value, double min, double max)
 }
 
 /* This function is identical to the C99 function lround(), except that it
- * performs arithmetic rounding (instead of away-from-zero rounding) and
+ * performs arithmetic rounding (floor(d + .5) instead of away-from-zero rounding) and
  * has a valid input range of (INT_MIN, INT_MAX] instead of
  * [INT_MIN, INT_MAX]. It is much faster on both x86 and FPU-less systems
  * than other commonly used methods for rounding (lround, round, rint, lrint
