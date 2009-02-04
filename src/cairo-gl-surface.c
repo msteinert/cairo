@@ -237,9 +237,11 @@ _cairo_gl_surface_create_similar (void		 *abstract_surface,
 				  int		  width,
 				  int		  height)
 {
+    cairo_gl_surface_t *surface = abstract_surface;
+
     assert (CAIRO_CONTENT_VALID (content));
 
-    return cairo_gl_surface_create (NULL, content, width, height);
+    return cairo_gl_surface_create (surface->ctx, content, width, height);
 }
 
 
