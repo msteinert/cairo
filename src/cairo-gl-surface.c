@@ -476,6 +476,33 @@ _cairo_gl_surface_clone_similar (void		     *abstract_surface,
 	*clone_out = cairo_surface_reference (src);
 
 	return CAIRO_STATUS_SUCCESS;
+    } else if (_cairo_surface_is_image (src)) {
+	cairo_gl_surface_t *clone;
+	cairo_image_surface_t *image_src = (cairo_image_surface_t *)src;
+	cairo_status_t status;
+
+	clone = (cairo_gl_surface_t *)
+	    _cairo_gl_surface_create_similar (&surface->base, src->content,
+					      width, height);
+	if (clone == NULL)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	if (clone->base.status)
+	    return clone->base.status;
+
+	status = _cairo_gl_surface_draw_image (clone, image_src,
+					       src_x, src_y,
+					       width, height,
+					       0, 0);
+	if (status) {
+	    cairo_surface_destroy (&clone->base);
+	    return status;
+	}
+
+	*clone_out = &clone->base;
+	*clone_offset_x = src_x;
+	*clone_offset_y = src_y;
+
+	return CAIRO_STATUS_SUCCESS;
     }
 
     return CAIRO_INT_STATUS_UNSUPPORTED;
