@@ -30,7 +30,7 @@
 #include "cairo-test.h"
 
 #if defined(HAVE_IEEE754) && !defined(INFINITY)
-#define INFINITY (0./1.)
+#define INFINITY (1./0.)
 #endif
 
 #if HAVE_FEDISABLEEXCEPT
