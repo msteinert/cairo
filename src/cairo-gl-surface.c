@@ -346,6 +346,16 @@ _cairo_gl_surface_create_similar (void		 *abstract_surface,
     return cairo_gl_surface_create (surface->ctx, content, width, height);
 }
 
+static cairo_bool_t
+_cairo_gl_surface_draw_image_format_compatible (cairo_image_surface_t *surface)
+{
+    if (surface->pixman_format == PIXMAN_a8r8g8b8 ||
+	surface->pixman_format == PIXMAN_x8r8g8b8 ||
+	surface->pixman_format == PIXMAN_a8)
+	return TRUE;
+    else
+	return FALSE;
+}
 
 static cairo_status_t
 _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
@@ -583,6 +593,9 @@ _cairo_gl_surface_clone_similar (void		     *abstract_surface,
 	cairo_image_surface_t *image_src = (cairo_image_surface_t *)src;
 	cairo_status_t status;
 
+	if (!_cairo_gl_surface_draw_image_format_compatible (image_src))
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
 	clone = (cairo_gl_surface_t *)
 	    _cairo_gl_surface_create_similar (&surface->base, src->content,
 					      width, height);
@@ -692,6 +705,21 @@ _cairo_gl_pattern_acquire_surface (const cairo_pattern_t *src,
     cairo_status_t status;
     cairo_matrix_t m;
     cairo_gl_surface_t *surface;
+
+    /* Avoid looping in acquire surface fallback -> clone similar -> paint ->
+     * gl_composite -> acquire surface -> fallback.
+     */
+    if (src->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	cairo_surface_pattern_t *surface_pattern;
+	cairo_image_surface_t *image_surface;
+
+	surface_pattern = (cairo_surface_pattern_t *)src;
+	if (_cairo_surface_is_image (surface_pattern->surface)) {
+	    image_surface = (cairo_image_surface_t *)surface_pattern->surface;
+	    if (!_cairo_gl_surface_draw_image_format_compatible (image_surface))
+		return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+    }
 
     status = _cairo_pattern_acquire_surface (src, &dst->base,
 					     src_x, src_y,
