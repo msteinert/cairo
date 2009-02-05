@@ -274,6 +274,13 @@ cairo_gl_surface_create (cairo_gl_context_t   *ctx,
     surface->width = width;
     surface->height = height;
 
+    /* Cairo surfaces start out initialized to transparent (black) */
+    ctx = _cairo_gl_context_acquire (surface->ctx);
+    _cairo_gl_set_destination (surface);
+    glClearColor (0.0, 0.0, 0.0, 0.0);
+    glClear (GL_COLOR_BUFFER_BIT);
+    _cairo_gl_context_release (ctx);
+
     return &surface->base;
 }
 
