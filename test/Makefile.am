@@ -977,7 +977,6 @@ REFERENCE_IMAGES = \
 	trap-clip.ps2.argb32.ref.png \
 	trap-clip.ps2.rgb24.ref.png \
 	twin.ref.png \
-	twin.pdf.ref.png \
 	twin.ps.ref.png \
 	twin.svg.ref.png \
 	unantialiased-shapes.ref.png	\
