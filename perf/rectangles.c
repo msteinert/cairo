@@ -96,6 +96,9 @@ rectangles (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
     int i;
 
+    if (! cairo_perf_can_run (perf, "rectangles"))
+	return;
+
     srand (8478232);
     for (i = 0; i < RECTANGLE_COUNT; i++)
     {

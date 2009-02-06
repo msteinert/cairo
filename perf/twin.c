@@ -46,5 +46,8 @@ twin (cairo_perf_t *perf,
       int           width,
       int           height)
 {
+    if (! cairo_perf_can_run (perf, "twin"))
+	return;
+
     cairo_perf_run (perf, "twin", do_twin);
 }

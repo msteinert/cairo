@@ -63,5 +63,8 @@ do_long_dashed_lines (cairo_t *cr, int width, int height)
 void
 long_dashed_lines (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
+    if (! cairo_perf_can_run (perf, "long-dashed-lines"))
+	return;
+
     cairo_perf_run (perf, "long-dashed-lines", do_long_dashed_lines);
 }

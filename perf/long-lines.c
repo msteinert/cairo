@@ -112,6 +112,9 @@ long_lines_cropped (cairo_t *cr, int width, int height)
 void
 long_lines (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
+    if (! cairo_perf_can_run (perf, "long-lines"))
+	return;
+
     cairo_perf_run (perf, "long-lines-uncropped", long_lines_uncropped);
     cairo_perf_run (perf, "long-lines-cropped", long_lines_cropped);
 }

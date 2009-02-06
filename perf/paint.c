@@ -40,5 +40,8 @@ do_paint (cairo_t *cr, int width, int height)
 void
 paint (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
+    if (! cairo_perf_can_run (perf, "paint"))
+	return;
+
     cairo_perf_cover_sources_and_operators (perf, "paint", do_paint);
 }

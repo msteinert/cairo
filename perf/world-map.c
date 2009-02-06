@@ -105,5 +105,8 @@ do_world_map (cairo_t *cr, int width, int height)
 void
 world_map (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
+    if (! cairo_perf_can_run (perf, "world_map"))
+	return;
+
     cairo_perf_run (perf, "world_map", do_world_map);
 }

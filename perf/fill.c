@@ -45,5 +45,8 @@ do_fill (cairo_t *cr, int width, int height)
 void
 fill (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
+    if (! cairo_perf_can_run (perf, "fill"))
+	return;
+
     cairo_perf_cover_sources_and_operators (perf, "fill", do_fill);
 }

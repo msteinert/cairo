@@ -92,6 +92,9 @@ random_nz (cairo_t *cr, int width, int height)
 void
 intersections (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
+    if (! cairo_perf_can_run (perf, "intersections"))
+	return;
+
     cairo_perf_run (perf, "intersections-nz-fill", random_nz);
     cairo_perf_run (perf, "intersections-eo-fill", random_eo);
 }

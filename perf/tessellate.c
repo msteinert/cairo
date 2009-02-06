@@ -143,6 +143,9 @@ tessellate_256 (cairo_t *cr, int width, int height)
 void
 tessellate (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
+    if (! cairo_perf_can_run (perf, "tessellate"))
+	return;
+
     cairo_perf_run (perf, "tessellate-16", tessellate_16);
     cairo_perf_run (perf, "tessellate-64", tessellate_64);
     cairo_perf_run (perf, "tessellate-256", tessellate_256);

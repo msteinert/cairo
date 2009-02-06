@@ -201,6 +201,9 @@ do_dragon_solid (cairo_t *cr, int width, int height)
 void
 dragon (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
+    if (! cairo_perf_can_run (perf, "dragon"))
+	return;
+
     cairo_perf_run (perf, "dragon-solid", do_dragon_solid);
     cairo_perf_run (perf, "dragon", do_dragon);
 }

@@ -141,6 +141,22 @@ cairo_perf_has_similar (cairo_perf_t *perf)
     return TRUE;
 }
 
+cairo_bool_t
+cairo_perf_can_run (cairo_perf_t	*perf,
+		    const char		*name)
+{
+    unsigned int i;
+
+    if (perf->num_names == 0)
+	return TRUE;
+
+    for (i = 0; i < perf->num_names; i++)
+	if (strstr (name, perf->names[i]))
+	    return TRUE;
+
+    return FALSE;
+}
+
 void
 cairo_perf_run (cairo_perf_t		*perf,
 		const char		*name,
@@ -151,14 +167,6 @@ cairo_perf_run (cairo_perf_t		*perf,
     cairo_perf_ticks_t *times;
     cairo_stats_t stats = {0.0, 0.0};
     int low_std_dev_count;
-
-    if (perf->num_names) {
-	for (i = 0; i < perf->num_names; i++)
-	    if (strstr (name, perf->names[i]))
-		goto NAME_FOUND;
-	return;
-    }
-  NAME_FOUND:
 
     if (perf->list_only) {
 	printf ("%s\n", name);
