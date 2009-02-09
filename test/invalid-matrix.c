@@ -29,8 +29,8 @@
 
 #include "cairo-test.h"
 
-#if defined(HAVE_IEEE754) && !defined(INFINITY)
-#define INFINITY (1./0.)
+#if !defined(INFINITY) && defined(_MSC_VER)
+#define INFINITY HUGE_VAL
 #endif
 
 #if HAVE_FEDISABLEEXCEPT

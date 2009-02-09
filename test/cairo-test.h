@@ -60,9 +60,6 @@ typedef unsigned __int64 uint64_t;
 
 #include <math.h>
 
-/* remove this if you don't have IEEE754 floating point */
-#define HAVE_IEEE754
-
 typedef enum cairo_test_status {
     CAIRO_TEST_SUCCESS = 0,
     CAIRO_TEST_NO_MEMORY,
