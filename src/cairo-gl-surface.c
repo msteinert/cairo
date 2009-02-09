@@ -161,16 +161,22 @@ _cairo_gl_context_release (cairo_gl_context_t *ctx)
 static void
 _cairo_gl_set_destination (cairo_gl_surface_t *surface)
 {
-    if (surface->fb) {
-	glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, surface->fb);
-	glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
-	glReadBuffer (GL_COLOR_ATTACHMENT0_EXT);
-    } else {
-	/* Set the window as the target of our context. */
-	glXMakeCurrent (surface->ctx->dpy, surface->win, surface->ctx->gl_ctx);
-	glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
-	glDrawBuffer (GL_BACK_LEFT);
-	glReadBuffer (GL_BACK_LEFT);
+    cairo_gl_context_t *ctx = surface->ctx;
+
+    if (ctx->current_target != surface) {
+	ctx->current_target = surface;
+
+	if (surface->fb) {
+	    glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, surface->fb);
+	    glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
+	    glReadBuffer (GL_COLOR_ATTACHMENT0_EXT);
+	} else {
+	    /* Set the window as the target of our context. */
+	    glXMakeCurrent (ctx->dpy, surface->win, ctx->gl_ctx);
+	    glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
+	    glDrawBuffer (GL_BACK_LEFT);
+	    glReadBuffer (GL_BACK_LEFT);
+	}
     }
 
     glViewport (0, 0, surface->width, surface->height);
@@ -588,6 +594,10 @@ _cairo_gl_surface_finish (void *abstract_surface)
 
     glDeleteFramebuffersEXT (1, &surface->fb);
     glDeleteTextures (1, &surface->tex);
+
+    if (surface->ctx->current_target == surface)
+	surface->ctx->current_target = NULL;
+
     cairo_gl_context_destroy(surface->ctx);
 
     return CAIRO_STATUS_SUCCESS;
