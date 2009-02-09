@@ -630,6 +630,7 @@ _cairo_gl_get_traps_pattern (cairo_gl_surface_t *dst,
 			     int width, int height,
 			     cairo_trapezoid_t *traps,
 			     int num_traps,
+			     cairo_antialias_t antialias,
 			     cairo_pattern_t **pattern)
 {
     pixman_trapezoid_t stack_traps[CAIRO_STACK_ARRAY_LENGTH (pixman_trapezoid_t)];
@@ -661,8 +662,14 @@ _cairo_gl_get_traps_pattern (cairo_gl_surface_t *dst,
 	pixman_traps[i].right.p2.y = _cairo_fixed_to_16_16 (traps[i].right.p2.y);
     }
 
-    image_surface = (cairo_image_surface_t*)
-	cairo_image_surface_create (CAIRO_FORMAT_A8, width, height);
+    if (antialias != CAIRO_ANTIALIAS_NONE) {
+	image_surface = (cairo_image_surface_t*)
+	    cairo_image_surface_create (CAIRO_FORMAT_A8, width, height);
+    } else {
+	image_surface = (cairo_image_surface_t*)
+	    cairo_image_surface_create (CAIRO_FORMAT_A1, width, height);
+    }
+
     if (image_surface->base.status) {
 	if (pixman_traps != stack_traps)
 	    free (pixman_traps);
@@ -948,7 +955,7 @@ _cairo_gl_surface_composite_trapezoids (cairo_operator_t op,
 
     status = _cairo_gl_get_traps_pattern (dst,
 					  dst_x, dst_y, width, height,
-					  traps, num_traps,
+					  traps, num_traps, antialias,
 					  &traps_pattern);
     if (status) {
 	fprintf(stderr, "traps falllback\n");
