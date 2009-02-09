@@ -54,6 +54,7 @@ typedef struct _cairo_gl_surface {
     cairo_content_t content;
     int width, height;
 
+    Window win; /* window if not rendering to FBO */
     GLuint tex; /* GL texture object containing our data. */
     GLuint fb; /* GL framebuffer object wrapping our data. */
 } cairo_gl_surface_t;
@@ -74,6 +75,11 @@ const cairo_gl_context_t _nil_context = {
     CAIRO_REFERENCE_COUNT_INVALID,
     CAIRO_STATUS_NO_MEMORY
 };
+
+static cairo_bool_t _cairo_surface_is_gl (cairo_surface_t *surface)
+{
+    return surface->backend == &_cairo_gl_surface_backend;
+}
 
 static cairo_gl_context_t *
 _cairo_gl_context_create_in_error (cairo_status_t status)
@@ -155,15 +161,26 @@ _cairo_gl_context_release (cairo_gl_context_t *ctx)
 static void
 _cairo_gl_set_destination (cairo_gl_surface_t *surface)
 {
-    glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, surface->fb);
-    glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
-    glReadBuffer (GL_COLOR_ATTACHMENT0_EXT);
+    if (surface->fb) {
+	glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, surface->fb);
+	glDrawBuffer (GL_COLOR_ATTACHMENT0_EXT);
+	glReadBuffer (GL_COLOR_ATTACHMENT0_EXT);
+    } else {
+	/* Set the window as the target of our context. */
+	glXMakeCurrent (surface->ctx->dpy, surface->win, surface->ctx->gl_ctx);
+	glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, 0);
+	glDrawBuffer (GL_BACK_LEFT);
+	glReadBuffer (GL_BACK_LEFT);
+    }
 
     glViewport (0, 0, surface->width, surface->height);
 
     glMatrixMode (GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, surface->width, 0, surface->height, -1.0, 1.0);
+    if (surface->fb)
+	glOrtho(0, surface->width, 0, surface->height, -1.0, 1.0);
+    else
+	glOrtho(0, surface->width, surface->height, 0, -1.0, 1.0);
 
     glMatrixMode (GL_MODELVIEW);
     glLoadIdentity();
@@ -326,6 +343,66 @@ cairo_gl_surface_create (cairo_gl_context_t   *ctx,
     _cairo_gl_context_release (ctx);
 
     return &surface->base;
+}
+
+
+cairo_surface_t *
+cairo_gl_surface_create_for_window (cairo_gl_context_t   *ctx,
+				    Window                win,
+				    int                   width,
+				    int                   height)
+{
+    cairo_gl_surface_t *surface;
+    cairo_content_t content = CAIRO_CONTENT_COLOR_ALPHA;
+
+    surface = calloc (1, sizeof (cairo_gl_surface_t));
+    if (unlikely (surface == NULL))
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+
+    _cairo_surface_init (&surface->base,
+			 &_cairo_gl_surface_backend,
+			 content);
+
+    surface->ctx = cairo_gl_context_reference (ctx);
+    surface->content = content;
+    surface->width = width;
+    surface->height = height;
+    surface->win = win;
+
+    return &surface->base;
+}
+
+void
+cairo_gl_surface_set_size (cairo_surface_t *abstract_surface,
+			   int              width,
+			   int              height)
+{
+    cairo_gl_surface_t *surface = (cairo_gl_surface_t *) abstract_surface;
+    cairo_status_t status;
+
+    if (! _cairo_surface_is_gl (abstract_surface) || surface->fb) {
+	status = _cairo_surface_set_error (abstract_surface,
+		                           CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return;
+    }
+
+    surface->width = width;
+    surface->height = height;
+}
+
+void
+cairo_gl_surface_swapbuffers (cairo_surface_t *abstract_surface)
+{
+    cairo_gl_surface_t *surface = (cairo_gl_surface_t *) abstract_surface;
+    cairo_status_t status;
+
+    if (! _cairo_surface_is_gl (abstract_surface) || surface->fb) {
+	status = _cairo_surface_set_error (abstract_surface,
+		                           CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return;
+    }
+
+    glXSwapBuffers(surface->ctx->dpy, surface->win);
 }
 
 static cairo_surface_t *

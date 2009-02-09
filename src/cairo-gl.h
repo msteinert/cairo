@@ -64,17 +64,16 @@ cairo_gl_surface_create (cairo_gl_context_t *ctx,
 cairo_public cairo_surface_t *
 cairo_gl_surface_create_for_window (cairo_gl_context_t *ctx,
 				    Window win,
-				    cairo_content_t content,
 				    int width, int height);
 
 cairo_public cairo_gl_context_t *
 cairo_gl_surface_get_context (cairo_surface_t *abstract_surface);
 
-cairo_public int
-cairo_gl_surface_get_width (cairo_surface_t *surface);
+cairo_public void
+cairo_gl_surface_set_size (cairo_surface_t *surface, int width, int height);
 
-cairo_public int
-cairo_gl_surface_get_height (cairo_surface_t *surface);
+cairo_public void
+cairo_gl_surface_swapbuffers (cairo_surface_t *surface);
 
 cairo_public cairo_status_t
 cairo_gl_surface_glfinish (cairo_surface_t *surface);
