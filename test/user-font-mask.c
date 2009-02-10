@@ -36,7 +36,12 @@
 #define BORDER 10
 #define TEXT_SIZE 64
 #define WIDTH  (TEXT_SIZE * 15 + 2*BORDER)
-#define HEIGHT ((TEXT_SIZE + 2*BORDER)*2)
+#ifndef ROTATED
+ #define HEIGHT ((TEXT_SIZE + 2*BORDER)*2)
+#else
+ #define HEIGHT WIDTH
+#endif
+#define END_GLYPH 0
 #define TEXT   "cairo"
 
 /* Reverse the bits in a byte with 7 operations (no 64-bit):
@@ -238,9 +243,5 @@ CAIRO_TEST (user_font_mask,
 	    "Tests a user-font using cairo_mask with bitmap images",
 	    "user-font, mask", /* keywords */
 	    NULL, /* requirements */
-#ifndef ROTATED
 	    WIDTH, HEIGHT,
-#else
-	    WIDTH, WIDTH,
-#endif
 	    NULL, draw)

@@ -35,7 +35,11 @@
 #define BORDER 10
 #define TEXT_SIZE 64
 #define WIDTH  (TEXT_SIZE * 15 + 2*BORDER)
-#define HEIGHT ((TEXT_SIZE + 2*BORDER)*2)
+#ifndef ROTATED
+ #define HEIGHT ((TEXT_SIZE + 2*BORDER)*2)
+#else
+ #define HEIGHT WIDTH
+#endif
 #define TEXT   "geez... cairo user-font"
 
 #define END_GLYPH 0
@@ -259,9 +263,5 @@ CAIRO_TEST (user_font,
 	    "Tests user font feature",
 	    "font, user-font", /* keywords */
 	    "cairo >= 1.7.4", /* requirements */
-#ifndef ROTATED
 	    WIDTH, HEIGHT,
-#else
-	    WIDTH, WIDTH,
-#endif
 	    NULL, draw)

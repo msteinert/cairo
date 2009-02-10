@@ -35,7 +35,11 @@
 #define BORDER 10
 #define TEXT_SIZE 64
 #define WIDTH  (TEXT_SIZE * 12 + 2*BORDER)
-#define HEIGHT ((TEXT_SIZE + 2*BORDER)*2)
+#ifndef ROTATED
+ #define HEIGHT ((TEXT_SIZE + 2*BORDER)*2)
+#else
+ #define HEIGHT WIDTH
+#endif
 #define TEXT   "geez... cairo user-font"
 
 static cairo_user_data_key_t fallback_font_key;
@@ -208,9 +212,5 @@ CAIRO_TEST (user_font_proxy,
 	    "Tests a user-font using a native font in its render_glyph",
 	    "font, user-font", /* keywords */
 	    "cairo >= 1.7.4", /* requirements */
-#ifndef ROTATED
 	    WIDTH, HEIGHT,
-#else
-	    WIDTH, WIDTH,
-#endif
 	    NULL, draw)
