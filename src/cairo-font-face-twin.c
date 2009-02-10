@@ -34,8 +34,6 @@
  *      Behdad Esfahbod <behdad@behdad.org>
  */
 
-#define _ISOC99_SOURCE /* for round() */
-
 #include "cairoint.h"
 
 #include <math.h>
@@ -255,8 +253,8 @@ compute_hinting_scales (cairo_t *cr,
     compute_hinting_scale (cr, x, y, y_scale, y_scale_inv);
 }
 
-#define SNAPXI(p)	(round ((p) * x_scale) * x_scale_inv)
-#define SNAPYI(p)	(round ((p) * y_scale) * y_scale_inv)
+#define SNAPXI(p)	(_cairo_round ((p) * x_scale) * x_scale_inv)
+#define SNAPYI(p)	(_cairo_round ((p) * y_scale) * y_scale_inv)
 
 /* This controls the global font size */
 #define F(g)		((g) / 72.)
