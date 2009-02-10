@@ -54,6 +54,10 @@
 #include <sys/wait.h>
 #endif
 
+#ifdef _MSC_VER
+#include <crtdbg.h>
+#endif
+
 typedef struct _cairo_test_list {
     const cairo_test_t *test;
     struct _cairo_test_list *next;
