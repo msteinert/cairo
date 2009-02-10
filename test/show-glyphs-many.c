@@ -109,7 +109,7 @@ get_glyph (cairo_t *cr, const char *utf8, cairo_glyph_t *glyph)
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
-    cairo_glyph_t glyphs[NUM_GLYPHS];
+    cairo_glyph_t *glyphs = malloc(NUM_GLYPHS * sizeof(cairo_glyph_t));
     const char *characters[] = { /* try to exercise different widths of index */
 	"m", /* Latin letter m, index=0x50 */
 	"μ", /* Greek letter mu, index=0x349 */
@@ -156,6 +156,8 @@ draw (cairo_t *cr, int width, int height)
 	glyphs[j] = glyphs[i];
 
     cairo_show_glyphs (cr, glyphs, NUM_GLYPHS);
+    
+    free(glyphs);
 
     return CAIRO_TEST_SUCCESS;
 }
