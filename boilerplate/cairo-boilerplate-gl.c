@@ -39,6 +39,7 @@ typedef struct _gl_target_closure {
     Display *dpy;
     int screen;
 
+    GLXContext gl_ctx;
     cairo_gl_context_t *ctx;
     cairo_surface_t *surface;
 } gl_target_closure_t;
@@ -49,6 +50,7 @@ _cairo_boilerplate_gl_cleanup (void *closure)
     gl_target_closure_t *gltc = closure;
 
     cairo_gl_context_destroy (gltc->ctx);
+    glXDestroyContext (gltc->dpy, gltc->gl_ctx);
     XCloseDisplay (gltc->dpy);
     free (gltc);
 }
@@ -103,7 +105,9 @@ _cairo_boilerplate_gl_create_surface (const char		 *name,
     }
 
     gl_ctx = glXCreateContext (dpy, visinfo, NULL, True);
+    XFree (visinfo);
 
+    gltc->gl_ctx = gl_ctx;
     gltc->ctx = cairo_gl_glx_context_create (dpy, gl_ctx);
 
     gltc->surface = cairo_gl_surface_create (gltc->ctx, content,
