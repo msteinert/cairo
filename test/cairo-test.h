@@ -64,6 +64,21 @@ typedef unsigned __int64 uint64_t;
 
 #include <math.h>
 
+static inline double
+cairo_test_NaN (void)
+{
+#ifdef _MSC_VER
+    /* MSVC strtod("NaN", NULL) returns 0.0 */
+    union {
+	uint32_t i[2];
+	double d;
+    } nan = {{0xffffffff, 0x7fffffff}};
+    return nan.d;
+#else
+    return strtod("NaN", NULL);
+#endif
+}
+
 typedef enum cairo_test_status {
     CAIRO_TEST_SUCCESS = 0,
     CAIRO_TEST_NO_MEMORY,

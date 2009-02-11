@@ -211,7 +211,7 @@ create_rescaled_font (cairo_font_face_t *substitute_font,
     for (i = 0; i < r->glyph_count; i++) {
 	r->desired_width[i] = desired_width[i];
 	/* use NaN to specify unset */
-	r->rescale_factor[i] = strtod ("NaN", NULL);
+	r->rescale_factor[i] = cairo_test_NaN ();
     }
 
     status = cairo_font_face_set_user_data (user_font_face,

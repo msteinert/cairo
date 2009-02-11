@@ -74,7 +74,7 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
 #endif
 
     /* create a bogus matrix and check results of attempted inversion */
-    bogus.x0 = bogus.xy = bogus.xx = strtod ("NaN", NULL);
+    bogus.x0 = bogus.xy = bogus.xx = cairo_test_NaN ();
     bogus.y0 = bogus.yx = bogus.yy = bogus.xx;
     status = cairo_matrix_invert (&bogus);
     CHECK_STATUS (status, "cairo_matrix_invert(NaN)");
