@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2009 Eric Anholt
+ * Copyright © 2009 Chris Wilson
  * Copyright © 2005 Red Hat, Inc
  *
  * This library is free software; you can redistribute it and/or
@@ -67,7 +68,38 @@ struct _cairo_gl_context {
     GLXContext gl_ctx;
     cairo_mutex_t mutex; /* needed? */
     cairo_gl_surface_t *current_target;
+    GLuint dummy_tex;
 };
+
+enum cairo_gl_composite_operand_type {
+    OPERAND_CONSTANT,
+    OPERAND_TEXTURE,
+};
+
+/* This union structure describes a potential source or mask operand to the
+ * compositing equation.
+ */
+typedef struct cairo_gl_composite_operand {
+    enum cairo_gl_composite_operand_type type;
+    union {
+	struct {
+	    GLuint tex;
+	    cairo_gl_surface_t *surface;
+	    cairo_surface_attributes_t attributes;
+	    cairo_bool_t has_alpha;
+	} texture;
+	struct {
+	    GLfloat color[4];
+	} constant;
+    } operand;
+
+    const cairo_pattern_t *pattern;
+} cairo_gl_composite_operand_t;
+
+typedef struct _cairo_gl_composite_setup {
+    cairo_gl_composite_operand_t src;
+    cairo_gl_composite_operand_t mask;
+} cairo_gl_composite_setup_t;
 
 static const cairo_surface_backend_t _cairo_gl_surface_backend;
 
@@ -111,6 +143,12 @@ cairo_gl_glx_context_create (Display *dpy, GLXContext gl_ctx)
      */
     glXMakeCurrent(dpy, RootWindow (dpy, DefaultScreen (dpy)), gl_ctx);
 
+    /* Set up the dummy texture for tex_env_combine with constant color. */
+    glGenTextures (1, &ctx->dummy_tex);
+    glBindTexture (GL_TEXTURE_2D, ctx->dummy_tex);
+    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0,
+		  GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
     return ctx;
 }
 
@@ -141,6 +179,8 @@ cairo_gl_context_destroy (cairo_gl_context_t *context)
     assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&context->ref_count));
     if (! _cairo_reference_count_dec_and_test (&context->ref_count))
 	return;
+
+    glDeleteTextures (1, &context->dummy_tex);
 
     free (context);
 }
@@ -225,12 +265,11 @@ _cairo_gl_set_operator (cairo_operator_t op)
 }
 
 static void
-_cairo_gl_set_texture_surface (int tex_unit, cairo_gl_surface_t *surface,
+_cairo_gl_set_texture_surface (int tex_unit, GLuint tex,
 			       cairo_surface_attributes_t *attributes)
 {
-    assert(surface->base.backend = &_cairo_gl_surface_backend);
     glActiveTexture (GL_TEXTURE0 + tex_unit);
-    glBindTexture (GL_TEXTURE_2D, surface->tex);
+    glBindTexture (GL_TEXTURE_2D, tex);
     switch (attributes->extend) {
     case CAIRO_EXTEND_NONE:
 	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
@@ -788,17 +827,19 @@ _cairo_gl_get_traps_pattern (cairo_gl_surface_t *dst,
  * from dest to src coords.
  */
 static cairo_status_t
-_cairo_gl_pattern_acquire_surface (const cairo_pattern_t *src,
-				   cairo_gl_surface_t *dst,
-				   int src_x, int src_y,
-				   int dst_x, int dst_y,
-				   int width, int height,
-				   cairo_gl_surface_t **out_surface,
-				   cairo_surface_attributes_t *out_attributes)
+_cairo_gl_pattern_texture_setup (cairo_gl_composite_operand_t *operand,
+				 const cairo_pattern_t *src,
+				 cairo_gl_surface_t *dst,
+				 int src_x, int src_y,
+				 int dst_x, int dst_y,
+				 int width, int height)
 {
     cairo_status_t status;
     cairo_matrix_t m;
     cairo_gl_surface_t *surface;
+    cairo_surface_attributes_t *attributes;
+
+    attributes = &operand->operand.texture.attributes;
 
     /* Avoid looping in acquire surface fallback -> clone similar -> paint ->
      * gl_composite -> acquire surface -> fallback.
@@ -820,23 +861,34 @@ _cairo_gl_pattern_acquire_surface (const cairo_pattern_t *src,
 					     width, height,
 					     (cairo_surface_t **)
 					     &surface,
-					     out_attributes);
+					     attributes);
+    operand->operand.texture.surface = surface;
     if (unlikely (status))
 	return status;
 
     assert(surface->base.backend == &_cairo_gl_surface_backend);
-    *out_surface = surface;
+
+    operand->operand.texture.tex = surface->tex;
+    switch (surface->base.content) {
+    case CAIRO_CONTENT_ALPHA:
+    case CAIRO_CONTENT_COLOR_ALPHA:
+	operand->operand.texture.has_alpha = TRUE;
+	break;
+    case CAIRO_CONTENT_COLOR:
+	operand->operand.texture.has_alpha = FALSE;
+	break;
+    }
 
     /* Translate the matrix from
      * (unnormalized src -> unnormalized src) to
      * (unnormalized dst -> unnormalized src)
      */
     cairo_matrix_init_translate (&m,
-				 src_x - dst_x + out_attributes->x_offset,
-				 src_y - dst_y + out_attributes->y_offset);
-    cairo_matrix_multiply (&out_attributes->matrix,
+				 src_x - dst_x + attributes->x_offset,
+				 src_y - dst_y + attributes->y_offset);
+    cairo_matrix_multiply (&attributes->matrix,
 			   &m,
-			   &out_attributes->matrix);
+			   &attributes->matrix);
 
 
     /* Translate the matrix from
@@ -846,11 +898,93 @@ _cairo_gl_pattern_acquire_surface (const cairo_pattern_t *src,
     cairo_matrix_init_scale (&m,
 			     1.0 / surface->width,
 			     1.0 / surface->height);
-    cairo_matrix_multiply (&out_attributes->matrix,
-			   &out_attributes->matrix,
+    cairo_matrix_multiply (&attributes->matrix,
+			   &attributes->matrix,
 			   &m);
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
+_cairo_gl_operand_init(cairo_gl_composite_operand_t *operand,
+		       const cairo_pattern_t *pattern,
+		       cairo_gl_surface_t *dst,
+		       int src_x, int src_y,
+		       int dst_x, int dst_y,
+		       int width, int height)
+{
+    cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *)pattern;
+
+    operand->pattern = pattern;
+
+    switch (pattern->type) {
+    case CAIRO_PATTERN_TYPE_SOLID:
+	operand->type = OPERAND_CONSTANT;
+	operand->operand.constant.color[0] = solid->color.red * solid->color.alpha;
+	operand->operand.constant.color[1] = solid->color.green * solid->color.alpha;
+	operand->operand.constant.color[2] = solid->color.blue * solid->color.alpha;
+	operand->operand.constant.color[3] = solid->color.alpha;
+	return CAIRO_STATUS_SUCCESS;
+    default:
+    case CAIRO_PATTERN_TYPE_SURFACE:
+    case CAIRO_PATTERN_TYPE_LINEAR:
+    case CAIRO_PATTERN_TYPE_RADIAL:
+	operand->type = OPERAND_TEXTURE;
+	return _cairo_gl_pattern_texture_setup(operand,
+					       pattern, dst,
+					       src_x, src_y,
+					       dst_x, dst_y,
+					       width, height);
+    }
+}
+
+static void
+_cairo_gl_operand_destroy (cairo_gl_composite_operand_t *operand)
+{
+
+    switch (operand->type) {
+    case OPERAND_CONSTANT:
+	break;
+    case OPERAND_TEXTURE:
+	_cairo_pattern_release_surface(operand->pattern,
+				       &operand->operand.texture.surface->base,
+				       &operand->operand.texture.attributes);
+	break;
+    }
+}
+
+static void
+_cairo_gl_set_tex_combine_constant_color (cairo_gl_context_t *ctx, int tex_unit,
+					  GLfloat *color)
+{
+    glActiveTexture (GL_TEXTURE0 + tex_unit);
+    /* Have to have a dummy texture bound in order to use the combiner unit. */
+    glBindTexture (GL_TEXTURE_2D, ctx->dummy_tex);
+    glEnable (GL_TEXTURE_2D);
+
+    glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, color);
+    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+    if (tex_unit == 0) {
+	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
+	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
+    } else {
+	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
+	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
+    }
+    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
+    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_CONSTANT);
+    if (tex_unit == 0) {
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+    } else {
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_ALPHA);
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+
+	glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PREVIOUS);
+	glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_PREVIOUS);
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA);
+    }
 }
 
 static cairo_int_status_t
@@ -868,8 +1002,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 			     unsigned int		  height)
 {
     cairo_gl_surface_t	*dst = abstract_dst;
-    cairo_gl_surface_t *src_surface, *mask_surface;
-    cairo_surface_attributes_t src_attributes, mask_attributes;
+    cairo_surface_attributes_t *src_attributes, *mask_attributes = NULL;
     cairo_gl_context_t *ctx;
     GLfloat vertices[4][2];
     GLfloat texcoord_src[4][2];
@@ -878,80 +1011,102 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     int i;
     GLenum err;
     GLfloat constant_color[4] = {0.0, 0.0, 0.0, 1.0};
+    cairo_gl_composite_setup_t setup;
 
-    status = _cairo_gl_pattern_acquire_surface(src, dst,
-					       src_x, src_y,
-					       dst_x, dst_y,
-					       width, height,
-					       &src_surface,
-					       &src_attributes);
+    memset(&setup, 0, sizeof(setup));
+
+    status = _cairo_gl_operand_init (&setup.src, src, dst,
+				     src_x, src_y,
+				     dst_x, dst_y,
+				     width, height);
     if (unlikely (status))
 	return status;
+    src_attributes = &setup.src.operand.texture.attributes;
 
     if (mask != NULL && _cairo_pattern_is_opaque(mask))
 	mask = NULL;
 
     if (mask != NULL) {
-	status = _cairo_gl_pattern_acquire_surface(mask, dst,
-						   mask_x, mask_y,
-						   dst_x, dst_y,
-						   width, height,
-						   &mask_surface,
-						   &mask_attributes);
+	status = _cairo_gl_operand_init (&setup.mask, mask, dst,
+					 mask_x, mask_y,
+					 dst_x, dst_y,
+					 width, height);
 	if (unlikely (status)) {
-	    _cairo_pattern_release_surface(src,
-					   &src_surface->base,
-					   &src_attributes);
+	    _cairo_gl_operand_destroy (&setup.src);
 	    return status;
 	}
+	mask_attributes = &setup.mask.operand.texture.attributes;
     }
 
     ctx = _cairo_gl_context_acquire (dst->ctx);
     _cairo_gl_set_destination (dst);
     status = _cairo_gl_set_operator (op);
     if (status != CAIRO_STATUS_SUCCESS) {
+	_cairo_gl_operand_destroy (&setup.src);
+	if (mask != NULL)
+	    _cairo_gl_operand_destroy (&setup.mask);
 	_cairo_gl_context_release (ctx);
 	return status;
     }
 
     glEnable (GL_BLEND);
 
-    /* Set up the constant color we use to set alpha to 1 if needed. */
-    glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, constant_color);
-    _cairo_gl_set_texture_surface (0, src_surface, &src_attributes);
-    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
-    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
-
-    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE0);
-    /* Wire the src alpha to 1 if the surface doesn't have it.
-     * We may have a teximage with alpha bits even though we didn't ask
-     * for it and we don't pay attention to setting alpha to 1 in a dest
-     * that has inadvertent alpha.
-     */
-    if (src_surface->base.content != CAIRO_CONTENT_COLOR)
-	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE0);
-    else
-	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_CONSTANT);
-    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
-    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
-    if (mask != NULL) {
-	_cairo_gl_set_texture_surface (1, mask_surface, &mask_attributes);
-
-	/* IN: dst.argb = src.argb * mask.aaaa */
+    switch (setup.src.type) {
+    case OPERAND_CONSTANT:
+	_cairo_gl_set_tex_combine_constant_color (ctx, 0,
+	    setup.src.operand.constant.color);
+	break;
+    case OPERAND_TEXTURE:
+	_cairo_gl_set_texture_surface (0, setup.src.operand.texture.tex,
+				       src_attributes);
+	/* Set up the constant color we use to set alpha to 1 if needed. */
+	glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, constant_color);
+	/* Set up the combiner to just set color to the sampled texture. */
 	glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
-	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
+	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
+	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
 
-	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PREVIOUS);
-	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_PREVIOUS);
+	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE0);
+	/* Wire the src alpha to 1 if the surface doesn't have it.
+	 * We may have a teximage with alpha bits even though we didn't ask
+	 * for it and we don't pay attention to setting alpha to 1 in a dest
+	 * that has inadvertent alpha.
+	 */
+	if (setup.src.operand.texture.has_alpha)
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE0);
+	else
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_CONSTANT);
 	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
 	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+	break;
+    }
 
-	glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_RGB, GL_TEXTURE1);
-	glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_TEXTURE1);
-	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_ALPHA);
-	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA);
+    if (mask != NULL) {
+	switch (setup.mask.type) {
+	case OPERAND_CONSTANT:
+	    _cairo_gl_set_tex_combine_constant_color (ctx, 1,
+		setup.mask.operand.constant.color);
+	    break;
+	case OPERAND_TEXTURE:
+	    _cairo_gl_set_texture_surface (1, setup.mask.operand.texture.tex,
+					   mask_attributes);
+
+	    /* IN: dst.argb = src.argb * mask.aaaa */
+	    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
+
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PREVIOUS);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_PREVIOUS);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_RGB, GL_TEXTURE1);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_TEXTURE1);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_ALPHA);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA);
+	    break;
+	}
     }
 
     vertices[0][0] = dst_x;
@@ -966,34 +1121,38 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     glVertexPointer (2, GL_FLOAT, sizeof(GLfloat) * 2, vertices);
     glEnableClientState (GL_VERTEX_ARRAY);
 
-    for (i = 0; i < 4; i++) {
-	double s, t;
-
-	s = vertices[i][0];
-	t = vertices[i][1];
-	cairo_matrix_transform_point (&src_attributes.matrix, &s, &t);
-	texcoord_src[i][0] = s;
-	texcoord_src[i][1] = t;
-    }
-
-    glClientActiveTexture (GL_TEXTURE0);
-    glTexCoordPointer (2, GL_FLOAT, sizeof(GLfloat) * 2, texcoord_src);
-    glEnableClientState (GL_TEXTURE_COORD_ARRAY);
-
-    if (mask != NULL) {
+    if (setup.src.type == OPERAND_TEXTURE) {
 	for (i = 0; i < 4; i++) {
 	    double s, t;
 
 	    s = vertices[i][0];
 	    t = vertices[i][1];
-	    cairo_matrix_transform_point (&mask_attributes.matrix, &s, &t);
-	    texcoord_mask[i][0] = s;
-	    texcoord_mask[i][1] = t;
+	    cairo_matrix_transform_point (&src_attributes->matrix, &s, &t);
+	    texcoord_src[i][0] = s;
+	    texcoord_src[i][1] = t;
 	}
 
-	glClientActiveTexture (GL_TEXTURE1);
-	glTexCoordPointer (2, GL_FLOAT, sizeof(GLfloat) * 2, texcoord_mask);
+	glClientActiveTexture (GL_TEXTURE0);
+	glTexCoordPointer (2, GL_FLOAT, sizeof(GLfloat) * 2, texcoord_src);
 	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+    }
+
+    if (mask != NULL) {
+	if (setup.mask.type == OPERAND_TEXTURE) {
+	    for (i = 0; i < 4; i++) {
+		double s, t;
+
+		s = vertices[i][0];
+		t = vertices[i][1];
+		cairo_matrix_transform_point (&mask_attributes->matrix, &s, &t);
+		texcoord_mask[i][0] = s;
+		texcoord_mask[i][1] = t;
+	    }
+
+	    glClientActiveTexture (GL_TEXTURE1);
+	    glTexCoordPointer (2, GL_FLOAT, sizeof(GLfloat) * 2, texcoord_mask);
+	    glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+	}
     }
 
     glDrawArrays (GL_TRIANGLE_FAN, 0, 4);
@@ -1017,9 +1176,9 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 
     _cairo_gl_context_release (ctx);
 
-    _cairo_pattern_release_surface (src, &src_surface->base, &src_attributes);
+    _cairo_gl_operand_destroy (&setup.src);
     if (mask != NULL)
-	_cairo_pattern_release_surface (mask, &mask_surface->base, &mask_attributes);
+	_cairo_gl_operand_destroy (&setup.mask);
 
     return CAIRO_STATUS_SUCCESS;
 }
