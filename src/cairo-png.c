@@ -631,6 +631,10 @@ stdio_read_func (png_structp png, png_bytep data, png_size_t size)
  *	%CAIRO_STATUS_NO_MEMORY
  *	%CAIRO_STATUS_FILE_NOT_FOUND
  *	%CAIRO_STATUS_READ_ERROR
+ *
+ * Alternatively, you can allow errors to propagate through the drawing
+ * operations and check the status on the context upon completion
+ * using cairo_status().
  **/
 cairo_surface_t *
 cairo_image_surface_create_from_png (const char *filename)
@@ -692,8 +696,17 @@ stream_read_func (png_structp png, png_bytep data, png_size_t size)
  * via the @read_func function.
  *
  * Return value: a new #cairo_surface_t initialized with the contents
- * of the PNG file or %NULL if the data read is not a valid PNG image or
- * memory could not be allocated for the operation.
+ * of the PNG file or a "nil" surface if the data read is not a valid PNG image
+ * or memory could not be allocated for the operation.  A nil
+ * surface can be checked for with cairo_surface_status(surface) which
+ * may return one of the following values:
+ *
+ *	%CAIRO_STATUS_NO_MEMORY
+ *	%CAIRO_STATUS_READ_ERROR
+ *
+ * Alternatively, you can allow errors to propagate through the drawing
+ * operations and check the status on the context upon completion
+ * using cairo_status().
  **/
 cairo_surface_t *
 cairo_image_surface_create_from_png_stream (cairo_read_func_t	read_func,
