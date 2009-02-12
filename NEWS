@@ -10,9 +10,27 @@ API additions:
      "image/jpeg" is understood by PDF,PS,SVG,win32-printing.
      "image/png" is understood by SVG.
 
-New backend:
+  cairo_pdf_version_t
+  cairo_pdf_surface_restrict_to_version()
+  cairo_pdf_get_versions()
+  cairo_pdf_version_to_string()
+    Similar to restrict to version and level found in SVG and PS, these
+    limit the features used in the output to comply with the PDF specification
+    for that version.
+
+  CAIRO_STATUS_INVALID_SIZE
+    Indicates that the request surface size is not supported by the backend.
+    This generally indicates that the request is too large.
+
+  The built-in twin font is now called "@cairo:" and supports a limited set
+  of options like "@cairo:mono". Where are these specified?
+
+  cairo_in_fill() now uses flash semantics... OTOH, top and left are outside.
+
+New experimental backends:
 
    Simple DirectMedia Layer
+   CairoScript
 
 New utility:
 
