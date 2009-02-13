@@ -85,7 +85,7 @@
 
 CAIRO_BEGIN_DECLS
 
-#ifdef _WIN32
+#if _WIN32 && !WINCE // we don't have to worry about permissions on WINCE
 cairo_private FILE *
 _cairo_win32_tmpfile (void);
 #define tmpfile() _cairo_win32_tmpfile()

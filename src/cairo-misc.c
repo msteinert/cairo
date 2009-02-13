@@ -610,10 +610,12 @@ _cairo_lround (double d)
 #include <windows.h>
 #include <io.h>
 
+#if !WINCE
 /* tmpfile() replacement for Windows.
  *
  * On Windows tmpfile() creates the file in the root directory. This
- * may fail due to unsufficient privileges.
+ * may fail due to unsufficient privileges. However, this isn't a
+ * problem on Windows CE so we don't use it there.
  */
 FILE *
 _cairo_win32_tmpfile (void)
@@ -658,6 +660,7 @@ _cairo_win32_tmpfile (void)
 
     return fp;
 }
+#endif /* !WINCE */
 
 #endif /* _WIN32 */
 
