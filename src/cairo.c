@@ -816,7 +816,10 @@ cairo_get_source (cairo_t *cr)
  * is less than @tolerance. The default value is 0.1. A larger
  * value will give better performance, a smaller value, better
  * appearance. (Reducing the value from the default value of 0.1
- * is unlikely to improve appearance significantly.)
+ * is unlikely to improve appearance significantly.)  The accuracy of paths
+ * within Cairo is limited by the precision of its internal arithmetic, and
+ * the prescribed @tolerance is restricted to the smallest
+ * representable internal value.
  **/
 void
 cairo_set_tolerance (cairo_t *cr, double tolerance)
