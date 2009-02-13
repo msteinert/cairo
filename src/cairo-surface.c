@@ -1399,16 +1399,40 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 cairo_surface_t *
 _cairo_surface_snapshot (cairo_surface_t *surface)
 {
+    cairo_surface_t *snapshot;
+    cairo_status_t status;
+
     if (surface->status)
 	return _cairo_surface_create_in_error (surface->status);
 
     if (surface->finished)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
 
-    if (surface->backend->snapshot)
-	return surface->backend->snapshot (surface);
+    if (surface->is_snapshot)
+	return cairo_surface_reference (surface);
 
-    return _cairo_surface_fallback_snapshot (surface);
+    snapshot = NULL;
+    if (surface->backend->snapshot != NULL)
+	snapshot = surface->backend->snapshot (surface);
+
+    if (snapshot == NULL)
+	snapshot = _cairo_surface_fallback_snapshot (surface);
+
+    if (unlikely (snapshot->status))
+	return snapshot;
+
+    status = _cairo_surface_copy_mime_data (snapshot, surface);
+    if (unlikely (status)) {
+	cairo_surface_destroy (snapshot);
+	return _cairo_surface_create_in_error (status);
+    }
+
+    snapshot->device_transform = surface->device_transform;
+    snapshot->device_transform_inverse = surface->device_transform_inverse;
+
+    snapshot->is_snapshot = TRUE;
+
+    return snapshot;
 }
 
 /**

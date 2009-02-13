@@ -1152,17 +1152,6 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
 	return _cairo_surface_create_in_error (status);
     }
 
-    status = _cairo_surface_copy_mime_data (snapshot, surface);
-    if (unlikely (status)) {
-	cairo_surface_destroy (snapshot);
-	return _cairo_surface_create_in_error (status);
-    }
-
-    snapshot->device_transform = surface->device_transform;
-    snapshot->device_transform_inverse = surface->device_transform_inverse;
-
-    snapshot->is_snapshot = TRUE;
-
     return snapshot;
 }
 
