@@ -330,6 +330,17 @@ _cairo_user_data_array_set_data (cairo_user_data_array_t     *array,
 				 void			     *user_data,
 				 cairo_destroy_func_t	      destroy);
 
+cairo_private cairo_status_t
+_cairo_user_data_array_copy (cairo_user_data_array_t	*dst,
+			     cairo_user_data_array_t	*src);
+
+cairo_private void
+_cairo_user_data_array_foreach (cairo_user_data_array_t     *array,
+				void (*func) (void *key,
+					      void *elt,
+					      void *closure),
+				void *closure);
+
 #define _CAIRO_HASH_INIT_VALUE 5381
 
 cairo_private unsigned long
@@ -1742,8 +1753,7 @@ _cairo_surface_create_in_error (cairo_status_t status);
 
 cairo_private cairo_status_t
 _cairo_surface_copy_mime_data (cairo_surface_t *dst,
-			       cairo_surface_t *src,
-			       const char *mime_type);
+			       cairo_surface_t *src);
 
 cairo_private cairo_status_t
 _cairo_surface_set_error (cairo_surface_t	*surface,

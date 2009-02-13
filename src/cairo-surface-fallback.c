@@ -1121,12 +1121,6 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
     cairo_surface_pattern_t pattern;
     cairo_image_surface_t *image;
     void *image_extra;
-    const char *mime_types[] = {
-	CAIRO_MIME_TYPE_JPEG,
-	CAIRO_MIME_TYPE_PNG,
-	CAIRO_MIME_TYPE_JP2,
-	NULL
-    }, **mime_type;
 
     status = _cairo_surface_acquire_source_image (surface,
 						  &image, &image_extra);
@@ -1137,13 +1131,11 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
 					   image->width,
 					   image->height);
     if (cairo_surface_status (snapshot)) {
-	_cairo_surface_release_source_image (surface,
-					     image, image_extra);
+	_cairo_surface_release_source_image (surface, image, image_extra);
 	return snapshot;
     }
 
     _cairo_pattern_init_for_surface (&pattern, &image->base);
-
     status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
 			               &pattern.base,
 				       NULL,
@@ -1153,11 +1145,14 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
 				       0, 0,
 				       image->width,
 				       image->height);
-
     _cairo_pattern_fini (&pattern.base);
-    _cairo_surface_release_source_image (surface,
-					 image, image_extra);
+    _cairo_surface_release_source_image (surface, image, image_extra);
+    if (unlikely (status)) {
+	cairo_surface_destroy (snapshot);
+	return _cairo_surface_create_in_error (status);
+    }
 
+    status = _cairo_surface_copy_mime_data (snapshot, surface);
     if (unlikely (status)) {
 	cairo_surface_destroy (snapshot);
 	return _cairo_surface_create_in_error (status);
@@ -1165,14 +1160,6 @@ _cairo_surface_fallback_snapshot (cairo_surface_t *surface)
 
     snapshot->device_transform = surface->device_transform;
     snapshot->device_transform_inverse = surface->device_transform_inverse;
-
-    for (mime_type = mime_types; *mime_type; mime_type++) {
-	status = _cairo_surface_copy_mime_data (snapshot, surface, *mime_type);
-	if (unlikely (status)) {
-	    cairo_surface_destroy (snapshot);
-	    return _cairo_surface_create_in_error (status);
-	}
-    }
 
     snapshot->is_snapshot = TRUE;
 

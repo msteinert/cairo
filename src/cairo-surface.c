@@ -51,6 +51,7 @@ const cairo_surface_t name = {					\
     status,				/* status */		\
     FALSE,				/* finished */		\
     { 0, 0, 0, NULL, },			/* user_data */		\
+    { 0, 0, 0, NULL, },			/* mime_data */         \
     { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 },   /* device_transform */	\
     { 1.0, 0.0,	0.0, 1.0, 0.0, 0.0 },	/* device_transform_inverse */	\
     0.0,				/* x_resolution */	\
@@ -194,6 +195,7 @@ _cairo_surface_init (cairo_surface_t			*surface,
     surface->finished = FALSE;
 
     _cairo_user_data_array_init (&surface->user_data);
+    _cairo_user_data_array_init (&surface->mime_data);
 
     cairo_matrix_init_identity (&surface->device_transform);
     cairo_matrix_init_identity (&surface->device_transform_inverse);
@@ -437,6 +439,7 @@ cairo_surface_destroy (cairo_surface_t *surface)
 	cairo_surface_finish (surface);
 
     _cairo_user_data_array_fini (&surface->user_data);
+    _cairo_user_data_array_fini (&surface->mime_data);
 
     free (surface);
 }
@@ -459,6 +462,7 @@ _cairo_surface_reset (cairo_surface_t *surface)
     assert (CAIRO_REFERENCE_COUNT_GET_VALUE (&surface->ref_count) == 1);
 
     _cairo_user_data_array_fini (&surface->user_data);
+    _cairo_user_data_array_fini (&surface->mime_data);
 
     if (surface->backend->reset != NULL) {
 	cairo_status_t status = surface->backend->reset (surface);
@@ -620,7 +624,7 @@ cairo_surface_get_mime_data (cairo_surface_t		*surface,
 	return;
     }
 
-    mime_data = _cairo_user_data_array_get_data (&surface->user_data,
+    mime_data = _cairo_user_data_array_get_data (&surface->mime_data,
 						 (cairo_user_data_key_t *) mime_type);
     if (mime_data == NULL)
 	return;
@@ -696,7 +700,7 @@ cairo_surface_set_mime_data (cairo_surface_t		*surface,
     } else
 	mime_data = NULL;
 
-    status = _cairo_user_data_array_set_data (&surface->user_data,
+    status = _cairo_user_data_array_set_data (&surface->mime_data,
 					      (cairo_user_data_key_t *) mime_type,
 					      mime_data,
 					      _cairo_mime_data_destroy);
@@ -711,13 +715,19 @@ cairo_surface_set_mime_data (cairo_surface_t		*surface,
 }
 slim_hidden_def (cairo_surface_set_mime_data);
 
+static void
+_cairo_mime_data_reference (void *key, void *elt, void *closure)
+{
+    cairo_mime_data_t *mime_data = elt;
+
+    _cairo_reference_count_inc (&mime_data->ref_count);
+}
+
 cairo_status_t
 _cairo_surface_copy_mime_data (cairo_surface_t *dst,
-			       cairo_surface_t *src,
-			       const char *mime_type)
+			       cairo_surface_t *src)
 {
     cairo_status_t status;
-    cairo_mime_data_t *mime_data;
 
     if (dst->status)
 	return dst->status;
@@ -725,25 +735,15 @@ _cairo_surface_copy_mime_data (cairo_surface_t *dst,
     if (src->status)
 	return _cairo_surface_set_error (dst, src->status);
 
-    status = _cairo_intern_string (&mime_type, -1);
+    /* first copy the mime-data, discarding any already set on dst */
+    status = _cairo_user_data_array_copy (&dst->mime_data, &src->mime_data);
     if (unlikely (status))
 	return _cairo_surface_set_error (dst, status);
 
-    mime_data = _cairo_user_data_array_get_data (&src->user_data,
-						 (cairo_user_data_key_t *) mime_type);
-    if (mime_data == NULL)
-	return CAIRO_STATUS_SUCCESS;
-
-    _cairo_reference_count_inc (&mime_data->ref_count);
-
-    status = _cairo_user_data_array_set_data (&dst->user_data,
-					      (cairo_user_data_key_t *) mime_type,
-					      mime_data,
-					      _cairo_mime_data_destroy);
-    if (unlikely (status)) {
-	_cairo_mime_data_destroy (mime_data);
-	return _cairo_surface_set_error (dst, status);
-    }
+    /* now increment the reference counters for the copies */
+    _cairo_user_data_array_foreach (&dst->mime_data,
+				    _cairo_mime_data_reference,
+				    NULL);
 
     return CAIRO_STATUS_SUCCESS;
 }
