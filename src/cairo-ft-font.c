@@ -444,6 +444,7 @@ _cairo_ft_unscaled_font_create_internal (cairo_bool_t from_face,
     if (unlikely (status))
 	goto UNWIND_UNSCALED_MALLOC;
 
+    assert (unscaled->base.hash_entry.hash == key.base.hash_entry.hash);
     status = _cairo_hash_table_insert (font_map->hash_table,
 				       &unscaled->base.hash_entry);
     if (unlikely (status))
@@ -484,7 +485,6 @@ _cairo_ft_unscaled_font_create_for_pattern (FcPattern *pattern)
 
 DONE:
     return _cairo_ft_unscaled_font_create_internal (font_face != NULL, filename, id, font_face);
-
 }
 
 static cairo_ft_unscaled_font_t *

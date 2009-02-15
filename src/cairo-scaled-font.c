@@ -206,6 +206,7 @@ static const cairo_scaled_font_t _cairo_scaled_font_nil = {
     CAIRO_STATUS_NO_MEMORY,	/* status */
     CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
     { 0, 0, 0, NULL },		/* user_data */
+    NULL,			/* original_font_face */
     NULL,			/* font_face */
     { 1., 0., 0., 1., 0, 0},	/* font_matrix */
     { 1., 0., 0., 1., 0, 0},	/* ctm */
@@ -706,14 +707,17 @@ _cairo_scaled_font_keys_equal (const void *abstract_key_a, const void *abstract_
     const cairo_scaled_font_t *key_a = abstract_key_a;
     const cairo_scaled_font_t *key_b = abstract_key_b;
 
-    return (key_a->font_face == key_b->font_face &&
+    if (key_a->hash_entry.hash != key_b->hash_entry.hash)
+	return FALSE;
+
+    return key_a->font_face == key_b->font_face &&
 	    memcmp ((unsigned char *)(&key_a->font_matrix.xx),
 		    (unsigned char *)(&key_b->font_matrix.xx),
 		    sizeof(cairo_matrix_t)) == 0 &&
 	    memcmp ((unsigned char *)(&key_a->ctm.xx),
 		    (unsigned char *)(&key_b->ctm.xx),
 		    sizeof(cairo_matrix_t)) == 0 &&
-	    cairo_font_options_equal (&key_a->options, &key_b->options));
+	    cairo_font_options_equal (&key_a->options, &key_b->options);
 }
 
 /*
@@ -863,8 +867,8 @@ _cairo_scaled_font_fini_internal (cairo_scaled_font_t *scaled_font)
 
     _cairo_scaled_glyph_page_cache_remove_scaled_font (scaled_font);
 
-    if (scaled_font->font_face != NULL)
-	cairo_font_face_destroy (scaled_font->font_face);
+    cairo_font_face_destroy (scaled_font->font_face);
+    cairo_font_face_destroy (scaled_font->original_font_face);
 
     CAIRO_MUTEX_FINI (scaled_font->mutex);
 
@@ -916,6 +920,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 {
     cairo_status_t status;
     cairo_scaled_font_map_t *font_map;
+    cairo_font_face_t *original_font_face = font_face;
     cairo_scaled_font_t key, *old = NULL, *scaled_font = NULL;
     double det;
 
@@ -1051,6 +1056,10 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	return scaled_font;
     }
 
+    scaled_font->original_font_face =
+	cairo_font_face_reference (original_font_face);
+
+    assert (scaled_font->hash_entry.hash == key.hash_entry.hash);
     status = _cairo_hash_table_insert (font_map->hash_table,
 				       &scaled_font->hash_entry);
     if (likely (status == CAIRO_STATUS_SUCCESS)) {

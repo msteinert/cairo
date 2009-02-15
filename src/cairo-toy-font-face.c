@@ -325,6 +325,7 @@ cairo_toy_font_face_create (const char          *family,
     if (unlikely (status))
 	goto UNWIND_FONT_FACE_MALLOC;
 
+    assert (font_face->base.hash_entry.hash == key.base.hash_entry.hash);
     status = _cairo_hash_table_insert (hash_table, &font_face->base.hash_entry);
     if (unlikely (status))
 	goto UNWIND_FONT_FACE_INIT;
