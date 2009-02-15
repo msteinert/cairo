@@ -2294,7 +2294,7 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 	XRectangle *rects = NULL;
 	int n_boxes, i;
 	cairo_rectangle_int_t rect;
-	cairo_region_t bound, bounded;
+	cairo_region_t bounded;
 
 	rect.x = rect.y = 0;
 	rect.width = surface->width;
@@ -2304,11 +2304,9 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 	 * is necessary so we don't wrap around when we convert cairo's
 	 * 32 bit region into 16 bit rectangles.
 	 */
-	_cairo_region_init_rect (&bound, &rect);
-	_cairo_region_init (&bounded);
-	status = _cairo_region_intersect (&bounded, &bound, region);
+	_cairo_region_init_rect (&bounded, &rect);
+	status = _cairo_region_intersect (&bounded, &bounded, region);
 	if (unlikely (status)) {
-	    _cairo_region_fini (&bound);
 	    _cairo_region_fini (&bounded);
 	    return status;
 	}
@@ -2317,7 +2315,6 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 	boxes = (cairo_box_int_t *) surface->embedded_clip_rects;
 	status = _cairo_region_get_boxes (&bounded, &n_boxes, &boxes);
 	if (unlikely (status)) {
-	    _cairo_region_fini (&bound);
 	    _cairo_region_fini (&bounded);
 	    return status;
 	}
@@ -2326,7 +2323,6 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 	    rects = _cairo_malloc_ab (n_boxes, sizeof (XRectangle));
 	    if (unlikely (rects == NULL)) {
                 _cairo_region_boxes_fini (&bounded, boxes);
-		_cairo_region_fini (&bound);
 		_cairo_region_fini (&bounded);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
             }
@@ -2343,7 +2339,6 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 	if (boxes != (cairo_box_int_t *) surface->embedded_clip_rects)
 	    _cairo_region_boxes_fini (&bounded, boxes);
 	_cairo_region_fini (&bounded);
-	_cairo_region_fini (&bound);
 
 	surface->have_clip_rects = TRUE;
 	surface->clip_rects = rects;
