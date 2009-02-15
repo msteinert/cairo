@@ -884,38 +884,35 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
     }
 
     if (clip->has_region) {
-	cairo_box_int_t *boxes;
         int i;
 
-	if (_cairo_region_get_boxes (&clip->region, &n_boxes, &boxes))
-	    return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
+	n_boxes = _cairo_region_num_boxes (&clip->region);
 
 	if (n_boxes) {
 	    rectangles = _cairo_malloc_ab (n_boxes, sizeof (cairo_rectangle_t));
 	    if (unlikely (rectangles == NULL)) {
-		_cairo_region_boxes_fini (&clip->region, boxes);
 		_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 		return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
 	    }
 
 	    for (i = 0; i < n_boxes; ++i) {
-               cairo_rectangle_int_t clip_rect;
+		cairo_box_int_t box;
+		cairo_rectangle_int_t clip_rect;
 
-               clip_rect.x = boxes[i].p1.x;
-               clip_rect.y = boxes[i].p1.y;
-               clip_rect.width  = boxes[i].p2.x - boxes[i].p1.x;
-               clip_rect.height = boxes[i].p2.y - boxes[i].p1.y;
+		_cairo_region_get_box (&clip->region, i, &box);
 
+		clip_rect.x = box.p1.x;
+		clip_rect.y = box.p1.y;
+		clip_rect.width  = box.p2.x - box.p1.x;
+		clip_rect.height = box.p2.y - box.p1.y;
+		
 		if (!_cairo_clip_int_rect_to_user(gstate, &clip_rect, &rectangles[i])) {
 		    _cairo_error_throw (CAIRO_STATUS_CLIP_NOT_REPRESENTABLE);
-		    _cairo_region_boxes_fini (&clip->region, boxes);
 		    free (rectangles);
 		    return (cairo_rectangle_list_t*) &_cairo_rectangles_not_representable;
 		}
 	    }
 	}
-
-	_cairo_region_boxes_fini (&clip->region, boxes);
     } else {
         cairo_rectangle_int_t extents;
 

@@ -318,26 +318,23 @@ static cairo_status_t
 _cairo_sdl_surface_flush (void                  *abstract_surface)
 {
     cairo_sdl_surface_t *surface = abstract_surface;
-    cairo_box_int_t *boxes;
     int n_boxes, i;
-    cairo_status_t status;
 
-    n_boxes = 0;
-    status = _cairo_region_get_boxes (&surface->update, &n_boxes, &boxes);
-    if (unlikely (status))
-	return status;
+    n_boxes = _cairo_region_num_boxes (&surface->update);
     if (n_boxes == 0)
 	return CAIRO_STATUS_SUCCESS;
 
     for (i = 0; i < n_boxes; i++) {
-	SDL_UpdateRect (surface->sdl,
-			boxes[i].p1.x,
-			boxes[i].p1.y,
-			boxes[i].p2.x - boxes[i].p1.x,
-			boxes[i].p2.y - boxes[i].p1.y);
-    }
+	cairo_box_int_t box;
 
-    _cairo_region_boxes_fini (&surface->update, boxes);
+	_cairo_region_get_box (&surface->update, i, &box);
+	
+	SDL_UpdateRect (surface->sdl,
+			box.p1.x,
+			box.p1.y,
+			box.p2.x - box.p1.x,
+			box.p2.y - box.p1.y);
+    }
 
     _cairo_region_fini (&surface->update);
     _cairo_region_init (&surface->update);

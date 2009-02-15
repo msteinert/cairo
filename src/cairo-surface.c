@@ -1579,7 +1579,6 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
 {
     int num_boxes;
     cairo_rectangle_int_t stack_rects[CAIRO_STACK_ARRAY_LENGTH (cairo_rectangle_int_t)];
-    cairo_box_int_t *boxes = (cairo_box_int_t *) stack_rects;
     cairo_rectangle_int_t *rects = stack_rects;
     cairo_status_t status;
     int i;
@@ -1593,37 +1592,28 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
     if (num_boxes == 0)
 	return CAIRO_STATUS_SUCCESS;
 
-    /* handle the common case of a single box without allocation */
-    if (num_boxes > 1) {
-	num_boxes = sizeof (stack_rects) / sizeof (cairo_box_int_t);
-	status = _cairo_region_get_boxes (region, &num_boxes, &boxes);
-	if (unlikely (status))
-	    return status;
-
-	if (num_boxes > ARRAY_LENGTH (stack_rects)) {
-	    rects = _cairo_malloc_ab (num_boxes,
-		                      sizeof (cairo_rectangle_int_t));
-	    if (rects == NULL) {
-		_cairo_region_boxes_fini (region, boxes);
-		return _cairo_surface_set_error (surface,
-			                         _cairo_error (CAIRO_STATUS_NO_MEMORY));
-	    }
+    if (num_boxes > ARRAY_LENGTH (stack_rects)) {
+	rects = _cairo_malloc_ab (num_boxes,
+				  sizeof (cairo_rectangle_int_t));
+	if (rects == NULL) {
+	    return _cairo_surface_set_error (surface,
+					     _cairo_error (CAIRO_STATUS_NO_MEMORY));
 	}
+    }
 
-	for (i = 0; i < num_boxes; i++) {
-	    rects[i].x = boxes[i].p1.x;
-	    rects[i].y = boxes[i].p1.y;
-	    rects[i].width  = boxes[i].p2.x - rects[i].x;
-	    rects[i].height = boxes[i].p2.y - rects[i].y;
-	}
-    } else
-	_cairo_region_get_extents (region, &rects[0]);
+    for (i = 0; i < num_boxes; i++) {
+	cairo_box_int_t box;
+
+	_cairo_region_get_box (region, i, &box);
+	
+	rects[i].x = box.p1.x;
+	rects[i].y = box.p1.y;
+	rects[i].width  = box.p2.x - rects[i].x;
+	rects[i].height = box.p2.y - rects[i].y;
+    }
 
     status =  _cairo_surface_fill_rectangles (surface, op,
 					      color, rects, num_boxes);
-
-    if (boxes != (cairo_box_int_t *) stack_rects)
-	_cairo_region_boxes_fini (region, boxes);
 
     if (rects != stack_rects)
 	free (rects);

@@ -2289,7 +2289,6 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
     surface->num_clip_rects = 0;
 
     if (region != NULL) {
-	cairo_box_int_t *boxes;
 	cairo_status_t status;
 	XRectangle *rects = NULL;
 	int n_boxes, i;
@@ -2311,33 +2310,29 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 	    return status;
 	}
 
-	n_boxes = sizeof (surface->embedded_clip_rects) / sizeof (cairo_box_int_t);
-	boxes = (cairo_box_int_t *) surface->embedded_clip_rects;
-	status = _cairo_region_get_boxes (&bounded, &n_boxes, &boxes);
-	if (unlikely (status)) {
-	    _cairo_region_fini (&bounded);
-	    return status;
-	}
+	n_boxes = _cairo_region_num_boxes (&bounded);
 
 	if (n_boxes > ARRAY_LENGTH (surface->embedded_clip_rects)) {
 	    rects = _cairo_malloc_ab (n_boxes, sizeof (XRectangle));
 	    if (unlikely (rects == NULL)) {
-                _cairo_region_boxes_fini (&bounded, boxes);
 		_cairo_region_fini (&bounded);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-            }
-	} else
+	    }
+	} else {
 	    rects = surface->embedded_clip_rects;
-
-	for (i = 0; i < n_boxes; i++) {
-	    rects[i].x = boxes[i].p1.x;
-	    rects[i].y = boxes[i].p1.y;
-	    rects[i].width  = boxes[i].p2.x - rects[i].x;
-	    rects[i].height = boxes[i].p2.y - rects[i].y;
 	}
 
-	if (boxes != (cairo_box_int_t *) surface->embedded_clip_rects)
-	    _cairo_region_boxes_fini (&bounded, boxes);
+	for (i = 0; i < n_boxes; i++) {
+	    cairo_box_int_t box;
+
+	    _cairo_region_get_box (&bounded, i, &box);
+
+	    rects[i].x = box.p1.x;
+	    rects[i].y = box.p1.y;
+	    rects[i].width  = box.p2.x - rects[i].x;
+	    rects[i].height = box.p2.y - rects[i].y;
+	}
+	
 	_cairo_region_fini (&bounded);
 
 	surface->have_clip_rects = TRUE;

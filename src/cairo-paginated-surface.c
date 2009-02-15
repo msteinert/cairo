@@ -381,7 +381,6 @@ _paint_page (cairo_paginated_surface_t *surface)
 
     if (has_finegrained_fallback) {
         cairo_region_t *region;
-        cairo_box_int_t *boxes;
         int num_boxes, i;
 
 	surface->backend->set_paginated_mode (surface->target,
@@ -398,19 +397,17 @@ _paint_page (cairo_paginated_surface_t *surface)
 
 	region = _cairo_analysis_surface_get_unsupported (analysis);
 
-	num_boxes = 0;
-	status = _cairo_region_get_boxes (region, &num_boxes, &boxes);
-	if (unlikely (status))
-	    goto FAIL;
-
+	num_boxes = _cairo_region_num_boxes (region);
 	for (i = 0; i < num_boxes; i++) {
-	    status = _paint_fallback_image (surface, &boxes[i]);
-	    if (unlikely (status)) {
-                _cairo_region_boxes_fini (region, boxes);
+	    cairo_box_int_t box;
+
+	    _cairo_region_get_box (region, i, &box);
+	    
+	    status = _paint_fallback_image (surface, &box);
+	    
+	    if (unlikely (status))
 		goto FAIL;
-            }
 	}
-        _cairo_region_boxes_fini (region, boxes);
     }
 
   FAIL:

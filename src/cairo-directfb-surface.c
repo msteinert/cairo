@@ -1299,17 +1299,13 @@ _cairo_directfb_surface_set_clip_region (void           *abstract_surface,
 		__FUNCTION__, surface, region);
 
     if (region) {
-	cairo_box_int_t *boxes;
 	int              n_boxes;
 	cairo_status_t   status;
 	int              i;
 
 	surface->has_clip = TRUE;
 
-	n_boxes = 0;
-	status = _cairo_region_get_boxes (region, &n_boxes, &boxes);
-	if (status)
-	    return status;
+	n_boxes = _cairo_region_num_boxes (region);
 
 	if (n_boxes == 0)
 	    return CAIRO_STATUS_SUCCESS;
@@ -1321,7 +1317,6 @@ _cairo_directfb_surface_set_clip_region (void           *abstract_surface,
 	    surface->clips = _cairo_malloc_ab (n_boxes, sizeof (DFBRegion));
 	    if (!surface->clips) {
 		surface->n_clips = 0;
-		_cairo_region_boxes_fini (region, boxes);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    }
 
@@ -1329,13 +1324,15 @@ _cairo_directfb_surface_set_clip_region (void           *abstract_surface,
 	}
 
 	for (i = 0; i < n_boxes; i++) {
-	    surface->clips[i].x1 = boxes[i].p1.x;
-	    surface->clips[i].y1 = boxes[i].p1.y;
-	    surface->clips[i].x2 = boxes[i].p2.x - 1;
-	    surface->clips[i].y2 = boxes[i].p2.y - 1;
-	}
+	    cairo_box_int_t box;
 
-	_cairo_region_boxes_fini (region, boxes);
+	    _cairo_region_get_box (region, i, &box);
+	    
+	    surface->clips[i].x1 = box.p1.x;
+	    surface->clips[i].y1 = box.p1.y;
+	    surface->clips[i].x2 = box.p2.x - 1;
+	    surface->clips[i].y2 = box.p2.y - 1;
+	}
     } else {
 	surface->has_clip = FALSE;
 	if (surface->clips) {

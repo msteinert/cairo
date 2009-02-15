@@ -1555,35 +1555,31 @@ _cairo_xcb_surface_set_clip_region (void           *abstract_surface,
 	    xcb_render_change_picture (surface->dpy, surface->dst_picture,
 		XCB_RENDER_CP_CLIP_MASK, none);
     } else {
-	cairo_box_int_t *boxes;
 	cairo_status_t status;
 	xcb_rectangle_t *rects = NULL;
 	int n_boxes, i;
 
-	n_boxes = 0;
-	status = _cairo_region_get_boxes (region, &n_boxes, &boxes);
-        if (status)
-            return status;
+	n_boxes = _cairo_region_num_boxes (region);
 
 	if (n_boxes > 0) {
 	    rects = _cairo_malloc_ab (n_boxes, sizeof(xcb_rectangle_t));
-	    if (rects == NULL) {
-                _cairo_region_boxes_fini (region, boxes);
+	    if (rects == NULL)
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-            }
 	} else {
 	    rects = NULL;
 	}
 
 	for (i = 0; i < n_boxes; i++) {
-	    rects[i].x = boxes[i].p1.x;
-	    rects[i].y = boxes[i].p1.y;
-	    rects[i].width = boxes[i].p2.x - boxes[i].p1.x;
-	    rects[i].height = boxes[i].p2.y - boxes[i].p1.y;
+	    cairo_box_int_t box;
+
+	    _cairo_region_get_box (region, i, &box);
+	    
+	    rects[i].x = box.p1.x;
+	    rects[i].y = box.p1.y;
+	    rects[i].width = box.p2.x - box.p1.x;
+	    rects[i].height = box.p2.y - box.p1.y;
 	}
-
-        _cairo_region_boxes_fini (region, boxes);
-
+ 
 	surface->have_clip_rects = TRUE;
 	surface->clip_rects = rects;
 	surface->num_clip_rects = n_boxes;

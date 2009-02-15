@@ -1461,38 +1461,36 @@ _cairo_win32_surface_set_clip_region (void           *abstract_surface,
     /* Then combine any new region with it */
     if (region) {
 	cairo_rectangle_int_t extents;
-	cairo_box_int_t *boxes;
 	int num_boxes;
 	RGNDATA *data;
 	size_t data_size;
 	RECT *rects;
 	int i;
 	HRGN gdi_region;
+	cairo_box_int_t box0;
 
 	/* Create a GDI region for the cairo region */
 
 	_cairo_region_get_extents (region, &extents);
-	num_boxes = 0;
-	status = _cairo_region_get_boxes (region, &num_boxes, &boxes);
-	if (status)
-	    return status;
+	num_boxes = _cairo_region_num_boxes (region);
 
+	if (num_boxes == 1)
+	    _cairo_region_get_box (region, 0, &box0);
+	    
 	if (num_boxes == 1 &&
-	    boxes[0].p1.x == 0 &&
-	    boxes[0].p1.y == 0 &&
-	    boxes[0].p2.x == surface->extents.width &&
-	    boxes[0].p2.y == surface->extents.height)
+	    box0.p1.x == 0 &&
+	    box0.p1.y == 0 &&
+	    box0.p2.x == surface->extents.width &&
+	    box0.p2.y == surface->extents.height)
 	{
 	    gdi_region = NULL;
-
+	    
 	    SelectClipRgn (surface->dc, NULL);
 	    IntersectClipRect (surface->dc,
-			       boxes[0].p1.x,
-			       boxes[0].p1.y,
-			       boxes[0].p2.x,
-			       boxes[0].p2.y);
-
-	    _cairo_region_boxes_fini (region, boxes);
+			       box0.p1.x,
+			       box0.p1.y,
+			       box0.p2.x,
+			       box0.p2.y);
 	} else {
 	    /* XXX see notes in _cairo_win32_save_initial_clip --
 	     * this code will interact badly with a HDC which had an initial
@@ -1503,10 +1501,8 @@ _cairo_win32_surface_set_clip_region (void           *abstract_surface,
 
 	    data_size = sizeof (RGNDATAHEADER) + num_boxes * sizeof (RECT);
 	    data = malloc (data_size);
-	    if (!data) {
-		_cairo_region_boxes_fini (region, boxes);
+	    if (!data)
 		return _cairo_error(CAIRO_STATUS_NO_MEMORY);
-	    }
 	    rects = (RECT *)data->Buffer;
 
 	    data->rdh.dwSize = sizeof (RGNDATAHEADER);
@@ -1519,13 +1515,15 @@ _cairo_win32_surface_set_clip_region (void           *abstract_surface,
 	    data->rdh.rcBound.bottom = extents.y + extents.height;
 
 	    for (i = 0; i < num_boxes; i++) {
-		rects[i].left = boxes[i].p1.x;
-		rects[i].top = boxes[i].p1.y;
-		rects[i].right = boxes[i].p2.x;
-		rects[i].bottom = boxes[i].p2.y;
-	    }
+		cairo_box_int_t box;
 
-	    _cairo_region_boxes_fini (region, boxes);
+		_cairo_region_get_box (region, i, &box);
+		
+		rects[i].left = box.p1.x;
+		rects[i].top = box.p1.y;
+		rects[i].right = box.p2.x;
+		rects[i].bottom = box.p2.y;
+	    }
 
 	    gdi_region = ExtCreateRegion (NULL, data_size, data);
 	    free (data);
