@@ -762,9 +762,6 @@ _cairo_gl_get_traps_pattern (cairo_gl_surface_t *dst,
     pixman_trapezoid_t stack_traps[CAIRO_STACK_ARRAY_LENGTH (pixman_trapezoid_t)];
     pixman_trapezoid_t *pixman_traps;
     cairo_image_surface_t *image_surface;
-    cairo_surface_t *gl_surface;
-    cairo_status_t status;
-    int gl_offset_x, gl_offset_y;
     int i;
 
     /* Convert traps to pixman traps */
@@ -808,16 +805,167 @@ _cairo_gl_get_traps_pattern (cairo_gl_surface_t *dst,
     if (pixman_traps != stack_traps)
 	free (pixman_traps);
 
-    status = _cairo_surface_clone_similar (&dst->base, &image_surface->base,
-					   0, 0, width, height,
-					   &gl_offset_x, &gl_offset_y,
-					   &gl_surface);
+    *pattern = cairo_pattern_create_for_surface (&image_surface->base);
     cairo_surface_destroy (&image_surface->base);
-    if (status)
-	return status;
 
-    *pattern = cairo_pattern_create_for_surface (gl_surface);
-    cairo_surface_destroy (gl_surface);
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_gl_pattern_image_texture_setup (cairo_gl_composite_operand_t *operand,
+				       const cairo_pattern_t *src,
+				       cairo_gl_surface_t *dst,
+				       int src_x, int src_y,
+				       int dst_x, int dst_y,
+				       int width, int height)
+{
+    cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *)src;
+    cairo_image_surface_t *image_surface;
+    cairo_matrix_t m;
+    cairo_surface_attributes_t *attributes;
+    GLuint tex;
+    GLenum format, internal_format, type;
+
+    if (src->type != CAIRO_PATTERN_TYPE_SURFACE)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (!_cairo_surface_is_image (surface_pattern->surface))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    image_surface = (cairo_image_surface_t *)surface_pattern->surface;
+
+    switch (image_surface->pixman_format) {
+    case PIXMAN_a8r8g8b8:
+	internal_format = GL_RGBA;
+	format = GL_BGRA;
+	type = GL_UNSIGNED_INT_8_8_8_8_REV;
+	break;
+    case PIXMAN_x8r8g8b8:
+	internal_format = GL_RGB;
+	format = GL_BGR;
+	type = GL_UNSIGNED_INT_8_8_8_8_REV;
+	break;
+    case PIXMAN_a8b8g8r8:
+	internal_format = GL_RGBA;
+	format = GL_RGBA;
+	type = GL_UNSIGNED_INT_8_8_8_8_REV;
+	break;
+    case PIXMAN_x8b8g8r8:
+	internal_format = GL_RGB;
+	format = GL_RGB;
+	type = GL_UNSIGNED_INT_8_8_8_8_REV;
+	break;
+    case PIXMAN_r8g8b8:
+	internal_format = GL_RGB;
+	format = GL_RGB;
+	type = GL_UNSIGNED_BYTE;
+	break;
+    case PIXMAN_b8g8r8:
+	internal_format = GL_RGB;
+	format = GL_BGR;
+	type = GL_UNSIGNED_BYTE;
+	break;
+    case PIXMAN_r5g6b5:
+	internal_format = GL_RGB;
+	format = GL_RGB;
+	type = GL_UNSIGNED_SHORT_5_6_5;
+	break;
+    case PIXMAN_b5g6r5:
+	internal_format = GL_RGB;
+	format = GL_BGR;
+	type = GL_UNSIGNED_SHORT_5_6_5;
+	break;
+    case PIXMAN_a8:
+	internal_format = GL_ALPHA;
+	format = GL_ALPHA;
+	type = GL_UNSIGNED_BYTE;
+	break;
+
+    case PIXMAN_a1r5g5b5:
+    case PIXMAN_x1r5g5b5:
+    case PIXMAN_a1b5g5r5:
+    case PIXMAN_x1b5g5r5:
+    case PIXMAN_a2b10g10r10:
+    case PIXMAN_x2b10g10r10:
+    case PIXMAN_a4r4g4b4:
+    case PIXMAN_x4r4g4b4:
+    case PIXMAN_a4b4g4r4:
+    case PIXMAN_x4b4g4r4:
+    case PIXMAN_r3g3b2:
+    case PIXMAN_b2g3r3:
+    case PIXMAN_a2r2g2b2:
+    case PIXMAN_a2b2g2r2:
+    case PIXMAN_c8:
+    case PIXMAN_x4a4:
+    /* case PIXMAN_x4c4: */
+    case PIXMAN_x4g4:
+    case PIXMAN_a4:
+    case PIXMAN_r1g2b1:
+    case PIXMAN_b1g2r1:
+    case PIXMAN_a1r1g1b1:
+    case PIXMAN_a1b1g1r1:
+    case PIXMAN_c4:
+    case PIXMAN_g4:
+    case PIXMAN_a1:
+    case PIXMAN_g1:
+    case PIXMAN_yuy2:
+    case PIXMAN_yv12:
+    default:
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    glGenTextures (1, &tex);
+    glBindTexture (GL_TEXTURE_2D, tex);
+    glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+    assert(((image_surface->stride * image_surface->depth) %
+	    image_surface->depth) == 0);
+    glPixelStorei (GL_UNPACK_ROW_LENGTH,
+		   image_surface->stride / (image_surface->depth / 8));
+    glTexImage2D (GL_TEXTURE_2D, 0, internal_format,
+		  image_surface->width, image_surface->height, 0,
+		  format, type, image_surface->data);
+    glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
+
+    attributes = &operand->operand.texture.attributes;
+
+    operand->type = OPERAND_TEXTURE;
+    operand->operand.texture.tex = tex;
+    operand->operand.texture.surface = NULL;
+    attributes->matrix = src->matrix;
+    attributes->extend = src->extend;
+    attributes->filter = src->filter;
+    /* Demote the filter if we're doing a 1:1 mapping of pixels. */
+    if ((src->filter == CAIRO_FILTER_GOOD ||
+	 src->filter == CAIRO_FILTER_BEST ||
+	 src->filter == CAIRO_FILTER_BILINEAR) &&
+	_cairo_matrix_is_pixel_exact (&src->matrix)) {
+	attributes->filter = CAIRO_FILTER_NEAREST;
+    }
+
+    attributes->x_offset = 0;
+    attributes->y_offset = 0;
+
+
+    /* Set up translation matrix for
+     * (unnormalized dst -> unnormalized src)
+     */
+    cairo_matrix_init_translate (&m,
+				 src_x - dst_x,
+				 src_y - dst_y);
+    cairo_matrix_multiply(&attributes->matrix,
+			  &m,
+			  &attributes->matrix);
+
+    /* Translate the matrix from
+     * (unnormalized src -> unnormalized src) to
+     * (unnormalized dst -> normalized src)
+     */
+    cairo_matrix_init_scale (&m,
+			     1.0 / image_surface->width,
+			     1.0 / image_surface->height);
+    cairo_matrix_multiply (&attributes->matrix,
+			   &attributes->matrix,
+			   &m);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -840,6 +988,14 @@ _cairo_gl_pattern_texture_setup (cairo_gl_composite_operand_t *operand,
     cairo_surface_attributes_t *attributes;
 
     attributes = &operand->operand.texture.attributes;
+
+    /* First, try to just upload it to a texture if it's an image surface. */
+    status = _cairo_gl_pattern_image_texture_setup (operand, src, dst,
+						    src_x, src_y,
+						    dst_x, dst_y,
+						    width, height);
+    if (status == CAIRO_STATUS_SUCCESS)
+	return CAIRO_STATUS_SUCCESS;
 
     /* Avoid looping in acquire surface fallback -> clone similar -> paint ->
      * gl_composite -> acquire surface -> fallback.
@@ -941,14 +1097,19 @@ _cairo_gl_operand_init(cairo_gl_composite_operand_t *operand,
 static void
 _cairo_gl_operand_destroy (cairo_gl_composite_operand_t *operand)
 {
-
     switch (operand->type) {
     case OPERAND_CONSTANT:
 	break;
     case OPERAND_TEXTURE:
-	_cairo_pattern_release_surface(operand->pattern,
-				       &operand->operand.texture.surface->base,
-				       &operand->operand.texture.attributes);
+	if (operand->operand.texture.surface != NULL) {
+	    cairo_gl_surface_t *surface = operand->operand.texture.surface;
+
+	    _cairo_pattern_release_surface (operand->pattern,
+					    &surface->base,
+					    &operand->operand.texture.attributes);
+	} else {
+	    glDeleteTextures (1, &operand->operand.texture.tex);
+	}
 	break;
     }
 }
