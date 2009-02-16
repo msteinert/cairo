@@ -160,14 +160,6 @@ CAIRO_ENABLE_SURFACE_BACKEND(beos, BeOS/Zeta, no, [
 
 dnl ===========================================================================
 
-CAIRO_ENABLE_SURFACE_BACKEND(sdl, SDL, no, [
-  sdl_REQUIRES="sdl >= 1.2"
-  PKG_CHECK_MODULES(sdl, $sdl_REQUIRES, , [AC_MSG_RESULT(no)
-  use_sdl="no (requires $sdl_REQUIRES http://www.libsdl.org)"])
-])
-
-dnl ===========================================================================
-
 CAIRO_ENABLE_FUNCTIONS(png, PNG, yes, [
   use_png=no
   AC_ARG_VAR([png_REQUIRES], [module name for libpng to search for using pkg-config])

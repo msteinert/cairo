@@ -308,10 +308,6 @@ if HAVE_PTHREAD
 cairo_test_suite_LDADD += -lpthread
 endif
 
-if CAIRO_HAS_SDL_SURFACE
-cairo_test_suite_LDADD += $(sdl_LIBS)
-endif
-
 BUILT_SOURCES += cairo-test-constructors.c
 noinst_SCRIPTS = make-cairo-test-constructors.pl
 EXTRA_DIST += $(BUILT_SOURCES) $(noinst_SCRIPTS) COPYING

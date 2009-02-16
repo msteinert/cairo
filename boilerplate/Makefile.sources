@@ -43,9 +43,6 @@ cairo_boilerplate_quartz_sources = cairo-boilerplate-quartz.c
 cairo_boilerplate_script_private = cairo-boilerplate-script-private.h
 cairo_boilerplate_script_sources = cairo-boilerplate-script.c
 
-cairo_boilerplate_sdl_private = cairo-boilerplate-sdl-private.h
-cairo_boilerplate_sdl_sources = cairo-boilerplate-sdl.c
-
 cairo_boilerplate_svg_private = cairo-boilerplate-svg-private.h
 cairo_boilerplate_svg_sources = cairo-boilerplate-svg.c
 

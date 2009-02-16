@@ -1877,7 +1877,6 @@ cairo_surface_status (cairo_surface_t *surface);
  * @CAIRO_SURFACE_TYPE_OS2: The surface is of type os2
  * @CAIRO_SURFACE_TYPE_WIN32_PRINTING: The surface is a win32 printing surface
  * @CAIRO_SURFACE_TYPE_QUARTZ_IMAGE: The surface is of type quartz_image
- * @CAIRO_SURFACE_TYPE_SDL: The surface is of type SDL, since 1.10
  * @CAIRO_SURFACE_TYPE_SCRIPT: The surface is of type script, since 1.10
  *
  * #cairo_surface_type_t is used to describe the type of a given
@@ -1918,7 +1917,6 @@ typedef enum _cairo_surface_type {
     CAIRO_SURFACE_TYPE_OS2,
     CAIRO_SURFACE_TYPE_WIN32_PRINTING,
     CAIRO_SURFACE_TYPE_QUARTZ_IMAGE,
-    CAIRO_SURFACE_TYPE_SDL,
     CAIRO_SURFACE_TYPE_SCRIPT
 } cairo_surface_type_t;
 

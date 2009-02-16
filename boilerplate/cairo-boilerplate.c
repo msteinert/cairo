@@ -50,9 +50,6 @@
 #if CAIRO_HAS_SCRIPT_SURFACE
 #include "cairo-boilerplate-script-private.h"
 #endif
-#if CAIRO_HAS_SDL_SURFACE
-#include "cairo-boilerplate-sdl-private.h"
-#endif
 #if CAIRO_HAS_SVG_SURFACE
 #include "cairo-boilerplate-svg-private.h"
 #endif
@@ -721,18 +718,6 @@ static cairo_boilerplate_target_t targets[] =
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_directfb_cleanup
-    },
-#endif
-
-#if CAIRO_HAS_SDL_SURFACE
-    {
-	"sdl", "sdl", NULL,
-	CAIRO_SURFACE_TYPE_SDL, CAIRO_CONTENT_COLOR, 0,
-	_cairo_boilerplate_sdl_create_surface, NULL,
-	NULL,
-	_cairo_boilerplate_get_image_surface,
-	cairo_surface_write_to_png,
-	_cairo_boilerplate_sdl_cleanup
     },
 #endif
 };

@@ -119,16 +119,6 @@ enabled_cairo_boilerplate_private += $(cairo_boilerplate_beos_private)
 enabled_cairo_boilerplate_sources += $(cairo_boilerplate_beos_sources)
 endif
 
-unsupported_cairo_boilerplate_headers += $(cairo_boilerplate_sdl_headers)
-all_cairo_boilerplate_headers += $(cairo_boilerplate_sdl_headers)
-all_cairo_boilerplate_private += $(cairo_boilerplate_sdl_private)
-all_cairo_boilerplate_sources += $(cairo_boilerplate_sdl_sources)
-ifeq ($(CAIRO_HAS_SDL_SURFACE),1)
-enabled_cairo_boilerplate_headers += $(cairo_boilerplate_sdl_headers)
-enabled_cairo_boilerplate_private += $(cairo_boilerplate_sdl_private)
-enabled_cairo_boilerplate_sources += $(cairo_boilerplate_sdl_sources)
-endif
-
 supported_cairo_boilerplate_headers += $(cairo_boilerplate_png_headers)
 all_cairo_boilerplate_headers += $(cairo_boilerplate_png_headers)
 all_cairo_boilerplate_private += $(cairo_boilerplate_png_private)

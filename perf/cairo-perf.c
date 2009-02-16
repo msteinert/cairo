@@ -33,10 +33,6 @@
 
 #include "cairo-boilerplate-getopt.h"
 
-#if CAIRO_HAS_SDL_SURFACE
-#include <SDL_main.h>
-#endif
-
 /* For basename */
 #ifdef HAVE_LIBGEN_H
 #include <libgen.h>

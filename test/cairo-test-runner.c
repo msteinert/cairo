@@ -33,10 +33,6 @@
 #undef CAIRO_VERSION_MICRO
 #include "../cairo-version.h"
 
-#if CAIRO_HAS_SDL_SURFACE
-#include <SDL_main.h>
-#endif
-
 #include <pixman.h> /* for version information */
 
 /* Coregraphics doesn't seem to like being forked and reports:
