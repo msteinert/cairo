@@ -1570,14 +1570,13 @@ _cairo_surface_fill_rectangle (cairo_surface_t	   *surface,
  *
  * Return value: %CAIRO_STATUS_SUCCESS or the error that occurred
  **/
-COMPILE_TIME_ASSERT (sizeof (cairo_box_int_t) <= sizeof (cairo_rectangle_int_t));
 cairo_status_t
 _cairo_surface_fill_region (cairo_surface_t	   *surface,
 			    cairo_operator_t	    op,
 			    const cairo_color_t    *color,
 			    cairo_region_t         *region)
 {
-    int num_boxes;
+    int num_rects;
     cairo_rectangle_int_t stack_rects[CAIRO_STACK_ARRAY_LENGTH (cairo_rectangle_int_t)];
     cairo_rectangle_int_t *rects = stack_rects;
     cairo_status_t status;
@@ -1588,12 +1587,12 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
 
     assert (! surface->is_snapshot);
 
-    num_boxes = _cairo_region_num_boxes (region);
-    if (num_boxes == 0)
+    num_rects = _cairo_region_num_rectangles (region);
+    if (num_rects == 0)
 	return CAIRO_STATUS_SUCCESS;
 
-    if (num_boxes > ARRAY_LENGTH (stack_rects)) {
-	rects = _cairo_malloc_ab (num_boxes,
+    if (num_rects > ARRAY_LENGTH (stack_rects)) {
+	rects = _cairo_malloc_ab (num_rects,
 				  sizeof (cairo_rectangle_int_t));
 	if (rects == NULL) {
 	    return _cairo_surface_set_error (surface,
@@ -1601,19 +1600,11 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
 	}
     }
 
-    for (i = 0; i < num_boxes; i++) {
-	cairo_box_int_t box;
-
-	_cairo_region_get_box (region, i, &box);
-	
-	rects[i].x = box.p1.x;
-	rects[i].y = box.p1.y;
-	rects[i].width  = box.p2.x - rects[i].x;
-	rects[i].height = box.p2.y - rects[i].y;
-    }
+    for (i = 0; i < num_rects; i++)
+	_cairo_region_get_rectangle (region, i, &rects[i]);
 
     status =  _cairo_surface_fill_rectangles (surface, op,
-					      color, rects, num_boxes);
+					      color, rects, num_rects);
 
     if (rects != stack_rects)
 	free (rects);

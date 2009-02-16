@@ -2269,7 +2269,6 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
     return status;
 }
 
-COMPILE_TIME_ASSERT (sizeof (XRectangle) <= sizeof (cairo_box_int_t));
 static cairo_int_status_t
 _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 				     cairo_region_t *region)
@@ -2291,7 +2290,7 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
     if (region != NULL) {
 	cairo_status_t status;
 	XRectangle *rects = NULL;
-	int n_boxes, i;
+	int n_rects, i;
 	cairo_rectangle_int_t rect;
 	cairo_region_t *bounded;
 
@@ -2310,10 +2309,10 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 	    return status;
 	}
 
-	n_boxes = _cairo_region_num_boxes (bounded);
+	n_rects = _cairo_region_num_rectangles (bounded);
 
-	if (n_boxes > ARRAY_LENGTH (surface->embedded_clip_rects)) {
-	    rects = _cairo_malloc_ab (n_boxes, sizeof (XRectangle));
+	if (n_rects > ARRAY_LENGTH (surface->embedded_clip_rects)) {
+	    rects = _cairo_malloc_ab (n_rects, sizeof (XRectangle));
 	    if (unlikely (rects == NULL)) {
 		_cairo_region_destroy (bounded);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -2322,25 +2321,25 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 	    rects = surface->embedded_clip_rects;
 	}
 
-	for (i = 0; i < n_boxes; i++) {
-	    cairo_box_int_t box;
+	for (i = 0; i < n_rects; i++) {
+	    cairo_rectangle_int_t rect;
+	    
+	    _cairo_region_get_rectangle (bounded, i, &rect);
 
-	    _cairo_region_get_box (bounded, i, &box);
-
-	    rects[i].x = box.p1.x;
-	    rects[i].y = box.p1.y;
-	    rects[i].width  = box.p2.x - rects[i].x;
-	    rects[i].height = box.p2.y - rects[i].y;
+	    rects[i].x = rect.x;
+	    rects[i].y = rect.y;
+	    rects[i].width = rect.width;
+	    rects[i].height = rect.height;
 	}
 	
 	_cairo_region_destroy (bounded);
 
 	surface->have_clip_rects = TRUE;
 	surface->clip_rects = rects;
-	surface->num_clip_rects = n_boxes;
+	surface->num_clip_rects = n_rects;
 
 	/* Discard the trivial clip rectangle that covers the entire surface */
-	if (n_boxes == 1 &&
+	if (n_rects == 1 &&
 	    rects[0].x == 0 &&
 	    rects[0].y == 0 &&
 	    rects[0].width  == surface->width &&

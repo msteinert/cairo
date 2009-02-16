@@ -75,8 +75,8 @@ _cairo_region_create_rect (cairo_rectangle_int_t *rect)
 }
 
 cairo_region_t *
-_cairo_region_create_boxes (cairo_box_int_t *boxes,
-			    int count)
+_cairo_region_create_rectangles (cairo_rectangle_int_t *rects,
+				 int count)
 {
     pixman_box32_t stack_pboxes[CAIRO_STACK_ARRAY_LENGTH (pixman_box32_t)];
     pixman_box32_t *pboxes = stack_pboxes;
@@ -100,10 +100,10 @@ _cairo_region_create_boxes (cairo_box_int_t *boxes,
     }
 
     for (i = 0; i < count; i++) {
-	pboxes[i].x1 = boxes[i].p1.x;
-	pboxes[i].y1 = boxes[i].p1.y;
-	pboxes[i].x2 = boxes[i].p2.x;
-	pboxes[i].y2 = boxes[i].p2.y;
+	pboxes[i].x1 = rects[i].x;
+	pboxes[i].y1 = rects[i].y;
+	pboxes[i].x2 = rects[i].x + rects[i].width;
+	pboxes[i].y2 = rects[i].y + rects[i].height;
     }
 
     if (! pixman_region32_init_rects (&region->rgn, pboxes, count)) {
@@ -150,7 +150,7 @@ _cairo_region_copy (cairo_region_t *original)
 }
 
 int
-_cairo_region_num_boxes (cairo_region_t *region)
+_cairo_region_num_rectangles (cairo_region_t *region)
 {
     if (region->status)
 	return 0;
@@ -159,9 +159,9 @@ _cairo_region_num_boxes (cairo_region_t *region)
 }
 
 cairo_private void
-_cairo_region_get_box (cairo_region_t *region,
-		       int nth_box,
-		       cairo_box_int_t *box)
+_cairo_region_get_rectangle (cairo_region_t *region,
+			     int nth_box,
+			     cairo_rectangle_int_t *rect)
 {
     pixman_box32_t *pbox;
 
@@ -170,10 +170,10 @@ _cairo_region_get_box (cairo_region_t *region,
     
     pbox = pixman_region32_rectangles (&region->rgn, NULL) + nth_box;
 
-    box->p1.x = pbox->x1;
-    box->p1.y = pbox->y1;
-    box->p2.x = pbox->x2;
-    box->p2.y = pbox->y2;
+    rect->x = pbox->x1;
+    rect->y = pbox->y1;
+    rect->width = pbox->x2 - pbox->x1;
+    rect->height = pbox->y2 - pbox->y1;
 }
 
 /**

@@ -417,7 +417,7 @@ _composite_trap_region (cairo_clip_t            *clip,
     cairo_status_t status;
     cairo_solid_pattern_t solid_pattern;
     cairo_surface_pattern_t mask;
-    int num_rects = _cairo_region_num_boxes (trap_region);
+    int num_rects = _cairo_region_num_rectangles (trap_region);
     unsigned int clip_serial;
     cairo_surface_t *clip_surface = clip ? clip->surface : NULL;
 

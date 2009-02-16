@@ -250,12 +250,6 @@ typedef struct _cairo_point_int32 cairo_point_int_t;
 #error Not sure how to pick a cairo_rectangle_int_t and cairo_point_int_t for your CAIRO_FIXED_BITS!
 #endif
 
-typedef struct _cairo_box_int {
-    cairo_point_int_t p1;
-    cairo_point_int_t p2;
-} cairo_box_int_t;
-
-
 /* Rectangles that take part in a composite operation.
  *
  * This defines four translations that define which pixels of the

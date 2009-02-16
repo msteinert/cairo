@@ -65,8 +65,8 @@ cairo_private void
 _cairo_region_clear (cairo_region_t *region);
 
 cairo_private cairo_region_t *
-_cairo_region_create_boxes (cairo_box_int_t *boxes,
-			    int count);
+_cairo_region_create_rectangles (cairo_rectangle_int_t *rects,
+				 int count);
 
 cairo_private void
 _cairo_region_destroy (cairo_region_t *region);
@@ -75,12 +75,12 @@ cairo_private cairo_region_t *
 _cairo_region_copy (cairo_region_t *original);
 
 cairo_private int
-_cairo_region_num_boxes (cairo_region_t *region);
+_cairo_region_num_rectangles (cairo_region_t *region);
 
 cairo_private void
-_cairo_region_get_box (cairo_region_t *region,
-		       int nth_box,
-		       cairo_box_int_t *box);
+_cairo_region_get_rectangle (cairo_region_t *region,
+			     int nth_rectangle,
+			     cairo_rectangle_int_t *rectangle);
 
 cairo_private void
 _cairo_region_get_extents (cairo_region_t *region,
@@ -107,7 +107,7 @@ _cairo_region_translate (cairo_region_t *region,
 
 cairo_private pixman_region_overlap_t
 _cairo_region_contains_rectangle (cairo_region_t *region,
-				  const cairo_rectangle_int_t *box);
+				  const cairo_rectangle_int_t *rect);
 
 
 CAIRO_END_DECLS

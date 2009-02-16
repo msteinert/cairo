@@ -610,9 +610,9 @@ cairo_int_status_t
 _cairo_traps_extract_region (const cairo_traps_t  *traps,
 			     cairo_region_t      **region)
 {
-    cairo_box_int_t stack_boxes[CAIRO_STACK_ARRAY_LENGTH (cairo_box_int_t)];
-    cairo_box_int_t *boxes = stack_boxes;
-    int i, box_count;
+    cairo_rectangle_int_t stack_rects[CAIRO_STACK_ARRAY_LENGTH (cairo_rectangle_int_t)];
+    cairo_rectangle_int_t *rects = stack_rects;
+    int i, rect_count;
     cairo_int_status_t status;
 
     if (traps->num_traps == 0) {
@@ -632,14 +632,15 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
 	}
     }
 
-    if (traps->num_traps > ARRAY_LENGTH (stack_boxes)) {
-	boxes = _cairo_malloc_ab (traps->num_traps, sizeof (cairo_box_int_t));
+    if (traps->num_traps > ARRAY_LENGTH (stack_rects)) {
+	rects = _cairo_malloc_ab (traps->num_traps,
+				  sizeof (cairo_rectangle_int_t));
 
-	if (unlikely (boxes == NULL))
+	if (unlikely (rects == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
-    box_count = 0;
+    rect_count = 0;
 
     for (i = 0; i < traps->num_traps; i++) {
 	int x1 = _cairo_fixed_integer_part (traps->traps[i].left.p1.x);
@@ -653,19 +654,19 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
 	if (x1 == x2 || y1 == y2)
 	    continue;
 
-	boxes[box_count].p1.x = x1;
-	boxes[box_count].p1.y = y1;
-	boxes[box_count].p2.x = x2;
-	boxes[box_count].p2.y = y2;
+	rects[rect_count].x = x1;
+	rects[rect_count].y = y1;
+	rects[rect_count].width = x2 - x1;
+	rects[rect_count].height = y2 - y1;
 
-	box_count++;
+	rect_count++;
     }
 
-    *region = _cairo_region_create_boxes (boxes, box_count);
+    *region = _cairo_region_create_rectangles (rects, rect_count);
     status = _cairo_region_status (*region);
     
-    if (boxes != stack_boxes)
-	free (boxes);
+    if (rects != stack_rects)
+	free (rects);
 
     if (unlikely (status))
     {

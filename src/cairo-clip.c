@@ -859,7 +859,7 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
 {
     cairo_rectangle_list_t *list;
     cairo_rectangle_t *rectangles = NULL;
-    int n_boxes = 0;
+    int n_rects = 0;
 
     if (clip->all_clipped)
 	goto DONE;
@@ -872,25 +872,19 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
     if (clip->region) {
         int i;
 
-	n_boxes = _cairo_region_num_boxes (clip->region);
+	n_rects = _cairo_region_num_rectangles (clip->region);
 
-	if (n_boxes) {
-	    rectangles = _cairo_malloc_ab (n_boxes, sizeof (cairo_rectangle_t));
+	if (n_rects) {
+	    rectangles = _cairo_malloc_ab (n_rects, sizeof (cairo_rectangle_t));
 	    if (unlikely (rectangles == NULL)) {
 		_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 		return (cairo_rectangle_list_t*) &_cairo_rectangles_nil;
 	    }
 
-	    for (i = 0; i < n_boxes; ++i) {
-		cairo_box_int_t box;
+	    for (i = 0; i < n_rects; ++i) {
 		cairo_rectangle_int_t clip_rect;
 
-		_cairo_region_get_box (clip->region, i, &box);
-
-		clip_rect.x = box.p1.x;
-		clip_rect.y = box.p1.y;
-		clip_rect.width  = box.p2.x - box.p1.x;
-		clip_rect.height = box.p2.y - box.p1.y;
+		_cairo_region_get_rectangle (clip->region, i, &clip_rect);
 		
 		if (!_cairo_clip_int_rect_to_user(gstate, &clip_rect, &rectangles[i])) {
 		    _cairo_error_throw (CAIRO_STATUS_CLIP_NOT_REPRESENTABLE);
@@ -902,7 +896,7 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
     } else {
         cairo_rectangle_int_t extents;
 
-	n_boxes = 1;
+	n_rects = 1;
 
 	rectangles = malloc(sizeof (cairo_rectangle_t));
 	if (unlikely (rectangles == NULL)) {
@@ -929,7 +923,7 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
 
     list->status = CAIRO_STATUS_SUCCESS;
     list->rectangles = rectangles;
-    list->num_rectangles = n_boxes;
+    list->num_rectangles = n_rects;
     return list;
 }
 
