@@ -120,12 +120,6 @@ _cairo_region_get_box (cairo_region_t *region,
     box->p2.y = pbox->y2;
 }
 
-void
-_cairo_region_boxes_fini (cairo_region_t *region, cairo_box_int_t *boxes)
-{
-    free (boxes);
-}
-
 /**
  * _cairo_region_get_extents:
  * @region: a #cairo_region_t
