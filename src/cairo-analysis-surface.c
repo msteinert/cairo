@@ -215,7 +215,7 @@ _add_operation  (cairo_analysis_surface_t *surface,
      * region there is no benefit in emitting a native operation as
      * the fallback image will be painted on top.
      */
-    if (_cairo_region_contains_rectangle (surface->fallback_region, rect) == PIXMAN_REGION_IN)
+    if (_cairo_region_contains_rectangle (surface->fallback_region, rect) == CAIRO_REGION_OVERLAP_IN)
 	return CAIRO_INT_STATUS_IMAGE_FALLBACK;
 
     if (backend_status == CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY) {
@@ -226,7 +226,7 @@ _add_operation  (cairo_analysis_surface_t *surface,
 	 * natively supported and the backend will blend the
 	 * transparency into the white background.
 	 */
-	if (_cairo_region_contains_rectangle (surface->supported_region, rect) == PIXMAN_REGION_OUT)
+	if (_cairo_region_contains_rectangle (surface->supported_region, rect) == CAIRO_REGION_OVERLAP_OUT)
 	    backend_status = CAIRO_STATUS_SUCCESS;
     }
 

@@ -279,19 +279,34 @@ _cairo_region_translate (cairo_region_t *region,
     pixman_region32_translate (&region->rgn, x, y);
 }
 
-pixman_region_overlap_t
+cairo_region_overlap_t
 _cairo_region_contains_rectangle (cairo_region_t *region,
 				  const cairo_rectangle_int_t *rect)
 {
     pixman_box32_t pbox;
+    pixman_region_overlap_t poverlap;
 
-    if (region->status)
-	return PIXMAN_REGION_OUT;
-    
-    pbox.x1 = rect->x;
-    pbox.y1 = rect->y;
-    pbox.x2 = rect->x + rect->width;
-    pbox.y2 = rect->y + rect->height;
+    if (!region->status)
+    {
+	pbox.x1 = rect->x;
+	pbox.y1 = rect->y;
+	pbox.x2 = rect->x + rect->width;
+	pbox.y2 = rect->y + rect->height;
+	
+	poverlap = pixman_region32_contains_rectangle (&region->rgn, &pbox);
+	
+	switch (poverlap)
+	{
+	case PIXMAN_REGION_OUT:
+	    return CAIRO_REGION_OVERLAP_OUT;
+	    
+	case PIXMAN_REGION_IN:
+	    return CAIRO_REGION_OVERLAP_IN;
+	    
+	case PIXMAN_REGION_PART:
+	    return CAIRO_REGION_OVERLAP_PART;
+	}
+    }
 
-    return pixman_region32_contains_rectangle (&region->rgn, &pbox);
+    return CAIRO_REGION_OVERLAP_OUT;
 }

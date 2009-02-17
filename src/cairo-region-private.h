@@ -52,6 +52,12 @@ struct _cairo_region {
     pixman_region32_t rgn;
 };
 
+typedef enum _cairo_region_overlap {
+    CAIRO_REGION_OVERLAP_IN,		/* completely inside region */
+    CAIRO_REGION_OVERLAP_OUT,		/* completely outside region */
+    CAIRO_REGION_OVERLAP_PART,		/* partly inside region */
+} cairo_region_overlap_t;
+
 cairo_private cairo_region_t *
 _cairo_region_create (void);
 
@@ -105,7 +111,7 @@ cairo_private void
 _cairo_region_translate (cairo_region_t *region,
 			 int x, int y);
 
-cairo_private pixman_region_overlap_t
+cairo_private cairo_region_overlap_t
 _cairo_region_contains_rectangle (cairo_region_t *region,
 				  const cairo_rectangle_int_t *rect);
 
