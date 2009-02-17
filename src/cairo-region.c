@@ -246,6 +246,22 @@ _cairo_region_intersect (cairo_region_t *dst, cairo_region_t *other)
     return CAIRO_STATUS_SUCCESS;
 }
 
+cairo_private cairo_status_t
+_cairo_region_union (cairo_region_t *dst,
+		     cairo_region_t *other)
+{
+    if (dst->status)
+	return dst->status;
+
+    if (other->status)
+	return other->status;
+
+    if (!pixman_region32_union (&dst->rgn, &dst->rgn, &other->rgn))
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 cairo_status_t
 _cairo_region_union_rect (cairo_region_t *dst,
 			  cairo_rectangle_int_t *rect)

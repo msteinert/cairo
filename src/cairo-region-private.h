@@ -101,6 +101,10 @@ _cairo_region_intersect (cairo_region_t *dst,
 			 cairo_region_t *other);
 
 cairo_private cairo_status_t
+_cairo_region_union (cairo_region_t *dst,
+		     cairo_region_t *other);
+
+cairo_private cairo_status_t
 _cairo_region_union_rect (cairo_region_t *dst,
 			  cairo_rectangle_int_t *rect);
 
