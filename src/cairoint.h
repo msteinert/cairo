@@ -2528,7 +2528,11 @@ _cairo_pattern_reset_static_data (void);
 
 /* cairo-region.c */
 
-#include "cairo-region-private.h"
+struct _cairo_region {
+    cairo_status_t status;
+    
+    pixman_region32_t rgn;
+};
 
 /* cairo-unicode.c */
 

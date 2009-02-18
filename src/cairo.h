@@ -2349,6 +2349,81 @@ cairo_public void
 cairo_matrix_transform_point (const cairo_matrix_t *matrix,
 			      double *x, double *y);
 
+/* Region functions */
+
+typedef struct _cairo_region cairo_region_t;
+
+typedef struct _cairo_rectangle_int {
+    int x, y;
+    unsigned int width, height;
+} cairo_rectangle_int_t;
+
+typedef enum _cairo_region_overlap {
+    CAIRO_REGION_OVERLAP_IN,		/* completely inside region */
+    CAIRO_REGION_OVERLAP_OUT,		/* completely outside region */
+    CAIRO_REGION_OVERLAP_PART,		/* partly inside region */
+} cairo_region_overlap_t;
+
+cairo_public cairo_region_t *
+cairo_region_create (void);
+
+cairo_public cairo_region_t *
+cairo_region_create_rect (cairo_rectangle_int_t *rect);
+
+cairo_public cairo_region_t *
+cairo_region_create_rectangles (cairo_rectangle_int_t *rects,
+				int count);
+
+cairo_public cairo_region_t *
+cairo_region_copy (cairo_region_t *original);
+
+cairo_public void
+cairo_region_destroy (cairo_region_t *region);
+
+cairo_public cairo_status_t
+cairo_region_status (cairo_region_t *region);
+
+cairo_public void
+cairo_region_get_extents (cairo_region_t        *region,
+			  cairo_rectangle_int_t *extents);
+
+cairo_public int
+cairo_region_num_rectangles (cairo_region_t *region);
+
+cairo_public void
+cairo_region_get_rectangle (cairo_region_t        *region,
+			    int                    nth_rectangle,
+			    cairo_rectangle_int_t *rectangle);
+
+cairo_public cairo_bool_t
+cairo_region_empty (cairo_region_t *region);
+
+cairo_public cairo_region_overlap_t
+cairo_region_contains_rectangle (cairo_region_t *region,
+				 const cairo_rectangle_int_t *rect);
+
+cairo_public cairo_bool_t
+cairo_region_contains_point (cairo_region_t *region, int x, int y);
+
+cairo_public void
+cairo_region_clear (cairo_region_t *region);
+
+cairo_public void
+cairo_region_translate (cairo_region_t *region, int dx, int dy);
+
+cairo_public cairo_status_t
+cairo_region_subtract (cairo_region_t *dst, cairo_region_t *other);
+
+cairo_public cairo_status_t
+cairo_region_intersect (cairo_region_t *dst, cairo_region_t *other);
+
+cairo_public cairo_status_t
+cairo_region_union (cairo_region_t *dst, cairo_region_t *other);
+
+cairo_public cairo_status_t
+cairo_region_union_rect (cairo_region_t *dst, cairo_rectangle_int_t *rect);
+
+
 /* Functions to be used while debugging (not intended for use in production code) */
 cairo_public void
 cairo_debug_reset_static_data (void);

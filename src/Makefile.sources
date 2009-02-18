@@ -78,7 +78,6 @@ cairo_private = \
 	cairo-path-private.h \
 	cairo-private.h \
 	cairo-reference-count-private.h \
-	cairo-region-private.h \
 	cairo-scaled-font-private.h \
 	cairo-skiplist-private.h \
 	cairo-spans-private.h \

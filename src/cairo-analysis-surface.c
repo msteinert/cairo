@@ -38,7 +38,6 @@
 
 #include "cairo-analysis-surface-private.h"
 #include "cairo-paginated-private.h"
-#include "cairo-region-private.h"
 #include "cairo-meta-surface-private.h"
 
 typedef struct {

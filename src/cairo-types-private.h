@@ -59,7 +59,6 @@ typedef struct _cairo_output_stream cairo_output_stream_t;
 typedef struct _cairo_paginated_surface_backend cairo_paginated_surface_backend_t;
 typedef struct _cairo_path_fixed cairo_path_fixed_t;
 typedef struct _cairo_rectangle_int16 cairo_glyph_size_t;
-typedef struct _cairo_region cairo_region_t;
 typedef struct _cairo_scaled_font_backend   cairo_scaled_font_backend_t;
 typedef struct _cairo_scaled_font_subsets cairo_scaled_font_subsets_t;
 typedef struct _cairo_solid_pattern cairo_solid_pattern_t;
@@ -217,11 +216,6 @@ typedef struct _cairo_trapezoid {
     cairo_fixed_t top, bottom;
     cairo_line_t left, right;
 } cairo_trapezoid_t;
-
-typedef struct _cairo_rectangle_int {
-    int x, y;
-    unsigned int width, height;
-} cairo_rectangle_int_t;
 
 typedef struct _cairo_point_int {
     int x, y;

@@ -158,7 +158,7 @@ cairo_region_num_rectangles (cairo_region_t *region)
     return pixman_region32_n_rects (&region->rgn);
 }
 
-cairo_private void
+void
 cairo_region_get_rectangle (cairo_region_t *region,
 			    int nth_box,
 			    cairo_rectangle_int_t *rect)
@@ -246,7 +246,7 @@ cairo_region_intersect (cairo_region_t *dst, cairo_region_t *other)
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_private cairo_status_t
+cairo_status_t
 cairo_region_union (cairo_region_t *dst,
 		    cairo_region_t *other)
 {
@@ -327,7 +327,7 @@ cairo_region_contains_rectangle (cairo_region_t *region,
     return CAIRO_REGION_OVERLAP_OUT;
 }
 
-cairo_private cairo_bool_t
+cairo_bool_t
 cairo_region_contains_point (cairo_region_t *region,
 			     int x, int y)
 {
