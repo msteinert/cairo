@@ -2696,7 +2696,6 @@ slim_hidden_proto (cairo_user_to_device_distance);
 slim_hidden_proto (cairo_version_string);
 slim_hidden_proto (cairo_region_create);
 slim_hidden_proto (cairo_region_create_rect);
-slim_hidden_proto (cairo_region_create_rectangles);
 slim_hidden_proto (cairo_region_copy);
 slim_hidden_proto (cairo_region_destroy);
 slim_hidden_proto (cairo_region_status);

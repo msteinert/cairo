@@ -610,17 +610,12 @@ cairo_int_status_t
 _cairo_traps_extract_region (const cairo_traps_t  *traps,
 			     cairo_region_t      **region)
 {
-    cairo_rectangle_int_t stack_rects[CAIRO_STACK_ARRAY_LENGTH (cairo_rectangle_int_t)];
-    cairo_rectangle_int_t *rects = stack_rects;
-    int i, rect_count;
-    cairo_int_status_t status;
+    cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_region_t *r;
+    int i;
 
-    if (traps->num_traps == 0) {
-	*region = cairo_region_create ();
-	return CAIRO_STATUS_SUCCESS;
-    }
-
-    for (i = 0; i < traps->num_traps; i++) {
+    for (i = 0; i < traps->num_traps; i++)
+    {
 	if (traps->traps[i].left.p1.x != traps->traps[i].left.p2.x   ||
 	    traps->traps[i].right.p1.x != traps->traps[i].right.p2.x ||
 	    ! _cairo_fixed_is_integer (traps->traps[i].top)          ||
@@ -632,17 +627,12 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
 	}
     }
 
-    if (traps->num_traps > ARRAY_LENGTH (stack_rects)) {
-	rects = _cairo_malloc_ab (traps->num_traps,
-				  sizeof (cairo_rectangle_int_t));
-
-	if (unlikely (rects == NULL))
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-    }
-
-    rect_count = 0;
-
-    for (i = 0; i < traps->num_traps; i++) {
+    r = cairo_region_create ();
+    
+    for (i = 0; i < traps->num_traps; i++)
+    {
+	cairo_rectangle_int_t rect;
+	
 	int x1 = _cairo_fixed_integer_part (traps->traps[i].left.p1.x);
 	int y1 = _cairo_fixed_integer_part (traps->traps[i].top);
 	int x2 = _cairo_fixed_integer_part (traps->traps[i].right.p1.x);
@@ -654,26 +644,22 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
 	if (x1 == x2 || y1 == y2)
 	    continue;
 
-	rects[rect_count].x = x1;
-	rects[rect_count].y = y1;
-	rects[rect_count].width = x2 - x1;
-	rects[rect_count].height = y2 - y1;
+	rect.x = x1;
+	rect.y = y1;
+	rect.width = x2 - x1;
+	rect.height = y2 - y1;
 
-	rect_count++;
+	status = cairo_region_union_rect (r, &rect);
+	if (unlikely (status))
+	{
+	    cairo_region_destroy (r);
+	    r = NULL;
+	    break;
+	}
     }
 
-    *region = cairo_region_create_rectangles (rects, rect_count);
-    status = cairo_region_status (*region);
+    *region = r;
     
-    if (rects != stack_rects)
-	free (rects);
-
-    if (unlikely (status))
-    {
-	cairo_region_destroy (*region);
-	*region = NULL;
-    }
-
     return status;
 }
 
