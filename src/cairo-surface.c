@@ -716,7 +716,7 @@ cairo_surface_set_mime_data (cairo_surface_t		*surface,
 slim_hidden_def (cairo_surface_set_mime_data);
 
 static void
-_cairo_mime_data_reference (void *key, void *elt, void *closure)
+_cairo_mime_data_reference (const void *key, void *elt, void *closure)
 {
     cairo_mime_data_t *mime_data = elt;
 

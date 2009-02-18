@@ -336,7 +336,7 @@ _cairo_user_data_array_copy (cairo_user_data_array_t	*dst,
 
 cairo_private void
 _cairo_user_data_array_foreach (cairo_user_data_array_t     *array,
-				void (*func) (void *key,
+				void (*func) (const void *key,
 					      void *elt,
 					      void *closure),
 				void *closure);
