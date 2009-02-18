@@ -1471,11 +1471,11 @@ _cairo_win32_surface_set_clip_region (void           *abstract_surface,
 
 	/* Create a GDI region for the cairo region */
 
-	_cairo_region_get_extents (region, &extents);
-	num_rects = _cairo_region_num_rectangles (region);
+	cairo_region_get_extents (region, &extents);
+	num_rects = cairo_region_num_rectangles (region);
 
 	if (num_rects == 1)
-	    _cairo_region_get_rectangle (region, 0, &rect0);
+	    cairo_region_get_rectangle (region, 0, &rect0);
 	    
 	if (num_rects == 1 &&
 	    rect0.x == 0 &&
@@ -1517,7 +1517,7 @@ _cairo_win32_surface_set_clip_region (void           *abstract_surface,
 	    for (i = 0; i < num_rects; i++) {
 		cairo_rectangle_int_t rect;
 
-	        _cairo_region_get_rectangle (region, i, &rect);
+	        cairo_region_get_rectangle (region, i, &rect);
 		
 		rects[i].left = rect.x;
 		rects[i].top = rect.y;

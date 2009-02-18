@@ -417,7 +417,7 @@ _composite_trap_region (cairo_clip_t            *clip,
     cairo_status_t status;
     cairo_solid_pattern_t solid_pattern;
     cairo_surface_pattern_t mask;
-    int num_rects = _cairo_region_num_rectangles (trap_region);
+    int num_rects = cairo_region_num_rectangles (trap_region);
     unsigned int clip_serial;
     cairo_surface_t *clip_surface = clip ? clip->surface : NULL;
 
@@ -544,7 +544,7 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
             if (unlikely (status))
                 goto out;
 
-            _cairo_region_get_extents (trap_region, &trap_extents);
+            cairo_region_get_extents (trap_region, &trap_extents);
         } else {
             cairo_box_t trap_box;
             _cairo_traps_extents (traps, &trap_box);
@@ -567,9 +567,9 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
              * _cairo_surface_fill_rectangles() or to drawing with a
              * clip region, then we have an additional region to clear.
              */
-            clear_region = _cairo_region_create_rect (&extents);
+            clear_region = cairo_region_create_rect (&extents);
 
-	    status = _cairo_region_status (clear_region);
+	    status = cairo_region_status (clear_region);
 	    if (unlikely (status))
 		goto out;
 
@@ -577,14 +577,14 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
             if (unlikely (status))
                 goto out;
 
-            _cairo_region_get_extents (clear_region, &extents);
+            cairo_region_get_extents (clear_region, &extents);
 
-            status = _cairo_region_subtract (clear_region, trap_region);
+            status = cairo_region_subtract (clear_region, trap_region);
             if (unlikely (status))
                 goto out;
 
-            if (_cairo_region_empty (clear_region)) {
-                _cairo_region_destroy (clear_region);
+            if (cairo_region_empty (clear_region)) {
+                cairo_region_destroy (clear_region);
 		clear_region = NULL;
             }
         } else {
@@ -659,9 +659,9 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
 
 out:
     if (trap_region)
-        _cairo_region_destroy (trap_region);
+        cairo_region_destroy (trap_region);
     if (clear_region)
-        _cairo_region_destroy (clear_region);
+        cairo_region_destroy (clear_region);
 
     return status;
 }

@@ -600,7 +600,7 @@ _cairo_traps_extents (const cairo_traps_t *traps,
  * Determines if a set of trapezoids are exactly representable as a
  * cairo region.  If so, the passed-in region is initialized to
  * the area representing the given traps.  It should be finalized
- * with _cairo_region_fini().  If not, %CAIRO_INT_STATUS_UNSUPPORTED
+ * with cairo_region_fini().  If not, %CAIRO_INT_STATUS_UNSUPPORTED
  * is returned.
  *
  * Return value: %CAIRO_STATUS_SUCCESS, %CAIRO_INT_STATUS_UNSUPPORTED
@@ -616,7 +616,7 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
     cairo_int_status_t status;
 
     if (traps->num_traps == 0) {
-	*region = _cairo_region_create ();
+	*region = cairo_region_create ();
 	return CAIRO_STATUS_SUCCESS;
     }
 
@@ -662,15 +662,15 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
 	rect_count++;
     }
 
-    *region = _cairo_region_create_rectangles (rects, rect_count);
-    status = _cairo_region_status (*region);
+    *region = cairo_region_create_rectangles (rects, rect_count);
+    status = cairo_region_status (*region);
     
     if (rects != stack_rects)
 	free (rects);
 
     if (unlikely (status))
     {
-	_cairo_region_destroy (*region);
+	cairo_region_destroy (*region);
 	*region = NULL;
     }
 

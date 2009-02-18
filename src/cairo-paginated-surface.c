@@ -397,11 +397,11 @@ _paint_page (cairo_paginated_surface_t *surface)
 
 	region = _cairo_analysis_surface_get_unsupported (analysis);
 
-	num_rects = _cairo_region_num_rectangles (region);
+	num_rects = cairo_region_num_rectangles (region);
 	for (i = 0; i < num_rects; i++) {
 	    cairo_rectangle_int_t rect;
 
-	    _cairo_region_get_rectangle (region, i, &rect);
+	    cairo_region_get_rectangle (region, i, &rect);
 	    
 	    status = _paint_fallback_image (surface, &rect);
 	    

@@ -2302,19 +2302,19 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 	 * is necessary so we don't wrap around when we convert cairo's
 	 * 32 bit region into 16 bit rectangles.
 	 */
-	bounded = _cairo_region_create_rect (&rect);
-	status = _cairo_region_intersect (bounded, region);
+	bounded = cairo_region_create_rect (&rect);
+	status = cairo_region_intersect (bounded, region);
 	if (unlikely (status)) {
-	    _cairo_region_destroy (bounded);
+	    cairo_region_destroy (bounded);
 	    return status;
 	}
 
-	n_rects = _cairo_region_num_rectangles (bounded);
+	n_rects = cairo_region_num_rectangles (bounded);
 
 	if (n_rects > ARRAY_LENGTH (surface->embedded_clip_rects)) {
 	    rects = _cairo_malloc_ab (n_rects, sizeof (XRectangle));
 	    if (unlikely (rects == NULL)) {
-		_cairo_region_destroy (bounded);
+		cairo_region_destroy (bounded);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    }
 	} else {
@@ -2324,7 +2324,7 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 	for (i = 0; i < n_rects; i++) {
 	    cairo_rectangle_int_t rect;
 	    
-	    _cairo_region_get_rectangle (bounded, i, &rect);
+	    cairo_region_get_rectangle (bounded, i, &rect);
 
 	    rects[i].x = rect.x;
 	    rects[i].y = rect.y;
@@ -2332,7 +2332,7 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 	    rects[i].height = rect.height;
 	}
 	
-	_cairo_region_destroy (bounded);
+	cairo_region_destroy (bounded);
 
 	surface->have_clip_rects = TRUE;
 	surface->clip_rects = rects;

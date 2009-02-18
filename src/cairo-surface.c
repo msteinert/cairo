@@ -1587,7 +1587,7 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
 
     assert (! surface->is_snapshot);
 
-    num_rects = _cairo_region_num_rectangles (region);
+    num_rects = cairo_region_num_rectangles (region);
     if (num_rects == 0)
 	return CAIRO_STATUS_SUCCESS;
 
@@ -1601,7 +1601,7 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
     }
 
     for (i = 0; i < num_rects; i++)
-	_cairo_region_get_rectangle (region, i, &rects[i]);
+	cairo_region_get_rectangle (region, i, &rects[i]);
 
     status =  _cairo_surface_fill_rectangles (surface, op,
 					      color, rects, num_rects);
@@ -2692,7 +2692,7 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
     dst_rectangle.width = width;
     dst_rectangle.height = height;
 
-    clear_region = _cairo_region_create_rect (&dst_rectangle);
+    clear_region = cairo_region_create_rect (&dst_rectangle);
 
     drawn_rectangle = dst_rectangle;
 
@@ -2708,10 +2708,10 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
 
     /* Now compute the area that is in dst_rectangle but not in drawn_rectangle
      */
-    drawn_region = _cairo_region_create_rect (&drawn_rectangle);
+    drawn_region = cairo_region_create_rect (&drawn_rectangle);
     has_drawn_region = TRUE;
 
-    status = _cairo_region_subtract (clear_region, drawn_region);
+    status = cairo_region_subtract (clear_region, drawn_region);
     if (unlikely (status))
         goto CLEANUP_REGIONS;
 
@@ -2722,8 +2722,8 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
 
   CLEANUP_REGIONS:
     if (drawn_region)
-        _cairo_region_destroy (drawn_region);
-    _cairo_region_destroy (clear_region);
+        cairo_region_destroy (drawn_region);
+    cairo_region_destroy (clear_region);
 
     return _cairo_surface_set_error (dst, status);
 }

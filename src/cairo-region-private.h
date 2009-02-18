@@ -59,68 +59,68 @@ typedef enum _cairo_region_overlap {
 } cairo_region_overlap_t;
 
 cairo_private cairo_region_t *
-_cairo_region_create (void);
+cairo_region_create (void);
 
 cairo_private cairo_region_t *
-_cairo_region_create_rect (cairo_rectangle_int_t *rect);
+cairo_region_create_rect (cairo_rectangle_int_t *rect);
 
 cairo_private cairo_status_t
-_cairo_region_status (cairo_region_t *region);
+cairo_region_status (cairo_region_t *region);
 
 cairo_private void
-_cairo_region_clear (cairo_region_t *region);
+cairo_region_clear (cairo_region_t *region);
 
 cairo_private cairo_region_t *
-_cairo_region_create_rectangles (cairo_rectangle_int_t *rects,
+cairo_region_create_rectangles (cairo_rectangle_int_t *rects,
 				 int count);
 
 cairo_private void
-_cairo_region_destroy (cairo_region_t *region);
+cairo_region_destroy (cairo_region_t *region);
 
 cairo_private cairo_region_t *
-_cairo_region_copy (cairo_region_t *original);
+cairo_region_copy (cairo_region_t *original);
 
 cairo_private int
-_cairo_region_num_rectangles (cairo_region_t *region);
+cairo_region_num_rectangles (cairo_region_t *region);
 
 cairo_private void
-_cairo_region_get_rectangle (cairo_region_t *region,
+cairo_region_get_rectangle (cairo_region_t *region,
 			     int nth_rectangle,
 			     cairo_rectangle_int_t *rectangle);
 
 cairo_private void
-_cairo_region_get_extents (cairo_region_t *region,
+cairo_region_get_extents (cairo_region_t *region,
 			   cairo_rectangle_int_t *extents);
 
 cairo_private cairo_status_t
-_cairo_region_subtract (cairo_region_t *dst,
+cairo_region_subtract (cairo_region_t *dst,
 			cairo_region_t *other);
 
 cairo_private cairo_status_t
-_cairo_region_intersect (cairo_region_t *dst,
+cairo_region_intersect (cairo_region_t *dst,
 			 cairo_region_t *other);
 
 cairo_private cairo_status_t
-_cairo_region_union (cairo_region_t *dst,
+cairo_region_union (cairo_region_t *dst,
 		     cairo_region_t *other);
 
 cairo_private cairo_status_t
-_cairo_region_union_rect (cairo_region_t *dst,
+cairo_region_union_rect (cairo_region_t *dst,
 			  cairo_rectangle_int_t *rect);
 
 cairo_private cairo_bool_t
-_cairo_region_empty (cairo_region_t *region);
+cairo_region_empty (cairo_region_t *region);
 
 cairo_private void
-_cairo_region_translate (cairo_region_t *region,
+cairo_region_translate (cairo_region_t *region,
 			 int dx, int dy);
 
 cairo_private cairo_region_overlap_t
-_cairo_region_contains_rectangle (cairo_region_t *region,
+cairo_region_contains_rectangle (cairo_region_t *region,
 				  const cairo_rectangle_int_t *rect);
 
 cairo_private cairo_bool_t
-_cairo_region_contains_point (cairo_region_t *region,
+cairo_region_contains_point (cairo_region_t *region,
 			      int x, int y);
 
 CAIRO_END_DECLS

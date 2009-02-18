@@ -43,7 +43,7 @@ const cairo_region_t _cairo_region_nil = {
 };
 
 cairo_region_t *
-_cairo_region_create (void)
+cairo_region_create (void)
 {
     cairo_region_t *region = _cairo_malloc (sizeof (cairo_region_t));
 
@@ -58,7 +58,7 @@ _cairo_region_create (void)
 }
 
 cairo_region_t *
-_cairo_region_create_rect (cairo_rectangle_int_t *rect)
+cairo_region_create_rect (cairo_rectangle_int_t *rect)
 {
     cairo_region_t *region = _cairo_malloc (sizeof (cairo_region_t));
 
@@ -75,8 +75,8 @@ _cairo_region_create_rect (cairo_rectangle_int_t *rect)
 }
 
 cairo_region_t *
-_cairo_region_create_rectangles (cairo_rectangle_int_t *rects,
-				 int count)
+cairo_region_create_rectangles (cairo_rectangle_int_t *rects,
+				int count)
 {
     pixman_box32_t stack_pboxes[CAIRO_STACK_ARRAY_LENGTH (pixman_box32_t)];
     pixman_box32_t *pboxes = stack_pboxes;
@@ -119,7 +119,7 @@ _cairo_region_create_rectangles (cairo_rectangle_int_t *rects,
 }
 
 void
-_cairo_region_destroy (cairo_region_t *region)
+cairo_region_destroy (cairo_region_t *region)
 {
     if (region->status)
 	return;
@@ -129,19 +129,19 @@ _cairo_region_destroy (cairo_region_t *region)
 }
 
 cairo_region_t *
-_cairo_region_copy (cairo_region_t *original)
+cairo_region_copy (cairo_region_t *original)
 {
     cairo_region_t *copy;
     
     if (original->status)
 	return (cairo_region_t *)&_cairo_region_nil;
 
-    copy = _cairo_region_create ();
+    copy = cairo_region_create ();
     if (!copy)
 	return (cairo_region_t *)&_cairo_region_nil;
 
     if (!pixman_region32_copy (&copy->rgn, &original->rgn)) {
-	_cairo_region_destroy (copy);
+	cairo_region_destroy (copy);
 
 	return (cairo_region_t *)&_cairo_region_nil;
     }
@@ -150,7 +150,7 @@ _cairo_region_copy (cairo_region_t *original)
 }
 
 int
-_cairo_region_num_rectangles (cairo_region_t *region)
+cairo_region_num_rectangles (cairo_region_t *region)
 {
     if (region->status)
 	return 0;
@@ -159,9 +159,9 @@ _cairo_region_num_rectangles (cairo_region_t *region)
 }
 
 cairo_private void
-_cairo_region_get_rectangle (cairo_region_t *region,
-			     int nth_box,
-			     cairo_rectangle_int_t *rect)
+cairo_region_get_rectangle (cairo_region_t *region,
+			    int nth_box,
+			    cairo_rectangle_int_t *rect)
 {
     pixman_box32_t *pbox;
 
@@ -177,15 +177,15 @@ _cairo_region_get_rectangle (cairo_region_t *region,
 }
 
 /**
- * _cairo_region_get_extents:
+ * cairo_region_get_extents:
  * @region: a #cairo_region_t
  * @rect: rectangle into which to store the extents
  *
  * Gets the bounding box of a region as a #cairo_rectangle_int_t
  **/
 void
-_cairo_region_get_extents (cairo_region_t *region,
-			   cairo_rectangle_int_t *extents)
+cairo_region_get_extents (cairo_region_t *region,
+			  cairo_rectangle_int_t *extents)
 {
     pixman_box32_t *pextents;
 
@@ -201,13 +201,13 @@ _cairo_region_get_extents (cairo_region_t *region,
 }
 
 cairo_status_t
-_cairo_region_status (cairo_region_t *region)
+cairo_region_status (cairo_region_t *region)
 {
     return region->status;
 }
 
 void
-_cairo_region_clear (cairo_region_t *region)
+cairo_region_clear (cairo_region_t *region)
 {
     if (region->status)
 	return;
@@ -217,7 +217,7 @@ _cairo_region_clear (cairo_region_t *region)
 }
 
 cairo_status_t
-_cairo_region_subtract (cairo_region_t *dst, cairo_region_t *other)
+cairo_region_subtract (cairo_region_t *dst, cairo_region_t *other)
 {
     if (dst->status)
 	return dst->status;
@@ -232,7 +232,7 @@ _cairo_region_subtract (cairo_region_t *dst, cairo_region_t *other)
 }
 
 cairo_status_t
-_cairo_region_intersect (cairo_region_t *dst, cairo_region_t *other)
+cairo_region_intersect (cairo_region_t *dst, cairo_region_t *other)
 {
     if (dst->status)
 	return dst->status;
@@ -247,8 +247,8 @@ _cairo_region_intersect (cairo_region_t *dst, cairo_region_t *other)
 }
 
 cairo_private cairo_status_t
-_cairo_region_union (cairo_region_t *dst,
-		     cairo_region_t *other)
+cairo_region_union (cairo_region_t *dst,
+		    cairo_region_t *other)
 {
     if (dst->status)
 	return dst->status;
@@ -263,8 +263,8 @@ _cairo_region_union (cairo_region_t *dst,
 }
 
 cairo_status_t
-_cairo_region_union_rect (cairo_region_t *dst,
-			  cairo_rectangle_int_t *rect)
+cairo_region_union_rect (cairo_region_t *dst,
+			 cairo_rectangle_int_t *rect)
 {
     if (!pixman_region32_union_rect (&dst->rgn, &dst->rgn,
 				     rect->x, rect->y,
@@ -277,7 +277,7 @@ _cairo_region_union_rect (cairo_region_t *dst,
 }
 
 cairo_bool_t
-_cairo_region_empty (cairo_region_t *region)
+cairo_region_empty (cairo_region_t *region)
 {
     if (region->status)
 	return TRUE;
@@ -286,8 +286,8 @@ _cairo_region_empty (cairo_region_t *region)
 }
 
 void
-_cairo_region_translate (cairo_region_t *region,
-			 int dx, int dy)
+cairo_region_translate (cairo_region_t *region,
+			int dx, int dy)
 {
     if (region->status)
 	return;
@@ -296,8 +296,8 @@ _cairo_region_translate (cairo_region_t *region,
 }
 
 cairo_region_overlap_t
-_cairo_region_contains_rectangle (cairo_region_t *region,
-				  const cairo_rectangle_int_t *rect)
+cairo_region_contains_rectangle (cairo_region_t *region,
+				 const cairo_rectangle_int_t *rect)
 {
     pixman_box32_t pbox;
     pixman_region_overlap_t poverlap;
@@ -328,9 +328,8 @@ _cairo_region_contains_rectangle (cairo_region_t *region,
 }
 
 cairo_private cairo_bool_t
-_cairo_region_contains_point (cairo_region_t *region,
-			      int x,
-			      int y)
+cairo_region_contains_point (cairo_region_t *region,
+			     int x, int y)
 {
     if (region->status)
 	return FALSE;

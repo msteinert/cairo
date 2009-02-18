@@ -1559,7 +1559,7 @@ _cairo_xcb_surface_set_clip_region (void           *abstract_surface,
 	xcb_rectangle_t *rects = NULL;
 	int n_rects, i;
 
-	n_rects = _cairo_region_num_rectangles (region);
+	n_rects = cairo_region_num_rectangles (region);
 
 	if (n_rects > 0) {
 	    rects = _cairo_malloc_ab (n_rects, sizeof(xcb_rectangle_t));
@@ -1572,7 +1572,7 @@ _cairo_xcb_surface_set_clip_region (void           *abstract_surface,
 	for (i = 0; i < n_rects; i++) {
 	    cairo_rectangle_int_t rect;
 
-	    _cairo_region_get_rectangle (region, i, &rect);
+	    cairo_region_get_rectangle (region, i, &rect);
 	    
 	    rects[i].x = rect.x;
 	    rects[i].y = rect.y;

@@ -1305,7 +1305,7 @@ _cairo_directfb_surface_set_clip_region (void           *abstract_surface,
 
 	surface->has_clip = TRUE;
 
-	n_rects = _cairo_region_num_rectangles (region);
+	n_rects = cairo_region_num_rectangles (region);
 
 	if (n_rects == 0)
 	    return CAIRO_STATUS_SUCCESS;
@@ -1326,7 +1326,7 @@ _cairo_directfb_surface_set_clip_region (void           *abstract_surface,
 	for (i = 0; i < n_rects; i++) {
 	    cairo_rectangle_int_t rect;
 
-	    _cairo_region_get_rectangle (region, i, &rect);
+	    cairo_region_get_rectangle (region, i, &rect);
 	    
 	    surface->clips[i].x1 = rect.x;
 	    surface->clips[i].y1 = rect.y;
