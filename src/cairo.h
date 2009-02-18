@@ -2353,6 +2353,7 @@ cairo_matrix_transform_point (const cairo_matrix_t *matrix,
 cairo_public void
 cairo_debug_reset_static_data (void);
 
+
 CAIRO_END_DECLS
 
 #endif /* CAIRO_H */

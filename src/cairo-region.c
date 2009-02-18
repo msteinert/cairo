@@ -287,12 +287,12 @@ _cairo_region_empty (cairo_region_t *region)
 
 void
 _cairo_region_translate (cairo_region_t *region,
-			 int x, int y)
+			 int dx, int dy)
 {
     if (region->status)
 	return;
     
-    pixman_region32_translate (&region->rgn, x, y);
+    pixman_region32_translate (&region->rgn, dx, dy);
 }
 
 cairo_region_overlap_t
@@ -325,4 +325,15 @@ _cairo_region_contains_rectangle (cairo_region_t *region,
     }
 
     return CAIRO_REGION_OVERLAP_OUT;
+}
+
+cairo_private cairo_bool_t
+_cairo_region_contains_point (cairo_region_t *region,
+			      int x,
+			      int y)
+{
+    if (region->status)
+	return FALSE;
+
+    return pixman_region32_contains_point (&region->rgn, x, y, NULL);
 }
