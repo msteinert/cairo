@@ -218,37 +218,17 @@ typedef struct _cairo_trapezoid {
     cairo_line_t left, right;
 } cairo_trapezoid_t;
 
-struct _cairo_rectangle_int16 {
-    int16_t x, y;
-    uint16_t width, height;
-};
+typedef struct _cairo_rectangle_int {
+    int x, y;
+    unsigned int width, height;
+} cairo_rectangle_int_t;
 
-struct _cairo_rectangle_int32 {
-    int32_t x, y;
-    uint32_t width, height;
-};
+typedef struct _cairo_point_int {
+    int x, y;
+} cairo_point_int_t;
 
-struct _cairo_point_int16 {
-    int16_t x, y;
-};
-
-struct _cairo_point_int32 {
-    int32_t x, y;
-};
-
-#if CAIRO_FIXED_BITS == 32 && CAIRO_FIXED_FRAC_BITS >= 16
-typedef struct _cairo_rectangle_int16 cairo_rectangle_int_t;
-typedef struct _cairo_point_int16 cairo_point_int_t;
-#define CAIRO_RECT_INT_MIN (INT16_MIN >> (CAIRO_FIXED_FRAC_BITS - 16))
-#define CAIRO_RECT_INT_MAX (INT16_MAX >> (CAIRO_FIXED_FRAC_BITS - 16))
-#elif CAIRO_FIXED_BITS == 32
-typedef struct _cairo_rectangle_int32 cairo_rectangle_int_t;
-typedef struct _cairo_point_int32 cairo_point_int_t;
-#define CAIRO_RECT_INT_MIN (INT32_MIN >> CAIRO_FIXED_FRAC_BITS)
-#define CAIRO_RECT_INT_MAX (INT32_MAX >> CAIRO_FIXED_FRAC_BITS)
-#else
-#error Not sure how to pick a cairo_rectangle_int_t and cairo_point_int_t for your CAIRO_FIXED_BITS!
-#endif
+#define CAIRO_RECT_INT_MIN (INT_MIN >> CAIRO_FIXED_FRAC_BITS)
+#define CAIRO_RECT_INT_MAX (INT_MAX >> CAIRO_FIXED_FRAC_BITS)
 
 /* Rectangles that take part in a composite operation.
  *
