@@ -172,30 +172,6 @@
 #define inline __inline
 #endif
 
-#ifdef _MSC_VER
-/* When compiling with /Gy and /OPT:ICF identical functions will be folded in together.
-   The CAIRO_ENSURE_UNIQUE macro ensures that a function is always unique and
-   will never be folded into another one. Something like this might eventually
-   be needed for GCC but it seems fine for now. */
-#define CAIRO_ENSURE_UNIQUE                 \
-    do {                                    \
-	char func[] = __FUNCTION__;         \
-	char file[] = __FILE__;             \
-	__asm {                             \
-	    jmp __internal_skip_line_no;    \
-	    _emit (__LINE__ & 0xff);        \
-	    _emit ((__LINE__>>8) & 0xff);   \
-	    _emit ((__LINE__>>16) & 0xff);  \
-	    _emit ((__LINE__>>24) & 0xff);  \
-	    lea eax, func;                  \
-	    lea eax, file;                  \
-	    __internal_skip_line_no:        \
-	};                                  \
-    } while (0)
-#else
-#define CAIRO_ENSURE_UNIQUE    do { } while (0)
-#endif
-
 #ifdef __STRICT_ANSI__
 #undef inline
 #define inline __inline__
