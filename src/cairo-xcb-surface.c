@@ -101,6 +101,8 @@ typedef struct cairo_xcb_surface {
 
 #define CAIRO_SURFACE_RENDER_HAS_PICTURE_TRANSFORM(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 6)
 #define CAIRO_SURFACE_RENDER_HAS_FILTERS(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 6)
+#define CAIRO_SURFACE_RENDER_HAS_REPEAT_PAD(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 10)
+#define CAIRO_SURFACE_RENDER_HAS_REPEAT_REFLECT(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 10)
 
 static void
 _cairo_xcb_surface_ensure_gc (cairo_xcb_surface_t *surface);
@@ -854,13 +856,22 @@ _cairo_xcb_surface_set_attributes (cairo_xcb_surface_t	      *surface,
 
     switch (attributes->extend) {
     case CAIRO_EXTEND_NONE:
-	_cairo_xcb_surface_set_repeat (surface, 0);
+	_cairo_xcb_surface_set_repeat (surface, XCB_RENDER_REPEAT_NONE);
 	break;
     case CAIRO_EXTEND_REPEAT:
-	_cairo_xcb_surface_set_repeat (surface, 1);
+	_cairo_xcb_surface_set_repeat (surface, XCB_RENDER_REPEAT_NORMAL);
 	break;
     case CAIRO_EXTEND_REFLECT:
+	if (!CAIRO_SURFACE_RENDER_HAS_REPEAT_REFLECT(surface))
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	_cairo_xcb_surface_set_repeat (surface, XCB_RENDER_REPEAT_REFLECT);
+	break;
     case CAIRO_EXTEND_PAD:
+	if (!CAIRO_SURFACE_RENDER_HAS_REPEAT_PAD(surface))
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	_cairo_xcb_surface_set_repeat (surface, XCB_RENDER_REPEAT_PAD);
+	break;
+    default:
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 

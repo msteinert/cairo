@@ -35,6 +35,7 @@ Richard Henderson <rth@twiddle.net> "slim" macros for better shared libraries
 James Henstridge <james@daa.com.au> Build fixes related to freetype
 Graydon Hoare <graydon@redhat.com> Support for non-render X server, first real text support
 Thomas Hunger <info@teh-web.de> Initial version of cairo_in_stroke/fill
+Thomas Jaeger <ThJaeger@gmail.com> Extended repeat modes for X
 Björn Lindqvist <bjourne@gmail.com> Performance test cases
 Kristian Høgsberg <krh@redhat.com> PDF backend, PS backend with meta-surfaces
 Amaury Jacquot <sxpert@esitcom.org> Documentation review, appplication testing

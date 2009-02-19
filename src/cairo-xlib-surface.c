@@ -1466,7 +1466,15 @@ _cairo_xlib_surface_set_attributes (cairo_xlib_surface_t	    *surface,
 	_cairo_xlib_surface_set_repeat (surface, RepeatNormal);
 	break;
     case CAIRO_EXTEND_REFLECT:
+	if (surface->buggy_pad_reflect)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	_cairo_xlib_surface_set_repeat (surface, RepeatReflect);
+	break;
     case CAIRO_EXTEND_PAD:
+	if (surface->buggy_pad_reflect)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	_cairo_xlib_surface_set_repeat (surface, RepeatPad);
+	break;
     default:
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
@@ -1768,7 +1776,9 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 					      src_x, src_y,
 					      mask_x, mask_y,
 					      width, height,
-					      CAIRO_PATTERN_ACQUIRE_NO_REFLECT,
+					      dst->buggy_pad_reflect ?
+						      CAIRO_PATTERN_ACQUIRE_NO_REFLECT :
+						      CAIRO_PATTERN_ACQUIRE_NONE,
 					      (cairo_surface_t **) &src,
 					      (cairo_surface_t **) &mask,
 					      &src_attr, &mask_attr);
@@ -2181,7 +2191,9 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
     status = _cairo_pattern_acquire_surface (pattern, &dst->base,
 					     CAIRO_CONTENT_COLOR_ALPHA,
 					     src_x, src_y, width, height,
-					     CAIRO_PATTERN_ACQUIRE_NO_REFLECT,
+					     dst->buggy_pad_reflect ?
+						     CAIRO_PATTERN_ACQUIRE_NO_REFLECT :
+						     CAIRO_PATTERN_ACQUIRE_NONE,
 					     (cairo_surface_t **) &src,
 					     &attributes);
     if (unlikely (status))
@@ -2686,6 +2698,7 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 	/* so we can use the XTile fallback */
 	surface->buggy_repeat = TRUE;
     }
+    surface->buggy_pad_reflect = screen_info->display->buggy_pad_reflect;
 
     surface->dst_picture = None;
     surface->src_picture = None;
@@ -4125,7 +4138,9 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 						 CAIRO_CONTENT_COLOR_ALPHA,
                                                  glyph_extents.x, glyph_extents.y,
                                                  glyph_extents.width, glyph_extents.height,
-						 CAIRO_PATTERN_ACQUIRE_NO_REFLECT,
+						 dst->buggy_pad_reflect ?
+							 CAIRO_PATTERN_ACQUIRE_NO_REFLECT :
+							 CAIRO_PATTERN_ACQUIRE_NONE,
                                                  (cairo_surface_t **) &src,
                                                  &attributes);
         if (unlikely (status))
