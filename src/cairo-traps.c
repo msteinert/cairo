@@ -649,7 +649,7 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
 	rect.width = x2 - x1;
 	rect.height = y2 - y1;
 
-	status = cairo_region_union_rect (r, &rect);
+	status = cairo_region_union_rectangle (r, &rect);
 	if (unlikely (status))
 	{
 	    cairo_region_destroy (r);

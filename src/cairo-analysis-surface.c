@@ -234,7 +234,7 @@ _add_operation  (cairo_analysis_surface_t *surface,
 	 * this region will be emitted as native operations.
 	 */
 	surface->has_supported = TRUE;
-	status = cairo_region_union_rect (surface->supported_region, rect);
+	status = cairo_region_union_rectangle (surface->supported_region, rect);
 	return status;
     }
 
@@ -243,7 +243,7 @@ _add_operation  (cairo_analysis_surface_t *surface,
      * emitted.
      */
     surface->has_unsupported = TRUE;
-    status = cairo_region_union_rect (surface->fallback_region, rect);
+    status = cairo_region_union_rectangle (surface->fallback_region, rect);
 
     /* The status CAIRO_INT_STATUS_IMAGE_FALLBACK is used to indicate
      * unsupported operations to the meta surface as using

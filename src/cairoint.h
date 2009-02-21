@@ -2695,7 +2695,7 @@ slim_hidden_proto (cairo_user_to_device);
 slim_hidden_proto (cairo_user_to_device_distance);
 slim_hidden_proto (cairo_version_string);
 slim_hidden_proto (cairo_region_create);
-slim_hidden_proto (cairo_region_create_rect);
+slim_hidden_proto (cairo_region_create_rectangle);
 slim_hidden_proto (cairo_region_copy);
 slim_hidden_proto (cairo_region_destroy);
 slim_hidden_proto (cairo_region_status);
@@ -2705,12 +2705,11 @@ slim_hidden_proto (cairo_region_get_rectangle);
 slim_hidden_proto (cairo_region_empty);
 slim_hidden_proto (cairo_region_contains_rectangle);
 slim_hidden_proto (cairo_region_contains_point);
-slim_hidden_proto (cairo_region_clear);
 slim_hidden_proto (cairo_region_translate);
 slim_hidden_proto (cairo_region_subtract);
 slim_hidden_proto (cairo_region_intersect);
 slim_hidden_proto (cairo_region_union);
-slim_hidden_proto (cairo_region_union_rect);
+slim_hidden_proto (cairo_region_union_rectangle);
 
 #if CAIRO_HAS_PNG_FUNCTIONS
 

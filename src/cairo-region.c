@@ -58,7 +58,7 @@ cairo_region_create (void)
 }
 
 cairo_region_t *
-cairo_region_create_rect (cairo_rectangle_int_t *rect)
+cairo_region_create_rectangle (cairo_rectangle_int_t *rect)
 {
     cairo_region_t *region = _cairo_malloc (sizeof (cairo_region_t));
 
@@ -162,16 +162,6 @@ cairo_region_status (cairo_region_t *region)
     return region->status;
 }
 
-void
-cairo_region_clear (cairo_region_t *region)
-{
-    if (region->status)
-	return;
-
-    pixman_region32_fini (&region->rgn);
-    pixman_region32_init (&region->rgn);
-}
-
 cairo_status_t
 cairo_region_subtract (cairo_region_t *dst, cairo_region_t *other)
 {
@@ -219,8 +209,8 @@ cairo_region_union (cairo_region_t *dst,
 }
 
 cairo_status_t
-cairo_region_union_rect (cairo_region_t *dst,
-			 cairo_rectangle_int_t *rect)
+cairo_region_union_rectangle (cairo_region_t *dst,
+			      cairo_rectangle_int_t *rect)
 {
     if (!pixman_region32_union_rect (&dst->rgn, &dst->rgn,
 				     rect->x, rect->y,

@@ -201,7 +201,7 @@ _cairo_clip_intersect_to_region (cairo_clip_t   *clip,
     if (clip->all_clipped) {
 	cairo_region_t *clip_rect;
 
-	clip_rect = cairo_region_create_rect (&clip->surface_rect);
+	clip_rect = cairo_region_create_rectangle (&clip->surface_rect);
 
 	status = cairo_region_intersect (region, clip_rect);
 
@@ -223,7 +223,7 @@ _cairo_clip_intersect_to_region (cairo_clip_t   *clip,
     if (clip->surface) {
 	cairo_region_t *clip_rect;
 
-	clip_rect = cairo_region_create_rect (&clip->surface_rect);
+	clip_rect = cairo_region_create_rectangle (&clip->surface_rect);
 
 	status = cairo_region_intersect (region, clip_rect);
 

@@ -567,7 +567,7 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
              * _cairo_surface_fill_rectangles() or to drawing with a
              * clip region, then we have an additional region to clear.
              */
-            clear_region = cairo_region_create_rect (&extents);
+            clear_region = cairo_region_create_rectangle (&extents);
 
 	    status = cairo_region_status (clear_region);
 	    if (unlikely (status))

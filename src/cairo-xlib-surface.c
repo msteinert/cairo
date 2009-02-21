@@ -2302,7 +2302,7 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 	 * is necessary so we don't wrap around when we convert cairo's
 	 * 32 bit region into 16 bit rectangles.
 	 */
-	bounded = cairo_region_create_rect (&rect);
+	bounded = cairo_region_create_rectangle (&rect);
 	status = cairo_region_intersect (bounded, region);
 	if (unlikely (status)) {
 	    cairo_region_destroy (bounded);

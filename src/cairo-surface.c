@@ -2692,7 +2692,7 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
     dst_rectangle.width = width;
     dst_rectangle.height = height;
 
-    clear_region = cairo_region_create_rect (&dst_rectangle);
+    clear_region = cairo_region_create_rectangle (&dst_rectangle);
 
     drawn_rectangle = dst_rectangle;
 
@@ -2708,7 +2708,7 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
 
     /* Now compute the area that is in dst_rectangle but not in drawn_rectangle
      */
-    drawn_region = cairo_region_create_rect (&drawn_rectangle);
+    drawn_region = cairo_region_create_rectangle (&drawn_rectangle);
     has_drawn_region = TRUE;
 
     status = cairo_region_subtract (clear_region, drawn_region);

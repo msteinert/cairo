@@ -2368,7 +2368,7 @@ cairo_public cairo_region_t *
 cairo_region_create (void);
 
 cairo_public cairo_region_t *
-cairo_region_create_rect (cairo_rectangle_int_t *rect);
+cairo_region_create_rectangle (cairo_rectangle_int_t *rect);
 
 cairo_public cairo_region_t *
 cairo_region_copy (cairo_region_t *original);
@@ -2402,9 +2402,6 @@ cairo_public cairo_bool_t
 cairo_region_contains_point (cairo_region_t *region, int x, int y);
 
 cairo_public void
-cairo_region_clear (cairo_region_t *region);
-
-cairo_public void
 cairo_region_translate (cairo_region_t *region, int dx, int dy);
 
 cairo_public cairo_status_t
@@ -2417,7 +2414,7 @@ cairo_public cairo_status_t
 cairo_region_union (cairo_region_t *dst, cairo_region_t *other);
 
 cairo_public cairo_status_t
-cairo_region_union_rect (cairo_region_t *dst, cairo_rectangle_int_t *rect);
+cairo_region_union_rectangle (cairo_region_t *dst, cairo_rectangle_int_t *rectangle);
 
 
 /* Functions to be used while debugging (not intended for use in production code) */
