@@ -505,6 +505,9 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
 						       NULL,
 						       _cairo_ps_emit_imagemask,
 						       surface->font_subsets);
+    status = type3_surface->status;
+    if (unlikely (status))
+	return status;
 
     for (i = 0; i < font_subset->num_glyphs; i++) {
 	if (font_subset->glyph_names != NULL) {
