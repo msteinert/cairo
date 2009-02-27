@@ -244,6 +244,8 @@ _cairo_path_fixed_in_fill (cairo_path_fixed_t	*path,
 					  &in_fill);
     assert (status == CAIRO_STATUS_SUCCESS);
 
+    _cairo_in_fill_close_path (&in_fill);
+
     switch (fill_rule) {
     case CAIRO_FILL_RULE_EVEN_ODD:
 	*is_inside = in_fill.winding & 1;
