@@ -452,8 +452,8 @@ _cairo_path_append_to_context (const cairo_path_t	*path,
 
     user_to_backend = cr->gstate->ctm;
     cairo_matrix_multiply (&user_to_backend,
-	                   &cr->gstate->target->device_transform,
-			   &user_to_backend);
+			   &user_to_backend,
+	                   &cr->gstate->target->device_transform);
 
     end = &path->data[path->num_data];
     for (p = &path->data[0]; p < end; p += p->header.length) {
