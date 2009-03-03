@@ -190,7 +190,6 @@ test_sources = \
 	transforms.c					\
 	translate-show-surface.c			\
 	trap-clip.c					\
-	truetype-tables.c				\
 	twin.c						\
 	unantialiased-shapes.c				\
 	unbounded-operator.c				\

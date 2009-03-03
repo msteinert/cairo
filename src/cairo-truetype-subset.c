@@ -94,6 +94,21 @@ struct _cairo_truetype_font {
 
 };
 
+/*
+ * Test that the structs we define for TrueType tables have the
+ * correct size, ie. they are not padded.
+ */
+#define check(T, S) COMPILE_TIME_ASSERT (sizeof (T) == (S))
+check (tt_head_t,	54);
+check (tt_hhea_t,	36);
+check (tt_maxp_t,	32);
+check (tt_name_record_t, 12);
+check (tt_name_t,	18);
+check (tt_name_t,	18);
+check (tt_composite_glyph_t, 18);
+check (tt_glyph_data_t,	28);
+#undef check
+
 static cairo_status_t
 cairo_truetype_font_use_glyph (cairo_truetype_font_t	    *font,
 	                       unsigned short		     glyph,
