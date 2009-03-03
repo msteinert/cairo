@@ -77,7 +77,7 @@
 #include <libspectre/spectre.h>
 #endif
 
-#if HAVE_FCNTL_H && HAVE_SIGNAL_H && HAVE_SYS_STAT_H && HAVE_SYS_SOCKET_H && HAVE_SYS_POLL_H && HAVE_SYS_UN_H
+#if HAVE_UNISTD_H && HAVE_FCNTL_H && HAVE_SIGNAL_H && HAVE_SYS_STAT_H && HAVE_SYS_SOCKET_H && HAVE_SYS_POLL_H && HAVE_SYS_UN_H
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/stat.h>
@@ -89,7 +89,11 @@
 #define SOCKET_PATH "./.any2ppm"
 #define TIMEOUT 60000 /* 60 seconds */
 
+#if _BSD_SOURCE || (_XOPEN_SOURCE && _XOPEN_SOURCE < 500)
 #define CAN_RUN_AS_DAEMON 1
+#else
+#define CAN_RUN_AS_DAEMON 0
+#endif
 #endif
 
 #define ARRAY_LENGTH(A) (sizeof (A) / sizeof (A[0]))
