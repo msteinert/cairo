@@ -19,9 +19,9 @@ dnl The order of the includes here is rather important
 dnl
 m4_include(build/configure.ac.version)	dnl macros setting up various version declares
 m4_include(build/configure.ac.tools)	dnl checks for tools we use
-m4_include(build/configure.ac.system)	dnl checks for system functions, headers, libs
 m4_include(build/configure.ac.features)	dnl macros for backend/feature handling
 m4_include(build/configure.ac.warnings)	dnl checks for compiler warning
+m4_include(build/configure.ac.system)	dnl checks for system functions, headers, libs
 m4_include(build/configure.ac.analysis)	dnl checks for analysis tools (lcov, etc)
 m4_include(build/configure.ac.noversion) dnl disable builtin libtool versioning
 AC_CACHE_SAVE

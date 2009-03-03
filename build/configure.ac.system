@@ -81,7 +81,7 @@ AC_CHECK_FUNC(mkdir,
 	      [AC_MSG_CHECKING([mkdir variant])
 	      mkdir_variant="unknown"
 	      save_CFLAGS="$CFLAGS"
-	      CFLAGS="-Werror -Wall $CFLAGS" # non-gcc compilers?
+	      CFLAGS=$WARN_CFLAGS
 	      AC_TRY_COMPILE([
 #ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
