@@ -239,6 +239,7 @@ write_ppm (cairo_surface_t *surface, int fd)
 
 static cairo_surface_t *
 _create_image (void *closure,
+	       cairo_content_t content,
 	       double width, double height)
 	       //csi_object_t *dictionary)
 {
