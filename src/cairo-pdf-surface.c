@@ -1543,7 +1543,7 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
     int i, x, y;
     cairo_pdf_resource_t smask = {0}; /* squelch bogus compiler warning */
     cairo_bool_t need_smask;
-    const char *interpolate;
+    const char *interpolate = "true";
 
     /* These are the only image formats we currently support, (which
      * makes things a lot simpler here). This is enforced through
