@@ -1437,7 +1437,7 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
     glEnableClientState (GL_VERTEX_ARRAY);
     glColorPointer (4, GL_FLOAT, sizeof(GLfloat) * 4, colors);
     glEnableClientState (GL_COLOR_ARRAY);
-    glDrawArrays (GL_QUADS, 0, 4 * num_rects);
+    glDrawArrays (GL_TRIANGLE_FAN, 0, 4 * num_rects);
 
     glDisableClientState (GL_COLOR_ARRAY);
     glDisableClientState (GL_VERTEX_ARRAY);
