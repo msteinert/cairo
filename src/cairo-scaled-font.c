@@ -777,6 +777,7 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
     _cairo_user_data_array_init (&scaled_font->user_data);
 
     cairo_font_face_reference (font_face);
+    scaled_font->original_font_face = NULL;
 
     CAIRO_MUTEX_INIT (scaled_font->mutex);
 
