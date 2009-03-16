@@ -106,8 +106,10 @@ struct _cairo_scaled_font {
     /* The mutex protects modification to all subsequent fields. */
     cairo_mutex_t mutex;
 
-    int cache_frozen;
-    cairo_scaled_glyph_page_t *mru_page;
+    cairo_hash_table_t *glyphs;
+    cairo_scaled_glyph_page_t *glyph_pages;
+    cairo_bool_t cache_frozen;
+    cairo_bool_t global_cache_frozen;
 
     /*
      * One surface backend may store data in each glyph.

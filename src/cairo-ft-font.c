@@ -532,9 +532,9 @@ _cairo_ft_unscaled_font_destroy (void *abstract_font)
 }
 
 static cairo_bool_t
-_has_unlocked_face (void *entry)
+_has_unlocked_face (const void *entry)
 {
-    cairo_ft_unscaled_font_t *unscaled = entry;
+    const cairo_ft_unscaled_font_t *unscaled = entry;
 
     return (!unscaled->from_face && unscaled->lock_count == 0 && unscaled->face);
 }
