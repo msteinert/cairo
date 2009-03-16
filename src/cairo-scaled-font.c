@@ -51,15 +51,15 @@
 
 /* Global Glyph Cache
  *
- * We maintain a global pool of glyphs split between all open fonts. This
+ * We maintain a global pool of glyphs split between all active fonts. This
  * allows a heavily used individual font to cache more glyphs than we could
  * manage if we used per-font glyph caches, but at the same time maintains
  * fairness across all fonts and provides a cap on the maximum number of
  * global glyphs.
  *
- * The glyphs are allocated in pages, which are cached in the global pool.
+ * The glyphs are allocated in pages, which are capped in the global pool.
  * Using pages means we can reduce the frequency at which we have to probe the
- * global cache and ameliorates the memory allocation pressure.
+ * global pool and ameliorates the memory allocation pressure.
  */
 
 /* XXX: This number is arbitrary---we've never done any measurement of this. */
