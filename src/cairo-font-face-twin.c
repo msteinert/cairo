@@ -59,14 +59,17 @@ static cairo_user_data_key_t twin_properties_key;
 
 /* CSS weight */
 typedef enum {
+  TWIN_WEIGHT_THIN = 100,
   TWIN_WEIGHT_ULTRALIGHT = 200,
   TWIN_WEIGHT_LIGHT = 300,
+  TWIN_WEIGHT_BOOK = 380,
   TWIN_WEIGHT_NORMAL = 400,
   TWIN_WEIGHT_MEDIUM = 500,
   TWIN_WEIGHT_SEMIBOLD = 600,
   TWIN_WEIGHT_BOLD = 700,
   TWIN_WEIGHT_ULTRABOLD = 800,
-  TWIN_WEIGHT_HEAVY = 900
+  TWIN_WEIGHT_HEAVY = 900,
+  TWIN_WEIGHT_ULTRAHEAVY = 1000
 } twin_face_weight_t;
 
 /* CSS stretch */
@@ -132,30 +135,41 @@ parse_field (twin_face_properties_t *props,
 
     if (0) ;
 
-    else MATCH ("oblique",    props->slant, CAIRO_FONT_SLANT_OBLIQUE);
-    else MATCH ("italic",     props->slant, CAIRO_FONT_SLANT_ITALIC);
+    else MATCH ("Oblique",	props->slant, CAIRO_FONT_SLANT_OBLIQUE);
+    else MATCH ("Italic",	props->slant, CAIRO_FONT_SLANT_ITALIC);
 
-    else MATCH ("ultra-light", props->weight, TWIN_WEIGHT_ULTRALIGHT);
-    else MATCH ("light",       props->weight, TWIN_WEIGHT_LIGHT);
-    else MATCH ("medium",      props->weight, TWIN_WEIGHT_NORMAL);
-    else MATCH ("semi-bold",   props->weight, TWIN_WEIGHT_SEMIBOLD);
-    else MATCH ("bold",        props->weight, TWIN_WEIGHT_BOLD);
-    else MATCH ("ultra-bold",  props->weight, TWIN_WEIGHT_ULTRABOLD);
-    else MATCH ("heavy",       props->weight, TWIN_WEIGHT_HEAVY);
+    else MATCH ("Thin",		props->weight, TWIN_WEIGHT_THIN);
+    else MATCH ("Ultra-Light",	props->weight, TWIN_WEIGHT_ULTRALIGHT);
+    else MATCH ("Extra-Light",	props->weight, TWIN_WEIGHT_ULTRALIGHT);
+    else MATCH ("Light",	props->weight, TWIN_WEIGHT_LIGHT);
+    else MATCH ("Book",		props->weight, TWIN_WEIGHT_BOOK);
+    else MATCH ("Regular",	props->weight, TWIN_WEIGHT_NORMAL);
+    else MATCH ("Medium",	props->weight, TWIN_WEIGHT_MEDIUM);
+    else MATCH ("Semi-Bold",	props->weight, TWIN_WEIGHT_SEMIBOLD);
+    else MATCH ("Demi-Bold",	props->weight, TWIN_WEIGHT_SEMIBOLD);
+    else MATCH ("Bold",		props->weight, TWIN_WEIGHT_BOLD);
+    else MATCH ("Ultra-Bold",	props->weight, TWIN_WEIGHT_ULTRABOLD);
+    else MATCH ("Extra-Bold",	props->weight, TWIN_WEIGHT_ULTRABOLD);
+    else MATCH ("Heavy",	props->weight, TWIN_WEIGHT_HEAVY);
+    else MATCH ("Black",	props->weight, TWIN_WEIGHT_HEAVY);
+    else MATCH ("Ultra-Heavy",	props->weight, TWIN_WEIGHT_ULTRAHEAVY);
+    else MATCH ("Extra-Heavy",	props->weight, TWIN_WEIGHT_ULTRAHEAVY);
+    else MATCH ("Ultra-Black",	props->weight, TWIN_WEIGHT_ULTRAHEAVY);
+    else MATCH ("Extra-Black",	props->weight, TWIN_WEIGHT_ULTRAHEAVY);
 
-    else MATCH ("ultra-condensed", props->stretch, TWIN_STRETCH_ULTRA_CONDENSED);
-    else MATCH ("extra-condensed", props->stretch, TWIN_STRETCH_EXTRA_CONDENSED);
-    else MATCH ("condensed",       props->stretch, TWIN_STRETCH_CONDENSED);
-    else MATCH ("semi-condensed",  props->stretch, TWIN_STRETCH_SEMI_CONDENSED);
-    else MATCH ("semi-expanded",   props->stretch, TWIN_STRETCH_SEMI_EXPANDED);
-    else MATCH ("expanded",        props->stretch, TWIN_STRETCH_EXPANDED);
-    else MATCH ("extra-expanded",  props->stretch, TWIN_STRETCH_EXTRA_EXPANDED);
-    else MATCH ("ultra-expanded",  props->stretch, TWIN_STRETCH_ULTRA_EXPANDED);
+    else MATCH ("Ultra-Condensed",	props->stretch, TWIN_STRETCH_ULTRA_CONDENSED);
+    else MATCH ("Extra-Condensed",	props->stretch, TWIN_STRETCH_EXTRA_CONDENSED);
+    else MATCH ("Condensed",		props->stretch, TWIN_STRETCH_CONDENSED);
+    else MATCH ("Semi-Condensed",	props->stretch, TWIN_STRETCH_SEMI_CONDENSED);
+    else MATCH ("Semi-Expanded",	props->stretch, TWIN_STRETCH_SEMI_EXPANDED);
+    else MATCH ("Expanded",		props->stretch, TWIN_STRETCH_EXPANDED);
+    else MATCH ("Extra-Expanded",	props->stretch, TWIN_STRETCH_EXTRA_EXPANDED);
+    else MATCH ("Ultra-Expanded",	props->stretch, TWIN_STRETCH_ULTRA_EXPANDED);
 
-    else MATCH ("mono",       props->monospace, TRUE);
-    else MATCH ("monospace",  props->monospace, TRUE);
+    else MATCH ("Mono",		props->monospace, TRUE);
+    else MATCH ("Monospace",	props->monospace, TRUE);
 
-    else MATCH ("small-caps", props->smallcaps, TRUE);
+    else MATCH ("Small-Caps",	props->smallcaps, TRUE);
 }
 
 static void
