@@ -379,6 +379,7 @@ AC_DEFUN([CAIRO_REPORT],
 	echo "The following font backends:"
 	echo "  User:          yes (always builtin)"
 	echo "  FreeType:      $use_ft"
+	echo "  Fontconfig:    $use_fc"
 	echo "  Win32:         $use_win32_font"
 	echo "  Quartz:        $use_quartz_font"
 	echo ""

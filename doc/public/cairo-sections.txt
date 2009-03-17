@@ -2,6 +2,7 @@
 <FILE>cairo-ft</FILE>
 <TITLE>ft-font</TITLE>
 CAIRO_HAS_FT_FONT
+CAIRO_HAS_FC_FONT
 cairo_ft_font_face_create_for_ft_face
 cairo_ft_font_face_create_for_pattern
 cairo_ft_font_options_substitute

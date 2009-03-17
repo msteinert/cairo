@@ -259,13 +259,6 @@ FREETYPE_MIN_RELEASE=2.1.9
 FREETYPE_MIN_VERSION=9.7.3
 
 CAIRO_ENABLE_FONT_BACKEND(ft, FreeType, auto, [
-  ft_REQUIRES="fontconfig"
-  PKG_CHECK_MODULES(FONTCONFIG, $ft_REQUIRES,,
-		    [AC_MSG_RESULT(no); use_ft="no (requires $ft_REQUIRES)"])
-
-  if test "x$use_ft" = "xyes"; then
-
-    CAIRO_CHECK_FUNCS_WITH_FLAGS(FcFini, [$FONTCONFIG_CFLAGS], [$FONTCONFIG_LIBS])
 
     PKG_CHECK_MODULES(FREETYPE, freetype2 >= $FREETYPE_MIN_VERSION,
                       [freetype_pkgconfig=yes],
@@ -293,9 +286,20 @@ CAIRO_ENABLE_FONT_BACKEND(ft, FreeType, auto, [
 			   use_ft="no ($FREETYPE_VERSION found; version $FREETYPE_MIN_VERSION from release $FREETYPE_MIN_RELEASE required)"])
       fi
     fi
+
+  ft_CFLAGS="$FREETYPE_CFLAGS"
+  ft_LIBS="$FREETYPE_LIBS"
+])
+
+CAIRO_ENABLE_FONT_BACKEND(fc, Fontconfig, auto, [
+  use_fc=$use_ft
+  if test "x$use_fc" = "xyes"; then
+    fc_REQUIRES="fontconfig"
+    PKG_CHECK_MODULES(FONTCONFIG, $fc_REQUIRES,,
+		      [AC_MSG_RESULT(no); use_fc="no (requires $fc_REQUIRES)"])
   fi
-  ft_CFLAGS="$FREETYPE_CFLAGS $FONTCONFIG_CFLAGS"
-  ft_LIBS="$FREETYPE_LIBS $FONTCONFIG_LIBS"
+  fc_CFLAGS="$FONTCONFIG_CFLAGS"
+  fc_LIBS="$FONTCONFIG_LIBS"
 ])
 
 if test "x$use_ft" = "xyes"; then
@@ -315,6 +319,10 @@ if test "x$use_ft" = "xyes"; then
 
   LIBS="$_save_libs"
   CFLAGS="$_save_cflags"
+fi
+
+if test "x$use_fc" = "xyes"; then
+  CAIRO_CHECK_FUNCS_WITH_FLAGS(FcFini, [$FONTCONFIG_CFLAGS], [$FONTCONFIG_LIBS])
 fi
 
 dnl ===========================================================================

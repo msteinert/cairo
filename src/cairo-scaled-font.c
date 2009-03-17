@@ -2719,8 +2719,8 @@ slim_hidden_def (cairo_scaled_font_get_font_matrix);
  *
  * Stores the CTM with which @scaled_font was created into @ctm.
  * Note that the translation offsets (x0, y0) of the CTM are ignored
- * by cairo_scaled_font_create().  So, the matrix this function
- * returns always has 0,0 as x0,y0.
+ * by cairo_scaled_font_create().  So, the matrix this
+ * function returns always has 0,0 as x0,y0.
  *
  * Since: 1.2
  **/

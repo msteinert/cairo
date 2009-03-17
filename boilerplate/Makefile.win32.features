@@ -169,6 +169,16 @@ enabled_cairo_boilerplate_private += $(cairo_boilerplate_ft_private)
 enabled_cairo_boilerplate_sources += $(cairo_boilerplate_ft_sources)
 endif
 
+supported_cairo_boilerplate_headers += $(cairo_boilerplate_fc_headers)
+all_cairo_boilerplate_headers += $(cairo_boilerplate_fc_headers)
+all_cairo_boilerplate_private += $(cairo_boilerplate_fc_private)
+all_cairo_boilerplate_sources += $(cairo_boilerplate_fc_sources)
+ifeq ($(CAIRO_HAS_FC_FONT),1)
+enabled_cairo_boilerplate_headers += $(cairo_boilerplate_fc_headers)
+enabled_cairo_boilerplate_private += $(cairo_boilerplate_fc_private)
+enabled_cairo_boilerplate_sources += $(cairo_boilerplate_fc_sources)
+endif
+
 supported_cairo_boilerplate_headers += $(cairo_boilerplate_ps_headers)
 all_cairo_boilerplate_headers += $(cairo_boilerplate_ps_headers)
 all_cairo_boilerplate_private += $(cairo_boilerplate_ps_private)
