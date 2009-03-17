@@ -2597,6 +2597,9 @@ cairo_pattern_get_rgba (cairo_pattern_t *pattern,
     cairo_solid_pattern_t *solid = (cairo_solid_pattern_t*) pattern;
     double r0, g0, b0, a0;
 
+    if (pattern->status)
+	return pattern->status;
+
     if (pattern->type != CAIRO_PATTERN_TYPE_SOLID)
 	return _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
 
@@ -2635,6 +2638,9 @@ cairo_pattern_get_surface (cairo_pattern_t *pattern,
 {
     cairo_surface_pattern_t *spat = (cairo_surface_pattern_t*) pattern;
 
+    if (pattern->status)
+	return pattern->status;
+
     if (pattern->type != CAIRO_PATTERN_TYPE_SURFACE)
 	return _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
 
@@ -2672,6 +2678,9 @@ cairo_pattern_get_color_stop_rgba (cairo_pattern_t *pattern,
 				   double *blue, double *alpha)
 {
     cairo_gradient_pattern_t *gradient = (cairo_gradient_pattern_t*) pattern;
+
+    if (pattern->status)
+	return pattern->status;
 
     if (pattern->type != CAIRO_PATTERN_TYPE_LINEAR &&
 	pattern->type != CAIRO_PATTERN_TYPE_RADIAL)
@@ -2714,6 +2723,9 @@ cairo_pattern_get_color_stop_count (cairo_pattern_t *pattern,
 {
     cairo_gradient_pattern_t *gradient = (cairo_gradient_pattern_t*) pattern;
 
+    if (pattern->status)
+	return pattern->status;
+
     if (pattern->type != CAIRO_PATTERN_TYPE_LINEAR &&
 	pattern->type != CAIRO_PATTERN_TYPE_RADIAL)
 	return _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
@@ -2746,6 +2758,9 @@ cairo_pattern_get_linear_points (cairo_pattern_t *pattern,
 				 double *x1, double *y1)
 {
     cairo_linear_pattern_t *linear = (cairo_linear_pattern_t*) pattern;
+
+    if (pattern->status)
+	return pattern->status;
 
     if (pattern->type != CAIRO_PATTERN_TYPE_LINEAR)
 	return _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
@@ -2787,6 +2802,9 @@ cairo_pattern_get_radial_circles (cairo_pattern_t *pattern,
 				  double *x1, double *y1, double *r1)
 {
     cairo_radial_pattern_t *radial = (cairo_radial_pattern_t*) pattern;
+
+    if (pattern->status)
+	return pattern->status;
 
     if (pattern->type != CAIRO_PATTERN_TYPE_RADIAL)
 	return _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
