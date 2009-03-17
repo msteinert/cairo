@@ -74,24 +74,37 @@ draw (cairo_t *cr, int width, int height)
 {
     const cairo_test_context_t *ctx = cairo_test_get_context (cr);
     cairo_status_t status;
+    cairo_test_status_t result;
 
     /* first test that a relative move without a current point fails... */
     status = invalid_rel_move_to (cairo_get_target (cr));
     if (status != CAIRO_STATUS_NO_CURRENT_POINT) {
+	result = cairo_test_status_from_status (ctx, status);
+	if (result == CAIRO_TEST_NO_MEMORY)
+	    return result;
+
 	cairo_test_log (ctx, "Error: invalid cairo_rel_move_to() did not raise NO_CURRENT_POINT\n");
-	return CAIRO_TEST_FAILURE;
+	return result;
     }
 
     status = invalid_rel_line_to (cairo_get_target (cr));
     if (status != CAIRO_STATUS_NO_CURRENT_POINT) {
+	result = cairo_test_status_from_status (ctx, status);
+	if (result == CAIRO_TEST_NO_MEMORY)
+	    return result;
+
 	cairo_test_log (ctx, "Error: invalid cairo_rel_line_to() did not raise NO_CURRENT_POINT\n");
-	return CAIRO_TEST_FAILURE;
+	return result;
     }
 
     status = invalid_rel_curve_to (cairo_get_target (cr));
     if (status != CAIRO_STATUS_NO_CURRENT_POINT) {
+	result = cairo_test_status_from_status (ctx, status);
+	if (result == CAIRO_TEST_NO_MEMORY)
+	    return result;
+
 	cairo_test_log (ctx, "Error: invalid cairo_rel_curve_to() did not raise NO_CURRENT_POINT\n");
-	return CAIRO_TEST_FAILURE;
+	return result;
     }
 
     cairo_set_source_rgb (cr, 1, 1, 1);
