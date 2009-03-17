@@ -125,12 +125,6 @@ _cairo_win32_tmpfile (void);
 #define STRINGIFY(macro_or_string)    STRINGIFY_ARG (macro_or_string)
 #define STRINGIFY_ARG(contents)       #contents
 
-/* This has to be updated whenever #cairo_status_t is extended.  That's
- * a bit of a pain, but it should be easy to always catch as long as
- * one adds a new test case to test a trigger of the new status value.
- */
-#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_SIZE
-
 #ifdef __GNUC__
 #define cairo_container_of(ptr, type, member) ({ \
     const typeof(((type *) 0)->member) *mptr__ = (ptr); \

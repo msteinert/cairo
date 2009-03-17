@@ -208,6 +208,7 @@ typedef struct _cairo_user_data_key {
 /**
  * cairo_status_t:
  * @CAIRO_STATUS_SUCCESS: no error has occurred
+ *
  * @CAIRO_STATUS_NO_MEMORY: out of memory
  * @CAIRO_STATUS_INVALID_RESTORE: cairo_restore() called without matching cairo_save()
  * @CAIRO_STATUS_INVALID_POP_GROUP: no saved group to pop
@@ -241,6 +242,11 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_INVALID_WEIGHT: invalid value for an input #cairo_font_weight_t (Since 1.8)
  * @CAIRO_STATUS_INVALID_SIZE: invalid value (typically too big) for a size (Since 1.10)
  *
+ * @CAIRO_STATUS_LAST_STATUS: this is a special value indicating the number of
+ *   status values defined in this enumeration.  When using this value, note
+ *   that the version of cairo at run-time may have additional status values
+ *   defined than the value of this symbol at compile-time. (Since 1.10)
+ *
  * #cairo_status_t is used to indicate errors that can occur when
  * using Cairo. In some cases it is returned directly by functions.
  * but when using #cairo_t, the last error, if any, is stored in
@@ -251,6 +257,7 @@ typedef struct _cairo_user_data_key {
  **/
 typedef enum _cairo_status {
     CAIRO_STATUS_SUCCESS = 0,
+
     CAIRO_STATUS_NO_MEMORY,
     CAIRO_STATUS_INVALID_RESTORE,
     CAIRO_STATUS_INVALID_POP_GROUP,
@@ -282,8 +289,9 @@ typedef enum _cairo_status {
     CAIRO_STATUS_INVALID_CLUSTERS,
     CAIRO_STATUS_INVALID_SLANT,
     CAIRO_STATUS_INVALID_WEIGHT,
-    CAIRO_STATUS_INVALID_SIZE
-    /* after adding a new error: update CAIRO_STATUS_LAST_STATUS in cairoint.h.  */
+    CAIRO_STATUS_INVALID_SIZE,
+
+    CAIRO_STATUS_LAST_STATUS
 } cairo_status_t;
 
 /**
