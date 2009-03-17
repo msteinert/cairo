@@ -130,7 +130,7 @@ draw (cairo_t *cr, int width, int height)
     for (utf8 = characters; *utf8 != NULL; utf8++) {
 	status = get_glyph (cr, *utf8, &glyphs[0]);
 	if (status)
-	    return status;
+	    goto BAIL;
 
 	if (glyphs[0].index) {
 	    glyphs[0].x = 1.0;
@@ -145,21 +145,22 @@ draw (cairo_t *cr, int width, int height)
     /* we can pack ~21k 1-byte glyphs into a single XRenderCompositeGlyphs8 */
     status = get_glyph (cr, "m", &glyphs[0]);
     if (status)
-	return status;
+	goto BAIL;
     for (i=1; i < 21500; i++)
 	glyphs[i] = glyphs[0];
     /* so check expanding the current 1-byte request for 2-byte glyphs */
     status = get_glyph (cr, "μ", &glyphs[i]);
     if (status)
-	return status;
+	goto BAIL;
     for (j=i+1; j < NUM_GLYPHS; j++)
 	glyphs[j] = glyphs[i];
 
     cairo_show_glyphs (cr, glyphs, NUM_GLYPHS);
-    
+
+  BAIL:
     free(glyphs);
 
-    return CAIRO_TEST_SUCCESS;
+    return status;
 }
 
 CAIRO_TEST (show_glyphs_many,
