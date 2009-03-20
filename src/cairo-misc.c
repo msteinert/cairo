@@ -610,7 +610,7 @@ _cairo_lround (double d)
 #include <windows.h>
 #include <io.h>
 
-#if !WINCE
+#if !_WIN32_WCE
 /* tmpfile() replacement for Windows.
  *
  * On Windows tmpfile() creates the file in the root directory. This
@@ -660,7 +660,7 @@ _cairo_win32_tmpfile (void)
 
     return fp;
 }
-#endif /* !WINCE */
+#endif /* !_WIN32_WCE */
 
 #endif /* _WIN32 */
 
