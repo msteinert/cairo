@@ -117,6 +117,9 @@ test_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     metrics->x_advance = (glyphs[glyph].width + 1) / 8.0;
 
     image = cairo_image_surface_create (CAIRO_FORMAT_A1, glyphs[glyph].width, 8);
+    if (cairo_surface_status (image))
+	return cairo_surface_status (image);
+
     data = cairo_image_surface_get_data (image);
     for (i = 0; i < 8; i++) {
 	byte = glyphs[glyph].data[i];
@@ -125,15 +128,17 @@ test_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
     }
 
     pattern = cairo_pattern_create_for_surface (image);
+    cairo_surface_destroy (image);
+
     cairo_matrix_init_identity (&matrix);
     cairo_matrix_scale (&matrix, 1.0/8.0, 1.0/8.0);
     cairo_matrix_translate (&matrix, 0, -8);
     cairo_matrix_invert (&matrix);
     cairo_pattern_set_matrix (pattern, &matrix);
+
     cairo_set_source (cr, pattern);
     cairo_mask (cr, pattern);
     cairo_pattern_destroy (pattern);
-    cairo_surface_destroy (image);
 
     return CAIRO_STATUS_SUCCESS;
 }
