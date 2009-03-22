@@ -108,6 +108,9 @@ use_similar (cairo_t *cr,
 {
     cairo_t *cr2;
 
+    if (cairo_status (cr))
+	return;
+
     cr2 = _cairo_create_similar (cr, 1, 1);
 
     _draw (cr2, red, green, blue);
@@ -124,6 +127,9 @@ use_image (cairo_t *cr,
 	   double blue)
 {
     cairo_t *cr2;
+
+    if (cairo_status (cr))
+	return;
 
     cr2 = _cairo_create_image (cr, format, 1, 1);
 
@@ -153,23 +159,36 @@ use_solid (cairo_t *cr,
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
-    int loop;
-    int i;
+    const cairo_test_context_t *ctx = cairo_test_get_context (cr);
+    cairo_status_t status;
+    const double colors[8][3] = {
+	{ 1.0, 0.0, 0.0 }, /* red */
+	{ 0.0, 1.0, 0.0 }, /* green */
+	{ 1.0, 1.0, 0.0 }, /* yellow */
+	{ 0.0, 0.0, 1.0 }, /* blue */
+	{ 1.0, 0.0, 1.0 }, /* magenta */
+	{ 0.0, 1.0, 1.0 }, /* cyan */
+	{ 1.0, 1.0, 1.0 }, /* white */
+	{ 0.0, 0.0, 0.0 }, /* black */
+    };
+    int i, j, loop;
 
     for (loop = 0; loop < LOOPS; loop++) {
 	for (i = 0; i < LOOPS; i++) {
-	    use_solid (cr, 0.0, 0.0, 0.0); /* black */
-	    use_solid (cr, 1.0, 0.0, 0.0); /* red */
-	    use_solid (cr, 0.0, 1.0, 0.0); /* green */
-	    use_solid (cr, 1.0, 1.0, 0.0); /* yellow */
-	    use_solid (cr, 0.0, 0.0, 1.0); /* blue */
-	    use_solid (cr, 1.0, 0.0, 1.0); /* magenta */
-	    use_solid (cr, 0.0, 1.0, 1.0); /* cyan */
-	    use_solid (cr, 1.0, 1.0, 1.0); /* white */
+	    for (j = 0; j < 8; j++) {
+		use_solid (cr, colors[j][0], colors[j][1], colors[j][2]);
+		status = cairo_status (cr);
+		if (status)
+		    return cairo_test_status_from_status (ctx, status);
+	    }
 	}
 
-	for (i = 0; i < NRAND; i++)
+	for (i = 0; i < NRAND; i++) {
 	    use_solid (cr, drand48 (), drand48 (), drand48 ());
+	    status = cairo_status (cr);
+	    if (status)
+		return cairo_test_status_from_status (ctx, status);
+	}
     }
 
     /* stress test only, so clear the surface before comparing */
