@@ -7,6 +7,8 @@ AM_CPPFLAGS =					\
 	-I$(top_builddir)/src			\
 	$(CAIRO_CFLAGS)
 
+AM_LDFLAGS = $(CAIRO_LDFLAGS)
+
 EXTRA_PROGRAMS += cairo-perf \
 		  cairo-perf-diff-files \
 		  cairo-perf-compare-backends \
