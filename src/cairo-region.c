@@ -178,6 +178,28 @@ cairo_region_subtract (cairo_region_t *dst, cairo_region_t *other)
 }
 
 cairo_status_t
+cairo_region_subtract_rectangle (cairo_region_t *dst,
+				 cairo_rectangle_int_t *rectangle)
+{
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    pixman_region32_t region;
+
+    if (dst->status)
+	return dst->status;
+    
+    pixman_region32_init_rect (&region,
+			       rectangle->x, rectangle->y,
+			       rectangle->width, rectangle->height);
+
+    if (!pixman_region32_subtract (&dst->rgn, &dst->rgn, &region))
+	status = cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
+
+    pixman_region32_fini (&region);
+    
+    return status;
+}
+
+cairo_status_t
 cairo_region_intersect (cairo_region_t *dst, cairo_region_t *other)
 {
     if (dst->status)
@@ -190,6 +212,27 @@ cairo_region_intersect (cairo_region_t *dst, cairo_region_t *other)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+cairo_region_intersect_rectangle (cairo_region_t *dst,
+				  const cairo_rectangle_int_t *rect)
+{
+    cairo_status_t result = CAIRO_STATUS_SUCCESS;
+    pixman_region32_t region;
+
+    if (dst->status)
+	return dst->status;
+    
+    pixman_region32_init_rect (&region,
+			       rect->x, rect->y, rect->width, rect->height);
+
+    if (!pixman_region32_intersect (&dst->rgn, &dst->rgn, &region))
+	result = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    pixman_region32_fini (&region);
+    
+    return result;
 }
 
 cairo_status_t
@@ -210,7 +253,7 @@ cairo_region_union (cairo_region_t *dst,
 
 cairo_status_t
 cairo_region_union_rectangle (cairo_region_t *dst,
-			      cairo_rectangle_int_t *rect)
+			      const cairo_rectangle_int_t *rect)
 {
     if (!pixman_region32_union_rect (&dst->rgn, &dst->rgn,
 				     rect->x, rect->y,

@@ -2679,8 +2679,6 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
 {
     cairo_rectangle_int_t dst_rectangle;
     cairo_rectangle_int_t drawn_rectangle;
-    cairo_bool_t has_drawn_region = FALSE;
-    cairo_region_t *drawn_region = NULL;
     cairo_region_t *clear_region = NULL;
     cairo_status_t status;
 
@@ -2708,10 +2706,7 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
 
     /* Now compute the area that is in dst_rectangle but not in drawn_rectangle
      */
-    drawn_region = cairo_region_create_rectangle (&drawn_rectangle);
-    has_drawn_region = TRUE;
-
-    status = cairo_region_subtract (clear_region, drawn_region);
+    status = cairo_region_subtract_rectangle (clear_region, &drawn_rectangle);
     if (unlikely (status))
         goto CLEANUP_REGIONS;
 
@@ -2721,8 +2716,6 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
                                          clear_region);
 
   CLEANUP_REGIONS:
-    if (drawn_region)
-        cairo_region_destroy (drawn_region);
     cairo_region_destroy (clear_region);
 
     return _cairo_surface_set_error (dst, status);

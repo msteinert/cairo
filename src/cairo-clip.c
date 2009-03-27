@@ -198,17 +198,8 @@ _cairo_clip_intersect_to_region (cairo_clip_t   *clip,
     if (!clip)
 	return CAIRO_STATUS_SUCCESS;
 
-    if (clip->all_clipped) {
-	cairo_region_t *clip_rect;
-
-	clip_rect = cairo_region_create_rectangle (&clip->surface_rect);
-
-	status = cairo_region_intersect (region, clip_rect);
-
-	cairo_region_destroy (clip_rect);
-
-	return status;
-    }
+    if (clip->all_clipped)
+	return cairo_region_intersect_rectangle (region, &clip->surface_rect);
 
     if (clip->path) {
 	/* Intersect clip path into region. */
@@ -220,18 +211,8 @@ _cairo_clip_intersect_to_region (cairo_clip_t   *clip,
 	    return status;
     }
 
-    if (clip->surface) {
-	cairo_region_t *clip_rect;
-
-	clip_rect = cairo_region_create_rectangle (&clip->surface_rect);
-
-	status = cairo_region_intersect (region, clip_rect);
-
-	cairo_region_destroy (clip_rect);
-
-        if (unlikely (status))
-            return status;
-    }
+    if (clip->surface)
+	return cairo_region_intersect_rectangle (region, &clip->surface_rect);
 
     return CAIRO_STATUS_SUCCESS;
 }

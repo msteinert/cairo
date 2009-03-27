@@ -2707,7 +2707,9 @@ slim_hidden_proto (cairo_region_contains_rectangle);
 slim_hidden_proto (cairo_region_contains_point);
 slim_hidden_proto (cairo_region_translate);
 slim_hidden_proto (cairo_region_subtract);
+slim_hidden_proto (cairo_region_subtract_rectangle);
 slim_hidden_proto (cairo_region_intersect);
+slim_hidden_proto (cairo_region_intersect_rectangle);
 slim_hidden_proto (cairo_region_union);
 slim_hidden_proto (cairo_region_union_rectangle);
 
