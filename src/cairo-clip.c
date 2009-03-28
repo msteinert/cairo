@@ -357,23 +357,14 @@ _cairo_clip_intersect_region (cairo_clip_t    *clip,
     if (status)
 	return status;
 
-    if (!clip->has_region) {
+    if (clip->has_region) {
+	status = _cairo_region_intersect (&clip->region,
+					  &clip->region,
+					  &region);
+    } else {
         status = _cairo_region_copy (&clip->region, &region);
 	if (status == CAIRO_STATUS_SUCCESS)
 	    clip->has_region = TRUE;
-    } else {
-	cairo_region_t intersection;
-
-        _cairo_region_init (&intersection);
-
-	status = _cairo_region_intersect (&intersection,
-		                         &clip->region,
-		                         &region);
-
-	if (status == CAIRO_STATUS_SUCCESS)
-	    status = _cairo_region_copy (&clip->region, &intersection);
-
-        _cairo_region_fini (&intersection);
     }
 
     clip->serial = _cairo_surface_allocate_clip_serial (target);
