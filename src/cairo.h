@@ -2368,7 +2368,7 @@ cairo_public cairo_region_t *
 cairo_region_create (void);
 
 cairo_public cairo_region_t *
-cairo_region_create_rectangle (cairo_rectangle_int_t *rect);
+cairo_region_create_rectangle (cairo_rectangle_int_t *rectangle);
 
 cairo_public cairo_region_t *
 cairo_region_copy (cairo_region_t *original);
@@ -2396,7 +2396,7 @@ cairo_region_empty (cairo_region_t *region);
 
 cairo_public cairo_region_overlap_t
 cairo_region_contains_rectangle (cairo_region_t *region,
-				 const cairo_rectangle_int_t *rect);
+				 const cairo_rectangle_int_t *rectangle);
 
 cairo_public cairo_bool_t
 cairo_region_contains_point (cairo_region_t *region, int x, int y);
@@ -2416,7 +2416,7 @@ cairo_region_intersect (cairo_region_t *dst, cairo_region_t *other);
 
 cairo_public cairo_status_t
 cairo_region_intersect_rectangle (cairo_region_t *dst,
-				  const cairo_rectangle_int_t *rect);
+				  const cairo_rectangle_int_t *rectangle);
 
 cairo_public cairo_status_t
 cairo_region_union (cairo_region_t *dst, cairo_region_t *other);
