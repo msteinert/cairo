@@ -2355,7 +2355,7 @@ typedef struct _cairo_region cairo_region_t;
 
 typedef struct _cairo_rectangle_int {
     int x, y;
-    unsigned int width, height;
+    int width, height;
 } cairo_rectangle_int_t;
 
 typedef enum _cairo_region_overlap {
