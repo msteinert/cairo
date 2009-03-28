@@ -2950,6 +2950,7 @@ _cairo_surface_create_in_error (cairo_status_t status)
     case CAIRO_STATUS_INVALID_STRIDE:
 	return (cairo_surface_t *) &_cairo_surface_nil_invalid_stride;
     case CAIRO_STATUS_SUCCESS:
+    case CAIRO_STATUS_LAST_STATUS:
 	ASSERT_NOT_REACHED;
 	/* fall-through */
     case CAIRO_STATUS_INVALID_RESTORE:

@@ -123,9 +123,10 @@ cairo_status_to_string (cairo_status_t status)
 	return "invalid value for an input #cairo_font_weight_t";
     case CAIRO_STATUS_INVALID_SIZE:
 	return "invalid value for the size of the input (surface, pattern, etc.)";
+    default:
+    case CAIRO_STATUS_LAST_STATUS:
+	return "<unknown error status>";
     }
-
-    return "<unknown error status>";
 }
 
 
