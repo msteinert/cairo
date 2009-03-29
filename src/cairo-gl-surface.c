@@ -246,7 +246,7 @@ _cairo_gl_set_destination (cairo_gl_surface_t *surface)
 }
 
 static int
-_cairo_gl_set_operator (cairo_operator_t op)
+_cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op)
 {
     struct {
 	GLenum src;
@@ -268,11 +268,25 @@ _cairo_gl_set_operator (cairo_operator_t op)
 	{ GL_ONE_MINUS_DST_ALPHA, GL_ONE_MINUS_SRC_ALPHA }, /* Xor */
 	{ GL_ONE, GL_ONE }, /* Add */
     };
+    GLenum src_factor, dst_factor;
 
     if (op >= ARRAY_SIZE (blend_factors))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    glBlendFunc (blend_factors[op].src, blend_factors[op].dst);
+    src_factor = blend_factors[op].src;
+    dst_factor = blend_factors[op].dst;
+
+    /* We may have a visual with alpha bits despite the user requesting
+     * CAIRO_CONTENT_COLOR.  So clear out those bits in that case.
+     */
+    if (dst->content == CAIRO_CONTENT_COLOR) {
+	if (src_factor == GL_ONE_MINUS_DST_ALPHA)
+	    src_factor = GL_ZERO;
+	if (src_factor == GL_DST_ALPHA)
+	    src_factor = GL_ONE;
+    }
+
+    glBlendFunc (src_factor, dst_factor);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1214,7 +1228,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 
     ctx = _cairo_gl_context_acquire (dst->ctx);
     _cairo_gl_set_destination (dst);
-    status = _cairo_gl_set_operator (op);
+    status = _cairo_gl_set_operator (dst, op);
     if (status != CAIRO_STATUS_SUCCESS) {
 	_cairo_gl_operand_destroy (&setup.src);
 	if (mask != NULL)
@@ -1409,7 +1423,7 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
     ctx = _cairo_gl_context_acquire (surface->ctx);
 
     _cairo_gl_set_destination (surface);
-    status = _cairo_gl_set_operator (op);
+    status = _cairo_gl_set_operator (surface, op);
     if (status != CAIRO_STATUS_SUCCESS) {
 	_cairo_gl_context_release (ctx);
 	return status;
