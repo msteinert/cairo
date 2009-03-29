@@ -38,6 +38,7 @@
 
 #include <X11/Xlib.h>
 
+#include <GL/glew.h>
 #define GL_GLEXT_PROTOTYPES
 #include <GL/glx.h>
 #include <GL/glext.h>
@@ -127,6 +128,7 @@ cairo_gl_context_t *
 cairo_gl_glx_context_create (Display *dpy, GLXContext gl_ctx)
 {
     cairo_gl_context_t *ctx;
+    GLenum err;
 
     ctx = calloc (1, sizeof(cairo_gl_context_t));
     if (ctx == NULL)
@@ -142,6 +144,17 @@ cairo_gl_glx_context_create (Display *dpy, GLXContext gl_ctx)
      * for this.
      */
     glXMakeCurrent(dpy, RootWindow (dpy, DefaultScreen (dpy)), gl_ctx);
+
+    err = glewInit();
+    if (err != GLEW_OK) {
+	free(ctx);
+	return NULL;
+    }
+
+    if (!GLEW_EXT_framebuffer_object || !GLEW_ARB_texture_env_combine) {
+	free(ctx);
+	return NULL;
+    }
 
     /* Set up the dummy texture for tex_env_combine with constant color. */
     glGenTextures (1, &ctx->dummy_tex);

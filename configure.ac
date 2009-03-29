@@ -196,6 +196,15 @@ CAIRO_ENABLE_SURFACE_BACKEND(gl, gl, no, [
   gl_REQUIRES="gl"
   PKG_CHECK_MODULES(gl, $gl_REQUIRES, , [AC_MSG_RESULT(no)
   use_gl="no (requires gl.pc)"])
+
+  AC_CHECK_LIB(GLEW, glewInit, [
+    AC_CHECK_HEADER(GL/glew.h, [], [
+      have_gl="no (requires glew http://glew.sourceforge.net/)"
+    ])
+  ], [
+    have_gl="no (requires glew http://glew.sourceforge.net/)"
+  ])
+  gl_NONPKGCONFIG_LIBS="-lGLEW"
 ])
 
 dnl ===========================================================================
