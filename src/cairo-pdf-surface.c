@@ -1015,18 +1015,21 @@ _cairo_pdf_surface_open_stream (cairo_pdf_surface_t	*surface,
 static cairo_status_t
 _cairo_pdf_surface_close_stream (cairo_pdf_surface_t *surface)
 {
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_status_t status;
     long length;
 
     if (! surface->pdf_stream.active)
 	return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_pdf_operators_flush (&surface->pdf_operators);
-    if (unlikely (status))
-	return status;
 
     if (surface->pdf_stream.compressed) {
-	status = _cairo_output_stream_destroy (surface->output);
+	cairo_status_t status2;
+
+	status2 = _cairo_output_stream_destroy (surface->output);
+	if (likely (status == CAIRO_STATUS_SUCCESS))
+	    status = status2;
+
 	surface->output = surface->pdf_stream.old_output;
 	_cairo_pdf_operators_set_stream (&surface->pdf_operators, surface->output);
 	surface->pdf_stream.old_output = NULL;
@@ -1051,7 +1054,7 @@ _cairo_pdf_surface_close_stream (cairo_pdf_surface_t *surface)
 
     surface->pdf_stream.active = FALSE;
 
-    if (status == CAIRO_STATUS_SUCCESS)
+    if (likely (status == CAIRO_STATUS_SUCCESS))
 	status = _cairo_output_stream_get_status (surface->output);
 
     return status;
