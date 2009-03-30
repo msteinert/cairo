@@ -121,7 +121,7 @@ slim_hidden_def (cairo_region_create);
  * Since: 1.10
  **/
 cairo_region_t *
-cairo_region_create_rectangle (cairo_rectangle_int_t *rectangle)
+cairo_region_create_rectangle (const cairo_rectangle_int_t *rectangle)
 {
     cairo_region_t *region;
 
@@ -335,7 +335,7 @@ slim_hidden_def (cairo_region_subtract);
  **/
 cairo_status_t
 cairo_region_subtract_rectangle (cairo_region_t *dst,
-				 cairo_rectangle_int_t *rectangle)
+				 const cairo_rectangle_int_t *rectangle)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     pixman_region32_t region;

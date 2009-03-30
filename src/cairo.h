@@ -2368,7 +2368,7 @@ cairo_public cairo_region_t *
 cairo_region_create (void);
 
 cairo_public cairo_region_t *
-cairo_region_create_rectangle (cairo_rectangle_int_t *rectangle);
+cairo_region_create_rectangle (const cairo_rectangle_int_t *rectangle);
 
 cairo_public cairo_region_t *
 cairo_region_copy (cairo_region_t *original);
@@ -2409,7 +2409,7 @@ cairo_region_subtract (cairo_region_t *dst, cairo_region_t *other);
 
 cairo_public cairo_status_t
 cairo_region_subtract_rectangle (cairo_region_t *dst,
-				 cairo_rectangle_int_t *rectangle);
+				 const cairo_rectangle_int_t *rectangle);
 
 cairo_public cairo_status_t
 cairo_region_intersect (cairo_region_t *dst, cairo_region_t *other);
