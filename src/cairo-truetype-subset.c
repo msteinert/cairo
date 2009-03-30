@@ -1329,8 +1329,8 @@ _cairo_truetype_read_font_name (cairo_scaled_font_t  	 *scaled_font,
     tt_name_record_t *record;
     unsigned long size;
     int i, j;
-    char *ps_name;
-    char *font_name;
+    char *ps_name = NULL;
+    char *font_name = NULL;
 
     backend = scaled_font->backend;
     if (!backend->load_truetype_table)
@@ -1360,8 +1360,6 @@ _cairo_truetype_read_font_name (cairo_scaled_font_t  	 *scaled_font,
      * name. It should be extended to use any suitable font name in
      * the name table.
      */
-    ps_name = NULL;
-    font_name = NULL;
     for (i = 0; i < be16_to_cpu(name->num_records); i++) {
         record = &(name->records[i]);
         if ((be16_to_cpu (record->platform) == 1) &&
@@ -1415,6 +1413,13 @@ _cairo_truetype_read_font_name (cairo_scaled_font_t  	 *scaled_font,
 
 fail:
     free (name);
+
+    if (ps_name != NULL)
+	free (ps_name);
+
+    if (font_name != NULL)
+	free (font_name);
+
     *ps_name_out = NULL;
     *font_name_out = NULL;
 
