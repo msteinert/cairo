@@ -66,7 +66,7 @@ static cairo_status_t
 _cairo_region_set_error (cairo_region_t *region,
 			cairo_status_t status)
 {
-    if (status == CAIRO_STATUS_SUCCESS || status >= CAIRO_INT_STATUS_UNSUPPORTED)
+    if (! _cairo_status_is_error (status))
 	return status;
 
     /* Don't overwrite an existing error. This preserves the first
