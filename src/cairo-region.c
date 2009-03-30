@@ -43,7 +43,7 @@ static const cairo_region_t _cairo_region_nil = {
 };
 
 /**
- * cairo_region_set_error:
+ * _cairo_region_set_error:
  * @region: a region
  * @status: a status value indicating an error
  *
@@ -52,7 +52,7 @@ static const cairo_region_t _cairo_region_nil = {
  * status values.
  *
  * All assignments of an error status to region->status should happen
- * through cairo_region_set_error(). Note that due to the nature of
+ * through _cairo_region_set_error(). Note that due to the nature of
  * the atomic operation, it is not safe to call this function on the
  * nil objects.
  *
@@ -63,7 +63,7 @@ static const cairo_region_t _cairo_region_nil = {
  * Return value: the error status.
  **/
 static cairo_status_t
-cairo_region_set_error (cairo_region_t *region,
+_cairo_region_set_error (cairo_region_t *region,
 			cairo_status_t status)
 {
     if (status == CAIRO_STATUS_SUCCESS || status >= CAIRO_INT_STATUS_UNSUPPORTED)
@@ -313,10 +313,10 @@ cairo_region_subtract (cairo_region_t *dst, cairo_region_t *other)
 	return dst->status;
 
     if (other->status)
-	return cairo_region_set_error (dst, other->status);
+	return _cairo_region_set_error (dst, other->status);
 
     if (! pixman_region32_subtract (&dst->rgn, &dst->rgn, &other->rgn))
-	return cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
+	return _cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -348,7 +348,7 @@ cairo_region_subtract_rectangle (cairo_region_t *dst,
 			       rectangle->width, rectangle->height);
 
     if (! pixman_region32_subtract (&dst->rgn, &dst->rgn, &region))
-	status = cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
+	status = _cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
 
     pixman_region32_fini (&region);
 
@@ -374,10 +374,10 @@ cairo_region_intersect (cairo_region_t *dst, cairo_region_t *other)
 	return dst->status;
 
     if (other->status)
-	return cairo_region_set_error (dst, other->status);
+	return _cairo_region_set_error (dst, other->status);
 
     if (! pixman_region32_intersect (&dst->rgn, &dst->rgn, &other->rgn))
-	return cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
+	return _cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -410,7 +410,7 @@ cairo_region_intersect_rectangle (cairo_region_t *dst,
 			       rectangle->width, rectangle->height);
 
     if (! pixman_region32_intersect (&dst->rgn, &dst->rgn, &region))
-	status = cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
+	status = _cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
 
     pixman_region32_fini (&region);
 
@@ -437,10 +437,10 @@ cairo_region_union (cairo_region_t *dst,
 	return dst->status;
 
     if (other->status)
-	return cairo_region_set_error (dst, other->status);
+	return _cairo_region_set_error (dst, other->status);
 
     if (! pixman_region32_union (&dst->rgn, &dst->rgn, &other->rgn))
-	return cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
+	return _cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -472,7 +472,7 @@ cairo_region_union_rectangle (cairo_region_t *dst,
 			       rectangle->width, rectangle->height);
 
     if (! pixman_region32_union (&dst->rgn, &dst->rgn, &region))
-	status = cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
+	status = _cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
 
     pixman_region32_fini (&region);
 
