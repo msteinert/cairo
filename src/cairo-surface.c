@@ -2678,12 +2678,11 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
 						   unsigned int		    height)
 {
     cairo_rectangle_int_t dst_rectangle;
-    cairo_rectangle_int_t drawn_rectangle;
-    cairo_region_t *clear_region = NULL;
+    cairo_region_t *clear_region;
     cairo_status_t status;
 
-    /* The area that was drawn is the area in the destination rectangle but not within
-     * the source or the mask.
+    /* The area that was drawn is the area in the destination rectangle but
+     * not within the source or the mask.
      */
     dst_rectangle.x = dst_x;
     dst_rectangle.y = dst_y;
@@ -2691,22 +2690,22 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
     dst_rectangle.height = height;
 
     clear_region = cairo_region_create_rectangle (&dst_rectangle);
-
-    drawn_rectangle = dst_rectangle;
+    status = clear_region->status;
+    if (unlikely (status))
+        goto CLEANUP_REGIONS;
 
     if (src_rectangle) {
-        if (! _cairo_rectangle_intersect (&drawn_rectangle, src_rectangle))
+        if (! _cairo_rectangle_intersect (&dst_rectangle, src_rectangle))
 	    goto EMPTY;
     }
 
     if (mask_rectangle) {
-        if (! _cairo_rectangle_intersect (&drawn_rectangle, mask_rectangle))
+        if (! _cairo_rectangle_intersect (&dst_rectangle, mask_rectangle))
 	    goto EMPTY;
     }
 
-    /* Now compute the area that is in dst_rectangle but not in drawn_rectangle
-     */
-    status = cairo_region_subtract_rectangle (clear_region, &drawn_rectangle);
+    /* Now compute the area that is in dst but not drawn */
+    status = cairo_region_subtract_rectangle (clear_region, &dst_rectangle);
     if (unlikely (status))
         goto CLEANUP_REGIONS;
 
