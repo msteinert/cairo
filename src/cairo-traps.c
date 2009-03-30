@@ -610,12 +610,11 @@ cairo_int_status_t
 _cairo_traps_extract_region (const cairo_traps_t  *traps,
 			     cairo_region_t      **region)
 {
-    cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_int_status_t status;
     cairo_region_t *r;
     int i;
 
-    for (i = 0; i < traps->num_traps; i++)
-    {
+    for (i = 0; i < traps->num_traps; i++) {
 	if (traps->traps[i].left.p1.x != traps->traps[i].left.p2.x   ||
 	    traps->traps[i].right.p1.x != traps->traps[i].right.p2.x ||
 	    ! _cairo_fixed_is_integer (traps->traps[i].top)          ||
@@ -628,11 +627,12 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
     }
 
     r = cairo_region_create ();
-    
-    for (i = 0; i < traps->num_traps; i++)
-    {
+    if (unlikely (r->status))
+	return r->status;
+
+    for (i = 0; i < traps->num_traps; i++) {
 	cairo_rectangle_int_t rect;
-	
+
 	int x1 = _cairo_fixed_integer_part (traps->traps[i].left.p1.x);
 	int y1 = _cairo_fixed_integer_part (traps->traps[i].top);
 	int x2 = _cairo_fixed_integer_part (traps->traps[i].right.p1.x);
@@ -650,17 +650,14 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
 	rect.height = y2 - y1;
 
 	status = cairo_region_union_rectangle (r, &rect);
-	if (unlikely (status))
-	{
+	if (unlikely (status)) {
 	    cairo_region_destroy (r);
-	    r = NULL;
-	    break;
+	    return status;
 	}
     }
 
     *region = r;
-    
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 /* moves trap points such that they become the actual corners of the trapezoid */
