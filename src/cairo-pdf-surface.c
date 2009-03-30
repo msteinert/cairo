@@ -1324,10 +1324,12 @@ _cairo_pdf_surface_finish (void *abstract_surface)
 				 "%%%%EOF\n",
 				 offset);
 
-    status2 = _cairo_pdf_operators_fini (&surface->pdf_operators);
     /* pdf_operators has already been flushed when the last stream was
-     * closed so we should never be writing anything here. */
-    assert(status2 == CAIRO_STATUS_SUCCESS);
+     * closed so we should never be writing anything here - however,
+     * the stream may itself be in an error state. */
+    status2 = _cairo_pdf_operators_fini (&surface->pdf_operators);
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = status2;
 
     /* close any active streams still open due to fatal errors */
     status2 = _cairo_pdf_surface_close_stream (surface);
