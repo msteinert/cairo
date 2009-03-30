@@ -38,7 +38,7 @@
 
 #include "cairoint.h"
 
-const cairo_region_t _cairo_region_nil = {
+static const cairo_region_t _cairo_region_nil = {
     CAIRO_STATUS_NO_MEMORY,		/* status */
 };
 
@@ -80,22 +80,23 @@ cairo_region_set_error (cairo_region_t *region,
  * cairo_region_create:
  *
  * Allocates a new empty region object.
- * 
+ *
  * Return value: A newly allocated #cairo_region_t. Free with
  *   cairo_region_destroy(). This function always returns a
  *   valid pointer; if memory cannot be allocated, then a special
  *   error object is returned where all operations on the object do nothing.
  *   You can check for this with cairo_region_status().
- * 
+ *
  * Since: 1.10
  **/
 cairo_region_t *
 cairo_region_create (void)
 {
-    cairo_region_t *region = _cairo_malloc (sizeof (cairo_region_t));
+    cairo_region_t *region;
 
-    if (!region)
-	return (cairo_region_t *)&_cairo_region_nil;
+    region = _cairo_malloc (sizeof (cairo_region_t));
+    if (region == NULL)
+	return (cairo_region_t *) &_cairo_region_nil;
 
     region->status = CAIRO_STATUS_SUCCESS;
 
@@ -103,101 +104,105 @@ cairo_region_create (void)
 
     return region;
 }
+slim_hidden_def (cairo_region_create);
 
 /**
  * cairo_region_create_rectangle:
  * @rectangle: a #cairo_rectangle_int_t
  *
  * Allocates a new region object containing @rectangle.
- * 
+ *
  * Return value: A newly allocated #cairo_region_t. Free with
  *   cairo_region_destroy(). This function always returns a
  *   valid pointer; if memory cannot be allocated, then a special
  *   error object is returned where all operations on the object do nothing.
  *   You can check for this with cairo_region_status().
- * 
+ *
  * Since: 1.10
  **/
 cairo_region_t *
 cairo_region_create_rectangle (cairo_rectangle_int_t *rectangle)
 {
-    cairo_region_t *region = _cairo_malloc (sizeof (cairo_region_t));
+    cairo_region_t *region;
 
-    if (!region)
-	return (cairo_region_t *)&_cairo_region_nil;
-    
+    region = _cairo_malloc (sizeof (cairo_region_t));
+    if (region == NULL)
+	return (cairo_region_t *) &_cairo_region_nil;
+
     region->status = CAIRO_STATUS_SUCCESS;
-    
+
     pixman_region32_init_rect (&region->rgn,
 			       rectangle->x, rectangle->y,
 			       rectangle->width, rectangle->height);
 
     return region;
 }
+slim_hidden_def (cairo_region_create_rectangle);
 
 /**
  * cairo_region_copy:
  * @original: a #cairo_region_t
- * 
+ *
  * Allocates a new region object copying the area from @original.
- * 
+ *
  * Return value: A newly allocated #cairo_region_t. Free with
  *   cairo_region_destroy(). This function always returns a
  *   valid pointer; if memory cannot be allocated, then a special
  *   error object is returned where all operations on the object do nothing.
  *   You can check for this with cairo_region_status().
- * 
+ *
  * Since: 1.10
  **/
 cairo_region_t *
 cairo_region_copy (cairo_region_t *original)
 {
     cairo_region_t *copy;
-    
+
     if (original->status)
-	return (cairo_region_t *)&_cairo_region_nil;
+	return (cairo_region_t *) &_cairo_region_nil;
 
     copy = cairo_region_create ();
-    if (!copy)
-	return (cairo_region_t *)&_cairo_region_nil;
+    if (copy->status)
+	return copy;
 
-    if (!pixman_region32_copy (&copy->rgn, &original->rgn)) {
+    if (! pixman_region32_copy (&copy->rgn, &original->rgn)) {
 	cairo_region_destroy (copy);
-
-	return (cairo_region_t *)&_cairo_region_nil;
+	return (cairo_region_t *) &_cairo_region_nil;
     }
 
     return copy;
 }
+slim_hidden_def (cairo_region_copy);
 
 /**
  * cairo_region_destroy:
  * @region: a #cairo_region_t
- * 
+ *
  * Destroys a #cairo_region_t object created with
  * cairo_region_create(), cairo_region_copy(), or
  * or cairo_region_create_rectangle().
- * 
+ *
  * Since: 1.10
  **/
 void
 cairo_region_destroy (cairo_region_t *region)
 {
-    if (region->status)
+    if (region == (cairo_region_t *) &_cairo_region_nil)
 	return;
-    
+
     pixman_region32_fini (&region->rgn);
     free (region);
 }
+slim_hidden_def (cairo_region_destroy);
 
 /**
  * cairo_region_num_rectangles:
  * @region: a #cairo_region_t
- * 
+ *
  * Returns the number of rectangles contained in @region.
- * 
+ *
  * Return value: The number of rectangles contained in @region.
- * 
+ *
  * Since: 1.10
  **/
 int
@@ -205,18 +210,19 @@ cairo_region_num_rectangles (cairo_region_t *region)
 {
     if (region->status)
 	return 0;
-    
+
     return pixman_region32_n_rects (&region->rgn);
 }
+slim_hidden_def (cairo_region_num_rectangles);
 
 /**
  * cairo_region_get_rectangle:
  * @region: a #cairo_region_t
  * @nth: a number indicating which rectangle should be returned
  * @rectangle: return location for a #cairo_rectangle_int_t
- * 
+ *
  * Stores the @nth rectangle from the region in @rectangle.
- * 
+ *
  * Since: 1.10
  **/
 void
@@ -226,9 +232,12 @@ cairo_region_get_rectangle (cairo_region_t *region,
 {
     pixman_box32_t *pbox;
 
-    if (region->status)
+    if (region->status) {
+	rectangle->x = rectangle->y = 0;
+	rectangle->width = rectangle->height = 0;
 	return;
-    
+    }
+
     pbox = pixman_region32_rectangles (&region->rgn, NULL) + nth;
 
     rectangle->x = pbox->x1;
@@ -236,6 +245,7 @@ cairo_region_get_rectangle (cairo_region_t *region,
     rectangle->width = pbox->x2 - pbox->x1;
     rectangle->height = pbox->y2 - pbox->y1;
 }
+slim_hidden_def (cairo_region_get_rectangle);
 
 /**
  * cairo_region_get_extents:
@@ -252,8 +262,11 @@ cairo_region_get_extents (cairo_region_t *region,
 {
     pixman_box32_t *pextents;
 
-    if (region->status || !extents)
+    if (region->status) {
+	extents->x = extents->y = 0;
+	extents->width = extents->height = 0;
 	return;
+    }
 
     pextents = pixman_region32_extents (&region->rgn);
 
@@ -262,16 +275,17 @@ cairo_region_get_extents (cairo_region_t *region,
     extents->width = pextents->x2 - pextents->x1;
     extents->height = pextents->y2 - pextents->y1;
 }
+slim_hidden_def (cairo_region_get_extents);
 
 /**
  * cairo_region_status:
  * @region: a #cairo_region_t
- * 
+ *
  * Checks whether an error has previous occured for this
  * region object.
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY
- * 
+ *
  * Since: 1.10
  **/
 cairo_status_t
@@ -279,16 +293,17 @@ cairo_region_status (cairo_region_t *region)
 {
     return region->status;
 }
+slim_hidden_def (cairo_region_status);
 
 /**
  * cairo_region_subtract:
- * @dst: a #cairo_region_t 
+ * @dst: a #cairo_region_t
  * @other: another #cairo_region_t
- * 
+ *
  * Subtracts @other from @dst and places the result in @dst
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY
- * 
+ *
  * Since: 1.10
  **/
 cairo_status_t
@@ -298,13 +313,14 @@ cairo_region_subtract (cairo_region_t *dst, cairo_region_t *other)
 	return dst->status;
 
     if (other->status)
-	return other->status;
-    
-    if (!pixman_region32_subtract (&dst->rgn, &dst->rgn, &other->rgn))
+	return cairo_region_set_error (dst, other->status);
+
+    if (! pixman_region32_subtract (&dst->rgn, &dst->rgn, &other->rgn))
 	return cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
 
     return CAIRO_STATUS_SUCCESS;
 }
+slim_hidden_def (cairo_region_subtract);
 
 /**
  * cairo_region_subtract_rectangle:
@@ -312,9 +328,9 @@ cairo_region_subtract (cairo_region_t *dst, cairo_region_t *other)
  * @rectangle: a #cairo_rectangle_int_t
  *
  * Subtracts @rectangle from @dst and places the result in @dst
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY
- * 
+ *
  * Since: 1.10
  **/
 cairo_status_t
@@ -326,28 +342,29 @@ cairo_region_subtract_rectangle (cairo_region_t *dst,
 
     if (dst->status)
 	return dst->status;
-    
+
     pixman_region32_init_rect (&region,
 			       rectangle->x, rectangle->y,
 			       rectangle->width, rectangle->height);
 
-    if (!pixman_region32_subtract (&dst->rgn, &dst->rgn, &region))
+    if (! pixman_region32_subtract (&dst->rgn, &dst->rgn, &region))
 	status = cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
 
     pixman_region32_fini (&region);
-    
+
     return status;
 }
+slim_hidden_def (cairo_region_subtract_rectangle);
 
 /**
  * cairo_region_intersect:
  * @dst: a #cairo_region_t
  * @other: another #cairo_region_t
- * 
+ *
  * Computes the intersection of @dst with @other and places the result in @dst
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY
- * 
+ *
  * Since: 1.10
  **/
 cairo_status_t
@@ -357,23 +374,25 @@ cairo_region_intersect (cairo_region_t *dst, cairo_region_t *other)
 	return dst->status;
 
     if (other->status)
-	return other->status;
+	return cairo_region_set_error (dst, other->status);
 
-    if (!pixman_region32_intersect (&dst->rgn, &dst->rgn, &other->rgn))
+    if (! pixman_region32_intersect (&dst->rgn, &dst->rgn, &other->rgn))
 	return cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
 
     return CAIRO_STATUS_SUCCESS;
 }
+slim_hidden_def (cairo_region_intersect);
 
 /**
  * cairo_region_intersect_rectangle:
  * @dst: a #cairo_region_t
  * @rectangle: a #cairo_rectangle_int_t
- * 
- * Computes the intersection of @dst with @rectangle and places the result in @dst
- * 
+ *
+ * Computes the intersection of @dst with @rectangle and places the
+ * result in @dst
+ *
  * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY
- * 
+ *
  * Since: 1.10
  **/
 cairo_status_t
@@ -385,28 +404,29 @@ cairo_region_intersect_rectangle (cairo_region_t *dst,
 
     if (dst->status)
 	return dst->status;
-    
+
     pixman_region32_init_rect (&region,
 			       rectangle->x, rectangle->y,
 			       rectangle->width, rectangle->height);
 
-    if (!pixman_region32_intersect (&dst->rgn, &dst->rgn, &region))
+    if (! pixman_region32_intersect (&dst->rgn, &dst->rgn, &region))
 	status = cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
 
     pixman_region32_fini (&region);
-    
+
     return status;
 }
+slim_hidden_def (cairo_region_intersect_rectangle);
 
 /**
  * cairo_region_union:
  * @dst: a #cairo_region_t
  * @other: another #cairo_region_t
- * 
+ *
  * Computes the union of @dst with @other and places the result in @dst
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY
- * 
+ *
  * Since: 1.10
  **/
 cairo_status_t
@@ -417,23 +437,24 @@ cairo_region_union (cairo_region_t *dst,
 	return dst->status;
 
     if (other->status)
-	return other->status;
+	return cairo_region_set_error (dst, other->status);
 
-    if (!pixman_region32_union (&dst->rgn, &dst->rgn, &other->rgn))
+    if (! pixman_region32_union (&dst->rgn, &dst->rgn, &other->rgn))
 	return cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
 
     return CAIRO_STATUS_SUCCESS;
 }
+slim_hidden_def (cairo_region_union);
 
 /**
  * cairo_region_union_rectangle:
  * @dst: a #cairo_region_t
  * @rectangle: a #cairo_rectangle_int_t
- * 
+ *
  * Computes the union of @dst with @rectangle and places the result in @dst.
- * 
+ *
  * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY
- * 
+ *
  * Since: 1.10
  **/
 cairo_status_t
@@ -443,26 +464,30 @@ cairo_region_union_rectangle (cairo_region_t *dst,
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     pixman_region32_t region;
 
+    if (dst->status)
+	return dst->status;
+
     pixman_region32_init_rect (&region,
 			       rectangle->x, rectangle->y,
 			       rectangle->width, rectangle->height);
-    
-    if (!pixman_region32_union (&dst->rgn, &dst->rgn, &region))
+
+    if (! pixman_region32_union (&dst->rgn, &dst->rgn, &region))
 	status = cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
 
     pixman_region32_fini (&region);
-    
+
     return status;
 }
+slim_hidden_def (cairo_region_union_rectangle);
 
 /**
  * cairo_region_empty:
  * @region: a #cairo_region_t
- * 
+ *
  * Checks whether @region is empty.
- * 
+ *
  * Return value: %TRUE if @region is empty, %FALSE if it isn't.
- * 
+ *
  * Since: 1.10
  **/
 cairo_bool_t
@@ -470,18 +495,19 @@ cairo_region_empty (cairo_region_t *region)
 {
     if (region->status)
 	return TRUE;
-    
-    return !pixman_region32_not_empty (&region->rgn);
+
+    return ! pixman_region32_not_empty (&region->rgn);
 }
+slim_hidden_def (cairo_region_empty);
 
 /**
  * cairo_region_translate:
  * @region: a #cairo_region_t
  * @dx: Amount to translate in the x direction
  * @dy: Amount to translate in the y direction
- * 
+ *
  * Translates @region by (@dx, @dy).
- * 
+ *
  * Since: 1.10
  **/
 void
@@ -490,22 +516,24 @@ cairo_region_translate (cairo_region_t *region,
 {
     if (region->status)
 	return;
-    
+
     pixman_region32_translate (&region->rgn, dx, dy);
 }
+slim_hidden_def (cairo_region_translate);
 
 /**
  * cairo_region_contains_rectangle:
  * @region: a #cairo_region_t
  * @rectangle: a #cairo_rectangle_int_t
- * 
- * Checks whether @rectangle is inside, outside or partially contained in @region
- * 
+ *
+ * Checks whether @rectangle is inside, outside or partially contained
+ * in @region
+ *
  * Return value:
  *   %CAIRO_REGION_OVERLAP_IN if @rectangle is entirely inside @region,
  *   %CAIRO_REGION_OVERLAP_OUT if @rectangle is entirely outside @region, or
  *   %CAIRO_REGION_OVERLAP_PART if @rectangle is partially inside and partially outside @region.
- * 
+ *
  * Since: 1.10
  **/
 cairo_region_overlap_t
@@ -515,41 +543,34 @@ cairo_region_contains_rectangle (cairo_region_t *region,
     pixman_box32_t pbox;
     pixman_region_overlap_t poverlap;
 
-    if (!region->status)
-    {
-	pbox.x1 = rectangle->x;
-	pbox.y1 = rectangle->y;
-	pbox.x2 = rectangle->x + rectangle->width;
-	pbox.y2 = rectangle->y + rectangle->height;
-	
-	poverlap = pixman_region32_contains_rectangle (&region->rgn, &pbox);
-	
-	switch (poverlap)
-	{
-	case PIXMAN_REGION_OUT:
-	    return CAIRO_REGION_OVERLAP_OUT;
-	    
-	case PIXMAN_REGION_IN:
-	    return CAIRO_REGION_OVERLAP_IN;
-	    
-	case PIXMAN_REGION_PART:
-	    return CAIRO_REGION_OVERLAP_PART;
-	}
-    }
+    if (region->status)
+	return CAIRO_REGION_OVERLAP_OUT;
 
-    return CAIRO_REGION_OVERLAP_OUT;
+    pbox.x1 = rectangle->x;
+    pbox.y1 = rectangle->y;
+    pbox.x2 = rectangle->x + rectangle->width;
+    pbox.y2 = rectangle->y + rectangle->height;
+
+    poverlap = pixman_region32_contains_rectangle (&region->rgn, &pbox);
+    switch (poverlap) {
+    default:
+    case PIXMAN_REGION_OUT:  return CAIRO_REGION_OVERLAP_OUT;
+    case PIXMAN_REGION_IN:   return CAIRO_REGION_OVERLAP_IN;
+    case PIXMAN_REGION_PART: return CAIRO_REGION_OVERLAP_PART;
+    }
 }
+slim_hidden_def (cairo_region_contains_rectangle);
 
 /**
  * cairo_region_contains_point:
  * @region: a #cairo_region_t
  * @x: the x coordinate of a point
  * @y: the y coordinate of a point
- * 
+ *
  * Checks whether (@x, @y) is contained in @region.
- * 
+ *
  * Return value: %TRUE if (@x, @y) is contained in @region, %FALSE if it is not.
- * 
+ *
  * Since: 1.10
  **/
 cairo_bool_t
@@ -561,3 +582,4 @@ cairo_region_contains_point (cairo_region_t *region,
 
     return pixman_region32_contains_point (&region->rgn, x, y, NULL);
 }
+slim_hidden_def (cairo_region_contains_point);
