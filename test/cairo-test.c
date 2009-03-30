@@ -910,7 +910,42 @@ REPEAT:
 	cairo_status_t diff_status;
 
 	if (target->finish_surface != NULL) {
+#if HAVE_MEMFAULT
+	    /* We need to re-enable faults as most meta-surface processing
+	     * is done during cairo_surface_finish().
+	     */
+	    VALGRIND_CLEAR_FAULTS ();
+	    last_fault_count = VALGRIND_COUNT_FAULTS ();
+	    VALGRIND_ENABLE_FAULTS ();
+#endif
+
 	    diff_status = target->finish_surface (surface);
+
+#if HAVE_MEMFAULT
+	    VALGRIND_DISABLE_FAULTS ();
+
+	    if (ctx->malloc_failure &&
+		VALGRIND_COUNT_FAULTS () - last_fault_count > 0 &&
+		diff_status == CAIRO_STATUS_NO_MEMORY)
+	    {
+		cairo_destroy (cr);
+		cairo_surface_destroy (surface);
+		if (target->cleanup)
+		    target->cleanup (closure);
+		if (ctx->thread == 0) {
+		    cairo_debug_reset_static_data ();
+#if HAVE_FCFINI
+		    FcFini ();
+#endif
+		    if (VALGRIND_COUNT_LEAKS () > 0) {
+			VALGRIND_PRINT_FAULTS ();
+			VALGRIND_PRINT_LEAKS ();
+		    }
+		}
+
+		goto REPEAT;
+	    }
+#endif
 	    if (diff_status) {
 		cairo_test_log (ctx, "Error: Failed to finish surface: %s\n",
 				cairo_status_to_string (diff_status));

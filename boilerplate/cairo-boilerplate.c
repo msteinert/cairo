@@ -76,6 +76,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <assert.h>
+#include <errno.h>
 
 #if HAVE_UNISTD_H && HAVE_FCNTL_H && HAVE_SIGNAL_H && HAVE_SYS_STAT_H && HAVE_SYS_SOCKET_H && HAVE_SYS_UN_H
 #include <unistd.h>
@@ -169,6 +170,9 @@ _cairo_boilerplate_get_image_surface (cairo_surface_t *src,
 {
     cairo_surface_t *surface;
     cairo_t *cr;
+
+    if (cairo_surface_status (src))
+	return cairo_surface_reference (src);
 
 #if 0
     if (cairo_surface_get_type (src) == CAIRO_SURFACE_TYPE_IMAGE) {
@@ -973,7 +977,7 @@ cairo_boilerplate_image_surface_create_from_ppm_stream (FILE *file)
 	goto FAIL;
     }
     if (cairo_surface_status (image))
-	goto FAIL;
+	return image;
 
     data = cairo_image_surface_get_data (image);
     stride = cairo_image_surface_get_stride (image);
@@ -1017,8 +1021,14 @@ cairo_boilerplate_convert_to_image (const char *filename, int page)
 
   RETRY:
     file = cairo_boilerplate_open_any2ppm (filename, page, flags);
-    if (file == NULL)
-	return cairo_boilerplate_surface_create_in_error (CAIRO_STATUS_READ_ERROR);
+    if (file == NULL) {
+	switch (errno) {
+	case ENOMEM:
+	    return cairo_boilerplate_surface_create_in_error (CAIRO_STATUS_NO_MEMORY);
+	default:
+	    return cairo_boilerplate_surface_create_in_error (CAIRO_STATUS_READ_ERROR);
+	}
+    }
 
     image = cairo_boilerplate_image_surface_create_from_ppm_stream (file);
     ret = pclose (file);
