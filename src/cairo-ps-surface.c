@@ -3317,6 +3317,9 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
     if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
         return CAIRO_STATUS_SUCCESS;
 
+    if (unlikely (status))
+	return status;
+
     return _cairo_pdf_operators_stroke (&surface->pdf_operators,
 					path,
 					style,
