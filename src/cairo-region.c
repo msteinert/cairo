@@ -481,7 +481,7 @@ cairo_region_union_rectangle (cairo_region_t *dst,
 slim_hidden_def (cairo_region_union_rectangle);
 
 /**
- * cairo_region_empty:
+ * cairo_region_is_empty:
  * @region: a #cairo_region_t
  *
  * Checks whether @region is empty.
@@ -491,14 +491,14 @@ slim_hidden_def (cairo_region_union_rectangle);
  * Since: 1.10
  **/
 cairo_bool_t
-cairo_region_empty (cairo_region_t *region)
+cairo_region_is_empty (cairo_region_t *region)
 {
     if (region->status)
 	return TRUE;
 
     return ! pixman_region32_not_empty (&region->rgn);
 }
-slim_hidden_def (cairo_region_empty);
+slim_hidden_def (cairo_region_is_empty);
 
 /**
  * cairo_region_translate:

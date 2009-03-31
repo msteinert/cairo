@@ -2702,7 +2702,7 @@ slim_hidden_proto (cairo_region_status);
 slim_hidden_proto (cairo_region_get_extents);
 slim_hidden_proto (cairo_region_num_rectangles);
 slim_hidden_proto (cairo_region_get_rectangle);
-slim_hidden_proto (cairo_region_empty);
+slim_hidden_proto (cairo_region_is_empty);
 slim_hidden_proto (cairo_region_contains_rectangle);
 slim_hidden_proto (cairo_region_contains_point);
 slim_hidden_proto (cairo_region_translate);

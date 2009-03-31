@@ -2392,7 +2392,7 @@ cairo_region_get_rectangle (cairo_region_t        *region,
 			    cairo_rectangle_int_t *rectangle);
 
 cairo_public cairo_bool_t
-cairo_region_empty (cairo_region_t *region);
+cairo_region_is_empty (cairo_region_t *region);
 
 cairo_public cairo_region_overlap_t
 cairo_region_contains_rectangle (cairo_region_t *region,
