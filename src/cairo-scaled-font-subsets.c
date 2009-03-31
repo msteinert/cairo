@@ -542,6 +542,10 @@ _cairo_sub_font_collect (void *entry, void *closure)
     if (collection->status)
 	return;
 
+    collection->status = sub_font->scaled_font->status;
+    if (collection->status)
+	return;
+
     for (i = 0; i <= sub_font->current_subset; i++) {
 	collection->subset_id = i;
 	collection->num_glyphs = 0;
