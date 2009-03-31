@@ -1797,7 +1797,7 @@ _cairo_pdf_surface_emit_image_surface (cairo_pdf_surface_t     *surface,
 
     status = _cairo_surface_acquire_source_image (pattern->surface, &image, &image_extra);
     if (unlikely (status))
-	goto BAIL;
+	return status;
 
     pad_image = &image->base;
     if (cairo_pattern_get_extend (&pattern->base) == CAIRO_EXTEND_PAD) {
@@ -1847,10 +1847,10 @@ _cairo_pdf_surface_emit_image_surface (cairo_pdf_surface_t     *surface,
     *origin_x = x;
     *origin_y = y;
 
+BAIL:
     if (pad_image != &image->base)
 	cairo_surface_destroy (pad_image);
 
-BAIL:
     _cairo_surface_release_source_image (pattern->surface, image, image_extra);
 
     return status;
