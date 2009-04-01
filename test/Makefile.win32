@@ -19,13 +19,16 @@ cairo-test-constructors.c: $(test_sources)
 
 SOURCES = $(cairo_test_suite_sources) $(test_sources) cairo-test-constructors.c
 
-OBJECTS = $(patsubst %.c, $(CFG)/%.obj, $(SOURCES))
+OBJECTS = $(patsubst %.c, $(CFG)/%-static.obj, $(SOURCES))
 
-cairo-test-suite.exe: $(OBJECTS)
-	$(CC) $(OPT) $(MS_MDFLAGS) $(OBJECTS) -Fe"$@" -link $(LDFLAGS) /NODEFAULTLIB:library
+cairo-test-suite.exe: $(OBJECTS) ./pdiff/pdiff.lib ../boilerplate/$(CFG)/boiler.lib
+	$(CC) $(OPT) $(MS_MDFLAGS) $(OBJECTS) -Fe"$@" -link $(LDFLAGS) $(CAIRO_LIBS) /NODEFAULTLIB:library
 
 ./pdiff/pdiff.lib:
 	(cd pdiff ; $(MAKE) -f Makefile.win32)
+
+../boilerplate/$(CFG)/boiler.lib:
+	(cd ../boilerplate ; $(MAKE) -f Makefile.win32)
 
 .PHONY: check test html
 

@@ -16,4 +16,4 @@ pdiff.lib: $(OBJECTS)
 	lib -NOLOGO -OUT:$@ $(OBJECTS)
 
 %.obj: %.c
-	@$(CC) $(CFLAGS) -c -Fo"$@" $<
+	@$(CC) $(CFLAGS) -DCAIRO_WIN32_STATIC_BUILD=1 -c -Fo"$@" $<
