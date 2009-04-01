@@ -577,9 +577,11 @@ cairo_bool_t
 cairo_region_contains_point (cairo_region_t *region,
 			     int x, int y)
 {
+    pixman_box32_t box;
+    
     if (region->status)
 	return FALSE;
 
-    return pixman_region32_contains_point (&region->rgn, x, y, NULL);
+    return pixman_region32_contains_point (&region->rgn, x, y, &box);
 }
 slim_hidden_def (cairo_region_contains_point);
