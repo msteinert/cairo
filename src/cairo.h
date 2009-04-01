@@ -2361,7 +2361,7 @@ typedef struct _cairo_rectangle_int {
 typedef enum _cairo_region_overlap {
     CAIRO_REGION_OVERLAP_IN,		/* completely inside region */
     CAIRO_REGION_OVERLAP_OUT,		/* completely outside region */
-    CAIRO_REGION_OVERLAP_PART,		/* partly inside region */
+    CAIRO_REGION_OVERLAP_PART		/* partly inside region */
 } cairo_region_overlap_t;
 
 cairo_public cairo_region_t *
