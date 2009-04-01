@@ -1228,7 +1228,7 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
     }
 
 #if defined(HAVE_SIGNAL_H) && defined(HAVE_SETJMP_H)
-    if (ctx->thread == 0) {
+    if (ctx->thread == 0 && ! RUNNING_ON_VALGRIND) {
 	void (* volatile old_segfault_handler)(int);
 	void (* volatile old_sigpipe_handler)(int);
 	void (* volatile old_sigabrt_handler)(int);
