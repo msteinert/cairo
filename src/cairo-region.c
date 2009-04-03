@@ -76,6 +76,29 @@ _cairo_region_set_error (cairo_region_t *region,
     return _cairo_error (status);
 }
 
+void
+_cairo_region_init (cairo_region_t *region)
+{
+    region->status = CAIRO_STATUS_SUCCESS;
+    pixman_region32_init (&region->rgn);
+}
+
+void
+_cairo_region_init_rectangle (cairo_region_t *region,
+			      const cairo_rectangle_int_t *rectangle)
+{
+    region->status = CAIRO_STATUS_SUCCESS;
+    pixman_region32_init_rect (&region->rgn,
+			       rectangle->x, rectangle->y,
+			       rectangle->width, rectangle->height);
+}
+
+void
+_cairo_region_fini (cairo_region_t *region)
+{
+    pixman_region32_fini (&region->rgn);
+}
+
 /**
  * cairo_region_create:
  *

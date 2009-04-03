@@ -2534,6 +2534,16 @@ struct _cairo_region {
     pixman_region32_t rgn;
 };
 
+cairo_private void
+_cairo_region_init (cairo_region_t *region);
+
+cairo_private void
+_cairo_region_init_rectangle (cairo_region_t *region,
+			      const cairo_rectangle_int_t *rectangle);
+
+cairo_private void
+_cairo_region_fini (cairo_region_t *region);
+
 /* cairo-unicode.c */
 
 cairo_private int
