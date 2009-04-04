@@ -105,8 +105,8 @@ check (tt_maxp_t,	32);
 check (tt_name_record_t, 12);
 check (tt_name_t,	18);
 check (tt_name_t,	18);
-check (tt_composite_glyph_t, 18);
-check (tt_glyph_data_t,	28);
+check (tt_composite_glyph_t, 16);
+check (tt_glyph_data_t,	26);
 #undef check
 
 static cairo_status_t
@@ -508,13 +508,15 @@ cairo_truetype_font_remap_composite_glyph (cairo_truetype_font_t	*font,
         num_args = 1;
         if (flags & TT_ARG_1_AND_2_ARE_WORDS)
             num_args += 1;
-        if (flags & TT_WE_HAVE_A_SCALE)
+
+	if (flags & TT_WE_HAVE_A_SCALE)
             num_args += 1;
         else if (flags & TT_WE_HAVE_AN_X_AND_Y_SCALE)
             num_args += 2;
         else if (flags & TT_WE_HAVE_A_TWO_BY_TWO)
-            num_args += 3;
-        composite_glyph = (tt_composite_glyph_t *) &(composite_glyph->args[num_args]);
+            num_args += 4;
+
+	composite_glyph = (tt_composite_glyph_t *) &(composite_glyph->args[num_args]);
     } while (has_more_components);
 
     return CAIRO_STATUS_SUCCESS;
