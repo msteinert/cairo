@@ -495,7 +495,7 @@ cairo_truetype_font_remap_composite_glyph (cairo_truetype_font_t	*font,
 
     composite_glyph = &glyph_data->glyph;
     do {
-	if ((unsigned char *)(&composite_glyph->args[1]) >= end)
+	if ((unsigned char *)(&composite_glyph->args[0]) >= end)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
 	flags = be16_to_cpu (composite_glyph->flags);
