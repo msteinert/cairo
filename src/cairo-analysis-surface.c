@@ -51,8 +51,8 @@ typedef struct {
     cairo_bool_t has_supported;
     cairo_bool_t has_unsupported;
 
-    cairo_region_t *supported_region;
-    cairo_region_t *fallback_region;
+    cairo_region_t supported_region;
+    cairo_region_t fallback_region;
     cairo_rectangle_int_t current_clip;
     cairo_box_t page_bbox;
 
@@ -214,7 +214,7 @@ _add_operation  (cairo_analysis_surface_t *surface,
      * region there is no benefit in emitting a native operation as
      * the fallback image will be painted on top.
      */
-    if (cairo_region_contains_rectangle (surface->fallback_region, rect) == CAIRO_REGION_OVERLAP_IN)
+    if (cairo_region_contains_rectangle (&surface->fallback_region, rect) == CAIRO_REGION_OVERLAP_IN)
 	return CAIRO_INT_STATUS_IMAGE_FALLBACK;
 
     if (backend_status == CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY) {
@@ -225,7 +225,7 @@ _add_operation  (cairo_analysis_surface_t *surface,
 	 * natively supported and the backend will blend the
 	 * transparency into the white background.
 	 */
-	if (cairo_region_contains_rectangle (surface->supported_region, rect) == CAIRO_REGION_OVERLAP_OUT)
+	if (cairo_region_contains_rectangle (&surface->supported_region, rect) == CAIRO_REGION_OVERLAP_OUT)
 	    backend_status = CAIRO_STATUS_SUCCESS;
     }
 
@@ -234,7 +234,7 @@ _add_operation  (cairo_analysis_surface_t *surface,
 	 * this region will be emitted as native operations.
 	 */
 	surface->has_supported = TRUE;
-	status = cairo_region_union_rectangle (surface->supported_region, rect);
+	status = cairo_region_union_rectangle (&surface->supported_region, rect);
 	return status;
     }
 
@@ -243,7 +243,7 @@ _add_operation  (cairo_analysis_surface_t *surface,
      * emitted.
      */
     surface->has_unsupported = TRUE;
-    status = cairo_region_union_rectangle (surface->fallback_region, rect);
+    status = cairo_region_union_rectangle (&surface->fallback_region, rect);
 
     /* The status CAIRO_INT_STATUS_IMAGE_FALLBACK is used to indicate
      * unsupported operations to the meta surface as using
@@ -262,8 +262,8 @@ _cairo_analysis_surface_finish (void *abstract_surface)
 {
     cairo_analysis_surface_t	*surface = (cairo_analysis_surface_t *) abstract_surface;
 
-    cairo_region_destroy (surface->supported_region);
-    cairo_region_destroy (surface->fallback_region);
+    _cairo_region_fini (&surface->supported_region);
+    _cairo_region_fini (&surface->fallback_region);
 
     cairo_surface_destroy (surface->target);
 
@@ -773,13 +773,13 @@ _cairo_analysis_surface_create (cairo_surface_t		*target,
     surface->has_supported = FALSE;
     surface->has_unsupported = FALSE;
 
+    _cairo_region_init (&surface->supported_region);
+    _cairo_region_init (&surface->fallback_region);
+
     surface->page_bbox.p1.x = 0;
     surface->page_bbox.p1.y = 0;
     surface->page_bbox.p2.x = 0;
     surface->page_bbox.p2.y = 0;
-
-    surface->supported_region = cairo_region_create ();
-    surface->fallback_region = cairo_region_create ();
 
     if (width == -1 && height == -1) {
 	surface->current_clip.x      = CAIRO_RECT_INT_MIN;
@@ -826,7 +826,7 @@ _cairo_analysis_surface_get_supported (cairo_surface_t *abstract_surface)
 {
     cairo_analysis_surface_t	*surface = (cairo_analysis_surface_t *) abstract_surface;
 
-    return surface->supported_region;
+    return &surface->supported_region;
 }
 
 cairo_region_t *
@@ -834,7 +834,7 @@ _cairo_analysis_surface_get_unsupported (cairo_surface_t *abstract_surface)
 {
     cairo_analysis_surface_t	*surface = (cairo_analysis_surface_t *) abstract_surface;
 
-    return surface->fallback_region;
+    return &surface->fallback_region;
 }
 
 cairo_bool_t
