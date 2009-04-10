@@ -3934,6 +3934,11 @@ _cairo_pdf_surface_analyze_user_font_subset (cairo_scaled_font_subset_t *font_su
 						       null_stream,
 						       _cairo_pdf_emit_imagemask,
 						       surface->font_subsets);
+    if (unlikely (type3_surface->status)) {
+	status2 = _cairo_output_stream_destroy (null_stream);
+	return type3_surface->status;
+    }
+
     _cairo_type3_glyph_surface_set_font_subsets_callback (type3_surface,
 							  _cairo_pdf_surface_add_font,
 							  surface);
@@ -3990,6 +3995,12 @@ _cairo_pdf_surface_emit_type3_font_subset (cairo_pdf_surface_t		*surface,
 						       NULL,
 						       _cairo_pdf_emit_imagemask,
 						       surface->font_subsets);
+    if (unlikely (type3_surface->status)) {
+        free (glyphs);
+        free (widths);
+	return type3_surface->status;
+    }
+
     _cairo_type3_glyph_surface_set_font_subsets_callback (type3_surface,
 							  _cairo_pdf_surface_add_font,
 							  surface);
