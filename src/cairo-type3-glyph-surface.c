@@ -285,6 +285,8 @@ _cairo_type3_glyph_surface_show_glyphs (void		     *abstract_surface,
 				     &scaled_font->font_matrix,
 				     &new_ctm,
 				     &scaled_font->options);
+    if (unlikely (font->status))
+	return font->status;
 
     status = _cairo_pdf_operators_show_text_glyphs (&surface->pdf_operators,
 						    NULL, 0,
