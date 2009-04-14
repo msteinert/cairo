@@ -45,21 +45,26 @@
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
+    const cairo_test_context_t *ctx = cairo_test_get_context (cr);
     cairo_surface_t *surface;
+    cairo_status_t status;
 
     surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
 
     cairo_surface_finish (surface);
-    if (cairo_surface_status (surface) != CAIRO_STATUS_SUCCESS)
-	return CAIRO_TEST_FAILURE;
+    status = cairo_surface_status (surface);
+    if (status != CAIRO_STATUS_SUCCESS)
+	return cairo_test_status_from_status (ctx, status);
 
     cairo_surface_finish (surface);
-    if (cairo_surface_status (surface) != CAIRO_STATUS_SUCCESS)
-	return CAIRO_TEST_FAILURE;
+    status = cairo_surface_status (surface);
+    if (status != CAIRO_STATUS_SUCCESS)
+	return cairo_test_status_from_status (ctx, status);
 
     cairo_surface_finish (surface);
-    if (cairo_surface_status (surface) != CAIRO_STATUS_SUCCESS)
-	return CAIRO_TEST_FAILURE;
+    status = cairo_surface_status (surface);
+    if (status != CAIRO_STATUS_SUCCESS)
+	return cairo_test_status_from_status (ctx, status);
 
     cairo_surface_destroy (surface);
 
