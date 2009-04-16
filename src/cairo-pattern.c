@@ -272,6 +272,9 @@ _cairo_pattern_create_copy (cairo_pattern_t	  **pattern_out,
     case CAIRO_PATTERN_TYPE_RADIAL:
 	pattern = malloc (sizeof (cairo_radial_pattern_t));
 	break;
+    default:
+	ASSERT_NOT_REACHED;
+	return _cairo_error (CAIRO_STATUS_PATTERN_TYPE_MISMATCH);
     }
     if (unlikely (pattern == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
