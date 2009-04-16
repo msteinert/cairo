@@ -704,6 +704,9 @@ _cairo_intern_string (const char **str_inout, int len)
     cairo_intern_string_t tmpl, *istring;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
+    if (CAIRO_INJECT_FAULT ())
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
     if (len < 0)
 	len = strlen (str);
     tmpl.hash_entry.hash = _intern_string_hash (str, len);

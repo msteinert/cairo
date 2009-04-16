@@ -1044,6 +1044,9 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
 
     cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
 
+    if (CAIRO_INJECT_FAULT ())
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
     pixman_color.red   = color->red_short;
     pixman_color.green = color->green_short;
     pixman_color.blue  = color->blue_short;
@@ -1111,6 +1114,9 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 
     if (height == 0 || width == 0)
 	return CAIRO_STATUS_SUCCESS;
+
+    if (CAIRO_INJECT_FAULT ())
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     /* Convert traps to pixman traps */
     if (num_traps > ARRAY_LENGTH (stack_traps)) {

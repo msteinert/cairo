@@ -119,6 +119,9 @@ static cairo_status_t
 _cairo_gradient_pattern_init_copy (cairo_gradient_pattern_t	  *pattern,
 				   const cairo_gradient_pattern_t *other)
 {
+    if (CAIRO_INJECT_FAULT ())
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
     if (other->base.type == CAIRO_PATTERN_TYPE_LINEAR)
     {
 	cairo_linear_pattern_t *dst = (cairo_linear_pattern_t *) pattern;
@@ -841,6 +844,9 @@ _cairo_pattern_gradient_grow (cairo_gradient_pattern_t *pattern)
 	return CAIRO_STATUS_SUCCESS;
     }
 
+    if (CAIRO_INJECT_FAULT ())
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
     assert (pattern->n_stops <= pattern->stops_size);
 
     if (pattern->stops == pattern->stops_embedded) {
@@ -1256,6 +1262,9 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
     unsigned int i;
     int clone_offset_x, clone_offset_y;
     cairo_matrix_t matrix = pattern->base.matrix;
+
+    if (CAIRO_INJECT_FAULT ())
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     if (pattern->n_stops > ARRAY_LENGTH(pixman_stops_static)) {
 	pixman_stops = _cairo_malloc_ab (pattern->n_stops,

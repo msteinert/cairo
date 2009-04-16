@@ -131,6 +131,11 @@ _cairo_traps_grow (cairo_traps_t *traps)
     cairo_trapezoid_t *new_traps;
     int new_size = 2 * MAX (traps->traps_size, 16);
 
+    if (CAIRO_INJECT_FAULT ()) {
+	traps->status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	return FALSE;
+    }
+
     if (traps->traps == traps->traps_embedded) {
 	new_traps = _cairo_malloc_ab (new_size, sizeof (cairo_trapezoid_t));
 	if (new_traps != NULL)
