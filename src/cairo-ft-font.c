@@ -2558,6 +2558,8 @@ _cairo_ft_resolve_pattern (FcPattern		      *pattern,
 	return status;
 
     pattern = FcPatternDuplicate (pattern);
+    if (pattern == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     if (! FcPatternAddDouble (pattern, FC_PIXEL_SIZE, sf.y_scale)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
