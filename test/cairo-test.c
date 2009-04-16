@@ -743,6 +743,12 @@ REPEAT:
     VALGRIND_RESET_LEAKS ();
     ctx->last_fault_count = 0;
     last_fault_count = VALGRIND_COUNT_FAULTS ();
+
+    /* Pre-initialise fontconfig so that the configuration is loaded without
+     * malloc failures (our primary goal is to test cairo fault tolerance).
+     */
+    FcInit ();
+
     VALGRIND_ENABLE_FAULTS ();
 #endif
     have_output = FALSE;
