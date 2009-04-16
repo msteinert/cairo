@@ -2352,7 +2352,7 @@ _cairo_ft_font_face_create_for_pattern (FcPattern *pattern,
     font_face->next = NULL;
 
     font_face->pattern = FcPatternDuplicate (pattern);
-    if (unlikely (pattern == NULL)) {
+    if (unlikely (font_face->pattern == NULL)) {
 	free (font_face);
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
