@@ -539,7 +539,11 @@ dnl ===========================================================================
 # We use GTK+ for some utility/debugging tools
 PKG_CHECK_MODULES(gtk, "gtk+-2.0",, AC_MSG_RESULT(no))
 
+SHAVE_INIT([build], [enable]) # dnl Make the output pretty
+
 AC_CONFIG_FILES([
+build/shave
+build/shave-libtool
 Makefile
 boilerplate/Makefile
 src/Makefile
