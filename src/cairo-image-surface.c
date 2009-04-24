@@ -569,7 +569,7 @@ cairo_image_surface_get_format (cairo_surface_t *surface)
 
     if (! _cairo_surface_is_image (surface)) {
 	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
-	return 0;
+	return CAIRO_FORMAT_INVALID;
     }
 
     return image_surface->format;
