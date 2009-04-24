@@ -1576,15 +1576,13 @@ _cairo_image_analyze_transparency (cairo_image_surface_t      *image)
     if (image->transparency != CAIRO_IMAGE_UNKNOWN)
 	return image->transparency;
 
-    if (image->format == CAIRO_FORMAT_RGB24) {
-	image->transparency = CAIRO_IMAGE_IS_OPAQUE;
-	return CAIRO_IMAGE_IS_OPAQUE;
-    }
+    if ((image->base.content & CAIRO_CONTENT_ALPHA) == 0)
+	return image->transparency = CAIRO_IMAGE_IS_OPAQUE;
+    if ((image->base.content & CAIRO_CONTENT_COLOR) == 0)
+	return image->transparency = CAIRO_IMAGE_HAS_ALPHA;
 
-    if (image->format != CAIRO_FORMAT_ARGB32) {
-	image->transparency = CAIRO_IMAGE_HAS_ALPHA;
-	return CAIRO_IMAGE_HAS_ALPHA;
-    }
+    if (image->format != CAIRO_FORMAT_ARGB32)
+	return image->transparency = CAIRO_IMAGE_HAS_ALPHA;
 
     image->transparency = CAIRO_IMAGE_IS_OPAQUE;
     for (y = 0; y < image->height; y++) {
@@ -1593,8 +1591,7 @@ _cairo_image_analyze_transparency (cairo_image_surface_t      *image)
 	for (x = 0; x < image->width; x++, pixel++) {
 	    int a = (*pixel & 0xff000000) >> 24;
 	    if (a > 0 && a < 255) {
-		image->transparency = CAIRO_IMAGE_HAS_ALPHA;
-		return CAIRO_IMAGE_HAS_ALPHA;
+		return image->transparency = CAIRO_IMAGE_HAS_ALPHA;
 	    } else if (a == 0) {
 		image->transparency = CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
 	    }
