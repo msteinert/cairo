@@ -1071,6 +1071,8 @@ $(REFERENCE_IMAGES)
 #                         until they have come up with an interface and
 #                         semantics that actually work. :-)
 # long-lines            - range overflow of fixed-point
+# scale-offset-image    - loss of precision converting a cairo matrix to
+# scale-offset-similar    pixman's fixed point format.
 # self-copy-overlap     - vector surfaces take snapshot of patterns in contrast
 #                         to the raster backends which don't. One solution
 #                         would be to clone overlapping areas of dst/source, so
