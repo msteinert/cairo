@@ -229,6 +229,9 @@ svg_surface_test_sources = \
 	svg-clip.c \
 	svg-surface-source.c
 
+test_fallback16_surface_test_sources = \
+	test-fallback16-surface-source.c
+
 xlib_surface_test_sources = \
 	xlib-expose-event.c \
 	xlib-surface.c \

@@ -37,6 +37,10 @@ if CAIRO_HAS_SVG_SURFACE
 test_sources += $(svg_surface_test_sources)
 endif
 
+if CAIRO_HAS_TEST_SURFACES
+test_sources += $(test_fallback16_surface_test_sources)
+endif
+
 if CAIRO_HAS_XLIB_SURFACE
 test_sources += $(xlib_surface_test_sources)
 endif

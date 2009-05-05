@@ -190,11 +190,13 @@ cairo_ft_sources = cairo-ft-font.c
 # These are private, even though they look like public headers
 cairo_test_surfaces_private = \
 	test-fallback-surface.h \
+	test-fallback16-surface.h \
 	test-meta-surface.h \
 	test-paginated-surface.h \
 	$(NULL)
 cairo_test_surfaces_sources = \
 	test-fallback-surface.c \
+	test-fallback16-surface.c \
 	test-meta-surface.c \
 	test-paginated-surface.c \
 	$(NULL)

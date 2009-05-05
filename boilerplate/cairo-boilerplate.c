@@ -311,6 +311,24 @@ static cairo_boilerplate_target_t targets[] =
 	cairo_surface_write_to_png
     },
     {
+	"test-fallback16", "image", NULL,
+	CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
+	CAIRO_CONTENT_COLOR_ALPHA, 0,
+	_cairo_boilerplate_test_fallback16_create_surface, NULL,
+	NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png
+    },
+    {
+	"test-fallback16", "image", NULL,
+	CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
+	CAIRO_CONTENT_COLOR, 0,
+	_cairo_boilerplate_test_fallback16_create_surface, NULL,
+	NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png
+    },
+    {
 	"test-meta", "image", NULL,
 	CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
 	CAIRO_CONTENT_COLOR_ALPHA, 0,
