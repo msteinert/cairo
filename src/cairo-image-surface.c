@@ -1578,8 +1578,13 @@ _cairo_image_analyze_transparency (cairo_image_surface_t      *image)
 
     if ((image->base.content & CAIRO_CONTENT_ALPHA) == 0)
 	return image->transparency = CAIRO_IMAGE_IS_OPAQUE;
-    if ((image->base.content & CAIRO_CONTENT_COLOR) == 0)
-	return image->transparency = CAIRO_IMAGE_HAS_ALPHA;
+
+    if ((image->base.content & CAIRO_CONTENT_COLOR) == 0) {
+	if (image->format == CAIRO_FORMAT_A1)
+	    return image->transparency = CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
+	else
+	    return image->transparency = CAIRO_IMAGE_HAS_ALPHA;
+    }
 
     if (image->format != CAIRO_FORMAT_ARGB32)
 	return image->transparency = CAIRO_IMAGE_HAS_ALPHA;
