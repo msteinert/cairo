@@ -69,6 +69,9 @@ lt_unmangle "$lt_output"
 output=$last_result
 
 if test -z $V; then
+    if test $output = "/dev/null"; then
+	pass_through=1
+    fi
     if test $pass_through -eq 0; then
         echo "$Q$output"
     fi
