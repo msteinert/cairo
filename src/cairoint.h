@@ -151,7 +151,7 @@ do {					\
     assert (NOT_REACHED);		\
 } while (0)
 #define COMPILE_TIME_ASSERT1(condition, line)		\
-    typedef int compile_time_assertion_at_line_##line##_failed [(condition)?1:-1];
+    typedef int compile_time_assertion_at_line_##line##_failed [(condition)?1:-1]
 #define COMPILE_TIME_ASSERT0(condition, line)	COMPILE_TIME_ASSERT1(condition, line)
 #define COMPILE_TIME_ASSERT(condition)		COMPILE_TIME_ASSERT0(condition, __LINE__)
 
