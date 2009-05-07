@@ -5416,7 +5416,7 @@ _debug_print (csi_t *ctx)
 	fprintf (stderr, "name: %s\n", (char *) obj->datum.name);
 	break;
     case CSI_OBJECT_TYPE_OPERATOR:
-	fprintf (stderr, "operator: %p\n", obj->datum.op);
+	fprintf (stderr, "operator: %p\n", obj->datum.ptr);
 	break;
     case CSI_OBJECT_TYPE_REAL:
 	fprintf (stderr, "real: %g\n", obj->datum.real);
