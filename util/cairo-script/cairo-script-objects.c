@@ -34,6 +34,7 @@
 
 #include "cairo-script-private.h"
 
+#include <limits.h> /* INT_MAX */
 #include <string.h>
 
 csi_status_t
@@ -523,7 +524,7 @@ csi_string_new (csi_t *ctx,
 
     if (len < 0)
 	len = strlen (str);
-    if (_csi_unlikely (len >= INT32_MAX))
+    if (_csi_unlikely (len >= INT_MAX))
 	return _csi_error (CSI_STATUS_NO_MEMORY);
 
     if (ctx->free_string == NULL || ctx->free_string->len <= len) {

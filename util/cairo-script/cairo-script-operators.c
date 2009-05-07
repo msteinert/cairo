@@ -39,6 +39,7 @@
 #include <stdio.h> /* snprintf */
 #include <string.h>
 #include <math.h>
+#include <limits.h> /* INT_MAX */
 #include <assert.h>
 
 typedef struct _csi_proxy {
@@ -2136,7 +2137,7 @@ _glyph_path (csi_t *ctx)
     }
 
     if (nglyphs > ARRAY_LENGTH (stack_glyphs)) {
-	if (_csi_unlikely ((unsigned) nglyphs >= INT32_MAX / sizeof (cairo_glyph_t)))
+	if (_csi_unlikely ((unsigned) nglyphs >= INT_MAX / sizeof (cairo_glyph_t)))
 	    return _csi_error (CSI_STATUS_NO_MEMORY);
 	glyphs = _csi_alloc (ctx, sizeof (cairo_glyph_t) * nglyphs);
 	if (_csi_unlikely (glyphs == NULL))
@@ -3898,7 +3899,7 @@ _set_dash (csi_t *ctx)
 	if (_csi_likely (array->stack.len < ARRAY_LENGTH (stack_dashes))) {
 	    dashes = stack_dashes;
 	} else {
-	if (_csi_unlikely ((unsigned) array->stack.len >= INT32_MAX / sizeof (double)))
+	if (_csi_unlikely ((unsigned) array->stack.len >= INT_MAX / sizeof (double)))
 	    return _csi_error (CSI_STATUS_NO_MEMORY);
 	    dashes = _csi_alloc (ctx, sizeof (double) * array->stack.len);
 	    if (_csi_unlikely (dashes == NULL))
@@ -4734,7 +4735,7 @@ _show_glyphs (csi_t *ctx)
     }
 
     if (nglyphs > ARRAY_LENGTH (stack_glyphs)) {
-	if (_csi_unlikely ((unsigned) nglyphs >= INT32_MAX / sizeof (cairo_glyph_t)))
+	if (_csi_unlikely ((unsigned) nglyphs >= INT_MAX / sizeof (cairo_glyph_t)))
 	    return _csi_error (CSI_STATUS_NO_MEMORY);
 	glyphs = _csi_alloc (ctx, sizeof (cairo_glyph_t) * nglyphs);
 	if (_csi_unlikely (glyphs == NULL))
@@ -4880,7 +4881,7 @@ _show_text_glyphs (csi_t *ctx)
 	array = obj->datum.array;
 	nclusters = array->stack.len / 2;
 	if (nclusters > ARRAY_LENGTH (stack_clusters)) {
-	    if (_csi_unlikely ((unsigned) nclusters >= INT32_MAX / sizeof (cairo_text_cluster_t)))
+	    if (_csi_unlikely ((unsigned) nclusters >= INT_MAX / sizeof (cairo_text_cluster_t)))
 		return _csi_error (CSI_STATUS_NO_MEMORY);
 	    clusters = _csi_alloc (ctx, sizeof (cairo_text_cluster_t) * nclusters);
 	    if (_csi_unlikely (clusters == NULL))
@@ -4898,7 +4899,7 @@ _show_text_glyphs (csi_t *ctx)
 	string = obj->datum.string;
 	nclusters = string->len / 2;
 	if (nclusters > ARRAY_LENGTH (stack_clusters)) {
-	    if (_csi_unlikely ((unsigned) nclusters >= INT32_MAX / sizeof (cairo_text_cluster_t)))
+	    if (_csi_unlikely ((unsigned) nclusters >= INT_MAX / sizeof (cairo_text_cluster_t)))
 		return _csi_error (CSI_STATUS_NO_MEMORY);
 	    clusters = _csi_alloc (ctx, sizeof (cairo_text_cluster_t) * nclusters);
 	    if (_csi_unlikely (clusters == NULL))
@@ -4943,7 +4944,7 @@ _show_text_glyphs (csi_t *ctx)
 	return CSI_STATUS_SUCCESS;
 
     if (nglyphs > ARRAY_LENGTH (stack_glyphs)) {
-	    if (_csi_unlikely ((unsigned) nglyphs >= INT32_MAX / sizeof (cairo_glyph_t)))
+	    if (_csi_unlikely ((unsigned) nglyphs >= INT_MAX / sizeof (cairo_glyph_t)))
 		return _csi_error (CSI_STATUS_NO_MEMORY);
 	glyphs = _csi_alloc (ctx, sizeof (cairo_glyph_t) * nglyphs);
 	if (_csi_unlikely (glyphs == NULL)) {

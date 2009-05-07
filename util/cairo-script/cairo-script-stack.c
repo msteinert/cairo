@@ -34,6 +34,7 @@
 
 #include "cairo-script-private.h"
 
+#include <limits.h> /* INT_MAX */
 #include <string.h>
 
 csi_status_t
@@ -43,7 +44,7 @@ _csi_stack_init (csi_t *ctx, csi_stack_t *stack, csi_integer_t size)
 
     stack->len = 0;
     stack->size = size;
-    /* assert ((unsigned) size < INT32_MAX / sizeof (csi_object_t)); */
+    /* assert ((unsigned) size < INT_MAX / sizeof (csi_object_t)); */
     stack->objects = _csi_alloc (ctx, size * sizeof (csi_object_t));
     if (_csi_unlikely (stack->objects == NULL))
 	status = _csi_error (CSI_STATUS_NO_MEMORY);
@@ -90,7 +91,7 @@ _csi_stack_roll (csi_t *ctx,
 
     /* fall back to a copy */
     if (n > ARRAY_LENGTH (stack_copy)) {
-	if (_csi_unlikely ((unsigned) n > INT32_MAX / sizeof (csi_object_t)))
+	if (_csi_unlikely ((unsigned) n > INT_MAX / sizeof (csi_object_t)))
 	    return _csi_error (CSI_STATUS_NO_MEMORY);
 	copy = _csi_alloc (ctx, n * sizeof (csi_object_t));
 	if (copy == NULL)
@@ -124,7 +125,7 @@ _csi_stack_grow (csi_t *ctx, csi_stack_t *stack, csi_integer_t cnt)
 
     if (_csi_likely (cnt <= stack->size))
 	return CSI_STATUS_SUCCESS;
-    if (_csi_unlikely ((unsigned) cnt >= INT32_MAX / sizeof (csi_object_t)))
+    if (_csi_unlikely ((unsigned) cnt >= INT_MAX / sizeof (csi_object_t)))
 	return _csi_error (CSI_STATUS_NO_MEMORY);
 
     newsize = stack->size;

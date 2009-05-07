@@ -35,6 +35,7 @@
 #include "cairo-script-private.h"
 
 #include <stdio.h>
+#include <limits.h> /* INT_MAX */
 #include <string.h>
 
 #define CHUNK_SIZE 32768
@@ -996,7 +997,7 @@ _csi_file_as_string (csi_t *ctx,
 	    char *newbytes;
 	    int newlen;
 
-	    if (_csi_unlikely (allocated > INT32_MAX / 2))
+	    if (_csi_unlikely (allocated > INT_MAX / 2))
 		return _csi_error (CAIRO_STATUS_NO_MEMORY);
 
 	    newlen = allocated * 2;
