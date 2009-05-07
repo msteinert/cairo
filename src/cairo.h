@@ -1557,7 +1557,7 @@ typedef cairo_status_t (*cairo_user_scaled_font_render_glyph_func_t) (cairo_scal
  *
  * The callback is optional.  If @num_glyphs is negative upon
  * the callback returning or if the return value
- * isCAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED, the unicode_to_glyph callback
+ * is %CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED, the unicode_to_glyph callback
  * is tried.  See #cairo_user_scaled_font_unicode_to_glyph_func_t.
  *
  * Note: While cairo does not impose any limitation on glyph indices,
@@ -1569,7 +1569,7 @@ typedef cairo_status_t (*cairo_user_scaled_font_render_glyph_func_t) (cairo_scal
  * glyph value for other purposes.
  *
  * Returns: %CAIRO_STATUS_SUCCESS upon success,
- * CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED if fallback options should be tried,
+ * %CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED if fallback options should be tried,
  * or %CAIRO_STATUS_USER_FONT_ERROR or any other error status on error.
  *
  * Since: 1.8
@@ -1604,7 +1604,7 @@ typedef cairo_status_t (*cairo_user_scaled_font_text_to_glyphs_func_t) (cairo_sc
  *
  * The callback is optional, and only used if text_to_glyphs callback is not
  * set or fails to return glyphs.  If this callback is not set or if it returns
- * CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED, an identity mapping from Unicode
+ * %CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED, an identity mapping from Unicode
  * code-points to glyph indices is assumed.
  *
  * Note: While cairo does not impose any limitation on glyph indices,
@@ -1616,7 +1616,7 @@ typedef cairo_status_t (*cairo_user_scaled_font_text_to_glyphs_func_t) (cairo_sc
  * glyph value for other purposes.
  *
  * Returns: %CAIRO_STATUS_SUCCESS upon success,
- * CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED if fallback options should be tried,
+ * %CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED if fallback options should be tried,
  * or %CAIRO_STATUS_USER_FONT_ERROR or any other error status on error.
  *
  * Since: 1.8
