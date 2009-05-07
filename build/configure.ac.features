@@ -387,6 +387,7 @@ AC_DEFUN([CAIRO_REPORT],
 	echo "  PNG functions: $use_png"
 	echo ""
 	echo "And the following internal features:"
+	echo "  gtk-doc:       $enable_gtk_doc"
 	echo "  gcov support:  $use_gcov"
 	echo "  test surfaces: $use_test_surfaces"
 	echo "  ps testing:    $test_ps"
