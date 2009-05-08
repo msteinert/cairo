@@ -74,10 +74,10 @@ check_extents (const cairo_test_context_t *ctx,
         break;
     case APPROX_EQUALS:
         relation_string = "approx. equal";
-        if (floor (ext_x1 + 0.5) == floor (x + 0.5) &&
-	    floor (ext_y1 + 0.5) == floor (y + 0.5) &&
-	    floor (ext_x2 + 0.5) == floor (x + width + 0.5) &&
-	    floor (ext_y2 + 0.5) == floor (y + height + 0.5))
+        if (fabs (ext_x1 - x) < 1. &&
+	    fabs (ext_y1 - y) < 1. &&
+	    fabs (ext_x2 - (x + width))  < 1. &&
+	    fabs (ext_y2 - (y + height)) < 1.)
 	{
             return 1;
 	}
