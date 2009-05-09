@@ -49,6 +49,18 @@
 
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
 
+static inline float
+int_as_float(uint32_t val)
+{
+    union fi {
+	float f;
+	uint32_t u;
+    } fi;
+
+    fi.u = val;
+    return fi.f;
+}
+
 typedef struct _cairo_gl_surface {
     cairo_surface_t base;
 
@@ -1498,11 +1510,65 @@ typedef struct _cairo_gl_surface_span_renderer {
     const cairo_pattern_t *pattern;
     cairo_antialias_t antialias;
 
-    cairo_image_surface_t *mask;
+    cairo_gl_surface_t *mask;
     cairo_gl_surface_t *dst;
 
     cairo_composite_rectangles_t composite_rectangles;
+    GLuint vbo;
+    void *vbo_base;
+    unsigned int vbo_size;
+    unsigned int vbo_offset;
 } cairo_gl_surface_span_renderer_t;
+
+static void
+_cairo_gl_span_renderer_flush(cairo_gl_surface_span_renderer_t *renderer)
+{
+    unsigned int vertex_size = 2 * sizeof(float) + sizeof(uint32_t);
+
+    if (renderer->vbo_offset == 0)
+	return;
+
+    glUnmapBuffer (GL_ARRAY_BUFFER_ARB);
+    glDrawArrays (GL_LINES, 0, renderer->vbo_offset / vertex_size);
+    renderer->vbo_offset = 0;
+}
+
+static void *
+_cairo_gl_span_renderer_get_vbo(cairo_gl_surface_span_renderer_t *renderer,
+				unsigned int num_vertices)
+{
+    unsigned int vertex_size = 2 * sizeof(float) + sizeof(uint32_t);
+    unsigned int offset;
+
+    if (renderer->vbo == 0) {
+	renderer->vbo_size = 16384;
+	glGenBuffers (1, &renderer->vbo);
+	glBindBuffer (GL_ARRAY_BUFFER_ARB, renderer->vbo);
+	glVertexPointer (2, GL_FLOAT, vertex_size, 0);
+	glColorPointer (4, GL_UNSIGNED_BYTE, vertex_size,
+			(void *)(uintptr_t)(2 * sizeof(float)));
+	glEnable (GL_VERTEX_ARRAY);
+	glEnable (GL_COLOR_ARRAY);
+    }
+
+    if (renderer->vbo_offset + num_vertices * vertex_size >
+	renderer->vbo_size) {
+	_cairo_gl_span_renderer_flush(renderer);
+    }
+
+    if (renderer->vbo_offset == 0) {
+	/* We'll only be using these vertices once. */
+	glBufferData(GL_ARRAY_BUFFER_ARB, renderer->vbo_size, NULL,
+		     GL_STREAM_DRAW_ARB);
+	renderer->vbo_base = glMapBuffer(GL_ARRAY_BUFFER_ARB,
+					 GL_WRITE_ONLY_ARB);
+    }
+
+    offset = renderer->vbo_offset;
+    renderer->vbo_offset += num_vertices * vertex_size;
+
+    return (char *)renderer->vbo_base + offset;
+}
 
 static cairo_status_t
 _cairo_gl_surface_span_renderer_render_row (
@@ -1514,17 +1580,16 @@ _cairo_gl_surface_span_renderer_render_row (
     cairo_gl_surface_span_renderer_t *renderer = abstract_renderer;
     int xmin = renderer->composite_rectangles.mask.x;
     int xmax = xmin + renderer->composite_rectangles.width;
-    uint8_t *row;
     int prev_x = xmin;
     int prev_alpha = 0;
-    unsigned i;
+    unsigned i, v;
+    float *vertices;
 
     /* Make sure we're within y-range. */
-    y -= renderer->composite_rectangles.mask.y;
-    if (y < 0 || y >= renderer->composite_rectangles.height)
+    if (y < renderer->composite_rectangles.mask.y ||
+	y >= renderer->composite_rectangles.mask.y +
+	renderer->composite_rectangles.height)
 	return CAIRO_STATUS_SUCCESS;
-
-    row = (uint8_t*)(renderer->mask->data) + y*(size_t)renderer->mask->stride - xmin;
 
     /* Find the first span within x-range. */
     for (i=0; i < num_spans && spans[i].x < xmin; i++) {}
@@ -1539,16 +1604,16 @@ _cairo_gl_surface_span_renderer_render_row (
 	    break;
 
 	if (prev_alpha != 0) {
-	    /* We implement setting rendering the most common single
-	     * pixel wide span case to avoid the overhead of a memset
-	     * call.  Open coding setting longer spans didn't show a
-	     * noticeable improvement over memset. */
-	    if (x == prev_x + 1) {
-		row[prev_x] = prev_alpha;
-	    }
-	    else {
-		memset(row + prev_x, prev_alpha, x - prev_x);
-	    }
+	    vertices = _cairo_gl_span_renderer_get_vbo(renderer, 2);
+	    v = 0;
+
+	    vertices[v++] = prev_x;
+	    vertices[v++] = y;
+	    vertices[v++] = int_as_float(prev_alpha << 24);
+
+	    vertices[v++] = x;
+	    vertices[v++] = y;
+	    vertices[v++] = int_as_float(prev_alpha << 24);
 	}
 
 	prev_x = x;
@@ -1556,7 +1621,15 @@ _cairo_gl_surface_span_renderer_render_row (
     }
 
     if (prev_alpha != 0 && prev_x < xmax) {
-	memset(row + prev_x, prev_alpha, xmax - prev_x);
+	vertices = _cairo_gl_span_renderer_get_vbo(renderer, 2);
+	v = 0;
+	vertices[v++] = prev_x;
+	vertices[v++] = y;
+	vertices[v++] = int_as_float(prev_alpha << 24);
+
+	vertices[v++] = xmax;
+	vertices[v++] = y;
+	vertices[v++] = int_as_float(prev_alpha << 24);
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -1566,7 +1639,9 @@ static void
 _cairo_gl_surface_span_renderer_destroy (void *abstract_renderer)
 {
     cairo_gl_surface_span_renderer_t *renderer = abstract_renderer;
-    if (!renderer) return;
+
+    if (!renderer)
+	return;
 
     if (renderer->mask != NULL)
 	cairo_surface_destroy (&renderer->mask->base);
@@ -1583,6 +1658,15 @@ _cairo_gl_surface_span_renderer_finish (void *abstract_renderer)
     cairo_pattern_t *mask_pattern = NULL;
     int width = rects->width;
     int height = rects->height;
+
+    _cairo_gl_span_renderer_flush(renderer);
+
+    glBindBuffer (GL_ARRAY_BUFFER_ARB, 0);
+    glDeleteBuffers (1, &renderer->vbo);
+    glDisable (GL_VERTEX_ARRAY);
+    glDisable (GL_COLOR_ARRAY);
+
+    _cairo_gl_context_release (renderer->dst->ctx);
 
     if (renderer->pattern == NULL || renderer->mask == NULL)
 	return CAIRO_STATUS_SUCCESS;
@@ -1672,6 +1756,9 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
     if (renderer == NULL)
 	return _cairo_span_renderer_create_in_error (CAIRO_STATUS_NO_MEMORY);
 
+    if (!GLEW_ARB_vertex_buffer_object)
+	return _cairo_span_renderer_create_in_error (CAIRO_INT_STATUS_UNSUPPORTED);
+
     renderer->base.destroy = _cairo_gl_surface_span_renderer_destroy;
     renderer->base.finish = _cairo_gl_surface_span_renderer_finish;
     renderer->base.render_row =
@@ -1685,8 +1772,8 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
 
     /* TODO: support rendering to A1 surfaces (or: go add span
      * compositing to pixman.) */
-    renderer->mask = (cairo_image_surface_t *)
-	cairo_image_surface_create (CAIRO_FORMAT_A8, width, height);
+    renderer->mask = (cairo_gl_surface_t *)
+	cairo_gl_surface_create (dst->ctx, CAIRO_CONTENT_ALPHA, width, height);
 
     status = cairo_surface_status (&renderer->mask->base);
 
@@ -1694,6 +1781,22 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
 	_cairo_gl_surface_span_renderer_destroy (renderer);
 	return _cairo_span_renderer_create_in_error (status);
     }
+
+    _cairo_gl_context_acquire (dst->ctx);
+    _cairo_gl_set_destination (renderer->mask);
+
+    /* Fix up the projection matrix from _cairo_gl_set_destination --
+     * we want to translate incoming vertices from
+     * (rectangles.mask.x, rectangles.mask.y) to the origin.
+     */
+    glMatrixMode (GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(renderer->composite_rectangles.mask.x,
+	    renderer->composite_rectangles.mask.x + renderer->mask->width,
+	    renderer->composite_rectangles.mask.y,
+	    renderer->composite_rectangles.mask.y + renderer->mask->height,
+	    -1.0, 1.0);
+
     return &renderer->base;
 }
 
