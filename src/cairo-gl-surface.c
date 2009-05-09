@@ -883,6 +883,11 @@ _cairo_gl_pattern_image_texture_setup (cairo_gl_composite_operand_t *operand,
 	format = GL_RGB;
 	type = GL_UNSIGNED_INT_8_8_8_8_REV;
 	break;
+    case PIXMAN_b8g8r8a8:
+	internal_format = GL_BGRA;
+	format = GL_BGRA;
+	type = GL_UNSIGNED_INT_8_8_8_8;
+	break;
     case PIXMAN_r8g8b8:
 	internal_format = GL_RGB;
 	format = GL_RGB;
@@ -938,6 +943,7 @@ _cairo_gl_pattern_image_texture_setup (cairo_gl_composite_operand_t *operand,
     case PIXMAN_g1:
     case PIXMAN_yuy2:
     case PIXMAN_yv12:
+    case PIXMAN_b8g8r8x8:
     default:
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
