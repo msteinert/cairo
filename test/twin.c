@@ -41,6 +41,15 @@ draw (cairo_t *cr, int width, int height)
     cairo_move_to (cr, 4, 14);
     cairo_show_text (cr, "Is cairo's twin giza?");
 
+    cairo_move_to (cr, 4, 34);
+    cairo_text_path (cr, "Is cairo's twin giza?");
+    cairo_fill (cr);
+
+    cairo_move_to (cr, 4, 54);
+    cairo_text_path (cr, "Is cairo's twin giza?");
+    cairo_set_line_width (cr, 2/16.);
+    cairo_stroke (cr);
+
     return CAIRO_TEST_SUCCESS;
 }
 
@@ -48,5 +57,5 @@ CAIRO_TEST (twin,
 	    "Tests the internal font",
 	    "twin, font", /* keywords */
 	    NULL, /* requirements */
-	    140, 20,
+	    140, 60,
 	    NULL, draw)
