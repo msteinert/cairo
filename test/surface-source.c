@@ -102,6 +102,7 @@ draw (cairo_t *cr, int width, int height)
 			      (height - INTER_SIZE)/2);
     cairo_destroy (cr2);
     cairo_rectangle (cr, 15, 15, 60, 60);
+    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
     cairo_fill (cr);
 
     /* destroy the surface last, as this triggers XCloseDisplay */
