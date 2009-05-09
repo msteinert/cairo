@@ -151,7 +151,8 @@ cairo_gl_glx_context_create (Display *dpy, GLXContext gl_ctx)
 	return NULL;
     }
 
-    if (!GLEW_EXT_framebuffer_object || !GLEW_ARB_texture_env_combine) {
+    if (!GLEW_EXT_framebuffer_object || !GLEW_ARB_texture_env_combine ||
+	!GLEW_ARB_texture_non_power_of_two) {
 	free(ctx);
 	return NULL;
     }
