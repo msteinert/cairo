@@ -1547,8 +1547,8 @@ _cairo_gl_span_renderer_get_vbo(cairo_gl_surface_span_renderer_t *renderer,
 	glVertexPointer (2, GL_FLOAT, vertex_size, 0);
 	glColorPointer (4, GL_UNSIGNED_BYTE, vertex_size,
 			(void *)(uintptr_t)(2 * sizeof(float)));
-	glEnable (GL_VERTEX_ARRAY);
-	glEnable (GL_COLOR_ARRAY);
+	glEnableClientState (GL_VERTEX_ARRAY);
+	glEnableClientState (GL_COLOR_ARRAY);
     }
 
     if (renderer->vbo_offset + num_vertices * vertex_size >
@@ -1663,8 +1663,8 @@ _cairo_gl_surface_span_renderer_finish (void *abstract_renderer)
 
     glBindBuffer (GL_ARRAY_BUFFER_ARB, 0);
     glDeleteBuffers (1, &renderer->vbo);
-    glDisable (GL_VERTEX_ARRAY);
-    glDisable (GL_COLOR_ARRAY);
+    glDisableClientState (GL_VERTEX_ARRAY);
+    glDisableClientState (GL_COLOR_ARRAY);
 
     _cairo_gl_context_release (renderer->dst->ctx);
 
