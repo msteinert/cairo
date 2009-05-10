@@ -383,6 +383,8 @@ cairo_gl_surface_create (cairo_gl_context_t   *ctx,
     /* Create the texture used to store the surface's data. */
     glGenTextures (1, &surface->tex);
     glBindTexture (GL_TEXTURE_2D, surface->tex);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexImage2D (GL_TEXTURE_2D, 0, format, width, height, 0,
 		  format, GL_UNSIGNED_BYTE, NULL);
 
@@ -955,6 +957,11 @@ _cairo_gl_pattern_image_texture_setup (cairo_gl_composite_operand_t *operand,
 	    image_surface->depth) == 0);
     glPixelStorei (GL_UNPACK_ROW_LENGTH,
 		   image_surface->stride / (image_surface->depth / 8));
+    /* The filter will be correctly set up later, but for now we want to
+     * hint to glTexImage that we're not mipmapping.
+     */
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexImage2D (GL_TEXTURE_2D, 0, internal_format,
 		  image_surface->width, image_surface->height, 0,
 		  format, type, image_surface->data);
