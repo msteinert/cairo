@@ -1201,6 +1201,46 @@ _cairo_gl_set_tex_combine_constant_color (cairo_gl_context_t *ctx, int tex_unit,
     }
 }
 
+static void
+_cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
+			   cairo_gl_composite_setup_t *setup)
+{
+    cairo_surface_attributes_t *src_attributes;
+    GLfloat constant_color[4] = {0.0, 0.0, 0.0, 1.0};
+
+    src_attributes = &setup->src.operand.texture.attributes;
+
+    switch (setup->src.type) {
+    case OPERAND_CONSTANT:
+	_cairo_gl_set_tex_combine_constant_color (ctx, 0,
+	    setup->src.operand.constant.color);
+	break;
+    case OPERAND_TEXTURE:
+	_cairo_gl_set_texture_surface (0, setup->src.operand.texture.tex,
+				       src_attributes);
+	/* Set up the constant color we use to set alpha to 1 if needed. */
+	glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, constant_color);
+	/* Set up the combiner to just set color to the sampled texture. */
+	glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
+	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
+
+	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE0);
+	/* Wire the src alpha to 1 if the surface doesn't have it.
+	 * We may have a teximage with alpha bits even though we didn't ask
+	 * for it and we don't pay attention to setting alpha to 1 in a dest
+	 * that has inadvertent alpha.
+	 */
+	if (setup->src.operand.texture.has_alpha)
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE0);
+	else
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_CONSTANT);
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+	break;
+    }
+}
+
 static cairo_int_status_t
 _cairo_gl_surface_composite (cairo_operator_t		  op,
 			     const cairo_pattern_t	 *src,
@@ -1224,7 +1264,6 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     cairo_status_t status;
     int i;
     GLenum err;
-    GLfloat constant_color[4] = {0.0, 0.0, 0.0, 1.0};
     cairo_gl_composite_setup_t setup;
 
     memset(&setup, 0, sizeof(setup));
@@ -1265,35 +1304,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 
     glEnable (GL_BLEND);
 
-    switch (setup.src.type) {
-    case OPERAND_CONSTANT:
-	_cairo_gl_set_tex_combine_constant_color (ctx, 0,
-	    setup.src.operand.constant.color);
-	break;
-    case OPERAND_TEXTURE:
-	_cairo_gl_set_texture_surface (0, setup.src.operand.texture.tex,
-				       src_attributes);
-	/* Set up the constant color we use to set alpha to 1 if needed. */
-	glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, constant_color);
-	/* Set up the combiner to just set color to the sampled texture. */
-	glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
-	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
-
-	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE0);
-	/* Wire the src alpha to 1 if the surface doesn't have it.
-	 * We may have a teximage with alpha bits even though we didn't ask
-	 * for it and we don't pay attention to setting alpha to 1 in a dest
-	 * that has inadvertent alpha.
-	 */
-	if (setup.src.operand.texture.has_alpha)
-	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE0);
-	else
-	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_CONSTANT);
-	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
-	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
-	break;
-    }
+    _cairo_gl_set_src_operand (ctx, &setup);
 
     if (mask != NULL) {
 	switch (setup.mask.type) {
@@ -1506,11 +1517,11 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
 typedef struct _cairo_gl_surface_span_renderer {
     cairo_span_renderer_t base;
 
+    cairo_gl_composite_setup_t setup;
+
     cairo_operator_t op;
-    const cairo_pattern_t *pattern;
     cairo_antialias_t antialias;
 
-    cairo_gl_surface_t *mask;
     cairo_gl_surface_t *dst;
 
     cairo_composite_rectangles_t composite_rectangles;
@@ -1518,18 +1529,17 @@ typedef struct _cairo_gl_surface_span_renderer {
     void *vbo_base;
     unsigned int vbo_size;
     unsigned int vbo_offset;
+    unsigned int vertex_size;
 } cairo_gl_surface_span_renderer_t;
 
 static void
 _cairo_gl_span_renderer_flush(cairo_gl_surface_span_renderer_t *renderer)
 {
-    unsigned int vertex_size = 2 * sizeof(float) + sizeof(uint32_t);
-
     if (renderer->vbo_offset == 0)
 	return;
 
     glUnmapBuffer (GL_ARRAY_BUFFER_ARB);
-    glDrawArrays (GL_LINES, 0, renderer->vbo_offset / vertex_size);
+    glDrawArrays (GL_LINES, 0, renderer->vbo_offset / renderer->vertex_size);
     renderer->vbo_offset = 0;
 }
 
@@ -1537,21 +1547,35 @@ static void *
 _cairo_gl_span_renderer_get_vbo(cairo_gl_surface_span_renderer_t *renderer,
 				unsigned int num_vertices)
 {
-    unsigned int vertex_size = 2 * sizeof(float) + sizeof(uint32_t);
     unsigned int offset;
 
     if (renderer->vbo == 0) {
 	renderer->vbo_size = 16384;
 	glGenBuffers (1, &renderer->vbo);
 	glBindBuffer (GL_ARRAY_BUFFER_ARB, renderer->vbo);
-	glVertexPointer (2, GL_FLOAT, vertex_size, 0);
-	glColorPointer (4, GL_UNSIGNED_BYTE, vertex_size,
-			(void *)(uintptr_t)(2 * sizeof(float)));
+
+	if (renderer->setup.src.type == OPERAND_TEXTURE)
+	    renderer->vertex_size = 4 * sizeof(float) + sizeof(uint32_t);
+	else
+	    renderer->vertex_size = 2 * sizeof(float) + sizeof(uint32_t);
+
+	glVertexPointer (2, GL_FLOAT, renderer->vertex_size, 0);
 	glEnableClientState (GL_VERTEX_ARRAY);
+
+	glColorPointer (4, GL_UNSIGNED_BYTE, renderer->vertex_size,
+			(void *)(uintptr_t)(2 * sizeof(float)));
 	glEnableClientState (GL_COLOR_ARRAY);
+
+	if (renderer->setup.src.type == OPERAND_TEXTURE) {
+	    glClientActiveTexture(GL_TEXTURE0);
+	    glTexCoordPointer (2, GL_FLOAT, renderer->vertex_size,
+			       (void *)(uintptr_t)(2 * sizeof(float) +
+						   sizeof(uint32_t)));
+	    glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+	}
     }
 
-    if (renderer->vbo_offset + num_vertices * vertex_size >
+    if (renderer->vbo_offset + num_vertices * renderer->vertex_size >
 	renderer->vbo_size) {
 	_cairo_gl_span_renderer_flush(renderer);
     }
@@ -1565,11 +1589,53 @@ _cairo_gl_span_renderer_get_vbo(cairo_gl_surface_span_renderer_t *renderer,
     }
 
     offset = renderer->vbo_offset;
-    renderer->vbo_offset += num_vertices * vertex_size;
+    renderer->vbo_offset += num_vertices * renderer->vertex_size;
 
     return (char *)renderer->vbo_base + offset;
 }
 
+static void
+_cairo_gl_emit_span_vertex(cairo_gl_surface_span_renderer_t *renderer,
+			   int dst_x, int dst_y, uint8_t alpha,
+			   float *vertices)
+{
+    cairo_surface_attributes_t *src_attributes;
+    int v = 0;
+
+    src_attributes = &renderer->setup.src.operand.texture.attributes;
+
+    vertices[v++] = dst_x;
+    vertices[v++] = dst_y;
+    vertices[v++] = int_as_float(alpha << 24);
+    if (renderer->setup.src.type == OPERAND_TEXTURE) {
+	double s, t;
+
+	s = dst_x;
+	t = dst_y;
+	cairo_matrix_transform_point (&src_attributes->matrix, &s, &t);
+	vertices[v++] = s;
+	vertices[v++] = t;
+    }
+}
+
+static void
+_cairo_gl_emit_span(cairo_gl_surface_span_renderer_t *renderer,
+		    int x1, int x2, int y, uint8_t alpha)
+{
+    float *vertices = _cairo_gl_span_renderer_get_vbo(renderer, 2);
+
+    _cairo_gl_emit_span_vertex(renderer, x1, y, alpha, vertices);
+    _cairo_gl_emit_span_vertex(renderer, x2, y, alpha,
+			       vertices + renderer->vertex_size / 4);
+}
+
+/* Emits the contents of the span renderer rows as GL_LINES with the span's
+ * alpha.
+ *
+ * Unlike the image surface, which is compositing into a temporary, we emit
+ * coverage even for alpha == 0, in case we're using an unbounded operator.
+ * But it means we avoid having to do the fixup.
+ */
 static cairo_status_t
 _cairo_gl_surface_span_renderer_render_row (
     void				*abstract_renderer,
@@ -1582,14 +1648,19 @@ _cairo_gl_surface_span_renderer_render_row (
     int xmax = xmin + renderer->composite_rectangles.width;
     int prev_x = xmin;
     int prev_alpha = 0;
-    unsigned i, v;
-    float *vertices;
+    unsigned i;
+    int x_translate;
 
     /* Make sure we're within y-range. */
     if (y < renderer->composite_rectangles.mask.y ||
 	y >= renderer->composite_rectangles.mask.y +
 	renderer->composite_rectangles.height)
 	return CAIRO_STATUS_SUCCESS;
+
+    x_translate = renderer->composite_rectangles.dst.x -
+	renderer->composite_rectangles.mask.x;
+    y += renderer->composite_rectangles.dst.y -
+	renderer->composite_rectangles.mask.y;
 
     /* Find the first span within x-range. */
     for (i=0; i < num_spans && spans[i].x < xmin; i++) {}
@@ -1603,33 +1674,17 @@ _cairo_gl_surface_span_renderer_render_row (
 	if (x >= xmax)
 	    break;
 
-	if (prev_alpha != 0) {
-	    vertices = _cairo_gl_span_renderer_get_vbo(renderer, 2);
-	    v = 0;
-
-	    vertices[v++] = prev_x;
-	    vertices[v++] = y;
-	    vertices[v++] = int_as_float(prev_alpha << 24);
-
-	    vertices[v++] = x;
-	    vertices[v++] = y;
-	    vertices[v++] = int_as_float(prev_alpha << 24);
-	}
+	_cairo_gl_emit_span(renderer, prev_x + x_translate, x + x_translate, y,
+			    prev_alpha);
 
 	prev_x = x;
 	prev_alpha = spans[i].coverage;
     }
 
-    if (prev_alpha != 0 && prev_x < xmax) {
-	vertices = _cairo_gl_span_renderer_get_vbo(renderer, 2);
-	v = 0;
-	vertices[v++] = prev_x;
-	vertices[v++] = y;
-	vertices[v++] = int_as_float(prev_alpha << 24);
-
-	vertices[v++] = xmax;
-	vertices[v++] = y;
-	vertices[v++] = int_as_float(prev_alpha << 24);
+    if (prev_x < xmax) {
+	_cairo_gl_emit_span(renderer,
+			    prev_x + x_translate, xmax + x_translate, y,
+			    prev_alpha);
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -1643,8 +1698,8 @@ _cairo_gl_surface_span_renderer_destroy (void *abstract_renderer)
     if (!renderer)
 	return;
 
-    if (renderer->mask != NULL)
-	cairo_surface_destroy (&renderer->mask->base);
+    _cairo_gl_operand_destroy (&renderer->setup.src);
+    _cairo_gl_context_release (renderer->dst->ctx);
 
     free (renderer);
 }
@@ -1653,11 +1708,6 @@ static cairo_status_t
 _cairo_gl_surface_span_renderer_finish (void *abstract_renderer)
 {
     cairo_gl_surface_span_renderer_t *renderer = abstract_renderer;
-    cairo_composite_rectangles_t *rects = &renderer->composite_rectangles;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    cairo_pattern_t *mask_pattern = NULL;
-    int width = rects->width;
-    int height = rects->height;
 
     _cairo_gl_span_renderer_flush(renderer);
 
@@ -1666,61 +1716,15 @@ _cairo_gl_surface_span_renderer_finish (void *abstract_renderer)
     glDisableClientState (GL_VERTEX_ARRAY);
     glDisableClientState (GL_COLOR_ARRAY);
 
-    _cairo_gl_context_release (renderer->dst->ctx);
+    glClientActiveTexture (GL_TEXTURE0);
+    glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+    glActiveTexture (GL_TEXTURE0);
+    glDisable (GL_TEXTURE_2D);
 
-    if (renderer->pattern == NULL || renderer->mask == NULL)
-	return CAIRO_STATUS_SUCCESS;
+    glActiveTexture (GL_TEXTURE1);
+    glDisable (GL_TEXTURE_2D);
 
-    status = cairo_surface_status (&renderer->mask->base);
-    if (status != CAIRO_STATUS_SUCCESS)
-	goto fail;
-    /*
-    status = _cairo_gl_surface_clone_similar (renderer->src,
-					      renderer->mask,
-					      0,
-					      0,
-					      renderer->mask->width,
-					      renderer->mask->height,
-					      &mask_x, &mask_y,
-					      &mask_gl);
-    if (status != CAIRO_STATUS_SUCCESS)
-	goto fail;
-    */
-    mask_pattern = cairo_pattern_create_for_surface (&renderer->mask->base);
-
-    status = _cairo_gl_surface_composite (renderer->op,
-					  renderer->pattern,
-					  mask_pattern,
-					  renderer->dst,
-					  rects->src.x,
-					  rects->src.y,
-					  0,
-					  0,
-					  rects->dst.x,
-					  rects->dst.y,
-					  width, height);
-    if (status != CAIRO_STATUS_SUCCESS)
-	goto fail;
-
-    /*
-    if (! _cairo_operator_bounded_by_mask (renderer->op))
-	status = _cairo_surface_composite_shape_fixup_unbounded (
-		&dst->base,
-		src_attributes,
-		src->width, src->height,
-		rects->width, rects->height,
-		rects->src.x, rects->src.y,
-		0, 0,
-		rects->dst.x, rects->dst.y,
-		rects->width, rects->height);
-*/
-
-fail:
-    cairo_pattern_destroy (mask_pattern);
-
-    if (status != CAIRO_STATUS_SUCCESS)
-	return _cairo_span_renderer_set_error (abstract_renderer,
-					       status);
+    glDisable (GL_BLEND);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1742,7 +1746,7 @@ _cairo_gl_surface_check_span_renderer (cairo_operator_t	  op,
 
 static cairo_span_renderer_t *
 _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
-					const cairo_pattern_t  *pattern,
+					const cairo_pattern_t	*src,
 					void			*abstract_dst,
 					cairo_antialias_t	 antialias,
 					const cairo_composite_rectangles_t *rects)
@@ -1752,6 +1756,8 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
     cairo_status_t status;
     int width = rects->width;
     int height = rects->height;
+    cairo_surface_attributes_t *src_attributes;
+    GLenum err;
 
     if (renderer == NULL)
 	return _cairo_span_renderer_create_in_error (CAIRO_STATUS_NO_MEMORY);
@@ -1764,38 +1770,58 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
     renderer->base.render_row =
 	_cairo_gl_surface_span_renderer_render_row;
     renderer->op = op;
-    renderer->pattern = pattern;
     renderer->antialias = antialias;
     renderer->dst = dst;
 
     renderer->composite_rectangles = *rects;
 
-    /* TODO: support rendering to A1 surfaces (or: go add span
-     * compositing to pixman.) */
-    renderer->mask = (cairo_gl_surface_t *)
-	cairo_gl_surface_create (dst->ctx, CAIRO_CONTENT_ALPHA, width, height);
-
-    status = cairo_surface_status (&renderer->mask->base);
-
-    if (status != CAIRO_STATUS_SUCCESS) {
+    status = _cairo_gl_operand_init (&renderer->setup.src, src, dst,
+				     rects->src.x, rects->src.y,
+				     rects->dst.x, rects->dst.y,
+				     width, height);
+    if (unlikely (status)) {
+	_cairo_gl_context_acquire (dst->ctx);
 	_cairo_gl_surface_span_renderer_destroy (renderer);
 	return _cairo_span_renderer_create_in_error (status);
     }
 
     _cairo_gl_context_acquire (dst->ctx);
-    _cairo_gl_set_destination (renderer->mask);
 
-    /* Fix up the projection matrix from _cairo_gl_set_destination --
-     * we want to translate incoming vertices from
-     * (rectangles.mask.x, rectangles.mask.y) to the origin.
-     */
-    glMatrixMode (GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(renderer->composite_rectangles.mask.x,
-	    renderer->composite_rectangles.mask.x + renderer->mask->width,
-	    renderer->composite_rectangles.mask.y,
-	    renderer->composite_rectangles.mask.y + renderer->mask->height,
-	    -1.0, 1.0);
+    _cairo_gl_set_destination (dst);
+
+    src_attributes = &renderer->setup.src.operand.texture.attributes;
+
+    status = _cairo_gl_set_operator (dst, op);
+    if (status != CAIRO_STATUS_SUCCESS) {
+	_cairo_gl_surface_span_renderer_destroy (renderer);
+	return _cairo_span_renderer_create_in_error (status);
+    }
+
+    glEnable (GL_BLEND);
+
+    _cairo_gl_set_src_operand (dst->ctx, &renderer->setup);
+
+    /* Set up the mask to source from the incoming vertex color. */
+    glActiveTexture (GL_TEXTURE1);
+    /* Have to have a dummy texture bound in order to use the combiner unit. */
+    glBindTexture (GL_TEXTURE_2D, dst->ctx->dummy_tex);
+    glEnable (GL_TEXTURE_2D);
+    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
+    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
+
+    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PREVIOUS);
+    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_PREVIOUS);
+    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+
+    glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PRIMARY_COLOR);
+    glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_PRIMARY_COLOR);
+    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_ALPHA);
+    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA);
+
+    while ((err = glGetError ()))
+	fprintf(stderr, "GL error 0x%08x\n", (int) err);
 
     return &renderer->base;
 }
