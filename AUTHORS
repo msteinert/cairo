@@ -86,7 +86,7 @@ Travis Spencer <tspencer@cs.pdx.edu> XCB backend fix
 Bill Spitzak <spitzak@d2.com> Build fix to find Xrender.h without xrender.pc
 Zhe Su <james.su@gmail.com> Add support for fontconfig's embeddedbitmap option
 Owen Taylor <otaylor@redhat.com> Font rewrite, documentation, win32 backend
-Karl Tomlinson <karlt+@karlt.net>
+Karl Tomlinson <karlt+@karlt.net> Optimisation and obscure bug fixes (mozilla)
 Alp Toker <alp@atoker.com> Fix several code/comment typos
 Malcolm Tredinnick <malcolm@commsecure.com.au> Documentation fixes
 David Turner <david@freetype.org> Optimize gradient calculations
