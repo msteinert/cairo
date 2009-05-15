@@ -65,7 +65,7 @@ AC_CHECK_HEADERS([sched.h],
 
 dnl check for GNU-extensions to fenv
 AC_CHECK_HEADER(fenv.h,
-	[AC_CHECK_FUNCS(feenableexcept fedisableexcept)])
+	[AC_CHECK_FUNCS(feenableexcept fedisableexcept feclearexcept)])
 
 dnl check for misc headers and functions
 AC_CHECK_HEADERS([libgen.h byteswap.h signal.h setjmp.h])

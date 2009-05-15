@@ -363,6 +363,10 @@ if ((status) == CAIRO_STATUS_SUCCESS) {							\
     CHECK_STATUS (status, "cairo_rotate(∞)");
     cairo_destroy (cr2);
 
+#if HAVE_FECLEAREXCEPT
+    feclearexcept (FE_INVALID);
+#endif
+
     return CAIRO_TEST_SUCCESS;
 }
 
