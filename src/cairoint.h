@@ -2741,4 +2741,15 @@ CAIRO_END_DECLS
 #include "cairo-malloc-private.h"
 #include "cairo-hash-private.h"
 
+#if HAVE_VALGRIND
+
+cairo_private void
+_cairo_debug_check_image_surface_is_defined (const cairo_surface_t *surface);
+
+#else
+
+#define _cairo_debug_check_image_surface_is_defined(X)
+
+#endif
+
 #endif

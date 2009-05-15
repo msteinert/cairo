@@ -1153,6 +1153,8 @@ _cairo_surface_acquire_source_image (cairo_surface_t         *surface,
 				     cairo_image_surface_t  **image_out,
 				     void                   **image_extra)
 {
+    cairo_status_t status;
+
     if (surface->status)
 	return surface->status;
 
@@ -1161,9 +1163,14 @@ _cairo_surface_acquire_source_image (cairo_surface_t         *surface,
     if (surface->backend->acquire_source_image == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    return _cairo_surface_set_error (surface,
-	    surface->backend->acquire_source_image (surface,
-						    image_out, image_extra));
+    status = surface->backend->acquire_source_image (surface,
+						     image_out, image_extra);
+    if (unlikely (status))
+	return _cairo_surface_set_error (surface, status);
+
+    _cairo_debug_check_image_surface_is_defined (&(*image_out)->base);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 /**
@@ -1222,6 +1229,8 @@ _cairo_surface_acquire_dest_image (cairo_surface_t         *surface,
 				   cairo_rectangle_int_t   *image_rect,
 				   void                   **image_extra)
 {
+    cairo_status_t status;
+
     if (surface->status)
 	return surface->status;
 
@@ -1230,12 +1239,17 @@ _cairo_surface_acquire_dest_image (cairo_surface_t         *surface,
     if (surface->backend->acquire_dest_image == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    return _cairo_surface_set_error (surface,
-	    surface->backend->acquire_dest_image (surface,
-						  interest_rect,
-						  image_out,
-						  image_rect,
-						  image_extra));
+    status = surface->backend->acquire_dest_image (surface,
+						   interest_rect,
+						   image_out,
+						   image_rect,
+						   image_extra);
+    if (unlikely (status))
+	return _cairo_surface_set_error (surface, status);
+
+    _cairo_debug_check_image_surface_is_defined (&(*image_out)->base);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 /**

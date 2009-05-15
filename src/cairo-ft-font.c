@@ -996,6 +996,8 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 
     _cairo_image_surface_assume_ownership_of_data ((*surface));
 
+    _cairo_debug_check_image_surface_is_defined (&(*surface)->base);
+
     return CAIRO_STATUS_SUCCESS;
 }
 

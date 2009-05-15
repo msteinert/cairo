@@ -654,6 +654,8 @@ read_png (struct png_read_closure_t *png_closure)
     _cairo_image_surface_assume_ownership_of_data ((cairo_image_surface_t*)surface);
     data = NULL;
 
+    _cairo_debug_check_image_surface_is_defined (surface);
+
     status = _cairo_memory_stream_destroy (png_closure->png_data,
 					   &mime_data,
 					   &mime_data_length);
