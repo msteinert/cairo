@@ -13,16 +13,16 @@ test_sources += $(pthread_test_sources)
 endif
 
 if CAIRO_HAS_FT_FONT
-test_sources += $(ft_font_sources)
+test_sources += $(ft_font_test_sources)
 endif
 
 # Need to add quartz-surface-source
 if CAIRO_HAS_QUARTZ_SURFACE
-test_sources += $(quartz_surface_sources)
+test_sources += $(quartz_surface_test_sources)
 endif
 
 if CAIRO_HAS_GLITZ_SURFACE
-test_sources += $(glitz_surface_sources)
+test_sources += $(glitz_surface_test_sources)
 endif
 
 if CAIRO_HAS_PDF_SURFACE
