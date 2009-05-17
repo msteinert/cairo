@@ -490,7 +490,8 @@ struct _cairo_scaled_font_backend {
                            unsigned char        *buffer,
                            unsigned long        *length);
 
-    /* returns -1 if the unicode character could not be found for the glyph */
+    /* ucs4 is set to -1 if the unicode character could not be found
+     * for the glyph */
     cairo_warn cairo_int_status_t
     (*index_to_ucs4)(void                       *scaled_font,
 		     unsigned long               index,
