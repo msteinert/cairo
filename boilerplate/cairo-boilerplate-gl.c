@@ -119,7 +119,7 @@ _cairo_boilerplate_gl_create_surface (const char		 *name,
     XFree (visinfo);
 
     gltc->gl_ctx = gl_ctx;
-    gltc->ctx = cairo_gl_glx_context_create (dpy, gl_ctx);
+    gltc->ctx = cairo_glx_context_create (dpy, gl_ctx);
 
     gltc->surface = cairo_gl_surface_create (gltc->ctx, content,
 					     width, height);

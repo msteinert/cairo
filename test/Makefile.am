@@ -227,6 +227,16 @@ if CAIRO_HAS_QUARTZ_SURFACE
 test_sources += quartz-surface-source.c
 endif
 
+if CAIRO_HAS_GL_EGL_SURFACE
+EXTRA_PROGRAMS += egl-flowers$(EXEEXT)
+egl_flowers_LDADD = $(top_builddir)/src/libcairo.la $(CAIRO_LDADD)
+endif
+
+if CAIRO_HAS_GL_GLX_SURFACE
+EXTRA_PROGRAMS += glx-flowers$(EXEEXT)
+glx_flowers_LDADD = $(top_builddir)/src/libcairo.la $(CAIRO_LDADD)
+endif
+
 if CAIRO_HAS_GLITZ_SURFACE
 test_sources += glitz-surface-source.c
 endif

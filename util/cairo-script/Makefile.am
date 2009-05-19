@@ -22,10 +22,25 @@ libcairo_script_interpreter_la_LDFLAGS = -version-info $(CAIRO_LIBTOOL_VERSION_I
 libcairo_script_interpreter_la_LIBADD = $(top_builddir)/src/libcairo.la $(CAIRO_LIBS)
 
 csi_replay_SOURCES = csi-replay.c
+csi_replay_CFLAGS = $(CAIRO_CFLAGS)
 csi_replay_LDADD = libcairo-script-interpreter.la $(top_builddir)/src/libcairo.la $(CAIRO_LIBS)
 
 csi_exec_SOURCES = csi-exec.c
 csi_exec_LDADD = libcairo-script-interpreter.la $(top_builddir)/src/libcairo.la $(CAIRO_LIBS)
+
+if CAIRO_HAS_GL_EGL_SURFACE
+noinst_PROGRAMS += csi-egl
+csi_egl_SOURCES = csi-egl.c
+csi_egl_CFLAGS = $(CAIRO_CFLAGS)
+csi_egl_LDADD = libcairo-script-interpreter.la $(top_builddir)/src/libcairo.la $(CAIRO_LIBS)
+endif
+
+if CAIRO_HAS_GL_GLX_SURFACE
+noinst_PROGRAMS += csi-glx
+csi_glx_SOURCES = csi-glx.c
+csi_glx_CFLAGS = $(CAIRO_CFLAGS)
+csi_glx_LDADD = libcairo-script-interpreter.la $(top_builddir)/src/libcairo.la $(CAIRO_LIBS)
+endif
 
 EXTRA_DIST = \
 	COPYING

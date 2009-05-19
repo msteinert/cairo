@@ -34,8 +34,6 @@
 #ifndef CAIRO_GL_H
 #define CAIRO_GL_H
 
-#include <GL/glx.h>
-
 #include "cairo.h"
 
 #if CAIRO_HAS_GL_SURFACE
@@ -43,9 +41,6 @@
 CAIRO_BEGIN_DECLS
 
 typedef struct _cairo_gl_context cairo_gl_context_t;
-
-cairo_public cairo_gl_context_t *
-cairo_gl_glx_context_create (Display *dpy, GLXContext gl_ctx);
 
 cairo_public cairo_gl_context_t *
 cairo_gl_context_reference (cairo_gl_context_t *context);
@@ -61,22 +56,47 @@ cairo_gl_surface_create (cairo_gl_context_t *ctx,
 			 cairo_content_t content,
 			 int width, int height);
 
-cairo_public cairo_surface_t *
-cairo_gl_surface_create_for_window (cairo_gl_context_t *ctx,
-				    Window win,
-				    int width, int height);
-
 cairo_public cairo_gl_context_t *
 cairo_gl_surface_get_context (cairo_surface_t *abstract_surface);
 
 cairo_public void
 cairo_gl_surface_set_size (cairo_surface_t *surface, int width, int height);
 
+cairo_public int
+cairo_gl_surface_get_width (cairo_surface_t *abstract_surface);
+
+cairo_public int
+cairo_gl_surface_get_height (cairo_surface_t *abstract_surface);
+
 cairo_public void
 cairo_gl_surface_swapbuffers (cairo_surface_t *surface);
 
 cairo_public cairo_status_t
 cairo_gl_surface_glfinish (cairo_surface_t *surface);
+
+#if CAIRO_HAS_GL_GLX_SURFACE
+#include <GL/glx.h>
+
+cairo_public cairo_gl_context_t *
+cairo_glx_context_create (Display *dpy, GLXContext gl_ctx);
+
+cairo_public cairo_surface_t *
+cairo_gl_surface_create_for_window (cairo_gl_context_t *ctx,
+				    Window win,
+				    int width, int height);
+#endif
+
+#if CAIRO_HAS_GL_EGL_SURFACE
+#include <eagle.h>
+
+cairo_public cairo_gl_context_t *
+cairo_egl_context_create (EGLDisplay display, EGLContext context);
+
+cairo_public cairo_surface_t *
+cairo_gl_surface_create_for_eagle (cairo_gl_context_t *ctx,
+				   EGLSurface surface,
+				   int width, int height);
+#endif
 
 CAIRO_END_DECLS
 
@@ -85,4 +105,3 @@ CAIRO_END_DECLS
 #endif /* CAIRO_HAS_GL_SURFACE */
 
 #endif /* CAIRO_GL_H */
-

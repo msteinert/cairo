@@ -44,6 +44,12 @@ endif
 ifeq ($(CAIRO_HAS_GL_SURFACE),1)
 	@echo "#define CAIRO_HAS_GL_SURFACE 1" >> src/cairo-features.h
 endif
+ifeq ($(CAIRO_HAS_GL_GLX_SURFACE),1)
+	@echo "#define CAIRO_HAS_GL_GLX_SURFACE 1" >> src/cairo-features.h
+endif
+ifeq ($(CAIRO_HAS_GL_EGL_SURFACE),1)
+	@echo "#define CAIRO_HAS_GL_EGL_SURFACE 1" >> src/cairo-features.h
+endif
 ifeq ($(CAIRO_HAS_GLITZ_SURFACE),1)
 	@echo "#define CAIRO_HAS_GLITZ_SURFACE 1" >> src/cairo-features.h
 endif

@@ -199,12 +199,38 @@ CAIRO_ENABLE_SURFACE_BACKEND(gl, gl, no, [
 
   AC_CHECK_LIB(GLEW, glewInit, [
     AC_CHECK_HEADER(GL/glew.h, [], [
-      have_gl="no (requires glew http://glew.sourceforge.net/)"
+      use_gl="no (requires glew http://glew.sourceforge.net/)"
     ])
   ], [
-    have_gl="no (requires glew http://glew.sourceforge.net/)"
+    use_gl="no (requires glew http://glew.sourceforge.net/)"
   ])
   gl_NONPKGCONFIG_LIBS="-lGLEW"
+])
+
+CAIRO_ENABLE_SURFACE_BACKEND(gl_glx, GLX, auto, [
+  if test "x$use_gl" != "xyes"; then
+    use_gl_glx="no (requires --enable-gl)"
+  else
+    gl_glx_BASE=cairo-gl
+    old_CPPFLAGS=$CPPFLAGS
+    CPPFLAGS="$CPPFLAGS $gl_CFLAGS $gl_NONPKGCONFIG_CFLAGS"
+    AC_CHECK_HEADER(GL/glx.h,
+		    [],
+		    [use_gl_glx="no (requires GLX)"])
+    CPPFLAGS=$old_CPPFLAGS
+  fi
+])
+
+CAIRO_ENABLE_SURFACE_BACKEND(gl_egl, eagle, auto, [
+  if test "x$use_gl" != "xyes"; then
+    use_gl_egl="no (requires --enable-gl)"
+  else
+    gl_egl_BASE=cairo-gl
+    gl_egl_REQUIRES="eagle"
+    PKG_CHECK_MODULES(gl_egl, $gl_egl_REQUIRES, ,
+		      [AC_MSG_RESULT(no)
+		       use_gl_egl="no (requires eagle)"])
+  fi
 ])
 
 dnl ===========================================================================
