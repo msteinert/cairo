@@ -1332,6 +1332,9 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 						  clone_out);
 
 	if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+	    if (_cairo_surface_is_image (src))
+		return CAIRO_INT_STATUS_UNSUPPORTED;
+
 	    /* First check to see if we can replay to a similar surface */
 	    if (_cairo_surface_is_meta (src)) {
 		cairo_surface_t *similar;
@@ -1375,7 +1378,7 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
     }
 
     /* If we're still unsupported, hit our fallback path to get a clone */
-    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 	status =
 	    _cairo_surface_fallback_clone_similar (surface, src,
 						   content,
@@ -1384,6 +1387,7 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 						   clone_offset_x,
 						   clone_offset_y,
 						   clone_out);
+    }
 
     /* We should never get UNSUPPORTED here, so if we have an error, bail. */
     if (unlikely (status))
