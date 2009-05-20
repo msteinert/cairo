@@ -722,7 +722,7 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
     _cairo_matrix_to_win32_xform (&m, &xform);
 
     if (! SetWorldTransform (surface->dc, &xform)) {
-	status = _cairo_win32_print_gdi_error ("_win32_scaled_font_set_world_transform");
+	status = _cairo_win32_print_gdi_error ("_cairo_win32_printing_surface_paint_image_pattern");
 	goto CLEANUP_OPAQUE_IMAGE;
     }
 
