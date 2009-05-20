@@ -1451,6 +1451,7 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
 	 * If we are printing a bitmap font, use fallback images to
 	 * ensure the font is not substituted.
 	 */
+#if CAIRO_HAS_WIN32_FONT
 	if (cairo_scaled_font_get_type (scaled_font) == CAIRO_FONT_TYPE_WIN32) {
 	    if (_cairo_win32_scaled_font_is_bitmap (scaled_font))
 		return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1472,6 +1473,7 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
 	    if (status)
 		return status;
 	}
+#endif
 
 	return _cairo_win32_printing_surface_analyze_operation (surface, op, source);
     }
@@ -1490,6 +1492,7 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
 	source = opaque;
     }
 
+#if CAIRO_HAS_WIN32_FONT
     if (cairo_scaled_font_get_type (scaled_font) == CAIRO_FONT_TYPE_WIN32 &&
 	source->type == CAIRO_PATTERN_TYPE_SOLID)
     {
@@ -1554,6 +1557,7 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
 
 	return status;
     }
+#endif
 
     SaveDC (surface->dc);
     old_ctm = surface->ctm;
