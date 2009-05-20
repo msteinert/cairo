@@ -208,7 +208,7 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
     Pixmap pix;
 
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
-	return _cairo_surface_create_in_error (_cairo_error(CAIRO_STATUS_INVALID_SIZE));
+	return NULL;
 
     _cairo_xlib_display_notify (src->display);
 
@@ -1199,7 +1199,7 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	cairo_format_t format;
 
 	if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
-	    return _cairo_error (CAIRO_STATUS_INVALID_SIZE);
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
 	format = image_src->format;
 	if (format == CAIRO_FORMAT_INVALID ||
