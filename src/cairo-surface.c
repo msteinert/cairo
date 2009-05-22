@@ -79,6 +79,7 @@ static DEFINE_NIL_SURFACE(CAIRO_STATUS_TEMP_FILE_ERROR, _cairo_surface_nil_temp_
 static DEFINE_NIL_SURFACE(CAIRO_STATUS_READ_ERROR, _cairo_surface_nil_read_error);
 static DEFINE_NIL_SURFACE(CAIRO_STATUS_WRITE_ERROR, _cairo_surface_nil_write_error);
 static DEFINE_NIL_SURFACE(CAIRO_STATUS_INVALID_STRIDE, _cairo_surface_nil_invalid_stride);
+static DEFINE_NIL_SURFACE(CAIRO_STATUS_INVALID_SIZE, _cairo_surface_nil_invalid_size);
 
 static cairo_status_t
 _cairo_surface_copy_pattern_for_destination (const cairo_pattern_t **pattern,
@@ -2967,6 +2968,8 @@ _cairo_surface_create_in_error (cairo_status_t status)
 	return (cairo_surface_t *) &_cairo_surface_nil_temp_file_error;
     case CAIRO_STATUS_INVALID_STRIDE:
 	return (cairo_surface_t *) &_cairo_surface_nil_invalid_stride;
+    case CAIRO_STATUS_INVALID_SIZE:
+	return (cairo_surface_t *) &_cairo_surface_nil_invalid_size;
     case CAIRO_STATUS_SUCCESS:
     case CAIRO_STATUS_LAST_STATUS:
 	ASSERT_NOT_REACHED;
@@ -2993,7 +2996,6 @@ _cairo_surface_create_in_error (cairo_status_t status)
     case CAIRO_STATUS_INVALID_CLUSTERS:
     case CAIRO_STATUS_INVALID_SLANT:
     case CAIRO_STATUS_INVALID_WEIGHT:
-    case CAIRO_STATUS_INVALID_SIZE:
     case CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED:
     default:
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
