@@ -33,7 +33,7 @@
 #define INFINITY HUGE_VAL
 #endif
 
-#if HAVE_FEDISABLEEXCEPT
+#if HAVE_FEDISABLEEXCEPT || HAVE_FECLEAREXCEPT
 #include <fenv.h>
 #endif
 
