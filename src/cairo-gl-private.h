@@ -65,6 +65,8 @@ struct _cairo_gl_context {
 
     cairo_mutex_t mutex; /* needed? */
     GLuint dummy_tex;
+    GLint max_framebuffer_size;
+    GLint max_texture_size;
 
     cairo_gl_surface_t *current_target;
 

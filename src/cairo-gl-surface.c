@@ -130,6 +130,11 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0,
 		  GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
+    ctx->max_framebuffer_size = 0;
+    glGetIntegerv (GL_MAX_RENDERBUFFER_SIZE, &ctx->max_framebuffer_size);
+    ctx->max_texture_size = 0;
+    glGetIntegerv (GL_MAX_TEXTURE_SIZE, &ctx->max_texture_size);
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -459,6 +464,9 @@ cairo_gl_surface_create (cairo_gl_context_t   *ctx,
     if (ctx->status)
 	return _cairo_surface_create_in_error (ctx->status);
 
+    if (width > ctx->max_framebuffer_size || height > ctx->max_framebuffer_size)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
+
     surface = calloc (1, sizeof (cairo_gl_surface_t));
     if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
@@ -583,6 +591,12 @@ _cairo_gl_surface_create_similar (void		 *abstract_surface,
     cairo_gl_surface_t *surface = abstract_surface;
 
     assert (CAIRO_CONTENT_VALID (content));
+
+    if (width > surface->ctx->max_framebuffer_size ||
+	height > surface->ctx->max_framebuffer_size)
+    {
+	return NULL;
+    }
 
     if (width < 1)
 	width = 1;
@@ -946,6 +960,11 @@ _cairo_gl_pattern_image_texture_setup (cairo_gl_composite_operand_t *operand,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     image_surface = (cairo_image_surface_t *)surface_pattern->surface;
+    if (image_surface->width > dst->ctx->max_texture_size ||
+	image_surface->height > dst->ctx->max_texture_size)
+    {
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
 
     /* The textures we create almost always has appropriate alpha channel
      * contents.  But sometimes GL sucks at image specification and we end up
