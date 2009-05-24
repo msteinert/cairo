@@ -33,8 +33,8 @@
 #define INFINITY HUGE_VAL
 #endif
 
-#if HAVE_FEDISABLEEXCEPT || HAVE_FECLEAREXCEPT
-#include <fenv.h>
+#if HAVE_FENV_H
+# include <fenv.h>
 #endif
 
 static cairo_test_status_t

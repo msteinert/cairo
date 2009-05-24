@@ -88,7 +88,7 @@ AC_CHECK_HEADER(fenv.h,
 	[AC_CHECK_FUNCS(feenableexcept fedisableexcept feclearexcept)])
 
 dnl check for misc headers and functions
-AC_CHECK_HEADERS([libgen.h byteswap.h signal.h setjmp.h])
+AC_CHECK_HEADERS([libgen.h byteswap.h signal.h setjmp.h fenv.h])
 AC_CHECK_FUNCS([vasnprintf link ctime_r drand48 flockfile ffs])
 
 dnl check for win32 headers (this detects mingw as well)
