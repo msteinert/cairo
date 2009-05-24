@@ -1188,7 +1188,7 @@ check_PROGRAMS += any2ppm
 any2ppm_CFLAGS = $(AM_CFLAGS) $(POPPLER_CFLAGS) $(LIBRSVG_CFLAGS) $(LIBSPECTRE_CFLAGS)
 # add LDADD, so poppler/librsvg uses "our" cairo
 any2ppm_LDFLAGS = $(AM_LDFLAGS) $(CAIRO_TEST_UNDEFINED_LDFLAGS)
-any2ppm_LDADD = $(top_builddir)/util/cairo-script/libcairo-script-interpreter.la $(top_builddir)/src/libcairo.la $(CAIRO_LDADD) $(POPPLER_LIBS) $(LIBRSVG_LIBS) $(LIBSPECTRE_LIBS)
+any2ppm_LDADD = $(top_builddir)/util/cairo-script/libcairo-script-interpreter.la $(top_builddir)/src/libcairo.la $(CAIRO_LDADD) $(CAIROBOILERPLATE_LIBS) $(POPPLER_LIBS) $(LIBRSVG_LIBS) $(LIBSPECTRE_LIBS)
 endif
 
 if CAIRO_CAN_TEST_PDF_SURFACE

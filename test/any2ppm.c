@@ -89,11 +89,7 @@
 #define SOCKET_PATH "./.any2ppm"
 #define TIMEOUT 60000 /* 60 seconds */
 
-#if _BSD_SOURCE || (_XOPEN_SOURCE && _XOPEN_SOURCE < 500)
 #define CAN_RUN_AS_DAEMON 1
-#else
-#define CAN_RUN_AS_DAEMON 0
-#endif
 #endif
 
 #define ARRAY_LENGTH(A) (sizeof (A) / sizeof (A[0]))
@@ -662,6 +658,62 @@ write_pid_file (void)
     return ret;
 }
 
+static int
+open_devnull_to_fd (int want_fd, int flags)
+{
+    int error;
+    int got_fd;
+
+    close (want_fd);
+
+    got_fd = open("/dev/null", flags | O_CREAT, 0700);
+    if (got_fd == -1)
+        return -1;
+
+    error = dup2 (got_fd, want_fd);
+    close (got_fd);
+
+    return error;
+}
+
+static int
+daemonize (void)
+{
+    void (*oldhup) (int);
+
+    /* Let the parent go. */
+    switch (fork ()) {
+    case -1: return -1;
+    case 0: break;
+    default: _exit (0);
+    }
+
+    /* Become session leader. */
+    if (setsid () == -1)
+	return -1;
+
+    /* Refork to yield session leadership. */
+    oldhup = signal (SIGHUP, SIG_IGN);
+
+    switch (fork ()) {		/* refork to yield session leadership. */
+    case -1: return -1;
+    case 0: break;
+    default: _exit (0);
+    }
+
+    signal (SIGHUP, oldhup);
+
+    /* Establish stdio. */
+    if (open_devnull_to_fd (0, O_RDONLY) == -1)
+	return -1;
+    if (open_devnull_to_fd (1, O_WRONLY | O_APPEND) == -1)
+	return -1;
+    if (dup2 (1, 2) == -1)
+	return -1;
+
+    return 0;
+}
+
 static const char *
 any2ppm_daemon (void)
 {
@@ -707,7 +759,7 @@ any2ppm_daemon (void)
     }
 
     /* ready for client connection - detach from parent/terminal */
-    if (getenv ("ANY2PPM_NODAEMON") == NULL && daemon (1, 0) == -1) {
+    if (getenv ("ANY2PPM_NODAEMON") == NULL && daemonize () == -1) {
 	close (sk);
 	return "unable to detach from parent";
     }
