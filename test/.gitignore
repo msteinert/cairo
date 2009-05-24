@@ -36,3 +36,4 @@ valgrind-log
 *.o
 *~
 .*.sw?
+make-cairo-test-constructors

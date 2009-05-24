@@ -14,8 +14,11 @@ TESTCORE_SOURCES = \
 
 all: cairo-test-suite.exe
 
-cairo-test-constructors.c: $(test_sources)
-	./make-cairo-test-constructors.pl $(test_sources) > $@
+make-cairo-test-constructors.exe: $(CFG)/make-cairo-test-constructors.obj
+	$(CC) $(OPT) $(MS_MDFLAGS) $(CFG)/make-cairo-test-constructors.obj -Fe"$@" -link $(LDFLAGS) user32.lib /NODEFAULTLIB:library
+
+cairo-test-constructors.c: $(test_sources) make-cairo-test-constructors.exe
+	./make-cairo-test-constructors.exe $(test_sources) > $@
 
 SOURCES = $(cairo_test_suite_sources) $(test_sources) cairo-test-constructors.c
 
