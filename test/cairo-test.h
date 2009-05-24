@@ -133,19 +133,6 @@ struct _cairo_test {
  * one backend that is tested and if all tested backend pass according
  * to the four criteria above.
  */
-#if CAIRO_HAS_CONSTRUCTOR_ATTRIBUTE
-#define CAIRO_TEST(name, description, keywords, requirements, width, height, preamble, draw) \
-static void __attribute__((constructor)) _register_##name (void) \
-{\
-    static const cairo_test_t test = { \
-	#name, description, \
-	keywords, requirements, \
-	width, height, \
-	preamble, draw \
-    }; \
-    cairo_test_register (&test); \
-}
-#else
 #define CAIRO_TEST(name, description, keywords, requirements, width, height, preamble, draw) \
 void _register_##name (void); \
 void _register_##name (void) { \
@@ -157,7 +144,6 @@ void _register_##name (void) { \
     }; \
     cairo_test_register (&test); \
 }
-#endif
 
 void
 cairo_test_register (const cairo_test_t *test);

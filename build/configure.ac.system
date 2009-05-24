@@ -135,15 +135,5 @@ dnl ===========================================================================
 dnl
 dnl Test for the tools required for building one big test binary
 dnl
-AC_MSG_CHECKING([for the constructor attribute])
-cairo_has_constructor_attribute="no"
-AC_TRY_LINK([static void __attribute__((constructor)) constructor(void) {}], [],
-    cairo_has_constructor_attribute="yes"
-  )
-AC_MSG_RESULT([$cairo_has_constructor_attribute])
-if test "x$cairo_has_constructor_attribute" = "xyes"; then
-    AC_DEFINE(CAIRO_HAS_CONSTRUCTOR_ATTRIBUTE, 1, [Define to 1 if your compiler supports __attribute__(constructor)])
-fi
-AM_CONDITIONAL(CAIRO_HAS_CONSTRUCTOR_ATTRIBUTE, test "x$cairo_has_constructor_attribute" = "xyes")
 
 AC_CHECK_FUNCS(fork waitpid raise)

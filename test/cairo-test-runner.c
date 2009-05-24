@@ -599,9 +599,7 @@ main (int argc, char **argv)
     _CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDERR);
 #endif
 
-#ifndef CAIRO_HAS_CONSTRUCTOR_ATTRIBUTE
     _cairo_test_runner_register_tests ();
-#endif
 
     memset (&runner, 0, sizeof (runner));
     runner.num_device_offsets = 1;

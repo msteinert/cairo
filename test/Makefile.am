@@ -73,11 +73,8 @@ cairo-test-constructors.c: Makefile $(test_sources) make-cairo-test-constructors
 cairo_test_suite_SOURCES = 		\
 	$(cairo_test_suite_sources)	\
 	$(cairo_test_suite_headers)	\
-	$(test_sources)
-if CAIRO_HAS_CONSTRUCTOR_ATTRIBUTE
-else
-cairo_test_suite_SOURCES += cairo-test-constructors.c
-endif
+	$(test_sources)			\
+	cairo-test-constructors.c
 cairo_test_suite_LDADD = 					\
 	$(top_builddir)/test/pdiff/libpdiff.la 			\
         $(top_builddir)/boilerplate/libcairoboilerplate.la	\

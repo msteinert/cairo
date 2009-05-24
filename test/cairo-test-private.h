@@ -64,10 +64,8 @@ cairo_test (const cairo_test_t *test);
 void
 cairo_test_fini (cairo_test_context_t *ctx);
 
-#if ! CAIRO_HAS_CONSTRUCTOR_ATTRIBUTE
 void
 _cairo_test_runner_register_tests (void);
-#endif
 
 CAIRO_END_DECLS
 
