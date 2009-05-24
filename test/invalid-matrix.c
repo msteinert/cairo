@@ -29,7 +29,7 @@
 
 #include "cairo-test.h"
 
-#if !defined(INFINITY) && defined(_MSC_VER)
+#if !defined(INFINITY)
 #define INFINITY HUGE_VAL
 #endif
 
