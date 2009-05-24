@@ -56,6 +56,10 @@ AC_CHECK_LIB(rt, shm_open, [
 AM_CONDITIONAL(HAVE_SHM, test "x$has_shm_open" = "xyes")
 AC_SUBST(SHM_LIBS)
 
+AC_CHECK_LIB(socket, connect, [SOCKET_LIBS=-lsocket], [SOCKET_LIBS=])
+CAIROBOILERPLATE_LIBS=$SOCKET_LIBS
+AC_SUBST(CAIROBOILERPLATE_LIBS)
+
 dnl ====================================================================
 dnl Header/function checks
 dnl ====================================================================

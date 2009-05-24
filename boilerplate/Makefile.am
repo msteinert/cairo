@@ -45,6 +45,8 @@ if CAIRO_HAS_WIN32_SURFACE
 libcairoboilerplate_la_LIBADD += -lwinspool
 endif
 
+libcairoboilerplate_la_LIBADD += $(CAIROBOILERPLATE_LIBS)
+
 test: check
 
 if CROSS_COMPILING
