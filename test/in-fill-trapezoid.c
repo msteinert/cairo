@@ -43,24 +43,24 @@ draw (cairo_t *cr, int width, int height)
     }
 
     /* rectangular boundary tests */
-    if (cairo_in_fill (cr, -10, -10)) {
-	cairo_test_log (ctx, "Error: Found top-left vertex inside rectangle\n");
+    if (! cairo_in_fill (cr, -10, -10)) {
+	cairo_test_log (ctx, "Error: Failed to find top-left vertex inside rectangle\n");
 	ret = CAIRO_TEST_FAILURE;
     }
-    if (cairo_in_fill (cr, -10, 10)) {
-	cairo_test_log (ctx, "Error: Found bottom-left vertex inside rectangle\n");
+    if (! cairo_in_fill (cr, -10, 10)) {
+	cairo_test_log (ctx, "Error: Failed to find bottom-left vertex inside rectangle\n");
 	ret = CAIRO_TEST_FAILURE;
     }
     if (! cairo_in_fill (cr, 10, -10)) {
 	cairo_test_log (ctx, "Error: Failed to find top-right vertex inside rectangle\n");
 	ret = CAIRO_TEST_FAILURE;
     }
-    if (cairo_in_fill (cr, 10, 10)) {
-	cairo_test_log (ctx, "Error: Found bottom-right vertex inside rectangle\n");
+    if (! cairo_in_fill (cr, 10, 10)) {
+	cairo_test_log (ctx, "Error: Failed to find bottom-right vertex inside rectangle\n");
 	ret = CAIRO_TEST_FAILURE;
     }
-    if (cairo_in_fill (cr, -10, 0)) {
-	cairo_test_log (ctx, "Error: Found left edge inside rectangle\n");
+    if (! cairo_in_fill (cr, -10, 0)) {
+	cairo_test_log (ctx, "Error: Failed to find left edge inside rectangle\n");
 	ret = CAIRO_TEST_FAILURE;
     }
     if (! cairo_in_fill (cr, 0, -10)) {
@@ -71,8 +71,8 @@ draw (cairo_t *cr, int width, int height)
 	cairo_test_log (ctx, "Error: Failed to find right edge inside rectangle\n");
 	ret = CAIRO_TEST_FAILURE;
     }
-    if (cairo_in_fill (cr, 0, 10)) {
-	cairo_test_log (ctx, "Error: Found bottom edge inside rectangle\n");
+    if (! cairo_in_fill (cr, 0, 10)) {
+	cairo_test_log (ctx, "Error: Failed to find bottom edge inside rectangle\n");
 	ret = CAIRO_TEST_FAILURE;
     }
 
@@ -89,7 +89,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_rectangle (cr, -10, -10, 20, 20);
     cairo_rectangle (cr, -5, -5, 10, 10);
     if (cairo_in_fill (cr, 0, 0)) {
-	cairo_test_log (ctx, "Error: Found an unexpected point inside rectangular hole\n");
+	cairo_test_log (ctx, "Error: Found an unexpected point inside rectangular eo-hole\n");
 	ret = CAIRO_TEST_FAILURE;
     }
 
@@ -98,7 +98,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_arc (cr, 0, 0, 10, 0, 2 * M_PI);
     cairo_arc (cr, 0, 0, 5, 0, 2 * M_PI);
     if (cairo_in_fill (cr, 0, 0)) {
-	cairo_test_log (ctx, "Error: Found an unexpected point inside circular hole\n");
+	cairo_test_log (ctx, "Error: Found an unexpected point inside circular eo-hole\n");
 	ret = CAIRO_TEST_FAILURE;
     }
 
@@ -136,7 +136,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_rectangle (cr, -10, -10, 20, 20);
     cairo_rectangle (cr, 5, -5, -10, 10);
     if (cairo_in_fill (cr, 0, 0)) {
-	cairo_test_log (ctx, "Error: Found an unexpected point inside rectangular hole\n");
+	cairo_test_log (ctx, "Error: Found an unexpected point inside rectangular non-zero-hole\n");
 	ret = CAIRO_TEST_FAILURE;
     }
 
@@ -145,7 +145,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_arc (cr, 0, 0, 10, 0, 2 * M_PI);
     cairo_arc_negative (cr, 0, 0, 5, 0, -2 * M_PI);
     if (cairo_in_fill (cr, 0, 0)) {
-	cairo_test_log (ctx, "Error: Found an unexpected point inside circular hole\n");
+	cairo_test_log (ctx, "Error: Found an unexpected point inside circular non-zero-hole\n");
 	ret = CAIRO_TEST_FAILURE;
     }
 
@@ -163,26 +163,26 @@ draw (cairo_t *cr, int width, int height)
     cairo_arc (cr, 7.5, 0, 10, 0, 2 * M_PI);
     cairo_arc_negative (cr, 7.5, 0, 5, 0, -2 * M_PI);
     if (cairo_in_fill (cr, 7.5, 0)) {
-	cairo_test_log (ctx, "Error: Found an unexpected point inside circular hole\n");
+	cairo_test_log (ctx, "Error: Found an unexpected point inside off-centre-x circular non-zero-hole\n");
 	ret = CAIRO_TEST_FAILURE;
     }
     cairo_new_path (cr);
     cairo_arc (cr, 0, 7.5, 10, 0, 2 * M_PI);
     cairo_arc_negative (cr, 0, 7.5, 5, 0, -2 * M_PI);
     if (cairo_in_fill (cr, 0, 7.5)) {
-	cairo_test_log (ctx, "Error: Found an unexpected point inside circular hole\n");
+	cairo_test_log (ctx, "Error: Found an unexpected point inside off-centre-y circular non-zero-hole\n");
 	ret = CAIRO_TEST_FAILURE;
     }
     cairo_new_path (cr);
     cairo_arc (cr, 15, 0, 10, 0, 2 * M_PI);
     if (! cairo_in_fill (cr, 15, 0)) {
-	cairo_test_log (ctx, "Error: Failed to find point inside circle\n");
+	cairo_test_log (ctx, "Error: Failed to find point inside off-centre-x circle\n");
 	ret = CAIRO_TEST_FAILURE;
     }
     cairo_new_path (cr);
     cairo_arc (cr, 0, 15, 10, 0, 2 * M_PI);
     if (! cairo_in_fill (cr, 0, 15)) {
-	cairo_test_log (ctx, "Error: Failed to find point inside circle\n");
+	cairo_test_log (ctx, "Error: Failed to find point inside off-centre-y circle\n");
 	ret = CAIRO_TEST_FAILURE;
     }
 
@@ -209,12 +209,49 @@ draw (cairo_t *cr, int width, int height)
     cairo_line_to (cr, 5, 5);
     cairo_close_path (cr);
     if (cairo_in_fill (cr, 0, 0) ||
-	cairo_in_fill (cr, 10, 10) ||
+	cairo_in_fill (cr, 5, 0) ||
+	cairo_in_fill (cr, 15, 0) ||
 	cairo_in_fill (cr, 20, 0) ||
+	cairo_in_fill (cr, 0, 10) ||
+	cairo_in_fill (cr, 10, 10) ||
+	cairo_in_fill (cr, 20, 10) ||
 	cairo_in_fill (cr, 7, 2.5) ||
 	cairo_in_fill (cr, 13, 2.5))
     {
-	cairo_test_log (ctx, "Error: Found an unexpected point outside triangle\n");
+	cairo_test_log (ctx,
+			"Error: Found an unexpected point outside triangle\n"
+			"\t(0, 0) -> %s\n"
+			"\t(5, 0) -> %s\n"
+			"\t(15, 0) -> %s\n"
+			"\t(20, 0) -> %s\n"
+			"\t(0, 10) -> %s\n"
+			"\t(10, 10) -> %s\n"
+			"\t(20, 10) -> %s\n"
+			"\t(7, 2.5) -> %s\n"
+			"\t(13, 2.5) -> %s\n",
+			cairo_in_fill (cr, 0, 0) ? "inside" : "outside",
+			cairo_in_fill (cr, 5, 0) ? "inside" : "outside",
+			cairo_in_fill (cr, 15, 0) ? "inside" : "outside",
+			cairo_in_fill (cr, 20, 0) ? "inside" : "outside",
+			cairo_in_fill (cr, 0, 10) ? "inside" : "outside",
+			cairo_in_fill (cr, 10, 10) ? "inside" : "outside",
+			cairo_in_fill (cr, 20, 10) ? "inside" : "outside",
+			cairo_in_fill (cr, 7, 2.5) ? "inside" : "outside",
+			cairo_in_fill (cr, 13, 2.5) ? "inside" : "outside");
+	ret = CAIRO_TEST_FAILURE;
+    }
+    if (! cairo_in_fill (cr, 7.5, 2.5) ||
+	! cairo_in_fill (cr, 12.5, 2.5) ||
+	! cairo_in_fill (cr, 10, 5))
+    {
+	cairo_test_log (ctx,
+			"Error: Failed to find point on triangle edge\n"
+			"\t(7.5, 2.5) -> %s\n"
+			"\t(12.5, 2.5) -> %s\n"
+			"\t(10, 5) -> %s\n",
+			cairo_in_fill (cr, 7.5, 2.5) ? "inside" : "outside",
+			cairo_in_fill (cr, 12.5, 2.5) ? "inside" : "outside",
+			cairo_in_fill (cr, 10, 5) ? "inside" : "outside");
 	ret = CAIRO_TEST_FAILURE;
     }
     if (! cairo_in_fill (cr, 8, 2.5) ||
