@@ -194,9 +194,7 @@ csi_boolean_new (csi_t *ctx,
 static cairo_bool_t
 _dictionary_name_equal (const void *_a, const void *_b)
 {
-    const csi_dictionary_entry_t *a = _a;
-    const csi_dictionary_entry_t *b = _b;
-    return a->hash_entry.hash == b->hash_entry.hash;
+    return TRUE;
 }
 
 csi_status_t
