@@ -312,6 +312,12 @@ _cairo_array_num_elements (cairo_array_t *array);
 cairo_private int
 _cairo_array_size (cairo_array_t *array);
 
+typedef struct {
+    const cairo_user_data_key_t *key;
+    void *user_data;
+    cairo_destroy_func_t destroy;
+} cairo_user_data_slot_t;
+
 cairo_private void
 _cairo_user_data_array_init (cairo_user_data_array_t *array);
 

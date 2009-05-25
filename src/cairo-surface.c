@@ -611,27 +611,30 @@ cairo_surface_get_mime_data (cairo_surface_t		*surface,
                              const unsigned char       **data,
                              unsigned int		*length)
 {
-    cairo_status_t status;
-    cairo_mime_data_t *mime_data;
+    cairo_user_data_slot_t *slots;
+    int i, num_slots;
 
     *data = NULL;
     *length = 0;
-    if (surface->status)
+    if (unlikely (surface->status))
 	return;
 
-    status = _cairo_intern_string (&mime_type, -1);
-    if (unlikely (status)) {
-	status = _cairo_surface_set_error (surface, status);
-	return;
+    /* The number of mime-types attached to a surface is usually small,
+     * typically zero. Therefore it is quicker to do a strcmp() against
+     * each key than it is to intern the string (i.e. compute a hash,
+     * search the hash table, and do a final strcmp).
+     */
+    num_slots = surface->mime_data.num_elements;
+    slots = _cairo_array_index (&surface->mime_data, 0);
+    for (i = 0; i < num_slots; i++) {
+	if (strcmp ((char *) slots[i].key, mime_type) == 0) {
+	    cairo_mime_data_t *mime_data = slots[i].user_data;
+
+	    *data = mime_data->data;
+	    *length = mime_data->length;
+	    return;
+	}
     }
-
-    mime_data = _cairo_user_data_array_get_data (&surface->mime_data,
-						 (cairo_user_data_key_t *) mime_type);
-    if (mime_data == NULL)
-	return;
-
-    *data = mime_data->data;
-    *length = mime_data->length;
 }
 slim_hidden_def (cairo_surface_get_mime_data);
 
