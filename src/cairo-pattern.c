@@ -1972,13 +1972,28 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
 	/* Never acquire a larger area than the source itself */
 	is_empty = _cairo_rectangle_intersect (&extents, &sampled_area);
     } else {
+	int trim = 0;
+
 	if (sampled_area.x >= extents.x &&
-	    sampled_area.y >= extents.y &&
-	    sampled_area.x + (int) sampled_area.width <= extents.x + (int) extents.width &&
+	    sampled_area.x + (int) sampled_area.width <= extents.x + (int) extents.width)
+	{
+	    /* source is horizontally contained within extents, trim */
+	    extents.x = sampled_area.x;
+	    extents.width = sampled_area.width;
+	    trim |= 0x1;
+	}
+
+	if (sampled_area.y >= extents.y &&
 	    sampled_area.y + (int) sampled_area.height <= extents.y + (int) extents.height)
 	{
+	    /* source is vertically contained within extents, trim */
+	    extents.y = sampled_area.y;
+	    extents.height = sampled_area.height;
+	    trim |= 0x2;
+	}
+
+	if (trim == 0x3) {
 	    /* source is wholly contained within extents, drop the REPEAT */
-	    extents = sampled_area;
 	    attr->extend = CAIRO_EXTEND_NONE;
 	}
 
