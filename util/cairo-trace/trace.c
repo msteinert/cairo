@@ -703,7 +703,7 @@ _init_logfile (void)
 	int fd = atoi (filename);
 	logfile = fdopen (fd, "w");
 	if (logfile == NULL) {
-	    fprintf (stderr, "Failed to open trace file descriptor '%s': %s",
+	    fprintf (stderr, "Failed to open trace file descriptor '%s': %s\n",
 		       filename, strerror (errno));
 	    return false;
 	}
@@ -730,7 +730,7 @@ _init_logfile (void)
 
     logfile = fopen (filename, "wb");
     if (logfile == NULL) {
-	fprintf (stderr, "Failed to open trace file '%s': %s",
+	fprintf (stderr, "Failed to open trace file '%s': %s\n",
 		   filename, strerror (errno));
 	return false;
     }
