@@ -279,7 +279,7 @@ _csi_hash_table_lookup (csi_hash_table_t *hash_table,
     entry = &hash_table->entries[idx];
 
     if (ENTRY_IS_LIVE (*entry)) {
-	if (hash_table->keys_equal (key, *entry))
+	if ((*entry)->hash == key->hash && hash_table->keys_equal (key, *entry))
 	    return *entry;
     } else if (ENTRY_IS_FREE (*entry))
 	return NULL;
@@ -295,8 +295,11 @@ _csi_hash_table_lookup (csi_hash_table_t *hash_table,
 
 	entry = &hash_table->entries[idx];
 	if (ENTRY_IS_LIVE (*entry)) {
-	    if (hash_table->keys_equal (key, *entry))
+	    if ((*entry)->hash == key->hash &&
+		hash_table->keys_equal (key, *entry))
+	    {
 		return *entry;
+	    }
 	} else if (ENTRY_IS_FREE (*entry))
 	    return NULL;
     } while (++i < table_size);
