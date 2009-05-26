@@ -107,7 +107,7 @@ _cairo_debug_check_image_surface_is_defined (const cairo_surface_t *surface)
 	width = image->width*4;
 	break;
     default:
-	ASSERT_NOT_REACHED;
+	/* XXX compute width from pixman bpp */
 	return;
     }
 
