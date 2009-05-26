@@ -2374,6 +2374,10 @@ cairo_public cairo_region_t *
 cairo_region_create_rectangle (const cairo_rectangle_int_t *rectangle);
 
 cairo_public cairo_region_t *
+cairo_region_create_rectangles (cairo_rectangle_int_t *rects,
+				int count);
+
+cairo_public cairo_region_t *
 cairo_region_copy (cairo_region_t *original);
 
 cairo_public void

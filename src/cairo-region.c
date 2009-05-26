@@ -134,6 +134,50 @@ cairo_region_create (void)
 }
 slim_hidden_def (cairo_region_create);
 
+cairo_region_t *
+cairo_region_create_rectangles (cairo_rectangle_int_t *rects,
+				int count)
+{
+    pixman_box32_t stack_pboxes[CAIRO_STACK_ARRAY_LENGTH (pixman_box32_t)];
+    pixman_box32_t *pboxes = stack_pboxes;
+    cairo_region_t *region;
+    int i;
+
+    region = _cairo_malloc (sizeof (cairo_region_t));
+
+    if (!region)
+	return (cairo_region_t *)&_cairo_region_nil;
+
+    region->status = CAIRO_STATUS_SUCCESS;
+    
+    if (count > ARRAY_LENGTH (stack_pboxes)) {
+	pboxes = _cairo_malloc_ab (count, sizeof (pixman_box32_t));
+
+	if (unlikely (pboxes == NULL)) {
+	    free (region);
+	    return (cairo_region_t *)&_cairo_region_nil;
+	}
+    }
+
+    for (i = 0; i < count; i++) {
+	pboxes[i].x1 = rects[i].x;
+	pboxes[i].y1 = rects[i].y;
+	pboxes[i].x2 = rects[i].x + rects[i].width;
+	pboxes[i].y2 = rects[i].y + rects[i].height;
+    }
+
+    if (! pixman_region32_init_rects (&region->rgn, pboxes, count)) {
+	free (region);
+
+	region = (cairo_region_t *)&_cairo_region_nil;
+    }
+    
+    if (pboxes != stack_pboxes)
+	free (pboxes);
+
+    return region;
+}
+
 /**
  * cairo_region_create_rectangle:
  * @rectangle: a #cairo_rectangle_int_t
