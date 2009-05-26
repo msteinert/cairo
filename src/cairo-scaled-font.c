@@ -64,7 +64,7 @@
 
 /* XXX: This number is arbitrary---we've never done any measurement of this. */
 #define MAX_GLYPH_PAGES_CACHED 512
-static cairo_cache_t *cairo_scaled_glyph_page_cache;
+static cairo_cache_t cairo_scaled_glyph_page_cache;
 
 #define CAIRO_SCALED_GLYPH_PAGE_SIZE 32
 struct _cairo_scaled_glyph_page {
@@ -745,7 +745,7 @@ _cairo_scaled_font_thaw_cache (cairo_scaled_font_t *scaled_font)
 
     if (scaled_font->global_cache_frozen) {
 	CAIRO_MUTEX_LOCK (_cairo_scaled_glyph_page_cache_mutex);
-	_cairo_cache_thaw (cairo_scaled_glyph_page_cache);
+	_cairo_cache_thaw (&cairo_scaled_glyph_page_cache);
 	CAIRO_MUTEX_UNLOCK (_cairo_scaled_glyph_page_cache_mutex);
 
 	scaled_font->global_cache_frozen = FALSE;
@@ -761,7 +761,7 @@ _cairo_scaled_font_reset_cache (cairo_scaled_font_t *scaled_font)
 
     CAIRO_MUTEX_LOCK (_cairo_scaled_glyph_page_cache_mutex);
     while (scaled_font->glyph_pages != NULL) {
-	_cairo_cache_remove (cairo_scaled_glyph_page_cache,
+	_cairo_cache_remove (&cairo_scaled_glyph_page_cache,
 			     &scaled_font->glyph_pages->cache_entry);
     }
     CAIRO_MUTEX_UNLOCK (_cairo_scaled_glyph_page_cache_mutex);
@@ -1072,9 +1072,9 @@ _cairo_scaled_font_reset_static_data (void)
     CAIRO_MUTEX_UNLOCK (_cairo_scaled_font_error_mutex);
 
     CAIRO_MUTEX_LOCK (_cairo_scaled_glyph_page_cache_mutex);
-    if (cairo_scaled_glyph_page_cache != NULL) {
-	_cairo_cache_destroy (cairo_scaled_glyph_page_cache);
-	cairo_scaled_glyph_page_cache = NULL;
+    if (cairo_scaled_glyph_page_cache.hash_table != NULL) {
+	_cairo_cache_fini (&cairo_scaled_glyph_page_cache);
+	cairo_scaled_glyph_page_cache.hash_table = NULL;
     }
     CAIRO_MUTEX_UNLOCK (_cairo_scaled_glyph_page_cache_mutex);
 }
@@ -2469,24 +2469,24 @@ _cairo_scaled_font_allocate_glyph (cairo_scaled_font_t *scaled_font,
 
     CAIRO_MUTEX_LOCK (_cairo_scaled_glyph_page_cache_mutex);
     if (scaled_font->global_cache_frozen == FALSE) {
-	if (unlikely (cairo_scaled_glyph_page_cache == NULL)) {
-	    cairo_scaled_glyph_page_cache =
-		_cairo_cache_create (NULL,
-				     _cairo_scaled_glyph_page_can_remove,
-				     _cairo_scaled_glyph_page_destroy,
-				     MAX_GLYPH_PAGES_CACHED);
-	    if (unlikely (cairo_scaled_glyph_page_cache == NULL)) {
+	if (unlikely (cairo_scaled_glyph_page_cache.hash_table == NULL)) {
+	    status = _cairo_cache_init (&cairo_scaled_glyph_page_cache,
+					NULL,
+					_cairo_scaled_glyph_page_can_remove,
+					_cairo_scaled_glyph_page_destroy,
+					MAX_GLYPH_PAGES_CACHED);
+	    if (unlikely (status)) {
 		CAIRO_MUTEX_UNLOCK (_cairo_scaled_glyph_page_cache_mutex);
 		free (page);
-		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+		return status;
 	    }
 	}
 
-	_cairo_cache_freeze (cairo_scaled_glyph_page_cache);
+	_cairo_cache_freeze (&cairo_scaled_glyph_page_cache);
 	scaled_font->global_cache_frozen = TRUE;
     }
 
-    status = _cairo_cache_insert (cairo_scaled_glyph_page_cache,
+    status = _cairo_cache_insert (&cairo_scaled_glyph_page_cache,
 				  &page->cache_entry);
     CAIRO_MUTEX_UNLOCK (_cairo_scaled_glyph_page_cache_mutex);
     if (unlikely (status)) {
@@ -2516,7 +2516,8 @@ _cairo_scaled_font_free_last_glyph (cairo_scaled_font_t *scaled_font,
     _cairo_scaled_glyph_fini (scaled_font, scaled_glyph);
 
     if (--page->num_glyphs == 0) {
-	_cairo_cache_remove (cairo_scaled_glyph_page_cache, &page->cache_entry);
+	_cairo_cache_remove (&cairo_scaled_glyph_page_cache,
+		             &page->cache_entry);
 	assert (scaled_font->glyph_pages != page);
     }
 }
