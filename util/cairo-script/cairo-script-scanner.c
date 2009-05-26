@@ -214,32 +214,32 @@ parse_number (csi_object_t *obj, const char *s, int len)
     while (++s < end) {
 	if (*s < '0') {
 	    if (*s == '.') {
-		if (radix)
+		if (_csi_unlikely (radix))
 		    return FALSE;
-		if (decimal != -1)
+		if (_csi_unlikely (decimal != -1))
 		    return FALSE;
-		if (exponent_sign)
+		if (_csi_unlikely (exponent_sign))
 		    return FALSE;
 
 		decimal = 0;
 	    } else if (*s == '!') {
-		if (radix)
+		if (_csi_unlikely (radix))
 		    return FALSE;
-		if (decimal != -1)
+		if (_csi_unlikely (decimal != -1))
 		    return FALSE;
-		if (exponent_sign)
+		if (_csi_unlikely (exponent_sign))
 		    return FALSE;
 
 		radix = mantissa;
 		mantissa = 0;
 
-		if (radix < 2 || radix > 36)
+		if (_csi_unlikely (radix < 2 || radix > 36))
 		    return FALSE;
 	    } else
 		return FALSE;
 	} else if (*s <= '9') {
 	    int v = *s - '0';
-	    if (radix && v >= radix)
+	    if (_csi_unlikely (radix && v >= radix))
 		return FALSE;
 
 	    if (exponent_sign) {
@@ -254,7 +254,7 @@ parse_number (csi_object_t *obj, const char *s, int len)
 	    }
 	} else if (*s == 'E' || * s== 'e') {
 	    if (radix == 0) {
-		if (s + 1 == end)
+		if (_csi_unlikely (s + 1 == end))
 		    return FALSE;
 
 		exponent_sign = 1;
@@ -266,7 +266,7 @@ parse_number (csi_object_t *obj, const char *s, int len)
 	    } else {
 		int v = 0xe;
 
-		if (v >= radix)
+		if (_csi_unlikely (v >= radix))
 		    return FALSE;
 
 		mantissa = radix * mantissa + v;
@@ -276,7 +276,7 @@ parse_number (csi_object_t *obj, const char *s, int len)
 	} else if (*s <= 'Z') {
 	    int v = *s - 'A' + 0xA;
 
-	    if (v >= radix)
+	    if (_csi_unlikely (v >= radix))
 		return FALSE;
 
 	    mantissa = radix * mantissa + v;
@@ -285,7 +285,7 @@ parse_number (csi_object_t *obj, const char *s, int len)
 	} else if (*s <= 'z') {
 	    int v = *s - 'a' + 0xa;
 
-	    if (v >= radix)
+	    if (_csi_unlikely (v >= radix))
 		return FALSE;
 
 	    mantissa = radix * mantissa + v;
@@ -306,8 +306,25 @@ parse_number (csi_object_t *obj, const char *s, int len)
 	    e = exponent * exponent_sign;
 	    if (decimal != -1)
 		e -= decimal;
-	    if (e != 0)
-		v *= pow (10, e); /* XXX */
+	    switch (e) {
+	    case -7: v *= 0.0000001; break;
+	    case -6: v *= 0.000001; break;
+	    case -5: v *= 0.00001; break;
+	    case -4: v *= 0.0001; break;
+	    case -3: v *= 0.001; break;
+	    case -2: v *= 0.01; break;
+	    case -1: v *= 0.1; break;
+	    case  0: break;
+	    case  1: v *= 10; break;
+	    case  2: v *= 100; break;
+	    case  3: v *= 1000; break;
+	    case  4: v *= 10000; break;
+	    case  5: v *= 100000; break;
+	    case  6: v *= 1000000; break;
+	    default:
+		    v *= pow (10, e); /* XXX */
+		    break;
+	    }
 
 	    obj->type = CSI_OBJECT_TYPE_REAL;
 	    obj->datum.real = sign * v;
