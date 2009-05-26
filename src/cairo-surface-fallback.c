@@ -1196,7 +1196,7 @@ _cairo_surface_fallback_fill_rectangles (cairo_surface_t         *surface,
     int x1, y1, x2, y2;
     int i;
 
-    assert (! surface->is_snapshot);
+    assert (surface->snapshot_of == NULL);
 
     if (num_rects <= 0)
 	return CAIRO_STATUS_SUCCESS;

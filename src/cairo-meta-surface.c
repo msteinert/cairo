@@ -542,7 +542,6 @@ _cairo_meta_surface_snapshot (void *abstract_other)
 
     _cairo_surface_init (&meta->base, &cairo_meta_surface_backend,
 			 other->base.content);
-    meta->base.is_snapshot = TRUE;
 
     meta->width_pixels = other->width_pixels;
     meta->height_pixels = other->height_pixels;

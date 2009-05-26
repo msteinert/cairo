@@ -43,6 +43,8 @@
 #include "cairo-types-private.h"
 #include "cairo-reference-count-private.h"
 
+typedef void (*cairo_surface_func_t) (cairo_surface_t *);
+
 struct _cairo_surface {
     const cairo_surface_backend_t *backend;
 
@@ -94,7 +96,10 @@ struct _cairo_surface {
     unsigned int current_clip_serial;
 
     /* A "snapshot" surface is immutable. See _cairo_surface_snapshot. */
-    cairo_bool_t is_snapshot;
+    cairo_surface_t *snapshot_of;
+    cairo_surface_func_t snapshot_detach;
+    /* current snapshots of this surface */
+    cairo_array_t snapshots;
 
     /*
      * Surface font options, falling back to backend's default options,
