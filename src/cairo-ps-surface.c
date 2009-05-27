@@ -1896,6 +1896,7 @@ _cairo_ps_surface_emit_image (cairo_ps_surface_t    *surface,
 	return image->base.status;
 
     switch (filter) {
+    default:
     case CAIRO_FILTER_GOOD:
     case CAIRO_FILTER_BEST:
     case CAIRO_FILTER_BILINEAR:
