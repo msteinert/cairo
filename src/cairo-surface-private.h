@@ -56,6 +56,8 @@ struct _cairo_surface {
     cairo_reference_count_t ref_count;
     cairo_status_t status;
     cairo_bool_t finished;
+    unsigned int unique_id;
+
     cairo_user_data_array_t user_data;
     cairo_user_data_array_t mime_data;
 

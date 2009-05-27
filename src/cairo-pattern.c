@@ -2424,7 +2424,10 @@ static unsigned long
 _cairo_surface_pattern_hash (unsigned long hash,
 			     const cairo_pattern_t *pattern)
 {
-    /* XXX requires cow-snapshots */
+    const cairo_surface_pattern_t *surface = (cairo_surface_pattern_t *) pattern;
+
+    hash ^= surface->surface->unique_id;
+
     return hash;
 }
 
@@ -2578,8 +2581,10 @@ static cairo_bool_t
 _cairo_surface_pattern_equal (const cairo_pattern_t *A,
 			      const cairo_pattern_t *B)
 {
-    /* XXX requires cow-snapshots */
-    return FALSE;
+    const cairo_surface_pattern_t *a = (cairo_surface_pattern_t *) A;
+    const cairo_surface_pattern_t *b = (cairo_surface_pattern_t *) B;
+
+    return a->surface->unique_id == b->surface->unique_id;
 }
 
 cairo_bool_t

@@ -50,6 +50,7 @@ const cairo_surface_t name = {					\
     CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */		\
     status,				/* status */		\
     FALSE,				/* finished */		\
+    0,					/* unique id */		\
     { 0, 0, 0, NULL, },			/* user_data */		\
     { 0, 0, 0, NULL, },			/* mime_data */         \
     { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 },   /* device_transform */	\
@@ -180,6 +181,29 @@ cairo_surface_status (cairo_surface_t *surface)
 }
 slim_hidden_def (cairo_surface_status);
 
+static unsigned long
+_cairo_surface_allocate_unique_id (void)
+{
+    static unsigned int unique_id;
+
+#if CAIRO_NO_MUTEX
+    if (++unique_id == 0)
+	unique_id = 1;
+    return unique_id;
+#else
+    unsigned int old, id;
+
+    do {
+	old = _cairo_atomic_int_get (&unique_id);
+	id = old + 1;
+	if (id == 0)
+	    id = 1;
+    } while (! _cairo_atomic_int_cmpxchg (&unique_id, old, id));
+
+    return id;
+#endif
+}
+
 void
 _cairo_surface_init (cairo_surface_t			*surface,
 		     const cairo_surface_backend_t	*backend,
@@ -194,6 +218,7 @@ _cairo_surface_init (cairo_surface_t			*surface,
     CAIRO_REFERENCE_COUNT_INIT (&surface->ref_count, 1);
     surface->status = CAIRO_STATUS_SUCCESS;
     surface->finished = FALSE;
+    surface->unique_id = _cairo_surface_allocate_unique_id ();
 
     _cairo_user_data_array_init (&surface->user_data);
     _cairo_user_data_array_init (&surface->mime_data);
