@@ -644,6 +644,23 @@ _cairo_scaled_font_keys_equal (const void *abstract_key_a,
 }
 
 static cairo_bool_t
+_cairo_scaled_font_matches (const cairo_scaled_font_t *scaled_font,
+	                    const cairo_font_face_t *font_face,
+			    const cairo_matrix_t *font_matrix,
+			    const cairo_matrix_t *ctm,
+			    const cairo_font_options_t *options)
+{
+    return scaled_font->font_face == font_face &&
+	    memcmp ((unsigned char *)(&scaled_font->font_matrix.xx),
+		    (unsigned char *)(&font_matrix->xx),
+		    sizeof(cairo_matrix_t)) == 0 &&
+	    memcmp ((unsigned char *)(&scaled_font->ctm.xx),
+		    (unsigned char *)(&ctm->xx),
+		    sizeof(cairo_matrix_t)) == 0 &&
+	    cairo_font_options_equal (&scaled_font->options, options);
+}
+
+static cairo_bool_t
 _cairo_scaled_glyphs_equal (const void *abstract_a, const void *abstract_b)
 {
     const cairo_scaled_glyph_t *a = abstract_a;
@@ -892,16 +909,14 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     if (unlikely (font_map == NULL))
 	return _cairo_scaled_font_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    _cairo_scaled_font_init_key (&key, font_face,
-				 font_matrix, ctm, options);
     scaled_font = font_map->mru_scaled_font;
     if (scaled_font != NULL &&
-	scaled_font->hash_entry.hash == key.hash_entry.hash &&
-	_cairo_scaled_font_keys_equal (scaled_font, &key))
+	_cairo_scaled_font_matches (scaled_font,
+	                            font_face, font_matrix, ctm, options))
     {
 	assert (! scaled_font->placeholder);
 
-	if (scaled_font->status == CAIRO_STATUS_SUCCESS) {
+	if (likely (scaled_font->status == CAIRO_STATUS_SUCCESS)) {
 	    /* We increment the reference count manually here, (rather
 	     * than calling into cairo_scaled_font_reference), since we
 	     * must modify the reference count while our lock is still
@@ -918,6 +933,9 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     }
     else
     {
+	_cairo_scaled_font_init_key (&key, font_face,
+				     font_matrix, ctm, options);
+
 	while ((scaled_font = _cairo_hash_table_lookup (font_map->hash_table,
 							&key.hash_entry)))
 	{
