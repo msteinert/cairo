@@ -1878,37 +1878,48 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
     int i;
     cairo_point_int_t min = { CAIRO_RECT_INT_MAX, CAIRO_RECT_INT_MAX };
     cairo_point_int_t max = { CAIRO_RECT_INT_MIN, CAIRO_RECT_INT_MIN };
+    cairo_scaled_glyph_t *glyph_cache[64];
 
-    if (scaled_font->status)
+    if (unlikely (scaled_font->status))
 	return scaled_font->status;
 
     _cairo_scaled_font_freeze_cache (scaled_font);
+
+    memset (glyph_cache, 0, sizeof (glyph_cache));
 
     for (i = 0; i < num_glyphs; i++) {
 	cairo_scaled_glyph_t	*scaled_glyph;
 	int			left, top;
 	int			right, bottom;
 	int			x, y;
+	int cache_index = glyphs[i].index % ARRAY_LENGTH (glyph_cache);
 
-	status = _cairo_scaled_glyph_lookup (scaled_font,
-					     glyphs[i].index,
-					     CAIRO_SCALED_GLYPH_INFO_METRICS,
-					     &scaled_glyph);
-	if (unlikely (status))
-	    break;
+	scaled_glyph = glyph_cache[cache_index];
+	if (scaled_glyph == NULL ||
+	    _cairo_scaled_glyph_index (scaled_glyph) != glyphs[i].index)
+	{
+	    status = _cairo_scaled_glyph_lookup (scaled_font,
+						 glyphs[i].index,
+						 CAIRO_SCALED_GLYPH_INFO_METRICS,
+						 &scaled_glyph);
+	    if (unlikely (status))
+		break;
+
+	    glyph_cache[cache_index] = scaled_glyph;
+	}
 
 	/* XXX glyph images are snapped to pixel locations */
 	x = _cairo_lround (glyphs[i].x);
 	y = _cairo_lround (glyphs[i].y);
 
-	left   = x + _cairo_fixed_integer_floor(scaled_glyph->bbox.p1.x);
+	left   = x + _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.x);
 	top    = y + _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.y);
-	right  = x + _cairo_fixed_integer_ceil(scaled_glyph->bbox.p2.x);
+	right  = x + _cairo_fixed_integer_ceil (scaled_glyph->bbox.p2.x);
 	bottom = y + _cairo_fixed_integer_ceil (scaled_glyph->bbox.p2.y);
 
-	if (left < min.x) min.x = left;
-	if (right > max.x) max.x = right;
-	if (top < min.y) min.y = top;
+	if (left   < min.x) min.x = left;
+	if (right  > max.x) max.x = right;
+	if (top    < min.y) min.y = top;
 	if (bottom > max.y) max.y = bottom;
     }
 
