@@ -934,25 +934,26 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	    /* If the original reference count is 0, then this font must have
 	     * been found in font_map->holdovers, (which means this caching is
 	     * actually working). So now we remove it from the holdovers
-	     * array. */
+	     * array, unless we caught the font in the middle of destruction.
+	     */
 	    if (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&scaled_font->ref_count)) {
 		int i;
 
 		for (i = 0; i < font_map->num_holdovers; i++)
 		    if (font_map->holdovers[i] == scaled_font)
 			break;
-		assert (i < font_map->num_holdovers);
-
-		font_map->num_holdovers--;
-		memmove (&font_map->holdovers[i],
-			 &font_map->holdovers[i+1],
-			 (font_map->num_holdovers - i) * sizeof (cairo_scaled_font_t*));
+		if (i < font_map->num_holdovers) {
+		    font_map->num_holdovers--;
+		    memmove (&font_map->holdovers[i],
+			     &font_map->holdovers[i+1],
+			     (font_map->num_holdovers - i) * sizeof (cairo_scaled_font_t*));
+		}
 
 		/* reset any error status */
 		scaled_font->status = CAIRO_STATUS_SUCCESS;
 	    }
 
-	    if (scaled_font->status == CAIRO_STATUS_SUCCESS) {
+	    if (likely (scaled_font->status == CAIRO_STATUS_SUCCESS)) {
 		/* We increment the reference count manually here, (rather
 		 * than calling into cairo_scaled_font_reference), since we
 		 * must modify the reference count while our lock is still
@@ -1130,10 +1131,14 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
 
     assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&scaled_font->ref_count));
 
+    if (! _cairo_reference_count_dec_and_test (&scaled_font->ref_count))
+	return;
+
     font_map = _cairo_scaled_font_map_lock ();
     assert (font_map != NULL);
 
-    if (_cairo_reference_count_dec_and_test (&scaled_font->ref_count)) {
+    /* Another thread may have resurrected the font whilst we waited */
+    if (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&scaled_font->ref_count)) {
 	if (! scaled_font->placeholder &&
 	    scaled_font->hash_entry.hash != ZOMBIE)
 	{
@@ -1143,9 +1148,7 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
 	     * the reference count). To make room for it, we do actually
 	     * destroy the least-recently-used holdover.
 	     */
-
-	    if (font_map->num_holdovers == CAIRO_SCALED_FONT_MAX_HOLDOVERS)
-	    {
+	    if (font_map->num_holdovers == CAIRO_SCALED_FONT_MAX_HOLDOVERS) {
 		lru = font_map->holdovers[0];
 		assert (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&lru->ref_count));
 
@@ -1158,8 +1161,7 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
 			 font_map->num_holdovers * sizeof (cairo_scaled_font_t*));
 	    }
 
-	    font_map->holdovers[font_map->num_holdovers] = scaled_font;
-	    font_map->num_holdovers++;
+	    font_map->holdovers[font_map->num_holdovers++] = scaled_font;
 	} else
 	    lru = scaled_font;
     }
@@ -1172,7 +1174,7 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
      * safely call fini on it without any lock held. This is desirable
      * as we never want to call into any backend function with a lock
      * held. */
-    if (lru) {
+    if (lru != NULL) {
 	_cairo_scaled_font_fini_internal (lru);
 	free (lru);
     }
