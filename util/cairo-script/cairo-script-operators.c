@@ -4705,7 +4705,7 @@ _show_glyphs (csi_t *ctx)
     double x,y;
     csi_integer_t nglyphs, i, j;
     double glyph_advance[256][2];
-    int have_glyph_advance[256];
+    unsigned long have_glyph_advance[256];
 
     check (2);
 
@@ -4746,7 +4746,7 @@ _show_glyphs (csi_t *ctx)
     scaled_font = cairo_get_scaled_font (cr);
 
     nglyphs = 0;
-    memset (have_glyph_advance, 0, sizeof (have_glyph_advance));
+    memset (have_glyph_advance, 0xff, sizeof (have_glyph_advance));
     x = y = 0;
     for (i = 0; i < array->stack.len; i++) {
 	obj = &array->stack.objects[i];
@@ -4755,6 +4755,7 @@ _show_glyphs (csi_t *ctx)
 	    glyph_array = obj->datum.array;
 	    for (j = 0; j < glyph_array->stack.len; j++) {
 		unsigned long g;
+		int gi;
 		cairo_bool_t have_advance;
 
 		obj = &glyph_array->stack.objects[j];
@@ -4766,34 +4767,22 @@ _show_glyphs (csi_t *ctx)
 		glyphs[nglyphs].x = x;
 		glyphs[nglyphs].y = y;
 
-		if (g < ARRAY_LENGTH (have_glyph_advance)) {
-		    if (! have_glyph_advance[g]) {
-			cairo_text_extents_t extents;
-
-			cairo_scaled_font_glyph_extents (scaled_font,
-							 &glyphs[nglyphs], 1,
-							 &extents);
-
-			glyph_advance[g][0] = extents.x_advance;
-			glyph_advance[g][1] = extents.y_advance;
-			have_glyph_advance[g] = TRUE;
-
-		    }
-
-		    have_advance = glyph_advance[g][0] != 0.0;
-		    x += glyph_advance[g][0];
-		    y += glyph_advance[g][1];
-		} else {
+		gi = g % ARRAY_LENGTH (have_glyph_advance);
+		if (have_glyph_advance[gi] != g) {
 		    cairo_text_extents_t extents;
 
 		    cairo_scaled_font_glyph_extents (scaled_font,
 						     &glyphs[nglyphs], 1,
 						     &extents);
 
-		    have_advance = extents.x_advance != 0.0;
-		    x += extents.x_advance;
-		    y += extents.y_advance;
+		    glyph_advance[gi][0] = extents.x_advance;
+		    glyph_advance[gi][1] = extents.y_advance;
+		    have_glyph_advance[gi] = g;
 		}
+
+		have_advance = glyph_advance[gi][0] != 0.0;
+		x += glyph_advance[gi][0];
+		y += glyph_advance[gi][1];
 
 		nglyphs += have_advance;
 	    }
@@ -4810,7 +4799,7 @@ _show_glyphs (csi_t *ctx)
 		glyphs[nglyphs].x = x;
 		glyphs[nglyphs].y = y;
 
-		if (! have_glyph_advance[g]) {
+		if (have_glyph_advance[g] != g) {
 		    cairo_text_extents_t extents;
 
 		    cairo_scaled_font_glyph_extents (scaled_font,
@@ -4819,7 +4808,7 @@ _show_glyphs (csi_t *ctx)
 
 		    glyph_advance[g][0] = extents.x_advance;
 		    glyph_advance[g][1] = extents.y_advance;
-		    have_glyph_advance[g] = TRUE;
+		    have_glyph_advance[g] = g;
 		}
 
 		have_advance = glyph_advance[g][0] != 0.0;
