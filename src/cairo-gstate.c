@@ -90,6 +90,7 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
 
     gstate->font_face = NULL;
     gstate->scaled_font = NULL;
+    gstate->previous_scaled_font = NULL;
 
     cairo_matrix_init_scale (&gstate->font_matrix,
 			     CAIRO_GSTATE_DEFAULT_FONT_SIZE,
@@ -153,6 +154,7 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 
     gstate->font_face = cairo_font_face_reference (other->font_face);
     gstate->scaled_font = cairo_scaled_font_reference (other->scaled_font);
+    gstate->previous_scaled_font = cairo_scaled_font_reference (other->previous_scaled_font);
 
     gstate->font_matrix = other->font_matrix;
 
@@ -163,6 +165,7 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
 	_cairo_stroke_style_fini (&gstate->stroke_style);
 	cairo_font_face_destroy (gstate->font_face);
 	cairo_scaled_font_destroy (gstate->scaled_font);
+	cairo_scaled_font_destroy (gstate->previous_scaled_font);
 	return status;
     }
 
@@ -189,6 +192,9 @@ _cairo_gstate_fini (cairo_gstate_t *gstate)
 
     cairo_font_face_destroy (gstate->font_face);
     gstate->font_face = NULL;
+
+    cairo_scaled_font_destroy (gstate->previous_scaled_font);
+    gstate->previous_scaled_font = NULL;
 
     cairo_scaled_font_destroy (gstate->scaled_font);
     gstate->scaled_font = NULL;
@@ -1293,10 +1299,14 @@ _cairo_gstate_copy_clip_rectangle_list (cairo_gstate_t *gstate)
 static void
 _cairo_gstate_unset_scaled_font (cairo_gstate_t *gstate)
 {
-    if (gstate->scaled_font) {
-	cairo_scaled_font_destroy (gstate->scaled_font);
-	gstate->scaled_font = NULL;
-    }
+    if (gstate->scaled_font == NULL)
+	return;
+
+    if (gstate->previous_scaled_font != NULL)
+	cairo_scaled_font_destroy (gstate->previous_scaled_font);
+
+    gstate->previous_scaled_font = gstate->scaled_font;
+    gstate->scaled_font = NULL;
 }
 
 cairo_status_t

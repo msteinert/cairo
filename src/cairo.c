@@ -2910,6 +2910,7 @@ cairo_set_scaled_font (cairo_t                   *cr,
 		       const cairo_scaled_font_t *scaled_font)
 {
     cairo_status_t status;
+    cairo_bool_t was_previous;
 
     if (cr->status)
 	return;
@@ -2926,6 +2927,8 @@ cairo_set_scaled_font (cairo_t                   *cr,
     if (scaled_font == cr->gstate->scaled_font)
 	return;
 
+    was_previous = scaled_font == cr->gstate->previous_scaled_font;
+
     status = _cairo_gstate_set_font_face (cr->gstate, scaled_font->font_face);
     if (unlikely (status))
         goto BAIL;
@@ -2935,6 +2938,9 @@ cairo_set_scaled_font (cairo_t                   *cr,
         goto BAIL;
 
     _cairo_gstate_set_font_options (cr->gstate, &scaled_font->options);
+
+    if (was_previous)
+	cr->gstate->scaled_font = cairo_scaled_font_reference ((cairo_scaled_font_t *) scaled_font);
 
     return;
 
