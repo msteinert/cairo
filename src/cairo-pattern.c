@@ -1794,6 +1794,7 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
 					    int			       y,
 					    unsigned int	       width,
 					    unsigned int	       height,
+					    unsigned int	       flags,
 					    cairo_surface_t	       **out,
 					    cairo_surface_attributes_t *attr)
 {
@@ -1855,7 +1856,9 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
      * images such that the new image, when repeated, has the same effect
      * of reflecting the original pattern.
      */
-    if (attr->extend == CAIRO_EXTEND_REFLECT) {
+    if (flags & CAIRO_PATTERN_ACQUIRE_NO_REFLECT &&
+	attr->extend == CAIRO_EXTEND_REFLECT)
+    {
 	cairo_t *cr;
 	cairo_surface_t *src;
 	int w, h;
@@ -2081,6 +2084,7 @@ _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 				int			   y,
 				unsigned int		   width,
 				unsigned int		   height,
+				unsigned int		   flags,
 				cairo_surface_t		   **surface_out,
 				cairo_surface_attributes_t *attributes)
 {
@@ -2170,7 +2174,9 @@ _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 
 	status = _cairo_pattern_acquire_surface_for_surface (src, dst,
 							     content,
-							     x, y, width, height,
+							     x, y,
+							     width, height,
+							     flags,
 							     surface_out,
 							     attributes);
     } break;
@@ -2209,6 +2215,7 @@ _cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
 				 int			    mask_y,
 				 unsigned int		    width,
 				 unsigned int		    height,
+				 unsigned int		    flags,
 				 cairo_surface_t	    **src_out,
 				 cairo_surface_t	    **mask_out,
 				 cairo_surface_attributes_t *src_attributes,
@@ -2249,6 +2256,7 @@ _cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
 					     src_content,
 					     src_x, src_y,
 					     width, height,
+					     flags,
 					     src_out, src_attributes);
     if (unlikely (status))
 	goto BAIL;
@@ -2262,6 +2270,7 @@ _cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
 					     CAIRO_CONTENT_ALPHA,
 					     mask_x, mask_y,
 					     width, height,
+					     flags,
 					     mask_out, mask_attributes);
     if (unlikely (status))
 	_cairo_pattern_release_surface (src, *src_out, src_attributes);

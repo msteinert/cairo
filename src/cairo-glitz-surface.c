@@ -719,6 +719,7 @@ _cairo_glitz_pattern_acquire_surface (const cairo_pattern_t	       *pattern,
 	status = _cairo_pattern_acquire_surface (pattern, &dst->base,
 						 CAIRO_CONTENT_COLOR_ALPHA,
 						 x, y, width, height,
+						 CAIRO_PATTERN_ACQUIRE_NONE,
 						 (cairo_surface_t **) &src,
 						 &attr->base);
 	if (status)

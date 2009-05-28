@@ -2491,6 +2491,10 @@ _cairo_pattern_is_opaque_solid (const cairo_pattern_t *pattern);
 cairo_private cairo_bool_t
 _cairo_pattern_is_opaque (const cairo_pattern_t *abstract_pattern);
 
+enum {
+    CAIRO_PATTERN_ACQUIRE_NONE = 0x0,
+    CAIRO_PATTERN_ACQUIRE_NO_REFLECT = 0x1,
+};
 cairo_private cairo_int_status_t
 _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 				cairo_surface_t		   *dst,
@@ -2499,6 +2503,7 @@ _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 				int			   y,
 				unsigned int		   width,
 				unsigned int		   height,
+				unsigned int		   flags,
 				cairo_surface_t		   **surface_out,
 				cairo_surface_attributes_t *attributes);
 
@@ -2518,6 +2523,7 @@ _cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
 				 int			    mask_y,
 				 unsigned int		    width,
 				 unsigned int		    height,
+				 unsigned int		    flags,
 				 cairo_surface_t	    **src_out,
 				 cairo_surface_t	    **mask_out,
 				 cairo_surface_attributes_t *src_attributes,

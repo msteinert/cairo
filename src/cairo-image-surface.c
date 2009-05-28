@@ -967,6 +967,7 @@ _cairo_image_surface_composite (cairo_operator_t	op,
 					      src_x, src_y,
 					      mask_x, mask_y,
 					      width, height,
+					      CAIRO_PATTERN_ACQUIRE_NONE,
 					      (cairo_surface_t **) &src,
 					      (cairo_surface_t **) &mask,
 					      &src_attr, &mask_attr);
@@ -1171,6 +1172,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     status = _cairo_pattern_acquire_surface (pattern, &dst->base,
 					     CAIRO_CONTENT_COLOR_ALPHA,
 					     src_x, src_y, width, height,
+					     CAIRO_PATTERN_ACQUIRE_NONE,
 					     (cairo_surface_t **) &src,
 					     &attributes);
     if (unlikely (status))
@@ -1402,6 +1404,7 @@ _cairo_image_surface_create_span_renderer (cairo_operator_t	 op,
 	CAIRO_CONTENT_COLOR_ALPHA,
 	rects->src.x, rects->src.y,
 	width, height,
+	CAIRO_PATTERN_ACQUIRE_NONE,
 	(cairo_surface_t **) &renderer->src,
 	&renderer->src_attributes);
     if (status)
