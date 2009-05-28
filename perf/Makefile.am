@@ -40,6 +40,7 @@ cairo_perf_SOURCES =		\
 	subimage_copy.c		\
 	tessellate.c		\
 	text.c			\
+	glyphs.c		\
 	twin.c			\
 	unaligned-clip.c	\
 	world-map.c		\
