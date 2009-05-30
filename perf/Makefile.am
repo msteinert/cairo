@@ -33,6 +33,7 @@ cairo_perf_SOURCES =		\
 	mosaic.h		\
 	paint.c			\
 	paint-with-alpha.c	\
+	mask.c			\
 	pattern_create_radial.c \
 	rectangles.c		\
 	rounded-rectangles.c	\

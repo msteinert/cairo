@@ -166,6 +166,7 @@ test_report_cmp_name (const void *a, const void *b);
 CAIRO_PERF_DECL (fill);
 CAIRO_PERF_DECL (paint);
 CAIRO_PERF_DECL (paint_with_alpha);
+CAIRO_PERF_DECL (mask);
 CAIRO_PERF_DECL (stroke);
 CAIRO_PERF_DECL (subimage_copy);
 CAIRO_PERF_DECL (tessellate);
