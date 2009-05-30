@@ -148,7 +148,7 @@ test_report_parse (test_report_t *report, char *line, char *configuration)
 
     report->configuration = configuration;
     parse_string (report->backend);
-    end = strrchr (report->backend, '-');
+    end = strrchr (report->backend, '.');
     if (*end)
 	*end++ = '\0';
     report->content = end;
@@ -156,7 +156,7 @@ test_report_parse (test_report_t *report, char *line, char *configuration)
     skip_space ();
 
     parse_string (report->name);
-    end = strrchr (report->name, '-');
+    end = strrchr (report->name, '.');
     if (*end)
 	*end++ = '\0';
     report->size = atoi (end);
@@ -173,13 +173,23 @@ test_report_parse (test_report_t *report, char *line, char *configuration)
 
 	report->samples_size = 5;
 	report->samples = xmalloc (report->samples_size * sizeof (cairo_perf_ticks_t));
+	report->stats.min_ticks = 0;
 	do {
 	    if (report->samples_count == report->samples_size) {
 		report->samples_size *= 2;
 		report->samples = xrealloc (report->samples,
 					    report->samples_size * sizeof (cairo_perf_ticks_t));
 	    }
-	    parse_long_long (report->samples[report->samples_count++]);
+	    parse_long_long (report->samples[report->samples_count]);
+	    if (report->samples_count == 0) {
+		report->stats.min_ticks =
+		    report->samples[report->samples_count];
+	    } else if (report->stats.min_ticks >
+		       report->samples[report->samples_count]){
+		report->stats.min_ticks =
+		    report->samples[report->samples_count];
+	    }
+	    report->samples_count++;
 	    skip_space ();
 	} while (*s && *s != '\n');
 	report->stats.iterations = 0;

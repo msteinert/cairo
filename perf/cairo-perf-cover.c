@@ -301,22 +301,22 @@ cairo_perf_cover_sources_and_operators (cairo_perf_t		*perf,
     char *expanded_name;
 
     struct { set_source_func_t set_source; const char *name; } sources[] = {
-	{ set_source_solid_rgb, "solid_rgb" },
-	{ set_source_solid_rgba, "solid_rgba" },
-	{ set_source_image_surface_rgb, "image_rgb" },
-	{ set_source_image_surface_rgba, "image_rgba" },
-	{ set_source_image_surface_rgba_mag, "image_rgba_mag" },
-	{ set_source_image_surface_rgba_min, "image_rgba_min" },
-	{ set_source_similar_surface_rgb, "similar_rgb" },
-	{ set_source_similar_surface_rgba, "similar_rgba" },
-	{ set_source_similar_surface_rgba_mag, "similar_rgba_mag" },
-	{ set_source_similar_surface_rgba_min, "similar_rgba_min" },
-	{ set_source_linear_rgb, "linear_rgb" },
-	{ set_source_linear_rgba, "linear_rgba" },
-	{ set_source_linear3_rgb, "linear3_rgb" },
-	{ set_source_linear3_rgba, "linear3_rgba" },
-	{ set_source_radial_rgb, "radial_rgb" },
-	{ set_source_radial_rgba, "radial_rgba" }
+	{ set_source_solid_rgb, "solid-rgb" },
+	{ set_source_solid_rgba, "solid-rgba" },
+	{ set_source_image_surface_rgb, "image-rgb" },
+	{ set_source_image_surface_rgba, "image-rgba" },
+	{ set_source_image_surface_rgba_mag, "image-rgba-mag" },
+	{ set_source_image_surface_rgba_min, "image-rgba-min" },
+	{ set_source_similar_surface_rgb, "similar-rgb" },
+	{ set_source_similar_surface_rgba, "similar-rgba" },
+	{ set_source_similar_surface_rgba_mag, "similar-rgba-mag" },
+	{ set_source_similar_surface_rgba_min, "similar-rgba-min" },
+	{ set_source_linear_rgb, "linear-rgb" },
+	{ set_source_linear_rgba, "linear-rgba" },
+	{ set_source_linear3_rgb, "linear3-rgb" },
+	{ set_source_linear3_rgba, "linear3-rgba" },
+	{ set_source_radial_rgb, "radial-rgb" },
+	{ set_source_radial_rgba, "radial-rgba" }
     };
 
     struct { cairo_operator_t op; const char *name; } operators[] = {

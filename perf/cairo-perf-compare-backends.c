@@ -225,18 +225,20 @@ cairo_perf_reports_compare (cairo_perf_report_t		*reports,
 		    test_report_cmp_name (tests[i], min_test) == 0)
 	    {
 		test_time = tests[i]->stats.min_ticks;
-		if (options->use_ms)
-		    test_time /= tests[i]->stats.ticks_per_ms;
-		if (diff->num_tests == 0) {
-		    diff->min = test_time;
-		    diff->max = test_time;
-		} else {
-		    if (test_time < diff->min)
+		if (test_time > 0) {
+		    if (options->use_ms)
+			test_time /= tests[i]->stats.ticks_per_ms;
+		    if (diff->num_tests == 0) {
 			diff->min = test_time;
-		    if (test_time > diff->max)
 			diff->max = test_time;
+		    } else {
+			if (test_time < diff->min)
+			    diff->min = test_time;
+			if (test_time > diff->max)
+			    diff->max = test_time;
+		    }
+		    diff->tests[diff->num_tests++] = tests[i];
 		}
-		diff->tests[diff->num_tests++] = tests[i];
 		tests[i]++;
 	    }
 	}
@@ -366,7 +368,7 @@ main (int argc, const char *argv[])
     if (args.num_filenames < 1)
 	usage (argv[0]);
 
-    reports = xmalloc (args.num_filenames * sizeof (cairo_perf_report_t));
+    reports = xcalloc (args.num_filenames, sizeof (cairo_perf_report_t));
 
     for (i = 0; i < args.num_filenames; i++) {
 	cairo_perf_report_load (&reports[i], args.filenames[i],

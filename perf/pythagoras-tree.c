@@ -82,7 +82,7 @@ do_pythagoras_tree (cairo_t *cr, int width, int height)
 void
 pythagoras_tree (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "pythagoras_tree"))
+    if (! cairo_perf_can_run (perf, "pythagoras-tree"))
 	return;
 
     cairo_perf_run (perf, "pythagoras_tree", do_pythagoras_tree);
