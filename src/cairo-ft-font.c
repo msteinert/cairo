@@ -1924,7 +1924,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 	    FT_Pos x1, x2;
 	    FT_Pos y1, y2;
 	    FT_Pos advance;
-	    
+
 	    if (!vertical_layout) {
 		x1 = (metrics->horiBearingX) & -64;
 		x2 = (metrics->horiBearingX + metrics->width + 63) & -64;
@@ -1979,7 +1979,7 @@ _cairo_ft_scaled_glyph_init (void			*abstract_font,
 		if (hint_metrics || glyph->format != FT_GLYPH_FORMAT_OUTLINE)
 		    fs_metrics.y_advance = DOUBLE_FROM_26_6 (metrics->vertAdvance) * y_factor;
 		else
-		    fs_metrics.y_advance = DOUBLE_FROM_26_6 (glyph->linearVertAdvance) * y_factor;
+		    fs_metrics.y_advance = DOUBLE_FROM_16_16 (glyph->linearVertAdvance) * y_factor;
 	    }
 	 }
 
