@@ -73,7 +73,7 @@ typedef struct _cairo_gl_composite_setup {
 
 static const cairo_surface_backend_t _cairo_gl_surface_backend;
 
-const cairo_gl_context_t _nil_context = {
+static const cairo_gl_context_t _nil_context = {
     CAIRO_REFERENCE_COUNT_INVALID,
     CAIRO_STATUS_NO_MEMORY
 };

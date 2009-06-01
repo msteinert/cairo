@@ -45,9 +45,6 @@ typedef struct _cairo_gl_context cairo_gl_context_t;
 cairo_public cairo_gl_context_t *
 cairo_gl_context_reference (cairo_gl_context_t *context);
 
-cairo_public cairo_status_t
-cairo_gl_context_status (cairo_gl_context_t *context);
-
 cairo_public void
 cairo_gl_context_destroy (cairo_gl_context_t *context);
 
@@ -55,9 +52,6 @@ cairo_public cairo_surface_t *
 cairo_gl_surface_create (cairo_gl_context_t *ctx,
 			 cairo_content_t content,
 			 int width, int height);
-
-cairo_public cairo_gl_context_t *
-cairo_gl_surface_get_context (cairo_surface_t *abstract_surface);
 
 cairo_public void
 cairo_gl_surface_set_size (cairo_surface_t *surface, int width, int height);
