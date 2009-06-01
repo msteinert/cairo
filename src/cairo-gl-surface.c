@@ -840,6 +840,12 @@ _cairo_gl_pattern_image_texture_setup (cairo_gl_composite_operand_t *operand,
 
     image_surface = (cairo_image_surface_t *)surface_pattern->surface;
 
+    /* The textures we create almost always has appropriate alpha channel
+     * contents.  But sometimes GL sucks at image specification and we end up
+     * with junk in the alpha.
+     */
+    operand->operand.texture.has_alpha = TRUE;
+
     switch (image_surface->pixman_format) {
     case PIXMAN_a8r8g8b8:
 	internal_format = GL_RGBA;
@@ -848,8 +854,9 @@ _cairo_gl_pattern_image_texture_setup (cairo_gl_composite_operand_t *operand,
 	break;
     case PIXMAN_x8r8g8b8:
 	internal_format = GL_RGB;
-	format = GL_BGR;
+	format = GL_BGRA;
 	type = GL_UNSIGNED_INT_8_8_8_8_REV;
+	operand->operand.texture.has_alpha = FALSE;
 	break;
     case PIXMAN_a8b8g8r8:
 	internal_format = GL_RGBA;
@@ -858,8 +865,9 @@ _cairo_gl_pattern_image_texture_setup (cairo_gl_composite_operand_t *operand,
 	break;
     case PIXMAN_x8b8g8r8:
 	internal_format = GL_RGB;
-	format = GL_RGB;
+	format = GL_RGBA;
 	type = GL_UNSIGNED_INT_8_8_8_8_REV;
+	operand->operand.texture.has_alpha = FALSE;
 	break;
     case PIXMAN_b8g8r8a8:
 	internal_format = GL_BGRA;
@@ -881,17 +889,13 @@ _cairo_gl_pattern_image_texture_setup (cairo_gl_composite_operand_t *operand,
 	format = GL_RGB;
 	type = GL_UNSIGNED_SHORT_5_6_5;
 	break;
-    case PIXMAN_b5g6r5:
-	internal_format = GL_RGB;
-	format = GL_BGR;
-	type = GL_UNSIGNED_SHORT_5_6_5;
-	break;
     case PIXMAN_a8:
 	internal_format = GL_ALPHA;
 	format = GL_ALPHA;
 	type = GL_UNSIGNED_BYTE;
 	break;
 
+    case PIXMAN_b5g6r5:
     case PIXMAN_a1r5g5b5:
     case PIXMAN_x1r5g5b5:
     case PIXMAN_a1b5g5r5:
@@ -932,7 +936,8 @@ _cairo_gl_pattern_image_texture_setup (cairo_gl_composite_operand_t *operand,
     assert(((image_surface->stride * image_surface->depth) %
 	    image_surface->depth) == 0);
     glPixelStorei (GL_UNPACK_ROW_LENGTH,
-		   image_surface->stride / (image_surface->depth / 8));
+		   image_surface->stride /
+		   (PIXMAN_FORMAT_BPP(image_surface->pixman_format) / 8));
     /* The filter will be correctly set up later, but for now we want to
      * hint to glTexImage that we're not mipmapping.
      */
@@ -948,10 +953,6 @@ _cairo_gl_pattern_image_texture_setup (cairo_gl_composite_operand_t *operand,
     operand->type = OPERAND_TEXTURE;
     operand->operand.texture.tex = tex;
     operand->operand.texture.surface = NULL;
-    /* The textures we create always have appropriate alpha channels --
-     * we aren't uploading x8 channels to a8 channels.
-     */
-    operand->operand.texture.has_alpha = TRUE;
     attributes->matrix = src->matrix;
     attributes->extend = src->extend;
     attributes->filter = src->filter;
