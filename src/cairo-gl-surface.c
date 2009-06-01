@@ -39,6 +39,10 @@
 
 #include "cairo-gl-private.h"
 
+slim_hidden_proto (cairo_gl_context_reference);
+slim_hidden_proto (cairo_gl_context_destroy);
+slim_hidden_proto (cairo_gl_surface_create);
+
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
 
 enum cairo_gl_composite_operand_type {
@@ -143,6 +147,7 @@ cairo_gl_context_reference (cairo_gl_context_t *context)
 
     return context;
 }
+slim_hidden_def (cairo_gl_context_reference);
 
 void
 cairo_gl_context_destroy (cairo_gl_context_t *context)
@@ -163,6 +168,7 @@ cairo_gl_context_destroy (cairo_gl_context_t *context)
 
     free (context);
 }
+slim_hidden_def (cairo_gl_context_destroy);
 
 static cairo_gl_context_t *
 _cairo_gl_context_acquire (cairo_gl_context_t *ctx)
@@ -390,6 +396,7 @@ cairo_gl_surface_create (cairo_gl_context_t   *ctx,
 
     return &surface->base;
 }
+slim_hidden_def (cairo_gl_surface_create);
 
 void
 cairo_gl_surface_set_size (cairo_surface_t *abstract_surface,
