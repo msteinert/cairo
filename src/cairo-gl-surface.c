@@ -981,7 +981,7 @@ _cairo_gl_pattern_image_texture_setup (cairo_gl_composite_operand_t *operand,
 }
 
 /**
- * Like cairo_pattern_acquire_surface, but returns a matrix that transforms
+ * Like cairo_pattern_acquire_surface(), but returns a matrix that transforms
  * from dest to src coords.
  */
 static cairo_status_t
