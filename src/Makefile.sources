@@ -245,8 +245,10 @@ cairo_beos_headers = cairo-beos.h
 #cairo_beos_sources = cairo-beos-surface.cpp
 
 cairo_gl_headers = cairo-gl.h
-cairo_gl_private =
+cairo_gl_private = cairo-gl-private.h
 cairo_gl_sources = cairo-gl-surface.c
+cairo_gl_glx_sources = cairo-glx-context.c
+cairo_gl_egl_sources = cairo-egl-context.c
 
 cairo_glitz_headers = cairo-glitz.h
 cairo_glitz_private = cairo-glitz-private.h

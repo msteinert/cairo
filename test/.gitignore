@@ -13,6 +13,8 @@ any2ppm
 .any2ppm.errors
 cairo-test-constructors.c
 cairo-test-suite
+egl-flowers
+glx-flowers
 pdf2png
 ps2png
 svg2png

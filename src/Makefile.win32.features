@@ -203,6 +203,34 @@ ifeq ($(CAIRO_HAS_GL_SURFACE),1)
 enabled_cairo_pkgconf += cairo-gl.pc
 endif
 
+supported_cairo_headers += $(cairo_gl_glx_headers)
+all_cairo_headers += $(cairo_gl_glx_headers)
+all_cairo_private += $(cairo_gl_glx_private)
+all_cairo_sources += $(cairo_gl_glx_sources)
+ifeq ($(CAIRO_HAS_GL_GLX_SURFACE),1)
+enabled_cairo_headers += $(cairo_gl_glx_headers)
+enabled_cairo_private += $(cairo_gl_glx_private)
+enabled_cairo_sources += $(cairo_gl_glx_sources)
+endif
+all_cairo_pkgconf += cairo-gl-glx.pc
+ifeq ($(CAIRO_HAS_GL_GLX_SURFACE),1)
+enabled_cairo_pkgconf += cairo-gl-glx.pc
+endif
+
+supported_cairo_headers += $(cairo_gl_egl_headers)
+all_cairo_headers += $(cairo_gl_egl_headers)
+all_cairo_private += $(cairo_gl_egl_private)
+all_cairo_sources += $(cairo_gl_egl_sources)
+ifeq ($(CAIRO_HAS_GL_EGL_SURFACE),1)
+enabled_cairo_headers += $(cairo_gl_egl_headers)
+enabled_cairo_private += $(cairo_gl_egl_private)
+enabled_cairo_sources += $(cairo_gl_egl_sources)
+endif
+all_cairo_pkgconf += cairo-gl-egl.pc
+ifeq ($(CAIRO_HAS_GL_EGL_SURFACE),1)
+enabled_cairo_pkgconf += cairo-gl-egl.pc
+endif
+
 unsupported_cairo_headers += $(cairo_glitz_headers)
 all_cairo_headers += $(cairo_glitz_headers)
 all_cairo_private += $(cairo_glitz_private)

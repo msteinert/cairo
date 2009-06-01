@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 static const cairo_user_data_key_t _key;
 
@@ -107,6 +108,63 @@ _xrender_surface_create (void *closure,
 }
 #endif
 
+#if CAIRO_HAS_GL_GLX_SURFACE
+#include <cairo-gl.h>
+static cairo_gl_context_t *
+_glx_get_context (cairo_content_t content)
+{
+    static cairo_gl_context_t *context;
+
+    if (context == NULL) {
+	int rgba_attribs[] = {
+	    GLX_RGBA,
+	    GLX_RED_SIZE, 1,
+	    GLX_GREEN_SIZE, 1,
+	    GLX_BLUE_SIZE, 1,
+	    GLX_ALPHA_SIZE, 1,
+	    GLX_DOUBLEBUFFER,
+	    None
+	};
+	XVisualInfo *visinfo;
+	GLXContext gl_ctx;
+	Display *dpy;
+
+	dpy = XOpenDisplay (NULL);
+	if (dpy == NULL) {
+	    fprintf (stderr, "Failed to open display.\n");
+	    exit (1);
+	}
+
+	visinfo = glXChooseVisual (dpy, DefaultScreen (dpy), rgba_attribs);
+	if (visinfo == NULL) {
+	    fprintf (stderr, "Failed to create RGBA, double-buffered visual\n");
+	    exit (1);
+	}
+
+	gl_ctx = glXCreateContext (dpy, visinfo, NULL, True);
+	XFree (visinfo);
+
+	context = cairo_glx_context_create (dpy, gl_ctx);
+    }
+
+    return context;
+}
+
+static cairo_surface_t *
+_glx_surface_create (void *closure,
+		     cairo_content_t content,
+		     double width, double height)
+{
+    if (width == 0)
+	width = 1;
+    if (height == 0)
+	height = 1;
+
+    return cairo_gl_surface_create (_glx_get_context (content),
+				    content, width, height);
+}
+#endif
+
 #if CAIRO_HAS_PDF_SURFACE
 #include <cairo-pdf.h>
 static cairo_surface_t *
@@ -173,6 +231,9 @@ main (int argc, char **argv)
 	{ "--image", _image_surface_create },
 #if CAIRO_HAS_XLIB_XRENDER_SURFACE
 	{ "--xrender", _xrender_surface_create },
+#endif
+#if CAIRO_HAS_GL_GLX_SURFACE
+	{ "--glx", _glx_surface_create },
 #endif
 #if CAIRO_HAS_PDF_SURFACE
 	{ "--pdf", _pdf_surface_create },
