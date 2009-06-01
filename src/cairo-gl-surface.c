@@ -948,6 +948,10 @@ _cairo_gl_pattern_image_texture_setup (cairo_gl_composite_operand_t *operand,
     operand->type = OPERAND_TEXTURE;
     operand->operand.texture.tex = tex;
     operand->operand.texture.surface = NULL;
+    /* The textures we create always have appropriate alpha channels --
+     * we aren't uploading x8 channels to a8 channels.
+     */
+    operand->operand.texture.has_alpha = TRUE;
     attributes->matrix = src->matrix;
     attributes->extend = src->extend;
     attributes->filter = src->filter;
