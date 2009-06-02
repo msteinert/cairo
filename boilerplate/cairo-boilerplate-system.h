@@ -48,4 +48,8 @@ xasprintf (char **strp, const char *fmt, ...) CAIRO_BOILERPLATE_PRINTF_FORMAT(2,
 void
 xunlink (const char *path);
 
+#define xstrdup cairo_boilerplate_xstrdup
+char *
+xstrdup (const char *str);
+
 #endif

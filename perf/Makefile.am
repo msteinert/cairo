@@ -4,12 +4,14 @@ AM_CPPFLAGS =					\
 	-I$(srcdir)				\
 	-I$(top_srcdir)/boilerplate		\
 	-I$(top_srcdir)/src			\
+	-I$(top_srcdir)/util/cairo-script	\
 	-I$(top_builddir)/src			\
 	$(CAIRO_CFLAGS)
 
 AM_LDFLAGS = $(CAIRO_LDFLAGS)
 
 EXTRA_PROGRAMS += cairo-perf \
+		  cairo-perf-trace \
 		  cairo-perf-diff-files \
 		  cairo-perf-compare-backends \
 		  cairo-perf-graph-files
@@ -69,6 +71,21 @@ libcairoperf_la_SOURCES = \
 	cairo-perf-report.c	\
 	cairo-stats.c		\
 	cairo-stats.h
+
+cairo_perf_trace_SOURCES =		\
+	cairo-perf-trace.c
+if CAIRO_HAS_WIN32_SURFACE
+cairo_perf_trace_SOURCES += cairo-perf-win32.c
+else
+if CAIRO_HAS_OS2_SURFACE
+cairo_perf_trace_SOURCES += cairo-perf-os2.c
+else
+cairo_perf_trace_SOURCES += cairo-perf-posix.c
+endif
+endif
+cairo_perf_trace_LDADD =		\
+	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
+	$(LDADD)
 
 cairo_perf_diff_files_SOURCES =	\
 	cairo-perf-diff-files.c

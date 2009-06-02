@@ -179,6 +179,37 @@ added:
     above, three tests would be performed at sizes of 16x16, 32x32 and
     64x64.
 
+
+How to benchmark traces
+-----------------------
+Using cairo-trace you can record the exact sequence of graphic operations
+made by an application and replay them later. These traces can then be
+used to benchmark the various backends and patches.
+
+To record a trace:
+$ cairo-trace --no-mark-dirty --no-callers $APPLICATION [$ARGV]
+
+--no-mark-dirty is useful for applications that are paranoid about
+surfaces being modified by external plugins outside of their control, the
+prime example here is firefox.
+--no-callers disables the symbolic caller lookup and so speeds tracing
+(dramatically for large c++ programs) and similarly speeds up the replay
+as the files are much smaller.
+
+The output file will be called $APPLICATION.$PID.trace, the actual path
+written to will be displayed on the terminal.
+
+Then to use cairo-perf-trace:
+$ ./cairo-perf-trace $APPLICATION.$PID.trace
+
+Alternatively you can put the trace into perf/traces, or set
+CAIRO_TRACE_DIR to point to your trace directory, and the trace will be
+included in the performance tests.
+
+If you record an interesting trace, please consider sharing it by compressing
+it, LZMA preferred, and posting a link to cairo@cairographics.org.
+
+
 How to run cairo-perf-diff on WINDOWS
 -------------------------------------
 This section explains the specifics of running cairo-perf-diff under

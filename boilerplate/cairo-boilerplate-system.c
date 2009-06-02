@@ -145,3 +145,18 @@ xunlink (const char *pathname)
 	exit (1);
     }
 }
+
+char *
+xstrdup (const char *str)
+{
+    if (str == NULL)
+	return NULL;
+
+    str = strdup (str);
+    if (str == NULL) {
+	fprintf (stderr, "Error: Out of memory. Exiting.\n");
+	exit (1);
+    }
+
+    return (char *) str;
+}

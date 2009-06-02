@@ -122,9 +122,13 @@ test_diff_print (test_diff_t			*diff,
     double test_time;
     double change;
 
-    printf ("(%s, size: %d)\n",
-	    diff->tests[0]->name,
-	    diff->tests[0]->size);
+    if (diff->tests[0]->size != 0) {
+	printf ("(%s, size: %d)\n",
+		diff->tests[0]->name,
+		diff->tests[0]->size);
+    } else {
+	printf ("(%s\n", diff->tests[0]->name);
+    }
 
     for (i = 0; i < diff->num_tests; i++) {
 	test_time = diff->tests[i]->stats.min_ticks;
