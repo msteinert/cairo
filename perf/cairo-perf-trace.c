@@ -437,7 +437,7 @@ main (int argc, char *argv[])
 {
     cairo_perf_t perf;
     cairo_script_interpreter_t *csi;
-    const char *trace_dir = "traces";
+    const char *trace_dir = "cairo-traces";
     cairo_bool_t names_are_traces;
     unsigned int n;
     int i;
@@ -488,11 +488,11 @@ main (int argc, char *argv[])
 	    dir = opendir (trace_dir);
 	    if (dir == NULL) {
 		fprintf (stderr,
-			 "Error: Failed to open trace directory '%s'.\n"
-			 "Have you cloned the trace repository?\n"
-			 "  git clone git://anongit.freedesktop.org/~ickle/traces\n"
-			 "  cd traces && make\n"
-			 "Or set the env.var CAIRO_TRACE_DIR to point to your traces?\n",
+"Error: Failed to open trace directory '%s'.\n"
+"Have you cloned the trace repository?\n"
+"  git clone git://git.freedesktop.org/cairo-traces\n"
+"  cd cairo-traces && make\n"
+"Or set the env.var CAIRO_TRACE_DIR to point to your traces?\n",
 			 trace_dir);
 
 		return 1;
