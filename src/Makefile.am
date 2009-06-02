@@ -14,9 +14,6 @@ export_symbols = -export-symbols cairo.def
 cairo_def_dependency = cairo.def
 endif
 
-EXTRA_DIST           += cairo-supported-features.h
-MAINTAINERCLEANFILES += cairo-supported-features.h
-
 $(top_builddir)/config.h: $(top_srcdir)/config.h.in
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) config.h
 
@@ -36,9 +33,11 @@ libcairo_la_DEPENDENCIES = $(cairo_def_dependency)
 
 # Special headers
 cairoinclude_HEADERS += $(top_srcdir)/cairo-version.h
+libcairo_la_SOURCES += cairo-version.h
 nodist_cairoinclude_HEADERS = cairo-features.h
-libcairo_la_SOURCES += cairo-version.h cairo-features.h
+nodist_libcairo_la_SOURCES  = cairo-features.h
 BUILT_SOURCES  += cairo-features.h cairo-supported-features.h
+DISTCLEANFILES += cairo-features.h cairo-supported-features.h
 cairo-features.h cairo-supported-features.h:
 	cd $(top_builddir) && ./config.status src/$@
 

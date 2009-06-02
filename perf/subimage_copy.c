@@ -55,6 +55,9 @@ subimage_copy (cairo_perf_t *perf, cairo_t *cr, int width, int height)
     cairo_surface_t *image;
     cairo_t *cr2;
 
+    if (! cairo_perf_can_run (perf, "subimage_copy"))
+	return;
+
     cairo_set_source_rgb (cr, 0, 0, 1); /* blue */
     cairo_paint (cr);
 

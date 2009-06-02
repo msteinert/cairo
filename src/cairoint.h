@@ -85,7 +85,7 @@
 
 CAIRO_BEGIN_DECLS
 
-#ifdef _WIN32
+#if _WIN32 && !_WIN32_WCE /* Permissions on WinCE? No worries! */
 cairo_private FILE *
 _cairo_win32_tmpfile (void);
 #define tmpfile() _cairo_win32_tmpfile()
@@ -120,16 +120,14 @@ _cairo_win32_tmpfile (void);
 #undef  ARRAY_LENGTH
 #define ARRAY_LENGTH(__array) ((int) (sizeof (__array) / sizeof (__array[0])))
 
-
-/* This has to be updated whenever #cairo_status_t is extended.  That's
- * a bit of a pain, but it should be easy to always catch as long as
- * one adds a new test case to test a trigger of the new status value.
- */
-#define CAIRO_STATUS_LAST_STATUS CAIRO_STATUS_INVALID_SIZE
+#undef STRINGIFY
+#undef STRINGIFY_ARG
+#define STRINGIFY(macro_or_string)    STRINGIFY_ARG (macro_or_string)
+#define STRINGIFY_ARG(contents)       #contents
 
 #ifdef __GNUC__
 #define cairo_container_of(ptr, type, member) ({ \
-    const typeof(((type *) 0)->member) *mptr__ = (ptr); \
+    const __typeof__ (((type *) 0)->member) *mptr__ = (ptr); \
     (type *) ((char *) mptr__ - offsetof (type, member)); \
 })
 #else
@@ -153,7 +151,7 @@ do {					\
     assert (NOT_REACHED);		\
 } while (0)
 #define COMPILE_TIME_ASSERT1(condition, line)		\
-    typedef int compile_time_assertion_at_line_##line##_failed [(condition)?1:-1];
+    typedef int compile_time_assertion_at_line_##line##_failed [(condition)?1:-1]
 #define COMPILE_TIME_ASSERT0(condition, line)	COMPILE_TIME_ASSERT1(condition, line)
 #define COMPILE_TIME_ASSERT(condition)		COMPILE_TIME_ASSERT0(condition, __LINE__)
 
@@ -330,6 +328,17 @@ _cairo_user_data_array_set_data (cairo_user_data_array_t     *array,
 				 void			     *user_data,
 				 cairo_destroy_func_t	      destroy);
 
+cairo_private cairo_status_t
+_cairo_user_data_array_copy (cairo_user_data_array_t	*dst,
+			     cairo_user_data_array_t	*src);
+
+cairo_private void
+_cairo_user_data_array_foreach (cairo_user_data_array_t     *array,
+				void (*func) (const void *key,
+					      void *elt,
+					      void *closure),
+				void *closure);
+
 #define _CAIRO_HASH_INIT_VALUE 5381
 
 cairo_private unsigned long
@@ -351,8 +360,7 @@ typedef struct _cairo_unscaled_font {
 } cairo_unscaled_font_t;
 
 typedef struct _cairo_scaled_glyph {
-    unsigned long index;
-    cairo_scaled_font_t	    *scaled_font;	/* font the glyph lives in */
+    cairo_hash_entry_t hash_entry;
 
     cairo_text_extents_t    metrics;		/* user-space metrics */
     cairo_text_extents_t    fs_metrics;		/* font-space metrics */
@@ -367,8 +375,8 @@ typedef struct _cairo_scaled_glyph {
     void		    *surface_private;	/* for the surface backend */
 } cairo_scaled_glyph_t;
 
-#define _cairo_scaled_glyph_index(g) ((g)->index)
-#define _cairo_scaled_glyph_set_index(g, i)  ((g)->index = (i))
+#define _cairo_scaled_glyph_index(g) ((g)->hash_entry.hash)
+#define _cairo_scaled_glyph_set_index(g, i)  ((g)->hash_entry.hash = (i))
 
 #include "cairo-scaled-font-private.h"
 
@@ -482,7 +490,8 @@ struct _cairo_scaled_font_backend {
                            unsigned char        *buffer,
                            unsigned long        *length);
 
-    /* returns -1 if the unicode character could not be found for the glyph */
+    /* ucs4 is set to -1 if the unicode character could not be found
+     * for the glyph */
     cairo_warn cairo_int_status_t
     (*index_to_ucs4)(void                       *scaled_font,
 		     unsigned long               index,
@@ -583,6 +592,7 @@ struct _cairo_surface_backend {
     cairo_warn cairo_status_t
     (*clone_similar)            (void                   *surface,
 				 cairo_surface_t        *src,
+				 cairo_content_t	 content,
 				 int                     src_x,
 				 int                     src_y,
 				 int                     width,
@@ -1021,8 +1031,26 @@ typedef struct _cairo_stroke_face {
 } cairo_stroke_face_t;
 
 /* cairo.c */
-cairo_private void
-_cairo_restrict_value (double *value, double min, double max);
+
+static inline double
+_cairo_restrict_value (double value, double min, double max)
+{
+    if (value < min)
+	return min;
+    else if (value > max)
+	return max;
+    else
+	return value;
+}
+
+/* C99 round() rounds to the nearest integral value with halfway cases rounded
+ * away from 0. _cairo_round rounds halfway cases toward negative infinity.
+ * This matches the rounding behaviour of _cairo_lround. */
+static inline double
+_cairo_round (double r)
+{
+    return floor (r + .5);
+}
 
 cairo_private int
 _cairo_lround (double d);
@@ -1733,8 +1761,7 @@ _cairo_surface_create_in_error (cairo_status_t status);
 
 cairo_private cairo_status_t
 _cairo_surface_copy_mime_data (cairo_surface_t *dst,
-			       cairo_surface_t *src,
-			       const char *mime_type);
+			       cairo_surface_t *src);
 
 cairo_private cairo_status_t
 _cairo_surface_set_error (cairo_surface_t	*surface,
@@ -1938,6 +1965,7 @@ _cairo_surface_release_dest_image (cairo_surface_t        *surface,
 cairo_private cairo_status_t
 _cairo_surface_clone_similar (cairo_surface_t  *surface,
 			      cairo_surface_t  *src,
+			      cairo_content_t	content,
 			      int               src_x,
 			      int               src_y,
 			      int               width,
@@ -2383,7 +2411,7 @@ _cairo_traps_extents (const cairo_traps_t *traps,
 
 cairo_private cairo_int_status_t
 _cairo_traps_extract_region (const cairo_traps_t *tr,
-			     cairo_region_t      *region);
+			     cairo_region_t      **region);
 
 cairo_private cairo_status_t
 _cairo_traps_path (const cairo_traps_t *traps,
@@ -2457,6 +2485,7 @@ _cairo_pattern_is_opaque (const cairo_pattern_t *abstract_pattern);
 cairo_private cairo_int_status_t
 _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 				cairo_surface_t		   *dst,
+				cairo_content_t		    content,
 				int			   x,
 				int			   y,
 				unsigned int		   width,
@@ -2473,6 +2502,7 @@ cairo_private cairo_int_status_t
 _cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
 				 const cairo_pattern_t	    *mask,
 				 cairo_surface_t	    *dst,
+				 cairo_content_t	    src_content,
 				 int			    src_x,
 				 int			    src_y,
 				 int			    mask_x,
@@ -2503,7 +2533,21 @@ _cairo_pattern_reset_static_data (void);
 
 /* cairo-region.c */
 
-#include "cairo-region-private.h"
+struct _cairo_region {
+    cairo_status_t status;
+    
+    pixman_region32_t rgn;
+};
+
+cairo_private void
+_cairo_region_init (cairo_region_t *region);
+
+cairo_private void
+_cairo_region_init_rectangle (cairo_region_t *region,
+			      const cairo_rectangle_int_t *rectangle);
+
+cairo_private void
+_cairo_region_fini (cairo_region_t *region);
 
 /* cairo-unicode.c */
 
@@ -2665,6 +2709,24 @@ slim_hidden_proto (cairo_user_font_face_set_unicode_to_glyph_func);
 slim_hidden_proto (cairo_user_to_device);
 slim_hidden_proto (cairo_user_to_device_distance);
 slim_hidden_proto (cairo_version_string);
+slim_hidden_proto (cairo_region_create);
+slim_hidden_proto (cairo_region_create_rectangle);
+slim_hidden_proto (cairo_region_copy);
+slim_hidden_proto (cairo_region_destroy);
+slim_hidden_proto (cairo_region_status);
+slim_hidden_proto (cairo_region_get_extents);
+slim_hidden_proto (cairo_region_num_rectangles);
+slim_hidden_proto (cairo_region_get_rectangle);
+slim_hidden_proto (cairo_region_is_empty);
+slim_hidden_proto (cairo_region_contains_rectangle);
+slim_hidden_proto (cairo_region_contains_point);
+slim_hidden_proto (cairo_region_translate);
+slim_hidden_proto (cairo_region_subtract);
+slim_hidden_proto (cairo_region_subtract_rectangle);
+slim_hidden_proto (cairo_region_intersect);
+slim_hidden_proto (cairo_region_intersect_rectangle);
+slim_hidden_proto (cairo_region_union);
+slim_hidden_proto (cairo_region_union_rectangle);
 
 #if CAIRO_HAS_PNG_FUNCTIONS
 
@@ -2679,5 +2741,16 @@ CAIRO_END_DECLS
 #include "cairo-wideint-private.h"
 #include "cairo-malloc-private.h"
 #include "cairo-hash-private.h"
+
+#if HAVE_VALGRIND
+
+cairo_private void
+_cairo_debug_check_image_surface_is_defined (const cairo_surface_t *surface);
+
+#else
+
+#define _cairo_debug_check_image_surface_is_defined(X)
+
+#endif
 
 #endif

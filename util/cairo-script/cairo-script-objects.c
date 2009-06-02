@@ -34,6 +34,7 @@
 
 #include "cairo-script-private.h"
 
+#include <limits.h> /* INT_MAX */
 #include <string.h>
 
 csi_status_t
@@ -193,9 +194,7 @@ csi_boolean_new (csi_t *ctx,
 static cairo_bool_t
 _dictionary_name_equal (const void *_a, const void *_b)
 {
-    const csi_dictionary_entry_t *a = _a;
-    const csi_dictionary_entry_t *b = _b;
-    return a->hash_entry.hash == b->hash_entry.hash;
+    return TRUE;
 }
 
 csi_status_t
@@ -523,7 +522,7 @@ csi_string_new (csi_t *ctx,
 
     if (len < 0)
 	len = strlen (str);
-    if (_csi_unlikely (len >= INT32_MAX))
+    if (_csi_unlikely (len >= INT_MAX))
 	return _csi_error (CSI_STATUS_NO_MEMORY);
 
     if (ctx->free_string == NULL || ctx->free_string->len <= len) {

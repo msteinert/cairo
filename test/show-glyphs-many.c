@@ -109,7 +109,7 @@ get_glyph (cairo_t *cr, const char *utf8, cairo_glyph_t *glyph)
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
-    cairo_glyph_t glyphs[NUM_GLYPHS];
+    cairo_glyph_t *glyphs = xmalloc (NUM_GLYPHS * sizeof (cairo_glyph_t));
     const char *characters[] = { /* try to exercise different widths of index */
 	"m", /* Latin letter m, index=0x50 */
 	"μ", /* Greek letter mu, index=0x349 */
@@ -130,7 +130,7 @@ draw (cairo_t *cr, int width, int height)
     for (utf8 = characters; *utf8 != NULL; utf8++) {
 	status = get_glyph (cr, *utf8, &glyphs[0]);
 	if (status)
-	    return status;
+	    goto BAIL;
 
 	if (glyphs[0].index) {
 	    glyphs[0].x = 1.0;
@@ -145,19 +145,22 @@ draw (cairo_t *cr, int width, int height)
     /* we can pack ~21k 1-byte glyphs into a single XRenderCompositeGlyphs8 */
     status = get_glyph (cr, "m", &glyphs[0]);
     if (status)
-	return status;
+	goto BAIL;
     for (i=1; i < 21500; i++)
 	glyphs[i] = glyphs[0];
     /* so check expanding the current 1-byte request for 2-byte glyphs */
     status = get_glyph (cr, "μ", &glyphs[i]);
     if (status)
-	return status;
+	goto BAIL;
     for (j=i+1; j < NUM_GLYPHS; j++)
 	glyphs[j] = glyphs[i];
 
     cairo_show_glyphs (cr, glyphs, NUM_GLYPHS);
 
-    return CAIRO_TEST_SUCCESS;
+  BAIL:
+    free(glyphs);
+
+    return status;
 }
 
 CAIRO_TEST (show_glyphs_many,

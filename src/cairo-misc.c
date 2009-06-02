@@ -123,9 +123,12 @@ cairo_status_to_string (cairo_status_t status)
 	return "invalid value for an input #cairo_font_weight_t";
     case CAIRO_STATUS_INVALID_SIZE:
 	return "invalid value for the size of the input (surface, pattern, etc.)";
+    case CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED:
+	return "user-font method not implemented";
+    default:
+    case CAIRO_STATUS_LAST_STATUS:
+	return "<unknown error status>";
     }
-
-    return "<unknown error status>";
 }
 
 
@@ -384,15 +387,6 @@ _cairo_operator_bounded_by_source (cairo_operator_t op)
 }
 
 
-void
-_cairo_restrict_value (double *value, double min, double max)
-{
-    if (*value < min)
-	*value = min;
-    else if (*value > max)
-	*value = max;
-}
-
 /* This function is identical to the C99 function lround(), except that it
  * performs arithmetic rounding (floor(d + .5) instead of away-from-zero rounding) and
  * has a valid input range of (INT_MIN, INT_MAX] instead of
@@ -619,10 +613,12 @@ _cairo_lround (double d)
 #include <windows.h>
 #include <io.h>
 
+#if !_WIN32_WCE
 /* tmpfile() replacement for Windows.
  *
  * On Windows tmpfile() creates the file in the root directory. This
- * may fail due to unsufficient privileges.
+ * may fail due to unsufficient privileges. However, this isn't a
+ * problem on Windows CE so we don't use it there.
  */
 FILE *
 _cairo_win32_tmpfile (void)
@@ -667,6 +663,7 @@ _cairo_win32_tmpfile (void)
 
     return fp;
 }
+#endif /* !_WIN32_WCE */
 
 #endif /* _WIN32 */
 
@@ -708,6 +705,9 @@ _cairo_intern_string (const char **str_inout, int len)
     char *str = (char *) *str_inout;
     cairo_intern_string_t tmpl, *istring;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
+
+    if (CAIRO_INJECT_FAULT ())
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     if (len < 0)
 	len = strlen (str);

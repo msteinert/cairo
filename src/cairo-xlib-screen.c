@@ -112,7 +112,7 @@ get_integer_default (Display    *dpy,
 
     v = XGetDefault (dpy, "Xft", option);
     if (v) {
-#if CAIRO_HAS_FT_FONT
+#if CAIRO_HAS_FC_FONT
 	if (FcNameConstant ((FcChar8 *) v, value))
 	    return TRUE;
 #endif
@@ -125,7 +125,15 @@ get_integer_default (Display    *dpy,
     return FALSE;
 }
 
-/* Old versions of fontconfig didn't have these options */
+#ifndef FC_RGBA_UNKNOWN
+#define FC_RGBA_UNKNOWN	    0
+#define FC_RGBA_RGB	    1
+#define FC_RGBA_BGR	    2
+#define FC_RGBA_VRGB	    3
+#define FC_RGBA_VBGR	    4
+#define FC_RGBA_NONE	    5
+#endif
+
 #ifndef FC_HINT_NONE
 #define FC_HINT_NONE        0
 #define FC_HINT_SLIGHT      1
@@ -133,17 +141,6 @@ get_integer_default (Display    *dpy,
 #define FC_HINT_FULL        3
 #endif
 
-/* Fontconfig version older than 2.6 didn't have these options */
-#ifndef FC_LCD_FILTER
-#define FC_LCD_FILTER	"lcdfilter"
-#endif
-/* Some Ubuntu versions defined FC_LCD_FILTER without defining the following */
-#ifndef FC_LCD_NONE
-#define FC_LCD_NONE	0
-#define FC_LCD_DEFAULT	1
-#define FC_LCD_LIGHT	2
-#define FC_LCD_LEGACY	3
-#endif
 
 static void
 _cairo_xlib_init_screen_font_options (Display *dpy,

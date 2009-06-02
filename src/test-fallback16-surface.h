@@ -1,6 +1,7 @@
-/* Cairo - a vector graphics library with display and print output
+/* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2008 Chris Wilson
+ * Copyright © 2005 Red Hat, Inc
+ * Copyright © 2009 Chris Wilson
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -27,43 +28,25 @@
  *
  * The Original Code is the cairo graphics library.
  *
- * The Initial Developer of the Original Code is Chris Wilson.
+ * The Initial Developer of the Original Code is Red Hat, Inc.
+ *
+ * Contributor(s):
+ *	Carl Worth <cworth@cworth.org>
+ *	Chris Wilson <chris@chris-wilson.co.uk>
  */
 
-#include "cairo-boilerplate.h"
-#include "cairo-boilerplate-sdl-private.h"
+#ifndef TEST_FALLBACK16_SURFACE_H
+#define TEST_FALLBACK16_SURFACE_H
 
-#include <cairo-sdl.h>
+#include "cairo.h"
 
-void
-_cairo_boilerplate_sdl_cleanup (void *closure)
-{
-    SDL_Quit ();
-}
+CAIRO_BEGIN_DECLS
 
 cairo_surface_t *
-_cairo_boilerplate_sdl_create_surface (const char		 *name,
-				       cairo_content_t		  content,
-				       int			  width,
-				       int			  height,
-				       int			  max_width,
-				       int			  max_height,
-				       cairo_boilerplate_mode_t	  mode,
-				       int			  id,
-				       void			**closure)
-{
-    SDL_Surface *screen;
-    cairo_surface_t *surface;
+_cairo_test_fallback16_surface_create (cairo_content_t	content,
+				       int		width,
+				       int		height);
 
-    if (SDL_Init (SDL_INIT_VIDEO) < 0)
-	return NULL;
+CAIRO_END_DECLS
 
-    screen = SDL_SetVideoMode (width, height, 24, SDL_SWSURFACE);
-    if (screen == NULL)
-	return NULL;
-
-    surface = cairo_sdl_surface_create (screen);
-    SDL_FreeSurface (screen);
-
-    return surface;
-}
+#endif /* TEST_FALLBACK16_SURFACE_H */

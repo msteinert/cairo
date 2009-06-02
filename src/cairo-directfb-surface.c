@@ -617,6 +617,7 @@ _cairo_directfb_surface_release_dest_image (void                  *abstract_surf
 static cairo_status_t
 _cairo_directfb_surface_clone_similar (void             *abstract_surface,
                                        cairo_surface_t  *src,
+				       cairo_content_t	 content,
                                        int               src_x,
                                        int               src_y,
                                        int               width,
@@ -763,6 +764,7 @@ _directfb_prepare_composite (cairo_directfb_surface_t    *dst,
     }
 
     status = _cairo_pattern_acquire_surface (src_pattern, &dst->base,
+					     CAIRO_CONTENT_COLOR_ALPHA,
 					     *src_x, *src_y, width, height,
 					     (cairo_surface_t **) &src,
 					     &src_attr);
@@ -1299,43 +1301,40 @@ _cairo_directfb_surface_set_clip_region (void           *abstract_surface,
 		__FUNCTION__, surface, region);
 
     if (region) {
-	cairo_box_int_t *boxes;
-	int              n_boxes;
+	int              n_rects;
 	cairo_status_t   status;
 	int              i;
 
 	surface->has_clip = TRUE;
 
-	n_boxes = 0;
-	status = _cairo_region_get_boxes (region, &n_boxes, &boxes);
-	if (status)
-	    return status;
+	n_rects = cairo_region_num_rectangles (region);
 
-	if (n_boxes == 0)
+	if (n_rects == 0)
 	    return CAIRO_STATUS_SUCCESS;
 
-	if (surface->n_clips != n_boxes) {
+	if (surface->n_clips != n_rects) {
 	    if (surface->clips)
 		free (surface->clips);
 
-	    surface->clips = _cairo_malloc_ab (n_boxes, sizeof (DFBRegion));
+	    surface->clips = _cairo_malloc_ab (n_rects, sizeof (DFBRegion));
 	    if (!surface->clips) {
 		surface->n_clips = 0;
-		_cairo_region_boxes_fini (region, boxes);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    }
 
-	    surface->n_clips = n_boxes;
+	    surface->n_clips = n_rects;
 	}
 
-	for (i = 0; i < n_boxes; i++) {
-	    surface->clips[i].x1 = boxes[i].p1.x;
-	    surface->clips[i].y1 = boxes[i].p1.y;
-	    surface->clips[i].x2 = boxes[i].p2.x - 1;
-	    surface->clips[i].y2 = boxes[i].p2.y - 1;
-	}
+	for (i = 0; i < n_rects; i++) {
+	    cairo_rectangle_int_t rect;
 
-	_cairo_region_boxes_fini (region, boxes);
+	    cairo_region_get_rectangle (region, i, &rect);
+	    
+	    surface->clips[i].x1 = rect.x;
+	    surface->clips[i].y1 = rect.y;
+	    surface->clips[i].x2 = rect.x + rect.width - 1;
+	    surface->clips[i].y2 = rect.y + rect.height - 1;
+	}
     } else {
 	surface->has_clip = FALSE;
 	if (surface->clips) {

@@ -33,10 +33,6 @@
 
 #include "cairo-boilerplate-getopt.h"
 
-#if CAIRO_HAS_SDL_SURFACE
-#include <SDL_main.h>
-#endif
-
 /* For basename */
 #ifdef HAVE_LIBGEN_H
 #include <libgen.h>
@@ -135,11 +131,30 @@ cairo_perf_has_similar (cairo_perf_t *perf)
 {
     cairo_surface_t *target = cairo_get_target (perf->cr);
 
+    if (getenv ("CAIRO_TEST_IGNORE_SIMILAR"))
+	return FALSE;
+
     /* exclude the image backend */
     if (cairo_surface_get_type (target) == CAIRO_SURFACE_TYPE_IMAGE)
 	return FALSE;
 
     return TRUE;
+}
+
+cairo_bool_t
+cairo_perf_can_run (cairo_perf_t	*perf,
+		    const char		*name)
+{
+    unsigned int i;
+
+    if (perf->num_names == 0)
+	return TRUE;
+
+    for (i = 0; i < perf->num_names; i++)
+	if (strstr (name, perf->names[i]))
+	    return TRUE;
+
+    return FALSE;
 }
 
 void
@@ -152,14 +167,6 @@ cairo_perf_run (cairo_perf_t		*perf,
     cairo_perf_ticks_t *times;
     cairo_stats_t stats = {0.0, 0.0};
     int low_std_dev_count;
-
-    if (perf->num_names) {
-	for (i = 0; i < perf->num_names; i++)
-	    if (strstr (name, perf->names[i]))
-		goto NAME_FOUND;
-	return;
-    }
-  NAME_FOUND:
 
     if (perf->list_only) {
 	printf ("%s\n", name);
@@ -445,11 +452,11 @@ main (int argc, char *argv[])
 }
 
 const cairo_perf_case_t perf_cases[] = {
-    { paint,  256, 512},
-    { paint_with_alpha,  256, 512},
-    { fill,   64, 256},
-    { stroke, 64, 256},
-    { text,   64, 256},
+    { paint,  64, 512},
+    { paint_with_alpha,  64, 512},
+    { fill,   64, 512},
+    { stroke, 64, 512},
+    { text,   64, 512},
     { tessellate, 100, 100},
     { subimage_copy, 16, 512},
     { pattern_create_radial, 16, 16},

@@ -84,6 +84,8 @@ struct _cairo_scaled_font {
     cairo_reference_count_t ref_count;
     cairo_user_data_array_t user_data;
 
+    cairo_font_face_t *original_font_face; /* may be NULL */
+
     /* hash key members */
     cairo_font_face_t *font_face; /* may be NULL */
     cairo_matrix_t font_matrix;	  /* font space => user space */
@@ -104,8 +106,10 @@ struct _cairo_scaled_font {
     /* The mutex protects modification to all subsequent fields. */
     cairo_mutex_t mutex;
 
-    int cache_frozen;
-    cairo_scaled_glyph_page_t *mru_page;
+    cairo_hash_table_t *glyphs;
+    cairo_scaled_glyph_page_t *glyph_pages;
+    cairo_bool_t cache_frozen;
+    cairo_bool_t global_cache_frozen;
 
     /*
      * One surface backend may store data in each glyph.

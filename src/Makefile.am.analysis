@@ -23,7 +23,7 @@ uno:
 headers-standalone: $(enabled_cairo_headers) $(enabled_cairo_private)
 	@echo Checking that enabled public/private headers can be compiled standalone
 	@status=true; for f in $(enabled_cairo_headers) $(enabled_cairo_private); do \
-		echo $(COMPILE) -o /dev/null $(srcdir)/$$f; \
+		echo "  CHECK $$f"; \
 		$(COMPILE) -o /dev/null $(srcdir)/$$f || status=false; \
 	done; $$status
 	@touch $@

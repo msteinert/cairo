@@ -78,7 +78,6 @@ cairo_private = \
 	cairo-path-private.h \
 	cairo-private.h \
 	cairo-reference-count-private.h \
-	cairo-region-private.h \
 	cairo-scaled-font-private.h \
 	cairo-skiplist-private.h \
 	cairo-spans-private.h \
@@ -191,11 +190,13 @@ cairo_ft_sources = cairo-ft-font.c
 # These are private, even though they look like public headers
 cairo_test_surfaces_private = \
 	test-fallback-surface.h \
+	test-fallback16-surface.h \
 	test-meta-surface.h \
 	test-paginated-surface.h \
 	$(NULL)
 cairo_test_surfaces_sources = \
 	test-fallback-surface.c \
+	test-fallback16-surface.c \
 	test-meta-surface.c \
 	test-paginated-surface.c \
 	$(NULL)
@@ -256,9 +257,6 @@ cairo_glitz_sources = cairo-glitz-surface.c
 
 cairo_directfb_headers = cairo-directfb.h
 cairo_directfb_sources = cairo-directfb-surface.c
-
-cairo_sdl_headers = cairo-sdl.h
-cairo_sdl_sources = cairo-sdl-surface.c
 
 cairo_script_headers = cairo-script.h
 cairo_script_sources = cairo-script-surface.c

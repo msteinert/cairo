@@ -216,6 +216,7 @@ check_result (cairo_test_context_t *ctx,
 	cairo_surface_destroy (test_image);
 	free (png_name);
 	free (diff_name);
+	free (ref_name);
 	return FALSE;
     }
 
@@ -247,6 +248,7 @@ check_result (cairo_test_context_t *ctx,
     cairo_surface_destroy (diff_image);
     free (png_name);
     free (diff_name);
+    free (ref_name);
 
     return ret;
 }

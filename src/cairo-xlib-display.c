@@ -38,8 +38,6 @@
 #include "cairo-xlib-private.h"
 #include "cairo-xlib-xrender-private.h"
 
-#include <fontconfig/fontconfig.h>
-
 #include <X11/Xlibint.h>	/* For XESetCloseDisplay */
 
 typedef int (*cairo_xlib_error_func_t) (Display     *display,

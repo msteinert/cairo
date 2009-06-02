@@ -13,7 +13,7 @@ SOURCES = \
 	$(enabled_cairo_boilerplate_sources) \
 	$(NULL)
 
-OBJECTS = $(patsubst %.c, $(CFG)/%.obj, $(SOURCES))
+OBJECTS = $(patsubst %.c, $(CFG)/%-static.obj, $(SOURCES))
 
 
 all: $(CFG)/boiler.lib

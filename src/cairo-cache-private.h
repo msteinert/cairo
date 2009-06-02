@@ -97,6 +97,7 @@ typedef void
 
 cairo_private cairo_cache_t *
 _cairo_cache_create (cairo_cache_keys_equal_func_t keys_equal,
+		     cairo_cache_predicate_func_t  predicate,
 		     cairo_destroy_func_t	   entry_destroy,
 		     unsigned long		   max_size);
 
@@ -111,10 +112,6 @@ _cairo_cache_thaw (cairo_cache_t *cache);
 
 cairo_private void *
 _cairo_cache_lookup (cairo_cache_t	  *cache,
-		     cairo_cache_entry_t  *key);
-
-cairo_private void *
-_cairo_cache_steal (cairo_cache_t	  *cache,
 		     cairo_cache_entry_t  *key);
 
 cairo_private cairo_status_t

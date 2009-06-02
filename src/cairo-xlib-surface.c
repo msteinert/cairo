@@ -208,7 +208,7 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
     Pixmap pix;
 
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
-	return _cairo_surface_create_in_error (_cairo_error(CAIRO_STATUS_INVALID_SIZE));
+	return NULL;
 
     _cairo_xlib_display_notify (src->display);
 
@@ -950,9 +950,10 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
     ximage.blue_mask = surface->b_mask;
     ximage.xoffset = 0;
 
-    if (image_masks.red_mask   == surface->r_mask &&
-	image_masks.green_mask == surface->g_mask &&
-	image_masks.blue_mask  == surface->b_mask)
+    if ((image_masks.alpha_mask == surface->a_mask || surface->a_mask == 0) &&
+	(image_masks.red_mask   == surface->r_mask || surface->r_mask == 0) &&
+	(image_masks.green_mask == surface->g_mask || surface->g_mask == 0) &&
+	(image_masks.blue_mask  == surface->b_mask || surface->b_mask == 0))
     {
 	int ret;
 
@@ -1016,8 +1017,8 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 		goto BAIL;
 	}
 
-	rowstride = cairo_image_surface_get_stride (&image->base) >> 2;
-	row = (uint32_t *) cairo_image_surface_get_data (&image->base);
+	rowstride = image->stride >> 2;
+	row = (uint32_t *) image->data;
 	x0 = dst_x + surface->base.device_transform.x0;
 	y0 = dst_y + surface->base.device_transform.y0;
 	for (y = 0, y_off = y0 % ARRAY_LENGTH (dither_pattern);
@@ -1168,6 +1169,7 @@ _cairo_xlib_surface_same_screen (cairo_xlib_surface_t *dst,
 static cairo_status_t
 _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 				   cairo_surface_t	*src,
+				   cairo_content_t	 content,
 				   int                   src_x,
 				   int                   src_y,
 				   int                   width,
@@ -1194,16 +1196,20 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 	}
     } else if (_cairo_surface_is_image (src)) {
 	cairo_image_surface_t *image_src = (cairo_image_surface_t *)src;
-
-	if (! CAIRO_FORMAT_VALID (image_src->format))
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	cairo_format_t format;
 
 	if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
-	    return _cairo_error (CAIRO_STATUS_INVALID_SIZE);
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
+	format = image_src->format;
+	if (format == CAIRO_FORMAT_INVALID ||
+	    (_cairo_content_from_format (format) & ~content))
+	{
+	    format = _cairo_format_from_content (image_src->base.content & content);
+	}
 	clone = (cairo_xlib_surface_t *)
 	    _cairo_xlib_surface_create_similar_with_format (surface,
-		                                            image_src->format,
+							    format,
 							    width, height);
 	if (clone == NULL)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1506,14 +1512,15 @@ _surface_has_alpha (cairo_xlib_surface_t *surface)
  */
 static cairo_bool_t
 _operator_needs_alpha_composite (cairo_operator_t op,
-				 cairo_bool_t     surface_has_alpha)
+				 cairo_bool_t     destination_has_alpha,
+				 cairo_bool_t     source_has_alpha)
 {
     if (op == CAIRO_OPERATOR_SOURCE ||
-	(!surface_has_alpha &&
+	(! source_has_alpha &&
 	 (op == CAIRO_OPERATOR_OVER ||
 	  op == CAIRO_OPERATOR_ATOP ||
 	  op == CAIRO_OPERATOR_IN)))
-	return FALSE;
+	return destination_has_alpha;
 
     return TRUE;
 }
@@ -1622,7 +1629,9 @@ _recategorize_composite_operation (cairo_xlib_surface_t	      *dst,
 	return DO_UNSUPPORTED;
 
     needs_alpha_composite =
-	_operator_needs_alpha_composite (op, _surface_has_alpha (src));
+	_operator_needs_alpha_composite (op,
+					 _surface_has_alpha (dst),
+					 _surface_has_alpha (src));
 
     if (! have_mask &&
 	is_integer_translation &&
@@ -1719,6 +1728,8 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
     composite_operation_t       operation;
     int				itx, ity;
     cairo_bool_t		is_integer_translation;
+    cairo_bool_t		needs_alpha_composite;
+    cairo_content_t		src_content;
 
     _cairo_xlib_display_notify (dst->display);
 
@@ -1727,8 +1738,17 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
     if (operation == DO_UNSUPPORTED)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    needs_alpha_composite =
+	_operator_needs_alpha_composite (op,
+					 _surface_has_alpha (dst),
+					 ! _cairo_pattern_is_opaque (src_pattern));
+    src_content = CAIRO_CONTENT_COLOR_ALPHA;
+    if (! needs_alpha_composite)
+	src_content &= ~CAIRO_CONTENT_ALPHA;
+
     status = _cairo_pattern_acquire_surfaces (src_pattern, mask_pattern,
 					      &dst->base,
+					      src_content,
 					      src_x, src_y,
 					      mask_x, mask_y,
 					      width, height,
@@ -1890,6 +1910,7 @@ _cairo_xlib_surface_solid_fill_rectangles (cairo_xlib_surface_t    *surface,
         return status;
 
     status = _cairo_pattern_acquire_surface (&solid.base, &surface->base,
+					     CAIRO_CONTENT_COLOR_ALPHA,
 					     0, 0,
 					     ARRAY_LENGTH (dither_pattern[0]),
 					     ARRAY_LENGTH (dither_pattern),
@@ -2140,6 +2161,7 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     status = _cairo_pattern_acquire_surface (pattern, &dst->base,
+					     CAIRO_CONTENT_COLOR_ALPHA,
 					     src_x, src_y, width, height,
 					     (cairo_surface_t **) &src,
 					     &attributes);
@@ -2269,7 +2291,32 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
     return status;
 }
 
-COMPILE_TIME_ASSERT (sizeof (XRectangle) <= sizeof (cairo_box_int_t));
+static cairo_region_t *
+_surface_maybe_clip_region (cairo_xlib_surface_t *surface,
+			    cairo_region_t *clip,
+			    cairo_region_t *bounded)
+{
+    cairo_rectangle_int_t rect;
+
+    cairo_region_get_extents (clip, &rect);
+    if (rect.x >= 0 &&
+	rect.y >= 0 &&
+	rect.x + rect.width <= surface->width &&
+	rect.y + rect.height <= surface->height)
+    {
+	return clip;
+    }
+
+    rect.x = rect.y = 0;
+    rect.width = surface->width;
+    rect.height = surface->height;
+    _cairo_region_init_rectangle (bounded, &rect);
+
+    bounded->status = cairo_region_intersect (bounded, clip);
+
+    return bounded;
+}
+
 static cairo_int_status_t
 _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
 				     cairo_region_t *region)
@@ -2289,68 +2336,50 @@ _cairo_xlib_surface_set_clip_region (void           *abstract_surface,
     surface->num_clip_rects = 0;
 
     if (region != NULL) {
-	cairo_box_int_t *boxes;
-	cairo_status_t status;
 	XRectangle *rects = NULL;
-	int n_boxes, i;
-	cairo_rectangle_int_t rect;
-	cairo_region_t bound, bounded;
-
-	rect.x = rect.y = 0;
-	rect.width = surface->width;
-	rect.height = surface->height;
+	int n_rects, i;
+	cairo_region_t bounded;
 
 	/* Intersect the region with the bounds of the surface. This
 	 * is necessary so we don't wrap around when we convert cairo's
 	 * 32 bit region into 16 bit rectangles.
 	 */
-	_cairo_region_init_rect (&bound, &rect);
-	_cairo_region_init (&bounded);
-	status = _cairo_region_intersect (&bounded, &bound, region);
-	if (unlikely (status)) {
-	    _cairo_region_fini (&bound);
-	    _cairo_region_fini (&bounded);
-	    return status;
-	}
+	region = _surface_maybe_clip_region (surface, region, &bounded);
+	if (unlikely (region->status))
+	    return region->status;
 
-	n_boxes = sizeof (surface->embedded_clip_rects) / sizeof (cairo_box_int_t);
-	boxes = (cairo_box_int_t *) surface->embedded_clip_rects;
-	status = _cairo_region_get_boxes (&bounded, &n_boxes, &boxes);
-	if (unlikely (status)) {
-	    _cairo_region_fini (&bound);
-	    _cairo_region_fini (&bounded);
-	    return status;
-	}
-
-	if (n_boxes > ARRAY_LENGTH (surface->embedded_clip_rects)) {
-	    rects = _cairo_malloc_ab (n_boxes, sizeof (XRectangle));
+	n_rects = cairo_region_num_rectangles (region);
+	if (n_rects > ARRAY_LENGTH (surface->embedded_clip_rects)) {
+	    rects = _cairo_malloc_ab (n_rects, sizeof (XRectangle));
 	    if (unlikely (rects == NULL)) {
-                _cairo_region_boxes_fini (&bounded, boxes);
-		_cairo_region_fini (&bound);
-		_cairo_region_fini (&bounded);
+		if (unlikely (region == &bounded))
+		    _cairo_region_fini (&bounded);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-            }
-	} else
+	    }
+	} else {
 	    rects = surface->embedded_clip_rects;
-
-	for (i = 0; i < n_boxes; i++) {
-	    rects[i].x = boxes[i].p1.x;
-	    rects[i].y = boxes[i].p1.y;
-	    rects[i].width  = boxes[i].p2.x - rects[i].x;
-	    rects[i].height = boxes[i].p2.y - rects[i].y;
 	}
 
-	if (boxes != (cairo_box_int_t *) surface->embedded_clip_rects)
-	    _cairo_region_boxes_fini (&bounded, boxes);
-	_cairo_region_fini (&bounded);
-	_cairo_region_fini (&bound);
+	for (i = 0; i < n_rects; i++) {
+	    cairo_rectangle_int_t rect;
+
+	    cairo_region_get_rectangle (region, i, &rect);
+
+	    rects[i].x = rect.x;
+	    rects[i].y = rect.y;
+	    rects[i].width = rect.width;
+	    rects[i].height = rect.height;
+	}
+
+	if (unlikely (region == &bounded))
+	    _cairo_region_fini (&bounded);
 
 	surface->have_clip_rects = TRUE;
 	surface->clip_rects = rects;
-	surface->num_clip_rects = n_boxes;
+	surface->num_clip_rects = n_rects;
 
 	/* Discard the trivial clip rectangle that covers the entire surface */
-	if (n_boxes == 1 &&
+	if (n_rects == 1 &&
 	    rects[0].x == 0 &&
 	    rects[0].y == 0 &&
 	    rects[0].width  == surface->width &&
@@ -4062,6 +4091,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 
     if (src_pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
         status = _cairo_pattern_acquire_surface (src_pattern, &dst->base,
+						 CAIRO_CONTENT_COLOR_ALPHA,
                                                  0, 0, 1, 1,
                                                  (cairo_surface_t **) &src,
                                                  &attributes);
@@ -4078,6 +4108,7 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 	    goto BAIL0;
 
         status = _cairo_pattern_acquire_surface (src_pattern, &dst->base,
+						 CAIRO_CONTENT_COLOR_ALPHA,
                                                  glyph_extents.x, glyph_extents.y,
                                                  glyph_extents.width, glyph_extents.height,
                                                  (cairo_surface_t **) &src,

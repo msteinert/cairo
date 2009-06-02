@@ -42,8 +42,32 @@ do_fill (cairo_t *cr, int width, int height)
     return cairo_perf_timer_elapsed ();
 }
 
+static cairo_perf_ticks_t
+do_fill_eo_noaa (cairo_t *cr, int width, int height)
+{
+    cairo_set_antialias (cr, CAIRO_ANTIALIAS_NONE);
+    cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
+
+    cairo_arc (cr,
+	       width/2.0, height/2.0,
+	       width/3.0,
+	       0, 2 * M_PI);
+
+    cairo_perf_timer_start ();
+
+    cairo_fill (cr);
+
+    cairo_perf_timer_stop ();
+
+    return cairo_perf_timer_elapsed ();
+}
+
 void
 fill (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
+    if (! cairo_perf_can_run (perf, "fill"))
+	return;
+
     cairo_perf_cover_sources_and_operators (perf, "fill", do_fill);
+    cairo_perf_cover_sources_and_operators (perf, "fill-eo-noaa", do_fill_eo_noaa);
 }

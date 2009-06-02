@@ -1,230 +1,24 @@
 include $(top_srcdir)/build/Makefile.am.common
 
+include $(top_srcdir)/test/Makefile.sources
+
 SUBDIRS=pdiff .
 
 CLEANFILES += have-similar.*
 
-test_sources = \
-	a1-image-sample.c 				\
-	a1-mask.c					\
-	a1-traps-sample.c				\
-	a8-mask.c					\
-	alpha-similar.c					\
-	big-line.c					\
-	big-trap.c					\
-	bilevel-image.c					\
-	caps.c						\
-	caps-joins.c					\
-	caps-joins-alpha.c				\
-	caps-joins-curve.c				\
-	caps-sub-paths.c				\
-	clip-all.c					\
-	clip-empty.c					\
-	clip-fill-rule.c				\
-	clip-fill-rule-pixel-aligned.c			\
-	clip-nesting.c					\
-	clip-operator.c					\
-	clip-push-group.c				\
-	clip-twice.c					\
-	clip-zero.c					\
-	clipped-group.c					\
-	clipped-surface.c				\
-	close-path.c					\
-	composite-integer-translate-source.c		\
-	composite-integer-translate-over.c		\
-	composite-integer-translate-over-repeat.c	\
-	copy-path.c					\
-	create-for-stream.c				\
-	create-from-png.c				\
-	create-from-png-stream.c			\
-	culled-glyphs.c					\
-	dash-caps-joins.c				\
-	dash-curve.c					\
-	dash-no-dash.c					\
-	dash-offset-negative.c				\
-	dash-scale.c					\
-	dash-state.c					\
-	dash-zero-length.c				\
-	degenerate-arc.c				\
-	degenerate-dash.c				\
-	degenerate-path.c				\
-	degenerate-pen.c				\
-	device-offset.c					\
-	device-offset-fractional.c			\
-	device-offset-positive.c			\
-	device-offset-scale.c				\
-	extend-pad.c					\
-	extend-pad-border.c				\
-	extend-pad-similar.c				\
-	extend-reflect.c				\
-	extend-reflect-similar.c			\
-	extend-repeat.c					\
-	extend-repeat-similar.c				\
-	fill-alpha.c					\
-	fill-alpha-pattern.c				\
-	fill-and-stroke.c				\
-	fill-and-stroke-alpha.c				\
-	fill-and-stroke-alpha-add.c			\
-	fill-degenerate-sort-order.c			\
-	fill-image.c				        \
-	fill-missed-stop.c				\
-	fill-rule.c					\
-	filter-bilinear-extents.c			\
-	filter-nearest-offset.c				\
-	filter-nearest-transformed.c			\
-	finer-grained-fallbacks.c			\
-	font-face-get-type.c				\
-	font-matrix-translation.c			\
-	font-options.c					\
-	glyph-cache-pressure.c				\
-	get-and-set.c					\
-	get-clip.c					\
-	get-group-target.c				\
-	get-path-extents.c				\
-	gradient-alpha.c				\
-	gradient-constant-alpha.c			\
-	gradient-zero-stops.c				\
-	group-paint.c					\
-	huge-linear.c					\
-	huge-radial.c					\
-	image-surface-source.c				\
-	infinite-join.c					\
-	in-fill-empty-trapezoid.c			\
-	in-fill-trapezoid.c				\
-	invalid-matrix.c				\
-	joins.c						\
-	large-clip.c					\
-	large-font.c					\
-	large-source.c					\
-	large-source-roi.c				\
-	leaky-dash.c					\
-	leaky-dashed-rectangle.c			\
-	leaky-dashed-stroke.c				\
-	leaky-polygon.c					\
-	line-width.c					\
-	line-width-scale.c				\
-	line-width-zero.c				\
-	linear-gradient.c				\
-	linear-gradient-reflect.c			\
-	long-dashed-lines.c				\
-	long-lines.c					\
-	mask.c						\
-	mask-alpha.c					\
-	mask-ctm.c					\
-	mask-surface-ctm.c				\
-	mask-transformed-image.c			\
-	mask-transformed-similar.c			\
-	meta-surface-pattern.c				\
-	mime-data.c					\
-	miter-precision.c				\
-	move-to-show-surface.c				\
-	new-sub-path.c					\
-	nil-surface.c					\
-	operator.c					\
-	operator-alpha.c				\
-	operator-clear.c				\
-	operator-source.c				\
-	over-above-source.c				\
-	over-around-source.c				\
-	over-below-source.c				\
-	over-between-source.c				\
-	paint.c						\
-	paint-repeat.c					\
-	paint-source-alpha.c				\
-	paint-with-alpha.c				\
-	path-precision.c				\
-	pattern-get-type.c				\
-	pattern-getters.c				\
-	pixman-rotate.c					\
-	png.c						\
-	push-group.c					\
-	radial-gradient.c				\
-	random-intersections.c				\
-	rectangle-rounding-error.c			\
-	rectilinear-fill.c				\
-	rectilinear-miter-limit.c			\
-	rectilinear-dash.c				\
-	rectilinear-stroke.c				\
-	reflected-stroke.c				\
-	rel-path.c					\
-	rgb24-ignore-alpha.c				\
-	rotate-image-surface-paint.c			\
-	scale-down-source-surface-paint.c		\
-	scale-offset-image.c				\
-	scale-offset-similar.c				\
-	scale-source-surface-paint.c			\
-	scaled-font-zero-matrix.c			\
-	stroke-ctm-caps.c				\
-	stroke-image.c				        \
-	select-font-face.c				\
-	select-font-no-show-text.c			\
-	self-copy.c					\
-	self-copy-overlap.c				\
-	self-intersecting.c				\
-	set-source.c					\
-	show-glyphs-many.c				\
-	show-text-current-point.c			\
-	skew-extreme.c					\
-	smask.c						\
-	smask-fill.c					\
-	smask-image-mask.c				\
-	smask-mask.c					\
-	smask-paint.c					\
-	smask-stroke.c					\
-	smask-text.c					\
-	solid-pattern-cache-stress.c			\
-	source-clip.c					\
-	source-clip-scale.c				\
-	source-surface-scale-paint.c			\
-	spline-decomposition.c				\
-	surface-finish-twice.c				\
-	surface-pattern.c				\
-	surface-pattern-big-scale-down.c		\
-	surface-pattern-scale-down.c			\
-	surface-pattern-scale-up.c			\
-	text-antialias-gray.c				\
-	text-antialias-none.c				\
-	text-antialias-subpixel.c			\
-	text-cache-crash.c				\
-	text-glyph-range.c				\
-	text-pattern.c					\
-	text-rotate.c					\
-	text-transform.c				\
-	text-zero-len.c					\
-	toy-font-face.c					\
-	transforms.c					\
-	translate-show-surface.c			\
-	trap-clip.c					\
-	truetype-tables.c				\
-	twin.c						\
-	unantialiased-shapes.c				\
-	unbounded-operator.c				\
-	user-data.c					\
-	user-font.c					\
-	user-font-mask.c				\
-	user-font-proxy.c				\
-	user-font-rescale.c				\
-	zero-alpha.c
-
 # Then we have a collection of tests that are only run if certain
 # features are compiled into cairo
 if HAVE_PTHREAD
-test_sources += pthread-show-text.c
+test_sources += $(pthread_test_sources)
 endif
 
 if CAIRO_HAS_FT_FONT
-test_sources += bitmap-font.c
-test_sources += ft-font-create-for-ft-face.c
-test_sources += ft-show-glyphs-positioning.c
-test_sources += ft-show-glyphs-table.c
-test_sources += ft-text-vertical-layout-type1.c
-test_sources += ft-text-vertical-layout-type3.c
-test_sources += ft-text-antialias-none.c
+test_sources += $(ft_font_test_sources)
 endif
 
 # Need to add quartz-surface-source
 if CAIRO_HAS_QUARTZ_SURFACE
-test_sources += quartz-surface-source.c
+test_sources += $(quartz_surface_test_sources)
 endif
 
 if CAIRO_HAS_GL_EGL_SURFACE
@@ -238,49 +32,46 @@ glx_flowers_LDADD = $(top_builddir)/src/libcairo.la $(CAIRO_LDADD)
 endif
 
 if CAIRO_HAS_GLITZ_SURFACE
-test_sources += glitz-surface-source.c
+test_sources += $(glitz_surface_test_sources)
 endif
 
 if CAIRO_HAS_PDF_SURFACE
-test_sources += pdf-features.c
-test_sources += pdf-mime-data.c
-test_sources += pdf-surface-source.c
+test_sources += $(pdf_surface_test_sources)
 endif
 
 if CAIRO_HAS_PS_SURFACE
-test_sources += ps-features.c
-test_sources += ps-surface-source.c
+test_sources += $(ps_surface_test_sources)
 endif
 
 if CAIRO_HAS_SVG_SURFACE
-test_sources += svg-surface.c
-test_sources += svg-clip.c
-test_sources += svg-surface-source.c
+test_sources += $(svg_surface_test_sources)
+endif
+
+if CAIRO_HAS_TEST_SURFACES
+test_sources += $(test_fallback16_surface_test_sources)
 endif
 
 if CAIRO_HAS_XLIB_SURFACE
-test_sources += xlib-expose-event.c
-test_sources += xlib-surface.c
-test_sources += xlib-surface-source.c
+test_sources += $(xlib_surface_test_sources)
 endif
 
 if CAIRO_HAS_XLIB_XRENDER_SURFACE
-test_sources += get-xrender-format.c
+test_sources += $(xlib_xrender_surface_test_sources)
 endif
 
 if CAIRO_HAS_MULTI_PAGE_SURFACES
-test_sources += multi-page.c
+test_sources += $(multi_page_surface_test_sources)
 endif
 
 # Include fallback-resolution (once!) if we have any of the vector surfaces
 if CAIRO_HAS_SVG_SURFACE
-test = fallback-resolution.c
+test = $(fallback_resolution_test_sources)
 endif
 if CAIRO_HAS_PDF_SURFACE
-test = fallback-resolution.c
+test = $(fallback_resolution_test_sources)
 endif
 if CAIRO_HAS_PS_SURFACE
-test = fallback-resolution.c
+test = $(fallback_resolution_test_sources)
 endif
 test_sources += $(test)
 
@@ -290,12 +81,8 @@ cairo-test-constructors.c: Makefile $(test_sources) make-cairo-test-constructors
 	@(cd $(srcdir) && ./make-cairo-test-constructors.pl $(test_sources)) > $@
 
 cairo_test_suite_SOURCES = 		\
-	buffer-diff.c			\
-	buffer-diff.h			\
-	cairo-test.c			\
-	cairo-test.h			\
-	cairo-test-private.h		\
-	cairo-test-runner.c		\
+	$(cairo_test_suite_sources)	\
+	$(cairo_test_suite_headers)	\
 	$(test_sources)
 if CAIRO_HAS_CONSTRUCTOR_ATTRIBUTE
 else
@@ -316,10 +103,6 @@ cairo_test_suite_DEPENDENCIES += \
 endif
 if HAVE_PTHREAD
 cairo_test_suite_LDADD += -lpthread
-endif
-
-if CAIRO_HAS_SDL_SURFACE
-cairo_test_suite_LDADD += $(sdl_LIBS)
 endif
 
 BUILT_SOURCES += cairo-test-constructors.c
@@ -987,7 +770,6 @@ REFERENCE_IMAGES = \
 	trap-clip.ps2.argb32.ref.png \
 	trap-clip.ps2.rgb24.ref.png \
 	twin.ref.png \
-	twin.pdf.ref.png \
 	twin.ps.ref.png \
 	twin.svg.ref.png \
 	unantialiased-shapes.ref.png	\

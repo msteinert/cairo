@@ -1240,7 +1240,7 @@ _cprt_move_to (void		    *closure,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
-/**
+/*
  * Check whether the given path is representable as a region.
  * That is, if the path contains only axis aligned lines between
  * integer coordinates in device space.

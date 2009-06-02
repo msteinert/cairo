@@ -346,61 +346,6 @@ _cairo_hash_table_lookup (cairo_hash_table_t *hash_table,
 }
 
 /**
- * _cairo_hash_table_steal:
- * @hash_table: a hash table
- * @key: the key of interest
- *
- * Performs a lookup in @hash_table looking for an entry which has a
- * key that matches @key, (as determined by the keys_equal() function
- * passed to _cairo_hash_table_create) and removes that entry from the
- * hash table.
- *
- * Return value: the matching entry, of %NULL if no match was found.
- **/
-void *
-_cairo_hash_table_steal (cairo_hash_table_t *hash_table,
-			 cairo_hash_entry_t *key)
-{
-    cairo_hash_entry_t *entry;
-    unsigned long table_size, i, idx, step;
-
-    table_size = hash_table->arrangement->size;
-    idx = key->hash % table_size;
-
-    entry = hash_table->entries[idx];
-    if (ENTRY_IS_LIVE (entry)) {
-	if (hash_table->keys_equal (key, entry)) {
-	    hash_table->entries[idx] = DEAD_ENTRY;
-	    hash_table->live_entries--;
-	    return entry;
-	}
-    } else if (ENTRY_IS_FREE (entry))
-	return NULL;
-
-    i = 1;
-    step = key->hash % hash_table->arrangement->rehash;
-    if (step == 0)
-	step = 1;
-    do {
-	idx += step;
-	if (idx >= table_size)
-	    idx -= table_size;
-
-	entry = hash_table->entries[idx];
-	if (ENTRY_IS_LIVE (entry)) {
-	    if (hash_table->keys_equal (key, entry)) {
-		hash_table->entries[idx] = DEAD_ENTRY;
-		hash_table->live_entries--;
-		return entry;
-	    }
-	} else if (ENTRY_IS_FREE (entry))
-	    return NULL;
-    } while (++i < table_size);
-
-    return NULL;
-}
-
-/**
  * _cairo_hash_table_random_entry:
  * @hash_table: a hash table
  * @predicate: a predicate function.

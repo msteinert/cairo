@@ -28,6 +28,7 @@
 #include "cairo-boilerplate-test-surfaces-private.h"
 
 #include <test-fallback-surface.h>
+#include <test-fallback16-surface.h>
 #include <test-meta-surface.h>
 #include <test-paginated-surface.h>
 
@@ -46,6 +47,21 @@ _cairo_boilerplate_test_fallback_create_surface (const char			 *name,
 {
     *closure = NULL;
     return _cairo_test_fallback_surface_create (content, width, height);
+}
+
+cairo_surface_t *
+_cairo_boilerplate_test_fallback16_create_surface (const char			 *name,
+						   cairo_content_t		  content,
+						   int				  width,
+						   int				  height,
+						   int				  max_width,
+						   int				  max_height,
+						   cairo_boilerplate_mode_t	  mode,
+						   int                              id,
+						   void				**closure)
+{
+    *closure = NULL;
+    return _cairo_test_fallback16_surface_create (content, width, height);
 }
 
 cairo_surface_t *

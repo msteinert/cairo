@@ -31,21 +31,20 @@ do_text (cairo_t *cr, int width, int height)
     const char text[] = "the jay, pig, fox, zebra and my wolves quack";
     int len = strlen (text);
     double x, y;
-    int i = 0;
+    int i = 0, j = 0;
 
     cairo_perf_timer_start ();
 
     cairo_set_font_size (cr, 9);
     do {
-	cairo_move_to (cr, 0, i * 10);
+	cairo_move_to (cr, 0, j++ * 10);
 	cairo_show_text (cr, text + i);
 	cairo_get_current_point (cr, &x, &y);
 	while (x < width && cairo_status (cr) == CAIRO_STATUS_SUCCESS) {
 	    cairo_show_text (cr, text);
 	    cairo_get_current_point (cr, &x, &y);
 	}
-	i++;
-	if (i >= len)
+	if (++i >= len)
 	    i = 0;
     } while (y < height && cairo_status (cr) == CAIRO_STATUS_SUCCESS);
 
@@ -57,5 +56,8 @@ do_text (cairo_t *cr, int width, int height)
 void
 text (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
+    if (! cairo_perf_can_run (perf, "text"))
+	return;
+
     cairo_perf_cover_sources_and_operators (perf, "text", do_text);
 }

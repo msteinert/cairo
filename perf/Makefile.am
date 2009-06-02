@@ -7,6 +7,8 @@ AM_CPPFLAGS =					\
 	-I$(top_builddir)/src			\
 	$(CAIRO_CFLAGS)
 
+AM_LDFLAGS = $(CAIRO_LDFLAGS)
+
 EXTRA_PROGRAMS += cairo-perf \
 		  cairo-perf-diff-files \
 		  cairo-perf-compare-backends \
@@ -60,10 +62,6 @@ cairo_perf_SOURCES += cairo-perf-posix.c
 endif
 endif
 cairo_perf_LDADD = $(LDADD)
-
-if CAIRO_HAS_SDL_SURFACE
-cairo_perf_LDADD += $(sdl_LIBS)
-endif
 
 libcairoperf_la_SOURCES = \
 	cairo-perf-report.c	\

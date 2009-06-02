@@ -39,7 +39,9 @@
 
 #include "cairo-os2-private.h"
 
+#if CAIRO_HAS_FC_FONT
 #include <fontconfig/fontconfig.h>
+#endif
 
 #include <float.h>
 #ifdef BUILD_CAIRO_DLL
@@ -101,7 +103,7 @@ cairo_os2_init (void)
 
     DisableFPUException ();
 
-#if CAIRO_HAS_FT_FONT
+#if CAIRO_HAS_FC_FONT
     /* Initialize FontConfig */
     FcInit ();
 #endif
@@ -132,7 +134,7 @@ cairo_os2_fini (void)
 
     cairo_debug_reset_static_data ();
 
-#if CAIRO_HAS_FT_FONT
+#if CAIRO_HAS_FC_FONT
 # if HAVE_FCFINI
     /* Uninitialize FontConfig */
     FcFini ();

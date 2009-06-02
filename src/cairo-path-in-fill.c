@@ -41,6 +41,7 @@ typedef struct cairo_in_fill {
     int winding;
 
     cairo_fixed_t x, y;
+    cairo_bool_t on_edge;
 
     cairo_bool_t has_current_point;
     cairo_point_t current_point;
@@ -58,6 +59,7 @@ _cairo_in_fill_init (cairo_in_fill_t	*in_fill,
 
     in_fill->x = _cairo_fixed_from_double (x);
     in_fill->y = _cairo_fixed_from_double (y);
+    in_fill->on_edge = FALSE;
 
     in_fill->has_current_point = FALSE;
     in_fill->current_point.x = 0;
@@ -103,6 +105,9 @@ _cairo_in_fill_add_edge (cairo_in_fill_t *in_fill,
 {
     int dir;
 
+    if (in_fill->on_edge)
+	return;
+
     /* count the number of edge crossing to -∞ */
 
     dir = 1;
@@ -114,6 +119,18 @@ _cairo_in_fill_add_edge (cairo_in_fill_t *in_fill,
 	p2 = tmp;
 
 	dir = -1;
+    }
+
+    /* First check whether the query is on an edge */
+    if ((p1->x == in_fill->x && p1->y == in_fill->y) ||
+	(p2->x == in_fill->x && p2->y == in_fill->y) ||
+	(! (p2->y < in_fill->y || p1->y > in_fill->y ||
+	   (p1->x > in_fill->x && p2->x > in_fill->x) ||
+	   (p1->x < in_fill->x && p2->x < in_fill->x)) &&
+	 edge_compare_for_y_against_x (p1, p2, in_fill->y, in_fill->x) == 0))
+    {
+	in_fill->on_edge = TRUE;
+	return;
     }
 
     /* edge is entirely above or below, note the shortening rule */
@@ -184,15 +201,19 @@ _cairo_in_fill_curve_to (void *closure,
     if (c->y > bot) bot = c->y;
     if (d->y < top) top = d->y;
     if (d->y > bot) bot = d->y;
-    if (bot < in_fill->y || top > in_fill->y)
+    if (bot < in_fill->y || top > in_fill->y) {
+	in_fill->current_point = *d;
 	return CAIRO_STATUS_SUCCESS;
+    }
 
     left = in_fill->current_point.x;
     if (b->x < left) left = b->x;
     if (c->x < left) left = c->x;
     if (d->x < left) left = d->x;
-    if (left > in_fill->x)
+    if (left > in_fill->x) {
+	in_fill->current_point = *d;
 	return CAIRO_STATUS_SUCCESS;
+    }
 
     /* XXX Investigate direct inspection of the inflections? */
     if (! _cairo_spline_init (&spline,
@@ -244,7 +265,11 @@ _cairo_path_fixed_in_fill (cairo_path_fixed_t	*path,
 					  &in_fill);
     assert (status == CAIRO_STATUS_SUCCESS);
 
-    switch (fill_rule) {
+    _cairo_in_fill_close_path (&in_fill);
+
+    if (in_fill.on_edge) {
+	*is_inside = TRUE;
+    } else switch (fill_rule) {
     case CAIRO_FILL_RULE_EVEN_ODD:
 	*is_inside = in_fill.winding & 1;
 	break;

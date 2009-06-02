@@ -189,6 +189,9 @@ draw_spiral_nz_na_di (cairo_t *cr, int width, int height)
 void
 spiral (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
+    if (! cairo_perf_can_run (perf, "spiral"))
+	return;
+
     cairo_perf_run (perf, "spiral-diag-nonalign-evenodd-fill", draw_spiral_eo_na_di);
     cairo_perf_run (perf, "spiral-diag-nonalign-nonzero-fill", draw_spiral_nz_na_di);
     cairo_perf_run (perf, "spiral-diag-pixalign-evenodd-fill", draw_spiral_eo_pa_di);

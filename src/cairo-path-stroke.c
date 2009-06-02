@@ -35,6 +35,7 @@
  *	Carl D. Worth <cworth@cworth.org>
  */
 
+#define _BSD_SOURCE /* for hypot() */
 #include "cairoint.h"
 #include "cairo-path-fixed-private.h"
 
@@ -1278,6 +1279,8 @@ _cairo_rectilinear_stroker_add_segment (cairo_rectilinear_stroker_t *stroker,
 					cairo_bool_t		 is_horizontal,
 					cairo_bool_t		 has_join)
 {
+    if (CAIRO_INJECT_FAULT ())
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     if (stroker->num_segments == stroker->segments_size) {
 	int new_size = stroker->segments_size * 2;

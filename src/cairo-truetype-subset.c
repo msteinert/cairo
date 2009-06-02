@@ -94,6 +94,21 @@ struct _cairo_truetype_font {
 
 };
 
+/*
+ * Test that the structs we define for TrueType tables have the
+ * correct size, ie. they are not padded.
+ */
+#define check(T, S) COMPILE_TIME_ASSERT (sizeof (T) == (S))
+check (tt_head_t,	54);
+check (tt_hhea_t,	36);
+check (tt_maxp_t,	32);
+check (tt_name_record_t, 12);
+check (tt_name_t,	18);
+check (tt_name_t,	18);
+check (tt_composite_glyph_t, 16);
+check (tt_glyph_data_t,	26);
+#undef check
+
 static cairo_status_t
 cairo_truetype_font_use_glyph (cairo_truetype_font_t	    *font,
 	                       unsigned short		     glyph,
@@ -480,7 +495,7 @@ cairo_truetype_font_remap_composite_glyph (cairo_truetype_font_t	*font,
 
     composite_glyph = &glyph_data->glyph;
     do {
-	if ((unsigned char *)(&composite_glyph->args[1]) >= end)
+	if ((unsigned char *)(&composite_glyph->args[1]) > end)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 
 	flags = be16_to_cpu (composite_glyph->flags);
@@ -493,13 +508,15 @@ cairo_truetype_font_remap_composite_glyph (cairo_truetype_font_t	*font,
         num_args = 1;
         if (flags & TT_ARG_1_AND_2_ARE_WORDS)
             num_args += 1;
-        if (flags & TT_WE_HAVE_A_SCALE)
+
+	if (flags & TT_WE_HAVE_A_SCALE)
             num_args += 1;
         else if (flags & TT_WE_HAVE_AN_X_AND_Y_SCALE)
             num_args += 2;
         else if (flags & TT_WE_HAVE_A_TWO_BY_TWO)
-            num_args += 3;
-        composite_glyph = (tt_composite_glyph_t *) &(composite_glyph->args[num_args]);
+            num_args += 4;
+
+	composite_glyph = (tt_composite_glyph_t *) &(composite_glyph->args[num_args]);
     } while (has_more_components);
 
     return CAIRO_STATUS_SUCCESS;
@@ -630,7 +647,7 @@ cairo_truetype_font_write_head_table (cairo_truetype_font_t *font,
     if (unlikely (status))
 	return _cairo_truetype_font_set_error (font, status);
 
-    /* set checkSumAdjustment to 0 for table checksum calcualtion */
+    /* set checkSumAdjustment to 0 for table checksum calculation */
     *(uint32_t *)(buffer + 8) = 0;
 
     return CAIRO_STATUS_SUCCESS;
@@ -1314,8 +1331,8 @@ _cairo_truetype_read_font_name (cairo_scaled_font_t  	 *scaled_font,
     tt_name_record_t *record;
     unsigned long size;
     int i, j;
-    char *ps_name;
-    char *font_name;
+    char *ps_name = NULL;
+    char *font_name = NULL;
 
     backend = scaled_font->backend;
     if (!backend->load_truetype_table)
@@ -1345,8 +1362,6 @@ _cairo_truetype_read_font_name (cairo_scaled_font_t  	 *scaled_font,
      * name. It should be extended to use any suitable font name in
      * the name table.
      */
-    ps_name = NULL;
-    font_name = NULL;
     for (i = 0; i < be16_to_cpu(name->num_records); i++) {
         record = &(name->records[i]);
         if ((be16_to_cpu (record->platform) == 1) &&
@@ -1400,6 +1415,13 @@ _cairo_truetype_read_font_name (cairo_scaled_font_t  	 *scaled_font,
 
 fail:
     free (name);
+
+    if (ps_name != NULL)
+	free (ps_name);
+
+    if (font_name != NULL)
+	free (font_name);
+
     *ps_name_out = NULL;
     *font_name_out = NULL;
 

@@ -166,6 +166,7 @@ static FILE *logfile;
 static bool _flush;
 static bool _error;
 static bool _line_info;
+static bool _mark_dirty;
 static const cairo_user_data_key_t destroy_key;
 
 #if __GNUC__ >= 3
@@ -692,12 +693,17 @@ _init_logfile (void)
     if (env != NULL)
 	_line_info = atoi (env);
 
+    _mark_dirty = true;
+    env = getenv ("CAIRO_TRACE_MARK_DIRTY");
+    if (env != NULL)
+	_mark_dirty = atoi (env);
+
     filename = getenv ("CAIRO_TRACE_FD");
     if (filename != NULL) {
 	int fd = atoi (filename);
 	logfile = fdopen (fd, "w");
 	if (logfile == NULL) {
-	    fprintf (stderr, "Failed to open trace file descriptor '%s': %s",
+	    fprintf (stderr, "Failed to open trace file descriptor '%s': %s\n",
 		       filename, strerror (errno));
 	    return false;
 	}
@@ -724,7 +730,7 @@ _init_logfile (void)
 
     logfile = fopen (filename, "wb");
     if (logfile == NULL) {
-	fprintf (stderr, "Failed to open trace file '%s': %s",
+	fprintf (stderr, "Failed to open trace file '%s': %s\n",
 		   filename, strerror (errno));
 	return false;
     }
@@ -3115,9 +3121,12 @@ cairo_surface_mark_dirty (cairo_surface_t *surface)
 {
     _emit_line_info ();
     if (surface != NULL && _write_lock ()) {
-	_emit_surface (surface);
-	_trace_printf ("%% mark-dirty\n");
-	_emit_source_image (surface);
+	if (_mark_dirty) {
+	    _emit_surface (surface);
+	    _trace_printf ("%% mark-dirty\n");
+	    _emit_source_image (surface);
+	} else
+	    _trace_printf ("%% s%ld mark-dirty\n", _get_surface_id (surface));
 	_write_unlock ();
     }
 
@@ -3130,10 +3139,14 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
 {
     _emit_line_info ();
     if (surface != NULL && _write_lock ()) {
-	_emit_surface (surface);
-	_trace_printf ("%% %d %d %d %d mark-dirty-rectangle\n",
-		 x, y, width, height);
-	_emit_source_image_rectangle (surface, x,y, width, height);
+	if (_mark_dirty) {
+	    _emit_surface (surface);
+	    _trace_printf ("%% %d %d %d %d mark-dirty-rectangle\n",
+		            x, y, width, height);
+	    _emit_source_image_rectangle (surface, x,y, width, height);
+	} else
+	    _trace_printf ("%% s%ld %d %d %d %d mark-dirty-rectangle\n",
+		           _get_surface_id (surface), x, y, width, height);
 	_write_unlock ();
     }
 

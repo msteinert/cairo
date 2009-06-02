@@ -42,9 +42,16 @@ static void
 _cairo_cache_shrink_to_accommodate (cairo_cache_t *cache,
 				    unsigned long  additional);
 
+static cairo_bool_t
+_cairo_cache_entry_is_non_zero (const void *entry)
+{
+    return ((const cairo_cache_entry_t *) entry)->size;
+}
+
 static cairo_status_t
 _cairo_cache_init (cairo_cache_t		*cache,
 		   cairo_cache_keys_equal_func_t keys_equal,
+		   cairo_cache_predicate_func_t  predicate,
 		   cairo_destroy_func_t		 entry_destroy,
 		   unsigned long		 max_size)
 {
@@ -52,6 +59,9 @@ _cairo_cache_init (cairo_cache_t		*cache,
     if (unlikely (cache->hash_table == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
+    if (predicate == NULL)
+	predicate = _cairo_cache_entry_is_non_zero;
+    cache->predicate = predicate;
     cache->entry_destroy = entry_destroy;
 
     cache->max_size = max_size;
@@ -114,6 +124,7 @@ _cairo_cache_fini (cairo_cache_t *cache)
  **/
 cairo_cache_t *
 _cairo_cache_create (cairo_cache_keys_equal_func_t keys_equal,
+		     cairo_cache_predicate_func_t  predicate,
 		     cairo_destroy_func_t	   entry_destroy,
 		     unsigned long		   max_size)
 {
@@ -126,7 +137,11 @@ _cairo_cache_create (cairo_cache_keys_equal_func_t keys_equal,
 	return NULL;
     }
 
-    status = _cairo_cache_init (cache, keys_equal, entry_destroy, max_size);
+    status = _cairo_cache_init (cache,
+				keys_equal,
+				predicate,
+				entry_destroy,
+				max_size);
     if (unlikely (status)) {
 	free (cache);
 	return NULL;
@@ -221,26 +236,6 @@ _cairo_cache_lookup (cairo_cache_t	  *cache,
 				     (cairo_hash_entry_t *) key);
 }
 
-void *
-_cairo_cache_steal (cairo_cache_t	  *cache,
-		    cairo_cache_entry_t  *key)
-{
-    cairo_cache_entry_t *entry;
-
-    entry = _cairo_hash_table_steal (cache->hash_table,
-				     (cairo_hash_entry_t *) key);
-    if (entry != NULL)
-	cache->size -= entry->size;
-
-    return entry;
-}
-
-static cairo_bool_t
-_cairo_cache_entry_is_non_zero (void *entry)
-{
-    return ((cairo_cache_entry_t *)entry)->size;
-}
-
 /**
  * _cairo_cache_remove_random:
  * @cache: a cache
@@ -256,7 +251,7 @@ _cairo_cache_remove_random (cairo_cache_t *cache)
     cairo_cache_entry_t *entry;
 
     entry = _cairo_hash_table_random_entry (cache->hash_table,
-					    _cairo_cache_entry_is_non_zero);
+					    cache->predicate);
     if (unlikely (entry == NULL))
 	return FALSE;
 

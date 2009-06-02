@@ -214,7 +214,6 @@ The Portable Network Graphics image file format (ISO/IEC 15948). Since 1.10
 @CAIRO_SURFACE_TYPE_OS2: 
 @CAIRO_SURFACE_TYPE_WIN32_PRINTING: 
 @CAIRO_SURFACE_TYPE_QUARTZ_IMAGE: 
-@CAIRO_SURFACE_TYPE_SDL: 
 @CAIRO_SURFACE_TYPE_SCRIPT: 
 
 <!-- ##### FUNCTION cairo_surface_get_type ##### -->

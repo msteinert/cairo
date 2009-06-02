@@ -70,6 +70,9 @@ code is required before or after each individual cairo function call.
 @CAIRO_STATUS_INVALID_CLUSTERS: 
 @CAIRO_STATUS_INVALID_SLANT: 
 @CAIRO_STATUS_INVALID_WEIGHT: 
+@CAIRO_STATUS_INVALID_SIZE: 
+@CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED: 
+@CAIRO_STATUS_LAST_STATUS: 
 
 <!-- ##### FUNCTION cairo_status_to_string ##### -->
 <para>

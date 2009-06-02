@@ -131,7 +131,7 @@ _cairo_test_init (cairo_test_context_t *ctx,
 {
     char *log_name;
 
-    MF (VALGRIND_DISABLE_FAULTS ());
+    MF (MEMFAULT_DISABLE_FAULTS ());
 
 #if HAVE_FEENABLEEXCEPT
     feenableexcept (FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
@@ -222,7 +222,7 @@ cairo_test_init_thread (cairo_test_context_t *ctx,
 			cairo_test_context_t *master,
 			int thread)
 {
-    MF (VALGRIND_DISABLE_FAULTS ());
+    MF (MEMFAULT_DISABLE_FAULTS ());
 
     *ctx = *master;
     ctx->thread = thread;
@@ -739,11 +739,17 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 
 #if HAVE_MEMFAULT
 REPEAT:
-    VALGRIND_CLEAR_FAULTS ();
-    VALGRIND_RESET_LEAKS ();
+    MEMFAULT_CLEAR_FAULTS ();
+    MEMFAULT_RESET_LEAKS ();
     ctx->last_fault_count = 0;
-    last_fault_count = VALGRIND_COUNT_FAULTS ();
-    VALGRIND_ENABLE_FAULTS ();
+    last_fault_count = MEMFAULT_COUNT_FAULTS ();
+
+    /* Pre-initialise fontconfig so that the configuration is loaded without
+     * malloc failures (our primary goal is to test cairo fault tolerance).
+     */
+    FcInit ();
+
+    MEMFAULT_ENABLE_FAULTS ();
 #endif
     have_output = FALSE;
     have_result = FALSE;
@@ -766,7 +772,7 @@ REPEAT:
 
 #if HAVE_MEMFAULT
     if (ctx->malloc_failure &&
-	VALGRIND_COUNT_FAULTS () - last_fault_count > 0 &&
+	MEMFAULT_COUNT_FAULTS () - last_fault_count > 0 &&
 	cairo_surface_status (surface) == CAIRO_STATUS_NO_MEMORY)
     {
 	goto REPEAT;
@@ -774,7 +780,7 @@ REPEAT:
 #endif
 
     if (cairo_surface_status (surface)) {
-	MF (VALGRIND_PRINT_FAULTS ());
+	MF (MEMFAULT_PRINT_FAULTS ());
 	cairo_test_log (ctx, "Error: Created an error surface\n");
 	ret = CAIRO_TEST_FAILURE;
 	goto UNWIND_STRINGS;
@@ -782,7 +788,7 @@ REPEAT:
 
     /* Check that we created a surface of the expected type. */
     if (cairo_surface_get_type (surface) != target->expected_type) {
-	MF (VALGRIND_PRINT_FAULTS ());
+	MF (MEMFAULT_PRINT_FAULTS ());
 	cairo_test_log (ctx, "Error: Created surface is of type %d (expected %d)\n",
 			cairo_surface_get_type (surface), target->expected_type);
 	ret = CAIRO_TEST_FAILURE;
@@ -795,7 +801,7 @@ REPEAT:
     expected_content = cairo_boilerplate_content (target->content);
 
     if (cairo_surface_get_content (surface) != expected_content) {
-	MF (VALGRIND_PRINT_FAULTS ());
+	MF (MEMFAULT_PRINT_FAULTS ());
 	cairo_test_log (ctx, "Error: Created surface has content %d (expected %d)\n",
 			cairo_surface_get_content (surface), expected_content);
 	ret = CAIRO_TEST_FAILURE;
@@ -850,11 +856,11 @@ REPEAT:
     }
 
 #if HAVE_MEMFAULT
-    VALGRIND_DISABLE_FAULTS ();
+    MEMFAULT_DISABLE_FAULTS ();
 
     /* repeat test after malloc failure injection */
     if (ctx->malloc_failure &&
-	VALGRIND_COUNT_FAULTS () - last_fault_count > 0 &&
+	MEMFAULT_COUNT_FAULTS () - last_fault_count > 0 &&
 	(status == CAIRO_TEST_NO_MEMORY ||
 	 cairo_status (cr) == CAIRO_STATUS_NO_MEMORY ||
 	 cairo_surface_status (surface) == CAIRO_STATUS_NO_MEMORY))
@@ -868,9 +874,9 @@ REPEAT:
 #if HAVE_FCFINI
 	    FcFini ();
 #endif
-	    if (VALGRIND_COUNT_LEAKS () > 0) {
-		VALGRIND_PRINT_FAULTS ();
-		VALGRIND_PRINT_LEAKS ();
+	    if (MEMFAULT_COUNT_LEAKS () > 0) {
+		MEMFAULT_PRINT_FAULTS ();
+		MEMFAULT_PRINT_LEAKS ();
 	    }
 	}
 
@@ -893,11 +899,11 @@ REPEAT:
     }
 
 #if HAVE_MEMFAULT
-    if (VALGRIND_COUNT_FAULTS () - last_fault_count > 0 &&
-	VALGRIND_HAS_FAULTS ())
+    if (MEMFAULT_COUNT_FAULTS () - last_fault_count > 0 &&
+	MEMFAULT_HAS_FAULTS ())
     {
 	VALGRIND_PRINTF ("Unreported memfaults...");
-	VALGRIND_PRINT_FAULTS ();
+	MEMFAULT_PRINT_FAULTS ();
     }
 #endif
 
@@ -910,7 +916,42 @@ REPEAT:
 	cairo_status_t diff_status;
 
 	if (target->finish_surface != NULL) {
+#if HAVE_MEMFAULT
+	    /* We need to re-enable faults as most meta-surface processing
+	     * is done during cairo_surface_finish().
+	     */
+	    MEMFAULT_CLEAR_FAULTS ();
+	    last_fault_count = MEMFAULT_COUNT_FAULTS ();
+	    MEMFAULT_ENABLE_FAULTS ();
+#endif
+
 	    diff_status = target->finish_surface (surface);
+
+#if HAVE_MEMFAULT
+	    MEMFAULT_DISABLE_FAULTS ();
+
+	    if (ctx->malloc_failure &&
+		MEMFAULT_COUNT_FAULTS () - last_fault_count > 0 &&
+		diff_status == CAIRO_STATUS_NO_MEMORY)
+	    {
+		cairo_destroy (cr);
+		cairo_surface_destroy (surface);
+		if (target->cleanup)
+		    target->cleanup (closure);
+		if (ctx->thread == 0) {
+		    cairo_debug_reset_static_data ();
+#if HAVE_FCFINI
+		    FcFini ();
+#endif
+		    if (MEMFAULT_COUNT_LEAKS () > 0) {
+			MEMFAULT_PRINT_FAULTS ();
+			MEMFAULT_PRINT_LEAKS ();
+		    }
+		}
+
+		goto REPEAT;
+	    }
+#endif
 	    if (diff_status) {
 		cairo_test_log (ctx, "Error: Failed to finish surface: %s\n",
 				cairo_status_to_string (diff_status));
@@ -1094,7 +1135,7 @@ UNWIND_CAIRO:
 
 #if HAVE_MEMFAULT
     if (ret == CAIRO_TEST_FAILURE && ctx->expectation != CAIRO_TEST_FAILURE)
-	VALGRIND_PRINT_FAULTS ();
+	MEMFAULT_PRINT_FAULTS ();
 #endif
     cairo_destroy (cr);
 UNWIND_SURFACE:
@@ -1111,13 +1152,13 @@ UNWIND_SURFACE:
 	FcFini ();
 #endif
 
-	if (VALGRIND_COUNT_LEAKS () > 0) {
+	if (MEMFAULT_COUNT_LEAKS () > 0) {
 	    if (ret != CAIRO_TEST_FAILURE ||
 		ctx->expectation == CAIRO_TEST_FAILURE)
 	    {
-		VALGRIND_PRINT_FAULTS ();
+		MEMFAULT_PRINT_FAULTS ();
 	    }
-	    VALGRIND_PRINT_LEAKS ();
+	    MEMFAULT_PRINT_LEAKS ();
 	}
     }
 
@@ -1193,7 +1234,7 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
     }
 
 #if defined(HAVE_SIGNAL_H) && defined(HAVE_SETJMP_H)
-    if (ctx->thread == 0) {
+    if (ctx->thread == 0 && ! RUNNING_ON_VALGRIND) {
 	void (* volatile old_segfault_handler)(int);
 	void (* volatile old_sigpipe_handler)(int);
 	void (* volatile old_sigabrt_handler)(int);
@@ -1607,7 +1648,7 @@ cairo_test_malloc_failure (const cairo_test_context_t *ctx,
 	int n_faults;
 
 	/* prevent infinite loops... */
-	n_faults = VALGRIND_COUNT_FAULTS ();
+	n_faults = MEMFAULT_COUNT_FAULTS ();
 	if (n_faults == ctx->last_fault_count)
 	    return FALSE;
 

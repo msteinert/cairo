@@ -33,10 +33,6 @@
 #undef CAIRO_VERSION_MICRO
 #include "../cairo-version.h"
 
-#if CAIRO_HAS_SDL_SURFACE
-#include <SDL_main.h>
-#endif
-
 #include <pixman.h> /* for version information */
 
 /* Coregraphics doesn't seem to like being forked and reports:
@@ -54,6 +50,10 @@
 #include <sys/wait.h>
 #endif
 
+#ifdef _MSC_VER
+#include <crtdbg.h>
+#endif
+
 typedef struct _cairo_test_list {
     const cairo_test_t *test;
     struct _cairo_test_list *next;
@@ -64,6 +64,7 @@ typedef struct _cairo_test_runner {
 
     unsigned int num_device_offsets;
 
+    cairo_bool_t passed;
     int num_passed;
     int num_xpassed;
     int num_skipped;
@@ -339,6 +340,8 @@ _runner_init (cairo_test_runner_t *runner)
 {
     cairo_test_init (&runner->base, "cairo-test-suite");
 
+    runner->passed = TRUE;
+
     runner->xpasses_per_target = xcalloc (sizeof (cairo_test_list_t *),
 					  runner->base.num_targets);
     runner->fails_per_target = xcalloc (sizeof (cairo_test_list_t *),
@@ -449,6 +452,13 @@ _runner_print_results (cairo_test_runner_t *runner)
 {
     _runner_print_summary (runner);
     _runner_print_details (runner);
+
+    if (! runner->passed) {
+	_log (&runner->base,
+"\n"
+"Note: These failures may be due to external factors.\n"
+"Please read test/README -- \"Getting the elusive zero failures\".\n");
+    }
 }
 
 static cairo_test_status_t
@@ -856,6 +866,7 @@ main (int argc, char **argv)
 	    targets[len-2] = '\0';
 	    _log (&runner.base, "\n%s: CRASH! (%s)\n", name, targets);
 	    runner.num_crashed++;
+	    runner.passed = FALSE;
 	} else if (failed) {
 	    if (expectation == CAIRO_TEST_SUCCESS) {
 		len = 0;
@@ -878,6 +889,7 @@ main (int argc, char **argv)
 		    targets[len-2] = '\0';
 		    _log (&runner.base, "%s: FAIL (%s)\n", name, targets);
 		    runner.num_failed++;
+		    runner.passed = FALSE;
 		}
 	    } else {
 		_log (&runner.base, "%s: XFAIL\n", name);

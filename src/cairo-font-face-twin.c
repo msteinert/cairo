@@ -34,8 +34,6 @@
  *      Behdad Esfahbod <behdad@behdad.org>
  */
 
-#define _ISOC99_SOURCE /* for round() */
-
 #include "cairoint.h"
 
 #include <math.h>
@@ -59,16 +57,21 @@ static cairo_user_data_key_t twin_properties_key;
 
 /* We synthesize multiple faces from the twin data.  Here is the parameters. */
 
+/* The following tables and matching code are copied from Pango */
+
 /* CSS weight */
 typedef enum {
+  TWIN_WEIGHT_THIN = 100,
   TWIN_WEIGHT_ULTRALIGHT = 200,
   TWIN_WEIGHT_LIGHT = 300,
+  TWIN_WEIGHT_BOOK = 380,
   TWIN_WEIGHT_NORMAL = 400,
   TWIN_WEIGHT_MEDIUM = 500,
   TWIN_WEIGHT_SEMIBOLD = 600,
   TWIN_WEIGHT_BOLD = 700,
   TWIN_WEIGHT_ULTRABOLD = 800,
-  TWIN_WEIGHT_HEAVY = 900
+  TWIN_WEIGHT_HEAVY = 900,
+  TWIN_WEIGHT_ULTRAHEAVY = 1000
 } twin_face_weight_t;
 
 /* CSS stretch */
@@ -83,6 +86,64 @@ typedef enum {
   TWIN_STRETCH_EXTRA_EXPANDED,
   TWIN_STRETCH_ULTRA_EXPANDED
 } twin_face_stretch_t;
+
+typedef struct
+{
+  int value;
+  const char str[16];
+} FieldMap;
+
+static const FieldMap slant_map[] = {
+  { CAIRO_FONT_SLANT_NORMAL, "" },
+  { CAIRO_FONT_SLANT_NORMAL, "Roman" },
+  { CAIRO_FONT_SLANT_OBLIQUE, "Oblique" },
+  { CAIRO_FONT_SLANT_ITALIC, "Italic" }
+};
+
+static const FieldMap smallcaps_map[] = {
+  { FALSE, "" },
+  { TRUE, "Small-Caps" }
+};
+
+static const FieldMap weight_map[] = {
+  { TWIN_WEIGHT_THIN, "Thin" },
+  { TWIN_WEIGHT_ULTRALIGHT, "Ultra-Light" },
+  { TWIN_WEIGHT_ULTRALIGHT, "Extra-Light" },
+  { TWIN_WEIGHT_LIGHT, "Light" },
+  { TWIN_WEIGHT_BOOK, "Book" },
+  { TWIN_WEIGHT_NORMAL, "" },
+  { TWIN_WEIGHT_NORMAL, "Regular" },
+  { TWIN_WEIGHT_MEDIUM, "Medium" },
+  { TWIN_WEIGHT_SEMIBOLD, "Semi-Bold" },
+  { TWIN_WEIGHT_SEMIBOLD, "Demi-Bold" },
+  { TWIN_WEIGHT_BOLD, "Bold" },
+  { TWIN_WEIGHT_ULTRABOLD, "Ultra-Bold" },
+  { TWIN_WEIGHT_ULTRABOLD, "Extra-Bold" },
+  { TWIN_WEIGHT_HEAVY, "Heavy" },
+  { TWIN_WEIGHT_HEAVY, "Black" },
+  { TWIN_WEIGHT_ULTRAHEAVY, "Ultra-Heavy" },
+  { TWIN_WEIGHT_ULTRAHEAVY, "Extra-Heavy" },
+  { TWIN_WEIGHT_ULTRAHEAVY, "Ultra-Black" },
+  { TWIN_WEIGHT_ULTRAHEAVY, "Extra-Black" }
+};
+
+static const FieldMap stretch_map[] = {
+  { TWIN_STRETCH_ULTRA_CONDENSED, "Ultra-Condensed" },
+  { TWIN_STRETCH_EXTRA_CONDENSED, "Extra-Condensed" },
+  { TWIN_STRETCH_CONDENSED,       "Condensed" },
+  { TWIN_STRETCH_SEMI_CONDENSED,  "Semi-Condensed" },
+  { TWIN_STRETCH_NORMAL,          "" },
+  { TWIN_STRETCH_SEMI_EXPANDED,   "Semi-Expanded" },
+  { TWIN_STRETCH_EXPANDED,        "Expanded" },
+  { TWIN_STRETCH_EXTRA_EXPANDED,  "Extra-Expanded" },
+  { TWIN_STRETCH_ULTRA_EXPANDED,  "Ultra-Expanded" }
+};
+
+static const FieldMap monospace_map[] = {
+  { FALSE, "" },
+  { TRUE, "Mono" },
+  { TRUE, "Monospace" }
+};
 
 
 typedef struct _twin_face_properties {
@@ -123,41 +184,84 @@ field_matches (const char *s1,
   return len == 0 && *s1 == '\0';
 }
 
+static cairo_bool_t
+parse_int (const char *word,
+	   size_t      wordlen,
+	   int        *out)
+{
+  char *end;
+  long val = strtol (word, &end, 10);
+  int i = val;
+
+  if (end != word && (end == word + wordlen) && val >= 0 && val == i)
+    {
+      if (out)
+        *out = i;
+
+      return TRUE;
+    }
+
+  return FALSE;
+}
+
+static cairo_bool_t
+find_field (const char *what,
+	    const FieldMap *map,
+	    int n_elements,
+	    const char *str,
+	    int len,
+	    int *val)
+{
+  int i;
+  cairo_bool_t had_prefix = FALSE;
+
+  if (what)
+    {
+      i = strlen (what);
+      if (len > i && 0 == strncmp (what, str, i) && str[i] == '=')
+	{
+	  str += i + 1;
+	  len -= i + 1;
+	  had_prefix = TRUE;
+	}
+    }
+
+  for (i=0; i<n_elements; i++)
+    {
+      if (map[i].str[0] && field_matches (map[i].str, str, len))
+	{
+	  if (val)
+	    *val = map[i].value;
+	  return TRUE;
+	}
+    }
+
+  if (!what || had_prefix)
+    return parse_int (str, len, val);
+
+  return FALSE;
+}
 
 static void
 parse_field (twin_face_properties_t *props,
-	     const char *s,
+	     const char *str,
 	     int len)
 {
-#define MATCH(s1, var, value) \
-	if (field_matches (s1, s, len)) var = value
+  if (field_matches ("Normal", str, len))
+    return;
 
-    if (0) ;
+#define FIELD(NAME) \
+  if (find_field (STRINGIFY (NAME), NAME##_map, ARRAY_LENGTH (NAME##_map), str, len, \
+		  (int *)(void *)&props->NAME)) \
+      return; \
 
-    else MATCH ("oblique",    props->slant, CAIRO_FONT_SLANT_OBLIQUE);
-    else MATCH ("italic",     props->slant, CAIRO_FONT_SLANT_ITALIC);
+  FIELD (weight);
+  FIELD (slant);
+  FIELD (stretch);
+  FIELD (smallcaps);
+  FIELD (monospace);
 
-    else MATCH ("ultra-light", props->weight, TWIN_WEIGHT_ULTRALIGHT);
-    else MATCH ("light",       props->weight, TWIN_WEIGHT_LIGHT);
-    else MATCH ("medium",      props->weight, TWIN_WEIGHT_NORMAL);
-    else MATCH ("semi-bold",   props->weight, TWIN_WEIGHT_SEMIBOLD);
-    else MATCH ("bold",        props->weight, TWIN_WEIGHT_BOLD);
-    else MATCH ("ultra-bold",  props->weight, TWIN_WEIGHT_ULTRABOLD);
-    else MATCH ("heavy",       props->weight, TWIN_WEIGHT_HEAVY);
-
-    else MATCH ("ultra-condensed", props->stretch, TWIN_STRETCH_ULTRA_CONDENSED);
-    else MATCH ("extra-condensed", props->stretch, TWIN_STRETCH_EXTRA_CONDENSED);
-    else MATCH ("condensed",       props->stretch, TWIN_STRETCH_CONDENSED);
-    else MATCH ("semi-condensed",  props->stretch, TWIN_STRETCH_SEMI_CONDENSED);
-    else MATCH ("semi-expanded",   props->stretch, TWIN_STRETCH_SEMI_EXPANDED);
-    else MATCH ("expanded",        props->stretch, TWIN_STRETCH_EXPANDED);
-    else MATCH ("extra-expanded",  props->stretch, TWIN_STRETCH_EXTRA_EXPANDED);
-    else MATCH ("ultra-expanded",  props->stretch, TWIN_STRETCH_ULTRA_EXPANDED);
-
-    else MATCH ("mono",       props->monospace, TRUE);
-    else MATCH ("monospace",  props->monospace, TRUE);
-
-    else MATCH ("small-caps", props->smallcaps, TRUE);
+#undef FIELD
 }
 
 static void
@@ -166,11 +270,8 @@ face_props_parse (twin_face_properties_t *props,
 {
     const char *start, *end;
 
-#define ISALPHA(c) \
-   (((c) >= 'A' && (c) <= 'Z') || ((c) >= 'a' && (c) <= 'z'))
-
     for (start = end = s; *end; end++) {
-	if (ISALPHA (*end) || *end == '-')
+	if (*end != ' ' && *end != ':')
 	    continue;
 
 	if (start < end)
@@ -255,8 +356,8 @@ compute_hinting_scales (cairo_t *cr,
     compute_hinting_scale (cr, x, y, y_scale, y_scale_inv);
 }
 
-#define SNAPXI(p)	(round ((p) * x_scale) * x_scale_inv)
-#define SNAPYI(p)	(round ((p) * y_scale) * y_scale_inv)
+#define SNAPXI(p)	(_cairo_round ((p) * x_scale) * x_scale_inv)
+#define SNAPYI(p)	(_cairo_round ((p) * y_scale) * y_scale_inv)
 
 /* This controls the global font size */
 #define F(g)		((g) / 72.)

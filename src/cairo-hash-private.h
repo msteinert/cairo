@@ -51,7 +51,7 @@ typedef cairo_bool_t
 (*cairo_hash_keys_equal_func_t) (const void *key_a, const void *key_b);
 
 typedef cairo_bool_t
-(*cairo_hash_predicate_func_t) (void *entry);
+(*cairo_hash_predicate_func_t) (const void *entry);
 
 typedef void
 (*cairo_hash_callback_func_t) (void *entry,
@@ -66,10 +66,6 @@ _cairo_hash_table_destroy (cairo_hash_table_t *hash_table);
 cairo_private void *
 _cairo_hash_table_lookup (cairo_hash_table_t  *hash_table,
 			  cairo_hash_entry_t  *key);
-
-cairo_private void *
-_cairo_hash_table_steal (cairo_hash_table_t *hash_table,
-			 cairo_hash_entry_t *key);
 
 cairo_private void *
 _cairo_hash_table_random_entry (cairo_hash_table_t	   *hash_table,

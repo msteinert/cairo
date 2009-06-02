@@ -28,6 +28,15 @@ This macro can be used to conditionally compile backend-specific code.
 
 
 
+<!-- ##### MACRO CAIRO_HAS_FC_FONT ##### -->
+<para>
+Defined if the Fontconfig-specific functions of the FreeType font backend
+are available.
+This macro can be used to conditionally compile backend-specific code.
+</para>
+
+
+
 <!-- ##### FUNCTION cairo_ft_font_face_create_for_ft_face ##### -->
 <para>
 

@@ -320,7 +320,6 @@ struct _pool_chunk {
     struct _pool_chunk *prev_chunk;
 
     /* Actual data starts here.	 Well aligned for pointers. */
-    unsigned char data[0];
 };
 
 /* A memory pool.  This is supposed to be embedded on the stack or
@@ -623,7 +622,7 @@ _pool_alloc_from_new_chunk(
     }
     pool->current = chunk;
 
-    obj = &chunk->data[chunk->size];
+    obj = ((unsigned char*)chunk + sizeof(*chunk) + chunk->size);
     chunk->size += size;
     return obj;
 }
@@ -642,7 +641,7 @@ pool_alloc(
     struct _pool_chunk *chunk = pool->current;
 
     if (size <= chunk->capacity - chunk->size) {
-	void *obj = &chunk->data[chunk->size];
+	void *obj = ((unsigned char*)chunk + sizeof(*chunk) + chunk->size);
 	chunk->size += size;
 	return obj;
     }

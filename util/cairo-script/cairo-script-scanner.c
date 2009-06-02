@@ -34,9 +34,10 @@
 
 #include "cairo-script-private.h"
 
+#include <limits.h> /* INT_MAX */
+#include <math.h> /* pow */
 #include <stdio.h> /* EOF */
 #include <string.h> /* memset */
-#include <math.h> /* pow */
 
 /*
  * whitespace:
@@ -88,7 +89,7 @@ _csi_buffer_grow (csi_t *ctx, csi_buffer_t *buffer)
     if (_csi_unlikely (buffer->status))
 	return buffer->status;
 
-    if (_csi_unlikely (buffer->size > INT32_MAX / 2))
+    if (_csi_unlikely (buffer->size > INT_MAX / 2))
 	return buffer->status = _csi_error (CSI_STATUS_NO_MEMORY);
 
     offset = buffer->ptr - buffer->base;

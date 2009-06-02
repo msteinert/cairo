@@ -247,7 +247,7 @@ typedef enum {
     CSI_OBJECT_TYPE_FONT,
     CSI_OBJECT_TYPE_PATTERN,
     CSI_OBJECT_TYPE_SCALED_FONT,
-    CSI_OBJECT_TYPE_SURFACE,
+    CSI_OBJECT_TYPE_SURFACE
 } csi_object_type_t;
 
 #define CSI_OBJECT_IS_ATOM(OBJ) (((OBJ)->type & CSI_OBJECT_TYPE_MASK) < 0x08)
@@ -256,7 +256,7 @@ typedef enum {
 
 enum { /* attributes */
     CSI_OBJECT_ATTR_EXECUTABLE = 1 << 6,
-    CSI_OBJECT_ATTR_WRITABLE   = 1 << 7,
+    CSI_OBJECT_ATTR_WRITABLE   = 1 << 7
 };
 #define CSI_OBJECT_ATTR_MASK (CSI_OBJECT_ATTR_EXECUTABLE | \
 			      CSI_OBJECT_ATTR_WRITABLE)
@@ -400,7 +400,7 @@ struct _csi_file {
 	STDIO,
 	BYTES,
 	PROCEDURE,
-	FILTER,
+	FILTER
     } type;
     void *src;
     void *data;
@@ -429,7 +429,7 @@ struct _csi_scanner {
 	COMMENT,
 	STRING,
 	HEX,
-	BASE85,
+	BASE85
     } state;
 
     csi_buffer_t buffer;

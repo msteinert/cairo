@@ -1180,12 +1180,12 @@ _add_glyph (cairo_glyph_state_t *state,
 	    if (status)
 		return status;
 	    state->start_x = logical_x;
+	} else {
+	    dx = logical_x - state->last_x;
+	    status = _cairo_array_append (&state->dx, &dx);
+	    if (status)
+		return status;
 	}
-
-	dx = logical_x - state->last_x;
-	status = _cairo_array_append (&state->dx, &dx);
-	if (status)
-	    return status;
     } else {
 	state->start_x = logical_x;
     }
@@ -1543,6 +1543,7 @@ _cairo_win32_scaled_font_index_to_ucs4 (void		*abstract_font,
 	goto exit1;
     }
 
+    *ucs4 = (uint32_t) -1;
     for (i = 0; i < glyph_set->cRanges; i++) {
 	num_glyphs = glyph_set->ranges[i].cGlyphs;
 

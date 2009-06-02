@@ -34,6 +34,17 @@
 #include <assert.h>
 #include <string.h>
 
+#if   CAIRO_HAS_WIN32_FONT
+#define CAIRO_FONT_FAMILY_DEFAULT "Arial"
+#elif CAIRO_HAS_QUARTZ_FONT
+#define CAIRO_FONT_FAMILY_DEFAULT "Helvetica"
+#elif CAIRO_HAS_FT_FONT
+#define CAIRO_FONT_FAMILY_DEFAULT ""
+#else
+#define CAIRO_FONT_FAMILY_DEFAULT "@cairo:"
+#endif
+
+
 static cairo_test_status_t
 preamble (cairo_test_context_t *ctx)
 {
@@ -79,7 +90,7 @@ preamble (cairo_test_context_t *ctx)
 					    CAIRO_FONT_SLANT_OBLIQUE,
 					    CAIRO_FONT_WEIGHT_BOLD);
     assert (cairo_font_face_get_type (font_face) == CAIRO_FONT_TYPE_TOY);
-    assert (0 == (strcmp) (cairo_toy_font_face_get_family (font_face), ""));
+    assert (0 == (strcmp) (cairo_toy_font_face_get_family (font_face), CAIRO_FONT_FAMILY_DEFAULT));
     assert (cairo_toy_font_face_get_slant (font_face) == CAIRO_FONT_SLANT_NORMAL);
     assert (cairo_toy_font_face_get_weight (font_face) == CAIRO_FONT_WEIGHT_NORMAL);
     assert (cairo_font_face_status(font_face) == CAIRO_STATUS_NULL_POINTER);
@@ -89,7 +100,7 @@ preamble (cairo_test_context_t *ctx)
 					    CAIRO_FONT_SLANT_OBLIQUE,
 					    CAIRO_FONT_WEIGHT_BOLD);
     assert (cairo_font_face_get_type (font_face) == CAIRO_FONT_TYPE_TOY);
-    assert (0 == (strcmp) (cairo_toy_font_face_get_family (font_face), ""));
+    assert (0 == (strcmp) (cairo_toy_font_face_get_family (font_face), CAIRO_FONT_FAMILY_DEFAULT));
     assert (cairo_toy_font_face_get_slant (font_face) == CAIRO_FONT_SLANT_NORMAL);
     assert (cairo_toy_font_face_get_weight (font_face) == CAIRO_FONT_WEIGHT_NORMAL);
     assert (cairo_font_face_status(font_face) == CAIRO_STATUS_INVALID_STRING);
@@ -99,7 +110,7 @@ preamble (cairo_test_context_t *ctx)
 					    -1,
 					    CAIRO_FONT_WEIGHT_BOLD);
     assert (cairo_font_face_get_type (font_face) == CAIRO_FONT_TYPE_TOY);
-    assert (0 == (strcmp) (cairo_toy_font_face_get_family (font_face), ""));
+    assert (0 == (strcmp) (cairo_toy_font_face_get_family (font_face), CAIRO_FONT_FAMILY_DEFAULT));
     assert (cairo_toy_font_face_get_slant (font_face) == CAIRO_FONT_SLANT_NORMAL);
     assert (cairo_toy_font_face_get_weight (font_face) == CAIRO_FONT_WEIGHT_NORMAL);
     assert (cairo_font_face_status(font_face) == CAIRO_STATUS_INVALID_SLANT);
@@ -109,7 +120,7 @@ preamble (cairo_test_context_t *ctx)
 					    CAIRO_FONT_SLANT_OBLIQUE,
 					    -1);
     assert (cairo_font_face_get_type (font_face) == CAIRO_FONT_TYPE_TOY);
-    assert (0 == (strcmp) (cairo_toy_font_face_get_family (font_face), ""));
+    assert (0 == (strcmp) (cairo_toy_font_face_get_family (font_face), CAIRO_FONT_FAMILY_DEFAULT));
     assert (cairo_toy_font_face_get_slant (font_face) == CAIRO_FONT_SLANT_NORMAL);
     assert (cairo_toy_font_face_get_weight (font_face) == CAIRO_FONT_WEIGHT_NORMAL);
     assert (cairo_font_face_status(font_face) == CAIRO_STATUS_INVALID_WEIGHT);

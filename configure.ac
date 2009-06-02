@@ -19,9 +19,9 @@ dnl The order of the includes here is rather important
 dnl
 m4_include(build/configure.ac.version)	dnl macros setting up various version declares
 m4_include(build/configure.ac.tools)	dnl checks for tools we use
-m4_include(build/configure.ac.system)	dnl checks for system functions, headers, libs
 m4_include(build/configure.ac.features)	dnl macros for backend/feature handling
 m4_include(build/configure.ac.warnings)	dnl checks for compiler warning
+m4_include(build/configure.ac.system)	dnl checks for system functions, headers, libs
 m4_include(build/configure.ac.analysis)	dnl checks for analysis tools (lcov, etc)
 m4_include(build/configure.ac.noversion) dnl disable builtin libtool versioning
 AC_CACHE_SAVE
@@ -156,14 +156,6 @@ CAIRO_ENABLE_SURFACE_BACKEND(beos, BeOS/Zeta, no, [
       use_beos="no (requires a BeOS platform)"
       ;;
   esac
-])
-
-dnl ===========================================================================
-
-CAIRO_ENABLE_SURFACE_BACKEND(sdl, SDL, no, [
-  sdl_REQUIRES="sdl >= 1.2"
-  PKG_CHECK_MODULES(sdl, $sdl_REQUIRES, , [AC_MSG_RESULT(no)
-  use_sdl="no (requires $sdl_REQUIRES http://www.libsdl.org)"])
 ])
 
 dnl ===========================================================================
@@ -309,13 +301,6 @@ FREETYPE_MIN_RELEASE=2.1.9
 FREETYPE_MIN_VERSION=9.7.3
 
 CAIRO_ENABLE_FONT_BACKEND(ft, FreeType, auto, [
-  ft_REQUIRES="fontconfig"
-  PKG_CHECK_MODULES(FONTCONFIG, $ft_REQUIRES,,
-		    [AC_MSG_RESULT(no); use_ft="no (requires $ft_REQUIRES)"])
-
-  if test "x$use_ft" = "xyes"; then
-
-    CAIRO_CHECK_FUNCS_WITH_FLAGS(FcFini, [$FONTCONFIG_CFLAGS], [$FONTCONFIG_LIBS])
 
     PKG_CHECK_MODULES(FREETYPE, freetype2 >= $FREETYPE_MIN_VERSION,
                       [freetype_pkgconfig=yes],
@@ -343,9 +328,20 @@ CAIRO_ENABLE_FONT_BACKEND(ft, FreeType, auto, [
 			   use_ft="no ($FREETYPE_VERSION found; version $FREETYPE_MIN_VERSION from release $FREETYPE_MIN_RELEASE required)"])
       fi
     fi
+
+  ft_CFLAGS="$FREETYPE_CFLAGS"
+  ft_LIBS="$FREETYPE_LIBS"
+])
+
+CAIRO_ENABLE_FONT_BACKEND(fc, Fontconfig, auto, [
+  use_fc=$use_ft
+  if test "x$use_fc" = "xyes"; then
+    fc_REQUIRES="fontconfig"
+    PKG_CHECK_MODULES(FONTCONFIG, $fc_REQUIRES,,
+		      [AC_MSG_RESULT(no); use_fc="no (requires $fc_REQUIRES)"])
   fi
-  ft_CFLAGS="$FREETYPE_CFLAGS $FONTCONFIG_CFLAGS"
-  ft_LIBS="$FREETYPE_LIBS $FONTCONFIG_LIBS"
+  fc_CFLAGS="$FONTCONFIG_CFLAGS"
+  fc_LIBS="$FONTCONFIG_LIBS"
 ])
 
 if test "x$use_ft" = "xyes"; then
@@ -365,6 +361,10 @@ if test "x$use_ft" = "xyes"; then
 
   LIBS="$_save_libs"
   CFLAGS="$_save_cflags"
+fi
+
+if test "x$use_fc" = "xyes"; then
+  CAIRO_CHECK_FUNCS_WITH_FLAGS(FcFini, [$FONTCONFIG_CFLAGS], [$FONTCONFIG_LIBS])
 fi
 
 dnl ===========================================================================
@@ -581,7 +581,11 @@ dnl ===========================================================================
 # We use GTK+ for some utility/debugging tools
 PKG_CHECK_MODULES(gtk, "gtk+-2.0",, AC_MSG_RESULT(no))
 
+SHAVE_INIT([build], [enable]) # dnl Make the output pretty
+
 AC_CONFIG_FILES([
+build/shave
+build/shave-libtool
 Makefile
 boilerplate/Makefile
 src/Makefile
