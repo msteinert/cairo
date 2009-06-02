@@ -29,6 +29,7 @@
 #define _CAIRO_PERF_H_
 
 #include "cairo-boilerplate.h"
+#include <stdio.h>
 
 typedef uint64_t cairo_perf_ticks_t;
 
@@ -68,6 +69,8 @@ cairo_perf_yield (void);
 
 /* running a test case */
 typedef struct _cairo_perf {
+    FILE *summary;
+
     /* Options from command-line */
     unsigned int iterations;
     cairo_bool_t exact_iterations;
