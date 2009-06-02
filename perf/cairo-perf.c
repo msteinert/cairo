@@ -128,12 +128,13 @@ _content_to_string (cairo_content_t content, cairo_bool_t similar)
 static cairo_bool_t
 cairo_perf_has_similar (cairo_perf_t *perf)
 {
-    cairo_surface_t *target = cairo_get_target (perf->cr);
+    cairo_surface_t *target;
 
-    if (getenv ("CAIRO_TEST_IGNORE_SIMILAR"))
+    if (getenv ("CAIRO_TEST_SIMILAR") == NULL)
 	return FALSE;
 
     /* exclude the image backend */
+    target = cairo_get_target (perf->cr);
     if (cairo_surface_get_type (target) == CAIRO_SURFACE_TYPE_IMAGE)
 	return FALSE;
 
