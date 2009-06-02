@@ -127,7 +127,7 @@ test_diff_print (test_diff_t			*diff,
 		diff->tests[0]->name,
 		diff->tests[0]->size);
     } else {
-	printf ("(%s\n", diff->tests[0]->name);
+	printf ("(%s)\n", diff->tests[0]->name);
     }
 
     for (i = 0; i < diff->num_tests; i++) {
