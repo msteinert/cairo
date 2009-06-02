@@ -694,6 +694,7 @@ cairo_set_source_rgb (cairo_t *cr, double red, double green, double blue)
     cairo_set_source (cr, pattern);
     cairo_pattern_destroy (pattern);
 }
+slim_hidden_def (cairo_set_source_rgb);
 
 /**
  * cairo_set_source_rgba:

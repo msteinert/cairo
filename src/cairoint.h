@@ -2699,6 +2699,7 @@ slim_hidden_proto (cairo_set_line_width);
 slim_hidden_proto (cairo_set_matrix);
 slim_hidden_proto (cairo_set_operator);
 slim_hidden_proto (cairo_set_source);
+slim_hidden_proto (cairo_set_source_rgb);
 slim_hidden_proto (cairo_set_source_surface);
 slim_hidden_proto (cairo_set_tolerance);
 slim_hidden_proto (cairo_status);
