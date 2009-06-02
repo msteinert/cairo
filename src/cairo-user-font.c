@@ -92,6 +92,7 @@ _cairo_user_scaled_font_create_meta_context (cairo_user_scaled_font_t *scaled_fo
     cairo_set_matrix (cr, &scaled_font->base.scale);
     cairo_set_font_size (cr, 1.0);
     cairo_set_font_options (cr, &scaled_font->base.options);
+    cairo_set_source_rgb (cr, 1., 1., 1.);
 
     return cr;
 }
