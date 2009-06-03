@@ -3788,10 +3788,6 @@ cairo_get_group_target (cairo_t *cr)
  *    would be returned by cairo_status().</listitem>
  * </orderedlist>
  *
- * In either case, <literal>path->status</literal> will be set to
- * %CAIRO_STATUS_NO_MEMORY (regardless of what the error status in
- * @cr might have been).
- *
  * Return value: the copy of the current path. The caller owns the
  * returned object and should call cairo_path_destroy() when finished
  * with it.
