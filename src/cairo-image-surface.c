@@ -449,7 +449,7 @@ slim_hidden_def (cairo_format_stride_for_width);
  * Creates an image surface for the provided pixel data. The output
  * buffer must be kept around until the #cairo_surface_t is destroyed
  * or cairo_surface_finish() is called on the surface.  The initial
- * contents of @buffer will be used as the initial image contents; you
+ * contents of @data will be used as the initial image contents; you
  * must explicitly clear the buffer, using, for example,
  * cairo_rectangle() and cairo_fill() if you want it cleared.
  *
