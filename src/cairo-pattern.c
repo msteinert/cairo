@@ -1107,7 +1107,7 @@ cairo_pattern_get_matrix (cairo_pattern_t *pattern, cairo_matrix_t *matrix)
  *
  * <informalexample><programlisting>
  * cairo_set_source_surface (cr, image, x, y);
- * cairo_pattern_set_filter (cairo_get_source (cr), %CAIRO_FILTER_NEAREST);
+ * cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_NEAREST);
  * </programlisting></informalexample>
  **/
 void
