@@ -52,8 +52,9 @@
 #include <sched.h>
 #endif
 
-#define CAIRO_PERF_ITERATIONS_DEFAULT	10
-#define CAIRO_PERF_LOW_STD_DEV		0.3
+#define CAIRO_PERF_ITERATIONS_DEFAULT	15
+#define CAIRO_PERF_LOW_STD_DEV		0.05
+#define CAIRO_PERF_MIN_STD_DEV_COUNT	3
 #define CAIRO_PERF_STABLE_STD_DEV_COUNT	3
 
 /* Some targets just aren't that interesting for performance testing,
@@ -183,8 +184,8 @@ execute (cairo_perf_t		 *perf,
 
 	if (perf->summary) {
 	    fprintf (perf->summary,
-		     "[ # ] %8s %28s %8s %8s %5s %5s %s\n",
-		     "backend", "test", "min(ticks)", "min(ms)", "median(ms)",
+		     "[ # ] %8s %28s %8s %5s %5s %s\n",
+		     "backend", "test", "min(s)", "median(s)",
 		     "stddev.", "iterations");
 	}
 	first_run = FALSE;
@@ -194,7 +195,7 @@ execute (cairo_perf_t		 *perf,
 
     if (perf->summary) {
 	fprintf (perf->summary,
-		 "[%3d] %8s %26s ",
+		 "[%3d] %8s %28s ",
 		 perf->test_number,
 		 perf->target->name,
 		 name);
@@ -204,7 +205,7 @@ execute (cairo_perf_t		 *perf,
     cairo_script_interpreter_install_hooks (csi, &hooks);
 
     low_std_dev_count = 0;
-    for (i =0; i < perf->iterations; i++) {
+    for (i = 0; i < perf->iterations; i++) {
 	cairo_perf_yield ();
 	cairo_perf_timer_start ();
 
@@ -223,13 +224,13 @@ execute (cairo_perf_t		 *perf,
 			0,
 			cairo_perf_ticks_per_second () / 1000.0);
 	    printf (" %lld", (long long) times[i]);
+	    fflush (stdout);
 	} else if (! perf->exact_iterations) {
-	    if (i > 0) {
+	    if (i > CAIRO_PERF_MIN_STD_DEV_COUNT) {
 		_cairo_stats_compute (&stats, times, i+1);
 
 		if (stats.std_dev <= CAIRO_PERF_LOW_STD_DEV) {
-		    low_std_dev_count++;
-		    if (low_std_dev_count >= CAIRO_PERF_STABLE_STD_DEV_COUNT)
+		    if (++low_std_dev_count >= CAIRO_PERF_STABLE_STD_DEV_COUNT)
 			break;
 		} else {
 		    low_std_dev_count = 0;
@@ -238,18 +239,20 @@ execute (cairo_perf_t		 *perf,
 	}
     }
 
-    if (perf->raw)
-	printf ("\n");
-
     if (perf->summary) {
 	_cairo_stats_compute (&stats, times, i);
 	fprintf (perf->summary,
-		 "%10lld %#8.3f %#8.3f %#5.2f%% %3d\n",
-		 (long long) stats.min_ticks,
-		 (stats.min_ticks * 1000.0) / cairo_perf_ticks_per_second (),
-		 (stats.median_ticks * 1000.0) / cairo_perf_ticks_per_second (),
-		 stats.std_dev * 100.0, stats.iterations);
+		 "%#8.3f %#8.3f %#5.2f%% %3d\n",
+		 stats.min_ticks / (double) cairo_perf_ticks_per_second (),
+		 stats.median_ticks / (double) cairo_perf_ticks_per_second (),
+		 stats.std_dev * 100.0,
+		 stats.iterations);
 	fflush (perf->summary);
+    }
+
+    if (perf->raw) {
+	printf ("\n");
+	fflush (stdout);
     }
 
     perf->test_number++;
