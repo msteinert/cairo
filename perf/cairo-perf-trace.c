@@ -438,7 +438,7 @@ warn_no_traces (const char *message, const char *trace_dir)
     fprintf (stderr,
 "Error: %s '%s'.\n"
 "Have you cloned the cairo-traces repository and uncompressed the traces?\n"
-"  git clone git://git.freedesktop.org/cairo-traces\n"
+"  git clone git://anongit.freedesktop.org/cairo-traces\n"
 "  cd cairo-traces && make\n"
 "Or set the env.var CAIRO_TRACE_DIR to point to your traces?\n",
 	    message, trace_dir);
