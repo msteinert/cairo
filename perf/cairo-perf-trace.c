@@ -149,7 +149,6 @@ _similar_surface_create (void *closure,
 
 static void
 execute (cairo_perf_t		 *perf,
-	 cairo_script_interpreter_t *csi,
 	 cairo_surface_t	 *target,
 	 const char		 *trace)
 {
@@ -202,10 +201,13 @@ execute (cairo_perf_t		 *perf,
 	fflush (perf->summary);
     }
 
-    cairo_script_interpreter_install_hooks (csi, &hooks);
-
     low_std_dev_count = 0;
     for (i = 0; i < perf->iterations; i++) {
+	cairo_script_interpreter_t *csi;
+
+	csi = cairo_script_interpreter_create ();
+	cairo_script_interpreter_install_hooks (csi, &hooks);
+
 	cairo_perf_yield ();
 	cairo_perf_timer_start ();
 
@@ -214,6 +216,8 @@ execute (cairo_perf_t		 *perf,
 
 	cairo_perf_timer_stop ();
 	times[i] = cairo_perf_timer_elapsed ();
+
+	cairo_script_interpreter_destroy (csi);
 
 	if (perf->raw) {
 	    if (i == 0)
@@ -405,7 +409,6 @@ have_trace_filenames (cairo_perf_t *perf)
 static void
 cairo_perf_trace (cairo_perf_t *perf,
 		  cairo_boilerplate_target_t *target,
-		  cairo_script_interpreter_t *csi,
 		  const char *trace)
 {
     cairo_surface_t *surface;
@@ -427,7 +430,7 @@ cairo_perf_trace (cairo_perf_t *perf,
 
     cairo_perf_timer_set_synchronize (target->synchronize, closure);
 
-    execute (perf, csi, surface, trace);
+    execute (perf, surface, trace);
 
     cairo_surface_destroy (surface);
 
@@ -451,7 +454,6 @@ int
 main (int argc, char *argv[])
 {
     cairo_perf_t perf;
-    cairo_script_interpreter_t *csi;
     const char *trace_dir = "cairo-traces";
     cairo_bool_t names_are_traces;
     unsigned int n;
@@ -477,8 +479,6 @@ main (int argc, char *argv[])
     perf.targets = cairo_boilerplate_get_targets (&perf.num_targets, NULL);
     perf.times = xmalloc (perf.iterations * sizeof (cairo_perf_ticks_t));
 
-    csi = cairo_script_interpreter_create ();
-
     /* do we have a list of filenames? */
     names_are_traces = have_trace_filenames (&perf);
 
@@ -494,7 +494,7 @@ main (int argc, char *argv[])
 	if (names_are_traces) {
 	    for (n = 0; n < perf.num_names; n++) {
 		if (access (perf.names[n], R_OK) == 0)
-		    cairo_perf_trace (&perf, target, csi, perf.names[n]);
+		    cairo_perf_trace (&perf, target, perf.names[n]);
 	    }
 	} else {
 	    DIR *dir;
@@ -522,7 +522,7 @@ main (int argc, char *argv[])
 		    continue;
 
 		xasprintf (&trace, "%s/%s", trace_dir, de->d_name);
-		cairo_perf_trace (&perf, target, csi, trace);
+		cairo_perf_trace (&perf, target, trace);
 		free (trace);
 
 	    }
@@ -538,7 +538,6 @@ main (int argc, char *argv[])
 	    break;
     }
 
-    cairo_script_interpreter_destroy (csi);
     cairo_perf_fini (&perf);
 
     return 0;
