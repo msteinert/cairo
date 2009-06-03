@@ -7,6 +7,7 @@ nofile=
 flush=
 nocallers=
 nomarkdirty=
+compress=
 
 usage() {
 cat << EOF
@@ -20,6 +21,8 @@ Whatever else happens is driven by its argument:
                     terminal instead.
   --no-callers    - Do not lookup the caller address/symbol/line whilst tracing.
   --no-mark-dirty - Do not record image data for cairo_mark_dirty()
+  --compress      - Compress the output with LZMA
+  --profile       - Combine --no-callers and --no-mark-dirty and --compress
 
 Enviroment variables understood by cairo-trace:
   CAIRO_TRACE_FLUSH - flush the output after every function call.
@@ -47,6 +50,18 @@ while test $skip -eq 1; do
     --no-mark-dirty)
 	skip=1
 	nomarkdirty=1
+	;;
+    --compress)
+	skip=1
+	compress=1
+	nofile=1
+	;;
+    --profile)
+	skip=1
+	compress=1
+	nomarkdirty=1
+	nocallers=1
+	nofile=1
 	;;
     --version)
 	echo "cairo-trace, version @CAIRO_VERSION_MAJOR@.@CAIRO_VERSION_MINOR@.@CAIRO_VERSION_MICRO@."
@@ -87,6 +102,9 @@ fi
 
 if test -z "$nofile"; then
     CAIRO_TRACE_OUTDIR=`pwd` "$@"
+elif test -n "$compress"; then
+    echo Generating compressed trace file $1.$$.lzma
+    CAIRO_TRACE_FD=3 "$@" 3>&1 | lzma -cz9 > $1.$$.lzma
 else
     CAIRO_TRACE_FD=3 "$@" 3>&1 >/dev/null
 fi
