@@ -54,6 +54,7 @@ typedef int cairo_atomic_int_t;
 # define _cairo_atomic_int_inc(x) ((void) __sync_fetch_and_add(x, 1))
 # define _cairo_atomic_int_dec_and_test(x) (__sync_fetch_and_add(x, -1) == 1)
 # define _cairo_atomic_int_cmpxchg(x, oldv, newv) __sync_val_compare_and_swap (x, oldv, newv)
+# define _cairo_atomic_ptr_cmpxchg(x, oldv, newv) __sync_val_compare_and_swap (x, oldv, newv)
 
 #endif
 
