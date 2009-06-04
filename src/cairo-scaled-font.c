@@ -218,6 +218,7 @@ static const cairo_scaled_font_t _cairo_scaled_font_nil = {
       CAIRO_HINT_STYLE_DEFAULT,
       CAIRO_HINT_METRICS_DEFAULT} ,
     FALSE,			/* placeholder */
+    FALSE,			/* holdover */
     TRUE,			/* finished */
     { 1., 0., 0., 1., 0, 0},	/* scale */
     { 1., 0., 0., 1., 0, 0},	/* scale_inverse */
@@ -726,6 +727,7 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
     scaled_font->cache_frozen = FALSE;
     scaled_font->global_cache_frozen = FALSE;
 
+    scaled_font->holdover = FALSE;
     scaled_font->finished = FALSE;
 
     CAIRO_REFERENCE_COUNT_INIT (&scaled_font->ref_count, 1);
@@ -955,16 +957,20 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	     * array, unless we caught the font in the middle of destruction.
 	     */
 	    if (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&scaled_font->ref_count)) {
-		int i;
+		if (scaled_font->holdover) {
+		    int i;
 
-		for (i = 0; i < font_map->num_holdovers; i++)
-		    if (font_map->holdovers[i] == scaled_font)
-			break;
-		if (i < font_map->num_holdovers) {
-		    font_map->num_holdovers--;
-		    memmove (&font_map->holdovers[i],
-			     &font_map->holdovers[i+1],
-			     (font_map->num_holdovers - i) * sizeof (cairo_scaled_font_t*));
+		    for (i = 0; i < font_map->num_holdovers; i++) {
+			if (font_map->holdovers[i] == scaled_font) {
+			    font_map->num_holdovers--;
+			    memmove (&font_map->holdovers[i],
+				     &font_map->holdovers[i+1],
+				     (font_map->num_holdovers - i) * sizeof (cairo_scaled_font_t*));
+			    break;
+			}
+		    }
+
+		    scaled_font->holdover = FALSE;
 		}
 
 		/* reset any error status */
@@ -1160,12 +1166,17 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
 	if (! scaled_font->placeholder &&
 	    scaled_font->hash_entry.hash != ZOMBIE)
 	{
+	    /* Another thread may have already inserted us into the holdovers */
+	    if (scaled_font->holdover)
+		goto unlock;
+
 	    /* Rather than immediately destroying this object, we put it into
 	     * the font_map->holdovers array in case it will get used again
 	     * soon (and is why we must hold the lock over the atomic op on
 	     * the reference count). To make room for it, we do actually
 	     * destroy the least-recently-used holdover.
 	     */
+
 	    if (font_map->num_holdovers == CAIRO_SCALED_FONT_MAX_HOLDOVERS) {
 		lru = font_map->holdovers[0];
 		assert (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&lru->ref_count));
@@ -1180,10 +1191,12 @@ cairo_scaled_font_destroy (cairo_scaled_font_t *scaled_font)
 	    }
 
 	    font_map->holdovers[font_map->num_holdovers++] = scaled_font;
+	    scaled_font->holdover = TRUE;
 	} else
 	    lru = scaled_font;
     }
 
+  unlock:
     _cairo_scaled_font_map_unlock ();
 
     /* If we pulled an item from the holdovers array, (while the font
