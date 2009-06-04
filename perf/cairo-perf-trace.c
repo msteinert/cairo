@@ -44,6 +44,8 @@
 #include <sys/types.h>
 #include <dirent.h>
 
+#include <signal.h>
+
 #if HAVE_FCFINI
 #include <fontconfig/fontconfig.h>
 #endif
@@ -147,6 +149,19 @@ _similar_surface_create (void *closure,
     return cairo_surface_create_similar (closure, content, width, height);
 }
 
+static int user_interrupt;
+
+static void
+interrupt (int sig)
+{
+    if (user_interrupt) {
+	signal (sig, SIG_DFL);
+	raise (sig);
+    }
+
+    user_interrupt = 1;
+}
+
 static void
 execute (cairo_perf_t		 *perf,
 	 cairo_surface_t	 *target,
@@ -202,7 +217,7 @@ execute (cairo_perf_t		 *perf,
     }
 
     low_std_dev_count = 0;
-    for (i = 0; i < perf->iterations; i++) {
+    for (i = 0; i < perf->iterations && ! user_interrupt; i++) {
 	cairo_script_interpreter_t *csi;
 
 	csi = cairo_script_interpreter_create ();
@@ -242,6 +257,7 @@ execute (cairo_perf_t		 *perf,
 	    }
 	}
     }
+    user_interrupt = 0;
 
     if (perf->summary) {
 	_cairo_stats_compute (&stats, times, i);
@@ -472,6 +488,8 @@ main (int argc, char *argv[])
 	       "See taskset(1) for information about changing CPU affinity.\n\n",
 	       stderr);
     }
+
+    signal (SIGINT, interrupt);
 
     if (getenv ("CAIRO_TRACE_DIR") != NULL)
 	trace_dir = getenv ("CAIRO_TRACE_DIR");
