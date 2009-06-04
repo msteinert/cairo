@@ -200,7 +200,7 @@ execute (cairo_perf_t		 *perf,
 	    fprintf (perf->summary,
 		     "[ # ] %8s %28s %8s %5s %5s %s\n",
 		     "backend", "test", "min(s)", "median(s)",
-		     "stddev.", "iterations");
+		     "stddev.", "count");
 	}
 	first_run = FALSE;
     }
@@ -256,11 +256,35 @@ execute (cairo_perf_t		 *perf,
 		}
 	    }
 	}
+
+	if (perf->summary && perf->summary_continuous) {
+	    _cairo_stats_compute (&stats, times, i+1);
+
+	    fprintf (perf->summary,
+		     "\r[%3d] %8s %28s ",
+		     perf->test_number,
+		     perf->target->name,
+		     name);
+	    fprintf (perf->summary,
+		     "%#8.3f %#8.3f %#5.2f%% %3d",
+		     stats.min_ticks / (double) cairo_perf_ticks_per_second (),
+		     stats.median_ticks / (double) cairo_perf_ticks_per_second (),
+		     stats.std_dev * 100.0,
+		     stats.iterations);
+	    fflush (perf->summary);
+	}
     }
     user_interrupt = 0;
 
     if (perf->summary) {
 	_cairo_stats_compute (&stats, times, i);
+	if (perf->summary_continuous) {
+	    fprintf (perf->summary,
+		     "\r[%3d] %8s %28s ",
+		     perf->test_number,
+		     perf->target->name,
+		     name);
+	}
 	fprintf (perf->summary,
 		 "%#8.3f %#8.3f %#5.2f%% %3d\n",
 		 stats.min_ticks / (double) cairo_perf_ticks_per_second (),
@@ -319,6 +343,7 @@ parse_options (cairo_perf_t *perf, int argc, char *argv[])
     perf->names = NULL;
     perf->num_names = 0;
     perf->summary = stdout;
+    perf->summary_continuous = FALSE;
 
     while (1) {
 	c = _cairo_getopt (argc, argv, "i:lrv");
@@ -356,6 +381,8 @@ parse_options (cairo_perf_t *perf, int argc, char *argv[])
 
     if (verbose && perf->summary == NULL)
 	perf->summary = stderr;
+    if (perf->summary == stdout && isatty (fileno(stdout)))
+	perf->summary_continuous = TRUE;
 
     if (optind < argc) {
 	perf->names = &argv[optind];

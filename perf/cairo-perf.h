@@ -70,6 +70,7 @@ cairo_perf_yield (void);
 /* running a test case */
 typedef struct _cairo_perf {
     FILE *summary;
+    cairo_bool_t summary_continuous;
 
     /* Options from command-line */
     unsigned int iterations;
