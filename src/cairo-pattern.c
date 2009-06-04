@@ -96,6 +96,23 @@ _cairo_pattern_set_error (cairo_pattern_t *pattern,
 static void
 _cairo_pattern_init (cairo_pattern_t *pattern, cairo_pattern_type_t type)
 {
+#if HAVE_VALGRIND
+    switch (type) {
+    case CAIRO_PATTERN_TYPE_SOLID:
+	VALGRIND_MAKE_MEM_UNDEFINED (pattern, sizeof (cairo_solid_pattern_t));
+	break;
+    case CAIRO_PATTERN_TYPE_SURFACE:
+	VALGRIND_MAKE_MEM_UNDEFINED (pattern, sizeof (cairo_surface_pattern_t));
+	break;
+    case CAIRO_PATTERN_TYPE_LINEAR:
+	VALGRIND_MAKE_MEM_UNDEFINED (pattern, sizeof (cairo_linear_pattern_t));
+	break;
+    case CAIRO_PATTERN_TYPE_RADIAL:
+	VALGRIND_MAKE_MEM_UNDEFINED (pattern, sizeof (cairo_radial_pattern_t));
+	break;
+    }
+#endif
+
     pattern->type      = type;
     pattern->status    = CAIRO_STATUS_SUCCESS;
 
@@ -168,11 +185,15 @@ _cairo_pattern_init_copy (cairo_pattern_t	*pattern,
 	cairo_solid_pattern_t *dst = (cairo_solid_pattern_t *) pattern;
 	cairo_solid_pattern_t *src = (cairo_solid_pattern_t *) other;
 
+	VG (VALGRIND_MAKE_MEM_UNDEFINED (pattern, sizeof (cairo_solid_pattern_t)));
+
 	*dst = *src;
     } break;
     case CAIRO_PATTERN_TYPE_SURFACE: {
 	cairo_surface_pattern_t *dst = (cairo_surface_pattern_t *) pattern;
 	cairo_surface_pattern_t *src = (cairo_surface_pattern_t *) other;
+
+	VG (VALGRIND_MAKE_MEM_UNDEFINED (pattern, sizeof (cairo_surface_pattern_t)));
 
 	*dst = *src;
 	cairo_surface_reference (dst->surface);
@@ -182,6 +203,12 @@ _cairo_pattern_init_copy (cairo_pattern_t	*pattern,
 	cairo_gradient_pattern_t *dst = (cairo_gradient_pattern_t *) pattern;
 	cairo_gradient_pattern_t *src = (cairo_gradient_pattern_t *) other;
 	cairo_status_t status;
+
+	if (other->type == CAIRO_PATTERN_TYPE_LINEAR) {
+	    VG (VALGRIND_MAKE_MEM_UNDEFINED (pattern, sizeof (cairo_linear_pattern_t)));
+	} else {
+	    VG (VALGRIND_MAKE_MEM_UNDEFINED (pattern, sizeof (cairo_radial_pattern_t)));
+	}
 
 	status = _cairo_gradient_pattern_init_copy (dst, src);
 	if (unlikely (status))
@@ -250,6 +277,23 @@ _cairo_pattern_fini (cairo_pattern_t *pattern)
 	    free (gradient->stops);
     } break;
     }
+
+#if HAVE_VALGRIND
+    switch (pattern->type) {
+    case CAIRO_PATTERN_TYPE_SOLID:
+	VALGRIND_MAKE_MEM_NOACCESS (pattern, sizeof (cairo_solid_pattern_t));
+	break;
+    case CAIRO_PATTERN_TYPE_SURFACE:
+	VALGRIND_MAKE_MEM_NOACCESS (pattern, sizeof (cairo_surface_pattern_t));
+	break;
+    case CAIRO_PATTERN_TYPE_LINEAR:
+	VALGRIND_MAKE_MEM_NOACCESS (pattern, sizeof (cairo_linear_pattern_t));
+	break;
+    case CAIRO_PATTERN_TYPE_RADIAL:
+	VALGRIND_MAKE_MEM_NOACCESS (pattern, sizeof (cairo_radial_pattern_t));
+	break;
+    }
+#endif
 }
 
 cairo_status_t
@@ -721,6 +765,8 @@ slim_hidden_def (cairo_pattern_status);
 void
 cairo_pattern_destroy (cairo_pattern_t *pattern)
 {
+    cairo_pattern_type_t type;
+
     if (pattern == NULL ||
 	    CAIRO_REFERENCE_COUNT_IS_INVALID (&pattern->ref_count))
 	return;
@@ -730,10 +776,11 @@ cairo_pattern_destroy (cairo_pattern_t *pattern)
     if (! _cairo_reference_count_dec_and_test (&pattern->ref_count))
 	return;
 
+    type = pattern->type;
     _cairo_pattern_fini (pattern);
 
     /* maintain a small cache of freed patterns */
-    if (pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
+    if (type == CAIRO_PATTERN_TYPE_SOLID) {
 	int i;
 
 	CAIRO_MUTEX_LOCK (_cairo_pattern_solid_pattern_cache_lock);

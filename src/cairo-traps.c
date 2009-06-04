@@ -47,6 +47,8 @@ _compare_point_fixed_by_y (const void *av, const void *bv);
 void
 _cairo_traps_init (cairo_traps_t *traps)
 {
+    VG (VALGRIND_MAKE_MEM_UNDEFINED (traps, sizeof (cairo_traps_t)));
+
     traps->status = CAIRO_STATUS_SUCCESS;
 
     traps->num_traps = 0;
@@ -91,6 +93,8 @@ _cairo_traps_fini (cairo_traps_t *traps)
 {
     if (traps->traps != traps->traps_embedded)
 	free (traps->traps);
+
+    VG (VALGRIND_MAKE_MEM_NOACCESS (traps, sizeof (cairo_traps_t)));
 }
 
 /**

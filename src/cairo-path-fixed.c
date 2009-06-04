@@ -69,6 +69,8 @@ _cairo_path_buf_add_points (cairo_path_buf_t *buf,
 void
 _cairo_path_fixed_init (cairo_path_fixed_t *path)
 {
+    VG (VALGRIND_MAKE_MEM_UNDEFINED (path, sizeof (cairo_path_fixed_t)));
+
     path->buf_head.base.next = NULL;
     path->buf_head.base.prev = NULL;
     path->buf_tail = &path->buf_head.base;
@@ -334,14 +336,8 @@ _cairo_path_fixed_fini (cairo_path_fixed_t *path)
 	buf = buf->next;
 	_cairo_path_buf_destroy (this);
     }
-    path->buf_head.base.next = NULL;
-    path->buf_head.base.prev = NULL;
-    path->buf_tail = &path->buf_head.base;
-    path->buf_head.base.num_ops = 0;
-    path->buf_head.base.num_points = 0;
 
-    path->has_current_point = FALSE;
-    path->has_curve_to = FALSE;
+    VG (VALGRIND_MAKE_MEM_NOACCESS (path, sizeof (cairo_path_fixed_t)));
 }
 
 void

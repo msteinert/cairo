@@ -24,13 +24,6 @@
 
 #include "cairo-freelist-private.h"
 
-#if HAVE_VALGRIND
-#include <memcheck.h>
-#define VG(x) x
-#else
-#define VG(x)
-#endif
-
 void
 _cairo_freelist_init (cairo_freelist_t *freelist, unsigned nodesize)
 {

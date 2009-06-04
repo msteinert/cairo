@@ -79,6 +79,8 @@ _cairo_region_set_error (cairo_region_t *region,
 void
 _cairo_region_init (cairo_region_t *region)
 {
+    VG (VALGRIND_MAKE_MEM_UNDEFINED (region, sizeof (cairo_region_t)));
+
     region->status = CAIRO_STATUS_SUCCESS;
     pixman_region32_init (&region->rgn);
 }
@@ -87,6 +89,8 @@ void
 _cairo_region_init_rectangle (cairo_region_t *region,
 			      const cairo_rectangle_int_t *rectangle)
 {
+    VG (VALGRIND_MAKE_MEM_UNDEFINED (region, sizeof (cairo_region_t)));
+
     region->status = CAIRO_STATUS_SUCCESS;
     pixman_region32_init_rect (&region->rgn,
 			       rectangle->x, rectangle->y,
@@ -97,6 +101,7 @@ void
 _cairo_region_fini (cairo_region_t *region)
 {
     pixman_region32_fini (&region->rgn);
+    VG (VALGRIND_MAKE_MEM_NOACCESS (region, sizeof (cairo_region_t)));
 }
 
 /**

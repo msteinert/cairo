@@ -1408,6 +1408,7 @@ cairo_new_path (cairo_t *cr)
 	return;
 
     _cairo_path_fixed_fini (cr->path);
+    _cairo_path_fixed_init (cr->path);
 }
 slim_hidden_def(cairo_new_path);
 

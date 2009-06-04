@@ -2771,12 +2771,16 @@ CAIRO_END_DECLS
 #include "cairo-hash-private.h"
 
 #if HAVE_VALGRIND
+#include <memcheck.h>
+
+#define VG(x) x
 
 cairo_private void
 _cairo_debug_check_image_surface_is_defined (const cairo_surface_t *surface);
 
 #else
 
+#define VG(x)
 #define _cairo_debug_check_image_surface_is_defined(X)
 
 #endif

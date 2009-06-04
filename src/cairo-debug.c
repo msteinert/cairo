@@ -79,8 +79,6 @@ cairo_debug_reset_static_data (void)
 }
 
 #if HAVE_VALGRIND
-#include <memcheck.h>
-
 void
 _cairo_debug_check_image_surface_is_defined (const cairo_surface_t *surface)
 {
