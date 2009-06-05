@@ -72,6 +72,9 @@ _cairo_atomic_int_dec_and_test (int *x);
 cairo_private int
 _cairo_atomic_int_cmpxchg (int *x, int oldv, int newv);
 
+cairo_private void *
+_cairo_atomic_ptr_cmpxchg (void **x, void *oldv, void *newv);
+
 #endif
 
 
