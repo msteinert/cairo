@@ -95,6 +95,9 @@ _cairo_atomic_int_set (int *x, int value);
 
 #endif
 
+#define _cairo_atomic_uint_get(x) _cairo_atomic_int_get(x)
+#define _cairo_atomic_uint_cmpxchg(x, oldv, newv) \
+    _cairo_atomic_int_cmpxchg((int *)x, oldv, newv)
 
 #define _cairo_status_set_error(status, err) do { \
     /* hide compiler warnings about cairo_status_t != int (gcc treats its as \

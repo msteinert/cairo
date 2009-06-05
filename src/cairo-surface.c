@@ -187,7 +187,7 @@ cairo_surface_status (cairo_surface_t *surface)
 }
 slim_hidden_def (cairo_surface_status);
 
-static unsigned long
+static unsigned int
 _cairo_surface_allocate_unique_id (void)
 {
     static unsigned int unique_id;
@@ -200,11 +200,11 @@ _cairo_surface_allocate_unique_id (void)
     unsigned int old, id;
 
     do {
-	old = _cairo_atomic_int_get (&unique_id);
+	old = _cairo_atomic_uint_get (&unique_id);
 	id = old + 1;
 	if (id == 0)
 	    id = 1;
-    } while (! _cairo_atomic_int_cmpxchg (&unique_id, old, id));
+    } while (! _cairo_atomic_uint_cmpxchg (&unique_id, old, id));
 
     return id;
 #endif
