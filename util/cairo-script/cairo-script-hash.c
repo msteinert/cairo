@@ -34,6 +34,7 @@
  *      Keith Packard <keithp@keithp.com>
  *	Graydon Hoare <graydon@redhat.com>
  *	Carl Worth <cworth@cworth.org>
+ *	Karl Tomlinson <karlt+@karlt.net>, Mozilla Corporation
  */
 
 #include "cairo-script-private.h"
@@ -60,16 +61,8 @@
 #define ENTRY_IS_DEAD(entry) ((entry) == DEAD_ENTRY)
 #define ENTRY_IS_LIVE(entry) ((entry) >  DEAD_ENTRY)
 
-/* We expect keys will not be destroyed frequently, so our table does not
- * contain any explicit shrinking code nor any chain-coalescing code for
- * entries randomly deleted by memory pressure (except during rehashing, of
- * course). These assumptions are potentially bad, but they make the
- * implementation straightforward.
- *
- * Revisit later if evidence appears that we're using excessive memory from
- * a mostly-dead table.
- *
- * This table is open-addressed with double hashing. Each table size is a
+
+/* This table is open-addressed with double hashing. Each table size is a
  * prime chosen to be a little more than double the high water mark for a
  * given arrangement, so the tables should remain < 50% full. The table
  * size makes for the "first" hash modulus; a second prime (2 less than the
@@ -142,6 +135,7 @@ _csi_hash_table_init (csi_hash_table_t *hash_table,
 	return _csi_error (CAIRO_STATUS_NO_MEMORY);
 
     hash_table->live_entries = 0;
+    hash_table->used_entries = 0;
     hash_table->iterating = 0;
 
     return CSI_STATUS_SUCCESS;
@@ -202,56 +196,93 @@ _csi_hash_table_lookup_unique_key (csi_hash_table_t *hash_table,
 }
 
 /**
- * _csi_hash_table_resize:
+ * _csi_hash_table_manage:
  * @hash_table: a hash table
  *
  * Resize the hash table if the number of entries has gotten much
  * bigger or smaller than the ideal number of entries for the current
- * size.
+ * size, or control the number of dead entries by moving the entries
+ * within the table.
  *
  * Return value: %CAIRO_STATUS_SUCCESS if successful or
  * %CAIRO_STATUS_NO_MEMORY if out of memory.
  **/
 static csi_status_t
-_csi_hash_table_resize (csi_hash_table_t *hash_table)
+_csi_hash_table_manage (csi_hash_table_t *hash_table)
 {
     csi_hash_table_t tmp;
-    unsigned long new_size, i;
+    csi_boolean_t realloc = TRUE;
+    unsigned long i;
 
-    /* This keeps the hash table between 25% and 50% full. */
+    /* This keeps the size of the hash table between 2 and approximately 8
+     * times the number of live entries and keeps the proportion of free
+     * entries (search-terminations) > 25%.
+     */
     unsigned long high = hash_table->arrangement->high_water_mark;
     unsigned long low = high >> 2;
-
-    if (hash_table->live_entries >= low && hash_table->live_entries <= high)
-	return CAIRO_STATUS_SUCCESS;
+    unsigned long max_used = high  + high / 2;
 
     tmp = *hash_table;
 
     if (hash_table->live_entries > high) {
 	tmp.arrangement = hash_table->arrangement + 1;
 	/* This code is being abused if we can't make a table big enough. */
-    } else { /* hash_table->live_entries < low */
-	/* Can't shrink if we're at the smallest size */
-	if (hash_table->arrangement == &hash_table_arrangements[0])
-	    return CAIRO_STATUS_SUCCESS;
+    } else if (hash_table->live_entries < low &&
+	       /* Can't shrink if we're at the smallest size */
+	       hash_table->arrangement != &hash_table_arrangements[0])
+    {
 	tmp.arrangement = hash_table->arrangement - 1;
     }
+    else if (hash_table->used_entries > max_used)
+    {
+	/* Clean out dead entries to prevent lookups from becoming too slow. */
+	for (i = 0; i < hash_table->arrangement->size; ++i) {
+	    if (ENTRY_IS_DEAD (hash_table->entries[i]))
+		hash_table->entries[i] = NULL;
+	}
+	hash_table->used_entries = hash_table->live_entries;
 
-    new_size = tmp.arrangement->size;
-    tmp.entries = calloc (new_size, sizeof (csi_hash_entry_t*));
-    if (tmp.entries == NULL)
-	return _csi_error (CAIRO_STATUS_NO_MEMORY);
+	/* There is no need to reallocate but some entries may need to be
+	 * moved.  Typically the proportion of entries needing to be moved is
+	 * small, but, if the moving should leave a large number of dead
+	 * entries, they will be cleaned out next time this code is
+	 * executed. */
+	realloc = FALSE;
+    }
+    else
+    {
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    if (realloc) {
+	tmp.entries = calloc (tmp.arrangement->size,
+		              sizeof (csi_hash_entry_t*));
+	if (tmp.entries == NULL)
+	    return _csi_error (CAIRO_STATUS_NO_MEMORY);
+
+	hash_table->used_entries = 0;
+    }
 
     for (i = 0; i < hash_table->arrangement->size; ++i) {
-	if (ENTRY_IS_LIVE (hash_table->entries[i])) {
-	    *_csi_hash_table_lookup_unique_key (&tmp, hash_table->entries[i])
-		= hash_table->entries[i];
+	csi_hash_entry_t *entry, **pos;
+
+	entry = hash_table->entries[i];
+	if (ENTRY_IS_LIVE (entry)) {
+	    hash_table->entries[i] = DEAD_ENTRY;
+
+	    pos = _csi_hash_table_lookup_unique_key (&tmp, entry);
+	    if (ENTRY_IS_FREE (*pos))
+		hash_table->used_entries++;
+
+	    *pos = entry;
 	}
     }
 
-    free (hash_table->entries);
-    hash_table->entries = tmp.entries;
-    hash_table->arrangement = tmp.arrangement;
+    if (realloc) {
+	free (hash_table->entries);
+	hash_table->entries = tmp.entries;
+	hash_table->arrangement = tmp.arrangement;
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -332,18 +363,22 @@ _csi_hash_table_insert (csi_hash_table_t *hash_table,
 			  csi_hash_entry_t *key_and_value)
 {
     csi_status_t status;
+    csi_hash_entry_t **entry;
 
     hash_table->live_entries++;
-    status = _csi_hash_table_resize (hash_table);
+    status = _csi_hash_table_manage (hash_table);
     if (_csi_unlikely (status)) {
 	/* abort the insert... */
 	hash_table->live_entries--;
 	return status;
     }
 
-    *_csi_hash_table_lookup_unique_key (hash_table,
-					  key_and_value) = key_and_value;
+    entry = _csi_hash_table_lookup_unique_key (hash_table,
+					       key_and_value);
+    if (ENTRY_IS_FREE (*entry))
+	hash_table->used_entries++;
 
+    *entry = key_and_value;
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -402,7 +437,7 @@ _csi_hash_table_remove (csi_hash_table_t *hash_table,
 	 * memory to shrink the hash table. It does leave the table in a
 	 * consistent state, and we've already succeeded in removing the
 	 * entry, so we don't examine the failure status of this call. */
-	_csi_hash_table_resize (hash_table);
+	_csi_hash_table_manage (hash_table);
     }
 }
 
@@ -443,6 +478,6 @@ _csi_hash_table_foreach (csi_hash_table_t	      *hash_table,
     if (--hash_table->iterating == 0) {
 	/* Should we fail to shrink the hash table, it is left unaltered,
 	 * and we don't need to propagate the error status. */
-	_csi_hash_table_resize (hash_table);
+	_csi_hash_table_manage (hash_table);
     }
 }

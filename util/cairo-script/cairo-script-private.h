@@ -340,6 +340,7 @@ struct _csi_hash_table {
     csi_hash_entry_t **entries;
 
     unsigned long live_entries;
+    unsigned long used_entries;
     unsigned long iterating;   /* Iterating, no insert, no resize */
 };
 
