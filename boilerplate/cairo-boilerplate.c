@@ -490,7 +490,7 @@ static cairo_boilerplate_target_t targets[] =
 	NULL, TRUE, TRUE
     },
     {
-	"win32-printing", "win32"".ps",
+	"win32-printing", "win32", ".ps",
 	CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
 	_cairo_boilerplate_win32_printing_create_surface, NULL,
 	NULL,
