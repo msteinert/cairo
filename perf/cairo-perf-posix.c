@@ -55,7 +55,10 @@
 
 #define _XOPEN_SOURCE 600	/* for round() */
 
+#include "config.h"
+
 #include <signal.h>
+#include <time.h>
 #include <sys/time.h>
 #include <unistd.h>
 #ifdef _POSIX_PRIORITY_SCHEDULING
@@ -66,13 +69,22 @@
 
 /* timers */
 
+#if defined(HAVE_CLOCK_GETTIME)
+#if defined(CLOCK_MONOTONIC_RAW)
+#define CLOCK CLOCK_MONOTONIC_RAW
+#elif defined(CLOCK_MONOTONIC)
+#define CLOCK CLOCK_MONOTONIC
+#endif
+#endif
+
+#if ! defined(CLOCK)
 #if defined(__i386__) || defined(__amd64__)
 static inline cairo_perf_ticks_t
 oil_profile_stamp_rdtsc (void)
 {
-    unsigned a, d; 
-    __asm__ __volatile__("rdtsc" : "=a" (a), "=d" (d)); 
-    return ((uint64_t)a) | (((uint64_t)d) << 32); 
+    unsigned a, d;
+    __asm__ __volatile__("rdtsc" : "=a" (a), "=d" (d));
+    return ((uint64_t)a) | (((uint64_t)d) << 32);
 }
 #define OIL_STAMP oil_profile_stamp_rdtsc
 #endif
@@ -118,10 +130,13 @@ oil_profile_stamp_s390(void)
 }
 #define OIL_STAMP oil_profile_stamp_s390
 #endif
+#endif
 
-typedef struct _cairo_perf_timer
-{
-#ifdef OIL_STAMP
+typedef struct _cairo_perf_timer {
+#if defined(CLOCK)
+    struct timespec tv_start;
+    struct timespec tv_stop;
+#elif defined(OIL_STAMP)
     cairo_perf_ticks_t start;
     cairo_perf_ticks_t stop;
 #else
@@ -143,10 +158,14 @@ cairo_perf_timer_set_synchronize (cairo_perf_timer_synchronize_t	 synchronize,
 }
 
 void
-cairo_perf_timer_start (void) {
+cairo_perf_timer_start (void)
+{
     if (cairo_perf_timer_synchronize)
 	cairo_perf_timer_synchronize (cairo_perf_timer_synchronize_closure);
-#ifdef OIL_STAMP
+
+#if defined(CLOCK)
+    clock_gettime (CLOCK, &timer.tv_start);
+#elif defined(OIL_STAMP)
     timer.start = OIL_STAMP ();
 #else
     gettimeofday (&timer.tv_start, NULL);
@@ -154,10 +173,14 @@ cairo_perf_timer_start (void) {
 }
 
 void
-cairo_perf_timer_stop (void) {
+cairo_perf_timer_stop (void)
+{
     if (cairo_perf_timer_synchronize)
 	cairo_perf_timer_synchronize (cairo_perf_timer_synchronize_closure);
-#ifdef OIL_STAMP
+
+#if defined(CLOCK)
+    clock_gettime (CLOCK, &timer.tv_stop);
+#elif defined(OIL_STAMP)
     timer.stop = OIL_STAMP ();
 #else
     gettimeofday (&timer.tv_stop, NULL);
@@ -165,22 +188,32 @@ cairo_perf_timer_stop (void) {
 }
 
 cairo_perf_ticks_t
-cairo_perf_timer_elapsed (void) {
+cairo_perf_timer_elapsed (void)
+{
     cairo_perf_ticks_t ticks;
 
-#ifdef OIL_STAMP
-    ticks = (timer.stop - timer.start);
+#if defined(CLOCK)
+    ticks  = timer.tv_stop.tv_sec - timer.tv_start.tv_sec;
+    ticks *= 1000000000;
+    ticks += timer.tv_stop.tv_nsec - timer.tv_start.tv_nsec;
+#elif defined(OIL_STAMP)
+    ticks = timer.stop - timer.start;
 #else
-    ticks = (timer.tv_stop.tv_sec - timer.tv_start.tv_sec) * 1000000;
-    ticks += (timer.tv_stop.tv_usec - timer.tv_start.tv_usec);
+    ticks  = timer.tv_stop.tv_sec - timer.tv_start.tv_sec;
+    ticks *= 1000000;
+    ticks += timer.tv_stop.tv_usec - timer.tv_start.tv_usec;
 #endif
 
     return ticks;
 }
 
 cairo_perf_ticks_t
-cairo_perf_ticks_per_second (void) {
-#ifdef OIL_STAMP
+cairo_perf_ticks_per_second (void)
+{
+#if defined(CLOCK)
+    /* For clock_gettime() the units are nano-seconds */
+    return 1000000000;
+#elif defined(OIL_STAMP)
     static cairo_perf_ticks_t tps = 0;
     /* XXX: This is obviously not stable in light of changing CPU speed. */
     if (tps == 0) {
@@ -197,7 +230,7 @@ cairo_perf_ticks_per_second (void) {
     }
     return tps;
 #else
-    /* For gettimeofday the units are micro-seconds */
+    /* For gettimeofday() the units are micro-seconds */
     return 1000000;
 #endif
 }
@@ -205,7 +238,8 @@ cairo_perf_ticks_per_second (void) {
 /* yield */
 
 void
-cairo_perf_yield (void) {
+cairo_perf_yield (void)
+{
 #ifdef _POSIX_PRIORITY_SCHEDULING
     sched_yield ();
 #endif

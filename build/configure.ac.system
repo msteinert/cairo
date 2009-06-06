@@ -60,8 +60,13 @@ dnl Check for socket support for any2ppm daemon
 AC_CHECK_HEADERS([fcntl.h unistd.h signal.h sys/stat.h sys/socket.h sys/poll.h sys/un.h])
 
 dnl check for CPU affinity support
-AC_CHECK_HEADERS([sched.h],
-	[AC_CHECK_FUNCS([sched_getaffinity])])
+AC_CHECK_HEADERS([sched.h], [AC_CHECK_FUNCS([sched_getaffinity])])
+
+dnl check for clock_gettime() support
+save_LIBS="$LIBS"
+LIBS="$LIBS $RT_LIBS"
+AC_CHECK_HEADERS([time.h], [AC_CHECK_FUNCS([clock_gettime])])
+LIBS="$save_LIBS"
 
 dnl check for GNU-extensions to fenv
 AC_CHECK_HEADER(fenv.h,
