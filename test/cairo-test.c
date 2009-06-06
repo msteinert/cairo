@@ -747,7 +747,9 @@ REPEAT:
     /* Pre-initialise fontconfig so that the configuration is loaded without
      * malloc failures (our primary goal is to test cairo fault tolerance).
      */
+#if HAVE_FCINIT
     FcInit ();
+#endif
 
     MEMFAULT_ENABLE_FAULTS ();
 #endif

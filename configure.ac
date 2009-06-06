@@ -322,7 +322,7 @@ if test "x$use_ft" = "xyes"; then
 fi
 
 if test "x$use_fc" = "xyes"; then
-  CAIRO_CHECK_FUNCS_WITH_FLAGS(FcFini, [$FONTCONFIG_CFLAGS], [$FONTCONFIG_LIBS])
+  CAIRO_CHECK_FUNCS_WITH_FLAGS(FcInit FcFini, [$FONTCONFIG_CFLAGS], [$FONTCONFIG_LIBS])
 fi
 
 dnl ===========================================================================
