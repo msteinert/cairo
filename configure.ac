@@ -537,7 +537,8 @@ fi
 dnl ===========================================================================
 
 # We use GTK+ for some utility/debugging tools
-PKG_CHECK_MODULES(gtk, "gtk+-2.0",, AC_MSG_RESULT(no))
+PKG_CHECK_MODULES(gtk, "gtk+-2.0",have_gtk=yes, have_gtk=no)
+AM_CONDITIONAL(HAVE_GTK, test "x$have_gtk" = "xyes")
 
 SHAVE_INIT([build], [enable]) # dnl Make the output pretty
 
