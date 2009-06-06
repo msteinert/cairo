@@ -116,6 +116,9 @@ _csi_perm_alloc (csi_t *ctx, int size)
 void *
 _csi_slab_alloc (csi_t *ctx, int size)
 {
+#if CSI_DEBUG_MALLOC
+    return malloc (size);
+#else
     int chunk_size;
     csi_chunk_t *chunk;
     void *ptr;
@@ -150,6 +153,7 @@ _csi_slab_alloc (csi_t *ctx, int size)
     chunk->rem--;
 
     return ptr;
+#endif
 }
 
 void
@@ -161,12 +165,16 @@ _csi_slab_free (csi_t *ctx, void *ptr, int size)
     if (_csi_unlikely (ptr == NULL))
 	return;
 
+#if CSI_DEBUG_MALLOC
+    free (ptr);
+#else
     chunk_size = 2 * sizeof (void *);
     chunk_size = (size + chunk_size - 1) / chunk_size;
 
     free_list = ptr;
     *free_list = ctx->slabs[chunk_size].free_list;
     ctx->slabs[chunk_size].free_list = ptr;
+#endif
 }
 
 static void
@@ -396,16 +404,6 @@ _csi_fini (csi_t *ctx)
     _csi_scanner_fini (ctx, &ctx->scanner);
 
     _csi_hash_table_fini (&ctx->strings);
-
-    if (ctx->free_array != NULL)
-	csi_array_free (ctx, ctx->free_array);
-    if (ctx->free_dictionary != NULL)
-	csi_dictionary_free (ctx, ctx->free_dictionary);
-    if (ctx->free_string != NULL)
-	csi_string_free (ctx, ctx->free_string);
-
-    _csi_slab_fini (ctx);
-    _csi_perm_fini (ctx);
 }
 
 csi_status_t
@@ -530,6 +528,8 @@ cairo_script_interpreter_run (csi_t *ctx, const char *filename)
 
     if (ctx->status)
 	return ctx->status;
+    if (ctx->finished)
+	return ctx->status = CSI_STATUS_INTERPRETER_FINISHED;
 
     ctx->status = csi_file_new (ctx, &file, filename, "r");
     if (ctx->status)
@@ -550,6 +550,8 @@ cairo_script_interpreter_feed_string (csi_t *ctx, const char *line, int len)
 
     if (ctx->status)
 	return ctx->status;
+    if (ctx->finished)
+	return ctx->status = CSI_STATUS_INTERPRETER_FINISHED;
 
     if (len < 0)
 	len = strlen (line);
@@ -574,6 +576,22 @@ cairo_script_interpreter_reference (csi_t *ctx)
 slim_hidden_def (cairo_script_interpreter_reference);
 
 cairo_status_t
+cairo_script_interpreter_finish (csi_t *ctx)
+{
+    csi_status_t status;
+
+    status = ctx->status;
+    if (! ctx->finished) {
+	_csi_fini (ctx);
+	ctx->finished = 1;
+    } else if (status == CAIRO_STATUS_SUCCESS) {
+	status = ctx->status = CSI_STATUS_INTERPRETER_FINISHED;
+    }
+
+    return status;
+}
+
+cairo_status_t
 cairo_script_interpreter_destroy (csi_t *ctx)
 {
     csi_status_t status;
@@ -582,7 +600,18 @@ cairo_script_interpreter_destroy (csi_t *ctx)
     if (--ctx->ref_count)
 	return status;
 
-    _csi_fini (ctx);
+    if (! ctx->finished)
+	_csi_fini (ctx);
+
+    if (ctx->free_array != NULL)
+	csi_array_free (ctx, ctx->free_array);
+    if (ctx->free_dictionary != NULL)
+	csi_dictionary_free (ctx, ctx->free_dictionary);
+    if (ctx->free_string != NULL)
+	csi_string_free (ctx, ctx->free_string);
+
+    _csi_slab_fini (ctx);
+    _csi_perm_fini (ctx);
     free (ctx);
 
     return status;

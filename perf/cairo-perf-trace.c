@@ -232,6 +232,7 @@ execute (cairo_perf_t		 *perf,
 	cairo_perf_timer_stop ();
 	times[i] = cairo_perf_timer_elapsed ();
 
+	cairo_script_interpreter_finish (csi);
 	cairo_script_interpreter_destroy (csi);
 
 	if (perf->raw) {
@@ -426,11 +427,9 @@ cairo_perf_fini (cairo_perf_t *perf)
 {
     cairo_boilerplate_free_targets (perf->targets);
     free (perf->times);
-#if 0 /* XXX */
     cairo_debug_reset_static_data ();
 #if HAVE_FCFINI
     FcFini ();
-#endif
 #endif
 }
 

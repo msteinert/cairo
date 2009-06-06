@@ -219,6 +219,7 @@ typedef enum _csi_status {
     CSI_STATUS_SCRIPT_INVALID_TYPE,
     CSI_STATUS_SCRIPT_INVALID_INDEX,
     CSI_STATUS_SCRIPT_UNDEFINED_NAME,
+    CSI_STATUS_INTERPRETER_FINISHED,
 
     _CSI_STATUS_SCRIPT_LAST_ERROR,
     CSI_INT_STATUS_UNSUPPORTED
@@ -452,6 +453,8 @@ typedef struct _csi_chunk {
 struct _cairo_script_interpreter {
     int ref_count;
     csi_status_t status;
+
+    unsigned int finished : 1;
 
     csi_hooks_t hooks;
 

@@ -157,6 +157,16 @@ _csi_array_execute (csi_t *ctx, csi_array_t *array)
 void
 csi_array_free (csi_t *ctx, csi_array_t *array)
 {
+#if CSI_DEBUG_MALLOC
+    _csi_stack_fini (ctx, &array->stack);
+    _csi_slab_free (ctx, array, sizeof (csi_array_t));
+#else
+    csi_integer_t n;
+
+    for (n = 0; n < array->stack.len; n++)
+	csi_object_free (ctx, &array->stack.objects[n]);
+    array->stack.len = 0;
+
     if (ctx->free_array != NULL) {
 	if (array->stack.size > ctx->free_array->stack.size) {
 	    csi_array_t *tmp = ctx->free_array;
@@ -166,18 +176,9 @@ csi_array_free (csi_t *ctx, csi_array_t *array)
 
 	_csi_stack_fini (ctx, &array->stack);
 	_csi_slab_free (ctx, array, sizeof (csi_array_t));
-    } else {
-	csi_integer_t n;
-
-	for (n = 0; n < array->stack.len; n++)
-	    csi_object_free (ctx, &array->stack.objects[n]);
-	array->stack.len = 0;
-
-	if (ctx->free_array == NULL)
-	    ctx->free_array = array;
-	else
-	    csi_array_free (ctx, array);
-    }
+    } else
+	ctx->free_array = array;
+#endif
 }
 
 csi_status_t
@@ -262,11 +263,16 @@ csi_dictionary_free (csi_t *ctx,
 			     _dictionary_entry_pluck,
 			     &data);
 
+#if CSI_DEBUG_MALLOC
+    _csi_hash_table_fini (&dict->hash_table);
+    _csi_slab_free (ctx, dict, sizeof (csi_dictionary_t));
+#else
     if (ctx->free_dictionary != NULL) {
 	_csi_hash_table_fini (&dict->hash_table);
 	_csi_slab_free (ctx, dict, sizeof (csi_dictionary_t));
     } else
 	ctx->free_dictionary = dict;
+#endif
 }
 
 csi_status_t
@@ -575,6 +581,10 @@ _csi_string_execute (csi_t *ctx, csi_string_t *string)
 void
 csi_string_free (csi_t *ctx, csi_string_t *string)
 {
+#if CSI_DEBUG_MALLOC
+    _csi_free (ctx, string->string);
+    _csi_slab_free (ctx, string, sizeof (csi_string_t));
+#else
     if (ctx->free_string != NULL) {
 	if (string->len > ctx->free_string->len) {
 	    csi_string_t *tmp = ctx->free_string;
@@ -586,6 +596,7 @@ csi_string_free (csi_t *ctx, csi_string_t *string)
 	_csi_slab_free (ctx, string, sizeof (csi_string_t));
     } else
 	ctx->free_string = string;
+#endif
 }
 
 csi_status_t

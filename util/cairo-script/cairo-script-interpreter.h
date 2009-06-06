@@ -92,6 +92,9 @@ cairo_public cairo_script_interpreter_t *
 cairo_script_interpreter_reference (cairo_script_interpreter_t *ctx);
 
 cairo_public cairo_status_t
+cairo_script_interpreter_finish (cairo_script_interpreter_t *ctx);
+
+cairo_public cairo_status_t
 cairo_script_interpreter_destroy (cairo_script_interpreter_t *ctx);
 
 CAIRO_END_DECLS
