@@ -1494,7 +1494,7 @@ _type3_render (cairo_scaled_font_t *scaled_font,
 
     status = csi_object_execute (ctx, &render);
     pop (1);
-    return CAIRO_STATUS_USER_FONT_ERROR;
+    return status ? CAIRO_STATUS_USER_FONT_ERROR : CAIRO_STATUS_SUCCESS;
 }
 
 static csi_status_t
