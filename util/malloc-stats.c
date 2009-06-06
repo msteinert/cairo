@@ -105,36 +105,6 @@ _perm_alloc (size_t size)
     return ret;
 }
 
-static const char *
-resolve_addr (const void *addr) {
-
-	char **strings;
-	char *p;
-	char *name;
-	int len;
-
-	if (addr == NULL)
-		return "(other)";
-	if (addr == (void *) -1)
-		return "(total)";
-
-	strings = backtrace_symbols ((void**)&addr, 1);
-
-	p = strchr (strings[0], '\t');
-	if (p)
-		p++;
-	else
-		p = strings[0];
-
-	len = strlen (p) + 1;
-	name = _perm_alloc (len);
-	memcpy (name, p, len);
-
-	free (strings);
-
-	return name;
-}
-
 static void
 resolve_addrs (struct func_stat_t *func_stats, int num)
 {
