@@ -1621,6 +1621,7 @@ _ft_create_for_pattern (csi_t *ctx,
 			csi_string_t *string,
 			cairo_font_face_t **font_face_out)
 {
+#if CAIRO_HAS_FC_FONT
     csi_blob_t tmpl;
     struct _ft_face_data *data;
     csi_list_t *link;
@@ -1666,6 +1667,11 @@ _ft_create_for_pattern (csi_t *ctx,
     data->font_face = font_face;
     *font_face_out = font_face;
     return CSI_STATUS_SUCCESS;
+#else
+    if (--string->base.ref == 0)
+	csi_string_free (ctx, string);
+    return CSI_INT_STATUS_UNSUPPORTED;
+#endif
 }
 
 static csi_status_t
