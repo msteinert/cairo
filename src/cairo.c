@@ -117,6 +117,53 @@ _cairo_set_error (cairo_t *cr, cairo_status_t status)
     status = _cairo_error (status);
 }
 
+#if HAS_ATOMIC_OPS
+/* We keep a small stash of contexts to reduce malloc pressure */
+#define CAIRO_STASH_SIZE 4
+static struct {
+    cairo_t pool[CAIRO_STASH_SIZE];
+    int occupied;
+} _context_stash;
+
+static cairo_t *
+_context_get (void)
+{
+    int avail, old, new;
+
+    do {
+	old = _context_stash.occupied;
+	avail = ffs (~old) - 1;
+	if (avail >= CAIRO_STASH_SIZE)
+	    return malloc (sizeof (cairo_t));
+
+	new = old | (1 << avail);
+    } while (_cairo_atomic_int_cmpxchg (&_context_stash.occupied, old, new) != old);
+
+    return &_context_stash.pool[avail];
+}
+
+static void
+_context_put (cairo_t *cr)
+{
+    int old, new, avail;
+
+    if (cr < &_context_stash.pool[0] ||
+	cr >= &_context_stash.pool[CAIRO_STASH_SIZE])
+    {
+	return free (cr);
+    }
+
+    avail = ~(1 << (cr - &_context_stash.pool[0]));
+    do {
+	old = _context_stash.occupied;
+	new = old & avail;
+    } while (_cairo_atomic_int_cmpxchg (&_context_stash.occupied, old, new) != old);
+}
+#else
+#define _context_get() malloc (sizeof (cairo_t))
+#define _context_put(cr) free (cr)
+#endif
+
 /**
  * cairo_create:
  * @target: target surface for the context
@@ -150,7 +197,7 @@ cairo_create (cairo_surface_t *target)
     if (target && target->status == CAIRO_STATUS_NO_MEMORY)
 	return (cairo_t *) &_cairo_nil;
 
-    cr = malloc (sizeof (cairo_t));
+    cr = _context_get ();
     if (unlikely (cr == NULL)) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_t *) &_cairo_nil;
@@ -248,7 +295,7 @@ cairo_destroy (cairo_t *cr)
 
     _cairo_user_data_array_fini (&cr->user_data);
 
-    free (cr);
+    _context_put (cr);
 }
 slim_hidden_def (cairo_destroy);
 
