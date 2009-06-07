@@ -478,7 +478,11 @@ _cairo_gl_surface_draw_image_format_compatible (cairo_image_surface_t *surface)
 {
     if (surface->pixman_format == PIXMAN_a8r8g8b8 ||
 	surface->pixman_format == PIXMAN_x8r8g8b8 ||
-	surface->pixman_format == PIXMAN_a8)
+	surface->pixman_format == PIXMAN_a8 ||
+	surface->pixman_format == PIXMAN_a1r5g5b5 ||
+	surface->pixman_format == PIXMAN_r5g6b5 ||
+	surface->pixman_format == PIXMAN_a1b5g5r5 ||
+	surface->pixman_format == PIXMAN_b5g6r5)
 	return TRUE;
     else
 	return FALSE;
@@ -512,6 +516,22 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 	format = GL_ALPHA;
 	type = GL_UNSIGNED_BYTE;
 	cpp = 1;
+    } else if (src->pixman_format == PIXMAN_r5g6b5) {
+	format = GL_RGB;
+	type = GL_UNSIGNED_SHORT_5_6_5;
+	cpp = 2;
+    } else if (src->pixman_format == PIXMAN_b5g6r5) {
+	format = GL_RGB;
+	type = GL_UNSIGNED_SHORT_5_6_5_REV;
+	cpp = 2;
+    } else if (src->pixman_format == PIXMAN_a1r5g5b5) {
+	format = GL_BGRA;
+	type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
+	cpp = 2;
+    } else if (src->pixman_format == PIXMAN_a1b5g5r5) {
+	format = GL_RGBA;
+	type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
+	cpp = 2;
     } else {
 	fprintf(stderr, "draw_image fallback\n");
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -890,17 +910,39 @@ _cairo_gl_pattern_image_texture_setup (cairo_gl_composite_operand_t *operand,
 	format = GL_RGB;
 	type = GL_UNSIGNED_SHORT_5_6_5;
 	break;
+    case PIXMAN_b5g6r5:
+	internal_format = GL_RGB;
+	format = GL_RGB;
+	type = GL_UNSIGNED_SHORT_5_6_5_REV;
+	break;
+    case PIXMAN_a1r5g5b5:
+	internal_format = GL_RGBA;
+	format = GL_BGRA;
+	type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
+	break;
+    case PIXMAN_x1r5g5b5:
+	internal_format = GL_RGB;
+	format = GL_BGRA;
+	type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
+	break;
+    case PIXMAN_a1b5g5r5:
+	internal_format = GL_RGBA;
+	format = GL_RGBA;
+	type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
+	operand->operand.texture.has_alpha = FALSE;
+	break;
+    case PIXMAN_x1b5g5r5:
+	internal_format = GL_RGB;
+	format = GL_RGBA;
+	type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
+	operand->operand.texture.has_alpha = FALSE;
+	break;
     case PIXMAN_a8:
 	internal_format = GL_ALPHA;
 	format = GL_ALPHA;
 	type = GL_UNSIGNED_BYTE;
 	break;
 
-    case PIXMAN_b5g6r5:
-    case PIXMAN_a1r5g5b5:
-    case PIXMAN_x1r5g5b5:
-    case PIXMAN_a1b5g5r5:
-    case PIXMAN_x1b5g5r5:
     case PIXMAN_a2b10g10r10:
     case PIXMAN_x2b10g10r10:
     case PIXMAN_a4r4g4b4:
