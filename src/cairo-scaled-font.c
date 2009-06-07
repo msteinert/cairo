@@ -899,12 +899,11 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     /* Note that degenerate ctm or font_matrix *are* allowed.
      * We want to support a font size of 0. */
 
-    if (font_face->backend->type == CAIRO_FONT_TYPE_TOY) {
-	/* indirect implementation, lookup the face that is used for the toy face */
-	font_face = _cairo_toy_font_face_get_implementation (font_face);
-
-	if (unlikely (font_face->status))
-	    return _cairo_scaled_font_create_in_error (font_face->status);
+    if (font_face->backend->get_implementation != NULL) {
+	font_face = font_face->backend->get_implementation (font_face,
+							    font_matrix,
+							    ctm,
+							    options);
     }
 
     font_map = _cairo_scaled_font_map_lock ();
@@ -1018,6 +1017,12 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	return scaled_font;
     }
 
+    /* Our caching above is defeated if the backend switches fonts on us -
+     * e.g. old incarnations of toy-font-face and lazily resolved
+     * ft-font-faces
+     */
+    assert (scaled_font->font_face == font_face);
+
     scaled_font->original_font_face =
 	cairo_font_face_reference (original_font_face);
 
@@ -1042,6 +1047,9 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     }
 
     cairo_scaled_font_destroy (old);
+
+    if (font_face != original_font_face)
+	cairo_font_face_destroy (font_face);
 
     return scaled_font;
 }

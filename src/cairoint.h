@@ -525,6 +525,12 @@ struct _cairo_font_face_backend {
 			   const cairo_matrix_t		*ctm,
 			   const cairo_font_options_t	*options,
 			   cairo_scaled_font_t	       **scaled_font);
+
+    cairo_font_face_t *
+    (*get_implementation) (void				*font_face,
+			   const cairo_matrix_t		*font_matrix,
+			   const cairo_matrix_t		*ctm,
+			   const cairo_font_options_t	*options);
 };
 
 extern const cairo_private struct _cairo_font_face_backend _cairo_user_font_face_backend;
@@ -1426,9 +1432,6 @@ _cairo_unscaled_font_reference (cairo_unscaled_font_t *font);
 
 cairo_private void
 _cairo_unscaled_font_destroy (cairo_unscaled_font_t *font);
-
-cairo_private cairo_font_face_t *
-_cairo_toy_font_face_get_implementation (cairo_font_face_t *font_face);
 
 /* cairo-font-face-twin.c */
 
