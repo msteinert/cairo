@@ -382,7 +382,7 @@ parse_options (cairo_perf_t *perf, int argc, char *argv[])
 
     if (verbose && perf->summary == NULL)
 	perf->summary = stderr;
-    if (perf->summary == stdout && isatty (fileno(stdout)))
+    if (perf->summary && isatty (fileno (perf->summary)))
 	perf->summary_continuous = TRUE;
 
     if (optind < argc) {
