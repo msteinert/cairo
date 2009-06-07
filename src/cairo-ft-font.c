@@ -2628,6 +2628,8 @@ _cairo_ft_resolve_pattern (FcPattern		      *pattern,
     if (unlikely (status))
 	goto FREE_RESOLVED;
 
+    assert (*unscaled != NULL);
+
     _get_pattern_ft_options (resolved, ft_options);
 
 FREE_RESOLVED:
