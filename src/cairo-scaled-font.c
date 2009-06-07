@@ -2744,6 +2744,9 @@ cairo_scaled_font_get_font_face (cairo_scaled_font_t *scaled_font)
     if (scaled_font->status)
 	return (cairo_font_face_t*) &_cairo_font_face_nil;
 
+    if (scaled_font->original_font_face != NULL)
+	return scaled_font->original_font_face;
+
     return scaled_font->font_face;
 }
 slim_hidden_def (cairo_scaled_font_get_font_face);
