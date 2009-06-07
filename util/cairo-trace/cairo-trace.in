@@ -104,7 +104,7 @@ if test -z "$nofile"; then
     CAIRO_TRACE_OUTDIR=`pwd` "$@"
 elif test -n "$compress"; then
     echo Generating compressed trace file $1.$$.lzma
-    CAIRO_TRACE_FD=3 "$@" 3>&1 | lzma -cz9 > $1.$$.lzma
+    CAIRO_TRACE_FD=3 "$@" 3>&1 >/dev/null | lzma -cz9 > $1.$$.lzma
 else
     CAIRO_TRACE_FD=3 "$@" 3>&1 >/dev/null
 fi
