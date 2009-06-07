@@ -37,6 +37,8 @@
 #define drand48() (rand () / (double) RAND_MAX)
 #endif
 
+static cairo_scaled_font_t *scaled_font;
+
 static cairo_t *
 _cairo_create_similar (cairo_t *cr, int width, int height)
 {
@@ -93,6 +95,7 @@ _draw (cairo_t *cr,
 
     cairo_mask (cr, cairo_get_source (cr));
 
+    cairo_set_scaled_font (cr, scaled_font);
     cairo_text_extents (cr, "cairo", &extents);
     cairo_move_to (cr,
 	           -extents.x_bearing - .5 * extents.width,
@@ -172,6 +175,9 @@ draw (cairo_t *cr, int width, int height)
 	{ 0.0, 0.0, 0.0 }, /* black */
     };
     int i, j, loop;
+
+    /* cache a resolved scaled-font */
+    scaled_font = cairo_get_scaled_font (cr);
 
     for (loop = 0; loop < LOOPS; loop++) {
 	for (i = 0; i < LOOPS; i++) {
