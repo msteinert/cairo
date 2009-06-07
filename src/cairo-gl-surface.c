@@ -177,6 +177,125 @@ _cairo_gl_context_acquire (cairo_gl_context_t *ctx)
     return ctx;
 }
 
+static cairo_status_t
+_cairo_gl_get_image_format_and_type (pixman_format_code_t pixman_format,
+				     GLenum *internal_format, GLenum *format,
+				     GLenum *type, cairo_bool_t *has_alpha)
+{
+    *has_alpha = TRUE;
+
+    switch (pixman_format) {
+    case PIXMAN_a8r8g8b8:
+	*internal_format = GL_RGBA;
+	*format = GL_BGRA;
+	*type = GL_UNSIGNED_INT_8_8_8_8_REV;
+	return CAIRO_STATUS_SUCCESS;
+    case PIXMAN_x8r8g8b8:
+	*internal_format = GL_RGB;
+	*format = GL_BGRA;
+	*type = GL_UNSIGNED_INT_8_8_8_8_REV;
+	*has_alpha = FALSE;
+	return CAIRO_STATUS_SUCCESS;
+    case PIXMAN_a8b8g8r8:
+	*internal_format = GL_RGBA;
+	*format = GL_RGBA;
+	*type = GL_UNSIGNED_INT_8_8_8_8_REV;
+	return CAIRO_STATUS_SUCCESS;
+    case PIXMAN_x8b8g8r8:
+	*internal_format = GL_RGB;
+	*format = GL_RGBA;
+	*type = GL_UNSIGNED_INT_8_8_8_8_REV;
+	*has_alpha = FALSE;
+	return CAIRO_STATUS_SUCCESS;
+    case PIXMAN_b8g8r8a8:
+	*internal_format = GL_BGRA;
+	*format = GL_BGRA;
+	*type = GL_UNSIGNED_INT_8_8_8_8;
+	return CAIRO_STATUS_SUCCESS;
+    case PIXMAN_b8g8r8x8:
+	*internal_format = GL_RGB;
+	*format = GL_BGRA;
+	*type = GL_UNSIGNED_INT_8_8_8_8;
+	*has_alpha = FALSE;
+	return CAIRO_STATUS_SUCCESS;
+    case PIXMAN_r8g8b8:
+	*internal_format = GL_RGB;
+	*format = GL_RGB;
+	*type = GL_UNSIGNED_BYTE;
+	return CAIRO_STATUS_SUCCESS;
+    case PIXMAN_b8g8r8:
+	*internal_format = GL_RGB;
+	*format = GL_BGR;
+	*type = GL_UNSIGNED_BYTE;
+	return CAIRO_STATUS_SUCCESS;
+    case PIXMAN_r5g6b5:
+	*internal_format = GL_RGB;
+	*format = GL_RGB;
+	*type = GL_UNSIGNED_SHORT_5_6_5;
+	return CAIRO_STATUS_SUCCESS;
+    case PIXMAN_b5g6r5:
+	*internal_format = GL_RGB;
+	*format = GL_RGB;
+	*type = GL_UNSIGNED_SHORT_5_6_5_REV;
+	return CAIRO_STATUS_SUCCESS;
+    case PIXMAN_a1r5g5b5:
+	*internal_format = GL_RGBA;
+	*format = GL_BGRA;
+	*type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
+	return CAIRO_STATUS_SUCCESS;
+    case PIXMAN_x1r5g5b5:
+	*internal_format = GL_RGB;
+	*format = GL_BGRA;
+	*type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
+	*has_alpha = FALSE;
+	return CAIRO_STATUS_SUCCESS;
+    case PIXMAN_a1b5g5r5:
+	*internal_format = GL_RGBA;
+	*format = GL_RGBA;
+	*type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
+	return CAIRO_STATUS_SUCCESS;
+    case PIXMAN_x1b5g5r5:
+	*internal_format = GL_RGB;
+	*format = GL_RGBA;
+	*type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
+	*has_alpha = FALSE;
+	return CAIRO_STATUS_SUCCESS;
+    case PIXMAN_a8:
+	*internal_format = GL_ALPHA;
+	*format = GL_ALPHA;
+	*type = GL_UNSIGNED_BYTE;
+	return CAIRO_STATUS_SUCCESS;
+
+    case PIXMAN_a2b10g10r10:
+    case PIXMAN_x2b10g10r10:
+    case PIXMAN_a4r4g4b4:
+    case PIXMAN_x4r4g4b4:
+    case PIXMAN_a4b4g4r4:
+    case PIXMAN_x4b4g4r4:
+    case PIXMAN_r3g3b2:
+    case PIXMAN_b2g3r3:
+    case PIXMAN_a2r2g2b2:
+    case PIXMAN_a2b2g2r2:
+    case PIXMAN_c8:
+    case PIXMAN_x4a4:
+    /* case PIXMAN_x4c4: */
+    case PIXMAN_x4g4:
+    case PIXMAN_a4:
+    case PIXMAN_r1g2b1:
+    case PIXMAN_b1g2r1:
+    case PIXMAN_a1r1g1b1:
+    case PIXMAN_a1b1g1r1:
+    case PIXMAN_c4:
+    case PIXMAN_g4:
+    case PIXMAN_a1:
+    case PIXMAN_g1:
+    case PIXMAN_yuy2:
+    case PIXMAN_yv12:
+    default:
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+}
+
 static void
 _cairo_gl_context_release (cairo_gl_context_t *ctx)
 {
@@ -473,21 +592,6 @@ _cairo_gl_surface_create_similar (void		 *abstract_surface,
     return cairo_gl_surface_create (surface->ctx, content, width, height);
 }
 
-static cairo_bool_t
-_cairo_gl_surface_draw_image_format_compatible (cairo_image_surface_t *surface)
-{
-    if (surface->pixman_format == PIXMAN_a8r8g8b8 ||
-	surface->pixman_format == PIXMAN_x8r8g8b8 ||
-	surface->pixman_format == PIXMAN_a8 ||
-	surface->pixman_format == PIXMAN_a1r5g5b5 ||
-	surface->pixman_format == PIXMAN_r5g6b5 ||
-	surface->pixman_format == PIXMAN_a1b5g5r5 ||
-	surface->pixman_format == PIXMAN_b5g6r5)
-	return TRUE;
-    else
-	return FALSE;
-}
-
 static cairo_status_t
 _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 			      cairo_image_surface_t *src,
@@ -497,45 +601,19 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 {
     char *temp_data;
     int y;
-    unsigned int cpp;
-    GLenum format, type;
+    unsigned int cpp = PIXMAN_FORMAT_BPP(src->pixman_format) / 8;
+    GLenum internal_format, format, type;
     char *src_data_start;
+    cairo_bool_t has_alpha;
+    cairo_status_t status;
 
-    /* Want to use a switch statement here but the compiler gets whiny. */
-    if (src->pixman_format == PIXMAN_a8r8g8b8) {
-	format = GL_BGRA;
-	type = GL_UNSIGNED_INT_8_8_8_8_REV;
-	cpp = 4;
-    } else if (src->pixman_format == PIXMAN_x8r8g8b8) {
-	assert(dst->base.content != CAIRO_CONTENT_COLOR_ALPHA);
-	assert(dst->base.content != CAIRO_CONTENT_ALPHA);
-	format = GL_BGRA;
-	type = GL_UNSIGNED_INT_8_8_8_8_REV;
-	cpp = 4;
-    } else if (src->pixman_format == PIXMAN_a8) {
-	format = GL_ALPHA;
-	type = GL_UNSIGNED_BYTE;
-	cpp = 1;
-    } else if (src->pixman_format == PIXMAN_r5g6b5) {
-	format = GL_RGB;
-	type = GL_UNSIGNED_SHORT_5_6_5;
-	cpp = 2;
-    } else if (src->pixman_format == PIXMAN_b5g6r5) {
-	format = GL_RGB;
-	type = GL_UNSIGNED_SHORT_5_6_5_REV;
-	cpp = 2;
-    } else if (src->pixman_format == PIXMAN_a1r5g5b5) {
-	format = GL_BGRA;
-	type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
-	cpp = 2;
-    } else if (src->pixman_format == PIXMAN_a1b5g5r5) {
-	format = GL_RGBA;
-	type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
-	cpp = 2;
-    } else {
-	fprintf(stderr, "draw_image fallback\n");
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
+    status = _cairo_gl_get_image_format_and_type (src->pixman_format,
+						  &internal_format,
+						  &format,
+						  &type,
+						  &has_alpha);
+    if (status != CAIRO_STATUS_SUCCESS)
+	return status;
 
     /* Write the data to a temporary as GL wants bottom-to-top data
      * screen-wise, and we want top-to-bottom.
@@ -744,9 +822,16 @@ _cairo_gl_surface_clone_similar (void		     *abstract_surface,
 	cairo_gl_surface_t *clone;
 	cairo_image_surface_t *image_src = (cairo_image_surface_t *)src;
 	cairo_status_t status;
+	GLenum internal_format, format, type;
+	cairo_bool_t has_alpha;
 
-	if (!_cairo_gl_surface_draw_image_format_compatible (image_src))
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	status = _cairo_gl_get_image_format_and_type (image_src->pixman_format,
+						      &internal_format,
+						      &format,
+						      &type,
+						      &has_alpha);
+	if (status != CAIRO_STATUS_SUCCESS)
+	    return status;
 
 	clone = (cairo_gl_surface_t *)
 	    _cairo_gl_surface_create_similar (&surface->base,
@@ -852,6 +937,7 @@ _cairo_gl_pattern_image_texture_setup (cairo_gl_composite_operand_t *operand,
     cairo_surface_attributes_t *attributes;
     GLuint tex;
     GLenum format, internal_format, type;
+    cairo_status_t status;
 
     if (src->type != CAIRO_PATTERN_TYPE_SURFACE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -867,111 +953,12 @@ _cairo_gl_pattern_image_texture_setup (cairo_gl_composite_operand_t *operand,
      */
     operand->operand.texture.has_alpha = TRUE;
 
-    switch (image_surface->pixman_format) {
-    case PIXMAN_a8r8g8b8:
-	internal_format = GL_RGBA;
-	format = GL_BGRA;
-	type = GL_UNSIGNED_INT_8_8_8_8_REV;
-	break;
-    case PIXMAN_x8r8g8b8:
-	internal_format = GL_RGB;
-	format = GL_BGRA;
-	type = GL_UNSIGNED_INT_8_8_8_8_REV;
-	operand->operand.texture.has_alpha = FALSE;
-	break;
-    case PIXMAN_a8b8g8r8:
-	internal_format = GL_RGBA;
-	format = GL_RGBA;
-	type = GL_UNSIGNED_INT_8_8_8_8_REV;
-	break;
-    case PIXMAN_x8b8g8r8:
-	internal_format = GL_RGB;
-	format = GL_RGBA;
-	type = GL_UNSIGNED_INT_8_8_8_8_REV;
-	operand->operand.texture.has_alpha = FALSE;
-	break;
-    case PIXMAN_b8g8r8a8:
-	internal_format = GL_BGRA;
-	format = GL_BGRA;
-	type = GL_UNSIGNED_INT_8_8_8_8;
-	break;
-    case PIXMAN_r8g8b8:
-	internal_format = GL_RGB;
-	format = GL_RGB;
-	type = GL_UNSIGNED_BYTE;
-	break;
-    case PIXMAN_b8g8r8:
-	internal_format = GL_RGB;
-	format = GL_BGR;
-	type = GL_UNSIGNED_BYTE;
-	break;
-    case PIXMAN_r5g6b5:
-	internal_format = GL_RGB;
-	format = GL_RGB;
-	type = GL_UNSIGNED_SHORT_5_6_5;
-	break;
-    case PIXMAN_b5g6r5:
-	internal_format = GL_RGB;
-	format = GL_RGB;
-	type = GL_UNSIGNED_SHORT_5_6_5_REV;
-	break;
-    case PIXMAN_a1r5g5b5:
-	internal_format = GL_RGBA;
-	format = GL_BGRA;
-	type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
-	break;
-    case PIXMAN_x1r5g5b5:
-	internal_format = GL_RGB;
-	format = GL_BGRA;
-	type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
-	break;
-    case PIXMAN_a1b5g5r5:
-	internal_format = GL_RGBA;
-	format = GL_RGBA;
-	type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
-	operand->operand.texture.has_alpha = FALSE;
-	break;
-    case PIXMAN_x1b5g5r5:
-	internal_format = GL_RGB;
-	format = GL_RGBA;
-	type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
-	operand->operand.texture.has_alpha = FALSE;
-	break;
-    case PIXMAN_a8:
-	internal_format = GL_ALPHA;
-	format = GL_ALPHA;
-	type = GL_UNSIGNED_BYTE;
-	break;
-
-    case PIXMAN_a2b10g10r10:
-    case PIXMAN_x2b10g10r10:
-    case PIXMAN_a4r4g4b4:
-    case PIXMAN_x4r4g4b4:
-    case PIXMAN_a4b4g4r4:
-    case PIXMAN_x4b4g4r4:
-    case PIXMAN_r3g3b2:
-    case PIXMAN_b2g3r3:
-    case PIXMAN_a2r2g2b2:
-    case PIXMAN_a2b2g2r2:
-    case PIXMAN_c8:
-    case PIXMAN_x4a4:
-    /* case PIXMAN_x4c4: */
-    case PIXMAN_x4g4:
-    case PIXMAN_a4:
-    case PIXMAN_r1g2b1:
-    case PIXMAN_b1g2r1:
-    case PIXMAN_a1r1g1b1:
-    case PIXMAN_a1b1g1r1:
-    case PIXMAN_c4:
-    case PIXMAN_g4:
-    case PIXMAN_a1:
-    case PIXMAN_g1:
-    case PIXMAN_yuy2:
-    case PIXMAN_yv12:
-    case PIXMAN_b8g8r8x8:
-    default:
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
+    status = _cairo_gl_get_image_format_and_type (image_surface->pixman_format,
+						  &internal_format, &format,
+						  &type,
+						  &operand->operand.texture.has_alpha);
+    if (status)
+	return status;
 
     glGenTextures (1, &tex);
     glBindTexture (GL_TEXTURE_2D, tex);
@@ -1067,13 +1054,21 @@ _cairo_gl_pattern_texture_setup (cairo_gl_composite_operand_t *operand,
      */
     if (src->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	cairo_surface_pattern_t *surface_pattern;
-	cairo_image_surface_t *image_surface;
 
 	surface_pattern = (cairo_surface_pattern_t *)src;
 	if (_cairo_surface_is_image (surface_pattern->surface)) {
+	    cairo_image_surface_t *image_surface;
+	    GLenum internal_format, format, type;
+	    cairo_bool_t has_alpha;
+
 	    image_surface = (cairo_image_surface_t *)surface_pattern->surface;
-	    if (!_cairo_gl_surface_draw_image_format_compatible (image_surface))
-		return CAIRO_INT_STATUS_UNSUPPORTED;
+
+	    status = _cairo_gl_get_image_format_and_type (image_surface->pixman_format,
+							  &internal_format,
+							  &format, &type,
+							  &has_alpha);
+		if (status)
+		    return status;
 	}
     }
 
