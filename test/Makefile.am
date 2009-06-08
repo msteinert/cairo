@@ -461,6 +461,7 @@ REFERENCE_IMAGES = \
 	mask.pdf.rgb24.ref.png	\
 	mask.quartz.ref.png	\
 	mask.quartz.rgb24.ref.png	\
+	mask-glyphs.ref.png	\
 	mask-surface-ctm.ref.png	\
 	mask-surface-ctm.rgb24.ref.png	\
 	mask-surface-ctm.svg11.argb32.ref.png	\

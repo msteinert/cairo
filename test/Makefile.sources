@@ -105,6 +105,7 @@ test_sources = \
 	mask.c						\
 	mask-alpha.c					\
 	mask-ctm.c					\
+	mask-glyphs.c					\
 	mask-surface-ctm.c				\
 	mask-transformed-image.c			\
 	mask-transformed-similar.c			\
