@@ -184,7 +184,7 @@ How to benchmark traces
 -----------------------
 Using cairo-trace you can record the exact sequence of graphic operations
 made by an application and replay them later. These traces can then be
-used to benchmark the various backends and patches.
+used by cairo-perf-trace to benchmark the various backends and patches.
 
 To record a trace:
 $ cairo-trace --no-mark-dirty --no-callers $APPLICATION [$ARGV]
