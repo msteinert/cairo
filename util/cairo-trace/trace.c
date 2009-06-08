@@ -885,8 +885,52 @@ static void
 _push_operand (enum operand_type t, const void *ptr)
 {
     Object *obj = _get_object (t, ptr);
+
+    if (current_stack_depth ==
+	sizeof (current_object) / sizeof (current_object[0]))
+    {
+	int n;
+
+	fprintf (stderr, "Operand stack overflow!\n");
+	for (n = 0; n < current_stack_depth; n++) {
+	    obj = current_object[n];
+
+	    fprintf (stderr, "  [%3d] = %s%ld\n",
+		     n, obj->type->op_code, obj->token);
+	}
+
+	abort ();
+    }
+
     obj->operand = current_stack_depth;
     current_object[current_stack_depth++] = obj;
+}
+
+static void
+_object_remove (Object *obj)
+{
+    if (obj->operand != -1) {
+	if (obj->operand == current_stack_depth - 1) {
+	    _trace_printf ("pop %% %s%ld destroyed\n",
+			   obj->type->op_code, obj->token);
+	} else if (obj->operand == current_stack_depth - 2) {
+	    _exch_operands ();
+	    _trace_printf ("exch pop %% %s%ld destroyed\n",
+			   obj->type->op_code, obj->token);
+	} else {
+	    int n;
+
+	    _trace_printf ("%d -1 roll pop %% %s%ld destroyed\n",
+			   current_stack_depth - obj->operand,
+			   obj->type->op_code, obj->token);
+
+	    for (n = obj->operand; n < current_stack_depth - 1; n++) {
+		current_object[n] = current_object[n+1];
+		current_object[n]->operand = n;
+	    }
+	}
+	current_stack_depth--;
+    }
 }
 
 static void
@@ -895,28 +939,7 @@ _object_undef (void *ptr)
     Object *obj = ptr;
 
     if (_write_lock ()) {
-	if (obj->operand != -1) {
-	    if (obj->operand == current_stack_depth - 1) {
-		_trace_printf ("pop %% %s%ld destroyed\n",
-			       obj->type->op_code, obj->token);
-	    } else if (obj->operand == current_stack_depth - 2) {
-		_exch_operands ();
-		_trace_printf ("exch pop %% %s%ld destroyed\n",
-			       obj->type->op_code, obj->token);
-	    } else {
-		int n;
-
-		_trace_printf ("%d -1 roll pop %% %s%ld destroyed\n",
-			       current_stack_depth - obj->operand,
-			       obj->type->op_code, obj->token);
-
-		for (n = obj->operand; n < current_stack_depth - 1; n++) {
-		    current_object[n] = current_object[n+1];
-		    current_object[n]->operand = n;
-		}
-	    }
-	    current_stack_depth--;
-	}
+	_object_remove (obj);
 
 	if (obj->defined) {
 	    _trace_printf ("/%s%ld undef\n",
@@ -2722,11 +2745,16 @@ cairo_scaled_font_create (cairo_font_face_t *font_face,
 
 	_emit_font_options (options);
 
-	_trace_printf ("  scaled-font dup /sf%ld exch def\n",
-		       scaled_font_id);
+	if (_get_object (SCALED_FONT, ret)->defined) {
+	    _trace_printf ("  scaled-font pop %% sf%ld\n",
+			   scaled_font_id);
+	} else {
+	    _trace_printf ("  scaled-font dup /sf%ld exch def\n",
+			   scaled_font_id);
+	    _push_operand (SCALED_FONT, ret);
 
-	_get_object (SCALED_FONT, ret)->defined = true;
-	_push_operand (SCALED_FONT, ret);
+	    _get_object (SCALED_FONT, ret)->defined = true;
+	}
 
 	_write_unlock ();
     }
@@ -3470,7 +3498,12 @@ cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
 
     _emit_line_info ();
     if (pattern != NULL && _write_lock ()) {
+	Object *obj;
 	FcChar8 *parsed;
+
+	obj = _get_object (FONT_FACE, ret);
+	if (obj->operand != -1)
+	    _object_remove (obj);
 
 	parsed = DLCALL (FcNameUnparse, pattern);
 	_trace_printf ("dict\n"
@@ -3523,6 +3556,10 @@ cairo_ft_font_face_create_for_ft_face (FT_Face face, int load_flags)
 
     _emit_line_info ();
     if (_write_lock ()) {
+	obj = _get_object (FONT_FACE, ret);
+	if (obj->operand != -1)
+	    _object_remove (obj);
+
 	_trace_printf ("dict\n"
 		       "  /type 42 set\n"
 		       "  /source ");
