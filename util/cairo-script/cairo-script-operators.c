@@ -2445,12 +2445,12 @@ _image_read_raw (csi_file_t *src,
 		    row[4*x + 3] = *--bp;
 		    row[4*x + 2] = *--bp;
 		    row[4*x + 1] = *--bp;
-		    row[4*x + 0] = 0;
+		    row[4*x + 0] = 0xff;
 #else
 		    row[4*x + 0] = *--bp;
 		    row[4*x + 1] = *--bp;
 		    row[4*x + 2] = *--bp;
-		    row[4*x + 3] = 0;
+		    row[4*x + 3] = 0xff;
 #endif
 		}
 		break;
@@ -2478,12 +2478,12 @@ _image_read_raw (csi_file_t *src,
 		data[4*x + 3] = *--bp;
 		data[4*x + 2] = *--bp;
 		data[4*x + 1] = *--bp;
-		data[4*x + 0] = 0;
+		data[4*x + 0] = 0xff;
 #else
 		data[4*x + 0] = *--bp;
 		data[4*x + 1] = *--bp;
 		data[4*x + 2] = *--bp;
-		data[4*x + 3] = 0;
+		data[4*x + 3] = 0xff;
 #endif
 	    }
 	    if (width > 1) {
@@ -2496,27 +2496,27 @@ _image_read_raw (csi_file_t *src,
 		rgb[0][1] = data[1];
 		rgb[0][2] = data[0];
 #ifdef WORDS_BIGENDIAN
-		data[4] = 0;
+		data[4] = 0xff;
 		data[5] = rgb[1][2];
 		data[6] = rgb[1][1];
 		data[7] = rgb[1][0];
-		data[0] = 0;
+		data[0] = 0xff;
 		data[1] = rgb[0][2];
 		data[2] = rgb[0][1];
 		data[3] = rgb[0][0];
 #else
-		data[7] = 0;
+		data[7] = 0xff;
 		data[6] = rgb[1][2];
 		data[5] = rgb[1][1];
 		data[4] = rgb[1][0];
-		data[3] = 0;
+		data[3] = 0xff;
 		data[2] = rgb[0][2];
 		data[1] = rgb[0][1];
 		data[0] = rgb[0][0];
 #endif
 	    } else {
 #ifdef WORDS_BIGENDIAN
-		data[0] = 0;
+		data[0] = 0xff;
 		data[1] = data[0];
 		data[2] = data[1];
 		data[3] = data[2];
@@ -2524,7 +2524,7 @@ _image_read_raw (csi_file_t *src,
 		data[3] = data[0];
 		data[0] = data[2];
 		data[2] = data[3];
-		data[3] = 0;
+		data[3] = 0xff;
 #endif
 	    }
 	    break;
@@ -4407,13 +4407,42 @@ _set_source (csi_t *ctx)
     return CSI_STATUS_SUCCESS;
 }
 
+static csi_boolean_t
+_matching_images (cairo_surface_t *a, cairo_surface_t *b)
+{
+    cairo_format_t format_a, format_b;
+
+    if (cairo_surface_get_type (a) != CAIRO_SURFACE_TYPE_IMAGE)
+	return FALSE;
+    if (cairo_surface_get_type (b) != CAIRO_SURFACE_TYPE_IMAGE)
+	return FALSE;
+
+    if (cairo_image_surface_get_height (a) != cairo_image_surface_get_height (b))
+	return FALSE;
+
+    if (cairo_image_surface_get_width (a) != cairo_image_surface_get_width (b))
+	return FALSE;
+
+    format_a = cairo_image_surface_get_format (a);
+    if (format_a == CAIRO_FORMAT_RGB24)
+	format_a = CAIRO_FORMAT_ARGB32;
+
+    format_b = cairo_image_surface_get_format (b);
+    if (format_b == CAIRO_FORMAT_RGB24)
+	format_b = CAIRO_FORMAT_ARGB32;
+
+    if (format_a != format_b)
+	return FALSE;
+
+    return TRUE;
+}
+
 static csi_status_t
 _set_source_image (csi_t *ctx)
 {
     csi_status_t status;
     cairo_surface_t *surface;
     cairo_surface_t *source;
-    cairo_t *cr;
 
     check (2);
 
@@ -4424,10 +4453,21 @@ _set_source_image (csi_t *ctx)
     if (_csi_unlikely (status))
 	return status;
 
-    cr = cairo_create (surface);
-    cairo_set_source_surface (cr, source, 0, 0);
-    cairo_paint (cr);
-    cairo_destroy (cr);
+    /* Catch the most frequent use of simply uploading pixel data,
+     * principally to remove the pixman ops from the profiles.
+     */
+    if (_csi_likely (_matching_images (surface, source))) {
+	memcpy (cairo_image_surface_get_data (surface),
+		cairo_image_surface_get_data (source),
+		cairo_image_surface_get_height (source) * cairo_image_surface_get_stride (source));
+    } else {
+	cairo_t *cr;
+
+	cr = cairo_create (surface);
+	cairo_set_source_surface (cr, source, 0, 0);
+	cairo_paint (cr);
+	cairo_destroy (cr);
+    }
 
     pop (1);
     return CSI_STATUS_SUCCESS;
