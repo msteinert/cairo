@@ -41,7 +41,6 @@ typedef struct _cairo_perf_report_options {
     double min_change;
     int use_utf;
     int print_change_bars;
-    int use_ms;
 } cairo_perf_report_options_t;
 
 typedef struct _cairo_perf_diff_files_args {
@@ -132,8 +131,7 @@ test_diff_print (test_diff_t			*diff,
 
     for (i = 0; i < diff->num_tests; i++) {
 	test_time = diff->tests[i]->stats.min_ticks;
-	if (options->use_ms)
-	    test_time /= diff->tests[i]->stats.ticks_per_ms;
+	test_time /= diff->tests[i]->stats.ticks_per_ms;
 	change = diff->max / test_time;
 	printf ("%8s-%s-%s\t%6.2f: %5.2fx ",
 		diff->tests[i]->backend,
@@ -230,8 +228,7 @@ cairo_perf_reports_compare (cairo_perf_report_t		*reports,
 	    {
 		test_time = tests[i]->stats.min_ticks;
 		if (test_time > 0) {
-		    if (options->use_ms)
-			test_time /= tests[i]->stats.ticks_per_ms;
+		    test_time /= tests[i]->stats.ticks_per_ms;
 		    if (diff->num_tests == 0) {
 			diff->min = test_time;
 			diff->max = test_time;
@@ -251,7 +248,7 @@ cairo_perf_reports_compare (cairo_perf_report_t		*reports,
 	diff++;
 	num_diffs++;
     }
-    if (num_diffs < 2)
+    if (num_diffs == 0)
 	goto DONE;
 
     qsort (diffs, num_diffs, sizeof (test_diff_t), test_diff_cmp);
@@ -274,9 +271,9 @@ cairo_perf_reports_compare (cairo_perf_report_t		*reports,
 	test_diff_print (diff, max_change, options);
     }
 
- DONE:
     for (i = 0; i < num_diffs; i++)
 	free (diffs[i].tests);
+ DONE:
     free (diffs);
     free (tests);
 }
@@ -324,9 +321,6 @@ parse_args(int				  argc,
 	}
 	else if (strcmp (argv[i], "--no-bars") == 0) {
 	    args->options.print_change_bars = 0;
-	}
-	else if (strcmp (argv[i], "--use-ms") == 0) {
-	    args->options.use_ms = 1;
 	}
 	else if (strcmp (argv[i], "--min-change") == 0) {
 	    char *end = NULL;
@@ -377,7 +371,8 @@ main (int argc, const char *argv[])
     for (i = 0; i < args.num_filenames; i++) {
 	cairo_perf_report_load (&reports[i], args.filenames[i],
 		                test_report_cmp_name);
-	printf ("loaded: %s\n", args.filenames[i]);
+	printf ("loaded: %s, %d tests\n",
+		args.filenames[i], reports[i].tests_count);
     }
 
     cairo_perf_reports_compare (reports, args.num_filenames, &args.options);
