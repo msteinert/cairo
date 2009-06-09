@@ -40,10 +40,13 @@
 
 #include "cairo-gl-private.h"
 
+#include <X11/Xutil.h>
+
 typedef struct _cairo_glx_context {
     cairo_gl_context_t base;
 
     Display *display;
+    Window dummy_window;
     GLXContext context;
 } cairo_glx_context_t;
 
@@ -77,6 +80,61 @@ _glx_swap_buffers (void *abstract_ctx,
 static void
 _glx_destroy (void *abstract_ctx)
 {
+    cairo_glx_context_t *ctx = abstract_ctx;
+
+    if (ctx->dummy_window != None)
+	XDestroyWindow (ctx->display, ctx->dummy_window);
+}
+
+static cairo_status_t
+_glx_dummy_ctx (Display *dpy, GLXContext gl_ctx, Window *dummy)
+{
+    int attr[3] = { GLX_FBCONFIG_ID, 0, None };
+    GLXFBConfig *config;
+    XVisualInfo *vi;
+    Colormap cmap;
+    XSetWindowAttributes swa;
+    Window win = None;
+    int cnt;
+
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+
+    /* Create a dummy window created for the target GLX context that we can
+     * use to query the available GL/GLX extensions.
+     */
+    glXQueryContext (dpy, gl_ctx, GLX_FBCONFIG_ID, &attr[1]);
+
+    cnt = 0;
+    config = glXChooseFBConfig (dpy, DefaultScreen (dpy), attr, &cnt);
+    if (cnt == 0)
+	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT);
+    vi = glXGetVisualFromFBConfig (dpy, config[0]);
+    XFree (config);
+
+    cmap = XCreateColormap (dpy,
+			    RootWindow (dpy, vi->screen),
+			    vi->visual,
+			    AllocNone);
+    swa.colormap = cmap;
+    swa.border_pixel = 0;
+    win = XCreateWindow (dpy, RootWindow (dpy, vi->screen),
+			 -1, -1, 1, 1, 0,
+			 vi->depth,
+			 InputOutput,
+			 vi->visual,
+			 CWBorderPixel | CWColormap, &swa);
+    XFreeColormap (dpy, cmap);
+    XFree (vi);
+
+    XFlush (dpy);
+    if (! glXMakeCurrent (dpy, win, gl_ctx)) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	XDestroyWindow (dpy, win);
+	win = None;
+    }
+
+    *dummy = win;
+    return status;
 }
 
 cairo_gl_context_t *
@@ -84,20 +142,18 @@ cairo_glx_context_create (Display *dpy, GLXContext gl_ctx)
 {
     cairo_glx_context_t *ctx;
     cairo_status_t status;
+    Window dummy = None;
 
-    /* Make our GL context active.  While we'll be setting the destination
-     * drawable with each rendering operation, in order to set the context
-     * we have to choose a drawable.  The root window happens to be convenient
-     * for this.
-     */
-    if (! glXMakeCurrent (dpy, RootWindow (dpy, DefaultScreen (dpy)), gl_ctx))
-	return _cairo_gl_context_create_in_error (CAIRO_STATUS_NO_MEMORY);
+    status = _glx_dummy_ctx (dpy, gl_ctx, &dummy);
+    if (status)
+	return _cairo_gl_context_create_in_error (status);
 
     ctx = calloc (1, sizeof (cairo_glx_context_t));
     if (ctx == NULL)
 	return _cairo_gl_context_create_in_error (CAIRO_STATUS_NO_MEMORY);
 
     ctx->display = dpy;
+    ctx->dummy_window = dummy;
     ctx->context = gl_ctx;
 
     ctx->base.make_current = _glx_make_current;
