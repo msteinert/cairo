@@ -781,7 +781,20 @@ cairo_boilerplate_get_targets (int *pnum_targets, cairo_bool_t *plimited_targets
 	    }
 
 	    if (!found) {
-		fprintf (stderr, "Cannot find target '%.*s'\n", (int)(end - tname), tname);
+		fprintf (stderr, "Cannot find target '%.*s'.\n",
+			 (int)(end - tname), tname);
+		fprintf (stderr, "Known targets:");
+		for (i = 0; i < sizeof (targets) / sizeof (targets[0]); i++) {
+		    if (i != 0) {
+			if (strcmp (targets[i].name, targets[i-1].name) == 0) {
+			    /* filter out repeats that differ in content */
+			    continue;
+			}
+			fprintf (stderr, ",");
+		    }
+		    fprintf (stderr, " %s", targets[i].name);
+		}
+		fprintf (stderr, "\n");
 		exit(-1);
 	    }
 
