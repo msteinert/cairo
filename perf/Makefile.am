@@ -66,6 +66,9 @@ cairo_perf_SOURCES += cairo-perf-posix.c
 endif
 endif
 cairo_perf_LDADD = $(LDADD)
+cairo_perf_DEPENDENCIES = \
+        $(top_builddir)/boilerplate/libcairoboilerplate.la	\
+	$(top_builddir)/src/libcairo.la
 
 libcairoperf_la_SOURCES = \
 	cairo-perf-report.c	\
@@ -86,6 +89,10 @@ endif
 cairo_perf_trace_LDADD =		\
 	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
 	$(LDADD)
+cairo_perf_trace_DEPENDENCIES = \
+	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
+        $(top_builddir)/boilerplate/libcairoboilerplate.la	\
+	$(top_builddir)/src/libcairo.la
 
 cairo_perf_diff_files_SOURCES =	\
 	cairo-perf-diff-files.c
@@ -100,11 +107,15 @@ cairo_perf_graph_files_SOURCES = \
 cairo_perf_graph_files_CFLAGS = @gtk_CFLAGS@
 cairo_perf_graph_files_LDADD = @gtk_LIBS@ $(LDADD)
 
+# Install rules to rebuild the libraries and add explicit dependencies
 $(top_builddir)/boilerplate/libcairoboilerplate.la: $(top_builddir)/src/libcairo.la
 	cd $(top_builddir)/boilerplate && $(MAKE) $(AM_MAKEFLAGS) libcairoboilerplate.la
 
 $(top_builddir)/src/libcairo.la:
 	cd $(top_builddir)/src && $(MAKE) $(AM_MAKEFLAGS) libcairo.la
+
+$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la: $(top_builddir)/src/libcairo.la
+	cd $(top_builddir)/util/cairo-script && $(MAKE) $(AM_MAKEFLAGS) libcairo-script-interpreter.la
 
 
 # Do a funny transition of CAIRO_TEST_TARGET through TARGETS such that
