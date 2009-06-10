@@ -132,8 +132,9 @@ TESTS_ENVIRONMENT = CAIRO_TEST_TARGET="$(TARGETS)" CAIRO_PERF_ITERATIONS="10"
 
 TESTS += cairo-perf$(EXEEXT)
 
-perf: cairo-perf$(EXEEXT)
-	$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf$(EXEEXT)
+perf: cairo-perf$(EXEEXT) cairo-perf-trace$(EXEEXT)
+	-$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf$(EXEEXT)
+	-$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf-trace$(EXEEXT)
 
 html-local: index.html
 
