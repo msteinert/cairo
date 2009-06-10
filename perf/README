@@ -9,8 +9,20 @@ more details on other options for running the suite below.
 
 Running the cairo performance suite
 -----------------------------------
-The lowest-level means of running the test suite is with the
-cairo-perf program, (which is what "make perf" executes). Some
+The performance suite is composed of two types of tests, micro- and
+macro-benchmarks. The micro-benchmarks are a series of hand-written,
+short, synthetic tests that measure the speed of doing a simple
+operation such as painting a surface or showing glyphs. These aim to
+give very good feedback on whether a performance related patch is
+successful without causing any performance degradations elsewhere. The
+second type of benchmark consists of replaying a cairo-trace from a
+large application during typical usage. These aim to give an overall
+feel as to whether cairo is faster for everyday use.
+
+Running the micro-benchmarks
+----------------------------
+The micro-benchmarks are compiled into a single executable called
+cairo-perf, which is what "make perf" executes. Some
 examples of running it:
 
     # Report on all tests with default number of iterations:
@@ -28,6 +40,25 @@ Raw results aren't useful for reading directly, but are quite useful
 when using cairo-perf-diff to compare separate runs (see more
 below). The advantage of using the raw mode is that test runs can be
 generated incrementally and appended to existing reports.
+
+Running the macro-benchmarks
+----------------------------
+The macro-benchmarks are run by a single program called
+cairo-perf-trace, which is also executed by "make perf".
+cairo-perf-trace loops over the series of traces stored beneath
+cairo-traces/. cairo-perf-trace produces the same output and takes the
+same arguments as cairo-perf.  Some examples of running it:
+
+    # Report on all tests with default number of iterations:
+    ./cairo-perf-trace
+
+    # Report on 100 iterations of all firefox tests:
+    ./cairo-perf-trace -i 100 firefox
+
+    # Generate raw results for 10 iterations into cairo.perf
+    ./cairo-perf-trace -r -i 10 > cairo.perf
+    # Append 10 more iterations of the poppler tests
+    ./cairo-perf-trace -r -i 10 poppler >> cairo.perf
 
 Generating comparisons of separate runs
 ---------------------------------------
@@ -180,7 +211,7 @@ added:
     64x64.
 
 
-How to benchmark traces
+How to record new traces
 -----------------------
 Using cairo-trace you can record the exact sequence of graphic operations
 made by an application and replay them later. These traces can then be
