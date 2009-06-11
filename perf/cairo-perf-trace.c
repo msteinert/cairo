@@ -28,7 +28,7 @@
  *          Chris Wilson <chris@chris-wilson.co.uk>
  */
 
-#define _GNU_SOURCE 1	/* for sched_getaffinity() */
+#define _GNU_SOURCE 1	/* for sched_getaffinity() and getline() */
 
 #include "cairo-perf.h"
 #include "cairo-stats.h"
@@ -40,6 +40,7 @@
 #ifdef HAVE_LIBGEN_H
 #include <libgen.h>
 #endif
+#include <ctype.h> /* isspace() */
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -114,8 +115,9 @@ cairo_perf_can_run (cairo_perf_t	*perf,
 {
     unsigned int i;
     char *copy, *dot;
+    cairo_bool_t ret;
 
-    if (perf->num_names == 0)
+    if (perf->num_names == 0 && perf->num_exclude_names == 0)
 	return TRUE;
 
     copy = xstrdup (name);
@@ -123,13 +125,31 @@ cairo_perf_can_run (cairo_perf_t	*perf,
     if (dot != NULL)
 	*dot = '\0';
 
-    for (i = 0; i < perf->num_names; i++)
-	if (strstr (copy, perf->names[i]))
-	    break;
+    if (perf->num_names) {
+	ret = TRUE;
+	for (i = 0; i < perf->num_names; i++)
+	    if (strstr (copy, perf->names[i]))
+		goto check_exclude;
 
+	ret = FALSE;
+	goto done;
+    }
+
+check_exclude:
+    if (perf->num_exclude_names) {
+	ret = FALSE;
+	for (i = 0; i < perf->num_exclude_names; i++)
+	    if (strstr (copy, perf->exclude_names[i]))
+		goto done;
+
+	ret = TRUE;
+	goto done;
+    }
+
+done:
     free (copy);
 
-    return i != perf->num_names;
+    return ret;
 }
 
 static void
@@ -317,12 +337,104 @@ usage (const char *argv0)
 "  -r	raw; display each time measurement instead of summary statistics\n"
 "  -v	verbose; in raw mode also show the summaries\n"
 "  -i	iterations; specify the number of iterations per test case\n"
+"  -x   exclude; specify a file to read a list of traces to exclude\n"
 "  -l	list only; just list selected test case names without executing\n"
 "\n"
 "If test names are given they are used as sub-string matches so a command\n"
 "such as \"cairo-perf-trace firefox\" can be used to run all firefox traces.\n"
 "Alternatively, you can specify a list of filenames to execute.\n",
 	     argv0, argv0);
+}
+
+#ifndef __USE_GNU
+#define POORMANS_GETLINE_BUFFER_SIZE (65536)
+static ssize_t
+getline (char **lineptr, size_t *n, FILE *stream)
+{
+    if (!*lineptr)
+    {
+        *n = POORMANS_GETLINE_BUFFER_SIZE;
+        *lineptr = (char *) malloc (*n);
+    }
+
+    if (!fgets (*lineptr, *n, stream))
+        return -1;
+
+    if (!feof (stream) && !strchr (*lineptr, '\n'))
+    {
+        fprintf (stderr, "The poor man's implementation of getline in "
+                          __FILE__ " needs a bigger buffer. Perhaps it's "
+                         "time for a complete implementation of getline.\n");
+        exit (0);
+    }
+
+    return strlen (*lineptr);
+}
+#undef POORMANS_GETLINE_BUFFER_SIZE
+
+static char *
+strndup (const char *s, size_t n)
+{
+    size_t len;
+    char *sdup;
+
+    if (!s)
+        return NULL;
+
+    len = strlen (s);
+    len = (n < len ? n : len);
+    sdup = (char *) malloc (len + 1);
+    if (sdup)
+    {
+        memcpy (sdup, s, len);
+        sdup[len] = '\0';
+    }
+
+    return sdup;
+}
+#endif /* ifndef __USE_GNU */
+
+static cairo_bool_t
+read_excludes (cairo_perf_t *perf, const char *filename)
+{
+    FILE *file;
+    char *line = NULL;
+    size_t line_size = 0;
+    char *s, *t;
+
+    file = fopen (filename, "r");
+    if (file == NULL)
+	return FALSE;
+
+    while (getline (&line, &line_size, file) != -1) {
+	/* terminate the line at a comment marker '#' */
+	s = strchr (line, '#');
+	if (s)
+	    *s = '\0';
+
+	/* whitespace delimits */
+	s = line;
+	while (*s != '\0' && isspace (*s))
+	    s++;
+
+	t = s;
+	while (*t != '\0' && ! isspace (*t))
+	    t++;
+
+	if (s != t) {
+	    int i = perf->num_exclude_names;
+	    perf->exclude_names = xrealloc (perf->exclude_names,
+					    sizeof (char *) * (i+1));
+	    perf->exclude_names[i] = strndup (s, t-s);
+	    perf->num_exclude_names++;
+	}
+    }
+    if (line != NULL)
+	free (line);
+
+    fclose (file);
+
+    return TRUE;
 }
 
 static void
@@ -345,9 +457,11 @@ parse_options (cairo_perf_t *perf, int argc, char *argv[])
     perf->num_names = 0;
     perf->summary = stdout;
     perf->summary_continuous = FALSE;
+    perf->exclude_names = NULL;
+    perf->num_exclude_names = 0;
 
     while (1) {
-	c = _cairo_getopt (argc, argv, "i:lrv");
+	c = _cairo_getopt (argc, argv, "ix:lrv");
 	if (c == -1)
 	    break;
 
@@ -370,6 +484,13 @@ parse_options (cairo_perf_t *perf, int argc, char *argv[])
 	    break;
 	case 'v':
 	    verbose = 1;
+	    break;
+	case 'x':
+	    if (! read_excludes (perf, optarg)) {
+		fprintf (stderr, "Invalid argument for -x (not readable file): %s\n",
+			 optarg);
+		exit (1);
+	    }
 	    break;
 	default:
 	    fprintf (stderr, "Internal error: unhandled option: %c\n", c);

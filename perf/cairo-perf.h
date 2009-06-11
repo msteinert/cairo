@@ -79,6 +79,8 @@ typedef struct _cairo_perf {
     cairo_bool_t list_only;
     char **names;
     unsigned int num_names;
+    char **exclude_names;
+    unsigned int num_exclude_names;
 
     /* Stuff used internally */
     cairo_perf_ticks_t *times;
