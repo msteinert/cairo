@@ -1018,12 +1018,13 @@ CLEANFILES +=					\
 	index.html				\
 	ref.hash				\
 	png-test.png				\
+	png.out.png				\
 	create-for-stream.pdf			\
 	create-for-stream.ps			\
 	create-for-stream.svg			\
-	svg-surface-source.svg			\
-	pdf-surface-source.pdf			\
-	ps-surface-source.ps			\
+	svg-surface-source.out.svg		\
+	pdf-surface-source.out.pdf		\
+	ps-surface-source.out.ps		\
 	pdf-features.pdf			\
 	pdf-mime-data.out*			\
 	ps-features.ps				\
