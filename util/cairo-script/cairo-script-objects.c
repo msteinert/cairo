@@ -559,6 +559,33 @@ csi_string_new (csi_t *ctx,
     return CSI_STATUS_SUCCESS;
 }
 
+csi_status_t
+csi_string_new_from_bytes (csi_t *ctx,
+	                   csi_object_t *obj,
+			   char *bytes,
+			   unsigned int len)
+{
+    csi_string_t *string;
+
+    if (_csi_unlikely (len >= INT_MAX))
+	return _csi_error (CSI_STATUS_NO_MEMORY);
+
+    string = _csi_slab_alloc (ctx, sizeof (csi_string_t));
+    if (_csi_unlikely (string == NULL))
+	return _csi_error (CSI_STATUS_NO_MEMORY);
+
+    string->string = bytes;
+    string->len = len;
+
+    string->base.type = CSI_OBJECT_TYPE_STRING;
+    string->base.ref = 1;
+
+    obj->type = CSI_OBJECT_TYPE_STRING;
+    obj->datum.string = string;
+
+    return CSI_STATUS_SUCCESS;
+}
+
 static inline csi_status_t
 _csi_string_execute (csi_t *ctx, csi_string_t *string)
 {

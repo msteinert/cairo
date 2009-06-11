@@ -737,6 +737,12 @@ csi_string_new (csi_t *ctx,
 		const char *str,
 		int len);
 
+csi_private csi_status_t
+csi_string_new_from_bytes (csi_t *ctx,
+	                   csi_object_t *obj,
+			   char *bytes,
+			   unsigned int len);
+
 csi_private void
 csi_string_free (csi_t *ctx, csi_string_t *string);
 

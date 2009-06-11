@@ -993,7 +993,7 @@ _csi_file_as_string (csi_t *ctx,
 	    break;
 
 	len += ret;
-	if (len > allocated / 2) {
+	if (len + 1 > allocated / 2) {
 	    char *newbytes;
 	    int newlen;
 
@@ -1011,7 +1011,8 @@ _csi_file_as_string (csi_t *ctx,
 	}
     } while (TRUE);
 
-    status = csi_string_new (ctx, obj, bytes, len);
+    bytes[len] = '\0'; /* better safe than sorry! */
+    status = csi_string_new_from_bytes (ctx, obj, bytes, len);
     if (status) {
 	_csi_free (ctx, bytes);
 	return status;
