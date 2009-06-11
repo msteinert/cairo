@@ -68,7 +68,8 @@ endif
 cairo_perf_LDADD = $(LDADD)
 cairo_perf_DEPENDENCIES = \
         $(top_builddir)/boilerplate/libcairoboilerplate.la	\
-	$(top_builddir)/src/libcairo.la
+	$(top_builddir)/src/libcairo.la \
+	libcairoperf.la
 
 libcairoperf_la_SOURCES = \
 	cairo-perf-report.c	\
@@ -92,7 +93,8 @@ cairo_perf_trace_LDADD =		\
 cairo_perf_trace_DEPENDENCIES = \
 	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
         $(top_builddir)/boilerplate/libcairoboilerplate.la	\
-	$(top_builddir)/src/libcairo.la
+	$(top_builddir)/src/libcairo.la \
+	libcairoperf.la
 
 cairo_perf_diff_files_SOURCES =	\
 	cairo-perf-diff-files.c
