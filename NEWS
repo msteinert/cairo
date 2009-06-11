@@ -18,13 +18,14 @@ API additions:
   cairo_pdf_surface_restrict_to_version()
   cairo_pdf_get_versions()
   cairo_pdf_version_to_string()
-    Similar to restrict to version and level found in SVG and PS, these
-    limit the features used in the output to comply with the PDF specification
-    for that version.
+
+    Similar to restrict to version and level found in SVG and PS,
+    these limit the features used in the output to comply with the PDF
+    specification for that version.
 
   CAIRO_STATUS_INVALID_SIZE
-    Indicates that the request surface size is not supported by the backend.
-    This generally indicates that the request is too large.
+    Indicates that the request surface size is not supported by the
+    backend.  This generally indicates that the request is too large.
 
   CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED
     Indicates that a required callback for a user-font was not implemented.
@@ -44,23 +45,31 @@ New experimental backends:
 
 New utility:
 
-  cairo-trace
+  cairo-trace and cairo-perf-trace
 
-    Generates a human-readable, replayable, compact(-ish!) representation of
-    the sequences of drawing commands made by an application.
+    cairo-trace generates a human-readable, replayable, compact(-ish!)
+    representation of the sequences of drawing commands made by an
+    application.
 
     Under the util/cairo-script directory is a library to replay traces.
 
-    perf/cairo-perf-trace contains a benchmarking tool for traces, integrated
-    with 'make perf' (needs the external trace repository
-    git://anongit.freedesktop.org/cairo-traces under perf/cairo-traces).
+    perf/cairo-perf-trace replays traces against multiple backends
+    and makes useful benchmark reports. This is integrated with
+    'make perf'. You may collect your own traces or take advantage
+    of traces collected by the community:
+
+      git://git.cairographics.org/git/cairo-traces
+
+    (Put this into perf/cairo-traces to run these as part of "make perf".)
 
     There is additional WIP in building a debugging tool for cairo applications
     based on CairoScript (currently very preliminary, mostly serves to show
     that GtkSourceView is too slow) :
+
       people.freedesktop.org:~ickle/sphinx
 
 Test suite overhaul:
+
   The test suite is undergoing an overhaul, primarily to improve its speed
   and utility. (Expect more changes in the near future to improve XFAIL
   handling.)
@@ -72,26 +81,36 @@ Optimisations:
   Bovine Polaroids! Though Adrian said that the PDF is not quite working as
   well as it should.
 
-Tweaks to tessellator, allocations of patterns, delayed initialisation of
-the xlib backend (reduce the cairo overhead of render_bench by ~80%).
-
 Bug fixes:
-EXTEND_PAD.
-Better handling of large scale-factors on image patterns.
-Emit /Interpolate for PS,PDF images.
-Global glyph cache - cap on the total number of inactive glyphs, should prove
-fairer for fonts with larger glyph sets.
-Compilation without fontconfig
-Improved handling of low-bitdepth sources (e.g. copying the contents of
-16-bit xserver windows)
+
+  EXTEND_PAD.
+
+  Better handling of large scale-factors on image patterns.
+
+  Emit /Interpolate for PS,PDF images.
+
+  Global glyph cache - cap on the total number of inactive glyphs,
+  should prove fairer for fonts with larger glyph sets.
+
+  Compilation without fontconfig
+
+  Improved handling of low-bitdepth sources (e.g. copying the contents
+  of 16-bit xserver windows)
 
 Regressions:
-cairo_traps_extract_region >10x slower. Fix pending.
+
+  cairo_traps_extract_region >10x slower. Fix pending.
 
 Still to come:
-Region tracking API (ssp) for damage tracking, hit testing etc
-mime-surface
-An expiremental OpenGL backend?
+
+  Region tracking API (ssp) for damage tracking, hit testing etc
+  mime-surface
+
+  An expiremental OpenGL backend?
+
+  Tweaks to tessellator, allocations of patterns, delayed
+  initialisation of the xlib backend (reduce the cairo overhead of
+  render_bench by ~80%).
 
 Release 1.8.6 (2008-12-13 Chris Wilson <chris@chris-wilson.co.uk>)
 =========================================================
