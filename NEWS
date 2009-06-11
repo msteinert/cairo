@@ -5,8 +5,12 @@ API additions:
   cairo_surface_set_mime_data()
   cairo_surface_get_mime_data()
 
+    Should this take unsigned int, unsigned long or size_t for the length
+    parameter? (Some datasets may be >4GiB in size.)
+
     Associate an alternate, compressed, representation for a surface.
     Currently:
+     "image/jp2" (JPEG2000) is understood by PDF >= 1.5
      "image/jpeg" is understood by PDF,PS,SVG,win32-printing.
      "image/png" is understood by SVG.
 
@@ -22,31 +26,52 @@ API additions:
     Indicates that the request surface size is not supported by the backend.
     This generally indicates that the request is too large.
 
+  CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED
+    Indicates that a required callback for a user-font was not implemented.
+
+  CAIRO_STATUS_LAST_STATUS
+    This is a special value to indicate the number of status values enumerated
+    at compile time. (This may differ to the number known at run-time.)
+
   The built-in twin font is now called "@cairo:" and supports a limited set
   of options like "@cairo:mono". Where are these specified?
 
-  cairo_in_fill() now uses flash semantics... OTOH, top and left are outside.
+  cairo_in_fill() now uses HTML Canvas semantics, all edges are inside.
 
 New experimental backends:
 
-   Simple DirectMedia Layer
    CairoScript
 
 New utility:
 
   cairo-trace
 
-    Generates a human-readable, replayable, compact representation of
+    Generates a human-readable, replayable, compact(-ish!) representation of
     the sequences of drawing commands made by an application.
-    Though currently the replay tools are out-of-tree -
-      people.freedesktop.org:~ickle/cairo-script,
+
+    Under the util/cairo-script directory is a library to replay traces.
+
+    perf/cairo-perf-trace contains a benchmarking tool for traces, integrated
+    with 'make perf' (needs the external trace repository
+    git://anongit.freedesktop.org/cairo-traces under perf/cairo-traces).
+
+    There is additional WIP in building a debugging tool for cairo applications
+    based on CairoScript (currently very preliminary, mostly serves to show
+    that GtkSourceView is too slow) :
       people.freedesktop.org:~ickle/sphinx
 
 Test suite overhaul:
   The test suite is undergoing an overhaul, primarily to improve its speed
-  and utility.
+  and utility. (Expect more changes in the near future to improve XFAIL
+  handling.)
 
 Optimisations:
+  polygon rasterisation! Joonas implemented the Tor polygon scan converter,
+  on typical geometry is about 30% faster for the image backend.
+
+  Bovine Polaroids! Though Adrian said that the PDF is not quite working as
+  well as it should.
+
 Tweaks to tessellator, allocations of patterns, delayed initialisation of
 the xlib backend (reduce the cairo overhead of render_bench by ~80%).
 
@@ -54,6 +79,19 @@ Bug fixes:
 EXTEND_PAD.
 Better handling of large scale-factors on image patterns.
 Emit /Interpolate for PS,PDF images.
+Global glyph cache - cap on the total number of inactive glyphs, should prove
+fairer for fonts with larger glyph sets.
+Compilation without fontconfig
+Improved handling of low-bitdepth sources (e.g. copying the contents of
+16-bit xserver windows)
+
+Regressions:
+cairo_traps_extract_region >10x slower. Fix pending.
+
+Still to come:
+Region tracking API (ssp) for damage tracking, hit testing etc
+mime-surface
+An expiremental OpenGL backend?
 
 Release 1.8.6 (2008-12-13 Chris Wilson <chris@chris-wilson.co.uk>)
 =========================================================
