@@ -461,7 +461,7 @@ parse_options (cairo_perf_t *perf, int argc, char *argv[])
     perf->num_exclude_names = 0;
 
     while (1) {
-	c = _cairo_getopt (argc, argv, "ix:lrv");
+	c = _cairo_getopt (argc, argv, "i:x:lrv");
 	if (c == -1)
 	    break;
 
