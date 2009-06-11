@@ -78,8 +78,15 @@ Optimisations:
   polygon rasterisation! Joonas implemented the Tor polygon scan converter,
   on typical geometry is about 30% faster for the image backend.
 
-  Bovine Polaroids! Though Adrian said that the PDF is not quite working as
-  well as it should.
+  Bovine Polaroids! For those not in on the joke, this is the long
+  awaited "copy-on-write snapshot" or "COW snapshot" support. The
+  user-visible feature is that including the same image multiple times
+  into a PDF file should result in only a single instance of that
+  image in the final output. This is unlike previous versions of cairo
+  which would generate very large PDF files with multiple copies of
+  the same image. Adrian says that the PDF is not quite working as
+  well as it should yet, so we hope for futher improvements before
+  cairo 1.10.
 
 Bug fixes:
 
