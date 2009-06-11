@@ -175,6 +175,34 @@ ifeq ($(CAIRO_HAS_BEOS_SURFACE),1)
 enabled_cairo_pkgconf += cairo-beos.pc
 endif
 
+unsupported_cairo_headers += $(cairo_drm_headers)
+all_cairo_headers += $(cairo_drm_headers)
+all_cairo_private += $(cairo_drm_private)
+all_cairo_sources += $(cairo_drm_sources)
+ifeq ($(CAIRO_HAS_DRM_SURFACE),1)
+enabled_cairo_headers += $(cairo_drm_headers)
+enabled_cairo_private += $(cairo_drm_private)
+enabled_cairo_sources += $(cairo_drm_sources)
+endif
+all_cairo_pkgconf += cairo-drm.pc
+ifeq ($(CAIRO_HAS_DRM_SURFACE),1)
+enabled_cairo_pkgconf += cairo-drm.pc
+endif
+
+unsupported_cairo_headers += $(cairo_gallium_headers)
+all_cairo_headers += $(cairo_gallium_headers)
+all_cairo_private += $(cairo_gallium_private)
+all_cairo_sources += $(cairo_gallium_sources)
+ifeq ($(CAIRO_HAS_GALLIUM_SURFACE),1)
+enabled_cairo_headers += $(cairo_gallium_headers)
+enabled_cairo_private += $(cairo_gallium_private)
+enabled_cairo_sources += $(cairo_gallium_sources)
+endif
+all_cairo_pkgconf += cairo-gallium.pc
+ifeq ($(CAIRO_HAS_GALLIUM_SURFACE),1)
+enabled_cairo_pkgconf += cairo-gallium.pc
+endif
+
 supported_cairo_headers += $(cairo_png_headers)
 all_cairo_headers += $(cairo_png_headers)
 all_cairo_private += $(cairo_png_private)

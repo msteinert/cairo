@@ -2516,6 +2516,13 @@ _cairo_pattern_equal (const cairo_pattern_t *a,
 cairo_private void
 _cairo_pattern_reset_static_data (void);
 
+#if CAIRO_HAS_DRM_SURFACE
+
+cairo_private void
+_cairo_drm_device_reset_static_data (void);
+
+#endif
+
 cairo_private void
 _cairo_clip_reset_static_data (void);
 
@@ -2588,6 +2595,7 @@ slim_hidden_proto (cairo_glyph_free);
 slim_hidden_proto (cairo_image_surface_create);
 slim_hidden_proto (cairo_image_surface_create_for_data);
 slim_hidden_proto (cairo_image_surface_get_data);
+slim_hidden_proto (cairo_image_surface_get_format);
 slim_hidden_proto (cairo_image_surface_get_height);
 slim_hidden_proto (cairo_image_surface_get_stride);
 slim_hidden_proto (cairo_image_surface_get_width);

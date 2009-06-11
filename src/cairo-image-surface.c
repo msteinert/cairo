@@ -598,6 +598,7 @@ cairo_image_surface_get_format (cairo_surface_t *surface)
 
     return image_surface->format;
 }
+slim_hidden_def (cairo_image_surface_get_format);
 
 /**
  * cairo_image_surface_get_width:

@@ -171,6 +171,31 @@ CAIRO_ENABLE_SURFACE_BACKEND(beos, BeOS/Zeta, no, [
 
 dnl ===========================================================================
 
+CAIRO_ENABLE_SURFACE_BACKEND(drm, DRM, no, [
+  drm_REQUIRES="libudev >= 136"
+  PKG_CHECK_MODULES(drm, $drm_REQUIRES, , [AC_MSG_RESULT(no)
+  use_drm="no (requires $drm_REQUIRES, udev is available from git://git.kernel.org/pub/scm/linux/hotplug/udev.git)"])
+])
+
+CAIRO_ENABLE_SURFACE_BACKEND(gallium, Gallium3D, no, [
+  if test "x$use_drm" = "xyes"; then
+      AC_ARG_WITH([gallium],
+		  [AS_HELP_STRING([--with-gallium=/path/to/mesa],
+				  [directory to find gallium enabled mesa])],
+		  [mesa_DIR="$withval"],
+		  [mesa_DIR="`pwd`/../mesa"])
+      gallium_DIR="$mesa_DIR/src/gallium"
+      gallium_NONPKGCONFIG_CFLAGS="-I$mesa_DIR/include -I$mesa_DIR/src/mesa -I$gallium_DIR/include -I$gallium_DIR/auxiliary"
+      gallium_NONPKGCONFIG_LIBS="-lGL"
+      AC_SUBST(mesa_DIR)
+      AC_SUBST(gallium_DIR)
+  else
+    use_gallium="no (requires --enable-drm)"
+  fi
+])
+
+dnl ===========================================================================
+
 CAIRO_ENABLE_FUNCTIONS(png, PNG, yes, [
   use_png=no
   AC_ARG_VAR([png_REQUIRES], [module name for libpng to search for using pkg-config])

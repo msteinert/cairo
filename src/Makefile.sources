@@ -273,6 +273,19 @@ cairo_glitz_sources = cairo-glitz-surface.c
 cairo_directfb_headers = cairo-directfb.h
 cairo_directfb_sources = cairo-directfb-surface.c
 
+cairo_drm_headers = cairo-drm.h
+cairo_drm_private = drm/cairo-drm-private.h \
+		    drm/cairo-drm-intel-private.h \
+		    drm/cairo-drm-radeon-private.h
+cairo_drm_sources = drm/cairo-drm.c \
+		    drm/cairo-drm-bo.c \
+		    drm/cairo-drm-surface.c \
+		    drm/cairo-drm-intel.c \
+		    drm/cairo-drm-intel-surface.c \
+		    drm/cairo-drm-radeon.c \
+		    drm/cairo-drm-radeon-surface.c
+cairo_gallium_sources = drm/cairo-drm-gallium-surface.c
+
 cairo_script_headers = cairo-script.h
 cairo_script_sources = cairo-script-surface.c
 

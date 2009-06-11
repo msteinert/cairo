@@ -895,7 +895,7 @@ REPEAT:
 	MF (MEMFAULT_PRINT_FAULTS ());
 	cairo_test_log (ctx, "Error: Created surface is of type %d (expected %d)\n",
 			cairo_surface_get_type (surface), target->expected_type);
-	ret = CAIRO_TEST_FAILURE;
+	ret = CAIRO_TEST_UNTESTED;
 	goto UNWIND_SURFACE;
     }
 

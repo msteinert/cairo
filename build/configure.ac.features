@@ -379,6 +379,7 @@ AC_DEFUN([CAIRO_REPORT],
 	echo "  BeOS:          $use_beos"
 	echo "  DirectFB:      $use_directfb"
 	echo "  OpenVG:        $use_vg"
+	echo "  DRM:           $use_drm"
 	echo ""
 	echo "The following font backends:"
 	echo "  User:          yes (always builtin)"
