@@ -1585,7 +1585,6 @@ _cairo_xcb_surface_set_clip_region (void           *abstract_surface,
 	    xcb_render_change_picture (surface->dpy, surface->dst_picture,
 		XCB_RENDER_CP_CLIP_MASK, none);
     } else {
-	cairo_status_t status;
 	xcb_rectangle_t *rects = NULL;
 	int n_rects, i;
 
@@ -1603,13 +1602,13 @@ _cairo_xcb_surface_set_clip_region (void           *abstract_surface,
 	    cairo_rectangle_int_t rect;
 
 	    cairo_region_get_rectangle (region, i, &rect);
-	    
+
 	    rects[i].x = rect.x;
 	    rects[i].y = rect.y;
 	    rects[i].width = rect.width;
 	    rects[i].height = rect.height;
 	}
- 
+
 	surface->have_clip_rects = TRUE;
 	surface->clip_rects = rects;
 	surface->num_clip_rects = n_rects;
@@ -1655,7 +1654,8 @@ _cairo_xcb_surface_show_glyphs (void			*abstract_dst,
 				cairo_glyph_t		*glyphs,
 				int			 num_glyphs,
 				cairo_scaled_font_t	*scaled_font,
-				int			*remaining_glyphs);
+				int			*remaining_glyphs,
+				cairo_rectangle_int_t   *extents);
 
 static cairo_bool_t
 _cairo_xcb_surface_is_similar (void *surface_a,
@@ -2463,7 +2463,8 @@ _cairo_xcb_surface_show_glyphs (void			*abstract_dst,
 				cairo_glyph_t		*glyphs,
 				int			 num_glyphs,
 				cairo_scaled_font_t	*scaled_font,
-				int			*remaining_glyphs)
+				int			*remaining_glyphs,
+				cairo_rectangle_int_t   *extents)
 {
     cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_xcb_surface_t *dst = abstract_dst;
