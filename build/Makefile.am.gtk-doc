@@ -54,7 +54,7 @@ if ENABLE_GTK_DOC
 doc: html-build.stamp
 else
 doc:
-	@echo "*** gtk-doc must be installed and enabled in order to make doc"
+	@echo "*** gtk-doc must be installed (and --enable-gtk-doc) in order to make doc"
 	@false
 endif
 
@@ -161,7 +161,7 @@ if ENABLE_GTK_DOC
 dist-check-gtkdoc:
 else
 dist-check-gtkdoc:
-	@echo "*** gtk-doc must be installed and enabled in order to make dist"
+	@echo "*** gtk-doc must be installed (and --enable-gtk-doc) in order to make dist"
 	@false
 endif
 
