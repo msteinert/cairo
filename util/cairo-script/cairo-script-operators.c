@@ -37,10 +37,15 @@
 #include "cairo-script-private.h"
 
 #include <stdio.h> /* snprintf */
+#include <stdlib.h> /* mkstemp */
 #include <string.h>
 #include <math.h>
 #include <limits.h> /* INT_MAX */
 #include <assert.h>
+
+#ifdef HAVE_MMAP
+#include <sys/mman.h>
+#endif
 
 typedef struct _csi_proxy {
     csi_t *ctx;
@@ -1541,12 +1546,52 @@ _ft_done_face (void *closure)
 
     ctx->_faces = _csi_list_unlink (ctx->_faces, &data->blob.list);
 
-    if (--data->source->base.ref == 0)
-	csi_string_free (ctx, data->source);
+    if (data->source != NULL) {
+	if (--data->source->base.ref == 0)
+	    csi_string_free (ctx, data->source);
+    } else {
+#ifdef HAVE_MMAP
+	munmap (data->blob.bytes, data->blob.len);
+#endif
+    }
+
     _csi_slab_free (ctx, data, sizeof (*data));
 
     cairo_script_interpreter_destroy (ctx);
 }
+
+#ifdef HAVE_MMAP
+/* manual form of swapping for swapless systems like tiny */
+static void *
+_mmap_bytes (const uint8_t *bytes, size_t num_bytes)
+{
+    char template[] = "/tmp/csi-font.XXXXXX";
+    size_t len;
+    void *ptr;
+    int fd;
+
+    fd = mkstemp (template);
+    if (fd == -1)
+	return MAP_FAILED;
+
+    unlink (template);
+    len = num_bytes;
+    while (len) {
+	int ret = write (fd, bytes, len);
+	if (ret < 0) {
+	    close (fd);
+	    return MAP_FAILED;
+	}
+	len -= ret;
+	bytes += ret;
+    }
+
+    ptr = mmap (NULL, num_bytes, PROT_READ, MAP_SHARED, fd, 0);
+    close (fd);
+
+    return ptr;
+}
+#endif
 
 static csi_status_t
 _ft_create_for_source (csi_t *ctx,
@@ -1557,7 +1602,6 @@ _ft_create_for_source (csi_t *ctx,
     csi_blob_t tmpl;
     struct _ft_face_data *data;
     csi_list_t *link;
-    FT_Face face;
     FT_Error err;
     cairo_font_face_t *font_face;
     csi_status_t status;
@@ -1581,27 +1625,42 @@ _ft_create_for_source (csi_t *ctx,
 	    return _csi_error (CSI_STATUS_NO_MEMORY);
     }
 
+    data = _csi_slab_alloc (ctx, sizeof (*data));
+    data->face = NULL;
+    ctx->_faces = _csi_list_prepend (ctx->_faces, &data->blob.list);
+    data->ctx = cairo_script_interpreter_reference (ctx);
+    data->blob.hash = tmpl.hash;
+    data->blob.len = tmpl.len;
+#ifdef HAVE_MMAP
+    data->blob.bytes = _mmap_bytes (tmpl.bytes, tmpl.len);
+    if (data->blob.bytes != MAP_FAILED) {
+	data->source = NULL;
+	if (--source->base.ref == 0)
+	    csi_string_free (ctx, source);
+    } else {
+	data->blob.bytes = tmpl.bytes;
+	data->source = source;
+    }
+#else
+    data->blob.bytes = tmpl.bytes;
+    data->source = source;
+#endif
+
     err = FT_New_Memory_Face (_ft_lib,
-			      (uint8_t *) source->string,
-			      source->len, index,
-			      &face);
+			      data->blob.bytes,
+			      data->blob.len,
+			      index,
+			      &data->face);
     if (_csi_unlikely (err != FT_Err_Ok)) {
+	_ft_done_face (data);
+
 	if (err == FT_Err_Out_Of_Memory)
 	    return _csi_error (CSI_STATUS_NO_MEMORY);
 
 	return _csi_error (CSI_STATUS_INVALID_SCRIPT);
     }
 
-    data = _csi_slab_alloc (ctx, sizeof (*data));
-    ctx->_faces = _csi_list_prepend (ctx->_faces, &data->blob.list);
-    data->ctx = cairo_script_interpreter_reference (ctx);
-    data->blob.hash = tmpl.hash;
-    data->blob.bytes = tmpl.bytes;
-    data->blob.len = tmpl.len;
-    data->face = face;
-    data->source = source;
-
-    font_face = cairo_ft_font_face_create_for_ft_face (face, load_flags);
+    font_face = cairo_ft_font_face_create_for_ft_face (data->face, load_flags);
     status = cairo_font_face_set_user_data (font_face,
 					    &_csi_blob_key,
 					    data, _ft_done_face);

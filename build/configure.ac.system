@@ -62,6 +62,9 @@ AC_CHECK_HEADERS([fcntl.h unistd.h signal.h sys/stat.h sys/socket.h sys/poll.h s
 dnl check for CPU affinity support
 AC_CHECK_HEADERS([sched.h], [AC_CHECK_FUNCS([sched_getaffinity])])
 
+dnl check for mmap support
+AC_CHECK_HEADERS([sys/mman.h], [AC_CHECK_FUNCS([mmap])])
+
 dnl check for clock_gettime() support
 save_LIBS="$LIBS"
 LIBS="$LIBS $RT_LIBS"
