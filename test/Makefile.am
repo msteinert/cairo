@@ -95,6 +95,20 @@ if HAVE_PTHREAD
 cairo_test_suite_LDADD += -lpthread
 endif
 
+cairo_test_trace_SOURCES =		\
+	cairo-test-trace.c
+cairo_test_trace_LDADD =		\
+	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
+        $(top_builddir)/boilerplate/libcairoboilerplate.la	\
+	$(top_builddir)/src/libcairo.la 			\
+	$(CAIRO_LDADD) \
+	-lrt
+cairo_test_trace_DEPENDENCIES = \
+	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
+        $(top_builddir)/boilerplate/libcairoboilerplate.la	\
+	$(top_builddir)/src/libcairo.la
+EXTRA_DIST += dlmalloc.c
+
 BUILT_SOURCES += cairo-test-constructors.c
 noinst_SCRIPTS = make-cairo-test-constructors.pl
 EXTRA_DIST += $(BUILT_SOURCES) $(noinst_SCRIPTS) COPYING
@@ -1153,7 +1167,7 @@ $(top_builddir)/test/pdiff/libpdiff.la:
 $(top_builddir)/util/cairo-script/libcairo-script-interpreter.la: $(top_builddir)/src/libcairo.la
 	cd $(top_builddir)/util/cairo-script && $(MAKE) $(AM_MAKEFLAGS) libcairo-script-interpreter.la
 
-EXTRA_PROGRAMS += imagediff png-flatten
+EXTRA_PROGRAMS += imagediff png-flatten cairo-test-trace
 
 imagediff_SOURCES = \
 	imagediff.c	\
