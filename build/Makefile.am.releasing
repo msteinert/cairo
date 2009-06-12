@@ -139,14 +139,14 @@ doc-publish-versioned: doc
 	cp -a doc/public/html $(MANUAL_VERSIONED)
 	tar czf $(MANUAL_TAR_FILE) $(MANUAL_VERSIONED)
 	scp $(MANUAL_TAR_FILE) $(RELEASE_UPLOAD_HOST):$(MANUAL_UPLOAD_DIR)
-	ssh $(RELEASE_UPLOAD_HOST) "cd $(MANUAL_UPLOAD_DIR) && tar xzf $(MANUAL_TAR_FILE) && ln -sf $(MANUAL_TAR_FILE) cairo-$(MANUAL_TAR_FILE"
+	ssh $(RELEASE_UPLOAD_HOST) "cd $(MANUAL_UPLOAD_DIR) && tar xzf $(MANUAL_TAR_FILE) && ln -sf $(MANUAL_TAR_FILE) cairo-$(MANUAL_TAR_FILE)"
 
 doc-publish-symlinks:
 	ssh $(RELEASE_UPLOAD_HOST) "cd $(MANUAL_UPLOAD_DIR) && rm -f manual && ln -s $(MANUAL_VERSIONED) manual && ln -sf $(MANUAL_TAR_FILE) cairo-manual.tar.gz"
 
 doc-publish:
 	$(MAKE) $(AM_MAKEFLAGS) doc-publish-versioned
-	@if test "$(RELEASE_OR_SNAPSHOT)" = release; then $(MAKE) $(AM_MAKEFLAGS) doc-publish-symliks; fi
+	@if test "$(RELEASE_OR_SNAPSHOT)" = release; then $(MAKE) $(AM_MAKEFLAGS) doc-publish-symlinks; fi
 
 # Strict ordering enforced for parallel make to work
 release-publish: release-check
