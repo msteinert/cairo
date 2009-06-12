@@ -1,5 +1,5 @@
-Release 1.9.2 (2009-06-11)
-==========================
+Snapshot 1.9.2 (2009-06-12)
+===========================
 API additions:
 
   cairo_surface_set_mime_data()
