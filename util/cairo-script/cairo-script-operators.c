@@ -1709,10 +1709,22 @@ _ft_create_for_pattern (csi_t *ctx,
     ctx->_faces = _csi_list_prepend (ctx->_faces, &data->blob.list);
     data->ctx = cairo_script_interpreter_reference (ctx);
     data->blob.hash = tmpl.hash;
-    data->blob.bytes = tmpl.bytes;
     data->blob.len = tmpl.len;
     data->face = NULL;
+#ifdef HAVE_MMAP
+    data->blob.bytes = _mmap_bytes (tmpl.bytes, tmpl.len);
+    if (data->blob.bytes != MAP_FAILED) {
+	data->source = NULL;
+	if (--string->base.ref == 0)
+	    csi_string_free (ctx, string);
+    } else {
+	data->blob.bytes = tmpl.bytes;
+	data->source = string;
+    }
+#else
+    data->blob.bytes = tmpl.bytes;
     data->source = string;
+#endif
 
     status = cairo_font_face_set_user_data (font_face,
 					    &_csi_blob_key,
