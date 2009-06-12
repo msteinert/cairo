@@ -10,12 +10,13 @@ DOC_MAIN_SGML_FILE=cairo-docs.xml
 # Extra options to supply to gtkdoc-scan
 SCAN_OPTIONS=--deprecated-guards="CAIRO_DISABLE_DEPRECATED" --ignore-decorators="cairo_public|cairo_private"
 
-# The directory containing the source code. Relative to $(srcdir)
-DOC_SOURCE_DIR=../../src
+# The directory containing the source code.
+DOC_SOURCE_DIR=$(top_srcdir)/src
 
 # Used for dependencies
 HFILE_GLOB=$(top_srcdir)/src/cairo*.h
 CFILE_GLOB=$(top_srcdir)/src/cairo*.c
+EXTRA_HFILES=$(top_builddir)/src/cairo-supported-features.h
 
 # Headers to ignore
 IGNORE_HFILES= \
