@@ -850,6 +850,23 @@ cairo_boilerplate_get_targets (int *pnum_targets, cairo_bool_t *plimited_targets
     return targets_to_test;
 }
 
+const cairo_boilerplate_target_t *
+cairo_boilerplate_get_image_target (cairo_content_t content)
+{
+    int num_targets, i;
+
+    num_targets = sizeof (targets) / sizeof (targets[0]);
+    for (i = 0; i < num_targets; i++) {
+	if (targets[i].expected_type == CAIRO_SURFACE_TYPE_IMAGE &&
+	    targets[i].content == content)
+	{
+	    return &targets[i];
+	}
+    }
+
+    return NULL;
+}
+
 void
 cairo_boilerplate_free_targets (cairo_boilerplate_target_t **targets)
 {

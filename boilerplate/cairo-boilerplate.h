@@ -165,6 +165,9 @@ typedef struct _cairo_boilerplate_target
     cairo_bool_t				 is_meta;
 } cairo_boilerplate_target_t;
 
+const cairo_boilerplate_target_t *
+cairo_boilerplate_get_image_target (cairo_content_t content);
+
 cairo_boilerplate_target_t **
 cairo_boilerplate_get_targets (int *num_targets, cairo_bool_t *limited_targets);
 
