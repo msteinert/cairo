@@ -168,11 +168,11 @@ typedef struct _cairo_boilerplate_target
 const cairo_boilerplate_target_t *
 cairo_boilerplate_get_image_target (cairo_content_t content);
 
-cairo_boilerplate_target_t **
+const cairo_boilerplate_target_t **
 cairo_boilerplate_get_targets (int *num_targets, cairo_bool_t *limited_targets);
 
 void
-cairo_boilerplate_free_targets (cairo_boilerplate_target_t **targets);
+cairo_boilerplate_free_targets (const cairo_boilerplate_target_t **targets);
 
 cairo_surface_t *
 _cairo_boilerplate_get_image_surface (cairo_surface_t *src,

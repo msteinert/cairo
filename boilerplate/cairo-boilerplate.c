@@ -270,7 +270,7 @@ cairo_boilerplate_get_image_surface_from_png (const char *filename,
     return surface;
 }
 
-static cairo_boilerplate_target_t targets[] =
+static const cairo_boilerplate_target_t targets[] =
 {
     /* I'm uncompromising about leaving the image backend as 0
      * for tolerance. There shouldn't ever be anything that is out of
@@ -744,13 +744,13 @@ static cairo_boilerplate_target_t targets[] =
 #endif
 };
 
-cairo_boilerplate_target_t **
+const cairo_boilerplate_target_t **
 cairo_boilerplate_get_targets (int *pnum_targets, cairo_bool_t *plimited_targets)
 {
     size_t i, num_targets;
     cairo_bool_t limited_targets = FALSE;
     const char *tname;
-    cairo_boilerplate_target_t **targets_to_test;
+    const cairo_boilerplate_target_t **targets_to_test;
 
     if ((tname = getenv ("CAIRO_TEST_TARGET")) != NULL && *tname) {
 	/* check the list of targets specified by the user */
@@ -868,7 +868,7 @@ cairo_boilerplate_get_image_target (cairo_content_t content)
 }
 
 void
-cairo_boilerplate_free_targets (cairo_boilerplate_target_t **targets)
+cairo_boilerplate_free_targets (const cairo_boilerplate_target_t **targets)
 {
     free (targets);
 }

@@ -84,9 +84,9 @@ typedef struct _cairo_perf {
 
     /* Stuff used internally */
     cairo_perf_ticks_t *times;
-    cairo_boilerplate_target_t **targets;
+    const cairo_boilerplate_target_t **targets;
     int num_targets;
-    cairo_boilerplate_target_t *target;
+    const cairo_boilerplate_target_t *target;
     unsigned int test_number;
     unsigned int size;
     cairo_t *cr;

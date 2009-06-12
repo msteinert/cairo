@@ -66,7 +66,7 @@
  * loops wouldn't count the real work, just the recording by the
  * meta-surface. */
 static cairo_bool_t
-target_is_measurable (cairo_boilerplate_target_t *target)
+target_is_measurable (const cairo_boilerplate_target_t *target)
 {
     if (target->content != CAIRO_CONTENT_COLOR_ALPHA)
 	return FALSE;
@@ -571,7 +571,7 @@ have_trace_filenames (cairo_perf_t *perf)
 
 static void
 cairo_perf_trace (cairo_perf_t *perf,
-		  cairo_boilerplate_target_t *target,
+		  const cairo_boilerplate_target_t *target,
 		  const char *trace)
 {
     cairo_surface_t *surface;
@@ -648,7 +648,7 @@ main (int argc, char *argv[])
     names_are_traces = have_trace_filenames (&perf);
 
     for (i = 0; i < perf.num_targets; i++) {
-        cairo_boilerplate_target_t *target = perf.targets[i];
+        const cairo_boilerplate_target_t *target = perf.targets[i];
 
 	if (! perf.list_only && ! target_is_measurable (target))
 	    continue;

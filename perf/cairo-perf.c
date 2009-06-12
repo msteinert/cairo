@@ -64,7 +64,7 @@ const cairo_perf_case_t perf_cases[];
  * loops wouldn't count the real work, just the recording by the
  * meta-surface. */
 static cairo_bool_t
-target_is_measurable (cairo_boilerplate_target_t *target)
+target_is_measurable (const cairo_boilerplate_target_t *target)
 {
     switch (target->expected_type) {
     case CAIRO_SURFACE_TYPE_IMAGE:
@@ -417,7 +417,7 @@ main (int argc, char *argv[])
     perf.times = xmalloc (perf.iterations * sizeof (cairo_perf_ticks_t));
 
     for (i = 0; i < perf.num_targets; i++) {
-        cairo_boilerplate_target_t *target = perf.targets[i];
+        const cairo_boilerplate_target_t *target = perf.targets[i];
 
 	if (! target_is_measurable (target))
 	    continue;

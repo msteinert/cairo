@@ -187,7 +187,7 @@ struct _cairo_test_context {
 
     size_t num_targets;
     cairo_bool_t limited_targets;
-    cairo_boilerplate_target_t **targets_to_test;
+    const cairo_boilerplate_target_t **targets_to_test;
     cairo_bool_t own_targets;
 
     int malloc_failure;
