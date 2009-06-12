@@ -1005,6 +1005,7 @@ EXTRA_DIST +=		\
 make-html.pl		\
 jpeg.jpg		\
 png.png			\
+jp2.jp2			\
 romedalen.jpg		\
 romedalen.png		\
 scarab.jpg		\
