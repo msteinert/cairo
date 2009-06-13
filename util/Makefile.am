@@ -27,7 +27,7 @@ backtrace_symbols_la_LIBADD  = -lbfd -liberty
 noinst_PROGRAMS =
 
 if HAVE_GTK
-noinst_PROGRAMS += font-view
+EXTRA_PROGRAMS += font-view
 font_view_CFLAGS = $(gtk_CFLAGS)
 font_view_LDADD = ../src/libcairo.la $(gtk_LIBS)
 endif
