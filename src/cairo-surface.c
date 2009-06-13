@@ -2277,7 +2277,7 @@ cairo_surface_show_page (cairo_surface_t *surface)
     if (surface->status)
 	return;
 
-    assert (surface->snapshot_of == NULL);
+    _cairo_surface_begin_modification (surface);
 
     if (surface->finished) {
 	status_ignored = _cairo_surface_set_error (surface,
