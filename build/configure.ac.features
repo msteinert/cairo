@@ -319,7 +319,7 @@ CAIRO_FEATURE_HOOK_REGISTER(yes,no,!,
 dnl Collect warning message for disabled recommended features
 CAIRO_FEATURE_HOOK_REGISTER(no,yes,*,
 [dnl
-	CAIRO_ACCUMULATE([WARNING_MESSAGE], CAIRO_TEXT_WRAP([It is strictly recommended that you do NOT disable the ]cr_feature_name[ feature.], [+++ ]))
+	CAIRO_ACCUMULATE([WARNING_MESSAGE], CAIRO_TEXT_WRAP([It is strongly recommended that you do NOT disable the ]cr_feature_name[ feature.], [+++ ]))
 ])dnl
 
 
@@ -340,11 +340,11 @@ AC_CONFIG_COMMANDS_PRE(dnl
 [dnl
 	AS_IF([test -z "$CAIRO_NATIVE_SURFACE_BACKENDS"],dnl
 	[dnl
-		CAIRO_ACCUMULATE([WARNING_MESSAGE], CAIRO_TEXT_WRAP([It is strictly recommended that you enable the native surface backend feature for your platform.], [*** ]))
+		CAIRO_ACCUMULATE([WARNING_MESSAGE], CAIRO_TEXT_WRAP([No native surface backends enabled for your platform. It is strongly recommended that you enable the native surface backend feature for your platform.], [*** ]))
 	])
 	AS_IF([test -z "$CAIRO_NATIVE_FONT_BACKENDS"],dnl
 	[dnl
-		CAIRO_ACCUMULATE([WARNING_MESSAGE], CAIRO_TEXT_WRAP([It is strictly recommended that you enable the native font backend feature for your platform.], [*** ]))
+		CAIRO_ACCUMULATE([WARNING_MESSAGE], CAIRO_TEXT_WRAP([No native font backends enabled for your platform. It is strongly recommended that you enable the native font backend feature for your platform.], [*** ]))
 	])
 ])dnl
 
