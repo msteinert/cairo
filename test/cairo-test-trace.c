@@ -24,12 +24,12 @@
  */
 
 /*
- * The basic premise is that we feed the trace to multiple backends in
- * parallel and compare the output at the end of each context (based on the
- * premise that contexts demarcate expose events, or their logical
- * equivalents) with that of the image[1] backend. Each backend is executed in
- * a separate process, for robustness, with the image data residing in shared
- * memory and synchronising over a socket.
+ * The basic idea is that we feed the trace to multiple backends in parallel
+ * and compare the output at the end of each context (based on the premise
+ * that contexts demarcate expose events, or their logical equivalents) with
+ * that of the image[1] backend. Each backend is executed in a separate
+ * process, for robustness and to isolate the global cairo state, with the
+ * image data residing in shared memory and synchronising over a socket.
  *
  * [1] Should be reference implementation, currently the image backend is
  *     considered to be the reference for all other backends.
@@ -45,7 +45,14 @@
  *     So for each backend spawn two processes, a reference and xlib
  *     (obviously minimising the number of reference processes when possible)
  */
-#define _GNU_SOURCE 1	/* for sched_getaffinity() and getline() */
+
+/*
+ * XXX Handle show-page as well as cairo_destroy()? Though arguably that is
+ *     only relevant for paginated backends which is currently outside the
+ *     scope of this test.
+ */
+
+#define _GNU_SOURCE 1	/* getline() */
 
 #include "cairo-test.h"
 
@@ -77,32 +84,38 @@
 /* manage the shared memory using Doug Lea's malloc */
 #define USE_LOCKS 0
 #define USE_DL_PREFIX 1
+#if HAVE_FFS
 #define USE_BUILTIN_FFS 1
+#endif
 
 /* We only use the segment created my create_mspace_with_base.  */
 #define MSPACES 1
 #define ONLY_MSPACES 1
 
+/* Disable manipulation of the memory segment */
 #define HAVE_MORECORE 0
 #define HAVE_MMAP 1
 #define HAVE_MREMAP 0
+#define mmap(a, b, c, d, e, f)	MFAIL
+#define munmap(a, b)		(-1)
+#define DEFAULT_MMAP_THRESHOLD MAX_SIZE_T
 
 /* We have no use for this, so save some code and data.  */
 #define NO_MALLINFO 1
-
-/* We need all allocations to be in regular segments.  */
-#define DEFAULT_MMAP_THRESHOLD MAX_SIZE_T
+#define ABORT_ON_ASSERT_FAILURE 0
 
 /* Don't allocate more than a page unless needed.  */
 #define DEFAULT_GRANULARITY ((size_t)malloc_getpagesize)
 
-#define mmap(a, b, c, d, e, f)	MFAIL
-#define munmap(a, b)		(-1)
 #include "dlmalloc.c"
 #undef mmap
 #undef munmap
 
+#undef assert
+#include <assert.h>
+
 #define DATA_SIZE (64 << 20)
+#define SHM_PATH_XXX "/shmem-cairo-trace"
 
 typedef struct _test_runner {
     /* Options from command-line */
@@ -144,11 +157,18 @@ struct slave {
     const cairo_boilerplate_target_t *target;
 };
 
+struct request_image {
+    unsigned long id;
+    cairo_format_t format;
+    int width;
+    int height;
+    int stride;
+};
+
 struct surface_tag {
     int width, height;
 };
 static const cairo_user_data_key_t surface_tag;
-
 
 static cairo_bool_t
 writen (int fd, const void *ptr, int len)
@@ -222,14 +242,6 @@ format_for_content (cairo_content_t content)
     }
 }
 
-struct request_image {
-    unsigned long id;
-    cairo_format_t format;
-    int width;
-    int height;
-    int stride;
-};
-
 static void *
 request_image (test_runner_thread_t *thread,
 	       unsigned long id,
@@ -241,8 +253,8 @@ request_image (test_runner_thread_t *thread,
 
     writen (thread->sk, &rq, sizeof (rq));
     readn (thread->sk, &offset, sizeof (offset));
-
-    assert (offset != (size_t) -1);
+    if (offset == (size_t) -1)
+	return NULL;
 
     return thread->base + offset;
 }
@@ -253,29 +265,47 @@ push_surface (test_runner_thread_t *thread,
 	      unsigned long id)
 {
     cairo_surface_t *image;
-    cairo_format_t format;
+    cairo_format_t format = (cairo_format_t) -1;
     cairo_t *cr;
     int width, height, stride;
     void *data;
     unsigned long serial;
 
-    format = format_for_content (cairo_surface_get_content (source));
     if (cairo_surface_get_type (source) == CAIRO_SURFACE_TYPE_IMAGE) {
 	width = cairo_image_surface_get_width (source);
 	height = cairo_image_surface_get_height (source);
+	format = cairo_image_surface_get_format (source);
     } else {
 	struct surface_tag *tag;
 
 	tag = cairo_surface_get_user_data (source, &surface_tag);
-	assert (tag != NULL);
-	width = tag->width;
-	height = tag->height;
+	if (tag != NULL) {
+	    width = tag->width;
+	    height = tag->height;
+	} else {
+	    double x0, x1, y0, y1;
+
+	    /* presumably created using cairo_surface_create_similar() */
+	    cr = cairo_create (source);
+	    cairo_clip_extents (cr, &x0, &y0, &x1, &y1);
+	    cairo_destroy (cr);
+
+	    tag = xmalloc (sizeof (*tag));
+	    width = tag->width = x1 - x0;
+	    height = tag->height = y1 - y0;
+
+	    if (cairo_surface_set_user_data (source, &surface_tag, tag, free))
+		exit (-1);
+	}
     }
+    if (format == (cairo_format_t) -1)
+	format = format_for_content (cairo_surface_get_content (source));
 
     stride = cairo_format_stride_for_width (format, width);
 
     data = request_image (thread, id, format, width, height, stride);
-    assert (data != NULL);
+    if (data == NULL)
+	exit (-1);
 
     image = cairo_image_surface_create_for_data (data,
 						 format,
@@ -314,7 +344,8 @@ _surface_create (void *closure,
 	tag = xmalloc (sizeof (*tag));
 	tag->width = width;
 	tag->height = height;
-	cairo_surface_set_user_data (surface, &surface_tag, tag, free);
+	if (cairo_surface_set_user_data (surface, &surface_tag, tag, free))
+	    exit (-1);
     }
 
     return surface;
@@ -349,7 +380,8 @@ _context_destroy (void *closure, void *ptr)
 	    if (cairo_surface_status (l->surface) == CAIRO_STATUS_SUCCESS) {
 		push_surface (thread, l->surface, l->id);
             } else {
-		fprintf (stderr, "error during replay: %s!\n",
+		fprintf (stderr, "%s: error during replay: %s!\n",
+			 thread->target->name,
 			 cairo_status_to_string (cairo_surface_status
 						 (l->surface)));
 		exit (1);
@@ -382,7 +414,8 @@ execute (test_runner_thread_t    *thread,
     cairo_script_interpreter_run (csi, trace);
 
     cairo_script_interpreter_finish (csi);
-    cairo_script_interpreter_destroy (csi);
+    if (cairo_script_interpreter_destroy (csi))
+	exit (1);
 }
 
 static int
@@ -408,24 +441,21 @@ spawn_socket (const char *socket_path, pid_t pid)
     return sk;
 }
 
-
 static void *
 spawn_shm (const char *shm_path)
 {
-    void *base = MAP_FAILED;
+    void *base;
     int fd;
 
     fd = shm_open (shm_path, O_RDWR, 0);
     if (fd == -1)
-	return base;
+	return MAP_FAILED;
 
     base = mmap (NULL, DATA_SIZE,
 		 PROT_READ | PROT_WRITE,
 		 MAP_SHARED | MAP_NORESERVE,
 		 fd, 0);
     close (fd);
-    if (base == MAP_FAILED)
-	return base;
 
     return base;
 }
@@ -490,6 +520,7 @@ spawn_target (const char *socket_path,
     exit (0);
 }
 
+/* XXX imagediff - is the extra expense worth it? */
 static cairo_bool_t
 matching_images (cairo_surface_t *a, cairo_surface_t *b)
 {
@@ -521,37 +552,15 @@ matching_images (cairo_surface_t *a, cairo_surface_t *b)
 }
 
 static cairo_bool_t
-check_images_and_ack (mspace msp, struct slave *slaves, int num_slaves)
+check_images (struct slave *slaves, int num_slaves)
 {
     int n;
 
-    /* wait for completion */
-    if (slaves[0].image_ready == 0)
-	return TRUE;
-
     for (n = 1; n < num_slaves; n++) {
-	if (slaves[n].image_ready != slaves[0].image_ready)
-	    return TRUE;
-    }
+	assert (slaves[n].image_ready == slaves[0].image_ready);
 
-    /* compare */
-    for (n = 1; n < num_slaves; n++) {
 	if (! matching_images (slaves[n].image, slaves[0].image))
 	    return FALSE;
-    }
-
-    /* ack */
-    for (n = 0; n < num_slaves; n++) {
-	cairo_surface_finish (slaves[n].image);
-	mspace_free (msp, cairo_image_surface_get_data (slaves[n].image));
-	cairo_surface_destroy (slaves[n].image);
-	slaves[n].image = NULL;
-
-	writen (slaves[n].fd,
-		&slaves[n].image_serial,
-		sizeof (slaves[n].image_serial));
-	slaves[n].image_serial = 0;
-	slaves[n].image_ready = 0;
     }
 
     return TRUE;
@@ -596,7 +605,7 @@ allocate_image_for_slave (uint8_t *base, mspace *msp, struct slave *slave)
     return data - base;
 }
 
-static void
+static cairo_bool_t
 test_run (void *base,
 	  mspace msp,
 	  int sk,
@@ -606,14 +615,16 @@ test_run (void *base,
 {
     struct pollfd *pfd;
     int npfd, cnt, n, i;
+    int completion;
+    cairo_bool_t ret = FALSE;
 
     pfd = xcalloc (num_slaves+2, sizeof (*pfd));
 
     pfd[0].fd = sk;
     pfd[0].events = POLLIN;
-    pfd[0].revents = 0; /* valgrind */
     npfd = 1;
 
+    completion = 0;
     while ((cnt = poll (pfd, npfd, -1)) > 0) {
 	if (pfd[0].revents) {
 	    int fd;
@@ -638,21 +649,22 @@ test_run (void *base,
 	    if (! pfd[n].revents)
 		continue;
 
+	    if (pfd[n].revents & POLLHUP)
+		goto done;
+
 	    for (i = 0; i < num_slaves; i++) {
 		if (slaves[i].fd == pfd[n].fd) {
-		    if (pfd[n].revents & POLLHUP)
-			/* XXX check exitcode? */
-			goto done;
-
 		    /* Communication with the slave is done in three phases,
 		     * and we do each pass synchronously.
 		     *
 		     * 1. The slave requests an image buffer, which we
-		     * allocate and then return the offset into the shared
-		     * memory segment.
+		     * allocate and then return to the slave the offset into
+		     * the shared memory segment.
 		     *
 		     * 2. The slave indicates that it has finished writing
-		     * into the shared image buffer.
+		     * into the shared image buffer. The slave now waits
+		     * for the server to collate all the image data - thereby
+		     * throttling the slaves.
 		     *
 		     * 3. After all slaves have finished writing their images,
 		     * we compare them all against the reference image and,
@@ -664,30 +676,18 @@ test_run (void *base,
 			offset =
 			    allocate_image_for_slave (base, msp,
 						      &slaves[i]);
-			if (! writen (pfd[n].fd, &offset, sizeof (offset))) {
-			    fprintf (stderr,
-				     "communication error with slave\n");
+			if (! writen (pfd[n].fd, &offset, sizeof (offset)))
 			    goto out;
-			}
 		    } else {
 			readn (pfd[n].fd,
 			       &slaves[i].image_ready,
 			       sizeof (slaves[i].image_ready));
-			if (slaves[i].image_ready != slaves[i].image_serial) {
-			    fprintf (stderr,
-				     "communication error with slave: "
-				     "expected serial %lu, got %lu\n",
-				     slaves[i].image_serial,
-				     slaves[i].image_ready);
+			if (slaves[i].image_ready != slaves[i].image_serial)
 			    goto out;
-			}
 
-			if (! check_images_and_ack (msp, slaves, num_slaves)) {
-			    printf ("FAIL: backends differ after context %lu\n",
-				     slaves[0].image_serial);
-			    write_images (trace, slaves, num_slaves);
-			    goto out;
-			}
+			/* Can anyone spell 'P·E·D·A·N·T'? */
+			cairo_surface_mark_dirty (slaves[i].image);
+			completion++;
 		    }
 
 		    break;
@@ -696,9 +696,37 @@ test_run (void *base,
 
 	    cnt--;
 	}
+
+	if (completion == num_slaves) {
+	    if (! check_images (slaves, num_slaves)) {
+		write_images (trace, slaves, num_slaves);
+		goto out;
+	    }
+
+	    /* ack */
+	    for (i = 0; i < num_slaves; i++) {
+		cairo_surface_finish (slaves[i].image);
+		mspace_free (msp,
+			     cairo_image_surface_get_data (slaves[i].image));
+		cairo_surface_destroy (slaves[i].image);
+		slaves[i].image = NULL;
+
+		if (! writen (slaves[i].fd,
+			      &slaves[i].image_serial,
+			      sizeof (slaves[i].image_serial)))
+		{
+		    goto out;
+		}
+
+		slaves[i].image_serial = 0;
+		slaves[i].image_ready = 0;
+	    }
+
+	    completion = 0;
+	}
     }
 done:
-    printf ("PASS\n");
+    ret = TRUE;
 
 out:
     for (n = 0; n < num_slaves; n++) {
@@ -715,9 +743,12 @@ out:
 
 	slaves[n].image_serial = 0;
 	slaves[n].image_ready = 0;
+	ret = FALSE;
     }
 
     free (pfd);
+
+    return ret;
 }
 
 /* Paginated surfaces require finalization and external converters and so
@@ -763,93 +794,96 @@ target_is_measurable (const cairo_boilerplate_target_t *target)
     return TRUE;
 }
 
-/* XXX cleanup on SIGINT. */
-static void
-test_trace (test_runner_t *test, const char *trace)
+static int
+server_socket (const char *socket_path)
 {
-    const char *shm_path = "/shmem";
-    const cairo_boilerplate_target_t *target, *image;
-    char *trace_cpy, *name, *dot;
-    struct slave *slaves, *s;
-    char socket_dir[] = "/tmp/cairo-test-trace.XXXXXX";
-    char *socket_path;
-    int sk, fd;
     long flags;
     struct sockaddr_un addr;
-    int i, num_slaves;
-    void *base;
-    mspace msp;
-
-    trace_cpy = xstrdup (trace);
-    name = basename (trace_cpy);
-    dot = strchr (name, '.');
-    if (dot)
-	*dot = '\0';
-
-    if (test->list_only) {
-	printf ("%s\n", name);
-	free (trace_cpy);
-	return;
-    }
-
-    printf ("%s: ", name);
-    fflush (stdout);
-
-    /* create a socket to control the test runners */
-    if (mkdtemp (socket_dir) == NULL) {
-	fprintf (stderr, "unable to create temporary name for socket\n");
-	return;
-    }
-
-    xasprintf (&socket_path, "%s/socket", socket_dir);
+    int sk;
 
     sk = socket (PF_UNIX, SOCK_STREAM, 0);
-    if (sk == -1) {
-	fprintf (stderr, "unable to create socket\n");
-	return;
-    }
+    if (sk == -1)
+	return -1;
 
     memset (&addr, 0, sizeof (addr));
     addr.sun_family = AF_UNIX;
     strcpy (addr.sun_path, socket_path);
     if (bind (sk, (struct sockaddr *) &addr, sizeof (addr)) == -1) {
 	close (sk);
-	fprintf (stderr,  "unable to bind socket\n");
-	return;
+	return -1;
     }
 
     flags = fcntl (sk, F_GETFL);
     if (flags == -1 || fcntl (sk, F_SETFL, flags | O_NONBLOCK) == -1) {
 	close (sk);
-	fprintf (stderr, "unable to set socket to non-blocking\n");
-	return;
+	return -1;
     }
 
     if (listen (sk, 5) == -1) {
-	fprintf (stderr, "unable to listen on socket\n");
-	goto cleanup_sk;
+	close (sk);
+	return -1;
     }
 
-    shm_path="/shmem";
+    return sk;
+}
+
+static int
+server_shm (const char *shm_path)
+{
+    int fd;
+
     fd = shm_open (shm_path, O_RDWR | O_EXCL | O_CREAT, 0777);
-    if (fd == -1) {
-	fprintf (stderr,
-		 "unable to create shared memory '%s': %s\n",
-		 shm_path, strerror (errno));
-	goto cleanup_sk;
-    }
+    if (fd == -1)
+	return -1;
 
     if (ftruncate (fd, DATA_SIZE) == -1) {
-	fprintf (stderr, "unable to resize shared memory\n");
 	close (fd);
+	return -1;
+    }
+
+    return fd;
+}
+
+static cairo_bool_t
+_test_trace (test_runner_t *test, const char *trace, const char *name)
+{
+    const char *shm_path = SHM_PATH_XXX;
+    const cairo_boilerplate_target_t *target, *image;
+    struct slave *slaves, *s;
+    char socket_dir[] = "/tmp/cairo-test-trace.XXXXXX";
+    char *socket_path;
+    int sk, fd;
+    int i, num_slaves;
+    void *base;
+    mspace msp;
+    cairo_bool_t ret = FALSE;
+
+    /* create a socket to control the test runners */
+    if (mkdtemp (socket_dir) == NULL) {
+	fprintf (stderr, "Unable to create temporary name for socket\n");
+	return FALSE;
+    }
+
+    xasprintf (&socket_path, "%s/socket", socket_dir);
+    sk = server_socket (socket_path);
+    if (sk == -1) {
+	fprintf (stderr, "Unable to create socket for server\n");
+	goto cleanup_paths;
+    }
+
+    /* allocate some shared memory */
+    fd = server_shm (shm_path);
+    if (fd == -1) {
+	fprintf (stderr, "Unable to create shared memory '%s'\n",
+		 shm_path);
 	goto cleanup_sk;
     }
 
     image = cairo_boilerplate_get_image_target (CAIRO_CONTENT_COLOR_ALPHA);
     assert (image != NULL);
 
+    /* spawn slave processes to run the trace */
     s = slaves = xcalloc (test->num_targets + 1, sizeof (struct slave));
-
     s->pid = spawn_target (socket_path, shm_path, image, trace);
     if (s->pid < 0)
 	goto cleanup;
@@ -879,36 +913,66 @@ test_trace (test_runner_t *test, const char *trace)
 	goto cleanup;
     }
 
+    /* map our shared memory and manage using a dlmalloc pool */
     base = mmap (NULL, DATA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    close (fd);
-
     if (base == MAP_FAILED) {
-	fprintf (stderr, "unable to mmap shared memory\n");
+	fprintf (stderr, "Unable to mmap shared memory\n");
 	goto cleanup;
     }
-
     msp = create_mspace_with_base (base, DATA_SIZE, 0);
 
-    test_run (base, msp, sk, name, slaves, num_slaves);
+    ret = test_run (base, msp, sk, name, slaves, num_slaves);
 
     destroy_mspace (msp);
     munmap (base, DATA_SIZE);
 
 cleanup:
+    close (fd);
     while (s-- > slaves) {
 	int status;
 	kill (s->pid, SIGKILL);
 	waitpid (s->pid, &status, 0);
+	ret &= WIFEXITED (status) && WEXITSTATUS (status) == 0;
+	if (WIFSIGNALED (status) && WTERMSIG(status) != SIGKILL) {
+	    fprintf (stderr, "%s crashed\n", s->target->name);
+	}
     }
     free (slaves);
     shm_unlink (shm_path);
 cleanup_sk:
     close (sk);
 
+cleanup_paths:
     remove (socket_path);
     remove (socket_dir);
 
     free (socket_path);
+    return ret;
+}
+
+static void
+test_trace (test_runner_t *test, const char *trace)
+{
+    char *trace_cpy, *name, *dot;
+
+    trace_cpy = xstrdup (trace);
+    name = basename (trace_cpy);
+    dot = strchr (name, '.');
+    if (dot)
+	*dot = '\0';
+
+    if (test->list_only) {
+	printf ("%s\n", name);
+    } else {
+	cairo_bool_t ret;
+
+	printf ("%s: ", name);
+	fflush (stdout);
+
+	ret = _test_trace (test, trace, name);
+	printf ("%s\n", ret ? "PASS" : "FAIL");
+    }
+
     free (trace_cpy);
 }
 
@@ -1008,7 +1072,7 @@ usage (const char *argv0)
 "Usage: %s [-x exclude-file] [test-names ... | traces ...]\n"
 "       %s -l\n"
 "\n"
-"Run the cairo performance test suite over the given tests (all by default)\n"
+"Run the cairo test suite over the given traces (all by default).\n"
 "The command-line arguments are interpreted as follows:\n"
 "\n"
 "  -x   exclude; specify a file to read a list of traces to exclude\n"
@@ -1063,7 +1127,7 @@ parse_options (test_runner_t *test, int argc, char *argv[])
 }
 
 static void
-cairo_test_reset (test_runner_t *test)
+test_reset (test_runner_t *test)
 {
     cairo_debug_reset_static_data ();
 #if HAVE_FCFINI
@@ -1072,9 +1136,9 @@ cairo_test_reset (test_runner_t *test)
 }
 
 static void
-cairo_test_fini (test_runner_t *test)
+test_fini (test_runner_t *test)
 {
-    cairo_test_reset (test);
+    test_reset (test);
 
     cairo_boilerplate_free_targets (test->targets);
     if (test->exclude_names)
@@ -1082,7 +1146,7 @@ cairo_test_fini (test_runner_t *test)
 }
 
 static cairo_bool_t
-have_trace_filenames (test_runner_t *test)
+test_has_filenames (test_runner_t *test)
 {
     unsigned int i;
 
@@ -1097,8 +1161,7 @@ have_trace_filenames (test_runner_t *test)
 }
 
 static cairo_bool_t
-cairo_test_can_run (test_runner_t	*test,
-		    const char		*name)
+test_can_run (test_runner_t *test, const char *name)
 {
     unsigned int i;
     char *copy, *dot;
@@ -1151,6 +1214,15 @@ warn_no_traces (const char *message, const char *trace_dir)
 	    message, trace_dir);
 }
 
+static void
+interrupt (int sig)
+{
+    shm_unlink (SHM_PATH_XXX);
+
+    signal (sig, SIG_DFL);
+    raise (sig);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -1159,6 +1231,7 @@ main (int argc, char *argv[])
     unsigned int n;
 
     signal (SIGPIPE, SIG_IGN);
+    signal (SIGINT, interrupt);
 
     parse_options (&test, argc, argv);
 
@@ -1167,14 +1240,13 @@ main (int argc, char *argv[])
 
     test.targets = cairo_boilerplate_get_targets (&test.num_targets, NULL);
 
-    /* do we have a list of filenames? */
-    if (have_trace_filenames (&test)) {
+    if (test_has_filenames (&test)) {
 	for (n = 0; n < test.num_names; n++) {
-	    if (cairo_test_can_run (&test, test.names[n]) &&
+	    if (test_can_run (&test, test.names[n]) &&
 		access (test.names[n], R_OK) == 0)
 	    {
 		test_trace (&test, test.names[n]);
-		cairo_test_reset (&test);
+		test_reset (&test);
 	    }
 	}
     } else {
@@ -1185,7 +1257,7 @@ main (int argc, char *argv[])
 	dir = opendir (trace_dir);
 	if (dir == NULL) {
 	    warn_no_traces ("Failed to open directory", trace_dir);
-	    cairo_test_fini (&test);
+	    test_fini (&test);
 	    return 1;
 	}
 
@@ -1200,12 +1272,12 @@ main (int argc, char *argv[])
 		continue;
 
 	    num_traces++;
-	    if (! cairo_test_can_run (&test, de->d_name))
+	    if (! test_can_run (&test, de->d_name))
 		continue;
 
 	    xasprintf (&trace, "%s/%s", trace_dir, de->d_name);
 	    test_trace (&test, trace);
-	    cairo_test_reset (&test);
+	    test_reset (&test);
 
 	    free (trace);
 
@@ -1214,12 +1286,12 @@ main (int argc, char *argv[])
 
 	if (num_traces == 0) {
 	    warn_no_traces ("Found no traces in", trace_dir);
-	    cairo_test_fini (&test);
+	    test_fini (&test);
 	    return 1;
 	}
     }
 
-    cairo_test_fini (&test);
+    test_fini (&test);
 
     return 0;
 }
