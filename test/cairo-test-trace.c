@@ -282,6 +282,7 @@ push_surface (test_runner_thread_t *thread,
     cr = cairo_create (image);
     cairo_surface_destroy (image);
 
+    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
     cairo_set_source_surface (cr, source, 0, 0);
     cairo_paint (cr);
     cairo_destroy (cr);
