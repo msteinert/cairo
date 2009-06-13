@@ -1,7 +1,7 @@
 SUBDIRS = examples
 
 lib_LTLIBRARIES = libcairo-script-interpreter.la
-noinst_PROGRAMS = csi-replay csi-exec
+EXTRA_PROGRAMS = csi-replay csi-exec
 
 AM_CPPFLAGS = -I$(top_srcdir)/src -I$(top_builddir)/src
 
