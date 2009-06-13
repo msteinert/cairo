@@ -60,19 +60,27 @@ typedef struct _cairo_pdf_group_resources {
     cairo_array_t fonts;
 } cairo_pdf_group_resources_t;
 
-typedef struct _cairo_pdf_pattern_entry {
+typedef struct _cairo_pdf_source_surface_entry {
     cairo_hash_entry_t base;
     unsigned int id;
-    cairo_pdf_resource_t pattern_res;
-    cairo_pdf_resource_t gstate_res;
-} cairo_pdf_pattern_entry_t;
+    cairo_bool_t interpolate;
+    cairo_pdf_resource_t surface_res;
+    int width;
+    int height;
+} cairo_pdf_source_surface_entry_t;
+
+typedef struct _cairo_pdf_source_surface {
+    cairo_surface_t *surface;
+    cairo_pdf_source_surface_entry_t *hash_entry;
+} cairo_pdf_source_surface_t;
 
 typedef struct _cairo_pdf_pattern {
     double width;
     double height;
     cairo_rectangle_int_t extents;
     cairo_pattern_t *pattern;
-    cairo_pdf_pattern_entry_t *hash_entry;
+    cairo_pdf_resource_t pattern_res;
+    cairo_pdf_resource_t gstate_res;
 } cairo_pdf_pattern_t;
 
 typedef enum _cairo_pdf_operation {
@@ -125,7 +133,8 @@ struct _cairo_pdf_surface {
     cairo_array_t rgb_linear_functions;
     cairo_array_t alpha_linear_functions;
     cairo_array_t page_patterns;
-    cairo_hash_table_t *all_patterns;
+    cairo_array_t page_surfaces;
+    cairo_hash_table_t *all_surfaces;
     cairo_array_t smask_groups;
     cairo_array_t knockout_group;
 
