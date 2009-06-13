@@ -233,6 +233,8 @@ _cairo_surface_detach_snapshots (cairo_surface_t *surface)
 
 	if (snapshots[i]->snapshot_detach != NULL)
 	    snapshots[i]->snapshot_detach (snapshots[i]);
+
+	cairo_surface_destroy (snapshots[i]);
     }
     surface->snapshots.num_elements = 0;
 
@@ -244,6 +246,8 @@ _cairo_surface_attach_snapshot (cairo_surface_t *surface,
 				cairo_surface_t *snapshot,
 				cairo_surface_func_t detach_func)
 {
+    cairo_status_t status;
+
     assert (surface != snapshot);
 
     if (snapshot->snapshot_of != NULL)
@@ -252,7 +256,12 @@ _cairo_surface_attach_snapshot (cairo_surface_t *surface,
     snapshot->snapshot_of = surface;
     snapshot->snapshot_detach = detach_func;
 
-    return _cairo_array_append (&surface->snapshots, &snapshot);
+    status = _cairo_array_append (&surface->snapshots, &snapshot);
+    if (unlikely (status))
+	return status;
+
+    cairo_surface_reference (snapshot);
+    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_surface_t *
@@ -297,6 +306,8 @@ _cairo_surface_detach_snapshot (cairo_surface_t *snapshot)
 
     if (snapshot->snapshot_detach != NULL)
 	snapshot->snapshot_detach (snapshot);
+
+    cairo_surface_destroy (snapshot);
 }
 
 static cairo_bool_t
@@ -574,6 +585,8 @@ cairo_surface_destroy (cairo_surface_t *surface)
 
     if (! _cairo_reference_count_dec_and_test (&surface->ref_count))
 	return;
+
+    assert (surface->snapshot_of == NULL);
 
     if (! surface->finished)
 	cairo_surface_finish (surface);
