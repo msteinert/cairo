@@ -553,7 +553,7 @@ write_images (const char *trace, struct slave *slave, int num_slaves)
 }
 
 static size_t
-allocate_image_for_slave (uint8_t *base, size_t *offset, struct slave *slave)
+allocate_image_for_slave (uint8_t *base, size_t offset, struct slave *slave)
 {
     struct request_image rq;
     int size;
@@ -564,16 +564,16 @@ allocate_image_for_slave (uint8_t *base, size_t *offset, struct slave *slave)
 
     size = rq.height * rq.stride;
     size = (size + 127) & -128;
-    data = base + *offset;
-    *offset += size;
-    assert (*offset <= DATA_SIZE);
+    data = base + offset;
+    offset += size;
+    assert (offset <= DATA_SIZE);
 
     assert (slave->image == NULL);
     slave->image = cairo_image_surface_create_for_data (data, rq.format,
 							rq.width, rq.height,
 							rq.stride);
 
-    return data - base;
+    return offset;
 }
 
 static cairo_bool_t
@@ -645,8 +645,10 @@ test_run (void *base,
 		    if (slaves[i].image_serial == 0) {
 			size_t offset;
 
-			offset =
-			    allocate_image_for_slave (base, &image, &slaves[i]);
+			image =
+			    allocate_image_for_slave (base,
+						      offset = image,
+						      &slaves[i]);
 			if (! writen (pfd[n].fd, &offset, sizeof (offset)))
 			    goto out;
 		    } else {
