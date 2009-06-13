@@ -95,6 +95,7 @@ if HAVE_PTHREAD
 cairo_test_suite_LDADD += -lpthread
 endif
 
+if HAVE_SHM
 cairo_test_trace_SOURCES =		\
 	cairo-test-trace.c
 cairo_test_trace_LDADD =		\
@@ -102,11 +103,12 @@ cairo_test_trace_LDADD =		\
         $(top_builddir)/boilerplate/libcairoboilerplate.la	\
 	$(top_builddir)/src/libcairo.la 			\
 	$(CAIRO_LDADD) \
-	-lrt
+	$(SHM_LIBS)
 cairo_test_trace_DEPENDENCIES = \
 	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
         $(top_builddir)/boilerplate/libcairoboilerplate.la	\
 	$(top_builddir)/src/libcairo.la
+endif
 
 BUILT_SOURCES += cairo-test-constructors.c
 noinst_SCRIPTS = make-cairo-test-constructors.pl

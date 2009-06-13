@@ -48,6 +48,14 @@ AC_CHECK_LIB(rt, sched_yield, [RT_LIBS=-lrt], [RT_LIBS=])
 CAIROPERF_LIBS=$RT_LIBS
 AC_SUBST(CAIROPERF_LIBS)
 
+has_shm_open=
+AC_CHECK_LIB(rt, shm_open, [
+	     SHM_LIBS=-lrt
+	     has_shm_open=yes
+	     ], [SHM_LIBS=])
+AM_CONDITIONAL(HAVE_SHM, test "x$has_shm_open" = "xyes")
+AC_SUBST(SHM_LIBS)
+
 dnl ====================================================================
 dnl Header/function checks
 dnl ====================================================================
