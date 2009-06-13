@@ -96,6 +96,7 @@ cairo_test_suite_LDADD += -lpthread
 endif
 
 if HAVE_SHM
+EXTRA_PROGRAMS += cairo-test-trace
 cairo_test_trace_SOURCES =		\
 	cairo-test-trace.c
 cairo_test_trace_LDADD =		\
@@ -1168,7 +1169,7 @@ $(top_builddir)/test/pdiff/libpdiff.la:
 $(top_builddir)/util/cairo-script/libcairo-script-interpreter.la: $(top_builddir)/src/libcairo.la
 	cd $(top_builddir)/util/cairo-script && $(MAKE) $(AM_MAKEFLAGS) libcairo-script-interpreter.la
 
-EXTRA_PROGRAMS += imagediff png-flatten cairo-test-trace
+EXTRA_PROGRAMS += imagediff png-flatten
 
 imagediff_SOURCES = \
 	imagediff.c	\
