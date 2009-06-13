@@ -35,6 +35,7 @@
 #include <math.h>
 #include <locale.h> /* for locale independent %f printing */
 #include <ctype.h>
+#include <assert.h>
 
 #include <cairo.h>
 #if CAIRO_HAS_FT_FONT
@@ -80,10 +81,17 @@
  * printed numbers.
  */
 
+static void *_dlhandle = RTLD_NEXT;
 #define DLCALL(name, args...) ({ \
     static typeof (&name) name##_real; \
-    if (name##_real == NULL) \
-	name##_real = dlsym (RTLD_NEXT, #name); \
+    if (name##_real == NULL) { \
+	name##_real = dlsym (_dlhandle, #name); \
+	if (name##_real == NULL && _dlhandle == RTLD_NEXT) { \
+	    _dlhandle = dlopen ("libcairo.so", RTLD_LAZY); \
+	    name##_real = dlsym (_dlhandle, #name); \
+	    assert (name##_real != NULL); \
+	} \
+    } \
     (*name##_real) (args);  \
 })
 
@@ -1381,20 +1389,22 @@ _emit_image (cairo_surface_t *image,
     uint8_t *rowdata;
     uint8_t *data;
     struct _data_stream stream;
+    cairo_status_t status;
 
-    if (cairo_surface_status (image)) {
+    status = DLCALL (cairo_surface_status, image);
+    if (status) {
 	_trace_printf ("dict\n"
 		       "  /status //%s set\n"
 		       "  image",
-		       _status_to_string (cairo_surface_status (image)));
+		       _status_to_string (status));
 	return;
     }
 
-    width = cairo_image_surface_get_width (image);
-    height = cairo_image_surface_get_height (image);
-    stride = cairo_image_surface_get_stride (image);
-    format = cairo_image_surface_get_format (image);
-    data = cairo_image_surface_get_data (image);
+    width = DLCALL (cairo_image_surface_get_width, image);
+    height = DLCALL (cairo_image_surface_get_height, image);
+    stride = DLCALL (cairo_image_surface_get_stride, image);
+    format = DLCALL (cairo_image_surface_get_format, image);
+    data = DLCALL (cairo_image_surface_get_data, image);
 
     _trace_printf ("dict\n"
 		   "  /width %d set\n"
@@ -1410,7 +1420,7 @@ _emit_image (cairo_surface_t *image,
 	va_end (ap);
     }
 
-    if (cairo_version () >= CAIRO_VERSION_ENCODE (1, 9, 0)) {
+    if (DLCALL (cairo_version) >= CAIRO_VERSION_ENCODE (1, 9, 0)) {
 	const char *mime_types[] = {
 	    CAIRO_MIME_TYPE_JPEG,
 	    CAIRO_MIME_TYPE_PNG,
@@ -1421,8 +1431,8 @@ _emit_image (cairo_surface_t *image,
 	    const unsigned char *mime_data;
 	    unsigned int mime_length;
 
-	    cairo_surface_get_mime_data (image, *mime_type,
-					 &mime_data, &mime_length);
+	    DLCALL (cairo_surface_get_mime_data,
+		    image, *mime_type, &mime_data, &mime_length);
 	    if (mime_data != NULL) {
 		_trace_printf ("  /mime-type (%s) set\n"
 			       "  /source <~",
@@ -2607,25 +2617,25 @@ _emit_font_options (const cairo_font_options_t *options)
 
     _trace_printf ("dict\n");
 
-    antialias = cairo_font_options_get_antialias (options);
+    antialias = DLCALL (cairo_font_options_get_antialias, options);
     if (antialias != CAIRO_ANTIALIAS_DEFAULT) {
 	_trace_printf ("  /antialias //%s set\n",
 		       _antialias_to_string (antialias));
     }
 
-    subpixel_order = cairo_font_options_get_subpixel_order (options);
+    subpixel_order = DLCALL (cairo_font_options_get_subpixel_order, options);
     if (subpixel_order != CAIRO_SUBPIXEL_ORDER_DEFAULT) {
 	_trace_printf ("  /subpixel-order //%s set\n",
 		       _subpixel_order_to_string (subpixel_order));
     }
 
-    hint_style = cairo_font_options_get_hint_style (options);
+    hint_style = DLCALL (cairo_font_options_get_hint_style, options);
     if (hint_style != CAIRO_HINT_STYLE_DEFAULT) {
 	_trace_printf ("  /hint-style //%s set\n",
 		       _hint_style_to_string (hint_style));
     }
 
-    hint_metrics = cairo_font_options_get_hint_metrics (options);
+    hint_metrics = DLCALL (cairo_font_options_get_hint_metrics, options);
     if (hint_style != CAIRO_HINT_METRICS_DEFAULT) {
 	_trace_printf ("  /hint-metrics //%s set\n",
 		       _hint_metrics_to_string (hint_metrics));
@@ -2775,6 +2785,18 @@ cairo_show_text (cairo_t *cr, const char *utf8)
     DLCALL (cairo_show_text, cr, utf8);
 }
 
+static void
+_glyph_advance (cairo_scaled_font_t *font,
+		const cairo_glyph_t *glyph,
+		double *x, double *y)
+{
+    cairo_text_extents_t extents;
+
+    DLCALL (cairo_scaled_font_glyph_extents, font, glyph, 1, &extents);
+    *x += extents.x_advance;
+    *y += extents.y_advance;
+}
+
 #define TOLERANCE 1e-5
 static void
 _emit_glyphs (cairo_scaled_font_t *font,
@@ -2802,8 +2824,6 @@ _emit_glyphs (cairo_scaled_font_t *font,
 	_trace_printf ("[%g %g [", x, y);
 	first = true;
 	while (num_glyphs--) {
-	    cairo_text_extents_t extents;
-
 	    if (fabs (glyphs->x - x) > TOLERANCE ||
 		fabs (glyphs->y - y) > TOLERANCE)
 	    {
@@ -2818,10 +2838,7 @@ _emit_glyphs (cairo_scaled_font_t *font,
 	    _trace_printf ("%lu", glyphs->index);
 	    first = false;
 
-	    cairo_scaled_font_glyph_extents (font, glyphs, 1, &extents);
-	    x += extents.x_advance;
-	    y += extents.y_advance;
-
+	    _glyph_advance (font, glyphs, &x, &y);
 	    glyphs++;
 	}
 	_trace_printf ("]]");
@@ -2834,7 +2851,6 @@ _emit_glyphs (cairo_scaled_font_t *font,
 	    _trace_printf ("[%g %g <~", x, y);
 	    _write_base85_data_start (&stream);
 	    while (num_glyphs--) {
-		cairo_text_extents_t extents;
 		unsigned char c;
 
 		if (fabs (glyphs->x - x) > TOLERANCE ||
@@ -2850,10 +2866,7 @@ _emit_glyphs (cairo_scaled_font_t *font,
 		c = glyphs->index;
 		_write_base85_data (&stream, &c, 1);
 
-		cairo_scaled_font_glyph_extents (font, glyphs, 1, &extents);
-		x += extents.x_advance;
-		y += extents.y_advance;
-
+		_glyph_advance (font, glyphs, &x, &y);
 		glyphs++;
 	    }
 	    _write_base85_data_end (&stream);
@@ -3686,6 +3699,24 @@ FT_Done_Face (FT_Face face)
 }
 #endif
 
+static void
+_surface_object_set_size (cairo_surface_t *surface, int width, int height)
+{
+    Object *obj;
+
+    obj = _get_object (SURFACE, surface);
+    obj->width = width;
+    obj->height = height;
+}
+
+static void
+_surface_object_set_size_from_surface (cairo_surface_t *surface)
+{
+    _surface_object_set_size (surface,
+			      DLCALL (cairo_image_surface_get_width, surface),
+			      DLCALL (cairo_image_surface_get_height, surface));
+}
+
 #if CAIRO_HAS_PS_SURFACE
 #include<cairo-ps.h>
 
@@ -3711,8 +3742,7 @@ cairo_ps_surface_create (const char *filename, double width_in_points, double he
 		       width_in_points,
 		       height_in_points,
 		       surface_id);
-	_get_object (SURFACE, ret)->width = width_in_points;
-	_get_object (SURFACE, ret)->height = height_in_points;
+	_surface_object_set_size (ret, width_in_points, height_in_points);
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
@@ -3739,8 +3769,7 @@ cairo_ps_surface_create_for_stream (cairo_write_func_t write_func, void *closure
 		       width_in_points,
 		       height_in_points,
 		       surface_id);
-	_get_object (SURFACE, ret)->width = width_in_points;
-	_get_object (SURFACE, ret)->height = height_in_points;
+	_surface_object_set_size (ret, width_in_points, height_in_points);
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
@@ -3782,8 +3811,7 @@ cairo_pdf_surface_create (const char *filename, double width_in_points, double h
 		       width_in_points,
 		       height_in_points,
 		       surface_id);
-	_get_object (SURFACE, ret)->width = width_in_points;
-	_get_object (SURFACE, ret)->height = height_in_points;
+	_surface_object_set_size (ret, width_in_points, height_in_points);
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
@@ -3810,8 +3838,7 @@ cairo_pdf_surface_create_for_stream (cairo_write_func_t write_func, void *closur
 		       width_in_points,
 		       height_in_points,
 		       surface_id);
-	_get_object (SURFACE, ret)->width = width_in_points;
-	_get_object (SURFACE, ret)->height = height_in_points;
+	_surface_object_set_size (ret, width_in_points, height_in_points);
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
@@ -3851,8 +3878,7 @@ cairo_svg_surface_create (const char *filename, double width, double height)
 		       width,
 		       height,
 		       surface_id);
-	_get_object (SURFACE, ret)->width = width;
-	_get_object (SURFACE, ret)->height = height;
+	_surface_object_set_size (ret, width, height);
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
@@ -3879,8 +3905,7 @@ cairo_svg_surface_create_for_stream (cairo_write_func_t write_func, void *closur
 		       width,
 		       height,
 		       surface_id);
-	_get_object (SURFACE, ret)->width = width;
-	_get_object (SURFACE, ret)->height = height;
+	_surface_object_set_size (ret, width, height);
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
@@ -3910,8 +3935,7 @@ cairo_image_surface_create_from_png (const char *filename)
 	_emit_image (ret, "  /filename %s set\n", filename_string);
 	_trace_printf (" dup /s%ld exch def\n",
 		       surface_id);
-	_get_object (SURFACE, ret)->width = cairo_image_surface_get_width (ret);
-	_get_object (SURFACE, ret)->height = cairo_image_surface_get_height (ret);
+	_surface_object_set_size_from_surface (ret);
 	_get_object (SURFACE, ret)->defined = true;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
@@ -3934,8 +3958,7 @@ cairo_image_surface_create_from_png_stream (cairo_read_func_t read_func, void *c
 	_emit_image (ret, NULL);
 	_trace_printf (" dup /s%ld exch def\n",
 		       surface_id);
-	_get_object (SURFACE, ret)->width = cairo_image_surface_get_width (ret);
-	_get_object (SURFACE, ret)->height = cairo_image_surface_get_height (ret);
+	_surface_object_set_size_from_surface (ret);
 	_get_object (SURFACE, ret)->defined = true;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
@@ -3944,6 +3967,12 @@ cairo_image_surface_create_from_png_stream (cairo_read_func_t read_func, void *c
     return ret;
 }
 #endif
+
+static const char *
+_content_from_surface (cairo_surface_t *surface)
+{
+    return _content_to_string (DLCALL (cairo_surface_get_content, surface));
+}
 
 #if CAIRO_HAS_XLIB_SURFACE
 #include <cairo-xlib.h>
@@ -3971,13 +4000,12 @@ cairo_xlib_surface_create (Display *dpy,
 		       "  /height %d set\n"
 		       "  surface dup /s%ld exch def\n",
 		       drawable,
-		       _content_to_string (cairo_surface_get_content (ret)),
+		       _content_from_surface (ret),
 		       width,
 		       height,
 		       surface_id);
 	_get_object (SURFACE, ret)->defined = true;
-	_get_object (SURFACE, ret)->width  = width;
-	_get_object (SURFACE, ret)->height = height;
+	_surface_object_set_size (ret, width, height);
 	_get_object (SURFACE, ret)->foreign = true;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
@@ -4010,13 +4038,12 @@ cairo_xlib_surface_create_for_bitmap (Display *dpy,
 		       "  /depth 1 set\n"
 		       "  surface dup /s%ld exch def\n",
 		       bitmap,
-		       _content_to_string (cairo_surface_get_content (ret)),
+		       _content_from_surface (ret),
 		       width,
 		       height,
 		       surface_id);
 	_get_object (SURFACE, ret)->defined = true;
-	_get_object (SURFACE, ret)->width  = width;
-	_get_object (SURFACE, ret)->height = height;
+	_surface_object_set_size (ret, width, height);
 	_get_object (SURFACE, ret)->foreign = true;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
@@ -4052,14 +4079,13 @@ cairo_xlib_surface_create_with_xrender_format (Display *dpy,
 		       "  /depth %d set\n"
 		       "  surface dup /s%ld exch def\n",
 		       drawable,
-		       _content_to_string (cairo_surface_get_content (ret)),
+		       _content_from_surface (ret),
 		       width,
 		       height,
 		       format->depth,
 		       surface_id);
 	_get_object (SURFACE, ret)->defined = true;
-	_get_object (SURFACE, ret)->width  = width;
-	_get_object (SURFACE, ret)->height = height;
+	_surface_object_set_size (ret, width, height);
 	_get_object (SURFACE, ret)->foreign = true;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
@@ -4095,8 +4121,7 @@ cairo_script_surface_create (const char *filename,
 		       "  surface dup /s%ld exch def\n",
 		       width, height,
 		       surface_id);
-	_get_object (SURFACE, ret)->width = width;
-	_get_object (SURFACE, ret)->height = height;
+	_surface_set_size (ret, width, height);
 	_get_object (SURFACE, ret)->defined = true;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
@@ -4127,8 +4152,7 @@ cairo_script_surface_create_for_stream (cairo_write_func_t write_func,
 		       "  surface dup /s%ld exch def\n",
 		       width, height,
 		       surface_id);
-	_get_object (SURFACE, ret)->width = width;
-	_get_object (SURFACE, ret)->height = height;
+	_surface_object_set_size (ret, width, height);
 	_get_object (SURFACE, ret)->defined = true;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
@@ -4162,8 +4186,7 @@ _cairo_test_fallback_surface_create (cairo_content_t	content,
 		       _content_to_string (content),
 		       width, height,
 		       surface_id);
-	_get_object (SURFACE, ret)->width = width;
-	_get_object (SURFACE, ret)->height = height;
+	_surface_object_set_size (ret, width, height);
 	_get_object (SURFACE, ret)->defined = true;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
@@ -4200,8 +4223,7 @@ _cairo_test_paginated_surface_create_for_data (unsigned char	*data,
 		       _content_to_string (content),
 		       width, height, stride,
 		       surface_id);
-	_get_object (SURFACE, ret)->width = width;
-	_get_object (SURFACE, ret)->height = height;
+	_surface_object_set_size (ret, width, height);
 	_get_object (SURFACE, ret)->defined = true;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
@@ -4233,8 +4255,7 @@ _cairo_test_meta_surface_create (cairo_content_t	content,
 		       _content_to_string (content),
 		       width, height,
 		       surface_id);
-	_get_object (SURFACE, ret)->width = width;
-	_get_object (SURFACE, ret)->height = height;
+	_surface_object_set_size (ret, width, height);
 	_get_object (SURFACE, ret)->defined = true;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
