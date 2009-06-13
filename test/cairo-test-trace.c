@@ -76,43 +76,11 @@
 #include <sys/poll.h>
 #include <sys/un.h>
 #include <errno.h>
+#include <assert.h>
 
 #if HAVE_FCFINI
 #include <fontconfig/fontconfig.h>
 #endif
-
-/* manage the shared memory using Doug Lea's malloc */
-#define USE_LOCKS 0
-#define USE_DL_PREFIX 1
-#if HAVE_FFS
-#define USE_BUILTIN_FFS 1
-#endif
-
-/* We only use the segment created my create_mspace_with_base.  */
-#define MSPACES 1
-#define ONLY_MSPACES 1
-
-/* Disable manipulation of the memory segment */
-#define HAVE_MORECORE 0
-#define HAVE_MMAP 1
-#define HAVE_MREMAP 0
-#define mmap(a, b, c, d, e, f)	MFAIL
-#define munmap(a, b)		(-1)
-#define DEFAULT_MMAP_THRESHOLD MAX_SIZE_T
-
-/* We have no use for this, so save some code and data.  */
-#define NO_MALLINFO 1
-#define ABORT_ON_ASSERT_FAILURE 0
-
-/* Don't allocate more than a page unless needed.  */
-#define DEFAULT_GRANULARITY ((size_t)malloc_getpagesize)
-
-#include "dlmalloc.c"
-#undef mmap
-#undef munmap
-
-#undef assert
-#include <assert.h>
 
 #define DATA_SIZE (64 << 20)
 #define SHM_PATH_XXX "/shmem-cairo-trace"
@@ -584,7 +552,7 @@ write_images (const char *trace, struct slave *slave, int num_slaves)
 }
 
 static size_t
-allocate_image_for_slave (uint8_t *base, mspace *msp, struct slave *slave)
+allocate_image_for_slave (uint8_t *base, size_t *offset, struct slave *slave)
 {
     struct request_image rq;
     int size;
@@ -594,8 +562,10 @@ allocate_image_for_slave (uint8_t *base, mspace *msp, struct slave *slave)
     slave->image_serial = rq.id;
 
     size = rq.height * rq.stride;
-    data = mspace_malloc (msp, size);
-    assert (data != NULL);
+    size = (size + 127) & -128;
+    data = base + *offset;
+    *offset += size;
+    assert (*offset <= DATA_SIZE);
 
     assert (slave->image == NULL);
     slave->image = cairo_image_surface_create_for_data (data, rq.format,
@@ -607,7 +577,6 @@ allocate_image_for_slave (uint8_t *base, mspace *msp, struct slave *slave)
 
 static cairo_bool_t
 test_run (void *base,
-	  mspace msp,
 	  int sk,
 	  const char *trace,
 	  struct slave *slaves,
@@ -617,6 +586,7 @@ test_run (void *base,
     int npfd, cnt, n, i;
     int completion;
     cairo_bool_t ret = FALSE;
+    size_t image;
 
     pfd = xcalloc (num_slaves+2, sizeof (*pfd));
 
@@ -625,6 +595,7 @@ test_run (void *base,
     npfd = 1;
 
     completion = 0;
+    image = 0;
     while ((cnt = poll (pfd, npfd, -1)) > 0) {
 	if (pfd[0].revents) {
 	    int fd;
@@ -674,8 +645,7 @@ test_run (void *base,
 			size_t offset;
 
 			offset =
-			    allocate_image_for_slave (base, msp,
-						      &slaves[i]);
+			    allocate_image_for_slave (base, &image, &slaves[i]);
 			if (! writen (pfd[n].fd, &offset, sizeof (offset)))
 			    goto out;
 		    } else {
@@ -705,9 +675,6 @@ test_run (void *base,
 
 	    /* ack */
 	    for (i = 0; i < num_slaves; i++) {
-		cairo_surface_finish (slaves[i].image);
-		mspace_free (msp,
-			     cairo_image_surface_get_data (slaves[i].image));
 		cairo_surface_destroy (slaves[i].image);
 		slaves[i].image = NULL;
 
@@ -723,6 +690,7 @@ test_run (void *base,
 	    }
 
 	    completion = 0;
+	    image = 0;
 	}
     }
 done:
@@ -736,8 +704,6 @@ out:
 	if (slaves[n].image == NULL)
 	    continue;
 
-	cairo_surface_finish (slaves[n].image);
-	mspace_free (msp, cairo_image_surface_get_data (slaves[n].image));
 	cairo_surface_destroy (slaves[n].image);
 	slaves[n].image = NULL;
 
@@ -855,7 +821,6 @@ _test_trace (test_runner_t *test, const char *trace, const char *name)
     int sk, fd;
     int i, num_slaves;
     void *base;
-    mspace msp;
     cairo_bool_t ret = FALSE;
 
     /* create a socket to control the test runners */
@@ -913,17 +878,12 @@ _test_trace (test_runner_t *test, const char *trace, const char *name)
 	goto cleanup;
     }
 
-    /* map our shared memory and manage using a dlmalloc pool */
     base = mmap (NULL, DATA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (base == MAP_FAILED) {
 	fprintf (stderr, "Unable to mmap shared memory\n");
 	goto cleanup;
     }
-    msp = create_mspace_with_base (base, DATA_SIZE, 0);
-
-    ret = test_run (base, msp, sk, name, slaves, num_slaves);
-
-    destroy_mspace (msp);
+    ret = test_run (base, sk, name, slaves, num_slaves);
     munmap (base, DATA_SIZE);
 
 cleanup:

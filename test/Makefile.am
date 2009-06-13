@@ -107,7 +107,6 @@ cairo_test_trace_DEPENDENCIES = \
 	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
         $(top_builddir)/boilerplate/libcairoboilerplate.la	\
 	$(top_builddir)/src/libcairo.la
-EXTRA_DIST += dlmalloc.c
 
 BUILT_SOURCES += cairo-test-constructors.c
 noinst_SCRIPTS = make-cairo-test-constructors.pl
