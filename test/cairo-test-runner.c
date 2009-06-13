@@ -453,7 +453,7 @@ _runner_print_results (cairo_test_runner_t *runner)
     _runner_print_summary (runner);
     _runner_print_details (runner);
 
-    if (! runner->passed) {
+    if (! runner->passed && ! runner->num_crashed) {
 	_log (&runner->base,
 "\n"
 "Note: These failures may be due to external factors.\n"
