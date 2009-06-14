@@ -19,7 +19,8 @@ cairo_trace_la_LIBADD = -ldl -lz $(BFD_LIBS)
 
 
 system-install: install
-	mkdir -p $(cairooutdir)
+	-mkdir -p $(cairooutdir)
+	-chmod 01777 $(cairooutdir)
 	grep -sq $(cairolibdir)/cairo-trace.so /etc/ld.so.preload || echo $(cairolibdir)/cairo-trace.so >> /etc/ld.so.preload
 
 system-uninstall: uninstall
