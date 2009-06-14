@@ -50,7 +50,7 @@ cairo.def: cairo-features.h $(enabled_cairo_headers)
 	@(echo EXPORTS; \
 	(cd $(srcdir); cat $(enabled_cairo_headers) || echo 'cairo_ERROR ()' ) | \
 	grep -v -E '^# *include' | \
-	( cat cairo-features.h - | $(CPP) - || echo 'cairo_ERROR ()' ) | \
+	( cat cairo-features.h - | $(CPP) -D__cplusplus - || echo 'cairo_ERROR ()' ) | \
 	grep -E '^cairo_.* \(' | \
 	sed -e 's/[ 	].*//' | \
 	sort; \

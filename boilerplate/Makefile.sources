@@ -37,6 +37,9 @@ cairo_boilerplate_pdf_sources = cairo-boilerplate-pdf.c
 cairo_boilerplate_ps_private = cairo-boilerplate-ps-private.h
 cairo_boilerplate_ps_sources = cairo-boilerplate-ps.c
 
+cairo_boilerplate_qt_private = cairo-boilerplate-qt-private.h
+cairo_boilerplate_qt_sources = cairo-boilerplate-qt.cpp
+
 cairo_boilerplate_quartz_private = cairo-boilerplate-quartz-private.h
 cairo_boilerplate_quartz_sources = cairo-boilerplate-quartz.c
 

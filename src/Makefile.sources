@@ -223,6 +223,9 @@ cairo_xlib_xrender_headers = cairo-xlib-xrender.h
 cairo_xcb_headers = cairo-xcb.h cairo-xcb-xrender.h
 cairo_xcb_sources = cairo-xcb-surface.c
 
+cairo_qt_headers = cairo-qt.h
+cairo_qt_sources = cairo-qt-surface.cpp
+
 cairo_quartz_headers = cairo-quartz.h
 cairo_quartz_private = cairo-quartz-private.h
 cairo_quartz_sources = cairo-quartz-surface.c

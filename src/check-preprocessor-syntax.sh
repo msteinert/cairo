@@ -52,6 +52,7 @@ grep '#.*\<include\>.*<.*cairo' $ALL >&2 && stat=1
 
 
 echo 'Checking that feature conditionals are used with #if only (not #ifdef)'
-grep '#if.*CAIRO_HAS_' $ALL | grep def >&2 && stat=1
+grep '#ifdef CAIRO_HAS_' $ALL && stat=1
+grep '#if.*defined[ ]*(CAIRO_HAS_' $ALL && stat=1
 
 exit $stat

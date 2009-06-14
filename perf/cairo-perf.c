@@ -92,9 +92,8 @@ target_is_measurable (const cairo_boilerplate_target_t *target)
     case CAIRO_SURFACE_TYPE_WIN32:
     case CAIRO_SURFACE_TYPE_BEOS:
     case CAIRO_SURFACE_TYPE_DIRECTFB:
-#if CAIRO_VERSION_MAJOR > 1 || (CAIRO_VERSION_MAJOR == 1 && CAIRO_VERSION_MINOR > 2)
     case CAIRO_SURFACE_TYPE_OS2:
-#endif
+    case CAIRO_SURFACE_TYPE_QT:
 	return TRUE;
     case CAIRO_SURFACE_TYPE_PDF:
     case CAIRO_SURFACE_TYPE_PS:

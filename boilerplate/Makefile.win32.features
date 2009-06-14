@@ -49,6 +49,16 @@ enabled_cairo_boilerplate_private += $(cairo_boilerplate_xcb_private)
 enabled_cairo_boilerplate_sources += $(cairo_boilerplate_xcb_sources)
 endif
 
+unsupported_cairo_boilerplate_headers += $(cairo_boilerplate_qt_headers)
+all_cairo_boilerplate_headers += $(cairo_boilerplate_qt_headers)
+all_cairo_boilerplate_private += $(cairo_boilerplate_qt_private)
+all_cairo_boilerplate_sources += $(cairo_boilerplate_qt_sources)
+ifeq ($(CAIRO_HAS_QT_SURFACE),1)
+enabled_cairo_boilerplate_headers += $(cairo_boilerplate_qt_headers)
+enabled_cairo_boilerplate_private += $(cairo_boilerplate_qt_private)
+enabled_cairo_boilerplate_sources += $(cairo_boilerplate_qt_sources)
+endif
+
 supported_cairo_boilerplate_headers += $(cairo_boilerplate_quartz_headers)
 all_cairo_boilerplate_headers += $(cairo_boilerplate_quartz_headers)
 all_cairo_boilerplate_private += $(cairo_boilerplate_quartz_private)

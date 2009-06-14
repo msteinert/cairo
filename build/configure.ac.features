@@ -363,6 +363,7 @@ AC_DEFUN([CAIRO_REPORT],
 	echo "  Image:         yes (always builtin)"
 	echo "  Xlib:          $use_xlib"
 	echo "  Xlib Xrender:  $use_xlib_xrender"
+	echo "  Qt:            $use_qt"
 	echo "  Quartz:        $use_quartz"
 	echo "  Quartz-image:  $use_quartz_image"
 	echo "  XCB:           $use_xcb"

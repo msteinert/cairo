@@ -93,6 +93,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+CAIRO_BEGIN_DECLS
 
 /* A fake format we use for the flattened ARGB output of the PS and
  * PDF surfaces. */
@@ -209,5 +210,7 @@ const char*
 cairo_boilerplate_version_string (void);
 
 #include "cairo-boilerplate-system.h"
+
+CAIRO_END_DECLS
 
 #endif

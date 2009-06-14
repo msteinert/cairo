@@ -99,6 +99,7 @@ target_is_measurable (const cairo_boilerplate_target_t *target)
     case CAIRO_SURFACE_TYPE_BEOS:
     case CAIRO_SURFACE_TYPE_DIRECTFB:
     case CAIRO_SURFACE_TYPE_OS2:
+    case CAIRO_SURFACE_TYPE_QT:
     case CAIRO_INTERNAL_SURFACE_TYPE_NULL:
 	return TRUE;
     case CAIRO_SURFACE_TYPE_PDF:

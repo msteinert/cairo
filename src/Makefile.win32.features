@@ -63,6 +63,20 @@ ifeq ($(CAIRO_HAS_XCB_SURFACE),1)
 enabled_cairo_pkgconf += cairo-xcb.pc
 endif
 
+unsupported_cairo_headers += $(cairo_qt_headers)
+all_cairo_headers += $(cairo_qt_headers)
+all_cairo_private += $(cairo_qt_private)
+all_cairo_sources += $(cairo_qt_sources)
+ifeq ($(CAIRO_HAS_QT_SURFACE),1)
+enabled_cairo_headers += $(cairo_qt_headers)
+enabled_cairo_private += $(cairo_qt_private)
+enabled_cairo_sources += $(cairo_qt_sources)
+endif
+all_cairo_pkgconf += cairo-qt.pc
+ifeq ($(CAIRO_HAS_QT_SURFACE),1)
+enabled_cairo_pkgconf += cairo-qt.pc
+endif
+
 supported_cairo_headers += $(cairo_quartz_headers)
 all_cairo_headers += $(cairo_quartz_headers)
 all_cairo_private += $(cairo_quartz_private)

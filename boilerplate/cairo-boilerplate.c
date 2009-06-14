@@ -44,6 +44,9 @@
 #if CAIRO_HAS_PS_SURFACE
 #include "cairo-boilerplate-ps-private.h"
 #endif
+#if CAIRO_HAS_QT_SURFACE
+#include "cairo-boilerplate-qt-private.h"
+#endif
 #if CAIRO_HAS_QUARTZ_SURFACE
 #include "cairo-boilerplate-quartz-private.h"
 #endif
@@ -446,6 +449,26 @@ static const cairo_boilerplate_target_t targets[] =
     },
 #endif
 #endif /* CAIRO_HAS_GLITZ_SURFACE */
+#if CAIRO_HAS_QT_SURFACE
+    {
+	"qt", "qt", NULL,
+	CAIRO_SURFACE_TYPE_QT, CAIRO_CONTENT_COLOR_ALPHA, 0,
+	_cairo_boilerplate_qt_create_surface, NULL,
+	NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	_cairo_boilerplate_qt_cleanup
+    },
+    {
+	"qt", "qt", NULL,
+	CAIRO_SURFACE_TYPE_QT, CAIRO_CONTENT_COLOR, 0,
+	_cairo_boilerplate_qt_create_surface, NULL,
+	NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	_cairo_boilerplate_qt_cleanup
+    },
+#endif
 #if CAIRO_HAS_QUARTZ_SURFACE
     {
 	"quartz", "quartz", NULL,

@@ -82,6 +82,17 @@ CAIRO_ENABLE_SURFACE_BACKEND(xcb, XCB, no, [
 
 dnl ===========================================================================
 
+CAIRO_ENABLE_SURFACE_BACKEND(qt, Qt, no, [
+  qt_REQUIRES="QtGui >= 4.4.0"
+  PKG_CHECK_MODULES(qt, $qt_REQUIRES, ,
+		    [AC_MSG_RESULT(no)
+		     qt_REQUIRES=""
+		     use_qt="no (requires Qt4 development libraries)"
+		     ])
+])
+
+dnl ===========================================================================
+
 CAIRO_ENABLE_SURFACE_BACKEND(quartz, Quartz, auto, [
   dnl There is no pkgconfig for quartz; lets do a header check
   AC_CHECK_HEADER(ApplicationServices/ApplicationServices.h, , [use_quartz="no (requires ApplicationServices framework)"])
