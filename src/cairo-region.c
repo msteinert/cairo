@@ -149,7 +149,7 @@ cairo_region_create_rectangles (cairo_rectangle_int_t *rects,
 	return (cairo_region_t *)&_cairo_region_nil;
 
     region->status = CAIRO_STATUS_SUCCESS;
-    
+
     if (count > ARRAY_LENGTH (stack_pboxes)) {
 	pboxes = _cairo_malloc_ab (count, sizeof (pixman_box32_t));
 
@@ -171,12 +171,13 @@ cairo_region_create_rectangles (cairo_rectangle_int_t *rects,
 
 	region = (cairo_region_t *)&_cairo_region_nil;
     }
-    
+
     if (pboxes != stack_pboxes)
 	free (pboxes);
 
     return region;
 }
+slim_hidden_def (cairo_region_create_rectangles);
 
 /**
  * cairo_region_create_rectangle:
