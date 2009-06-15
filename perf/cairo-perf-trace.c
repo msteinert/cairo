@@ -113,6 +113,9 @@ target_is_measurable (const cairo_boilerplate_target_t *target)
 #if CAIRO_HAS_DRM_SURFACE
     case CAIRO_SURFACE_TYPE_DRM:
 #endif
+#if CAIRO_HAS_SKIA_SURFACE
+    case CAIRO_SURFACE_TYPE_SKIA:
+#endif
 	return TRUE;
     case CAIRO_SURFACE_TYPE_PDF:
     case CAIRO_SURFACE_TYPE_PS:

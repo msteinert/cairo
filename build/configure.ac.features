@@ -360,6 +360,7 @@ AC_DEFUN([CAIRO_REPORT],
 	echo "  Meta:          yes (always builtin)"
 	echo "  Tee:           yes (always builtin)"
 	echo "  XML:           $use_xml"
+	echo "  Skia:          $use_skia"
 	echo "  Xlib:          $use_xlib"
 	echo "  Xlib Xrender:  $use_xlib_xrender"
 	echo "  Qt:            $use_qt"

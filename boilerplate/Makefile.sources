@@ -36,6 +36,7 @@ cairo_boilerplate_ps_sources = cairo-boilerplate-ps.c
 cairo_boilerplate_qt_sources = cairo-boilerplate-qt.cpp
 cairo_boilerplate_quartz_sources = cairo-boilerplate-quartz.c
 cairo_boilerplate_script_sources = cairo-boilerplate-script.c
+cairo_boilerplate_skia_sources = cairo-boilerplate-skia.c
 cairo_boilerplate_svg_sources = cairo-boilerplate-svg.c
 cairo_boilerplate_test_surfaces_sources = cairo-boilerplate-test-surfaces.c
 cairo_boilerplate_win32_sources = cairo-boilerplate-win32.c cairo-boilerplate-win32-printing.c

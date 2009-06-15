@@ -142,6 +142,19 @@ AM_CONDITIONAL(CAIRO_CAN_TEST_WIN32_PRINTING_SURFACE, test "x$test_win32_printin
 
 dnl ===========================================================================
 
+CAIRO_ENABLE_SURFACE_BACKEND(skia, Skia, no, [
+  AC_ARG_WITH([skia],
+	      [AS_HELP_STRING([--with-skia=/path/to/skia],
+			      [directory to find compiled skia sources])],
+	      [skia_DIR="$withval"],
+	      [skia_DIR="`pwd`/../mesa"])
+  skia_NONPKGCONFIG_CFLAGS="-I$skia_DIR/include/config -I$skia_DIR/include/core -I$skia_DIR/include/effects"
+  skia_NONPKGCONFIG_LIBS="$skia_DIR/out/libskia.a"
+  AC_SUBST(skia_DIR)
+])
+
+dnl ===========================================================================
+
 CAIRO_ENABLE_SURFACE_BACKEND(os2, OS/2, no, [
   case "$host" in
     *-*-os2*)
