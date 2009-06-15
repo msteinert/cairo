@@ -374,6 +374,15 @@ static const cairo_boilerplate_target_t targets[] =
 	NULL,
 	FALSE, TRUE
     },
+    {
+	"null", "image", NULL,
+	CAIRO_INTERNAL_SURFACE_TYPE_NULL,
+	CAIRO_CONTENT_COLOR_ALPHA, 0,
+	_cairo_boilerplate_test_null_create_surface, NULL,
+	NULL, NULL, NULL,
+	NULL, NULL,
+	TRUE, FALSE
+    },
 #endif
 #ifdef CAIRO_HAS_GLITZ_SURFACE
 #if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE

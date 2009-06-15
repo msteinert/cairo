@@ -35,6 +35,7 @@
 
 #include "cairo-boilerplate-getopt.h"
 #include <cairo-script-interpreter.h>
+#include <cairo-types-private.h> /* for INTERNAL_SURFACE_TYPE */
 
 /* For basename */
 #ifdef HAVE_LIBGEN_H
@@ -71,7 +72,7 @@ target_is_measurable (const cairo_boilerplate_target_t *target)
     if (target->content != CAIRO_CONTENT_COLOR_ALPHA)
 	return FALSE;
 
-    switch (target->expected_type) {
+    switch ((int) target->expected_type) {
     case CAIRO_SURFACE_TYPE_IMAGE:
 	if (strcmp (target->name, "pdf") == 0 ||
 	    strcmp (target->name, "ps") == 0)
@@ -97,9 +98,8 @@ target_is_measurable (const cairo_boilerplate_target_t *target)
     case CAIRO_SURFACE_TYPE_WIN32:
     case CAIRO_SURFACE_TYPE_BEOS:
     case CAIRO_SURFACE_TYPE_DIRECTFB:
-#if CAIRO_VERSION_MAJOR > 1 || (CAIRO_VERSION_MAJOR == 1 && CAIRO_VERSION_MINOR > 2)
     case CAIRO_SURFACE_TYPE_OS2:
-#endif
+    case CAIRO_INTERNAL_SURFACE_TYPE_NULL:
 	return TRUE;
     case CAIRO_SURFACE_TYPE_PDF:
     case CAIRO_SURFACE_TYPE_PS:

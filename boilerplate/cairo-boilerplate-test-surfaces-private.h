@@ -61,6 +61,16 @@ _cairo_boilerplate_test_meta_create_surface (const char			 *name,
 					     int                          id,
 					     void			**closure);
 
+cairo_surface_t *
+_cairo_boilerplate_test_null_create_surface (const char			 *name,
+					     cairo_content_t		  content,
+					     int			  width,
+					     int			  height,
+					     int			  max_width,
+					     int			  max_height,
+					     cairo_boilerplate_mode_t	  mode,
+					     int                          id,
+					     void			**closure);
 
 cairo_surface_t *
 _cairo_boilerplate_test_paginated_create_surface (const char			 *name,

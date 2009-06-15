@@ -4263,4 +4263,30 @@ _cairo_test_meta_surface_create (cairo_content_t	content,
 
     return ret;
 }
+
+#include <test-null-surface.h>
+cairo_surface_t *
+_cairo_test_null_surface_create (cairo_content_t	content)
+{
+    cairo_surface_t *ret;
+    long surface_id;
+
+    ret = DLCALL (_cairo_test_null_surface_create, content);
+    surface_id = _create_surface_id (ret);
+
+    _emit_line_info ();
+    if (_write_lock ()) {
+	_trace_printf ("dict\n"
+		       "  /type /test-null set\n"
+		       "  /content //%s set\n"
+		       "  surface dup /s%ld exch def\n",
+		       _content_to_string (content),
+		       surface_id);
+	_get_object (SURFACE, ret)->defined = true;
+	_push_operand (SURFACE, ret);
+	_write_unlock ();
+    }
+
+    return ret;
+}
 #endif

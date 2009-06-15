@@ -1217,6 +1217,9 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 {
     cairo_test_status_t status;
 
+    if (target->get_image_surface == NULL)
+	return CAIRO_TEST_UNTESTED;
+
     if (similar && ! cairo_test_target_has_similar (ctx, target))
 	return CAIRO_TEST_UNTESTED;
 
@@ -1413,8 +1416,10 @@ _cairo_test_context_run (cairo_test_context_t *ctx)
 	    for (similar = 0; similar <= has_similar ; similar++) {
 		cairo_status_t status;
 
-		status = _cairo_test_context_run_for_target (ctx, target,
-						    similar, dev_offset);
+		status = _cairo_test_context_run_for_target (ctx,
+							     target,
+							     similar,
+							     dev_offset);
 		if (ret == CAIRO_TEST_UNTESTED)
 		    ret = status;
 	    }
@@ -1617,7 +1622,8 @@ cairo_test_paint_checkered (cairo_t *cr)
 }
 
 cairo_bool_t
-cairo_test_is_target_enabled (const cairo_test_context_t *ctx, const char *target)
+cairo_test_is_target_enabled (const cairo_test_context_t *ctx,
+			      const char *target)
 {
     size_t i;
 
@@ -1628,7 +1634,7 @@ cairo_test_is_target_enabled (const cairo_test_context_t *ctx, const char *targe
 	     * e.g. the xlib backend could check whether it is able to connect
 	     * to the Display.
 	     */
-	    return TRUE;
+	    return t->get_image_surface != NULL;
 	}
     }
 
