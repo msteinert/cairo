@@ -239,6 +239,7 @@ execute (cairo_perf_t		 *perf,
     low_std_dev_count = 0;
     for (i = 0; i < perf->iterations && ! user_interrupt; i++) {
 	cairo_script_interpreter_t *csi;
+	cairo_status_t status;
 
 	csi = cairo_script_interpreter_create ();
 	cairo_script_interpreter_install_hooks (csi, &hooks);
@@ -253,7 +254,14 @@ execute (cairo_perf_t		 *perf,
 	times[i] = cairo_perf_timer_elapsed ();
 
 	cairo_script_interpreter_finish (csi);
-	cairo_script_interpreter_destroy (csi);
+	status = cairo_script_interpreter_destroy (csi);
+	if (status) {
+	    if (perf->summary) {
+		fprintf (perf->summary, "Error during replay: %s\n",
+			 cairo_status_to_string (status));
+		goto out;
+	    }
+	}
 
 	if (perf->raw) {
 	    if (i == 0)
@@ -315,6 +323,7 @@ execute (cairo_perf_t		 *perf,
 	fflush (perf->summary);
     }
 
+out:
     if (perf->raw) {
 	printf ("\n");
 	fflush (stdout);
