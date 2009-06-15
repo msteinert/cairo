@@ -287,11 +287,11 @@ execute (cairo_perf_t		 *perf,
 		     perf->target->name,
 		     name);
 	    fprintf (perf->summary,
-		     "%#8.3f %#8.3f %#5.2f%% %3d",
+		     "%#8.3f %#8.3f %#6.2f%% %4d/%d",
 		     stats.min_ticks / (double) cairo_perf_ticks_per_second (),
 		     stats.median_ticks / (double) cairo_perf_ticks_per_second (),
 		     stats.std_dev * 100.0,
-		     stats.iterations);
+		     stats.iterations, i+1);
 	    fflush (perf->summary);
 	}
     }
@@ -307,11 +307,11 @@ execute (cairo_perf_t		 *perf,
 		     name);
 	}
 	fprintf (perf->summary,
-		 "%#8.3f %#8.3f %#5.2f%% %3d\n",
+		 "%#8.3f %#8.3f %#6.2f%% %4d/%d\n",
 		 stats.min_ticks / (double) cairo_perf_ticks_per_second (),
 		 stats.median_ticks / (double) cairo_perf_ticks_per_second (),
 		 stats.std_dev * 100.0,
-		 stats.iterations);
+		 stats.iterations, i);
 	fflush (perf->summary);
     }
 
