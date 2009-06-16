@@ -150,7 +150,8 @@ _context_put (cairo_t *cr)
     if (cr < &_context_stash.pool[0] ||
 	cr >= &_context_stash.pool[CAIRO_STASH_SIZE])
     {
-	return free (cr);
+	free (cr);
+	return;
     }
 
     avail = ~(1 << (cr - &_context_stash.pool[0]));
