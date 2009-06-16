@@ -51,6 +51,7 @@ Tor Lillqvist <tml@novell.com> win32 build fixes, build scripts
 Jinghua Luo <sunmoon1997@gmail.com> Add bitmap glyph transformation, many freetype and glitz fixes
 Luke-Jr <luke-jr@utopios.org> Build fix for cross-compiling
 Kjartan Maraas <kmaraas@gnome.org> Several fixes for sparse, lots of debug help for multi-thread bugs
+Nis Martensen <nis.martensen@web.de> Bug fix for sub paths
 Jordi Mas <jordi@ximian.com> Bug fix for cairo_show_text
 Nicholas Miell <nmiell@gmail.com> Fixes for linking bugs on AMD64
 Eugeniy Meshcheryakov <eugen@debian.org> PS/PDF font subsetting improvements

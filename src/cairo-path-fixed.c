@@ -414,7 +414,7 @@ _cairo_path_fixed_line_to (cairo_path_fixed_t *path,
 
     /* When there is not yet a current point, the line_to operation
      * becomes a move_to instead. Note: We have to do this by
-     * explicitly calling into _cairo_path_fixed_line_to to ensure
+     * explicitly calling into _cairo_path_fixed_move_to to ensure
      * that the last_move_point state is updated properly.
      */
     if (! path->has_current_point)
@@ -460,9 +460,9 @@ _cairo_path_fixed_curve_to (cairo_path_fixed_t	*path,
     point[1].x = x1; point[1].y = y1;
     point[2].x = x2; point[2].y = y2;
 
+    /* make sure subpaths are started properly */
     if (! path->has_current_point) {
-	status = _cairo_path_fixed_add (path, CAIRO_PATH_OP_MOVE_TO,
-					&point[0], 1);
+	status = _cairo_path_fixed_move_to (path, point[0].x, point[0].y);
 	if (unlikely (status))
 	    return status;
     }
