@@ -24,6 +24,7 @@ test_sources = \
 	clipped-group.c					\
 	clipped-surface.c				\
 	close-path.c					\
+	close-path-current-point.c			\
 	composite-integer-translate-source.c		\
 	composite-integer-translate-over.c		\
 	composite-integer-translate-over-repeat.c	\

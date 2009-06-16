@@ -218,6 +218,7 @@ REFERENCE_IMAGES = \
 	close-path.ps2.ref.png \
 	close-path.ps3.ref.png \
 	close-path.ref.png \
+	close-path-current-point.ref.png \
 	composite-integer-translate-over.ps2.ref.png \
 	composite-integer-translate-over.ps3.ref.png \
 	composite-integer-translate-over.ref.png \
