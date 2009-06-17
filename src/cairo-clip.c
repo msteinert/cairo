@@ -337,8 +337,9 @@ _cairo_clip_intersect_region (cairo_clip_t    *clip,
     if (clip->region) {
 	status = cairo_region_intersect (clip->region, region);
 	cairo_region_destroy (region);
-    } else
+    } else {
 	clip->region = region;
+    }
 
     clip->serial = _cairo_surface_allocate_clip_serial (target);
 
