@@ -874,12 +874,7 @@ _return_success (void)
 typedef cairo_int_status_t
 (*_set_clip_region_func)	(void			*surface,
 				 cairo_region_t		*region);
-typedef cairo_int_status_t
-(*_intersect_clip_path_func)	(void			*dst,
-				 cairo_path_fixed_t	*path,
-				 cairo_fill_rule_t	fill_rule,
-				 double			tolerance,
-				 cairo_antialias_t	antialias);
+
 typedef cairo_int_status_t
 (*_paint_func)			(void			*surface,
 			         cairo_operator_t	 op,
@@ -925,50 +920,10 @@ typedef cairo_int_status_t
 				 int			*remaining_glyphs,
 				 cairo_rectangle_int_t  *extents);
 
-typedef cairo_int_status_t
-(*_show_text_glyphs_func)	(void			    *surface,
-				 cairo_operator_t	     op,
-				 const cairo_pattern_t	    *source,
-				 const char		    *utf8,
-				 int			     utf8_len,
-				 cairo_glyph_t		    *glyphs,
-				 int			     num_glyphs,
-				 const cairo_text_cluster_t *clusters,
-				 int			     num_clusters,
-				 cairo_text_cluster_flags_t  cluster_flags,
-				 cairo_scaled_font_t	    *scaled_font,
-				 cairo_rectangle_int_t	    *extents);
-
-static cairo_surface_t *
-_cairo_null_surface_create_similar (void *other,
-				    cairo_content_t content,
-				    int width, int height)
-{
-    return _cairo_null_surface_create (content);
-}
-
-static cairo_int_status_t
-_cairo_null_surface_get_extents (void *surface,
-				 cairo_rectangle_int_t *extents)
-{
-    extents->x = 0;
-    extents->y = 0;
-    extents->width = 0;
-    extents->height = 0;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_bool_t
-_cairo_null_surface_has_show_text_glyphs (void *surface)
-{
-    return TRUE;
-}
-
 static const cairo_surface_backend_t cairo_null_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_NULL,
 
-    _cairo_null_surface_create_similar,
+    NULL, /* create_similar */
     NULL, /* finish */
     NULL, /* acquire_source_image */
     NULL, /* release_source_image */
@@ -983,8 +938,8 @@ static const cairo_surface_backend_t cairo_null_surface_backend = {
     NULL, /* copy_page */
     NULL, /* show_page */
     (_set_clip_region_func) _return_success, /* set_clip_region */
-    (_intersect_clip_path_func) _return_success, /* intersect_clip_path */
-    _cairo_null_surface_get_extents,
+    NULL, /* intersect_clip_path */
+    NULL, /* get_extents */
     NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
     NULL, /* flush */
@@ -1002,8 +957,8 @@ static const cairo_surface_backend_t cairo_null_surface_backend = {
     NULL, /* fill_stroke */
     NULL, /* create_solid_pattern_surface */
     NULL, /* can_repaint_solid_pattern_surface */
-    _cairo_null_surface_has_show_text_glyphs,
-    (_show_text_glyphs_func) _return_success,    /* show_text_glyphs */
+    NULL, /* has_show_text_glyphs */
+    NULL  /* show_text_glyphs */
 };
 
 cairo_surface_t *
