@@ -68,6 +68,9 @@ static cairo_status_t
 _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface);
 
 static void
+_cairo_xlib_surface_maybe_put_gc (cairo_xlib_surface_t *surface);
+
+static void
 _cairo_xlib_surface_ensure_src_picture (cairo_xlib_surface_t *surface);
 
 static void
@@ -305,14 +308,11 @@ _cairo_xlib_surface_finish (void *abstract_surface)
     }
 
     if (surface->gc != NULL) {
-	cairo_status_t status2;
-	status2 = _cairo_xlib_screen_put_gc (surface->screen_info,
-		                             surface->depth,
-				             surface->gc,
-				             surface->gc_has_clip_rects);
+	_cairo_xlib_screen_put_gc (surface->screen_info,
+				   surface->depth,
+				   surface->gc,
+				   surface->gc_has_clip_rects);
 	surface->gc = NULL;
-	if (status == CAIRO_STATUS_SUCCESS)
-	    status = status2;
     }
 
     if (surface->clip_rects != surface->embedded_clip_rects)
@@ -662,8 +662,7 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	ximage = NULL;
     }
 
-    if (!ximage)
-    {
+    if (!ximage) {
 
 	/* XGetImage from a window is dangerous because it can
 	 * produce errors if the window is unmapped or partially
@@ -695,9 +694,12 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 
 	    XFreePixmap (surface->dpy, pixmap);
 	}
+
+	if (!ximage)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+	_cairo_xlib_surface_maybe_put_gc (surface);
     }
-    if (!ximage)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     _swap_ximage_to_native (ximage);
 
@@ -902,25 +904,35 @@ _cairo_xlib_surface_ensure_dst_picture (cairo_xlib_surface_t    *surface)
 static cairo_status_t
 _cairo_xlib_surface_ensure_gc (cairo_xlib_surface_t *surface)
 {
-    XGCValues gcv;
 
     if (surface->gc == NULL) {
 	surface->gc = _cairo_xlib_screen_get_gc (surface->screen_info,
 						 surface->depth,
+						 surface->drawable,
 						 &surface->clip_dirty);
-	if (surface->gc == NULL) {
-	    gcv.graphics_exposures = False;
-	    surface->gc = XCreateGC (surface->dpy, surface->drawable,
-				     GCGraphicsExposures, &gcv);
-	    if (unlikely (surface->gc == NULL))
-		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	}
+	if (unlikely (surface->gc == NULL))
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     if (surface->clip_dirty & CAIRO_XLIB_SURFACE_CLIP_DIRTY_GC)
 	_cairo_xlib_surface_set_gc_clip_rects (surface);
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+static void
+_cairo_xlib_surface_maybe_put_gc (cairo_xlib_surface_t *surface)
+{
+    /* return the GC back to the common pool if clean */
+
+    if (surface->gc_has_clip_rects)
+	return;
+
+    _cairo_xlib_screen_put_gc (surface->screen_info,
+			       surface->depth,
+			       surface->gc,
+			       FALSE);
+    surface->gc = NULL;
 }
 
 static cairo_status_t
@@ -1080,6 +1092,8 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
     XPutImage(surface->dpy, surface->drawable, surface->gc,
 	      &ximage, src_x, src_y, dst_x, dst_y,
 	      width, height);
+
+    _cairo_xlib_surface_maybe_put_gc (surface);
 
   BAIL:
     if (own_data)
@@ -1870,6 +1884,8 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 		   src_y + src_attr.y_offset + ity,
 		   width, height,
 		   dst_x, dst_y);
+
+	_cairo_xlib_surface_maybe_put_gc (dst);
 	break;
 
     case DO_XTILE:
@@ -1896,6 +1912,8 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 
 	XFillRectangle (dst->dpy, dst->drawable, dst->gc,
 			dst_x, dst_y, width, height);
+
+	_cairo_xlib_surface_maybe_put_gc (dst);
 	break;
 
     case DO_UNSUPPORTED:
@@ -1968,6 +1986,8 @@ _cairo_xlib_surface_solid_fill_rectangles (cairo_xlib_surface_t    *surface,
 			rects[i].x, rects[i].y,
 			rects[i].width, rects[i].height);
     }
+
+    _cairo_xlib_surface_maybe_put_gc (surface);
 
   BAIL:
     _cairo_pattern_release_surface (&solid.base, solid_surface, &attrs);
