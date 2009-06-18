@@ -2548,6 +2548,35 @@ _cairo_surface_set_empty_clip_path (cairo_surface_t *surface,
     return _cairo_surface_set_error (surface, status);
 }
 
+/**
+ * _cairo_surface_set_empty_clip_region:
+ * @surface: the #cairo_surface_t to set the clip on
+ * @serial: the clip serial number associated with the clip path
+ *
+ * Create an empty clip region, one that represents the entire surface clipped
+ * out, and assigns the given clipping serial to the surface.
+ **/
+static cairo_status_t
+_cairo_surface_set_empty_clip_region (cairo_surface_t *surface,
+				      unsigned int     serial)
+{
+    cairo_region_t *region;
+    cairo_status_t  status;
+
+    if (surface->status)
+	return surface->status;
+
+    region = cairo_region_create ();
+    status = region->status;
+
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = _cairo_surface_set_clip_region (surface, region, serial);
+
+    cairo_region_destroy (region);
+
+    return _cairo_surface_set_error (surface, status);
+}
+
 cairo_clip_t *
 _cairo_surface_get_clip (cairo_surface_t *surface)
 {
@@ -2583,9 +2612,8 @@ _cairo_surface_set_clip (cairo_surface_t *surface, cairo_clip_t *clip)
 						           clip->serial);
 
 	    if (surface->backend->set_clip_region != NULL)
-		return _cairo_surface_set_clip_region (surface,
-						       clip->region,
-						       clip->serial);
+		return _cairo_surface_set_empty_clip_region (surface,
+							     clip->serial);
 	} else {
 	    if (clip->path)
 		return _cairo_surface_set_clip_path (surface,
