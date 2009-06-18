@@ -651,7 +651,7 @@ _cairo_scaled_font_matches (const cairo_scaled_font_t *scaled_font,
 			    const cairo_matrix_t *ctm,
 			    const cairo_font_options_t *options)
 {
-    return scaled_font->font_face == font_face &&
+    return scaled_font->original_font_face == font_face &&
 	    memcmp ((unsigned char *)(&scaled_font->font_matrix.xx),
 		    (unsigned char *)(&font_matrix->xx),
 		    sizeof(cairo_matrix_t)) == 0 &&
@@ -899,13 +899,6 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     /* Note that degenerate ctm or font_matrix *are* allowed.
      * We want to support a font size of 0. */
 
-    if (font_face->backend->get_implementation != NULL) {
-	font_face = font_face->backend->get_implementation (font_face,
-							    font_matrix,
-							    ctm,
-							    options);
-    }
-
     font_map = _cairo_scaled_font_map_lock ();
     if (unlikely (font_map == NULL))
 	return _cairo_scaled_font_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
@@ -931,9 +924,23 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	_cairo_hash_table_remove (font_map->hash_table,
 				  &scaled_font->hash_entry);
 	scaled_font->hash_entry.hash = ZOMBIE;
+
+	if (font_face->backend->get_implementation != NULL) {
+	    font_face = font_face->backend->get_implementation (font_face,
+								font_matrix,
+								ctm,
+								options);
+	}
     }
     else
     {
+	if (font_face->backend->get_implementation != NULL) {
+	    font_face = font_face->backend->get_implementation (font_face,
+								font_matrix,
+								ctm,
+								options);
+	}
+
 	_cairo_scaled_font_init_key (&key, font_face,
 				     font_matrix, ctm, options);
 
