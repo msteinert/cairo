@@ -1200,6 +1200,9 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
     }
 
     meta = (cairo_meta_surface_t *) _cairo_surface_snapshot (&surface->base);
+    if (unlikely (meta->base.status))
+	return meta->base.status;
+
     paginated_surface = _cairo_svg_surface_create_for_document (document,
 								meta->content,
 								meta->width_pixels,
@@ -2655,6 +2658,7 @@ _cairo_svg_document_finish (cairo_svg_document_t *document)
 
     for (i = 0; i < document->meta_snapshots.num_elements; i++) {
 	snapshot = _cairo_array_index (&document->meta_snapshots, i);
+	cairo_surface_finish (&snapshot->meta->base);
 	status2 = cairo_surface_status (&snapshot->meta->base);
 	cairo_surface_destroy (&snapshot->meta->base);
 	if (status == CAIRO_STATUS_SUCCESS)
