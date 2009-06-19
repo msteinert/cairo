@@ -23,6 +23,7 @@ John Ellson <ellson@research.att.com> First font/glyph extents functions
 Michael Emmel <mike.emmel@gmail.com> DirectFB backend
 Miklós Erdélyi <erdelyim@gmail.com> Fix typo leading to a crash
 Behdad Esfahbod <behdad@behdad.org> Huge piles of bug fixes, improvements, and general maintenance
+Larry Ewing <lewing@novell.com> Test case for group-clip
 Brian Ewins <Brian.Ewins@gmail.com> ATSUI maintenance (first success at making it really work)
 Bertram Felgenhauer <int-e@gmx.de> Fixes for subtle arithmetic errors
 Damian Frank <damian.frank@gmail.com> Build system improvements for win32

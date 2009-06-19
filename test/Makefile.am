@@ -500,6 +500,7 @@ REFERENCE_IMAGES = \
 	gradient-constant-alpha.rgb24.ref.png \
 	gradient-zero-stops.ref.png \
 	gradient-zero-stops.rgb24.ref.png \
+	group-clip.ref.png \
 	group-paint.ref.png \
 	huge-linear.ps3.ref.png \
 	huge-linear.ref.png \

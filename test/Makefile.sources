@@ -79,6 +79,7 @@ test_sources = \
 	gradient-alpha.c				\
 	gradient-constant-alpha.c			\
 	gradient-zero-stops.c				\
+	group-clip.c					\
 	group-paint.c					\
 	huge-linear.c					\
 	huge-radial.c					\
