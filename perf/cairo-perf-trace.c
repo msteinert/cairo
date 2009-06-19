@@ -258,10 +258,14 @@ execute (cairo_perf_t		 *perf,
 	status = cairo_script_interpreter_destroy (csi);
 	if (status) {
 	    if (perf->summary) {
-		fprintf (perf->summary, "Error during replay: %s\n",
+		unsigned int line_no;
+
+		line_no = cairo_script_interpreter_get_line_number (csi);
+		fprintf (perf->summary, "Error during replay, line %d: %s\n",
+			 line_no,
 			 cairo_status_to_string (status));
-		goto out;
 	    }
+	    goto out;
 	}
 
 	if (perf->raw) {
