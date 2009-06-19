@@ -210,7 +210,7 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
 				    int			height)
 {
     cairo_xlib_surface_t *src = abstract_src;
-    XRenderPictFormat *xrender_format = src->xrender_format;
+    XRenderPictFormat *xrender_format;
     cairo_xlib_surface_t *surface;
     Pixmap pix;
 
@@ -219,17 +219,12 @@ _cairo_xlib_surface_create_similar (void	       *abstract_src,
 
     _cairo_xlib_display_notify (src->display);
 
-    /* Start by examining the surface's XRenderFormat, or if it
-     * doesn't have one, then look one up through its visual (in the
-     * case of a bitmap, it won't even have that). */
-    if (xrender_format == NULL && src->visual != NULL)
-        xrender_format = XRenderFindVisualFormat (src->dpy, src->visual);
-
     /* If we never found an XRenderFormat or if it isn't compatible
      * with the content being requested, then we fallback to just
      * constructing a cairo_format_t instead, (which will fairly
      * arbitrarily pick a visual/depth for the similar surface.
      */
+    xrender_format = src->xrender_format;
     if (xrender_format == NULL ||
 	_xrender_format_to_content (xrender_format) != content)
     {
