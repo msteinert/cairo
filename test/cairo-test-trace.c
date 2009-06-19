@@ -570,10 +570,91 @@ matches_reference (struct slave *slave)
 	    return TRUE;
 	}
     } else {
-	return memcmp (cairo_image_surface_get_data (a),
-		       cairo_image_surface_get_data (b),
-		       cairo_image_surface_get_stride (a) *
-		       cairo_image_surface_get_stride (b));
+	int width, height, stride;
+	const uint8_t *aa, *bb;
+	int x, y;
+
+	width = cairo_image_surface_get_width (a);
+	height = cairo_image_surface_get_height (a);
+	stride = cairo_image_surface_get_stride (a);
+
+	aa = cairo_image_surface_get_data (a);
+	bb = cairo_image_surface_get_data (b);
+	switch (cairo_image_surface_get_format (a)) {
+	case CAIRO_FORMAT_ARGB32:
+	    for (y = 0; y < height; y++) {
+		const uint32_t *ua = (uint32_t *) aa;
+		const uint32_t *ub = (uint32_t *) bb;
+		for (x = 0; x < width; x++) {
+		    if (ua[x] != ub[x]) {
+			int channel;
+
+			for (channel = 0; channel < 4; channel++) {
+			    unsigned va, vb, diff;
+
+			    va = (ua[x] >> (channel*8)) & 0xff;
+			    vb = (ub[x] >> (channel*8)) & 0xff;
+			    diff = abs (va - vb);
+			    if (diff > slave->target->error_tolerance)
+				return FALSE;
+			}
+		    }
+		}
+		aa += stride;
+		bb += stride;
+	    }
+	    break;
+
+	case CAIRO_FORMAT_RGB24:
+	    for (y = 0; y < height; y++) {
+		const uint32_t *ua = (uint32_t *) aa;
+		const uint32_t *ub = (uint32_t *) bb;
+		for (x = 0; x < width; x++) {
+		    if ((ua[x] & 0x00ffffff) != (ub[x] & 0x00ffffff)) {
+			int channel;
+
+			for (channel = 0; channel < 3; channel++) {
+			    unsigned va, vb, diff;
+
+			    va = (ua[x] >> (channel*8)) & 0xff;
+			    vb = (ub[x] >> (channel*8)) & 0xff;
+			    diff = abs (va - vb);
+			    if (diff > slave->target->error_tolerance)
+				return FALSE;
+			}
+		    }
+		}
+		aa += stride;
+		bb += stride;
+	    }
+	    break;
+
+	case CAIRO_FORMAT_A8:
+	    for (y = 0; y < height; y++) {
+		for (x = 0; x < width; x++) {
+		    if (aa[x] != bb[x]) {
+			unsigned diff = abs (aa[x] - bb[x]);
+			if (diff > slave->target->error_tolerance)
+			    return FALSE;
+		    }
+		}
+		aa += stride;
+		bb += stride;
+	    }
+	    break;
+
+	case CAIRO_FORMAT_A1:
+	    width /= 8;
+	    for (y = 0; y < height; y++) {
+		if (memcmp (aa, bb, width))
+		    return FALSE;
+		aa += stride;
+		bb += stride;
+	    }
+	    break;
+	}
+
+	return TRUE;
     }
 }
 
@@ -582,9 +663,7 @@ check_images (struct slave *slaves, int num_slaves)
 {
     int n;
 
-    for (n = 1; n < num_slaves; n++) {
-	assert (slaves[n].image_ready == slaves[0].image_ready);
-
+    for (n = 0; n < num_slaves; n++) {
 	if (slaves[n].reference == NULL)
 	    continue;
 
@@ -939,14 +1018,6 @@ _test_trace (test_runner_t *test,
 
     /* spawn slave processes to run the trace */
     s = slaves = xcalloc (2*test->num_targets + 1, sizeof (struct slave));
-    s->pid = spawn_target (socket_path, shm_path, image, trace);
-    if (s->pid < 0)
-	goto cleanup;
-    s->target = image;
-    s->reference = NULL;
-    s->fd = -1;
-    s++;
-
     for (i = 0; i < test->num_targets; i++) {
 	pid_t slave;
 	const cairo_boilerplate_target_t *reference;
