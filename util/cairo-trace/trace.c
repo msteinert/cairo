@@ -709,12 +709,17 @@ _init_logfile (void)
     filename = getenv ("CAIRO_TRACE_FD");
     if (filename != NULL) {
 	int fd = atoi (filename);
+	if (fd == -1)
+	    return false;
+
 	logfile = fdopen (fd, "w");
 	if (logfile == NULL) {
 	    fprintf (stderr, "Failed to open trace file descriptor '%s': %s\n",
 		       filename, strerror (errno));
 	    return false;
 	}
+
+	setenv ("CAIRO_TRACE_FD", "-1", 1);
 	goto done;
     }
 
@@ -734,6 +739,8 @@ _init_logfile (void)
 		filename, name, getpid());
 
 	filename = buf;
+
+	setenv ("CAIRO_TRACE_FD", "-1", 1);
     }
 
     logfile = fopen (filename, "wb");
