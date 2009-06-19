@@ -302,10 +302,11 @@ CAIRO_ENABLE_FONT_BACKEND(ft, FreeType, auto, [
   ft_LIBS="$FREETYPE_LIBS"
 ])
 
+FONTCONFIG_MIN_VERSION=2.2.95
 CAIRO_ENABLE_FONT_BACKEND(fc, Fontconfig, auto, [
   use_fc=$use_ft
   if test "x$use_fc" = "xyes"; then
-    fc_REQUIRES="fontconfig"
+    fc_REQUIRES="fontconfig >= $FONTCONFIG_MIN_VERSION"
     PKG_CHECK_MODULES(FONTCONFIG, $fc_REQUIRES,,
 		      [AC_MSG_RESULT(no); use_fc="no (requires $fc_REQUIRES)"])
   fi
