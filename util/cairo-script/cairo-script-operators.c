@@ -44,7 +44,12 @@
 #include <assert.h>
 
 #ifdef HAVE_MMAP
-#include <sys/mman.h>
+# ifdef HAVE_UNISTD_H
+#  include <sys/mman.h>
+#  include <unistd.h>
+# else
+#  undef HAVE_MMAP
+# endif
 #endif
 
 typedef struct _csi_proxy {
