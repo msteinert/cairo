@@ -1435,6 +1435,9 @@ _cairo_unscaled_font_destroy (cairo_unscaled_font_t *font);
 
 /* cairo-font-face-twin.c */
 
+cairo_private cairo_font_face_t *
+_cairo_font_face_twin_create_fallback (void);
+
 cairo_private cairo_status_t
 _cairo_font_face_twin_create_for_toy (cairo_toy_font_face_t   *toy_face,
 				      cairo_font_face_t      **font_face);

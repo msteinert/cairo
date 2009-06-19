@@ -2601,7 +2601,11 @@ _cairo_ft_resolve_pattern (FcPattern		      *pattern,
 
     resolved = FcFontMatch (NULL, pattern, &result);
     if (!resolved) {
-	font_face = (cairo_font_face_t *)&_cairo_font_face_nil;
+	/* We failed to find any font. Substitute twin so that the user can
+	 * see something (and hopefully recognise that the font is missing)
+	 * and not just receive a NO_MEMORY error during rendering.
+	 */
+	font_face = _cairo_font_face_twin_create_fallback ();
 	goto FREE_PATTERN;
     }
 
