@@ -3062,8 +3062,11 @@ cairo_image_surface_create_for_data (unsigned char *data, cairo_format_t format,
 	 * Defer grabbing the pixel contents until we have to, but only for
 	 * "large" images, for small images the overhead of embedding pixels
 	 * is negligible.
+	 *
+	 * Choose 32x32 as that captures most icons which thanks to GdkPixbuf
+	 * are frequently reloaded.
 	 */
-	if (width * height < 128) {
+	if (width * height < 32*32) {
 	    _emit_image (ret, NULL);
 	    _trace_printf (" dup /s%ld exch def\n",
 			   surface_id);
