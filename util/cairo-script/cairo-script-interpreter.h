@@ -88,6 +88,9 @@ cairo_script_interpreter_feed_string (cairo_script_interpreter_t *ctx,
 				      const char *line,
 				      int len);
 
+cairo_public unsigned int
+cairo_script_interpreter_get_line_number (cairo_script_interpreter_t *ctx);
+
 cairo_public cairo_script_interpreter_t *
 cairo_script_interpreter_reference (cairo_script_interpreter_t *ctx);
 

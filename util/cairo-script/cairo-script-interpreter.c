@@ -567,6 +567,12 @@ cairo_script_interpreter_feed_string (csi_t *ctx, const char *line, int len)
     return ctx->status;
 }
 
+unsigned int
+cairo_script_interpreter_get_line_number (csi_t *ctx)
+{
+    return ctx->scanner.line_number + 1; /* 1 index based */
+}
+
 csi_t *
 cairo_script_interpreter_reference (csi_t *ctx)
 {

@@ -678,9 +678,10 @@ scan_none (csi_t *ctx,
 	csi_object_t obj = { CSI_OBJECT_TYPE_NULL };
 
 	switch (c) {
+	case 0xa:
+	    scan->line_number++;
 	case 0x0:
 	case 0x9:
-	case 0xa:
 	case 0xc:
 	case 0xd:
 	case 0x20: /* ignore whitespace */
@@ -829,9 +830,10 @@ scan_token (csi_t *ctx, csi_scanner_t *scan, csi_file_t *src)
 
     while ((c = scan_getc (scan, src)) != EOF) {
 	switch (c) {
+	case 0xa:
+	    scan->line_number++;
 	case 0x0:
 	case 0x9:
-	case 0xa:
 	case 0xc:
 	case 0xd:
 	case 0x20:
@@ -901,9 +903,10 @@ scan_hex (csi_t *ctx, csi_scanner_t *scan, csi_file_t *src)
 
     while ((c = scan_getc (scan, src)) != EOF) {
 	switch (c) {
+	case 0xa:
+	    scan->line_number++;
 	case 0x0:
 	case 0x9:
-	case 0xa:
 	case 0xc:
 	case 0xd:
 	case 0x20: /* ignore whitespace */
@@ -1056,6 +1059,7 @@ scan_string (csi_t *ctx, csi_scanner_t *scan, csi_file_t *src)
 		    scan_putc (scan, src, next);
 		    break;
 		}
+		scan->line_number++;
 		break;
 	    case 0xc:
 		break;
@@ -1098,6 +1102,7 @@ scan_comment (csi_t *ctx, csi_scanner_t *scan, csi_file_t *src)
     while ((c = scan_getc (scan, src)) != EOF) {
 	switch (c) {
 	case 0xa:
+	    scan->line_number++;
 	case 0xc:
 	    comment_end (scan);
 	    return 1;
@@ -1119,6 +1124,7 @@ _csi_scan_file (csi_t *ctx, csi_scanner_t *scan, csi_file_t *src)
 	scan_base85,
     };
 
+    scan->line_number = 0;
     while (func[scan->state] (ctx, scan, src))
 	;
 

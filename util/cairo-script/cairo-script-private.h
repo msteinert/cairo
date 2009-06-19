@@ -441,6 +441,8 @@ struct _csi_scanner {
     int string_p;
     unsigned int accumulator;
     unsigned int accumulator_count;
+
+    unsigned int line_number;
 };
 
 typedef cairo_script_interpreter_hooks_t csi_hooks_t;
