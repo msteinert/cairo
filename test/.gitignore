@@ -12,6 +12,7 @@ any2ppm
 .any2ppm.pid
 .any2ppm.errors
 cairo-test-constructors.c
+cairo-test-trace
 cairo-test-suite
 pdf2png
 ps2png
