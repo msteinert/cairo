@@ -36,7 +36,7 @@
 #include <signal.h>
 #endif
 
-cairo_user_data_key_t pdf_closure_key;
+static const cairo_user_data_key_t pdf_closure_key;
 
 typedef struct _pdf_target_closure
 {
