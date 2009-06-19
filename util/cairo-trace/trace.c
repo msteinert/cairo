@@ -3510,6 +3510,7 @@ cairo_pattern_set_extend (cairo_pattern_t *pattern, cairo_extend_t extend)
 }
 
 #if CAIRO_HAS_FT_FONT
+#if CAIRO_HAS_FC_FONT
 cairo_font_face_t *
 cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
 {
@@ -3543,6 +3544,7 @@ cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
 
     return ret;
 }
+#endif /* CAIRO_HAS_FC_FONT*/
 
 typedef struct _ft_face_data {
     unsigned long index;
