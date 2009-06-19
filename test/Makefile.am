@@ -100,14 +100,18 @@ endif
 if HAVE_SHM
 EXTRA_PROGRAMS += cairo-test-trace
 cairo_test_trace_SOURCES =		\
-	cairo-test-trace.c
+	cairo-test-trace.c		\
+	buffer-diff.c			\
+	buffer-diff.h
 cairo_test_trace_LDADD =		\
+	$(top_builddir)/test/pdiff/libpdiff.la 			\
 	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
         $(top_builddir)/boilerplate/libcairoboilerplate.la	\
 	$(top_builddir)/src/libcairo.la 			\
 	$(CAIRO_LDADD) \
 	$(SHM_LIBS)
 cairo_test_trace_DEPENDENCIES = \
+	$(top_builddir)/test/pdiff/libpdiff.la 			\
 	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
         $(top_builddir)/boilerplate/libcairoboilerplate.la	\
 	$(top_builddir)/src/libcairo.la

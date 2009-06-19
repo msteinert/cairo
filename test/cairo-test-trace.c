@@ -55,6 +55,7 @@
 #define _GNU_SOURCE 1	/* getline() */
 
 #include "cairo-test.h"
+#include "buffer-diff.h"
 
 #include "cairo-boilerplate-getopt.h"
 #include <cairo-script-interpreter.h>
@@ -82,7 +83,7 @@
 #include <fontconfig/fontconfig.h>
 #endif
 
-#define DATA_SIZE (64 << 20)
+#define DATA_SIZE (256 << 20)
 #define SHM_PATH_XXX "/shmem-cairo-trace"
 
 typedef struct _test_runner {
@@ -106,9 +107,12 @@ typedef struct _test_runner_thread {
     pid_t pid;
     int sk;
 
-    struct context_list {
-	struct context_list *next;
+    cairo_script_interpreter_t *csi;
+    struct context_closure {
+	struct context_closure *next;
 	unsigned long id;
+	unsigned long start_line;
+	unsigned long end_line;
 	cairo_t *context;
 	cairo_surface_t *surface;
     } *contexts;
@@ -121,12 +125,19 @@ struct slave {
     int fd;
     unsigned long image_serial;
     unsigned long image_ready;
+    unsigned long start_line;
+    unsigned long end_line;
     cairo_surface_t *image;
+    cairo_surface_t *difference;
+    buffer_diff_result_t result;
     const cairo_boilerplate_target_t *target;
+    const struct slave *reference;
 };
 
 struct request_image {
     unsigned long id;
+    unsigned long start_line;
+    unsigned long end_line;
     cairo_format_t format;
     int width;
     int height;
@@ -212,11 +223,16 @@ format_for_content (cairo_content_t content)
 
 static void *
 request_image (test_runner_thread_t *thread,
-	       unsigned long id,
+	       struct context_closure *closure,
 	       cairo_format_t format,
 	       int width, int height, int stride)
 {
-    struct request_image rq = { id, format, width, height, stride };
+    const struct request_image rq = {
+	closure->id,
+	closure->start_line,
+	closure->end_line,
+	format, width, height, stride
+    };
     size_t offset = -1;
 
     writen (thread->sk, &rq, sizeof (rq));
@@ -229,9 +245,9 @@ request_image (test_runner_thread_t *thread,
 
 static void
 push_surface (test_runner_thread_t *thread,
-	      cairo_surface_t *source,
-	      unsigned long id)
+	      struct context_closure *closure)
 {
+    cairo_surface_t *source = closure->surface;
     cairo_surface_t *image;
     cairo_format_t format = (cairo_format_t) -1;
     cairo_t *cr;
@@ -271,7 +287,7 @@ push_surface (test_runner_thread_t *thread,
 
     stride = cairo_format_stride_for_width (format, width);
 
-    data = request_image (thread, id, format, width, height, stride);
+    data = request_image (thread, closure, format, width, height, stride);
     if (data == NULL)
 	exit (-1);
 
@@ -288,12 +304,12 @@ push_surface (test_runner_thread_t *thread,
     cairo_destroy (cr);
 
     /* signal completion */
-    writen (thread->sk, &id, sizeof (id));
+    writen (thread->sk, &closure->id, sizeof (closure->id));
 
     /* wait for image check */
     serial = 0;
     readn (thread->sk, &serial, sizeof (serial));
-    if (serial != id)
+    if (serial != closure->id)
 	exit (-1);
 }
 
@@ -324,10 +340,12 @@ static cairo_t *
 _context_create (void *closure, cairo_surface_t *surface)
 {
     test_runner_thread_t *thread = closure;
-    struct context_list *l;
+    struct context_closure *l;
 
     l = xmalloc (sizeof (*l));
     l->next = thread->contexts;
+    l->start_line = cairo_script_interpreter_get_line_number (thread->csi);
+    l->end_line = l->start_line;
     l->context = cairo_create (surface);
     l->surface = cairo_surface_reference (surface);
     l->id = ++thread->context_id;
@@ -342,17 +360,19 @@ static void
 _context_destroy (void *closure, void *ptr)
 {
     test_runner_thread_t *thread = closure;
-    struct context_list *l, **prev = &thread->contexts;
+    struct context_closure *l, **prev = &thread->contexts;
 
     while ((l = *prev) != NULL) {
 	if (l->context == ptr) {
+	    l->end_line =
+		cairo_script_interpreter_get_line_number (thread->csi);
 	    if (cairo_surface_status (l->surface) == CAIRO_STATUS_SUCCESS) {
-		push_surface (thread, l->surface, l->id);
+		push_surface (thread, l);
             } else {
-		fprintf (stderr, "%s: error during replay: %s!\n",
+		fprintf (stderr, "%s: error during replay, line %lu: %s!\n",
 			 thread->target->name,
-			 cairo_status_to_string (cairo_surface_status
-						 (l->surface)));
+			 l->end_line,
+			 cairo_status_to_string (cairo_surface_status (l->surface)));
 		exit (1);
 	    }
 
@@ -375,15 +395,14 @@ execute (test_runner_thread_t    *thread,
 	.context_create = _context_create,
 	.context_destroy = _context_destroy,
     };
-    cairo_script_interpreter_t *csi;
 
-    csi = cairo_script_interpreter_create ();
-    cairo_script_interpreter_install_hooks (csi, &hooks);
+    thread->csi = cairo_script_interpreter_create ();
+    cairo_script_interpreter_install_hooks (thread->csi, &hooks);
 
-    cairo_script_interpreter_run (csi, trace);
+    cairo_script_interpreter_run (thread->csi, trace);
 
-    cairo_script_interpreter_finish (csi);
-    if (cairo_script_interpreter_destroy (csi))
+    cairo_script_interpreter_finish (thread->csi);
+    if (cairo_script_interpreter_destroy (thread->csi))
 	exit (1);
 }
 
@@ -463,7 +482,7 @@ spawn_target (const char *socket_path,
     thread.context_id = 0;
 
     thread.surface = target->create_surface (NULL,
-					     CAIRO_CONTENT_COLOR_ALPHA,
+					     target->content,
 					     1, 1,
 					     1, 1,
 					     CAIRO_BOILERPLATE_MODE_TEST,
@@ -491,10 +510,12 @@ spawn_target (const char *socket_path,
 
 /* XXX imagediff - is the extra expense worth it? */
 static cairo_bool_t
-matching_images (cairo_surface_t *a, cairo_surface_t *b)
+matches_reference (struct slave *slave)
 {
-    if (a == NULL || b == NULL)
-	return FALSE;
+    cairo_surface_t *a, *b;
+
+    a = slave->image;
+    b = slave->reference->image;
 
     if (cairo_surface_status (a) || cairo_surface_status (b))
 	return FALSE;
@@ -514,10 +535,46 @@ matching_images (cairo_surface_t *a, cairo_surface_t *b)
     if (cairo_image_surface_get_stride (a) != cairo_image_surface_get_stride (b))
 	return FALSE;
 
-    return memcmp (cairo_image_surface_get_data (a),
-		   cairo_image_surface_get_data (b),
-		   cairo_image_surface_get_stride (a) *
-		   cairo_image_surface_get_stride (b));
+    if (FALSE && cairo_surface_get_content (a) & CAIRO_CONTENT_COLOR) {
+	cairo_surface_t *diff;
+	int width, height, stride, size;
+	unsigned char *data;
+	cairo_status_t status;
+
+	width = cairo_image_surface_get_width (a);
+	height = cairo_image_surface_get_height (a);
+	stride = cairo_image_surface_get_stride (a);
+	size = height * stride * 4;
+	data = malloc (size);
+	if (data == NULL)
+	    return FALSE;
+
+	diff = cairo_image_surface_create_for_data (data,
+						    cairo_image_surface_get_format (a),
+						    width, height, stride);
+	cairo_surface_set_user_data (diff, (cairo_user_data_key_t *) diff,
+				     data, free);
+
+	status = image_diff (NULL, a, b, diff, &slave->result);
+	if (status) {
+	    cairo_surface_destroy (diff);
+	    return FALSE;
+	}
+
+	if (slave->result.pixels_changed &&
+	    slave->result.max_diff > slave->target->error_tolerance) {
+	    slave->difference = diff;
+	    return FALSE;
+	} else {
+	    cairo_surface_destroy (diff);
+	    return TRUE;
+	}
+    } else {
+	return memcmp (cairo_image_surface_get_data (a),
+		       cairo_image_surface_get_data (b),
+		       cairo_image_surface_get_stride (a) *
+		       cairo_image_surface_get_stride (b));
+    }
 }
 
 static cairo_bool_t
@@ -528,7 +585,10 @@ check_images (struct slave *slaves, int num_slaves)
     for (n = 1; n < num_slaves; n++) {
 	assert (slaves[n].image_ready == slaves[0].image_ready);
 
-	if (! matching_images (slaves[n].image, slaves[0].image))
+	if (slaves[n].reference == NULL)
+	    continue;
+
+	if (! matches_reference (&slaves[n]))
 	    return FALSE;
     }
 
@@ -546,6 +606,13 @@ write_images (const char *trace, struct slave *slave, int num_slaves)
 		       trace, slave->target->name);
 	    cairo_surface_write_to_png (slave->image, filename);
 	    free (filename);
+
+	    if (slave->difference) {
+		xasprintf (&filename, "%s-%s-diff.png",
+			   trace, slave->target->name);
+		cairo_surface_write_to_png (slave->difference, filename);
+		free (filename);
+	    }
 	}
 
 	slave++;
@@ -561,6 +628,8 @@ allocate_image_for_slave (uint8_t *base, size_t offset, struct slave *slave)
 
     readn (slave->fd, &rq, sizeof (rq));
     slave->image_serial = rq.id;
+    slave->start_line = rq.start_line;
+    slave->end_line = rq.end_line;
 
     size = rq.height * rq.stride;
     size = (size + 127) & -128;
@@ -576,12 +645,19 @@ allocate_image_for_slave (uint8_t *base, size_t offset, struct slave *slave)
     return offset;
 }
 
+struct error_info {
+    unsigned long context_id;
+    unsigned long start_line;
+    unsigned long end_line;
+};
+
 static cairo_bool_t
 test_run (void *base,
 	  int sk,
 	  const char *trace,
 	  struct slave *slaves,
-	  int num_slaves)
+	  int num_slaves,
+	  struct error_info *error)
 {
     struct pollfd *pfd;
     int npfd, cnt, n, i;
@@ -672,6 +748,10 @@ test_run (void *base,
 
 	if (completion == num_slaves) {
 	    if (! check_images (slaves, num_slaves)) {
+		error->context_id = slaves[0].image_serial;
+		error->start_line = slaves[0].start_line;
+		error->end_line = slaves[0].end_line;
+
 		write_images (trace, slaves, num_slaves);
 		goto out;
 	    }
@@ -710,6 +790,9 @@ out:
 	cairo_surface_destroy (slaves[n].image);
 	slaves[n].image = NULL;
 
+	cairo_surface_destroy (slaves[n].difference);
+	slaves[n].difference = NULL;
+
 	slaves[n].image_serial = 0;
 	slaves[n].image_ready = 0;
 	ret = FALSE;
@@ -744,16 +827,17 @@ target_is_measurable (const cairo_boilerplate_target_t *target)
     case CAIRO_SURFACE_TYPE_XCB:
     case CAIRO_SURFACE_TYPE_GLITZ:
     case CAIRO_SURFACE_TYPE_QUARTZ:
+    case CAIRO_SURFACE_TYPE_QUARTZ_IMAGE:
     case CAIRO_SURFACE_TYPE_WIN32:
     case CAIRO_SURFACE_TYPE_BEOS:
     case CAIRO_SURFACE_TYPE_DIRECTFB:
-#if CAIRO_VERSION > CAIRO_VERSION_ENCODE(1,1,2)
     case CAIRO_SURFACE_TYPE_OS2:
-#endif
+    case CAIRO_SURFACE_TYPE_QT:
 	return TRUE;
 
     case CAIRO_SURFACE_TYPE_PDF:
     case CAIRO_SURFACE_TYPE_PS:
+    case CAIRO_SURFACE_TYPE_SCRIPT:
     case CAIRO_SURFACE_TYPE_SVG:
     case CAIRO_SURFACE_TYPE_WIN32_PRINTING:
     default:
@@ -814,7 +898,10 @@ server_shm (const char *shm_path)
 }
 
 static cairo_bool_t
-_test_trace (test_runner_t *test, const char *trace, const char *name)
+_test_trace (test_runner_t *test,
+	     const char *trace,
+	     const char *name,
+	     struct error_info *error)
 {
     const char *shm_path = SHM_PATH_XXX;
     const cairo_boilerplate_target_t *target, *image;
@@ -851,20 +938,50 @@ _test_trace (test_runner_t *test, const char *trace, const char *name)
     assert (image != NULL);
 
     /* spawn slave processes to run the trace */
-    s = slaves = xcalloc (test->num_targets + 1, sizeof (struct slave));
+    s = slaves = xcalloc (2*test->num_targets + 1, sizeof (struct slave));
     s->pid = spawn_target (socket_path, shm_path, image, trace);
     if (s->pid < 0)
 	goto cleanup;
     s->target = image;
+    s->reference = NULL;
     s->fd = -1;
     s++;
 
     for (i = 0; i < test->num_targets; i++) {
 	pid_t slave;
+	const cairo_boilerplate_target_t *reference;
+	struct slave *master;
 
 	target = test->targets[i];
 	if (target == image || ! target_is_measurable (target))
 	    continue;
+
+	/* find a matching slave to use as a reference for this target */
+	if (target->reference_target != NULL) {
+	    reference =
+		cairo_boilerplate_get_target_by_name (target->reference_target,
+						      target->content);
+	    assert (reference != NULL);
+	} else {
+	    reference = image;
+	}
+	for (master = slaves; master < s; master++) {
+	    if (master->target == reference)
+		break;
+	}
+
+	if (master == s) {
+	    /* no match found, spawn a slave to render the reference image */
+	    slave = spawn_target (socket_path, shm_path, reference, trace);
+	    if (slave < 0)
+		continue;
+
+	    s->pid = slave;
+	    s->target = reference;
+	    s->fd = -1;
+	    s->reference = NULL;
+	    s++;
+	}
 
 	slave = spawn_target (socket_path, shm_path, target, trace);
 	if (slave < 0)
@@ -873,6 +990,7 @@ _test_trace (test_runner_t *test, const char *trace, const char *name)
 	s->pid = slave;
 	s->target = target;
 	s->fd = -1;
+	s->reference = master;
 	s++;
     }
     num_slaves = s - slaves;
@@ -886,7 +1004,7 @@ _test_trace (test_runner_t *test, const char *trace, const char *name)
 	fprintf (stderr, "Unable to mmap shared memory\n");
 	goto cleanup;
     }
-    ret = test_run (base, sk, name, slaves, num_slaves);
+    ret = test_run (base, sk, name, slaves, num_slaves, error);
     munmap (base, DATA_SIZE);
 
 cleanup:
@@ -927,13 +1045,25 @@ test_trace (test_runner_t *test, const char *trace)
     if (test->list_only) {
 	printf ("%s\n", name);
     } else {
+	struct error_info error = {0};
 	cairo_bool_t ret;
 
 	printf ("%s: ", name);
 	fflush (stdout);
 
-	ret = _test_trace (test, trace, name);
-	printf ("%s\n", ret ? "PASS" : "FAIL");
+	ret = _test_trace (test, trace, name, &error);
+	if (ret) {
+	    printf ("PASS\n");
+	} else {
+	    if (error.context_id) {
+		printf ("FAIL (context %lu, lines [%lu, %lu])\n",
+			error.context_id,
+			error.start_line,
+			error.end_line);
+	    } else {
+		printf ("FAIL\n");
+	    }
+	}
     }
 
     free (trace_cpy);
@@ -1257,4 +1387,25 @@ main (int argc, char *argv[])
     test_fini (&test);
 
     return 0;
+}
+
+void
+cairo_test_logv (const cairo_test_context_t *ctx,
+		 const char *fmt, va_list va)
+{
+#if 0
+    vfprintf (stderr, fmt, va);
+#endif
+}
+
+void
+cairo_test_log (const cairo_test_context_t *ctx, const char *fmt, ...)
+{
+#if 0
+    va_list va;
+
+    va_start (va, fmt);
+    vfprintf (stderr, fmt, va);
+    va_end (va);
+#endif
 }

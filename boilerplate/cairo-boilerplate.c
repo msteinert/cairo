@@ -279,86 +279,86 @@ static const cairo_boilerplate_target_t targets[] =
      * for tolerance. There shouldn't ever be anything that is out of
      * our control here. */
     {
-	"image", "image", NULL,
+	"image", "image", NULL, NULL,
 	CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR_ALPHA, 0,
-	_cairo_boilerplate_image_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_image_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png
     },
     {
-	"image", "image", NULL,
+	"image", "image", NULL, NULL,
 	CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR, 0,
-	_cairo_boilerplate_image_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_image_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png
     },
 #ifdef CAIRO_HAS_TEST_SURFACES
     {
-	"test-fallback", "image", NULL,
+	"test-fallback", "image", NULL, NULL,
 	CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
 	CAIRO_CONTENT_COLOR_ALPHA, 0,
-	_cairo_boilerplate_test_fallback_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_test_fallback_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png
     },
     {
-	"test-fallback", "image", NULL,
+	"test-fallback", "image", NULL, NULL,
 	CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
 	CAIRO_CONTENT_COLOR, 0,
-	_cairo_boilerplate_test_fallback_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_test_fallback_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png
     },
     {
-	"test-fallback16", "image", NULL,
+	"test-fallback16", "image", NULL, NULL,
 	CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
 	CAIRO_CONTENT_COLOR_ALPHA, 0,
-	_cairo_boilerplate_test_fallback16_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_test_fallback16_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png
     },
     {
-	"test-fallback16", "image", NULL,
+	"test-fallback16", "image", NULL, NULL,
 	CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
 	CAIRO_CONTENT_COLOR, 0,
-	_cairo_boilerplate_test_fallback16_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_test_fallback16_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png
     },
     {
-	"test-meta", "image", NULL,
+	"test-meta", "image", NULL, NULL,
 	CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
 	CAIRO_CONTENT_COLOR_ALPHA, 0,
-	_cairo_boilerplate_test_meta_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_test_meta_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	NULL, NULL,
 	FALSE, TRUE
     },
     {
-	"test-meta", "image", NULL,
+	"test-meta", "image", NULL, NULL,
 	CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
 	CAIRO_CONTENT_COLOR, 0,
-	_cairo_boilerplate_test_meta_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_test_meta_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	NULL, NULL,
 	FALSE, TRUE
     },
     {
-	"test-paginated", "image", NULL,
+	"test-paginated", "image", NULL, NULL,
 	CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED,
 	CAIRO_CONTENT_COLOR_ALPHA, 0,
-	_cairo_boilerplate_test_paginated_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_test_paginated_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_test_paginated_get_image_surface,
 	_cairo_boilerplate_test_paginated_surface_write_to_png,
 	_cairo_boilerplate_test_paginated_cleanup,
@@ -366,11 +366,11 @@ static const cairo_boilerplate_target_t targets[] =
 	FALSE, TRUE,
     },
     {
-	"test-paginated", "image", NULL,
+	"test-paginated", "image", NULL, NULL,
 	CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED,
 	CAIRO_CONTENT_COLOR, 0,
-	_cairo_boilerplate_test_paginated_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_test_paginated_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_test_paginated_get_image_surface,
 	_cairo_boilerplate_test_paginated_surface_write_to_png,
 	_cairo_boilerplate_test_paginated_cleanup,
@@ -378,31 +378,32 @@ static const cairo_boilerplate_target_t targets[] =
 	FALSE, TRUE
     },
     {
-	"null", "image", NULL,
+	"null", "image", NULL, NULL,
 	CAIRO_INTERNAL_SURFACE_TYPE_NULL,
 	CAIRO_CONTENT_COLOR_ALPHA, 0,
-	_cairo_boilerplate_test_null_create_surface, NULL,
-	NULL, NULL, NULL,
+	_cairo_boilerplate_test_null_create_surface,
 	NULL, NULL,
+	NULL, NULL, NULL,
+	NULL,
 	TRUE, FALSE
     },
 #endif
 #ifdef CAIRO_HAS_GLITZ_SURFACE
 #if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE
     {
-	"glitz-glx", "glitz", NULL,
+	"glitz-glx", "glitz", NULL, NULL,
 	CAIRO_SURFACE_TYPE_GLITZ,CAIRO_CONTENT_COLOR_ALPHA, 0,
-	_cairo_boilerplate_glitz_glx_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_glitz_glx_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_glitz_glx_cleanup
     },
     {
-	"glitz-glx", "glitz", NULL,
+	"glitz-glx", "glitz", NULL, NULL,
 	CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR, 0,
-	_cairo_boilerplate_glitz_glx_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_glitz_glx_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_glitz_glx_cleanup
@@ -410,19 +411,19 @@ static const cairo_boilerplate_target_t targets[] =
 #endif
 #if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE
     {
-	"glitz-agl", "glitz", NULL,
+	"glitz-agl", "glitz", NULL, NULL,
 	CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR_ALPHA, 0,
-	_cairo_boilerplate_glitz_agl_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_glitz_agl_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_glitz_agl_cleanup
     },
     {
-	"glitz-agl", "glitz", NULL,
+	"glitz-agl", "glitz", NULL, NULL,
 	CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR, 0,
-	_cairo_boilerplate_glitz_agl_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_glitz_agl_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_glitz_agl_cleanup
@@ -430,19 +431,19 @@ static const cairo_boilerplate_target_t targets[] =
 #endif
 #if CAIRO_CAN_TEST_GLITZ_WGL_SURFACE
     {
-	"glitz-wgl", "glitz", NULL,
+	"glitz-wgl", "glitz", NULL, NULL,
 	CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR_ALPHA, 0,
-	_cairo_boilerplate_glitz_wgl_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_glitz_wgl_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_glitz_wgl_cleanup
     },
     {
-	"glitz-wgl", "glitz", NULL,
+	"glitz-wgl", "glitz", NULL, NULL,
 	CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR, 0,
-	_cairo_boilerplate_glitz_wgl_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_glitz_wgl_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_glitz_wgl_cleanup
@@ -451,19 +452,19 @@ static const cairo_boilerplate_target_t targets[] =
 #endif /* CAIRO_HAS_GLITZ_SURFACE */
 #if CAIRO_HAS_QT_SURFACE
     {
-	"qt", "qt", NULL,
+	"qt", "qt", NULL, NULL,
 	CAIRO_SURFACE_TYPE_QT, CAIRO_CONTENT_COLOR_ALPHA, 0,
-	_cairo_boilerplate_qt_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_qt_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_qt_cleanup
     },
     {
-	"qt", "qt", NULL,
+	"qt", "qt", NULL, NULL,
 	CAIRO_SURFACE_TYPE_QT, CAIRO_CONTENT_COLOR, 0,
-	_cairo_boilerplate_qt_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_qt_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_qt_cleanup
@@ -471,19 +472,19 @@ static const cairo_boilerplate_target_t targets[] =
 #endif
 #if CAIRO_HAS_QUARTZ_SURFACE
     {
-	"quartz", "quartz", NULL,
+	"quartz", "quartz", NULL, NULL,
 	CAIRO_SURFACE_TYPE_QUARTZ, CAIRO_CONTENT_COLOR_ALPHA, 0,
-	_cairo_boilerplate_quartz_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_quartz_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_quartz_cleanup
     },
     {
-	"quartz", "quartz", NULL,
+	"quartz", "quartz", NULL, NULL,
 	CAIRO_SURFACE_TYPE_QUARTZ, CAIRO_CONTENT_COLOR, 0,
-	_cairo_boilerplate_quartz_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_quartz_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_quartz_cleanup
@@ -491,10 +492,10 @@ static const cairo_boilerplate_target_t targets[] =
 #endif
 #if CAIRO_HAS_WIN32_SURFACE
     {
-	"win32", "win32", NULL,
+	"win32", "win32", NULL, NULL,
 	CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR, 0,
-	_cairo_boilerplate_win32_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_win32_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png
     },
@@ -502,30 +503,30 @@ static const cairo_boilerplate_target_t targets[] =
      * ARGB images it just chains to the image backend
      */
     {
-	"win32", "win32", NULL,
+	"win32", "win32", NULL, NULL,
 	CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR_ALPHA, 0,
-	_cairo_boilerplate_win32_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_win32_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png
     },
 #if CAIRO_CAN_TEST_WIN32_PRINTING_SURFACE
     {
-	"win32-printing", "win32", ".ps",
+	"win32-printing", "win32", ".ps", NULL,
 	CAIRO_SURFACE_TYPE_WIN32_PRINTING,
 	CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED, 0,
-	_cairo_boilerplate_win32_printing_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_win32_printing_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_win32_printing_get_image_surface,
 	_cairo_boilerplate_win32_printing_surface_write_to_png,
 	_cairo_boilerplate_win32_printing_cleanup,
 	NULL, TRUE, TRUE
     },
     {
-	"win32-printing", "win32", ".ps",
+	"win32-printing", "win32", ".ps", NULL,
 	CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
-	_cairo_boilerplate_win32_printing_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_win32_printing_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_win32_printing_get_image_surface,
 	_cairo_boilerplate_win32_printing_surface_write_to_png,
 	_cairo_boilerplate_win32_printing_cleanup,
@@ -537,10 +538,10 @@ static const cairo_boilerplate_target_t targets[] =
     /* Acceleration architectures may make the results differ by a
      * bit, so we set the error tolerance to 1. */
     {
-	"xcb", "xcb", NULL,
+	"xcb", "xcb", NULL, NULL,
 	CAIRO_SURFACE_TYPE_XCB, CAIRO_CONTENT_COLOR_ALPHA, 1,
-	_cairo_boilerplate_xcb_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_xcb_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xcb_cleanup,
@@ -551,19 +552,20 @@ static const cairo_boilerplate_target_t targets[] =
     /* Acceleration architectures may make the results differ by a
      * bit, so we set the error tolerance to 1. */
     {
-	"xlib", "xlib", NULL,
+	"xlib", "xlib", NULL, "xlib-fallback",
 	CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR_ALPHA, 1,
-	_cairo_boilerplate_xlib_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_xlib_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xlib_cleanup,
 	_cairo_boilerplate_xlib_synchronize
     },
     {
-	"xlib", "xlib", NULL, CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR, 1,
-	_cairo_boilerplate_xlib_create_surface, NULL,
-	NULL,
+	"xlib", "xlib", NULL, "xlib-fallback",
+	CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR, 1,
+	_cairo_boilerplate_xlib_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xlib_cleanup,
@@ -574,10 +576,10 @@ static const cairo_boilerplate_target_t targets[] =
     /* This is a fallback surface which uses xlib fallbacks instead of
      * the Render extension. */
     {
-	"xlib-fallback", "xlib", NULL,
+	"xlib-fallback", "xlib", NULL, NULL,
 	CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR, 1,
-	_cairo_boilerplate_xlib_fallback_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_xlib_fallback_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xlib_cleanup,
@@ -586,7 +588,7 @@ static const cairo_boilerplate_target_t targets[] =
 #endif
 #if CAIRO_HAS_PS_SURFACE && CAIRO_CAN_TEST_PS_SURFACE
     {
-	"ps2", "ps", ".ps",
+	"ps2", "ps", ".ps", NULL,
 	CAIRO_SURFACE_TYPE_PS,
 	CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED, 0,
 	_cairo_boilerplate_ps2_create_surface,
@@ -598,7 +600,7 @@ static const cairo_boilerplate_target_t targets[] =
 	NULL, TRUE, TRUE
     },
     {
-	"ps2", "ps", ".ps",
+	"ps2", "ps", ".ps", NULL,
 	CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
 	_cairo_boilerplate_ps2_create_surface,
 	_cairo_boilerplate_ps_force_fallbacks,
@@ -609,7 +611,7 @@ static const cairo_boilerplate_target_t targets[] =
 	NULL, TRUE, TRUE
     },
     {
-	"ps3", "ps", ".ps",
+	"ps3", "ps", ".ps", NULL,
 	CAIRO_SURFACE_TYPE_PS,
 	CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED, 0,
 	_cairo_boilerplate_ps3_create_surface,
@@ -621,7 +623,7 @@ static const cairo_boilerplate_target_t targets[] =
 	NULL, TRUE, TRUE
     },
     {
-	"ps3", "ps", ".ps",
+	"ps3", "ps", ".ps", NULL,
 	CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
 	_cairo_boilerplate_ps3_create_surface,
 	_cairo_boilerplate_ps_force_fallbacks,
@@ -634,7 +636,7 @@ static const cairo_boilerplate_target_t targets[] =
 #endif
 #if CAIRO_HAS_PDF_SURFACE && CAIRO_CAN_TEST_PDF_SURFACE
     {
-	"pdf", "pdf", ".pdf",
+	"pdf", "pdf", ".pdf", NULL,
 	CAIRO_SURFACE_TYPE_PDF,
 	CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED, 0,
 	_cairo_boilerplate_pdf_create_surface,
@@ -646,7 +648,7 @@ static const cairo_boilerplate_target_t targets[] =
 	NULL, TRUE, TRUE
     },
     {
-	"pdf", "pdf", ".pdf",
+	"pdf", "pdf", ".pdf", NULL,
 	CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
 	_cairo_boilerplate_pdf_create_surface,
 	_cairo_boilerplate_pdf_force_fallbacks,
@@ -659,7 +661,7 @@ static const cairo_boilerplate_target_t targets[] =
 #endif
 #if CAIRO_HAS_SCRIPT_SURFACE
     {
-	"script", "script", ".cs",
+	"script", "script", ".cs", NULL,
 	CAIRO_SURFACE_TYPE_SCRIPT, CAIRO_CONTENT_COLOR_ALPHA, 0,
 	_cairo_boilerplate_script_create_surface,
 	NULL,
@@ -677,7 +679,7 @@ static const cairo_boilerplate_target_t targets[] =
      * tests. XXX: I'd still like to chase these down at some point.
      * For now just set the svg error tolerance to 1. */
     {
-	"svg11", "svg", NULL,
+	"svg11", "svg", NULL, NULL,
 	CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR_ALPHA, 1,
 	_cairo_boilerplate_svg11_create_surface,
 	_cairo_boilerplate_svg_force_fallbacks,
@@ -688,7 +690,7 @@ static const cairo_boilerplate_target_t targets[] =
 	NULL, TRUE, TRUE
     },
     {
-	"svg11", "svg", NULL,
+	"svg11", "svg", NULL, NULL,
 	CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 1,
 	_cairo_boilerplate_svg11_create_surface,
 	_cairo_boilerplate_svg_force_fallbacks,
@@ -699,7 +701,7 @@ static const cairo_boilerplate_target_t targets[] =
 	NULL, TRUE, TRUE
     },
     {
-	"svg12", "svg", NULL,
+	"svg12", "svg", NULL, NULL,
 	CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR_ALPHA, 1,
 	_cairo_boilerplate_svg12_create_surface,
 	_cairo_boilerplate_svg_force_fallbacks,
@@ -710,7 +712,7 @@ static const cairo_boilerplate_target_t targets[] =
 	NULL, TRUE, TRUE
     },
     {
-	"svg12", "svg", NULL,
+	"svg12", "svg", NULL, NULL,
 	CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 1,
 	_cairo_boilerplate_svg12_create_surface,
 	_cairo_boilerplate_svg_force_fallbacks,
@@ -726,28 +728,28 @@ static const cairo_boilerplate_target_t targets[] =
      * is related to the fact that it doesn't use premultiplied alpha...
      * Just ignore the small difference. */
     {
-	"beos", "beos", NULL,
+	"beos", "beos", NULL, NULL,
 	CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR, 1,
-	_cairo_boilerplate_beos_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_beos_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_beos_cleanup
     },
     {
-	"beos-bitmap", "beos", NULL,
+	"beos-bitmap", "beos", NULL, NULL,
 	CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR, 1,
-	_cairo_boilerplate_beos_create_surface_for_bitmap, NULL,
-	NULL,
+	_cairo_boilerplate_beos_create_surface_for_bitmap,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_beos_cleanup_bitmap
     },
     {
-	"beos-bitmap", "beos", NULL,
+	"beos-bitmap", "beos", NULL, NULL,
 	CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR_ALPHA, 1,
-	_cairo_boilerplate_beos_create_surface_for_bitmap, NULL,
-	NULL,
+	_cairo_boilerplate_beos_create_surface_for_bitmap,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_beos_cleanup_bitmap
@@ -756,19 +758,19 @@ static const cairo_boilerplate_target_t targets[] =
 
 #if CAIRO_HAS_DIRECTFB_SURFACE
     {
-	"directfb", "directfb", NULL,
+	"directfb", "directfb", NULL, NULL,
 	CAIRO_SURFACE_TYPE_DIRECTFB, CAIRO_CONTENT_COLOR, 0,
-	_cairo_boilerplate_directfb_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_directfb_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_directfb_cleanup
     },
     {
-	"directfb-bitmap", "directfb", NULL,
+	"directfb-bitmap", "directfb", NULL, NULL,
 	CAIRO_SURFACE_TYPE_DIRECTFB, CAIRO_CONTENT_COLOR_ALPHA, 0,
-	_cairo_boilerplate_directfb_create_surface, NULL,
-	NULL,
+	_cairo_boilerplate_directfb_create_surface,
+	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_directfb_cleanup
@@ -894,6 +896,32 @@ cairo_boilerplate_get_image_target (cairo_content_t content)
 	{
 	    return &targets[i];
 	}
+    }
+
+    return NULL;
+}
+
+const cairo_boilerplate_target_t *
+cairo_boilerplate_get_target_by_name (const char *name,
+				      cairo_content_t content)
+{
+    int num_targets, i;
+
+    num_targets = sizeof (targets) / sizeof (targets[0]);
+
+    /* first return an exact match */
+    for (i = 0; i < num_targets; i++) {
+	if (strcmp (targets[i].name, name) == 0 &&
+	    targets[i].content == content)
+	{
+	    return &targets[i];
+	}
+    }
+
+    /* otherwise just return a match that may differ in content */
+    for (i = 0; i < num_targets; i++) {
+	if (strcmp (targets[i].name, name) == 0)
+	    return &targets[i];
     }
 
     return NULL;

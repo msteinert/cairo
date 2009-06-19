@@ -152,6 +152,7 @@ typedef struct _cairo_boilerplate_target
     const char					*name;
     const char					*basename;
     const char					*file_extension;
+    const char                                  *reference_target;
     cairo_surface_type_t			 expected_type;
     cairo_content_t				 content;
     unsigned int				 error_tolerance;
@@ -168,6 +169,10 @@ typedef struct _cairo_boilerplate_target
 
 const cairo_boilerplate_target_t *
 cairo_boilerplate_get_image_target (cairo_content_t content);
+
+const cairo_boilerplate_target_t *
+cairo_boilerplate_get_target_by_name (const char *name,
+				      cairo_content_t content);
 
 const cairo_boilerplate_target_t **
 cairo_boilerplate_get_targets (int *num_targets, cairo_bool_t *limited_targets);
