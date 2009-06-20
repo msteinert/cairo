@@ -49,6 +49,7 @@ while true; do
     case $1 in
         -f|--force) force_cairo_perf="true";;
         -h|--html) html_output="true";;
+        -s|--show) show_only="true";;
         *) break;;
     esac
 
@@ -136,7 +137,7 @@ run_cairo_perf_if_not_cached() {
     sha=`rev2sha $rev`
     perf=`rev2perf $rev`
     glob=`rev2perf_glob $rev`
-    if [ -e $glob ] && [ "$force_cairo_perf" != "true" ]; then
+    if [ -e $glob ] && [ "$force_cairo_perf" != "true" ]  || [ -n "$show_only" ]; then
 	return 0
     fi
     if [ ! -d $CAIRO_PERF_DIR ]; then
@@ -198,7 +199,7 @@ revs=""
 for rev in `git rev-list --reverse $old..$new`; do
     run_cairo_perf_if_not_cached $rev rev
     perf=`rev2perf $rev`
-    [ -e $perf ] && revs="$revs $perf"
+    [ -e "$perf" ] && revs="$revs $perf"
 done
 
 exec $CAIRO_DIR/perf/cairo-perf-graph-files $revs
