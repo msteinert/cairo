@@ -221,7 +221,104 @@ draw_hline (cairo_t *cr, const cairo_matrix_t *m, double y0, double xmin, double
     cairo_stroke (cr);
 }
 
-#define PAD 24
+static void
+draw_label (cairo_t *cr, const cairo_matrix_t *m,
+	    double y0, double xmin, double xmax)
+{
+    double x, y;
+    char buf[80];
+    cairo_text_extents_t extents;
+
+    snprintf (buf, sizeof (buf), "%.0fx", fabs (y0));
+    cairo_text_extents (cr, buf, &extents);
+
+    x = xmin; y = y0;
+    cairo_matrix_transform_point (m, &x, &y);
+    cairo_move_to (cr,
+		   x - extents.width - 4,
+		   y - (extents.height/2. + extents.y_bearing));
+    cairo_show_text (cr, buf);
+
+
+    snprintf (buf, sizeof (buf), "%.0fx", fabs (y0));
+    cairo_text_extents (cr, buf, &extents);
+
+    x = xmax; y = y0;
+    cairo_matrix_transform_point (m, &x, &y);
+    cairo_move_to (cr,
+		   x + 4,
+		   y - (extents.height/2. + extents.y_bearing));
+    cairo_show_text (cr, buf);
+}
+
+#define ALIGN_X(v) ((v)<<0)
+#define ALIGN_Y(v) ((v)<<2)
+static void
+draw_rotated_label (cairo_t *cr, const char *text,
+		    double x, double y, double angle,
+		    int align)
+{
+    cairo_text_extents_t extents;
+
+    cairo_text_extents (cr, text, &extents);
+
+    cairo_save (cr); {
+	cairo_translate (cr, x, y);
+	cairo_rotate (cr, angle);
+	switch (align) {
+	case ALIGN_X(0) | ALIGN_Y(0):
+	    cairo_move_to (cr,
+			   -extents.x_bearing,
+			   -extents.y_bearing);
+	    break;
+	case ALIGN_X(0) | ALIGN_Y(1):
+	    cairo_move_to (cr,
+			   -extents.x_bearing,
+			   - (extents.height/2. + extents.y_bearing));
+	    break;
+	case ALIGN_X(0) | ALIGN_Y(2):
+	    cairo_move_to (cr,
+			   -extents.x_bearing,
+			   - (extents.height + extents.y_bearing));
+	    break;
+
+	case ALIGN_X(1) | ALIGN_Y(0):
+	    cairo_move_to (cr,
+			   - (extents.width/2. + extents.x_bearing),
+			   -extents.y_bearing);
+	    break;
+	case ALIGN_X(1) | ALIGN_Y(1):
+	    cairo_move_to (cr,
+			   - (extents.width/2. + extents.x_bearing),
+			   - (extents.height/2. + extents.y_bearing));
+	    break;
+	case ALIGN_X(1) | ALIGN_Y(2):
+	    cairo_move_to (cr,
+			   - (extents.width/2. + extents.x_bearing),
+			   - (extents.height + extents.y_bearing));
+	    break;
+
+	case ALIGN_X(2) | ALIGN_Y(0):
+	    cairo_move_to (cr,
+			   - (extents.width + extents.x_bearing),
+			   -extents.y_bearing);
+	    break;
+	case ALIGN_X(2) | ALIGN_Y(1):
+	    cairo_move_to (cr,
+			   - (extents.width + extents.x_bearing),
+			   - (extents.height/2. + extents.y_bearing));
+	    break;
+	case ALIGN_X(2) | ALIGN_Y(2):
+	    cairo_move_to (cr,
+			   - (extents.width + extents.x_bearing),
+			   - (extents.height + extents.y_bearing));
+	    break;
+	}
+	cairo_show_text (cr, text);
+    } cairo_restore (cr);
+}
+
+#define PAD 36
 static void
 graph_view_draw (GraphView *self, cairo_t *cr)
 {
@@ -230,11 +327,18 @@ graph_view_draw (GraphView *self, cairo_t *cr)
     double range;
     int i;
 
-    range = ceil (self->ymax) - floor (self->ymin);
+    if (self->widget.allocation.width < 4 *PAD)
+	return;
+    if (self->widget.allocation.height < 3 *PAD)
+	return;
 
-    cairo_matrix_init_translate (&m, PAD, PAD);
-    cairo_matrix_scale (&m, (self->widget.allocation.width-2*PAD)/self->num_reports, (self->widget.allocation.height-2*PAD)/range);
-    cairo_matrix_translate (&m, 0,  - floor (self->ymin));
+    range = floor (self->ymax+1) - ceil (self->ymin-1);
+
+    cairo_matrix_init_translate (&m, PAD, self->widget.allocation.height - PAD);
+    cairo_matrix_scale (&m,
+			(self->widget.allocation.width-2*PAD)/(self->num_reports),
+			-(self->widget.allocation.height-2*PAD)/range);
+    cairo_matrix_translate (&m, 0,   floor (self->ymax+1));
 
     if (self->selected_report != -1) {
 	cairo_save (cr); {
@@ -256,16 +360,56 @@ graph_view_draw (GraphView *self, cairo_t *cr)
     }
 
     cairo_save (cr); {
-	cairo_set_source_rgb (cr, 0.7, 0.7, 0.7);
+	cairo_pattern_t *linear;
+	double x, y;
+
+	gdk_cairo_set_source_color (cr,
+				    &self->widget.style->fg[GTK_WIDGET_STATE (self)]);
 	cairo_set_line_width (cr, 2.);
-	draw_hline (cr, &m, 0, 0, self->num_reports-1);
+	draw_hline (cr, &m, 0, 0, self->num_reports);
 
 	cairo_set_line_width (cr, 1.);
 	cairo_set_dash (cr, NULL, 0, 0);
-	for (i = floor (self->ymin); i <= floor (self->ymax); i++) {
+
+	for (i = ceil (self->ymin-1); i <= floor (self->ymax+1); i++) {
 	    if (i != 0)
 		draw_hline (cr, &m, i, 0, self->num_reports);
 	}
+
+	cairo_set_font_size (cr, 11);
+
+	linear = cairo_pattern_create_linear (0, PAD, 0, self->widget.allocation.height-2*PAD);
+	cairo_pattern_add_color_stop_rgb (linear, 0, 0, 1, 0);
+	cairo_pattern_add_color_stop_rgb (linear, 1, 1, 0, 0);
+	cairo_set_source (cr, linear);
+	cairo_pattern_destroy (linear);
+
+	for (i = ceil (self->ymin-1); i <= floor (self->ymax+1); i++) {
+	    if (i != 0)
+		draw_label (cr, &m, i, 0, self->num_reports);
+	}
+
+	x = 0, y = floor (self->ymax+1);
+	cairo_matrix_transform_point (&m, &x, &y);
+	draw_rotated_label (cr, "Faster", x - 7, y + 14,
+			    270./360 * 2 * G_PI,
+			    ALIGN_X(2) | ALIGN_Y(1));
+	x = self->num_reports, y = floor (self->ymax+1);
+	cairo_matrix_transform_point (&m, &x, &y);
+	draw_rotated_label (cr, "Faster", x + 11, y + 14,
+			    270./360 * 2 * G_PI,
+			    ALIGN_X(2) | ALIGN_Y(1));
+
+	x = 0, y = ceil (self->ymin-1);
+	cairo_matrix_transform_point (&m, &x, &y);
+	draw_rotated_label (cr, "Slower", x - 7, y - 14,
+			    90./360 * 2 * G_PI,
+			    ALIGN_X(2) | ALIGN_Y(1));
+	x = self->num_reports, y = ceil (self->ymin-1);
+	cairo_matrix_transform_point (&m, &x, &y);
+	draw_rotated_label (cr, "Slower", x + 11, y - 14,
+			    90./360 * 2 * G_PI,
+			    ALIGN_X(2) | ALIGN_Y(1));
     } cairo_restore (cr);
 
     draw_baseline_performance (self->cases,
@@ -276,9 +420,8 @@ graph_view_draw (GraphView *self, cairo_t *cr)
 	cairo_set_source_rgb (cr, 0.7, 0.7, 0.7);
 	cairo_set_line_width (cr, 1.);
 	cairo_set_dash (cr, dash, 2, 0);
-	draw_hline (cr, &m, 0, 0, self->num_reports-1);
+	draw_hline (cr, &m, 0, 0, self->num_reports);
     } cairo_restore (cr);
-
 }
 
 static gboolean
@@ -288,9 +431,6 @@ graph_view_expose (GtkWidget *w, GdkEventExpose *ev)
     cairo_t *cr;
 
     cr = gdk_cairo_create (w->window);
-    gdk_cairo_region (cr, ev->region);
-    cairo_clip (cr);
-
     gdk_cairo_set_source_color (cr, &w->style->base[GTK_WIDGET_STATE (w)]);
     cairo_paint (cr);
 
