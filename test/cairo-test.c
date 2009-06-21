@@ -26,7 +26,7 @@
  */
 
 #define _GNU_SOURCE 1	/* for feenableexcept() et al */
-#define _POSIX_C_SOURCE 2000112L /* for flockfile() et al */
+#define _POSIX_C_SOURCE 200112L /* for flockfile() et al */
 
 #if HAVE_CONFIG_H
 #include "config.h"
