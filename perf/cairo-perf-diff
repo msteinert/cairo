@@ -133,31 +133,9 @@ rev2perf_glob() {
     echo "$CAIRO_PERF_DIR/*-${perf_tree_sha}-${src_tree_sha}.perf"
 }
 
-# Usage: run_cairo_perf_if_not_cached <rev> <suffix>
-# The <rev> argument must be a valid git ref-spec that can
-# be resolved to a commit. The suffix is just something
-# unique so that build directories can be separated for
-# multiple calls to this function.
-run_cairo_perf_if_not_cached() {
-    rev=$1
-    build_dir="build-$2"
-
-    owd=`pwd`
-    sha=`rev2sha $rev`
-    perf=`rev2perf $rev`
-    glob=`rev2perf_glob $rev`
-    if [ -e $glob ] && [ "$force_cairo_perf" != "true" ]; then
-	return 0
-    fi
-    if [ ! -d $CAIRO_PERF_DIR ]; then
-	echo "Creating new perf cache in $CAIRO_PERF_DIR"
-	mkdir $CAIRO_PERF_DIR
-    fi
-
-    cd $CAIRO_DIR
-    boilerplate_files=`git ls-tree --name-only HEAD boilerplate/*`
-    perf_files=`git ls-tree --name-only HEAD perf/*`
-    cd $CAIRO_PERF_DIR
+build() {
+    build_dir=$1
+    sha=$2
 
     if [ ! -d $build_dir ]; then
 	git clone -s $CAIRO_DIR $build_dir
@@ -185,7 +163,40 @@ run_cairo_perf_if_not_cached() {
 	rsync $CAIRO_DIR/$file perf
     done
     cd perf;
-    make cairo-perf || exit 1
+    make cairo-perf
+}
+
+# Usage: run_cairo_perf_if_not_cached <rev> <suffix>
+# The <rev> argument must be a valid git ref-spec that can
+# be resolved to a commit. The suffix is just something
+# unique so that build directories can be separated for
+# multiple calls to this function.
+run_cairo_perf_if_not_cached() {
+    rev=$1
+    build_dir="build-$2"
+
+    owd=`pwd`
+    sha=`rev2sha $rev`
+    perf=`rev2perf $rev`
+    glob=`rev2perf_glob $rev`
+    if [ -e $glob ] && [ "$force_cairo_perf" != "true" ]; then
+	return 0
+    fi
+    if [ ! -d $CAIRO_PERF_DIR ]; then
+	echo "Creating new perf cache in $CAIRO_PERF_DIR"
+	mkdir $CAIRO_PERF_DIR
+    fi
+
+    cd $CAIRO_DIR
+    boilerplate_files=`git ls-tree --name-only HEAD boilerplate/*`
+    perf_files=`git ls-tree --name-only HEAD perf/*`
+    cd $CAIRO_PERF_DIR
+
+    build $build_dir $sha || {
+	rm -rf $build_dir
+	build $build_dir $sha || exit 1
+    }
+
     echo "Running \"cairo-perf $CAIRO_PERF_OPTIONS\" against $rev. Results will be cached in:"
     echo "$perf"
     (./cairo-perf $CAIRO_PERF_OPTIONS || echo "*** Performance test crashed") >> $perf
