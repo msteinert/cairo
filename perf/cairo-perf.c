@@ -28,6 +28,8 @@
 
 #define _GNU_SOURCE 1	/* for sched_getaffinity() */
 
+#include "../cairo-version.h" /* for the real version */
+
 #include "cairo-perf.h"
 #include "cairo-stats.h"
 
@@ -92,8 +94,12 @@ target_is_measurable (const cairo_boilerplate_target_t *target)
     case CAIRO_SURFACE_TYPE_WIN32:
     case CAIRO_SURFACE_TYPE_BEOS:
     case CAIRO_SURFACE_TYPE_DIRECTFB:
+#if CAIRO_VERSION > CAIRO_VERSION_ENCODE(1,1,2)
     case CAIRO_SURFACE_TYPE_OS2:
+#endif
+#if CAIRO_VERSION > CAIRO_VERSION_ENCODE(1,9,4)
     case CAIRO_SURFACE_TYPE_QT:
+#endif
 	return TRUE;
     case CAIRO_SURFACE_TYPE_PDF:
     case CAIRO_SURFACE_TYPE_PS:
