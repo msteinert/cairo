@@ -552,7 +552,7 @@ static const cairo_boilerplate_target_t targets[] =
     /* Acceleration architectures may make the results differ by a
      * bit, so we set the error tolerance to 1. */
     {
-	"xlib", "xlib", NULL, "xlib-fallback",
+	"xlib", "xlib", NULL, "xlib-reference",
 	CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR_ALPHA, 1,
 	_cairo_boilerplate_xlib_create_surface,
 	NULL, NULL,
@@ -562,11 +562,21 @@ static const cairo_boilerplate_target_t targets[] =
 	_cairo_boilerplate_xlib_synchronize
     },
     {
-	"xlib", "xlib", NULL, "xlib-fallback",
+	"xlib", "xlib", NULL, "xlib-reference",
 	CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR, 1,
 	_cairo_boilerplate_xlib_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	_cairo_boilerplate_xlib_cleanup,
+	_cairo_boilerplate_xlib_synchronize
+    },
+    {
+	"xlib-reference", "xlib", NULL, NULL,
+	CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR, 1,
+	_cairo_boilerplate_xlib_reference_create_surface,
+	NULL, NULL,
+	NULL, /* get_image */
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xlib_cleanup,
 	_cairo_boilerplate_xlib_synchronize

@@ -224,6 +224,57 @@ _cairo_boilerplate_xlib_create_surface (const char			 *name,
 
     return surface;
 }
+
+cairo_surface_t *
+_cairo_boilerplate_xlib_reference_create_surface (const char			 *name,
+						  cairo_content_t			  content,
+						  int				  width,
+						  int				  height,
+						  int				  max_width,
+						  int				  max_height,
+						  cairo_boilerplate_mode_t	  mode,
+						  int                               id,
+						  void				**closure)
+{
+    xlib_target_closure_t *xtc;
+    Display *dpy;
+    cairo_surface_t *surface;
+    const char *display;
+
+    display = getenv ("CAIRO_REFERENCE_DISPLAY");
+    if (display == NULL) {
+	return _cairo_boilerplate_xlib_fallback_create_surface (name, content,
+								width, height,
+								max_width,
+								max_height,
+								mode, id,
+								closure);
+    }
+
+    *closure = xtc = xcalloc (1, sizeof (xlib_target_closure_t));
+
+    if (width == 0)
+	width = 1;
+    if (height == 0)
+	height = 1;
+
+    xtc->dpy = dpy = XOpenDisplay (display);
+    if (xtc->dpy == NULL) {
+	free (xtc);
+	CAIRO_BOILERPLATE_DEBUG (("Failed to open display: %s\n", display));
+	return NULL;
+    }
+
+    if (mode == CAIRO_BOILERPLATE_MODE_TEST)
+	surface = _cairo_boilerplate_xlib_test_create_surface (dpy, content, width, height, xtc);
+    else /* mode == CAIRO_BOILERPLATE_MODE_PERF */
+	surface = _cairo_boilerplate_xlib_perf_create_surface (dpy, content, width, height, xtc);
+
+    if (surface == NULL || cairo_surface_status (surface))
+	_cairo_boilerplate_xlib_cleanup (xtc);
+
+    return surface;
+}
 #endif
 
 /* The xlib-fallback target differs from the xlib target in two ways:
