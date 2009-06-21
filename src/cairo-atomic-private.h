@@ -55,14 +55,19 @@ typedef int cairo_atomic_int_t;
 # define _cairo_atomic_int_dec_and_test(x) (__sync_fetch_and_add(x, -1) == 1)
 # define _cairo_atomic_int_cmpxchg(x, oldv, newv) __sync_val_compare_and_swap (x, oldv, newv)
 
+#if SIZEOF_VOID_P==SIZEOF_INT
+typedef int cairo_atomic_intptr_t;
+#elif SIZEOF_VOID_P==SIZEOF_LONG
+typedef long cairo_atomic_intptr_t;
+#elif SIZEOF_VOID_P==SIZEOF_LONG_LONG
+typedef long long cairo_atomic_intptr_t;
+#else
+#error No matching integer pointer type
+#endif
+
 # define _cairo_atomic_ptr_cmpxchg(x, oldv, newv) \
-  (sizeof(void*) == sizeof(int) ?\
-    (void*)__sync_val_compare_and_swap ((int*)x, (int)oldv, (int)newv) :\
-   sizeof(void*) == sizeof(long) ?\
-    (void*)__sync_val_compare_and_swap ((long*)x, (long)oldv, (long)newv) :\
-   sizeof(void*) == sizeof(long long) ?\
-    (void*)__sync_val_compare_and_swap ((long long*)x, (long long)oldv, (long long)newv) :\
-   (void*)(oldv)/*impossible*/)
+    (void*)__sync_val_compare_and_swap ((cairo_atomic_intptr_t*)x, (cairo_atomic_intptr_t)oldv, (cairo_atomic_intptr_t)newv)
+
 #endif
 
 
