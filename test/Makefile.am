@@ -1315,9 +1315,8 @@ run:
 	$(MAKE) $(AM_MAKEFLAGS) check TESTS_ENVIRONMENT='$(TESTS_ENVIRONMENT) $(top_builddir)/libtool --mode=execute env $(TOOL)'
 
 # Check tests under valgrind.  Saves log to valgrind-log
-check-valgrind: MODE+=,foreground
 check-valgrind:
-	$(MAKE) $(AM_MAKEFLAGS) check TESTS_ENVIRONMENT='$(TESTS_ENVIRONMENT) $(top_builddir)/libtool --mode=execute valgrind $(VALGRIND_FLAGS)' 2>&1 | tee valgrind-log
+	$(MAKE) $(AM_MAKEFLAGS) check TESTS_ENVIRONMENT='$(TESTS_ENVIRONMENT) CAIRO_TEST_MODE="$(MODE),foreground" $(top_builddir)/libtool --mode=execute valgrind $(VALGRIND_FLAGS)' 2>&1 | tee valgrind-log
 
 %.log: %.c cairo-test-suite
 	-./cairo-test-suite $(<:.c=)
