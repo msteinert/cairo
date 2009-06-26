@@ -513,7 +513,7 @@ cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
     if (unlikely (status))
 	goto bail;
 
-    group_surface = cairo_surface_create_similar (_cairo_gstate_get_target (cr->gstate),
+    group_surface = cairo_surface_create_similar (parent_surface,
 						  content,
 						  extents.width,
 						  extents.height);
