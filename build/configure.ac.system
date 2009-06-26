@@ -144,9 +144,6 @@ AC_CHECK_FUNC(mkdir,
 			    [Define to non-zero if your system has mkdir, and to 2 if your version of mkdir requires a mode parameter])
 	      fi])
 
-# check for GNU-extensions to fenv
-AC_CHECK_HEADER(fenv.h, [AC_CHECK_FUNCS(feenableexcept fedisableexcept)])
-
 dnl ===========================================================================
 dnl
 dnl Test for the tools required for building one big test binary
