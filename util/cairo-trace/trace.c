@@ -651,21 +651,28 @@ _trace_printf (const char *fmt, ...)
 static void
 get_prog_name (char *buf, int length)
 {
-    FILE *file = fopen ("/proc/self/cmdline", "rb");
-    *buf = '\0';
+    char *slash;
+    FILE *file;
+
+    memset (buf, 0, length);
+    if (length == 0)
+	return;
+
+    file = fopen ("/proc/self/cmdline", "rb");
     if (file != NULL) {
-	char *slash;
-
-	slash = fgets (buf, length, file);
+	fgets (buf, length, file);
 	fclose (file);
-	if (slash == NULL)
-	    return;
-
-	slash = strrchr (buf, '/');
-	if (slash != NULL) {
-	    int len = strlen (slash+1);
-	    memmove (buf, slash+1, len+1);
+    } else {
+	char const *name = getenv ("CAIRO_TRACE_PROG_NAME");
+	if (name != NULL) {
+	    strncpy (buf, name, length-1);
 	}
+    }
+
+    slash = strrchr (buf, '/');
+    if (slash != NULL) {
+	size_t len = strlen (slash+1);
+	memmove (buf, slash+1, len+1);
     }
 }
 
