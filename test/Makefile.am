@@ -816,9 +816,6 @@ REFERENCE_IMAGES = \
 	skew-extreme.ps2.ref.png \
 	skew-extreme.ps3.ref.png \
 	skew-extreme.ref.png \
-	smask-fill.pdf.argb32.ref.png \
-	smask-fill.pdf.ref.png \
-	smask-fill.pdf.rgb24.ref.png \
 	smask-fill.ref.png \
 	smask-fill.svg11.argb32.ref.png \
 	smask-fill.svg11.ref.png \
@@ -830,35 +827,19 @@ REFERENCE_IMAGES = \
 	smask-fill.test-fallback.rgb24.ref.png \
 	smask-fill.xlib-fallback.ref.png \
 	smask-fill.xlib.ref.png \
-	smask-image-mask.pdf.argb32.ref.png \
-	smask-image-mask.pdf.ref.png \
-	smask-image-mask.pdf.rgb24.ref.png \
 	smask-image-mask.ref.png \
-	smask-mask.pdf.argb32.ref.png \
-	smask-mask.pdf.ref.png \
-	smask-mask.pdf.rgb24.ref.png \
 	smask-mask.ref.png \
 	smask-mask.svg11.ref.png \
 	smask-mask.svg12.ref.png \
-	smask-paint.pdf.argb32.ref.png \
-	smask-paint.pdf.ref.png \
-	smask-paint.pdf.rgb24.ref.png \
 	smask-paint.ref.png \
 	smask-paint.svg11.ref.png \
 	smask-paint.svg12.ref.png \
-	smask.pdf.argb32.ref.png \
-	smask.pdf.ref.png \
-	smask.pdf.rgb24.ref.png \
 	smask.ps2.ref.png \
 	smask.ps3.ref.png \
 	smask.ref.png \
-	smask-stroke.pdf.argb32.ref.png \
-	smask-stroke.pdf.ref.png \
-	smask-stroke.pdf.rgb24.ref.png \
 	smask-stroke.ref.png \
 	smask.svg11.ref.png \
 	smask.svg12.ref.png \
-	smask-text.pdf.ref.png \
 	smask-text.ps2.ref.png \
 	smask-text.ps3.ref.png \
 	smask-text.ref.png \
