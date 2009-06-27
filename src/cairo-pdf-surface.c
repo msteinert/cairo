@@ -4694,8 +4694,10 @@ _cairo_pdf_surface_write_smask_group (cairo_pdf_surface_t     *surface,
 					  group->height);
     /* _mask is a special case that requires two groups - source
      * and mask as well as a smask and gstate dictionary */
-    if (group->operation == PDF_MASK)
-	return _cairo_pdf_surface_write_mask_group (surface, group);
+    if (group->operation == PDF_MASK) {
+	status = _cairo_pdf_surface_write_mask_group (surface, group);
+	goto RESTORE_SIZE;
+    }
 
     status = _cairo_pdf_surface_open_group (surface, &group->group_res);
     if (unlikely (status))
@@ -4747,6 +4749,7 @@ _cairo_pdf_surface_write_smask_group (cairo_pdf_surface_t     *surface,
 
     status = _cairo_pdf_surface_close_group (surface, NULL);
 
+RESTORE_SIZE:
     _cairo_pdf_surface_set_size_internal (surface,
 					  old_width,
 					  old_height);
