@@ -2476,6 +2476,10 @@ cairo_private cairo_status_t
 _cairo_pattern_init_copy (cairo_pattern_t	*pattern,
 			  const cairo_pattern_t *other);
 
+cairo_private void
+_cairo_pattern_init_static_copy (cairo_pattern_t	*pattern,
+				 const cairo_pattern_t *other);
+
 cairo_private cairo_status_t
 _cairo_pattern_init_snapshot (cairo_pattern_t       *pattern,
 			      const cairo_pattern_t *other);
