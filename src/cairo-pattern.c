@@ -566,7 +566,7 @@ _cairo_pattern_create_solid (const cairo_color_t *color,
     return &pattern->base;
 }
 
-static const cairo_pattern_t *
+cairo_pattern_t *
 _cairo_pattern_create_in_error (cairo_status_t status)
 {
     cairo_pattern_t *pattern;
@@ -686,7 +686,7 @@ cairo_pattern_create_for_surface (cairo_surface_t *surface)
     }
 
     if (surface->status)
-	return (cairo_pattern_t*) _cairo_pattern_create_in_error (surface->status);
+	return _cairo_pattern_create_in_error (surface->status);
 
     pattern =
 	_freed_pattern_get (&freed_pattern_pool[CAIRO_PATTERN_TYPE_SURFACE]);

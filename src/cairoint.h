@@ -916,7 +916,6 @@ struct _cairo_solid_pattern {
     cairo_content_t content;
 };
 
-extern const cairo_private cairo_solid_pattern_t _cairo_pattern_nil;
 extern const cairo_private cairo_solid_pattern_t _cairo_pattern_black;
 
 typedef struct _cairo_surface_pattern {
@@ -2467,6 +2466,9 @@ _cairo_slope_compare (const cairo_slope_t *a,
 	              const cairo_slope_t *b) cairo_pure;
 
 /* cairo-pattern.c */
+
+cairo_private cairo_pattern_t *
+_cairo_pattern_create_in_error (cairo_status_t status);
 
 cairo_private cairo_status_t
 _cairo_pattern_create_copy (cairo_pattern_t	  **pattern,
