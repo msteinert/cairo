@@ -725,9 +725,6 @@ REFERENCE_IMAGES = \
 	pixman-rotate.ref.png \
 	pixman-rotate.rgb24.ref.png \
 	ps-surface-source.ref.png \
-	push-group.pdf.argb32.ref.png \
-	push-group.pdf.ref.png \
-	push-group.pdf.rgb24.ref.png \
 	push-group.ref.png \
 	push-group.rgb24.ref.png \
 	push-group.svg11.argb32.ref.png \
