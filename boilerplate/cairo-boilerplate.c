@@ -319,7 +319,7 @@ static const cairo_boilerplate_target_t targets[] =
 	CAIRO_CONTENT_COLOR_ALPHA, 0,
 	_cairo_boilerplate_test_fallback16_create_surface,
 	NULL, NULL,
-	_cairo_boilerplate_get_image_surface,
+	NULL, /* _cairo_boilerplate_get_image_surface, */
 	cairo_surface_write_to_png
     },
     {
@@ -328,7 +328,7 @@ static const cairo_boilerplate_target_t targets[] =
 	CAIRO_CONTENT_COLOR, 0,
 	_cairo_boilerplate_test_fallback16_create_surface,
 	NULL, NULL,
-	_cairo_boilerplate_get_image_surface,
+	NULL, /* _cairo_boilerplate_get_image_surface, */
 	cairo_surface_write_to_png
     },
     {
