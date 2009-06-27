@@ -68,10 +68,10 @@ static cairo_surface_t *
 _cairo_boilerplate_ps_create_surface (const char		 *name,
 				      cairo_content_t		  content,
 				      cairo_ps_level_t		  level,
-				      int			  width,
-				      int			  height,
-				      int			  max_width,
-				      int			  max_height,
+				      double			  width,
+				      double			  height,
+				      double			  max_width,
+				      double			  max_height,
 				      cairo_boilerplate_mode_t	  mode,
 				      int                         id,
 				      void			**closure)
@@ -90,8 +90,8 @@ _cairo_boilerplate_ps_create_surface (const char		 *name,
     xunlink (ptc->filename);
 
     ptc->level = level;
-    ptc->width = width;
-    ptc->height = height;
+    ptc->width = ceil (width);
+    ptc->height = ceil (height);
 
     surface = cairo_ps_surface_create (ptc->filename, width, height);
     if (cairo_surface_status (surface))
@@ -105,7 +105,7 @@ _cairo_boilerplate_ps_create_surface (const char		 *name,
 	ptc->target = surface;
 	surface = cairo_surface_create_similar (ptc->target,
 						CAIRO_CONTENT_COLOR,
-						width, height);
+						ptc->width, ptc->height);
 	if (cairo_surface_status (surface))
 	    goto CLEANUP_TARGET;
     } else {
@@ -130,10 +130,10 @@ _cairo_boilerplate_ps_create_surface (const char		 *name,
 cairo_surface_t *
 _cairo_boilerplate_ps2_create_surface (const char		 *name,
 				       cairo_content_t		  content,
-				       int			  width,
-				       int			  height,
-				       int			  max_width,
-				       int			  max_height,
+				       double			  width,
+				       double			  height,
+				       double			  max_width,
+				       double			  max_height,
 				       cairo_boilerplate_mode_t	  mode,
 				       int                        id,
 				       void			**closure)
@@ -149,10 +149,10 @@ _cairo_boilerplate_ps2_create_surface (const char		 *name,
 cairo_surface_t *
 _cairo_boilerplate_ps3_create_surface (const char		 *name,
 				       cairo_content_t		  content,
-				       int			  width,
-				       int			  height,
-				       int			  max_width,
-				       int			  max_height,
+				       double			  width,
+				       double			  height,
+				       double			  max_width,
+				       double			  max_height,
 				       cairo_boilerplate_mode_t	  mode,
 				       int                        id,
 				       void			**closure)

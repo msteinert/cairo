@@ -48,10 +48,10 @@ static cairo_surface_t *
 _cairo_boilerplate_svg_create_surface (const char		 *name,
 				       cairo_content_t		  content,
 				       cairo_svg_version_t	  version,
-				       int			  width,
-				       int			  height,
-				       int			  max_width,
-				       int			  max_height,
+				       double			  width,
+				       double			  height,
+				       double			  max_width,
+				       double			  max_height,
 				       cairo_boilerplate_mode_t	  mode,
 				       int                        id,
 				       void			**closure)
@@ -62,8 +62,8 @@ _cairo_boilerplate_svg_create_surface (const char		 *name,
 
     *closure = ptc = xmalloc (sizeof (svg_target_closure_t));
 
-    ptc->width = width;
-    ptc->height = height;
+    ptc->width = ceil (width);
+    ptc->height = ceil (height);
 
     xasprintf (&ptc->filename, "%s.out.svg", name);
     xunlink (ptc->filename);
@@ -79,7 +79,7 @@ _cairo_boilerplate_svg_create_surface (const char		 *name,
 	ptc->target = surface;
 	surface = cairo_surface_create_similar (ptc->target,
 						CAIRO_CONTENT_COLOR,
-						width, height);
+						ptc->width, ptc->height);
 	if (cairo_surface_status (surface))
 	    goto CLEANUP_TARGET;
     } else
@@ -103,10 +103,10 @@ _cairo_boilerplate_svg_create_surface (const char		 *name,
 cairo_surface_t *
 _cairo_boilerplate_svg11_create_surface (const char		 *name,
 					 cairo_content_t	  content,
-					 int			  width,
-					 int			  height,
-					 int			  max_width,
-					 int			  max_height,
+					 double			  width,
+					 double			  height,
+					 double			  max_width,
+					 double			  max_height,
 					 cairo_boilerplate_mode_t	  mode,
 					 int                        id,
 					 void			**closure)
@@ -123,10 +123,10 @@ _cairo_boilerplate_svg11_create_surface (const char		 *name,
 cairo_surface_t *
 _cairo_boilerplate_svg12_create_surface (const char		 *name,
 					 cairo_content_t	  content,
-					 int			  width,
-					 int			  height,
-					 int			  max_width,
-					 int			  max_height,
+					 double			  width,
+					 double			  height,
+					 double			  max_width,
+					 double			  max_height,
 					 cairo_boilerplate_mode_t	  mode,
 					 int                        id,
 					 void			**closure)

@@ -81,6 +81,7 @@ test_sources = \
 	gradient-zero-stops.c				\
 	group-clip.c					\
 	group-paint.c					\
+	group-unaligned.c				\
 	huge-linear.c					\
 	huge-radial.c					\
 	image-surface-source.c				\

@@ -663,7 +663,7 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
     cairo_bool_t have_output = FALSE;
     cairo_bool_t have_result = FALSE;
     void *closure;
-    int width, height;
+    double width, height;
     cairo_bool_t have_output_dir;
 #if HAVE_MEMFAULT
     int malloc_failure_iterations = ctx->malloc_failure;

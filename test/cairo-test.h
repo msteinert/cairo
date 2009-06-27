@@ -101,8 +101,8 @@ struct _cairo_test {
     const char *description;
     const char *keywords;
     const char *requirements;
-    int width;
-    int height;
+    double width;
+    double height;
     cairo_test_preamble_function_t *preamble;
     cairo_test_draw_function_t *draw;
 };

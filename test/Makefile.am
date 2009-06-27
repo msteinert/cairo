@@ -502,6 +502,13 @@ REFERENCE_IMAGES = \
 	gradient-zero-stops.rgb24.ref.png \
 	group-clip.ref.png \
 	group-paint.ref.png \
+	group-unaligned.ref.png \
+	group-unaligned.pdf.ref.png \
+	group-unaligned.ps.ref.png \
+	group-unaligned.svg.argb32.ref.png \
+	group-unaligned.svg.rgb24.ref.png \
+	group-unaligned.xlib.ref.png \
+	group-unaligned.xlib-fallback.ref.png \
 	huge-linear.ps3.ref.png \
 	huge-linear.ref.png \
 	huge-radial.ps3.ref.png \

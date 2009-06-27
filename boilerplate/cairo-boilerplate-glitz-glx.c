@@ -153,11 +153,11 @@ _cairo_boilerplate_glitz_glx_create_surface_internal (glitz_format_name_t		 form
 
 cairo_surface_t *
 _cairo_boilerplate_glitz_glx_create_surface (const char			 *name,
-					     cairo_content_t 		  content,
-					     int			  width,
-					     int			  height,
-					     int			  max_width,
-					     int			  max_height,
+					     cairo_content_t		  content,
+					     double			  width,
+					     double			  height,
+					     double			  max_width,
+					     double			  max_height,
 					     cairo_boilerplate_mode_t	  mode,
 					     int                          id,
 					     void			**closure)

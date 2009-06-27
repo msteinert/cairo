@@ -141,10 +141,10 @@ cairo_boilerplate_format_from_content (cairo_content_t content)
 static cairo_surface_t *
 _cairo_boilerplate_image_create_surface (const char			 *name,
 					 cairo_content_t		  content,
-					 int				  width,
-					 int				  height,
-					 int				  max_width,
-					 int				  max_height,
+					 double				  width,
+					 double				  height,
+					 double				  max_width,
+					 double				  max_height,
 					 cairo_boilerplate_mode_t	  mode,
 					 int                              id,
 					 void				**closure)
@@ -162,7 +162,7 @@ _cairo_boilerplate_image_create_surface (const char			 *name,
 	return NULL;
     }
 
-    return cairo_image_surface_create (format, width, height);
+    return cairo_image_surface_create (format, ceil (width), ceil (height));
 }
 
 cairo_surface_t *

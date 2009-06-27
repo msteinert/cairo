@@ -10,10 +10,10 @@ CAIRO_BEGIN_DECLS
 extern cairo_surface_t *
 _cairo_boilerplate_directfb_create_surface (const char			 *name,
 					    cairo_content_t		  content,
-					    int				  width,
-					    int				  height,
-					    int				  max_width,
-					    int				  max_height,
+					    double				  width,
+					    double				  height,
+					    double				  max_width,
+					    double				  max_height,
 					    cairo_boilerplate_mode_t	  mode,
 					    int                           id,
 					    void			**closure);

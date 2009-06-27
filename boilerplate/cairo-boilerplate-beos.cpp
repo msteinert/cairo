@@ -172,8 +172,8 @@ struct beos_boilerplate_closure
 cairo_surface_t *
 _cairo_boilerplate_beos_create_surface (const char			 *name,
 					cairo_content_t			  content,
-					int				  width,
-					int				  height,
+					double				  width,
+					double				  height,
 					cairo_boilerplate_mode_t	  mode,
 					void				**closure)
 {
@@ -207,8 +207,8 @@ _cairo_boilerplate_beos_cleanup (void* closure)
 cairo_surface_t *
 _cairo_boilerplate_beos_create_surface_for_bitmap (const char			 *name,
 						   cairo_content_t		  content,
-						   int				  width,
-						   int				  height,
+						   double				  width,
+						   double				  height,
 						   cairo_boilerplate_mode_t	  mode,
 						   void				**closure)
 {
