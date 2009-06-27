@@ -139,6 +139,8 @@ struct _cairo_ft_font_face {
 
 #if CAIRO_HAS_FC_FONT
     FcPattern *pattern; /* if pattern is set, the above fields will be NULL */
+    cairo_font_face_t *resolved_font_face;
+    FcConfig *resolved_config;
 #endif
 };
 
@@ -2289,8 +2291,10 @@ _cairo_ft_font_face_destroy (void *abstract_face)
     }
 
 #if CAIRO_HAS_FC_FONT
-    if (font_face->pattern)
+    if (font_face->pattern) {
 	FcPatternDestroy (font_face->pattern);
+	cairo_font_face_destroy (font_face->resolved_font_face);
+    }
 #endif
 }
 
@@ -2317,10 +2321,32 @@ _cairo_ft_font_face_get_implementation (void                     *abstract_face,
      * unscaled font.  Otherwise, use the ones stored in font_face.
      */
     if (font_face->pattern) {
-	return _cairo_ft_resolve_pattern (font_face->pattern,
-					  font_matrix,
-					  ctm,
-					  options);
+	cairo_font_face_t *resolved;
+
+	/* Cache the resolved font whilst the FcConfig remains consistent. */
+	resolved = font_face->resolved_font_face;
+	if (resolved != NULL) {
+	    if (! FcInitBringUptoDate ()) {
+		_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+		return (cairo_font_face_t *) &_cairo_font_face_nil;
+	    }
+
+	    if (font_face->resolved_config == FcConfigGetCurrent ())
+		return resolved;
+
+	    cairo_font_face_destroy (resolved);
+	    font_face->resolved_font_face = NULL;
+	}
+
+	resolved = _cairo_ft_resolve_pattern (font_face->pattern,
+					      font_matrix,
+					      ctm,
+					      options);
+
+	font_face->resolved_font_face = cairo_font_face_reference (resolved);
+	font_face->resolved_config = FcConfigGetCurrent ();
+
+	return resolved;
     }
 #endif
 
@@ -2358,6 +2384,9 @@ _cairo_ft_font_face_create_for_pattern (FcPattern *pattern,
 	free (font_face);
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
+
+    font_face->resolved_font_face = NULL;
+    font_face->resolved_config = NULL;
 
     _cairo_font_face_init (&font_face->base, &_cairo_ft_font_face_backend);
 
