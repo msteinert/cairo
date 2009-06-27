@@ -181,17 +181,6 @@ csi_array_free (csi_t *ctx, csi_array_t *array)
 #endif
 }
 
-csi_status_t
-csi_boolean_new (csi_t *ctx,
-		 csi_object_t *obj,
-		 csi_boolean_t v)
-{
-    obj->type = CSI_OBJECT_TYPE_BOOLEAN;
-    obj->datum.boolean = v;
-
-    return CSI_STATUS_SUCCESS;
-}
-
 static cairo_bool_t
 _dictionary_name_equal (const void *_a, const void *_b)
 {
@@ -351,17 +340,6 @@ csi_dictionary_remove (csi_t *ctx,
 }
 
 csi_status_t
-csi_integer_new (csi_t *ctx,
-		 csi_object_t *obj,
-		 csi_integer_t v)
-{
-    obj->type = CSI_OBJECT_TYPE_INTEGER;
-    obj->datum.integer = v;
-
-    return CSI_STATUS_SUCCESS;
-}
-
-csi_status_t
 csi_matrix_new (csi_t *ctx,
 		csi_object_t *obj)
 {
@@ -486,34 +464,12 @@ csi_name_new_static (csi_t *ctx,
 {
     csi_status_t status;
 
-    status = _csi_intern_string (ctx, &str, -1);
+    status = _csi_intern_string (ctx, &str, strlen (str));
     if (_csi_unlikely (status))
 	return status;
 
     obj->type = CSI_OBJECT_TYPE_NAME;
     obj->datum.name = (csi_name_t) str;
-
-    return CSI_STATUS_SUCCESS;
-}
-
-csi_status_t
-csi_operator_new (csi_t *ctx,
-		  csi_object_t *obj,
-		  csi_operator_t op)
-{
-    obj->type = CSI_OBJECT_TYPE_OPERATOR | CSI_OBJECT_ATTR_EXECUTABLE;
-    obj->datum.op = op;
-
-    return CSI_STATUS_SUCCESS;
-}
-
-csi_status_t
-csi_real_new (csi_t *ctx,
-	      csi_object_t *obj,
-	      csi_real_t v)
-{
-    obj->type = CSI_OBJECT_TYPE_REAL;
-    obj->datum.real = v;
 
     return CSI_STATUS_SUCCESS;
 }

@@ -41,6 +41,8 @@
 
 #include "cairo-script-interpreter.h"
 
+#include <setjmp.h>
+
 #ifndef FALSE
 #define FALSE 0
 #endif
@@ -351,8 +353,6 @@ struct _csi_list {
 };
 
 struct _csi_buffer {
-    csi_status_t status;
-
     char *base, *ptr, *end;
     unsigned int size;
 };
@@ -423,7 +423,7 @@ union _csi_union_object {
 };
 
 struct _csi_scanner {
-    csi_status_t status;
+    jmp_buf jmpbuf;
 
     enum {
 	NONE,
@@ -650,10 +650,13 @@ csi_array_append (csi_t *ctx,
 csi_private void
 csi_array_free (csi_t *ctx, csi_array_t *array);
 
-csi_private csi_status_t
-csi_boolean_new (csi_t *ctx,
-		 csi_object_t *obj,
-		 csi_boolean_t v);
+static inline void
+csi_boolean_new (csi_object_t *obj,
+		 csi_boolean_t v)
+{
+    obj->type = CSI_OBJECT_TYPE_BOOLEAN;
+    obj->datum.boolean = v;
+}
 
 csi_private csi_status_t
 csi_dictionary_new (csi_t *ctx,
@@ -684,10 +687,14 @@ csi_private void
 csi_dictionary_free (csi_t *ctx,
 		     csi_dictionary_t *dict);
 
-csi_private csi_status_t
-csi_integer_new (csi_t *ctx,
-		 csi_object_t *obj,
-		 csi_integer_t v);
+static inline void
+csi_integer_new (csi_object_t *obj,
+		 csi_integer_t v)
+{
+    obj->type = CSI_OBJECT_TYPE_INTEGER;
+    obj->datum.integer = v;
+}
+
 
 csi_private csi_status_t
 csi_matrix_new (csi_t *ctx,
@@ -723,15 +730,21 @@ csi_name_new_static (csi_t *ctx,
 		     csi_object_t *obj,
 		     const char *str);
 
-csi_private csi_status_t
-csi_operator_new (csi_t *ctx,
-		  csi_object_t *obj,
-		  csi_operator_t op);
+static inline void
+csi_operator_new (csi_object_t *obj,
+		  csi_operator_t op)
+{
+    obj->type = CSI_OBJECT_TYPE_OPERATOR | CSI_OBJECT_ATTR_EXECUTABLE;
+    obj->datum.op = op;
+}
 
-csi_private csi_status_t
-csi_real_new (csi_t *ctx,
-	      csi_object_t *obj,
-	      csi_real_t v);
+static inline void
+csi_real_new (csi_object_t *obj,
+	      csi_real_t v)
+{
+    obj->type = CSI_OBJECT_TYPE_REAL;
+    obj->datum.real = v;
+}
 
 csi_private csi_status_t
 csi_string_new (csi_t *ctx,

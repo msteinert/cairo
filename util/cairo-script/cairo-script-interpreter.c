@@ -214,9 +214,7 @@ _add_operator (csi_t *ctx,
     if (status)
 	return status;
 
-    status = csi_operator_new (ctx, &operator, def->op);
-    if (status)
-	return status;
+    csi_operator_new (&operator, def->op);
 
     return csi_dictionary_put (ctx, dict, name.datum.name, &operator);
 }
@@ -234,9 +232,7 @@ _add_integer_constant (csi_t *ctx,
     if (status)
 	return status;
 
-    status = csi_integer_new (ctx, &constant, def->value);
-    if (status)
-	return status;
+    csi_integer_new (&constant, def->value);
 
     return csi_dictionary_put (ctx, dict, name.datum.name, &constant);
 }
@@ -254,9 +250,7 @@ _add_real_constant (csi_t *ctx,
     if (status)
 	return status;
 
-    status = csi_real_new (ctx, &constant, def->value);
-    if (status)
-	return status;
+    csi_real_new (&constant, def->value);
 
     return csi_dictionary_put (ctx, dict, name.datum.name, &constant);
 }
@@ -462,8 +456,6 @@ _csi_intern_string (csi_t *ctx, const char **str_inout, int len)
     csi_intern_string_t tmpl, *istring;
     csi_status_t status = CSI_STATUS_SUCCESS;
 
-    if (len < 0)
-	len = strlen (str);
     tmpl.hash_entry.hash = _intern_string_hash (str, len);
     tmpl.len = len;
     tmpl.string = (char *) str;
