@@ -179,6 +179,8 @@ struct _cairo_test_context {
     int malloc_failure;
     int last_fault_count;
 
+    int timeout;
+
     int thread;
 };
 

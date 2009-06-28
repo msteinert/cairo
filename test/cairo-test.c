@@ -93,6 +93,7 @@ _xunlink (const cairo_test_context_t *ctx, const char *pathname);
 
 static const char *fail_face = "", *xfail_face="", *normal_face = "";
 static cairo_bool_t print_fail_on_stdout;
+static int cairo_test_timeout = 60;
 
 #define CAIRO_TEST_LOG_SUFFIX ".log"
 #define CAIRO_TEST_PNG_SUFFIX ".out.png"
@@ -148,6 +149,10 @@ _cairo_test_init (cairo_test_context_t *ctx,
     if (ctx->malloc_failure && ! RUNNING_ON_MEMFAULT ())
 	ctx->malloc_failure = 0;
 #endif
+
+    ctx->timeout = cairo_test_timeout;
+    if (getenv ("CAIRO_TEST_TIMEOUT"))
+	ctx->timeout = atoi (getenv ("CAIRO_TEST_TIMEOUT"));
 
     xasprintf (&log_name, "%s%s", ctx->test_name, CAIRO_TEST_LOG_SUFFIX);
     _xunlink (NULL, log_name);
@@ -848,7 +853,13 @@ REPEAT:
     cairo_font_options_destroy (font_options);
 
     cairo_save (cr);
+#if HAVE_ALARM
+    alarm (ctx->timeout);
+#endif
     status = (ctx->test->draw) (cr, ctx->test->width, ctx->test->height);
+#if HAVE_ALARM
+    alarm (0);
+#endif
     cairo_restore (cr);
 
     if (similar) {
@@ -1243,6 +1254,7 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 	void (* volatile old_segfault_handler)(int);
 	void (* volatile old_sigpipe_handler)(int);
 	void (* volatile old_sigabrt_handler)(int);
+	void (* volatile old_sigalrm_handler)(int);
 
 	/* Set up a checkpoint to get back to in case of segfaults. */
 #ifdef SIGSEGV
@@ -1253,6 +1265,9 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 #endif
 #ifdef SIGABRT
 	old_sigabrt_handler = signal (SIGABRT, segfault_handler);
+#endif
+#ifdef SIGALRM
+	old_sigalrm_handler = signal (SIGALRM, segfault_handler);
 #endif
 	if (0 == setjmp (jmpbuf))
 	    status = cairo_test_for_target (ctx, target, dev_offset, similar);
@@ -1266,6 +1281,9 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 #endif
 #ifdef SIGABRT
 	signal (SIGABRT, old_sigabrt_handler);
+#endif
+#ifdef SIGALRM
+	signal (SIGALRM, old_sigalrm_handler);
 #endif
     } else {
 	status = cairo_test_for_target (ctx, target, dev_offset, similar);
