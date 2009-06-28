@@ -424,6 +424,7 @@ union _csi_union_object {
 
 struct _csi_scanner {
     jmp_buf jmpbuf;
+    int depth;
 
     enum {
 	NONE,

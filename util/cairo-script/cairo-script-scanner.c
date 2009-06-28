@@ -1101,13 +1101,22 @@ _csi_scan_file (csi_t *ctx, csi_scanner_t *scan, csi_file_t *src)
     };
     csi_status_t status;
 
-    if ((status = setjmp (scan->jmpbuf)))
-	return status;
+    /* This function needs to be reentrant to handle recursive scanners.
+     * i.e. one script executes a second.
+     */
 
-    scan->line_number = 0;
+    if (scan->depth++ == 0) {
+	if ((status = setjmp (scan->jmpbuf))) {
+	    scan->depth = 0;
+	    return status;
+	}
+    }
+
+    scan->line_number = 0; /* XXX broken by recursive scanning */
     while (func[scan->state] (ctx, scan, src))
 	;
 
+    --scan->depth;
     return CSI_STATUS_SUCCESS;
 }
 
