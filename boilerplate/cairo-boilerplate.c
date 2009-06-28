@@ -225,6 +225,8 @@ cairo_boilerplate_get_image_surface_from_png (const char *filename,
     cairo_surface_t *surface;
 
     surface = cairo_image_surface_create_from_png (filename);
+    if (cairo_surface_status (surface))
+	return surface;
 
     if (flatten) {
 	cairo_t *cr;
