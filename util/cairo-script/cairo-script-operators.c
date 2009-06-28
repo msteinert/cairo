@@ -2175,21 +2175,137 @@ _get (csi_t *ctx)
     return _csi_push_ostack_copy (ctx, &obj);
 }
 
+struct glyph_advance_cache {
+    csi_t *ctx;
+    double glyph_advance[256][2];
+    unsigned long have_glyph_advance[256];
+};
+
+static void
+glyph_advance_cache_destroy (void *closure)
+{
+    struct glyph_advance_cache *cache = closure;
+    _csi_free (cache->ctx, cache);
+}
+
+static int
+_glyph_string (csi_t *ctx,
+	       csi_array_t *array,
+	       cairo_scaled_font_t *scaled_font,
+	       cairo_glyph_t *glyphs)
+{
+    double x,y;
+    csi_integer_t nglyphs, i, j;
+    struct glyph_advance_cache *cache;
+
+    cache = cairo_scaled_font_get_user_data (scaled_font,
+					     (cairo_user_data_key_t *) &_glyph_string);
+    if (cache == NULL) {
+	cache = _csi_alloc (ctx, sizeof (*cache));
+	if (cache == NULL)
+	    return -1;
+
+	cache->ctx = ctx;
+	memset (cache->have_glyph_advance, 0xff,
+		sizeof (cache->have_glyph_advance));
+
+	cairo_scaled_font_set_user_data (scaled_font,
+					 (cairo_user_data_key_t *) &_glyph_string,
+					 cache, glyph_advance_cache_destroy);
+    }
+
+    nglyphs = 0;
+    x = y = 0;
+    for (i = 0; i < array->stack.len; i++) {
+	const csi_object_t *obj = &array->stack.objects[i];
+
+	switch ((int) csi_object_get_type (obj)) {
+	case CSI_OBJECT_TYPE_ARRAY: {
+	    const csi_array_t *glyph_array = obj->datum.array;
+	    for (j = 0; j < glyph_array->stack.len; j++) {
+		unsigned long g;
+		int gi;
+
+		obj = &glyph_array->stack.objects[j];
+		if (csi_object_get_type (obj) != CSI_OBJECT_TYPE_INTEGER)
+		    break;
+		g = obj->datum.integer;
+
+		glyphs[nglyphs].index = g;
+		glyphs[nglyphs].x = x;
+		glyphs[nglyphs].y = y;
+
+		gi = g % ARRAY_LENGTH (cache->have_glyph_advance);
+		if (cache->have_glyph_advance[gi] != g) {
+		    cairo_text_extents_t extents;
+
+		    cairo_scaled_font_glyph_extents (scaled_font,
+						     &glyphs[nglyphs], 1,
+						     &extents);
+
+		    cache->glyph_advance[gi][0] = extents.x_advance;
+		    cache->glyph_advance[gi][1] = extents.y_advance;
+		    cache->have_glyph_advance[gi] = g;
+		}
+
+		x += cache->glyph_advance[gi][0];
+		y += cache->glyph_advance[gi][1];
+		nglyphs++;
+	    }
+	    break;
+	}
+
+	case CSI_OBJECT_TYPE_STRING: {
+	    const csi_string_t *glyph_string = obj->datum.string;
+	    for (j = 0; j < glyph_string->len; j++) {
+		uint8_t g;
+
+		g = glyph_string->string[j];
+		glyphs[nglyphs].index = g;
+		glyphs[nglyphs].x = x;
+		glyphs[nglyphs].y = y;
+
+		if (cache->have_glyph_advance[g] != g) {
+		    cairo_text_extents_t extents;
+
+		    cairo_scaled_font_glyph_extents (scaled_font,
+						     &glyphs[nglyphs], 1,
+						     &extents);
+
+		    cache->glyph_advance[g][0] = extents.x_advance;
+		    cache->glyph_advance[g][1] = extents.y_advance;
+		    cache->have_glyph_advance[g] = g;
+		}
+
+		x += cache->glyph_advance[g][0];
+		y += cache->glyph_advance[g][1];
+		nglyphs++;
+	    }
+	    break;
+	}
+
+	case CSI_OBJECT_TYPE_INTEGER:
+	case CSI_OBJECT_TYPE_REAL: /* dx */
+	    x = csi_number_get_value (obj);
+	    if (++i == array->stack.len)
+		break;
+	    y = csi_number_get_value (&array->stack.objects[i]);
+	    break;
+	}
+    }
+
+    return nglyphs;
+}
+
 static csi_status_t
 _glyph_path (csi_t *ctx)
 {
     csi_object_t *obj;
     csi_array_t *array;
-    csi_array_t *glyph_array;
-    csi_string_t *glyph_string;
     csi_status_t status;
     cairo_t *cr;
-    cairo_scaled_font_t *scaled_font;
     cairo_glyph_t stack_glyphs[256], *glyphs;
-    double x,y;
-    csi_integer_t nglyphs, i, j;
-    double glyph_advance[256][2];
-    int have_glyph_advance[256];
+    csi_integer_t nglyphs, i;
 
     check (2);
 
@@ -2227,107 +2343,19 @@ _glyph_path (csi_t *ctx)
     } else
 	glyphs = stack_glyphs;
 
-    scaled_font = cairo_get_scaled_font (cr);
+    nglyphs = _glyph_string (ctx, array, cairo_get_scaled_font (cr), glyphs);
+    if (_csi_unlikely (nglyphs < 0)) {
+	if (glyphs != stack_glyphs)
+	    _csi_free (ctx, glyphs);
 
-    nglyphs = 0;
-    memset (have_glyph_advance, 0, sizeof (have_glyph_advance));
-    x = y = 0;
-    for (i = 0; i < array->stack.len; i++) {
-	obj = &array->stack.objects[i];
-	switch ((int) csi_object_get_type (obj)) {
-	case CSI_OBJECT_TYPE_ARRAY: /* glyphs */
-	    glyph_array = obj->datum.array;
-	    for (j = 0; j < glyph_array->stack.len; j++) {
-		unsigned long g;
-		cairo_bool_t have_advance;
-
-		obj = &glyph_array->stack.objects[j];
-		if (csi_object_get_type (obj) != CSI_OBJECT_TYPE_INTEGER)
-		    break;
-		g = obj->datum.integer;
-
-		glyphs[nglyphs].index = g;
-		glyphs[nglyphs].x = x;
-		glyphs[nglyphs].y = y;
-
-		if (g < ARRAY_LENGTH (have_glyph_advance)) {
-		    if (! have_glyph_advance[g]) {
-			cairo_text_extents_t extents;
-
-			cairo_scaled_font_glyph_extents (scaled_font,
-							 &glyphs[nglyphs], 1,
-							 &extents);
-
-			glyph_advance[g][0] = extents.x_advance;
-			glyph_advance[g][1] = extents.y_advance;
-			have_glyph_advance[g] = TRUE;
-
-		    }
-
-		    have_advance = glyph_advance[g][0] != 0.0;
-		    x += glyph_advance[g][0];
-		    y += glyph_advance[g][1];
-		} else {
-		    cairo_text_extents_t extents;
-
-		    cairo_scaled_font_glyph_extents (scaled_font,
-						     &glyphs[nglyphs], 1,
-						     &extents);
-
-		    have_advance = extents.x_advance != 0.0;
-		    x += extents.x_advance;
-		    y += extents.y_advance;
-		}
-
-		nglyphs += have_advance;
-	    }
-	    break;
-
-	case CSI_OBJECT_TYPE_STRING: /* glyphs */
-	    glyph_string = obj->datum.string;
-	    for (j = 0; j < glyph_string->len; j++) {
-		uint8_t g;
-		cairo_bool_t have_advance;
-
-		g = glyph_string->string[j];
-		glyphs[nglyphs].index = g;
-		glyphs[nglyphs].x = x;
-		glyphs[nglyphs].y = y;
-
-		if (! have_glyph_advance[g]) {
-		    cairo_text_extents_t extents;
-
-		    cairo_scaled_font_glyph_extents (scaled_font,
-						     &glyphs[nglyphs], 1,
-						     &extents);
-
-		    glyph_advance[g][0] = extents.x_advance;
-		    glyph_advance[g][1] = extents.y_advance;
-		    have_glyph_advance[g] = TRUE;
-		}
-
-		have_advance = glyph_advance[g][0] != 0.0;
-		x += glyph_advance[g][0];
-		y += glyph_advance[g][1];
-
-		nglyphs += have_advance;
-	    }
-	    break;
-
-	case CSI_OBJECT_TYPE_INTEGER:
-	case CSI_OBJECT_TYPE_REAL: /* dx */
-	    x = csi_number_get_value (obj);
-	    if (++i == array->stack.len)
-		break;
-	    y = csi_number_get_value (&array->stack.objects[i]);
-	    break;
-	}
+	return _csi_error (CSI_STATUS_NO_MEMORY);
     }
 
     cairo_glyph_path (cr, glyphs, nglyphs);
 
     if (glyphs != stack_glyphs)
 	_csi_free (ctx, glyphs);
+
     pop (1);
     return CSI_STATUS_SUCCESS;
 }
@@ -4818,16 +4846,10 @@ _show_glyphs (csi_t *ctx)
 {
     csi_object_t *obj;
     csi_array_t *array;
-    csi_array_t *glyph_array;
-    csi_string_t *glyph_string;
     csi_status_t status;
     cairo_t *cr;
-    cairo_scaled_font_t *scaled_font;
     cairo_glyph_t stack_glyphs[256], *glyphs;
-    double x,y;
-    csi_integer_t nglyphs, i, j;
-    double glyph_advance[256][2];
-    unsigned long have_glyph_advance[256];
+    csi_integer_t nglyphs, i;
 
     check (2);
 
@@ -4865,97 +4887,18 @@ _show_glyphs (csi_t *ctx)
     } else
 	glyphs = stack_glyphs;
 
-    scaled_font = cairo_get_scaled_font (cr);
-
-    nglyphs = 0;
-    memset (have_glyph_advance, 0xff, sizeof (have_glyph_advance));
-    x = y = 0;
-    for (i = 0; i < array->stack.len; i++) {
-	obj = &array->stack.objects[i];
-	switch ((int) csi_object_get_type (obj)) {
-	case CSI_OBJECT_TYPE_ARRAY: /* glyphs */
-	    glyph_array = obj->datum.array;
-	    for (j = 0; j < glyph_array->stack.len; j++) {
-		unsigned long g;
-		int gi;
-		cairo_bool_t have_advance;
-
-		obj = &glyph_array->stack.objects[j];
-		if (csi_object_get_type (obj) != CSI_OBJECT_TYPE_INTEGER)
-		    break;
-		g = obj->datum.integer;
-
-		glyphs[nglyphs].index = g;
-		glyphs[nglyphs].x = x;
-		glyphs[nglyphs].y = y;
-
-		gi = g % ARRAY_LENGTH (have_glyph_advance);
-		if (have_glyph_advance[gi] != g) {
-		    cairo_text_extents_t extents;
-
-		    cairo_scaled_font_glyph_extents (scaled_font,
-						     &glyphs[nglyphs], 1,
-						     &extents);
-
-		    glyph_advance[gi][0] = extents.x_advance;
-		    glyph_advance[gi][1] = extents.y_advance;
-		    have_glyph_advance[gi] = g;
-		}
-
-		have_advance = glyph_advance[gi][0] != 0.0;
-		x += glyph_advance[gi][0];
-		y += glyph_advance[gi][1];
-
-		nglyphs += have_advance;
-	    }
-	    break;
-
-	case CSI_OBJECT_TYPE_STRING: /* glyphs */
-	    glyph_string = obj->datum.string;
-	    for (j = 0; j < glyph_string->len; j++) {
-		uint8_t g;
-		cairo_bool_t have_advance;
-
-		g = glyph_string->string[j];
-		glyphs[nglyphs].index = g;
-		glyphs[nglyphs].x = x;
-		glyphs[nglyphs].y = y;
-
-		if (have_glyph_advance[g] != g) {
-		    cairo_text_extents_t extents;
-
-		    cairo_scaled_font_glyph_extents (scaled_font,
-						     &glyphs[nglyphs], 1,
-						     &extents);
-
-		    glyph_advance[g][0] = extents.x_advance;
-		    glyph_advance[g][1] = extents.y_advance;
-		    have_glyph_advance[g] = g;
-		}
-
-		have_advance = glyph_advance[g][0] != 0.0;
-		x += glyph_advance[g][0];
-		y += glyph_advance[g][1];
-
-		nglyphs += have_advance;
-	    }
-	    break;
-
-	case CSI_OBJECT_TYPE_INTEGER:
-	case CSI_OBJECT_TYPE_REAL: /* dx */
-	    x = csi_number_get_value (obj);
-	    if (++i == array->stack.len)
-		break;
-	    y = csi_number_get_value (&array->stack.objects[i]);
-	    break;
-	}
+    nglyphs = _glyph_string (ctx, array, cairo_get_scaled_font (cr), glyphs);
+    if (_csi_unlikely (nglyphs < 0)) {
+	if (glyphs != stack_glyphs)
+	    _csi_free (ctx, glyphs);
+	return _csi_error (CSI_STATUS_NO_MEMORY);
     }
 
     cairo_show_glyphs (cr, glyphs, nglyphs);
-    cairo_move_to (cr, x, y);
 
     if (glyphs != stack_glyphs)
 	_csi_free (ctx, glyphs);
+
     pop (1);
     return CSI_STATUS_SUCCESS;
 }
@@ -4967,17 +4910,11 @@ _show_text_glyphs (csi_t *ctx)
     csi_array_t *array;
     csi_string_t *string;
     csi_string_t *utf8_string;
-    csi_string_t *glyph_string;
-    csi_array_t *glyph_array;
     csi_status_t status;
     cairo_t *cr;
-    cairo_scaled_font_t *scaled_font;
     cairo_text_cluster_t stack_clusters[256], *clusters;
     cairo_glyph_t stack_glyphs[256], *glyphs;
-    double x,y;
-    csi_integer_t nglyphs, nclusters, i, j;
-    double glyph_advance[256][2];
-    int have_glyph_advance[256];
+    csi_integer_t nglyphs, nclusters, i;
     long direction;
 
     check (5);
@@ -5064,102 +5001,15 @@ _show_text_glyphs (csi_t *ctx)
     } else
 	glyphs = stack_glyphs;
 
-    /* amalgamate glyph strings */
-    scaled_font = cairo_get_scaled_font (cr);
+    nglyphs = _glyph_string (ctx, array, cairo_get_scaled_font (cr), glyphs);
+    if (_csi_unlikely (nglyphs < 0)) {
+	if (clusters != stack_clusters)
+	    _csi_free (ctx, clusters);
 
-    nglyphs = 0;
-    memset (have_glyph_advance, 0, sizeof (have_glyph_advance));
-    x = y = 0;
-    for (i = 0; i < array->stack.len; i++) {
-	obj = &array->stack.objects[i];
-	switch ((int) csi_object_get_type (obj)) {
-	case CSI_OBJECT_TYPE_ARRAY: /* glyphs */
-	    glyph_array = obj->datum.array;
-	    for (j = 0; j < glyph_array->stack.len; j++) {
-		unsigned long g;
-		cairo_bool_t have_advance;
+	if (glyphs != stack_glyphs)
+	    _csi_free (ctx, glyphs);
 
-		obj = &glyph_array->stack.objects[j];
-		if (csi_object_get_type (obj) != CSI_OBJECT_TYPE_INTEGER)
-		    break;
-		g = obj->datum.integer;
-
-		glyphs[nglyphs].index = g;
-		glyphs[nglyphs].x = x;
-		glyphs[nglyphs].y = y;
-
-		if (g < ARRAY_LENGTH (have_glyph_advance)) {
-		    if (! have_glyph_advance[g]) {
-			cairo_text_extents_t extents;
-
-			cairo_scaled_font_glyph_extents (scaled_font,
-							 &glyphs[nglyphs], 1,
-							 &extents);
-
-			glyph_advance[g][0] = extents.x_advance;
-			glyph_advance[g][1] = extents.y_advance;
-			have_glyph_advance[g] = TRUE;
-
-		    }
-
-		    have_advance = glyph_advance[g][0] != 0.0;
-		    x += glyph_advance[g][0];
-		    y += glyph_advance[g][1];
-		} else {
-		    cairo_text_extents_t extents;
-
-		    cairo_scaled_font_glyph_extents (scaled_font,
-						     &glyphs[nglyphs], 1,
-						     &extents);
-
-		    have_advance = extents.x_advance != 0.0;
-		    x += extents.x_advance;
-		    y += extents.y_advance;
-		}
-
-		nglyphs += have_advance;
-	    }
-	    break;
-
-	case CSI_OBJECT_TYPE_STRING: /* glyphs */
-	    glyph_string = obj->datum.string;
-	    for (j = 0; j < glyph_string->len; j++) {
-		uint8_t g;
-		cairo_bool_t have_advance;
-
-		g = glyph_string->string[j];
-		glyphs[nglyphs].index = g;
-		glyphs[nglyphs].x = x;
-		glyphs[nglyphs].y = y;
-
-		if (! have_glyph_advance[g]) {
-		    cairo_text_extents_t extents;
-
-		    cairo_scaled_font_glyph_extents (scaled_font,
-						     &glyphs[nglyphs], 1,
-						     &extents);
-
-		    glyph_advance[g][0] = extents.x_advance;
-		    glyph_advance[g][1] = extents.y_advance;
-		    have_glyph_advance[g] = TRUE;
-		}
-
-		have_advance = glyph_advance[g][0] != 0.0;
-		x += glyph_advance[g][0];
-		y += glyph_advance[g][1];
-
-		nglyphs += have_advance;
-	    }
-	    break;
-
-	case CSI_OBJECT_TYPE_INTEGER:
-	case CSI_OBJECT_TYPE_REAL: /* dx */
-	    x = csi_number_get_value (obj);
-	    if (++i == array->stack.len)
-		break;
-	    y = csi_number_get_value (&array->stack.objects[i]);
-	    break;
-	}
+	return _csi_error (CSI_STATUS_NO_MEMORY);
     }
 
     cairo_show_text_glyphs (cr,
@@ -5167,7 +5017,6 @@ _show_text_glyphs (csi_t *ctx)
 			    glyphs, nglyphs,
 			    clusters, nclusters,
 			    direction);
-    cairo_move_to (cr, x, y);
 
     if (clusters != stack_clusters)
 	_csi_free (ctx, clusters);
