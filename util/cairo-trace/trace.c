@@ -4133,7 +4133,7 @@ cairo_script_surface_create (const char *filename,
 		       "  surface dup /s%ld exch def\n",
 		       width, height,
 		       surface_id);
-	_surface_set_size (ret, width, height);
+	_surface_object_set_size (ret, width, height);
 	_get_object (SURFACE, ret)->defined = true;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
