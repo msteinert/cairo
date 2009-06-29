@@ -707,7 +707,6 @@ REFERENCE_IMAGES = \
 	paint-source-alpha.ref.png \
 	paint-source-alpha.svg11.ref.png \
 	paint-source-alpha.svg12.ref.png \
-	paint-with-alpha.pdf.ref.png \
 	paint-with-alpha.ref.png \
 	paint-with-alpha.svg11.ref.png \
 	paint-with-alpha.svg12.ref.png \
