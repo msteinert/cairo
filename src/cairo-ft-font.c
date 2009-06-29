@@ -2332,10 +2332,9 @@ _cairo_ft_font_face_get_implementation (void                     *abstract_face,
 	    }
 
 	    if (font_face->resolved_config == FcConfigGetCurrent ())
-		return resolved;
+		return cairo_font_face_reference (resolved);
 
 	    cairo_font_face_destroy (resolved);
-	    font_face->resolved_font_face = NULL;
 	}
 
 	resolved = _cairo_ft_resolve_pattern (font_face->pattern,
