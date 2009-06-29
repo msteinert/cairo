@@ -704,8 +704,6 @@ REFERENCE_IMAGES = \
 	over-between-source.xlib.rgb24.ref.png \
 	paint.ref.png \
 	paint-repeat.ref.png \
-	paint-source-alpha.pdf.argb32.ref.png \
-	paint-source-alpha.pdf.ref.png \
 	paint-source-alpha.ref.png \
 	paint-source-alpha.svg11.ref.png \
 	paint-source-alpha.svg12.ref.png \
