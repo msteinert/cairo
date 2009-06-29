@@ -779,8 +779,6 @@ REFERENCE_IMAGES = \
 	scale-offset-image.ref.png \
 	scale-offset-similar.ps.ref.png \
 	scale-offset-similar.ref.png \
-	scale-source-surface-paint.pdf.argb32.ref.png \
-	scale-source-surface-paint.pdf.rgb24.ref.png \
 	scale-source-surface-paint.ref.png \
 	scale-source-surface-paint.rgb24.ref.png \
 	scale-source-surface-paint.svg11.argb32.ref.png \
