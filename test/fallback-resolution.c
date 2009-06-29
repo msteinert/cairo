@@ -354,6 +354,9 @@ preamble (cairo_test_context_t *ctx)
 	if (! target->is_vector)
 	    continue;
 
+	if (! cairo_test_is_target_enabled (ctx, target->name))
+	    continue;
+
 	format = cairo_boilerplate_content_name (target->content);
 	xasprintf (&base_name, "fallback-resolution.%s.%s",
 		   target->name,
