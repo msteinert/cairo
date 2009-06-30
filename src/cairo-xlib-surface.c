@@ -834,8 +834,7 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 static void
 _cairo_xlib_surface_ensure_src_picture (cairo_xlib_surface_t    *surface)
 {
-    if (!surface->src_picture)
-    {
+    if (!surface->src_picture) {
 	XRenderPictureAttributes pa;
 	int mask = 0;
 
@@ -1361,9 +1360,6 @@ _cairo_xlib_surface_set_matrix (cairo_xlib_surface_t *surface,
 {
     XTransform xtransform;
 
-    if (!surface->src_picture)
-	return CAIRO_STATUS_SUCCESS;
-
     /* Casting between pixman_transform_t and XTransform is safe because
      * they happen to be the exact same type.
      */
@@ -1388,9 +1384,6 @@ _cairo_xlib_surface_set_filter (cairo_xlib_surface_t *surface,
 				cairo_filter_t	     filter)
 {
     const char *render_filter;
-
-    if (!surface->src_picture)
-	return CAIRO_STATUS_SUCCESS;
 
     if (surface->filter == filter)
 	return CAIRO_STATUS_SUCCESS;
@@ -1442,9 +1435,6 @@ _cairo_xlib_surface_set_repeat (cairo_xlib_surface_t *surface, int repeat)
 {
     XRenderPictureAttributes pa;
     unsigned long	     mask;
-
-    if (!surface->src_picture)
-	return;
 
     if (surface->repeat == repeat)
 	return;
