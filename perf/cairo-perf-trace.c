@@ -87,7 +87,8 @@ target_is_measurable (const cairo_boilerplate_target_t *target)
 	    return TRUE;
 	}
     case CAIRO_SURFACE_TYPE_XLIB:
-	if (strcmp (target->name, "xlib-fallback") == 0)
+	if (strcmp (target->name, "xlib-fallback") == 0 ||
+	    strcmp (target->name, "xlib-reference") == 0)
 	{
 	    return FALSE;
 	}
