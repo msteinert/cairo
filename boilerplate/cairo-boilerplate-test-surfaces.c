@@ -24,14 +24,18 @@
  * Author: Carl D. Worth <cworth@cworth.org>
  */
 
+#include "../cairo-version.h"
+
 #include "cairo-boilerplate.h"
 #include "cairo-boilerplate-test-surfaces-private.h"
 
 #include <test-fallback-surface.h>
 #include <test-fallback16-surface.h>
 #include <test-meta-surface.h>
-#include <test-null-surface.h>
 #include <test-paginated-surface.h>
+#if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1,9,3)
+#include <test-null-surface.h>
+#endif
 
 #include <assert.h>
 
@@ -92,7 +96,11 @@ _cairo_boilerplate_test_null_create_surface (const char			 *name,
 					     void			**closure)
 {
     *closure = NULL;
+#if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1,9,3)
     return _cairo_test_null_surface_create (content);
+#else
+    return NULL;
+#endif
 }
 
 static const cairo_user_data_key_t test_paginated_closure_key;
