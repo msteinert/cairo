@@ -761,8 +761,7 @@ REFERENCE_IMAGES = \
 	rel-path.ref.png \
 	rel-path.rgb24.ref.png \
 	rgb24-ignore-alpha.ref.png \
-	rotate-image-surface-paint.pdf.argb32.ref.png \
-	rotate-image-surface-paint.pdf.rgb24.ref.png \
+	rotate-image-surface-paint.pdf.ref.png \
 	rotate-image-surface-paint.ps2.ref.png \
 	rotate-image-surface-paint.ps3.ref.png \
 	rotate-image-surface-paint.quartz.ref.png \
