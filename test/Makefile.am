@@ -597,6 +597,7 @@ REFERENCE_IMAGES = \
 	mask.svg12.rgb24.ref.png \
 	mask.test-fallback.argb32.ref.png \
 	mask.test-fallback.rgb24.ref.png \
+	mask-transformed-image.pdf.ref.png \
 	mask-transformed-image.ref.png \
 	mask-transformed-similar.pdf.ref.png \
 	mask-transformed-similar.ref.png \
