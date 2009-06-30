@@ -392,9 +392,7 @@ REFERENCE_IMAGES = \
 	filter-bilinear-extents.ps2.ref.png \
 	filter-bilinear-extents.ps3.ref.png \
 	filter-bilinear-extents.ref.png \
-	filter-nearest-offset.pdf.argb32.ref.png \
 	filter-nearest-offset.pdf.ref.png \
-	filter-nearest-offset.pdf.rgb24.ref.png \
 	filter-nearest-offset.ps2.ref.png \
 	filter-nearest-offset.ps3.ref.png \
 	filter-nearest-offset.ref.png \
