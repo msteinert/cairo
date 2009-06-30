@@ -605,9 +605,7 @@ REFERENCE_IMAGES = \
 	mask.xlib-fallback.rgb24.ref.png \
 	mask.xlib.ref.png \
 	mask.xlib.rgb24.ref.png \
-	meta-surface-pattern.pdf.argb32.ref.png \
 	meta-surface-pattern.pdf.ref.png \
-	meta-surface-pattern.pdf.rgb24.ref.png \
 	meta-surface-pattern.ps2.argb32.ref.png \
 	meta-surface-pattern.ps2.rgb24.ref.png \
 	meta-surface-pattern.ps3.argb32.ref.png \
