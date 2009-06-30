@@ -46,6 +46,7 @@
 #include <ctype.h> /* isspace() */
 
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <dirent.h>
 
 #include <signal.h>
@@ -125,6 +126,9 @@ cairo_perf_can_run (cairo_perf_t	*perf,
     unsigned int i;
     char *copy, *dot;
     cairo_bool_t ret;
+
+    if (perf->exact_names)
+	return TRUE;
 
     if (perf->num_names == 0 && perf->num_exclude_names == 0)
 	return TRUE;
@@ -635,12 +639,63 @@ warn_no_traces (const char *message, const char *trace_dir)
 	    message, trace_dir);
 }
 
+static int
+cairo_perf_trace_dir (cairo_perf_t *perf,
+		      const cairo_boilerplate_target_t *target,
+		      const char *dirname)
+{
+    DIR *dir;
+    struct dirent *de;
+    int num_traces = 0;
+
+    dir = opendir (dirname);
+    if (dir == NULL) {
+	fprintf (stderr, "Failed to open directory '%s'\n", dirname);
+	return 0;
+    }
+
+    while ((de = readdir (dir)) != NULL) {
+	char *trace;
+	struct stat st;
+
+	if (de->d_name[0] == '.')
+	    continue;
+
+	xasprintf (&trace, "%s/%s", dirname, de->d_name);
+	if (stat (trace, &st) != 0)
+	    goto next;
+
+	if (S_ISDIR(st.st_mode)) {
+	    num_traces += cairo_perf_trace_dir (perf, target, trace);
+	} else {
+	    const char *dot;
+
+	    dot = strrchr (de->d_name, '.');
+	    if (dot == NULL)
+		goto next;
+	    if (strcmp (dot, ".trace"))
+		goto next;
+
+	    num_traces++;
+	    if (! cairo_perf_can_run (perf, de->d_name))
+		goto next;
+
+	    cairo_perf_trace (perf, target, trace);
+	}
+next:
+	free (trace);
+
+    }
+    closedir (dir);
+
+    return num_traces;
+}
+
 int
 main (int argc, char *argv[])
 {
     cairo_perf_t perf;
     const char *trace_dir = "cairo-traces";
-    cairo_bool_t names_are_traces;
     unsigned int n;
     int i;
 
@@ -667,7 +722,7 @@ main (int argc, char *argv[])
     perf.times = xmalloc (perf.iterations * sizeof (cairo_perf_ticks_t));
 
     /* do we have a list of filenames? */
-    names_are_traces = have_trace_filenames (&perf);
+    perf.exact_names = have_trace_filenames (&perf);
 
     for (i = 0; i < perf.num_targets; i++) {
         const cairo_boilerplate_target_t *target = perf.targets[i];
@@ -678,44 +733,19 @@ main (int argc, char *argv[])
 	perf.target = target;
 	perf.test_number = 0;
 
-	if (names_are_traces) {
+	if (perf.exact_names) {
 	    for (n = 0; n < perf.num_names; n++) {
-		if (access (perf.names[n], R_OK) == 0)
-		    cairo_perf_trace (&perf, target, perf.names[n]);
+		struct stat st;
+
+		if (stat (perf.names[n], &st) == 0) {
+		    if (S_ISDIR (st.st_mode)) {
+			cairo_perf_trace_dir (&perf, target, perf.names[n]);
+		    } else
+			cairo_perf_trace (&perf, target, perf.names[n]);
+		}
 	    }
 	} else {
-	    DIR *dir;
-	    struct dirent *de;
-	    int num_traces = 0;
-
-	    dir = opendir (trace_dir);
-	    if (dir == NULL) {
-		warn_no_traces ("Failed to open directory", trace_dir);
-		return 1;
-	    }
-
-	    while ((de = readdir (dir)) != NULL) {
-		char *trace;
-		const char *dot;
-
-		dot = strrchr (de->d_name, '.');
-		if (dot == NULL)
-		    continue;
-		if (strcmp (dot, ".trace"))
-		    continue;
-
-		num_traces++;
-		if (! cairo_perf_can_run (&perf, de->d_name))
-		    continue;
-
-		xasprintf (&trace, "%s/%s", trace_dir, de->d_name);
-		cairo_perf_trace (&perf, target, trace);
-		free (trace);
-
-	    }
-	    closedir (dir);
-
-	    if (num_traces == 0) {
+	    if (cairo_perf_trace_dir (&perf, target, trace_dir) == 0) {
 		warn_no_traces ("Found no traces in", trace_dir);
 		return 1;
 	    }
