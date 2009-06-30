@@ -398,9 +398,7 @@ REFERENCE_IMAGES = \
 	filter-nearest-offset.ref.png \
 	filter-nearest-offset.svg11.ref.png \
 	filter-nearest-offset.svg12.ref.png \
-	filter-nearest-transformed.pdf.argb32.ref.png \
 	filter-nearest-transformed.pdf.ref.png \
-	filter-nearest-transformed.pdf.rgb24.ref.png \
 	filter-nearest-transformed.ref.png \
 	filter-nearest-transformed.svg11.ref.png \
 	filter-nearest-transformed.svg12.ref.png \
