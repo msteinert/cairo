@@ -67,7 +67,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (smask_stroke,
 	    "Test the support of \"soft\" masks with strokes",
-	    "smask, stroke", /* keywords */
+	    "XFAIL=pdf smask, stroke", /* keywords */
 	    NULL, /* requirements */
 	    60, 60,
 	    NULL, draw)

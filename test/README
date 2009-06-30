@@ -293,6 +293,17 @@ https://bugs.freedesktop.org/show_bug.cgi?id=14580
 --------------------------------------------------
 push-group
 
+spurious horizontal stripes in color gradients
+https://bugs.freedesktop.org/show_bug.cgi?id=10942
+--------------------------------------------------
+smask 
+smask-fill 
+smask-image-mask 
+smask-mask 
+smask-paint 
+smask-stroke 
+smask-text
+
 Ghostscript does not correctly render small miters
 http://bugs.ghostscript.com/show_bug.cgi?id=690098
 --------------------------------------------------
