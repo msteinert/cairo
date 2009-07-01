@@ -32,6 +32,10 @@ Options:
 	With this option performance changes are summarized
 	as HTML table.
 
+-t, --trace
+	Compare performance using trace replays instead of
+	microbenchmarks.
+
 Additional options can be passed the child cairo-perf process
 by separating them with a double hyphen (--). For example, to
 examine what the impact of the latest change is on the stroke
@@ -53,6 +57,7 @@ while true; do
     case $1 in
         -f|--force) force_cairo_perf="true";;
         -h|--html) html_output="true";;
+        -t|--trace) use_traces="true";;
         *) break;;
     esac
 
@@ -95,6 +100,7 @@ git_setup() {
 	CAIRO_DIR=`pwd`
     fi
     CAIRO_PERF_DIR=$CAIRO_DIR/.perf
+    export CAIRO_TRACE_DIR=$CAIRO_DIR/perf/cairo-traces
 }
 
 rev2sha() {
@@ -124,13 +130,15 @@ rev2perf() {
     sha=`rev2sha $rev`
     src_tree_sha=`rev2sha $rev:src`
     perf_tree_sha=`rev2sha HEAD:perf`
-    echo "$CAIRO_PERF_DIR/${sha}-${perf_tree_sha}-${src_tree_sha}.perf"
+    script_tree_sha=`rev2sha HEAD:util/cairo-script`
+    echo "$CAIRO_PERF_DIR/${sha}-${perf_tree_sha}-${script_tree_sha}-${src_tree_sha}.perf"
 }
 rev2perf_glob() {
     rev=$1
     src_tree_sha=`rev2sha $rev:src`
     perf_tree_sha=`rev2sha HEAD:perf`
-    echo "$CAIRO_PERF_DIR/*-${perf_tree_sha}-${src_tree_sha}.perf"
+    script_tree_sha=`rev2sha HEAD:util/cairo-script`
+    echo "$CAIRO_PERF_DIR/*-${perf_tree_sha}-${script_tree_sha}-${src_tree_sha}.perf"
 }
 
 build() {
@@ -146,24 +154,29 @@ build() {
     git checkout tmp-cairo-perf-diff
     git reset --hard $sha
 
+    for file in $boilerplate_files; do
+	rsync $CAIRO_DIR/$file boilerplate
+    done
+    for file in $perf_files; do
+	rsync $CAIRO_DIR/$file perf
+    done
+    for file in $script_files; do
+	rsync $CAIRO_DIR/$file util/cairo-script
+    done
+
     if [ -z "$MAKEFLAGS" ]; then
 	CPU_COUNT=`cpu_count`
         export MAKEFLAGS="-j`expr $CPU_COUNT + 1`"
     fi
 
     if [ ! -e Makefile ]; then
-	CFLAGS="-O2" ./autogen.sh $CAIRO_AUTOGEN_OPTIONS
+	./autogen.sh $CAIRO_AUTOGEN_OPTIONS
     fi
-    make CFLAGS="-O2" || (rm config.cache && make CFLAGS="-O2")
-    for file in $boilerplate_files; do
-	rsync $CAIRO_DIR/$file boilerplate
-    done
-    (cd boilerplate; make)
-    for file in $perf_files; do
-	rsync $CAIRO_DIR/$file perf
-    done
-    cd perf;
-    make cairo-perf
+    make || (rm config.cache && make)
+    (cd boilerplate && make)
+
+    cd perf
+    make cairo-perf cairo-perf-trace
 }
 
 # Usage: run_cairo_perf_if_not_cached <rev> <suffix>
@@ -190,6 +203,7 @@ run_cairo_perf_if_not_cached() {
     cd $CAIRO_DIR
     boilerplate_files=`git ls-tree --name-only HEAD boilerplate/*`
     perf_files=`git ls-tree --name-only HEAD perf/*`
+    script_files=`git ls-tree --name-only HEAD util/cairo-script/*`
     cd $CAIRO_PERF_DIR
 
     build $build_dir $sha || {
@@ -197,9 +211,16 @@ run_cairo_perf_if_not_cached() {
 	build $build_dir $sha || exit 1
     }
 
-    echo "Running \"cairo-perf $CAIRO_PERF_OPTIONS\" against $rev. Results will be cached in:"
+    if [ "$use_traces" = "true" ]; then
+	cmd="cairo-perf-trace"
+    else
+	cmd="cairo-perf"
+    fi
+    echo "Running \"$cmd $CAIRO_PERF_OPTIONS\" against $rev. Results will be cached in:"
     echo "$perf"
-    (./cairo-perf $CAIRO_PERF_OPTIONS || echo "*** Performance test crashed") >> $perf
+    pwd
+    (./$cmd $CAIRO_PERF_OPTIONS || echo "*** Performance test crashed") >> $perf
+
     cd $owd
 }
 
