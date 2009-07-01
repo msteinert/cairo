@@ -154,6 +154,15 @@ build() {
     git checkout tmp-cairo-perf-diff
     git reset --hard $sha
 
+    if [ -z "$MAKEFLAGS" ]; then
+	CPU_COUNT=`cpu_count`
+        export MAKEFLAGS="-j`expr $CPU_COUNT + 1`"
+    fi
+
+    if [ ! -e Makefile ]; then
+	./autogen.sh $CAIRO_AUTOGEN_OPTIONS
+    fi
+
     for file in $boilerplate_files; do
 	rsync $CAIRO_DIR/$file boilerplate
     done
@@ -164,16 +173,8 @@ build() {
 	rsync $CAIRO_DIR/$file util/cairo-script
     done
 
-    if [ -z "$MAKEFLAGS" ]; then
-	CPU_COUNT=`cpu_count`
-        export MAKEFLAGS="-j`expr $CPU_COUNT + 1`"
-    fi
-
-    if [ ! -e Makefile ]; then
-	./autogen.sh $CAIRO_AUTOGEN_OPTIONS
-    fi
     make || (rm config.cache && make)
-    (cd boilerplate && make)
+    (cd boilerplate && make libcairoboilerplate.la)
 
     cd perf
     make cairo-perf cairo-perf-trace
