@@ -78,6 +78,7 @@ const cairo_surface_t name = {					\
 }
 
 static DEFINE_NIL_SURFACE(CAIRO_STATUS_NO_MEMORY, _cairo_surface_nil);
+static DEFINE_NIL_SURFACE(CAIRO_STATUS_SURFACE_TYPE_MISMATCH, _cairo_surface_nil_surface_type_mismatch);
 static DEFINE_NIL_SURFACE(CAIRO_STATUS_INVALID_CONTENT, _cairo_surface_nil_invalid_content);
 static DEFINE_NIL_SURFACE(CAIRO_STATUS_INVALID_FORMAT, _cairo_surface_nil_invalid_format);
 static DEFINE_NIL_SURFACE(CAIRO_STATUS_INVALID_VISUAL, _cairo_surface_nil_invalid_visual);
@@ -3169,6 +3170,8 @@ _cairo_surface_create_in_error (cairo_status_t status)
     switch (status) {
     case CAIRO_STATUS_NO_MEMORY:
 	return (cairo_surface_t *) &_cairo_surface_nil;
+    case CAIRO_STATUS_SURFACE_TYPE_MISMATCH:
+	return (cairo_surface_t *) &_cairo_surface_nil_surface_type_mismatch;
     case CAIRO_STATUS_INVALID_CONTENT:
 	return (cairo_surface_t *) &_cairo_surface_nil_invalid_content;
     case CAIRO_STATUS_INVALID_FORMAT:
@@ -3200,7 +3203,6 @@ _cairo_surface_create_in_error (cairo_status_t status)
     case CAIRO_STATUS_INVALID_STRING:
     case CAIRO_STATUS_INVALID_PATH_DATA:
     case CAIRO_STATUS_SURFACE_FINISHED:
-    case CAIRO_STATUS_SURFACE_TYPE_MISMATCH:
     case CAIRO_STATUS_PATTERN_TYPE_MISMATCH:
     case CAIRO_STATUS_INVALID_DASH:
     case CAIRO_STATUS_INVALID_DSC_COMMENT:
