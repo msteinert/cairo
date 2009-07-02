@@ -40,6 +40,8 @@
 
 #define CHUNK_SIZE 32768
 
+#define OWN_STREAM 0x1
+
 csi_status_t
 csi_file_new (csi_t *ctx,
 	      csi_object_t *obj,
@@ -56,7 +58,44 @@ csi_file_new (csi_t *ctx,
 
     file->data = NULL;
     file->type = STDIO;
+    file->flags = OWN_STREAM;
     file->src = fopen (path, mode);
+    if (file->src == NULL) {
+	_csi_slab_free (ctx, file, sizeof (csi_file_t));
+	return _csi_error (CAIRO_STATUS_FILE_NOT_FOUND);
+    }
+
+    file->data = _csi_alloc (ctx, CHUNK_SIZE);
+    if (file->data == NULL) {
+	_csi_slab_free (ctx, file, sizeof (csi_file_t));
+	return _csi_error (CAIRO_STATUS_NO_MEMORY);
+    }
+    file->bp = file->data;
+    file->rem = 0;
+
+    obj->type = CSI_OBJECT_TYPE_FILE;
+    obj->datum.file = file;
+    return CAIRO_STATUS_SUCCESS;
+}
+
+csi_status_t
+csi_file_new_for_stream (csi_t *ctx,
+	                 csi_object_t *obj,
+			 FILE *stream)
+{
+    csi_file_t *file;
+
+    file = _csi_slab_alloc (ctx, sizeof (csi_file_t));
+    if (file == NULL)
+	return _csi_error (CAIRO_STATUS_NO_MEMORY);
+
+    file->base.type = CSI_OBJECT_TYPE_FILE;
+    file->base.ref = 1;
+
+    file->data = NULL;
+    file->type = STDIO;
+    file->flags = 0;
+    file->src = stream;
     if (file->src == NULL) {
 	_csi_slab_free (ctx, file, sizeof (csi_file_t));
 	return _csi_error (CAIRO_STATUS_FILE_NOT_FOUND);
@@ -727,7 +766,7 @@ csi_file_new_decrypt (csi_t *ctx, csi_object_t *src, int salt, int discard)
 csi_status_t
 _csi_file_execute (csi_t *ctx, csi_file_t *obj)
 {
-    return _csi_scan_file (ctx, &ctx->scanner, obj);
+    return _csi_scan_file (ctx, obj);
 }
 
 int
@@ -917,7 +956,8 @@ csi_file_close (csi_t *ctx, csi_file_t *file)
 
     switch (file->type) {
     case STDIO:
-	fclose (file->src);
+	if (file->flags & OWN_STREAM)
+	    fclose (file->src);
 	break;
     case BYTES:
 	if (file->src != file->data) {

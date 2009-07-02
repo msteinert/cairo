@@ -502,8 +502,10 @@ csi_string_new (csi_t *ctx,
 	ctx->free_string = NULL;
     }
 
-    memcpy (string->string, str, len);
-    string->string[len] = '\0';
+    if (str != NULL) {
+	memcpy (string->string, str, len);
+	string->string[len] = '\0';
+    }
     string->len = len;
 
     string->base.type = CSI_OBJECT_TYPE_STRING;
@@ -555,7 +557,7 @@ _csi_string_execute (csi_t *ctx, csi_string_t *string)
     if (_csi_unlikely (status))
 	return status;
 
-    status = _csi_scan_file (ctx, &ctx->scanner, obj.datum.file);
+    status = _csi_scan_file (ctx, obj.datum.file);
     csi_object_free (ctx, &obj);
 
     return status;

@@ -5440,7 +5440,7 @@ _defs[] = {
     { "arc", _arc },
     { "arc-negative", _arc_negative },
     { "arc-", _arc_negative },
-    //{ "arc-to", NULL },
+    { "arc-to", NULL },
     { "array", _array },
     { "astore", NULL },
     { "atan", NULL },

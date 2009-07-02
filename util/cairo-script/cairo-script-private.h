@@ -404,6 +404,7 @@ struct _csi_file {
 	PROCEDURE,
 	FILTER
     } type;
+    unsigned int flags;
     void *src;
     void *data;
     uint8_t *bp;
@@ -426,14 +427,9 @@ struct _csi_scanner {
     jmp_buf jmpbuf;
     int depth;
 
-    enum {
-	NONE,
-	TOKEN,
-	COMMENT,
-	STRING,
-	HEX,
-	BASE85
-    } state;
+    csi_status_t (*push) (csi_t *ctx, csi_object_t *obj);
+    csi_status_t (*execute) (csi_t *ctx, csi_object_t *obj);
+    void *closure;
 
     csi_buffer_t buffer;
     csi_stack_t procedure_stack;
@@ -478,6 +474,8 @@ struct _cairo_script_interpreter {
     csi_dictionary_t *free_dictionary;
     csi_string_t *free_string;
 
+    csi_operator_t opcode[256];
+
     /* caches of live data */
     csi_list_t *_images;
     csi_list_t *_faces;
@@ -504,6 +502,11 @@ csi_private csi_status_t
 csi_file_new (csi_t *ctx,
 	      csi_object_t *obj,
 	      const char *path, const char *mode);
+
+csi_private csi_status_t
+csi_file_new_for_stream (csi_t *ctx,
+	                 csi_object_t *obj,
+			 FILE *stream);
 
 csi_private csi_status_t
 csi_file_new_for_bytes (csi_t *ctx,
@@ -803,7 +806,13 @@ csi_private csi_status_t
 _csi_scanner_init (csi_t *ctx, csi_scanner_t *scanner);
 
 csi_private csi_status_t
-_csi_scan_file (csi_t *ctx, csi_scanner_t *scan, csi_file_t *src);
+_csi_scan_file (csi_t *ctx, csi_file_t *src);
+
+csi_private csi_status_t
+_csi_translate_file (csi_t *ctx,
+	             csi_file_t *file,
+		     cairo_write_func_t write_func,
+		     void *closure);
 
 csi_private void
 _csi_scanner_fini (csi_t *ctx, csi_scanner_t *scanner);

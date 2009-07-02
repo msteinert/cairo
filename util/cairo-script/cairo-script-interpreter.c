@@ -40,6 +40,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <assert.h>
 
 #ifndef MAX
 #define MAX(a,b) (((a)>=(b))?(a):(b))
@@ -261,10 +262,11 @@ _init_dictionaries (csi_t *ctx)
     csi_status_t status;
     csi_stack_t *stack;
     csi_object_t obj;
-    csi_dictionary_t *dict;
+    csi_dictionary_t *dict, *opcodes;
     const csi_operator_def_t *odef;
     const csi_integer_constant_def_t *idef;
     const csi_real_constant_def_t *rdef;
+    unsigned n;
 
     stack = &ctx->dstack;
 
@@ -283,12 +285,37 @@ _init_dictionaries (csi_t *ctx)
 
     dict = obj.datum.dictionary;
 
+    status = csi_dictionary_new (ctx, &obj);
+    if (_csi_unlikely (status))
+	return status;
+
+    opcodes = obj.datum.dictionary;
+
+    n = 0;
+    csi_integer_new (&obj, n);
+    status = csi_dictionary_put (ctx, opcodes, 0, &obj);
+    if (_csi_unlikely (status))
+	return status;
+    ctx->opcode[n++] = NULL;
+
     /* fill systemdict with operators */
     for (odef = _csi_operators (); odef->name != NULL; odef++) {
 	status = _add_operator (ctx, dict, odef);
 	if (_csi_unlikely (status))
 	    return status;
+
+	if (! csi_dictionary_has (opcodes, (csi_name_t) odef->op)) {
+	    csi_integer_new (&obj, n);
+	    status = csi_dictionary_put (ctx,
+		                         opcodes, (csi_name_t) odef->op, &obj);
+	    if (_csi_unlikely (status))
+		return status;
+
+	    assert (n < sizeof (ctx->opcode) / sizeof (ctx->opcode[0]));
+	    ctx->opcode[n++] = odef->op;
+	}
     }
+    csi_dictionary_free (ctx, opcodes);
 
     /* add constants */
     for (idef = _csi_integer_constants (); idef->name != NULL; idef++) {
@@ -365,6 +392,8 @@ _csi_init (csi_t *ctx)
 {
     csi_status_t status;
 
+    memset (ctx, 0, sizeof (*ctx));
+
     ctx->status = CSI_STATUS_SUCCESS;
     ctx->ref_count = 1;
 
@@ -391,7 +420,7 @@ FAIL:
 }
 
 static void
-_csi_fini (csi_t *ctx)
+_csi_finish (csi_t *ctx)
 {
     _csi_stack_fini (ctx, &ctx->ostack);
     _csi_stack_fini (ctx, &ctx->dstack);
@@ -494,7 +523,7 @@ cairo_script_interpreter_create (void)
 {
     csi_t *ctx;
 
-    ctx = calloc (1, sizeof (csi_t));
+    ctx = malloc (sizeof (csi_t));
     if (ctx == NULL)
 	return (csi_t *) &_csi_nil;
 
@@ -580,13 +609,30 @@ cairo_script_interpreter_finish (csi_t *ctx)
 
     status = ctx->status;
     if (! ctx->finished) {
-	_csi_fini (ctx);
+	_csi_finish (ctx);
 	ctx->finished = 1;
     } else if (status == CAIRO_STATUS_SUCCESS) {
 	status = ctx->status = CSI_STATUS_INTERPRETER_FINISHED;
     }
 
     return status;
+}
+
+static void
+_csi_fini (csi_t *ctx)
+{
+    if (! ctx->finished)
+	_csi_finish (ctx);
+
+    if (ctx->free_array != NULL)
+	csi_array_free (ctx, ctx->free_array);
+    if (ctx->free_dictionary != NULL)
+	csi_dictionary_free (ctx, ctx->free_dictionary);
+    if (ctx->free_string != NULL)
+	csi_string_free (ctx, ctx->free_string);
+
+    _csi_slab_fini (ctx);
+    _csi_perm_fini (ctx);
 }
 
 cairo_status_t
@@ -598,20 +644,33 @@ cairo_script_interpreter_destroy (csi_t *ctx)
     if (--ctx->ref_count)
 	return status;
 
-    if (! ctx->finished)
-	_csi_fini (ctx);
-
-    if (ctx->free_array != NULL)
-	csi_array_free (ctx, ctx->free_array);
-    if (ctx->free_dictionary != NULL)
-	csi_dictionary_free (ctx, ctx->free_dictionary);
-    if (ctx->free_string != NULL)
-	csi_string_free (ctx, ctx->free_string);
-
-    _csi_slab_fini (ctx);
-    _csi_perm_fini (ctx);
+    _csi_fini (ctx);
     free (ctx);
 
     return status;
 }
 slim_hidden_def (cairo_script_interpreter_destroy);
+
+cairo_status_t
+cairo_script_interpreter_translate_stream (FILE *stream,
+	                                   cairo_write_func_t write_func,
+					   void *closure)
+{
+    csi_t ctx;
+    csi_object_t src;
+    csi_status_t status;
+
+    _csi_init (&ctx);
+
+    status = csi_file_new_for_stream (&ctx, &src, stream);
+    if (status)
+	goto BAIL;
+
+    status = _csi_translate_file (&ctx, src.datum.file, write_func, closure);
+
+BAIL:
+    csi_object_free (&ctx, &src);
+    _csi_fini (&ctx);
+
+    return status;
+}
