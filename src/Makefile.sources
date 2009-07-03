@@ -65,6 +65,7 @@ cairo_private = \
 	cairo-gstate-private.h \
 	cairo-hash-private.h \
 	cairo-image-info-private.h \
+	cairo-list-private.h \
 	cairo-malloc-private.h \
 	cairo-meta-surface-private.h \
 	cairo-mutex-impl-private.h \
