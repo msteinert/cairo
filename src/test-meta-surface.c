@@ -347,6 +347,7 @@ _cairo_test_meta_surface_create (cairo_content_t	content,
     surface->height = height;
 
     surface->image_reflects_meta = FALSE;
+    surface->image = NULL;
 
     return &surface->base;
 
