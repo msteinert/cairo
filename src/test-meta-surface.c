@@ -63,49 +63,17 @@ typedef struct _test_meta_surface {
     cairo_bool_t image_reflects_meta;
 } test_meta_surface_t;
 
-static const cairo_surface_backend_t test_meta_surface_backend;
-
 static cairo_int_status_t
 _test_meta_surface_show_page (void *abstract_surface);
 
-cairo_surface_t *
-_cairo_test_meta_surface_create (cairo_content_t	content,
-			   int		 	width,
-			   int		 	height)
+slim_hidden_proto (_cairo_test_meta_surface_create);
+
+static cairo_surface_t *
+_test_meta_surface_create_similar (void *abstract_surface,
+				   cairo_content_t content,
+				   int width, int height)
 {
-    test_meta_surface_t *surface;
-    cairo_status_t status;
-
-    surface = malloc (sizeof (test_meta_surface_t));
-    if (unlikely (surface == NULL)) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto FAIL;
-    }
-
-    _cairo_surface_init (&surface->base, &test_meta_surface_backend,
-			 content);
-
-    surface->meta = _cairo_meta_surface_create (content, width, height);
-    status = cairo_surface_status (surface->meta);
-    if (status)
-	goto FAIL_CLEANUP_SURFACE;
-
-    surface->image = _cairo_image_surface_create_with_content (content,
-							       width, height);
-    status = cairo_surface_status (surface->image);
-    if (status)
-	goto FAIL_CLEANUP_META;
-
-    surface->image_reflects_meta = FALSE;
-
-    return &surface->base;
-
-  FAIL_CLEANUP_META:
-    cairo_surface_destroy (surface->meta);
-  FAIL_CLEANUP_SURFACE:
-    free (surface);
-  FAIL:
-    return _cairo_surface_create_in_error (status);
+    return _cairo_test_meta_surface_create (content, width, height);
 }
 
 static cairo_status_t
@@ -303,7 +271,7 @@ _test_meta_surface_snapshot (void *abstract_other)
 
 static const cairo_surface_backend_t test_meta_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
-    NULL, /* create_similar */
+    _test_meta_surface_create_similar,
     _test_meta_surface_finish,
     _test_meta_surface_acquire_source_image,
     _test_meta_surface_release_source_image,
@@ -340,3 +308,56 @@ static const cairo_surface_backend_t test_meta_surface_backend = {
     _test_meta_surface_has_show_text_glyphs,
     _test_meta_surface_show_text_glyphs
 };
+
+cairo_surface_t *
+_cairo_test_meta_surface_create (cairo_content_t	content,
+			         int			width,
+			         int			height)
+{
+    test_meta_surface_t *surface;
+    cairo_status_t status;
+
+    surface = malloc (sizeof (test_meta_surface_t));
+    if (unlikely (surface == NULL)) {
+	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	goto FAIL;
+    }
+
+    _cairo_surface_init (&surface->base, &test_meta_surface_backend,
+			 content);
+
+    surface->meta = _cairo_meta_surface_create (content, width, height);
+    status = cairo_surface_status (surface->meta);
+    if (status)
+	goto FAIL_CLEANUP_SURFACE;
+
+    surface->image = _cairo_image_surface_create_with_content (content,
+							       width, height);
+    status = cairo_surface_status (surface->image);
+    if (status)
+	goto FAIL_CLEANUP_META;
+
+    surface->image_reflects_meta = FALSE;
+
+    return &surface->base;
+
+  FAIL_CLEANUP_META:
+    cairo_surface_destroy (surface->meta);
+  FAIL_CLEANUP_SURFACE:
+    free (surface);
+  FAIL:
+    return _cairo_surface_create_in_error (status);
+}
+slim_hidden_def (_cairo_test_meta_surface_create);
+
+cairo_status_t
+_cairo_test_meta_surface_replay (cairo_surface_t *abstract_surface,
+				 cairo_surface_t *target)
+{
+    test_meta_surface_t *surface = (test_meta_surface_t *) abstract_surface;
+
+    if (abstract_surface->backend != &test_meta_surface_backend)
+	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+
+    return _cairo_meta_surface_replay (surface->meta, target);
+}

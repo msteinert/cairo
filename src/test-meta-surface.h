@@ -45,6 +45,10 @@ _cairo_test_meta_surface_create (cairo_content_t	content,
 			   int			width,
 			   int			height);
 
+cairo_status_t
+_cairo_test_meta_surface_replay (cairo_surface_t *abstract_surface,
+				 cairo_surface_t *target);
+
 CAIRO_END_DECLS
 
 #endif /* TEST_META_SURFACE_H */

@@ -110,6 +110,9 @@ cairo_test_trace_LDADD =		\
 	$(top_builddir)/src/libcairo.la 			\
 	$(CAIRO_LDADD) \
 	$(SHM_LIBS)
+if HAVE_PTHREAD
+cairo_test_trace_LDADD += -lpthread
+endif
 cairo_test_trace_DEPENDENCIES = \
 	$(top_builddir)/test/pdiff/libpdiff.la 			\
 	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
