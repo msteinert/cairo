@@ -856,7 +856,7 @@ _cairo_svg_surface_create_similar (void			*abstract_src,
 				   int			 width,
 				   int			 height)
 {
-    return _cairo_meta_surface_create (content, width, height);
+    return cairo_meta_surface_create (content, width, height);
 }
 
 static cairo_status_t
@@ -1217,7 +1217,7 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
 					   document->owner->x_fallback_resolution,
 					   document->owner->y_fallback_resolution);
 
-    status = _cairo_meta_surface_replay (&meta->base, paginated_surface);
+    status = cairo_meta_surface_replay (&meta->base, paginated_surface);
     if (unlikely (status)) {
 	cairo_surface_destroy (&meta->base);
 	cairo_surface_destroy (paginated_surface);
@@ -1334,8 +1334,8 @@ _cairo_svg_surface_emit_composite_meta_pattern (cairo_output_stream_t	*output,
 				     "patternUnits=\"userSpaceOnUse\" "
 				     "width=\"%d\" height=\"%d\"",
 				     pattern_id,
-				     meta_surface->width_pixels,
-				     meta_surface->height_pixels);
+				     (int) ceil (meta_surface->width_pixels),
+				     (int) ceil (meta_surface->height_pixels));
 	_cairo_svg_surface_emit_transform (output, " patternTransform", &p2u, parent_matrix);
 	_cairo_output_stream_printf (output, ">\n");
     }

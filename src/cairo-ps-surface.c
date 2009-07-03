@@ -1294,7 +1294,7 @@ _cairo_ps_surface_create_similar (void			*abstract_surface,
 				  int			 width,
 				  int			 height)
 {
-    return _cairo_meta_surface_create (content, width, height);
+    return cairo_meta_surface_create (content, width, height);
 }
 
 static cairo_status_t

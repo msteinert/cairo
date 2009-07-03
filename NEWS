@@ -1,3 +1,30 @@
+Snapshot 1.9.4 (2009-07-xx)
+===========================
+API additions:
+
+  cairo_meta_surface_create()
+  cairo_meta_surface_ink_extents()
+  cairo_meta_surface_replay()
+
+    Finally exporting the internal meta-surface so that applications
+    have a method to record and replay a sequence of drawing commands.
+
+New utilities:
+
+  cairo-test-trace
+
+    A companion to cairo-perf-trace, this utility replays a trace against
+    multiple targets in parallel and looks for differences in the output,
+    and then records any drawing commands that cause a failure.
+    Future plans:
+      Further minimisation of the fail trace using "delta debugging".
+      More control over test/reference targets.
+
+New experimental backends:
+
+   QT
+
+
 Snapshot 1.9.2 (2009-06-12)
 ===========================
 API additions:

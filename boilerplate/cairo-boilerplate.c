@@ -526,7 +526,7 @@ static const cairo_boilerplate_target_t targets[] =
     },
     {
 	"win32-printing", "win32", ".ps", NULL,
-	CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
+	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
 	_cairo_boilerplate_win32_printing_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_win32_printing_get_image_surface,
@@ -613,7 +613,7 @@ static const cairo_boilerplate_target_t targets[] =
     },
     {
 	"ps2", "ps", ".ps", NULL,
-	CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
+	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
 	_cairo_boilerplate_ps2_create_surface,
 	_cairo_boilerplate_ps_force_fallbacks,
 	_cairo_boilerplate_ps_finish_surface,
@@ -636,7 +636,7 @@ static const cairo_boilerplate_target_t targets[] =
     },
     {
 	"ps3", "ps", ".ps", NULL,
-	CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
+	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
 	_cairo_boilerplate_ps3_create_surface,
 	_cairo_boilerplate_ps_force_fallbacks,
 	_cairo_boilerplate_ps_finish_surface,
@@ -661,7 +661,7 @@ static const cairo_boilerplate_target_t targets[] =
     },
     {
 	"pdf", "pdf", ".pdf", NULL,
-	CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
+	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
 	_cairo_boilerplate_pdf_create_surface,
 	_cairo_boilerplate_pdf_force_fallbacks,
 	_cairo_boilerplate_pdf_finish_surface,
@@ -703,7 +703,7 @@ static const cairo_boilerplate_target_t targets[] =
     },
     {
 	"svg11", "svg", NULL, NULL,
-	CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 1,
+	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 1,
 	_cairo_boilerplate_svg11_create_surface,
 	_cairo_boilerplate_svg_force_fallbacks,
 	_cairo_boilerplate_svg_finish_surface,
@@ -725,7 +725,7 @@ static const cairo_boilerplate_target_t targets[] =
     },
     {
 	"svg12", "svg", NULL, NULL,
-	CAIRO_INTERNAL_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 1,
+	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 1,
 	_cairo_boilerplate_svg12_create_surface,
 	_cairo_boilerplate_svg_force_fallbacks,
 	_cairo_boilerplate_svg_finish_surface,

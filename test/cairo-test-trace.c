@@ -64,9 +64,6 @@
 #include <cairo-script.h>
 #endif
 
-/* XXX give me a real meta surface! */
-#include <test-meta-surface.h>
-
 /* For basename */
 #ifdef HAVE_LIBGEN_H
 #include <libgen.h>
@@ -603,9 +600,6 @@ cleanup_recorder (void *arg)
     cairo_surface_finish (thread->surface);
     cairo_surface_destroy (thread->surface);
 
-    if (thread->target->cleanup)
-	thread->target->cleanup (thread->closure);
-
     close (thread->sk);
     free (thread);
 }
@@ -628,9 +622,7 @@ record (void *arg)
  * 2. Runs in the same process, but separate thread.
  */
 static pid_t
-spawn_recorder (const char *socket_path,
-		const cairo_boilerplate_target_t *target,
-		const char *trace)
+spawn_recorder (const char *socket_path, const char *trace)
 {
     test_runner_thread_t *thread;
     pthread_t id;
@@ -653,18 +645,13 @@ spawn_recorder (const char *socket_path,
     }
 
     thread->base = NULL;
-    thread->target = target;
+    thread->target = NULL;
     thread->contexts = NULL;
     thread->context_id = 0;
     thread->trace = trace;
 
-    thread->surface = target->create_surface (NULL,
-					      target->content,
-					      1, 1,
-					      1, 1,
-					      CAIRO_BOILERPLATE_MODE_TEST,
-					      0,
-					      &thread->closure);
+    thread->surface = cairo_meta_surface_create (CAIRO_CONTENT_COLOR_ALPHA,
+                                                 0, 0);
     if (thread->surface == NULL) {
 	cleanup_recorder (thread);
 	return -1;
@@ -853,7 +840,7 @@ static void
 write_images (const char *trace, struct slave *slave, int num_slaves)
 {
     while (num_slaves--) {
-	if (slave->image != NULL) {
+	if (slave->image != NULL && ! slave->is_meta) {
 	    char *filename;
 
 	    xasprintf (&filename, "%s-%s-fail.png",
@@ -887,7 +874,7 @@ write_trace (const char *trace, struct slave *slave)
 					  slave->height);
     free (filename);
 
-    status = _cairo_test_meta_surface_replay (slave->image, script);
+    status = cairo_meta_surface_replay (slave->image, script);
     cairo_surface_destroy (script);
 #endif
 }
@@ -1179,6 +1166,7 @@ target_is_measurable (const cairo_boilerplate_target_t *target)
     case CAIRO_SURFACE_TYPE_SCRIPT:
     case CAIRO_SURFACE_TYPE_SVG:
     case CAIRO_SURFACE_TYPE_WIN32_PRINTING:
+    case CAIRO_SURFACE_TYPE_META:
     default:
 	return FALSE;
     }
@@ -1243,8 +1231,9 @@ _test_trace (test_runner_t *test,
 	     struct error_info *error)
 {
     const char *shm_path = SHM_PATH_XXX;
-    const cairo_boilerplate_target_t *target, *image, *meta;
+    const cairo_boilerplate_target_t *target, *image;
     struct slave *slaves, *s;
+    pid_t slave;
     char socket_dir[] = "/tmp/cairo-test-trace.XXXXXX";
     char *socket_path;
     int sk, fd;
@@ -1280,29 +1269,22 @@ _test_trace (test_runner_t *test,
 
 #if HAVE_PTHREAD_H
     /* set-up a meta-surface to reconstruct errors */
-    meta = cairo_boilerplate_get_target_by_name ("test-meta",
-						 CAIRO_CONTENT_COLOR_ALPHA);
-    if (meta != NULL) {
-	pid_t slave;
-
-	slave = spawn_recorder (socket_path, meta, trace);
-	if (slave < 0) {
-	    fprintf (stderr, "Unable to create meta surface\n");
-	    goto cleanup_sk;
-	}
-
-	s->pid = slave;
-	s->is_meta = TRUE;
-	s->target = meta;
-	s->fd = -1;
-	s->reference = NULL;
-	s++;
+    slave = spawn_recorder (socket_path, trace);
+    if (slave < 0) {
+        fprintf (stderr, "Unable to create meta surface\n");
+        goto cleanup_sk;
     }
+
+    s->pid = slave;
+    s->is_meta = TRUE;
+    s->target = NULL;
+    s->fd = -1;
+    s->reference = NULL;
+    s++;
 #endif
 
     /* spawn slave processes to run the trace */
     for (i = 0; i < test->num_targets; i++) {
-	pid_t slave;
 	const cairo_boilerplate_target_t *reference;
 	struct slave *master;
 

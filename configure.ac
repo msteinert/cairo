@@ -472,6 +472,10 @@ CAIRO_ENABLE_SURFACE_BACKEND(image, image, always, [
 
 dnl ===========================================================================
 
+CAIRO_ENABLE_SURFACE_BACKEND(meta, meta, always)
+
+dnl ===========================================================================
+
 CAIRO_ENABLE_FONT_BACKEND(user, user, always)
 
 dnl ===========================================================================

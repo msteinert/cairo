@@ -1890,6 +1890,7 @@ cairo_surface_status (cairo_surface_t *surface);
  * @CAIRO_SURFACE_TYPE_QUARTZ_IMAGE: The surface is of type quartz_image
  * @CAIRO_SURFACE_TYPE_SCRIPT: The surface is of type script, since 1.10
  * @CAIRO_SURFACE_TYPE_QT: The surface is of type Qt, since 1.10
+ * @CAIRO_SURFACE_TYPE_META: The surface is a meta-type, since 1.10
  *
  * #cairo_surface_type_t is used to describe the type of a given
  * surface. The surface types are also known as "backends" or "surface
@@ -1930,7 +1931,8 @@ typedef enum _cairo_surface_type {
     CAIRO_SURFACE_TYPE_WIN32_PRINTING,
     CAIRO_SURFACE_TYPE_QUARTZ_IMAGE,
     CAIRO_SURFACE_TYPE_SCRIPT,
-    CAIRO_SURFACE_TYPE_QT
+    CAIRO_SURFACE_TYPE_QT,
+    CAIRO_SURFACE_TYPE_META
 } cairo_surface_type_t;
 
 cairo_public cairo_surface_type_t
@@ -2107,6 +2109,24 @@ cairo_image_surface_create_from_png_stream (cairo_read_func_t	read_func,
 					    void		*closure);
 
 #endif
+
+/* Meta-surface functions */
+
+cairo_public cairo_surface_t *
+cairo_meta_surface_create (cairo_content_t	content,
+			   double		width_pixels,
+			   double		height_pixels);
+
+cairo_public void
+cairo_meta_surface_ink_extents (cairo_surface_t *surface,
+				double *x0,
+				double *y0,
+				double *width,
+				double *height);
+
+cairo_public cairo_status_t
+cairo_meta_surface_replay (cairo_surface_t *surface,
+			   cairo_surface_t *target);
 
 /* Pattern creation functions */
 

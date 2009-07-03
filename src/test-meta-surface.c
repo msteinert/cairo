@@ -136,7 +136,7 @@ _test_meta_surface_show_page (void *abstract_surface)
 	    return status;
     }
 
-    status = _cairo_meta_surface_replay (surface->meta, surface->image);
+    status = cairo_meta_surface_replay (surface->meta, surface->image);
     if (status)
 	return status;
 
@@ -338,7 +338,7 @@ _cairo_test_meta_surface_create (cairo_content_t	content,
     _cairo_surface_init (&surface->base, &test_meta_surface_backend,
 			 content);
 
-    surface->meta = _cairo_meta_surface_create (content, width, height);
+    surface->meta = cairo_meta_surface_create (content, width, height);
     status = cairo_surface_status (surface->meta);
     if (status)
 	goto FAIL;
@@ -356,15 +356,3 @@ _cairo_test_meta_surface_create (cairo_content_t	content,
     return _cairo_surface_create_in_error (status);
 }
 slim_hidden_def (_cairo_test_meta_surface_create);
-
-cairo_status_t
-_cairo_test_meta_surface_replay (cairo_surface_t *abstract_surface,
-				 cairo_surface_t *target)
-{
-    test_meta_surface_t *surface = (test_meta_surface_t *) abstract_surface;
-
-    if (abstract_surface->backend != &test_meta_surface_backend)
-	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
-
-    return _cairo_meta_surface_replay (surface->meta, target);
-}

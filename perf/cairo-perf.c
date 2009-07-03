@@ -68,7 +68,7 @@ const cairo_perf_case_t perf_cases[];
 static cairo_bool_t
 target_is_measurable (const cairo_boilerplate_target_t *target)
 {
-    switch (target->expected_type) {
+    switch ((int) target->expected_type) {
     case CAIRO_SURFACE_TYPE_IMAGE:
 	if (strcmp (target->name, "pdf") == 0 ||
 	    strcmp (target->name, "ps") == 0)
@@ -102,9 +102,7 @@ target_is_measurable (const cairo_boilerplate_target_t *target)
     case CAIRO_SURFACE_TYPE_QT:
 #endif
 	return TRUE;
-    case CAIRO_SURFACE_TYPE_PDF:
-    case CAIRO_SURFACE_TYPE_PS:
-    case CAIRO_SURFACE_TYPE_SVG:
+
     default:
 	return FALSE;
     }

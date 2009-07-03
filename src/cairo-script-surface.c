@@ -840,7 +840,7 @@ _emit_meta_surface_pattern (cairo_script_surface_t *surface,
     if (unlikely (status))
 	return status;
 
-    status = _cairo_meta_surface_replay (source, analysis_surface);
+    status = cairo_meta_surface_replay (source, analysis_surface);
     _cairo_analysis_surface_get_bounding_box (analysis_surface, &bbox);
     cairo_surface_destroy (analysis_surface);
     if (unlikely (status))
@@ -862,7 +862,7 @@ _emit_meta_surface_pattern (cairo_script_surface_t *surface,
 				 _content_to_string (source->content));
     target_push (similar);
 
-    status = _cairo_meta_surface_replay (source, &similar->base);
+    status = cairo_meta_surface_replay (source, &similar->base);
     if (unlikely (status)) {
 	cairo_surface_destroy (&similar->base);
 	return status;
@@ -1145,7 +1145,7 @@ _emit_surface_pattern (cairo_script_surface_t *surface,
     source = surface_pattern->surface;
 
     switch ((int) source->type) {
-    case CAIRO_INTERNAL_SURFACE_TYPE_META:
+    case CAIRO_SURFACE_TYPE_META:
 	return _emit_meta_surface_pattern (surface, pattern);
     case CAIRO_SURFACE_TYPE_SCRIPT:
 	return _emit_script_surface_pattern (surface, pattern);
@@ -2216,8 +2216,8 @@ _emit_scaled_glyph_vector (cairo_script_surface_t *surface,
 
     old_cr = surface->cr;
     _cairo_script_implicit_context_init (&surface->cr);
-    status = _cairo_meta_surface_replay (scaled_glyph->meta_surface,
-					 &surface->base);
+    status = cairo_meta_surface_replay (scaled_glyph->meta_surface,
+					&surface->base);
     surface->cr = old_cr;
 
     _cairo_output_stream_puts (surface->ctx->stream, "} set set\n");
