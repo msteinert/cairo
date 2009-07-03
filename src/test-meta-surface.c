@@ -56,6 +56,7 @@ typedef struct _test_meta_surface {
 
     /* This is a cairo_meta_surface to record all operations. */
     cairo_surface_t *meta;
+    int width, height;
 
     /* And this is a cairo_image_surface to hold the final result. */
     cairo_surface_t *image;
@@ -108,7 +109,7 @@ _test_meta_surface_acquire_source_image (void		  *abstract_surface,
 static void
 _test_meta_surface_release_source_image (void			*abstract_surface,
 					 cairo_image_surface_t	*image,
-					 void		  	*image_extra)
+					 void			*image_extra)
 {
     test_meta_surface_t *surface = abstract_surface;
 
@@ -124,6 +125,16 @@ _test_meta_surface_show_page (void *abstract_surface)
 
     if (surface->image_reflects_meta)
 	return CAIRO_STATUS_SUCCESS;
+
+    if (surface->image == NULL) {
+	surface->image =
+	    _cairo_image_surface_create_with_content (surface->base.content,
+						      surface->width,
+						      surface->height);
+	status = surface->image->status;
+	if (status)
+	    return status;
+    }
 
     status = _cairo_meta_surface_replay (surface->meta, surface->image);
     if (status)
@@ -154,9 +165,12 @@ _test_meta_surface_get_extents (void			*abstract_surface,
 {
     test_meta_surface_t *surface = abstract_surface;
 
-    surface->image_reflects_meta = FALSE;
+    rectangle->x = 0;
+    rectangle->y = 0;
+    rectangle->width  = surface->width;
+    rectangle->height = surface->height;
 
-    return _cairo_surface_get_extents (surface->image, rectangle);
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_int_status_t
@@ -196,7 +210,7 @@ _test_meta_surface_stroke (void				*abstract_surface,
 			   cairo_matrix_t		*ctm_inverse,
 			   double			 tolerance,
 			   cairo_antialias_t		 antialias,
-			   cairo_rectangle_int_t 	*extents)
+			   cairo_rectangle_int_t	*extents)
 {
     test_meta_surface_t *surface = abstract_surface;
 
@@ -318,10 +332,8 @@ _cairo_test_meta_surface_create (cairo_content_t	content,
     cairo_status_t status;
 
     surface = malloc (sizeof (test_meta_surface_t));
-    if (unlikely (surface == NULL)) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	goto FAIL;
-    }
+    if (unlikely (surface == NULL))
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     _cairo_surface_init (&surface->base, &test_meta_surface_backend,
 			 content);
@@ -329,23 +341,17 @@ _cairo_test_meta_surface_create (cairo_content_t	content,
     surface->meta = _cairo_meta_surface_create (content, width, height);
     status = cairo_surface_status (surface->meta);
     if (status)
-	goto FAIL_CLEANUP_SURFACE;
+	goto FAIL;
 
-    surface->image = _cairo_image_surface_create_with_content (content,
-							       width, height);
-    status = cairo_surface_status (surface->image);
-    if (status)
-	goto FAIL_CLEANUP_META;
+    surface->width = width;
+    surface->height = height;
 
     surface->image_reflects_meta = FALSE;
 
     return &surface->base;
 
-  FAIL_CLEANUP_META:
-    cairo_surface_destroy (surface->meta);
-  FAIL_CLEANUP_SURFACE:
-    free (surface);
   FAIL:
+    free (surface);
     return _cairo_surface_create_in_error (status);
 }
 slim_hidden_def (_cairo_test_meta_surface_create);
