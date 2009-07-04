@@ -95,7 +95,7 @@
 #define DATA_SIZE (256 << 20)
 #define SHM_PATH_XXX "/shmem-cairo-trace"
 
-typedef struct _test_runner {
+typedef struct _test_trace {
     /* Options from command-line */
     cairo_bool_t list_only;
     char **names;
@@ -106,10 +106,10 @@ typedef struct _test_runner {
     /* Stuff used internally */
     const cairo_boilerplate_target_t **targets;
     int num_targets;
-} test_runner_t;
+} test_trace_t;
 
-typedef struct _test_runner_thread {
-    const cairo_boilerplate_target_t *target;
+typedef struct _test_runner {
+    const char *name;
     cairo_surface_t *surface;
     void *closure;
     uint8_t *base;
@@ -129,7 +129,7 @@ typedef struct _test_runner_thread {
     } *contexts;
 
     unsigned long context_id;
-} test_runner_thread_t;
+} test_runner_t;
 
 struct slave {
     pid_t pid;
@@ -163,9 +163,9 @@ struct surface_tag {
 static const cairo_user_data_key_t surface_tag;
 
 #if HAVE_PTHREAD_H
-#define thread_die(t) t->is_meta ? pthread_exit(NULL) : exit(1)
+#define tr_die(t) t->is_meta ? pthread_exit(NULL) : exit(1)
 #else
-#define thread_die(t) exit(1)
+#define tr_die(t) exit(1)
 #endif
 
 static cairo_bool_t
@@ -241,7 +241,7 @@ format_for_content (cairo_content_t content)
 }
 
 static void
-send_meta_surface (test_runner_thread_t *thread,
+send_meta_surface (test_runner_t *tr,
 		   int width, int height,
 		   struct context_closure *closure)
 {
@@ -263,15 +263,15 @@ send_meta_surface (test_runner_thread_t *thread,
 		closure->start_line,
 		closure->end_line);
     }
-    writen (thread->sk, &rq, sizeof (rq));
-    readn (thread->sk, &offset, sizeof (offset));
+    writen (tr->sk, &rq, sizeof (rq));
+    readn (tr->sk, &offset, sizeof (offset));
 
     /* signal completion */
-    writen (thread->sk, &closure->id, sizeof (closure->id));
+    writen (tr->sk, &closure->id, sizeof (closure->id));
 
     /* wait for image check */
     serial = 0;
-    readn (thread->sk, &serial, sizeof (serial));
+    readn (tr->sk, &serial, sizeof (serial));
     if (DEBUG > 1) {
 	printf ("send-meta-surface: serial: %lu\n", serial);
     }
@@ -283,7 +283,7 @@ send_meta_surface (test_runner_thread_t *thread,
 }
 
 static void *
-request_image (test_runner_thread_t *thread,
+request_image (test_runner_t *tr,
 	       struct context_closure *closure,
 	       cairo_format_t format,
 	       int width, int height, int stride)
@@ -298,16 +298,16 @@ request_image (test_runner_thread_t *thread,
 
     assert (format != (cairo_format_t) -1);
 
-    writen (thread->sk, &rq, sizeof (rq));
-    readn (thread->sk, &offset, sizeof (offset));
+    writen (tr->sk, &rq, sizeof (rq));
+    readn (tr->sk, &offset, sizeof (offset));
     if (offset == (unsigned long) -1)
 	return NULL;
 
-    return thread->base + offset;
+    return tr->base + offset;
 }
 
 static void
-send_surface (test_runner_thread_t *thread,
+send_surface (test_runner_t *tr,
 	      struct context_closure *closure)
 {
     cairo_surface_t *source = closure->surface;
@@ -319,7 +319,7 @@ send_surface (test_runner_thread_t *thread,
     unsigned long serial;
 
     if (DEBUG > 1) {
-	printf ("send-surface: '%s'\n", thread->target->name);
+	printf ("send-surface: '%s'\n", tr->name);
     }
 
     if (cairo_surface_get_type (source) == CAIRO_SURFACE_TYPE_IMAGE) {
@@ -346,12 +346,12 @@ send_surface (test_runner_thread_t *thread,
 	    height = tag->height = y1 - y0;
 
 	    if (cairo_surface_set_user_data (source, &surface_tag, tag, free))
-		thread_die (thread);
+		tr_die (tr);
 	}
     }
 
-    if (thread->is_meta) {
-	send_meta_surface (thread, width, height, closure);
+    if (tr->is_meta) {
+	send_meta_surface (tr, width, height, closure);
 	return;
     }
 
@@ -360,9 +360,9 @@ send_surface (test_runner_thread_t *thread,
 
     stride = cairo_format_stride_for_width (format, width);
 
-    data = request_image (thread, closure, format, width, height, stride);
+    data = request_image (tr, closure, format, width, height, stride);
     if (data == NULL)
-	thread_die (thread);
+	tr_die (tr);
 
     image = cairo_image_surface_create_for_data (data,
 						 format,
@@ -377,13 +377,13 @@ send_surface (test_runner_thread_t *thread,
     cairo_destroy (cr);
 
     /* signal completion */
-    writen (thread->sk, &closure->id, sizeof (closure->id));
+    writen (tr->sk, &closure->id, sizeof (closure->id));
 
     /* wait for image check */
     serial = 0;
-    readn (thread->sk, &serial, sizeof (serial));
+    readn (tr->sk, &serial, sizeof (serial));
     if (serial != closure->id)
-	thread_die (thread);
+	tr_die (tr);
 }
 
 static cairo_surface_t *
@@ -391,10 +391,10 @@ _surface_create (void *closure,
 		 cairo_content_t content,
 		 double width, double height)
 {
-    test_runner_thread_t *thread = closure;
+    test_runner_t *tr = closure;
     cairo_surface_t *surface;
 
-    surface = cairo_surface_create_similar (thread->surface,
+    surface = cairo_surface_create_similar (tr->surface,
 					    content, width, height);
     if (cairo_surface_get_type (surface) != CAIRO_SURFACE_TYPE_IMAGE) {
 	struct surface_tag *tag;
@@ -403,7 +403,7 @@ _surface_create (void *closure,
 	tag->width = width;
 	tag->height = height;
 	if (cairo_surface_set_user_data (surface, &surface_tag, tag, free))
-	    thread_die (thread);
+	    tr_die (tr);
     }
 
     return surface;
@@ -412,19 +412,19 @@ _surface_create (void *closure,
 static cairo_t *
 _context_create (void *closure, cairo_surface_t *surface)
 {
-    test_runner_thread_t *thread = closure;
+    test_runner_t *tr = closure;
     struct context_closure *l;
 
     l = xmalloc (sizeof (*l));
-    l->next = thread->contexts;
-    l->start_line = cairo_script_interpreter_get_line_number (thread->csi);
+    l->next = tr->contexts;
+    l->start_line = cairo_script_interpreter_get_line_number (tr->csi);
     l->end_line = l->start_line;
     l->context = cairo_create (surface);
     l->surface = cairo_surface_reference (surface);
-    l->id = ++thread->context_id;
+    l->id = ++tr->context_id;
     if (l->id == 0)
-	l->id = ++thread->context_id;
-    thread->contexts = l;
+	l->id = ++tr->context_id;
+    tr->contexts = l;
 
     return l->context;
 }
@@ -432,21 +432,21 @@ _context_create (void *closure, cairo_surface_t *surface)
 static void
 _context_destroy (void *closure, void *ptr)
 {
-    test_runner_thread_t *thread = closure;
-    struct context_closure *l, **prev = &thread->contexts;
+    test_runner_t *tr = closure;
+    struct context_closure *l, **prev = &tr->contexts;
 
     while ((l = *prev) != NULL) {
 	if (l->context == ptr) {
 	    l->end_line =
-		cairo_script_interpreter_get_line_number (thread->csi);
+		cairo_script_interpreter_get_line_number (tr->csi);
 	    if (cairo_surface_status (l->surface) == CAIRO_STATUS_SUCCESS) {
-		send_surface (thread, l);
+		send_surface (tr, l);
             } else {
 		fprintf (stderr, "%s: error during replay, line %lu: %s!\n",
-			 thread->target->name,
+			 tr->name,
 			 l->end_line,
 			 cairo_status_to_string (cairo_surface_status (l->surface)));
-		thread_die (thread);
+		tr_die (tr);
 	    }
 
             cairo_surface_destroy (l->surface);
@@ -459,29 +459,29 @@ _context_destroy (void *closure, void *ptr)
 }
 
 static void
-execute (test_runner_thread_t    *thread)
+execute (test_runner_t *tr)
 {
     const cairo_script_interpreter_hooks_t hooks = {
-	.closure = thread,
+	.closure = tr,
 	.surface_create = _surface_create,
 	.context_create = _context_create,
 	.context_destroy = _context_destroy,
     };
     pid_t ack;
 
-    thread->csi = cairo_script_interpreter_create ();
-    cairo_script_interpreter_install_hooks (thread->csi, &hooks);
+    tr->csi = cairo_script_interpreter_create ();
+    cairo_script_interpreter_install_hooks (tr->csi, &hooks);
 
     ack = -1;
-    readn (thread->sk, &ack, sizeof (ack));
-    if (ack != thread->pid)
-	thread_die (thread);
+    readn (tr->sk, &ack, sizeof (ack));
+    if (ack != tr->pid)
+	tr_die (tr);
 
-    cairo_script_interpreter_run (thread->csi, thread->trace);
+    cairo_script_interpreter_run (tr->csi, tr->trace);
 
-    cairo_script_interpreter_finish (thread->csi);
-    if (cairo_script_interpreter_destroy (thread->csi))
-	thread_die (thread);
+    cairo_script_interpreter_finish (tr->csi);
+    if (cairo_script_interpreter_destroy (tr->csi))
+	tr_die (tr);
 }
 
 static int
@@ -532,7 +532,7 @@ spawn_target (const char *socket_path,
 	      const cairo_boilerplate_target_t *target,
 	      const char *trace)
 {
-    test_runner_thread_t thread;
+    test_runner_t tr;
     pid_t pid;
 
     if (DEBUG)
@@ -542,51 +542,51 @@ spawn_target (const char *socket_path,
     if (pid != 0)
 	return pid;
 
-    thread.is_meta = FALSE;
-    thread.pid = getpid ();
+    tr.is_meta = FALSE;
+    tr.pid = getpid ();
 
-    thread.sk = spawn_socket (socket_path, thread.pid);
-    if (thread.sk == -1) {
+    tr.sk = spawn_socket (socket_path, tr.pid);
+    if (tr.sk == -1) {
 	fprintf (stderr, "%s: Failed to open socket.\n",
 		 target->name);
 	exit (-1);
     }
 
-    thread.base = spawn_shm (shm_path);
-    if (thread.base == MAP_FAILED) {
+    tr.base = spawn_shm (shm_path);
+    if (tr.base == MAP_FAILED) {
 	fprintf (stderr, "%s: Failed to map shared memory segment.\n",
 		 target->name);
 	exit (-1);
     }
 
-    thread.target = target;
-    thread.contexts = NULL;
-    thread.context_id = 0;
-    thread.trace = trace;
+    tr.name = target->name;
+    tr.contexts = NULL;
+    tr.context_id = 0;
+    tr.trace = trace;
 
-    thread.surface = target->create_surface (NULL,
-					     target->content,
-					     1, 1,
-					     1, 1,
-					     CAIRO_BOILERPLATE_MODE_TEST,
-					     0,
-					     &thread.closure);
-    if (thread.surface == NULL) {
+    tr.surface = target->create_surface (NULL,
+					 target->content,
+					 1, 1,
+					 1, 1,
+					 CAIRO_BOILERPLATE_MODE_TEST,
+					 0,
+					 &tr.closure);
+    if (tr.surface == NULL) {
 	fprintf (stderr,
 		 "%s:  Failed to create target surface.\n",
 		 target->name);
 	exit (-1);
     }
 
-    execute (&thread);
+    execute (&tr);
 
-    cairo_surface_destroy (thread.surface);
+    cairo_surface_destroy (tr.surface);
 
     if (target->cleanup)
-	target->cleanup (thread.closure);
+	target->cleanup (tr.closure);
 
-    close (thread.sk);
-    munmap (thread.base, DATA_SIZE);
+    close (tr.sk);
+    munmap (tr.base, DATA_SIZE);
 
     exit (0);
 }
@@ -595,22 +595,22 @@ spawn_target (const char *socket_path,
 static void
 cleanup_recorder (void *arg)
 {
-    test_runner_thread_t *thread = arg;
+    test_runner_t *tr = arg;
 
-    cairo_surface_finish (thread->surface);
-    cairo_surface_destroy (thread->surface);
+    cairo_surface_finish (tr->surface);
+    cairo_surface_destroy (tr->surface);
 
-    close (thread->sk);
-    free (thread);
+    close (tr->sk);
+    free (tr);
 }
 
 static void *
 record (void *arg)
 {
-    test_runner_thread_t *thread = arg;
+    test_runner_t *tr = arg;
 
-    pthread_cleanup_push (cleanup_recorder, thread);
-    execute (thread);
+    pthread_cleanup_push (cleanup_recorder, tr);
+    execute (tr);
     pthread_cleanup_pop (TRUE);
 
     return NULL;
@@ -624,7 +624,7 @@ record (void *arg)
 static pid_t
 spawn_recorder (const char *socket_path, const char *trace)
 {
-    test_runner_thread_t *thread;
+    test_runner_t *tr;
     pthread_t id;
     pthread_attr_t attr;
     pid_t pid = getpid ();
@@ -632,36 +632,36 @@ spawn_recorder (const char *socket_path, const char *trace)
     if (DEBUG)
 	printf ("Spawning recorder for %s\n", trace);
 
-    thread = malloc (sizeof (*thread));
-    if (thread == NULL)
+    tr = malloc (sizeof (*tr));
+    if (tr == NULL)
 	return -1;
 
-    thread->is_meta = TRUE;
-    thread->pid = pid;
-    thread->sk = spawn_socket (socket_path, thread->pid);
-    if (thread->sk == -1) {
-	free (thread);
+    tr->is_meta = TRUE;
+    tr->pid = pid;
+    tr->sk = spawn_socket (socket_path, tr->pid);
+    if (tr->sk == -1) {
+	free (tr);
 	return -1;
     }
 
-    thread->base = NULL;
-    thread->target = NULL;
-    thread->contexts = NULL;
-    thread->context_id = 0;
-    thread->trace = trace;
+    tr->base = NULL;
+    tr->name = NULL;
+    tr->contexts = NULL;
+    tr->context_id = 0;
+    tr->trace = trace;
 
-    thread->surface = cairo_meta_surface_create (CAIRO_CONTENT_COLOR_ALPHA,
+    tr->surface = cairo_meta_surface_create (CAIRO_CONTENT_COLOR_ALPHA,
                                                  0, 0);
-    if (thread->surface == NULL) {
-	cleanup_recorder (thread);
+    if (tr->surface == NULL) {
+	cleanup_recorder (tr);
 	return -1;
     }
 
     pthread_attr_init (&attr);
     pthread_attr_setdetachstate (&attr, TRUE);
-    if (pthread_create (&id, &attr, record, thread) < 0) {
+    if (pthread_create (&id, &attr, record, tr) < 0) {
 	pthread_attr_destroy (&attr);
-	cleanup_recorder (thread);
+	cleanup_recorder (tr);
 	return -1;
     }
     pthread_attr_destroy (&attr);
@@ -1225,7 +1225,7 @@ server_shm (const char *shm_path)
 }
 
 static cairo_bool_t
-_test_trace (test_runner_t *test,
+_test_trace (test_trace_t *test,
 	     const char *trace,
 	     const char *name,
 	     struct error_info *error)
@@ -1371,7 +1371,7 @@ cleanup_paths:
 }
 
 static void
-test_trace (test_runner_t *test, const char *trace)
+test_trace (test_trace_t *test, const char *trace)
 {
     char *trace_cpy, *name, *dot;
 
@@ -1455,7 +1455,7 @@ strndup (const char *s, size_t n)
 #endif /* ifndef __USE_GNU */
 
 static cairo_bool_t
-read_excludes (test_runner_t *test, const char *filename)
+read_excludes (test_trace_t *test, const char *filename)
 {
     FILE *file;
     char *line = NULL;
@@ -1517,7 +1517,7 @@ usage (const char *argv0)
 }
 
 static void
-parse_options (test_runner_t *test, int argc, char *argv[])
+parse_options (test_trace_t *test, int argc, char *argv[])
 {
     int c;
 
@@ -1559,7 +1559,7 @@ parse_options (test_runner_t *test, int argc, char *argv[])
 }
 
 static void
-test_reset (test_runner_t *test)
+test_reset (test_trace_t *test)
 {
     /* XXX leaking fonts again via meta-surface? */
 #if 0
@@ -1571,7 +1571,7 @@ test_reset (test_runner_t *test)
 }
 
 static void
-test_fini (test_runner_t *test)
+test_fini (test_trace_t *test)
 {
     test_reset (test);
 
@@ -1581,7 +1581,7 @@ test_fini (test_runner_t *test)
 }
 
 static cairo_bool_t
-test_has_filenames (test_runner_t *test)
+test_has_filenames (test_trace_t *test)
 {
     unsigned int i;
 
@@ -1596,7 +1596,7 @@ test_has_filenames (test_runner_t *test)
 }
 
 static cairo_bool_t
-test_can_run (test_runner_t *test, const char *name)
+test_can_run (test_trace_t *test, const char *name)
 {
     unsigned int i;
     char *copy, *dot;
@@ -1661,7 +1661,7 @@ interrupt (int sig)
 int
 main (int argc, char *argv[])
 {
-    test_runner_t test;
+    test_trace_t test;
     const char *trace_dir = "cairo-traces";
     unsigned int n;
 
