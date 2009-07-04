@@ -267,15 +267,19 @@ _cairo_surface_attach_snapshot (cairo_surface_t *surface,
 
 cairo_surface_t *
 _cairo_surface_has_snapshot (cairo_surface_t *surface,
-			     const cairo_surface_backend_t *backend)
+			     const cairo_surface_backend_t *backend,
+			     cairo_content_t content)
 {
     cairo_surface_t **snapshots;
     unsigned int i;
 
     snapshots = _cairo_array_index (&surface->snapshots, 0);
     for (i = 0; i < surface->snapshots.num_elements; i++) {
-	if (snapshots[i]->backend == backend)
+	if (snapshots[i]->backend == backend &&
+	    snapshots[i]->content == content)
+	{
 	    return snapshots[i];
+	}
     }
 
     return NULL;
@@ -1506,27 +1510,67 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 
 	    /* First check to see if we can replay to a similar surface */
 	    if (_cairo_surface_is_meta (src)) {
+		cairo_meta_surface_t *meta = (cairo_meta_surface_t *) src;
 		cairo_surface_t *similar;
 
-		similar = cairo_surface_create_similar (surface,
-							src->content & content,
-							width, height);
-		status = similar->status;
-		if (unlikely (status))
-		    return status;
-
-		cairo_surface_set_device_offset (similar, -src_x, -src_y);
-
-		status = cairo_meta_surface_replay (src, similar);
-		if (unlikely (status)) {
-		    cairo_surface_destroy (similar);
-		    return status;
+		similar = _cairo_surface_has_snapshot (src,
+						       surface->backend,
+						       src->content & content);
+		if (similar != NULL) {
+		    *clone_out = cairo_surface_reference (similar);
+		    *clone_offset_x = 0;
+		    *clone_offset_y = 0;
+		    return CAIRO_STATUS_SUCCESS;
 		}
 
-		*clone_out = similar;
-		*clone_offset_x = src_x;
-		*clone_offset_y = src_y;
-		return CAIRO_STATUS_SUCCESS;
+		if (width*height*8 < meta->extents.width*meta->extents.height) {
+		    similar = cairo_surface_create_similar (surface,
+							    src->content & content,
+							    width, height);
+		    status = similar->status;
+		    if (unlikely (status))
+			return status;
+
+		    cairo_surface_set_device_offset (similar, -src_x, -src_y);
+
+		    status = cairo_meta_surface_replay (src, similar);
+		    if (unlikely (status)) {
+			cairo_surface_destroy (similar);
+			return status;
+		    }
+
+		    *clone_out = similar;
+		    *clone_offset_x = src_x;
+		    *clone_offset_y = src_y;
+		    return CAIRO_STATUS_SUCCESS;
+		} else {
+		    similar = cairo_surface_create_similar (surface,
+							    src->content & content,
+							    meta->extents.width,
+							    meta->extents.height);
+		    status = similar->status;
+		    if (unlikely (status))
+			return status;
+
+		    status = cairo_meta_surface_replay (src, similar);
+		    if (unlikely (status)) {
+			cairo_surface_destroy (similar);
+			return status;
+		    }
+
+		    status = _cairo_surface_attach_snapshot (src,
+							     similar,
+							     NULL);
+		    if (unlikely (status)) {
+			cairo_surface_destroy (similar);
+			return status;
+		    }
+
+		    *clone_out = similar;
+		    *clone_offset_x = 0;
+		    *clone_offset_y = 0;
+		    return CAIRO_STATUS_SUCCESS;
+		}
 	    }
 
 	    /* If we failed, try again with an image surface */
@@ -1604,7 +1648,9 @@ _cairo_surface_snapshot (cairo_surface_t *surface)
     if (surface->snapshot_of != NULL)
 	return cairo_surface_reference (surface);
 
-    snapshot = _cairo_surface_has_snapshot (surface, surface->backend);
+    snapshot = _cairo_surface_has_snapshot (surface,
+					    surface->backend,
+					    surface->content);
     if (snapshot != NULL)
 	return cairo_surface_reference (snapshot);
 
@@ -1618,7 +1664,8 @@ _cairo_surface_snapshot (cairo_surface_t *surface)
 	    cairo_surface_t *previous;
 
 	    previous = _cairo_surface_has_snapshot (surface,
-		                                    snapshot->backend);
+		                                    snapshot->backend,
+						    snapshot->content);
 	    if (previous != NULL) {
 		cairo_surface_destroy (snapshot);
 		return cairo_surface_reference (previous);
@@ -1628,7 +1675,8 @@ _cairo_surface_snapshot (cairo_surface_t *surface)
 
     if (snapshot == NULL) {
 	snapshot = _cairo_surface_has_snapshot (surface,
-						&_cairo_image_surface_backend);
+						&_cairo_image_surface_backend,
+						surface->content);
 	if (snapshot != NULL)
 	    return cairo_surface_reference (snapshot);
 

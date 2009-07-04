@@ -244,6 +244,15 @@ _cairo_meta_surface_acquire_source_image (void			 *abstract_surface,
     cairo_meta_surface_t *surface = abstract_surface;
     cairo_surface_t *image;
 
+    image = _cairo_surface_has_snapshot (&surface->base,
+					 &_cairo_image_surface_backend,
+					 surface->content);
+    if (image != NULL) {
+	*image_out = (cairo_image_surface_t *) cairo_surface_reference (image);
+	*image_extra = NULL;
+	return CAIRO_STATUS_SUCCESS;
+    }
+
     image = _cairo_image_surface_create_with_content (surface->content,
 						      ceil (surface->width_pixels),
 						      ceil (surface->height_pixels));
@@ -254,10 +263,15 @@ _cairo_meta_surface_acquire_source_image (void			 *abstract_surface,
 	return status;
     }
 
+    status = _cairo_surface_attach_snapshot (&surface->base, image, NULL);
+    if (unlikely (status)) {
+	cairo_surface_destroy (image);
+	return status;
+    }
+
     *image_out = (cairo_image_surface_t *) image;
     *image_extra = NULL;
-
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
