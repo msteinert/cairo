@@ -2185,8 +2185,8 @@ _emit_scaled_glyph_vector (cairo_script_surface_t *surface,
     scaled_glyph->surface_private = (void *) index;
 
     _cairo_output_stream_printf (surface->ctx->stream,
-				 "%lu dict\n"
-				 "  /metrics [%f %f %f %f %f %f] set\n"
+				 "%lu <<\n"
+				 "  /metrics [%f %f %f %f %f %f]\n"
 				 "  /render {\n",
 				 index,
 				 scaled_glyph->fs_metrics.x_bearing,
@@ -2213,7 +2213,7 @@ _emit_scaled_glyph_vector (cairo_script_surface_t *surface,
 					&surface->base);
     surface->cr = old_cr;
 
-    _cairo_output_stream_puts (surface->ctx->stream, "} set set\n");
+    _cairo_output_stream_puts (surface->ctx->stream, "} >> set\n");
 
     return status;
 }
@@ -2232,8 +2232,8 @@ _emit_scaled_glyph_bitmap (cairo_script_surface_t *surface,
     scaled_glyph->surface_private = (void *) index;
 
     _cairo_output_stream_printf (surface->ctx->stream,
-				 "%lu dict\n"
-				 "  /metrics [%f %f %f %f %f %f] set\n"
+				 "%lu <<\n"
+				 "  /metrics [%f %f %f %f %f %f]\n"
 				 "  /render {\n"
 				 "%f %f translate\n",
 				 index,
@@ -2261,7 +2261,7 @@ _emit_scaled_glyph_bitmap (cairo_script_surface_t *surface,
 				     scaled_font->font_matrix.y0);
     }
     _cairo_output_stream_puts (surface->ctx->stream,
-				 "mask\n} set set\n");
+				 "mask\n} >> set\n");
 
     return CAIRO_STATUS_SUCCESS;
 }
