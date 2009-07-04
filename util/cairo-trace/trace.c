@@ -1985,20 +1985,29 @@ cairo_set_source (cairo_t *cr, cairo_pattern_t *source)
 {
     _emit_line_info ();
     if (cr != NULL && source != NULL && _write_lock ()) {
+	Object *obj = _get_object (PATTERN, source);
+	bool need_context_and_pattern = true;
+
 	if (_is_current (PATTERN, source, 0) &&
 	    _is_current (CONTEXT, cr, 1))
 	{
-	    _consume_operand ();
+	    if (obj->defined) {
+		_consume_operand ();
+		need_context_and_pattern = false;
+	    }
 	}
 	else if (_is_current (PATTERN, source, 1) &&
 		 _is_current (CONTEXT, cr, 0))
 	{
-	    _trace_printf ("exch ");
-	    _exch_operands ();
-	    _consume_operand ();
+	    if (obj->defined) {
+		_trace_printf ("exch ");
+		_exch_operands ();
+		_consume_operand ();
+		need_context_and_pattern = false;
+	    }
 	}
-	else
-	{
+
+	if (need_context_and_pattern) {
 	    _emit_context (cr);
 	    _emit_pattern_id (source);
 	}
@@ -2353,18 +2362,29 @@ cairo_mask (cairo_t *cr, cairo_pattern_t *pattern)
 {
     _emit_line_info ();
     if (cr != NULL && pattern != NULL && _write_lock ()) {
+	Object *obj = _get_object (PATTERN, pattern);
+	bool need_context_and_pattern = true;
+
 	if (_is_current (PATTERN, pattern, 0) &&
 	    _is_current (CONTEXT, cr, 1))
 	{
-	    _consume_operand ();
+	    if (obj->defined) {
+		_consume_operand ();
+		need_context_and_pattern = false;
+	    }
 	}
 	else if (_is_current (PATTERN, pattern, 1) &&
 		 _is_current (CONTEXT, cr, 0))
 	{
-	    _trace_printf ("exch ");
-	    _exch_operands ();
-	    _consume_operand ();
-	} else {
+	    if (obj->defined) {
+		_trace_printf ("exch ");
+		_exch_operands ();
+		_consume_operand ();
+		need_context_and_pattern = false;
+	    }
+	}
+
+	if (need_context_and_pattern) {
 	    _emit_context (cr);
 	    _emit_pattern_id (pattern);
 	}
