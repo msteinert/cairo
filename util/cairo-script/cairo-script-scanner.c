@@ -40,6 +40,8 @@
 #include <string.h> /* memset */
 #include <assert.h>
 
+#define DEBUG_SCAN 0
+
 /*
  * whitespace:
  * 0 - nul
@@ -1181,7 +1183,7 @@ scan_base85:
 static csi_status_t
 _scan_push (csi_t *ctx, csi_object_t *obj)
 {
-    if (0) {
+    if (DEBUG_SCAN) {
 	fprintf (stderr, "push ");
 	fprintf_obj (stderr, ctx, obj);
     }
@@ -1191,7 +1193,7 @@ _scan_push (csi_t *ctx, csi_object_t *obj)
 static csi_status_t
 _scan_execute (csi_t *ctx, csi_object_t *obj)
 {
-    if (0) {
+    if (DEBUG_SCAN) {
 	fprintf (stderr, "exec ");
 	fprintf_obj (stderr, ctx, obj);
     }

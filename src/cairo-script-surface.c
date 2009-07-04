@@ -363,7 +363,7 @@ _get_target (cairo_script_surface_t *surface)
 		_cairo_output_stream_printf (ctx->stream, "s%ld ", surface->id);
 	    } else {
 		_cairo_output_stream_printf (ctx->stream, "%d index ", depth);
-		_cairo_output_stream_puts (ctx->stream, "get-target exch pop ");
+		_cairo_output_stream_puts (ctx->stream, "/target get exch pop ");
 	    }
 	} else {
 	    if (depth == 1) {
@@ -374,11 +374,11 @@ _get_target (cairo_script_surface_t *surface)
 					     "%d -1 roll\n",
 					     depth);
 	    }
-	    _cairo_output_stream_puts (ctx->stream, "get-target ");
+	    _cairo_output_stream_puts (ctx->stream, "/target get ");
 	    target_push (surface);
 	}
     } else
-	_cairo_output_stream_puts (ctx->stream, "get-target ");
+	_cairo_output_stream_puts (ctx->stream, "/target get ");
 }
 
 static cairo_status_t
@@ -1028,7 +1028,7 @@ _emit_png_surface (cairo_script_surface_t *surface,
     if (unlikely (status))
 	return status;
 
-    _cairo_output_stream_puts (surface->ctx->stream, " >> image");
+    _cairo_output_stream_puts (surface->ctx->stream, " >> image ");
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -1046,20 +1046,31 @@ _emit_image_surface (cairo_script_surface_t *surface,
     if (_cairo_status_is_error (status)) {
 	return status;
     } else if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+	cairo_image_surface_t *clone;
+
+	if (image->format == CAIRO_FORMAT_INVALID) {
+	    clone =
+		_cairo_image_surface_coerce (image,
+					     _cairo_format_from_content (image->base.content));
+	} else {
+	    clone = (cairo_image_surface_t *)
+		cairo_surface_reference (&image->base);
+	}
+
 	_cairo_output_stream_printf (surface->ctx->stream,
 				     "<< "
 				     "/width %d "
 				     "/height %d "
 				     "/format //%s "
 				     "/source <~",
-				     image->width, image->height,
-				     _format_to_string (image->format));
+				     clone->width, clone->height,
+				     _format_to_string (clone->format));
 
-	if (image->width * image->height > 8) {
+	if (clone->width * clone->height > 8) {
 	    base85_stream = _cairo_base85_stream_create (surface->ctx->stream);
 	    zlib_stream = _cairo_deflate_stream_create (base85_stream);
 
-	    status = _write_image_surface (zlib_stream, image);
+	    status = _write_image_surface (zlib_stream, clone);
 
 	    status2 = _cairo_output_stream_destroy (zlib_stream);
 	    if (status == CAIRO_STATUS_SUCCESS)
@@ -1071,10 +1082,10 @@ _emit_image_surface (cairo_script_surface_t *surface,
 		return status;
 
 	    _cairo_output_stream_puts (surface->ctx->stream,
-				       " /deflate filter>> image ");
+				       " /deflate filter >> image ");
 	} else {
 	    base85_stream = _cairo_base85_stream_create (surface->ctx->stream);
-	    status = _write_image_surface (base85_stream, image);
+	    status = _write_image_surface (base85_stream, clone);
 	    status2 = _cairo_output_stream_destroy (base85_stream);
 	    if (status == CAIRO_STATUS_SUCCESS)
 		status = status2;
@@ -1082,6 +1093,8 @@ _emit_image_surface (cairo_script_surface_t *surface,
 	    _cairo_output_stream_puts (surface->ctx->stream,
 				       " >> image ");
 	}
+
+	cairo_surface_destroy (&clone->base);
     }
 
     cairo_surface_get_mime_data (&image->base, CAIRO_MIME_TYPE_JPEG,
