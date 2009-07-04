@@ -20,6 +20,7 @@ libcairoboilerplate_la_SOURCES = \
 	$(enabled_cairo_boilerplate_headers) \
 	$(enabled_cairo_boilerplate_private) \
 	$(enabled_cairo_boilerplate_sources) \
+	cairo-boilerplate-constructors.c \
 	$(NULL)
 libcairoboilerplate_la_LIBADD = $(top_builddir)/src/libcairo.la
 
@@ -46,6 +47,17 @@ libcairoboilerplate_la_LIBADD += -lwinspool
 endif
 
 libcairoboilerplate_la_LIBADD += $(CAIROBOILERPLATE_LIBS)
+
+make-cairo-boilerplate-constructors$(EXEEXT): make-cairo-boilerplate-constructors.c
+	$(CC) -o $@ make-cairo-boilerplate-constructors.c
+
+cairo-boilerplate-constructors.c: Makefile $(enabled_cairo_boilerplate_sources) make-cairo-boilerplate-constructors$(EXEEXT)
+	(cd $(srcdir) && ./make-cairo-boilerplate-constructors$(EXEEXT) $(enabled_cairo_boilerplate_sources)) > $@
+
+BUILT_SOURCES += cairo-boilerplate-constructors.c
+EXTRA_DIST += $(BUILT_SOURCES)
+CLEANFILES += $(BUILT_SOURCES)
+CLEANFILES += make-cairo-boilerplate-constructors
 
 test: check
 

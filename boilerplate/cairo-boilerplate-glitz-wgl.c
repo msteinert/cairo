@@ -24,8 +24,7 @@
  * Author: Carl D. Worth <cworth@cworth.org>
  */
 
-#include "cairo-boilerplate.h"
-#include "cairo-boilerplate-glitz-private.h"
+#include "cairo-boilerplate-private.h"
 
 #if CAIRO_CAN_TEST_GLITZ_WGL_SURFACE
 #include <cairo-glitz.h>
@@ -37,7 +36,7 @@ typedef struct _glitz_wgl_target_closure {
     glitz_target_closure_base_t base;
 } glitz_wgl_target_closure_t;
 
-glitz_surface_t *
+static glitz_surface_t *
 _cairo_boilerplate_glitz_wgl_create_surface_internal (glitz_format_name_t		 formatname,
 						      int				 width,
 						      int				 height,
@@ -97,7 +96,7 @@ _cairo_boilerplate_glitz_wgl_create_surface_internal (glitz_format_name_t		 form
     return sr; /* will be NULL unless we create it and attach */
 }
 
-cairo_surface_t *
+static cairo_surface_t *
 _cairo_boilerplate_glitz_wgl_create_surface (const char			 *name,
 					     cairo_content_t		  content,
 					     double			  width,
@@ -154,11 +153,34 @@ _cairo_boilerplate_glitz_wgl_create_surface (const char			 *name,
     return surface;
 }
 
-void
+static void
 _cairo_boilerplate_glitz_wgl_cleanup (void *closure)
 {
     free (closure);
     glitz_wgl_fini ();
 }
-
 #endif
+
+static const cairo_boilerplate_target_t targets[] = {
+#if CAIRO_CAN_TEST_GLITZ_WGL_SURFACE
+    {
+	"glitz-wgl", "glitz", NULL, NULL,
+	CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR_ALPHA, 0,
+	_cairo_boilerplate_glitz_wgl_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	_cairo_boilerplate_glitz_wgl_cleanup
+    },
+    {
+	"glitz-wgl", "glitz", NULL, NULL,
+	CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR, 0,
+	_cairo_boilerplate_glitz_wgl_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	_cairo_boilerplate_glitz_wgl_cleanup
+    },
+#endif
+};
+CAIRO_BOILERPLATE (glitz_wgl, targets)

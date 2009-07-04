@@ -19,3 +19,5 @@ Makefile.am.features
 *~
 .*.sw?
 check-link
+cairo-boilerplate-constructors.c
+cairo-boilerplate-constructors

@@ -24,12 +24,11 @@
  * Author: Carl D. Worth <cworth@cworth.org>
  */
 
-#include "cairo-boilerplate.h"
-#include "cairo-boilerplate-win32-private.h"
+#include "cairo-boilerplate-private.h"
 
 #include <cairo-win32.h>
 
-cairo_surface_t *
+static cairo_surface_t *
 _cairo_boilerplate_win32_create_surface (const char			 *name,
 					 cairo_content_t		  content,
 					 double				  width,
@@ -48,3 +47,26 @@ _cairo_boilerplate_win32_create_surface (const char			 *name,
 
     return cairo_win32_surface_create_with_dib (format, width, height);
 }
+
+static const cairo_boilerplate_target_t targets[] = {
+    {
+	"win32", "win32", NULL, NULL,
+	CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR, 0,
+	_cairo_boilerplate_win32_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png
+    },
+    /* Testing the win32 surface isn't interesting, since for
+     * ARGB images it just chains to the image backend
+     */
+    {
+	"win32", "win32", NULL, NULL,
+	CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR_ALPHA, 0,
+	_cairo_boilerplate_win32_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png
+    },
+};
+CAIRO_BOILERPLATE (win32, targets)

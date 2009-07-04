@@ -26,8 +26,7 @@
 
 #include "../cairo-version.h"
 
-#include "cairo-boilerplate.h"
-#include "cairo-boilerplate-test-surfaces-private.h"
+#include "cairo-boilerplate-private.h"
 
 #include <test-fallback-surface.h>
 #include <test-fallback16-surface.h>
@@ -37,9 +36,9 @@
 #include <test-null-surface.h>
 #endif
 
-#include <assert.h>
+#include <cairo-types-private.h>
 
-cairo_surface_t *
+static cairo_surface_t *
 _cairo_boilerplate_test_fallback_create_surface (const char			 *name,
 						 cairo_content_t		  content,
 						 double				  width,
@@ -54,7 +53,7 @@ _cairo_boilerplate_test_fallback_create_surface (const char			 *name,
     return _cairo_test_fallback_surface_create (content, width, height);
 }
 
-cairo_surface_t *
+static cairo_surface_t *
 _cairo_boilerplate_test_fallback16_create_surface (const char			 *name,
 						   cairo_content_t		  content,
 						   double				  width,
@@ -69,7 +68,7 @@ _cairo_boilerplate_test_fallback16_create_surface (const char			 *name,
     return _cairo_test_fallback16_surface_create (content, width, height);
 }
 
-cairo_surface_t *
+static cairo_surface_t *
 _cairo_boilerplate_test_meta_create_surface (const char			 *name,
 					     cairo_content_t		  content,
 					     double			  width,
@@ -84,7 +83,7 @@ _cairo_boilerplate_test_meta_create_surface (const char			 *name,
     return _cairo_test_meta_surface_create (content, width, height);
 }
 
-cairo_surface_t *
+static cairo_surface_t *
 _cairo_boilerplate_test_null_create_surface (const char			 *name,
 					     cairo_content_t		  content,
 					     double			  width,
@@ -113,7 +112,7 @@ typedef struct {
     int stride;
 } test_paginated_closure_t;
 
-cairo_surface_t *
+static cairo_surface_t *
 _cairo_boilerplate_test_paginated_create_surface (const char			 *name,
 						  cairo_content_t		  content,
 						  double				  width,
@@ -173,7 +172,7 @@ _cairo_boilerplate_test_paginated_create_surface (const char			 *name,
  * test_paginated_surface would not be involved and wouldn't be
  * tested.
  */
-cairo_status_t
+static cairo_status_t
 _cairo_boilerplate_test_paginated_surface_write_to_png (cairo_surface_t	*surface,
 						        const char	*filename)
 {
@@ -204,7 +203,7 @@ _cairo_boilerplate_test_paginated_surface_write_to_png (cairo_surface_t	*surface
     return status;
 }
 
-cairo_surface_t *
+static cairo_surface_t *
 _cairo_boilerplate_test_paginated_get_image_surface (cairo_surface_t *surface,
 						     int page,
 						     int width,
@@ -251,7 +250,7 @@ _cairo_boilerplate_test_paginated_get_image_surface (cairo_surface_t *surface,
     }
 }
 
-void
+static void
 _cairo_boilerplate_test_paginated_cleanup (void *closure)
 {
     test_paginated_closure_t *tpc = closure;
@@ -259,3 +258,99 @@ _cairo_boilerplate_test_paginated_cleanup (void *closure)
     free (tpc->data);
     free (tpc);
 }
+
+static const cairo_boilerplate_target_t targets[] = {
+    {
+	"test-fallback", "image", NULL, NULL,
+	CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
+	CAIRO_CONTENT_COLOR_ALPHA, 0,
+	_cairo_boilerplate_test_fallback_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png
+    },
+    {
+	"test-fallback", "image", NULL, NULL,
+	CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
+	CAIRO_CONTENT_COLOR, 0,
+	_cairo_boilerplate_test_fallback_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png
+    },
+    {
+	"test-fallback16", "image", NULL, NULL,
+	CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
+	CAIRO_CONTENT_COLOR_ALPHA, 0,
+	_cairo_boilerplate_test_fallback16_create_surface,
+	NULL, NULL,
+	NULL, /* _cairo_boilerplate_get_image_surface, */
+	cairo_surface_write_to_png
+    },
+    {
+	"test-fallback16", "image", NULL, NULL,
+	CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
+	CAIRO_CONTENT_COLOR, 0,
+	_cairo_boilerplate_test_fallback16_create_surface,
+	NULL, NULL,
+	NULL, /* _cairo_boilerplate_get_image_surface, */
+	cairo_surface_write_to_png
+    },
+    {
+	"test-meta", "image", NULL, NULL,
+	CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
+	CAIRO_CONTENT_COLOR_ALPHA, 0,
+	_cairo_boilerplate_test_meta_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	NULL, NULL,
+	FALSE, TRUE
+    },
+    {
+	"test-meta", "image", NULL, NULL,
+	CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
+	CAIRO_CONTENT_COLOR, 0,
+	_cairo_boilerplate_test_meta_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	NULL, NULL,
+	FALSE, TRUE
+    },
+    {
+	"test-paginated", "image", NULL, NULL,
+	CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED,
+	CAIRO_CONTENT_COLOR_ALPHA, 0,
+	_cairo_boilerplate_test_paginated_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_test_paginated_get_image_surface,
+	_cairo_boilerplate_test_paginated_surface_write_to_png,
+	_cairo_boilerplate_test_paginated_cleanup,
+	NULL,
+	FALSE, TRUE,
+    },
+    {
+	"test-paginated", "image", NULL, NULL,
+	CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED,
+	CAIRO_CONTENT_COLOR, 0,
+	_cairo_boilerplate_test_paginated_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_test_paginated_get_image_surface,
+	_cairo_boilerplate_test_paginated_surface_write_to_png,
+	_cairo_boilerplate_test_paginated_cleanup,
+	NULL,
+	FALSE, TRUE
+    },
+    {
+	"null", "image", NULL, NULL,
+	CAIRO_INTERNAL_SURFACE_TYPE_NULL,
+	CAIRO_CONTENT_COLOR_ALPHA, 0,
+	_cairo_boilerplate_test_null_create_surface,
+	NULL, NULL,
+	NULL, NULL, NULL,
+	NULL,
+	TRUE, FALSE
+    },
+};
+CAIRO_BOILERPLATE (test, targets)

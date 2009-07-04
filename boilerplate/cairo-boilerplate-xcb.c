@@ -24,20 +24,18 @@
  * Author: Carl D. Worth <cworth@cworth.org>
  */
 
-#include "cairo-boilerplate.h"
-#include "cairo-boilerplate-xcb-private.h"
+#include "cairo-boilerplate-private.h"
 
 #include <cairo-xcb-xrender.h>
 
 #include <xcb/xcb_renderutil.h>
 
-typedef struct _xcb_target_closure
-{
+typedef struct _xcb_target_closure {
     xcb_connection_t *c;
     xcb_pixmap_t pixmap;
 } xcb_target_closure_t;
 
-void
+static void
 _cairo_boilerplate_xcb_synchronize (void *closure)
 {
     xcb_target_closure_t *xtc = closure;
@@ -47,7 +45,7 @@ _cairo_boilerplate_xcb_synchronize (void *closure)
 		0));
 }
 
-cairo_surface_t *
+static cairo_surface_t *
 _cairo_boilerplate_xcb_create_surface (const char		 *name,
 				       cairo_content_t		  content,
 				       double			  width,
@@ -105,7 +103,7 @@ _cairo_boilerplate_xcb_create_surface (const char		 *name,
 							 width, height);
 }
 
-void
+static void
 _cairo_boilerplate_xcb_cleanup (void *closure)
 {
     xcb_target_closure_t *xtc = closure;
@@ -114,3 +112,19 @@ _cairo_boilerplate_xcb_cleanup (void *closure)
     xcb_disconnect (xtc->c);
     free (xtc);
 }
+
+static const cairo_boilerplate_target_t targets[] = {
+    /* Acceleration architectures may make the results differ by a
+     * bit, so we set the error tolerance to 1. */
+    {
+	"xcb", "xcb", NULL, NULL,
+	CAIRO_SURFACE_TYPE_XCB, CAIRO_CONTENT_COLOR_ALPHA, 1,
+	_cairo_boilerplate_xcb_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	_cairo_boilerplate_xcb_cleanup,
+	_cairo_boilerplate_xcb_synchronize
+    },
+};
+CAIRO_BOILERPLATE (xcb, targets)

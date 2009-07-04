@@ -31,7 +31,6 @@
  */
 
 #include "cairo-boilerplate.h"
-#include "cairo-boilerplate-qt-private.h"
 
 #include <cairo-qt.h>
 
@@ -43,7 +42,7 @@ typedef struct _qt_closure {
     QApplication *app;
 } qt_closure_t;
 
-void
+static void
 _cairo_boilerplate_qt_cleanup (void *closure)
 {
     qt_closure_t *qtc = (qt_closure_t *) closure;
@@ -53,7 +52,7 @@ _cairo_boilerplate_qt_cleanup (void *closure)
     free (qtc);
 }
 
-cairo_surface_t *
+static cairo_surface_t *
 _cairo_boilerplate_qt_create_surface (const char		 *name,
 				      cairo_content_t		  content,
 				      double			  width,
@@ -81,10 +80,32 @@ _cairo_boilerplate_qt_create_surface (const char		 *name,
     return cairo_qt_surface_create_with_qpixmap (content, width, height);
 }
 
-void
+static void
 _cairo_boilerplate_qt_synchronize (void *closure)
 {
     qt_closure_t *qtc = (qt_closure_t *) closure;
 
     qtc->app->flush (); /* not sure if this is sufficient */
 }
+
+static const cairo_boilerplate_target_t targets[] = {
+    {
+	"qt", "qt", NULL, NULL,
+	CAIRO_SURFACE_TYPE_QT, CAIRO_CONTENT_COLOR_ALPHA, 0,
+	_cairo_boilerplate_qt_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	_cairo_boilerplate_qt_cleanup
+    },
+    {
+	"qt", "qt", NULL, NULL,
+	CAIRO_SURFACE_TYPE_QT, CAIRO_CONTENT_COLOR, 0,
+	_cairo_boilerplate_qt_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	_cairo_boilerplate_qt_cleanup
+    },
+};
+CAIRO_BOILERPLATE (qt, targets)

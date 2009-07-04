@@ -147,8 +147,7 @@ typedef void
 typedef void
 (*cairo_boilerplate_wait_t) (void *closure);
 
-typedef struct _cairo_boilerplate_target
-{
+typedef struct _cairo_boilerplate_target {
     const char					*name;
     const char					*basename;
     const char					*file_extension;

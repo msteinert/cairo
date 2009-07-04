@@ -38,11 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-extern "C" {
 #include "cairo-boilerplate.h"
-}
-#include "cairo-boilerplate-beos-private.h"
-
 #include <cairo-beos.h>
 
 // Part of this code was originally part of
@@ -161,15 +157,14 @@ AppRunner::~AppRunner()
 // Make sure that the BApplication is initialized
 static AppRunner sAppRunner;
 
-struct beos_boilerplate_closure
-{
+struct beos_boilerplate_closure {
     BView* view;
     BBitmap* bitmap;
     BWindow* window;
 };
 
 // Test a real window
-cairo_surface_t *
+static cairo_surface_t *
 _cairo_boilerplate_beos_create_surface (const char			 *name,
 					cairo_content_t			  content,
 					double				  width,
@@ -192,7 +187,7 @@ _cairo_boilerplate_beos_create_surface (const char			 *name,
     return cairo_beos_surface_create(wnd->View());
 }
 
-void
+static void
 _cairo_boilerplate_beos_cleanup (void* closure)
 {
     beos_boilerplate_closure* bclosure = reinterpret_cast<beos_boilerplate_closure*>(closure);
@@ -204,7 +199,7 @@ _cairo_boilerplate_beos_cleanup (void* closure)
 }
 
 // Test a bitmap
-cairo_surface_t *
+static cairo_surface_t *
 _cairo_boilerplate_beos_create_surface_for_bitmap (const char			 *name,
 						   cairo_content_t		  content,
 						   double				  width,
@@ -228,7 +223,7 @@ _cairo_boilerplate_beos_create_surface_for_bitmap (const char			 *name,
     return cairo_beos_surface_create_for_bitmap(view, bmp);
 }
 
-void
+static void
 _cairo_boilerplate_beos_cleanup_bitmap (void* closure)
 {
     beos_boilerplate_closure* bclosure = reinterpret_cast<beos_boilerplate_closure*>(closure);
@@ -242,4 +237,37 @@ _cairo_boilerplate_beos_cleanup_bitmap (void* closure)
     delete bclosure;
 }
 
+static const cairo_boilerplate_target_t targets[] = {
+    /* BeOS sometimes produces a slightly different image. Perhaps this
+     * is related to the fact that it doesn't use premultiplied alpha...
+     * Just ignore the small difference. */
+    {
+	"beos", "beos", NULL, NULL,
+	CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR, 1,
+	_cairo_boilerplate_beos_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	_cairo_boilerplate_beos_cleanup
+    },
+    {
+	"beos-bitmap", "beos", NULL, NULL,
+	CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR, 1,
+	_cairo_boilerplate_beos_create_surface_for_bitmap,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	_cairo_boilerplate_beos_cleanup_bitmap
+    },
+    {
+	"beos-bitmap", "beos", NULL, NULL,
+	CAIRO_SURFACE_TYPE_BEOS, CAIRO_CONTENT_COLOR_ALPHA, 1,
+	_cairo_boilerplate_beos_create_surface_for_bitmap,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	_cairo_boilerplate_beos_cleanup_bitmap
+    },
+};
+CAIRO_BOILERPLATE (beos, targets)
 

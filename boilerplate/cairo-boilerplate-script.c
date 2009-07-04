@@ -24,12 +24,11 @@
  * Author: Chris Wilson <chris@chris-wilson.co.uk>
  */
 
-#include "cairo-boilerplate.h"
-#include "cairo-boilerplate-script-private.h"
+#include "cairo-boilerplate-private.h"
 
 #include "cairo-script.h"
 
-cairo_user_data_key_t script_closure_key;
+static cairo_user_data_key_t script_closure_key;
 
 typedef struct _script_target_closure {
     char		*filename;
@@ -37,7 +36,7 @@ typedef struct _script_target_closure {
     double		 height;
 } script_target_closure_t;
 
-cairo_surface_t *
+static cairo_surface_t *
 _cairo_boilerplate_script_create_surface (const char		 *name,
 					  cairo_content_t	  content,
 					  double			  width,
@@ -75,14 +74,14 @@ _cairo_boilerplate_script_create_surface (const char		 *name,
     return surface;
 }
 
-cairo_status_t
+static cairo_status_t
 _cairo_boilerplate_script_finish_surface (cairo_surface_t		*surface)
 {
     cairo_surface_finish (surface);
     return cairo_surface_status (surface);
 }
 
-cairo_status_t
+static cairo_status_t
 _cairo_boilerplate_script_surface_write_to_png (cairo_surface_t *surface,
 						const char *filename)
 {
@@ -98,7 +97,7 @@ _cairo_boilerplate_script_convert_to_image (cairo_surface_t *surface,
     return cairo_boilerplate_convert_to_image (ptc->filename, page);
 }
 
-cairo_surface_t *
+static cairo_surface_t *
 _cairo_boilerplate_script_get_image_surface (cairo_surface_t *surface,
 					     int page,
 					     int width,
@@ -116,10 +115,23 @@ _cairo_boilerplate_script_get_image_surface (cairo_surface_t *surface,
     return surface;
 }
 
-void
+static void
 _cairo_boilerplate_script_cleanup (void *closure)
 {
     script_target_closure_t *ptc = closure;
     free (ptc->filename);
     free (ptc);
 }
+
+static const cairo_boilerplate_target_t target[] = {{
+    "script", "script", ".cs", NULL,
+    CAIRO_SURFACE_TYPE_SCRIPT, CAIRO_CONTENT_COLOR_ALPHA, 0,
+    _cairo_boilerplate_script_create_surface,
+    NULL,
+    _cairo_boilerplate_script_finish_surface,
+    _cairo_boilerplate_script_get_image_surface,
+    _cairo_boilerplate_script_surface_write_to_png,
+    _cairo_boilerplate_script_cleanup,
+    NULL, FALSE
+}};
+CAIRO_BOILERPLATE (script, target)

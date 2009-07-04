@@ -34,8 +34,7 @@
 # define _WIN32_WINNT 0x0500
 #endif
 
-#include "cairo-boilerplate.h"
-#include "cairo-boilerplate-win32-private.h"
+#include "cairo-boilerplate-private.h"
 
 #include <cairo-win32.h>
 #include <cairo-win32-private.h>
@@ -59,10 +58,9 @@
 # define FEATURESETTING_PSLEVEL 0x0002
 #endif
 
-cairo_user_data_key_t win32_closure_key;
+static cairo_user_data_key_t win32_closure_key;
 
-typedef struct _win32_target_closure
-{
+typedef struct _win32_target_closure {
     char *filename;
     int width;
     int height;
@@ -161,7 +159,7 @@ create_printer_dc (win32_target_closure_t *ptc)
     ptc->bottom_margin = 72.0*(page_height - printable_height - top_margin)/y_dpi;
 }
 
-cairo_surface_t *
+static cairo_surface_t *
 _cairo_boilerplate_win32_printing_create_surface (const char              *name,
 						  cairo_content_t          content,
 						  double                      width,
@@ -233,7 +231,7 @@ _cairo_boilerplate_win32_printing_create_surface (const char              *name,
     return surface;
 }
 
-cairo_status_t
+static cairo_status_t
 _cairo_boilerplate_win32_printing_surface_write_to_png (cairo_surface_t *surface, const char *filename)
 {
     win32_target_closure_t *ptc = cairo_surface_get_user_data (surface, &win32_closure_key);
@@ -300,7 +298,7 @@ _cairo_boilerplate_win32_printing_surface_write_to_png (cairo_surface_t *surface
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_surface_t *
+static cairo_surface_t *
 _cairo_boilerplate_win32_printing_get_image_surface (cairo_surface_t *surface,
 						     int page,
 						     int width,
@@ -331,7 +329,7 @@ _cairo_boilerplate_win32_printing_get_image_surface (cairo_surface_t *surface,
     return surface;
 }
 
-void
+static void
 _cairo_boilerplate_win32_printing_cleanup (void *closure)
 {
     win32_target_closure_t *ptc = closure;
@@ -342,3 +340,30 @@ _cairo_boilerplate_win32_printing_cleanup (void *closure)
     free (ptc);
     DeleteDC (ptc->dc);
 }
+
+static const cairo_boilerplate_target_t targets[] = {
+#if CAIRO_CAN_TEST_WIN32_PRINTING_SURFACE
+    {
+	"win32-printing", "win32", ".ps", NULL,
+	CAIRO_SURFACE_TYPE_WIN32_PRINTING,
+	CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED, 0,
+	_cairo_boilerplate_win32_printing_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_win32_printing_get_image_surface,
+	_cairo_boilerplate_win32_printing_surface_write_to_png,
+	_cairo_boilerplate_win32_printing_cleanup,
+	NULL, TRUE, TRUE
+    },
+    {
+	"win32-printing", "win32", ".ps", NULL,
+	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
+	_cairo_boilerplate_win32_printing_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_win32_printing_get_image_surface,
+	_cairo_boilerplate_win32_printing_surface_write_to_png,
+	_cairo_boilerplate_win32_printing_cleanup,
+	NULL, TRUE, TRUE
+    },
+#endif
+};
+CAIRO_BOILERPLATE (win32_printing, targets)

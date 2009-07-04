@@ -24,8 +24,7 @@
  * Author: Carl D. Worth <cworth@cworth.org>
  */
 
-#include "cairo-boilerplate.h"
-#include "cairo-boilerplate-svg-private.h"
+#include "cairo-boilerplate-private.h"
 
 #include <cairo-svg.h>
 #include <cairo-svg-surface-private.h>
@@ -100,7 +99,7 @@ _cairo_boilerplate_svg_create_surface (const char		 *name,
     return surface;
 }
 
-cairo_surface_t *
+static cairo_surface_t *
 _cairo_boilerplate_svg11_create_surface (const char		 *name,
 					 cairo_content_t	  content,
 					 double			  width,
@@ -120,7 +119,7 @@ _cairo_boilerplate_svg11_create_surface (const char		 *name,
 						  closure);
 }
 
-cairo_surface_t *
+static cairo_surface_t *
 _cairo_boilerplate_svg12_create_surface (const char		 *name,
 					 cairo_content_t	  content,
 					 double			  width,
@@ -139,7 +138,7 @@ _cairo_boilerplate_svg12_create_surface (const char		 *name,
 						  closure);
 }
 
-cairo_status_t
+static cairo_status_t
 _cairo_boilerplate_svg_finish_surface (cairo_surface_t		*surface)
 {
     svg_target_closure_t *ptc = cairo_surface_get_user_data (surface,
@@ -183,7 +182,7 @@ _cairo_boilerplate_svg_finish_surface (cairo_surface_t		*surface)
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_status_t
+static cairo_status_t
 _cairo_boilerplate_svg_surface_write_to_png (cairo_surface_t *surface, const char *filename)
 {
     svg_target_closure_t *ptc = cairo_surface_get_user_data (surface,
@@ -214,7 +213,7 @@ _cairo_boilerplate_svg_convert_to_image (cairo_surface_t *surface)
     return cairo_boilerplate_convert_to_image (ptc->filename, 0);
 }
 
-cairo_surface_t *
+static cairo_surface_t *
 _cairo_boilerplate_svg_get_image_surface (cairo_surface_t *surface,
 					  int page,
 					  int width,
@@ -235,7 +234,7 @@ _cairo_boilerplate_svg_get_image_surface (cairo_surface_t *surface,
     return surface;
 }
 
-void
+static void
 _cairo_boilerplate_svg_cleanup (void *closure)
 {
     svg_target_closure_t *ptc = closure;
@@ -245,7 +244,7 @@ _cairo_boilerplate_svg_cleanup (void *closure)
     free (ptc);
 }
 
-void
+static void
 _cairo_boilerplate_svg_force_fallbacks (cairo_surface_t *abstract_surface,
 	                                unsigned int flags)
 {
@@ -262,3 +261,56 @@ _cairo_boilerplate_svg_force_fallbacks (cairo_surface_t *abstract_surface,
     surface = (cairo_svg_surface_t*) paginated->target;
     surface->force_fallbacks = TRUE;
 }
+
+static const cairo_boilerplate_target_t targets[] = {
+    /* It seems we should be able to round-trip SVG content perfectly
+     * through librsvg and cairo, but for some mysterious reason, some
+     * systems get an error of 1 for some pixels on some of the text
+     * tests. XXX: I'd still like to chase these down at some point.
+     * For now just set the svg error tolerance to 1. */
+    {
+	"svg11", "svg", NULL, NULL,
+	CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR_ALPHA, 1,
+	_cairo_boilerplate_svg11_create_surface,
+	_cairo_boilerplate_svg_force_fallbacks,
+	_cairo_boilerplate_svg_finish_surface,
+	_cairo_boilerplate_svg_get_image_surface,
+	_cairo_boilerplate_svg_surface_write_to_png,
+	_cairo_boilerplate_svg_cleanup,
+	NULL, TRUE, TRUE
+    },
+    {
+	"svg11", "svg", NULL, NULL,
+	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 1,
+	_cairo_boilerplate_svg11_create_surface,
+	_cairo_boilerplate_svg_force_fallbacks,
+	_cairo_boilerplate_svg_finish_surface,
+	_cairo_boilerplate_svg_get_image_surface,
+	_cairo_boilerplate_svg_surface_write_to_png,
+	_cairo_boilerplate_svg_cleanup,
+	NULL, TRUE, TRUE
+    },
+    {
+	"svg12", "svg", NULL, NULL,
+	CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR_ALPHA, 1,
+	_cairo_boilerplate_svg12_create_surface,
+	_cairo_boilerplate_svg_force_fallbacks,
+	_cairo_boilerplate_svg_finish_surface,
+	_cairo_boilerplate_svg_get_image_surface,
+	_cairo_boilerplate_svg_surface_write_to_png,
+	_cairo_boilerplate_svg_cleanup,
+	NULL, TRUE, TRUE
+    },
+    {
+	"svg12", "svg", NULL, NULL,
+	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 1,
+	_cairo_boilerplate_svg12_create_surface,
+	_cairo_boilerplate_svg_force_fallbacks,
+	_cairo_boilerplate_svg_finish_surface,
+	_cairo_boilerplate_svg_get_image_surface,
+	_cairo_boilerplate_svg_surface_write_to_png,
+	_cairo_boilerplate_svg_cleanup,
+	NULL, TRUE, TRUE
+    },
+};
+CAIRO_BOILERPLATE (svg, targets)

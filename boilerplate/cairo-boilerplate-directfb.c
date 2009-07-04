@@ -9,8 +9,7 @@ make check
 
 */
 
-#include "cairo-boilerplate.h"
-#include "cairo-boilerplate-directfb-private.h"
+#include "cairo-boilerplate-private.h"
 
 #include <cairo-directfb.h>
 
@@ -37,7 +36,7 @@ typedef struct _DFBInfo {
     IDirectFBSurface       *surface;
 } DFBInfo;
 
-void
+static void
 _cairo_boilerplate_directfb_cleanup (void *closure)
 {
     DFBInfo *info = (DFBInfo *) closure;
@@ -168,7 +167,7 @@ ERROR:
     return NULL;
 }
 
-cairo_surface_t *
+static cairo_surface_t *
 _cairo_boilerplate_directfb_create_surface (const char			 *name,
 					    cairo_content_t		  content,
 					    double				  width,
@@ -207,3 +206,25 @@ _cairo_boilerplate_directfb_create_surface (const char			 *name,
     else /* mode == CAIRO_BOILERPLATE_MODE_PERF */
 	return _cairo_boilerplate_directfb_window_create_surface (info, content, width, height);
 }
+
+static const cairo_boilerplate_target_t targets[] = {
+    {
+	"directfb", "directfb", NULL, NULL,
+	CAIRO_SURFACE_TYPE_DIRECTFB, CAIRO_CONTENT_COLOR, 0,
+	_cairo_boilerplate_directfb_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	_cairo_boilerplate_directfb_cleanup
+    },
+    {
+	"directfb-bitmap", "directfb", NULL, NULL,
+	CAIRO_SURFACE_TYPE_DIRECTFB, CAIRO_CONTENT_COLOR_ALPHA, 0,
+	_cairo_boilerplate_directfb_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	_cairo_boilerplate_directfb_cleanup
+    },
+};
+CAIRO_BOILERPLATE (directfb, targets);

@@ -24,12 +24,11 @@
  * Author: Carl D. Worth <cworth@cworth.org>
  */
 
-#include "cairo-boilerplate.h"
-#include "cairo-boilerplate-quartz-private.h"
+#include "cairo-boilerplate-private.h"
 
 #include <cairo-quartz.h>
 
-cairo_surface_t *
+static cairo_surface_t *
 _cairo_boilerplate_quartz_create_surface (const char			 *name,
 					  cairo_content_t		  content,
 					  double				  width,
@@ -49,8 +48,22 @@ _cairo_boilerplate_quartz_create_surface (const char			 *name,
     return cairo_quartz_surface_create (format, width, height);
 }
 
-void
-_cairo_boilerplate_quartz_cleanup (void *closure)
-{
-    /* nothing */
-}
+static const cairo_boilerplate_target_t targets[] = {
+    {
+	"quartz", "quartz", NULL, NULL,
+	CAIRO_SURFACE_TYPE_QUARTZ, CAIRO_CONTENT_COLOR_ALPHA, 0,
+	_cairo_boilerplate_quartz_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+    },
+    {
+	"quartz", "quartz", NULL, NULL,
+	CAIRO_SURFACE_TYPE_QUARTZ, CAIRO_CONTENT_COLOR, 0,
+	_cairo_boilerplate_quartz_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+    },
+};
+CAIRO_BOILERPLATE (quartz, targets)
