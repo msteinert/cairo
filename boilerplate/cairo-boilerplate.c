@@ -1102,19 +1102,20 @@ cairo_boilerplate_image_surface_create_from_ppm_stream (FILE *file)
     data = cairo_image_surface_get_data (image);
     stride = cairo_image_surface_get_stride (image);
     for (y = 0; y < height; y++) {
-	unsigned char *buf = data + y *stride;
+	unsigned char *buf = data + y*stride;
 	switch (format) {
 	case '7':
 	    if (! freadn (buf, 4 * width, file))
 		goto FAIL;
 	    break;
 	case '6':
-	    for (x = 0; x < width; x++) {
-		if (! freadn (buf, 3, file))
-		    goto FAIL;
-		*(uint32_t *) buf =
+	    if (! freadn (buf, 3*width, file))
+		goto FAIL;
+	    buf += 3*width;
+	    for (x = width; x--; ) {
+		buf -= 3;
+		((uint32_t *) (data + y*stride))[x] =
 		    (buf[0] << 16) | (buf[1] << 8) | (buf[2] << 0);
-		buf += 4;
 	    }
 	    break;
 	case '5':
