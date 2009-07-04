@@ -582,6 +582,7 @@ _cairo_meta_surface_snapshot (void *abstract_other)
 
     meta->width_pixels = other->width_pixels;
     meta->height_pixels = other->height_pixels;
+    meta->extents = other->extents;
     meta->replay_start_idx = other->replay_start_idx;
     meta->content = other->content;
 
