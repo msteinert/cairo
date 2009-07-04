@@ -240,7 +240,20 @@ _create_image (void *closure,
 	       //csi_object_t *dictionary)
 {
     cairo_surface_t **out = closure;
-    *out = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+    cairo_format_t format;
+    switch (content) {
+    case CAIRO_CONTENT_ALPHA:
+	format = CAIRO_FORMAT_A8;
+	break;
+    case CAIRO_CONTENT_COLOR:
+	format = CAIRO_FORMAT_RGB24;
+	break;
+    default:
+    case CAIRO_CONTENT_COLOR_ALPHA:
+	format = CAIRO_FORMAT_ARGB32;
+	break;
+    }
+    *out = cairo_image_surface_create (format, width, height);
     return cairo_surface_reference (*out);
 }
 
