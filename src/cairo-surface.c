@@ -1452,6 +1452,78 @@ _cairo_surface_release_dest_image (cairo_surface_t         *surface,
 					      image, image_rect, image_extra);
 }
 
+static cairo_status_t
+_cairo_meta_surface_clone_similar (cairo_surface_t  *surface,
+			           cairo_surface_t  *src,
+				   cairo_content_t   content,
+				   int               src_x,
+				   int               src_y,
+				   int               width,
+				   int               height,
+				   int              *clone_offset_x,
+				   int              *clone_offset_y,
+				   cairo_surface_t **clone_out)
+{
+    cairo_meta_surface_t *meta = (cairo_meta_surface_t *) src;
+    cairo_surface_t *similar;
+    cairo_status_t status;
+
+    similar = _cairo_surface_has_snapshot (src,
+					   surface->backend,
+					   src->content & content);
+    if (similar != NULL) {
+	*clone_out = cairo_surface_reference (similar);
+	*clone_offset_x = 0;
+	*clone_offset_y = 0;
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    if (width*height*8 < meta->extents.width*meta->extents.height) {
+	similar = cairo_surface_create_similar (surface,
+						src->content & content,
+						width, height);
+	status = similar->status;
+	if (unlikely (status))
+	    return status;
+
+	cairo_surface_set_device_offset (similar, -src_x, -src_y);
+
+	status = cairo_meta_surface_replay (src, similar);
+	if (unlikely (status)) {
+	    cairo_surface_destroy (similar);
+	    return status;
+	}
+
+    } else {
+	similar = cairo_surface_create_similar (surface,
+						src->content & content,
+						meta->extents.width,
+						meta->extents.height);
+	status = similar->status;
+	if (unlikely (status))
+	    return status;
+
+	status = cairo_meta_surface_replay (src, similar);
+	if (unlikely (status)) {
+	    cairo_surface_destroy (similar);
+	    return status;
+	}
+
+	status = _cairo_surface_attach_snapshot (src, similar, NULL);
+	if (unlikely (status)) {
+	    cairo_surface_destroy (similar);
+	    return status;
+	}
+
+	src_x = src_y = 0;
+    }
+
+    *clone_out = similar;
+    *clone_offset_x = src_x;
+    *clone_offset_y = src_y;
+    return CAIRO_STATUS_SUCCESS;
+}
+
 /**
  * _cairo_surface_clone_similar:
  * @surface: a #cairo_surface_t
@@ -1510,67 +1582,13 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 
 	    /* First check to see if we can replay to a similar surface */
 	    if (_cairo_surface_is_meta (src)) {
-		cairo_meta_surface_t *meta = (cairo_meta_surface_t *) src;
-		cairo_surface_t *similar;
-
-		similar = _cairo_surface_has_snapshot (src,
-						       surface->backend,
-						       src->content & content);
-		if (similar != NULL) {
-		    *clone_out = cairo_surface_reference (similar);
-		    *clone_offset_x = 0;
-		    *clone_offset_y = 0;
-		    return CAIRO_STATUS_SUCCESS;
-		}
-
-		if (width*height*8 < meta->extents.width*meta->extents.height) {
-		    similar = cairo_surface_create_similar (surface,
-							    src->content & content,
-							    width, height);
-		    status = similar->status;
-		    if (unlikely (status))
-			return status;
-
-		    cairo_surface_set_device_offset (similar, -src_x, -src_y);
-
-		    status = cairo_meta_surface_replay (src, similar);
-		    if (unlikely (status)) {
-			cairo_surface_destroy (similar);
-			return status;
-		    }
-
-		    *clone_out = similar;
-		    *clone_offset_x = src_x;
-		    *clone_offset_y = src_y;
-		    return CAIRO_STATUS_SUCCESS;
-		} else {
-		    similar = cairo_surface_create_similar (surface,
-							    src->content & content,
-							    meta->extents.width,
-							    meta->extents.height);
-		    status = similar->status;
-		    if (unlikely (status))
-			return status;
-
-		    status = cairo_meta_surface_replay (src, similar);
-		    if (unlikely (status)) {
-			cairo_surface_destroy (similar);
-			return status;
-		    }
-
-		    status = _cairo_surface_attach_snapshot (src,
-							     similar,
-							     NULL);
-		    if (unlikely (status)) {
-			cairo_surface_destroy (similar);
-			return status;
-		    }
-
-		    *clone_out = similar;
-		    *clone_offset_x = 0;
-		    *clone_offset_y = 0;
-		    return CAIRO_STATUS_SUCCESS;
-		}
+		return _cairo_meta_surface_clone_similar (surface, src,
+							  content,
+							  src_x, src_y,
+							  width, height,
+							  clone_offset_x,
+							  clone_offset_y,
+							  clone_out);
 	    }
 
 	    /* If we failed, try again with an image surface */
