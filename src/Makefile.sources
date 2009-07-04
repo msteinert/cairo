@@ -192,14 +192,12 @@ cairo_ft_sources = cairo-ft-font.c
 cairo_test_surfaces_private = \
 	test-fallback-surface.h \
 	test-fallback16-surface.h \
-	test-meta-surface.h \
 	test-null-surface.h \
 	test-paginated-surface.h \
 	$(NULL)
 cairo_test_surfaces_sources = \
 	test-fallback-surface.c \
 	test-fallback16-surface.c \
-	test-meta-surface.c \
 	test-null-surface.c \
 	test-paginated-surface.c \
 	$(NULL)

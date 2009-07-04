@@ -125,6 +125,21 @@ _cairo_boilerplate_image_create_surface (const char			 *name,
     return cairo_image_surface_create (format, ceil (width), ceil (height));
 }
 
+static cairo_surface_t *
+_cairo_boilerplate_meta_create_surface (const char	     *name,
+					cairo_content_t	      content,
+					double		      width,
+					double		      height,
+					double		      max_width,
+					double		      max_height,
+					cairo_boilerplate_mode_t mode,
+					int		      id,
+					void		    **closure)
+{
+    *closure = NULL;
+    return cairo_meta_surface_create (content, width, height);
+}
+
 cairo_surface_t *
 _cairo_boilerplate_get_image_surface (cairo_surface_t *src,
 				      int page,
@@ -254,6 +269,26 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png
+    },
+    {
+	"meta", "image", NULL, NULL,
+	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR_ALPHA, 0,
+	_cairo_boilerplate_meta_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	NULL, NULL,
+	FALSE, TRUE
+    },
+    {
+	"meta", "image", NULL, NULL,
+	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
+	_cairo_boilerplate_meta_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	NULL, NULL,
+	FALSE, TRUE
     },
 };
 CAIRO_BOILERPLATE (builtin, builtin_targets)

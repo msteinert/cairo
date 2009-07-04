@@ -4264,37 +4264,6 @@ _cairo_test_paginated_surface_create_for_data (unsigned char	*data,
     return ret;
 }
 
-#include <test-meta-surface.h>
-cairo_surface_t *
-_cairo_test_meta_surface_create (cairo_content_t	content,
-				 int			width,
-				 int			height)
-{
-    cairo_surface_t *ret;
-    long surface_id;
-
-    ret = DLCALL (_cairo_test_meta_surface_create, content, width, height);
-    surface_id = _create_surface_id (ret);
-
-    _emit_line_info ();
-    if (_write_lock ()) {
-	_trace_printf ("dict\n"
-		       "  /type /test-meta set\n"
-		       "  /content //%s set\n"
-		       "  /width %d set\n"
-		       "  /height %d set\n"
-		       "  surface dup /s%ld exch def\n",
-		       _content_to_string (content),
-		       width, height,
-		       surface_id);
-	_surface_object_set_size (ret, width, height);
-	_get_object (SURFACE, ret)->defined = true;
-	_push_operand (SURFACE, ret);
-	_write_unlock ();
-    }
-
-    return ret;
-}
 
 #include <test-null-surface.h>
 cairo_surface_t *
@@ -4322,3 +4291,53 @@ _cairo_test_null_surface_create (cairo_content_t	content)
     return ret;
 }
 #endif
+
+cairo_surface_t *
+cairo_meta_surface_create (cairo_content_t content,
+			   double width,
+			   double height)
+{
+    cairo_surface_t *ret;
+    long surface_id;
+
+    ret = DLCALL (cairo_meta_surface_create, content, width, height);
+    surface_id = _create_surface_id (ret);
+
+    _emit_line_info ();
+    if (_write_lock ()) {
+	_trace_printf ("dict\n"
+		       "  /type /meta set\n"
+		       "  /content //%s set\n"
+		       "  /width %f set\n"
+		       "  /height %f set\n"
+		       "  surface dup /s%ld exch def\n",
+		       _content_to_string (content),
+		       width, height,
+		       surface_id);
+	_surface_object_set_size (ret, width, height);
+	_get_object (SURFACE, ret)->defined = true;
+	_push_operand (SURFACE, ret);
+	_write_unlock ();
+    }
+
+    return ret;
+}
+
+cairo_status_t
+cairo_meta_surface_replay (cairo_surface_t *meta, cairo_surface_t *target)
+{
+    cairo_status_t
+
+    ret = DLCALL (cairo_meta_surface_replay, meta, target);
+
+    _emit_line_info ();
+    if (_write_lock ()) {
+
+	_emit_surface (target);
+	_emit_surface (meta);
+	_trace_printf ("replay");
+	_consume_operand ();
+    }
+
+    return ret;
+}

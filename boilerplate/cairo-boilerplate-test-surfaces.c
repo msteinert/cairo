@@ -30,7 +30,6 @@
 
 #include <test-fallback-surface.h>
 #include <test-fallback16-surface.h>
-#include <test-meta-surface.h>
 #include <test-paginated-surface.h>
 #if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1,9,3)
 #include <test-null-surface.h>
@@ -66,21 +65,6 @@ _cairo_boilerplate_test_fallback16_create_surface (const char			 *name,
 {
     *closure = NULL;
     return _cairo_test_fallback16_surface_create (content, width, height);
-}
-
-static cairo_surface_t *
-_cairo_boilerplate_test_meta_create_surface (const char			 *name,
-					     cairo_content_t		  content,
-					     double			  width,
-					     double			  height,
-					     double			  max_width,
-					     double			  max_height,
-					     cairo_boilerplate_mode_t	  mode,
-					     int                          id,
-					     void			**closure)
-{
-    *closure = NULL;
-    return _cairo_test_meta_surface_create (content, width, height);
 }
 
 static cairo_surface_t *
@@ -295,28 +279,6 @@ static const cairo_boilerplate_target_t targets[] = {
 	NULL, NULL,
 	NULL, /* _cairo_boilerplate_get_image_surface, */
 	cairo_surface_write_to_png
-    },
-    {
-	"test-meta", "image", NULL, NULL,
-	CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
-	CAIRO_CONTENT_COLOR_ALPHA, 0,
-	_cairo_boilerplate_test_meta_create_surface,
-	NULL, NULL,
-	_cairo_boilerplate_get_image_surface,
-	cairo_surface_write_to_png,
-	NULL, NULL,
-	FALSE, TRUE
-    },
-    {
-	"test-meta", "image", NULL, NULL,
-	CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
-	CAIRO_CONTENT_COLOR, 0,
-	_cairo_boilerplate_test_meta_create_surface,
-	NULL, NULL,
-	_cairo_boilerplate_get_image_surface,
-	cairo_surface_write_to_png,
-	NULL, NULL,
-	FALSE, TRUE
     },
     {
 	"test-paginated", "image", NULL, NULL,
