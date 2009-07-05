@@ -574,6 +574,32 @@ _cairo_path_fixed_add (cairo_path_fixed_t   *path,
 	_cairo_path_fixed_add_buf (path, buf);
     }
 
+    if (WATCH_PATH) {
+	const char *op_str[] = {
+	    "move-to",
+	    "line-to",
+	    "curve-to",
+	    "close-path",
+	};
+	char buf[1024];
+	int len = 0;
+	int i;
+
+	len += snprintf (buf + len, sizeof (buf), "[");
+	for (i = 0; i < num_points; i++) {
+	    if (i != 0)
+		len += snprintf (buf + len, sizeof (buf), " ");
+	    len += snprintf (buf + len, sizeof (buf), "(%f, %f)",
+			     _cairo_fixed_to_double (points[i].x),
+			     _cairo_fixed_to_double (points[i].y));
+	}
+	len += snprintf (buf + len, sizeof (buf), "]");
+
+	fprintf (stderr,
+		 "_cairo_path_fixed_add (%s, %s)\n",
+		 op_str[(int) op], buf);
+    }
+
     _cairo_path_buf_add_op (buf, op);
     _cairo_path_buf_add_points (buf, points, num_points);
 

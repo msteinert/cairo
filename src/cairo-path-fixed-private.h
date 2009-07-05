@@ -39,6 +39,11 @@
 #include "cairo-types-private.h"
 #include "cairo-compiler-private.h"
 
+#define WATCH_PATH 0
+#if WATCH_PATH
+#include <stdio.h>
+#endif
+
 enum cairo_path_op {
     CAIRO_PATH_OP_MOVE_TO = 0,
     CAIRO_PATH_OP_LINE_TO = 1,
@@ -110,6 +115,10 @@ _cairo_path_fixed_iter_at_end (const cairo_path_fixed_iter_t *iter);
 static inline cairo_bool_t
 _cairo_path_fixed_is_region (cairo_path_fixed_t *path)
 {
+#if WATCH_PATH
+    fprintf (stderr, "_cairo_path_fixed_is_region () = %s\n",
+	     path->is_region ? "true" : "false");
+#endif
     return path->is_region;
 }
 
