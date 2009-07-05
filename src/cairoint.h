@@ -1617,9 +1617,6 @@ cairo_private cairo_bool_t
 _cairo_path_fixed_is_rectangle (cairo_path_fixed_t *path,
 				cairo_box_t        *box);
 
-cairo_private cairo_bool_t
-_cairo_path_fixed_is_region (cairo_path_fixed_t *path);
-
 /* cairo-path-in-fill.c */
 cairo_private void
 _cairo_path_fixed_in_fill (cairo_path_fixed_t	*path,

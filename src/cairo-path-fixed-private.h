@@ -73,6 +73,8 @@ struct _cairo_path_fixed {
     cairo_point_t current_point;
     unsigned int has_current_point	: 1;
     unsigned int has_curve_to		: 1;
+    unsigned int is_box			: 1;
+    unsigned int is_region		: 1;
 
     cairo_path_buf_t       *buf_tail;
     cairo_path_buf_fixed_t  buf_head;
@@ -104,5 +106,11 @@ _cairo_path_fixed_iter_is_fill_box (cairo_path_fixed_iter_t *_iter,
 
 cairo_private cairo_bool_t
 _cairo_path_fixed_iter_at_end (const cairo_path_fixed_iter_t *iter);
+
+static inline cairo_bool_t
+_cairo_path_fixed_is_region (cairo_path_fixed_t *path)
+{
+    return path->is_region;
+}
 
 #endif /* CAIRO_PATH_FIXED_PRIVATE_H */
