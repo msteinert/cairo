@@ -58,7 +58,7 @@ static const cairo_t _cairo_nil = {
     FALSE,			/* has_curve_to */
     FALSE,			/* is_box */
     FALSE,			/* is_region */
-    NULL, {{NULL}}		/* buf_tail, buf_head */
+    {{{NULL,NULL}}}		/* link */
   }}
 };
 

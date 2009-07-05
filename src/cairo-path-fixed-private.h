@@ -38,6 +38,7 @@
 
 #include "cairo-types-private.h"
 #include "cairo-compiler-private.h"
+#include "cairo-list-private.h"
 
 #define WATCH_PATH 0
 #if WATCH_PATH
@@ -50,15 +51,16 @@ enum cairo_path_op {
     CAIRO_PATH_OP_CURVE_TO = 2,
     CAIRO_PATH_OP_CLOSE_PATH = 3
 };
-/* we want to make sure a single byte is used for thie enum */
+
+/* we want to make sure a single byte is used for the enum */
 typedef char cairo_path_op_t;
 
-/* make _cairo_path_fixed fit a 512 bytes.  about 50 items */
-#define CAIRO_PATH_BUF_SIZE ((512 - 4 * sizeof (void*) - sizeof (cairo_path_buf_t)) \
+/* make _cairo_path_fixed fit into ~512 bytes -- about 50 items */
+#define CAIRO_PATH_BUF_SIZE ((512 - sizeof (cairo_path_buf_t)) \
 			   / (2 * sizeof (cairo_point_t) + sizeof (cairo_path_op_t)))
 
 typedef struct _cairo_path_buf {
-    struct _cairo_path_buf *next, *prev;
+    cairo_list_t link;
     unsigned int buf_size;
     unsigned int num_ops;
     unsigned int num_points;
@@ -66,6 +68,7 @@ typedef struct _cairo_path_buf {
     cairo_path_op_t *op;
     cairo_point_t *points;
 } cairo_path_buf_t;
+
 typedef struct _cairo_path_buf_fixed {
     cairo_path_buf_t base;
 
@@ -81,8 +84,7 @@ struct _cairo_path_fixed {
     unsigned int is_box			: 1;
     unsigned int is_region		: 1;
 
-    cairo_path_buf_t       *buf_tail;
-    cairo_path_buf_fixed_t  buf_head;
+    cairo_path_buf_fixed_t  buf;
 };
 
 cairo_private unsigned long
