@@ -163,16 +163,9 @@ _cairo_path_fixed_init_copy (cairo_path_fixed_t *path,
 unsigned long
 _cairo_path_fixed_hash (const cairo_path_fixed_t *path)
 {
-    unsigned long hash = 0;
+    unsigned long hash = _CAIRO_HASH_INIT_VALUE;
     const cairo_path_buf_t *buf;
     int num_points, num_ops;
-
-    hash = _cairo_hash_bytes (hash,
-			      &path->current_point,
-			      sizeof (path->current_point));
-    hash = _cairo_hash_bytes (hash,
-			      &path->last_move_point,
-			      sizeof (path->last_move_point));
 
     num_ops = num_points = 0;
     cairo_path_foreach_buf_start (buf, path) {
@@ -219,6 +212,14 @@ _cairo_path_fixed_equal (const cairo_path_fixed_t *a,
 
     if (a == b)
 	return TRUE;
+
+    /* use the flags to quickly differentiate based on contents */
+    if (a->has_curve_to != b->has_curve_to ||
+	a->is_region != b->is_region ||
+	a->is_box != b->is_box)
+    {
+	return FALSE;
+    }
 
     num_ops_a = num_points_a = 0;
     if (a != NULL) {
