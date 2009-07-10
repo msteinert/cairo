@@ -269,6 +269,7 @@ REFERENCE_IMAGES = \
 	dash-curve.ps3.ref.png \
 	dash-curve.quartz.ref.png \
 	dash-curve.ref.png \
+	dash-infinite-loop.ref.png \
 	dash-no-dash.ref.png \
 	dash-offset-negative.ref.png \
 	dash-scale.ps2.argb32.ref.png \

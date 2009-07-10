@@ -38,6 +38,7 @@ test_sources = \
 	curve-to-as-line-to.c				\
 	dash-caps-joins.c				\
 	dash-curve.c					\
+	dash-infinite-loop.c				\
 	dash-no-dash.c					\
 	dash-offset-negative.c				\
 	dash-scale.c					\
