@@ -2186,7 +2186,6 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
     cairo_matrix_t cairo_p2d, pdf_p2d;
     cairo_extend_t extend = cairo_pattern_get_extend (&pattern->base);
     double xstep, ystep;
-    cairo_rectangle_int_t surface_extents;
     int pattern_width = 0; /* squelch bogus compiler warning */
     int pattern_height = 0; /* squelch bogus compiler warning */
     int origin_x = 0; /* squelch bogus compiler warning */
@@ -2214,10 +2213,6 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
 							&pattern_width,
 							&pattern_height);
     }
-    if (unlikely (status))
-	return status;
-
-    status = _cairo_surface_get_extents (&surface->base, &surface_extents);
     if (unlikely (status))
 	return status;
 
@@ -2303,10 +2298,7 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
     /* cairo_pattern_set_matrix ensures the matrix is invertible */
     assert (status == CAIRO_STATUS_SUCCESS);
 
-    cairo_matrix_init_identity (&pdf_p2d);
-    cairo_matrix_translate (&pdf_p2d, 0.0, surface_extents.height);
-    cairo_matrix_scale (&pdf_p2d, 1.0, -1.0);
-    cairo_matrix_multiply (&pdf_p2d, &cairo_p2d, &pdf_p2d);
+    cairo_matrix_multiply (&pdf_p2d, &cairo_p2d, &surface->cairo_to_pdf);
     cairo_matrix_translate (&pdf_p2d, -origin_x, -origin_y);
     cairo_matrix_translate (&pdf_p2d, 0.0, pattern_height);
     cairo_matrix_scale (&pdf_p2d, 1.0, -1.0);
