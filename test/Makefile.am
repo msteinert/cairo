@@ -542,9 +542,7 @@ REFERENCE_IMAGES = \
 	leaky-polygon.ps2.ref.png \
 	leaky-polygon.ps3.ref.png \
 	leaky-polygon.ref.png \
-	linear-gradient.pdf.argb32.ref.png \
 	linear-gradient.pdf.ref.png \
-	linear-gradient.pdf.rgb24.ref.png \
 	linear-gradient.ps3.ref.png \
 	linear-gradient.quartz.ref.png \
 	linear-gradient-reflect.pdf.argb32.ref.png \
@@ -735,9 +733,7 @@ REFERENCE_IMAGES = \
 	quartz-surface-source.ps2.ref.png \
 	quartz-surface-source.ps3.ref.png \
 	quartz-surface-source.ref.png \
-	radial-gradient.pdf.argb32.ref.png \
 	radial-gradient.pdf.ref.png \
-	radial-gradient.pdf.rgb24.ref.png \
 	radial-gradient.quartz.ref.png \
 	radial-gradient.ref.png \
 	radial-gradient.svg11.ref.png \
@@ -868,9 +864,7 @@ REFERENCE_IMAGES = \
 	stroke-image.quartz.ref.png \
 	stroke-image.ref.png \
 	surface-pattern-big-scale-down.ref.png \
-	surface-pattern.pdf.argb32.ref.png \
 	surface-pattern.pdf.ref.png \
-	surface-pattern.pdf.rgb24.ref.png \
 	surface-pattern.ps2.ref.png \
 	surface-pattern.ps3.ref.png \
 	surface-pattern.ref.png \
