@@ -228,6 +228,7 @@ REFERENCE_IMAGES = \
 	close-path.ps3.ref.png \
 	close-path.ref.png \
 	close-path-current-point.ref.png \
+	close-path-current-point.ps.ref.png \
 	composite-integer-translate-over.ps2.ref.png \
 	composite-integer-translate-over.ps3.ref.png \
 	composite-integer-translate-over.ref.png \
@@ -309,6 +310,7 @@ REFERENCE_IMAGES = \
 	device-offset-scale.ref.png \
 	extend-pad-border.ref.png \
 	extend-pad.ref.png \
+	extend-pad.ps.ref.png \
 	extend-pad-similar.ref.png \
 	extend-reflect.ps2.ref.png \
 	extend-reflect.ps3.ref.png \
@@ -372,6 +374,7 @@ REFERENCE_IMAGES = \
 	fill-degenerate-sort-order.xlib.ref.png \
 	fill-degenerate-sort-order.xlib.rgb24.ref.png \
 	fill-image.ref.png \
+	fill-image.ps.ref.png \
 	fill-missed-stop.pdf.argb32.ref.png \
 	fill-missed-stop.ps2.argb32.ref.png \
 	fill-missed-stop.ps2.rgb24.ref.png \
@@ -885,6 +888,7 @@ REFERENCE_IMAGES = \
 	surface-pattern.svg.ref.png \
 	svg-surface-source.ref.png \
 	test-fallback16-surface-source.ref.png \
+	test-fallback16-surface-source.ps.ref.png \
 	text-antialias-gray.quartz.ref.png \
 	text-antialias-gray.ref.png \
 	text-antialias-none.quartz.ref.png \
@@ -966,8 +970,7 @@ REFERENCE_IMAGES = \
 	user-font-proxy.pdf.argb32.ref.png \
 	user-font-proxy.pdf.ref.png \
 	user-font-proxy.pdf.rgb24.ref.png \
-	user-font-proxy.ps2.ref.png \
-	user-font-proxy.ps3.ref.png \
+	user-font-proxy.ps.ref.png \
 	user-font-proxy.ref.png \
 	user-font-proxy.svg11.argb32.ref.png \
 	user-font-proxy.svg11.ref.png \
