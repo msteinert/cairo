@@ -180,7 +180,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (unbounded_operator,
 	    "Operators with an effect for transparent source/mask",
-	    "XFAIL=svg12 operator", /* keywords */
+	    "operator", /* keywords */
 	    NULL, /* requirements */
 	    IMAGE_WIDTH, IMAGE_HEIGHT,
 	    NULL, draw)

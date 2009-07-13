@@ -182,7 +182,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (clip_operator,
 	    "Surface clipping with different operators",
-	    "XFAIL=svg12 clip", /* keywords */
+	    "clip", /* keywords */
 	    NULL, /* requirements */
 	    IMAGE_WIDTH, IMAGE_HEIGHT,
 	    NULL, draw)

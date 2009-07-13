@@ -169,7 +169,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (mask_glyphs,
 	    "Creates a mask using a distorted array of overlapping glyphs",
-	    "XFAIL=svg,pdf mask, glyphs", /* keywords */
+	    "mask, glyphs", /* keywords */
 	    NULL, /* requirements */
 	    WIDTH, HEIGHT,
 	    NULL, draw)

@@ -63,7 +63,7 @@ draw (cairo_t *cr, int width, int height)
 CAIRO_TEST (alpha_similar,
 	    "Tests creation of similar alpha surfaces"
 	    "\nApplication of a pure-alpha similar source is inconsistent across backends.",
-	    "XFAIL=ps,pdf,svg alpha, similar", /* keywords */
+	    "alpha, similar", /* keywords */
 	    NULL, /* requirements */
 	    10, 10,
 	    NULL, draw)

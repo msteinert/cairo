@@ -61,6 +61,11 @@
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
+    cairo_set_source_rgb (cr, 1,1,1);
+    cairo_paint (cr);
+
+    cairo_set_source_rgb (cr, 0,0,0);
+
     /* Note that without the clip, this doesn't crash... */
     cairo_new_path (cr);
     cairo_rectangle (cr, 0, 0, width, height);
@@ -80,7 +85,7 @@ draw (cairo_t *cr, int width, int height)
 CAIRO_TEST (big_trap,
 	    "Test oversize trapezoid with a clip region"
 	    "\nTest needs to be adjusted to trigger the original bug",
-	    "XFAIL trap", /* keywords */
+	    "trap", /* keywords */
 	    NULL, /* requirements */
 	    100, 100,
 	    NULL, draw)

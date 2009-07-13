@@ -174,7 +174,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (finer_grained_fallbacks,
 	    "Test that multiple PS/PDF fallback images in various locations are correct",
-	    "XFAIL=svg12 fallbacks", /* keywords */
+	    "fallbacks", /* keywords */
 	    NULL, /* requirements */
 	    WIDTH, HEIGHT,
 	    NULL, draw)

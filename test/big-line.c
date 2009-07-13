@@ -56,7 +56,7 @@ draw (cairo_t *cr, int width, int height)
 CAIRO_TEST (big_line,
 	    "Test drawing of simple lines with positive and negative coordinates > 2^16\n"
 	    "This currently fails because of 16-bit limitations in pixman.",
-	    "XFAIL line", /* keywords */
+	    "line", /* keywords */
 	    NULL, /* requirements */
 	    100, 100,
 	    NULL, draw)

@@ -71,7 +71,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (fill_degenerate_sort_order,
 	    "Tests the tessellator's event comparator with degenerate input",
-	    "XFAIL=ps degenerate, fill", /* keywords */
+	    "degenerate, fill", /* keywords */
 	    NULL, /* requirements */
 	    190, 120,
 	    NULL, draw)

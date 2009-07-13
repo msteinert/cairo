@@ -43,7 +43,7 @@ draw (cairo_t *cr, int width, int height)
 CAIRO_TEST (self_copy_overlap,
 	    "Tests painting to itself using itself as the source"
 	    "\nBackends treat this case inconsistently---vector backends are creating snapshots.",
-	    "XFAIL=!image,test-meta,test-paginated,pdf,ps,svg self-copy", /* keywords */
+	    "self-copy", /* keywords */
 	    NULL, /* requirements */
 	    200, 200,
 	    NULL, draw)

@@ -119,7 +119,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (surface_pattern_big_scale_down,
 	    "Test scaled-down transformed not-repeated surface patterns with large images and offsets",
-	    "XFAIL transform", /* keywords */
+	    "transform", /* keywords */
 	    NULL, /* requirements */
 	    512, 16,
 	    NULL, draw)

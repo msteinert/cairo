@@ -61,7 +61,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (huge_linear,
 	    "Test huge linear patterns",
-	    "XFAIL=pdf gradient, linear", /* keywords */
+	    "gradient, linear", /* keywords */
 	    NULL, /* requirements */
 	    600, 350,
 	    NULL, draw)

@@ -112,7 +112,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (degenerate_path,
 	    "Tests the behaviour of degenerate paths with different cap types",
-	    "XFAIL=ps degenerate", /* keywords */
+	    "degenerate", /* keywords */
 	    NULL, /* requirements */
 	    3*(PAD+LINE_WIDTH+PAD), 8*(LINE_WIDTH+PAD) + PAD,
 	    NULL, draw)

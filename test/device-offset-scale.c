@@ -67,7 +67,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (device_offset_scale,
 	    "Test that the device-offset transform is transformed by the ctm.",
-	    "XFAIL=svg device-offset", /* keywords */
+	    "device-offset", /* keywords */
 	    NULL, /* requirements */
 	    WIDTH, HEIGHT,
 	    NULL, draw)

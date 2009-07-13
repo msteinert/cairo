@@ -89,7 +89,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (extend_pad_border,
 	    "Test CAIRO_EXTEND_PAD for surface patterns",
-	    "XFAIL=!image,pdf,ps,svg extend", /* keywords */
+	    "extend", /* keywords */
 	    NULL, /* requirements */
 	    SIZE, SIZE,
 	    NULL, draw)

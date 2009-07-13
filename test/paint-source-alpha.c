@@ -56,7 +56,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (paint_source_alpha,
 	    "Simple test of cairo_paint with a source surface with non-opaque alpha",
-	    "XFAIL=svg12 paint, alpha", /* keywords */
+	    "paint, alpha", /* keywords */
 	    NULL, /* requirements */
 	    32, 32,
 	    NULL, draw)

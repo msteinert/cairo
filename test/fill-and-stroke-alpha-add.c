@@ -101,7 +101,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (fill_and_stroke_alpha_add,
 	    "Use a group to fill/stroke a path (each with different alpha) using DEST_OUT and ADD to combine",
-	    "XFAIL=svg12 fill-and-stroke, fill, stroke", /* keywords */
+	    "fill-and-stroke, fill, stroke", /* keywords */
 	    NULL, /* requirements */
 	    2 * SIZE + 4 * PAD, SIZE + 2 * PAD,
 	    NULL, draw)

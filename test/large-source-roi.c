@@ -70,7 +70,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (large_source_roi,
 	    "Uses a all of a large source image.",
-	    "XFAIL stress, source", /* keywords */
+	    "stress, source", /* keywords */
 	    NULL, /* requirements */
 	    20, 20,
 	    NULL, draw)

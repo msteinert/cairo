@@ -58,7 +58,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (composite_integer_translate_source,
 	    "Test simple compositing: integer-translation 32->32 SOURCE",
-	    "XFAIL=svg12 composite", /* keywords */
+	    "composite", /* keywords */
 	    NULL, /* requirements */
 	    SIZE, SIZE,
 	    NULL, draw)

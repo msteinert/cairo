@@ -77,7 +77,7 @@ draw (cairo_t *cr, int width, int height)
 CAIRO_TEST (long_lines,
 	    "Test long lines"
 	    "\nLong lines are not drawn due to the limitations of the internal 16.16 fixed-point coordinates",
-	    "XFAIL stroke, stress", /* keywords */
+	    "stroke, stress", /* keywords */
 	    NULL, /* requirements */
 	    SIZE * (LINE_NBR + 1), SIZE * (LINE_NBR + 1),
 	    NULL, draw)

@@ -66,7 +66,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (over_below_source,
 	    "A simple test drawing a circle with OVER before a triangle drawn with SOURCE",
-	    "XFAIL=svg12 operator", /* keywords */
+	    "operator", /* keywords */
 	    NULL, /* requirements */
 	    WIDTH, HEIGHT,
 	    NULL, draw)

@@ -83,7 +83,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (degenerate_dash,
 	    "Tests the behaviour of dashed segments that end on a off-on transition",
-	    "XFAIL=ps dash, degenerate", /* keywords */
+	    "dash, degenerate", /* keywords */
 	    NULL, /* requirementts */
 	    210 + 2*PAD, 210 + 2*PAD,
 	    NULL, draw)

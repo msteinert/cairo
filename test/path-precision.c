@@ -27,6 +27,9 @@
 
 #include "cairo-test.h"
 
+/* we know that this is an inherent limitation in cairo */
+#define FAIL CAIRO_TEST_XFAILURE
+
 /* Test the idempotency of path construction and copying */
 
 static cairo_test_status_t
@@ -80,7 +83,7 @@ draw (cairo_t *cr, int width, int height)
 			    "Paths differ in header type after %d operations.\n"
 			    "Expected path operation %d, found %d.\n",
 			    n, src->header.type, dst->header.type);
-	    result = CAIRO_TEST_FAILURE;
+	    result = FAIL;
 	    break;
 	}
 
@@ -91,7 +94,7 @@ draw (cairo_t *cr, int width, int height)
 			    n,
 			    src[1].point.x, src[1].point.y,
 			    dst[1].point.x, dst[1].point.y);
-	    result = CAIRO_TEST_FAILURE;
+	    result = FAIL;
 	    break;
 	}
     }
@@ -102,7 +105,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (path_precision,
 	    "Check that the path append/copy is idempotent.",
-	    "XFAIL api", /* keywords */
+	    "api", /* keywords */
 	    NULL, /* requirements */
 	    0, 0,
 	    NULL, draw)

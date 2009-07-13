@@ -59,7 +59,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (operator,
 	    "Tests using set_operator()",
-	    "XFAIL=svg12 operator", /* keywords */
+	    "operator", /* keywords */
 	    NULL, /* requirements */
 	    (SIZE+PAD) * N_OPERATORS + PAD, SIZE + 2*PAD,
 	    NULL, draw)

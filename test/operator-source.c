@@ -228,7 +228,7 @@ draw (cairo_t *cr, int width, int height)
 
 CAIRO_TEST (operator_source,
 	    "Test of CAIRO_OPERATOR_SOURCE",
-	    "XFAIL=svg12 operator", /* keywords */
+	    "operator", /* keywords */
 	    NULL, /* requirements */
 	    IMAGE_WIDTH, IMAGE_HEIGHT,
 	    NULL, draw)

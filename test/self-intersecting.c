@@ -78,7 +78,7 @@ draw (cairo_t *cr, int width, int height)
 CAIRO_TEST (self_intersecting,
 	    "Test strokes of self-intersecting paths"
 	    "\nSelf-intersecting strokes are wrong due to incremental trapezoidization.",
-	    "XFAIL stroke, trap", /* keywords */
+	    "stroke, trap", /* keywords */
 	    NULL, /* requirements */
 	    10, 20,
 	    NULL, draw)

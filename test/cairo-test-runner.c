@@ -66,7 +66,6 @@ typedef struct _cairo_test_runner {
 
     cairo_bool_t passed;
     int num_passed;
-    int num_xpassed;
     int num_skipped;
     int num_failed;
     int num_xfailed;
@@ -74,11 +73,9 @@ typedef struct _cairo_test_runner {
 
     cairo_test_list_t **crashes_per_target;
     cairo_test_list_t **fails_per_target;
-    cairo_test_list_t **xpasses_per_target;
 
     int *num_failed_per_target;
     int *num_crashed_per_target;
-    int *num_xpassed_per_target;
 
     cairo_bool_t foreground;
     cairo_bool_t list_only;
@@ -342,14 +339,10 @@ _runner_init (cairo_test_runner_t *runner)
 
     runner->passed = TRUE;
 
-    runner->xpasses_per_target = xcalloc (sizeof (cairo_test_list_t *),
-					  runner->base.num_targets);
     runner->fails_per_target = xcalloc (sizeof (cairo_test_list_t *),
 					runner->base.num_targets);
     runner->crashes_per_target = xcalloc (sizeof (cairo_test_list_t *),
 					  runner->base.num_targets);
-    runner->num_xpassed_per_target = xcalloc (sizeof (int),
-					      runner->base.num_targets);
     runner->num_failed_per_target = xcalloc (sizeof (int),
 					     runner->base.num_targets);
     runner->num_crashed_per_target = xcalloc (sizeof (int),
@@ -373,9 +366,8 @@ static void
 _runner_print_summary (cairo_test_runner_t *runner)
 {
     _log (&runner->base,
-	  "%d Passed [%d unexpectedly], %d Failed [%d crashed, %d expected], %d Skipped\n",
-	  runner->num_passed + runner->num_xpassed,
-	  runner->num_xpassed,
+	  "%d Passed, %d Failed [%d crashed, %d expected], %d Skipped\n",
+	  runner->num_passed,
 
 	  runner->num_failed + runner->num_crashed + runner->num_xfailed,
 	  runner->num_crashed,
@@ -427,23 +419,6 @@ _runner_print_details (cairo_test_runner_t *runner)
 	    }
 	    _log (&runner->base, "\n");
 	}
-
-	if (runner->num_xpassed_per_target[n]) {
-	    _log (&runner->base, "%s (%s): %d unexpectedly passed -",
-		  target->name,
-		  cairo_boilerplate_content_name (target->content),
-		  runner->num_xpassed_per_target[n]);
-
-	    for (list = runner->xpasses_per_target[n];
-		 list != NULL;
-		 list = list->next)
-	    {
-		char *name = cairo_test_get_name (list->test);
-		_log (&runner->base, " %s", name);
-		free (name);
-	    }
-	    _log (&runner->base, "\n");
-	}
     }
 }
 
@@ -469,21 +444,18 @@ _runner_fini (cairo_test_runner_t *runner)
     for (n = 0; n < runner->base.num_targets; n++) {
 	_list_free (runner->crashes_per_target[n]);
 	_list_free (runner->fails_per_target[n]);
-	_list_free (runner->xpasses_per_target[n]);
     }
     free (runner->crashes_per_target);
     free (runner->fails_per_target);
-    free (runner->xpasses_per_target);
 
     free (runner->num_crashed_per_target);
     free (runner->num_failed_per_target);
-    free (runner->num_xpassed_per_target);
 
     cairo_test_fini (&runner->base);
 
     return runner->num_failed + runner->num_crashed ?
 	CAIRO_TEST_FAILURE :
-	runner->num_passed + runner->num_xpassed + runner->num_xfailed ?
+	runner->num_passed + runner->num_xfailed ?
 	CAIRO_TEST_SUCCESS : CAIRO_TEST_UNTESTED;
 }
 
@@ -632,9 +604,8 @@ main (int argc, char **argv)
 
     for (list = tests; list != NULL; list = list->next) {
 	cairo_test_context_t ctx;
-	cairo_test_status_t status, expectation;
-	cairo_bool_t failed = FALSE, crashed = FALSE, skipped = TRUE;
-	const char *XFAIL = NULL;
+	cairo_test_status_t status;
+	cairo_bool_t failed = FALSE, xfailed = FALSE, crashed = FALSE, skipped = TRUE;
 	char *name = cairo_test_get_name (list->test);
 	int i;
 
@@ -657,7 +628,7 @@ main (int argc, char **argv)
 		    found = TRUE;
 		}
 
-		/* keyword match */
+		/* XXX keyword match */
 		if (keywords != NULL && strstr (keywords, match) != NULL) {
 		    found = ! invert;
 		    break;
@@ -715,20 +686,6 @@ main (int argc, char **argv)
 	    goto TEST_NEXT;
 	}
 
-	/* check for a failing test */
-	expectation = CAIRO_TEST_SUCCESS;
-	if (list->test->keywords != NULL &&
-	    (XFAIL = strstr (list->test->keywords, "XFAIL")) != NULL)
-	{
-	    if (XFAIL[5] == '=') {
-		/* backend specific expected failure */
-		XFAIL += 5;
-	    } else {
-		XFAIL = NULL;
-		expectation = CAIRO_TEST_FAILURE;
-	    }
-	}
-
 	_cairo_test_context_init_for_test (&ctx, &runner.base, list->test);
 	memset (target_status, 0,
 		sizeof (cairo_test_status_t) * ctx.num_targets);
@@ -739,10 +696,14 @@ main (int argc, char **argv)
 	    case CAIRO_TEST_SUCCESS:
 		skipped = FALSE;
 		break;
-	    case CAIRO_TEST_NO_MEMORY:
+	    case CAIRO_TEST_XFAILURE:
+		xfailed = TRUE;
+		goto TEST_DONE;
+	    case CAIRO_TEST_NEW:
 	    case CAIRO_TEST_FAILURE:
 		failed = TRUE;
 		goto TEST_DONE;
+	    case CAIRO_TEST_NO_MEMORY:
 	    case CAIRO_TEST_CRASHED:
 		failed = TRUE;
 		goto TEST_DONE;
@@ -757,34 +718,12 @@ main (int argc, char **argv)
 	for (n = 0; n < ctx.num_targets; n++) {
 	    const cairo_boilerplate_target_t *target;
 	    cairo_bool_t target_failed = FALSE,
+			 target_xfailed = FALSE,
 			 target_crashed = FALSE,
 			 target_skipped = TRUE;
 	    int has_similar;
 
 	    target = ctx.targets_to_test[n];
-
-	    if (XFAIL != NULL) {
-		const char *target_XFAIL, *base_XFAIL = NULL;
-
-		if (((target_XFAIL = strstr (XFAIL, target->name)) != NULL ||
-		     (base_XFAIL = target_XFAIL = strstr (XFAIL, target->basename)) != NULL) &&
-		    target_XFAIL < strpbrk (XFAIL, " \t;:") &&
-		    target_XFAIL[-1] != '!')
-		{
-		    ctx.expectation = CAIRO_TEST_FAILURE;
-
-		    if (base_XFAIL != NULL) {
-			unsigned slen;
-
-			slen = strpbrk (base_XFAIL, " \t;:,") - base_XFAIL;
-			if (slen != strlen (target->basename))
-			    ctx.expectation = CAIRO_TEST_SUCCESS;
-		    }
-		}
-		else
-		    ctx.expectation = CAIRO_TEST_SUCCESS;
-	    } else
-		ctx.expectation = expectation;
 
 	    has_similar = runner.full_test ?
 			  cairo_test_target_has_similar (&ctx, target) :
@@ -800,7 +739,11 @@ main (int argc, char **argv)
 		    case CAIRO_TEST_SUCCESS:
 			target_skipped = FALSE;
 			break;
+		    case CAIRO_TEST_XFAILURE:
+			target_xfailed = TRUE;
+			break;
 		    case CAIRO_TEST_NO_MEMORY:
+		    case CAIRO_TEST_NEW:
 		    case CAIRO_TEST_FAILURE:
 			target_failed = TRUE;
 			break;
@@ -820,26 +763,19 @@ main (int argc, char **argv)
 							      list->test);
 		crashed = TRUE;
 	    } else if (target_failed) {
-		if (ctx.expectation == CAIRO_TEST_SUCCESS) {
-		    target_status[n] = CAIRO_TEST_FAILURE;
-		    runner.num_failed_per_target[n]++;
-		    runner.fails_per_target[n] = _list_prepend (runner.fails_per_target[n],
-								list->test);
-		} else
-		    target_status[n] = CAIRO_TEST_SUCCESS;
+		target_status[n] = CAIRO_TEST_FAILURE;
+		runner.num_failed_per_target[n]++;
+		runner.fails_per_target[n] = _list_prepend (runner.fails_per_target[n],
+							    list->test);
 
 		failed = TRUE;
+	    } else if (target_xfailed) {
+		target_status[n] = CAIRO_TEST_XFAILURE;
+		xfailed = TRUE;
 	    } else if (target_skipped) {
 		target_status[n] = CAIRO_TEST_UNTESTED;
 	    } else {
 		target_status[n] = CAIRO_TEST_SUCCESS;
-		/* An unexpected pass should also be flagged */
-		if (ctx.expectation != CAIRO_TEST_SUCCESS) {
-		    target_status[n] = CAIRO_TEST_FAILURE;
-		    runner.num_xpassed_per_target[n]++;
-		    runner.xpasses_per_target[n] = _list_prepend (runner.xpasses_per_target[n],
-								  list->test);
-		}
 		skipped = FALSE;
 	    }
 	}
@@ -866,44 +802,32 @@ main (int argc, char **argv)
 	    runner.num_crashed++;
 	    runner.passed = FALSE;
 	} else if (failed) {
-	    if (expectation == CAIRO_TEST_SUCCESS) {
-		len = 0;
-		for (n = 0 ; n < runner.base.num_targets; n++) {
-		    if (target_status[n] == CAIRO_TEST_FAILURE) {
-			if (strstr (targets,
-				    runner.base.targets_to_test[n]->name) == NULL)
-			{
-			    len += snprintf (targets + len,
-					     sizeof (targets) - len,
-					     "%s, ",
-					     runner.base.targets_to_test[n]->name);
-			}
+	    len = 0;
+	    for (n = 0 ; n < runner.base.num_targets; n++) {
+		if (target_status[n] == CAIRO_TEST_FAILURE) {
+		    if (strstr (targets,
+				runner.base.targets_to_test[n]->name) == NULL)
+		    {
+			len += snprintf (targets + len,
+					 sizeof (targets) - len,
+					 "%s, ",
+					 runner.base.targets_to_test[n]->name);
 		    }
 		}
-		if (len == 0) {
-		    _log (&runner.base, "%s: XFAIL\n", name);
-		    runner.num_xfailed++;
-		} else {
-		    targets[len-2] = '\0';
-		    _log (&runner.base, "%s: FAIL (%s)\n", name, targets);
-		    runner.num_failed++;
-		    runner.passed = FALSE;
-		}
-	    } else {
-		_log (&runner.base, "%s: XFAIL\n", name);
-		runner.num_xfailed++;
 	    }
+	    targets[len-2] = '\0';
+	    _log (&runner.base, "%s: FAIL (%s)\n", name, targets);
+	    runner.num_failed++;
+	    runner.passed = FALSE;
+	} else if (xfailed) {
+	    _log (&runner.base, "%s: XFAIL\n", name);
+	    runner.num_xfailed++;
 	} else if (skipped) {
 	    _log (&runner.base, "%s: UNTESTED\n", name);
 	    runner.num_skipped++;
 	} else {
-	    if (expectation == CAIRO_TEST_SUCCESS) {
-		_log (&runner.base, "%s: PASS\n", name);
-		runner.num_passed++;
-	    } else {
-		_log (&runner.base, "%s: XPASS\n", name);
-		runner.num_xpassed++;
-	    }
+	    _log (&runner.base, "%s: PASS\n", name);
+	    runner.num_passed++;
 	}
 	fflush (runner.base.log_file);
 
@@ -921,7 +845,6 @@ main (int argc, char **argv)
     for (n = 0 ; n < runner.base.num_targets; n++) {
 	runner.crashes_per_target[n] = _list_reverse (runner.crashes_per_target[n]);
 	runner.fails_per_target[n] = _list_reverse (runner.fails_per_target[n]);
-	runner.xpasses_per_target[n] = _list_reverse (runner.xpasses_per_target[n]);
     }
 
     _runner_print_results (&runner);
