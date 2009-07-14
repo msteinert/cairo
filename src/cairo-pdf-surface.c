@@ -771,52 +771,39 @@ static const char *
 _cairo_operator_to_pdf_blend_mode (cairo_operator_t op)
 {
     switch (op) {
-    case CAIRO_OPERATOR_MULTIPLY:
-	return "Multiply";
-
-    case CAIRO_OPERATOR_SCREEN:
-	return "Screen";
-
-    case CAIRO_OPERATOR_OVERLAY:
-	return "Overlay";
-
-    case CAIRO_OPERATOR_DARKEN:
-	return "Darken";
-
-    case  CAIRO_OPERATOR_LIGHTEN:
-	return "Lighten";
-
-    case CAIRO_OPERATOR_COLOR_DODGE:
-	return "ColorDodge";
-
-    case CAIRO_OPERATOR_COLOR_BURN:
-	return "ColorBurn";
-
-    case CAIRO_OPERATOR_HARD_LIGHT:
-	return "HardLight";
-
-    case CAIRO_OPERATOR_SOFT_LIGHT:
-	return "SoftLight";
-
-    case CAIRO_OPERATOR_DIFFERENCE:
-	return "Difference";
-
-    case CAIRO_OPERATOR_EXCLUSION:
-	return "Exclusion";
-
-    case CAIRO_OPERATOR_HSL_HUE:
-	return "Hue";
-
-    case CAIRO_OPERATOR_HSL_SATURATION:
-	return "Saturation";
-
-    case CAIRO_OPERATOR_HSL_COLOR:
-	return "Color";
-
-    case CAIRO_OPERATOR_HSL_LUMINOSITY:
-	return "Luminosity";
+    /* The extend blend mode operators */
+    case CAIRO_OPERATOR_MULTIPLY:       return "Multiply";
+    case CAIRO_OPERATOR_SCREEN:         return "Screen";
+    case CAIRO_OPERATOR_OVERLAY:        return "Overlay";
+    case CAIRO_OPERATOR_DARKEN:         return "Darken";
+    case CAIRO_OPERATOR_LIGHTEN:        return "Lighten";
+    case CAIRO_OPERATOR_COLOR_DODGE:    return "ColorDodge";
+    case CAIRO_OPERATOR_COLOR_BURN:     return "ColorBurn";
+    case CAIRO_OPERATOR_HARD_LIGHT:     return "HardLight";
+    case CAIRO_OPERATOR_SOFT_LIGHT:     return "SoftLight";
+    case CAIRO_OPERATOR_DIFFERENCE:     return "Difference";
+    case CAIRO_OPERATOR_EXCLUSION:      return "Exclusion";
+    case CAIRO_OPERATOR_HSL_HUE:        return "Hue";
+    case CAIRO_OPERATOR_HSL_SATURATION: return "Saturation";
+    case CAIRO_OPERATOR_HSL_COLOR:      return "Color";
+    case CAIRO_OPERATOR_HSL_LUMINOSITY: return "Luminosity";
 
     default:
+    /* The original Porter-Duff set */
+    case CAIRO_OPERATOR_CLEAR:
+    case CAIRO_OPERATOR_SOURCE:
+    case CAIRO_OPERATOR_OVER:
+    case CAIRO_OPERATOR_IN:
+    case CAIRO_OPERATOR_OUT:
+    case CAIRO_OPERATOR_ATOP:
+    case CAIRO_OPERATOR_DEST:
+    case CAIRO_OPERATOR_DEST_OVER:
+    case CAIRO_OPERATOR_DEST_IN:
+    case CAIRO_OPERATOR_DEST_OUT:
+    case CAIRO_OPERATOR_DEST_ATOP:
+    case CAIRO_OPERATOR_XOR:
+    case CAIRO_OPERATOR_ADD:
+    case CAIRO_OPERATOR_SATURATE:
 	return "Normal";
     }
 }
@@ -839,10 +826,11 @@ _cairo_pdf_surface_emit_group_resources (cairo_pdf_surface_t         *surface,
 				     "   /ExtGState <<\n");
 
 	for (i = 0; i < CAIRO_NUM_OPERATORS; i++) {
-	    if (res->operators[i])
+	    if (res->operators[i]) {
 		_cairo_output_stream_printf (surface->output,
 					     "      /b%d << /BM /%s >>\n",
 					     i, _cairo_operator_to_pdf_blend_mode(i));
+	    }
 	}
 
 	for (i = 0; i < num_alphas; i++) {
@@ -5125,6 +5113,19 @@ _pdf_operator_supported (cairo_operator_t op)
 	return TRUE;
 
     default:
+    case CAIRO_OPERATOR_CLEAR:
+    case CAIRO_OPERATOR_SOURCE:
+    case CAIRO_OPERATOR_IN:
+    case CAIRO_OPERATOR_OUT:
+    case CAIRO_OPERATOR_ATOP:
+    case CAIRO_OPERATOR_DEST:
+    case CAIRO_OPERATOR_DEST_OVER:
+    case CAIRO_OPERATOR_DEST_IN:
+    case CAIRO_OPERATOR_DEST_OUT:
+    case CAIRO_OPERATOR_DEST_ATOP:
+    case CAIRO_OPERATOR_XOR:
+    case CAIRO_OPERATOR_ADD:
+    case CAIRO_OPERATOR_SATURATE:
 	return FALSE;
     }
 }
@@ -5154,10 +5155,10 @@ _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t  *surface,
 		    return CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN;
 	    }
 	}
+
+	return CAIRO_STATUS_SUCCESS;
     }
 
-    if (_pdf_operator_supported (op))
-	return CAIRO_STATUS_SUCCESS;
 
     /* The SOURCE operator is supported if the pattern is opaque or if
      * there is nothing painted underneath. */
