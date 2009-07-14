@@ -441,10 +441,54 @@ _cairo_glitz_surface_set_matrix (cairo_glitz_surface_t *surface,
     glitz_surface_set_transform (surface->surface, &transform);
 }
 
+static cairo_bool_t
+_is_supported_operator (cairo_operator_t op)
+{
+    /* This is really just a if (op < SATURATE), but we use a switch
+     * so the compiler will warn if we ever add more operators.
+     */
+    switch (op) {
+    case CAIRO_OPERATOR_CLEAR:
+    case CAIRO_OPERATOR_SOURCE:
+    case CAIRO_OPERATOR_OVER:
+    case CAIRO_OPERATOR_IN:
+    case CAIRO_OPERATOR_OUT:
+    case CAIRO_OPERATOR_ATOP:
+    case CAIRO_OPERATOR_DEST:
+    case CAIRO_OPERATOR_DEST_OVER:
+    case CAIRO_OPERATOR_DEST_IN:
+    case CAIRO_OPERATOR_DEST_OUT:
+    case CAIRO_OPERATOR_DEST_ATOP:
+    case CAIRO_OPERATOR_XOR:
+    case CAIRO_OPERATOR_ADD:
+	return TRUE;
+
+    case CAIRO_OPERATOR_SATURATE:
+	/* nobody likes saturate, expect that it's required to do
+	 * seamless polygons!
+	 */
+    case CAIRO_OPERATOR_MULTIPLY:
+    case CAIRO_OPERATOR_SCREEN:
+    case CAIRO_OPERATOR_OVERLAY:
+    case CAIRO_OPERATOR_DARKEN:
+    case CAIRO_OPERATOR_LIGHTEN:
+    case CAIRO_OPERATOR_COLOR_DODGE:
+    case CAIRO_OPERATOR_COLOR_BURN:
+    case CAIRO_OPERATOR_HARD_LIGHT:
+    case CAIRO_OPERATOR_SOFT_LIGHT:
+    case CAIRO_OPERATOR_DIFFERENCE:
+    case CAIRO_OPERATOR_EXCLUSION:
+    case CAIRO_OPERATOR_HSL_HUE:
+    case CAIRO_OPERATOR_HSL_SATURATION:
+    case CAIRO_OPERATOR_HSL_COLOR:
+    case CAIRO_OPERATOR_HSL_LUMINOSITY:
+	return FALSE;
+    }
+}
 static glitz_operator_t
 _glitz_operator (cairo_operator_t op)
 {
-    switch (op) {
+    switch ((int) op) {
     case CAIRO_OPERATOR_CLEAR:
 	return GLITZ_OPERATOR_CLEAR;
 
@@ -474,24 +518,17 @@ _glitz_operator (cairo_operator_t op)
 	return GLITZ_OPERATOR_XOR;
     case CAIRO_OPERATOR_ADD:
 	return GLITZ_OPERATOR_ADD;
-    case CAIRO_OPERATOR_SATURATE:
-	/* XXX: This line should never be reached. Glitz backend should bail
-	   out earlier if saturate operator is used. OpenGL can't do saturate
-	   with pre-multiplied colors. Solid colors can still be done as we
-	   can just un-pre-multiply them. However, support for that will have
-	   to be added to glitz. */
 
-	/* fall-through */
-	break;
+    default:
+	ASSERT_NOT_REACHED;
+
+	/* Something's very broken if this line of code can be reached, so
+	 * we want to return something that would give a noticeably
+	 * incorrect result. The XOR operator seems so rearely desired
+	 * that it should fit the bill here.
+	 */
+	return CAIRO_OPERATOR_XOR;
     }
-
-    ASSERT_NOT_REACHED;
-
-    /* Something's very broken if this line of code can be reached, so
-       we want to return something that would give a noticeably
-       incorrect result. The XOR operator seems so rearely desired
-       that it should fit the bill here. */
-    return CAIRO_OPERATOR_XOR;
 }
 
 #define CAIRO_GLITZ_FEATURE_OK(surface, name)				  \
@@ -897,7 +934,7 @@ _cairo_glitz_surface_composite (cairo_operator_t op,
     cairo_glitz_surface_t		*mask;
     cairo_int_status_t			status;
 
-    if (op == CAIRO_OPERATOR_SATURATE)
+    if (! _is_supported_operator (op))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (_glitz_ensure_target (dst->surface))
@@ -1001,6 +1038,9 @@ _cairo_glitz_surface_fill_rectangles (void		      *abstract_dst,
     glitz_rectangle_t *glitz_rects = stack_rects;
     glitz_rectangle_t *current_rect;
     int i;
+
+    if (! _is_supported_operator (op))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (n_rects > ARRAY_LENGTH (stack_rects)) {
         glitz_rects = _cairo_malloc_ab (n_rects, sizeof (glitz_rectangle_t));
@@ -1133,7 +1173,7 @@ _cairo_glitz_surface_composite_trapezoids (cairo_operator_t  op,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    if (op == CAIRO_OPERATOR_SATURATE)
+    if (! _is_supported_operator (op))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (_glitz_ensure_target (dst->surface))
@@ -2028,7 +2068,7 @@ _cairo_glitz_surface_old_show_glyphs (cairo_scaled_font_t *scaled_font,
 	scaled_font->surface_backend != _cairo_glitz_surface_get_backend ())
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    if (op == CAIRO_OPERATOR_SATURATE)
+    if (! _is_supported_operator (op))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     /* XXX Unbounded operators are not handled correctly */
