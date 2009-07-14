@@ -427,35 +427,35 @@ cairo_pop_group_to_source (cairo_t *cr);
  * @CAIRO_OPERATOR_SCREEN: source and destination are complemented and
  * multiplied. This causes the result to be at least as light as the lighter
  * inputs.
- * @CAIRO_OPERATOR_OVERLAY: multiplies or screens, depending on the 
+ * @CAIRO_OPERATOR_OVERLAY: multiplies or screens, depending on the
  * lightness of the destination color.
  * @CAIRO_OPERATOR_DARKEN: replaces the destination with the source if it
  * is darker, otherwise keeps the source.
  * @CAIRO_OPERATOR_LIGHTEN: replaces the destination with the source if it
  * is lighter, otherwise keeps the source.
- * @CAIRO_OPERATOR_COLOR_DODGE: brightens the destination color to reflect 
+ * @CAIRO_OPERATOR_COLOR_DODGE: brightens the destination color to reflect
  * the source color.
  * @CAIRO_OPERATOR_COLOR_BURN: darkens the destination color to reflect
  * the source color.
- * @CAIRO_OPERATOR_HARD_LIGHT: Multiplies or screens, dependant on source 
+ * @CAIRO_OPERATOR_HARD_LIGHT: Multiplies or screens, dependant on source
  * color.
- * @CAIRO_OPERATOR_SOFT_LIGHT: Darkens or lightens, dependant on source 
+ * @CAIRO_OPERATOR_SOFT_LIGHT: Darkens or lightens, dependant on source
  * color.
- * @CAIRO_OPERATOR_DIFFERENCE: Takes the difference of the source and 
+ * @CAIRO_OPERATOR_DIFFERENCE: Takes the difference of the source and
  * destination color.
  * @CAIRO_OPERATOR_EXCLUSION: Produces an effect similar to difference, but
  * with lower contrast.
- * @CAIRO_OPERATOR_HSL_HUE: Creates a color with the hue of the source 
+ * @CAIRO_OPERATOR_HSL_HUE: Creates a color with the hue of the source
  * and the saturation and luminosity of the target.
  * @CAIRO_OPERATOR_HSL_SATURATION: Creates a color with the saturation
- * of the source and the hue and luminosity of the target. Painting with 
+ * of the source and the hue and luminosity of the target. Painting with
  * this mode onto a gray area prduces no change.
- * @CAIRO_OPERATOR_HSL_COLOR: Creates a color with the hue and saturation 
- * of the source and the luminosity of the target. This preserves the gray 
+ * @CAIRO_OPERATOR_HSL_COLOR: Creates a color with the hue and saturation
+ * of the source and the luminosity of the target. This preserves the gray
  * levels of the target and is useful for coloring monochrome images or
  * tinting color images.
- * @CAIRO_OPERATOR_HSL_LUMINOSITY: Creates a color with the luminosity of 
- * the source and the hue and saturation of the target. This produces an 
+ * @CAIRO_OPERATOR_HSL_LUMINOSITY: Creates a color with the luminosity of
+ * the source and the hue and saturation of the target. This produces an
  * inverse effect to @CAIRO_OPERATOR_HSL_COLOR.
  *
  * #cairo_operator_t is used to set the compositing operator for all cairo
