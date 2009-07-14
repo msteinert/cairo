@@ -308,6 +308,10 @@ REFERENCE_IMAGES = \
 	device-offset.ref.png \
 	device-offset.rgb24.ref.png \
 	device-offset-scale.ref.png \
+	extended-blend.argb32.ref.png \
+	extended-blend.rgb24.ref.png \
+	extended-blend-alpha.argb32.ref.png \
+	extended-blend-alpha.rgb24.ref.png \
 	extend-pad-border.ref.png \
 	extend-pad.ref.png \
 	extend-pad.ps.ref.png \
