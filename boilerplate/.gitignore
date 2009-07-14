@@ -21,3 +21,4 @@ Makefile.am.features
 check-link
 cairo-boilerplate-constructors.c
 cairo-boilerplate-constructors
+make-cairo-boilerplate-constructors
