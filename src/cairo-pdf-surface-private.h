@@ -52,7 +52,10 @@ typedef struct _cairo_pdf_resource {
     unsigned int id;
 } cairo_pdf_resource_t;
 
+#define CAIRO_NUM_OPERATORS (CAIRO_OPERATOR_HSL_LUMINOSITY + 1)
+
 typedef struct _cairo_pdf_group_resources {
+    cairo_bool_t  operators[CAIRO_NUM_OPERATORS];
     cairo_array_t alphas;
     cairo_array_t smasks;
     cairo_array_t patterns;
@@ -177,6 +180,7 @@ struct _cairo_pdf_surface {
 
     cairo_bool_t force_fallbacks;
 
+    cairo_operator_t current_operator;
     cairo_bool_t current_pattern_is_solid_color;
     cairo_bool_t current_color_is_stroke;
     double current_color_red;
