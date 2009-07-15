@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #define NAME "make-cairo-boilerplate-constructors.c"
 
@@ -67,8 +68,8 @@ add_name (const char *name)
 }
 
 static int
-scan_file (const char   *filename,
-           FILE         *fp)
+scan_file (const char *filename,
+           FILE       *fp)
 {
     int line_num = 0;
     char linebuf[1024];
@@ -116,16 +117,22 @@ scan_file (const char   *filename,
 int
 main (int argc, char **argv)
 {
+    char buf[PATH_MAX];
     int i;
     int fail = 0;
     struct name *node;
 
-    for (i=1; i<argc; i++) {
-        FILE *fp = fopen (argv[i], "r");
-        if (fp) {
+    for (i = 2; i < argc; i++) {
+        FILE *fp;
+
+	snprintf (buf, sizeof (buf), "%s/%s", argv[1], argv[i]);
+
+	fp = fopen (buf, "r");
+        if (fp != NULL) {
             fail |= scan_file (argv[i], fp);
             fclose (fp);
-        }
+        } else
+	    fail = 1;
     }
     if (fail)
         exit(1);

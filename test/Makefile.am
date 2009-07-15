@@ -70,10 +70,10 @@ test_sources += $(test)
 TESTS += cairo-test-suite$(EXEEXT)
 
 make-cairo-test-constructors$(EXEEXT): make-cairo-test-constructors.c
-	$(CC) -o $@ make-cairo-test-constructors.c
+	$(CC) $^ -o $@
 
 cairo-test-constructors.c: Makefile $(test_sources) make-cairo-test-constructors$(EXEEXT)
-	(cd $(srcdir) && ./make-cairo-test-constructors$(EXEEXT) $(test_sources)) > $@
+	./make-cairo-test-constructors$(EXEEXT) $(srcdir) $(test_sources) > $@
 
 cairo_test_suite_SOURCES = 		\
 	$(cairo_test_suite_sources)	\
@@ -121,9 +121,8 @@ cairo_test_trace_DEPENDENCIES = \
 endif
 
 BUILT_SOURCES += cairo-test-constructors.c
-EXTRA_DIST += $(BUILT_SOURCES) $(noinst_SCRIPTS) COPYING
-CLEANFILES += $(BUILT_SOURCES)
-CLEANFILES += make-cairo-test-constructors
+EXTRA_DIST += $(BUILT_SOURCES) $(noinst_SCRIPTS) COPYING make-cairo-test-constructors.c
+CLEANFILES += $(BUILT_SOURCES) make-cairo-test-constructors
 
 # All tests which have a reference image go here.
 REFERENCE_IMAGES = \

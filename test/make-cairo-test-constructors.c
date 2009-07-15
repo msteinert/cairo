@@ -32,6 +32,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 
 #define NAME "make-cairo-test-constructors.c"
 
@@ -115,16 +116,22 @@ scan_file (const char   *filename,
 int
 main (int argc, char **argv)
 {
+    char buf[PATH_MAX];
     int i;
     int fail = 0;
     struct name *node;
 
-    for (i=1; i<argc; i++) {
-        FILE *fp = fopen (argv[i], "r");
+    for (i = 2; i < argc; i++) {
+        FILE *fp;
+
+	snprintf (buf, sizeof (buf), "%s/%s", argv[1], argv[i]);
+
+	fp = fopen (buf, "r");
         if (fp) {
             fail |= scan_file (argv[i], fp);
             fclose (fp);
-        }
+        } else
+	    fail = 1;
     }
     if (fail)
         exit(1);
