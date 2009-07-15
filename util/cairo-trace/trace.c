@@ -4357,3 +4357,73 @@ cairo_meta_surface_replay (cairo_surface_t *meta, cairo_surface_t *target)
 
     return ret;
 }
+
+#if CAIRO_HAS_VG_SURFACE
+#include <cairo-vg.h>
+cairo_surface_t *
+cairo_vg_surface_create (cairo_vg_context_t *context,
+			 cairo_content_t content,
+			 int width, int height)
+{
+    cairo_surface_t *ret;
+    long surface_id;
+
+    ret = DLCALL (cairo_vg_surface_create, context, content, width, height);
+    surface_id = _create_surface_id (ret);
+
+    _emit_line_info ();
+    if (_write_lock ()) {
+	_trace_printf ("dict\n"
+		       "  /type /vg set\n"
+		       "  /content //%s set\n"
+		       "  /width %d set\n"
+		       "  /height %d set\n"
+		       "  surface dup /s%ld exch def\n",
+		       _content_to_string (content),
+		       width, height,
+		       surface_id);
+	_surface_object_set_size (ret, width, height);
+	_get_object (SURFACE, ret)->defined = true;
+	_push_operand (SURFACE, ret);
+	_write_unlock ();
+    }
+
+    return ret;
+}
+
+cairo_surface_t *
+cairo_vg_surface_create_for_image (cairo_vg_context_t *context,
+				   VGImage image,
+				   VGImageFormat format,
+				   int width, int height)
+{
+    cairo_surface_t *ret;
+    long surface_id;
+
+    ret = DLCALL (cairo_vg_surface_create_for_image,
+		  context, image, format, width, height);
+    surface_id = _create_surface_id (ret);
+
+    _emit_line_info ();
+    if (_write_lock ()) {
+	cairo_content_t content;
+
+	content = DLCALL (cairo_surface_get_content, ret);
+	_trace_printf ("dict\n"
+		       "  /type /vg set\n"
+		       "  /content //%s set\n"
+		       "  /width %d set\n"
+		       "  /height %d set\n"
+		       "  surface dup /s%ld exch def\n",
+		       _content_to_string (content),
+		       width, height,
+		       surface_id);
+	_surface_object_set_size (ret, width, height);
+	_get_object (SURFACE, ret)->defined = true;
+	_push_operand (SURFACE, ret);
+	_write_unlock ();
+    }
+
+    return ret;
+}
+#endif

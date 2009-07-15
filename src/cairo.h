@@ -1942,6 +1942,7 @@ cairo_surface_status (cairo_surface_t *surface);
  * @CAIRO_SURFACE_TYPE_SCRIPT: The surface is of type script, since 1.10
  * @CAIRO_SURFACE_TYPE_QT: The surface is of type Qt, since 1.10
  * @CAIRO_SURFACE_TYPE_META: The surface is a meta-type, since 1.10
+ * @CAIRO_SURFACE_TYPE_VG: The surface is a OpenVG surface, since 1.10
  *
  * #cairo_surface_type_t is used to describe the type of a given
  * surface. The surface types are also known as "backends" or "surface
@@ -1983,7 +1984,8 @@ typedef enum _cairo_surface_type {
     CAIRO_SURFACE_TYPE_QUARTZ_IMAGE,
     CAIRO_SURFACE_TYPE_SCRIPT,
     CAIRO_SURFACE_TYPE_QT,
-    CAIRO_SURFACE_TYPE_META
+    CAIRO_SURFACE_TYPE_META,
+    CAIRO_SURFACE_TYPE_VG
 } cairo_surface_type_t;
 
 cairo_public cairo_surface_type_t

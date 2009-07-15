@@ -43,7 +43,7 @@ Amaury Jacquot <sxpert@esitcom.org> Documentation review, appplication testing
 Adrian Johnson <ajohnson@redneon.com> PDF backend improvement
 Michael Johnson <ahze@ahze.net> Bug fix for pre-C99 compilers
 Jonathon Jongsma <jonathon.jongsma@gmail.com> Fix documentation typos
-Øyvind Kolås <pippin@freedesktop.org> Bug fixes. Better default values.
+Øyvind Kolås <pippin@freedesktop.org> OpenVG backend, Bug fixes. Better default values.
 Martin Kretzschmar <martink@gnome.org> Arithmetic fix for 64-bit architectures
 Mathieu Lacage <Mathieu.Lacage@sophia.inria.fr> several bug/typo fixes
 Dominic Lachowicz <domlachowicz@gmail.com> PDF conformance fix, fix image surface to zero out contents
@@ -89,6 +89,7 @@ Travis Spencer <tspencer@cs.pdx.edu> XCB backend fix
 Bill Spitzak <spitzak@d2.com> Build fix to find Xrender.h without xrender.pc
 Zhe Su <james.su@gmail.com> Add support for fontconfig's embeddedbitmap option
 Owen Taylor <otaylor@redhat.com> Font rewrite, documentation, win32 backend
+Pierre Tardy <tardyp@gmail.com> EGL support and testing, OpenVG backend
 Karl Tomlinson <karlt+@karlt.net> Optimisation and obscure bug fixes (mozilla)
 Alp Toker <alp@atoker.com> Fix several code/comment typos
 Malcolm Tredinnick <malcolm@commsecure.com.au> Documentation fixes

@@ -141,6 +141,7 @@ draw (cairo_t *cr, int width, int height)
     case CAIRO_SURFACE_TYPE_SCRIPT:
     case CAIRO_SURFACE_TYPE_QT:
     case CAIRO_SURFACE_TYPE_META:
+    case CAIRO_SURFACE_TYPE_VG:
     default:
         uses_clip_rects = FALSE;
         break;

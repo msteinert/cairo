@@ -258,3 +258,6 @@ cairo_directfb_sources = cairo-directfb-surface.c
 
 cairo_script_headers = cairo-script.h
 cairo_script_sources = cairo-script-surface.c
+
+cairo_vg_headers = cairo-vg.h
+cairo_vg_sources = cairo-vg-surface.c

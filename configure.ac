@@ -242,6 +242,49 @@ CAIRO_ENABLE_SURFACE_BACKEND(directfb, directfb, no, [
 
 dnl ===========================================================================
 
+CAIRO_ENABLE_SURFACE_BACKEND(vg, OpenVG, no, [
+  dnl There is no pkgconfig for OpenVG; lets do a header check
+  AC_CHECK_HEADER(VG/openvg.h,, [use_vg="no (OpenVG headers not found)"])
+  if test "x$use_vg" = "xyes"; then
+      vg_NONPKGCONFIG_CFLAGS=
+      vg_NONPKGCONFIG_LIBS="-lOpenVG"
+      need_egl_functions=yes
+      need_glx_functions=yes
+  fi
+])
+
+CAIRO_ENABLE_FUNCTIONS(egl, EGL, auto, [
+  if test "x$need_egl_functions" = "xyes"; then
+    AC_CHECK_HEADER(EGL/egl.h,, [use_egl="no (EGL headers not found)"])
+    if test "x$use_egl" = "xyes"; then
+      egl_NONPKGCONFIG_CFLAGS=
+      egl_NONPKGCONFIG_LIBS=
+      for lib in EGL egl13 egl12 egl11; do
+	if test -z "$egl_NONPKGCONFIG_LIBS"; then
+          AC_CHECK_LIB($lib, eglGetError, egl_NONPKGCONFIG_LIBS="-l$lib")
+	fi
+      done
+      if test -z "$egl_NONPKGCONFIG_LIBS"; then
+        use_egl="no (EGL library not found)"
+      fi
+    fi
+  else
+      use_egl="no (not required by any backend)"
+  fi
+])
+
+CAIRO_ENABLE_FUNCTIONS(glx, GLX, auto, [
+  if test "x$need_glx_functions" = "xyes"; then
+    AC_CHECK_HEADER(GL/glx.h,, [use_glx="no (GLX headers not found)"])
+    glx_NONPKGCONFIG_CFLAGS=
+    glx_NONPKGCONFIG_LIBS="-lGL"
+  else
+      use_glx="no (not required by any backend)"
+  fi
+])
+
+dnl ===========================================================================
+
 any2ppm_cs=no
 CAIRO_ENABLE_SURFACE_BACKEND(script, script, no, [
   any2ppm_cs=yes

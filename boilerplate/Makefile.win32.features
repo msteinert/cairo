@@ -159,6 +159,36 @@ enabled_cairo_boilerplate_private += $(cairo_boilerplate_directfb_private)
 enabled_cairo_boilerplate_sources += $(cairo_boilerplate_directfb_sources)
 endif
 
+unsupported_cairo_boilerplate_headers += $(cairo_boilerplate_vg_headers)
+all_cairo_boilerplate_headers += $(cairo_boilerplate_vg_headers)
+all_cairo_boilerplate_private += $(cairo_boilerplate_vg_private)
+all_cairo_boilerplate_sources += $(cairo_boilerplate_vg_sources)
+ifeq ($(CAIRO_HAS_VG_SURFACE),1)
+enabled_cairo_boilerplate_headers += $(cairo_boilerplate_vg_headers)
+enabled_cairo_boilerplate_private += $(cairo_boilerplate_vg_private)
+enabled_cairo_boilerplate_sources += $(cairo_boilerplate_vg_sources)
+endif
+
+supported_cairo_boilerplate_headers += $(cairo_boilerplate_egl_headers)
+all_cairo_boilerplate_headers += $(cairo_boilerplate_egl_headers)
+all_cairo_boilerplate_private += $(cairo_boilerplate_egl_private)
+all_cairo_boilerplate_sources += $(cairo_boilerplate_egl_sources)
+ifeq ($(CAIRO_HAS_EGL_FUNCTIONS),1)
+enabled_cairo_boilerplate_headers += $(cairo_boilerplate_egl_headers)
+enabled_cairo_boilerplate_private += $(cairo_boilerplate_egl_private)
+enabled_cairo_boilerplate_sources += $(cairo_boilerplate_egl_sources)
+endif
+
+supported_cairo_boilerplate_headers += $(cairo_boilerplate_glx_headers)
+all_cairo_boilerplate_headers += $(cairo_boilerplate_glx_headers)
+all_cairo_boilerplate_private += $(cairo_boilerplate_glx_private)
+all_cairo_boilerplate_sources += $(cairo_boilerplate_glx_sources)
+ifeq ($(CAIRO_HAS_GLX_FUNCTIONS),1)
+enabled_cairo_boilerplate_headers += $(cairo_boilerplate_glx_headers)
+enabled_cairo_boilerplate_private += $(cairo_boilerplate_glx_private)
+enabled_cairo_boilerplate_sources += $(cairo_boilerplate_glx_sources)
+endif
+
 unsupported_cairo_boilerplate_headers += $(cairo_boilerplate_script_headers)
 all_cairo_boilerplate_headers += $(cairo_boilerplate_script_headers)
 all_cairo_boilerplate_private += $(cairo_boilerplate_script_private)

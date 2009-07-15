@@ -855,7 +855,8 @@ REPEAT:
 
     if (cairo_surface_status (surface)) {
 	MF (MEMFAULT_PRINT_FAULTS ());
-	cairo_test_log (ctx, "Error: Created an error surface\n");
+	cairo_test_log (ctx, "Error: Created an error surface: %s\n",
+			cairo_status_to_string (cairo_surface_status (surface)));
 	ret = CAIRO_TEST_FAILURE;
 	goto UNWIND_STRINGS;
     }

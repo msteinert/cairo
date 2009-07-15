@@ -24,6 +24,9 @@ New experimental backends:
 
    QT
 
+   OpenVG - The initial work was done by Øyvind Kolås, and made ready for
+            inclusion by Pierre Tardy.
+
 
 Snapshot 1.9.2 (2009-06-12)
 ===========================
