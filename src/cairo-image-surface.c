@@ -946,13 +946,13 @@ _pixman_operator (cairo_operator_t op)
     case CAIRO_OPERATOR_DARKEN:
 	return PIXMAN_OP_DARKEN;
     case CAIRO_OPERATOR_LIGHTEN:
- 	return PIXMAN_OP_LIGHTEN;
+	return PIXMAN_OP_LIGHTEN;
     case CAIRO_OPERATOR_COLOR_DODGE:
- 	return PIXMAN_OP_COLOR_DODGE;
+	return PIXMAN_OP_COLOR_DODGE;
     case CAIRO_OPERATOR_COLOR_BURN:
- 	return PIXMAN_OP_COLOR_BURN;
+	return PIXMAN_OP_COLOR_BURN;
     case CAIRO_OPERATOR_HARD_LIGHT:
- 	return PIXMAN_OP_HARD_LIGHT;
+	return PIXMAN_OP_HARD_LIGHT;
     case CAIRO_OPERATOR_SOFT_LIGHT:
 	return PIXMAN_OP_SOFT_LIGHT;
     case CAIRO_OPERATOR_DIFFERENCE:
@@ -967,7 +967,9 @@ _pixman_operator (cairo_operator_t op)
 	return PIXMAN_OP_HSL_COLOR;
     case CAIRO_OPERATOR_HSL_LUMINOSITY:
 	return PIXMAN_OP_HSL_LUMINOSITY;
+
     default:
+	ASSERT_NOT_REACHED;
 	return PIXMAN_OP_OVER;
     }
 }
