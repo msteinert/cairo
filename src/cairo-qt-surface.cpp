@@ -82,6 +82,22 @@
 typedef struct {
     cairo_surface_t base;
 
+    bool has_clipping;
+    // if this is true, calls to intersect_clip_path won't
+    // update the clip_bounds rect
+    bool no_update_clip_bounds;
+
+    cairo_bool_t supports_porter_duff;
+
+#if defined(Q_WS_X11) && CAIRO_HAS_XLIB_XRENDER_SURFACE
+    /* temporary, so that we can share the xlib surface's glyphs code */
+    bool xlib_has_clipping;
+    cairo_surface_t *xlib_equiv;
+    QRect xlib_clip_bounds;
+    int xlib_clip_serial;
+    QPoint redir_offset;
+#endif
+
     QPainter *p;
 
     /* The pixmap/image constructors will store their objects here */
@@ -90,25 +106,10 @@ typedef struct {
 
     QRect window;
 
-    bool has_clipping;
+
     QRect clip_bounds;
 
-    // if this is true, calls to intersect_clip_path won't
-    // update the clip_bounds rect
-    bool no_update_clip_bounds;
-
     cairo_surface_t *image_equiv;
-
-#if defined(Q_WS_X11) && CAIRO_HAS_XLIB_XRENDER_SURFACE
-    /* temporary, so that we can share the xlib surface's glyphs code */
-    cairo_surface_t *xlib_equiv;
-    bool xlib_has_clipping;
-    QRect xlib_clip_bounds;
-    int xlib_clip_serial;
-    QPoint redir_offset;
-#endif
-
-    cairo_bool_t supports_porter_duff;
 } cairo_qt_surface_t;
 
 /* Will be true if we ever try to create a QPixmap and end
