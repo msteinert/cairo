@@ -67,6 +67,31 @@
 
 #if 0
 #define D(x)  x
+static const char *
+_opstr (cairo_operator_t op)
+{
+    const char *ops[] = {
+        "CLEAR",
+        "SOURCE",
+        "OVER",
+        "IN",
+        "OUT",
+        "ATOP",
+        "DEST",
+        "DEST_OVER",
+        "DEST_IN",
+        "DEST_OUT",
+        "DEST_ATOP",
+        "XOR",
+        "ADD",
+        "SATURATE"
+    };
+
+    if (op < CAIRO_OPERATOR_CLEAR || op > CAIRO_OPERATOR_SATURATE)
+        return "(\?\?\?)";
+
+    return ops[op];
+}
 #else
 #define D(x) do { } while(0)
 #endif
@@ -125,31 +150,6 @@ slim_hidden_proto (cairo_xlib_surface_create_with_xrender_format);
 /**
  ** Helper methods
  **/
-static const char *
-_opstr (cairo_operator_t op)
-{
-    const char *ops[] = {
-        "CLEAR",
-        "SOURCE",
-        "OVER",
-        "IN",
-        "OUT",
-        "ATOP",
-        "DEST",
-        "DEST_OVER",
-        "DEST_IN",
-        "DEST_OUT",
-        "DEST_ATOP",
-        "XOR",
-        "ADD",
-        "SATURATE"
-    };
-
-    if (op < CAIRO_OPERATOR_CLEAR || op > CAIRO_OPERATOR_SATURATE)
-        return "(\?\?\?)";
-
-    return ops[op];
-}
 
 static QPainter::CompositionMode
 _qpainter_compositionmode_from_cairo_op (cairo_operator_t op)
