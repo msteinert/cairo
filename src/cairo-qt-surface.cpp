@@ -1061,8 +1061,8 @@ struct PatternToBrushConverter {
 
 struct PatternToPenConverter {
     PatternToPenConverter (const cairo_pattern_t *source,
-                           cairo_stroke_style_t *style)
-      : mBrushConverter(source)
+                           cairo_stroke_style_t *style) :
+        mBrushConverter(source)
     {
         Qt::PenJoinStyle join = Qt::MiterJoin;
         Qt::PenCapStyle cap = Qt::SquareCap;
@@ -1091,8 +1091,8 @@ struct PatternToPenConverter {
             break;
         }
 
-        mPen = new QPen (mBrushConverter, style->line_width, Qt::SolidLine, cap, join);
-        mPen->setMiterLimit (style->miter_limit);
+        mPen = QPen(mBrushConverter, style->line_width, Qt::SolidLine, cap, join);
+        mPen.setMiterLimit (style->miter_limit);
 
         if (style->dash && style->num_dashes) {
             Qt::PenStyle pstyle = Qt::NoPen;
@@ -1113,7 +1113,7 @@ struct PatternToPenConverter {
             }
 
             if (pstyle != Qt::NoPen) {
-                mPen->setStyle(pstyle);
+                mPen.setStyle(pstyle);
                 return;
             }
 
@@ -1130,20 +1130,18 @@ struct PatternToPenConverter {
                 }
             }
 
-            mPen->setDashPattern (dashes);
-            mPen->setDashOffset (style->dash_offset / style->line_width);
+            mPen.setDashPattern(dashes);
+            mPen.setDashOffset(style->dash_offset / style->line_width);
         }
     }
 
-    ~PatternToPenConverter() {
-        delete mPen;
-    }
+    ~PatternToPenConverter() { }
 
     operator QPen& () {
-        return *mPen;
+        return mPen;
     }
 
-    QPen *mPen;
+    QPen mPen;
     PatternToBrushConverter mBrushConverter;
 };
 
