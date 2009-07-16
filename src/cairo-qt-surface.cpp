@@ -684,7 +684,7 @@ _cairo_qt_surface_intersect_clip_path (void *abstract_surface,
         return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (path == NULL) {
-	//fprintf (stderr, "clip clear\n");
+        //fprintf (stderr, "clip clear\n");
         // How the clip path is reset depends on whether we own p or not
         if (qs->pixmap || qs->image) {
             // we own p
@@ -694,10 +694,10 @@ _cairo_qt_surface_intersect_clip_path (void *abstract_surface,
             qs->p->save ();
         }
 
-	if (!qs->no_update_clip_bounds) {
-	    qs->clip_bounds.setRect(0, 0, 0, 0);
-	    qs->has_clipping = false;
-	}
+        if (!qs->no_update_clip_bounds) {
+            qs->clip_bounds.setRect(0, 0, 0, 0);
+            qs->has_clipping = false;
+        }
 
         return CAIRO_INT_STATUS_SUCCESS;
     }
@@ -1061,86 +1061,86 @@ struct PatternToBrushConverter {
 
 struct PatternToPenConverter {
     PatternToPenConverter (const cairo_pattern_t *source,
-			   cairo_stroke_style_t *style)
+                           cairo_stroke_style_t *style)
       : mBrushConverter(source)
     {
-	Qt::PenJoinStyle join = Qt::MiterJoin;
-	Qt::PenCapStyle cap = Qt::SquareCap;
+        Qt::PenJoinStyle join = Qt::MiterJoin;
+        Qt::PenCapStyle cap = Qt::SquareCap;
 
-	switch (style->line_cap) {
-	    case CAIRO_LINE_CAP_BUTT:
-		cap = Qt::FlatCap;
-		break;
-	    case CAIRO_LINE_CAP_ROUND:
-		cap = Qt::RoundCap;
-		break;
-	    case CAIRO_LINE_CAP_SQUARE:
-		cap = Qt::SquareCap;
-		break;
-	}
+        switch (style->line_cap) {
+        case CAIRO_LINE_CAP_BUTT:
+            cap = Qt::FlatCap;
+            break;
+        case CAIRO_LINE_CAP_ROUND:
+            cap = Qt::RoundCap;
+            break;
+        case CAIRO_LINE_CAP_SQUARE:
+            cap = Qt::SquareCap;
+            break;
+        }
 
-	switch (style->line_join) {
-	    case CAIRO_LINE_JOIN_MITER:
-		join = Qt::MiterJoin;
-		break;
-	    case CAIRO_LINE_JOIN_ROUND:
-		join = Qt::RoundJoin;
-		break;
-	    case CAIRO_LINE_JOIN_BEVEL:
-		join = Qt::BevelJoin;
-		break;
-	}
+        switch (style->line_join) {
+        case CAIRO_LINE_JOIN_MITER:
+            join = Qt::MiterJoin;
+            break;
+        case CAIRO_LINE_JOIN_ROUND:
+            join = Qt::RoundJoin;
+            break;
+        case CAIRO_LINE_JOIN_BEVEL:
+            join = Qt::BevelJoin;
+            break;
+        }
 
-	mPen = new QPen (mBrushConverter, style->line_width, Qt::SolidLine, cap, join);
-	mPen->setMiterLimit (style->miter_limit);
+        mPen = new QPen (mBrushConverter, style->line_width, Qt::SolidLine, cap, join);
+        mPen->setMiterLimit (style->miter_limit);
 
-	if (style->dash && style->num_dashes) {
-	    Qt::PenStyle pstyle = Qt::NoPen;
+        if (style->dash && style->num_dashes) {
+            Qt::PenStyle pstyle = Qt::NoPen;
 
-	    if (style->num_dashes == 2) {
-		if ((style->dash[0] == style->line_width &&
-		     style->dash[1] == style->line_width && style->line_width <= 2.0) ||
-		    (style->dash[0] == 0.0 &&
-		     style->dash[1] == style->line_width * 2 && cap == Qt::RoundCap))
-		{
-		    pstyle = Qt::DotLine;
-		} else if (style->dash[0] == style->line_width * DASH_LENGTH &&
-			   style->dash[1] == style->line_width * DASH_LENGTH &&
-			   cap == Qt::FlatCap)
-		{
-		    pstyle = Qt::DashLine;
-		}
-	    }
+            if (style->num_dashes == 2) {
+                if ((style->dash[0] == style->line_width &&
+                        style->dash[1] == style->line_width && style->line_width <= 2.0) ||
+                    (style->dash[0] == 0.0 &&
+                        style->dash[1] == style->line_width * 2 && cap == Qt::RoundCap))
+                {
+                    pstyle = Qt::DotLine;
+                } else if (style->dash[0] == style->line_width * DASH_LENGTH &&
+                           style->dash[1] == style->line_width * DASH_LENGTH &&
+                           cap == Qt::FlatCap)
+                {
+                    pstyle = Qt::DashLine;
+                }
+            }
 
-	    if (pstyle != Qt::NoPen) {
-		mPen->setStyle(pstyle);
-		return;
-	    }
+            if (pstyle != Qt::NoPen) {
+                mPen->setStyle(pstyle);
+                return;
+            }
 
-	    unsigned int odd_dash = style->num_dashes % 2;
+            unsigned int odd_dash = style->num_dashes % 2;
 
-	    QVector<qreal> dashes (odd_dash ? style->num_dashes * 2 : style->num_dashes);
-	    for (unsigned int i = 0; i < odd_dash+1; i++) {
-		for (unsigned int j = 0; j < style->num_dashes; j++) {
-		    // In Qt, the dash lengths are given in units of line width, whereas
-		    // in cairo, they are in user-space units.  We'll always apply the CTM,
-		    // so all we have to do here is divide cairo's dash lengths by the line
-		    // width.
-		    dashes.append (style->dash[j] / style->line_width);
-		}
-	    }
+            QVector<qreal> dashes (odd_dash ? style->num_dashes * 2 : style->num_dashes);
+            for (unsigned int i = 0; i < odd_dash+1; i++) {
+                for (unsigned int j = 0; j < style->num_dashes; j++) {
+                    // In Qt, the dash lengths are given in units of line width, whereas
+                    // in cairo, they are in user-space units.  We'll always apply the CTM,
+                    // so all we have to do here is divide cairo's dash lengths by the line
+                    // width.
+                    dashes.append (style->dash[j] / style->line_width);
+                }
+            }
 
-	    mPen->setDashPattern (dashes);
-	    mPen->setDashOffset (style->dash_offset / style->line_width);
-	}
+            mPen->setDashPattern (dashes);
+            mPen->setDashOffset (style->dash_offset / style->line_width);
+        }
     }
 
     ~PatternToPenConverter() {
-	delete mPen;
+        delete mPen;
     }
 
     operator QPen& () {
-	return *mPen;
+        return *mPen;
     }
 
     QPen *mPen;
@@ -1204,14 +1204,14 @@ _cairo_qt_fast_fill (cairo_qt_surface_t *qs,
     qs->p->save();
 
     if (path) {
-	qs->no_update_clip_bounds = true;
-	status = _cairo_qt_surface_intersect_clip_path (qs, path, fill_rule, tolerance, antialias);
-	qs->no_update_clip_bounds = false;
+        qs->no_update_clip_bounds = true;
+        status = _cairo_qt_surface_intersect_clip_path (qs, path, fill_rule, tolerance, antialias);
+        qs->no_update_clip_bounds = false;
 
-	if (status != CAIRO_INT_STATUS_SUCCESS) {
-	    qs->p->restore();
-	    return false;
-	}
+        if (status != CAIRO_INT_STATUS_SUCCESS) {
+            qs->p->restore();
+            return false;
+        }
     }
 
     qs->p->setWorldMatrix (sourceMatrix.inverted(), true);
@@ -1220,26 +1220,26 @@ _cairo_qt_fast_fill (cairo_qt_surface_t *qs,
     case CAIRO_EXTEND_REPEAT:
     // XXX handle reflect by tiling 4 times first
     case CAIRO_EXTEND_REFLECT: {
-	assert (qsSrc_pixmap);
+            assert (qsSrc_pixmap);
 
-	// Render the tiling to cover the entire destination window (because
-	// it'll be clipped).  Transform the window rect by the inverse
-	// of the current world transform so that the device coordinates
-	// end up as the right thing.
-	QRectF dest = qs->p->worldTransform().inverted().mapRect(QRectF(qs->window));
-	QPointF origin = sourceMatrix.map(QPointF(0.0, 0.0));
+            // Render the tiling to cover the entire destination window (because
+            // it'll be clipped).  Transform the window rect by the inverse
+            // of the current world transform so that the device coordinates
+            // end up as the right thing.
+            QRectF dest = qs->p->worldTransform().inverted().mapRect(QRectF(qs->window));
+            QPointF origin = sourceMatrix.map(QPointF(0.0, 0.0));
 
-	qs->p->drawTiledPixmap (dest, *qsSrc_pixmap, origin);
-    }
-	break;
+            qs->p->drawTiledPixmap (dest, *qsSrc_pixmap, origin);
+        }
+        break;
     case CAIRO_EXTEND_NONE:
     case CAIRO_EXTEND_PAD: // XXX not exactly right, but good enough
     default:
-	if (qsSrc_image)
-	    qs->p->drawImage (0, 0, *qsSrc_image);
-	else if (qsSrc_pixmap)
-	    qs->p->drawPixmap (0, 0, *qsSrc_pixmap);
-	break;
+        if (qsSrc_image)
+            qs->p->drawImage (0, 0, *qsSrc_image);
+        else if (qsSrc_pixmap)
+            qs->p->drawPixmap (0, 0, *qsSrc_pixmap);
+        break;
     }
 
     qs->p->restore();
@@ -1537,16 +1537,16 @@ _cairo_qt_surface_composite (cairo_operator_t op,
 
         QImage *qimg = NULL;
         QPixmap *qpixmap = NULL;
-	std::auto_ptr<QImage> qimg_d;
+        std::auto_ptr<QImage> qimg_d;
 
         if (surface->type == CAIRO_SURFACE_TYPE_IMAGE) {
             cairo_image_surface_t *isurf = (cairo_image_surface_t*) surface;
-	    qimg = new QImage ((const uchar *) isurf->data,
-			       isurf->width,
-			       isurf->height,
-			       isurf->stride,
-			       _qimage_format_from_cairo_format (isurf->format));
-	    qimg_d.reset(qimg);
+            qimg = new QImage ((const uchar *) isurf->data,
+                               isurf->width,
+                               isurf->height,
+                               isurf->stride,
+                               _qimage_format_from_cairo_format (isurf->format));
+            qimg_d.reset(qimg);
         }
 
         if (surface->type == CAIRO_SURFACE_TYPE_QT) {
@@ -1722,9 +1722,9 @@ cairo_qt_surface_create (QPainter *painter)
 
     qs->p = painter;
     if (qs->p->paintEngine())
-	qs->supports_porter_duff = qs->p->paintEngine()->hasFeature(QPaintEngine::PorterDuff);
+        qs->supports_porter_duff = qs->p->paintEngine()->hasFeature(QPaintEngine::PorterDuff);
     else
-	qs->supports_porter_duff = FALSE;
+        qs->supports_porter_duff = FALSE;
 
     // Save so that we can always get back to the original state
     qs->p->save();
