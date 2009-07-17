@@ -154,6 +154,10 @@ REFERENCE_IMAGES = \
 	caps-sub-paths.ref.png \
 	caps.ps.ref.png \
 	caps.ref.png \
+	clear.argb32.ref.png \
+	clear.rgb24.ref.png \
+	clear.svg12.argb32.xfail.png \
+	clear.svg12.rgb24.xfail.png \
 	clip-all.ref.png \
 	clip-empty.ref.png \
 	clip-fill-rule-pixel-aligned.ref.png \
