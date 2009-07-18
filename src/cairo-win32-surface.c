@@ -51,6 +51,7 @@
 #include "cairo-paginated-private.h"
 #include "cairo-win32-private.h"
 #include "cairo-scaled-font-subsets-private.h"
+#include "cairo-surface-fallback-private.h"
 
 #include <windows.h>
 
