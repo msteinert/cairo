@@ -70,7 +70,7 @@ test_sources += $(test)
 TESTS += cairo-test-suite$(EXEEXT)
 
 make-cairo-test-constructors$(EXEEXT): make-cairo-test-constructors.c
-	$(CC) $^ -o $@
+	$(CC_FOR_BUILD) $^ -o $@
 
 cairo-test-constructors.c: Makefile $(test_sources) make-cairo-test-constructors$(EXEEXT)
 	./make-cairo-test-constructors$(EXEEXT) $(srcdir) $(test_sources) > $@

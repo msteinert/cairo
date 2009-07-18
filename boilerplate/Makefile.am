@@ -49,7 +49,7 @@ endif
 libcairoboilerplate_la_LIBADD += $(CAIROBOILERPLATE_LIBS)
 
 make-cairo-boilerplate-constructors$(EXEEXT): make-cairo-boilerplate-constructors.c
-	$(CC) $^ -o $@
+	$(CC_FOR_BUILD) $^ -o $@
 
 cairo-boilerplate-constructors.c: Makefile $(enabled_cairo_boilerplate_sources) make-cairo-boilerplate-constructors$(EXEEXT)
 	echo '(cd $(srcdir) && $(top_builddir)/boilerplate/make-cairo-boilerplate-constructors$(EXEEXT) $(enabled_cairo_boilerplate_sources)) > $@'
