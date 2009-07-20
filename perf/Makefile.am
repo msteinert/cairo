@@ -144,9 +144,14 @@ perf: cairo-perf$(EXEEXT) cairo-perf-trace$(EXEEXT)
 
 html-local: index.html
 
-index.html: cairo-perf$(EXEEXT)
+perf-tag.html : cairo-perf${EXEEXT}
+	$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf-diff -t -h `git describe --abbrev=0` HEAD > $@
+perf-commit.html : cairo-perf${EXEEXT}
 	$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf-diff -t -h HEAD > $@
 
+# Summarise changes in index.html, with details in links
+index.html: perf-tag.html perf-commit.html
+	echo "<html><head><title>Performance Changes</title></head><body>Against <a href=\"perf-tag.html\">"`git describe --abbrev=0`"</a><br><a href=\"perf-commit.html\">Latest commit</a></body>" > $@
 
 EXTRA_VALGRIND_FLAGS = $(CAIRO_EXTRA_VALGRIND_FLAGS)
 VALGRIND_MEMCHECK_FLAGS = \
