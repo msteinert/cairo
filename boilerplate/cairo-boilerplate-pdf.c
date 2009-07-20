@@ -30,6 +30,10 @@
 #include <cairo-pdf-surface-private.h>
 #include <cairo-paginated-surface-private.h>
 
+#if ! CAIRO_HAS_META_SURFACE
+#define CAIRO_SURFACE_TYPE_META CAIRO_INTERNAL_SURFACE_TYPE_META
+#endif
+
 static const cairo_user_data_key_t pdf_closure_key;
 
 typedef struct _pdf_target_closure

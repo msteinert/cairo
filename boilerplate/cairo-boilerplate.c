@@ -129,6 +129,7 @@ _cairo_boilerplate_image_create_surface (const char			 *name,
     return cairo_image_surface_create (format, ceil (width), ceil (height));
 }
 
+#if CAIRO_HAS_META_SURFACE
 static cairo_surface_t *
 _cairo_boilerplate_meta_create_surface (const char	     *name,
 					cairo_content_t	      content,
@@ -151,8 +152,6 @@ _cairo_boilerplate_meta_create_surface (const char	     *name,
     return cairo_meta_surface_create (content, &extents);
 }
 
-const cairo_user_data_key_t cairo_boilerplate_output_basename_key;
-
 #if CAIRO_HAS_SCRIPT_SURFACE
 static cairo_status_t
 stdio_write (void *closure, const unsigned char *data, unsigned int len)
@@ -163,6 +162,9 @@ stdio_write (void *closure, const unsigned char *data, unsigned int len)
     return CAIRO_STATUS_SUCCESS;
 }
 #endif
+#endif
+
+const cairo_user_data_key_t cairo_boilerplate_output_basename_key;
 
 cairo_surface_t *
 _cairo_boilerplate_get_image_surface (cairo_surface_t *src,
@@ -186,7 +188,7 @@ _cairo_boilerplate_get_image_surface (cairo_surface_t *src,
     image = cairo_surface_reference (surface);
 
     /* open a logging channel (only interesting for meta surfaces) */
-#if CAIRO_HAS_SCRIPT_SURFACE
+#if CAIRO_HAS_SCRIPT_SURFACE && CAIRO_HAS_META_SURFACE
     if (cairo_surface_get_type (src) == CAIRO_SURFACE_TYPE_META) {
 	const char *test_name;
 
@@ -307,6 +309,7 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png
     },
+#if CAIRO_HAS_META_SURFACE
     {
 	"meta", "image", NULL, NULL,
 	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR_ALPHA, 0,
@@ -327,6 +330,7 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	NULL, NULL,
 	FALSE, TRUE
     },
+#endif
 };
 CAIRO_BOILERPLATE (builtin, builtin_targets)
 
