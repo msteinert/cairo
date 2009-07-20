@@ -145,9 +145,9 @@ perf: cairo-perf$(EXEEXT) cairo-perf-trace$(EXEEXT)
 html-local: index.html
 
 perf-tag.html : cairo-perf${EXEEXT}
-	$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf-diff -t -h `git describe --abbrev=0` HEAD > $@
+	$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf-diff -t -h $@ `git describe --abbrev=0` HEAD
 perf-commit.html : cairo-perf${EXEEXT}
-	$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf-diff -t -h HEAD > $@
+	$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf-diff -t -h $@ HEAD
 
 # Summarise changes in index.html, with details in links
 index.html: perf-tag.html perf-commit.html
