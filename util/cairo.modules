@@ -1,0 +1,19 @@
+<?xml version="1.0" standalone="no"?> <!--*- mode: nxml -*-->
+<!DOCTYPE moduleset SYSTEM "moduleset.dtd">
+<?xml-stylesheet type="text/xsl" href="moduleset.xsl"?>
+<moduleset>
+  <include href="http://cgit.freedesktop.org/xorg/util/modular/plain/xorg.modules" />
+
+  <repository type="git" name="fd.o" href="git://anongit.freedesktop.org/git/"/>
+
+  <autotools id="cairo">
+    <branch repo="fd.o" module="cairo"/>
+    <dependencies>
+      <dep package="pixman"/>
+      <dep package="fontconfig"/>
+    </dependencies>
+    <after>
+      <dep package="libXrender"/>
+    </after>
+  </autotools>
+</moduleset>
