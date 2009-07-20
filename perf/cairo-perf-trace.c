@@ -695,7 +695,7 @@ int
 main (int argc, char *argv[])
 {
     cairo_perf_t perf;
-    const char *trace_dir = "cairo-traces";
+    const char *trace_dir = "cairo-traces:/usr/src/cairo-traces:/usr/share/cairo-traces";
     unsigned int n;
     int i;
 
@@ -745,7 +745,26 @@ main (int argc, char *argv[])
 		}
 	    }
 	} else {
-	    if (cairo_perf_trace_dir (&perf, target, trace_dir) == 0) {
+	    int num_traces = 0;
+	    const char *dir;
+
+	    dir = trace_dir;
+	    do {
+		char buf[1024];
+		const char *end = strchr (dir, ':');
+		if (end != NULL) {
+		    memcpy (buf, dir, end-dir);
+		    buf[end-dir] = '\0';
+		    end++;
+
+		    dir = buf;
+		}
+
+		num_traces += cairo_perf_trace_dir (&perf, target, dir);
+		dir = end;
+	    } while (dir != NULL);
+
+	    if (num_traces == 0) {
 		warn_no_traces ("Found no traces in", trace_dir);
 		return 1;
 	    }
