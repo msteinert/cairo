@@ -71,6 +71,9 @@ typedef struct _cairo_test_runner {
     int num_xfailed;
     int num_crashed;
 
+    cairo_test_list_t *crashes_preamble;
+    cairo_test_list_t *fails_preamble;
+
     cairo_test_list_t **crashes_per_target;
     cairo_test_list_t **fails_per_target;
 
@@ -339,6 +342,9 @@ _runner_init (cairo_test_runner_t *runner)
 
     runner->passed = TRUE;
 
+    runner->fails_preamble = NULL;
+    runner->crashes_preamble = NULL;
+
     runner->fails_per_target = xcalloc (sizeof (cairo_test_list_t *),
 					runner->base.num_targets);
     runner->crashes_per_target = xcalloc (sizeof (cairo_test_list_t *),
@@ -379,11 +385,42 @@ _runner_print_summary (cairo_test_runner_t *runner)
 static void
 _runner_print_details (cairo_test_runner_t *runner)
 {
+    cairo_test_list_t *list;
     unsigned int n;
+
+    if (runner->crashes_preamble) {
+	int count = 0;
+
+	for (list = runner->crashes_preamble; list != NULL; list = list->next)
+	    count++;
+
+	_log (&runner->base, "Preamble: %d crashed! -", count);
+
+	for (list = runner->crashes_preamble; list != NULL; list = list->next) {
+	    char *name = cairo_test_get_name (list->test);
+	    _log (&runner->base, " %s", name);
+	    free (name);
+	}
+	_log (&runner->base, "\n");
+    }
+    if (runner->fails_preamble) {
+	int count = 0;
+
+	for (list = runner->fails_preamble; list != NULL; list = list->next)
+	    count++;
+
+	_log (&runner->base, "Preamble: %d failed -", count);
+
+	for (list = runner->fails_preamble; list != NULL; list = list->next) {
+	    char *name = cairo_test_get_name (list->test);
+	    _log (&runner->base, " %s", name);
+	    free (name);
+	}
+	_log (&runner->base, "\n");
+    }
 
     for (n = 0; n < runner->base.num_targets; n++) {
 	const cairo_boilerplate_target_t *target;
-	cairo_test_list_t *list;
 
 	target = runner->base.targets_to_test[n];
 	if (runner->num_crashed_per_target[n]) {
@@ -440,6 +477,9 @@ static cairo_test_status_t
 _runner_fini (cairo_test_runner_t *runner)
 {
     unsigned int n;
+
+    _list_free (runner->crashes_preamble);
+    _list_free (runner->fails_preamble);
 
     for (n = 0; n < runner->base.num_targets; n++) {
 	_list_free (runner->crashes_per_target[n]);
@@ -606,6 +646,7 @@ main (int argc, char **argv)
 	cairo_test_context_t ctx;
 	cairo_test_status_t status;
 	cairo_bool_t failed = FALSE, xfailed = FALSE, crashed = FALSE, skipped = TRUE;
+	cairo_bool_t in_preamble = FALSE;
 	char *name = cairo_test_get_name (list->test);
 	int i;
 
@@ -694,19 +735,31 @@ main (int argc, char **argv)
 	    status = _cairo_test_runner_preamble (&runner, &ctx);
 	    switch (status) {
 	    case CAIRO_TEST_SUCCESS:
+		in_preamble = TRUE;
 		skipped = FALSE;
 		break;
+
 	    case CAIRO_TEST_XFAILURE:
+		in_preamble = TRUE;
 		xfailed = TRUE;
 		goto TEST_DONE;
+
 	    case CAIRO_TEST_NEW:
 	    case CAIRO_TEST_FAILURE:
+		runner.fails_preamble = _list_prepend (runner.fails_preamble,
+						       list->test);
+		in_preamble = TRUE;
 		failed = TRUE;
 		goto TEST_DONE;
+
 	    case CAIRO_TEST_NO_MEMORY:
 	    case CAIRO_TEST_CRASHED:
+		runner.crashes_preamble = _list_prepend (runner.crashes_preamble,
+							 list->test);
+		in_preamble = TRUE;
 		failed = TRUE;
 		goto TEST_DONE;
+
 	    case CAIRO_TEST_UNTESTED:
 		goto TEST_DONE;
 	    }
@@ -785,38 +838,46 @@ main (int argc, char **argv)
   TEST_SKIPPED:
 	targets[0] = '\0';
 	if (crashed) {
-	    len = 0;
-	    for (n = 0 ; n < runner.base.num_targets; n++) {
-		if (target_status[n] == CAIRO_TEST_CRASHED) {
-		    if (strstr (targets,
-				runner.base.targets_to_test[n]->name) == NULL)
-		    {
-			len += snprintf (targets + len, sizeof (targets) - len,
-					 "%s, ",
-					 runner.base.targets_to_test[n]->name);
+	    if (! in_preamble) {
+		len = 0;
+		for (n = 0 ; n < runner.base.num_targets; n++) {
+		    if (target_status[n] == CAIRO_TEST_CRASHED) {
+			if (strstr (targets,
+				    runner.base.targets_to_test[n]->name) == NULL)
+			{
+			    len += snprintf (targets + len, sizeof (targets) - len,
+					     "%s, ",
+					     runner.base.targets_to_test[n]->name);
+			}
 		    }
 		}
+		targets[len-2] = '\0';
+		_log (&runner.base, "\n%s: CRASH! (%s)\n", name, targets);
+	    } else {
+		_log (&runner.base, "\n%s: CRASH!\n", name);
 	    }
-	    targets[len-2] = '\0';
-	    _log (&runner.base, "\n%s: CRASH! (%s)\n", name, targets);
 	    runner.num_crashed++;
 	    runner.passed = FALSE;
 	} else if (failed) {
-	    len = 0;
-	    for (n = 0 ; n < runner.base.num_targets; n++) {
-		if (target_status[n] == CAIRO_TEST_FAILURE) {
-		    if (strstr (targets,
-				runner.base.targets_to_test[n]->name) == NULL)
-		    {
-			len += snprintf (targets + len,
-					 sizeof (targets) - len,
-					 "%s, ",
-					 runner.base.targets_to_test[n]->name);
+	    if (! in_preamble) {
+		len = 0;
+		for (n = 0 ; n < runner.base.num_targets; n++) {
+		    if (target_status[n] == CAIRO_TEST_FAILURE) {
+			if (strstr (targets,
+				    runner.base.targets_to_test[n]->name) == NULL)
+			{
+			    len += snprintf (targets + len,
+					     sizeof (targets) - len,
+					     "%s, ",
+					     runner.base.targets_to_test[n]->name);
+			}
 		    }
 		}
+		targets[len-2] = '\0';
+		_log (&runner.base, "%s: FAIL (%s)\n", name, targets);
+	    } else {
+		_log (&runner.base, "%s: FAIL\n", name);
 	    }
-	    targets[len-2] = '\0';
-	    _log (&runner.base, "%s: FAIL (%s)\n", name, targets);
 	    runner.num_failed++;
 	    runner.passed = FALSE;
 	} else if (xfailed) {
