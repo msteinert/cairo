@@ -14,6 +14,7 @@ if test "${build}" != "${host}" ; then
 else
     CC_FOR_BUILD=${CC}
 fi
+AC_SUBST(CC_FOR_BUILD)
 
 dnl ===========================================================================
 
