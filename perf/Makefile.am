@@ -141,7 +141,7 @@ perf: cairo-perf$(EXEEXT) cairo-perf-trace$(EXEEXT)
 html-local: index.html
 
 index.html: cairo-perf$(EXEEXT)
-	$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf-diff -h HEAD > $@
+	$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf-diff -t -h HEAD > $@
 
 
 EXTRA_VALGRIND_FLAGS = $(CAIRO_EXTRA_VALGRIND_FLAGS)

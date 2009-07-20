@@ -27,6 +27,7 @@ print '''\
 <html><head>
 <title>Performance Changes</title>
 <style type="text/css">/*<![CDATA[*/
+    body { background: white; color: black; }
     table { border-collapse: collapse; }
 
     th, td { border: 1px solid silver; padding: 0.2em; }
@@ -85,5 +86,3 @@ for target, names in targets:
 	print '</tbody></table>'
 
 print '</body></html>'
-
-

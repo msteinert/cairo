@@ -52,12 +52,14 @@ END
     exit 1
 }
 
+benchmarks="cairo-perf"
+
 # First, pull off any known options
 while true; do
     case $1 in
         -f|--force) force_cairo_perf="true";;
         -h|--html) html_output="true";;
-        -t|--trace) use_traces="true";;
+        -t|--trace) benchmarks="${benchmarks} cairo-perf-trace";;
         *) break;;
     esac
 
@@ -212,15 +214,10 @@ run_cairo_perf_if_not_cached() {
 	build $build_dir $sha || exit 1
     }
 
-    if [ "$use_traces" = "true" ]; then
-	cmd="cairo-perf-trace"
-    else
-	cmd="cairo-perf"
-    fi
-    echo "Running \"$cmd $CAIRO_PERF_OPTIONS\" against $rev. Results will be cached in:"
-    echo "$perf"
-    pwd
-    (./$cmd $CAIRO_PERF_OPTIONS || echo "*** Performance test crashed") >> $perf
+    echo "Running \"cairo-perf $CAIRO_PERF_OPTIONS\" against $rev. Results will be cached in:"
+    for cmd in $benchmarks; do
+	(./$cmd $CAIRO_PERF_OPTIONS || echo "*** Performance test crashed") >> $perf
+    done
 
     cd $owd
 }
