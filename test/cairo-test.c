@@ -1214,7 +1214,7 @@ REPEAT:
 		ret = CAIRO_TEST_SUCCESS;
 		goto UNWIND_CAIRO;
 	    }
-	    if (cairo_test_files_equal (out_png_path, xfail_png_path)) {
+	    if (cairo_test_files_equal (out_png_path, new_png_path)) {
 		cairo_test_log (ctx, "PNG file exactly matches current failure image.\n");
 		cairo_surface_destroy (test_image);
 		ret = CAIRO_TEST_NEW;
