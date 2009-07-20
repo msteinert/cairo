@@ -349,55 +349,59 @@ cairo_test_reference_filename (const cairo_test_context_t *ctx,
 	    goto done;
     }
 
-    /* Next look for a target/format-specific reference image. */
-    xasprintf (&ref_name, "%s/%s.%s.%s%s%s",
-	       ctx->srcdir,
-	       test_name,
-	       target_name,
-	       format,
-	       suffix,
-	       extension);
-    if (access (ref_name, F_OK) != 0)
-	free (ref_name);
-    else
-	goto done;
+    if (target_name != NULL) {
+	/* Next look for a target/format-specific reference image. */
+	xasprintf (&ref_name, "%s/%s.%s.%s%s%s",
+		   ctx->srcdir,
+		   test_name,
+		   target_name,
+		   format,
+		   suffix,
+		   extension);
+	if (access (ref_name, F_OK) != 0)
+	    free (ref_name);
+	else
+	    goto done;
 
-    /* Next, look for target-specific reference image. */
-    xasprintf (&ref_name, "%s/%s.%s%s%s",
-	       ctx->srcdir,
-	       test_name,
-	       target_name,
-	       suffix,
-	       extension);
-    if (access (ref_name, F_OK) != 0)
-	free (ref_name);
-    else
-	goto done;
+	/* Next, look for target-specific reference image. */
+	xasprintf (&ref_name, "%s/%s.%s%s%s",
+		   ctx->srcdir,
+		   test_name,
+		   target_name,
+		   suffix,
+		   extension);
+	if (access (ref_name, F_OK) != 0)
+	    free (ref_name);
+	else
+	    goto done;
+    }
 
-    /* Next look for a base/format-specific reference image. */
-    xasprintf (&ref_name, "%s/%s.%s.%s%s%s",
-	       ctx->srcdir,
-	       test_name,
-	       base_target_name,
-	       format,
-	       suffix,
-	       extension);
-    if (access (ref_name, F_OK) != 0)
-	free (ref_name);
-    else
-	goto done;
+    if (base_target_name != NULL) {
+	/* Next look for a base/format-specific reference image. */
+	xasprintf (&ref_name, "%s/%s.%s.%s%s%s",
+		   ctx->srcdir,
+		   test_name,
+		   base_target_name,
+		   format,
+		   suffix,
+		   extension);
+	if (access (ref_name, F_OK) != 0)
+	    free (ref_name);
+	else
+	    goto done;
 
-    /* Next, look for base-specific reference image. */
-    xasprintf (&ref_name, "%s/%s.%s%s%s",
-	       ctx->srcdir,
-	       test_name,
-	       base_target_name,
-	       suffix,
-	       extension);
-    if (access (ref_name, F_OK) != 0)
-	free (ref_name);
-    else
-	goto done;
+	/* Next, look for base-specific reference image. */
+	xasprintf (&ref_name, "%s/%s.%s%s%s",
+		   ctx->srcdir,
+		   test_name,
+		   base_target_name,
+		   suffix,
+		   extension);
+	if (access (ref_name, F_OK) != 0)
+	    free (ref_name);
+	else
+	    goto done;
+    }
 
     /* Next, look for format-specific reference image. */
     xasprintf (&ref_name, "%s/%s.%s%s%s",
@@ -677,9 +681,12 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
     char *offset_str, *thread_str;
     char *base_name, *base_path;
     char *out_png_path;
-    char *ref_path = NULL, *ref_png_path;
+    char *ref_path = NULL, *ref_png_path, *cmp_png_path = NULL;
     char *new_path = NULL, *new_png_path;
     char *xfail_path = NULL, *xfail_png_path;
+    char *base_ref_png_path;
+    char *base_new_png_path;
+    char *base_xfail_png_path;
     char *diff_png_path;
     char *test_filename = NULL, *pass_filename = NULL, *fail_filename = NULL;
     cairo_test_status_t ret;
@@ -742,6 +749,28 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 						    ctx->test_name,
 						    target->name,
 						    target->basename,
+						    format,
+						    CAIRO_TEST_XFAIL_SUFFIX,
+						    CAIRO_TEST_PNG_EXTENSION);
+
+    base_ref_png_path = cairo_test_reference_filename (ctx,
+						  base_name,
+						  ctx->test_name,
+						  NULL, NULL,
+						  format,
+						  CAIRO_TEST_REF_SUFFIX,
+						  CAIRO_TEST_PNG_EXTENSION);
+    base_new_png_path = cairo_test_reference_filename (ctx,
+						  base_name,
+						  ctx->test_name,
+						  NULL, NULL,
+						  format,
+						  CAIRO_TEST_NEW_SUFFIX,
+						  CAIRO_TEST_PNG_EXTENSION);
+    base_xfail_png_path = cairo_test_reference_filename (ctx,
+						    base_name,
+						    ctx->test_name,
+						    NULL, NULL,
 						    format,
 						    CAIRO_TEST_XFAIL_SUFFIX,
 						    CAIRO_TEST_PNG_EXTENSION);
@@ -1071,6 +1100,9 @@ REPEAT:
 		new_path,
 		xfail_png_path,
 		xfail_path,
+		base_ref_png_path,
+		base_new_png_path,
+		base_xfail_png_path,
 	    };
 
 	    xasprintf (&test_filename, "%s.out%s",
@@ -1157,6 +1189,9 @@ REPEAT:
 		ref_png_path,
 		new_png_path,
 		xfail_png_path,
+		base_ref_png_path,
+		base_new_png_path,
+		base_xfail_png_path,
 	    };
 
 	    xasprintf (&test_filename, "%s", out_png_path);
@@ -1228,13 +1263,32 @@ REPEAT:
 	    }
 	}
 
-	ref_image = cairo_test_get_reference_image (ctx, ref_png_path,
+	if (cairo_test_files_equal (out_png_path, base_ref_png_path)) {
+	    cairo_test_log (ctx, "PNG file exactly reference image.\n");
+	    cairo_surface_destroy (test_image);
+	    ret = CAIRO_TEST_SUCCESS;
+	    goto UNWIND_CAIRO;
+	}
+	if (cairo_test_files_equal (out_png_path, base_new_png_path)) {
+	    cairo_test_log (ctx, "PNG file exactly current failure image.\n");
+	    cairo_surface_destroy (test_image);
+	    ret = CAIRO_TEST_NEW;
+	    goto UNWIND_CAIRO;
+	}
+	if (cairo_test_files_equal (out_png_path, base_xfail_png_path)) {
+	    cairo_test_log (ctx, "PNG file exactly known failure image.\n");
+	    cairo_surface_destroy (test_image);
+	    ret = CAIRO_TEST_XFAILURE;
+	    goto UNWIND_CAIRO;
+	}
+
+	/* first compare against the ideal reference */
+	ref_image = cairo_test_get_reference_image (ctx, base_ref_png_path,
 						    target->content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED);
 	if (cairo_surface_status (ref_image)) {
 	    cairo_test_log (ctx, "Error: Cannot open reference image for %s: %s\n",
-			    ref_png_path,
+			    base_ref_png_path,
 			    cairo_status_to_string (cairo_surface_status (ref_image)));
-	    cairo_surface_destroy (ref_image);
 	    cairo_surface_destroy (test_image);
 	    ret = CAIRO_TEST_FAILURE;
 	    goto UNWIND_CAIRO;
@@ -1244,30 +1298,61 @@ REPEAT:
 						 ctx->test->width,
 						 ctx->test->height);
 
+	cmp_png_path = base_ref_png_path;
 	diff_status = image_diff (ctx,
-				  test_image, ref_image,
-				  diff_image,
+				  test_image, ref_image, diff_image,
 				  &result);
 	_xunlink (ctx, diff_png_path);
-	if (diff_status) {
-	    cairo_test_log (ctx, "Error: Failed to compare images: %s\n",
-			    cairo_status_to_string (diff_status));
-	    ret = CAIRO_TEST_FAILURE;
-	}
-	else if (result.pixels_changed &&
-		 result.max_diff > target->error_tolerance)
+	if (diff_status ||
+	    (result.pixels_changed &&
+	     result.max_diff > target->error_tolerance))
 	{
-	    ret = CAIRO_TEST_FAILURE;
+	    /* that failed, so check against the specific backend */
+	    ref_image = cairo_test_get_reference_image (ctx, ref_png_path,
+							target->content == CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED);
+	    if (cairo_surface_status (ref_image)) {
+		cairo_test_log (ctx, "Error: Cannot open reference image for %s: %s\n",
+				ref_png_path,
+				cairo_status_to_string (cairo_surface_status (ref_image)));
+		cairo_surface_destroy (test_image);
+		ret = CAIRO_TEST_FAILURE;
+		goto UNWIND_CAIRO;
+	    }
 
-	    diff_status = cairo_surface_write_to_png (diff_image, diff_png_path);
-	    if (diff_status) {
-		cairo_test_log (ctx, "Error: Failed to write differences image: %s\n",
+	    cmp_png_path = ref_png_path;
+	    diff_status = image_diff (ctx,
+				      test_image, ref_image,
+				      diff_image,
+				      &result);
+	    if (diff_status)
+	    {
+		cairo_test_log (ctx, "Error: Failed to compare images: %s\n",
 				cairo_status_to_string (diff_status));
-	    } else
-		have_result = TRUE;
+		ret = CAIRO_TEST_FAILURE;
+	    }
+	    else if (result.pixels_changed &&
+		     result.max_diff > target->error_tolerance)
+	    {
+		ret = CAIRO_TEST_FAILURE;
 
-	    cairo_test_copy_file (test_filename, fail_filename);
-	} else { /* success */
+		diff_status = cairo_surface_write_to_png (diff_image,
+							  diff_png_path);
+		if (diff_status) {
+		    cairo_test_log (ctx, "Error: Failed to write differences image: %s\n",
+				    cairo_status_to_string (diff_status));
+		} else {
+		    have_result = TRUE;
+		}
+
+		cairo_test_copy_file (test_filename, fail_filename);
+	    }
+	    else
+	    { /* success */
+		cairo_test_copy_file (test_filename, pass_filename);
+	    }
+	}
+	else
+	{ /* success */
 	    cairo_test_copy_file (test_filename, pass_filename);
 	}
 
@@ -1324,9 +1409,13 @@ UNWIND_SURFACE:
 	    cairo_test_log (ctx, "OUTPUT: %s\n", out_png_path);
 
 	if (have_result) {
+	    if (cmp_png_path == NULL) {
+		/* XXX presume we matched the normal ref last time */
+		cmp_png_path = ref_png_path;
+	    }
 	    cairo_test_log (ctx,
 		            "REFERENCE: %s\nDIFFERENCE: %s\n",
-			    ref_png_path, diff_png_path);
+			    cmp_png_path, diff_png_path);
 	}
     }
 
@@ -1335,14 +1424,20 @@ UNWIND_STRINGS:
       free (out_png_path);
     if (ref_png_path)
       free (ref_png_path);
+    if (base_ref_png_path)
+      free (base_ref_png_path);
     if (ref_path)
       free (ref_path);
     if (new_png_path)
       free (new_png_path);
+    if (base_new_png_path)
+      free (base_new_png_path);
     if (new_path)
       free (new_path);
     if (xfail_png_path)
       free (xfail_png_path);
+    if (base_xfail_png_path)
+      free (base_xfail_png_path);
     if (xfail_path)
       free (xfail_path);
     if (diff_png_path)
