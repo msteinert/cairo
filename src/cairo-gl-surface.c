@@ -883,56 +883,46 @@ _cairo_gl_get_traps_pattern (cairo_gl_surface_t *dst,
 			     cairo_trapezoid_t *traps,
 			     int num_traps,
 			     cairo_antialias_t antialias,
-			     cairo_pattern_t **pattern)
+			     cairo_surface_pattern_t *pattern)
 {
-    pixman_trapezoid_t stack_traps[CAIRO_STACK_ARRAY_LENGTH (pixman_trapezoid_t)];
-    pixman_trapezoid_t *pixman_traps;
-    cairo_image_surface_t *image_surface;
+    pixman_format_code_t pixman_format;
+    pixman_image_t *image;
+    cairo_surface_t *surface;
     int i;
 
-    /* Convert traps to pixman traps */
-    pixman_traps = stack_traps;
-    if (num_traps > ARRAY_LENGTH (stack_traps)) {
-	pixman_traps = _cairo_malloc_ab (num_traps, sizeof (pixman_trapezoid_t));
-	if (unlikely (pixman_traps == NULL))
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-    }
+    pixman_format = antialias != CAIRO_ANTIALIAS_NONE ? PIXMAN_a8 : PIXMAN_a1,
+    image = pixman_image_create_bits (pixman_format, width, height, NULL, 0);
+    if (unlikely (image == NULL))
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     for (i = 0; i < num_traps; i++) {
-	pixman_traps[i].top = _cairo_fixed_to_16_16 (traps[i].top);
-	pixman_traps[i].bottom = _cairo_fixed_to_16_16 (traps[i].bottom);
-	pixman_traps[i].left.p1.x = _cairo_fixed_to_16_16 (traps[i].left.p1.x);
-	pixman_traps[i].left.p1.y = _cairo_fixed_to_16_16 (traps[i].left.p1.y);
-	pixman_traps[i].left.p2.x = _cairo_fixed_to_16_16 (traps[i].left.p2.x);
-	pixman_traps[i].left.p2.y = _cairo_fixed_to_16_16 (traps[i].left.p2.y);
-	pixman_traps[i].right.p1.x = _cairo_fixed_to_16_16 (traps[i].right.p1.x);
-	pixman_traps[i].right.p1.y = _cairo_fixed_to_16_16 (traps[i].right.p1.y);
-	pixman_traps[i].right.p2.x = _cairo_fixed_to_16_16 (traps[i].right.p2.x);
-	pixman_traps[i].right.p2.y = _cairo_fixed_to_16_16 (traps[i].right.p2.y);
+	pixman_trapezoid_t trap;
+
+	trap.top = _cairo_fixed_to_16_16 (traps[i].top);
+	trap.bottom = _cairo_fixed_to_16_16 (traps[i].bottom);
+
+	trap.left.p1.x = _cairo_fixed_to_16_16 (traps[i].left.p1.x);
+	trap.left.p1.y = _cairo_fixed_to_16_16 (traps[i].left.p1.y);
+	trap.left.p2.x = _cairo_fixed_to_16_16 (traps[i].left.p2.x);
+	trap.left.p2.y = _cairo_fixed_to_16_16 (traps[i].left.p2.y);
+
+	trap.right.p1.x = _cairo_fixed_to_16_16 (traps[i].right.p1.x);
+	trap.right.p1.y = _cairo_fixed_to_16_16 (traps[i].right.p1.y);
+	trap.right.p2.x = _cairo_fixed_to_16_16 (traps[i].right.p2.x);
+	trap.right.p2.y = _cairo_fixed_to_16_16 (traps[i].right.p2.y);
+
+	pixman_rasterize_trapezoid (image, &trap, -dst_x, -dst_y);
     }
 
-    if (antialias != CAIRO_ANTIALIAS_NONE) {
-	image_surface = (cairo_image_surface_t*)
-	    cairo_image_surface_create (CAIRO_FORMAT_A8, width, height);
-    } else {
-	image_surface = (cairo_image_surface_t*)
-	    cairo_image_surface_create (CAIRO_FORMAT_A1, width, height);
+    surface = _cairo_image_surface_create_for_pixman_image (image,
+							    pixman_format);
+    if (unlikely (surface->status)) {
+	pixman_image_unref (image);
+	return surface->status;
     }
 
-    if (image_surface->base.status) {
-	if (pixman_traps != stack_traps)
-	    free (pixman_traps);
-	return image_surface->base.status;
-    }
-
-    pixman_add_trapezoids (image_surface->pixman_image, -dst_x, -dst_y,
-			   num_traps, pixman_traps);
-
-    if (pixman_traps != stack_traps)
-	free (pixman_traps);
-
-    *pattern = cairo_pattern_create_for_surface (&image_surface->base);
-    cairo_surface_destroy (&image_surface->base);
+    _cairo_pattern_init_for_surface (pattern, surface);
+    cairo_surface_destroy (surface);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1438,24 +1428,24 @@ _cairo_gl_surface_composite_trapezoids (cairo_operator_t op,
 					int num_traps)
 {
     cairo_gl_surface_t *dst = abstract_dst;
-    cairo_pattern_t *traps_pattern;
+    cairo_surface_pattern_t traps_pattern;
     cairo_int_status_t status;
 
     status = _cairo_gl_get_traps_pattern (dst,
 					  dst_x, dst_y, width, height,
 					  traps, num_traps, antialias,
 					  &traps_pattern);
-    if (status) {
-	fprintf(stderr, "traps falllback\n");
+    if (unlikely (status))
 	return status;
-    }
 
-    status = _cairo_gl_surface_composite (op, pattern, traps_pattern, dst,
+    status = _cairo_gl_surface_composite (op,
+					  pattern, &traps_pattern.base, dst,
 					  src_x, src_y,
 					  0, 0,
 					  dst_x, dst_y,
 					  width, height);
-    cairo_pattern_destroy (traps_pattern);
+
+    _cairo_pattern_fini (&traps_pattern.base);
 
     return status;
 }
