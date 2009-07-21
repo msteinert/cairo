@@ -42,6 +42,8 @@
 
 #include <X11/Xutil.h>
 
+/* XXX needs hooking into XCloseDisplay() */
+
 typedef struct _cairo_glx_context {
     cairo_gl_context_t base;
 
