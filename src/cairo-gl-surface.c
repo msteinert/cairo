@@ -1058,29 +1058,6 @@ _cairo_gl_pattern_texture_setup (cairo_gl_composite_operand_t *operand,
     if (status == CAIRO_STATUS_SUCCESS)
 	return CAIRO_STATUS_SUCCESS;
 
-    /* Avoid looping in acquire surface fallback -> clone similar -> paint ->
-     * gl_composite -> acquire surface -> fallback.
-     */
-    if (src->type == CAIRO_PATTERN_TYPE_SURFACE) {
-	cairo_surface_pattern_t *surface_pattern;
-
-	surface_pattern = (cairo_surface_pattern_t *)src;
-	if (_cairo_surface_is_image (surface_pattern->surface)) {
-	    cairo_image_surface_t *image_surface;
-	    GLenum internal_format, format, type;
-	    cairo_bool_t has_alpha;
-
-	    image_surface = (cairo_image_surface_t *)surface_pattern->surface;
-
-	    status = _cairo_gl_get_image_format_and_type (image_surface->pixman_format,
-							  &internal_format,
-							  &format, &type,
-							  &has_alpha);
-		if (status)
-		    return status;
-	}
-    }
-
     status = _cairo_pattern_acquire_surface (src, &dst->base,
 					     CAIRO_CONTENT_COLOR_ALPHA,
 					     src_x, src_y,
@@ -1089,12 +1066,12 @@ _cairo_gl_pattern_texture_setup (cairo_gl_composite_operand_t *operand,
 					     (cairo_surface_t **)
 					     &surface,
 					     attributes);
-    operand->operand.texture.surface = surface;
     if (unlikely (status))
 	return status;
 
     assert(surface->base.backend == &_cairo_gl_surface_backend);
 
+    operand->operand.texture.surface = surface;
     operand->operand.texture.tex = surface->tex;
     switch (surface->base.content) {
     case CAIRO_CONTENT_ALPHA:
