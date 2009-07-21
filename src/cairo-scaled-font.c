@@ -2028,7 +2028,6 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t	*scaled_font,
 
     for (i = 0; i < num_glyphs; i++) {
 	int x, y;
-	cairo_surface_pattern_t glyph_pattern;
 	cairo_image_surface_t *glyph_surface;
 	cairo_scaled_glyph_t *scaled_glyph;
 
@@ -2046,8 +2045,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t	*scaled_font,
 	 * glyph. Later we'll deal with different formats. */
 	if (mask == NULL) {
 	    mask_format = glyph_surface->format;
-	    mask = cairo_image_surface_create (mask_format,
-					       width, height);
+	    mask = cairo_image_surface_create (mask_format, width, height);
 	    status = mask->status;
 	    if (unlikely (status))
 		goto CLEANUP_MASK;
@@ -2074,10 +2072,9 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t	*scaled_font,
 		break;
 	    }
 
-	    new_mask = cairo_image_surface_create (mask_format,
-						   width, height);
-	    if (new_mask->status) {
-		status = new_mask->status;
+	    new_mask = cairo_image_surface_create (mask_format, width, height);
+	    status = new_mask->status;
+	    if (unlikely (status)) {
 		cairo_surface_destroy (new_mask);
 		goto CLEANUP_MASK;
 	    }
@@ -2105,33 +2102,41 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t	*scaled_font,
 	    mask = new_mask;
 	}
 
-	/* round glyph locations to the nearest pixel */
-	/* XXX: FRAGILE: We're ignoring device_transform scaling here. A bug? */
-	x = _cairo_lround (glyphs[i].x - glyph_surface->base.device_transform.x0);
-	y = _cairo_lround (glyphs[i].y - glyph_surface->base.device_transform.y0);
+	if (glyph_surface->width && glyph_surface->height) {
+	    cairo_surface_pattern_t glyph_pattern;
 
-	_cairo_pattern_init_for_surface (&glyph_pattern, &glyph_surface->base);
+	    /* round glyph locations to the nearest pixel */
+	    /* XXX: FRAGILE: We're ignoring device_transform scaling here. A bug? */
+	    x = _cairo_lround (glyphs[i].x -
+			       glyph_surface->base.device_transform.x0);
+	    y = _cairo_lround (glyphs[i].y -
+			       glyph_surface->base.device_transform.y0);
 
-	status = _cairo_surface_composite (CAIRO_OPERATOR_ADD,
-					   &white_pattern.base,
-					   &glyph_pattern.base,
-					   mask,
-					   0, 0,
-					   0, 0,
-					   x - dest_x, y - dest_y,
-					   glyph_surface->width,
-					   glyph_surface->height,
-					   NULL);
+	    _cairo_pattern_init_for_surface (&glyph_pattern,
+					     &glyph_surface->base);
 
-	_cairo_pattern_fini (&glyph_pattern.base);
+	    status = _cairo_surface_composite (CAIRO_OPERATOR_ADD,
+					       &white_pattern.base,
+					       &glyph_pattern.base,
+					       mask,
+					       0, 0,
+					       0, 0,
+					       x - dest_x, y - dest_y,
+					       glyph_surface->width,
+					       glyph_surface->height,
+					       NULL);
 
-	if (unlikely (status))
-	    goto CLEANUP_MASK;
+	    _cairo_pattern_fini (&glyph_pattern.base);
+
+	    if (unlikely (status))
+		goto CLEANUP_MASK;
+	}
     }
 
-    if (mask_format == CAIRO_FORMAT_ARGB32)
+    if (mask_format == CAIRO_FORMAT_ARGB32) {
 	pixman_image_set_component_alpha (((cairo_image_surface_t*) mask)->
 					  pixman_image, TRUE);
+    }
     _cairo_pattern_init_for_surface (&mask_pattern, mask);
 
     status = _cairo_surface_composite (op, pattern, &mask_pattern.base,
