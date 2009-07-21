@@ -87,6 +87,11 @@ Long standing bugs fixed:
     cairo-trace and submitting it to us for analysis and inclusion into
     our performance suite.
 
+Special thanks:
+
+   To the AuroraUX team for providing access to one of their OpenSolaris
+   machines for cairo and pixman development.  http://www.auroraux.org/
+
 
 Snapshot 1.9.2 (2009-06-12)
 ===========================
