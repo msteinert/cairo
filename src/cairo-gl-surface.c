@@ -46,7 +46,7 @@ slim_hidden_proto (cairo_gl_surface_create);
 #define ARRAY_SIZE(array) (sizeof (array) / sizeof (array[0]))
 
 static inline float
-int_as_float(uint32_t val)
+int_as_float (uint32_t val)
 {
     union fi {
 	float f;
@@ -984,8 +984,8 @@ _cairo_gl_pattern_image_texture_setup (cairo_gl_composite_operand_t *operand,
     glGenTextures (1, &tex);
     glBindTexture (GL_TEXTURE_2D, tex);
     glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
-    assert(((image_surface->stride * image_surface->depth) %
-	    image_surface->depth) == 0);
+    assert (((image_surface->stride * image_surface->depth) %
+	     image_surface->depth) == 0);
     glPixelStorei (GL_UNPACK_ROW_LENGTH,
 		   image_surface->stride /
 		   (PIXMAN_FORMAT_BPP (image_surface->pixman_format) / 8));
@@ -1540,7 +1540,7 @@ typedef struct _cairo_gl_surface_span_renderer {
 } cairo_gl_surface_span_renderer_t;
 
 static void
-_cairo_gl_span_renderer_flush(cairo_gl_surface_span_renderer_t *renderer)
+_cairo_gl_span_renderer_flush (cairo_gl_surface_span_renderer_t *renderer)
 {
     if (renderer->vbo_offset == 0)
 	return;
@@ -1551,8 +1551,8 @@ _cairo_gl_span_renderer_flush(cairo_gl_surface_span_renderer_t *renderer)
 }
 
 static void *
-_cairo_gl_span_renderer_get_vbo(cairo_gl_surface_span_renderer_t *renderer,
-				unsigned int num_vertices)
+_cairo_gl_span_renderer_get_vbo (cairo_gl_surface_span_renderer_t *renderer,
+				 unsigned int num_vertices)
 {
     unsigned int offset;
 
@@ -1562,49 +1562,49 @@ _cairo_gl_span_renderer_get_vbo(cairo_gl_surface_span_renderer_t *renderer,
 	glBindBuffer (GL_ARRAY_BUFFER_ARB, renderer->vbo);
 
 	if (renderer->setup.src.type == OPERAND_TEXTURE)
-	    renderer->vertex_size = 4 * sizeof(float) + sizeof(uint32_t);
+	    renderer->vertex_size = 4 * sizeof (float) + sizeof (uint32_t);
 	else
-	    renderer->vertex_size = 2 * sizeof(float) + sizeof(uint32_t);
+	    renderer->vertex_size = 2 * sizeof (float) + sizeof (uint32_t);
 
 	glVertexPointer (2, GL_FLOAT, renderer->vertex_size, 0);
 	glEnableClientState (GL_VERTEX_ARRAY);
 
 	glColorPointer (4, GL_UNSIGNED_BYTE, renderer->vertex_size,
-			(void *)(uintptr_t)(2 * sizeof(float)));
+			(void *) (uintptr_t) (2 * sizeof (float)));
 	glEnableClientState (GL_COLOR_ARRAY);
 
 	if (renderer->setup.src.type == OPERAND_TEXTURE) {
-	    glClientActiveTexture(GL_TEXTURE0);
+	    glClientActiveTexture (GL_TEXTURE0);
 	    glTexCoordPointer (2, GL_FLOAT, renderer->vertex_size,
-			       (void *)(uintptr_t)(2 * sizeof(float) +
-						   sizeof(uint32_t)));
+			       (void *) (uintptr_t) (2 * sizeof (float) +
+						     sizeof (uint32_t)));
 	    glEnableClientState (GL_TEXTURE_COORD_ARRAY);
 	}
     }
 
     if (renderer->vbo_offset + num_vertices * renderer->vertex_size >
 	renderer->vbo_size) {
-	_cairo_gl_span_renderer_flush(renderer);
+	_cairo_gl_span_renderer_flush (renderer);
     }
 
     if (renderer->vbo_offset == 0) {
 	/* We'll only be using these vertices once. */
-	glBufferData(GL_ARRAY_BUFFER_ARB, renderer->vbo_size, NULL,
-		     GL_STREAM_DRAW_ARB);
-	renderer->vbo_base = glMapBuffer(GL_ARRAY_BUFFER_ARB,
+	glBufferData (GL_ARRAY_BUFFER_ARB, renderer->vbo_size, NULL,
+		      GL_STREAM_DRAW_ARB);
+	renderer->vbo_base = glMapBuffer (GL_ARRAY_BUFFER_ARB,
 					 GL_WRITE_ONLY_ARB);
     }
 
     offset = renderer->vbo_offset;
     renderer->vbo_offset += num_vertices * renderer->vertex_size;
 
-    return (char *)renderer->vbo_base + offset;
+    return (char *) renderer->vbo_base + offset;
 }
 
 static void
-_cairo_gl_emit_span_vertex(cairo_gl_surface_span_renderer_t *renderer,
-			   int dst_x, int dst_y, uint8_t alpha,
-			   float *vertices)
+_cairo_gl_emit_span_vertex (cairo_gl_surface_span_renderer_t *renderer,
+			    int dst_x, int dst_y, uint8_t alpha,
+			    float *vertices)
 {
     cairo_surface_attributes_t *src_attributes;
     int v = 0;
@@ -1613,7 +1613,7 @@ _cairo_gl_emit_span_vertex(cairo_gl_surface_span_renderer_t *renderer,
 
     vertices[v++] = dst_x;
     vertices[v++] = dst_y;
-    vertices[v++] = int_as_float(alpha << 24);
+    vertices[v++] = int_as_float (alpha << 24);
     if (renderer->setup.src.type == OPERAND_TEXTURE) {
 	double s, t;
 
@@ -1626,13 +1626,13 @@ _cairo_gl_emit_span_vertex(cairo_gl_surface_span_renderer_t *renderer,
 }
 
 static void
-_cairo_gl_emit_span(cairo_gl_surface_span_renderer_t *renderer,
-		    int x1, int x2, int y, uint8_t alpha)
+_cairo_gl_emit_span (cairo_gl_surface_span_renderer_t *renderer,
+		     int x1, int x2, int y, uint8_t alpha)
 {
-    float *vertices = _cairo_gl_span_renderer_get_vbo(renderer, 2);
+    float *vertices = _cairo_gl_span_renderer_get_vbo (renderer, 2);
 
-    _cairo_gl_emit_span_vertex(renderer, x1, y, alpha, vertices);
-    _cairo_gl_emit_span_vertex(renderer, x2, y, alpha,
+    _cairo_gl_emit_span_vertex (renderer, x1, y, alpha, vertices);
+    _cairo_gl_emit_span_vertex (renderer, x2, y, alpha,
 			       vertices + renderer->vertex_size / 4);
 }
 
@@ -1681,17 +1681,18 @@ _cairo_gl_surface_span_renderer_render_row (
 	if (x >= xmax)
 	    break;
 
-	_cairo_gl_emit_span(renderer, prev_x + x_translate, x + x_translate, y,
-			    prev_alpha);
+	_cairo_gl_emit_span (renderer,
+			     prev_x + x_translate, x + x_translate, y,
+			     prev_alpha);
 
 	prev_x = x;
 	prev_alpha = spans[i].coverage;
     }
 
     if (prev_x < xmax) {
-	_cairo_gl_emit_span(renderer,
-			    prev_x + x_translate, xmax + x_translate, y,
-			    prev_alpha);
+	_cairo_gl_emit_span (renderer,
+			     prev_x + x_translate, xmax + x_translate, y,
+			     prev_alpha);
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -1716,7 +1717,7 @@ _cairo_gl_surface_span_renderer_finish (void *abstract_renderer)
 {
     cairo_gl_surface_span_renderer_t *renderer = abstract_renderer;
 
-    _cairo_gl_span_renderer_flush(renderer);
+    _cairo_gl_span_renderer_flush (renderer);
 
     glBindBuffer (GL_ARRAY_BUFFER_ARB, 0);
     glDeleteBuffers (1, &renderer->vbo);
@@ -1759,7 +1760,7 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
 					const cairo_composite_rectangles_t *rects)
 {
     cairo_gl_surface_t *dst = abstract_dst;
-    cairo_gl_surface_span_renderer_t *renderer = calloc(1, sizeof(*renderer));
+    cairo_gl_surface_span_renderer_t *renderer = calloc (1, sizeof (*renderer));
     cairo_status_t status;
     int width = rects->width;
     int height = rects->height;
@@ -1828,7 +1829,7 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
     glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA);
 
     while ((err = glGetError ()))
-	fprintf(stderr, "GL error 0x%08x\n", (int) err);
+	fprintf (stderr, "GL error 0x%08x\n", (int) err);
 
     return &renderer->base;
 }
