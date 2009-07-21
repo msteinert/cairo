@@ -102,7 +102,6 @@ git_setup() {
 	CAIRO_DIR=`pwd`
     fi
     CAIRO_PERF_DIR=$CAIRO_DIR/.perf
-    export CAIRO_TRACE_DIR=$CAIRO_DIR/perf/cairo-traces
 }
 
 rev2sha() {
