@@ -43,7 +43,7 @@ slim_hidden_proto (cairo_gl_context_reference);
 slim_hidden_proto (cairo_gl_context_destroy);
 slim_hidden_proto (cairo_gl_surface_create);
 
-#define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
+#define ARRAY_SIZE(array) (sizeof (array) / sizeof (array[0]))
 
 enum cairo_gl_composite_operand_type {
     OPERAND_CONSTANT,
@@ -330,14 +330,14 @@ _cairo_gl_set_destination (cairo_gl_surface_t *surface)
     glViewport (0, 0, surface->width, surface->height);
 
     glMatrixMode (GL_PROJECTION);
-    glLoadIdentity();
+    glLoadIdentity ();
     if (surface->fb)
-	glOrtho(0, surface->width, 0, surface->height, -1.0, 1.0);
+	glOrtho (0, surface->width, 0, surface->height, -1.0, 1.0);
     else
-	glOrtho(0, surface->width, surface->height, 0, -1.0, 1.0);
+	glOrtho (0, surface->width, surface->height, 0, -1.0, 1.0);
 
     glMatrixMode (GL_MODELVIEW);
-    glLoadIdentity();
+    glLoadIdentity ();
 }
 
 static int
@@ -498,8 +498,8 @@ cairo_gl_surface_create (cairo_gl_context_t   *ctx,
     /* Create a framebuffer object wrapping the texture so that we can render
      * to it.
      */
-    glGenFramebuffersEXT(1, &surface->fb);
-    glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, surface->fb);
+    glGenFramebuffersEXT (1, &surface->fb);
+    glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, surface->fb);
     glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT,
 			       GL_COLOR_ATTACHMENT0_EXT,
 			       GL_TEXTURE_2D,
@@ -507,12 +507,12 @@ cairo_gl_surface_create (cairo_gl_context_t   *ctx,
 			       0);
 
     while ((err = glGetError ())) {
-	fprintf(stderr, "GL error in surface create: 0x%08x\n", err);
+	fprintf (stderr, "GL error in surface create: 0x%08x\n", err);
     }
 
     status = glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT);
     if (status != GL_FRAMEBUFFER_COMPLETE_EXT)
-	fprintf(stderr, "destination is framebuffer incomplete\n");
+	fprintf (stderr, "destination is framebuffer incomplete\n");
 
     /* Cairo surfaces start out initialized to transparent (black) */
     ctx = _cairo_gl_context_acquire (surface->ctx);
@@ -615,7 +615,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 {
     char *temp_data;
     int y;
-    unsigned int cpp = PIXMAN_FORMAT_BPP(src->pixman_format) / 8;
+    unsigned int cpp = PIXMAN_FORMAT_BPP (src->pixman_format) / 8;
     GLenum internal_format, format, type;
     char *src_data_start;
     cairo_bool_t has_alpha;
@@ -645,7 +645,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 
     _cairo_gl_set_destination (dst);
     glRasterPos2i (dst_x, dst_y);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
     glDrawPixels (width, height, format, type, temp_data);
 
     free (temp_data);
@@ -700,7 +700,7 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
 	type = GL_UNSIGNED_BYTE;
 	cpp = 1;
     } else {
-	fprintf(stderr, "get_image fallback: %d\n", surface->base.content);
+	fprintf (stderr, "get_image fallback: %d\n", surface->base.content);
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
@@ -714,7 +714,7 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
      * it the destination.  But then, this is the fallback path, so let's not
      * fall back instead.
      */
-    _cairo_gl_set_destination(surface);
+    _cairo_gl_set_destination (surface);
 
     /* Read the data to a temporary as GL gives us bottom-to-top data
      * screen-wise, and we want top-to-bottom.
@@ -723,13 +723,13 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
     if (temp_data == NULL)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    glReadPixels(extents.x, extents.y,
+    glPixelStorei (GL_PACK_ALIGNMENT, 1);
+    glReadPixels (extents.x, extents.y,
 		 extents.width, extents.height,
 		 format, type, temp_data);
 
     for (y = 0; y < extents.height; y++) {
-	memcpy ((char *)image->data + y * image->stride,
+	memcpy ((char *) image->data + y * image->stride,
 		temp_data + y * extents.width * cpp,
 		extents.width * cpp);
     }
@@ -738,7 +738,7 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
     *image_out = image;
 
     while ((err = glGetError ()))
-	fprintf(stderr, "GL error 0x%08x\n", (int) err);
+	fprintf (stderr, "GL error 0x%08x\n", (int) err);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -754,7 +754,7 @@ _cairo_gl_surface_finish (void *abstract_surface)
     if (surface->ctx->current_target == surface)
 	surface->ctx->current_target = NULL;
 
-    cairo_gl_context_destroy(surface->ctx);
+    cairo_gl_context_destroy (surface->ctx);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -976,7 +976,7 @@ _cairo_gl_pattern_image_texture_setup (cairo_gl_composite_operand_t *operand,
 	    image_surface->depth) == 0);
     glPixelStorei (GL_UNPACK_ROW_LENGTH,
 		   image_surface->stride /
-		   (PIXMAN_FORMAT_BPP(image_surface->pixman_format) / 8));
+		   (PIXMAN_FORMAT_BPP (image_surface->pixman_format) / 8));
     /* The filter will be correctly set up later, but for now we want to
      * hint to glTexImage that we're not mipmapping.
      */
@@ -1013,9 +1013,9 @@ _cairo_gl_pattern_image_texture_setup (cairo_gl_composite_operand_t *operand,
     cairo_matrix_init_translate (&m,
 				 src_x - dst_x,
 				 src_y - dst_y);
-    cairo_matrix_multiply(&attributes->matrix,
-			  &m,
-			  &attributes->matrix);
+    cairo_matrix_multiply (&attributes->matrix,
+			   &m,
+			   &attributes->matrix);
 
     /* Translate the matrix from
      * (unnormalized src -> unnormalized src) to
@@ -1069,7 +1069,7 @@ _cairo_gl_pattern_texture_setup (cairo_gl_composite_operand_t *operand,
     if (unlikely (status))
 	return status;
 
-    assert(surface->base.backend == &_cairo_gl_surface_backend);
+    assert (surface->base.backend == &_cairo_gl_surface_backend);
 
     operand->operand.texture.surface = surface;
     operand->operand.texture.tex = surface->tex;
@@ -1110,7 +1110,7 @@ _cairo_gl_pattern_texture_setup (cairo_gl_composite_operand_t *operand,
 }
 
 static cairo_int_status_t
-_cairo_gl_operand_init(cairo_gl_composite_operand_t *operand,
+_cairo_gl_operand_init (cairo_gl_composite_operand_t *operand,
 		       const cairo_pattern_t *pattern,
 		       cairo_gl_surface_t *dst,
 		       int src_x, int src_y,
@@ -1134,11 +1134,11 @@ _cairo_gl_operand_init(cairo_gl_composite_operand_t *operand,
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
 	operand->type = OPERAND_TEXTURE;
-	return _cairo_gl_pattern_texture_setup(operand,
-					       pattern, dst,
-					       src_x, src_y,
-					       dst_x, dst_y,
-					       width, height);
+	return _cairo_gl_pattern_texture_setup (operand,
+						pattern, dst,
+						src_x, src_y,
+						dst_x, dst_y,
+						width, height);
     }
 }
 
@@ -1222,7 +1222,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     GLfloat constant_color[4] = {0.0, 0.0, 0.0, 1.0};
     cairo_gl_composite_setup_t setup;
 
-    memset(&setup, 0, sizeof(setup));
+    memset (&setup, 0, sizeof (setup));
 
     status = _cairo_gl_operand_init (&setup.src, src, dst,
 				     src_x, src_y,
@@ -1232,7 +1232,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 	return status;
     src_attributes = &setup.src.operand.texture.attributes;
 
-    if (mask != NULL && _cairo_pattern_is_opaque(mask))
+    if (mask != NULL && _cairo_pattern_is_opaque (mask))
 	mask = NULL;
 
     if (mask != NULL) {
@@ -1327,7 +1327,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     vertices[3][0] = dst_x;
     vertices[3][1] = dst_y + height;
 
-    glVertexPointer (2, GL_FLOAT, sizeof(GLfloat) * 2, vertices);
+    glVertexPointer (2, GL_FLOAT, sizeof (GLfloat) * 2, vertices);
     glEnableClientState (GL_VERTEX_ARRAY);
 
     if (setup.src.type == OPERAND_TEXTURE) {
@@ -1342,7 +1342,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 	}
 
 	glClientActiveTexture (GL_TEXTURE0);
-	glTexCoordPointer (2, GL_FLOAT, sizeof(GLfloat) * 2, texcoord_src);
+	glTexCoordPointer (2, GL_FLOAT, sizeof (GLfloat)*2, texcoord_src);
 	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
     }
 
@@ -1359,7 +1359,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 	    }
 
 	    glClientActiveTexture (GL_TEXTURE1);
-	    glTexCoordPointer (2, GL_FLOAT, sizeof(GLfloat) * 2, texcoord_mask);
+	    glTexCoordPointer (2, GL_FLOAT, sizeof (GLfloat)*2, texcoord_mask);
 	    glEnableClientState (GL_TEXTURE_COORD_ARRAY);
 	}
     }
@@ -1381,7 +1381,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     glDisable (GL_TEXTURE_2D);
 
     while ((err = glGetError ()))
-	fprintf(stderr, "GL error 0x%08x\n", (int) err);
+	fprintf (stderr, "GL error 0x%08x\n", (int) err);
 
     _cairo_gl_context_release (ctx);
 
@@ -1450,12 +1450,12 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
 	return status;
     }
 
-    vertices = _cairo_malloc_ab(num_rects, sizeof(GLfloat) * 4 * 2);
-    colors = _cairo_malloc_ab(num_rects, sizeof(GLfloat) * 4 * 4);
+    vertices = _cairo_malloc_ab (num_rects, sizeof (GLfloat) * 4 * 2);
+    colors = _cairo_malloc_ab (num_rects, sizeof (GLfloat) * 4 * 4);
     if (!vertices || !colors) {
-	_cairo_gl_context_release(ctx);
-	free(vertices);
-	free(colors);
+	_cairo_gl_context_release (ctx);
+	free (vertices);
+	free (colors);
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
@@ -1481,9 +1481,9 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
     }
 
     glEnable (GL_BLEND);
-    glVertexPointer (2, GL_FLOAT, sizeof(GLfloat) * 2, vertices);
+    glVertexPointer (2, GL_FLOAT, sizeof (GLfloat)*2, vertices);
     glEnableClientState (GL_VERTEX_ARRAY);
-    glColorPointer (4, GL_FLOAT, sizeof(GLfloat) * 4, colors);
+    glColorPointer (4, GL_FLOAT, sizeof (GLfloat)*4, colors);
     glEnableClientState (GL_COLOR_ARRAY);
     glDrawArrays (GL_TRIANGLE_FAN, 0, 4 * num_rects);
 
@@ -1492,8 +1492,8 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
     glDisable (GL_BLEND);
 
     _cairo_gl_context_release (ctx);
-    free(vertices);
-    free(colors);
+    free (vertices);
+    free (colors);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1549,7 +1549,7 @@ static const cairo_surface_backend_t _cairo_gl_surface_backend = {
 cairo_status_t
 cairo_gl_surface_glfinish (cairo_surface_t *surface)
 {
-    glFinish();
+    glFinish ();
 
     return CAIRO_STATUS_SUCCESS;
 }
