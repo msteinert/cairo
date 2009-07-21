@@ -45,6 +45,8 @@ slim_hidden_proto (cairo_gl_surface_create);
 
 #define ARRAY_SIZE(array) (sizeof (array) / sizeof (array[0]))
 
+#define BIAS .375
+
 static inline float
 int_as_float (uint32_t val)
 {
@@ -1611,14 +1613,14 @@ _cairo_gl_emit_span_vertex (cairo_gl_surface_span_renderer_t *renderer,
 
     src_attributes = &renderer->setup.src.operand.texture.attributes;
 
-    vertices[v++] = dst_x;
-    vertices[v++] = dst_y;
+    vertices[v++] = dst_x + BIAS;
+    vertices[v++] = dst_y + BIAS;
     vertices[v++] = int_as_float (alpha << 24);
     if (renderer->setup.src.type == OPERAND_TEXTURE) {
 	double s, t;
 
-	s = dst_x;
-	t = dst_y;
+	s = dst_x + BIAS;
+	t = dst_y + BIAS;
 	cairo_matrix_transform_point (&src_attributes->matrix, &s, &t);
 	vertices[v++] = s;
 	vertices[v++] = t;
