@@ -90,6 +90,7 @@ target_is_measurable (const cairo_boilerplate_target_t *target)
 	    return TRUE;
 	}
     case CAIRO_SURFACE_TYPE_XCB:
+    case CAIRO_SURFACE_TYPE_GL:
     case CAIRO_SURFACE_TYPE_GLITZ:
     case CAIRO_SURFACE_TYPE_QUARTZ:
     case CAIRO_SURFACE_TYPE_WIN32:

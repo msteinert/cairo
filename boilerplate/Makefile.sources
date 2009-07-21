@@ -23,7 +23,7 @@ cairo_boilerplate_private = \
 # following lines, even if beos surface is not enabled.  Disable it for now.
 #libcairoboilerplate_la_SOURCES += cairo-boilerplate-beos.cpp
 
-cairo_boilerplate_directfb_sources = cairo-boilerplate-directfb.c
+cairo_boilerplate_gl_sources = cairo-boilerplate-gl.c
 cairo_boilerplate_glitz_sources = \
 	cairo-boilerplate-glitz-agl.c \
 	cairo-boilerplate-glitz-glx.c \

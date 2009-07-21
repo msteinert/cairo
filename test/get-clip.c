@@ -129,6 +129,7 @@ draw (cairo_t *cr, int width, int height)
     case CAIRO_SURFACE_TYPE_WIN32:
     case CAIRO_SURFACE_TYPE_BEOS:
     case CAIRO_SURFACE_TYPE_DIRECTFB:
+    case CAIRO_SURFACE_TYPE_GL:
         uses_clip_rects = TRUE;
 	break;
     case CAIRO_SURFACE_TYPE_QUARTZ:

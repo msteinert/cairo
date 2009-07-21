@@ -195,6 +195,24 @@ CAIRO_ENABLE_FUNCTIONS(png, PNG, yes, [
 ])
 
 dnl ===========================================================================
+CAIRO_ENABLE_SURFACE_BACKEND(gl, OpenGL, no, [
+  gl_REQUIRES="gl"
+  PKG_CHECK_MODULES(gl, $gl_REQUIRES, , [AC_MSG_RESULT(no)
+  use_gl="no (requires gl.pc)"])
+
+  AC_CHECK_LIB(GLEW, glewInit, [
+    AC_CHECK_HEADER(GL/glew.h, [], [
+      use_gl="no (requires glew http://glew.sourceforge.net/)"
+    ])
+  ], [
+    use_gl="no (requires glew http://glew.sourceforge.net/)"
+  ])
+  gl_NONPKGCONFIG_LIBS="-lGLEW"
+  need_glx_functions=yes
+  need_eagle_functions=yes
+])
+
+dnl ===========================================================================
 
 GLITZ_MIN_VERSION=0.5.1
 CAIRO_ENABLE_SURFACE_BACKEND(glitz, glitz, no, [
@@ -250,6 +268,17 @@ CAIRO_ENABLE_SURFACE_BACKEND(vg, OpenVG, no, [
       vg_NONPKGCONFIG_LIBS="-lOpenVG"
       need_egl_functions=yes
       need_glx_functions=yes
+  fi
+])
+
+CAIRO_ENABLE_FUNCTIONS(eagle, eagle, auto, [
+  if test "x$need_eagle_functions" = "xyes"; then
+      eagle_REQUIRES="eagle"
+      PKG_CHECK_MODULES(eagle, $eagle_REQUIRES, ,
+                       [AC_MSG_RESULT(no)
+                       use_eagle="no (requires eagle)"])
+  else
+      use_eagle="no (not required by any backend)"
   fi
 ])
 

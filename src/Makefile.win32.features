@@ -189,6 +189,20 @@ ifeq ($(CAIRO_HAS_PNG_FUNCTIONS),1)
 enabled_cairo_pkgconf += cairo-png.pc
 endif
 
+unsupported_cairo_headers += $(cairo_gl_headers)
+all_cairo_headers += $(cairo_gl_headers)
+all_cairo_private += $(cairo_gl_private)
+all_cairo_sources += $(cairo_gl_sources)
+ifeq ($(CAIRO_HAS_GL_SURFACE),1)
+enabled_cairo_headers += $(cairo_gl_headers)
+enabled_cairo_private += $(cairo_gl_private)
+enabled_cairo_sources += $(cairo_gl_sources)
+endif
+all_cairo_pkgconf += cairo-gl.pc
+ifeq ($(CAIRO_HAS_GL_SURFACE),1)
+enabled_cairo_pkgconf += cairo-gl.pc
+endif
+
 unsupported_cairo_headers += $(cairo_glitz_headers)
 all_cairo_headers += $(cairo_glitz_headers)
 all_cairo_private += $(cairo_glitz_private)
@@ -229,6 +243,20 @@ endif
 all_cairo_pkgconf += cairo-vg.pc
 ifeq ($(CAIRO_HAS_VG_SURFACE),1)
 enabled_cairo_pkgconf += cairo-vg.pc
+endif
+
+supported_cairo_headers += $(cairo_eagle_headers)
+all_cairo_headers += $(cairo_eagle_headers)
+all_cairo_private += $(cairo_eagle_private)
+all_cairo_sources += $(cairo_eagle_sources)
+ifeq ($(CAIRO_HAS_EAGLE_FUNCTIONS),1)
+enabled_cairo_headers += $(cairo_eagle_headers)
+enabled_cairo_private += $(cairo_eagle_private)
+enabled_cairo_sources += $(cairo_eagle_sources)
+endif
+all_cairo_pkgconf += cairo-eagle.pc
+ifeq ($(CAIRO_HAS_EAGLE_FUNCTIONS),1)
+enabled_cairo_pkgconf += cairo-eagle.pc
 endif
 
 supported_cairo_headers += $(cairo_egl_headers)

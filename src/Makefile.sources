@@ -165,6 +165,10 @@ _cairo_font_subset_sources = \
 cairo_private += $(_cairo_font_subset_private)
 cairo_sources += $(_cairo_font_subset_sources)
 
+cairo_glx_sources =
+cairo_egl_sources =
+cairo_eagle_sources =
+
 _cairo_pdf_operators_private = cairo-pdf-operators-private.h
 _cairo_pdf_operators_sources = cairo-pdf-operators.c
 cairo_private += $(_cairo_pdf_operators_private)
@@ -248,6 +252,12 @@ cairo_os2_sources = cairo-os2-surface.c
 # following lines, even if beos surface is not enabled.  Disable it for now.
 cairo_beos_headers = cairo-beos.h
 #cairo_beos_sources = cairo-beos-surface.cpp
+
+cairo_gl_headers = cairo-gl.h
+cairo_gl_private = cairo-gl-private.h
+cairo_gl_sources = cairo-gl-surface.c
+cairo_glx_sources += cairo-glx-context.c
+cairo_eagle_sources += cairo-eagle-context.c
 
 cairo_glitz_headers = cairo-glitz.h
 cairo_glitz_private = cairo-glitz-private.h
