@@ -127,9 +127,12 @@ CLEANFILES += $(BUILT_SOURCES) make-cairo-test-constructors
 # All tests which have a reference image go here.
 REFERENCE_IMAGES = \
 	a1-image-sample.ref.png \
+	a1-image-sample.gl.xfail.png \
 	a1-mask.ref.png \
 	a1-traps-sample.ref.png \
 	a8-mask.ref.png \
+	alpha-similar.gl.argb32.xfail.png \
+	alpha-similar.gl.rgb24.xfail.png \
 	alpha-similar.pdf.argb32.xfail.png \
 	alpha-similar.pdf.rgb24.xfail.png \
 	alpha-similar.ps.argb32.xfail.png \
@@ -293,6 +296,7 @@ REFERENCE_IMAGES = \
 	degenerate-pen.ps3.ref.png \
 	degenerate-pen.quartz.ref.png \
 	degenerate-pen.ref.png \
+	device-offset-fractional.gl.xfail.png \
 	device-offset-fractional.pdf.argb32.ref.png \
 	device-offset-fractional.pdf.ref.png \
 	device-offset-fractional.pdf.rgb24.ref.png \
@@ -397,14 +401,17 @@ REFERENCE_IMAGES = \
 	filter-bilinear-extents.ps2.ref.png \
 	filter-bilinear-extents.ps3.ref.png \
 	filter-bilinear-extents.ref.png \
+	filter-nearest-offset.gl.xfail.png \
 	filter-nearest-offset.pdf.xfail.png \
 	filter-nearest-offset.ps2.ref.png \
 	filter-nearest-offset.ps3.ref.png \
 	filter-nearest-offset.ref.png \
 	filter-nearest-offset.svg.xfail.png \
+	filter-nearest-transformed.gl.xfail.png \
 	filter-nearest-transformed.pdf.xfail.png \
 	filter-nearest-transformed.ref.png \
 	filter-nearest-transformed.svg.xfail.png \
+	finer-grained-fallbacks.gl.argb32.ref.png \
 	finer-grained-fallbacks.ps2.argb32.ref.png \
 	finer-grained-fallbacks.ps2.ref.png \
 	finer-grained-fallbacks.ps2.rgb24.ref.png \
@@ -540,6 +547,7 @@ REFERENCE_IMAGES = \
 	mask-alpha.xlib.rgb24.ref.png \
 	mask-ctm.ref.png \
 	mask-ctm.rgb24.ref.png \
+	mask-glyphs.gl.ref.png \
 	mask-glyphs.pdf.ref.png \
 	mask-glyphs.ref.png \
 	mask-glyphs.svg.ref.png \
@@ -561,6 +569,7 @@ REFERENCE_IMAGES = \
 	mask.xlib-fallback.rgb24.ref.png \
 	mask.xlib.ref.png \
 	mask.xlib.rgb24.ref.png \
+	meta-surface-pattern.gl.argb32.ref.png \
 	meta-surface-pattern.pdf.argb32.ref.png \
 	meta-surface-pattern.pdf.rgb24.ref.png \
 	meta-surface-pattern.ps2.argb32.ref.png \
@@ -717,12 +726,14 @@ REFERENCE_IMAGES = \
 	rotate-image-surface-paint.ref.png \
 	rotate-image-surface-paint.svg.ref.png \
 	scale-down-source-surface-paint.ref.png \
+	scale-offset-image.gl.ref.png \
 	scale-offset-image.pdf.argb32.ref.png \
 	scale-offset-image.pdf.rgb24.ref.png \
 	scale-offset-image.ps.ref.png \
 	scale-offset-image.ref.png \
 	scale-offset-image.xfail.png \
 	scale-offset-image.xlib.xfail.png \
+	scale-offset-similar.gl.ref.png \
 	scale-offset-similar.pdf.argb32.ref.png \
 	scale-offset-similar.pdf.rgb24.ref.png \
 	scale-offset-similar.ps.ref.png \
@@ -784,6 +795,7 @@ REFERENCE_IMAGES = \
 	smask.ref.png \
 	smask.svg.ref.png \
 	solid-pattern-cache-stress.ref.png \
+	source-clip-scale.gl.ref.png \
 	source-clip-scale.pdf.ref.png \
 	source-clip-scale.ps2.argb32.ref.png \
 	source-clip-scale.ps2.rgb24.ref.png \
@@ -875,6 +887,8 @@ REFERENCE_IMAGES = \
 	twin.svg.ref.png \
 	unantialiased-shapes.quartz.ref.png \
 	unantialiased-shapes.ref.png \
+	unbounded-operator.gl.argb32.xfail.png \
+	unbounded-operator.gl.rgb24.xfail.png \
 	unbounded-operator.pdf.argb32.ref.png \
 	unbounded-operator.ps2.argb32.ref.png \
 	unbounded-operator.ps3.argb32.ref.png \
