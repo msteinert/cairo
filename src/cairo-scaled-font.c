@@ -1428,22 +1428,22 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
     extents->x_advance = 0.0;
     extents->y_advance = 0.0;
 
-    if (scaled_font->status)
-	return;
+    if (unlikely (scaled_font->status))
+	goto ZERO_EXTENTS;
 
     if (num_glyphs == 0)
-	return;
+	goto ZERO_EXTENTS;
 
-    if (num_glyphs < 0) {
+    if (unlikely (num_glyphs < 0)) {
 	_cairo_error_throw (CAIRO_STATUS_NEGATIVE_COUNT);
 	/* XXX Can't propagate error */
-	return;
+	goto ZERO_EXTENTS;
     }
 
-    if (glyphs == NULL) {
+    if (unlikely (glyphs == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NULL_POINTER);
 	/* XXX Can't propagate error */
-	return;
+	goto ZERO_EXTENTS;
     }
 
     _cairo_scaled_font_freeze_cache (scaled_font);
@@ -1514,6 +1514,15 @@ cairo_scaled_font_glyph_extents (cairo_scaled_font_t   *scaled_font,
 
  UNLOCK:
     _cairo_scaled_font_thaw_cache (scaled_font);
+    return;
+
+ZERO_EXTENTS:
+    extents->x_bearing = 0.0;
+    extents->y_bearing = 0.0;
+    extents->width  = 0.0;
+    extents->height = 0.0;
+    extents->x_advance = 0.0;
+    extents->y_advance = 0.0;
 }
 slim_hidden_def (cairo_scaled_font_glyph_extents);
 
