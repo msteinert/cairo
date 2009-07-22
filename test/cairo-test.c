@@ -1509,6 +1509,7 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 #if defined(HAVE_SIGNAL_H) && defined(HAVE_SETJMP_H)
     if (ctx->thread == 0 && ! RUNNING_ON_VALGRIND) {
 	void (* volatile old_segfault_handler)(int);
+	void (* volatile old_segfpe_handler)(int);
 	void (* volatile old_sigpipe_handler)(int);
 	void (* volatile old_sigabrt_handler)(int);
 	void (* volatile old_sigalrm_handler)(int);
@@ -1516,6 +1517,9 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 	/* Set up a checkpoint to get back to in case of segfaults. */
 #ifdef SIGSEGV
 	old_segfault_handler = signal (SIGSEGV, segfault_handler);
+#endif
+#ifdef SIGFPE
+	old_segfpe_handler = signal (SIGFPE, segfault_handler);
 #endif
 #ifdef SIGPIPE
 	old_sigpipe_handler = signal (SIGPIPE, segfault_handler);
@@ -1532,6 +1536,9 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 	    status = CAIRO_TEST_CRASHED;
 #ifdef SIGSEGV
 	signal (SIGSEGV, old_segfault_handler);
+#endif
+#ifdef SIGFPE
+	signal (SIGFPE, old_segfpe_handler);
 #endif
 #ifdef SIGPIPE
 	signal (SIGPIPE, old_sigpipe_handler);
