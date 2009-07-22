@@ -195,7 +195,7 @@ _cairo_boilerplate_vg_cleanup_egl (void *closure)
 
     eglDestroyContext (vgc->dpy, vgc->ctx);
     eglDestroySurface (vgc->dpy, vgc->dummy);
-    eglDestroyDisplay (vgc->dpy);
+    eglTerminate (vgc->dpy);
     free (vgc);
 }
 
@@ -216,7 +216,7 @@ _cairo_boilerplate_vg_create_surface_egl (const char	*name,
 	EGL_BLUE_SIZE, 8,
 	EGL_ALPHA_SIZE, 8,
 	EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
-	ELG_RENDERABLE_TYPE, EGL_OPENVG_BIT,
+	EGL_RENDERABLE_TYPE, EGL_OPENVG_BIT,
 	None
     };
     int rgb_attribs[] = {
@@ -224,9 +224,9 @@ _cairo_boilerplate_vg_create_surface_egl (const char	*name,
 	EGL_GREEN_SIZE, 8,
 	EGL_BLUE_SIZE, 8,
 	EGL_ALPHA_SIZE, 8,
-	EGL_VG_ALPHA_FORMAT, VG_ALPHA_FORMAT_PRE,
+	EGL_VG_ALPHA_FORMAT, EGL_VG_ALPHA_FORMAT_PRE_BIT,
 	EGL_SURFACE_TYPE, EGL_PBUFFER_BIT,
-	ELG_RENDERABLE_TYPE, EGL_OPENVG_BIT,
+	EGL_RENDERABLE_TYPE, EGL_OPENVG_BIT,
 	None
     };
     int dummy_attribs[] = {
@@ -235,11 +235,12 @@ _cairo_boilerplate_vg_create_surface_egl (const char	*name,
     };
     EGLDisplay *dpy;
     int major, minor;
-    EGLConfig *config;
+    EGLConfig config;
     int num_configs;
     EGLContext *egl_context;
+    EGLSurface *dummy;
     cairo_vg_context_t *context;
-    cairo_vg_surface_t *surface;
+    cairo_surface_t *surface;
     vg_closure_egl_t *vgc;
 
     dpy = eglGetDisplay (EGL_DEFAULT_DISPLAY);
@@ -250,10 +251,9 @@ _cairo_boilerplate_vg_create_surface_egl (const char	*name,
     eglBindAPI (EGL_OPENVG_API);
 
     if (! eglChooseConfig (dpy,
-			   attribs,
 			   content == CAIRO_CONTENT_COLOR_ALPHA ?
 			   rgba_attribs : rgb_attribs,
-			   1, &num_configs) ||
+			   &config, 1, &num_configs) ||
 	num_configs != 1)
     {
 	return NULL;
@@ -284,10 +284,9 @@ _cairo_boilerplate_vg_create_surface_egl (const char	*name,
     *closure = vgc;
 
     context = cairo_vg_context_create_for_egl (vgc->dpy, vgc->ctx);
-    vgc->surface = cairo_vg_surface_create (context, content, width, height);
+    surface = cairo_vg_surface_create (context, content, width, height);
     cairo_vg_context_destroy (context);
 
-    surface = vgc->surface;
     if (cairo_surface_status (surface))
 	_cairo_boilerplate_vg_cleanup_egl (vgc);
 
