@@ -27,6 +27,14 @@ New experimental backends:
    OpenVG - The initial work was done by Øyvind Kolås, and made ready for
             inclusion by Pierre Tardy.
 
+   OpenGL - An advanced OpenGL compositor. The aim is to write a integrate
+            directed rendering using OpenGL at a high-level into Cairo. In
+	    contrast to the previous attempt using Glitz which tried to
+	    implement the RENDER protocol on top of OpenGL, using the
+	    high-level interface should permit greater flexibility and
+	    more offloading onto the GPU.
+	    The initial work on the backend was performed by Eric Anholt.
+
 
 Snapshot 1.9.2 (2009-06-12)
 ===========================
