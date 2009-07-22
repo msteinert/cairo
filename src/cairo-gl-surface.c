@@ -1850,6 +1850,15 @@ _cairo_gl_surface_get_extents (void		     *abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static void
+_cairo_gl_surface_get_font_options (void                  *abstract_surface,
+				    cairo_font_options_t  *options)
+{
+    _cairo_font_options_init_default (options);
+
+    cairo_font_options_set_hint_metrics (options, CAIRO_HINT_METRICS_ON);
+}
+
 static const cairo_surface_backend_t _cairo_gl_surface_backend = {
     CAIRO_SURFACE_TYPE_GL,
     _cairo_gl_surface_create_similar,
@@ -1870,7 +1879,7 @@ static const cairo_surface_backend_t _cairo_gl_surface_backend = {
     NULL, /* intersect_clip_path */
     _cairo_gl_surface_get_extents,
     NULL, /* old_show_glyphs */
-    NULL, /* get_font_options */
+    _cairo_gl_surface_get_font_options,
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
     NULL, /* scaled_font_fini */
