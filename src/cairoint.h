@@ -857,6 +857,7 @@ struct _cairo_image_surface {
     pixman_image_t *pixman_image;
     cairo_region_t *clip_region;
 
+    unsigned is_clear : 1;
     unsigned owns_data : 1;
     unsigned transparency : 2;
 };
