@@ -13,14 +13,15 @@ AM_LDFLAGS = $(CAIRO_LDFLAGS)
 EXTRA_PROGRAMS += cairo-perf \
 		  cairo-perf-trace \
 		  cairo-perf-diff-files \
+		  cairo-perf-print \
 		  cairo-perf-compare-backends \
 		  cairo-perf-graph-files
 EXTRA_DIST += cairo-perf-diff COPYING
 EXTRA_LTLIBRARIES += libcairoperf.la
 
-LDADD = $(top_builddir)/boilerplate/libcairoboilerplate.la \
+LDADD = libcairoperf.la \
+	$(top_builddir)/boilerplate/libcairoboilerplate.la \
 	$(top_builddir)/src/libcairo.la \
-	libcairoperf.la \
 	$(CAIROPERF_LIBS)
 
 cairo_perf_SOURCES =		\
@@ -98,6 +99,9 @@ cairo_perf_trace_DEPENDENCIES = \
 
 cairo_perf_diff_files_SOURCES =	\
 	cairo-perf-diff-files.c
+
+cairo_perf_print_SOURCES =	\
+	cairo-perf-print.c
 
 cairo_perf_compare_backends_SOURCES =	\
 	cairo-perf-compare-backends.c
