@@ -1861,6 +1861,29 @@ _cairo_gl_surface_get_font_options (void                  *abstract_surface,
     cairo_font_options_set_hint_metrics (options, CAIRO_HINT_METRICS_ON);
 }
 
+
+static cairo_int_status_t
+_cairo_gl_surface_paint (void *abstract_surface,
+			 cairo_operator_t	 op,
+			 const cairo_pattern_t *source,
+			 cairo_clip_t	    *clip)
+{
+    /* simplify the common case of clearing the surface */
+    if (op == CAIRO_OPERATOR_CLEAR && clip == NULL) {
+	cairo_gl_surface_t *surface = abstract_surface;
+	cairo_gl_context_t *ctx;
+
+	ctx = _cairo_gl_context_acquire (surface->ctx);
+	_cairo_gl_set_destination (surface);
+	glClear (GL_COLOR_BUFFER_BIT);
+	_cairo_gl_context_release (ctx);
+
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
 static const cairo_surface_backend_t _cairo_gl_surface_backend = {
     CAIRO_SURFACE_TYPE_GL,
     _cairo_gl_surface_create_similar,
@@ -1886,7 +1909,7 @@ static const cairo_surface_backend_t _cairo_gl_surface_backend = {
     NULL, /* mark_dirty_rectangle */
     NULL, /* scaled_font_fini */
     NULL, /* scaled_glyph_fini */
-    NULL, /* paint */
+    _cairo_gl_surface_paint,
     NULL, /* mask */
     NULL, /* stroke */
     NULL, /* fill */
