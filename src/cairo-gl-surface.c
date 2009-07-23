@@ -118,16 +118,18 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     CAIRO_REFERENCE_COUNT_INIT (&ctx->ref_count, 1);
     CAIRO_MUTEX_INIT (ctx->mutex);
 
-    if (glewInit () != GLEW_OK) {
+    if (glewInit () != GLEW_OK)
 	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT); /* XXX */
-    }
 
-    if (! GLEW_EXT_framebuffer_object ||
+    if (! GLEW_ARB_vertex_buffer_object ||
+	! GLEW_EXT_framebuffer_object ||
 	! GLEW_ARB_texture_env_combine ||
 	! GLEW_ARB_texture_non_power_of_two)
     {
 	fprintf (stderr,
 		 "Required GL extensions not available:\n");
+	if (! GLEW_ARB_vertex_buffer_object)
+	    fprintf (stderr, "    GL_ARB_vertex_buffer_object\n");
 	if (! GLEW_EXT_framebuffer_object)
 	    fprintf (stderr, "    GL_EXT_framebuffer_object\n");
 	if (! GLEW_ARB_texture_env_combine)
@@ -1547,7 +1549,7 @@ _cairo_gl_span_renderer_flush (cairo_gl_surface_span_renderer_t *renderer)
     if (renderer->vbo_offset == 0)
 	return;
 
-    glUnmapBuffer (GL_ARRAY_BUFFER_ARB);
+    glUnmapBufferARB (GL_ARRAY_BUFFER_ARB);
     glDrawArrays (GL_LINES, 0, renderer->vbo_offset / renderer->vertex_size);
     renderer->vbo_offset = 0;
 }
@@ -1560,8 +1562,8 @@ _cairo_gl_span_renderer_get_vbo (cairo_gl_surface_span_renderer_t *renderer,
 
     if (renderer->vbo == 0) {
 	renderer->vbo_size = 16384;
-	glGenBuffers (1, &renderer->vbo);
-	glBindBuffer (GL_ARRAY_BUFFER_ARB, renderer->vbo);
+	glGenBuffersARB (1, &renderer->vbo);
+	glBindBufferARB (GL_ARRAY_BUFFER_ARB, renderer->vbo);
 
 	if (renderer->setup.src.type == OPERAND_TEXTURE)
 	    renderer->vertex_size = 4 * sizeof (float) + sizeof (uint32_t);
@@ -1591,10 +1593,10 @@ _cairo_gl_span_renderer_get_vbo (cairo_gl_surface_span_renderer_t *renderer,
 
     if (renderer->vbo_offset == 0) {
 	/* We'll only be using these vertices once. */
-	glBufferData (GL_ARRAY_BUFFER_ARB, renderer->vbo_size, NULL,
+	glBufferDataARB (GL_ARRAY_BUFFER_ARB, renderer->vbo_size, NULL,
 		      GL_STREAM_DRAW_ARB);
-	renderer->vbo_base = glMapBuffer (GL_ARRAY_BUFFER_ARB,
-					 GL_WRITE_ONLY_ARB);
+	renderer->vbo_base = glMapBufferARB (GL_ARRAY_BUFFER_ARB,
+					     GL_WRITE_ONLY_ARB);
     }
 
     offset = renderer->vbo_offset;
@@ -1721,8 +1723,8 @@ _cairo_gl_surface_span_renderer_finish (void *abstract_renderer)
 
     _cairo_gl_span_renderer_flush (renderer);
 
-    glBindBuffer (GL_ARRAY_BUFFER_ARB, 0);
-    glDeleteBuffers (1, &renderer->vbo);
+    glBindBufferARB (GL_ARRAY_BUFFER_ARB, 0);
+    glDeleteBuffersARB (1, &renderer->vbo);
     glDisableClientState (GL_VERTEX_ARRAY);
     glDisableClientState (GL_COLOR_ARRAY);
 
