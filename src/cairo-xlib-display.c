@@ -457,6 +457,12 @@ _cairo_xlib_display_notify (cairo_xlib_display_t *display)
     cairo_xlib_job_t *jobs, *job, *freelist;
     Display *dpy = display->display;
 
+    /* Optimistic atomic pointer read -- don't care if it is wrong due to
+     * contention as we will check again very shortly.
+     */
+    if (display->workqueue == NULL)
+	return;
+
     CAIRO_MUTEX_LOCK (display->mutex);
     jobs = display->workqueue;
     while (jobs != NULL) {
