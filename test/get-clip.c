@@ -28,21 +28,9 @@
 
 static cairo_bool_t
 check_count (const cairo_test_context_t *ctx,
-	     const char *message, cairo_bool_t uses_clip_rects,
+	     const char *message,
              cairo_rectangle_list_t *list, int expected)
 {
-    if (!uses_clip_rects) {
-        if (expected == 0 && list->num_rectangles == 0)
-            return 1;
-	if (list->num_rectangles == expected)
-	    return 1;
-	if (list->status == CAIRO_STATUS_CLIP_NOT_REPRESENTABLE)
-	    return 1;
-        cairo_test_log (ctx, "Error: %s; cairo_copy_clip_rectangle_list unexpectedly got %d rectangles\n",
-                        message, list->num_rectangles);
-        return 0;
-    }
-
     if (list->status != CAIRO_STATUS_SUCCESS) {
         cairo_test_log (ctx, "Error: %s; cairo_copy_clip_rectangle_list failed with \"%s\"\n",
                         message, cairo_status_to_string(list->status));
@@ -70,14 +58,11 @@ check_unrepresentable (const cairo_test_context_t *ctx, const char *message, cai
 
 static cairo_bool_t
 check_rectangles_contain (const cairo_test_context_t *ctx,
-			  const char *message, cairo_bool_t uses_clip_rects,
+			  const char *message,
                           cairo_rectangle_list_t *list,
                           double x, double y, double width, double height)
 {
     int i;
-
-    if (!uses_clip_rects)
-        return 1;
 
     for (i = 0; i < list->num_rectangles; ++i) {
         if (list->rectangles[i].x == x && list->rectangles[i].y == y &&
@@ -105,63 +90,26 @@ check_clip_extents (const cairo_test_context_t *ctx,
 }
 
 static cairo_test_status_t
-draw (cairo_t *cr, int width, int height)
+preamble (cairo_test_context_t *ctx)
 {
-    const cairo_test_context_t *ctx = cairo_test_get_context (cr);
     cairo_surface_t        *surface;
-    cairo_t                *cr2;
+    cairo_t                *cr;
     cairo_rectangle_list_t *rectangle_list;
     const char             *phase;
-    cairo_bool_t            uses_clip_rects;
     cairo_status_t          status;
 
-    surface = cairo_surface_create_similar (cairo_get_group_target (cr),
-                                            CAIRO_CONTENT_COLOR, 100, 100);
-    /* Check the surface type so we ignore cairo_copy_clip_rectangle_list failures
-     * on surface types that don't use rectangle lists for clipping.
-     * Default to FALSE for the internal surface types, (meta, test-fallback, etc.)
-     */
-    switch (cairo_surface_get_type (surface)) {
-    case CAIRO_SURFACE_TYPE_IMAGE:
-    case CAIRO_SURFACE_TYPE_XLIB:
-    case CAIRO_SURFACE_TYPE_XCB:
-    case CAIRO_SURFACE_TYPE_GLITZ:
-    case CAIRO_SURFACE_TYPE_WIN32:
-    case CAIRO_SURFACE_TYPE_BEOS:
-    case CAIRO_SURFACE_TYPE_DIRECTFB:
-    case CAIRO_SURFACE_TYPE_GL:
-    case CAIRO_SURFACE_TYPE_DRM:
-        uses_clip_rects = TRUE;
-	break;
-    case CAIRO_SURFACE_TYPE_QUARTZ:
-    case CAIRO_SURFACE_TYPE_QUARTZ_IMAGE:
-    case CAIRO_SURFACE_TYPE_PDF:
-    case CAIRO_SURFACE_TYPE_PS:
-    case CAIRO_SURFACE_TYPE_SVG:
-    case CAIRO_SURFACE_TYPE_OS2:
-    case CAIRO_SURFACE_TYPE_WIN32_PRINTING:
-    case CAIRO_SURFACE_TYPE_SCRIPT:
-    case CAIRO_SURFACE_TYPE_QT:
-    case CAIRO_SURFACE_TYPE_META:
-    case CAIRO_SURFACE_TYPE_VG:
-    default:
-        uses_clip_rects = FALSE;
-        break;
-    }
-
-    /* don't use cr accidentally */
-    cr = NULL;
-    cr2 = cairo_create (surface);
+    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 0, 0);
+    cr = cairo_create (surface);
     cairo_surface_destroy (surface);
 
 
     /* first, test basic stuff. This should not be clipped, it should
        return the surface rectangle. */
     phase = "No clip set";
-    rectangle_list = cairo_copy_clip_rectangle_list (cr2);
-    if (! check_count (ctx, phase, uses_clip_rects, rectangle_list, 1) ||
-        ! check_clip_extents (ctx, phase, cr2, 0, 0, 100, 100) ||
-        ! check_rectangles_contain (ctx, phase, uses_clip_rects, rectangle_list, 0, 0, 100, 100))
+    rectangle_list = cairo_copy_clip_rectangle_list (cr);
+    if (! check_count (ctx, phase, rectangle_list, 1) ||
+        ! check_clip_extents (ctx, phase, cr, 0, 0, 100, 100) ||
+        ! check_rectangles_contain (ctx, phase, rectangle_list, 0, 0, 100, 100))
     {
 	goto FAIL;
     }
@@ -169,115 +117,115 @@ draw (cairo_t *cr, int width, int height)
 
     /* Test simple clip rect. */
     phase = "Simple clip rect";
-    cairo_save (cr2);
-    cairo_rectangle (cr2, 10, 10, 80, 80);
-    cairo_clip (cr2);
-    rectangle_list = cairo_copy_clip_rectangle_list (cr2);
-    if (! check_count (ctx, phase, uses_clip_rects, rectangle_list, 1) ||
-        ! check_clip_extents (ctx, phase, cr2, 10, 10, 80, 80) ||
-        ! check_rectangles_contain (ctx, phase, uses_clip_rects, rectangle_list, 10, 10, 80, 80))
+    cairo_save (cr);
+    cairo_rectangle (cr, 10, 10, 80, 80);
+    cairo_clip (cr);
+    rectangle_list = cairo_copy_clip_rectangle_list (cr);
+    if (! check_count (ctx, phase, rectangle_list, 1) ||
+        ! check_clip_extents (ctx, phase, cr, 10, 10, 80, 80) ||
+        ! check_rectangles_contain (ctx, phase, rectangle_list, 10, 10, 80, 80))
     {
 	goto FAIL;
     }
     cairo_rectangle_list_destroy (rectangle_list);
-    cairo_restore (cr2);
+    cairo_restore (cr);
 
     /* Test everything clipped out. */
     phase = "All clipped out";
-    cairo_save (cr2);
-    cairo_clip (cr2);
-    rectangle_list = cairo_copy_clip_rectangle_list (cr2);
-    if (! check_count (ctx, phase, uses_clip_rects, rectangle_list, 0))
+    cairo_save (cr);
+    cairo_clip (cr);
+    rectangle_list = cairo_copy_clip_rectangle_list (cr);
+    if (! check_count (ctx, phase, rectangle_list, 0))
     {
 	goto FAIL;
     }
     cairo_rectangle_list_destroy (rectangle_list);
-    cairo_restore (cr2);
+    cairo_restore (cr);
 
     /* test two clip rects */
     phase = "Two clip rects";
-    cairo_save (cr2);
-    cairo_rectangle (cr2, 10, 10, 10, 10);
-    cairo_rectangle (cr2, 20, 20, 10, 10);
-    cairo_clip (cr2);
-    cairo_rectangle (cr2, 15, 15, 10, 10);
-    cairo_clip (cr2);
-    rectangle_list = cairo_copy_clip_rectangle_list (cr2);
-    if (! check_count (ctx, phase, uses_clip_rects, rectangle_list, 2) ||
-        ! check_clip_extents (ctx, phase, cr2, 15, 15, 10, 10) ||
-        ! check_rectangles_contain (ctx, phase, uses_clip_rects, rectangle_list, 15, 15, 5, 5) ||
-        ! check_rectangles_contain (ctx, phase, uses_clip_rects, rectangle_list, 20, 20, 5, 5))
+    cairo_save (cr);
+    cairo_rectangle (cr, 10, 10, 10, 10);
+    cairo_rectangle (cr, 20, 20, 10, 10);
+    cairo_clip (cr);
+    cairo_rectangle (cr, 15, 15, 10, 10);
+    cairo_clip (cr);
+    rectangle_list = cairo_copy_clip_rectangle_list (cr);
+    if (! check_count (ctx, phase, rectangle_list, 2) ||
+        ! check_clip_extents (ctx, phase, cr, 15, 15, 10, 10) ||
+        ! check_rectangles_contain (ctx, phase, rectangle_list, 15, 15, 5, 5) ||
+        ! check_rectangles_contain (ctx, phase, rectangle_list, 20, 20, 5, 5))
     {
 	goto FAIL;
     }
     cairo_rectangle_list_destroy (rectangle_list);
-    cairo_restore (cr2);
+    cairo_restore (cr);
 
     /* test non-rectangular clip */
     phase = "Nonrectangular clip";
-    cairo_save (cr2);
-    cairo_move_to (cr2, 0, 0);
-    cairo_line_to (cr2, 100, 100);
-    cairo_line_to (cr2, 100, 0);
-    cairo_close_path (cr2);
-    cairo_clip (cr2);
-    rectangle_list = cairo_copy_clip_rectangle_list (cr2);
+    cairo_save (cr);
+    cairo_move_to (cr, 0, 0);
+    cairo_line_to (cr, 100, 100);
+    cairo_line_to (cr, 100, 0);
+    cairo_close_path (cr);
+    cairo_clip (cr);
+    rectangle_list = cairo_copy_clip_rectangle_list (cr);
      /* can't get this in one tight user-space rectangle */
     if (! check_unrepresentable (ctx, phase, rectangle_list) ||
-        ! check_clip_extents (ctx, phase, cr2, 0, 0, 100, 100))
+        ! check_clip_extents (ctx, phase, cr, 0, 0, 100, 100))
     {
 	goto FAIL;
     }
     cairo_rectangle_list_destroy (rectangle_list);
-    cairo_restore (cr2);
+    cairo_restore (cr);
 
     phase = "User space, simple scale, getting clip with same transform";
-    cairo_save (cr2);
-    cairo_scale (cr2, 2, 2);
-    cairo_rectangle (cr2, 5, 5, 40, 40);
-    cairo_clip (cr2);
-    rectangle_list = cairo_copy_clip_rectangle_list (cr2);
-    if (! check_count (ctx, phase, uses_clip_rects, rectangle_list, 1) ||
-        ! check_clip_extents (ctx, phase, cr2, 5, 5, 40, 40) ||
-        ! check_rectangles_contain (ctx, phase, uses_clip_rects, rectangle_list, 5, 5, 40, 40))
+    cairo_save (cr);
+    cairo_scale (cr, 2, 2);
+    cairo_rectangle (cr, 5, 5, 40, 40);
+    cairo_clip (cr);
+    rectangle_list = cairo_copy_clip_rectangle_list (cr);
+    if (! check_count (ctx, phase, rectangle_list, 1) ||
+        ! check_clip_extents (ctx, phase, cr, 5, 5, 40, 40) ||
+        ! check_rectangles_contain (ctx, phase, rectangle_list, 5, 5, 40, 40))
     {
 	goto FAIL;
     }
     cairo_rectangle_list_destroy (rectangle_list);
-    cairo_restore (cr2);
+    cairo_restore (cr);
 
     phase = "User space, simple scale, getting clip with no transform";
-    cairo_save (cr2);
-    cairo_save (cr2);
-    cairo_scale (cr2, 2, 2);
-    cairo_rectangle (cr2, 5, 5, 40, 40);
-    cairo_restore (cr2);
-    cairo_clip (cr2);
-    rectangle_list = cairo_copy_clip_rectangle_list (cr2);
-    if (! check_count (ctx, phase, uses_clip_rects, rectangle_list, 1) ||
-        ! check_clip_extents (ctx, phase, cr2, 10, 10, 80, 80) ||
-        ! check_rectangles_contain (ctx, phase, uses_clip_rects, rectangle_list, 10, 10, 80, 80))
+    cairo_save (cr);
+    cairo_save (cr);
+    cairo_scale (cr, 2, 2);
+    cairo_rectangle (cr, 5, 5, 40, 40);
+    cairo_restore (cr);
+    cairo_clip (cr);
+    rectangle_list = cairo_copy_clip_rectangle_list (cr);
+    if (! check_count (ctx, phase, rectangle_list, 1) ||
+        ! check_clip_extents (ctx, phase, cr, 10, 10, 80, 80) ||
+        ! check_rectangles_contain (ctx, phase, rectangle_list, 10, 10, 80, 80))
     {
 	goto FAIL;
     }
     cairo_rectangle_list_destroy (rectangle_list);
-    cairo_restore (cr2);
+    cairo_restore (cr);
 
     phase = "User space, rotation, getting clip with no transform";
-    cairo_save (cr2);
-    cairo_save (cr2);
-    cairo_rotate (cr2, 12);
-    cairo_rectangle (cr2, 5, 5, 40, 40);
-    cairo_restore (cr2);
-    cairo_clip (cr2);
-    rectangle_list = cairo_copy_clip_rectangle_list (cr2);
+    cairo_save (cr);
+    cairo_save (cr);
+    cairo_rotate (cr, 12);
+    cairo_rectangle (cr, 5, 5, 40, 40);
+    cairo_restore (cr);
+    cairo_clip (cr);
+    rectangle_list = cairo_copy_clip_rectangle_list (cr);
     if (! check_unrepresentable (ctx, phase, rectangle_list))
 	goto FAIL;
 
 FAIL:
     cairo_rectangle_list_destroy (rectangle_list);
-    status = cairo_status (cr2);
-    cairo_destroy (cr2);
+    status = cairo_status (cr);
+    cairo_destroy (cr);
 
     return cairo_test_status_from_status (ctx, status);
 }
@@ -287,4 +235,4 @@ CAIRO_TEST (get_clip,
 	    "clip, extents", /* keywords */
 	    NULL, /* requirements */
 	    0, 0,
-	    NULL, draw)
+	    preamble, NULL)
