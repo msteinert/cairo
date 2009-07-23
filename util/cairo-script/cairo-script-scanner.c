@@ -665,17 +665,17 @@ base85_end (csi_t *ctx, csi_scanner_t *scan, cairo_bool_t deflate)
 	longjmp (scan->jmpbuf, status);
 }
 
-static void
+static inline void
 scan_read (csi_scanner_t *scan, csi_file_t *src, void *ptr, int len)
 {
     uint8_t *data = ptr;
-    while (len) {
+    do {
 	int ret = csi_file_read (src, data, len);
 	if (_csi_unlikely (ret == 0))
 	    longjmp (scan->jmpbuf, _csi_error (CSI_STATUS_READ_ERROR));
 	data += ret;
 	len -= ret;
-    }
+    } while (_csi_unlikely (len));
 }
 
 static void
