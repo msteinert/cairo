@@ -42,6 +42,7 @@
 #include <math.h>
 #include <limits.h> /* INT_MAX */
 #include <assert.h>
+#include <zlib.h>
 
 #ifdef HAVE_MMAP
 # ifdef HAVE_UNISTD_H
@@ -1535,6 +1536,7 @@ struct _ft_face_data {
     csi_blob_t blob;
     FT_Face face;
     csi_string_t *source;
+    void *bytes;
     cairo_font_face_t *font_face;
 };
 
@@ -1560,6 +1562,9 @@ _ft_done_face (void *closure)
 #endif
     }
 
+    if (data->bytes != NULL)
+	_csi_free (ctx, data->bytes);
+
     _csi_slab_free (ctx, data, sizeof (*data));
 
     cairo_script_interpreter_destroy (ctx);
@@ -1567,28 +1572,39 @@ _ft_done_face (void *closure)
 
 #ifdef HAVE_MMAP
 /* manual form of swapping for swapless systems like tiny */
+struct mmap_vec {
+    const uint8_t *bytes;
+    size_t num_bytes;
+};
 static void *
-_mmap_bytes (const uint8_t *bytes, size_t num_bytes)
+_mmap_bytes (const struct mmap_vec *vec, int count)
 {
     char template[] = "/tmp/csi-font.XXXXXX";
-    size_t len;
     void *ptr;
     int fd;
+    int num_bytes;
 
     fd = mkstemp (template);
     if (fd == -1)
 	return MAP_FAILED;
 
     unlink (template);
-    len = num_bytes;
-    while (len) {
-	int ret = write (fd, bytes, len);
-	if (ret < 0) {
-	    close (fd);
-	    return MAP_FAILED;
+    num_bytes = 0;
+    while (count--) {
+	const uint8_t *bytes = vec->bytes;
+	size_t len = vec->num_bytes;
+	while (len) {
+	    int ret = write (fd, bytes, len);
+	    if (ret < 0) {
+		close (fd);
+		return MAP_FAILED;
+	    }
+	    len -= ret;
+	    bytes += ret;
 	}
-	len -= ret;
-	bytes += ret;
+
+	num_bytes += vec->num_bytes;
+	vec++;
     }
 
     ptr = mmap (NULL, num_bytes, PROT_READ, MAP_SHARED, fd, 0);
@@ -1597,6 +1613,31 @@ _mmap_bytes (const uint8_t *bytes, size_t num_bytes)
     return ptr;
 }
 #endif
+
+static void *
+inflate_string (csi_t *ctx, csi_string_t *src)
+{
+    uLongf len;
+    uint8_t *bytes;
+
+    len = src->deflate;
+    bytes = _csi_alloc (ctx, len + 1);
+    if (bytes == NULL)
+	return NULL;
+
+    if (uncompress ((Bytef *) bytes, &len,
+		    (Bytef *) src->string, src->len) != Z_OK)
+    {
+	_csi_free (ctx, bytes);
+	bytes = NULL;
+    }
+    else
+    {
+	bytes[len] = '\0';
+    }
+
+    return bytes;
+}
 
 static csi_status_t
 _ft_create_for_source (csi_t *ctx,
@@ -1610,6 +1651,10 @@ _ft_create_for_source (csi_t *ctx,
     FT_Error err;
     cairo_font_face_t *font_face;
     csi_status_t status;
+    struct mmap_vec vec[2];
+    int vec_count;
+    void *bytes;
+    int len;
 
     /* check for an existing FT_Face (kept alive by the font cache) */
     /* XXX index/flags */
@@ -1631,29 +1676,50 @@ _ft_create_for_source (csi_t *ctx,
     }
 
     data = _csi_slab_alloc (ctx, sizeof (*data));
+    data->bytes = NULL;
+    data->source = source;
+
+    vec[0].bytes = tmpl.bytes;
+    vec[0].num_bytes = tmpl.len;
+
+    if (source->deflate) {
+	len = source->deflate;
+	bytes = inflate_string (ctx, source);
+	if (_csi_unlikely (bytes == NULL))
+	    return _csi_error (CSI_STATUS_NO_MEMORY);
+
+	vec[1].bytes = bytes;
+	vec[1].num_bytes = len;
+	data->bytes = bytes;
+	vec_count = 2;
+    } else {
+	bytes = tmpl.bytes;
+	len = tmpl.len;
+	vec_count = 1;
+    }
+
     data->face = NULL;
     ctx->_faces = _csi_list_prepend (ctx->_faces, &data->blob.list);
     data->ctx = cairo_script_interpreter_reference (ctx);
     data->blob.hash = tmpl.hash;
     data->blob.len = tmpl.len;
 #ifdef HAVE_MMAP
-    data->blob.bytes = _mmap_bytes (tmpl.bytes, tmpl.len);
+    data->blob.bytes = _mmap_bytes (vec, vec_count);
     if (data->blob.bytes != MAP_FAILED) {
-	data->source = NULL;
 	if (--source->base.ref == 0)
 	    csi_string_free (ctx, source);
+
+	data->source = NULL;
+	data->bytes = NULL;
     } else {
 	data->blob.bytes = tmpl.bytes;
-	data->source = source;
     }
 #else
     data->blob.bytes = tmpl.bytes;
-    data->source = source;
 #endif
 
     err = FT_New_Memory_Face (_ft_lib,
-			      data->blob.bytes,
-			      data->blob.len,
+			      bytes, len,
 			      index,
 			      &data->face);
     if (_csi_unlikely (err != FT_Err_Ok)) {
@@ -1692,6 +1758,8 @@ _ft_create_for_pattern (csi_t *ctx,
     cairo_font_face_t *font_face;
     FcPattern *pattern;
     csi_status_t status;
+    struct mmap_vec vec;
+    void *bytes;
 
     _csi_blob_init (&tmpl, (uint8_t *) string->string, string->len);
     link = _csi_list_find (ctx->_faces, _csi_blob_equal, &tmpl);
@@ -1703,9 +1771,17 @@ _ft_create_for_pattern (csi_t *ctx,
 	return CSI_STATUS_SUCCESS;
     }
 
-    pattern = FcNameParse ((FcChar8 *) string->string);
-    if (_csi_unlikely (pattern == NULL))
-	return _csi_error (CSI_STATUS_NO_MEMORY);
+    if (string->deflate) {
+	bytes = inflate_string (ctx, string);
+	if (_csi_unlikely (bytes == NULL))
+	    return _csi_error (CSI_STATUS_NO_MEMORY);
+    } else {
+	bytes = tmpl.bytes;
+    }
+
+    pattern = FcNameParse (bytes);
+    if (bytes != tmpl.bytes)
+	_csi_free (ctx, bytes);
 
     font_face = cairo_ft_font_face_create_for_pattern (pattern);
     FcPatternDestroy (pattern);
@@ -1715,9 +1791,12 @@ _ft_create_for_pattern (csi_t *ctx,
     data->ctx = cairo_script_interpreter_reference (ctx);
     data->blob.hash = tmpl.hash;
     data->blob.len = tmpl.len;
+    data->bytes = NULL;
     data->face = NULL;
 #ifdef HAVE_MMAP
-    data->blob.bytes = _mmap_bytes (tmpl.bytes, tmpl.len);
+    vec.bytes = tmpl.bytes;
+    vec.num_bytes = tmpl.len;
+    data->blob.bytes = _mmap_bytes (&vec, 1);
     if (data->blob.bytes != MAP_FAILED) {
 	data->source = NULL;
 	if (--string->base.ref == 0)
