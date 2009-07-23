@@ -30,7 +30,7 @@
  * The Initial Developer of the Original Code is Chris Wilson.
  */
 
-#include "cairo-boilerplate.h"
+#include "cairo-boilerplate-private.h"
 
 #include <cairo-qt.h>
 
@@ -108,4 +108,6 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_qt_cleanup
     },
 };
+extern "C" {
 CAIRO_BOILERPLATE (qt, targets)
+}

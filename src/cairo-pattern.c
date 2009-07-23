@@ -1686,10 +1686,6 @@ _cairo_pattern_acquire_surface_for_solid (const cairo_solid_pattern_t	     *patt
 						    pattern,
 						    dst))
     {
-	status = _cairo_surface_reset (solid_surface_cache.cache[i].surface);
-	if (unlikely (status))
-	    goto UNLOCK;
-
 	goto DONE;
     }
 
@@ -1698,10 +1694,6 @@ _cairo_pattern_acquire_surface_for_solid (const cairo_solid_pattern_t	     *patt
 							pattern,
 							dst))
 	{
-	    status = _cairo_surface_reset (solid_surface_cache.cache[i].surface);
-	    if (unlikely (status))
-		goto UNLOCK;
-
 	    goto DONE;
 	}
     }
@@ -1717,11 +1709,6 @@ _cairo_pattern_acquire_surface_for_solid (const cairo_solid_pattern_t	     *patt
 						  dst))
 	{
 	    /* Reuse the surface instead of evicting */
-
-	    status = _cairo_surface_reset (surface);
-	    if (unlikely (status))
-		goto EVICT;
-
 	    status = _cairo_surface_repaint_solid_pattern_surface (dst, surface, pattern);
 	    if (unlikely (status))
 		goto EVICT;
@@ -1738,14 +1725,21 @@ _cairo_pattern_acquire_surface_for_solid (const cairo_solid_pattern_t	     *patt
     if (surface == NULL) {
 	/* Not cached, need to create new */
 	surface = _cairo_surface_create_solid_pattern_surface (dst, pattern);
-	if (surface->status) {
+	if (surface == NULL) {
+	    status = CAIRO_INT_STATUS_UNSUPPORTED;
+	    goto UNLOCK;
+	}
+	if (unlikely (surface->status)) {
 	    status = surface->status;
 	    goto UNLOCK;
 	}
 
-	if (! _cairo_surface_is_similar (surface, dst, pattern->content)) {
-	    /* in the rare event of a substitute surface being returned (e.g.
-	     * malloc failure) don't cache the fallback surface */
+	if (unlikely (! _cairo_surface_is_similar (surface,
+						   dst, pattern->content)))
+	{
+	    /* In the rare event of a substitute surface being returned,
+	     * don't cache the fallback.
+	     */
 	    *out = surface;
 	    goto NOCACHE;
 	}
@@ -1953,6 +1947,7 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
     double pad;
     cairo_bool_t is_identity;
     cairo_bool_t is_empty;
+    cairo_bool_t is_bounded;
     cairo_int_status_t status;
 
     surface = cairo_surface_reference (pattern->surface);
@@ -2010,9 +2005,8 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
 	cairo_surface_t *src;
 	int w, h;
 
-	status = _cairo_surface_get_extents (surface, &extents);
-	if (unlikely (status))
-	    goto BAIL;
+	is_bounded = _cairo_surface_get_extents (surface, &extents);
+	assert (is_bounded);
 
 	status = _cairo_surface_clone_similar (dst, surface, content,
 					       extents.x, extents.y,
@@ -2045,8 +2039,13 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
 	}
 
 	cairo_surface_destroy (surface);
-	surface = cairo_surface_create_similar (dst, dst->content, w, h);
-	if (surface->status) {
+	surface = _cairo_surface_create_similar_solid (dst,
+						       dst->content, w, h,
+						       CAIRO_COLOR_TRANSPARENT,
+						       FALSE);
+	if (surface == NULL)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	if (unlikely (surface->status)) {
 	    cairo_surface_destroy (src);
 	    return surface->status;
 	}
@@ -2092,10 +2091,6 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
 	attr->extend = CAIRO_EXTEND_REPEAT;
     }
 
-    status = _cairo_surface_get_extents (surface, &extents);
-    if (unlikely (status))
-	goto BAIL;
-
     /* We first transform the rectangle to the coordinate space of the
      * source surface so that we only need to clone that portion of the
      * surface that will be read.
@@ -2118,36 +2113,38 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
     sampled_area.x += tx;
     sampled_area.y += ty;
 
-    if (attr->extend != CAIRO_EXTEND_REPEAT) {
-	/* Never acquire a larger area than the source itself */
-	is_empty = _cairo_rectangle_intersect (&extents, &sampled_area);
-    } else {
-	int trim = 0;
+    if ( _cairo_surface_get_extents (surface, &extents)) {
+	if (attr->extend != CAIRO_EXTEND_REPEAT) {
+	    /* Never acquire a larger area than the source itself */
+	    is_empty = _cairo_rectangle_intersect (&extents, &sampled_area);
+	} else {
+	    int trim = 0;
 
-	if (sampled_area.x >= extents.x &&
-	    sampled_area.x + (int) sampled_area.width <= extents.x + (int) extents.width)
-	{
-	    /* source is horizontally contained within extents, trim */
-	    extents.x = sampled_area.x;
-	    extents.width = sampled_area.width;
-	    trim |= 0x1;
+	    if (sampled_area.x >= extents.x &&
+		sampled_area.x + (int) sampled_area.width <= extents.x + (int) extents.width)
+	    {
+		/* source is horizontally contained within extents, trim */
+		extents.x = sampled_area.x;
+		extents.width = sampled_area.width;
+		trim |= 0x1;
+	    }
+
+	    if (sampled_area.y >= extents.y &&
+		sampled_area.y + (int) sampled_area.height <= extents.y + (int) extents.height)
+	    {
+		/* source is vertically contained within extents, trim */
+		extents.y = sampled_area.y;
+		extents.height = sampled_area.height;
+		trim |= 0x2;
+	    }
+
+	    if (trim == 0x3) {
+		/* source is wholly contained within extents, drop the REPEAT */
+		attr->extend = CAIRO_EXTEND_NONE;
+	    }
+
+	    is_empty = extents.width == 0 || extents.height == 0;
 	}
-
-	if (sampled_area.y >= extents.y &&
-	    sampled_area.y + (int) sampled_area.height <= extents.y + (int) extents.height)
-	{
-	    /* source is vertically contained within extents, trim */
-	    extents.y = sampled_area.y;
-	    extents.height = sampled_area.height;
-	    trim |= 0x2;
-	}
-
-	if (trim == 0x3) {
-	    /* source is wholly contained within extents, drop the REPEAT */
-	    attr->extend = CAIRO_EXTEND_NONE;
-	}
-
-	is_empty = extents.width == 0 || extents.height == 0;
     }
 
     /* XXX can we use is_empty? */
@@ -2237,7 +2234,7 @@ _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 {
     cairo_status_t status;
 
-    if (pattern->status) {
+    if (unlikely (pattern->status)) {
 	*surface_out = NULL;
 	return pattern->status;
     }
@@ -2371,9 +2368,9 @@ _cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
     cairo_int_status_t	  status;
     cairo_pattern_union_t src_tmp;
 
-    if (src->status)
+    if (unlikely (src->status))
 	return src->status;
-    if (mask && mask->status)
+    if (unlikely (mask != NULL && mask->status))
 	return mask->status;
 
     /* If src and mask are both solid, then the mask alpha can be
@@ -2441,7 +2438,7 @@ _cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
  * "infinite" extents, though it would be possible to optimize these
  * with a little more work.
  **/
-cairo_status_t
+void
 _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
 			    cairo_rectangle_int_t         *extents)
 {
@@ -2457,11 +2454,8 @@ _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
 	double x1, y1, x2, y2;
 	double pad;
 
-	status = _cairo_surface_get_extents (surface, &surface_extents);
-	if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+	if (! _cairo_surface_get_extents (surface, &surface_extents))
 	    goto UNBOUNDED;
-	if (unlikely (status))
-	    return status;
 
 	/* The filter can effectively enlarge the extents of the
 	 * pattern, so extend as necessary.
@@ -2497,8 +2491,7 @@ _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
 
 	extents->x = x1; extents->width = x2 - x1;
 	extents->y = y1; extents->height = y2 - y1;
-
-	return CAIRO_STATUS_SUCCESS;
+	return;
     }
 
     /* XXX: We could optimize gradients with pattern->extend of NONE
@@ -2508,12 +2501,7 @@ _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
 
   UNBOUNDED:
     /* unbounded patterns -> 'infinite' extents */
-    extents->x = CAIRO_RECT_INT_MIN;
-    extents->y = CAIRO_RECT_INT_MIN;
-    extents->width = CAIRO_RECT_INT_MAX - CAIRO_RECT_INT_MIN;
-    extents->height = CAIRO_RECT_INT_MAX - CAIRO_RECT_INT_MIN;
-
-    return CAIRO_STATUS_SUCCESS;
+    _cairo_unbounded_rectangle_init (extents);
 }
 
 
@@ -2748,6 +2736,9 @@ _cairo_pattern_equal (const cairo_pattern_t *a, const cairo_pattern_t *b)
 {
     if (a->status || b->status)
 	return FALSE;
+
+    if (a == b)
+	return TRUE;
 
     if (a->type != b->type)
 	return FALSE;

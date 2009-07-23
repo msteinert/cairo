@@ -21,6 +21,7 @@ test_sources = \
 	clip-operator.c					\
 	clip-push-group.c				\
 	clip-twice.c					\
+	clip-unbounded.c				\
 	clip-zero.c					\
 	clipped-group.c					\
 	clipped-surface.c				\
@@ -64,6 +65,7 @@ test_sources = \
 	fill-and-stroke-alpha.c				\
 	fill-and-stroke-alpha-add.c			\
 	fill-degenerate-sort-order.c			\
+	fill-empty.c					\
 	fill-image.c				        \
 	fill-missed-stop.c				\
 	fill-rule.c					\

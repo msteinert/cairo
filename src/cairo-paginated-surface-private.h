@@ -48,14 +48,6 @@ typedef struct _cairo_paginated_surface {
 
     cairo_content_t content;
 
-    /* XXX: These shouldn't actually exist. We inherit this ugliness
-     * from _cairo_meta_surface_create. The width/height parameters
-     * from that function also should not exist. The fix that will
-     * allow us to remove all of these is to fix acquire_source_image
-     * to pass an interest rectangle. */
-    int width;
-    int height;
-
     /* Paginated-surface specific functions for the target */
     const cairo_paginated_surface_backend_t *backend;
 
@@ -66,7 +58,6 @@ typedef struct _cairo_paginated_surface {
 
     int page_num;
     cairo_bool_t page_is_blank;
-
 } cairo_paginated_surface_t;
 
 #endif /* CAIRO_PAGINATED_SURFACE_H */

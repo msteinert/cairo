@@ -125,18 +125,20 @@ _cairo_filler_close_path (void *closure)
 }
 
 static cairo_int_status_t
-_cairo_path_fixed_fill_rectangle (cairo_path_fixed_t	*path,
+_cairo_path_fixed_fill_rectangle (const cairo_path_fixed_t	*path,
 				  cairo_fill_rule_t	 fill_rule,
 				  cairo_traps_t		*traps);
 
 cairo_status_t
-_cairo_path_fixed_fill_to_traps (cairo_path_fixed_t *path,
+_cairo_path_fixed_fill_to_traps (const cairo_path_fixed_t *path,
 				 cairo_fill_rule_t   fill_rule,
 				 double              tolerance,
 				 cairo_traps_t      *traps)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_filler_t filler;
+
+    traps->maybe_region = path->maybe_fill_region;
 
     /* Before we do anything else, we use a special-case filler for
      * a device-axis aligned rectangle if possible. */
@@ -181,11 +183,14 @@ BAIL:
  * this function will return %CAIRO_INT_STATUS_UNSUPPORTED.
  */
 static cairo_int_status_t
-_cairo_path_fixed_fill_rectangle (cairo_path_fixed_t	*path,
+_cairo_path_fixed_fill_rectangle (const cairo_path_fixed_t	*path,
 				  cairo_fill_rule_t	 fill_rule,
 				  cairo_traps_t		*traps)
 {
     cairo_box_t box;
+
+    if (! path->is_rectilinear)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (_cairo_path_fixed_is_box (path, &box)) {
 	if (box.p1.x > box.p2.x) {

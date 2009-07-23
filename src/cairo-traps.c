@@ -39,6 +39,8 @@
 
 #include "cairoint.h"
 
+#include "cairo-region-private.h"
+
 /* private functions */
 
 static int
@@ -50,6 +52,8 @@ _cairo_traps_init (cairo_traps_t *traps)
     VG (VALGRIND_MAKE_MEM_UNDEFINED (traps, sizeof (cairo_traps_t)));
 
     traps->status = CAIRO_STATUS_SUCCESS;
+
+    traps->maybe_region = 1;
 
     traps->num_traps = 0;
 
@@ -82,6 +86,8 @@ void
 _cairo_traps_clear (cairo_traps_t *traps)
 {
     traps->status = CAIRO_STATUS_SUCCESS;
+
+    traps->maybe_region = 1;
 
     traps->num_traps = 0;
     traps->extents.p1.x = traps->extents.p1.y = INT32_MAX;
@@ -616,13 +622,17 @@ _cairo_traps_extents (const cairo_traps_t *traps,
  * or %CAIRO_STATUS_NO_MEMORY
  **/
 cairo_int_status_t
-_cairo_traps_extract_region (const cairo_traps_t  *traps,
-			     cairo_region_t      **region)
+_cairo_traps_extract_region (cairo_traps_t   *traps,
+			     cairo_region_t **region)
 {
     cairo_rectangle_int_t stack_rects[CAIRO_STACK_ARRAY_LENGTH (cairo_rectangle_int_t)];
     cairo_rectangle_int_t *rects = stack_rects;
     cairo_int_status_t status;
     int i, rect_count;
+
+    /* we only treat this a hint... */
+    if (! traps->maybe_region)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     for (i = 0; i < traps->num_traps; i++) {
 	if (traps->traps[i].left.p1.x != traps->traps[i].left.p2.x   ||
@@ -632,6 +642,7 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
 	    ! _cairo_fixed_is_integer (traps->traps[i].left.p1.x)    ||
 	    ! _cairo_fixed_is_integer (traps->traps[i].right.p1.x))
 	{
+	    traps->maybe_region = FALSE;
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	}
     }
@@ -655,7 +666,7 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
 	 */
 	if (x1 == x2 || y1 == y2)
 	    continue;
-	
+
 	rects[rect_count].x = x1;
 	rects[rect_count].y = y1;
 	rects[rect_count].width = x2 - x1;
@@ -663,18 +674,13 @@ _cairo_traps_extract_region (const cairo_traps_t  *traps,
 
 	rect_count++;
     }
- 
+
     *region = cairo_region_create_rectangles (rects, rect_count);
-    status = cairo_region_status (*region);
+    status = (*region)->status;
 
     if (rects != stack_rects)
 	free (rects);
 
-    if (unlikely (status)) {
-	cairo_region_destroy (*region);
-	*region = NULL;
-    }
-    
     return status;
 }
 

@@ -39,6 +39,9 @@
 
 #include "cairoint.h"
 #include "cairo-types-private.h"
+#include "cairo-clip-private.h"
+#include "cairo-surface-clipper-private.h"
+#include "cairo-region-private.h"
 
 #include "cairo-qt.h"
 
@@ -64,6 +67,8 @@
 #endif
 
 #include <sys/time.h>
+
+#define ENABLE_FAST_FILL 1 /* Enable workaround slow regional Qt paths */
 
 #if 0
 #define D(x)  x
@@ -104,13 +109,8 @@ _opstr (cairo_operator_t op)
 #define DOT_LENGTH  1.0
 #define DASH_LENGTH 3.0
 
-typedef struct {
+struct cairo_qt_surface_t {
     cairo_surface_t base;
-
-    bool has_clipping;
-    // if this is true, calls to intersect_clip_path won't
-    // update the clip_bounds rect
-    bool no_update_clip_bounds;
 
     cairo_bool_t supports_porter_duff;
 
@@ -131,11 +131,10 @@ typedef struct {
 
     QRect window;
 
-
-    QRect clip_bounds;
+    cairo_surface_clipper_t clipper;
 
     cairo_surface_t *image_equiv;
-} cairo_qt_surface_t;
+};
 
 /* Will be true if we ever try to create a QPixmap and end
  * up with one without an alpha channel.
@@ -186,6 +185,21 @@ _qpainter_compositionmode_from_cairo_op (cairo_operator_t op)
     default:
     case CAIRO_OPERATOR_ADD:
     case CAIRO_OPERATOR_SATURATE:
+    case CAIRO_OPERATOR_MULTIPLY:
+    case CAIRO_OPERATOR_SCREEN:
+    case CAIRO_OPERATOR_OVERLAY:
+    case CAIRO_OPERATOR_DARKEN:
+    case CAIRO_OPERATOR_LIGHTEN:
+    case CAIRO_OPERATOR_COLOR_DODGE:
+    case CAIRO_OPERATOR_COLOR_BURN:
+    case CAIRO_OPERATOR_HARD_LIGHT:
+    case CAIRO_OPERATOR_SOFT_LIGHT:
+    case CAIRO_OPERATOR_DIFFERENCE:
+    case CAIRO_OPERATOR_EXCLUSION:
+    case CAIRO_OPERATOR_HSL_HUE:
+    case CAIRO_OPERATOR_HSL_SATURATION:
+    case CAIRO_OPERATOR_HSL_COLOR:
+    case CAIRO_OPERATOR_HSL_LUMINOSITY:
 	ASSERT_NOT_REACHED;
     }
 }
@@ -211,12 +225,27 @@ _op_is_supported (cairo_qt_surface_t *qs, cairo_operator_t op)
 	case CAIRO_OPERATOR_XOR:
 	    return TRUE;
 
-	case CAIRO_OPERATOR_ADD:
-	case CAIRO_OPERATOR_SATURATE:
-	    return FALSE;
-
 	default:
 	    ASSERT_NOT_REACHED;
+	case CAIRO_OPERATOR_ADD:
+	case CAIRO_OPERATOR_SATURATE:
+	case CAIRO_OPERATOR_MULTIPLY:
+	case CAIRO_OPERATOR_SCREEN:
+	case CAIRO_OPERATOR_OVERLAY:
+	case CAIRO_OPERATOR_DARKEN:
+	case CAIRO_OPERATOR_LIGHTEN:
+	case CAIRO_OPERATOR_COLOR_DODGE:
+	case CAIRO_OPERATOR_COLOR_BURN:
+	case CAIRO_OPERATOR_HARD_LIGHT:
+	case CAIRO_OPERATOR_SOFT_LIGHT:
+	case CAIRO_OPERATOR_DIFFERENCE:
+	case CAIRO_OPERATOR_EXCLUSION:
+	case CAIRO_OPERATOR_HSL_HUE:
+	case CAIRO_OPERATOR_HSL_SATURATION:
+	case CAIRO_OPERATOR_HSL_COLOR:
+	case CAIRO_OPERATOR_HSL_LUMINOSITY:
+	    return FALSE;
+
 	}
     } else {
 	return op == CAIRO_OPERATOR_OVER;
@@ -458,6 +487,8 @@ _cairo_qt_surface_finish (void *abstract_surface)
     if (qs->image_equiv)
         cairo_surface_destroy (qs->image_equiv);
 
+    _cairo_surface_clipper_reset (&qs->clipper);
+
 #if defined(Q_WS_X11) && CAIRO_HAS_XLIB_XRENDER_SURFACE
     if (qs->xlib_equiv)
         cairo_surface_destroy (qs->xlib_equiv);
@@ -655,7 +686,7 @@ _cairo_qt_surface_clone_similar (void *abstract_surface,
     return (cairo_status_t) CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
-static cairo_int_status_t
+static cairo_bool_t
 _cairo_qt_surface_get_extents (void *abstract_surface,
 			       cairo_rectangle_int_t *extents)
 {
@@ -666,25 +697,40 @@ _cairo_qt_surface_get_extents (void *abstract_surface,
     extents->width = qs->window.width();
     extents->height = qs->window.height();
 
-    return CAIRO_INT_STATUS_SUCCESS;
+    return TRUE;
 }
 
-static cairo_int_status_t
-_cairo_qt_surface_intersect_clip_path (void *abstract_surface,
-				       cairo_path_fixed_t *path,
-				       cairo_fill_rule_t fill_rule,
-				       double tolerance,
-				       cairo_antialias_t antialias)
+static cairo_status_t
+_cairo_qt_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clipper,
+					       cairo_path_fixed_t *path,
+					       cairo_fill_rule_t fill_rule,
+					       double tolerance,
+					       cairo_antialias_t antialias)
 {
-    cairo_qt_surface_t *qs = (cairo_qt_surface_t *) abstract_surface;
+    cairo_qt_surface_t *qs = cairo_container_of (clipper,
+						 cairo_qt_surface_t,
+						 clipper);
+    QPainterPath qpath;
+    cairo_status_t status;
 
-    D(fprintf(stderr, "q[%p] intersect_clip_path %s\n", abstract_surface, path ? "(path)" : "(clear)"));
+    // XXX Antialiasing is ignored
+    status = _cairo_quartz_cairo_path_to_qpainterpath (path,
+						       &qpath,
+						       fill_rule);
+    if (unlikely (status))
+	return status;
 
-    if (!qs->p)
-        return CAIRO_INT_STATUS_UNSUPPORTED;
+    qs->p->setClipPath (qpath, Qt::IntersectClip);
+    return CAIRO_STATUS_SUCCESS;
+}
 
-    if (path == NULL) {
-        //fprintf (stderr, "clip clear\n");
+static void
+_cairo_qt_surface_set_clip_region (cairo_qt_surface_t *qs,
+				   cairo_region_t *clip_region)
+{
+    _cairo_surface_clipper_reset (&qs->clipper);
+
+    if (clip_region == NULL) {
         // How the clip path is reset depends on whether we own p or not
         if (qs->pixmap || qs->image) {
             // we own p
@@ -693,10 +739,38 @@ _cairo_qt_surface_intersect_clip_path (void *abstract_surface,
             qs->p->restore ();
             qs->p->save ();
         }
+    } else {
+	QRegion qr;
+	int num_rects = cairo_region_num_rectangles (clip_region);
+	for (int i = 0; i < num_rects; ++i) {
+	    cairo_rectangle_int_t rect;
 
-        if (!qs->no_update_clip_bounds) {
-            qs->clip_bounds.setRect(0, 0, 0, 0);
-            qs->has_clipping = false;
+	    cairo_region_get_rectangle (clip_region, i, &rect);
+
+	    QRect r(rect.x, rect.y, rect.width, rect.height);
+	    qr = qr.unite(r);
+	}
+
+	qs->p->setClipRegion (qr, Qt::IntersectClip);
+    }
+}
+
+static cairo_int_status_t
+_cairo_qt_surface_set_clip (cairo_qt_surface_t *qs,
+			    cairo_clip_t *clip)
+{
+
+    D(fprintf(stderr, "q[%p] intersect_clip_path %s\n", abstract_surface, path ? "(path)" : "(clear)"));
+
+    if (clip == NULL) {
+	_cairo_surface_clipper_reset (&qs->clipper);
+        // How the clip path is reset depends on whether we own p or not
+        if (qs->pixmap || qs->image) {
+            // we own p
+            qs->p->setClipping (false);
+        } else {
+            qs->p->restore ();
+            qs->p->save ();
         }
 
         return CAIRO_INT_STATUS_SUCCESS;
@@ -711,125 +785,21 @@ _cairo_qt_surface_intersect_clip_path (void *abstract_surface,
     // we do a bunch of work here to try to get rectangles or regions
     // down to Qt for clipping.
 
-    QRect clip_bounds;
+    cairo_region_t *clip_region = NULL;
 
-    // First check if it's an integer-aligned single rectangle
-    cairo_box_t box;
-    if (_cairo_path_fixed_is_box (path, &box) &&
-	_cairo_fixed_is_integer (box.p1.x) &&
-	_cairo_fixed_is_integer (box.p1.y) &&
-	_cairo_fixed_is_integer (box.p2.x) &&
-	_cairo_fixed_is_integer (box.p2.y))
-    {
-	QRect r(_cairo_fixed_integer_part(box.p1.x),
-		_cairo_fixed_integer_part(box.p1.y),
-		_cairo_fixed_integer_part(box.p2.x - box.p1.x),
-		_cairo_fixed_integer_part(box.p2.y - box.p1.y));
-
-	r = r.normalized();
-
-	clip_bounds = r;
-
-	qs->p->setClipRect (r, Qt::IntersectClip);
-    } else {
-	// Then if it's not an integer-aligned rectangle, check
-	// if we can extract a region (a set of rectangles) out.
-	// We use cairo to convert the path to traps.
-
-	cairo_traps_t traps;
-	cairo_int_status_t status;
-	cairo_region_t *region = NULL;
-
-	_cairo_traps_init (&traps);
+    cairo_int_status_t status;
+    status = _cairo_clip_get_region (clip, &clip_region);
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+	// We weren't able to extract a region from the traps.
+	// Just hand the path down to QPainter.
 	status = (cairo_int_status_t)
-	    _cairo_path_fixed_fill_to_traps (path,
-					     fill_rule, tolerance, &traps);
-	if (status) {
-	    _cairo_traps_fini (&traps);
-	    return status;
-	}
-
-	status = _cairo_traps_extract_region (&traps, &region);
-	_cairo_traps_fini (&traps);
-
-	if (_cairo_status_is_error ((cairo_status_t) status))
-	    return status;
-
-	if (status == CAIRO_INT_STATUS_SUCCESS) {
-#if 0
-        cairo_box_int_t *boxes;
-	    int n_boxes;
-
-	    QRegion qr;
-
-	    _cairo_region_get_boxes (&region, &n_boxes, &boxes);
-
-	    for (int i = 0; i < n_boxes; i++) {
-		QRect r(boxes[i].p1.x,
-			boxes[i].p1.y,
-			boxes[i].p2.x - boxes[i].p1.x,
-			boxes[i].p2.y - boxes[i].p1.y);
-
-		if (i == 0)
-		    clip_bounds = r;
-		else
-		    clip_bounds = clip_bounds.united(r);
-
-		qr = qr.unite(r);
-	    }
-        _cairo_region_boxes_fini (&region, boxes);
-#else
-	    int n_boxes;
-
-	    QRegion qr;
-
-	    n_boxes = cairo_region_num_rectangles (region);
-	    for (int i = 0; i < n_boxes; ++i) {
-		cairo_rectangle_int_t box;
-		cairo_region_get_rectangle (region, i, &box);
-		QRect r(box.x, box.y, box.width, box.height);
-
-		if (0 == i)
-		    clip_bounds = r;
-		else
-		    clip_bounds = clip_bounds.united(r);
-
-		qr = qr.unite(r);
-	    }
-#endif
-	    _cairo_region_fini (region);
-
-	    qs->p->setClipRegion (qr, Qt::IntersectClip);
-	} else {
-	    // We weren't able to extract a region from the traps.
-	    // Just hand the path down to QPainter.
-	    QPainterPath qpath;
-	    cairo_status_t status;
-
-	    status = _cairo_quartz_cairo_path_to_qpainterpath (path,
-							       &qpath,
-							       fill_rule);
-	    assert (status == CAIRO_STATUS_SUCCESS);
-
-	    clip_bounds = qpath.boundingRect().toAlignedRect();
-
-	    // XXX Antialiasing is ignored
-	    qs->p->setClipPath (qpath, Qt::IntersectClip);
-	}
+	    _cairo_surface_clipper_set_clip (&qs->clipper, clip);
+    } else if (status == CAIRO_INT_STATUS_SUCCESS) {
+	_cairo_qt_surface_set_clip_region (qs, clip_region);
+	status = CAIRO_INT_STATUS_SUCCESS;
     }
 
-    if (!qs->no_update_clip_bounds) {
-	clip_bounds = qs->p->worldTransform().mapRect(clip_bounds);
-
-	if (qs->has_clipping) {
-	    qs->clip_bounds = qs->clip_bounds.intersect(clip_bounds);
-	} else {
-	    qs->clip_bounds = clip_bounds;
-	    qs->has_clipping = true;
-	}
-    }
-
-    return CAIRO_INT_STATUS_SUCCESS;
+    return status;
 }
 
 /**
@@ -1156,9 +1126,11 @@ _cairo_qt_fast_fill (cairo_qt_surface_t *qs,
 		     double tolerance = 0.0,
 		     cairo_antialias_t antialias = CAIRO_ANTIALIAS_NONE)
 {
+#if ENABLE_FAST_FILL
     QImage *qsSrc_image = NULL;
     QPixmap *qsSrc_pixmap = NULL;
     std::auto_ptr<QImage> qsSrc_image_d;
+
 
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	cairo_surface_pattern_t *spattern = (cairo_surface_pattern_t*) source;
@@ -1190,7 +1162,6 @@ _cairo_qt_fast_fill (cairo_qt_surface_t *qs,
     }
 
     QMatrix sourceMatrix = _qmatrix_from_cairo_matrix (source->matrix);
-    cairo_int_status_t status;
 
     // We can draw this faster by clipping and calling drawImage/drawPixmap.
     // Use our own clipping function so that we can get the
@@ -1201,14 +1172,29 @@ _cairo_qt_fast_fill (cairo_qt_surface_t *qs,
     qs->p->save();
 
     if (path) {
-        qs->no_update_clip_bounds = true;
-        status = _cairo_qt_surface_intersect_clip_path (qs, path, fill_rule, tolerance, antialias);
-        qs->no_update_clip_bounds = false;
+	cairo_int_status_t status;
 
-        if (status != CAIRO_INT_STATUS_SUCCESS) {
-            qs->p->restore();
-            return false;
-        }
+	cairo_clip_t clip, old_clip = qs->clipper.clip;
+
+	_cairo_clip_init_copy (&clip, &qs->clipper.clip);
+	status = (cairo_int_status_t) _cairo_clip_clip (&clip,
+							path,
+							fill_rule,
+							tolerance,
+							antialias);
+	if (unlikely (status)) {
+	    qs->p->restore();
+	    return false;
+	}
+
+	status = _cairo_qt_surface_set_clip (qs, &clip);
+	if (unlikely (status)) {
+	    qs->p->restore();
+	    return false;
+	}
+
+	_cairo_clip_reset (&clip);
+	qs->clipper.clip = old_clip;
     }
 
     qs->p->setWorldMatrix (sourceMatrix.inverted(), true);
@@ -1242,16 +1228,19 @@ _cairo_qt_fast_fill (cairo_qt_surface_t *qs,
     qs->p->restore();
 
     return true;
+#else
+    return false;
+#endif
 }
 
 static cairo_int_status_t
 _cairo_qt_surface_paint (void *abstract_surface,
 			 cairo_operator_t op,
 			 const cairo_pattern_t *source,
-			 cairo_rectangle_int_t *extents)
+			 cairo_clip_t	       *clip)
 {
-    Q_UNUSED(extents);
     cairo_qt_surface_t *qs = (cairo_qt_surface_t *) abstract_surface;
+    cairo_int_status_t status;
 
     D(fprintf(stderr, "q[%p] paint op:%s\n", abstract_surface, _opstr(op)));
 
@@ -1260,6 +1249,10 @@ _cairo_qt_surface_paint (void *abstract_surface,
 
     if (! _op_is_supported (qs, op))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    status = _cairo_qt_surface_set_clip (qs, clip);
+    if (unlikely (status))
+	return status;
 
     if (qs->supports_porter_duff)
         qs->p->setCompositionMode (_qpainter_compositionmode_from_cairo_op (op));
@@ -1283,9 +1276,8 @@ _cairo_qt_surface_fill (void *abstract_surface,
 			cairo_fill_rule_t fill_rule,
 			double tolerance,
 			cairo_antialias_t antialias,
-			cairo_rectangle_int_t * extents)
+			cairo_clip_t *clip)
 {
-    Q_UNUSED(extents);
     cairo_qt_surface_t *qs = (cairo_qt_surface_t *) abstract_surface;
 
     D(fprintf(stderr, "q[%p] fill op:%s\n", abstract_surface, _opstr(op)));
@@ -1295,6 +1287,10 @@ _cairo_qt_surface_fill (void *abstract_surface,
 
     if (! _op_is_supported (qs, op))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    cairo_int_status_t status = _cairo_qt_surface_set_clip (qs, clip);
+    if (unlikely (status))
+	return status;
 
     if (qs->supports_porter_duff)
         qs->p->setCompositionMode (_qpainter_compositionmode_from_cairo_op (op));
@@ -1333,9 +1329,8 @@ _cairo_qt_surface_stroke (void *abstract_surface,
 			  cairo_matrix_t *ctm_inverse,
 			  double tolerance,
 			  cairo_antialias_t antialias,
-			  cairo_rectangle_int_t  *extents)
+			  cairo_clip_t *clip)
 {
-    Q_UNUSED(extents);
     cairo_qt_surface_t *qs = (cairo_qt_surface_t *) abstract_surface;
 
     D(fprintf(stderr, "q[%p] stroke op:%s\n", abstract_surface, _opstr(op)));
@@ -1345,6 +1340,10 @@ _cairo_qt_surface_stroke (void *abstract_surface,
 
     if (! _op_is_supported (qs, op))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    cairo_int_status_t int_status = _cairo_qt_surface_set_clip (qs, clip);
+    if (unlikely (int_status))
+	return int_status;
 
     QPainterPath qpath;
     cairo_status_t status;
@@ -1387,8 +1386,8 @@ _cairo_qt_surface_show_glyphs (void *abstract_surface,
 			       cairo_glyph_t *glyphs,
 			       int num_glyphs,
 			       cairo_scaled_font_t *scaled_font,
-			       int *remaining_glyphs,
-			       cairo_rectangle_int_t *extents)
+			       cairo_clip_t *clip,
+			       int *remaining_glyphs)
 {
     cairo_qt_surface_t *qs = (cairo_qt_surface_t *) abstract_surface;
 
@@ -1404,37 +1403,6 @@ _cairo_qt_surface_show_glyphs (void *abstract_surface,
 	    glyphs[i].y -= qs->redir_offset.y();
 	}
 
-	if (qs->has_clipping != qs->xlib_has_clipping ||
-	    qs->clip_bounds != qs->xlib_clip_bounds)
-	{
-	    cairo_status_t status;
-
-	    status = _cairo_surface_reset_clip (qs->xlib_equiv);
-	    assert (status == CAIRO_STATUS_SUCCESS);
-
-	    if (qs->has_clipping) {
-		cairo_region_t region;
-		cairo_rectangle_int_t rect = {
-		    qs->clip_bounds.x() - qs->redir_offset.x(),
-		    qs->clip_bounds.y() - qs->redir_offset.y(),
-		    qs->clip_bounds.width(),
-		    qs->clip_bounds.height()
-		};
-
-		_cairo_region_init_rectangle (&region, &rect);
-		status = _cairo_surface_set_clip_region (qs->xlib_equiv,
-							 &region,
-							 ++qs->xlib_clip_serial);
-		_cairo_region_fini (&region);
-
-		if (status)
-		    return (cairo_int_status_t) status;
-	    }
-
-	    qs->xlib_has_clipping = qs->has_clipping;
-	    qs->xlib_clip_bounds = qs->clip_bounds;
-	}
-
         return (cairo_int_status_t)
                _cairo_surface_show_text_glyphs (qs->xlib_equiv,
 						op, source,
@@ -1443,7 +1411,7 @@ _cairo_qt_surface_show_glyphs (void *abstract_surface,
 						NULL, 0,
 						(cairo_text_cluster_flags_t) 0,
 						scaled_font,
-						extents);
+						clip);
     }
 #endif
 
@@ -1452,12 +1420,11 @@ _cairo_qt_surface_show_glyphs (void *abstract_surface,
 
 static cairo_int_status_t
 _cairo_qt_surface_mask (void *abstract_surface,
-                              cairo_operator_t op,
-                              const cairo_pattern_t *source,
-                              const cairo_pattern_t *mask,
-                              cairo_rectangle_int_t  *extents)
+			cairo_operator_t op,
+			const cairo_pattern_t *source,
+			const cairo_pattern_t *mask,
+			cairo_clip_t	    *clip)
 {
-    Q_UNUSED(extents);
     cairo_qt_surface_t *qs = (cairo_qt_surface_t *) abstract_surface;
 
     D(fprintf(stderr, "q[%p] mask op:%s\n", abstract_surface, _opstr(op)));
@@ -1471,7 +1438,7 @@ _cairo_qt_surface_mask (void *abstract_surface,
 
         qs->p->setOpacity (solid_mask->color.alpha);
 
-        result = _cairo_qt_surface_paint (abstract_surface, op, source, 0);
+        result = _cairo_qt_surface_paint (abstract_surface, op, source, clip);
 
         qs->p->setOpacity (1.0);
 
@@ -1498,7 +1465,8 @@ _cairo_qt_surface_composite (cairo_operator_t op,
 			     int dst_x,
 			     int dst_y,
 			     unsigned int width,
-			     unsigned int height)
+			     unsigned int height,
+			     cairo_region_t *clip_region)
 {
     cairo_qt_surface_t *qs = (cairo_qt_surface_t *) abstract_surface;
 
@@ -1507,6 +1475,8 @@ _cairo_qt_surface_composite (cairo_operator_t op,
 
     if (! _op_is_supported (qs, op))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    _cairo_qt_surface_set_clip_region (qs, clip_region);
 
     D(fprintf(stderr, "q[%p] composite op:%s src:%p [%d %d] dst [%d %d] dim [%d %d]\n",
               abstract_surface, _opstr(op), (void*)pattern,
@@ -1618,8 +1588,6 @@ static const cairo_surface_backend_t cairo_qt_surface_backend = {
     NULL, /* check_span_renderer */
     NULL, /* copy_page */
     NULL, /* show_page */
-    NULL, /* set_clip_region */
-    _cairo_qt_surface_intersect_clip_path,
     _cairo_qt_surface_get_extents,
     NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
@@ -1636,7 +1604,6 @@ static const cairo_surface_backend_t cairo_qt_surface_backend = {
 
     NULL, /* snapshot */
     NULL, /* is_similar */
-    NULL, /* reset */
     NULL, /* fill_stroke */
     NULL, /* create_solid_pattern_surface */
     NULL, /* can_repaint_solid_pattern_surface */
@@ -1727,6 +1694,10 @@ cairo_qt_surface_create (QPainter *painter)
     qs->p->save();
 
     qs->window = painter->window();
+
+    _cairo_surface_clipper_init (&qs->clipper,
+				 _cairo_qt_surface_clipper_intersect_clip_path);
+
 
 #if defined(Q_WS_X11) && CAIRO_HAS_XLIB_XRENDER_SURFACE
     qs->xlib_equiv = _cairo_qt_create_xlib_surface (qs);

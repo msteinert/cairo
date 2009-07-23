@@ -99,6 +99,8 @@ CAIRO_BEGIN_DECLS
  * PDF surfaces. */
 #define CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED ((unsigned int) -1)
 
+extern const cairo_user_data_key_t cairo_boilerplate_output_basename_key;
+
 cairo_content_t
 cairo_boilerplate_content (cairo_content_t content);
 

@@ -85,11 +85,11 @@ struct _cairo_xlib_surface {
     Picture dst_picture, src_picture;
 
     unsigned int clip_dirty;
-    cairo_bool_t have_clip_rects;
     cairo_bool_t gc_has_clip_rects;
     XRectangle embedded_clip_rects[8];
     XRectangle *clip_rects;
     int num_clip_rects;
+    cairo_region_t *clip_region;
 
     XRenderPictFormat *xrender_format;
     cairo_filter_t filter;

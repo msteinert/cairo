@@ -1360,6 +1360,7 @@ _cairo_win32_scaled_font_show_glyphs (void			*abstract_font,
 				      unsigned int		 height,
 				      cairo_glyph_t		*glyphs,
 				      int			 num_glyphs,
+				      cairo_region_t		*clip_region,
 				      int			*remaining_glyphs)
 {
     cairo_win32_scaled_font_t *scaled_font = abstract_font;
@@ -1381,15 +1382,17 @@ _cairo_win32_scaled_font_show_glyphs (void			*abstract_font,
 	 */
 	COLORREF new_color;
 
+	status = _cairo_win32_surface_set_clip_region (surface, clip_region);
+	if (unlikely (status))
+	    return status;
+
 	new_color = RGB (((int)solid_pattern->color.red_short) >> 8,
 			 ((int)solid_pattern->color.green_short) >> 8,
 			 ((int)solid_pattern->color.blue_short) >> 8);
 
-	status = _draw_glyphs_on_surface (surface, scaled_font, new_color,
-					  0, 0,
-					  glyphs, num_glyphs);
-
-	return status;
+	return _draw_glyphs_on_surface (surface, scaled_font, new_color,
+					0, 0,
+					glyphs, num_glyphs);
     } else {
 	/* Otherwise, we need to draw using software fallbacks. We create a mask
 	 * surface by drawing the the glyphs onto a DIB, black-on-white then
@@ -1458,7 +1461,8 @@ _cairo_win32_scaled_font_show_glyphs (void			*abstract_font,
 					   source_x, source_y,
 					   0, 0,
 					   dest_x, dest_y,
-					   width, height);
+					   width, height,
+					   clip_region);
 
 	_cairo_pattern_fini (&mask.base);
 

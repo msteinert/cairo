@@ -44,6 +44,10 @@
 
 #define CAIRO_TOLERANCE_MINIMUM	_cairo_fixed_to_double(1)
 
+#if !defined(INFINITY)
+#define INFINITY HUGE_VAL
+#endif
+
 static const cairo_t _cairo_nil = {
   CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
   CAIRO_STATUS_NO_MEMORY,	/* status */
@@ -57,7 +61,8 @@ static const cairo_t _cairo_nil = {
     FALSE,			/* has_current_point */
     FALSE,			/* has_curve_to */
     FALSE,			/* is_box */
-    FALSE,			/* is_region */
+    FALSE,			/* maybe_fill_region */
+    TRUE,			/* is_empty_fill */
     {{{NULL,NULL}}}		/* link */
   }}
 };
@@ -496,25 +501,28 @@ cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
 {
     cairo_status_t status;
     cairo_rectangle_int_t extents;
+    const cairo_rectangle_int_t *clip_extents;
     cairo_surface_t *parent_surface, *group_surface = NULL;
+    cairo_bool_t is_empty;
 
     if (unlikely (cr->status))
 	return;
 
     parent_surface = _cairo_gstate_get_target (cr->gstate);
-    /* Get the extents that we'll use in creating our new group surface */
-    status = _cairo_surface_get_extents (parent_surface, &extents);
-    if (unlikely (status))
-	goto bail;
-    status = _cairo_clip_intersect_to_rectangle (_cairo_gstate_get_clip (cr->gstate), &extents);
-    if (unlikely (status))
-	goto bail;
 
-    group_surface = cairo_surface_create_similar (parent_surface,
-						  content,
-						  extents.width,
-						  extents.height);
-    status = cairo_surface_status (group_surface);
+    /* Get the extents that we'll use in creating our new group surface */
+    is_empty = _cairo_surface_get_extents (parent_surface, &extents);
+    clip_extents = _cairo_clip_get_extents (_cairo_gstate_get_clip (cr->gstate));
+    if (clip_extents != NULL)
+	is_empty = _cairo_rectangle_intersect (&extents, clip_extents);
+
+    group_surface = _cairo_surface_create_similar_solid (parent_surface,
+							 content,
+							 extents.width,
+							 extents.height,
+							 CAIRO_COLOR_TRANSPARENT,
+							 TRUE);
+    status = group_surface->status;
     if (unlikely (status))
 	goto bail;
 
@@ -2340,7 +2348,7 @@ cairo_in_stroke (cairo_t *cr, double x, double y)
     cairo_bool_t inside = FALSE;
 
     if (unlikely (cr->status))
-	return 0;
+	return FALSE;
 
     status = _cairo_gstate_in_stroke (cr->gstate,
 				      cr->path,
@@ -2370,16 +2378,10 @@ cairo_in_stroke (cairo_t *cr, double x, double y)
 cairo_bool_t
 cairo_in_fill (cairo_t *cr, double x, double y)
 {
-    cairo_bool_t inside;
-
     if (unlikely (cr->status))
-	return 0;
+	return FALSE;
 
-    _cairo_gstate_in_fill (cr->gstate,
-			   cr->path,
-			   x, y, &inside);
-
-    return inside;
+    return _cairo_gstate_in_fill (cr->gstate, cr->path, x, y);
 }
 
 /**
@@ -2600,8 +2602,6 @@ cairo_clip_extents (cairo_t *cr,
 		    double *x1, double *y1,
 		    double *x2, double *y2)
 {
-    cairo_status_t status;
-
     if (unlikely (cr->status)) {
 	if (x1)
 	    *x1 = 0.0;
@@ -2615,9 +2615,38 @@ cairo_clip_extents (cairo_t *cr,
 	return;
     }
 
-    status = _cairo_gstate_clip_extents (cr->gstate, x1, y1, x2, y2);
-    if (unlikely (status))
-	_cairo_set_error (cr, status);
+    if (! _cairo_gstate_clip_extents (cr->gstate, x1, y1, x2, y2)) {
+	*x1 = -INFINITY;
+	*y1 = -INFINITY;
+	*x2 = +INFINITY;
+	*y2 = +INFINITY;
+    }
+}
+
+/**
+ * cairo_in_clip:
+ * @cr: a cairo context
+ * @x: X coordinate of the point to test
+ * @y: Y coordinate of the point to test
+ *
+ * Tests whether the given point is inside the area that would be
+ * visible through the current clip, i.e. the area that would be filled by
+ * a cairo_paint() operation.
+ *
+ * See cairo_clip(), and cairo_clip_preserve().
+ *
+ * Return value: A non-zero value if the point is inside, or zero if
+ * outside.
+ *
+ * Since: 1.10
+ **/
+cairo_bool_t
+cairo_in_clip (cairo_t *cr, double x, double y)
+{
+    if (unlikely (cr->status))
+	return FALSE;
+
+    return _cairo_gstate_in_clip (cr->gstate, x, y);
 }
 
 static cairo_rectangle_list_t *

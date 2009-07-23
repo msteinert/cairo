@@ -566,7 +566,7 @@ cairo_test_file_is_older (const char *filename,
 
     while (num_ref_filenames--) {
 	struct stat ref;
-	char *ref_filename = ref_filenames++;
+	char *ref_filename = *ref_filenames++;
 
 	if (ref_filename == NULL)
 	    continue;
@@ -912,6 +912,11 @@ REPEAT:
 	goto UNWIND_SURFACE;
     }
 
+    cairo_surface_set_user_data (surface,
+				 &cairo_boilerplate_output_basename_key,
+				 base_path,
+				 NULL);
+
     cairo_surface_set_device_offset (surface, dev_offset, dev_offset);
 
     cr = cairo_create (surface);
@@ -1080,13 +1085,17 @@ REPEAT:
 		                                    ctx->test->width,
 						    ctx->test->height);
 	    diff_status = cairo_surface_write_to_png (test_image, out_png_path);
+	    cairo_surface_destroy (test_image);
 	    if (diff_status) {
+		if (cairo_surface_status (test_image) == CAIRO_STATUS_INVALID_STATUS)
+		    ret = CAIRO_TEST_CRASHED;
+		else
+		    ret = CAIRO_TEST_FAILURE;
 		cairo_test_log (ctx,
 			        "Error: Failed to write output image: %s\n",
 			        cairo_status_to_string (diff_status));
 	    }
 	    have_output = TRUE;
-	    cairo_surface_destroy (test_image);
 
 	    ret = CAIRO_TEST_XFAILURE;
 	    goto UNWIND_CAIRO;
@@ -1167,8 +1176,11 @@ REPEAT:
 	if (cairo_surface_status (test_image)) {
 	    cairo_test_log (ctx, "Error: Failed to extract image: %s\n",
 			    cairo_status_to_string (cairo_surface_status (test_image)));
+	    if (cairo_surface_status (test_image) == CAIRO_STATUS_INVALID_STATUS)
+		ret = CAIRO_TEST_CRASHED;
+	    else
+		ret = CAIRO_TEST_FAILURE;
 	    cairo_surface_destroy (test_image);
-	    ret = CAIRO_TEST_FAILURE;
 	    goto UNWIND_CAIRO;
 	}
 

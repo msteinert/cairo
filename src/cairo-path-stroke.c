@@ -1140,13 +1140,13 @@ _cairo_stroker_close_path (void *closure)
 }
 
 static cairo_int_status_t
-_cairo_path_fixed_stroke_rectilinear (cairo_path_fixed_t	*path,
+_cairo_path_fixed_stroke_rectilinear (const cairo_path_fixed_t	*path,
 				      cairo_stroke_style_t	*stroke_style,
 				      const cairo_matrix_t	*ctm,
 				      cairo_traps_t		*traps);
 
 cairo_status_t
-_cairo_path_fixed_stroke_to_traps (cairo_path_fixed_t	*path,
+_cairo_path_fixed_stroke_to_traps (const cairo_path_fixed_t	*path,
 				   cairo_stroke_style_t	*stroke_style,
 				   const cairo_matrix_t	*ctm,
 				   const cairo_matrix_t	*ctm_inverse,
@@ -1737,7 +1737,7 @@ _cairo_rectilinear_stroker_close_path (void *closure)
 }
 
 static cairo_int_status_t
-_cairo_path_fixed_stroke_rectilinear (cairo_path_fixed_t	*path,
+_cairo_path_fixed_stroke_rectilinear (const cairo_path_fixed_t	*path,
 				      cairo_stroke_style_t	*stroke_style,
 				      const cairo_matrix_t	*ctm,
 				      cairo_traps_t		*traps)
@@ -1755,7 +1755,7 @@ _cairo_path_fixed_stroke_rectilinear (cairo_path_fixed_t	*path,
      * UNSUPPORTED from _cairo_rectilinear_stroker_line_to if any
      * non-rectilinear line_to is encountered.
      */
-    if (path->has_curve_to)
+    if (! path->is_rectilinear)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     if (stroke_style->line_join	!= CAIRO_LINE_JOIN_MITER)
 	return CAIRO_INT_STATUS_UNSUPPORTED;

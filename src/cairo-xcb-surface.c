@@ -75,6 +75,7 @@ typedef struct cairo_xcb_surface {
     cairo_bool_t have_clip_rects;
     xcb_rectangle_t *clip_rects;
     int num_clip_rects;
+    cairo_region_t *clip_region;
 
     xcb_render_picture_t src_picture, dst_picture;
     xcb_render_pictforminfo_t xrender_format;
@@ -166,6 +167,93 @@ _xcb_render_format_to_content (xcb_render_pictforminfo_t *xrender_format)
 	return CAIRO_CONTENT_COLOR;
 }
 
+static void
+_cairo_xcb_surface_set_gc_clip_rects (cairo_xcb_surface_t *surface)
+{
+    if (surface->have_clip_rects)
+	xcb_set_clip_rectangles(surface->dpy, XCB_CLIP_ORDERING_YX_SORTED, surface->gc,
+			     0, 0,
+			     surface->num_clip_rects,
+			     surface->clip_rects );
+}
+
+static void
+_cairo_xcb_surface_set_picture_clip_rects (cairo_xcb_surface_t *surface)
+{
+    if (surface->have_clip_rects)
+	xcb_render_set_picture_clip_rectangles (surface->dpy, surface->dst_picture,
+					   0, 0,
+					   surface->num_clip_rects,
+					   surface->clip_rects);
+}
+
+static cairo_status_t
+_cairo_xcb_surface_set_clip_region (void           *abstract_surface,
+				    cairo_region_t *region)
+{
+    cairo_xcb_surface_t *surface = abstract_surface;
+
+    if (region == surface->clip_region)
+	return CAIRO_STATUS_SUCCESS;
+
+    cairo_region_destroy (surface->clip_region);
+    region = cairo_region_reference (region);
+
+    if (surface->clip_rects) {
+	free (surface->clip_rects);
+	surface->clip_rects = NULL;
+    }
+
+    surface->have_clip_rects = FALSE;
+    surface->num_clip_rects = 0;
+
+    if (region == NULL) {
+	uint32_t none[] = { XCB_NONE };
+	if (surface->gc)
+	    xcb_change_gc (surface->dpy, surface->gc, XCB_GC_CLIP_MASK, none);
+
+	if (surface->xrender_format.id != XCB_NONE && surface->dst_picture)
+	    xcb_render_change_picture (surface->dpy, surface->dst_picture,
+		XCB_RENDER_CP_CLIP_MASK, none);
+    } else {
+	xcb_rectangle_t *rects = NULL;
+	int n_rects, i;
+
+	n_rects = cairo_region_num_rectangles (region);
+
+	if (n_rects > 0) {
+	    rects = _cairo_malloc_ab (n_rects, sizeof(xcb_rectangle_t));
+	    if (rects == NULL)
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	} else {
+	    rects = NULL;
+	}
+
+	for (i = 0; i < n_rects; i++) {
+	    cairo_rectangle_int_t rect;
+
+	    cairo_region_get_rectangle (region, i, &rect);
+
+	    rects[i].x = rect.x;
+	    rects[i].y = rect.y;
+	    rects[i].width = rect.width;
+	    rects[i].height = rect.height;
+	}
+
+	surface->have_clip_rects = TRUE;
+	surface->clip_rects = rects;
+	surface->num_clip_rects = n_rects;
+
+	if (surface->gc)
+	    _cairo_xcb_surface_set_gc_clip_rects (surface);
+
+	if (surface->dst_picture)
+	    _cairo_xcb_surface_set_picture_clip_rects (surface);
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_surface_t *
 _cairo_xcb_surface_create_similar (void		       *abstract_src,
 				   cairo_content_t	content,
@@ -223,6 +311,7 @@ _cairo_xcb_surface_finish (void *abstract_surface)
 	xcb_free_gc (surface->dpy, surface->gc);
 
     free (surface->clip_rects);
+    cairo_region_destroy (surface->clip_region);
 
     surface->dpy = NULL;
 
@@ -473,26 +562,6 @@ _cairo_xcb_surface_ensure_src_picture (cairo_xcb_surface_t    *surface)
 	                           surface->xrender_format.id,
 				   0, NULL);
     }
-}
-
-static void
-_cairo_xcb_surface_set_picture_clip_rects (cairo_xcb_surface_t *surface)
-{
-    if (surface->have_clip_rects)
-	xcb_render_set_picture_clip_rectangles (surface->dpy, surface->dst_picture,
-					   0, 0,
-					   surface->num_clip_rects,
-					   surface->clip_rects);
-}
-
-static void
-_cairo_xcb_surface_set_gc_clip_rects (cairo_xcb_surface_t *surface)
-{
-    if (surface->have_clip_rects)
-	xcb_set_clip_rectangles(surface->dpy, XCB_CLIP_ORDERING_YX_SORTED, surface->gc,
-			     0, 0,
-			     surface->num_clip_rects,
-			     surface->clip_rects );
 }
 
 static void
@@ -1124,7 +1193,8 @@ _cairo_xcb_surface_composite (cairo_operator_t		op,
 			      int			dst_x,
 			      int			dst_y,
 			      unsigned int		width,
-			      unsigned int		height)
+			      unsigned int		height,
+			      cairo_region_t		*clip_region)
 {
     cairo_surface_attributes_t	src_attr, mask_attr;
     cairo_xcb_surface_t		*dst = abstract_dst;
@@ -1162,6 +1232,10 @@ _cairo_xcb_surface_composite (cairo_operator_t		op,
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
 	goto BAIL;
     }
+
+    status = _cairo_xcb_surface_set_clip_region (dst, clip_region);
+    if (unlikely (status))
+	goto BAIL;
 
     status = _cairo_xcb_surface_set_attributes (src, &src_attr);
     if (status)
@@ -1257,7 +1331,8 @@ _cairo_xcb_surface_composite (cairo_operator_t		op,
 							 mask ? mask->height : 0,
 							 src_x, src_y,
 							 mask_x, mask_y,
-							 dst_x, dst_y, width, height);
+							 dst_x, dst_y, width, height,
+							 clip_region);
 
  BAIL:
     if (mask)
@@ -1279,6 +1354,7 @@ _cairo_xcb_surface_fill_rectangles (void			     *abstract_surface,
     xcb_render_color_t render_color;
     xcb_rectangle_t static_xrects[16];
     xcb_rectangle_t *xrects = static_xrects;
+    cairo_status_t status;
     int i;
 
     if (!CAIRO_SURFACE_RENDER_HAS_FILL_RECTANGLE (surface))
@@ -1288,6 +1364,9 @@ _cairo_xcb_surface_fill_rectangles (void			     *abstract_surface,
     render_color.green = color->green_short;
     render_color.blue  = color->blue_short;
     render_color.alpha = color->alpha_short;
+
+    status = _cairo_xcb_surface_set_clip_region (surface, NULL);
+    assert (status == CAIRO_STATUS_SUCCESS);
 
     if (num_rects > ARRAY_LENGTH(static_xrects)) {
         xrects = _cairo_malloc_ab (num_rects, sizeof(xcb_rectangle_t));
@@ -1415,7 +1494,8 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
 					 unsigned int		width,
 					 unsigned int		height,
 					 cairo_trapezoid_t	*traps,
-					 int			num_traps)
+					 int			num_traps,
+					 cairo_region_t		*clip_region)
 {
     cairo_surface_attributes_t	attributes;
     cairo_xcb_surface_t		*dst = abstract_dst;
@@ -1475,6 +1555,11 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
     render_src_y = src_y + render_reference_y - dst_y;
 
     _cairo_xcb_surface_ensure_dst_picture (dst);
+
+    status = _cairo_xcb_surface_set_clip_region (dst, clip_region);
+    if (unlikely (status))
+	goto BAIL;
+
     status = _cairo_xcb_surface_set_attributes (src, &attributes);
     if (status)
 	goto BAIL;
@@ -1516,7 +1601,8 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
 								 width, height,
 								 src_x, src_y,
 								 0, 0,
-								 dst_x, dst_y, width, height);
+								 dst_x, dst_y, width, height,
+								 clip_region);
 
     } else {
         xcb_render_trapezoid_t xtraps_stack[16];
@@ -1562,68 +1648,7 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
     return status;
 }
 
-static cairo_int_status_t
-_cairo_xcb_surface_set_clip_region (void           *abstract_surface,
-				    cairo_region_t *region)
-{
-    cairo_xcb_surface_t *surface = abstract_surface;
-
-    if (surface->clip_rects) {
-	free (surface->clip_rects);
-	surface->clip_rects = NULL;
-    }
-
-    surface->have_clip_rects = FALSE;
-    surface->num_clip_rects = 0;
-
-    if (region == NULL) {
-	uint32_t none[] = { XCB_NONE };
-	if (surface->gc)
-	    xcb_change_gc (surface->dpy, surface->gc, XCB_GC_CLIP_MASK, none);
-
-	if (surface->xrender_format.id != XCB_NONE && surface->dst_picture)
-	    xcb_render_change_picture (surface->dpy, surface->dst_picture,
-		XCB_RENDER_CP_CLIP_MASK, none);
-    } else {
-	xcb_rectangle_t *rects = NULL;
-	int n_rects, i;
-
-	n_rects = cairo_region_num_rectangles (region);
-
-	if (n_rects > 0) {
-	    rects = _cairo_malloc_ab (n_rects, sizeof(xcb_rectangle_t));
-	    if (rects == NULL)
-		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	} else {
-	    rects = NULL;
-	}
-
-	for (i = 0; i < n_rects; i++) {
-	    cairo_rectangle_int_t rect;
-
-	    cairo_region_get_rectangle (region, i, &rect);
-
-	    rects[i].x = rect.x;
-	    rects[i].y = rect.y;
-	    rects[i].width = rect.width;
-	    rects[i].height = rect.height;
-	}
-
-	surface->have_clip_rects = TRUE;
-	surface->clip_rects = rects;
-	surface->num_clip_rects = n_rects;
-
-	if (surface->gc)
-	    _cairo_xcb_surface_set_gc_clip_rects (surface);
-
-	if (surface->dst_picture)
-	    _cairo_xcb_surface_set_picture_clip_rects (surface);
-    }
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_int_status_t
+static cairo_bool_t
 _cairo_xcb_surface_get_extents (void		        *abstract_surface,
 				cairo_rectangle_int_t   *rectangle)
 {
@@ -1635,7 +1660,7 @@ _cairo_xcb_surface_get_extents (void		        *abstract_surface,
     rectangle->width  = surface->width;
     rectangle->height = surface->height;
 
-    return CAIRO_STATUS_SUCCESS;
+    return TRUE;
 }
 
 /* XXX: _cairo_xcb_surface_get_font_options */
@@ -1654,8 +1679,8 @@ _cairo_xcb_surface_show_glyphs (void			*abstract_dst,
 				cairo_glyph_t		*glyphs,
 				int			 num_glyphs,
 				cairo_scaled_font_t	*scaled_font,
-				int			*remaining_glyphs,
-				cairo_rectangle_int_t   *extents);
+				cairo_clip_t		*clip,
+				int			*remaining_glyphs);
 
 static cairo_bool_t
 _cairo_xcb_surface_is_similar (void *surface_a,
@@ -1682,40 +1707,29 @@ _cairo_xcb_surface_is_similar (void *surface_a,
     return a->xrender_format.id == xrender_format->id;
 }
 
-static cairo_status_t
-_cairo_xcb_surface_reset (void *abstract_surface)
-{
-    cairo_xcb_surface_t *surface = abstract_surface;
-    cairo_status_t status;
-
-    status = _cairo_xcb_surface_set_clip_region (surface, NULL);
-    if (status)
-	return status;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-
 /* XXX: move this to the bottom of the file, XCB and Xlib */
 
 static const cairo_surface_backend_t cairo_xcb_surface_backend = {
     CAIRO_SURFACE_TYPE_XCB,
+
     _cairo_xcb_surface_create_similar,
     _cairo_xcb_surface_finish,
     _cairo_xcb_surface_acquire_source_image,
     _cairo_xcb_surface_release_source_image,
+
     _cairo_xcb_surface_acquire_dest_image,
     _cairo_xcb_surface_release_dest_image,
+
     _cairo_xcb_surface_clone_similar,
     _cairo_xcb_surface_composite,
     _cairo_xcb_surface_fill_rectangles,
     _cairo_xcb_surface_composite_trapezoids,
     NULL, /* create_span_renderer */
     NULL, /* check_span_renderer */
+
     NULL, /* copy_page */
     NULL, /* show_page */
-    _cairo_xcb_surface_set_clip_region,
-    NULL, /* intersect_clip_path */
+
     _cairo_xcb_surface_get_extents,
     NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
@@ -1733,8 +1747,6 @@ static const cairo_surface_backend_t cairo_xcb_surface_backend = {
     _cairo_xcb_surface_snapshot,
 
     _cairo_xcb_surface_is_similar,
-
-    _cairo_xcb_surface_reset
 };
 
 /**
@@ -1853,8 +1865,9 @@ _cairo_xcb_surface_create_internal (xcb_connection_t	     *dpy,
     surface->have_clip_rects = FALSE;
     surface->clip_rects = NULL;
     surface->num_clip_rects = 0;
+    surface->clip_region = NULL;
 
-    return (cairo_surface_t *) surface;
+    return &surface->base;
 }
 
 static xcb_screen_t *
@@ -2463,8 +2476,8 @@ _cairo_xcb_surface_show_glyphs (void			*abstract_dst,
 				cairo_glyph_t		*glyphs,
 				int			 num_glyphs,
 				cairo_scaled_font_t	*scaled_font,
-				int			*remaining_glyphs,
-				cairo_rectangle_int_t   *extents)
+				cairo_clip_t		*clip,
+				int			*remaining_glyphs)
 {
     cairo_int_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_xcb_surface_t *dst = abstract_dst;
@@ -2474,6 +2487,7 @@ _cairo_xcb_surface_show_glyphs (void			*abstract_dst,
     cairo_xcb_surface_t *src = NULL;
 
     cairo_solid_pattern_t solid_pattern;
+    cairo_region_t *clip_region = NULL;
 
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE_TEXT (dst) || dst->xrender_format.id == XCB_NONE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -2497,10 +2511,12 @@ _cairo_xcb_surface_show_glyphs (void			*abstract_dst,
      * fallback clip masking, we have to go through the full
      * fallback path.
      */
-    if (dst->base.clip &&
-        (dst->base.clip->mode != CAIRO_CLIP_MODE_REGION ||
-         dst->base.clip->surface != NULL))
-        return CAIRO_INT_STATUS_UNSUPPORTED;
+    if (clip != NULL) {
+	status = _cairo_clip_get_region (clip, &clip_region);
+	assert (status != CAIRO_INT_STATUS_NOTHING_TO_DO);
+	if (status)
+	    return status;
+    }
 
     operation = _categorize_composite_operation (dst, op, src_pattern, TRUE);
     if (operation == DO_UNSUPPORTED)
@@ -2563,6 +2579,10 @@ _cairo_xcb_surface_show_glyphs (void			*abstract_dst,
 	status = CAIRO_INT_STATUS_UNSUPPORTED;
 	goto BAIL;
     }
+
+    status = _cairo_xcb_surface_set_clip_region (dst, clip_region);
+    if (unlikely (status))
+	goto BAIL;
 
     status = _cairo_xcb_surface_set_attributes (src, &attributes);
     if (status)

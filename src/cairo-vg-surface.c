@@ -40,6 +40,7 @@
 
 #include "cairo-path-fixed-private.h"
 #include "cairo-meta-surface-private.h"
+#include "cairo-surface-clipper-private.h"
 #include "cairo-cache-private.h"
 
 #include <pixman.h>
@@ -94,7 +95,7 @@ struct _cairo_vg_surface {
 
     cairo_cache_entry_t snapshot_cache_entry;
 
-    cairo_bool_t clipped;
+    cairo_surface_clipper_t clipper;
 
     unsigned long target_id;
 };
@@ -397,37 +398,27 @@ _vg_surface_create_similar (void            *abstract_surface,
     return cairo_vg_surface_create (surface->context, content, width, height);
 }
 
-static cairo_int_status_t
-_vg_surface_intersect_clip_path (void               *abstract_surface,
-				 cairo_path_fixed_t *path,
-				 cairo_fill_rule_t   fill_rule,
-				 double              tolerance,
-				 cairo_antialias_t   antialias)
+static cairo_status_t
+_vg_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clipper,
+					 cairo_path_fixed_t *path,
+					 cairo_fill_rule_t   fill_rule,
+					 double              tolerance,
+					 cairo_antialias_t   antialias)
 {
-    cairo_vg_surface_t *surface = abstract_surface;
+    cairo_vg_surface_t *surface = cairo_container_of (clipper,
+						      cairo_vg_surface_t,
+						      clipper);
     cairo_vg_surface_t *mask;
-    cairo_rectangle_int_t extents, clip_extents;
     cairo_solid_pattern_t white;
     cairo_status_t status;
 
     if (path == NULL) {
-	surface->clipped = FALSE;
 	vgMask (VG_INVALID_HANDLE,
 		VG_FILL_MASK, 0, 0, surface->width, surface->height);
 	vgSeti (VG_MASKING, VG_FALSE);
 	CHECK_VG_ERRORS();
 	return CAIRO_STATUS_SUCCESS;
     }
-
-    extents.x = extents.y = 0;
-    extents.width = surface->width;
-    extents.height = surface->height;
-    _cairo_path_fixed_approximate_clip_extents (path, &clip_extents);
-    if (! _cairo_rectangle_intersect (&clip_extents, &extents))
-	surface->clipped = TRUE;
-
-    if (surface->clipped)
-	return CAIRO_STATUS_SUCCESS;
 
     mask = (cairo_vg_surface_t *)
 	_vg_surface_create_similar (surface, CAIRO_CONTENT_ALPHA,
@@ -456,7 +447,7 @@ _vg_surface_intersect_clip_path (void               *abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_int_status_t
+static cairo_bool_t
 _vg_surface_get_extents (void                  *abstract_surface,
 			 cairo_rectangle_int_t *extents)
 {
@@ -467,7 +458,7 @@ _vg_surface_get_extents (void                  *abstract_surface,
     extents->width  = surface->width;
     extents->height = surface->height;
 
-    return CAIRO_STATUS_SUCCESS;
+    return TRUE;
 }
 
 #define MAX_SEG  16  /* max number of knots to upload in a batch */
@@ -589,7 +580,7 @@ _vg_close_path (void *closure)
 
 static void
 _vg_path_from_cairo (vg_path_t    *vg_path,
-		     cairo_path_fixed_t *path)
+		     const cairo_path_fixed_t *path)
 {
     cairo_status_t status;
 
@@ -805,7 +796,7 @@ _vg_setup_linear_source (cairo_vg_context_t *context,
 
 static cairo_status_t
 _vg_setup_radial_source (cairo_vg_context_t *context,
-			 cairo_radial_pattern_t *rpat)
+			 const cairo_radial_pattern_t *rpat)
 {
     VGfloat radial[5];
 
@@ -832,7 +823,7 @@ _vg_setup_radial_source (cairo_vg_context_t *context,
 
 static cairo_status_t
 _vg_setup_solid_source (cairo_vg_context_t *context,
-			cairo_solid_pattern_t *spat)
+			const cairo_solid_pattern_t *spat)
 {
     VGfloat color[] = {
 	spat->color.red,
@@ -960,7 +951,7 @@ _vg_surface_remove_from_cache (cairo_surface_t *abstract_surface)
 
 static cairo_status_t
 _vg_setup_surface_source (cairo_vg_context_t *context,
-			  cairo_surface_pattern_t *spat)
+			  const cairo_surface_pattern_t *spat)
 {
     cairo_surface_t *snapshot;
     cairo_vg_surface_t *clone;
@@ -1077,7 +1068,7 @@ _vg_surface_stroke (void                 *abstract_surface,
 		    cairo_matrix_t       *ctm_inverse,
 		    double                tolerance,
 		    cairo_antialias_t     antialias,
-		    cairo_rectangle_int_t *extents)
+		    cairo_clip_t	 *clip)
 {
     cairo_vg_surface_t *surface = abstract_surface;
     cairo_vg_context_t *context;
@@ -1085,9 +1076,6 @@ _vg_surface_stroke (void                 *abstract_surface,
     VGfloat state[9];
     VGfloat strokeTransform[9];
     vg_path_t vg_path;
-
-    if (surface->clipped)
-	return CAIRO_STATUS_SUCCESS;
 
     if (! _vg_is_supported_operator (op))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1101,6 +1089,12 @@ _vg_surface_stroke (void                 *abstract_surface,
 
     status = setup_source (context, source);
     if (status) {
+	_vg_context_unlock (context);
+	return status;
+    }
+
+    status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+    if (unlikely (status)) {
 	_vg_context_unlock (context);
 	return status;
     }
@@ -1148,15 +1142,12 @@ _vg_surface_fill (void                  *abstract_surface,
 		  cairo_fill_rule_t      fill_rule,
 		  double                 tolerance,
 		  cairo_antialias_t      antialias,
-		  cairo_rectangle_int_t *extents)
+		  cairo_clip_t		*clip)
 {
     cairo_vg_surface_t *surface = abstract_surface;
     cairo_vg_context_t *context;
     cairo_status_t status;
     vg_path_t vg_path;
-
-    if (surface->clipped)
-	return CAIRO_STATUS_SUCCESS;
 
     if (op == CAIRO_OPERATOR_DEST)
 	return CAIRO_STATUS_SUCCESS;
@@ -1173,6 +1164,12 @@ _vg_surface_fill (void                  *abstract_surface,
 
     status = setup_source (context, source);
     if (status) {
+	_vg_context_unlock (context);
+	return status;
+    }
+
+    status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+    if (unlikely (status)) {
 	_vg_context_unlock (context);
 	return status;
     }
@@ -1208,14 +1205,11 @@ static cairo_int_status_t
 _vg_surface_paint (void             *abstract_surface,
 		   cairo_operator_t  op,
 		   const cairo_pattern_t  *source,
-		   cairo_rectangle_int_t *extents)
+		   cairo_clip_t	     *clip)
 {
     cairo_vg_surface_t *surface = abstract_surface;
     cairo_vg_context_t *context;
     cairo_status_t status;
-
-    if (surface->clipped)
-	return CAIRO_STATUS_SUCCESS;
 
     if (op == CAIRO_OPERATOR_DEST)
 	return CAIRO_STATUS_SUCCESS;
@@ -1232,6 +1226,12 @@ _vg_surface_paint (void             *abstract_surface,
 
     status = setup_source (context, source);
     if (status) {
+	_vg_context_unlock (context);
+	return status;
+    }
+
+    status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
+    if (unlikely (status)) {
 	_vg_context_unlock (context);
 	return status;
     }
@@ -1273,13 +1273,10 @@ _vg_surface_mask (void                   *abstract_surface,
 		  cairo_operator_t       op,
 		  const cairo_pattern_t  *source,
 		  const cairo_pattern_t  *mask,
-		  cairo_rectangle_int_t  *extents)
+		  cairo_clip_t		 *clip)
 {
     cairo_vg_surface_t *surface = abstract_surface;
     cairo_status_t status;
-
-    if (surface->clipped)
-	return CAIRO_STATUS_SUCCESS;
 
     if (! _vg_is_supported_operator (op))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1291,7 +1288,7 @@ _vg_surface_mask (void                   *abstract_surface,
 	double alpha = context->alpha;
 
 	context->alpha = solid->color.alpha;
-	status = _vg_surface_paint (abstract_surface, op, source, extents);
+	status = _vg_surface_paint (abstract_surface, op, source, clip);
 	context->alpha = alpha;
 
 	_vg_context_unlock (context);
@@ -1312,14 +1309,14 @@ _vg_surface_get_font_options (void                  *abstract_surface,
 }
 
 static cairo_int_status_t
-_vg_surface_show_glyphs (void                  *abstract_surface,
-			 cairo_operator_t       op,
-			 const cairo_pattern_t *source,
-			 cairo_glyph_t         *glyphs,
-			 int                    num_glyphs,
-			 cairo_scaled_font_t   *scaled_font,
-			 int		         *remaining_glyphs,
-			 cairo_rectangle_int_t *extents)
+_vg_surface_show_glyphs (void			*abstract_surface,
+			 cairo_operator_t	 op,
+			 const cairo_pattern_t	*source,
+			 cairo_glyph_t		*glyphs,
+			 int			 num_glyphs,
+			 cairo_scaled_font_t	*scaled_font,
+			 cairo_clip_t		*clip,
+			 int			*remaining_glyphs)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     cairo_path_fixed_t path;
@@ -1342,7 +1339,7 @@ _vg_surface_show_glyphs (void                  *abstract_surface,
 			       CAIRO_FILL_RULE_WINDING,
 			       CAIRO_GSTATE_TOLERANCE_DEFAULT,
 			       CAIRO_ANTIALIAS_SUBPIXEL,
-			       extents);
+			       clip);
 BAIL:
     _cairo_path_fixed_fini (&path);
     return status;
@@ -1510,12 +1507,6 @@ _vg_surface_release_dest_image (void                    *abstract_surface,
     cairo_vg_surface_t *surface = abstract_surface;
     cairo_bool_t needs_unpremultiply;
 
-    /* XXX clipping is incorrect
-     * We can either composite through the current clip mask using fill,
-     * or what for the clipping overhaul patches, due to land any time
-     * soon now...
-     */
-
     _vg_format_to_pixman (surface->format, &needs_unpremultiply);
     if (needs_unpremultiply) {
 	unpremultiply_argb (image->data,
@@ -1545,6 +1536,8 @@ _vg_surface_finish (void *abstract_surface)
 	surface->snapshot_cache_entry.hash = 0;
     }
 
+    _cairo_surface_clipper_reset (&surface->clipper);
+
     if (surface->own_image)
 	vgDestroyImage (surface->image);
 
@@ -1561,20 +1554,21 @@ static const cairo_surface_backend_t cairo_vg_surface_backend = {
     CAIRO_SURFACE_TYPE_VG,
     _vg_surface_create_similar,
     _vg_surface_finish,
+
     _vg_surface_acquire_source_image,
     _vg_surface_release_source_image,
     _vg_surface_acquire_dest_image,
     _vg_surface_release_dest_image,
+
     NULL, /* clone_similar */
     NULL, /* composite */
     NULL, /* fill_rectangles */
     NULL, /* composite_trapezoids */
     NULL, /* create_span_renderer */
     NULL, /* check_span_renderer */
+
     NULL, /* copy_page */
     NULL, /* show_page */
-    NULL, /* set_clip_region */
-    _vg_surface_intersect_clip_path,
     _vg_surface_get_extents,
     NULL, /* old_show_glyphs */
     _vg_surface_get_font_options, /* get_font_options */
@@ -1591,7 +1585,6 @@ static const cairo_surface_backend_t cairo_vg_surface_backend = {
 
     NULL, /* snapshot */
     NULL, /* is_similar */
-    NULL, /* reset */
 };
 
 static cairo_surface_t *
@@ -1617,14 +1610,13 @@ _vg_surface_create_internal (cairo_vg_context_t *context,
 
     surface->width  = width;
     surface->height = height;
-    surface->clipped = FALSE;
+
+    _cairo_surface_clipper_init (&surface->clipper,
+				 _vg_surface_clipper_intersect_clip_path);
 
     surface->snapshot_cache_entry.hash = 0;
 
     surface->target_id = 0;
-
-    /* Force an initial "clip", that resets the mask */
-    _vg_surface_intersect_clip_path (surface, NULL, 0, 0.0, 0);
 
     CHECK_VG_ERRORS();
     return &surface->base;

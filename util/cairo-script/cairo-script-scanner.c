@@ -39,6 +39,7 @@
 #include <stdio.h> /* EOF */
 #include <string.h> /* memset */
 #include <assert.h>
+#include <zlib.h>
 
 #define DEBUG_SCAN 0
 
@@ -488,18 +489,6 @@ token_end (csi_t *ctx, csi_scanner_t *scan, csi_file_t *src)
 }
 
 static void
-string_inc_p (csi_scanner_t *scan)
-{
-    scan->string_p++;
-}
-
-static int
-string_dec_p (csi_scanner_t *scan)
-{
-    return --scan->string_p == 0;
-}
-
-static void
 string_add (csi_t *ctx, csi_scanner_t *scan, int c)
 {
     buffer_check (ctx, scan, 1);
@@ -616,7 +605,7 @@ base85_add (csi_t *ctx, csi_scanner_t *scan, int c)
 }
 
 static void
-base85_end (csi_t *ctx, csi_scanner_t *scan)
+base85_end (csi_t *ctx, csi_scanner_t *scan, cairo_bool_t deflate)
 {
     csi_object_t obj;
     cairo_status_t status;
@@ -647,12 +636,24 @@ base85_end (csi_t *ctx, csi_scanner_t *scan)
 	break;
     }
 
-    status = csi_string_new (ctx,
-			     &obj,
-			     scan->buffer.base,
-			     scan->buffer.ptr - scan->buffer.base);
-    if (_csi_unlikely (status))
-	longjmp (scan->jmpbuf, status);
+    if (deflate) {
+	uLongf len = *(uint32_t *) scan->buffer.base;
+	Bytef *source = (Bytef *) (scan->buffer.base + sizeof (uint32_t));
+
+	status = csi_string_deflate_new (ctx, &obj,
+					 source,
+					 (Bytef *) scan->buffer.ptr - source,
+					 len);
+	if (_csi_unlikely (status))
+	    longjmp (scan->jmpbuf, status);
+    } else {
+	status = csi_string_new (ctx,
+				 &obj,
+				 scan->buffer.base,
+				 scan->buffer.ptr - scan->buffer.base);
+	if (_csi_unlikely (status))
+	    longjmp (scan->jmpbuf, status);
+    }
 
     if (scan->build_procedure.type != CSI_OBJECT_TYPE_NULL)
 	status = csi_array_append (ctx,
@@ -714,6 +715,8 @@ _scan_file (csi_t *ctx, csi_file_t *src)
 	uint32_t u32;
 	float f;
     } u;
+    int deflate = 0;
+    int string_p;
 
 scan_none:
     while ((c = csi_file_getc (src)) != EOF) {
@@ -757,6 +760,8 @@ scan_none:
 		token_add_unchecked (scan, '<');
 		token_end (ctx, scan, src);
 		goto scan_none;
+	    case '|':
+		deflate = 1;
 	    case '~':
 		goto scan_base85;
 	    default:
@@ -1000,7 +1005,7 @@ scan_comment:
 
 scan_string:
     buffer_reset (&scan->buffer);
-    scan->string_p = 1;
+    string_p = 1;
     while ((c = csi_file_getc (src)) != EOF) {
 	switch (c) {
 	case '\\': /* escape */
@@ -1086,12 +1091,12 @@ scan_string:
 	    break;
 
 	case '(':
-	    string_inc_p (scan);
+	    string_p++;
 	    string_add (ctx, scan, c);
 	    break;
 
 	case ')':
-	    if (string_dec_p (scan)) {
+	    if (--string_p == 0) {
 		string_end (ctx, scan);
 		goto scan_none;
 	    }
@@ -1166,7 +1171,8 @@ scan_base85:
 		return;
 
 	    case '>':
-		base85_end (ctx, scan);
+		base85_end (ctx, scan, deflate);
+		deflate = 0;
 		goto scan_none;
 	    }
 	    csi_file_putc (src, next);

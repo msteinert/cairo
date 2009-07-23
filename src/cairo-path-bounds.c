@@ -173,7 +173,7 @@ _cairo_path_bounder_close_path (void *closure)
  * the control points of the curves, not the flattened path).
  */
 void
-_cairo_path_fixed_approximate_clip_extents (cairo_path_fixed_t *path,
+_cairo_path_fixed_approximate_clip_extents (const cairo_path_fixed_t *path,
 					    cairo_rectangle_int_t *extents)
 {
     cairo_path_bounder_t bounder;
@@ -203,7 +203,7 @@ _cairo_path_fixed_approximate_clip_extents (cairo_path_fixed_t *path,
  * Bezier, but we continue to ignore winding.
  */
 void
-_cairo_path_fixed_approximate_fill_extents (cairo_path_fixed_t *path,
+_cairo_path_fixed_approximate_fill_extents (const cairo_path_fixed_t *path,
 					    cairo_rectangle_int_t *extents)
 {
     cairo_path_bounder_t bounder;
@@ -229,9 +229,37 @@ _cairo_path_fixed_approximate_fill_extents (cairo_path_fixed_t *path,
     _cairo_path_bounder_fini (&bounder);
 }
 
+void
+_cairo_path_fixed_fill_extents (const cairo_path_fixed_t	*path,
+				cairo_fill_rule_t	 fill_rule,
+				double			 tolerance,
+				cairo_rectangle_int_t	*extents)
+{
+    cairo_path_bounder_t bounder;
+    cairo_status_t status;
+
+    _cairo_path_bounder_init (&bounder);
+
+    status = _cairo_path_fixed_interpret_flat (path, CAIRO_DIRECTION_FORWARD,
+					       _cairo_path_bounder_move_to,
+					       _cairo_path_bounder_line_to,
+					       _cairo_path_bounder_close_path,
+					       &bounder, tolerance);
+    assert (status == CAIRO_STATUS_SUCCESS);
+
+    if (bounder.has_point) {
+	_cairo_box_round_to_rectangle (&bounder.extents, extents);
+    } else {
+	extents->x = extents->y = 0;
+	extents->width = extents->height = 0;
+    }
+
+    _cairo_path_bounder_fini (&bounder);
+}
+
 /* Adjusts the fill extents (above) by the device-space pen.  */
 void
-_cairo_path_fixed_approximate_stroke_extents (cairo_path_fixed_t *path,
+_cairo_path_fixed_approximate_stroke_extents (const cairo_path_fixed_t *path,
 					      cairo_stroke_style_t *style,
 					      const cairo_matrix_t *ctm,
 					      cairo_rectangle_int_t *extents)
@@ -268,8 +296,37 @@ _cairo_path_fixed_approximate_stroke_extents (cairo_path_fixed_t *path,
     _cairo_path_bounder_fini (&bounder);
 }
 
+cairo_status_t
+_cairo_path_fixed_stroke_extents (const cairo_path_fixed_t *path,
+				  cairo_stroke_style_t *stroke_style,
+				  const cairo_matrix_t *ctm,
+				  const cairo_matrix_t *ctm_inverse,
+				  double tolerance,
+				  cairo_rectangle_int_t *extents)
+{
+    cairo_traps_t traps;
+    cairo_box_t bbox;
+    cairo_status_t status;
+
+    _cairo_traps_init (&traps);
+
+    status = _cairo_path_fixed_stroke_to_traps (path,
+						stroke_style,
+						ctm,
+						ctm_inverse,
+						tolerance,
+						&traps);
+
+    _cairo_traps_extents (&traps, &bbox);
+    _cairo_traps_fini (&traps);
+
+    _cairo_box_round_to_rectangle (&bbox, extents);
+
+    return status;
+}
+
 void
-_cairo_path_fixed_bounds (cairo_path_fixed_t *path,
+_cairo_path_fixed_bounds (const cairo_path_fixed_t *path,
 			  double *x1, double *y1,
 			  double *x2, double *y2)
 {

@@ -53,6 +53,16 @@ cairo_script_surface_create_for_stream (cairo_write_func_t	 write_func,
 					double width,
 					double height);
 
+cairo_public cairo_surface_t *
+cairo_script_surface_create_for_target (cairo_surface_t *surface,
+					cairo_write_func_t write_func,
+					void *closure);
+
+cairo_public void
+cairo_script_surface_write_comment (cairo_surface_t *abstract_surface,
+				    const char *comment,
+				    int len);
+
 typedef enum {
     CAIRO_SCRIPT_MODE_BINARY,
     CAIRO_SCRIPT_MODE_ASCII

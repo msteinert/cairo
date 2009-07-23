@@ -33,7 +33,6 @@
 static const cairo_user_data_key_t glitz_closure_key;
 
 typedef struct _glitz_glx_target_closure {
-    glitz_target_closure_base_t base;
     Display        *dpy;
     int             scr;
     Window          win;
@@ -206,9 +205,6 @@ _cairo_boilerplate_glitz_glx_create_surface (const char			 *name,
     if (cairo_surface_status (surface))
 	goto FAIL_CLOSE_DISPLAY;
 
-    gxtc->base.width = width;
-    gxtc->base.height = height;
-    gxtc->base.content = content;
     status = cairo_surface_set_user_data (surface,
 					  &glitz_closure_key, gxtc, NULL);
     if (status == CAIRO_STATUS_SUCCESS)

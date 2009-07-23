@@ -166,7 +166,6 @@ _cairo_boilerplate_svg_finish_surface (cairo_surface_t		*surface)
 	if (status)
 	    return status;
 
-	cairo_surface_finish (surface);
 	status = cairo_surface_status (surface);
 	if (status)
 	    return status;

@@ -27,10 +27,15 @@
 #include "cairo-test.h"
 
 static cairo_test_status_t
-draw (cairo_t *cr, int width, int height)
+preamble (cairo_test_context_t *ctx)
 {
-    const cairo_test_context_t *ctx = cairo_test_get_context (cr);
     cairo_test_status_t ret = CAIRO_TEST_SUCCESS;
+    cairo_surface_t *surface;
+    cairo_t *cr;
+
+    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 0, 0);
+    cr = cairo_create (surface);
+    cairo_surface_destroy (surface);
 
     cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
 
@@ -80,7 +85,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_new_path (cr);
     cairo_arc (cr, 0, 0, 10, 0, 2 * M_PI);
     if (! cairo_in_fill (cr, 0, 0)) {
-	cairo_test_log (ctx, "Error: Failed to find point inside circle\n");
+	cairo_test_log (ctx, "Error: Failed to find point inside circle [even-odd]\n");
 	ret = CAIRO_TEST_FAILURE;
     }
 
@@ -117,7 +122,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_new_path (cr);
     cairo_arc (cr, 0, 0, 10, 0, 2 * M_PI);
     if (! cairo_in_fill (cr, 0, 0)) {
-	cairo_test_log (ctx, "Error: Failed to find point inside circle\n");
+	cairo_test_log (ctx, "Error: Failed to find point inside circle [nonzero]\n");
 	ret = CAIRO_TEST_FAILURE;
     }
 
@@ -261,12 +266,14 @@ draw (cairo_t *cr, int width, int height)
 	ret = CAIRO_TEST_FAILURE;
     }
 
+    cairo_destroy (cr);
+
     return ret;
 }
 
 CAIRO_TEST (in_fill_trapezoid,
-	    "Test _cairo_trap_contains via cairo_in_fill",
+	    "Test cairo_in_fill",
 	    "in, trap", /* keywords */
 	    NULL, /* requirements */
 	    0, 0,
-	    NULL, draw)
+	    preamble, NULL)

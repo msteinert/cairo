@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include <limits.h> /* INT_MAX */
 #include <string.h>
+#include <zlib.h>
 
 #define CHUNK_SIZE 32768
 
@@ -148,17 +149,43 @@ csi_file_new_from_string (csi_t *ctx,
     csi_file_t *file;
 
     file = _csi_slab_alloc (ctx, sizeof (csi_file_t));
-    if (file == NULL)
+    if (_csi_unlikely (file == NULL))
 	return _csi_error (CAIRO_STATUS_NO_MEMORY);
 
     file->base.type = CSI_OBJECT_TYPE_FILE;
     file->base.ref = 1;
 
-    file->type = BYTES;
-    file->src = src; src->base.ref++;
-    file->data = src->string;
-    file->bp   = file->data;
-    file->rem  = src->len;
+    if (src->deflate) {
+	uLongf len = src->deflate;
+	csi_object_t tmp_obj;
+	csi_string_t *tmp_str;
+	csi_status_t status;
+
+	status = csi_string_new (ctx, &tmp_obj,  NULL, src->deflate);
+	if (_csi_unlikely (status))
+	    return status;
+
+	tmp_str = tmp_obj.datum.string;
+	if (uncompress ((Bytef *) tmp_str->string, &len,
+			(Bytef *) src->string, src->len) != Z_OK)
+	{
+	    csi_string_free (ctx, tmp_str);
+	    _csi_slab_free (ctx, file, sizeof (csi_file_t));
+	    return _csi_error (CAIRO_STATUS_NO_MEMORY);
+	}
+
+	file->type = BYTES;
+	file->src = tmp_str;
+	file->data = tmp_str->string;
+	file->bp   = file->data;
+	file->rem  = tmp_str->len;
+    } else {
+	file->type = BYTES;
+	file->src = src; src->base.ref++;
+	file->data = src->string;
+	file->bp   = file->data;
+	file->rem  = src->len;
+    }
 
     obj->type = CSI_OBJECT_TYPE_FILE;
     obj->datum.file = file;

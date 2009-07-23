@@ -41,6 +41,7 @@
 
 #include "cairo.h"
 #include "cairo-fixed-type-private.h"
+#include "cairo-list-private.h"
 #include "cairo-reference-count-private.h"
 
 typedef struct _cairo_array cairo_array_t;
@@ -63,6 +64,7 @@ typedef struct _cairo_scaled_font_backend   cairo_scaled_font_backend_t;
 typedef struct _cairo_scaled_font_subsets cairo_scaled_font_subsets_t;
 typedef struct _cairo_solid_pattern cairo_solid_pattern_t;
 typedef struct _cairo_surface_backend cairo_surface_backend_t;
+typedef struct _cairo_surface_wrapper cairo_surface_wrapper_t;
 typedef struct _cairo_unscaled_font_backend cairo_unscaled_font_backend_t;
 typedef struct _cairo_xlib_screen_info cairo_xlib_screen_info_t;
 
@@ -167,6 +169,7 @@ typedef enum _cairo_internal_surface_type {
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_META,
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED,
+    CAIRO_INTERNAL_SURFACE_TYPE_TEST_WRAPPING,
     CAIRO_INTERNAL_SURFACE_TYPE_NULL,
     CAIRO_INTERNAL_SURFACE_TYPE_TYPE3_GLYPH
 } cairo_internal_surface_type_t;
@@ -236,12 +239,6 @@ typedef enum _cairo_direction {
     CAIRO_DIRECTION_FORWARD,
     CAIRO_DIRECTION_REVERSE
 } cairo_direction_t;
-
-typedef enum _cairo_clip_mode {
-    CAIRO_CLIP_MODE_PATH,
-    CAIRO_CLIP_MODE_REGION,
-    CAIRO_CLIP_MODE_MASK
-} cairo_clip_mode_t;
 
 typedef struct _cairo_edge {
     cairo_line_t edge;

@@ -178,6 +178,7 @@ _cairo_boilerplate_ps_finish_surface (cairo_surface_t		*surface)
 
     if (ptc->target) {
 	cairo_t *cr;
+
 	cr = cairo_create (ptc->target);
 	cairo_set_source_surface (cr, surface, 0, 0);
 	cairo_paint (cr);
@@ -188,7 +189,6 @@ _cairo_boilerplate_ps_finish_surface (cairo_surface_t		*surface)
 	if (status)
 	    return status;
 
-	cairo_surface_finish (surface);
 	status = cairo_surface_status (surface);
 	if (status)
 	    return status;
@@ -197,11 +197,7 @@ _cairo_boilerplate_ps_finish_surface (cairo_surface_t		*surface)
     }
 
     cairo_surface_finish (surface);
-    status = cairo_surface_status (surface);
-    if (status)
-	return status;
-
-    return CAIRO_STATUS_SUCCESS;
+    return cairo_surface_status (surface);
 }
 
 static cairo_status_t

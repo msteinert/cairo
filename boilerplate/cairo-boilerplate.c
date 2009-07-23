@@ -32,6 +32,10 @@
 #include <cairo-types-private.h>
 #include <cairo-scaled-font-private.h>
 
+#if CAIRO_HAS_SCRIPT_SURFACE
+#include <cairo-script.h>
+#endif
+
 /* get the "real" version info instead of dummy cairo-version.h */
 #undef CAIRO_VERSION_H
 #include "../cairo-version.h"
@@ -136,9 +140,29 @@ _cairo_boilerplate_meta_create_surface (const char	     *name,
 					int		      id,
 					void		    **closure)
 {
+    cairo_rectangle_t extents;
+
     *closure = NULL;
-    return cairo_meta_surface_create (content, width, height);
+
+    extents.x = 0;
+    extents.y = 0;
+    extents.width = width;
+    extents.height = height;
+    return cairo_meta_surface_create (content, &extents);
 }
+
+const cairo_user_data_key_t cairo_boilerplate_output_basename_key;
+
+#if CAIRO_HAS_SCRIPT_SURFACE
+static cairo_status_t
+stdio_write (void *closure, const unsigned char *data, unsigned int len)
+{
+    if (fwrite (data, len, 1, closure) != 1)
+	return CAIRO_STATUS_WRITE_ERROR;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+#endif
 
 cairo_surface_t *
 _cairo_boilerplate_get_image_surface (cairo_surface_t *src,
@@ -146,38 +170,44 @@ _cairo_boilerplate_get_image_surface (cairo_surface_t *src,
 				      int width,
 				      int height)
 {
-    cairo_surface_t *surface;
+    FILE *file = NULL;
+    cairo_surface_t *surface, *image;
     cairo_t *cr;
+    cairo_status_t status;
 
     if (cairo_surface_status (src))
 	return cairo_surface_reference (src);
-
-#if 0
-    if (cairo_surface_get_type (src) == CAIRO_SURFACE_TYPE_IMAGE) {
-	int ww = cairo_image_surface_get_width (src);
-	int hh = cairo_image_surface_get_height (src);
-	if (width == ww && hh == height) {
-	    return cairo_surface_reference (src);
-	} else {
-	    cairo_format_t format = cairo_image_surface_get_format (src);
-	    unsigned char *data = cairo_image_surface_get_data (src);
-	    int stride = cairo_image_surface_get_stride (src);
-
-	    data += stride * (hh - height) + 4 * (ww - width);
-	    return cairo_image_surface_create_for_data (data,
-							format,
-							width,
-							height,
-							stride);
-	}
-    }
-#endif
 
     if (page != 0)
 	return cairo_boilerplate_surface_create_in_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 
     /* extract sub-surface */
     surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
+    image = cairo_surface_reference (surface);
+
+    /* open a logging channel (only interesting for meta surfaces) */
+#if CAIRO_HAS_SCRIPT_SURFACE
+    if (cairo_surface_get_type (src) == CAIRO_SURFACE_TYPE_META) {
+	const char *test_name;
+
+	test_name = cairo_surface_get_user_data (src,
+						 &cairo_boilerplate_output_basename_key);
+	if (test_name != NULL) {
+	    char *filename;
+
+	    xasprintf (&filename, "%s.out.trace", test_name);
+	    file = fopen (filename, "w");
+	    free (filename);
+
+	    if (file != NULL) {
+		surface = cairo_script_surface_create_for_target (image,
+								  stdio_write,
+								  file);
+	    }
+	}
+    }
+#endif
+
     cr = cairo_create (surface);
     cairo_surface_destroy (surface);
 
@@ -185,10 +215,17 @@ _cairo_boilerplate_get_image_surface (cairo_surface_t *src,
     cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
     cairo_paint (cr);
 
-    surface = cairo_surface_reference (cairo_get_target (cr));
+    status = cairo_status (cr);
+    if (status) {
+	cairo_surface_destroy (image);
+	image = cairo_surface_reference (cairo_get_target (cr));
+    }
     cairo_destroy (cr);
 
-    return surface;
+    if (file != NULL)
+	fclose (file);
+
+    return image;
 }
 
 cairo_surface_t *
@@ -705,8 +742,13 @@ cairo_boilerplate_convert_to_image (const char *filename, int page)
 
     image = cairo_boilerplate_image_surface_create_from_ppm_stream (file);
     ret = pclose (file);
+    /* check for fatal errors from the interpreter */
+    if (ret) { /* any2pmm should never die... */
+	cairo_surface_destroy (image);
+	return cairo_boilerplate_surface_create_in_error (CAIRO_STATUS_INVALID_STATUS);
+    }
 
-    if (cairo_surface_status (image) == CAIRO_STATUS_READ_ERROR) {
+    if (ret == 0 && cairo_surface_status (image) == CAIRO_STATUS_READ_ERROR) {
 	if (flags == 0) {
 	    /* Try again in a standalone process. */
 	    cairo_surface_destroy (image);
@@ -714,12 +756,6 @@ cairo_boilerplate_convert_to_image (const char *filename, int page)
 	    goto RETRY;
 	}
     }
-
-    if (cairo_surface_status (image) == CAIRO_STATUS_SUCCESS && ret != 0) {
-	cairo_surface_destroy (image);
-	image =
-	    cairo_boilerplate_surface_create_in_error (CAIRO_STATUS_READ_ERROR);
-    };
 
     return image;
 }

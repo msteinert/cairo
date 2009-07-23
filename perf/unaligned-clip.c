@@ -49,6 +49,9 @@ do_unaligned_clip (cairo_t *cr, int width, int height)
     cairo_rectangle (cr, 55, 55, 35, 35);
     cairo_clip (cr);
 
+    /* And paint something to force the clip to be evaluated. */
+    cairo_paint (cr);
+
     cairo_perf_timer_stop ();
 
     cairo_restore (cr);

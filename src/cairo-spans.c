@@ -149,19 +149,19 @@ _create_scan_converter (cairo_fill_rule_t			 fill_rule,
 }
 
 cairo_status_t
-_cairo_path_fixed_fill_using_spans (
-    cairo_operator_t		 op,
-    const cairo_pattern_t	*pattern,
-    cairo_path_fixed_t		*path,
-    cairo_surface_t		*dst,
-    cairo_fill_rule_t		 fill_rule,
-    double			 tolerance,
-    cairo_antialias_t		 antialias,
-    const cairo_composite_rectangles_t *rects)
+_cairo_path_fixed_fill_using_spans (cairo_operator_t		 op,
+				    const cairo_pattern_t	*pattern,
+				    cairo_path_fixed_t		*path,
+				    cairo_surface_t		*dst,
+				    cairo_fill_rule_t		 fill_rule,
+				    double			 tolerance,
+				    cairo_antialias_t		 antialias,
+				    const cairo_composite_rectangles_t *rects,
+				    cairo_region_t		*clip_region)
 {
     cairo_status_t status;
     cairo_span_renderer_t *renderer = _cairo_surface_create_span_renderer (
-	op, pattern, dst, antialias, rects);
+	op, pattern, dst, antialias, rects, clip_region);
     cairo_scan_converter_t *converter = _create_scan_converter (
 	fill_rule, antialias, rects);
 

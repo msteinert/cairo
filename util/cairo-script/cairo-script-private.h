@@ -386,6 +386,7 @@ struct _csi_matrix {
 struct _csi_string {
     csi_compound_object_t base;
     csi_integer_t len;
+    csi_integer_t deflate;
     char *string;
 };
 
@@ -435,7 +436,6 @@ struct _csi_scanner {
     csi_stack_t procedure_stack;
     csi_object_t build_procedure;
 
-    int string_p;
     unsigned int accumulator;
     unsigned int accumulator_count;
 
@@ -755,6 +755,13 @@ csi_string_new (csi_t *ctx,
 		csi_object_t *obj,
 		const char *str,
 		int len);
+
+csi_private csi_status_t
+csi_string_deflate_new (csi_t *ctx,
+			csi_object_t *obj,
+			void *bytes,
+			int in_len,
+			int out_len);
 
 csi_private csi_status_t
 csi_string_new_from_bytes (csi_t *ctx,

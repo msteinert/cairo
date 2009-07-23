@@ -50,26 +50,17 @@ _return_success (void)
 
 /* These typedefs are just to silence the compiler... */
 typedef cairo_int_status_t
-(*_set_clip_region_func)	(void			*surface,
-				 cairo_region_t		*region);
-typedef cairo_int_status_t
-(*_intersect_clip_path_func)	(void			*dst,
-				 cairo_path_fixed_t	*path,
-				 cairo_fill_rule_t	fill_rule,
-				 double			tolerance,
-				 cairo_antialias_t	antialias);
-typedef cairo_int_status_t
 (*_paint_func)			(void			*surface,
 			         cairo_operator_t	 op,
 				 const cairo_pattern_t	*source,
-				 cairo_rectangle_int_t  *extents);
+				 cairo_clip_t		*clip);
 
 typedef cairo_int_status_t
 (*_mask_func)			(void			*surface,
 			         cairo_operator_t	 op,
 				 const cairo_pattern_t	*source,
 				 const cairo_pattern_t	*mask,
-				 cairo_rectangle_int_t  *extents);
+				 cairo_clip_t		*clip);
 
 typedef cairo_int_status_t
 (*_stroke_func)			(void			*surface,
@@ -81,7 +72,7 @@ typedef cairo_int_status_t
 				 cairo_matrix_t		*ctm_inverse,
 				 double			 tolerance,
 				 cairo_antialias_t	 antialias,
-				 cairo_rectangle_int_t  *extents);
+				 cairo_clip_t		*clip);
 
 typedef cairo_int_status_t
 (*_fill_func)			(void			*surface,
@@ -91,7 +82,7 @@ typedef cairo_int_status_t
 				 cairo_fill_rule_t	 fill_rule,
 				 double			 tolerance,
 				 cairo_antialias_t	 antialias,
-				 cairo_rectangle_int_t  *extents);
+				 cairo_clip_t		*clip);
 
 typedef cairo_int_status_t
 (*_show_glyphs_func)		(void			*surface,
@@ -100,8 +91,8 @@ typedef cairo_int_status_t
 				 cairo_glyph_t		*glyphs,
 				 int			 num_glyphs,
 				 cairo_scaled_font_t	*scaled_font,
-				 int			*remaining_glyphs,
-				 cairo_rectangle_int_t  *extents);
+				 cairo_clip_t		*clip,
+				 int			*remaining_glyphs);
 
 typedef cairo_int_status_t
 (*_show_text_glyphs_func)	(void			    *surface,
@@ -115,7 +106,7 @@ typedef cairo_int_status_t
 				 int			     num_clusters,
 				 cairo_text_cluster_flags_t  cluster_flags,
 				 cairo_scaled_font_t	    *scaled_font,
-				 cairo_rectangle_int_t	    *extents);
+				 cairo_clip_t		    *clip);
 
 static cairo_surface_t *
 _cairo_null_surface_create_similar (void *other,
@@ -125,16 +116,11 @@ _cairo_null_surface_create_similar (void *other,
     return _cairo_test_null_surface_create (content);
 }
 
-static cairo_int_status_t
+static cairo_bool_t
 _cairo_null_surface_get_extents (void *surface,
 				 cairo_rectangle_int_t *extents)
 {
-    extents->x = 0;
-    extents->y = 0;
-    extents->width = 0;
-    extents->height = 0;
-
-    return CAIRO_STATUS_SUCCESS;
+    return FALSE;
 }
 
 static cairo_bool_t
@@ -160,8 +146,6 @@ static const cairo_surface_backend_t null_surface_backend = {
     NULL, /* check_span_renderer */
     NULL, /* copy_page */
     NULL, /* show_page */
-    (_set_clip_region_func) _return_success, /* set_clip_region */
-    (_intersect_clip_path_func) _return_success, /* intersect_clip_path */
     _cairo_null_surface_get_extents,
     NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
@@ -176,7 +160,6 @@ static const cairo_surface_backend_t null_surface_backend = {
     (_show_glyphs_func) _return_success,    /* show_glyphs */
     NULL, /* snapshot */
     NULL, /* is_similar */
-    NULL, /* reset */
     NULL, /* fill_stroke */
     NULL, /* create_solid_pattern_surface */
     NULL, /* can_repaint_solid_pattern_surface */

@@ -45,6 +45,7 @@
 #include "cairo-pdf.h"
 
 #include "cairo-surface-private.h"
+#include "cairo-surface-clipper-private.h"
 #include "cairo-pdf-operators-private.h"
 #include "cairo-path-fixed-private.h"
 
@@ -173,6 +174,8 @@ struct _cairo_pdf_surface {
 	cairo_pdf_resource_t   resource;
 	cairo_bool_t is_knockout;
     } group_stream;
+
+    cairo_surface_clipper_t clipper;
 
     cairo_pdf_operators_t pdf_operators;
     cairo_paginated_mode_t paginated_mode;

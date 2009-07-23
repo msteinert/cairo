@@ -79,11 +79,14 @@ cairo_private = \
 	cairo-path-private.h \
 	cairo-private.h \
 	cairo-reference-count-private.h \
+	cairo-region-private.h \
 	cairo-scaled-font-private.h \
 	cairo-skiplist-private.h \
 	cairo-spans-private.h \
 	cairo-surface-fallback-private.h \
 	cairo-surface-private.h \
+	cairo-surface-clipper-private.h \
+	cairo-surface-wrapper-private.h \
 	cairo-types-private.h \
 	cairo-user-font-private.h \
 	cairo-wideint-private.h \
@@ -138,6 +141,8 @@ cairo_sources = \
 	cairo-stroke-style.c \
 	cairo-surface.c \
 	cairo-surface-fallback.c \
+	cairo-surface-clipper.c \
+	cairo-surface-wrapper.c \
 	cairo-tor-scan-converter.c \
 	cairo-system.c \
 	cairo-traps.c \
@@ -198,12 +203,14 @@ cairo_test_surfaces_private = \
 	test-fallback16-surface.h \
 	test-null-surface.h \
 	test-paginated-surface.h \
+	test-wrapping-surface.h \
 	$(NULL)
 cairo_test_surfaces_sources = \
 	test-fallback-surface.c \
 	test-fallback16-surface.c \
 	test-null-surface.c \
 	test-paginated-surface.c \
+	test-wrapping-surface.c \
 	$(NULL)
 
 cairo_xlib_headers = cairo-xlib.h

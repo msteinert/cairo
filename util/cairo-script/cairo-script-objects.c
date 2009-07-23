@@ -507,12 +507,33 @@ csi_string_new (csi_t *ctx,
 	string->string[len] = '\0';
     }
     string->len = len;
+    string->deflate = 0;
 
     string->base.type = CSI_OBJECT_TYPE_STRING;
     string->base.ref = 1;
 
     obj->type = CSI_OBJECT_TYPE_STRING;
     obj->datum.string = string;
+
+    return CSI_STATUS_SUCCESS;
+}
+
+csi_status_t
+csi_string_deflate_new (csi_t *ctx,
+			csi_object_t *obj,
+			void *bytes,
+			int in_len,
+			int out_len)
+{
+    csi_status_t status;
+    csi_string_t *string;
+
+    status = csi_string_new (ctx, obj, bytes, in_len);
+    if (_csi_unlikely (status))
+	return status;
+
+    string = obj->datum.string;
+    string->deflate = out_len;
 
     return CSI_STATUS_SUCCESS;
 }
@@ -534,6 +555,7 @@ csi_string_new_from_bytes (csi_t *ctx,
 
     string->string = bytes;
     string->len = len;
+    string->deflate = 0;
 
     string->base.type = CSI_OBJECT_TYPE_STRING;
     string->base.ref = 1;

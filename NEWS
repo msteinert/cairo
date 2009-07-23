@@ -9,6 +9,12 @@ API additions:
     Finally exporting the internal meta-surface so that applications
     have a method to record and replay a sequence of drawing commands.
 
+  cairo_in_clip()
+
+    Determines whether a given point is inside the current clip.
+    ??? Should this be called cairo_in_paint() instead? in-clip is the test
+    that is performed, but in-paint would be similar to in-fill and in-stroke.
+
 New utilities:
 
   cairo-test-trace

@@ -42,6 +42,7 @@
 
 #include "cairo-types-private.h"
 #include "cairo-reference-count-private.h"
+#include "cairo-clip-private.h"
 
 typedef void (*cairo_surface_func_t) (cairo_surface_t *);
 
@@ -76,24 +77,6 @@ struct _cairo_surface {
      */
     double x_fallback_resolution;
     double y_fallback_resolution;
-
-    cairo_clip_t *clip;
-
-    /*
-     * Each time a clip region is modified, it gets the next value in this
-     * sequence.  This means that clip regions for this surface are uniquely
-     * identified and updates to the clip can be readily identified
-     */
-    unsigned int next_clip_serial;
-    /*
-     * The serial number of the current clip.  This is set when
-     * the surface clipping is set.  The gstate can then cheaply
-     * check whether the surface clipping is already correct before
-     * performing a rendering operation.
-     *
-     * The special value '0' is reserved for the unclipped case.
-     */
-    unsigned int current_clip_serial;
 
     /* A "snapshot" surface is immutable. See _cairo_surface_snapshot. */
     cairo_surface_t *snapshot_of;

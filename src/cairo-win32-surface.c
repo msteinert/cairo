@@ -468,7 +468,8 @@ _cairo_win32_surface_clone_similar (void *abstract_surface,
 				       src_x, src_y,
 				       0, 0,
 				       0, 0,
-				       width, height);
+				       width, height,
+				       NULL);
 
     _cairo_pattern_fini (&pattern.base);
 
@@ -693,6 +694,91 @@ _cairo_win32_surface_release_dest_image (void                    *abstract_surfa
     cairo_surface_destroy ((cairo_surface_t *)local);
 }
 
+cairo_status_t
+_cairo_win32_surface_set_clip_region (void           *abstract_surface,
+				      cairo_region_t *region)
+{
+    cairo_win32_surface_t *surface = abstract_surface;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+
+    if (surface->clip_region == region)
+	return CAIRO_STATUS_SUCCESS;
+
+    cairo_region_destroy (surface->clip_region);
+    surface->clip_region = cairo_region_reference (region);
+
+    /* The semantics we want is that any clip set by cairo combines
+     * is intersected with the clip on device context that the
+     * surface was created for. To implement this, we need to
+     * save the original clip when first setting a clip on surface.
+     */
+
+    /* Clear any clip set by cairo, return to the original first */
+    status = _cairo_win32_restore_initial_clip (surface);
+
+    /* Then combine any new region with it */
+    if (region) {
+	cairo_rectangle_int_t extents;
+	int num_rects;
+	RGNDATA *data;
+	size_t data_size;
+	RECT *rects;
+	int i;
+	HRGN gdi_region;
+
+	/* Create a GDI region for the cairo region */
+
+	cairo_region_get_extents (region, &extents);
+	num_rects = cairo_region_num_rectangles (region);
+	/* XXX see notes in _cairo_win32_save_initial_clip --
+	 * this code will interact badly with a HDC which had an initial
+	 * world transform -- we should probably manually transform the
+	 * region rects, because SelectClipRgn takes device units, not
+	 * logical units (unlike IntersectClipRect).
+	 */
+
+	data_size = sizeof (RGNDATAHEADER) + num_rects * sizeof (RECT);
+	data = malloc (data_size);
+	if (!data)
+	    return _cairo_error(CAIRO_STATUS_NO_MEMORY);
+	rects = (RECT *)data->Buffer;
+
+	data->rdh.dwSize = sizeof (RGNDATAHEADER);
+	data->rdh.iType = RDH_RECTANGLES;
+	data->rdh.nCount = num_rects;
+	data->rdh.nRgnSize = num_rects * sizeof (RECT);
+	data->rdh.rcBound.left = extents.x;
+	data->rdh.rcBound.top = extents.y;
+	data->rdh.rcBound.right = extents.x + extents.width;
+	data->rdh.rcBound.bottom = extents.y + extents.height;
+
+	for (i = 0; i < num_rects; i++) {
+	    cairo_rectangle_int_t rect;
+
+	    cairo_region_get_rectangle (region, i, &rect);
+
+	    rects[i].left   = rect.x;
+	    rects[i].top    = rect.y;
+	    rects[i].right  = rect.x + rect.width;
+	    rects[i].bottom = rect.y + rect.height;
+	}
+
+	gdi_region = ExtCreateRegion (NULL, data_size, data);
+	free (data);
+
+	if (!gdi_region)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+	/* AND the new region into our DC */
+	if (ExtSelectClipRgn (surface->dc, gdi_region, RGN_AND) == ERROR)
+	    status = _cairo_win32_print_gdi_error ("_cairo_win32_surface_set_clip_region");
+
+	DeleteObject (gdi_region);
+    }
+
+    return status;
+}
+
 #if !defined(AC_SRC_OVER)
 #define AC_SRC_OVER                 0x00
 #pragma pack(1)
@@ -889,7 +975,8 @@ _cairo_win32_surface_composite (cairo_operator_t	op,
 				int			dst_x,
 				int			dst_y,
 				unsigned int		width,
-				unsigned int		height)
+				unsigned int		height,
+				cairo_region_t	       *clip_region)
 {
     cairo_win32_surface_t *dst = abstract_dst;
     cairo_win32_surface_t *src;
@@ -1030,7 +1117,7 @@ _cairo_win32_surface_composite (cairo_operator_t	op,
     fflush (stderr);
 #endif
 
-    /* If the src recangle doesn't wholly lie within the src extents,
+    /* If the src rectangle doesn't wholly lie within the src extents,
      * fudge things.  We really need to do fixup on the unpainted
      * region -- e.g. the SOURCE operator is broken for areas outside
      * of the extents, because it won't clear that area to transparent
@@ -1149,6 +1236,10 @@ _cairo_win32_surface_composite (cairo_operator_t	op,
 	     dst_r.x, dst_r.y, dst_r.width, dst_r.height);
     fflush (stderr);
 #endif
+
+    status = _cairo_win32_surface_set_clip_region (dst, clip_region);
+    if (status)
+	return status;
 
     /* If we need to repeat, we turn the repeated blit into
      * a bunch of piece-by-piece blits.
@@ -1283,7 +1374,8 @@ UNSUPPORTED:
 					       src_x, src_y,
 					       mask_x, mask_y,
 					       dst_x, dst_y,
-					       width, height);
+					       width, height,
+					       clip_region);
     }
 
     return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1387,6 +1479,10 @@ _cairo_win32_surface_fill_rectangles (void			*abstract_surface,
     if (surface->format != CAIRO_FORMAT_RGB24)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    status = _cairo_win32_surface_set_clip_region (surface, NULL);
+    if (status)
+	return status;
+
     /* Optimize for no destination alpha (surface->pixman_image is non-NULL for all
      * surfaces with alpha.)
      */
@@ -1432,133 +1528,20 @@ _cairo_win32_surface_fill_rectangles (void			*abstract_surface,
     return status;
 }
 
-static cairo_int_status_t
-_cairo_win32_surface_set_clip_region (void           *abstract_surface,
-				      cairo_region_t *region)
-{
-    cairo_win32_surface_t *surface = abstract_surface;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
-
-    /* If we are in-memory, then we set the clip on the image surface
-     * as well as on the underlying GDI surface.
-     */
-    if (surface->image) {
-	unsigned int serial;
-
-	serial = _cairo_surface_allocate_clip_serial (surface->image);
-	status = _cairo_surface_set_clip_region (surface->image, region, serial);
-	if (status)
-	    return status;
-    }
-
-    /* The semantics we want is that any clip set by cairo combines
-     * is intersected with the clip on device context that the
-     * surface was created for. To implement this, we need to
-     * save the original clip when first setting a clip on surface.
-     */
-
-    /* Clear any clip set by cairo, return to the original first */
-    status = _cairo_win32_restore_initial_clip (surface);
-
-    /* Then combine any new region with it */
-    if (region) {
-	cairo_rectangle_int_t extents;
-	int num_rects;
-	RGNDATA *data;
-	size_t data_size;
-	RECT *rects;
-	int i;
-	HRGN gdi_region;
-	cairo_rectangle_int_t rect0;
-
-	/* Create a GDI region for the cairo region */
-
-	cairo_region_get_extents (region, &extents);
-	num_rects = cairo_region_num_rectangles (region);
-
-	if (num_rects == 1)
-	    cairo_region_get_rectangle (region, 0, &rect0);
-	    
-	if (num_rects == 1 &&
-	    rect0.x == 0 &&
-	    rect0.y == 0 &&
-	    rect0.width == surface->extents.width &&
-	    rect0.width == surface->extents.height)
-	{
-	    gdi_region = NULL;
-	    
-	    SelectClipRgn (surface->dc, NULL);
-	    IntersectClipRect (surface->dc,
-			       rect0.x,
-			       rect0.y,
-			       rect0.x + rect0.width,
-			       rect0.y + rect0.height);
-	} else {
-	    /* XXX see notes in _cairo_win32_save_initial_clip --
-	     * this code will interact badly with a HDC which had an initial
-	     * world transform -- we should probably manually transform the
-	     * region rects, because SelectClipRgn takes device units, not
-	     * logical units (unlike IntersectClipRect).
-	     */
-
-	    data_size = sizeof (RGNDATAHEADER) + num_rects * sizeof (RECT);
-	    data = malloc (data_size);
-	    if (!data)
-		return _cairo_error(CAIRO_STATUS_NO_MEMORY);
-	    rects = (RECT *)data->Buffer;
-
-	    data->rdh.dwSize = sizeof (RGNDATAHEADER);
-	    data->rdh.iType = RDH_RECTANGLES;
-	    data->rdh.nCount = num_rects;
-	    data->rdh.nRgnSize = num_rects * sizeof (RECT);
-	    data->rdh.rcBound.left = extents.x;
-	    data->rdh.rcBound.top = extents.y;
-	    data->rdh.rcBound.right = extents.x + extents.width;
-	    data->rdh.rcBound.bottom = extents.y + extents.height;
-
-	    for (i = 0; i < num_rects; i++) {
-		cairo_rectangle_int_t rect;
-
-	        cairo_region_get_rectangle (region, i, &rect);
-		
-		rects[i].left = rect.x;
-		rects[i].top = rect.y;
-		rects[i].right = rect.x + rect.width;
-		rects[i].bottom = rect.y + rect.height;
-	    }
-
-	    gdi_region = ExtCreateRegion (NULL, data_size, data);
-	    free (data);
-
-	    if (!gdi_region)
-		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-	    /* AND the new region into our DC */
-	    if (ExtSelectClipRgn (surface->dc, gdi_region, RGN_AND) == ERROR)
-		status = _cairo_win32_print_gdi_error ("_cairo_win32_surface_set_clip_region");
-
-	    DeleteObject (gdi_region);
-	}
-    }
-
-    return status;
-}
-
-cairo_int_status_t
+cairo_bool_t
 _cairo_win32_surface_get_extents (void		          *abstract_surface,
 				  cairo_rectangle_int_t   *rectangle)
 {
     cairo_win32_surface_t *surface = abstract_surface;
 
     *rectangle = surface->extents;
-
-    return CAIRO_STATUS_SUCCESS;
+    return TRUE;
 }
 
 static cairo_status_t
 _cairo_win32_surface_flush (void *abstract_surface)
 {
-    return _cairo_surface_reset_clip (abstract_surface);
+    return _cairo_win32_surface_set_clip_region (abstract_surface, NULL);
 }
 
 #define STACK_GLYPH_SIZE 256
@@ -1570,8 +1553,8 @@ _cairo_win32_surface_show_glyphs (void			*surface,
 				  cairo_glyph_t		*glyphs,
 				  int			 num_glyphs,
 				  cairo_scaled_font_t	*scaled_font,
-				  int			*remaining_glyphs,
-				  cairo_rectangle_int_t *extents)
+				  cairo_clip_t		*clip,
+				  int			*remaining_glyphs)
 {
 #if CAIRO_HAS_WIN32_FONT
     cairo_win32_surface_t *dst = surface;
@@ -1611,11 +1594,19 @@ _cairo_win32_surface_show_glyphs (void			*surface,
     /* If we have a fallback mask clip set on the dst, we have
      * to go through the fallback path, but only if we're not
      * doing this for printing */
-    if (dst->base.clip  &&
-	!(dst->flags & CAIRO_WIN32_SURFACE_FOR_PRINTING) &&
-	(dst->base.clip->mode != CAIRO_CLIP_MODE_REGION ||
-	 dst->base.clip->surface != NULL))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+    if (clip != NULL) {
+	if ((dst->flags & CAIRO_WIN32_SURFACE_FOR_PRINTING) == 0) {
+	    cairo_region_t *clip_region;
+	    cairo_status_t status;
+
+	    status = _cairo_clip_get_region (clip, &clip_region);
+	    assert (status != CAIRO_INT_STATUS_NOTHING_TO_DO);
+	    if (status)
+		return status;
+
+	    _cairo_win32_surface_set_clip_region (surface, clip_region);
+	}
+    }
 
     solid_pattern = (cairo_solid_pattern_t *)source;
     color = RGB(((int)solid_pattern->color.red_short) >> 8,
@@ -1957,19 +1948,6 @@ _cairo_win32_surface_is_similar (void *surface_a,
     return a->dc == b->dc;
 }
 
-static cairo_status_t
-_cairo_win32_surface_reset (void *abstract_surface)
-{
-    cairo_win32_surface_t *surface = abstract_surface;
-    cairo_status_t status;
-
-    status = _cairo_win32_surface_set_clip_region (surface, NULL);
-    if (status)
-	return status;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 typedef struct _cairo_win32_surface_span_renderer {
     cairo_span_renderer_t base;
 
@@ -1979,6 +1957,7 @@ typedef struct _cairo_win32_surface_span_renderer {
 
     cairo_image_surface_t *mask;
     cairo_win32_surface_t *dst;
+    cairo_region_t *clip_region;
 
     cairo_composite_rectangles_t composite_rectangles;
 } cairo_win32_surface_span_renderer_t;
@@ -2031,18 +2010,20 @@ _cairo_win32_surface_span_renderer_finish (void *abstract_renderer)
 		    rects->src.y,
 		    0, 0,		/* mask.x, mask.y */
 		    rects->dst.x, rects->dst.y,
-		    rects->width, rects->height);
+		    rects->width, rects->height,
+		    renderer->clip_region);
 	} else {
 	    /* otherwise go through the fallback_composite path which
 	     * will do the appropriate surface acquisition */
 	    status = _cairo_surface_fallback_composite (
 		    renderer->op,
-		    renderer->pattern, mask_pattern, dst,
+		    renderer->pattern, mask_pattern, &dst->base,
 		    rects->src.x,
 		    rects->src.y,
 		    0, 0,		/* mask.x, mask.y */
 		    rects->dst.x, rects->dst.y,
-		    rects->width, rects->height);
+		    rects->width, rects->height,
+		    renderer->clip_region);
 	}
 	cairo_pattern_destroy (mask_pattern);
 
@@ -2073,15 +2054,16 @@ _cairo_win32_surface_create_span_renderer (cairo_operator_t	 op,
 					   const cairo_pattern_t  *pattern,
 					   void			*abstract_dst,
 					   cairo_antialias_t	 antialias,
-					   const cairo_composite_rectangles_t *rects)
+					   const cairo_composite_rectangles_t *rects,
+					   cairo_region_t	*clip_region)
 {
     cairo_win32_surface_t *dst = abstract_dst;
-    cairo_win32_surface_span_renderer_t *renderer
-	= calloc(1, sizeof(*renderer));
+    cairo_win32_surface_span_renderer_t *renderer;
     cairo_status_t status;
     int width = rects->width;
     int height = rects->height;
 
+    renderer = calloc(1, sizeof(*renderer));
     if (renderer == NULL)
 	return _cairo_span_renderer_create_in_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -2093,6 +2075,7 @@ _cairo_win32_surface_create_span_renderer (cairo_operator_t	 op,
     renderer->pattern = pattern;
     renderer->antialias = antialias;
     renderer->dst = dst;
+    renderer->clip_region = clip_region;
 
     renderer->composite_rectangles = *rects;
 
@@ -2128,8 +2111,6 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
     _cairo_win32_surface_check_span_renderer,
     NULL, /* copy_page */
     NULL, /* show_page */
-    _cairo_win32_surface_set_clip_region,
-    NULL, /* intersect_clip_path */
     _cairo_win32_surface_get_extents,
     NULL, /* old_show_glyphs */
     NULL, /* get_font_options */
@@ -2146,8 +2127,6 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
 
     NULL,  /* snapshot */
     _cairo_win32_surface_is_similar,
-
-    _cairo_win32_surface_reset
 };
 
 /* Notes:
