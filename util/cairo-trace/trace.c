@@ -2320,7 +2320,6 @@ cairo_identity_matrix (cairo_t *cr)
     return DLCALL (cairo_identity_matrix, cr);
 }
 
-
 void
 cairo_new_path (cairo_t *cr)
 {
@@ -2817,9 +2816,7 @@ cairo_set_scaled_font (cairo_t *cr, const cairo_scaled_font_t *scaled_font)
 static void
 _emit_matrix (const cairo_matrix_t *m)
 {
-    if (m->xx == 1.0 && m->yx == 0.0 &&
-	m->xy == 0.0 && m->yy == 1.0 &&
-	m->x0 == 0.0 && m->y0 == 0.0)
+    if (_matrix_is_identity(m))
     {
 	_trace_printf ("identity");
     }
