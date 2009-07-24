@@ -768,7 +768,9 @@ _write_lock (void)
     if (! _init_logfile ())
 	return false;
 
+#if HAVE_FLOCKFILE && HAVE_FUNLOCKFILE
     flockfile (logfile);
+#endif
     return true;
 }
 
@@ -778,7 +780,9 @@ _write_unlock (void)
     if (logfile == NULL)
 	return;
 
+#if HAVE_FLOCKFILE && HAVE_FUNLOCKFILE
     funlockfile (logfile);
+#endif
 
     if (_flush)
 	fflush (logfile);
