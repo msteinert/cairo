@@ -73,6 +73,18 @@ dnl ====================================================================
 dnl Header/function checks
 dnl ====================================================================
 
+dnl check if we have a __builtin_return_address for the cairo-trace
+dnl utility.
+AC_MSG_CHECKING([for __builtin_return_address(0)])
+AC_TRY_COMPILE([],[__builtin_return_address(0);],
+		[have_builtin_return_address=yes],
+		[have_builtin_return_address=no])
+AC_MSG_RESULT($have_builtin_return_address)
+if test "x$have_builtin_return_address" = "xyes"; then
+    AC_DEFINE(HAVE_BUILTIN_RETURN_ADDRESS, 1,
+	[Define to 1 if your compiler supports the __builtin_return_address() intrinsic.])
+fi
+
 dnl Checks for precise integer types
 AC_CHECK_HEADERS([stdint.h inttypes.h sys/int_types.h])
 AC_CHECK_TYPES([uint64_t, uint128_t])

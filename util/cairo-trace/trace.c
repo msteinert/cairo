@@ -177,7 +177,7 @@ static bool _line_info;
 static bool _mark_dirty;
 static const cairo_user_data_key_t destroy_key;
 
-#if __GNUC__ >= 3
+#if HAVE_BUILTIN_RETURN_ADDRESS
 #define _emit_line_info() do { \
     if (_line_info && _write_lock ()) { \
 	void *addr = __builtin_return_address(0); \
