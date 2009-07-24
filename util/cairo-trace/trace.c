@@ -829,10 +829,30 @@ static Object *current_object[2048]; /* XXX limit operand stack */
 static int current_stack_depth;
 
 static void
+ensure_operands (int num_operands)
+{
+    if (current_stack_depth < num_operands)
+    {
+	int n;
+
+	fprintf (stderr, "Operand stack underflow!\n");
+	for (n = 0; n < current_stack_depth; n++) {
+	    Object *obj = current_object[n];
+
+	    fprintf (stderr, "  [%3d] = %s%ld\n",
+		     n, obj->type->op_code, obj->token);
+	}
+
+	abort ();
+    }
+}
+
+static void
 _consume_operand (void)
 {
     Object *obj;
 
+    ensure_operands (1);
     obj = current_object[--current_stack_depth];
     if (! obj->defined) {
 	_trace_printf ("dup /%s%ld exch def\n",
@@ -848,6 +868,7 @@ _exch_operands (void)
 {
     Object *tmp;
 
+    ensure_operands (2);
     tmp = current_object[current_stack_depth-1];
     tmp->operand--;
     current_object[current_stack_depth-1] = current_object[current_stack_depth-2];
@@ -871,6 +892,7 @@ _pop_operands_to_object (Object *obj)
     while (current_stack_depth > obj->operand + 1) {
 	Object *c_obj;
 
+	ensure_operands (1);
 	c_obj = current_object[--current_stack_depth];
 	c_obj->operand = -1;
 	if (! c_obj->defined) {
@@ -912,8 +934,7 @@ _push_operand (enum operand_type t, const void *ptr)
 {
     Object *obj = _get_object (t, ptr);
 
-    if (current_stack_depth ==
-	sizeof (current_object) / sizeof (current_object[0]))
+    if (current_stack_depth == ARRAY_LENGTH (current_object))
     {
 	int n;
 
@@ -936,6 +957,7 @@ static void
 _object_remove (Object *obj)
 {
     if (obj->operand != -1) {
+	ensure_operands (1);
 	if (obj->operand == current_stack_depth - 1) {
 	    _trace_printf ("pop %% %s%ld destroyed\n",
 			   obj->type->op_code, obj->token);
