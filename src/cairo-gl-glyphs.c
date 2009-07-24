@@ -520,50 +520,91 @@ _cairo_gl_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 	glyph_private->owner = NULL;
 }
 
-static void
-_cairo_gl_emit_glyph_rectangle (cairo_gl_context_t *ctx,
-				cairo_gl_composite_setup_t *setup,
-				int x1, int y1,
-				int x2, int y2,
-				cairo_gl_glyph_private_t *glyph,
-				float *vertices, float *texcoord_src,
-				float *texcoord_mask)
+typedef struct _cairo_gl_glyphs_setup
 {
-    double s, t;
+    unsigned int vbo_size; /* units of floats */
+    unsigned int vb_offset; /* units of floats */
+    unsigned int vertex_size; /* units of floats */
+    unsigned int num_prims;
+    float *vb;
+    cairo_gl_composite_setup_t *composite;
+} cairo_gl_glyphs_setup_t;
+
+static void
+_cairo_gl_flush_glyphs (cairo_gl_context_t *ctx,
+			cairo_gl_glyphs_setup_t *setup)
+{
     int i;
-    cairo_surface_attributes_t *src_attributes;
 
-    src_attributes = &setup->src.operand.texture.attributes;
+    if (setup->vb != NULL) {
+	glUnmapBufferARB (GL_ARRAY_BUFFER_ARB);
+	setup->vb = NULL;
 
-    vertices[0] = x1;
-    vertices[1] = y1;
-    vertices[2] = x2;
-    vertices[3] = y1;
-    vertices[4] = x2;
-    vertices[5] = y2;
-    vertices[6] = x1;
-    vertices[7] = y2;
-
-    if (setup->src.type == OPERAND_TEXTURE) {
-	for (i = 0; i < 4; i++) {
-	    s = vertices[i * 2];
-	    t = vertices[i * 2 + 1];
-	    cairo_matrix_transform_point (&src_attributes->matrix, &s, &t);
-	    texcoord_src[i * 2] = s;
-	    texcoord_src[i * 2 + 1] = t;
+	if (setup->num_prims != 0) {
+	    glDrawArrays (GL_QUADS, 0, 4 * setup->num_prims);
+	    setup->num_prims = 0;
 	}
     }
 
-    texcoord_mask[0] = glyph->p1.x;
-    texcoord_mask[1] = glyph->p1.y;
-    texcoord_mask[2] = glyph->p2.x;
-    texcoord_mask[3] = glyph->p1.y;
-    texcoord_mask[4] = glyph->p2.x;
-    texcoord_mask[5] = glyph->p2.y;
-    texcoord_mask[6] = glyph->p1.x;
-    texcoord_mask[7] = glyph->p2.y;
+    for (i = 0; i < ARRAY_LENGTH (ctx->glyph_cache); i++) {
+	_rtree_unlock (&ctx->glyph_cache[i].rtree,
+		       &ctx->glyph_cache[i].rtree.root);
+    }
+}
 
-    glDrawArrays (GL_QUADS, 0, 4);
+static void
+_cairo_gl_glyphs_emit_vertex (cairo_gl_glyphs_setup_t *setup,
+			      int x, int y, float glyph_x, float glyph_y)
+{
+    int i = 0;
+    float *vb = &setup->vb[setup->vb_offset];
+    cairo_surface_attributes_t *src_attributes;
+
+    src_attributes = &setup->composite->src.operand.texture.attributes;
+
+    vb[i++] = x;
+    vb[i++] = y;
+
+    vb[i++] = glyph_x;
+    vb[i++] = glyph_y;
+
+    if (setup->composite->src.type == OPERAND_TEXTURE) {
+	double s = x;
+	double t = y;
+	cairo_matrix_transform_point (&src_attributes->matrix, &s, &t);
+	vb[i++] = s;
+	vb[i++] = t;
+    }
+
+    setup->vb_offset += setup->vertex_size;
+}
+
+
+static void
+_cairo_gl_emit_glyph_rectangle (cairo_gl_context_t *ctx,
+				cairo_gl_glyphs_setup_t *setup,
+				int x1, int y1,
+				int x2, int y2,
+				cairo_gl_glyph_private_t *glyph)
+{
+    if (setup->vb != NULL &&
+	setup->vb_offset + 4 * setup->vertex_size > setup->vbo_size) {
+	_cairo_gl_flush_glyphs (ctx, setup);
+    }
+
+    if (setup->vb == NULL) {
+	glBufferDataARB (GL_ARRAY_BUFFER_ARB,
+			 setup->vbo_size * sizeof (GLfloat),
+			 NULL, GL_STREAM_DRAW_ARB);
+	setup->vb = glMapBufferARB (GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY_ARB);
+	setup->vb_offset = 0;
+    }
+
+    _cairo_gl_glyphs_emit_vertex (setup, x1, y1, glyph->p1.x, glyph->p1.y);
+    _cairo_gl_glyphs_emit_vertex (setup, x2, y1, glyph->p2.x, glyph->p1.y);
+    _cairo_gl_glyphs_emit_vertex (setup, x2, y2, glyph->p2.x, glyph->p2.y);
+    _cairo_gl_glyphs_emit_vertex (setup, x1, y2, glyph->p1.x, glyph->p2.y);
+    setup->num_prims++;
 }
 
 cairo_int_status_t
@@ -583,10 +624,11 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
     cairo_gl_glyph_cache_t *cache = NULL;
     cairo_status_t status;
     int i = 0;
-    cairo_gl_composite_setup_t setup;
-    float vertices[4 * 2], texcoord_src[4 * 2], texcoord_mask[4 * 2];
     cairo_region_t *clip_region = NULL;
     cairo_solid_pattern_t solid_pattern;
+    cairo_gl_glyphs_setup_t setup;
+    cairo_gl_composite_setup_t composite_setup;
+    GLuint vbo = 0;
 
     /* Just let unbounded operators go through the fallback code
      * instead of trying to do the fixups here */
@@ -660,7 +702,7 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
     if (unlikely (status))
 	return status;
 
-    status = _cairo_gl_operand_init (&setup.src, source, dst,
+    status = _cairo_gl_operand_init (&composite_setup.src, source, dst,
 				     extents.x, extents.y,
 				     extents.x, extents.y,
 				     extents.width, extents.height);
@@ -693,7 +735,7 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
     if (status != CAIRO_STATUS_SUCCESS)
 	goto CLEANUP_CONTEXT;
 
-    _cairo_gl_set_src_operand (ctx, &setup);
+    _cairo_gl_set_src_operand (ctx, &composite_setup);
 
     _cairo_scaled_font_freeze_cache (scaled_font);
     if (! _cairo_gl_surface_owns_font (dst, scaled_font))
@@ -705,15 +747,36 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 	scaled_font->surface_backend = &_cairo_gl_surface_backend;
     }
 
-    glVertexPointer (2, GL_FLOAT, sizeof (GLfloat) * 2, vertices);
+    /* Create our VBO so that we can accumulate a bunch of glyph primitives
+     * into one giant DrawArrays.
+     */
+    memset(&setup, 0, sizeof(setup));
+    setup.composite = &composite_setup;
+    setup.vertex_size = 4;
+    if (composite_setup.src.type == OPERAND_TEXTURE)
+	setup.vertex_size += 2;
+    setup.vbo_size = num_glyphs * 4 * setup.vertex_size;
+    if (setup.vbo_size > 4096)
+	setup.vbo_size = 4096;
+
+    glGenBuffersARB (1, &vbo);
+    glBindBufferARB (GL_ARRAY_BUFFER_ARB, vbo);
+
+    glVertexPointer (2, GL_FLOAT, setup.vertex_size * sizeof (GLfloat),
+		     (void *)(uintptr_t)(0));
     glEnableClientState (GL_VERTEX_ARRAY);
-    if (setup.src.type == OPERAND_TEXTURE) {
+    if (composite_setup.src.type == OPERAND_TEXTURE) {
+	/* Note that we're packing texcoord 0 after texcoord 1, for
+	 * convenience.
+	 */
 	glClientActiveTexture (GL_TEXTURE0);
-	glTexCoordPointer (2, GL_FLOAT, sizeof (GLfloat) * 2, texcoord_src);
+	glTexCoordPointer (2, GL_FLOAT, setup.vertex_size * sizeof (GLfloat),
+			   (void *)(uintptr_t)(4 * sizeof (GLfloat)));
 	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
     }
     glClientActiveTexture (GL_TEXTURE1);
-    glTexCoordPointer (2, GL_FLOAT, sizeof (GLfloat) * 2, texcoord_mask);
+    glTexCoordPointer (2, GL_FLOAT, setup.vertex_size * sizeof (GLfloat),
+		       (void *)(uintptr_t)(2 * sizeof (GLfloat)));
     glEnableClientState (GL_TEXTURE_COORD_ARRAY);
 
     for (i = 0; i < num_glyphs; i++) {
@@ -741,6 +804,9 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 	}
 
 	if (scaled_glyph->surface->format != last_format) {
+	    /* Switching textures, so flush any queued prims. */
+	    _cairo_gl_flush_glyphs (ctx, &setup);
+
 	    glActiveTexture (GL_TEXTURE1);
 	    status = cairo_gl_context_get_glyph_cache (ctx,
 						       scaled_glyph->surface->format,
@@ -759,16 +825,8 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 		goto FINISH;
 
 	    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
-		int n;
-
-		/* If we were accumulating VBOs like sensible people, this is where
-		 * we'd flush because the cache was full.  But we're slackers.
-		 */
-
-		for (n = 0; n < ARRAY_LENGTH (ctx->glyph_cache); n++) {
-		    _rtree_unlock (&ctx->glyph_cache[n].rtree,
-				   &ctx->glyph_cache[n].rtree.root);
-		}
+		/* Cache is full, so flush existing prims and try again. */
+		_cairo_gl_flush_glyphs (ctx, &setup);
 	    }
 
 	    status = _cairo_gl_glyph_cache_add_glyph (cache, scaled_glyph);
@@ -786,12 +844,12 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 
 	_cairo_gl_emit_glyph_rectangle (ctx, &setup,
 					x1, y1, x2, y2,
-					_cairo_gl_glyph_cache_lock (cache, scaled_glyph),
-					vertices, texcoord_src, texcoord_mask);
+					_cairo_gl_glyph_cache_lock (cache, scaled_glyph));
     }
 
     status = CAIRO_STATUS_SUCCESS;
   FINISH:
+    _cairo_gl_flush_glyphs (ctx, &setup);
     _cairo_scaled_font_thaw_cache (scaled_font);
 
   CLEANUP_CONTEXT:
@@ -809,9 +867,14 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
     glActiveTexture (GL_TEXTURE1);
     glDisable (GL_TEXTURE_2D);
 
+    if (vbo != 0) {
+	glBindBufferARB (GL_ARRAY_BUFFER_ARB, 0);
+	glDeleteBuffersARB (1, &vbo);
+    }
+
     _cairo_gl_context_release (ctx);
 
-    _cairo_gl_operand_destroy (&setup.src);
+    _cairo_gl_operand_destroy (&composite_setup.src);
 
     *remaining_glyphs = num_glyphs - i;
     return status;
