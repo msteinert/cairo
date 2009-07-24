@@ -82,7 +82,6 @@ cairo_private = \
 	cairo-region-private.h \
 	cairo-rtree-private.h \
 	cairo-scaled-font-private.h \
-	cairo-skiplist-private.h \
 	cairo-spans-private.h \
 	cairo-surface-fallback-private.h \
 	cairo-surface-private.h \
@@ -136,7 +135,6 @@ cairo_sources = \
 	cairo-region.c \
 	cairo-rtree.c \
 	cairo-scaled-font.c \
-	cairo-skiplist.c \
 	cairo-slope.c \
 	cairo-spans.c \
 	cairo-spline.c \

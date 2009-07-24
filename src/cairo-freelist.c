@@ -104,8 +104,9 @@ _cairo_freepool_init (cairo_freepool_t *freepool, unsigned nodesize)
 
 	node->next = freepool->first_free_node;
 	freepool->first_free_node = node;
-	VG (VALGRIND_MAKE_MEM_NOACCESS (node, freepool->nodesize));
     }
+    VG (VALGRIND_MAKE_MEM_NOACCESS (freepool->embedded_pool,
+				    sizeof (freepool->embedded_pool)));
 }
 
 void
@@ -133,7 +134,7 @@ _cairo_freepool_alloc_from_new_pool (cairo_freepool_t *freepool)
 
     poolsize = (128 * freepool->nodesize + 8191) & -8192;
     node = malloc (poolsize);
-    if (node == NULL)
+    if (unlikely (node == NULL))
 	return node;
 
     node->next = freepool->pools;
@@ -150,8 +151,9 @@ _cairo_freepool_alloc_from_new_pool (cairo_freepool_t *freepool)
 
 	node->next = freepool->first_free_node;
 	freepool->first_free_node = node;
-	VG (VALGRIND_MAKE_MEM_NOACCESS (node, freepool->nodesize));
     }
+    VG (VALGRIND_MAKE_MEM_NOACCESS (freepool->pools,
+				    (128 * freepool->nodesize + 8191) & -8192));
 
     return ptr;
 }
