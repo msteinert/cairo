@@ -1366,53 +1366,61 @@ _emit_data (const void *data, unsigned int length)
 static const char *
 _format_to_string (cairo_format_t format)
 {
-    const char *names[] = {
-	"ARGB32",	/* CAIRO_FORMAT_ARGB32 */
-	"RGB24",	/* CAIRO_FORMAT_RGB24 */
-	"A8",		/* CAIRO_FORMAT_A8 */
-	"A1"		/* CAIRO_FORMAT_A1 */
-    };
-    return names[format];
+#define f(name) case CAIRO_FORMAT_ ## name: return #name
+    switch (format) {
+	f(ARGB32);
+	f(RGB24);
+	f(A8);
+	f(A1);
+    }
+#undef f
+    return "UNKNOWN_FORMAT";
 }
 
 static const char *
 _status_to_string (cairo_status_t status)
 {
-    const char *names[] = {
-	"STATUS_SUCCESS",
-	"STATUS_NO_MEMORY",
-	"STATUS_INVALID_RESTORE",
-	"STATUS_INVALID_POP_GROUP",
-	"STATUS_NO_CURRENT_POINT",
-	"STATUS_INVALID_MATRIX",
-	"STATUS_INVALID_STATUS",
-	"STATUS_NULL_POINTER",
-	"STATUS_INVALID_STRING",
-	"STATUS_INVALID_PATH_DATA",
-	"STATUS_READ_ERROR",
-	"STATUS_WRITE_ERROR",
-	"STATUS_SURFACE_FINISHED",
-	"STATUS_SURFACE_TYPE_MISMATCH",
-	"STATUS_PATTERN_TYPE_MISMATCH",
-	"STATUS_INVALID_CONTENT",
-	"STATUS_INVALID_FORMAT",
-	"STATUS_INVALID_VISUAL",
-	"STATUS_FILE_NOT_FOUND",
-	"STATUS_INVALID_DASH",
-	"STATUS_INVALID_DSC_COMMENT",
-	"STATUS_INVALID_INDEX",
-	"STATUS_CLIP_NOT_REPRESENTABLE",
-	"STATUS_TEMP_FILE_ERROR",
-	"STATUS_INVALID_STRIDE",
-	"STATUS_FONT_TYPE_MISMATCH",
-	"STATUS_USER_FONT_IMMUTABLE",
-	"STATUS_USER_FONT_ERROR",
-	"STATUS_NEGATIVE_COUNT",
-	"STATUS_INVALID_CLUSTERS",
-	"STATUS_INVALID_SLANT",
-	"STATUS_INVALID_WEIGHT"
-    };
-    return names[status];
+#define f(name) case CAIRO_STATUS_ ## name: return "STATUS_" #name
+    switch (status) {
+	f(SUCCESS);
+	f(NO_MEMORY);
+	f(INVALID_RESTORE);
+	f(INVALID_POP_GROUP);
+	f(NO_CURRENT_POINT);
+	f(INVALID_MATRIX);
+	f(INVALID_STATUS);
+	f(NULL_POINTER);
+	f(INVALID_STRING);
+	f(INVALID_PATH_DATA);
+	f(READ_ERROR);
+	f(WRITE_ERROR);
+	f(SURFACE_FINISHED);
+	f(SURFACE_TYPE_MISMATCH);
+	f(PATTERN_TYPE_MISMATCH);
+	f(INVALID_CONTENT);
+	f(INVALID_FORMAT);
+	f(INVALID_VISUAL);
+	f(FILE_NOT_FOUND);
+	f(INVALID_DASH);
+	f(INVALID_DSC_COMMENT);
+	f(INVALID_INDEX);
+	f(CLIP_NOT_REPRESENTABLE);
+	f(TEMP_FILE_ERROR);
+	f(INVALID_STRIDE);
+	f(FONT_TYPE_MISMATCH);
+	f(USER_FONT_IMMUTABLE);
+	f(USER_FONT_ERROR);
+	f(NEGATIVE_COUNT);
+	f(INVALID_CLUSTERS);
+	f(INVALID_SLANT);
+	f(INVALID_WEIGHT);
+	f(INVALID_SIZE);
+	f(USER_FONT_NOT_IMPLEMENTED);
+    case CAIRO_STATUS_LAST_STATUS:
+	break;
+    }
+    return "UNKNOWN_STATUS";
+#undef f
 }
 
 static void CAIRO_PRINTF_FORMAT(2, 3)
@@ -1877,42 +1885,40 @@ cairo_pop_group_to_source (cairo_t *cr)
 static const char *
 _operator_to_string (cairo_operator_t op)
 {
-    const char *names[] = {
-	"CLEAR",	/* CAIRO_OPERATOR_CLEAR */
-
-	"SOURCE",	/* CAIRO_OPERATOR_SOURCE */
-	"OVER",		/* CAIRO_OPERATOR_OVER */
-	"IN",		/* CAIRO_OPERATOR_IN */
-	"OUT",		/* CAIRO_OPERATOR_OUT */
-	"ATOP",		/* CAIRO_OPERATOR_ATOP */
-
-	"DEST",		/* CAIRO_OPERATOR_DEST */
-	"DEST_OVER",	/* CAIRO_OPERATOR_DEST_OVER */
-	"DEST_IN",	/* CAIRO_OPERATOR_DEST_IN */
-	"DEST_OUT",	/* CAIRO_OPERATOR_DEST_OUT */
-	"DEST_ATOP",	/* CAIRO_OPERATOR_DEST_ATOP */
-
-	"XOR",		/* CAIRO_OPERATOR_XOR */
-	"ADD",		/* CAIRO_OPERATOR_ADD */
-	"SATURATE",	/* CAIRO_OPERATOR_SATURATE */
-
-	"MULTIPLY",	/* CAIRO_OPERATOR_MULTIPLY */
-	"SCREEN",	/* CAIRO_OPERATOR_SCREEN */
-	"OVERLAY",	/* CAIRO_OPERATOR_OVERLAY */
-	"DARKEN",	/* CAIRO_OPERATOR_DARKEN */
-	"LIGHTEN",	/* CAIRO_OPERATOR_LIGHTEN */
-	"DODGE",	/* CAIRO_OPERATOR_COLOR_DODGE */
-	"BURN",		/* CAIRO_OPERATOR_COLOR_BURN */
-	"HARD_LIGHT",	/* CAIRO_OPERATOR_HARD_LIGHT */
-	"SOFT_LIGHT",	/* CAIRO_OPERATOR_SOFT_LIGHT */
-	"DIFFERENCE",	/* CAIRO_OPERATOR_DIFFERENCE */
-	"EXCLUSION",	/* CAIRO_OPERATOR_EXCLUSION */
-	"HSL_HUE",	/* CAIRO_OPERATOR_HSL_HUE */
-	"HSL_SATURATION", /* CAIRO_OPERATOR_HSL_SATURATION */
-	"HSL_COLOR",	/* CAIRO_OPERATOR_HSL_COLOR */
-	"HSL_LUMINOSITY" /* CAIRO_OPERATOR_HSL_LUMINOSITY */
-    };
-    return names[op];
+#define f(name) case CAIRO_OPERATOR_ ## name: return #name
+    switch (op) {
+	f(OVER);
+	f(SOURCE);
+	f(CLEAR);
+	f(IN);
+	f(OUT);
+	f(ATOP);
+	f(DEST);
+	f(DEST_OVER);
+	f(DEST_IN);
+	f(DEST_OUT);
+	f(DEST_ATOP);
+	f(XOR);
+	f(ADD);
+	f(SATURATE);
+	f(MULTIPLY);
+	f(SCREEN);
+	f(OVERLAY);
+	f(DARKEN);
+	f(LIGHTEN);
+        case CAIRO_OPERATOR_COLOR_DODGE: return "DODGE";
+        case CAIRO_OPERATOR_COLOR_BURN: return "BURN";
+	f(HARD_LIGHT);
+	f(SOFT_LIGHT);
+	f(DIFFERENCE);
+	f(EXCLUSION);
+	f(HSL_HUE);
+	f(HSL_SATURATION);
+	f(HSL_COLOR);
+	f(HSL_LUMINOSITY);
+    }
+#undef f
+    return "UNKNOWN_OPERATOR";
 }
 
 void
@@ -2099,13 +2105,15 @@ cairo_set_tolerance (cairo_t *cr, double tolerance)
 static const char *
 _antialias_to_string (cairo_antialias_t antialias)
 {
-    const char *names[] = {
-	"ANTIALIAS_DEFAULT",	/* CAIRO_ANTIALIAS_DEFAULT */
-	"ANTIALIAS_NONE",	/* CAIRO_ANTIALIAS_NONE */
-	"ANTIALIAS_GRAY",	/* CAIRO_ANTIALIAS_GRAY */
-	"ANTIALIAS_SUBPIXEL"	/* CAIRO_ANTIALIAS_SUBPIXEL */
+#define f(name) case CAIRO_ANTIALIAS_ ## name: return "ANTIALIAS_" #name
+    switch (antialias) {
+	f(DEFAULT);
+	f(NONE);
+	f(GRAY);
+	f(SUBPIXEL);
     };
-    return names[antialias];
+#undef f
+    return "UNKNOWN_ANTIALIAS";
 }
 
 void
@@ -2120,11 +2128,13 @@ cairo_set_antialias (cairo_t *cr, cairo_antialias_t antialias)
 static const char *
 _fill_rule_to_string (cairo_fill_rule_t rule)
 {
-    const char *names[] = {
-	"WINDING",	/* CAIRO_FILL_RULE_WINDING */
-	"EVEN_ODD"	/* CAIRO_FILL_RILE_EVEN_ODD */
+#define f(name) case CAIRO_FILL_RULE_ ## name: return #name
+    switch (rule) {
+	f(WINDING);
+	f(EVEN_ODD);
     };
-    return names[rule];
+#undef f
+    return "UNKNOWN_FILL_RULE";
 }
 
 void
@@ -2147,12 +2157,14 @@ cairo_set_line_width (cairo_t *cr, double width)
 static const char *
 _line_cap_to_string (cairo_line_cap_t line_cap)
 {
-    const char *names[] = {
-	"LINE_CAP_BUTT",	/* CAIRO_LINE_CAP_BUTT */
-	"LINE_CAP_ROUND",	/* CAIRO_LINE_CAP_ROUND */
-	"LINE_CAP_SQUARE"	/* CAIRO_LINE_CAP_SQUARE */
+#define f(name) case CAIRO_LINE_CAP_ ## name: return "LINE_CAP_" #name
+    switch (line_cap) {
+	f(BUTT);
+	f(ROUND);
+	f(SQUARE);
     };
-    return names[line_cap];
+#undef f
+    return "UNKNOWN_LINE_CAP";
 }
 
 void
@@ -2166,12 +2178,14 @@ cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap)
 static const char *
 _line_join_to_string (cairo_line_join_t line_join)
 {
-    const char *names[] = {
-	"LINE_JOIN_MITER",	/* CAIRO_LINE_JOIN_MITER */
-	"LINE_JOIN_ROUND",	/* CAIRO_LINE_JOIN_ROUND */
-	"LINE_JOIN_BEVEL",	/* CAIRO_LINE_JOIN_BEVEL */
+#define f(name) case CAIRO_LINE_JOIN_ ## name: return "LINE_JOIN_" #name
+    switch (line_join) {
+	f(MITER);
+	f(ROUND);
+	f(BEVEL);
     };
-    return names[line_join];
+#undef f
+    return "UNKNOWN_LINE_JOIN";
 }
 
 void
@@ -2556,22 +2570,26 @@ cairo_reset_clip (cairo_t *cr)
 static const char *
 _slant_to_string (cairo_font_slant_t font_slant)
 {
-    const char *names[] = {
-	"SLANT_NORMAL",		/* CAIRO_FONT_SLANT_NORMAL */
-	"SLANT_ITALIC",		/* CAIRO_FONT_SLANT_ITALIC */
-	"SLANT_OBLIQUE"		/* CAIRO_FONT_SLANT_OBLIQUE */
+#define f(name) case CAIRO_FONT_SLANT_ ## name: return "SLANT_" #name
+    switch (font_slant) {
+	f(NORMAL);
+	f(ITALIC);
+	f(OBLIQUE);
     };
-    return names[font_slant];
+#undef f
+    return "UNKNOWN_SLANT";
 }
 
 static const char *
 _weight_to_string (cairo_font_weight_t font_weight)
 {
-    const char *names[] = {
-	"WEIGHT_NORMAL",	/* CAIRO_FONT_WEIGHT_NORMAL */
-	"WEIGHT_BOLD",		/* CAIRO_FONT_WEIGHT_BOLD */
+#define f(name) case CAIRO_FONT_WEIGHT_ ## name: return "WEIGHT_" #name
+    switch (font_weight) {
+	f(NORMAL);
+	f(BOLD);
     };
-    return names[font_weight];
+#undef f
+    return "UNKNOWN_WEIGHT";
 }
 
 void
@@ -2656,37 +2674,46 @@ cairo_set_font_matrix (cairo_t *cr, const cairo_matrix_t *matrix)
 static const char *
 _subpixel_order_to_string (cairo_subpixel_order_t subpixel_order)
 {
-    const char *names[] = {
-	"SUBPIXEL_ORDER_DEFAULT",	/* CAIRO_SUBPIXEL_ORDER_DEFAULT */
-	"SUBPIXEL_ORDER_RGB",		/* CAIRO_SUBPIXEL_ORDER_RGB */
-	"SUBPIXEL_ORDER_BGR",		/* CAIRO_SUBPIXEL_ORDER_BGR */
-	"SUBPIXEL_ORDER_VRGB",		/* CAIRO_SUBPIXEL_ORDER_VRGB */
-	"SUBPIXEL_ORDER_VBGR"		/* CAIRO_SUBPIXEL_ORDER_VBGR */
+#define f(name) case CAIRO_SUBPIXEL_ORDER_ ## name: return "SUBPIXEL_ORDER_" #name
+    switch (subpixel_order) {
+	f(DEFAULT);
+	f(RGB);
+	f(BGR);
+	f(VRGB);
+	f(VBGR);
     };
-    return names[subpixel_order];
+#undef f
+    return "UNKNOWN_SUBPIXEL_ORDER";
 }
+
 static const char *
 _hint_style_to_string (cairo_hint_style_t hint_style)
 {
-    const char *names[] = {
-	"HINT_STYLE_DEFAULT",	/* CAIRO_HINT_STYLE_DEFAULT */
-	"HINT_STYLE_NONE",	/* CAIRO_HINT_STYLE_NONE */
-	"HINT_STYLE_SLIGHT",	/* CAIRO_HINT_STYLE_SLIGHT */
-	"HINT_STYLE_MEDIUM",	/* CAIRO_HINT_STYLE_MEDIUM */
-	"HINT_STYLE_FULL"	/* CAIRO_HINT_STYLE_FULL */
+#define f(name) case CAIRO_HINT_STYLE_ ## name: return "HINT_STYLE_" #name
+    switch (hint_style) {
+	f(DEFAULT);
+	f(NONE);
+	f(SLIGHT);
+	f(MEDIUM);
+	f(FULL);
     };
-    return names[hint_style];
+#undef f
+    return "UNKNOWN_HINT_STYLE";
 }
+
 static const char *
 _hint_metrics_to_string (cairo_hint_metrics_t hint_metrics)
 {
-    const char *names[] = {
-	 "HINT_METRICS_DEFAULT",	/* CAIRO_HINT_METRICS_DEFAULT */
-	 "HINT_METRICS_OFF",		/* CAIRO_HINT_METRICS_OFF */
-	 "HINT_METRICS_ON"		/* CAIRO_HINT_METRICS_ON */
+#define f(name) case CAIRO_HINT_METRICS_ ## name: return "HINT_METRICS_" #name
+    switch (hint_metrics) {
+	f(DEFAULT);
+	f(OFF);
+	f(ON);
     };
-    return names[hint_metrics];
+#undef f
+    return "UNKNOWN_HINT_METRICS";
 }
+
 static void
 _emit_font_options (const cairo_font_options_t *options)
 {
@@ -2982,7 +3009,7 @@ _direction_to_string (cairo_bool_t backward)
 	"FORWARD",
 	"BACKWARD"
     };
-    return names[backward];
+    return names[!!backward];
 }
 
 void
@@ -3544,15 +3571,17 @@ cairo_pattern_set_matrix (cairo_pattern_t *pattern, const cairo_matrix_t *matrix
 static const char *
 _filter_to_string (cairo_filter_t filter)
 {
-    const char *names[] = {
-	"FILTER_FAST",		/* CAIRO_FILTER_FAST */
-	"FILTER_GOOD",		/* CAIRO_FILTER_GOOD */
-	"FILTER_BEST",		/* CAIRO_FILTER_BEST */
-	"FILTER_NEAREST",	/* CAIRO_FILTER_NEAREST */
-	"FILTER_BILINEAR",	/* CAIRO_FILTER_BILINEAR */
-	"FILTER_GAUSSIAN",	/* CAIRO_FILTER_GAUSSIAN */
+#define f(name) case CAIRO_FILTER_ ## name: return "FILTER_" #name
+    switch (filter) {
+	f(FAST);
+	f(GOOD);
+	f(BEST);
+	f(NEAREST);
+	f(BILINEAR);
+	f(GAUSSIAN);
     };
-    return names[filter];
+#undef f
+    return "UNKNOWN_FILTER";
 }
 
 void
@@ -3566,13 +3595,15 @@ cairo_pattern_set_filter (cairo_pattern_t *pattern, cairo_filter_t filter)
 static const char *
 _extend_to_string (cairo_extend_t extend)
 {
-    const char *names[] = {
-	"EXTEND_NONE",		/* CAIRO_EXTEND_NONE */
-	"EXTEND_REPEAT",	/* CAIRO_EXTEND_REPEAT */
-	"EXTEND_REFLECT",	/* CAIRO_EXTEND_REFLECT */
-	"EXTEND_PAD"		/* CAIRO_EXTEND_PAD */
+#define f(name) case CAIRO_EXTEND_ ## name: return "EXTEND_" #name
+    switch (extend) {
+	f(NONE);
+	f(REPEAT);
+	f(REFLECT);
+	f(PAD);
     };
-    return names[extend];
+#undef f
+    return "UNKNOWN_EXTEND";
 }
 
 void
