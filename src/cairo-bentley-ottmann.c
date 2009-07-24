@@ -42,7 +42,6 @@
 #include "cairo-freelist-private.h"
 #include "cairo-combsort-private.h"
 
-#define DEBUG_VALIDATE 0
 #define DEBUG_PRINT_STATE 0
 #define DEBUG_EVENTS 0
 #define DEBUG_TRAPS 0
@@ -120,11 +119,10 @@ typedef struct _cairo_bo_event_queue {
 
 /* This structure extends #cairo_skip_list_t, which must come first. */
 typedef struct _cairo_bo_sweep_line {
-    cairo_skip_list_t active_edges;
     cairo_bo_edge_t *head;
-    cairo_bo_edge_t *tail;
     cairo_bo_edge_t *stopped;
     int32_t current_y;
+    cairo_bo_edge_t *current_edge;
 } cairo_bo_sweep_line_t;
 
 #if DEBUG_TRAPS
@@ -615,21 +613,7 @@ _cairo_bo_sweep_line_compare_edges (cairo_bo_sweep_line_t	*sweep_line,
 	    return cmp;
     }
 
-    return a - b;
-}
-
-static int
-_sweep_line_elt_compare (void	*list,
-			 const void	*a,
-			 const void	*b)
-{
-    cairo_bo_sweep_line_t *sweep_line = list;
-    const sweep_line_elt_t *edge_elt_a = a;
-    const sweep_line_elt_t *edge_elt_b = b;
-
-    return _cairo_bo_sweep_line_compare_edges (sweep_line,
-					       edge_elt_a->edge,
-					       edge_elt_b->edge);
+    return 0;
 }
 
 static inline int
@@ -1072,51 +1056,61 @@ _cairo_bo_event_queue_insert_if_intersect_below_current_y (cairo_bo_event_queue_
 static void
 _cairo_bo_sweep_line_init (cairo_bo_sweep_line_t *sweep_line)
 {
-    _cairo_skip_list_init (&sweep_line->active_edges,
-			   _sweep_line_elt_compare,
-			   sizeof (sweep_line_elt_t));
-
     sweep_line->head = NULL;
-    sweep_line->tail = NULL;
     sweep_line->stopped = NULL;
     sweep_line->current_y = INT32_MIN;
-}
-
-static void
-_cairo_bo_sweep_line_fini (cairo_bo_sweep_line_t *sweep_line)
-{
-    _cairo_skip_list_fini (&sweep_line->active_edges);
+    sweep_line->current_edge = NULL;
 }
 
 static cairo_status_t
 _cairo_bo_sweep_line_insert (cairo_bo_sweep_line_t	*sweep_line,
 			     cairo_bo_edge_t		*edge)
 {
-    skip_elt_t *next_elt;
-    sweep_line_elt_t *sweep_line_elt;
-    cairo_bo_edge_t **prev_of_next, **next_of_prev;
+    if (sweep_line->current_edge != NULL) {
+	cairo_bo_edge_t *prev, *next;
+	int cmp;
 
-    sweep_line_elt = _cairo_skip_list_insert (&sweep_line->active_edges, &edge);
-    if (unlikely (sweep_line_elt == NULL))
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	cmp = _cairo_bo_sweep_line_compare_edges (sweep_line,
+						  sweep_line->current_edge,
+						  edge);
+	if (cmp < 0) {
+	    prev = sweep_line->current_edge;
+	    next = prev->next;
+	    while (next != NULL &&
+		   _cairo_bo_sweep_line_compare_edges (sweep_line,
+						       next, edge) < 0)
+	    {
+		prev = next, next = prev->next;
+	    }
 
-    next_elt = sweep_line_elt->elt.next[0];
-    if (next_elt)
-	prev_of_next = &SKIP_ELT_TO_EDGE (next_elt)->prev;
-    else
-	prev_of_next = &sweep_line->tail;
+	    prev->next = edge;
+	    edge->prev = prev;
+	    edge->next = next;
+	    if (next != NULL)
+		next->prev = edge;
+	} else {
+	    next = sweep_line->current_edge;
+	    prev = next->prev;
+	    while (prev != NULL &&
+		   _cairo_bo_sweep_line_compare_edges (sweep_line,
+						       prev, edge) > 0)
+	    {
+		next = prev, prev = next->prev;
+	    }
 
-    if (*prev_of_next)
-	next_of_prev = &(*prev_of_next)->next;
-    else
-	next_of_prev = &sweep_line->head;
+	    next->prev = edge;
+	    edge->next = next;
+	    edge->prev = prev;
+	    if (prev != NULL)
+		prev->next = edge;
+	    else
+		sweep_line->head = edge;
+	}
+    } else {
+	sweep_line->head = edge;
+    }
 
-    edge->prev = *prev_of_next;
-    edge->next = *next_of_prev;
-    *prev_of_next = edge;
-    *next_of_prev = edge;
-
-    edge->sweep_line_elt = sweep_line_elt;
+    sweep_line->current_edge = edge;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1125,21 +1119,16 @@ static void
 _cairo_bo_sweep_line_delete (cairo_bo_sweep_line_t	*sweep_line,
 			     cairo_bo_edge_t	*edge)
 {
-    cairo_bo_edge_t **left_next, **right_prev;
+    if (edge->prev != NULL)
+	edge->prev->next = edge->next;
+    else
+	sweep_line->head = edge->next;
 
-    _cairo_skip_list_delete_given (&sweep_line->active_edges,
-				   &edge->sweep_line_elt->elt);
+    if (edge->next != NULL)
+	edge->next->prev = edge->prev;
 
-    left_next = &sweep_line->head;
-    if (edge->prev)
-	left_next = &edge->prev->next;
-
-    right_prev = &sweep_line->tail;
-    if (edge->next)
-	right_prev = &edge->next->prev;
-
-    *left_next = edge->next;
-    *right_prev = edge->prev;
+    if (sweep_line->current_edge == edge)
+	sweep_line->current_edge = edge->prev ? edge->prev : edge->next;
 }
 
 static void
@@ -1147,32 +1136,13 @@ _cairo_bo_sweep_line_swap (cairo_bo_sweep_line_t	*sweep_line,
 			   cairo_bo_edge_t		*left,
 			   cairo_bo_edge_t		*right)
 {
-    sweep_line_elt_t *left_elt, *right_elt;
-    cairo_bo_edge_t **before_left, **after_right;
+    if (left->prev != NULL)
+	left->prev->next = right;
+    else
+	sweep_line->head = right;
 
-    /* Within the skip list we can do the swap simply by swapping the
-     * pointers to the edge elements and leaving all of the skip list
-     * elements and pointers unchanged. */
-    left_elt = left->sweep_line_elt;
-    right_elt = SKIP_ELT_TO_EDGE_ELT (left_elt->elt.next[0]);
-
-    left_elt->edge = right;
-    right->sweep_line_elt = left_elt;
-
-    right_elt->edge = left;
-    left->sweep_line_elt = right_elt;
-
-    /* Within the doubly-linked list of edges, there's a bit more
-     * bookkeeping involved with the swap. */
-    before_left = &sweep_line->head;
-    if (left->prev)
-	before_left = &left->prev->next;
-    *before_left = right;
-
-    after_right = &sweep_line->tail;
-    if (right->next)
-	after_right = &right->next->prev;
-    *after_right = left;
+    if (right->next != NULL)
+	right->next->prev = left;
 
     left->next = right->next;
     right->next = left;
@@ -1234,20 +1204,6 @@ _cairo_bo_sweep_line_print (cairo_bo_sweep_line_t *sweep_line)
     skip_elt_t *elt;
     cairo_bo_edge_t *edge;
 
-    printf ("Sweep line (reversed):     ");
-
-    for (edge = sweep_line->tail;
-	 edge;
-	 edge = edge->prev)
-    {
-	if (!first)
-	    printf (", ");
-	_cairo_bo_edge_print (edge);
-	first = FALSE;
-    }
-    printf ("\n");
-
-
     printf ("Sweep line from edge list: ");
     first = TRUE;
     for (edge = sweep_line->head;
@@ -1257,19 +1213,6 @@ _cairo_bo_sweep_line_print (cairo_bo_sweep_line_t *sweep_line)
 	if (!first)
 	    printf (", ");
 	_cairo_bo_edge_print (edge);
-	first = FALSE;
-    }
-    printf ("\n");
-
-    printf ("Sweep line from skip list: ");
-    first = TRUE;
-    for (elt = sweep_line->active_edges.chains[0];
-	 elt;
-	 elt = elt->next[0])
-    {
-	if (!first)
-	    printf (", ");
-	_cairo_bo_edge_print (SKIP_ELT_TO_EDGE (elt));
 	first = FALSE;
     }
     printf ("\n");
@@ -1286,34 +1229,6 @@ print_state (const char			*msg,
     _cairo_bo_event_queue_print (event_queue);
     _cairo_bo_sweep_line_print (sweep_line);
     printf ("\n");
-}
-#endif
-
-#if DEBUG_VALIDATE
-static void
-_cairo_bo_sweep_line_validate (cairo_bo_sweep_line_t *sweep_line)
-{
-    cairo_bo_edge_t *edge;
-    skip_elt_t *elt;
-
-    /* March through both the skip list's singly-linked list and the
-     * sweep line's own list through pointers in the edges themselves
-     * and make sure they agree at every point. */
-
-    for (edge = sweep_line->head, elt = sweep_line->active_edges.chains[0];
-	 edge && elt;
-	 edge = edge->next, elt = elt->next[0])
-    {
-	if (SKIP_ELT_TO_EDGE (elt) != edge) {
-	    fprintf (stderr, "*** Error: Sweep line fails to validate: Inconsistent data in the two lists.\n");
-	    abort ();
-	}
-    }
-
-    if (edge || elt) {
-	fprintf (stderr, "*** Error: Sweep line fails to validate: One list ran out before the other.\n");
-	abort ();
-    }
 }
 #endif
 
@@ -1345,13 +1260,23 @@ edges_colinear (const cairo_bo_edge_t *a, const cairo_bo_edge_t *b)
     if (_line_equal (&a->edge.line, &b->edge.line))
 	return TRUE;
 
+    if (_slope_compare (a, b))
+	return FALSE;
+
     /* The choice of y is not truly arbitrary since we must guarantee that it
      * is greater than the start of either line.
      */
-    return _slope_compare (a, b) == 0 &&
-	edges_compare_x_for_y (a, b,
-				  MAX (a->edge.line.p1.y,
-				       b->edge.line.p1.y)) == 0;
+    if (a->edge.line.p1.y == b->edge.line.p1.y) {
+	return a->edge.line.p1.x == b->edge.line.p1.x;
+    } else if (a->edge.line.p1.y < b->edge.line.p1.y) {
+	return edge_compare_for_y_against_x (b,
+					     a->edge.line.p1.y,
+					     a->edge.line.p1.x) == 0;
+    } else {
+	return edge_compare_for_y_against_x (a,
+					     b->edge.line.p1.y,
+					     b->edge.line.p1.x) == 0;
+    }
 }
 
 /* Adds the trapezoid, if any, of the left edge to the #cairo_traps_t */
@@ -1363,8 +1288,7 @@ _cairo_bo_edge_end_trap (cairo_bo_edge_t	*left,
     cairo_bo_trap_t *trap = &left->deferred_trap;
 
     /* Only emit (trivial) non-degenerate trapezoids with positive height. */
-    if (likely (trap->top < bot && ! edges_colinear (left, trap->right))) {
-	assert (trap->right->edge.bottom >= bot);
+    if (likely (trap->top < bot)) {
 	_cairo_traps_add_trap (traps,
 			       trap->top, bot,
 			       &left->edge.line, &trap->right->edge.line);
@@ -1422,7 +1346,7 @@ _cairo_bo_edge_start_or_continue_trap (cairo_bo_edge_t	*left,
 	    return status;
     }
 
-    if (right != NULL) {
+    if (right != NULL && ! edges_colinear (left, right)) {
 	left->deferred_trap.top = top;
 	left->deferred_trap.right = right;
 
@@ -1716,9 +1640,6 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_event_t   **start_events,
 
 	    break;
 	}
-#if DEBUG_VALIDATE
-	_cairo_bo_sweep_line_validate (&sweep_line);
-#endif
     }
 
     *num_intersections = intersection_count;
@@ -1730,7 +1651,6 @@ _cairo_bentley_ottmann_tessellate_bo_edges (cairo_bo_event_t   **start_events,
 	}
     }
  unwind:
-    _cairo_bo_sweep_line_fini (&sweep_line);
     _cairo_bo_event_queue_fini (&event_queue);
 
 #if DEBUG_EVENTS
