@@ -144,23 +144,28 @@ cairo_region_create (void)
 }
 slim_hidden_def (cairo_region_create);
 
-cairo_status_t
-_cairo_region_init_rectangles (cairo_region_t *region,
-			       const cairo_rectangle_int_t *rects,
-			       int count)
+cairo_region_t *
+cairo_region_create_rectangles (const cairo_rectangle_int_t *rects,
+				int count)
 {
     pixman_box32_t stack_pboxes[CAIRO_STACK_ARRAY_LENGTH (pixman_box32_t)];
     pixman_box32_t *pboxes = stack_pboxes;
-    cairo_status_t status;
+    cairo_region_t *region;
     int i;
 
-    status = CAIRO_STATUS_SUCCESS;
-    CAIRO_REFERENCE_COUNT_INIT (&region->ref_count, 0);
+    region = _cairo_malloc (sizeof (cairo_region_t));
+    if (unlikely (region == NULL)) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_region_t *) &_cairo_region_nil;
+    }
 
     if (count > ARRAY_LENGTH (stack_pboxes)) {
 	pboxes = _cairo_malloc_ab (count, sizeof (pixman_box32_t));
-	if (unlikely (pboxes == NULL))
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	if (unlikely (pboxes == NULL)) {
+	    free (region);
+	    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	    return (cairo_region_t *) &_cairo_region_nil;
+	}
     }
 
     for (i = 0; i < count; i++) {
@@ -170,35 +175,19 @@ _cairo_region_init_rectangles (cairo_region_t *region,
 	pboxes[i].y2 = rects[i].y + rects[i].height;
     }
 
-    if (! pixman_region32_init_rects (&region->rgn, pboxes, count))
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    i = pixman_region32_init_rects (&region->rgn, pboxes, count);
 
     if (pboxes != stack_pboxes)
 	free (pboxes);
 
-    return region->status = status;
-}
-
-cairo_region_t *
-cairo_region_create_rectangles (const cairo_rectangle_int_t *rects,
-				int count)
-{
-    cairo_region_t *region;
-    cairo_status_t status;
-
-    region = _cairo_malloc (sizeof (cairo_region_t));
-    if (unlikely (region == NULL)) {
+    if (unlikely (i == 0)) {
+	free (region);
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_region_t *) &_cairo_region_nil;
     }
 
-    status = _cairo_region_init_rectangles (region, rects, count);
-    if (unlikely (status)) {
-	cairo_region_destroy (region);
-	return (cairo_region_t *) &_cairo_region_nil;
-    }
-
     CAIRO_REFERENCE_COUNT_INIT (&region->ref_count, 1);
+    region->status = CAIRO_STATUS_SUCCESS;
     return region;
 }
 slim_hidden_def (cairo_region_create_rectangles);

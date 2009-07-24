@@ -60,11 +60,6 @@ cairo_private void
 _cairo_region_init_rectangle (cairo_region_t *region,
 			      const cairo_rectangle_int_t *rectangle);
 
-cairo_private cairo_status_t
-_cairo_region_init_rectangles (cairo_region_t *region,
-			       const cairo_rectangle_int_t *rects,
-			       int count);
-
 cairo_private void
 _cairo_region_fini (cairo_region_t *region);
 

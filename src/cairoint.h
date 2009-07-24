@@ -951,7 +951,6 @@ typedef struct _cairo_surface_attributes {
 typedef struct _cairo_traps {
     cairo_status_t status;
 
-    cairo_box_t extents;
     cairo_box_t limits;
 
     unsigned int maybe_region : 1; /* hint: 0 implies that it cannot be */
@@ -2363,14 +2362,6 @@ _cairo_traps_fini (cairo_traps_t *traps);
 
 cairo_private void
 _cairo_traps_translate (cairo_traps_t *traps, int x, int y);
-
-cairo_private cairo_status_t
-_cairo_traps_tessellate_triangle (cairo_traps_t *traps,
-				  const cairo_point_t t[3]);
-
-cairo_private cairo_status_t
-_cairo_traps_tessellate_convex_quad (cairo_traps_t *traps,
-				     const cairo_point_t q[4]);
 
 cairo_private cairo_status_t
 _cairo_traps_tessellate_rectangle (cairo_traps_t *traps,

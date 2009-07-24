@@ -752,16 +752,6 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
     /* Otherwise render the trapezoids to a mask and composite in the usual
      * fashion.
      */
-    if (_cairo_operator_bounded_by_mask (op)) {
-        cairo_rectangle_int_t trap_extents;
-	cairo_box_t trap_box;
-
-	_cairo_traps_extents (traps, &trap_box);
-	_cairo_box_round_to_rectangle (&trap_box, &trap_extents);
-	if (! _cairo_rectangle_intersect (extents, &trap_extents))
-	    return CAIRO_STATUS_SUCCESS;
-    }
-
     traps_info.traps = traps;
     traps_info.antialias = antialias;
 
