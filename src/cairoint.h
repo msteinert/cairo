@@ -1611,6 +1611,11 @@ _cairo_path_fixed_fill_to_polygon (const cairo_path_fixed_t *path,
 				   double              tolerance,
 				   cairo_polygon_t      *polygon);
 
+cairo_private cairo_region_t *
+_cairo_path_fixed_fill_rectilinear_to_region (const cairo_path_fixed_t	*path,
+					      cairo_fill_rule_t	 fill_rule,
+					      const cairo_rectangle_int_t *extents);
+
 cairo_private cairo_int_status_t
 _cairo_path_fixed_fill_rectilinear_to_traps (const cairo_path_fixed_t *path,
 					     cairo_fill_rule_t fill_rule,

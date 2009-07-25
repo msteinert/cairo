@@ -265,3 +265,132 @@ _cairo_path_fixed_fill_rectilinear_to_traps (const cairo_path_fixed_t	*path,
 
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
+
+cairo_region_t *
+_cairo_path_fixed_fill_rectilinear_to_region (const cairo_path_fixed_t	*path,
+					      cairo_fill_rule_t	 fill_rule,
+					      const cairo_rectangle_int_t *extents)
+{
+    cairo_rectangle_int_t rectangle_stack[CAIRO_STACK_ARRAY_LENGTH (cairo_rectangle_int_t)];
+    cairo_box_t box;
+    cairo_region_t *region = NULL;
+
+    assert (path->maybe_fill_region);
+
+    if (_cairo_path_fixed_is_box (path, &box)) {
+	if (box.p1.x > box.p2.x) {
+	    cairo_fixed_t t;
+
+	    t = box.p1.x;
+	    box.p1.x = box.p2.x;
+	    box.p2.x = t;
+	}
+
+	if (box.p1.y > box.p2.y) {
+	    cairo_fixed_t t;
+
+	    t = box.p1.y;
+	    box.p1.y = box.p2.y;
+	    box.p2.y = t;
+	}
+
+	assert (_cairo_fixed_is_integer (box.p1.x) &&
+		_cairo_fixed_is_integer (box.p1.y));
+	assert (_cairo_fixed_is_integer (box.p2.x) &&
+		_cairo_fixed_is_integer (box.p2.y));
+	rectangle_stack[0].x = _cairo_fixed_integer_part (box.p1.x);
+	rectangle_stack[0].y = _cairo_fixed_integer_part (box.p1.y);
+	rectangle_stack[0].width = _cairo_fixed_integer_part (box.p2.x) -
+	                            rectangle_stack[0].x;
+	rectangle_stack[0].height = _cairo_fixed_integer_part (box.p2.y) -
+	                            rectangle_stack[0].y;
+	if (! _cairo_rectangle_intersect (&rectangle_stack[0], extents))
+	    region = cairo_region_create ();
+	else
+	    region = cairo_region_create_rectangle (&rectangle_stack[0]);
+    } else if (fill_rule == CAIRO_FILL_RULE_WINDING) {
+	cairo_rectangle_int_t *rects = rectangle_stack;
+	cairo_path_fixed_iter_t iter;
+	int last_cw = -1;
+	int size = ARRAY_LENGTH (rectangle_stack);
+	int count = 0;
+
+	/* Support a series of rectangles as can be expected to describe a
+	 * GdkRegion clip region during exposes.
+	 */
+	_cairo_path_fixed_iter_init (&iter, path);
+	while (_cairo_path_fixed_iter_is_fill_box (&iter, &box)) {
+	    int cw = 0;
+
+	    if (box.p1.x > box.p2.x) {
+		cairo_fixed_t t;
+
+		t = box.p1.x;
+		box.p1.x = box.p2.x;
+		box.p2.x = t;
+
+		cw = ! cw;
+	    }
+
+	    if (box.p1.y > box.p2.y) {
+		cairo_fixed_t t;
+
+		t = box.p1.y;
+		box.p1.y = box.p2.y;
+		box.p2.y = t;
+
+		cw = ! cw;
+	    }
+
+	    if (last_cw < 0) {
+		last_cw = cw;
+	    } else if (last_cw != cw) {
+		if (rects != rectangle_stack)
+		    free (rects);
+		return NULL;
+	    }
+
+	    if (count == size) {
+		cairo_rectangle_int_t *new_rects;
+
+		size *= 4;
+		if (rects == rectangle_stack) {
+		    new_rects = _cairo_malloc_ab (size,
+						  sizeof (cairo_rectangle_int_t));
+		    if (unlikely (new_rects == NULL)) {
+			/* XXX _cairo_region_nil */
+			break;
+		    }
+		    memcpy (new_rects, rects, sizeof (rectangle_stack));
+		} else {
+		    new_rects = _cairo_realloc_ab (rects, size,
+						   sizeof (cairo_rectangle_int_t));
+		    if (unlikely (new_rects == NULL)) {
+			/* XXX _cairo_region_nil */
+			break;
+		    }
+		}
+		rects = new_rects;
+	    }
+
+	    assert (_cairo_fixed_is_integer (box.p1.x) &&
+		    _cairo_fixed_is_integer (box.p1.y));
+	    assert (_cairo_fixed_is_integer (box.p2.x) &&
+		    _cairo_fixed_is_integer (box.p2.y));
+	    rects[count].x = _cairo_fixed_integer_part (box.p1.x);
+	    rects[count].y = _cairo_fixed_integer_part (box.p1.y);
+	    rects[count].width = _cairo_fixed_integer_part (box.p2.x) - rects[count].x;
+	    rects[count].height = _cairo_fixed_integer_part (box.p2.y) - rects[count].y;
+	    if (_cairo_rectangle_intersect (&rects[count], extents))
+		count++;
+	}
+
+	if (_cairo_path_fixed_iter_at_end (&iter))
+	    region = cairo_region_create_rectangles (rects, count);
+
+	if (rects != rectangle_stack)
+	    free (rects);
+    }
+
+    return region;
+}
