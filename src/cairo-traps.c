@@ -124,7 +124,7 @@ static cairo_bool_t
 _cairo_traps_grow (cairo_traps_t *traps)
 {
     cairo_trapezoid_t *new_traps;
-    int new_size = 2 * MAX (traps->traps_size, 16);
+    int new_size = 4 * traps->traps_size;
 
     if (CAIRO_INJECT_FAULT ()) {
 	traps->status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -157,10 +157,8 @@ _cairo_traps_add_trap (cairo_traps_t *traps,
 {
     cairo_trapezoid_t *trap;
 
-    assert (top < bottom);
-
-    if (traps->num_traps == traps->traps_size) {
-	if (! _cairo_traps_grow (traps))
+    if (unlikely (traps->num_traps == traps->traps_size)) {
+	if (unlikely (! _cairo_traps_grow (traps)))
 	    return;
     }
 

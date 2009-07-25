@@ -954,15 +954,13 @@ typedef struct _cairo_traps {
     cairo_box_t limits;
 
     unsigned int maybe_region : 1; /* hint: 0 implies that it cannot be */
+    unsigned int has_limits : 1;
+    unsigned int has_intersections : 1;
 
     int num_traps;
     int traps_size;
     cairo_trapezoid_t *traps;
-    /* embed enough storage for a stroked rectangle */
-    cairo_trapezoid_t  traps_embedded[4];
-
-    cairo_bool_t has_limits;
-    cairo_bool_t has_intersections;
+    cairo_trapezoid_t  traps_embedded[16];
 } cairo_traps_t;
 
 #define CAIRO_FONT_SLANT_DEFAULT   CAIRO_FONT_SLANT_NORMAL
