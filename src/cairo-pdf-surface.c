@@ -244,6 +244,19 @@ _cairo_pdf_surface_set_size_internal (cairo_pdf_surface_t *surface,
 						  &surface->cairo_to_pdf);
 }
 
+static cairo_bool_t
+_path_covers_bbox (cairo_pdf_surface_t *surface,
+		   cairo_path_fixed_t *path)
+{
+    cairo_box_t box;
+
+    return _cairo_path_fixed_is_rectangle (path, &box) &&
+	   box.p1.x <= 0 &&
+	   box.p1.y <= 0 &&
+	   box.p2.x >= _cairo_fixed_from_double (surface->width) &&
+	   box.p2.y >= _cairo_fixed_from_double (surface->height);
+}
+
 static cairo_status_t
 _cairo_pdf_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clipper,
 						cairo_path_fixed_t	*path,
@@ -268,6 +281,9 @@ _cairo_pdf_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clipper
 
 	return CAIRO_STATUS_SUCCESS;
     }
+
+    if (_path_covers_bbox (surface, path))
+	return CAIRO_STATUS_SUCCESS;
 
     return _cairo_pdf_operators_clip (&surface->pdf_operators, path, fill_rule);
 }
