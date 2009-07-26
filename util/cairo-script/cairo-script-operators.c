@@ -1709,6 +1709,12 @@ _ft_create_for_source (csi_t *ctx,
 	if (--source->base.ref == 0)
 	    csi_string_free (ctx, source);
 
+	if (source->deflate) {
+	    _csi_free (ctx, bytes);
+	    bytes = data->blob.bytes + vec[0].num_bytes;
+	} else
+	    bytes = data->blob.bytes;
+
 	data->source = NULL;
 	data->bytes = NULL;
     } else {
