@@ -488,6 +488,7 @@ _cairo_path_fixed_curve_to (cairo_path_fixed_t	*path,
 {
     cairo_status_t status;
     cairo_point_t point[3];
+    cairo_slope_t slope, tangent;
 
     /* make sure subpaths are started properly */
     if (! path->has_current_point) {
@@ -502,6 +503,17 @@ _cairo_path_fixed_curve_to (cairo_path_fixed_t	*path,
     point[0].x = x0; point[0].y = y0;
     point[1].x = x1; point[1].y = y1;
     point[2].x = x2; point[2].y = y2;
+
+    _cairo_slope_init (&slope, &path->current_point, &point[2]);
+    _cairo_slope_init (&tangent, &path->current_point, &point[0]);
+    if (_cairo_slope_compare (&slope, &tangent) == 0) {
+	_cairo_slope_init (&tangent, &point[1], &point[2]);
+	if (_cairo_slope_compare (&slope, &tangent) == 0) {
+	    /* just a straight line... */
+	    return _cairo_path_fixed_line_to (path, x2, y2);
+	}
+    }
+
     status = _cairo_path_fixed_add (path, CAIRO_PATH_OP_CURVE_TO, point, 3);
     if (unlikely (status))
 	return status;
