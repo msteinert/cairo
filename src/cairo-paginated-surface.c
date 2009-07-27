@@ -159,6 +159,16 @@ _cairo_paginated_surface_finish (void *abstract_surface)
 	status = cairo_surface_status (abstract_surface);
     }
 
+     /* XXX We want to propagate any errors from destroy(), but those are not
+      * returned via the api. So we need to explicitly finish the target,
+      * and check the status afterwards. However, we can only call finish()
+      * on the target, if we own it.
+      */
+    if (CAIRO_REFERENCE_COUNT_GET_VALUE (&surface->target->ref_count) == 1) {
+	cairo_surface_finish (surface->target);
+	if (status == CAIRO_STATUS_SUCCESS)
+	    status = cairo_surface_status (surface->target);
+    }
     cairo_surface_destroy (surface->target);
 
     cairo_surface_finish (surface->meta);
