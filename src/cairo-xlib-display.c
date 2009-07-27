@@ -514,6 +514,12 @@ _cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
 {
     XRenderPictFormat *xrender_format;
 
+#if ! ATOMIC_OP_NEEDS_MEMORY_BARRIER
+    xrender_format = display->cached_xrender_formats[format];
+    if (likely (xrender_format != NULL))
+	return xrender_format;
+#endif
+
     CAIRO_MUTEX_LOCK (display->mutex);
     xrender_format = display->cached_xrender_formats[format];
     if (xrender_format == NULL) {
