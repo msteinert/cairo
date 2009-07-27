@@ -51,6 +51,7 @@ enum {
 
 typedef struct _cairo_rtree_node {
     struct _cairo_rtree_node *children[4], *parent;
+    void **owner;
     cairo_list_t link;
     uint16_t pinned;
     uint16_t state;

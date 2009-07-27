@@ -56,6 +56,7 @@ _cairo_rtree_node_create (cairo_rtree_t		 *rtree,
 
     node->children[0] = NULL;
     node->parent = parent;
+    node->owner  = NULL;
     node->state  = CAIRO_RTREE_NODE_AVAILABLE;
     node->pinned = FALSE;
     node->x	 = x;
@@ -76,6 +77,8 @@ _cairo_rtree_node_destroy (cairo_rtree_t *rtree, cairo_rtree_node_t *node)
     cairo_list_del (&node->link);
 
     if (node->state == CAIRO_RTREE_NODE_OCCUPIED) {
+	if (node->owner != NULL)
+	    *node->owner = NULL;
 	if (rtree->evict != NULL)
 	    rtree->evict (node);
     } else {
@@ -235,6 +238,8 @@ _cairo_rtree_evict_random (cairo_rtree_t	 *rtree,
     {
 	if (node->width >= width && node->height >= height && cnt-- == 0) {
 	    if (node->state == CAIRO_RTREE_NODE_OCCUPIED) {
+		if (node->owner != NULL)
+		    *node->owner = NULL;
 		if (rtree->evict != NULL)
 		    rtree->evict (node);
 	    } else {
@@ -274,12 +279,49 @@ void
 _cairo_rtree_unpin (cairo_rtree_t *rtree)
 {
     cairo_rtree_node_t *node, *next;
+    cairo_list_t can_collapse;
+
+    if (cairo_list_is_empty (&rtree->pinned))
+	return;
+
+    cairo_list_init (&can_collapse);
 
     cairo_list_foreach_entry_safe (node, next,
-	                           cairo_rtree_node_t, &rtree->pinned, link)
+	                           cairo_rtree_node_t,
+				   &rtree->pinned,
+				   link)
     {
 	node->pinned = FALSE;
-	cairo_list_move (&node->link, &rtree->evictable);
+	if (node->state == CAIRO_RTREE_NODE_OCCUPIED && node->owner == NULL) {
+	    cairo_bool_t all_available;
+	    int i;
+
+	    node->state = CAIRO_RTREE_NODE_AVAILABLE;
+	    cairo_list_move (&node->link, &rtree->available);
+
+	    all_available = TRUE;
+	    node = node->parent;
+	    for (i = 0; i < 4 && node->children[i] != NULL && all_available; i++)
+		all_available &= node->children[i]->state == CAIRO_RTREE_NODE_AVAILABLE;
+
+	    if (all_available) {
+		cairo_list_move (&node->link, &can_collapse);
+		for (i = 0;  i < 4 && node->children[i] != NULL; i++)
+		    cairo_list_del (&node->children[i]->link);
+	    }
+	}
+	else
+	{
+	    cairo_list_move (&node->link, &rtree->evictable);
+	}
+    }
+
+    cairo_list_foreach_entry_safe (node, next,
+	                           cairo_rtree_node_t,
+				   &can_collapse,
+				   link)
+    {
+	_cairo_rtree_node_collapse (rtree, node);
     }
 }
 
@@ -315,6 +357,8 @@ _cairo_rtree_reset (cairo_rtree_t *rtree)
     int i;
 
     if (rtree->root.state == CAIRO_RTREE_NODE_OCCUPIED) {
+	if (rtree->root.owner != NULL)
+	    *rtree->root.owner = NULL;
 	if (rtree->evict != NULL)
 	    rtree->evict (&rtree->root);
     } else {
@@ -338,6 +382,8 @@ _cairo_rtree_fini (cairo_rtree_t *rtree)
     int i;
 
     if (rtree->root.state == CAIRO_RTREE_NODE_OCCUPIED) {
+	if (rtree->root.owner != NULL)
+	    *rtree->root.owner = NULL;
 	if (rtree->evict != NULL)
 	    rtree->evict (&rtree->root);
     } else {
