@@ -48,8 +48,13 @@ endif
 
 libcairoboilerplate_la_LIBADD += $(CAIROBOILERPLATE_LIBS)
 
+# we need to workaround the introduction of CC_FOR_BUILD with older builds
 make-cairo-boilerplate-constructors$(EXEEXT): make-cairo-boilerplate-constructors.c
-	$(CC_FOR_BUILD) $^ -o $@
+	if test -n "$(CC_FOR_BUILD)"; then \
+		$(CC_FOR_BUILD) $^ -o $@; \
+	else \
+		$(CC) $^ -o $@; \
+	fi
 
 cairo-boilerplate-constructors.c: Makefile $(enabled_cairo_boilerplate_sources) make-cairo-boilerplate-constructors$(EXEEXT)
 	echo '(cd $(srcdir) && $(top_builddir)/boilerplate/make-cairo-boilerplate-constructors$(EXEEXT) $(enabled_cairo_boilerplate_sources)) > $@'

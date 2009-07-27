@@ -244,6 +244,19 @@ _cairo_pdf_surface_set_size_internal (cairo_pdf_surface_t *surface,
 						  &surface->cairo_to_pdf);
 }
 
+static cairo_bool_t
+_path_covers_bbox (cairo_pdf_surface_t *surface,
+		   cairo_path_fixed_t *path)
+{
+    cairo_box_t box;
+
+    return _cairo_path_fixed_is_rectangle (path, &box) &&
+	   box.p1.x <= 0 &&
+	   box.p1.y <= 0 &&
+	   box.p2.x >= _cairo_fixed_from_double (surface->width) &&
+	   box.p2.y >= _cairo_fixed_from_double (surface->height);
+}
+
 static cairo_status_t
 _cairo_pdf_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clipper,
 						cairo_path_fixed_t	*path,
@@ -268,6 +281,9 @@ _cairo_pdf_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clipper
 
 	return CAIRO_STATUS_SUCCESS;
     }
+
+    if (_path_covers_bbox (surface, path))
+	return CAIRO_STATUS_SUCCESS;
 
     return _cairo_pdf_operators_clip (&surface->pdf_operators, path, fill_rule);
 }
@@ -3657,37 +3673,56 @@ _cairo_pdf_surface_emit_to_unicode_stream (cairo_pdf_surface_t		*surface,
     _cairo_output_stream_printf (surface->output,
                                   "endcodespacerange\n");
 
-    num_bfchar = font_subset->num_glyphs - 1;
+    if (is_composite) {
+	num_bfchar = font_subset->num_glyphs - 1;
 
-    /* The CMap specification has a limit of 100 characters per beginbfchar operator */
-    _cairo_output_stream_printf (surface->output,
-                                 "%d beginbfchar\n",
-                                 num_bfchar > 100 ? 100 : num_bfchar);
-
-    for (i = 0; i < num_bfchar; i++) {
-        if (i != 0 && i % 100 == 0) {
-            _cairo_output_stream_printf (surface->output,
-                                         "endbfchar\n"
-                                         "%d beginbfchar\n",
-                                         num_bfchar - i > 100 ? 100 : num_bfchar - i);
-        }
-        if (is_composite) {
-            _cairo_output_stream_printf (surface->output,
-                                         "<%04x> ",
-                                         i + 1);
-        } else {
-            _cairo_output_stream_printf (surface->output,
-                                         "<%02x> ",
-                                         i + 1);
-        }
-	status = _cairo_pdf_surface_emit_unicode_for_glyph (surface,
-							    font_subset->utf8[i + 1]);
-	if (unlikely (status))
-	    return status;
-
+	/* The CMap specification has a limit of 100 characters per beginbfchar operator */
 	_cairo_output_stream_printf (surface->output,
-				     "\n");
+				     "%d beginbfchar\n",
+				     num_bfchar > 100 ? 100 : num_bfchar);
+
+	for (i = 0; i < num_bfchar; i++) {
+	    if (i != 0 && i % 100 == 0) {
+		_cairo_output_stream_printf (surface->output,
+					     "endbfchar\n"
+					     "%d beginbfchar\n",
+					     num_bfchar - i > 100 ? 100 : num_bfchar - i);
+	    }
+	    _cairo_output_stream_printf (surface->output, "<%04x> ", i + 1);
+	    status = _cairo_pdf_surface_emit_unicode_for_glyph (surface,
+								font_subset->utf8[i + 1]);
+	    if (unlikely (status))
+		return status;
+
+	    _cairo_output_stream_printf (surface->output,
+					 "\n");
+	}
+    } else {
+	num_bfchar = font_subset->num_glyphs;
+
+	/* The CMap specification has a limit of 100 characters per beginbfchar operator */
+	_cairo_output_stream_printf (surface->output,
+				     "%d beginbfchar\n",
+				     num_bfchar > 100 ? 100 : num_bfchar);
+
+	for (i = 0; i < num_bfchar; i++) {
+	    if (i != 0 && i % 100 == 0) {
+		_cairo_output_stream_printf (surface->output,
+					     "endbfchar\n"
+					     "%d beginbfchar\n",
+					     num_bfchar - i > 100 ? 100 : num_bfchar - i);
+	    }
+	    _cairo_output_stream_printf (surface->output, "<%02x> ", i);
+	    status = _cairo_pdf_surface_emit_unicode_for_glyph (surface,
+								font_subset->utf8[i]);
+	    if (unlikely (status))
+		return status;
+
+	    _cairo_output_stream_printf (surface->output,
+					 "\n");
+	}
     }
+
     _cairo_output_stream_printf (surface->output,
                                  "endbfchar\n");
 

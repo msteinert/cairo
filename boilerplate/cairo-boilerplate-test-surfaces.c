@@ -28,15 +28,19 @@
 
 #include "cairo-boilerplate-private.h"
 
+#include <cairo-types-private.h>
+
 #include <test-fallback-surface.h>
 #include <test-fallback16-surface.h>
+#if CAIRO_HAS_TEST_PAGINATED_SURFACE
 #include <test-paginated-surface.h>
-#if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1,9,3)
+#endif
+#if CAIRO_HAS_TEST_NULL_SURFACE
 #include <test-null-surface.h>
+#endif
+#if CAIRO_HAS_TEST_WRAPPING_SURFACE
 #include <test-wrapping-surface.h>
 #endif
-
-#include <cairo-types-private.h>
 
 static cairo_surface_t *
 _cairo_boilerplate_test_fallback_create_surface (const char			 *name,
@@ -70,6 +74,7 @@ _cairo_boilerplate_test_fallback16_create_surface (const char			 *name,
 						  ceil (width), ceil (height));
 }
 
+#if CAIRO_HAS_TEST_NULL_SURFACE
 static cairo_surface_t *
 _cairo_boilerplate_test_null_create_surface (const char			 *name,
 					     cairo_content_t		  content,
@@ -82,13 +87,11 @@ _cairo_boilerplate_test_null_create_surface (const char			 *name,
 					     void			**closure)
 {
     *closure = NULL;
-#if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1,9,3)
     return _cairo_test_null_surface_create (content);
-#else
-    return NULL;
-#endif
 }
+#endif
 
+#if CAIRO_HAS_TEST_PAGINATED_SURFACE
 static const cairo_user_data_key_t test_paginated_closure_key;
 
 typedef struct {
@@ -196,7 +199,9 @@ _cairo_boilerplate_test_paginated_cleanup (void *closure)
     cairo_surface_destroy (tpc->target);
     free (tpc);
 }
+#endif
 
+#if CAIRO_HAS_TEST_WRAPPING_SURFACE
 static cairo_surface_t *
 _cairo_boilerplate_test_wrapping_create_surface (const char			 *name,
 						 cairo_content_t		  content,
@@ -208,7 +213,6 @@ _cairo_boilerplate_test_wrapping_create_surface (const char			 *name,
 						 int                              id,
 						 void				**closure)
 {
-#if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1,9,3)
     cairo_surface_t *target;
     cairo_surface_t *surface;
     cairo_format_t format;
@@ -221,11 +225,8 @@ _cairo_boilerplate_test_wrapping_create_surface (const char			 *name,
     cairo_surface_destroy (target);
 
     return surface;
-#else
-    *closure = NULL;
-    return NULL;
-#endif
 }
+#endif
 
 static const cairo_boilerplate_target_t targets[] = {
     {
@@ -264,6 +265,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	NULL, /* _cairo_boilerplate_get_image_surface, */
 	cairo_surface_write_to_png
     },
+#if CAIRO_HAS_TEST_PAGINATED_SURFACE
     {
 	"test-paginated", "image", NULL, NULL,
 	CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED,
@@ -288,6 +290,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	NULL,
 	FALSE, TRUE
     },
+#endif
+#if CAIRO_HAS_TEST_WRAPPING_SURFACE
     {
 	"test-wrapping", "image", NULL, NULL,
 	CAIRO_INTERNAL_SURFACE_TYPE_TEST_WRAPPING,
@@ -297,6 +301,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
     },
+#endif
+#if CAIRO_HAS_TEST_NULL_SURFACE
     {
 	"null", "image", NULL, NULL,
 	CAIRO_INTERNAL_SURFACE_TYPE_NULL,
@@ -307,5 +313,6 @@ static const cairo_boilerplate_target_t targets[] = {
 	NULL,
 	TRUE, FALSE
     },
+#endif
 };
 CAIRO_BOILERPLATE (test, targets)

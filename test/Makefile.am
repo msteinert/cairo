@@ -679,6 +679,10 @@ REFERENCE_IMAGES = \
 	over-between-source.svg12.rgb24.xfail.png \
 	over-between-source.xlib.ref.png \
 	over-between-source.xlib.rgb24.ref.png \
+	overlapping-glyphs.argb32.ref.png \
+	overlapping-glyphs.rgb24.ref.png \
+	overlapping-glyphs.pdf.argb32.xfail.png \
+	overlapping-glyphs.pdf.rgb24.xfail.png \
 	paint-repeat.ref.png \
 	paint-source-alpha.ref.png \
 	paint-source-alpha.svg.ref.png \

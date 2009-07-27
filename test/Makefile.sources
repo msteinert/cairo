@@ -132,6 +132,7 @@ test_sources = \
 	over-around-source.c				\
 	over-below-source.c				\
 	over-between-source.c				\
+	overlapping-glyphs.c				\
 	paint.c						\
 	paint-repeat.c					\
 	paint-source-alpha.c				\

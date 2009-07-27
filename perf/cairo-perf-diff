@@ -58,7 +58,7 @@ benchmarks="cairo-perf"
 while true; do
     case $1 in
         -f|--force) force_cairo_perf="true";;
-        -h|--html) html_output="true";;
+        -h|--html) html_output="$2"; shift ;;
         -t|--trace) benchmarks="${benchmarks} cairo-perf-trace";;
         *) break;;
     esac
@@ -243,9 +243,9 @@ if [ ! -e $new ]; then
     new=`rev2perf $new`
 fi
 
-if [ "$html_output" != "true" ]; then
+if [ -z "$html_output" ]; then
     $CAIRO_DIR/perf/cairo-perf-diff-files $old $new
 else
     $CAIRO_DIR/perf/cairo-perf-diff-files $old $new |
-    $CAIRO_DIR/perf/make-html.py
+    $CAIRO_DIR/perf/make-html.py > $html_output
 fi

@@ -1709,6 +1709,12 @@ _ft_create_for_source (csi_t *ctx,
 	if (--source->base.ref == 0)
 	    csi_string_free (ctx, source);
 
+	if (source->deflate) {
+	    _csi_free (ctx, bytes);
+	    bytes = data->blob.bytes + vec[0].num_bytes;
+	} else
+	    bytes = data->blob.bytes;
+
 	data->source = NULL;
 	data->bytes = NULL;
     } else {
@@ -5714,6 +5720,7 @@ _integer_constants[] = {
     { "XOR",		CAIRO_OPERATOR_XOR },
     { "ADD",		CAIRO_OPERATOR_ADD },
     { "SATURATE",	CAIRO_OPERATOR_SATURATE },
+#if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1, 9, 4)
     { "MULTIPLY",	CAIRO_OPERATOR_MULTIPLY },
     { "SCREEN",		CAIRO_OPERATOR_SCREEN },
     { "OVERLAY",	CAIRO_OPERATOR_OVERLAY },
@@ -5729,6 +5736,7 @@ _integer_constants[] = {
     { "HSL_SATURATION", CAIRO_OPERATOR_HSL_SATURATION },
     { "HSL_COLOR",	CAIRO_OPERATOR_HSL_COLOR },
     { "HSL_LUMINOSITY", CAIRO_OPERATOR_HSL_LUMINOSITY },
+#endif
 
     { "WINDING",	CAIRO_FILL_RULE_WINDING },
     { "EVEN_ODD",	CAIRO_FILL_RULE_EVEN_ODD },

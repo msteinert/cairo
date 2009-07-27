@@ -43,6 +43,8 @@ _cairo_spline_init (cairo_spline_t *spline,
 		    const cairo_point_t *a, const cairo_point_t *b,
 		    const cairo_point_t *c, const cairo_point_t *d)
 {
+    cairo_slope_t slope;
+
     spline->add_point_func = add_point_func;
     spline->closure = closure;
 
@@ -66,6 +68,13 @@ _cairo_spline_init (cairo_spline_t *spline,
 	_cairo_slope_init (&spline->final_slope, &spline->knots.b, &spline->knots.d);
     else
 	_cairo_slope_init (&spline->final_slope, &spline->knots.a, &spline->knots.d);
+
+    _cairo_slope_init (&slope, &spline->knots.a, &spline->knots.d);
+    if (_cairo_slope_compare (&slope, &spline->initial_slope) == 0 &&
+	_cairo_slope_compare (&slope, &spline->final_slope) == 0)
+    {
+	return FALSE; /* just a straight line... */
+    }
 
     return TRUE;
 }
