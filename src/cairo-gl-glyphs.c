@@ -198,8 +198,9 @@ _cairo_gl_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
     if (glyph_private != NULL) {
 	glyph_private->node.owner = NULL;
 	if (! glyph_private->node.pinned) {
-	    _cairo_rtree_node_collapse (&glyph_private->cache->rtree,
-		                        glyph_private->node.parent);
+	    /* XXX thread-safety? Probably ok due to the frozen scaled-font. */
+	    _cairo_rtree_node_remove (&glyph_private->cache->rtree,
+		                      &glyph_private->node);
 	}
     }
 }

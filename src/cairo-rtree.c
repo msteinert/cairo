@@ -185,6 +185,19 @@ _cairo_rtree_node_insert (cairo_rtree_t *rtree,
     return CAIRO_STATUS_SUCCESS;
 }
 
+void
+_cairo_rtree_node_remove (cairo_rtree_t *rtree, cairo_rtree_node_t *node)
+{
+    assert (node->state == CAIRO_RTREE_NODE_OCCUPIED);
+    assert (node->pinned == FALSE);
+
+    node->state = CAIRO_RTREE_NODE_AVAILABLE;
+    cairo_list_move (&node->link, &rtree->available);
+
+    if (! node->parent->pinned)
+	_cairo_rtree_node_collapse (rtree, node->parent);
+}
+
 cairo_int_status_t
 _cairo_rtree_insert (cairo_rtree_t	     *rtree,
 		     int		      width,
