@@ -35,6 +35,7 @@ test_sources = \
 	create-from-png.c				\
 	create-from-png-stream.c			\
 	culled-glyphs.c					\
+	curve-to-as-line-to.c				\
 	dash-caps-joins.c				\
 	dash-curve.c					\
 	dash-no-dash.c					\
