@@ -39,6 +39,12 @@
  *	Karl Tomlinson <karlt+@karlt.net>, Mozilla Corporation
  */
 
+/* Heed well the words of Owen Taylor:
+ * "Any patch that works around a render bug, or claims to, without a
+ * specific reference to the bug filed in bugzilla.freedesktop.org will
+ * never pass approval."
+ */
+
 #include "cairoint.h"
 
 #include "cairo-xlib-private.h"
