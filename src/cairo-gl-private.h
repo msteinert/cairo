@@ -40,7 +40,7 @@
 #define CAIRO_GL_PRIVATE_H
 
 #include "cairoint.h"
-#include "cairo-freelist-private.h"
+#include "cairo-rtree-private.h"
 
 #include <GL/glew.h>
 
@@ -61,27 +61,8 @@ typedef struct _cairo_gl_surface {
     GLuint fb; /* GL framebuffer object wrapping our data. */
 } cairo_gl_surface_t;
 
-enum {
-    RTREE_NODE_AVAILABLE,
-    RTREE_NODE_DIVIDED,
-    RTREE_NODE_OCCUPIED,
-};
-typedef struct _rtree_node {
-    struct _rtree_node *children[4], *parent;
-    uint16_t state;
-    uint16_t locked;
-    uint16_t x, y;
-    uint16_t width, height;
-} rtree_node_t;
-
-typedef struct _rtree {
-    rtree_node_t root;
-    void (*evict) (void *node);
-    cairo_freelist_t node_freelist;
-} rtree_t;
-
 typedef struct cairo_gl_glyph_cache {
-    rtree_t rtree;
+    cairo_rtree_t rtree;
     GLuint tex;
     unsigned int width, height;
 } cairo_gl_glyph_cache_t;
@@ -133,7 +114,7 @@ typedef struct _cairo_gl_composite_setup {
     cairo_gl_composite_operand_t mask;
 } cairo_gl_composite_setup_t;
 
-extern const cairo_surface_backend_t _cairo_gl_surface_backend;
+cairo_private extern const cairo_surface_backend_t _cairo_gl_surface_backend;
 
 cairo_private cairo_gl_context_t *
 _cairo_gl_context_create_in_error (cairo_status_t status);
@@ -147,14 +128,14 @@ _cairo_gl_surface_init (cairo_gl_context_t *ctx,
 			cairo_content_t content,
 			int width, int height);
 
-cairo_status_t
+cairo_private cairo_status_t
 _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 			      cairo_image_surface_t *src,
 			      int src_x, int src_y,
 			      int width, int height,
 			      int dst_x, int dst_y);
 
-cairo_int_status_t
+cairo_private cairo_int_status_t
 _cairo_gl_operand_init (cairo_gl_composite_operand_t *operand,
 			const cairo_pattern_t *pattern,
 			cairo_gl_surface_t *dst,
@@ -162,35 +143,38 @@ _cairo_gl_operand_init (cairo_gl_composite_operand_t *operand,
 			int dst_x, int dst_y,
 			int width, int height);
 
-cairo_gl_context_t *
+cairo_private cairo_gl_context_t *
 _cairo_gl_context_acquire (cairo_gl_context_t *ctx);
 
-void
+cairo_private void
 _cairo_gl_context_release (cairo_gl_context_t *ctx);
 
-void
+cairo_private void
 _cairo_gl_set_destination (cairo_gl_surface_t *surface);
 
-int
+cairo_private int
 _cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op);
 
-void
+cairo_private void
 _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 			   cairo_gl_composite_setup_t *setup);
 
-void
+cairo_private void
 _cairo_gl_operand_destroy (cairo_gl_composite_operand_t *operand);
 
-cairo_status_t
+cairo_private cairo_status_t
 _cairo_gl_get_image_format_and_type (pixman_format_code_t pixman_format,
 				     GLenum *internal_format, GLenum *format,
 				     GLenum *type, cairo_bool_t *has_alpha);
 
-void
+cairo_private void
 _cairo_gl_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 				     cairo_scaled_font_t  *scaled_font);
 
-cairo_int_status_t
+cairo_private void
+_cairo_gl_glyph_cache_init (cairo_gl_glyph_cache_t *cache);
+
+cairo_private cairo_int_status_t
 _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 			       cairo_operator_t		 op,
 			       const cairo_pattern_t	*source,
@@ -200,7 +184,7 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 			       cairo_clip_t		*clip,
 			       int			*remaining_glyphs);
 
-void
+cairo_private void
 _cairo_gl_glyph_cache_fini (cairo_gl_glyph_cache_t *cache);
 
 #endif /* CAIRO_GL_PRIVATE_H */

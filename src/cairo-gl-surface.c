@@ -82,6 +82,8 @@ _cairo_gl_context_create_in_error (cairo_status_t status)
 cairo_status_t
 _cairo_gl_context_init (cairo_gl_context_t *ctx)
 {
+    int n;
+
     ctx->status = CAIRO_STATUS_SUCCESS;
     CAIRO_REFERENCE_COUNT_INIT (&ctx->ref_count, 1);
     CAIRO_MUTEX_INIT (ctx->mutex);
@@ -120,6 +122,9 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     glGetIntegerv (GL_MAX_RENDERBUFFER_SIZE, &ctx->max_framebuffer_size);
     ctx->max_texture_size = 0;
     glGetIntegerv (GL_MAX_TEXTURE_SIZE, &ctx->max_texture_size);
+
+    for (n = 0; n < ARRAY_LENGTH (ctx->glyph_cache); n++)
+	_cairo_gl_glyph_cache_init (&ctx->glyph_cache[n]);
 
     return CAIRO_STATUS_SUCCESS;
 }

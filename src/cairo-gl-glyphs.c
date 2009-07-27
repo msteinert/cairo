@@ -33,7 +33,7 @@
 #include "cairoint.h"
 
 #include "cairo-gl-private.h"
-#include "cairo-freelist-private.h"
+#include "cairo-rtree-private.h"
 
 #define GLYPH_CACHE_WIDTH 1024
 #define GLYPH_CACHE_HEIGHT 1024
@@ -41,306 +41,10 @@
 #define GLYPH_CACHE_MAX_SIZE 128
 
 typedef struct _cairo_gl_glyph_private {
-    rtree_node_t node;
-    void **owner;
+    cairo_rtree_node_t node;
+    cairo_gl_glyph_cache_t *cache;
     struct { float x, y; } p1, p2;
 } cairo_gl_glyph_private_t;
-
-static void
-_rtree_node_evict (rtree_t *rtree, rtree_node_t *node)
-{
-    rtree->evict (node);
-    node->state = RTREE_NODE_AVAILABLE;
-}
-
-static rtree_node_t *
-_rtree_node_create (rtree_t		 *rtree,
-		    rtree_node_t	 *parent,
-		    int			  x,
-		    int			  y,
-		    int			  width,
-		    int			  height)
-{
-    rtree_node_t *node;
-
-    /* XXX chunked freelist */
-    node = _cairo_freelist_alloc (&rtree->node_freelist);
-    if (node == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return NULL;
-    }
-
-    memset (node->children, 0, sizeof (node->children));
-    node->parent = parent;
-    node->state  = RTREE_NODE_AVAILABLE;
-    node->locked = FALSE;
-    node->x	 = x;
-    node->y	 = y;
-    node->width  = width;
-    node->height = height;
-
-    return node;
-}
-
-static void
-_rtree_node_destroy (rtree_t *rtree, rtree_node_t *node)
-{
-    int i;
-
-    if (node == NULL)
-	return;
-
-    if (node->state == RTREE_NODE_OCCUPIED) {
-	_rtree_node_evict (rtree, node);
-    } else {
-	for (i = 0; i < 4 && node->children[i] != NULL; i++)
-	    _rtree_node_destroy (rtree, node->children[i]);
-    }
-
-    _cairo_freelist_free (&rtree->node_freelist, node);
-}
-
-static cairo_int_status_t
-_rtree_insert (rtree_t	     *rtree,
-	       rtree_node_t  *node,
-	       int	      width,
-	       int	      height,
-	       rtree_node_t **out)
-{
-    cairo_status_t status;
-    int i;
-
-    switch (node->state) {
-    case RTREE_NODE_DIVIDED:
-	for (i = 0; i < 4 && node->children[i] != NULL; i++) {
-	    if (node->children[i]->width  >= width &&
-		node->children[i]->height >= height)
-	    {
-		status = _rtree_insert (rtree, node->children[i],
-					width, height,
-					out);
-		if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-		    return status;
-	    }
-	}
-
-    default:
-    case RTREE_NODE_OCCUPIED:
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    case RTREE_NODE_AVAILABLE:
-	if (node->width  - width  > GLYPH_CACHE_MIN_SIZE ||
-	    node->height - height > GLYPH_CACHE_MIN_SIZE)
-	{
-	    int w, h;
-
-	    w = node->width  - width;
-	    h = node->height - height;
-
-	    i = 0;
-	    node->children[i] = _rtree_node_create (rtree, node,
-						    node->x, node->y,
-						    width, height);
-	    if (unlikely (node->children[i] == NULL))
-		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    i++;
-
-	    if (w > GLYPH_CACHE_MIN_SIZE) {
-		node->children[i] = _rtree_node_create (rtree, node,
-							node->x + width,
-							node->y,
-							w, height);
-		if (unlikely (node->children[i] == NULL))
-		    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-		i++;
-	    }
-
-	    if (h > GLYPH_CACHE_MIN_SIZE) {
-		node->children[i] = _rtree_node_create (rtree, node,
-							node->x,
-							node->y + height,
-							width, h);
-		if (unlikely (node->children[i] == NULL))
-		    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-		i++;
-
-		if (w > GLYPH_CACHE_MIN_SIZE) {
-		    node->children[i] = _rtree_node_create (rtree, node,
-							    node->x + width,
-							    node->y + height,
-							    w, h);
-		    if (unlikely (node->children[i] == NULL))
-			return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-		    i++;
-		}
-	    }
-
-	    node->state = RTREE_NODE_DIVIDED;
-	    node = node->children[0];
-	}
-
-	node->state = RTREE_NODE_OCCUPIED;
-	*out = node;
-	return CAIRO_STATUS_SUCCESS;
-    }
-}
-
-static cairo_int_status_t
-_rtree_add_evictable_nodes (rtree_t *rtree,
-			    rtree_node_t *node,
-			    int width,
-			    int height,
-			    cairo_array_t *evictable_nodes)
-{
-    cairo_int_status_t status;
-    cairo_bool_t child_added = FALSE;
-    int i;
-
-    switch (node->state) {
-    case RTREE_NODE_DIVIDED:
-	for (i = 0; i < 4 && node->children[i] != NULL; i++) {
-	    if (node->children[i]->width  >= width &&
-		node->children[i]->height >= height)
-	    {
-		status = _rtree_add_evictable_nodes (rtree, node->children[i],
-						     width, height,
-						     evictable_nodes);
-		if (_cairo_status_is_error (status))
-		    return status;
-
-		child_added |= status == CAIRO_STATUS_SUCCESS;
-	    }
-	}
-	if (child_added)
-	    return CAIRO_STATUS_SUCCESS;
-
-	/* fall through */
-    case RTREE_NODE_AVAILABLE:
-    case RTREE_NODE_OCCUPIED:
-	if (node->locked)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
-
-    return _cairo_array_append (evictable_nodes, &node);
-}
-
-static uint32_t
-hars_petruska_f54_1_random (void)
-{
-#define rol(x,k) ((x << k) | (x >> (32-k)))
-    static uint32_t x;
-    return x = (x ^ rol (x, 5) ^ rol (x, 24)) + 0x37798849;
-#undef rol
-}
-
-static cairo_int_status_t
-_rtree_evict_random (rtree_t	*rtree,
-		     rtree_node_t *root,
-		     int	 width,
-		     int	 height,
-		     rtree_node_t **out)
-{
-    cairo_array_t evictable_nodes;
-    cairo_status_t status;
-    int i;
-
-    _cairo_array_init (&evictable_nodes, sizeof (rtree_node_t *));
-
-    status = _rtree_add_evictable_nodes (rtree, root,
-					 width, height,
-					 &evictable_nodes);
-    if (status == CAIRO_STATUS_SUCCESS) {
-	rtree_node_t *node;
-
-	node = *(rtree_node_t **)
-	    _cairo_array_index (&evictable_nodes,
-				hars_petruska_f54_1_random () % evictable_nodes.num_elements);
-	if (node->state == RTREE_NODE_OCCUPIED) {
-	    _rtree_node_evict (rtree, node);
-	} else {
-	    for (i = 0; i < 4 && node->children[i] != NULL; i++) {
-		_rtree_node_destroy (rtree, node->children[i]);
-		node->children[i] = NULL;
-	    }
-	}
-
-	node->state = RTREE_NODE_AVAILABLE;
-	*out = node;
-    }
-
-    _cairo_array_fini (&evictable_nodes);
-
-    return status;
-}
-
-static void *
-_rtree_lock (rtree_t *rtree, rtree_node_t *node)
-{
-    void *ptr = node;
-
-    while (node != NULL && ! node->locked) {
-	node->locked = TRUE;
-	node = node->parent;
-    }
-
-    return ptr;
-}
-
-static void
-_rtree_unlock (rtree_t *rtree, rtree_node_t *node)
-{
-    int i;
-
-    if (! node->locked)
-	return;
-
-    node->locked = FALSE;
-    if (node->state == RTREE_NODE_DIVIDED) {
-	for (i = 0; i < 4 && node->children[i] != NULL; i++)
-	    _rtree_unlock (rtree, node->children[i]);
-    }
-}
-
-static void
-_rtree_init (rtree_t	    *rtree,
-	     int	     width,
-	     int	     height,
-	     int             node_size,
-	     void (*evict) (void *node))
-{
-    rtree->evict = evict;
-
-    assert (node_size >= (int) sizeof (rtree_node_t));
-    _cairo_freelist_init (&rtree->node_freelist, node_size);
-
-    memset (&rtree->root, 0, sizeof (rtree->root));
-    rtree->root.width = width;
-    rtree->root.height = height;
-}
-
-static void
-_rtree_fini (rtree_t *rtree)
-{
-    int i;
-
-    if (rtree->root.state == RTREE_NODE_OCCUPIED) {
-	_rtree_node_evict (rtree, &rtree->root);
-    } else {
-	for (i = 0; i < 4 && rtree->root.children[i] != NULL; i++)
-	    _rtree_node_destroy (rtree, rtree->root.children[i]);
-    }
-
-    _cairo_freelist_fini (&rtree->node_freelist);
-}
-
-static void
-_glyph_evict (void *node)
-{
-    cairo_gl_glyph_private_t *glyph_private = node;
-
-    if (glyph_private->owner != NULL)
-	*glyph_private->owner = NULL;
-}
 
 static cairo_status_t
 _cairo_gl_glyph_cache_add_glyph (cairo_gl_glyph_cache_t *cache,
@@ -348,7 +52,7 @@ _cairo_gl_glyph_cache_add_glyph (cairo_gl_glyph_cache_t *cache,
 {
     cairo_image_surface_t *glyph_surface = scaled_glyph->surface;
     cairo_gl_glyph_private_t *glyph_private;
-    rtree_node_t *node = NULL;
+    cairo_rtree_node_t *node = NULL;
     cairo_status_t status;
     int width, height;
     GLenum internal_format, format, type;
@@ -370,14 +74,15 @@ _cairo_gl_glyph_cache_add_glyph (cairo_gl_glyph_cache_t *cache,
 	height = GLYPH_CACHE_MIN_SIZE;
 
     /* search for an available slot */
-    status = _rtree_insert (&cache->rtree, &cache->rtree.root,
-			    width, height, &node);
+    status = _cairo_rtree_insert (&cache->rtree, width, height, &node);
     /* search for an unlocked slot */
     if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
-	status = _rtree_evict_random (&cache->rtree, &cache->rtree.root,
-				      width, height, &node);
-	if (status == CAIRO_STATUS_SUCCESS)
-	    status = _rtree_insert (&cache->rtree, node, width, height, &node);
+	status = _cairo_rtree_evict_random (&cache->rtree,
+				            width, height, &node);
+	if (status == CAIRO_STATUS_SUCCESS) {
+	    status = _cairo_rtree_node_insert (&cache->rtree,
+		                               node, width, height, &node);
+	}
     }
     if (status)
 	return status;
@@ -394,9 +99,10 @@ _cairo_gl_glyph_cache_add_glyph (cairo_gl_glyph_cache_t *cache,
     glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
 
     scaled_glyph->surface_private = node;
+    node->owner = &scaled_glyph->surface_private;
 
     glyph_private = (cairo_gl_glyph_private_t *) node;
-    glyph_private->owner = &scaled_glyph->surface_private;
+    glyph_private->cache = cache;
 
     /* compute tex coords */
     glyph_private->p1.x = node->x / (double) cache->width;
@@ -413,59 +119,14 @@ static cairo_gl_glyph_private_t *
 _cairo_gl_glyph_cache_lock (cairo_gl_glyph_cache_t *cache,
 			    cairo_scaled_glyph_t *scaled_glyph)
 {
-    return _rtree_lock (&cache->rtree, scaled_glyph->surface_private);
+    return _cairo_rtree_pin (&cache->rtree, scaled_glyph->surface_private);
 }
 
-static cairo_status_t
-cairo_gl_glyph_cache_init (cairo_gl_glyph_cache_t *cache,
-			   cairo_gl_context_t *ctx,
-			   cairo_format_t format,
-			   int width, int height)
-{
-    cairo_content_t content;
-    GLenum internal_format;
-
-    assert ((width & 3) == 0);
-    assert ((height & 1) == 0);
-    cache->width = width;
-    cache->height = height;
-
-    switch (format) {
-    case CAIRO_FORMAT_A1:
-    case CAIRO_FORMAT_RGB24:
-	ASSERT_NOT_REACHED;
-    case CAIRO_FORMAT_ARGB32:
-	content = CAIRO_CONTENT_COLOR_ALPHA;
-	internal_format = GL_RGBA;
-	break;
-    case CAIRO_FORMAT_A8:
-	content = CAIRO_CONTENT_ALPHA;
-	internal_format = GL_ALPHA;
-	break;
-    }
-
-    glGenTextures (1, &cache->tex);
-    glBindTexture (GL_TEXTURE_2D, cache->tex);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexImage2D (GL_TEXTURE_2D, 0, internal_format,
-		  width, height, 0, internal_format, GL_FLOAT, NULL);
-
-    _rtree_init (&cache->rtree,
-		 width, height,
-		 sizeof (cairo_gl_glyph_private_t),
-		 _glyph_evict);
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
+static cairo_gl_glyph_cache_t *
 cairo_gl_context_get_glyph_cache (cairo_gl_context_t *ctx,
-				  cairo_format_t format,
-				  cairo_gl_glyph_cache_t **out)
+				  cairo_format_t format)
 {
     cairo_gl_glyph_cache_t *cache;
-    cairo_status_t status;
 
     switch (format) {
     case CAIRO_FORMAT_ARGB32:
@@ -481,15 +142,33 @@ cairo_gl_context_get_glyph_cache (cairo_gl_context_t *ctx,
     }
 
     if (unlikely (cache->tex == 0)) {
-	status = cairo_gl_glyph_cache_init (cache, ctx, format,
-					    GLYPH_CACHE_WIDTH,
-					    GLYPH_CACHE_HEIGHT);
-	if (unlikely (status))
-	    return status;
+	GLenum internal_format;
+
+	cache->width = GLYPH_CACHE_WIDTH;
+	cache->height = GLYPH_CACHE_HEIGHT;
+
+	switch (format) {
+	    case CAIRO_FORMAT_A1:
+	    case CAIRO_FORMAT_RGB24:
+		ASSERT_NOT_REACHED;
+	    case CAIRO_FORMAT_ARGB32:
+		internal_format = GL_RGBA;
+		break;
+	    case CAIRO_FORMAT_A8:
+		internal_format = GL_ALPHA;
+		break;
+	}
+
+	glGenTextures (1, &cache->tex);
+	glBindTexture (GL_TEXTURE_2D, cache->tex);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexImage2D (GL_TEXTURE_2D, 0, internal_format,
+		      GLYPH_CACHE_WIDTH, GLYPH_CACHE_HEIGHT, 0,
+		      internal_format, GL_FLOAT, NULL);
     }
 
-    *out = cache;
-    return CAIRO_STATUS_SUCCESS;
+    return cache;
 }
 
 static cairo_bool_t
@@ -516,8 +195,13 @@ _cairo_gl_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
     cairo_gl_glyph_private_t *glyph_private;
 
     glyph_private = scaled_glyph->surface_private;
-    if (glyph_private != NULL)
-	glyph_private->owner = NULL;
+    if (glyph_private != NULL) {
+	glyph_private->node.owner = NULL;
+	if (! glyph_private->node.pinned) {
+	    _cairo_rtree_node_collapse (&glyph_private->cache->rtree,
+		                        glyph_private->node.parent);
+	}
+    }
 }
 
 typedef struct _cairo_gl_glyphs_setup
@@ -576,10 +260,8 @@ _cairo_gl_flush_glyphs (cairo_gl_context_t *ctx,
 	}
     }
 
-    for (i = 0; i < ARRAY_LENGTH (ctx->glyph_cache); i++) {
-	_rtree_unlock (&ctx->glyph_cache[i].rtree,
-		       &ctx->glyph_cache[i].rtree.root);
-    }
+    for (i = 0; i < ARRAY_LENGTH (ctx->glyph_cache); i++)
+	_cairo_rtree_unpin (&ctx->glyph_cache[i].rtree);
 }
 
 static void
@@ -848,11 +530,8 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 	    _cairo_gl_flush_glyphs (ctx, &setup);
 
 	    glActiveTexture (GL_TEXTURE1);
-	    status = cairo_gl_context_get_glyph_cache (ctx,
-						       scaled_glyph->surface->format,
-						       &cache);
-	    if (unlikely (status))
-		goto FINISH;
+	    cache = cairo_gl_context_get_glyph_cache (ctx,
+						      scaled_glyph->surface->format);
 
 	    glBindTexture (GL_TEXTURE_2D, cache->tex);
 
@@ -929,5 +608,18 @@ _cairo_gl_glyph_cache_fini (cairo_gl_glyph_cache_t *cache)
 
     glDeleteTextures (1, &cache->tex);
 
-    _rtree_fini (&cache->rtree);
+    _cairo_rtree_fini (&cache->rtree);
+}
+
+void
+_cairo_gl_glyph_cache_init (cairo_gl_glyph_cache_t *cache)
+{
+    cache->tex = 0;
+
+    _cairo_rtree_init (&cache->rtree,
+		       GLYPH_CACHE_WIDTH,
+		       GLYPH_CACHE_HEIGHT,
+		       GLYPH_CACHE_MIN_SIZE,
+		       sizeof (cairo_gl_glyph_private_t),
+		       NULL);
 }
