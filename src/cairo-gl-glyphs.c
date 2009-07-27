@@ -528,7 +528,18 @@ typedef struct _cairo_gl_glyphs_setup
     unsigned int num_prims;
     float *vb;
     cairo_gl_composite_setup_t *composite;
+    cairo_region_t *clip;
+    cairo_gl_surface_t *dst;
 } cairo_gl_glyphs_setup_t;
+
+static int
+_cairo_gl_y_flip (cairo_gl_surface_t *surface, int y)
+{
+    if (surface->fb)
+	return y;
+    else
+	return (surface->height - 1) - y;
+}
 
 static void
 _cairo_gl_flush_glyphs (cairo_gl_context_t *ctx,
@@ -541,7 +552,26 @@ _cairo_gl_flush_glyphs (cairo_gl_context_t *ctx,
 	setup->vb = NULL;
 
 	if (setup->num_prims != 0) {
-	    glDrawArrays (GL_QUADS, 0, 4 * setup->num_prims);
+	    if (setup->clip) {
+		int num_rectangles = cairo_region_num_rectangles (setup->clip);
+
+		glEnable (GL_SCISSOR_TEST);
+		for (i = 0; i < num_rectangles; i++) {
+		    cairo_rectangle_int_t rect;
+
+		    cairo_region_get_rectangle (setup->clip, i, &rect);
+
+		    glScissor (rect.x,
+			       _cairo_gl_y_flip (setup->dst, rect.y),
+			       rect.x + rect.width,
+			       _cairo_gl_y_flip (setup->dst,
+						 rect.y + rect.height));
+		    glDrawArrays (GL_QUADS, 0, 4 * setup->num_prims);
+		}
+		glDisable (GL_SCISSOR_TEST);
+	    } else {
+		glDrawArrays (GL_QUADS, 0, 4 * setup->num_prims);
+	    }
 	    setup->num_prims = 0;
 	}
     }
@@ -690,6 +720,14 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
     if (! _cairo_gl_surface_owns_font (dst, scaled_font))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    if (clip != NULL) {
+	status = _cairo_clip_get_region (clip, &clip_region);
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    return CAIRO_STATUS_SUCCESS;
+	else if (status != CAIRO_STATUS_SUCCESS)
+	    return status;
+    }
+
     /* XXX If glyphs overlap, build tmp mask and composite.
      * Could we use the stencil instead but only write if alpha !=0 ?
      * TEXKILL? PIXELKILL?
@@ -752,6 +790,8 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
      */
     memset(&setup, 0, sizeof(setup));
     setup.composite = &composite_setup;
+    setup.clip = clip_region;
+    setup.dst = dst;
     setup.vertex_size = 4;
     if (composite_setup.src.type == OPERAND_TEXTURE)
 	setup.vertex_size += 2;
@@ -854,6 +894,7 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 
   CLEANUP_CONTEXT:
     glDisable (GL_BLEND);
+    glDisable (GL_SCISSOR_TEST);
 
     glDisableClientState (GL_VERTEX_ARRAY);
 
