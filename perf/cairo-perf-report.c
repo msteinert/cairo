@@ -149,17 +149,17 @@ test_report_parse (test_report_t *report, char *line, char *configuration)
     report->configuration = configuration;
     parse_string (report->backend);
     end = strrchr (report->backend, '.');
-    if (*end)
+    if (end)
 	*end++ = '\0';
-    report->content = end;
+    report->content = end ? end : xstrdup ("???");
 
     skip_space ();
 
     parse_string (report->name);
     end = strrchr (report->name, '.');
-    if (*end)
+    if (end)
 	*end++ = '\0';
-    report->size = atoi (end);
+    report->size = end ? atoi (end) : 0;
 
     skip_space ();
 
