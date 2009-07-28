@@ -460,7 +460,7 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 
     _cairo_scaled_font_freeze_cache (scaled_font);
     if (! _cairo_gl_surface_owns_font (dst, scaled_font))
-	goto CLEANUP_CONTEXT;
+	goto CLEANUP_FONT;
 
     if (scaled_font->surface_private == NULL) {
 	/* XXX couple into list to remove on context destruction */
@@ -570,9 +570,9 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
     status = CAIRO_STATUS_SUCCESS;
   FINISH:
     _cairo_gl_flush_glyphs (ctx, &setup);
+  CLEANUP_FONT:
     _cairo_scaled_font_thaw_cache (scaled_font);
 
-  CLEANUP_CONTEXT:
     glDisable (GL_BLEND);
     glDisable (GL_SCISSOR_TEST);
 
