@@ -93,15 +93,12 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     if (glewInit () != GLEW_OK)
 	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT); /* XXX */
 
-    if (! GLEW_ARB_vertex_buffer_object ||
-	! GLEW_EXT_framebuffer_object ||
+    if (! GLEW_EXT_framebuffer_object ||
 	! GLEW_ARB_texture_env_combine ||
 	! GLEW_ARB_texture_non_power_of_two)
     {
 	fprintf (stderr,
 		 "Required GL extensions not available:\n");
-	if (! GLEW_ARB_vertex_buffer_object)
-	    fprintf (stderr, "    GL_ARB_vertex_buffer_object\n");
 	if (! GLEW_EXT_framebuffer_object)
 	    fprintf (stderr, "    GL_EXT_framebuffer_object\n");
 	if (! GLEW_ARB_texture_env_combine)
@@ -1775,7 +1772,14 @@ _cairo_gl_surface_check_span_renderer (cairo_operator_t	  op,
 				       cairo_antialias_t	  antialias,
 				       const cairo_composite_rectangles_t *rects)
 {
-    return _cairo_gl_operator_is_supported (op);
+    if (! _cairo_gl_operator_is_supported (op))
+	return FALSE;
+
+    if (! GLEW_ARB_vertex_buffer_object)
+	return FALSE;
+
+    return TRUE;
+
     (void) pattern;
     (void) abstract_dst;
     (void) antialias;
@@ -1880,9 +1884,6 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
     int height = rects->height;
     cairo_surface_attributes_t *src_attributes;
     GLenum err;
-
-    if (!GLEW_ARB_vertex_buffer_object)
-	return _cairo_span_renderer_create_in_error (CAIRO_INT_STATUS_UNSUPPORTED);
 
     renderer = calloc (1, sizeof (*renderer));
     if (unlikely (renderer == NULL))

@@ -343,6 +343,9 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
     cairo_gl_composite_setup_t composite_setup;
     GLuint vbo = 0;
 
+    if (! GLEW_ARB_vertex_buffer_object)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     if (! _cairo_gl_operator_is_supported (op))
         return CAIRO_INT_STATUS_UNSUPPORTED;
 
