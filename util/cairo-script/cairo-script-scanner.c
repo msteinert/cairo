@@ -228,8 +228,8 @@ token_add_unchecked (csi_scanner_t *scan, int c)
     buffer_add (&scan->buffer, c);
 }
 
-static csi_boolean_t
-parse_number (csi_object_t *obj, const char *s, int len)
+csi_boolean_t
+_csi_parse_number (csi_object_t *obj, const char *s, int len)
 {
     int radix = 0;
     long long mantissa = 0;
@@ -464,7 +464,7 @@ token_end (csi_t *ctx, csi_scanner_t *scan, csi_file_t *src)
 	if (_csi_unlikely (status))
 	    longjmp (scan->jmpbuf, status);
     } else {
-	if (! parse_number (&obj, s, len)) {
+	if (! _csi_parse_number (&obj, s, len)) {
 	    status = csi_name_new (ctx, &obj, s, len);
 	    if (_csi_unlikely (status))
 		longjmp (scan->jmpbuf, status);

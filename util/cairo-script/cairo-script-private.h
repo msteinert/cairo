@@ -824,6 +824,9 @@ _csi_translate_file (csi_t *ctx,
 csi_private void
 _csi_scanner_fini (csi_t *ctx, csi_scanner_t *scanner);
 
+csi_private csi_boolean_t
+_csi_parse_number (csi_object_t *obj, const char *s, int len);
+
 /* cairo-script-stack.c */
 
 csi_private csi_status_t

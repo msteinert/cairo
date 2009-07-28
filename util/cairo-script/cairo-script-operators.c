@@ -1109,6 +1109,78 @@ _curve_to (csi_t *ctx)
 }
 
 static csi_status_t
+_cvi (csi_t *ctx)
+{
+    csi_object_t *val, obj;
+
+    check (1);
+
+    val = _csi_peek_ostack (ctx, 0);
+
+    switch ((int) csi_object_get_type (val)) {
+    case CSI_OBJECT_TYPE_INTEGER:
+	return CSI_STATUS_SUCCESS;
+
+    case CSI_OBJECT_TYPE_REAL:
+	pop (1);
+	return _csi_push_ostack_integer (ctx, val->datum.real);
+
+    case CSI_OBJECT_TYPE_STRING:
+	if (! _csi_parse_number (&obj,
+				 val->datum.string->string,
+				 val->datum.string->len))
+	{
+	    return _csi_error (CSI_STATUS_INVALID_SCRIPT);
+	}
+
+	pop (1);
+	if (csi_object_get_type (&obj) == CSI_OBJECT_TYPE_INTEGER)
+	    return push (&obj);
+	else
+	    return _csi_push_ostack_integer (ctx, obj.datum.real);
+
+    default:
+	return _csi_error (CSI_STATUS_INVALID_SCRIPT);
+    }
+}
+
+static csi_status_t
+_cvr (csi_t *ctx)
+{
+    csi_object_t *val, obj;
+
+    check (1);
+
+    val = _csi_peek_ostack (ctx, 0);
+
+    switch ((int) csi_object_get_type (val)) {
+    case CSI_OBJECT_TYPE_REAL:
+	return CSI_STATUS_SUCCESS;
+
+    case CSI_OBJECT_TYPE_INTEGER:
+	pop (1);
+	return _csi_push_ostack_real (ctx, val->datum.integer);
+
+    case CSI_OBJECT_TYPE_STRING:
+	if (! _csi_parse_number (&obj,
+				 val->datum.string->string,
+				 val->datum.string->len))
+	{
+	    return _csi_error (CSI_STATUS_INVALID_SCRIPT);
+	}
+
+	pop (1);
+	if (csi_object_get_type (&obj) == CSI_OBJECT_TYPE_REAL)
+	    return push (&obj);
+	else
+	    return _csi_push_ostack_real (ctx, obj.datum.integer);
+
+    default:
+	return _csi_error (CSI_STATUS_INVALID_SCRIPT);
+    }
+}
+
+static csi_status_t
 _def (csi_t *ctx)
 {
     csi_name_t name = 0; /* silence the compiler */
@@ -3239,6 +3311,25 @@ _matrix (csi_t *ctx)
     }
 
     return push (&matrix);
+}
+
+static csi_status_t
+_mod (csi_t *ctx)
+{
+    csi_integer_t x, y;
+    csi_status_t status;
+
+    check (2);
+
+    status = _csi_ostack_get_integer (ctx, 0, &y);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_integer (ctx, 1, &x);
+    if (_csi_unlikely (status))
+	return status;
+
+    pop (2);
+    return _csi_push_ostack_integer (ctx, x % y);
 }
 
 static csi_status_t
@@ -5548,6 +5639,8 @@ _defs[] = {
     { "count", NULL },
     { "count-to-mark", NULL },
     { "curve-to", _curve_to },
+    { "cvi", _cvi },
+    { "cvr", _cvr },
     { "def", _def },
     { "device-to-user", NULL },
     { "device-to-user-distance", NULL },
@@ -5601,7 +5694,7 @@ _defs[] = {
     { "mark", _mark },
     { "mask", _mask },
     { "matrix", _matrix },
-    { "mod", NULL },
+    { "mod", _mod },
     { "move-to", _move_to },
     { "mul", _mul },
     { "multiply", NULL },
