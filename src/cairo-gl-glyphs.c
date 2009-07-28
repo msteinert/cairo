@@ -520,7 +520,6 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     return CAIRO_STATUS_SUCCESS;
 }
 
-
 static cairo_int_status_t
 _cairo_gl_surface_show_glyphs_via_mask (cairo_gl_surface_t	*dst,
 			                cairo_operator_t	 op,
@@ -586,6 +585,7 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 			       int			*remaining_glyphs)
 {
     cairo_gl_surface_t *dst = abstract_dst;
+    cairo_rectangle_int_t surface_extents;
     cairo_rectangle_int_t extents;
     cairo_region_t *clip_region = NULL;
     cairo_solid_pattern_t solid_pattern;
@@ -598,8 +598,6 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
     if (! _cairo_gl_operator_is_supported (op))
 	return UNSUPPORTED ("unsupported operator");
 
-    /* Just let unbounded operators go through the fallback code
-     * instead of trying to do the fixups here */
     if (! _cairo_operator_bounded_by_mask (op))
 	use_mask |= TRUE;
 
@@ -678,7 +676,17 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 	    return status;
 
 	use_mask |= status == CAIRO_INT_STATUS_UNSUPPORTED;
+
+	if (! _cairo_rectangle_intersect (&extents,
+		                          _cairo_clip_get_extents (clip)))
+	    goto EMPTY;
     }
+
+    surface_extents.x = surface_extents.y = 0;
+    surface_extents.width = dst->width;
+    surface_extents.height = dst->height;
+    if (! _cairo_rectangle_intersect (&extents, &surface_extents))
+	goto EMPTY;
 
     if (use_mask) {
 	return _cairo_gl_surface_show_glyphs_via_mask (dst, op,
@@ -694,6 +702,13 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 	                   op, source,
 			   glyphs, num_glyphs, &extents,
 			   scaled_font, clip_region, remaining_glyphs);
+
+EMPTY:
+    *remaining_glyphs = 0;
+    if (! _cairo_operator_bounded_by_mask (op))
+	return _cairo_surface_paint (&dst->base, op, source, clip);
+    else
+	return CAIRO_STATUS_SUCCESS;
 }
 
 void
