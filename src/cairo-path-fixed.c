@@ -496,9 +496,6 @@ _cairo_path_fixed_curve_to (cairo_path_fixed_t	*path,
 	    return status;
     }
 
-    if (x2 == path->current_point.x && y2 == path->current_point.y)
-	return _cairo_path_fixed_line_to (path, x2, y2);
-
     point[0].x = x0; point[0].y = y0;
     point[1].x = x1; point[1].y = y1;
     point[2].x = x2; point[2].y = y2;
