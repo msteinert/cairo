@@ -570,6 +570,7 @@ _cairo_sub_font_collect (void *entry, void *closure)
 
 	subset.scaled_font = sub_font->scaled_font;
 	subset.is_composite = sub_font->is_composite;
+	subset.is_scaled = sub_font->is_scaled;
 	subset.font_id = sub_font->font_id;
 	subset.subset_id = i;
 	subset.glyphs = collection->glyphs;
