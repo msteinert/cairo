@@ -323,124 +323,32 @@ _cairo_gl_emit_glyph_rectangle (cairo_gl_context_t *ctx,
     setup->num_prims++;
 }
 
-cairo_int_status_t
-_cairo_gl_surface_show_glyphs (void			*abstract_dst,
-			       cairo_operator_t		 op,
-			       const cairo_pattern_t	*source,
-			       cairo_glyph_t		*glyphs,
-			       int			 num_glyphs,
-			       cairo_scaled_font_t	*scaled_font,
-			       cairo_clip_t		*clip,
-			       int			*remaining_glyphs)
+static cairo_status_t
+_render_glyphs (cairo_gl_surface_t	*dst,
+	        int dst_x, int dst_y,
+	        cairo_operator_t	 op,
+		const cairo_pattern_t	*source,
+		cairo_glyph_t		*glyphs,
+		int			 num_glyphs,
+		const cairo_rectangle_int_t *glyph_extents,
+		cairo_scaled_font_t	*scaled_font,
+		cairo_region_t		*clip_region,
+		int			*remaining_glyphs)
 {
-    cairo_gl_surface_t *dst = abstract_dst;
-    cairo_gl_context_t *ctx;
-    cairo_rectangle_int_t extents;
     cairo_format_t last_format = (cairo_format_t) -1;
     cairo_gl_glyph_cache_t *cache = NULL;
-    cairo_status_t status;
-    int i = 0;
-    cairo_region_t *clip_region = NULL;
-    cairo_solid_pattern_t solid_pattern;
+    cairo_gl_context_t *ctx;
     cairo_gl_glyphs_setup_t setup;
     cairo_gl_composite_setup_t composite_setup;
-    cairo_bool_t overlap;
+    cairo_status_t status;
+    int i = 0;
     GLuint vbo = 0;
 
-    if (! GLEW_ARB_vertex_buffer_object)
-	return UNSUPPORTED ("requires ARB_vertex_buffer_object");
-
-    if (! _cairo_gl_operator_is_supported (op))
-	return UNSUPPORTED ("unsupported operator");
-
-    /* Just let unbounded operators go through the fallback code
-     * instead of trying to do the fixups here */
-    if (! _cairo_operator_bounded_by_mask (op))
-	return UNSUPPORTED ("unhandled unbound operator");
-
-    /* For CLEAR, cairo's rendering equation (quoting Owen's description in:
-     * http://lists.cairographics.org/archives/cairo/2005-August/004992.html)
-     * is:
-     *     mask IN clip ? src OP dest : dest
-     * or more simply:
-     *     mask IN CLIP ? 0 : dest
-     *
-     * where the ternary operator A ? B : C is (A * B) + ((1 - A) * C).
-     *
-     * The model we use in _cairo_gl_set_operator() is Render's:
-     *     src IN mask IN clip OP dest
-     * which would boil down to:
-     *     0 (bounded by the extents of the drawing).
-     *
-     * However, we can do a Render operation using an opaque source
-     * and DEST_OUT to produce:
-     *    1 IN mask IN clip DEST_OUT dest
-     * which is
-     *    mask IN clip ? 0 : dest
-     */
-    if (op == CAIRO_OPERATOR_CLEAR) {
-	_cairo_pattern_init_solid (&solid_pattern, CAIRO_COLOR_WHITE,
-				   CAIRO_CONTENT_COLOR);
-	source = &solid_pattern.base;
-	op = CAIRO_OPERATOR_DEST_OUT;
-    }
-
-    /* For SOURCE, cairo's rendering equation is:
-     *     (mask IN clip) ? src OP dest : dest
-     * or more simply:
-     *     (mask IN clip) ? src : dest.
-     *
-     * If we just used the Render equation, we would get:
-     *     (src IN mask IN clip) OP dest
-     * or:
-     *     (src IN mask IN clip) bounded by extents of the drawing.
-     *
-     * The trick is that for GL blending, we only get our 4 source values
-     * into the blender, and since we need all 4 components of source, we
-     * can't also get the mask IN clip into the blender.  But if we did
-     * two passes we could make it work:
-     *     dest = (mask IN clip) DEST_OUT dest
-     *     dest = src IN mask IN clip ADD dest
-     *
-     * But for now, fall back :)
-     */
-    if (op == CAIRO_OPERATOR_SOURCE)
-	return UNSUPPORTED ("not handling SOURCE operator");
-
-    /* XXX we don't need ownership of the font as we use a global
-     * glyph cache -- but we do need scaled_glyph eviction notification. :-(
-     */
-    if (! _cairo_gl_surface_owns_font (dst, scaled_font))
-	return UNSUPPORTED ("do not control font");
-
-    if (clip != NULL) {
-	status = _cairo_clip_get_region (clip, &clip_region);
-	/* the empty clip should never be propagated this far */
-	assert (status != CAIRO_INT_STATUS_NOTHING_TO_DO);
-	if (unlikely (_cairo_status_is_error (status)))
-	    return status;
-	if (status == CAIRO_INT_STATUS_UNSUPPORTED)
-	    return UNSUPPORTED ("unhandled clipmask");
-    }
-
-    status = _cairo_scaled_font_glyph_device_extents (scaled_font,
-						      glyphs, num_glyphs,
-						      &extents,
-						      &overlap);
-    if (unlikely (status))
-	return status;
-
-    /* If the glyphs overlap, we need to build an intermediate mask rather
-     * then compositing directly.
-     * For the time being, just fallback.
-     */
-    if (overlap)
-	return UNSUPPORTED ("overlapping glyphs");
-
     status = _cairo_gl_operand_init (&composite_setup.src, source, dst,
-				     extents.x, extents.y,
-				     extents.x, extents.y,
-				     extents.width, extents.height);
+				     glyph_extents->x, glyph_extents->y,
+				     dst_x, dst_y,
+				     glyph_extents->width,
+				     glyph_extents->height);
     if (unlikely (status))
 	return status;
 
@@ -465,9 +373,7 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
     glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA);
 
     _cairo_gl_set_destination (dst);
-
     _cairo_gl_set_operator (dst, op);
-
     _cairo_gl_set_src_operand (ctx, &composite_setup);
 
     _cairo_scaled_font_freeze_cache (scaled_font);
@@ -611,7 +517,183 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
     _cairo_gl_operand_destroy (&composite_setup.src);
 
     *remaining_glyphs = num_glyphs - i;
+    return CAIRO_STATUS_SUCCESS;
+}
+
+
+static cairo_int_status_t
+_cairo_gl_surface_show_glyphs_via_mask (cairo_gl_surface_t	*dst,
+			                cairo_operator_t	 op,
+					const cairo_pattern_t	*source,
+					cairo_glyph_t		*glyphs,
+					int			 num_glyphs,
+					const cairo_rectangle_int_t *glyph_extents,
+					cairo_scaled_font_t	*scaled_font,
+					cairo_clip_t		*clip,
+					int			*remaining_glyphs)
+{
+    cairo_surface_t *mask;
+    cairo_status_t status;
+    cairo_solid_pattern_t solid;
+    int i;
+
+    mask = cairo_gl_surface_create (dst->ctx,
+	                            CAIRO_CONTENT_ALPHA,
+				    glyph_extents->width,
+				    glyph_extents->height);
+    if (unlikely (mask->status))
+	return mask->status;
+
+    for (i = 0; i < num_glyphs; i++) {
+	glyphs[i].x -= glyph_extents->x;
+	glyphs[i].y -= glyph_extents->y;
+    }
+
+    _cairo_pattern_init_solid (&solid, CAIRO_COLOR_WHITE, CAIRO_CONTENT_ALPHA);
+    status = _render_glyphs ((cairo_gl_surface_t *) mask, 0, 0,
+	                     CAIRO_OPERATOR_ADD, &solid.base,
+	                     glyphs, num_glyphs, glyph_extents,
+			     scaled_font, NULL, remaining_glyphs);
+    if (likely (status == CAIRO_STATUS_SUCCESS)) {
+	cairo_surface_pattern_t mask_pattern;
+
+	_cairo_pattern_init_for_surface (&mask_pattern, mask);
+	cairo_matrix_init_translate (&mask_pattern.base.matrix,
+		                     -glyph_extents->x, -glyph_extents->y);
+	status = _cairo_surface_mask (&dst->base, op,
+		                      source, &mask_pattern.base, clip);
+	_cairo_pattern_fini (&mask_pattern.base);
+    } else {
+	for (i = 0; i < num_glyphs; i++) {
+	    glyphs[i].x += glyph_extents->x;
+	    glyphs[i].y += glyph_extents->y;
+	}
+	*remaining_glyphs = num_glyphs;
+    }
+
+    cairo_surface_destroy (mask);
     return status;
+}
+
+cairo_int_status_t
+_cairo_gl_surface_show_glyphs (void			*abstract_dst,
+			       cairo_operator_t		 op,
+			       const cairo_pattern_t	*source,
+			       cairo_glyph_t		*glyphs,
+			       int			 num_glyphs,
+			       cairo_scaled_font_t	*scaled_font,
+			       cairo_clip_t		*clip,
+			       int			*remaining_glyphs)
+{
+    cairo_gl_surface_t *dst = abstract_dst;
+    cairo_rectangle_int_t extents;
+    cairo_region_t *clip_region = NULL;
+    cairo_solid_pattern_t solid_pattern;
+    cairo_bool_t overlap, use_mask = FALSE;
+    cairo_status_t status;
+
+    if (! GLEW_ARB_vertex_buffer_object)
+	return UNSUPPORTED ("requires ARB_vertex_buffer_object");
+
+    if (! _cairo_gl_operator_is_supported (op))
+	return UNSUPPORTED ("unsupported operator");
+
+    /* Just let unbounded operators go through the fallback code
+     * instead of trying to do the fixups here */
+    if (! _cairo_operator_bounded_by_mask (op))
+	use_mask |= TRUE;
+
+    /* For CLEAR, cairo's rendering equation (quoting Owen's description in:
+     * http://lists.cairographics.org/archives/cairo/2005-August/004992.html)
+     * is:
+     *     mask IN clip ? src OP dest : dest
+     * or more simply:
+     *     mask IN CLIP ? 0 : dest
+     *
+     * where the ternary operator A ? B : C is (A * B) + ((1 - A) * C).
+     *
+     * The model we use in _cairo_gl_set_operator() is Render's:
+     *     src IN mask IN clip OP dest
+     * which would boil down to:
+     *     0 (bounded by the extents of the drawing).
+     *
+     * However, we can do a Render operation using an opaque source
+     * and DEST_OUT to produce:
+     *    1 IN mask IN clip DEST_OUT dest
+     * which is
+     *    mask IN clip ? 0 : dest
+     */
+    if (op == CAIRO_OPERATOR_CLEAR) {
+	_cairo_pattern_init_solid (&solid_pattern, CAIRO_COLOR_WHITE,
+				   CAIRO_CONTENT_COLOR);
+	source = &solid_pattern.base;
+	op = CAIRO_OPERATOR_DEST_OUT;
+    }
+
+    /* For SOURCE, cairo's rendering equation is:
+     *     (mask IN clip) ? src OP dest : dest
+     * or more simply:
+     *     (mask IN clip) ? src : dest.
+     *
+     * If we just used the Render equation, we would get:
+     *     (src IN mask IN clip) OP dest
+     * or:
+     *     (src IN mask IN clip) bounded by extents of the drawing.
+     *
+     * The trick is that for GL blending, we only get our 4 source values
+     * into the blender, and since we need all 4 components of source, we
+     * can't also get the mask IN clip into the blender.  But if we did
+     * two passes we could make it work:
+     *     dest = (mask IN clip) DEST_OUT dest
+     *     dest = src IN mask IN clip ADD dest
+     *
+     * But for now, composite via an intermediate mask.
+     */
+    if (op == CAIRO_OPERATOR_SOURCE)
+	use_mask |= TRUE;
+
+    /* XXX we don't need ownership of the font as we use a global
+     * glyph cache -- but we do need scaled_glyph eviction notification. :-(
+     */
+    if (! _cairo_gl_surface_owns_font (dst, scaled_font))
+	return UNSUPPORTED ("do not control font");
+
+    /* If the glyphs overlap, we need to build an intermediate mask rather
+     * then perform the compositing directly.
+     */
+    status = _cairo_scaled_font_glyph_device_extents (scaled_font,
+						      glyphs, num_glyphs,
+						      &extents,
+						      &overlap);
+    if (unlikely (status))
+	return status;
+
+    use_mask |= overlap;
+
+    if (clip != NULL) {
+	status = _cairo_clip_get_region (clip, &clip_region);
+	/* the empty clip should never be propagated this far */
+	assert (status != CAIRO_INT_STATUS_NOTHING_TO_DO);
+	if (unlikely (_cairo_status_is_error (status)))
+	    return status;
+
+	use_mask |= status == CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    if (use_mask) {
+	return _cairo_gl_surface_show_glyphs_via_mask (dst, op,
+			                               source,
+			                               glyphs, num_glyphs,
+						       &extents,
+						       scaled_font,
+						       clip,
+						       remaining_glyphs);
+    }
+
+    return _render_glyphs (dst, extents.x, extents.y,
+	                   op, source,
+			   glyphs, num_glyphs, &extents,
+			   scaled_font, clip_region, remaining_glyphs);
 }
 
 void
