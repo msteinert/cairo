@@ -171,6 +171,12 @@ cairo_gl_context_get_glyph_cache (cairo_gl_context_t *ctx,
     return cache;
 }
 
+static void
+_cairo_gl_glyph_cache_unlock (cairo_gl_glyph_cache_t *cache)
+{
+    _cairo_rtree_unpin (&cache->rtree);
+}
+
 static cairo_bool_t
 _cairo_gl_surface_owns_font (cairo_gl_surface_t *surface,
 			     cairo_scaled_font_t *scaled_font)
@@ -260,9 +266,6 @@ _cairo_gl_flush_glyphs (cairo_gl_context_t *ctx,
 	    setup->num_prims = 0;
 	}
     }
-
-    for (i = 0; i < ARRAY_LENGTH (ctx->glyph_cache); i++)
-	_cairo_rtree_unpin (&ctx->glyph_cache[i].rtree);
 }
 
 static void
@@ -551,6 +554,7 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 	    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 		/* Cache is full, so flush existing prims and try again. */
 		_cairo_gl_flush_glyphs (ctx, &setup);
+		_cairo_gl_glyph_cache_unlock (cache);
 	    }
 
 	    status = _cairo_gl_glyph_cache_add_glyph (cache, scaled_glyph);
