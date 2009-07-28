@@ -294,7 +294,7 @@ _cairo_sub_font_create (cairo_scaled_font_subsets_t	*parent,
 
     /* Reserve first glyph in subset for the .notdef glyph except for
      * Type 3 fonts */
-    if (! _cairo_font_face_is_user (scaled_font->font_face)) {
+    if (! scaled_font) {
 	status = _cairo_sub_font_map_glyph (sub_font, 0, NULL, -1, &subset_glyph);
 	if (unlikely (status)) {
 	    _cairo_hash_table_destroy (sub_font->sub_font_glyphs);
