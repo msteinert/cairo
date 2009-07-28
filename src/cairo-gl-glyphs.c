@@ -53,18 +53,34 @@ _cairo_gl_glyph_cache_add_glyph (cairo_gl_glyph_cache_t *cache,
     cairo_image_surface_t *glyph_surface = scaled_glyph->surface;
     cairo_gl_glyph_private_t *glyph_private;
     cairo_rtree_node_t *node = NULL;
+    cairo_image_surface_t *clone = NULL;
     cairo_status_t status;
     int width, height;
     GLenum internal_format, format, type;
     cairo_bool_t has_alpha;
 
-    status = _cairo_gl_get_image_format_and_type (glyph_surface->pixman_format,
-						  &internal_format,
-						  &format,
-						  &type,
-						  &has_alpha);
-    if (status != CAIRO_STATUS_SUCCESS)
-	return status;
+    if (! _cairo_gl_get_image_format_and_type (glyph_surface->pixman_format,
+					       &internal_format,
+					       &format,
+					       &type,
+					       &has_alpha))
+    {
+	cairo_bool_t is_supported;
+
+	clone = _cairo_image_surface_coerce (glyph_surface,
+		                             _cairo_format_from_content (glyph_surface->base.content));
+	if (unlikely (clone->base.status))
+	    return clone->base.status;
+
+	is_supported =
+	    _cairo_gl_get_image_format_and_type (clone->pixman_format,
+					         &internal_format,
+						 &format,
+						 &type,
+						 &has_alpha);
+	assert (is_supported);
+	glyph_surface = clone;
+    }
 
     width = glyph_surface->width;
     if (width < GLYPH_CACHE_MIN_SIZE)
@@ -111,6 +127,8 @@ _cairo_gl_glyph_cache_add_glyph (cairo_gl_glyph_cache_t *cache,
 	(node->x + glyph_surface->width) / (double) cache->width;
     glyph_private->p2.y =
 	(node->y + glyph_surface->height) / (double) cache->height;
+
+    cairo_surface_destroy (&clone->base);
 
     return CAIRO_STATUS_SUCCESS;
 }

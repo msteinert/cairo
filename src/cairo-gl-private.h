@@ -178,7 +178,7 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 cairo_private void
 _cairo_gl_operand_destroy (cairo_gl_composite_operand_t *operand);
 
-cairo_private cairo_status_t
+cairo_private cairo_bool_t
 _cairo_gl_get_image_format_and_type (pixman_format_code_t pixman_format,
 				     GLenum *internal_format, GLenum *format,
 				     GLenum *type, cairo_bool_t *has_alpha);
