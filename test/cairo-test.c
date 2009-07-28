@@ -90,6 +90,10 @@
 #define ARRAY_SIZE(A) (sizeof(A) / sizeof (A[0]))
 #endif
 
+#if ! HAVE_ALARM
+#define alarm(X);
+#endif
+
 static const cairo_user_data_key_t _cairo_test_context_key;
 
 static void
@@ -955,13 +959,9 @@ REPEAT:
     cairo_font_options_destroy (font_options);
 
     cairo_save (cr);
-#if HAVE_ALARM
     alarm (ctx->timeout);
-#endif
     status = (ctx->test->draw) (cr, ctx->test->width, ctx->test->height);
-#if HAVE_ALARM
     alarm (0);
-#endif
     cairo_restore (cr);
 
     if (similar) {
@@ -1040,7 +1040,10 @@ REPEAT:
 	    MEMFAULT_ENABLE_FAULTS ();
 #endif
 
+	    /* also check for infinite loops whilst replaying */
+	    alarm (ctx->timeout);
 	    diff_status = target->finish_surface (surface);
+	    alarm (0);
 
 #if HAVE_MEMFAULT
 	    MEMFAULT_DISABLE_FAULTS ();
@@ -1081,9 +1084,12 @@ REPEAT:
 
 	    /* we may be running this test to generate reference images */
 	    _xunlink (ctx, out_png_path);
+	    /* be more generous as we may need to use external renderers */
+	    alarm (4 * ctx->timeout);
 	    test_image = target->get_image_surface (surface, 0,
 		                                    ctx->test->width,
 						    ctx->test->height);
+	    alarm (0);
 	    diff_status = cairo_surface_write_to_png (test_image, out_png_path);
 	    cairo_surface_destroy (test_image);
 	    if (diff_status) {
