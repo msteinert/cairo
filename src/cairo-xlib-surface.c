@@ -4196,7 +4196,8 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
         status = _cairo_scaled_font_glyph_device_extents (scaled_font,
                                                           glyphs,
                                                           num_glyphs,
-                                                          &glyph_extents);
+                                                          &glyph_extents,
+							  NULL);
         if (unlikely (status))
 	    goto BAIL0;
 

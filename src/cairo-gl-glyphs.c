@@ -344,18 +344,19 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
     cairo_solid_pattern_t solid_pattern;
     cairo_gl_glyphs_setup_t setup;
     cairo_gl_composite_setup_t composite_setup;
+    cairo_bool_t overlap;
     GLuint vbo = 0;
 
     if (! GLEW_ARB_vertex_buffer_object)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return UNSUPPORTED ("requires ARB_vertex_buffer_object");
 
     if (! _cairo_gl_operator_is_supported (op))
-        return CAIRO_INT_STATUS_UNSUPPORTED;
+	return UNSUPPORTED ("unsupported operator");
 
     /* Just let unbounded operators go through the fallback code
      * instead of trying to do the fixups here */
     if (! _cairo_operator_bounded_by_mask (op))
-        return CAIRO_INT_STATUS_UNSUPPORTED;
+	return UNSUPPORTED ("unhandled unbound operator");
 
     /* For CLEAR, cairo's rendering equation (quoting Owen's description in:
      * http://lists.cairographics.org/archives/cairo/2005-August/004992.html)
@@ -404,33 +405,37 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
      * But for now, fall back :)
      */
     if (op == CAIRO_OPERATOR_SOURCE)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return UNSUPPORTED ("not handling SOURCE operator");
 
     /* XXX we don't need ownership of the font as we use a global
      * glyph cache -- but we do need scaled_glyph eviction notification. :-(
      */
     if (! _cairo_gl_surface_owns_font (dst, scaled_font))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return UNSUPPORTED ("do not control font");
 
     if (clip != NULL) {
 	status = _cairo_clip_get_region (clip, &clip_region);
-	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
-	    return CAIRO_STATUS_SUCCESS;
-	else if (status != CAIRO_STATUS_SUCCESS)
+	/* the empty clip should never be propagated this far */
+	assert (status != CAIRO_INT_STATUS_NOTHING_TO_DO);
+	if (unlikely (_cairo_status_is_error (status)))
 	    return status;
+	if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+	    return UNSUPPORTED ("unhandled clipmask");
     }
-
-    /* XXX If glyphs overlap, build tmp mask and composite.
-     * Could we use the stencil instead but only write if alpha !=0 ?
-     * TEXKILL? PIXELKILL?
-     * Antialiasing issues - but using glyph images cause their own anyway.
-     */
 
     status = _cairo_scaled_font_glyph_device_extents (scaled_font,
 						      glyphs, num_glyphs,
-						      &extents);
+						      &extents,
+						      &overlap);
     if (unlikely (status))
 	return status;
+
+    /* If the glyphs overlap, we need to build an intermediate mask rather
+     * then compositing directly.
+     * For the time being, just fallback.
+     */
+    if (overlap)
+	return UNSUPPORTED ("overlapping glyphs");
 
     status = _cairo_gl_operand_init (&composite_setup.src, source, dst,
 				     extents.x, extents.y,

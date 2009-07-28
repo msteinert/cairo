@@ -1902,6 +1902,15 @@ cairo_scaled_font_text_to_glyphs (cairo_scaled_font_t   *scaled_font,
 }
 slim_hidden_def (cairo_scaled_font_text_to_glyphs);
 
+static inline cairo_bool_t
+_range_contains_glyph (const cairo_point_int_t *min,
+		       const cairo_point_int_t *max,
+		       int left, int top,
+		       int right, int bottom)
+{
+    return right > min->x && left < max->x && bottom > min->y && top < max->y;
+}
+
 /*
  * Compute a device-space bounding box for the glyphs.
  */
@@ -1909,13 +1918,15 @@ cairo_status_t
 _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
 					 const cairo_glyph_t	 *glyphs,
 					 int                      num_glyphs,
-					 cairo_rectangle_int_t   *extents)
+					 cairo_rectangle_int_t   *extents,
+					 cairo_bool_t *overlap_out)
 {
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    int i;
     cairo_point_int_t min = { CAIRO_RECT_INT_MAX, CAIRO_RECT_INT_MAX };
     cairo_point_int_t max = { CAIRO_RECT_INT_MIN, CAIRO_RECT_INT_MIN };
     cairo_scaled_glyph_t *glyph_cache[64];
+    cairo_bool_t overlap = overlap_out ? FALSE : TRUE;
+    int i;
 
     if (unlikely (scaled_font->status))
 	return scaled_font->status;
@@ -1954,6 +1965,11 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
 	right  = x + _cairo_fixed_integer_ceil (scaled_glyph->bbox.p2.x);
 	bottom = y + _cairo_fixed_integer_ceil (scaled_glyph->bbox.p2.y);
 
+	if (overlap == FALSE) {
+	    overlap = _range_contains_glyph (&min, &max,
+		                             left, top, right, bottom);
+	}
+
 	if (left   < min.x) min.x = left;
 	if (right  > max.x) max.x = right;
 	if (top    < min.y) min.y = top;
@@ -1973,6 +1989,9 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
 	extents->x = extents->y = 0;
 	extents->width = extents->height = 0;
     }
+
+    if (overlap_out != NULL)
+	*overlap_out = overlap;
 
     return CAIRO_STATUS_SUCCESS;
 }

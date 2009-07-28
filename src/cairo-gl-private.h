@@ -50,6 +50,19 @@
 #define GL_GLEXT_PROTOTYPES
 #include <GL/glext.h>
 
+#define DEBUG_GL 0
+
+#if DEBUG_GL && __GNUC__
+#define UNSUPPORTED(reason) ({ \
+    fprintf (stderr, \
+	     "cairo-gl: hit unsupported operation in %s(), line %d: %s\n", \
+	     __FUNCTION__, __LINE__, reason); \
+    CAIRO_INT_STATUS_UNSUPPORTED; \
+})
+#else
+#define UNSUPPORTED(reason) CAIRO_INT_STATUS_UNSUPPORTED
+#endif
+
 typedef struct _cairo_gl_surface {
     cairo_surface_t base;
 
