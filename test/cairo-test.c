@@ -1176,9 +1176,12 @@ REPEAT:
 	    }
 	}
 
+	/* be more generous as we may need to use external renderers */
+	alarm (4 * ctx->timeout);
 	test_image = target->get_image_surface (surface, 0,
 					        ctx->test->width,
 						ctx->test->height);
+	alarm (0);
 	if (cairo_surface_status (test_image)) {
 	    cairo_test_log (ctx, "Error: Failed to extract image: %s\n",
 			    cairo_status_to_string (cairo_surface_status (test_image)));
