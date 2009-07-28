@@ -1009,7 +1009,7 @@ _cairo_scaled_font_subset_create_glyph_names (cairo_scaled_font_subset_t *subset
     }
 
     i = 0;
-    if (! _cairo_font_face_is_user (subset->scaled_font->font_face)) {
+    if (! subset->is_scaled) {
 	subset->glyph_names[0] = strdup (".notdef");
 	if (unlikely (subset->glyph_names[0] == NULL)) {
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
