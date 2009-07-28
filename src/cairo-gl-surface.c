@@ -1065,7 +1065,7 @@ _cairo_gl_pattern_texture_setup (cairo_gl_composite_operand_t *operand,
 					     CAIRO_CONTENT_COLOR_ALPHA,
 					     src_x, src_y,
 					     width, height,
-					     CAIRO_PATTERN_ACQUIRE_NO_REFLECT,
+					     CAIRO_PATTERN_ACQUIRE_NONE,
 					     (cairo_surface_t **)
 					     &surface,
 					     attributes);
