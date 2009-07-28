@@ -340,7 +340,13 @@ _cairo_gl_set_destination (cairo_gl_surface_t *surface)
     glLoadIdentity ();
 }
 
-int
+cairo_bool_t
+_cairo_gl_operator_is_supported (cairo_operator_t op)
+{
+    return op < CAIRO_OPERATOR_SATURATE;
+}
+
+void
 _cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op)
 {
     struct {
@@ -365,8 +371,7 @@ _cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op)
     };
     GLenum src_factor, dst_factor;
 
-    if (op >= ARRAY_SIZE (blend_factors))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+    assert (op < ARRAY_SIZE (blend_factors));
 
     src_factor = blend_factors[op].src;
     dst_factor = blend_factors[op].dst;
@@ -383,8 +388,6 @@ _cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op)
 
     glEnable (GL_BLEND);
     glBlendFunc (src_factor, dst_factor);
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -1268,6 +1271,9 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     GLenum err;
     cairo_gl_composite_setup_t setup;
 
+    if (! _cairo_gl_operator_is_supported (op))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     memset (&setup, 0, sizeof (setup));
 
     status = _cairo_gl_operand_init (&setup.src, src, dst,
@@ -1295,14 +1301,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 
     ctx = _cairo_gl_context_acquire (dst->ctx);
     _cairo_gl_set_destination (dst);
-    status = _cairo_gl_set_operator (dst, op);
-    if (status != CAIRO_STATUS_SUCCESS) {
-	_cairo_gl_operand_destroy (&setup.src);
-	if (mask != NULL)
-	    _cairo_gl_operand_destroy (&setup.mask);
-	_cairo_gl_context_release (ctx);
-	return status;
-    }
+    _cairo_gl_set_operator (dst, op);
 
     _cairo_gl_set_src_operand (ctx, &setup);
 
@@ -1493,19 +1492,17 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
 {
     cairo_gl_surface_t *surface = abstract_surface;
     cairo_gl_context_t *ctx;
-    cairo_int_status_t status;
     int i;
     GLfloat *vertices;
     GLfloat *colors;
 
+    if (! _cairo_gl_operator_is_supported (op))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     ctx = _cairo_gl_context_acquire (surface->ctx);
 
     _cairo_gl_set_destination (surface);
-    status = _cairo_gl_set_operator (surface, op);
-    if (status != CAIRO_STATUS_SUCCESS) {
-	_cairo_gl_context_release (ctx);
-	return status;
-    }
+    _cairo_gl_set_operator (surface, op);
 
     vertices = _cairo_malloc_ab (num_rects, sizeof (GLfloat) * 4 * 2);
     colors = _cairo_malloc_ab (num_rects, sizeof (GLfloat) * 4 * 4);
@@ -1778,12 +1775,11 @@ _cairo_gl_surface_check_span_renderer (cairo_operator_t	  op,
 				       cairo_antialias_t	  antialias,
 				       const cairo_composite_rectangles_t *rects)
 {
-    (void) op;
+    return _cairo_gl_operator_is_supported (op);
     (void) pattern;
     (void) abstract_dst;
     (void) antialias;
     (void) rects;
-    return TRUE;
 }
 
 static void
@@ -1913,7 +1909,6 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
     }
 
     _cairo_gl_context_acquire (dst->ctx);
-
     _cairo_gl_set_destination (dst);
 
     status = _cairo_gl_surface_set_clip_region (dst, clip_region);
@@ -1924,12 +1919,7 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
 
     src_attributes = &renderer->setup.src.operand.texture.attributes;
 
-    status = _cairo_gl_set_operator (dst, op);
-    if (status != CAIRO_STATUS_SUCCESS) {
-	_cairo_gl_surface_span_renderer_destroy (renderer);
-	return _cairo_span_renderer_create_in_error (status);
-    }
-
+    _cairo_gl_set_operator (dst, op);
     _cairo_gl_set_src_operand (dst->ctx, &renderer->setup);
 
     /* Set up the mask to source from the incoming vertex color. */

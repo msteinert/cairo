@@ -343,6 +343,9 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
     cairo_gl_composite_setup_t composite_setup;
     GLuint vbo = 0;
 
+    if (! _cairo_gl_operator_is_supported (op))
+        return CAIRO_INT_STATUS_UNSUPPORTED;
+
     /* Just let unbounded operators go through the fallback code
      * instead of trying to do the fixups here */
     if (! _cairo_operator_bounded_by_mask (op))
@@ -452,9 +455,7 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 
     _cairo_gl_set_destination (dst);
 
-    status = _cairo_gl_set_operator (dst, op);
-    if (status != CAIRO_STATUS_SUCCESS)
-	goto CLEANUP_CONTEXT;
+    _cairo_gl_set_operator (dst, op);
 
     _cairo_gl_set_src_operand (ctx, &composite_setup);
 
