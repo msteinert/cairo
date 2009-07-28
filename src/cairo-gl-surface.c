@@ -614,42 +614,46 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 			      int width, int height,
 			      int dst_x, int dst_y)
 {
-    char *temp_data;
-    int y;
-    unsigned int cpp = PIXMAN_FORMAT_BPP (src->pixman_format) / 8;
     GLenum internal_format, format, type;
-    char *src_data_start;
     cairo_bool_t has_alpha;
+    cairo_image_surface_t *clone = NULL;
     cairo_status_t status;
+    int cpp;
 
     status = _cairo_gl_get_image_format_and_type (src->pixman_format,
 						  &internal_format,
 						  &format,
 						  &type,
 						  &has_alpha);
-    if (status != CAIRO_STATUS_SUCCESS)
-	return status;
+    if (status != CAIRO_STATUS_SUCCESS) {
+	clone = _cairo_image_surface_coerce (src,
+		_cairo_format_from_content (src->base.content));
+	if (unlikely (clone->base.status))
+	    return clone->base.status;
 
-    /* Write the data to a temporary as GL wants bottom-to-top data
-     * screen-wise, and we want top-to-bottom.
-     */
-    temp_data = malloc (width * height * cpp);
-    if (temp_data == NULL)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    src_data_start = (char *)src->data + (src_y * src->stride) + (src_x * cpp);
-    for (y = 0; y < height; y++) {
-	memcpy (temp_data + y * width * cpp, src_data_start +
-		y * src->stride,
-		width * cpp);
+	status = _cairo_gl_get_image_format_and_type (clone->pixman_format,
+		                                      &internal_format,
+						      &format,
+						      &type,
+						      &has_alpha);
+	assert (status == CAIRO_STATUS_SUCCESS);
+	src = clone;
     }
 
-    _cairo_gl_set_destination (dst);
-    glRasterPos2i (dst_x, dst_y);
-    glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
-    glDrawPixels (width, height, format, type, temp_data);
+    cpp = PIXMAN_FORMAT_BPP (src->pixman_format) / 8;
 
-    free (temp_data);
+    glBindTexture (GL_TEXTURE_2D, dst->tex);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei (GL_UNPACK_ROW_LENGTH, src->stride / cpp);
+    glTexSubImage2D (GL_TEXTURE_2D, 0,
+	             dst_x, dst_y, width, height,
+		     format, GL_UNSIGNED_BYTE,
+		     src->data + src_y * src->stride + src_x * cpp);
+    glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
+
+    cairo_surface_destroy (&clone->base);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -836,19 +840,9 @@ _cairo_gl_surface_clone_similar (void		     *abstract_surface,
 
 	return CAIRO_STATUS_SUCCESS;
     } else if (_cairo_surface_is_image (src)) {
-	cairo_gl_surface_t *clone;
 	cairo_image_surface_t *image_src = (cairo_image_surface_t *)src;
+	cairo_gl_surface_t *clone;
 	cairo_status_t status;
-	GLenum internal_format, format, type;
-	cairo_bool_t has_alpha;
-
-	status = _cairo_gl_get_image_format_and_type (image_src->pixman_format,
-						      &internal_format,
-						      &format,
-						      &type,
-						      &has_alpha);
-	if (status != CAIRO_STATUS_SUCCESS)
-	    return status;
 
 	clone = (cairo_gl_surface_t *)
 	    _cairo_gl_surface_create_similar (&surface->base,
