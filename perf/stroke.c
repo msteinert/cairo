@@ -44,6 +44,41 @@ do_stroke (cairo_t *cr, int width, int height)
     return cairo_perf_timer_elapsed ();
 }
 
+static void
+rounded_rectangle (cairo_t *cr,
+		   double x, double y, double w, double h,
+		   double radius)
+{
+    cairo_move_to (cr, x+radius, y);
+    cairo_arc (cr, x+w-radius, y+radius,   radius, M_PI + M_PI / 2, M_PI * 2        );
+    cairo_arc (cr, x+w-radius, y+h-radius, radius, 0,               M_PI / 2        );
+    cairo_arc (cr, x+radius,   y+h-radius, radius, M_PI/2,          M_PI            );
+    cairo_arc (cr, x+radius,   y+radius,   radius, M_PI,            270 * M_PI / 180);
+}
+
+static cairo_perf_ticks_t
+do_strokes (cairo_t *cr, int width, int height)
+{
+    /* a pair of overlapping rectangles */
+    rounded_rectangle (cr,
+		       2, 2, width/2. + 10, height/2. + 10,
+		       10);
+    rounded_rectangle (cr,
+		       width/2. - 10, height/2. - 10,
+		       width - 2, height - 2,
+		       10);
+
+    cairo_set_line_width (cr, 2.);
+
+    cairo_perf_timer_start ();
+
+    cairo_stroke (cr);
+
+    cairo_perf_timer_stop ();
+
+    return cairo_perf_timer_elapsed ();
+}
+
 void
 stroke (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
@@ -51,4 +86,5 @@ stroke (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 	return;
 
     cairo_perf_cover_sources_and_operators (perf, "stroke", do_stroke);
+    cairo_perf_cover_sources_and_operators (perf, "strokes", do_strokes);
 }
