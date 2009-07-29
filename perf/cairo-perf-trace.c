@@ -655,10 +655,8 @@ cairo_perf_trace_dir (cairo_perf_t *perf,
     int num_traces = 0;
 
     dir = opendir (dirname);
-    if (dir == NULL) {
-	fprintf (stderr, "Failed to open directory '%s'\n", dirname);
+    if (dir == NULL)
 	return 0;
-    }
 
     while ((de = readdir (dir)) != NULL) {
 	char *trace;
