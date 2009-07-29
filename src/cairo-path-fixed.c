@@ -522,12 +522,6 @@ _cairo_path_fixed_rel_curve_to (cairo_path_fixed_t *path,
     if (unlikely (! path->has_current_point))
 	return _cairo_error (CAIRO_STATUS_NO_CURRENT_POINT);
 
-    if (dx2 == 0 && dy2 == 0) {
-	return _cairo_path_fixed_line_to (path,
-					  path->current_point.x,
-					  path->current_point.y);
-    }
-
     return _cairo_path_fixed_curve_to (path,
 				       path->current_point.x + dx0,
 				       path->current_point.y + dy0,
