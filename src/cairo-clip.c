@@ -586,16 +586,11 @@ _cairo_clip_path_to_region (cairo_clip_path_t *clip_path)
 	_cairo_path_fixed_fill_rectilinear_to_region (&clip_path->path,
 						      clip_path->fill_rule,
 						      &clip_path->extents);
-    if (clip_path->region == NULL) {
-	clip_path->flags |= CAIRO_CLIP_PATH_REGION_IS_UNSUPPORTED;
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
+    assert (clip_path->region != NULL);
 
     status = clip_path->region->status;
-    if (unlikely (status)) {
-	clip_path->flags |= CAIRO_CLIP_PATH_REGION_IS_UNSUPPORTED;
+    if (unlikely (status))
 	return status;
-    }
 
     if (prev != NULL) {
 	status = cairo_region_intersect (clip_path->region, prev);

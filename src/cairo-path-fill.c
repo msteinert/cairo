@@ -36,6 +36,7 @@
 
 #include "cairoint.h"
 #include "cairo-path-fixed-private.h"
+#include "cairo-region-private.h"
 
 typedef struct cairo_filler {
     double tolerance;
@@ -177,12 +178,61 @@ _cairo_path_fixed_fill_to_traps (const cairo_path_fixed_t *path,
     return status;
 }
 
+static cairo_region_t *
+_cairo_path_fixed_fill_rectilinear_tessellate_to_region (const cairo_path_fixed_t	*path,
+							 cairo_fill_rule_t	 fill_rule,
+							 const cairo_rectangle_int_t *extents)
+{
+    cairo_polygon_t polygon;
+    cairo_traps_t traps;
+    cairo_status_t status;
+    cairo_region_t *region;
+
+    _cairo_polygon_init (&polygon);
+    if (extents != NULL) {
+	cairo_box_t box;
+
+	_cairo_box_from_rectangle (&box, extents);
+	_cairo_polygon_limit (&polygon, &box);
+    }
+
+    /* tolerance will be ignored as the path is rectilinear */
+    status = _cairo_path_fixed_fill_to_polygon (path, 0., &polygon);
+    if (unlikely (status))
+	goto CLEANUP_POLYGON;
+
+    if (polygon.num_edges == 0) {
+	region = cairo_region_create ();
+    } else {
+	_cairo_traps_init (&traps);
+
+	status = _cairo_bentley_ottmann_tessellate_rectilinear_polygon (&traps,
+									&polygon,
+									fill_rule);
+	if (likely (status == CAIRO_STATUS_SUCCESS))
+	    status = _cairo_traps_extract_region (&traps, &region);
+
+	_cairo_traps_fini (&traps);
+    }
+
+  CLEANUP_POLYGON:
+    _cairo_polygon_fini (&polygon);
+
+    if (unlikely (status)) { /* XXX _cairo_region_create_in_error() */
+	region = cairo_region_create ();
+	if (likely (region->status) == CAIRO_STATUS_SUCCESS)
+	    region->status = status;
+    }
+
+    return region;
+}
+
 /* This special-case filler supports only a path that describes a
  * device-axis aligned rectangle. It exists to avoid the overhead of
  * the general tessellator when drawing very common rectangles.
  *
  * If the path described anything but a device-axis aligned rectangle,
- * this function will return %CAIRO_INT_STATUS_UNSUPPORTED.
+ * this function will abort.
  */
 cairo_region_t *
 _cairo_path_fixed_fill_rectilinear_to_region (const cairo_path_fixed_t	*path,
@@ -212,10 +262,6 @@ _cairo_path_fixed_fill_rectilinear_to_region (const cairo_path_fixed_t	*path,
 	    box.p2.y = t;
 	}
 
-	assert (_cairo_fixed_is_integer (box.p1.x) &&
-		_cairo_fixed_is_integer (box.p1.y));
-	assert (_cairo_fixed_is_integer (box.p2.x) &&
-		_cairo_fixed_is_integer (box.p2.y));
 	rectangle_stack[0].x = _cairo_fixed_integer_part (box.p1.x);
 	rectangle_stack[0].y = _cairo_fixed_integer_part (box.p1.y);
 	rectangle_stack[0].width = _cairo_fixed_integer_part (box.p2.x) -
@@ -260,13 +306,10 @@ _cairo_path_fixed_fill_rectilinear_to_region (const cairo_path_fixed_t	*path,
 		cw = ! cw;
 	    }
 
-	    if (last_cw < 0) {
+	    if (last_cw < 0)
 		last_cw = cw;
-	    } else if (last_cw != cw) {
-		if (rects != rectangle_stack)
-		    free (rects);
-		return NULL;
-	    }
+	    else if (last_cw != cw)
+		goto TESSELLATE;
 
 	    if (count == size) {
 		cairo_rectangle_int_t *new_rects;
@@ -291,10 +334,6 @@ _cairo_path_fixed_fill_rectilinear_to_region (const cairo_path_fixed_t	*path,
 		rects = new_rects;
 	    }
 
-	    assert (_cairo_fixed_is_integer (box.p1.x) &&
-		    _cairo_fixed_is_integer (box.p1.y));
-	    assert (_cairo_fixed_is_integer (box.p2.x) &&
-		    _cairo_fixed_is_integer (box.p2.y));
 	    rects[count].x = _cairo_fixed_integer_part (box.p1.x);
 	    rects[count].y = _cairo_fixed_integer_part (box.p1.y);
 	    rects[count].width = _cairo_fixed_integer_part (box.p2.x) - rects[count].x;
@@ -306,8 +345,18 @@ _cairo_path_fixed_fill_rectilinear_to_region (const cairo_path_fixed_t	*path,
 	if (_cairo_path_fixed_iter_at_end (&iter))
 	    region = cairo_region_create_rectangles (rects, count);
 
+TESSELLATE:
 	if (rects != rectangle_stack)
 	    free (rects);
+    }
+
+    if (region == NULL) {
+	/* Hmm, complex polygon */
+	region = _cairo_path_fixed_fill_rectilinear_tessellate_to_region (path,
+									  fill_rule,
+									  extents);
+
+
     }
 
     return region;
