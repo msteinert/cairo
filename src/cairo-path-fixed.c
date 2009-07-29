@@ -1143,7 +1143,7 @@ void
 _cairo_path_fixed_iter_init (cairo_path_fixed_iter_t *iter,
 			     const cairo_path_fixed_t *path)
 {
-    iter->buf = cairo_path_head (path);
+    iter->first = iter->buf = cairo_path_head (path);
     iter->n_op = 0;
     iter->n_point = 0;
 }
@@ -1153,11 +1153,16 @@ _cairo_path_fixed_iter_next_op (cairo_path_fixed_iter_t *iter)
 {
     if (++iter->n_op >= iter->buf->num_ops) {
 	iter->buf = cairo_path_buf_next (iter->buf);
+	if (iter->buf == iter->first) {
+	    iter->buf = NULL;
+	    return FALSE;
+	}
+
 	iter->n_op = 0;
 	iter->n_point = 0;
     }
 
-    return iter->buf != NULL;
+    return TRUE;
 }
 
 cairo_bool_t

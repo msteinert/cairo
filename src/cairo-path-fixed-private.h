@@ -112,6 +112,7 @@ _cairo_path_fixed_equal (const cairo_path_fixed_t *a,
 			 const cairo_path_fixed_t *b);
 
 typedef struct _cairo_path_fixed_iter {
+    const cairo_path_buf_t *first;
     const cairo_path_buf_t *buf;
     unsigned int n_op;
     unsigned int n_point;
