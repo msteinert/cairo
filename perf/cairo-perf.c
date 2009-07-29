@@ -200,6 +200,25 @@ cairo_perf_run (cairo_perf_t		*perf,
 
     times = perf->times;
 
+    if (getenv ("CAIRO_PERF_OUTPUT") != NULL) { /* check output */
+	char *filename;
+	cairo_status_t status;
+
+	xasprintf (&filename, "%s.%s.%s.%d.out.png",
+		   name, perf->target->name,
+		   _content_to_string (perf->target->content, 0),
+		   perf->size);
+	perf_func (perf->cr, perf->size, perf->size);
+	status = cairo_surface_write_to_png (cairo_get_target (perf->cr), filename);
+	if (status) {
+	    fprintf (stderr, "Failed to generate output check '%s': %s\n",
+		     filename, cairo_status_to_string (status));
+	    return;
+	}
+
+	free (filename);
+    }
+
     has_similar = cairo_perf_has_similar (perf);
     for (similar = 0; similar <= has_similar; similar++) {
 	if (perf->summary) {
