@@ -306,6 +306,8 @@ REFERENCE_IMAGES = \
 	degenerate-pen.ps3.ref.png \
 	degenerate-pen.quartz.ref.png \
 	degenerate-pen.ref.png \
+	degenerate-rel-curve-to.ref.png \
+	degenerate-rel-curve-to.ps.xfail.png \
 	device-offset-fractional.gl.xfail.png \
 	device-offset-fractional.pdf.argb32.ref.png \
 	device-offset-fractional.pdf.ref.png \

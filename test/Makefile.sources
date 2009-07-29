@@ -49,6 +49,7 @@ test_sources = \
 	degenerate-dash.c				\
 	degenerate-path.c				\
 	degenerate-pen.c				\
+	degenerate-rel-curve-to.c			\
 	device-offset.c					\
 	device-offset-fractional.c			\
 	device-offset-positive.c			\
