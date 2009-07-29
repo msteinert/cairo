@@ -42,6 +42,7 @@
 #include "cairoint.h"
 #include "cairo-clip-private.h"
 #include "cairo-path-fixed-private.h"
+#include "cairo-region-private.h"
 
 /* Keep a stash of recently freed clip_paths, since we need to
  * reallocate them frequently.
@@ -551,9 +552,7 @@ static cairo_int_status_t
 _cairo_clip_path_to_region (cairo_clip_path_t *clip_path)
 {
     cairo_int_status_t status;
-    cairo_traps_t traps;
     cairo_region_t *prev = NULL;
-    cairo_box_t box;
 
     if (clip_path->flags &
 	(CAIRO_CLIP_PATH_HAS_REGION |
@@ -582,24 +581,17 @@ _cairo_clip_path_to_region (cairo_clip_path_t *clip_path)
 
     /* now extract the region for ourselves */
 
-    /* XXX fixed fill to region */
-    _cairo_traps_init (&traps);
-
-    _cairo_box_from_rectangle (&box, &clip_path->extents);
-    _cairo_traps_limit (&traps, &box);
-
-    status = _cairo_path_fixed_fill_rectilinear_to_traps (&clip_path->path,
-							  clip_path->fill_rule,
-							  &traps);
-    if (status) {
-	_cairo_traps_fini (&traps);
+    /* XXX just use the cheap search for now */
+    clip_path->region =
+	_cairo_path_fixed_fill_rectilinear_to_region (&clip_path->path,
+						      clip_path->fill_rule,
+						      &clip_path->extents);
+    if (clip_path->region == NULL) {
 	clip_path->flags |= CAIRO_CLIP_PATH_REGION_IS_UNSUPPORTED;
-	return status;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    status = _cairo_traps_extract_region (&traps, &clip_path->region);
-    _cairo_traps_fini (&traps);
-
+    status = clip_path->region->status;
     if (unlikely (status)) {
 	clip_path->flags |= CAIRO_CLIP_PATH_REGION_IS_UNSUPPORTED;
 	return status;
