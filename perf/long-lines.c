@@ -69,7 +69,7 @@ do_long_lines (cairo_t *cr, int width, int height, long_lines_crop_t crop)
 
     cairo_perf_timer_start ();
 
-    for (i = 0; i < NUM_LINES; i++) {
+    for (i = 0; i <= NUM_LINES; i++) {
 	cairo_move_to (cr, 0, 0);
 	cairo_line_to (cr, x, min_y);
 	cairo_stroke (cr);
