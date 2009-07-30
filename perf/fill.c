@@ -43,6 +43,42 @@ do_fill (cairo_t *cr, int width, int height)
 }
 
 static cairo_perf_ticks_t
+do_fill_annuli (cairo_t *cr, int width, int height)
+{
+    cairo_new_sub_path (cr);
+    cairo_arc (cr,
+	       width/2.0, height/2.0,
+	       width/3.0,
+	       0, 2 * M_PI);
+
+    cairo_new_sub_path (cr);
+    cairo_arc_negative (cr,
+	       width/2.0, height/2.0,
+	       width/4.0,
+	       2 * M_PI, 0);
+
+    cairo_new_sub_path (cr);
+    cairo_arc (cr,
+	       width/2.0, height/2.0,
+	       width/6.0,
+	       0, 2 * M_PI);
+
+    cairo_new_sub_path (cr);
+    cairo_arc_negative (cr,
+	       width/2.0, height/2.0,
+	       width/8.0,
+	       2 * M_PI, 0);
+
+    cairo_perf_timer_start ();
+
+    cairo_fill (cr);
+
+    cairo_perf_timer_stop ();
+
+    return cairo_perf_timer_elapsed ();
+}
+
+static cairo_perf_ticks_t
 do_fill_eo_noaa (cairo_t *cr, int width, int height)
 {
     cairo_set_antialias (cr, CAIRO_ANTIALIAS_NONE);
@@ -69,5 +105,6 @@ fill (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 	return;
 
     cairo_perf_cover_sources_and_operators (perf, "fill", do_fill);
+    cairo_perf_cover_sources_and_operators (perf, "fill-annuli", do_fill_annuli);
     cairo_perf_cover_sources_and_operators (perf, "fill-eo-noaa", do_fill_eo_noaa);
 }
