@@ -63,7 +63,7 @@ do_long_lines (cairo_t *cr, int width, int height, long_lines_crop_t crop)
     min_x = x = - outer_width / 2.0;
     min_y = y = - outer_height / 2.0;
     max_x = outer_width / 2.0;
-    max_y = outer_width / 2.0;
+    max_y = outer_height / 2.0;
     dx = outer_width / NUM_LINES;
     dy = outer_height / NUM_LINES;
 
