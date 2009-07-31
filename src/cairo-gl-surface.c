@@ -1610,6 +1610,7 @@ typedef struct _cairo_gl_surface_span_renderer {
     cairo_antialias_t antialias;
 
     cairo_gl_surface_t *dst;
+    cairo_region_t *clip;
 
     cairo_composite_rectangles_t composite_rectangles;
     GLuint vbo;
@@ -1622,12 +1623,32 @@ typedef struct _cairo_gl_surface_span_renderer {
 static void
 _cairo_gl_span_renderer_flush (cairo_gl_surface_span_renderer_t *renderer)
 {
+    int count;
+
     if (renderer->vbo_offset == 0)
 	return;
 
     glUnmapBufferARB (GL_ARRAY_BUFFER_ARB);
-    glDrawArrays (GL_LINES, 0, renderer->vbo_offset / renderer->vertex_size);
+
+    count = renderer->vbo_offset / renderer->vertex_size;
     renderer->vbo_offset = 0;
+
+    if (renderer->clip) {
+	int i, num_rectangles = cairo_region_num_rectangles (renderer->clip);
+
+	glEnable (GL_SCISSOR_TEST);
+	for (i = 0; i < num_rectangles; i++) {
+	    cairo_rectangle_int_t rect;
+
+	    cairo_region_get_rectangle (renderer->clip, i, &rect);
+
+	    glScissor (rect.x, rect.y, rect.width, rect.height);
+	    glDrawArrays (GL_LINES, 0, count);
+	}
+	glDisable (GL_SCISSOR_TEST);
+    } else {
+	glDrawArrays (GL_LINES, 0, count);
+    }
 }
 
 static void *
@@ -1813,7 +1834,6 @@ _cairo_gl_surface_span_renderer_finish (void *abstract_renderer)
     glDisable (GL_TEXTURE_2D);
 
     glDisable (GL_BLEND);
-    glDisable (GL_DEPTH_TEST);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1837,89 +1857,6 @@ _cairo_gl_surface_check_span_renderer (cairo_operator_t	  op,
     (void) abstract_dst;
     (void) antialias;
     (void) rects;
-}
-
-static void
-_cairo_gl_surface_ensure_depth_buffer (cairo_gl_surface_t *surface)
-{
-    if (surface->depth_stencil_tex)
-	return;
-
-    glGenTextures (1, &surface->depth_stencil_tex);
-    glBindTexture (GL_TEXTURE_2D, surface->depth_stencil_tex);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexImage2D (GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8_EXT,
-		  surface->width, surface->height, 0,
-		  GL_DEPTH_STENCIL_EXT, GL_UNSIGNED_INT_24_8_EXT, NULL);
-    glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT,
-			       GL_DEPTH_ATTACHMENT_EXT,
-			       GL_TEXTURE_2D,
-			       surface->depth_stencil_tex, 0);
-    glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT,
-			       GL_STENCIL_ATTACHMENT_EXT,
-			       GL_TEXTURE_2D,
-			       surface->depth_stencil_tex, 0);
-}
-
-
-static cairo_status_t
-_cairo_gl_surface_set_clip_region (cairo_gl_surface_t *surface,
-				   cairo_region_t *clip_region)
-{
-    GLfloat vertices_stack[CAIRO_STACK_ARRAY_LENGTH(GLfloat)], *vertices;
-    int num_rectangles, i, n;
-
-    if (clip_region == NULL)
-	return CAIRO_STATUS_SUCCESS;
-
-    num_rectangles = cairo_region_num_rectangles (clip_region);
-
-    vertices = vertices_stack;
-    if (num_rectangles * 8 > ARRAY_LENGTH (vertices_stack)) {
-	vertices = _cairo_malloc_ab (num_rectangles,
-				     4*3*sizeof (vertices[0]));
-	if (unlikely (vertices == NULL))
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-    }
-
-    for (i = n = 0; i < num_rectangles; i++) {
-	cairo_rectangle_int_t rect;
-
-	cairo_region_get_rectangle (clip_region, i, &rect);
-	vertices[n++] = rect.x;
-	vertices[n++] = rect.y;
-	vertices[n++] = rect.x + rect.width;
-	vertices[n++] = rect.y;
-	vertices[n++] = rect.x + rect.width;
-	vertices[n++] = rect.y + rect.height;
-	vertices[n++] = rect.x;
-	vertices[n++] = rect.y +rect. height;
-    }
-
-    _cairo_gl_surface_ensure_depth_buffer (surface);
-
-    glDisable (GL_BLEND);
-    glDepthFunc (GL_ALWAYS);
-    glEnable (GL_DEPTH_TEST);
-    glColorMask (GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-
-    glDepthMask (GL_TRUE);
-    glClear (GL_DEPTH_BUFFER_BIT);
-
-    glVertexPointer (2, GL_FLOAT, sizeof (GLfloat) * 2, vertices);
-    glEnableClientState (GL_VERTEX_ARRAY);
-    glDrawArrays (GL_QUADS, 0, 4 * num_rectangles);
-    glDisableClientState (GL_VERTEX_ARRAY);
-
-    glColorMask (GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glDepthFunc (GL_EQUAL);
-    glDepthMask (GL_FALSE);
-
-    if (vertices != vertices_stack)
-	free (vertices);
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_span_renderer_t *
@@ -1949,6 +1886,7 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
     renderer->op = op;
     renderer->antialias = antialias;
     renderer->dst = dst;
+    renderer->clip = clip_region;
 
     renderer->composite_rectangles = *rects;
 
@@ -1964,12 +1902,6 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
 
     _cairo_gl_context_acquire (dst->ctx);
     _cairo_gl_set_destination (dst);
-
-    status = _cairo_gl_surface_set_clip_region (dst, clip_region);
-    if (unlikely (status)) {
-	_cairo_gl_surface_span_renderer_destroy (renderer);
-	return _cairo_span_renderer_create_in_error (status);
-    }
 
     src_attributes = &renderer->setup.src.operand.texture.attributes;
 

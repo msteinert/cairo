@@ -241,15 +241,6 @@ typedef struct _cairo_gl_glyphs_setup
     cairo_gl_surface_t *dst;
 } cairo_gl_glyphs_setup_t;
 
-static int
-_cairo_gl_y_flip (cairo_gl_surface_t *surface, int y)
-{
-    if (surface->fb)
-	return y;
-    else
-	return (surface->height - 1) - y;
-}
-
 static void
 _cairo_gl_flush_glyphs (cairo_gl_context_t *ctx,
 			cairo_gl_glyphs_setup_t *setup)

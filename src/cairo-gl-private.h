@@ -203,4 +203,13 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 cairo_private void
 _cairo_gl_glyph_cache_fini (cairo_gl_glyph_cache_t *cache);
 
+static inline int
+_cairo_gl_y_flip (cairo_gl_surface_t *surface, int y)
+{
+    if (surface->fb)
+	return y;
+    else
+	return (surface->height - 1) - y;
+}
+
 #endif /* CAIRO_GL_PRIVATE_H */
