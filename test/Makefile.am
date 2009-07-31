@@ -189,6 +189,7 @@ REFERENCE_IMAGES = \
 	clip-nesting.rgb24.ref.png \
 	clip-nesting.test-paginated.rgb24.ref.png \
 	clip-nesting.xlib.rgb24.ref.png \
+	clip-operator.gl.argb32.ref.png \
 	clip-operator.pdf.argb32.ref.png \
 	clip-operator.pdf.rgb24.ref.png \
 	clip-operator.ps2.rgb24.ref.png \
