@@ -15,6 +15,7 @@ test_sources = \
 	clear.c						\
 	clip-all.c					\
 	clip-empty.c					\
+	clip-fill.c					\
 	clip-fill-rule.c				\
 	clip-fill-rule-pixel-aligned.c			\
 	clip-nesting.c					\

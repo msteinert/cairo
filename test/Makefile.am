@@ -163,6 +163,10 @@ REFERENCE_IMAGES = \
 	clear.svg12.rgb24.xfail.png \
 	clip-all.ref.png \
 	clip-empty.ref.png \
+	clip-fill.ref.png \
+	clip-fill.ps.xfail.png \
+	clip-fill.xlib.ref.png \
+	clip-fill.xlib-fallback.ref.png \
 	clip-fill-rule-pixel-aligned.ref.png \
 	clip-fill-rule-pixel-aligned.rgb24.ref.png \
 	clip-fill-rule.pdf.argb32.ref.png \
