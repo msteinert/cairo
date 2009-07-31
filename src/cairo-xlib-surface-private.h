@@ -78,6 +78,9 @@ struct _cairo_xlib_surface {
     unsigned int buggy_gradients : 1;
     unsigned int buggy_pad_reflect : 1;
     unsigned int buggy_repeat : 1;
+#define CAIRO_XLIB_SURFACE_HAS_BUGGY_GRADIENTS 1
+#define CAIRO_XLIB_SURFACE_HAS_BUGGY_PAD_REFLECT 1
+#define CAIRO_XLIB_SURFACE_HAS_BUGGY_REPEAT 1
 
     int width;
     int height;

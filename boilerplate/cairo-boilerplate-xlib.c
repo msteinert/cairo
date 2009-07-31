@@ -257,9 +257,15 @@ cairo_boilerplate_xlib_surface_disable_render (cairo_surface_t *abstract_surface
     surface->base.content = CAIRO_CONTENT_COLOR;
 
     /* These flags are set based on known bugs and lack of RENDER support */
-    surface->buggy_repeat = TRUE;
-    surface->buggy_pad_reflect = TRUE;
+#if CAIRO_XLIB_SURFACE_HAS_BUGGY_GRADIENTS
     surface->buggy_gradients = TRUE;
+#endif
+#if CAIRO_XLIB_SURFACE_HAS_BUGGY_PAD_REFLECT
+    surface->buggy_pad_reflect = TRUE;
+#endif
+#if CAIRO_XLIB_SURFACE_HAS_BUGGY_REPEAT
+    surface->buggy_repeat = TRUE;
+#endif
 
     return CAIRO_STATUS_SUCCESS;
 }
