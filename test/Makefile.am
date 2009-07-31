@@ -213,6 +213,10 @@ REFERENCE_IMAGES = \
 	clip-push-group.quartz.ref.png \
 	clip-push-group.ref.png \
 	clip-push-group.xlib.ref.png \
+	clip-text.ref.png \
+	clip-text.ps.xfail.png \
+	clip-text.svg.ref.png \
+	clip-text.xlib.ref.png \
 	clip-twice.pdf.argb32.ref.png \
 	clip-twice.ps2.argb32.ref.png \
 	clip-twice.ps2.rgb24.ref.png \
