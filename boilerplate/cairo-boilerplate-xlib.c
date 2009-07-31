@@ -256,6 +256,11 @@ cairo_boilerplate_xlib_surface_disable_render (cairo_surface_t *abstract_surface
      * non-Render surface creation, so repeat the procedure here. */
     surface->base.content = CAIRO_CONTENT_COLOR;
 
+    /* These flags are set based on known bugs and lack of RENDER support */
+    surface->buggy_repeat = TRUE;
+    surface->buggy_pad_reflect = TRUE;
+    surface->buggy_gradients = TRUE;
+
     return CAIRO_STATUS_SUCCESS;
 }
 
