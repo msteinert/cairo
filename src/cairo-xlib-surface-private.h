@@ -75,8 +75,9 @@ struct _cairo_xlib_surface {
      * Both are fixed in xorg >= 6.9 and hopefully in > 6.8.2, so
      * we can reuse the test for now.
      */
-    cairo_bool_t buggy_repeat;
-    cairo_bool_t buggy_pad_reflect;
+    unsigned int buggy_gradients : 1;
+    unsigned int buggy_pad_reflect : 1;
+    unsigned int buggy_repeat : 1;
 
     int width;
     int height;

@@ -153,6 +153,7 @@ static const XTransform identity = { {
 #define CAIRO_SURFACE_RENDER_HAS_FILTERS(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 6)
 
 #define CAIRO_SURFACE_RENDER_HAS_EXTENDED_REPEAT(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 10)
+#define CAIRO_SURFACE_RENDER_HAS_GRADIENTS(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 10)
 
 #define CAIRO_SURFACE_RENDER_HAS_PDF_OPERATORS(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 11)
 
@@ -1887,6 +1888,254 @@ _render_operator (cairo_operator_t op)
 }
 
 static cairo_int_status_t
+_cairo_xlib_surface_acquire_pattern_surface (cairo_xlib_surface_t *dst,
+					     const cairo_pattern_t *pattern,
+					     cairo_content_t content,
+					     int x, int y,
+					     int width, int height,
+					     cairo_xlib_surface_t **surface_out,
+					     cairo_surface_attributes_t *attributes)
+{
+    switch (pattern->type) {
+    case CAIRO_PATTERN_TYPE_LINEAR:
+    case CAIRO_PATTERN_TYPE_RADIAL:
+	{
+	    cairo_gradient_pattern_t *gradient =
+		(cairo_gradient_pattern_t *) pattern;
+	    cairo_matrix_t matrix = pattern->matrix;
+	    cairo_xlib_surface_t *surface;
+	    char buf[CAIRO_STACK_BUFFER_SIZE];
+	    XFixed *stops;
+	    XRenderColor *colors;
+	    XRenderPictFormat *format;
+	    Picture picture;
+	    unsigned int i;
+
+	    if (dst->buggy_gradients)
+		break;
+
+	    if (gradient->n_stops < 2) /* becomes a solid */
+		break;
+
+	    if (gradient->n_stops < sizeof (buf) / (sizeof (XFixed) + sizeof (XRenderColor)))
+	    {
+		stops = (XFixed *) buf;
+	    }
+	    else
+	    {
+		stops =
+		    _cairo_malloc_ab (gradient->n_stops,
+				      sizeof (XFixed) + sizeof (XRenderColor));
+		if (unlikely (stops == NULL))
+		    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    }
+
+	    colors = (XRenderColor *) (stops + gradient->n_stops);
+	    for (i = 0; i < gradient->n_stops; i++) {
+		stops[i] =
+		    _cairo_fixed_16_16_from_double (gradient->stops[i].offset);
+
+		colors[i].red   = gradient->stops[i].color.red_short;
+		colors[i].green = gradient->stops[i].color.green_short;
+		colors[i].blue  = gradient->stops[i].color.blue_short;
+		colors[i].alpha = gradient->stops[i].color.alpha_short;
+	    }
+
+#if 0
+	    /* For some weird reason the X server is sometimes getting
+	     * CreateGradient requests with bad length. So far I've only seen
+	     * XRenderCreateLinearGradient request with 4 stops sometime end up
+	     * with length field matching 0 stops at the server side. I've
+	     * looked at the libXrender code and I can't see anything that
+	     * could cause this behavior. However, for some reason having a
+	     * XSync call here seems to avoid the issue so I'll keep it here
+	     * until it's solved.
+	     */
+	    XSync (dst->dpy, False);
+#endif
+
+	    if (pattern->type == CAIRO_PATTERN_TYPE_LINEAR) {
+		cairo_linear_pattern_t *linear = (cairo_linear_pattern_t *) pattern;
+		XLinearGradient grad;
+
+		cairo_fixed_t xdim, ydim;
+
+		xdim = linear->p2.x - linear->p1.x;
+		ydim = linear->p2.y - linear->p1.y;
+
+		/*
+		 * Transform the matrix to avoid overflow when converting between
+		 * cairo_fixed_t and pixman_fixed_t (without incurring performance
+		 * loss when the transformation is unnecessary).
+		 *
+		 * XXX: Consider converting out-of-range co-ordinates and transforms.
+		 * Having a function to compute the required transformation to
+		 * "normalize" a given bounding box would be generally useful -
+		 * cf linear patterns, gradient patterns, surface patterns...
+		 */
+#define PIXMAN_MAX_INT ((pixman_fixed_1 >> 1) - pixman_fixed_e) /* need to ensure deltas also fit */
+		if (_cairo_fixed_integer_ceil (xdim) > PIXMAN_MAX_INT ||
+		    _cairo_fixed_integer_ceil (ydim) > PIXMAN_MAX_INT)
+		{
+		    double sf;
+
+		    if (xdim > ydim)
+			sf = PIXMAN_MAX_INT / _cairo_fixed_to_double (xdim);
+		    else
+			sf = PIXMAN_MAX_INT / _cairo_fixed_to_double (ydim);
+
+		    grad.p1.x = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p1.x) * sf);
+		    grad.p1.y = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p1.y) * sf);
+		    grad.p2.x = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p2.x) * sf);
+		    grad.p2.y = _cairo_fixed_16_16_from_double (_cairo_fixed_to_double (linear->p2.y) * sf);
+
+		    cairo_matrix_scale (&matrix, sf, sf);
+		}
+		else
+		{
+		    grad.p1.x = _cairo_fixed_to_16_16 (linear->p1.x);
+		    grad.p1.y = _cairo_fixed_to_16_16 (linear->p1.y);
+		    grad.p2.x = _cairo_fixed_to_16_16 (linear->p2.x);
+		    grad.p2.y = _cairo_fixed_to_16_16 (linear->p2.y);
+		}
+
+		picture = XRenderCreateLinearGradient (dst->dpy, &grad,
+						       stops, colors,
+						       gradient->n_stops);
+	    } else {
+		cairo_radial_pattern_t *radial = (cairo_radial_pattern_t *) pattern;
+		XRadialGradient grad;
+
+		grad.inner.x = _cairo_fixed_to_16_16 (radial->c1.x);
+		grad.inner.y = _cairo_fixed_to_16_16 (radial->c1.y);
+		grad.inner.radius = _cairo_fixed_to_16_16 (radial->r1);
+
+		grad.outer.x = _cairo_fixed_to_16_16 (radial->c2.x);
+		grad.outer.y = _cairo_fixed_to_16_16 (radial->c2.y);
+		grad.outer.radius = _cairo_fixed_to_16_16 (radial->r2);
+
+		picture = XRenderCreateRadialGradient (dst->dpy, &grad,
+						       stops, colors,
+						       gradient->n_stops);
+
+	    }
+
+	    if (stops != (XFixed *) buf)
+		free (stops);
+
+	    if (unlikely (picture == None))
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+	    /* Wrap the remote Picture in an xlib surface. */
+	    format = _cairo_xlib_display_get_xrender_format (dst->display,
+							     CAIRO_FORMAT_ARGB32);
+
+	    surface = (cairo_xlib_surface_t *)
+		_cairo_xlib_surface_create_internal (dst->dpy, None,
+						     dst->screen, NULL,
+						     format, 0, 0, 32);
+	    if (unlikely (surface->base.status)) {
+		XRenderFreePicture (dst->dpy, picture);
+		return surface->base.status;
+	    }
+
+	    surface->src_picture = picture;
+
+	    attributes->matrix   = matrix;
+	    attributes->extend   = pattern->extend;
+	    attributes->filter   = CAIRO_FILTER_NEAREST;
+	    attributes->x_offset = 0;
+	    attributes->y_offset = 0;
+
+	    *surface_out = surface;
+	    return CAIRO_STATUS_SUCCESS;
+	}
+    default:
+	ASSERT_NOT_REACHED;
+    case CAIRO_PATTERN_TYPE_SOLID:
+    case CAIRO_PATTERN_TYPE_SURFACE:
+	break;
+    }
+
+    return _cairo_pattern_acquire_surface (pattern, &dst->base,
+					   content,
+					   x, y, width, height,
+					   dst->buggy_pad_reflect ?
+					   CAIRO_PATTERN_ACQUIRE_NO_REFLECT :
+					   CAIRO_PATTERN_ACQUIRE_NONE,
+					   (cairo_surface_t **) surface_out,
+					   attributes);
+}
+
+static cairo_int_status_t
+_cairo_xlib_surface_acquire_pattern_surfaces (cairo_xlib_surface_t	 *dst,
+					      const cairo_pattern_t	         *src,
+					      const cairo_pattern_t	         *mask,
+					      cairo_content_t		 src_content,
+					      int			 src_x,
+					      int			 src_y,
+					      int			 mask_x,
+					      int			 mask_y,
+					      unsigned int		 width,
+					      unsigned int		 height,
+					      cairo_xlib_surface_t	 **src_out,
+					      cairo_xlib_surface_t	 **mask_out,
+					      cairo_surface_attributes_t *src_attr,
+					      cairo_surface_attributes_t *mask_attr)
+{
+    if (! dst->buggy_gradients &&
+	(src->type == CAIRO_PATTERN_TYPE_LINEAR		 ||
+	 src->type == CAIRO_PATTERN_TYPE_RADIAL		 ||
+	 (mask && (mask->type == CAIRO_PATTERN_TYPE_LINEAR ||
+		   mask->type == CAIRO_PATTERN_TYPE_RADIAL))))
+    {
+	cairo_int_status_t status;
+
+	status = _cairo_xlib_surface_acquire_pattern_surface (dst, src,
+							      src_content,
+							      src_x, src_y,
+							      width, height,
+							      src_out,
+							      src_attr);
+	if (unlikely (status))
+	    return status;
+
+	if (mask) {
+	    status = _cairo_xlib_surface_acquire_pattern_surface (dst, mask,
+								  CAIRO_CONTENT_ALPHA,
+								  mask_x,
+								  mask_y,
+								  width,
+								  height,
+								  mask_out,
+								  mask_attr);
+	    if (unlikely (status)) {
+		_cairo_pattern_release_surface (src, &(*src_out)->base,
+						src_attr);
+		return status;
+	    }
+	} else {
+	    *mask_out = NULL;
+	}
+
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    return _cairo_pattern_acquire_surfaces (src, mask,
+					    &dst->base,
+					    src_content,
+					    src_x, src_y,
+					    mask_x, mask_y,
+					    width, height,
+					    dst->buggy_pad_reflect ?
+					    CAIRO_PATTERN_ACQUIRE_NO_REFLECT :
+					    CAIRO_PATTERN_ACQUIRE_NONE,
+					    (cairo_surface_t **) src_out,
+					    (cairo_surface_t **) mask_out,
+					    src_attr, mask_attr);
+}
+
+static cairo_int_status_t
 _cairo_xlib_surface_composite (cairo_operator_t		op,
 			       const cairo_pattern_t	*src_pattern,
 			       const cairo_pattern_t	*mask_pattern,
@@ -1930,18 +2179,15 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 
     _cairo_xlib_display_notify (dst->display);
 
-    status = _cairo_pattern_acquire_surfaces (src_pattern, mask_pattern,
-					      &dst->base,
-					      src_content,
-					      src_x, src_y,
-					      mask_x, mask_y,
-					      width, height,
-					      dst->buggy_pad_reflect ?
-						      CAIRO_PATTERN_ACQUIRE_NO_REFLECT :
-						      CAIRO_PATTERN_ACQUIRE_NONE,
-					      (cairo_surface_t **) &src,
-					      (cairo_surface_t **) &mask,
-					      &src_attr, &mask_attr);
+    status =
+	_cairo_xlib_surface_acquire_pattern_surfaces (dst,
+						      src_pattern, mask_pattern,
+						      src_content,
+						      src_x, src_y,
+						      mask_x, mask_y,
+						      width, height,
+						      &src, &mask,
+						      &src_attr, &mask_attr);
     if (unlikely (status))
 	return status;
 
@@ -2083,6 +2329,7 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
     return status;
 }
 
+/* XXX move this out of core and into acquire_pattern_surface() above. */
 static cairo_int_status_t
 _cairo_xlib_surface_solid_fill_rectangles (cairo_xlib_surface_t    *surface,
 					   const cairo_color_t     *color,
@@ -2359,14 +2606,12 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
     if (operation == DO_UNSUPPORTED)
 	return UNSUPPORTED ("unsupported operation");
 
-    status = _cairo_pattern_acquire_surface (pattern, &dst->base,
-					     CAIRO_CONTENT_COLOR_ALPHA,
-					     src_x, src_y, width, height,
-					     dst->buggy_pad_reflect ?
-						     CAIRO_PATTERN_ACQUIRE_NO_REFLECT :
-						     CAIRO_PATTERN_ACQUIRE_NONE,
-					     (cairo_surface_t **) &src,
-					     &attributes);
+    status = _cairo_xlib_surface_acquire_pattern_surface (dst,
+							  pattern,
+							  CAIRO_CONTENT_COLOR_ALPHA,
+							  src_x, src_y,
+							  width, height,
+							  &src, &attributes);
     if (unlikely (status))
 	return status;
 
@@ -2752,9 +2997,14 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 	/* so we can use the XTile fallback */
 	surface->buggy_repeat = TRUE;
     }
+
     surface->buggy_pad_reflect = screen_info->display->buggy_pad_reflect;
     if (! CAIRO_SURFACE_RENDER_HAS_EXTENDED_REPEAT (surface))
 	surface->buggy_pad_reflect = TRUE;
+
+    surface->buggy_gradients = screen_info->display->buggy_gradients;
+    if (! CAIRO_SURFACE_RENDER_HAS_GRADIENTS (surface))
+	surface->buggy_gradients = TRUE;
 
     surface->dst_picture = None;
     surface->src_picture = None;
@@ -4212,15 +4462,13 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 	    }
 	}
 
-        status = _cairo_pattern_acquire_surface (src_pattern, &dst->base,
-						 CAIRO_CONTENT_COLOR_ALPHA,
-                                                 glyph_extents.x, glyph_extents.y,
-                                                 glyph_extents.width, glyph_extents.height,
-						 dst->buggy_pad_reflect ?
-							 CAIRO_PATTERN_ACQUIRE_NO_REFLECT :
-							 CAIRO_PATTERN_ACQUIRE_NONE,
-                                                 (cairo_surface_t **) &src,
-                                                 &attributes);
+        status = _cairo_xlib_surface_acquire_pattern_surface (dst, src_pattern,
+							      dst->base.content,
+							      glyph_extents.x,
+							      glyph_extents.y,
+							      glyph_extents.width,
+							      glyph_extents.height,
+							      &src, &attributes);
         if (unlikely (status))
 	    goto BAIL0;
     }

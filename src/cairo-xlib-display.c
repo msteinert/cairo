@@ -284,8 +284,9 @@ _cairo_xlib_display_get (Display *dpy,
     memset (display->cached_xrender_formats, 0,
 	    sizeof (display->cached_xrender_formats));
 
-    display->buggy_repeat = FALSE;
+    display->buggy_gradients = FALSE;
     display->buggy_pad_reflect = TRUE;
+    display->buggy_repeat = FALSE;
 
     /* This buggy_repeat condition is very complicated because there
      * are multiple X server code bases (with multiple versioning
@@ -335,6 +336,12 @@ _cairo_xlib_display_get (Display *dpy,
 	if (VendorRelease (dpy) >= 60700000) {
 	    if (VendorRelease (dpy) < 70000000)
 		display->buggy_repeat = TRUE;
+
+	    /* We know that gradients simply do not work in eary Xorg servers */
+	    if (VendorRelease (dpy) < 70200000)
+	    {
+		display->buggy_gradients = TRUE;
+	    }
 	} else {
 	    if (VendorRelease (dpy) < 10400000)
 		display->buggy_repeat = TRUE;

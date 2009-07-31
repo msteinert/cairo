@@ -26,6 +26,34 @@ New utilities:
       Further minimisation of the fail trace using "delta debugging".
       More control over test/reference targets.
 
+Backend improvements:
+
+  xlib
+
+     Server-side gradients. The theory is that we can offload computation
+     of gradients to the GPU and avoid pushing large images over the
+     connection. Even if the driver has to fallback and use pixman to render
+     a temporary source, it should be able to do so in a more efficient manner
+     than Cairo itself. However, cairo-perf suggests otherwise:
+
+     On tiny, Celeron/i915:
+
+      before: firefox-20090601 211.585
+       after: firefox-20090601 270.939
+
+     and on tiger, CoreDuo/nvidia:
+
+      before: firefox-20090601 70.143
+       after: firefox-20090601 87.326
+
+     In particular, looking at tiny:
+
+     xlib-rgba paint-with-alpha_linear-rgba_over-512   47.11 (47.16 0.05%) -> 123.42 (123.72 0.13%):  2.62x slowdown
+     █▋
+     xlib-rgba paint-with-alpha_linear3-rgba_over-512   47.27 (47.32 0.04%) -> 123.78 (124.04 0.13%):  2.62x slowdown
+     █▋
+
+
 New experimental backends:
 
    QT
