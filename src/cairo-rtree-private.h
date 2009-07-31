@@ -88,6 +88,9 @@ cairo_private void
 _cairo_rtree_node_collapse (cairo_rtree_t *rtree, cairo_rtree_node_t *node);
 
 cairo_private void
+_cairo_rtree_node_remove (cairo_rtree_t *rtree, cairo_rtree_node_t *node);
+
+cairo_private void
 _cairo_rtree_node_destroy (cairo_rtree_t *rtree, cairo_rtree_node_t *node);
 
 cairo_private void

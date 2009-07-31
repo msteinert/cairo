@@ -131,6 +131,9 @@ blit_with_span_renderer(
     int				 xmin,
     int				 xmax);
 
+static glitter_status_t
+blit_empty_with_span_renderer (cairo_span_renderer_t *renderer, int y);
+
 #define GLITTER_BLIT_COVERAGES_ARGS \
 	cairo_span_renderer_t *span_renderer, \
 	struct pool *span_pool
@@ -140,6 +143,12 @@ blit_with_span_renderer(
 						     span_renderer,	\
 						     span_pool,		\
 						     y, xmin, xmax);	\
+    if (unlikely (status))						\
+	return status;							\
+} while (0)
+
+#define GLITTER_BLIT_COVERAGES_EMPTY(y, xmin, xmax) do {		\
+    cairo_status_t status = blit_empty_with_span_renderer (span_renderer, y); \
     if (unlikely (status))						\
 	return status;							\
 } while (0)
@@ -1887,6 +1896,12 @@ blit_with_span_renderer(
 
     /* Dump them into the renderer. */
     return renderer->render_row (renderer, y, spans, num_spans);
+}
+
+static glitter_status_t
+blit_empty_with_span_renderer (cairo_span_renderer_t *renderer, int y)
+{
+    return renderer->render_row (renderer, y, NULL, 0);
 }
 
 struct _cairo_tor_scan_converter {

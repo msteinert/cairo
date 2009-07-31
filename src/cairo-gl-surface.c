@@ -59,38 +59,6 @@ int_as_float (uint32_t val)
     return fi.f;
 }
 
-enum cairo_gl_composite_operand_type {
-    OPERAND_CONSTANT,
-    OPERAND_TEXTURE,
-};
-
-/* This union structure describes a potential source or mask operand to the
- * compositing equation.
- */
-typedef struct cairo_gl_composite_operand {
-    enum cairo_gl_composite_operand_type type;
-    union {
-	struct {
-	    GLuint tex;
-	    cairo_gl_surface_t *surface;
-	    cairo_surface_attributes_t attributes;
-	    cairo_bool_t has_alpha;
-	} texture;
-	struct {
-	    GLfloat color[4];
-	} constant;
-    } operand;
-
-    const cairo_pattern_t *pattern;
-} cairo_gl_composite_operand_t;
-
-typedef struct _cairo_gl_composite_setup {
-    cairo_gl_composite_operand_t src;
-    cairo_gl_composite_operand_t mask;
-} cairo_gl_composite_setup_t;
-
-static const cairo_surface_backend_t _cairo_gl_surface_backend;
-
 static const cairo_gl_context_t _nil_context = {
     CAIRO_REFERENCE_COUNT_INVALID,
     CAIRO_STATUS_NO_MEMORY
@@ -114,22 +82,23 @@ _cairo_gl_context_create_in_error (cairo_status_t status)
 cairo_status_t
 _cairo_gl_context_init (cairo_gl_context_t *ctx)
 {
+    int n;
+
     ctx->status = CAIRO_STATUS_SUCCESS;
     CAIRO_REFERENCE_COUNT_INIT (&ctx->ref_count, 1);
     CAIRO_MUTEX_INIT (ctx->mutex);
 
+    memset (ctx->glyph_cache, 0, sizeof (ctx->glyph_cache));
+
     if (glewInit () != GLEW_OK)
 	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT); /* XXX */
 
-    if (! GLEW_ARB_vertex_buffer_object ||
-	! GLEW_EXT_framebuffer_object ||
+    if (! GLEW_EXT_framebuffer_object ||
 	! GLEW_ARB_texture_env_combine ||
 	! GLEW_ARB_texture_non_power_of_two)
     {
 	fprintf (stderr,
 		 "Required GL extensions not available:\n");
-	if (! GLEW_ARB_vertex_buffer_object)
-	    fprintf (stderr, "    GL_ARB_vertex_buffer_object\n");
 	if (! GLEW_EXT_framebuffer_object)
 	    fprintf (stderr, "    GL_EXT_framebuffer_object\n");
 	if (! GLEW_ARB_texture_env_combine)
@@ -150,6 +119,9 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     glGetIntegerv (GL_MAX_RENDERBUFFER_SIZE, &ctx->max_framebuffer_size);
     ctx->max_texture_size = 0;
     glGetIntegerv (GL_MAX_TEXTURE_SIZE, &ctx->max_texture_size);
+
+    for (n = 0; n < ARRAY_LENGTH (ctx->glyph_cache); n++)
+	_cairo_gl_glyph_cache_init (&ctx->glyph_cache[n]);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -173,6 +145,8 @@ slim_hidden_def (cairo_gl_context_reference);
 void
 cairo_gl_context_destroy (cairo_gl_context_t *context)
 {
+    int n;
+
     if (context == NULL ||
 	CAIRO_REFERENCE_COUNT_IS_INVALID (&context->ref_count))
     {
@@ -185,20 +159,23 @@ cairo_gl_context_destroy (cairo_gl_context_t *context)
 
     glDeleteTextures (1, &context->dummy_tex);
 
+    for (n = 0; n < ARRAY_LENGTH (context->glyph_cache); n++)
+	_cairo_gl_glyph_cache_fini (&context->glyph_cache[n]);
+
     context->destroy (context);
 
     free (context);
 }
 slim_hidden_def (cairo_gl_context_destroy);
 
-static cairo_gl_context_t *
+cairo_gl_context_t *
 _cairo_gl_context_acquire (cairo_gl_context_t *ctx)
 {
     CAIRO_MUTEX_LOCK (ctx->mutex);
     return ctx;
 }
 
-static cairo_status_t
+cairo_bool_t
 _cairo_gl_get_image_format_and_type (pixman_format_code_t pixman_format,
 				     GLenum *internal_format, GLenum *format,
 				     GLenum *type, cairo_bool_t *has_alpha)
@@ -210,82 +187,82 @@ _cairo_gl_get_image_format_and_type (pixman_format_code_t pixman_format,
 	*internal_format = GL_RGBA;
 	*format = GL_BGRA;
 	*type = GL_UNSIGNED_INT_8_8_8_8_REV;
-	return CAIRO_STATUS_SUCCESS;
+	return TRUE;
     case PIXMAN_x8r8g8b8:
 	*internal_format = GL_RGB;
 	*format = GL_BGRA;
 	*type = GL_UNSIGNED_INT_8_8_8_8_REV;
 	*has_alpha = FALSE;
-	return CAIRO_STATUS_SUCCESS;
+	return TRUE;
     case PIXMAN_a8b8g8r8:
 	*internal_format = GL_RGBA;
 	*format = GL_RGBA;
 	*type = GL_UNSIGNED_INT_8_8_8_8_REV;
-	return CAIRO_STATUS_SUCCESS;
+	return TRUE;
     case PIXMAN_x8b8g8r8:
 	*internal_format = GL_RGB;
 	*format = GL_RGBA;
 	*type = GL_UNSIGNED_INT_8_8_8_8_REV;
 	*has_alpha = FALSE;
-	return CAIRO_STATUS_SUCCESS;
+	return TRUE;
     case PIXMAN_b8g8r8a8:
 	*internal_format = GL_BGRA;
 	*format = GL_BGRA;
 	*type = GL_UNSIGNED_INT_8_8_8_8;
-	return CAIRO_STATUS_SUCCESS;
+	return TRUE;
     case PIXMAN_b8g8r8x8:
 	*internal_format = GL_RGB;
 	*format = GL_BGRA;
 	*type = GL_UNSIGNED_INT_8_8_8_8;
 	*has_alpha = FALSE;
-	return CAIRO_STATUS_SUCCESS;
+	return TRUE;
     case PIXMAN_r8g8b8:
 	*internal_format = GL_RGB;
 	*format = GL_RGB;
 	*type = GL_UNSIGNED_BYTE;
-	return CAIRO_STATUS_SUCCESS;
+	return TRUE;
     case PIXMAN_b8g8r8:
 	*internal_format = GL_RGB;
 	*format = GL_BGR;
 	*type = GL_UNSIGNED_BYTE;
-	return CAIRO_STATUS_SUCCESS;
+	return TRUE;
     case PIXMAN_r5g6b5:
 	*internal_format = GL_RGB;
 	*format = GL_RGB;
 	*type = GL_UNSIGNED_SHORT_5_6_5;
-	return CAIRO_STATUS_SUCCESS;
+	return TRUE;
     case PIXMAN_b5g6r5:
 	*internal_format = GL_RGB;
 	*format = GL_RGB;
 	*type = GL_UNSIGNED_SHORT_5_6_5_REV;
-	return CAIRO_STATUS_SUCCESS;
+	return TRUE;
     case PIXMAN_a1r5g5b5:
 	*internal_format = GL_RGBA;
 	*format = GL_BGRA;
 	*type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
-	return CAIRO_STATUS_SUCCESS;
+	return TRUE;
     case PIXMAN_x1r5g5b5:
 	*internal_format = GL_RGB;
 	*format = GL_BGRA;
 	*type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
 	*has_alpha = FALSE;
-	return CAIRO_STATUS_SUCCESS;
+	return TRUE;
     case PIXMAN_a1b5g5r5:
 	*internal_format = GL_RGBA;
 	*format = GL_RGBA;
 	*type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
-	return CAIRO_STATUS_SUCCESS;
+	return TRUE;
     case PIXMAN_x1b5g5r5:
 	*internal_format = GL_RGB;
 	*format = GL_RGBA;
 	*type = GL_UNSIGNED_SHORT_1_5_5_5_REV;
 	*has_alpha = FALSE;
-	return CAIRO_STATUS_SUCCESS;
+	return TRUE;
     case PIXMAN_a8:
 	*internal_format = GL_ALPHA;
 	*format = GL_ALPHA;
 	*type = GL_UNSIGNED_BYTE;
-	return CAIRO_STATUS_SUCCESS;
+	return TRUE;
 
     case PIXMAN_a2b10g10r10:
     case PIXMAN_x2b10g10r10:
@@ -317,17 +294,17 @@ _cairo_gl_get_image_format_and_type (pixman_format_code_t pixman_format,
     case PIXMAN_a2r10g10b10:
 #endif
     default:
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return FALSE;
     }
 }
 
-static void
+void
 _cairo_gl_context_release (cairo_gl_context_t *ctx)
 {
     CAIRO_MUTEX_UNLOCK (ctx->mutex);
 }
 
-static void
+void
 _cairo_gl_set_destination (cairo_gl_surface_t *surface)
 {
     cairo_gl_context_t *ctx = surface->ctx;
@@ -360,7 +337,13 @@ _cairo_gl_set_destination (cairo_gl_surface_t *surface)
     glLoadIdentity ();
 }
 
-static int
+cairo_bool_t
+_cairo_gl_operator_is_supported (cairo_operator_t op)
+{
+    return op < CAIRO_OPERATOR_SATURATE;
+}
+
+void
 _cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op)
 {
     struct {
@@ -385,8 +368,7 @@ _cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op)
     };
     GLenum src_factor, dst_factor;
 
-    if (op >= ARRAY_SIZE (blend_factors))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+    assert (op < ARRAY_SIZE (blend_factors));
 
     src_factor = blend_factors[op].src;
     dst_factor = blend_factors[op].dst;
@@ -401,9 +383,8 @@ _cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op)
 	    src_factor = GL_ONE;
     }
 
+    glEnable (GL_BLEND);
     glBlendFunc (src_factor, dst_factor);
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -626,49 +607,55 @@ _cairo_gl_surface_create_similar (void		 *abstract_surface,
     return cairo_gl_surface_create (surface->ctx, content, width, height);
 }
 
-static cairo_status_t
+cairo_status_t
 _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 			      cairo_image_surface_t *src,
 			      int src_x, int src_y,
 			      int width, int height,
 			      int dst_x, int dst_y)
 {
-    char *temp_data;
-    int y;
-    unsigned int cpp = PIXMAN_FORMAT_BPP (src->pixman_format) / 8;
     GLenum internal_format, format, type;
-    char *src_data_start;
     cairo_bool_t has_alpha;
-    cairo_status_t status;
+    cairo_image_surface_t *clone = NULL;
+    int cpp;
 
-    status = _cairo_gl_get_image_format_and_type (src->pixman_format,
-						  &internal_format,
-						  &format,
-						  &type,
-						  &has_alpha);
-    if (status != CAIRO_STATUS_SUCCESS)
-	return status;
+    if (! _cairo_gl_get_image_format_and_type (src->pixman_format,
+					      &internal_format,
+					      &format,
+					      &type,
+					      &has_alpha))
+    {
+	cairo_bool_t is_supported;
 
-    /* Write the data to a temporary as GL wants bottom-to-top data
-     * screen-wise, and we want top-to-bottom.
-     */
-    temp_data = malloc (width * height * cpp);
-    if (temp_data == NULL)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	clone = _cairo_image_surface_coerce (src,
+		_cairo_format_from_content (src->base.content));
+	if (unlikely (clone->base.status))
+	    return clone->base.status;
 
-    src_data_start = (char *)src->data + (src_y * src->stride) + (src_x * cpp);
-    for (y = 0; y < height; y++) {
-	memcpy (temp_data + y * width * cpp, src_data_start +
-		y * src->stride,
-		width * cpp);
+	is_supported =
+	    _cairo_gl_get_image_format_and_type (clone->pixman_format,
+		                                 &internal_format,
+						 &format,
+						 &type,
+						 &has_alpha);
+	assert (is_supported);
+	src = clone;
     }
 
-    _cairo_gl_set_destination (dst);
-    glRasterPos2i (dst_x, dst_y);
-    glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
-    glDrawPixels (width, height, format, type, temp_data);
+    cpp = PIXMAN_FORMAT_BPP (src->pixman_format) / 8;
 
-    free (temp_data);
+    glBindTexture (GL_TEXTURE_2D, dst->tex);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei (GL_UNPACK_ROW_LENGTH, src->stride / cpp);
+    glTexSubImage2D (GL_TEXTURE_2D, 0,
+	             dst_x, dst_y, width, height,
+		     format, GL_UNSIGNED_BYTE,
+		     src->data + src_y * src->stride + src_x * cpp);
+    glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
+
+    cairo_surface_destroy (&clone->base);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -855,19 +842,9 @@ _cairo_gl_surface_clone_similar (void		     *abstract_surface,
 
 	return CAIRO_STATUS_SUCCESS;
     } else if (_cairo_surface_is_image (src)) {
-	cairo_gl_surface_t *clone;
 	cairo_image_surface_t *image_src = (cairo_image_surface_t *)src;
+	cairo_gl_surface_t *clone;
 	cairo_status_t status;
-	GLenum internal_format, format, type;
-	cairo_bool_t has_alpha;
-
-	status = _cairo_gl_get_image_format_and_type (image_src->pixman_format,
-						      &internal_format,
-						      &format,
-						      &type,
-						      &has_alpha);
-	if (status != CAIRO_STATUS_SUCCESS)
-	    return status;
 
 	clone = (cairo_gl_surface_t *)
 	    _cairo_gl_surface_create_similar (&surface->base,
@@ -950,105 +927,117 @@ _cairo_gl_get_traps_pattern (cairo_gl_surface_t *dst,
 }
 
 static cairo_status_t
-_cairo_gl_pattern_image_texture_setup (cairo_gl_composite_operand_t *operand,
-				       const cairo_pattern_t *src,
-				       cairo_gl_surface_t *dst,
-				       int src_x, int src_y,
-				       int dst_x, int dst_y,
-				       int width, int height)
+_cairo_gl_pattern_surface_texture_setup (cairo_gl_composite_operand_t *operand,
+				         const cairo_surface_pattern_t *src,
+					 cairo_gl_surface_t *dst,
+					 int src_x, int src_y,
+					 int dst_x, int dst_y)
 {
-    cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *)src;
-    cairo_image_surface_t *image_surface;
+    cairo_surface_t *source = src->surface;
+    cairo_gl_surface_t *gl_surface;
+    cairo_status_t status;
     cairo_matrix_t m;
     cairo_surface_attributes_t *attributes;
-    GLuint tex;
-    GLenum format, internal_format, type;
-    cairo_status_t status;
 
-    if (src->type != CAIRO_PATTERN_TYPE_SURFACE)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+    if (source->backend != &_cairo_gl_surface_backend) {
+	gl_surface = (cairo_gl_surface_t *)
+	    _cairo_surface_has_snapshot (source,
+		                         &_cairo_gl_surface_backend,
+		                         source->content);
+	if (gl_surface == NULL) {
+	    cairo_image_surface_t *image;
+	    void *image_extra;
 
-    if (!_cairo_surface_is_image (surface_pattern->surface))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	    status = _cairo_surface_acquire_source_image (source,
+		                                          &image, &image_extra);
+	    if (unlikely (status))
+		return status;
 
-    image_surface = (cairo_image_surface_t *)surface_pattern->surface;
-    if (image_surface->width > dst->ctx->max_texture_size ||
-	image_surface->height > dst->ctx->max_texture_size)
-    {
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	    gl_surface = (cairo_gl_surface_t *)
+		_cairo_gl_surface_create_similar (&dst->base,
+			                          image->base.content,
+						  image->width, image->height);
+	    if (gl_surface == NULL) {
+		_cairo_surface_release_source_image (source,
+			                             image, image_extra);
+		return CAIRO_INT_STATUS_UNSUPPORTED;
+	    }
+	    if (unlikely (gl_surface->base.status)) {
+		_cairo_surface_release_source_image (source,
+			                             image, image_extra);
+		return gl_surface->base.status;
+	    }
+
+	    status = _cairo_gl_surface_draw_image (gl_surface, image,
+		                                   0, 0,
+						   image->width, image->height,
+						   0, 0);
+	    _cairo_surface_release_source_image (source, image, image_extra);
+	    if (unlikely (status)) {
+		cairo_surface_destroy (&gl_surface->base);
+		return status;
+	    }
+
+	    status = _cairo_surface_attach_snapshot (source,
+		                                     &gl_surface->base,
+						     cairo_surface_destroy);
+	    if (unlikely (status)) {
+		cairo_surface_destroy (&gl_surface->base);
+		return status;
+	    }
+
+	    /* XXX consider placing a bound on snapshot caches */
+	}
+    } else {
+	gl_surface = (cairo_gl_surface_t *) source;
     }
 
-    /* The textures we create almost always has appropriate alpha channel
-     * contents.  But sometimes GL sucks at image specification and we end up
-     * with junk in the alpha.
-     */
-    operand->operand.texture.has_alpha = TRUE;
-
-    status = _cairo_gl_get_image_format_and_type (image_surface->pixman_format,
-						  &internal_format, &format,
-						  &type,
-						  &operand->operand.texture.has_alpha);
-    if (status)
-	return status;
-
-    glGenTextures (1, &tex);
-    glBindTexture (GL_TEXTURE_2D, tex);
-    glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
-    assert (((image_surface->stride * image_surface->depth) %
-	     image_surface->depth) == 0);
-    glPixelStorei (GL_UNPACK_ROW_LENGTH,
-		   image_surface->stride /
-		   (PIXMAN_FORMAT_BPP (image_surface->pixman_format) / 8));
-    /* The filter will be correctly set up later, but for now we want to
-     * hint to glTexImage that we're not mipmapping.
-     */
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexImage2D (GL_TEXTURE_2D, 0, internal_format,
-		  image_surface->width, image_surface->height, 0,
-		  format, type, image_surface->data);
-    glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
+    operand->operand.texture.surface = NULL;
+    operand->operand.texture.tex = gl_surface->tex;
+    switch (gl_surface->base.content) {
+	case CAIRO_CONTENT_ALPHA:
+	case CAIRO_CONTENT_COLOR_ALPHA:
+	    operand->operand.texture.has_alpha = TRUE;
+	    break;
+	case CAIRO_CONTENT_COLOR:
+	    operand->operand.texture.has_alpha = FALSE;
+	    break;
+    }
 
     attributes = &operand->operand.texture.attributes;
 
     operand->type = OPERAND_TEXTURE;
-    operand->operand.texture.tex = tex;
+    operand->operand.texture.tex = gl_surface->tex;
     operand->operand.texture.surface = NULL;
-    attributes->matrix = src->matrix;
-    attributes->extend = src->extend;
-    attributes->filter = src->filter;
+    attributes->matrix = src->base.matrix;
+    attributes->extend = src->base.extend;
+    attributes->filter = src->base.filter;
     /* Demote the filter if we're doing a 1:1 mapping of pixels. */
-    if ((src->filter == CAIRO_FILTER_GOOD ||
-	 src->filter == CAIRO_FILTER_BEST ||
-	 src->filter == CAIRO_FILTER_BILINEAR) &&
-	_cairo_matrix_is_pixel_exact (&src->matrix)) {
+    if ((attributes->filter == CAIRO_FILTER_GOOD ||
+	 attributes->filter == CAIRO_FILTER_BEST ||
+	 attributes->filter == CAIRO_FILTER_BILINEAR) &&
+	_cairo_matrix_is_pixel_exact (&attributes->matrix))
+    {
 	attributes->filter = CAIRO_FILTER_NEAREST;
     }
 
     attributes->x_offset = 0;
     attributes->y_offset = 0;
 
-
     /* Set up translation matrix for
      * (unnormalized dst -> unnormalized src)
      */
-    cairo_matrix_init_translate (&m,
-				 src_x - dst_x,
-				 src_y - dst_y);
-    cairo_matrix_multiply (&attributes->matrix,
-			   &m,
-			   &attributes->matrix);
+    cairo_matrix_init_translate (&m, src_x - dst_x, src_y - dst_y);
+    cairo_matrix_multiply (&attributes->matrix, &m, &attributes->matrix);
 
     /* Translate the matrix from
      * (unnormalized src -> unnormalized src) to
      * (unnormalized dst -> normalized src)
      */
     cairo_matrix_init_scale (&m,
-			     1.0 / image_surface->width,
-			     1.0 / image_surface->height);
-    cairo_matrix_multiply (&attributes->matrix,
-			   &attributes->matrix,
-			   &m);
+			     1.0 / gl_surface->width,
+			     1.0 / gl_surface->height);
+    cairo_matrix_multiply (&attributes->matrix, &attributes->matrix, &m);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1072,19 +1061,23 @@ _cairo_gl_pattern_texture_setup (cairo_gl_composite_operand_t *operand,
 
     attributes = &operand->operand.texture.attributes;
 
-    /* First, try to just upload it to a texture if it's an image surface. */
-    status = _cairo_gl_pattern_image_texture_setup (operand, src, dst,
-						    src_x, src_y,
-						    dst_x, dst_y,
-						    width, height);
-    if (status == CAIRO_STATUS_SUCCESS)
-	return CAIRO_STATUS_SUCCESS;
+    /* First, try to just upload it to a texture if it's a surface. */
+    if (src->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	status =
+	    _cairo_gl_pattern_surface_texture_setup (operand,
+		                                     (cairo_surface_pattern_t *) src,
+						     dst,
+						     src_x, src_y,
+						     dst_x, dst_y);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
 
     status = _cairo_pattern_acquire_surface (src, &dst->base,
 					     CAIRO_CONTENT_COLOR_ALPHA,
 					     src_x, src_y,
 					     width, height,
-					     CAIRO_PATTERN_ACQUIRE_NO_REFLECT,
+					     CAIRO_PATTERN_ACQUIRE_NONE,
 					     (cairo_surface_t **)
 					     &surface,
 					     attributes);
@@ -1131,7 +1124,19 @@ _cairo_gl_pattern_texture_setup (cairo_gl_composite_operand_t *operand,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_int_status_t
+static cairo_status_t
+_cairo_gl_solid_operand_init (cairo_gl_composite_operand_t *operand,
+	                      const cairo_color_t *color)
+{
+    operand->type = OPERAND_CONSTANT;
+    operand->operand.constant.color[0] = color->red   * color->alpha;
+    operand->operand.constant.color[1] = color->green * color->alpha;
+    operand->operand.constant.color[2] = color->blue  * color->alpha;
+    operand->operand.constant.color[3] = color->alpha;
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_int_status_t
 _cairo_gl_operand_init (cairo_gl_composite_operand_t *operand,
 		       const cairo_pattern_t *pattern,
 		       cairo_gl_surface_t *dst,
@@ -1139,22 +1144,53 @@ _cairo_gl_operand_init (cairo_gl_composite_operand_t *operand,
 		       int dst_x, int dst_y,
 		       int width, int height)
 {
-    cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *)pattern;
-
     operand->pattern = pattern;
 
     switch (pattern->type) {
     case CAIRO_PATTERN_TYPE_SOLID:
-	operand->type = OPERAND_CONSTANT;
-	operand->operand.constant.color[0] = solid->color.red * solid->color.alpha;
-	operand->operand.constant.color[1] = solid->color.green * solid->color.alpha;
-	operand->operand.constant.color[2] = solid->color.blue * solid->color.alpha;
-	operand->operand.constant.color[3] = solid->color.alpha;
-	return CAIRO_STATUS_SUCCESS;
-    default:
-    case CAIRO_PATTERN_TYPE_SURFACE:
+	return _cairo_gl_solid_operand_init (operand,
+		                             &((cairo_solid_pattern_t *) pattern)->color);
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
+	{
+	    cairo_gradient_pattern_t *src = (cairo_gradient_pattern_t *) pattern;
+
+	    /* Fast path for gradients with less than 2 color stops.
+	     * Required to prevent _cairo_pattern_acquire_surface() returning
+	     * a solid color which is cached beyond the life of the context.
+	     */
+	    if (src->n_stops < 2) {
+		if (src->n_stops) {
+		    return _cairo_gl_solid_operand_init (operand,
+			                                 &src->stops->color);
+		} else {
+		    return _cairo_gl_solid_operand_init (operand,
+			                                 CAIRO_COLOR_TRANSPARENT);
+		}
+	    } else {
+		unsigned int i;
+
+		/* Is the gradient a uniform colour?
+		 * Happens more often than you would believe.
+		 */
+		for (i = 1; i < src->n_stops; i++) {
+		    if (! _cairo_color_equal (&src->stops[0].color,
+				              &src->stops[i].color))
+		    {
+			break;
+		    }
+		}
+		if (i == src->n_stops) {
+		    return _cairo_gl_solid_operand_init (operand,
+			                                 &src->stops->color);
+		}
+	    }
+	}
+
+	/* fall through */
+
+    default:
+    case CAIRO_PATTERN_TYPE_SURFACE:
 	operand->type = OPERAND_TEXTURE;
 	return _cairo_gl_pattern_texture_setup (operand,
 						pattern, dst,
@@ -1164,7 +1200,7 @@ _cairo_gl_operand_init (cairo_gl_composite_operand_t *operand,
     }
 }
 
-static void
+void
 _cairo_gl_operand_destroy (cairo_gl_composite_operand_t *operand)
 {
     switch (operand->type) {
@@ -1177,8 +1213,6 @@ _cairo_gl_operand_destroy (cairo_gl_composite_operand_t *operand)
 	    _cairo_pattern_release_surface (operand->pattern,
 					    &surface->base,
 					    &operand->operand.texture.attributes);
-	} else {
-	    glDeleteTextures (1, &operand->operand.texture.tex);
 	}
 	break;
     }
@@ -1218,7 +1252,7 @@ _cairo_gl_set_tex_combine_constant_color (cairo_gl_context_t *ctx, int tex_unit,
     }
 }
 
-static void
+void
 _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 			   cairo_gl_composite_setup_t *setup)
 {
@@ -1287,6 +1321,9 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     GLenum err;
     cairo_gl_composite_setup_t setup;
 
+    if (! _cairo_gl_operator_is_supported (op))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     memset (&setup, 0, sizeof (setup));
 
     status = _cairo_gl_operand_init (&setup.src, src, dst,
@@ -1314,16 +1351,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 
     ctx = _cairo_gl_context_acquire (dst->ctx);
     _cairo_gl_set_destination (dst);
-    status = _cairo_gl_set_operator (dst, op);
-    if (status != CAIRO_STATUS_SUCCESS) {
-	_cairo_gl_operand_destroy (&setup.src);
-	if (mask != NULL)
-	    _cairo_gl_operand_destroy (&setup.mask);
-	_cairo_gl_context_release (ctx);
-	return status;
-    }
-
-    glEnable (GL_BLEND);
+    _cairo_gl_set_operator (dst, op);
 
     _cairo_gl_set_src_operand (ctx, &setup);
 
@@ -1514,19 +1542,17 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
 {
     cairo_gl_surface_t *surface = abstract_surface;
     cairo_gl_context_t *ctx;
-    cairo_int_status_t status;
     int i;
     GLfloat *vertices;
     GLfloat *colors;
 
+    if (! _cairo_gl_operator_is_supported (op))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     ctx = _cairo_gl_context_acquire (surface->ctx);
 
     _cairo_gl_set_destination (surface);
-    status = _cairo_gl_set_operator (surface, op);
-    if (status != CAIRO_STATUS_SUCCESS) {
-	_cairo_gl_context_release (ctx);
-	return status;
-    }
+    _cairo_gl_set_operator (surface, op);
 
     vertices = _cairo_malloc_ab (num_rects, sizeof (GLfloat) * 4 * 2);
     colors = _cairo_malloc_ab (num_rects, sizeof (GLfloat) * 4 * 4);
@@ -1558,7 +1584,6 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
 	vertices[i * 8 + 7] = rects[i].y + rects[i].height;
     }
 
-    glEnable (GL_BLEND);
     glVertexPointer (2, GL_FLOAT, sizeof (GLfloat)*2, vertices);
     glEnableClientState (GL_VERTEX_ARRAY);
     glColorPointer (4, GL_FLOAT, sizeof (GLfloat)*4, colors);
@@ -1585,6 +1610,7 @@ typedef struct _cairo_gl_surface_span_renderer {
     cairo_antialias_t antialias;
 
     cairo_gl_surface_t *dst;
+    cairo_region_t *clip;
 
     cairo_composite_rectangles_t composite_rectangles;
     GLuint vbo;
@@ -1597,12 +1623,32 @@ typedef struct _cairo_gl_surface_span_renderer {
 static void
 _cairo_gl_span_renderer_flush (cairo_gl_surface_span_renderer_t *renderer)
 {
+    int count;
+
     if (renderer->vbo_offset == 0)
 	return;
 
     glUnmapBufferARB (GL_ARRAY_BUFFER_ARB);
-    glDrawArrays (GL_LINES, 0, renderer->vbo_offset / renderer->vertex_size);
+
+    count = renderer->vbo_offset / renderer->vertex_size;
     renderer->vbo_offset = 0;
+
+    if (renderer->clip) {
+	int i, num_rectangles = cairo_region_num_rectangles (renderer->clip);
+
+	glEnable (GL_SCISSOR_TEST);
+	for (i = 0; i < num_rectangles; i++) {
+	    cairo_rectangle_int_t rect;
+
+	    cairo_region_get_rectangle (renderer->clip, i, &rect);
+
+	    glScissor (rect.x, rect.y, rect.width, rect.height);
+	    glDrawArrays (GL_LINES, 0, count);
+	}
+	glDisable (GL_SCISSOR_TEST);
+    } else {
+	glDrawArrays (GL_LINES, 0, count);
+    }
 }
 
 static void *
@@ -1788,7 +1834,6 @@ _cairo_gl_surface_span_renderer_finish (void *abstract_renderer)
     glDisable (GL_TEXTURE_2D);
 
     glDisable (GL_BLEND);
-    glDisable (GL_DEPTH_TEST);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1800,95 +1845,18 @@ _cairo_gl_surface_check_span_renderer (cairo_operator_t	  op,
 				       cairo_antialias_t	  antialias,
 				       const cairo_composite_rectangles_t *rects)
 {
-    (void) op;
+    if (! _cairo_gl_operator_is_supported (op))
+	return FALSE;
+
+    if (! GLEW_ARB_vertex_buffer_object)
+	return FALSE;
+
+    return TRUE;
+
     (void) pattern;
     (void) abstract_dst;
     (void) antialias;
     (void) rects;
-    return TRUE;
-}
-
-static void
-_cairo_gl_surface_ensure_depth_buffer (cairo_gl_surface_t *surface)
-{
-    if (surface->depth_stencil_tex)
-	return;
-
-    glGenTextures (1, &surface->depth_stencil_tex);
-    glBindTexture (GL_TEXTURE_2D, surface->depth_stencil_tex);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexImage2D (GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8_EXT,
-		  surface->width, surface->height, 0,
-		  GL_DEPTH_STENCIL_EXT, GL_UNSIGNED_INT_24_8_EXT, NULL);
-    glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT,
-			       GL_DEPTH_ATTACHMENT_EXT,
-			       GL_TEXTURE_2D,
-			       surface->depth_stencil_tex, 0);
-    glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT,
-			       GL_STENCIL_ATTACHMENT_EXT,
-			       GL_TEXTURE_2D,
-			       surface->depth_stencil_tex, 0);
-}
-
-
-static cairo_status_t
-_cairo_gl_surface_set_clip_region (cairo_gl_surface_t *surface,
-				   cairo_region_t *clip_region)
-{
-    GLfloat vertices_stack[CAIRO_STACK_ARRAY_LENGTH(GLfloat)], *vertices;
-    int num_rectangles, i, n;
-
-    if (clip_region == NULL)
-	return CAIRO_STATUS_SUCCESS;
-
-    num_rectangles = cairo_region_num_rectangles (clip_region);
-
-    vertices = vertices_stack;
-    if (num_rectangles * 8 > ARRAY_LENGTH (vertices_stack)) {
-	vertices = _cairo_malloc_ab (num_rectangles,
-				     4*3*sizeof (vertices[0]));
-	if (unlikely (vertices == NULL))
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-    }
-
-    for (i = n = 0; i < num_rectangles; i++) {
-	cairo_rectangle_int_t rect;
-
-	cairo_region_get_rectangle (clip_region, i, &rect);
-	vertices[n++] = rect.x;
-	vertices[n++] = rect.y;
-	vertices[n++] = rect.x + rect.width;
-	vertices[n++] = rect.y;
-	vertices[n++] = rect.x + rect.width;
-	vertices[n++] = rect.y + rect.height;
-	vertices[n++] = rect.x;
-	vertices[n++] = rect.y +rect. height;
-    }
-
-    _cairo_gl_surface_ensure_depth_buffer (surface);
-
-    glDisable (GL_BLEND);
-    glDepthFunc (GL_ALWAYS);
-    glEnable (GL_DEPTH_TEST);
-    glColorMask (GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-
-    glDepthMask (GL_TRUE);
-    glClear (GL_DEPTH_BUFFER_BIT);
-
-    glVertexPointer (2, GL_FLOAT, sizeof (GLfloat) * 2, vertices);
-    glEnableClientState (GL_VERTEX_ARRAY);
-    glDrawArrays (GL_QUADS, 0, 4 * num_rectangles);
-    glDisableClientState (GL_VERTEX_ARRAY);
-
-    glColorMask (GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glDepthFunc (GL_EQUAL);
-    glDepthMask (GL_FALSE);
-
-    if (vertices != vertices_stack)
-	free (vertices);
-
-    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_span_renderer_t *
@@ -1907,9 +1875,6 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
     cairo_surface_attributes_t *src_attributes;
     GLenum err;
 
-    if (!GLEW_ARB_vertex_buffer_object)
-	return _cairo_span_renderer_create_in_error (CAIRO_INT_STATUS_UNSUPPORTED);
-
     renderer = calloc (1, sizeof (*renderer));
     if (unlikely (renderer == NULL))
 	return _cairo_span_renderer_create_in_error (CAIRO_STATUS_NO_MEMORY);
@@ -1921,6 +1886,7 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
     renderer->op = op;
     renderer->antialias = antialias;
     renderer->dst = dst;
+    renderer->clip = clip_region;
 
     renderer->composite_rectangles = *rects;
 
@@ -1935,25 +1901,11 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
     }
 
     _cairo_gl_context_acquire (dst->ctx);
-
     _cairo_gl_set_destination (dst);
-
-    status = _cairo_gl_surface_set_clip_region (dst, clip_region);
-    if (unlikely (status)) {
-	_cairo_gl_surface_span_renderer_destroy (renderer);
-	return _cairo_span_renderer_create_in_error (status);
-    }
 
     src_attributes = &renderer->setup.src.operand.texture.attributes;
 
-    status = _cairo_gl_set_operator (dst, op);
-    if (status != CAIRO_STATUS_SUCCESS) {
-	_cairo_gl_surface_span_renderer_destroy (renderer);
-	return _cairo_span_renderer_create_in_error (status);
-    }
-
-    glEnable (GL_BLEND);
-
+    _cairo_gl_set_operator (dst, op);
     _cairo_gl_set_src_operand (dst->ctx, &renderer->setup);
 
     /* Set up the mask to source from the incoming vertex color. */
@@ -2027,7 +1979,7 @@ _cairo_gl_surface_paint (void *abstract_surface,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
-static const cairo_surface_backend_t _cairo_gl_surface_backend = {
+const cairo_surface_backend_t _cairo_gl_surface_backend = {
     CAIRO_SURFACE_TYPE_GL,
     _cairo_gl_surface_create_similar,
     _cairo_gl_surface_finish,
@@ -2052,12 +2004,12 @@ static const cairo_surface_backend_t _cairo_gl_surface_backend = {
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
     NULL, /* scaled_font_fini */
-    NULL, /* scaled_glyph_fini */
+    _cairo_gl_surface_scaled_glyph_fini,
     _cairo_gl_surface_paint,
     NULL, /* mask */
     NULL, /* stroke */
     NULL, /* fill */
-    NULL, /* show_glyphs */
+    _cairo_gl_surface_show_glyphs, /* show_glyphs */
     NULL  /* snapshot */
 };
 

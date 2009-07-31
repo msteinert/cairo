@@ -1151,7 +1151,8 @@ _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
 	status = _cairo_scaled_font_glyph_device_extents (scaled_font,
 							  glyphs,
 							  num_glyphs,
-							  &glyph_extents);
+							  &glyph_extents,
+							  NULL);
 	if (unlikely (status))
 	    return status;
 
