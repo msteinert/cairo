@@ -60,12 +60,15 @@ test_diff_cmp_speedup_before_slowdown (const void *a, const void *b)
     if (a_diff->change < 1.0 && b_diff->change > 1.0)
 	return 1;
 
-    /* Reverse sort by magnitude of change so larger changes come
-     * first */
-    if (fabs (a_diff->change) > fabs (b_diff->change))
+    if (a_diff->change == b_diff->change)
+	return 0;
+
+    /* Large speedups come first. */
+    if (a_diff->change > 1. && a_diff->change > b_diff->change)
 	return -1;
 
-    if (fabs (a_diff->change) < fabs (b_diff->change))
+    /* Large slowdowns come last. */
+    if (a_diff->change < 1. && a_diff->change < b_diff->change)
 	return 1;
 
     return 0;
