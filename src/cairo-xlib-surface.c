@@ -152,6 +152,8 @@ static const XTransform identity = { {
 #define CAIRO_SURFACE_RENDER_HAS_PICTURE_TRANSFORM(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 6)
 #define CAIRO_SURFACE_RENDER_HAS_FILTERS(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 6)
 
+#define CAIRO_SURFACE_RENDER_HAS_EXTENDED_REPEAT(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 10)
+
 #define CAIRO_SURFACE_RENDER_HAS_PDF_OPERATORS(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 11)
 
 #if RENDER_MAJOR > 0 || RENDER_MINOR >= 11
@@ -2751,6 +2753,8 @@ _cairo_xlib_surface_create_internal (Display		       *dpy,
 	surface->buggy_repeat = TRUE;
     }
     surface->buggy_pad_reflect = screen_info->display->buggy_pad_reflect;
+    if (! CAIRO_SURFACE_RENDER_HAS_EXTENDED_REPEAT (surface))
+	surface->buggy_pad_reflect = TRUE;
 
     surface->dst_picture = None;
     surface->src_picture = None;
