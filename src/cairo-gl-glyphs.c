@@ -395,8 +395,10 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     _cairo_gl_set_src_operand (ctx, &composite_setup);
 
     _cairo_scaled_font_freeze_cache (scaled_font);
-    if (! _cairo_gl_surface_owns_font (dst, scaled_font))
+    if (! _cairo_gl_surface_owns_font (dst, scaled_font)) {
+	status = CAIRO_INT_STATUS_UNSUPPORTED;
 	goto CLEANUP_FONT;
+    }
 
     if (scaled_font->surface_private == NULL) {
 	/* XXX couple into list to remove on context destruction */
@@ -535,7 +537,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     _cairo_gl_operand_destroy (&composite_setup.src);
 
     *remaining_glyphs = num_glyphs - i;
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static cairo_int_status_t
