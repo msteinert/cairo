@@ -1812,37 +1812,6 @@ _cairo_gl_surface_span_renderer_finish (void *abstract_renderer)
     glActiveTexture (GL_TEXTURE1);
     glDisable (GL_TEXTURE_2D);
 
-    if (! _cairo_operator_bounded_by_mask (renderer->op)) {
-	struct {
-	    GLfloat x,y;
-	} vertices[4];
-
-	glBlendFunc (GL_ZERO, GL_ZERO);
-
-	vertices[0].x = renderer->composite_rectangles.dst.x;
-	vertices[0].y = renderer->composite_rectangles.dst.y;
-
-	vertices[1].x = renderer->composite_rectangles.dst.x +
-	                renderer->composite_rectangles.width;
-	vertices[1].y = renderer->composite_rectangles.dst.y;
-
-	vertices[2].x = renderer->composite_rectangles.dst.x +
-	                renderer->composite_rectangles.width;
-	vertices[2].y = renderer->composite_rectangles.dst.y +
-	                renderer->composite_rectangles.height;
-
-	vertices[3].x = renderer->composite_rectangles.dst.x;
-	vertices[3].y = renderer->composite_rectangles.dst.y +
-	                renderer->composite_rectangles.height;
-
-	glVertexPointer (2, GL_FLOAT, sizeof (GLfloat) * 2, vertices);
-	glEnableClientState (GL_VERTEX_ARRAY);
-
-	glDrawArrays (GL_QUADS, 0, 4);
-
-	glDisableClientState (GL_VERTEX_ARRAY);
-    }
-
     glDisable (GL_BLEND);
     glDisable (GL_DEPTH_TEST);
 
@@ -1873,8 +1842,6 @@ _cairo_gl_surface_check_span_renderer (cairo_operator_t	  op,
 static void
 _cairo_gl_surface_ensure_depth_buffer (cairo_gl_surface_t *surface)
 {
-    GLenum err;
-
     if (surface->depth_stencil_tex)
 	return;
 
@@ -1889,44 +1856,27 @@ _cairo_gl_surface_ensure_depth_buffer (cairo_gl_surface_t *surface)
 			       GL_DEPTH_ATTACHMENT_EXT,
 			       GL_TEXTURE_2D,
 			       surface->depth_stencil_tex, 0);
-#if 0
     glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT,
 			       GL_STENCIL_ATTACHMENT_EXT,
 			       GL_TEXTURE_2D,
 			       surface->depth_stencil_tex, 0);
-#endif
-
-    while ((err = glGetError ()))
-	fprintf (stderr, "ensure depth buffer: GL error 0x%08x\n", (int) err);
-
 }
 
 
 static cairo_status_t
 _cairo_gl_surface_set_clip_region (cairo_gl_surface_t *surface,
-	                           cairo_operator_t op,
 				   cairo_region_t *clip_region)
 {
     GLfloat vertices_stack[CAIRO_STACK_ARRAY_LENGTH(GLfloat)], *vertices;
     int num_rectangles, i, n;
 
-    if (clip_region == NULL) {
-	if (! _cairo_operator_bounded_by_mask (op)) {
-	    _cairo_gl_surface_ensure_depth_buffer (surface);
-	    glDepthMask (GL_TRUE);
-	    glEnable (GL_DEPTH_TEST);
-	    glClearDepth (1.);
-	    glClear (GL_DEPTH_BUFFER_BIT);
-	    glDepthFunc (GL_LESS);
-	}
-
+    if (clip_region == NULL)
 	return CAIRO_STATUS_SUCCESS;
-    }
 
     num_rectangles = cairo_region_num_rectangles (clip_region);
 
     vertices = vertices_stack;
-    if (num_rectangles * 12 > ARRAY_LENGTH (vertices_stack)) {
+    if (num_rectangles * 8 > ARRAY_LENGTH (vertices_stack)) {
 	vertices = _cairo_malloc_ab (num_rectangles,
 				     4*3*sizeof (vertices[0]));
 	if (unlikely (vertices == NULL))
@@ -1939,16 +1889,12 @@ _cairo_gl_surface_set_clip_region (cairo_gl_surface_t *surface,
 	cairo_region_get_rectangle (clip_region, i, &rect);
 	vertices[n++] = rect.x;
 	vertices[n++] = rect.y;
-	vertices[n++] = 1.;
 	vertices[n++] = rect.x + rect.width;
 	vertices[n++] = rect.y;
-	vertices[n++] = 1.;
 	vertices[n++] = rect.x + rect.width;
 	vertices[n++] = rect.y + rect.height;
-	vertices[n++] = 1.;
 	vertices[n++] = rect.x;
-	vertices[n++] = rect.y + rect. height;
-	vertices[n++] = 1.;
+	vertices[n++] = rect.y +rect. height;
     }
 
     _cairo_gl_surface_ensure_depth_buffer (surface);
@@ -1959,16 +1905,16 @@ _cairo_gl_surface_set_clip_region (cairo_gl_surface_t *surface,
     glColorMask (GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
     glDepthMask (GL_TRUE);
-    glClearDepth (-1.);
     glClear (GL_DEPTH_BUFFER_BIT);
 
-    glVertexPointer (3, GL_FLOAT, sizeof (GLfloat) * 3, vertices);
+    glVertexPointer (2, GL_FLOAT, sizeof (GLfloat) * 2, vertices);
     glEnableClientState (GL_VERTEX_ARRAY);
     glDrawArrays (GL_QUADS, 0, 4 * num_rectangles);
     glDisableClientState (GL_VERTEX_ARRAY);
 
     glColorMask (GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glDepthFunc (GL_LESS);
+    glDepthFunc (GL_EQUAL);
+    glDepthMask (GL_FALSE);
 
     if (vertices != vertices_stack)
 	free (vertices);
@@ -2019,7 +1965,7 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
     _cairo_gl_context_acquire (dst->ctx);
     _cairo_gl_set_destination (dst);
 
-    status = _cairo_gl_surface_set_clip_region (dst, op, clip_region);
+    status = _cairo_gl_surface_set_clip_region (dst, clip_region);
     if (unlikely (status)) {
 	_cairo_gl_surface_span_renderer_destroy (renderer);
 	return _cairo_span_renderer_create_in_error (status);
