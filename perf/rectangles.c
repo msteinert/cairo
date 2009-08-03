@@ -32,8 +32,7 @@
 
 #define RECTANGLE_COUNT (1000)
 
-static struct
-{
+static struct {
     double x;
     double y;
     double width;
@@ -41,17 +40,18 @@ static struct
 } rects[RECTANGLE_COUNT];
 
 static cairo_perf_ticks_t
-do_rectangles (cairo_t *cr, int width, int height)
+do_rectangles (cairo_t *cr, int width, int height, int loops)
 {
     int i;
 
     cairo_perf_timer_start ();
 
-    for (i = 0; i < RECTANGLE_COUNT; i++)
-    {
-        cairo_rectangle (cr, rects[i].x, rects[i].y,
-                             rects[i].width, rects[i].height);
-        cairo_fill (cr);
+    while (loops--) {
+	for (i = 0; i < RECTANGLE_COUNT; i++) {
+	    cairo_rectangle (cr, rects[i].x, rects[i].y,
+			     rects[i].width, rects[i].height);
+	    cairo_fill (cr);
+	}
     }
 
     cairo_perf_timer_stop ();
@@ -60,18 +60,20 @@ do_rectangles (cairo_t *cr, int width, int height)
 }
 
 static cairo_perf_ticks_t
-do_rectangles_once (cairo_t *cr, int width, int height)
+do_rectangles_once (cairo_t *cr, int width, int height, int loops)
 {
     int i;
 
     cairo_perf_timer_start ();
 
-    for (i = 0; i < RECTANGLE_COUNT; i++)
-    {
-        cairo_rectangle (cr, rects[i].x, rects[i].y,
-                             rects[i].width, rects[i].height);
+    while (loops--) {
+	for (i = 0; i < RECTANGLE_COUNT; i++) {
+	    cairo_rectangle (cr, rects[i].x, rects[i].y,
+			     rects[i].width, rects[i].height);
+	}
+
+	cairo_fill (cr);
     }
-    cairo_fill (cr);
 
     cairo_perf_timer_stop ();
 
@@ -79,12 +81,14 @@ do_rectangles_once (cairo_t *cr, int width, int height)
 }
 
 static cairo_perf_ticks_t
-do_rectangle (cairo_t *cr, int width, int height)
+do_rectangle (cairo_t *cr, int width, int height, int loops)
 {
     cairo_perf_timer_start ();
 
-    cairo_rectangle (cr, 0, 0, width, height);
-    cairo_fill (cr);
+    while (loops--) {
+	cairo_rectangle (cr, 0, 0, width, height);
+	cairo_fill (cr);
+    }
 
     cairo_perf_timer_stop ();
 

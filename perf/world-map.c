@@ -49,52 +49,54 @@ typedef struct _wm_element {
 #include "world-map.h"
 
 static cairo_perf_ticks_t
-do_world_map (cairo_t *cr, int width, int height)
+do_world_map (cairo_t *cr, int width, int height, int loops)
 {
     const wm_element_t *e;
     double cx, cy;
 
-    cairo_perf_timer_start ();
-
-    cairo_set_source_rgb (cr, .68, .85, .90); /* lightblue */
-    cairo_rectangle (cr, 0, 0, 800, 400);
-    cairo_fill (cr);
-
     cairo_set_line_width (cr, 0.2);
 
-    e = &countries[0];
-    while (1) {
-	switch (e->type) {
-	case WM_NEW_PATH:
-	case WM_END:
-	    cairo_set_source_rgb (cr, .75, .75, .75); /* silver */
-	    cairo_fill_preserve (cr);
-	    cairo_set_source_rgb (cr, .50, .50, .50); /* gray */
-	    cairo_stroke (cr);
-	    cairo_move_to (cr, e->x, e->y);
-	    break;
-	case WM_MOVE_TO:
-	    cairo_close_path (cr);
-	    cairo_move_to (cr, e->x, e->y);
-	    break;
-	case WM_LINE_TO:
-	    cairo_line_to (cr, e->x, e->y);
-	    break;
-	case WM_HLINE_TO:
-	    cairo_get_current_point (cr, &cx, &cy);
-	    cairo_line_to (cr, e->x, cy);
-	    break;
-	case WM_VLINE_TO:
-	    cairo_get_current_point (cr, &cx, &cy);
-	    cairo_line_to (cr, cx, e->y);
-	    break;
-	case WM_REL_LINE_TO:
-	    cairo_rel_line_to (cr, e->x, e->y);
-	    break;
+    cairo_perf_timer_start ();
+
+    while (loops--) {
+	cairo_set_source_rgb (cr, .68, .85, .90); /* lightblue */
+	cairo_rectangle (cr, 0, 0, 800, 400);
+	cairo_fill (cr);
+
+	e = &countries[0];
+	while (1) {
+	    switch (e->type) {
+	    case WM_NEW_PATH:
+	    case WM_END:
+		cairo_set_source_rgb (cr, .75, .75, .75); /* silver */
+		cairo_fill_preserve (cr);
+		cairo_set_source_rgb (cr, .50, .50, .50); /* gray */
+		cairo_stroke (cr);
+		cairo_move_to (cr, e->x, e->y);
+		break;
+	    case WM_MOVE_TO:
+		cairo_close_path (cr);
+		cairo_move_to (cr, e->x, e->y);
+		break;
+	    case WM_LINE_TO:
+		cairo_line_to (cr, e->x, e->y);
+		break;
+	    case WM_HLINE_TO:
+		cairo_get_current_point (cr, &cx, &cy);
+		cairo_line_to (cr, e->x, cy);
+		break;
+	    case WM_VLINE_TO:
+		cairo_get_current_point (cr, &cx, &cy);
+		cairo_line_to (cr, cx, e->y);
+		break;
+	    case WM_REL_LINE_TO:
+		cairo_rel_line_to (cr, e->x, e->y);
+		break;
+	    }
+	    if (e->type == WM_END)
+		break;
+	    e++;
 	}
-	if (e->type == WM_END)
-	    break;
-	e++;
     }
 
     cairo_perf_timer_stop ();

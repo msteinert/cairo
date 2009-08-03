@@ -49,7 +49,7 @@
 typedef ptrdiff_t ssize_t;
 #endif
 
-#ifndef __USE_GNU
+#if !defined (__USE_GNU) && !defined(__USE_XOPEN2K8)
 static ssize_t
 getline (char **lineptr, size_t *n, FILE *stream);
 
@@ -227,7 +227,7 @@ test_report_parse (test_report_t *report, char *line, char *configuration)
  * as needed. These aren't necessary full-fledged general purpose
  * implementations. They just get the job done for our purposes.
  */
-#ifndef __USE_GNU
+#if !defined (__USE_GNU) && !defined(__USE_XOPEN2K8)
 #define POORMANS_GETLINE_BUFFER_SIZE (65536)
 static ssize_t
 getline (char **lineptr, size_t *n, FILE *stream)

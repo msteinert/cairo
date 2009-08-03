@@ -26,7 +26,7 @@
 #include "cairo-perf.h"
 
 static cairo_perf_ticks_t
-do_stroke (cairo_t *cr, int width, int height)
+do_stroke (cairo_t *cr, int width, int height, int loops)
 {
     cairo_arc (cr,
 	       width/2.0, height/2.0,
@@ -34,12 +34,16 @@ do_stroke (cairo_t *cr, int width, int height)
 	       0, 2 * M_PI);
     cairo_close_path (cr);
 
+    cairo_set_line_width (cr, width/5.0);
+
     cairo_perf_timer_start ();
 
-    cairo_set_line_width (cr, width/5.0);
-    cairo_stroke (cr);
+    while (loops--)
+	cairo_stroke_preserve (cr);
 
     cairo_perf_timer_stop ();
+
+    cairo_new_path (cr);
 
     return cairo_perf_timer_elapsed ();
 }
@@ -57,7 +61,7 @@ rounded_rectangle (cairo_t *cr,
 }
 
 static cairo_perf_ticks_t
-do_strokes (cairo_t *cr, int width, int height)
+do_strokes (cairo_t *cr, int width, int height, int loops)
 {
     /* a pair of overlapping rectangles */
     rounded_rectangle (cr,
@@ -65,16 +69,19 @@ do_strokes (cairo_t *cr, int width, int height)
 		       10);
     rounded_rectangle (cr,
 		       width/2. - 10, height/2. - 10,
-		       width - 2, height - 2,
+		       width/2. - 2, height/2. - 2,
 		       10);
 
     cairo_set_line_width (cr, 2.);
 
     cairo_perf_timer_start ();
 
-    cairo_stroke (cr);
+    while (loops--)
+	cairo_stroke_preserve (cr);
 
     cairo_perf_timer_stop ();
+
+    cairo_new_path (cr);
 
     return cairo_perf_timer_elapsed ();
 }

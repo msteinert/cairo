@@ -26,7 +26,7 @@
 #include "cairo-perf.h"
 
 static cairo_perf_ticks_t
-do_fill (cairo_t *cr, int width, int height)
+do_fill (cairo_t *cr, int width, int height, int loops)
 {
     cairo_arc (cr,
 	       width/2.0, height/2.0,
@@ -35,15 +35,18 @@ do_fill (cairo_t *cr, int width, int height)
 
     cairo_perf_timer_start ();
 
-    cairo_fill (cr);
+    while (loops--)
+	cairo_fill_preserve (cr);
 
     cairo_perf_timer_stop ();
+
+    cairo_new_path (cr);
 
     return cairo_perf_timer_elapsed ();
 }
 
 static cairo_perf_ticks_t
-do_fill_annuli (cairo_t *cr, int width, int height)
+do_fill_annuli (cairo_t *cr, int width, int height, int loops)
 {
     cairo_new_sub_path (cr);
     cairo_arc (cr,
@@ -71,15 +74,18 @@ do_fill_annuli (cairo_t *cr, int width, int height)
 
     cairo_perf_timer_start ();
 
-    cairo_fill (cr);
+    while (loops--)
+	cairo_fill_preserve (cr);
 
     cairo_perf_timer_stop ();
+
+    cairo_new_path (cr);
 
     return cairo_perf_timer_elapsed ();
 }
 
 static cairo_perf_ticks_t
-do_fill_eo_noaa (cairo_t *cr, int width, int height)
+do_fill_eo_noaa (cairo_t *cr, int width, int height, int loops)
 {
     cairo_set_antialias (cr, CAIRO_ANTIALIAS_NONE);
     cairo_set_fill_rule (cr, CAIRO_FILL_RULE_EVEN_ODD);
@@ -91,9 +97,12 @@ do_fill_eo_noaa (cairo_t *cr, int width, int height)
 
     cairo_perf_timer_start ();
 
-    cairo_fill (cr);
+    while (loops--)
+	cairo_fill_preserve (cr);
 
     cairo_perf_timer_stop ();
+
+    cairo_new_path (cr);
 
     return cairo_perf_timer_elapsed ();
 }

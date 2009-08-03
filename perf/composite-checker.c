@@ -50,7 +50,8 @@ static cairo_pattern_t *src_pattern = NULL;
 static cairo_perf_ticks_t
 do_composite_checker (cairo_t *cr,
                       int      width,
-                      int      height)
+                      int      height,
+		      int loops)
 {
     /* Compute zoom so that the src_pattern covers the whole output image. */
     double xscale = width / (double) SRC_SIZE;
@@ -58,16 +59,17 @@ do_composite_checker (cairo_t *cr,
 
     cairo_perf_timer_start ();
 
-    cairo_identity_matrix (cr);
+    while (loops--) {
+	/* Fill the surface with our background. */
+	cairo_identity_matrix (cr);
+	cairo_set_source (cr, checkerboard);
+	cairo_paint (cr);
 
-    /* Fill the surface with our background. */
-    cairo_set_source (cr, checkerboard);
-    cairo_paint (cr);
-
-    /* Draw the scaled image on top. */
-    cairo_scale (cr, xscale, yscale);
-    cairo_set_source (cr, src_pattern);
-    cairo_paint (cr);
+	/* Draw the scaled image on top. */
+	cairo_scale (cr, xscale, yscale);
+	cairo_set_source (cr, src_pattern);
+	cairo_paint (cr);
+    }
 
     cairo_perf_timer_stop ();
     return cairo_perf_timer_elapsed ();

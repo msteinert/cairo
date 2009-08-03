@@ -26,11 +26,12 @@
 #include "cairo-perf.h"
 
 static cairo_perf_ticks_t
-do_paint (cairo_t *cr, int width, int height)
+do_paint (cairo_t *cr, int width, int height, int loops)
 {
     cairo_perf_timer_start ();
 
-    cairo_paint (cr);
+    while (loops--)
+	cairo_paint (cr);
 
     cairo_perf_timer_stop ();
 

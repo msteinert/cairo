@@ -35,16 +35,19 @@
  */
 
 static cairo_perf_ticks_t
-do_subimage_copy (cairo_t *cr, int width, int height)
+do_subimage_copy (cairo_t *cr, int width, int height, int loops)
 {
     cairo_rectangle (cr, 2, 2, 4, 4);
     cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 
     cairo_perf_timer_start ();
 
-    cairo_fill (cr);
+    while (loops--)
+	cairo_fill_preserve (cr);
 
     cairo_perf_timer_stop ();
+
+    cairo_new_path (cr);
 
     return cairo_perf_timer_elapsed ();
 }

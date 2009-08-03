@@ -28,7 +28,7 @@
 #include "cairo-perf.h"
 
 static cairo_perf_ticks_t
-do_mask_solid (cairo_t *cr, int width, int height)
+do_mask_solid (cairo_t *cr, int width, int height, int loops)
 {
     cairo_pattern_t *mask;
 
@@ -36,7 +36,8 @@ do_mask_solid (cairo_t *cr, int width, int height)
 
     cairo_perf_timer_start ();
 
-    cairo_mask (cr, mask);
+    while (loops--)
+	cairo_mask (cr, mask);
 
     cairo_perf_timer_stop ();
 
@@ -70,7 +71,7 @@ init_surface (cairo_surface_t *surface, int width, int height)
 }
 
 static cairo_perf_ticks_t
-do_mask_image (cairo_t *cr, int width, int height)
+do_mask_image (cairo_t *cr, int width, int height, int loops)
 {
     cairo_surface_t *surface;
     cairo_pattern_t *mask;
@@ -83,7 +84,8 @@ do_mask_image (cairo_t *cr, int width, int height)
 
     cairo_perf_timer_start ();
 
-    cairo_mask (cr, mask);
+    while (loops--)
+	cairo_mask (cr, mask);
 
     cairo_perf_timer_stop ();
 
@@ -93,7 +95,7 @@ do_mask_image (cairo_t *cr, int width, int height)
 }
 
 static cairo_perf_ticks_t
-do_mask_image_half (cairo_t *cr, int width, int height)
+do_mask_image_half (cairo_t *cr, int width, int height, int loops)
 {
     cairo_surface_t *surface;
     cairo_pattern_t *mask;
@@ -109,7 +111,8 @@ do_mask_image_half (cairo_t *cr, int width, int height)
 
     cairo_perf_timer_start ();
 
-    cairo_mask (cr, mask);
+    while (loops--)
+	cairo_mask (cr, mask);
 
     cairo_perf_timer_stop ();
 
@@ -119,7 +122,7 @@ do_mask_image_half (cairo_t *cr, int width, int height)
 }
 
 static cairo_perf_ticks_t
-do_mask_image_double (cairo_t *cr, int width, int height)
+do_mask_image_double (cairo_t *cr, int width, int height, int loops)
 {
     cairo_surface_t *surface;
     cairo_pattern_t *mask;
@@ -135,7 +138,8 @@ do_mask_image_double (cairo_t *cr, int width, int height)
 
     cairo_perf_timer_start ();
 
-    cairo_mask (cr, mask);
+    while (loops--)
+	cairo_mask (cr, mask);
 
     cairo_perf_timer_stop ();
 
@@ -145,7 +149,7 @@ do_mask_image_double (cairo_t *cr, int width, int height)
 }
 
 static cairo_perf_ticks_t
-do_mask_similar (cairo_t *cr, int width, int height)
+do_mask_similar (cairo_t *cr, int width, int height, int loops)
 {
     cairo_surface_t *surface;
     cairo_pattern_t *mask;
@@ -159,7 +163,8 @@ do_mask_similar (cairo_t *cr, int width, int height)
 
     cairo_perf_timer_start ();
 
-    cairo_mask (cr, mask);
+    while (loops--)
+	cairo_mask (cr, mask);
 
     cairo_perf_timer_stop ();
 
@@ -169,7 +174,7 @@ do_mask_similar (cairo_t *cr, int width, int height)
 }
 
 static cairo_perf_ticks_t
-do_mask_similar_half (cairo_t *cr, int width, int height)
+do_mask_similar_half (cairo_t *cr, int width, int height, int loops)
 {
     cairo_surface_t *surface;
     cairo_pattern_t *mask;
@@ -186,7 +191,8 @@ do_mask_similar_half (cairo_t *cr, int width, int height)
 
     cairo_perf_timer_start ();
 
-    cairo_mask (cr, mask);
+    while (loops--)
+	cairo_mask (cr, mask);
 
     cairo_perf_timer_stop ();
 
@@ -196,7 +202,7 @@ do_mask_similar_half (cairo_t *cr, int width, int height)
 }
 
 static cairo_perf_ticks_t
-do_mask_similar_double (cairo_t *cr, int width, int height)
+do_mask_similar_double (cairo_t *cr, int width, int height, int loops)
 {
     cairo_surface_t *surface;
     cairo_pattern_t *mask;
@@ -213,7 +219,8 @@ do_mask_similar_double (cairo_t *cr, int width, int height)
 
     cairo_perf_timer_start ();
 
-    cairo_mask (cr, mask);
+    while (loops--)
+	cairo_mask (cr, mask);
 
     cairo_perf_timer_stop ();
 
@@ -223,7 +230,7 @@ do_mask_similar_double (cairo_t *cr, int width, int height)
 }
 
 static cairo_perf_ticks_t
-do_mask_linear (cairo_t *cr, int width, int height)
+do_mask_linear (cairo_t *cr, int width, int height, int loops)
 {
     cairo_pattern_t *mask;
 
@@ -233,7 +240,8 @@ do_mask_linear (cairo_t *cr, int width, int height)
 
     cairo_perf_timer_start ();
 
-    cairo_mask (cr, mask);
+    while (loops--)
+	cairo_mask (cr, mask);
 
     cairo_perf_timer_stop ();
 
@@ -243,7 +251,7 @@ do_mask_linear (cairo_t *cr, int width, int height)
 }
 
 static cairo_perf_ticks_t
-do_mask_radial (cairo_t *cr, int width, int height)
+do_mask_radial (cairo_t *cr, int width, int height, int loops)
 {
     cairo_pattern_t *mask;
 
@@ -254,7 +262,8 @@ do_mask_radial (cairo_t *cr, int width, int height)
 
     cairo_perf_timer_start ();
 
-    cairo_mask (cr, mask);
+    while (loops--)
+	cairo_mask (cr, mask);
 
     cairo_perf_timer_stop ();
 

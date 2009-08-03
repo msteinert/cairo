@@ -28,7 +28,7 @@
 #include "cairo-perf.h"
 
 static cairo_perf_ticks_t
-do_glyphs (cairo_t *cr, int width, int height)
+do_glyphs (cairo_t *cr, int width, int height, int loops)
 {
     const char text[] = "the jay, pig, fox, zebra and my wolves quack";
     cairo_scaled_font_t *scaled_font;
@@ -61,22 +61,24 @@ do_glyphs (cairo_t *cr, int width, int height)
 
     cairo_perf_timer_start ();
 
-    do {
-	x = 0;
+    while (loops--) {
 	do {
-	    for (n = 0; n < num_glyphs; n++) {
-		glyphs_copy[n] = glyphs[n];
-		glyphs_copy[n].x += x;
-		glyphs_copy[n].y += y;
-	    }
-	    cairo_show_glyphs (cr, glyphs_copy, num_glyphs);
-	    if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
-		goto out;
+	    x = 0;
+	    do {
+		for (n = 0; n < num_glyphs; n++) {
+		    glyphs_copy[n] = glyphs[n];
+		    glyphs_copy[n].x += x;
+		    glyphs_copy[n].y += y;
+		}
+		cairo_show_glyphs (cr, glyphs_copy, num_glyphs);
+		if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
+		    goto out;
 
-	    x += extents.width;
-	} while (x < width);
-	y += extents.height;
-    } while (y < height);
+		x += extents.width;
+	    } while (x < width);
+	    y += extents.height;
+	} while (y < height);
+    }
 out:
 
     cairo_perf_timer_stop ();

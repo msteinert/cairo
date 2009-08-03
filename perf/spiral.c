@@ -44,7 +44,7 @@ draw_spiral (cairo_t *cr,
              cairo_fill_rule_t fill_rule,
              align_t align,
              close_t close,
-             int width, int height)
+             int width, int height, int loops)
 {
     int i;
     int n=0;
@@ -89,16 +89,15 @@ draw_spiral (cairo_t *cr,
     cairo_set_fill_rule (cr, fill_rule);
     cairo_set_source_rgb (cr, 1, 0, 0);
 
-    cairo_perf_timer_start (); {
-
-        cairo_move_to (cr, x[0], y[0]);
-        for (i = 1; i < n; i++) {
-            cairo_line_to (cr, x[i], y[i]);
-        }
-        cairo_close_path (cr);
-
-        cairo_fill (cr);
+    cairo_move_to (cr, x[0], y[0]);
+    for (i = 1; i < n; i++) {
+	cairo_line_to (cr, x[i], y[i]);
     }
+    cairo_close_path (cr);
+
+    cairo_perf_timer_start ();
+    while (loops--)
+        cairo_fill_preserve (cr);
     cairo_perf_timer_stop ();
 
     cairo_restore (cr);
@@ -107,83 +106,83 @@ draw_spiral (cairo_t *cr,
 }
 
 static cairo_perf_ticks_t
-draw_spiral_eo_pa_re (cairo_t *cr, int width, int height)
+draw_spiral_eo_pa_re (cairo_t *cr, int width, int height, int loops)
 {
     return draw_spiral (cr,
                         CAIRO_FILL_RULE_EVEN_ODD,
                         PIXALIGN,
                         RECTCLOSE,
-                        width, height);
+                        width, height, loops);
 }
 
 static cairo_perf_ticks_t
-draw_spiral_nz_pa_re (cairo_t *cr, int width, int height)
+draw_spiral_nz_pa_re (cairo_t *cr, int width, int height, int loops)
 {
     return draw_spiral (cr,
                         CAIRO_FILL_RULE_WINDING,
                         PIXALIGN,
                         RECTCLOSE,
-                        width, height);
+                        width, height, loops);
 }
 
 static cairo_perf_ticks_t
-draw_spiral_eo_na_re (cairo_t *cr, int width, int height)
+draw_spiral_eo_na_re (cairo_t *cr, int width, int height, int loops)
 {
     return draw_spiral (cr,
                         CAIRO_FILL_RULE_EVEN_ODD,
                         NONALIGN,
                         RECTCLOSE,
-                        width, height);
+                        width, height, loops);
 }
 
 static cairo_perf_ticks_t
-draw_spiral_nz_na_re (cairo_t *cr, int width, int height)
+draw_spiral_nz_na_re (cairo_t *cr, int width, int height, int loops)
 {
     return draw_spiral (cr,
                         CAIRO_FILL_RULE_WINDING,
                         NONALIGN,
                         RECTCLOSE,
-                        width, height);
+                        width, height, loops);
 }
 
 static cairo_perf_ticks_t
-draw_spiral_eo_pa_di (cairo_t *cr, int width, int height)
+draw_spiral_eo_pa_di (cairo_t *cr, int width, int height, int loops)
 {
     return draw_spiral (cr,
                         CAIRO_FILL_RULE_EVEN_ODD,
                         PIXALIGN,
                         DIAGCLOSE,
-                        width, height);
+                        width, height, loops);
 }
 
 static cairo_perf_ticks_t
-draw_spiral_nz_pa_di (cairo_t *cr, int width, int height)
+draw_spiral_nz_pa_di (cairo_t *cr, int width, int height, int loops)
 {
     return draw_spiral (cr,
                         CAIRO_FILL_RULE_WINDING,
                         PIXALIGN,
                         DIAGCLOSE,
-                        width, height);
+                        width, height, loops);
 }
 
 static cairo_perf_ticks_t
-draw_spiral_eo_na_di (cairo_t *cr, int width, int height)
+draw_spiral_eo_na_di (cairo_t *cr, int width, int height, int loops)
 {
     return draw_spiral (cr,
                         CAIRO_FILL_RULE_EVEN_ODD,
                         NONALIGN,
                         DIAGCLOSE,
-                        width, height);
+                        width, height, loops);
 }
 
 static cairo_perf_ticks_t
-draw_spiral_nz_na_di (cairo_t *cr, int width, int height)
+draw_spiral_nz_na_di (cairo_t *cr, int width, int height, int loops)
 {
     return draw_spiral (cr,
                         CAIRO_FILL_RULE_WINDING,
                         NONALIGN,
                         DIAGCLOSE,
-                        width, height);
+                        width, height, loops);
 }
 
 void

@@ -43,7 +43,7 @@ typedef enum {
 #define LONG_FACTOR  50.0
 
 static cairo_perf_ticks_t
-do_long_lines (cairo_t *cr, int width, int height, long_lines_crop_t crop)
+do_long_lines (cairo_t *cr, int width, int height, int loops, long_lines_crop_t crop)
 {
     int i;
     double x, y, dx, dy, min_x, min_y, max_x, max_y;
@@ -72,32 +72,34 @@ do_long_lines (cairo_t *cr, int width, int height, long_lines_crop_t crop)
 
     cairo_perf_timer_start ();
 
-    for (i = 0; i <= NUM_LINES; i++) {
-	cairo_move_to (cr, 0, 0);
-	cairo_line_to (cr, x, min_y);
-	if ((crop & LONG_LINES_ONCE) == 0)
-	    cairo_stroke (cr);
+    while (loops--) {
+	for (i = 0; i <= NUM_LINES; i++) {
+	    cairo_move_to (cr, 0, 0);
+	    cairo_line_to (cr, x, min_y);
+	    if ((crop & LONG_LINES_ONCE) == 0)
+		cairo_stroke (cr);
 
-	cairo_move_to (cr, 0, 0);
-	cairo_line_to (cr, x, max_y);
-	if ((crop & LONG_LINES_ONCE) == 0)
-	    cairo_stroke (cr);
+	    cairo_move_to (cr, 0, 0);
+	    cairo_line_to (cr, x, max_y);
+	    if ((crop & LONG_LINES_ONCE) == 0)
+		cairo_stroke (cr);
 
-	cairo_move_to (cr, 0, 0);
-	cairo_line_to (cr, min_x, y);
-	if ((crop & LONG_LINES_ONCE) == 0)
-	    cairo_stroke (cr);
+	    cairo_move_to (cr, 0, 0);
+	    cairo_line_to (cr, min_x, y);
+	    if ((crop & LONG_LINES_ONCE) == 0)
+		cairo_stroke (cr);
 
-	cairo_move_to (cr, 0, 0);
-	cairo_line_to (cr, max_x, y);
-	if ((crop & LONG_LINES_ONCE) == 0)
-	    cairo_stroke (cr);
+	    cairo_move_to (cr, 0, 0);
+	    cairo_line_to (cr, max_x, y);
+	    if ((crop & LONG_LINES_ONCE) == 0)
+		cairo_stroke (cr);
 
-	x += dx;
-	y += dy;
+	    x += dx;
+	    y += dy;
+	}
+	if (crop & LONG_LINES_ONCE)
+	    cairo_stroke (cr);
     }
-    if (crop & LONG_LINES_ONCE)
-	cairo_stroke (cr);
 
     cairo_perf_timer_stop ();
 
@@ -107,27 +109,27 @@ do_long_lines (cairo_t *cr, int width, int height, long_lines_crop_t crop)
 }
 
 static cairo_perf_ticks_t
-long_lines_uncropped (cairo_t *cr, int width, int height)
+long_lines_uncropped (cairo_t *cr, int width, int height, int loops)
 {
-    return do_long_lines (cr, width, height, 0);
+    return do_long_lines (cr, width, height, loops, 0);
 }
 
 static cairo_perf_ticks_t
-long_lines_uncropped_once (cairo_t *cr, int width, int height)
+long_lines_uncropped_once (cairo_t *cr, int width, int height, int loops)
 {
-    return do_long_lines (cr, width, height, LONG_LINES_ONCE);
+    return do_long_lines (cr, width, height, loops, LONG_LINES_ONCE);
 }
 
 static cairo_perf_ticks_t
-long_lines_cropped (cairo_t *cr, int width, int height)
+long_lines_cropped (cairo_t *cr, int width, int height, int loops)
 {
-    return do_long_lines (cr, width, height, LONG_LINES_CROPPED);
+    return do_long_lines (cr, width, height, loops, LONG_LINES_CROPPED);
 }
 
 static cairo_perf_ticks_t
-long_lines_cropped_once (cairo_t *cr, int width, int height)
+long_lines_cropped_once (cairo_t *cr, int width, int height, int loops)
 {
-    return do_long_lines (cr, width, height, LONG_LINES_CROPPED | LONG_LINES_ONCE);
+    return do_long_lines (cr, width, height, loops, LONG_LINES_CROPPED | LONG_LINES_ONCE);
 }
 
 void

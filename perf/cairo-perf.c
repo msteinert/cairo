@@ -191,9 +191,9 @@ cairo_perf_run (cairo_perf_t		*perf,
 
 	if (perf->summary) {
 	    fprintf (perf->summary,
-		     "[ # ] %8s.%-4s %28s %8s %8s %5s %5s %s\n",
+		     "[ # ] %8s.%-4s %28s %8s %8s %5s %5s %s %s\n",
 		     "backend", "content", "test-size", "min(ticks)", "min(ms)", "median(ms)",
-		     "stddev.", "iterations");
+		     "stddev.", "iterations", "overhead");
 	}
 	first_run = FALSE;
     }
@@ -208,7 +208,7 @@ cairo_perf_run (cairo_perf_t		*perf,
 		   name, perf->target->name,
 		   _content_to_string (perf->target->content, 0),
 		   perf->size);
-	perf_func (perf->cr, perf->size, perf->size);
+	perf_func (perf->cr, perf->size, perf->size, 1);
 	status = cairo_surface_write_to_png (cairo_get_target (perf->cr), filename);
 	if (status) {
 	    fprintf (stderr, "Failed to generate output check '%s': %s\n",
@@ -221,6 +221,9 @@ cairo_perf_run (cairo_perf_t		*perf,
 
     has_similar = cairo_perf_has_similar (perf);
     for (similar = 0; similar <= has_similar; similar++) {
+	cairo_perf_ticks_t calibration0, calibration;
+	unsigned loops;
+
 	if (perf->summary) {
 	    fprintf (perf->summary,
 		     "[%3d] %8s.%-5s %26s.%-3d ",
@@ -230,14 +233,33 @@ cairo_perf_run (cairo_perf_t		*perf,
 	    fflush (perf->summary);
 	}
 
-	/* We run one iteration in advance to warm caches, etc. */
+	/* We run one iteration in advance to warm caches and calibrate. */
 	cairo_perf_yield ();
 	if (similar)
 	    cairo_push_group_with_content (perf->cr,
 		                           cairo_boilerplate_content (perf->target->content));
-	(perf_func) (perf->cr, perf->size, perf->size);
+	perf_func (perf->cr, perf->size, perf->size, 1);
+	calibration0 = perf_func (perf->cr, perf->size, perf->size, 1);
+	loops = cairo_perf_ticks_per_second () / 100 / calibration0;
+	if (loops < 3)
+	    loops = 3;
+	calibration = (calibration0 + perf_func (perf->cr, perf->size, perf->size, loops)) / (loops + 1);
 	if (similar)
 	    cairo_pattern_destroy (cairo_pop_group (perf->cr));
+
+	/* XXX
+	 * Compute the number of loops required for the timing interval to
+	 * be ~2 seconds. This helps to eliminate sampling variance due to
+	 * timing and other systematic errors. However, it also hides
+	 * synchronisation overhead as we attempt to process a large batch
+	 * of identical operations in a single shot. This can be considered
+	 * both good and bad... It would be good to perform a more rigorous
+	 * analysis of the synchronisation overhead, that is to estimate
+	 * the time for loop=0.
+	 */
+	loops = 2 * cairo_perf_ticks_per_second () / calibration;
+	if (loops < 10)
+	    loops = 10;
 
 	low_std_dev_count = 0;
 	for (i =0; i < perf->iterations; i++) {
@@ -245,7 +267,7 @@ cairo_perf_run (cairo_perf_t		*perf,
 	    if (similar)
 		cairo_push_group_with_content (perf->cr,
 			                       cairo_boilerplate_content (perf->target->content));
-	    times[i] = (perf_func) (perf->cr, perf->size, perf->size);
+	    times[i] = perf_func (perf->cr, perf->size, perf->size, loops) / loops;
 	    if (similar)
 		cairo_pattern_destroy (cairo_pop_group (perf->cr));
 
@@ -279,11 +301,12 @@ cairo_perf_run (cairo_perf_t		*perf,
 	if (perf->summary) {
 	    _cairo_stats_compute (&stats, times, i);
 	    fprintf (perf->summary,
-		     "%10lld %#8.3f %#8.3f %#5.2f%% %3d\n",
+		     "%10lld %#8.3f %#8.3f %#5.2f%% %3d %10lld\n",
 		     (long long) stats.min_ticks,
 		     (stats.min_ticks * 1000.0) / cairo_perf_ticks_per_second (),
 		     (stats.median_ticks * 1000.0) / cairo_perf_ticks_per_second (),
-		     stats.std_dev * 100.0, stats.iterations);
+		     stats.std_dev * 100.0, stats.iterations,
+		     (long long) (calibration0 - stats.min_ticks));
 	    fflush (perf->summary);
 	}
 

@@ -45,7 +45,7 @@ zrusin_another_path (cairo_t *cr)
 }
 
 static cairo_perf_ticks_t
-zrusin_another_tessellate (cairo_t *cr, int width, int height)
+zrusin_another_tessellate (cairo_t *cr, int width, int height, int loops)
 {
     zrusin_another_path (cr);
 
@@ -56,7 +56,8 @@ zrusin_another_tessellate (cairo_t *cr, int width, int height)
      * we'll have to be careful since cairo_in_fill might eventually
      * be optimized to have an implementation that doesn't necessarily
      * include tessellation. */
-    cairo_in_fill (cr, 50, 50);
+    while (loops--)
+	cairo_in_fill (cr, 50, 50);
 
     cairo_perf_timer_stop ();
 
@@ -66,14 +67,15 @@ zrusin_another_tessellate (cairo_t *cr, int width, int height)
 }
 
 static cairo_perf_ticks_t
-zrusin_another_fill (cairo_t *cr, int width, int height)
+zrusin_another_fill (cairo_t *cr, int width, int height, int loops)
 {
     zrusin_another_path (cr);
     cairo_set_source_rgb (cr, 0.0, 0.0, 0.8); /* blue */
 
     cairo_perf_timer_start ();
 
-    cairo_fill (cr);
+    while (loops--)
+	cairo_fill_preserve (cr);
 
     cairo_perf_timer_stop ();
 

@@ -94,7 +94,7 @@ path (cairo_t *cr, int step, int dir, int iterations)
 }
 
 static cairo_perf_ticks_t
-do_dragon (cairo_t *cr, int width, int height)
+do_dragon (cairo_t *cr, int width, int height, int loops)
 {
     cairo_pattern_t *pattern;
     double cx, cy, r;
@@ -104,54 +104,56 @@ do_dragon (cairo_t *cr, int width, int height)
 
     cairo_perf_timer_start ();
 
-    pattern = cairo_pattern_create_radial (cx, cy, 0., cx, cy, r);
-    cairo_pattern_add_color_stop_rgb (pattern, 0., .0, .0, .0);
-    cairo_pattern_add_color_stop_rgb (pattern, 0.25, .5, .4, .4);
-    cairo_pattern_add_color_stop_rgb (pattern, .5, .8, .8, .9);
-    cairo_pattern_add_color_stop_rgb (pattern, 1., .9, .9, 1.);
-    cairo_set_source (cr, pattern);
-    cairo_pattern_destroy (pattern);
-    cairo_paint (cr);
+    while (loops--) {
+	pattern = cairo_pattern_create_radial (cx, cy, 0., cx, cy, r);
+	cairo_pattern_add_color_stop_rgb (pattern, 0., .0, .0, .0);
+	cairo_pattern_add_color_stop_rgb (pattern, 0.25, .5, .4, .4);
+	cairo_pattern_add_color_stop_rgb (pattern, .5, .8, .8, .9);
+	cairo_pattern_add_color_stop_rgb (pattern, 1., .9, .9, 1.);
+	cairo_set_source (cr, pattern);
+	cairo_pattern_destroy (pattern);
+	cairo_paint (cr);
 
-    cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
-    cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
-    cairo_set_line_width (cr, 4.);
+	cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
+	cairo_set_line_join (cr, CAIRO_LINE_JOIN_ROUND);
+	cairo_set_line_width (cr, 4.);
 
-    cairo_move_to (cr, cx, cy);
-    path (cr, 12, 0, 2048);
-    pattern = cairo_pattern_create_radial (cx, cy, 0., cx, cy, r);
-    cairo_pattern_add_color_stop_rgb (pattern, 0., 1., 1., 1.);
-    cairo_pattern_add_color_stop_rgb (pattern, 1., 0., 0., 0.);
-    cairo_set_source (cr, pattern);
-    cairo_pattern_destroy (pattern);
-    cairo_stroke(cr);
+	cairo_move_to (cr, cx, cy);
+	path (cr, 12, 0, 2048);
+	pattern = cairo_pattern_create_radial (cx, cy, 0., cx, cy, r);
+	cairo_pattern_add_color_stop_rgb (pattern, 0., 1., 1., 1.);
+	cairo_pattern_add_color_stop_rgb (pattern, 1., 0., 0., 0.);
+	cairo_set_source (cr, pattern);
+	cairo_pattern_destroy (pattern);
+	cairo_stroke(cr);
 
-    cairo_move_to (cr, cx, cy);
-    path (cr, 12, 1, 2048);
-    pattern = cairo_pattern_create_radial (cx, cy, 0., cx, cy, r);
-    cairo_pattern_add_color_stop_rgb (pattern, 1., 1., 1., 0.);
-    cairo_pattern_add_color_stop_rgb (pattern, 0., 1., 0., 0.);
-    cairo_set_source (cr, pattern);
-    cairo_pattern_destroy (pattern);
-    cairo_stroke(cr);
+	cairo_move_to (cr, cx, cy);
+	path (cr, 12, 1, 2048);
+	pattern = cairo_pattern_create_radial (cx, cy, 0., cx, cy, r);
+	cairo_pattern_add_color_stop_rgb (pattern, 1., 1., 1., 0.);
+	cairo_pattern_add_color_stop_rgb (pattern, 0., 1., 0., 0.);
+	cairo_set_source (cr, pattern);
+	cairo_pattern_destroy (pattern);
+	cairo_stroke(cr);
 
-    cairo_move_to (cr, cx, cy);
-    path (cr, 12, 2, 2048);
-    pattern = cairo_pattern_create_radial (cx, cy, 0., cx, cy, r);
-    cairo_pattern_add_color_stop_rgb (pattern, 1., 0., 1., 1.);
-    cairo_pattern_add_color_stop_rgb (pattern, 0., 0., 1., 0.);
-    cairo_set_source (cr, pattern);
-    cairo_pattern_destroy (pattern);
-    cairo_stroke(cr);
+	cairo_move_to (cr, cx, cy);
+	path (cr, 12, 2, 2048);
+	pattern = cairo_pattern_create_radial (cx, cy, 0., cx, cy, r);
+	cairo_pattern_add_color_stop_rgb (pattern, 1., 0., 1., 1.);
+	cairo_pattern_add_color_stop_rgb (pattern, 0., 0., 1., 0.);
+	cairo_set_source (cr, pattern);
+	cairo_pattern_destroy (pattern);
+	cairo_stroke(cr);
 
-    cairo_move_to (cr, cx, cy);
-    path (cr, 12, 3, 2048);
-    pattern = cairo_pattern_create_radial (cx, cy, 0., cx, cy, r);
-    cairo_pattern_add_color_stop_rgb (pattern, 1., 1., 0., 1.);
-    cairo_pattern_add_color_stop_rgb (pattern, 0., 0., 0., 1.);
-    cairo_set_source (cr, pattern);
-    cairo_pattern_destroy (pattern);
-    cairo_stroke(cr);
+	cairo_move_to (cr, cx, cy);
+	path (cr, 12, 3, 2048);
+	pattern = cairo_pattern_create_radial (cx, cy, 0., cx, cy, r);
+	cairo_pattern_add_color_stop_rgb (pattern, 1., 1., 0., 1.);
+	cairo_pattern_add_color_stop_rgb (pattern, 0., 0., 0., 1.);
+	cairo_set_source (cr, pattern);
+	cairo_pattern_destroy (pattern);
+	cairo_stroke(cr);
+    }
 
     cairo_perf_timer_stop ();
 
@@ -159,7 +161,7 @@ do_dragon (cairo_t *cr, int width, int height)
 }
 
 static cairo_perf_ticks_t
-do_dragon_solid (cairo_t *cr, int width, int height)
+do_dragon_solid (cairo_t *cr, int width, int height, int loops)
 {
     double cx, cy, r;
 
@@ -168,30 +170,32 @@ do_dragon_solid (cairo_t *cr, int width, int height)
 
     cairo_perf_timer_start ();
 
-    cairo_set_source_rgb (cr, 0, 0, 0);
-    cairo_paint (cr);
+    while (loops--) {
+	cairo_set_source_rgb (cr, 0, 0, 0);
+	cairo_paint (cr);
 
-    cairo_set_line_width (cr, 4.);
+	cairo_set_line_width (cr, 4.);
 
-    cairo_move_to (cr, cx, cy);
-    path (cr, 12, 0, 2048);
-    cairo_set_source_rgb (cr, 1, 0, 0);
-    cairo_stroke(cr);
+	cairo_move_to (cr, cx, cy);
+	path (cr, 12, 0, 2048);
+	cairo_set_source_rgb (cr, 1, 0, 0);
+	cairo_stroke(cr);
 
-    cairo_move_to (cr, cx, cy);
-    path (cr, 12, 1, 2048);
-    cairo_set_source_rgb (cr, 0, 1, 0);
-    cairo_stroke(cr);
+	cairo_move_to (cr, cx, cy);
+	path (cr, 12, 1, 2048);
+	cairo_set_source_rgb (cr, 0, 1, 0);
+	cairo_stroke(cr);
 
-    cairo_move_to (cr, cx, cy);
-    path (cr, 12, 2, 2048);
-    cairo_set_source_rgb (cr, 0, 0, 1);
-    cairo_stroke(cr);
+	cairo_move_to (cr, cx, cy);
+	path (cr, 12, 2, 2048);
+	cairo_set_source_rgb (cr, 0, 0, 1);
+	cairo_stroke(cr);
 
-    cairo_move_to (cr, cx, cy);
-    path (cr, 12, 3, 2048);
-    cairo_set_source_rgb (cr, 1, 1, 1);
-    cairo_stroke(cr);
+	cairo_move_to (cr, cx, cy);
+	path (cr, 12, 3, 2048);
+	cairo_set_source_rgb (cr, 1, 1, 1);
+	cairo_stroke(cr);
+    }
 
     cairo_perf_timer_stop ();
 

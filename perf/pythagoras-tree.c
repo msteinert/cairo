@@ -58,21 +58,23 @@ add_rectangle (cairo_t *cr, double size)
 }
 
 static cairo_perf_ticks_t
-do_pythagoras_tree (cairo_t *cr, int width, int height)
+do_pythagoras_tree (cairo_t *cr, int width, int height, int loops)
 {
     double size = 128;
 
     cairo_perf_timer_start ();
 
-    cairo_save (cr);
-    cairo_translate (cr, 0, height);
-    cairo_scale (cr, 1, -1);
+    while (loops--) {
+	cairo_save (cr);
+	cairo_translate (cr, 0, height);
+	cairo_scale (cr, 1, -1);
 
-    cairo_move_to (cr, width/2, size/2);
-    add_rectangle (cr, size);
-    cairo_set_source_rgb (cr, 0., 0., 0.);
-    cairo_fill (cr);
-    cairo_restore (cr);
+	cairo_move_to (cr, width/2, size/2);
+	add_rectangle (cr, size);
+	cairo_set_source_rgb (cr, 0., 0., 0.);
+	cairo_fill (cr);
+	cairo_restore (cr);
+    }
 
     cairo_perf_timer_stop ();
 

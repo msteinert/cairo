@@ -99,7 +99,7 @@ point_t points[300] = {
 };
 
 static cairo_perf_ticks_t
-do_tessellate (cairo_t *cr, int num_points)
+do_tessellate (cairo_t *cr, int num_points, int loops)
 {
     int i;
 
@@ -113,7 +113,8 @@ do_tessellate (cairo_t *cr, int num_points)
      * we'll have to be careful since cairo_in_fill might eventually
      * be optimized to have an implementation that doesn't necessarily
      * include tessellation. */
-    cairo_in_fill (cr, 50, 50);
+    while (loops--)
+	cairo_in_fill (cr, 50, 50);
 
     cairo_perf_timer_stop ();
 
@@ -123,21 +124,21 @@ do_tessellate (cairo_t *cr, int num_points)
 }
 
 static cairo_perf_ticks_t
-tessellate_16 (cairo_t *cr, int width, int height)
+tessellate_16 (cairo_t *cr, int width, int height, int loops)
 {
-    return do_tessellate (cr, 16);
+    return do_tessellate (cr, 16, loops);
 }
 
 static cairo_perf_ticks_t
-tessellate_64 (cairo_t *cr, int width, int height)
+tessellate_64 (cairo_t *cr, int width, int height, int loops)
 {
-    return do_tessellate (cr, 64);
+    return do_tessellate (cr, 64, loops);
 }
 
 static cairo_perf_ticks_t
-tessellate_256 (cairo_t *cr, int width, int height)
+tessellate_256 (cairo_t *cr, int width, int height, int loops)
 {
-    return do_tessellate (cr, 256);
+    return do_tessellate (cr, 256, loops);
 }
 
 void

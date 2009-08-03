@@ -61,12 +61,14 @@ rounded_rectangle (cairo_t *cr,
 }
 
 static cairo_perf_ticks_t
-do_rectangle (cairo_t *cr, int width, int height)
+do_rectangle (cairo_t *cr, int width, int height, int loops)
 {
     cairo_perf_timer_start ();
 
-    rounded_rectangle (cr, 0, 0, width, height, 3.0);
-    cairo_fill (cr);
+    while (loops--) {
+	rounded_rectangle (cr, 0, 0, width, height, 3.0);
+	cairo_fill (cr);
+    }
 
     cairo_perf_timer_stop ();
 
@@ -74,18 +76,42 @@ do_rectangle (cairo_t *cr, int width, int height)
 }
 
 static cairo_perf_ticks_t
-do_rectangles (cairo_t *cr, int width, int height)
+do_rectangles (cairo_t *cr, int width, int height, int loops)
 {
     int i;
 
     cairo_perf_timer_start ();
 
-    for (i = 0; i < RECTANGLE_COUNT; i++) {
-        rounded_rectangle (cr,
-		           rects[i].x, rects[i].y,
-                           rects[i].width, rects[i].height,
-			   3.0);
-        cairo_fill (cr);
+    while (loops--) {
+	for (i = 0; i < RECTANGLE_COUNT; i++) {
+	    rounded_rectangle (cr,
+			       rects[i].x, rects[i].y,
+			       rects[i].width, rects[i].height,
+			       3.0);
+	    cairo_fill (cr);
+	}
+    }
+
+    cairo_perf_timer_stop ();
+
+    return cairo_perf_timer_elapsed ();
+}
+
+static cairo_perf_ticks_t
+do_rectangles_once (cairo_t *cr, int width, int height, int loops)
+{
+    int i;
+
+    cairo_perf_timer_start ();
+
+    while (loops--) {
+	for (i = 0; i < RECTANGLE_COUNT; i++) {
+	    rounded_rectangle (cr,
+			       rects[i].x, rects[i].y,
+			       rects[i].width, rects[i].height,
+			       3.0);
+	}
+	cairo_fill (cr);
     }
 
     cairo_perf_timer_stop ();
@@ -111,4 +137,5 @@ rounded_rectangles (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 
     MODE (perf, "one-rounded-rectangle", do_rectangle);
     MODE (perf, "rounded-rectangles", do_rectangles);
+    MODE (perf, "rounded-rectangles-once", do_rectangles_once);
 }

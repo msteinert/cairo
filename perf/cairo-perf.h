@@ -94,7 +94,7 @@ typedef struct _cairo_perf {
 } cairo_perf_t;
 
 typedef cairo_perf_ticks_t
-(*cairo_perf_func_t) (cairo_t *cr, int width, int height);
+(*cairo_perf_func_t) (cairo_t *cr, int width, int height, int loops);
 
 cairo_bool_t
 cairo_perf_can_run (cairo_perf_t	*perf,

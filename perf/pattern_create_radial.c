@@ -56,20 +56,22 @@ generate_double_in_range (double min, double max)
 }
 
 static cairo_perf_ticks_t
-do_pattern_create_radial (cairo_t *cr, int width, int height)
+do_pattern_create_radial (cairo_t *cr, int width, int height, int loops)
 {
-    int i;
-    cairo_pattern_t *pattern;
-
     cairo_perf_timer_start ();
 
-    for (i = 0; i < RADIALS_COUNT; i++)
-    {
-        pattern = cairo_pattern_create_radial (radials[i].cx0, radials[i].cy0,
-                                               radials[i].radius0,
-                                               radials[i].cx1, radials[i].cy1,
-                                               radials[i].radius1);
-        cairo_pattern_destroy (pattern);
+    while (loops--) {
+	cairo_pattern_t *pattern;
+	int i;
+
+	for (i = 0; i < RADIALS_COUNT; i++) {
+	    pattern =
+		cairo_pattern_create_radial (radials[i].cx0, radials[i].cy0,
+					     radials[i].radius0,
+					     radials[i].cx1, radials[i].cy1,
+					     radials[i].radius1);
+	    cairo_pattern_destroy (pattern);
+	}
     }
 
     cairo_perf_timer_stop ();

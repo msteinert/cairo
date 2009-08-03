@@ -93,7 +93,7 @@ mosaic_next_path (cairo_t *cr, struct mosaic_region_iter *iter)
 }
 
 static cairo_perf_ticks_t
-mosaic_perform(cairo_t *cr, unsigned flags, int width, int height)
+mosaic_perform(cairo_t *cr, unsigned flags, int width, int height, int loops)
 {
     struct mosaic_region_iter iter;
 
@@ -116,17 +116,19 @@ mosaic_perform(cairo_t *cr, unsigned flags, int width, int height)
 
     /* Iterate over all closed regions in the mosaic filling or
      * tessellating them as dictated by the flags.  */
-    mosaic_region_iter_init (&iter, flags & MOSAIC_CURVE_TO);
 
     cairo_perf_timer_start ();
-    while (mosaic_next_path (cr, &iter)) {
-	if (flags & MOSAIC_FILL) {
-	    cairo_fill (cr);
-	}
-	else {
-	    double x, y;
-	    cairo_get_current_point (cr, &x, &y);
-	    cairo_in_fill (cr, x, y);
+    while (loops--) {
+	mosaic_region_iter_init (&iter, flags & MOSAIC_CURVE_TO);
+	while (mosaic_next_path (cr, &iter)) {
+	    if (flags & MOSAIC_FILL) {
+		cairo_fill (cr);
+	    }
+	    else {
+		double x, y;
+		cairo_get_current_point (cr, &x, &y);
+		cairo_in_fill (cr, x, y);
+	    }
 	}
     }
     cairo_perf_timer_stop ();
@@ -135,27 +137,27 @@ mosaic_perform(cairo_t *cr, unsigned flags, int width, int height)
 }
 
 static cairo_perf_ticks_t
-mosaic_fill_curves (cairo_t *cr, int width, int height)
+mosaic_fill_curves (cairo_t *cr, int width, int height, int loops)
 {
-    return mosaic_perform (cr, MOSAIC_FILL | MOSAIC_CURVE_TO, width, height);
+    return mosaic_perform (cr, MOSAIC_FILL | MOSAIC_CURVE_TO, width, height, loops);
 }
 
 static cairo_perf_ticks_t
-mosaic_fill_lines (cairo_t *cr, int width, int height)
+mosaic_fill_lines (cairo_t *cr, int width, int height, int loops)
 {
-    return mosaic_perform (cr, MOSAIC_FILL | MOSAIC_LINE_TO, width, height);
+    return mosaic_perform (cr, MOSAIC_FILL | MOSAIC_LINE_TO, width, height, loops);
 }
 
 static cairo_perf_ticks_t
-mosaic_tessellate_lines (cairo_t *cr, int width, int height)
+mosaic_tessellate_lines (cairo_t *cr, int width, int height, int loops)
 {
-    return mosaic_perform (cr, MOSAIC_TESSELLATE | MOSAIC_LINE_TO, width, height);
+    return mosaic_perform (cr, MOSAIC_TESSELLATE | MOSAIC_LINE_TO, width, height, loops);
 }
 
 static cairo_perf_ticks_t
-mosaic_tessellate_curves (cairo_t *cr, int width, int height)
+mosaic_tessellate_curves (cairo_t *cr, int width, int height, int loops)
 {
-    return mosaic_perform (cr, MOSAIC_TESSELLATE | MOSAIC_CURVE_TO, width, height);
+    return mosaic_perform (cr, MOSAIC_TESSELLATE | MOSAIC_CURVE_TO, width, height, loops);
 }
 
 void

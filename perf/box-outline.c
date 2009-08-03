@@ -41,7 +41,7 @@
  */
 
 static cairo_perf_ticks_t
-box_outline_stroke (cairo_t *cr, int width, int height)
+box_outline_stroke (cairo_t *cr, int width, int height, int loops)
 {
     cairo_set_source_rgb (cr, 0, 0, 1); /* blue */
     cairo_paint (cr);
@@ -54,15 +54,18 @@ box_outline_stroke (cairo_t *cr, int width, int height)
 
     cairo_perf_timer_start ();
 
-    cairo_stroke (cr);
+    while (loops--)
+	cairo_stroke_preserve (cr);
 
     cairo_perf_timer_stop ();
+
+    cairo_new_path (cr);
 
     return cairo_perf_timer_elapsed ();
 }
 
 static cairo_perf_ticks_t
-box_outline_fill (cairo_t *cr, int width, int height)
+box_outline_fill (cairo_t *cr, int width, int height, int loops)
 {
     cairo_set_source_rgb (cr, 0, 0, 1); /* blue */
     cairo_paint (cr);
@@ -78,9 +81,12 @@ box_outline_fill (cairo_t *cr, int width, int height)
 
     cairo_perf_timer_start ();
 
-    cairo_fill (cr);
+    while (loops--)
+	cairo_fill_preserve (cr);
 
     cairo_perf_timer_stop ();
+
+    cairo_new_path (cr);
 
     return cairo_perf_timer_elapsed ();
 }

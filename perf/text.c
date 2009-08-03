@@ -26,27 +26,30 @@
 #include "cairo-perf.h"
 
 static cairo_perf_ticks_t
-do_text (cairo_t *cr, int width, int height)
+do_text (cairo_t *cr, int width, int height, int loops)
 {
     const char text[] = "the jay, pig, fox, zebra and my wolves quack";
     int len = strlen (text);
     double x, y;
     int i = 0, j = 0;
 
+    cairo_set_font_size (cr, 9);
+
     cairo_perf_timer_start ();
 
-    cairo_set_font_size (cr, 9);
-    do {
-	cairo_move_to (cr, 0, j++ * 10);
-	cairo_show_text (cr, text + i);
-	cairo_get_current_point (cr, &x, &y);
-	while (x < width && cairo_status (cr) == CAIRO_STATUS_SUCCESS) {
-	    cairo_show_text (cr, text);
+    while (loops--) {
+	do {
+	    cairo_move_to (cr, 0, j++ * 10);
+	    cairo_show_text (cr, text + i);
 	    cairo_get_current_point (cr, &x, &y);
-	}
-	if (++i >= len)
-	    i = 0;
-    } while (y < height && cairo_status (cr) == CAIRO_STATUS_SUCCESS);
+	    while (x < width && cairo_status (cr) == CAIRO_STATUS_SUCCESS) {
+		cairo_show_text (cr, text);
+		cairo_get_current_point (cr, &x, &y);
+	    }
+	    if (++i >= len)
+		i = 0;
+	} while (y < height && cairo_status (cr) == CAIRO_STATUS_SUCCESS);
+    }
 
     cairo_perf_timer_stop ();
 

@@ -40,7 +40,8 @@ uniform_random (double minval, double maxval)
 }
 
 static cairo_perf_ticks_t
-draw_random (cairo_t *cr, cairo_fill_rule_t fill_rule, int width, int height)
+draw_random (cairo_t *cr, cairo_fill_rule_t fill_rule,
+	     int width, int height, int loops)
 {
     int i;
     double x[NUM_SEGMENTS];
@@ -60,16 +61,14 @@ draw_random (cairo_t *cr, cairo_fill_rule_t fill_rule, int width, int height)
     cairo_set_fill_rule (cr, fill_rule);
     cairo_set_source_rgb (cr, 1, 0, 0);
 
-    cairo_perf_timer_start (); {
+    cairo_move_to (cr, 0, 0);
+    for (i = 0; i < NUM_SEGMENTS; i++)
+	cairo_line_to (cr, x[i], y[i]);
+    cairo_close_path (cr);
 
-        cairo_move_to (cr, 0, 0);
-        for (i = 0; i < NUM_SEGMENTS; i++) {
-            cairo_line_to (cr, x[i], y[i]);
-        }
-        cairo_close_path (cr);
-
-        cairo_fill (cr);
-    }
+    cairo_perf_timer_start ();
+    while (loops--)
+        cairo_fill_preserve (cr);
     cairo_perf_timer_stop ();
 
     cairo_restore (cr);
@@ -78,15 +77,15 @@ draw_random (cairo_t *cr, cairo_fill_rule_t fill_rule, int width, int height)
 }
 
 static cairo_perf_ticks_t
-random_eo (cairo_t *cr, int width, int height)
+random_eo (cairo_t *cr, int width, int height, int loops)
 {
-    return draw_random (cr, CAIRO_FILL_RULE_EVEN_ODD, width, height);
+    return draw_random (cr, CAIRO_FILL_RULE_EVEN_ODD, width, height, loops);
 }
 
 static cairo_perf_ticks_t
-random_nz (cairo_t *cr, int width, int height)
+random_nz (cairo_t *cr, int width, int height, int loops)
 {
-    return draw_random (cr, CAIRO_FILL_RULE_WINDING, width, height);
+    return draw_random (cr, CAIRO_FILL_RULE_WINDING, width, height, loops);
 }
 
 void

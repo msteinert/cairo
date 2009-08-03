@@ -28,7 +28,7 @@
 #include "cairo-perf.h"
 
 static cairo_perf_ticks_t
-do_long_dashed_lines (cairo_t *cr, int width, int height)
+do_long_dashed_lines (cairo_t *cr, int width, int height, int loops)
 {
     double dash[2] = { 2.0, 2.0 };
     int i;
@@ -40,8 +40,6 @@ do_long_dashed_lines (cairo_t *cr, int width, int height)
     cairo_set_source_rgb (cr, 1.0, 0.0, 0.0);
     cairo_set_dash (cr, dash, 2, 0.0);
 
-    cairo_perf_timer_start ();
-
     cairo_new_path (cr);
     cairo_set_line_width (cr, 1.0);
 
@@ -51,7 +49,10 @@ do_long_dashed_lines (cairo_t *cr, int width, int height)
 	cairo_line_to (cr, width, y0);
     }
 
-    cairo_stroke (cr);
+    cairo_perf_timer_start ();
+
+    while (loops--)
+	cairo_stroke_preserve (cr);
 
     cairo_perf_timer_stop ();
 

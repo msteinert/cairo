@@ -29,32 +29,31 @@
 #include "cairo-perf.h"
 
 static cairo_perf_ticks_t
-do_unaligned_clip (cairo_t *cr, int width, int height)
+do_unaligned_clip (cairo_t *cr, int width, int height, int loops)
 {
-    cairo_save (cr);
-
     cairo_perf_timer_start ();
 
-    /* First a triangular clip that obviously isn't along device-pixel
-     * boundaries. */
-    cairo_move_to (cr, 50, 50);
-    cairo_line_to (cr, 50, 90);
-    cairo_line_to (cr, 90, 90);
-    cairo_close_path (cr);
-    cairo_clip (cr);
+    while (loops--) {
+	/* First a triangular clip that obviously isn't along device-pixel
+	 * boundaries. */
+	cairo_move_to (cr, 50, 50);
+	cairo_line_to (cr, 50, 90);
+	cairo_line_to (cr, 90, 90);
+	cairo_close_path (cr);
+	cairo_clip (cr);
 
-    /* Then a rectangular clip that would be but for the non-integer
-     * scaling. */
-    cairo_scale (cr, 1.1, 1.1);
-    cairo_rectangle (cr, 55, 55, 35, 35);
-    cairo_clip (cr);
+	/* Then a rectangular clip that would be but for the non-integer
+	 * scaling. */
+	cairo_scale (cr, 1.1, 1.1);
+	cairo_rectangle (cr, 55, 55, 35, 35);
+	cairo_clip (cr);
 
-    /* And paint something to force the clip to be evaluated. */
-    cairo_paint (cr);
+	/* And paint something to force the clip to be evaluated. */
+	cairo_paint (cr);
 
+	cairo_reset_clip (cr);
+    }
     cairo_perf_timer_stop ();
-
-    cairo_restore (cr);
 
     return cairo_perf_timer_elapsed ();
 }
