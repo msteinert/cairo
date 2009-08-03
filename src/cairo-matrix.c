@@ -624,7 +624,7 @@ _cairo_matrix_compute_basis_scale_factors (const cairo_matrix_t *matrix,
 	double major, minor;
 
 	cairo_matrix_transform_distance (matrix, &x, &y);
-	major = sqrt(x*x + y*y);
+	major = hypot (x, y);
 	/*
 	 * ignore mirroring
 	 */
@@ -856,7 +856,7 @@ _cairo_matrix_transformed_circle_major_axis (const cairo_matrix_t *matrix,
     g = 0.5 * (i - j);
     h = a*c + b*d;
 
-    return radius * sqrt (f + sqrt (g*g+h*h));
+    return radius * sqrt (f + hypot (g, h));
 
     /*
      * we don't need the minor axis length, which is
