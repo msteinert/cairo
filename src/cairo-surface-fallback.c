@@ -663,8 +663,8 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
     cairo_bool_t clip_surface = FALSE;
     cairo_status_t status;
 
-    if (_cairo_operator_bounded_by_mask (op) && traps->num_traps == 0)
-        return CAIRO_STATUS_SUCCESS;
+    if (traps->num_traps == 0 && _cairo_operator_bounded_by_mask (op))
+	return CAIRO_STATUS_SUCCESS;
 
     if (clip != NULL) {
 	status = _cairo_clip_get_region (clip, &clip_region);
@@ -1019,6 +1019,9 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
     if (unlikely (status))
 	goto CLEANUP;
 
+    if (polygon.num_edges == 0)
+	goto DO_TRAPS;
+
     if (_cairo_operator_bounded_by_mask (op)) {
 	cairo_rectangle_int_t polygon_extents;
 
@@ -1160,6 +1163,9 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
     status = _cairo_path_fixed_fill_to_polygon (path, tolerance, &polygon);
     if (unlikely (status))
 	goto CLEANUP;
+
+    if (polygon.num_edges == 0)
+	goto DO_TRAPS;
 
     if (_cairo_operator_bounded_by_mask (op)) {
 	cairo_rectangle_int_t polygon_extents;
