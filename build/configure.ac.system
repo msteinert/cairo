@@ -8,8 +8,14 @@ dnl ====================================================================
 
 AM_CONDITIONAL(CROSS_COMPILING, test "x$cross_compiling" = "xyes")
 CAIRO_BIGENDIAN
-CAIRO_CHECK_NATIVE_ATOMIC_PRIMITIVES
-CAIRO_CHECK_ATOMIC_OP_NEEDS_MEMORY_BARRIER
+AC_ARG_ENABLE(atomic,
+	      [AS_HELP_STRING([--disable-atomic],
+			      [disable use of native atomic operations])],
+	      [use_atomic=$enableval], [use_atomic=yes])
+AS_IF([test "x$use_atomic" = "xyes"], [
+  CAIRO_CHECK_NATIVE_ATOMIC_PRIMITIVES
+  CAIRO_CHECK_ATOMIC_OP_NEEDS_MEMORY_BARRIER
+])
 AC_CHECK_SIZEOF(void *)
 AC_CHECK_SIZEOF(int)
 AC_CHECK_SIZEOF(long)
