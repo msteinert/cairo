@@ -247,8 +247,11 @@ typedef struct _cairo_polygon {
     cairo_status_t status;
 
     cairo_point_t first_point;
+    cairo_point_t last_point;
     cairo_point_t current_point;
+    cairo_slope_t current_edge;
     cairo_bool_t has_current_point;
+    cairo_bool_t has_current_edge;
 
     cairo_box_t extents;
     cairo_box_t limits;
