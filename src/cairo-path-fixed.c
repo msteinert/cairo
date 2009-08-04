@@ -445,22 +445,47 @@ _cairo_path_fixed_line_to (cairo_path_fixed_t *path,
     if (! path->has_current_point) {
 	status = _cairo_path_fixed_move_to (path, point.x, point.y);
     } else {
+	/* If the previous op was also a LINE_TO with the same gradient,
+	 * then just change its end-point rather than adding a new op.
+	 */
+	if (_cairo_path_last_op (path) == CAIRO_PATH_OP_LINE_TO) {
+	    cairo_path_buf_t *buf;
+	    cairo_point_t *p;
+	    cairo_slope_t prev, self;
+
+	    buf = cairo_path_tail (path);
+	    if (likely (buf->num_points >= 2)) {
+		p = &buf->points[buf->num_points-2];
+	    } else {
+		cairo_path_buf_t *prev_buf = cairo_path_buf_prev (buf);
+		p = &prev_buf->points[prev_buf->num_points - (2 - buf->num_points)];
+	    }
+	    _cairo_slope_init (&prev, p, &path->current_point);
+	    _cairo_slope_init (&self, &path->current_point, &point);
+	    if (_cairo_slope_equal (&prev, &self)) {
+		buf->points[buf->num_points - 1] = point;
+		status = CAIRO_STATUS_SUCCESS;
+		goto DONE;
+	    }
+	}
+
 	status = _cairo_path_fixed_add (path, CAIRO_PATH_OP_LINE_TO, &point, 1);
 	if (path->is_rectilinear) {
 	    path->is_rectilinear = path->current_point.x == x ||
-		                   path->current_point.y == y;
+		path->current_point.y == y;
 	    path->maybe_fill_region &= path->is_rectilinear;
 	}
 	if (path->maybe_fill_region) {
 	    path->maybe_fill_region = _cairo_fixed_is_integer (x) &&
-		                      _cairo_fixed_is_integer (y);
+		_cairo_fixed_is_integer (y);
 	}
 	if (path->is_empty_fill) {
 	    path->is_empty_fill = path->current_point.x == x &&
-		                  path->current_point.y == y;
+		path->current_point.y == y;
 	}
     }
 
+DONE:
     path->current_point = point;
     path->has_current_point = TRUE;
 
