@@ -511,7 +511,9 @@ _freed_pattern_put (freed_pool_t *pool,
 {
     int i = pool->top;
 
-    if (_atomic_store (&pool->pool[i], pattern)) {
+    if (i < ARRAY_LENGTH (pool->pool) &&
+	_atomic_store (&pool->pool[i], pattern))
+    {
 	pool->top = i + 1;
 	return;
     }
