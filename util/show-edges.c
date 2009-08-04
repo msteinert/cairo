@@ -586,6 +586,23 @@ trap_view_draw (TrapView *self, cairo_t *cr)
     cairo_restore (cr);
 }
 
+
+static gdouble
+edge_length (const edge_t *e)
+{
+    return hypot (e->p2.x - e->p1.x, e->p2.y - e->p1.y);
+}
+
+static gdouble
+edges_compute_total_length (const edges_t *edges)
+{
+    int n;
+    gdouble len = 0.;
+    for (n = 0; n < edges->num_edges; n++)
+	len += edge_length (&edges->edges[n]);
+    return len;
+}
+
 static gdouble
 trapezoid_area (const trapezoid_t *t)
 {
@@ -646,26 +663,41 @@ trap_view_draw_labels (TrapView *self, cairo_t *cr)
 {
     PangoLayout *layout;
     gint width, height;
-    gdouble total_area;
+    GString *string;
     gchar *str;
     traps_t *traps;
+    edges_t *edges;
+
+    string = g_string_new (NULL);
 
     traps = self->current_traps;
-    if (traps == NULL)
-	return;
+    if (traps != NULL) {
+	/* convert total area from fixed-point (assuming 24.8) */
+	gdouble total_area = traps_compute_total_area (traps) / (256. * 256.);
+	g_string_append_printf (string,
+				"Number of trapezoids:\t%d\n"
+				"Total area of trapezoids:\t%.2f\n",
+				traps->num_traps,
+				total_area);
+    }
 
-    /* convert total area from fixed-point (assuming 24.8) */
-    total_area = traps_compute_total_area (traps) / (256. * 256.);
-    str = g_strdup_printf ("Number of trapezoids:\t%d\n"
-			   "Total area of trapezoids:\t%.2f",
-			   traps->num_traps,
-			   total_area);
+    edges = self->current_edges;
+    if (edges != NULL) {
+	double total_length = edges_compute_total_length (edges) / 256.;
+	g_string_append_printf (string,
+				"Number of edges:\t%d\n"
+				"Total length of edges: \t%.2f\n",
+				edges->num_edges,
+				total_length);
+    }
+
+    str = g_string_free (string, FALSE);
     layout = gtk_widget_create_pango_layout (&self->widget, str);
     g_free (str);
 
     pango_layout_get_pixel_size (layout, &width, &height);
 
-    cairo_move_to (cr, 10, 10 + height);
+    cairo_move_to (cr, 10, 40);
     pango_cairo_show_layout (cr, layout);
     g_object_unref (layout);
 }
@@ -1179,7 +1211,7 @@ main (int argc, char **argv)
     window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
     g_signal_connect (window, "delete-event",
 		      G_CALLBACK (gtk_main_quit), NULL);
-    gtk_widget_set_size_request (window, 512, 512);
+    gtk_widget_set_size_request (window, 800, 800);
     gtk_container_add (GTK_CONTAINER (window), hbox);
     gtk_widget_show (hbox);
     gtk_widget_show (window);
