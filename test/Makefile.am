@@ -742,6 +742,16 @@ REFERENCE_IMAGES = \
 	random-intersections-nonzero.ref.png \
 	random-intersections-nonzero.ps.ref.png \
 	random-intersections-nonzero.xlib.ref.png \
+	random-intersections-curves-eo.ps.ref.png \
+	random-intersections-curves-eo.pdf.ref.png \
+	random-intersections-curves-eo.ref.png \
+	random-intersections-curves-eo.xlib.ref.png \
+	random-intersections-curves-eo.xlib-fallback.ref.png \
+	random-intersections-curves-nz.ps.ref.png \
+	random-intersections-curves-nz.pdf.ref.png \
+	random-intersections-curves-nz.ref.png \
+	random-intersections-curves-nz.xlib.ref.png \
+	random-intersections-curves-nz.xlib-fallback.ref.png \
 	rectangle-rounding-error.ref.png \
 	rectilinear-dash.ref.png \
 	rectilinear-fill.ref.png \
