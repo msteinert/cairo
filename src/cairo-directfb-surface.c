@@ -246,7 +246,9 @@ _directfb_to_pixman_format (DFBSurfacePixelFormat format)
     case DSPF_LUT2: return PIXMAN_invalid;
     case DSPF_RGB444: return PIXMAN_x4r4g4b4;
     case DSPF_RGB555: return PIXMAN_x1r5g5b5;
+#if DFB_NUM_PIXELFORMATS >= 29
     case DSPF_BGR555: return PIXMAN_x1b5g5r5;
+#endif
     }
     return PIXMAN_invalid;
 }
@@ -269,7 +271,9 @@ _directfb_from_pixman_format (pixman_format_code_t format)
     case PIXMAN_a4: return DSPF_A4;
     case PIXMAN_x4r4g4b4: return DSPF_RGB444;
     case PIXMAN_x1r5g5b5: return DSPF_RGB555;
+#if DFB_NUM_PIXELFORMATS >= 29
     case PIXMAN_x1b5g5r5: return DSPF_BGR555;
+#endif
     default: return 0;
     }
 }
