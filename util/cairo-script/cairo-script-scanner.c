@@ -683,11 +683,12 @@ string_read (csi_t *ctx, csi_scanner_t *scan, csi_file_t *src, int len, csi_obje
 {
     csi_status_t status;
 
-    status = csi_string_new (ctx, obj, NULL, len);
+    status = csi_string_new (ctx, obj, NULL, len + 1);
     if (_csi_unlikely (status))
 	longjmp (scan->jmpbuf, status);
 
     scan_read (scan, src, obj->datum.string->string, len);
+    obj->datum.string->string[len] = '\0';
 }
 
 #if WORDS_BIGENDIAN
