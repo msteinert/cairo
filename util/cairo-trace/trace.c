@@ -1217,17 +1217,13 @@ _write_base85_data (struct _data_stream *stream,
 		    const unsigned char	  *data,
 		    unsigned int	   length)
 {
-    const unsigned char *ptr = data;
     unsigned char five_tuple[5];
-    bool is_zero;
     int ret;
 
     while (length--) {
-	stream->four_tuple[stream->base85_pending++] = *ptr++;
+	stream->four_tuple[stream->base85_pending++] = *data++;
 	if (stream->base85_pending == 4) {
-	    is_zero = _expand_four_tuple_to_five (stream->four_tuple,
-						  five_tuple);
-	    if (is_zero)
+	    if (_expand_four_tuple_to_five (stream->four_tuple, five_tuple))
 		ret = fwrite ("z", 1, 1, logfile);
 	    else
 		ret = fwrite (five_tuple, 5, 1, logfile);
@@ -3645,13 +3641,13 @@ cairo_ft_font_face_create_for_ft_face (FT_Face face, int load_flags)
 static bool
 _ft_read_file (FtFaceData *data, const char *path)
 {
-    char buf[4096];
+    char buf[8192];
     FILE *file;
 
     file = fopen (path, "rb");
     if (file != NULL) {
 	size_t ret;
-	unsigned long int allocated = 8192;
+	unsigned long int allocated = sizeof (buf);
 	data->data = malloc (allocated);
 	do {
 	    ret = fread (buf, 1, sizeof (buf), file);
