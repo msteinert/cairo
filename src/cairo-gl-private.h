@@ -212,4 +212,6 @@ _cairo_gl_y_flip (cairo_gl_surface_t *surface, int y)
 	return (surface->height - 1) - y;
 }
 
+slim_hidden_proto (cairo_gl_surface_create);
+
 #endif /* CAIRO_GL_PRIVATE_H */

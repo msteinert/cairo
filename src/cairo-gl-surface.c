@@ -41,7 +41,6 @@
 
 slim_hidden_proto (cairo_gl_context_reference);
 slim_hidden_proto (cairo_gl_context_destroy);
-slim_hidden_proto (cairo_gl_surface_create);
 
 #define ARRAY_SIZE(array) (sizeof (array) / sizeof (array[0]))
 
