@@ -7,6 +7,58 @@
 
 static const cairo_user_data_key_t _key;
 
+#define SINGLE_SURFACE 1
+
+#if SINGLE_SURFACE
+static cairo_surface_t *
+_similar_surface_create (void *closure,
+			 cairo_content_t content,
+			 double width, double height)
+{
+    return cairo_surface_create_similar (closure, content, width, height);
+}
+
+static struct list {
+    struct list *next;
+    cairo_t *context;
+    cairo_surface_t *surface;
+} *list;
+
+static cairo_t *
+_context_create (void *closure, cairo_surface_t *surface)
+{
+    cairo_t *cr = cairo_create (surface);
+    struct list *l = malloc (sizeof (*l));
+    l->next = list;
+    l->context = cr;
+    l->surface = cairo_surface_reference (surface);
+    list = l;
+    return cr;
+}
+
+static void
+_context_destroy (void *closure, void *ptr)
+{
+    struct list *l, **prev = &list;
+    while ((l = *prev) != NULL) {
+	if (l->context == ptr) {
+	    if (cairo_surface_status (l->surface) == CAIRO_STATUS_SUCCESS) {
+		cairo_t *cr = cairo_create (closure);
+		cairo_set_source_surface (cr, l->surface, 0, 0);
+		cairo_paint (cr);
+		cairo_destroy (cr);
+	    }
+
+	    cairo_surface_destroy (l->surface);
+	    *prev = l->next;
+	    free (l);
+	    return;
+	}
+	prev = &l->next;
+    }
+}
+#endif
+
 #if CAIRO_HAS_XLIB_SURFACE
 #include <cairo-xlib.h>
 static Display *
@@ -216,7 +268,11 @@ main (int argc, char **argv)
 {
     cairo_script_interpreter_t *csi;
     cairo_script_interpreter_hooks_t hooks = {
-#if CAIRO_HAS_XLIB_XRENDER_SURFACE
+#if SINGLE_SURFACE
+	.surface_create = _similar_surface_create,
+	.context_create = _context_create,
+	.context_destroy = _context_destroy
+#elif CAIRO_HAS_XLIB_XRENDER_SURFACE
 	.surface_create = _xrender_surface_create
 #elif CAIRO_HAS_XLIB_SURFACE
 	.surface_create = _xlib_surface_create
@@ -257,6 +313,13 @@ main (int argc, char **argv)
 	{ NULL, NULL }
     };
 
+#if SINGLE_SURFACE
+    hooks.closure = backends[0].create (NULL,
+					CAIRO_CONTENT_COLOR_ALPHA,
+					512, 512);
+#endif
+
+
     csi = cairo_script_interpreter_create ();
     cairo_script_interpreter_install_hooks (csi, &hooks);
 
@@ -265,7 +328,14 @@ main (int argc, char **argv)
 
 	for (b = backends; b->name != NULL; b++) {
 	    if (strcmp (b->name, argv[i]) == 0) {
+#if SINGLE_SURFACE
+		cairo_surface_destroy (hooks.closure);
+		hooks.closure = b->create (NULL,
+					   CAIRO_CONTENT_COLOR_ALPHA,
+					   512, 512);
+#else
 		hooks.surface_create = b->create;
+#endif
 		cairo_script_interpreter_install_hooks (csi, &hooks);
 		break;
 	    }
@@ -274,6 +344,7 @@ main (int argc, char **argv)
 	if (b->name == NULL)
 	    cairo_script_interpreter_run (csi, argv[i]);
     }
+    cairo_surface_destroy (hooks.closure);
 
     return cairo_script_interpreter_destroy (csi);
 }
