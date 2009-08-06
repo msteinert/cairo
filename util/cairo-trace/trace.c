@@ -3629,7 +3629,7 @@ cairo_ft_font_face_create_for_ft_face (FT_Face face, int load_flags)
 
 	_trace_printf ("<< /type 42 /source ");
 	_emit_data (data->data, data->size);
-	_trace_printf (" /index %lu /flags %d font\n",
+	_trace_printf (" /index %lu /flags %d >> font\n",
 		       data->index, load_flags);
 	_push_operand (FONT_FACE, ret);
 	_write_unlock ();
