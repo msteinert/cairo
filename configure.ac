@@ -618,6 +618,7 @@ AM_CONDITIONAL(BUILD_TRACE,
 AC_CHECK_LIB(bfd, bfd_openr,
 	 [AC_CHECK_HEADER(bfd.h, [have_bfd=yes],
 	 [have_bfd=no])], [have_bfd=no])
+AC_CHECK_HEADER(libiberty.h,, [have_bfd=no])
 if test "x$have_bfd" = "xyes"; then
     AC_DEFINE([HAVE_BFD], [1], [Define to 1 if you have the binutils development files installed])
     BFD_LIBS=-lbfd
