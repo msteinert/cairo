@@ -2354,9 +2354,10 @@ _glyph_string (csi_t *ctx,
     double x,y;
     csi_integer_t nglyphs, i, j;
     struct glyph_advance_cache *cache;
+    cairo_status_t status;
 
     cache = cairo_scaled_font_get_user_data (scaled_font,
-					     (cairo_user_data_key_t *) &_glyph_string);
+					     (cairo_user_data_key_t *) ctx);
     if (cache == NULL) {
 	cache = _csi_alloc (ctx, sizeof (*cache));
 	if (cache == NULL)
@@ -2366,9 +2367,14 @@ _glyph_string (csi_t *ctx,
 	memset (cache->have_glyph_advance, 0xff,
 		sizeof (cache->have_glyph_advance));
 
-	cairo_scaled_font_set_user_data (scaled_font,
-					 (cairo_user_data_key_t *) &_glyph_string,
-					 cache, glyph_advance_cache_destroy);
+	status = cairo_scaled_font_set_user_data (scaled_font,
+						  (cairo_user_data_key_t *) ctx,
+						  cache,
+						  glyph_advance_cache_destroy);
+	if (status) {
+	    _csi_free (ctx, cache);
+	    return -1;
+	}
     }
 
     nglyphs = 0;
