@@ -1268,7 +1268,7 @@ _write_data_start (struct _data_stream *stream, uint32_t len)
     _write_base85_data_start (stream);
 
     _trace_printf ("<|");
-    _write_base85_data (stream, (unsigned char *) &len, len);
+    _write_base85_data (stream, (unsigned char *) &len, sizeof (len));
 }
 
 static void
