@@ -8,14 +8,6 @@ AC_PROG_CXX dnl required for BeOS (and cannot be a conditional dependency)
 AM_PROG_CC_C_O
 AC_C_INLINE
 
-# Set reasonable defaults for the tools in case we are cross-compiling
-if test "${build}" != "${host}" ; then
-    CC_FOR_BUILD=${CC_FOR_BUILD-cc}
-else
-    CC_FOR_BUILD=${CC}
-fi
-AC_SUBST(CC_FOR_BUILD)
-
 dnl ===========================================================================
 
 PKG_PROG_PKG_CONFIG()

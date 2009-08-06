@@ -48,21 +48,12 @@ endif
 
 libcairoboilerplate_la_LIBADD += $(CAIROBOILERPLATE_LIBS)
 
-# we need to workaround the introduction of CC_FOR_BUILD with older builds
-make-cairo-boilerplate-constructors$(EXEEXT): make-cairo-boilerplate-constructors.c
-	if test -n "$(CC_FOR_BUILD)"; then \
-		$(CC_FOR_BUILD) $^ -o $@; \
-	else \
-		$(CC) $^ -o $@; \
-	fi
-
-cairo-boilerplate-constructors.c: Makefile $(enabled_cairo_boilerplate_sources) make-cairo-boilerplate-constructors$(EXEEXT)
-	echo '(cd $(srcdir) && $(top_builddir)/boilerplate/make-cairo-boilerplate-constructors$(EXEEXT) $(enabled_cairo_boilerplate_sources)) > $@'
-	./make-cairo-boilerplate-constructors$(EXEEXT) $(srcdir) $(enabled_cairo_boilerplate_sources) > $@
+cairo-boilerplate-constructors.c: Makefile $(enabled_cairo_boilerplate_sources) make-cairo-boilerplate-constructors.sh
+	(cd $(srcdir) && sh ./make-cairo-boilerplate-constructors.sh $(enabled_cairo_boilerplate_sources)) > $@
 
 BUILT_SOURCES += cairo-boilerplate-constructors.c
-EXTRA_DIST += $(BUILT_SOURCES) make-cairo-boilerplate-constructors.c
-CLEANFILES += $(BUILT_SOURCES) make-cairo-boilerplate-constructors
+EXTRA_DIST += $(BUILT_SOURCES) make-cairo-boilerplate-constructors.sh
+CLEANFILES += $(BUILT_SOURCES)
 
 test: check
 
