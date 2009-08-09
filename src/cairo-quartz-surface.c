@@ -1091,8 +1091,8 @@ _cairo_quartz_setup_fallback_source (cairo_quartz_surface_t *surface,
     {
 	cairo_pattern_union_t pattern;
 
-	_cairo_pattern_init_static_copy (&pattern, source);
-	_cairo_pattern_transform (pattern_copy,
+	_cairo_pattern_init_static_copy (&pattern.base, source);
+	_cairo_pattern_transform (&pattern.base,
 				  &fallback->device_transform_inverse);
 	status = _cairo_surface_paint (fallback,
 				       CAIRO_OPERATOR_SOURCE,
@@ -2264,7 +2264,7 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
                                          cairo_operator_t op,
                                          const cairo_pattern_t *source,
                                          const cairo_surface_pattern_t *mask,
-                                         cairo_rectangle_int_t *extents)
+					 cairo_clip_t *clip)
 {
     cairo_rectangle_int_t mask_extents;
     CGRect rect;
@@ -2304,7 +2304,7 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
 
     CGContextSetCTM (surface->cgContext, ctm);
 
-    status = _cairo_quartz_surface_paint (surface, op, source, extents);
+    status = _cairo_quartz_surface_paint (surface, op, source, clip);
 
     CGContextRestoreGState (surface->cgContext);
 
@@ -2330,7 +2330,7 @@ _cairo_quartz_surface_mask_with_generic (cairo_quartz_surface_t *surface,
 					 cairo_operator_t op,
 					 const cairo_pattern_t *source,
 					 const cairo_pattern_t *mask,
-					 cairo_rectangle_int_t *extents)
+					 cairo_clip_t *clip)
 {
     int width = surface->extents.width - surface->extents.x;
     int height = surface->extents.height - surface->extents.y;
@@ -2364,7 +2364,7 @@ _cairo_quartz_surface_mask_with_generic (cairo_quartz_surface_t *surface,
 
     _cairo_pattern_init_for_surface (&surface_pattern, gradient_surf);
 
-    status = _cairo_quartz_surface_mask_with_surface (surface, op, source, &surface_pattern, extents);
+    status = _cairo_quartz_surface_mask_with_surface (surface, op, source, &surface_pattern, clip);
 
     _cairo_pattern_fini (&surface_pattern.base);
 
@@ -2409,9 +2409,9 @@ _cairo_quartz_surface_mask (void *abstract_surface,
     if (CGContextClipToMaskPtr) {
 	/* For these, we can skip creating a temporary surface, since we already have one */
 	if (mask->type == CAIRO_PATTERN_TYPE_SURFACE && mask->extend == CAIRO_EXTEND_NONE)
-	    return _cairo_quartz_surface_mask_with_surface (surface, op, source, (cairo_surface_pattern_t *) mask, extents);
+	    return _cairo_quartz_surface_mask_with_surface (surface, op, source, (cairo_surface_pattern_t *) mask, clip);
 
-	return _cairo_quartz_surface_mask_with_generic (surface, op, source, mask, extents);
+	return _cairo_quartz_surface_mask_with_generic (surface, op, source, mask, clip);
     }
 
     /* So, CGContextClipToMask is not present in 10.3.9, so we're
@@ -2537,7 +2537,7 @@ _cairo_quartz_surface_create_internal (CGContextRef cgContext,
 			content);
 
     _cairo_surface_clipper_init (&surface->clipper,
-				 _cairo_quartz_surface_intersect_clip_path);
+				 _cairo_quartz_surface_clipper_intersect_clip_path);
 
     /* Save our extents */
     surface->extents.x = surface->extents.y = 0;
