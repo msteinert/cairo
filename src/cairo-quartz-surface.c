@@ -2399,7 +2399,7 @@ _cairo_quartz_surface_mask (void *abstract_surface,
 	cairo_solid_pattern_t *solid_mask = (cairo_solid_pattern_t *) mask;
 
 	CGContextSetAlpha (surface->cgContext, solid_mask->color.alpha);
-	rv = _cairo_quartz_surface_paint (surface, op, source, extents);
+	rv = _cairo_quartz_surface_paint (surface, op, source, clip);
 	CGContextSetAlpha (surface->cgContext, 1.0);
 
 	return rv;
