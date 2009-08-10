@@ -105,7 +105,7 @@ target_is_measurable (const cairo_boilerplate_target_t *target)
 #if CAIRO_VERSION > CAIRO_VERSION_ENCODE(1,1,2)
     case CAIRO_SURFACE_TYPE_OS2:
 #endif
-#if CAIRO_VERSION > CAIRO_VERSION_ENCODE(1,9,3)
+#if CAIRO_HAS_QT_SURFACE
     case CAIRO_SURFACE_TYPE_QT:
 #endif
 #if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1,9,3)

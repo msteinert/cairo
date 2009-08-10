@@ -68,7 +68,9 @@
 
 #include <sys/time.h>
 
-#define ENABLE_FAST_FILL 1 /* Enable workaround slow regional Qt paths */
+/* Enable workaround slow regional Qt paths */
+#define ENABLE_FAST_FILL 0
+#define ENABLE_FAST_CLIP 0
 
 #if 0
 #define D(x)  x
@@ -710,17 +712,29 @@ _cairo_qt_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clipper,
     cairo_qt_surface_t *qs = cairo_container_of (clipper,
 						 cairo_qt_surface_t,
 						 clipper);
-    QPainterPath qpath;
-    cairo_status_t status;
 
-    // XXX Antialiasing is ignored
-    status = _cairo_quartz_cairo_path_to_qpainterpath (path,
-						       &qpath,
-						       fill_rule);
-    if (unlikely (status))
-	return status;
+    if (path == NULL) {
+        if (qs->pixmap || qs->image) {
+            // we own p
+            qs->p->setClipping (false);
+        } else {
+            qs->p->restore ();
+            qs->p->save ();
+        }
+    } else {
+	QPainterPath qpath;
+	cairo_status_t status;
 
-    qs->p->setClipPath (qpath, Qt::IntersectClip);
+	// XXX Antialiasing is ignored
+	status = _cairo_quartz_cairo_path_to_qpainterpath (path,
+							   &qpath,
+							   fill_rule);
+	if (unlikely (status))
+	    return status;
+
+	qs->p->setClipPath (qpath, Qt::IntersectClip);
+    }
+
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -759,6 +773,7 @@ static cairo_int_status_t
 _cairo_qt_surface_set_clip (cairo_qt_surface_t *qs,
 			    cairo_clip_t *clip)
 {
+    cairo_int_status_t status;
 
     D(fprintf(stderr, "q[%p] intersect_clip_path %s\n", abstract_surface, path ? "(path)" : "(clear)"));
 
@@ -776,6 +791,7 @@ _cairo_qt_surface_set_clip (cairo_qt_surface_t *qs,
         return CAIRO_INT_STATUS_SUCCESS;
     }
 
+#if ENABLE_FAST_CLIP
     // Qt will implicitly enable clipping, and will use ReplaceClip
     // instead of IntersectClip if clipping was disabled before
 
@@ -787,7 +803,6 @@ _cairo_qt_surface_set_clip (cairo_qt_surface_t *qs,
 
     cairo_region_t *clip_region = NULL;
 
-    cairo_int_status_t status;
     status = _cairo_clip_get_region (clip, &clip_region);
     if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 	// We weren't able to extract a region from the traps.
@@ -798,6 +813,10 @@ _cairo_qt_surface_set_clip (cairo_qt_surface_t *qs,
 	_cairo_qt_surface_set_clip_region (qs, clip_region);
 	status = CAIRO_INT_STATUS_SUCCESS;
     }
+#else
+    status = (cairo_int_status_t)
+	_cairo_surface_clipper_set_clip (&qs->clipper, clip);
+#endif
 
     return status;
 }
@@ -1300,8 +1319,8 @@ _cairo_qt_surface_fill (void *abstract_surface,
     //qs->p->setRenderHint (QPainter::Antialiasing, antialias == CAIRO_ANTIALIAS_NONE ? false : true);
     qs->p->setRenderHint (QPainter::SmoothPixmapTransform, source->filter != CAIRO_FILTER_FAST);
 
-    if (!  _cairo_qt_fast_fill (qs, source,
-				path, fill_rule, tolerance, antialias))
+    if (! _cairo_qt_fast_fill (qs, source,
+			       path, fill_rule, tolerance, antialias))
     {
 	QPainterPath qpath;
 	cairo_status_t status;
@@ -1449,10 +1468,6 @@ _cairo_qt_surface_mask (void *abstract_surface,
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
-/**
- ** XXX this will go away!  it's only implemented for now so that we
- ** can get some text without show_glyphs being available.
- **/
 static cairo_int_status_t
 _cairo_qt_surface_composite (cairo_operator_t op,
 			     const cairo_pattern_t *pattern,
@@ -1684,6 +1699,9 @@ cairo_qt_surface_create (QPainter *painter)
 			 &cairo_qt_surface_backend,
 			 CAIRO_CONTENT_COLOR_ALPHA);
 
+    _cairo_surface_clipper_init (&qs->clipper,
+				 _cairo_qt_surface_clipper_intersect_clip_path);
+
     qs->p = painter;
     if (qs->p->paintEngine())
         qs->supports_porter_duff = qs->p->paintEngine()->hasFeature(QPaintEngine::PorterDuff);
@@ -1694,10 +1712,6 @@ cairo_qt_surface_create (QPainter *painter)
     qs->p->save();
 
     qs->window = painter->window();
-
-    _cairo_surface_clipper_init (&qs->clipper,
-				 _cairo_qt_surface_clipper_intersect_clip_path);
-
 
 #if defined(Q_WS_X11) && CAIRO_HAS_XLIB_XRENDER_SURFACE
     qs->xlib_equiv = _cairo_qt_create_xlib_surface (qs);
@@ -1726,6 +1740,10 @@ cairo_qt_surface_create_with_qimage (cairo_format_t format,
     _cairo_surface_init (&qs->base,
 			 &cairo_qt_surface_backend,
 			 _cairo_content_from_format (format));
+
+    _cairo_surface_clipper_init (&qs->clipper,
+				 _cairo_qt_surface_clipper_intersect_clip_path);
+
 
     QImage *image = new QImage (width, height,
 				_qimage_format_from_cairo_format (format));
@@ -1780,6 +1798,9 @@ cairo_qt_surface_create_with_qpixmap (cairo_content_t content,
 	pixmap->fill(Qt::transparent);
 
     _cairo_surface_init (&qs->base, &cairo_qt_surface_backend, content);
+
+    _cairo_surface_clipper_init (&qs->clipper,
+				 _cairo_qt_surface_clipper_intersect_clip_path);
 
     qs->pixmap = pixmap;
 
