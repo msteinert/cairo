@@ -1633,19 +1633,21 @@ _cairo_surface_snapshot (cairo_surface_t *surface)
 
     if (surface->backend->snapshot != NULL) {
 	snapshot = surface->backend->snapshot (surface);
-	if (unlikely (snapshot->status))
-	    return snapshot;
+	if (snapshot != NULL) {
+	    if (unlikely (snapshot->status))
+		return snapshot;
 
-	/* Is this surface just a proxy - e.g. paginated surfaces? */
-	if (snapshot->backend != surface->backend) {
-	    cairo_surface_t *previous;
+	    /* Is this surface just a proxy - e.g. paginated surfaces? */
+	    if (snapshot->backend != surface->backend) {
+		cairo_surface_t *previous;
 
-	    previous = _cairo_surface_has_snapshot (surface,
-		                                    snapshot->backend,
-						    snapshot->content);
-	    if (previous != NULL) {
-		cairo_surface_destroy (snapshot);
-		return cairo_surface_reference (previous);
+		previous = _cairo_surface_has_snapshot (surface,
+							snapshot->backend,
+							snapshot->content);
+		if (previous != NULL) {
+		    cairo_surface_destroy (snapshot);
+		    return cairo_surface_reference (previous);
+		}
 	    }
 	}
     }
