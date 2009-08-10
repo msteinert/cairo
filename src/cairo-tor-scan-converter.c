@@ -1685,7 +1685,7 @@ glitter_scan_converter_add_edge (glitter_scan_converter_t *converter,
 
     INPUT_TO_GRID_Y (edge->top, e.top);
     INPUT_TO_GRID_Y (edge->bottom, e.bottom);
-    if (e.top == e.bottom)
+    if (e.top >= e.bottom)
 	return GLITTER_STATUS_SUCCESS;
 
     /* XXX: possible overflows if GRID_X/Y > 2**GLITTER_INPUT_BITS */
@@ -1915,6 +1915,30 @@ _cairo_tor_scan_converter_destroy (void *converter)
 }
 
 static cairo_status_t
+_cairo_tor_scan_converter_add_edge (void		*converter,
+				    const cairo_point_t *p1,
+				    const cairo_point_t *p2,
+				    int top, int bottom,
+				    int dir)
+{
+    cairo_tor_scan_converter_t *self = converter;
+    cairo_status_t status;
+    cairo_edge_t edge;
+
+    edge.line.p1 = *p1;
+    edge.line.p2 = *p2;
+    edge.top = top;
+    edge.bottom = bottom;
+    edge.dir = dir;
+
+    status = glitter_scan_converter_add_edge (self->converter, &edge);
+    if (unlikely (status))
+	return _cairo_scan_converter_set_error (self, _cairo_error (status));
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
 _cairo_tor_scan_converter_add_polygon (void		*converter,
 				       const cairo_polygon_t *polygon)
 {
@@ -1968,6 +1992,7 @@ _cairo_tor_scan_converter_create (int			xmin,
     }
 
     self->base.destroy = _cairo_tor_scan_converter_destroy;
+    self->base.add_edge = _cairo_tor_scan_converter_add_edge;
     self->base.add_polygon = _cairo_tor_scan_converter_add_polygon;
     self->base.generate = _cairo_tor_scan_converter_generate;
 

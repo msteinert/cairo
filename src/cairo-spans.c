@@ -83,6 +83,71 @@ _cairo_surface_composite_polygon (cairo_surface_t	*surface,
     return status;
 }
 
+cairo_status_t
+_cairo_surface_composite_trapezoids_as_polygon (cairo_surface_t	*surface,
+						cairo_operator_t	 op,
+						const cairo_pattern_t	*pattern,
+						cairo_antialias_t	antialias,
+						int src_x, int src_y,
+						int dst_x, int dst_y,
+						int width, int height,
+						cairo_trapezoid_t	*traps,
+						int num_traps,
+						cairo_region_t	*clip_region)
+{
+    cairo_span_renderer_t *renderer;
+    cairo_scan_converter_t *converter;
+    cairo_composite_rectangles_t rects;
+    cairo_status_t status;
+
+    rects.src.x = src_x;
+    rects.src.y = src_y;
+    rects.dst.x = 0;
+    rects.dst.y = 0;
+    rects.mask.x = dst_x;
+    rects.mask.y = dst_y;
+    rects.width  = width;
+    rects.height = height;
+
+    converter = _create_scan_converter (CAIRO_FILL_RULE_WINDING,
+					antialias,
+					&rects);
+    status = converter->status;
+    if (unlikely (status))
+	goto CLEANUP_CONVERTER;
+
+    while (num_traps--) {
+	status = converter->add_edge (converter,
+				      &traps->left.p1, &traps->left.p2,
+				      traps->top, traps->bottom, 1);
+	if (unlikely (status))
+	    goto CLEANUP_CONVERTER;
+
+	status = converter->add_edge (converter,
+				      &traps->right.p1, &traps->right.p2,
+				      traps->top, traps->bottom, -1);
+	if (unlikely (status))
+	    goto CLEANUP_CONVERTER;
+
+	traps++;
+    }
+
+    renderer = _cairo_surface_create_span_renderer (op, pattern, surface,
+						    antialias, &rects,
+						    clip_region);
+    status = converter->generate (converter, renderer);
+    if (unlikely (status))
+	goto CLEANUP_RENDERER;
+
+    status = renderer->finish (renderer);
+
+ CLEANUP_RENDERER:
+    renderer->destroy (renderer);
+ CLEANUP_CONVERTER:
+    converter->destroy (converter);
+    return status;
+}
+
 static void
 _cairo_nil_destroy (void *abstract)
 {
@@ -95,6 +160,22 @@ _cairo_nil_scan_converter_add_polygon (void *abstract_converter,
 {
     (void) abstract_converter;
     (void) polygon;
+    return _cairo_scan_converter_status (abstract_converter);
+}
+
+static cairo_status_t
+_cairo_nil_scan_converter_add_edge (void *abstract_converter,
+				    const cairo_point_t *p1,
+				    const cairo_point_t *p2,
+				    int top, int bottom,
+				    int dir)
+{
+    (void) abstract_converter;
+    (void) p1;
+    (void) p2;
+    (void) top;
+    (void) bottom;
+    (void) dir;
     return _cairo_scan_converter_status (abstract_converter);
 }
 
@@ -123,6 +204,7 @@ _cairo_scan_converter_set_error (void *abstract_converter,
 	ASSERT_NOT_REACHED;
     if (converter->status == CAIRO_STATUS_SUCCESS) {
 	converter->add_polygon = _cairo_nil_scan_converter_add_polygon;
+	converter->add_edge = _cairo_nil_scan_converter_add_edge;
 	converter->generate = _cairo_nil_scan_converter_generate;
 	converter->status = error;
     }

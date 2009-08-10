@@ -75,6 +75,13 @@ struct _cairo_scan_converter {
     /* Destroy this scan converter. */
     cairo_destroy_func_t	destroy;
 
+    /* Add a single edge to the converter. */
+    cairo_status_t (*add_edge) (void		    *abstract_converter,
+				const cairo_point_t *p1,
+				const cairo_point_t *p2,
+				int top, int bottom,
+				int dir);
+
     /* Add a polygon (set of edges) to the converter. */
     cairo_status_t (*add_polygon) (void		    *abstract_converter,
 				   const cairo_polygon_t  *polygon);
@@ -132,5 +139,17 @@ _cairo_surface_composite_polygon (cairo_surface_t	*surface,
 				  const cairo_composite_rectangles_t *rects,
 				  cairo_polygon_t	*polygon,
 				  cairo_region_t	*clip_region);
+
+cairo_private cairo_status_t
+_cairo_surface_composite_trapezoids_as_polygon (cairo_surface_t	*surface,
+						cairo_operator_t	 op,
+						const cairo_pattern_t	*pattern,
+						cairo_antialias_t	antialias,
+						int src_x, int src_y,
+						int dst_x, int dst_y,
+						int width, int height,
+						cairo_trapezoid_t	*traps,
+						int num_traps,
+						cairo_region_t	*clip_region);
 
 #endif /* CAIRO_SPANS_PRIVATE_H */
