@@ -866,9 +866,10 @@ _cairo_gstate_copy_transformed_mask (cairo_gstate_t   *gstate,
 #define _gstate_get_clip(G, C) _cairo_clip_init_copy ((C), &(G)->clip)
 
 static cairo_bool_t
-_clipped (const cairo_gstate_t *gstate)
+_clipped (cairo_gstate_t *gstate)
 {
     cairo_rectangle_int_t extents;
+    cairo_region_t *clip_region;
 
     if (gstate->clip.all_clipped)
 	return TRUE;
@@ -883,9 +884,12 @@ _clipped (const cairo_gstate_t *gstate)
 	{
 	    return TRUE;
 	}
+
+	/* XXX consider applying a surface clip? */
     }
 
-    return FALSE;
+    /* perform a simple query to exclude trivial all-clipped cases */
+    return _cairo_clip_get_region (&gstate->clip, &clip_region) == CAIRO_INT_STATUS_NOTHING_TO_DO;
 }
 
 cairo_status_t
