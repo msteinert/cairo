@@ -60,12 +60,11 @@
 #define DEBUG 0
 
 #if DEBUG
-#define UNSUPPORTED(reason) ({ \
+#define UNSUPPORTED(reason) \
     fprintf (stderr, \
 	     "cairo-xlib: hit unsupported operation %s(), line %d: %s\n", \
-	     __FUNCTION__, __LINE__, reason); \
-    CAIRO_INT_STATUS_UNSUPPORTED; \
-})
+	     __FUNCTION__, __LINE__, reason), \
+    CAIRO_INT_STATUS_UNSUPPORTED
 #else
 #define UNSUPPORTED(reason) CAIRO_INT_STATUS_UNSUPPORTED
 #endif
