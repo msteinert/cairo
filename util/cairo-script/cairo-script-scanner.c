@@ -678,8 +678,27 @@ scan_read (csi_scanner_t *scan, csi_file_t *src, void *ptr, int len)
     } while (_csi_unlikely (len));
 }
 
+#if WORDS_BIGENDIAN
+#define le16(x) bswap_16 (x)
+#define le32(x) bswap_32 (x)
+#define be16(x) x
+#define be32(x) x
+#define to_be32(x) x
+#else
+#define le16(x) x
+#define le32(x) x
+#define be16(x) bswap_16 (x)
+#define be32(x) bswap_32 (x)
+#define to_be32(x) bswap_32 (x)
+#endif
+
 static void
-string_read (csi_t *ctx, csi_scanner_t *scan, csi_file_t *src, int len, csi_object_t *obj)
+string_read (csi_t *ctx,
+	     csi_scanner_t *scan,
+	     csi_file_t *src,
+	     int len,
+	     int compressed,
+	     csi_object_t *obj)
 {
     csi_status_t status;
 
@@ -687,21 +706,16 @@ string_read (csi_t *ctx, csi_scanner_t *scan, csi_file_t *src, int len, csi_obje
     if (_csi_unlikely (status))
 	longjmp (scan->jmpbuf, status);
 
+    if (compressed) {
+	uint32_t u32;
+	scan_read (scan, src, &u32, 4);
+	obj->datum.string->deflate = be32 (u32);
+    }
+
     scan_read (scan, src, obj->datum.string->string, len);
     obj->datum.string->string[len] = '\0';
 }
 
-#if WORDS_BIGENDIAN
-#define le16(x) bswap_16 (x)
-#define le32(x) bswap_32 (x)
-#define be16(x) x
-#define be32(x) x
-#else
-#define le16(x) x
-#define le32(x) x
-#define be16(x) bswap_16 (x)
-#define be32(x) bswap_32 (x)
-#endif
 static void
 _scan_file (csi_t *ctx, csi_file_t *src)
 {
@@ -845,48 +859,50 @@ scan_none:
 	    break;
 
 #define STRING_1 142
-#define STRING_2_MSB 143
-#define STRING_2_LSB 144
-#define STRING_4_MSB 145
-#define STRING_4_LSB 146
+#define STRING_2_MSB 144
+#define STRING_2_LSB 146
+#define STRING_4_MSB 148
+#define STRING_4_LSB 150
+#define STRING_DEFLATE 1
 	case STRING_1:
+	case STRING_1 | STRING_DEFLATE:
 	    scan_read (scan, src, &u.u8, 1);
-	    string_read (ctx, scan, src, u.u8, &obj);
+	    string_read (ctx, scan, src, u.u8, c & STRING_DEFLATE, &obj);
 	    break;
 	case STRING_2_MSB:
+	case STRING_2_MSB | STRING_DEFLATE:
 	    scan_read (scan, src, &u.u16, 2);
-	    string_read (ctx, scan, src, be16 (u.u16), &obj);
+	    string_read (ctx, scan, src, be16 (u.u16),  c & STRING_DEFLATE, &obj);
 	    break;
 	case STRING_2_LSB:
+	case STRING_2_LSB | STRING_DEFLATE:
 	    scan_read (scan, src, &u.u16, 2);
-	    string_read (ctx, scan, src, le16 (u.u16), &obj);
+	    string_read (ctx, scan, src, le16 (u.u16), c & STRING_DEFLATE, &obj);
 	    break;
 	case STRING_4_MSB:
+	case STRING_4_MSB | STRING_DEFLATE:
 	    scan_read (scan, src, &u.u32, 4);
-	    string_read (ctx, scan, src, be32 (u.u32), &obj);
+	    string_read (ctx, scan, src, be32 (u.u32), c & STRING_DEFLATE, &obj);
 	    break;
 	case STRING_4_LSB:
+	case STRING_4_LSB | STRING_DEFLATE:
 	    scan_read (scan, src, &u.u32, 4);
-	    string_read (ctx, scan, src, le32 (u.u32), &obj);
+	    string_read (ctx, scan, src, le32 (u.u32), c & STRING_DEFLATE, &obj);
 	    break;
 
-	case 147:
+#define OPCODE 152
+	case OPCODE:
 	    scan_read (scan, src, &u.u8, 1);
 	    csi_operator_new (&obj, ctx->opcode[u.u8]);
 	    break;
 
-	case 148:
+	case OPCODE | 1:
 	    scan_read (scan, src, &u.u8, 1);
 	    csi_operator_new (&obj, ctx->opcode[u.u8]);
 	    obj.type &= ~CSI_OBJECT_ATTR_EXECUTABLE;
 	    break;
 
 	    /* unassigned */
-	case 149:
-	case 150:
-	case 151:
-	case 152:
-	case 153:
 	case 154:
 	case 155:
 	case 156:
@@ -1462,11 +1478,18 @@ _translate_string (csi_t *ctx,
 	len = 4;
     }
 #endif
+    if (string->deflate)
+	hdr |= STRING_DEFLATE;
 
     closure->write_func (closure->closure,
 	                 (unsigned char *) &hdr, 1);
     closure->write_func (closure->closure,
 	                 (unsigned char *) &u, len);
+    if (string->deflate) {
+	uint32_t u32 = to_be32 (string->deflate);
+	closure->write_func (closure->closure,
+			     (unsigned char *) &u32, 4);
+    }
     closure->write_func (closure->closure,
 	                 (unsigned char *) string->string, string->len);
 
@@ -1571,7 +1594,7 @@ build_opcodes (csi_t *ctx, csi_dictionary_t **out)
     csi_dictionary_t *dict;
     const csi_operator_def_t *def;
     csi_status_t status;
-    int opcode = 147 << 8;
+    int opcode = OPCODE << 8;
 
     status = csi_dictionary_new (ctx, &obj);
     if (_csi_unlikely (status))

@@ -174,18 +174,16 @@ csi_file_new_from_string (csi_t *ctx,
 	    return _csi_error (CAIRO_STATUS_NO_MEMORY);
 	}
 
-	file->type = BYTES;
-	file->src = tmp_str;
+	file->src  = tmp_str;
 	file->data = tmp_str->string;
-	file->bp   = file->data;
 	file->rem  = tmp_str->len;
     } else {
-	file->type = BYTES;
-	file->src = src; src->base.ref++;
+	file->src  = src; src->base.ref++;
 	file->data = src->string;
-	file->bp   = file->data;
 	file->rem  = src->len;
     }
+    file->type = BYTES;
+    file->bp   = file->data;
 
     obj->type = CSI_OBJECT_TYPE_FILE;
     obj->datum.file = file;
