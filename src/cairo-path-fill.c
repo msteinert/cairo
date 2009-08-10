@@ -156,6 +156,9 @@ _cairo_path_fixed_fill_to_traps (const cairo_path_fixed_t *path,
     cairo_polygon_t polygon;
     cairo_status_t status;
 
+    if (path->is_empty_fill)
+	return CAIRO_STATUS_SUCCESS;
+
     _cairo_polygon_init (&polygon);
     if (traps->has_limits)
 	_cairo_polygon_limit (&polygon, &traps->limits);
@@ -163,7 +166,7 @@ _cairo_path_fixed_fill_to_traps (const cairo_path_fixed_t *path,
     status = _cairo_path_fixed_fill_to_polygon (path,
 						tolerance,
 						&polygon);
-    if (unlikely (status))
+    if (unlikely (status || polygon.num_edges == 0))
 	goto CLEANUP;
 
     if (path->is_rectilinear) {
