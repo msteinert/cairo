@@ -2712,8 +2712,7 @@ _cairo_scaled_font_get_max_scale (cairo_scaled_font_t *scaled_font)
  * @scaled_font: a #cairo_scaled_font_t
  *
  * Gets the font face that this scaled font uses.  This is the
- * font face passed to cairo_scaled_font_create() if that font face
- * was not of type %CAIRO_FONT_TYPE_TOY.
+ * font face passed to cairo_scaled_font_create().
  *
  * Return value: The #cairo_font_face_t with which @scaled_font was
  * created.
