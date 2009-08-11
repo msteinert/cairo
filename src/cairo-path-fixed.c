@@ -574,6 +574,28 @@ _cairo_path_fixed_close_path (cairo_path_fixed_t *path)
     if (! path->has_current_point)
 	return CAIRO_STATUS_SUCCESS;
 
+    /* If the previous op was also a LINE_TO back to the start, discard it */
+    if (_cairo_path_last_op (path) == CAIRO_PATH_OP_LINE_TO) {
+	if (path->current_point.x == path->last_move_point.x &&
+	    path->current_point.y == path->last_move_point.y)
+	{
+	    cairo_path_buf_t *buf;
+	    cairo_point_t *p;
+
+	    buf = cairo_path_tail (path);
+	    if (likely (buf->num_points >= 2)) {
+		p = &buf->points[buf->num_points-2];
+	    } else {
+		cairo_path_buf_t *prev_buf = cairo_path_buf_prev (buf);
+		p = &prev_buf->points[prev_buf->num_points - (2 - buf->num_points)];
+	    }
+
+	    path->current_point = *p;
+	    buf->num_ops--;
+	    buf->num_points--;
+	}
+    }
+
     status = _cairo_path_fixed_add (path, CAIRO_PATH_OP_CLOSE_PATH, NULL, 0);
     if (unlikely (status))
 	return status;
