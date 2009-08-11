@@ -386,12 +386,12 @@ _cairo_polygon_add_line (cairo_polygon_t *polygon,
     } else
 	_add_edge (polygon, &line->p1, &line->p2, top, bottom, dir);
 
-    return _cairo_polygon_status (polygon);
+    return polygon->status;
 }
 
 /* flattened path operations */
 
-void
+cairo_status_t
 _cairo_polygon_move_to (cairo_polygon_t *polygon,
 			const cairo_point_t *point)
 {
@@ -408,9 +408,10 @@ _cairo_polygon_move_to (cairo_polygon_t *polygon,
     }
 
     polygon->current_point = *point;
+    return polygon->status;
 }
 
-void
+cairo_status_t
 _cairo_polygon_line_to (cairo_polygon_t *polygon,
 			const cairo_point_t *point)
 {
@@ -424,7 +425,7 @@ _cairo_polygon_line_to (cairo_polygon_t *polygon,
 	    _cairo_slope_init (&this, &polygon->current_point, point);
 	    if (_cairo_slope_equal (&polygon->current_edge, &this)) {
 		polygon->current_point = *point;
-		return;
+		return CAIRO_STATUS_SUCCESS;
 	    }
 
 	    _cairo_polygon_add_edge (polygon,
@@ -450,13 +451,16 @@ _cairo_polygon_line_to (cairo_polygon_t *polygon,
     }
 
     polygon->current_point = *point;
+    return polygon->status;
 }
 
-void
+cairo_status_t
 _cairo_polygon_close (cairo_polygon_t *polygon)
 {
+    cairo_status_t status;
+
     if (polygon->has_current_point) {
-	_cairo_polygon_line_to (polygon, &polygon->first_point);
+	status = _cairo_polygon_line_to (polygon, &polygon->first_point);
 	polygon->has_current_point = FALSE;
     }
 
@@ -466,4 +470,6 @@ _cairo_polygon_close (cairo_polygon_t *polygon)
 				 &polygon->current_point);
 	polygon->has_current_edge = FALSE;
     }
+
+    return polygon->status;
 }
