@@ -2351,7 +2351,7 @@ _glyph_string (csi_t *ctx,
 	       cairo_scaled_font_t *scaled_font,
 	       cairo_glyph_t *glyphs)
 {
-    double x,y;
+    double x,y, dx;
     csi_integer_t nglyphs, i, j;
     struct glyph_advance_cache *cache;
     cairo_status_t status;
@@ -2448,12 +2448,22 @@ _glyph_string (csi_t *ctx,
 	}
 
 	case CSI_OBJECT_TYPE_INTEGER:
-	case CSI_OBJECT_TYPE_REAL: /* dx */
-	    x = csi_number_get_value (obj);
-	    if (++i == array->stack.len)
+	case CSI_OBJECT_TYPE_REAL: /* dx or x*/
+	    dx = csi_number_get_value (obj);
+	    if (i+1 == array->stack.len)
 		break;
-	    y = csi_number_get_value (&array->stack.objects[i]);
-	    break;
+
+	    switch ((int) csi_object_get_type (&array->stack.objects[i+1])) {
+	    case CSI_OBJECT_TYPE_INTEGER:
+	    case CSI_OBJECT_TYPE_REAL: /* y */
+		y = csi_number_get_value (&array->stack.objects[i+1]);
+		x = dx;
+		i++;
+		break;
+
+	    default:
+		x += dx;
+	    }
 	}
     }
 

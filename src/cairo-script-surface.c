@@ -2763,6 +2763,9 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 		_cairo_scaled_font_thaw_cache (scaled_font);
 		return status;
 	    }
+
+	    if ((long unsigned) scaled_glyph->surface_private > 256)
+		break;
 	}
     }
 
@@ -2783,26 +2786,45 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 	    break;
 
 	if (fabs (glyphs[n].x - x) > 1e-5 || fabs (glyphs[n].y - y) > 1e-5) {
-	    ix = x = glyphs[n].x;
-	    iy = y = glyphs[n].y;
-	    cairo_matrix_transform_point (&matrix, &ix, &iy);
-	    ix -= scaled_font->font_matrix.x0;
-	    iy -= scaled_font->font_matrix.y0;
-	    if (base85_stream != NULL) {
-		status = _cairo_output_stream_destroy (base85_stream);
-		if (unlikely (status)) {
-		    base85_stream = NULL;
-		    break;
+	    if (fabs (glyphs[n].y - y) < 1e-5) {
+		if (base85_stream != NULL) {
+		    status = _cairo_output_stream_destroy (base85_stream);
+		    if (unlikely (status)) {
+			base85_stream = NULL;
+			break;
+		    }
+
+		    _cairo_output_stream_printf (surface->ctx->stream,
+						 " %f <~", glyphs[n].x - x);
+		    base85_stream = _cairo_base85_stream_create (surface->ctx->stream);
+		} else {
+		    _cairo_output_stream_printf (surface->ctx->stream,
+						 " ] %f [ ", glyphs[n].x - x);
 		}
 
-		_cairo_output_stream_printf (surface->ctx->stream,
-					     " %f %f <~",
-					     ix, iy);
-		base85_stream = _cairo_base85_stream_create (surface->ctx->stream);
+		x = glyphs[n].x;
 	    } else {
-		_cairo_output_stream_printf (surface->ctx->stream,
-					     " ] %f %f [ ",
-					     ix, iy);
+		ix = x = glyphs[n].x;
+		iy = y = glyphs[n].y;
+		cairo_matrix_transform_point (&matrix, &ix, &iy);
+		ix -= scaled_font->font_matrix.x0;
+		iy -= scaled_font->font_matrix.y0;
+		if (base85_stream != NULL) {
+		    status = _cairo_output_stream_destroy (base85_stream);
+		    if (unlikely (status)) {
+			base85_stream = NULL;
+			break;
+		    }
+
+		    _cairo_output_stream_printf (surface->ctx->stream,
+						 " %f %f <~",
+						 ix, iy);
+		    base85_stream = _cairo_base85_stream_create (surface->ctx->stream);
+		} else {
+		    _cairo_output_stream_printf (surface->ctx->stream,
+						 " ] %f %f [ ",
+						 ix, iy);
+		}
 	    }
 	}
 	if (base85_stream != NULL) {
