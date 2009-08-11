@@ -428,6 +428,7 @@ struct _csi_scanner {
     jmp_buf jmpbuf;
     int depth;
 
+    int bind;
     csi_status_t (*push) (csi_t *ctx, csi_object_t *obj);
     csi_status_t (*execute) (csi_t *ctx, csi_object_t *obj);
     void *closure;
