@@ -1193,6 +1193,20 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
     _cairo_polygon_init (&polygon);
     _cairo_polygon_limit (&polygon, boxes, num_boxes);
 
+    if (path->is_empty_fill)
+	goto DO_TRAPS;
+
+    if (path->is_rectilinear) {
+	status = _cairo_path_fixed_fill_rectilinear_to_traps (path,
+							      fill_rule,
+							      &traps);
+	if (likely (status == CAIRO_STATUS_SUCCESS))
+	    goto DO_TRAPS;
+
+	if (_cairo_status_is_error (status))
+	    goto CLEANUP;
+    }
+
     status = _cairo_path_fixed_fill_to_polygon (path, tolerance, &polygon);
     if (unlikely (status))
 	goto CLEANUP;

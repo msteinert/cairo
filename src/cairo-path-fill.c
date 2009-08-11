@@ -347,3 +347,77 @@ TESSELLATE:
 
     return region;
 }
+
+cairo_int_status_t
+_cairo_path_fixed_fill_rectilinear_to_traps (const cairo_path_fixed_t *path,
+					     cairo_fill_rule_t fill_rule,
+					     cairo_traps_t *traps)
+{
+    cairo_box_t box;
+    cairo_status_t status;
+
+    if (_cairo_path_fixed_is_box (path, &box)) {
+	if (box.p1.x > box.p2.x) {
+	    cairo_fixed_t t;
+
+	    t = box.p1.x;
+	    box.p1.x = box.p2.x;
+	    box.p2.x = t;
+	}
+
+	if (box.p1.y > box.p2.y) {
+	    cairo_fixed_t t;
+
+	    t = box.p1.y;
+	    box.p1.y = box.p2.y;
+	    box.p2.y = t;
+	}
+
+	return _cairo_traps_tessellate_rectangle (traps, &box.p1, &box.p2);
+    } else if (fill_rule == CAIRO_FILL_RULE_WINDING) {
+	cairo_path_fixed_iter_t iter;
+	int last_cw = -1;
+
+	_cairo_path_fixed_iter_init (&iter, path);
+	while (_cairo_path_fixed_iter_is_fill_box (&iter, &box)) {
+	    int cw = 0;
+
+	    if (box.p1.x > box.p2.x) {
+		cairo_fixed_t t;
+
+		t = box.p1.x;
+		box.p1.x = box.p2.x;
+		box.p2.x = t;
+
+		cw = ! cw;
+	    }
+
+	    if (box.p1.y > box.p2.y) {
+		cairo_fixed_t t;
+
+		t = box.p1.y;
+		box.p1.y = box.p2.y;
+		box.p2.y = t;
+
+		cw = ! cw;
+	    }
+
+	    if (last_cw < 0)
+		last_cw = cw;
+	    else if (last_cw != cw)
+		goto out;
+
+	    status = _cairo_traps_tessellate_rectangle (traps,
+							&box.p1, &box.p2);
+	    if (unlikely (status))
+		return status;
+	}
+
+	if (_cairo_path_fixed_iter_at_end (&iter))
+	    return CAIRO_STATUS_SUCCESS;
+    }
+
+  out:
+    _cairo_traps_clear (traps);
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
