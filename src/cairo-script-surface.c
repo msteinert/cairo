@@ -88,7 +88,7 @@ struct _cairo_script_vmcontext {
     cairo_list_t operands;
     cairo_list_t deferred;
 
-    cairo_script_surface_font_private_t *fonts;
+    cairo_list_t fonts;
     cairo_list_t defines;
 };
 
@@ -97,7 +97,7 @@ struct _cairo_script_surface_font_private {
     cairo_bool_t has_sfnt;
     unsigned long id;
     unsigned long subset_glyph_index;
-    cairo_script_surface_font_private_t *prev, *next;
+    cairo_list_t link;
     cairo_scaled_font_t *parent;
 };
 
@@ -1070,7 +1070,7 @@ _undef (void *data)
     struct def *def = data;
 
     cairo_list_del (&def->link);
-    _cairo_output_stream_printf (def->ctx->stream, "/s%u undef ", def->tag);
+    _cairo_output_stream_printf (def->ctx->stream, "/s%u undef\n", def->tag);
     free (def);
 }
 
@@ -1629,9 +1629,13 @@ _vmcontext_destroy (cairo_script_vmcontext_t *ctx)
     if (--ctx->ref)
 	return _cairo_output_stream_flush (ctx->stream);
 
-    while (ctx->fonts != NULL ){
-	cairo_script_surface_font_private_t *font = ctx->fonts;
-	ctx->fonts = font->next;
+    while (! cairo_list_is_empty (&ctx->fonts)) {
+	cairo_script_surface_font_private_t *font;
+
+	font = cairo_list_first_entry (&ctx->fonts,
+				       cairo_script_surface_font_private_t,
+				       link);
+	cairo_list_del (&font->link);
 	_cairo_script_surface_scaled_font_fini (font->parent);
     }
 
@@ -2231,15 +2235,7 @@ _cairo_script_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font)
 				     font_private->id);
 
 	_bitmap_release_id (&font_private->ctx->font_id, font_private->id);
-
-	if (font_private->prev != NULL)
-	    font_private->prev = font_private->next;
-	else
-	    font_private->ctx->fonts = font_private->next;
-
-	if (font_private->next != NULL)
-	    font_private->next = font_private->prev;
-
+	cairo_list_del (&font_private->link);
 	free (font_private);
 
 	scaled_font->surface_private = NULL;
@@ -2329,11 +2325,7 @@ _emit_scaled_font_init (cairo_script_surface_t *surface,
     font_private->subset_glyph_index = 0;
     font_private->has_sfnt = TRUE;
 
-    font_private->next = font_private->ctx->fonts;
-    font_private->prev = NULL;
-    if (font_private->ctx->fonts != NULL)
-	font_private->ctx->fonts->prev = font_private;
-    font_private->ctx->fonts = font_private;
+    cairo_list_add (&font_private->link, &surface->ctx->fonts);
 
     status = _bitmap_next_id (&surface->ctx->font_id,
 			      &font_private->id);
@@ -2998,6 +2990,7 @@ _cairo_script_vmcontext_create (cairo_output_stream_t *stream)
     ctx->stream = stream;
     ctx->mode = CAIRO_SCRIPT_MODE_ASCII;
 
+    cairo_list_init (&ctx->fonts);
     cairo_list_init (&ctx->defines);
 
     return ctx;
