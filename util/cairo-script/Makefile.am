@@ -28,5 +28,11 @@ csi_replay_LDADD = libcairo-script-interpreter.la $(top_builddir)/src/libcairo.l
 csi_exec_SOURCES = csi-exec.c
 csi_exec_LDADD = libcairo-script-interpreter.la $(top_builddir)/src/libcairo.la $(CAIRO_LIBS)
 
+if CAIRO_HAS_SCRIPT_SURFACE
+EXTRA_PROGRAMS += csi-trace
+csi_trace_SOURCES = csi-trace.c
+csi_trace_LDADD = libcairo-script-interpreter.la $(top_builddir)/src/libcairo.la $(CAIRO_LIBS)
+endif
+
 EXTRA_DIST = \
 	COPYING
