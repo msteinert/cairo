@@ -704,7 +704,7 @@ string_read (csi_t *ctx,
 {
     csi_status_t status;
 
-    status = csi_string_new (ctx, obj, NULL, len + 1);
+    status = csi_string_new (ctx, obj, NULL, len);
     if (_csi_unlikely (status))
 	longjmp (scan->jmpbuf, status);
 
