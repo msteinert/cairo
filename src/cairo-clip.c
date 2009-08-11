@@ -1127,6 +1127,106 @@ BAIL:
     return _cairo_surface_create_in_error (status);
 }
 
+cairo_status_t
+_cairo_clip_combine_with_surface (cairo_clip_t *clip, cairo_surface_t *dst)
+{
+    cairo_pattern_union_t pattern;
+    cairo_clip_path_t *clip_path = clip->path;
+    const cairo_rectangle_int_t *clip_extents = &clip_path->extents;
+    cairo_bool_t need_translate;
+    cairo_status_t status;
+
+    assert (clip_path != NULL);
+
+    if (clip_path->surface != NULL &&
+	clip_path->surface->backend == dst->backend)
+    {
+	_cairo_pattern_init_for_surface (&pattern.surface,
+					 clip_path->surface);
+	cairo_matrix_init_translate (&pattern.base.matrix,
+				     -clip_path->extents.x + clip_extents->x,
+				     -clip_path->extents.y + clip_extents->y);
+	status = _cairo_surface_paint (dst,
+				       CAIRO_OPERATOR_IN,
+				       &pattern.base,
+				       NULL);
+
+	_cairo_pattern_fini (&pattern.base);
+
+	return status;
+    }
+
+    _cairo_pattern_init_solid (&pattern.solid,
+			       CAIRO_COLOR_WHITE,
+			       CAIRO_CONTENT_COLOR);
+
+    need_translate = clip_extents->x || clip_extents->y;
+    do {
+	status = _cairo_clip_path_to_region (clip_path);
+	if (unlikely (_cairo_status_is_error (status)))
+	    return status;
+
+	if (status == CAIRO_STATUS_SUCCESS) {
+	    if (need_translate) {
+		cairo_region_translate (clip_path->region,
+					-clip_extents->x, -clip_extents->y);
+	    }
+	    status = _cairo_surface_fill_region (dst,
+						 CAIRO_OPERATOR_IN,
+						 CAIRO_COLOR_WHITE,
+						 clip_path->region);
+	    if (need_translate) {
+		cairo_region_translate (clip_path->region,
+					clip_extents->x, clip_extents->y);
+	    }
+
+	    return status;
+	}
+
+	if (clip_path->surface != NULL &&
+	    clip_path->surface->backend == dst->backend)
+	{
+	    _cairo_pattern_init_for_surface (&pattern.surface,
+					     clip_path->surface);
+	    cairo_matrix_init_translate (&pattern.base.matrix,
+					 -clip_path->extents.x + clip_extents->x,
+					 -clip_path->extents.y + clip_extents->y);
+	    status = _cairo_surface_paint (dst,
+					   CAIRO_OPERATOR_IN,
+					   &pattern.base,
+					   NULL);
+
+	    _cairo_pattern_fini (&pattern.base);
+
+	    return status;
+	}
+
+	if (need_translate) {
+	    _cairo_path_fixed_translate (&clip_path->path,
+					 _cairo_fixed_from_int (-clip_extents->x),
+					 _cairo_fixed_from_int (-clip_extents->y));
+	}
+	status = _cairo_surface_fill (dst,
+				      CAIRO_OPERATOR_IN,
+				      &pattern.base,
+				      &clip_path->path,
+				      clip_path->fill_rule,
+				      clip_path->tolerance,
+				      clip_path->antialias,
+				      NULL);
+	if (need_translate) {
+	    _cairo_path_fixed_translate (&clip_path->path,
+					 _cairo_fixed_from_int (clip_extents->x),
+					 _cairo_fixed_from_int (clip_extents->y));
+	}
+
+	if (unlikely (status))
+	    return status;
+    } while ((clip_path = clip_path->prev) != NULL);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 const cairo_rectangle_int_t *
 _cairo_clip_get_extents (const cairo_clip_t *clip)
 {
@@ -1273,18 +1373,20 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
 
     cairo_rectangle_list_t *list;
     cairo_rectangle_t *rectangles = NULL;
+    cairo_region_t *region = NULL;
     cairo_int_status_t status;
-    cairo_region_t *region;
     int n_rects = 0;
     int i;
 
-    status = _cairo_clip_get_region (clip, &region);
-    if (status == CAIRO_INT_STATUS_NOTHING_TO_DO) {
-	goto DONE;
-    } else if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
-	return ERROR_LIST (CAIRO_STATUS_CLIP_NOT_REPRESENTABLE)
-    } else if (unlikely (status)) {
-	return ERROR_LIST (status);
+    if (clip != NULL && clip->path != NULL) {
+	status = _cairo_clip_get_region (clip, &region);
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO) {
+	    goto DONE;
+	} else if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+	    return ERROR_LIST (CAIRO_STATUS_CLIP_NOT_REPRESENTABLE)
+	} else if (unlikely (status)) {
+	    return ERROR_LIST (status);
+	}
     }
 
     if (region != NULL) {

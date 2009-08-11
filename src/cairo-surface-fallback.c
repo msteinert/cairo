@@ -163,30 +163,8 @@ _create_composite_mask_pattern (cairo_surface_pattern_t       *mask_pattern,
     if (unlikely (status))
 	goto CLEANUP_SURFACE;
 
-    if (clip_surface) {
-	cairo_surface_pattern_t pattern;
-	cairo_surface_t *surface;
-
-	surface = _cairo_clip_get_surface (clip, mask);
-	_cairo_pattern_init_for_surface (&pattern, surface);
-	cairo_surface_destroy (surface);
-
-	status = _cairo_surface_composite (CAIRO_OPERATOR_IN,
-					   &pattern.base,
-					   NULL,
-					   mask,
-					   extents->x - clip->path->extents.x,
-					   extents->y - clip->path->extents.y,
-					   0, 0,
-					   0, 0,
-					   extents->width, extents->height,
-					   NULL);
-
-	_cairo_pattern_fini (&pattern.base);
-
-	if (unlikely (status))
-	    goto CLEANUP_SURFACE;
-    }
+    if (clip_surface)
+	status = _cairo_clip_combine_with_surface (clip, mask);
 
     _cairo_pattern_init_for_surface (mask_pattern, mask);
 
