@@ -390,7 +390,7 @@ _cairo_path_fixed_move_to (cairo_path_fixed_t  *path,
 	if (path->has_current_point && path->is_rectilinear) {
 	    /* a move-to is first an implicit close */
 	    path->is_rectilinear = path->current_point.x == path->last_move_point.x ||
-		                   path->current_point.y == path->last_move_point.y;
+				   path->current_point.y == path->last_move_point.y;
 	    path->maybe_fill_region &= path->is_rectilinear;
 	}
 	if (path->maybe_fill_region) {
@@ -450,23 +450,32 @@ _cairo_path_fixed_line_to (cairo_path_fixed_t *path,
 	 * then just change its end-point rather than adding a new op.
 	 */
 	if (_cairo_path_last_op (path) == CAIRO_PATH_OP_LINE_TO) {
-	    cairo_path_buf_t *buf;
-	    cairo_point_t *p;
-	    cairo_slope_t prev, self;
-
-	    buf = cairo_path_tail (path);
-	    if (likely (buf->num_points >= 2)) {
-		p = &buf->points[buf->num_points-2];
-	    } else {
-		cairo_path_buf_t *prev_buf = cairo_path_buf_prev (buf);
-		p = &prev_buf->points[prev_buf->num_points - (2 - buf->num_points)];
+	    if (x == path->current_point.x &&
+		y == path->current_point.y)
+	    {
+		return CAIRO_STATUS_SUCCESS;
 	    }
-	    _cairo_slope_init (&prev, p, &path->current_point);
-	    _cairo_slope_init (&self, &path->current_point, &point);
-	    if (_cairo_slope_equal (&prev, &self)) {
-		buf->points[buf->num_points - 1] = point;
-		status = CAIRO_STATUS_SUCCESS;
-		goto DONE;
+	    else
+	    {
+		cairo_path_buf_t *buf;
+		cairo_point_t *p;
+		cairo_slope_t prev, self;
+
+		buf = cairo_path_tail (path);
+		if (likely (buf->num_points >= 2)) {
+		    p = &buf->points[buf->num_points-2];
+		} else {
+		    cairo_path_buf_t *prev_buf = cairo_path_buf_prev (buf);
+		    p = &prev_buf->points[prev_buf->num_points - (2 - buf->num_points)];
+		}
+
+		_cairo_slope_init (&prev, p, &path->current_point);
+		_cairo_slope_init (&self, &path->current_point, &point);
+		if (_cairo_slope_equal (&prev, &self)) {
+		    buf->points[buf->num_points - 1] = point;
+		    path->current_point = point;
+		    return CAIRO_STATUS_SUCCESS;
+		}
 	    }
 	}
 
@@ -484,11 +493,9 @@ _cairo_path_fixed_line_to (cairo_path_fixed_t *path,
 	    path->is_empty_fill = path->current_point.x == x &&
 		path->current_point.y == y;
 	}
-    }
 
-DONE:
-    path->current_point = point;
-    path->has_current_point = TRUE;
+	path->current_point = point;
+    }
 
     return status;
 }
