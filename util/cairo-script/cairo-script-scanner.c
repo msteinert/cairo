@@ -714,7 +714,8 @@ string_read (csi_t *ctx,
 	obj->datum.string->deflate = be32 (u32);
     }
 
-    scan_read (scan, src, obj->datum.string->string, len);
+    if (_csi_likely (len))
+	scan_read (scan, src, obj->datum.string->string, len);
     obj->datum.string->string[len] = '\0';
 }
 
