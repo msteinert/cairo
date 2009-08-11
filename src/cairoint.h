@@ -2768,4 +2768,7 @@ _cairo_debug_check_image_surface_is_defined (const cairo_surface_t *surface);
 
 #endif
 
+void
+_cairo_debug_print_path (FILE *stream, cairo_path_fixed_t *path);
+
 #endif
