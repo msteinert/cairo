@@ -109,6 +109,7 @@ struct _cairo_script_implicit_context {
     cairo_stroke_style_t current_style;
     cairo_pattern_union_t current_source;
     cairo_matrix_t current_ctm;
+    cairo_matrix_t current_stroke_matrix;
     cairo_matrix_t current_font_matrix;
     cairo_font_options_t current_font_options;
     cairo_scaled_font_t *current_scaled_font;
@@ -631,6 +632,18 @@ _emit_miter_limit (cairo_script_surface_t *surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_bool_t
+_dashes_equal (const double *a, const double *b, int num_dashes)
+{
+    while (num_dashes--) {
+	if (fabs (*a - *b) > 1e-5)
+	    return FALSE;
+	a++, b++;
+    }
+
+    return TRUE;
+}
+
 static cairo_status_t
 _emit_dash (cairo_script_surface_t *surface,
 	    const double *dash,
@@ -652,9 +665,8 @@ _emit_dash (cairo_script_surface_t *surface,
     if (! force &&
 	(surface->cr.current_style.num_dashes == num_dashes &&
 	 (num_dashes == 0 ||
-	  (surface->cr.current_style.dash_offset == offset &&
-	   memcmp (surface->cr.current_style.dash, dash,
-		   sizeof (double) * num_dashes)))))
+	  (fabs (surface->cr.current_style.dash_offset - offset) < 1e-5 &&
+	   _dashes_equal (surface->cr.current_style.dash, dash, num_dashes)))))
     {
 	return CAIRO_STATUS_SUCCESS;
     }
@@ -1513,6 +1525,15 @@ _emit_path (cairo_script_surface_t *surface,
 
     return CAIRO_STATUS_SUCCESS;
 }
+static cairo_bool_t
+_scaling_matrix_equal (const cairo_matrix_t *a,
+		       const cairo_matrix_t *b)
+{
+    return fabs (a->xx - b->xx) < 1e-5 &&
+	   fabs (a->xy - b->xy) < 1e-5 &&
+	   fabs (a->yx - b->yx) < 1e-5 &&
+	   fabs (a->yy - b->yy) < 1e-5;
+}
 
 static cairo_status_t
 _emit_scaling_matrix (cairo_script_surface_t *surface,
@@ -1521,13 +1542,8 @@ _emit_scaling_matrix (cairo_script_surface_t *surface,
 {
     assert (target_is_active (surface));
 
-    if (fabs (surface->cr.current_ctm.xx - ctm->xx) < 1e-5 &&
-	fabs (surface->cr.current_ctm.xy - ctm->xy) < 1e-5 &&
-	fabs (surface->cr.current_ctm.yx - ctm->yx) < 1e-5 &&
-	fabs (surface->cr.current_ctm.yy - ctm->yy) < 1e-5)
-    {
+    if (_scaling_matrix_equal (&surface->cr.current_ctm, ctm))
 	return CAIRO_STATUS_SUCCESS;
-    }
 
     *matrix_updated = TRUE;
     surface->cr.current_ctm = *ctm;
@@ -2063,6 +2079,17 @@ _cairo_script_surface_stroke (void				*abstract_surface,
     status = _emit_operator (surface, op);
     if (unlikely (status))
 	return status;
+
+    if (_scaling_matrix_equal (&surface->cr.current_ctm,
+			       &surface->cr.current_stroke_matrix))
+    {
+	matrix_updated = FALSE;
+    }
+    else
+    {
+	matrix_updated = TRUE;
+	surface->cr.current_stroke_matrix = surface->cr.current_ctm;
+    }
 
     status = _emit_stroke_style (surface, style, matrix_updated);
     if (unlikely (status))
@@ -3083,6 +3110,7 @@ _cairo_script_implicit_context_init (cairo_script_implicit_context_t *cr)
 			       CAIRO_CONTENT_COLOR);
     _cairo_path_fixed_init (&cr->current_path);
     cairo_matrix_init_identity (&cr->current_ctm);
+    cairo_matrix_init_identity (&cr->current_stroke_matrix);
     cairo_matrix_init_identity (&cr->current_font_matrix);
     _cairo_font_options_init_default (&cr->current_font_options);
     cr->current_scaled_font = NULL;
