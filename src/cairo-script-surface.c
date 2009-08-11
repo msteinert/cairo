@@ -127,6 +127,7 @@ struct _cairo_script_surface {
     unsigned long id;
     cairo_list_t operand;
     cairo_bool_t defined;
+    cairo_bool_t is_clear;
 
     double width, height;
 
@@ -1616,6 +1617,7 @@ _cairo_script_surface_create_similar (void	       *abstract_surface,
 				 _content_to_string (content),
 				 surface->id);
     surface->defined = TRUE;
+    surface->is_clear = TRUE;
     target_push (surface);
 
     return &surface->base;
@@ -1903,6 +1905,11 @@ _cairo_script_surface_paint (void			*abstract_surface,
     cairo_script_surface_t *surface = abstract_surface;
     cairo_status_t status;
 
+    if (op == CAIRO_OPERATOR_CLEAR) {
+	if (surface->is_clear)
+	    goto DONE;
+    }
+
     ctx_active (surface->ctx);
 
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
@@ -1924,8 +1931,11 @@ _cairo_script_surface_paint (void			*abstract_surface,
     _cairo_output_stream_puts (surface->ctx->stream,
 			       "paint\n");
 
+    surface->is_clear = op == CAIRO_OPERATOR_CLEAR && clip == NULL;
+
     ctx_inactive (surface->ctx);
 
+  DONE:
     if (_cairo_surface_wrapper_is_active (&surface->wrapper)) {
 	return _cairo_surface_wrapper_paint (&surface->wrapper,
 					     op, source, clip);
@@ -1943,6 +1953,11 @@ _cairo_script_surface_mask (void			*abstract_surface,
 {
     cairo_script_surface_t *surface = abstract_surface;
     cairo_status_t status;
+
+    if (op == CAIRO_OPERATOR_CLEAR) {
+	if (surface->is_clear)
+	    goto DONE;
+    }
 
     ctx_active (surface->ctx);
 
@@ -1975,8 +1990,11 @@ _cairo_script_surface_mask (void			*abstract_surface,
     _cairo_output_stream_puts (surface->ctx->stream,
 			       " mask\n");
 
+    surface->is_clear = FALSE;
+
     ctx_inactive (surface->ctx);
 
+  DONE:
     if (_cairo_surface_wrapper_is_active (&surface->wrapper)) {
 	return _cairo_surface_wrapper_mask (&surface->wrapper,
 					    op, source, mask, clip);
@@ -2000,6 +2018,11 @@ _cairo_script_surface_stroke (void				*abstract_surface,
     cairo_script_surface_t *surface = abstract_surface;
     cairo_bool_t matrix_updated = FALSE;
     cairo_status_t status;
+
+    if (op == CAIRO_OPERATOR_CLEAR) {
+	if (surface->is_clear)
+	    goto DONE;
+    }
 
     ctx_active (surface->ctx);
 
@@ -2047,8 +2070,11 @@ _cairo_script_surface_stroke (void				*abstract_surface,
 
     _cairo_output_stream_puts (surface->ctx->stream, "stroke+\n");
 
+    surface->is_clear = FALSE;
+
     ctx_inactive (surface->ctx);
 
+  DONE:
     if (_cairo_surface_wrapper_is_active (&surface->wrapper)) {
 	return _cairo_surface_wrapper_stroke (&surface->wrapper,
 					      op, source, path,
@@ -2074,6 +2100,11 @@ _cairo_script_surface_fill (void			*abstract_surface,
     cairo_script_surface_t *surface = abstract_surface;
     cairo_bool_t matrix_updated = FALSE;
     cairo_status_t status;
+
+    if (op == CAIRO_OPERATOR_CLEAR) {
+	if (surface->is_clear)
+	    goto DONE;
+    }
 
     ctx_active (surface->ctx);
 
@@ -2119,8 +2150,11 @@ _cairo_script_surface_fill (void			*abstract_surface,
 
     _cairo_output_stream_puts (surface->ctx->stream, "fill+\n");
 
+    surface->is_clear = FALSE;
+
     ctx_inactive (surface->ctx);
 
+  DONE:
     if (_cairo_surface_wrapper_is_active (&surface->wrapper)) {
 	return _cairo_surface_wrapper_fill (&surface->wrapper,
 					    op, source, path,
@@ -2699,6 +2733,11 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
     int n;
     cairo_output_stream_t *base85_stream = NULL;
 
+    if (op == CAIRO_OPERATOR_CLEAR) {
+	if (surface->is_clear)
+	    goto DONE;
+    }
+
     ctx_active (surface->ctx);
 
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
@@ -2907,8 +2946,11 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 				   "] show-glyphs\n");
     }
 
+    surface->is_clear = FALSE;
+
     ctx_inactive (surface->ctx);
 
+  DONE:
     if (_cairo_surface_wrapper_is_active (&surface->wrapper)){
 	return _cairo_surface_wrapper_show_text_glyphs (&surface->wrapper,
 							op, source,
@@ -3068,6 +3110,7 @@ _cairo_script_surface_create_internal (cairo_script_vmcontext_t *ctx,
     surface->height = height;
 
     surface->defined = FALSE;
+    surface->is_clear = FALSE;
     surface->id = (unsigned long) -1;
     cairo_list_init (&surface->operand);
 
