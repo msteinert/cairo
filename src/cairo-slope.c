@@ -36,14 +36,7 @@
 
 #include "cairoint.h"
 
-void
-_cairo_slope_init (cairo_slope_t *slope,
-		   const cairo_point_t *a,
-		   const cairo_point_t *b)
-{
-    slope->dx = b->x - a->x;
-    slope->dy = b->y - a->y;
-}
+#include "cairo-slope-private.h"
 
 /* Compare two slopes. Slope angles begin at 0 in the direction of the
    positive X axis and increase in the direction of the positive Y

@@ -38,6 +38,8 @@
 
 #include "cairoint.h"
 
+#include "cairo-slope-private.h"
+
 static int
 _cairo_pen_vertices_needed (double tolerance,
 			    double radius,

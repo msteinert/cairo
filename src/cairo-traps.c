@@ -40,6 +40,7 @@
 #include "cairoint.h"
 
 #include "cairo-region-private.h"
+#include "cairo-slope-private.h"
 
 /* private functions */
 

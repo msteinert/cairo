@@ -36,6 +36,8 @@
 
 #include "cairoint.h"
 
+#include "cairo-slope-private.h"
+
 void
 _cairo_polygon_init (cairo_polygon_t *polygon)
 {

@@ -39,6 +39,7 @@
 #include "cairoint.h"
 
 #include "cairo-path-fixed-private.h"
+#include "cairo-slope-private.h"
 
 static cairo_status_t
 _cairo_path_fixed_add (cairo_path_fixed_t  *path,

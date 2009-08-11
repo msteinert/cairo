@@ -38,7 +38,9 @@
 
 #define _BSD_SOURCE /* for hypot() */
 #include "cairoint.h"
+
 #include "cairo-path-fixed-private.h"
+#include "cairo-slope-private.h"
 
 typedef struct _cairo_stroker_dash {
     cairo_bool_t dashed;

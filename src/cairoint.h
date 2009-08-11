@@ -2427,16 +2427,6 @@ _cairo_trapezoid_array_translate_and_scale (cairo_trapezoid_t *offset_traps,
 					    double tx, double ty,
 					    double sx, double sy);
 
-/* cairo-slope.c */
-cairo_private void
-_cairo_slope_init (cairo_slope_t *slope,
-		   const cairo_point_t *a,
-		   const cairo_point_t *b);
-
-cairo_private int
-_cairo_slope_compare (const cairo_slope_t *a,
-	              const cairo_slope_t *b) cairo_pure;
-
 /* cairo-pattern.c */
 
 cairo_private cairo_pattern_t *
@@ -2757,13 +2747,6 @@ CAIRO_END_DECLS
 #include "cairo-wideint-private.h"
 #include "cairo-malloc-private.h"
 #include "cairo-hash-private.h"
-
-static inline cairo_bool_t
-_cairo_slope_equal (const cairo_slope_t *a, const cairo_slope_t *b)
-{
-    return _cairo_int64_eq (_cairo_int32x32_64_mul (a->dy, b->dx),
-			    _cairo_int32x32_64_mul (b->dy, a->dx));
-}
 
 #if HAVE_VALGRIND
 #include <memcheck.h>
