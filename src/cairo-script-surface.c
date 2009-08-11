@@ -520,8 +520,12 @@ _emit_tolerance (cairo_script_surface_t *surface,
 {
     assert (target_is_active (surface));
 
-    if (! force && surface->cr.current_tolerance == tolerance)
+    if ((! force ||
+	 fabs (tolerance - CAIRO_GSTATE_TOLERANCE_DEFAULT) < 1e-5) &&
+	surface->cr.current_tolerance == tolerance)
+    {
 	return CAIRO_STATUS_SUCCESS;
+    }
 
     surface->cr.current_tolerance = tolerance;
 
@@ -556,8 +560,12 @@ _emit_line_width (cairo_script_surface_t *surface,
 {
     assert (target_is_active (surface));
 
-    if (! force && surface->cr.current_style.line_width == line_width)
+    if ((! force ||
+	 fabs (line_width - CAIRO_GSTATE_LINE_WIDTH_DEFAULT) < 1e-5) &&
+	surface->cr.current_style.line_width == line_width)
+    {
 	return CAIRO_STATUS_SUCCESS;
+    }
 
     surface->cr.current_style.line_width = line_width;
 
@@ -608,8 +616,12 @@ _emit_miter_limit (cairo_script_surface_t *surface,
 {
     assert (target_is_active (surface));
 
-    if (! force && surface->cr.current_style.miter_limit == miter_limit)
+    if ((! force ||
+	 fabs (miter_limit - CAIRO_GSTATE_MITER_LIMIT_DEFAULT) < 1e-5) &&
+	surface->cr.current_style.miter_limit == miter_limit)
+    {
 	return CAIRO_STATUS_SUCCESS;
+    }
 
     surface->cr.current_style.miter_limit = miter_limit;
 
@@ -1507,31 +1519,29 @@ _emit_scaling_matrix (cairo_script_surface_t *surface,
 		      const cairo_matrix_t *ctm,
 		      cairo_bool_t *matrix_updated)
 {
-    cairo_matrix_t current, ctm_scaling;
-
     assert (target_is_active (surface));
 
-    current = surface->cr.current_ctm;
-    current.x0 = current.y0 = 0;
-
-    ctm_scaling = *ctm;
-    ctm_scaling.x0 = ctm_scaling.y0 = 0;
-
-    if (memcmp (&current, &ctm_scaling, sizeof (cairo_matrix_t)) == 0)
+    if (fabs (surface->cr.current_ctm.xx - ctm->xx) < 1e-5 &&
+	fabs (surface->cr.current_ctm.xy - ctm->xy) < 1e-5 &&
+	fabs (surface->cr.current_ctm.yx - ctm->yx) < 1e-5 &&
+	fabs (surface->cr.current_ctm.yy - ctm->yy) < 1e-5)
+    {
 	return CAIRO_STATUS_SUCCESS;
+    }
 
     *matrix_updated = TRUE;
     surface->cr.current_ctm = *ctm;
+    surface->cr.current_ctm.x0 = 0.;
+    surface->cr.current_ctm.y0 = 0.;
 
-    if (_cairo_matrix_is_identity (ctm)) {
+    if (_cairo_matrix_is_identity (&surface->cr.current_ctm)) {
 	_cairo_output_stream_puts (surface->ctx->stream,
 				   "identity set-matrix\n");
     } else {
 	_cairo_output_stream_printf (surface->ctx->stream,
-				   "[%f %f %f %f %f %f] set-matrix\n",
+				   "[%f %f %f %f 0 0] set-matrix\n",
 				   ctm->xx, ctm->yx,
-				   ctm->xy, ctm->yy,
-				   ctm->x0, ctm->y0);
+				   ctm->xy, ctm->yy);
     }
 
     return CAIRO_STATUS_SUCCESS;
