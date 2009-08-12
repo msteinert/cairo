@@ -937,11 +937,12 @@ typedef union {
 } cairo_gradient_pattern_union_t;
 
 typedef union {
-    cairo_pattern_t base;
+    cairo_pattern_type_t	    type;
+    cairo_pattern_t		    base;
 
-    cairo_solid_pattern_t	   solid;
-    cairo_surface_pattern_t	   surface;
-    cairo_gradient_pattern_union_t gradient;
+    cairo_solid_pattern_t	    solid;
+    cairo_surface_pattern_t	    surface;
+    cairo_gradient_pattern_union_t  gradient;
 } cairo_pattern_union_t;
 
 typedef struct _cairo_surface_attributes {

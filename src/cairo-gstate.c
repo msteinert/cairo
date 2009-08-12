@@ -818,12 +818,70 @@ _cairo_gstate_path_extents (cairo_gstate_t     *gstate,
 }
 
 static void
+_cairo_gstate_copy_pattern (cairo_pattern_t *pattern,
+			    const cairo_pattern_t *original)
+{
+    /* First check if the we can replace the original with a much simpler
+     * pattern. For example, gradients that are uniform or just have a single
+     * stop can be replace with a solid.
+     */
+    switch (original->type) {
+    case CAIRO_PATTERN_TYPE_SOLID:
+    case CAIRO_PATTERN_TYPE_SURFACE:
+	break;
+
+    case CAIRO_PATTERN_TYPE_LINEAR:
+    case CAIRO_PATTERN_TYPE_RADIAL:
+	{
+	    cairo_gradient_pattern_t *src = (cairo_gradient_pattern_t *) original;
+
+	    /* fast path for gradients with less than 2 color stops */
+	    if (src->n_stops < 2) {
+		if (src->n_stops) {
+		    _cairo_pattern_init_solid ((cairo_solid_pattern_t *) pattern,
+					       &src->stops->color,
+					       CAIRO_CONTENT_COLOR_ALPHA);
+		} else {
+		    _cairo_pattern_init_solid ((cairo_solid_pattern_t *) pattern,
+					       CAIRO_COLOR_TRANSPARENT,
+					       CAIRO_CONTENT_ALPHA);
+		}
+
+		return;
+	    } else {
+		unsigned int i;
+
+		/* Is the gradient a uniform colour?
+		 * Happens more often than you would believe.
+		 */
+		for (i = 1; i < src->n_stops; i++) {
+		    if (! _cairo_color_equal (&src->stops[0].color,
+					      &src->stops[i].color))
+		    {
+			break;
+		    }
+		}
+		if (i == src->n_stops) {
+		    _cairo_pattern_init_solid ((cairo_solid_pattern_t *) pattern,
+					       &src->stops->color,
+					       CAIRO_CONTENT_COLOR_ALPHA);
+
+		    return;
+		}
+	    }
+	}
+    }
+
+    _cairo_pattern_init_static_copy (pattern, original);
+}
+
+static void
 _cairo_gstate_copy_transformed_pattern (cairo_gstate_t  *gstate,
 					cairo_pattern_t *pattern,
-					cairo_pattern_t *original,
-					cairo_matrix_t  *ctm_inverse)
+					const cairo_pattern_t *original,
+					const cairo_matrix_t  *ctm_inverse)
 {
-    _cairo_pattern_init_static_copy (pattern, original);
+    _cairo_gstate_copy_pattern (pattern, original);
 
     /* apply device_transform first so that it is transformed by ctm_inverse */
     if (original->type == CAIRO_PATTERN_TYPE_SURFACE) {
@@ -934,14 +992,41 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
     if (_clipped (gstate))
 	return CAIRO_STATUS_SUCCESS;
 
+    if (_cairo_pattern_is_opaque (mask))
+	return _cairo_gstate_paint (gstate);
+
     _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
     _cairo_gstate_copy_transformed_mask (gstate, &mask_pattern.base, mask);
 
-    status = _cairo_surface_mask (gstate->target,
-				  gstate->op,
-				  &source_pattern.base,
-				  &mask_pattern.base,
-				  _gstate_get_clip (gstate, &clip));
+    /* XXX: This optimization assumes that there is no color
+     * information in mask, so this will need to change if we
+     * support RENDER-style 4-channel masks.
+     */
+    if (source_pattern.type == CAIRO_PATTERN_TYPE_SOLID &&
+	mask_pattern.type == CAIRO_PATTERN_TYPE_SOLID)
+    {
+	cairo_color_t combined;
+
+	combined = source_pattern.solid.color;
+	_cairo_color_multiply_alpha (&combined, mask_pattern.solid.color.alpha);
+
+	_cairo_pattern_init_solid (&source_pattern.solid, &combined,
+				   source_pattern.solid.content |
+				   mask_pattern.solid.content);
+
+	status = _cairo_surface_paint (gstate->target,
+				       gstate->op,
+				       &source_pattern.base,
+				       _gstate_get_clip (gstate, &clip));
+    }
+    else
+    {
+	status = _cairo_surface_mask (gstate->target,
+				      gstate->op,
+				      &source_pattern.base,
+				      &mask_pattern.base,
+				      _gstate_get_clip (gstate, &clip));
+    }
     _cairo_clip_fini (&clip);
 
     return status;
