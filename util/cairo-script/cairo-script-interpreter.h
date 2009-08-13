@@ -86,6 +86,10 @@ cairo_script_interpreter_run (cairo_script_interpreter_t *ctx,
 			      const char *filename);
 
 cairo_public cairo_status_t
+cairo_script_interpreter_feed_stream (cairo_script_interpreter_t *ctx,
+				      FILE *stream);
+
+cairo_public cairo_status_t
 cairo_script_interpreter_feed_string (cairo_script_interpreter_t *ctx,
 				      const char *line,
 				      int len);

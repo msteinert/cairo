@@ -565,6 +565,28 @@ cairo_script_interpreter_run (csi_t *ctx, const char *filename)
 }
 
 cairo_status_t
+cairo_script_interpreter_feed_stream (csi_t *ctx, FILE *stream)
+{
+    csi_object_t file;
+
+    if (ctx->status)
+	return ctx->status;
+    if (ctx->finished)
+	return ctx->status = CSI_STATUS_INTERPRETER_FINISHED;
+
+    ctx->status = csi_file_new_for_stream (ctx, &file, stream);
+    if (ctx->status)
+	return ctx->status;
+
+    file.type |= CSI_OBJECT_ATTR_EXECUTABLE;
+
+    ctx->status = csi_object_execute (ctx, &file);
+    csi_object_free (ctx, &file);
+
+    return ctx->status;
+}
+
+cairo_status_t
 cairo_script_interpreter_feed_string (csi_t *ctx, const char *line, int len)
 {
     csi_object_t file;
