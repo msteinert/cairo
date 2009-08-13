@@ -61,6 +61,7 @@ draw_random (cairo_t *cr, cairo_fill_rule_t fill_rule,
     cairo_set_fill_rule (cr, fill_rule);
     cairo_set_source_rgb (cr, 1, 0, 0);
 
+    cairo_new_path (cr);
     cairo_move_to (cr, 0, 0);
     for (i = 0; i < NUM_SEGMENTS; i++)
 	cairo_line_to (cr, x[i], y[i]);
@@ -98,6 +99,7 @@ draw_random_curve (cairo_t *cr, cairo_fill_rule_t fill_rule,
     cairo_set_fill_rule (cr, fill_rule);
     cairo_set_source_rgb (cr, 1, 0, 0);
 
+    cairo_new_path (cr);
     cairo_move_to (cr, 0, 0);
     for (i = 0; i < NUM_SEGMENTS; i++) {
 	cairo_curve_to (cr,

@@ -89,6 +89,7 @@ draw_spiral (cairo_t *cr,
     cairo_set_fill_rule (cr, fill_rule);
     cairo_set_source_rgb (cr, 1, 0, 0);
 
+    cairo_new_path (cr);
     cairo_move_to (cr, x[0], y[0]);
     for (i = 1; i < n; i++) {
 	cairo_line_to (cr, x[i], y[i]);

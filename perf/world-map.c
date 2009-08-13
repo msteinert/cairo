@@ -97,6 +97,8 @@ do_world_map (cairo_t *cr, int width, int height, int loops)
 		break;
 	    e++;
 	}
+
+	cairo_new_path (cr);
     }
 
     cairo_perf_timer_stop ();
