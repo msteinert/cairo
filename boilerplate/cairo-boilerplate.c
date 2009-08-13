@@ -151,17 +151,6 @@ _cairo_boilerplate_meta_create_surface (const char	     *name,
     extents.height = height;
     return cairo_meta_surface_create (content, &extents);
 }
-
-#if CAIRO_HAS_SCRIPT_SURFACE
-static cairo_status_t
-stdio_write (void *closure, const unsigned char *data, unsigned int len)
-{
-    if (fwrite (data, len, 1, closure) != 1)
-	return CAIRO_STATUS_WRITE_ERROR;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-#endif
 #endif
 
 const cairo_user_data_key_t cairo_boilerplate_output_basename_key;
@@ -172,7 +161,6 @@ _cairo_boilerplate_get_image_surface (cairo_surface_t *src,
 				      int width,
 				      int height)
 {
-    FILE *file = NULL;
     cairo_surface_t *surface, *image;
     cairo_t *cr;
     cairo_status_t status;
@@ -195,17 +183,14 @@ _cairo_boilerplate_get_image_surface (cairo_surface_t *src,
 	test_name = cairo_surface_get_user_data (src,
 						 &cairo_boilerplate_output_basename_key);
 	if (test_name != NULL) {
+	    cairo_script_context_t *ctx;
 	    char *filename;
 
 	    xasprintf (&filename, "%s.out.trace", test_name);
-	    file = fopen (filename, "w");
+	    ctx = cairo_script_context_create (filename);
+	    surface = cairo_script_surface_create_for_target (ctx, image);
+	    cairo_script_context_destroy (ctx);
 	    free (filename);
-
-	    if (file != NULL) {
-		surface = cairo_script_surface_create_for_target (image,
-								  stdio_write,
-								  file);
-	    }
 	}
     }
 #endif
@@ -223,9 +208,6 @@ _cairo_boilerplate_get_image_surface (cairo_surface_t *src,
 	image = cairo_surface_reference (cairo_get_target (cr));
     }
     cairo_destroy (cr);
-
-    if (file != NULL)
-	fclose (file);
 
     return image;
 }

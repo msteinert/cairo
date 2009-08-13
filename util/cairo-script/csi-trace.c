@@ -6,11 +6,11 @@
 #include <libgen.h>
 
 static cairo_surface_t *
-_similar_surface_create (void *closure,
+_script_surface_create (void *closure,
 			 cairo_content_t content,
 			 double width, double height)
 {
-    return cairo_surface_create_similar (closure, content, width, height);
+    return cairo_script_surface_create (closure, width, height);
 }
 
 int
@@ -18,7 +18,7 @@ main (int argc, char **argv)
 {
     cairo_script_interpreter_t *csi;
     cairo_script_interpreter_hooks_t hooks = {
-	.surface_create = _similar_surface_create,
+	.surface_create = _script_surface_create,
     };
     int i;
 
@@ -28,13 +28,12 @@ main (int argc, char **argv)
 	char buf[4096];
 
 	snprintf (buf, sizeof (buf), "%s.trace", basename (argv[i]));
-
-	cairo_surface_destroy (hooks.closure);
-	hooks.closure = cairo_script_surface_create (buf, -1, -1);
+	cairo_script_context_destroy (hooks.closure);
+	hooks.closure = cairo_script_context_create (buf);
 	cairo_script_interpreter_install_hooks (csi, &hooks);
 	cairo_script_interpreter_run (csi, argv[i]);
     }
-    cairo_surface_destroy (hooks.closure);
+    cairo_script_context_destroy (hooks.closure);
 
     return cairo_script_interpreter_destroy (csi);
 }

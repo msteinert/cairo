@@ -4145,23 +4145,20 @@ cairo_xlib_surface_create_with_xrender_format (Display *dpy,
 #if CAIRO_HAS_SCRIPT_SURFACE
 #include <cairo-script.h>
 cairo_surface_t *
-cairo_script_surface_create (const char *filename,
+cairo_script_surface_create (cairo_script_context_t *ctx,
 			     double width,
 			     double height)
 {
     cairo_surface_t *ret;
     long surface_id;
 
-    ret = DLCALL (cairo_script_surface_create, filename, width, height);
+    ret = DLCALL (cairo_script_surface_create, ctx, width, height);
     surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
 	_trace_printf ("dict\n"
 		       "  /type /script set\n"
-		       "  /filename ");
-	_emit_string_literal (filename, -1);
-	_trace_printf (" set\n"
 		       "  /width %g set\n"
 		       "  /height %g set\n"
 		       "  surface dup /s%ld exch def\n",
@@ -4177,28 +4174,21 @@ cairo_script_surface_create (const char *filename,
 }
 
 cairo_surface_t *
-cairo_script_surface_create_for_stream (cairo_write_func_t write_func,
-					void *data,
-					double width,
-					double height)
+cairo_script_surface_create_for_target (cairo_script_context_t *ctx,
+					cairo_surface_t *target)
 {
     cairo_surface_t *ret;
     long surface_id;
 
-    ret = DLCALL (cairo_script_surface_create_for_stream,
-		  write_func, data, width, height);
+    ret = DLCALL (cairo_script_surface_create_for_target, ctx, target);
     surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
 	_trace_printf ("dict\n"
 		       "  /type /script set\n"
-		       "  /width %g set\n"
-		       "  /height %g set\n"
 		       "  surface dup /s%ld exch def\n",
-		       width, height,
 		       surface_id);
-	_surface_object_set_size (ret, width, height);
 	_get_object (SURFACE, ret)->defined = true;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
