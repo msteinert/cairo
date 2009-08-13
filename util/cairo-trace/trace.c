@@ -3148,7 +3148,6 @@ cairo_surface_create_similar (cairo_surface_t *other,
 			      int width, int height)
 {
     cairo_surface_t *ret;
-    long other_id;
     long surface_id;
 
     ret = DLCALL (cairo_surface_create_similar, other, content, width, height);
@@ -3156,21 +3155,21 @@ cairo_surface_create_similar (cairo_surface_t *other,
 
     _emit_line_info ();
     if (other != NULL && _write_lock ()) {
-	other_id = _get_surface_id (other);
+	Object *obj;
+
+	obj = _get_object (SURFACE, other);
 
 	if (_pop_operands_to (SURFACE, other)) {
 	    _consume_operand ();
-	    _trace_printf ("%d %d //%s similar\n",
-			   width,
-			   height,
-			   _content_to_string (content));
+	} else if (obj->defined) {
+	    _trace_printf ("s%ld", obj->token);
 	} else {
-	    _trace_printf ("s%ld %d %d //%s similar\n",
-			   other_id,
-			   width,
-			   height,
-			   _content_to_string (content));
+	    _trace_printf ("%d index ", current_stack_depth - obj->operand - 1);
 	}
+	_trace_printf ("%d %d //%s similar\n",
+		       width,
+		       height,
+		       _content_to_string (content));
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
