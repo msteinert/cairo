@@ -2411,7 +2411,8 @@ _cairo_script_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font)
     font_private = scaled_font->surface_private;
     if (font_private != NULL) {
 	_cairo_output_stream_printf (font_private->ctx->stream,
-				     "/f%lu undef\n",
+				     "/f%lu undef /sf%lu undef\n",
+				     font_private->id,
 				     font_private->id);
 
 	_bitmap_release_id (&font_private->ctx->font_id, font_private->id);
@@ -2483,7 +2484,7 @@ _emit_type42_font (cairo_script_surface_t *surface,
 
     font_private = scaled_font->surface_private;
     _cairo_output_stream_printf (surface->ctx->stream,
-				 " >> font dup /f%lu exch def set-font-face\n",
+				 " >> font dup /f%lu exch def set-font-face",
 				 font_private->id);
 
     return status;
@@ -2531,7 +2532,7 @@ _emit_scaled_font_init (cairo_script_surface_t *surface,
 				 "  /type 3 set\n"
 				 "  /metrics [%f %f %f %f %f] set\n"
 				 "  /glyphs array set\n"
-				 "  font dup /f%lu exch def set-font-face\n",
+				 "  font dup /f%lu exch def set-font-face",
 				 scaled_font->fs_extents.ascent,
 				 scaled_font->fs_extents.descent,
 				 scaled_font->fs_extents.height,
@@ -2560,16 +2561,6 @@ _emit_scaled_font (cairo_script_surface_t *surface,
     if (! matrix_updated && surface->cr.current_scaled_font == scaled_font)
 	return CAIRO_STATUS_SUCCESS;
 
-    cairo_scaled_font_get_font_matrix (scaled_font, &matrix);
-    status = _emit_font_matrix (surface, &matrix);
-    if (unlikely (status))
-	return status;
-
-    cairo_scaled_font_get_font_options (scaled_font, &options);
-    status = _emit_font_options (surface, &options);
-    if (unlikely (status))
-	return status;
-
     surface->cr.current_scaled_font = scaled_font;
 
     assert (scaled_font->surface_backend == NULL ||
@@ -2577,16 +2568,30 @@ _emit_scaled_font (cairo_script_surface_t *surface,
 
     font_private = scaled_font->surface_private;
     if (font_private == NULL) {
-	status = _emit_scaled_font_init (surface, scaled_font);
-	if (unlikely (status))
-	    return status;
-    } else {
-	status = _emit_context (surface);
+	cairo_scaled_font_get_font_matrix (scaled_font, &matrix);
+	status = _emit_font_matrix (surface, &matrix);
 	if (unlikely (status))
 	    return status;
 
+	cairo_scaled_font_get_font_options (scaled_font, &options);
+	status = _emit_font_options (surface, &options);
+	if (unlikely (status))
+	    return status;
+
+	status = _emit_scaled_font_init (surface, scaled_font);
+	if (unlikely (status))
+	    return status;
+
+	font_private = scaled_font->surface_private;
+	assert (font_private != NULL);
+
+	assert (target_is_active (surface));
 	_cairo_output_stream_printf (surface->ctx->stream,
-				     "f%lu set-font-face\n",
+				     " /scaled-font get /sf%lu exch def\n",
+				     font_private->id);
+    } else {
+	_cairo_output_stream_printf (surface->ctx->stream,
+				     "sf%lu set-scaled-font\n",
 				     font_private->id);
     }
 
