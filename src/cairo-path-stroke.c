@@ -1493,9 +1493,6 @@ _cairo_rectilinear_stroker_init (cairo_rectilinear_stroker_t	*stroker,
     _cairo_stroker_dash_init (&stroker->dash, stroke_style);
 
     stroker->has_bounds = FALSE;
-
-    /* As we incrementally tessellate, we do not eliminate self-intersections */
-    stroker->traps->has_intersections = TRUE;
 }
 
 static void
@@ -2032,6 +2029,8 @@ _cairo_path_fixed_stroke_rectilinear_to_traps (const cairo_path_fixed_t	*path,
 	status = _cairo_rectilinear_stroker_emit_segments (&rectilinear_stroker);
 
     traps->is_rectilinear = 1;
+    /* As we incrementally tessellate, we do not eliminate self-intersections */
+    traps->has_intersections = traps->num_traps != 0;
 BAIL:
     _cairo_rectilinear_stroker_fini (&rectilinear_stroker);
 
