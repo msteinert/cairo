@@ -761,9 +761,10 @@ _emit_solid_pattern (cairo_script_surface_t *surface,
 	! CAIRO_COLOR_IS_OPAQUE (&solid->color))
     {
 	if (! (solid->content & CAIRO_CONTENT_COLOR) ||
-	    (solid->color.red_short   == 0 &&
-	     solid->color.green_short == 0 &&
-	     solid->color.blue_short  == 0))
+	    ! (surface->base.content & CAIRO_CONTENT_COLOR) ||
+	    ((solid->color.red_short   == 0 || solid->color.red_short   == 0xffff) &&
+	     (solid->color.green_short == 0 || solid->color.green_short == 0xffff) &&
+	     (solid->color.blue_short  == 0 || solid->color.blue_short  == 0xffff) ))
 	{
 	    _cairo_output_stream_printf (surface->ctx->stream,
 					 "%f a",
@@ -2206,6 +2207,17 @@ _cairo_script_surface_fill (void			*abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_surface_t *
+_cairo_script_surface_snapshot (void *abstract_surface)
+{
+    cairo_script_surface_t *surface = abstract_surface;
+
+    if (_cairo_surface_wrapper_is_active (&surface->wrapper))
+	return _cairo_surface_wrapper_snapshot (&surface->wrapper);
+
+    return NULL;
+}
+
 static cairo_bool_t
 _cairo_script_surface_has_show_text_glyphs (void *abstract_surface)
 {
@@ -3058,7 +3070,7 @@ _cairo_script_surface_backend = {
     _cairo_script_surface_fill,
     NULL,
 
-    NULL, /* _cairo_script_surface_snapshot, */
+    _cairo_script_surface_snapshot,
 
     NULL, /* is_similar */
     /* XXX need fill-stroke for passthrough */

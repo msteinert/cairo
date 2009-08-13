@@ -429,6 +429,12 @@ _cairo_surface_wrapper_get_extents (cairo_surface_wrapper_t *wrapper,
     return _cairo_surface_get_extents (wrapper->target, extents);
 }
 
+cairo_surface_t *
+_cairo_surface_wrapper_snapshot (cairo_surface_wrapper_t *wrapper)
+{
+    return _cairo_surface_snapshot (wrapper->target);
+}
+
 cairo_bool_t
 _cairo_surface_wrapper_has_show_text_glyphs (cairo_surface_wrapper_t *wrapper)
 {
