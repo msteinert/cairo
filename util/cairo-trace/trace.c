@@ -4146,22 +4146,25 @@ cairo_xlib_surface_create_with_xrender_format (Display *dpy,
 #include <cairo-script.h>
 cairo_surface_t *
 cairo_script_surface_create (cairo_script_context_t *ctx,
+			     cairo_content_t content,
 			     double width,
 			     double height)
 {
     cairo_surface_t *ret;
     long surface_id;
 
-    ret = DLCALL (cairo_script_surface_create, ctx, width, height);
+    ret = DLCALL (cairo_script_surface_create, ctx, content, width, height);
     surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
 	_trace_printf ("dict\n"
 		       "  /type /script set\n"
+		       "  /content %s set\n"
 		       "  /width %g set\n"
 		       "  /height %g set\n"
 		       "  surface dup /s%ld exch def\n",
+		       _content_to_string (content),
 		       width, height,
 		       surface_id);
 	_surface_object_set_size (ret, width, height);

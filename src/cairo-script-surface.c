@@ -151,6 +151,7 @@ static const cairo_surface_backend_t _cairo_script_surface_backend;
 
 static cairo_script_surface_t *
 _cairo_script_surface_create_internal (cairo_script_context_t *ctx,
+				       cairo_content_t content,
 				       double width,
 				       double height,
 				       cairo_surface_t *passthrough);
@@ -428,11 +429,23 @@ _get_target (cairo_script_surface_t *surface)
     }
 }
 
+static const char *
+_content_to_string (cairo_content_t content)
+{
+    switch (content) {
+    case CAIRO_CONTENT_ALPHA: return "ALPHA";
+    case CAIRO_CONTENT_COLOR: return "COLOR";
+    default:
+    case CAIRO_CONTENT_COLOR_ALPHA: return "COLOR_ALPHA";
+    }
+}
+
 static cairo_status_t
 _emit_surface (cairo_script_surface_t *surface)
 {
     _cairo_output_stream_printf (surface->ctx->stream,
-				 "<< /width %f /height %f",
+				 "<< /content %s /width %f /height %f",
+				 _content_to_string (surface->base.content),
 				 surface->width,
 				 surface->height);
 
@@ -909,17 +922,6 @@ _emit_radial_pattern (cairo_script_surface_t *surface,
     return _emit_gradient_color_stops (&radial->base, surface->ctx->stream);
 }
 
-static const char *
-_content_to_string (cairo_content_t content)
-{
-    switch (content) {
-    case CAIRO_CONTENT_ALPHA: return "ALPHA";
-    case CAIRO_CONTENT_COLOR: return "COLOR";
-    default:
-    case CAIRO_CONTENT_COLOR_ALPHA: return "COLOR_ALPHA";
-    }
-}
-
 static cairo_status_t
 _emit_meta_surface_pattern (cairo_script_surface_t *surface,
 			    const cairo_pattern_t *pattern)
@@ -944,6 +946,7 @@ _emit_meta_surface_pattern (cairo_script_surface_t *surface,
     _cairo_box_round_to_rectangle (&bbox, &rect);
 
     similar = _cairo_script_surface_create_internal (surface->ctx,
+						     source->content,
 						     rect.width,
 						     rect.height,
 						     NULL);
@@ -1677,6 +1680,7 @@ _cairo_script_surface_create_similar (void	       *abstract_surface,
     }
 
     surface = _cairo_script_surface_create_internal (ctx,
+						     content,
 						     width, height,
 						     passthrough);
     cairo_surface_destroy (passthrough);
@@ -3209,6 +3213,7 @@ _cairo_script_implicit_context_reset (cairo_script_implicit_context_t *cr)
 
 static cairo_script_surface_t *
 _cairo_script_surface_create_internal (cairo_script_context_t *ctx,
+				       cairo_content_t content,
 				       double width,
 				       double height,
 				       cairo_surface_t *passthrough)
@@ -3224,7 +3229,7 @@ _cairo_script_surface_create_internal (cairo_script_context_t *ctx,
 
     _cairo_surface_init (&surface->base,
 			 &_cairo_script_surface_backend,
-			 CAIRO_CONTENT_COLOR_ALPHA);
+			 content);
 
     _cairo_surface_wrapper_init (&surface->wrapper, passthrough);
 
@@ -3335,10 +3340,12 @@ cairo_script_context_get_mode (cairo_script_context_t *context)
 
 cairo_surface_t *
 cairo_script_surface_create (cairo_script_context_t *context,
+			     cairo_content_t content,
 			     double width,
 			     double height)
 {
     return &_cairo_script_surface_create_internal (context,
+						   content,
 						   width, height,
 						   NULL)->base;
 }
@@ -3356,6 +3363,7 @@ cairo_script_surface_create_for_target (cairo_script_context_t *context,
 	extents.width = extents.height = -1;
 
     return &_cairo_script_surface_create_internal (context,
+						   target->content,
 						   extents.width,
 						   extents.height,
 						   target)->base;

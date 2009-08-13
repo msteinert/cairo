@@ -73,6 +73,7 @@ cairo_script_context_destroy (cairo_script_context_t *context);
 
 cairo_public cairo_surface_t *
 cairo_script_surface_create (cairo_script_context_t *context,
+			     cairo_content_t content,
 			     double width,
 			     double height);
 

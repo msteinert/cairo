@@ -61,7 +61,7 @@ _cairo_boilerplate_script_create_surface (const char		 *name,
     xunlink (ptc->filename);
 
     ctx = cairo_script_context_create (ptc->filename);
-    surface = cairo_script_surface_create (ctx, width, height);
+    surface = cairo_script_surface_create (ctx, content, width, height);
     cairo_script_context_destroy (ctx);
 
     status = cairo_surface_set_user_data (surface,
