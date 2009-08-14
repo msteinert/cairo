@@ -1292,7 +1292,7 @@ _div (csi_t *ctx)
 }
 
 static csi_status_t
-_dup (csi_t *ctx)
+_duplicate (csi_t *ctx)
 {
     check (1);
 
@@ -5741,7 +5741,7 @@ _defs[] = {
     { "device-to-user-distance", NULL },
     { "dict", _dict },
     { "div", _div },
-    { "dup", _dup },
+    { "dup", _duplicate },
     { "eq", _eq },
     { "exch", _exch },
     { "exec", NULL },
