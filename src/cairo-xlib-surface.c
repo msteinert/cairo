@@ -156,13 +156,10 @@ static const XTransform identity = { {
 
 #define CAIRO_SURFACE_RENDER_HAS_PDF_OPERATORS(surface)	CAIRO_SURFACE_RENDER_AT_LEAST((surface), 0, 11)
 
-#if RENDER_MAJOR > 0 || RENDER_MINOR >= 11
-#define CAIRO_SURFACE_RENDER_SUPPORTS_OPERATOR(surface, op) \
-     (((op) <= CAIRO_OPERATOR_SATURATE) ? TRUE : (CAIRO_SURFACE_RENDER_HAS_PDF_OPERATORS (surface) ? (op) <= CAIRO_OPERATOR_HSL_LUMINOSITY : FALSE))
-#else
-#define CAIRO_SURFACE_RENDER_SUPPORTS_OPERATOR(surface, op) \
-     ((op) <= CAIRO_OPERATOR_SATURATE)
-#endif
+#define CAIRO_SURFACE_RENDER_SUPPORTS_OPERATOR(surface, op)	\
+     ((op) <= CAIRO_OPERATOR_SATURATE ||			\
+      (CAIRO_SURFACE_RENDER_HAS_PDF_OPERATORS(surface) &&	\
+       (op) <= CAIRO_OPERATOR_HSL_LUMINOSITY))
 
 static cairo_status_t
 _cairo_xlib_surface_set_clip_region (cairo_xlib_surface_t *surface,
@@ -1832,7 +1829,6 @@ _render_operator (cairo_operator_t op)
     case CAIRO_OPERATOR_SATURATE:
 	return PictOpSaturate;
 
-#if RENDER_MAJOR > 0 || RENDER_MINOR >= 11
     case CAIRO_OPERATOR_MULTIPLY:
 	return PictOpMultiply;
     case CAIRO_OPERATOR_SCREEN:
@@ -1863,24 +1859,6 @@ _render_operator (cairo_operator_t op)
 	return PictOpHSLColor;
     case CAIRO_OPERATOR_HSL_LUMINOSITY:
 	return PictOpHSLLuminosity;
-#else
-    case CAIRO_OPERATOR_MULTIPLY:
-    case CAIRO_OPERATOR_SCREEN:
-    case CAIRO_OPERATOR_OVERLAY:
-    case CAIRO_OPERATOR_DARKEN:
-    case CAIRO_OPERATOR_LIGHTEN:
-    case CAIRO_OPERATOR_COLOR_DODGE:
-    case CAIRO_OPERATOR_COLOR_BURN:
-    case CAIRO_OPERATOR_HARD_LIGHT:
-    case CAIRO_OPERATOR_SOFT_LIGHT:
-    case CAIRO_OPERATOR_DIFFERENCE:
-    case CAIRO_OPERATOR_EXCLUSION:
-    case CAIRO_OPERATOR_HSL_HUE:
-    case CAIRO_OPERATOR_HSL_SATURATION:
-    case CAIRO_OPERATOR_HSL_COLOR:
-    case CAIRO_OPERATOR_HSL_LUMINOSITY:
-	/* silence the compiler */
-#endif
 
     default:
 	ASSERT_NOT_REACHED;
