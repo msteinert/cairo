@@ -1963,8 +1963,6 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
 
 #undef IMAGE_DICTIONARY
 
-    if (image_res == NULL)
-	*image_res = surface->pdf_stream.self;
     _cairo_output_stream_write (surface->output, rgb, rgb_size);
     status = _cairo_pdf_surface_close_stream (surface);
 

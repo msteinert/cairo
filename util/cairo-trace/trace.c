@@ -2565,7 +2565,7 @@ cairo_get_font_face (cairo_t *cr)
     ret = DLCALL (cairo_get_font_face, cr);
     font_face_id = _create_font_face_id (ret);
 
-    _emit_cairo_op (cr, "/font-face get\n");
+    _emit_cairo_op (cr, "/font-face get %% f%ld\n", font_face_id);
     _push_operand (FONT_FACE, ret);
 
     return ret;
@@ -3164,10 +3164,11 @@ cairo_surface_create_similar (cairo_surface_t *other,
 	    _trace_printf ("dup ");
 	else
 	    _trace_printf ("%d index ", current_stack_depth - obj->operand - 1);
-	_trace_printf ("%d %d //%s similar\n",
+	_trace_printf ("%d %d //%s similar %% s%ld\n",
 		       width,
 		       height,
-		       _content_to_string (content));
+		       _content_to_string (content),
+		       surface_id);
 
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
@@ -3575,7 +3576,8 @@ cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
 		       "  /pattern ");
 	_emit_string_literal ((char *) parsed, -1);
 	_trace_printf (" set\n"
-		       "  font\n");
+		       "  font %% f%ld\n",
+		       font_face_id);
 	_push_operand (FONT_FACE, ret);
 	_write_unlock ();
 
@@ -3627,8 +3629,8 @@ cairo_ft_font_face_create_for_ft_face (FT_Face face, int load_flags)
 
 	_trace_printf ("<< /type 42 /source ");
 	_emit_data (data->data, data->size);
-	_trace_printf (" /index %lu /flags %d >> font\n",
-		       data->index, load_flags);
+	_trace_printf (" /index %lu /flags %d >> font %% f%ld\n",
+		       data->index, load_flags, font_face_id);
 	_push_operand (FONT_FACE, ret);
 	_write_unlock ();
     }

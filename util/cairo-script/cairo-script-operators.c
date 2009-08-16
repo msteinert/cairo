@@ -1937,6 +1937,9 @@ _ft_type42_create (csi_t *ctx,
 
     /* two basic sub-types, either an FcPattern or embedded font */
     status = csi_name_new_static (ctx, &key, "pattern");
+    if (_csi_unlikely (status))
+	return status;
+
     if (csi_dictionary_has (font, key.datum.name)) {
 	csi_object_t obj;
 	int type;
@@ -2512,7 +2515,7 @@ _glyph_path (csi_t *ctx)
     /* count glyphs */
     nglyphs = 0;
     for (i = 0; i < array->stack.len; i++) {
-	csi_object_t *obj = obj = &array->stack.objects[i];
+	csi_object_t *obj = &array->stack.objects[i];
 	int type = csi_object_get_type (obj);
 	switch (type) {
 	case CSI_OBJECT_TYPE_ARRAY:
@@ -2700,10 +2703,9 @@ _image_read_raw (csi_file_t *src,
     case CAIRO_FORMAT_RGB24:
 	len = 3 * width * height;
 	break;
+    default:
     case CAIRO_FORMAT_ARGB32:
 	len = 4 * width * height;
-	break;
-    default:
 	break;
     }
 
@@ -2973,8 +2975,11 @@ _image_load_from_dictionary (csi_t *ctx,
 	return status;
 
     status = csi_name_new_static (ctx, &key, "source");
+    if (_csi_unlikely (status))
+	return status;
+
     if (csi_dictionary_has (dict, key.datum.name)) {
-	enum mime_type type;
+	enum mime_type mime_type;
 	csi_object_t file;
 
 	status = csi_dictionary_get (ctx, dict, key.datum.name, &obj);
@@ -2985,7 +2990,7 @@ _image_load_from_dictionary (csi_t *ctx,
 	if (_csi_unlikely (status))
 	    return status;
 
-	type = MIME_TYPE_NONE;
+	mime_type = MIME_TYPE_NONE;
 	if (csi_dictionary_has (dict, key.datum.name)) {
 	    csi_object_t type_obj;
 	    const char *type_str;
@@ -3008,7 +3013,7 @@ _image_load_from_dictionary (csi_t *ctx,
 	    }
 
 	    if (strcmp (type_str, CAIRO_MIME_TYPE_PNG) == 0)
-		type = MIME_TYPE_PNG;
+		mime_type = MIME_TYPE_PNG;
 	}
 
 	status = csi_object_as_file (ctx, &obj, &file);
@@ -3017,7 +3022,7 @@ _image_load_from_dictionary (csi_t *ctx,
 
 	/* XXX hook for general mime-type decoder */
 
-	switch (type) {
+	switch (mime_type) {
 	case MIME_TYPE_NONE:
 	    status = _image_read_raw (file.datum.file,
 				      format, width, height, &image);
@@ -5406,6 +5411,10 @@ _surface (csi_t *ctx)
     }
     if (csi_dictionary_has (dict, key.datum.name)) {
 	status = csi_dictionary_get (ctx, dict, key.datum.name, &obj);
+	if (_csi_unlikely (status)) {
+	    cairo_surface_destroy (surface);
+	    return status;
+	}
 	if (csi_object_get_type (&obj) == CSI_OBJECT_TYPE_ARRAY) {
 	    csi_array_t *array = obj.datum.array;
 	    if (array->stack.len == 2) {
