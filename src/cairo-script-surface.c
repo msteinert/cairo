@@ -402,30 +402,31 @@ _get_target (cairo_script_surface_t *surface)
 {
     cairo_script_context_t *ctx = surface->ctx;
 
-    if (! target_is_active (surface)) {
-	int depth = target_depth (surface);
-	if (ctx->active) {
-	    if (surface->defined) {
-		_cairo_output_stream_printf (ctx->stream, "s%u ",
-					     surface->base.unique_id);
-	    } else {
+    if (surface->defined) {
+	_cairo_output_stream_printf (ctx->stream, "s%u ",
+				     surface->base.unique_id);
+    } else {
+	assert (! cairo_list_is_empty (&surface->operand.link));
+	if (! target_is_active (surface)) {
+	    int depth = target_depth (surface);
+	    if (ctx->active) {
 		_cairo_output_stream_printf (ctx->stream, "%d index ", depth);
 		_cairo_output_stream_puts (ctx->stream, "/target get exch pop ");
+	    } else {
+		if (depth == 1) {
+		    _cairo_output_stream_puts (surface->ctx->stream,
+					       "exch\n");
+		} else {
+		    _cairo_output_stream_printf (surface->ctx->stream,
+						 "%d -1 roll\n",
+						 depth);
+		}
+		_cairo_output_stream_puts (ctx->stream, "/target get ");
+		target_push (surface);
 	    }
 	} else {
-	    if (depth == 1) {
-		_cairo_output_stream_puts (surface->ctx->stream,
-					     "exch\n");
-	    } else {
-		_cairo_output_stream_printf (surface->ctx->stream,
-					     "%d -1 roll\n",
-					     depth);
-	    }
 	    _cairo_output_stream_puts (ctx->stream, "/target get ");
-	    target_push (surface);
 	}
-    } else {
-	_cairo_output_stream_puts (ctx->stream, "/target get ");
     }
 }
 
@@ -1598,10 +1599,13 @@ _emit_scaling_matrix (cairo_script_surface_t *surface,
 		      const cairo_matrix_t *ctm,
 		      cairo_bool_t *matrix_updated)
 {
+    cairo_bool_t was_identity;
     assert (target_is_active (surface));
 
     if (_scaling_matrix_equal (&surface->cr.current_ctm, ctm))
 	return CAIRO_STATUS_SUCCESS;
+
+    was_identity = _cairo_matrix_is_identity (&surface->cr.current_ctm);
 
     *matrix_updated = TRUE;
     surface->cr.current_ctm = *ctm;
@@ -1611,6 +1615,10 @@ _emit_scaling_matrix (cairo_script_surface_t *surface,
     if (_cairo_matrix_is_identity (&surface->cr.current_ctm)) {
 	_cairo_output_stream_puts (surface->ctx->stream,
 				   "identity set-matrix\n");
+    } else if (was_identity && fabs (ctm->yx) < 1e-5 && fabs (ctm->xy) < 1e-5) {
+	_cairo_output_stream_printf (surface->ctx->stream,
+				   "%f %f scale\n",
+				   ctm->xx, ctm->yy);
     } else {
 	_cairo_output_stream_printf (surface->ctx->stream,
 				   "[%f %f %f %f 0 0] set-matrix\n",
@@ -2234,6 +2242,7 @@ _cairo_script_surface_fill (void			*abstract_surface,
     cairo_script_surface_t *surface = abstract_surface;
     cairo_bool_t matrix_updated = FALSE;
     cairo_status_t status;
+    cairo_box_t box;
 
     if (op == CAIRO_OPERATOR_CLEAR) {
 	if (surface->is_clear)
@@ -2258,9 +2267,11 @@ _cairo_script_surface_fill (void			*abstract_surface,
     if (unlikely (status))
 	return status;
 
-    status = _emit_fill_rule (surface, fill_rule);
-    if (unlikely (status))
-	return status;
+    if (! _cairo_path_fixed_is_box (path, &box)) {
+	status = _emit_fill_rule (surface, fill_rule);
+	if (unlikely (status))
+	    return status;
+    }
 
     if (! path->is_rectilinear) {
 	status = _emit_tolerance (surface, tolerance, matrix_updated);
