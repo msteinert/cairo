@@ -51,6 +51,7 @@
 #include "cairo-list-private.h"
 #include "cairo-meta-surface-private.h"
 #include "cairo-output-stream-private.h"
+#include "cairo-scaled-font-private.h"
 #include "cairo-surface-clipper-private.h"
 #include "cairo-surface-wrapper-private.h"
 
@@ -445,10 +446,14 @@ static cairo_status_t
 _emit_surface (cairo_script_surface_t *surface)
 {
     _cairo_output_stream_printf (surface->ctx->stream,
-				 "<< /content %s /width %f /height %f",
-				 _content_to_string (surface->base.content),
-				 surface->width,
-				 surface->height);
+				 "<< /content //%s",
+				 _content_to_string (surface->base.content));
+    if (surface->width != -1 && surface->height != -1) {
+	_cairo_output_stream_printf (surface->ctx->stream,
+				     " /width %f /height %f",
+				     surface->width,
+				     surface->height);
+    }
 
     if (surface->base.x_fallback_resolution !=
 	CAIRO_SURFACE_FALLBACK_RESOLUTION_DEFAULT ||
@@ -2573,8 +2578,11 @@ _emit_scaled_font (cairo_script_surface_t *surface,
 
     surface->cr.current_scaled_font = scaled_font;
 
-    assert (scaled_font->surface_backend == NULL ||
-	    scaled_font->surface_backend == &_cairo_script_surface_backend);
+    if (! (scaled_font->surface_backend == NULL ||
+	   scaled_font->surface_backend == &_cairo_script_surface_backend))
+    {
+	_cairo_scaled_font_revoke_ownership (scaled_font);
+    }
 
     font_private = scaled_font->surface_private;
     if (font_private == NULL) {
@@ -3382,6 +3390,44 @@ cairo_script_surface_create_for_target (cairo_script_context_t *context,
 						   extents.width,
 						   extents.height,
 						   target)->base;
+}
+
+cairo_status_t
+cairo_script_from_meta_surface (cairo_script_context_t *context,
+				cairo_surface_t *meta)
+{
+    cairo_box_t bbox;
+    cairo_rectangle_int_t extents;
+    cairo_surface_t *surface;
+    cairo_status_t status;
+
+    if (unlikely (context->status))
+	return context->status;
+
+    if (unlikely (meta->status))
+	return meta->status;
+
+    if (unlikely (! _cairo_surface_is_meta (meta)))
+	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+
+    status = _cairo_meta_surface_get_bbox ((cairo_meta_surface_t *) meta,
+					   &bbox, NULL);
+    if (unlikely (status))
+	return status;
+
+    _cairo_box_round_to_rectangle (&bbox, &extents);
+    surface = &_cairo_script_surface_create_internal (context,
+						      meta->content,
+						      extents.width,
+						      extents.height,
+						      NULL)->base;
+    if (unlikely (surface->status))
+	return surface->status;
+
+    status = cairo_meta_surface_replay (meta, surface);
+    cairo_surface_destroy (surface);
+
+    return status;
 }
 
 void

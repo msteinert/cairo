@@ -4,6 +4,9 @@ SUBDIRS = . cairo-script
 
 if BUILD_TRACE
 SUBDIRS += cairo-trace
+if CAIRO_HAS_SCRIPT_SURFACE
+SUBDIRS += cairo-fdr
+endif
 endif
 
 AM_CPPFLAGS = -I$(top_srcdir)/src

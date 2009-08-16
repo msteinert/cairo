@@ -2198,6 +2198,10 @@ cairo_public void
 cairo_tee_surface_append (cairo_surface_t *surface,
 			  cairo_surface_t *target);
 
+cairo_public cairo_surface_t *
+cairo_tee_surface_index (cairo_surface_t *abstract_surface,
+			 int index);
+
 /* Pattern creation functions */
 
 cairo_public cairo_pattern_t *

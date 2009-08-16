@@ -838,6 +838,22 @@ _cairo_scaled_font_fini_internal (cairo_scaled_font_t *scaled_font)
     _cairo_user_data_array_fini (&scaled_font->user_data);
 }
 
+/* XXX: allow multiple backends to share the font */
+void
+_cairo_scaled_font_revoke_ownership (cairo_scaled_font_t *scaled_font)
+{
+    if (scaled_font->surface_backend == NULL)
+	return;
+
+    _cairo_scaled_font_reset_cache (scaled_font);
+
+    if (scaled_font->surface_backend->scaled_font_fini != NULL)
+	scaled_font->surface_backend->scaled_font_fini (scaled_font);
+
+    scaled_font->surface_backend = NULL;
+    scaled_font->surface_private = NULL;
+}
+
 void
 _cairo_scaled_font_fini (cairo_scaled_font_t *scaled_font)
 {
