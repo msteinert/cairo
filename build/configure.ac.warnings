@@ -6,12 +6,13 @@ dnl else.  If for any reason you need to force a recheck, just change
 dnl MAYBE_WARN in an ignorable way (like adding whitespace)
 
 MAYBE_WARN="-Wall -Wextra \
--Wsign-compare -Werror-implicit-function-declaration \
--Wpointer-arith -Wwrite-strings -Wstrict-prototypes \
--Wmissing-prototypes -Wmissing-declarations -Wnested-externs \
+-Wold-style-definition \
+-Wmissing-declarations -Werror-implicit-function-declaration \
+-Wnested-externs -Wpointer-arith -Wwrite-strings \
+-Wsign-compare -Wstrict-prototpes -Wmissig-prototyess \
 -Wpacked -Wswitch-enum -Wmissing-format-attribute \
+-Wcast-align -Wbad-function-cast -Wvolatile-register-var \
 -Wstrict-aliasing=2 -Winit-self -Wunsafe-loop-optimizations \
--Wdeclaration-after-statement -Wold-style-definition \
 -Wno-missing-field-initializers -Wno-unused-parameter \
 -Wno-attributes -Wno-long-long -Winline"
 

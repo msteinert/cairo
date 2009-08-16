@@ -2972,9 +2972,9 @@ _cairo_ps_surface_emit_linear_pattern (cairo_ps_surface_t     *surface,
 	dx = fabs (x2 - x1);
 	dy = fabs (y2 - y1);
 	if (dx > 1e-6)
-	    x_rep = (int) ceil (surface->width/dx);
+	    x_rep = ceil (surface->width/dx);
 	if (dy > 1e-6)
-	    y_rep = (int) ceil (surface->height/dy);
+	    y_rep = ceil (surface->height/dy);
 
 	repeat_end = MAX (x_rep, y_rep);
 	repeat_begin = -repeat_end;
@@ -3214,8 +3214,8 @@ _cairo_ps_surface_get_extents (void		       *abstract_surface,
      * mention the aribitray limitation of width to a short(!). We
      * may need to come up with a better interface for get_extents.
      */
-    rectangle->width  = (int) ceil (surface->width);
-    rectangle->height = (int) ceil (surface->height);
+    rectangle->width  = ceil (surface->width);
+    rectangle->height = ceil (surface->height);
 
     return TRUE;
 }
@@ -3497,15 +3497,15 @@ _cairo_ps_surface_set_bounding_box (void		*abstract_surface,
     int x1, y1, x2, y2;
 
     if (surface->eps) {
-	x1 = (int) floor (_cairo_fixed_to_double (bbox->p1.x));
-	y1 = (int) floor (surface->height - _cairo_fixed_to_double (bbox->p2.y));
-	x2 = (int) ceil (_cairo_fixed_to_double (bbox->p2.x));
-	y2 = (int) ceil (surface->height - _cairo_fixed_to_double (bbox->p1.y));
+	x1 = floor (_cairo_fixed_to_double (bbox->p1.x));
+	y1 = floor (surface->height - _cairo_fixed_to_double (bbox->p2.y));
+	x2 = ceil (_cairo_fixed_to_double (bbox->p2.x));
+	y2 = ceil (surface->height - _cairo_fixed_to_double (bbox->p1.y));
     } else {
 	x1 = 0;
 	y1 = 0;
-	x2 = (int) ceil (surface->width);
-	y2 = (int) ceil (surface->height);
+	x2 = ceil (surface->width);
+	y2 = ceil (surface->height);
     }
 
     surface->page_bbox.x = x1;
