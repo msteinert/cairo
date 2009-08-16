@@ -1934,9 +1934,8 @@ _cairo_script_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clip
 static void
 active (cairo_script_surface_t *surface)
 {
-    assert (surface->active == FALSE);
-    surface->active = TRUE;
-    surface->ctx->active++;
+    if (surface->active++ == 0)
+	surface->ctx->active++;
 }
 
 static void
@@ -1945,10 +1944,10 @@ inactive (cairo_script_surface_t *surface)
     cairo_script_context_t *ctx = surface->ctx;
     cairo_list_t sorted;
 
-    assert (surface->active == TRUE);
-    surface->active = FALSE;
+    if (--surface->active)
+	return;
 
-    if (--ctx->active > 0)
+    if (--ctx->active)
 	return;
 
     cairo_list_init (&sorted);
