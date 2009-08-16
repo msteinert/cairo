@@ -917,7 +917,7 @@ _clip_to_boxes (cairo_clip_t **clip,
 
     if (*clip == NULL) {
 	status = CAIRO_STATUS_SUCCESS;
-	goto OUT;
+	goto EXTENTS;
     }
 
     /* In some cases it may be preferable to always use boxes instead
@@ -927,7 +927,7 @@ _clip_to_boxes (cairo_clip_t **clip,
      */
     status = _cairo_clip_get_region (*clip, NULL);
     if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	goto OUT;
+	goto EXTENTS;
 
     status = _cairo_clip_get_boxes (*clip, boxes, num_boxes);
     switch ((int) status) {
@@ -937,10 +937,10 @@ _clip_to_boxes (cairo_clip_t **clip,
 
     case  CAIRO_INT_STATUS_UNSUPPORTED:
 	status = CAIRO_STATUS_SUCCESS;
-	goto OUT;
+	goto EXTENTS;
     }
 
-  OUT:
+  EXTENTS:
     _cairo_box_from_rectangle (&(*boxes)[0], extents);
     *num_boxes = 1;
   DONE:

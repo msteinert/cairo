@@ -737,6 +737,7 @@ _region_clip_to_boxes (const cairo_region_t *region,
     _cairo_traps_init (&traps);
     _cairo_traps_limit (&traps, *boxes, *num_boxes);
     traps.is_rectilinear = TRUE;
+    traps.is_rectangular = TRUE;
 
     num_rects = cairo_region_num_rectangles (region);
     for (n = 0; n < num_rects; n++) {
@@ -1459,17 +1460,19 @@ _cairo_clip_copy_rectangle_list (cairo_clip_t *clip, cairo_gstate_t *gstate)
     } else {
         cairo_rectangle_int_t extents;
 
-	n_rects = 1;
-
-	rectangles = malloc(sizeof (cairo_rectangle_t));
-	if (unlikely (rectangles == NULL)) {
-	    return ERROR_LIST (CAIRO_STATUS_NO_MEMORY);
+	if (! _cairo_surface_get_extents (_cairo_gstate_get_target (gstate),
+					  &extents))
+	{
+	    /* unbounded surface -> unclipped */
+	    goto DONE;
 	}
 
-	if (_cairo_surface_get_extents (_cairo_gstate_get_target (gstate),
-					&extents) ||
-	    ! _cairo_clip_int_rect_to_user (gstate, &extents, rectangles))
-	{
+	n_rects = 1;
+	rectangles = malloc(sizeof (cairo_rectangle_t));
+	if (unlikely (rectangles == NULL))
+	    return ERROR_LIST (CAIRO_STATUS_NO_MEMORY);
+
+	if (! _cairo_clip_int_rect_to_user (gstate, &extents, rectangles)) {
 	    free (rectangles);
 	    return ERROR_LIST (CAIRO_STATUS_CLIP_NOT_REPRESENTABLE);
 	}

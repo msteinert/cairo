@@ -176,6 +176,20 @@ _cairo_path_fixed_fill_rectilinear_tessellate_to_region (const cairo_path_fixed_
     cairo_status_t status;
     cairo_region_t *region;
 
+    /* first try to bypass fill-to-polygon */
+    _cairo_traps_init (&traps);
+    status = _cairo_path_fixed_fill_rectilinear_to_traps (path,
+							  fill_rule,
+							  &traps);
+    if (_cairo_status_is_error (status))
+	goto CLEANUP_TRAPS;
+
+    if (status == CAIRO_STATUS_SUCCESS) {
+	status = _cairo_traps_extract_region (&traps, &region);
+	goto CLEANUP_TRAPS;
+    }
+
+    /* path is not rectangular, try extracting clipped rectilinear edges */
     _cairo_polygon_init (&polygon);
     if (extents != NULL) {
 	_cairo_box_from_rectangle (&box, extents);
@@ -190,19 +204,19 @@ _cairo_path_fixed_fill_rectilinear_tessellate_to_region (const cairo_path_fixed_
     if (polygon.num_edges == 0) {
 	region = cairo_region_create ();
     } else {
-	_cairo_traps_init (&traps);
-
-	status = _cairo_bentley_ottmann_tessellate_rectilinear_polygon (&traps,
-									&polygon,
-									fill_rule);
+	status =
+	    _cairo_bentley_ottmann_tessellate_rectilinear_polygon (&traps,
+								   &polygon,
+								   fill_rule);
 	if (likely (status == CAIRO_STATUS_SUCCESS))
 	    status = _cairo_traps_extract_region (&traps, &region);
-
-	_cairo_traps_fini (&traps);
     }
 
   CLEANUP_POLYGON:
     _cairo_polygon_fini (&polygon);
+
+  CLEANUP_TRAPS:
+    _cairo_traps_fini (&traps);
 
     if (unlikely (status)) { /* XXX _cairo_region_create_in_error() */
 	region = cairo_region_create ();
@@ -230,6 +244,7 @@ _cairo_path_fixed_fill_rectilinear_to_region (const cairo_path_fixed_t	*path,
     cairo_region_t *region = NULL;
 
     assert (path->maybe_fill_region);
+    assert (! path->is_empty_fill);
 
     if (_cairo_path_fixed_is_box (path, &box)) {
 	if (box.p1.x > box.p2.x) {
