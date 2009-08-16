@@ -570,6 +570,7 @@ CAIRO_ENABLE_SURFACE_BACKEND(image, image, always, [
 dnl ===========================================================================
 
 CAIRO_ENABLE_SURFACE_BACKEND(meta, meta, always)
+CAIRO_ENABLE_SURFACE_BACKEND(tee, tee, always)
 
 dnl ===========================================================================
 

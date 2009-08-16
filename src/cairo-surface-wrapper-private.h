@@ -142,6 +142,10 @@ cairo_private cairo_bool_t
 _cairo_surface_wrapper_get_extents (cairo_surface_wrapper_t *wrapper,
 				    cairo_rectangle_int_t   *extents);
 
+cairo_private void
+_cairo_surface_wrapper_get_font_options (cairo_surface_wrapper_t    *wrapper,
+					 cairo_font_options_t	    *options);
+
 cairo_private cairo_surface_t *
 _cairo_surface_wrapper_snapshot (cairo_surface_wrapper_t *wrapper);
 

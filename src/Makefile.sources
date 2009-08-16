@@ -88,6 +88,7 @@ cairo_private = \
 	cairo-surface-private.h \
 	cairo-surface-clipper-private.h \
 	cairo-surface-wrapper-private.h \
+	cairo-tee-surface-private.h \
 	cairo-types-private.h \
 	cairo-user-font-private.h \
 	cairo-wideint-private.h \
@@ -146,10 +147,11 @@ cairo_sources = \
 	cairo-surface-fallback.c \
 	cairo-surface-clipper.c \
 	cairo-surface-wrapper.c \
-	cairo-tor-scan-converter.c \
 	cairo-system.c \
-	cairo-traps.c \
+	cairo-tee-surface.c \
+	cairo-tor-scan-converter.c \
 	cairo-toy-font-face.c \
+	cairo-traps.c \
 	cairo-unicode.c \
 	cairo-user-font.c \
 	cairo-version.c \

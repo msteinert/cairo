@@ -42,6 +42,7 @@
 #include "cairo-clip-private.h"
 #include "cairo-meta-surface-private.h"
 #include "cairo-region-private.h"
+#include "cairo-tee-surface-private.h"
 
 #define DEFINE_NIL_SURFACE(status, name)			\
 const cairo_surface_t name = {					\
@@ -1527,6 +1528,16 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 
     if (unlikely (surface->finished))
 	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
+
+    if (src->type == CAIRO_SURFACE_TYPE_TEE) {
+	cairo_surface_t *match;
+
+	match = _cairo_tee_surface_find_match (src,
+					       surface->backend,
+					       content);
+	if (match != NULL)
+	    src = match;
+    }
 
     if (surface->backend->clone_similar != NULL) {
 	status = surface->backend->clone_similar (surface, src,

@@ -1948,6 +1948,7 @@ cairo_surface_status (cairo_surface_t *surface);
  * @CAIRO_SURFACE_TYPE_VG: The surface is a OpenVG surface, since 1.10
  * @CAIRO_SURFACE_TYPE_GL: The surface is of type OpenGL, since 1.10
  * @CAIRO_SURFACE_TYPE_DRM: The surface is of type Direct Render Manager, since 1.10
+ * @CAIRO_SURFACE_TYPE_TEE: The surface is of type 'tee' (a multiplexing surface), since 1.10
  *
  * #cairo_surface_type_t is used to describe the type of a given
  * surface. The surface types are also known as "backends" or "surface
@@ -1992,7 +1993,8 @@ typedef enum _cairo_surface_type {
     CAIRO_SURFACE_TYPE_META,
     CAIRO_SURFACE_TYPE_VG,
     CAIRO_SURFACE_TYPE_GL,
-    CAIRO_SURFACE_TYPE_DRM
+    CAIRO_SURFACE_TYPE_DRM,
+    CAIRO_SURFACE_TYPE_TEE
 } cairo_surface_type_t;
 
 cairo_public cairo_surface_type_t
@@ -2186,6 +2188,15 @@ cairo_meta_surface_ink_extents (cairo_surface_t *surface,
 cairo_public cairo_status_t
 cairo_meta_surface_replay (cairo_surface_t *surface,
 			   cairo_surface_t *target);
+
+/* Tee-surface functions */
+
+cairo_public cairo_surface_t *
+cairo_tee_surface_create (cairo_surface_t *master);
+
+cairo_public void
+cairo_tee_surface_append (cairo_surface_t *surface,
+			  cairo_surface_t *target);
 
 /* Pattern creation functions */
 
