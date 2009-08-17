@@ -88,14 +88,18 @@ _cairo_surface_wrapper_paint (cairo_surface_wrapper_t *wrapper,
     if (clip && clip->all_clipped)
 	return CAIRO_STATUS_SUCCESS;
 
-    if (clip != NULL &&
-	_cairo_surface_wrapper_needs_device_transform (wrapper,
-						       &device_transform))
-    {
-	status = _cairo_clip_init_copy_transformed (&clip_copy, clip,
-						    &device_transform);
-	if (unlikely (status))
-	    goto FINISH;
+    if (clip != NULL) {
+	if (_cairo_surface_wrapper_needs_device_transform (wrapper,
+							   &device_transform))
+	{
+	    status = _cairo_clip_init_copy_transformed (&clip_copy, clip,
+							&device_transform);
+	    if (unlikely (status))
+		goto FINISH;
+
+	} else {
+	    _cairo_clip_init_copy (&clip_copy, clip);
+	}
 
 	dev_clip = &clip_copy;
     }
@@ -125,14 +129,18 @@ _cairo_surface_wrapper_mask (cairo_surface_wrapper_t *wrapper,
     if (clip && clip->all_clipped)
 	return CAIRO_STATUS_SUCCESS;
 
-    if (clip != NULL &&
-	_cairo_surface_wrapper_needs_device_transform (wrapper,
-						       &device_transform))
-    {
-	status = _cairo_clip_init_copy_transformed (&clip_copy, clip,
-						    &device_transform);
-	if (unlikely (status))
-	    goto FINISH;
+    if (clip != NULL) {
+	if (_cairo_surface_wrapper_needs_device_transform (wrapper,
+							   &device_transform))
+	{
+	    status = _cairo_clip_init_copy_transformed (&clip_copy, clip,
+							&device_transform);
+	    if (unlikely (status))
+		goto FINISH;
+
+	} else {
+	    _cairo_clip_init_copy (&clip_copy, clip);
+	}
 
 	dev_clip = &clip_copy;
     }
@@ -195,6 +203,11 @@ _cairo_surface_wrapper_stroke (cairo_surface_wrapper_t *wrapper,
 	cairo_matrix_multiply (&dev_ctm_inverse,
 			       &device_transform,
 			       &dev_ctm_inverse);
+    } else {
+	if (clip != NULL) {
+	    dev_clip = &clip_copy;
+	    _cairo_clip_init_copy (&clip_copy, clip);
+	}
     }
 
     status = _cairo_surface_stroke (wrapper->target, op, source,
@@ -266,6 +279,11 @@ _cairo_surface_wrapper_fill_stroke (cairo_surface_wrapper_t *wrapper,
 	cairo_matrix_multiply (&dev_ctm_inverse,
 			       &device_transform,
 			       &dev_ctm_inverse);
+    } else {
+	if (clip != NULL) {
+	    dev_clip = &clip_copy;
+	    _cairo_clip_init_copy (&clip_copy, clip);
+	}
     }
 
     status = _cairo_surface_fill_stroke (wrapper->target,
@@ -324,6 +342,11 @@ _cairo_surface_wrapper_fill (cairo_surface_wrapper_t	*wrapper,
 		goto FINISH;
 
 	    dev_clip = &clip_copy;
+	}
+    } else {
+	if (clip != NULL) {
+	    dev_clip = &clip_copy;
+	    _cairo_clip_init_copy (&clip_copy, clip);
 	}
     }
 
@@ -392,6 +415,11 @@ _cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t *wrapper,
 	    cairo_matrix_transform_point (&device_transform,
 					  &dev_glyphs[i].x,
 					  &dev_glyphs[i].y);
+	}
+    } else {
+	if (clip != NULL) {
+	    dev_clip = &clip_copy;
+	    _cairo_clip_init_copy (&clip_copy, clip);
 	}
     }
 
