@@ -1919,9 +1919,13 @@ _cairo_ps_surface_emit_base85_string (cairo_ps_surface_t    *surface,
     _cairo_output_stream_write (base85_stream, data, length);
 
     status = _cairo_output_stream_destroy (base85_stream);
+
+    /* Mark end of base85 data */
+    _cairo_output_stream_printf (string_array_stream, "~>");
     status2 = _cairo_output_stream_destroy (string_array_stream);
     if (status == CAIRO_STATUS_SUCCESS)
 	status = status2;
+
 
     return status;
 }

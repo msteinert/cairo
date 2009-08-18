@@ -430,6 +430,20 @@ enabled_cairo_headers += $(cairo_tee_headers)
 enabled_cairo_private += $(cairo_tee_private)
 enabled_cairo_sources += $(cairo_tee_sources)
 
+supported_cairo_headers += $(cairo_xml_headers)
+all_cairo_headers += $(cairo_xml_headers)
+all_cairo_private += $(cairo_xml_private)
+all_cairo_sources += $(cairo_xml_sources)
+ifeq ($(CAIRO_HAS_XML_SURFACE),1)
+enabled_cairo_headers += $(cairo_xml_headers)
+enabled_cairo_private += $(cairo_xml_private)
+enabled_cairo_sources += $(cairo_xml_sources)
+endif
+all_cairo_pkgconf += cairo-xml.pc
+ifeq ($(CAIRO_HAS_XML_SURFACE),1)
+enabled_cairo_pkgconf += cairo-xml.pc
+endif
+
 supported_cairo_headers += $(cairo_user_headers)
 all_cairo_headers += $(cairo_user_headers)
 all_cairo_private += $(cairo_user_private)

@@ -1,7 +1,8 @@
 /* -*- Mode: c; c-basic-offset: 4; indent-tabs-mode: t; tab-width: 8; -*- */
 /* cairo - a vector graphics library with display and print output
  *
- * Copyright © 2005 Red Hat, Inc
+ * Copyright © 2005-2007 Emmanuel Pacaud <emmanuel.pacaud@free.fr>
+ * Copyright © 2009 Chris Wilson
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -32,99 +33,111 @@
  *
  * Author(s):
  *	Kristian Høgsberg <krh@redhat.com>
+ *	Chris Wilson <chris@chris-wilson.co.uk>
  */
 
 #include "cairoint.h"
 #include "cairo-output-stream-private.h"
 
-typedef struct _cairo_base85_stream {
+typedef struct _cairo_base64_stream {
     cairo_output_stream_t base;
     cairo_output_stream_t *output;
-    unsigned char four_tuple[4];
-    int pending;
-} cairo_base85_stream_t;
+    unsigned int in_mem;
+    unsigned int trailing;
+    unsigned char src[3];
+} cairo_base64_stream_t;
 
-static void
-_expand_four_tuple_to_five (unsigned char four_tuple[4],
-			    unsigned char five_tuple[5],
-			    cairo_bool_t *all_zero)
-{
-    uint32_t value;
-    int digit, i;
-
-    value = four_tuple[0] << 24 | four_tuple[1] << 16 | four_tuple[2] << 8 | four_tuple[3];
-    if (all_zero)
-	*all_zero = TRUE;
-    for (i = 0; i < 5; i++) {
-	digit = value % 85;
-	if (digit != 0 && all_zero)
-	    *all_zero = FALSE;
-	five_tuple[4-i] = digit + 33;
-	value = value / 85;
-    }
-}
+static char const base64_table[64] =
+"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 static cairo_status_t
-_cairo_base85_stream_write (cairo_output_stream_t *base,
+_cairo_base64_stream_write (cairo_output_stream_t *base,
 			    const unsigned char	  *data,
 			    unsigned int	   length)
 {
-    cairo_base85_stream_t *stream = (cairo_base85_stream_t *) base;
-    const unsigned char *ptr = data;
-    unsigned char five_tuple[5];
-    cairo_bool_t is_zero;
+    cairo_base64_stream_t * stream = (cairo_base64_stream_t *) base;
+    unsigned char *src = stream->src;
+    unsigned int i;
 
-    while (length) {
-	stream->four_tuple[stream->pending++] = *ptr++;
-	length--;
-	if (stream->pending == 4) {
-	    _expand_four_tuple_to_five (stream->four_tuple, five_tuple, &is_zero);
-	    if (is_zero)
-		_cairo_output_stream_write (stream->output, "z", 1);
-	    else
-		_cairo_output_stream_write (stream->output, five_tuple, 5);
-	    stream->pending = 0;
+    if (stream->in_mem + length < 3) {
+	for (i = 0; i < length; i++) {
+	    src[i + stream->in_mem] = *data++;
 	}
+	stream->in_mem += length;
+	return CAIRO_STATUS_SUCCESS;
     }
+
+    do {
+	unsigned char dst[4];
+
+	for (i = stream->in_mem; i < 3; i++) {
+	    src[i] = *data++;
+	    length--;
+	}
+	stream->in_mem = 0;
+
+	dst[0] = base64_table[src[0] >> 2];
+	dst[1] = base64_table[(src[0] & 0x03) << 4 | src[1] >> 4];
+	dst[2] = base64_table[(src[1] & 0x0f) << 2 | src[2] >> 6];
+	dst[3] = base64_table[src[2] & 0xfc >> 2];
+	/* Special case for the last missing bits */
+	switch (stream->trailing) {
+	    case 2:
+		dst[2] = '=';
+	    case 1:
+		dst[3] = '=';
+	    default:
+		break;
+	}
+	_cairo_output_stream_write (stream->output, dst, 4);
+    } while (length >= 3);
+
+    for (i = 0; i < length; i++) {
+	src[i] = *data++;
+    }
+    stream->in_mem = length;
 
     return _cairo_output_stream_get_status (stream->output);
 }
 
 static cairo_status_t
-_cairo_base85_stream_close (cairo_output_stream_t *base)
+_cairo_base64_stream_close (cairo_output_stream_t *base)
 {
-    cairo_base85_stream_t *stream = (cairo_base85_stream_t *) base;
-    unsigned char five_tuple[5];
+    cairo_base64_stream_t *stream = (cairo_base64_stream_t *) base;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
-    if (stream->pending) {
-	memset (stream->four_tuple + stream->pending, 0, 4 - stream->pending);
-	_expand_four_tuple_to_five (stream->four_tuple, five_tuple, NULL);
-	_cairo_output_stream_write (stream->output, five_tuple, stream->pending + 1);
+    if (stream->in_mem > 0) {
+	memset (stream->src + stream->in_mem, 0, 3 - stream->in_mem);
+	stream->trailing = 3 - stream->in_mem;
+	stream->in_mem = 3;
+	status = _cairo_base64_stream_write (base, NULL, 0);
     }
 
-    return _cairo_output_stream_get_status (stream->output);
+    return status;
 }
 
 cairo_output_stream_t *
-_cairo_base85_stream_create (cairo_output_stream_t *output)
+_cairo_base64_stream_create (cairo_output_stream_t *output)
 {
-    cairo_base85_stream_t *stream;
+    cairo_base64_stream_t *stream;
 
     if (output->status)
 	return _cairo_output_stream_create_in_error (output->status);
 
-    stream = malloc (sizeof (cairo_base85_stream_t));
+    stream = malloc (sizeof (cairo_base64_stream_t));
     if (unlikely (stream == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return (cairo_output_stream_t *) &_cairo_output_stream_nil;
     }
 
     _cairo_output_stream_init (&stream->base,
-			       _cairo_base85_stream_write,
+			       _cairo_base64_stream_write,
 			       NULL,
-			       _cairo_base85_stream_close);
+			       _cairo_base64_stream_close);
+
     stream->output = output;
-    stream->pending = 0;
+    stream->in_mem = 0;
+    stream->trailing = 0;
 
     return &stream->base;
 }

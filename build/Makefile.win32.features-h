@@ -92,5 +92,8 @@ endif
 	@echo "#define CAIRO_HAS_IMAGE_SURFACE 1" >> src/cairo-features.h
 	@echo "#define CAIRO_HAS_META_SURFACE 1" >> src/cairo-features.h
 	@echo "#define CAIRO_HAS_TEE_SURFACE 1" >> src/cairo-features.h
+ifeq ($(CAIRO_HAS_XML_SURFACE),1)
+	@echo "#define CAIRO_HAS_XML_SURFACE 1" >> src/cairo-features.h
+endif
 	@echo "#define CAIRO_HAS_USER_FONT 1" >> src/cairo-features.h
 	@echo "#endif" >>  src/cairo-features.h

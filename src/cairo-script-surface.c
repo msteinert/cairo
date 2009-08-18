@@ -1142,7 +1142,7 @@ _emit_png_surface (cairo_script_surface_t *surface,
     if (unlikely (status))
 	return status;
 
-    _cairo_output_stream_puts (surface->ctx->stream, " >> image ");
+    _cairo_output_stream_puts (surface->ctx->stream, "~> >> image ");
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -1253,7 +1253,7 @@ _emit_image_surface (cairo_script_surface_t *surface,
 	    if (unlikely (status))
 		return status;
 	}
-	_cairo_output_stream_puts (surface->ctx->stream, " >> image ");
+	_cairo_output_stream_puts (surface->ctx->stream, "~> >> image ");
 
 	cairo_surface_destroy (&clone->base);
     }
@@ -1291,7 +1291,7 @@ _emit_image_surface (cairo_script_surface_t *surface,
 	if (unlikely (status))
 	    return status;
 
-	_cairo_output_stream_puts (surface->ctx->stream, " set-mime-data\n");
+	_cairo_output_stream_puts (surface->ctx->stream, "~> set-mime-data\n");
     }
 
     cairo_surface_get_mime_data (&image->base, CAIRO_MIME_TYPE_JP2,
@@ -1307,7 +1307,7 @@ _emit_image_surface (cairo_script_surface_t *surface,
 	if (unlikely (status))
 	    return status;
 
-	_cairo_output_stream_puts (surface->ctx->stream, " set-mime-data\n");
+	_cairo_output_stream_puts (surface->ctx->stream, "~> set-mime-data\n");
     }
 
     _cairo_output_stream_puts (surface->ctx->stream, "pattern");
@@ -2499,7 +2499,7 @@ _emit_type42_font (cairo_script_surface_t *surface,
 
     font_private = scaled_font->surface_private;
     _cairo_output_stream_printf (surface->ctx->stream,
-				 " >> font dup /f%lu exch def set-font-face",
+				 "~> >> font dup /f%lu exch def set-font-face",
 				 font_private->id);
 
     return status;
@@ -3003,7 +3003,7 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 		    }
 
 		    _cairo_output_stream_printf (surface->ctx->stream,
-						 " %f <~", glyphs[n].x - x);
+						 "~> %f <~", glyphs[n].x - x);
 		    base85_stream = _cairo_base85_stream_create (surface->ctx->stream);
 		} else {
 		    _cairo_output_stream_printf (surface->ctx->stream,
@@ -3025,7 +3025,7 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 		    }
 
 		    _cairo_output_stream_printf (surface->ctx->stream,
-						 " %f %f <~",
+						 "~> %f %f <~",
 						 ix, iy);
 		    base85_stream = _cairo_base85_stream_create (surface->ctx->stream);
 		} else {
@@ -3067,6 +3067,8 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 	status2 = _cairo_output_stream_destroy (base85_stream);
 	if (status == CAIRO_STATUS_SUCCESS)
 	    status = status2;
+
+	_cairo_output_stream_printf (surface->ctx->stream, "~>");
     } else {
 	_cairo_output_stream_puts (surface->ctx->stream, " ]");
     }
@@ -3105,6 +3107,8 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 	    status = _cairo_output_stream_destroy (base85_stream);
 	    if (unlikely (status))
 		return status;
+
+	    _cairo_output_stream_puts (surface->ctx->stream, "~>");
 	}
 
 	_cairo_output_stream_printf (surface->ctx->stream,

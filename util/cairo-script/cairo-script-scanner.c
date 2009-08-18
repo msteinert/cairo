@@ -667,6 +667,92 @@ base85_end (csi_t *ctx, csi_scanner_t *scan, cairo_bool_t deflate)
 	longjmp (scan->jmpbuf, status);
 }
 
+static void
+base64_add (csi_t *ctx, csi_scanner_t *scan, int c)
+{
+    int val;
+
+    /* Convert Base64 character to its 6 bit nibble */
+    val = scan->accumulator;
+    if (c =='/') {
+	val = (val << 6) | 63;
+    } else if (c =='+') {
+	val = (val << 6) | 62;
+    } else if (c >='A' && c <='Z') {
+	val = (val << 6) | (c -'A');
+    } else if (c >='a' && c <='z') {
+	val = (val << 6) | (c -'a' + 26);
+    } else if (c >='0' && c <='9') {
+	val = (val << 6) | (c -'0' + 52);
+    }
+
+    buffer_check (ctx, scan, 1);
+    switch (scan->accumulator_count++) {
+    case 0:
+	break;
+
+    case 1:
+	buffer_add (&scan->buffer, (val >> 4) & 0xFF);
+	val &= 0xF;
+	break;
+
+    case 2:
+	buffer_add (&scan->buffer, (val >> 2) & 0xFF);
+	val &= 0x3;
+	break;
+
+    case 3:
+	buffer_add (&scan->buffer, (val >> 0) & 0xFF);
+	scan->accumulator_count = 0;
+	val = 0;
+	break;
+    }
+
+     if (c == '=') {
+	scan->accumulator_count = 0;
+	scan->accumulator = 0;
+     } else {
+	 scan->accumulator = val;
+     }
+}
+
+static void
+base64_end (csi_t *ctx, csi_scanner_t *scan)
+{
+    csi_object_t obj;
+    cairo_status_t status;
+
+    switch (scan->accumulator_count) {
+    case 0:
+	break;
+    case 2:
+	base64_add (ctx, scan, (scan->accumulator << 2) & 0x3f);
+	base64_add (ctx, scan, '=');
+	break;
+    case 1:
+	base64_add (ctx, scan, (scan->accumulator << 4) & 0x3f);
+	base64_add (ctx, scan, '=');
+	base64_add (ctx, scan, '=');
+	break;
+    }
+
+    status = csi_string_new (ctx,
+			     &obj,
+			     scan->buffer.base,
+			     scan->buffer.ptr - scan->buffer.base);
+    if (_csi_unlikely (status))
+	longjmp (scan->jmpbuf, status);
+
+    if (scan->build_procedure.type != CSI_OBJECT_TYPE_NULL)
+	status = csi_array_append (ctx,
+				   scan->build_procedure.datum.array,
+				   &obj);
+    else
+	status = scan_push (ctx, &obj);
+    if (_csi_unlikely (status))
+	longjmp (scan->jmpbuf, status);
+}
+
 static inline void
 scan_read (csi_scanner_t *scan, csi_file_t *src, void *ptr, int len)
 {
@@ -782,6 +868,8 @@ scan_none:
 		deflate = 1;
 	    case '~':
 		goto scan_base85;
+	    case '{':
+		goto scan_base64;
 	    default:
 		csi_file_putc (src, next);
 		goto scan_hex;
@@ -1200,6 +1288,31 @@ scan_base85:
 	    /* fall-through */
 	default:
 	    base85_add (ctx, scan, c);
+	    break;
+	}
+    }
+    longjmp (scan->jmpbuf, _csi_error (CSI_STATUS_INVALID_SCRIPT));
+
+scan_base64:
+    buffer_reset (&scan->buffer);
+    scan->accumulator = 0;
+    scan->accumulator_count = 0;
+    while ((c = csi_file_getc (src)) != EOF) {
+	switch (c) {
+	case '}':
+	    next = csi_file_getc (src);
+	    switch (next) {
+	    case EOF:
+		return;
+
+	    case '>':
+		base64_end (ctx, scan);
+		goto scan_none;
+	    }
+	    longjmp (scan->jmpbuf, _csi_error (CSI_STATUS_INVALID_SCRIPT));
+
+	default:
+	    base64_add (ctx, scan, c);
 	    break;
 	}
     }

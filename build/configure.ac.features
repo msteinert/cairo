@@ -359,6 +359,7 @@ AC_DEFUN([CAIRO_REPORT],
 	echo "  Image:         yes (always builtin)"
 	echo "  Meta:          yes (always builtin)"
 	echo "  Tee:           yes (always builtin)"
+	echo "  XML:           $use_xml"
 	echo "  Xlib:          $use_xlib"
 	echo "  Xlib Xrender:  $use_xlib_xrender"
 	echo "  Qt:            $use_qt"
