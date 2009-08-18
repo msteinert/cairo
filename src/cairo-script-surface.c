@@ -3416,6 +3416,7 @@ cairo_script_from_meta_surface (cairo_script_context_t *context,
 	return status;
 
     _cairo_box_round_to_rectangle (&bbox, &extents);
+
     surface = &_cairo_script_surface_create_internal (context,
 						      meta->content,
 						      extents.width,
@@ -3424,6 +3425,7 @@ cairo_script_from_meta_surface (cairo_script_context_t *context,
     if (unlikely (surface->status))
 	return surface->status;
 
+    cairo_surface_set_device_offset (surface, -extents.x, -extents.y);
     status = cairo_meta_surface_replay (meta, surface);
     cairo_surface_destroy (surface);
 
