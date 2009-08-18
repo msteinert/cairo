@@ -626,6 +626,11 @@ if test "x$have_bfd" = "xyes"; then
     AC_SUBST(BFD_LIBS)
 fi
 
+PKG_CHECK_MODULES(glib, glib-2.0, have_glib=yes, have_glib=no)
+AC_SUBST(glib_CFLAGS)
+AC_SUBST(glib_LIBS)
+AM_CONDITIONAL(BUILD_SPHINX, test "x$have_glib" = "xyes")
+
 dnl ===========================================================================
 
 AC_ARG_ENABLE(some-floating-point,
@@ -670,6 +675,7 @@ util/Makefile
 util/cairo-fdr/Makefile
 util/cairo-script/Makefile
 util/cairo-script/examples/Makefile
+util/cairo-sphinx/Makefile
 util/cairo-trace/Makefile
 util/cairo-trace/cairo-trace
 doc/Makefile

@@ -9,6 +9,12 @@ SUBDIRS += cairo-fdr
 endif
 endif
 
+if BUILD_SPHINX
+if CAIRO_HAS_SCRIPT_SURFACE
+SUBDIRS += cairo-sphinx
+endif
+endif
+
 AM_CPPFLAGS = -I$(top_srcdir)/src
 
 EXTRA_PROGRAMS += show-traps show-edges show-events
