@@ -14,6 +14,7 @@ EXTRA_PROGRAMS += cairo-perf \
 		  cairo-perf-trace \
 		  cairo-perf-diff-files \
 		  cairo-perf-print \
+		  cairo-perf-chart \
 		  cairo-perf-compare-backends \
 		  cairo-perf-graph-files
 EXTRA_DIST += cairo-perf-diff COPYING
@@ -102,6 +103,9 @@ cairo_perf_diff_files_SOURCES =	\
 
 cairo_perf_print_SOURCES =	\
 	cairo-perf-print.c
+
+cairo_perf_chart_SOURCES =	\
+	cairo-perf-chart.c
 
 cairo_perf_compare_backends_SOURCES =	\
 	cairo-perf-compare-backends.c
