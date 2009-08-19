@@ -920,15 +920,6 @@ _clip_to_boxes (cairo_clip_t **clip,
 	goto EXTENTS;
     }
 
-    /* In some cases it may be preferable to always use boxes instead
-     * of a region, in particular where we can cull lots of geometry.
-     * For the time being, continue to use the old path until we can
-     * find a compelling use-case for geometry clipping.
-     */
-    status = _cairo_clip_get_region (*clip, NULL);
-    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	goto EXTENTS;
-
     status = _cairo_clip_get_boxes (*clip, boxes, num_boxes);
     switch ((int) status) {
     case CAIRO_STATUS_SUCCESS:
@@ -956,6 +947,7 @@ _cairo_surface_fallback_paint (cairo_surface_t		*surface,
     cairo_status_t status;
     cairo_rectangle_int_t extents;
     cairo_bool_t is_bounded;
+    cairo_clip_path_t *clip_path = clip ? clip->path : NULL;
     cairo_box_t boxes_stack[32], *boxes = boxes_stack;
     int num_boxes = ARRAY_LENGTH (boxes_stack);
     cairo_traps_t traps;
@@ -986,6 +978,22 @@ _cairo_surface_fallback_paint (cairo_surface_t		*surface,
 	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
 	    status = CAIRO_STATUS_SUCCESS;
 	return status;
+    }
+
+    /* If the clip cannot be reduced to a set of boxes, we will need to
+     * use a clipmask. Paint is special as it is the only operation that
+     * does not implicitly use a mask, so we may be able to reduce this
+     * operation to a fill...
+     */
+    if (clip != NULL && clip_path->prev == NULL &&
+	_cairo_operator_bounded_by_mask (op))
+    {
+	return _cairo_surface_fill (surface, op, source,
+				    &clip_path->path,
+				    clip_path->fill_rule,
+				    clip_path->tolerance,
+				    clip_path->antialias,
+				    NULL);
     }
 
     status = _cairo_traps_init_boxes (&traps, boxes, num_boxes);
