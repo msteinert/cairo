@@ -1854,7 +1854,7 @@ _ft_create_for_pattern (csi_t *ctx,
     struct _ft_face_data *data;
     csi_list_t *link;
     cairo_font_face_t *font_face;
-    FcPattern *pattern;
+    FcPattern *pattern, *resolved;
     csi_status_t status;
     struct mmap_vec vec;
     void *bytes;
@@ -1881,8 +1881,20 @@ _ft_create_for_pattern (csi_t *ctx,
     if (bytes != tmpl.bytes)
 	_csi_free (ctx, bytes);
 
-    font_face = cairo_ft_font_face_create_for_pattern (pattern);
-    FcPatternDestroy (pattern);
+    resolved = pattern;
+    if (cairo_version () < CAIRO_VERSION_ENCODE (1, 9, 0)) {
+	/* prior to 1.9, you needed to pass a resolved pattern */
+	resolved = FcFontMatch (NULL, pattern, NULL);
+	if (_csi_unlikely (resolved == NULL)) {
+	    FcPatternDestroy (resolved);
+	    return _csi_error (CSI_STATUS_NO_MEMORY);
+	}
+    }
+
+    font_face = cairo_ft_font_face_create_for_pattern (resolved);
+    FcPatternDestroy (resolved);
+    if (resolved != pattern)
+	FcPatternDestroy (pattern);
 
     data = _csi_slab_alloc (ctx, sizeof (*data));
     ctx->_faces = _csi_list_prepend (ctx->_faces, &data->blob.list);
