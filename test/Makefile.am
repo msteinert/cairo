@@ -268,6 +268,8 @@ REFERENCE_IMAGES = \
 	create-from-png.ref.png \
 	culled-glyphs.ps.ref.png \
 	culled-glyphs.ref.png \
+	curve-to-as-line-to.ps.xfail.png \
+	curve-to-as-line-to.ref.png \
 	dash-caps-joins.ps2.argb32.ref.png \
 	dash-caps-joins.ps2.rgb24.ref.png \
 	dash-caps-joins.ps3.argb32.ref.png \
@@ -321,8 +323,6 @@ REFERENCE_IMAGES = \
 	degenerate-rel-curve-to.ref.png \
 	degenerate-rel-curve-to.ps.xfail.png \
 	device-offset-fractional.gl.xfail.png \
-	device-offset-fractional.pdf.argb32.ref.png \
-	device-offset-fractional.pdf.ref.png \
 	device-offset-fractional.pdf.xfail.png \
 	device-offset-fractional.ps2.ref.png \
 	device-offset-fractional.ps3.ref.png \
@@ -782,7 +782,6 @@ REFERENCE_IMAGES = \
 	scale-offset-image.ps.ref.png \
 	scale-offset-image.ref.png \
 	scale-offset-image.xfail.png \
-	scale-offset-image.meta.xfail.png \
 	scale-offset-image.xlib.xfail.png \
 	scale-offset-image.xlib-fallback.xfail.png \
 	scale-offset-similar.gl.ref.png \
