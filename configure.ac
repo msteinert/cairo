@@ -313,14 +313,22 @@ CAIRO_ENABLE_FUNCTIONS(egl, EGL, auto, [
     if test "x$use_egl" = "xyes"; then
       egl_NONPKGCONFIG_CFLAGS=
       egl_NONPKGCONFIG_LIBS=
-      for lib in EGL egl13 egl12 egl11; do
+      save_LIBS="$LIBS"
+      other_egl_LIBS=""
+      # Temporary workaround for missing link from egl13
+      AC_CHECK_LIB(csi, csi_stream_attachresource, other_egl_LIBS="-lcsi")
+      LIBS="$other_egl_LIBS $LIBS"
+      for egl_lib in EGL egl13 egl12 egl11; do
 	if test -z "$egl_NONPKGCONFIG_LIBS"; then
-          AC_CHECK_LIB($lib, eglGetError, egl_NONPKGCONFIG_LIBS="-l$lib")
+          AC_CHECK_LIB($egl_lib, eglGetError, egl_NONPKGCONFIG_LIBS="-l$egl_lib")
 	fi
       done
       if test -z "$egl_NONPKGCONFIG_LIBS"; then
         use_egl="no (EGL library not found)"
+      else
+        egl_NONPKGCONFIG_LIBS="$egl_NONPKGCONFIG_LIBS $other_egl_LIBS"
       fi
+      LIBS="$save_LIBS"
     fi
   else
       use_egl="no (not required by any backend)"
