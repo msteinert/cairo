@@ -5,13 +5,16 @@ dnl skipped and all flags rechecked.  So there's no need to do anything
 dnl else.  If for any reason you need to force a recheck, just change
 dnl MAYBE_WARN in an ignorable way (like adding whitespace)
 
+# -Wcast-align generates lots of false positive reports we need to
+# cast image data from uint8_t to uin32_t.
+
 MAYBE_WARN="-Wall -Wextra \
 -Wold-style-definition \
 -Wmissing-declarations -Werror-implicit-function-declaration \
 -Wnested-externs -Wpointer-arith -Wwrite-strings \
 -Wsign-compare -Wstrict-prototpes -Wmissig-prototyess \
 -Wpacked -Wswitch-enum -Wmissing-format-attribute \
--Wcast-align -Wbad-function-cast -Wvolatile-register-var \
+-Wbad-function-cast -Wvolatile-register-var \
 -Wstrict-aliasing=2 -Winit-self -Wunsafe-loop-optimizations \
 -Wno-missing-field-initializers -Wno-unused-parameter \
 -Wno-attributes -Wno-long-long -Winline"
