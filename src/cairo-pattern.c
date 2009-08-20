@@ -2116,7 +2116,7 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
     sampled_area.y += ty;
 
     if ( _cairo_surface_get_extents (surface, &extents)) {
-	if (attr->extend != CAIRO_EXTEND_REPEAT) {
+	if (attr->extend == CAIRO_EXTEND_NONE) {
 	    /* Never acquire a larger area than the source itself */
 	    is_empty = _cairo_rectangle_intersect (&extents, &sampled_area);
 	} else {
