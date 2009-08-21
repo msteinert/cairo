@@ -2003,14 +2003,12 @@ static cairo_bool_t
 _cairo_win32_surface_check_span_renderer (cairo_operator_t	  op,
 					  const cairo_pattern_t  *pattern,
 					  void			 *abstract_dst,
-					  cairo_antialias_t	  antialias,
-					  const cairo_composite_rectangles_t *rects)
+					  cairo_antialias_t	  antialias)
 {
     (void) op;
     (void) pattern;
     (void) abstract_dst;
     (void) antialias;
-    (void) rects;
     return TRUE;
 }
 

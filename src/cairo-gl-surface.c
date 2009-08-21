@@ -667,7 +667,6 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
     GLenum err;
     GLenum format, type;
     cairo_format_t cairo_format;
-    int y;
     unsigned int cpp;
 
     /* Want to use a switch statement here but the compiler gets whiny. */
@@ -1481,6 +1480,23 @@ _cairo_gl_surface_composite_trapezoids (cairo_operator_t op,
     cairo_surface_pattern_t traps_pattern;
     cairo_int_status_t status;
 
+    if (! _cairo_gl_operator_is_supported (op))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (_cairo_surface_check_span_renderer (op,pattern,&dst->base, antialias)) {
+	status =
+	    _cairo_surface_composite_trapezoids_as_polygon (&dst->base,
+							    op, pattern,
+							    antialias,
+							    src_x, src_y,
+							    dst_x, dst_y,
+							    width, height,
+							    traps, num_traps,
+							    clip_region);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
+
     status = _cairo_gl_get_traps_pattern (dst,
 					  dst_x, dst_y, width, height,
 					  traps, num_traps, antialias,
@@ -1810,8 +1826,7 @@ static cairo_bool_t
 _cairo_gl_surface_check_span_renderer (cairo_operator_t	  op,
 				       const cairo_pattern_t  *pattern,
 				       void			 *abstract_dst,
-				       cairo_antialias_t	  antialias,
-				       const cairo_composite_rectangles_t *rects)
+				       cairo_antialias_t	  antialias)
 {
     if (! _cairo_gl_operator_is_supported (op))
 	return FALSE;
@@ -1824,7 +1839,6 @@ _cairo_gl_surface_check_span_renderer (cairo_operator_t	  op,
     (void) pattern;
     (void) abstract_dst;
     (void) antialias;
-    (void) rects;
 }
 
 static cairo_span_renderer_t *

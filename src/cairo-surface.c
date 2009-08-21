@@ -2218,29 +2218,22 @@ _cairo_surface_create_span_renderer (cairo_operator_t		 op,
 }
 
 cairo_bool_t
-_cairo_surface_check_span_renderer   (cairo_operator_t		 op,
-				      const cairo_pattern_t     *pattern,
-				      cairo_surface_t		*dst,
-				      cairo_antialias_t	         antialias,
-				      const cairo_composite_rectangles_t *rects)
+_cairo_surface_check_span_renderer (cairo_operator_t		 op,
+				    const cairo_pattern_t	*pattern,
+				    cairo_surface_t		*dst,
+				    cairo_antialias_t	         antialias)
 {
-    cairo_int_status_t status;
-
     assert (dst->snapshot_of == NULL);
+    assert (dst->status == CAIRO_STATUS_SUCCESS);
+    assert (! dst->finished);
 
-    if (unlikely (dst->status))
+    /* XXX: Currently we have no mono span renderer */
+    if (antialias == CAIRO_ANTIALIAS_NONE)
 	return FALSE;
 
-    if (unlikely (dst->finished)) {
-	status = _cairo_surface_set_error (dst, CAIRO_STATUS_SURFACE_FINISHED);
-	return FALSE;
-    }
+    if (dst->backend->check_span_renderer != NULL)
+	return dst->backend->check_span_renderer (op, pattern, dst, antialias);
 
-    if (dst->backend->check_span_renderer) {
-	return dst->backend->check_span_renderer (op, pattern, dst,
-						  antialias,
-						  rects);
-    }
     return FALSE;
 }
 

@@ -1184,10 +1184,7 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
 	    goto CLEANUP;
     }
 
-    if (antialias != CAIRO_ANTIALIAS_NONE &&
-	_cairo_surface_check_span_renderer (op, source, surface,
-					    antialias, NULL))
-    {
+    if (_cairo_surface_check_span_renderer (op, source, surface, antialias)) {
 	cairo_composite_spans_info_t info;
 
 	info.polygon = &polygon;
@@ -1327,10 +1324,7 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
     }
 
 
-    if (antialias != CAIRO_ANTIALIAS_NONE &&
-	_cairo_surface_check_span_renderer (op, source, surface,
-					    antialias, NULL))
-    {
+    if (_cairo_surface_check_span_renderer (op, source, surface, antialias)) {
 	cairo_composite_spans_info_t info;
 
 	info.polygon = &polygon;
