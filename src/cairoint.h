@@ -2774,10 +2774,10 @@ _cairo_debug_check_image_surface_is_defined (const cairo_surface_t *surface);
 
 #endif
 
-void
+cairo_private void
 _cairo_debug_print_path (FILE *stream, cairo_path_fixed_t *path);
 
-void
+cairo_private void
 _cairo_debug_print_clip (FILE *stream, cairo_clip_t *clip);
 
 #endif
