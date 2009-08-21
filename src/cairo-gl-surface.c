@@ -42,8 +42,6 @@
 slim_hidden_proto (cairo_gl_context_reference);
 slim_hidden_proto (cairo_gl_context_destroy);
 
-#define ARRAY_SIZE(array) (sizeof (array) / sizeof (array[0]))
-
 #define BIAS .375
 
 static inline float
@@ -367,7 +365,7 @@ _cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op)
     };
     GLenum src_factor, dst_factor;
 
-    assert (op < ARRAY_SIZE (blend_factors));
+    assert (op < ARRAY_LENGTH (blend_factors));
 
     src_factor = blend_factors[op].src;
     dst_factor = blend_factors[op].dst;
