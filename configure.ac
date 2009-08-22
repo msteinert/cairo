@@ -641,6 +641,8 @@ AM_CONDITIONAL(BUILD_TRACE,
 	       test "x$have_ld_preload" = "xyes" \
 	       -a "x$have_libz" = "xyes")
 
+AM_CONDITIONAL(BUILD_SCRIPT, test "x$have_libz" = "xyes")
+
 AC_CHECK_LIB(bfd, bfd_openr,
 	 [AC_CHECK_HEADER(bfd.h, [have_bfd=yes],
 	 [have_bfd=no])], [have_bfd=no])

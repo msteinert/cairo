@@ -1,6 +1,10 @@
 include $(top_srcdir)/build/Makefile.am.common
 
-SUBDIRS = . cairo-script
+SUBDIRS = .
+
+if BUILD_SCRIPT
+SUBDIRS += cairo-script
+endif
 
 if BUILD_TRACE
 SUBDIRS += cairo-trace
@@ -20,7 +24,10 @@ AM_CPPFLAGS = -I$(top_srcdir)/src \
 	      -I$(top_srcdir)/util/cairo-script	\
 	      $(CAIRO_CFLAGS)
 
-EXTRA_PROGRAMS += show-traps show-edges show-events trace-to-xml xml-to-trace
+EXTRA_PROGRAMS += show-traps show-edges show-events
+if BUILD_SCRIPT
+EXTRA_PROGRAMS += trace-to-xml xml-to-trace
+endif
 
 trace_to_xml_LDADD = cairo-script/libcairo-script-interpreter.la $(top_builddir)/src/libcairo.la $(CAIRO_LDADD)
 
