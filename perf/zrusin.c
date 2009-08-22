@@ -87,7 +87,7 @@ zrusin_another_fill (cairo_t *cr, int width, int height, int loops)
 void
 zrusin (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "zrusin"))
+    if (! cairo_perf_can_run (perf, "zrusin", NULL))
 	return;
 
     cairo_perf_run (perf, "zrusin-another-tessellate", zrusin_another_tessellate);

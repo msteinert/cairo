@@ -153,16 +153,24 @@ cairo_perf_has_similar (cairo_perf_t *perf)
 
 cairo_bool_t
 cairo_perf_can_run (cairo_perf_t	*perf,
-		    const char		*name)
+		    const char		*name,
+		    cairo_bool_t	*is_explicit)
 {
     unsigned int i;
+
+    if (is_explicit)
+	*is_explicit = FALSE;
 
     if (perf->num_names == 0)
 	return TRUE;
 
-    for (i = 0; i < perf->num_names; i++)
-	if (strstr (name, perf->names[i]))
+    for (i = 0; i < perf->num_names; i++) {
+	if (strstr (name, perf->names[i])) {
+	    if (is_explicit)
+		*is_explicit = FALSE;
 	    return TRUE;
+	}
+    }
 
     return FALSE;
 }

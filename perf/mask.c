@@ -275,7 +275,7 @@ do_mask_radial (cairo_t *cr, int width, int height, int loops)
 void
 mask (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "mask"))
+    if (! cairo_perf_can_run (perf, "mask", NULL))
 	return;
 
     cairo_perf_cover_sources_and_operators (perf, "mask-solid",

@@ -72,6 +72,7 @@ path (cairo_t *cr, int step, int dir, int iterations)
     int i;
 
     switch (dir) {
+	default:
 	case 0: dx =  step; dy =  0; break;
 	case 1: dx = -step; dy =  0; break;
 	case 2: dx =  0; dy =  step; break;
@@ -237,7 +238,7 @@ do_dragon_solid_circle_clip (cairo_t *cr, int width, int height, int loops)
 void
 dragon (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "dragon"))
+    if (! cairo_perf_can_run (perf, "dragon", NULL))
 	return;
 
     cairo_perf_run (perf, "dragon-solid", do_dragon_solid);

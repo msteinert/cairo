@@ -110,7 +110,7 @@ do_fill_eo_noaa (cairo_t *cr, int width, int height, int loops)
 void
 fill (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "fill"))
+    if (! cairo_perf_can_run (perf, "fill", NULL))
 	return;
 
     cairo_perf_cover_sources_and_operators (perf, "fill", do_fill);

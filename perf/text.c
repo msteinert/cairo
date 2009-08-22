@@ -59,7 +59,7 @@ do_text (cairo_t *cr, int width, int height, int loops)
 void
 text (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "text"))
+    if (! cairo_perf_can_run (perf, "text", NULL))
 	return;
 
     cairo_perf_cover_sources_and_operators (perf, "text", do_text);

@@ -146,7 +146,7 @@ random_curve_nz (cairo_t *cr, int width, int height, int loops)
 void
 intersections (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "intersections"))
+    if (! cairo_perf_can_run (perf, "intersections", NULL))
 	return;
 
     cairo_perf_run (perf, "intersections-nz-fill", random_nz);
