@@ -947,6 +947,10 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 								ctm,
 								options);
 	}
+
+	_cairo_scaled_font_init_key (&key, font_face,
+				     font_matrix, ctm, options);
+
     }
     else
     {
@@ -1049,7 +1053,6 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     scaled_font->original_font_face =
 	cairo_font_face_reference (original_font_face);
 
-    assert (scaled_font->hash_entry.hash == key.hash_entry.hash);
     status = _cairo_hash_table_insert (font_map->hash_table,
 				       &scaled_font->hash_entry);
     if (likely (status == CAIRO_STATUS_SUCCESS)) {
