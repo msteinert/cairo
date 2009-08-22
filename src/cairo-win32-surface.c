@@ -338,6 +338,8 @@ _cairo_win32_surface_create_for_dc (HDC             original_dc,
     if (surface == NULL)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
+    surface->clip_region = NULL;
+
     status = _create_dc_and_bitmap (surface, original_dc, format,
 				    width, height,
 				    &bits, &rowstride);
@@ -1707,6 +1709,7 @@ cairo_win32_surface_create (HDC hdc)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
+    surface->clip_region = NULL;
     surface->image = NULL;
     surface->format = format;
 
