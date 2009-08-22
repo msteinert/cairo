@@ -55,10 +55,6 @@
 #include <fontconfig/fontconfig.h>
 #endif
 
-#ifdef HAVE_SCHED_H
-#include <sched.h>
-#endif
-
 #define CAIRO_PERF_ITERATIONS_DEFAULT	15
 #define CAIRO_PERF_LOW_STD_DEV		0.05
 #define CAIRO_PERF_MIN_STD_DEV_COUNT	3
@@ -544,37 +540,6 @@ parse_options (cairo_perf_t *perf, int argc, char *argv[])
     }
 }
 
-static int
-check_cpu_affinity (void)
-{
-#ifdef HAVE_SCHED_GETAFFINITY
-    cpu_set_t affinity;
-    int i, cpu_count;
-
-    if (sched_getaffinity (0, sizeof (affinity), &affinity)) {
-        perror ("sched_getaffinity");
-        return -1;
-    }
-
-    for (i = 0, cpu_count = 0; i < CPU_SETSIZE; ++i) {
-        if (CPU_ISSET (i, &affinity))
-            ++cpu_count;
-    }
-
-    if (cpu_count > 1) {
-	fputs ("WARNING: cairo-perf has not been bound to a single CPU.\n",
-	       stderr);
-        return -1;
-    }
-
-    return 0;
-#else
-    fputs ("WARNING: Cannot check CPU affinity for this platform.\n",
-	   stderr);
-    return -1;
-#endif
-}
-
 static void
 cairo_perf_fini (cairo_perf_t *perf)
 {
@@ -704,18 +669,6 @@ main (int argc, char *argv[])
     int i;
 
     parse_options (&perf, argc, argv);
-
-    if (! perf.list_only && check_cpu_affinity ()) {
-        fputs ("NOTICE: cairo-perf and the X server should be bound to CPUs (either the same\n"
-	       "or separate) on SMP systems. Not doing so causes random results when the X\n"
-	       "server is moved to or from cairo-perf's CPU during the benchmarks:\n"
-	       "\n"
-	       "    $ sudo taskset -cp 0 $(pidof X)\n"
-	       "    $ taskset -cp 1 $$\n"
-	       "\n"
-	       "See taskset(1) for information about changing CPU affinity.\n\n",
-	       stderr);
-    }
 
     signal (SIGINT, interrupt);
 
