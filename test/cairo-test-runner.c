@@ -49,6 +49,15 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #endif
+#if HAVE_LIBGEN_H
+#include <libgen.h>
+#endif
+
+#if HAVE_VALGRIND
+#include <valgrind.h>
+#else
+#define RUNNING_ON_VALGRIND 0
+#endif
 
 #ifdef _MSC_VER
 #include <crtdbg.h>
@@ -144,6 +153,26 @@ _list_free (cairo_test_list_t *list)
 	free (list);
 	list = next;
     }
+}
+
+static cairo_bool_t
+is_running_under_debugger (void)
+{
+    char buf[1024];
+
+    if (RUNNING_ON_VALGRIND)
+	return TRUE;
+
+#if HAVE_UNISTD_H && HAVE_LIBGEN_H && __linux__
+    sprintf (buf, "/proc/%d/exe", getppid ());
+    if (readlink (buf, buf, sizeof (buf)) != -1 &&
+	strncmp (basename (buf), "gdb", 3) == 0)
+    {
+	return TRUE;
+    }
+#endif
+
+    return FALSE;
 }
 
 #if SHOULD_FORK
@@ -620,6 +649,9 @@ main (int argc, char **argv)
 
     memset (&runner, 0, sizeof (runner));
     runner.num_device_offsets = 1;
+
+    if (is_running_under_debugger ())
+	runner.foreground = TRUE;
 
     if (getenv ("CAIRO_TEST_MODE")) {
 	const char *env = getenv ("CAIRO_TEST_MODE");
