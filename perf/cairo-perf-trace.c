@@ -596,6 +596,11 @@ cairo_perf_trace (cairo_perf_t *perf,
 
     if (target->cleanup)
 	target->cleanup (closure);
+
+    cairo_debug_reset_static_data ();
+#if HAVE_FCFINI
+    FcFini ();
+#endif
 }
 
 static void
