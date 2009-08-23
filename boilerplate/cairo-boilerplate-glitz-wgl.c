@@ -166,6 +166,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"glitz-wgl", "glitz", NULL, NULL,
 	CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR_ALPHA, 0,
+	"cairo_glitz_surface_create",
 	_cairo_boilerplate_glitz_wgl_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
@@ -175,6 +176,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"glitz-wgl", "glitz", NULL, NULL,
 	CAIRO_SURFACE_TYPE_GLITZ, CAIRO_CONTENT_COLOR, 0,
+	"cairo_glitz_surface_create",
 	_cairo_boilerplate_glitz_wgl_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,

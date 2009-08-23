@@ -129,6 +129,7 @@ _cairo_boilerplate_script_cleanup (void *closure)
 static const cairo_boilerplate_target_t target[] = {{
     "script", "script", ".cs", NULL,
     CAIRO_SURFACE_TYPE_SCRIPT, CAIRO_CONTENT_COLOR_ALPHA, 0,
+    "cairo_script_surface_create",
     _cairo_boilerplate_script_create_surface,
     NULL,
     _cairo_boilerplate_script_finish_surface,

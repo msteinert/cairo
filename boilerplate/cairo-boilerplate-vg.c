@@ -305,6 +305,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"vg-glx", "vg", NULL, NULL,
 	CAIRO_SURFACE_TYPE_VG, CAIRO_CONTENT_COLOR_ALPHA, 1,
+	"cairo_vg_context_create_for_glx",
 	_cairo_boilerplate_vg_create_surface_glx,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
@@ -315,6 +316,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"vg-glx", "vg", NULL, NULL,
 	CAIRO_SURFACE_TYPE_VG, CAIRO_CONTENT_COLOR, 1,
+	"cairo_vg_context_create_for_glx",
 	_cairo_boilerplate_vg_create_surface_glx,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
@@ -327,6 +329,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"vg-egl", "vg", NULL, NULL,
 	CAIRO_SURFACE_TYPE_VG, CAIRO_CONTENT_COLOR_ALPHA, 1,
+	"cairo_vg_context_create_for_egl",
 	_cairo_boilerplate_vg_create_surface_egl,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
@@ -337,6 +340,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"vg-egl", "vg", NULL, NULL,
 	CAIRO_SURFACE_TYPE_VG, CAIRO_CONTENT_COLOR, 1,
+	"cairo_vg_context_create_for_egl",
 	_cairo_boilerplate_vg_create_surface_egl,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,

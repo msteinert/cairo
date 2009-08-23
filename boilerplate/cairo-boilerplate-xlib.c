@@ -439,6 +439,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"xlib", "xlib", NULL, "xlib-reference",
 	CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR_ALPHA, 1,
+	"cairo_xlib_surface_create_with_xrender_format",
 	_cairo_boilerplate_xlib_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
@@ -449,6 +450,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"xlib", "xlib", NULL, "xlib-reference",
 	CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR, 1,
+	"cairo_xlib_surface_create_with_xrender_format",
 	_cairo_boilerplate_xlib_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
@@ -459,6 +461,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"xlib-reference", "xlib", NULL, NULL,
 	CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR, 1,
+	"cairo_xlib_surface_create",
 	_cairo_boilerplate_xlib_reference_create_surface,
 	NULL, NULL,
 	NULL, /* get_image */
@@ -473,6 +476,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"xlib-fallback", "xlib", NULL, NULL,
 	CAIRO_SURFACE_TYPE_XLIB, CAIRO_CONTENT_COLOR, 1,
+	"cairo_xlib_surface_create",
 	_cairo_boilerplate_xlib_fallback_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,

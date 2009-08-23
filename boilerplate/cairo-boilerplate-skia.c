@@ -33,6 +33,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"skia", "skia", NULL, NULL,
 	CAIRO_SURFACE_TYPE_SKIA, CAIRO_CONTENT_COLOR_ALPHA, 0,
+	"cairo_skia_surface_create",
 	_cairo_boilerplate_skia_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
@@ -41,6 +42,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"skia", "skia", NULL, NULL,
 	CAIRO_SURFACE_TYPE_SKIA, CAIRO_CONTENT_COLOR, 0,
+	"cairo_skia_surface_create",
 	_cairo_boilerplate_skia_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,

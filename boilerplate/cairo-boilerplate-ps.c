@@ -294,6 +294,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	"ps2", "ps", ".ps", NULL,
 	CAIRO_SURFACE_TYPE_PS,
 	CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED, 0,
+	"cairo_ps_surface_create",
 	_cairo_boilerplate_ps2_create_surface,
 	_cairo_boilerplate_ps_force_fallbacks,
 	_cairo_boilerplate_ps_finish_surface,
@@ -305,6 +306,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"ps2", "ps", ".ps", NULL,
 	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
+	"cairo_ps_surface_create",
 	_cairo_boilerplate_ps2_create_surface,
 	_cairo_boilerplate_ps_force_fallbacks,
 	_cairo_boilerplate_ps_finish_surface,
@@ -317,6 +319,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	"ps3", "ps", ".ps", NULL,
 	CAIRO_SURFACE_TYPE_PS,
 	CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED, 0,
+	"cairo_ps_surface_create",
 	_cairo_boilerplate_ps3_create_surface,
 	_cairo_boilerplate_ps_force_fallbacks,
 	_cairo_boilerplate_ps_finish_surface,
@@ -328,6 +331,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"ps3", "ps", ".ps", NULL,
 	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
+	"cairo_ps_surface_create",
 	_cairo_boilerplate_ps3_create_surface,
 	_cairo_boilerplate_ps_force_fallbacks,
 	_cairo_boilerplate_ps_finish_surface,

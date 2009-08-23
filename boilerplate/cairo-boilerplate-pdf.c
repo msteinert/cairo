@@ -229,6 +229,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	"pdf", "pdf", ".pdf", NULL,
 	CAIRO_SURFACE_TYPE_PDF,
 	CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED, 0,
+	"cairo_pdf_surface_create",
 	_cairo_boilerplate_pdf_create_surface,
 	_cairo_boilerplate_pdf_force_fallbacks,
 	_cairo_boilerplate_pdf_finish_surface,
@@ -240,6 +241,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"pdf", "pdf", ".pdf", NULL,
 	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
+	"cairo_pdf_surface_create",
 	_cairo_boilerplate_pdf_create_surface,
 	_cairo_boilerplate_pdf_force_fallbacks,
 	_cairo_boilerplate_pdf_finish_surface,

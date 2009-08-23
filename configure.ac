@@ -36,6 +36,13 @@ AC_CHECK_LIB(z, compress,
 	 [have_libz="no (requires zlib http://www.gzip.org/zlib/)"])],
 	 [have_libz="no (requires zlib http://www.gzip.org/zlib/)"])
 
+AC_CHECK_LIB(dl, dlsym,
+	     [AC_CHECK_HEADER(dlfcn.h, [
+	      have_dl=yes
+	      AC_DEFINE(HAVE_DL, 1, [Define to 1 if you have dl available]),
+	     ], [have_dl=no])], [have_dl=no])
+AM_CONDITIONAL(CAIRO_HAS_DL, test "x$have_dl" = "xyes")
+
 dnl ===========================================================================
 
 CAIRO_ENABLE_SURFACE_BACKEND(xlib, Xlib, auto, [

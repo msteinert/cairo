@@ -45,6 +45,10 @@
 #include <assert.h>
 #include <errno.h>
 
+#if HAVE_DL
+#include <dlfcn.h>
+#endif
+
 #if HAVE_UNISTD_H && HAVE_FCNTL_H && HAVE_SIGNAL_H && HAVE_SYS_STAT_H && HAVE_SYS_SOCKET_H && HAVE_SYS_UN_H
 #include <unistd.h>
 #include <fcntl.h>
@@ -278,7 +282,7 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
     {
 	"image", "image", NULL, NULL,
 	CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR_ALPHA, 0,
-	_cairo_boilerplate_image_create_surface,
+	NULL, _cairo_boilerplate_image_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png
@@ -286,7 +290,7 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
     {
 	"image", "image", NULL, NULL,
 	CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR, 0,
-	_cairo_boilerplate_image_create_surface,
+	NULL, _cairo_boilerplate_image_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png
@@ -295,6 +299,7 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
     {
 	"meta", "image", NULL, NULL,
 	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR_ALPHA, 0,
+	"cairo_meta_surface_create",
 	_cairo_boilerplate_meta_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
@@ -305,6 +310,7 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
     {
 	"meta", "image", NULL, NULL,
 	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
+	"cairo_meta_surface_create",
 	_cairo_boilerplate_meta_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
@@ -321,6 +327,19 @@ static struct cairo_boilerplate_target_list {
     const cairo_boilerplate_target_t *target;
 } *cairo_boilerplate_targets;
 
+static cairo_bool_t
+probe_target (const cairo_boilerplate_target_t *target)
+{
+    if (target->probe == NULL)
+	return TRUE;
+
+#if HAVE_DL
+    return dlsym (NULL, target->probe) != NULL;
+#else
+    return TRUE;
+#endif
+}
+
 void
 _cairo_boilerplate_register_backend (const cairo_boilerplate_target_t *targets,
 				     unsigned int count)
@@ -329,9 +348,13 @@ _cairo_boilerplate_register_backend (const cairo_boilerplate_target_t *targets,
     while (count--) {
 	struct cairo_boilerplate_target_list *list;
 
+	--targets;
+	if (! probe_target (targets))
+	    continue;
+
 	list = xmalloc (sizeof (*list));
 	list->next = cairo_boilerplate_targets;
-	list->target = --targets;
+	list->target = targets;
 	cairo_boilerplate_targets = list;
     }
 }

@@ -52,6 +52,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"win32", "win32", NULL, NULL,
 	CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR, 0,
+	"cairo_win32_surface_create_with_dib",
 	_cairo_boilerplate_win32_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
@@ -63,6 +64,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"win32", "win32", NULL, NULL,
 	CAIRO_SURFACE_TYPE_WIN32, CAIRO_CONTENT_COLOR_ALPHA, 0,
+	"cairo_win32_surface_create_with_dib",
 	_cairo_boilerplate_win32_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
