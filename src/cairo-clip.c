@@ -205,21 +205,25 @@ _cairo_clip_set_all_clipped (cairo_clip_t *clip)
     }
 }
 
-/* XXX consider accepting a matrix, no users yet. */
-cairo_status_t
-_cairo_clip_init_rectangle (cairo_clip_t *clip,
-			    const cairo_rectangle_int_t *rect)
+static cairo_status_t
+_cairo_clip_intersect_rectangle (cairo_clip_t *clip,
+				 const cairo_rectangle_int_t *rect)
 {
     cairo_clip_path_t *clip_path;
     cairo_status_t status;
 
-    _cairo_clip_init (clip);
-    if (rect == NULL)
-	return CAIRO_STATUS_SUCCESS;
+    if (clip->path != NULL) {
+	cairo_box_t box;
 
-    if (rect->width == 0 || rect->height == 0) {
-	_cairo_clip_set_all_clipped (clip);
-	return CAIRO_STATUS_SUCCESS;
+	if (_cairo_path_fixed_is_box (&clip->path->path, &box)) {
+	    if (box.p1.x >= _cairo_fixed_from_int (rect->x) &&
+		box.p1.y >= _cairo_fixed_from_int (rect->y) &&
+		box.p2.x <= _cairo_fixed_from_int (rect->x + rect->width) &&
+		box.p2.y <= _cairo_fixed_from_int (rect->y + rect->height))
+	    {
+		return CAIRO_STATUS_SUCCESS;
+	    }
+	}
     }
 
     clip_path = _cairo_clip_path_create (clip);
@@ -257,16 +261,40 @@ _cairo_clip_init_rectangle (cairo_clip_t *clip,
     return CAIRO_STATUS_SUCCESS;
 }
 
-void
+/* XXX consider accepting a matrix, no users yet. */
+cairo_status_t
+_cairo_clip_init_rectangle (cairo_clip_t *clip,
+			    const cairo_rectangle_int_t *rect)
+{
+    _cairo_clip_init (clip);
+
+    if (rect == NULL)
+	return CAIRO_STATUS_SUCCESS;
+
+    if (rect->width == 0 || rect->height == 0) {
+	_cairo_clip_set_all_clipped (clip);
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    return _cairo_clip_intersect_rectangle (clip, rect);
+}
+
+cairo_clip_t *
 _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other)
 {
     if (other != NULL) {
-	clip->all_clipped = other->all_clipped;
-	clip->path = _cairo_clip_path_reference (other->path);
+	if (other->path == NULL) {
+	    _cairo_clip_init (clip);
+	    clip = NULL;
+	} else {
+	    clip->all_clipped = other->all_clipped;
+	    clip->path = _cairo_clip_path_reference (other->path);
+	}
     } else {
-	clip->all_clipped = FALSE;
-	clip->path = NULL;
+	_cairo_clip_init (clip);
     }
+
+    return clip;
 }
 
 void
@@ -291,15 +319,13 @@ _cairo_clip_intersect_path (cairo_clip_t       *clip,
     cairo_rectangle_int_t extents;
 
     if (clip->path != NULL) {
-	if (_cairo_path_fixed_equal (&clip->path->path, path)) {
-	    if (clip->path->fill_rule == fill_rule) {
-		if (path->is_rectilinear ||
-		    (tolerance == clip->path->tolerance &&
-		     antialias == clip->path->antialias))
-		{
-		    return CAIRO_STATUS_SUCCESS;
-		}
-	    }
+	if (clip->path->fill_rule == fill_rule &&
+	    (path->is_rectilinear ||
+	     (tolerance == clip->path->tolerance &&
+	      antialias == clip->path->antialias)) &&
+	    _cairo_path_fixed_equal (&clip->path->path, path))
+	{
+	    return CAIRO_STATUS_SUCCESS;
 	}
     }
 
@@ -367,6 +393,32 @@ _cairo_clip_clip (cairo_clip_t       *clip,
     return _cairo_clip_intersect_path (clip,
 				       path, fill_rule, tolerance,
 				       antialias);
+}
+
+cairo_status_t
+_cairo_clip_rectangle (cairo_clip_t       *clip,
+		       const cairo_rectangle_int_t *rectangle)
+{
+    if (clip->all_clipped)
+	return CAIRO_STATUS_SUCCESS;
+
+    if (rectangle->width == 0 || rectangle->height == 0) {
+	_cairo_clip_set_all_clipped (clip);
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    /* if a smaller clip has already been set, ignore the new path */
+    if (clip->path != NULL) {
+	if (rectangle->x <= clip->path->extents.x &&
+	    rectangle->y <= clip->path->extents.x &&
+	    rectangle->x + rectangle->width >= clip->path->extents.x + clip->path->extents.width &&
+	    rectangle->y + rectangle->height >= clip->path->extents.y + clip->path->extents.height)
+	{
+	    return CAIRO_STATUS_SUCCESS;
+	}
+    }
+
+    return _cairo_clip_intersect_rectangle (clip, rectangle);
 }
 
 static cairo_status_t
@@ -548,6 +600,65 @@ _cairo_clip_apply_clip (cairo_clip_t *clip,
     return status;
 }
 
+#if 0
+static inline cairo_bool_t
+_clip_paths_are_rectilinear (cairo_clip_path_t *clip_path)
+{
+    while (clip_path != NULL) {
+	if (! clip_path->path.is_rectilinear)
+	    return FALSE;
+
+	clip_path = clip_path->prev;
+    }
+
+    return TRUE;
+}
+#endif
+
+static cairo_int_status_t
+_cairo_clip_path_to_region_geometric (cairo_clip_path_t *clip_path)
+{
+    cairo_traps_t traps;
+    cairo_box_t box;
+    cairo_status_t status;
+
+    /* If we have nothing to intersect with this path, then it cannot
+     * magically be reduced into a region.
+     */
+    if (clip_path->prev == NULL)
+	goto UNSUPPORTED;
+
+    /* start simple... */
+    if (! clip_path->path.maybe_fill_region)
+	goto UNSUPPORTED;
+
+    _cairo_traps_init (&traps);
+    _cairo_box_from_rectangle (&box, &clip_path->extents);
+    _cairo_traps_limit (&traps, &box);
+
+    status = _cairo_path_fixed_fill_to_traps (&clip_path->prev->path,
+					      clip_path->prev->fill_rule,
+					      clip_path->prev->tolerance,
+					      &traps);
+    if (unlikely (status))
+	return status;
+
+    status = _cairo_traps_extract_region (&traps, &clip_path->region);
+    _cairo_traps_fini (&traps);
+
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+	goto UNSUPPORTED;
+    if (unlikely (status))
+	return status;
+
+    clip_path->flags |= CAIRO_CLIP_PATH_HAS_REGION;
+    return CAIRO_STATUS_SUCCESS;
+
+UNSUPPORTED:
+    clip_path->flags |= CAIRO_CLIP_PATH_REGION_IS_UNSUPPORTED;
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
 static cairo_int_status_t
 _cairo_clip_path_to_region (cairo_clip_path_t *clip_path)
 {
@@ -563,16 +674,16 @@ _cairo_clip_path_to_region (cairo_clip_path_t *clip_path)
 	    CAIRO_STATUS_SUCCESS;
     }
 
-    if (! clip_path->path.maybe_fill_region) {
-	clip_path->flags |= CAIRO_CLIP_PATH_REGION_IS_UNSUPPORTED;
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
+    if (! clip_path->path.maybe_fill_region)
+	return _cairo_clip_path_to_region_geometric (clip_path);
 
     /* first retrieve the region for our antecedents */
     if (clip_path->prev != NULL) {
 	status = _cairo_clip_path_to_region (clip_path->prev);
 	if (status) {
-	    clip_path->flags |= CAIRO_CLIP_PATH_REGION_IS_UNSUPPORTED;
+	    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+		return _cairo_clip_path_to_region_geometric (clip_path);
+
 	    return status;
 	}
 
@@ -581,7 +692,6 @@ _cairo_clip_path_to_region (cairo_clip_path_t *clip_path)
 
     /* now extract the region for ourselves */
 
-    /* XXX just use the cheap search for now */
     clip_path->region =
 	_cairo_path_fixed_fill_rectilinear_to_region (&clip_path->path,
 						      clip_path->fill_rule,
@@ -647,7 +757,7 @@ _cairo_clip_get_surface (cairo_clip_t *clip, cairo_surface_t *target)
 			       CAIRO_CONTENT_COLOR);
 
     status = _cairo_clip_get_region (clip, &clip_region);
-    if (_cairo_status_is_error (status))
+    if (unlikely (_cairo_status_is_error (status)))
 	goto BAIL;
 
     need_translate = clip_extents->x || clip_extents->y;
@@ -693,18 +803,18 @@ _cairo_clip_get_surface (cairo_clip_t *clip, cairo_surface_t *target)
     }
 
     while ((clip_path = clip_path->prev) != NULL) {
-	status = _cairo_clip_get_region (clip, &clip_region);
-	if (_cairo_status_is_error (status))
+	status = _cairo_clip_path_to_region (clip_path);
+	if (unlikely (_cairo_status_is_error (status)))
 	    goto BAIL;
 
 	if (status == CAIRO_STATUS_SUCCESS) {
-	    cairo_region_translate (clip_region,
+	    cairo_region_translate (clip_path->region,
 				    -clip_extents->x, -clip_extents->y);
 	    status = _cairo_surface_fill_region (surface,
 						 CAIRO_OPERATOR_IN,
 						 CAIRO_COLOR_WHITE,
-						 clip_region);
-	    cairo_region_translate (clip_region,
+						 clip_path->region);
+	    cairo_region_translate (clip_path->region,
 				    clip_extents->x, clip_extents->y);
 	    if (unlikely (status))
 		goto BAIL;
@@ -843,6 +953,11 @@ _cairo_clip_get_region (cairo_clip_t *clip,
     status = _cairo_clip_path_to_region (clip->path);
     if (status)
 	return status;
+
+    if (cairo_region_is_empty (clip->path->region)) {
+	_cairo_clip_set_all_clipped (clip);
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
+    }
 
     *region = clip->path->region;
     return CAIRO_STATUS_SUCCESS;

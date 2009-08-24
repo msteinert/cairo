@@ -157,6 +157,9 @@ _cairo_path_fixed_fill_to_traps (const cairo_path_fixed_t *path,
     cairo_status_t status;
 
     _cairo_polygon_init (&polygon);
+    if (traps->has_limits)
+	_cairo_polygon_limit (&polygon, &traps->limits);
+
     status = _cairo_path_fixed_fill_to_polygon (path,
 						tolerance,
 						&polygon);

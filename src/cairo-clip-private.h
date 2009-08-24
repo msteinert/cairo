@@ -79,7 +79,7 @@ cairo_private cairo_status_t
 _cairo_clip_init_rectangle (cairo_clip_t *clip,
 			    const cairo_rectangle_int_t *rect);
 
-cairo_private void
+cairo_private_no_warn cairo_clip_t *
 _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other);
 
 cairo_private cairo_status_t
@@ -89,6 +89,12 @@ _cairo_clip_init_copy_transformed (cairo_clip_t    *clip,
 
 cairo_private void
 _cairo_clip_reset (cairo_clip_t *clip);
+
+#define _cairo_clip_fini(clip) _cairo_clip_reset (clip)
+
+cairo_private cairo_status_t
+_cairo_clip_rectangle (cairo_clip_t       *clip,
+		       const cairo_rectangle_int_t *rectangle);
 
 cairo_private cairo_status_t
 _cairo_clip_clip (cairo_clip_t       *clip,

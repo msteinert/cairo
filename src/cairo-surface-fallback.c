@@ -133,6 +133,9 @@ _create_composite_mask_pattern (cairo_surface_pattern_t       *mask_pattern,
 	status = _cairo_clip_get_region (clip, &clip_region);
 	assert (! _cairo_status_is_error (status));
 
+	/* The all-clipped state should never propagate this far. */
+	assert (status != CAIRO_INT_STATUS_NOTHING_TO_DO);
+
 	clip_surface = status == CAIRO_INT_STATUS_UNSUPPORTED;
 
 	if (clip_region && cairo_region_num_rectangles (clip_region) == 1)
@@ -349,6 +352,18 @@ _clip_and_composite_source (cairo_clip_t                  *clip,
     cairo_region_t *clip_region = NULL;
     cairo_status_t status;
 
+    if (clip != NULL) {
+	status = _cairo_clip_get_region (clip, &clip_region);
+	assert (! _cairo_status_is_error (status));
+	if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
+	    return CAIRO_STATUS_SUCCESS;
+
+	/* a solitary clip rectangle is already accommodated by extents */
+	if (clip_region && cairo_region_num_rectangles (clip_region) == 1)
+	    clip_region = NULL;
+    }
+
+
     /* Create a surface that is mask IN clip */
     status = _create_composite_mask_pattern (&mask_pattern,
 					     clip,
@@ -356,15 +371,6 @@ _clip_and_composite_source (cairo_clip_t                  *clip,
 					     dst, extents);
     if (unlikely (status))
 	return status;
-
-    if (clip != NULL) {
-	status = _cairo_clip_get_region (clip, &clip_region);
-	assert (! _cairo_status_is_error (status));
-
-	/* a solitary clip rectangle is already accommodated by extents */
-	if (clip_region && cairo_region_num_rectangles (clip_region) == 1)
-	    clip_region = NULL;
-    }
 
     /* Compute dest' = dest OUT (mask IN clip) */
     status = _cairo_surface_composite (CAIRO_OPERATOR_DEST_OUT,
@@ -454,6 +460,8 @@ _clip_and_composite (cairo_clip_t                  *clip,
 	if (clip != NULL) {
 	    status = _cairo_clip_get_region (clip, &clip_region);
 	    assert (! _cairo_status_is_error (status));
+	    if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
+		return CAIRO_STATUS_SUCCESS;
 
 	    clip_surface = status == CAIRO_INT_STATUS_UNSUPPORTED;
 	}
@@ -670,9 +678,9 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
 	status = _cairo_clip_get_region (clip, &clip_region);
 	if (unlikely (_cairo_status_is_error (status)))
 	    return status;
+	if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
+	    return CAIRO_STATUS_SUCCESS;
 
-	/* The all-clipped state should not have been propagated this far. */
-	assert (status != CAIRO_INT_STATUS_NOTHING_TO_DO);
 	clip_surface = status == CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
@@ -785,18 +793,21 @@ _composite_spans_draw_func (void                          *closure,
 					     clip_region);
 }
 
-static cairo_bool_t
+static cairo_status_t
 _rectangle_intersect_clip (cairo_rectangle_int_t *extents, cairo_clip_t *clip)
 {
     if (clip != NULL) {
-	const cairo_rectangle_int_t *clip_extents;
+	if (! _cairo_rectangle_intersect (extents,
+					  _cairo_clip_get_extents (clip)))
+	{
+	    return CAIRO_INT_STATUS_NOTHING_TO_DO;
+	}
 
-	clip_extents = _cairo_clip_get_extents (clip);
-	if (clip_extents != NULL)
-	    return _cairo_rectangle_intersect (extents, clip_extents);
-    }
+	return _cairo_clip_rectangle (clip, extents);
+    } else if (_cairo_rectangle_empty (extents))
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
 
-    return ! _cairo_rectangle_empty (extents);
+    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_status_t
@@ -824,17 +835,21 @@ _cairo_surface_fallback_paint (cairo_surface_t		*surface,
 	    return CAIRO_STATUS_SUCCESS;
     }
 
-    if (! _rectangle_intersect_clip (&extents, clip))
-	return CAIRO_STATUS_SUCCESS;
+    status = _rectangle_intersect_clip (&extents, clip);
+    if (status) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    status = CAIRO_STATUS_SUCCESS;
+	return status;
+    }
 
     /* avoid the palaver of constructing traps for a simple region */
     if (clip != NULL) {
 	status = _cairo_clip_get_region (clip, &clip_region);
 	if (unlikely (_cairo_status_is_error (status)))
 	    return status;
+	if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
+	    return CAIRO_STATUS_SUCCESS;
 
-	/* The all-clipped state should not have been propagated this far. */
-	assert (status != CAIRO_INT_STATUS_NOTHING_TO_DO);
 	clip_surface = status == CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
@@ -929,6 +944,7 @@ _cairo_surface_fallback_mask (cairo_surface_t		*surface,
 {
     cairo_rectangle_int_t extents;
     cairo_bool_t is_bounded;
+    cairo_status_t status;
 
     is_bounded = _cairo_surface_get_extents (surface, &extents);
     assert (is_bounded || clip);
@@ -949,8 +965,12 @@ _cairo_surface_fallback_mask (cairo_surface_t		*surface,
 	    return CAIRO_STATUS_SUCCESS;
     }
 
-    if (! _rectangle_intersect_clip (&extents, clip))
-	return CAIRO_STATUS_SUCCESS;
+    status = _rectangle_intersect_clip (&extents, clip);
+    if (status) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    status = CAIRO_STATUS_SUCCESS;
+	return status;
+    }
 
     return _clip_and_composite (clip, op, source,
 				_cairo_surface_mask_draw_func,
@@ -988,8 +1008,22 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
 	    return CAIRO_STATUS_SUCCESS;
     }
 
-    if (! _rectangle_intersect_clip (&extents, clip))
-	return CAIRO_STATUS_SUCCESS;
+    if (_cairo_operator_bounded_by_mask (op)) {
+	cairo_rectangle_int_t path_extents;
+
+	_cairo_path_fixed_approximate_stroke_extents (path,
+						      stroke_style, ctm,
+						      &path_extents);
+	if (! _cairo_rectangle_intersect (&extents, &path_extents))
+	    return CAIRO_STATUS_SUCCESS;
+    }
+
+    status = _rectangle_intersect_clip (&extents, clip);
+    if (status) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    status = CAIRO_STATUS_SUCCESS;
+	return status;
+    }
 
     _cairo_box_from_rectangle (&box, &extents);
 
@@ -1092,8 +1126,20 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
 	    return CAIRO_STATUS_SUCCESS;
     }
 
-    if (! _rectangle_intersect_clip (&extents, clip))
-	return CAIRO_STATUS_SUCCESS;
+    if (_cairo_operator_bounded_by_mask (op)) {
+	cairo_rectangle_int_t path_extents;
+
+	_cairo_path_fixed_approximate_fill_extents (path, &path_extents);
+	if (! _cairo_rectangle_intersect (&extents, &path_extents))
+	    return CAIRO_STATUS_SUCCESS;
+    }
+
+    status = _rectangle_intersect_clip (&extents, clip);
+    if (status) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    status = CAIRO_STATUS_SUCCESS;
+	return status;
+    }
 
     /* avoid the palaver of constructing traps for a simple region */
     if (path->maybe_fill_region) {
@@ -1104,8 +1150,9 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
 	    status = _cairo_clip_get_region (clip, &clip_region);
 	    if (unlikely (_cairo_status_is_error (status)))
 		return status;
+	    if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
+		return CAIRO_STATUS_SUCCESS;
 
-	    assert (status != CAIRO_INT_STATUS_NOTHING_TO_DO);
 	    clip_surface = status == CAIRO_INT_STATUS_UNSUPPORTED;
 	}
 
@@ -1310,8 +1357,12 @@ _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
 	    return CAIRO_STATUS_SUCCESS;
     }
 
-    if (! _rectangle_intersect_clip (&extents, clip))
-	return CAIRO_STATUS_SUCCESS;
+    status = _rectangle_intersect_clip (&extents, clip);
+    if (status) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    status = CAIRO_STATUS_SUCCESS;
+	return status;
+    }
 
     glyph_info.font = scaled_font;
     glyph_info.glyphs = glyphs;
