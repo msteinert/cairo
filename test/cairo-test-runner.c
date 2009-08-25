@@ -81,6 +81,7 @@ typedef struct _cairo_test_runner {
     int *num_crashed_per_target;
 
     cairo_bool_t foreground;
+    cairo_bool_t exit_on_failure;
     cairo_bool_t list_only;
     cairo_bool_t full_test;
 } cairo_test_runner_t;
@@ -285,7 +286,7 @@ static void
 usage (const char *argv0)
 {
     fprintf (stderr,
-	     "Usage: %s [-af] [test-names|keywords ...]\n"
+	     "Usage: %s [-afx] [test-names|keywords ...]\n"
 	     "       %s -l\n"
 	     "\n"
 	     "Run the cairo conformance test suite over the given tests (all by default)\n"
@@ -294,6 +295,7 @@ usage (const char *argv0)
 	     "  -a	all; run the full set of tests. By default the test suite\n"
 	     "          skips similar surface and device offset testing.\n"
 	     "  -f	foreground; do not fork\n"
+	     "  -x	exit on first failure\n"
 	     "  -l	list only; just list selected test case names without executing\n"
 	     "\n"
 	     "If test names are given they are used as exact matches either to a specific\n"
@@ -308,7 +310,7 @@ _parse_cmdline (cairo_test_runner_t *runner, int *argc, char **argv[])
     int c;
 
     while (1) {
-	c = _cairo_getopt (*argc, *argv, ":afl");
+	c = _cairo_getopt (*argc, *argv, ":aflx");
 	if (c == -1)
 	    break;
 
@@ -321,6 +323,9 @@ _parse_cmdline (cairo_test_runner_t *runner, int *argc, char **argv[])
 	    break;
 	case 'f':
 	    runner->foreground = TRUE;
+	    break;
+	case 'x':
+	    runner->exit_on_failure = TRUE;
 	    break;
 	default:
 	    fprintf (stderr, "Internal error: unhandled option: %c\n", c);
@@ -625,6 +630,9 @@ main (int argc, char **argv)
 	if (strstr (env, "foreground")) {
 	    runner.foreground = TRUE;
 	}
+	if (strstr (env, "exit-on-failure")) {
+	    runner.exit_on_failure = TRUE;
+	}
     }
 
     _parse_cmdline (&runner, &argc, &argv);
@@ -894,6 +902,9 @@ main (int argc, char **argv)
 
   TEST_NEXT:
 	free (name);
+	if (runner.exit_on_failure && ! runner.passed)
+	    break;
+
     }
 
     _list_free (tests);
