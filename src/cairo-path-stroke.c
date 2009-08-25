@@ -2027,6 +2027,7 @@ _cairo_path_fixed_stroke_rectilinear_to_traps (const cairo_path_fixed_t	*path,
     else
 	status = _cairo_rectilinear_stroker_emit_segments (&rectilinear_stroker);
 
+    traps->is_rectilinear = 1;
 BAIL:
     _cairo_rectilinear_stroker_fini (&rectilinear_stroker);
 

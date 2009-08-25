@@ -99,6 +99,7 @@ cairo_sources = \
 	cairo-atomic.c \
 	cairo-base85-stream.c \
 	cairo-bentley-ottmann.c \
+	cairo-bentley-ottmann-rectilinear.c \
 	cairo.c \
 	cairo-cache.c \
 	cairo-clip.c \

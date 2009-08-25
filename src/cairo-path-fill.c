@@ -155,14 +155,6 @@ _cairo_path_fixed_fill_to_traps (const cairo_path_fixed_t *path,
     cairo_polygon_t polygon;
     cairo_status_t status;
 
-    if (path->is_rectilinear) {
-	status = _cairo_path_fixed_fill_rectilinear_to_traps (path,
-							      fill_rule,
-							      traps);
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
-    }
-
     _cairo_polygon_init (&polygon);
     status = _cairo_path_fixed_fill_to_polygon (path,
 						tolerance,
@@ -170,14 +162,20 @@ _cairo_path_fixed_fill_to_traps (const cairo_path_fixed_t *path,
     if (unlikely (status))
 	goto CLEANUP;
 
-    status = _cairo_bentley_ottmann_tessellate_polygon (traps, &polygon,
-							fill_rule);
+    if (path->is_rectilinear) {
+	status = _cairo_bentley_ottmann_tessellate_rectilinear_polygon (traps,
+									&polygon,
+									fill_rule);
+    } else {
+	status = _cairo_bentley_ottmann_tessellate_polygon (traps,
+							    &polygon,
+							    fill_rule);
+    }
 
   CLEANUP:
     _cairo_polygon_fini (&polygon);
     return status;
 }
-
 
 /* This special-case filler supports only a path that describes a
  * device-axis aligned rectangle. It exists to avoid the overhead of
@@ -186,86 +184,6 @@ _cairo_path_fixed_fill_to_traps (const cairo_path_fixed_t *path,
  * If the path described anything but a device-axis aligned rectangle,
  * this function will return %CAIRO_INT_STATUS_UNSUPPORTED.
  */
-cairo_int_status_t
-_cairo_path_fixed_fill_rectilinear_to_traps (const cairo_path_fixed_t	*path,
-					     cairo_fill_rule_t	 fill_rule,
-					     cairo_traps_t		*traps)
-{
-    cairo_box_t box;
-
-    assert (path->is_rectilinear);
-
-    if (_cairo_path_fixed_is_box (path, &box)) {
-	if (box.p1.x > box.p2.x) {
-	    cairo_fixed_t t;
-
-	    t = box.p1.x;
-	    box.p1.x = box.p2.x;
-	    box.p2.x = t;
-	}
-
-	if (box.p1.y > box.p2.y) {
-	    cairo_fixed_t t;
-
-	    t = box.p1.y;
-	    box.p1.y = box.p2.y;
-	    box.p2.y = t;
-	}
-
-	return _cairo_traps_tessellate_rectangle (traps, &box.p1, &box.p2);
-    } else if (fill_rule == CAIRO_FILL_RULE_WINDING) {
-	cairo_path_fixed_iter_t iter;
-	int last_cw = -1;
-
-	/* Support a series of rectangles as can be expected to describe a
-	 * GdkRegion clip region during exposes.
-	 */
-	_cairo_path_fixed_iter_init (&iter, path);
-	while (_cairo_path_fixed_iter_is_fill_box (&iter, &box)) {
-	    cairo_status_t status;
-	    int cw = 0;
-
-	    if (box.p1.x > box.p2.x) {
-		cairo_fixed_t t;
-
-		t = box.p1.x;
-		box.p1.x = box.p2.x;
-		box.p2.x = t;
-
-		cw = ! cw;
-	    }
-
-	    if (box.p1.y > box.p2.y) {
-		cairo_fixed_t t;
-
-		t = box.p1.y;
-		box.p1.y = box.p2.y;
-		box.p2.y = t;
-
-		cw = ! cw;
-	    }
-
-	    if (last_cw < 0) {
-		last_cw = cw;
-	    } else if (last_cw != cw) {
-		_cairo_traps_clear (traps);
-		return CAIRO_INT_STATUS_UNSUPPORTED;
-	    }
-
-	    status = _cairo_traps_tessellate_rectangle (traps,
-							&box.p1, &box.p2);
-	    if (unlikely (status))
-		return status;
-	}
-	if (_cairo_path_fixed_iter_at_end (&iter))
-	    return CAIRO_STATUS_SUCCESS;
-
-	_cairo_traps_clear (traps);
-    }
-
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
 cairo_region_t *
 _cairo_path_fixed_fill_rectilinear_to_region (const cairo_path_fixed_t	*path,
 					      cairo_fill_rule_t	 fill_rule,

@@ -727,7 +727,12 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
 
     /* No fast path, exclude self-intersections and clip trapezoids. */
     if (traps->has_intersections) {
-	status = _cairo_bentley_ottmann_tessellate_traps (traps);
+	if (traps->is_rectilinear)
+	    status = _cairo_bentley_ottmann_tessellate_rectilinear_traps (traps,
+									  CAIRO_FILL_RULE_WINDING);
+	else
+	    status = _cairo_bentley_ottmann_tessellate_traps (traps,
+							      CAIRO_FILL_RULE_WINDING);
 	if (unlikely (status))
 	    return status;
     }
@@ -1152,20 +1157,7 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
     _cairo_polygon_init (&polygon);
     _cairo_polygon_limit (&polygon, &box);
 
-    if (path->is_rectilinear) {
-	status = _cairo_path_fixed_fill_rectilinear_to_traps (path,
-							      fill_rule,
-							      &traps);
-	if (likely (status == CAIRO_STATUS_SUCCESS))
-	    goto DO_TRAPS;
-
-	if (unlikely (_cairo_status_is_error (status)))
-	    goto CLEANUP;
-    }
-
-    status = _cairo_path_fixed_fill_to_polygon (path,
-						tolerance,
-						&polygon);
+    status = _cairo_path_fixed_fill_to_polygon (path, tolerance, &polygon);
     if (unlikely (status))
 	goto CLEANUP;
 
@@ -1176,6 +1168,18 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
 	if (! _cairo_rectangle_intersect (&extents, &polygon_extents))
 	    goto CLEANUP;
     }
+
+    if (path->is_rectilinear) {
+	status = _cairo_bentley_ottmann_tessellate_rectilinear_polygon (&traps,
+									&polygon,
+									fill_rule);
+	if (likely (status == CAIRO_STATUS_SUCCESS))
+	    goto DO_TRAPS;
+
+	if (unlikely (_cairo_status_is_error (status)))
+	    goto CLEANUP;
+    }
+
 
     if (antialias != CAIRO_ANTIALIAS_NONE &&
 	_cairo_surface_check_span_renderer (op, source, surface,

@@ -51,6 +51,7 @@ _cairo_traps_init (cairo_traps_t *traps)
     traps->status = CAIRO_STATUS_SUCCESS;
 
     traps->maybe_region = 1;
+    traps->is_rectilinear = 0;
 
     traps->num_traps = 0;
 
@@ -76,6 +77,7 @@ _cairo_traps_clear (cairo_traps_t *traps)
     traps->status = CAIRO_STATUS_SUCCESS;
 
     traps->maybe_region = 1;
+    traps->is_rectilinear = 0;
 
     traps->num_traps = 0;
     traps->has_intersections = FALSE;

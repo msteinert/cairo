@@ -956,6 +956,7 @@ typedef struct _cairo_traps {
     unsigned int maybe_region : 1; /* hint: 0 implies that it cannot be */
     unsigned int has_limits : 1;
     unsigned int has_intersections : 1;
+    unsigned int is_rectilinear : 1;
 
     int num_traps;
     int traps_size;
@@ -1615,11 +1616,6 @@ cairo_private cairo_region_t *
 _cairo_path_fixed_fill_rectilinear_to_region (const cairo_path_fixed_t	*path,
 					      cairo_fill_rule_t	 fill_rule,
 					      const cairo_rectangle_int_t *extents);
-
-cairo_private cairo_int_status_t
-_cairo_path_fixed_fill_rectilinear_to_traps (const cairo_path_fixed_t *path,
-					     cairo_fill_rule_t fill_rule,
-					     cairo_traps_t    *traps);
 
 cairo_private cairo_status_t
 _cairo_path_fixed_fill_to_traps (const cairo_path_fixed_t   *path,
@@ -2377,12 +2373,22 @@ _cairo_traps_add_trap (cairo_traps_t *traps,
 		       cairo_line_t *left, cairo_line_t *right);
 
 cairo_private cairo_status_t
+_cairo_bentley_ottmann_tessellate_rectilinear_polygon (cairo_traps_t	 *traps,
+						       const cairo_polygon_t *polygon,
+						       cairo_fill_rule_t	  fill_rule);
+
+cairo_private cairo_status_t
 _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t         *traps,
 					   const cairo_polygon_t *polygon,
 					   cairo_fill_rule_t      fill_rule);
 
 cairo_private cairo_status_t
-_cairo_bentley_ottmann_tessellate_traps (cairo_traps_t *traps);
+_cairo_bentley_ottmann_tessellate_traps (cairo_traps_t *traps,
+					 cairo_fill_rule_t fill_rule);
+
+cairo_private cairo_status_t
+_cairo_bentley_ottmann_tessellate_rectilinear_traps (cairo_traps_t *traps,
+						     cairo_fill_rule_t fill_rule);
 
 cairo_private int
 _cairo_traps_contain (const cairo_traps_t *traps,

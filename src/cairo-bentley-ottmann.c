@@ -2002,7 +2002,8 @@ _compute_clipped_trapezoid_edges (const cairo_traps_t *traps,
 }
 
 cairo_status_t
-_cairo_bentley_ottmann_tessellate_traps (cairo_traps_t *traps)
+_cairo_bentley_ottmann_tessellate_traps (cairo_traps_t *traps,
+					 cairo_fill_rule_t fill_rule)
 {
     int intersections;
     cairo_status_t status;
@@ -2054,7 +2055,7 @@ _cairo_bentley_ottmann_tessellate_traps (cairo_traps_t *traps)
     _cairo_traps_clear (traps);
     status = _cairo_bentley_ottmann_tessellate_bo_edges (event_ptrs,
 							 num_events,
-							 CAIRO_FILL_RULE_WINDING,
+							 fill_rule,
 							 traps,
 							 &intersections);
 
