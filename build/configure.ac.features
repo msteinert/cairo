@@ -351,10 +351,6 @@ AC_CONFIG_COMMANDS_PRE(dnl
 
 AC_DEFUN([CAIRO_REPORT],
 [dnl
-	if test -z "$CAIRO_NATIVE_FONT_BACKENDS"; then
-	   AC_MSG_ERROR([Cairo requires at least one native font backend.  Please install FreeType and fontconfig and try again.])
-	fi
-
 	V="$CAIRO_VERSION_MAJOR.$CAIRO_VERSION_MINOR.$CAIRO_VERSION_MICRO"
 	echo ""
 	echo "cairo (version $V [[$CAIRO_RELEASE_STATUS]]) will be compiled with:"
