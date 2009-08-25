@@ -125,6 +125,7 @@ draw (cairo_t *cr, int width, int height)
     }
 
     cairo_set_scaled_font (cr, scaled_font);
+    cairo_scaled_font_destroy (scaled_font);
 
     cairo_set_line_width (cr, 1.0);
     cairo_set_source_rgb (cr, 0, 0, 0); /* black */
@@ -154,16 +155,13 @@ draw (cairo_t *cr, int width, int height)
 		     extents.height + line_width);
     cairo_stroke (cr);
 
-    cairo_scaled_font_destroy (scaled_font);
-
     return CAIRO_TEST_SUCCESS;
 }
 
 CAIRO_TEST (ft_text_vertical_layout_type1,
 	    "Tests text rendering for vertical layout with Type1 fonts"
 	    "\nCan fail if an incorrect font is loaded---need to bundle the desired font",
-	    "ft, text", /* keywords */
+	    "ft, fc, text", /* keywords */
 	    NULL, /* requirements */
 	    WIDTH, HEIGHT,
 	    NULL, draw)
-
