@@ -527,6 +527,7 @@ REFERENCE_IMAGES = \
 	image-surface-source.ref.png \
 	image-surface-source.svg12.argb32.xfail.png \
 	image-surface-source.svg12.rgb24.xfail.png \
+	implicit-close.ref.png \
 	infinite-join.ps2.ref.png \
 	infinite-join.ps3.ref.png \
 	infinite-join.ref.png \

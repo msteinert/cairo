@@ -96,6 +96,7 @@ test_sources = \
 	huge-linear.c					\
 	huge-radial.c					\
 	image-surface-source.c				\
+	implicit-close.c				\
 	infinite-join.c					\
 	in-fill-empty-trapezoid.c			\
 	in-fill-trapezoid.c				\
