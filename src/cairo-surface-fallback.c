@@ -1233,6 +1233,7 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
     int num_boxes = ARRAY_LENGTH (boxes_stack);
     cairo_rectangle_int_t extents;
     cairo_bool_t is_bounded;
+    cairo_bool_t is_rectilinear;
     cairo_status_t status;
 
     is_bounded = _cairo_surface_get_extents (surface, &extents);
@@ -1286,7 +1287,8 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
     if (path->is_empty_fill)
 	goto DO_TRAPS;
 
-    if (path->is_rectilinear) {
+    is_rectilinear = _cairo_path_fixed_is_rectilinear_fill (path);
+    if (is_rectilinear) {
 	status = _cairo_path_fixed_fill_rectilinear_to_traps (path,
 							      fill_rule,
 							      &traps);
@@ -1312,7 +1314,7 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
 	    goto CLEANUP;
     }
 
-    if (path->is_rectilinear) {
+    if (is_rectilinear) {
 	status = _cairo_bentley_ottmann_tessellate_rectilinear_polygon (&traps,
 									&polygon,
 									fill_rule);
