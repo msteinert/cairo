@@ -1113,7 +1113,7 @@ _cairo_path_fixed_is_box (const cairo_path_fixed_t *path,
 	return FALSE;
 
     /* Do we have the right number of ops? */
-    if (buf->num_ops != 5 && buf->num_ops != 6)
+    if (buf->num_ops < 4 || buf->num_ops > 6)
 	return FALSE;
 
     /* Check whether the ops are those that would be used for a rectangle */
@@ -1125,22 +1125,25 @@ _cairo_path_fixed_is_box (const cairo_path_fixed_t *path,
 	return FALSE;
     }
 
-    /* Now, there are choices. The rectangle might end with a LINE_TO
-     * (to the original point), but this isn't required. If it
-     * doesn't, then it must end with a CLOSE_PATH. */
-    if (buf->op[4] == CAIRO_PATH_OP_LINE_TO) {
-	if (buf->points[4].x != buf->points[0].x ||
-	    buf->points[4].y != buf->points[0].y)
+    /* we accept an implicit close for filled paths */
+    if (buf->num_ops > 4) {
+	/* Now, there are choices. The rectangle might end with a LINE_TO
+	 * (to the original point), but this isn't required. If it
+	 * doesn't, then it must end with a CLOSE_PATH. */
+	if (buf->op[4] == CAIRO_PATH_OP_LINE_TO) {
+	    if (buf->points[4].x != buf->points[0].x ||
+		buf->points[4].y != buf->points[0].y)
+		return FALSE;
+	} else if (buf->op[4] != CAIRO_PATH_OP_CLOSE_PATH) {
 	    return FALSE;
-    } else if (buf->op[4] != CAIRO_PATH_OP_CLOSE_PATH) {
-	return FALSE;
-    }
+	}
 
-    if (buf->num_ops == 6) {
-	/* A trailing CLOSE_PATH or MOVE_TO is ok */
-	if (buf->op[5] != CAIRO_PATH_OP_MOVE_TO &&
-	    buf->op[5] != CAIRO_PATH_OP_CLOSE_PATH)
-	    return FALSE;
+	if (buf->num_ops == 6) {
+	    /* A trailing CLOSE_PATH or MOVE_TO is ok */
+	    if (buf->op[5] != CAIRO_PATH_OP_MOVE_TO &&
+		buf->op[5] != CAIRO_PATH_OP_CLOSE_PATH)
+		return FALSE;
+	}
     }
 
     /* Ok, we may have a box, if the points line up */
