@@ -217,6 +217,9 @@ REFERENCE_IMAGES = \
 	clip-push-group.quartz.ref.png \
 	clip-push-group.ref.png \
 	clip-push-group.xlib.ref.png \
+	clip-stroke.ref.png \
+	clip-stroke.xlib.ref.png \
+	clip-stroke.xlib-fallback.ref.png \
 	clip-text.ref.png \
 	clip-text.ps.xfail.png \
 	clip-text.svg.ref.png \

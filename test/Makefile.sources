@@ -21,6 +21,7 @@ test_sources = \
 	clip-nesting.c					\
 	clip-operator.c					\
 	clip-push-group.c				\
+	clip-stroke.c					\
 	clip-text.c					\
 	clip-twice.c					\
 	clip-unbounded.c				\
