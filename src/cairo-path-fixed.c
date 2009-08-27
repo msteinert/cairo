@@ -1300,8 +1300,8 @@ _cairo_path_fixed_iter_is_fill_box (cairo_path_fixed_iter_t *_iter,
 	points[2].x == points[3].x &&
 	points[3].y == points[0].y)
     {
-	box->p1 = points[0];
-	box->p2 = points[2];
+	box->p1 = points[1];
+	box->p2 = points[3];
 	*_iter = iter;
 	return TRUE;
     }
