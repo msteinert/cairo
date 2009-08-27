@@ -2208,13 +2208,13 @@ CLEANUP_MASK:
 
 /* Add a single-device-unit rectangle to a path. */
 static cairo_status_t
-_add_unit_rectangle_to_path (cairo_path_fixed_t *path, int x, int y)
+_add_unit_rectangle_to_path (cairo_path_fixed_t *path,
+			     cairo_fixed_t x,
+			     cairo_fixed_t y)
 {
     cairo_status_t status;
 
-    status = _cairo_path_fixed_move_to (path,
-					_cairo_fixed_from_int (x),
-					_cairo_fixed_from_int (y));
+    status = _cairo_path_fixed_move_to (path, x, y);
     if (unlikely (status))
 	return status;
 
@@ -2236,11 +2236,7 @@ _add_unit_rectangle_to_path (cairo_path_fixed_t *path, int x, int y)
     if (unlikely (status))
 	return status;
 
-    status = _cairo_path_fixed_close_path (path);
-    if (unlikely (status))
-	return status;
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_path_fixed_close_path (path);
 }
 
 /**
@@ -2262,12 +2258,15 @@ _add_unit_rectangle_to_path (cairo_path_fixed_t *path, int x, int y)
  **/
 static cairo_status_t
 _trace_mask_to_path (cairo_image_surface_t *mask,
-		     cairo_path_fixed_t *path)
+		     cairo_path_fixed_t *path,
+		     double tx, double ty)
 {
     const uint8_t *row;
     int rows, cols, bytes_per_row;
     int x, y, bit;
     double xoff, yoff;
+    cairo_fixed_t x0, y0;
+    cairo_fixed_t px, py;
     cairo_status_t status;
 
     mask = _cairo_image_surface_coerce (mask, CAIRO_FORMAT_A1);
@@ -2276,12 +2275,15 @@ _trace_mask_to_path (cairo_image_surface_t *mask,
 	return status;
 
     cairo_surface_get_device_offset (&mask->base, &xoff, &yoff);
+    x0 = _cairo_fixed_from_double (tx - xoff);
+    y0 = _cairo_fixed_from_double (ty - yoff);
 
     bytes_per_row = (mask->width + 7) / 8;
     row = mask->data;
     for (y = 0, rows = mask->height; rows--; row += mask->stride, y++) {
 	const uint8_t *byte_ptr = row;
 	x = 0;
+	py = _cairo_fixed_from_int (y);
 	for (cols = bytes_per_row; cols--; ) {
 	    uint8_t byte = *byte_ptr++;
 	    if (byte == 0) {
@@ -2292,8 +2294,10 @@ _trace_mask_to_path (cairo_image_surface_t *mask,
 	    byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (byte);
 	    for (bit = 1 << 7; bit && x < mask->width; bit >>= 1, x++) {
 		if (byte & bit) {
+		    px = _cairo_fixed_from_int (x);
 		    status = _add_unit_rectangle_to_path (path,
-							  x - xoff, y - yoff);
+							  px + x0,
+							  py + y0);
 		    if (unlikely (status))
 			goto BAIL;
 		}
@@ -2315,8 +2319,6 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
 {
     cairo_status_t status;
     int	i;
-    cairo_path_fixed_t glyph_path_static;
-    cairo_path_fixed_t *glyph_path;
 
     status = scaled_font->status;
     if (unlikely (status))
@@ -2331,7 +2333,11 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
 					     CAIRO_SCALED_GLYPH_INFO_PATH,
 					     &scaled_glyph);
 	if (status == CAIRO_STATUS_SUCCESS) {
-	    glyph_path = scaled_glyph->path;
+	    status = _cairo_path_fixed_append (path,
+					       scaled_glyph->path, CAIRO_DIRECTION_FORWARD,
+					       _cairo_fixed_from_double (glyphs[i].x),
+					       _cairo_fixed_from_double (glyphs[i].y));
+
 	} else if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 	    /* If the font is incapable of providing a path, then we'll
 	     * have to trace our own from a surface.
@@ -2343,22 +2349,9 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
 	    if (unlikely (status))
 		goto BAIL;
 
-	    _cairo_path_fixed_init (&glyph_path_static);
-	    glyph_path = &glyph_path_static;
-	    status = _trace_mask_to_path (scaled_glyph->surface, glyph_path);
-	    if (unlikely (status))
-		goto BAIL;
-	} else {
-	    goto BAIL;
+	    status = _trace_mask_to_path (scaled_glyph->surface, path,
+					  glyphs[i].x, glyphs[i].y);
 	}
-
-	status = _cairo_path_fixed_append (path,
-					   glyph_path, CAIRO_DIRECTION_FORWARD,
-					   _cairo_fixed_from_double (glyphs[i].x),
-					   _cairo_fixed_from_double (glyphs[i].y));
-
-	if (glyph_path != scaled_glyph->path)
-	    _cairo_path_fixed_fini (glyph_path);
 
 	if (unlikely (status))
 	    goto BAIL;
