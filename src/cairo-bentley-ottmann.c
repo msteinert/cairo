@@ -216,28 +216,6 @@ _line_compute_intersection_x_for_y (const cairo_line_t *line,
     return x;
 }
 
-static cairo_fixed_t
-_line_compute_intersection_y_for_x (const cairo_line_t *line,
-				    cairo_fixed_t x)
-{
-    cairo_fixed_t y, dx;
-
-    if (x == line->p1.x)
-	return line->p1.y;
-    if (x == line->p2.x)
-	return line->p2.y;
-
-    y = line->p1.y;
-    dx = line->p2.x - line->p1.x;
-    if (dx != 0) {
-	y += _cairo_fixed_mul_div_floor (x - line->p1.x,
-					 line->p2.y - line->p1.y,
-					 dx);
-    }
-
-    return y;
-}
-
 static inline int
 _cairo_bo_point32_compare (cairo_bo_point32_t const *a,
 			   cairo_bo_point32_t const *b)
@@ -1801,217 +1779,12 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t	 *traps,
     return status;
 }
 
-static cairo_bool_t
-_points_outside (const cairo_fixed_t *x, const cairo_box_t *limits)
-{
-    if (x[0] < limits->p1.x || x[0] > limits->p2.x)
-	return TRUE;
-    if (x[1] < limits->p1.x || x[1] > limits->p2.x)
-	return TRUE;
-    if (x[2] < limits->p1.x || x[2] > limits->p2.x)
-	return TRUE;
-    if (x[3] < limits->p1.x || x[3] > limits->p2.x)
-	return TRUE;
-
-    return FALSE;
-}
-
-static int
-_add_event (const cairo_line_t *line,
-	   int32_t top, int32_t bottom,
-	   int dir,
-	   cairo_bo_start_event_t *event)
-{
-    if (top == bottom)
-	return 0;
-
-    event->type = CAIRO_BO_EVENT_TYPE_START;
-    event->point.y = top;
-    event->point.x = _line_compute_intersection_x_for_y (line, top);
-
-    event->edge.edge.line = *line;
-    event->edge.edge.top = top;
-    event->edge.edge.bottom = bottom;
-    event->edge.edge.dir = dir;
-
-    event->edge.deferred_trap.right = NULL;
-    event->edge.prev = NULL;
-    event->edge.next = NULL;
-
-    return 1;
-}
-
-static int
-_compute_clipped_trapezoid_edges (const cairo_traps_t *traps,
-				  const cairo_trapezoid_t *t,
-				  cairo_bo_start_event_t *events)
-{
-    cairo_fixed_t x[4];
-    int num_events = 0;
-    int top, bot;
-
-    /* compute points in clockwise orientation */
-    top = t->top;
-    bot = t->bottom;
-
-    x[0] = _line_compute_intersection_x_for_y (&t->left, top);
-    x[1] = _line_compute_intersection_x_for_y (&t->right, top);
-    x[2] = _line_compute_intersection_x_for_y (&t->right, bot);
-    x[3] = _line_compute_intersection_x_for_y (&t->left, bot);
-
-    if (traps->has_limits && _points_outside (x, &traps->limits)) {
-	cairo_line_t limits[2];
-	cairo_fixed_t ly[2], ry[2];
-	cairo_fixed_t ymin, ymax;
-
-	limits[0].p1.x = traps->limits.p1.x;
-	limits[0].p1.y = traps->limits.p1.y;
-	limits[0].p2.x = traps->limits.p1.x;
-	limits[0].p2.y = traps->limits.p2.y;
-
-	limits[1].p1.x = traps->limits.p2.x;
-	limits[1].p1.y = traps->limits.p1.y;
-	limits[1].p2.x = traps->limits.p2.x;
-	limits[1].p2.y = traps->limits.p2.y;
-
-	ly[0] = _line_compute_intersection_y_for_x (&t->left,
-						    traps->limits.p1.x);
-	ymin = ymax = ly[0];
-
-	ly[1] = _line_compute_intersection_y_for_x (&t->left,
-						    traps->limits.p2.x);
-	if (ly[1] < ymin)
-	    ymin = ly[1];
-	if (ly[1] > ymax)
-	    ymax = ly[1];
-
-	ry[0] = _line_compute_intersection_y_for_x (&t->right,
-						    traps->limits.p1.x);
-	if (ry[0] < ymin)
-	    ymin = ry[0];
-	if (ry[0] > ymax)
-	    ymax = ry[0];
-
-	ry[1] = _line_compute_intersection_y_for_x (&t->right,
-						    traps->limits.p2.x);
-	if (ry[1] < ymin)
-	    ymin = ry[1];
-	if (ry[1] > ymax)
-	    ymax = ry[1];
-
-	if (ymin > top)
-	    top = ymin;
-	if (ymax < bot)
-	    bot = ymax;
-	if (top >= bot)
-	    return 0;
-
-	/* left hand side intersects */
-
-	if (x[0] <= traps->limits.p1.x && x[3] <= traps->limits.p1.x)
-	{
-	    num_events += _add_event (&limits[0], top, bot, 1,
-				      events + num_events);
-	}
-	else if (x[0] >= traps->limits.p1.x && x[3] >= traps->limits.p1.x &&
-		 x[0] <= traps->limits.p2.x && x[3] <= traps->limits.p2.x)
-	{
-	    num_events += _add_event (&t->left, top, bot, 1,
-				      events + num_events);
-	}
-	else
-	{
-	    if (ly[0] < ly[1]) {
-		if (ly[1] >= top) {
-		    if (ly[0] < top)
-			ly[0] = top;
-		    if (ly[1] > bot)
-			ly[1] = bot;
-		    num_events += _add_event (&limits[0], top, ly[0], 1,
-					    events + num_events);
-		    num_events += _add_event (&t->left, ly[0], ly[1], 1,
-					    events + num_events);
-		    num_events += _add_event (&limits[1], ly[1], bot, 1,
-					    events + num_events);
-		}
-	    } else {
-		if (ly[1] <= bot) {
-		    if (ly[1] < top)
-			ly[1] = top;
-		    if (ly[0] > bot)
-			ly[0] = bot;
-		    num_events += _add_event (&limits[1], top, ly[1], 1,
-					    events + num_events);
-		    num_events += _add_event (&t->left, ly[1], ly[0], 1,
-					    events + num_events);
-		    num_events += _add_event (&limits[0], ly[0], bot, 1,
-					    events + num_events);
-		}
-	    }
-	}
-
-	/* right hand side intersects */
-
-	if (x[1] >= traps->limits.p2.x && x[2] >= traps->limits.p2.x)
-	{
-	    num_events += _add_event (&limits[1], top, bot, -1,
-				      events + num_events);
-	}
-	else if (x[1] <= traps->limits.p2.x && x[2] <= traps->limits.p2.x &&
-		 x[1] >= traps->limits.p1.x && x[2] >= traps->limits.p1.x)
-	{
-	    num_events += _add_event (&t->right, top, bot, -1,
-				      events + num_events);
-	}
-	else
-	{
-	    if (ry[0] < ry[1]) {
-		if (ry[0] <= bot) {
-		    if (ry[0] < top)
-			ry[0] = top;
-		    if (ry[1] > bot)
-			ry[1] = bot;
-		    num_events += _add_event (&limits[0], top, ry[0], -1,
-					    events + num_events);
-		    num_events += _add_event (&t->right, ry[0], ry[1], -1,
-					    events + num_events);
-		    num_events += _add_event (&limits[1], ry[1], bot, -1,
-					    events + num_events);
-		}
-	    } else {
-		if (ry[0] >= top) {
-		    if (ry[0] > bot)
-			ry[0] = bot;
-		    if (ry[1] < top)
-			ry[1] = top;
-		    num_events += _add_event (&limits[1], top, ry[1], -1,
-					    events + num_events);
-		    num_events += _add_event (&t->right, ry[1], ry[0], -1,
-					    events + num_events);
-		    num_events += _add_event (&limits[0], ry[0], bot, -1,
-					    events + num_events);
-		}
-	    }
-	}
-    } else {
-	num_events += _add_event (&t->left, top, bot, 1, events + num_events);
-	num_events += _add_event (&t->right, top, bot, -1, events + num_events);
-    }
-
-    return num_events;
-}
-
 cairo_status_t
 _cairo_bentley_ottmann_tessellate_traps (cairo_traps_t *traps,
 					 cairo_fill_rule_t fill_rule)
 {
-    int intersections;
     cairo_status_t status;
-    cairo_bo_start_event_t stack_events[CAIRO_STACK_ARRAY_LENGTH (cairo_bo_start_event_t)];
-    cairo_bo_start_event_t *events;
-    cairo_bo_event_t *stack_event_ptrs[ARRAY_LENGTH (stack_events) + 1];
-    cairo_bo_event_t **event_ptrs;
-    int num_events;
+    cairo_polygon_t polygon;
     int i;
 
     if (unlikely (0 == traps->num_traps))
@@ -2021,50 +1794,38 @@ _cairo_bentley_ottmann_tessellate_traps (cairo_traps_t *traps,
     dump_traps (traps, "bo-traps-in.txt");
 #endif
 
-    /* we need at most 6 vertical edges to describe each clipped trapezoid */
-    i = 6 * traps->num_traps;
+    _cairo_polygon_init (&polygon);
+    _cairo_polygon_limit (&polygon, traps->limits, traps->num_limits);
 
-    events = stack_events;
-    event_ptrs = stack_event_ptrs;
-    if (i > ARRAY_LENGTH (stack_events)) {
-	events = _cairo_malloc_ab_plus_c (i,
-					  sizeof (cairo_bo_start_event_t) +
-					  sizeof (cairo_bo_event_t *),
-					  sizeof (cairo_bo_event_t *));
-	if (unlikely (events == NULL))
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-	event_ptrs = (cairo_bo_event_t **) (events + i);
-    }
-
-    num_events = 0;
     for (i = 0; i < traps->num_traps; i++) {
-	num_events += _compute_clipped_trapezoid_edges (traps,
-							&traps->traps[i],
-							&events[num_events]);
+	status = _cairo_polygon_add_line (&polygon,
+					  &traps->traps[i].left,
+					  traps->traps[i].top,
+					  traps->traps[i].bottom,
+					  1);
+	if (unlikely (status))
+	    goto CLEANUP;
+
+	status = _cairo_polygon_add_line (&polygon,
+					  &traps->traps[i].right,
+					  traps->traps[i].top,
+					  traps->traps[i].bottom,
+					  -1);
+	if (unlikely (status))
+	    goto CLEANUP;
     }
-
-    for (i = 0; i < num_events; i++)
-	event_ptrs[i] = (cairo_bo_event_t *) &events[i];
-
-
-#if DEBUG_TRAPS
-    dump_edges (events, num_events, "bo-traps-edges.txt");
-#endif
 
     _cairo_traps_clear (traps);
-    status = _cairo_bentley_ottmann_tessellate_bo_edges (event_ptrs,
-							 num_events,
-							 fill_rule,
-							 traps,
-							 &intersections);
+    status = _cairo_bentley_ottmann_tessellate_polygon (traps,
+							&polygon,
+							fill_rule);
 
 #if DEBUG_TRAPS
     dump_traps (traps, "bo-traps-out.txt");
 #endif
 
-    if (events != stack_events)
-	free (events);
+  CLEANUP:
+    _cairo_polygon_fini (&polygon);
 
     return status;
 }

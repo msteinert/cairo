@@ -160,8 +160,7 @@ _cairo_path_fixed_fill_to_traps (const cairo_path_fixed_t *path,
 	return CAIRO_STATUS_SUCCESS;
 
     _cairo_polygon_init (&polygon);
-    if (traps->has_limits)
-	_cairo_polygon_limit (&polygon, &traps->limits);
+    _cairo_polygon_limit (&polygon, traps->limits, traps->num_limits);
 
     status = _cairo_path_fixed_fill_to_polygon (path,
 						tolerance,
@@ -189,6 +188,7 @@ _cairo_path_fixed_fill_rectilinear_tessellate_to_region (const cairo_path_fixed_
 							 cairo_fill_rule_t	 fill_rule,
 							 const cairo_rectangle_int_t *extents)
 {
+    cairo_box_t box;
     cairo_polygon_t polygon;
     cairo_traps_t traps;
     cairo_status_t status;
@@ -196,10 +196,8 @@ _cairo_path_fixed_fill_rectilinear_tessellate_to_region (const cairo_path_fixed_
 
     _cairo_polygon_init (&polygon);
     if (extents != NULL) {
-	cairo_box_t box;
-
 	_cairo_box_from_rectangle (&box, extents);
-	_cairo_polygon_limit (&polygon, &box);
+	_cairo_polygon_limit (&polygon, &box, 1);
     }
 
     /* tolerance will be ignored as the path is rectilinear */

@@ -600,7 +600,6 @@ _cairo_clip_apply_clip (cairo_clip_t *clip,
     return status;
 }
 
-#if 0
 static inline cairo_bool_t
 _clip_paths_are_rectilinear (cairo_clip_path_t *clip_path)
 {
@@ -613,7 +612,6 @@ _clip_paths_are_rectilinear (cairo_clip_path_t *clip_path)
 
     return TRUE;
 }
-#endif
 
 static cairo_int_status_t
 _cairo_clip_path_to_region_geometric (cairo_clip_path_t *clip_path)
@@ -634,7 +632,7 @@ _cairo_clip_path_to_region_geometric (cairo_clip_path_t *clip_path)
 
     _cairo_traps_init (&traps);
     _cairo_box_from_rectangle (&box, &clip_path->extents);
-    _cairo_traps_limit (&traps, &box);
+    _cairo_traps_limit (&traps, &box, 1);
 
     status = _cairo_path_fixed_fill_to_traps (&clip_path->prev->path,
 					      clip_path->prev->fill_rule,
@@ -709,6 +707,260 @@ _cairo_clip_path_to_region (cairo_clip_path_t *clip_path)
     }
 
     clip_path->flags |= CAIRO_CLIP_PATH_HAS_REGION;
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static inline int
+pot (int v)
+{
+    v--;
+    v |= v >> 1;
+    v |= v >> 2;
+    v |= v >> 4;
+    v |= v >> 8;
+    v |= v >> 16;
+    v++;
+    return v;
+}
+
+/* XXX there is likely a faster method! ;-) */
+static cairo_status_t
+_region_clip_to_boxes (const cairo_region_t *region,
+		       cairo_box_t **boxes,
+		       int *num_boxes,
+		       int *size_boxes)
+{
+    cairo_traps_t traps;
+    cairo_status_t status;
+    int n, num_rects;
+
+    _cairo_traps_init (&traps);
+    _cairo_traps_limit (&traps, *boxes, *num_boxes);
+    traps.is_rectilinear = TRUE;
+
+    num_rects = cairo_region_num_rectangles (region);
+    for (n = 0; n < num_rects; n++) {
+	cairo_rectangle_int_t rect;
+	cairo_point_t p1, p2;
+
+	cairo_region_get_rectangle (region, n, &rect);
+
+	p1.x = _cairo_fixed_from_int (rect.x);
+	p1.y = _cairo_fixed_from_int (rect.y);
+	p2.x = _cairo_fixed_from_int (rect.x + rect.width);
+	p2.y = _cairo_fixed_from_int (rect.y + rect.height);
+
+	status = _cairo_traps_tessellate_rectangle (&traps, &p1, &p2);
+	if (unlikely (status))
+	    goto CLEANUP;
+    }
+
+    status = _cairo_bentley_ottmann_tessellate_rectilinear_traps (&traps, CAIRO_FILL_RULE_WINDING);
+    if (unlikely (status))
+	goto CLEANUP;
+
+    n = *size_boxes;
+    if (n < 0)
+	n = -n;
+
+    if (traps.num_traps > n) {
+	cairo_box_t *new_boxes;
+
+	new_boxes = _cairo_malloc_ab (traps.num_traps, sizeof (cairo_box_t));
+	if (unlikely (new_boxes == NULL)) {
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto CLEANUP;
+	}
+
+	if (*size_boxes > 0)
+	    free (*boxes);
+
+	*boxes = new_boxes;
+	*size_boxes = traps.num_traps;
+    }
+
+    for (n = 0; n < traps.num_traps; n++) {
+	(*boxes)[n].p1.x = traps.traps[n].left.p1.x;
+	(*boxes)[n].p1.y = traps.traps[n].top;
+	(*boxes)[n].p2.x = traps.traps[n].right.p1.x;
+	(*boxes)[n].p2.y = traps.traps[n].bottom;
+    }
+    *num_boxes = n;
+
+  CLEANUP:
+    _cairo_traps_fini (&traps);
+
+    return status;
+}
+
+static cairo_status_t
+_rectilinear_clip_to_boxes (const cairo_path_fixed_t *path,
+			    cairo_fill_rule_t fill_rule,
+			    cairo_box_t **boxes,
+			    int *num_boxes,
+			    int *size_boxes)
+{
+    cairo_polygon_t polygon;
+    cairo_traps_t traps;
+    cairo_status_t status;
+
+    _cairo_polygon_init (&polygon);
+    _cairo_polygon_limit (&polygon, *boxes, *num_boxes);
+
+    /* tolerance will be ignored as the path is rectilinear */
+    status = _cairo_path_fixed_fill_to_polygon (path, 0., &polygon);
+    if (unlikely (status))
+	goto CLEANUP_POLYGON;
+
+    if (polygon.num_edges == 0) {
+	*num_boxes = 0;
+    } else {
+	_cairo_traps_init (&traps);
+
+	status = _cairo_bentley_ottmann_tessellate_rectilinear_polygon (&traps,
+									&polygon,
+									fill_rule);
+	if (likely (status == CAIRO_STATUS_SUCCESS)) {
+	    int i;
+
+	    i = *size_boxes;
+	    if (i < 0)
+		i = -i;
+
+	    if (traps.num_traps > i) {
+		cairo_box_t *new_boxes;
+		int new_size;
+
+		new_size = pot (traps.num_traps);
+		new_boxes = _cairo_malloc_ab (new_size, sizeof (cairo_box_t));
+		if (unlikely (new_boxes == NULL)) {
+		    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+		    goto CLEANUP_TRAPS;
+		}
+
+		if (*size_boxes > 0)
+		    free (*boxes);
+
+		*boxes = new_boxes;
+		*size_boxes = new_size;
+	    }
+
+	    for (i = 0; i < traps.num_traps; i++) {
+		(*boxes)[i].p1.x = traps.traps[i].left.p1.x;
+		(*boxes)[i].p1.y = traps.traps[i].top;
+		(*boxes)[i].p2.x = traps.traps[i].right.p1.x;
+		(*boxes)[i].p2.y = traps.traps[i].bottom;
+	    }
+	    *num_boxes = i;
+	}
+
+      CLEANUP_TRAPS:
+	_cairo_traps_fini (&traps);
+    }
+
+  CLEANUP_POLYGON:
+    _cairo_polygon_fini (&polygon);
+
+    return status;
+}
+
+static cairo_int_status_t
+_cairo_clip_path_to_boxes (cairo_clip_path_t *clip_path,
+			   cairo_box_t **boxes,
+			   int *count)
+{
+    int size = -*count;
+    int num_boxes = 0;
+    cairo_status_t status;
+
+    if (clip_path->region != NULL) {
+	int num_rects, n;
+
+	num_rects = cairo_region_num_rectangles (clip_path->region);
+	if (num_rects > -size) {
+	    cairo_box_t *new_boxes;
+
+	    new_boxes = _cairo_malloc_ab (num_rects, sizeof (cairo_box_t));
+	    if (unlikely (new_boxes == NULL))
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+	    *boxes = new_boxes;
+	}
+
+	for (n = 0; n < num_rects; n++) {
+	    cairo_rectangle_int_t rect;
+
+	    cairo_region_get_rectangle (clip_path->region, n, &rect);
+	    (*boxes)[n].p1.x = _cairo_fixed_from_int (rect.x);
+	    (*boxes)[n].p1.y = _cairo_fixed_from_int (rect.y);
+	    (*boxes)[n].p2.x = _cairo_fixed_from_int (rect.x + rect.width);
+	    (*boxes)[n].p2.y = _cairo_fixed_from_int (rect.y + rect.height);
+	}
+
+	*count = num_rects;
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    /* keep it simple at first */
+    if (! _clip_paths_are_rectilinear (clip_path))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    assert (-size >= 1);
+    if (_cairo_path_fixed_is_box (&clip_path->path, *boxes)) {
+	num_boxes = 1;
+    } else {
+	status = _rectilinear_clip_to_boxes (&clip_path->path,
+					     clip_path->fill_rule,
+					     boxes, &num_boxes, &size);
+	if (unlikely (status))
+	    return status;
+    }
+
+    while ((clip_path = clip_path->prev) != NULL) {
+	cairo_box_t box;
+
+	if (clip_path->region != NULL) {
+	    status = _region_clip_to_boxes (clip_path->region,
+					    boxes, &num_boxes, &size);
+	    if (unlikely (status))
+		return status;
+
+	    break;
+	} else if (_cairo_path_fixed_is_box (&clip_path->path, &box)) {
+	    int i, j;
+
+	    for (i = j = 0; i < num_boxes; i++) {
+		if (j != i)
+		    (*boxes)[j] = (*boxes)[i];
+
+		if (box.p1.x > (*boxes)[j].p1.x)
+		    (*boxes)[j].p1.x = box.p1.x;
+		if (box.p2.x < (*boxes)[j].p2.x)
+		    (*boxes)[j].p2.x = box.p2.x;
+
+		if (box.p1.y > (*boxes)[j].p1.y)
+		    (*boxes)[j].p1.y = box.p1.y;
+		if (box.p2.y < (*boxes)[j].p2.y)
+		    (*boxes)[j].p2.y = box.p2.y;
+
+		j += (*boxes)[j].p2.x > (*boxes)[j].p1.x &&
+		     (*boxes)[j].p2.y > (*boxes)[j].p1.y;
+	    }
+
+	    num_boxes = j;
+	} else {
+	    status = _rectilinear_clip_to_boxes (&clip_path->path,
+						 clip_path->fill_rule,
+						 boxes, &num_boxes, &size);
+	    if (unlikely (status))
+		return status;
+	}
+
+	if (num_boxes == 0)
+	    break;
+    }
+
+    *count = num_boxes;
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -943,12 +1195,10 @@ _cairo_clip_get_region (cairo_clip_t *clip,
 {
     cairo_int_status_t status;
 
-    *region = NULL;
     if (clip->all_clipped)
-	return CAIRO_INT_STATUS_NOTHING_TO_DO;
+	goto CLIPPED;
 
-    if (clip->path == NULL)
-	return CAIRO_STATUS_SUCCESS;
+    assert (clip->path != NULL);
 
     status = _cairo_clip_path_to_region (clip->path);
     if (status)
@@ -956,10 +1206,40 @@ _cairo_clip_get_region (cairo_clip_t *clip,
 
     if (cairo_region_is_empty (clip->path->region)) {
 	_cairo_clip_set_all_clipped (clip);
+	goto CLIPPED;
+    }
+
+    if (region)
+	*region = clip->path->region;
+    return CAIRO_STATUS_SUCCESS;
+
+  CLIPPED:
+    if (region)
+	*region = NULL;
+    return CAIRO_INT_STATUS_NOTHING_TO_DO;
+}
+
+cairo_int_status_t
+_cairo_clip_get_boxes (cairo_clip_t *clip,
+		       cairo_box_t **boxes,
+		       int *count)
+{
+    cairo_int_status_t status;
+
+    if (clip->all_clipped)
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
+
+    assert (clip->path != NULL);
+
+    status = _cairo_clip_path_to_boxes (clip->path, boxes, count);
+    if (status)
+	return status;
+
+    if (*count == 0) {
+	_cairo_clip_set_all_clipped (clip);
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
     }
 
-    *region = clip->path->region;
     return CAIRO_STATUS_SUCCESS;
 }
 

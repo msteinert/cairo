@@ -58,17 +58,17 @@ _cairo_traps_init (cairo_traps_t *traps)
     traps->traps_size = ARRAY_LENGTH (traps->traps_embedded);
     traps->traps = traps->traps_embedded;
 
-    traps->has_limits = FALSE;
+    traps->num_limits = 0;
     traps->has_intersections = FALSE;
 }
 
 void
 _cairo_traps_limit (cairo_traps_t	*traps,
-		    cairo_box_t		*limits)
+		    const cairo_box_t	*limits,
+		    int			 num_limits)
 {
-    traps->has_limits = TRUE;
-
-    traps->limits = *limits;
+    traps->limits = limits;
+    traps->num_limits = num_limits;
 }
 
 void
@@ -90,35 +90,6 @@ _cairo_traps_fini (cairo_traps_t *traps)
 	free (traps->traps);
 
     VG (VALGRIND_MAKE_MEM_NOACCESS (traps, sizeof (cairo_traps_t)));
-}
-
-/**
- * _cairo_traps_init_box:
- * @traps: a #cairo_traps_t
- * @box: a box that will be converted to a single trapezoid
- *       to store in @traps.
- *
- * Initializes a #cairo_traps_t to contain a single rectangular
- * trapezoid.
- **/
-void
-_cairo_traps_init_box (cairo_traps_t *traps,
-		       const cairo_box_t   *box)
-{
-    _cairo_traps_init (traps);
-
-    assert (traps->traps_size >= 1);
-
-    traps->num_traps = 1;
-
-    traps->traps[0].top = box->p1.y;
-    traps->traps[0].bottom = box->p2.y;
-    traps->traps[0].left.p1 = box->p1;
-    traps->traps[0].left.p2.x = box->p1.x;
-    traps->traps[0].left.p2.y = box->p2.y;
-    traps->traps[0].right.p1.x = box->p2.x;
-    traps->traps[0].right.p1.y = box->p1.y;
-    traps->traps[0].right.p2 = box->p2;
 }
 
 /* make room for at least one more trap */
@@ -171,6 +142,60 @@ _cairo_traps_add_trap (cairo_traps_t *traps,
     trap->right = *right;
 }
 
+/**
+ * _cairo_traps_init_box:
+ * @traps: a #cairo_traps_t
+ * @box: an array box that will each be converted to a single trapezoid
+ *       to store in @traps.
+ *
+ * Initializes a #cairo_traps_t to contain an array of rectangular
+ * trapezoids.
+ **/
+cairo_status_t
+_cairo_traps_init_boxes (cairo_traps_t	    *traps,
+		         const cairo_box_t  *boxes,
+			 int		     num_boxes)
+{
+    cairo_trapezoid_t *trap;
+
+    _cairo_traps_init (traps);
+
+    while (traps->traps_size < num_boxes) {
+	if (unlikely (! _cairo_traps_grow (traps))) {
+	    _cairo_traps_fini (traps);
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	}
+    }
+
+    traps->num_traps = num_boxes;
+    traps->is_rectilinear = TRUE;
+
+    trap = &traps->traps[0];
+    while (num_boxes--) {
+	trap->top    = boxes->p1.y;
+	trap->bottom = boxes->p2.y;
+
+	trap->left.p1   = boxes->p1;
+	trap->left.p2.x = boxes->p1.x;
+	trap->left.p2.y = boxes->p2.y;
+
+	trap->right.p1.x = boxes->p2.x;
+	trap->right.p1.y = boxes->p1.y;
+	trap->right.p2   = boxes->p2;
+
+	if (traps->maybe_region) {
+	    traps->maybe_region  = _cairo_fixed_is_integer (boxes->p1.x) &&
+		                   _cairo_fixed_is_integer (boxes->p1.y) &&
+		                   _cairo_fixed_is_integer (boxes->p2.x) &&
+		                   _cairo_fixed_is_integer (boxes->p2.y);
+	}
+
+	trap++, boxes++;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 cairo_status_t
 _cairo_traps_tessellate_rectangle (cairo_traps_t *traps,
 				   const cairo_point_t *top_left,
@@ -188,63 +213,72 @@ _cairo_traps_tessellate_rectangle (cairo_traps_t *traps,
      top = top_left->y;
      bottom = bottom_right->y;
 
-    if (traps->has_limits) {
-	/* Trivially reject if trapezoid is entirely to the right or
-	 * to the left of the limits. */
-	if (left.p1.x >= traps->limits.p2.x &&
-	    left.p2.x >= traps->limits.p2.x)
-	{
-	    return CAIRO_STATUS_SUCCESS;
-	}
-
-	if (right.p1.x <= traps->limits.p1.x &&
-	    right.p2.x <= traps->limits.p1.x)
-	{
-	    return CAIRO_STATUS_SUCCESS;
-	}
-
-	/* And reject if the trapezoid is entirely above or below */
-	if (top > traps->limits.p2.y || bottom < traps->limits.p1.y)
-	    return CAIRO_STATUS_SUCCESS;
-
-	/* Otherwise, clip the trapezoid to the limits. We only clip
-	 * where an edge is entirely outside the limits. If we wanted
-	 * to be more clever, we could handle cases where a trapezoid
-	 * edge intersects the edge of the limits, but that would
-	 * require slicing this trapezoid into multiple trapezoids,
-	 * and I'm not sure the effort would be worth it. */
-	if (top < traps->limits.p1.y)
-	    top = traps->limits.p1.y;
-
-	if (bottom > traps->limits.p2.y)
-	    bottom = traps->limits.p2.y;
-
-	if (left.p1.x <= traps->limits.p1.x &&
-	    left.p2.x <= traps->limits.p1.x)
-	{
-	    left.p1.x = traps->limits.p1.x;
-	    left.p1.y = traps->limits.p1.y;
-	    left.p2.x = traps->limits.p1.x;
-	    left.p2.y = traps->limits.p2.y;
-	}
-
-	if (right.p1.x >= traps->limits.p2.x &&
-	    right.p2.x >= traps->limits.p2.x)
-	{
-	    right.p1.x = traps->limits.p2.x;
-	    right.p1.y = traps->limits.p1.y;
-	    right.p2.x = traps->limits.p2.x;
-	    right.p2.y = traps->limits.p2.y;
-	}
-    }
-
     if (top == bottom)
 	return CAIRO_STATUS_SUCCESS;
 
     if (left.p1.x == right.p1.x)
 	return CAIRO_STATUS_SUCCESS;
 
-    _cairo_traps_add_trap (traps, top, bottom, &left, &right);
+    if (traps->num_limits) {
+	int n;
+
+	for (n = 0; n < traps->num_limits; n++) {
+	    const cairo_box_t *limits = &traps->limits[n];
+	    cairo_line_t _left, _right;
+	    cairo_fixed_t _top, _bottom;
+
+	    if (top >= limits->p2.y)
+		continue;
+	    if (bottom <= limits->p1.y)
+		continue;
+
+	    /* Trivially reject if trapezoid is entirely to the right or
+	     * to the left of the limits. */
+	    if (left.p1.x >= limits->p2.x)
+		continue;
+	    if (right.p1.x <= limits->p1.x)
+		continue;
+
+	    /* Otherwise, clip the trapezoid to the limits. */
+	    _top = top;
+	    if (_top < limits->p1.y)
+		_top = limits->p1.y;
+
+	    _bottom = bottom;
+	    if (_bottom > limits->p2.y)
+		_bottom = limits->p2.y;
+
+	    if (_bottom <= _top)
+		continue;
+
+	    _left = left;
+	    if (_left.p1.x <= limits->p1.x &&
+		_left.p2.x <= limits->p1.x)
+	    {
+		_left.p1.x = limits->p1.x;
+		_left.p1.y = limits->p1.y;
+		_left.p2.x = limits->p1.x;
+		_left.p2.y = limits->p2.y;
+	    }
+
+	    _right = right;
+	    if (_right.p1.x >= limits->p2.x &&
+		_right.p2.x >= limits->p2.x)
+	    {
+		_right.p1.x = limits->p2.x;
+		_right.p1.y = limits->p1.y;
+		_right.p2.x = limits->p2.x;
+		_right.p2.y = limits->p2.y;
+	    }
+
+	    if (left.p1.x >= right.p1.x)
+		continue;
+
+	    _cairo_traps_add_trap (traps, _top, _bottom, &_left, &_right);
+	}
+    } else {
+	_cairo_traps_add_trap (traps, top, bottom, &left, &right);
+    }
 
     return traps->status;
 }
@@ -492,12 +526,6 @@ _cairo_traps_extract_region (cairo_traps_t   *traps,
 	int y1 = _cairo_fixed_integer_part (traps->traps[i].top);
 	int x2 = _cairo_fixed_integer_part (traps->traps[i].right.p1.x);
 	int y2 = _cairo_fixed_integer_part (traps->traps[i].bottom);
-
-	/* XXX: Sometimes we get degenerate trapezoids from the tesellator;
-	 * skip these.
-	 */
-	assert (x1 != x2);
-	assert (y1 != y2);
 
 	rects[rect_count].x = x1;
 	rects[rect_count].y = y1;

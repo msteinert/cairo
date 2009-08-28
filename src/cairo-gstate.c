@@ -869,27 +869,28 @@ static cairo_bool_t
 _clipped (cairo_gstate_t *gstate)
 {
     cairo_rectangle_int_t extents;
-    cairo_region_t *clip_region;
 
     if (gstate->clip.all_clipped)
 	return TRUE;
+
+    /* XXX consider applying a surface clip? */
+
+    if (gstate->clip.path == NULL)
+	return FALSE;
 
     if (_cairo_surface_get_extents (gstate->target, &extents)) {
 	if (extents.width == 0 || extents.height == 0)
 	    return TRUE;
 
-	if (gstate->clip.path != NULL &&
-	    ! _cairo_rectangle_intersect (&extents,
+	if (! _cairo_rectangle_intersect (&extents,
 					  &gstate->clip.path->extents))
 	{
 	    return TRUE;
 	}
-
-	/* XXX consider applying a surface clip? */
     }
 
     /* perform a simple query to exclude trivial all-clipped cases */
-    return _cairo_clip_get_region (&gstate->clip, &clip_region) == CAIRO_INT_STATUS_NOTHING_TO_DO;
+    return _cairo_clip_get_region (&gstate->clip, NULL) == CAIRO_INT_STATUS_NOTHING_TO_DO;
 }
 
 cairo_status_t
@@ -1018,7 +1019,7 @@ _cairo_gstate_in_stroke (cairo_gstate_t	    *gstate,
     limit.p2.y = limit.p1.y + 2;
 
     _cairo_traps_init (&traps);
-    _cairo_traps_limit (&traps, &limit);
+    _cairo_traps_limit (&traps, &limit, 1);
 
     status = _cairo_path_fixed_stroke_to_traps (path,
 						&gstate->stroke_style,

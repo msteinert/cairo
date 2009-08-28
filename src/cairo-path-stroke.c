@@ -186,13 +186,14 @@ _cairo_stroker_init (cairo_stroker_t		*stroker,
 
 static void
 _cairo_stroker_limit (cairo_stroker_t *stroker,
-		      const cairo_box_t *box)
+		      const cairo_box_t *boxes,
+		      int num_boxes)
 {
     double dx, dy;
     cairo_fixed_t fdx, fdy;
 
     stroker->has_bounds = TRUE;
-    stroker->bounds = *box;
+    _cairo_boxes_get_extents (boxes, num_boxes, &stroker->bounds);
 
     /* Extend the bounds in each direction to account for the maximum area
      * we might generate trapezoids, to capture line segments that are outside
@@ -1353,8 +1354,8 @@ _cairo_path_fixed_stroke_to_polygon (const cairo_path_fixed_t	*path,
     stroker.add_external_edge = _cairo_polygon_add_external_edge,
     stroker.closure = polygon;
 
-    if (polygon->has_limits)
-	_cairo_stroker_limit (&stroker, &polygon->limits);
+    if (polygon->num_limits)
+	_cairo_stroker_limit (&stroker, polygon->limits, polygon->num_limits);
 
     status = _cairo_path_fixed_interpret (path,
 					  CAIRO_DIRECTION_FORWARD,
@@ -1404,8 +1405,7 @@ _cairo_path_fixed_stroke_to_traps (const cairo_path_fixed_t	*path,
     }
 
     _cairo_polygon_init (&polygon);
-    if (traps->has_limits)
-	_cairo_polygon_limit (&polygon, &traps->limits);
+    _cairo_polygon_limit (&polygon, traps->limits, traps->num_limits);
 
     status = _cairo_path_fixed_stroke_to_polygon (path,
 						 stroke_style,
@@ -1458,10 +1458,11 @@ typedef struct _cairo_rectilinear_stroker {
 
 static void
 _cairo_rectilinear_stroker_limit (cairo_rectilinear_stroker_t *stroker,
-				  const cairo_box_t *box)
+				  const cairo_box_t *boxes,
+				  int num_boxes)
 {
     stroker->has_bounds = TRUE;
-    stroker->bounds = *box;
+    _cairo_boxes_get_extents (boxes, num_boxes, &stroker->bounds);
 
     stroker->bounds.p1.x -= stroker->half_line_width;
     stroker->bounds.p2.x += stroker->half_line_width;
@@ -2005,9 +2006,10 @@ _cairo_path_fixed_stroke_rectilinear_to_traps (const cairo_path_fixed_t	*path,
 				     stroke_style,
 				     ctm,
 				     traps);
-    if (traps->has_limits) {
+    if (traps->num_limits) {
 	_cairo_rectilinear_stroker_limit (&rectilinear_stroker,
-					  &traps->limits);
+					  traps->limits,
+					  traps->num_limits);
     }
 
     status = _cairo_path_fixed_interpret (path,

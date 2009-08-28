@@ -50,7 +50,7 @@ _cairo_polygon_init (cairo_polygon_t *polygon)
 
     polygon->has_current_point = FALSE;
     polygon->has_current_edge = FALSE;
-    polygon->has_limits = FALSE;
+    polygon->num_limits = 0;
 
     polygon->extents.p1.x = polygon->extents.p1.y = INT32_MAX;
     polygon->extents.p2.x = polygon->extents.p2.y = INT32_MIN;
@@ -58,10 +58,11 @@ _cairo_polygon_init (cairo_polygon_t *polygon)
 
 void
 _cairo_polygon_limit (cairo_polygon_t	*polygon,
-		      const cairo_box_t *limits)
+		      const cairo_box_t *limits,
+		      int num_limits)
 {
-    polygon->has_limits = TRUE;
-    polygon->limits = *limits;
+    polygon->limits = limits;
+    polygon->num_limits = num_limits;
 }
 
 void
@@ -159,156 +160,163 @@ static void
 _add_clipped_edge (cairo_polygon_t *polygon,
 		   const cairo_point_t *p1,
 		   const cairo_point_t *p2,
-		   int dir)
+		   const int top, const int bottom,
+		   const int dir)
 {
     cairo_point_t p[2];
     int top_y, bot_y;
+    int n;
 
-    if (p1->x <= polygon->limits.p1.x && p2->x <= polygon->limits.p1.x)
-    {
-	p[0].x = polygon->limits.p1.x;
-	p[0].y = polygon->limits.p1.y;
-	top_y = p1->y;
-	if (top_y < p[0].y)
-	    top_y = p[0].y;
+    for (n = 0; n < polygon->num_limits; n++) {
+	const cairo_box_t *limits = &polygon->limits[n];
 
-	p[1].x = polygon->limits.p1.x;
-	p[1].y = polygon->limits.p2.y;
-	bot_y = p2->y;
-	if (bot_y > p[1].y)
-	    bot_y = p[1].y;
+	if (top >= limits->p2.y)
+	    continue;
+	if (bottom <= limits->p1.y)
+	    continue;
 
-	_add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
-    }
-    else if (p1->x >= polygon->limits.p2.x && p2->x >= polygon->limits.p2.x)
-    {
-	p[0].x = polygon->limits.p2.x;
-	p[0].y = polygon->limits.p1.y;
-	top_y = p1->y;
-	if (top_y < p[0].y)
-	    top_y = p[0].y;
+	if (p1->x <= limits->p1.x && p2->x <= limits->p1.x)
+	{
+	    p[0].x = limits->p1.x;
+	    p[0].y = limits->p1.y;
+	    top_y = top;
+	    if (top_y < p[0].y)
+		top_y = p[0].y;
 
-	p[1].x = polygon->limits.p2.x;
-	p[1].y = polygon->limits.p2.y;
-	bot_y = p2->y;
-	if (bot_y > p[1].y)
-	    bot_y = p[1].y;
+	    p[1].x = limits->p1.x;
+	    p[1].y = limits->p2.y;
+	    bot_y = bottom;
+	    if (bot_y > p[1].y)
+		bot_y = p[1].y;
 
-	_add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
-    }
-    else if (p1->x >= polygon->limits.p1.x && p2->x >= polygon->limits.p1.x &&
-	     p1->x <= polygon->limits.p2.x && p2->x <= polygon->limits.p2.x)
-    {
-	top_y = p1->y;
-	if (top_y < polygon->limits.p1.y)
-	    top_y = polygon->limits.p1.y;
-
-	bot_y = p2->y;
-	if (bot_y > polygon->limits.p2.y)
-	    bot_y = polygon->limits.p2.y;
-
-	_add_edge (polygon, p1, p2, top_y, bot_y, dir);
-    }
-    else
-    {
-	int left_y, right_y;
-	int p1_y, p2_y;
-
-	left_y = _cairo_edge_compute_intersection_y_for_x (p1, p2,
-						     polygon->limits.p1.x);
-	right_y = _cairo_edge_compute_intersection_y_for_x (p1, p2,
-						      polygon->limits.p2.x);
-
-	if (left_y == right_y) /* horizontal within bounds */
-	    return;
-
-	p1_y = p1->y;
-	p2_y = p2->y;
-
-	if (left_y < right_y) {
-	    if (p1->x < polygon->limits.p1.x && left_y > polygon->limits.p1.y)
-	    {
-		p[0].x = polygon->limits.p1.x;
-		p[0].y = polygon->limits.p1.y;
-		top_y = p1_y;
-		if (top_y < p[0].y)
-		    top_y = p[0].y;
-
-		p[1].x = polygon->limits.p1.x;
-		p[1].y = polygon->limits.p2.y;
-		bot_y = left_y;
-		if (bot_y > p[1].y)
-		    bot_y = p[1].y;
-
-		if (bot_y > top_y)
-		    _add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
-		p1_y = bot_y;
-	    }
-
-	    if (p2->x > polygon->limits.p2.x && right_y < polygon->limits.p2.y)
-	    {
-		p[0].x = polygon->limits.p2.x;
-		p[0].y = polygon->limits.p1.y;
-		top_y = right_y;
-		if (top_y < p[0].y)
-		    top_y = p[0].y;
-
-		p[1].x = polygon->limits.p2.x;
-		p[1].y = polygon->limits.p2.y;
-		bot_y = p2_y;
-		if (bot_y > p[1].y)
-		    bot_y = p[1].y;
-
-		if (bot_y > top_y)
-		    _add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
-		p2_y = top_y;
-	    }
-	} else {
-	    if (p1->x > polygon->limits.p2.x && right_y > polygon->limits.p1.y)
-	    {
-		p[0].x = polygon->limits.p2.x;
-		p[0].y = polygon->limits.p1.y;
-		top_y = p1_y;
-		if (top_y < p[0].y)
-		    top_y = p[0].y;
-
-		p[1].x = polygon->limits.p2.x;
-		p[1].y = polygon->limits.p2.y;
-		bot_y = right_y;
-		if (bot_y > p[1].y)
-		    bot_y = p[1].y;
-
-		if (bot_y > top_y)
-		    _add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
-		p1_y = bot_y;
-	    }
-
-	    if (p2->x < polygon->limits.p1.x && left_y < polygon->limits.p2.y)
-	    {
-		p[0].x = polygon->limits.p1.x;
-		p[0].y = polygon->limits.p1.y;
-		top_y = left_y;
-		if (top_y < p[0].y)
-		    top_y = p[0].y;
-
-		p[1].x = polygon->limits.p1.x;
-		p[1].y = polygon->limits.p2.y;
-		bot_y = p2_y;
-		if (bot_y > p[1].y)
-		    bot_y = p[1].y;
-
-		if (bot_y > top_y)
-		    _add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
-		p2_y = top_y;
-	    }
+	    _add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
 	}
+	else if (p1->x >= limits->p2.x && p2->x >= limits->p2.x)
+	{
+	    p[0].x = limits->p2.x;
+	    p[0].y = limits->p1.y;
+	    top_y = top;
+	    if (top_y < p[0].y)
+		top_y = p[0].y;
 
-	if (p1_y < polygon->limits.p1.y)
-	    p1_y = polygon->limits.p1.y;
-	if (p2_y > polygon->limits.p2.y)
-	    p2_y = polygon->limits.p2.y;
-	if (p2_y > p1_y)
-	    _add_edge (polygon, p1, p2, p1_y, p2_y, dir);
+	    p[1].x = limits->p2.x;
+	    p[1].y = limits->p2.y;
+	    bot_y = bottom;
+	    if (bot_y > p[1].y)
+		bot_y = p[1].y;
+
+	    _add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
+	}
+	else if (p1->x >= limits->p1.x && p2->x >= limits->p1.x &&
+		 p1->x <= limits->p2.x && p2->x <= limits->p2.x)
+	{
+	    top_y = top;
+	    if (top_y < limits->p1.y)
+		top_y = limits->p1.y;
+
+	    bot_y = bottom;
+	    if (bot_y > limits->p2.y)
+		bot_y = limits->p2.y;
+
+	    _add_edge (polygon, p1, p2, top_y, bot_y, dir);
+	}
+	else
+	{
+	    int left_y, right_y;
+	    int p1_y, p2_y;
+
+	    left_y = _cairo_edge_compute_intersection_y_for_x (p1, p2,
+							       limits->p1.x);
+	    right_y = _cairo_edge_compute_intersection_y_for_x (p1, p2,
+								limits->p2.x);
+
+	    if (left_y == right_y) /* horizontal within bounds */
+		return;
+
+	    p1_y = top;
+	    p2_y = bottom;
+
+	    if (left_y < right_y) {
+		if (p1->x < limits->p1.x && left_y > limits->p1.y) {
+		    p[0].x = limits->p1.x;
+		    p[0].y = limits->p1.y;
+		    top_y = p1_y;
+		    if (top_y < p[0].y)
+			top_y = p[0].y;
+
+		    p[1].x = limits->p1.x;
+		    p[1].y = limits->p2.y;
+		    bot_y = left_y;
+		    if (bot_y > p[1].y)
+			bot_y = p[1].y;
+
+		    if (bot_y > top_y)
+			_add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
+		    p1_y = bot_y;
+		}
+
+		if (p2->x > limits->p2.x && right_y < limits->p2.y) {
+		    p[0].x = limits->p2.x;
+		    p[0].y = limits->p1.y;
+		    top_y = right_y;
+		    if (top_y < p[0].y)
+			top_y = p[0].y;
+
+		    p[1].x = limits->p2.x;
+		    p[1].y = limits->p2.y;
+		    bot_y = p2_y;
+		    if (bot_y > p[1].y)
+			bot_y = p[1].y;
+
+		    if (bot_y > top_y)
+			_add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
+		    p2_y = top_y;
+		}
+	    } else {
+		if (p1->x > limits->p2.x && right_y > limits->p1.y) {
+		    p[0].x = limits->p2.x;
+		    p[0].y = limits->p1.y;
+		    top_y = p1_y;
+		    if (top_y < p[0].y)
+			top_y = p[0].y;
+
+		    p[1].x = limits->p2.x;
+		    p[1].y = limits->p2.y;
+		    bot_y = right_y;
+		    if (bot_y > p[1].y)
+			bot_y = p[1].y;
+
+		    if (bot_y > top_y)
+			_add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
+		    p1_y = bot_y;
+		}
+
+		if (p2->x < limits->p1.x && left_y < limits->p2.y) {
+		    p[0].x = limits->p1.x;
+		    p[0].y = limits->p1.y;
+		    top_y = left_y;
+		    if (top_y < p[0].y)
+			top_y = p[0].y;
+
+		    p[1].x = limits->p1.x;
+		    p[1].y = limits->p2.y;
+		    bot_y = p2_y;
+		    if (bot_y > p[1].y)
+			bot_y = p[1].y;
+
+		    if (bot_y > top_y)
+			_add_edge (polygon, &p[0], &p[1], top_y, bot_y, dir);
+		    p2_y = top_y;
+		}
+	    }
+
+	    if (p1_y < limits->p1.y)
+		p1_y = limits->p1.y;
+	    if (p2_y > limits->p2.y)
+		p2_y = limits->p2.y;
+	    if (p2_y > p1_y)
+		_add_edge (polygon, p1, p2, p1_y, p2_y, dir);
+	}
     }
 }
 
@@ -331,14 +339,14 @@ _cairo_polygon_add_edge (cairo_polygon_t *polygon,
 	dir = -1;
     }
 
-    if (polygon->has_limits) {
-	if (p2->y <= polygon->limits.p1.y)
+    if (polygon->num_limits) {
+	if (p2->y <= polygon->limits[0].p1.y)
 	    return;
 
-	if (p1->y >= polygon->limits.p2.y)
+	if (p1->y >= polygon->limits[polygon->num_limits-1].p2.y)
 	    return;
 
-	_add_clipped_edge (polygon, p1, p2, dir);
+	_add_clipped_edge (polygon, p1, p2, p1->y, p2->y, dir);
     } else
 	_add_edge (polygon, p1, p2, p1->y, p2->y, dir);
 }
@@ -349,6 +357,33 @@ _cairo_polygon_add_external_edge (void *polygon,
 				  const cairo_point_t *p2)
 {
     _cairo_polygon_add_edge (polygon, p1, p2);
+    return _cairo_polygon_status (polygon);
+}
+
+cairo_status_t
+_cairo_polygon_add_line (cairo_polygon_t *polygon,
+			 const cairo_line_t *line,
+			 int top, int bottom,
+			 int dir)
+{
+    /* drop horizontal edges */
+    if (line->p1.y == line->p2.y)
+	return CAIRO_STATUS_SUCCESS;
+
+    if (bottom <= top)
+	return CAIRO_STATUS_SUCCESS;
+
+    if (polygon->num_limits) {
+	if (line->p2.y <= polygon->limits[0].p1.y)
+	    return CAIRO_STATUS_SUCCESS;
+
+	if (line->p1.y >= polygon->limits[polygon->num_limits-1].p2.y)
+	    return CAIRO_STATUS_SUCCESS;
+
+	_add_clipped_edge (polygon, &line->p1, &line->p2, top, bottom, dir);
+    } else
+	_add_edge (polygon, &line->p1, &line->p2, top, bottom, dir);
+
     return _cairo_polygon_status (polygon);
 }
 

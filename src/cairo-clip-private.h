@@ -117,6 +117,11 @@ cairo_private cairo_int_status_t
 _cairo_clip_get_region (cairo_clip_t *clip,
 			cairo_region_t **region);
 
+cairo_private cairo_int_status_t
+_cairo_clip_get_boxes (cairo_clip_t *clip,
+		       cairo_box_t **boxes,
+		       int *count);
+
 cairo_private void
 _cairo_clip_translate (cairo_clip_t  *clip,
                        cairo_fixed_t  tx,

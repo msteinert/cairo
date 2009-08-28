@@ -252,6 +252,11 @@ cairo_private void
 _cairo_box_round_to_rectangle (const cairo_box_t     *box,
 			       cairo_rectangle_int_t *rectangle);
 
+cairo_private void
+_cairo_boxes_get_extents (const cairo_box_t *boxes,
+			  int num_boxes,
+			  cairo_box_t *extents);
+
 static inline void
 _cairo_unbounded_rectangle_init (cairo_rectangle_int_t *rect)
 {
@@ -951,10 +956,10 @@ typedef struct _cairo_surface_attributes {
 typedef struct _cairo_traps {
     cairo_status_t status;
 
-    cairo_box_t limits;
+    const cairo_box_t *limits;
+    int num_limits;
 
     unsigned int maybe_region : 1; /* hint: 0 implies that it cannot be */
-    unsigned int has_limits : 1;
     unsigned int has_intersections : 1;
     unsigned int is_rectilinear : 1;
 
@@ -2245,10 +2250,17 @@ _cairo_polygon_init (cairo_polygon_t *polygon);
 
 cairo_private void
 _cairo_polygon_limit (cairo_polygon_t	*polygon,
-		      const cairo_box_t *limits);
+		      const cairo_box_t *boxes,
+		      int		 num_boxes);
 
 cairo_private void
 _cairo_polygon_fini (cairo_polygon_t *polygon);
+
+cairo_private cairo_status_t
+_cairo_polygon_add_line (cairo_polygon_t *polygon,
+			 const cairo_line_t *line,
+			 int top, int bottom,
+			 int dir);
 
 cairo_private cairo_status_t
 _cairo_polygon_add_external_edge (void *polygon,
@@ -2345,11 +2357,13 @@ _cairo_traps_init (cairo_traps_t *traps);
 
 cairo_private void
 _cairo_traps_limit (cairo_traps_t	*traps,
-		    cairo_box_t		*limits);
+		    const cairo_box_t	*boxes,
+		    int			 num_boxes);
 
-cairo_private void
-_cairo_traps_init_box (cairo_traps_t *traps,
-		       const cairo_box_t   *box);
+cairo_private cairo_status_t
+_cairo_traps_init_boxes (cairo_traps_t	    *traps,
+			 const cairo_box_t    *boxes,
+			 int		     num_boxes);
 
 cairo_private void
 _cairo_traps_clear (cairo_traps_t *traps);
