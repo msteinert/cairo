@@ -755,7 +755,7 @@ _region_clip_to_boxes (const cairo_region_t *region,
 	    goto CLEANUP;
     }
 
-    status = _cairo_bentley_ottmann_tessellate_rectilinear_traps (&traps, CAIRO_FILL_RULE_WINDING);
+    status = _cairo_bentley_ottmann_tessellate_rectangular_traps (&traps, CAIRO_FILL_RULE_WINDING);
     if (unlikely (status))
 	goto CLEANUP;
 
@@ -804,25 +804,35 @@ _rectilinear_clip_to_boxes (const cairo_path_fixed_t *path,
     cairo_traps_t traps;
     cairo_status_t status;
 
+    _cairo_traps_init (&traps);
+    _cairo_traps_limit (&traps, *boxes, *num_boxes);
+
     _cairo_polygon_init (&polygon);
     _cairo_polygon_limit (&polygon, *boxes, *num_boxes);
+
+    status = _cairo_path_fixed_fill_rectilinear_to_traps (path,
+							  fill_rule,
+							  &traps);
+    if (unlikely (_cairo_status_is_error (status)))
+	goto CLEANUP;
+    if (status == CAIRO_STATUS_SUCCESS)
+	goto BOXES;
 
     /* tolerance will be ignored as the path is rectilinear */
     status = _cairo_path_fixed_fill_to_polygon (path, 0., &polygon);
     if (unlikely (status))
-	goto CLEANUP_POLYGON;
+	goto CLEANUP;
 
     if (polygon.num_edges == 0) {
 	*num_boxes = 0;
     } else {
-	_cairo_traps_init (&traps);
-
 	status = _cairo_bentley_ottmann_tessellate_rectilinear_polygon (&traps,
 									&polygon,
 									fill_rule);
 	if (likely (status == CAIRO_STATUS_SUCCESS)) {
 	    int i;
 
+          BOXES:
 	    i = *size_boxes;
 	    if (i < 0)
 		i = -i;
@@ -835,7 +845,7 @@ _rectilinear_clip_to_boxes (const cairo_path_fixed_t *path,
 		new_boxes = _cairo_malloc_ab (new_size, sizeof (cairo_box_t));
 		if (unlikely (new_boxes == NULL)) {
 		    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-		    goto CLEANUP_TRAPS;
+		    goto CLEANUP;
 		}
 
 		if (*size_boxes > 0)
@@ -853,13 +863,11 @@ _rectilinear_clip_to_boxes (const cairo_path_fixed_t *path,
 	    }
 	    *num_boxes = i;
 	}
-
-      CLEANUP_TRAPS:
-	_cairo_traps_fini (&traps);
     }
 
-  CLEANUP_POLYGON:
+  CLEANUP:
     _cairo_polygon_fini (&polygon);
+    _cairo_traps_fini (&traps);
 
     return status;
 }

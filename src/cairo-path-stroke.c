@@ -2029,8 +2029,9 @@ _cairo_path_fixed_stroke_rectilinear_to_traps (const cairo_path_fixed_t	*path,
 	status = _cairo_rectilinear_stroker_emit_segments (&rectilinear_stroker);
 
     traps->is_rectilinear = 1;
+    traps->is_rectangular = 1;
     /* As we incrementally tessellate, we do not eliminate self-intersections */
-    traps->has_intersections = traps->num_traps != 0;
+    traps->has_intersections = traps->num_traps > 1;
 BAIL:
     _cairo_rectilinear_stroker_fini (&rectilinear_stroker);
 

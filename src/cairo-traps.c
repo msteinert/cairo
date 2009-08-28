@@ -53,6 +53,7 @@ _cairo_traps_init (cairo_traps_t *traps)
 
     traps->maybe_region = 1;
     traps->is_rectilinear = 0;
+    traps->is_rectangular = 0;
 
     traps->num_traps = 0;
 
@@ -79,6 +80,7 @@ _cairo_traps_clear (cairo_traps_t *traps)
 
     traps->maybe_region = 1;
     traps->is_rectilinear = 0;
+    traps->is_rectangular = 0;
 
     traps->num_traps = 0;
     traps->has_intersections = FALSE;
@@ -170,6 +172,7 @@ _cairo_traps_init_boxes (cairo_traps_t	    *traps,
 
     traps->num_traps = num_boxes;
     traps->is_rectilinear = TRUE;
+    traps->is_rectangular = TRUE;
 
     trap = &traps->traps[0];
     while (num_boxes--) {
@@ -206,6 +209,12 @@ _cairo_traps_tessellate_rectangle (cairo_traps_t *traps,
     cairo_line_t right;
     cairo_fixed_t top, bottom;
 
+    if (top_left->y == bottom_right->y)
+	return CAIRO_STATUS_SUCCESS;
+
+    if (top_left->x == bottom_right->x)
+	return CAIRO_STATUS_SUCCESS;
+
      left.p1.x =  left.p2.x = top_left->x;
      left.p1.y = right.p1.y = top_left->y;
     right.p1.x = right.p2.x = bottom_right->x;
@@ -214,14 +223,16 @@ _cairo_traps_tessellate_rectangle (cairo_traps_t *traps,
      top = top_left->y;
      bottom = bottom_right->y;
 
-    if (top == bottom)
-	return CAIRO_STATUS_SUCCESS;
-
-    if (left.p1.x == right.p1.x)
-	return CAIRO_STATUS_SUCCESS;
-
     if (traps->num_limits) {
+	cairo_bool_t reversed;
 	int n;
+
+	/* support counter-clockwise winding for rectangular tessellation */
+	reversed = top_left->x > bottom_right->x;
+	if (reversed) {
+	    right.p1.x = right.p2.x = top_left->x;
+	    left.p1.x = left.p2.x = bottom_right->x;
+	}
 
 	for (n = 0; n < traps->num_limits; n++) {
 	    const cairo_box_t *limits = &traps->limits[n];
@@ -275,7 +286,10 @@ _cairo_traps_tessellate_rectangle (cairo_traps_t *traps,
 	    if (left.p1.x >= right.p1.x)
 		continue;
 
-	    _cairo_traps_add_trap (traps, _top, _bottom, &_left, &_right);
+	    if (reversed)
+		_cairo_traps_add_trap (traps, _top, _bottom, &_right, &_left);
+	    else
+		_cairo_traps_add_trap (traps, _top, _bottom, &_left, &_right);
 	}
     } else {
 	_cairo_traps_add_trap (traps, top, bottom, &left, &right);

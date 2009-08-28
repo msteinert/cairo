@@ -963,6 +963,7 @@ typedef struct _cairo_traps {
     unsigned int maybe_region : 1; /* hint: 0 implies that it cannot be */
     unsigned int has_intersections : 1;
     unsigned int is_rectilinear : 1;
+    unsigned int is_rectangular : 1;
 
     int num_traps;
     int traps_size;
@@ -2405,6 +2406,10 @@ _cairo_bentley_ottmann_tessellate_polygon (cairo_traps_t         *traps,
 cairo_private cairo_status_t
 _cairo_bentley_ottmann_tessellate_traps (cairo_traps_t *traps,
 					 cairo_fill_rule_t fill_rule);
+
+cairo_private cairo_status_t
+_cairo_bentley_ottmann_tessellate_rectangular_traps (cairo_traps_t *traps,
+						     cairo_fill_rule_t fill_rule);
 
 cairo_private cairo_status_t
 _cairo_bentley_ottmann_tessellate_rectilinear_traps (cairo_traps_t *traps,

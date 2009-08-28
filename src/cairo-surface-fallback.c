@@ -634,6 +634,87 @@ _clip_and_composite_region (const cairo_pattern_t *src,
     return status;
 }
 
+/* avoid using region code to re-validate boxes */
+static cairo_status_t
+_fill_rectangles (cairo_surface_t *dst,
+		  cairo_operator_t op,
+		  const cairo_pattern_t *src,
+		  cairo_traps_t *traps,
+		  cairo_clip_t *clip)
+{
+    const cairo_color_t *color;
+    cairo_rectangle_int_t stack_rects[CAIRO_STACK_ARRAY_LENGTH (cairo_rectangle_int_t)];
+    cairo_rectangle_int_t *rects = stack_rects;
+    cairo_status_t status;
+    int i;
+
+    if (! traps->is_rectilinear || ! traps->maybe_region)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* XXX: convert clip region to geometric boxes? */
+    if (clip != NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* XXX: fallback for the region_subtract() operation */
+    if (! _cairo_operator_bounded_by_mask (op))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (! (src->type == CAIRO_PATTERN_TYPE_SOLID || op == CAIRO_OPERATOR_CLEAR))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (traps->has_intersections) {
+	if (traps->is_rectangular) {
+	    status = _cairo_bentley_ottmann_tessellate_rectangular_traps (traps, CAIRO_FILL_RULE_WINDING);
+	} else {
+	    status = _cairo_bentley_ottmann_tessellate_rectilinear_traps (traps, CAIRO_FILL_RULE_WINDING);
+	}
+	if (unlikely (status))
+	    return status;
+    }
+
+    for (i = 0; i < traps->num_traps; i++) {
+	if (! _cairo_fixed_is_integer (traps->traps[i].top)          ||
+	    ! _cairo_fixed_is_integer (traps->traps[i].bottom)       ||
+	    ! _cairo_fixed_is_integer (traps->traps[i].left.p1.x)    ||
+	    ! _cairo_fixed_is_integer (traps->traps[i].right.p1.x))
+	{
+	    traps->maybe_region = FALSE;
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+    }
+
+    if (traps->num_traps > ARRAY_LENGTH (stack_rects)) {
+	rects = _cairo_malloc_ab (traps->num_traps,
+				  sizeof (cairo_rectangle_int_t));
+	if (unlikely (rects == NULL))
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+
+    for (i = 0; i < traps->num_traps; i++) {
+	int x1 = _cairo_fixed_integer_part (traps->traps[i].left.p1.x);
+	int y1 = _cairo_fixed_integer_part (traps->traps[i].top);
+	int x2 = _cairo_fixed_integer_part (traps->traps[i].right.p1.x);
+	int y2 = _cairo_fixed_integer_part (traps->traps[i].bottom);
+
+	rects[i].x = x1;
+	rects[i].y = y1;
+	rects[i].width = x2 - x1;
+	rects[i].height = y2 - y1;
+    }
+
+    if (op == CAIRO_OPERATOR_CLEAR)
+	color = CAIRO_COLOR_TRANSPARENT;
+    else
+	color = &((cairo_solid_pattern_t *)src)->color;
+
+    status =  _cairo_surface_fill_rectangles (dst, op, color, rects, i);
+
+    if (rects != stack_rects)
+	free (rects);
+
+    return status;
+}
+
 /* Warning: This call modifies the coordinates of traps */
 static cairo_status_t
 _clip_and_composite_trapezoids (const cairo_pattern_t *src,
@@ -670,6 +751,10 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
 	(_cairo_operator_bounded_by_mask (op) && op != CAIRO_OPERATOR_SOURCE))
     {
 	cairo_region_t *trap_region = NULL;
+
+	status = _fill_rectangles (dst, op, src, traps, clip);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
 
 	status = _cairo_traps_extract_region (traps, &trap_region);
 	if (unlikely (_cairo_status_is_error (status)))
@@ -713,12 +798,12 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
 
     /* No fast path, exclude self-intersections and clip trapezoids. */
     if (traps->has_intersections) {
-	if (traps->is_rectilinear)
-	    status = _cairo_bentley_ottmann_tessellate_rectilinear_traps (traps,
-									  CAIRO_FILL_RULE_WINDING);
+	if (traps->is_rectangular)
+	    status = _cairo_bentley_ottmann_tessellate_rectangular_traps (traps, CAIRO_FILL_RULE_WINDING);
+	else if (traps->is_rectilinear)
+	    status = _cairo_bentley_ottmann_tessellate_rectilinear_traps (traps, CAIRO_FILL_RULE_WINDING);
 	else
-	    status = _cairo_bentley_ottmann_tessellate_traps (traps,
-							      CAIRO_FILL_RULE_WINDING);
+	    status = _cairo_bentley_ottmann_tessellate_traps (traps, CAIRO_FILL_RULE_WINDING);
 	if (unlikely (status))
 	    return status;
     }
