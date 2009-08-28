@@ -1109,9 +1109,12 @@ _cairo_clip_path_get_surface (cairo_clip_path_t *clip_path,
 	    prev = prev->prev;
 	    goto NEXT_PATH;
 	} else {
-	    _cairo_pattern_init_for_surface (&pattern.surface,
-					     _cairo_clip_path_get_surface (prev,
-									   target));
+	    cairo_surface_t *prev_surface;
+
+	    prev_surface = _cairo_clip_path_get_surface (prev, target);
+	    _cairo_pattern_init_for_surface (&pattern.surface, prev_surface);
+	    cairo_surface_destroy (prev_surface);
+
 	    cairo_matrix_init_translate (&pattern.base.matrix,
 					 -prev->extents.x + clip_extents->x,
 					 -prev->extents.y + clip_extents->y);
