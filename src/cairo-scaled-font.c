@@ -1063,6 +1063,10 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 
     _cairo_scaled_font_map_unlock ();
 
+    cairo_scaled_font_destroy (old);
+    if (font_face != original_font_face)
+	cairo_font_face_destroy (font_face);
+
     if (unlikely (status)) {
 	/* We can't call _cairo_scaled_font_destroy here since it expects
 	 * that the font has already been successfully inserted into the
@@ -1071,11 +1075,6 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	free (scaled_font);
 	return _cairo_scaled_font_create_in_error (status);
     }
-
-    cairo_scaled_font_destroy (old);
-
-    if (font_face != original_font_face)
-	cairo_font_face_destroy (font_face);
 
     return scaled_font;
 }
