@@ -2003,7 +2003,7 @@ inactive (cairo_script_surface_t *surface)
 	cairo_list_t *operand;
 	int depth;
 
-	df = cairo_list_first_entry (&ctx->deferred,
+	df = cairo_list_first_entry (&sorted,
 				     struct deferred_finish,
 				     link);
 
