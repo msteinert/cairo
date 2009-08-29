@@ -163,8 +163,12 @@ _create_composite_mask_pattern (cairo_surface_pattern_t       *mask_pattern,
     if (unlikely (status))
 	goto CLEANUP_SURFACE;
 
-    if (clip_surface)
-	status = _cairo_clip_combine_with_surface (clip, mask);
+    if (clip_surface) {
+	status = _cairo_clip_combine_with_surface (clip,
+						   mask,
+						   extents->x,
+						   extents->y);
+    }
 
     _cairo_pattern_init_for_surface (mask_pattern, mask);
 
@@ -838,9 +842,9 @@ _composite_spans_draw_func (void                          *closure,
     cairo_composite_rectangles_t rects;
     cairo_composite_spans_info_t *info = closure;
 
-    _cairo_composite_rectangles_init (
-	&rects, extents->x, extents->y,
-	extents->width, extents->height);
+    _cairo_composite_rectangles_init (&rects,
+				      extents->x, extents->y,
+				      extents->width, extents->height);
 
     /* The incoming dst_x/y are where we're pretending the origin of
      * the dst surface is -- *not* the offset of a rectangle where
