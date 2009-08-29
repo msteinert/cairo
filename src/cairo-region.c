@@ -426,7 +426,7 @@ slim_hidden_def (cairo_region_status);
  * Since: 1.10
  **/
 cairo_status_t
-cairo_region_subtract (cairo_region_t *dst, cairo_region_t *other)
+cairo_region_subtract (cairo_region_t *dst, const cairo_region_t *other)
 {
     if (dst->status)
 	return dst->status;
@@ -434,8 +434,12 @@ cairo_region_subtract (cairo_region_t *dst, cairo_region_t *other)
     if (other->status)
 	return _cairo_region_set_error (dst, other->status);
 
-    if (! pixman_region32_subtract (&dst->rgn, &dst->rgn, &other->rgn))
+    if (! pixman_region32_subtract (&dst->rgn,
+				    &dst->rgn,
+				    CONST_CAST &other->rgn))
+    {
 	return _cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }

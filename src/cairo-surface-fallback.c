@@ -163,12 +163,8 @@ _create_composite_mask_pattern (cairo_surface_pattern_t       *mask_pattern,
     if (unlikely (status))
 	goto CLEANUP_SURFACE;
 
-    if (clip_surface) {
-	status = _cairo_clip_combine_with_surface (clip,
-						   mask,
-						   extents->x,
-						   extents->y);
-    }
+    if (clip_surface)
+	status = _cairo_clip_combine_with_surface (clip, mask, extents);
 
     _cairo_pattern_init_for_surface (mask_pattern, mask);
 

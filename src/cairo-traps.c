@@ -264,9 +264,7 @@ _cairo_traps_tessellate_rectangle (cairo_traps_t *traps,
 		continue;
 
 	    _left = left;
-	    if (_left.p1.x <= limits->p1.x &&
-		_left.p2.x <= limits->p1.x)
-	    {
+	    if (_left.p1.x < limits->p1.x) {
 		_left.p1.x = limits->p1.x;
 		_left.p1.y = limits->p1.y;
 		_left.p2.x = limits->p1.x;
@@ -274,9 +272,7 @@ _cairo_traps_tessellate_rectangle (cairo_traps_t *traps,
 	    }
 
 	    _right = right;
-	    if (_right.p1.x >= limits->p2.x &&
-		_right.p2.x >= limits->p2.x)
-	    {
+	    if (_right.p1.x > limits->p2.x) {
 		_right.p1.x = limits->p2.x;
 		_right.p1.y = limits->p1.y;
 		_right.p2.x = limits->p2.x;

@@ -2518,7 +2518,7 @@ cairo_public void
 cairo_region_translate (cairo_region_t *region, int dx, int dy);
 
 cairo_public cairo_status_t
-cairo_region_subtract (cairo_region_t *dst, cairo_region_t *other);
+cairo_region_subtract (cairo_region_t *dst, const cairo_region_t *other);
 
 cairo_public cairo_status_t
 cairo_region_subtract_rectangle (cairo_region_t *dst,
