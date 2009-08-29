@@ -3122,6 +3122,30 @@ _integer (csi_t *ctx)
 }
 
 static csi_status_t
+_invert (csi_t *ctx)
+{
+    csi_object_t obj;
+    csi_status_t status;
+    cairo_matrix_t m;
+
+    check (1);
+
+    status = _csi_ostack_get_matrix (ctx, 0, &m);
+    if (_csi_unlikely (status))
+	return status;
+
+    cairo_matrix_invert (&m);
+
+    status = csi_matrix_new_from_matrix (ctx, &obj, &m);
+    if (_csi_unlikely (status))
+	return status;
+
+    pop (1);
+
+    return push (&obj);
+}
+
+static csi_status_t
 _le (csi_t *ctx)
 {
     csi_status_t status;
@@ -5768,7 +5792,7 @@ _defs[] = {
     { "image", _image },
     { "index", _index },
     { "integer", _integer },
-    { "invert", NULL },
+    { "invert", _invert },
     { "in-stroke", NULL },
     { "in-fill", NULL },
     { "known", NULL },
