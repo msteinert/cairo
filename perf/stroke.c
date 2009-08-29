@@ -89,7 +89,7 @@ do_strokes (cairo_t *cr, int width, int height, int loops)
 void
 stroke (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "stroke"))
+    if (! cairo_perf_can_run (perf, "stroke", NULL))
 	return;
 
     cairo_perf_cover_sources_and_operators (perf, "stroke", do_stroke);

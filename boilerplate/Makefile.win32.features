@@ -109,6 +109,16 @@ enabled_cairo_boilerplate_private += $(cairo_boilerplate_win32_font_private)
 enabled_cairo_boilerplate_sources += $(cairo_boilerplate_win32_font_sources)
 endif
 
+unsupported_cairo_boilerplate_headers += $(cairo_boilerplate_skia_headers)
+all_cairo_boilerplate_headers += $(cairo_boilerplate_skia_headers)
+all_cairo_boilerplate_private += $(cairo_boilerplate_skia_private)
+all_cairo_boilerplate_sources += $(cairo_boilerplate_skia_sources)
+ifeq ($(CAIRO_HAS_SKIA_SURFACE),1)
+enabled_cairo_boilerplate_headers += $(cairo_boilerplate_skia_headers)
+enabled_cairo_boilerplate_private += $(cairo_boilerplate_skia_private)
+enabled_cairo_boilerplate_sources += $(cairo_boilerplate_skia_sources)
+endif
+
 unsupported_cairo_boilerplate_headers += $(cairo_boilerplate_os2_headers)
 all_cairo_boilerplate_headers += $(cairo_boilerplate_os2_headers)
 all_cairo_boilerplate_private += $(cairo_boilerplate_os2_private)
@@ -311,6 +321,24 @@ all_cairo_boilerplate_sources += $(cairo_boilerplate_meta_sources)
 enabled_cairo_boilerplate_headers += $(cairo_boilerplate_meta_headers)
 enabled_cairo_boilerplate_private += $(cairo_boilerplate_meta_private)
 enabled_cairo_boilerplate_sources += $(cairo_boilerplate_meta_sources)
+
+supported_cairo_boilerplate_headers += $(cairo_boilerplate_tee_headers)
+all_cairo_boilerplate_headers += $(cairo_boilerplate_tee_headers)
+all_cairo_boilerplate_private += $(cairo_boilerplate_tee_private)
+all_cairo_boilerplate_sources += $(cairo_boilerplate_tee_sources)
+enabled_cairo_boilerplate_headers += $(cairo_boilerplate_tee_headers)
+enabled_cairo_boilerplate_private += $(cairo_boilerplate_tee_private)
+enabled_cairo_boilerplate_sources += $(cairo_boilerplate_tee_sources)
+
+supported_cairo_boilerplate_headers += $(cairo_boilerplate_xml_headers)
+all_cairo_boilerplate_headers += $(cairo_boilerplate_xml_headers)
+all_cairo_boilerplate_private += $(cairo_boilerplate_xml_private)
+all_cairo_boilerplate_sources += $(cairo_boilerplate_xml_sources)
+ifeq ($(CAIRO_HAS_XML_SURFACE),1)
+enabled_cairo_boilerplate_headers += $(cairo_boilerplate_xml_headers)
+enabled_cairo_boilerplate_private += $(cairo_boilerplate_xml_private)
+enabled_cairo_boilerplate_sources += $(cairo_boilerplate_xml_sources)
+endif
 
 supported_cairo_boilerplate_headers += $(cairo_boilerplate_user_headers)
 all_cairo_boilerplate_headers += $(cairo_boilerplate_user_headers)

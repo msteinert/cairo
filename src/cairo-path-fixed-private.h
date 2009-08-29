@@ -136,6 +136,20 @@ _cairo_path_fixed_fill_is_empty (const cairo_path_fixed_t *path)
 }
 
 static inline cairo_bool_t
+_cairo_path_fixed_is_rectilinear_fill (const cairo_path_fixed_t *path)
+{
+    if (! path->is_rectilinear)
+	return FALSE;
+
+    if (! path->has_current_point)
+	return TRUE;
+
+    /* check whether the implicit close preserves the rectilinear property */
+    return path->current_point.x == path->last_move_point.x ||
+	   path->current_point.y == path->last_move_point.y;
+}
+
+static inline cairo_bool_t
 _cairo_path_fixed_maybe_fill_region (const cairo_path_fixed_t *path)
 {
 #if WATCH_PATH

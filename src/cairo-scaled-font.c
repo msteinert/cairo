@@ -838,6 +838,22 @@ _cairo_scaled_font_fini_internal (cairo_scaled_font_t *scaled_font)
     _cairo_user_data_array_fini (&scaled_font->user_data);
 }
 
+/* XXX: allow multiple backends to share the font */
+void
+_cairo_scaled_font_revoke_ownership (cairo_scaled_font_t *scaled_font)
+{
+    if (scaled_font->surface_backend == NULL)
+	return;
+
+    _cairo_scaled_font_reset_cache (scaled_font);
+
+    if (scaled_font->surface_backend->scaled_font_fini != NULL)
+	scaled_font->surface_backend->scaled_font_fini (scaled_font);
+
+    scaled_font->surface_backend = NULL;
+    scaled_font->surface_private = NULL;
+}
+
 void
 _cairo_scaled_font_fini (cairo_scaled_font_t *scaled_font)
 {
@@ -931,6 +947,9 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 								ctm,
 								options);
 	}
+
+	_cairo_scaled_font_init_key (&key, font_face,
+				     font_matrix, ctm, options);
     }
     else
     {
@@ -998,6 +1017,8 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 		_cairo_scaled_font_map_unlock ();
 
 		cairo_scaled_font_destroy (old);
+		if (font_face != original_font_face)
+		    cairo_font_face_destroy (font_face);
 
 		return scaled_font;
 	    }
@@ -1015,12 +1036,18 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     /* Did we leave the backend in an error state? */
     if (unlikely (status)) {
 	_cairo_scaled_font_map_unlock ();
+	if (font_face != original_font_face)
+	    cairo_font_face_destroy (font_face);
+
 	status = _cairo_font_face_set_error (font_face, status);
 	return _cairo_scaled_font_create_in_error (status);
     }
     /* Or did we encounter an error whilst constructing the scaled font? */
     if (unlikely (scaled_font->status)) {
 	_cairo_scaled_font_map_unlock ();
+	if (font_face != original_font_face)
+	    cairo_font_face_destroy (font_face);
+
 	return scaled_font;
     }
 
@@ -1033,7 +1060,6 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     scaled_font->original_font_face =
 	cairo_font_face_reference (original_font_face);
 
-    assert (scaled_font->hash_entry.hash == key.hash_entry.hash);
     status = _cairo_hash_table_insert (font_map->hash_table,
 				       &scaled_font->hash_entry);
     if (likely (status == CAIRO_STATUS_SUCCESS)) {
@@ -1044,6 +1070,10 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 
     _cairo_scaled_font_map_unlock ();
 
+    cairo_scaled_font_destroy (old);
+    if (font_face != original_font_face)
+	cairo_font_face_destroy (font_face);
+
     if (unlikely (status)) {
 	/* We can't call _cairo_scaled_font_destroy here since it expects
 	 * that the font has already been successfully inserted into the
@@ -1052,11 +1082,6 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	free (scaled_font);
 	return _cairo_scaled_font_create_in_error (status);
     }
-
-    cairo_scaled_font_destroy (old);
-
-    if (font_face != original_font_face)
-	cairo_font_face_destroy (font_face);
 
     return scaled_font;
 }
@@ -2189,13 +2214,13 @@ CLEANUP_MASK:
 
 /* Add a single-device-unit rectangle to a path. */
 static cairo_status_t
-_add_unit_rectangle_to_path (cairo_path_fixed_t *path, int x, int y)
+_add_unit_rectangle_to_path (cairo_path_fixed_t *path,
+			     cairo_fixed_t x,
+			     cairo_fixed_t y)
 {
     cairo_status_t status;
 
-    status = _cairo_path_fixed_move_to (path,
-					_cairo_fixed_from_int (x),
-					_cairo_fixed_from_int (y));
+    status = _cairo_path_fixed_move_to (path, x, y);
     if (unlikely (status))
 	return status;
 
@@ -2217,11 +2242,7 @@ _add_unit_rectangle_to_path (cairo_path_fixed_t *path, int x, int y)
     if (unlikely (status))
 	return status;
 
-    status = _cairo_path_fixed_close_path (path);
-    if (unlikely (status))
-	return status;
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_path_fixed_close_path (path);
 }
 
 /**
@@ -2243,12 +2264,15 @@ _add_unit_rectangle_to_path (cairo_path_fixed_t *path, int x, int y)
  **/
 static cairo_status_t
 _trace_mask_to_path (cairo_image_surface_t *mask,
-		     cairo_path_fixed_t *path)
+		     cairo_path_fixed_t *path,
+		     double tx, double ty)
 {
     const uint8_t *row;
     int rows, cols, bytes_per_row;
     int x, y, bit;
     double xoff, yoff;
+    cairo_fixed_t x0, y0;
+    cairo_fixed_t px, py;
     cairo_status_t status;
 
     mask = _cairo_image_surface_coerce (mask, CAIRO_FORMAT_A1);
@@ -2257,12 +2281,15 @@ _trace_mask_to_path (cairo_image_surface_t *mask,
 	return status;
 
     cairo_surface_get_device_offset (&mask->base, &xoff, &yoff);
+    x0 = _cairo_fixed_from_double (tx - xoff);
+    y0 = _cairo_fixed_from_double (ty - yoff);
 
     bytes_per_row = (mask->width + 7) / 8;
     row = mask->data;
     for (y = 0, rows = mask->height; rows--; row += mask->stride, y++) {
 	const uint8_t *byte_ptr = row;
 	x = 0;
+	py = _cairo_fixed_from_int (y);
 	for (cols = bytes_per_row; cols--; ) {
 	    uint8_t byte = *byte_ptr++;
 	    if (byte == 0) {
@@ -2273,8 +2300,10 @@ _trace_mask_to_path (cairo_image_surface_t *mask,
 	    byte = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (byte);
 	    for (bit = 1 << 7; bit && x < mask->width; bit >>= 1, x++) {
 		if (byte & bit) {
+		    px = _cairo_fixed_from_int (x);
 		    status = _add_unit_rectangle_to_path (path,
-							  x - xoff, y - yoff);
+							  px + x0,
+							  py + y0);
 		    if (unlikely (status))
 			goto BAIL;
 		}
@@ -2296,8 +2325,6 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
 {
     cairo_status_t status;
     int	i;
-    cairo_path_fixed_t glyph_path_static;
-    cairo_path_fixed_t *glyph_path;
 
     status = scaled_font->status;
     if (unlikely (status))
@@ -2312,7 +2339,11 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
 					     CAIRO_SCALED_GLYPH_INFO_PATH,
 					     &scaled_glyph);
 	if (status == CAIRO_STATUS_SUCCESS) {
-	    glyph_path = scaled_glyph->path;
+	    status = _cairo_path_fixed_append (path,
+					       scaled_glyph->path, CAIRO_DIRECTION_FORWARD,
+					       _cairo_fixed_from_double (glyphs[i].x),
+					       _cairo_fixed_from_double (glyphs[i].y));
+
 	} else if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 	    /* If the font is incapable of providing a path, then we'll
 	     * have to trace our own from a surface.
@@ -2324,22 +2355,9 @@ _cairo_scaled_font_glyph_path (cairo_scaled_font_t *scaled_font,
 	    if (unlikely (status))
 		goto BAIL;
 
-	    _cairo_path_fixed_init (&glyph_path_static);
-	    glyph_path = &glyph_path_static;
-	    status = _trace_mask_to_path (scaled_glyph->surface, glyph_path);
-	    if (unlikely (status))
-		goto BAIL;
-	} else {
-	    goto BAIL;
+	    status = _trace_mask_to_path (scaled_glyph->surface, path,
+					  glyphs[i].x, glyphs[i].y);
 	}
-
-	status = _cairo_path_fixed_append (path,
-					   glyph_path, CAIRO_DIRECTION_FORWARD,
-					   _cairo_fixed_from_double (glyphs[i].x),
-					   _cairo_fixed_from_double (glyphs[i].y));
-
-	if (glyph_path != scaled_glyph->path)
-	    _cairo_path_fixed_fini (glyph_path);
 
 	if (unlikely (status))
 	    goto BAIL;

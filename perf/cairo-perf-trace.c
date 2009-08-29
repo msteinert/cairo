@@ -55,10 +55,6 @@
 #include <fontconfig/fontconfig.h>
 #endif
 
-#ifdef HAVE_SCHED_H
-#include <sched.h>
-#endif
-
 #define CAIRO_PERF_ITERATIONS_DEFAULT	15
 #define CAIRO_PERF_LOW_STD_DEV		0.05
 #define CAIRO_PERF_MIN_STD_DEV_COUNT	3
@@ -117,6 +113,9 @@ target_is_measurable (const cairo_boilerplate_target_t *target)
 #if CAIRO_HAS_DRM_SURFACE
     case CAIRO_SURFACE_TYPE_DRM:
 #endif
+#if CAIRO_HAS_SKIA_SURFACE
+    case CAIRO_SURFACE_TYPE_SKIA:
+#endif
 	return TRUE;
     case CAIRO_SURFACE_TYPE_PDF:
     case CAIRO_SURFACE_TYPE_PS:
@@ -128,14 +127,21 @@ target_is_measurable (const cairo_boilerplate_target_t *target)
 
 cairo_bool_t
 cairo_perf_can_run (cairo_perf_t	*perf,
-		    const char		*name)
+		    const char		*name,
+		    cairo_bool_t	*is_explicit)
 {
     unsigned int i;
     char *copy, *dot;
     cairo_bool_t ret;
 
-    if (perf->exact_names)
+    if (is_explicit)
+	*is_explicit = FALSE;
+
+    if (perf->exact_names) {
+	if (is_explicit)
+	    *is_explicit = TRUE;
 	return TRUE;
+    }
 
     if (perf->num_names == 0 && perf->num_exclude_names == 0)
 	return TRUE;
@@ -148,8 +154,11 @@ cairo_perf_can_run (cairo_perf_t	*perf,
     if (perf->num_names) {
 	ret = TRUE;
 	for (i = 0; i < perf->num_names; i++)
-	    if (strstr (copy, perf->names[i]))
+	    if (strstr (copy, perf->names[i])) {
+		if (is_explicit)
+		    *is_explicit = strcmp (copy, perf->names[i]) == 0;
 		goto check_exclude;
+	    }
 
 	ret = FALSE;
 	goto done;
@@ -159,8 +168,11 @@ check_exclude:
     if (perf->num_exclude_names) {
 	ret = FALSE;
 	for (i = 0; i < perf->num_exclude_names; i++)
-	    if (strstr (copy, perf->exclude_names[i]))
+	    if (strstr (copy, perf->exclude_names[i])) {
+		if (is_explicit)
+		    *is_explicit = strcmp (copy, perf->exclude_names[i]) == 0;
 		goto done;
+	    }
 
 	ret = TRUE;
 	goto done;
@@ -319,8 +331,8 @@ execute (cairo_perf_t		 *perf,
 		     name);
 	    fprintf (perf->summary,
 		     "%#8.3f %#8.3f %#6.2f%% %4d/%d",
-		     stats.min_ticks / (double) cairo_perf_ticks_per_second (),
-		     stats.median_ticks / (double) cairo_perf_ticks_per_second (),
+		     (double) stats.min_ticks / cairo_perf_ticks_per_second (),
+		     (double) stats.median_ticks / cairo_perf_ticks_per_second (),
 		     stats.std_dev * 100.0,
 		     stats.iterations, i+1);
 	    fflush (perf->summary);
@@ -339,8 +351,8 @@ execute (cairo_perf_t		 *perf,
 	}
 	fprintf (perf->summary,
 		 "%#8.3f %#8.3f %#6.2f%% %4d/%d\n",
-		 stats.min_ticks / (double) cairo_perf_ticks_per_second (),
-		 stats.median_ticks / (double) cairo_perf_ticks_per_second (),
+		 (double) stats.min_ticks / cairo_perf_ticks_per_second (),
+		 (double) stats.median_ticks / cairo_perf_ticks_per_second (),
 		 stats.std_dev * 100.0,
 		 stats.iterations, i);
 	fflush (perf->summary);
@@ -544,37 +556,6 @@ parse_options (cairo_perf_t *perf, int argc, char *argv[])
     }
 }
 
-static int
-check_cpu_affinity (void)
-{
-#ifdef HAVE_SCHED_GETAFFINITY
-    cpu_set_t affinity;
-    int i, cpu_count;
-
-    if (sched_getaffinity (0, sizeof (affinity), &affinity)) {
-        perror ("sched_getaffinity");
-        return -1;
-    }
-
-    for (i = 0, cpu_count = 0; i < CPU_SETSIZE; ++i) {
-        if (CPU_ISSET (i, &affinity))
-            ++cpu_count;
-    }
-
-    if (cpu_count > 1) {
-	fputs ("WARNING: cairo-perf has not been bound to a single CPU.\n",
-	       stderr);
-        return -1;
-    }
-
-    return 0;
-#else
-    fputs ("WARNING: Cannot check CPU affinity for this platform.\n",
-	   stderr);
-    return -1;
-#endif
-}
-
 static void
 cairo_perf_fini (cairo_perf_t *perf)
 {
@@ -631,6 +612,11 @@ cairo_perf_trace (cairo_perf_t *perf,
 
     if (target->cleanup)
 	target->cleanup (closure);
+
+    cairo_debug_reset_static_data ();
+#if HAVE_FCFINI
+    FcFini ();
+#endif
 }
 
 static void
@@ -653,10 +639,16 @@ cairo_perf_trace_dir (cairo_perf_t *perf,
     DIR *dir;
     struct dirent *de;
     int num_traces = 0;
+    cairo_bool_t force;
+    cairo_bool_t is_explicit;
 
     dir = opendir (dirname);
     if (dir == NULL)
 	return 0;
+
+    force = FALSE;
+    if (cairo_perf_can_run (perf, dirname, &is_explicit))
+	force = is_explicit;
 
     while ((de = readdir (dir)) != NULL) {
 	char *trace;
@@ -681,7 +673,7 @@ cairo_perf_trace_dir (cairo_perf_t *perf,
 		goto next;
 
 	    num_traces++;
-	    if (! cairo_perf_can_run (perf, de->d_name))
+	    if (!force && ! cairo_perf_can_run (perf, de->d_name, NULL))
 		goto next;
 
 	    cairo_perf_trace (perf, target, trace);
@@ -704,18 +696,6 @@ main (int argc, char *argv[])
     int i;
 
     parse_options (&perf, argc, argv);
-
-    if (! perf.list_only && check_cpu_affinity ()) {
-        fputs ("NOTICE: cairo-perf and the X server should be bound to CPUs (either the same\n"
-	       "or separate) on SMP systems. Not doing so causes random results when the X\n"
-	       "server is moved to or from cairo-perf's CPU during the benchmarks:\n"
-	       "\n"
-	       "    $ sudo taskset -cp 0 $(pidof X)\n"
-	       "    $ taskset -cp 1 $$\n"
-	       "\n"
-	       "See taskset(1) for information about changing CPU affinity.\n\n",
-	       stderr);
-    }
 
     signal (SIGINT, interrupt);
 

@@ -347,6 +347,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	"win32-printing", "win32", ".ps", NULL,
 	CAIRO_SURFACE_TYPE_WIN32_PRINTING,
 	CAIRO_TEST_CONTENT_COLOR_ALPHA_FLATTENED, 0,
+	"cairo_win32_printing_surface_create",
 	_cairo_boilerplate_win32_printing_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_win32_printing_get_image_surface,
@@ -357,6 +358,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"win32-printing", "win32", ".ps", NULL,
 	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
+	"cairo_win32_printing_surface_create",
 	_cairo_boilerplate_win32_printing_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_win32_printing_get_image_surface,

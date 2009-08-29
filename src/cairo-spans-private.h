@@ -75,22 +75,22 @@ struct _cairo_scan_converter {
     /* Destroy this scan converter. */
     cairo_destroy_func_t	destroy;
 
-    /* Add an edge to the converter. */
-    cairo_status_t
-    (*add_edge)(
-	void		*abstract_converter,
-	cairo_fixed_t	 x1,
-	cairo_fixed_t	 y1,
-	cairo_fixed_t	 x2,
-	cairo_fixed_t	 y2);
+    /* Add a single edge to the converter. */
+    cairo_status_t (*add_edge) (void		    *abstract_converter,
+				const cairo_point_t *p1,
+				const cairo_point_t *p2,
+				int top, int bottom,
+				int dir);
+
+    /* Add a polygon (set of edges) to the converter. */
+    cairo_status_t (*add_polygon) (void		    *abstract_converter,
+				   const cairo_polygon_t  *polygon);
 
     /* Generates coverage spans for rows for the added edges and calls
      * the renderer function for each row. After generating spans the
      * only valid thing to do with the converter is to destroy it. */
-    cairo_status_t
-    (*generate)(
-	void			*abstract_converter,
-	cairo_span_renderer_t	*renderer);
+    cairo_status_t (*generate) (void			*abstract_converter,
+				cairo_span_renderer_t	*renderer);
 
     /* Private status. Read with _cairo_scan_converter_status(). */
     cairo_status_t status;
@@ -99,12 +99,11 @@ struct _cairo_scan_converter {
 /* Scan converter constructors. */
 
 cairo_private cairo_scan_converter_t *
-_cairo_tor_scan_converter_create(
-    int			xmin,
-    int			ymin,
-    int			xmax,
-    int			ymax,
-    cairo_fill_rule_t	fill_rule);
+_cairo_tor_scan_converter_create (int			xmin,
+				  int			ymin,
+				  int			xmax,
+				  int			ymax,
+				  cairo_fill_rule_t	fill_rule);
 
 /* cairo-spans.c: */
 
@@ -132,14 +131,25 @@ _cairo_span_renderer_set_error (void *abstract_renderer,
 				cairo_status_t error);
 
 cairo_private cairo_status_t
-_cairo_path_fixed_fill_using_spans (cairo_operator_t		 op,
-				    const cairo_pattern_t	*pattern,
-				    cairo_path_fixed_t		*path,
-				    cairo_surface_t		*dst,
-				    cairo_fill_rule_t		 fill_rule,
-				    double			 tolerance,
-				    cairo_antialias_t		 antialias,
-				    const cairo_composite_rectangles_t *rects,
-				    cairo_region_t		*clip_region);
+_cairo_surface_composite_polygon (cairo_surface_t	*surface,
+				  cairo_operator_t	 op,
+				  const cairo_pattern_t	*pattern,
+				  cairo_fill_rule_t	fill_rule,
+				  cairo_antialias_t	antialias,
+				  const cairo_composite_rectangles_t *rects,
+				  cairo_polygon_t	*polygon,
+				  cairo_region_t	*clip_region);
+
+cairo_private cairo_status_t
+_cairo_surface_composite_trapezoids_as_polygon (cairo_surface_t	*surface,
+						cairo_operator_t	 op,
+						const cairo_pattern_t	*pattern,
+						cairo_antialias_t	antialias,
+						int src_x, int src_y,
+						int dst_x, int dst_y,
+						int width, int height,
+						cairo_trapezoid_t	*traps,
+						int num_traps,
+						cairo_region_t	*clip_region);
 
 #endif /* CAIRO_SPANS_PRIVATE_H */

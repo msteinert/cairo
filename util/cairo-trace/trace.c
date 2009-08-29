@@ -2565,7 +2565,7 @@ cairo_get_font_face (cairo_t *cr)
     ret = DLCALL (cairo_get_font_face, cr);
     font_face_id = _create_font_face_id (ret);
 
-    _emit_cairo_op (cr, "/font-face get\n");
+    _emit_cairo_op (cr, "/font-face get %% f%ld\n", font_face_id);
     _push_operand (FONT_FACE, ret);
 
     return ret;
@@ -3148,7 +3148,6 @@ cairo_surface_create_similar (cairo_surface_t *other,
 			      int width, int height)
 {
     cairo_surface_t *ret;
-    long other_id;
     long surface_id;
 
     ret = DLCALL (cairo_surface_create_similar, other, content, width, height);
@@ -3156,21 +3155,21 @@ cairo_surface_create_similar (cairo_surface_t *other,
 
     _emit_line_info ();
     if (other != NULL && _write_lock ()) {
-	other_id = _get_surface_id (other);
+	Object *obj;
 
-	if (_pop_operands_to (SURFACE, other)) {
-	    _consume_operand ();
-	    _trace_printf ("%d %d //%s similar\n",
-			   width,
-			   height,
-			   _content_to_string (content));
-	} else {
-	    _trace_printf ("s%ld %d %d //%s similar\n",
-			   other_id,
-			   width,
-			   height,
-			   _content_to_string (content));
-	}
+	obj = _get_object (SURFACE, other);
+	if (obj->defined)
+	    _trace_printf ("s%ld ", obj->token);
+	else if (current_stack_depth == obj->operand + 1)
+	    _trace_printf ("dup ");
+	else
+	    _trace_printf ("%d index ", current_stack_depth - obj->operand - 1);
+	_trace_printf ("%d %d //%s similar %% s%ld\n",
+		       width,
+		       height,
+		       _content_to_string (content),
+		       surface_id);
+
 	_push_operand (SURFACE, ret);
 	_write_unlock ();
     }
@@ -3577,7 +3576,8 @@ cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
 		       "  /pattern ");
 	_emit_string_literal ((char *) parsed, -1);
 	_trace_printf (" set\n"
-		       "  font\n");
+		       "  font %% f%ld\n",
+		       font_face_id);
 	_push_operand (FONT_FACE, ret);
 	_write_unlock ();
 
@@ -3629,8 +3629,8 @@ cairo_ft_font_face_create_for_ft_face (FT_Face face, int load_flags)
 
 	_trace_printf ("<< /type 42 /source ");
 	_emit_data (data->data, data->size);
-	_trace_printf (" /index %lu /flags %d >> font\n",
-		       data->index, load_flags);
+	_trace_printf (" /index %lu /flags %d >> font %% f%ld\n",
+		       data->index, load_flags, font_face_id);
 	_push_operand (FONT_FACE, ret);
 	_write_unlock ();
     }
@@ -4147,26 +4147,26 @@ cairo_xlib_surface_create_with_xrender_format (Display *dpy,
 #if CAIRO_HAS_SCRIPT_SURFACE
 #include <cairo-script.h>
 cairo_surface_t *
-cairo_script_surface_create (const char *filename,
+cairo_script_surface_create (cairo_script_context_t *ctx,
+			     cairo_content_t content,
 			     double width,
 			     double height)
 {
     cairo_surface_t *ret;
     long surface_id;
 
-    ret = DLCALL (cairo_script_surface_create, filename, width, height);
+    ret = DLCALL (cairo_script_surface_create, ctx, content, width, height);
     surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
 	_trace_printf ("dict\n"
 		       "  /type /script set\n"
-		       "  /filename ");
-	_emit_string_literal (filename, -1);
-	_trace_printf (" set\n"
+		       "  /content %s set\n"
 		       "  /width %g set\n"
 		       "  /height %g set\n"
 		       "  surface dup /s%ld exch def\n",
+		       _content_to_string (content),
 		       width, height,
 		       surface_id);
 	_surface_object_set_size (ret, width, height);
@@ -4179,28 +4179,21 @@ cairo_script_surface_create (const char *filename,
 }
 
 cairo_surface_t *
-cairo_script_surface_create_for_stream (cairo_write_func_t write_func,
-					void *data,
-					double width,
-					double height)
+cairo_script_surface_create_for_target (cairo_script_context_t *ctx,
+					cairo_surface_t *target)
 {
     cairo_surface_t *ret;
     long surface_id;
 
-    ret = DLCALL (cairo_script_surface_create_for_stream,
-		  write_func, data, width, height);
+    ret = DLCALL (cairo_script_surface_create_for_target, ctx, target);
     surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
 	_trace_printf ("dict\n"
 		       "  /type /script set\n"
-		       "  /width %g set\n"
-		       "  /height %g set\n"
 		       "  surface dup /s%ld exch def\n",
-		       width, height,
 		       surface_id);
-	_surface_object_set_size (ret, width, height);
 	_get_object (SURFACE, ret)->defined = true;
 	_push_operand (SURFACE, ret);
 	_write_unlock ();

@@ -41,7 +41,7 @@ do_paint_with_alpha (cairo_t *cr, int width, int height, int loops)
 void
 paint_with_alpha (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "paint-with-alpha"))
+    if (! cairo_perf_can_run (perf, "paint-with-alpha", NULL))
 	return;
 
     cairo_perf_cover_sources_and_operators (perf, "paint-with-alpha",

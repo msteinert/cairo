@@ -21,6 +21,7 @@ test_sources = \
 	clip-nesting.c					\
 	clip-operator.c					\
 	clip-push-group.c				\
+	clip-stroke.c					\
 	clip-text.c					\
 	clip-twice.c					\
 	clip-unbounded.c				\
@@ -96,6 +97,7 @@ test_sources = \
 	huge-linear.c					\
 	huge-radial.c					\
 	image-surface-source.c				\
+	implicit-close.c				\
 	infinite-join.c					\
 	in-fill-empty-trapezoid.c			\
 	in-fill-trapezoid.c				\
@@ -150,7 +152,10 @@ test_sources = \
 	png.c						\
 	push-group.c					\
 	radial-gradient.c				\
-	random-intersections.c				\
+	random-intersections-eo.c			\
+	random-intersections-nonzero.c			\
+	random-intersections-curves-eo.c		\
+	random-intersections-curves-nz.c		\
 	rectangle-rounding-error.c			\
 	rectilinear-fill.c				\
 	rectilinear-miter-limit.c			\
@@ -160,6 +165,7 @@ test_sources = \
 	rel-path.c					\
 	rgb24-ignore-alpha.c				\
 	rotate-image-surface-paint.c			\
+	rotated-clip.c					\
 	scale-down-source-surface-paint.c		\
 	scale-offset-image.c				\
 	scale-offset-similar.c				\

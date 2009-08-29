@@ -98,7 +98,8 @@ typedef cairo_perf_ticks_t
 
 cairo_bool_t
 cairo_perf_can_run (cairo_perf_t	*perf,
-		    const char		*name);
+		    const char		*name,
+		    cairo_bool_t	*is_explicit);
 
 void
 cairo_perf_run (cairo_perf_t		*perf,

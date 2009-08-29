@@ -385,10 +385,10 @@ _cairo_win32_printing_surface_paint_meta_pattern (cairo_win32_surface_t   *surfa
 	return status;
 
     if (extend == CAIRO_EXTEND_REPEAT || extend == CAIRO_EXTEND_REFLECT) {
-	left = (int) floor (clip.left / _cairo_fixed_to_double (bbox.p2.x - bbox.p1.x));
-	right = (int) ceil (clip.right / _cairo_fixed_to_double (bbox.p2.x - bbox.p1.x));
-	top = (int) floor (clip.top / _cairo_fixed_to_double (bbox.p2.y - bbox.p1.y));
-	bottom = (int) ceil (clip.bottom / _cairo_fixed_to_double (bbox.p2.y - bbox.p1.y));
+	left = floor (clip.left / _cairo_fixed_to_double (bbox.p2.x - bbox.p1.x));
+	right = ceil (clip.right / _cairo_fixed_to_double (bbox.p2.x - bbox.p1.x));
+	top = floor (clip.top / _cairo_fixed_to_double (bbox.p2.y - bbox.p1.y));
+	bottom = ceil (clip.bottom / _cairo_fixed_to_double (bbox.p2.y - bbox.p1.y));
     } else {
 	left = 0;
 	right = 1;
@@ -693,10 +693,10 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
 
     GetClipBox (surface->dc, &clip);
     if (extend == CAIRO_EXTEND_REPEAT || extend == CAIRO_EXTEND_REFLECT) {
-	left = (int) floor((double)clip.left/opaque_image->width);
-	right = (int) ceil((double)clip.right/opaque_image->width);
-	top = (int) floor((double)clip.top/opaque_image->height);
-	bottom = (int) ceil((double)clip.bottom/opaque_image->height);
+	left = floor ( clip.left / (double) opaque_image->width);
+	right = ceil (clip.right / (double) opaque_image->width);
+	top = floor (clip.top / (double) opaque_image->height);
+	bottom = ceil (clip.bottom / (double) opaque_image->height);
     } else {
 	left = 0;
 	right = 1;
@@ -813,8 +813,8 @@ _cairo_win32_printing_surface_paint_linear_pattern (cairo_win32_surface_t *surfa
     GetClipBox (surface->dc, &clip);
 
     if (extend == CAIRO_EXTEND_REPEAT || extend == CAIRO_EXTEND_REFLECT) {
-	range_start = (int) floor(clip.left/d);
-	range_stop = (int) ceil(clip.right/d);
+	range_start = floor (clip.left / d);
+	range_stop = ceil (clip.right / d);
     } else {
 	range_start = 0;
 	range_stop = 1;
@@ -1621,8 +1621,8 @@ _cairo_win32_printing_surface_start_page (void *abstract_surface)
     if (status)
 	return status;
 
-    x_res = (double) GetDeviceCaps(surface->dc, LOGPIXELSX);
-    y_res = (double) GetDeviceCaps(surface->dc, LOGPIXELSY);
+    x_res = GetDeviceCaps (surface->dc, LOGPIXELSX);
+    y_res = GetDeviceCaps (surface->dc, LOGPIXELSY);
     cairo_matrix_transform_distance (&inverse_ctm, &x_res, &y_res);
     _cairo_surface_set_resolution (&surface->base, x_res, y_res);
 

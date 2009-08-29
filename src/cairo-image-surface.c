@@ -1483,15 +1483,13 @@ static cairo_bool_t
 _cairo_image_surface_check_span_renderer (cairo_operator_t	  op,
 					  const cairo_pattern_t  *pattern,
 					  void			 *abstract_dst,
-					  cairo_antialias_t	  antialias,
-					  const cairo_composite_rectangles_t *rects)
+					  cairo_antialias_t	  antialias)
 {
     return TRUE;
     (void) op;
     (void) pattern;
     (void) abstract_dst;
     (void) antialias;
-    (void) rects;
 }
 
 static cairo_span_renderer_t *

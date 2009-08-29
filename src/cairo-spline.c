@@ -36,6 +36,8 @@
 
 #include "cairoint.h"
 
+#include "cairo-slope-private.h"
+
 cairo_bool_t
 _cairo_spline_init (cairo_spline_t *spline,
 		    cairo_spline_add_point_func_t add_point_func,

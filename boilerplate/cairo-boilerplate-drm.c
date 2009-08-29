@@ -70,6 +70,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"drm", "drm", NULL, NULL,
 	CAIRO_SURFACE_TYPE_DRM, CAIRO_CONTENT_COLOR_ALPHA, 1,
+	"cairo_drm_surface_create",
 	_cairo_boilerplate_drm_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
@@ -80,6 +81,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"drm", "drm", NULL, NULL,
 	CAIRO_SURFACE_TYPE_DRM, CAIRO_CONTENT_COLOR, 1,
+	"cairo_drm_surface_create",
 	_cairo_boilerplate_drm_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,

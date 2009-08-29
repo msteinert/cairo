@@ -250,7 +250,7 @@ _path_covers_bbox (cairo_pdf_surface_t *surface,
 {
     cairo_box_t box;
 
-    return _cairo_path_fixed_is_rectangle (path, &box) &&
+    return _cairo_path_fixed_is_box (path, &box) &&
 	   box.p1.x <= 0 &&
 	   box.p1.y <= 0 &&
 	   box.p2.x >= _cairo_fixed_from_double (surface->width) &&
@@ -1963,8 +1963,6 @@ _cairo_pdf_surface_emit_image (cairo_pdf_surface_t     *surface,
 
 #undef IMAGE_DICTIONARY
 
-    if (image_res == NULL)
-	*image_res = surface->pdf_stream.self;
     _cairo_output_stream_write (surface->output, rgb, rgb_size);
     status = _cairo_pdf_surface_close_stream (surface);
 
@@ -2950,9 +2948,9 @@ _cairo_pdf_surface_emit_linear_pattern (cairo_pdf_surface_t    *surface,
 	dx = fabs (x2 - x1);
 	dy = fabs (y2 - y1);
 	if (dx > 1e-6)
-	    x_rep = (int) ceil (surface->width/dx);
+	    x_rep = ceil (surface->width/dx);
 	if (dy > 1e-6)
-	    y_rep = (int) ceil (surface->height/dy);
+	    y_rep = ceil (surface->height/dy);
 
 	repeat_end = MAX (x_rep, y_rep);
 	repeat_begin = -repeat_end;
@@ -3445,8 +3443,8 @@ _cairo_pdf_surface_get_extents (void		        *abstract_surface,
      * mention the arbitrary limitation of width to a short(!). We
      * may need to come up with a better interface for get_size.
      */
-    rectangle->width  = (int) ceil (surface->width);
-    rectangle->height = (int) ceil (surface->height);
+    rectangle->width  = ceil (surface->width);
+    rectangle->height = ceil (surface->height);
 
     return TRUE;
 }

@@ -47,6 +47,9 @@
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
+    cairo_set_source_rgb (cr, 1, 1, 1);
+    cairo_paint (cr);
+
     cairo_translate (cr, 1.0, 1.0);
 
     cairo_set_source_rgb (cr, 1, 0, 0); /* red */

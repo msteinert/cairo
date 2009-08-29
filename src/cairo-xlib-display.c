@@ -284,7 +284,14 @@ _cairo_xlib_display_get (Display *dpy,
     memset (display->cached_xrender_formats, 0,
 	    sizeof (display->cached_xrender_formats));
 
+    /* Prior to Render 0.10, there is no protocol support for gradients and
+     * we call function stubs instead, which would silently consume the drawing.
+     */
+#if RENDER_MAJOR == 0 && RENDER_MINOR < 10
+    display->buggy_gradients = TRUE;
+#else
     display->buggy_gradients = FALSE;
+#endif
     display->buggy_pad_reflect = TRUE;
     display->buggy_repeat = FALSE;
 

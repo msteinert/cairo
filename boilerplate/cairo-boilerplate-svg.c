@@ -274,6 +274,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"svg11", "svg", NULL, NULL,
 	CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR_ALPHA, 1,
+	"cairo_svg_surface_create",
 	_cairo_boilerplate_svg11_create_surface,
 	_cairo_boilerplate_svg_force_fallbacks,
 	_cairo_boilerplate_svg_finish_surface,
@@ -285,6 +286,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"svg11", "svg", NULL, NULL,
 	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 1,
+	"cairo_svg_surface_create",
 	_cairo_boilerplate_svg11_create_surface,
 	_cairo_boilerplate_svg_force_fallbacks,
 	_cairo_boilerplate_svg_finish_surface,
@@ -296,6 +298,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"svg12", "svg", NULL, NULL,
 	CAIRO_SURFACE_TYPE_SVG, CAIRO_CONTENT_COLOR_ALPHA, 1,
+	"cairo_svg_surface_create",
 	_cairo_boilerplate_svg12_create_surface,
 	_cairo_boilerplate_svg_force_fallbacks,
 	_cairo_boilerplate_svg_finish_surface,
@@ -307,6 +310,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"svg12", "svg", NULL, NULL,
 	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 1,
+	"cairo_svg_surface_create",
 	_cairo_boilerplate_svg12_create_surface,
 	_cairo_boilerplate_svg_force_fallbacks,
 	_cairo_boilerplate_svg_finish_surface,

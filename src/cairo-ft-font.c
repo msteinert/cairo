@@ -2234,12 +2234,6 @@ _cairo_ft_font_face_destroy (void *abstract_face)
 {
     cairo_ft_font_face_t *font_face = abstract_face;
 
-    cairo_ft_font_face_t *tmp_face = NULL;
-    cairo_ft_font_face_t *last_face = NULL;
-
-    if (font_face == NULL)
-	return;
-
     /* When destroying a face created by cairo_ft_font_face_create_for_ft_face,
      * we have a special "zombie" state for the face when the unscaled font
      * is still alive but there are no other references to a font face with
@@ -2270,6 +2264,9 @@ _cairo_ft_font_face_destroy (void *abstract_face)
     }
 
     if (font_face->unscaled) {
+	cairo_ft_font_face_t *tmp_face = NULL;
+	cairo_ft_font_face_t *last_face = NULL;
+
 	/* Remove face from linked list */
 	for (tmp_face = font_face->unscaled->faces;
 	     tmp_face;
@@ -2334,12 +2331,15 @@ _cairo_ft_font_face_get_implementation (void                     *abstract_face,
 		return cairo_font_face_reference (resolved);
 
 	    cairo_font_face_destroy (resolved);
+	    font_face->resolved_font_face = NULL;
 	}
 
 	resolved = _cairo_ft_resolve_pattern (font_face->pattern,
 					      font_matrix,
 					      ctm,
 					      options);
+	if (unlikely (resolved->status))
+	    return resolved;
 
 	font_face->resolved_font_face = cairo_font_face_reference (resolved);
 	font_face->resolved_config = FcConfigGetCurrent ();

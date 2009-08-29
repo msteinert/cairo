@@ -316,8 +316,7 @@ _ascii85_decode (csi_file_t *file)
 	    data->buf[n+2] = 0;
 	    data->buf[n+3] = 0;
 	} else if (v == '~') {
-	    v = _getc_skip_whitespace (file->src);
-	    /* c == '>' || IO_ERROR */
+	    _getc_skip_whitespace (file->src); /* == '>' || IO_ERROR */
 	    data->eod = TRUE;
 	    break;
 	} else if (v < '!' || v > 'u') {
@@ -331,8 +330,7 @@ _ascii85_decode (csi_file_t *file)
 	    for (i = 1; i < 5; i++) {
 		int c = _getc_skip_whitespace (file->src);
 		if (c == '~') { /* short tuple */
-		    c = _getc_skip_whitespace (file->src);
-		    /* c == '>' || IO_ERROR */
+		    _getc_skip_whitespace (file->src); /* == '>' || IO_ERROR */
 		    data->eod = TRUE;
 		    switch (i) {
 		    case 0:
@@ -958,14 +956,12 @@ csi_file_putc (csi_file_t *file, int c)
 void
 csi_file_flush (csi_file_t *file)
 {
-    int c;
-
     if (file->src == NULL)
 	return;
 
     switch ((int) file->type) {
     case FILTER: /* need to eat EOD */
-	while ((c = csi_file_getc (file)) != EOF)
+	while (csi_file_getc (file) != EOF)
 	    ;
 	break;
     default:

@@ -42,8 +42,6 @@
 slim_hidden_proto (cairo_gl_context_reference);
 slim_hidden_proto (cairo_gl_context_destroy);
 
-#define ARRAY_SIZE(array) (sizeof (array) / sizeof (array[0]))
-
 #define BIAS .375
 
 static inline float
@@ -367,7 +365,7 @@ _cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op)
     };
     GLenum src_factor, dst_factor;
 
-    assert (op < ARRAY_SIZE (blend_factors));
+    assert (op < ARRAY_LENGTH (blend_factors));
 
     src_factor = blend_factors[op].src;
     dst_factor = blend_factors[op].dst;
@@ -666,28 +664,10 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
 			     cairo_rectangle_int_t   *rect_out)
 {
     cairo_image_surface_t *image;
-    cairo_rectangle_int_t extents;
     GLenum err;
-    char *temp_data;
-    int y;
-    unsigned int cpp;
     GLenum format, type;
     cairo_format_t cairo_format;
-
-    extents.x = 0;
-    extents.y = 0;
-    extents.width  = surface->width;
-    extents.height = surface->height;
-
-    if (interest != NULL) {
-	if (! _cairo_rectangle_intersect (&extents, interest)) {
-	    *image_out = NULL;
-	    return CAIRO_STATUS_SUCCESS;
-	}
-    }
-
-    if (rect_out != NULL)
-	*rect_out = extents;
+    unsigned int cpp;
 
     /* Want to use a switch statement here but the compiler gets whiny. */
     if (surface->base.content == CAIRO_CONTENT_COLOR_ALPHA) {
@@ -706,14 +686,14 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
 	type = GL_UNSIGNED_BYTE;
 	cpp = 1;
     } else {
-	fprintf (stderr, "get_image fallback: %d\n", surface->base.content);
+	ASSERT_NOT_REACHED;
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
     image = (cairo_image_surface_t*)
 	cairo_image_surface_create (cairo_format,
-				    extents.width, extents.height);
-    if (image->base.status)
+				    interest->width, interest->height);
+    if (unlikely (image->base.status))
 	return image->base.status;
 
     /* This is inefficient, as we'd rather just read the thing without making
@@ -722,30 +702,18 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
      */
     _cairo_gl_set_destination (surface);
 
-    /* Read the data to a temporary as GL gives us bottom-to-top data
-     * screen-wise, and we want top-to-bottom.
-     */
-    temp_data = malloc (extents.width * extents.height * cpp);
-    if (temp_data == NULL)
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
     glPixelStorei (GL_PACK_ALIGNMENT, 1);
-    glReadPixels (extents.x, extents.y,
-		 extents.width, extents.height,
-		 format, type, temp_data);
-
-    for (y = 0; y < extents.height; y++) {
-	memcpy ((char *) image->data + y * image->stride,
-		temp_data + y * extents.width * cpp,
-		extents.width * cpp);
-    }
-    free (temp_data);
-
-    *image_out = image;
+    glPixelStorei (GL_PACK_ROW_LENGTH, image->stride / cpp);
+    glReadPixels (interest->x, interest->y,
+		  interest->width, interest->height,
+		  format, type, image->data);
 
     while ((err = glGetError ()))
 	fprintf (stderr, "GL error 0x%08x\n", (int) err);
 
+    *image_out = image;
+    if (rect_out != NULL)
+	*rect_out = *interest;
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -1512,6 +1480,23 @@ _cairo_gl_surface_composite_trapezoids (cairo_operator_t op,
     cairo_surface_pattern_t traps_pattern;
     cairo_int_status_t status;
 
+    if (! _cairo_gl_operator_is_supported (op))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (_cairo_surface_check_span_renderer (op,pattern,&dst->base, antialias)) {
+	status =
+	    _cairo_surface_composite_trapezoids_as_polygon (&dst->base,
+							    op, pattern,
+							    antialias,
+							    src_x, src_y,
+							    dst_x, dst_y,
+							    width, height,
+							    traps, num_traps,
+							    clip_region);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
+
     status = _cairo_gl_get_traps_pattern (dst,
 					  dst_x, dst_y, width, height,
 					  traps, num_traps, antialias,
@@ -1841,8 +1826,7 @@ static cairo_bool_t
 _cairo_gl_surface_check_span_renderer (cairo_operator_t	  op,
 				       const cairo_pattern_t  *pattern,
 				       void			 *abstract_dst,
-				       cairo_antialias_t	  antialias,
-				       const cairo_composite_rectangles_t *rects)
+				       cairo_antialias_t	  antialias)
 {
     if (! _cairo_gl_operator_is_supported (op))
 	return FALSE;
@@ -1855,7 +1839,6 @@ _cairo_gl_surface_check_span_renderer (cairo_operator_t	  op,
     (void) pattern;
     (void) abstract_dst;
     (void) antialias;
-    (void) rects;
 }
 
 static cairo_span_renderer_t *

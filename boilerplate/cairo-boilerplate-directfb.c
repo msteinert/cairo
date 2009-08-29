@@ -211,6 +211,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"directfb", "directfb", NULL, NULL,
 	CAIRO_SURFACE_TYPE_DIRECTFB, CAIRO_CONTENT_COLOR, 0,
+	"cairo_directfb_surface_create",
 	_cairo_boilerplate_directfb_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
@@ -220,6 +221,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"directfb-bitmap", "directfb", NULL, NULL,
 	CAIRO_SURFACE_TYPE_DIRECTFB, CAIRO_CONTENT_COLOR_ALPHA, 0,
+	"cairo_directfb_surface_create",
 	_cairo_boilerplate_directfb_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,

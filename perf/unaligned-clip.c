@@ -34,6 +34,8 @@ do_unaligned_clip (cairo_t *cr, int width, int height, int loops)
     cairo_perf_timer_start ();
 
     while (loops--) {
+	cairo_save (cr);
+
 	/* First a triangular clip that obviously isn't along device-pixel
 	 * boundaries. */
 	cairo_move_to (cr, 50, 50);
@@ -51,7 +53,7 @@ do_unaligned_clip (cairo_t *cr, int width, int height, int loops)
 	/* And paint something to force the clip to be evaluated. */
 	cairo_paint (cr);
 
-	cairo_reset_clip (cr);
+	cairo_restore (cr);
     }
     cairo_perf_timer_stop ();
 
@@ -61,7 +63,7 @@ do_unaligned_clip (cairo_t *cr, int width, int height, int loops)
 void
 unaligned_clip (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "unaligned-clip"))
+    if (! cairo_perf_can_run (perf, "unaligned-clip", NULL))
 	return;
 
     cairo_perf_run (perf, "unaligned-clip", do_unaligned_clip);

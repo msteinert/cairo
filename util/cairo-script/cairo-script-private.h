@@ -428,6 +428,7 @@ struct _csi_scanner {
     jmp_buf jmpbuf;
     int depth;
 
+    int bind;
     csi_status_t (*push) (csi_t *ctx, csi_object_t *obj);
     csi_status_t (*execute) (csi_t *ctx, csi_object_t *obj);
     void *closure;
@@ -872,7 +873,8 @@ csi_object_is_procedure (const csi_object_t *obj)
 static inline csi_boolean_t
 csi_object_is_number (const csi_object_t *obj)
 {
-    switch ((int) csi_object_get_type (obj)) {
+    int type = csi_object_get_type (obj);
+    switch (type) {
     case CSI_OBJECT_TYPE_BOOLEAN:
     case CSI_OBJECT_TYPE_INTEGER:
     case CSI_OBJECT_TYPE_REAL:
@@ -885,7 +887,8 @@ csi_object_is_number (const csi_object_t *obj)
 static inline double
 csi_number_get_value (const csi_object_t *obj)
 {
-    switch ((int) csi_object_get_type (obj)) {
+    int type = csi_object_get_type (obj);
+    switch (type) {
     case CSI_OBJECT_TYPE_BOOLEAN: return obj->datum.boolean;
     case CSI_OBJECT_TYPE_INTEGER: return obj->datum.integer;
     case CSI_OBJECT_TYPE_REAL: return obj->datum.real;

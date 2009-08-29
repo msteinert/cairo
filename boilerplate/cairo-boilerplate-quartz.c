@@ -52,6 +52,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"quartz", "quartz", NULL, NULL,
 	CAIRO_SURFACE_TYPE_QUARTZ, CAIRO_CONTENT_COLOR_ALPHA, 0,
+	"cairo_quartz_surface_create",
 	_cairo_boilerplate_quartz_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
@@ -60,6 +61,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"quartz", "quartz", NULL, NULL,
 	CAIRO_SURFACE_TYPE_QUARTZ, CAIRO_CONTENT_COLOR, 0,
+	"cairo_quartz_surface_create",
 	_cairo_boilerplate_quartz_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,

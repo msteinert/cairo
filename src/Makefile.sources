@@ -82,12 +82,13 @@ cairo_private = \
 	cairo-region-private.h \
 	cairo-rtree-private.h \
 	cairo-scaled-font-private.h \
-	cairo-skiplist-private.h \
+	cairo-slope-private.h \
 	cairo-spans-private.h \
 	cairo-surface-fallback-private.h \
 	cairo-surface-private.h \
 	cairo-surface-clipper-private.h \
 	cairo-surface-wrapper-private.h \
+	cairo-tee-surface-private.h \
 	cairo-types-private.h \
 	cairo-user-font-private.h \
 	cairo-wideint-private.h \
@@ -98,8 +99,11 @@ cairo_sources = \
 	cairo-arc.c \
 	cairo-array.c \
 	cairo-atomic.c \
+	cairo-base64-stream.c \
 	cairo-base85-stream.c \
 	cairo-bentley-ottmann.c \
+	cairo-bentley-ottmann-rectangular.c \
+	cairo-bentley-ottmann-rectilinear.c \
 	cairo.c \
 	cairo-cache.c \
 	cairo-clip.c \
@@ -136,7 +140,6 @@ cairo_sources = \
 	cairo-region.c \
 	cairo-rtree.c \
 	cairo-scaled-font.c \
-	cairo-skiplist.c \
 	cairo-slope.c \
 	cairo-spans.c \
 	cairo-spline.c \
@@ -145,10 +148,11 @@ cairo_sources = \
 	cairo-surface-fallback.c \
 	cairo-surface-clipper.c \
 	cairo-surface-wrapper.c \
-	cairo-tor-scan-converter.c \
 	cairo-system.c \
-	cairo-traps.c \
+	cairo-tee-surface.c \
+	cairo-tor-scan-converter.c \
 	cairo-toy-font-face.c \
+	cairo-traps.c \
 	cairo-unicode.c \
 	cairo-user-font.c \
 	cairo-version.c \
@@ -187,9 +191,14 @@ cairo_ps_headers = cairo-ps.h
 cairo_ps_private = cairo-ps-surface-private.h
 cairo_ps_sources = cairo-ps-surface.c
 
+cairo_deflate_stream_sources = cairo-deflate-stream.c
+
 cairo_pdf_headers = cairo-pdf.h
 cairo_pdf_private = cairo-pdf-surface-private.h
-cairo_pdf_sources = cairo-pdf-surface.c cairo-deflate-stream.c
+cairo_pdf_sources = cairo-pdf-surface.c
+if CAIRO_HAS_PDF_SURFACE
+req_cairo_deflate_stream_sources = $(cairo_deflate_stream_sources)
+endif
 
 cairo_svg_headers = cairo-svg.h
 cairo_svg_private = cairo-svg-surface-private.h
@@ -253,6 +262,9 @@ cairo_win32_sources = cairo-win32-surface.c cairo-win32-printing-surface.c
 
 cairo_win32_font_sources = cairo-win32-font.c
 
+cairo_skia_headers =
+cairo_skia_sources = cairo-skia-surface.cpp
+
 cairo_os2_headers = cairo-os2.h
 cairo_os2_private = cairo-os2-private.h
 cairo_os2_sources = cairo-os2-surface.c
@@ -291,5 +303,15 @@ cairo_gallium_sources = drm/cairo-drm-gallium-surface.c
 cairo_script_headers = cairo-script.h
 cairo_script_sources = cairo-script-surface.c
 
+cairo_xml_headers = cairo-xml.h
+cairo_xml_sources = cairo-xml-surface.c
+if CAIRO_HAS_XML_SURFACE
+req_cairo_deflate_stream_sources = $(cairo_deflate_stream_sources)
+endif
+
 cairo_vg_headers = cairo-vg.h
 cairo_vg_sources = cairo-vg-surface.c
+
+cairo_sources += \
+		 $(req_cairo_deflate_stream_sources) \
+		 $(NULL)

@@ -49,11 +49,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_set_source_rgb (cr, 1, 1, 1);
     cairo_paint (cr);
 
-    /* Draw in black */
-    cairo_set_source_rgb (cr, 0, 0, 0);
-
     cairo_translate (cr, PAD, PAD);
-    cairo_set_antialias (cr, CAIRO_ANTIALIAS_NONE);
 
     for (i = 0; i < POINTS; i++)
 	for (j = 0; j < POINTS; j++) {

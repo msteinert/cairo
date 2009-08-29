@@ -94,7 +94,7 @@ box_outline_fill (cairo_t *cr, int width, int height, int loops)
 void
 box_outline (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
-    if (! cairo_perf_can_run (perf, "box-outline"))
+    if (! cairo_perf_can_run (perf, "box-outline", NULL))
 	return;
 
     cairo_perf_run (perf, "box-outline-stroke", box_outline_stroke);

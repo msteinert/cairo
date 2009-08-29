@@ -36,6 +36,13 @@ AC_CHECK_LIB(z, compress,
 	 [have_libz="no (requires zlib http://www.gzip.org/zlib/)"])],
 	 [have_libz="no (requires zlib http://www.gzip.org/zlib/)"])
 
+AC_CHECK_LIB(dl, dlsym,
+	     [AC_CHECK_HEADER(dlfcn.h, [
+	      have_dl=yes
+	      AC_DEFINE(HAVE_DL, 1, [Define to 1 if you have dl available]),
+	     ], [have_dl=no])], [have_dl=no])
+AM_CONDITIONAL(CAIRO_HAS_DL, test "x$have_dl" = "xyes")
+
 dnl ===========================================================================
 
 CAIRO_ENABLE_SURFACE_BACKEND(xlib, Xlib, auto, [
@@ -139,6 +146,19 @@ if test "x$use_win32" = "xyes"; then
 fi
 
 AM_CONDITIONAL(CAIRO_CAN_TEST_WIN32_PRINTING_SURFACE, test "x$test_win32_printing" = "xyes")
+
+dnl ===========================================================================
+
+CAIRO_ENABLE_SURFACE_BACKEND(skia, Skia, no, [
+  AC_ARG_WITH([skia],
+	      [AS_HELP_STRING([--with-skia=/path/to/skia],
+			      [directory to find compiled skia sources])],
+	      [skia_DIR="$withval"],
+	      [skia_DIR="`pwd`/../mesa"])
+  skia_NONPKGCONFIG_CFLAGS="-I$skia_DIR/include/config -I$skia_DIR/include/core -I$skia_DIR/include/effects"
+  skia_NONPKGCONFIG_LIBS="$skia_DIR/out/libskia.a"
+  AC_SUBST(skia_DIR)
+])
 
 dnl ===========================================================================
 
@@ -313,14 +333,22 @@ CAIRO_ENABLE_FUNCTIONS(egl, EGL, auto, [
     if test "x$use_egl" = "xyes"; then
       egl_NONPKGCONFIG_CFLAGS=
       egl_NONPKGCONFIG_LIBS=
-      for lib in EGL egl13 egl12 egl11; do
+      save_LIBS="$LIBS"
+      other_egl_LIBS=""
+      # Temporary workaround for missing link from egl13
+      AC_CHECK_LIB(csi, csi_stream_attachresource, other_egl_LIBS="-lcsi")
+      LIBS="$other_egl_LIBS $LIBS"
+      for egl_lib in EGL egl13 egl12 egl11; do
 	if test -z "$egl_NONPKGCONFIG_LIBS"; then
-          AC_CHECK_LIB($lib, eglGetError, egl_NONPKGCONFIG_LIBS="-l$lib")
+          AC_CHECK_LIB($egl_lib, eglGetError, egl_NONPKGCONFIG_LIBS="-l$egl_lib")
 	fi
       done
       if test -z "$egl_NONPKGCONFIG_LIBS"; then
         use_egl="no (EGL library not found)"
+      else
+        egl_NONPKGCONFIG_LIBS="$egl_NONPKGCONFIG_LIBS $other_egl_LIBS"
       fi
+      LIBS="$save_LIBS"
     fi
   else
       use_egl="no (not required by any backend)"
@@ -570,6 +598,11 @@ CAIRO_ENABLE_SURFACE_BACKEND(image, image, always, [
 dnl ===========================================================================
 
 CAIRO_ENABLE_SURFACE_BACKEND(meta, meta, always)
+CAIRO_ENABLE_SURFACE_BACKEND(tee, tee, always)
+CAIRO_ENABLE_SURFACE_BACKEND(xml, xml, yes, [
+    use_xml=$have_libz
+    xml_NONPKGCONFIG_LIBS=-lz
+])
 
 dnl ===========================================================================
 
@@ -615,6 +648,8 @@ AM_CONDITIONAL(BUILD_TRACE,
 	       test "x$have_ld_preload" = "xyes" \
 	       -a "x$have_libz" = "xyes")
 
+AM_CONDITIONAL(BUILD_SCRIPT, test "x$have_libz" = "xyes")
+
 AC_CHECK_LIB(bfd, bfd_openr,
 	 [AC_CHECK_HEADER(bfd.h, [have_bfd=yes],
 	 [have_bfd=no])], [have_bfd=no])
@@ -624,6 +659,11 @@ if test "x$have_bfd" = "xyes"; then
     BFD_LIBS=-lbfd
     AC_SUBST(BFD_LIBS)
 fi
+
+PKG_CHECK_MODULES(glib, glib-2.0, have_glib=yes, have_glib=no)
+AC_SUBST(glib_CFLAGS)
+AC_SUBST(glib_LIBS)
+AM_CONDITIONAL(BUILD_SPHINX, test "x$have_glib" = "xyes")
 
 dnl ===========================================================================
 
@@ -666,8 +706,10 @@ test/Makefile
 test/pdiff/Makefile
 perf/Makefile
 util/Makefile
+util/cairo-fdr/Makefile
 util/cairo-script/Makefile
 util/cairo-script/examples/Makefile
+util/cairo-sphinx/Makefile
 util/cairo-trace/Makefile
 util/cairo-trace/cairo-trace
 doc/Makefile

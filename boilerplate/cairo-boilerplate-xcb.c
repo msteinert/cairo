@@ -119,6 +119,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"xcb", "xcb", NULL, NULL,
 	CAIRO_SURFACE_TYPE_XCB, CAIRO_CONTENT_COLOR_ALPHA, 1,
+	"cairo_xcb_surface_create_with_xrender_format",
 	_cairo_boilerplate_xcb_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,

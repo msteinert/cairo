@@ -323,7 +323,7 @@ _qmatrix_from_cairo_matrix (const cairo_matrix_t& m)
 
 /** Path conversion **/
 typedef struct _qpainter_path_transform {
-    QPainterPath *path;
+    QPainterPath path;
     cairo_matrix_t *ctm_inverse;
 } qpainter_path_data;
 
@@ -331,14 +331,14 @@ typedef struct _qpainter_path_transform {
 static cairo_status_t
 _cairo_path_to_qpainterpath_move_to (void *closure, const cairo_point_t *point)
 {
-    qpainter_path_data *pdata = (qpainter_path_data *)closure;
+    qpainter_path_data *pdata = static_cast <qpainter_path_data *> (closure);
     double x = _cairo_fixed_to_double (point->x);
     double y = _cairo_fixed_to_double (point->y);
 
     if (pdata->ctm_inverse)
         cairo_matrix_transform_point (pdata->ctm_inverse, &x, &y);
 
-    pdata->path->moveTo(x, y);
+    pdata->path.moveTo(x, y);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -346,19 +346,14 @@ _cairo_path_to_qpainterpath_move_to (void *closure, const cairo_point_t *point)
 static cairo_status_t
 _cairo_path_to_qpainterpath_line_to (void *closure, const cairo_point_t *point)
 {
-    qpainter_path_data *pdata = (qpainter_path_data *)closure;
+    qpainter_path_data *pdata = static_cast <qpainter_path_data *> (closure);
     double x = _cairo_fixed_to_double (point->x);
     double y = _cairo_fixed_to_double (point->y);
 
     if (pdata->ctm_inverse)
         cairo_matrix_transform_point (pdata->ctm_inverse, &x, &y);
 
-    pdata->path->lineTo(x, y);
-
-    if (pdata->path->isEmpty())
-        pdata->path->moveTo(x, y);
-    else
-        pdata->path->lineTo(x, y);
+    pdata->path.lineTo(x, y);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -366,7 +361,7 @@ _cairo_path_to_qpainterpath_line_to (void *closure, const cairo_point_t *point)
 static cairo_status_t
 _cairo_path_to_qpainterpath_curve_to (void *closure, const cairo_point_t *p0, const cairo_point_t *p1, const cairo_point_t *p2)
 {
-    qpainter_path_data *pdata = (qpainter_path_data *)closure;
+    qpainter_path_data *pdata = static_cast <qpainter_path_data *> (closure);
     double x0 = _cairo_fixed_to_double (p0->x);
     double y0 = _cairo_fixed_to_double (p0->y);
     double x1 = _cairo_fixed_to_double (p1->x);
@@ -380,7 +375,7 @@ _cairo_path_to_qpainterpath_curve_to (void *closure, const cairo_point_t *p0, co
         cairo_matrix_transform_point (pdata->ctm_inverse, &x2, &y2);
     }
 
-    pdata->path->cubicTo (x0, y0, x1, y1, x2, y2);
+    pdata->path.cubicTo (x0, y0, x1, y1, x2, y2);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -388,42 +383,48 @@ _cairo_path_to_qpainterpath_curve_to (void *closure, const cairo_point_t *p0, co
 static cairo_status_t
 _cairo_path_to_qpainterpath_close_path (void *closure)
 {
-    qpainter_path_data *pdata = (qpainter_path_data *)closure;
+    qpainter_path_data *pdata = static_cast <qpainter_path_data *> (closure);
 
-    pdata->path->closeSubpath();
+    pdata->path.closeSubpath();
 
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
-_cairo_quartz_cairo_path_to_qpainterpath (cairo_path_fixed_t *path,
-                                          QPainterPath *qpath,
-                                          cairo_fill_rule_t fill_rule,
-                                          cairo_matrix_t *ctm_inverse = NULL)
+static inline QPainterPath
+path_to_qt (cairo_path_fixed_t *path,
+	    cairo_matrix_t *ctm_inverse = NULL)
 {
-    qpainter_path_data pdata = { qpath, ctm_inverse };
+    qpainter_path_data data;
+    cairo_status_t status;
 
-    qpath->setFillRule (fill_rule == CAIRO_FILL_RULE_WINDING ?
+    if (ctm_inverse && _cairo_matrix_is_identity (ctm_inverse))
+	ctm_inverse = NULL;
+    data.ctm_inverse = ctm_inverse;
+
+    status = _cairo_path_fixed_interpret (path,
+					  CAIRO_DIRECTION_FORWARD,
+					  _cairo_path_to_qpainterpath_move_to,
+					  _cairo_path_to_qpainterpath_line_to,
+					  _cairo_path_to_qpainterpath_curve_to,
+					  _cairo_path_to_qpainterpath_close_path,
+					  &data);
+    assert (status == CAIRO_STATUS_SUCCESS);
+
+    return data.path;
+}
+
+static inline QPainterPath
+path_to_qt (cairo_path_fixed_t *path,
+	    cairo_fill_rule_t fill_rule,
+	    cairo_matrix_t *ctm_inverse = NULL)
+{
+    QPainterPath qpath = path_to_qt (path, ctm_inverse);
+
+    qpath.setFillRule (fill_rule == CAIRO_FILL_RULE_WINDING ?
 			Qt::WindingFill :
 			Qt::OddEvenFill);
 
-    return _cairo_path_fixed_interpret (path,
-                                        CAIRO_DIRECTION_FORWARD,
-                                        _cairo_path_to_qpainterpath_move_to,
-                                        _cairo_path_to_qpainterpath_line_to,
-                                        _cairo_path_to_qpainterpath_curve_to,
-                                        _cairo_path_to_qpainterpath_close_path,
-                                        &pdata);
-}
-
-static cairo_status_t
-_cairo_quartz_cairo_path_to_qpainterpath (cairo_path_fixed_t *path,
-					  QPainterPath *qpath,
-					  cairo_matrix_t *ctm_inverse)
-{
-    return _cairo_quartz_cairo_path_to_qpainterpath (path, qpath,
-            CAIRO_FILL_RULE_WINDING,
-            ctm_inverse);
+    return qpath;
 }
 
 /**
@@ -722,17 +723,8 @@ _cairo_qt_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clipper,
             qs->p->save ();
         }
     } else {
-	QPainterPath qpath;
-	cairo_status_t status;
-
 	// XXX Antialiasing is ignored
-	status = _cairo_quartz_cairo_path_to_qpainterpath (path,
-							   &qpath,
-							   fill_rule);
-	if (unlikely (status))
-	    return status;
-
-	qs->p->setClipPath (qpath, Qt::IntersectClip);
+	qs->p->setClipPath (path_to_qt (path, fill_rule), Qt::IntersectClip);
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -1042,6 +1034,7 @@ struct PatternToBrushConverter {
 
     QBrush mBrush;
 
+    private:
     cairo_surface_t *mAcquiredImageParent;
     cairo_image_surface_t *mAcquiredImage;
     void *mAcquiredImageExtra;
@@ -1322,14 +1315,8 @@ _cairo_qt_surface_fill (void *abstract_surface,
     if (! _cairo_qt_fast_fill (qs, source,
 			       path, fill_rule, tolerance, antialias))
     {
-	QPainterPath qpath;
-	cairo_status_t status;
-
-	status = _cairo_quartz_cairo_path_to_qpainterpath (path, &qpath, fill_rule);
-	assert (status == CAIRO_STATUS_SUCCESS);
-
 	PatternToBrushConverter brush(source);
-	qs->p->fillPath (qpath, brush);
+	qs->p->fillPath (path_to_qt (path, fill_rule), brush);
     }
 
     if (qs->supports_porter_duff)
@@ -1364,14 +1351,6 @@ _cairo_qt_surface_stroke (void *abstract_surface,
     if (unlikely (int_status))
 	return int_status;
 
-    QPainterPath qpath;
-    cairo_status_t status;
-
-    if (_cairo_matrix_is_identity (ctm_inverse))
-	ctm_inverse = NULL;
-    status = _cairo_quartz_cairo_path_to_qpainterpath (path, &qpath,
-						       ctm_inverse);
-    assert (status == CAIRO_STATUS_SUCCESS);
 
     QMatrix savedMatrix = qs->p->worldMatrix();
 
@@ -1387,7 +1366,7 @@ _cairo_qt_surface_stroke (void *abstract_surface,
     PatternToPenConverter pen(source, style);
 
     qs->p->setPen(pen);
-    qs->p->drawPath(qpath);
+    qs->p->drawPath(path_to_qt (path, ctm_inverse));
     qs->p->setPen(Qt::black);
 
     qs->p->setWorldMatrix (savedMatrix, false);

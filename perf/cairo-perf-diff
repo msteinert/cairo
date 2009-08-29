@@ -223,14 +223,20 @@ run_cairo_perf_if_not_cached() {
 
 git_setup
 
-# Build cairo-perf-diff-files if not available
-if [ ! -e $CAIRO_DIR/perf/cairo-perf-diff-files ]; then
-    echo "Building cairo-perf-diff-files"
-    if [ "x$OS" = "xWindows_NT" ]; then
-        make -f Makefile.win32 -C $CAIRO_DIR/perf/ cairo-perf-diff-files CFG=debug
-    else
-        make -C $CAIRO_DIR/perf/ cairo-perf-diff-files
-    fi
+if [ -e ./cairo-perf-diff-files ]; then
+	bindir="."
+else
+	bindir=$CAIRO_DIR/perf
+
+	# Build cairo-perf-diff-files if not available
+	if [ ! -e $bindir/cairo-perf-diff-files ]; then
+	    echo "Building cairo-perf-diff-files"
+	    if [ "x$OS" = "xWindows_NT" ]; then
+		make -f Makefile.win32 -C $bindir cairo-perf-diff-files CFG=debug
+	    else
+		make -C $bindir cairo-perf-diff-files
+	    fi
+	fi
 fi
 
 if [ ! -e $old ]; then
@@ -244,8 +250,8 @@ if [ ! -e $new ]; then
 fi
 
 if [ -z "$html_output" ]; then
-    $CAIRO_DIR/perf/cairo-perf-diff-files $old $new
+    $bindir/cairo-perf-diff-files $old $new
 else
-    $CAIRO_DIR/perf/cairo-perf-diff-files $old $new |
+    $bindir/cairo-perf-diff-files $old $new |
     $CAIRO_DIR/perf/make-html.py > $html_output
 fi

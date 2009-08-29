@@ -720,8 +720,8 @@ csi_object_as_file (csi_t *ctx,
 		    csi_object_t *src,
 		    csi_object_t *file)
 {
-
-    switch ((int) csi_object_get_type (src)) {
+    int type = csi_object_get_type (src);
+    switch (type) {
     case CSI_OBJECT_TYPE_FILE:
 	*file = *csi_object_reference (src);
 	return CSI_STATUS_SUCCESS;

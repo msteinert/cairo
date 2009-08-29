@@ -1948,6 +1948,9 @@ cairo_surface_status (cairo_surface_t *surface);
  * @CAIRO_SURFACE_TYPE_VG: The surface is a OpenVG surface, since 1.10
  * @CAIRO_SURFACE_TYPE_GL: The surface is of type OpenGL, since 1.10
  * @CAIRO_SURFACE_TYPE_DRM: The surface is of type Direct Render Manager, since 1.10
+ * @CAIRO_SURFACE_TYPE_TEE: The surface is of type 'tee' (a multiplexing surface), since 1.10
+ * @CAIRO_SURFACE_TYPE_XML: The surface is of type XML (for debugging), since 1.10
+ * @CAIRO_SURFACE_TYPE_SKIA: The surface is of type Skia, since 1.10
  *
  * #cairo_surface_type_t is used to describe the type of a given
  * surface. The surface types are also known as "backends" or "surface
@@ -1992,7 +1995,10 @@ typedef enum _cairo_surface_type {
     CAIRO_SURFACE_TYPE_META,
     CAIRO_SURFACE_TYPE_VG,
     CAIRO_SURFACE_TYPE_GL,
-    CAIRO_SURFACE_TYPE_DRM
+    CAIRO_SURFACE_TYPE_DRM,
+    CAIRO_SURFACE_TYPE_TEE,
+    CAIRO_SURFACE_TYPE_XML,
+    CAIRO_SURFACE_TYPE_SKIA
 } cairo_surface_type_t;
 
 cairo_public cairo_surface_type_t
@@ -2186,6 +2192,19 @@ cairo_meta_surface_ink_extents (cairo_surface_t *surface,
 cairo_public cairo_status_t
 cairo_meta_surface_replay (cairo_surface_t *surface,
 			   cairo_surface_t *target);
+
+/* Tee-surface functions */
+
+cairo_public cairo_surface_t *
+cairo_tee_surface_create (cairo_surface_t *master);
+
+cairo_public void
+cairo_tee_surface_append (cairo_surface_t *surface,
+			  cairo_surface_t *target);
+
+cairo_public cairo_surface_t *
+cairo_tee_surface_index (cairo_surface_t *abstract_surface,
+			 int index);
 
 /* Pattern creation functions */
 
@@ -2499,7 +2518,7 @@ cairo_public void
 cairo_region_translate (cairo_region_t *region, int dx, int dy);
 
 cairo_public cairo_status_t
-cairo_region_subtract (cairo_region_t *dst, cairo_region_t *other);
+cairo_region_subtract (cairo_region_t *dst, const cairo_region_t *other);
 
 cairo_public cairo_status_t
 cairo_region_subtract_rectangle (cairo_region_t *dst,

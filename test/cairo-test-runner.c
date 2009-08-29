@@ -49,6 +49,15 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #endif
+#if HAVE_LIBGEN_H
+#include <libgen.h>
+#endif
+
+#if HAVE_VALGRIND
+#include <valgrind.h>
+#else
+#define RUNNING_ON_VALGRIND 0
+#endif
 
 #ifdef _MSC_VER
 #include <crtdbg.h>
@@ -81,6 +90,7 @@ typedef struct _cairo_test_runner {
     int *num_crashed_per_target;
 
     cairo_bool_t foreground;
+    cairo_bool_t exit_on_failure;
     cairo_bool_t list_only;
     cairo_bool_t full_test;
 } cairo_test_runner_t;
@@ -143,6 +153,26 @@ _list_free (cairo_test_list_t *list)
 	free (list);
 	list = next;
     }
+}
+
+static cairo_bool_t
+is_running_under_debugger (void)
+{
+    char buf[1024];
+
+    if (RUNNING_ON_VALGRIND)
+	return TRUE;
+
+#if HAVE_UNISTD_H && HAVE_LIBGEN_H && __linux__
+    sprintf (buf, "/proc/%d/exe", getppid ());
+    if (readlink (buf, buf, sizeof (buf)) != -1 &&
+	strncmp (basename (buf), "gdb", 3) == 0)
+    {
+	return TRUE;
+    }
+#endif
+
+    return FALSE;
 }
 
 #if SHOULD_FORK
@@ -285,7 +315,7 @@ static void
 usage (const char *argv0)
 {
     fprintf (stderr,
-	     "Usage: %s [-af] [test-names|keywords ...]\n"
+	     "Usage: %s [-afx] [test-names|keywords ...]\n"
 	     "       %s -l\n"
 	     "\n"
 	     "Run the cairo conformance test suite over the given tests (all by default)\n"
@@ -294,6 +324,7 @@ usage (const char *argv0)
 	     "  -a	all; run the full set of tests. By default the test suite\n"
 	     "          skips similar surface and device offset testing.\n"
 	     "  -f	foreground; do not fork\n"
+	     "  -x	exit on first failure\n"
 	     "  -l	list only; just list selected test case names without executing\n"
 	     "\n"
 	     "If test names are given they are used as exact matches either to a specific\n"
@@ -308,7 +339,7 @@ _parse_cmdline (cairo_test_runner_t *runner, int *argc, char **argv[])
     int c;
 
     while (1) {
-	c = _cairo_getopt (*argc, *argv, ":afl");
+	c = _cairo_getopt (*argc, *argv, ":aflx");
 	if (c == -1)
 	    break;
 
@@ -321,6 +352,9 @@ _parse_cmdline (cairo_test_runner_t *runner, int *argc, char **argv[])
 	    break;
 	case 'f':
 	    runner->foreground = TRUE;
+	    break;
+	case 'x':
+	    runner->exit_on_failure = TRUE;
 	    break;
 	default:
 	    fprintf (stderr, "Internal error: unhandled option: %c\n", c);
@@ -616,6 +650,9 @@ main (int argc, char **argv)
     memset (&runner, 0, sizeof (runner));
     runner.num_device_offsets = 1;
 
+    if (is_running_under_debugger ())
+	runner.foreground = TRUE;
+
     if (getenv ("CAIRO_TEST_MODE")) {
 	const char *env = getenv ("CAIRO_TEST_MODE");
 
@@ -624,6 +661,9 @@ main (int argc, char **argv)
 	}
 	if (strstr (env, "foreground")) {
 	    runner.foreground = TRUE;
+	}
+	if (strstr (env, "exit-on-failure")) {
+	    runner.exit_on_failure = TRUE;
 	}
     }
 
@@ -894,6 +934,9 @@ main (int argc, char **argv)
 
   TEST_NEXT:
 	free (name);
+	if (runner.exit_on_failure && ! runner.passed)
+	    break;
+
     }
 
     _list_free (tests);

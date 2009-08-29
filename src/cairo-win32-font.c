@@ -1819,7 +1819,10 @@ _cairo_win32_scaled_font_init_glyph_path (cairo_win32_scaled_font_t *scaled_font
     free (buffer);
 
  CLEANUP_FONT:
-    cairo_win32_scaled_font_done_font (&scaled_font->base);
+    if (scaled_font->base.options.hint_style == CAIRO_HINT_STYLE_NONE)
+	_cairo_win32_scaled_font_done_unscaled_font (&scaled_font->base);
+    else
+	cairo_win32_scaled_font_done_font (&scaled_font->base);
 
  CLEANUP_PATH:
     if (status != CAIRO_STATUS_SUCCESS)

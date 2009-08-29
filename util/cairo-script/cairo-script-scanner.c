@@ -411,44 +411,46 @@ token_end (csi_t *ctx, csi_scanner_t *scan, csi_file_t *src)
     s = scan->buffer.base;
     len = scan->buffer.ptr - scan->buffer.base;
 
-    if (s[0] == '{') { /* special case procedures */
-	if (scan->build_procedure.type != CSI_OBJECT_TYPE_NULL) {
-	    status = _csi_stack_push (ctx,
-				      &scan->procedure_stack,
-				      &scan->build_procedure);
+    if (_csi_likely (! scan->bind)) {
+	if (s[0] == '{') { /* special case procedures */
+	    if (scan->build_procedure.type != CSI_OBJECT_TYPE_NULL) {
+		status = _csi_stack_push (ctx,
+					  &scan->procedure_stack,
+					  &scan->build_procedure);
+		if (_csi_unlikely (status))
+		    longjmp (scan->jmpbuf, status);
+	    }
+
+	    status = csi_array_new (ctx, 0, &scan->build_procedure);
 	    if (_csi_unlikely (status))
 		longjmp (scan->jmpbuf, status);
+
+	    scan->build_procedure.type |= CSI_OBJECT_ATTR_EXECUTABLE;
+	    return;
+	} else if (s[0] == '}') {
+	    if (_csi_unlikely
+		(scan->build_procedure.type == CSI_OBJECT_TYPE_NULL))
+	    {
+		longjmp (scan->jmpbuf, _csi_error (CSI_STATUS_INVALID_SCRIPT));
+	    }
+
+	    if (scan->procedure_stack.len) {
+		csi_object_t *next;
+
+		next = _csi_stack_peek (&scan->procedure_stack, 0);
+		status = csi_array_append (ctx, next->datum.array,
+					   &scan->build_procedure);
+		scan->build_procedure = *next;
+		scan->procedure_stack.len--;
+	    } else {
+		status = scan_push (ctx, &scan->build_procedure);
+		scan->build_procedure.type = CSI_OBJECT_TYPE_NULL;
+	    }
+	    if (_csi_unlikely (status))
+		longjmp (scan->jmpbuf, status);
+
+	    return;
 	}
-
-	status = csi_array_new (ctx, 0, &scan->build_procedure);
-	if (_csi_unlikely (status))
-	    longjmp (scan->jmpbuf, status);
-
-	scan->build_procedure.type |= CSI_OBJECT_ATTR_EXECUTABLE;
-	return;
-    } else if (s[0] == '}') {
-	if (_csi_unlikely
-	    (scan->build_procedure.type == CSI_OBJECT_TYPE_NULL))
-	{
-	    longjmp (scan->jmpbuf, _csi_error (CSI_STATUS_INVALID_SCRIPT));
-	}
-
-	if (scan->procedure_stack.len) {
-	    csi_object_t *next;
-
-	    next = _csi_stack_peek (&scan->procedure_stack, 0);
-	    status = csi_array_append (ctx, next->datum.array,
-				       &scan->build_procedure);
-	    scan->build_procedure = *next;
-	    scan->procedure_stack.len--;
-	} else {
-	    status = scan_push (ctx, &scan->build_procedure);
-	    scan->build_procedure.type = CSI_OBJECT_TYPE_NULL;
-	}
-	if (_csi_unlikely (status))
-	    longjmp (scan->jmpbuf, status);
-
-	return;
     }
 
     if (s[0] == '/') {
@@ -665,6 +667,92 @@ base85_end (csi_t *ctx, csi_scanner_t *scan, cairo_bool_t deflate)
 	longjmp (scan->jmpbuf, status);
 }
 
+static void
+base64_add (csi_t *ctx, csi_scanner_t *scan, int c)
+{
+    int val;
+
+    /* Convert Base64 character to its 6 bit nibble */
+    val = scan->accumulator;
+    if (c =='/') {
+	val = (val << 6) | 63;
+    } else if (c =='+') {
+	val = (val << 6) | 62;
+    } else if (c >='A' && c <='Z') {
+	val = (val << 6) | (c -'A');
+    } else if (c >='a' && c <='z') {
+	val = (val << 6) | (c -'a' + 26);
+    } else if (c >='0' && c <='9') {
+	val = (val << 6) | (c -'0' + 52);
+    }
+
+    buffer_check (ctx, scan, 1);
+    switch (scan->accumulator_count++) {
+    case 0:
+	break;
+
+    case 1:
+	buffer_add (&scan->buffer, (val >> 4) & 0xFF);
+	val &= 0xF;
+	break;
+
+    case 2:
+	buffer_add (&scan->buffer, (val >> 2) & 0xFF);
+	val &= 0x3;
+	break;
+
+    case 3:
+	buffer_add (&scan->buffer, (val >> 0) & 0xFF);
+	scan->accumulator_count = 0;
+	val = 0;
+	break;
+    }
+
+     if (c == '=') {
+	scan->accumulator_count = 0;
+	scan->accumulator = 0;
+     } else {
+	 scan->accumulator = val;
+     }
+}
+
+static void
+base64_end (csi_t *ctx, csi_scanner_t *scan)
+{
+    csi_object_t obj;
+    cairo_status_t status;
+
+    switch (scan->accumulator_count) {
+    case 0:
+	break;
+    case 2:
+	base64_add (ctx, scan, (scan->accumulator << 2) & 0x3f);
+	base64_add (ctx, scan, '=');
+	break;
+    case 1:
+	base64_add (ctx, scan, (scan->accumulator << 4) & 0x3f);
+	base64_add (ctx, scan, '=');
+	base64_add (ctx, scan, '=');
+	break;
+    }
+
+    status = csi_string_new (ctx,
+			     &obj,
+			     scan->buffer.base,
+			     scan->buffer.ptr - scan->buffer.base);
+    if (_csi_unlikely (status))
+	longjmp (scan->jmpbuf, status);
+
+    if (scan->build_procedure.type != CSI_OBJECT_TYPE_NULL)
+	status = csi_array_append (ctx,
+				   scan->build_procedure.datum.array,
+				   &obj);
+    else
+	status = scan_push (ctx, &obj);
+    if (_csi_unlikely (status))
+	longjmp (scan->jmpbuf, status);
+}
+
 static inline void
 scan_read (csi_scanner_t *scan, csi_file_t *src, void *ptr, int len)
 {
@@ -702,7 +790,7 @@ string_read (csi_t *ctx,
 {
     csi_status_t status;
 
-    status = csi_string_new (ctx, obj, NULL, len + 1);
+    status = csi_string_new (ctx, obj, NULL, len);
     if (_csi_unlikely (status))
 	longjmp (scan->jmpbuf, status);
 
@@ -712,7 +800,8 @@ string_read (csi_t *ctx,
 	obj->datum.string->deflate = be32 (u32);
     }
 
-    scan_read (scan, src, obj->datum.string->string, len);
+    if (_csi_likely (len))
+	scan_read (scan, src, obj->datum.string->string, len);
     obj->datum.string->string[len] = '\0';
 }
 
@@ -779,6 +868,8 @@ scan_none:
 		deflate = 1;
 	    case '~':
 		goto scan_base85;
+	    case '{':
+		goto scan_base64;
 	    default:
 		csi_file_putc (src, next);
 		goto scan_hex;
@@ -1201,6 +1292,31 @@ scan_base85:
 	}
     }
     longjmp (scan->jmpbuf, _csi_error (CSI_STATUS_INVALID_SCRIPT));
+
+scan_base64:
+    buffer_reset (&scan->buffer);
+    scan->accumulator = 0;
+    scan->accumulator_count = 0;
+    while ((c = csi_file_getc (src)) != EOF) {
+	switch (c) {
+	case '}':
+	    next = csi_file_getc (src);
+	    switch (next) {
+	    case EOF:
+		return;
+
+	    case '>':
+		base64_end (ctx, scan);
+		goto scan_none;
+	    }
+	    longjmp (scan->jmpbuf, _csi_error (CSI_STATUS_INVALID_SCRIPT));
+
+	default:
+	    base64_add (ctx, scan, c);
+	    break;
+	}
+    }
+    longjmp (scan->jmpbuf, _csi_error (CSI_STATUS_INVALID_SCRIPT));
 }
 
 static csi_status_t
@@ -1238,6 +1354,7 @@ _csi_scanner_init (csi_t *ctx, csi_scanner_t *scanner)
     if (status)
 	return status;
 
+    scanner->bind = 0;
     scanner->push = _scan_push;
     scanner->execute = _scan_execute;
 
@@ -1663,11 +1780,13 @@ _csi_translate_file (csi_t *ctx,
     translator.closure = closure;
     ctx->scanner.closure = &translator;
 
+    ctx->scanner.bind = 1;
     ctx->scanner.push = _translate_push;
     ctx->scanner.execute = _translate_execute;
 
     _scan_file (ctx, file);
 
+    ctx->scanner.bind = 0;
     ctx->scanner.push = _scan_push;
     ctx->scanner.execute = _scan_execute;
 

@@ -23,6 +23,9 @@ libcairoboilerplate_la_SOURCES = \
 	cairo-boilerplate-constructors.c \
 	$(NULL)
 libcairoboilerplate_la_LIBADD = $(top_builddir)/src/libcairo.la
+if CAIRO_HAS_DL
+libcairoboilerplate_la_LIBADD += -ldl
+endif
 
 if CAIRO_HAS_BEOS_SURFACE
 # BeOS system headers trigger this warning

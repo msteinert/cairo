@@ -34,6 +34,8 @@
  *
  * Contributor(s):
  *	Carl D. Worth <cworth@cworth.org>
+ *      Joonas Pihlaja <jpihlaja@cc.helsinki.fi>
+ *	Chris Wilson <chris@chris-wilson.co.uk>
  */
 
 #include "cairoint.h"
@@ -41,6 +43,7 @@
 #include "cairo-surface-fallback-private.h"
 #include "cairo-clip-private.h"
 #include "cairo-region-private.h"
+#include "cairo-spans-private.h"
 
 typedef struct {
     cairo_surface_t *dst;
@@ -130,6 +133,9 @@ _create_composite_mask_pattern (cairo_surface_pattern_t       *mask_pattern,
 	status = _cairo_clip_get_region (clip, &clip_region);
 	assert (! _cairo_status_is_error (status));
 
+	/* The all-clipped state should never propagate this far. */
+	assert (status != CAIRO_INT_STATUS_NOTHING_TO_DO);
+
 	clip_surface = status == CAIRO_INT_STATUS_UNSUPPORTED;
 
 	if (clip_region && cairo_region_num_rectangles (clip_region) == 1)
@@ -157,30 +163,8 @@ _create_composite_mask_pattern (cairo_surface_pattern_t       *mask_pattern,
     if (unlikely (status))
 	goto CLEANUP_SURFACE;
 
-    if (clip_surface) {
-	cairo_surface_pattern_t pattern;
-	cairo_surface_t *surface;
-
-	surface = _cairo_clip_get_surface (clip, mask);
-	_cairo_pattern_init_for_surface (&pattern, surface);
-	cairo_surface_destroy (surface);
-
-	status = _cairo_surface_composite (CAIRO_OPERATOR_IN,
-					   &pattern.base,
-					   NULL,
-					   mask,
-					   extents->x - clip->path->extents.x,
-					   extents->y - clip->path->extents.y,
-					   0, 0,
-					   0, 0,
-					   extents->width, extents->height,
-					   NULL);
-
-	_cairo_pattern_fini (&pattern.base);
-
-	if (unlikely (status))
-	    goto CLEANUP_SURFACE;
-    }
+    if (clip_surface)
+	status = _cairo_clip_combine_with_surface (clip, mask, extents);
 
     _cairo_pattern_init_for_surface (mask_pattern, mask);
 
@@ -346,6 +330,18 @@ _clip_and_composite_source (cairo_clip_t                  *clip,
     cairo_region_t *clip_region = NULL;
     cairo_status_t status;
 
+    if (clip != NULL) {
+	status = _cairo_clip_get_region (clip, &clip_region);
+	assert (! _cairo_status_is_error (status));
+	if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
+	    return CAIRO_STATUS_SUCCESS;
+
+	/* a solitary clip rectangle is already accommodated by extents */
+	if (clip_region && cairo_region_num_rectangles (clip_region) == 1)
+	    clip_region = NULL;
+    }
+
+
     /* Create a surface that is mask IN clip */
     status = _create_composite_mask_pattern (&mask_pattern,
 					     clip,
@@ -353,15 +349,6 @@ _clip_and_composite_source (cairo_clip_t                  *clip,
 					     dst, extents);
     if (unlikely (status))
 	return status;
-
-    if (clip != NULL) {
-	status = _cairo_clip_get_region (clip, &clip_region);
-	assert (! _cairo_status_is_error (status));
-
-	/* a solitary clip rectangle is already accommodated by extents */
-	if (clip_region && cairo_region_num_rectangles (clip_region) == 1)
-	    clip_region = NULL;
-    }
 
     /* Compute dest' = dest OUT (mask IN clip) */
     status = _cairo_surface_composite (CAIRO_OPERATOR_DEST_OUT,
@@ -451,6 +438,8 @@ _clip_and_composite (cairo_clip_t                  *clip,
 	if (clip != NULL) {
 	    status = _cairo_clip_get_region (clip, &clip_region);
 	    assert (! _cairo_status_is_error (status));
+	    if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
+		return CAIRO_STATUS_SUCCESS;
 
 	    clip_surface = status == CAIRO_INT_STATUS_UNSUPPORTED;
 	}
@@ -579,48 +568,29 @@ _clip_and_composite_region (const cairo_pattern_t *src,
 			    cairo_operator_t op,
 			    cairo_surface_t *dst,
 			    cairo_region_t *trap_region,
-			    cairo_antialias_t antialias,
 			    cairo_clip_t *clip,
 			    cairo_rectangle_int_t *extents)
 {
     cairo_region_t clear_region;
-    cairo_bool_t clip_surface = FALSE;
     unsigned int has_region = 0;
     cairo_status_t status;
 
-    if (clip != NULL) {
-	cairo_region_t *clip_region;
+    if (! _cairo_operator_bounded_by_mask (op) && clip == NULL) {
+	/* If we optimize drawing with an unbounded operator to
+	 * _cairo_surface_fill_rectangles() or to drawing with a
+	 * clip region, then we have an additional region to clear.
+	 */
+	_cairo_region_init_rectangle (&clear_region, extents);
+	status = cairo_region_subtract (&clear_region, trap_region);
+	if (unlikely (status))
+	    return status;
 
-	status = _cairo_clip_get_region (clip, &clip_region);
-	assert (! _cairo_status_is_error (status));
-
-	clip_surface = status == CAIRO_INT_STATUS_UNSUPPORTED;
-    }
-
-    if (_cairo_operator_bounded_by_mask (op)) {
-        cairo_rectangle_int_t trap_extents;
-
-	cairo_region_get_extents (trap_region, &trap_extents);
-	if (! _cairo_rectangle_intersect (extents, &trap_extents))
-	    return CAIRO_STATUS_SUCCESS;
-    } else {
-        if (! clip_surface) {
-            /* If we optimize drawing with an unbounded operator to
-             * _cairo_surface_fill_rectangles() or to drawing with a
-             * clip region, then we have an additional region to clear.
-             */
-            _cairo_region_init_rectangle (&clear_region, extents);
-            status = cairo_region_subtract (&clear_region, trap_region);
-            if (unlikely (status))
-		return status;
-
-            if (! cairo_region_is_empty (&clear_region))
-		has_region |= HAS_CLEAR_REGION;
-        }
+	if (! cairo_region_is_empty (&clear_region))
+	    has_region |= HAS_CLEAR_REGION;
     }
 
     if ((src->type == CAIRO_PATTERN_TYPE_SOLID || op == CAIRO_OPERATOR_CLEAR) &&
-	! clip_surface)
+	clip == NULL)
     {
 	const cairo_color_t *color;
 
@@ -647,8 +617,7 @@ _clip_and_composite_region (const cairo_pattern_t *src,
 	 * more than rectangle and the destination doesn't support clip
 	 * regions. In that case, we fall through.
 	 */
-	status = _composite_trap_region (clip_surface ? clip : NULL,
-					 src, op, dst,
+	status = _composite_trap_region (clip, src, op, dst,
 					 trap_region, extents);
     }
 
@@ -661,6 +630,87 @@ _clip_and_composite_region (const cairo_pattern_t *src,
 	}
 	_cairo_region_fini (&clear_region);
     }
+
+    return status;
+}
+
+/* avoid using region code to re-validate boxes */
+static cairo_status_t
+_fill_rectangles (cairo_surface_t *dst,
+		  cairo_operator_t op,
+		  const cairo_pattern_t *src,
+		  cairo_traps_t *traps,
+		  cairo_clip_t *clip)
+{
+    const cairo_color_t *color;
+    cairo_rectangle_int_t stack_rects[CAIRO_STACK_ARRAY_LENGTH (cairo_rectangle_int_t)];
+    cairo_rectangle_int_t *rects = stack_rects;
+    cairo_status_t status;
+    int i;
+
+    if (! traps->is_rectilinear || ! traps->maybe_region)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* XXX: convert clip region to geometric boxes? */
+    if (clip != NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    /* XXX: fallback for the region_subtract() operation */
+    if (! _cairo_operator_bounded_by_mask (op))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (! (src->type == CAIRO_PATTERN_TYPE_SOLID || op == CAIRO_OPERATOR_CLEAR))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (traps->has_intersections) {
+	if (traps->is_rectangular) {
+	    status = _cairo_bentley_ottmann_tessellate_rectangular_traps (traps, CAIRO_FILL_RULE_WINDING);
+	} else {
+	    status = _cairo_bentley_ottmann_tessellate_rectilinear_traps (traps, CAIRO_FILL_RULE_WINDING);
+	}
+	if (unlikely (status))
+	    return status;
+    }
+
+    for (i = 0; i < traps->num_traps; i++) {
+	if (! _cairo_fixed_is_integer (traps->traps[i].top)          ||
+	    ! _cairo_fixed_is_integer (traps->traps[i].bottom)       ||
+	    ! _cairo_fixed_is_integer (traps->traps[i].left.p1.x)    ||
+	    ! _cairo_fixed_is_integer (traps->traps[i].right.p1.x))
+	{
+	    traps->maybe_region = FALSE;
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+    }
+
+    if (traps->num_traps > ARRAY_LENGTH (stack_rects)) {
+	rects = _cairo_malloc_ab (traps->num_traps,
+				  sizeof (cairo_rectangle_int_t));
+	if (unlikely (rects == NULL))
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+
+    for (i = 0; i < traps->num_traps; i++) {
+	int x1 = _cairo_fixed_integer_part (traps->traps[i].left.p1.x);
+	int y1 = _cairo_fixed_integer_part (traps->traps[i].top);
+	int x2 = _cairo_fixed_integer_part (traps->traps[i].right.p1.x);
+	int y2 = _cairo_fixed_integer_part (traps->traps[i].bottom);
+
+	rects[i].x = x1;
+	rects[i].y = y1;
+	rects[i].width = x2 - x1;
+	rects[i].height = y2 - y1;
+    }
+
+    if (op == CAIRO_OPERATOR_CLEAR)
+	color = CAIRO_COLOR_TRANSPARENT;
+    else
+	color = &((cairo_solid_pattern_t *)src)->color;
+
+    status =  _cairo_surface_fill_rectangles (dst, op, color, rects, i);
+
+    if (rects != stack_rects)
+	free (rects);
 
     return status;
 }
@@ -680,16 +730,16 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
     cairo_bool_t clip_surface = FALSE;
     cairo_status_t status;
 
-    if (_cairo_operator_bounded_by_mask (op) && traps->num_traps == 0)
-        return CAIRO_STATUS_SUCCESS;
+    if (traps->num_traps == 0 && _cairo_operator_bounded_by_mask (op))
+	return CAIRO_STATUS_SUCCESS;
 
     if (clip != NULL) {
 	status = _cairo_clip_get_region (clip, &clip_region);
 	if (unlikely (_cairo_status_is_error (status)))
 	    return status;
+	if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
+	    return CAIRO_STATUS_SUCCESS;
 
-	/* The all-clipped state should not have been propagated this far. */
-	assert (status != CAIRO_INT_STATUS_NOTHING_TO_DO);
 	clip_surface = status == CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
@@ -701,6 +751,10 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
 	(_cairo_operator_bounded_by_mask (op) && op != CAIRO_OPERATOR_SOURCE))
     {
 	cairo_region_t *trap_region = NULL;
+
+	status = _fill_rectangles (dst, op, src, traps, clip);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
 
 	status = _cairo_traps_extract_region (traps, &trap_region);
 	if (unlikely (_cairo_status_is_error (status)))
@@ -721,17 +775,20 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
 		}
 	    }
 
-	    if (cairo_region_is_empty (trap_region) &&
-		_cairo_operator_bounded_by_mask (op))
-	    {
-		cairo_region_destroy (trap_region);
-		return CAIRO_STATUS_SUCCESS;
+	    if (_cairo_operator_bounded_by_mask (op)) {
+		cairo_rectangle_int_t trap_extents;
+
+		cairo_region_get_extents (trap_region, &trap_extents);
+		if (! _cairo_rectangle_intersect (extents, &trap_extents)) {
+		    cairo_region_destroy (trap_region);
+		    return CAIRO_STATUS_SUCCESS;
+		}
 	    }
 
 	    status = _clip_and_composite_region (src, op, dst,
 						 trap_region,
-						 antialias,
-						 clip, extents);
+						 clip_surface ? clip : NULL,
+						 extents);
 	    cairo_region_destroy (trap_region);
 
 	    if (likely (status != CAIRO_INT_STATUS_UNSUPPORTED))
@@ -739,35 +796,37 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
 	}
     }
 
-    /* Otherwise we need to render the trapezoids to a mask and composite
-     * in the usual fashion.
-     */
-    if (_cairo_operator_bounded_by_mask (op)) {
-        cairo_rectangle_int_t trap_extents;
-	cairo_box_t trap_box;
-
-	_cairo_traps_extents (traps, &trap_box);
-	_cairo_box_round_to_rectangle (&trap_box, &trap_extents);
-	if (! _cairo_rectangle_intersect (extents, &trap_extents))
-	    return CAIRO_STATUS_SUCCESS;
+    /* No fast path, exclude self-intersections and clip trapezoids. */
+    if (traps->has_intersections) {
+	if (traps->is_rectangular)
+	    status = _cairo_bentley_ottmann_tessellate_rectangular_traps (traps, CAIRO_FILL_RULE_WINDING);
+	else if (traps->is_rectilinear)
+	    status = _cairo_bentley_ottmann_tessellate_rectilinear_traps (traps, CAIRO_FILL_RULE_WINDING);
+	else
+	    status = _cairo_bentley_ottmann_tessellate_traps (traps, CAIRO_FILL_RULE_WINDING);
+	if (unlikely (status))
+	    return status;
     }
 
+    /* Otherwise render the trapezoids to a mask and composite in the usual
+     * fashion.
+     */
     traps_info.traps = traps;
     traps_info.antialias = antialias;
+
     return _clip_and_composite (clip, op, src,
 				_composite_traps_draw_func,
 				&traps_info, dst, extents);
 }
 
 typedef struct {
-    cairo_path_fixed_t		*path;
+    cairo_polygon_t		*polygon;
     cairo_fill_rule_t		 fill_rule;
-    double			 tolerance;
     cairo_antialias_t		 antialias;
-} cairo_composite_spans_fill_info_t;
+} cairo_composite_spans_info_t;
 
 static cairo_status_t
-_composite_spans_fill_func (void                          *closure,
+_composite_spans_draw_func (void                          *closure,
 			    cairo_operator_t               op,
 			    const cairo_pattern_t         *src,
 			    cairo_surface_t               *dst,
@@ -777,11 +836,11 @@ _composite_spans_fill_func (void                          *closure,
 			    cairo_region_t		  *clip_region)
 {
     cairo_composite_rectangles_t rects;
-    cairo_composite_spans_fill_info_t *info = closure;
+    cairo_composite_spans_info_t *info = closure;
 
-    _cairo_composite_rectangles_init (
-	&rects, extents->x, extents->y,
-	extents->width, extents->height);
+    _cairo_composite_rectangles_init (&rects,
+				      extents->x, extents->y,
+				      extents->width, extents->height);
 
     /* The incoming dst_x/y are where we're pretending the origin of
      * the dst surface is -- *not* the offset of a rectangle where
@@ -789,26 +848,94 @@ _composite_spans_fill_func (void                          *closure,
     rects.dst.x -= dst_x;
     rects.dst.y -= dst_y;
 
-    return _cairo_path_fixed_fill_using_spans (op, src, info->path, dst,
-					       info->fill_rule,
-					       info->tolerance,
-					       info->antialias,
-					       &rects,
-					       clip_region);
+    return _cairo_surface_composite_polygon (dst, op, src,
+					     info->fill_rule,
+					     info->antialias,
+					     &rects,
+					     info->polygon,
+					     clip_region);
 }
 
-static cairo_bool_t
+static cairo_status_t
 _rectangle_intersect_clip (cairo_rectangle_int_t *extents, cairo_clip_t *clip)
 {
     if (clip != NULL) {
-	const cairo_rectangle_int_t *clip_extents;
+	if (! _cairo_rectangle_intersect (extents,
+					  _cairo_clip_get_extents (clip)))
+	{
+	    return CAIRO_INT_STATUS_NOTHING_TO_DO;
+	}
 
-	clip_extents = _cairo_clip_get_extents (clip);
-	if (clip_extents != NULL)
-	    return _cairo_rectangle_intersect (extents, clip_extents);
+	return _cairo_clip_rectangle (clip, extents);
+    } else if (_cairo_rectangle_empty (extents))
+	return CAIRO_INT_STATUS_NOTHING_TO_DO;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_bool_t
+_clip_contains_rectangle (cairo_clip_t *clip,
+			  const cairo_rectangle_int_t *rect)
+{
+    cairo_clip_path_t *clip_path;
+
+    clip_path = clip->path;
+
+    if (clip_path->extents.x > rect->x ||
+	clip_path->extents.y > rect->y ||
+	clip_path->extents.x + clip_path->extents.width < rect->x + rect->width ||
+	clip_path->extents.y + clip_path->extents.height < rect->y + rect->height)
+    {
+	return FALSE;
     }
 
-    return ! _cairo_rectangle_empty (extents);
+    do {
+	cairo_box_t box;
+
+	if (! _cairo_path_fixed_is_box (&clip_path->path, &box))
+	    return FALSE;
+
+	if (box.p1.x > _cairo_fixed_from_int (rect->x) ||
+	    box.p1.y > _cairo_fixed_from_int (rect->y) ||
+	    box.p2.x < _cairo_fixed_from_int (rect->x + rect->width) ||
+	    box.p2.y < _cairo_fixed_from_int (rect->y + rect->height))
+	{
+	    return FALSE;
+	}
+    } while ((clip_path = clip_path->prev) != NULL);
+
+    return TRUE;
+}
+
+static cairo_status_t
+_clip_to_boxes (cairo_clip_t **clip,
+		const cairo_rectangle_int_t *extents,
+		cairo_box_t **boxes,
+		int *num_boxes)
+{
+    cairo_status_t status;
+
+    if (*clip == NULL) {
+	status = CAIRO_STATUS_SUCCESS;
+	goto EXTENTS;
+    }
+
+    status = _cairo_clip_get_boxes (*clip, boxes, num_boxes);
+    switch ((int) status) {
+    case CAIRO_STATUS_SUCCESS:
+	*clip = NULL;
+	goto DONE;
+
+    case  CAIRO_INT_STATUS_UNSUPPORTED:
+	status = CAIRO_STATUS_SUCCESS;
+	goto EXTENTS;
+    }
+
+  EXTENTS:
+    _cairo_box_from_rectangle (&(*boxes)[0], extents);
+    *num_boxes = 1;
+  DONE:
+    return status;
 }
 
 cairo_status_t
@@ -819,9 +946,11 @@ _cairo_surface_fallback_paint (cairo_surface_t		*surface,
 {
     cairo_status_t status;
     cairo_rectangle_int_t extents;
-    cairo_box_t box;
-    cairo_traps_t traps;
     cairo_bool_t is_bounded;
+    cairo_clip_path_t *clip_path = clip ? clip->path : NULL;
+    cairo_box_t boxes_stack[32], *boxes = boxes_stack;
+    int num_boxes = ARRAY_LENGTH (boxes_stack);
+    cairo_traps_t traps;
 
     is_bounded = _cairo_surface_get_extents (surface, &extents);
     assert (is_bounded || clip);
@@ -834,16 +963,51 @@ _cairo_surface_fallback_paint (cairo_surface_t		*surface,
 	    return CAIRO_STATUS_SUCCESS;
     }
 
-    if (! _rectangle_intersect_clip (&extents, clip))
-	return CAIRO_STATUS_SUCCESS;
+    if (clip != NULL && _clip_contains_rectangle (clip, &extents))
+	clip = NULL;
 
-    _cairo_box_from_rectangle (&box, &extents);
+    status = _rectangle_intersect_clip (&extents, clip);
+    if (unlikely (status)) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    status = CAIRO_STATUS_SUCCESS;
+	return status;
+    }
 
-    _cairo_traps_init_box (&traps, &box);
+    status = _clip_to_boxes (&clip, &extents, &boxes, &num_boxes);
+    if (unlikely (status)) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    status = CAIRO_STATUS_SUCCESS;
+	return status;
+    }
+
+    /* If the clip cannot be reduced to a set of boxes, we will need to
+     * use a clipmask. Paint is special as it is the only operation that
+     * does not implicitly use a mask, so we may be able to reduce this
+     * operation to a fill...
+     */
+    if (clip != NULL && clip_path->prev == NULL &&
+	_cairo_operator_bounded_by_mask (op))
+    {
+	return _cairo_surface_fill (surface, op, source,
+				    &clip_path->path,
+				    clip_path->fill_rule,
+				    clip_path->tolerance,
+				    clip_path->antialias,
+				    NULL);
+    }
+
+    status = _cairo_traps_init_boxes (&traps, boxes, num_boxes);
+    if (unlikely (status))
+	goto CLEANUP_BOXES;
+
     status = _clip_and_composite_trapezoids (source, op, surface,
-					     &traps, CAIRO_ANTIALIAS_NONE,
+					     &traps, CAIRO_ANTIALIAS_DEFAULT,
 					     clip, &extents);
     _cairo_traps_fini (&traps);
+
+CLEANUP_BOXES:
+    if (boxes != boxes_stack)
+	free (boxes);
 
     return status;
 }
@@ -879,7 +1043,6 @@ _cairo_surface_mask_draw_func (void                          *closure,
     }
 }
 
-
 cairo_status_t
 _cairo_surface_fallback_mask (cairo_surface_t		*surface,
 			      cairo_operator_t		 op,
@@ -889,6 +1052,7 @@ _cairo_surface_fallback_mask (cairo_surface_t		*surface,
 {
     cairo_rectangle_int_t extents;
     cairo_bool_t is_bounded;
+    cairo_status_t status;
 
     is_bounded = _cairo_surface_get_extents (surface, &extents);
     assert (is_bounded || clip);
@@ -909,8 +1073,15 @@ _cairo_surface_fallback_mask (cairo_surface_t		*surface,
 	    return CAIRO_STATUS_SUCCESS;
     }
 
-    if (! _rectangle_intersect_clip (&extents, clip))
-	return CAIRO_STATUS_SUCCESS;
+    if (clip != NULL && _clip_contains_rectangle (clip, &extents))
+	clip = NULL;
+
+    status = _rectangle_intersect_clip (&extents, clip);
+    if (status) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    status = CAIRO_STATUS_SUCCESS;
+	return status;
+    }
 
     return _clip_and_composite (clip, op, source,
 				_cairo_surface_mask_draw_func,
@@ -930,11 +1101,13 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
 				cairo_antialias_t	 antialias,
 				cairo_clip_t		*clip)
 {
-    cairo_status_t status;
+    cairo_polygon_t polygon;
     cairo_traps_t traps;
-    cairo_box_t box;
+    cairo_box_t boxes_stack[32], *boxes = boxes_stack;
+    int num_boxes = ARRAY_LENGTH (boxes_stack);
     cairo_rectangle_int_t extents;
     cairo_bool_t is_bounded;
+    cairo_status_t status;
 
     is_bounded = _cairo_surface_get_extents (surface, &extents);
     assert (is_bounded || clip);
@@ -947,27 +1120,99 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
 	    return CAIRO_STATUS_SUCCESS;
     }
 
-    if (! _rectangle_intersect_clip (&extents, clip))
-	return CAIRO_STATUS_SUCCESS;
+    if (_cairo_operator_bounded_by_mask (op)) {
+	cairo_rectangle_int_t path_extents;
 
-    _cairo_box_from_rectangle (&box, &extents);
+	_cairo_path_fixed_approximate_stroke_extents (path,
+						      stroke_style, ctm,
+						      &path_extents);
+	if (! _cairo_rectangle_intersect (&extents, &path_extents))
+	    return CAIRO_STATUS_SUCCESS;
+    }
+
+    if (clip != NULL && _clip_contains_rectangle (clip, &extents))
+	clip = NULL;
+
+    status = _rectangle_intersect_clip (&extents, clip);
+    if (unlikely (status)) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    status = CAIRO_STATUS_SUCCESS;
+	return status;
+    }
+
+    status = _clip_to_boxes (&clip, &extents, &boxes, &num_boxes);
+    if (unlikely (status)) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    status = CAIRO_STATUS_SUCCESS;
+	return status;
+    }
+
+    _cairo_polygon_init (&polygon);
+    _cairo_polygon_limit (&polygon, boxes, num_boxes);
 
     _cairo_traps_init (&traps);
-    _cairo_traps_limit (&traps, &box);
+    _cairo_traps_limit (&traps, boxes, num_boxes);
 
-    status = _cairo_path_fixed_stroke_to_traps (path,
-						stroke_style,
-						ctm, ctm_inverse,
-						tolerance,
-						&traps);
+    if (path->is_rectilinear) {
+	status = _cairo_path_fixed_stroke_rectilinear_to_traps (path,
+								stroke_style,
+								ctm,
+								&traps);
+	if (likely (status == CAIRO_STATUS_SUCCESS))
+	    goto DO_TRAPS;
+
+	if (_cairo_status_is_error (status))
+	    goto CLEANUP;
+    }
+
+    status = _cairo_path_fixed_stroke_to_polygon (path,
+						  stroke_style,
+						  ctm, ctm_inverse,
+						  tolerance,
+						  &polygon);
     if (unlikely (status))
-	goto FAIL;
+	goto CLEANUP;
 
-    status = _clip_and_composite_trapezoids (source, op,
-					     surface, &traps, antialias,
+    if (polygon.num_edges == 0)
+	goto DO_TRAPS;
+
+    if (_cairo_operator_bounded_by_mask (op)) {
+	cairo_rectangle_int_t polygon_extents;
+
+	_cairo_box_round_to_rectangle (&polygon.extents, &polygon_extents);
+	if (! _cairo_rectangle_intersect (&extents, &polygon_extents))
+	    goto CLEANUP;
+    }
+
+    if (_cairo_surface_check_span_renderer (op, source, surface, antialias)) {
+	cairo_composite_spans_info_t info;
+
+	info.polygon = &polygon;
+	info.fill_rule = CAIRO_FILL_RULE_WINDING;
+	info.antialias = antialias;
+
+	status = _clip_and_composite (clip, op, source,
+				      _composite_spans_draw_func,
+				      &info, surface, &extents);
+	goto CLEANUP;
+    }
+
+    /* Fall back to trapezoid fills. */
+    status = _cairo_bentley_ottmann_tessellate_polygon (&traps,
+							&polygon,
+							CAIRO_FILL_RULE_WINDING);
+    if (unlikely (status))
+	goto CLEANUP;
+
+  DO_TRAPS:
+    status = _clip_and_composite_trapezoids (source, op, surface,
+					     &traps, antialias,
 					     clip, &extents);
-  FAIL:
+  CLEANUP:
     _cairo_traps_fini (&traps);
+    _cairo_polygon_fini (&polygon);
+    if (boxes != boxes_stack)
+	free (boxes);
 
     return status;
 }
@@ -982,11 +1227,14 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
 			      cairo_antialias_t		 antialias,
 			      cairo_clip_t		*clip)
 {
-    cairo_status_t status;
+    cairo_polygon_t polygon;
     cairo_traps_t traps;
-    cairo_box_t box;
+    cairo_box_t boxes_stack[32], *boxes = boxes_stack;
+    int num_boxes = ARRAY_LENGTH (boxes_stack);
     cairo_rectangle_int_t extents;
     cairo_bool_t is_bounded;
+    cairo_bool_t is_rectilinear;
+    cairo_status_t status;
 
     is_bounded = _cairo_surface_get_extents (surface, &extents);
     assert (is_bounded || clip);
@@ -999,74 +1247,114 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
 	    return CAIRO_STATUS_SUCCESS;
     }
 
-    if (! _rectangle_intersect_clip (&extents, clip))
-	return CAIRO_STATUS_SUCCESS;
+    if (_cairo_operator_bounded_by_mask (op)) {
+	cairo_rectangle_int_t path_extents;
 
-    /* XXX future direction:
-       status = _cairo_path_fixed_fill_to_region (path, fill_rule, &region);
-       if (status != CAIRO_STATUS_INT_UNSUPPORTED) {
-	   if (unlikely (status))
-	       return status;
+	_cairo_path_fixed_approximate_fill_extents (path, &path_extents);
+	if (! _cairo_rectangle_intersect (&extents, &path_extents))
+	    return CAIRO_STATUS_SUCCESS;
+    }
 
-         status = _clip_and_composite_region ();
-	 if (status !=  CAIRO_INT_STATUS_UNSUPPORTED)
-	     return status;
-	}
-      */
+    if (clip != NULL && _clip_contains_rectangle (clip, &extents))
+	clip = NULL;
 
-    /* Ask if the surface would like to render this combination of
-     * op/source/dst/antialias with spans or not, but don't actually
-     * make a renderer yet.  We'll try to hit the region optimisations
-     * in _clip_and_composite_trapezoids() if it looks like the path
-     * is a region. */
-    /* TODO: Until we have a mono scan converter we won't even try
-     * to use spans for CAIRO_ANTIALIAS_NONE. */
-    /* TODO: The region filling code should be lifted from
-     * _clip_and_composite_trapezoids() and given first priority
-     * explicitly before deciding between spans and trapezoids. */
-    if (antialias != CAIRO_ANTIALIAS_NONE && ! path->is_rectilinear &&
-	_cairo_surface_check_span_renderer (
-	    op, source, surface, antialias, NULL))
+    if (clip != NULL && clip->path->prev == NULL &&
+	_cairo_path_fixed_equal (&clip->path->path, path))
     {
-	cairo_composite_spans_fill_info_t info;
-	info.path = path;
+	clip = NULL;
+    }
+
+    status = _rectangle_intersect_clip (&extents, clip);
+    if (unlikely (status)) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    status = CAIRO_STATUS_SUCCESS;
+	return status;
+    }
+
+    status = _clip_to_boxes (&clip, &extents, &boxes, &num_boxes);
+    if (unlikely (status)) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    status = CAIRO_STATUS_SUCCESS;
+	return status;
+    }
+
+    _cairo_traps_init (&traps);
+    _cairo_traps_limit (&traps, boxes, num_boxes);
+
+    _cairo_polygon_init (&polygon);
+    _cairo_polygon_limit (&polygon, boxes, num_boxes);
+
+    if (path->is_empty_fill)
+	goto DO_TRAPS;
+
+    is_rectilinear = _cairo_path_fixed_is_rectilinear_fill (path);
+    if (is_rectilinear) {
+	status = _cairo_path_fixed_fill_rectilinear_to_traps (path,
+							      fill_rule,
+							      &traps);
+	if (likely (status == CAIRO_STATUS_SUCCESS))
+	    goto DO_TRAPS;
+
+	if (_cairo_status_is_error (status))
+	    goto CLEANUP;
+    }
+
+    status = _cairo_path_fixed_fill_to_polygon (path, tolerance, &polygon);
+    if (unlikely (status))
+	goto CLEANUP;
+
+    if (polygon.num_edges == 0)
+	goto DO_TRAPS;
+
+    if (_cairo_operator_bounded_by_mask (op)) {
+	cairo_rectangle_int_t polygon_extents;
+
+	_cairo_box_round_to_rectangle (&polygon.extents, &polygon_extents);
+	if (! _cairo_rectangle_intersect (&extents, &polygon_extents))
+	    goto CLEANUP;
+    }
+
+    if (is_rectilinear) {
+	status = _cairo_bentley_ottmann_tessellate_rectilinear_polygon (&traps,
+									&polygon,
+									fill_rule);
+	if (likely (status == CAIRO_STATUS_SUCCESS))
+	    goto DO_TRAPS;
+
+	if (unlikely (_cairo_status_is_error (status)))
+	    goto CLEANUP;
+    }
+
+
+    if (_cairo_surface_check_span_renderer (op, source, surface, antialias)) {
+	cairo_composite_spans_info_t info;
+
+	info.polygon = &polygon;
 	info.fill_rule = fill_rule;
-	info.tolerance = tolerance;
 	info.antialias = antialias;
 
-	if (_cairo_operator_bounded_by_mask (op)) {
-	    cairo_rectangle_int_t path_extents;
-
-	    _cairo_path_fixed_approximate_clip_extents (path,
-							&path_extents);
-	    if (! _cairo_rectangle_intersect (&extents, &path_extents))
-		return CAIRO_STATUS_SUCCESS;
-	}
-
-	return _clip_and_composite (clip, op, source,
-				    _composite_spans_fill_func,
-				    &info,
-				    surface,
-				    &extents);
+	status = _clip_and_composite (clip, op, source,
+				      _composite_spans_draw_func,
+				      &info, surface, &extents);
+	goto CLEANUP;
     }
 
     /* Fall back to trapezoid fills. */
-    _cairo_box_from_rectangle (&box, &extents);
-    _cairo_traps_init (&traps);
-    _cairo_traps_limit (&traps, &box);
-
-    status = _cairo_path_fixed_fill_to_traps (path,
-					      fill_rule,
-					      tolerance,
-					      &traps);
+    status = _cairo_bentley_ottmann_tessellate_polygon (&traps,
+							&polygon,
+							fill_rule);
     if (unlikely (status))
-	goto FAIL;
+	goto CLEANUP;
 
+  DO_TRAPS:
     status = _clip_and_composite_trapezoids (source, op, surface,
 					     &traps, antialias,
 					     clip, &extents);
-  FAIL:
+  CLEANUP:
     _cairo_traps_fini (&traps);
+    _cairo_polygon_fini (&polygon);
+    if (boxes != boxes_stack)
+	free (boxes);
 
     return status;
 }
@@ -1145,6 +1433,14 @@ _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
     is_bounded = _cairo_surface_get_extents (surface, &extents);
     assert (is_bounded || clip);
 
+    if (_cairo_operator_bounded_by_source (op)) {
+	cairo_rectangle_int_t source_extents;
+
+	_cairo_pattern_get_extents (source, &source_extents);
+	if (! _cairo_rectangle_intersect (&extents, &source_extents))
+	    return CAIRO_STATUS_SUCCESS;
+    }
+
     if (_cairo_operator_bounded_by_mask (op)) {
         cairo_rectangle_int_t glyph_extents;
 
@@ -1160,8 +1456,15 @@ _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
 	    return CAIRO_STATUS_SUCCESS;
     }
 
-    if (! _rectangle_intersect_clip (&extents, clip))
-	return CAIRO_STATUS_SUCCESS;
+    if (clip != NULL && _clip_contains_rectangle (clip, &extents))
+	clip = NULL;
+
+    status = _rectangle_intersect_clip (&extents, clip);
+    if (status) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    status = CAIRO_STATUS_SUCCESS;
+	return status;
+    }
 
     glyph_info.font = scaled_font;
     glyph_info.glyphs = glyphs;
