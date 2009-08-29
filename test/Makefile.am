@@ -785,6 +785,9 @@ REFERENCE_IMAGES = \
 	rotate-image-surface-paint.quartz.ref.png \
 	rotate-image-surface-paint.ref.png \
 	rotate-image-surface-paint.svg.ref.png \
+	rotated-clip.ref.png \
+	rotated-clip.ps.ref.png \
+	rotated-clip.xlib.ref.png \
 	scale-down-source-surface-paint.ref.png \
 	scale-offset-image.gl.ref.png \
 	scale-offset-image.pdf.ref.png \

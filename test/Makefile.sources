@@ -165,6 +165,7 @@ test_sources = \
 	rel-path.c					\
 	rgb24-ignore-alpha.c				\
 	rotate-image-surface-paint.c			\
+	rotated-clip.c					\
 	scale-down-source-surface-paint.c		\
 	scale-offset-image.c				\
 	scale-offset-similar.c				\
