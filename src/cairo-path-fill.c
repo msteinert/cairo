@@ -247,22 +247,6 @@ _cairo_path_fixed_fill_rectilinear_to_region (const cairo_path_fixed_t	*path,
     assert (! path->is_empty_fill);
 
     if (_cairo_path_fixed_is_box (path, &box)) {
-	if (box.p1.x > box.p2.x) {
-	    cairo_fixed_t t;
-
-	    t = box.p1.x;
-	    box.p1.x = box.p2.x;
-	    box.p2.x = t;
-	}
-
-	if (box.p1.y > box.p2.y) {
-	    cairo_fixed_t t;
-
-	    t = box.p1.y;
-	    box.p1.y = box.p2.y;
-	    box.p2.y = t;
-	}
-
 	rectangle_stack[0].x = _cairo_fixed_integer_part (box.p1.x);
 	rectangle_stack[0].y = _cairo_fixed_integer_part (box.p1.y);
 	rectangle_stack[0].width = _cairo_fixed_integer_part (box.p2.x) -
@@ -375,22 +359,6 @@ _cairo_path_fixed_fill_rectilinear_to_traps (const cairo_path_fixed_t *path,
     traps->is_rectangular = TRUE;
 
     if (_cairo_path_fixed_is_box (path, &box)) {
-	if (box.p1.x > box.p2.x) {
-	    cairo_fixed_t t;
-
-	    t = box.p1.x;
-	    box.p1.x = box.p2.x;
-	    box.p2.x = t;
-	}
-
-	if (box.p1.y > box.p2.y) {
-	    cairo_fixed_t t;
-
-	    t = box.p1.y;
-	    box.p1.y = box.p2.y;
-	    box.p2.y = t;
-	}
-
 	return _cairo_traps_tessellate_rectangle (traps, &box.p1, &box.p2);
     } else {
 	cairo_path_fixed_iter_t iter;
