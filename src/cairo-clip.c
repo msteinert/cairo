@@ -617,8 +617,10 @@ static cairo_int_status_t
 _cairo_clip_path_to_region_geometric (cairo_clip_path_t *clip_path)
 {
     cairo_traps_t traps;
-    cairo_box_t box;
+    cairo_box_t stack_boxes[CAIRO_STACK_ARRAY_LENGTH (cairo_box_t)];
+    cairo_box_t *boxes = stack_boxes;
     cairo_status_t status;
+    int n;
 
     /* If we have nothing to intersect with this path, then it cannot
      * magically be reduced into a region.
@@ -626,18 +628,46 @@ _cairo_clip_path_to_region_geometric (cairo_clip_path_t *clip_path)
     if (clip_path->prev == NULL)
 	goto UNSUPPORTED;
 
-    /* start simple... */
-    if (! clip_path->path.maybe_fill_region)
+    /* Start simple... Intersect some boxes with an arbitrary path. */
+    if (! clip_path->path.is_rectilinear)
+	goto UNSUPPORTED;
+    if (clip_path->prev->prev != NULL)
 	goto UNSUPPORTED;
 
     _cairo_traps_init (&traps);
-    _cairo_box_from_rectangle (&box, &clip_path->extents);
-    _cairo_traps_limit (&traps, &box, 1);
+    _cairo_box_from_rectangle (&boxes[0], &clip_path->extents);
+    _cairo_traps_limit (&traps, boxes, 1);
 
+    status = _cairo_path_fixed_fill_rectilinear_to_traps (&clip_path->path,
+							  clip_path->fill_rule,
+							  &traps);
+    if (unlikely (_cairo_status_is_error (status)))
+	return status;
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED)
+	goto UNSUPPORTED;
+
+    if (traps.num_traps > ARRAY_LENGTH (stack_boxes)) {
+	boxes = _cairo_malloc_ab (traps.num_traps, sizeof (cairo_box_t));
+	if (unlikely (boxes == NULL))
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+
+    for (n = 0; n < traps.num_traps; n++) {
+	boxes[n].p1.x = traps.traps[n].left.p1.x;
+	boxes[n].p1.y = traps.traps[n].top;
+	boxes[n].p2.x = traps.traps[n].right.p1.x;
+	boxes[n].p2.y = traps.traps[n].bottom;
+    }
+
+    _cairo_traps_clear (&traps);
+    _cairo_traps_limit (&traps, boxes, n);
     status = _cairo_path_fixed_fill_to_traps (&clip_path->prev->path,
 					      clip_path->prev->fill_rule,
 					      clip_path->prev->tolerance,
 					      &traps);
+    if (boxes != stack_boxes)
+	free (boxes);
+
     if (unlikely (status))
 	return status;
 
@@ -689,7 +719,6 @@ _cairo_clip_path_to_region (cairo_clip_path_t *clip_path)
     }
 
     /* now extract the region for ourselves */
-
     clip_path->region =
 	_cairo_path_fixed_fill_rectilinear_to_region (&clip_path->path,
 						      clip_path->fill_rule,
@@ -1107,9 +1136,9 @@ _cairo_clip_path_get_surface (cairo_clip_path_t *clip_path,
 					  CAIRO_OPERATOR_IN,
 					  &pattern.base,
 					  &prev->path,
-					  clip_path->fill_rule,
-					  clip_path->tolerance,
-					  clip_path->antialias,
+					  prev->fill_rule,
+					  prev->tolerance,
+					  prev->antialias,
 					  NULL);
 	    if (need_translate) {
 		_cairo_path_fixed_translate (&prev->path,
