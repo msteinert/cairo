@@ -216,6 +216,7 @@ REFERENCE_IMAGES = \
 	clip-push-group.ps3.rgb24.ref.png \
 	clip-push-group.quartz.ref.png \
 	clip-push-group.ref.png \
+	clip-push-group.svg.ref.png \
 	clip-push-group.xlib.ref.png \
 	clip-stroke.ref.png \
 	clip-stroke.xlib.ref.png \
@@ -240,6 +241,7 @@ REFERENCE_IMAGES = \
 	clipped-group.pdf.ref.png \
 	clipped-group.ps2.ref.png \
 	clipped-group.ps3.ref.png \
+	clipped-group.svg.ref.png \
 	clipped-group.ref.png \
 	clipped-surface.ref.png \
 	clipped-trapezoids.ref.png \
@@ -707,6 +709,8 @@ REFERENCE_IMAGES = \
 	overlapping-glyphs.rgb24.ref.png \
 	overlapping-glyphs.pdf.argb32.xfail.png \
 	overlapping-glyphs.pdf.rgb24.xfail.png \
+	overlapping-glyphs.svg.rgb24.ref.png \
+	overlapping-glyphs.svg.argb32.ref.png \
 	paint-repeat.ref.png \
 	paint-source-alpha.ref.png \
 	paint-source-alpha.svg.ref.png \
@@ -739,6 +743,7 @@ REFERENCE_IMAGES = \
 	radial-gradient.pdf.ref.png \
 	radial-gradient.quartz.ref.png \
 	radial-gradient.ref.png \
+	radial-gradient.svg.xfail.png \
 	random-intersections-eo.ps.ref.png \
 	random-intersections-eo.quartz.ref.png \
 	random-intersections-eo.ref.png \
@@ -782,18 +787,20 @@ REFERENCE_IMAGES = \
 	rotate-image-surface-paint.svg.ref.png \
 	scale-down-source-surface-paint.ref.png \
 	scale-offset-image.gl.ref.png \
-	scale-offset-image.pdf.xfail.png \
+	scale-offset-image.pdf.ref.png \
 	scale-offset-image.ps.ref.png \
 	scale-offset-image.ref.png \
 	scale-offset-image.xfail.png \
+	scale-offset-image.script.xfail.png \
 	scale-offset-image.xlib.xfail.png \
 	scale-offset-image.xlib-fallback.xfail.png \
 	scale-offset-similar.gl.ref.png \
-	scale-offset-similar.pdf.xfail.png \
+	scale-offset-similar.pdf.ref.png \
 	scale-offset-similar.ps.ref.png \
 	scale-offset-similar.ref.png \
 	scale-offset-similar.xfail.png \
 	scale-offset-similar.meta.xfail.png \
+	scale-offset-similar.script.xfail.png \
 	scale-offset-similar.xlib.xfail.png \
 	scale-offset-similar.xlib-fallback.xfail.png \
 	scale-source-surface-paint.ref.png \
@@ -838,11 +845,13 @@ REFERENCE_IMAGES = \
 	smask-text.ps3.ref.png \
 	smask-text.ref.png \
 	smask-text.svg.ref.png \
+	smask-text.script.ref.png \
 	smask-text.xlib.ref.png \
 	smask.pdf.xfail.png \
 	smask.ps.ref.png \
 	smask.ref.png \
 	smask.svg.ref.png \
+	smask.script.ref.png \
 	smask.xlib.ref.png \
 	solid-pattern-cache-stress.ref.png \
 	source-clip-scale.gl.ref.png \
@@ -973,6 +982,7 @@ REFERENCE_IMAGES = \
 	user-font-rescale.ps3.ref.png \
 	user-font-rescale.ref.png \
 	user-font-rescale.svg.ref.png \
+	user-font.pdf.ref.png \
 	user-font.ps.ref.png \
 	user-font.ref.png \
 	user-font.svg.ref.png \
