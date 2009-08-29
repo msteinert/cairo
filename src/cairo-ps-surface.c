@@ -714,7 +714,7 @@ _path_covers_bbox (cairo_ps_surface_t *surface,
 {
     cairo_box_t box;
 
-    if (_cairo_path_fixed_is_rectangle (path, &box)) {
+    if (_cairo_path_fixed_is_box (path, &box)) {
 	cairo_rectangle_int_t rect;
 
 	_cairo_box_round_to_rectangle (&box, &rect);

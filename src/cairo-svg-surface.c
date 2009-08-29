@@ -340,7 +340,7 @@ _cliprect_covers_surface (cairo_svg_surface_t *surface,
 {
     cairo_box_t box;
 
-    if (_cairo_path_fixed_is_rectangle (path, &box)) {
+    if (_cairo_path_fixed_is_box (path, &box)) {
 	if (box.p1.x <= 0 &&
 	    box.p1.y <= 0 &&
 	    _cairo_fixed_to_double (box.p2.x) >= surface->width &&

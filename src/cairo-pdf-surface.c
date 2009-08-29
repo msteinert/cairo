@@ -250,7 +250,7 @@ _path_covers_bbox (cairo_pdf_surface_t *surface,
 {
     cairo_box_t box;
 
-    return _cairo_path_fixed_is_rectangle (path, &box) &&
+    return _cairo_path_fixed_is_box (path, &box) &&
 	   box.p1.x <= 0 &&
 	   box.p1.y <= 0 &&
 	   box.p2.x >= _cairo_fixed_from_double (surface->width) &&

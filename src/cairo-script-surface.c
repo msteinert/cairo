@@ -1554,7 +1554,7 @@ _emit_path (cairo_script_surface_t *surface,
 
     if (path == NULL) {
 	_cairo_path_fixed_init (&surface->cr.current_path);
-    } else if (_cairo_path_fixed_is_rectangle (path, &box)) {
+    } else if (_cairo_path_fixed_is_box (path, &box)) {
 	double x1 = _cairo_fixed_to_double (box.p1.x);
 	double y1 = _cairo_fixed_to_double (box.p1.y);
 	double x2 = _cairo_fixed_to_double (box.p2.x);
@@ -1904,7 +1904,7 @@ _cairo_script_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clip
 
     /* skip the trivial clip covering the surface extents */
     if (surface->width >=0 && surface->height >= 0 &&
-	_cairo_path_fixed_is_rectangle (path, &box))
+	_cairo_path_fixed_is_box (path, &box))
     {
 	if (box.p1.x <= 0 && box.p1.y <= 0 &&
 	    box.p2.x - box.p1.x >= _cairo_fixed_from_double (surface->width) &&
