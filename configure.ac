@@ -39,7 +39,7 @@ AC_CHECK_LIB(z, compress,
 AC_CHECK_LIB(dl, dlsym,
 	     [AC_CHECK_HEADER(dlfcn.h, [
 	      have_dl=yes
-	      AC_DEFINE(HAVE_DL, 1, [Define to 1 if you have dl available]),
+	      AC_DEFINE(HAVE_DL, 1, [Define to 1 if you have dl available])
 	     ], [have_dl=no])], [have_dl=no])
 AM_CONDITIONAL(CAIRO_HAS_DL, test "x$have_dl" = "xyes")
 
