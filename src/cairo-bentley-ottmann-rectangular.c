@@ -570,6 +570,8 @@ _cairo_bo_sweep_line_insert (cairo_bo_sweep_line_t	*sweep_line,
 
     /* right edge */
     pos = sweep_line->current_right;
+    if (pos == &sweep_line->sweep)
+	pos = sweep_line->sweep.prev;
     if (pos != &sweep_line->sweep) {
 	int cmp;
 
@@ -596,6 +598,8 @@ _cairo_bo_sweep_line_insert (cairo_bo_sweep_line_t	*sweep_line,
 
     /* left edge */
     pos = sweep_line->current_left;
+    if (pos == &sweep_line->sweep)
+	pos = sweep_line->sweep.next;
     if (pos != &sweep_line->sweep) {
 	int cmp;
 
