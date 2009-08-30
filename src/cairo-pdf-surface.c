@@ -3265,6 +3265,51 @@ _cairo_pdf_surface_emit_pattern (cairo_pdf_surface_t *surface, cairo_pdf_pattern
 }
 
 static cairo_status_t
+_cairo_pdf_surface_paint_surface_pattern (cairo_pdf_surface_t     *surface,
+					  cairo_surface_pattern_t *source)
+{
+    cairo_pdf_resource_t surface_res;
+    int width, height;
+    cairo_matrix_t cairo_p2d, pdf_p2d;
+    cairo_status_t status;
+
+    status = _cairo_pdf_surface_add_source_surface (surface,
+						    source->surface,
+						    source->base.filter,
+						    &surface_res,
+						    &width,
+						    &height);
+    if (unlikely (status))
+	return status;
+
+    cairo_p2d = source->base.matrix;
+    status = cairo_matrix_invert (&cairo_p2d);
+    /* cairo_pattern_set_matrix ensures the matrix is invertible */
+    assert (status == CAIRO_STATUS_SUCCESS);
+
+    pdf_p2d = surface->cairo_to_pdf;
+    cairo_matrix_multiply (&pdf_p2d, &cairo_p2d, &pdf_p2d);
+    cairo_matrix_translate (&pdf_p2d, 0.0, height);
+    cairo_matrix_scale (&pdf_p2d, 1.0, -1.0);
+    if (! _cairo_surface_is_meta (source->surface))
+	cairo_matrix_scale (&pdf_p2d, width, height);
+
+    if (! _cairo_matrix_is_identity (&pdf_p2d)) {
+	_cairo_output_stream_printf (surface->output,
+				     "%f %f %f %f %f %f cm\n",
+				     pdf_p2d.xx, pdf_p2d.yx,
+				     pdf_p2d.xy, pdf_p2d.yy,
+				     pdf_p2d.x0, pdf_p2d.y0);
+    }
+
+    _cairo_output_stream_printf (surface->output,
+				 "/x%d Do\n",
+				 surface_res.id);
+
+    return _cairo_pdf_surface_add_xobject (surface, surface_res);
+}
+
+static cairo_status_t
 _cairo_pdf_surface_select_operator (cairo_pdf_surface_t *surface,
 				    cairo_operator_t     op)
 {
@@ -5273,6 +5318,19 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (status))
 	return status;
+
+    if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
+	  source->extend == CAIRO_EXTEND_NONE) {
+
+	_cairo_output_stream_printf (surface->output, "q\n");
+	status = _cairo_pdf_surface_paint_surface_pattern (surface,
+							   (cairo_surface_pattern_t *) source);
+	if (unlikely (status))
+	    return status;
+
+	_cairo_output_stream_printf (surface->output, "Q\n");
+	return _cairo_output_stream_get_status (surface->output);
+    }
 
     pattern_res.id = 0;
     gstate_res.id = 0;
