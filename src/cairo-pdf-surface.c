@@ -5617,6 +5617,25 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
     if (unlikely (status))
 	return status;
 
+    if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
+	  source->extend == CAIRO_EXTEND_NONE) {
+
+	_cairo_output_stream_printf (surface->output, "q\n");
+	status =  _cairo_pdf_operators_clip (&surface->pdf_operators,
+					     path,
+					     fill_rule);
+	if (unlikely (status))
+	    return status;
+
+	status = _cairo_pdf_surface_paint_surface_pattern (surface,
+							   (cairo_surface_pattern_t *) source);
+	if (unlikely (status))
+	    return status;
+
+	_cairo_output_stream_printf (surface->output, "Q\n");
+	return _cairo_output_stream_get_status (surface->output);
+    }
+
     pattern_res.id = 0;
     gstate_res.id = 0;
     status = _cairo_pdf_surface_add_pdf_pattern (surface, source, clip,
