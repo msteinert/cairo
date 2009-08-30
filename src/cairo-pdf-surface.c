@@ -4886,7 +4886,8 @@ _cairo_pdf_surface_write_patterns_and_smask_groups (cairo_pdf_surface_t *surface
     group_index = 0;
     surface_index = 0;
     while ((pattern_index < _cairo_array_num_elements (&surface->page_patterns)) ||
-	   (group_index < _cairo_array_num_elements (&surface->smask_groups)))
+	   (group_index < _cairo_array_num_elements (&surface->smask_groups)) ||
+	   (surface_index < _cairo_array_num_elements (&surface->page_surfaces)))
     {
 	for (; group_index < _cairo_array_num_elements (&surface->smask_groups); group_index++) {
 	    _cairo_array_copy_element (&surface->smask_groups, group_index, &group);
