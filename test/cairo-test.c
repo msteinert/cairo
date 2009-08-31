@@ -26,7 +26,6 @@
  */
 
 #define _GNU_SOURCE 1	/* for feenableexcept() et al */
-#define _POSIX_C_SOURCE 200112L /* for flockfile() et al */
 
 #if HAVE_CONFIG_H
 #include "config.h"
@@ -1646,7 +1645,7 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 	}
 	fflush (stdout);
     } else {
-#if _POSIX_THREAD_SAFE_FUNCTIONS
+#if HAVE_FLOCKFILE && HAVE_FUNLOCKFILE
 	flockfile (stdout);
 #endif
 	printf ("%s.%s.%s %d [%d]:\t",
@@ -1678,7 +1677,7 @@ _cairo_test_context_run_for_target (cairo_test_context_t *ctx,
 	}
 
 	fflush (stdout);
-#if _POSIX_THREAD_SAFE_FUNCTIONS
+#if  HAVE_FLOCKFILE && HAVE_FUNLOCKFILE
 	funlockfile (stdout);
 #endif
     }
