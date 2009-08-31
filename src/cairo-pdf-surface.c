@@ -3272,6 +3272,7 @@ _cairo_pdf_surface_paint_surface_pattern (cairo_pdf_surface_t     *surface,
     int width, height;
     cairo_matrix_t cairo_p2d, pdf_p2d;
     cairo_status_t status;
+    int alpha;
 
     status = _cairo_pdf_surface_add_source_surface (surface,
 						    source->surface,
@@ -3302,8 +3303,13 @@ _cairo_pdf_surface_paint_surface_pattern (cairo_pdf_surface_t     *surface,
 				     pdf_p2d.x0, pdf_p2d.y0);
     }
 
+    status = _cairo_pdf_surface_add_alpha (surface, 1.0, &alpha);
+    if (unlikely (status))
+	return status;
+
     _cairo_output_stream_printf (surface->output,
-				 "/x%d Do\n",
+				 "/a%d gs /x%d Do\n",
+				 alpha,
 				 surface_res.id);
 
     return _cairo_pdf_surface_add_xobject (surface, surface_res);
