@@ -461,7 +461,7 @@ void
 _cairo_surface_wrapper_get_font_options (cairo_surface_wrapper_t    *wrapper,
 					 cairo_font_options_t	    *options)
 {
-    return cairo_surface_get_font_options (wrapper->target, options);
+    cairo_surface_get_font_options (wrapper->target, options);
 }
 
 cairo_surface_t *
