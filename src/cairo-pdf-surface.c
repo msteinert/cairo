@@ -3295,6 +3295,10 @@ _cairo_pdf_surface_paint_surface_pattern (cairo_pdf_surface_t     *surface,
     if (! _cairo_surface_is_meta (source->surface))
 	cairo_matrix_scale (&pdf_p2d, width, height);
 
+    status = _cairo_pdf_operators_flush (&surface->pdf_operators);
+    if (unlikely (status))
+	return status;
+
     if (! _cairo_matrix_is_identity (&pdf_p2d)) {
 	_cairo_output_stream_printf (surface->output,
 				     "%f %f %f %f %f %f cm\n",
