@@ -5329,6 +5329,10 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
     if (unlikely (status))
 	return status;
 
+    status = _cairo_pdf_surface_select_operator (surface, op);
+    if (unlikely (status))
+	return status;
+
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
 	  source->extend == CAIRO_EXTEND_NONE) {
 
@@ -5348,10 +5352,6 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
 						 &pattern_res, &gstate_res);
     if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
 	return CAIRO_STATUS_SUCCESS;
-    if (unlikely (status))
-	return status;
-
-    status = _cairo_pdf_surface_select_operator (surface, op);
     if (unlikely (status))
 	return status;
 
@@ -5627,6 +5627,10 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
     if (unlikely (status))
 	return status;
 
+    status = _cairo_pdf_surface_select_operator (surface, op);
+    if (unlikely (status))
+	return status;
+
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
 	  source->extend == CAIRO_EXTEND_NONE) {
 
@@ -5652,10 +5656,6 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
 						 &pattern_res, &gstate_res);
     if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
 	return CAIRO_STATUS_SUCCESS;
-    if (unlikely (status))
-	return status;
-
-    status = _cairo_pdf_surface_select_operator (surface, op);
     if (unlikely (status))
 	return status;
 
