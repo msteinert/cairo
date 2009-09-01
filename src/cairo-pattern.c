@@ -486,7 +486,7 @@ _freed_pattern_get (freed_pool_t *pool)
 	i = 0;
 
     pattern = _atomic_fetch (&pool->pool[i]);
-    if (pattern != NULL) {
+    if (likely (pattern != NULL)) {
 	pool->top = i;
 	return pattern;
     }
@@ -511,8 +511,8 @@ _freed_pattern_put (freed_pool_t *pool,
 {
     int i = pool->top;
 
-    if (i < ARRAY_LENGTH (pool->pool) &&
-	_atomic_store (&pool->pool[i], pattern))
+    if (likely (i < ARRAY_LENGTH (pool->pool) &&
+		_atomic_store (&pool->pool[i], pattern)))
     {
 	pool->top = i + 1;
 	return;
@@ -549,7 +549,7 @@ cairo_pattern_t *
 _cairo_pattern_create_solid (const cairo_color_t *color,
 			     cairo_content_t	  content)
 {
-    cairo_solid_pattern_t *pattern = NULL;
+    cairo_solid_pattern_t *pattern;
 
     pattern =
 	_freed_pattern_get (&freed_pattern_pool[CAIRO_PATTERN_TYPE_SOLID]);
@@ -870,7 +870,6 @@ cairo_pattern_status (cairo_pattern_t *pattern)
 {
     return pattern->status;
 }
-slim_hidden_def (cairo_pattern_status);
 
 /**
  * cairo_pattern_destroy:

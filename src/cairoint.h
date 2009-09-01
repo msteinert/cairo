@@ -2668,7 +2668,6 @@ slim_hidden_proto (cairo_pattern_destroy);
 slim_hidden_proto (cairo_pattern_get_extend);
 slim_hidden_proto_no_warn (cairo_pattern_reference);
 slim_hidden_proto (cairo_pattern_set_matrix);
-slim_hidden_proto (cairo_pattern_status);
 slim_hidden_proto (cairo_pop_group);
 slim_hidden_proto (cairo_push_group_with_content);
 slim_hidden_proto (cairo_rel_line_to);
