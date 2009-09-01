@@ -139,10 +139,10 @@ static inline cairo_bool_t
 _cairo_path_fixed_is_rectilinear_fill (const cairo_path_fixed_t *path)
 {
     if (! path->is_rectilinear)
-	return FALSE;
+	return 0;
 
     if (! path->has_current_point)
-	return TRUE;
+	return 1;
 
     /* check whether the implicit close preserves the rectilinear property */
     return path->current_point.x == path->last_move_point.x ||
