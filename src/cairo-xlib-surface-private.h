@@ -46,12 +46,11 @@ struct _cairo_xlib_surface {
 
     Display *dpy;
     cairo_xlib_display_t *display;
-    cairo_xlib_screen_info_t *screen_info;
+    cairo_xlib_screen_t *screen;
     cairo_xlib_hook_t close_display_hook;
 
     GC gc;
     Drawable drawable;
-    Screen *screen;
     cairo_bool_t owns_pixmap;
     Visual *visual;
 

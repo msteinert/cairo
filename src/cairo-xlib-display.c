@@ -38,7 +38,31 @@
 #include "cairo-xlib-private.h"
 #include "cairo-xlib-xrender-private.h"
 
+#include "cairo-freelist-private.h"
+
 #include <X11/Xlibint.h>	/* For XESetCloseDisplay */
+
+struct _cairo_xlib_display {
+    cairo_xlib_display_t *next;
+    cairo_reference_count_t ref_count;
+    cairo_mutex_t mutex;
+
+    Display *display;
+    cairo_xlib_screen_t *screens;
+
+    int render_major;
+    int render_minor;
+    XRenderPictFormat *cached_xrender_formats[CAIRO_FORMAT_A1 + 1];
+
+    cairo_xlib_job_t *workqueue;
+    cairo_freelist_t wq_freelist;
+
+    cairo_xlib_hook_t *close_display_hooks;
+    unsigned int buggy_gradients :1;
+    unsigned int buggy_pad_reflect :1;
+    unsigned int buggy_repeat :1;
+    unsigned int closed :1;
+};
 
 typedef int (*cairo_xlib_error_func_t) (Display     *display,
 					XErrorEvent *event);
@@ -71,14 +95,14 @@ _cairo_xlib_remove_close_display_hook_internal (cairo_xlib_display_t *display,
 static void
 _cairo_xlib_call_close_display_hooks (cairo_xlib_display_t *display)
 {
-    cairo_xlib_screen_info_t	    *screen;
+    cairo_xlib_screen_t	    *screen;
     cairo_xlib_hook_t		    *hook;
 
     /* call all registered shutdown routines */
     CAIRO_MUTEX_LOCK (display->mutex);
 
     for (screen = display->screens; screen != NULL; screen = screen->next)
-	_cairo_xlib_screen_info_close_display (screen);
+	_cairo_xlib_screen_close_display (screen);
 
     while (TRUE) {
 	hook = display->close_display_hooks;
@@ -99,7 +123,7 @@ _cairo_xlib_call_close_display_hooks (cairo_xlib_display_t *display)
 static void
 _cairo_xlib_display_discard_screens (cairo_xlib_display_t *display)
 {
-    cairo_xlib_screen_info_t *screens;
+    cairo_xlib_screen_t *screens;
 
     CAIRO_MUTEX_LOCK (display->mutex);
     screens = display->screens;
@@ -107,10 +131,10 @@ _cairo_xlib_display_discard_screens (cairo_xlib_display_t *display)
     CAIRO_MUTEX_UNLOCK (display->mutex);
 
     while (screens != NULL) {
-	cairo_xlib_screen_info_t *screen = screens;
+	cairo_xlib_screen_t *screen = screens;
 	screens = screen->next;
 
-	_cairo_xlib_screen_info_destroy (screen);
+	_cairo_xlib_screen_destroy (screen);
     }
 }
 
@@ -558,4 +582,96 @@ _cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
     CAIRO_MUTEX_UNLOCK (display->mutex);
 
     return xrender_format;
+}
+
+Display *
+_cairo_xlib_display_get_dpy (cairo_xlib_display_t *display)
+{
+    return display->display;
+}
+
+void
+_cairo_xlib_display_remove_screen (cairo_xlib_display_t *display,
+				   cairo_xlib_screen_t *screen)
+{
+    cairo_xlib_screen_t **prev;
+    cairo_xlib_screen_t *list;
+
+    CAIRO_MUTEX_LOCK (display->mutex);
+    for (prev = &display->screens; (list = *prev); prev = &list->next) {
+	if (list == screen) {
+	    *prev = screen->next;
+	    break;
+	}
+    }
+    CAIRO_MUTEX_UNLOCK (display->mutex);
+}
+
+cairo_status_t
+_cairo_xlib_display_get_screen (cairo_xlib_display_t *display,
+				Screen *screen,
+				cairo_xlib_screen_t **out)
+{
+    cairo_xlib_screen_t *info = NULL, **prev;
+
+    CAIRO_MUTEX_LOCK (display->mutex);
+    if (display->closed) {
+	CAIRO_MUTEX_UNLOCK (display->mutex);
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
+    }
+
+    for (prev = &display->screens; (info = *prev); prev = &(*prev)->next) {
+	if (info->screen == screen) {
+	    /*
+	     * MRU the list
+	     */
+	    if (prev != &display->screens) {
+		*prev = info->next;
+		info->next = display->screens;
+		display->screens = info;
+	    }
+	    break;
+	}
+    }
+    CAIRO_MUTEX_UNLOCK (display->mutex);
+
+    *out = info;
+    return CAIRO_STATUS_SUCCESS;
+}
+
+
+void
+_cairo_xlib_display_add_screen (cairo_xlib_display_t *display,
+				cairo_xlib_screen_t *screen)
+{
+    CAIRO_MUTEX_LOCK (display->mutex);
+    screen->next = display->screens;
+    display->screens = screen;
+    CAIRO_MUTEX_UNLOCK (display->mutex);
+}
+
+void
+_cairo_xlib_display_get_xrender_version (cairo_xlib_display_t *display,
+					 int *major, int *minor)
+{
+    *major = display->render_major;
+    *minor = display->render_minor;
+}
+
+cairo_bool_t
+_cairo_xlib_display_has_repeat (cairo_xlib_display_t *display)
+{
+    return ! display->buggy_repeat;
+}
+
+cairo_bool_t
+_cairo_xlib_display_has_reflect (cairo_xlib_display_t *display)
+{
+    return ! display->buggy_pad_reflect;
+}
+
+cairo_bool_t
+_cairo_xlib_display_has_gradients (cairo_xlib_display_t *display)
+{
+    return ! display->buggy_gradients;
 }
