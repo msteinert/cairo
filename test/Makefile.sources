@@ -18,6 +18,7 @@ test_sources = \
 	clip-fill.c					\
 	clip-fill-rule.c				\
 	clip-fill-rule-pixel-aligned.c			\
+	clip-image.c					\
 	clip-nesting.c					\
 	clip-operator.c					\
 	clip-push-group.c				\

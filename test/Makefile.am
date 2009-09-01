@@ -177,6 +177,7 @@ REFERENCE_IMAGES = \
 	clip-fill-rule.rgb24.ref.png \
 	clip-fill-rule.test-paginated.rgb24.ref.png \
 	clip-fill-rule.xlib.rgb24.ref.png \
+	clip-image.ref.png \
 	clip-nesting.pdf.argb32.ref.png \
 	clip-nesting.ps2.argb32.ref.png \
 	clip-nesting.ps2.rgb24.ref.png \
