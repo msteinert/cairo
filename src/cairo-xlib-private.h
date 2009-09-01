@@ -85,7 +85,7 @@ struct _cairo_xlib_screen {
     cairo_font_options_t font_options;
 
     GC gc[4];
-    int gc_depths; /* 4 x uint8_t, high bit == needs reset */
+    int gc_depths; /* 4 x uint8_t */
 
     cairo_array_t visuals;
 };
@@ -171,15 +171,13 @@ _cairo_xlib_screen_close_display (cairo_xlib_screen_t *info);
 
 cairo_private GC
 _cairo_xlib_screen_get_gc (cairo_xlib_screen_t *info,
-			   unsigned int depth,
-			   Drawable drawable,
-			   unsigned int *need_reset);
+			   int depth,
+			   Drawable drawable);
 
 cairo_private void
 _cairo_xlib_screen_put_gc (cairo_xlib_screen_t *info,
-			   unsigned int depth,
-			   GC gc,
-			   cairo_bool_t reset_clip);
+			   int depth,
+			   GC gc);
 
 cairo_private cairo_font_options_t *
 _cairo_xlib_screen_get_font_options (cairo_xlib_screen_t *info);

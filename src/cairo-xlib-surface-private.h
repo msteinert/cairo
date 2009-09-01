@@ -49,7 +49,6 @@ struct _cairo_xlib_surface {
     cairo_xlib_screen_t *screen;
     cairo_xlib_hook_t close_display_hook;
 
-    GC gc;
     Drawable drawable;
     cairo_bool_t owns_pixmap;
     Visual *visual;
@@ -88,7 +87,6 @@ struct _cairo_xlib_surface {
     Picture dst_picture, src_picture;
 
     unsigned int clip_dirty;
-    cairo_bool_t gc_has_clip_rects;
     XRectangle embedded_clip_rects[8];
     XRectangle *clip_rects;
     int num_clip_rects;

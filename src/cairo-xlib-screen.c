@@ -380,9 +380,8 @@ _cairo_xlib_screen_get (Display *dpy,
 #if HAS_ATOMIC_OPS
 GC
 _cairo_xlib_screen_get_gc (cairo_xlib_screen_t *info,
-			   unsigned int depth,
-			   Drawable drawable,
-			   unsigned int *dirty)
+			   int depth,
+			   Drawable drawable)
 {
     XGCValues gcv;
     int i, new, old;
@@ -394,13 +393,13 @@ _cairo_xlib_screen_get_gc (cairo_xlib_screen_t *info,
 	if (old == 0)
 	    break;
 
-	if (((old >> 0) & 0x7f) == depth)
+	if (((old >> 0) & 0xff) == depth)
 	    i = 0;
-	else if (((old >> 8) & 0x7f) == depth)
+	else if (((old >> 8) & 0xff) == depth)
 	    i = 1;
-	else if (((old >> 16) & 0x7f) == depth)
+	else if (((old >> 16) & 0xff) == depth)
 	    i = 2;
-	else if (((old >> 24) & 0x7f) == depth)
+	else if (((old >> 24) & 0xff) == depth)
 	    i = 3;
 	else
 	    break;
@@ -411,10 +410,6 @@ _cairo_xlib_screen_get_gc (cairo_xlib_screen_t *info,
 
     if (likely (gc != NULL)) {
 	(void) _cairo_atomic_ptr_cmpxchg (&info->gc[i], gc, NULL);
-
-	if (old & 0x80 << (8 * i))
-	    *dirty |= CAIRO_XLIB_SURFACE_CLIP_DIRTY_GC;
-
 	return gc;
     }
 
@@ -426,25 +421,23 @@ _cairo_xlib_screen_get_gc (cairo_xlib_screen_t *info,
 
 void
 _cairo_xlib_screen_put_gc (cairo_xlib_screen_t *info,
-			   unsigned int depth,
-			   GC gc,
-			   cairo_bool_t reset_clip)
+			   int depth,
+			   GC gc)
 {
     int i, old, new;
 
-    depth |= reset_clip ? 0x80 : 0;
     do {
 	do {
 	    i = -1;
 	    old = info->gc_depths;
 
-	    if (((old >> 0) & 0x7f) == 0)
+	    if (((old >> 0) & 0xff) == 0)
 		i = 0;
-	    else if (((old >> 8) & 0x7f) == 0)
+	    else if (((old >> 8) & 0xff) == 0)
 		i = 1;
-	    else if (((old >> 16) & 0x7f) == 0)
+	    else if (((old >> 16) & 0xff) == 0)
 		i = 2;
-	    else if (((old >> 24) & 0x7f) == 0)
+	    else if (((old >> 24) & 0xff) == 0)
 		i = 3;
 	    else
 		goto out;
@@ -468,19 +461,15 @@ out:
 #else
 GC
 _cairo_xlib_screen_get_gc (cairo_xlib_screen_t *info,
-			   unsigned int depth,
-			   Drawable drawable,
-			   unsigned int *dirty)
+			   int depth,
+			   Drawable drawable)
 {
     GC gc = NULL;
     int i;
 
     CAIRO_MUTEX_LOCK (info->mutex);
     for (i = 0; i < ARRAY_LENGTH (info->gc); i++) {
-	if (((info->gc_depths >> (8*i)) & 0x7f) == depth) {
-	    if (info->gc_depths & 0x80 << (8*i))
-		*dirty |= CAIRO_XLIB_SURFACE_CLIP_DIRTY_GC;
-
+	if (((info->gc_depths >> (8*i)) & 0xff) == depth) {
 	    info->gc_depths &= ~(0xff << (8*i));
 	    gc = info->gc[i];
 	    break;
@@ -502,17 +491,14 @@ _cairo_xlib_screen_get_gc (cairo_xlib_screen_t *info,
 
 void
 _cairo_xlib_screen_put_gc (cairo_xlib_screen_t *info,
-			   unsigned int depth,
-			   GC gc,
-			   cairo_bool_t reset_clip)
+			   int depth,
+			   GC gc)
 {
     int i;
 
-    depth |= reset_clip ? 0x80 : 0;
-
     CAIRO_MUTEX_LOCK (info->mutex);
     for (i = 0; i < ARRAY_LENGTH (info->gc); i++) {
-	if (((info->gc_depths >> (8*i)) & 0x7f) == 0)
+	if (((info->gc_depths >> (8*i)) & 0xff) == 0)
 	    break;
     }
 
