@@ -1099,6 +1099,7 @@ _cairo_pdf_surface_add_source_surface (cairo_pdf_surface_t	*surface,
     cairo_bool_t interpolate;
 
     switch (filter) {
+    default:
     case CAIRO_FILTER_GOOD:
     case CAIRO_FILTER_BEST:
     case CAIRO_FILTER_BILINEAR:

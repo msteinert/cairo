@@ -266,7 +266,7 @@ _cairo_xml_printf (cairo_xml_t *xml, const char *fmt, ...)
     char indent[80];
     int len;
 
-    len = MIN (xml->indent, sizeof (indent));
+    len = MIN (xml->indent, ARRAY_LENGTH (indent));
     memset (indent, ' ', len);
     _cairo_output_stream_write (xml->stream, indent, len);
 
@@ -283,7 +283,7 @@ _cairo_xml_printf_start (cairo_xml_t *xml, const char *fmt, ...)
     char indent[80];
     int len;
 
-    len = MIN (xml->indent, sizeof (indent));
+    len = MIN (xml->indent, ARRAY_LENGTH (indent));
     memset (indent, ' ', len);
     _cairo_output_stream_write (xml->stream, indent, len);
 
@@ -535,7 +535,7 @@ static void
 _cairo_xml_emit_gradient (cairo_xml_t *xml,
 			  const cairo_gradient_pattern_t *gradient)
 {
-    int i;
+    unsigned int i;
 
     for (i = 0; i < gradient->n_stops; i++) {
 	_cairo_xml_printf (xml,
@@ -784,7 +784,7 @@ _cairo_xml_surface_stroke (void				*abstract_surface,
 	return status;
 
     if (style->num_dashes) {
-	int i;
+	unsigned int i;
 
 	_cairo_xml_printf_start (xml, "<dash offset='%f'>",
 				 style->dash_offset);
