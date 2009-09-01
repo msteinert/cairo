@@ -117,8 +117,19 @@ static const cairo_boilerplate_target_t targets[] = {
     /* Acceleration architectures may make the results differ by a
      * bit, so we set the error tolerance to 1. */
     {
-	"xcb", "xcb", NULL, NULL,
+	"xcb", "xlib", NULL, NULL,
 	CAIRO_SURFACE_TYPE_XCB, CAIRO_CONTENT_COLOR_ALPHA, 1,
+	"cairo_xcb_surface_create_with_xrender_format",
+	_cairo_boilerplate_xcb_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	_cairo_boilerplate_xcb_cleanup,
+	_cairo_boilerplate_xcb_synchronize
+    },
+    {
+	"xcb", "xlib", NULL, NULL,
+	CAIRO_SURFACE_TYPE_XCB, CAIRO_CONTENT_COLOR, 1,
 	"cairo_xcb_surface_create_with_xrender_format",
 	_cairo_boilerplate_xcb_create_surface,
 	NULL, NULL,
