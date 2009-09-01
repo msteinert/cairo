@@ -22,7 +22,6 @@
 #ifndef CAIRO_FREELIST_H
 #define CAIRO_FREELIST_H
 
-#include "cairoint.h"
 #include "cairo-types-private.h"
 #include "cairo-compiler-private.h"
 
@@ -97,32 +96,8 @@ _cairo_freepool_init (cairo_freepool_t *freepool, unsigned nodesize);
 cairo_private void
 _cairo_freepool_fini (cairo_freepool_t *freepool);
 
-static inline void *
-_cairo_freepool_alloc_from_new_pool (cairo_freepool_t *freepool)
-{
-    cairo_freelist_pool_t *pool;
-    int poolsize;
-
-    if (freepool->pools != &freepool->embedded_pool)
-	poolsize = 2 * freepool->pools->size;
-    else
-	poolsize = (128 * freepool->nodesize + 8191) & -8192;
-    pool = malloc (sizeof (cairo_freelist_pool_t) + poolsize);
-    if (unlikely (pool == NULL))
-	return pool;
-
-    pool->next = freepool->pools;
-    freepool->pools = pool;
-
-    pool->size = poolsize;
-    pool->rem = poolsize - freepool->nodesize;
-    pool->data = (uint8_t *) (pool + 1) + freepool->nodesize;
-
-    VG (VALGRIND_MAKE_MEM_NOACCESS (pool->data, poolsize));
-    VG (VALGRIND_MAKE_MEM_UNDEFINED (pool->data, freepool->nodesize));
-
-    return pool + 1;
-}
+cairo_private void *
+_cairo_freepool_alloc_from_new_pool (cairo_freepool_t *freepool);
 
 static inline void *
 _cairo_freepool_alloc_from_pool (cairo_freepool_t *freepool)
