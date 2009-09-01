@@ -2277,12 +2277,14 @@ _cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
     double old_width, old_height;
     cairo_matrix_t old_cairo_to_ps;
     cairo_content_t old_content;
+    cairo_rectangle_int_t old_page_bbox;
     cairo_box_t bbox;
     cairo_status_t status;
 
     old_content = surface->content;
     old_width = surface->width;
     old_height = surface->height;
+    old_page_bbox = surface->page_bbox;
     old_cairo_to_ps = surface->cairo_to_ps;
 
     status =
@@ -2292,9 +2294,18 @@ _cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
     if (unlikely (status))
 	return status;
 
-    /* XXX is this still necessary? */
+#if DEBUG_PS
+    _cairo_output_stream_printf (surface->stream,
+				 "%% _cairo_ps_surface_emit_meta_surface (%f, %f), (%f, %f)\n",
+				 _cairo_fixed_to_double (bbox.p1.x),
+				 _cairo_fixed_to_double (bbox.p1.y),
+				 _cairo_fixed_to_double (bbox.p2.x),
+				 _cairo_fixed_to_double (bbox.p2.y));
+#endif
+
     surface->width = _cairo_fixed_to_double (bbox.p2.x - bbox.p1.x);
     surface->height = _cairo_fixed_to_double (bbox.p2.y - bbox.p1.y);
+    _cairo_box_round_to_rectangle (&bbox, &surface->page_bbox);
 
     surface->current_pattern_is_solid_color = FALSE;
     _cairo_pdf_operators_reset (&surface->pdf_operators);
@@ -2325,6 +2336,7 @@ _cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
     surface->content = old_content;
     surface->width = old_width;
     surface->height = old_height;
+    surface->page_bbox = old_page_bbox;
     surface->current_pattern_is_solid_color = FALSE;
     _cairo_pdf_operators_reset (&surface->pdf_operators);
     surface->cairo_to_ps = old_cairo_to_ps;
@@ -3235,21 +3247,6 @@ _cairo_ps_surface_get_font_options (void                  *abstract_surface,
     cairo_font_options_set_antialias (options, CAIRO_ANTIALIAS_GRAY);
 }
 
-static cairo_bool_t
-_rectangle_intersect_clip (cairo_rectangle_int_t *extents, cairo_clip_t *clip)
-{
-    const cairo_rectangle_int_t *clip_extents;
-
-    clip_extents = NULL;
-    if (clip != NULL)
-	clip_extents = _cairo_clip_get_extents (clip);
-
-    if (clip_extents != NULL)
-	return _cairo_rectangle_intersect (extents, clip_extents);
-
-    return TRUE;
-}
-
 static cairo_int_status_t
 _cairo_ps_surface_paint (void			*abstract_surface,
 			 cairo_operator_t	 op,
@@ -3271,8 +3268,13 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 				 "%% _cairo_ps_surface_paint\n");
 #endif
 
-    extents = surface->page_bbox;
-    if (! _rectangle_intersect_clip (&extents, clip))
+    status = _cairo_surface_paint_extents (&surface->base,
+					   op, source, clip,
+					   &extents);
+    if (unlikely (status))
+	return status;
+
+    if (! _cairo_rectangle_intersect (&extents, &surface->page_bbox))
 	return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
@@ -3333,8 +3335,16 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
 				 "%% _cairo_ps_surface_stroke\n");
 #endif
 
-    extents = surface->page_bbox;
-    if (! _rectangle_intersect_clip (&extents, clip))
+    status = _cairo_surface_stroke_extents (&surface->base,
+					    op, source,
+					    path, style,
+					    ctm, ctm_inverse,
+					    tolerance, antialias,
+					    clip, &extents);
+    if (unlikely (status))
+	return status;
+
+    if (! _cairo_rectangle_intersect (&extents, &surface->page_bbox))
 	return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
@@ -3379,13 +3389,20 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 				 "%% _cairo_ps_surface_fill\n");
 #endif
 
-    extents = surface->page_bbox;
-    if (! _rectangle_intersect_clip (&extents, clip))
-	return CAIRO_STATUS_SUCCESS;
-
     status = _cairo_pdf_operators_flush (&surface->pdf_operators);
     if (unlikely (status))
 	return status;
+
+    status = _cairo_surface_fill_extents (&surface->base,
+					  op, source,
+					  path, fill_rule,
+					  tolerance, antialias,
+					  clip, &extents);
+    if (unlikely (status))
+	return status;
+
+    if (! _cairo_rectangle_intersect (&extents, &surface->page_bbox))
+	return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (status))
@@ -3454,8 +3471,15 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
     if (num_glyphs <= 0)
         return CAIRO_STATUS_SUCCESS;
 
-    extents = surface->page_bbox;
-    if (! _rectangle_intersect_clip (&extents, clip))
+    status = _cairo_surface_glyphs_extents (&surface->base,
+					    op, source,
+					    glyphs, num_glyphs,
+					    scaled_font,
+					    clip, &extents);
+    if (unlikely (status))
+	return status;
+
+    if (! _cairo_rectangle_intersect (&extents, &surface->page_bbox))
 	return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);

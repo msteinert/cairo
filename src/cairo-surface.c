@@ -2841,6 +2841,168 @@ _cairo_surface_set_resolution (cairo_surface_t *surface,
     surface->y_resolution = y_res;
 }
 
+/* Generic methods for determining operation extents. */
+
+static void
+_rectangle_intersect_clip (cairo_rectangle_int_t *extents, cairo_clip_t *clip)
+{
+    const cairo_rectangle_int_t *clip_extents;
+    cairo_bool_t is_empty;
+
+    clip_extents = NULL;
+    if (clip != NULL)
+	clip_extents = _cairo_clip_get_extents (clip);
+
+    if (clip_extents != NULL)
+	is_empty = _cairo_rectangle_intersect (extents, clip_extents);
+}
+
+static void
+_cairo_surface_operation_extents (cairo_surface_t *surface,
+				  cairo_operator_t op,
+				  const cairo_pattern_t *source,
+				  cairo_clip_t *clip,
+				  cairo_rectangle_int_t *extents)
+{
+    cairo_bool_t is_empty;
+
+    is_empty = _cairo_surface_get_extents (surface, extents);
+
+    if (_cairo_operator_bounded_by_source (op)) {
+	cairo_rectangle_int_t source_extents;
+
+	_cairo_pattern_get_extents (source, &source_extents);
+	is_empty = _cairo_rectangle_intersect (extents, &source_extents);
+    }
+
+    _rectangle_intersect_clip (extents, clip);
+}
+
+cairo_status_t
+_cairo_surface_paint_extents (cairo_surface_t *surface,
+			      cairo_operator_t		op,
+			      const cairo_pattern_t	*source,
+			      cairo_clip_t		*clip,
+			      cairo_rectangle_int_t	*extents)
+{
+    _cairo_surface_operation_extents (surface, op, source, clip, extents);
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_surface_mask_extents (cairo_surface_t *surface,
+			     cairo_operator_t		 op,
+			     const cairo_pattern_t	*source,
+			     const cairo_pattern_t	*mask,
+			     cairo_clip_t		*clip,
+			     cairo_rectangle_int_t	*extents)
+{
+    cairo_bool_t is_empty;
+
+    _cairo_surface_operation_extents (surface, op, source, clip, extents);
+
+    if (_cairo_operator_bounded_by_mask (op)) {
+	cairo_rectangle_int_t mask_extents;
+
+	_cairo_pattern_get_extents (mask, &mask_extents);
+	is_empty = _cairo_rectangle_intersect (extents, &mask_extents);
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_surface_stroke_extents (cairo_surface_t *surface,
+			       cairo_operator_t op,
+			       const cairo_pattern_t *source,
+			       cairo_path_fixed_t	*path,
+			       cairo_stroke_style_t *style,
+			       const cairo_matrix_t *ctm,
+			       const cairo_matrix_t *ctm_inverse,
+			       double tolerance,
+			       cairo_antialias_t	 antialias,
+			       cairo_clip_t *clip,
+			       cairo_rectangle_int_t *extents)
+{
+    cairo_status_t status;
+    cairo_bool_t is_empty;
+
+    _cairo_surface_operation_extents (surface, op, source, clip, extents);
+
+    if (_cairo_operator_bounded_by_mask (op)) {
+	cairo_rectangle_int_t mask_extents;
+
+	status = _cairo_path_fixed_stroke_extents (path, style,
+						   ctm, ctm_inverse,
+						   tolerance,
+						   &mask_extents);
+	if (unlikely (status))
+	    return status;
+
+	is_empty = _cairo_rectangle_intersect (extents, &mask_extents);
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_surface_fill_extents (cairo_surface_t		*surface,
+			     cairo_operator_t		 op,
+			     const cairo_pattern_t	*source,
+			     cairo_path_fixed_t		*path,
+			     cairo_fill_rule_t		 fill_rule,
+			     double			 tolerance,
+			     cairo_antialias_t		 antialias,
+			     cairo_clip_t		*clip,
+			     cairo_rectangle_int_t	*extents)
+{
+    cairo_bool_t is_empty;
+
+    _cairo_surface_operation_extents (surface, op, source, clip, extents);
+
+    if (_cairo_operator_bounded_by_mask (op)) {
+	cairo_rectangle_int_t mask_extents;
+
+	_cairo_path_fixed_fill_extents (path, fill_rule, tolerance,
+					&mask_extents);
+	is_empty = _cairo_rectangle_intersect (extents, &mask_extents);
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_status_t
+_cairo_surface_glyphs_extents (cairo_surface_t *surface,
+			       cairo_operator_t	   op,
+			       const cairo_pattern_t *source,
+			       cairo_glyph_t	  *glyphs,
+			       int		   num_glyphs,
+			       cairo_scaled_font_t  *scaled_font,
+			       cairo_clip_t         *clip,
+			       cairo_rectangle_int_t *extents)
+{
+    cairo_status_t	     status;
+    cairo_bool_t             is_empty;
+
+    _cairo_surface_operation_extents (surface, op, source, clip, extents);
+
+    if (_cairo_operator_bounded_by_mask (op)) {
+	cairo_rectangle_int_t glyph_extents;
+
+	status = _cairo_scaled_font_glyph_device_extents (scaled_font,
+							  glyphs,
+							  num_glyphs,
+							  &glyph_extents,
+							  NULL);
+	if (unlikely (status))
+	    return status;
+
+	is_empty = _cairo_rectangle_intersect (extents, &glyph_extents);
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 cairo_surface_t *
 _cairo_surface_create_in_error (cairo_status_t status)
 {

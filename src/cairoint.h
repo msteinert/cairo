@@ -1950,6 +1950,55 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 				 cairo_clip_t		    *clip);
 
 cairo_private cairo_status_t
+_cairo_surface_paint_extents (cairo_surface_t *surface,
+			      cairo_operator_t		op,
+			      const cairo_pattern_t	*source,
+			      cairo_clip_t		*clip,
+			      cairo_rectangle_int_t	*extents);
+
+cairo_private cairo_status_t
+_cairo_surface_mask_extents (cairo_surface_t *surface,
+			     cairo_operator_t		 op,
+			     const cairo_pattern_t	*source,
+			     const cairo_pattern_t	*mask,
+			     cairo_clip_t		*clip,
+			     cairo_rectangle_int_t	*extents);
+
+cairo_private cairo_status_t
+_cairo_surface_stroke_extents (cairo_surface_t *surface,
+			       cairo_operator_t op,
+			       const cairo_pattern_t *source,
+			       cairo_path_fixed_t	*path,
+			       cairo_stroke_style_t *style,
+			       const cairo_matrix_t *ctm,
+			       const cairo_matrix_t *ctm_inverse,
+			       double tolerance,
+			       cairo_antialias_t	 antialias,
+			       cairo_clip_t *clip,
+			       cairo_rectangle_int_t *extents);
+
+cairo_private cairo_status_t
+_cairo_surface_fill_extents (cairo_surface_t		*surface,
+			     cairo_operator_t		 op,
+			     const cairo_pattern_t	*source,
+			     cairo_path_fixed_t		*path,
+			     cairo_fill_rule_t		 fill_rule,
+			     double			 tolerance,
+			     cairo_antialias_t		 antialias,
+			     cairo_clip_t		*clip,
+			     cairo_rectangle_int_t	*extents);
+
+cairo_private cairo_status_t
+_cairo_surface_glyphs_extents (cairo_surface_t *surface,
+			       cairo_operator_t	   op,
+			       const cairo_pattern_t *source,
+			       cairo_glyph_t	  *glyphs,
+			       int		   num_glyphs,
+			       cairo_scaled_font_t  *scaled_font,
+			       cairo_clip_t         *clip,
+			       cairo_rectangle_int_t *extents);
+
+cairo_private cairo_status_t
 _cairo_surface_composite_trapezoids (cairo_operator_t	op,
 				     const cairo_pattern_t *pattern,
 				     cairo_surface_t	*dst,

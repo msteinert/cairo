@@ -1162,7 +1162,7 @@ _cairo_pdf_surface_add_source_surface (cairo_pdf_surface_t	*surface,
 static cairo_status_t
 _cairo_pdf_surface_add_pdf_pattern (cairo_pdf_surface_t		*surface,
 				    const cairo_pattern_t	*pattern,
-				    cairo_clip_t		*clip,
+				    const cairo_rectangle_int_t	*extents,
 				    cairo_pdf_resource_t	*pattern_res,
 				    cairo_pdf_resource_t	*gstate_res)
 {
@@ -1221,8 +1221,8 @@ _cairo_pdf_surface_add_pdf_pattern (cairo_pdf_surface_t		*surface,
 
     pdf_pattern.width = surface->width;
     pdf_pattern.height = surface->height;
-    if (clip != NULL) {
-	pdf_pattern.extents = clip->path->extents;
+    if (extents != NULL) {
+	pdf_pattern.extents = *extents;
     } else {
 	pdf_pattern.extents.x = 0;
 	pdf_pattern.extents.y = 0;
@@ -5315,6 +5315,7 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
     cairo_status_t status;
     cairo_pdf_smask_group_t *group;
     cairo_pdf_resource_t pattern_res, gstate_res;
+    cairo_rectangle_int_t extents;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
 	return _cairo_pdf_surface_analyze_operation (surface, op, source);
@@ -5347,9 +5348,15 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
 	return _cairo_output_stream_get_status (surface->output);
     }
 
+    status = _cairo_surface_paint_extents (&surface->base,
+					   op, source, clip,
+					   &extents);
+    if (unlikely (status))
+	return status;
+
     pattern_res.id = 0;
     gstate_res.id = 0;
-    status = _cairo_pdf_surface_add_pdf_pattern (surface, source, clip,
+    status = _cairo_pdf_surface_add_pdf_pattern (surface, source, &extents,
 						 &pattern_res, &gstate_res);
     if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
 	return CAIRO_STATUS_SUCCESS;
@@ -5512,6 +5519,7 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
     cairo_status_t status;
     cairo_pdf_smask_group_t *group;
     cairo_pdf_resource_t pattern_res, gstate_res;
+    cairo_rectangle_int_t extents;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _cairo_pdf_surface_analyze_operation (surface, op, source);
@@ -5522,9 +5530,17 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
     if (unlikely (status))
 	return status;
 
+    status = _cairo_surface_stroke_extents (&surface->base,
+					    op, source, path,
+					    style, ctm, ctm_inverse,
+					    tolerance, antialias,
+					    clip, &extents);
+    if (unlikely (status))
+	return status;
+
     pattern_res.id = 0;
     gstate_res.id = 0;
-    status = _cairo_pdf_surface_add_pdf_pattern (surface, source, clip,
+    status = _cairo_pdf_surface_add_pdf_pattern (surface, source, &extents,
 						 &pattern_res, &gstate_res);
     if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
 	return CAIRO_STATUS_SUCCESS;
@@ -5613,6 +5629,7 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
     cairo_status_t status;
     cairo_pdf_smask_group_t *group;
     cairo_pdf_resource_t pattern_res, gstate_res;
+    cairo_rectangle_int_t extents;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
 	return _cairo_pdf_surface_analyze_operation (surface, op, source);
@@ -5651,9 +5668,16 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
 	return _cairo_output_stream_get_status (surface->output);
     }
 
+    status = _cairo_surface_fill_extents (&surface->base,
+					  op, source, path, fill_rule,
+					  tolerance, antialias,
+					  clip, &extents);
+    if (unlikely (status))
+	return status;
+
     pattern_res.id = 0;
     gstate_res.id = 0;
-    status = _cairo_pdf_surface_add_pdf_pattern (surface, source, clip,
+    status = _cairo_pdf_surface_add_pdf_pattern (surface, source, &extents,
 						 &pattern_res, &gstate_res);
     if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
 	return CAIRO_STATUS_SUCCESS;
@@ -5740,6 +5764,7 @@ _cairo_pdf_surface_fill_stroke (void		     *abstract_surface,
     cairo_pdf_surface_t *surface = abstract_surface;
     cairo_status_t status;
     cairo_pdf_resource_t fill_pattern_res, stroke_pattern_res, gstate_res;
+    cairo_rectangle_int_t extents;
 
     /* During analysis we return unsupported and let the _fill and
      * _stroke functions that are on the fallback path do the analysis
@@ -5771,10 +5796,18 @@ _cairo_pdf_surface_fill_stroke (void		     *abstract_surface,
     if (unlikely (status))
 	return status;
 
+    status = _cairo_surface_fill_extents (&surface->base,
+					  fill_op, fill_source, path, fill_rule,
+					  fill_tolerance, fill_antialias,
+					  clip, &extents);
+    if (unlikely (status))
+	return status;
+
+
     fill_pattern_res.id = 0;
     gstate_res.id = 0;
     status = _cairo_pdf_surface_add_pdf_pattern (surface, fill_source,
-						 clip,
+						 &extents,
 						 &fill_pattern_res,
 						 &gstate_res);
     if (unlikely (status))
@@ -5782,11 +5815,19 @@ _cairo_pdf_surface_fill_stroke (void		     *abstract_surface,
 
     assert (gstate_res.id == 0);
 
+    status = _cairo_surface_stroke_extents (&surface->base,
+					    stroke_op, stroke_source, path,
+					    stroke_style, stroke_ctm, stroke_ctm_inverse,
+					    stroke_tolerance, stroke_antialias,
+					    clip, &extents);
+    if (unlikely (status))
+	return status;
+
     stroke_pattern_res.id = 0;
     gstate_res.id = 0;
     status = _cairo_pdf_surface_add_pdf_pattern (surface,
 						 stroke_source,
-						 clip,
+						 &extents,
 						 &stroke_pattern_res,
 						 &gstate_res);
     if (unlikely (status))
@@ -5846,6 +5887,7 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
     cairo_status_t status;
     cairo_pdf_smask_group_t *group;
     cairo_pdf_resource_t pattern_res, gstate_res;
+    cairo_rectangle_int_t extents;
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
 	return _cairo_pdf_surface_analyze_operation (surface, op, source);
@@ -5856,9 +5898,16 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
     if (unlikely (status))
 	return status;
 
+    status = _cairo_surface_glyphs_extents (&surface->base, op, source,
+					    glyphs, num_glyphs,
+					    scaled_font,
+					    clip, &extents);
+    if (unlikely (status))
+	return status;
+
     pattern_res.id = 0;
     gstate_res.id = 0;
-    status = _cairo_pdf_surface_add_pdf_pattern (surface, source, clip,
+    status = _cairo_pdf_surface_add_pdf_pattern (surface, source, &extents,
 						 &pattern_res, &gstate_res);
     if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
 	return CAIRO_STATUS_SUCCESS;
