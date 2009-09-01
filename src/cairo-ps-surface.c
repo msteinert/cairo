@@ -2317,9 +2317,11 @@ _cairo_ps_surface_emit_meta_surface (cairo_ps_surface_t  *surface,
     if (cairo_surface_get_content (meta_surface) == CAIRO_CONTENT_COLOR) {
 	surface->content = CAIRO_CONTENT_COLOR;
 	_cairo_output_stream_printf (surface->stream,
-				     "  0 g 0 0 %f %f rectfill\n",
-				     surface->width,
-				     surface->height);
+				     "  0 g %d %d %d %d rectfill\n",
+				     surface->page_bbox.x,
+				     surface->page_bbox.y,
+				     surface->page_bbox.width,
+				     surface->page_bbox.height);
     }
 
     status = _cairo_meta_surface_replay_region (meta_surface, &surface->base,
@@ -2527,6 +2529,35 @@ _cairo_ps_surface_release_surface (cairo_ps_surface_t      *surface,
     surface->image = NULL;
 }
 
+static void
+_path_fixed_init_rectangle (cairo_path_fixed_t *path,
+			    cairo_rectangle_int_t *rect)
+{
+    cairo_status_t status;
+
+    _cairo_path_fixed_init (path);
+
+    status = _cairo_path_fixed_move_to (path,
+					_cairo_fixed_from_int (rect->x),
+					_cairo_fixed_from_int (rect->y));
+    assert (status == CAIRO_STATUS_SUCCESS);
+    status = _cairo_path_fixed_rel_line_to (path,
+					    _cairo_fixed_from_int (rect->width),
+					    _cairo_fixed_from_int (0));
+    assert (status == CAIRO_STATUS_SUCCESS);
+    status = _cairo_path_fixed_rel_line_to (path,
+					    _cairo_fixed_from_int (0),
+					    _cairo_fixed_from_int (rect->height));
+    assert (status == CAIRO_STATUS_SUCCESS);
+    status = _cairo_path_fixed_rel_line_to (path,
+					    _cairo_fixed_from_int (-rect->width),
+					    _cairo_fixed_from_int (0));
+    assert (status == CAIRO_STATUS_SUCCESS);
+
+    status = _cairo_path_fixed_close_path (path);
+    assert (status == CAIRO_STATUS_SUCCESS);
+}
+
 static cairo_status_t
 _cairo_ps_surface_paint_surface (cairo_ps_surface_t      *surface,
 				 cairo_surface_pattern_t *pattern,
@@ -2536,6 +2567,7 @@ _cairo_ps_surface_paint_surface (cairo_ps_surface_t      *surface,
     cairo_status_t status;
     int width, height;
     cairo_matrix_t cairo_p2d, ps_p2d;
+    cairo_path_fixed_t path;
     int origin_x = 0;
     int origin_y = 0;
 
@@ -2544,6 +2576,14 @@ _cairo_ps_surface_paint_surface (cairo_ps_surface_t      *surface,
 						extents,
 						&width, &height,
 						&origin_x, &origin_y);
+    if (unlikely (status))
+	return status;
+
+    _path_fixed_init_rectangle (&path, extents);
+    status = _cairo_pdf_operators_clip (&surface->pdf_operators,
+					&path,
+					CAIRO_FILL_RULE_WINDING);
+    _cairo_path_fixed_fini (&path);
     if (unlikely (status))
 	return status;
 
