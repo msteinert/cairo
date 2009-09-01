@@ -51,7 +51,7 @@ typedef struct _cairo_tee_surface {
 } cairo_tee_surface_t;
 
 slim_hidden_proto (cairo_tee_surface_create);
-slim_hidden_proto (cairo_tee_surface_append);
+slim_hidden_proto (cairo_tee_surface_add);
 
 static cairo_surface_t *
 _cairo_tee_surface_create_similar (void			*abstract_surface,
@@ -80,7 +80,7 @@ _cairo_tee_surface_create_similar (void			*abstract_surface,
 	similar = _cairo_surface_wrapper_create_similar (&slaves[n],
 							 content,
 							 width, height);
-	cairo_tee_surface_append (surface, similar);
+	cairo_tee_surface_add (surface, similar);
 	cairo_surface_destroy (similar);
     }
 
@@ -457,8 +457,8 @@ cairo_tee_surface_create (cairo_surface_t *master)
 slim_hidden_def (cairo_tee_surface_create);
 
 void
-cairo_tee_surface_append (cairo_surface_t *abstract_surface,
-			  cairo_surface_t *target)
+cairo_tee_surface_add (cairo_surface_t *abstract_surface,
+		       cairo_surface_t *target)
 {
     cairo_tee_surface_t *surface;
     cairo_surface_wrapper_t slave;
@@ -487,7 +487,48 @@ cairo_tee_surface_append (cairo_surface_t *abstract_surface,
 	status = _cairo_surface_set_error (&surface->base, status);
     }
 }
-slim_hidden_def (cairo_tee_surface_append);
+slim_hidden_def (cairo_tee_surface_add);
+
+void
+cairo_tee_surface_remove (cairo_surface_t *abstract_surface,
+			  cairo_surface_t *target)
+{
+    cairo_tee_surface_t *surface;
+    cairo_surface_wrapper_t *slaves;
+    int n, num_slaves;
+    cairo_status_t status;
+
+    if (abstract_surface->backend != &cairo_tee_surface_backend) {
+	status = _cairo_surface_set_error (abstract_surface,
+					   _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
+	return;
+    }
+
+    surface = (cairo_tee_surface_t *) abstract_surface;
+    if (target == surface->master.target) {
+	status = _cairo_surface_set_error (abstract_surface,
+					   _cairo_error (CAIRO_STATUS_INVALID_INDEX));
+	return;
+    }
+
+    num_slaves = _cairo_array_num_elements (&surface->slaves);
+    slaves = _cairo_array_index (&surface->slaves, 0);
+    for (n = 0; n < num_slaves; n++) {
+	if (slaves[n].target == target)
+	    break;
+    }
+
+    if (n == num_slaves) {
+	status = _cairo_surface_set_error (abstract_surface,
+					   _cairo_error (CAIRO_STATUS_INVALID_INDEX));
+	return;
+    }
+
+    _cairo_surface_wrapper_fini (&slaves[n]);
+    for (n++; n < num_slaves; n++)
+	slaves[n-1] = slaves[n];
+    surface->slaves.num_elements--; /* XXX: cairo_array_remove()? */
+}
 
 cairo_surface_t *
 cairo_tee_surface_index (cairo_surface_t *abstract_surface,

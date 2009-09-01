@@ -136,7 +136,7 @@ cairo_create (cairo_surface_t *surface)
 	tee = DLCALL (cairo_tee_surface_create, surface);
 	script = DLCALL (cairo_script_surface_create,
 			 fdr_context, content, extents.width, extents.height);
-	DLCALL (cairo_tee_surface_append, tee, script);
+	DLCALL (cairo_tee_surface_add, tee, script);
 
 	DLCALL (cairo_surface_set_user_data, surface,
 		&fdr_key, tee, fdr_surface_destroy);

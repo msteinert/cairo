@@ -164,7 +164,7 @@ cairo_create (cairo_surface_t *surface)
 
 	tee = DLCALL (cairo_tee_surface_create, surface);
 	record = DLCALL (cairo_meta_surface_create, content, &extents);
-	DLCALL (cairo_tee_surface_append, tee, record);
+	DLCALL (cairo_tee_surface_add, tee, record);
 
 	DLCALL (cairo_surface_set_user_data, surface,
 		&fdr_key, tee, fdr_surface_destroy);
