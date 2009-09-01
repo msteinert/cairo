@@ -20,8 +20,6 @@
  * OF THIS SOFTWARE.
  */
 
-#include "cairoint.h"
-
 #include "cairo-freelist-private.h"
 
 void
@@ -110,31 +108,4 @@ _cairo_freepool_fini (cairo_freepool_t *freepool)
 	pool = next;
     }
     VG (VALGRIND_MAKE_MEM_NOACCESS (freepool, sizeof (freepool)));
-}
-
-void *
-_cairo_freepool_alloc_from_new_pool (cairo_freepool_t *freepool)
-{
-    cairo_freelist_pool_t *pool;
-    int poolsize;
-
-    if (freepool->pools != &freepool->embedded_pool)
-	poolsize = 2 * freepool->pools->size;
-    else
-	poolsize = (128 * freepool->nodesize + 8191) & -8192;
-    pool = malloc (sizeof (cairo_freelist_pool_t) + poolsize);
-    if (unlikely (pool == NULL))
-	return pool;
-
-    pool->next = freepool->pools;
-    freepool->pools = pool;
-
-    pool->size = poolsize;
-    pool->rem = poolsize - freepool->nodesize;
-    pool->data = (uint8_t *) (pool + 1) + freepool->nodesize;
-
-    VG (VALGRIND_MAKE_MEM_NOACCESS (pool->data, poolsize));
-    VG (VALGRIND_MAKE_MEM_UNDEFINED (pool->data, freepool->nodesize));
-
-    return pool + 1;
 }
