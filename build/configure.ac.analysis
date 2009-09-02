@@ -72,7 +72,7 @@ dnl  PHP_ADD_MAKEFILE_FRAGMENT($abs_srcdir/Makefile.gcov, $abs_srcdir)
   dnl In order to workaround a debian bug in libtool where they strip
   dnl $dependency_libs from the link line and CFLAGS, we need to pass
   dnl --coverage via LDFLAGS.
-  CAIRO_CC_TRY_FLAG([--coverage],
+  CAIRO_CC_TRY_FLAG([--coverage],,
 		    [
 		    CAIRO_CFLAGS="$CAIRO_CFLAGS -O0 --coverage"
 		    CAIRO_LDFLAGS="$CAIRO_LDFLAGS -O0 --coverage"

@@ -75,21 +75,47 @@ AC_DEFUN([CAIRO_CONFIG_COMMANDS],
 	], $3)
 ])
 
-dnl check compiler flags
-AC_DEFUN([CAIRO_CC_TRY_FLAG],
-[dnl
-	AC_MSG_CHECKING([whether $CC supports $1])
+dnl check compiler flags with a program and no muttering.
+AC_DEFUN([CAIRO_CC_TRY_FLAG_SILENT],
+[dnl     (flags..., optional program, true-action, false-action)
+
+	_compile_program='$2'
+	if test "x$_compile_program" = "x"; then
+		# AC_LANG_PROGRAM() produces a main() w/o args,
+		# but -Wold-style-definition doesn't like that.
+		# We need _some_ program so that we don't get
+		# warnings about empty compilation units.
+		_compile_program='
+			int main(int c, char **v) {
+			    (void)c; (void)v; return 0; }'
+	fi
 
 	_save_cflags="$CFLAGS"
-	CFLAGS="$CFLAGS -Werror $1"
-	AC_COMPILE_IFELSE([ ], [cairo_cc_flag=yes], [cairo_cc_flag=no])
+	CFLAGS="$CFLAGS $1"
+	AC_COMPILE_IFELSE(
+		[$_compile_program],
+		[cairo_cc_stderr=`test -f conftest.err && cat conftest.err`
+		 cairo_cc_flag=yes],
+		[cairo_cc_stderr=`test -f conftest.err && cat conftest.err`
+		 cairo_cc_flag=no])
 	CFLAGS="$_save_cflags"
 
-	if test "x$cairo_cc_flag" = "xyes"; then
-		ifelse([$2], , :, [$2])
-	else
-		ifelse([$3], , :, [$3])
+	if test "x$cairo_cc_stderr" != "x"; then
+		cairo_cc_flag=no
 	fi
+
+	if test "x$cairo_cc_flag" = "xyes"; then
+		ifelse([$3], , :, [$3])
+	else
+		ifelse([$4], , :, [$4])
+	fi
+])
+
+dnl check compiler flags possibly using -Werror if available.
+AC_DEFUN([CAIRO_CC_TRY_FLAG],
+[dnl     (flags..., optional program, true-action, false-action)
+	AC_MSG_CHECKING([whether $CC supports $1])
+	CAIRO_CC_TRY_FLAG_SILENT([-Werror $1], [$2], [$3], [$4])
 	AC_MSG_RESULT([$cairo_cc_flag])
 ])
 
