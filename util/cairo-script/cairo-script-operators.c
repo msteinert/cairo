@@ -2029,12 +2029,118 @@ _ft_type42_create (csi_t *ctx,
 #define _ft_type42_create(ctx, font, face_out) CSI_INT_STATUS_UNSUPPORTED
 #endif
 
+static char *
+_fc_strcpy (csi_t *ctx, const char *str)
+{
+    char *ret;
+    int len;
+
+    ret = strchr (str, ':');
+    if (ret != NULL)
+	len = ret - str;
+    else
+	len = strlen (str);
+
+    ret = _csi_alloc (ctx, len+1);
+    if (_csi_unlikely (ret == NULL))
+	return NULL;
+
+    memcpy (ret, str, len);
+    ret[len] = '\0';
+
+    return ret;
+}
+static csi_status_t
+_ft_fallback_create_for_pattern (csi_t *ctx,
+				 csi_string_t *string,
+				 cairo_font_face_t **font_face_out)
+{
+    char *str, *name;
+    cairo_surface_t *surface;
+    cairo_t *cr;
+
+    str = string->string;
+#if 0
+    name = strstr (str, "fullname=");
+    if (name != NULL)
+	str = name + 9;
+#endif
+
+    name = _fc_strcpy (ctx, str);
+    if (_csi_unlikely (name == NULL))
+	return _csi_error (CSI_STATUS_NO_MEMORY);
+
+    /* create a dummy context to choose a font */
+    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 0, 0);
+    cr = cairo_create (surface);
+    cairo_surface_destroy (surface);
+
+    cairo_select_font_face (cr, name,
+			    CAIRO_FONT_SLANT_NORMAL,
+			    CAIRO_FONT_WEIGHT_NORMAL);
+    *font_face_out = cairo_font_face_reference (cairo_get_font_face (cr));
+    cairo_destroy (cr);
+
+    _csi_free (ctx, name);
+
+    return CSI_STATUS_SUCCESS;
+}
+
+static csi_status_t
+_ft_type42_fallback_create (csi_t *ctx,
+			    csi_dictionary_t *font,
+			    cairo_font_face_t **font_face_out)
+{
+    csi_object_t key;
+    csi_status_t status;
+
+    /* attempt to select a similar font */
+
+    /* two basic sub-types, either an FcPattern or embedded font */
+    status = csi_name_new_static (ctx, &key, "pattern");
+    if (_csi_unlikely (status))
+	return status;
+
+    if (csi_dictionary_has (font, key.datum.name)) {
+	csi_object_t obj;
+	int type;
+
+	status = csi_dictionary_get (ctx, font, key.datum.name, &obj);
+	if (_csi_unlikely (status))
+	    return status;
+
+	type = csi_object_get_type (&obj);
+	switch (type) {
+	case CSI_OBJECT_TYPE_FILE:
+	    status = _csi_file_as_string (ctx, obj.datum.file, &obj);
+	    if (_csi_unlikely (status))
+		return status;
+	    break;
+	case CSI_OBJECT_TYPE_STRING:
+	    obj.datum.object->ref++;
+	    break;
+	default:
+	    return  _csi_error (CSI_STATUS_INVALID_SCRIPT);
+	}
+
+	return _ft_fallback_create_for_pattern (ctx,
+						obj.datum.string,
+						font_face_out);
+    }
+
+    return CSI_INT_STATUS_UNSUPPORTED;
+}
+
 static csi_status_t
 _font_type42 (csi_t *ctx, csi_dictionary_t *font, cairo_font_face_t **font_face)
 {
     csi_status_t status;
 
     status = _ft_type42_create (ctx, font, font_face);
+    if (_csi_likely (status != CSI_INT_STATUS_UNSUPPORTED))
+	return status;
+
+    status = _ft_type42_fallback_create (ctx, font, font_face);
     if (_csi_likely (status != CSI_INT_STATUS_UNSUPPORTED))
 	return status;
 
