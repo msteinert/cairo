@@ -14,6 +14,7 @@ test_sources = \
 	caps-sub-paths.c				\
 	clear.c						\
 	clip-all.c					\
+	clip-disjoint.c					\
 	clip-empty.c					\
 	clip-fill.c					\
 	clip-fill-rule.c				\
