@@ -111,21 +111,40 @@ AC_DEFUN([CAIRO_CC_TRY_FLAG_SILENT],
 	fi
 ])
 
+dnl find a -Werror equivalent
+AC_DEFUN([CAIRO_CC_CHECK_WERROR],
+[dnl
+	_test_WERROR=${WERROR+set}
+	if test "z$_test_WERROR" != zset; then
+		WERROR=""
+		for _werror in -Werror -errwarn; do
+			AC_MSG_CHECKING([whether $CC supports $_werror])
+			CAIRO_CC_TRY_FLAG_SILENT(
+				[$_werror],,
+				[WERROR="$WERROR $_werror"],
+				[:])
+			AC_MSG_RESULT($cairo_cc_flag)
+		done
+	fi
+])
+
 dnl check compiler flags possibly using -Werror if available.
 AC_DEFUN([CAIRO_CC_TRY_FLAG],
 [dnl     (flags..., optional program, true-action, false-action)
+	CAIRO_CC_CHECK_WERROR
 	AC_MSG_CHECKING([whether $CC supports $1])
-	CAIRO_CC_TRY_FLAG_SILENT([-Werror $1], [$2], [$3], [$4])
+	CAIRO_CC_TRY_FLAG_SILENT([$WERROR $1], [$2], [$3], [$4])
 	AC_MSG_RESULT([$cairo_cc_flag])
 ])
 
 dnl check compiler/ld flags
 AC_DEFUN([CAIRO_CC_TRY_LINK_FLAG],
 [dnl
+	CAIRO_CC_CHECK_WERROR
 	AC_MSG_CHECKING([whether $CC supports $1])
 
 	_save_cflags="$CFLAGS"
-	CFLAGS="$CFLAGS -Werror $1"
+	CFLAGS="$CFLAGS $WERROR $1"
 	AC_LINK_IFELSE([int main(void){ return 0;} ],
                        [cairo_cc_flag=yes],
                        [cairo_cc_flag=no])

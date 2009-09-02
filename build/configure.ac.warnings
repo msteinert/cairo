@@ -19,6 +19,12 @@ MAYBE_WARN="-Wall -Wextra \
 -Wno-missing-field-initializers -Wno-unused-parameter \
 -Wno-attributes -Wno-long-long -Winline"
 
+dnl Sun Studio 12 likes to rag at us for abusing enums like
+dnl having cairo_status_t variables hold cairo_int_status_t
+dnl values.  It's bad, we know.  Now please be quiet.
+MAYBE_WARN="$MAYBE_WARN -erroff=E_ENUM_TYPE_MISMATCH_ARG \
+			-erroff=E_ENUM_TYPE_MISMATCH_OP"
+
 dnl We also abuse the warning-flag facility to enable other compiler
 dnl options.  Namely, the following:
 MAYBE_WARN="$MAYBE_WARN -fno-strict-aliasing -fno-common"
