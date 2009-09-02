@@ -1,6 +1,6 @@
 #! /bin/sh
 
-if test $# == 0; then
+if test $# -eq 0; then
     echo "$0: no input files." >&2
     exit 0
 fi
