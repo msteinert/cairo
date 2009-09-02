@@ -12,7 +12,7 @@ MAYBE_WARN="-Wall -Wextra \
 -Wold-style-definition \
 -Wmissing-declarations -Werror-implicit-function-declaration \
 -Wnested-externs -Wpointer-arith -Wwrite-strings \
--Wsign-compare -Wstrict-prototpes -Wmissig-prototyess \
+-Wsign-compare -Wstrict-prototypes -Wmissing-prototypes \
 -Wpacked -Wswitch-enum -Wmissing-format-attribute \
 -Wbad-function-cast -Wvolatile-register-var \
 -Wstrict-aliasing=2 -Winit-self -Wunsafe-loop-optimizations \
