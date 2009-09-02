@@ -2050,14 +2050,34 @@ _fc_strcpy (csi_t *ctx, const char *str)
 
     return ret;
 }
+
+static cairo_font_face_t *
+_select_font (const char *name)
+{
+    cairo_surface_t *surface;
+    cairo_font_face_t *face;
+    cairo_t *cr;
+
+    /* create a dummy context to choose a font */
+    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 0, 0);
+    cr = cairo_create (surface);
+    cairo_surface_destroy (surface);
+
+    cairo_select_font_face (cr, name,
+			    CAIRO_FONT_SLANT_NORMAL,
+			    CAIRO_FONT_WEIGHT_NORMAL);
+    face = cairo_font_face_reference (cairo_get_font_face (cr));
+    cairo_destroy (cr);
+
+    return face;
+}
+
 static csi_status_t
 _ft_fallback_create_for_pattern (csi_t *ctx,
 				 csi_string_t *string,
 				 cairo_font_face_t **font_face_out)
 {
     char *str, *name;
-    cairo_surface_t *surface;
-    cairo_t *cr;
 
     str = string->string;
 #if 0
@@ -2070,17 +2090,7 @@ _ft_fallback_create_for_pattern (csi_t *ctx,
     if (_csi_unlikely (name == NULL))
 	return _csi_error (CSI_STATUS_NO_MEMORY);
 
-    /* create a dummy context to choose a font */
-    surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 0, 0);
-    cr = cairo_create (surface);
-    cairo_surface_destroy (surface);
-
-    cairo_select_font_face (cr, name,
-			    CAIRO_FONT_SLANT_NORMAL,
-			    CAIRO_FONT_WEIGHT_NORMAL);
-    *font_face_out = cairo_font_face_reference (cairo_get_font_face (cr));
-    cairo_destroy (cr);
-
+    *font_face_out = _select_font (name);
     _csi_free (ctx, name);
 
     return CSI_STATUS_SUCCESS;
@@ -2128,7 +2138,9 @@ _ft_type42_fallback_create (csi_t *ctx,
 						font_face_out);
     }
 
-    return CSI_INT_STATUS_UNSUPPORTED;
+    /* XXX: enable the trace to run */
+    *font_face_out = _select_font ("Sans");
+    return CSI_STATUS_SUCCESS;
 }
 
 static csi_status_t
@@ -2140,11 +2152,7 @@ _font_type42 (csi_t *ctx, csi_dictionary_t *font, cairo_font_face_t **font_face)
     if (_csi_likely (status != CSI_INT_STATUS_UNSUPPORTED))
 	return status;
 
-    status = _ft_type42_fallback_create (ctx, font, font_face);
-    if (_csi_likely (status != CSI_INT_STATUS_UNSUPPORTED))
-	return status;
-
-    return _csi_error (CSI_STATUS_INVALID_SCRIPT);
+    return _ft_type42_fallback_create (ctx, font, font_face);
 }
 
 static csi_status_t
