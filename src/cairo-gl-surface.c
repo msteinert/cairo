@@ -780,8 +780,8 @@ _cairo_gl_surface_release_dest_image (void		      *abstract_surface,
 					   0, 0,
 					   image->width, image->height,
 					   image_rect->x, image_rect->y);
-    if (status)
-	status = _cairo_surface_set_error (abstract_surface, status);
+    /* as we created the image, its format should be directly applicable */
+    assert (status == CAIRO_STATUS_SUCCESS);
 
     cairo_surface_destroy (&image->base);
 }
