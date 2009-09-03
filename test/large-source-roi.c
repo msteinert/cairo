@@ -47,7 +47,7 @@ static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
     cairo_surface_t *source;
-    double source_width = 66000.0;
+    double source_width = 32767.0;
 
     cairo_set_source_rgb (cr, 1,1,1);
     cairo_paint (cr);
@@ -72,5 +72,5 @@ CAIRO_TEST (large_source_roi,
 	    "Uses a all of a large source image.",
 	    "stress, source", /* keywords */
 	    NULL, /* requirements */
-	    20, 20,
+	    7, 7,
 	    NULL, draw)

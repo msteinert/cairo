@@ -40,6 +40,18 @@
 #include "cairo-clip-private.h"
 #include "cairo-region-private.h"
 
+/* Limit on the width / height of an image surface in pixels.  This is
+ * mainly determined by coordinates of things sent to pixman at the
+ * moment being in 16.16 format. */
+#define MAX_IMAGE_SIZE 32767
+
+static cairo_bool_t
+_cairo_image_surface_is_size_valid (int width, int height)
+{
+    return 0 <= width  &&  width <= MAX_IMAGE_SIZE &&
+	   0 <= height && height <= MAX_IMAGE_SIZE;
+}
+
 static cairo_format_t
 _cairo_format_from_pixman_format (pixman_format_code_t pixman_format)
 {
@@ -152,6 +164,12 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
 					      pixman_format_code_t	 pixman_format)
 {
     cairo_image_surface_t *surface;
+    int width = pixman_image_get_width (pixman_image);
+    int height = pixman_image_get_height (pixman_image);
+
+    if (! _cairo_image_surface_is_size_valid (width, height)) {
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
+    }
 
     surface = malloc (sizeof (cairo_image_surface_t));
     if (unlikely (surface == NULL))
@@ -168,8 +186,8 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
     surface->owns_data = FALSE;
     surface->transparency = CAIRO_IMAGE_UNKNOWN;
 
-    surface->width = pixman_image_get_width (pixman_image);
-    surface->height = pixman_image_get_height (pixman_image);
+    surface->width = width;
+    surface->height = height;
     surface->stride = pixman_image_get_stride (pixman_image);
     surface->depth = pixman_image_get_depth (pixman_image);
     surface->is_clear = FALSE;
@@ -348,6 +366,11 @@ _cairo_image_surface_create_with_pixman_format (unsigned char		*data,
 {
     cairo_surface_t *surface;
     pixman_image_t *pixman_image;
+
+    if (! _cairo_image_surface_is_size_valid (width, height))
+    {
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
+    }
 
     pixman_image = pixman_image_create_bits (pixman_format, width, height,
 					     (uint32_t *) data, stride);
