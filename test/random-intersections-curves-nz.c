@@ -54,13 +54,16 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_move_to (cr, 0, 0);
     for (i = 0; i < NUM_SEGMENTS; i++) {
-	cairo_curve_to (cr,
-			uniform_random (-SIZE, SIZE),
-			uniform_random (-SIZE, SIZE),
-			uniform_random (-SIZE, SIZE),
-			uniform_random (-SIZE, SIZE),
-			uniform_random (0, SIZE),
-			uniform_random (0, SIZE));
+        double y3 = uniform_random (0, SIZE);
+        double x3 = uniform_random (0, SIZE);
+        double y2 = uniform_random (-SIZE, SIZE);
+        double x2 = uniform_random (-SIZE, SIZE);
+        double y1 = uniform_random (-SIZE, SIZE);
+        double x1 = uniform_random (-SIZE, SIZE);
+        cairo_curve_to (cr,
+                        x1, y1,
+                        x2, y2,
+                        x3, y3);
     }
     cairo_close_path (cr);
 
