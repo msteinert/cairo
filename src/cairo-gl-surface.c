@@ -1522,7 +1522,10 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
 				   cairo_rectangle_int_t   *rects,
 				   int			    num_rects)
 {
+#define N_STACK_RECTS 4
     cairo_gl_surface_t *surface = abstract_surface;
+    GLfloat vertices_stack[N_STACK_RECTS*4*2];
+    GLfloat colors_stack[N_STACK_RECTS*4*4]
     cairo_gl_context_t *ctx;
     int i;
     GLfloat *vertices;
@@ -1536,23 +1539,32 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
     _cairo_gl_set_destination (surface);
     _cairo_gl_set_operator (surface, op);
 
-    vertices = _cairo_malloc_ab (num_rects, sizeof (GLfloat) * 4 * 2);
-    colors = _cairo_malloc_ab (num_rects, sizeof (GLfloat) * 4 * 4);
-    if (!vertices || !colors) {
-	_cairo_gl_context_release (ctx);
-	free (vertices);
-	free (colors);
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    if (num_rects > N_STACK_RECTS) {
+	vertices = _cairo_malloc_ab (num_rects, sizeof (GLfloat) * 4 * 2);
+	colors = _cairo_malloc_ab (num_rects, sizeof (GLfloat) * 4 * 4);
+	if (!vertices || !colors) {
+	    _cairo_gl_context_release (ctx);
+	    free (vertices);
+	    free (colors);
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	}
+    } else {
+	vertices = vertices_stack;
+	colors = colors_stack;
     }
 
     /* This should be loaded in as either a blend constant and an operator
      * setup specific to this, or better, a fragment shader constant.
      */
-    for (i = 0; i < num_rects * 4; i++) {
-	colors[i * 4 + 0] = color->red * color->alpha;
-	colors[i * 4 + 1] = color->green * color->alpha;
-	colors[i * 4 + 2] = color->blue * color->alpha;
-	colors[i * 4 + 3] = color->alpha;
+    colors[0] = color->red * color->alpha;
+    colors[1] = color->green * color->alpha;
+    colors[2] = color->blue * color->alpha;
+    colors[3] = color->alpha;
+    for (i = 1; i < num_rects * 4; i++) {
+	colors[i*4 + 0] = colors[0];
+	colors[i*4 + 1] = colors[1];
+	colors[i*4 + 2] = colors[2];
+	colors[i*4 + 3] = colors[3];
     }
 
     for (i = 0; i < num_rects; i++) {
@@ -1570,6 +1582,7 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
     glEnableClientState (GL_VERTEX_ARRAY);
     glColorPointer (4, GL_FLOAT, sizeof (GLfloat)*4, colors);
     glEnableClientState (GL_COLOR_ARRAY);
+
     glDrawArrays (GL_QUADS, 0, 4 * num_rects);
 
     glDisableClientState (GL_COLOR_ARRAY);
@@ -1577,8 +1590,10 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
     glDisable (GL_BLEND);
 
     _cairo_gl_context_release (ctx);
-    free (vertices);
-    free (colors);
+    if (vertices != vertices_stack)
+	free (vertices);
+    if (colors != colors_stack)
+	free (colors);
 
     return CAIRO_STATUS_SUCCESS;
 }
