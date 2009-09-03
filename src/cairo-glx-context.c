@@ -108,8 +108,9 @@ _glx_dummy_ctx (Display *dpy, GLXContext gl_ctx, Window *dummy)
 
     cnt = 0;
     config = glXChooseFBConfig (dpy, DefaultScreen (dpy), attr, &cnt);
-    if (cnt == 0)
+    if (unlikely (cnt == 0))
 	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT);
+
     vi = glXGetVisualFromFBConfig (dpy, config[0]);
     XFree (config);
 
@@ -129,10 +130,9 @@ _glx_dummy_ctx (Display *dpy, GLXContext gl_ctx, Window *dummy)
     XFree (vi);
 
     XFlush (dpy);
-    if (! glXMakeCurrent (dpy, win, gl_ctx)) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    if (unlikely (! glXMakeCurrent (dpy, win, gl_ctx))) {
 	XDestroyWindow (dpy, win);
-	win = None;
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     *dummy = win;
@@ -147,11 +147,11 @@ cairo_glx_context_create (Display *dpy, GLXContext gl_ctx)
     Window dummy = None;
 
     status = _glx_dummy_ctx (dpy, gl_ctx, &dummy);
-    if (status)
+    if (unlikely (status))
 	return _cairo_gl_context_create_in_error (status);
 
     ctx = calloc (1, sizeof (cairo_glx_context_t));
-    if (ctx == NULL)
+    if (unlikely (ctx == NULL))
 	return _cairo_gl_context_create_in_error (CAIRO_STATUS_NO_MEMORY);
 
     ctx->display = dpy;
@@ -163,7 +163,7 @@ cairo_glx_context_create (Display *dpy, GLXContext gl_ctx)
     ctx->base.destroy = _glx_destroy;
 
     status = _cairo_gl_context_init (&ctx->base);
-    if (status) {
+    if (unlikely (status)) {
 	free (ctx);
 	return _cairo_gl_context_create_in_error (status);
     }
@@ -179,7 +179,7 @@ cairo_gl_surface_create_for_window (cairo_gl_context_t   *ctx,
 {
     cairo_glx_surface_t *surface;
 
-    if (ctx->status)
+    if (unlikely (ctx->status))
 	return _cairo_surface_create_in_error (ctx->status);
 
     surface = calloc (1, sizeof (cairo_glx_surface_t));

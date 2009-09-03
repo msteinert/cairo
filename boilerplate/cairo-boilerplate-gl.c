@@ -81,6 +81,7 @@ _cairo_boilerplate_gl_create_surface (const char		 *name,
     XVisualInfo *visinfo;
     GLXContext gl_ctx;
     gl_target_closure_t *gltc;
+    cairo_surface_t *surface;
     Display *dpy;
 
     gltc = malloc (sizeof (gl_target_closure_t));
@@ -120,13 +121,13 @@ _cairo_boilerplate_gl_create_surface (const char		 *name,
     gltc->gl_ctx = gl_ctx;
     gltc->ctx = cairo_glx_context_create (dpy, gl_ctx);
 
-    gltc->surface = cairo_gl_surface_create (gltc->ctx, content,
-					     ceil (width), ceil (height));
-
-    if (gltc->surface == NULL || cairo_surface_status (gltc->surface))
+    gltc->surface = surface = cairo_gl_surface_create (gltc->ctx, content,
+					               ceil (width),
+						       ceil (height));
+    if (cairo_surface_status (surface))
 	_cairo_boilerplate_gl_cleanup (gltc);
 
-    return gltc->surface;
+    return surface;
 }
 
 static void
