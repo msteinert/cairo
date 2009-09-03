@@ -68,21 +68,21 @@ _cairo_polygon_limit (cairo_polygon_t	*polygon,
     polygon->limits = limits;
     polygon->num_limits = num_limits;
 
-    polygon->limit.p1.x = polygon->limit.p1.y = INT32_MAX;
-    polygon->limit.p2.x = polygon->limit.p2.y = INT32_MIN;
+    if (polygon->num_limits) {
+	polygon->limit = limits[0];
+	for (n = 1; n < num_limits; n++) {
+	    if (limits[n].p1.x < polygon->limit.p1.x)
+		polygon->limit.p1.x = limits[n].p1.x;
 
-    for (n = 0; n < num_limits; n++) {
-	if (limits[n].p1.x < polygon->limit.p1.x)
-	    polygon->limit.p1.x = limits[n].p1.x;
+	    if (limits[n].p1.y < polygon->limit.p1.y)
+		polygon->limit.p1.y = limits[n].p1.y;
 
-	if (limits[n].p1.y < polygon->limit.p1.y)
-	    polygon->limit.p1.y = limits[n].p1.y;
+	    if (limits[n].p2.x > polygon->limit.p2.x)
+		polygon->limit.p2.x = limits[n].p2.x;
 
-	if (limits[n].p2.x > polygon->limit.p2.x)
-	    polygon->limit.p2.x = limits[n].p2.x;
-
-	if (limits[n].p2.y > polygon->limit.p2.y)
-	    polygon->limit.p2.y = limits[n].p2.y;
+	    if (limits[n].p2.y > polygon->limit.p2.y)
+		polygon->limit.p2.y = limits[n].p2.y;
+	}
     }
 }
 
