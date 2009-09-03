@@ -2517,7 +2517,7 @@ _create_trapezoid_mask (cairo_xlib_surface_t *dst,
 	offset_traps[i].right.p2.y = _cairo_fixed_to_16_16(traps[i].right.p2.y) - 0x10000 * dst_y;
     }
 
-    solid_picture = _create_a8_picture (dst, &solid, width, height, TRUE);
+    solid_picture = _create_a8_picture (dst, &solid, 1, 1, TRUE);
     if (solid_picture == None) {
 	XRenderFreePicture (dst->dpy, mask_picture);
 	free (offset_traps);
