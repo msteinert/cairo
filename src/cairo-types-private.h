@@ -254,6 +254,7 @@ typedef struct _cairo_polygon {
     cairo_bool_t has_current_edge;
 
     cairo_box_t extents;
+    cairo_box_t limit;
     const cairo_box_t *limits;
     int num_limits;
 

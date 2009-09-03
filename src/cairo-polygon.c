@@ -63,8 +63,27 @@ _cairo_polygon_limit (cairo_polygon_t	*polygon,
 		      const cairo_box_t *limits,
 		      int num_limits)
 {
+    int n;
+
     polygon->limits = limits;
     polygon->num_limits = num_limits;
+
+    polygon->limit.p1.x = polygon->limit.p1.y = INT32_MAX;
+    polygon->limit.p2.x = polygon->limit.p2.y = INT32_MIN;
+
+    for (n = 0; n < num_limits; n++) {
+	if (limits[n].p1.x < polygon->limit.p1.x)
+	    polygon->limit.p1.x = limits[n].p1.x;
+
+	if (limits[n].p1.y < polygon->limit.p1.y)
+	    polygon->limit.p1.y = limits[n].p1.y;
+
+	if (limits[n].p2.x > polygon->limit.p2.x)
+	    polygon->limit.p2.x = limits[n].p2.x;
+
+	if (limits[n].p2.y > polygon->limit.p2.y)
+	    polygon->limit.p2.y = limits[n].p2.y;
+    }
 }
 
 void
@@ -233,7 +252,7 @@ _add_clipped_edge (cairo_polygon_t *polygon,
 								limits->p2.x);
 
 	    if (left_y == right_y) /* horizontal within bounds */
-		return;
+		continue;
 
 	    p1_y = top;
 	    p2_y = bottom;
@@ -342,10 +361,10 @@ _cairo_polygon_add_edge (cairo_polygon_t *polygon,
     }
 
     if (polygon->num_limits) {
-	if (p2->y <= polygon->limits[0].p1.y)
+	if (p2->y <= polygon->limit.p1.y)
 	    return;
 
-	if (p1->y >= polygon->limits[polygon->num_limits-1].p2.y)
+	if (p1->y >= polygon->limit.p2.y)
 	    return;
 
 	_add_clipped_edge (polygon, p1, p2, p1->y, p2->y, dir);
@@ -376,10 +395,10 @@ _cairo_polygon_add_line (cairo_polygon_t *polygon,
 	return CAIRO_STATUS_SUCCESS;
 
     if (polygon->num_limits) {
-	if (line->p2.y <= polygon->limits[0].p1.y)
+	if (line->p2.y <= polygon->limit.p1.y)
 	    return CAIRO_STATUS_SUCCESS;
 
-	if (line->p1.y >= polygon->limits[polygon->num_limits-1].p2.y)
+	if (line->p1.y >= polygon->limit.p2.y)
 	    return CAIRO_STATUS_SUCCESS;
 
 	_add_clipped_edge (polygon, &line->p1, &line->p2, top, bottom, dir);
