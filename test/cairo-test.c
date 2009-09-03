@@ -1005,13 +1005,6 @@ REPEAT:
 	goto UNWIND_CAIRO;
     }
 
-    if (cairo_status (cr) != CAIRO_STATUS_SUCCESS) {
-	cairo_test_log (ctx, "Error: Function under test left cairo status in an error state: %s\n",
-			cairo_status_to_string (cairo_status (cr)));
-	ret = CAIRO_TEST_FAILURE;
-	goto UNWIND_CAIRO;
-    }
-
 #if HAVE_MEMFAULT
     if (MEMFAULT_COUNT_FAULTS () - last_fault_count > 0 &&
 	MEMFAULT_HAS_FAULTS ())
@@ -1378,6 +1371,13 @@ REPEAT:
 
 	cairo_surface_destroy (test_image);
 	cairo_surface_destroy (diff_image);
+    }
+
+    if (cairo_status (cr) != CAIRO_STATUS_SUCCESS) {
+	cairo_test_log (ctx, "Error: Function under test left cairo status in an error state: %s\n",
+			cairo_status_to_string (cairo_status (cr)));
+	ret = CAIRO_TEST_FAILURE;
+	goto UNWIND_CAIRO;
     }
 
 UNWIND_CAIRO:
