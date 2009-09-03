@@ -724,8 +724,6 @@ _cairo_gl_surface_finish (void *abstract_surface)
 
     glDeleteFramebuffersEXT (1, &surface->fb);
     glDeleteTextures (1, &surface->tex);
-    if (surface->depth_stencil_tex)
-	glDeleteTextures (1, &surface->depth_stencil_tex);
 
     if (surface->ctx->current_target == surface)
 	surface->ctx->current_target = NULL;

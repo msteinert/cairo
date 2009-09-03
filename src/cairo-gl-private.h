@@ -70,7 +70,6 @@ typedef struct _cairo_gl_surface {
     int width, height;
 
     GLuint tex; /* GL texture object containing our data. */
-    GLuint depth_stencil_tex;
     GLuint fb; /* GL framebuffer object wrapping our data. */
 } cairo_gl_surface_t;
 
