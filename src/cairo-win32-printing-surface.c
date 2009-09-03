@@ -1741,7 +1741,7 @@ static const cairo_surface_backend_t cairo_win32_printing_surface_backend = {
     NULL, /* release_source_image */
     NULL, /* acquire_dest_image */
     NULL, /* release_dest_image */
-    _cairo_win32_surface_clone_similar,
+    NULL, /* clone_similar */
     NULL, /* composite */
     NULL, /* fill_rectangles */
     NULL, /* composite_trapezoids */

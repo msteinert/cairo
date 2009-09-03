@@ -432,61 +432,6 @@ _cairo_win32_surface_create_similar (void	    *abstract_src,
 }
 
 cairo_status_t
-_cairo_win32_surface_clone_similar (void *abstract_surface,
-				    cairo_surface_t *src,
-				    cairo_content_t content,
-				    int src_x,
-				    int src_y,
-				    int width,
-				    int height,
-				    int *clone_offset_x,
-				    int *clone_offset_y,
-				    cairo_surface_t **clone_out)
-{
-    cairo_content_t src_content;
-    cairo_surface_t *new_surface;
-    cairo_status_t status;
-    cairo_surface_pattern_t pattern;
-
-    src_content = src->content & content;
-    new_surface =
-	_cairo_win32_surface_create_similar_internal (abstract_surface,
-						      src_content,
-						      width, height,
-						      FALSE);
-    if (new_surface == NULL)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    status = new_surface->status;
-    if (status)
-	return status;
-
-    _cairo_pattern_init_for_surface (&pattern, src);
-
-    status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
-				       &pattern.base,
-				       NULL,
-				       new_surface,
-				       src_x, src_y,
-				       0, 0,
-				       0, 0,
-				       width, height,
-				       NULL);
-
-    _cairo_pattern_fini (&pattern.base);
-
-    if (status == CAIRO_STATUS_SUCCESS) {
-	*clone_offset_x = src_x;
-	*clone_offset_y = src_y;
-	*clone_out = new_surface;
-    } else
-	cairo_surface_destroy (new_surface);
-
-    return status;
-}
-
-
-cairo_status_t
 _cairo_win32_surface_finish (void *abstract_surface)
 {
     cairo_win32_surface_t *surface = abstract_surface;
@@ -2069,7 +2014,7 @@ static const cairo_surface_backend_t cairo_win32_surface_backend = {
     _cairo_win32_surface_release_source_image,
     _cairo_win32_surface_acquire_dest_image,
     _cairo_win32_surface_release_dest_image,
-    _cairo_win32_surface_clone_similar,
+    NULL, /* clone similar */
     _cairo_win32_surface_composite,
     _cairo_win32_surface_fill_rectangles,
     NULL, /* composite_trapezoids */
