@@ -558,6 +558,7 @@ REFERENCE_IMAGES = \
 	large-clip.ref.png \
 	large-font.ref.png \
 	large-source.ref.png \
+	large-source-roi.ref.png \
 	leaky-dash.ps2.argb32.ref.png \
 	leaky-dash.ps2.rgb24.ref.png \
 	leaky-dash.ps3.argb32.ref.png \
