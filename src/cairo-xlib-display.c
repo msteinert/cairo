@@ -316,7 +316,7 @@ _cairo_xlib_display_get (Display *dpy,
 #else
     display->buggy_gradients = FALSE;
 #endif
-    display->buggy_pad_reflect = TRUE;
+    display->buggy_pad_reflect = FALSE;
     display->buggy_repeat = FALSE;
 
     /* This buggy_repeat condition is very complicated because there
@@ -361,28 +361,33 @@ _cairo_xlib_display_get (Display *dpy,
      *    exactly when second the bug started, but since bug 1 is
      *    present through 6.8.2 and bug 2 is present in 6.9.0 it seems
      *    safest to just blacklist all old-versioning-scheme X servers,
-     *    (just using VendorRelase < 70000000), as buggy_repeat=TRUE.
+     *    (just using VendorRelease < 70000000), as buggy_repeat=TRUE.
      */
     if (strstr (ServerVendor (dpy), "X.Org") != NULL) {
 	if (VendorRelease (dpy) >= 60700000) {
 	    if (VendorRelease (dpy) < 70000000)
 		display->buggy_repeat = TRUE;
 
-	    /* We know that gradients simply do not work in eary Xorg servers */
+	    /* We know that gradients simply do not work in early Xorg servers */
 	    if (VendorRelease (dpy) < 70200000)
-	    {
 		display->buggy_gradients = TRUE;
-	    }
+
+	    /* And the extended repeat modes were not fixed until much later */
+	    display->buggy_pad_reflect = TRUE;
 	} else {
 	    if (VendorRelease (dpy) < 10400000)
 		display->buggy_repeat = TRUE;
-	    if (VendorRelease (dpy) >= 10699000)
-		display->buggy_pad_reflect = FALSE;
+
+	    /* Too many bugs in the early drivers */
+	    if (VendorRelease (dpy) < 10699000)
+		display->buggy_pad_reflect = TRUE;
 	}
     } else if (strstr (ServerVendor (dpy), "XFree86") != NULL) {
 	if (VendorRelease (dpy) <= 40500000)
 	    display->buggy_repeat = TRUE;
 
+	display->buggy_gradients = TRUE;
+	display->buggy_pad_reflect = TRUE;
     }
 
     display->next = _cairo_xlib_display_list;
