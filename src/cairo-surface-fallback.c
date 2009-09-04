@@ -907,9 +907,10 @@ _clip_contains_rectangle (cairo_clip_t *clip,
     return TRUE;
 }
 
-static cairo_status_t
+static inline cairo_status_t
 _clip_to_boxes (cairo_clip_t **clip,
 		const cairo_rectangle_int_t *extents,
+		cairo_bool_t is_bounded,
 		cairo_box_t **boxes,
 		int *num_boxes)
 {
@@ -923,7 +924,8 @@ _clip_to_boxes (cairo_clip_t **clip,
     status = _cairo_clip_get_boxes (*clip, boxes, num_boxes);
     switch ((int) status) {
     case CAIRO_STATUS_SUCCESS:
-	*clip = NULL;
+	if (is_bounded)
+	    *clip = NULL;
 	goto DONE;
 
     case  CAIRO_INT_STATUS_UNSUPPORTED:
@@ -955,15 +957,18 @@ _cairo_surface_fallback_paint (cairo_surface_t		*surface,
     is_bounded = _cairo_surface_get_extents (surface, &extents);
     assert (is_bounded || clip);
 
+    is_bounded = FALSE;
     if (_cairo_operator_bounded_by_source (op)) {
 	cairo_rectangle_int_t source_extents;
 
 	_cairo_pattern_get_extents (source, &source_extents);
 	if (! _cairo_rectangle_intersect (&extents, &source_extents))
 	    return CAIRO_STATUS_SUCCESS;
+
+	is_bounded = TRUE;
     }
 
-    if (clip != NULL && _clip_contains_rectangle (clip, &extents))
+    if (is_bounded && clip != NULL && _clip_contains_rectangle (clip, &extents))
 	clip = NULL;
 
     status = _rectangle_intersect_clip (&extents, clip);
@@ -973,7 +978,7 @@ _cairo_surface_fallback_paint (cairo_surface_t		*surface,
 	return status;
     }
 
-    status = _clip_to_boxes (&clip, &extents, &boxes, &num_boxes);
+    status = _clip_to_boxes (&clip, &extents, is_bounded, &boxes, &num_boxes);
     if (unlikely (status)) {
 	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
 	    status = CAIRO_STATUS_SUCCESS;
@@ -1057,12 +1062,15 @@ _cairo_surface_fallback_mask (cairo_surface_t		*surface,
     is_bounded = _cairo_surface_get_extents (surface, &extents);
     assert (is_bounded || clip);
 
+    is_bounded = FALSE;
     if (_cairo_operator_bounded_by_source (op)) {
 	cairo_rectangle_int_t source_extents;
 
 	_cairo_pattern_get_extents (source, &source_extents);
 	if (! _cairo_rectangle_intersect (&extents, &source_extents))
 	    return CAIRO_STATUS_SUCCESS;
+
+	is_bounded = TRUE;
     }
 
     if (_cairo_operator_bounded_by_mask (op)) {
@@ -1071,9 +1079,11 @@ _cairo_surface_fallback_mask (cairo_surface_t		*surface,
 	_cairo_pattern_get_extents (mask, &mask_extents);
 	if (! _cairo_rectangle_intersect (&extents, &mask_extents))
 	    return CAIRO_STATUS_SUCCESS;
+
+	is_bounded = TRUE;
     }
 
-    if (clip != NULL && _clip_contains_rectangle (clip, &extents))
+    if (is_bounded && clip != NULL && _clip_contains_rectangle (clip, &extents))
 	clip = NULL;
 
     status = _rectangle_intersect_clip (&extents, clip);
@@ -1112,12 +1122,15 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
     is_bounded = _cairo_surface_get_extents (surface, &extents);
     assert (is_bounded || clip);
 
+    is_bounded = FALSE;
     if (_cairo_operator_bounded_by_source (op)) {
 	cairo_rectangle_int_t source_extents;
 
 	_cairo_pattern_get_extents (source, &source_extents);
 	if (! _cairo_rectangle_intersect (&extents, &source_extents))
 	    return CAIRO_STATUS_SUCCESS;
+
+	is_bounded = TRUE;
     }
 
     if (_cairo_operator_bounded_by_mask (op)) {
@@ -1128,9 +1141,11 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
 						      &path_extents);
 	if (! _cairo_rectangle_intersect (&extents, &path_extents))
 	    return CAIRO_STATUS_SUCCESS;
+
+	is_bounded = TRUE;
     }
 
-    if (clip != NULL && _clip_contains_rectangle (clip, &extents))
+    if (is_bounded && clip != NULL && _clip_contains_rectangle (clip, &extents))
 	clip = NULL;
 
     status = _rectangle_intersect_clip (&extents, clip);
@@ -1140,7 +1155,7 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
 	return status;
     }
 
-    status = _clip_to_boxes (&clip, &extents, &boxes, &num_boxes);
+    status = _clip_to_boxes (&clip, &extents, is_bounded, &boxes, &num_boxes);
     if (unlikely (status)) {
 	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
 	    status = CAIRO_STATUS_SUCCESS;
@@ -1239,12 +1254,15 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
     is_bounded = _cairo_surface_get_extents (surface, &extents);
     assert (is_bounded || clip);
 
+    is_bounded = FALSE;
     if (_cairo_operator_bounded_by_source (op)) {
 	cairo_rectangle_int_t source_extents;
 
 	_cairo_pattern_get_extents (source, &source_extents);
 	if (! _cairo_rectangle_intersect (&extents, &source_extents))
 	    return CAIRO_STATUS_SUCCESS;
+
+	is_bounded = TRUE;
     }
 
     if (_cairo_operator_bounded_by_mask (op)) {
@@ -1253,15 +1271,19 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
 	_cairo_path_fixed_approximate_fill_extents (path, &path_extents);
 	if (! _cairo_rectangle_intersect (&extents, &path_extents))
 	    return CAIRO_STATUS_SUCCESS;
+
+	is_bounded = TRUE;
     }
 
-    if (clip != NULL && _clip_contains_rectangle (clip, &extents))
-	clip = NULL;
+    if (is_bounded) {
+	if (clip != NULL && _clip_contains_rectangle (clip, &extents))
+	    clip = NULL;
 
-    if (clip != NULL && clip->path->prev == NULL &&
-	_cairo_path_fixed_equal (&clip->path->path, path))
-    {
-	clip = NULL;
+	if (clip != NULL && clip->path->prev == NULL &&
+	    _cairo_path_fixed_equal (&clip->path->path, path))
+	{
+	    clip = NULL;
+	}
     }
 
     status = _rectangle_intersect_clip (&extents, clip);
@@ -1271,7 +1293,7 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
 	return status;
     }
 
-    status = _clip_to_boxes (&clip, &extents, &boxes, &num_boxes);
+    status = _clip_to_boxes (&clip, &extents, is_bounded, &boxes, &num_boxes);
     if (unlikely (status)) {
 	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
 	    status = CAIRO_STATUS_SUCCESS;
@@ -1433,12 +1455,15 @@ _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
     is_bounded = _cairo_surface_get_extents (surface, &extents);
     assert (is_bounded || clip);
 
+    is_bounded = FALSE;
     if (_cairo_operator_bounded_by_source (op)) {
 	cairo_rectangle_int_t source_extents;
 
 	_cairo_pattern_get_extents (source, &source_extents);
 	if (! _cairo_rectangle_intersect (&extents, &source_extents))
 	    return CAIRO_STATUS_SUCCESS;
+
+	is_bounded = TRUE;
     }
 
     if (_cairo_operator_bounded_by_mask (op)) {
@@ -1454,9 +1479,11 @@ _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
 
 	if (! _cairo_rectangle_intersect (&extents, &glyph_extents))
 	    return CAIRO_STATUS_SUCCESS;
+
+	is_bounded = TRUE;
     }
 
-    if (clip != NULL && _clip_contains_rectangle (clip, &extents))
+    if (is_bounded && clip != NULL && _clip_contains_rectangle (clip, &extents))
 	clip = NULL;
 
     status = _rectangle_intersect_clip (&extents, clip);
