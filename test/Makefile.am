@@ -179,6 +179,13 @@ REFERENCE_IMAGES = \
 	clip-fill-rule.rgb24.ref.png \
 	clip-fill-rule.test-paginated.rgb24.ref.png \
 	clip-fill-rule.xlib.rgb24.ref.png \
+	clip-fill-unbounded.argb32.ref.png \
+	clip-fill-unbounded.rgb24.ref.png \
+	clip-fill-unbounded.svg12.argb32.xfail.png \
+	clip-fill-unbounded.svg12.rgb24.xfail.png \
+	clip-fill-unbounded.xlib.argb32.ref.png \
+	clip-fill-unbounded.xlib.rgb24.ref.png \
+	clip-fill-unbounded.xlib-fallback.rgb24.ref.png \
 	clip-image.ref.png \
 	clip-nesting.pdf.argb32.ref.png \
 	clip-nesting.ps2.argb32.ref.png \
@@ -224,6 +231,13 @@ REFERENCE_IMAGES = \
 	clip-stroke.ref.png \
 	clip-stroke.xlib.ref.png \
 	clip-stroke.xlib-fallback.ref.png \
+	clip-stroke-unbounded.argb32.ref.png \
+	clip-stroke-unbounded.rgb24.ref.png \
+	clip-stroke-unbounded.svg12.argb32.xfail.png \
+	clip-stroke-unbounded.svg12.rgb24.xfail.png \
+	clip-stroke-unbounded.xlib.argb32.ref.png \
+	clip-stroke-unbounded.xlib.rgb24.ref.png \
+	clip-stroke-unbounded.xlib-fallback.rgb24.ref.png \
 	clip-text.ref.png \
 	clip-text.ps.xfail.png \
 	clip-text.svg.ref.png \
