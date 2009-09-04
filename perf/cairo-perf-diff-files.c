@@ -39,7 +39,7 @@ typedef struct _cairo_perf_report_options {
     double min_change;
     int use_utf;
     int print_change_bars;
-    int use_ms;
+    int use_ticks;
 } cairo_perf_report_options_t;
 
 typedef struct _cairo_perf_diff_files_args {
@@ -180,7 +180,7 @@ test_diff_print_multi (test_diff_t			*diff,
 
     for (i = 0; i < diff->num_tests; i++) {
 	test_time = diff->tests[i]->stats.min_ticks;
-	if (options->use_ms)
+	if (! options->use_ticks)
 	    test_time /= diff->tests[i]->stats.ticks_per_ms;
 	change = diff->max / test_time;
 	printf ("%8s %6.2f: %5.2fx ",
@@ -266,7 +266,7 @@ cairo_perf_reports_compare (cairo_perf_report_t		*reports,
 		test_report_cmp_backend_then_name (tests[i], min_test) == 0)
 	    {
 		test_time = tests[i]->stats.min_ticks;
-		if (options->use_ms)
+		if (! options->use_ticks)
 		    test_time /= tests[i]->stats.ticks_per_ms;
 		if (diff->num_tests == 0) {
 		    diff->min = test_time;
@@ -294,7 +294,7 @@ cairo_perf_reports_compare (cairo_perf_report_t		*reports,
 	    }
 	    old_time = diff->tests[0]->stats.min_ticks;
 	    new_time = diff->tests[1]->stats.min_ticks;
-	    if (options->use_ms) {
+	    if (! options->use_ticks) {
 		old_time /= diff->tests[0]->stats.ticks_per_ms;
 		new_time /= diff->tests[1]->stats.ticks_per_ms;
 	    }
@@ -405,7 +405,10 @@ parse_args(int				  argc,
 	    args->options.print_change_bars = 0;
 	}
 	else if (strcmp (argv[i], "--use-ms") == 0) {
-	    args->options.use_ms = 1;
+	    /* default */
+	}
+	else if (strcmp (argv[i], "--use-ticks") == 0) {
+	    args->options.use_ticks = 1;
 	}
 	else if (strcmp (argv[i], "--min-change") == 0) {
 	    char *end = NULL;
