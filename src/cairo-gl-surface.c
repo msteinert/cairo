@@ -1525,7 +1525,7 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
 #define N_STACK_RECTS 4
     cairo_gl_surface_t *surface = abstract_surface;
     GLfloat vertices_stack[N_STACK_RECTS*4*2];
-    GLfloat colors_stack[N_STACK_RECTS*4*4]
+    GLfloat colors_stack[N_STACK_RECTS*4*4];
     cairo_gl_context_t *ctx;
     int i;
     GLfloat *vertices;
@@ -1596,6 +1596,7 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
 	free (colors);
 
     return CAIRO_STATUS_SUCCESS;
+#undef N_STACK_RECTS
 }
 
 typedef struct _cairo_gl_surface_span_renderer {
