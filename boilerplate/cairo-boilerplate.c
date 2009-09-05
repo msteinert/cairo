@@ -392,10 +392,12 @@ _cairo_boilerplate_target_matches_name (const cairo_boilerplate_target_t *target
     name_len = end - tname;
 
     /* Check name. */
-    if (0 != strncmp (target->name, tname, name_len)) /* exact match? */
-	return FALSE;
-    if (isalnum (target->name[name_len]))
-	return FALSE;
+    if (! (name_len == 1 && 0 == strncmp (tname, "?", 1))) { /* wildcard? */
+	if (0 != strncmp (target->name, tname, name_len)) /* exact match? */
+	    return FALSE;
+	if (isalnum (target->name[name_len]))
+	    return FALSE;
+    }
 
     /* Check optional content. */
     if (content_start == NULL)	/* none given? */
