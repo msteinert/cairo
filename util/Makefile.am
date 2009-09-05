@@ -6,7 +6,7 @@ if BUILD_SCRIPT
 SUBDIRS += cairo-script
 endif
 
-if BUILD_TRACE
+if CAIRO_HAS_TRACE
 SUBDIRS += cairo-trace
 if CAIRO_HAS_SCRIPT_SURFACE
 SUBDIRS += cairo-fdr

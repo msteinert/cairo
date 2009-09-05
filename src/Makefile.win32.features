@@ -465,3 +465,10 @@ all_cairo_sources += $(cairo_user_sources)
 enabled_cairo_headers += $(cairo_user_headers)
 enabled_cairo_private += $(cairo_user_private)
 enabled_cairo_sources += $(cairo_user_sources)
+
+all_cairo_private += $(cairo_trace_private) $(cairo_trace_headers)
+all_cairo_sources += $(cairo_trace_sources)
+ifeq ($(CAIRO_HAS_TRACE),1)
+enabled_cairo_private += $(cairo_trace_private) $(cairo_trace_headers)
+enabled_cairo_sources += $(cairo_trace_sources)
+endif

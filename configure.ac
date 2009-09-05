@@ -644,9 +644,11 @@ case $host in
 	;;
 esac
 
-AM_CONDITIONAL(BUILD_TRACE,
-	       test "x$have_ld_preload" = "xyes" \
-	       -a "x$have_libz" = "xyes")
+CAIRO_ENABLE(trace, cairo-trace, yes, [
+	if test "x$have_ld_preload" != "xyes" -o "x$have_libz" != "xyes"; then
+		use_trace="no (requires dynamic linker and zlib)"
+	fi
+])
 
 AM_CONDITIONAL(BUILD_SCRIPT, test "x$have_libz" = "xyes")
 
