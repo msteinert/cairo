@@ -88,6 +88,22 @@ cairo_boilerplate_content_name (cairo_content_t content)
     }
 }
 
+static const char *
+_cairo_boilerplate_content_visible_name (cairo_content_t content)
+{
+    switch (cairo_boilerplate_content (content)) {
+    case CAIRO_CONTENT_COLOR:
+	return "rgb";
+    case CAIRO_CONTENT_COLOR_ALPHA:
+	return "rgba";
+    case CAIRO_CONTENT_ALPHA:
+	return "a";
+    default:
+	assert (0); /* not reached */
+	return "---";
+    }
+}
+
 cairo_format_t
 cairo_boilerplate_format_from_content (cairo_content_t content)
 {
@@ -359,6 +375,43 @@ _cairo_boilerplate_register_backend (const cairo_boilerplate_target_t *targets,
     }
 }
 
+static cairo_bool_t
+_cairo_boilerplate_target_matches_name (const cairo_boilerplate_target_t *target,
+					const char                       *tname,
+					const char                       *end)
+{
+    char const *content_name;
+    const char *content_start = strpbrk (tname, ".");
+    const char *content_end = end;
+    size_t name_len;
+    size_t content_len;
+
+    if (content_start != NULL)
+	end = content_start++;
+
+    name_len = end - tname;
+
+    /* Check name. */
+    if (0 != strncmp (target->name, tname, name_len)) /* exact match? */
+	return FALSE;
+    if (isalnum (target->name[name_len]))
+	return FALSE;
+
+    /* Check optional content. */
+    if (content_start == NULL)	/* none given? */
+	return TRUE;
+
+    /* Exact content match? */
+    content_name = _cairo_boilerplate_content_visible_name (target->content);
+    content_len = content_end - content_start;
+    if (strlen(content_name) != content_len)
+	return FALSE;
+    if (0 == strncmp (content_name, content_start, content_len))
+	return TRUE;
+
+    return FALSE;
+}
+
 const cairo_boilerplate_target_t **
 cairo_boilerplate_get_targets (int *pnum_targets, cairo_bool_t *plimited_targets)
 {
@@ -394,8 +447,7 @@ cairo_boilerplate_get_targets (int *pnum_targets, cairo_bool_t *plimited_targets
 		 list = list->next)
 	    {
 		const cairo_boilerplate_target_t *target = list->target;
-		if (0 == strncmp (target->name, tname, end - tname) &&
-		    !isalnum (target->name[end - tname])) {
+		if (_cairo_boilerplate_target_matches_name (target, tname, end)) {
 		    /* realloc isn't exactly the best thing here, but meh. */
 		    targets_to_test = xrealloc (targets_to_test, sizeof(cairo_boilerplate_target_t *) * (num_targets+1));
 		    targets_to_test[num_targets++] = target;
@@ -465,8 +517,9 @@ cairo_boilerplate_get_targets (int *pnum_targets, cairo_bool_t *plimited_targets
 	    }
 
 	    for (i = j = 0; i < num_targets; i++) {
-		if (strncmp (targets_to_test[i]->name, tname, end - tname) ||
-		    isalnum (targets_to_test[i]->name[end - tname]))
+		const cairo_boilerplate_target_t *target = targets_to_test[i];
+		if (! _cairo_boilerplate_target_matches_name (target,
+							      tname, end))
 		{
 		    targets_to_test[j++] = targets_to_test[i];
 		}
