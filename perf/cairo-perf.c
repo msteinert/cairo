@@ -48,9 +48,11 @@
 #include <sched.h>
 #endif
 
-#define CAIRO_PERF_ITERATIONS_DEFAULT	100
-#define CAIRO_PERF_LOW_STD_DEV		0.03
-#define CAIRO_PERF_STABLE_STD_DEV_COUNT	5
+#define CAIRO_PERF_ITERATIONS_DEFAULT		100
+#define CAIRO_PERF_LOW_STD_DEV			0.03
+#define CAIRO_PERF_STABLE_STD_DEV_COUNT		5
+#define CAIRO_PERF_ITERATION_MS_DEFAULT		2000
+#define CAIRO_PERF_ITERATION_MS_FAST		5
 
 typedef struct _cairo_perf_case {
     CAIRO_PERF_DECL (*run);
@@ -251,26 +253,31 @@ cairo_perf_run (cairo_perf_t		*perf,
 		                           cairo_boilerplate_content (perf->target->content));
 	perf_func (perf->cr, perf->size, perf->size, 1);
 	calibration0 = perf_func (perf->cr, perf->size, perf->size, 1);
-	loops = cairo_perf_ticks_per_second () / 100 / calibration0;
-	if (loops < 3)
-	    loops = 3;
-	calibration = (calibration0 + perf_func (perf->cr, perf->size, perf->size, loops)) / (loops + 1);
-	if (similar)
-	    cairo_pattern_destroy (cairo_pop_group (perf->cr));
+	if (perf->fast_and_sloppy) {
+	    calibration = calibration0;
+	} else {
+	    loops = cairo_perf_ticks_per_second () / 100 / calibration0;
+	    if (loops < 3)
+		loops = 3;
+	    calibration = (calibration0 + perf_func (perf->cr, perf->size, perf->size, loops)) / (loops + 1);
+	    if (similar)
+		cairo_pattern_destroy (cairo_pop_group (perf->cr));
+	}
 
 	/* XXX
-	 * Compute the number of loops required for the timing interval to
-	 * be ~2 seconds. This helps to eliminate sampling variance due to
-	 * timing and other systematic errors. However, it also hides
-	 * synchronisation overhead as we attempt to process a large batch
-	 * of identical operations in a single shot. This can be considered
-	 * both good and bad... It would be good to perform a more rigorous
-	 * analysis of the synchronisation overhead, that is to estimate
-	 * the time for loop=0.
+	 * Compute the number of loops required for the timing
+	 * interval to be perf->ms_per_iteration milliseconds. This
+	 * helps to eliminate sampling variance due to timing and
+	 * other systematic errors.  However, it also hides
+	 * synchronisation overhead as we attempt to process a large
+	 * batch of identical operations in a single shot. This can be
+	 * considered both good and bad... It would be good to perform
+	 * a more rigorous analysis of the synchronisation overhead,
+	 * that is to estimate the time for loop=0.
 	 */
-	loops = 2 * cairo_perf_ticks_per_second () / calibration;
+	loops = perf->ms_per_iteration * 0.001 * cairo_perf_ticks_per_second () / calibration;
 	if (loops < 10)
-	    loops = 10;
+	    loops = perf->fast_and_sloppy ? 1 : 10;
 
 	low_std_dev_count = 0;
 	for (i =0; i < perf->iterations; i++) {
@@ -350,6 +357,7 @@ parse_options (cairo_perf_t *perf, int argc, char *argv[])
 {
     int c;
     const char *iters;
+    const char *ms = NULL;
     char *end;
     int verbose = 0;
 
@@ -359,6 +367,12 @@ parse_options (cairo_perf_t *perf, int argc, char *argv[])
 	perf->iterations = CAIRO_PERF_ITERATIONS_DEFAULT;
     perf->exact_iterations = 0;
 
+    perf->fast_and_sloppy = FALSE;
+    perf->ms_per_iteration = CAIRO_PERF_ITERATION_MS_DEFAULT;
+    if ((ms = getenv("CAIRO_PERF_ITERATION_MS")) && *ms) {
+	perf->ms_per_iteration = atof(ms);
+    }
+
     perf->raw = FALSE;
     perf->list_only = FALSE;
     perf->names = NULL;
@@ -366,7 +380,7 @@ parse_options (cairo_perf_t *perf, int argc, char *argv[])
     perf->summary = stdout;
 
     while (1) {
-	c = _cairo_getopt (argc, argv, "i:lrv");
+	c = _cairo_getopt (argc, argv, "i:lrvf");
 	if (c == -1)
 	    break;
 
@@ -386,6 +400,11 @@ parse_options (cairo_perf_t *perf, int argc, char *argv[])
 	case 'r':
 	    perf->raw = TRUE;
 	    perf->summary = NULL;
+	    break;
+	case 'f':
+	    perf->fast_and_sloppy = TRUE;
+	    if (ms == NULL)
+		perf->ms_per_iteration = CAIRO_PERF_ITERATION_MS_FAST;
 	    break;
 	case 'v':
 	    verbose = 1;
