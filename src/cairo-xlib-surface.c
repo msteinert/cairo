@@ -3063,6 +3063,11 @@ cairo_xlib_surface_create (Display     *dpy,
     cairo_surface_t *surface;
     cairo_status_t status;
 
+    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX) {
+	/* you're lying, and you know it! */
+	return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_SIZE);
+    }
+
     scr = _cairo_xlib_screen_from_visual (dpy, visual);
     if (scr == NULL)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_VISUAL));
@@ -3103,6 +3108,9 @@ cairo_xlib_surface_create_for_bitmap (Display  *dpy,
     cairo_xlib_screen_t *screen;
     cairo_surface_t *surface;
     cairo_status_t status;
+
+    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
+	return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_SIZE);
 
     status = _cairo_xlib_screen_get (dpy, scr, &screen);
     if (unlikely (status))
@@ -3148,6 +3156,9 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
     cairo_xlib_screen_t *screen;
     cairo_surface_t *surface;
     cairo_status_t status;
+
+    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
+	return _cairo_surface_create_in_error (CAIRO_STATUS_INVALID_SIZE);
 
     status = _cairo_xlib_screen_get (dpy, scr, &screen);
     if (unlikely (status))
@@ -3222,6 +3233,12 @@ cairo_xlib_surface_set_size (cairo_surface_t *abstract_surface,
 	return;
     }
 
+    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX) {
+	status = _cairo_surface_set_error (abstract_surface,
+		                           CAIRO_STATUS_INVALID_SIZE);
+	return;
+    }
+
     surface->width = width;
     surface->height = height;
 }
@@ -3251,6 +3268,12 @@ cairo_xlib_surface_set_drawable (cairo_surface_t   *abstract_surface,
     if (! _cairo_surface_is_xlib (abstract_surface)) {
 	status = _cairo_surface_set_error (abstract_surface,
 		                           CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+	return;
+    }
+
+    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX) {
+	status = _cairo_surface_set_error (abstract_surface,
+		                           CAIRO_STATUS_INVALID_SIZE);
 	return;
     }
 
@@ -3423,7 +3446,7 @@ cairo_xlib_surface_get_width (cairo_surface_t *abstract_surface)
 
     if (! _cairo_surface_is_xlib (abstract_surface)) {
 	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
-	return -1;
+	return 0;
     }
 
     return surface->width;
@@ -3446,7 +3469,7 @@ cairo_xlib_surface_get_height (cairo_surface_t *abstract_surface)
 
     if (! _cairo_surface_is_xlib (abstract_surface)) {
 	_cairo_error_throw (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
-	return -1;
+	return 0;
     }
 
     return surface->height;
