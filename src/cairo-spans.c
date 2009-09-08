@@ -102,8 +102,8 @@ _cairo_surface_composite_trapezoids_as_polygon (cairo_surface_t	*surface,
 
     rects.src.x = src_x;
     rects.src.y = src_y;
-    rects.dst.x = 0;
-    rects.dst.y = 0;
+    rects.dst.x = dst_x;
+    rects.dst.y = dst_y;
     rects.mask.x = dst_x;
     rects.mask.y = dst_y;
     rects.width  = width;
