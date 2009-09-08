@@ -739,10 +739,14 @@ _cairo_gl_surface_acquire_source_image (void		       *abstract_surface,
 					void		      **image_extra)
 {
     cairo_gl_surface_t *surface = abstract_surface;
+    cairo_rectangle_int_t extents;
 
     *image_extra = NULL;
 
-    return _cairo_gl_surface_get_image (surface, NULL, image_out, NULL);
+    extents.x = extents.y = 0;
+    extents.width = surface->width;
+    extents.height = surface->height;
+    return _cairo_gl_surface_get_image (surface, &extents, image_out, NULL);
 }
 
 static void
