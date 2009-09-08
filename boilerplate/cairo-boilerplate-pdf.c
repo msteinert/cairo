@@ -225,6 +225,7 @@ _cairo_boilerplate_pdf_force_fallbacks (cairo_surface_t *abstract_surface,
 }
 
 static const cairo_boilerplate_target_t targets[] = {
+#if CAIRO_CAN_TEST_PDF_SURFACE
     {
 	"pdf", "pdf", ".pdf", NULL,
 	CAIRO_SURFACE_TYPE_PDF,
@@ -250,5 +251,6 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_pdf_cleanup,
 	NULL, TRUE, TRUE
     },
+#endif
 };
 CAIRO_BOILERPLATE (pdf, targets)

@@ -2,7 +2,7 @@ include $(top_srcdir)/build/Makefile.am.common
 
 SUBDIRS = .
 
-if BUILD_SCRIPT
+if CAIRO_HAS_INTERPRETER
 SUBDIRS += cairo-script
 endif
 
@@ -25,7 +25,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/src \
 	      $(CAIRO_CFLAGS)
 
 EXTRA_PROGRAMS += show-traps show-edges show-events
-if BUILD_SCRIPT
+if CAIRO_HAS_INTERPRETER
 EXTRA_PROGRAMS += trace-to-xml xml-to-trace
 endif
 

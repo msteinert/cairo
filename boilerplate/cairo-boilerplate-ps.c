@@ -290,6 +290,7 @@ _cairo_boilerplate_ps_force_fallbacks (cairo_surface_t *abstract_surface,
 }
 
 static const cairo_boilerplate_target_t targets[] = {
+#if CAIRO_CAN_TEST_PS_SURFACE
     {
 	"ps2", "ps", ".ps", NULL,
 	CAIRO_SURFACE_TYPE_PS,
@@ -340,5 +341,6 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_ps_cleanup,
 	NULL, TRUE, TRUE
     },
+#endif
 };
 CAIRO_BOILERPLATE (ps, targets)

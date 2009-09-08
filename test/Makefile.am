@@ -54,6 +54,7 @@ test_sources += $(multi_page_surface_test_sources)
 endif
 
 # Include fallback-resolution (once!) if we have any of the vector surfaces
+if BUILD_ANY2PPM
 if CAIRO_HAS_SVG_SURFACE
 test = $(fallback_resolution_test_sources)
 endif
@@ -62,6 +63,7 @@ test = $(fallback_resolution_test_sources)
 endif
 if CAIRO_HAS_PS_SURFACE
 test = $(fallback_resolution_test_sources)
+endif
 endif
 test_sources += $(test)
 

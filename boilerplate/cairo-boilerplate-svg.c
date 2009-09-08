@@ -266,6 +266,7 @@ _cairo_boilerplate_svg_force_fallbacks (cairo_surface_t *abstract_surface,
 }
 
 static const cairo_boilerplate_target_t targets[] = {
+#if CAIRO_CAN_TEST_SVG_SURFACE
     /* It seems we should be able to round-trip SVG content perfectly
      * through librsvg and cairo, but for some mysterious reason, some
      * systems get an error of 1 for some pixels on some of the text
@@ -319,5 +320,6 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_svg_cleanup,
 	NULL, TRUE, TRUE
     },
+#endif
 };
 CAIRO_BOILERPLATE (svg, targets)

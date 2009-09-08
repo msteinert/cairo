@@ -504,7 +504,7 @@ if test "x$use_ps" = "xyes"; then
   libspectre_DEPENDENCY="libspectre >= $SPECTRE_VERSION_REQUIRED"
   PKG_CHECK_MODULES(LIBSPECTRE, $libspectre_DEPENDENCY,
 		    [any2ppm_ps=yes],
-		    [AC_MSG_RESULT(no)])
+		    [test_ps="no (requires libspectre)"])
 fi
 
 AM_CONDITIONAL(CAIRO_CAN_TEST_PS_SURFACE, test "x$test_ps" = "xyes")
@@ -535,8 +535,8 @@ if test "x$use_pdf" = "xyes"; then
   PKG_CHECK_MODULES(POPPLER, $poppler_DEPENDENCY,
 		    [CAIRO_CHECK_FUNCS_WITH_FLAGS(poppler_page_render, [$POPPLER_CFLAGS], [$POPPLER_LIBS],
                     [test_pdf=yes; any2ppm_pdf=yes],
-		    [AC_MSG_RESULT(no); test_pdf="no (requires $poppler_DEPENDENCY)"])],
-		    [AC_MSG_RESULT(no); test_pdf="no (requires $poppler_DEPENDENCY)"])
+		    [test_pdf="no (requires $poppler_DEPENDENCY)"])],
+		    [test_pdf="no (requires $poppler_DEPENDENCY)"])
   if test "x$test_pdf" = "xyes"; then
     AC_DEFINE([CAIRO_CAN_TEST_PDF_SURFACE], 1, [Define to 1 if the PDF backend can be tested (need poppler and other dependencies for pdf2png)])
   else
@@ -566,8 +566,8 @@ if test "x$use_svg" = "xyes"; then
   PKG_CHECK_MODULES(LIBRSVG, $librsvg_DEPENDENCY gdk-2.0,
 		    [CAIRO_CHECK_FUNCS_WITH_FLAGS(rsvg_pixbuf_from_file, [$LIBRSVG_CFLAGS], [$LIBRSVG_LIBS],
                     [test_svg=yes; any2ppm_svg=yes],
-		    [AC_MSG_RESULT(no); test_svg="no (requires $librsvg_DEPENDENCY)"])],
-		    [AC_MSG_RESULT(no); test_svg="no (requires $librsvg_DEPENDENCY)"])
+		    [test_svg="no (requires $librsvg_DEPENDENCY)"])],
+		    [test_svg="no (requires $librsvg_DEPENDENCY)"])
   if test "x$test_svg" = "xyes"; then
     AC_DEFINE([CAIRO_CAN_TEST_SVG_SURFACE], 1, [Define to 1 if the SVG backend can be tested])
   else
@@ -645,12 +645,18 @@ case $host in
 esac
 
 CAIRO_ENABLE(trace, cairo-trace, yes, [
-	if test "x$have_ld_preload" != "xyes" -o "x$have_libz" != "xyes"; then
+	if test "x$have_ld_preload" != "xyes" -o \
+		"x$have_libz" != "xyes" -o \
+		"x$have_dl" != "xyes"; then
 		use_trace="no (requires dynamic linker and zlib)"
 	fi
 ])
 
-AM_CONDITIONAL(BUILD_SCRIPT, test "x$have_libz" = "xyes")
+CAIRO_ENABLE(interpreter, cairo-script-interpreter, yes, [
+	if test "x$have_libz" != "xyes" "x$have_dl" != "xyes"; then
+		use_interpreter="no (requires zlib)"
+	fi
+])
 
 AC_CHECK_LIB(bfd, bfd_openr,
 	 [AC_CHECK_HEADER(bfd.h, [have_bfd=yes],

@@ -472,3 +472,10 @@ ifeq ($(CAIRO_HAS_TRACE),1)
 enabled_cairo_private += $(cairo_trace_private) $(cairo_trace_headers)
 enabled_cairo_sources += $(cairo_trace_sources)
 endif
+
+all_cairo_private += $(cairo_interpreter_private) $(cairo_interpreter_headers)
+all_cairo_sources += $(cairo_interpreter_sources)
+ifeq ($(CAIRO_HAS_INTERPRETER),1)
+enabled_cairo_private += $(cairo_interpreter_private) $(cairo_interpreter_headers)
+enabled_cairo_sources += $(cairo_interpreter_sources)
+endif

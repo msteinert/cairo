@@ -257,6 +257,7 @@ _create_image (void *closure,
     return cairo_surface_reference (*out);
 }
 
+#if CAIRO_HAS_INTERPRETER
 static const char *
 _cairo_script_render_page (const char *filename,
 			   cairo_surface_t **surface_out)
@@ -303,6 +304,13 @@ cs_convert (char **argv, int fd)
 
     return err;
 }
+#else
+static const char *
+cs_convert (char **argv, int fd)
+{
+    return "compiled without CairoScript support.";
+}
+#endif
 
 #if CAIRO_CAN_TEST_PDF_SURFACE
 /* adapted from pdf2png.c */
