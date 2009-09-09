@@ -4,6 +4,8 @@
 <moduleset>
   <include href="http://cgit.freedesktop.org/xorg/util/modular/plain/xorg.modules" />
 
+  <repository type="git" name="git.freedesktop.org" href="git://anongit.freedesktop.org/git/"/>
+
   <autotools id="cairo">
     <branch repo="git.freedesktop.org" module="cairo"/>
     <dependencies>
