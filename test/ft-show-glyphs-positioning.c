@@ -59,10 +59,11 @@ glyph_array_show (glyph_array_t *glyphs, cairo_t *cr)
 
 #define DOUBLE_FROM_26_6(t) ((double)(t) / 64.0)
 
-static void
+static cairo_status_t
 glyph_array_add_text(glyph_array_t *glyphs, cairo_t *cr, const char *s, double spacing)
 {
     cairo_scaled_font_t *scaled_font;
+    cairo_status_t status;
     FT_Face face;
     unsigned long charcode;
     unsigned int index;
@@ -73,7 +74,14 @@ glyph_array_add_text(glyph_array_t *glyphs, cairo_t *cr, const char *s, double s
     int first = TRUE;
 
     scaled_font = cairo_get_scaled_font (cr);
+    status = cairo_scaled_font_status (scaled_font);
+    if (status)
+	return status;
+
     face = cairo_ft_scaled_font_lock_face (scaled_font);
+    if (face)
+	return CAIRO_STATUS_FONT_TYPE_MISMATCH;
+
     p = s;
     while (*p)
     {
@@ -106,13 +114,16 @@ glyph_array_add_text(glyph_array_t *glyphs, cairo_t *cr, const char *s, double s
     }
 
     cairo_ft_scaled_font_unlock_face (scaled_font);
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
+    const cairo_test_context_t *ctx = cairo_test_get_context (cr);
     glyph_array_t glyphs;
     cairo_font_options_t *font_options;
+    cairo_status_t status;
 
     /* paint white so we don't need separate ref images for
      * RGB24 and ARGB32 */
@@ -133,19 +144,40 @@ draw (cairo_t *cr, int width, int height)
     cairo_set_source_rgb (cr, 0.0, 0.0, 0.0);
 
     glyph_array_init (&glyphs, 1, TEXT_SIZE);
-    glyph_array_add_text(&glyphs, cr, "AWAY again", 0.0);
+
+    status = glyph_array_add_text(&glyphs, cr, "AWAY again", 0.0);
+    if (status)
+	return cairo_test_status_from_status (ctx, status);
+
     glyph_array_rel_move_to (&glyphs, TEXT_SIZE*1, 0.0);
-    glyph_array_add_text(&glyphs, cr, "character space", TEXT_SIZE*0.3);
+    status = glyph_array_add_text(&glyphs, cr, "character space", TEXT_SIZE*0.3);
+    if (status)
+	return cairo_test_status_from_status (ctx, status);
+
     glyph_array_show (&glyphs, cr);
 
+
     glyph_array_init (&glyphs, 1, TEXT_SIZE*2 + 4);
-    glyph_array_add_text(&glyphs, cr, "Increasing", 0.0);
+
+    status = glyph_array_add_text(&glyphs, cr, "Increasing", 0.0);
+    if (status)
+	return cairo_test_status_from_status (ctx, status);
+
     glyph_array_rel_move_to (&glyphs, TEXT_SIZE*0.5, 0.0);
-    glyph_array_add_text(&glyphs, cr, "space", 0.0);
+    status = glyph_array_add_text(&glyphs, cr, "space", 0.0);
+    if (status)
+	return cairo_test_status_from_status (ctx, status);
+
     glyph_array_rel_move_to (&glyphs, TEXT_SIZE*1.0, 0.0);
-    glyph_array_add_text(&glyphs, cr, "between", 0.0);
+    status = glyph_array_add_text(&glyphs, cr, "between", 0.0);
+    if (status)
+	return cairo_test_status_from_status (ctx, status);
+
     glyph_array_rel_move_to (&glyphs, TEXT_SIZE*1.5, 0.0);
-    glyph_array_add_text(&glyphs, cr, "words", 0.0);
+    status = glyph_array_add_text(&glyphs, cr, "words", 0.0);
+    if (status)
+	return cairo_test_status_from_status (ctx, status);
+
     glyph_array_show (&glyphs, cr);
 
     return CAIRO_TEST_SUCCESS;
