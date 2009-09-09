@@ -4,10 +4,10 @@
 <moduleset>
   <include href="http://cgit.freedesktop.org/xorg/util/modular/plain/xorg.modules" />
 
-  <repository type="git" name="git.freedesktop.org" href="git://anongit.freedesktop.org/git/"/>
+  <repository type="git" name="fd.o" href="git://anongit.freedesktop.org/git/"/>
 
   <autotools id="cairo">
-    <branch repo="git.freedesktop.org" module="cairo"/>
+    <branch repo="fd.o" module="cairo"/>
     <dependencies>
       <dep package="pixman"/>
       <dep package="fontconfig"/>
