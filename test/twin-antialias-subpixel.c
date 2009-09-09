@@ -66,6 +66,6 @@ draw (cairo_t *cr, int width, int height)
 CAIRO_TEST (twin_antialias_subpixel,
 	    "Tests the internal font (with subpixel antialiasing)",
 	    "twin, font", /* keywords */
-	    NULL, /* requirements */
+	    "target=raster", /* requirements */
 	    140, 60,
 	    NULL, draw)

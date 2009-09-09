@@ -92,6 +92,6 @@ draw (cairo_t *cr, int width, int height)
 CAIRO_TEST (large_twin_antialias_mixed,
 	    "Tests the internal font (with intermixed antialiasing)",
 	    "twin, font", /* keywords */
-	    NULL, /* requirements */
+	    "target=raster", /* requirements */
 	    524, 240,
 	    NULL, draw)
