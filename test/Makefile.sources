@@ -111,6 +111,7 @@ test_sources = \
 	large-font.c					\
 	large-source.c					\
 	large-source-roi.c				\
+	large-twin-antialias-mixed.c			\
 	leaky-dash.c					\
 	leaky-dashed-rectangle.c			\
 	leaky-dashed-stroke.c				\

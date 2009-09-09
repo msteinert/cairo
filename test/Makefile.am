@@ -561,6 +561,8 @@ REFERENCE_IMAGES = \
 	large-font.ref.png \
 	large-source.ref.png \
 	large-source-roi.ref.png \
+	large-twin-antialias-mixed.ref.png \
+	large-twin-antialias-mixed.xlib.ref.png \
 	leaky-dash.ps2.argb32.ref.png \
 	leaky-dash.ps2.rgb24.ref.png \
 	leaky-dash.ps3.argb32.ref.png \
