@@ -1369,6 +1369,52 @@ REPEAT:
 	    cairo_test_copy_file (test_filename, pass_filename);
 	}
 
+	/* If failed, compare against the current image output,
+	 * and attempt to detect systematic failures.
+	 */
+	if (ret == CAIRO_TEST_FAILURE) {
+	    char *image_out_path;
+
+	    image_out_path =
+		cairo_test_reference_filename (ctx,
+					       base_name,
+					       ctx->test_name,
+					       "image",
+					       "image",
+					       format,
+					       CAIRO_TEST_OUT_SUFFIX,
+					       CAIRO_TEST_PNG_EXTENSION);
+	    if (image_out_path != NULL) {
+		if (cairo_test_files_equal (out_png_path,
+					    image_out_path))
+		{
+		    ret = CAIRO_TEST_XFAILURE;
+		}
+		else
+		{
+		    ref_image =
+			cairo_image_surface_create_from_png (image_out_path);
+		    if (cairo_surface_status (ref_image) == CAIRO_STATUS_SUCCESS)
+		    {
+			diff_status = image_diff (ctx,
+						  test_image, ref_image,
+						  diff_image,
+						  &result);
+			if (diff_status == CAIRO_STATUS_SUCCESS &&
+			    (result.pixels_changed == 0 ||
+			     result.max_diff > target->error_tolerance))
+			{
+			    ret = CAIRO_TEST_XFAILURE;
+			}
+
+			cairo_surface_destroy (ref_image);
+		    }
+		}
+
+		free (image_out_path);
+	    }
+	}
+
 	cairo_surface_destroy (test_image);
 	cairo_surface_destroy (diff_image);
     }
