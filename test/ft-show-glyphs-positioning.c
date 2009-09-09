@@ -79,7 +79,7 @@ glyph_array_add_text(glyph_array_t *glyphs, cairo_t *cr, const char *s, double s
 	return status;
 
     face = cairo_ft_scaled_font_lock_face (scaled_font);
-    if (face)
+    if (face == NULL)
 	return CAIRO_STATUS_FONT_TYPE_MISMATCH;
 
     p = s;
