@@ -217,6 +217,7 @@ test_sources = \
 	translate-show-surface.c			\
 	trap-clip.c					\
 	twin.c						\
+	twin-antialias-none.c				\
 	unantialiased-shapes.c				\
 	unbounded-operator.c				\
 	user-data.c					\
