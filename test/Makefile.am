@@ -975,6 +975,8 @@ REFERENCE_IMAGES = \
 	twin.ref.png \
 	twin.svg.ref.png \
 	twin.xlib.ref.png \
+	twin-antialias-gray.ref.png \
+	twin-antialias-gray.xlib.ref.png \
 	twin-antialias-none.ref.png \
 	twin-antialias-none.xlib.ref.png \
 	unantialiased-shapes.quartz.ref.png \
