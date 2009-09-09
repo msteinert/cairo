@@ -218,6 +218,7 @@ test_sources = \
 	trap-clip.c					\
 	twin.c						\
 	twin-antialias-gray.c				\
+	twin-antialias-mixed.c				\
 	twin-antialias-none.c				\
 	twin-antialias-subpixel.c			\
 	unantialiased-shapes.c				\
