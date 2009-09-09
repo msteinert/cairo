@@ -653,7 +653,7 @@ CAIRO_ENABLE(trace, cairo-trace, yes, [
 ])
 
 CAIRO_ENABLE(interpreter, cairo-script-interpreter, yes, [
-	if test "x$have_libz" != "xyes" "x$have_dl" != "xyes"; then
+	if test "x$have_libz" != "xyes"; then
 		use_interpreter="no (requires zlib)"
 	fi
 ])
