@@ -219,6 +219,7 @@ test_sources = \
 	twin.c						\
 	twin-antialias-gray.c				\
 	twin-antialias-none.c				\
+	twin-antialias-subpixel.c			\
 	unantialiased-shapes.c				\
 	unbounded-operator.c				\
 	user-data.c					\

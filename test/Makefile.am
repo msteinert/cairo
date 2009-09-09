@@ -979,6 +979,8 @@ REFERENCE_IMAGES = \
 	twin-antialias-gray.xlib.ref.png \
 	twin-antialias-none.ref.png \
 	twin-antialias-none.xlib.ref.png \
+	twin-antialias-subpixel.ref.png \
+	twin-antialias-subpixel.xlib.ref.png \
 	unantialiased-shapes.quartz.ref.png \
 	unantialiased-shapes.ref.png \
 	unbounded-operator.gl.argb32.xfail.png \
