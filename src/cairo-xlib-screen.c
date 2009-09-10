@@ -284,7 +284,7 @@ _cairo_xlib_screen_close_display (cairo_xlib_screen_t *info)
 #endif
 
     for (i = 0; i < ARRAY_LENGTH (info->gc); i++) {
-	if (old >> (8*i) & 0x7f)
+	if ((old >> (8*i)) & 0xff)
 	    XFreeGC (dpy, info->gc[i]);
     }
 
