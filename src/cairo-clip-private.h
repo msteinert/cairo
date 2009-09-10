@@ -45,7 +45,8 @@ extern const cairo_private cairo_rectangle_list_t _cairo_rectangles_nil;
 
 enum {
     CAIRO_CLIP_PATH_HAS_REGION = 0x1,
-    CAIRO_CLIP_PATH_REGION_IS_UNSUPPORTED = 0x2
+    CAIRO_CLIP_PATH_REGION_IS_UNSUPPORTED = 0x2,
+    CAIRO_CLIP_PATH_IS_BOX = 0x4
 };
 
 struct _cairo_clip_path {
