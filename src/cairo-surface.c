@@ -1846,6 +1846,13 @@ _cairo_surface_fill_region (cairo_surface_t	   *surface,
     if (num_rects == 0)
 	return CAIRO_STATUS_SUCCESS;
 
+    /* catch a common reduction of _cairo_clip_combine_with_surface() */
+    if (op == CAIRO_OPERATOR_IN &&
+	_cairo_color_equal (color, CAIRO_COLOR_WHITE))
+    {
+	return CAIRO_STATUS_SUCCESS;
+    }
+
     if (num_rects > ARRAY_LENGTH (stack_rects)) {
 	rects = _cairo_malloc_ab (num_rects,
 				  sizeof (cairo_rectangle_int_t));
