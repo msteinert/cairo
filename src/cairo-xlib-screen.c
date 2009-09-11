@@ -414,9 +414,10 @@ _cairo_xlib_screen_get_gc (cairo_xlib_screen_t *info,
     }
 
     gcv.graphics_exposures = False;
+    gcv.fill_style = FillTiled;
     return XCreateGC (_cairo_xlib_display_get_dpy (info->display),
 		      drawable,
-		      GCGraphicsExposures, &gcv);
+		      GCGraphicsExposures | GCFillStyle, &gcv);
 }
 
 void
@@ -481,9 +482,10 @@ _cairo_xlib_screen_get_gc (cairo_xlib_screen_t *info,
 	XGCValues gcv;
 
 	gcv.graphics_exposures = False;
+	gcv.fill_style = FillTiled;
 	gc = XCreateGC (_cairo_xlib_display_get_dpy (info->display),
 			drawable,
-			GCGraphicsExposures, &gcv);
+			GCGraphicsExposures | GCFillStyle, &gcv);
     }
 
     return gc;

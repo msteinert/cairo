@@ -1472,39 +1472,18 @@ _cairo_xlib_surface_set_filter (cairo_xlib_surface_t *surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void
-_cairo_xlib_surface_set_repeat (cairo_xlib_surface_t *surface, int repeat)
+static cairo_status_t
+_cairo_xlib_surface_set_repeat (cairo_xlib_surface_t *surface,
+				cairo_extend_t extend)
 {
     XRenderPictureAttributes pa;
     unsigned long	     mask;
-
-    if (surface->repeat == repeat)
-	return;
-
-    mask = CPRepeat;
-    pa.repeat = repeat;
-
-    XRenderChangePicture (surface->dpy, surface->src_picture, mask, &pa);
-    surface->repeat = repeat;
-}
-
-static cairo_int_status_t
-_cairo_xlib_surface_set_attributes (cairo_xlib_surface_t	    *surface,
-				    cairo_surface_attributes_t	    *attributes,
-				    double			     xc,
-				    double			     yc)
-{
-    cairo_int_status_t status;
     int repeat;
 
-    _cairo_xlib_surface_ensure_src_picture (surface);
+    if (surface->extend == extend)
+	return CAIRO_STATUS_SUCCESS;
 
-    status = _cairo_xlib_surface_set_matrix (surface, &attributes->matrix,
-					     xc, yc);
-    if (unlikely (status))
-	return status;
-
-    switch (attributes->extend) {
+    switch (extend) {
     case CAIRO_EXTEND_NONE:
 	repeat = RepeatNone;
 	break;
@@ -1519,7 +1498,7 @@ _cairo_xlib_surface_set_attributes (cairo_xlib_surface_t	    *surface,
 	break;
     case CAIRO_EXTEND_PAD:
 	if (surface->buggy_pad_reflect)
-	    return UNSUPPORTED ("buggy reflect");
+	    return UNSUPPORTED ("buggy pad");
 
 	repeat = RepeatPad;
 	break;
@@ -1527,7 +1506,34 @@ _cairo_xlib_surface_set_attributes (cairo_xlib_surface_t	    *surface,
 	ASSERT_NOT_REACHED;
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
-    _cairo_xlib_surface_set_repeat (surface, repeat);
+
+    mask = CPRepeat;
+    pa.repeat = repeat;
+
+    XRenderChangePicture (surface->dpy, surface->src_picture, mask, &pa);
+    surface->extend = extend;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_int_status_t
+_cairo_xlib_surface_set_attributes (cairo_xlib_surface_t	    *surface,
+				    cairo_surface_attributes_t	    *attributes,
+				    double			     xc,
+				    double			     yc)
+{
+    cairo_int_status_t status;
+
+    _cairo_xlib_surface_ensure_src_picture (surface);
+
+    status = _cairo_xlib_surface_set_matrix (surface, &attributes->matrix,
+					     xc, yc);
+    if (unlikely (status))
+	return status;
+
+    status = _cairo_xlib_surface_set_repeat (surface, attributes->extend);
+    if (unlikely (status))
+	return status;
 
     status = _cairo_xlib_surface_set_filter (surface, attributes->filter);
     if (unlikely (status))
@@ -1640,24 +1646,32 @@ _categorize_composite_operation (cairo_xlib_surface_t *dst,
     if (! dst->buggy_repeat)
 	return DO_RENDER;
 
-    if (src_pattern->type == CAIRO_PATTERN_TYPE_SURFACE)
+    if (src_pattern->type != CAIRO_PATTERN_TYPE_SOLID &&
+	src_pattern->extend == CAIRO_EXTEND_REPEAT)
     {
-	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *)src_pattern;
-
-	if (_cairo_matrix_is_integer_translation (&src_pattern->matrix, NULL, NULL) &&
-	    src_pattern->extend == CAIRO_EXTEND_REPEAT)
+	/* Check for the bug with repeat patterns nad general transforms. */
+	if (! _cairo_matrix_is_integer_translation (&src_pattern->matrix,
+						    NULL, NULL))
 	{
+	    return DO_UNSUPPORTED;
+	}
+
+	if (have_mask ||
+	    !(op == CAIRO_OPERATOR_SOURCE || op == CAIRO_OPERATOR_OVER))
+	{
+	    return DO_UNSUPPORTED;
+	}
+
+	if (src_pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	    cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) src_pattern;
+
 	    /* This is the case where we have the bug involving
 	     * untransformed repeating source patterns with off-screen
 	     * video memory; reject some cases where a core protocol
 	     * fallback is impossible.
 	     */
-	    if (have_mask ||
-		!(op == CAIRO_OPERATOR_SOURCE || op == CAIRO_OPERATOR_OVER))
-		return DO_UNSUPPORTED;
-
 	    if (_cairo_surface_is_xlib (surface_pattern->surface)) {
-		cairo_xlib_surface_t *src = (cairo_xlib_surface_t *)surface_pattern->surface;
+		cairo_xlib_surface_t *src = (cairo_xlib_surface_t *) surface_pattern->surface;
 
 		if (op == CAIRO_OPERATOR_OVER && _surface_has_alpha (src))
 		    return DO_UNSUPPORTED;
@@ -1668,15 +1682,11 @@ _categorize_composite_operation (cairo_xlib_surface_t *dst,
 		 */
 		if (_cairo_xlib_surface_same_screen (dst, src) &&
 		    !_surfaces_compatible (dst, src))
+		{
 		    return DO_UNSUPPORTED;
+		}
 	    }
 	}
-
-	/* Check for the other bug involving repeat patterns with general
-	 * transforms. */
-	if (!_cairo_matrix_is_integer_translation (&src_pattern->matrix, NULL, NULL) &&
-	    src_pattern->extend == CAIRO_EXTEND_REPEAT)
-	    return DO_UNSUPPORTED;
     }
 
     return DO_RENDER;
@@ -1697,40 +1707,24 @@ _recategorize_composite_operation (cairo_xlib_surface_t	      *dst,
 				   cairo_surface_attributes_t *src_attr,
 				   cairo_bool_t		       have_mask)
 {
-    cairo_bool_t is_integer_translation =
-	_cairo_matrix_is_integer_translation (&src_attr->matrix, NULL, NULL);
-    cairo_bool_t needs_alpha_composite;
-
-    needs_alpha_composite =
-	_operator_needs_alpha_composite (op,
-					 _surface_has_alpha (dst),
-					 _surface_has_alpha (src));
-
+    /* Can we use the core protocol? */
     if (! have_mask &&
-	is_integer_translation &&
-	src_attr->extend == CAIRO_EXTEND_NONE &&
-	! needs_alpha_composite &&
         src->owns_pixmap &&
-	_surfaces_compatible (src, dst))
+	src->depth == dst->depth &&
+	_cairo_matrix_is_integer_translation (&src_attr->matrix, NULL, NULL) &&
+	! _operator_needs_alpha_composite (op,
+					   _surface_has_alpha (dst),
+					   _surface_has_alpha (src)))
     {
-	return DO_XCOPYAREA;
-    }
+	if (src_attr->extend == CAIRO_EXTEND_NONE)
+	    return DO_XCOPYAREA;
 
-    if (dst->buggy_repeat &&
-	is_integer_translation &&
-	src_attr->extend == CAIRO_EXTEND_REPEAT &&
-	(src->width != 1 || src->height != 1))
-    {
-	if (! have_mask &&
-	    ! needs_alpha_composite &&
-            src->owns_pixmap &&
-	    _surfaces_compatible (dst, src))
-	{
+	if (dst->buggy_repeat && src_attr->extend == CAIRO_EXTEND_REPEAT)
 	    return DO_XTILE;
-	}
-
-	return DO_UNSUPPORTED;
     }
+
+    if (dst->buggy_repeat && src_attr->extend == CAIRO_EXTEND_REPEAT)
+	return DO_UNSUPPORTED;
 
     if (! CAIRO_SURFACE_RENDER_HAS_COMPOSITE (src))
 	return DO_UNSUPPORTED;
@@ -2187,8 +2181,8 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 	if (unlikely (status))
 	    goto BAIL;
 
-	is_integer_translation = _cairo_matrix_is_integer_translation (&src_attr.matrix,
-								       &itx, &ity);
+	is_integer_translation =
+	    _cairo_matrix_is_integer_translation (&src_attr.matrix, &itx, &ity);
 	/* This is a pre-condition for DO_XCOPYAREA. */
 	assert (is_integer_translation);
 
@@ -2210,8 +2204,7 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 
 		cairo_region_get_rectangle (clip_region, n, &rect);
 		XCopyArea (dst->dpy, src->drawable, dst->drawable, gc,
-			   rect.x + src_x,
-			   rect.y + src_y,
+			   rect.x + src_x, rect.y + src_y,
 			   rect.width, rect.height,
 			   rect.x, rect.y);
 	    }
@@ -2233,15 +2226,14 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 	if (unlikely (status))
 	    goto BAIL;
 
-	is_integer_translation = _cairo_matrix_is_integer_translation (&src_attr.matrix,
-								       &itx, &ity);
+	is_integer_translation =
+	    _cairo_matrix_is_integer_translation (&src_attr.matrix, &itx, &ity);
 	/* This is a pre-condition for DO_XTILE. */
 	assert (is_integer_translation);
 
 	XSetTSOrigin (dst->dpy, gc,
 		      - (itx + src_attr.x_offset), - (ity + src_attr.y_offset));
 	XSetTile (dst->dpy, gc, src->drawable);
-	XSetFillStyle (dst->dpy, gc, FillTiled);
 
 	if (clip_region == NULL) {
 	    XFillRectangle (dst->dpy, dst->drawable, gc,
@@ -2254,8 +2246,6 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 		cairo_rectangle_int_t rect;
 
 		cairo_region_get_rectangle (clip_region, n, &rect);
-		rect.x -= dst_x;
-		rect.y -= dst_y;
 		XFillRectangle (dst->dpy, dst->drawable, gc,
 				rect.x, rect.y, rect.width, rect.height);
 	    }
@@ -2329,7 +2319,6 @@ _cairo_xlib_surface_solid_fill_rectangles (cairo_xlib_surface_t    *surface,
 		  - (surface->base.device_transform.y0 + attrs.y_offset));
     XSetTile (surface->dpy, gc,
 	      ((cairo_xlib_surface_t *) solid_surface)->drawable);
-    XSetFillStyle (surface->dpy, gc, FillTiled);
 
     for (i = 0; i < num_rects; i++) {
 	XFillRectangle (surface->dpy, surface->drawable, gc,
@@ -2423,117 +2412,41 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
     return CAIRO_STATUS_SUCCESS;
 }
 
-/* Creates an A8 picture of size @width x @height, initialized with @color
- */
-static Picture
-_create_a8_picture (cairo_xlib_surface_t *surface,
-		    XRenderColor         *color,
-		    int                   width,
-		    int                   height,
-		    cairo_bool_t          repeat)
+#define CAIRO_FIXED_16_16_MIN -32768
+#define CAIRO_FIXED_16_16_MAX 32767
+
+static cairo_bool_t
+_line_exceeds_16_16 (const cairo_line_t *line)
 {
-    XRenderPictureAttributes pa;
-    unsigned long mask = 0;
-
-    Pixmap pixmap;
-    Picture picture;
-    XRenderPictFormat *xrender_format;
-
-    if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
-	return None;
-
-    xrender_format =
-	_cairo_xlib_display_get_xrender_format (surface->display,
-						CAIRO_FORMAT_A8);
-    if (xrender_format == NULL)
-	return None;
-
-    pixmap = XCreatePixmap (surface->dpy, surface->drawable,
-			    width <= 0 ? 1 : width,
-			    height <= 0 ? 1 : height,
-			    8);
-
-    if (repeat) {
-	pa.repeat = TRUE;
-	mask = CPRepeat;
-    }
-
-    picture = XRenderCreatePicture (surface->dpy, pixmap,
-				    xrender_format, mask, &pa);
-    XRenderFillRectangle (surface->dpy, PictOpSrc, picture, color,
-			  0, 0, width, height);
-    XFreePixmap (surface->dpy, pixmap);
-
-    return picture;
+    return
+	line->p1.x < CAIRO_FIXED_16_16_MIN ||
+	line->p1.x > CAIRO_FIXED_16_16_MAX ||
+	line->p2.x < CAIRO_FIXED_16_16_MIN ||
+	line->p2.x > CAIRO_FIXED_16_16_MAX ||
+	line->p1.y < CAIRO_FIXED_16_16_MIN ||
+	line->p1.y > CAIRO_FIXED_16_16_MAX ||
+	line->p2.y < CAIRO_FIXED_16_16_MIN ||
+	line->p2.y > CAIRO_FIXED_16_16_MAX;
 }
 
-/* Creates a temporary mask for the trapezoids covering the area
- * [@dst_x, @dst_y, @width, @height] of the destination surface.
- */
-static Picture
-_create_trapezoid_mask (cairo_xlib_surface_t *dst,
-			cairo_trapezoid_t    *traps,
-			int                   num_traps,
-			int                   dst_x,
-			int                   dst_y,
-			int                   width,
-			int                   height,
-			XRenderPictFormat     *pict_format)
+static void
+_project_line_x_onto_16_16 (const cairo_line_t *line,
+			    cairo_fixed_t top,
+			    cairo_fixed_t bottom,
+			    XLineFixed *out)
 {
-    XRenderColor transparent = { 0, 0, 0, 0 };
-    XRenderColor solid = { 0xffff, 0xffff, 0xffff, 0xffff };
-    Picture mask_picture, solid_picture;
-    XTrapezoid *offset_traps;
-    int i;
+    cairo_point_double_t p1, p2;
+    double m;
 
-    /* This would be considerably simpler using XRenderAddTraps(), but since
-     * we are only using this in the unbounded-operator case, we stick with
-     * XRenderCompositeTrapezoids, which is available on older versions
-     * of RENDER rather than conditionalizing. We should still hit an
-     * optimization that avoids creating another intermediate surface on
-     * the servers that have XRenderAddTraps().
-     */
-    mask_picture = _create_a8_picture (dst, &transparent, width, height, FALSE);
-    if (mask_picture == None || num_traps == 0)
-	return mask_picture;
+    p1.x = _cairo_fixed_to_double (line->p1.x);
+    p1.y = _cairo_fixed_to_double (line->p1.y);
 
-    offset_traps = _cairo_malloc_ab (num_traps, sizeof (XTrapezoid));
-    if (!offset_traps) {
-	XRenderFreePicture (dst->dpy, mask_picture);
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return None;
-    }
+    p2.x = _cairo_fixed_to_double (line->p2.x);
+    p2.y = _cairo_fixed_to_double (line->p2.y);
 
-    for (i = 0; i < num_traps; i++) {
-	offset_traps[i].top = _cairo_fixed_to_16_16(traps[i].top) - 0x10000 * dst_y;
-	offset_traps[i].bottom = _cairo_fixed_to_16_16(traps[i].bottom) - 0x10000 * dst_y;
-	offset_traps[i].left.p1.x = _cairo_fixed_to_16_16(traps[i].left.p1.x) - 0x10000 * dst_x;
-	offset_traps[i].left.p1.y = _cairo_fixed_to_16_16(traps[i].left.p1.y) - 0x10000 * dst_y;
-	offset_traps[i].left.p2.x = _cairo_fixed_to_16_16(traps[i].left.p2.x) - 0x10000 * dst_x;
-	offset_traps[i].left.p2.y = _cairo_fixed_to_16_16(traps[i].left.p2.y) - 0x10000 * dst_y;
-	offset_traps[i].right.p1.x = _cairo_fixed_to_16_16(traps[i].right.p1.x) - 0x10000 * dst_x;
-	offset_traps[i].right.p1.y = _cairo_fixed_to_16_16(traps[i].right.p1.y) - 0x10000 * dst_y;
-	offset_traps[i].right.p2.x = _cairo_fixed_to_16_16(traps[i].right.p2.x) - 0x10000 * dst_x;
-	offset_traps[i].right.p2.y = _cairo_fixed_to_16_16(traps[i].right.p2.y) - 0x10000 * dst_y;
-    }
-
-    solid_picture = _create_a8_picture (dst, &solid, 1, 1, TRUE);
-    if (solid_picture == None) {
-	XRenderFreePicture (dst->dpy, mask_picture);
-	free (offset_traps);
-	return None;
-    }
-
-    XRenderCompositeTrapezoids (dst->dpy, PictOpAdd,
-				solid_picture, mask_picture,
-				pict_format,
-				0, 0,
-				offset_traps, num_traps);
-
-    XRenderFreePicture (dst->dpy, solid_picture);
-    free (offset_traps);
-
-    return mask_picture;
+    m = (p2.x - p1.x) / (p2.y - p1.y);
+    out->p1.x = _cairo_fixed_16_16_from_double (p1.x + m * _cairo_fixed_to_double (top - line->p1.y));
+    out->p2.x = _cairo_fixed_16_16_from_double (p1.x + m * _cairo_fixed_to_double (bottom - line->p1.y));
 }
 
 static cairo_int_status_t
@@ -2559,6 +2472,9 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
     int				render_reference_x, render_reference_y;
     int				render_src_x, render_src_y;
     XRenderPictFormat		*pict_format;
+    XTrapezoid xtraps_stack[CAIRO_STACK_ARRAY_LENGTH (XTrapezoid)];
+    XTrapezoid *xtraps = xtraps_stack;
+    int i;
 
     _cairo_xlib_display_notify (dst->display);
 
@@ -2624,6 +2540,63 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
     if (unlikely (status))
 	goto BAIL;
 
+    if (num_traps > ARRAY_LENGTH (xtraps_stack)) {
+	xtraps = _cairo_malloc_ab (num_traps, sizeof (XTrapezoid));
+	if (unlikely (xtraps == NULL)) {
+	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    goto BAIL;
+	}
+    }
+
+    for (i = 0; i < num_traps; i++) {
+	/* top/bottom will be clamped to surface bounds */
+	xtraps[i].top = _cairo_fixed_to_16_16(traps[i].top);
+	xtraps[i].bottom = _cairo_fixed_to_16_16(traps[i].bottom);
+
+	/* However, all the other coordinates will have been left untouched so
+	 * as not to introduce numerical error. Recompute them if they
+	 * exceed the 16.16 limits.
+	 */
+	if (unlikely (_line_exceeds_16_16 (&traps[i].left))) {
+	    _project_line_x_onto_16_16 (&traps[i].left,
+					traps[i].top,
+					traps[i].bottom,
+					&xtraps[i].left);
+	    xtraps[i].left.p1.y = xtraps[i].top;
+	    xtraps[i].left.p2.y = xtraps[i].bottom;
+	} else {
+	    xtraps[i].left.p1.x = _cairo_fixed_to_16_16(traps[i].left.p1.x);
+	    xtraps[i].left.p1.y = _cairo_fixed_to_16_16(traps[i].left.p1.y);
+	    xtraps[i].left.p2.x = _cairo_fixed_to_16_16(traps[i].left.p2.x);
+	    xtraps[i].left.p2.y = _cairo_fixed_to_16_16(traps[i].left.p2.y);
+	}
+
+	if (unlikely (_line_exceeds_16_16 (&traps[i].right))) {
+	    _project_line_x_onto_16_16 (&traps[i].right,
+					traps[i].top,
+					traps[i].bottom,
+					&xtraps[i].right);
+	    xtraps[i].right.p1.y = xtraps[i].top;
+	    xtraps[i].right.p2.y = xtraps[i].bottom;
+	} else {
+	    xtraps[i].right.p1.x = _cairo_fixed_to_16_16(traps[i].right.p1.x);
+	    xtraps[i].right.p1.y = _cairo_fixed_to_16_16(traps[i].right.p1.y);
+	    xtraps[i].right.p2.x = _cairo_fixed_to_16_16(traps[i].right.p2.x);
+	    xtraps[i].right.p2.y = _cairo_fixed_to_16_16(traps[i].right.p2.y);
+	}
+    }
+
+    XRenderCompositeTrapezoids (dst->dpy,
+				_render_operator (op),
+				src->src_picture, dst->dst_picture,
+				pict_format,
+				render_src_x + attributes.x_offset,
+				render_src_y + attributes.y_offset,
+				xtraps, num_traps);
+
+    if (xtraps != xtraps_stack)
+	free(xtraps);
+
     if (!_cairo_operator_bounded_by_mask (op)) {
 	/* XRenderCompositeTrapezoids() creates a mask only large enough for the
 	 * trapezoids themselves, but if the operator is unbounded, then we need
@@ -2634,27 +2607,6 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
 	 * bounds and clip. (XRenderAddTraps() could be used to make creating
 	 * the mask somewhat cheaper.)
 	 */
-	Picture mask_picture = _create_trapezoid_mask (dst, traps, num_traps,
-						       dst_x, dst_y, width, height,
-						       pict_format);
-	if (!mask_picture) {
-	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    goto BAIL;
-	}
-
-	XRenderComposite (dst->dpy,
-			  _render_operator (op),
-			  src->src_picture,
-			  mask_picture,
-			  dst->dst_picture,
-			  src_x + attributes.x_offset,
-			  src_y + attributes.y_offset,
-			  0, 0,
-			  dst_x, dst_y,
-			  width, height);
-
-	XRenderFreePicture (dst->dpy, mask_picture);
-
 	status = _cairo_surface_composite_shape_fixup_unbounded (&dst->base,
 								 &attributes, src->width, src->height,
 								 width, height,
@@ -2663,42 +2615,6 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
 								 dst_x, dst_y, width, height,
 								 clip_region);
 
-    } else {
-        XTrapezoid xtraps_stack[CAIRO_STACK_ARRAY_LENGTH (XTrapezoid)];
-        XTrapezoid *xtraps = xtraps_stack;
-        int i;
-
-        if (num_traps > ARRAY_LENGTH (xtraps_stack)) {
-            xtraps = _cairo_malloc_ab (num_traps, sizeof (XTrapezoid));
-            if (unlikely (xtraps == NULL)) {
-                status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-                goto BAIL;
-            }
-        }
-
-        for (i = 0; i < num_traps; i++) {
-            xtraps[i].top = _cairo_fixed_to_16_16(traps[i].top);
-            xtraps[i].bottom = _cairo_fixed_to_16_16(traps[i].bottom);
-            xtraps[i].left.p1.x = _cairo_fixed_to_16_16(traps[i].left.p1.x);
-            xtraps[i].left.p1.y = _cairo_fixed_to_16_16(traps[i].left.p1.y);
-            xtraps[i].left.p2.x = _cairo_fixed_to_16_16(traps[i].left.p2.x);
-            xtraps[i].left.p2.y = _cairo_fixed_to_16_16(traps[i].left.p2.y);
-            xtraps[i].right.p1.x = _cairo_fixed_to_16_16(traps[i].right.p1.x);
-            xtraps[i].right.p1.y = _cairo_fixed_to_16_16(traps[i].right.p1.y);
-            xtraps[i].right.p2.x = _cairo_fixed_to_16_16(traps[i].right.p2.x);
-            xtraps[i].right.p2.y = _cairo_fixed_to_16_16(traps[i].right.p2.y);
-        }
-
-	XRenderCompositeTrapezoids (dst->dpy,
-				    _render_operator (op),
-				    src->src_picture, dst->dst_picture,
-				    pict_format,
-				    render_src_x + attributes.x_offset,
-				    render_src_y + attributes.y_offset,
-				    xtraps, num_traps);
-
-        if (xtraps != xtraps_stack)
-            free(xtraps);
     }
 
  BAIL:
@@ -2956,7 +2872,7 @@ _cairo_xlib_surface_create_internal (cairo_xlib_screen_t	*screen,
     surface->xrender_format = xrender_format;
     surface->depth = depth;
     surface->filter = CAIRO_FILTER_NEAREST;
-    surface->repeat = FALSE;
+    surface->extend = CAIRO_EXTEND_NONE;
     surface->xtransform = identity;
 
     surface->clip_region = NULL;
