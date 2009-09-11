@@ -2021,6 +2021,42 @@ _cairo_scaled_font_glyph_device_extents (cairo_scaled_font_t	 *scaled_font,
     return CAIRO_STATUS_SUCCESS;
 }
 
+void
+_cairo_scaled_font_glyph_approximate_extents (cairo_scaled_font_t	 *scaled_font,
+					      const cairo_glyph_t	 *glyphs,
+					      int                      num_glyphs,
+					      cairo_rectangle_int_t   *extents)
+{
+    double x0 = HUGE_VAL, x1 = -HUGE_VAL;
+    double y0 = HUGE_VAL, y1 = -HUGE_VAL;
+    int i;
+
+    for (i = 0; i < num_glyphs; i++) {
+	double g;
+
+	g = glyphs[i].x;
+	if (g < x0) x0 = g;
+	if (g > x1) x1 = g;
+
+	g = glyphs[i].y;
+	if (g < y0) y0 = g;
+	if (g > y1) y1 = g;
+    }
+
+    if (x0 <= x1 && y0 <= y1) {
+	extents->x = floor (x0 - scaled_font->extents.max_x_advance);
+	extents->width = ceil (x1 + scaled_font->extents.max_x_advance);
+	extents->width -= extents->x;
+
+	extents->y = floor (y0 - scaled_font->extents.ascent);
+	extents->height = ceil (y1 + scaled_font->extents.descent);
+	extents->height -= extents->y;
+    } else {
+	extents->x = extents->y = 0;
+	extents->width = extents->height = 0;
+    }
+}
+
 cairo_status_t
 _cairo_scaled_font_show_glyphs (cairo_scaled_font_t	*scaled_font,
 				cairo_operator_t	 op,
