@@ -138,10 +138,10 @@ REFERENCE_IMAGES = \
 	alpha-similar.rgb24.ref.png \
 	alpha-similar.svg.argb32.xfail.png \
 	alpha-similar.svg.rgb24.xfail.png \
-	big-line.ps.argb32.ref.png \
-	big-line.ps.rgb24.ref.png \
-	big-line.quartz.ref.png \
-	big-line.quartz.rgb24.ref.png \
+	big-line.ref.png \
+	big-line.ps.ref.png \
+	big-line.xlib.png \
+	big-line.xlib-fallback.png \
 	bilevel-image.ref.png \
 	bitmap-font.ref.png \
 	bitmap-font.rgb24.ref.png \

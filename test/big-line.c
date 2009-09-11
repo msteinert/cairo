@@ -28,35 +28,35 @@
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
-    cairo_new_path (cr);
+    cairo_set_source_rgb (cr, 1, 1, 1);
+    cairo_paint (cr);
 
     cairo_set_source_rgb (cr, 1, 1, 0);
     cairo_move_to (cr, 50, 50);
-    cairo_line_to (cr, 50000, 50000);
+    cairo_rel_line_to (cr, 50000, 50000);
     cairo_stroke (cr);
 
     cairo_set_source_rgb (cr, 1, 0, 0);
     cairo_move_to (cr, 50, 50);
-    cairo_line_to (cr, -50000, 50000);
+    cairo_rel_line_to (cr, -50000, 50000);
     cairo_stroke (cr);
 
     cairo_set_source_rgb (cr, 0, 1, 0);
     cairo_move_to (cr, 50, 50);
-    cairo_line_to (cr, 50000, -50000);
+    cairo_rel_line_to (cr, 50000, -50000);
     cairo_stroke (cr);
 
     cairo_set_source_rgb (cr, 0, 0, 1);
     cairo_move_to (cr, 50, 50);
-    cairo_line_to (cr, -50000, -50000);
+    cairo_rel_line_to (cr, -50000, -50000);
     cairo_stroke (cr);
 
     return CAIRO_TEST_SUCCESS;
 }
 
 CAIRO_TEST (big_line,
-	    "Test drawing of simple lines with positive and negative coordinates > 2^16\n"
-	    "This currently fails because of 16-bit limitations in pixman.",
-	    "line", /* keywords */
+	    "Test drawing of simple lines with positive and negative coordinates > 2^16",
+	    "stroke, line", /* keywords */
 	    NULL, /* requirements */
 	    100, 100,
 	    NULL, draw)
