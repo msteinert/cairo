@@ -99,8 +99,10 @@ Here are some of the relevant details:
       "Bitstream Vera Sans" (Vera.ttf) [1d7f6fa0c34e3d50be52c16a0816bebac309fe41];
       "Bitstream Vera Sans Mono" (VeraMono.ttf) [2c2e2ded3c903b5186f955871109f084edef4dbe];
       "Bitstream Vera Serif" (VeraSe.ttf) [838645f09501d53647dd5edf5b961a8f8290613a];
+      [the Bitsream fonts can be installed from the ttf-dejabu Debian package]
     and also
-      "Nimbus Sans L" (n019003l.pfb).
+      "Nimbus Sans L" (n019003l.pfb)
+      [which can be found in the gsfonts Debian package].
 
   * Currently, you must be using a build of cairo using freetype
     (cairo-ft) as the default font backend. Otherwise all tests
