@@ -271,10 +271,18 @@ _pixman_format_to_masks (pixman_format_code_t	 format,
         return;
     case PIXMAN_TYPE_ABGR:
         masks->alpha_mask = MASK (a) << (b + g + r);
-        masks->blue_mask  = MASK (b) << (g +r);
+        masks->blue_mask  = MASK (b) << (g + r);
         masks->green_mask = MASK (g) << (r);
         masks->red_mask   = MASK (r);
         return;
+#ifdef PIXMAN_TYPE_BGRA
+    case PIXMAN_TYPE_BGRA:
+        masks->blue_mask  = MASK (b) << (g + r + a);
+        masks->green_mask = MASK (g) << (r + a);
+        masks->red_mask   = MASK (r) << (a);
+        masks->alpha_mask = MASK (a);
+        return;
+#endif
     case PIXMAN_TYPE_A:
         masks->alpha_mask = MASK (a);
         masks->red_mask   = 0;
