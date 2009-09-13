@@ -1824,7 +1824,7 @@ cairo_save (cairo_t *cr)
 {
     _emit_line_info ();
     _emit_cairo_op (cr, "save\n");
-    return DLCALL (cairo_save, cr);
+    DLCALL (cairo_save, cr);
 }
 
 void
@@ -1832,7 +1832,7 @@ cairo_restore (cairo_t *cr)
 {
     _emit_line_info ();
     _emit_cairo_op (cr, "restore\n");
-    return DLCALL (cairo_restore, cr);
+    DLCALL (cairo_restore, cr);
 }
 
 void
@@ -1840,7 +1840,7 @@ cairo_push_group (cairo_t *cr)
 {
     _emit_line_info ();
     _emit_cairo_op (cr, "//COLOR_ALPHA push-group\n");
-    return DLCALL (cairo_push_group, cr);
+    DLCALL (cairo_push_group, cr);
 }
 
 static const char *
@@ -1859,7 +1859,7 @@ cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
 {
     _emit_line_info ();
     _emit_cairo_op (cr, "//%s push-group\n", _content_to_string (content));
-    return DLCALL (cairo_push_group_with_content, cr, content);
+    DLCALL (cairo_push_group_with_content, cr, content);
 }
 
 cairo_pattern_t *
@@ -1881,7 +1881,7 @@ cairo_pop_group_to_source (cairo_t *cr)
 {
     _emit_line_info ();
     _emit_cairo_op (cr, "pop-group set-source\n");
-    return DLCALL (cairo_pop_group_to_source, cr);
+    DLCALL (cairo_pop_group_to_source, cr);
 }
 
 static const char *
@@ -1928,7 +1928,7 @@ cairo_set_operator (cairo_t *cr, cairo_operator_t op)
 {
     _emit_line_info ();
     _emit_cairo_op (cr, "//%s set-operator\n", _operator_to_string (op));
-    return DLCALL (cairo_set_operator, cr, op);
+    DLCALL (cairo_set_operator, cr, op);
 }
 
 void
@@ -1936,7 +1936,7 @@ cairo_set_source_rgb (cairo_t *cr, double red, double green, double blue)
 {
     _emit_line_info ();
     _emit_cairo_op (cr, "%g %g %g set-source-rgb\n", red, green, blue);
-    return DLCALL (cairo_set_source_rgb, cr, red, green, blue);
+    DLCALL (cairo_set_source_rgb, cr, red, green, blue);
 }
 
 void
@@ -1945,7 +1945,7 @@ cairo_set_source_rgba (cairo_t *cr, double red, double green, double blue, doubl
     _emit_line_info ();
     _emit_cairo_op (cr, "%g %g %g %g set-source-rgba\n",
 		    red, green, blue, alpha);
-    return DLCALL (cairo_set_source_rgba, cr, red, green, blue, alpha);
+    DLCALL (cairo_set_source_rgba, cr, red, green, blue, alpha);
 }
 
 static void
@@ -1988,8 +1988,10 @@ _emit_source_image_rectangle (cairo_surface_t *surface,
     if (obj == NULL)
 	return;
 
-    if (obj->foreign)
-	return _emit_source_image (surface);
+    if (obj->foreign) {
+	_emit_source_image (surface);
+	return;
+    }
 
     image = DLCALL (cairo_image_surface_create,
 		    CAIRO_FORMAT_ARGB32,
@@ -2038,7 +2040,7 @@ cairo_set_source_surface (cairo_t *cr, cairo_surface_t *surface, double x, doubl
 	_write_unlock ();
     }
 
-    return DLCALL (cairo_set_source_surface, cr, surface, x, y);
+    DLCALL (cairo_set_source_surface, cr, surface, x, y);
 }
 
 void
@@ -2077,7 +2079,7 @@ cairo_set_source (cairo_t *cr, cairo_pattern_t *source)
 	_write_unlock ();
     }
 
-    return DLCALL (cairo_set_source, cr, source);
+    DLCALL (cairo_set_source, cr, source);
 }
 
 cairo_pattern_t *
@@ -2101,7 +2103,7 @@ cairo_set_tolerance (cairo_t *cr, double tolerance)
 {
     _emit_line_info ();
     _emit_cairo_op (cr, "%g set-tolerance\n", tolerance);
-    return DLCALL (cairo_set_tolerance, cr, tolerance);
+    DLCALL (cairo_set_tolerance, cr, tolerance);
 }
 
 static const char *
@@ -2124,7 +2126,7 @@ cairo_set_antialias (cairo_t *cr, cairo_antialias_t antialias)
     _emit_line_info ();
     _emit_cairo_op (cr,
 		    "//%s set-antialias\n", _antialias_to_string (antialias));
-    return DLCALL (cairo_set_antialias, cr, antialias);
+    DLCALL (cairo_set_antialias, cr, antialias);
 }
 
 static const char *
@@ -2145,7 +2147,7 @@ cairo_set_fill_rule (cairo_t *cr, cairo_fill_rule_t fill_rule)
     _emit_line_info ();
     _emit_cairo_op (cr,
 		    "//%s set-fill-rule\n", _fill_rule_to_string (fill_rule));
-    return DLCALL (cairo_set_fill_rule, cr, fill_rule);
+    DLCALL (cairo_set_fill_rule, cr, fill_rule);
 }
 
 void
@@ -2153,7 +2155,7 @@ cairo_set_line_width (cairo_t *cr, double width)
 {
     _emit_line_info ();
     _emit_cairo_op (cr, "%g set-line-width\n", width);
-    return DLCALL (cairo_set_line_width, cr, width);
+    DLCALL (cairo_set_line_width, cr, width);
 }
 
 static const char *
@@ -2174,7 +2176,7 @@ cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap)
 {
     _emit_line_info ();
     _emit_cairo_op (cr, "//%s set-line-cap\n", _line_cap_to_string (line_cap));
-    return DLCALL (cairo_set_line_cap, cr, line_cap);
+    DLCALL (cairo_set_line_cap, cr, line_cap);
 }
 
 static const char *
@@ -2196,7 +2198,7 @@ cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
     _emit_line_info ();
     _emit_cairo_op (cr,
 		    "//%s set-line-join\n", _line_join_to_string (line_join));
-    return DLCALL (cairo_set_line_join, cr, line_join);
+    DLCALL (cairo_set_line_join, cr, line_join);
 }
 
 void
@@ -2219,7 +2221,7 @@ cairo_set_dash (cairo_t *cr, const double *dashes, int num_dashes, double offset
 	_write_unlock ();
     }
 
-    return DLCALL (cairo_set_dash, cr, dashes, num_dashes, offset);
+    DLCALL (cairo_set_dash, cr, dashes, num_dashes, offset);
 }
 
 void
@@ -2227,7 +2229,7 @@ cairo_set_miter_limit (cairo_t *cr, double limit)
 {
     _emit_line_info ();
     _emit_cairo_op (cr, "%g set-miter-limit\n", limit);
-    return DLCALL (cairo_set_miter_limit, cr, limit);
+    DLCALL (cairo_set_miter_limit, cr, limit);
 }
 
 void
@@ -2235,7 +2237,7 @@ cairo_translate (cairo_t *cr, double tx, double ty)
 {
     _emit_line_info ();
     _emit_cairo_op (cr, "%g %g translate\n", tx, ty);
-    return DLCALL (cairo_translate, cr, tx, ty);
+    DLCALL (cairo_translate, cr, tx, ty);
 }
 
 void
@@ -2243,7 +2245,7 @@ cairo_scale (cairo_t *cr, double sx, double sy)
 {
     _emit_line_info ();
     _emit_cairo_op (cr, "%g %g scale\n", sx, sy);
-    return DLCALL (cairo_scale, cr, sx, sy);
+    DLCALL (cairo_scale, cr, sx, sy);
 }
 
 void
@@ -2251,7 +2253,7 @@ cairo_rotate (cairo_t *cr, double angle)
 {
     _emit_line_info ();
     _emit_cairo_op (cr, "%g rotate\n", angle);
-    return DLCALL (cairo_rotate, cr, angle);
+    DLCALL (cairo_rotate, cr, angle);
 }
 
 void
@@ -2262,7 +2264,7 @@ cairo_transform (cairo_t *cr, const cairo_matrix_t *matrix)
 		    matrix->xx, matrix->yx,
 		    matrix->xy, matrix->yy,
 		    matrix->x0, matrix->y0);
-    return DLCALL (cairo_transform, cr, matrix);
+    DLCALL (cairo_transform, cr, matrix);
 }
 
 void
@@ -2277,7 +2279,7 @@ cairo_set_matrix (cairo_t *cr, const cairo_matrix_t *matrix)
 			matrix->xy, matrix->yy,
 			matrix->x0, matrix->y0);
     }
-    return DLCALL (cairo_set_matrix, cr, matrix);
+    DLCALL (cairo_set_matrix, cr, matrix);
 }
 
 cairo_surface_t *
@@ -2319,7 +2321,7 @@ cairo_identity_matrix (cairo_t *cr)
 {
     _emit_line_info ();
     _emit_cairo_op (cr, "identity set-matrix\n");
-    return DLCALL (cairo_identity_matrix, cr);
+    DLCALL (cairo_identity_matrix, cr);
 }
 
 void
@@ -2327,42 +2329,42 @@ cairo_new_path (cairo_t *cr)
 {
     _emit_line_info ();
     _emit_cairo_op (cr, "n ");
-    return DLCALL (cairo_new_path, cr);
+    DLCALL (cairo_new_path, cr);
 }
 
 void
 cairo_move_to (cairo_t *cr, double x, double y)
 {
     _emit_cairo_op (cr, "%g %g m ", x, y);
-    return DLCALL (cairo_move_to, cr, x, y);
+    DLCALL (cairo_move_to, cr, x, y);
 }
 
 void
 cairo_new_sub_path (cairo_t *cr)
 {
     _emit_cairo_op (cr, "N ");
-    return DLCALL (cairo_new_sub_path, cr);
+    DLCALL (cairo_new_sub_path, cr);
 }
 
 void
 cairo_line_to (cairo_t *cr, double x, double y)
 {
     _emit_cairo_op (cr, "%g %g l ", x, y);
-    return DLCALL (cairo_line_to, cr, x, y);
+    DLCALL (cairo_line_to, cr, x, y);
 }
 
 void
 cairo_curve_to (cairo_t *cr, double x1, double y1, double x2, double y2, double x3, double y3)
 {
     _emit_cairo_op (cr, "%g %g %g %g %g %g c ", x1, y1, x2, y2, x3, y3);
-    return DLCALL (cairo_curve_to, cr, x1, y1, x2, y2, x3, y3);
+    DLCALL (cairo_curve_to, cr, x1, y1, x2, y2, x3, y3);
 }
 
 void
 cairo_arc (cairo_t *cr, double xc, double yc, double radius, double angle1, double angle2)
 {
     _emit_cairo_op (cr, "%g %g %g %g %g arc\n", xc, yc, radius, angle1, angle2);
-    return DLCALL (cairo_arc, cr, xc, yc, radius, angle1, angle2);
+    DLCALL (cairo_arc, cr, xc, yc, radius, angle1, angle2);
 }
 
 void
@@ -2370,21 +2372,21 @@ cairo_arc_negative (cairo_t *cr, double xc, double yc, double radius, double ang
 {
     _emit_cairo_op (cr, "%g %g %g %g %g arc-\n",
 		    xc, yc, radius, angle1, angle2);
-    return DLCALL (cairo_arc_negative, cr, xc, yc, radius, angle1, angle2);
+    DLCALL (cairo_arc_negative, cr, xc, yc, radius, angle1, angle2);
 }
 
 void
 cairo_rel_move_to (cairo_t *cr, double dx, double dy)
 {
     _emit_cairo_op (cr, "%g %g M ", dx, dy);
-    return DLCALL (cairo_rel_move_to, cr, dx, dy);
+    DLCALL (cairo_rel_move_to, cr, dx, dy);
 }
 
 void
 cairo_rel_line_to (cairo_t *cr, double dx, double dy)
 {
     _emit_cairo_op (cr, "%g %g L ", dx, dy);
-    return DLCALL (cairo_rel_line_to, cr, dx, dy);
+    DLCALL (cairo_rel_line_to, cr, dx, dy);
 }
 
 void
@@ -2392,21 +2394,21 @@ cairo_rel_curve_to (cairo_t *cr, double dx1, double dy1, double dx2, double dy2,
 {
     _emit_cairo_op (cr, "%g %g %g %g %g %g C ",
 		    dx1, dy1, dx2, dy2, dx3, dy3);
-    return DLCALL (cairo_rel_curve_to, cr, dx1, dy1, dx2, dy2, dx3, dy3);
+    DLCALL (cairo_rel_curve_to, cr, dx1, dy1, dx2, dy2, dx3, dy3);
 }
 
 void
 cairo_rectangle (cairo_t *cr, double x, double y, double width, double height)
 {
     _emit_cairo_op (cr, "%g %g %g %g rectangle\n", x, y, width, height);
-    return DLCALL (cairo_rectangle, cr, x, y, width, height);
+    DLCALL (cairo_rectangle, cr, x, y, width, height);
 }
 
 void
 cairo_close_path (cairo_t *cr)
 {
     _emit_cairo_op (cr, "h\n");
-    return DLCALL (cairo_close_path, cr);
+    DLCALL (cairo_close_path, cr);
 }
 
 void
@@ -2532,7 +2534,7 @@ cairo_copy_page (cairo_t *cr)
 {
     _emit_line_info ();
     _emit_cairo_op (cr, "copy-page\n");
-    return DLCALL (cairo_copy_page, cr);
+    DLCALL (cairo_copy_page, cr);
 }
 
 void
@@ -2540,7 +2542,7 @@ cairo_show_page (cairo_t *cr)
 {
     _emit_line_info ();
     _emit_cairo_op (cr, "show-page\n");
-    return DLCALL (cairo_show_page, cr);
+    DLCALL (cairo_show_page, cr);
 }
 
 void
@@ -2564,7 +2566,7 @@ cairo_reset_clip (cairo_t *cr)
 {
     _emit_line_info ();
     _emit_cairo_op (cr, "reset-clip\n");
-    return DLCALL (cairo_reset_clip, cr);
+    DLCALL (cairo_reset_clip, cr);
 }
 
 
@@ -2605,7 +2607,7 @@ cairo_select_font_face (cairo_t *cr, const char *family, cairo_font_slant_t slan
 		       _weight_to_string (weight));
 	_write_unlock ();
     }
-    return DLCALL (cairo_select_font_face, cr, family, slant, weight);
+    DLCALL (cairo_select_font_face, cr, family, slant, weight);
 }
 
 cairo_font_face_t *
@@ -2650,7 +2652,7 @@ cairo_set_font_face (cairo_t *cr, cairo_font_face_t *font_face)
 	_write_unlock ();
     }
 
-    return DLCALL (cairo_set_font_face, cr, font_face);
+    DLCALL (cairo_set_font_face, cr, font_face);
 }
 
 void
@@ -2658,7 +2660,7 @@ cairo_set_font_size (cairo_t *cr, double size)
 {
     _emit_line_info ();
     _emit_cairo_op (cr, "%g set-font-size\n", size);
-    return DLCALL (cairo_set_font_size, cr, size);
+    DLCALL (cairo_set_font_size, cr, size);
 }
 
 void
@@ -2669,7 +2671,7 @@ cairo_set_font_matrix (cairo_t *cr, const cairo_matrix_t *matrix)
 		    matrix->xx, matrix->yx,
 		    matrix->xy, matrix->yy,
 		    matrix->x0, matrix->y0);
-    return DLCALL (cairo_set_font_matrix, cr, matrix);
+    DLCALL (cairo_set_font_matrix, cr, matrix);
 }
 
 static const char *
@@ -2763,7 +2765,7 @@ cairo_set_font_options (cairo_t *cr, const cairo_font_options_t *options)
 	_write_unlock ();
     }
 
-    return DLCALL (cairo_set_font_options, cr, options);
+    DLCALL (cairo_set_font_options, cr, options);
 }
 
 cairo_scaled_font_t *
@@ -2812,7 +2814,7 @@ cairo_set_scaled_font (cairo_t *cr, const cairo_scaled_font_t *scaled_font)
 			    _get_scaled_font_id (scaled_font));
 	}
     }
-    return DLCALL (cairo_set_scaled_font, cr, scaled_font);
+    DLCALL (cairo_set_scaled_font, cr, scaled_font);
 }
 
 static void
@@ -3063,7 +3065,7 @@ cairo_text_path (cairo_t *cr, const char *utf8)
 	_trace_printf (" text-path\n");
 	_write_unlock ();
     }
-    return DLCALL (cairo_text_path, cr, utf8);
+    DLCALL (cairo_text_path, cr, utf8);
 }
 
 void
@@ -3082,7 +3084,7 @@ cairo_glyph_path (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
 	_write_unlock ();
     }
 
-    return DLCALL (cairo_glyph_path, cr, glyphs, num_glyphs);
+    DLCALL (cairo_glyph_path, cr, glyphs, num_glyphs);
 }
 
 void
@@ -3093,8 +3095,10 @@ cairo_append_path (cairo_t *cr, const cairo_path_t *path)
     cairo_path_data_t *p;
 
     _emit_line_info ();
-    if (cr == NULL || path == NULL)
-	return DLCALL (cairo_append_path, cr, path);
+    if (cr == NULL || path == NULL) {
+	DLCALL (cairo_append_path, cr, path);
+	return;
+    }
 
     for (i=0; i < path->num_data; i += path->data[i].header.length) {
 	p = &path->data[i];
@@ -3257,14 +3261,14 @@ void
 cairo_surface_finish (cairo_surface_t *surface)
 {
     _emit_line_info ();
-    return DLCALL (cairo_surface_finish, surface);
+    DLCALL (cairo_surface_finish, surface);
 }
 
 void
 cairo_surface_flush (cairo_surface_t *surface)
 {
     _emit_line_info ();
-    return DLCALL (cairo_surface_flush, surface);
+    DLCALL (cairo_surface_flush, surface);
 }
 
 void
@@ -3281,7 +3285,7 @@ cairo_surface_mark_dirty (cairo_surface_t *surface)
 	_write_unlock ();
     }
 
-    return DLCALL (cairo_surface_mark_dirty, surface);
+    DLCALL (cairo_surface_mark_dirty, surface);
 }
 
 void
@@ -3301,7 +3305,7 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
 	_write_unlock ();
     }
 
-    return DLCALL (cairo_surface_mark_dirty_rectangle, surface, x, y, width, height);
+    DLCALL (cairo_surface_mark_dirty_rectangle, surface, x, y, width, height);
 }
 
 void
@@ -3310,7 +3314,7 @@ cairo_surface_set_device_offset (cairo_surface_t *surface, double x_offset, doub
     _emit_line_info ();
     _emit_surface_op (surface, "%g %g set-device-offset\n",
 		      x_offset, y_offset);
-    return DLCALL (cairo_surface_set_device_offset, surface, x_offset, y_offset);
+    DLCALL (cairo_surface_set_device_offset, surface, x_offset, y_offset);
 }
 
 void
@@ -3319,7 +3323,7 @@ cairo_surface_set_fallback_resolution (cairo_surface_t *surface, double x_pixels
     _emit_line_info ();
     _emit_surface_op (surface, "%g %g set-fallback-resolution\n",
 		      x_pixels_per_inch, y_pixels_per_inch);
-    return DLCALL (cairo_surface_set_fallback_resolution, surface, x_pixels_per_inch, y_pixels_per_inch);
+    DLCALL (cairo_surface_set_fallback_resolution, surface, x_pixels_per_inch, y_pixels_per_inch);
 }
 
 void
@@ -3327,7 +3331,7 @@ cairo_surface_copy_page (cairo_surface_t *surface)
 {
     _emit_line_info ();
     _emit_surface_op (surface, "copy-page\n");
-    return DLCALL (cairo_surface_copy_page, surface);
+    DLCALL (cairo_surface_copy_page, surface);
 }
 
 void
@@ -3335,7 +3339,7 @@ cairo_surface_show_page (cairo_surface_t *surface)
 {
     _emit_line_info ();
     _emit_surface_op (surface, "show-page\n");
-    return DLCALL (cairo_surface_show_page, surface);
+    DLCALL (cairo_surface_show_page, surface);
 }
 
 cairo_status_t
@@ -3540,7 +3544,7 @@ cairo_pattern_add_color_stop_rgb (cairo_pattern_t *pattern, double offset, doubl
     _emit_pattern_op (pattern,
 		      "%g %g %g %g 1 add-color-stop\n",
 		      offset, red, green, blue);
-    return DLCALL (cairo_pattern_add_color_stop_rgb, pattern, offset, red, green, blue);
+    DLCALL (cairo_pattern_add_color_stop_rgb, pattern, offset, red, green, blue);
 }
 
 void
@@ -3550,7 +3554,7 @@ cairo_pattern_add_color_stop_rgba (cairo_pattern_t *pattern, double offset, doub
     _emit_pattern_op (pattern,
 		      "%g %g %g %g %g add-color-stop\n",
 		      offset, red, green, blue, alpha);
-    return DLCALL (cairo_pattern_add_color_stop_rgba, pattern, offset, red, green, blue, alpha);
+    DLCALL (cairo_pattern_add_color_stop_rgba, pattern, offset, red, green, blue, alpha);
 }
 
 void
@@ -3566,7 +3570,7 @@ cairo_pattern_set_matrix (cairo_pattern_t *pattern, const cairo_matrix_t *matrix
 			  matrix->xy, matrix->yy,
 			  matrix->x0, matrix->y0);
     }
-    return DLCALL (cairo_pattern_set_matrix, pattern, matrix);
+    DLCALL (cairo_pattern_set_matrix, pattern, matrix);
 }
 
 static const char *
@@ -3590,7 +3594,7 @@ cairo_pattern_set_filter (cairo_pattern_t *pattern, cairo_filter_t filter)
 {
     _emit_line_info ();
     _emit_pattern_op (pattern, "//%s set-filter\n", _filter_to_string (filter));
-    return DLCALL (cairo_pattern_set_filter, pattern, filter);
+    DLCALL (cairo_pattern_set_filter, pattern, filter);
 }
 
 static const char *
@@ -3612,7 +3616,7 @@ cairo_pattern_set_extend (cairo_pattern_t *pattern, cairo_extend_t extend)
 {
     _emit_line_info ();
     _emit_pattern_op (pattern, "//%s set-extend\n", _extend_to_string (extend));
-    return DLCALL (cairo_pattern_set_extend, pattern, extend);
+    DLCALL (cairo_pattern_set_extend, pattern, extend);
 }
 
 #if CAIRO_HAS_FT_FONT
@@ -3894,7 +3898,7 @@ void
 cairo_ps_surface_set_size (cairo_surface_t *surface, double width_in_points, double height_in_points)
 {
     _emit_line_info ();
-    return DLCALL (cairo_ps_surface_set_size, surface, width_in_points, height_in_points);
+    DLCALL (cairo_ps_surface_set_size, surface, width_in_points, height_in_points);
 }
 
 #endif
@@ -3962,7 +3966,7 @@ void
 cairo_pdf_surface_set_size (cairo_surface_t *surface, double width_in_points, double height_in_points)
 {
     _emit_line_info ();
-    return DLCALL (cairo_pdf_surface_set_size, surface, width_in_points, height_in_points);
+    DLCALL (cairo_pdf_surface_set_size, surface, width_in_points, height_in_points);
 }
 #endif
 
