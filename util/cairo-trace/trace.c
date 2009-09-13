@@ -178,6 +178,10 @@ static bool _error;
 static bool _line_info;
 static bool _mark_dirty;
 static const cairo_user_data_key_t destroy_key;
+static pthread_once_t once_control = PTHREAD_ONCE_INIT;
+
+static void _init_trace (void);
+#define ENSURE_INIT_TRACE() pthread_once (&once_control, _init_trace);
 
 #if HAVE_BUILTIN_RETURN_ADDRESS && CAIRO_HAS_SYMBOL_LOOKUP
 #define _emit_line_info() do { \
@@ -394,7 +398,7 @@ _object_create (Type *type, const void *ptr)
     return obj;
 }
 
-static void __attribute__ ((constructor))
+static void
 _init_trace (void)
 {
     pthread_mutex_init (&Types.mutex, NULL);
@@ -1795,6 +1799,8 @@ cairo_create (cairo_surface_t *target)
     long surface_id;
     long context_id;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (cairo_create, target);
     context_id = _create_context_id (ret);
 
@@ -1822,6 +1828,7 @@ cairo_create (cairo_surface_t *target)
 void
 cairo_save (cairo_t *cr)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "save\n");
     DLCALL (cairo_save, cr);
@@ -1830,6 +1837,7 @@ cairo_save (cairo_t *cr)
 void
 cairo_restore (cairo_t *cr)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "restore\n");
     DLCALL (cairo_restore, cr);
@@ -1838,6 +1846,7 @@ cairo_restore (cairo_t *cr)
 void
 cairo_push_group (cairo_t *cr)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "//COLOR_ALPHA push-group\n");
     DLCALL (cairo_push_group, cr);
@@ -1857,6 +1866,7 @@ _content_to_string (cairo_content_t content)
 void
 cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "//%s push-group\n", _content_to_string (content));
     DLCALL (cairo_push_group_with_content, cr, content);
@@ -1866,6 +1876,8 @@ cairo_pattern_t *
 cairo_pop_group (cairo_t *cr)
 {
     cairo_pattern_t *ret;
+
+    ENSURE_INIT_TRACE ();
 
     ret = DLCALL (cairo_pop_group, cr);
 
@@ -1879,6 +1891,7 @@ cairo_pop_group (cairo_t *cr)
 void
 cairo_pop_group_to_source (cairo_t *cr)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "pop-group set-source\n");
     DLCALL (cairo_pop_group_to_source, cr);
@@ -1926,6 +1939,7 @@ _operator_to_string (cairo_operator_t op)
 void
 cairo_set_operator (cairo_t *cr, cairo_operator_t op)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "//%s set-operator\n", _operator_to_string (op));
     DLCALL (cairo_set_operator, cr, op);
@@ -1934,6 +1948,7 @@ cairo_set_operator (cairo_t *cr, cairo_operator_t op)
 void
 cairo_set_source_rgb (cairo_t *cr, double red, double green, double blue)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "%g %g %g set-source-rgb\n", red, green, blue);
     DLCALL (cairo_set_source_rgb, cr, red, green, blue);
@@ -1942,6 +1957,7 @@ cairo_set_source_rgb (cairo_t *cr, double red, double green, double blue)
 void
 cairo_set_source_rgba (cairo_t *cr, double red, double green, double blue, double alpha)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "%g %g %g %g set-source-rgba\n",
 		    red, green, blue, alpha);
@@ -2011,6 +2027,7 @@ _emit_source_image_rectangle (cairo_surface_t *surface,
 void
 cairo_set_source_surface (cairo_t *cr, cairo_surface_t *surface, double x, double y)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     if (cr != NULL && surface != NULL && _write_lock ()) {
 	if (_is_current (SURFACE, surface, 0) &&
@@ -2046,6 +2063,7 @@ cairo_set_source_surface (cairo_t *cr, cairo_surface_t *surface, double x, doubl
 void
 cairo_set_source (cairo_t *cr, cairo_pattern_t *source)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     if (cr != NULL && source != NULL && _write_lock ()) {
 	Object *obj = _get_object (PATTERN, source);
@@ -2087,6 +2105,8 @@ cairo_get_source (cairo_t *cr)
 {
     cairo_pattern_t *ret;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (cairo_get_source, cr);
 
     if (! _has_pattern_id (ret)) {
@@ -2101,6 +2121,7 @@ cairo_get_source (cairo_t *cr)
 void
 cairo_set_tolerance (cairo_t *cr, double tolerance)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "%g set-tolerance\n", tolerance);
     DLCALL (cairo_set_tolerance, cr, tolerance);
@@ -2123,6 +2144,7 @@ _antialias_to_string (cairo_antialias_t antialias)
 void
 cairo_set_antialias (cairo_t *cr, cairo_antialias_t antialias)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr,
 		    "//%s set-antialias\n", _antialias_to_string (antialias));
@@ -2144,6 +2166,7 @@ _fill_rule_to_string (cairo_fill_rule_t rule)
 void
 cairo_set_fill_rule (cairo_t *cr, cairo_fill_rule_t fill_rule)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr,
 		    "//%s set-fill-rule\n", _fill_rule_to_string (fill_rule));
@@ -2153,6 +2176,7 @@ cairo_set_fill_rule (cairo_t *cr, cairo_fill_rule_t fill_rule)
 void
 cairo_set_line_width (cairo_t *cr, double width)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "%g set-line-width\n", width);
     DLCALL (cairo_set_line_width, cr, width);
@@ -2174,6 +2198,7 @@ _line_cap_to_string (cairo_line_cap_t line_cap)
 void
 cairo_set_line_cap (cairo_t *cr, cairo_line_cap_t line_cap)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "//%s set-line-cap\n", _line_cap_to_string (line_cap));
     DLCALL (cairo_set_line_cap, cr, line_cap);
@@ -2195,6 +2220,7 @@ _line_join_to_string (cairo_line_join_t line_join)
 void
 cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr,
 		    "//%s set-line-join\n", _line_join_to_string (line_join));
@@ -2204,6 +2230,7 @@ cairo_set_line_join (cairo_t *cr, cairo_line_join_t line_join)
 void
 cairo_set_dash (cairo_t *cr, const double *dashes, int num_dashes, double offset)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     if (cr != NULL && _write_lock ()) {
 	int n;
@@ -2227,6 +2254,7 @@ cairo_set_dash (cairo_t *cr, const double *dashes, int num_dashes, double offset
 void
 cairo_set_miter_limit (cairo_t *cr, double limit)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "%g set-miter-limit\n", limit);
     DLCALL (cairo_set_miter_limit, cr, limit);
@@ -2235,6 +2263,7 @@ cairo_set_miter_limit (cairo_t *cr, double limit)
 void
 cairo_translate (cairo_t *cr, double tx, double ty)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "%g %g translate\n", tx, ty);
     DLCALL (cairo_translate, cr, tx, ty);
@@ -2243,6 +2272,7 @@ cairo_translate (cairo_t *cr, double tx, double ty)
 void
 cairo_scale (cairo_t *cr, double sx, double sy)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "%g %g scale\n", sx, sy);
     DLCALL (cairo_scale, cr, sx, sy);
@@ -2251,6 +2281,7 @@ cairo_scale (cairo_t *cr, double sx, double sy)
 void
 cairo_rotate (cairo_t *cr, double angle)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "%g rotate\n", angle);
     DLCALL (cairo_rotate, cr, angle);
@@ -2259,6 +2290,7 @@ cairo_rotate (cairo_t *cr, double angle)
 void
 cairo_transform (cairo_t *cr, const cairo_matrix_t *matrix)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "%g %g %g %g %g %g matrix transform\n",
 		    matrix->xx, matrix->yx,
@@ -2270,6 +2302,7 @@ cairo_transform (cairo_t *cr, const cairo_matrix_t *matrix)
 void
 cairo_set_matrix (cairo_t *cr, const cairo_matrix_t *matrix)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     if (_matrix_is_identity (matrix)) {
 	_emit_cairo_op (cr, "identity set-matrix\n");
@@ -2288,6 +2321,8 @@ cairo_get_target (cairo_t *cr)
     cairo_surface_t *ret;
     long surface_id;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (cairo_get_target, cr);
     surface_id = _create_surface_id (ret);
 
@@ -2305,6 +2340,8 @@ cairo_get_group_target (cairo_t *cr)
     cairo_surface_t *ret;
     long surface_id;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (cairo_get_group_target, cr);
     surface_id = _create_surface_id (ret);
 
@@ -2319,6 +2356,7 @@ cairo_get_group_target (cairo_t *cr)
 void
 cairo_identity_matrix (cairo_t *cr)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "identity set-matrix\n");
     DLCALL (cairo_identity_matrix, cr);
@@ -2327,6 +2365,7 @@ cairo_identity_matrix (cairo_t *cr)
 void
 cairo_new_path (cairo_t *cr)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "n ");
     DLCALL (cairo_new_path, cr);
@@ -2335,6 +2374,7 @@ cairo_new_path (cairo_t *cr)
 void
 cairo_move_to (cairo_t *cr, double x, double y)
 {
+    ENSURE_INIT_TRACE ();
     _emit_cairo_op (cr, "%g %g m ", x, y);
     DLCALL (cairo_move_to, cr, x, y);
 }
@@ -2342,6 +2382,7 @@ cairo_move_to (cairo_t *cr, double x, double y)
 void
 cairo_new_sub_path (cairo_t *cr)
 {
+    ENSURE_INIT_TRACE ();
     _emit_cairo_op (cr, "N ");
     DLCALL (cairo_new_sub_path, cr);
 }
@@ -2349,6 +2390,7 @@ cairo_new_sub_path (cairo_t *cr)
 void
 cairo_line_to (cairo_t *cr, double x, double y)
 {
+    ENSURE_INIT_TRACE ();
     _emit_cairo_op (cr, "%g %g l ", x, y);
     DLCALL (cairo_line_to, cr, x, y);
 }
@@ -2356,6 +2398,7 @@ cairo_line_to (cairo_t *cr, double x, double y)
 void
 cairo_curve_to (cairo_t *cr, double x1, double y1, double x2, double y2, double x3, double y3)
 {
+    ENSURE_INIT_TRACE ();
     _emit_cairo_op (cr, "%g %g %g %g %g %g c ", x1, y1, x2, y2, x3, y3);
     DLCALL (cairo_curve_to, cr, x1, y1, x2, y2, x3, y3);
 }
@@ -2363,6 +2406,7 @@ cairo_curve_to (cairo_t *cr, double x1, double y1, double x2, double y2, double 
 void
 cairo_arc (cairo_t *cr, double xc, double yc, double radius, double angle1, double angle2)
 {
+    ENSURE_INIT_TRACE ();
     _emit_cairo_op (cr, "%g %g %g %g %g arc\n", xc, yc, radius, angle1, angle2);
     DLCALL (cairo_arc, cr, xc, yc, radius, angle1, angle2);
 }
@@ -2370,6 +2414,7 @@ cairo_arc (cairo_t *cr, double xc, double yc, double radius, double angle1, doub
 void
 cairo_arc_negative (cairo_t *cr, double xc, double yc, double radius, double angle1, double angle2)
 {
+    ENSURE_INIT_TRACE ();
     _emit_cairo_op (cr, "%g %g %g %g %g arc-\n",
 		    xc, yc, radius, angle1, angle2);
     DLCALL (cairo_arc_negative, cr, xc, yc, radius, angle1, angle2);
@@ -2378,6 +2423,7 @@ cairo_arc_negative (cairo_t *cr, double xc, double yc, double radius, double ang
 void
 cairo_rel_move_to (cairo_t *cr, double dx, double dy)
 {
+    ENSURE_INIT_TRACE ();
     _emit_cairo_op (cr, "%g %g M ", dx, dy);
     DLCALL (cairo_rel_move_to, cr, dx, dy);
 }
@@ -2385,6 +2431,7 @@ cairo_rel_move_to (cairo_t *cr, double dx, double dy)
 void
 cairo_rel_line_to (cairo_t *cr, double dx, double dy)
 {
+    ENSURE_INIT_TRACE ();
     _emit_cairo_op (cr, "%g %g L ", dx, dy);
     DLCALL (cairo_rel_line_to, cr, dx, dy);
 }
@@ -2392,6 +2439,7 @@ cairo_rel_line_to (cairo_t *cr, double dx, double dy)
 void
 cairo_rel_curve_to (cairo_t *cr, double dx1, double dy1, double dx2, double dy2, double dx3, double dy3)
 {
+    ENSURE_INIT_TRACE ();
     _emit_cairo_op (cr, "%g %g %g %g %g %g C ",
 		    dx1, dy1, dx2, dy2, dx3, dy3);
     DLCALL (cairo_rel_curve_to, cr, dx1, dy1, dx2, dy2, dx3, dy3);
@@ -2400,6 +2448,7 @@ cairo_rel_curve_to (cairo_t *cr, double dx1, double dy1, double dx2, double dy2,
 void
 cairo_rectangle (cairo_t *cr, double x, double y, double width, double height)
 {
+    ENSURE_INIT_TRACE ();
     _emit_cairo_op (cr, "%g %g %g %g rectangle\n", x, y, width, height);
     DLCALL (cairo_rectangle, cr, x, y, width, height);
 }
@@ -2407,6 +2456,7 @@ cairo_rectangle (cairo_t *cr, double x, double y, double width, double height)
 void
 cairo_close_path (cairo_t *cr)
 {
+    ENSURE_INIT_TRACE ();
     _emit_cairo_op (cr, "h\n");
     DLCALL (cairo_close_path, cr);
 }
@@ -2414,6 +2464,7 @@ cairo_close_path (cairo_t *cr)
 void
 cairo_paint (cairo_t *cr)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "paint\n");
     DLCALL (cairo_paint, cr);
@@ -2422,6 +2473,7 @@ cairo_paint (cairo_t *cr)
 void
 cairo_paint_with_alpha (cairo_t *cr, double alpha)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "%g paint-with-alpha\n", alpha);
     DLCALL (cairo_paint_with_alpha, cr, alpha);
@@ -2430,6 +2482,7 @@ cairo_paint_with_alpha (cairo_t *cr, double alpha)
 void
 cairo_mask (cairo_t *cr, cairo_pattern_t *pattern)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     if (cr != NULL && pattern != NULL && _write_lock ()) {
 	Object *obj = _get_object (PATTERN, pattern);
@@ -2468,6 +2521,7 @@ cairo_mask (cairo_t *cr, cairo_pattern_t *pattern)
 void
 cairo_mask_surface (cairo_t *cr, cairo_surface_t *surface, double x, double y)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     if (cr != NULL && surface != NULL && _write_lock ()) {
 	if (_is_current (SURFACE, surface, 0) &&
@@ -2500,6 +2554,7 @@ cairo_mask_surface (cairo_t *cr, cairo_surface_t *surface, double x, double y)
 void
 cairo_stroke (cairo_t *cr)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "stroke\n");
     DLCALL (cairo_stroke, cr);
@@ -2508,6 +2563,7 @@ cairo_stroke (cairo_t *cr)
 void
 cairo_stroke_preserve (cairo_t *cr)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "stroke+\n");
     DLCALL (cairo_stroke_preserve, cr);
@@ -2516,6 +2572,7 @@ cairo_stroke_preserve (cairo_t *cr)
 void
 cairo_fill (cairo_t *cr)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "fill\n");
     DLCALL (cairo_fill, cr);
@@ -2524,6 +2581,7 @@ cairo_fill (cairo_t *cr)
 void
 cairo_fill_preserve (cairo_t *cr)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "fill+\n");
     DLCALL (cairo_fill_preserve, cr);
@@ -2532,6 +2590,7 @@ cairo_fill_preserve (cairo_t *cr)
 void
 cairo_copy_page (cairo_t *cr)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "copy-page\n");
     DLCALL (cairo_copy_page, cr);
@@ -2540,6 +2599,7 @@ cairo_copy_page (cairo_t *cr)
 void
 cairo_show_page (cairo_t *cr)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "show-page\n");
     DLCALL (cairo_show_page, cr);
@@ -2548,6 +2608,7 @@ cairo_show_page (cairo_t *cr)
 void
 cairo_clip (cairo_t *cr)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "clip\n");
     DLCALL (cairo_clip, cr);
@@ -2556,6 +2617,7 @@ cairo_clip (cairo_t *cr)
 void
 cairo_clip_preserve (cairo_t *cr)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "clip+\n");
     DLCALL (cairo_clip_preserve, cr);
@@ -2564,6 +2626,7 @@ cairo_clip_preserve (cairo_t *cr)
 void
 cairo_reset_clip (cairo_t *cr)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "reset-clip\n");
     DLCALL (cairo_reset_clip, cr);
@@ -2598,6 +2661,7 @@ _weight_to_string (cairo_font_weight_t font_weight)
 void
 cairo_select_font_face (cairo_t *cr, const char *family, cairo_font_slant_t slant, cairo_font_weight_t weight)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     if (cr != NULL && _write_lock ()) {
 	_emit_context (cr);
@@ -2616,6 +2680,8 @@ cairo_get_font_face (cairo_t *cr)
     cairo_font_face_t *ret;
     long font_face_id;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (cairo_get_font_face, cr);
     font_face_id = _create_font_face_id (ret);
 
@@ -2628,6 +2694,7 @@ cairo_get_font_face (cairo_t *cr)
 void
 cairo_set_font_face (cairo_t *cr, cairo_font_face_t *font_face)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     if (cr != NULL && font_face != NULL && _write_lock ()) {
 	if (_is_current (FONT_FACE, font_face, 0) &&
@@ -2658,6 +2725,7 @@ cairo_set_font_face (cairo_t *cr, cairo_font_face_t *font_face)
 void
 cairo_set_font_size (cairo_t *cr, double size)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "%g set-font-size\n", size);
     DLCALL (cairo_set_font_size, cr, size);
@@ -2666,6 +2734,7 @@ cairo_set_font_size (cairo_t *cr, double size)
 void
 cairo_set_font_matrix (cairo_t *cr, const cairo_matrix_t *matrix)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_cairo_op (cr, "%g %g %g %g %g %g matrix set-font-matrix\n",
 		    matrix->xx, matrix->yx,
@@ -2725,6 +2794,8 @@ _emit_font_options (const cairo_font_options_t *options)
     cairo_hint_style_t hint_style;
     cairo_hint_metrics_t hint_metrics;
 
+    ENSURE_INIT_TRACE ();
+
     _trace_printf ("<<");
 
     antialias = DLCALL (cairo_font_options_get_antialias, options);
@@ -2757,6 +2828,7 @@ _emit_font_options (const cairo_font_options_t *options)
 void
 cairo_set_font_options (cairo_t *cr, const cairo_font_options_t *options)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     if (cr != NULL && options != NULL && _write_lock ()) {
 	_emit_context (cr);
@@ -2773,6 +2845,8 @@ cairo_get_scaled_font (cairo_t *cr)
 {
     cairo_scaled_font_t *ret;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (cairo_get_scaled_font, cr);
 
     if (cr != NULL && ! _has_scaled_font_id (ret)) {
@@ -2787,6 +2861,7 @@ cairo_get_scaled_font (cairo_t *cr)
 void
 cairo_set_scaled_font (cairo_t *cr, const cairo_scaled_font_t *scaled_font)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     if (cr != NULL && scaled_font != NULL) {
 	if (_pop_operands_to (SCALED_FONT, scaled_font)) {
@@ -2842,6 +2917,8 @@ cairo_scaled_font_create (cairo_font_face_t *font_face,
     cairo_scaled_font_t *ret;
     long scaled_font_id;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (cairo_scaled_font_create, font_face, font_matrix, ctm, options);
     scaled_font_id = _create_scaled_font_id (ret);
 
@@ -2885,6 +2962,7 @@ cairo_scaled_font_create (cairo_font_face_t *font_face,
 void
 cairo_show_text (cairo_t *cr, const char *utf8)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     if (cr != NULL && _write_lock ()) {
 	_emit_context (cr);
@@ -2988,6 +3066,7 @@ _emit_glyphs (cairo_scaled_font_t *font,
 void
 cairo_show_glyphs (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     if (cr != NULL && glyphs != NULL && _write_lock ()) {
 	cairo_scaled_font_t *font;
@@ -3025,6 +3104,8 @@ cairo_show_text_glyphs (cairo_t			   *cr,
 {
     cairo_scaled_font_t *font;
 
+    ENSURE_INIT_TRACE ();
+
     font = DLCALL (cairo_get_scaled_font, cr);
 
     _emit_line_info ();
@@ -3058,6 +3139,7 @@ cairo_show_text_glyphs (cairo_t			   *cr,
 void
 cairo_text_path (cairo_t *cr, const char *utf8)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     if (cr != NULL && _write_lock ()) {
 	_emit_context (cr);
@@ -3072,6 +3154,8 @@ void
 cairo_glyph_path (cairo_t *cr, const cairo_glyph_t *glyphs, int num_glyphs)
 {
     cairo_scaled_font_t *font;
+
+    ENSURE_INIT_TRACE ();
 
     font = DLCALL (cairo_get_scaled_font, cr);
 
@@ -3093,6 +3177,8 @@ cairo_append_path (cairo_t *cr, const cairo_path_t *path)
     /* XXX no support for named paths, so manually reconstruct */
     int i;
     cairo_path_data_t *p;
+
+    ENSURE_INIT_TRACE ();
 
     _emit_line_info ();
     if (cr == NULL || path == NULL) {
@@ -3135,6 +3221,8 @@ cairo_image_surface_create (cairo_format_t format, int width, int height)
     long surface_id;
     const char *format_str;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (cairo_image_surface_create, format, width, height);
 
     surface_id = _create_surface_id (ret);
@@ -3163,6 +3251,8 @@ cairo_image_surface_create_for_data (unsigned char *data, cairo_format_t format,
 {
     cairo_surface_t *ret;
     long surface_id;
+
+    ENSURE_INIT_TRACE ();
 
     ret = DLCALL (cairo_image_surface_create_for_data, data, format, width, height, stride);
     surface_id = _create_surface_id (ret);
@@ -3213,6 +3303,8 @@ cairo_surface_create_similar (cairo_surface_t *other,
     cairo_surface_t *ret;
     long surface_id;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (cairo_surface_create_similar, other, content, width, height);
     surface_id = _create_surface_id (ret);
 
@@ -3260,6 +3352,7 @@ _emit_surface_op (cairo_surface_t *surface, const char *fmt, ...)
 void
 cairo_surface_finish (cairo_surface_t *surface)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     DLCALL (cairo_surface_finish, surface);
 }
@@ -3267,6 +3360,7 @@ cairo_surface_finish (cairo_surface_t *surface)
 void
 cairo_surface_flush (cairo_surface_t *surface)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     DLCALL (cairo_surface_flush, surface);
 }
@@ -3274,6 +3368,7 @@ cairo_surface_flush (cairo_surface_t *surface)
 void
 cairo_surface_mark_dirty (cairo_surface_t *surface)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     if (surface != NULL && _write_lock ()) {
 	if (_mark_dirty) {
@@ -3292,6 +3387,7 @@ void
 cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
 				    int x, int y, int width, int height)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     if (surface != NULL && _write_lock ()) {
 	if (_mark_dirty) {
@@ -3311,6 +3407,7 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
 void
 cairo_surface_set_device_offset (cairo_surface_t *surface, double x_offset, double y_offset)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_surface_op (surface, "%g %g set-device-offset\n",
 		      x_offset, y_offset);
@@ -3320,6 +3417,7 @@ cairo_surface_set_device_offset (cairo_surface_t *surface, double x_offset, doub
 void
 cairo_surface_set_fallback_resolution (cairo_surface_t *surface, double x_pixels_per_inch, double y_pixels_per_inch)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_surface_op (surface, "%g %g set-fallback-resolution\n",
 		      x_pixels_per_inch, y_pixels_per_inch);
@@ -3329,6 +3427,7 @@ cairo_surface_set_fallback_resolution (cairo_surface_t *surface, double x_pixels
 void
 cairo_surface_copy_page (cairo_surface_t *surface)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_surface_op (surface, "copy-page\n");
     DLCALL (cairo_surface_copy_page, surface);
@@ -3337,6 +3436,7 @@ cairo_surface_copy_page (cairo_surface_t *surface)
 void
 cairo_surface_show_page (cairo_surface_t *surface)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_surface_op (surface, "show-page\n");
     DLCALL (cairo_surface_show_page, surface);
@@ -3350,6 +3450,7 @@ cairo_surface_set_mime_data (cairo_surface_t		*surface,
 			     cairo_destroy_func_t	 destroy,
 			     void			*closure)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     if (surface != NULL && _write_lock ()) {
 	_emit_surface (surface);
@@ -3373,6 +3474,7 @@ cairo_surface_set_mime_data (cairo_surface_t		*surface,
 cairo_status_t
 cairo_surface_write_to_png (cairo_surface_t *surface, const char *filename)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     if (surface != NULL && _write_lock ()) {
 	_trace_printf ("%% s%ld ", _get_surface_id (surface));
@@ -3388,6 +3490,7 @@ cairo_surface_write_to_png_stream (cairo_surface_t *surface,
 				   cairo_write_func_t write_func,
 				   void *data)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     if (surface != NULL && _write_lock ()) {
 	char symbol[1024];
@@ -3429,6 +3532,8 @@ cairo_pattern_create_rgb (double red, double green, double blue)
     cairo_pattern_t *ret;
     long pattern_id;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (cairo_pattern_create_rgb, red, green, blue);
     pattern_id = _create_pattern_id (ret);
 
@@ -3448,6 +3553,8 @@ cairo_pattern_create_rgba (double red, double green, double blue, double alpha)
 {
     cairo_pattern_t *ret;
     long pattern_id;
+
+    ENSURE_INIT_TRACE ();
 
     ret = DLCALL (cairo_pattern_create_rgba, red, green, blue, alpha);
     pattern_id = _create_pattern_id (ret);
@@ -3469,6 +3576,8 @@ cairo_pattern_create_for_surface (cairo_surface_t *surface)
     cairo_pattern_t *ret;
     long pattern_id;
     long surface_id;
+
+    ENSURE_INIT_TRACE ();
 
     ret = DLCALL (cairo_pattern_create_for_surface, surface);
     pattern_id = _create_pattern_id (ret);
@@ -3500,6 +3609,8 @@ cairo_pattern_create_linear (double x0, double y0, double x1, double y1)
     cairo_pattern_t *ret;
     long pattern_id;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (cairo_pattern_create_linear, x0, y0, x1, y1);
     pattern_id = _create_pattern_id (ret);
 
@@ -3519,6 +3630,8 @@ cairo_pattern_create_radial (double cx0, double cy0, double radius0, double cx1,
 {
     cairo_pattern_t *ret;
     long pattern_id;
+
+    ENSURE_INIT_TRACE ();
 
     ret = DLCALL (cairo_pattern_create_radial,
 		  cx0, cy0, radius0,
@@ -3540,6 +3653,7 @@ cairo_pattern_create_radial (double cx0, double cy0, double radius0, double cx1,
 void
 cairo_pattern_add_color_stop_rgb (cairo_pattern_t *pattern, double offset, double red, double green, double blue)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_pattern_op (pattern,
 		      "%g %g %g %g 1 add-color-stop\n",
@@ -3550,6 +3664,7 @@ cairo_pattern_add_color_stop_rgb (cairo_pattern_t *pattern, double offset, doubl
 void
 cairo_pattern_add_color_stop_rgba (cairo_pattern_t *pattern, double offset, double red, double green, double blue, double alpha)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_pattern_op (pattern,
 		      "%g %g %g %g %g add-color-stop\n",
@@ -3560,6 +3675,7 @@ cairo_pattern_add_color_stop_rgba (cairo_pattern_t *pattern, double offset, doub
 void
 cairo_pattern_set_matrix (cairo_pattern_t *pattern, const cairo_matrix_t *matrix)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     if (_matrix_is_identity (matrix)) {
 	_emit_pattern_op (pattern, "identity set-matrix\n");
@@ -3592,6 +3708,7 @@ _filter_to_string (cairo_filter_t filter)
 void
 cairo_pattern_set_filter (cairo_pattern_t *pattern, cairo_filter_t filter)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_pattern_op (pattern, "//%s set-filter\n", _filter_to_string (filter));
     DLCALL (cairo_pattern_set_filter, pattern, filter);
@@ -3614,6 +3731,7 @@ _extend_to_string (cairo_extend_t extend)
 void
 cairo_pattern_set_extend (cairo_pattern_t *pattern, cairo_extend_t extend)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     _emit_pattern_op (pattern, "//%s set-extend\n", _extend_to_string (extend));
     DLCALL (cairo_pattern_set_extend, pattern, extend);
@@ -3626,6 +3744,8 @@ cairo_ft_font_face_create_for_pattern (FcPattern *pattern)
 {
     cairo_font_face_t *ret;
     long font_face_id;
+
+    ENSURE_INIT_TRACE ();
 
     ret = DLCALL (cairo_ft_font_face_create_for_pattern, pattern);
     font_face_id = _create_font_face_id (ret);
@@ -3678,6 +3798,8 @@ cairo_ft_font_face_create_for_ft_face (FT_Face face, int load_flags)
     Object *obj;
     FtFaceData *data;
     long font_face_id;
+
+    ENSURE_INIT_TRACE ();
 
     ret = DLCALL (cairo_ft_font_face_create_for_ft_face, face, load_flags);
     font_face_id = _create_font_face_id (ret);
@@ -3743,6 +3865,8 @@ FT_New_Face (FT_Library library, const char *pathname, FT_Long index, FT_Face *f
 {
     FT_Error ret;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (FT_New_Face, library, pathname, index, face);
     if (ret == 0) {
 	Object *obj = _type_object_create (NONE, *face);
@@ -3762,6 +3886,8 @@ FT_Error
 FT_New_Memory_Face (FT_Library library, const FT_Byte *mem, FT_Long size, FT_Long index, FT_Face *face)
 {
     FT_Error ret;
+
+    ENSURE_INIT_TRACE ();
 
     ret = DLCALL (FT_New_Memory_Face, library, mem, size, index, face);
     if (ret == 0) {
@@ -3791,6 +3917,8 @@ FT_Open_Face (FT_Library library, const FT_Open_Args *args, FT_Long index, FT_Fa
 {
     FT_Error ret;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (FT_Open_Face, library, args, index, face);
     if (args->flags & FT_OPEN_MEMORY)
 	fprintf (stderr, "FT_Open_Face (mem=%p, %ld, %ld) = %p\n",
@@ -3810,6 +3938,8 @@ FT_Open_Face (FT_Library library, const FT_Open_Args *args, FT_Long index, FT_Fa
 FT_Error
 FT_Done_Face (FT_Face face)
 {
+    ENSURE_INIT_TRACE ();
+
     _object_destroy (_get_object (NONE, face));
 
     return DLCALL (FT_Done_Face, face);
@@ -3843,6 +3973,8 @@ cairo_ps_surface_create (const char *filename, double width_in_points, double he
     cairo_surface_t *ret;
     long surface_id;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (cairo_ps_surface_create, filename, width_in_points, height_in_points);
     surface_id = _create_surface_id (ret);
 
@@ -3873,6 +4005,8 @@ cairo_ps_surface_create_for_stream (cairo_write_func_t write_func, void *closure
     cairo_surface_t *ret;
     long surface_id;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (cairo_ps_surface_create_for_stream, write_func, closure, width_in_points, height_in_points);
     surface_id = _create_surface_id (ret);
 
@@ -3897,6 +4031,7 @@ cairo_ps_surface_create_for_stream (cairo_write_func_t write_func, void *closure
 void
 cairo_ps_surface_set_size (cairo_surface_t *surface, double width_in_points, double height_in_points)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     DLCALL (cairo_ps_surface_set_size, surface, width_in_points, height_in_points);
 }
@@ -3911,6 +4046,8 @@ cairo_pdf_surface_create (const char *filename, double width_in_points, double h
 {
     cairo_surface_t *ret;
     long surface_id;
+
+    ENSURE_INIT_TRACE ();
 
     ret = DLCALL (cairo_pdf_surface_create, filename, width_in_points, height_in_points);
     surface_id = _create_surface_id (ret);
@@ -3942,6 +4079,8 @@ cairo_pdf_surface_create_for_stream (cairo_write_func_t write_func, void *closur
     cairo_surface_t *ret;
     long surface_id;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (cairo_pdf_surface_create_for_stream, write_func, closure, width_in_points, height_in_points);
     surface_id = _create_surface_id (ret);
 
@@ -3965,6 +4104,7 @@ cairo_pdf_surface_create_for_stream (cairo_write_func_t write_func, void *closur
 void
 cairo_pdf_surface_set_size (cairo_surface_t *surface, double width_in_points, double height_in_points)
 {
+    ENSURE_INIT_TRACE ();
     _emit_line_info ();
     DLCALL (cairo_pdf_surface_set_size, surface, width_in_points, height_in_points);
 }
@@ -3978,6 +4118,8 @@ cairo_svg_surface_create (const char *filename, double width, double height)
 {
     cairo_surface_t *ret;
     long surface_id;
+
+    ENSURE_INIT_TRACE ();
 
     ret = DLCALL (cairo_svg_surface_create, filename, width, height);
     surface_id = _create_surface_id (ret);
@@ -4009,6 +4151,8 @@ cairo_svg_surface_create_for_stream (cairo_write_func_t write_func, void *closur
     cairo_surface_t *ret;
     long surface_id;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (cairo_svg_surface_create_for_stream, write_func, closure, width, height);
     surface_id = _create_surface_id (ret);
 
@@ -4039,6 +4183,8 @@ cairo_image_surface_create_from_png (const char *filename)
     cairo_surface_t *ret;
     long surface_id;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (cairo_image_surface_create_from_png, filename);
 
     surface_id = _create_surface_id (ret);
@@ -4066,6 +4212,8 @@ cairo_image_surface_create_from_png_stream (cairo_read_func_t read_func, void *c
 {
     cairo_surface_t *ret;
     long surface_id;
+
+    ENSURE_INIT_TRACE ();
 
     ret = DLCALL (cairo_image_surface_create_from_png_stream, read_func, closure);
     surface_id = _create_surface_id (ret);
@@ -4103,6 +4251,8 @@ cairo_xlib_surface_create (Display *dpy,
     cairo_surface_t *ret;
     long surface_id;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (cairo_xlib_surface_create,
 	          dpy, drawable, visual, width, height);
     surface_id = _create_surface_id (ret);
@@ -4139,6 +4289,8 @@ cairo_xlib_surface_create_for_bitmap (Display *dpy,
 {
     cairo_surface_t *ret;
     long surface_id;
+
+    ENSURE_INIT_TRACE ();
 
     ret = DLCALL (cairo_xlib_surface_create_for_bitmap,
 	          dpy, bitmap, screen, width, height);
@@ -4180,6 +4332,8 @@ cairo_xlib_surface_create_with_xrender_format (Display *dpy,
 {
     cairo_surface_t *ret;
     long surface_id;
+
+    ENSURE_INIT_TRACE ();
 
     ret = DLCALL (cairo_xlib_surface_create_with_xrender_format,
 	          dpy, drawable, screen, format, width, height);
@@ -4224,6 +4378,8 @@ cairo_script_surface_create (cairo_script_context_t *ctx,
     cairo_surface_t *ret;
     long surface_id;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (cairo_script_surface_create, ctx, content, width, height);
     surface_id = _create_surface_id (ret);
 
@@ -4254,6 +4410,8 @@ cairo_script_surface_create_for_target (cairo_script_context_t *ctx,
     cairo_surface_t *ret;
     long surface_id;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (cairo_script_surface_create_for_target, ctx, target);
     surface_id = _create_surface_id (ret);
 
@@ -4281,6 +4439,8 @@ _cairo_test_fallback_surface_create (cairo_content_t	content,
 {
     cairo_surface_t *ret;
     long surface_id;
+
+    ENSURE_INIT_TRACE ();
 
     ret = DLCALL (_cairo_test_fallback_surface_create, content, width, height);
     surface_id = _create_surface_id (ret);
@@ -4312,6 +4472,8 @@ _cairo_test_paginated_surface_create (cairo_surface_t *surface)
     cairo_surface_t *ret;
     long surface_id;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (_cairo_test_paginated_surface_create, surface);
     surface_id = _create_surface_id (ret);
 
@@ -4339,6 +4501,8 @@ _cairo_test_null_surface_create (cairo_content_t	content)
     cairo_surface_t *ret;
     long surface_id;
 
+    ENSURE_INIT_TRACE ();
+
     ret = DLCALL (_cairo_test_null_surface_create, content);
     surface_id = _create_surface_id (ret);
 
@@ -4365,6 +4529,8 @@ cairo_meta_surface_create (cairo_content_t content,
 {
     cairo_surface_t *ret;
     long surface_id;
+
+    ENSURE_INIT_TRACE ();
 
     ret = DLCALL (cairo_meta_surface_create, content, extents);
     surface_id = _create_surface_id (ret);
@@ -4401,7 +4567,9 @@ cairo_meta_surface_create (cairo_content_t content,
 cairo_status_t
 cairo_meta_surface_replay (cairo_surface_t *meta, cairo_surface_t *target)
 {
-    cairo_status_t
+    cairo_status_t ret;
+
+    ENSURE_INIT_TRACE ();
 
     ret = DLCALL (cairo_meta_surface_replay, meta, target);
 
@@ -4426,6 +4594,8 @@ cairo_vg_surface_create (cairo_vg_context_t *context,
 {
     cairo_surface_t *ret;
     long surface_id;
+
+    ENSURE_INIT_TRACE ();
 
     ret = DLCALL (cairo_vg_surface_create, context, content, width, height);
     surface_id = _create_surface_id (ret);
@@ -4458,6 +4628,8 @@ cairo_vg_surface_create_for_image (cairo_vg_context_t *context,
 {
     cairo_surface_t *ret;
     long surface_id;
+
+    ENSURE_INIT_TRACE ();
 
     ret = DLCALL (cairo_vg_surface_create_for_image,
 		  context, image, format, width, height);
