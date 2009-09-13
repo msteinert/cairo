@@ -644,7 +644,7 @@ case $host in
 	;;
 esac
 
-CAIRO_ENABLE(trace, cairo-trace, yes, [
+CAIRO_ENABLE(trace, cairo-trace, auto, [
 	if test "x$have_ld_preload" != "xyes" -o \
 		"x$have_libz" != "xyes" -o \
 		"x$have_dl" != "xyes"; then
@@ -668,7 +668,7 @@ if test "x$have_bfd" = "xyes"; then
     AC_SUBST(BFD_LIBS)
 fi
 
-CAIRO_ENABLE(symbol_lookup, symbol-lookup, yes, [
+CAIRO_ENABLE(symbol_lookup, symbol-lookup, auto, [
 	if test "x$have_bfd" != "xyes"; then
 		use_symbol_lookup="no (requires bfd)"
 	fi
