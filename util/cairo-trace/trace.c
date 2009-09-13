@@ -62,7 +62,9 @@
 	  ((((uint32_t)(p)))              >> 24));
 #endif
 
+#if CAIRO_HAS_SYMBOL_LOOKUP
 #include "lookup-symbol.h"
+#endif
 
 /* Reverse the bits in a byte with 7 operations (no 64-bit):
  * Devised by Sean Anderson, July 13, 2001.
@@ -177,7 +179,7 @@ static bool _line_info;
 static bool _mark_dirty;
 static const cairo_user_data_key_t destroy_key;
 
-#if HAVE_BUILTIN_RETURN_ADDRESS
+#if HAVE_BUILTIN_RETURN_ADDRESS && CAIRO_HAS_SYMBOL_LOOKUP
 #define _emit_line_info() do { \
     if (_line_info && _write_lock ()) { \
 	void *addr = __builtin_return_address(0); \
@@ -3387,9 +3389,11 @@ cairo_surface_write_to_png_stream (cairo_surface_t *surface,
 	char symbol[1024];
 
 	_trace_printf ("%% s%ld ", _get_surface_id (surface));
+#if CAIRO_HAS_SYMBOL_LOOKUP
 	_emit_string_literal (lookup_symbol (symbol, sizeof (symbol),
 					     write_func),
 			      -1);
+#endif
 	_trace_printf (" write-to-png-stream\n");
 	_write_unlock ();
     }
