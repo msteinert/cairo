@@ -37,10 +37,12 @@ AC_CHECK_LIB(z, compress,
 	 [have_libz="no (requires zlib http://www.gzip.org/zlib/)"])
 
 AC_CHECK_LIB(dl, dlsym,
-	     [AC_CHECK_HEADER(dlfcn.h, [
-	      have_dl=yes
-	      AC_DEFINE(HAVE_DL, 1, [Define to 1 if you have dl available])
-	     ], [have_dl=no])], [have_dl=no])
+	     [have_dlsym=yes; have_dl=yes],
+	     [have_dlsym=no; have_dl=no])
+if test "x$have_dlsym" = "xno"; then
+   AC_CHECK_FUNC(dlsym, [have_dlsym=yes], [have_dlsym=no])
+fi
+AC_CHECK_HEADERS(dlfcn.h, [have_dlsym=yes], [have_dlsym=no])
 AM_CONDITIONAL(CAIRO_HAS_DL, test "x$have_dl" = "xyes")
 
 dnl ===========================================================================
@@ -659,7 +661,7 @@ esac
 CAIRO_ENABLE(trace, cairo-trace, auto, [
 	if test "x$have_ld_preload" != "xyes" -o \
 		"x$have_libz" != "xyes" -o \
-		"x$have_dl" != "xyes"; then
+		"x$have_dlsym" != "xyes"; then
 		use_trace="no (requires dynamic linker and zlib)"
 	fi
 ])

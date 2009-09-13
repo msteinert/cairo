@@ -45,7 +45,7 @@
 #include <assert.h>
 #include <errno.h>
 
-#if HAVE_DL
+#if HAVE_DLFCN_H
 #include <dlfcn.h>
 #endif
 
@@ -349,7 +349,7 @@ probe_target (const cairo_boilerplate_target_t *target)
     if (target->probe == NULL)
 	return TRUE;
 
-#if HAVE_DL
+#if HAVE_DLSYM
     return dlsym (NULL, target->probe) != NULL;
 #else
     return TRUE;
