@@ -87,10 +87,10 @@ static void *_dlhandle = RTLD_NEXT;
 #define DLCALL(name, args...) ({ \
     static typeof (&name) name##_real; \
     if (name##_real == NULL) { \
-	name##_real = dlsym (_dlhandle, #name); \
+	name##_real = (typeof (&name))(dlsym (_dlhandle, #name));	\
 	if (name##_real == NULL && _dlhandle == RTLD_NEXT) { \
 	    _dlhandle = dlopen ("libcairo.so", RTLD_LAZY); \
-	    name##_real = dlsym (_dlhandle, #name); \
+	    name##_real = (typeof (&name))(dlsym (_dlhandle, #name));	\
 	    assert (name##_real != NULL); \
 	} \
     } \
