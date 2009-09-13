@@ -668,6 +668,12 @@ if test "x$have_bfd" = "xyes"; then
     AC_SUBST(BFD_LIBS)
 fi
 
+CAIRO_ENABLE(symbol_lookup, symbol-lookup, yes, [
+	if test "x$have_bfd" != "xyes"; then
+		use_symbol_lookup="no (requires bfd)"
+	fi
+])
+
 PKG_CHECK_MODULES(glib, glib-2.0, have_glib=yes, have_glib=no)
 AC_SUBST(glib_CFLAGS)
 AC_SUBST(glib_LIBS)

@@ -7,15 +7,19 @@ cairolib_LTLIBRARIES = cairo-trace.la
 AM_CPPFLAGS = -I$(top_srcdir)/src \
 	      -I$(top_builddir)/src
 
-cairo_trace_la_SOURCES = \
-			 lookup-symbol.c \
-			 lookup-symbol.h \
-			 trace.c
+cairo_trace_la_SOURCES = trace.c
 cairo_trace_la_CPPFLAGS = -DCAIRO_TRACE_OUTDIR="\"$(cairooutdir)\"" \
 			  $(AM_CPPFLAGS)
 cairo_trace_la_CFLAGS = $(CAIRO_CFLAGS)
 cairo_trace_la_LDFLAGS = -module -no-undefined
-cairo_trace_la_LIBADD = -ldl -lz $(BFD_LIBS)
+cairo_trace_la_LIBADD = -ldl -lz
+
+if CAIRO_HAS_SYMBOL_LOOKUP
+cairo_trace_la_SOURCES += \
+			 lookup-symbol.c \
+			 lookup-symbol.h
+cairo_trace_la_LIBADD += $(BFD_LIBS)
+endif
 
 
 system-install: install

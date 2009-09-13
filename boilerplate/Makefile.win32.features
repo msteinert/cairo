@@ -361,3 +361,10 @@ ifeq ($(CAIRO_HAS_INTERPRETER),1)
 enabled_cairo_boilerplate_private += $(cairo_boilerplate_interpreter_private) $(cairo_boilerplate_interpreter_headers)
 enabled_cairo_boilerplate_sources += $(cairo_boilerplate_interpreter_sources)
 endif
+
+all_cairo_boilerplate_private += $(cairo_boilerplate_symbol_lookup_private) $(cairo_boilerplate_symbol_lookup_headers)
+all_cairo_boilerplate_sources += $(cairo_boilerplate_symbol_lookup_sources)
+ifeq ($(CAIRO_HAS_SYMBOL_LOOKUP),1)
+enabled_cairo_boilerplate_private += $(cairo_boilerplate_symbol_lookup_private) $(cairo_boilerplate_symbol_lookup_headers)
+enabled_cairo_boilerplate_sources += $(cairo_boilerplate_symbol_lookup_sources)
+endif

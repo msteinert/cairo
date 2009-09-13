@@ -400,6 +400,7 @@ AC_DEFUN([CAIRO_REPORT],
 	echo "And the following internal features:"
 	echo "  gtk-doc:       $enable_gtk_doc"
 	echo "  gcov support:  $use_gcov"
+	echo "  symbol-lookup: $use_symbol_lookup"
 	echo "  test surfaces: $use_test_surfaces"
 	echo "  ps testing:    $test_ps"
 	echo "  pdf testing:   $test_pdf"

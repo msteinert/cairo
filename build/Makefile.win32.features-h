@@ -105,4 +105,7 @@ endif
 ifeq ($(CAIRO_HAS_INTERPRETER),1)
 	@echo "#define CAIRO_HAS_INTERPRETER 1" >> src/cairo-features.h
 endif
+ifeq ($(CAIRO_HAS_SYMBOL_LOOKUP),1)
+	@echo "#define CAIRO_HAS_SYMBOL_LOOKUP 1" >> src/cairo-features.h
+endif
 	@echo "#endif" >>  src/cairo-features.h
