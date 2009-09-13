@@ -242,8 +242,13 @@ CAIRO_ENABLE_FUNCTIONS(png, PNG, yes, [
 dnl ===========================================================================
 CAIRO_ENABLE_SURFACE_BACKEND(gl, OpenGL, no, [
   gl_REQUIRES="gl"
-  PKG_CHECK_MODULES(gl, $gl_REQUIRES, , [AC_MSG_RESULT(no)
-  use_gl="no (requires gl.pc)"])
+  PKG_CHECK_MODULES(gl, $gl_REQUIRES,, [
+	  dnl Fallback to searching for headers
+	  AC_CHECK_HEADER(GL/gl.h,, [use_gl="no (gl.pc nor OpenGL headers not found)"])
+	  if test "x$use_gl" = "xyes"; then
+	      gl_NONPKGCONFIG_CFLAGS=
+	      gl_NONPKGCONFIG_LIBS="-lGL"
+	  fi])
 
   AC_CHECK_LIB(GLEW, glewInit, [
     AC_CHECK_HEADER(GL/glew.h, [], [
@@ -252,7 +257,7 @@ CAIRO_ENABLE_SURFACE_BACKEND(gl, OpenGL, no, [
   ], [
     use_gl="no (requires glew http://glew.sourceforge.net/)"
   ])
-  gl_NONPKGCONFIG_LIBS="-lGLEW"
+  gl_NONPKGCONFIG_LIBS="-lGLEW $gl_NONPKGCONFIG_LIBS"
   need_glx_functions=yes
   need_eagle_functions=yes
 ])
