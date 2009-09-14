@@ -389,6 +389,7 @@ AC_DEFUN([CAIRO_REPORT],
 	echo ""
 	echo "The following functions:"
 	echo "  PNG functions:   $use_png"
+	echo "  GLEW functions:  $use_glew"
 	echo "  GLX functions:   $use_glx"
 	echo "  EGL functions:   $use_egl"
 	echo "  Eagle functions: $use_eagle"

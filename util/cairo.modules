@@ -6,11 +6,19 @@
 
   <repository type="git" name="git.freedesktop.org" href="git://anongit.freedesktop.org/git/"/>
 
-  <autotools id="cairo">
+  <autotools id="glitz">
+    <branch repo="git.freedesktop.org" module="glitz"/>
+    <dependencies>
+      <dep package="libGL"/>
+    </dependencies>
+  </autotools>
+
+  <autotools id="cairo" autogenargs="--enable-gl --enable-glitz">
     <branch repo="git.freedesktop.org" module="cairo"/>
     <dependencies>
       <dep package="pixman"/>
       <dep package="fontconfig"/>
+      <dep package="glitz"/>
     </dependencies>
     <after>
       <dep package="libXrender"/>

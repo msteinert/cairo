@@ -6,6 +6,8 @@ include $(srcdir)/Makefile.am.features
 EXTRA_DIST += Makefile.win32      Makefile.win32.features
 #MAINTAINERCLEANFILES += $(srcdir)/Makefile.win32.features
 
+EXTRA_DIST += glew/LICENSE.txt
+
 AM_CPPFLAGS = -I$(srcdir) $(CAIRO_CFLAGS)
 AM_LDFLAGS = $(CAIRO_LDFLAGS)
 

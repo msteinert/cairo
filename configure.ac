@@ -250,14 +250,17 @@ CAIRO_ENABLE_SURFACE_BACKEND(gl, OpenGL, no, [
 	      gl_NONPKGCONFIG_LIBS="-lGL"
 	  fi])
 
-  AC_CHECK_LIB(GLEW, glewInit, [
-    AC_CHECK_HEADER(GL/glew.h, [], [
-      use_gl="no (requires glew http://glew.sourceforge.net/)"
-    ])
-  ], [
-    use_gl="no (requires glew http://glew.sourceforge.net/)"
-  ])
-  gl_NONPKGCONFIG_LIBS="-lGLEW $gl_NONPKGCONFIG_LIBS"
+  have_glew="no"
+  AC_CHECK_LIB(GLEW, glewInit,
+	       [AC_CHECK_HEADER(GL/glew.h, [have_glew="yes"], [])])
+  if test "x$have_glew" = "xyes"; then
+    gl_NONPKGCONFIG_LIBS="-lGLEW $gl_NONPKGCONFIG_LIBS"
+    use_glew="system library"
+  else
+    CAIRO_ENABLE_FUNCTIONS(glew, GLEW, always)
+    use_glew="private copy"
+    CAIRO_CFLAGS="$CAIRO_CFLAGS -I\$(top_srcdir)/src/glew"
+  fi
   need_glx_functions=yes
   need_eagle_functions=yes
 ])

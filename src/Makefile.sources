@@ -187,6 +187,9 @@ cairo_sources += $(_cairo_pdf_operators_sources)
 
 cairo_png_sources = cairo-png.c
 
+cairo_glew_sources = glew/glew.c
+cairo_glew_headers = glew/GL/glew.h glew/GL/glxew.h
+
 cairo_ps_headers = cairo-ps.h
 cairo_ps_private = cairo-ps-surface-private.h
 cairo_ps_sources = cairo-ps-surface.c
