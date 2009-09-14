@@ -18,6 +18,7 @@
     <dependencies>
       <dep package="pixman"/>
       <dep package="fontconfig"/>
+      <dep package="libGL"/>
       <dep package="glitz"/>
     </dependencies>
     <after>

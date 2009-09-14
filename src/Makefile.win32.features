@@ -231,14 +231,6 @@ ifeq ($(CAIRO_HAS_PNG_FUNCTIONS),1)
 enabled_cairo_pkgconf += cairo-png.pc
 endif
 
-supported_cairo_headers += $(cairo_glew_headers)
-all_cairo_headers += $(cairo_glew_headers)
-all_cairo_private += $(cairo_glew_private)
-all_cairo_sources += $(cairo_glew_sources)
-enabled_cairo_headers += $(cairo_glew_headers)
-enabled_cairo_private += $(cairo_glew_private)
-enabled_cairo_sources += $(cairo_glew_sources)
-
 unsupported_cairo_headers += $(cairo_gl_headers)
 all_cairo_headers += $(cairo_gl_headers)
 all_cairo_private += $(cairo_gl_private)

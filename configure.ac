@@ -240,6 +240,7 @@ CAIRO_ENABLE_FUNCTIONS(png, PNG, yes, [
 ])
 
 dnl ===========================================================================
+use_glew="no (not required by any backend)"
 CAIRO_ENABLE_SURFACE_BACKEND(gl, OpenGL, no, [
   gl_REQUIRES="gl"
   PKG_CHECK_MODULES(gl, $gl_REQUIRES,, [
@@ -255,10 +256,10 @@ CAIRO_ENABLE_SURFACE_BACKEND(gl, OpenGL, no, [
 	       [AC_CHECK_HEADER(GL/glew.h, [have_glew="yes"], [])])
   if test "x$have_glew" = "xyes"; then
     gl_NONPKGCONFIG_LIBS="-lGLEW $gl_NONPKGCONFIG_LIBS"
-    use_glew="system library"
+    use_glew="yes (system library)"
   else
     CAIRO_ENABLE_FUNCTIONS(glew, GLEW, always)
-    use_glew="private copy"
+    use_glew="yes (private copy)"
     CAIRO_CFLAGS="$CAIRO_CFLAGS -I\$(top_srcdir)/src/glew"
   fi
   need_glx_functions=yes
