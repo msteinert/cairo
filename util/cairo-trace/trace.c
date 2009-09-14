@@ -485,7 +485,6 @@ _fini_trace (void)
 	}
     }
 
-    pthread_key_delete (counter_key);
     pthread_mutex_destroy (&Types.mutex);
 }
 
