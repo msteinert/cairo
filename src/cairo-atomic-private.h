@@ -43,6 +43,8 @@
 #include "config.h"
 #endif
 
+/* The autoconf on OpenBSD 4.5 produces the malformed constant name
+ * SIZEOF_VOID__ rather than SIZEOF_VOID_P.  Work around that here. */
 #if !defined(SIZEOF_VOID_P) && defined(SIZEOF_VOID__)
 # define SIZEOF_VOID_P SIZEOF_VOID__
 #endif
