@@ -366,9 +366,12 @@ CAIRO_ENABLE_FUNCTIONS(egl, EGL, auto, [
 
 CAIRO_ENABLE_FUNCTIONS(glx, GLX, auto, [
   if test "x$need_glx_functions" = "xyes"; then
+    save_CFLAGS="$CFLAGS"
+    CFLAGS="$CFLAGS $gl_CFLAGS $gl_NONPKGCONFIG_CFLAGS"
     AC_CHECK_HEADER(GL/glx.h,, [use_glx="no (GLX headers not found)"])
     glx_NONPKGCONFIG_CFLAGS=
     glx_NONPKGCONFIG_LIBS="-lGL"
+    CFLAGS="$save_CFLAGS"
   else
       use_glx="no (not required by any backend)"
   fi
