@@ -37,9 +37,51 @@
 
 #if HAVE_UINT64_T
 
+#define uint64_lo32(i)	((i) & 0xffffffff)
+#define uint64_hi32(i)	((i) >> 32)
+#define uint64_lo(i)	((i) & 0xffffffff)
+#define uint64_hi(i)	((i) >> 32)
+#define uint64_shift32(i)   ((i) << 32)
+#define uint64_carry32	(((uint64_t) 1) << 32)
+
 #define _cairo_uint32s_to_uint64(h,l) ((uint64_t) (h) << 32 | (l))
 
 #else
+
+#define uint64_lo32(i)	((i).lo)
+#define uint64_hi32(i)	((i).hi)
+
+static cairo_uint64_t
+uint64_lo (cairo_uint64_t i)
+{
+    cairo_uint64_t  s;
+
+    s.lo = i.lo;
+    s.hi = 0;
+    return s;
+}
+
+static cairo_uint64_t
+uint64_hi (cairo_uint64_t i)
+{
+    cairo_uint64_t  s;
+
+    s.lo = i.hi;
+    s.hi = 0;
+    return s;
+}
+
+static cairo_uint64_t
+uint64_shift32 (cairo_uint64_t i)
+{
+    cairo_uint64_t  s;
+
+    s.lo = 0;
+    s.hi = i.lo;
+    return s;
+}
+
+static const cairo_uint64_t uint64_carry32 = { 0, 1 };
 
 cairo_uint64_t
 _cairo_uint32_to_uint64 (uint32_t i)
@@ -308,7 +350,6 @@ _cairo_uint64_divrem (cairo_uint64_t num, cairo_uint64_t den)
 #endif /* !HAVE_UINT64_T */
 
 #if HAVE_UINT128_T
-
 cairo_uquorem128_t
 _cairo_uint128_divrem (cairo_uint128_t num, cairo_uint128_t den)
 {
@@ -384,54 +425,6 @@ _cairo_uint128_sub (cairo_uint128_t a, cairo_uint128_t b)
 	s.hi = _cairo_uint64_sub (s.hi, _cairo_uint32_to_uint64(1));
     return s;
 }
-
-#if HAVE_UINT64_T
-
-#define uint64_lo32(i)	((i) & 0xffffffff)
-#define uint64_hi32(i)	((i) >> 32)
-#define uint64_lo(i)	((i) & 0xffffffff)
-#define uint64_hi(i)	((i) >> 32)
-#define uint64_shift32(i)   ((i) << 32)
-#define uint64_carry32	(((uint64_t) 1) << 32)
-
-#else
-
-#define uint64_lo32(i)	((i).lo)
-#define uint64_hi32(i)	((i).hi)
-
-static cairo_uint64_t
-uint64_lo (cairo_uint64_t i)
-{
-    cairo_uint64_t  s;
-
-    s.lo = i.lo;
-    s.hi = 0;
-    return s;
-}
-
-static cairo_uint64_t
-uint64_hi (cairo_uint64_t i)
-{
-    cairo_uint64_t  s;
-
-    s.lo = i.hi;
-    s.hi = 0;
-    return s;
-}
-
-static cairo_uint64_t
-uint64_shift32 (cairo_uint64_t i)
-{
-    cairo_uint64_t  s;
-
-    s.lo = 0;
-    s.hi = i.lo;
-    return s;
-}
-
-static const cairo_uint64_t uint64_carry32 = { 0, 1 };
-
-#endif
 
 cairo_uint128_t
 _cairo_uint64x64_128_mul (cairo_uint64_t a, cairo_uint64_t b)

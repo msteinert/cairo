@@ -272,6 +272,7 @@ int	        I	_cairo_int128_cmp (cairo_int128_t a, cairo_int128_t b);
 #define			_cairo_int128_sub(a,b)	    ((a) - (b))
 #define			_cairo_int128_mul(a,b)	    ((a) * (b))
 #define			_cairo_int64x64_128_mul(a,b) ((int128_t) (a) * (b))
+#define                 _cairo_int64x32_128_mul(a, b) _cairo_int64x64_128_mul(a, _cairo_int32_to_int64(b))
 #define			_cairo_int128_lt(a,b)	    ((a) < (b))
 #define			_cairo_int128_cmp(a,b)	    ((a) == (b) ? 0 : (a) < (b) ? -1 : 1)
 #define			_cairo_int128_is_zero(a)    ((a) == 0)
