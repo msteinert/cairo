@@ -52,7 +52,7 @@ END
     exit 1
 }
 
-benchmarks="cairo-perf"
+benchmarks="cairo-perf-micro"
 
 # First, pull off any known options
 while true; do

@@ -10,7 +10,7 @@ AM_CPPFLAGS =					\
 
 AM_LDFLAGS = $(CAIRO_LDFLAGS)
 
-EXTRA_PROGRAMS += cairo-perf \
+EXTRA_PROGRAMS += cairo-perf-micro \
 		  cairo-perf-trace \
 		  cairo-perf-diff-files \
 		  cairo-perf-print \
@@ -25,50 +25,50 @@ LDADD = libcairoperf.la \
 	$(top_builddir)/src/libcairo.la \
 	$(CAIROPERF_LIBS)
 
-cairo_perf_SOURCES =		\
-	cairo-perf.c		\
+cairo_perf_micro_SOURCES =		\
+	cairo-perf-micro.c	\
 	cairo-perf.h		\
-	cairo-perf-cover.c	\
-	box-outline.c		\
-	composite-checker.c	\
-	fill.c			\
-	long-lines.c		\
-	mosaic.c		\
-	mosaic.h		\
-	paint.c			\
-	paint-with-alpha.c	\
-	mask.c			\
-	pattern_create_radial.c \
-	rectangles.c		\
-	rounded-rectangles.c	\
-	stroke.c		\
-	subimage_copy.c		\
-	tessellate.c		\
-	text.c			\
-	glyphs.c		\
-	twin.c			\
-	unaligned-clip.c	\
-	world-map.c		\
-	world-map.h		\
-	zrusin.c		\
-	zrusin-another.h	\
-	long-dashed-lines.c	\
-	dragon.c		\
-	pythagoras-tree.c	\
-	intersections.c		\
-	spiral.c
+	micro/cairo-perf-cover.c	\
+	micro/box-outline.c		\
+	micro/composite-checker.c	\
+	micro/fill.c			\
+	micro/long-lines.c		\
+	micro/mosaic.c		\
+	micro/mosaic.h		\
+	micro/paint.c			\
+	micro/paint-with-alpha.c	\
+	micro/mask.c			\
+	micro/pattern_create_radial.c \
+	micro/rectangles.c		\
+	micro/rounded-rectangles.c	\
+	micro/stroke.c		\
+	micro/subimage_copy.c		\
+	micro/tessellate.c		\
+	micro/text.c			\
+	micro/glyphs.c		\
+	micro/twin.c			\
+	micro/unaligned-clip.c	\
+	micro/world-map.c		\
+	micro/world-map.h		\
+	micro/zrusin.c		\
+	micro/zrusin-another.h	\
+	micro/long-dashed-lines.c	\
+	micro/dragon.c		\
+	micro/pythagoras-tree.c	\
+	micro/intersections.c		\
+	micro/spiral.c
 
 if CAIRO_HAS_WIN32_SURFACE
-cairo_perf_SOURCES += cairo-perf-win32.c
+cairo_perf_micro_SOURCES += cairo-perf-win32.c
 else
 if CAIRO_HAS_OS2_SURFACE
-cairo_perf_SOURCES += cairo-perf-os2.c
+cairo_perf_micro_SOURCES += cairo-perf-os2.c
 else
-cairo_perf_SOURCES += cairo-perf-posix.c
+cairo_perf_micro_SOURCES += cairo-perf-posix.c
 endif
 endif
-cairo_perf_LDADD = $(LDADD)
-cairo_perf_DEPENDENCIES = \
+cairo_perf_micro_LDADD = $(LDADD)
+cairo_perf_micro_DEPENDENCIES = \
         $(top_builddir)/boilerplate/libcairoboilerplate.la	\
 	$(top_builddir)/src/libcairo.la \
 	libcairoperf.la
@@ -140,17 +140,17 @@ CAIRO_PERF_ENVIRONMENT = CAIRO_PERF_ITERATIONS="$(ITERS)" CAIRO_TEST_TARGET="$(T
 # Cap the maximum number of iterations during 'make check'
 TESTS_ENVIRONMENT = CAIRO_TEST_TARGET="$(TARGETS)" CAIRO_PERF_ITERATIONS="10"
 
-TESTS += cairo-perf$(EXEEXT)
+TESTS += cairo-perf-micro$(EXEEXT)
 
-perf: cairo-perf$(EXEEXT) cairo-perf-trace$(EXEEXT)
-	-$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf$(EXEEXT)
+perf: cairo-perf-micro$(EXEEXT) cairo-perf-trace$(EXEEXT)
+	-$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf-micro$(EXEEXT)
 	-$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf-trace$(EXEEXT)
 
 html-local: index.html
 
-perf-tag.html : cairo-perf${EXEEXT}
+perf-tag.html : cairo-perf-micro${EXEEXT}
 	$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf-diff -t -h $@ `git describe --abbrev=0` HEAD
-perf-commit.html : cairo-perf${EXEEXT}
+perf-commit.html : cairo-perf-micro${EXEEXT}
 	$(CAIRO_PERF_ENVIRONMENT) ./cairo-perf-diff -t -h $@ HEAD
 
 # Summarise changes in index.html, with details in links
