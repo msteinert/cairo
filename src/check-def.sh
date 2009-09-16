@@ -1,6 +1,7 @@
 #!/bin/sh
 
-LANG=C
+LC_ALL=C
+export LC_ALL
 
 if which nm 2>/dev/null >/dev/null; then
 	:

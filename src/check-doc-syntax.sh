@@ -1,6 +1,7 @@
 #!/bin/sh
 
-LANG=C
+LC_ALL=C
+export LC_ALL
 
 if grep --version 2>/dev/null | grep GNU >/dev/null; then
 	:
