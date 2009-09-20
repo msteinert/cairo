@@ -237,7 +237,7 @@ _cairo_xlib_display_get (Display *dpy,
     cairo_xlib_display_t *display;
     cairo_xlib_display_t **prev;
     XExtCodes *codes;
-    int render_major, render_minor;
+    const char *env;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     /* There is an apparent deadlock between this mutex and the
@@ -281,7 +281,24 @@ _cairo_xlib_display_get (Display *dpy,
      * add our hook. For now, that means Render, so we call into its
      * QueryVersion function to ensure it gets initialized.
      */
-    XRenderQueryVersion (dpy, &render_major, &render_minor);
+    display->render_major = display->render_minor = -1;
+    XRenderQueryVersion (dpy, &display->render_major, &display->render_minor);
+    env = getenv ("CAIRO_DEBUG");
+    if (env != NULL && (env = strstr (env, "xrender-version=")) != NULL) {
+	int max_render_major, max_render_minor;
+
+	env += sizeof ("xrender-version=") - 1;
+	if (sscanf (env, "%d.%d", &max_render_major, &max_render_minor) != 2)
+	    max_render_major = max_render_minor = -1;
+
+	if (max_render_major < display->render_major ||
+	    (max_render_major == display->render_major &&
+	     max_render_minor < display->render_minor))
+	{
+	    display->render_major = max_render_major;
+	    display->render_minor = max_render_minor;
+	}
+    }
 
     codes = XAddExtension (dpy);
     if (unlikely (codes == NULL)) {
@@ -303,8 +320,6 @@ _cairo_xlib_display_get (Display *dpy,
     display->close_display_hooks = NULL;
     display->closed = FALSE;
 
-    display->render_major = render_major;
-    display->render_minor = render_minor;
     memset (display->cached_xrender_formats, 0,
 	    sizeof (display->cached_xrender_formats));
 
