@@ -2631,7 +2631,7 @@ _cairo_surface_composite_fixup_unbounded_internal (cairo_surface_t         *dst,
 
     /* Now compute the area that is in dst but not drawn */
     status = cairo_region_subtract_rectangle (&clear_region, &dst_rectangle);
-    if (unlikely (status))
+    if (unlikely (status) || cairo_region_is_empty (&clear_region))
         goto CLEANUP_REGIONS;
 
   EMPTY:
@@ -2767,9 +2767,8 @@ _cairo_surface_composite_shape_fixup_unbounded (cairo_surface_t            *dst,
 						unsigned int		    height,
 						cairo_region_t	    *clip_region)
 {
-    cairo_rectangle_int_t src_tmp, mask_tmp;
-    cairo_rectangle_int_t *src_rectangle = NULL;
-    cairo_rectangle_int_t *mask_rectangle = NULL;
+    cairo_rectangle_int_t src_tmp, *src= NULL;
+    cairo_rectangle_int_t mask;
 
     if (dst->status)
 	return dst->status;
@@ -2784,20 +2783,18 @@ _cairo_surface_composite_shape_fixup_unbounded (cairo_surface_t            *dst,
     {
 	src_tmp.x = (dst_x - (src_x + src_attr->x_offset));
 	src_tmp.y = (dst_y - (src_y + src_attr->y_offset));
-	src_tmp.width = src_width;
+	src_tmp.width  = src_width;
 	src_tmp.height = src_height;
 
-	src_rectangle = &src_tmp;
+	src = &src_tmp;
     }
 
-    mask_tmp.x = dst_x - mask_x;
-    mask_tmp.y = dst_y - mask_y;
-    mask_tmp.width = mask_width;
-    mask_tmp.height = mask_height;
+    mask.x = dst_x - mask_x;
+    mask.y = dst_y - mask_y;
+    mask.width  = mask_width;
+    mask.height = mask_height;
 
-    mask_rectangle = &mask_tmp;
-
-    return _cairo_surface_composite_fixup_unbounded_internal (dst, src_rectangle, mask_rectangle,
+    return _cairo_surface_composite_fixup_unbounded_internal (dst, src, &mask,
 							      dst_x, dst_y, width, height,
 							      clip_region);
 }

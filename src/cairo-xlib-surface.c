@@ -2576,26 +2576,32 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
 				xtraps, num_traps);
 
     if (xtraps != xtraps_stack)
-	free(xtraps);
+	free (xtraps);
 
-    if (!_cairo_operator_bounded_by_mask (op)) {
+    if (! _cairo_operator_bounded_by_mask (op)) {
+	cairo_traps_t _traps;
+	cairo_box_t box;
+	cairo_rectangle_int_t extents;
+
 	/* XRenderCompositeTrapezoids() creates a mask only large enough for the
 	 * trapezoids themselves, but if the operator is unbounded, then we need
-	 * to actually composite all the way out to the bounds, so we create
-	 * the mask and composite ourselves. There actually would
-	 * be benefit to doing this in all cases, since RENDER implementations
-	 * will frequently create a too temporary big mask, ignoring destination
-	 * bounds and clip. (XRenderAddTraps() could be used to make creating
-	 * the mask somewhat cheaper.)
+	 * to actually composite all the way out to the bounds.
 	 */
-	status = _cairo_surface_composite_shape_fixup_unbounded (&dst->base,
-								 &attributes, src->width, src->height,
-								 width, height,
-								 src_x, src_y,
-								 0, 0,
-								 dst_x, dst_y, width, height,
-								 clip_region);
+	/* XXX: update the interface to pass composite rects */
+	_traps.traps = traps;
+	_traps.num_traps = num_traps;
+	_cairo_traps_extents (&_traps, &box);
+	_cairo_box_round_to_rectangle (&box, &extents);
 
+	status = _cairo_surface_composite_shape_fixup_unbounded (&dst->base,
+								 &attributes,
+								 src->width, src->height,
+								 extents.width, extents.height,
+								 src_x, src_y,
+								 -extents.x + dst_x, -extents.y + dst_y,
+								 dst_x, dst_y,
+								 width, height,
+								 clip_region);
     }
 
  BAIL:
