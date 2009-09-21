@@ -3764,7 +3764,6 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
      * a clear 1x1 surface, to avoid various X server bugs.
      */
     if (glyph_surface->width == 0 || glyph_surface->height == 0) {
-	cairo_t *cr;
 	cairo_surface_t *tmp_surface;
 
 	tmp_surface = cairo_image_surface_create (glyphset_info->format, 1, 1);
@@ -3772,19 +3771,10 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 	if (unlikely (status))
 	    goto BAIL;
 
-	cr = cairo_create (tmp_surface);
-	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-	cairo_paint (cr);
-	status = cairo_status (cr);
-	cairo_destroy (cr);
-
 	tmp_surface->device_transform = glyph_surface->base.device_transform;
 	tmp_surface->device_transform_inverse = glyph_surface->base.device_transform_inverse;
 
 	glyph_surface = (cairo_image_surface_t *) tmp_surface;
-
-	if (unlikely (status))
-	    goto BAIL;
     }
 
     /* If the glyph format does not match the font format, then we
@@ -3792,7 +3782,7 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
      * format.
      */
     if (glyph_surface->format != glyphset_info->format) {
-	cairo_t *cr;
+	cairo_surface_pattern_t pattern;
 	cairo_surface_t *tmp_surface;
 
 	tmp_surface = cairo_image_surface_create (glyphset_info->format,
@@ -3805,12 +3795,11 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 	tmp_surface->device_transform = glyph_surface->base.device_transform;
 	tmp_surface->device_transform_inverse = glyph_surface->base.device_transform_inverse;
 
-	cr = cairo_create (tmp_surface);
-	cairo_set_source_surface (cr, &glyph_surface->base, 0, 0);
-	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-	cairo_paint (cr);
-	status = cairo_status (cr);
-	cairo_destroy (cr);
+	_cairo_pattern_init_for_surface (&pattern, &glyph_surface->base);
+	status = _cairo_surface_paint (tmp_surface,
+				       CAIRO_OPERATOR_SOURCE, &pattern.base,
+				       NULL);
+	_cairo_pattern_fini (&pattern.base);
 
 	glyph_surface = (cairo_image_surface_t *) tmp_surface;
 
