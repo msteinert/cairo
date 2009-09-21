@@ -715,6 +715,44 @@ _fill_rectangles (cairo_surface_t *dst,
     return status;
 }
 
+/* fast-path for very common composite of a single rectangle */
+static cairo_status_t
+_composite_rectangle (cairo_surface_t *dst,
+		      cairo_operator_t op,
+		      const cairo_pattern_t *src,
+		      cairo_traps_t *traps,
+		      cairo_clip_t *clip)
+{
+    cairo_rectangle_int_t rect;
+
+    if (clip != NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (traps->num_traps > 1 || ! traps->is_rectilinear || ! traps->maybe_region)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (! _cairo_fixed_is_integer (traps->traps[0].top)          ||
+	! _cairo_fixed_is_integer (traps->traps[0].bottom)       ||
+	! _cairo_fixed_is_integer (traps->traps[0].left.p1.x)    ||
+	! _cairo_fixed_is_integer (traps->traps[0].right.p1.x))
+    {
+	traps->maybe_region = FALSE;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    rect.x = _cairo_fixed_integer_part (traps->traps[0].left.p1.x);
+    rect.y = _cairo_fixed_integer_part (traps->traps[0].top);
+    rect.width  = _cairo_fixed_integer_part (traps->traps[0].right.p1.x) - rect.x;
+    rect.height = _cairo_fixed_integer_part (traps->traps[0].bottom) - rect.y;
+
+    return _cairo_surface_composite (op, src, NULL, dst,
+				     rect.x, rect.y,
+				     0, 0,
+				     rect.x, rect.y,
+				     rect.width, rect.height,
+				     NULL);
+}
+
 /* Warning: This call modifies the coordinates of traps */
 static cairo_status_t
 _clip_and_composite_trapezoids (const cairo_pattern_t *src,
@@ -753,6 +791,10 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
 	cairo_region_t *trap_region = NULL;
 
 	status = _fill_rectangles (dst, op, src, traps, clip);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+
+	status = _composite_rectangle (dst, op, src, traps, clip);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	    return status;
 
