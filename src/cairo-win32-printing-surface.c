@@ -418,6 +418,8 @@ _cairo_win32_printing_surface_paint_meta_pattern (cairo_win32_surface_t   *surfa
     if (status)
 	return status;
 
+    _cairo_box_round_to_rectangle (&bbox, &meta_extents);
+
     status = _cairo_win32_printing_surface_get_ctm_clip_box (surface, &clip);
     if (status)
 	return status;
