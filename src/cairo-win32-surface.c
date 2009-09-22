@@ -2149,7 +2149,7 @@ void
 _cairo_win32_debug_dump_hrgn (HRGN rgn, char *header)
 {
     RGNDATA *rd;
-    int z;
+    unsigned int z;
 
     if (header)
 	fprintf (stderr, "%s\n", header);
@@ -2162,11 +2162,17 @@ _cairo_win32_debug_dump_hrgn (HRGN rgn, char *header)
     rd = (RGNDATA*) malloc(z);
     z = GetRegionData(rgn, z, rd);
 
-    fprintf (stderr, " %d rects, bounds: %d %d %d %d\n", rd->rdh.nCount, rd->rdh.rcBound.left, rd->rdh.rcBound.top, rd->rdh.rcBound.right - rd->rdh.rcBound.left, rd->rdh.rcBound.bottom - rd->rdh.rcBound.top);
+    fprintf (stderr, " %ld rects, bounds: %ld %ld %ld %ld\n",
+	     rd->rdh.nCount,
+	     rd->rdh.rcBound.left,
+	     rd->rdh.rcBound.top,
+	     rd->rdh.rcBound.right - rd->rdh.rcBound.left,
+	     rd->rdh.rcBound.bottom - rd->rdh.rcBound.top);
 
     for (z = 0; z < rd->rdh.nCount; z++) {
 	RECT r = ((RECT*)rd->Buffer)[z];
-	fprintf (stderr, " [%d]: [%d %d %d %d]\n", z, r.left, r.top, r.right - r.left, r.bottom - r.top);
+	fprintf (stderr, " [%d]: [%ld %ld %ld %ld]\n",
+		 z, r.left, r.top, r.right - r.left, r.bottom - r.top);
     }
 
     free(rd);
