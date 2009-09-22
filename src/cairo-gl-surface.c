@@ -61,6 +61,11 @@ static const cairo_gl_context_t _nil_context = {
     CAIRO_STATUS_NO_MEMORY
 };
 
+static const cairo_gl_context_t _nil_context__invalid_format = {
+    CAIRO_REFERENCE_COUNT_INVALID,
+    CAIRO_STATUS_INVALID_FORMAT
+};
+
 static cairo_bool_t _cairo_surface_is_gl (cairo_surface_t *surface)
 {
     return surface->backend == &_cairo_gl_surface_backend;
@@ -71,6 +76,9 @@ _cairo_gl_context_create_in_error (cairo_status_t status)
 {
     if (status == CAIRO_STATUS_NO_MEMORY)
 	return (cairo_gl_context_t *) &_nil_context;
+
+    if (status == CAIRO_STATUS_INVALID_FORMAT)
+	return (cairo_gl_context_t *) &_nil_context__invalid_format;
 
     ASSERT_NOT_REACHED;
     return NULL;

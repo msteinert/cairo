@@ -99,8 +99,6 @@ _glx_dummy_ctx (Display *dpy, GLXContext gl_ctx, Window *dummy)
     Window win = None;
     int cnt;
 
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
-
     /* Create a dummy window created for the target GLX context that we can
      * use to query the available GL/GLX extensions.
      */
@@ -113,6 +111,9 @@ _glx_dummy_ctx (Display *dpy, GLXContext gl_ctx, Window *dummy)
 
     vi = glXGetVisualFromFBConfig (dpy, config[0]);
     XFree (config);
+
+    if (unlikely (vi == NULL))
+	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT);
 
     cmap = XCreateColormap (dpy,
 			    RootWindow (dpy, vi->screen),
@@ -136,7 +137,7 @@ _glx_dummy_ctx (Display *dpy, GLXContext gl_ctx, Window *dummy)
     }
 
     *dummy = win;
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_gl_context_t *
