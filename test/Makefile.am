@@ -759,6 +759,8 @@ REFERENCE_IMAGES = \
 	push-group.rgb24.ref.png \
 	push-group.xlib.ref.png \
 	push-group.xlib.rgb24.ref.png \
+	push-group-color.ref.png \
+	push-group-color.xlib.ref.png \
 	quartz-surface-source.ps2.ref.png \
 	quartz-surface-source.ps3.ref.png \
 	quartz-surface-source.ref.png \
