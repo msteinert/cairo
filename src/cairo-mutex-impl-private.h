@@ -168,7 +168,7 @@
 # define CAIRO_MUTEX_IMPL_UNLOCK(mutex) CAIRO_MUTEX_IMPL_NOOP1(mutex)
 # define CAIRO_MUTEX_IMPL_NIL_INITIALIZER 0
 
-#elif defined(HAVE_WINDOWS_H) || defined(_MSC_VER) /*************************/
+#elif defined(_WIN32) /******************************************************/
 
 # include <windows.h>
 
