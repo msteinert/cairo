@@ -354,11 +354,13 @@ _cairo_win32_printing_surface_get_ctm_clip_box (cairo_win32_surface_t *surface,
     XFORM xform;
 
     _cairo_matrix_to_win32_xform (&surface->ctm, &xform);
+    if (!ModifyWorldTransform (surface->dc, &xform, MWT_LEFTMULTIPLY))
+	return _cairo_win32_print_gdi_error ("_cairo_win32_printing_surface_get_clip_box:ModifyWorldTransform");
+    GetClipBox (surface->dc, clip);
+
+    _cairo_matrix_to_win32_xform (&surface->gdi_ctm, &xform);
     if (!SetWorldTransform (surface->dc, &xform))
 	return _cairo_win32_print_gdi_error ("_cairo_win32_printing_surface_get_clip_box:SetWorldTransform");
-    GetClipBox (surface->dc, clip);
-    if (!ModifyWorldTransform (surface->dc, &xform, MWT_IDENTITY))
-	return _cairo_win32_print_gdi_error ("_cairo_win32_printing_surface_get_clip_box:ModifyWorldTransform");
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -716,7 +718,7 @@ _cairo_win32_printing_surface_paint_image_pattern (cairo_win32_surface_t   *surf
     /* _cairo_pattern_set_matrix guarantees invertibility */
     assert (status == CAIRO_STATUS_SUCCESS);
 
-    cairo_matrix_multiply (&m, &m, &surface->ctm);
+    cairo_matrix_multiply (&m, &m, &surface->gdi_ctm);
     SaveDC (surface->dc);
     _cairo_matrix_to_win32_xform (&m, &xform);
 
@@ -1340,7 +1342,7 @@ _cairo_win32_printing_surface_stroke (void			*abstract_surface,
     xform.eDx = 0.0f;
     xform.eDy = 0.0f;
 
-    if (!SetWorldTransform (surface->dc, &xform))
+    if (!ModifyWorldTransform (surface->dc, &xform, MWT_LEFTMULTIPLY))
 	return _cairo_win32_print_gdi_error ("_win32_surface_stroke:SetWorldTransform");
 
     if (source->type == CAIRO_PATTERN_TYPE_SOLID) {
@@ -1352,7 +1354,8 @@ _cairo_win32_printing_surface_stroke (void			*abstract_surface,
 	    return _cairo_win32_print_gdi_error ("_win32_surface_stroke:SelectClipPath");
 
 	/* Return to device space to paint the pattern */
-	if (!ModifyWorldTransform (surface->dc, &xform, MWT_IDENTITY))
+	_cairo_matrix_to_win32_xform (&surface->gdi_ctm, &xform);
+	if (!SetWorldTransform (surface->dc, &xform))
 	    return _cairo_win32_print_gdi_error ("_win32_surface_stroke:ModifyWorldTransform");
 	status = _cairo_win32_printing_surface_paint_pattern (surface, source);
     }
@@ -1551,10 +1554,11 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
 	    glyphs = type1_glyphs;
 	}
 
-	if (surface->has_ctm) {
+	if (surface->has_ctm || surface->has_gdi_ctm) {
+	    cairo_matrix_multiply (&ctm, &surface->ctm, &surface->gdi_ctm);
 	    for (i = 0; i < num_glyphs; i++)
-		cairo_matrix_transform_point (&surface->ctm, &glyphs[i].x, &glyphs[i].y);
-	    cairo_matrix_multiply (&ctm, &scaled_font->ctm, &surface->ctm);
+		cairo_matrix_transform_point (&ctm, &glyphs[i].x, &glyphs[i].y);
+	    cairo_matrix_multiply (&ctm, &scaled_font->ctm, &ctm);
 	    scaled_font = cairo_scaled_font_create (scaled_font->font_face,
 						    &scaled_font->font_matrix,
 						    &ctm,
@@ -1642,16 +1646,67 @@ _cairo_win32_printing_surface_start_page (void *abstract_surface)
 
     SaveDC (surface->dc); /* Save application context first, before doing MWT */
 
+    /* As the logical coordinates used by GDI functions (eg LineTo)
+     * are integers we need to do some additional work to prevent
+     * rounding errors. For example the obvious way to paint a meta
+     * pattern is to:
+     *
+     *   SaveDC()
+     *   transform the device context DC by the pattern to device matrix
+     *   replay the meta surface
+     *   RestoreDC()
+     *
+     * The problem here is that if the pattern to device matrix is
+     * [100 0 0 100 0 0], coordinates in the meta pattern such as
+     * (1.56, 2.23) which correspond to (156, 223) in device space
+     * will be rounded to (100, 200) due to (1.56, 2.23) being
+     * truncated to integers.
+     *
+     * This is solved by saving the current GDI CTM in surface->ctm,
+     * switch the GDI CTM to identity, and transforming all
+     * coordinates by surface->ctm before passing them to GDI. When
+     * painting a meta pattern, surface->ctm is transformed by the
+     * pattern to device matrix.
+     *
+     * For printing device contexts where 1 unit is 1 dpi, switching
+     * the GDI CTM to identity maximises the possible resolution of
+     * coordinates.
+     *
+     * If the device context is an EMF file, using an identity
+     * transform often provides insufficent resolution. The workaround
+     * is to set the GDI CTM to a scale < 1 eg [1.0/16 0 0 1/0/16 0 0]
+     * and scale the cairo CTM by [16 0 0 16 0 0]. The
+     * SetWorldTransform function call to scale the GDI CTM by 1.0/16
+     * will be recorded in the EMF followed by all the graphics
+     * functions by their coordinateds multiplied by 16.
+     *
+     * To support allowing the user to set a GDI CTM with scale < 1,
+     * we avoid switching to an identity CTM if the CTM xx and yy is < 1.
+     */
     SetGraphicsMode (surface->dc, GM_ADVANCED);
     GetWorldTransform(surface->dc, &xform);
-    surface->ctm.xx = xform.eM11;
-    surface->ctm.xy = xform.eM21;
-    surface->ctm.yx = xform.eM12;
-    surface->ctm.yy = xform.eM22;
-    surface->ctm.x0 = xform.eDx;
-    surface->ctm.y0 = xform.eDy;
-    surface->has_ctm = !_cairo_matrix_is_identity (&surface->ctm);
+    if (xform.eM11 < 1 && xform.eM22 < 1) {
+	cairo_matrix_init_identity (&surface->ctm);
+	surface->gdi_ctm.xx = xform.eM11;
+	surface->gdi_ctm.xy = xform.eM21;
+	surface->gdi_ctm.yx = xform.eM12;
+	surface->gdi_ctm.yy = xform.eM22;
+	surface->gdi_ctm.x0 = xform.eDx;
+	surface->gdi_ctm.y0 = xform.eDy;
+    } else {
+	surface->ctm.xx = xform.eM11;
+	surface->ctm.xy = xform.eM21;
+	surface->ctm.yx = xform.eM12;
+	surface->ctm.yy = xform.eM22;
+	surface->ctm.x0 = xform.eDx;
+	surface->ctm.y0 = xform.eDy;
+	cairo_matrix_init_identity (&surface->gdi_ctm);
+	if (!ModifyWorldTransform (surface->dc, NULL, MWT_IDENTITY))
+	    return _cairo_win32_print_gdi_error ("_cairo_win32_printing_surface_start_page:ModifyWorldTransform");
+    }
 
+    surface->has_ctm = !_cairo_matrix_is_identity (&surface->ctm);
+    surface->has_gdi_ctm = !_cairo_matrix_is_identity (&surface->gdi_ctm);
     inverse_ctm = surface->ctm;
     status = cairo_matrix_invert (&inverse_ctm);
     if (status)
@@ -1661,9 +1716,6 @@ _cairo_win32_printing_surface_start_page (void *abstract_surface)
     y_res = GetDeviceCaps (surface->dc, LOGPIXELSY);
     cairo_matrix_transform_distance (&inverse_ctm, &x_res, &y_res);
     _cairo_surface_set_resolution (&surface->base, x_res, y_res);
-
-    if (!ModifyWorldTransform (surface->dc, NULL, MWT_IDENTITY))
-	return _cairo_win32_print_gdi_error ("_cairo_win32_printing_surface_start_page:ModifyWorldTransform");
 
     SaveDC (surface->dc); /* Then save Cairo's known-good clip state, so the clip path can be reset */
 
