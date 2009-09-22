@@ -170,6 +170,15 @@
 
 #elif defined(_WIN32) /******************************************************/
 
+#define WIN32_LEAN_AND_MEAN
+/* We require Windows 2000 features such as ETO_PDY */
+#if !defined(WINVER) || (WINVER < 0x0500)
+# define WINVER 0x0500
+#endif
+#if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
+# define _WIN32_WINNT 0x0500
+#endif
+
 # include <windows.h>
 
   typedef CRITICAL_SECTION cairo_mutex_impl_t;
