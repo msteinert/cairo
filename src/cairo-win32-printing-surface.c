@@ -123,6 +123,42 @@ _cairo_win32_printing_surface_init_image_support (cairo_win32_surface_t *surface
 	surface->flags |= CAIRO_WIN32_SURFACE_CAN_CHECK_PNG;
 }
 
+/* When creating an EMF file, ExtTextOut with ETO_GLYPH_INDEX does not
+ * work unless the GDI function GdiInitializeLanguagePack() has been
+ * called.
+ *
+ *   http://m-a-tech.blogspot.com/2009/04/emf-buffer-idiocracy.html
+ *
+ * The only information I could find on the how to use this
+ * undocumented function is the use in:
+ *
+ * http://src.chromium.org/viewvc/chrome/trunk/src/chrome/renderer/render_process.cc?view=markup
+ *
+ * to solve the same problem. The above code first checks if LPK.DLL
+ * is already loaded. If it is not it calls
+ * GdiInitializeLanguagePack() using the prototype
+ *   BOOL GdiInitializeLanguagePack (int)
+ * and argument 0.
+ */
+static void
+_cairo_win32_printing_surface_init_language_pack (cairo_win32_surface_t *surface)
+{
+    typedef BOOL (WINAPI *gdi_init_lang_pack_func_t)(int);
+    gdi_init_lang_pack_func_t gdi_init_lang_pack;
+    HMODULE module;
+
+    if (GetModuleHandleW (L"LPK.DLL"))
+	return;
+
+    module = GetModuleHandleW (L"GDI32.DLL");
+    if (module) {
+	gdi_init_lang_pack = (gdi_init_lang_pack_func_t)
+	    GetProcAddress (module, "GdiInitializeLanguagePack");
+	if (gdi_init_lang_pack)
+	    gdi_init_lang_pack (0);
+    }
+}
+
 static cairo_int_status_t
 analyze_surface_pattern_transparency (cairo_surface_pattern_t *pattern)
 {
@@ -1713,6 +1749,7 @@ cairo_win32_printing_surface_create (HDC hdc)
 
     _cairo_win32_printing_surface_init_ps_mode (surface);
     _cairo_win32_printing_surface_init_image_support (surface);
+    _cairo_win32_printing_surface_init_language_pack (surface);
     _cairo_surface_init (&surface->base,
 			 &cairo_win32_printing_surface_backend,
                          CAIRO_CONTENT_COLOR_ALPHA);
