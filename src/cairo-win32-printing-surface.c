@@ -1479,6 +1479,7 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
 	    else
 		return _cairo_win32_printing_surface_analyze_operation (surface, op, source);
 	}
+#endif
 
 	/* For non win32 fonts we need to check that each glyph has a
 	 * path available. If a path is not available,
@@ -1494,7 +1495,6 @@ _cairo_win32_printing_surface_show_glyphs (void                 *abstract_surfac
 	    if (status)
 		return status;
 	}
-#endif
 
 	return _cairo_win32_printing_surface_analyze_operation (surface, op, source);
     }
