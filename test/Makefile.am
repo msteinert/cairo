@@ -548,7 +548,8 @@ REFERENCE_IMAGES = \
 	huge-radial.ref.png \
 	image-surface-source.ps2.ref.png \
 	image-surface-source.ps3.ref.png \
-	image-surface-source.ref.png \
+	image-surface-source.rgb24.ref.png \
+	image-surface-source.argb32.ref.png \
 	image-surface-source.svg12.argb32.xfail.png \
 	image-surface-source.svg12.rgb24.xfail.png \
 	implicit-close.ref.png \
@@ -747,12 +748,14 @@ REFERENCE_IMAGES = \
 	path-append.xlib-fallback.ref.png \
 	path-append.xlib.ref.png \
 	pattern-getters.ref.png \
-	pdf-surface-source.ref.png \
+	pdf-surface-source.rgb24.ref.png \
+	pdf-surface-source.argb32.ref.png \
 	pdf-surface-source.svg12.argb32.xfail.png \
 	pdf-surface-source.svg12.rgb24.xfail.png \
 	pixman-rotate.ref.png \
 	pixman-rotate.rgb24.ref.png \
-	ps-surface-source.ref.png \
+	ps-surface-source.rgb24.ref.png \
+	ps-surface-source.argb32.ref.png \
 	ps-surface-source.svg12.argb32.xfail.png \
 	ps-surface-source.svg12.rgb24.xfail.png \
 	push-group.ref.png \
@@ -761,9 +764,10 @@ REFERENCE_IMAGES = \
 	push-group.xlib.rgb24.ref.png \
 	push-group-color.ref.png \
 	push-group-color.xlib.ref.png \
+	quartz-surface-source.rgb24.ref.png \
+	quartz-surface-source.argb32.ref.png \
 	quartz-surface-source.ps2.ref.png \
 	quartz-surface-source.ps3.ref.png \
-	quartz-surface-source.ref.png \
 	radial-gradient.pdf.ref.png \
 	radial-gradient.quartz.ref.png \
 	radial-gradient.ref.png \
@@ -922,7 +926,8 @@ REFERENCE_IMAGES = \
 	surface-pattern.ps.xfail.png \
 	surface-pattern.ref.png \
 	surface-pattern.svg.xfail.png \
-	svg-surface-source.ref.png \
+	svg-surface-source.rgb24.ref.png \
+	svg-surface-source.argb32.ref.png \
 	svg-surface-source.svg12.argb32.xfail.png \
 	svg-surface-source.svg12.rgb24.xfail.png \
 	test-fallback16-surface-source.ps.ref.png \
@@ -1023,9 +1028,10 @@ REFERENCE_IMAGES = \
 	user-font.svg.ref.png \
 	user-font.xlib.ref.png \
 	xlib-expose-event.ref.png \
+	xlib-surface-source.rgb24.ref.png \
+	xlib-surface-source.argb32.ref.png \
 	xlib-surface-source.ps2.ref.png \
 	xlib-surface-source.ps3.ref.png \
-	xlib-surface-source.ref.png \
 	xlib-surface-source.svg12.argb32.xfail.png \
 	xlib-surface-source.svg12.rgb24.xfail.png \
 	zero-alpha.ref.png
