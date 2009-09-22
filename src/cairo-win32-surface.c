@@ -53,6 +53,7 @@
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-surface-fallback-private.h"
 
+#include <wchar.h>
 #include <windows.h>
 
 #if defined(__MINGW32__) && !defined(ETO_PDY)
