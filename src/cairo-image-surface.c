@@ -542,6 +542,7 @@ cairo_image_surface_create_for_data (unsigned char     *data,
 				     int		stride)
 {
     pixman_format_code_t pixman_format;
+    cairo_surface_t *surface;
     int minstride;
 
     if (! CAIRO_FORMAT_VALID (format))
@@ -562,9 +563,16 @@ cairo_image_surface_create_for_data (unsigned char     *data,
     }
 
     pixman_format = _cairo_format_to_pixman_format_code (format);
+    surface = _cairo_image_surface_create_with_pixman_format (data,
+							      pixman_format,
+							      width, height,
+							      stride);
+    if (unlikely (surface->status))
+	return surface;
 
-    return _cairo_image_surface_create_with_pixman_format (data, pixman_format,
-							   width, height, stride);
+    /* we can not make any assumptions by the initial state of the data */
+    ((cairo_image_surface_t *) surface)->is_clear = FALSE;
+    return surface;
 }
 slim_hidden_def (cairo_image_surface_create_for_data);
 
@@ -1610,6 +1618,16 @@ _cairo_image_surface_get_font_options (void                  *abstract_surface,
     cairo_font_options_set_hint_metrics (options, CAIRO_HINT_METRICS_ON);
 }
 
+static cairo_status_t
+_cairo_image_surface_mark_dirty_rectangle (void *abstract_surface,
+					   int x, int y,
+					   int width, int height)
+{
+    cairo_image_surface_t *surface = abstract_surface;
+    surface->is_clear = FALSE;
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static cairo_int_status_t
 _cairo_image_surface_paint (void *abstract_surface,
 			    cairo_operator_t	 op,
@@ -1663,7 +1681,7 @@ const cairo_surface_backend_t _cairo_image_surface_backend = {
     NULL, /* old_show_glyphs */
     _cairo_image_surface_get_font_options,
     NULL, /* flush */
-    NULL, /* mark_dirty_rectangle */
+    _cairo_image_surface_mark_dirty_rectangle,
     NULL, /* font_fini */
     NULL, /* glyph_fini */
 
