@@ -394,7 +394,7 @@ _cairo_image_surface_create_with_pixman_format (unsigned char		*data,
     }
 
     /* we can not make any assumptions about the initial state of user data */
-    ((cairo_image_surface_t *) surface)->is_clear = data != NULL;
+    ((cairo_image_surface_t *) surface)->is_clear = data == NULL;
     return surface;
 }
 
