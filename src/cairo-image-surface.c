@@ -391,7 +391,8 @@ _cairo_image_surface_create_with_pixman_format (unsigned char		*data,
     if (cairo_surface_status (surface))
 	pixman_image_unref (pixman_image);
     else
-	((cairo_image_surface_t *)surface)->is_clear = TRUE;
+        /* we can not make any assumptions by the initial state of the data */
+	((cairo_image_surface_t *)surface)->is_clear = (data != NULL);
 
     return surface;
 }
@@ -542,7 +543,6 @@ cairo_image_surface_create_for_data (unsigned char     *data,
 				     int		stride)
 {
     pixman_format_code_t pixman_format;
-    cairo_surface_t *surface;
     int minstride;
 
     if (! CAIRO_FORMAT_VALID (format))
@@ -563,16 +563,10 @@ cairo_image_surface_create_for_data (unsigned char     *data,
     }
 
     pixman_format = _cairo_format_to_pixman_format_code (format);
-    surface = _cairo_image_surface_create_with_pixman_format (data,
-							      pixman_format,
-							      width, height,
-							      stride);
-    if (unlikely (surface->status))
-	return surface;
-
-    /* we can not make any assumptions by the initial state of the data */
-    ((cairo_image_surface_t *) surface)->is_clear = FALSE;
-    return surface;
+    return _cairo_image_surface_create_with_pixman_format (data,
+							   pixman_format,
+							   width, height,
+							   stride);
 }
 slim_hidden_def (cairo_image_surface_create_for_data);
 
