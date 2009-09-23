@@ -388,12 +388,13 @@ _cairo_image_surface_create_with_pixman_format (unsigned char		*data,
 
     surface = _cairo_image_surface_create_for_pixman_image (pixman_image,
 							    pixman_format);
-    if (cairo_surface_status (surface))
+    if (unlikely (surface->status)) {
 	pixman_image_unref (pixman_image);
-    else
-        /* we can not make any assumptions by the initial state of the data */
-	((cairo_image_surface_t *)surface)->is_clear = (data != NULL);
+	return surface;
+    }
 
+    /* we can not make any assumptions about the initial state of user data */
+    ((cairo_image_surface_t *) surface)->is_clear = data != NULL;
     return surface;
 }
 
