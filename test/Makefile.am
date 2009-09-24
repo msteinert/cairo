@@ -1123,6 +1123,7 @@ font-options			\
 multi-page			\
 pdf-features			\
 png				\
+ps-eps                          \
 ps-features			\
 svg-clip			\
 svg-surface			\
@@ -1284,6 +1285,7 @@ CLEANFILES +=					\
 	ps-surface-source.out.ps		\
 	pdf-features.pdf			\
 	pdf-mime-data.out*			\
+	ps-eps.eps				\
 	ps-features.ps				\
 	svg-clip.svg				\
 	svg-surface.svg				\

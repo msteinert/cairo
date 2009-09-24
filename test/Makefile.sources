@@ -253,6 +253,7 @@ pdf_surface_test_sources = \
 	pdf-surface-source.c
 
 ps_surface_test_sources = \
+	ps-eps.c \
 	ps-features.c \
 	ps-surface-source.c
 
