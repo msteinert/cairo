@@ -437,9 +437,14 @@ cairo_perf_report_load (cairo_perf_report_t *report,
     char *configuration;
     char *dot;
     char *baseName;
+    const char *name;
 
-    configuration = xmalloc (strlen (filename) * sizeof (char) + 1);
-    strcpy (configuration, filename);
+    name = filename;
+    if (name == NULL)
+	name = "stdin";
+
+    configuration = xmalloc (strlen (name) * sizeof (char) + 1);
+    strcpy (configuration, name);
     baseName = basename (configuration);
     report->configuration = xmalloc (strlen (baseName) * sizeof (char) + 1);
     strcpy (report->configuration, baseName);
@@ -449,16 +454,20 @@ cairo_perf_report_load (cairo_perf_report_t *report,
     if (dot)
 	*dot = '\0';
 
-    report->name = filename;
+    report->name = name;
     report->tests_size = 16;
     report->tests = xmalloc (report->tests_size * sizeof (test_report_t));
     report->tests_count = 0;
 
-    file = fopen (filename, "r");
-    if (file == NULL) {
-	fprintf (stderr, "Failed to open %s: %s\n",
-		 filename, strerror (errno));
-	exit (1);
+    if (filename == NULL) {
+	file = stdin;
+    } else {
+	file = fopen (filename, "r");
+	if (file == NULL) {
+	    fprintf (stderr, "Failed to open %s: %s\n",
+		     filename, strerror (errno));
+	    exit (1);
+	}
     }
 
     while (1) {
@@ -485,7 +494,8 @@ cairo_perf_report_load (cairo_perf_report_t *report,
     if (line)
 	free (line);
 
-    fclose (file);
+    if (filename != NULL)
+	fclose (file);
 
     cairo_perf_report_sort_and_compute_stats (report, cmp);
 
@@ -497,4 +507,3 @@ cairo_perf_report_load (cairo_perf_report_t *report,
     }
     report->tests[report->tests_count].name = NULL;
 }
-

@@ -363,16 +363,18 @@ main (int argc, const char *argv[])
 
     parse_args (argc, argv, &args);
 
-    if (args.num_filenames < 1)
-	usage (argv[0]);
-
-    reports = xcalloc (args.num_filenames, sizeof (cairo_perf_report_t));
-
-    for (i = 0; i < args.num_filenames; i++) {
-	cairo_perf_report_load (&reports[i], args.filenames[i],
-		                test_report_cmp_name);
-	printf ("loaded: %s, %d tests\n",
-		args.filenames[i], reports[i].tests_count);
+    if (args.num_filenames) {
+	reports = xcalloc (args.num_filenames, sizeof (cairo_perf_report_t));
+	for (i = 0; i < args.num_filenames; i++) {
+	    cairo_perf_report_load (&reports[i], args.filenames[i],
+				    test_report_cmp_name);
+	    printf ("loaded: %s, %d tests\n",
+		    args.filenames[i], reports[i].tests_count);
+	}
+    } else {
+	args.num_filenames = 1;
+	reports = xcalloc (args.num_filenames, sizeof (cairo_perf_report_t));
+	cairo_perf_report_load (&reports[0], NULL, test_report_cmp_name);
     }
 
     cairo_perf_reports_compare (reports, args.num_filenames, &args.options);
