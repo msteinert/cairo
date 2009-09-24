@@ -2230,7 +2230,7 @@ cairo_private cairo_bool_t
 _pixman_format_from_masks (cairo_format_masks_t *masks,
 			   pixman_format_code_t *format_ret);
 
-cairo_private void
+cairo_private cairo_bool_t
 _pixman_format_to_masks (pixman_format_code_t	 pixman_format,
 			 cairo_format_masks_t	*masks);
 

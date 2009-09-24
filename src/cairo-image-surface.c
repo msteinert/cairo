@@ -231,11 +231,10 @@ _pixman_format_from_masks (cairo_format_masks_t *masks,
      * expected. This avoid any problems from something bizarre like
      * alpha in the least-significant bits, or insane channel order,
      * or whatever. */
-     _pixman_format_to_masks (format, &format_masks);
-
-     if (masks->bpp        != format_masks.bpp        ||
-	 masks->red_mask   != format_masks.red_mask   ||
-	 masks->green_mask != format_masks.green_mask ||
+     if (!_pixman_format_to_masks (format, &format_masks) ||
+         masks->bpp        != format_masks.bpp            ||
+	 masks->red_mask   != format_masks.red_mask       ||
+	 masks->green_mask != format_masks.green_mask     ||
 	 masks->blue_mask  != format_masks.blue_mask)
      {
 	 return FALSE;
@@ -248,7 +247,7 @@ _pixman_format_from_masks (cairo_format_masks_t *masks,
 /* A mask consisting of N bits set to 1. */
 #define MASK(N) ((1UL << (N))-1)
 
-void
+cairo_bool_t
 _pixman_format_to_masks (pixman_format_code_t	 format,
 			 cairo_format_masks_t	*masks)
 {
@@ -268,27 +267,27 @@ _pixman_format_to_masks (pixman_format_code_t	 format,
         masks->red_mask   = MASK (r) << (g + b);
         masks->green_mask = MASK (g) << (b);
         masks->blue_mask  = MASK (b);
-        return;
+        return TRUE;
     case PIXMAN_TYPE_ABGR:
         masks->alpha_mask = MASK (a) << (b + g + r);
         masks->blue_mask  = MASK (b) << (g + r);
         masks->green_mask = MASK (g) << (r);
         masks->red_mask   = MASK (r);
-        return;
+        return TRUE;
 #ifdef PIXMAN_TYPE_BGRA
     case PIXMAN_TYPE_BGRA:
         masks->blue_mask  = MASK (b) << (g + r + a);
         masks->green_mask = MASK (g) << (r + a);
         masks->red_mask   = MASK (r) << (a);
         masks->alpha_mask = MASK (a);
-        return;
+        return TRUE;
 #endif
     case PIXMAN_TYPE_A:
         masks->alpha_mask = MASK (a);
         masks->red_mask   = 0;
         masks->green_mask = 0;
         masks->blue_mask  = 0;
-        return;
+        return TRUE;
     case PIXMAN_TYPE_OTHER:
     case PIXMAN_TYPE_COLOR:
     case PIXMAN_TYPE_GRAY:
@@ -299,7 +298,7 @@ _pixman_format_to_masks (pixman_format_code_t	 format,
         masks->red_mask   = 0;
         masks->green_mask = 0;
         masks->blue_mask  = 0;
-        return;
+        return FALSE;
     }
 }
 
