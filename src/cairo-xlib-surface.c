@@ -974,11 +974,10 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
     XImage ximage;
     cairo_format_masks_t image_masks;
     int native_byte_order = _native_byte_order_lsb () ? LSBFirst : MSBFirst;
+    pixman_image_t *pixman_image = NULL;
     cairo_status_t status;
     cairo_bool_t own_data;
     GC gc;
-
-    _pixman_format_to_masks (image->pixman_format, &image_masks);
 
     ximage.width = image->width;
     ximage.height = image->height;
@@ -993,10 +992,47 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
     ximage.blue_mask = surface->b_mask;
     ximage.xoffset = 0;
 
-    if ((image_masks.alpha_mask == surface->a_mask || surface->a_mask == 0) &&
-	(image_masks.red_mask   == surface->r_mask || surface->r_mask == 0) &&
-	(image_masks.green_mask == surface->g_mask || surface->g_mask == 0) &&
-	(image_masks.blue_mask  == surface->b_mask || surface->b_mask == 0))
+    if (!_pixman_format_to_masks (image->pixman_format, &image_masks))
+    {
+        pixman_format_code_t intermediate_format;
+        int ret;
+
+        image_masks.alpha_mask = surface->a_mask;
+        image_masks.red_mask   = surface->r_mask;
+        image_masks.green_mask = surface->g_mask;
+        image_masks.blue_mask  = surface->b_mask;
+        ret = _pixman_format_from_masks (&image_masks, &intermediate_format);
+        assert (ret);
+
+        pixman_image = pixman_image_create_bits (intermediate_format,
+                                                 image->width,
+                                                 image->height,
+                                                 NULL,
+                                                 0);
+        if (pixman_image == NULL)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+        pixman_image_composite (PIXMAN_OP_SRC,
+                                image->pixman_image,
+                                NULL,
+                                pixman_image,
+                                0, 0,
+                                0, 0,
+                                0, 0,
+                                image->width, image->height);
+
+	ximage.bits_per_pixel = image_masks.bpp;
+	ximage.data = (char *) pixman_image_get_data (pixman_image);
+	ximage.bytes_per_line = pixman_image_get_stride (pixman_image);
+	own_data = FALSE;
+
+	ret = XInitImage (&ximage);
+	assert (ret != 0);
+    }
+    else if ((image_masks.alpha_mask == surface->a_mask || surface->a_mask == 0) &&
+             (image_masks.red_mask   == surface->r_mask || surface->r_mask == 0) &&
+             (image_masks.green_mask == surface->g_mask || surface->g_mask == 0) &&
+             (image_masks.blue_mask  == surface->b_mask || surface->b_mask == 0))
     {
 	int ret;
 
@@ -1126,6 +1162,8 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
   BAIL:
     if (own_data)
 	free (ximage.data);
+    if (pixman_image)
+        pixman_image_unref (pixman_image);
 
     return CAIRO_STATUS_SUCCESS;
 }
