@@ -106,6 +106,13 @@ static const char * _cairo_ps_level_strings[CAIRO_PS_LEVEL_LAST] =
     "PS Level 3"
 };
 
+typedef struct _cairo_page_media {
+    char *name;
+    int width;
+    int height;
+    cairo_list_t link;
+} cairo_page_media_t;
+
 static void
 _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 {
@@ -148,6 +155,27 @@ _cairo_ps_surface_emit_header (cairo_ps_surface_t *surface)
 				 "%%%%DocumentData: Clean7Bit\n"
 				 "%%%%LanguageLevel: %d\n",
 				 level);
+
+    if (!cairo_list_is_empty (&surface->document_media)) {
+	cairo_page_media_t *page;
+	cairo_bool_t first = TRUE;
+
+	cairo_list_foreach_entry (page, cairo_page_media_t, &surface->document_media, link) {
+	    if (first) {
+		_cairo_output_stream_printf (surface->final_stream,
+					     "%%%%DocumentMedia: ");
+		first = FALSE;
+	    } else {
+		_cairo_output_stream_printf (surface->final_stream,
+					     "%%%%+ ");
+	    }
+	    _cairo_output_stream_printf (surface->final_stream,
+					 "%s %d %d 0 () ()\n",
+					 page->name,
+					 page->width,
+					 page->height);
+	}
+    }
 
     num_comments = _cairo_array_num_elements (&surface->dsc_header_comments);
     comments = _cairo_array_index (&surface->dsc_header_comments, 0);
@@ -775,6 +803,39 @@ _cairo_ps_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clipper,
 				      fill_rule);
 }
 
+static const char *
+_cairo_ps_surface_get_page_media (cairo_ps_surface_t     *surface)
+{
+    int width, height;
+    char buf[50];
+    cairo_page_media_t *page;
+
+    width = _cairo_lround (surface->width);
+    height = _cairo_lround (surface->height);
+    cairo_list_foreach_entry (page, cairo_page_media_t, &surface->document_media, link) {
+	if (page->width == width && page->height == height)
+	    return page->name;
+    }
+
+    page = malloc (sizeof (cairo_page_media_t));
+    if (unlikely (page == NULL)) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	return NULL;
+    }
+
+    snprintf (buf, sizeof (buf), "p%dx%d", width , height);
+    page->name = strdup (buf);
+    if (unlikely (page->name == NULL)) {
+	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	return NULL;
+    }
+
+    page->width = width;
+    page->height = height;
+    cairo_list_add_tail (&page->link, &surface->document_media);
+
+    return page->name;
+}
 
 static cairo_surface_t *
 _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
@@ -841,6 +902,7 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
 			       surface->font_subsets);
     surface->num_pages = 0;
 
+    cairo_list_init (&surface->document_media);
     _cairo_array_init (&surface->dsc_header_comments, sizeof (char *));
     _cairo_array_init (&surface->dsc_setup_comments, sizeof (char *));
     _cairo_array_init (&surface->dsc_page_setup_comments, sizeof (char *));
@@ -1391,6 +1453,17 @@ CLEANUP:
     status2 = _cairo_output_stream_destroy (surface->final_stream);
     if (status == CAIRO_STATUS_SUCCESS)
 	status = status2;
+
+    while (! cairo_list_is_empty (&surface->document_media)) {
+        cairo_page_media_t *page;
+
+        page = cairo_list_first_entry (&surface->document_media,
+                                       cairo_page_media_t,
+                                       link);
+        cairo_list_del (&page->link);
+	free (page->name);
+	free (page);
+    }
 
     num_comments = _cairo_array_num_elements (&surface->dsc_header_comments);
     comments = _cairo_array_index (&surface->dsc_header_comments, 0);
@@ -3563,6 +3636,8 @@ _cairo_ps_surface_set_bounding_box (void		*abstract_surface,
     int i, num_comments;
     char **comments;
     int x1, y1, x2, y2;
+    cairo_bool_t has_page_media;
+    const char *page_media;
 
     if (surface->eps) {
 	x1 = floor (_cairo_fixed_to_double (bbox->p1.x));
@@ -3589,15 +3664,28 @@ _cairo_ps_surface_set_bounding_box (void		*abstract_surface,
     _cairo_output_stream_printf (surface->stream,
 				 "%%%%BeginPageSetup\n");
 
+    has_page_media = FALSE;
     num_comments = _cairo_array_num_elements (&surface->dsc_page_setup_comments);
     comments = _cairo_array_index (&surface->dsc_page_setup_comments, 0);
     for (i = 0; i < num_comments; i++) {
 	_cairo_output_stream_printf (surface->stream,
 				     "%s\n", comments[i]);
+	if (strncmp (comments[i], "%%PageMedia:", 11) == 0)
+	    has_page_media = TRUE;
 	free (comments[i]);
 	comments[i] = NULL;
     }
     _cairo_array_truncate (&surface->dsc_page_setup_comments, 0);
+
+    if (!has_page_media && !surface->eps) {
+	page_media = _cairo_ps_surface_get_page_media (surface);
+	if (unlikely (page_media == NULL))
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+	_cairo_output_stream_printf (surface->stream,
+				     "%%%%PageMedia: %s\n",
+				     page_media);
+    }
 
     _cairo_output_stream_printf (surface->stream,
 				 "%%%%PageBoundingBox: %d %d %d %d\n",

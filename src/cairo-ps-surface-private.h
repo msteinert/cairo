@@ -90,6 +90,7 @@ typedef struct cairo_ps_surface {
 
     cairo_scaled_font_subsets_t *font_subsets;
 
+    cairo_list_t document_media;
     cairo_array_t dsc_header_comments;
     cairo_array_t dsc_setup_comments;
     cairo_array_t dsc_page_setup_comments;
