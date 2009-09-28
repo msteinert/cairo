@@ -106,6 +106,33 @@ static const char * _cairo_ps_level_strings[CAIRO_PS_LEVEL_LAST] =
     "PS Level 3"
 };
 
+typedef struct _cairo_page_standard_media {
+    const char *name;
+    int width;
+    int height;
+} cairo_page_standard_media_t;
+
+static const cairo_page_standard_media_t _cairo_page_standard_media[] =
+{
+    { "A0",       2384, 3371 },
+    { "A1",       1685, 2384 },
+    { "A2",       1190, 1684 },
+    { "A3",        842, 1190 },
+    { "A4",        595,  842 },
+    { "A5",        420,  595 },
+    { "B4",        729, 1032 },
+    { "B5",        516,  729 },
+    { "Letter",    612,  792 },
+    { "Tabloid",   792, 1224 },
+    { "Ledger",   1224,  792 },
+    { "Legal",     612, 1008 },
+    { "Statement", 396,  612 },
+    { "Executive", 540,  720 },
+    { "Folio",     612,  936 },
+    { "Quarto",    610,  780 },
+    { "10x14",     720, 1008 },
+};
+
 typedef struct _cairo_page_media {
     char *name;
     int width;
@@ -803,18 +830,42 @@ _cairo_ps_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clipper,
 				      fill_rule);
 }
 
+/* PLRM specifies a tolerance of 5 points when matching page sizes */
+static cairo_bool_t
+_ps_page_dimension_equal (int a, int b)
+{
+    return (abs (a - b) < 5);
+}
+
 static const char *
 _cairo_ps_surface_get_page_media (cairo_ps_surface_t     *surface)
 {
-    int width, height;
+    int width, height, i;
     char buf[50];
     cairo_page_media_t *page;
+    const char *page_name;
 
     width = _cairo_lround (surface->width);
     height = _cairo_lround (surface->height);
+
+    /* search previously used page sizes */
     cairo_list_foreach_entry (page, cairo_page_media_t, &surface->document_media, link) {
-	if (page->width == width && page->height == height)
+	if (_ps_page_dimension_equal (width, page->width) &&
+	    _ps_page_dimension_equal (height, page->height))
 	    return page->name;
+    }
+
+    /* search list of standard page sizes */
+    page_name = NULL;
+    for (i = 0; i < ARRAY_LENGTH (_cairo_page_standard_media); i++) {
+	if (_ps_page_dimension_equal (width, _cairo_page_standard_media[i].width) &&
+	    _ps_page_dimension_equal (height, _cairo_page_standard_media[i].height))
+	{
+	    page_name = _cairo_page_standard_media[i].name;
+	    width = _cairo_page_standard_media[i].width;
+	    height = _cairo_page_standard_media[i].height;
+	    break;
+	}
     }
 
     page = malloc (sizeof (cairo_page_media_t));
@@ -823,8 +874,15 @@ _cairo_ps_surface_get_page_media (cairo_ps_surface_t     *surface)
 	return NULL;
     }
 
-    snprintf (buf, sizeof (buf), "p%dx%d", width , height);
-    page->name = strdup (buf);
+    if (page_name) {
+	page->name = strdup (page_name);
+    } else {
+	snprintf (buf, sizeof (buf), "%dx%dmm",
+		  _cairo_lround (surface->width * 25.4/72),
+		  _cairo_lround (surface->height * 25.4/72));
+	page->name = strdup (buf);
+    }
+
     if (unlikely (page->name == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
