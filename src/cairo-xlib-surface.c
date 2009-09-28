@@ -1001,6 +1001,7 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
         image_masks.red_mask   = surface->r_mask;
         image_masks.green_mask = surface->g_mask;
         image_masks.blue_mask  = surface->b_mask;
+        image_masks.bpp        = surface->depth;
         ret = _pixman_format_from_masks (&image_masks, &intermediate_format);
         assert (ret);
 
