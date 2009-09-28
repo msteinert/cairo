@@ -229,6 +229,22 @@ be32_to_cpu(uint32_t v)
 
 #endif
 
+
+/* The glibc versions of ispace() and isdigit() are slow in UTF-8 locales.
+ */
+
+static inline int cairo_const
+_cairo_isspace (int c)
+{
+    return (c == 0x20 || (c >= 0x09 && c <= 0x0d));
+}
+
+static inline int cairo_const
+_cairo_isdigit (int c)
+{
+    return (c >= '0' && c <= '9');
+}
+
 #include "cairo-types-private.h"
 #include "cairo-cache-private.h"
 #include "cairo-reference-count-private.h"

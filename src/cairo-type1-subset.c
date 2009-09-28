@@ -58,8 +58,6 @@
 #include FT_OUTLINE_H
 #include FT_TYPE1_TABLES_H
 
-#include <ctype.h>
-
 typedef struct _cairo_type1_font_subset {
     cairo_scaled_font_subset_t *scaled_font_subset;
 
@@ -295,8 +293,8 @@ cairo_type1_font_erase_dict_key (cairo_type1_font_subset_t *font,
 	    p = start + strlen(key);
 	    /* skip integers or array of integers */
 	    while (p < segment_end &&
-		   (isspace(*p) ||
-		    isdigit(*p) ||
+		   (_cairo_isspace(*p) ||
+		    _cairo_isdigit(*p) ||
 		    *p == '[' ||
 		    *p == ']'))
 	    {
@@ -354,7 +352,7 @@ cairo_type1_font_subset_write_header (cairo_type1_font_subset_t *font,
     start = find_token (font->header_segment, segment_end, "/UniqueID");
     if (start) {
 	start += 9;
-	while (start < segment_end && isspace (*start))
+	while (start < segment_end && _cairo_isspace (*start))
 	    start++;
 	if (start + 5 < segment_end && memcmp(start, "known", 5) == 0) {
 	    _cairo_output_stream_write (font->output, font->header_segment,
@@ -474,7 +472,7 @@ cairo_type1_font_subset_decrypt_eexec_segment (cairo_type1_font_subset_t *font)
     while (in < end) {
 	if (font->eexec_segment_is_ascii) {
 	    c = *in++;
-	    if (isspace (c))
+	    if (_cairo_isspace (c))
 		continue;
 	    c = (hex_to_int (c) << 4) | hex_to_int (*in++);
 	} else {
@@ -510,10 +508,10 @@ cairo_type1_font_subset_decrypt_eexec_segment (cairo_type1_font_subset_t *font)
 static const char *
 skip_token (const char *p, const char *end)
 {
-    while (p < end && isspace(*p))
+    while (p < end && _cairo_isspace(*p))
 	p++;
 
-    while (p < end && !isspace(*p))
+    while (p < end && !_cairo_isspace(*p))
 	p++;
 
     if (p == end)
@@ -969,7 +967,7 @@ cairo_type1_font_subset_for_each_glyph (cairo_type1_font_subset_t *font,
 
 	/* Skip binary data and |- or ND token. */
 	p = skip_token (charstring + charstring_length, dict_end);
-	while (p < dict_end && isspace(*p))
+	while (p < dict_end && _cairo_isspace(*p))
 	    p++;
 
 	/* In case any of the skip_token() calls above reached EOF, p will
