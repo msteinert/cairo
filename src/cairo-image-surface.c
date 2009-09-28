@@ -276,9 +276,9 @@ _pixman_format_to_masks (pixman_format_code_t	 format,
         return TRUE;
 #ifdef PIXMAN_TYPE_BGRA
     case PIXMAN_TYPE_BGRA:
-        masks->blue_mask  = MASK (b) << (g + r + a);
-        masks->green_mask = MASK (g) << (r + a);
-        masks->red_mask   = MASK (r) << (a);
+        masks->blue_mask  = MASK (b) << (masks->bpp - b);
+        masks->green_mask = MASK (g) << (masks->bpp - b - g);
+        masks->red_mask   = MASK (r) << (masks->bpp - b - g - r);
         masks->alpha_mask = MASK (a);
         return TRUE;
 #endif
