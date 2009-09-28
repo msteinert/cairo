@@ -1118,6 +1118,16 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 		    in_pixel = ((uint8_t*)row)[x];
 		else if (image_masks.bpp <= 16)
 		    in_pixel = ((uint16_t*)row)[x];
+		else if (image_masks.bpp <= 24)
+#ifdef WORDS_BIGENDIAN
+		    in_pixel = ((uint8_t*)row)[3 * x]     << 16 |
+			       ((uint8_t*)row)[3 * x + 1] << 8  |
+			       ((uint8_t*)row)[3 * x + 2];
+#else
+		    in_pixel = ((uint8_t*)row)[3 * x]           |
+			       ((uint8_t*)row)[3 * x + 1] << 8  |
+			       ((uint8_t*)row)[3 * x + 2] << 16;
+#endif
 		else
 		    in_pixel = row[x];
 
