@@ -69,6 +69,41 @@
 #define UNSUPPORTED(reason) CAIRO_INT_STATUS_UNSUPPORTED
 #endif
 
+#if DEBUG
+#include <X11/Xlibint.h>
+static void CAIRO_PRINTF_FORMAT (2, 3)
+_x_bread_crumb (Display *dpy,
+		const char *fmt,
+		...)
+{
+    xReq *req;
+    char buf[2048];
+    unsigned int len, len_dwords;
+    va_list ap;
+
+    va_start (ap, fmt);
+    len = vsnprintf (buf, sizeof (buf), fmt, ap);
+    va_end (ap);
+
+    buf[len++] = '\0';
+    while (len & 3)
+	buf[len++] = '\0';
+
+    LockDisplay (dpy);
+    GetEmptyReq (NoOperation, req);
+
+    len_dwords = len >> 2;
+    SetReqLen (req, len_dwords, len_dwords);
+    Data (dpy, buf, len);
+
+    UnlockDisplay (dpy);
+    SyncHandle ();
+}
+#define X_DEBUG(x) _x_bread_crumb x
+#else
+#define X_DEBUG
+#endif
+
 /* Xlib doesn't define a typedef, so define one ourselves */
 typedef int (*cairo_xlib_error_func_t) (Display     *display,
 					XErrorEvent *event);
@@ -335,6 +370,8 @@ _cairo_xlib_surface_finish (void *abstract_surface)
     cairo_xlib_surface_t *surface = abstract_surface;
     cairo_xlib_display_t *display = surface->display;
     cairo_status_t        status  = CAIRO_STATUS_SUCCESS;
+
+    X_DEBUG ((surface->dpy, "finish (drawable=%x)", (unsigned int) surface->drawable));
 
     if (surface->owns_pixmap) {
 	cairo_status_t status2;
@@ -2121,6 +2158,8 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
     if (operation == DO_UNSUPPORTED)
 	return UNSUPPORTED ("unsupported operation");
 
+    X_DEBUG ((dst->dpy, "composite (dst=%x)", (unsigned int) dst->drawable));
+
     needs_alpha_composite =
 	_operator_needs_alpha_composite (op,
 					 _surface_has_alpha (dst),
@@ -2329,6 +2368,8 @@ _cairo_xlib_surface_solid_fill_rectangles (cairo_xlib_surface_t    *surface,
     if (unlikely (status))
         return status;
 
+    X_DEBUG ((surface->dpy, "solid_fill_rectangles (dst=%x)", (unsigned int) surface->drawable));
+
     status = _cairo_pattern_acquire_surface (&solid.base, &surface->base,
 					     CAIRO_CONTENT_COLOR_ALPHA,
 					     0, 0,
@@ -2391,6 +2432,8 @@ _cairo_xlib_surface_fill_rectangles (void		     *abstract_surface,
 
 	return UNSUPPORTED ("no support for FillRectangles with this op");
     }
+
+    X_DEBUG ((surface->dpy, "fill_rectangles (dst=%x)", (unsigned int) surface->drawable));
 
     render_color.red   = color->red_short;
     render_color.green = color->green_short;
@@ -2514,6 +2557,8 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
     operation = _categorize_composite_operation (dst, op, pattern, TRUE);
     if (operation == DO_UNSUPPORTED)
 	return UNSUPPORTED ("unsupported operation");
+
+    X_DEBUG ((dst->dpy, "composite_trapezoids (dst=%x)", (unsigned int) dst->drawable));
 
     status = _cairo_xlib_surface_acquire_pattern_surface (dst,
 							  pattern,
@@ -2783,6 +2828,8 @@ _cairo_xlib_surface_detach_display (cairo_xlib_display_t *display, void *data)
     dpy = surface->dpy;
     surface->dpy = NULL;
 
+    X_DEBUG ((dpy, "detach (drawable=%x)", (unsigned int) surface->drawable));
+
     if (surface->dst_picture != None) {
 	XRenderFreePicture (dpy, surface->dst_picture);
 	surface->dst_picture = None;
@@ -3032,6 +3079,8 @@ cairo_xlib_surface_create (Display     *dpy,
     if (unlikely (status))
 	return _cairo_surface_create_in_error (status);
 
+    X_DEBUG ((dpy, "create (drawable=%x)", (unsigned int) drawable));
+
     surface = _cairo_xlib_surface_create_internal (screen, drawable,
 						   visual, NULL,
 						   width, height, 0);
@@ -3071,6 +3120,8 @@ cairo_xlib_surface_create_for_bitmap (Display  *dpy,
     status = _cairo_xlib_screen_get (dpy, scr, &screen);
     if (unlikely (status))
 	return _cairo_surface_create_in_error (status);
+
+    X_DEBUG ((dpy, "create_for_bitmap (drawable=%x)", (unsigned int) bitmap));
 
     surface = _cairo_xlib_surface_create_internal (screen, bitmap,
 						   NULL, NULL,
@@ -3119,6 +3170,8 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
     status = _cairo_xlib_screen_get (dpy, scr, &screen);
     if (unlikely (status))
 	return _cairo_surface_create_in_error (status);
+
+    X_DEBUG ((dpy, "create_with_xrender_format (drawable=%x)", (unsigned int) drawable));
 
     surface = _cairo_xlib_surface_create_internal (screen, drawable,
 						   NULL, format,
@@ -3238,6 +3291,8 @@ cairo_xlib_surface_set_drawable (cairo_surface_t   *abstract_surface,
 	return;
 
     if (surface->drawable != drawable) {
+	X_DEBUG ((surface->dpy, "set_drawable (drawable=%x)", (unsigned int) drawable));
+
 	if (surface->dst_picture != None) {
 	    status = _cairo_xlib_display_queue_resource (
 		                                  surface->display,
@@ -4357,6 +4412,8 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 
     if (! _cairo_xlib_surface_owns_font (dst, scaled_font))
 	return UNSUPPORTED ("unowned font");
+
+    X_DEBUG ((dst->dpy, "show_glyphs (dst=%x)", (unsigned int) dst->drawable));
 
     if (clip_region != NULL &&
 	cairo_region_num_rectangles (clip_region) == 1)
