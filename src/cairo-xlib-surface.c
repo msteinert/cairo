@@ -101,7 +101,7 @@ _x_bread_crumb (Display *dpy,
 }
 #define X_DEBUG(x) _x_bread_crumb x
 #else
-#define X_DEBUG
+#define X_DEBUG(x)
 #endif
 
 /* Xlib doesn't define a typedef, so define one ourselves */
