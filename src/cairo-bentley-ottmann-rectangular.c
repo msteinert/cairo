@@ -380,6 +380,8 @@ _active_edges_to_traps (cairo_bo_sweep_line_t	*sweep,
 			break;
 		    }
 
+		    if (right->link.next == &sweep->sweep)
+			break;
 		    right = link_to_edge (right->link.next);
 		}
 	    }
