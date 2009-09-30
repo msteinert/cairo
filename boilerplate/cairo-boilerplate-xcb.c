@@ -73,6 +73,7 @@ _cairo_boilerplate_xcb_create_surface (const char		 *name,
     xcb_connection_t *c;
     xcb_render_pictforminfo_t *render_format;
     xcb_pict_standard_t format;
+    xcb_void_cookie_t cookie;
     cairo_surface_t *surface;
     cairo_status_t status;
 
@@ -92,19 +93,31 @@ _cairo_boilerplate_xcb_create_surface (const char		 *name,
     root = xcb_setup_roots_iterator(xcb_get_setup(c)).data;
 
     xtc->pixmap = xcb_generate_id (c);
-    xcb_create_pixmap (c, 32, xtc->pixmap, root->root,
-			 width, height);
-
     switch (content) {
     case CAIRO_CONTENT_COLOR:
+	cookie = xcb_create_pixmap_checked (c, 24,
+					    xtc->pixmap, root->root,
+					    width, height);
 	format = XCB_PICT_STANDARD_RGB_24;
 	break;
+
     case CAIRO_CONTENT_COLOR_ALPHA:
+	cookie = xcb_create_pixmap_checked (c, 32,
+					    xtc->pixmap, root->root,
+					    width, height);
 	format = XCB_PICT_STANDARD_ARGB_32;
 	break;
+
     case CAIRO_CONTENT_ALPHA:  /* would be XCB_PICT_STANDARD_A_8 */
     default:
 	fprintf (stderr, "Invalid content for XCB test: %d\n", content);
+	return NULL;
+    }
+
+    /* slow, but sure */
+    if (xcb_request_check (c, cookie) != NULL) {
+	xcb_disconnect (c);
+	free (xtc);
 	return NULL;
     }
 
