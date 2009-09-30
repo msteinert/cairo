@@ -1014,6 +1014,54 @@ REPEAT:
     }
 #endif
 
+    if (target->finish_surface != NULL) {
+#if HAVE_MEMFAULT
+	/* We need to re-enable faults as most meta-surface processing
+	 * is done during cairo_surface_finish().
+	 */
+	MEMFAULT_CLEAR_FAULTS ();
+	last_fault_count = MEMFAULT_COUNT_FAULTS ();
+	MEMFAULT_ENABLE_FAULTS ();
+#endif
+
+	/* also check for infinite loops whilst replaying */
+	alarm (ctx->timeout);
+	status = target->finish_surface (surface);
+	alarm (0);
+
+#if HAVE_MEMFAULT
+	MEMFAULT_DISABLE_FAULTS ();
+
+	if (ctx->malloc_failure &&
+	    MEMFAULT_COUNT_FAULTS () - last_fault_count > 0 &&
+	    status == CAIRO_STATUS_NO_MEMORY)
+	{
+	    cairo_destroy (cr);
+	    cairo_surface_destroy (surface);
+	    if (target->cleanup)
+		target->cleanup (closure);
+	    if (ctx->thread == 0) {
+		cairo_debug_reset_static_data ();
+#if HAVE_FCFINI
+		FcFini ();
+#endif
+		if (MEMFAULT_COUNT_LEAKS () > 0) {
+		    MEMFAULT_PRINT_FAULTS ();
+		    MEMFAULT_PRINT_LEAKS ();
+		}
+	    }
+
+	    goto REPEAT;
+	}
+#endif
+	if (status) {
+	    cairo_test_log (ctx, "Error: Failed to finish surface: %s\n",
+			    cairo_status_to_string (status));
+	    ret = CAIRO_TEST_FAILURE;
+	    goto UNWIND_CAIRO;
+	}
+    }
+
     /* Skip image check for tests with no image (width,height == 0,0) */
     if (ctx->test->width != 0 && ctx->test->height != 0) {
 	cairo_surface_t *ref_image;
@@ -1021,54 +1069,6 @@ REPEAT:
 	cairo_surface_t *diff_image;
 	buffer_diff_result_t result;
 	cairo_status_t diff_status;
-
-	if (target->finish_surface != NULL) {
-#if HAVE_MEMFAULT
-	    /* We need to re-enable faults as most meta-surface processing
-	     * is done during cairo_surface_finish().
-	     */
-	    MEMFAULT_CLEAR_FAULTS ();
-	    last_fault_count = MEMFAULT_COUNT_FAULTS ();
-	    MEMFAULT_ENABLE_FAULTS ();
-#endif
-
-	    /* also check for infinite loops whilst replaying */
-	    alarm (ctx->timeout);
-	    diff_status = target->finish_surface (surface);
-	    alarm (0);
-
-#if HAVE_MEMFAULT
-	    MEMFAULT_DISABLE_FAULTS ();
-
-	    if (ctx->malloc_failure &&
-		MEMFAULT_COUNT_FAULTS () - last_fault_count > 0 &&
-		diff_status == CAIRO_STATUS_NO_MEMORY)
-	    {
-		cairo_destroy (cr);
-		cairo_surface_destroy (surface);
-		if (target->cleanup)
-		    target->cleanup (closure);
-		if (ctx->thread == 0) {
-		    cairo_debug_reset_static_data ();
-#if HAVE_FCFINI
-		    FcFini ();
-#endif
-		    if (MEMFAULT_COUNT_LEAKS () > 0) {
-			MEMFAULT_PRINT_FAULTS ();
-			MEMFAULT_PRINT_LEAKS ();
-		    }
-		}
-
-		goto REPEAT;
-	    }
-#endif
-	    if (diff_status) {
-		cairo_test_log (ctx, "Error: Failed to finish surface: %s\n",
-				cairo_status_to_string (diff_status));
-		ret = CAIRO_TEST_FAILURE;
-		goto UNWIND_CAIRO;
-	    }
-	}
 
 	if (ref_png_path == NULL) {
 	    cairo_test_log (ctx, "Error: Cannot find reference image for %s\n",
