@@ -2189,10 +2189,6 @@ cairo_meta_surface_ink_extents (cairo_surface_t *surface,
 				double *width,
 				double *height);
 
-cairo_public cairo_status_t
-cairo_meta_surface_replay (cairo_surface_t *surface,
-			   cairo_surface_t *target);
-
 /* Tee-surface functions */
 
 cairo_public cairo_surface_t *

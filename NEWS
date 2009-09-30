@@ -4,7 +4,6 @@ API additions:
 
   cairo_meta_surface_create()
   cairo_meta_surface_ink_extents()
-  cairo_meta_surface_replay()
 
     Finally exporting the internal meta-surface so that applications
     have a method to record and replay a sequence of drawing commands.

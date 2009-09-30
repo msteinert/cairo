@@ -867,7 +867,7 @@ write_trace (const char *trace, struct slave *slave)
     cairo_script_context_t *ctx;
     cairo_surface_t *script;
     char *filename;
-    cairo_status_t status;
+    cairo_t *cr;
 
     xasprintf (&filename, "%s-fail.trace", trace);
     ctx = cairo_script_context_create (filename);
@@ -877,7 +877,11 @@ write_trace (const char *trace, struct slave *slave)
     cairo_script_context_destroy (ctx);
     free (filename);
 
-    status = cairo_meta_surface_replay (slave->image, script);
+    cr = cairo_create (slave->image);
+    cairo_set_source_surface (cr, script, 0, 0);
+    cairo_paint (cr);
+    cairo_destroy (cr);
+
     cairo_surface_destroy (script);
 #endif
 }

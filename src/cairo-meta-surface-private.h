@@ -138,11 +138,14 @@ typedef struct _cairo_meta_surface {
 } cairo_meta_surface_t;
 
 slim_hidden_proto (cairo_meta_surface_create);
-slim_hidden_proto (cairo_meta_surface_replay);
 
 cairo_private cairo_int_status_t
 _cairo_meta_surface_get_path (cairo_surface_t	 *surface,
 			      cairo_path_fixed_t *path);
+
+cairo_private cairo_status_t
+_cairo_meta_surface_replay (cairo_surface_t *surface,
+			    cairo_surface_t *target);
 
 
 cairo_private cairo_status_t

@@ -870,7 +870,7 @@ _vg_clone_meta_surface (cairo_vg_context_t *context,
 				     extents.width, extents.height);
     cairo_surface_set_device_offset (&clone->base, -extents.x, -extents.y);
 
-    status = cairo_meta_surface_replay (surface, &clone->base);
+    status = _cairo_meta_surface_replay (surface, &clone->base);
     if (unlikely (status)) {
 	cairo_surface_destroy (&clone->base);
 	return (cairo_vg_surface_t *) _cairo_surface_create_in_error (status);

@@ -217,7 +217,7 @@ _cairo_paginated_surface_acquire_source_image (void	       *abstract_surface,
 							   extents.width,
 							   extents.height);
 
-    status = cairo_meta_surface_replay (surface->meta, image);
+    status = _cairo_meta_surface_replay (surface->meta, image);
     if (unlikely (status)) {
 	cairo_surface_destroy (image);
 	return status;
@@ -261,7 +261,7 @@ _paint_fallback_image (cairo_paginated_surface_t *surface,
      * so we have to do the scaling manually. */
     cairo_surface_set_device_offset (image, -x*x_scale, -y*y_scale);
 
-    status = cairo_meta_surface_replay (surface->meta, image);
+    status = _cairo_meta_surface_replay (surface->meta, image);
     if (unlikely (status))
 	goto CLEANUP_IMAGE;
 

@@ -1131,7 +1131,7 @@ cairo_xml_for_meta_surface (cairo_xml_t *xml,
     _cairo_xml_indent (xml, 2);
 
     cairo_surface_set_device_offset (surface, -extents.x, -extents.y);
-    status = cairo_meta_surface_replay (meta, surface);
+    status = _cairo_meta_surface_replay (meta, surface);
     cairo_surface_destroy (surface);
 
     _cairo_xml_indent (xml, -2);

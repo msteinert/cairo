@@ -202,7 +202,7 @@ _cairo_user_scaled_glyph_init (void			 *abstract_font,
 	cairo_surface_set_device_offset (surface,
 	                                 - _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.x),
 	                                 - _cairo_fixed_integer_floor (scaled_glyph->bbox.p1.y));
-	status = cairo_meta_surface_replay (meta_surface, surface);
+	status = _cairo_meta_surface_replay (meta_surface, surface);
 
 	if (unlikely (status)) {
 	    cairo_surface_destroy(surface);

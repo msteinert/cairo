@@ -4755,28 +4755,6 @@ cairo_meta_surface_create (cairo_content_t content,
     return ret;
 }
 
-cairo_status_t
-cairo_meta_surface_replay (cairo_surface_t *meta, cairo_surface_t *target)
-{
-    cairo_status_t ret;
-
-    _enter_trace ();
-
-    ret = DLCALL (cairo_meta_surface_replay, meta, target);
-
-    _emit_line_info ();
-    if (_write_lock ()) {
-
-	_emit_surface (target);
-	_emit_surface (meta);
-	_trace_printf ("replay");
-	_consume_operand ();
-    }
-
-    _exit_trace ();
-    return ret;
-}
-
 #if CAIRO_HAS_VG_SURFACE
 #include <cairo-vg.h>
 cairo_surface_t *

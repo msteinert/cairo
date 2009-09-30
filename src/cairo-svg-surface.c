@@ -1300,7 +1300,7 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
 				     -source->extents_pixels.x,
 				     -source->extents_pixels.y);
 
-    status = cairo_meta_surface_replay (&source->base, paginated_surface);
+    status = _cairo_meta_surface_replay (&source->base, paginated_surface);
     if (unlikely (status)) {
 	cairo_surface_destroy (paginated_surface);
 	return status;

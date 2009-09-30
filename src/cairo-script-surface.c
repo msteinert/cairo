@@ -972,7 +972,7 @@ _emit_meta_surface_pattern (cairo_script_surface_t *surface,
 
     old_cr = surface->cr;
     _cairo_script_implicit_context_init (&surface->cr);
-    status = cairo_meta_surface_replay (&source->base, &similar->base);
+    status = _cairo_meta_surface_replay (&source->base, &similar->base);
     surface->cr = old_cr;
 
     if (unlikely (status)) {
@@ -2655,7 +2655,7 @@ _emit_scaled_glyph_vector (cairo_script_surface_t *surface,
 
     old_cr = surface->cr;
     _cairo_script_implicit_context_init (&surface->cr);
-    status = cairo_meta_surface_replay (scaled_glyph->meta_surface,
+    status = _cairo_meta_surface_replay (scaled_glyph->meta_surface,
 					&surface->base);
     surface->cr = old_cr;
 
@@ -3430,7 +3430,7 @@ cairo_script_from_meta_surface (cairo_script_context_t *context,
 	return surface->status;
 
     cairo_surface_set_device_offset (surface, -extents.x, -extents.y);
-    status = cairo_meta_surface_replay (meta, surface);
+    status = _cairo_meta_surface_replay (meta, surface);
     cairo_surface_destroy (surface);
 
     return status;

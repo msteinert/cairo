@@ -40,15 +40,21 @@
 /* A meta surface is a surface that records all drawing operations at
  * the highest level of the surface backend interface, (that is, the
  * level of paint, mask, stroke, fill, and show_text_glyphs). The meta
- * surface can then be "replayed" against any target surface with:
+ * surface can then be "replayed" against any target surface by using it
+ * as a source surface.
  *
+ * If you want to replay a surface so that the results in target will be
+ * identical to the results that would have been obtained if the original
+ * operations applied to the meta surface had instead been applied to the
+ * target surface, you can use code like this:
  * <informalexample><programlisting>
- *	cairo_meta_surface_replay (meta, target);
- * </programlisting></informalexample>
+ *      cairo_t *cr;
  *
- * after which the results in target will be identical to the results
- * that would have been obtained if the original operations applied to
- * the meta surface had instead been applied to the target surface.
+ *	cr = cairo_create (target);
+ *	cairo_set_source_surface (cr, meta, 0.0, 0.0);
+ *	cairo_paint (cr);
+ *	cairo_destroy (cr);
+ * </programlisting></informalexample>
  *
  * A meta surface is logically unbounded, i.e. it has no implicit constraint
  * on the size of the drawing surface. However, in practice this is rarely
@@ -97,15 +103,7 @@ static const cairo_surface_backend_t cairo_meta_surface_backend;
  * Creates a meta-surface which can be used to record all drawing operations
  * at the highest level (that is, the level of paint, mask, stroke, fill
  * and show_text_glyphs). The meta surface can then be "replayed" against
- * any target surface with:
- *
- * <informalexample><programlisting>
- *	cairo_meta_surface_replay (meta, target);
- * </programlisting></informalexample>
- *
- * after which the results in target will be identical to the results
- * that would have been obtained if the original operations applied to
- * the meta surface had instead been applied to the target surface.
+ * any target surface by using it as a source to drawing operations.
  *
  * The recording phase of the meta surface is careful to snapshot all
  * necessary objects (paths, patterns, etc.), in order to achieve
@@ -264,7 +262,7 @@ _cairo_meta_surface_acquire_source_image (void			 *abstract_surface,
 				     -surface->extents.x,
 				     -surface->extents.y);
 
-    status = cairo_meta_surface_replay (&surface->base, image);
+    status = _cairo_meta_surface_replay (&surface->base, image);
     if (unlikely (status)) {
 	cairo_surface_destroy (image);
 	return status;
@@ -958,7 +956,7 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
 }
 
 /**
- * cairo_meta_surface_replay:
+ * _cairo_meta_surface_replay:
  * @surface: the #cairo_meta_surface_t
  * @target: a target #cairo_surface_t onto which to replay the operations
  * @width_pixels: width of the surface, in pixels
@@ -968,11 +966,9 @@ _cairo_meta_surface_replay_internal (cairo_surface_t	     *surface,
  * after which the results in target will be identical to the results
  * that would have been obtained if the original operations applied to
  * the meta surface had instead been applied to the target surface.
- *
- * Since 1.10
  **/
 cairo_status_t
-cairo_meta_surface_replay (cairo_surface_t *surface,
+_cairo_meta_surface_replay (cairo_surface_t *surface,
 			   cairo_surface_t *target)
 {
     return _cairo_meta_surface_replay_internal (surface,
@@ -980,7 +976,6 @@ cairo_meta_surface_replay (cairo_surface_t *surface,
 						CAIRO_META_REPLAY,
 						CAIRO_META_REGION_ALL);
 }
-slim_hidden_def (cairo_meta_surface_replay);
 
 /* Replay meta to surface. When the return status of each operation is
  * one of %CAIRO_STATUS_SUCCESS, %CAIRO_INT_STATUS_UNSUPPORTED, or
@@ -1029,7 +1024,7 @@ _meta_surface_get_ink_bbox (cairo_meta_surface_t *surface,
     if (transform != NULL)
 	_cairo_analysis_surface_set_ctm (analysis_surface, transform);
 
-    status = cairo_meta_surface_replay (&surface->base, analysis_surface);
+    status = _cairo_meta_surface_replay (&surface->base, analysis_surface);
     _cairo_analysis_surface_get_bounding_box (analysis_surface, bbox);
     cairo_surface_destroy (analysis_surface);
 

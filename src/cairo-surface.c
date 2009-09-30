@@ -1450,7 +1450,7 @@ _cairo_meta_surface_clone_similar (cairo_surface_t  *surface,
 
 	cairo_surface_set_device_offset (similar, -src_x, -src_y);
 
-	status = cairo_meta_surface_replay (src, similar);
+	status = _cairo_meta_surface_replay (src, similar);
 	if (unlikely (status)) {
 	    cairo_surface_destroy (similar);
 	    return status;
@@ -1465,7 +1465,7 @@ _cairo_meta_surface_clone_similar (cairo_surface_t  *surface,
 	if (unlikely (similar->status))
 	    return similar->status;
 
-	status = cairo_meta_surface_replay (src, similar);
+	status = _cairo_meta_surface_replay (src, similar);
 	if (unlikely (status)) {
 	    cairo_surface_destroy (similar);
 	    return status;
