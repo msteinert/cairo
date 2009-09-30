@@ -138,3 +138,36 @@ _cairo_freepool_alloc_from_new_pool (cairo_freepool_t *freepool)
 
     return pool + 1;
 }
+
+cairo_status_t
+_cairo_freepool_alloc_array (cairo_freepool_t *freepool,
+			     int count,
+			     void **array)
+{
+    int i;
+
+    for (i = 0; i < count; i++) {
+	cairo_freelist_node_t *node;
+
+	node = freepool->first_free_node;
+	if (likely (node != NULL)) {
+	    VG (VALGRIND_MAKE_MEM_DEFINED (node, sizeof (node->next)));
+	    freepool->first_free_node = node->next;
+	    VG (VALGRIND_MAKE_MEM_UNDEFINED (node, freepool->nodesize));
+	} else {
+	    node = _cairo_freepool_alloc_from_pool (freepool);
+	    if (unlikely (node == NULL))
+		goto CLEANUP;
+	}
+
+	array[i] = node;
+    }
+
+    return CAIRO_STATUS_SUCCESS;
+
+  CLEANUP:
+    while (i--)
+	_cairo_freepool_free (freepool, array[i]);
+
+    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+}

@@ -132,6 +132,11 @@ _cairo_freepool_alloc (cairo_freepool_t *freepool)
     return node;
 }
 
+cairo_private cairo_status_t
+_cairo_freepool_alloc_array (cairo_freepool_t *freepool,
+			     int count,
+			     void **array);
+
 static inline void
 _cairo_freepool_free (cairo_freepool_t *freepool, void *ptr)
 {

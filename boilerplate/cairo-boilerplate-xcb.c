@@ -133,6 +133,23 @@ _cairo_boilerplate_xcb_finish_surface (cairo_surface_t		*surface)
 {
     xcb_target_closure_t *xtc = cairo_surface_get_user_data (surface,
 							     &xcb_closure_key);
+    xcb_generic_event_t *ev;
+
+    cairo_surface_flush (surface);
+
+    if (cairo_surface_status (surface))
+	return cairo_surface_status (surface);
+
+    while ((ev = xcb_poll_for_event (xtc->c)) != NULL) {
+	if (ev->response_type == 0 /* trust me! */) {
+	    xcb_generic_error_t *error = (xcb_generic_error_t *) ev;
+
+	    fprintf (stderr, "Detected error during xcb run: %d major=%d, minor=%d\n",
+		     error->error_code, error->major_code, error->minor_code);
+
+	    return CAIRO_STATUS_WRITE_ERROR;
+	}
+    }
 
     if (xcb_connection_has_error (xtc->c))
 	return CAIRO_STATUS_WRITE_ERROR;
