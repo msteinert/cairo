@@ -5335,6 +5335,10 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
     if (unlikely (status))
 	return status;
 
+    status = _cairo_pdf_operators_flush (&surface->pdf_operators);
+    if (unlikely (status))
+	return status;
+
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
 	  source->extend == CAIRO_EXTEND_NONE) {
 
@@ -5386,10 +5390,6 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
 	    return status;
 
 	status = _cairo_pdf_surface_add_xobject (surface, group->group_res);
-	if (unlikely (status))
-	    return status;
-
-	status = _cairo_pdf_operators_flush (&surface->pdf_operators);
 	if (unlikely (status))
 	    return status;
 
@@ -5651,6 +5651,10 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
 
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
 	  source->extend == CAIRO_EXTEND_NONE) {
+
+	status = _cairo_pdf_operators_flush (&surface->pdf_operators);
+	if (unlikely (status))
+	    return status;
 
 	_cairo_output_stream_printf (surface->output, "q\n");
 	status =  _cairo_pdf_operators_clip (&surface->pdf_operators,
