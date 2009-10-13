@@ -172,10 +172,20 @@ int atomic_cmpxchg(int i, int j, int k) { return __sync_val_compare_and_swap (&i
 ], [],
 		  cairo_cv_atomic_primitives="Intel"
 		  )
+
+		if test "x$cairo_cv_atomic_primitives" = "xnone"; then
+			AC_CHECK_HEADER([atomic_ops.h],
+					cairo_cv_atomic_primitives="libatomic-ops")
+		fi
 	])
 	if test "x$cairo_cv_atomic_primitives" = xIntel; then
 		AC_DEFINE(HAVE_INTEL_ATOMIC_PRIMITIVES, 1,
 			  [Enable if your compiler supports the Intel __sync_* atomic primitives])
+	fi
+
+	if test "x$cairo_cv_atomic_primitives" = "xlibatomic-ops"; then
+		AC_DEFINE(HAVE_LIB_ATOMIC_OPS, 1,
+			  [Enable if you have libatomic-ops-dev installed])
 	fi
 ])
 

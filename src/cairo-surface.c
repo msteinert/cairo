@@ -193,14 +193,14 @@ slim_hidden_def (cairo_surface_status);
 static unsigned int
 _cairo_surface_allocate_unique_id (void)
 {
-    static unsigned int unique_id;
+    static cairo_atomic_int_t unique_id;
 
 #if CAIRO_NO_MUTEX
     if (++unique_id == 0)
 	unique_id = 1;
     return unique_id;
 #else
-    unsigned int old, id;
+    cairo_atomic_int_t old, id;
 
     do {
 	old = _cairo_atomic_uint_get (&unique_id);

@@ -85,7 +85,7 @@ struct _cairo_xlib_screen {
     cairo_font_options_t font_options;
 
     GC gc[4];
-    int gc_depths; /* 4 x uint8_t */
+    cairo_atomic_int_t gc_depths; /* 4 x uint8_t */
 
     cairo_array_t visuals;
 };

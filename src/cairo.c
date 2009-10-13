@@ -124,16 +124,16 @@ _cairo_set_error (cairo_t *cr, cairo_status_t status)
 #define CAIRO_STASH_SIZE 4
 static struct {
     cairo_t pool[CAIRO_STASH_SIZE];
-    int occupied;
+    cairo_atomic_int_t occupied;
 } _context_stash;
 
 static cairo_t *
 _context_get (void)
 {
-    int avail, old, new;
+    cairo_atomic_int_t avail, old, new;
 
     do {
-	old = _context_stash.occupied;
+	old = _cairo_atomic_int_get (&_context_stash.occupied);
 	avail = ffs (~old) - 1;
 	if (avail >= CAIRO_STASH_SIZE)
 	    return malloc (sizeof (cairo_t));
@@ -147,7 +147,7 @@ _context_get (void)
 static void
 _context_put (cairo_t *cr)
 {
-    int old, new, avail;
+    cairo_atomic_int_t old, new, avail;
 
     if (cr < &_context_stash.pool[0] ||
 	cr >= &_context_stash.pool[CAIRO_STASH_SIZE])
@@ -158,7 +158,7 @@ _context_put (cairo_t *cr)
 
     avail = ~(1 << (cr - &_context_stash.pool[0]));
     do {
-	old = _context_stash.occupied;
+	old = _cairo_atomic_int_get (&_context_stash.occupied);
 	new = old & avail;
     } while (_cairo_atomic_int_cmpxchg (&_context_stash.occupied, old, new) != old);
 }

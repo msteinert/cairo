@@ -269,7 +269,8 @@ _cairo_xlib_screen_close_display (cairo_xlib_screen_t *info)
 {
     cairo_xlib_visual_info_t **visuals;
     Display *dpy;
-    int i, old;
+    cairo_atomic_int_t old;
+    int i;
 
     CAIRO_MUTEX_LOCK (info->mutex);
 
@@ -277,7 +278,7 @@ _cairo_xlib_screen_close_display (cairo_xlib_screen_t *info)
 
 #if HAS_ATOMIC_OPS
     do {
-	old = info->gc_depths;
+	old = _cairo_atomic_int_get (&info->gc_depths);
     } while (_cairo_atomic_int_cmpxchg (&info->gc_depths, old, 0) != old);
 #else
     old = info->gc_depths;
@@ -384,7 +385,8 @@ _cairo_xlib_screen_get_gc (cairo_xlib_screen_t *info,
 			   Drawable drawable)
 {
     XGCValues gcv;
-    int i, new, old;
+    cairo_atomic_int_t old, new;
+    int i;
     GC gc;
 
     do {
@@ -393,13 +395,13 @@ _cairo_xlib_screen_get_gc (cairo_xlib_screen_t *info,
 	if (old == 0)
 	    break;
 
-	if (((old >> 0) & 0xff) == depth)
+	if (((old >> 0) & 0xff) == (unsigned) depth)
 	    i = 0;
-	else if (((old >> 8) & 0xff) == depth)
+	else if (((old >> 8) & 0xff) == (unsigned) depth)
 	    i = 1;
-	else if (((old >> 16) & 0xff) == depth)
+	else if (((old >> 16) & 0xff) == (unsigned) depth)
 	    i = 2;
-	else if (((old >> 24) & 0xff) == depth)
+	else if (((old >> 24) & 0xff) == (unsigned) depth)
 	    i = 3;
 	else
 	    break;
