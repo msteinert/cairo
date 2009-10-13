@@ -1878,13 +1878,13 @@ _cairo_pattern_is_opaque (const cairo_pattern_t *abstract_pattern)
  *      backends do currently (see bug #10508)
  */
 static cairo_filter_t
-_cairo_pattern_analyze_filter (const cairo_surface_pattern_t *pattern,
-			       double                        *pad_out)
+_cairo_pattern_analyze_filter (const cairo_pattern_t	*pattern,
+			       double			*pad_out)
 {
     double pad;
     cairo_filter_t optimized_filter;
 
-    switch (pattern->base.filter) {
+    switch (pattern->filter) {
     case CAIRO_FILTER_GOOD:
     case CAIRO_FILTER_BEST:
     case CAIRO_FILTER_BILINEAR:
@@ -1892,7 +1892,7 @@ _cairo_pattern_analyze_filter (const cairo_surface_pattern_t *pattern,
 	 * not need to filter (and do not want to filter, since it
 	 * will cause blurriness)
 	 */
-	if (_cairo_matrix_is_pixel_exact (&pattern->base.matrix)) {
+	if (_cairo_matrix_is_pixel_exact (&pattern->matrix)) {
 	    pad = 0.;
 	    optimized_filter = CAIRO_FILTER_NEAREST;
 	} else {
@@ -1902,7 +1902,7 @@ _cairo_pattern_analyze_filter (const cairo_surface_pattern_t *pattern,
 	     * more would be defensive...
 	     */
 	    pad = 0.5;
-	    optimized_filter = pattern->base.filter;
+	    optimized_filter = pattern->filter;
 	}
 	break;
 
@@ -1911,7 +1911,7 @@ _cairo_pattern_analyze_filter (const cairo_surface_pattern_t *pattern,
     case CAIRO_FILTER_GAUSSIAN:
     default:
 	pad = 0.;
-	optimized_filter = pattern->base.filter;
+	optimized_filter = pattern->filter;
 	break;
     }
 
@@ -1956,7 +1956,7 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
     is_identity = FALSE;
     attr->matrix = pattern->base.matrix;
     attr->extend = pattern->base.extend;
-    attr->filter = _cairo_pattern_analyze_filter (pattern, &pad);
+    attr->filter = _cairo_pattern_analyze_filter (&pattern->base, &pad);
 
     attr->x_offset = attr->y_offset = tx = ty = 0;
     if (_cairo_matrix_is_integer_translation (&attr->matrix, &tx, &ty)) {
@@ -2443,62 +2443,130 @@ void
 _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
 			    cairo_rectangle_int_t         *extents)
 {
-    if (pattern->extend == CAIRO_EXTEND_NONE &&
-	pattern->type == CAIRO_PATTERN_TYPE_SURFACE)
-    {
-	cairo_status_t status;
-	cairo_rectangle_int_t surface_extents;
-	const cairo_surface_pattern_t *surface_pattern =
-	    (const cairo_surface_pattern_t *) pattern;
-	cairo_surface_t *surface = surface_pattern->surface;
-	cairo_matrix_t imatrix;
-	double x1, y1, x2, y2;
-	double pad;
+    cairo_matrix_t imatrix;
+    double x1, y1, x2, y2;
+    cairo_status_t status;
 
-	if (! _cairo_surface_get_extents (surface, &surface_extents))
-	    goto UNBOUNDED;
+    if (pattern->extend != CAIRO_EXTEND_NONE)
+	goto UNBOUNDED;
 
-	/* The filter can effectively enlarge the extents of the
-	 * pattern, so extend as necessary.
-	 */
-	_cairo_pattern_analyze_filter (surface_pattern, &pad);
-	x1 = surface_extents.x - pad;
-	y1 = surface_extents.y - pad;
-	x2 = surface_extents.x + (int) surface_extents.width  + pad;
-	y2 = surface_extents.y + (int) surface_extents.height + pad;
+    switch (pattern->type) {
+    case CAIRO_PATTERN_TYPE_SOLID:
+	goto UNBOUNDED;
 
-	imatrix = pattern->matrix;
-	status = cairo_matrix_invert (&imatrix);
-	/* cairo_pattern_set_matrix ensures the matrix is invertible */
-	assert (status == CAIRO_STATUS_SUCCESS);
+    case CAIRO_PATTERN_TYPE_SURFACE:
+	{
+	    cairo_rectangle_int_t surface_extents;
+	    const cairo_surface_pattern_t *surface_pattern =
+		(const cairo_surface_pattern_t *) pattern;
+	    cairo_surface_t *surface = surface_pattern->surface;
+	    double pad;
 
-	_cairo_matrix_transform_bounding_box (&imatrix,
-					      &x1, &y1, &x2, &y2,
-					      NULL);
+	    if (! _cairo_surface_get_extents (surface, &surface_extents))
+		goto UNBOUNDED;
 
-	x1 = floor (x1);
-	if (x1 < CAIRO_RECT_INT_MIN)
-	    x1 = CAIRO_RECT_INT_MIN;
-	y1 = floor (y1);
-	if (y1 < CAIRO_RECT_INT_MIN)
-	    y1 = CAIRO_RECT_INT_MIN;
+	    /* The filter can effectively enlarge the extents of the
+	     * pattern, so extend as necessary.
+	     */
+	    _cairo_pattern_analyze_filter (&surface_pattern->base, &pad);
+	    x1 = surface_extents.x - pad;
+	    y1 = surface_extents.y - pad;
+	    x2 = surface_extents.x + (int) surface_extents.width  + pad;
+	    y2 = surface_extents.y + (int) surface_extents.height + pad;
+	}
+	break;
 
-	x2 = ceil (x2);
-	if (x2 > CAIRO_RECT_INT_MAX)
-	    x2 = CAIRO_RECT_INT_MAX;
-	y2 = ceil (y2);
-	if (y2 > CAIRO_RECT_INT_MAX)
-	    y2 = CAIRO_RECT_INT_MAX;
+    case CAIRO_PATTERN_TYPE_RADIAL:
+	{
+	    const cairo_radial_pattern_t *radial =
+		(const cairo_radial_pattern_t *) pattern;
+	    double cx1, cy1;
+	    double cx2, cy2;
+	    double r, D;
 
-	extents->x = x1; extents->width = x2 - x1;
-	extents->y = y1; extents->height = y2 - y1;
-	return;
+	    cx1 = _cairo_fixed_to_double (radial->c1.x);
+	    cy1 = _cairo_fixed_to_double (radial->c1.y);
+	    r = _cairo_fixed_to_double (radial->r1);
+	    x1 = cx1 - r; x2 = cx1 + r;
+	    y1 = cy1 - r; y2 = cy1 + r;
+
+	    cx2 = _cairo_fixed_to_double (radial->c2.x);
+	    cy2 = _cairo_fixed_to_double (radial->c2.y);
+	    r = fabs (_cairo_fixed_to_double (radial->r2));
+
+	    /* We need to be careful, as if the circles are not
+	     * self-contained, then the solution is actually unbounded.
+	     */
+	    D = (cx1-cx2)*(cx1-cx2) + (cy1-cy2)*(cy1-cy2);
+	    if (D > r*r - 1e-5)
+		goto UNBOUNDED;
+
+	    if (cx2 - r < x1)
+		x1 = cx2 - r;
+	    if (cx2 + r > x2)
+		x2 = cx2 + r;
+
+	    if (cy2 - r < y1)
+		y1 = cy2 - r;
+	    if (cy2 + r > y2)
+		y2 = cy2 + r;
+	}
+	break;
+
+    case CAIRO_PATTERN_TYPE_LINEAR:
+	{
+	    const cairo_linear_pattern_t *linear =
+		(const cairo_linear_pattern_t *) pattern;
+
+	    if (pattern->matrix.xy != 0. || pattern->matrix.yx != 0.)
+		goto UNBOUNDED;
+
+	    if (linear->p1.x == linear->p2.x) {
+		x1 = -HUGE_VAL;
+		x2 = HUGE_VAL;
+		y1 = _cairo_fixed_to_double (MIN (linear->p1.y, linear->p2.y));
+		y2 = _cairo_fixed_to_double (MAX (linear->p1.y, linear->p2.y));
+	    } else if (linear->p1.y == linear->p2.y) {
+		x1 = _cairo_fixed_to_double (MIN (linear->p1.x, linear->p2.x));
+		x2 = _cairo_fixed_to_double (MAX (linear->p1.x, linear->p2.x));
+		y1 = -HUGE_VAL;
+		y2 = HUGE_VAL;
+	    } else {
+		goto  UNBOUNDED;
+	    }
+	}
+	break;
+
+    default:
+	ASSERT_NOT_REACHED;
     }
 
-    /* XXX: We could optimize gradients with pattern->extend of NONE
-     * here in some cases, (eg. radial gradients and 1 axis of
-     * horizontal/vertical linear gradients).
-     */
+    imatrix = pattern->matrix;
+    status = cairo_matrix_invert (&imatrix);
+    /* cairo_pattern_set_matrix ensures the matrix is invertible */
+    assert (status == CAIRO_STATUS_SUCCESS);
+
+    _cairo_matrix_transform_bounding_box (&imatrix,
+					  &x1, &y1, &x2, &y2,
+					  NULL);
+
+    x1 = floor (x1);
+    if (x1 < CAIRO_RECT_INT_MIN)
+	x1 = CAIRO_RECT_INT_MIN;
+    y1 = floor (y1);
+    if (y1 < CAIRO_RECT_INT_MIN)
+	y1 = CAIRO_RECT_INT_MIN;
+
+    x2 = ceil (x2);
+    if (x2 > CAIRO_RECT_INT_MAX)
+	x2 = CAIRO_RECT_INT_MAX;
+    y2 = ceil (y2);
+    if (y2 > CAIRO_RECT_INT_MAX)
+	y2 = CAIRO_RECT_INT_MAX;
+
+    extents->x = x1; extents->width  = x2 - x1;
+    extents->y = y1; extents->height = y2 - y1;
+    return;
 
   UNBOUNDED:
     /* unbounded patterns -> 'infinite' extents */
