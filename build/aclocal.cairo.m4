@@ -79,20 +79,17 @@ dnl check compiler flags with a program and no muttering.
 AC_DEFUN([CAIRO_CC_TRY_FLAG_SILENT],
 [dnl     (flags..., optional program, true-action, false-action)
 
-	_compile_program='$2'
-	if test "x$_compile_program" = "x"; then
-		# AC_LANG_PROGRAM() produces a main() w/o args,
-		# but -Wold-style-definition doesn't like that.
-		# We need _some_ program so that we don't get
-		# warnings about empty compilation units.
-		_compile_program='
-			int main(int c, char **v) {
-			    (void)c; (void)v; return 0; }'
-	fi
+	# AC_LANG_PROGRAM() produces a main() w/o args,
+	# but -Wold-style-definition doesn't like that.
+	# We need _some_ program so that we don't get
+	# warnings about empty compilation units, so always
+	# append a reasonable main().
+	_compile_program="$2"'
+		int main(int c, char **v) { (void)c; (void)v; return 0; }'
 
 	_save_cflags="$CFLAGS"
 	CFLAGS="$CFLAGS $1"
-	AC_COMPILE_IFELSE(
+	AC_LINK_IFELSE(
 		[$_compile_program],
 		[cairo_cc_stderr=`test -f conftest.err && cat conftest.err`
 		 cairo_cc_flag=yes],
