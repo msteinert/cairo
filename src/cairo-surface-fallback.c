@@ -982,6 +982,35 @@ _clip_to_boxes (cairo_clip_t **clip,
     return status;
 }
 
+/* XXX _cairo_surface_backend_fill? */
+static cairo_status_t
+_wrap_surface_fill (cairo_surface_t	*surface,
+		    cairo_operator_t	 op,
+		    const cairo_pattern_t *source,
+		    cairo_path_fixed_t	*path,
+		    cairo_fill_rule_t	 fill_rule,
+		    double		 tolerance,
+		    cairo_antialias_t	 antialias,
+		    cairo_clip_t	*clip)
+{
+    if (surface->backend->fill != NULL) {
+	cairo_status_t status;
+
+	status = surface->backend->fill (surface, op, source,
+					 path, fill_rule,
+					 tolerance, antialias,
+					 clip);
+
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
+
+    return _cairo_surface_fallback_fill (surface, op, source,
+					 path, fill_rule,
+					 tolerance, antialias,
+					 clip);
+}
+
 cairo_status_t
 _cairo_surface_fallback_paint (cairo_surface_t		*surface,
 			       cairo_operator_t		 op,
@@ -1035,12 +1064,12 @@ _cairo_surface_fallback_paint (cairo_surface_t		*surface,
     if (clip != NULL && clip_path->prev == NULL &&
 	_cairo_operator_bounded_by_mask (op))
     {
-	return _cairo_surface_fill (surface, op, source,
-				    &clip_path->path,
-				    clip_path->fill_rule,
-				    clip_path->tolerance,
-				    clip_path->antialias,
-				    NULL);
+	return _wrap_surface_fill (surface, op, source,
+				   &clip_path->path,
+				   clip_path->fill_rule,
+				   clip_path->tolerance,
+				   clip_path->antialias,
+				   NULL);
     }
 
     status = _cairo_traps_init_boxes (&traps, boxes, num_boxes);
