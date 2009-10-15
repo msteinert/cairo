@@ -143,6 +143,8 @@ REFERENCE_IMAGES = \
 	alpha-similar.svg.argb32.xfail.png \
 	alpha-similar.svg.rgb24.xfail.png \
 	big-line.ref.png \
+	big-line.xlib-fallback.ref.png \
+	big-line.xlib.ref.png \
 	bilevel-image.ref.png \
 	bitmap-font.ref.png \
 	bitmap-font.rgb24.ref.png \
@@ -514,6 +516,8 @@ REFERENCE_IMAGES = \
 	ft-text-vertical-layout-type3.svg.ref.png \
 	ft-text-vertical-layout-type3.xlib.ref.png \
 	get-group-target.ref.png \
+	glitz-surface-source.argb32.ref.png \
+	glitz-surface-source.rgb24.ref.png \
 	glitz-surface-source.ps2.ref.png \
 	glitz-surface-source.ps3.ref.png \
 	glyph-cache-pressure.ps2.ref.png \
@@ -820,6 +824,8 @@ REFERENCE_IMAGES = \
 	rotated-clip.xlib.ref.png \
 	scale-down-source-surface-paint.ref.png \
 	scale-offset-image.gl.ref.png \
+	scale-offset-image.pdf.argb32.ref.png \
+	scale-offset-image.pdf.rgb24.ref.png \
 	scale-offset-image.ps.ref.png \
 	scale-offset-image.ref.png \
 	scale-offset-image.xfail.png \
@@ -827,6 +833,8 @@ REFERENCE_IMAGES = \
 	scale-offset-image.xlib.xfail.png \
 	scale-offset-image.xlib-fallback.xfail.png \
 	scale-offset-similar.gl.ref.png \
+	scale-offset-similar.pdf.argb32.ref.png \
+	scale-offset-similar.pdf.rgb24.ref.png \
 	scale-offset-similar.ps.ref.png \
 	scale-offset-similar.ref.png \
 	scale-offset-similar.xfail.png \
