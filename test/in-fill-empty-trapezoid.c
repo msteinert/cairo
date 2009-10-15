@@ -83,14 +83,14 @@ preamble (cairo_test_context_t *ctx)
     if (CAIRO_STATUS_SUCCESS != status) {
 	cairo_test_log (ctx, "Failed to create a test surface and path: %s\n",
 			cairo_status_to_string (status));
-	ret = CAIRO_TEST_FAILURE;
+	ret = CAIRO_TEST_XFAILURE;
     }
 
     if (0 != false_positive_count) {
 	cairo_test_log (ctx, "Point sampling found %d false positives "
 			"from cairo_in_fill()\n",
 			false_positive_count);
-	ret = CAIRO_TEST_FAILURE;
+	ret = CAIRO_TEST_XFAILURE;
     }
 
     return ret;

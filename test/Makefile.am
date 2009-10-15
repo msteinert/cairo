@@ -1086,6 +1086,10 @@ $(REFERENCE_IMAGES)
 #                         room, with Carl as a moderator and not let them out
 #                         until they have come up with an interface and
 #                         semantics that actually work. :-)
+# in-fill-empty-trapezoid The cairo_in_fill () function can sometimes
+#                         produce false positives when the tessellator
+#                         produces empty trapezoids and the query
+#                         point lands exactly on a trapezoid edge.
 # long-lines            - range overflow of fixed-point
 # scale-offset-image    - loss of precision converting a cairo matrix to
 # scale-offset-similar    pixman's fixed point format.
@@ -1109,6 +1113,7 @@ degenerate-path$(EXEEXT)			\
 device-offset-scale$(EXEEXT)			\
 extend-pad$(EXEEXT)				\
 fallback-resolution$(EXEEXT)			\
+in-fill-empty-trapezoid$(EXEEXT)		\
 long-lines$(EXEEXT)				\
 self-copy-overlap$(EXEEXT)			\
 self-intersecting$(EXEEXT)			\
