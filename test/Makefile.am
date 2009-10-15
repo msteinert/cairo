@@ -143,9 +143,6 @@ REFERENCE_IMAGES = \
 	alpha-similar.svg.argb32.xfail.png \
 	alpha-similar.svg.rgb24.xfail.png \
 	big-line.ref.png \
-	big-line.ps.ref.png \
-	big-line.xlib.png \
-	big-line.xlib-fallback.png \
 	bilevel-image.ref.png \
 	bitmap-font.ref.png \
 	bitmap-font.rgb24.ref.png \
@@ -519,7 +516,6 @@ REFERENCE_IMAGES = \
 	get-group-target.ref.png \
 	glitz-surface-source.ps2.ref.png \
 	glitz-surface-source.ps3.ref.png \
-	glitz-surface-source.ref.png \
 	glyph-cache-pressure.ps2.ref.png \
 	glyph-cache-pressure.ps3.ref.png \
 	glyph-cache-pressure.quartz.ref.png \
@@ -824,7 +820,6 @@ REFERENCE_IMAGES = \
 	rotated-clip.xlib.ref.png \
 	scale-down-source-surface-paint.ref.png \
 	scale-offset-image.gl.ref.png \
-	scale-offset-image.pdf.ref.png \
 	scale-offset-image.ps.ref.png \
 	scale-offset-image.ref.png \
 	scale-offset-image.xfail.png \
@@ -832,7 +827,6 @@ REFERENCE_IMAGES = \
 	scale-offset-image.xlib.xfail.png \
 	scale-offset-image.xlib-fallback.xfail.png \
 	scale-offset-similar.gl.ref.png \
-	scale-offset-similar.pdf.ref.png \
 	scale-offset-similar.ps.ref.png \
 	scale-offset-similar.ref.png \
 	scale-offset-similar.xfail.png \
@@ -937,7 +931,6 @@ REFERENCE_IMAGES = \
 	svg-surface-source.svg12.argb32.xfail.png \
 	svg-surface-source.svg12.rgb24.xfail.png \
 	test-fallback16-surface-source.ps.ref.png \
-	test-fallback16-surface-source.ref.png \
 	test-fallback16-surface-source.svg12.argb32.xfail.png \
 	test-fallback16-surface-source.svg12.rgb24.xfail.png \
 	text-antialias-gray.quartz.ref.png \
