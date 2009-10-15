@@ -167,6 +167,8 @@ REFERENCE_IMAGES = \
 	clear.svg12.argb32.xfail.png \
 	clear.svg12.rgb24.xfail.png \
 	clip-all.ref.png \
+	clip-device-offset.argb32.ref.png \
+	clip-device-offset.rgb24.ref.png \
 	clip-disjoint.ref.png \
 	clip-disjoint.xlib.ref.png \
 	clip-empty.ref.png \
