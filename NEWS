@@ -1,4 +1,4 @@
-Snapshot 1.9.4 (2009-07-xx)
+Snapshot 1.9.4 (2009-10-15)
 ===========================
 API additions:
 
@@ -90,7 +90,6 @@ Special thanks:
 
    To the AuroraUX team for providing access to one of their OpenSolaris
    machines for cairo and pixman development.  http://www.auroraux.org/
-
 
 Snapshot 1.9.2 (2009-06-12)
 ===========================
