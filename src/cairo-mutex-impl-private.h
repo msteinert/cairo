@@ -216,7 +216,7 @@
 # define CAIRO_MUTEX_IMPL_FINI(mutex) delete (mutex)
 # define CAIRO_MUTEX_IMPL_NIL_INITIALIZER NULL
 
-#elif HAVE_PTHREAD_H /* and finally if there are no native mutexes ********/
+#elif CAIRO_HAS_PTHREAD /* and finally if there are no native mutexes ********/
 
 # include <pthread.h>
 

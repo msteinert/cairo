@@ -77,6 +77,7 @@ cairo_test_suite_SOURCES = 		\
 	$(cairo_test_suite_headers)	\
 	$(test_sources)			\
 	cairo-test-constructors.c
+cairo_test_suite_CFLAGS = $(AM_CFLAGS)
 cairo_test_suite_LDADD = 					\
 	$(top_builddir)/test/pdiff/libpdiff.la 			\
         $(top_builddir)/boilerplate/libcairoboilerplate.la	\
@@ -91,6 +92,7 @@ cairo_test_suite_DEPENDENCIES += \
 	any2ppm
 endif
 if HAVE_PTHREAD
+cairo_test_suite_CFLAGS += -pthread
 cairo_test_suite_LDADD += -lpthread
 endif
 
@@ -100,6 +102,7 @@ cairo_test_trace_SOURCES =		\
 	cairo-test-trace.c		\
 	buffer-diff.c			\
 	buffer-diff.h
+cairo_test_trace_CFLAGS = $(AM_CFLAGS)
 cairo_test_trace_LDADD =		\
 	$(top_builddir)/test/pdiff/libpdiff.la 			\
 	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
@@ -108,6 +111,7 @@ cairo_test_trace_LDADD =		\
 	$(CAIRO_LDADD) \
 	$(SHM_LIBS)
 if HAVE_PTHREAD
+cairo_test_trace_CFLAGS += -pthread
 cairo_test_trace_LDADD += -lpthread
 endif
 cairo_test_trace_DEPENDENCIES = \
