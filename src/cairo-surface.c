@@ -1413,7 +1413,6 @@ _cairo_surface_release_dest_image (cairo_surface_t         *surface,
 static cairo_status_t
 _cairo_meta_surface_clone_similar (cairo_surface_t  *surface,
 			           cairo_surface_t  *src,
-				   cairo_content_t   content,
 				   int               src_x,
 				   int               src_y,
 				   int               width,
@@ -1428,7 +1427,7 @@ _cairo_meta_surface_clone_similar (cairo_surface_t  *surface,
 
     similar = _cairo_surface_has_snapshot (src,
 					   surface->backend,
-					   src->content & content);
+					   src->content);
     if (similar != NULL) {
 	*clone_out = cairo_surface_reference (similar);
 	*clone_offset_x = 0;
@@ -1441,7 +1440,7 @@ _cairo_meta_surface_clone_similar (cairo_surface_t  *surface,
     {
 	/* XXX use _solid to perform an initial CLEAR? */
 	similar = _cairo_surface_create_similar_scratch (surface,
-							 src->content & content,
+							 src->content,
 							 width, height);
 	if (similar == NULL)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1457,7 +1456,7 @@ _cairo_meta_surface_clone_similar (cairo_surface_t  *surface,
 	}
     } else {
 	similar = _cairo_surface_create_similar_scratch (surface,
-							 src->content & content,
+							 src->content,
 							 meta->extents.width,
 							 meta->extents.height);
 	if (similar == NULL)
@@ -1510,7 +1509,6 @@ _cairo_meta_surface_clone_similar (cairo_surface_t  *surface,
 cairo_status_t
 _cairo_surface_clone_similar (cairo_surface_t  *surface,
 			      cairo_surface_t  *src,
-			      cairo_content_t	content,
 			      int               src_x,
 			      int               src_y,
 			      int               width,
@@ -1534,14 +1532,13 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 
 	match = _cairo_tee_surface_find_match (src,
 					       surface->backend,
-					       content);
+					       src->content);
 	if (match != NULL)
 	    src = match;
     }
 
     if (surface->backend->clone_similar != NULL) {
 	status = surface->backend->clone_similar (surface, src,
-						  content,
 						  src_x, src_y,
 						  width, height,
 						  clone_offset_x,
@@ -1554,7 +1551,6 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 	    /* First check to see if we can replay to a similar surface */
 	    if (_cairo_surface_is_meta (src)) {
 		return _cairo_meta_surface_clone_similar (surface, src,
-							  content,
 							  src_x, src_y,
 							  width, height,
 							  clone_offset_x,
@@ -1567,7 +1563,6 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 	    if (status == CAIRO_STATUS_SUCCESS) {
 		status =
 		    surface->backend->clone_similar (surface, &image->base,
-						     content,
 						     src_x, src_y,
 						     width, height,
 						     clone_offset_x,
@@ -1583,7 +1578,6 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
     if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 	status =
 	    _cairo_surface_fallback_clone_similar (surface, src,
-						   content,
 						   src_x, src_y,
 						   width, height,
 						   clone_offset_x,

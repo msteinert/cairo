@@ -1603,9 +1603,6 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
     _cairo_debug_check_image_surface_is_defined (&image->base);
 
     status = _cairo_surface_clone_similar (dst, &image->base,
-					   opaque ?
-					   CAIRO_CONTENT_COLOR :
-					   CAIRO_CONTENT_COLOR_ALPHA,
 					   0, 0, width, height,
 					   &clone_offset_x,
 					   &clone_offset_y,
@@ -1931,7 +1928,6 @@ _pixman_nearest_sample (double d)
 static cairo_int_status_t
 _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pattern,
 					    cairo_surface_t	       *dst,
-					    cairo_content_t	    content,
 					    int			       x,
 					    int			       y,
 					    unsigned int	       width,
@@ -2009,7 +2005,7 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
 	is_bounded = _cairo_surface_get_extents (surface, &extents);
 	assert (is_bounded);
 
-	status = _cairo_surface_clone_similar (dst, surface, content,
+	status = _cairo_surface_clone_similar (dst, surface,
 					       extents.x, extents.y,
 					       extents.width, extents.height,
 					       &extents.x, &extents.y, &src);
@@ -2150,7 +2146,7 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
 
     /* XXX can we use is_empty? */
 
-    status = _cairo_surface_clone_similar (dst, surface, content,
+    status = _cairo_surface_clone_similar (dst, surface,
 					   extents.x, extents.y,
 					   extents.width, extents.height,
 					   &x, &y, out);
@@ -2224,7 +2220,6 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
 cairo_int_status_t
 _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 				cairo_surface_t		   *dst,
-				cairo_content_t		    content,
 				int			   x,
 				int			   y,
 				unsigned int		   width,
@@ -2318,7 +2313,6 @@ _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 	cairo_surface_pattern_t *src = (cairo_surface_pattern_t *) pattern;
 
 	status = _cairo_pattern_acquire_surface_for_surface (src, dst,
-							     content,
 							     x, y,
 							     width, height,
 							     flags,
@@ -2353,7 +2347,6 @@ cairo_int_status_t
 _cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
 				 const cairo_pattern_t	    *mask,
 				 cairo_surface_t	    *dst,
-				 cairo_content_t	    src_content,
 				 int			    src_x,
 				 int			    src_y,
 				 int			    mask_x,
@@ -2391,14 +2384,13 @@ _cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
 	_cairo_color_multiply_alpha (&combined, mask_solid->color.alpha);
 
 	_cairo_pattern_init_solid (&src_tmp.solid, &combined,
-				   (src_solid->content | mask_solid->content) & src_content);
+				   src_solid->content | mask_solid->content);
 
 	src = &src_tmp.base;
 	mask = NULL;
     }
 
     status = _cairo_pattern_acquire_surface (src, dst,
-					     src_content,
 					     src_x, src_y,
 					     width, height,
 					     flags,
@@ -2412,7 +2404,6 @@ _cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
     }
 
     status = _cairo_pattern_acquire_surface (mask, dst,
-					     CAIRO_CONTENT_ALPHA,
 					     mask_x, mask_y,
 					     width, height,
 					     flags,

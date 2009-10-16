@@ -1317,7 +1317,6 @@ _cairo_xlib_surface_same_screen (cairo_xlib_surface_t *dst,
 static cairo_status_t
 _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 				   cairo_surface_t	*src,
-				   cairo_content_t	 content,
 				   int                   src_x,
 				   int                   src_y,
 				   int                   width,
@@ -1350,7 +1349,7 @@ _cairo_xlib_surface_clone_similar (void			*abstract_surface,
 
 	clone = (cairo_xlib_surface_t *)
 	    _cairo_xlib_surface_create_similar (surface,
-						image_src->base.content & content,
+						image_src->base.content,
 						width, height);
 	if (clone == NULL)
 	    return UNSUPPORTED ("unhandled image format, no similar surface");
@@ -1878,7 +1877,6 @@ _render_operator (cairo_operator_t op)
 static cairo_int_status_t
 _cairo_xlib_surface_acquire_pattern_surface (cairo_xlib_surface_t *dst,
 					     const cairo_pattern_t *pattern,
-					     cairo_content_t content,
 					     int x, int y,
 					     int width, int height,
 					     cairo_xlib_surface_t **surface_out,
@@ -2046,7 +2044,6 @@ _cairo_xlib_surface_acquire_pattern_surface (cairo_xlib_surface_t *dst,
     }
 
     return _cairo_pattern_acquire_surface (pattern, &dst->base,
-					   content,
 					   x, y, width, height,
 					   dst->buggy_pad_reflect ?
 					   CAIRO_PATTERN_ACQUIRE_NO_REFLECT :
@@ -2059,7 +2056,6 @@ static cairo_int_status_t
 _cairo_xlib_surface_acquire_pattern_surfaces (cairo_xlib_surface_t	 *dst,
 					      const cairo_pattern_t	         *src,
 					      const cairo_pattern_t	         *mask,
-					      cairo_content_t		 src_content,
 					      int			 src_x,
 					      int			 src_y,
 					      int			 mask_x,
@@ -2080,7 +2076,6 @@ _cairo_xlib_surface_acquire_pattern_surfaces (cairo_xlib_surface_t	 *dst,
 	cairo_int_status_t status;
 
 	status = _cairo_xlib_surface_acquire_pattern_surface (dst, src,
-							      src_content,
 							      src_x, src_y,
 							      width, height,
 							      src_out,
@@ -2090,7 +2085,6 @@ _cairo_xlib_surface_acquire_pattern_surfaces (cairo_xlib_surface_t	 *dst,
 
 	if (mask) {
 	    status = _cairo_xlib_surface_acquire_pattern_surface (dst, mask,
-								  CAIRO_CONTENT_ALPHA,
 								  mask_x,
 								  mask_y,
 								  width,
@@ -2111,7 +2105,6 @@ _cairo_xlib_surface_acquire_pattern_surfaces (cairo_xlib_surface_t	 *dst,
 
     return _cairo_pattern_acquire_surfaces (src, mask,
 					    &dst->base,
-					    src_content,
 					    src_x, src_y,
 					    mask_x, mask_y,
 					    width, height,
@@ -2147,7 +2140,6 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
     int				itx, ity;
     cairo_bool_t		is_integer_translation;
     cairo_bool_t		needs_alpha_composite;
-    cairo_content_t		src_content;
     GC				gc;
 
     if (mask_pattern != NULL && ! CAIRO_SURFACE_RENDER_HAS_COMPOSITE (dst))
@@ -2164,16 +2156,12 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 	_operator_needs_alpha_composite (op,
 					 _surface_has_alpha (dst),
 					 ! _cairo_pattern_is_opaque (src_pattern));
-    src_content = CAIRO_CONTENT_COLOR_ALPHA;
-    if (! needs_alpha_composite)
-	src_content &= ~CAIRO_CONTENT_ALPHA;
 
     _cairo_xlib_display_notify (dst->display);
 
     status =
 	_cairo_xlib_surface_acquire_pattern_surfaces (dst,
 						      src_pattern, mask_pattern,
-						      src_content,
 						      src_x, src_y,
 						      mask_x, mask_y,
 						      width, height,
@@ -2371,7 +2359,6 @@ _cairo_xlib_surface_solid_fill_rectangles (cairo_xlib_surface_t    *surface,
     X_DEBUG ((surface->dpy, "solid_fill_rectangles (dst=%x)", (unsigned int) surface->drawable));
 
     status = _cairo_pattern_acquire_surface (&solid.base, &surface->base,
-					     CAIRO_CONTENT_COLOR_ALPHA,
 					     0, 0,
 					     ARRAY_LENGTH (dither_pattern[0]),
 					     ARRAY_LENGTH (dither_pattern),
@@ -2562,7 +2549,6 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
 
     status = _cairo_xlib_surface_acquire_pattern_surface (dst,
 							  pattern,
-							  CAIRO_CONTENT_COLOR_ALPHA,
 							  src_x, src_y,
 							  width, height,
 							  &src, &attributes);
@@ -4462,7 +4448,6 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 
     if (src_pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
         status = _cairo_pattern_acquire_surface (src_pattern, &dst->base,
-						 CAIRO_CONTENT_COLOR_ALPHA,
                                                  0, 0, 1, 1,
 						 CAIRO_PATTERN_ACQUIRE_NONE,
                                                  (cairo_surface_t **) &src,
@@ -4489,7 +4474,6 @@ _cairo_xlib_surface_show_glyphs (void                *abstract_dst,
 	}
 
         status = _cairo_xlib_surface_acquire_pattern_surface (dst, src_pattern,
-							      dst->base.content,
 							      glyph_extents.x,
 							      glyph_extents.y,
 							      glyph_extents.width,

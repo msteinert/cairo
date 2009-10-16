@@ -1835,7 +1835,6 @@ _cairo_surface_fallback_composite_trapezoids (cairo_operator_t		op,
 cairo_status_t
 _cairo_surface_fallback_clone_similar (cairo_surface_t	*surface,
 				       cairo_surface_t	*src,
-				       cairo_content_t	 content,
 				       int		 src_x,
 				       int		 src_y,
 				       int		 width,
@@ -1849,7 +1848,7 @@ _cairo_surface_fallback_clone_similar (cairo_surface_t	*surface,
     cairo_status_t status;
 
     new_surface = _cairo_surface_create_similar_scratch (surface,
-							 src->content & content,
+							 src->content,
 							 width, height);
     if (new_surface == NULL)
 	return CAIRO_INT_STATUS_UNSUPPORTED;

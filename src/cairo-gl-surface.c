@@ -801,7 +801,6 @@ _cairo_gl_surface_release_dest_image (void		      *abstract_surface,
 static cairo_status_t
 _cairo_gl_surface_clone_similar (void		     *abstract_surface,
 				 cairo_surface_t     *src,
-				 cairo_content_t      content,
 				 int                  src_x,
 				 int                  src_y,
 				 int                  width,
@@ -825,7 +824,7 @@ _cairo_gl_surface_clone_similar (void		     *abstract_surface,
 
 	clone = (cairo_gl_surface_t *)
 	    _cairo_gl_surface_create_similar (&surface->base,
-		                              content,
+		                              src->content,
 					      width, height);
 	if (clone == NULL)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1051,7 +1050,6 @@ _cairo_gl_pattern_texture_setup (cairo_gl_composite_operand_t *operand,
     }
 
     status = _cairo_pattern_acquire_surface (src, &dst->base,
-					     CAIRO_CONTENT_COLOR_ALPHA,
 					     src_x, src_y,
 					     width, height,
 					     CAIRO_PATTERN_ACQUIRE_NONE,
