@@ -227,17 +227,19 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
     cairo_status_t status;
 
     /* We'd be better off here creating a surface identical in format
-     * to dst, but we have no way of getting that information.
-     * A CAIRO_CONTENT_CLONE or something might be useful.
+     * to dst, but we have no way of getting that information. Instead
+     * we ask the backend to create a similar surface of identical content,
+     * in the belief that the backend will do something useful - like use
+     * an identical format. For example, the xlib backend will endeavor to
+     * use a compatible depth to enable core protocol routines.
      */
     intermediate =
-	_cairo_surface_create_similar_scratch (dst,
-					       CAIRO_CONTENT_COLOR_ALPHA,
+	_cairo_surface_create_similar_scratch (dst, dst->content,
 					       extents->width,
 					       extents->height);
     if (intermediate == NULL) {
 	intermediate =
-	    _cairo_image_surface_create_with_content (CAIRO_CONTENT_COLOR_ALPHA,
+	    _cairo_image_surface_create_with_content (dst->content,
 						      extents->width,
 						      extents->width);
     }
