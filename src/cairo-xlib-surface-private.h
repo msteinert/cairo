@@ -95,6 +95,7 @@ struct _cairo_xlib_surface {
     XRenderPictFormat *xrender_format;
     cairo_filter_t filter;
     cairo_extend_t extend;
+    cairo_bool_t has_component_alpha;
     XTransform xtransform;
 
     uint32_t a_mask;

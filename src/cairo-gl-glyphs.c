@@ -341,6 +341,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 		int			 num_glyphs,
 		const cairo_rectangle_int_t *glyph_extents,
 		cairo_scaled_font_t	*scaled_font,
+		cairo_bool_t		*has_component_alpha,
 		cairo_region_t		*clip_region,
 		int			*remaining_glyphs)
 {
@@ -352,6 +353,8 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     cairo_status_t status;
     int i = 0;
     GLuint vbo = 0;
+
+    *has_component_alpha = FALSE;
 
     status = _cairo_gl_operand_init (&composite_setup.src, source, dst,
 				     glyph_extents->x, glyph_extents->y,
@@ -376,6 +379,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
     glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
 
+    /* XXX component alpha */
     glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_RGB, GL_TEXTURE1);
     glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_TEXTURE1);
     glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_ALPHA);
@@ -466,6 +470,10 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 	    glBindTexture (GL_TEXTURE_2D, cache->tex);
 
 	    last_format = scaled_glyph->surface->format;
+	    if (last_format == CAIRO_FORMAT_ARGB32)
+		*has_component_alpha = TRUE;
+
+	    /* XXX component alpha */
 	}
 
 	if (scaled_glyph->surface_private == NULL) {
@@ -545,10 +553,11 @@ _cairo_gl_surface_show_glyphs_via_mask (cairo_gl_surface_t	*dst,
     cairo_surface_t *mask;
     cairo_status_t status;
     cairo_solid_pattern_t solid;
+    cairo_bool_t has_component_alpha;
     int i;
 
     mask = cairo_gl_surface_create (dst->ctx,
-	                            CAIRO_CONTENT_ALPHA,
+	                            CAIRO_CONTENT_COLOR_ALPHA,
 				    glyph_extents->width,
 				    glyph_extents->height);
     if (unlikely (mask->status))
@@ -559,15 +568,17 @@ _cairo_gl_surface_show_glyphs_via_mask (cairo_gl_surface_t	*dst,
 	glyphs[i].y -= glyph_extents->y;
     }
 
-    _cairo_pattern_init_solid (&solid, CAIRO_COLOR_WHITE, CAIRO_CONTENT_ALPHA);
+    _cairo_pattern_init_solid (&solid, CAIRO_COLOR_WHITE, CAIRO_CONTENT_COLOR_ALPHA);
     status = _render_glyphs ((cairo_gl_surface_t *) mask, 0, 0,
-	                     CAIRO_OPERATOR_ADD, &solid.base,
+	                     CAIRO_OPERATOR_SOURCE, &solid.base,
 	                     glyphs, num_glyphs, glyph_extents,
-			     scaled_font, NULL, remaining_glyphs);
+			     scaled_font, &has_component_alpha,
+			     NULL, remaining_glyphs);
     if (likely (status == CAIRO_STATUS_SUCCESS)) {
 	cairo_surface_pattern_t mask_pattern;
 
 	_cairo_pattern_init_for_surface (&mask_pattern, mask);
+	mask_pattern.base.has_component_alpha = has_component_alpha;
 	cairo_matrix_init_translate (&mask_pattern.base.matrix,
 		                     -glyph_extents->x, -glyph_extents->y);
 	status = _cairo_surface_mask (&dst->base, op,
@@ -601,6 +612,7 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
     cairo_region_t *clip_region = NULL;
     cairo_solid_pattern_t solid_pattern;
     cairo_bool_t overlap, use_mask = FALSE;
+    cairo_bool_t has_component_alpha;
     cairo_status_t status;
 
     if (! GLEW_ARB_vertex_buffer_object)
@@ -712,7 +724,8 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
     return _render_glyphs (dst, extents.x, extents.y,
 	                   op, source,
 			   glyphs, num_glyphs, &extents,
-			   scaled_font, clip_region, remaining_glyphs);
+			   scaled_font, &has_component_alpha,
+			   clip_region, remaining_glyphs);
 
 EMPTY:
     *remaining_glyphs = 0;

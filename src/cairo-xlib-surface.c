@@ -1539,11 +1539,11 @@ _cairo_xlib_surface_set_filter (cairo_xlib_surface_t *surface,
 }
 
 static cairo_status_t
-_cairo_xlib_surface_set_repeat (cairo_xlib_surface_t *surface,
-				cairo_extend_t extend)
+_cairo_xlib_surface_set_repeat (cairo_xlib_surface_t	*surface,
+				cairo_extend_t		 extend,
+				unsigned long		*mask,
+				XRenderPictureAttributes *pa)
 {
-    XRenderPictureAttributes pa;
-    unsigned long	     mask;
     int repeat;
 
     if (surface->extend == extend)
@@ -1573,12 +1573,26 @@ _cairo_xlib_surface_set_repeat (cairo_xlib_surface_t *surface,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-    mask = CPRepeat;
-    pa.repeat = repeat;
+    *mask |= CPRepeat;
+    pa->repeat = repeat;
 
-    XRenderChangePicture (surface->dpy, surface->src_picture, mask, &pa);
     surface->extend = extend;
+    return CAIRO_STATUS_SUCCESS;
+}
 
+static cairo_status_t
+_cairo_xlib_surface_set_component_alpha (cairo_xlib_surface_t *surface,
+					 cairo_bool_t		ca,
+					 unsigned long		*mask,
+					 XRenderPictureAttributes *pa)
+{
+    if (surface->has_component_alpha == ca)
+	return CAIRO_STATUS_SUCCESS;
+
+    *mask |= CPComponentAlpha;
+    pa->component_alpha = ca;
+
+    surface->has_component_alpha = ca;
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -1589,6 +1603,8 @@ _cairo_xlib_surface_set_attributes (cairo_xlib_surface_t	    *surface,
 				    double			     yc)
 {
     cairo_int_status_t status;
+    XRenderPictureAttributes pa;
+    unsigned long mask = 0;
 
     _cairo_xlib_surface_ensure_src_picture (surface);
 
@@ -1597,13 +1613,23 @@ _cairo_xlib_surface_set_attributes (cairo_xlib_surface_t	    *surface,
     if (unlikely (status))
 	return status;
 
-    status = _cairo_xlib_surface_set_repeat (surface, attributes->extend);
+    status = _cairo_xlib_surface_set_repeat (surface, attributes->extend,
+					     &mask, &pa);
+    if (unlikely (status))
+	return status;
+
+    status = _cairo_xlib_surface_set_component_alpha (surface,
+						      attributes->has_component_alpha,
+						      &mask, &pa);
     if (unlikely (status))
 	return status;
 
     status = _cairo_xlib_surface_set_filter (surface, attributes->filter);
     if (unlikely (status))
 	return status;
+
+    if (mask)
+	XRenderChangePicture (surface->dpy, surface->src_picture, mask, &pa);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -2946,6 +2972,7 @@ found:
     surface->depth = depth;
     surface->filter = CAIRO_FILTER_NEAREST;
     surface->extend = CAIRO_EXTEND_NONE;
+    surface->has_component_alpha = FALSE;
     surface->xtransform = identity;
 
     surface->clip_region = NULL;

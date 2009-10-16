@@ -340,4 +340,75 @@ struct _cairo_mime_data {
     void *closure;
 };
 
+struct _cairo_pattern {
+    cairo_pattern_type_t	type;
+    cairo_reference_count_t	ref_count;
+    cairo_status_t		status;
+    cairo_user_data_array_t	user_data;
+
+    cairo_matrix_t		matrix;
+    cairo_filter_t		filter;
+    cairo_extend_t		extend;
+
+    cairo_bool_t		has_component_alpha;
+};
+
+struct _cairo_solid_pattern {
+    cairo_pattern_t base;
+    cairo_color_t color;
+    cairo_content_t content;
+};
+
+typedef struct _cairo_surface_pattern {
+    cairo_pattern_t base;
+
+    cairo_surface_t *surface;
+} cairo_surface_pattern_t;
+
+typedef struct _cairo_gradient_stop {
+    double offset;
+    cairo_color_t color;
+} cairo_gradient_stop_t;
+
+typedef struct _cairo_gradient_pattern {
+    cairo_pattern_t base;
+
+    unsigned int	    n_stops;
+    unsigned int	    stops_size;
+    cairo_gradient_stop_t  *stops;
+    cairo_gradient_stop_t   stops_embedded[2];
+} cairo_gradient_pattern_t;
+
+typedef struct _cairo_linear_pattern {
+    cairo_gradient_pattern_t base;
+
+    cairo_point_t p1;
+    cairo_point_t p2;
+} cairo_linear_pattern_t;
+
+typedef struct _cairo_radial_pattern {
+    cairo_gradient_pattern_t base;
+
+    cairo_point_t c1;
+    cairo_fixed_t r1;
+    cairo_point_t c2;
+    cairo_fixed_t r2;
+} cairo_radial_pattern_t;
+
+typedef union {
+    cairo_gradient_pattern_t base;
+
+    cairo_linear_pattern_t linear;
+    cairo_radial_pattern_t radial;
+} cairo_gradient_pattern_union_t;
+
+typedef union {
+    cairo_pattern_type_t	    type;
+    cairo_pattern_t		    base;
+
+    cairo_solid_pattern_t	    solid;
+    cairo_surface_pattern_t	    surface;
+    cairo_gradient_pattern_union_t  gradient;
+} cairo_pattern_union_t;
+
 #endif /* CAIRO_TYPES_PRIVATE_H */

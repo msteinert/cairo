@@ -129,6 +129,8 @@ _cairo_pattern_init (cairo_pattern_t *pattern, cairo_pattern_type_t type)
 
     pattern->filter    = CAIRO_FILTER_DEFAULT;
 
+    pattern->has_component_alpha = FALSE;
+
     cairo_matrix_init_identity (&pattern->matrix);
 }
 
@@ -1522,6 +1524,7 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
 	attr->matrix = matrix;
 	attr->extend = pattern->base.extend;
 	attr->filter = CAIRO_FILTER_NEAREST;
+	attr->has_component_alpha = pattern->base.has_component_alpha;
 
 	*out = &image->base;
 
@@ -1615,6 +1618,7 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
     cairo_matrix_init_identity (&attr->matrix);
     attr->extend = repeat ? CAIRO_EXTEND_REPEAT : CAIRO_EXTEND_NONE;
     attr->filter = CAIRO_FILTER_NEAREST;
+    attr->has_component_alpha = pattern->base.has_component_alpha;
 
     return status;
 }
@@ -1759,6 +1763,7 @@ NOCACHE:
     cairo_matrix_init_identity (&attribs->matrix);
     attribs->extend = CAIRO_EXTEND_REPEAT;
     attribs->filter = CAIRO_FILTER_NEAREST;
+    attribs->has_component_alpha = pattern->base.has_component_alpha;
 
     status = CAIRO_STATUS_SUCCESS;
 
@@ -1844,6 +1849,9 @@ cairo_bool_t
 _cairo_pattern_is_opaque (const cairo_pattern_t *abstract_pattern)
 {
     const cairo_pattern_union_t *pattern;
+
+    if (abstract_pattern->has_component_alpha)
+	return FALSE;
 
     pattern = (cairo_pattern_union_t *) abstract_pattern;
     switch (pattern->base.type) {
@@ -1953,6 +1961,7 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
     attr->matrix = pattern->base.matrix;
     attr->extend = pattern->base.extend;
     attr->filter = _cairo_pattern_analyze_filter (&pattern->base, &pad);
+    attr->has_component_alpha = pattern->base.has_component_alpha;
 
     attr->x_offset = attr->y_offset = tx = ty = 0;
     if (_cairo_matrix_is_integer_translation (&attr->matrix, &tx, &ty)) {
@@ -2370,11 +2379,10 @@ _cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
     /* If src and mask are both solid, then the mask alpha can be
      * combined into src and mask can be ignored. */
 
-    /* XXX: This optimization assumes that there is no color
-     * information in mask, so this will need to change when we
-     * support RENDER-style 4-channel masks. */
     if (src->type == CAIRO_PATTERN_TYPE_SOLID &&
-	mask && mask->type == CAIRO_PATTERN_TYPE_SOLID)
+	mask &&
+	! mask->has_component_alpha &&
+	mask->type == CAIRO_PATTERN_TYPE_SOLID)
     {
 	cairo_color_t combined;
 	cairo_solid_pattern_t *src_solid = (cairo_solid_pattern_t *) src;
@@ -2651,6 +2659,9 @@ _cairo_pattern_hash (const cairo_pattern_t *pattern)
 				  &pattern->filter, sizeof (pattern->filter));
 	hash = _cairo_hash_bytes (hash,
 				  &pattern->extend, sizeof (pattern->extend));
+	hash = _cairo_hash_bytes (hash,
+				  &pattern->has_component_alpha,
+				  sizeof (pattern->has_component_alpha));
     }
 
     switch (pattern->type) {
@@ -2806,6 +2817,9 @@ _cairo_pattern_equal (const cairo_pattern_t *a, const cairo_pattern_t *b)
 	return TRUE;
 
     if (a->type != b->type)
+	return FALSE;
+
+    if (a->has_component_alpha != b->has_component_alpha)
 	return FALSE;
 
     if (a->type != CAIRO_PATTERN_TYPE_SOLID) {

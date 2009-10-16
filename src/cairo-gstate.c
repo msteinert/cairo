@@ -1002,17 +1002,22 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
     _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
     _cairo_gstate_copy_transformed_mask (gstate, &mask_pattern.base, mask);
 
-    /* XXX: This optimization assumes that there is no color
-     * information in mask, so this will need to change if we
-     * support RENDER-style 4-channel masks.
-     */
     if (source_pattern.type == CAIRO_PATTERN_TYPE_SOLID &&
 	mask_pattern.type == CAIRO_PATTERN_TYPE_SOLID)
     {
 	cairo_color_t combined;
 
-	combined = source_pattern.solid.color;
-	_cairo_color_multiply_alpha (&combined, mask_pattern.solid.color.alpha);
+	if (mask_pattern.base.has_component_alpha) {
+#define M(R, A, B, c) R.c = A.c * B.c
+	    M(combined, source_pattern.solid.color, mask_pattern.solid.color, red);
+	    M(combined, source_pattern.solid.color, mask_pattern.solid.color, green);
+	    M(combined, source_pattern.solid.color, mask_pattern.solid.color, blue);
+	    M(combined, source_pattern.solid.color, mask_pattern.solid.color, alpha);
+#undef M
+	} else {
+	    combined = source_pattern.solid.color;
+	    _cairo_color_multiply_alpha (&combined, mask_pattern.solid.color.alpha);
+	}
 
 	_cairo_pattern_init_solid (&source_pattern.solid, &combined,
 				   source_pattern.solid.content |

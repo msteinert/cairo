@@ -931,6 +931,39 @@ _cairo_image_surface_set_filter (cairo_image_surface_t *surface,
 }
 
 static cairo_status_t
+_cairo_image_surface_set_extend (cairo_image_surface_t *surface,
+				 cairo_extend_t extend)
+{
+    pixman_repeat_t pixman_repeat;
+
+    switch (extend) {
+    case CAIRO_EXTEND_NONE:
+	pixman_repeat = PIXMAN_REPEAT_NONE;
+	break;
+    case CAIRO_EXTEND_REPEAT:
+	pixman_repeat = PIXMAN_REPEAT_NORMAL;
+	break;
+    case CAIRO_EXTEND_REFLECT:
+	pixman_repeat = PIXMAN_REPEAT_REFLECT;
+	break;
+    case CAIRO_EXTEND_PAD:
+	pixman_repeat = PIXMAN_REPEAT_PAD;
+	break;
+    }
+
+    pixman_image_set_repeat (surface->pixman_image, pixman_repeat);
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_image_surface_set_component_alpha (cairo_image_surface_t *surface,
+					  cairo_bool_t ca)
+{
+    pixman_image_set_component_alpha (surface->pixman_image, ca);
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
 _cairo_image_surface_set_attributes (cairo_image_surface_t      *surface,
 				     cairo_surface_attributes_t *attributes,
 				     double xc, double yc)
@@ -942,22 +975,16 @@ _cairo_image_surface_set_attributes (cairo_image_surface_t      *surface,
     if (unlikely (status))
 	return status;
 
-    switch (attributes->extend) {
-    case CAIRO_EXTEND_NONE:
-        pixman_image_set_repeat (surface->pixman_image, PIXMAN_REPEAT_NONE);
-	break;
-    case CAIRO_EXTEND_REPEAT:
-        pixman_image_set_repeat (surface->pixman_image, PIXMAN_REPEAT_NORMAL);
-	break;
-    case CAIRO_EXTEND_REFLECT:
-        pixman_image_set_repeat (surface->pixman_image, PIXMAN_REPEAT_REFLECT);
-	break;
-    case CAIRO_EXTEND_PAD:
-        pixman_image_set_repeat (surface->pixman_image, PIXMAN_REPEAT_PAD);
-	break;
-    }
-
     status = _cairo_image_surface_set_filter (surface, attributes->filter);
+    if (unlikely (status))
+	return status;
+
+    status = _cairo_image_surface_set_extend (surface, attributes->extend);
+    if (unlikely (status))
+	return status;
+
+    status = _cairo_image_surface_set_component_alpha (surface,
+						       attributes->has_component_alpha);
     if (unlikely (status))
 	return status;
 

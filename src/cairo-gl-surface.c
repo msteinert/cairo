@@ -1004,6 +1004,7 @@ _cairo_gl_pattern_surface_texture_setup (cairo_gl_composite_operand_t *operand,
     operand->operand.texture.tex = gl_surface->tex;
     operand->operand.texture.surface = NULL;
     attributes->matrix = src->base.matrix;
+    attributes->has_component_alpha = src->base.has_component_alpha;
     attributes->extend = src->base.extend;
     attributes->filter = src->base.filter;
     /* Demote the filter if we're doing a 1:1 mapping of pixels. */
@@ -1257,7 +1258,7 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
     switch (setup->src.type) {
     case OPERAND_CONSTANT:
 	_cairo_gl_set_tex_combine_constant_color (ctx, 0,
-	    setup->src.operand.constant.color);
+						  setup->src.operand.constant.color);
 	break;
     case OPERAND_TEXTURE:
 	_cairo_gl_set_texture_surface (0, setup->src.operand.texture.tex,
@@ -1317,6 +1318,13 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     if (! _cairo_gl_operator_is_supported (op))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    /* XXX: There is no sane way of expressing ComponentAlpha using
+     * fixed-function combiners and every possible operator. Look at the
+     * EXA drivers for the more appropriate fallback conditions.
+     */
+    if (mask && mask->has_component_alpha)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     memset (&setup, 0, sizeof (setup));
 
     status = _cairo_gl_operand_init (&setup.src, src, dst,
@@ -1326,9 +1334,6 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     if (unlikely (status))
 	return status;
     src_attributes = &setup.src.operand.texture.attributes;
-
-    if (mask != NULL && _cairo_pattern_is_opaque (mask))
-	mask = NULL;
 
     if (mask != NULL) {
 	status = _cairo_gl_operand_init (&setup.mask, mask, dst,
@@ -1352,13 +1357,13 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 	switch (setup.mask.type) {
 	case OPERAND_CONSTANT:
 	    _cairo_gl_set_tex_combine_constant_color (ctx, 1,
-		setup.mask.operand.constant.color);
+						      setup.mask.operand.constant.color);
 	    break;
+
 	case OPERAND_TEXTURE:
 	    _cairo_gl_set_texture_surface (1, setup.mask.operand.texture.tex,
 					   mask_attributes);
 
-	    /* IN: dst.argb = src.argb * mask.aaaa */
 	    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
 	    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
 	    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
@@ -1368,6 +1373,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
 	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
 
+	    /* IN: dst.argb = src.argb * mask.aaaa */
 	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_RGB, GL_TEXTURE1);
 	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_TEXTURE1);
 	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_ALPHA);

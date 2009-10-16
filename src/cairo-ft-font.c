@@ -802,7 +802,6 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
     int width, height, stride;
     unsigned char *data;
     int format = CAIRO_FORMAT_A8;
-    cairo_bool_t subpixel = FALSE;
 
     width = bitmap->width;
     height = bitmap->rows;
@@ -970,7 +969,6 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 	    data = data_rgba;
 	    stride = stride_rgba;
 	    format = CAIRO_FORMAT_ARGB32;
-	    subpixel = TRUE;
 	    break;
 	}
 	}
@@ -992,9 +990,6 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 	free (data);
 	return (*surface)->base.status;
     }
-
-    if (subpixel)
-	pixman_image_set_component_alpha ((*surface)->pixman_image, TRUE);
 
     _cairo_image_surface_assume_ownership_of_data ((*surface));
 

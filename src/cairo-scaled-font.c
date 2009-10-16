@@ -2169,8 +2169,10 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t	*scaled_font,
 	    }
 
 	    _cairo_pattern_init_for_surface (&mask_pattern, mask);
-
-	    status = _cairo_surface_composite (CAIRO_OPERATOR_ADD,
+	    /* Note that we only upgrade masks, i.e. A1 -> A8 -> ARGB32, so there is
+	     * never any component alpha here.
+	     */
+	    status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
 					       &white_pattern.base,
 					       &mask_pattern.base,
 					       new_mask,
@@ -2203,6 +2205,8 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t	*scaled_font,
 
 	    _cairo_pattern_init_for_surface (&glyph_pattern,
 					     &glyph_surface->base);
+	    if (mask_format == CAIRO_FORMAT_ARGB32)
+		glyph_pattern.base.has_component_alpha = TRUE;
 
 	    status = _cairo_surface_composite (CAIRO_OPERATOR_ADD,
 					       &white_pattern.base,
@@ -2222,11 +2226,9 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t	*scaled_font,
 	}
     }
 
-    if (mask_format == CAIRO_FORMAT_ARGB32) {
-	pixman_image_set_component_alpha (((cairo_image_surface_t*) mask)->
-					  pixman_image, TRUE);
-    }
     _cairo_pattern_init_for_surface (&mask_pattern, mask);
+    if (mask_format == CAIRO_FORMAT_ARGB32)
+	mask_pattern.base.has_component_alpha = TRUE;
 
     status = _cairo_surface_composite (op, pattern, &mask_pattern.base,
 				       surface,
