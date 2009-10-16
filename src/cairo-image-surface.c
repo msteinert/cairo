@@ -760,12 +760,19 @@ _cairo_format_bits_per_pixel (cairo_format_t format)
 }
 
 static cairo_surface_t *
-_cairo_image_surface_create_similar (void	       *abstract_src,
+_cairo_image_surface_create_similar (void	       *abstract_other,
 				     cairo_content_t	content,
 				     int		width,
 				     int		height)
 {
-    assert (CAIRO_CONTENT_VALID (content));
+    cairo_image_surface_t *other = abstract_other;
+
+    if (content == other->base.content) {
+	return _cairo_image_surface_create_with_pixman_format (NULL,
+							       other->pixman_format,
+							       width, height,
+							       0);
+    }
 
     return _cairo_image_surface_create_with_content (content,
 						     width, height);
