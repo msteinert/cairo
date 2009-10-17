@@ -778,6 +778,8 @@ REFERENCE_IMAGES = \
 	radial-gradient.quartz.ref.png \
 	radial-gradient.ref.png \
 	radial-gradient.svg.xfail.png \
+	radial-gradient-source.argb32.ref.png \
+	radial-gradient-source.rgb24.ref.png \
 	random-intersections-eo.ps.ref.png \
 	random-intersections-eo.quartz.ref.png \
 	random-intersections-eo.ref.png \
