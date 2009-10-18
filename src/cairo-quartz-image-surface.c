@@ -59,7 +59,7 @@ _cairo_quartz_image_surface_create_similar (void *asurface,
 {
     cairo_surface_t *result;
     cairo_surface_t *isurf =
-	_cairo_image_surface_create_for_content (content, width, height);
+	_cairo_image_surface_create_with_content (content, width, height);
     if (cairo_surface_status(isurf))
 	return isurf;
 
