@@ -64,8 +64,8 @@ _cairo_filler_move_to (void *closure,
     cairo_filler_t *filler = closure;
     cairo_polygon_t *polygon = filler->polygon;
 
-    _cairo_polygon_close (polygon);
-    return _cairo_polygon_move_to (polygon, point);
+    return _cairo_polygon_close (polygon) ||
+           _cairo_polygon_move_to (polygon, point);
 }
 
 static cairo_status_t
@@ -122,8 +122,7 @@ _cairo_path_fixed_fill_to_polygon (const cairo_path_fixed_t *path,
     if (unlikely (status))
 	return status;
 
-    _cairo_polygon_close (polygon);
-    status = _cairo_polygon_status (polygon);
+    status = _cairo_polygon_close (polygon);
     _cairo_filler_fini (&filler);
 
     return status;
