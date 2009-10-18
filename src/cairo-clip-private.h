@@ -129,15 +129,6 @@ _cairo_clip_get_boxes (cairo_clip_t *clip,
 		       int *count);
 
 cairo_private void
-_cairo_clip_translate (cairo_clip_t  *clip,
-                       cairo_fixed_t  tx,
-                       cairo_fixed_t  ty);
-
-cairo_private void
-_cairo_clip_transform (cairo_clip_t  *clip,
-		       const cairo_matrix_t *transform);
-
-cairo_private void
 _cairo_clip_drop_cache (cairo_clip_t  *clip);
 
 cairo_private cairo_rectangle_list_t*
