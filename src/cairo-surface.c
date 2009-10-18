@@ -91,11 +91,6 @@ static DEFINE_NIL_SURFACE(CAIRO_STATUS_WRITE_ERROR, _cairo_surface_nil_write_err
 static DEFINE_NIL_SURFACE(CAIRO_STATUS_INVALID_STRIDE, _cairo_surface_nil_invalid_stride);
 static DEFINE_NIL_SURFACE(CAIRO_STATUS_INVALID_SIZE, _cairo_surface_nil_invalid_size);
 
-static void
-_cairo_surface_copy_pattern_for_destination (const cairo_pattern_t **pattern,
-					     cairo_surface_t *destination,
-					     cairo_pattern_t *pattern_copy);
-
 /**
  * _cairo_surface_set_error:
  * @surface: a surface
@@ -1922,7 +1917,6 @@ _cairo_surface_paint (cairo_surface_t	*surface,
 		      cairo_clip_t	    *clip)
 {
     cairo_status_t status;
-    cairo_pattern_union_t dev_source;
 
     if (unlikely (surface->status))
 	return surface->status;
@@ -1931,10 +1925,6 @@ _cairo_surface_paint (cairo_surface_t	*surface,
 	return CAIRO_STATUS_SUCCESS;
 
     _cairo_surface_begin_modification (surface);
-
-    _cairo_surface_copy_pattern_for_destination (&source,
-						 surface,
-						 &dev_source.base);
 
     if (surface->backend->paint != NULL) {
 	status = surface->backend->paint (surface, op, source, clip);
@@ -1956,8 +1946,6 @@ _cairo_surface_mask (cairo_surface_t		*surface,
 		     cairo_clip_t		*clip)
 {
     cairo_status_t status;
-    cairo_pattern_union_t dev_source;
-    cairo_pattern_union_t dev_mask;
 
     if (unlikely (surface->status))
 	return surface->status;
@@ -1966,11 +1954,6 @@ _cairo_surface_mask (cairo_surface_t		*surface,
 	return CAIRO_STATUS_SUCCESS;
 
     _cairo_surface_begin_modification (surface);
-
-    _cairo_surface_copy_pattern_for_destination (&source, surface,
-						 &dev_source.base);
-    _cairo_surface_copy_pattern_for_destination (&mask, surface,
-						 &dev_mask.base);
 
     if (surface->backend->mask != NULL) {
 	status = surface->backend->mask (surface, op, source, mask, clip);
@@ -2012,15 +1995,8 @@ _cairo_surface_fill_stroke (cairo_surface_t	    *surface,
     _cairo_surface_begin_modification (surface);
 
     if (surface->backend->fill_stroke) {
-	cairo_pattern_union_t dev_stroke_source;
-	cairo_pattern_union_t dev_fill_source;
 	cairo_matrix_t dev_ctm = *stroke_ctm;
 	cairo_matrix_t dev_ctm_inverse = *stroke_ctm_inverse;
-
-	_cairo_surface_copy_pattern_for_destination (&stroke_source, surface,
-						     &dev_stroke_source.base);
-	_cairo_surface_copy_pattern_for_destination (&fill_source, surface,
-						     &dev_fill_source.base);
 
 	status = surface->backend->fill_stroke (surface,
 						fill_op, fill_source, fill_rule,
@@ -2065,7 +2041,6 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
 		       cairo_clip_t		*clip)
 {
     cairo_status_t status;
-    cairo_pattern_union_t dev_source;
 
     if (unlikely (surface->status))
 	return surface->status;
@@ -2074,9 +2049,6 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
 	return CAIRO_STATUS_SUCCESS;
 
     _cairo_surface_begin_modification (surface);
-
-    _cairo_surface_copy_pattern_for_destination (&source, surface,
-						 &dev_source.base);
 
     if (surface->backend->stroke != NULL) {
 	status = surface->backend->stroke (surface, op, source,
@@ -2110,7 +2082,6 @@ _cairo_surface_fill (cairo_surface_t	*surface,
 		     cairo_clip_t	*clip)
 {
     cairo_status_t status;
-    cairo_pattern_union_t dev_source;
 
     if (unlikely (surface->status))
 	return surface->status;
@@ -2120,8 +2091,6 @@ _cairo_surface_fill (cairo_surface_t	*surface,
 
     _cairo_surface_begin_modification (surface);
 
-    _cairo_surface_copy_pattern_for_destination (&source, surface,
-						 &dev_source.base);
     if (surface->backend->fill != NULL) {
 	status = surface->backend->fill (surface, op, source,
 					 path, fill_rule,
@@ -2429,7 +2398,6 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 {
     cairo_status_t status;
     cairo_scaled_font_t *dev_scaled_font = scaled_font;
-    cairo_pattern_union_t dev_source;
 
     if (unlikely (surface->status))
 	return surface->status;
@@ -2441,9 +2409,6 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 	return CAIRO_STATUS_SUCCESS;
 
     _cairo_surface_begin_modification (surface);
-
-    _cairo_surface_copy_pattern_for_destination (&source, surface,
-						 &dev_source.base);
 
     if (_cairo_surface_has_device_transform (surface) &&
 	! _cairo_matrix_is_integer_translation (&surface->device_transform, NULL, NULL))
@@ -2791,30 +2756,6 @@ _cairo_surface_composite_shape_fixup_unbounded (cairo_surface_t            *dst,
     return _cairo_surface_composite_fixup_unbounded_internal (dst, src, &mask,
 							      dst_x, dst_y, width, height,
 							      clip_region);
-}
-
-/**
- * _cairo_surface_copy_pattern_for_destination
- * @pattern: the pattern to copy
- * @destination: the destination surface for which the pattern is being copied
- * @pattern_copy: the location to hold the copy
- *
- * Copies the given pattern, taking into account device scale and offsets
- * of the destination surface.
- */
-static void
-_cairo_surface_copy_pattern_for_destination (const cairo_pattern_t **pattern,
-                                             cairo_surface_t *destination,
-                                             cairo_pattern_t *pattern_copy)
-{
-    if (! _cairo_surface_has_device_transform (destination))
-	return;
-
-    _cairo_pattern_init_static_copy (pattern_copy, *pattern);
-    _cairo_pattern_transform (pattern_copy,
-			      &destination->device_transform_inverse);
-
-    *pattern = pattern_copy;
 }
 
 /**

@@ -897,6 +897,10 @@ _cairo_gstate_copy_transformed_pattern (cairo_gstate_t  *gstate,
 
     if (! _cairo_matrix_is_identity (ctm_inverse))
 	_cairo_pattern_transform (pattern, ctm_inverse);
+
+    if (_cairo_surface_has_device_transform (gstate->target))
+        _cairo_pattern_transform (pattern,
+                                  &gstate->target->device_transform_inverse);
 }
 
 static void
