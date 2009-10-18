@@ -395,13 +395,13 @@ _cairo_xlib_screen_get_gc (cairo_xlib_screen_t *info,
 	if (old == 0)
 	    break;
 
-	if (((old >> 0) & 0xff) == (unsigned) depth)
+	if (((old >> 0) & 0xff) == depth)
 	    i = 0;
-	else if (((old >> 8) & 0xff) == (unsigned) depth)
+	else if (((old >> 8) & 0xff) == depth)
 	    i = 1;
-	else if (((old >> 16) & 0xff) == (unsigned) depth)
+	else if (((old >> 16) & 0xff) == depth)
 	    i = 2;
-	else if (((old >> 24) & 0xff) == (unsigned) depth)
+	else if (((old >> 24) & 0xff) == depth)
 	    i = 3;
 	else
 	    break;
