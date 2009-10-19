@@ -2660,20 +2660,11 @@ cairo_quartz_surface_create (cairo_format_t format,
 	else
 	    bitinfo |= kCGImageAlphaNoneSkipFirst;
 	bitsPerComponent = 8;
-
-	/* The Apple docs say that for best performance, the stride and the data
-	 * pointer should be 16-byte aligned.  malloc already aligns to 16-bytes,
-	 * so we don't have to anything special on allocation.
-	 */
 	stride = width * 4;
-	stride += (16 - (stride & 15)) & 15;
     } else if (format == CAIRO_FORMAT_A8) {
-	cgColorspace = CGColorSpaceCreateDeviceGray();
-	if (width % 4 == 0)
-	    stride = width;
-	else
-	    stride = (width & ~3) + 4;
-	bitinfo = kCGImageAlphaNone;
+	cgColorspace = NULL;
+	stride = width;
+	bitinfo = kCGImageAlphaOnly;
 	bitsPerComponent = 8;
     } else if (format == CAIRO_FORMAT_A1) {
 	/* I don't think we can usefully support this, as defined by
@@ -2684,6 +2675,12 @@ cairo_quartz_surface_create (cairo_format_t format,
     } else {
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
     }
+
+    /* The Apple docs say that for best performance, the stride and the data
+     * pointer should be 16-byte aligned.  malloc already aligns to 16-bytes,
+     * so we don't have to anything special on allocation.
+     */
+    stride = (stride + 15) & ~15;
 
     imageData = _cairo_malloc_ab (height, stride);
     if (!imageData) {
