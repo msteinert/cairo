@@ -816,11 +816,10 @@ REFERENCE_IMAGES = \
 	rel-path.rgb24.ref.png \
 	rgb24-ignore-alpha.ref.png \
 	rotate-image-surface-paint.pdf.xfail.png \
-	rotate-image-surface-paint.ps2.ref.png \
-	rotate-image-surface-paint.ps3.ref.png \
+	rotate-image-surface-paint.ps.ref.png \
 	rotate-image-surface-paint.quartz.ref.png \
 	rotate-image-surface-paint.ref.png \
-	rotate-image-surface-paint.svg.ref.png \
+	rotate-image-surface-paint.svg.xfail.png \
 	rotated-clip.ref.png \
 	rotated-clip.ps.ref.png \
 	rotated-clip.xlib.ref.png \
