@@ -526,7 +526,6 @@ _cairo_quartz_fixup_unbounded_operation (cairo_quartz_surface_t *surface,
 					 unbounded_op_data_t *op,
 					 cairo_antialias_t antialias)
 {
-    CGColorSpaceRef gray;
     CGRect clipBox, clipBoxRound;
     CGContextRef cgc;
     CGImageRef maskImage;
@@ -537,26 +536,25 @@ _cairo_quartz_fixup_unbounded_operation (cairo_quartz_surface_t *surface,
     clipBox = CGContextGetClipBoundingBox (surface->cgContext);
     clipBoxRound = CGRectIntegral (clipBox);
 
-    gray = CGColorSpaceCreateDeviceGray ();
     cgc = CGBitmapContextCreate (NULL,
 				 clipBoxRound.size.width,
 				 clipBoxRound.size.height,
 				 8,
-				 clipBoxRound.size.width,
-				 gray,
-				 kCGImageAlphaNone);
-    CGColorSpaceRelease (gray);
+				 (((size_t) clipBoxRound.size.width) + 15) & (~15),
+				 NULL,
+				 kCGImageAlphaOnly);
 
     if (!cgc)
 	return;
 
+    CGContextSetCompositeOperation (cgc, kPrivateCGCompositeCopy);
     /* We want to mask out whatever we just rendered, so we fill the
-     * surface with white, and then we'll render with black.
+     * surface opaque, and then we'll render transparent.
      */
-    CGContextSetRGBFillColor (cgc, 1.0f, 1.0f, 1.0f, 1.0f);
+    CGContextSetAlpha (cgc, 1.0f);
     CGContextFillRect (cgc, CGRectMake (0, 0, clipBoxRound.size.width, clipBoxRound.size.height));
 
-    CGContextSetRGBFillColor (cgc, 0.0f, 0.0f, 0.0f, 1.0f);
+    CGContextSetAlpha (cgc, 0.0f);
     CGContextSetShouldAntialias (cgc, (antialias != CAIRO_ANTIALIAS_NONE));
 
     CGContextTranslateCTM (cgc, -clipBoxRound.origin.x, -clipBoxRound.origin.y);
