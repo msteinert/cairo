@@ -91,7 +91,7 @@ typedef  AO_t cairo_atomic_int_t;
 
 # define _cairo_atomic_int_inc(x) ((void) AO_fetch_and_add1_full(x))
 # define _cairo_atomic_int_dec_and_test(x) (AO_fetch_and_sub1_full(x) == 1)
-# define _cairo_atomic_int_cmpxchg(x, oldv, newv) ((cairo_atomic_int_t) AO_compare_and_swap_full(x, oldv, newv))
+# define _cairo_atomic_int_cmpxchg(x, oldv, newv) ((cairo_atomic_int_t) AO_compare_and_swap_full(x, oldv, newv) ? oldv : *x)
 
 #if SIZEOF_VOID_P==SIZEOF_INT
 typedef unsigned int cairo_atomic_intptr_t;
