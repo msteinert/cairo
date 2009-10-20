@@ -205,6 +205,7 @@ test_sources = \
 	surface-finish-twice.c				\
 	surface-pattern.c				\
 	surface-pattern-big-scale-down.c		\
+	surface-pattern-operator.c			\
 	surface-pattern-scale-down.c			\
 	surface-pattern-scale-up.c			\
 	text-antialias-gray.c				\

@@ -922,6 +922,10 @@ REFERENCE_IMAGES = \
 	stroke-image.xlib.ref.png \
 	surface-pattern-big-scale-down.ref.png \
 	surface-pattern-big-scale-down.ps.xfail.png \
+	surface-pattern-operator.argb32.ref.png \
+	surface-pattern-operator.rgb24.ref.png \
+	surface-pattern-operator.xlib.argb32.ref.png \
+	surface-pattern-operator.xlib.rgb24.ref.png \
 	surface-pattern-scale-down.pdf.ref.png \
 	surface-pattern-scale-down.ps2.ref.png \
 	surface-pattern-scale-down.ps3.ref.png \
