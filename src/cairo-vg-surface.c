@@ -39,7 +39,7 @@
 #include "cairo-vg.h"
 
 #include "cairo-path-fixed-private.h"
-#include "cairo-meta-surface-private.h"
+#include "cairo-recording-surface-private.h"
 #include "cairo-surface-clipper-private.h"
 #include "cairo-cache-private.h"
 
@@ -840,7 +840,7 @@ _vg_setup_solid_source (cairo_vg_context_t *context,
 }
 
 static cairo_vg_surface_t *
-_vg_clone_meta_surface (cairo_vg_context_t *context,
+_vg_clone_recording_surface (cairo_vg_context_t *context,
 			cairo_surface_t *surface)
 {
     VGImage vg_image;
@@ -870,7 +870,7 @@ _vg_clone_meta_surface (cairo_vg_context_t *context,
 				     extents.width, extents.height);
     cairo_surface_set_device_offset (&clone->base, -extents.x, -extents.y);
 
-    status = _cairo_meta_surface_replay (surface, &clone->base);
+    status = _cairo_recording_surface_replay (surface, &clone->base);
     if (unlikely (status)) {
 	cairo_surface_destroy (&clone->base);
 	return (cairo_vg_surface_t *) _cairo_surface_create_in_error (status);
@@ -965,8 +965,8 @@ _vg_setup_surface_source (cairo_vg_context_t *context,
 	goto DONE;
     }
 
-    if (_cairo_surface_is_meta (spat->surface))
-	clone = _vg_clone_meta_surface (context, spat->surface);
+    if (_cairo_surface_is_recording (spat->surface))
+	clone = _vg_clone_recording_surface (context, spat->surface);
     else
 	clone = _vg_clone_image_surface (context, spat->surface);
     if (clone == NULL)

@@ -40,7 +40,7 @@
 
 #include "cairo-surface-fallback-private.h"
 #include "cairo-clip-private.h"
-#include "cairo-meta-surface-private.h"
+#include "cairo-recording-surface-private.h"
 #include "cairo-region-private.h"
 #include "cairo-tee-surface-private.h"
 
@@ -1059,8 +1059,8 @@ slim_hidden_def (cairo_surface_mark_dirty_rectangle);
  *
  * Private function for setting an extra scale factor to affect all
  * drawing to a surface. This is used, for example, when replaying a
- * meta surface to an image fallback intended for an eventual
- * vector-oriented backend. Since the meta surface will record
+ * recording surface to an image fallback intended for an eventual
+ * vector-oriented backend. Since the recording surface will record
  * coordinates in one backend space, but the image fallback uses a
  * different backend space, (differing by the fallback resolution
  * scale factors), we need a scale factor correction.
@@ -1410,17 +1410,17 @@ _cairo_surface_release_dest_image (cairo_surface_t         *surface,
 }
 
 static cairo_status_t
-_cairo_meta_surface_clone_similar (cairo_surface_t  *surface,
-			           cairo_surface_t  *src,
-				   int               src_x,
-				   int               src_y,
-				   int               width,
-				   int               height,
-				   int              *clone_offset_x,
-				   int              *clone_offset_y,
-				   cairo_surface_t **clone_out)
+_cairo_recording_surface_clone_similar (cairo_surface_t  *surface,
+					cairo_surface_t  *src,
+					int               src_x,
+					int               src_y,
+					int               width,
+					int               height,
+					int              *clone_offset_x,
+					int              *clone_offset_y,
+					cairo_surface_t **clone_out)
 {
-    cairo_meta_surface_t *meta = (cairo_meta_surface_t *) src;
+    cairo_recording_surface_t *recorder = (cairo_recording_surface_t *) src;
     cairo_surface_t *similar;
     cairo_status_t status;
 
@@ -1434,8 +1434,8 @@ _cairo_meta_surface_clone_similar (cairo_surface_t  *surface,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    if (meta->unbounded ||
-	width*height*8 < meta->extents.width*meta->extents.height)
+    if (recorder->unbounded ||
+	width*height*8 < recorder->extents.width*recorder->extents.height)
     {
 	/* XXX use _solid to perform an initial CLEAR? */
 	similar = _cairo_surface_create_similar_scratch (surface,
@@ -1448,7 +1448,7 @@ _cairo_meta_surface_clone_similar (cairo_surface_t  *surface,
 
 	cairo_surface_set_device_offset (similar, -src_x, -src_y);
 
-	status = _cairo_meta_surface_replay (src, similar);
+	status = _cairo_recording_surface_replay (src, similar);
 	if (unlikely (status)) {
 	    cairo_surface_destroy (similar);
 	    return status;
@@ -1456,14 +1456,14 @@ _cairo_meta_surface_clone_similar (cairo_surface_t  *surface,
     } else {
 	similar = _cairo_surface_create_similar_scratch (surface,
 							 src->content,
-							 meta->extents.width,
-							 meta->extents.height);
+							 recorder->extents.width,
+							 recorder->extents.height);
 	if (similar == NULL)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	if (unlikely (similar->status))
 	    return similar->status;
 
-	status = _cairo_meta_surface_replay (src, similar);
+	status = _cairo_recording_surface_replay (src, similar);
 	if (unlikely (status)) {
 	    cairo_surface_destroy (similar);
 	    return status;
@@ -1548,13 +1548,13 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 		return CAIRO_INT_STATUS_UNSUPPORTED;
 
 	    /* First check to see if we can replay to a similar surface */
-	    if (_cairo_surface_is_meta (src)) {
-		return _cairo_meta_surface_clone_similar (surface, src,
-							  src_x, src_y,
-							  width, height,
-							  clone_offset_x,
-							  clone_offset_y,
-							  clone_out);
+	    if (_cairo_surface_is_recording (src)) {
+		return _cairo_recording_surface_clone_similar (surface, src,
+							       src_x, src_y,
+							       width, height,
+							       clone_offset_x,
+							       clone_offset_y,
+							       clone_out);
 	    }
 
 	    /* If we failed, try again with an image surface */
@@ -1598,7 +1598,7 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 }
 
 /* XXX: Shouldn't really need to do this here. */
-#include "cairo-meta-surface-private.h"
+#include "cairo-recording-surface-private.h"
 
 /**
  * _cairo_surface_snapshot
@@ -2339,7 +2339,7 @@ slim_hidden_def (cairo_surface_show_page);
  * possibly be recorded, in other words, it is the maximum extent of
  * potentially usable coordinates.
  *
- * For vector surfaces, (PDF, PS, SVG and meta-surfaces), the surface
+ * For vector surfaces, (PDF, PS, SVG and recording-surfaces), the surface
  * might be conceived as unbounded, but we force the user to provide a
  * maximum size at the time of surface_create. So get_extents uses
  * that size.

@@ -50,7 +50,7 @@
 
 #include "cairo-clip-private.h"
 #include "cairo-win32-private.h"
-#include "cairo-meta-surface-private.h"
+#include "cairo-recording-surface-private.h"
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-image-info-private.h"
 #include "cairo-surface-clipper-private.h"
@@ -195,7 +195,7 @@ analyze_surface_pattern_transparency (cairo_surface_pattern_t *pattern)
 static cairo_bool_t
 surface_pattern_supported (const cairo_surface_pattern_t *pattern)
 {
-    if (_cairo_surface_is_meta (pattern->surface))
+    if (_cairo_surface_is_recording (pattern->surface))
 	return TRUE;
 
     if (cairo_surface_get_type (pattern->surface) != CAIRO_SURFACE_TYPE_WIN32 &&
@@ -238,8 +238,8 @@ _cairo_win32_printing_surface_analyze_operation (cairo_win32_surface_t *surface,
     if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
 
-	if ( _cairo_surface_is_meta (surface_pattern->surface))
-	    return CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN;
+	if ( _cairo_surface_is_recording (surface_pattern->surface))
+	    return CAIRO_INT_STATUS_ANALYZE_RECORDING_SURFACE_PATTERN;
     }
 
     if (op == CAIRO_OPERATOR_SOURCE ||
@@ -384,20 +384,20 @@ _cairo_win32_printing_surface_paint_solid_pattern (cairo_win32_surface_t *surfac
 }
 
 static cairo_status_t
-_cairo_win32_printing_surface_paint_meta_pattern (cairo_win32_surface_t   *surface,
-						  cairo_surface_pattern_t *pattern)
+_cairo_win32_printing_surface_paint_recording_pattern (cairo_win32_surface_t   *surface,
+						       cairo_surface_pattern_t *pattern)
 {
     cairo_content_t old_content;
     cairo_matrix_t old_ctm;
     cairo_bool_t old_has_ctm;
-    cairo_rectangle_int_t meta_extents;
+    cairo_rectangle_int_t recording_extents;
     cairo_status_t status;
     cairo_extend_t extend;
     cairo_matrix_t p2d;
     XFORM xform;
     int x_tile, y_tile, left, right, top, bottom;
     RECT clip;
-    cairo_meta_surface_t *meta_surface = (cairo_meta_surface_t *) pattern->surface;
+    cairo_recording_surface_t *recording_surface = (cairo_recording_surface_t *) pattern->surface;
     cairo_box_t bbox;
 
     extend = cairo_pattern_get_extend (&pattern->base);
@@ -414,11 +414,11 @@ _cairo_win32_printing_surface_paint_meta_pattern (cairo_win32_surface_t   *surfa
     SaveDC (surface->dc);
     _cairo_matrix_to_win32_xform (&p2d, &xform);
 
-    status = _cairo_meta_surface_get_bbox (meta_surface, &bbox, NULL);
+    status = _cairo_recording_surface_get_bbox (recording_surface, &bbox, NULL);
     if (status)
 	return status;
 
-    _cairo_box_round_to_rectangle (&bbox, &meta_extents);
+    _cairo_box_round_to_rectangle (&bbox, &recording_extents);
 
     status = _cairo_win32_printing_surface_get_ctm_clip_box (surface, &clip);
     if (status)
@@ -437,7 +437,7 @@ _cairo_win32_printing_surface_paint_meta_pattern (cairo_win32_surface_t   *surfa
     }
 
     old_content = surface->content;
-    if (meta_surface->base.content == CAIRO_CONTENT_COLOR) {
+    if (recording_surface->base.content == CAIRO_CONTENT_COLOR) {
 	cairo_pattern_t  *source;
 	cairo_solid_pattern_t black;
 
@@ -457,15 +457,15 @@ _cairo_win32_printing_surface_paint_meta_pattern (cairo_win32_surface_t   *surfa
 	    SaveDC (surface->dc);
 	    m = p2d;
 	    cairo_matrix_translate (&m,
-				    x_tile*meta_extents.width,
-				    y_tile*meta_extents.height);
+				    x_tile*recording_extents.width,
+				    y_tile*recording_extents.height);
 	    if (extend == CAIRO_EXTEND_REFLECT) {
 		if (x_tile % 2) {
-		    cairo_matrix_translate (&m, meta_extents.width, 0);
+		    cairo_matrix_translate (&m, recording_extents.width, 0);
 		    cairo_matrix_scale (&m, -1, 1);
 		}
 		if (y_tile % 2) {
-		    cairo_matrix_translate (&m, 0, meta_extents.height);
+		    cairo_matrix_translate (&m, 0, recording_extents.height);
 		    cairo_matrix_scale (&m, 1, -1);
 		}
 	    }
@@ -480,18 +480,18 @@ _cairo_win32_printing_surface_paint_meta_pattern (cairo_win32_surface_t   *surfa
 	    cairo_matrix_transform_point (&surface->ctm, &x, &y);
 	    MoveToEx (surface->dc, (int) x, (int) y, NULL);
 
-	    x = meta_extents.width;
+	    x = recording_extents.width;
 	    y = 0;
 	    cairo_matrix_transform_point (&surface->ctm, &x, &y);
 	    LineTo (surface->dc, (int) x, (int) y);
 
-	    x = meta_extents.width;
-	    y = meta_extents.height;
+	    x = recording_extents.width;
+	    y = recording_extents.height;
 	    cairo_matrix_transform_point (&surface->ctm, &x, &y);
 	    LineTo (surface->dc, (int) x, (int) y);
 
 	    x = 0;
-	    y = meta_extents.height;
+	    y = recording_extents.height;
 	    cairo_matrix_transform_point (&surface->ctm, &x, &y);
 	    LineTo (surface->dc, (int) x, (int) y);
 
@@ -500,9 +500,9 @@ _cairo_win32_printing_surface_paint_meta_pattern (cairo_win32_surface_t   *surfa
 	    SelectClipPath (surface->dc, RGN_AND);
 
 	    SaveDC (surface->dc); /* Allow clip path to be reset during replay */
-	    status = _cairo_meta_surface_replay_region (&meta_surface->base,
-							&surface->base,
-							CAIRO_META_REGION_NATIVE);
+	    status = _cairo_recording_surface_replay_region (&recording_surface->base,
+							     &surface->base,
+							     CAIRO_RECORDING_REGION_NATIVE);
 	    assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
 	    /* Restore both the clip save and our earlier path SaveDC */
 	    RestoreDC (surface->dc, -2);
@@ -781,9 +781,9 @@ static cairo_status_t
 _cairo_win32_printing_surface_paint_surface_pattern (cairo_win32_surface_t   *surface,
                                                      cairo_surface_pattern_t *pattern)
 {
-    if (_cairo_surface_is_meta (pattern->surface)) {
-	return _cairo_win32_printing_surface_paint_meta_pattern (surface,
-								 pattern);
+    if (_cairo_surface_is_recording (pattern->surface)) {
+	return _cairo_win32_printing_surface_paint_recording_pattern (surface,
+								      pattern);
     } else {
 	return _cairo_win32_printing_surface_paint_image_pattern (surface,
 								  pattern);
@@ -1634,7 +1634,7 @@ _cairo_win32_printing_surface_create_similar (void		*abstract_surface,
     extents.x = extents.y = 0;
     extents.width  = width;
     extents.height = height;
-    return cairo_meta_surface_create (content, &extents);
+    return cairo_recording_surface_create (content, &extents);
 }
 
 static cairo_int_status_t
@@ -1650,16 +1650,16 @@ _cairo_win32_printing_surface_start_page (void *abstract_surface)
 
     /* As the logical coordinates used by GDI functions (eg LineTo)
      * are integers we need to do some additional work to prevent
-     * rounding errors. For example the obvious way to paint a meta
+     * rounding errors. For example the obvious way to paint a recording
      * pattern is to:
      *
      *   SaveDC()
      *   transform the device context DC by the pattern to device matrix
-     *   replay the meta surface
+     *   replay the recording surface
      *   RestoreDC()
      *
      * The problem here is that if the pattern to device matrix is
-     * [100 0 0 100 0 0], coordinates in the meta pattern such as
+     * [100 0 0 100 0 0], coordinates in the recording pattern such as
      * (1.56, 2.23) which correspond to (156, 223) in device space
      * will be rounded to (100, 200) due to (1.56, 2.23) being
      * truncated to integers.
@@ -1667,7 +1667,7 @@ _cairo_win32_printing_surface_start_page (void *abstract_surface)
      * This is solved by saving the current GDI CTM in surface->ctm,
      * switch the GDI CTM to identity, and transforming all
      * coordinates by surface->ctm before passing them to GDI. When
-     * painting a meta pattern, surface->ctm is transformed by the
+     * painting a recording pattern, surface->ctm is transformed by the
      * pattern to device matrix.
      *
      * For printing device contexts where 1 unit is 1 dpi, switching

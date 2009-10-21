@@ -35,8 +35,8 @@
 #include <signal.h>
 #endif
 
-#if ! CAIRO_HAS_META_SURFACE
-#define CAIRO_SURFACE_TYPE_META CAIRO_INTERNAL_SURFACE_TYPE_META
+#if ! CAIRO_HAS_RECORDING_SURFACE
+#define CAIRO_SURFACE_TYPE_RECORDING CAIRO_INTERNAL_SURFACE_TYPE_RECORDING
 #endif
 
 static const cairo_user_data_key_t svg_closure_key;
@@ -286,7 +286,7 @@ static const cairo_boilerplate_target_t targets[] = {
     },
     {
 	"svg11", "svg", NULL, NULL,
-	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 1,
+	CAIRO_SURFACE_TYPE_RECORDING, CAIRO_CONTENT_COLOR, 1,
 	"cairo_svg_surface_create",
 	_cairo_boilerplate_svg11_create_surface,
 	_cairo_boilerplate_svg_force_fallbacks,
@@ -310,7 +310,7 @@ static const cairo_boilerplate_target_t targets[] = {
     },
     {
 	"svg12", "svg", NULL, NULL,
-	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 1,
+	CAIRO_SURFACE_TYPE_RECORDING, CAIRO_CONTENT_COLOR, 1,
 	"cairo_svg_surface_create",
 	_cairo_boilerplate_svg12_create_surface,
 	_cairo_boilerplate_svg_force_fallbacks,

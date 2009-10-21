@@ -60,8 +60,8 @@ cairo_xml_surface_create (cairo_xml_t *xml,
 			  double width, double height);
 
 cairo_public cairo_status_t
-cairo_xml_for_meta_surface (cairo_xml_t *context,
-			    cairo_surface_t *meta);
+cairo_xml_for_recording_surface (cairo_xml_t *context,
+				 cairo_surface_t *surface);
 
 CAIRO_END_DECLS
 

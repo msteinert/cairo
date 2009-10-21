@@ -31,8 +31,8 @@
 #include <cairo-ps-surface-private.h>
 #include <cairo-paginated-surface-private.h>
 
-#if ! CAIRO_HAS_META_SURFACE
-#define CAIRO_SURFACE_TYPE_META CAIRO_INTERNAL_SURFACE_TYPE_META
+#if ! CAIRO_HAS_RECORDING_SURFACE
+#define CAIRO_SURFACE_TYPE_RECORDING CAIRO_INTERNAL_SURFACE_TYPE_RECORDING
 #endif
 
 static const cairo_user_data_key_t ps_closure_key;
@@ -306,7 +306,7 @@ static const cairo_boilerplate_target_t targets[] = {
     },
     {
 	"ps2", "ps", ".ps", NULL,
-	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
+	CAIRO_SURFACE_TYPE_RECORDING, CAIRO_CONTENT_COLOR, 0,
 	"cairo_ps_surface_create",
 	_cairo_boilerplate_ps2_create_surface,
 	_cairo_boilerplate_ps_force_fallbacks,
@@ -331,7 +331,7 @@ static const cairo_boilerplate_target_t targets[] = {
     },
     {
 	"ps3", "ps", ".ps", NULL,
-	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
+	CAIRO_SURFACE_TYPE_RECORDING, CAIRO_CONTENT_COLOR, 0,
 	"cairo_ps_surface_create",
 	_cairo_boilerplate_ps3_create_surface,
 	_cairo_boilerplate_ps_force_fallbacks,

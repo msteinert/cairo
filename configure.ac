@@ -617,7 +617,7 @@ CAIRO_ENABLE_SURFACE_BACKEND(image, image, always, [
 
 dnl ===========================================================================
 
-CAIRO_ENABLE_SURFACE_BACKEND(meta, meta, always)
+CAIRO_ENABLE_SURFACE_BACKEND(recording, recording, always)
 CAIRO_ENABLE_SURFACE_BACKEND(tee, tee, always)
 CAIRO_ENABLE_SURFACE_BACKEND(xml, xml, yes, [
     use_xml=$have_libz

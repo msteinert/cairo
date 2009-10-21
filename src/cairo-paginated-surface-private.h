@@ -51,10 +51,10 @@ typedef struct _cairo_paginated_surface {
     /* Paginated-surface specific functions for the target */
     const cairo_paginated_surface_backend_t *backend;
 
-    /* A cairo_meta_surface to record all operations. To be replayed
+    /* A cairo_recording_surface to record all operations. To be replayed
      * against target, and also against image surface as necessary for
      * fallbacks. */
-    cairo_surface_t *meta;
+    cairo_surface_t *recording_surface;
 
     int page_num;
     cairo_bool_t page_is_blank;

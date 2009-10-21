@@ -34,8 +34,8 @@
  *	Adrian Johnson <ajohnson@redneon.com>
  */
 
-#ifndef CAIRO_META_SURFACE_H
-#define CAIRO_META_SURFACE_H
+#ifndef CAIRO_RECORDING_SURFACE_H
+#define CAIRO_RECORDING_SURFACE_H
 
 #include "cairoint.h"
 #include "cairo-path-fixed-private.h"
@@ -51,14 +51,14 @@ typedef enum {
 } cairo_command_type_t;
 
 typedef enum {
-    CAIRO_META_REGION_ALL,
-    CAIRO_META_REGION_NATIVE,
-    CAIRO_META_REGION_IMAGE_FALLBACK
-} cairo_meta_region_type_t;
+    CAIRO_RECORDING_REGION_ALL,
+    CAIRO_RECORDING_REGION_NATIVE,
+    CAIRO_RECORDING_REGION_IMAGE_FALLBACK
+} cairo_recording_region_type_t;
 
 typedef struct _cairo_command_header {
     cairo_command_type_t	 type;
-    cairo_meta_region_type_t     region;
+    cairo_recording_region_type_t     region;
     cairo_operator_t		 op;
     cairo_clip_t		 clip;
 } cairo_command_header_t;
@@ -117,12 +117,12 @@ typedef union _cairo_command {
     cairo_command_show_text_glyphs_t		show_text_glyphs;
 } cairo_command_t;
 
-typedef struct _cairo_meta_surface {
+typedef struct _cairo_recording_surface {
     cairo_surface_t base;
 
     cairo_content_t content;
 
-    /* A meta-surface is logically unbounded, but when used as a
+    /* A recording-surface is logically unbounded, but when used as a
      * source we need to render it to an image, so we need a size at
      * which to create that image. */
     cairo_rectangle_t extents_pixels;
@@ -135,37 +135,37 @@ typedef struct _cairo_meta_surface {
     cairo_surface_t *commands_owner;
 
     int replay_start_idx;
-} cairo_meta_surface_t;
+} cairo_recording_surface_t;
 
-slim_hidden_proto (cairo_meta_surface_create);
+slim_hidden_proto (cairo_recording_surface_create);
 
 cairo_private cairo_int_status_t
-_cairo_meta_surface_get_path (cairo_surface_t	 *surface,
-			      cairo_path_fixed_t *path);
+_cairo_recording_surface_get_path (cairo_surface_t	 *surface,
+				   cairo_path_fixed_t *path);
 
 cairo_private cairo_status_t
-_cairo_meta_surface_replay (cairo_surface_t *surface,
-			    cairo_surface_t *target);
+_cairo_recording_surface_replay (cairo_surface_t *surface,
+				 cairo_surface_t *target);
 
 
 cairo_private cairo_status_t
-_cairo_meta_surface_replay_analyze_meta_pattern (cairo_surface_t *surface,
-						 cairo_surface_t *target);
+_cairo_recording_surface_replay_analyze_recording_pattern (cairo_surface_t *surface,
+							   cairo_surface_t *target);
 
 cairo_private cairo_status_t
-_cairo_meta_surface_replay_and_create_regions (cairo_surface_t *surface,
-					       cairo_surface_t *target);
+_cairo_recording_surface_replay_and_create_regions (cairo_surface_t *surface,
+						    cairo_surface_t *target);
 cairo_private cairo_status_t
-_cairo_meta_surface_replay_region (cairo_surface_t          *surface,
-				   cairo_surface_t          *target,
-				   cairo_meta_region_type_t  region);
+_cairo_recording_surface_replay_region (cairo_surface_t			*surface,
+					cairo_surface_t			*target,
+					cairo_recording_region_type_t	region);
 
 cairo_private cairo_status_t
-_cairo_meta_surface_get_bbox (cairo_meta_surface_t *meta,
-			      cairo_box_t *bbox,
-			      const cairo_matrix_t *transform);
+_cairo_recording_surface_get_bbox (cairo_recording_surface_t *recording,
+				   cairo_box_t *bbox,
+				   const cairo_matrix_t *transform);
 
 cairo_private cairo_bool_t
-_cairo_surface_is_meta (const cairo_surface_t *surface);
+_cairo_surface_is_recording (const cairo_surface_t *surface);
 
-#endif /* CAIRO_META_SURFACE_H */
+#endif /* CAIRO_RECORDING_SURFACE_H */

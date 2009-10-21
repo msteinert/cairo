@@ -634,19 +634,19 @@ REFERENCE_IMAGES = \
 	mask.svg.rgb24.xfail.png \
 	mask.xlib.ref.png \
 	mask.xlib.rgb24.ref.png \
-	meta-surface-pattern.gl.argb32.ref.png \
-	meta-surface-pattern.pdf.argb32.ref.png \
-	meta-surface-pattern.pdf.rgb24.ref.png \
-	meta-surface-pattern.ps2.argb32.ref.png \
-	meta-surface-pattern.ps2.rgb24.ref.png \
-	meta-surface-pattern.ps3.argb32.ref.png \
-	meta-surface-pattern.ps3.rgb24.ref.png \
-	meta-surface-pattern.quartz.ref.png \
-	meta-surface-pattern.quartz.rgb24.ref.png \
-	meta-surface-pattern.ref.png \
-	meta-surface-pattern.rgb24.ref.png \
-	meta-surface-pattern.svg.argb32.ref.png \
-	meta-surface-pattern.svg.rgb24.ref.png \
+	recording-surface-pattern.gl.argb32.ref.png \
+	recording-surface-pattern.pdf.argb32.ref.png \
+	recording-surface-pattern.pdf.rgb24.ref.png \
+	recording-surface-pattern.ps2.argb32.ref.png \
+	recording-surface-pattern.ps2.rgb24.ref.png \
+	recording-surface-pattern.ps3.argb32.ref.png \
+	recording-surface-pattern.ps3.rgb24.ref.png \
+	recording-surface-pattern.quartz.ref.png \
+	recording-surface-pattern.quartz.rgb24.ref.png \
+	recording-surface-pattern.ref.png \
+	recording-surface-pattern.rgb24.ref.png \
+	recording-surface-pattern.svg.argb32.ref.png \
+	recording-surface-pattern.svg.rgb24.ref.png \
 	mime-data.pdf.ref.png \
 	mime-data.ps.ref.png \
 	mime-data.ref.png \
@@ -839,7 +839,7 @@ REFERENCE_IMAGES = \
 	scale-offset-similar.ps.ref.png \
 	scale-offset-similar.ref.png \
 	scale-offset-similar.xfail.png \
-	scale-offset-similar.meta.xfail.png \
+	scale-offset-similar.recording.xfail.png \
 	scale-offset-similar.script.xfail.png \
 	scale-offset-similar.xlib.xfail.png \
 	scale-offset-similar.xlib-fallback.xfail.png \
@@ -1087,13 +1087,13 @@ $(REFERENCE_IMAGES)
 #                         manipulation for SVG
 # extend-pad            - lacks implementation in pixman and consequently used
 #                         as an excuse for lack of support in other backends
-# fallback-resolution   - The essential problem here is that the meta-surface
+# fallback-resolution   - The essential problem here is that the recording-surface
 #                         has recorded a sequence of operations with one device
 #                         transformation, and we attempt to replay it with
 #                         another (basically a scale-factor for the falback
 #                         resolution). Carl begun to look at this with his
 #                         chain-of-bugs, but the can of worms is much bigger.
-#                         It appears to be a design flaw in the meta-surface
+#                         It appears to be a design flaw in the recording-surface
 #                         that may spread further...
 #                         My solution would be to lock Behad and Adrian in a
 #                         room, with Carl as a moderator and not let them out

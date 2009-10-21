@@ -52,11 +52,11 @@ static int fdr_dump;
 static const cairo_user_data_key_t fdr_key;
 
 static void
-fdr_replay_to_script (cairo_surface_t *meta, cairo_script_context_t *ctx)
+fdr_replay_to_script (cairo_surface_t *recording, cairo_script_context_t *ctx)
 {
-    if (meta != NULL) {
+    if (recording != NULL) {
 	DLCALL (cairo_script_context_write_comment, ctx, "--- fdr ---", -1);
-	DLCALL (cairo_script_from_meta_surface, ctx, meta);
+	DLCALL (cairo_script_from_recording_surface, ctx, recording);
     }
 }
 
@@ -163,7 +163,7 @@ cairo_create (cairo_surface_t *surface)
 	content = DLCALL (cairo_surface_get_content, surface);
 
 	tee = DLCALL (cairo_tee_surface_create, surface);
-	record = DLCALL (cairo_meta_surface_create, content, &extents);
+	record = DLCALL (cairo_recording_surface_create, content, &extents);
 	DLCALL (cairo_tee_surface_add, tee, record);
 
 	DLCALL (cairo_surface_set_user_data, surface,

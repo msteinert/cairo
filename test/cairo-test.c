@@ -824,10 +824,10 @@ cairo_test_for_target (cairo_test_context_t		 *ctx,
 	    goto UNWIND_STRINGS;
 	}
 
-	required = target->is_meta ? "target=!meta" : "target=meta";
+	required = target->is_recording ? "target=!recording" : "target=recording";
 	if (strstr (ctx->test->requirements, required) != NULL) {
 	    cairo_test_log (ctx, "Error: Skipping for %s target %s\n",
-			    target->is_meta ? "meta" : "non-meta",
+			    target->is_recording ? "recording" : "non-recording",
 			    target->name);
 	    ret = CAIRO_TEST_UNTESTED;
 	    goto UNWIND_STRINGS;
@@ -1016,7 +1016,7 @@ REPEAT:
 
     if (target->finish_surface != NULL) {
 #if HAVE_MEMFAULT
-	/* We need to re-enable faults as most meta-surface processing
+	/* We need to re-enable faults as most recording-surface processing
 	 * is done during cairo_surface_finish().
 	 */
 	MEMFAULT_CLEAR_FAULTS ();

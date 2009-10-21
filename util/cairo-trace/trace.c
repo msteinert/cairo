@@ -4714,22 +4714,22 @@ _cairo_test_null_surface_create (cairo_content_t	content)
 #endif
 
 cairo_surface_t *
-cairo_meta_surface_create (cairo_content_t content,
-			   const cairo_rectangle_t *extents)
+cairo_recording_surface_create (cairo_content_t content,
+				const cairo_rectangle_t *extents)
 {
     cairo_surface_t *ret;
     long surface_id;
 
     _enter_trace ();
 
-    ret = DLCALL (cairo_meta_surface_create, content, extents);
+    ret = DLCALL (cairo_recording_surface_create, content, extents);
     surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
     if (_write_lock ()) {
 	if (extents) {
 	    _trace_printf ("dict\n"
-			   "  /type /meta set\n"
+			   "  /type /recording set\n"
 			   "  /content //%s set\n"
 			   "  /extents [%f %f %f %f] set\n"
 			   "  surface dup /s%ld exch def\n",
@@ -4740,7 +4740,7 @@ cairo_meta_surface_create (cairo_content_t content,
 	    _surface_object_set_size (ret, extents->width, extents->height);
 	} else {
 	    _trace_printf ("dict\n"
-			   "  /type /meta set\n"
+			   "  /type /recording set\n"
 			   "  /content //%s set\n"
 			   "  surface dup /s%ld exch def\n",
 			   _content_to_string (content),

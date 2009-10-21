@@ -82,8 +82,8 @@ cairo_script_surface_create_for_target (cairo_script_context_t *context,
 					cairo_surface_t *target);
 
 cairo_public cairo_status_t
-cairo_script_from_meta_surface (cairo_script_context_t *context,
-				cairo_surface_t *meta);
+cairo_script_from_recording_surface (cairo_script_context_t *context,
+				     cairo_surface_t        *recording_surface);
 
 CAIRO_END_DECLS
 

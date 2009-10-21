@@ -20,7 +20,7 @@ _surface_create (void *_closure,
     extents.x = extents.y = 0;
     extents.width  = width;
     extents.height = height;
-    surface = cairo_meta_surface_create (content, &extents);
+    surface = cairo_recording_surface_create (content, &extents);
     if (*closure == NULL)
 	*closure = cairo_surface_reference (surface);
 
@@ -62,7 +62,7 @@ main (int argc, char **argv)
 	cairo_xml_t *xml;
 
 	xml = cairo_xml_create_for_stream (stdio_write, out);
-	cairo_xml_for_meta_surface (xml, surface);
+	cairo_xml_for_recording_surface (xml, surface);
 	cairo_xml_destroy (xml);
 
 	cairo_surface_destroy (surface);

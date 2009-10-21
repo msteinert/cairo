@@ -34,7 +34,7 @@
 #define HEIGHT WIDTH
 
 
-/* This test is designed to test painting a meta surface pattern with
+/* This test is designed to test painting a recording surface pattern with
  * CAIRO_EXTEND_NONE and a non identity pattern matrix.
  */
 
@@ -113,9 +113,9 @@ draw (cairo_t *cr, int width, int height)
     return CAIRO_TEST_SUCCESS;
 }
 
-CAIRO_TEST (meta_surface_pattern,
-	    "Paint meta surface pattern with non identity pattern matrix",
-	    "meta", /* keywords */
+CAIRO_TEST (recording_surface_pattern,
+	    "Paint recording surface pattern with non identity pattern matrix",
+	    "recording", /* keywords */
 	    NULL, /* requirements */
 	    WIDTH, HEIGHT,
 	    NULL, draw)

@@ -216,7 +216,7 @@ The Portable Network Graphics image file format (ISO/IEC 15948). Since 1.10
 @CAIRO_SURFACE_TYPE_QUARTZ_IMAGE: 
 @CAIRO_SURFACE_TYPE_SCRIPT: 
 @CAIRO_SURFACE_TYPE_QT: 
-@CAIRO_SURFACE_TYPE_META: 
+@CAIRO_SURFACE_TYPE_RECORDING: 
 
 <!-- ##### FUNCTION cairo_surface_get_type ##### -->
 <para>

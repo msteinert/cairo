@@ -217,7 +217,7 @@ struct clients {
     int count, size;
     int complete;
 
-    cairo_surface_t *meta;
+    cairo_surface_t *recording;
     unsigned long serial;
 
     struct client_info {
@@ -274,7 +274,7 @@ clients_init (struct clients *clients)
 	return -1;
     clients->offset = 0;
 
-    clients->meta = NULL;
+    clients->recording = NULL;
     clients->serial = 0;
 
     return 0;
@@ -675,7 +675,7 @@ write_trace (struct clients *clients)
     mkdir ("output", 0777);
 
     ctx = cairo_script_context_create ("output/cairo-sphinx.trace");
-    cairo_script_from_meta_surface (ctx, clients->meta);
+    cairo_script_from_recording_surface (ctx, clients->recording);
     cairo_script_context_destroy (ctx);
 
     csum = checksum ("output/cairo-sphinx.trace");
@@ -684,8 +684,8 @@ write_trace (struct clients *clients)
     if (! g_file_test (buf, G_FILE_TEST_EXISTS)) {
 	rename ("output/cairo-sphinx.trace", buf);
 
-	sprintf (buf, "output/%s.meta.png", csum);
-	cairo_surface_write_to_png (clients->meta, buf);
+	sprintf (buf, "output/%s.recording.png", csum);
+	cairo_surface_write_to_png (clients->recording, buf);
 
 	for (i = 0; i < clients->count; i++) {
 	    struct client_info *c = &clients->clients[i];
@@ -732,14 +732,14 @@ clients_complete (struct clients *clients, int fd)
 	c->image_serial = 0;
     }
 
-    clients->meta = NULL;
+    clients->recording = NULL;
     clients->serial = 0;
 }
 
 static void
-clients_meta (struct clients *clients, int fd, char *info)
+clients_recording (struct clients *clients, int fd, char *info)
 {
-    sscanf (info, "%p %lu", &clients->meta, &clients->serial);
+    sscanf (info, "%p %lu", &clients->recording, &clients->serial);
     clients_complete (clients, fd);
 }
 
@@ -940,16 +940,16 @@ send_surface (struct client *c,
 }
 
 static void
-send_meta (struct client *c,
-	   struct context_closure *closure)
+send_recording (struct client *c,
+		struct context_closure *closure)
 {
     cairo_surface_t *source = closure->surface;
     char buf[1024];
     int len;
     unsigned long serial;
 
-    assert (cairo_surface_get_type (source) == CAIRO_SURFACE_TYPE_META);
-    len = sprintf (buf, ".meta %p %lu\n", source, closure->id);
+    assert (cairo_surface_get_type (source) == CAIRO_SURFACE_TYPE_RECORDING);
+    len = sprintf (buf, ".recording %p %lu\n", source, closure->id);
     writen (c->sk, buf, len);
 
     /* wait for image check */
@@ -1001,7 +1001,7 @@ _context_create (void *closure, cairo_surface_t *surface)
 
     /* record everything, including writes to images */
     if (c->target == NULL) {
-	if (cairo_surface_get_type (surface) != CAIRO_SURFACE_TYPE_META) {
+	if (cairo_surface_get_type (surface) != CAIRO_SURFACE_TYPE_RECORDING) {
 	    cairo_format_t format;
 	    int width, height;
 
@@ -1032,7 +1032,7 @@ _context_destroy (void *closure, void *ptr)
 	if (l->context == ptr) {
 	    if (cairo_surface_status (l->surface) == CAIRO_STATUS_SUCCESS) {
 		if (c->target == NULL)
-		    send_meta (c, l);
+		    send_recording (c, l);
 		else
 		    send_surface (c, l);
             } else {
@@ -1071,7 +1071,7 @@ recorder (void *arg)
     buf_size = 65536;
     buf = xmalloc (buf_size);
 
-    len = sprintf (buf, "client-command target=meta name=.recorder\n");
+    len = sprintf (buf, "client-command target=recording name=.recorder\n");
     if (! writen (client.sk, buf, len))
 	return NULL;
 
@@ -1086,8 +1086,8 @@ recorder (void *arg)
     if (! writen (pfd.fd, buf, len))
 	return NULL;
 
-    client.surface = cairo_meta_surface_create (CAIRO_CONTENT_COLOR_ALPHA,
-						NULL);
+    client.surface = cairo_recording_surface_create (CAIRO_CONTENT_COLOR_ALPHA,
+						     NULL);
 
     client.context_id = 0;
     client.csi = cairo_script_interpreter_create ();
@@ -1261,8 +1261,8 @@ do_server (const char *path)
 		    }
 		} else if (strncmp (line, ".complete", 9) == 0) {
 		    clients_complete (&clients, pfd[n].fd);
-		} else if (strncmp (line, ".meta", 5) == 0) {
-		    clients_meta (&clients, pfd[n].fd, line + 6);
+		} else if (strncmp (line, ".recording", 5) == 0) {
+		    clients_recording (&clients, pfd[n].fd, line + 6);
 		} else {
 		    printf ("do_command (%s)\n", line);
 		}

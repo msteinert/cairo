@@ -116,7 +116,7 @@ typedef struct _test_runner {
     const char *trace;
     pid_t pid;
     int sk;
-    cairo_bool_t is_meta;
+    cairo_bool_t is_recording;
 
     cairo_script_interpreter_t *csi;
     struct context_closure {
@@ -144,7 +144,7 @@ struct slave {
     buffer_diff_result_t result;
     const cairo_boilerplate_target_t *target;
     const struct slave *reference;
-    cairo_bool_t is_meta;
+    cairo_bool_t is_recording;
 };
 
 struct request_image {
@@ -163,7 +163,7 @@ struct surface_tag {
 static const cairo_user_data_key_t surface_tag;
 
 #if CAIRO_HAS_PTHREAD
-#define tr_die(t) t->is_meta ? pthread_exit(NULL) : exit(1)
+#define tr_die(t) t->is_recording ? pthread_exit(NULL) : exit(1)
 #else
 #define tr_die(t) exit(1)
 #endif
@@ -241,9 +241,9 @@ format_for_content (cairo_content_t content)
 }
 
 static void
-send_meta_surface (test_runner_t *tr,
-		   int width, int height,
-		   struct context_closure *closure)
+send_recording_surface (test_runner_t *tr,
+			int width, int height,
+			struct context_closure *closure)
 {
 #if CAIRO_HAS_PTHREAD
     const struct request_image rq = {
@@ -258,7 +258,7 @@ send_meta_surface (test_runner_t *tr,
     unsigned long serial;
 
     if (DEBUG > 1) {
-	printf ("send-meta-surface: %lu [%lu, %lu]\n",
+	printf ("send-recording-surface: %lu [%lu, %lu]\n",
 		closure->id,
 		closure->start_line,
 		closure->end_line);
@@ -273,7 +273,7 @@ send_meta_surface (test_runner_t *tr,
     serial = 0;
     readn (tr->sk, &serial, sizeof (serial));
     if (DEBUG > 1) {
-	printf ("send-meta-surface: serial: %lu\n", serial);
+	printf ("send-recording-surface: serial: %lu\n", serial);
     }
     if (serial != closure->id)
 	pthread_exit (NULL);
@@ -350,8 +350,8 @@ send_surface (test_runner_t *tr,
 	}
     }
 
-    if (tr->is_meta) {
-	send_meta_surface (tr, width, height, closure);
+    if (tr->is_recording) {
+	send_recording_surface (tr, width, height, closure);
 	return;
     }
 
@@ -542,7 +542,7 @@ spawn_target (const char *socket_path,
     if (pid != 0)
 	return pid;
 
-    tr.is_meta = FALSE;
+    tr.is_recording = FALSE;
     tr.pid = getpid ();
 
     tr.sk = spawn_socket (socket_path, tr.pid);
@@ -636,7 +636,7 @@ spawn_recorder (const char *socket_path, const char *trace)
     if (tr == NULL)
 	return -1;
 
-    tr->is_meta = TRUE;
+    tr->is_recording = TRUE;
     tr->pid = pid;
     tr->sk = spawn_socket (socket_path, tr->pid);
     if (tr->sk == -1) {
@@ -650,7 +650,7 @@ spawn_recorder (const char *socket_path, const char *trace)
     tr->context_id = 0;
     tr->trace = trace;
 
-    tr->surface = cairo_meta_surface_create (CAIRO_CONTENT_COLOR_ALPHA,
+    tr->surface = cairo_recording_surface_create (CAIRO_CONTENT_COLOR_ALPHA,
                                                  0, 0);
     if (tr->surface == NULL) {
 	cleanup_recorder (tr);
@@ -840,7 +840,7 @@ static void
 write_images (const char *trace, struct slave *slave, int num_slaves)
 {
     while (num_slaves--) {
-	if (slave->image != NULL && ! slave->is_meta) {
+	if (slave->image != NULL && ! slave->is_recording) {
 	    char *filename;
 
 	    xasprintf (&filename, "%s-%s-fail.png",
@@ -916,8 +916,8 @@ allocate_image_for_slave (uint8_t *base,
 		offset);
     }
 
-    if (slave->is_meta) {
-	/* special communication with meta-surface thread */
+    if (slave->is_recording) {
+	/* special communication with recording-surface thread */
 	slave->image = cairo_surface_reference ((cairo_surface_t *) rq.stride);
     } else {
 	size = rq.height * rq.stride;
@@ -1045,7 +1045,7 @@ test_run (void *base,
 			    goto out;
 
 			/* Can anyone spell 'P·E·D·A·N·T'? */
-			if (! slaves[i].is_meta)
+			if (! slaves[i].is_recording)
 			    cairo_surface_mark_dirty (slaves[i].image);
 			completion++;
 		    }
@@ -1075,7 +1075,7 @@ test_run (void *base,
 
 		write_images (trace, slaves, num_slaves);
 
-		if (slaves[0].is_meta)
+		if (slaves[0].is_recording)
 		    write_trace (trace, &slaves[0]);
 
 		goto out;
@@ -1173,7 +1173,7 @@ target_is_measurable (const cairo_boilerplate_target_t *target)
     case CAIRO_SURFACE_TYPE_SCRIPT:
     case CAIRO_SURFACE_TYPE_SVG:
     case CAIRO_SURFACE_TYPE_WIN32_PRINTING:
-    case CAIRO_SURFACE_TYPE_META:
+    case CAIRO_SURFACE_TYPE_RECORDING:
     default:
 	return FALSE;
     }
@@ -1275,15 +1275,15 @@ _test_trace (test_trace_t *test,
     s = slaves = xcalloc (2*test->num_targets + 1, sizeof (struct slave));
 
 #if CAIRO_HAS_PTHREAD
-    /* set-up a meta-surface to reconstruct errors */
+    /* set-up a recording-surface to reconstruct errors */
     slave = spawn_recorder (socket_path, trace);
     if (slave < 0) {
-        fprintf (stderr, "Unable to create meta surface\n");
+        fprintf (stderr, "Unable to create recording surface\n");
         goto cleanup_sk;
     }
 
     s->pid = slave;
-    s->is_meta = TRUE;
+    s->is_recording = TRUE;
     s->target = NULL;
     s->fd = -1;
     s->reference = NULL;
@@ -1355,7 +1355,7 @@ cleanup:
     while (s-- > slaves) {
 	int status;
 
-	if (s->is_meta) /* in-process */
+	if (s->is_recording) /* in-process */
 	    continue;
 
 	kill (s->pid, SIGKILL);
@@ -1568,7 +1568,7 @@ parse_options (test_trace_t *test, int argc, char *argv[])
 static void
 test_reset (test_trace_t *test)
 {
-    /* XXX leaking fonts again via meta-surface? */
+    /* XXX leaking fonts again via recording-surface? */
 #if 0
     cairo_debug_reset_static_data ();
 #if HAVE_FCFINI

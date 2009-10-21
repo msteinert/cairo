@@ -333,7 +333,7 @@ void
 _cairo_pattern_fini_snapshot (cairo_pattern_t *pattern)
 {
     /* XXX this is quite ugly, but currently necessary to break the circular
-     * references with snapshot-cow and the meta-surface.
+     * references with snapshot-cow and the recording-surface.
      * This operation remains safe only whilst _cairo_surface_snapshot() is
      * not public...
      */

@@ -149,17 +149,17 @@ _cairo_boilerplate_image_create_surface (const char			 *name,
     return cairo_image_surface_create (format, ceil (width), ceil (height));
 }
 
-#if CAIRO_HAS_META_SURFACE
+#if CAIRO_HAS_RECORDING_SURFACE
 static cairo_surface_t *
-_cairo_boilerplate_meta_create_surface (const char	     *name,
-					cairo_content_t	      content,
-					double		      width,
-					double		      height,
-					double		      max_width,
-					double		      max_height,
-					cairo_boilerplate_mode_t mode,
-					int		      id,
-					void		    **closure)
+_cairo_boilerplate_recording_create_surface (const char		     *name,
+					     cairo_content_t	      content,
+					     double		      width,
+					     double		      height,
+					     double		      max_width,
+					     double		      max_height,
+					     cairo_boilerplate_mode_t mode,
+					     int		      id,
+					     void		    **closure)
 {
     cairo_rectangle_t extents;
 
@@ -169,7 +169,7 @@ _cairo_boilerplate_meta_create_surface (const char	     *name,
     extents.y = 0;
     extents.width = width;
     extents.height = height;
-    return cairo_meta_surface_create (content, &extents);
+    return cairo_recording_surface_create (content, &extents);
 }
 #endif
 
@@ -195,9 +195,9 @@ _cairo_boilerplate_get_image_surface (cairo_surface_t *src,
     surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
     image = cairo_surface_reference (surface);
 
-    /* open a logging channel (only interesting for meta surfaces) */
-#if CAIRO_HAS_SCRIPT_SURFACE && CAIRO_HAS_META_SURFACE
-    if (cairo_surface_get_type (src) == CAIRO_SURFACE_TYPE_META) {
+    /* open a logging channel (only interesting for recording surfaces) */
+#if CAIRO_HAS_SCRIPT_SURFACE && CAIRO_HAS_RECORDING_SURFACE
+    if (cairo_surface_get_type (src) == CAIRO_SURFACE_TYPE_RECORDING) {
 	const char *test_name;
 
 	test_name = cairo_surface_get_user_data (src,
@@ -311,12 +311,12 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png
     },
-#if CAIRO_HAS_META_SURFACE
+#if CAIRO_HAS_RECORDING_SURFACE
     {
-	"meta", "image", NULL, NULL,
-	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR_ALPHA, 0,
-	"cairo_meta_surface_create",
-	_cairo_boilerplate_meta_create_surface,
+	"recording", "image", NULL, NULL,
+	CAIRO_SURFACE_TYPE_RECORDING, CAIRO_CONTENT_COLOR_ALPHA, 0,
+	"cairo_recording_surface_create",
+	_cairo_boilerplate_recording_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
@@ -324,10 +324,10 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	FALSE, TRUE
     },
     {
-	"meta", "image", NULL, NULL,
-	CAIRO_SURFACE_TYPE_META, CAIRO_CONTENT_COLOR, 0,
-	"cairo_meta_surface_create",
-	_cairo_boilerplate_meta_create_surface,
+	"recording", "image", NULL, NULL,
+	CAIRO_SURFACE_TYPE_RECORDING, CAIRO_CONTENT_COLOR, 0,
+	"cairo_recording_surface_create",
+	_cairo_boilerplate_recording_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,

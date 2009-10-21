@@ -63,10 +63,10 @@ typedef struct _cairo_perf_case {
 const cairo_perf_case_t perf_cases[];
 
 /* Some targets just aren't that interesting for performance testing,
- * (not least because many of these surface types use a meta-surface
+ * (not least because many of these surface types use a recording-surface
  * and as such defer the "real" rendering to later, so our timing
  * loops wouldn't count the real work, just the recording by the
- * meta-surface. */
+ * recording-surface. */
 static cairo_bool_t
 target_is_measurable (const cairo_boilerplate_target_t *target)
 {

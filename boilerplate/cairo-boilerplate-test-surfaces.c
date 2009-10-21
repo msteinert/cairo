@@ -146,7 +146,7 @@ _cairo_boilerplate_test_paginated_create_surface (const char			 *name,
  *
  * If we didn't implement this function then the default
  * cairo_surface_write_to_png would result in the paginated_surface's
- * acquire_source_image function replaying the meta-surface to an
+ * acquire_source_image function replaying the recording-surface to an
  * intermediate image surface. And in that case the
  * test_paginated_surface would not be involved and wouldn't be
  * tested.

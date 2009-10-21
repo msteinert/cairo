@@ -1953,7 +1953,7 @@ cairo_surface_status (cairo_surface_t *surface);
  * @CAIRO_SURFACE_TYPE_QUARTZ_IMAGE: The surface is of type quartz_image
  * @CAIRO_SURFACE_TYPE_SCRIPT: The surface is of type script, since 1.10
  * @CAIRO_SURFACE_TYPE_QT: The surface is of type Qt, since 1.10
- * @CAIRO_SURFACE_TYPE_META: The surface is a meta-type, since 1.10
+ * @CAIRO_SURFACE_TYPE_RECORDING: The surface is of type recording, since 1.10
  * @CAIRO_SURFACE_TYPE_VG: The surface is a OpenVG surface, since 1.10
  * @CAIRO_SURFACE_TYPE_GL: The surface is of type OpenGL, since 1.10
  * @CAIRO_SURFACE_TYPE_DRM: The surface is of type Direct Render Manager, since 1.10
@@ -2001,7 +2001,7 @@ typedef enum _cairo_surface_type {
     CAIRO_SURFACE_TYPE_QUARTZ_IMAGE,
     CAIRO_SURFACE_TYPE_SCRIPT,
     CAIRO_SURFACE_TYPE_QT,
-    CAIRO_SURFACE_TYPE_META,
+    CAIRO_SURFACE_TYPE_RECORDING,
     CAIRO_SURFACE_TYPE_VG,
     CAIRO_SURFACE_TYPE_GL,
     CAIRO_SURFACE_TYPE_DRM,
@@ -2185,18 +2185,18 @@ cairo_image_surface_create_from_png_stream (cairo_read_func_t	read_func,
 
 #endif
 
-/* Meta-surface functions */
+/* Recording-surface functions */
 
 cairo_public cairo_surface_t *
-cairo_meta_surface_create (cairo_content_t	content,
-			   const cairo_rectangle_t   *extents);
+cairo_recording_surface_create (cairo_content_t		 content,
+                                const cairo_rectangle_t *extents);
 
 cairo_public void
-cairo_meta_surface_ink_extents (cairo_surface_t *surface,
-				double *x0,
-				double *y0,
-				double *width,
-				double *height);
+cairo_recording_surface_ink_extents (cairo_surface_t *surface,
+                                     double *x0,
+                                     double *y0,
+                                     double *width,
+                                     double *height);
 
 /* Tee-surface functions */
 

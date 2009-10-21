@@ -46,7 +46,7 @@
 
 #include "cairo-clip-private.h"
 #include "cairo-output-stream-private.h"
-#include "cairo-meta-surface-private.h"
+#include "cairo-recording-surface-private.h"
 
 #define static cairo_warn static
 
@@ -69,7 +69,7 @@ struct _cairo_xml_surface {
     double width, height;
 };
 
-slim_hidden_proto (cairo_xml_for_meta_surface);
+slim_hidden_proto (cairo_xml_for_recording_surface);
 
 static const cairo_xml_t _nil_xml = {
     CAIRO_STATUS_NO_MEMORY,
@@ -348,7 +348,7 @@ _cairo_xml_surface_create_similar (void			*abstract_surface,
     extents.width  = width;
     extents.height = height;
 
-    return cairo_meta_surface_create (content, &extents);
+    return cairo_recording_surface_create (content, &extents);
 }
 
 static cairo_status_t
@@ -623,8 +623,8 @@ _cairo_xml_emit_surface (cairo_xml_t *xml,
     cairo_surface_t *source = pattern->surface;
     cairo_status_t status;
 
-    if (_cairo_surface_is_meta (source)) {
-	status = cairo_xml_for_meta_surface (xml, source);
+    if (_cairo_surface_is_recording (source)) {
+	status = cairo_xml_for_recording_surface (xml, source);
     } else {
 	cairo_image_surface_t *image;
 	void *image_extra;
@@ -1094,8 +1094,8 @@ cairo_xml_surface_create (cairo_xml_t *xml,
 }
 
 cairo_status_t
-cairo_xml_for_meta_surface (cairo_xml_t *xml,
-			    cairo_surface_t *meta)
+cairo_xml_for_recording_surface (cairo_xml_t 	 *xml,
+				 cairo_surface_t *recording_surface)
 {
     cairo_box_t bbox;
     cairo_rectangle_int_t extents;
@@ -1105,20 +1105,20 @@ cairo_xml_for_meta_surface (cairo_xml_t *xml,
     if (unlikely (xml->status))
 	return xml->status;
 
-    if (unlikely (meta->status))
-	return meta->status;
+    if (unlikely (recording_surface->status))
+	return recording_surface->status;
 
-    if (unlikely (! _cairo_surface_is_meta (meta)))
+    if (unlikely (! _cairo_surface_is_recording (recording_surface)))
 	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 
-    status = _cairo_meta_surface_get_bbox ((cairo_meta_surface_t *) meta,
-					   &bbox, NULL);
+    status = _cairo_recording_surface_get_bbox ((cairo_recording_surface_t *) recording_surface,
+						&bbox, NULL);
     if (unlikely (status))
 	return status;
 
     _cairo_box_round_to_rectangle (&bbox, &extents);
     surface = _cairo_xml_surface_create_internal (xml,
-						  meta->content,
+						  recording_surface->content,
 						  extents.width,
 						  extents.height);
     if (unlikely (surface->status))
@@ -1126,12 +1126,12 @@ cairo_xml_for_meta_surface (cairo_xml_t *xml,
 
     _cairo_xml_printf (xml,
 		       "<surface content='%s' width='%d' height='%d'>",
-		       _content_to_string (meta->content),
+		       _content_to_string (recording_surface->content),
 		       extents.width, extents.height);
     _cairo_xml_indent (xml, 2);
 
     cairo_surface_set_device_offset (surface, -extents.x, -extents.y);
-    status = _cairo_meta_surface_replay (meta, surface);
+    status = _cairo_recording_surface_replay (recording_surface, surface);
     cairo_surface_destroy (surface);
 
     _cairo_xml_indent (xml, -2);
@@ -1139,7 +1139,7 @@ cairo_xml_for_meta_surface (cairo_xml_t *xml,
 
     return status;
 }
-slim_hidden_def (cairo_xml_for_meta_surface);
+slim_hidden_def (cairo_xml_for_recording_surface);
 
 void
 cairo_xml_destroy (cairo_xml_t *xml)

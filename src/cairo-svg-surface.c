@@ -44,7 +44,7 @@
 #include "cairo-svg.h"
 #include "cairo-analysis-surface-private.h"
 #include "cairo-image-info-private.h"
-#include "cairo-meta-surface-private.h"
+#include "cairo-recording-surface-private.h"
 #include "cairo-output-stream-private.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-paginated-private.h"
@@ -1268,8 +1268,8 @@ _cairo_svg_surface_emit_composite_surface_pattern (cairo_output_stream_t   *outp
 }
 
 static cairo_status_t
-_cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
-				      cairo_meta_surface_t *source)
+_cairo_svg_surface_emit_recording_surface (cairo_svg_document_t      *document,
+					   cairo_recording_surface_t *source)
 {
     cairo_status_t status;
     cairo_surface_t *paginated_surface;
@@ -1300,7 +1300,7 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
 				     -source->extents_pixels.x,
 				     -source->extents_pixels.y);
 
-    status = _cairo_meta_surface_replay (&source->base, paginated_surface);
+    status = _cairo_recording_surface_replay (&source->base, paginated_surface);
     if (unlikely (status)) {
 	cairo_surface_destroy (paginated_surface);
 	return status;
@@ -1372,16 +1372,16 @@ _cairo_svg_surface_emit_meta_surface (cairo_svg_document_t *document,
 }
 
 static cairo_status_t
-_cairo_svg_surface_emit_composite_meta_pattern (cairo_output_stream_t	*output,
-						cairo_svg_surface_t	*surface,
-						cairo_operator_t	 op,
-						cairo_surface_pattern_t	*pattern,
-						int			 pattern_id,
-						const cairo_matrix_t	*parent_matrix,
-						const char		*extra_attributes)
+_cairo_svg_surface_emit_composite_recording_pattern (cairo_output_stream_t	*output,
+						     cairo_svg_surface_t	*surface,
+						     cairo_operator_t	         op,
+						     cairo_surface_pattern_t	*pattern,
+						     int			 pattern_id,
+						     const cairo_matrix_t	*parent_matrix,
+						     const char			*extra_attributes)
 {
     cairo_svg_document_t *document = surface->document;
-    cairo_meta_surface_t *meta_surface;
+    cairo_recording_surface_t *recording_surface;
     cairo_matrix_t p2u;
     cairo_status_t status;
 
@@ -1390,8 +1390,8 @@ _cairo_svg_surface_emit_composite_meta_pattern (cairo_output_stream_t	*output,
     /* cairo_pattern_set_matrix ensures the matrix is invertible */
     assert (status == CAIRO_STATUS_SUCCESS);
 
-    meta_surface = (cairo_meta_surface_t *) pattern->surface;
-    status = _cairo_svg_surface_emit_meta_surface (document, meta_surface);
+    recording_surface = (cairo_recording_surface_t *) pattern->surface;
+    status = _cairo_svg_surface_emit_recording_surface (document, recording_surface);
     if (unlikely (status))
 	return status;
 
@@ -1401,15 +1401,15 @@ _cairo_svg_surface_emit_composite_meta_pattern (cairo_output_stream_t	*output,
 				     "patternUnits=\"userSpaceOnUse\" "
 				     "width=\"%d\" height=\"%d\"",
 				     pattern_id,
-				     meta_surface->extents.width,
-				     meta_surface->extents.height);
+				     recording_surface->extents.width,
+				     recording_surface->extents.height);
 	_cairo_svg_surface_emit_transform (output, " patternTransform", &p2u, parent_matrix);
 	_cairo_output_stream_printf (output, ">\n");
     }
 
     _cairo_output_stream_printf (output,
 				 "<use xlink:href=\"#surface%d\"",
-				 meta_surface->base.unique_id);
+				 recording_surface->base.unique_id);
 
     if (pattern_id == invalid_pattern_id) {
 	_cairo_svg_surface_emit_operator (output, surface, op);
@@ -1437,12 +1437,12 @@ _cairo_svg_surface_emit_composite_pattern (cairo_output_stream_t   *output,
 					   const char		   *extra_attributes)
 {
 
-    if (_cairo_surface_is_meta (pattern->surface)) {
-	return _cairo_svg_surface_emit_composite_meta_pattern (output, surface,
-							       op, pattern,
-							       pattern_id,
-							       parent_matrix,
-							       extra_attributes);
+    if (_cairo_surface_is_recording (pattern->surface)) {
+	return _cairo_svg_surface_emit_composite_recording_pattern (output, surface,
+								    op, pattern,
+								    pattern_id,
+								    parent_matrix,
+								    extra_attributes);
     }
 
     return _cairo_svg_surface_emit_composite_surface_pattern (output, surface,

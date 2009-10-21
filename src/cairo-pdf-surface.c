@@ -46,7 +46,7 @@
 #include "cairo-pdf-operators-private.h"
 #include "cairo-analysis-surface-private.h"
 #include "cairo-image-info-private.h"
-#include "cairo-meta-surface-private.h"
+#include "cairo-recording-surface-private.h"
 #include "cairo-output-stream-private.h"
 #include "cairo-paginated-private.h"
 #include "cairo-scaled-font-subsets-private.h"
@@ -1046,11 +1046,11 @@ _get_source_surface_size (cairo_surface_t         *source,
     const unsigned char *mime_data;
     unsigned int mime_data_length;
 
-    if (_cairo_surface_is_meta (source)) {
-	cairo_meta_surface_t *meta_surface = (cairo_meta_surface_t *) source;
+    if (_cairo_surface_is_recording (source)) {
+	cairo_recording_surface_t *recording_surface = (cairo_recording_surface_t *) source;
 	cairo_box_t bbox;
 
-	status = _cairo_meta_surface_get_bbox (meta_surface, &bbox, NULL);
+	status = _cairo_recording_surface_get_bbox (recording_surface, &bbox, NULL);
 	if (unlikely (status))
 	    return status;
 
@@ -2198,18 +2198,18 @@ BAIL:
 
 
 static cairo_status_t
-_cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
-				      cairo_surface_t      *meta_surface,
-				      cairo_pdf_resource_t  resource)
+_cairo_pdf_surface_emit_recording_surface (cairo_pdf_surface_t  *surface,
+					   cairo_surface_t      *recording_surface,
+					   cairo_pdf_resource_t  resource)
 {
     double old_width, old_height;
     cairo_paginated_mode_t old_paginated_mode;
-    cairo_rectangle_int_t meta_extents;
+    cairo_rectangle_int_t recording_extents;
     cairo_bool_t is_bounded;
     cairo_status_t status;
     int alpha = 0;
 
-    is_bounded = _cairo_surface_get_extents (meta_surface, &meta_extents);
+    is_bounded = _cairo_surface_get_extents (recording_surface, &recording_extents);
     assert (is_bounded);
 
     old_width = surface->width;
@@ -2217,10 +2217,10 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
     old_paginated_mode = surface->paginated_mode;
 
     _cairo_pdf_surface_set_size_internal (surface,
-					  meta_extents.width,
-					  meta_extents.height);
+					  recording_extents.width,
+					  recording_extents.height);
     /* Patterns are emitted after fallback images. The paginated mode
-     * needs to be set to _RENDER while the meta surface is replayed
+     * needs to be set to _RENDER while the recording surface is replayed
      * back to this surface.
      */
     surface->paginated_mode = CAIRO_PAGINATED_MODE_RENDER;
@@ -2229,7 +2229,7 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
     if (unlikely (status))
 	return status;
 
-    if (cairo_surface_get_content (meta_surface) == CAIRO_CONTENT_COLOR) {
+    if (cairo_surface_get_content (recording_surface) == CAIRO_CONTENT_COLOR) {
 	status = _cairo_pdf_surface_add_alpha (surface, 1.0, &alpha);
 	if (unlikely (status))
 	    return status;
@@ -2241,8 +2241,8 @@ _cairo_pdf_surface_emit_meta_surface (cairo_pdf_surface_t  *surface,
 				     surface->height);
     }
 
-    status = _cairo_meta_surface_replay_region (meta_surface, &surface->base,
-						CAIRO_META_REGION_NATIVE);
+    status = _cairo_recording_surface_replay_region (recording_surface, &surface->base,
+						     CAIRO_RECORDING_REGION_NATIVE);
     assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
     if (unlikely (status))
 	return status;
@@ -2261,8 +2261,8 @@ static cairo_status_t
 _cairo_pdf_surface_emit_surface (cairo_pdf_surface_t        *surface,
 				 cairo_pdf_source_surface_t *src_surface)
 {
-    if (_cairo_surface_is_meta (src_surface->surface)) {
-	return _cairo_pdf_surface_emit_meta_surface (surface,
+    if (_cairo_surface_is_recording (src_surface->surface)) {
+	return _cairo_pdf_surface_emit_recording_surface (surface,
 						     src_surface->surface,
 						     src_surface->hash_entry->surface_res);
     } else {
@@ -2291,7 +2291,7 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
     char draw_surface[200];
 
     if (pattern->base.extend == CAIRO_EXTEND_PAD &&
-	 ! _cairo_surface_is_meta (pattern->surface))
+	 ! _cairo_surface_is_recording (pattern->surface))
     {
 	status = _cairo_pdf_surface_emit_padded_image_surface (surface,
 							       pdf_pattern,
@@ -2422,7 +2422,7 @@ _cairo_pdf_surface_emit_surface_pattern (cairo_pdf_surface_t	*surface,
     if (unlikely (status))
 	return status;
 
-    if (_cairo_surface_is_meta (pattern->surface)) {
+    if (_cairo_surface_is_recording (pattern->surface)) {
 	snprintf(draw_surface,
 		 sizeof (draw_surface),
 		 "/x%d Do\n",
@@ -3293,7 +3293,7 @@ _cairo_pdf_surface_paint_surface_pattern (cairo_pdf_surface_t     *surface,
     cairo_matrix_multiply (&pdf_p2d, &cairo_p2d, &pdf_p2d);
     cairo_matrix_translate (&pdf_p2d, 0.0, height);
     cairo_matrix_scale (&pdf_p2d, 1.0, -1.0);
-    if (! _cairo_surface_is_meta (source->surface))
+    if (! _cairo_surface_is_recording (source->surface))
 	cairo_matrix_scale (&pdf_p2d, width, height);
 
     status = _cairo_pdf_operators_flush (&surface->pdf_operators);
@@ -4935,7 +4935,7 @@ _cairo_pdf_surface_write_patterns_and_smask_groups (cairo_pdf_surface_t *surface
      * to be appended to surface->smask_groups. Additional patterns
      * may also be appended to surface->patterns.
      *
-     * Writing meta surface patterns will cause additional patterns
+     * Writing recording surface patterns will cause additional patterns
      * and groups to be appended.
      */
     pattern_index = 0;
@@ -5091,7 +5091,7 @@ _surface_pattern_supported (cairo_surface_pattern_t *pattern)
 {
     cairo_extend_t extend;
 
-    if (_cairo_surface_is_meta (pattern->surface))
+    if (_cairo_surface_is_recording (pattern->surface))
 	return TRUE;
 
     if (pattern->surface->backend->acquire_source_image == NULL)
@@ -5230,11 +5230,11 @@ _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t  *surface,
 	if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	    cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
 
-	    if ( _cairo_surface_is_meta (surface_pattern->surface)) {
+	    if ( _cairo_surface_is_recording (surface_pattern->surface)) {
 		if (pattern->extend == CAIRO_EXTEND_PAD)
 		    return CAIRO_INT_STATUS_UNSUPPORTED;
 		else
-		    return CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN;
+		    return CAIRO_INT_STATUS_ANALYZE_RECORDING_SURFACE_PATTERN;
 	    }
 	}
 
@@ -5248,14 +5248,14 @@ _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t  *surface,
 	if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
 	    cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
 
-	    if (_cairo_surface_is_meta (surface_pattern->surface)) {
+	    if (_cairo_surface_is_recording (surface_pattern->surface)) {
 		if (_cairo_pattern_is_opaque (pattern)) {
-		    return CAIRO_INT_STATUS_ANALYZE_META_SURFACE_PATTERN;
+		    return CAIRO_INT_STATUS_ANALYZE_RECORDING_SURFACE_PATTERN;
 		} else {
 		    /* FIXME: The analysis surface does not yet have
-		     * the capability to analyze a non opaque meta
+		     * the capability to analyze a non opaque recording
 		     * surface and mark it supported if there is
-		     * nothing underneath. For now meta surfaces of
+		     * nothing underneath. For now recording surfaces of
 		     * type CONTENT_COLOR_ALPHA painted with
 		     * OPERATOR_SOURCE will result in a fallback
 		     * image. */

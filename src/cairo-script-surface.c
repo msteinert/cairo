@@ -37,7 +37,7 @@
 /* The script surface is one that records all operations performed on
  * it in the form of a procedural script, similar in fashion to
  * PostScript but using Cairo's imaging model. In essence, this is
- * equivalent to the meta-surface, but as there is no impedance mismatch
+ * equivalent to the recording-surface, but as there is no impedance mismatch
  * between Cairo and CairoScript, we can generate output immediately
  * without having to copy and hold the data in memory.
  */
@@ -49,7 +49,7 @@
 #include "cairo-analysis-surface-private.h"
 #include "cairo-ft-private.h"
 #include "cairo-list-private.h"
-#include "cairo-meta-surface-private.h"
+#include "cairo-recording-surface-private.h"
 #include "cairo-output-stream-private.h"
 #include "cairo-scaled-font-private.h"
 #include "cairo-surface-clipper-private.h"
@@ -929,22 +929,22 @@ _emit_radial_pattern (cairo_script_surface_t *surface,
 }
 
 static cairo_status_t
-_emit_meta_surface_pattern (cairo_script_surface_t *surface,
-			    const cairo_pattern_t *pattern)
+_emit_recording_surface_pattern (cairo_script_surface_t *surface,
+				 const cairo_pattern_t *pattern)
 {
     cairo_script_implicit_context_t old_cr;
     cairo_surface_pattern_t *surface_pattern;
-    cairo_meta_surface_t *source;
+    cairo_recording_surface_t *source;
     cairo_script_surface_t *similar;
     cairo_status_t status;
     cairo_box_t bbox;
     cairo_rectangle_int_t rect;
 
     surface_pattern = (cairo_surface_pattern_t *) pattern;
-    source = (cairo_meta_surface_t *) surface_pattern->surface;
+    source = (cairo_recording_surface_t *) surface_pattern->surface;
 
     /* first measure the extents */
-    status = _cairo_meta_surface_get_bbox (source, &bbox, NULL);
+    status = _cairo_recording_surface_get_bbox (source, &bbox, NULL);
     if (unlikely (status))
 	return status;
 
@@ -972,7 +972,7 @@ _emit_meta_surface_pattern (cairo_script_surface_t *surface,
 
     old_cr = surface->cr;
     _cairo_script_implicit_context_init (&surface->cr);
-    status = _cairo_meta_surface_replay (&source->base, &similar->base);
+    status = _cairo_recording_surface_replay (&source->base, &similar->base);
     surface->cr = old_cr;
 
     if (unlikely (status)) {
@@ -1346,8 +1346,8 @@ _emit_surface_pattern (cairo_script_surface_t *surface,
     source = surface_pattern->surface;
 
     switch ((int) source->type) {
-    case CAIRO_SURFACE_TYPE_META:
-	return _emit_meta_surface_pattern (surface, pattern);
+    case CAIRO_SURFACE_TYPE_RECORDING:
+	return _emit_recording_surface_pattern (surface, pattern);
     case CAIRO_SURFACE_TYPE_SCRIPT:
 	return _emit_script_surface_pattern (surface, pattern);
     default:
@@ -2655,8 +2655,8 @@ _emit_scaled_glyph_vector (cairo_script_surface_t *surface,
 
     old_cr = surface->cr;
     _cairo_script_implicit_context_init (&surface->cr);
-    status = _cairo_meta_surface_replay (scaled_glyph->meta_surface,
-					&surface->base);
+    status = _cairo_recording_surface_replay (scaled_glyph->recording_surface,
+					      &surface->base);
     surface->cr = old_cr;
 
     _cairo_output_stream_puts (surface->ctx->stream, "} >> set\n");
@@ -2763,7 +2763,7 @@ _emit_scaled_glyphs (cairo_script_surface_t *surface,
 
 	status = _cairo_scaled_glyph_lookup (scaled_font,
 					     glyphs[n].index,
-					     CAIRO_SCALED_GLYPH_INFO_META_SURFACE,
+					     CAIRO_SCALED_GLYPH_INFO_RECORDING_SURFACE,
 					     &scaled_glyph);
 	if (_cairo_status_is_error (status))
 	    break;
@@ -3397,8 +3397,8 @@ cairo_script_surface_create_for_target (cairo_script_context_t *context,
 }
 
 cairo_status_t
-cairo_script_from_meta_surface (cairo_script_context_t *context,
-				cairo_surface_t *meta)
+cairo_script_from_recording_surface (cairo_script_context_t *context,
+				     cairo_surface_t *recording_surface)
 {
     cairo_box_t bbox;
     cairo_rectangle_int_t extents;
@@ -3408,13 +3408,13 @@ cairo_script_from_meta_surface (cairo_script_context_t *context,
     if (unlikely (context->status))
 	return context->status;
 
-    if (unlikely (meta->status))
-	return meta->status;
+    if (unlikely (recording_surface->status))
+	return recording_surface->status;
 
-    if (unlikely (! _cairo_surface_is_meta (meta)))
+    if (unlikely (! _cairo_surface_is_recording (recording_surface)))
 	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
 
-    status = _cairo_meta_surface_get_bbox ((cairo_meta_surface_t *) meta,
+    status = _cairo_recording_surface_get_bbox ((cairo_recording_surface_t *) recording_surface,
 					   &bbox, NULL);
     if (unlikely (status))
 	return status;
@@ -3422,7 +3422,7 @@ cairo_script_from_meta_surface (cairo_script_context_t *context,
     _cairo_box_round_to_rectangle (&bbox, &extents);
 
     surface = &_cairo_script_surface_create_internal (context,
-						      meta->content,
+						      recording_surface->content,
 						      extents.width,
 						      extents.height,
 						      NULL)->base;
@@ -3430,7 +3430,7 @@ cairo_script_from_meta_surface (cairo_script_context_t *context,
 	return surface->status;
 
     cairo_surface_set_device_offset (surface, -extents.x, -extents.y);
-    status = _cairo_meta_surface_replay (meta, surface);
+    status = _cairo_recording_surface_replay (recording_surface, surface);
     cairo_surface_destroy (surface);
 
     return status;

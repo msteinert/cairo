@@ -1,3 +1,10 @@
+API changes:
+
+  cairo_recording_surface_create()
+  cairo_recording_surface_ink_extents()
+
+    Renamed meta-surfaces to recording-surfaces for clarity.
+
 Snapshot 1.9.4 (2009-10-15)
 ===========================
 API additions:

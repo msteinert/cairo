@@ -67,7 +67,7 @@ cairo_private = \
 	cairo-image-info-private.h \
 	cairo-list-private.h \
 	cairo-malloc-private.h \
-	cairo-meta-surface-private.h \
+	cairo-recording-surface-private.h \
 	cairo-mutex-impl-private.h \
 	cairo-mutex-list-private.h \
 	cairo-mutex-private.h \
@@ -122,7 +122,7 @@ cairo_sources = \
 	cairo-image-surface.c \
 	cairo-lzw.c \
 	cairo-matrix.c \
-	cairo-meta-surface.c \
+	cairo-recording-surface.c \
 	cairo-misc.c \
 	cairo-mutex.c \
 	cairo-output-stream.c \

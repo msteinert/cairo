@@ -131,7 +131,7 @@ test_sources = \
 	mask-surface-ctm.c				\
 	mask-transformed-image.c			\
 	mask-transformed-similar.c			\
-	meta-surface-pattern.c				\
+	recording-surface-pattern.c			\
 	mime-data.c					\
 	miter-precision.c				\
 	move-to-show-surface.c				\

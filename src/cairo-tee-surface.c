@@ -159,14 +159,14 @@ _cairo_tee_surface_snapshot (void *abstract_surface)
     cairo_surface_wrapper_t *slaves;
     int num_slaves, n;
 
-    /* we prefer to use a meta surface for our snapshots */
-    if (_cairo_surface_is_meta (surface->master.target))
+    /* we prefer to use a recording surface for our snapshots */
+    if (_cairo_surface_is_recording (surface->master.target))
 	return _cairo_surface_wrapper_snapshot (&surface->master);
 
     num_slaves = _cairo_array_num_elements (&surface->slaves);
     slaves = _cairo_array_index (&surface->slaves, 0);
     for (n = 0; n < num_slaves; n++) {
-	if (_cairo_surface_is_meta (slaves[n].target))
+	if (_cairo_surface_is_recording (slaves[n].target))
 	    return _cairo_surface_wrapper_snapshot (&slaves[n]);
     }
 

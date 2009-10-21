@@ -1933,7 +1933,7 @@ cairo_stroke_to_path (cairo_t *cr)
     if (unlikely (cr->status))
 	return;
 
-    /* The code in _cairo_meta_surface_get_path has a poorman's stroke_to_path */
+    /* The code in _cairo_recording_surface_get_path has a poorman's stroke_to_path */
 
     status = _cairo_gstate_stroke_path (cr->gstate);
     if (unlikely (status))

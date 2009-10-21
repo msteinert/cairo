@@ -199,8 +199,8 @@ _cairo_scaled_glyph_fini (cairo_scaled_font_t *scaled_font,
     if (scaled_glyph->path != NULL)
 	_cairo_path_fixed_destroy (scaled_glyph->path);
 
-    if (scaled_glyph->meta_surface != NULL)
-	cairo_surface_destroy (scaled_glyph->meta_surface);
+    if (scaled_glyph->recording_surface != NULL)
+	cairo_surface_destroy (scaled_glyph->recording_surface);
 }
 
 #define ZOMBIE 0
@@ -2516,13 +2516,13 @@ _cairo_scaled_glyph_set_path (cairo_scaled_glyph_t *scaled_glyph,
 }
 
 void
-_cairo_scaled_glyph_set_meta_surface (cairo_scaled_glyph_t *scaled_glyph,
-				      cairo_scaled_font_t *scaled_font,
-				      cairo_surface_t *meta_surface)
+_cairo_scaled_glyph_set_recording_surface (cairo_scaled_glyph_t *scaled_glyph,
+					   cairo_scaled_font_t *scaled_font,
+					   cairo_surface_t *recording_surface)
 {
-    if (scaled_glyph->meta_surface != NULL)
-	cairo_surface_destroy (meta_surface);
-    scaled_glyph->meta_surface = meta_surface;
+    if (scaled_glyph->recording_surface != NULL)
+	cairo_surface_destroy (recording_surface);
+    scaled_glyph->recording_surface = recording_surface;
 }
 
 static cairo_bool_t
@@ -2703,10 +2703,10 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 	need_info |= CAIRO_SCALED_GLYPH_INFO_PATH;
     }
 
-    if ((info & CAIRO_SCALED_GLYPH_INFO_META_SURFACE) != 0 &&
-	scaled_glyph->meta_surface == NULL)
+    if ((info & CAIRO_SCALED_GLYPH_INFO_RECORDING_SURFACE) != 0 &&
+	scaled_glyph->recording_surface == NULL)
     {
-	need_info |= CAIRO_SCALED_GLYPH_INFO_META_SURFACE;
+	need_info |= CAIRO_SCALED_GLYPH_INFO_RECORDING_SURFACE;
     }
 
     if (need_info) {
@@ -2718,7 +2718,7 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 
 	/* Don't trust the scaled_glyph_init() return value, the font
 	 * backend may not even know about some of the info.  For example,
-	 * no backend other than the user-fonts knows about meta-surface
+	 * no backend other than the user-fonts knows about recording-surface
 	 * glyph info. */
 
 	if ((info & CAIRO_SCALED_GLYPH_INFO_SURFACE) != 0 &&
@@ -2735,8 +2735,8 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 	    goto CLEANUP;
 	}
 
-	if ((info & CAIRO_SCALED_GLYPH_INFO_META_SURFACE) != 0 &&
-	    scaled_glyph->meta_surface == NULL)
+	if ((info & CAIRO_SCALED_GLYPH_INFO_RECORDING_SURFACE) != 0 &&
+	    scaled_glyph->recording_surface == NULL)
 	{
 	    status = CAIRO_INT_STATUS_UNSUPPORTED;
 	    goto CLEANUP;
