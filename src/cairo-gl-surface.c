@@ -450,28 +450,20 @@ _cairo_gl_surface_init (cairo_gl_context_t *ctx,
     surface->height = height;
 }
 
-cairo_surface_t *
-cairo_gl_surface_create (cairo_gl_context_t   *ctx,
-			 cairo_content_t	content,
-			 int			width,
-			 int			height)
+static cairo_surface_t *
+_cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
+				  cairo_content_t	content,
+				  int			width,
+				  int			height)
 {
     cairo_gl_surface_t *surface;
     GLenum err, format;
     cairo_status_t status;
 
-    if (!CAIRO_CONTENT_VALID (content))
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_CONTENT));
-
-    if (ctx == NULL) {
-	return cairo_image_surface_create (_cairo_format_from_content (content),
-					   width, height);
-    }
     if (ctx->status)
 	return _cairo_surface_create_in_error (ctx->status);
 
-    if (width > ctx->max_framebuffer_size || height > ctx->max_framebuffer_size)
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
+    assert (width <= ctx->max_framebuffer_size && height <= ctx->max_framebuffer_size);
 
     surface = calloc (1, sizeof (cairo_gl_surface_t));
     if (unlikely (surface == NULL))
@@ -519,6 +511,30 @@ cairo_gl_surface_create (cairo_gl_context_t   *ctx,
     status = glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT);
     if (status != GL_FRAMEBUFFER_COMPLETE_EXT)
 	fprintf (stderr, "destination is framebuffer incomplete\n");
+
+    return &surface->base;
+}
+
+cairo_surface_t *
+cairo_gl_surface_create (cairo_gl_context_t   *ctx,
+			 cairo_content_t	content,
+			 int			width,
+			 int			height)
+{
+    cairo_gl_surface_t *surface;
+
+    if (!CAIRO_CONTENT_VALID (content))
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_CONTENT));
+
+    if (ctx == NULL) {
+	return cairo_image_surface_create (_cairo_format_from_content (content),
+					   width, height);
+    }
+
+    surface = (cairo_gl_surface_t *)
+	_cairo_gl_surface_create_scratch (ctx, content, width, height);
+    if (unlikely (surface->base.status))
+	return &surface->base;
 
     /* Cairo surfaces start out initialized to transparent (black) */
     ctx = _cairo_gl_context_acquire (surface->ctx);
@@ -611,7 +627,7 @@ _cairo_gl_surface_create_similar (void		 *abstract_surface,
     if (height < 1)
 	height = 1;
 
-    return cairo_gl_surface_create (surface->ctx, content, width, height);
+    return _cairo_gl_surface_create_scratch (surface->ctx, content, width, height);
 }
 
 cairo_status_t
