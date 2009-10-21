@@ -51,8 +51,10 @@ const cairo_surface_t name = {					\
     CAIRO_CONTENT_COLOR,		/* content */		\
     CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */		\
     status,				/* status */		\
-    FALSE,				/* finished */		\
     0,					/* unique id */		\
+    FALSE,				/* finished */		\
+    TRUE,				/* is_clear */		\
+    FALSE,				/* has_font_options */	\
     { 0, 0, 0, NULL, },			/* user_data */		\
     { 0, 0, 0, NULL, },			/* mime_data */         \
     { 1.0, 0.0, 0.0, 1.0, 0.0, 0.0 },   /* device_transform */	\
@@ -68,7 +70,6 @@ const cairo_surface_t name = {					\
       0,	/* element_size */				\
       NULL,	/* elements */					\
     },					/* snapshots */		\
-    FALSE,				/* has_font_options */	\
     { CAIRO_ANTIALIAS_DEFAULT,		/* antialias */		\
       CAIRO_SUBPIXEL_ORDER_DEFAULT,	/* subpixel_order */	\
       CAIRO_HINT_STYLE_DEFAULT,		/* hint_style */	\
@@ -343,8 +344,9 @@ _cairo_surface_init (cairo_surface_t			*surface,
 
     CAIRO_REFERENCE_COUNT_INIT (&surface->ref_count, 1);
     surface->status = CAIRO_STATUS_SUCCESS;
-    surface->finished = FALSE;
     surface->unique_id = _cairo_surface_allocate_unique_id ();
+    surface->finished = FALSE;
+    surface->is_clear = FALSE;
 
     _cairo_user_data_array_init (&surface->user_data);
     _cairo_user_data_array_init (&surface->mime_data);
@@ -1029,6 +1031,8 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
      * modifying the surface independently of cairo (and thus having to
      * call mark_dirty()). */
     assert (! _cairo_surface_has_snapshots (surface));
+
+    surface->is_clear = FALSE;
 
     if (surface->backend->mark_dirty_rectangle != NULL) {
 	/* XXX: FRAGILE: We're ignoring the scaling component of
@@ -1924,6 +1928,14 @@ _cairo_surface_paint (cairo_surface_t	*surface,
     if (clip && clip->all_clipped)
 	return CAIRO_STATUS_SUCCESS;
 
+    if (op == CAIRO_OPERATOR_CLEAR) {
+	if (surface->is_clear)
+	    return CAIRO_STATUS_SUCCESS;
+
+	if (clip == NULL)
+	    surface->is_clear = TRUE;
+    }
+
     _cairo_surface_begin_modification (surface);
 
     if (surface->backend->paint != NULL) {
@@ -1935,6 +1947,8 @@ _cairo_surface_paint (cairo_surface_t	*surface,
     status = _cairo_surface_fallback_paint (surface, op, source, clip);
 
  FINISH:
+    surface->is_clear &= op == CAIRO_OPERATOR_CLEAR;
+
     return _cairo_surface_set_error (surface, status);
 }
 
@@ -1953,6 +1967,16 @@ _cairo_surface_mask (cairo_surface_t		*surface,
     if (clip && clip->all_clipped)
 	return CAIRO_STATUS_SUCCESS;
 
+    if (op == CAIRO_OPERATOR_CLEAR && surface->is_clear)
+	return CAIRO_STATUS_SUCCESS;
+
+    /* If the mask is blank, this is just an expensive no-op */
+    if (mask->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	const cairo_surface_pattern_t *spattern = (cairo_surface_pattern_t *) mask;
+	if (spattern->surface->is_clear)
+	    return CAIRO_STATUS_SUCCESS;
+    }
+
     _cairo_surface_begin_modification (surface);
 
     if (surface->backend->mask != NULL) {
@@ -1964,6 +1988,8 @@ _cairo_surface_mask (cairo_surface_t		*surface,
     status = _cairo_surface_fallback_mask (surface, op, source, mask, clip);
 
  FINISH:
+    surface->is_clear &= op == CAIRO_OPERATOR_CLEAR;
+
     return _cairo_surface_set_error (surface, status);
 }
 
@@ -1992,6 +2018,13 @@ _cairo_surface_fill_stroke (cairo_surface_t	    *surface,
     if (clip && clip->all_clipped)
 	return CAIRO_STATUS_SUCCESS;
 
+    if (surface->is_clear &&
+	fill_op == CAIRO_OPERATOR_CLEAR &&
+	stroke_op == CAIRO_OPERATOR_CLEAR)
+    {
+	return CAIRO_STATUS_SUCCESS;
+    }
+
     _cairo_surface_begin_modification (surface);
 
     if (surface->backend->fill_stroke) {
@@ -2009,23 +2042,27 @@ _cairo_surface_fill_stroke (cairo_surface_t	    *surface,
 						clip);
 
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return _cairo_surface_set_error (surface, status);
+	    goto FINISH;
     }
 
     status = _cairo_surface_fill (surface, fill_op, fill_source, path,
 				  fill_rule, fill_tolerance, fill_antialias,
 				  clip);
     if (unlikely (status))
-	return _cairo_surface_set_error (surface, status);
+	goto FINISH;
 
     status = _cairo_surface_stroke (surface, stroke_op, stroke_source, path,
 				    stroke_style, stroke_ctm, stroke_ctm_inverse,
 				    stroke_tolerance, stroke_antialias,
 				    clip);
     if (unlikely (status))
-	return _cairo_surface_set_error (surface, status);
+	goto FINISH;
 
-    return CAIRO_STATUS_SUCCESS;
+  FINISH:
+    surface->is_clear &= fill_op == CAIRO_OPERATOR_CLEAR;
+    surface->is_clear &= stroke_op == CAIRO_OPERATOR_CLEAR;
+
+    return _cairo_surface_set_error (surface, status);
 }
 
 cairo_status_t
@@ -2048,6 +2085,9 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
     if (clip && clip->all_clipped)
 	return CAIRO_STATUS_SUCCESS;
 
+    if (op == CAIRO_OPERATOR_CLEAR && surface->is_clear)
+	return CAIRO_STATUS_SUCCESS;
+
     _cairo_surface_begin_modification (surface);
 
     if (surface->backend->stroke != NULL) {
@@ -2068,6 +2108,8 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
 					     clip);
 
  FINISH:
+    surface->is_clear &= op == CAIRO_OPERATOR_CLEAR;
+
     return _cairo_surface_set_error (surface, status);
 }
 
@@ -2089,6 +2131,9 @@ _cairo_surface_fill (cairo_surface_t	*surface,
     if (clip && clip->all_clipped)
 	return CAIRO_STATUS_SUCCESS;
 
+    if (op == CAIRO_OPERATOR_CLEAR && surface->is_clear)
+	return CAIRO_STATUS_SUCCESS;
+
     _cairo_surface_begin_modification (surface);
 
     if (surface->backend->fill != NULL) {
@@ -2107,6 +2152,8 @@ _cairo_surface_fill (cairo_surface_t	*surface,
 					   clip);
 
  FINISH:
+    surface->is_clear &= op == CAIRO_OPERATOR_CLEAR;
+
     return _cairo_surface_set_error (surface, status);
 }
 
@@ -2408,6 +2455,9 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
     if (clip && clip->all_clipped)
 	return CAIRO_STATUS_SUCCESS;
 
+    if (op == CAIRO_OPERATOR_CLEAR && surface->is_clear)
+	return CAIRO_STATUS_SUCCESS;
+
     _cairo_surface_begin_modification (surface);
 
     if (_cairo_surface_has_device_transform (surface) &&
@@ -2503,6 +2553,8 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 
     if (dev_scaled_font != scaled_font)
 	cairo_scaled_font_destroy (dev_scaled_font);
+
+    surface->is_clear &= op == CAIRO_OPERATOR_CLEAR;
 
     return _cairo_surface_set_error (surface, status);
 }

@@ -527,6 +527,8 @@ cairo_gl_surface_create (cairo_gl_context_t   *ctx,
     glClear (GL_COLOR_BUFFER_BIT);
     _cairo_gl_context_release (ctx);
 
+    surface->base.is_clear = TRUE;
+
     return &surface->base;
 }
 slim_hidden_def (cairo_gl_surface_create);

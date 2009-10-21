@@ -190,7 +190,6 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
     surface->height = height;
     surface->stride = pixman_image_get_stride (pixman_image);
     surface->depth = pixman_image_get_depth (pixman_image);
-    surface->is_clear = FALSE;
 
     surface->clip_region = NULL;
 
@@ -393,7 +392,7 @@ _cairo_image_surface_create_with_pixman_format (unsigned char		*data,
     }
 
     /* we can not make any assumptions about the initial state of user data */
-    ((cairo_image_surface_t *) surface)->is_clear = data == NULL;
+    surface->is_clear = data == NULL;
     return surface;
 }
 
@@ -1154,8 +1153,6 @@ _cairo_image_surface_composite (cairo_operator_t	 op,
 	_cairo_pattern_release_surface (mask_pattern, &mask->base, &mask_attr);
 
     _cairo_pattern_release_surface (src_pattern, &src->base, &src_attr);
-    if (op != CAIRO_OPERATOR_CLEAR)
-	dst->is_clear = FALSE;
 
     return status;
 }
@@ -1213,9 +1210,6 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
 
     if (pixman_rects != stack_rects)
 	free (pixman_rects);
-
-    if (op != CAIRO_OPERATOR_CLEAR)
-	surface->is_clear = FALSE;
 
     return status;
 }
@@ -1344,9 +1338,6 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 			    width, height);
 
     pixman_image_unref (mask);
-
-    if (op != CAIRO_OPERATOR_CLEAR)
-	dst->is_clear = FALSE;
 
     if (! _cairo_operator_bounded_by_mask (op)) {
 	status = _cairo_surface_composite_shape_fixup_unbounded (&dst->base,
@@ -1506,9 +1497,6 @@ _cairo_image_surface_span_renderer_finish (void *abstract_renderer)
 		rects->width, rects->height,
 		dst->clip_region);
 	}
-
-	if (renderer->op != CAIRO_OPERATOR_CLEAR)
-	    dst->is_clear = FALSE;
     }
     if (status != CAIRO_STATUS_SUCCESS)
 	return _cairo_span_renderer_set_error (abstract_renderer,
@@ -1615,35 +1603,6 @@ _cairo_image_surface_get_font_options (void                  *abstract_surface,
     cairo_font_options_set_hint_metrics (options, CAIRO_HINT_METRICS_ON);
 }
 
-static cairo_status_t
-_cairo_image_surface_mark_dirty_rectangle (void *abstract_surface,
-					   int x, int y,
-					   int width, int height)
-{
-    cairo_image_surface_t *surface = abstract_surface;
-    surface->is_clear = FALSE;
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_int_status_t
-_cairo_image_surface_paint (void *abstract_surface,
-			    cairo_operator_t	 op,
-			    const cairo_pattern_t *source,
-			    cairo_clip_t	    *clip)
-{
-    /* we know that surfaces are calloc, so ignore any redundant clears */
-    if (op == CAIRO_OPERATOR_CLEAR && clip == NULL) {
-	cairo_image_surface_t *surface = abstract_surface;
-
-	if (surface->is_clear)
-	    return CAIRO_STATUS_SUCCESS;
-
-	surface->is_clear = TRUE;
-    }
-
-    return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
 /**
  * _cairo_surface_is_image:
  * @surface: a #cairo_surface_t
@@ -1678,11 +1637,11 @@ const cairo_surface_backend_t _cairo_image_surface_backend = {
     NULL, /* old_show_glyphs */
     _cairo_image_surface_get_font_options,
     NULL, /* flush */
-    _cairo_image_surface_mark_dirty_rectangle,
+    NULL, /* mark dirty */
     NULL, /* font_fini */
     NULL, /* glyph_fini */
 
-    _cairo_image_surface_paint,
+    NULL, /* paint */
     NULL, /* mask */
     NULL, /* stroke */
     NULL, /* fill */
