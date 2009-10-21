@@ -132,6 +132,15 @@ typedef struct _cairo cairo_t;
  * creates a bitmap image in memory.
  * The type of a surface can be queried with cairo_surface_get_type().
  *
+ * The initial contents of a surface after creation depend upon the manner
+ * of its creation. If cairo creates the surface and backing storage for
+ * the user, it will be initially cleared; for example,
+ * cairo_image_surface_create() and cairo_surface_create_similar().
+ * Alternatively, if the user passes in a reference to some backing storage
+ * and asks cairo to wrap that in a #cairo_surface_t, then the contents are
+ * not modified; for example, cairo_image_surface_create_for_data() and
+ * cairo_xlib_surface_create().
+ *
  * Memory management of #cairo_surface_t is done with
  * cairo_surface_reference() and cairo_surface_destroy().
  **/
