@@ -2446,9 +2446,6 @@ _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
     double x1, y1, x2, y2;
     cairo_status_t status;
 
-    if (pattern->extend != CAIRO_EXTEND_NONE)
-	goto UNBOUNDED;
-
     switch (pattern->type) {
     case CAIRO_PATTERN_TYPE_SOLID:
 	goto UNBOUNDED;
@@ -2462,6 +2459,12 @@ _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
 	    double pad;
 
 	    if (! _cairo_surface_get_extents (surface, &surface_extents))
+		goto UNBOUNDED;
+
+	    if (surface_extents.width == 0 || surface_extents.height == 0)
+		goto EMPTY;
+
+	    if (pattern->extend != CAIRO_EXTEND_NONE)
 		goto UNBOUNDED;
 
 	    /* The filter can effectively enlarge the extents of the
@@ -2483,6 +2486,9 @@ _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
 	    double cx2, cy2;
 	    double r, D;
 
+	    if (radial->r1 == 0 && radial->r2 == 0)
+		goto EMPTY;
+
 	    cx1 = _cairo_fixed_to_double (radial->c1.x);
 	    cy1 = _cairo_fixed_to_double (radial->c1.y);
 	    r = _cairo_fixed_to_double (radial->r1);
@@ -2492,6 +2498,9 @@ _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
 	    cx2 = _cairo_fixed_to_double (radial->c2.x);
 	    cy2 = _cairo_fixed_to_double (radial->c2.y);
 	    r = fabs (_cairo_fixed_to_double (radial->r2));
+
+	    if (pattern->extend != CAIRO_EXTEND_NONE)
+		goto UNBOUNDED;
 
 	    /* We need to be careful, as if the circles are not
 	     * self-contained, then the solution is actually unbounded.
@@ -2516,6 +2525,12 @@ _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
 	{
 	    const cairo_linear_pattern_t *linear =
 		(const cairo_linear_pattern_t *) pattern;
+
+	    if (linear->p1.x == linear->p2.x && linear->p1.y == linear->p2.y)
+		goto EMPTY;
+
+	    if (pattern->extend != CAIRO_EXTEND_NONE)
+		goto UNBOUNDED;
 
 	    if (pattern->matrix.xy != 0. || pattern->matrix.yx != 0.)
 		goto UNBOUNDED;
@@ -2570,6 +2585,12 @@ _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
   UNBOUNDED:
     /* unbounded patterns -> 'infinite' extents */
     _cairo_unbounded_rectangle_init (extents);
+    return;
+
+  EMPTY:
+    extents->x = extents->y = 0;
+    extents->width = extents->height = 0;
+    return;
 }
 
 
