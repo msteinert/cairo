@@ -187,7 +187,12 @@ _cairo_int64_divrem (cairo_int64_t num, cairo_int64_t den)
 static inline int32_t
 _cairo_int64_32_div (cairo_int64_t num, int32_t den)
 {
+#if !HAVE_UINT64_T
+    return _cairo_int64_to_int32
+	(_cairo_int64_divrem (num, _cairo_int32_to_int64 (den)).quo);
+#else
     return num / den;
+#endif
 }
 
 /*
