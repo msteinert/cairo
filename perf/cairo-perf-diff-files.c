@@ -55,21 +55,29 @@ test_diff_cmp_speedup_before_slowdown (const void *a, const void *b)
     const test_diff_t *b_diff = b;
 
     /* First make all speedups come before all slowdowns. */
-    if (a_diff->change > 1.0 && b_diff->change < 1.0)
+    if (a_diff->change > 0 && b_diff->change < 0)
 	return -1;
-    if (a_diff->change < 1.0 && b_diff->change > 1.0)
+    if (a_diff->change < 0 && b_diff->change > 0)
 	return 1;
 
     if (a_diff->change == b_diff->change)
 	return 0;
 
     /* Large speedups come first. */
-    if (a_diff->change > 1. && a_diff->change > b_diff->change)
-	return -1;
+    if (a_diff->change > 0) {
+	    if (a_diff->change > b_diff->change)
+		    return -1;
+	    else
+		    return 1;
+    }
 
     /* Large slowdowns come last. */
-    if (a_diff->change < 1. && a_diff->change < b_diff->change)
-	return 1;
+    if (a_diff->change < 0) {
+	    if (a_diff->change < b_diff->change)
+		    return 1;
+	    else
+		    return -1;
+    }
 
     return 0;
 }
@@ -95,7 +103,7 @@ test_diff_cmp (const void *a, const void *b)
 static void
 print_change_bar (double change, double max_change, int use_utf)
 {
-    int units_per_cell = (int) ceil (max_change / CHANGE_BAR_WIDTH);
+    int units_per_cell = ceil (max_change / CHANGE_BAR_WIDTH);
     static char const *ascii_boxes[8] = {
 	"****","***" ,"***", "**",
 	"**",  "*",   "*",   ""
