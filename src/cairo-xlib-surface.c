@@ -2058,6 +2058,7 @@ _cairo_xlib_surface_acquire_pattern_surface (cairo_xlib_surface_t *dst,
 	    attributes->filter   = CAIRO_FILTER_NEAREST;
 	    attributes->x_offset = 0;
 	    attributes->y_offset = 0;
+	    attributes->has_component_alpha = FALSE;
 
 	    *surface_out = surface;
 	    return CAIRO_STATUS_SUCCESS;
