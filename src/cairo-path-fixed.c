@@ -446,15 +446,22 @@ _cairo_path_fixed_line_to (cairo_path_fixed_t *path,
     if (! path->has_current_point)
 	return _cairo_path_fixed_move_to (path, point.x, point.y);
 
+    /* If the previous op was but the initial MOVE_TO and this segment
+     * is degenerate, then we can simply skip this point. Note that
+     * a move-to followed by a degenerate line-to is a valid path for
+     * stroking, but at all other times is simply a degenerate segment.
+     */
+    if (_cairo_path_last_op (path) != CAIRO_PATH_OP_MOVE_TO) {
+	if (x == path->current_point.x && y == path->current_point.y)
+	    return CAIRO_STATUS_SUCCESS;
+    }
+
     /* If the previous op was also a LINE_TO with the same gradient,
      * then just change its end-point rather than adding a new op.
      */
     if (_cairo_path_last_op (path) == CAIRO_PATH_OP_LINE_TO) {
 	cairo_path_buf_t *buf;
 	const cairo_point_t *p;
-
-	if (x == path->current_point.x && y == path->current_point.y)
-	    return CAIRO_STATUS_SUCCESS;
 
 	buf = cairo_path_tail (path);
 	if (likely (buf->num_points >= 2)) {
