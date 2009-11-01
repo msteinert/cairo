@@ -963,7 +963,8 @@ send_recording (struct client *c,
 static cairo_surface_t *
 _surface_create (void *closure,
 		 cairo_content_t content,
-		 double width, double height)
+		 double width, double height,
+		 long uid)
 {
     struct client *c = closure;
     cairo_surface_t *surface;

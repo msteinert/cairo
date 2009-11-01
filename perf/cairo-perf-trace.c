@@ -39,6 +39,10 @@
 #include <cairo-script-interpreter.h>
 #include <cairo-types-private.h> /* for INTERNAL_SURFACE_TYPE */
 
+/* rudely reuse bits of the library... */
+#include "../src/cairo-hash-private.h"
+#include "../src/cairo-error-private.h"
+
 /* For basename */
 #ifdef HAVE_LIBGEN_H
 #include <libgen.h>
@@ -193,12 +197,125 @@ clear_surface (cairo_surface_t *surface)
     cairo_destroy (cr);
 }
 
+struct scache {
+    cairo_hash_entry_t entry;
+    cairo_content_t content;
+    int width, height;
+    cairo_surface_t *surface;
+};
+
+static cairo_hash_table_t *surface_cache;
+static cairo_surface_t *surface_holdovers[16];
+
+static cairo_bool_t
+scache_equal (const void *A, const void *B)
+{
+    const struct scache *a = A, *b = B;
+    return a->entry.hash == b->entry.hash;
+}
+
+#define ARRAY_SIZE(A) (sizeof(A)/sizeof(A[0]))
+static void
+scache_mark_active (cairo_surface_t *surface)
+{
+    cairo_surface_t *t0, *t1;
+    unsigned n;
+
+    if (surface_cache == NULL)
+	return;
+
+    t0 = cairo_surface_reference (surface);
+    for (n = 0; n < ARRAY_SIZE (surface_holdovers); n++) {
+	if (surface_holdovers[n] == surface) {
+	    surface_holdovers[n] = t0;
+	    t0 = surface;
+	    break;
+	}
+
+	t1 = surface_holdovers[n];
+	surface_holdovers[n] = t0;
+	t0 = t1;
+    }
+    cairo_surface_destroy (t0);
+}
+
+static void
+scache_clear (void)
+{
+    unsigned n;
+
+    if (surface_cache == NULL)
+	return;
+
+    for (n = 0; n < ARRAY_SIZE (surface_holdovers); n++) {
+	cairo_surface_destroy (surface_holdovers[n]);
+	surface_holdovers[n] = NULL;
+    }
+}
+
+static void
+scache_remove (void *closure)
+{
+    _cairo_hash_table_remove (surface_cache, closure);
+    free (closure);
+}
+
 static cairo_surface_t *
 _similar_surface_create (void *closure,
 			 cairo_content_t content,
-			 double width, double height)
+			 double width, double height,
+			 long uid)
 {
-    return cairo_surface_create_similar (closure, content, width, height);
+    cairo_surface_t *surface;
+    struct scache skey, *s;
+
+    if (uid == 0 || surface_cache == NULL)
+	return cairo_surface_create_similar (closure, content, width, height);
+
+    skey.entry.hash = uid;
+    s = _cairo_hash_table_lookup (surface_cache, &skey.entry);
+    if (s != NULL) {
+	if (s->content == content &&
+	    s->width   == width   &&
+	    s->height  == height)
+	{
+	    return cairo_surface_reference (s->surface);
+	}
+
+	/* The surface has been resized, allow the original entry to expire
+	 * as it becomes inactive.
+	 */
+    }
+
+    surface = cairo_surface_create_similar (closure, content, width, height);
+    s = malloc (sizeof (struct scache));
+    if (s == NULL)
+	return surface;
+
+    s->entry.hash = uid;
+    s->content = content;
+    s->width = width;
+    s->height = height;
+    s->surface = surface;
+    if (_cairo_hash_table_insert (surface_cache, &s->entry)) {
+	free (s);
+    } else if (cairo_surface_set_user_data
+	       (surface,
+		(const cairo_user_data_key_t *) &surface_cache,
+		s, scache_remove))
+    {
+	scache_remove (s);
+    }
+
+    return surface;
+}
+
+static cairo_t *
+_context_create (void *closure,
+		 cairo_surface_t *surface)
+{
+    scache_mark_active (surface);
+    return cairo_create (surface);
 }
 
 static int user_interrupt;
@@ -227,7 +344,8 @@ execute (cairo_perf_t		 *perf,
     char *trace_cpy, *name, *dot;
     const cairo_script_interpreter_hooks_t hooks = {
 	.closure = target,
-	.surface_create = _similar_surface_create
+	.surface_create = _similar_surface_create,
+	.context_create = _context_create
     };
 
     trace_cpy = xstrdup (trace);
@@ -287,6 +405,8 @@ execute (cairo_perf_t		 *perf,
 	times[i] = cairo_perf_timer_elapsed ();
 
 	cairo_script_interpreter_finish (csi);
+	scache_clear ();
+
 	line_no = cairo_script_interpreter_get_line_number (csi);
 	status = cairo_script_interpreter_destroy (csi);
 	if (status) {
@@ -488,6 +608,7 @@ parse_options (cairo_perf_t *perf, int argc, char *argv[])
     const char *iters;
     char *end;
     int verbose = 0;
+    int use_surface_cache = 0;
 
     if ((iters = getenv ("CAIRO_PERF_ITERATIONS")) && *iters)
 	perf->iterations = strtol (iters, NULL, 0);
@@ -505,7 +626,7 @@ parse_options (cairo_perf_t *perf, int argc, char *argv[])
     perf->num_exclude_names = 0;
 
     while (1) {
-	c = _cairo_getopt (argc, argv, "i:x:lrv");
+	c = _cairo_getopt (argc, argv, "i:x:lrvc");
 	if (c == -1)
 	    break;
 
@@ -528,6 +649,9 @@ parse_options (cairo_perf_t *perf, int argc, char *argv[])
 	    break;
 	case 'v':
 	    verbose = 1;
+	    break;
+	case 'c':
+	    use_surface_cache = 1;
 	    break;
 	case 'x':
 	    if (! read_excludes (perf, optarg)) {
@@ -554,6 +678,9 @@ parse_options (cairo_perf_t *perf, int argc, char *argv[])
 	perf->names = &argv[optind];
 	perf->num_names = argc - optind;
     }
+
+    if (use_surface_cache)
+	surface_cache = _cairo_hash_table_create (scache_equal);
 }
 
 static void
@@ -761,4 +888,10 @@ main (int argc, char *argv[])
     cairo_perf_fini (&perf);
 
     return 0;
+}
+
+cairo_status_t
+_cairo_error (cairo_status_t status)
+{
+    return status;
 }

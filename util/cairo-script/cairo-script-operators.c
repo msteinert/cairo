@@ -5511,6 +5511,7 @@ _surface (csi_t *ctx)
     csi_surface_create_func_t hook;
     long content;
     cairo_surface_t *surface;
+    long uid;
     csi_status_t status;
 
     check (1);
@@ -5531,10 +5532,20 @@ _surface (csi_t *ctx)
     if (_csi_unlikely (status))
 	return status;
 
+    uid = 0;
+    status = _csi_dictionary_get_integer (ctx, dict, "uid", TRUE, &uid);
+    if (_csi_unlikely (status))
+	return status;
+    if (uid == 0) {
+	status = _csi_dictionary_get_integer (ctx, dict, "drawable", TRUE, &uid);
+	if (_csi_unlikely (status))
+	    return status;
+    }
+
     hook = ctx->hooks.surface_create;
     assert (hook != NULL);
 
-    surface = hook (ctx->hooks.closure, content, width, height);
+    surface = hook (ctx->hooks.closure, content, width, height, uid);
     if (_csi_unlikely (surface == NULL)) {
 	return _csi_error (CSI_STATUS_NULL_POINTER);
     }

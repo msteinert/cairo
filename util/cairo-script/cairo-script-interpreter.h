@@ -52,7 +52,8 @@ typedef cairo_surface_t *
 (*csi_surface_create_func_t) (void *closure,
 			      cairo_content_t content,
 			      double width,
-			      double height);
+			      double height,
+			      long uid);
 typedef cairo_t *
 (*csi_context_create_func_t) (void *closure,
 			      cairo_surface_t *surface);
