@@ -498,6 +498,13 @@ if test "x$have_pthread" = xno -a "x$use_pthread" = xyes; then
   AC_MSG_ERROR([pthread requested but not found])
 fi
 
+have_real_pthread=no
+real_pthread_REQUIRES="pthread"
+PKG_CHECK_MODULES(real_pthread, $real_pthread_REQUIRES,
+		  [have_real_pthread=yes],
+		  [AC_CHECK_HEADERS([pthread.h],, [have_real_pthread="no (requires $real_pthread_REQUIRES)"])])
+AM_CONDITIONAL(HAVE_REAL_PTHREAD, test "x$have_real_pthread" = "xyes")
+
 dnl ===========================================================================
 
 CAIRO_ENABLE_SURFACE_BACKEND(ps, PostScript, yes, [
