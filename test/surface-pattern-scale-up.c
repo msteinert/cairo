@@ -40,7 +40,9 @@ draw (cairo_t *cr, int width, int height)
     cairo_t * cr_surface;
     int surface_size = 6;
 
-    cairo_set_source_rgb (cr, 0, 0, 0);
+    /* Fill the background with grey, so that it's easily visible when
+     * things get overdrawn */
+    cairo_set_source_rgb (cr, 0.5, 0.5, 0.5);
     cairo_paint (cr);
 
     /* Create an image surface with my favorite four colors in each
