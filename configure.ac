@@ -652,11 +652,26 @@ AM_CONDITIONAL(BUILD_ANY2PPM,
 		 -o "x$any2ppm_cs"  = "xyes")
 
 dnl ===========================================================================
+dnl Some utilities need to dlopen the shared libraries, so they need to
+dnl know how libtools will name them
+
+case $host in
+*-*-darwin*)
+	SHLIB_EXT="dylib"
+	;;
+*)
+	SHLIB_EXT="so"
+	;;
+esac
+AC_DEFINE_UNQUOTED(SHARED_LIB_EXT, "${SHLIB_EXT}", [Shared library file extension])
+AC_SUBST(SHLIB_EXT)
+
+dnl ===========================================================================
 dnl The tracing utility requires LD_PRELOAD, so only build it for systems
 dnl that are known to work.
 
 case $host in
-*-linux*|*-*bsd*|*-solaris*)
+*-linux*|*-*bsd*|*-solaris*|*-*-darwin*)
 	have_ld_preload="yes"
 	;;
 *)

@@ -90,7 +90,7 @@ export CAIRO_TRACE_PROG_NAME
 
 if test "x$CAIRO_TRACE_SO" = "x"; then
     CAIRO_TRACE_SO=""
-    for lib in @libdir@/cairo/cairo-trace.so @libdir@/cairo/cairo-trace.so*; do
+    for lib in @libdir@/cairo/libcairo-trace.@SHLIB_EXT@ @libdir@/cairo/libcairo-trace.@SHLIB_EXT@* @libdir@/cairo/libcairo-trace.*.@SHLIB_EXT@ ; do
 	if test -h "$lib" -o -f "$lib"; then
 	    CAIRO_TRACE_SO="$lib"
 	    break
@@ -104,7 +104,11 @@ if test "x$CAIRO_TRACE_SO" = "x"; then
 fi
 
 LD_PRELOAD="$CAIRO_TRACE_SO"
+DYLD_INSERT_LIBRARIES="$CAIRO_TRACE_SO"
+DYLD_FORCE_FLAT_NAMESPACE=1
 export LD_PRELOAD
+export DYLD_INSERT_LIBRARIES
+export DYLD_FORCE_FLAT_NAMESPACE
 
 if test -n "$nocallers"; then
     CAIRO_TRACE_LINE_INFO=0
