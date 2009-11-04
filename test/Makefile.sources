@@ -233,6 +233,7 @@ test_sources = \
 	user-font-mask.c				\
 	user-font-proxy.c				\
 	user-font-rescale.c				\
+	xcomposite-projection.c				\
 	zero-alpha.c
 
 pthread_test_sources = pthread-show-text.c
