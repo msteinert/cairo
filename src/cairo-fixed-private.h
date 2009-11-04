@@ -217,6 +217,15 @@ _cairo_fixed_16_16_from_double (double d)
 #endif
 }
 
+static inline int
+_cairo_fixed_16_16_floor (cairo_fixed_t f)
+{
+    if (f >= 0)
+        return f >> 16;
+    else
+        return -((-f - 1) >> 16) - 1;
+}
+
 #if CAIRO_FIXED_BITS == 32
 
 static inline cairo_fixed_t

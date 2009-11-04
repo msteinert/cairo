@@ -2605,17 +2605,6 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
 	break;
     }
 
-    if (traps[0].left.p1.y < traps[0].left.p2.y) {
-	render_reference_x = _cairo_fixed_integer_floor (traps[0].left.p1.x);
-	render_reference_y = _cairo_fixed_integer_floor (traps[0].left.p1.y);
-    } else {
-	render_reference_x = _cairo_fixed_integer_floor (traps[0].left.p2.x);
-	render_reference_y = _cairo_fixed_integer_floor (traps[0].left.p2.y);
-    }
-
-    render_src_x = src_x + render_reference_x - dst_x;
-    render_src_y = src_y + render_reference_y - dst_y;
-
     status = _cairo_xlib_surface_set_clip_region (dst, clip_region);
     if (unlikely (status))
 	goto BAIL;
@@ -2673,6 +2662,17 @@ _cairo_xlib_surface_composite_trapezoids (cairo_operator_t	op,
 	    xtraps[i].right.p2.y = _cairo_fixed_to_16_16(traps[i].right.p2.y);
 	}
     }
+
+    if (xtraps[0].left.p1.y < xtraps[0].left.p2.y) {
+	render_reference_x = _cairo_fixed_16_16_floor (xtraps[0].left.p1.x);
+	render_reference_y = _cairo_fixed_16_16_floor (xtraps[0].left.p1.y);
+    } else {
+	render_reference_x = _cairo_fixed_16_16_floor (xtraps[0].left.p2.x);
+	render_reference_y = _cairo_fixed_16_16_floor (xtraps[0].left.p2.y);
+    }
+
+    render_src_x = src_x + render_reference_x - dst_x;
+    render_src_y = src_y + render_reference_y - dst_y;
 
     XRenderCompositeTrapezoids (dst->dpy,
 				_render_operator (op),
