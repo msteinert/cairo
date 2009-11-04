@@ -282,6 +282,7 @@ _cairo_xlib_screen_close_display (cairo_xlib_screen_t *info)
     } while (_cairo_atomic_int_cmpxchg (&info->gc_depths, old, 0) != old);
 #else
     old = info->gc_depths;
+    info->gc_depths = 0;
 #endif
 
     for (i = 0; i < ARRAY_LENGTH (info->gc); i++) {
