@@ -76,6 +76,6 @@ draw (cairo_t *cr, int width, int height)
 CAIRO_TEST (xcomposite_projection,
 	    "Test a bug with XRenderComposite reference computation when projecting the first trapezoid onto 16.16 space",
 	    "xlib", /* keywords */
-	    NULL, /* requirements */
+	    "target=raster", /* requirements */
 	    300, 150,
 	    NULL, draw)
