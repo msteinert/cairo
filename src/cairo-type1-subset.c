@@ -1108,7 +1108,8 @@ cairo_type1_font_subset_write_private_dict (cairo_type1_font_subset_t *font,
     if (unlikely (status))
 	return status;
 
-    _cairo_output_stream_write (font->output, "\n", 1);
+    if (font->hex_encode)
+	_cairo_output_stream_write (font->output, "\n", 1);
 
     return CAIRO_STATUS_SUCCESS;
 }
