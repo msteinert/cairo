@@ -1308,7 +1308,6 @@ _cairo_xcb_surface_composite (cairo_operator_t		op,
 
     status = _cairo_pattern_acquire_surfaces (src_pattern, mask_pattern,
 					      &dst->base,
-					      CAIRO_CONTENT_COLOR_ALPHA,
 					      src_x, src_y,
 					      mask_x, mask_y,
 					      width, height,
@@ -1673,7 +1672,6 @@ _cairo_xcb_surface_composite_trapezoids (cairo_operator_t	op,
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     status = _cairo_pattern_acquire_surface (pattern, &dst->base,
-					     CAIRO_CONTENT_COLOR_ALPHA,
 					     src_x, src_y, width, height,
 					     CAIRO_PATTERN_ACQUIRE_NO_REFLECT,
 					     (cairo_surface_t **) &src,
@@ -2766,7 +2764,6 @@ _cairo_xcb_surface_show_glyphs (void			*abstract_dst,
 
     if (src_pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
         status = _cairo_pattern_acquire_surface (src_pattern, &dst->base,
-						 CAIRO_CONTENT_COLOR_ALPHA,
                                                  0, 0, 1, 1,
 						 CAIRO_PATTERN_ACQUIRE_NONE,
                                                  (cairo_surface_t **) &src,
@@ -2783,7 +2780,6 @@ _cairo_xcb_surface_show_glyphs (void			*abstract_dst,
 	    goto BAIL;
 
         status = _cairo_pattern_acquire_surface (src_pattern, &dst->base,
-						 CAIRO_CONTENT_COLOR_ALPHA,
                                                  glyph_extents.x, glyph_extents.y,
                                                  glyph_extents.width, glyph_extents.height,
 						 CAIRO_PATTERN_ACQUIRE_NO_REFLECT,

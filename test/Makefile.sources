@@ -139,6 +139,7 @@ test_sources = \
 	nil-surface.c					\
 	operator.c					\
 	operator-alpha.c				\
+	operator-alpha-alpha.c				\
 	operator-clear.c				\
 	operator-source.c				\
 	over-above-source.c				\

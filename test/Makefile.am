@@ -671,6 +671,10 @@ REFERENCE_IMAGES = \
 	operator-alpha.rgb24.ref.png \
 	operator-alpha.svg12.argb32.xfail.png \
 	operator-alpha.svg12.rgb24.xfail.png \
+	operator-alpha-alpha.ref.png \
+	operator-alpha-alpha.pdf.xfail.png \
+	operator-alpha-alpha.ps.xfail.png \
+	operator-alpha-alpha.svg.xfail.png \
 	operator-clear.ps2.argb32.ref.png \
 	operator-clear.ps3.argb32.ref.png \
 	operator-clear.quartz.ref.png \
