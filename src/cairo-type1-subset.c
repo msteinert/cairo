@@ -58,6 +58,8 @@
 #include FT_OUTLINE_H
 #include FT_TYPE1_TABLES_H
 
+#include <ctype.h>
+
 typedef struct _cairo_type1_font_subset {
     cairo_scaled_font_subset_t *scaled_font_subset;
 
@@ -233,7 +235,7 @@ cairo_type1_font_subset_find_segments (cairo_type1_font_subset_t *font)
 {
     unsigned char *p;
     const char *eexec_token;
-    int size;
+    int size, i;
 
     p = (unsigned char *) font->type1_data;
     font->type1_end = font->type1_data + font->type1_length;
@@ -264,6 +266,10 @@ cairo_type1_font_subset_find_segments (cairo_type1_font_subset_t *font)
 	font->eexec_segment_size = font->type1_length - font->header_segment_size;
 	font->eexec_segment = (char *) p + font->header_segment_size;
 	font->eexec_segment_is_ascii = TRUE;
+	for (i = 0; i < 4; i++) {
+	    if (!isxdigit(font->eexec_segment[i]))
+		font->eexec_segment_is_ascii = FALSE;
+	}
     }
 
     return CAIRO_STATUS_SUCCESS;
