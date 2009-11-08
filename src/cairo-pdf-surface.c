@@ -3997,16 +3997,16 @@ _cairo_pdf_surface_emit_type1_font (cairo_pdf_surface_t		*surface,
     if (subset_resource.id == 0)
 	return CAIRO_STATUS_SUCCESS;
 
-    /* We ignore the zero-trailer and set Length3 to 0. */
-    length = subset->header_length + subset->data_length;
+    length = subset->header_length + subset->data_length + subset->trailer_length;
     status = _cairo_pdf_surface_open_stream (surface,
 					     NULL,
 					     TRUE,
 					     "   /Length1 %lu\n"
 					     "   /Length2 %lu\n"
-					     "   /Length3 0\n",
+					     "   /Length3 %lu\n",
 					     subset->header_length,
-					     subset->data_length);
+					     subset->data_length,
+					     subset->trailer_length);
     if (unlikely (status))
 	return status;
 
