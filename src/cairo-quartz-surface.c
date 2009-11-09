@@ -385,7 +385,7 @@ _cairo_quartz_cairo_path_to_quartz_context (cairo_path_fixed_t *path,
  */
 
 static PrivateCGCompositeMode
-_cairo_quartz_cairo_operator_to_quartz (cairo_operator_t op)
+_cairo_quartz_cairo_operator_to_quartz_composite (cairo_operator_t op)
 {
     switch (op) {
 	case CAIRO_OPERATOR_CLEAR:
@@ -395,39 +395,150 @@ _cairo_quartz_cairo_operator_to_quartz (cairo_operator_t op)
 	case CAIRO_OPERATOR_OVER:
 	    return kPrivateCGCompositeSourceOver;
 	case CAIRO_OPERATOR_IN:
-	    /* XXX This doesn't match image output */
 	    return kPrivateCGCompositeSourceIn;
 	case CAIRO_OPERATOR_OUT:
-	    /* XXX This doesn't match image output */
 	    return kPrivateCGCompositeSourceOut;
 	case CAIRO_OPERATOR_ATOP:
 	    return kPrivateCGCompositeSourceAtop;
-
-	case CAIRO_OPERATOR_DEST:
-	    /* XXX this is handled specially (noop)! */
-	    return kPrivateCGCompositeCopy;
 	case CAIRO_OPERATOR_DEST_OVER:
 	    return kPrivateCGCompositeDestinationOver;
 	case CAIRO_OPERATOR_DEST_IN:
-	    /* XXX This doesn't match image output */
 	    return kPrivateCGCompositeDestinationIn;
 	case CAIRO_OPERATOR_DEST_OUT:
 	    return kPrivateCGCompositeDestinationOut;
 	case CAIRO_OPERATOR_DEST_ATOP:
-	    /* XXX This doesn't match image output */
 	    return kPrivateCGCompositeDestinationAtop;
-
 	case CAIRO_OPERATOR_XOR:
-	    return kPrivateCGCompositeXOR; /* This will generate strange results */
+	    return kPrivateCGCompositeXOR;
 	case CAIRO_OPERATOR_ADD:
 	    return kPrivateCGCompositePlusLighter;
+
+	case CAIRO_OPERATOR_DEST:
 	case CAIRO_OPERATOR_SATURATE:
-	    /* XXX This doesn't match image output for SATURATE; there's no equivalent */
-	    return kPrivateCGCompositePlusDarker;  /* ??? */
+	case CAIRO_OPERATOR_MULTIPLY:
+	case CAIRO_OPERATOR_SCREEN:
+	case CAIRO_OPERATOR_OVERLAY:
+	case CAIRO_OPERATOR_DARKEN:
+	case CAIRO_OPERATOR_LIGHTEN:
+	case CAIRO_OPERATOR_COLOR_DODGE:
+	case CAIRO_OPERATOR_COLOR_BURN:
+	case CAIRO_OPERATOR_HARD_LIGHT:
+	case CAIRO_OPERATOR_SOFT_LIGHT:
+	case CAIRO_OPERATOR_DIFFERENCE:
+	case CAIRO_OPERATOR_EXCLUSION:
+	case CAIRO_OPERATOR_HSL_HUE:
+	case CAIRO_OPERATOR_HSL_SATURATION:
+	case CAIRO_OPERATOR_HSL_COLOR:
+	case CAIRO_OPERATOR_HSL_LUMINOSITY:
+        default:
+	    assert (0);
     }
+}
+
+static cairo_int_status_t
+_cairo_quartz_surface_set_cairo_operator (cairo_quartz_surface_t *surface, cairo_operator_t op)
+{
+    ND((stderr, "%p _cairo_quartz_surface_set_cairo_operator %d\n", surface, op));
+
+    if (surface->base.content == CAIRO_CONTENT_ALPHA) {
+	/* For some weird reason, some compositing operators are
+	   swapped when operating on masks */
+	switch (op) {
+	    case CAIRO_OPERATOR_CLEAR:
+	    case CAIRO_OPERATOR_SOURCE:
+	    case CAIRO_OPERATOR_OVER:
+	    case CAIRO_OPERATOR_DEST_IN:
+	    case CAIRO_OPERATOR_DEST_OUT:
+	    case CAIRO_OPERATOR_ADD:
+		CGContextSetCompositeOperation (surface->cgContext, _cairo_quartz_cairo_operator_to_quartz_composite (op));
+		return CAIRO_STATUS_SUCCESS;
+
+	    case CAIRO_OPERATOR_IN:
+		CGContextSetCompositeOperation (surface->cgContext, kPrivateCGCompositeDestinationAtop);
+		return CAIRO_STATUS_SUCCESS;
+
+	    case CAIRO_OPERATOR_DEST_OVER:
+	    case CAIRO_OPERATOR_MULTIPLY:
+	    case CAIRO_OPERATOR_SCREEN:
+	    case CAIRO_OPERATOR_OVERLAY:
+	    case CAIRO_OPERATOR_DARKEN:
+	    case CAIRO_OPERATOR_LIGHTEN:
+	    case CAIRO_OPERATOR_COLOR_DODGE:
+	    case CAIRO_OPERATOR_COLOR_BURN:
+	    case CAIRO_OPERATOR_HARD_LIGHT:
+	    case CAIRO_OPERATOR_SOFT_LIGHT:
+	    case CAIRO_OPERATOR_DIFFERENCE:
+	    case CAIRO_OPERATOR_EXCLUSION:
+	    case CAIRO_OPERATOR_HSL_HUE:
+	    case CAIRO_OPERATOR_HSL_SATURATION:
+	    case CAIRO_OPERATOR_HSL_COLOR:
+	    case CAIRO_OPERATOR_HSL_LUMINOSITY:
+		CGContextSetCompositeOperation (surface->cgContext, kPrivateCGCompositeSourceOver);
+		return CAIRO_STATUS_SUCCESS;
+
+	    case CAIRO_OPERATOR_DEST_ATOP:
+		CGContextSetCompositeOperation (surface->cgContext, kPrivateCGCompositeSourceIn);
+		return CAIRO_STATUS_SUCCESS;
+
+	    case CAIRO_OPERATOR_SATURATE:
+		CGContextSetCompositeOperation (surface->cgContext, kPrivateCGCompositePlusLighter);
+		return CAIRO_STATUS_SUCCESS;
 
 
-    return kPrivateCGCompositeCopy;
+	    case CAIRO_OPERATOR_ATOP:
+		/*
+		CGContextSetCompositeOperation (surface->cgContext, kPrivateCGCompositeDestinationOver);
+		return CAIRO_STATUS_SUCCESS;
+		*/
+	    case CAIRO_OPERATOR_DEST:
+		return CAIRO_INT_STATUS_NOTHING_TO_DO;
+
+	    case CAIRO_OPERATOR_OUT:
+	    case CAIRO_OPERATOR_XOR:
+	    default:
+		return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+    } else {
+	switch (op) {
+	    case CAIRO_OPERATOR_CLEAR:
+	    case CAIRO_OPERATOR_SOURCE:
+	    case CAIRO_OPERATOR_OVER:
+	    case CAIRO_OPERATOR_IN:
+	    case CAIRO_OPERATOR_OUT:
+	    case CAIRO_OPERATOR_ATOP:
+	    case CAIRO_OPERATOR_DEST_OVER:
+	    case CAIRO_OPERATOR_DEST_IN:
+	    case CAIRO_OPERATOR_DEST_OUT:
+	    case CAIRO_OPERATOR_DEST_ATOP:
+	    case CAIRO_OPERATOR_XOR:
+	    case CAIRO_OPERATOR_ADD:
+		CGContextSetCompositeOperation (surface->cgContext, _cairo_quartz_cairo_operator_to_quartz_composite (op));
+		return CAIRO_STATUS_SUCCESS;
+
+	    case CAIRO_OPERATOR_DEST:
+		return CAIRO_INT_STATUS_NOTHING_TO_DO;
+
+	    case CAIRO_OPERATOR_SATURATE:
+	    /* TODO: the following are mostly supported by CGContextSetBlendMode*/
+	    case CAIRO_OPERATOR_MULTIPLY:
+	    case CAIRO_OPERATOR_SCREEN:
+	    case CAIRO_OPERATOR_OVERLAY:
+	    case CAIRO_OPERATOR_DARKEN:
+	    case CAIRO_OPERATOR_LIGHTEN:
+	    case CAIRO_OPERATOR_COLOR_DODGE:
+	    case CAIRO_OPERATOR_COLOR_BURN:
+	    case CAIRO_OPERATOR_HARD_LIGHT:
+	    case CAIRO_OPERATOR_SOFT_LIGHT:
+	    case CAIRO_OPERATOR_DIFFERENCE:
+	    case CAIRO_OPERATOR_EXCLUSION:
+	    case CAIRO_OPERATOR_HSL_HUE:
+	    case CAIRO_OPERATOR_HSL_SATURATION:
+	    case CAIRO_OPERATOR_HSL_COLOR:
+	    case CAIRO_OPERATOR_HSL_LUMINOSITY:
+	    default:
+		return CAIRO_INT_STATUS_UNSUPPORTED;
+	}
+    }
 }
 
 static inline CGLineCap
@@ -1766,14 +1877,13 @@ _cairo_quartz_surface_paint (void *abstract_surface,
     if (IS_EMPTY(surface))
 	return CAIRO_STATUS_SUCCESS;
 
-    if (op == CAIRO_OPERATOR_DEST)
-	return CAIRO_STATUS_SUCCESS;
-
     rv = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (rv))
 	return rv;
 
-    CGContextSetCompositeOperation (surface->cgContext, _cairo_quartz_cairo_operator_to_quartz (op));
+    rv = _cairo_quartz_surface_set_cairo_operator (surface, op);
+    if (unlikely (rv))
+	return rv == CAIRO_INT_STATUS_NOTHING_TO_DO ? CAIRO_STATUS_SUCCESS : rv;
 
     action = _cairo_quartz_setup_source (surface, source);
 
@@ -1815,7 +1925,6 @@ _cairo_quartz_surface_fill (void *abstract_surface,
     cairo_int_status_t rv = CAIRO_STATUS_SUCCESS;
     cairo_quartz_action_t action;
     quartz_stroke_t stroke;
-    cairo_box_t box;
     CGPathRef path_for_unbounded = NULL;
 
     ND((stderr, "%p _cairo_quartz_surface_fill op %d source->type %d\n", surface, op, source->type));
@@ -1823,27 +1932,17 @@ _cairo_quartz_surface_fill (void *abstract_surface,
     if (IS_EMPTY(surface))
 	return CAIRO_STATUS_SUCCESS;
 
-    if (op == CAIRO_OPERATOR_DEST)
-	return CAIRO_STATUS_SUCCESS;
-
-    /* Check whether the path would be a no-op */
-    /* XXX handle unbounded ops */
-    if (_cairo_path_fixed_fill_is_empty(path) ||
-	(_cairo_path_fixed_is_box(path, &box) &&
-	 box.p1.x == box.p2.x &&
-	 box.p1.y == box.p2.y))
-    {
-	return CAIRO_STATUS_SUCCESS;
-    }
-
     rv = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (rv))
 	return rv;
 
+    rv = _cairo_quartz_surface_set_cairo_operator (surface, op);
+    if (unlikely (rv))
+	return rv == CAIRO_INT_STATUS_NOTHING_TO_DO ? CAIRO_STATUS_SUCCESS : rv;
+
     CGContextSaveGState (surface->cgContext);
 
     CGContextSetShouldAntialias (surface->cgContext, (antialias != CAIRO_ANTIALIAS_NONE));
-    CGContextSetCompositeOperation (surface->cgContext, _cairo_quartz_cairo_operator_to_quartz (op));
 
     action = _cairo_quartz_setup_source (surface, source);
 
@@ -1928,12 +2027,13 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
     if (IS_EMPTY(surface))
 	return CAIRO_STATUS_SUCCESS;
 
-    if (op == CAIRO_OPERATOR_DEST)
-	return CAIRO_STATUS_SUCCESS;
-
     rv = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (rv))
 	return rv;
+
+    rv = _cairo_quartz_surface_set_cairo_operator (surface, op);
+    if (unlikely (rv))
+	return rv == CAIRO_INT_STATUS_NOTHING_TO_DO ? CAIRO_STATUS_SUCCESS : rv;
 
     // Turning antialiasing off used to cause misrendering with
     // single-pixel lines (e.g. 20,10.5 -> 21,10.5 end up being rendered as 2 pixels).
@@ -1971,7 +2071,6 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
 
     CGContextSaveGState (surface->cgContext);
 
-    CGContextSetCompositeOperation (surface->cgContext, _cairo_quartz_cairo_operator_to_quartz (op));
 
     action = _cairo_quartz_setup_source (surface, source);
 
@@ -2070,15 +2169,16 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
     if (num_glyphs <= 0)
 	return CAIRO_STATUS_SUCCESS;
 
-    if (op == CAIRO_OPERATOR_DEST)
-	return CAIRO_STATUS_SUCCESS;
-
     if (cairo_scaled_font_get_type (scaled_font) != CAIRO_FONT_TYPE_QUARTZ)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     rv = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (rv))
 	return rv;
+
+    rv = _cairo_quartz_surface_set_cairo_operator (surface, op);
+    if (unlikely (rv))
+	return rv == CAIRO_INT_STATUS_NOTHING_TO_DO ? CAIRO_STATUS_SUCCESS : rv;
 
     CGContextSaveGState (surface->cgContext);
 
@@ -2093,8 +2193,6 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
 	    rv = CAIRO_INT_STATUS_UNSUPPORTED;
 	goto BAIL;
     }
-
-    CGContextSetCompositeOperation (surface->cgContext, _cairo_quartz_cairo_operator_to_quartz (op));
 
     /* this doesn't addref */
     cgfref = _cairo_quartz_scaled_font_get_cg_font_ref (scaled_font);
