@@ -1926,8 +1926,6 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
     if (unlikely (rv))
 	return rv;
 
-    CGContextSaveGState (surface->cgContext);
-
     // Turning antialiasing off used to cause misrendering with
     // single-pixel lines (e.g. 20,10.5 -> 21,10.5 end up being rendered as 2 pixels).
     // That's been since fixed in at least 10.5, and in the latest 10.4 dot releases.
@@ -1938,9 +1936,6 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
     CGContextSetMiterLimit (surface->cgContext, style->miter_limit);
 
     origCTM = CGContextGetCTM (surface->cgContext);
-
-    _cairo_quartz_cairo_matrix_to_quartz (ctm, &strokeTransform);
-    CGContextConcatCTM (surface->cgContext, strokeTransform);
 
     if (style->dash && style->num_dashes) {
 #define STATIC_DASH 32
@@ -1962,11 +1957,17 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
 	CGContextSetLineDash (surface->cgContext, style->dash_offset, fdash, max_dashes);
 	if (fdash != sdash)
 	    free (fdash);
-    }
+    } else
+	CGContextSetLineDash (surface->cgContext, 0, NULL, 0);
+
+    CGContextSaveGState (surface->cgContext);
 
     CGContextSetCompositeOperation (surface->cgContext, _cairo_quartz_cairo_operator_to_quartz (op));
 
     action = _cairo_quartz_setup_source (surface, source);
+
+    _cairo_quartz_cairo_matrix_to_quartz (ctm, &strokeTransform);
+    CGContextConcatCTM (surface->cgContext, strokeTransform);
 
     CGContextBeginPath (surface->cgContext);
 
@@ -2013,32 +2014,21 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
     CGContextRestoreGState (surface->cgContext);
 
     if (path_for_unbounded) {
-	unbounded_op_data_t ub;
+	CGContextSaveGState (surface->cgContext);
+	CGContextConcatCTM (surface->cgContext, strokeTransform);
 
 	CGContextBeginPath (surface->cgContext);
-
-	/* recreate the stroke state, but without the CTM, as it's been already baked
-	 * into the path.
-	 */
-	CGContextSetShouldAntialias (surface->cgContext, (antialias != CAIRO_ANTIALIAS_NONE));
-	CGContextSetLineWidth (surface->cgContext, style->line_width);
-	CGContextSetLineCap (surface->cgContext, _cairo_quartz_cairo_line_cap_to_quartz (style->line_cap));
-	CGContextSetLineJoin (surface->cgContext, _cairo_quartz_cairo_line_join_to_quartz (style->line_join));
-	CGContextSetMiterLimit (surface->cgContext, style->miter_limit);
-
 	CGContextAddPath (surface->cgContext, path_for_unbounded);
 	CGPathRelease (path_for_unbounded);
 
 	CGContextReplacePathWithStrokedPath (surface->cgContext);
-	path_for_unbounded = CGContextCopyPathPtr (surface->cgContext);
 
-	ub.op = UNBOUNDED_STROKE_FILL;
-	ub.u.stroke_fill.cgPath = path_for_unbounded;
-	ub.u.stroke_fill.fill_rule = CAIRO_FILL_RULE_WINDING;
+	CGContextAddRect (surface->cgContext, CGContextGetClipBoundingBox (surface->cgContext));
 
-	_cairo_quartz_fixup_unbounded_operation (surface, &ub, antialias);
+	CGContextSetRGBFillColor (surface->cgContext, 0., 0., 0., 0.);
+	CGContextEOFillPath (surface->cgContext);
 
-	CGPathRelease (path_for_unbounded);
+	CGContextRestoreGState (surface->cgContext);
     }
 
     ND((stderr, "-- stroke\n"));
