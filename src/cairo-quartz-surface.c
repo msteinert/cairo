@@ -1392,6 +1392,30 @@ _cairo_quartz_teardown_source (cairo_quartz_surface_t *surface,
     }
 }
 
+
+static void
+_cairo_quartz_draw_image (cairo_quartz_surface_t *surface, cairo_operator_t op,  cairo_quartz_action_t action)
+{
+    assert (surface && surface->sourceImage && (action == DO_IMAGE || action == DO_TILED_IMAGE));
+
+    CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
+    CGContextTranslateCTM (surface->cgContext, 0, surface->sourceImageRect.size.height);
+    CGContextScaleCTM (surface->cgContext, 1, -1);
+
+    if (action == DO_IMAGE) {
+	CGContextDrawImage (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
+	if (!_cairo_operator_bounded_by_source(op)) {
+	    CGContextBeginPath (surface->cgContext);
+	    CGContextAddRect (surface->cgContext, surface->sourceImageRect);
+	    CGContextAddRect (surface->cgContext, CGContextGetClipBoundingBox (surface->cgContext));
+	    CGContextSetRGBFillColor (surface->cgContext, 0, 0, 0, 0);
+	    CGContextEOFillPath (surface->cgContext);
+	}
+    } else
+	CGContextDrawTiledImagePtr (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
+}
+
+
 /*
  * get source/dest image implementation
  */
@@ -1765,15 +1789,7 @@ _cairo_quartz_surface_paint (void *abstract_surface,
 	CGContextRestoreGState (surface->cgContext);
     } else if (action == DO_IMAGE || action == DO_TILED_IMAGE) {
 	CGContextSaveGState (surface->cgContext);
-
-	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
-	CGContextTranslateCTM (surface->cgContext, 0, surface->sourceImageRect.size.height);
-	CGContextScaleCTM (surface->cgContext, 1, -1);
-
-	if (action == DO_IMAGE)
-	    CGContextDrawImage (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
-	else
-	    CGContextDrawTiledImagePtr (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
+	_cairo_quartz_draw_image (surface, op, action);
 	CGContextRestoreGState (surface->cgContext);
     } else if (action != DO_NOTHING) {
 	rv = CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1864,14 +1880,7 @@ _cairo_quartz_surface_fill (void *abstract_surface,
 	else
 	    CGContextEOClip (surface->cgContext);
 
-	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
-	CGContextTranslateCTM (surface->cgContext, 0, surface->sourceImageRect.size.height);
-	CGContextScaleCTM (surface->cgContext, 1, -1);
-
-	if (action == DO_IMAGE)
-	    CGContextDrawImage (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
-	else
-	    CGContextDrawTiledImagePtr (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
+	_cairo_quartz_draw_image (surface, op, action);
     } else if (action != DO_NOTHING) {
 	rv = CAIRO_INT_STATUS_UNSUPPORTED;
     }
@@ -1987,15 +1996,7 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
 	CGContextClip (surface->cgContext);
 
 	CGContextSetCTM (surface->cgContext, origCTM);
-
-	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
-	CGContextTranslateCTM (surface->cgContext, 0, surface->sourceImageRect.size.height);
-	CGContextScaleCTM (surface->cgContext, 1, -1);
-
-	if (action == DO_IMAGE)
-	    CGContextDrawImage (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
-	else
-	    CGContextDrawTiledImagePtr (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
+	_cairo_quartz_draw_image (surface, op, action);
     } else if (action == DO_SHADING) {
 	CGContextReplacePathWithStrokedPath (surface->cgContext);
 	CGContextClip (surface->cgContext);
@@ -2198,14 +2199,7 @@ _cairo_quartz_surface_show_glyphs (void *abstract_surface,
     CGContextSetCTM (surface->cgContext, ctm);
 
     if (action == DO_IMAGE || action == DO_TILED_IMAGE) {
-	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
-	CGContextTranslateCTM (surface->cgContext, 0, surface->sourceImageRect.size.height);
-	CGContextScaleCTM (surface->cgContext, 1, -1);
-
-	if (action == DO_IMAGE)
-	    CGContextDrawImage (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
-	else
-	    CGContextDrawTiledImagePtr (surface->cgContext, surface->sourceImageRect, surface->sourceImage);
+	_cairo_quartz_draw_image (surface, op, action);
     } else if (action == DO_SHADING) {
 	CGContextConcatCTM (surface->cgContext, surface->sourceTransform);
 	CGContextDrawShading (surface->cgContext, surface->sourceShading);
