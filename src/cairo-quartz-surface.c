@@ -1274,6 +1274,8 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
 	if (status)
 	    return DO_UNSUPPORTED;
 
+	CGContextSetRGBFillColor (surface->cgContext, 0, 0, 0, 1);
+
 	surface->sourceImage = img;
 
 	cairo_matrix_invert(&m);
