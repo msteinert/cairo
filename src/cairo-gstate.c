@@ -539,9 +539,9 @@ _cairo_gstate_set_dash (cairo_gstate_t *gstate, const double *dash, int num_dash
     if (dash_total == 0.0)
 	return _cairo_error (CAIRO_STATUS_INVALID_DASH);
 
-    /* A single dash value indicate symmetric repeating, so the total
+    /* An odd dash value indicate symmetric repeating, so the total
      * is twice as long. */
-    if (gstate->stroke_style.num_dashes == 1)
+    if (gstate->stroke_style.num_dashes & 1)
 	dash_total *= 2;
 
     /* The dashing code doesn't like a negative offset, so we compute
