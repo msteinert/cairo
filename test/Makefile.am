@@ -312,6 +312,7 @@ REFERENCE_IMAGES = \
 	dash-curve.xlib.ref.png \
 	dash-infinite-loop.ref.png \
 	dash-no-dash.ref.png \
+	dash-offset.ref.png \
 	dash-offset-negative.ref.png \
 	dash-scale.ps2.argb32.ref.png \
 	dash-scale.ps2.rgb24.ref.png \

@@ -48,6 +48,7 @@ test_sources = \
 	dash-curve.c					\
 	dash-infinite-loop.c				\
 	dash-no-dash.c					\
+	dash-offset.c					\
 	dash-offset-negative.c				\
 	dash-scale.c					\
 	dash-state.c					\
