@@ -544,12 +544,10 @@ _cairo_gstate_set_dash (cairo_gstate_t *gstate, const double *dash, int num_dash
     if (gstate->stroke_style.num_dashes & 1)
 	dash_total *= 2;
 
-    /* The dashing code doesn't like a negative offset, so we compute
-     * the equivalent positive offset. */
-    if (offset < 0)
-	offset += ceil (-offset / dash_total + 0.5) * dash_total;
-
-    gstate->stroke_style.dash_offset = offset;
+    /* The dashing code doesn't like a negative offset or a big positive
+     * offset, so we compute an equivalent offset which is guaranteed to be
+     * positive and less than twice the pattern length. */
+    gstate->stroke_style.dash_offset = fmod (offset, dash_total) + dash_total;
 
     return CAIRO_STATUS_SUCCESS;
 }
