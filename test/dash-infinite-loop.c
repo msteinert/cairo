@@ -68,9 +68,9 @@ draw (cairo_t *cr, int width, int height)
 
     /* The following calls will wedge in various places that try
      * to advance the dashing in a loop inside the stroker. */
-    do_dash (cr, 30, 30, 1); /* _cairo_stroker_dash_start */
     do_dash (cr, 30, 30, 0); /* _cairo_stroker_line_to_dashed */
     do_dash (cr, 30,  0, 0); /* _cairo_rectilinear_stroker_line_to_dashed */
+    do_dash (cr, 30, 30, 1); /* _cairo_stroker_dash_start */
 
     return CAIRO_TEST_SUCCESS;
 }
