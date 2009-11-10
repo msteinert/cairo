@@ -1749,6 +1749,26 @@ _cairo_stroke_style_max_distance_from_path (const cairo_stroke_style_t *style,
                                             const cairo_matrix_t *ctm,
                                             double *dx, double *dy);
 
+cairo_private double
+_cairo_stroke_style_dash_period (const cairo_stroke_style_t *style);
+
+cairo_private double
+_cairo_stroke_style_dash_stroked (const cairo_stroke_style_t *style);
+
+cairo_private cairo_bool_t
+_cairo_stroke_style_dash_can_approximate (const cairo_stroke_style_t *style,
+					  const cairo_matrix_t *ctm,
+					  double tolerance);
+
+cairo_private void
+_cairo_stroke_style_dash_approximate (const cairo_stroke_style_t *style,
+				      const cairo_matrix_t *ctm,
+				      double tolerance,
+				      double *dash_offset,
+				      double *dashes,
+				      unsigned int *num_dashes);
+
+
 /* cairo-surface.c */
 
 cairo_private cairo_surface_t *
