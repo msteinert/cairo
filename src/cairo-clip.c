@@ -953,7 +953,7 @@ _cairo_clip_path_to_boxes (cairo_clip_path_t *clip_path,
 	    return status;
     }
 
-    while ((clip_path = clip_path->prev) != NULL) {
+    while (num_boxes > 0 && (clip_path = clip_path->prev) != NULL) {
 	cairo_box_t box;
 
 	if (clip_path->region != NULL) {
@@ -992,9 +992,6 @@ _cairo_clip_path_to_boxes (cairo_clip_path_t *clip_path,
 	    if (unlikely (status))
 		return status;
 	}
-
-	if (num_boxes == 0)
-	    break;
     }
 
     *count = num_boxes;
