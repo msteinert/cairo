@@ -18,6 +18,7 @@ test_sources = \
 	clip-device-offset.c				\
 	clip-empty.c					\
 	clip-fill.c					\
+	clip-fill-no-op.c				\
 	clip-fill-rule.c				\
 	clip-fill-rule-pixel-aligned.c			\
 	clip-fill-unbounded.c				\
@@ -26,6 +27,7 @@ test_sources = \
 	clip-operator.c					\
 	clip-push-group.c				\
 	clip-stroke.c					\
+	clip-stroke-no-op.c				\
 	clip-stroke-unbounded.c				\
 	clip-text.c					\
 	clip-twice.c					\

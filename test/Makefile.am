@@ -175,6 +175,7 @@ REFERENCE_IMAGES = \
 	clip-fill.ps.xfail.png \
 	clip-fill.xlib.ref.png \
 	clip-fill.xlib-fallback.ref.png \
+	clip-fill-no-op.ref.png \
 	clip-fill-rule-pixel-aligned.ref.png \
 	clip-fill-rule-pixel-aligned.rgb24.ref.png \
 	clip-fill-rule.pdf.argb32.ref.png \
@@ -238,6 +239,7 @@ REFERENCE_IMAGES = \
 	clip-stroke.ref.png \
 	clip-stroke.xlib.ref.png \
 	clip-stroke.xlib-fallback.ref.png \
+	clip-stroke-no-op.ref.png \
 	clip-stroke-unbounded.argb32.ref.png \
 	clip-stroke-unbounded.rgb24.ref.png \
 	clip-stroke-unbounded.svg12.argb32.xfail.png \
