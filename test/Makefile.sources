@@ -244,7 +244,10 @@ test_sources = \
 	xcomposite-projection.c				\
 	zero-alpha.c
 
-pthread_test_sources = pthread-show-text.c
+pthread_test_sources =					\
+	pthread-show-text.c				\
+	pthread-similar.c				\
+	$(NULL)
 
 ft_font_test_sources = \
 	bitmap-font.c \
