@@ -2702,6 +2702,10 @@ _cairo_ps_surface_paint_surface (cairo_ps_surface_t      *surface,
     int origin_x = 0;
     int origin_y = 0;
 
+    status = _cairo_pdf_operators_flush (&surface->pdf_operators);
+    if (unlikely (status))
+	return status;
+
     status = _cairo_ps_surface_acquire_surface (surface,
 						pattern,
 						extents,
@@ -3331,6 +3335,10 @@ _cairo_ps_surface_emit_pattern (cairo_ps_surface_t *surface,
 {
     cairo_status_t status;
 
+    status = _cairo_pdf_operators_flush (&surface->pdf_operators);
+    if (unlikely (status))
+	return status;
+
     if (pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
 	cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *) pattern;
 
@@ -3456,6 +3464,10 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 	(source->extend == CAIRO_EXTEND_NONE ||
 	 source->extend == CAIRO_EXTEND_PAD))
     {
+	status = _cairo_pdf_operators_flush (&surface->pdf_operators);
+	if (unlikely (status))
+	    return status;
+
 	_cairo_output_stream_printf (stream, "q\n");
 	status = _cairo_ps_surface_paint_surface (surface,
 						 (cairo_surface_pattern_t *) source,
@@ -3677,10 +3689,13 @@ _cairo_ps_surface_set_paginated_mode (void			*abstract_surface,
 				      cairo_paginated_mode_t	 paginated_mode)
 {
     cairo_ps_surface_t *surface = abstract_surface;
+    cairo_status_t status;
 
     surface->paginated_mode = paginated_mode;
 
     if (surface->clipper.clip.path != NULL) {
+	status = _cairo_pdf_operators_flush (&surface->pdf_operators);
+
 	_cairo_output_stream_printf (surface->stream, "Q\n");
 	_cairo_surface_clipper_reset (&surface->clipper);
     }
