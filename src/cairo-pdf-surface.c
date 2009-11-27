@@ -1332,13 +1332,12 @@ _cairo_pdf_surface_close_stream (cairo_pdf_surface_t *surface)
 	surface->output = surface->pdf_stream.old_output;
 	_cairo_pdf_operators_set_stream (&surface->pdf_operators, surface->output);
 	surface->pdf_stream.old_output = NULL;
-	_cairo_output_stream_printf (surface->output,
-				     "\n");
     }
 
     length = _cairo_output_stream_get_position (surface->output) -
 	surface->pdf_stream.start_offset;
     _cairo_output_stream_printf (surface->output,
+				 "\n"
 				 "endstream\n"
 				 "endobj\n");
 
@@ -2010,7 +2009,6 @@ _cairo_pdf_surface_emit_jpx_image (cairo_pdf_surface_t   *surface,
 	return status;
 
     _cairo_output_stream_write (surface->output, mime_data, mime_data_length);
-    _cairo_output_stream_printf (surface->output, "\n");
     status = _cairo_pdf_surface_close_stream (surface);
 
     return status;
@@ -2058,7 +2056,6 @@ _cairo_pdf_surface_emit_jpeg_image (cairo_pdf_surface_t   *surface,
 	return status;
 
     _cairo_output_stream_write (surface->output, mime_data, mime_data_length);
-    _cairo_output_stream_printf (surface->output, "\n");
     status = _cairo_pdf_surface_close_stream (surface);
 
     return status;
