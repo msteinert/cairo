@@ -185,7 +185,7 @@ _cairo_stroke_style_dash_stroked (const cairo_stroke_style_t *style)
  * Verifies if _cairo_stroke_style_dash_approximate should be used to generate
  * an approximation of the dash pattern in the specified style, when used for
  * stroking a path with the given CTM and tolerance.
- * Always FALSE for non-dashed styles.
+ * Always %FALSE for non-dashed styles.
  */
 cairo_bool_t
 _cairo_stroke_style_dash_can_approximate (const cairo_stroke_style_t *style,
