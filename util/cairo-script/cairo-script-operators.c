@@ -351,12 +351,20 @@ static csi_status_t
 _csi_ostack_get_surface (csi_t *ctx, unsigned int i, cairo_surface_t **out)
 {
     csi_object_t *obj;
+    int type;
 
     obj = _csi_peek_ostack (ctx, i);
-    if (_csi_unlikely (csi_object_get_type (obj) != CSI_OBJECT_TYPE_SURFACE))
+    type = csi_object_get_type (obj);
+    switch (type) {
+    case CSI_OBJECT_TYPE_CONTEXT:
+	*out = cairo_get_target (obj->datum.cr);
+	break;
+    case CSI_OBJECT_TYPE_SURFACE:
+	*out = obj->datum.surface;
+	break;
+    default:
 	return _csi_error (CSI_STATUS_INVALID_SCRIPT);
-
-    *out = obj->datum.surface;
+    }
     return CSI_STATUS_SUCCESS;
 }
 
