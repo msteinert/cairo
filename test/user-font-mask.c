@@ -126,6 +126,7 @@ test_scaled_font_render_glyph (cairo_scaled_font_t  *scaled_font,
 	*data = CAIRO_BITSWAP8_IF_LITTLE_ENDIAN (byte);
 	data += cairo_image_surface_get_stride (image);
     }
+    cairo_surface_mark_dirty (image);
 
     pattern = cairo_pattern_create_for_surface (image);
     cairo_surface_destroy (image);

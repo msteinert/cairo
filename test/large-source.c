@@ -62,6 +62,7 @@ draw (cairo_t *cr, int width, int height)
 		data[x] = RED_MASK;
 	    data += stride;
 	}
+        cairo_surface_mark_dirty (surface);
     }
 
     cairo_set_source_rgb (cr, 1, 0, 0); /* red */
@@ -81,6 +82,7 @@ draw (cairo_t *cr, int width, int height)
 		data[x] = GREEN_MASK;
 	    data += stride;
 	}
+        cairo_surface_mark_dirty (surface);
     }
 
     cairo_set_source_rgb (cr, 0, 1, 0); /* green */

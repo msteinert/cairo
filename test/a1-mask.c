@@ -125,6 +125,7 @@ draw (cairo_t *cr, int dst_width, int dst_height)
 	    dst += stride;
 	}
     }
+    cairo_surface_mark_dirty (surface);
 
     /* Paint background blue */
     cairo_set_source_rgb (cr, 0, 0, 1); /* blue */
