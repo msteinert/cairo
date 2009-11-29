@@ -914,6 +914,7 @@ _get_image_surface (cairo_xlib_surface_t    *surface,
 	    }
 	    row += rowstride;
 	}
+	cairo_surface_mark_dirty (&image->base);
     }
 
  BAIL:

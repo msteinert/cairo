@@ -2986,6 +2986,7 @@ _image_read_raw (csi_file_t *src,
 #endif
     }
 
+    cairo_surface_mark_dirty (image);
     *image_out = image;
     return CSI_STATUS_SUCCESS;
 }
@@ -4956,6 +4957,7 @@ _set_source_image (csi_t *ctx)
 	memcpy (cairo_image_surface_get_data (surface),
 		cairo_image_surface_get_data (source),
 		cairo_image_surface_get_height (source) * cairo_image_surface_get_stride (source));
+	cairo_surface_mark_dirty (surface);
     } else {
 	cairo_t *cr;
 

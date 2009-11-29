@@ -777,6 +777,7 @@ cairo_boilerplate_image_surface_create_from_ppm_stream (FILE *file)
 	    break;
 	}
     }
+    cairo_surface_mark_dirty (image);
 
     return image;
 
