@@ -45,6 +45,10 @@ draw_pattern (cairo_surface_t **surface_inout, int surface_size)
     cr = cairo_create (*surface_inout);
     cairo_surface_destroy (*surface_inout);
 
+    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+    cairo_set_source_rgba (cr, 0, 0, 0, 0);
+    cairo_paint (cr);
+
     cairo_rectangle (cr, 0, 0, surface_size, surface_size);
     cairo_rectangle (cr, mid - SIZE/4, mid + SIZE/4, SIZE/2, -SIZE/2);
     cairo_clip (cr);
