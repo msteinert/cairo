@@ -2001,7 +2001,6 @@ _cairo_pdf_surface_emit_jpx_image (cairo_pdf_surface_t   *surface,
 					     "   /Subtype /Image\n"
 					     "   /Width %d\n"
 					     "   /Height %d\n"
-					     "   /ColorSpace /DeviceRGB\n"
 					     "   /Filter /JPXDecode\n",
 					     info.width,
 					     info.height);
