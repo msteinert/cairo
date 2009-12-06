@@ -13,6 +13,7 @@ test_sources = \
 	caps-joins-curve.c				\
 	caps-sub-paths.c				\
 	clear.c						\
+	clear-source.c					\
 	clip-all.c					\
 	clip-disjoint.c					\
 	clip-device-offset.c				\
