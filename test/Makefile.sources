@@ -245,6 +245,7 @@ test_sources = \
 	zero-alpha.c
 
 pthread_test_sources =					\
+	pthread-same-source.c				\
 	pthread-show-text.c				\
 	pthread-similar.c				\
 	$(NULL)
