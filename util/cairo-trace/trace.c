@@ -42,6 +42,9 @@
 #include <locale.h> /* for locale independent %f printing */
 #include <ctype.h>
 #include <assert.h>
+#include <stdlib.h>
+#include <limits.h>
+#include <stdarg.h>
 
 #include <cairo.h>
 #if CAIRO_HAS_FT_FONT
