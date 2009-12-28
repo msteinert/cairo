@@ -516,7 +516,7 @@ slim_hidden_def (cairo_format_stride_for_width);
  * and row. This alignment is required to allow high-performance rendering
  * within cairo. The correct way to obtain a legal stride value is to
  * call cairo_format_stride_for_width() with the desired format and
- * maximum image width value, and the use the resulting stride value
+ * maximum image width value, and then use the resulting stride value
  * to allocate the data and to create the image surface. See
  * cairo_format_stride_for_width() for example code.
  *
