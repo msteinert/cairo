@@ -229,7 +229,7 @@ _cairo_quartz_create_cgimage (cairo_format_t format,
     }
 
     if (format == CAIRO_FORMAT_A8 || format == CAIRO_FORMAT_A1) {
-	float decode[] = {1.0, 0.0};
+	cairo_quartz_float_t decode[] = {1.0, 0.0};
 	image = CGImageMaskCreate (width, height,
 				   bitsPerComponent,
 				   bitsPerPixel,
@@ -760,7 +760,9 @@ _cairo_quartz_fixup_unbounded_operation (cairo_quartz_surface_t *surface,
  */
 
 static void
-ComputeGradientValue (void *info, const float *in, float *out)
+ComputeGradientValue (void *info,
+                      const cairo_quartz_float_t *in,
+                      cairo_quartz_float_t *out)
 {
     double fdist = *in;
     const cairo_gradient_pattern_t *grad = (cairo_gradient_pattern_t*) info;
@@ -791,10 +793,10 @@ ComputeGradientValue (void *info, const float *in, float *out)
 	out[2] = grad->stops[i].color.blue;
 	out[3] = grad->stops[i].color.alpha;
     } else {
-	float ax = grad->stops[i-1].offset;
-	float bx = grad->stops[i].offset - ax;
-	float bp = (fdist - ax)/bx;
-	float ap = 1.0 - bp;
+	cairo_quartz_float_t ax = grad->stops[i-1].offset;
+	cairo_quartz_float_t bx = grad->stops[i].offset - ax;
+	cairo_quartz_float_t bp = (fdist - ax)/bx;
+	cairo_quartz_float_t ap = 1.0 - bp;
 
 	out[0] =
 	    grad->stops[i-1].color.red * ap +
@@ -815,8 +817,8 @@ static CGFunctionRef
 CreateGradientFunction (const cairo_gradient_pattern_t *gpat)
 {
     cairo_pattern_t *pat;
-    float input_value_range[2] = { 0.f, 1.f };
-    float output_value_ranges[8] = { 0.f, 1.f, 0.f, 1.f, 0.f, 1.f, 0.f, 1.f };
+    cairo_quartz_float_t input_value_range[2] = { 0.f, 1.f };
+    cairo_quartz_float_t output_value_ranges[8] = { 0.f, 1.f, 0.f, 1.f, 0.f, 1.f, 0.f, 1.f };
     CGFunctionCallbacks callbacks = {
 	0, ComputeGradientValue, (CGFunctionReleaseInfoCallback) cairo_pattern_destroy
     };
@@ -841,8 +843,8 @@ CreateRepeatingGradientFunction (cairo_quartz_surface_t *surface,
 				 CGAffineTransform matrix)
 {
     cairo_pattern_t *pat;
-    float input_value_range[2];
-    float output_value_ranges[8] = { 0.f, 1.f, 0.f, 1.f, 0.f, 1.f, 0.f, 1.f };
+    cairo_quartz_float_t input_value_range[2];
+    cairo_quartz_float_t output_value_ranges[8] = { 0.f, 1.f, 0.f, 1.f, 0.f, 1.f, 0.f, 1.f };
     CGFunctionCallbacks callbacks = {
 	0, ComputeGradientValue, (CGFunctionReleaseInfoCallback) cairo_pattern_destroy
     };
@@ -1065,7 +1067,7 @@ _cairo_quartz_cairo_repeating_surface_pattern_to_quartz (cairo_quartz_surface_t 
 			      SurfacePatternDrawFunc,
 			      SurfacePatternReleaseInfoFunc };
     SurfacePatternDrawInfo *info;
-    float rw, rh;
+    cairo_quartz_float_t rw, rh;
     cairo_status_t status;
     cairo_bool_t is_bounded;
 
@@ -1443,7 +1445,7 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
     }
 
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE) {
-	float patternAlpha = 1.0f;
+	cairo_quartz_float_t patternAlpha = 1.0f;
 	CGColorSpaceRef patternSpace;
 	CGPatternRef pattern;
 	cairo_int_status_t status;
@@ -2117,20 +2119,20 @@ _cairo_quartz_surface_stroke_cg (void *abstract_surface,
 
     if (style->dash && style->num_dashes) {
 #define STATIC_DASH 32
-	float sdash[STATIC_DASH];
-	float *fdash = sdash;
+	cairo_quartz_float_t sdash[STATIC_DASH];
+	cairo_quartz_float_t *fdash = sdash;
 	unsigned int max_dashes = style->num_dashes;
 	unsigned int k;
 
 	if (style->num_dashes%2)
 	    max_dashes *= 2;
 	if (max_dashes > STATIC_DASH)
-	    fdash = _cairo_malloc_ab (max_dashes, sizeof (float));
+	    fdash = _cairo_malloc_ab (max_dashes, sizeof (cairo_quartz_float_t));
 	if (fdash == NULL)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 	for (k = 0; k < max_dashes; k++)
-	    fdash[k] = (float) style->dash[k % style->num_dashes];
+	    fdash[k] = (cairo_quartz_float_t) style->dash[k % style->num_dashes];
 
 	CGContextSetLineDash (surface->cgContext, style->dash_offset, fdash, max_dashes);
 	if (fdash != sdash)
@@ -2261,7 +2263,7 @@ _cairo_quartz_surface_show_glyphs_cg (void *abstract_surface,
     cairo_quartz_surface_t *surface = (cairo_quartz_surface_t *) abstract_surface;
     cairo_int_status_t rv = CAIRO_STATUS_SUCCESS;
     cairo_quartz_action_t action;
-    float xprev, yprev;
+    cairo_quartz_float_t xprev, yprev;
     int i;
     CGFontRef cgfref = NULL;
 
@@ -2364,8 +2366,8 @@ _cairo_quartz_surface_show_glyphs_cg (void *abstract_surface,
     cg_glyphs[0] = glyphs[0].index;
 
     for (i = 1; i < num_glyphs; i++) {
-	float xf = glyphs[i].x;
-	float yf = glyphs[i].y;
+	cairo_quartz_float_t xf = glyphs[i].x;
+	cairo_quartz_float_t yf = glyphs[i].y;
 	cg_glyphs[i] = glyphs[i].index;
 	cg_advances[i-1].width = xf - xprev;
 	cg_advances[i-1].height = yf - yprev;

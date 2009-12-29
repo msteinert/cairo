@@ -44,6 +44,12 @@
 #include "cairo-quartz.h"
 #include "cairo-surface-clipper-private.h"
 
+#ifdef CGFLOAT_DEFINED
+typedef CGFloat cairo_quartz_float_t;
+#else
+typedef float cairo_quartz_float_t;
+#endif
+
 typedef struct cairo_quartz_surface {
     cairo_surface_t base;
 
