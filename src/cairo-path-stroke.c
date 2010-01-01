@@ -346,7 +346,7 @@ _tessellate_fan (cairo_stroker_t *stroker,
 
     if (npoints < 0)
 	npoints += stroker->pen.num_vertices;
-    npoints += 2;
+    npoints += 3;
 
     if (npoints <= 1)
 	goto BEVEL;
