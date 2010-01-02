@@ -200,16 +200,16 @@ _cairo_quartz_create_cgimage (cairo_format_t format,
 	    bitsPerPixel = 32;
 	    break;
 
-	/* XXX -- should use CGImageMaskCreate! */
 	case CAIRO_FORMAT_A8:
-	    if (colorSpace == NULL)
-		colorSpace = CGColorSpaceCreateDeviceGray();
-	    bitinfo = kCGImageAlphaNone;
 	    bitsPerComponent = 8;
 	    bitsPerPixel = 8;
 	    break;
 
 	case CAIRO_FORMAT_A1:
+	    bitsPerComponent = 1;
+	    bitsPerPixel = 1;
+	    break;
+
 	default:
 	    return NULL;
     }
@@ -226,16 +226,26 @@ _cairo_quartz_create_cgimage (cairo_format_t format,
 	goto FINISH;
     }
 
-    image = CGImageCreate (width, height,
-			   bitsPerComponent,
-			   bitsPerPixel,
-			   stride,
-			   colorSpace,
-			   bitinfo,
-			   dataProvider,
-			   NULL,
-			   interpolate,
-			   kCGRenderingIntentDefault);
+    if (format == CAIRO_FORMAT_A8 || format == CAIRO_FORMAT_A1) {
+	float decode[] = {1.0, 0.0};
+	image = CGImageMaskCreate (width, height,
+				   bitsPerComponent,
+				   bitsPerPixel,
+				   stride,
+				   dataProvider,
+				   decode,
+				   interpolate);
+    } else
+	image = CGImageCreate (width, height,
+			       bitsPerComponent,
+			       bitsPerPixel,
+			       stride,
+			       colorSpace,
+			       bitinfo,
+			       dataProvider,
+			       NULL,
+			       interpolate,
+			       kCGRenderingIntentDefault);
 
 FINISH:
 
@@ -976,12 +986,14 @@ _cairo_surface_to_cgimage (cairo_surface_t *target,
 					      isurf_snap);
 
 	*image_out = image;
+	if (image == NULL)
+	    status = CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
     if (&isurf->base != source)
 	_cairo_surface_release_source_image (source, isurf, image_extra);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 /* Generic #cairo_pattern_t -> CGPattern function */
@@ -1067,9 +1079,8 @@ _cairo_quartz_cairo_repeating_surface_pattern_to_quartz (cairo_quartz_surface_t 
     assert (is_bounded);
 
     status = _cairo_surface_to_cgimage ((cairo_surface_t*) dest, pat_surf, &image);
-    if (status != CAIRO_STATUS_SUCCESS)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
+    if (status)
+	return status;
     if (image == NULL)
 	return CAIRO_INT_STATUS_NOTHING_TO_DO;
 
@@ -1201,10 +1212,10 @@ _cairo_quartz_setup_fallback_source (cairo_quartz_surface_t *surface,
 #endif
 
     status = _cairo_surface_to_cgimage (&surface->base, fallback, &img);
-    if (status == CAIRO_STATUS_SUCCESS && img == NULL)
-	return DO_NOTHING;
     if (status)
 	return DO_UNSUPPORTED;
+    if (img == NULL)
+	return DO_NOTHING;
 
     surface->sourceImageRect = CGRectMake (0.0, 0.0, w, h);
     surface->sourceImage = img;
@@ -1371,10 +1382,10 @@ _cairo_quartz_setup_source (cairo_quartz_surface_t *surface,
 	cairo_bool_t is_bounded;
 
 	status = _cairo_surface_to_cgimage ((cairo_surface_t *) surface, pat_surf, &img);
-	if (status == CAIRO_STATUS_SUCCESS && img == NULL)
-	    return DO_NOTHING;
 	if (status)
 	    return DO_UNSUPPORTED;
+	if (img == NULL)
+	    return DO_NOTHING;
 
 	CGContextSetRGBFillColor (surface->cgContext, 0, 0, 0, 1);
 
@@ -2356,10 +2367,10 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
 	return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_surface_to_cgimage ((cairo_surface_t *) surface, pat_surf, &img);
-    if (status == CAIRO_STATUS_SUCCESS && img == NULL)
-	return CAIRO_STATUS_SUCCESS;
     if (status)
 	return status;
+    if (img == NULL)
+	return CAIRO_STATUS_SUCCESS;
 
     rect = CGRectMake (0.0f, 0.0f, mask_extents.width, mask_extents.height);
 
