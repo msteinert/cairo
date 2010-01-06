@@ -651,6 +651,7 @@ _cairo_quartz_fixup_unbounded_operation (cairo_quartz_surface_t *surface,
     CGContextRef cgc;
     CGImageRef maskImage;
 
+    /* TODO: handle failure */
     if (!CGContextClipToMaskPtr)
 	return;
 
@@ -675,7 +676,7 @@ _cairo_quartz_fixup_unbounded_operation (cairo_quartz_surface_t *surface,
     CGContextSetAlpha (cgc, 1.0f);
     CGContextFillRect (cgc, CGRectMake (0, 0, clipBoxRound.size.width, clipBoxRound.size.height));
 
-    CGContextSetAlpha (cgc, 0.0f);
+    CGContextSetCompositeOperation (cgc, kPrivateCGCompositeClear);
     CGContextSetShouldAntialias (cgc, (antialias != CAIRO_ANTIALIAS_NONE));
 
     CGContextTranslateCTM (cgc, -clipBoxRound.origin.x, -clipBoxRound.origin.y);
@@ -710,27 +711,26 @@ _cairo_quartz_fixup_unbounded_operation (cairo_quartz_surface_t *surface,
 					 op->u.show_glyphs.nglyphs);
 
 	if (op->u.show_glyphs.isClipping) {
-	    CGContextFillRect (cgc, CGRectMake (0.0, 0.0, clipBoxRound.size.width, clipBoxRound.size.height));
+	    CGContextClearRect (cgc, clipBoxRound);
 	    CGContextRestoreGState (cgc);
 	}
     } else if (op->op == UNBOUNDED_MASK) {
+	CGAffineTransform ctm = CGContextGetCTM (cgc);
 	CGContextSaveGState (cgc);
 	CGContextConcatCTM (cgc, op->u.mask.maskTransform);
 	CGContextClipToMask (cgc, CGRectMake (0.0f, 0.0f,
 					      CGImageGetWidth(op->u.mask.mask), CGImageGetHeight(op->u.mask.mask)),
 			     op->u.mask.mask);
-	CGContextFillRect (cgc, CGRectMake (0.0, 0.0, clipBoxRound.size.width, clipBoxRound.size.height));
+	CGContextSetCTM (cgc, ctm);
+	CGContextClearRect (cgc, clipBoxRound);
 	CGContextRestoreGState (cgc);
     }
 
     /* Also mask out the portion of the clipbox that we rounded out, if any */
     if (!CGRectEqualToRect (clipBox, clipBoxRound)) {
 	CGContextBeginPath (cgc);
-	CGContextAddRect (cgc, CGRectMake (0.0, 0.0, clipBoxRound.size.width, clipBoxRound.size.height));
-	CGContextAddRect (cgc, CGRectMake (clipBoxRound.origin.x - clipBox.origin.x,
-					   clipBoxRound.origin.y - clipBox.origin.y,
-					   clipBox.size.width,
-					   clipBox.size.height));
+	CGContextAddRect (cgc, clipBoxRound);
+	CGContextAddRect (cgc, clipBox);
 	CGContextEOFillPath (cgc);
     }
 
@@ -2369,18 +2369,14 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
     CGAffineTransform ctm, mask_matrix;
     cairo_bool_t is_bounded;
 
-    is_bounded = _cairo_surface_get_extents (pat_surf, &mask_extents);
-    assert (is_bounded);
-
-    // everything would be masked out, so do nothing
-    if (mask_extents.width == 0 || mask_extents.height == 0)
-	return CAIRO_STATUS_SUCCESS;
-
     status = _cairo_surface_to_cgimage ((cairo_surface_t *) surface, pat_surf, &img);
     if (status)
 	return status;
-    if (img == NULL)
+    if (img == NULL) {
+	if (!_cairo_operator_bounded_by_mask (op))
+	    CGContextClearRect (surface->cgContext, CGContextGetClipBoundingBox (surface->cgContext));
 	return CAIRO_STATUS_SUCCESS;
+    }
 
     rect = CGRectMake (0.0f, 0.0f, mask_extents.width, mask_extents.height);
 
@@ -2391,10 +2387,11 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
     ctm = CGContextGetCTM (surface->cgContext);
 
     _cairo_quartz_cairo_matrix_to_quartz (&mask->base.matrix, &mask_matrix);
-    CGContextConcatCTM (surface->cgContext, CGAffineTransformInvert(mask_matrix));
-    CGContextTranslateCTM (surface->cgContext, 0.0f, rect.size.height);
-    CGContextScaleCTM (surface->cgContext, 1.0f, -1.0f);
+    mask_matrix = CGAffineTransformInvert(mask_matrix);
+    mask_matrix = CGAffineTransformTranslate (mask_matrix, 0.0, CGImageGetHeight (img));
+    mask_matrix = CGAffineTransformScale (mask_matrix, 1.0, -1.0);
 
+    CGContextConcatCTM (surface->cgContext, mask_matrix);
     CGContextClipToMaskPtr (surface->cgContext, rect, img);
 
     CGContextSetCTM (surface->cgContext, ctm);
@@ -2407,7 +2404,7 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
 	unbounded_op_data_t ub;
 	ub.op = UNBOUNDED_MASK;
 	ub.u.mask.mask = img;
-	ub.u.mask.maskTransform = CGAffineTransformInvert(mask_matrix);
+	ub.u.mask.maskTransform = mask_matrix;
 	_cairo_quartz_fixup_unbounded_operation (surface, &ub, CAIRO_ANTIALIAS_NONE);
     }
 
@@ -2427,33 +2424,19 @@ _cairo_quartz_surface_mask_with_generic (cairo_quartz_surface_t *surface,
 					 const cairo_pattern_t *mask,
 					 cairo_clip_t *clip)
 {
-    int width = surface->extents.width - surface->extents.x;
-    int height = surface->extents.height - surface->extents.y;
+    int width = surface->extents.width;
+    int height = surface->extents.height;
 
     cairo_surface_t *gradient_surf = NULL;
-    cairo_t *gradient_surf_cr = NULL;
-
     cairo_surface_pattern_t surface_pattern;
-    cairo_pattern_t *mask_copy;
     cairo_int_status_t status;
 
     /* Render the gradient to a surface */
-    gradient_surf = cairo_quartz_surface_create (CAIRO_FORMAT_ARGB32,
+    gradient_surf = cairo_quartz_surface_create (CAIRO_FORMAT_A8,
 						 width,
 						 height);
-    gradient_surf_cr = cairo_create(gradient_surf);
 
-    /* make a copy of the pattern because because cairo_set_source doesn't take
-     * a 'const cairo_pattern_t *' */
-    _cairo_pattern_create_copy (&mask_copy, mask);
-    cairo_set_source (gradient_surf_cr, mask_copy);
-    cairo_pattern_destroy (mask_copy);
-
-    cairo_set_operator (gradient_surf_cr, CAIRO_OPERATOR_SOURCE);
-    cairo_paint (gradient_surf_cr);
-    status = cairo_status (gradient_surf_cr);
-    cairo_destroy (gradient_surf_cr);
-
+    status = _cairo_quartz_surface_paint (gradient_surf, CAIRO_OPERATOR_SOURCE, mask, NULL);
     if (status)
 	goto BAIL;
 
