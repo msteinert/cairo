@@ -1745,6 +1745,15 @@ DONE:
 }
 
 static void
+to_octal (int value, char *buf, size_t size)
+{
+    do {
+	buf[--size] = '0' + (value & 7);
+	value >>= 3;
+    } while (size);
+}
+
+static void
 _emit_string_literal (const char *utf8, int len)
 {
     char c;
@@ -1787,13 +1796,11 @@ ESCAPED_CHAR:
 	    if (isprint (c) || isspace (c)) {
 		_trace_printf ("%c", c);
 	    } else {
-		int octal = 0;
-		while (c) {
-		    octal *= 10;
-		    octal += c&7;
-		    c /= 8;
-		}
-		_trace_printf ("\\%03d", octal);
+		char buf[4] = { '\\' };
+		int ret_ignored;
+
+		to_octal (c, buf+1, 3);
+		ret_ignored = fwrite (buf, 4, 1, logfile);
 	    }
 	    break;
 	}
