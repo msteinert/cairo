@@ -575,6 +575,7 @@ _cairo_gl_surface_show_glyphs_via_mask (cairo_gl_surface_t	*dst,
     if (likely (status == CAIRO_STATUS_SUCCESS)) {
 	cairo_surface_pattern_t mask_pattern;
 
+        mask->is_clear = FALSE;
 	_cairo_pattern_init_for_surface (&mask_pattern, mask);
 	mask_pattern.base.has_component_alpha = has_component_alpha;
 	cairo_matrix_init_translate (&mask_pattern.base.matrix,
