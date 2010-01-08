@@ -142,7 +142,7 @@ _cairo_type1_font_subset_init (cairo_type1_font_subset_t  *font,
     }
 #endif
 
-    memset (font, 0, sizeof (font));
+    memset (font, 0, sizeof (*font));
     font->base.unscaled_font = _cairo_unscaled_font_reference (unscaled_font);
     font->base.num_glyphs = face->num_glyphs;
     font->base.x_min = face->bbox.xMin;
@@ -1256,10 +1256,8 @@ cairo_type1_font_subset_generate (void       *abstract_font,
 	goto fail;
 
     font->output = _cairo_output_stream_create (type1_font_write, NULL, font);
-    if (_cairo_output_stream_get_status (font->output)) {
-	status = _cairo_output_stream_destroy (font->output);
+    if (unlikely ((status = font->output->status)))
 	goto fail;
-    }
 
     status = cairo_type1_font_subset_write (font, name);
     if (unlikely (status))
@@ -1273,9 +1271,10 @@ cairo_type1_font_subset_generate (void       *abstract_font,
     return status;
 }
 
-static void
+static cairo_status_t
 _cairo_type1_font_subset_fini (cairo_type1_font_subset_t *font)
 {
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
     unsigned int i;
 
     /* If the subset generation failed, some of the pointers below may
@@ -1284,16 +1283,21 @@ _cairo_type1_font_subset_fini (cairo_type1_font_subset_t *font)
     _cairo_array_fini (&font->contents);
 
     free (font->type1_data);
-    if (font->glyphs != NULL)
-	for (i = 0; i < font->base.num_glyphs; i++) {
+    if (font->glyphs != NULL) {
+	for (i = 0; i < font->base.num_glyphs; i++)
 	    free (font->glyphs[i].name);
-	}
+    }
 
     _cairo_unscaled_font_destroy (font->base.unscaled_font);
+
+    if (font->output != NULL)
+	status = _cairo_output_stream_destroy (font->output);
 
     if (font->base.base_font)
 	free (font->base.base_font);
     free (font->glyphs);
+
+    return status;
 }
 
 cairo_status_t
@@ -1303,7 +1307,7 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
                           cairo_bool_t                   hex_encode)
 {
     cairo_type1_font_subset_t font;
-    cairo_status_t status;
+    cairo_status_t status, status_ignored;
     unsigned long parent_glyph, length;
     unsigned int i;
     cairo_unscaled_font_t *unscaled_font;
@@ -1372,16 +1376,14 @@ _cairo_type1_subset_init (cairo_type1_subset_t		*type1_subset,
     type1_subset->data_length = font.base.data_size;
     type1_subset->trailer_length = font.base.trailer_size;
 
-    _cairo_type1_font_subset_fini (&font);
-
-    return CAIRO_STATUS_SUCCESS;
+    return _cairo_type1_font_subset_fini (&font);
 
  fail3:
     free (type1_subset->widths);
  fail2:
     free (type1_subset->base_font);
  fail1:
-    _cairo_type1_font_subset_fini (&font);
+    status_ignored = _cairo_type1_font_subset_fini (&font);
 
     return status;
 }
