@@ -478,17 +478,15 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 
 	if (scaled_glyph->surface_private == NULL) {
 	    status = _cairo_gl_glyph_cache_add_glyph (cache, scaled_glyph);
-	    if (unlikely (_cairo_status_is_error (status)))
-		goto FINISH;
 
 	    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 		/* Cache is full, so flush existing prims and try again. */
 		_cairo_gl_flush_glyphs (ctx, &setup);
 		_cairo_gl_glyph_cache_unlock (cache);
+		status = _cairo_gl_glyph_cache_add_glyph (cache, scaled_glyph);
 	    }
 
-	    status = _cairo_gl_glyph_cache_add_glyph (cache, scaled_glyph);
-	    if (unlikely (status))
+	    if (unlikely (_cairo_status_is_error (status)))
 		goto FINISH;
 	}
 
