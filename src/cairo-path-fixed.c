@@ -480,7 +480,10 @@ _cairo_path_fixed_line_to (cairo_path_fixed_t *path,
 
 	    _cairo_slope_init (&prev, p, &path->current_point);
 	    _cairo_slope_init (&self, &path->current_point, &point);
-	    if (_cairo_slope_equal (&prev, &self)) {
+	    if (_cairo_slope_equal (&prev, &self) &&
+		/* cannot trim anti-parallel segments whilst stroking */
+		! _cairo_slope_backwards (&prev, &self))
+	    {
 		buf->points[buf->num_points - 1] = point;
 		goto FLAGS;
 	    }
