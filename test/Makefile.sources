@@ -155,6 +155,7 @@ test_sources = \
 	paint-source-alpha.c				\
 	paint-with-alpha.c				\
 	path-append.c					\
+	path-stroke-twice.c				\
 	path-precision.c				\
 	pattern-get-type.c				\
 	pattern-getters.c				\

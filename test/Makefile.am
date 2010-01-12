@@ -757,6 +757,8 @@ REFERENCE_IMAGES = \
 	pass-through.rgb24.ref.png \
 	path-append.ps.ref.png \
 	path-append.ref.png \
+	path-stroke-twice.ref.png \
+	path-stroke-twice.ps.ref.png \
 	path-append.test-fallback.ref.png \
 	path-append.xlib-fallback.ref.png \
 	path-append.xlib.ref.png \
