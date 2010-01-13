@@ -1001,8 +1001,6 @@ _cairo_gl_pattern_surface_texture_setup (cairo_gl_composite_operand_t *operand,
     attributes = &operand->operand.texture.attributes;
 
     operand->type = OPERAND_TEXTURE;
-    operand->operand.texture.tex = gl_surface->tex;
-    operand->operand.texture.surface = NULL;
     attributes->matrix = src->base.matrix;
     attributes->has_component_alpha = src->base.has_component_alpha;
     attributes->extend = src->base.extend;
