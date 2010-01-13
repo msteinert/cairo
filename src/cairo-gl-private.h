@@ -85,6 +85,8 @@ struct _cairo_gl_context {
 
     cairo_mutex_t mutex; /* needed? */
     GLuint dummy_tex;
+    GLint fill_rectangles_shader;
+    GLint fill_rectangles_color_uniform;
     GLint max_framebuffer_size;
     GLint max_texture_size;
 
@@ -201,6 +203,10 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 
 cairo_private void
 _cairo_gl_glyph_cache_fini (cairo_gl_glyph_cache_t *cache);
+
+cairo_private cairo_status_t
+_cairo_gl_load_glsl (GLint *shader,
+		     const char *vs_source, const char *fs_source);
 
 static inline int
 _cairo_gl_y_flip (cairo_gl_surface_t *surface, int y)

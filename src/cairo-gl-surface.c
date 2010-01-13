@@ -1549,11 +1549,11 @@ _cairo_gl_surface_composite_trapezoids (cairo_operator_t op,
 }
 
 static cairo_int_status_t
-_cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
-				   cairo_operator_t	    op,
-				   const cairo_color_t     *color,
-				   cairo_rectangle_int_t   *rects,
-				   int			    num_rects)
+_cairo_gl_surface_fill_rectangles_fixed (void			 *abstract_surface,
+					 cairo_operator_t	  op,
+					 const cairo_color_t     *color,
+					 cairo_rectangle_int_t   *rects,
+					 int			  num_rects)
 {
 #define N_STACK_RECTS 4
     cairo_gl_surface_t *surface = abstract_surface;
@@ -1630,6 +1630,121 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
 
     return CAIRO_STATUS_SUCCESS;
 #undef N_STACK_RECTS
+}
+
+static cairo_int_status_t
+_cairo_gl_surface_fill_rectangles_glsl (void                  *abstract_surface,
+					cairo_operator_t       op,
+					const cairo_color_t   *color,
+					cairo_rectangle_int_t *rects,
+					int                    num_rects)
+{
+#define N_STACK_RECTS 4
+    cairo_gl_surface_t *surface = abstract_surface;
+    GLfloat vertices_stack[N_STACK_RECTS*4*2];
+    GLfloat gl_color[4];
+    cairo_gl_context_t *ctx;
+    int i;
+    GLfloat *vertices;
+    static const char *fill_vs_source =
+	"void main()\n"
+	"{\n"
+	"	gl_Position = ftransform();\n"
+	"}\n";
+    static const char *fill_fs_source =
+	"uniform vec4 color;\n"
+	"void main()\n"
+	"{\n"
+	"	gl_FragColor = color;\n"
+	"}\n";
+    cairo_status_t status;
+
+    if (! _cairo_gl_operator_is_supported (op))
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    ctx = _cairo_gl_context_acquire (surface->ctx);
+
+    if (ctx->fill_rectangles_shader == 0) {
+	status = _cairo_gl_load_glsl (&ctx->fill_rectangles_shader,
+				      fill_vs_source, fill_fs_source);
+	if (_cairo_status_is_error (status))
+	    return status;
+
+	ctx->fill_rectangles_color_uniform =
+	    glGetUniformLocationARB (ctx->fill_rectangles_shader, "color");
+    }
+
+    if (num_rects > N_STACK_RECTS) {
+	vertices = _cairo_malloc_ab (num_rects, sizeof (GLfloat) * 4 * 2);
+	if (!vertices) {
+	    _cairo_gl_context_release (ctx);
+	    free (vertices);
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	}
+    } else {
+	vertices = vertices_stack;
+    }
+
+    glUseProgramObjectARB (ctx->fill_rectangles_shader);
+
+    _cairo_gl_set_destination (surface);
+    _cairo_gl_set_operator (surface, op);
+
+    gl_color[0] = color->red * color->alpha;
+    gl_color[1] = color->green * color->alpha;
+    gl_color[2] = color->blue * color->alpha;
+    gl_color[3] = color->alpha;
+    glUniform4fvARB (ctx->fill_rectangles_color_uniform, 1, gl_color);
+
+    for (i = 0; i < num_rects; i++) {
+	vertices[i * 8 + 0] = rects[i].x;
+	vertices[i * 8 + 1] = rects[i].y;
+	vertices[i * 8 + 2] = rects[i].x + rects[i].width;
+	vertices[i * 8 + 3] = rects[i].y;
+	vertices[i * 8 + 4] = rects[i].x + rects[i].width;
+	vertices[i * 8 + 5] = rects[i].y + rects[i].height;
+	vertices[i * 8 + 6] = rects[i].x;
+	vertices[i * 8 + 7] = rects[i].y + rects[i].height;
+    }
+
+    glVertexPointer (2, GL_FLOAT, sizeof (GLfloat)*2, vertices);
+    glEnableClientState (GL_VERTEX_ARRAY);
+
+    glDrawArrays (GL_QUADS, 0, 4 * num_rects);
+
+    glDisableClientState (GL_VERTEX_ARRAY);
+    glDisable (GL_BLEND);
+    glUseProgramObjectARB (0);
+
+    _cairo_gl_context_release (ctx);
+    if (vertices != vertices_stack)
+	free (vertices);
+
+    return CAIRO_STATUS_SUCCESS;
+#undef N_STACK_RECTS
+}
+
+
+static cairo_int_status_t
+_cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
+				   cairo_operator_t	    op,
+				   const cairo_color_t     *color,
+				   cairo_rectangle_int_t   *rects,
+				   int			    num_rects)
+{
+    if (GLEW_ARB_fragment_shader && GLEW_ARB_vertex_shader) {
+	return _cairo_gl_surface_fill_rectangles_glsl(abstract_surface,
+						      op,
+						      color,
+						      rects,
+						      num_rects);
+    } else {
+	return _cairo_gl_surface_fill_rectangles_fixed(abstract_surface,
+						       op,
+						       color,
+						       rects,
+						       num_rects);
+    }
 }
 
 typedef struct _cairo_gl_surface_span_renderer {
