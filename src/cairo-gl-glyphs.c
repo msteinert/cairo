@@ -568,7 +568,7 @@ _cairo_gl_surface_show_glyphs_via_mask (cairo_gl_surface_t	*dst,
 
     _cairo_pattern_init_solid (&solid, CAIRO_COLOR_WHITE, CAIRO_CONTENT_COLOR_ALPHA);
     status = _render_glyphs ((cairo_gl_surface_t *) mask, 0, 0,
-	                     CAIRO_OPERATOR_SOURCE, &solid.base,
+	                     CAIRO_OPERATOR_ADD, &solid.base,
 	                     glyphs, num_glyphs, glyph_extents,
 			     scaled_font, &has_component_alpha,
 			     NULL, remaining_glyphs);
