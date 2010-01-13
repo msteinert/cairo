@@ -503,6 +503,7 @@ _cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
 			       GL_TEXTURE_2D,
 			       surface->tex,
 			       0);
+    ctx->current_target = NULL;
 
     while ((err = glGetError ())) {
 	fprintf (stderr, "GL error in surface create: 0x%08x\n", err);
