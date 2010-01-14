@@ -34,6 +34,7 @@
  * Contributor(s):
  *	Carl Worth <cworth@cworth.org>
  *	Chris Wilson <chris@chris-wilson.co.uk>
+ *      T. Zachary Laine <whatwasthataddress@gmail.com>
  */
 
 #ifndef CAIRO_GL_PRIVATE_H
@@ -78,6 +79,13 @@ typedef struct cairo_gl_glyph_cache {
     GLuint tex;
     unsigned int width, height;
 } cairo_gl_glyph_cache_t;
+
+typedef struct cairo_gl_shader_program {
+    GLuint vertex_shader;
+    GLuint fragment_shader;
+    GLuint program;
+    cairo_bool_t build_failure;
+} cairo_gl_shader_program_t;
 
 typedef struct _cairo_gl_context {
     cairo_device_t base;
@@ -240,6 +248,47 @@ _cairo_gl_y_flip (cairo_gl_surface_t *surface, int y)
     else
 	return (surface->height - 1) - y;
 }
+
+void
+init_shader_program (cairo_gl_shader_program_t *program);
+
+void
+destroy_shader_program (cairo_gl_shader_program_t *program);
+
+cairo_status_t
+create_shader_program (cairo_gl_shader_program_t *program,
+                       const char *vertex_text,
+                       const char *fragment_text);
+
+cairo_status_t
+create_linear_gradient_shader_program (cairo_gl_shader_program_t *program);
+
+cairo_status_t
+create_radial_gradient_shader_program (cairo_gl_shader_program_t *program);
+
+cairo_status_t
+bind_float_to_shader (GLuint program, const char *name,
+                      float value);
+
+cairo_status_t
+bind_vec2_to_shader (GLuint program, const char *name,
+                     float value0, float value1);
+
+cairo_status_t
+bind_vec3_to_shader (GLuint program, const char *name,
+                     float value0, float value1,
+                     float value2);
+
+cairo_status_t
+bind_vec4_to_shader (GLuint program, const char *name,
+                     float value0, float value1,
+                     float value2, float value3);
+
+cairo_status_t
+bind_matrix_to_shader (GLuint program, const char *name, cairo_matrix_t* m);
+
+cairo_status_t
+bind_texture_to_shader (GLuint program, const char *name, GLuint tex_unit);
 
 slim_hidden_proto (cairo_gl_surface_create);
 
