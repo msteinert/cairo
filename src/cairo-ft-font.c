@@ -2130,11 +2130,11 @@ _cairo_ft_index_to_ucs4(void	        *abstract_font,
     *ucs4 = (uint32_t) -1;
     charcode = FT_Get_First_Char(face, &gindex);
     while (gindex != 0) {
-	charcode = FT_Get_Next_Char (face, charcode, &gindex);
 	if (gindex == index) {
 	    *ucs4 = charcode;
 	    break;
 	}
+	charcode = FT_Get_Next_Char (face, charcode, &gindex);
     }
 
     _cairo_ft_unscaled_font_unlock_face (unscaled);
