@@ -954,15 +954,6 @@ _cairo_gl_pattern_texture_setup (cairo_gl_composite_operand_t *operand,
 
     operand->operand.texture.surface = surface;
     operand->operand.texture.tex = surface->tex;
-    switch (surface->base.content) {
-    case CAIRO_CONTENT_ALPHA:
-    case CAIRO_CONTENT_COLOR_ALPHA:
-	operand->operand.texture.has_alpha = TRUE;
-	break;
-    case CAIRO_CONTENT_COLOR:
-	operand->operand.texture.has_alpha = FALSE;
-	break;
-    }
 
     /* Translate the matrix from
      * (unnormalized src -> unnormalized src) to
@@ -1142,13 +1133,22 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
 	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
 
-	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE0);
+	/* Force the src color to 0 if the surface should be alpha-only.
+	 * We may have a teximage with color bits if the implementation doesn't
+	 * support GL_ALPHA FBOs.
+	 */
+	if (setup->src.operand.texture.surface->base.content !=
+	    CAIRO_CONTENT_ALPHA)
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE0);
+	else
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
 	/* Wire the src alpha to 1 if the surface doesn't have it.
 	 * We may have a teximage with alpha bits even though we didn't ask
 	 * for it and we don't pay attention to setting alpha to 1 in a dest
 	 * that has inadvertent alpha.
 	 */
-	if (setup->src.operand.texture.has_alpha)
+	if (setup->src.operand.texture.surface->base.content !=
+	    CAIRO_CONTENT_COLOR)
 	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE0);
 	else
 	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_CONSTANT);

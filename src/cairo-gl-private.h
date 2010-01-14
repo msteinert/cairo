@@ -113,7 +113,6 @@ typedef struct cairo_gl_composite_operand {
 	    GLuint tex;
 	    cairo_gl_surface_t *surface;
 	    cairo_surface_attributes_t attributes;
-	    cairo_bool_t has_alpha;
 	} texture;
 	struct {
 	    GLfloat color[4];
