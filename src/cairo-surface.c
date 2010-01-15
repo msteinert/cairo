@@ -1037,6 +1037,7 @@ cairo_surface_mark_dirty (cairo_surface_t *surface)
 {
     cairo_surface_mark_dirty_rectangle (surface, 0, 0, -1, -1);
 }
+slim_hidden_def (cairo_surface_mark_dirty);
 
 /**
  * cairo_surface_mark_dirty_rectangle:

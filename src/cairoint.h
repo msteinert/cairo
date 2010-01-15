@@ -2722,6 +2722,7 @@ slim_hidden_proto (cairo_surface_get_font_options);
 slim_hidden_proto (cairo_surface_get_mime_data);
 slim_hidden_proto (cairo_surface_get_type);
 slim_hidden_proto (cairo_surface_has_show_text_glyphs);
+slim_hidden_proto (cairo_surface_mark_dirty);
 slim_hidden_proto (cairo_surface_mark_dirty_rectangle);
 slim_hidden_proto_no_warn (cairo_surface_reference);
 slim_hidden_proto (cairo_surface_set_device_offset);
