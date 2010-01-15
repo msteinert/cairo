@@ -1113,6 +1113,8 @@ cairo_status_t
 _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 {
     cairo_pattern_union_t source_pattern;
+    cairo_stroke_style_t style;
+    double dash[2];
     cairo_clip_t clip;
     cairo_status_t status;
 
@@ -1128,13 +1130,22 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
     if (_clipped (gstate))
 	return CAIRO_STATUS_SUCCESS;
 
+    memcpy (&style, &gstate->stroke_style, sizeof (gstate->stroke_style));
+    if (_cairo_stroke_style_dash_can_approximate (&gstate->stroke_style, &gstate->ctm, gstate->tolerance)) {
+        style.dash = dash;
+        _cairo_stroke_style_dash_approximate (&gstate->stroke_style, &gstate->ctm, gstate->tolerance,
+					      &style.dash_offset,
+					      style.dash,
+					      &style.num_dashes);
+    }
+
     _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
 
     status = _cairo_surface_stroke (gstate->target,
 				    _reduce_op (gstate, &source_pattern),
 				    &source_pattern.base,
 				    path,
-				    &gstate->stroke_style,
+				    &style,
 				    &gstate->ctm,
 				    &gstate->ctm_inverse,
 				    gstate->tolerance,
