@@ -2361,13 +2361,11 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
                                          const cairo_surface_pattern_t *mask,
 					 cairo_clip_t *clip)
 {
-    cairo_rectangle_int_t mask_extents;
     CGRect rect;
     CGImageRef img;
     cairo_surface_t *pat_surf = mask->surface;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
     CGAffineTransform ctm, mask_matrix;
-    cairo_bool_t is_bounded;
 
     status = _cairo_surface_to_cgimage ((cairo_surface_t *) surface, pat_surf, &img);
     if (status)
@@ -2378,7 +2376,7 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    rect = CGRectMake (0.0f, 0.0f, mask_extents.width, mask_extents.height);
+    rect = CGRectMake (0.0f, 0.0f, CGImageGetWidth (img) , CGImageGetHeight (img));
 
     CGContextSaveGState (surface->cgContext);
 
