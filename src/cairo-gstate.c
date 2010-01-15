@@ -821,6 +821,21 @@ _cairo_gstate_path_extents (cairo_gstate_t     *gstate,
 }
 
 static void
+_init_solid_for_color_stop (cairo_solid_pattern_t *solid,
+			    const cairo_color_t *color)
+{
+    cairo_color_t premult;
+
+    /* Color stops aren't premultiplied, so fix that here */
+    _cairo_color_init_rgba (&premult,
+			    color->red,
+			    color->green,
+			    color->blue,
+			    color->alpha);
+    _cairo_pattern_init_solid (solid, &premult, CAIRO_CONTENT_COLOR_ALPHA);
+}
+
+static void
 _cairo_gstate_copy_pattern (cairo_pattern_t *pattern,
 			    const cairo_pattern_t *original)
 {
@@ -841,9 +856,8 @@ _cairo_gstate_copy_pattern (cairo_pattern_t *pattern,
 	    /* fast path for gradients with less than 2 color stops */
 	    if (src->n_stops < 2) {
 		if (src->n_stops) {
-		    _cairo_pattern_init_solid ((cairo_solid_pattern_t *) pattern,
-					       &src->stops->color,
-					       CAIRO_CONTENT_COLOR_ALPHA);
+		    _init_solid_for_color_stop ((cairo_solid_pattern_t *) pattern,
+						&src->stops->color);
 		} else {
 		    _cairo_pattern_init_solid ((cairo_solid_pattern_t *) pattern,
 					       CAIRO_COLOR_TRANSPARENT,
@@ -865,10 +879,8 @@ _cairo_gstate_copy_pattern (cairo_pattern_t *pattern,
 		    }
 		}
 		if (i == src->n_stops) {
-		    _cairo_pattern_init_solid ((cairo_solid_pattern_t *) pattern,
-					       &src->stops->color,
-					       CAIRO_CONTENT_COLOR_ALPHA);
-
+		    _init_solid_for_color_stop ((cairo_solid_pattern_t *) pattern,
+						&src->stops->color);
 		    return;
 		}
 	    }

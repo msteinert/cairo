@@ -2206,6 +2206,21 @@ _cairo_pattern_acquire_surface_for_surface (const cairo_surface_pattern_t   *pat
     return status;
 }
 
+static void
+_init_solid_for_color_stop (cairo_solid_pattern_t *solid,
+			    const cairo_color_t *color)
+{
+    cairo_color_t premult;
+
+    /* Color stops aren't premultiplied, so fix that here */
+    _cairo_color_init_rgba (&premult,
+			    color->red,
+			    color->green,
+			    color->blue,
+			    color->alpha);
+    _cairo_pattern_init_solid (solid, &premult, CAIRO_CONTENT_COLOR_ALPHA);
+}
+
 /**
  * _cairo_pattern_acquire_surface:
  * @pattern: a #cairo_pattern_t
@@ -2257,19 +2272,16 @@ _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
     case CAIRO_PATTERN_TYPE_RADIAL: {
 	cairo_gradient_pattern_t *src = (cairo_gradient_pattern_t *) pattern;
 
+	/* XXX The gradient->solid conversion code should now be redundant. */
+
 	/* fast path for gradients with less than 2 color stops */
 	if (src->n_stops < 2)
 	{
 	    cairo_solid_pattern_t solid;
 
-	    if (src->n_stops)
-	    {
-		_cairo_pattern_init_solid (&solid,
-					   &src->stops->color,
-					   CAIRO_CONTENT_COLOR_ALPHA);
-	    }
-	    else
-	    {
+	    if (src->n_stops) {
+		_init_solid_for_color_stop (&solid, &src->stops->color);
+	    } else {
 		_cairo_pattern_init_solid (&solid,
 					   CAIRO_COLOR_TRANSPARENT,
 					   CAIRO_CONTENT_ALPHA);
@@ -2298,9 +2310,7 @@ _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 	    if (i == src->n_stops) {
 		cairo_solid_pattern_t solid;
 
-		_cairo_pattern_init_solid (&solid,
-					   &src->stops->color,
-					   CAIRO_CONTENT_COLOR_ALPHA);
+		_init_solid_for_color_stop (&solid, &src->stops->color);
 
 		status =
 		    _cairo_pattern_acquire_surface_for_solid (&solid, dst,
