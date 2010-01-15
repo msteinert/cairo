@@ -126,6 +126,7 @@ test_sources = \
 	line-width-zero.c				\
 	linear-gradient.c				\
 	linear-gradient-reflect.c			\
+	linear-uniform.c				\
 	long-dashed-lines.c				\
 	long-lines.c					\
 	mask.c						\
