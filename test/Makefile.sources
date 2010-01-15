@@ -56,6 +56,7 @@ test_sources = \
 	dash-state.c					\
 	dash-zero-length.c				\
 	degenerate-arc.c				\
+	degenerate-arcs.c				\
 	degenerate-curve-to.c				\
 	degenerate-dash.c				\
 	degenerate-path.c				\

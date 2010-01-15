@@ -336,6 +336,7 @@ REFERENCE_IMAGES = \
 	degenerate-arc.ps3.ref.png \
 	degenerate-arc.ref.png \
 	degenerate-arc.xlib.ref.png \
+	degenerate-arcs.ref.png \
 	degenerate-curve-to.ref.png \
 	degenerate-curve-to.ps.xfail.png \
 	degenerate-dash.ps.xfail.png \
