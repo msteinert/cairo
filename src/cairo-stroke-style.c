@@ -145,6 +145,22 @@ _cairo_stroke_style_dash_period (const cairo_stroke_style_t *style)
 /*
  * Coefficient of the linear approximation (minimizing square difference)
  * of the surface covered by round caps
+ *
+ * This can be computed in the following way:
+ * the area inside the circle with radius w/2 and the region -d/2 <= x <= d/2 is:
+ *   f(w,d) = 2 * integrate (sqrt (w*w/4 - x*x), x, -d/2, d/2)
+ * The square difference to a generic linear approximation (c*d) in the range (0,w) would be:
+ *   integrate ((f(w,d) - c*d)^2, d, 0, w)
+ * To minimize this difference it is sufficient to find a solution of the differential with
+ * respect to c:
+ *   solve ( diff (integrate ((f(w,d) - c*d)^2, d, 0, w), c), c)
+ * Which leads to c = 9/32*pi*w
+ * Since we're not interested in the true area, but just in a coverage extimate,
+ * we always divide the real area by the line width (w).
+ * The same computation for square caps would be
+ *   f(w,d) = 2 * integrate(w/2, x, -d/2, d/2)
+ *   c = 1*w
+ * but in this case it would not be an approximation, since f is already linear in d.
  */
 #define ROUND_MINSQ_APPROXIMATION (9*M_PI/32)
 
