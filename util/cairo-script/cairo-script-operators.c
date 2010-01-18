@@ -1894,7 +1894,7 @@ _ft_create_for_pattern (csi_t *ctx,
 	/* prior to 1.9, you needed to pass a resolved pattern */
 	resolved = FcFontMatch (NULL, pattern, NULL);
 	if (_csi_unlikely (resolved == NULL)) {
-	    FcPatternDestroy (resolved);
+	    FcPatternDestroy (pattern);
 	    return _csi_error (CSI_STATUS_NO_MEMORY);
 	}
     }
