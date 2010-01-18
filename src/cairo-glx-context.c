@@ -88,6 +88,8 @@ _glx_destroy (void *abstract_ctx)
 
     if (ctx->dummy_window != None)
 	XDestroyWindow (ctx->display, ctx->dummy_window);
+
+    glXMakeCurrent (ctx->display, 0, 0);
 }
 
 static cairo_status_t
@@ -142,8 +144,8 @@ _glx_dummy_ctx (Display *dpy, GLXContext gl_ctx, Window *dummy)
     return CAIRO_STATUS_SUCCESS;
 }
 
-cairo_gl_context_t *
-cairo_glx_context_create (Display *dpy, GLXContext gl_ctx)
+cairo_device_t *
+cairo_glx_device_create (Display *dpy, GLXContext gl_ctx)
 {
     cairo_glx_context_t *ctx;
     cairo_status_t status;
@@ -171,25 +173,28 @@ cairo_glx_context_create (Display *dpy, GLXContext gl_ctx)
 	return _cairo_gl_context_create_in_error (status);
     }
 
-    return &ctx->base;
+    return &ctx->base.base;
 }
 
 cairo_surface_t *
-cairo_gl_surface_create_for_window (cairo_gl_context_t   *ctx,
-				    Window                win,
-				    int                   width,
-				    int                   height)
+cairo_gl_surface_create_for_window (cairo_device_t	*device,
+				    Window		 win,
+				    int			 width,
+				    int			 height)
 {
     cairo_glx_surface_t *surface;
 
-    if (unlikely (ctx->status))
-	return _cairo_surface_create_in_error (ctx->status);
+    if (unlikely (device->status))
+	return _cairo_surface_create_in_error (device->status);
+
+    if (device->backend->type != CAIRO_DEVICE_TYPE_GL)
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
 
     surface = calloc (1, sizeof (cairo_glx_surface_t));
     if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    _cairo_gl_surface_init (ctx, &surface->base,
+    _cairo_gl_surface_init (device, &surface->base,
 			    CAIRO_CONTENT_COLOR_ALPHA, width, height);
     surface->win = win;
 

@@ -40,16 +40,8 @@
 
 CAIRO_BEGIN_DECLS
 
-typedef struct _cairo_gl_context cairo_gl_context_t;
-
-cairo_public cairo_gl_context_t *
-cairo_gl_context_reference (cairo_gl_context_t *context);
-
-cairo_public void
-cairo_gl_context_destroy (cairo_gl_context_t *context);
-
 cairo_public cairo_surface_t *
-cairo_gl_surface_create (cairo_gl_context_t *ctx,
+cairo_gl_surface_create (cairo_device_t *device,
 			 cairo_content_t content,
 			 int width, int height);
 
@@ -71,11 +63,11 @@ cairo_gl_surface_glfinish (cairo_surface_t *surface);
 #if CAIRO_HAS_GLX_FUNCTIONS
 #include <GL/glx.h>
 
-cairo_public cairo_gl_context_t *
-cairo_glx_context_create (Display *dpy, GLXContext gl_ctx);
+cairo_public cairo_device_t *
+cairo_glx_device_create (Display *dpy, GLXContext gl_ctx);
 
 cairo_public cairo_surface_t *
-cairo_gl_surface_create_for_window (cairo_gl_context_t *ctx,
+cairo_gl_surface_create_for_window (cairo_device_t *device,
 				    Window win,
 				    int width, int height);
 #endif
@@ -83,11 +75,11 @@ cairo_gl_surface_create_for_window (cairo_gl_context_t *ctx,
 #if CAIRO_HAS_EAGLE_FUNCTIONS
 #include <eagle.h>
 
-cairo_public cairo_gl_context_t *
-cairo_eagle_context_create (EGLDisplay display, EGLContext context);
+cairo_public cairo_device_t *
+cairo_eagle_device_create (EGLDisplay display, EGLContext context);
 
 cairo_public cairo_surface_t *
-cairo_gl_surface_create_for_eagle (cairo_gl_context_t *ctx,
+cairo_gl_surface_create_for_eagle (cairo_device_t *device,
 				   EGLSurface surface,
 				   int width, int height);
 #endif

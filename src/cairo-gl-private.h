@@ -40,6 +40,7 @@
 #define CAIRO_GL_PRIVATE_H
 
 #include "cairoint.h"
+#include "cairo-device-private.h"
 #include "cairo-rtree-private.h"
 
 #include <GL/glew.h>
@@ -66,7 +67,6 @@
 typedef struct _cairo_gl_surface {
     cairo_surface_t base;
 
-    cairo_gl_context_t *ctx;
     int width, height;
 
     GLuint tex; /* GL texture object containing our data. */
@@ -79,11 +79,9 @@ typedef struct cairo_gl_glyph_cache {
     unsigned int width, height;
 } cairo_gl_glyph_cache_t;
 
-struct _cairo_gl_context {
-    cairo_reference_count_t ref_count;
-    cairo_status_t status;
+typedef struct _cairo_gl_context {
+    cairo_device_t base;
 
-    cairo_mutex_t mutex; /* needed? */
     GLuint dummy_tex;
     GLint fill_rectangles_shader;
     GLint fill_rectangles_color_uniform;
@@ -97,7 +95,7 @@ struct _cairo_gl_context {
     void (*make_current)(void *ctx, cairo_gl_surface_t *surface);
     void (*swap_buffers)(void *ctx, cairo_gl_surface_t *surface);
     void (*destroy) (void *ctx);
-};
+} cairo_gl_context_t;
 
 enum cairo_gl_composite_operand_type {
     OPERAND_CONSTANT,
@@ -130,14 +128,17 @@ typedef struct _cairo_gl_composite_setup {
 
 cairo_private extern const cairo_surface_backend_t _cairo_gl_surface_backend;
 
-cairo_private cairo_gl_context_t *
-_cairo_gl_context_create_in_error (cairo_status_t status);
+static inline cairo_device_t *
+_cairo_gl_context_create_in_error (cairo_status_t status)
+{
+    return (cairo_device_t *) _cairo_device_create_in_error (status);
+}
 
 cairo_private cairo_status_t
 _cairo_gl_context_init (cairo_gl_context_t *ctx);
 
 cairo_private void
-_cairo_gl_surface_init (cairo_gl_context_t *ctx,
+_cairo_gl_surface_init (cairo_device_t *device,
 			cairo_gl_surface_t *surface,
 			cairo_content_t content,
 			int width, int height);
@@ -157,11 +158,26 @@ _cairo_gl_operand_init (cairo_gl_composite_operand_t *operand,
 			int dst_x, int dst_y,
 			int width, int height);
 
-cairo_private cairo_gl_context_t *
-_cairo_gl_context_acquire (cairo_gl_context_t *ctx);
+static inline cairo_status_t cairo_warn
+_cairo_gl_context_acquire (cairo_device_t *device,
+			   cairo_gl_context_t **ctx)
+{
+    cairo_status_t status;
 
-cairo_private void
-_cairo_gl_context_release (cairo_gl_context_t *ctx);
+    status = cairo_device_acquire (device);
+    if (unlikely (status))
+	return status;
+
+    *ctx = (cairo_gl_context_t *) device;
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static inline void
+_cairo_gl_context_release (cairo_gl_context_t *ctx)
+{
+    cairo_device_release (&ctx->base);
+}
+
 
 cairo_private void
 _cairo_gl_set_destination (cairo_gl_surface_t *surface);
@@ -169,7 +185,7 @@ _cairo_gl_set_destination (cairo_gl_surface_t *surface);
 cairo_private cairo_bool_t
 _cairo_gl_operator_is_supported (cairo_operator_t op);
 
-cairo_private void
+cairo_private cairo_status_t
 _cairo_gl_surface_clear (cairo_gl_surface_t *surface);
 
 cairo_private void

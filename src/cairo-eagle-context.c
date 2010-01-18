@@ -41,6 +41,7 @@
 #include "cairo-gl-private.h"
 
 #include "cairo-error-private.h"
+
 #include <i915_drm.h> /* XXX dummy surface for glewInit() */
 #include <sys/ioctl.h>
 
@@ -129,19 +130,18 @@ _eagle_init (EGLDisplay display, EGLContext context)
     eagleMakeCurrent (display, dummy, dummy, context);
 }
 
-cairo_gl_context_t *
+cairo_device_t *
 cairo_eagle_context_create (EGLDisplay display, EGLContext context)
 {
     cairo_eagle_context_t *ctx;
     cairo_status_t status;
 
-    if (! _eagle_init (display, context)) {
-	return _cairo_gl_context_create_in_error (CAIRO_STATUS_NO_MEMORY);
-    }
+    if (! _eagle_init (display, context))
+	return _cairo_device_create_in_error (CAIRO_STATUS_NO_MEMORY);
 
     ctx = calloc (1, sizeof (cairo_eagle_context_t));
     if (ctx == NULL)
-	return _cairo_gl_context_create_in_error (CAIRO_STATUS_NO_MEMORY);
+	return _cairo_device_create_in_error (CAIRO_STATUS_NO_MEMORY);
 
     ctx->display = display;
     ctx->context = context;
@@ -153,28 +153,31 @@ cairo_eagle_context_create (EGLDisplay display, EGLContext context)
     status = _cairo_gl_context_init (&ctx->base);
     if (status) {
 	free (ctx);
-	return _cairo_gl_context_create_in_error (status);
+	return _cairo_device_create_in_error (status);
     }
 
-    return &ctx->base;
+    return &ctx->base.base;
 }
 
 cairo_surface_t *
-cairo_gl_surface_create_for_eagle (cairo_gl_context_t   *ctx,
+cairo_gl_surface_create_for_eagle (cairo_device_t	*device,
 				   EGLSurface            eagle,
 				   int                   width,
 				   int                   height)
 {
     cairo_eagle_surface_t *surface;
 
-    if (ctx->status)
-	return _cairo_surface_create_in_error (ctx->status);
+    if (unlikely (device->status))
+	return _cairo_surface_create_in_error (device->status);
+
+    if (unlikely (device->backend->type != CAIRO_DEVICE_TYPE_GL))
+	return _cairo_surface_create_in_error (CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
 
     surface = calloc (1, sizeof (cairo_eagle_surface_t));
     if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    _cairo_gl_surface_init (ctx, &surface->base,
+    _cairo_gl_surface_init (device, &surface->base,
 			    CAIRO_CONTENT_COLOR_ALPHA, width, height);
     surface->eagle = eagle;
 

@@ -37,9 +37,10 @@
 typedef struct _gl_target_closure {
     Display *dpy;
     int screen;
+    Window drawable;
 
-    GLXContext gl_ctx;
-    cairo_gl_context_t *ctx;
+    GLXContext ctx;
+    cairo_device_t *device;
     cairo_surface_t *surface;
 } gl_target_closure_t;
 
@@ -48,9 +49,15 @@ _cairo_boilerplate_gl_cleanup (void *closure)
 {
     gl_target_closure_t *gltc = closure;
 
-    cairo_gl_context_destroy (gltc->ctx);
-    glXDestroyContext (gltc->dpy, gltc->gl_ctx);
+    cairo_device_finish (gltc->device);
+    cairo_device_destroy (gltc->device);
+
+    glXDestroyContext (gltc->dpy, gltc->ctx);
+
+    if (gltc->drawable)
+	XDestroyWindow (gltc->dpy, gltc->drawable);
     XCloseDisplay (gltc->dpy);
+
     free (gltc);
 }
 
@@ -79,12 +86,12 @@ _cairo_boilerplate_gl_create_surface (const char		 *name,
 			  GLX_DOUBLEBUFFER,
 			  None };
     XVisualInfo *visinfo;
-    GLXContext gl_ctx;
+    GLXContext ctx;
     gl_target_closure_t *gltc;
     cairo_surface_t *surface;
     Display *dpy;
 
-    gltc = malloc (sizeof (gl_target_closure_t));
+    gltc = calloc (1, sizeof (gl_target_closure_t));
     *closure = gltc;
 
     if (width == 0)
@@ -115,13 +122,14 @@ _cairo_boilerplate_gl_create_surface (const char		 *name,
 	return NULL;
     }
 
-    gl_ctx = glXCreateContext (dpy, visinfo, NULL, True);
+    ctx = glXCreateContext (dpy, visinfo, NULL, True);
     XFree (visinfo);
 
-    gltc->gl_ctx = gl_ctx;
-    gltc->ctx = cairo_glx_context_create (dpy, gl_ctx);
+    gltc->ctx = ctx;
+    gltc->device = cairo_glx_device_create (dpy, ctx);
 
-    gltc->surface = surface = cairo_gl_surface_create (gltc->ctx, content,
+    gltc->surface = surface = cairo_gl_surface_create (gltc->device,
+						       content,
 					               ceil (width),
 						       ceil (height));
     if (cairo_surface_status (surface))
