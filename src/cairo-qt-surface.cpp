@@ -326,7 +326,7 @@ _qmatrix_from_cairo_matrix (const cairo_matrix_t& m)
 /** Path conversion **/
 typedef struct _qpainter_path_transform {
     QPainterPath path;
-    cairo_matrix_t *ctm_inverse;
+    const cairo_matrix_t *ctm_inverse;
 } qpainter_path_data;
 
 /* cairo path -> execute in context */
@@ -394,7 +394,7 @@ _cairo_path_to_qpainterpath_close_path (void *closure)
 
 static inline QPainterPath
 path_to_qt (cairo_path_fixed_t *path,
-	    cairo_matrix_t *ctm_inverse = NULL)
+	    const cairo_matrix_t *ctm_inverse = NULL)
 {
     qpainter_path_data data;
     cairo_status_t status;
@@ -699,7 +699,7 @@ _cairo_qt_surface_get_extents (void *abstract_surface,
 
     extents->x = qs->window.x();
     extents->y = qs->window.y();
-    extents->width = qs->window.width();
+    extents->width  = qs->window.width();
     extents->height = qs->window.height();
 
     return TRUE;
@@ -1044,7 +1044,7 @@ struct PatternToBrushConverter {
 
 struct PatternToPenConverter {
     PatternToPenConverter (const cairo_pattern_t *source,
-                           cairo_stroke_style_t *style) :
+                           const cairo_stroke_style_t *style) :
         mBrushConverter(source)
     {
         Qt::PenJoinStyle join = Qt::MiterJoin;
@@ -1332,9 +1332,9 @@ _cairo_qt_surface_stroke (void *abstract_surface,
 			  cairo_operator_t op,
 			  const cairo_pattern_t *source,
 			  cairo_path_fixed_t *path,
-			  cairo_stroke_style_t *style,
-			  cairo_matrix_t *ctm,
-			  cairo_matrix_t *ctm_inverse,
+			  const cairo_stroke_style_t *style,
+			  const cairo_matrix_t *ctm,
+			  const cairo_matrix_t *ctm_inverse,
 			  double tolerance,
 			  cairo_antialias_t antialias,
 			  cairo_clip_t *clip)

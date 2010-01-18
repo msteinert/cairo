@@ -53,7 +53,7 @@ _cairo_stroke_style_init (cairo_stroke_style_t *style)
 
 cairo_status_t
 _cairo_stroke_style_init_copy (cairo_stroke_style_t *style,
-			       cairo_stroke_style_t *other)
+			       const cairo_stroke_style_t *other)
 {
     if (CAIRO_INJECT_FAULT ())
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);

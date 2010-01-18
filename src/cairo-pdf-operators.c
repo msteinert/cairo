@@ -544,9 +544,9 @@ _cairo_pdf_line_join (cairo_line_join_t join)
 }
 
 cairo_int_status_t
-_cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t	*pdf_operators,
-					cairo_stroke_style_t	*style,
-					double			 scale)
+_cairo_pdf_operators_emit_stroke_style (cairo_pdf_operators_t		*pdf_operators,
+					const cairo_stroke_style_t	*style,
+					double				 scale)
 {
     double *dash = style->dash;
     int num_dashes = style->num_dashes;
@@ -701,12 +701,12 @@ _cairo_matrix_factor_out_scale (cairo_matrix_t *m, double *scale)
 }
 
 static cairo_int_status_t
-_cairo_pdf_operators_emit_stroke (cairo_pdf_operators_t	*pdf_operators,
-				  cairo_path_fixed_t	*path,
-				  cairo_stroke_style_t	*style,
-				  cairo_matrix_t	*ctm,
-				  cairo_matrix_t	*ctm_inverse,
-				  const char		*pdf_operator)
+_cairo_pdf_operators_emit_stroke (cairo_pdf_operators_t		*pdf_operators,
+				  cairo_path_fixed_t		*path,
+				  const cairo_stroke_style_t	*style,
+				  const cairo_matrix_t		*ctm,
+				  const cairo_matrix_t		*ctm_inverse,
+				  const char			*pdf_operator)
 {
     cairo_status_t status;
     cairo_matrix_t m, path_transform;
@@ -792,11 +792,11 @@ _cairo_pdf_operators_emit_stroke (cairo_pdf_operators_t	*pdf_operators,
 }
 
 cairo_int_status_t
-_cairo_pdf_operators_stroke (cairo_pdf_operators_t	*pdf_operators,
-			     cairo_path_fixed_t		*path,
-			     cairo_stroke_style_t	*style,
-			     cairo_matrix_t		*ctm,
-			     cairo_matrix_t		*ctm_inverse)
+_cairo_pdf_operators_stroke (cairo_pdf_operators_t		*pdf_operators,
+			     cairo_path_fixed_t			*path,
+			     const cairo_stroke_style_t		*style,
+			     const cairo_matrix_t		*ctm,
+			     const cairo_matrix_t		*ctm_inverse)
 {
     return _cairo_pdf_operators_emit_stroke (pdf_operators,
 					     path,
@@ -846,12 +846,12 @@ _cairo_pdf_operators_fill (cairo_pdf_operators_t	*pdf_operators,
 }
 
 cairo_int_status_t
-_cairo_pdf_operators_fill_stroke (cairo_pdf_operators_t 	*pdf_operators,
+_cairo_pdf_operators_fill_stroke (cairo_pdf_operators_t		*pdf_operators,
 				  cairo_path_fixed_t		*path,
-				  cairo_fill_rule_t	 	 fill_rule,
-				  cairo_stroke_style_t	        *style,
-				  cairo_matrix_t		*ctm,
-				  cairo_matrix_t		*ctm_inverse)
+				  cairo_fill_rule_t		 fill_rule,
+				  const cairo_stroke_style_t	*style,
+				  const cairo_matrix_t		*ctm,
+				  const cairo_matrix_t		*ctm_inverse)
 {
     const char *operator;
 

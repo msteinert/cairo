@@ -4889,7 +4889,7 @@ _cairo_pdf_surface_write_smask_group (cairo_pdf_surface_t     *surface,
     case PDF_STROKE:
 	status = _cairo_pdf_operators_stroke (&surface->pdf_operators,
 					      &group->path,
-					      group->style,
+					      &group->style,
 					      &group->ctm,
 					      &group->ctm_inverse);
 	break;
@@ -5509,9 +5509,9 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 			   cairo_operator_t	 op,
 			   const cairo_pattern_t *source,
 			   cairo_path_fixed_t	*path,
-			   cairo_stroke_style_t	*style,
-			   cairo_matrix_t	*ctm,
-			   cairo_matrix_t	*ctm_inverse,
+			   const cairo_stroke_style_t	*style,
+			   const cairo_matrix_t	*ctm,
+			   const cairo_matrix_t	*ctm_inverse,
 			   double		 tolerance,
 			   cairo_antialias_t	 antialias,
 			   cairo_clip_t		*clip)
@@ -5570,7 +5570,7 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 	    return status;
 	}
 
-	group->style = style;
+	group->style = *style;
 	group->ctm = *ctm;
 	group->ctm_inverse = *ctm_inverse;
 	status = _cairo_pdf_surface_add_smask_group (surface, group);
@@ -5750,21 +5750,21 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
 }
 
 static cairo_int_status_t
-_cairo_pdf_surface_fill_stroke (void		     *abstract_surface,
-				cairo_operator_t      fill_op,
-				const cairo_pattern_t *fill_source,
-				cairo_fill_rule_t     fill_rule,
-				double		      fill_tolerance,
-				cairo_antialias_t     fill_antialias,
-				cairo_path_fixed_t   *path,
-				cairo_operator_t      stroke_op,
-				const cairo_pattern_t *stroke_source,
-				cairo_stroke_style_t *stroke_style,
-				cairo_matrix_t	     *stroke_ctm,
-				cairo_matrix_t	     *stroke_ctm_inverse,
-				double		      stroke_tolerance,
-				cairo_antialias_t     stroke_antialias,
-				cairo_clip_t	     *clip)
+_cairo_pdf_surface_fill_stroke (void			*abstract_surface,
+				cairo_operator_t	 fill_op,
+				const cairo_pattern_t	*fill_source,
+				cairo_fill_rule_t	 fill_rule,
+				double			 fill_tolerance,
+				cairo_antialias_t	 fill_antialias,
+				cairo_path_fixed_t	*path,
+				cairo_operator_t	 stroke_op,
+				const cairo_pattern_t	*stroke_source,
+				const cairo_stroke_style_t *stroke_style,
+				const cairo_matrix_t	*stroke_ctm,
+				const cairo_matrix_t	*stroke_ctm_inverse,
+				double			 stroke_tolerance,
+				cairo_antialias_t	 stroke_antialias,
+				cairo_clip_t		*clip)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
     cairo_status_t status;

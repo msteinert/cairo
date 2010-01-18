@@ -95,10 +95,9 @@ typedef enum _cairo_pdf_operation {
     PDF_SHOW_GLYPHS
 } cairo_pdf_operation_t;
 
-typedef struct _cairo_pdf_smask_group
-{
-    double 		  width;
-    double 		  height;
+typedef struct _cairo_pdf_smask_group {
+    double		  width;
+    double		  height;
     cairo_pdf_resource_t  group_res;
     cairo_pdf_operation_t operation;
     cairo_pattern_t	 *source;
@@ -106,10 +105,10 @@ typedef struct _cairo_pdf_smask_group
     cairo_pattern_t	 *mask;
     cairo_path_fixed_t	  path;
     cairo_fill_rule_t	  fill_rule;
-    cairo_stroke_style_t *style;
+    cairo_stroke_style_t  style;
     cairo_matrix_t	  ctm;
     cairo_matrix_t	  ctm_inverse;
-    char           	 *utf8;
+    char		 *utf8;
     int                   utf8_len;
     cairo_glyph_t	 *glyphs;
     int			  num_glyphs;

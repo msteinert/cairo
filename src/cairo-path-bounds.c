@@ -246,8 +246,8 @@ _cairo_path_fixed_fill_extents (const cairo_path_fixed_t	*path,
 /* Adjusts the fill extents (above) by the device-space pen.  */
 void
 _cairo_path_fixed_approximate_stroke_extents (const cairo_path_fixed_t *path,
-					      cairo_stroke_style_t *style,
-					      const cairo_matrix_t *ctm,
+					      const cairo_stroke_style_t *style,
+					      const const cairo_matrix_t *ctm,
 					      cairo_rectangle_int_t *extents)
 {
     cairo_path_bounder_t bounder;
@@ -295,7 +295,7 @@ _cairo_path_fixed_approximate_stroke_extents (const cairo_path_fixed_t *path,
 
 cairo_status_t
 _cairo_path_fixed_stroke_extents (const cairo_path_fixed_t *path,
-				  cairo_stroke_style_t *stroke_style,
+				  const cairo_stroke_style_t *stroke_style,
 				  const cairo_matrix_t *ctm,
 				  const cairo_matrix_t *ctm_inverse,
 				  double tolerance,

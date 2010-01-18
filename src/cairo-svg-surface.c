@@ -66,9 +66,9 @@ static const cairo_svg_version_t _cairo_svg_versions[] =
 #define CAIRO_SVG_VERSION_LAST ARRAY_LENGTH (_cairo_svg_versions)
 
 static void
-_cairo_svg_surface_emit_path (cairo_output_stream_t *output,
-			      cairo_path_fixed_t    *path,
-			      cairo_matrix_t	    *ctm_inverse);
+_cairo_svg_surface_emit_path (cairo_output_stream_t	*output,
+			      cairo_path_fixed_t	*path,
+			      const cairo_matrix_t	*ctm_inverse);
 
 static cairo_bool_t
 _cairo_svg_version_has_page_set_support (cairo_svg_version_t version)
@@ -590,7 +590,7 @@ _cairo_svg_surface_emit_transform (cairo_output_stream_t *output,
 
 typedef struct {
     cairo_output_stream_t *output;
-    cairo_matrix_t *ctm_inverse;
+    const cairo_matrix_t *ctm_inverse;
 } svg_path_info_t;
 
 static cairo_status_t
@@ -663,9 +663,9 @@ _cairo_svg_path_close_path (void *closure)
 }
 
 static void
-_cairo_svg_surface_emit_path (cairo_output_stream_t *output,
-			      cairo_path_fixed_t    *path,
-			      cairo_matrix_t	    *ctm_inverse)
+_cairo_svg_surface_emit_path (cairo_output_stream_t	*output,
+			      cairo_path_fixed_t	*path,
+			      const cairo_matrix_t	*ctm_inverse)
 {
     cairo_status_t status;
     svg_path_info_t info;
@@ -1948,7 +1948,7 @@ _cairo_svg_surface_emit_fill_style (cairo_output_stream_t	*output,
 				    cairo_operator_t		 op,
 				    const cairo_pattern_t	*source,
 				    cairo_fill_rule_t		 fill_rule,
-				    cairo_matrix_t		*parent_matrix)
+				    const cairo_matrix_t	*parent_matrix)
 {
     _cairo_output_stream_printf (output,
 				 "fill-rule:%s;",
@@ -1959,12 +1959,12 @@ _cairo_svg_surface_emit_fill_style (cairo_output_stream_t	*output,
 }
 
 static cairo_status_t
-_cairo_svg_surface_emit_stroke_style (cairo_output_stream_t	    *output,
-				      cairo_svg_surface_t	    *surface,
-				      cairo_operator_t		     op,
-				      const cairo_pattern_t	    *source,
-				      cairo_stroke_style_t	    *stroke_style,
-				      cairo_matrix_t		    *parent_matrix)
+_cairo_svg_surface_emit_stroke_style (cairo_output_stream_t	   *output,
+				      cairo_svg_surface_t	   *surface,
+				      cairo_operator_t		    op,
+				      const cairo_pattern_t	   *source,
+				      const cairo_stroke_style_t   *stroke_style,
+				      const cairo_matrix_t	   *parent_matrix)
 {
     cairo_status_t status;
     const char *line_cap, *line_join;
@@ -2046,9 +2046,9 @@ _cairo_svg_surface_fill_stroke (void			*abstract_surface,
 				cairo_path_fixed_t	*path,
 				cairo_operator_t	 stroke_op,
 				const cairo_pattern_t	*stroke_source,
-				cairo_stroke_style_t	*stroke_style,
-				cairo_matrix_t		*stroke_ctm,
-				cairo_matrix_t		*stroke_ctm_inverse,
+				const cairo_stroke_style_t	*stroke_style,
+				const cairo_matrix_t		*stroke_ctm,
+				const cairo_matrix_t		*stroke_ctm_inverse,
 				double			 stroke_tolerance,
 				cairo_antialias_t	 stroke_antialias,
 				cairo_clip_t		*clip)
@@ -2337,9 +2337,9 @@ _cairo_svg_surface_stroke (void			*abstract_dst,
 			   cairo_operator_t      op,
 			   const cairo_pattern_t *source,
 			   cairo_path_fixed_t	*path,
-			   cairo_stroke_style_t *stroke_style,
-			   cairo_matrix_t	*ctm,
-			   cairo_matrix_t	*ctm_inverse,
+			   const cairo_stroke_style_t *stroke_style,
+			   const cairo_matrix_t	*ctm,
+			   const cairo_matrix_t	*ctm_inverse,
 			   double		 tolerance,
 			   cairo_antialias_t	 antialias,
 			   cairo_clip_t		*clip)

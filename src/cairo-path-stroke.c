@@ -57,7 +57,7 @@ typedef struct _cairo_stroker_dash {
 } cairo_stroker_dash_t;
 
 typedef struct cairo_stroker {
-    cairo_stroke_style_t *style;
+    cairo_stroke_style_t style;
 
     const cairo_matrix_t *ctm;
     const cairo_matrix_t *ctm_inverse;
@@ -164,14 +164,14 @@ _cairo_stroker_dash_init (cairo_stroker_dash_t *dash,
 
 static cairo_status_t
 _cairo_stroker_init (cairo_stroker_t		*stroker,
-		     cairo_stroke_style_t	*stroke_style,
+		     const cairo_stroke_style_t	*stroke_style,
 		     const cairo_matrix_t	*ctm,
 		     const cairo_matrix_t	*ctm_inverse,
 		     double			 tolerance)
 {
     cairo_status_t status;
 
-    stroker->style = stroke_style;
+    stroker->style = *stroke_style;
     stroker->ctm = ctm;
     stroker->ctm_inverse = ctm_inverse;
     stroker->tolerance = tolerance;
@@ -214,7 +214,7 @@ _cairo_stroker_limit (cairo_stroker_t *stroker,
      * of the bounds but which might generate rendering that's within bounds.
      */
 
-    _cairo_stroke_style_max_distance_from_path (stroker->style, stroker->ctm,
+    _cairo_stroke_style_max_distance_from_path (&stroker->style, stroker->ctm,
 						&dx, &dy);
 
     fdx = _cairo_fixed_from_double (dx);
@@ -457,7 +457,7 @@ _cairo_stroker_join (cairo_stroker_t *stroker,
 	outpt = &out->cw;
     }
 
-    switch (stroker->style->line_join) {
+    switch (stroker->style.line_join) {
     case CAIRO_LINE_JOIN_ROUND:
 	/* construct a fan around the common midpoint */
 	return _tessellate_fan (stroker,
@@ -471,7 +471,7 @@ _cairo_stroker_join (cairo_stroker_t *stroker,
 	/* dot product of incoming slope vector with outgoing slope vector */
 	double	in_dot_out = -in->usr_vector.x * out->usr_vector.x +
 			     -in->usr_vector.y * out->usr_vector.y;
-	double	ml = stroker->style->miter_limit;
+	double	ml = stroker->style.miter_limit;
 
 	/* Check the miter limit -- lines meeting at an acute angle
 	 * can generate long miters, the limit converts them to bevel
@@ -666,7 +666,7 @@ static cairo_status_t
 _cairo_stroker_add_cap (cairo_stroker_t *stroker,
 			const cairo_stroke_face_t *f)
 {
-    switch (stroker->style->line_cap) {
+    switch (stroker->style.line_cap) {
     case CAIRO_LINE_CAP_ROUND: {
 	cairo_slope_t slope;
 
@@ -688,8 +688,8 @@ _cairo_stroker_add_cap (cairo_stroker_t *stroker,
 
 	dx = f->usr_vector.x;
 	dy = f->usr_vector.y;
-	dx *= stroker->style->line_width / 2.0;
-	dy *= stroker->style->line_width / 2.0;
+	dx *= stroker->style.line_width / 2.0;
+	dy *= stroker->style.line_width / 2.0;
 	cairo_matrix_transform_distance (stroker->ctm, &dx, &dy);
 	fvector.dx = _cairo_fixed_from_double (dx);
 	fvector.dy = _cairo_fixed_from_double (dy);
@@ -827,13 +827,13 @@ _compute_face (const cairo_point_t *point, cairo_slope_t *dev_slope,
      */
     if (stroker->ctm_det_positive)
     {
-	face_dx = - slope_dy * (stroker->style->line_width / 2.0);
-	face_dy = slope_dx * (stroker->style->line_width / 2.0);
+	face_dx = - slope_dy * (stroker->style.line_width / 2.0);
+	face_dy = slope_dx * (stroker->style.line_width / 2.0);
     }
     else
     {
-	face_dx = slope_dy * (stroker->style->line_width / 2.0);
-	face_dy = - slope_dx * (stroker->style->line_width / 2.0);
+	face_dx = slope_dy * (stroker->style.line_width / 2.0);
+	face_dy = - slope_dx * (stroker->style.line_width / 2.0);
     }
 
     /* back to device space */
@@ -867,7 +867,7 @@ _cairo_stroker_add_caps (cairo_stroker_t *stroker)
     if (stroker->has_initial_sub_path
 	&& ! stroker->has_first_face
 	&& ! stroker->has_current_face
-	&& stroker->style->line_cap == CAIRO_LINE_JOIN_ROUND)
+	&& stroker->style.line_cap == CAIRO_LINE_JOIN_ROUND)
     {
 	/* pick an arbitrary slope to use */
 	double dx = 1.0, dy = 0.0;
@@ -1232,8 +1232,8 @@ _cairo_stroker_curve_to (void *closure,
 
     /* Temporarily modify the stroker to use round joins to guarantee
      * smooth stroked curves. */
-    line_join_save = stroker->style->line_join;
-    stroker->style->line_join = CAIRO_LINE_JOIN_ROUND;
+    line_join_save = stroker->style.line_join;
+    stroker->style.line_join = CAIRO_LINE_JOIN_ROUND;
 
     status = _cairo_spline_decompose (&spline, stroker->tolerance);
     if (unlikely (status))
@@ -1259,7 +1259,7 @@ _cairo_stroker_curve_to (void *closure,
 	stroker->current_face = face;
     }
 
-    stroker->style->line_join = line_join_save;
+    stroker->style.line_join = line_join_save;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1300,9 +1300,9 @@ _cairo_stroker_close_path (void *closure)
 
 cairo_status_t
 _cairo_path_fixed_stroke_to_shaper (cairo_path_fixed_t	*path,
-				    cairo_stroke_style_t	*stroke_style,
-				    cairo_matrix_t	*ctm,
-				    cairo_matrix_t	*ctm_inverse,
+				    const cairo_stroke_style_t	*stroke_style,
+				    const cairo_matrix_t	*ctm,
+				    const cairo_matrix_t	*ctm_inverse,
 				    double		 tolerance,
 				    cairo_status_t (*add_triangle) (void *closure,
 								    const cairo_point_t triangle[3]),
@@ -1351,7 +1351,7 @@ BAIL:
 
 cairo_status_t
 _cairo_path_fixed_stroke_to_polygon (const cairo_path_fixed_t	*path,
-				     cairo_stroke_style_t	*stroke_style,
+				     const cairo_stroke_style_t	*stroke_style,
 				     const cairo_matrix_t	*ctm,
 				     const cairo_matrix_t	*ctm_inverse,
 				     double		 tolerance,
@@ -1395,7 +1395,7 @@ BAIL:
 
 cairo_status_t
 _cairo_path_fixed_stroke_to_traps (const cairo_path_fixed_t	*path,
-				   cairo_stroke_style_t	*stroke_style,
+				   const cairo_stroke_style_t	*stroke_style,
 				   const cairo_matrix_t	*ctm,
 				   const cairo_matrix_t	*ctm_inverse,
 				   double		 tolerance,
@@ -1422,11 +1422,11 @@ _cairo_path_fixed_stroke_to_traps (const cairo_path_fixed_t	*path,
     _cairo_polygon_limit (&polygon, traps->limits, traps->num_limits);
 
     status = _cairo_path_fixed_stroke_to_polygon (path,
-						 stroke_style,
-						 ctm,
-						 ctm_inverse,
-						 tolerance,
-						 &polygon);
+						  stroke_style,
+						  ctm,
+						  ctm_inverse,
+						  tolerance,
+						  &polygon);
     if (unlikely (status))
 	goto BAIL;
 
@@ -1450,7 +1450,7 @@ typedef struct _segment_t {
 } segment_t;
 
 typedef struct _cairo_rectilinear_stroker {
-    cairo_stroke_style_t *stroke_style;
+    const cairo_stroke_style_t *stroke_style;
     const cairo_matrix_t *ctm;
 
     cairo_fixed_t half_line_width;
@@ -1487,7 +1487,7 @@ _cairo_rectilinear_stroker_limit (cairo_rectilinear_stroker_t *stroker,
 
 static void
 _cairo_rectilinear_stroker_init (cairo_rectilinear_stroker_t	*stroker,
-				 cairo_stroke_style_t		*stroke_style,
+				 const cairo_stroke_style_t	*stroke_style,
 				 const cairo_matrix_t		*ctm,
 				 cairo_traps_t			*traps)
 {
@@ -1979,7 +1979,7 @@ _cairo_rectilinear_stroker_close_path (void *closure)
 
 cairo_int_status_t
 _cairo_path_fixed_stroke_rectilinear_to_traps (const cairo_path_fixed_t	*path,
-					       cairo_stroke_style_t	*stroke_style,
+					       const cairo_stroke_style_t	*stroke_style,
 					       const cairo_matrix_t	*ctm,
 					       cairo_traps_t		*traps)
 {

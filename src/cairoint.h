@@ -780,9 +780,9 @@ struct _cairo_surface_backend {
 				 cairo_operator_t	 op,
 				 const cairo_pattern_t	*source,
 				 cairo_path_fixed_t	*path,
-				 cairo_stroke_style_t	*style,
-				 cairo_matrix_t		*ctm,
-				 cairo_matrix_t		*ctm_inverse,
+				 const cairo_stroke_style_t	*style,
+				 const cairo_matrix_t	*ctm,
+				 const cairo_matrix_t	*ctm_inverse,
 				 double			 tolerance,
 				 cairo_antialias_t	 antialias,
 				 cairo_clip_t		*clip);
@@ -825,9 +825,9 @@ struct _cairo_surface_backend {
 				 cairo_path_fixed_t	*path,
 				 cairo_operator_t	 stroke_op,
 				 const cairo_pattern_t	*stroke_source,
-				 cairo_stroke_style_t	*stroke_style,
-				 cairo_matrix_t		*stroke_ctm,
-				 cairo_matrix_t		*stroke_ctm_inverse,
+				 const cairo_stroke_style_t	*stroke_style,
+				 const cairo_matrix_t	*stroke_ctm,
+				 const cairo_matrix_t	*stroke_ctm_inverse,
 				 double			 stroke_tolerance,
 				 cairo_antialias_t	 stroke_antialias,
 				 cairo_clip_t		*clip);
@@ -1522,13 +1522,13 @@ _cairo_path_fixed_fill_extents (const cairo_path_fixed_t	*path,
 
 cairo_private void
 _cairo_path_fixed_approximate_stroke_extents (const cairo_path_fixed_t *path,
-					      cairo_stroke_style_t *style,
+					      const cairo_stroke_style_t *style,
 					      const cairo_matrix_t *ctm,
 					      cairo_rectangle_int_t *extents);
 
 cairo_private cairo_status_t
 _cairo_path_fixed_stroke_extents (const cairo_path_fixed_t *path,
-				  cairo_stroke_style_t *style,
+				  const cairo_stroke_style_t *style,
 				  const cairo_matrix_t *ctm,
 				  const cairo_matrix_t *ctm_inverse,
 				  double tolerance,
@@ -1584,7 +1584,7 @@ _cairo_path_fixed_fill_to_traps (const cairo_path_fixed_t   *path,
 /* cairo-path-stroke.c */
 cairo_private cairo_status_t
 _cairo_path_fixed_stroke_to_polygon (const cairo_path_fixed_t	*path,
-				     cairo_stroke_style_t	*stroke_style,
+				     const cairo_stroke_style_t	*stroke_style,
 				     const cairo_matrix_t	*ctm,
 				     const cairo_matrix_t	*ctm_inverse,
 				     double		 tolerance,
@@ -1592,12 +1592,12 @@ _cairo_path_fixed_stroke_to_polygon (const cairo_path_fixed_t	*path,
 
 cairo_private cairo_int_status_t
 _cairo_path_fixed_stroke_rectilinear_to_traps (const cairo_path_fixed_t	*path,
-					       cairo_stroke_style_t	*stroke_style,
+					       const cairo_stroke_style_t	*stroke_style,
 					       const cairo_matrix_t	*ctm,
 					       cairo_traps_t		*traps);
 cairo_private cairo_status_t
 _cairo_path_fixed_stroke_to_traps (const cairo_path_fixed_t	*path,
-				   cairo_stroke_style_t	*stroke_style,
+				   const cairo_stroke_style_t	*stroke_style,
 				   const cairo_matrix_t	*ctm,
 				   const cairo_matrix_t	*ctm_inverse,
 				   double		 tolerance,
@@ -1605,9 +1605,9 @@ _cairo_path_fixed_stroke_to_traps (const cairo_path_fixed_t	*path,
 
 cairo_private cairo_status_t
 _cairo_path_fixed_stroke_to_shaper (cairo_path_fixed_t	*path,
-				   cairo_stroke_style_t	*stroke_style,
-				   cairo_matrix_t	*ctm,
-				   cairo_matrix_t	*ctm_inverse,
+				   const cairo_stroke_style_t	*stroke_style,
+				   const cairo_matrix_t	*ctm,
+				   const cairo_matrix_t	*ctm_inverse,
 				   double		 tolerance,
 				   cairo_status_t (*add_triangle) (void *closure,
 								   const cairo_point_t triangle[3]),
@@ -1739,7 +1739,7 @@ _cairo_stroke_style_init (cairo_stroke_style_t *style);
 
 cairo_private cairo_status_t
 _cairo_stroke_style_init_copy (cairo_stroke_style_t *style,
-			       cairo_stroke_style_t *other);
+			       const cairo_stroke_style_t *other);
 
 cairo_private void
 _cairo_stroke_style_fini (cairo_stroke_style_t *style);
@@ -1879,9 +1879,9 @@ _cairo_surface_fill_stroke (cairo_surface_t	    *surface,
 			    cairo_path_fixed_t	    *path,
 			    cairo_operator_t	     stroke_op,
 			    const cairo_pattern_t   *stroke_source,
-			    cairo_stroke_style_t    *stroke_style,
-			    cairo_matrix_t	    *stroke_ctm,
-			    cairo_matrix_t	    *stroke_ctm_inverse,
+			    const cairo_stroke_style_t    *stroke_style,
+			    const cairo_matrix_t	    *stroke_ctm,
+			    const cairo_matrix_t	    *stroke_ctm_inverse,
 			    double		     stroke_tolerance,
 			    cairo_antialias_t	     stroke_antialias,
 			    cairo_clip_t	    *clip);
@@ -1891,9 +1891,9 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
 		       cairo_operator_t		 op,
 		       const cairo_pattern_t	*source,
 		       cairo_path_fixed_t	*path,
-		       cairo_stroke_style_t	*style,
-		       cairo_matrix_t		*ctm,
-		       cairo_matrix_t		*ctm_inverse,
+		       const cairo_stroke_style_t	*style,
+		       const cairo_matrix_t		*ctm,
+		       const cairo_matrix_t		*ctm_inverse,
 		       double			 tolerance,
 		       cairo_antialias_t	 antialias,
 		       cairo_clip_t		*clip);
@@ -1942,7 +1942,7 @@ _cairo_surface_stroke_extents (cairo_surface_t *surface,
 			       cairo_operator_t op,
 			       const cairo_pattern_t *source,
 			       cairo_path_fixed_t	*path,
-			       cairo_stroke_style_t *style,
+			       const cairo_stroke_style_t *style,
 			       const cairo_matrix_t *ctm,
 			       const cairo_matrix_t *ctm_inverse,
 			       double tolerance,
