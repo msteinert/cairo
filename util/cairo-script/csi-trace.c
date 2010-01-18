@@ -8,9 +8,10 @@
 static cairo_surface_t *
 _script_surface_create (void *closure,
 			 cairo_content_t content,
-			 double width, double height)
+			 double width, double height,
+			 long uid)
 {
-    return cairo_script_surface_create (closure, width, height);
+    return cairo_script_surface_create (closure, content, width, height);
 }
 
 int
@@ -28,12 +29,12 @@ main (int argc, char **argv)
 	char buf[4096];
 
 	snprintf (buf, sizeof (buf), "%s.trace", basename (argv[i]));
-	cairo_script_context_destroy (hooks.closure);
-	hooks.closure = cairo_script_context_create (buf);
+	cairo_device_destroy (hooks.closure);
+	hooks.closure = cairo_script_create (buf);
 	cairo_script_interpreter_install_hooks (csi, &hooks);
 	cairo_script_interpreter_run (csi, argv[i]);
     }
-    cairo_script_context_destroy (hooks.closure);
+    cairo_device_destroy (hooks.closure);
 
     return cairo_script_interpreter_destroy (csi);
 }

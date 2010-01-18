@@ -48,7 +48,7 @@ _cairo_boilerplate_script_create_surface (const char		 *name,
 					  void			**closure)
 {
     script_target_closure_t *ptc;
-    cairo_script_context_t *ctx;
+    cairo_device_t *ctx;
     cairo_surface_t *surface;
     cairo_status_t status;
 
@@ -60,9 +60,9 @@ _cairo_boilerplate_script_create_surface (const char		 *name,
     xasprintf (&ptc->filename, "%s.out.cs", name);
     xunlink (ptc->filename);
 
-    ctx = cairo_script_context_create (ptc->filename);
+    ctx = cairo_script_create (ptc->filename);
     surface = cairo_script_surface_create (ctx, content, width, height);
-    cairo_script_context_destroy (ctx);
+    cairo_device_destroy (ctx);
 
     status = cairo_surface_set_user_data (surface,
 					  &script_closure_key, ptc, NULL);

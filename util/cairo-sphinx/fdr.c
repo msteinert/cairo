@@ -46,7 +46,7 @@ static void *_dlhandle = RTLD_NEXT;
     (*name##_real) (args);  \
 })
 
-static cairo_script_context_t *fdr_context;
+static cairo_device_t *fdr_context;
 static const cairo_user_data_key_t fdr_key;
 
 static void
@@ -126,7 +126,7 @@ cairo_create (cairo_surface_t *surface)
 	if (fdr_context == NULL) {
 	    const char *env = getenv ("CAIRO_SPHINX_FD");
 	    int fd = env ? atoi (env) : 1;
-	    fdr_context = DLCALL (cairo_script_context_create_for_stream,
+	    fdr_context = DLCALL (cairo_script_create_for_stream,
 				  fdr_write, (void *) (intptr_t) fd);
 	}
 

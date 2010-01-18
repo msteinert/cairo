@@ -864,17 +864,18 @@ static void
 write_trace (const char *trace, struct slave *slave)
 {
 #if CAIRO_HAS_SCRIPT_SURFACE
-    cairo_script_context_t *ctx;
+    cairo_device_t *ctx,
     cairo_surface_t *script;
     char *filename;
     cairo_t *cr;
 
     xasprintf (&filename, "%s-fail.trace", trace);
-    ctx = cairo_script_context_create (filename);
+    ctx = cairo_script_create (filename);
     script = cairo_script_surface_create (ctx,
+					  cairo_surface_get_content (slave->image),
 					  slave->width,
 					  slave->height);
-    cairo_script_context_destroy (ctx);
+    cairo_device_destroy (ctx);
     free (filename);
 
     cr = cairo_create (slave->image);

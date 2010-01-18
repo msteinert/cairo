@@ -4567,7 +4567,7 @@ cairo_xlib_surface_create_with_xrender_format (Display *dpy,
 #if CAIRO_HAS_SCRIPT_SURFACE
 #include <cairo-script.h>
 cairo_surface_t *
-cairo_script_surface_create (cairo_script_context_t *ctx,
+cairo_script_surface_create (cairo_device_t *device,
 			     cairo_content_t content,
 			     double width,
 			     double height)
@@ -4577,7 +4577,7 @@ cairo_script_surface_create (cairo_script_context_t *ctx,
 
     _enter_trace ();
 
-    ret = DLCALL (cairo_script_surface_create, ctx, content, width, height);
+    ret = DLCALL (cairo_script_surface_create, device, content, width, height);
     surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
@@ -4602,7 +4602,7 @@ cairo_script_surface_create (cairo_script_context_t *ctx,
 }
 
 cairo_surface_t *
-cairo_script_surface_create_for_target (cairo_script_context_t *ctx,
+cairo_script_surface_create_for_target (cairo_device_t *device,
 					cairo_surface_t *target)
 {
     cairo_surface_t *ret;
@@ -4610,7 +4610,7 @@ cairo_script_surface_create_for_target (cairo_script_context_t *ctx,
 
     _enter_trace ();
 
-    ret = DLCALL (cairo_script_surface_create_for_target, ctx, target);
+    ret = DLCALL (cairo_script_surface_create_for_target, device, target);
     surface_id = _create_surface_id (ret);
 
     _emit_line_info ();

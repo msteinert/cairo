@@ -52,10 +52,10 @@ static int fdr_dump;
 static const cairo_user_data_key_t fdr_key;
 
 static void
-fdr_replay_to_script (cairo_surface_t *recording, cairo_script_context_t *ctx)
+fdr_replay_to_script (cairo_surface_t *recording, cairo_device_t *ctx)
 {
     if (recording != NULL) {
-	DLCALL (cairo_script_context_write_comment, ctx, "--- fdr ---", -1);
+	DLCALL (cairo_script_write_comment, ctx, "--- fdr ---", -1);
 	DLCALL (cairo_script_from_recording_surface, ctx, recording);
     }
 }
@@ -63,10 +63,10 @@ fdr_replay_to_script (cairo_surface_t *recording, cairo_script_context_t *ctx)
 static void
 fdr_dump_ringbuffer (void)
 {
-    cairo_script_context_t *ctx;
+    cairo_device_t *ctx;
     int n;
 
-    ctx = DLCALL (cairo_script_context_create, "/tmp/fdr.trace");
+    ctx = DLCALL (cairo_script_create, "/tmp/fdr.trace");
 
     for (n = fdr_position; n < RINGBUFFER_SIZE; n++)
 	fdr_replay_to_script (fdr_ringbuffer[n], ctx);
@@ -74,7 +74,7 @@ fdr_dump_ringbuffer (void)
     for (n = 0; n < fdr_position; n++)
 	fdr_replay_to_script (fdr_ringbuffer[n], ctx);
 
-    DLCALL (cairo_script_context_destroy, ctx);
+    DLCALL (cairo_device_destroy, ctx);
 }
 
 static void

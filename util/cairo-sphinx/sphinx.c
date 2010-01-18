@@ -135,7 +135,7 @@ daemonize (void)
     /* Let the parent go. */
     switch (fork ()) {
     case -1: return -1;
-    case 0: break;
+    case  0: break;
     default: _exit (0);
     }
 
@@ -145,13 +145,11 @@ daemonize (void)
 
     /* Refork to yield session leadership. */
     oldhup = signal (SIGHUP, SIG_IGN);
-
-    switch (fork ()) {		/* refork to yield session leadership. */
+    switch (fork ()) {
     case -1: return -1;
-    case 0: break;
+    case  0: break;
     default: _exit (0);
     }
-
     signal (SIGHUP, oldhup);
 
     /* Establish stdio. */
@@ -427,6 +425,7 @@ u8_cmp (const void *A, const void *B)
 static uint8_t
 median (uint8_t *values, int count)
 {
+    /* XXX could use a fast median here if we cared */
     qsort (values, count, 1, u8_cmp);
     return values[count/2];
 }
@@ -667,16 +666,16 @@ checksum (const char *filename)
 static void
 write_trace (struct clients *clients)
 {
-    cairo_script_context_t *ctx;
+    cairo_device_t *ctx;
     gchar *csum;
     char buf[4096];
     int i;
 
     mkdir ("output", 0777);
 
-    ctx = cairo_script_context_create ("output/cairo-sphinx.trace");
+    ctx = cairo_script_create ("output/cairo-sphinx.trace");
     cairo_script_from_recording_surface (ctx, clients->recording);
-    cairo_script_context_destroy (ctx);
+    cairo_device_destroy (ctx);
 
     csum = checksum ("output/cairo-sphinx.trace");
 
@@ -1262,7 +1261,7 @@ do_server (const char *path)
 		    }
 		} else if (strncmp (line, ".complete", 9) == 0) {
 		    clients_complete (&clients, pfd[n].fd);
-		} else if (strncmp (line, ".recording", 5) == 0) {
+		} else if (strncmp (line, ".recording", 10) == 0) {
 		    clients_recording (&clients, pfd[n].fd, line + 6);
 		} else {
 		    printf ("do_command (%s)\n", line);

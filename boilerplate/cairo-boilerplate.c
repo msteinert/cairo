@@ -203,13 +203,13 @@ _cairo_boilerplate_get_image_surface (cairo_surface_t *src,
 	test_name = cairo_surface_get_user_data (src,
 						 &cairo_boilerplate_output_basename_key);
 	if (test_name != NULL) {
-	    cairo_script_context_t *ctx;
+	    cairo_device_t *ctx;
 	    char *filename;
 
 	    xasprintf (&filename, "%s.out.trace", test_name);
-	    ctx = cairo_script_context_create (filename);
+	    ctx = cairo_script_create (filename);
 	    surface = cairo_script_surface_create_for_target (ctx, image);
-	    cairo_script_context_destroy (ctx);
+	    cairo_device_destroy (ctx);
 	    free (filename);
 	}
     }
