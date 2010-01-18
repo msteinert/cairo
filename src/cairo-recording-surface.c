@@ -245,8 +245,7 @@ _cairo_recording_surface_acquire_source_image (void			 *abstract_surface,
     cairo_surface_t *image;
 
     image = _cairo_surface_has_snapshot (&surface->base,
-					 &_cairo_image_surface_backend,
-					 surface->content);
+					 &_cairo_image_surface_backend);
     if (image != NULL) {
 	*image_out = (cairo_image_surface_t *) cairo_surface_reference (image);
 	*image_extra = NULL;

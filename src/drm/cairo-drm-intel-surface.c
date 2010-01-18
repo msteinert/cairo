@@ -93,8 +93,7 @@ intel_surface_acquire_source_image (void *abstract_surface,
     }
 
     image = _cairo_surface_has_snapshot (&surface->base.base,
-	                                 &_cairo_image_surface_backend,
-					 surface->base.base.content);
+	                                 &_cairo_image_surface_backend);
     if (image != NULL)
 	goto DONE;
 

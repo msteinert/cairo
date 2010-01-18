@@ -959,8 +959,7 @@ _vg_setup_surface_source (cairo_vg_context_t *context,
     cairo_status_t status;
 
     snapshot = _cairo_surface_has_snapshot (spat->surface,
-					    &cairo_vg_surface_backend,
-					    spat->surface->content);
+					    &cairo_vg_surface_backend);
     if (snapshot != NULL) {
 	clone = (cairo_vg_surface_t *) cairo_surface_reference (snapshot);
 	goto DONE;

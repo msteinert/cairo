@@ -266,19 +266,16 @@ _cairo_surface_attach_snapshot (cairo_surface_t *surface,
 
 cairo_surface_t *
 _cairo_surface_has_snapshot (cairo_surface_t *surface,
-			     const cairo_surface_backend_t *backend,
-			     cairo_content_t content)
+			     const cairo_surface_backend_t *backend)
 {
     cairo_surface_t **snapshots;
     unsigned int i;
 
+    /* XXX is_similar? */
     snapshots = _cairo_array_index (&surface->snapshots, 0);
     for (i = 0; i < surface->snapshots.num_elements; i++) {
-	if (snapshots[i]->backend == backend &&
-	    snapshots[i]->content == content)
-	{
+	if (snapshots[i]->backend == backend)
 	    return snapshots[i];
-	}
     }
 
     return NULL;
@@ -1425,9 +1422,7 @@ _cairo_recording_surface_clone_similar (cairo_surface_t  *surface,
     cairo_surface_t *similar;
     cairo_status_t status;
 
-    similar = _cairo_surface_has_snapshot (src,
-					   surface->backend,
-					   src->content);
+    similar = _cairo_surface_has_snapshot (src, surface->backend);
     if (similar != NULL) {
 	*clone_out = cairo_surface_reference (similar);
 	*clone_offset_x = 0;
@@ -1630,9 +1625,7 @@ _cairo_surface_snapshot (cairo_surface_t *surface)
     if (surface->snapshot_of != NULL)
 	return cairo_surface_reference (surface);
 
-    snapshot = _cairo_surface_has_snapshot (surface,
-					    surface->backend,
-					    surface->content);
+    snapshot = _cairo_surface_has_snapshot (surface, surface->backend);
     if (snapshot != NULL)
 	return cairo_surface_reference (snapshot);
 
@@ -1647,8 +1640,7 @@ _cairo_surface_snapshot (cairo_surface_t *surface)
 		cairo_surface_t *previous;
 
 		previous = _cairo_surface_has_snapshot (surface,
-							snapshot->backend,
-							snapshot->content);
+							snapshot->backend);
 		if (previous != NULL) {
 		    cairo_surface_destroy (snapshot);
 		    return cairo_surface_reference (previous);
@@ -1659,8 +1651,7 @@ _cairo_surface_snapshot (cairo_surface_t *surface)
 
     if (snapshot == NULL) {
 	snapshot = _cairo_surface_has_snapshot (surface,
-						&_cairo_image_surface_backend,
-						surface->content);
+						&_cairo_image_surface_backend);
 	if (snapshot != NULL)
 	    return cairo_surface_reference (snapshot);
 

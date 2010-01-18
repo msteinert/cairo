@@ -2057,8 +2057,7 @@ _cairo_surface_attach_snapshot (cairo_surface_t *surface,
 
 cairo_private cairo_surface_t *
 _cairo_surface_has_snapshot (cairo_surface_t *surface,
-			     const cairo_surface_backend_t *backend,
-			     cairo_content_t content);
+			     const cairo_surface_backend_t *backend);
 
 cairo_private void
 _cairo_surface_detach_snapshot (cairo_surface_t *snapshot);
