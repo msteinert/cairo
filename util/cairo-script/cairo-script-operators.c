@@ -2507,30 +2507,41 @@ _glyph_string (csi_t *ctx,
 	       cairo_scaled_font_t *scaled_font,
 	       cairo_glyph_t *glyphs)
 {
-    double x,y, dx;
-    csi_integer_t nglyphs, i, j;
+    struct glyph_advance_cache uncached;
     struct glyph_advance_cache *cache;
+    csi_integer_t nglyphs, i, j;
+    double x, y, dx;
     cairo_status_t status;
+
+    if (cairo_scaled_font_status (scaled_font))
+	return 0;
 
     cache = cairo_scaled_font_get_user_data (scaled_font,
 					     (cairo_user_data_key_t *) ctx);
     if (cache == NULL) {
 	cache = _csi_alloc (ctx, sizeof (*cache));
-	if (cache == NULL)
-	    return -1;
+	if (_csi_likely (cache != NULL)) {
+	    cache->ctx = ctx;
+	    memset (cache->have_glyph_advance, 0xff,
+		    sizeof (cache->have_glyph_advance));
+
+	    status = cairo_scaled_font_set_user_data (scaled_font,
+						      (cairo_user_data_key_t *) ctx,
+						      cache,
+						      glyph_advance_cache_destroy);
+	    if (_csi_unlikely (status)) {
+		_csi_free (ctx, cache);
+		cache = NULL;
+	    }
+	}
+    }
+
+    if (_csi_unlikely (cache == NULL)) {
+	cache = &uncached;
 
 	cache->ctx = ctx;
 	memset (cache->have_glyph_advance, 0xff,
 		sizeof (cache->have_glyph_advance));
-
-	status = cairo_scaled_font_set_user_data (scaled_font,
-						  (cairo_user_data_key_t *) ctx,
-						  cache,
-						  glyph_advance_cache_destroy);
-	if (status) {
-	    _csi_free (ctx, cache);
-	    return -1;
-	}
     }
 
     nglyphs = 0;
@@ -2668,6 +2679,7 @@ _glyph_path (csi_t *ctx)
     if (nglyphs > ARRAY_LENGTH (stack_glyphs)) {
 	if (_csi_unlikely ((unsigned) nglyphs >= INT_MAX / sizeof (cairo_glyph_t)))
 	    return _csi_error (CSI_STATUS_NO_MEMORY);
+
 	glyphs = _csi_alloc (ctx, sizeof (cairo_glyph_t) * nglyphs);
 	if (_csi_unlikely (glyphs == NULL))
 	    return _csi_error (CSI_STATUS_NO_MEMORY);
@@ -2675,13 +2687,6 @@ _glyph_path (csi_t *ctx)
 	glyphs = stack_glyphs;
 
     nglyphs = _glyph_string (ctx, array, cairo_get_scaled_font (cr), glyphs);
-    if (_csi_unlikely (nglyphs < 0)) {
-	if (glyphs != stack_glyphs)
-	    _csi_free (ctx, glyphs);
-
-	return _csi_error (CSI_STATUS_NO_MEMORY);
-    }
-
     cairo_glyph_path (cr, glyphs, nglyphs);
 
     if (glyphs != stack_glyphs)
@@ -5289,6 +5294,7 @@ _show_glyphs (csi_t *ctx)
     if (nglyphs > ARRAY_LENGTH (stack_glyphs)) {
 	if (_csi_unlikely ((unsigned) nglyphs >= INT_MAX / sizeof (cairo_glyph_t)))
 	    return _csi_error (CSI_STATUS_NO_MEMORY);
+
 	glyphs = _csi_alloc (ctx, sizeof (cairo_glyph_t) * nglyphs);
 	if (_csi_unlikely (glyphs == NULL))
 	    return _csi_error (CSI_STATUS_NO_MEMORY);
@@ -5296,12 +5302,6 @@ _show_glyphs (csi_t *ctx)
 	glyphs = stack_glyphs;
 
     nglyphs = _glyph_string (ctx, array, cairo_get_scaled_font (cr), glyphs);
-    if (_csi_unlikely (nglyphs < 0)) {
-	if (glyphs != stack_glyphs)
-	    _csi_free (ctx, glyphs);
-	return _csi_error (CSI_STATUS_NO_MEMORY);
-    }
-
     cairo_show_glyphs (cr, glyphs, nglyphs);
 
     if (glyphs != stack_glyphs)
@@ -5399,30 +5399,22 @@ _show_text_glyphs (csi_t *ctx)
 	    break;
 	}
     }
-    if (nglyphs == 0)
+    if (nglyphs == 0) {
+	pop (4);
 	return CSI_STATUS_SUCCESS;
+    }
 
     if (nglyphs > ARRAY_LENGTH (stack_glyphs)) {
-	    if (_csi_unlikely ((unsigned) nglyphs >= INT_MAX / sizeof (cairo_glyph_t)))
-		return _csi_error (CSI_STATUS_NO_MEMORY);
-	glyphs = _csi_alloc (ctx, sizeof (cairo_glyph_t) * nglyphs);
-	if (_csi_unlikely (glyphs == NULL)) {
+	if (_csi_unlikely ((unsigned) nglyphs >= INT_MAX / sizeof (cairo_glyph_t)))
 	    return _csi_error (CSI_STATUS_NO_MEMORY);
-	}
+
+	glyphs = _csi_alloc (ctx, sizeof (cairo_glyph_t) * nglyphs);
+	if (_csi_unlikely (glyphs == NULL))
+	    return _csi_error (CSI_STATUS_NO_MEMORY);
     } else
 	glyphs = stack_glyphs;
 
     nglyphs = _glyph_string (ctx, array, cairo_get_scaled_font (cr), glyphs);
-    if (_csi_unlikely (nglyphs < 0)) {
-	if (clusters != stack_clusters)
-	    _csi_free (ctx, clusters);
-
-	if (glyphs != stack_glyphs)
-	    _csi_free (ctx, glyphs);
-
-	return _csi_error (CSI_STATUS_NO_MEMORY);
-    }
-
     cairo_show_text_glyphs (cr,
 			    utf8_string->string, utf8_string->len,
 			    glyphs, nglyphs,
