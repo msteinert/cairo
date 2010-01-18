@@ -225,8 +225,6 @@ _cairo_surface_detach_snapshots (cairo_surface_t *surface)
     if (! _cairo_surface_has_snapshots (surface))
 	return;
 
-    /* XXX do something intelligent! */
-
     snapshots = _cairo_array_index (&surface->snapshots, 0);
     for (i = 0; i < surface->snapshots.num_elements; i++) {
 	snapshots[i]->snapshot_of = NULL;
@@ -578,6 +576,9 @@ cairo_surface_destroy (cairo_surface_t *surface)
     if (! surface->finished)
 	cairo_surface_finish (surface);
 
+    /* paranoid check that nobody took a reference whilst finishing */
+    assert (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&surface->ref_count));
+
     _cairo_user_data_array_fini (&surface->user_data);
     _cairo_user_data_array_fini (&surface->mime_data);
     _cairo_array_fini (&surface->snapshots);
@@ -640,6 +641,12 @@ cairo_surface_finish (cairo_surface_t *surface)
     if (surface->finished)
 	return;
 
+    /* update the snapshots *before* we declare the surface as finished */
+    _cairo_surface_detach_snapshots (surface);
+    if (surface->snapshot_of != NULL)
+	_cairo_surface_detach_snapshot (surface);
+
+    surface->finished = TRUE;
     cairo_surface_flush (surface);
 
     /* call finish even if in error mode */
@@ -648,11 +655,6 @@ cairo_surface_finish (cairo_surface_t *surface)
 	if (unlikely (status))
 	    status = _cairo_surface_set_error (surface, status);
     }
-
-    surface->finished = TRUE;
-
-    if (surface->snapshot_of != NULL)
-	_cairo_surface_detach_snapshot (surface);
 }
 slim_hidden_def (cairo_surface_finish);
 
@@ -1591,91 +1593,6 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
     }
 
     return status;
-}
-
-/* XXX: Shouldn't really need to do this here. */
-#include "cairo-recording-surface-private.h"
-
-/**
- * _cairo_surface_snapshot
- * @surface: a #cairo_surface_t
- *
- * Make an immutable copy of @surface. It is an error to call a
- * surface-modifying function on the result of this function.
- *
- * The caller owns the return value and should call
- * cairo_surface_destroy() when finished with it. This function will not
- * return %NULL, but will return a nil surface instead.
- *
- * Return value: The snapshot surface. Note that the return surface
- * may not necessarily be of the same type as @surface.
- **/
-cairo_surface_t *
-_cairo_surface_snapshot (cairo_surface_t *surface)
-{
-    cairo_surface_t *snapshot;
-    cairo_status_t status;
-
-    if (surface->status)
-	return _cairo_surface_create_in_error (surface->status);
-
-    if (surface->finished)
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_SURFACE_FINISHED));
-
-    if (surface->snapshot_of != NULL)
-	return cairo_surface_reference (surface);
-
-    snapshot = _cairo_surface_has_snapshot (surface, surface->backend);
-    if (snapshot != NULL)
-	return cairo_surface_reference (snapshot);
-
-    if (surface->backend->snapshot != NULL) {
-	snapshot = surface->backend->snapshot (surface);
-	if (snapshot != NULL) {
-	    if (unlikely (snapshot->status))
-		return snapshot;
-
-	    /* Is this surface just a proxy - e.g. paginated surfaces? */
-	    if (snapshot->backend != surface->backend) {
-		cairo_surface_t *previous;
-
-		previous = _cairo_surface_has_snapshot (surface,
-							snapshot->backend);
-		if (previous != NULL) {
-		    cairo_surface_destroy (snapshot);
-		    return cairo_surface_reference (previous);
-		}
-	    }
-	}
-    }
-
-    if (snapshot == NULL) {
-	snapshot = _cairo_surface_has_snapshot (surface,
-						&_cairo_image_surface_backend);
-	if (snapshot != NULL)
-	    return cairo_surface_reference (snapshot);
-
-	snapshot = _cairo_surface_fallback_snapshot (surface);
-	if (unlikely (snapshot->status))
-	    return snapshot;
-    }
-
-    status = _cairo_surface_copy_mime_data (snapshot, surface);
-    if (unlikely (status)) {
-	cairo_surface_destroy (snapshot);
-	return _cairo_surface_create_in_error (status);
-    }
-
-    snapshot->device_transform = surface->device_transform;
-    snapshot->device_transform_inverse = surface->device_transform_inverse;
-
-    status = _cairo_surface_attach_snapshot (surface, snapshot, NULL);
-    if (unlikely (status)) {
-	cairo_surface_destroy (snapshot);
-	return _cairo_surface_create_in_error (status);
-    }
-
-    return snapshot;
 }
 
 /**

@@ -156,8 +156,11 @@ _cairo_paginated_surface_finish (void *abstract_surface)
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     if (surface->page_is_blank == FALSE || surface->page_num == 1) {
-	cairo_surface_show_page (abstract_surface);
-	status = cairo_surface_status (abstract_surface);
+	/* Bypass some of the sanity checking in cairo-surface.c, as we
+	 * know that the surface is finished...
+	 */
+	if (surface->base.backend->show_page != NULL)
+	    status = surface->base.backend->show_page (&surface->base);
     }
 
      /* XXX We want to propagate any errors from destroy(), but those are not
