@@ -92,6 +92,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"qt", "qt", NULL, NULL,
 	CAIRO_SURFACE_TYPE_QT, CAIRO_CONTENT_COLOR_ALPHA, 0,
+	"cairo_qt_surface_create",
 	_cairo_boilerplate_qt_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
@@ -101,6 +102,7 @@ static const cairo_boilerplate_target_t targets[] = {
     {
 	"qt", "qt", NULL, NULL,
 	CAIRO_SURFACE_TYPE_QT, CAIRO_CONTENT_COLOR, 0,
+	"cairo_qt_surface_create",
 	_cairo_boilerplate_qt_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
