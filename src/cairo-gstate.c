@@ -35,8 +35,6 @@
  *	Carl D. Worth <cworth@cworth.org>
  */
 
-#define _GNU_SOURCE
-
 #include "cairoint.h"
 
 #include "cairo-clip-private.h"

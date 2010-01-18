@@ -31,6 +31,10 @@
 #include <cairo-ps-surface-private.h>
 #include <cairo-paginated-surface-private.h>
 
+#if HAVE_SIGNAL_H
+#include <signal.h>
+#endif
+
 #if ! CAIRO_HAS_RECORDING_SURFACE
 #define CAIRO_SURFACE_TYPE_RECORDING CAIRO_INTERNAL_SURFACE_TYPE_RECORDING
 #endif

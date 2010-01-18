@@ -38,8 +38,6 @@
  *      Chris Wilson <chris@chris-wilson.co.uk>
  */
 
-#define _GNU_SOURCE
-
 #include "cairoint.h"
 #include "cairo-error-private.h"
 #include "cairo-scaled-font-private.h"
