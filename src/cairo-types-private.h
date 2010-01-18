@@ -64,6 +64,7 @@ typedef struct _cairo_scaled_font_backend   cairo_scaled_font_backend_t;
 typedef struct _cairo_scaled_font_subsets cairo_scaled_font_subsets_t;
 typedef struct _cairo_solid_pattern cairo_solid_pattern_t;
 typedef struct _cairo_surface_backend cairo_surface_backend_t;
+typedef struct _cairo_surface_subsurface cairo_surface_subsurface_t;
 typedef struct _cairo_surface_wrapper cairo_surface_wrapper_t;
 typedef struct _cairo_unscaled_font_backend cairo_unscaled_font_backend_t;
 typedef struct _cairo_xlib_screen_info cairo_xlib_screen_info_t;
@@ -164,7 +165,8 @@ typedef enum _cairo_int_status {
 } cairo_int_status_t;
 
 typedef enum _cairo_internal_surface_type {
-    CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED = 0x1000,
+    CAIRO_INTERNAL_SURFACE_TYPE_SUBSURFACE = 0x1000,
+    CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED,
     CAIRO_INTERNAL_SURFACE_TYPE_ANALYSIS,
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED,

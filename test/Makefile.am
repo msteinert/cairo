@@ -933,6 +933,9 @@ REFERENCE_IMAGES = \
 	stroke-image.quartz.ref.png \
 	stroke-image.ref.png \
 	stroke-image.xlib.ref.png \
+	subsurface.ref.png \
+	subsurface-repeat.ref.png \
+	subsurface-similar-repeat.ref.png \
 	surface-pattern-big-scale-down.ref.png \
 	surface-pattern-big-scale-down.ps.xfail.png \
 	surface-pattern-operator.argb32.ref.png \

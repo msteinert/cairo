@@ -1921,6 +1921,13 @@ cairo_surface_create_similar (cairo_surface_t  *other,
 			      int		height);
 
 cairo_public cairo_surface_t *
+cairo_surface_create_for_region (cairo_surface_t	*target,
+				 int			 x,
+				 int			 y,
+				 int			 width,
+				 int			 height);
+
+cairo_public cairo_surface_t *
 cairo_surface_reference (cairo_surface_t *surface);
 
 cairo_public void

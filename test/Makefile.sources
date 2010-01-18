@@ -210,6 +210,9 @@ test_sources = \
 	source-clip-scale.c				\
 	source-surface-scale-paint.c			\
 	spline-decomposition.c				\
+	subsurface.c                                    \
+	subsurface-repeat.c                             \
+	subsurface-similar-repeat.c                     \
 	surface-finish-twice.c				\
 	surface-pattern.c				\
 	surface-pattern-big-scale-down.c		\
