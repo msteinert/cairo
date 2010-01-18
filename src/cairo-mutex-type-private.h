@@ -44,7 +44,7 @@
 #include "cairo-compiler-private.h"
 #include "cairo-mutex-impl-private.h"
 
-/* Only the following three are mandatory at this point */
+/* Only the following four are mandatory at this point */
 #ifndef CAIRO_MUTEX_IMPL_LOCK
 # error "CAIRO_MUTEX_IMPL_LOCK not defined.  Check cairo-mutex-impl-private.h."
 #endif
@@ -53,6 +53,9 @@
 #endif
 #ifndef CAIRO_MUTEX_IMPL_NIL_INITIALIZER
 # error "CAIRO_MUTEX_IMPL_NIL_INITIALIZER not defined.  Check cairo-mutex-impl-private.h."
+#endif
+#ifndef CAIRO_RECURSIVE_MUTEX_IMPL_INIT
+# error "CAIRO_RECURSIVE_MUTEX_IMPL_INIT not defined.  Check cairo-mutex-impl-private.h."
 #endif
 
 
@@ -156,6 +159,7 @@
 
 #ifndef CAIRO_MUTEX_DEBUG
 typedef cairo_mutex_impl_t cairo_mutex_t;
+typedef cairo_recursive_mutex_impl_t cairo_recursive_mutex_t;
 #else
 # define cairo_mutex_t			cairo_mutex_impl_t
 #endif
@@ -167,6 +171,9 @@ typedef cairo_mutex_impl_t cairo_mutex_t;
 #define CAIRO_MUTEX_INIT		CAIRO_MUTEX_IMPL_INIT
 #define CAIRO_MUTEX_FINI		CAIRO_MUTEX_IMPL_FINI
 #define CAIRO_MUTEX_NIL_INITIALIZER	CAIRO_MUTEX_IMPL_NIL_INITIALIZER
+
+#define CAIRO_RECURSIVE_MUTEX_INIT		CAIRO_RECURSIVE_MUTEX_IMPL_INIT
+#define CAIRO_RECURSIVE_MUTEX_NIL_INITIALIZER	CAIRO_RECURSIVE_MUTEX_IMPL_NIL_INITIALIZER
 
 #ifndef CAIRO_MUTEX_IS_LOCKED
 # define CAIRO_MUTEX_IS_LOCKED(name) 1
