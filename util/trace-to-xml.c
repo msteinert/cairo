@@ -11,7 +11,8 @@
 static cairo_surface_t *
 _surface_create (void *_closure,
 		 cairo_content_t content,
-		 double width, double height)
+		 double width, double height,
+		 long uid)
 {
     cairo_surface_t **closure = _closure;
     cairo_surface_t *surface;
@@ -59,11 +60,11 @@ main (int argc, char **argv)
     cairo_script_interpreter_destroy (csi);
 
     if (surface != NULL) {
-	cairo_xml_t *xml;
+	cairo_device_t *xml;
 
 	xml = cairo_xml_create_for_stream (stdio_write, out);
 	cairo_xml_for_recording_surface (xml, surface);
-	cairo_xml_destroy (xml);
+	cairo_device_destroy (xml);
 
 	cairo_surface_destroy (surface);
     }
