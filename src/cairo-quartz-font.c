@@ -41,6 +41,8 @@
 #include "cairo-quartz.h"
 #include "cairo-quartz-private.h"
 
+#include "cairo-error-private.h"
+
 /* CreateWithFontName exists in 10.5, but not in 10.4; CreateWithName isn't public in 10.4 */
 static CGFontRef (*CGFontCreateWithFontNamePtr) (CFStringRef) = NULL;
 static CGFontRef (*CGFontCreateWithNamePtr) (const char *) = NULL;

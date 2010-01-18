@@ -95,6 +95,7 @@
  */
 #include "cairoint.h"
 #include "cairo-spans-private.h"
+#include "cairo-error-private.h"
 
 #include <assert.h>
 #include <stdlib.h>

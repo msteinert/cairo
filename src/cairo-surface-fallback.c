@@ -42,6 +42,7 @@
 
 #include "cairo-surface-fallback-private.h"
 #include "cairo-clip-private.h"
+#include "cairo-error-private.h"
 #include "cairo-region-private.h"
 #include "cairo-spans-private.h"
 

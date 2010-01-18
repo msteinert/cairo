@@ -58,6 +58,7 @@
 #include "cairo-xlib-xrender-private.h"
 
 #include "cairo-xlib-surface-private.h"
+#include "cairo-error-private.h"
 
 #include <fontconfig/fontconfig.h>
 

@@ -43,6 +43,7 @@
 #include "cairoint.h"
 #include "cairo-svg.h"
 #include "cairo-analysis-surface-private.h"
+#include "cairo-error-private.h"
 #include "cairo-image-info-private.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-output-stream-private.h"

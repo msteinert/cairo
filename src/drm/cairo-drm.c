@@ -33,6 +33,7 @@
 #include "cairoint.h"
 
 #include "cairo-drm-private.h"
+#include "cairo-error-private.h"
 
 #define LIBUDEV_I_KNOW_THE_API_IS_SUBJECT_TO_CHANGE
 #include <libudev.h>

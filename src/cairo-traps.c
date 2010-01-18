@@ -39,6 +39,7 @@
 
 #include "cairoint.h"
 
+#include "cairo-error-private.h"
 #include "cairo-region-private.h"
 #include "cairo-slope-private.h"
 

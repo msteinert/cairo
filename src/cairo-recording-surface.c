@@ -74,8 +74,9 @@
 
 #include "cairoint.h"
 #include "cairo-analysis-surface-private.h"
-#include "cairo-recording-surface-private.h"
 #include "cairo-clip-private.h"
+#include "cairo-error-private.h"
+#include "cairo-recording-surface-private.h"
 #include "cairo-surface-wrapper-private.h"
 
 typedef enum {

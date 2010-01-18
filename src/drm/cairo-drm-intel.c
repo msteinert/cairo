@@ -32,6 +32,7 @@
 #include "cairo-drm-private.h"
 #include "cairo-drm-ioctl-private.h"
 #include "cairo-drm-intel-private.h"
+#include "cairo-error-private.h"
 #include "cairo-freelist-private.h"
 
 #include <sys/ioctl.h>

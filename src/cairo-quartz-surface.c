@@ -38,6 +38,8 @@
 #include "cairoint.h"
 
 #include "cairo-quartz-private.h"
+
+#include "cairo-error-private.h"
 #include "cairo-surface-clipper-private.h"
 
 #include <dlfcn.h>

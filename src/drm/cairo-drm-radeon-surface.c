@@ -31,6 +31,7 @@
 
 #include "cairo-drm-private.h"
 #include "cairo-drm-radeon-private.h"
+#include "cairo-error-private.h"
 
 /* Basic stub surface for radeon chipsets */
 

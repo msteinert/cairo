@@ -38,6 +38,7 @@
 /* Provide definitions for standalone compilation */
 #include "cairoint.h"
 
+#include "cairo-error-private.h"
 #include "cairo-combsort-private.h"
 #include "cairo-list-private.h"
 

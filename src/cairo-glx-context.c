@@ -40,6 +40,8 @@
 
 #include "cairo-gl-private.h"
 
+#include "cairo-error-private.h"
+
 #include <X11/Xutil.h>
 
 /* XXX needs hooking into XCloseDisplay() */

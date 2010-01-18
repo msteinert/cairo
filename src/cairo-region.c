@@ -38,6 +38,7 @@
 
 #include "cairoint.h"
 
+#include "cairo-error-private.h"
 #include "cairo-region-private.h"
 
 /* XXX need to update pixman headers to be const as appropriate */

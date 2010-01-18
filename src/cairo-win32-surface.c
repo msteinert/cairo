@@ -48,6 +48,7 @@
 #include "cairoint.h"
 
 #include "cairo-clip-private.h"
+#include "cairo-error-private.h"
 #include "cairo-paginated-private.h"
 #include "cairo-win32-private.h"
 #include "cairo-scaled-font-subsets-private.h"

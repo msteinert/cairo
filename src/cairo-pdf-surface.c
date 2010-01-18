@@ -45,6 +45,7 @@
 #include "cairo-pdf-surface-private.h"
 #include "cairo-pdf-operators-private.h"
 #include "cairo-analysis-surface-private.h"
+#include "cairo-error-private.h"
 #include "cairo-image-info-private.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-output-stream-private.h"

@@ -31,6 +31,7 @@
 
 #include "cairo-drm-private.h"
 #include "cairo-drm-intel-private.h"
+#include "cairo-error-private.h"
 
 /* Basic generic/stub surface for intel chipsets */
 

@@ -36,6 +36,7 @@
 
 #include "cairoint.h"
 
+#include "cairo-error-private.h"
 #include "cairo-rtree-private.h"
 
 cairo_rtree_node_t *

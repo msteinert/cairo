@@ -27,6 +27,8 @@
 #include "cairoint.h"
 #include "cairo-glitz.h"
 #include "cairo-glitz-private.h"
+
+#include "cairo-error-private.h"
 #include "cairo-region-private.h"
 
 typedef struct _cairo_glitz_surface {

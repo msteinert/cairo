@@ -38,6 +38,7 @@
 #include "cairo-user-font-private.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-analysis-surface-private.h"
+#include "cairo-error-private.h"
 
 typedef struct _cairo_user_scaled_font_methods {
     cairo_user_scaled_font_init_func_t			init;

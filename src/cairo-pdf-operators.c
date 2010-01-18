@@ -43,6 +43,7 @@
 
 #if CAIRO_HAS_PDF_OPERATORS
 
+#include "cairo-error-private.h"
 #include "cairo-pdf-operators-private.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-output-stream-private.h"

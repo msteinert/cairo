@@ -38,8 +38,9 @@
 #include "cairo-xcb.h"
 #include "cairo-xcb-xrender.h"
 #include "cairo-clip-private.h"
-#include "cairo-list-private.h"
+#include "cairo-error-private.h"
 #include "cairo-freelist-private.h"
+#include "cairo-list-private.h"
 #include <xcb/xcb_renderutil.h>
 
 #define AllPlanes               ((unsigned long)~0L)

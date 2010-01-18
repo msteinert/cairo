@@ -41,6 +41,7 @@
 #define _GNU_SOURCE
 
 #include "cairoint.h"
+#include "cairo-error-private.h"
 #include "cairo-scaled-font-private.h"
 
 #if _XOPEN_SOURCE >= 600 || defined (_ISOC99_SOURCE)

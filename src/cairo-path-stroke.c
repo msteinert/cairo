@@ -39,6 +39,7 @@
 #define _BSD_SOURCE /* for hypot() */
 #include "cairoint.h"
 
+#include "cairo-error-private.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-slope-private.h"
 

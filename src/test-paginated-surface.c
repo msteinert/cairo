@@ -49,6 +49,7 @@
 
 #include "test-paginated-surface.h"
 
+#include "cairo-error-private.h"
 #include "cairo-paginated-private.h"
 
 typedef struct _test_paginated_surface {

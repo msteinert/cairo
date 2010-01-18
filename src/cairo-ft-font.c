@@ -41,6 +41,7 @@
 #define _BSD_SOURCE /* for strdup() */
 #include "cairoint.h"
 
+#include "cairo-error-private.h"
 #include "cairo-ft-private.h"
 
 #include <float.h>

@@ -37,6 +37,8 @@
 
 #include "cairo-xlib-private.h"
 
+#include "cairo-error-private.h"
+
 /* A perceptual distance metric between two colors. No sqrt needed
  * since the square of the distance is still a valid metric. */
 

@@ -35,6 +35,7 @@
  */
 
 #include "cairoint.h"
+#include "cairo-error-private.h"
 
 typedef struct _lzw_buf {
     cairo_status_t status;

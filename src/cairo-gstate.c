@@ -40,6 +40,7 @@
 #include "cairoint.h"
 
 #include "cairo-clip-private.h"
+#include "cairo-error-private.h"
 #include "cairo-gstate-private.h"
 
 #if _XOPEN_SOURCE >= 600 || defined (_ISOC99_SOURCE)

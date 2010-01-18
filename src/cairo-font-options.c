@@ -35,6 +35,7 @@
  */
 
 #include "cairoint.h"
+#include "cairo-error-private.h"
 
 static const cairo_font_options_t _cairo_font_options_nil = {
     CAIRO_ANTIALIAS_DEFAULT,

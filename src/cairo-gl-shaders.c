@@ -32,6 +32,7 @@
 
 #include "cairoint.h"
 #include "cairo-gl-private.h"
+#include "cairo-error-private.h"
 
 static GLint
 _cairo_gl_compile_glsl(GLenum type, GLint *shader_out, const char *source)

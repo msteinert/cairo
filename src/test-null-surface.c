@@ -40,6 +40,8 @@
 
 #include "test-null-surface.h"
 
+#include "cairo-error-private.h"
+
 slim_hidden_proto (_cairo_test_null_surface_create);
 
 static cairo_int_status_t

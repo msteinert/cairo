@@ -39,6 +39,7 @@
 #include "cairo-directfb.h"
 
 #include "cairo-clip-private.h"
+#include "cairo-error-private.h"
 
 #include <pixman.h>
 

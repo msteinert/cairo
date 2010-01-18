@@ -36,6 +36,7 @@
  */
 
 #include "cairoint.h"
+#include "cairo-error-private.h"
 
 /**
  * _cairo_array_init:

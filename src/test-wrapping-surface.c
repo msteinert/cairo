@@ -43,6 +43,7 @@
 
 #include "test-wrapping-surface.h"
 
+#include "cairo-error-private.h"
 #include "cairo-surface-wrapper-private.h"
 
 typedef struct _test_wrapping_surface {

@@ -33,6 +33,8 @@
 #include "cairoint.h"
 
 #include "cairo-gl-private.h"
+
+#include "cairo-error-private.h"
 #include "cairo-rtree-private.h"
 
 #define GLYPH_CACHE_WIDTH 1024

@@ -50,6 +50,7 @@
 #include "cairo-xlib-private.h"
 #include "cairo-xlib-surface-private.h"
 #include "cairo-clip-private.h"
+#include "cairo-error-private.h"
 #include "cairo-scaled-font-private.h"
 #include "cairo-region-private.h"
 

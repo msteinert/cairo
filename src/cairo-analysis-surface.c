@@ -37,6 +37,7 @@
 #include "cairoint.h"
 
 #include "cairo-analysis-surface-private.h"
+#include "cairo-error-private.h"
 #include "cairo-paginated-private.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-region-private.h"

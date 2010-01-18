@@ -41,6 +41,7 @@
 
 #include "cairoint.h"
 #include "cairo-clip-private.h"
+#include "cairo-error-private.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-region-private.h"
 

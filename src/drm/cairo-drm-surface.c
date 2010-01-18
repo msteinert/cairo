@@ -33,6 +33,7 @@
 #include "cairoint.h"
 
 #include "cairo-drm-private.h"
+#include "cairo-error-private.h"
 #include "cairo-surface-fallback-private.h"
 
 cairo_surface_t *

@@ -37,6 +37,7 @@
  */
 
 #include "cairoint.h"
+#include "cairo-error-private.h"
 
 /*
  * An entry can be in one of three states:

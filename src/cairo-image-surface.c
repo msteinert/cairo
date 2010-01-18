@@ -38,6 +38,7 @@
 #include "cairoint.h"
 
 #include "cairo-clip-private.h"
+#include "cairo-error-private.h"
 #include "cairo-region-private.h"
 
 /* Limit on the width / height of an image surface in pixels.  This is

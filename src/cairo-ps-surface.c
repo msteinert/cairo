@@ -58,6 +58,7 @@
 #include "cairo-ps.h"
 #include "cairo-ps-surface-private.h"
 #include "cairo-pdf-operators-private.h"
+#include "cairo-error-private.h"
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-paginated-private.h"
 #include "cairo-recording-surface-private.h"

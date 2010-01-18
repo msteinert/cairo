@@ -45,6 +45,7 @@
 #include "cairoint.h"
 
 #include "cairo-win32-private.h"
+#include "cairo-error-private.h"
 
 #ifndef SPI_GETFONTSMOOTHINGTYPE
 #define SPI_GETFONTSMOOTHINGTYPE 0x200a

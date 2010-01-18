@@ -45,6 +45,7 @@
 #include "cairo-xml.h"
 
 #include "cairo-clip-private.h"
+#include "cairo-error-private.h"
 #include "cairo-output-stream-private.h"
 #include "cairo-recording-surface-private.h"
 

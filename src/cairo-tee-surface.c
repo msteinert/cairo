@@ -40,6 +40,7 @@
 
 #include "cairoint.h"
 
+#include "cairo-error-private.h"
 #include "cairo-tee-surface-private.h"
 #include "cairo-surface-wrapper-private.h"
 

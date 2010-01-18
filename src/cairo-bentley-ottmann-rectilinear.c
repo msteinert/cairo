@@ -39,6 +39,7 @@
 #include "cairoint.h"
 
 #include "cairo-combsort-private.h"
+#include "cairo-error-private.h"
 
 typedef struct _cairo_bo_edge cairo_bo_edge_t;
 typedef struct _cairo_bo_trap cairo_bo_trap_t;

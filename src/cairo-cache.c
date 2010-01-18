@@ -37,6 +37,7 @@
  */
 
 #include "cairoint.h"
+#include "cairo-error-private.h"
 
 static void
 _cairo_cache_shrink_to_accommodate (cairo_cache_t *cache,

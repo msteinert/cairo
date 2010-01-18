@@ -37,6 +37,7 @@
 
 #include "cairoint.h"
 
+#include "cairo-error-private.h"
 #include "cairo-gl-private.h"
 
 slim_hidden_proto (cairo_gl_context_reference);

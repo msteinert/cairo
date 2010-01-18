@@ -39,6 +39,7 @@
  */
 
 #include "cairoint.h"
+#include "cairo-error-private.h"
 
 /* #cairo_font_face_t */
 

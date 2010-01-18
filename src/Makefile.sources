@@ -59,6 +59,7 @@ cairo_private = \
 	cairo-clip-private.h \
 	cairo-combsort-private.h \
 	cairo-compiler-private.h \
+	cairo-error-private.h \
 	cairo-fixed-private.h \
 	cairo-fixed-type-private.h \
 	cairo-freelist-private.h \

@@ -40,6 +40,7 @@
 
 #include "cairo-gl-private.h"
 
+#include "cairo-error-private.h"
 #include <i915_drm.h> /* XXX dummy surface for glewInit() */
 #include <sys/ioctl.h>
 

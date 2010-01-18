@@ -2618,18 +2618,6 @@ _cairo_utf8_to_utf16 (const char *str,
 		      int	 *items_written);
 #endif
 
-#define _cairo_status_is_error(status) \
-    (status != CAIRO_STATUS_SUCCESS && status <= CAIRO_STATUS_LAST_STATUS)
-
-cairo_private cairo_status_t
-_cairo_error (cairo_status_t status);
-
-/* hide compiler warnings when discarding the return value */
-#define _cairo_error_throw(status) do { \
-    cairo_status_t status__ = _cairo_error (status); \
-    (void) status__; \
-} while (0)
-
 /* Avoid unnecessary PLT entries.  */
 slim_hidden_proto (cairo_clip_preserve);
 slim_hidden_proto (cairo_close_path);

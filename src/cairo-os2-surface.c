@@ -38,6 +38,7 @@
 #include "cairoint.h"
 
 #include "cairo-os2-private.h"
+#include "cairo-error-private.h"
 
 #if CAIRO_HAS_FC_FONT
 #include <fontconfig/fontconfig.h>

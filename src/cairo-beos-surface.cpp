@@ -40,6 +40,8 @@
 
 #include "cairo-beos.h"
 
+#include "cairo-error-private.h"
+
 #include <new>
 
 #include <Bitmap.h>

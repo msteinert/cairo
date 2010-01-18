@@ -37,6 +37,7 @@
 #include "cairoint.h"
 
 #include "cairo-output-stream-private.h"
+#include "cairo-error-private.h"
 #include "cairo-compiler-private.h"
 
 #include <stdio.h>

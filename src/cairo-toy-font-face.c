@@ -41,6 +41,7 @@
 
 #define _BSD_SOURCE /* for strdup() */
 #include "cairoint.h"
+#include "cairo-error-private.h"
 
 
 static const cairo_font_face_t _cairo_font_face_null_pointer = {

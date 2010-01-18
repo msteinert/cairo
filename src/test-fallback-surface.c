@@ -54,6 +54,7 @@
 #include "cairoint.h"
 
 #include "test-fallback-surface.h"
+#include "cairo-error-private.h"
 
 typedef struct _test_fallback_surface {
     cairo_surface_t base;

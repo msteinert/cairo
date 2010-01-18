@@ -47,6 +47,7 @@
 #include "cairo-script.h"
 
 #include "cairo-analysis-surface-private.h"
+#include "cairo-error-private.h"
 #include "cairo-ft-private.h"
 #include "cairo-list-private.h"
 #include "cairo-recording-surface-private.h"

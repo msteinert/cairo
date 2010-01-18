@@ -36,6 +36,7 @@
 
 #include "cairoint.h"
 
+#include "cairo-error-private.h"
 #include "cairo-slope-private.h"
 
 typedef struct cairo_hull {

@@ -40,6 +40,7 @@
 #include "cairo-private.h"
 
 #include "cairo-arc-private.h"
+#include "cairo-error-private.h"
 #include "cairo-path-private.h"
 
 #define CAIRO_TOLERANCE_MINIMUM	_cairo_fixed_to_double(1)

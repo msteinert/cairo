@@ -29,6 +29,7 @@
  */
 
 #include "cairoint.h"
+#include "cairo-error-private.h"
 
 static const cairo_solid_pattern_t _cairo_pattern_nil = {
     { CAIRO_PATTERN_TYPE_SOLID,		/* type */
