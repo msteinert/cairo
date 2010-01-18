@@ -41,6 +41,29 @@
 
 /* A collection of routines to facilitate surface wrapping */
 
+static void
+_copy_transformed_pattern (cairo_pattern_t *pattern,
+			   const cairo_pattern_t *original,
+			   const cairo_matrix_t  *ctm_inverse)
+{
+    _cairo_pattern_init_static_copy (pattern, original);
+
+    /* apply device_transform first so that it is transformed by ctm_inverse */
+    if (original->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	cairo_surface_pattern_t *surface_pattern;
+	cairo_surface_t *surface;
+
+        surface_pattern = (cairo_surface_pattern_t *) original;
+        surface = surface_pattern->surface;
+
+	if (_cairo_surface_has_device_transform (surface))
+	    _cairo_pattern_transform (pattern, &surface->device_transform);
+    }
+
+    if (! _cairo_matrix_is_identity (ctm_inverse))
+	_cairo_pattern_transform (pattern, ctm_inverse);
+}
+
 static cairo_bool_t
 _cairo_surface_wrapper_needs_device_transform (cairo_surface_wrapper_t *wrapper,
 					       cairo_matrix_t *matrix)
@@ -72,28 +95,16 @@ _cairo_surface_wrapper_release_source_image (cairo_surface_wrapper_t *wrapper,
     _cairo_surface_release_source_image (wrapper->target, image, image_extra);
 }
 
-static void
-_cairo_surface_wrapper_transform_pattern (cairo_surface_wrapper_t *wrapper,
-                                          cairo_pattern_t         *pattern,
-                                          const cairo_pattern_t   *original)
-{
-    _cairo_pattern_init_static_copy (pattern, original);
-
-    if (_cairo_surface_has_device_transform (wrapper->target))
-        _cairo_pattern_transform (pattern,
-                                  &wrapper->target->device_transform_inverse);
-}
-
 cairo_status_t
 _cairo_surface_wrapper_paint (cairo_surface_wrapper_t *wrapper,
-			      cairo_operator_t	       op,
-			      const cairo_pattern_t   *source,
-			      cairo_clip_t	      *clip)
+			      cairo_operator_t	 op,
+			      const cairo_pattern_t *source,
+			      cairo_clip_t	    *clip)
 {
     cairo_status_t status;
     cairo_matrix_t device_transform;
     cairo_clip_t clip_copy, *dev_clip = clip;
-    cairo_pattern_union_t source_pattern;
+    cairo_pattern_union_t source_copy;
 
     if (unlikely (wrapper->target->status))
 	return wrapper->target->status;
@@ -101,25 +112,25 @@ _cairo_surface_wrapper_paint (cairo_surface_wrapper_t *wrapper,
     if (clip && clip->all_clipped)
 	return CAIRO_STATUS_SUCCESS;
 
-    if (clip != NULL) {
-	if (_cairo_surface_wrapper_needs_device_transform (wrapper,
-							   &device_transform))
-	{
+    if (_cairo_surface_wrapper_needs_device_transform (wrapper,
+						       &device_transform))
+    {
+	if (clip != NULL) {
 	    status = _cairo_clip_init_copy_transformed (&clip_copy, clip,
 							&device_transform);
 	    if (unlikely (status))
 		goto FINISH;
-
 	} else {
 	    _cairo_clip_init_copy (&clip_copy, clip);
 	}
 
 	dev_clip = &clip_copy;
+
+	_copy_transformed_pattern (&source_copy.base, source, &device_transform);
+	source = &source_copy.base;
     }
 
-    _cairo_surface_wrapper_transform_pattern (wrapper, &source_pattern.base, source);
-
-    status = _cairo_surface_paint (wrapper->target, op, &source_pattern.base, dev_clip);
+    status = _cairo_surface_paint (wrapper->target, op, source, dev_clip);
 
   FINISH:
     if (dev_clip != clip)
@@ -137,7 +148,8 @@ _cairo_surface_wrapper_mask (cairo_surface_wrapper_t *wrapper,
     cairo_status_t status;
     cairo_matrix_t device_transform;
     cairo_clip_t clip_copy, *dev_clip = clip;
-    cairo_pattern_union_t source_pattern, mask_pattern;
+    cairo_pattern_union_t source_copy;
+    cairo_pattern_union_t mask_copy;
 
     if (unlikely (wrapper->target->status))
 	return wrapper->target->status;
@@ -145,10 +157,10 @@ _cairo_surface_wrapper_mask (cairo_surface_wrapper_t *wrapper,
     if (clip && clip->all_clipped)
 	return CAIRO_STATUS_SUCCESS;
 
-    if (clip != NULL) {
-	if (_cairo_surface_wrapper_needs_device_transform (wrapper,
-							   &device_transform))
-	{
+    if (_cairo_surface_wrapper_needs_device_transform (wrapper,
+						       &device_transform))
+    {
+	if (clip != NULL) {
 	    status = _cairo_clip_init_copy_transformed (&clip_copy, clip,
 							&device_transform);
 	    if (unlikely (status))
@@ -159,14 +171,15 @@ _cairo_surface_wrapper_mask (cairo_surface_wrapper_t *wrapper,
 	}
 
 	dev_clip = &clip_copy;
+
+	_copy_transformed_pattern (&source_copy.base, source, &device_transform);
+	source = &source_copy.base;
+
+	_copy_transformed_pattern (&mask_copy.base, mask, &device_transform);
+	mask = &mask_copy.base;
     }
 
-    _cairo_surface_wrapper_transform_pattern (wrapper, &source_pattern.base, source);
-    _cairo_surface_wrapper_transform_pattern (wrapper, &mask_pattern.base, mask);
-
-    status = _cairo_surface_mask (wrapper->target, op,
-                                  &source_pattern.base, &mask_pattern.base,
-                                  dev_clip);
+    status = _cairo_surface_mask (wrapper->target, op, source, mask, dev_clip);
 
   FINISH:
     if (dev_clip != clip)
@@ -192,7 +205,7 @@ _cairo_surface_wrapper_stroke (cairo_surface_wrapper_t *wrapper,
     cairo_clip_t clip_copy, *dev_clip = clip;
     cairo_matrix_t dev_ctm = *ctm;
     cairo_matrix_t dev_ctm_inverse = *ctm_inverse;
-    cairo_pattern_union_t source_pattern;
+    cairo_pattern_union_t source_copy;
 
     if (unlikely (wrapper->target->status))
 	return wrapper->target->status;
@@ -225,6 +238,9 @@ _cairo_surface_wrapper_stroke (cairo_surface_wrapper_t *wrapper,
 	cairo_matrix_multiply (&dev_ctm_inverse,
 			       &device_transform,
 			       &dev_ctm_inverse);
+
+	_copy_transformed_pattern (&source_copy.base, source, &device_transform);
+	source = &source_copy.base;
     } else {
 	if (clip != NULL) {
 	    dev_clip = &clip_copy;
@@ -232,9 +248,7 @@ _cairo_surface_wrapper_stroke (cairo_surface_wrapper_t *wrapper,
 	}
     }
 
-    _cairo_surface_wrapper_transform_pattern (wrapper, &source_pattern.base, source);
-
-    status = _cairo_surface_stroke (wrapper->target, op, &source_pattern.base,
+    status = _cairo_surface_stroke (wrapper->target, op, source,
 				    dev_path, stroke_style,
 				    &dev_ctm, &dev_ctm_inverse,
 				    tolerance, antialias,
@@ -271,7 +285,8 @@ _cairo_surface_wrapper_fill_stroke (cairo_surface_wrapper_t *wrapper,
     cairo_clip_t clip_copy, *dev_clip = clip;
     cairo_matrix_t dev_ctm = *stroke_ctm;
     cairo_matrix_t dev_ctm_inverse = *stroke_ctm_inverse;
-    cairo_pattern_union_t fill_pattern, stroke_pattern;
+    cairo_pattern_union_t stroke_source_copy;
+    cairo_pattern_union_t fill_source_copy;
 
     if (unlikely (wrapper->target->status))
 	return wrapper->target->status;
@@ -304,6 +319,12 @@ _cairo_surface_wrapper_fill_stroke (cairo_surface_wrapper_t *wrapper,
 	cairo_matrix_multiply (&dev_ctm_inverse,
 			       &device_transform,
 			       &dev_ctm_inverse);
+
+	_copy_transformed_pattern (&stroke_source_copy.base, stroke_source, &device_transform);
+	stroke_source = &stroke_source_copy.base;
+
+	_copy_transformed_pattern (&fill_source_copy.base, fill_source, &device_transform);
+	fill_source = &fill_source_copy.base;
     } else {
 	if (clip != NULL) {
 	    dev_clip = &clip_copy;
@@ -311,14 +332,11 @@ _cairo_surface_wrapper_fill_stroke (cairo_surface_wrapper_t *wrapper,
 	}
     }
 
-    _cairo_surface_wrapper_transform_pattern (wrapper, &fill_pattern.base, fill_source);
-    _cairo_surface_wrapper_transform_pattern (wrapper, &stroke_pattern.base, stroke_source);
-
     status = _cairo_surface_fill_stroke (wrapper->target,
-					 fill_op, &fill_pattern.base, fill_rule,
+					 fill_op, fill_source, fill_rule,
 					 fill_tolerance, fill_antialias,
 					 dev_path,
-					 stroke_op, &stroke_pattern.base,
+					 stroke_op, stroke_source,
 					 stroke_style,
 					 &dev_ctm, &dev_ctm_inverse,
 					 stroke_tolerance, stroke_antialias,
@@ -346,7 +364,7 @@ _cairo_surface_wrapper_fill (cairo_surface_wrapper_t	*wrapper,
     cairo_matrix_t device_transform;
     cairo_path_fixed_t path_copy, *dev_path = path;
     cairo_clip_t clip_copy, *dev_clip = clip;
-    cairo_pattern_union_t source_pattern;
+    cairo_pattern_union_t source_copy;
 
     if (unlikely (wrapper->target->status))
 	return wrapper->target->status;
@@ -372,6 +390,9 @@ _cairo_surface_wrapper_fill (cairo_surface_wrapper_t	*wrapper,
 
 	    dev_clip = &clip_copy;
 	}
+
+	_copy_transformed_pattern (&source_copy.base, source, &device_transform);
+	source = &source_copy.base;
     } else {
 	if (clip != NULL) {
 	    dev_clip = &clip_copy;
@@ -379,10 +400,7 @@ _cairo_surface_wrapper_fill (cairo_surface_wrapper_t	*wrapper,
 	}
     }
 
-    _cairo_surface_wrapper_transform_pattern (wrapper, &source_pattern.base, source);
-
-    status = _cairo_surface_fill (wrapper->target, op,
-                                  &source_pattern.base,
+    status = _cairo_surface_fill (wrapper->target, op, source,
 				  dev_path, fill_rule,
 				  tolerance, antialias,
 				  dev_clip);
@@ -411,9 +429,9 @@ _cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t *wrapper,
 {
     cairo_status_t status;
     cairo_matrix_t device_transform;
-    cairo_pattern_union_t source_pattern;
     cairo_clip_t clip_copy, *dev_clip = clip;
     cairo_glyph_t *dev_glyphs = glyphs;
+    cairo_pattern_union_t source_copy;
 
     if (unlikely (wrapper->target->status))
 	return wrapper->target->status;
@@ -449,6 +467,9 @@ _cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t *wrapper,
 					  &dev_glyphs[i].x,
 					  &dev_glyphs[i].y);
 	}
+
+	_copy_transformed_pattern (&source_copy.base, source, &device_transform);
+	source = &source_copy.base;
     } else {
 	if (clip != NULL) {
 	    dev_clip = &clip_copy;
@@ -456,10 +477,7 @@ _cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t *wrapper,
 	}
     }
 
-    _cairo_surface_wrapper_transform_pattern (wrapper, &source_pattern.base, source);
-
-    status = _cairo_surface_show_text_glyphs (wrapper->target, op,
-                                              &source_pattern.base,
+    status = _cairo_surface_show_text_glyphs (wrapper->target, op, source,
 					      utf8, utf8_len,
 					      dev_glyphs, num_glyphs,
 					      clusters, num_clusters,
@@ -480,10 +498,8 @@ _cairo_surface_wrapper_create_similar (cairo_surface_wrapper_t *wrapper,
 				       int		width,
 				       int		height)
 {
-    return _cairo_surface_create_similar_solid (wrapper->target,
-						content, width, height,
-						CAIRO_COLOR_TRANSPARENT,
-						TRUE);
+    return _cairo_surface_create_similar_scratch (wrapper->target,
+						  content, width, height);
 }
 
 cairo_bool_t
