@@ -138,6 +138,93 @@ _cairo_boilerplate_gl_create_surface (const char		 *name,
     return surface;
 }
 
+static cairo_surface_t *
+_cairo_boilerplate_gl_create_window (const char			 *name,
+				     cairo_content_t		  content,
+				     double			  width,
+				     double			  height,
+				     double			  max_width,
+				     double			  max_height,
+				     cairo_boilerplate_mode_t	  mode,
+				     int			  id,
+				     void			**closure)
+{
+    int rgb_attribs[] = { GLX_RGBA,
+			  GLX_RED_SIZE, 1,
+			  GLX_GREEN_SIZE, 1,
+			  GLX_BLUE_SIZE, 1,
+			  GLX_DOUBLEBUFFER,
+			  None };
+    XVisualInfo *vi;
+    GLXContext ctx;
+    gl_target_closure_t *gltc;
+    cairo_surface_t *surface;
+    Display *dpy;
+    XSetWindowAttributes attr;
+
+    gltc = calloc (1, sizeof (gl_target_closure_t));
+    *closure = gltc;
+
+    if (width == 0)
+	width = 1;
+    if (height == 0)
+	height = 1;
+
+    dpy = XOpenDisplay (NULL);
+    gltc->dpy = dpy;
+    if (!gltc->dpy) {
+	fprintf (stderr, "Failed to open display: %s\n", XDisplayName(0));
+	free (gltc);
+	return NULL;
+    }
+
+    if (mode == CAIRO_BOILERPLATE_MODE_TEST)
+	XSynchronize (gltc->dpy, 1);
+
+    vi = glXChooseVisual (dpy, DefaultScreen (dpy), rgb_attribs);
+    if (vi == NULL) {
+	fprintf (stderr, "Failed to create RGB, double-buffered visual\n");
+	XCloseDisplay (dpy);
+	free (gltc);
+	return NULL;
+    }
+
+    attr.colormap = XCreateColormap (dpy,
+				     RootWindow (dpy, vi->screen),
+				     vi->visual,
+				     AllocNone);
+    attr.border_pixel = 0;
+    attr.override_redirect = True;
+    gltc->drawable = XCreateWindow (dpy, DefaultRootWindow (dpy), 0, 0,
+				    width, height, 0, vi->depth,
+				    InputOutput, vi->visual,
+				    CWOverrideRedirect | CWBorderPixel | CWColormap,
+				    &attr);
+    XMapWindow (dpy, gltc->drawable);
+
+    ctx = glXCreateContext (dpy, vi, NULL, True);
+    XFree (vi);
+
+    gltc->ctx = ctx;
+    gltc->device = cairo_glx_device_create (dpy, ctx);
+
+    gltc->surface = surface = cairo_gl_surface_create_for_window (gltc->device,
+								  gltc->drawable,
+								  ceil (width),
+								  ceil (height));
+    if (cairo_surface_status (surface))
+	_cairo_boilerplate_gl_cleanup (gltc);
+
+    return surface;
+}
+
+static cairo_status_t
+_cairo_boilerplate_gl_finish_window (cairo_surface_t		*surface)
+{
+    cairo_gl_surface_swapbuffers (surface);
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static void
 _cairo_boilerplate_gl_synchronize (void *closure)
 {
@@ -164,6 +251,18 @@ static const cairo_boilerplate_target_t targets[] = {
 	"cairo_gl_surface_create",
 	_cairo_boilerplate_gl_create_surface,
 	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	_cairo_boilerplate_gl_cleanup,
+	_cairo_boilerplate_gl_synchronize
+    },
+    {
+	"gl-window", "gl", NULL, NULL,
+	CAIRO_SURFACE_TYPE_GL, CAIRO_CONTENT_COLOR_ALPHA, 1,
+	"cairo_gl_surface_create_for_window",
+	_cairo_boilerplate_gl_create_window,
+	NULL,
+	_cairo_boilerplate_gl_finish_window,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_gl_cleanup,
