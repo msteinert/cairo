@@ -367,7 +367,9 @@ _cairo_win32_surface_create_for_dc (HDC             original_dc,
     surface->extents = surface->clip_rect;
     surface->font_subsets = NULL;
 
-    _cairo_surface_init (&surface->base, &cairo_win32_surface_backend,
+    _cairo_surface_init (&surface->base,
+			 &cairo_win32_surface_backend,
+			 NULL, /* device */
 			 _cairo_content_from_format (format));
 
     return &surface->base;
@@ -1676,7 +1678,9 @@ cairo_win32_surface_create (HDC hdc)
 
     surface->flags = _cairo_win32_flags_for_dc (surface->dc);
 
-    _cairo_surface_init (&surface->base, &cairo_win32_surface_backend,
+    _cairo_surface_init (&surface->base,
+			 &cairo_win32_surface_backend,
+			 NULL, /* device */
 			 _cairo_content_from_format (format));
 
     return (cairo_surface_t *)surface;

@@ -845,6 +845,7 @@ cairo_os2_surface_create (HPS hps_client_window,
     /* Initialize base surface */
     _cairo_surface_init (&local_os2_surface->base,
                          &cairo_os2_surface_backend,
+			 NULL, /* device */
                          _cairo_content_from_format (CAIRO_FORMAT_ARGB32));
 
     return (cairo_surface_t *)local_os2_surface;

@@ -59,6 +59,7 @@ cairo_private = \
 	cairo-clip-private.h \
 	cairo-combsort-private.h \
 	cairo-compiler-private.h \
+	cairo-device-private.h \
 	cairo-error-private.h \
 	cairo-fixed-private.h \
 	cairo-fixed-type-private.h \
@@ -114,6 +115,7 @@ cairo_sources = \
 	cairo-clip.c \
 	cairo-color.c \
 	cairo-debug.c \
+	cairo-device.c \
 	cairo-fixed.c \
 	cairo-font-face.c \
 	cairo-font-face-twin.c \

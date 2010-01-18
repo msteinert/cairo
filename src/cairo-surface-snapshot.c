@@ -199,6 +199,7 @@ _cairo_surface_snapshot (cairo_surface_t *surface)
 
     _cairo_surface_init (&snapshot->base,
 			 &_cairo_surface_snapshot_backend,
+			 NULL, /* device */
 			 surface->content);
 
     snapshot->target = surface;

@@ -1487,6 +1487,8 @@ _status_to_string (cairo_status_t status)
 	f(INVALID_WEIGHT);
 	f(INVALID_SIZE);
 	f(USER_FONT_NOT_IMPLEMENTED);
+	f(DEVICE_TYPE_MISMATCH);
+	f(DEVICE_ERROR);
     case CAIRO_STATUS_LAST_STATUS:
 	break;
     }

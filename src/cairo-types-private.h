@@ -50,6 +50,7 @@ typedef struct _cairo_cache cairo_cache_t;
 typedef struct _cairo_clip cairo_clip_t;
 typedef struct _cairo_clip_path cairo_clip_path_t;
 typedef struct _cairo_color cairo_color_t;
+typedef struct _cairo_device_backend cairo_device_backend_t;
 typedef struct _cairo_font_face_backend     cairo_font_face_backend_t;
 typedef struct _cairo_gstate cairo_gstate_t;
 typedef struct _cairo_hash_entry cairo_hash_entry_t;

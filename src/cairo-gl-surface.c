@@ -462,6 +462,7 @@ _cairo_gl_surface_init (cairo_gl_context_t *ctx,
 {
     _cairo_surface_init (&surface->base,
 			 &_cairo_gl_surface_backend,
+			 NULL, /* device */
 			 content);
 
     surface->ctx = cairo_gl_context_reference (ctx);

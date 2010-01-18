@@ -69,6 +69,7 @@ _cairo_test_wrapping_surface_create (cairo_surface_t *target)
 
     _cairo_surface_init (&surface->base,
 			 &test_wrapping_surface_backend,
+			 NULL, /* device */
 			 target->content);
 
     _cairo_surface_wrapper_init (&surface->wrapper, target);

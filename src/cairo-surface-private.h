@@ -48,6 +48,7 @@ typedef void (*cairo_surface_func_t) (cairo_surface_t *);
 
 struct _cairo_surface {
     const cairo_surface_backend_t *backend;
+    cairo_device_t *device;
 
     /* We allow surfaces to override the backend->type by shoving something
      * else into surface->type. This is for "wrapper" surfaces that want to

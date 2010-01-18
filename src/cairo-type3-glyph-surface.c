@@ -84,7 +84,9 @@ _cairo_type3_glyph_surface_create (cairo_scaled_font_t			 *scaled_font,
     if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    _cairo_surface_init (&surface->base, &cairo_type3_glyph_surface_backend,
+    _cairo_surface_init (&surface->base,
+			 &cairo_type3_glyph_surface_backend,
+			 NULL, /* device */
 			 CAIRO_CONTENT_COLOR_ALPHA);
 
     surface->scaled_font = scaled_font;

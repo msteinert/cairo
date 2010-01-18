@@ -2941,7 +2941,9 @@ found:
 	surface->render_minor = -1;
     }
 
-    _cairo_surface_init (&surface->base, &cairo_xlib_surface_backend,
+    _cairo_surface_init (&surface->base,
+			 &cairo_xlib_surface_backend,
+			 NULL, /* device */
 			 _xrender_format_to_content (xrender_format));
 
     surface->screen = _cairo_xlib_screen_reference (screen);

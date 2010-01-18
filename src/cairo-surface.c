@@ -40,6 +40,7 @@
 
 #include "cairo-surface-fallback-private.h"
 #include "cairo-clip-private.h"
+#include "cairo-device-private.h"
 #include "cairo-error-private.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-region-private.h"
@@ -48,6 +49,7 @@
 #define DEFINE_NIL_SURFACE(status, name)			\
 const cairo_surface_t name = {					\
     NULL,				/* backend */		\
+    NULL,				/* device */		\
     CAIRO_SURFACE_TYPE_IMAGE,		/* type */		\
     CAIRO_CONTENT_COLOR,		/* content */		\
     CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */		\
@@ -92,6 +94,8 @@ static DEFINE_NIL_SURFACE(CAIRO_STATUS_READ_ERROR, _cairo_surface_nil_read_error
 static DEFINE_NIL_SURFACE(CAIRO_STATUS_WRITE_ERROR, _cairo_surface_nil_write_error);
 static DEFINE_NIL_SURFACE(CAIRO_STATUS_INVALID_STRIDE, _cairo_surface_nil_invalid_stride);
 static DEFINE_NIL_SURFACE(CAIRO_STATUS_INVALID_SIZE, _cairo_surface_nil_invalid_size);
+static DEFINE_NIL_SURFACE(CAIRO_STATUS_DEVICE_TYPE_MISMATCH, _cairo_surface_nil_device_type_mismatch);
+static DEFINE_NIL_SURFACE(CAIRO_STATUS_DEVICE_ERROR, _cairo_surface_nil_device_error);
 
 /**
  * _cairo_surface_set_error:
@@ -208,6 +212,23 @@ _cairo_surface_allocate_unique_id (void)
 
     return id;
 #endif
+}
+
+/**
+ * cairo_surface_get_device:
+ * @surface: a #cairo_surface_t
+ *
+ * This function returns the device for a @surface.
+ * See #cairo_device_t.
+ *
+ * Return value: The device for @surface.
+ *
+ * Since: 1.10
+ **/
+cairo_device_t *
+cairo_surface_get_device (cairo_surface_t *surface)
+{
+    return surface->device;
 }
 
 static cairo_bool_t
@@ -330,11 +351,13 @@ _cairo_surface_begin_modification (cairo_surface_t *surface)
 void
 _cairo_surface_init (cairo_surface_t			*surface,
 		     const cairo_surface_backend_t	*backend,
+		     cairo_device_t			*device,
 		     cairo_content_t			 content)
 {
     CAIRO_MUTEX_INITIALIZE ();
 
     surface->backend = backend;
+    surface->device = cairo_device_reference (device);
     surface->content = content;
     surface->type = backend->type;
 
@@ -578,6 +601,8 @@ cairo_surface_destroy (cairo_surface_t *surface)
 
     /* paranoid check that nobody took a reference whilst finishing */
     assert (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&surface->ref_count));
+
+    cairo_device_destroy (surface->device);
 
     _cairo_user_data_array_fini (&surface->user_data);
     _cairo_user_data_array_fini (&surface->mime_data);
@@ -2931,6 +2956,10 @@ _cairo_surface_create_in_error (cairo_status_t status)
 	return (cairo_surface_t *) &_cairo_surface_nil_invalid_stride;
     case CAIRO_STATUS_INVALID_SIZE:
 	return (cairo_surface_t *) &_cairo_surface_nil_invalid_size;
+    case CAIRO_STATUS_DEVICE_TYPE_MISMATCH:
+	return (cairo_surface_t *) &_cairo_surface_nil_device_type_mismatch;
+    case CAIRO_STATUS_DEVICE_ERROR:
+	return (cairo_surface_t *) &_cairo_surface_nil_device_error;
     case CAIRO_STATUS_SUCCESS:
     case CAIRO_STATUS_LAST_STATUS:
 	ASSERT_NOT_REACHED;

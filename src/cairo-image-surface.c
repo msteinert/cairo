@@ -176,7 +176,9 @@ _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
     if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    _cairo_surface_init (&surface->base, &_cairo_image_surface_backend,
+    _cairo_surface_init (&surface->base,
+			 &_cairo_image_surface_backend,
+			 NULL, /* device */
 			 _cairo_content_from_pixman_format (pixman_format));
 
     surface->pixman_image = pixman_image;

@@ -179,7 +179,10 @@ _cairo_test_null_surface_create (cairo_content_t content)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
-    _cairo_surface_init (surface, &null_surface_backend, content);
+    _cairo_surface_init (surface,
+			 &null_surface_backend,
+			 NULL, /* device */
+			 content);
 
     return surface;
 }

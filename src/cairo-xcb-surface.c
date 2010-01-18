@@ -2041,7 +2041,9 @@ _cairo_xcb_surface_create_internal (xcb_connection_t	     *dpy,
 	xrender_format = NULL;
     }
 
-    _cairo_surface_init (&surface->base, &cairo_xcb_surface_backend,
+    _cairo_surface_init (&surface->base,
+			 &cairo_xcb_surface_backend,
+			 NULL, /* device */
 			 _xcb_render_format_to_content (xrender_format));
 
     surface->dpy = dpy;

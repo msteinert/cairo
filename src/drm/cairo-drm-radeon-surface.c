@@ -276,7 +276,10 @@ radeon_surface_init (radeon_surface_t *surface,
 	           cairo_content_t content,
 		   cairo_drm_device_t *device)
 {
-    _cairo_surface_init (&surface->base.base, &radeon_surface_backend, content);
+    _cairo_surface_init (&surface->base.base,
+			 &radeon_surface_backend,
+			 NULL, /* device */
+			 content);
     _cairo_drm_surface_init (&surface->base, device);
 
     switch (content) {

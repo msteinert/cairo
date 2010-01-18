@@ -304,7 +304,9 @@ _cairo_pdf_surface_create_for_stream_internal (cairo_output_stream_t	*output,
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
-    _cairo_surface_init (&surface->base, &cairo_pdf_surface_backend,
+    _cairo_surface_init (&surface->base,
+			 &cairo_pdf_surface_backend,
+			 NULL, /* device */
 			 CAIRO_CONTENT_COLOR_ALPHA);
 
     surface->output = output;

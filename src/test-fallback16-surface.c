@@ -81,6 +81,7 @@ _cairo_test_fallback16_surface_create (cairo_content_t	content,
 
     _cairo_surface_init (&surface->base,
 			 &test_fallback16_surface_backend,
+			 NULL, /* device */
 			 content);
 
     surface->backing = backing;

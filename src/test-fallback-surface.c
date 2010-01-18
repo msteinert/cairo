@@ -85,7 +85,9 @@ _cairo_test_fallback_surface_create (cairo_content_t	content,
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
-    _cairo_surface_init (&surface->base, &test_fallback_surface_backend,
+    _cairo_surface_init (&surface->base,
+			 &test_fallback_surface_backend,
+			 NULL, /* device */
 			 content);
 
     surface->backing = backing;

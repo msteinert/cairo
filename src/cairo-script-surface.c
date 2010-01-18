@@ -3257,6 +3257,7 @@ _cairo_script_surface_create_internal (cairo_script_context_t *ctx,
 
     _cairo_surface_init (&surface->base,
 			 &_cairo_script_surface_backend,
+			 NULL, /* device */
 			 content);
 
     _cairo_surface_wrapper_init (&surface->wrapper, passthrough);

@@ -102,7 +102,9 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
 	goto FAIL;
     }
 
-    _cairo_surface_init (&surface->base, &cairo_paginated_surface_backend,
+    _cairo_surface_init (&surface->base,
+			 &cairo_paginated_surface_backend,
+			 NULL, /* device */
 			 content);
 
     /* Override surface->base.type with target's type so we don't leak

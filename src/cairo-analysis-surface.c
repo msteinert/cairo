@@ -717,7 +717,9 @@ _cairo_analysis_surface_create (cairo_surface_t		*target)
 
     /* I believe the content type here is truly arbitrary. I'm quite
      * sure nothing will ever use this value. */
-    _cairo_surface_init (&surface->base, &cairo_analysis_surface_backend,
+    _cairo_surface_init (&surface->base,
+			 &cairo_analysis_surface_backend,
+			 NULL, /* device */
 			 CAIRO_CONTENT_COLOR_ALPHA);
 
     cairo_matrix_init_identity (&surface->ctm);
@@ -907,7 +909,10 @@ _cairo_null_surface_create (cairo_content_t content)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
-    _cairo_surface_init (surface, &cairo_null_surface_backend, content);
+    _cairo_surface_init (surface,
+			 &cairo_null_surface_backend,
+			 NULL, /* device */
+			 content);
 
     return surface;
 }

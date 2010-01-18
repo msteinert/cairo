@@ -915,7 +915,10 @@ _cairo_beos_surface_create_internal (BView*   view,
     cairo_content_t content = CAIRO_CONTENT_COLOR;
     if (bmp && (bmp->ColorSpace() == B_RGBA32 || bmp->ColorSpace() == B_RGBA15))
 	content = CAIRO_CONTENT_COLOR_ALPHA;
-    _cairo_surface_init(&surface->base, &cairo_beos_surface_backend, content);
+    _cairo_surface_init (&surface->base,
+			 &cairo_beos_surface_backend,
+			 NULL, /* device */
+			 content);
 
     surface->view = view;
     surface->bitmap = bmp;

@@ -123,7 +123,10 @@ cairo_recording_surface_create (cairo_content_t		 content,
     if (unlikely (recording_surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    _cairo_surface_init (&recording_surface->base, &cairo_recording_surface_backend, content);
+    _cairo_surface_init (&recording_surface->base,
+			 &cairo_recording_surface_backend,
+			 NULL, /* device */
+			 content);
 
     recording_surface->content = content;
 
@@ -616,7 +619,9 @@ _cairo_recording_surface_snapshot (void *abstract_other)
     if (unlikely (recording_surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    _cairo_surface_init (&recording_surface->base, &cairo_recording_surface_backend,
+    _cairo_surface_init (&recording_surface->base,
+			 &cairo_recording_surface_backend,
+			 NULL, /* device */
 			 other->base.content);
 
     recording_surface->extents_pixels = other->extents_pixels;

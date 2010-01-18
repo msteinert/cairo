@@ -1027,6 +1027,7 @@ _cairo_skia_surface_create_internal (SkBitmap::Config config,
 
     _cairo_surface_init (&surface->base,
 			 &cairo_skia_surface_backend,
+			 NULL, /* device */
 			 _cairo_content_from_format (format));
 
     _cairo_surface_clipper_init (&surface->clipper,

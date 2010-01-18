@@ -147,6 +147,22 @@ typedef struct _cairo cairo_t;
 typedef struct _cairo_surface cairo_surface_t;
 
 /**
+ * cairo_device_t:
+ *
+ * A #cairo_device_t represents the driver interface for drawing
+ * operations to a #cairo_surface_t.  There are different subtypes of
+ * #cairo_device_t for different drawing backends; for example,
+ * cairo_xcb_device_create() creates a device that wraps the connection
+ * to an X Windows System using the XCB library.
+ *
+ * The type of a surface can be queried with cairo_device_get_type().
+ *
+ * Memory management of #cairo_device_t is done with
+ * cairo_device_reference() and cairo_device_destroy().
+ **/
+typedef struct _cairo_device cairo_device_t;
+
+/**
  * cairo_matrix_t:
  * @xx: xx component of the affine transformation
  * @yx: yx component of the affine transformation
@@ -250,6 +266,8 @@ typedef struct _cairo_user_data_key {
  * @CAIRO_STATUS_INVALID_WEIGHT: invalid value for an input #cairo_font_weight_t (Since 1.8)
  * @CAIRO_STATUS_INVALID_SIZE: invalid value (typically too big) for the size of the input (surface, pattern, etc.) (Since 1.10)
  * @CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED: user-font method not implemented (Since 1.10)
+ * @CAIRO_STATUS_DEVICE_TYPE_MISMATCH: the device type is not appropriate for the operation (Since 1.10)
+ * @CAIRO_STATUS_DEVICE_ERROR: an operation to the device caused an unspecified error (Since 1.10)
  * @CAIRO_STATUS_LAST_STATUS: this is a special value indicating the number of
  *   status values defined in this enumeration.  When using this value, note
  *   that the version of cairo at run-time may have additional status values
@@ -299,6 +317,8 @@ typedef enum _cairo_status {
     CAIRO_STATUS_INVALID_WEIGHT,
     CAIRO_STATUS_INVALID_SIZE,
     CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED,
+    CAIRO_STATUS_DEVICE_TYPE_MISMATCH,
+    CAIRO_STATUS_DEVICE_ERROR,
 
     CAIRO_STATUS_LAST_STATUS
 } cairo_status_t;
@@ -1912,6 +1932,100 @@ cairo_status (cairo_t *cr);
 cairo_public const char *
 cairo_status_to_string (cairo_status_t status);
 
+/* Backend device manipulation */
+
+cairo_public cairo_device_t *
+cairo_device_reference (cairo_device_t *device);
+
+/**
+ * cairo_device_type_t:
+ * @CAIRO_DEVICE_TYPE_IMAGE: The surface is of type image
+ * @CAIRO_DEVICE_TYPE_PDF: The surface is of type pdf
+ * @CAIRO_DEVICE_TYPE_PS: The surface is of type ps
+ * @CAIRO_DEVICE_TYPE_XLIB: The surface is of type xlib
+ * @CAIRO_DEVICE_TYPE_XCB: The surface is of type xcb
+ * @CAIRO_DEVICE_TYPE_GLITZ: The surface is of type glitz
+ * @CAIRO_DEVICE_TYPE_QUARTZ: The surface is of type quartz
+ * @CAIRO_DEVICE_TYPE_WIN32: The surface is of type win32
+ * @CAIRO_DEVICE_TYPE_BEOS: The surface is of type beos
+ * @CAIRO_DEVICE_TYPE_DIRECTFB: The surface is of type directfb
+ * @CAIRO_DEVICE_TYPE_SVG: The surface is of type svg
+ * @CAIRO_DEVICE_TYPE_OS2: The surface is of type os2
+ * @CAIRO_DEVICE_TYPE_WIN32_PRINTING: The surface is a win32 printing surface
+ * @CAIRO_DEVICE_TYPE_QUARTZ_IMAGE: The surface is of type quartz_image
+ * @CAIRO_DEVICE_TYPE_SCRIPT: The surface is of type script
+ * @CAIRO_DEVICE_TYPE_QT: The surface is of type Qt
+ * @CAIRO_DEVICE_TYPE_RECORDING: The surface is of type recording
+ * @CAIRO_DEVICE_TYPE_VG: The surface is a OpenVG surface
+ * @CAIRO_DEVICE_TYPE_GL: The surface is of type OpenGL
+ * @CAIRO_DEVICE_TYPE_DRM: The surface is of type Direct Render Manager
+ * @CAIRO_DEVICE_TYPE_XML: The surface is of type XML
+ * @CAIRO_DEVICE_TYPE_SKIA: The surface is of type Skia
+ *
+ * #cairo_device_type_t is used to describe the type of a given
+ * device. The devices types are also known as "backends" within cairo.
+ *
+ * The device type can be queried with cairo_device_get_type()
+ *
+ * The various #cairo_device_t functions can be used with surfaces of
+ * any type, but some backends also provide type-specific functions
+ * that must only be called with a device of the appropriate
+ * type. These functions have names that begin with
+ * cairo_<emphasis>type</emphasis>_device<!-- --> such as cairo_xcb_device_debug_set_render_version().
+ *
+ * The behavior of calling a type-specific function with a surface of
+ * the wrong type is undefined.
+ *
+ * New entries may be added in future versions.
+ *
+ * Since: 1.10
+ **/
+typedef enum _cairo_device_type {
+    CAIRO_DEVICE_TYPE_IMAGE,
+    CAIRO_DEVICE_TYPE_PDF,
+    CAIRO_DEVICE_TYPE_PS,
+    CAIRO_DEVICE_TYPE_XLIB,
+    CAIRO_DEVICE_TYPE_XCB,
+    CAIRO_DEVICE_TYPE_GLITZ,
+    CAIRO_DEVICE_TYPE_QUARTZ,
+    CAIRO_DEVICE_TYPE_WIN32,
+    CAIRO_DEVICE_TYPE_BEOS,
+    CAIRO_DEVICE_TYPE_DIRECTFB,
+    CAIRO_DEVICE_TYPE_SVG,
+    CAIRO_DEVICE_TYPE_OS2,
+    CAIRO_DEVICE_TYPE_WIN32_PRINTING,
+    CAIRO_DEVICE_TYPE_QUARTZ_IMAGE,
+    CAIRO_DEVICE_TYPE_SCRIPT,
+    CAIRO_DEVICE_TYPE_QT,
+    CAIRO_DEVICE_TYPE_RECORDING,
+    CAIRO_DEVICE_TYPE_VG,
+    CAIRO_DEVICE_TYPE_GL,
+    CAIRO_DEVICE_TYPE_DRM,
+    CAIRO_DEVICE_TYPE_XML,
+    CAIRO_DEVICE_TYPE_SKIA
+} cairo_device_type_t;
+
+cairo_public cairo_device_type_t
+cairo_device_get_type (cairo_device_t *device);
+
+cairo_public cairo_status_t
+cairo_device_status (cairo_device_t *device);
+
+cairo_public cairo_status_t
+cairo_device_acquire (cairo_device_t *device);
+
+cairo_public void
+cairo_device_release (cairo_device_t *device);
+
+cairo_public void
+cairo_device_flush (cairo_device_t *device);
+
+cairo_public void
+cairo_device_finish (cairo_device_t *device);
+
+cairo_public void
+cairo_device_destroy (cairo_device_t *device);
+
 /* Surface manipulation */
 
 cairo_public cairo_surface_t *
@@ -1935,6 +2049,9 @@ cairo_surface_finish (cairo_surface_t *surface);
 
 cairo_public void
 cairo_surface_destroy (cairo_surface_t *surface);
+
+cairo_public cairo_device_t *
+cairo_surface_get_device (cairo_surface_t *surface);
 
 cairo_public unsigned int
 cairo_surface_get_reference_count (cairo_surface_t *surface);

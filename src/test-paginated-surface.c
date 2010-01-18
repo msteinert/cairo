@@ -76,7 +76,9 @@ _cairo_test_paginated_surface_create (cairo_surface_t *target)
     if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    _cairo_surface_init (&surface->base, &test_paginated_surface_backend,
+    _cairo_surface_init (&surface->base,
+			 &test_paginated_surface_backend,
+			 NULL, /* device */
 			 target->content);
 
     surface->target = cairo_surface_reference (target);

@@ -260,6 +260,7 @@ cairo_quartz_image_surface_create (cairo_surface_t *surface)
 
     _cairo_surface_init (&qisurf->base,
 			 &cairo_quartz_image_surface_backend,
+			 NULL, /* device */
 			 _cairo_content_from_format (format));
 
     qisurf->extents.x = qisurf->extents.y = 0;

@@ -1813,6 +1813,7 @@ _cairo_surface_repaint_solid_pattern_surface (cairo_surface_t	    *other,
 cairo_private void
 _cairo_surface_init (cairo_surface_t			*surface,
 		     const cairo_surface_backend_t	*backend,
+		     cairo_device_t			*device,
 		     cairo_content_t			 content);
 
 cairo_private void

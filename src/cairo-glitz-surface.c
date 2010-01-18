@@ -2430,7 +2430,9 @@ cairo_glitz_surface_create (glitz_surface_t *surface)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     format = glitz_surface_get_format (surface);
-    _cairo_surface_init (&crsurface->base, &cairo_glitz_surface_backend,
+    _cairo_surface_init (&crsurface->base,
+			 &cairo_glitz_surface_backend,
+			 NULL, /* device */
 			 _glitz_format_to_content (format));
 
     glitz_surface_reference (surface);

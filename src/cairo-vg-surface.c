@@ -1606,6 +1606,7 @@ _vg_surface_create_internal (cairo_vg_context_t *context,
 
     _cairo_surface_init (&surface->base,
 			 &cairo_vg_surface_backend,
+			 NULL, /* device */
 			 _vg_format_to_content (format));
 
     surface->width  = width;

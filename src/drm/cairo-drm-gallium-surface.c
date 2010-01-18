@@ -444,6 +444,7 @@ gallium_surface_create_internal (gallium_device_t *device,
 
     _cairo_surface_init (&surface->base.base,
 			 &gallium_surface_backend,
+			 NULL, /* device */
 			 content);
     _cairo_drm_surface_init (&surface->base, &device->base);
 
@@ -550,6 +551,7 @@ gallium_surface_create_for_name (cairo_drm_device_t *base_dev,
     content = _cairo_content_from_format (format);
     _cairo_surface_init (&surface->base.base,
 			 &gallium_surface_backend,
+			 NULL, /* device */
 			 content);
     _cairo_drm_surface_init (&surface->base, base_dev);
 

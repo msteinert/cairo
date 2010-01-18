@@ -1050,6 +1050,7 @@ _cairo_xml_surface_create_internal (cairo_xml_t *xml,
 
     _cairo_surface_init (&surface->base,
 			 &_cairo_xml_surface_backend,
+			 NULL, /* device */
 			 content);
 
     surface->xml = xml;

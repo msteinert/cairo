@@ -451,6 +451,7 @@ cairo_surface_create_for_region (cairo_surface_t *target,
 
     _cairo_surface_init (&surface->base,
 			 &_cairo_surface_subsurface_backend,
+			 NULL, /* device */
 			 target->content);
     surface->base.type = target->type;
 

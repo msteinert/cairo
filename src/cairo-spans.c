@@ -266,6 +266,8 @@ _cairo_scan_converter_create_in_error (cairo_status_t status)
     case CAIRO_STATUS_NO_MEMORY: RETURN_NIL;
     case CAIRO_STATUS_INVALID_SIZE: RETURN_NIL;
     case CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED: RETURN_NIL;
+    case CAIRO_STATUS_DEVICE_TYPE_MISMATCH: RETURN_NIL;
+    case CAIRO_STATUS_DEVICE_ERROR: RETURN_NIL;
     default:
 	break;
     }
@@ -372,6 +374,8 @@ _cairo_span_renderer_create_in_error (cairo_status_t status)
     case CAIRO_STATUS_NO_MEMORY: RETURN_NIL;
     case CAIRO_STATUS_INVALID_SIZE: RETURN_NIL;
     case CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED: RETURN_NIL;
+    case CAIRO_STATUS_DEVICE_TYPE_MISMATCH: RETURN_NIL;
+    case CAIRO_STATUS_DEVICE_ERROR: RETURN_NIL;
     default:
 	break;
     }

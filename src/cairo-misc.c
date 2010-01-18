@@ -126,6 +126,10 @@ cairo_status_to_string (cairo_status_t status)
 	return "invalid value (typically too big) for the size of the input (surface, pattern, etc.)";
     case CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED:
 	return "user-font method not implemented";
+    case CAIRO_STATUS_DEVICE_TYPE_MISMATCH:
+	return "the device type is not appropriate for the operation";
+    case CAIRO_STATUS_DEVICE_ERROR:
+	return "an operation to the device caused an unspecified error";
     default:
     case CAIRO_STATUS_LAST_STATUS:
 	return "<unknown error status>";
