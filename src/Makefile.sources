@@ -55,6 +55,7 @@ cairo_private = \
 	cairo-analysis-surface-private.h \
 	cairo-arc-private.h \
 	cairo-atomic-private.h \
+	cairo-boxes-private.h \
 	cairo-cache-private.h \
 	cairo-clip-private.h \
 	cairo-combsort-private.h \
@@ -111,6 +112,7 @@ cairo_sources = \
 	cairo-bentley-ottmann.c \
 	cairo-bentley-ottmann-rectangular.c \
 	cairo-bentley-ottmann-rectilinear.c \
+	cairo-boxes.c \
 	cairo.c \
 	cairo-cache.c \
 	cairo-clip.c \
