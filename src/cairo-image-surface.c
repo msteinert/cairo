@@ -38,6 +38,7 @@
 #include "cairoint.h"
 
 #include "cairo-clip-private.h"
+#include "cairo-composite-rectangles-private.h"
 #include "cairo-error-private.h"
 #include "cairo-region-private.h"
 
@@ -1484,28 +1485,28 @@ _cairo_image_surface_span_renderer_finish (void *abstract_renderer)
 	cairo_image_surface_t *src = renderer->src;
 	cairo_image_surface_t *dst = renderer->dst;
 	cairo_surface_attributes_t *src_attributes = &renderer->src_attributes;
-	int width = rects->width;
-	int height = rects->height;
+	int width = rects->bounded.width;
+	int height = rects->bounded.height;
 
 	pixman_image_composite (_pixman_operator (renderer->op),
 				src->pixman_image,
 				renderer->mask->pixman_image,
 				dst->pixman_image,
-				rects->src.x + src_attributes->x_offset,
-				rects->src.y + src_attributes->y_offset,
+				rects->bounded.x + src_attributes->x_offset,
+				rects->bounded.y + src_attributes->y_offset,
 				0, 0,		/* mask.x, mask.y */
-				rects->dst.x, rects->dst.y,
+				rects->bounded.x, rects->bounded.y,
 				width, height);
 
-	if (! _cairo_operator_bounded_by_mask (renderer->op)) {
+	if (! rects->is_bounded) {
 	    status = _cairo_surface_composite_shape_fixup_unbounded (
 		&dst->base,
 		src_attributes,
 		src->width, src->height,
 		width, height,
-		rects->src.x, rects->src.y,
+		rects->bounded.x, rects->bounded.y,
 		0, 0,		/* mask.x, mask.y */
-		rects->dst.x, rects->dst.y,
+		rects->bounded.x, rects->bounded.y,
 		width, height,
 		dst->clip_region);
 	}
@@ -1540,8 +1541,6 @@ _cairo_image_surface_create_span_renderer (cairo_operator_t	 op,
     cairo_image_surface_t *dst = abstract_dst;
     cairo_image_surface_span_renderer_t *renderer = calloc(1, sizeof(*renderer));
     cairo_status_t status;
-    int width = rects->width;
-    int height = rects->height;
 
     status = _cairo_image_surface_set_clip_region (dst, clip_region);
     if (unlikely (status))
@@ -1562,8 +1561,8 @@ _cairo_image_surface_create_span_renderer (cairo_operator_t	 op,
 
     status = _cairo_pattern_acquire_surface (
 	renderer->pattern, &renderer->dst->base,
-	rects->src.x, rects->src.y,
-	width, height,
+	rects->bounded.x, rects->bounded.y,
+	rects->bounded.width, rects->bounded.height,
 	CAIRO_PATTERN_ACQUIRE_NONE,
 	(cairo_surface_t **) &renderer->src,
 	&renderer->src_attributes);
@@ -1572,7 +1571,8 @@ _cairo_image_surface_create_span_renderer (cairo_operator_t	 op,
 
     status = _cairo_image_surface_set_attributes (
 	renderer->src, &renderer->src_attributes,
-	rects->dst.x + width/2, rects->dst.y + height/2);
+	rects->bounded.x + rects->bounded.width/2,
+	rects->bounded.y + rects->bounded.height/2);
     if (status)
 	goto unwind;
 
@@ -1580,7 +1580,8 @@ _cairo_image_surface_create_span_renderer (cairo_operator_t	 op,
      * compositing to pixman.) */
     renderer->mask = (cairo_image_surface_t *)
 	cairo_image_surface_create (CAIRO_FORMAT_A8,
-				    width, height);
+				    rects->bounded.width,
+				    rects->bounded.height);
 
     status = cairo_surface_status (&renderer->mask->base);
 
@@ -1590,7 +1591,7 @@ _cairo_image_surface_create_span_renderer (cairo_operator_t	 op,
 	return _cairo_span_renderer_create_in_error (status);
     }
 
-    renderer->mask_data = renderer->mask->data - rects->mask.x - rects->mask.y * renderer->mask->stride;
+    renderer->mask_data = renderer->mask->data - rects->bounded.x - rects->bounded.y * renderer->mask->stride;
     renderer->mask_stride = renderer->mask->stride;
     return &renderer->base;
 }

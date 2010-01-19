@@ -26,6 +26,7 @@
  */
 #include "cairoint.h"
 
+#include "cairo-composite-rectangles-private.h"
 #include "cairo-fixed-private.h"
 
 static cairo_scan_converter_t *
@@ -38,10 +39,10 @@ _create_scan_converter (cairo_fill_rule_t			 fill_rule,
 	return NULL;
     }
 
-    return _cairo_tor_scan_converter_create (rects->mask.x,
-					     rects->mask.y,
-					     rects->mask.x + rects->width,
-					     rects->mask.y + rects->height,
+    return _cairo_tor_scan_converter_create (rects->bounded.x,
+					     rects->bounded.y,
+					     rects->bounded.x + rects->bounded.width,
+					     rects->bounded.y + rects->bounded.height,
 					     fill_rule);
 }
 
@@ -100,14 +101,22 @@ _cairo_surface_composite_trapezoids_as_polygon (cairo_surface_t	*surface,
     cairo_composite_rectangles_t rects;
     cairo_status_t status;
 
-    rects.src.x = src_x;
-    rects.src.y = src_y;
-    rects.dst.x = dst_x;
-    rects.dst.y = dst_y;
+    rects.source.x = src_x;
+    rects.source.y = src_y;
+    rects.source.width  = width;
+    rects.source.height = height;
+
     rects.mask.x = dst_x;
     rects.mask.y = dst_y;
-    rects.width  = width;
-    rects.height = height;
+    rects.mask.width  = width;
+    rects.mask.height = height;
+
+    rects.bounded.x = dst_x;
+    rects.bounded.y = dst_y;
+    rects.bounded.width  = width;
+    rects.bounded.height = height;
+
+    rects.unbounded = rects.bounded;
 
     converter = _create_scan_converter (CAIRO_FILL_RULE_WINDING,
 					antialias,

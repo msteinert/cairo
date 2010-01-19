@@ -42,6 +42,7 @@
 
 #include "cairo-surface-fallback-private.h"
 #include "cairo-clip-private.h"
+#include "cairo-composite-rectangles-private.h"
 #include "cairo-error-private.h"
 #include "cairo-region-private.h"
 #include "cairo-spans-private.h"
@@ -883,15 +884,15 @@ _composite_spans_draw_func (void                          *closure,
     cairo_composite_rectangles_t rects;
     cairo_composite_spans_info_t *info = closure;
 
-    _cairo_composite_rectangles_init (&rects,
-				      extents->x, extents->y,
-				      extents->width, extents->height);
-
+    rects.source = *extents;
+    rects.mask = *extents;
+    rects.bounded = *extents;
     /* The incoming dst_x/y are where we're pretending the origin of
      * the dst surface is -- *not* the offset of a rectangle where
      * we'd like to place the result. */
-    rects.dst.x -= dst_x;
-    rects.dst.y -= dst_y;
+    rects.bounded.x -= dst_x;
+    rects.bounded.y -= dst_y;
+    rects.unbounded = rects.bounded;;
 
     return _cairo_surface_composite_polygon (dst, op, src,
 					     info->fill_rule,

@@ -294,13 +294,6 @@ cairo_private cairo_bool_t
 _cairo_box_contains_point (cairo_box_t *box,
 	                   const cairo_point_t *point) cairo_pure;
 
-cairo_private void
-_cairo_composite_rectangles_init (cairo_composite_rectangles_t	*rects,
-                                  int				 all_x,
-                                  int				 all_y,
-                                  int				 width,
-                                  int				 height);
-
 /* cairo-array.c structures and functions */
 
 cairo_private void
@@ -1293,6 +1286,13 @@ _cairo_operator_bounded_by_mask (cairo_operator_t op) cairo_const;
 cairo_private cairo_bool_t
 _cairo_operator_bounded_by_source (cairo_operator_t op) cairo_const;
 
+enum {
+    CAIRO_OPERATOR_BOUND_BY_MASK = 1 << 1,
+    CAIRO_OPERATOR_BOUND_BY_SOURCE = 1 << 2,
+};
+
+cairo_private uint32_t
+_cairo_operator_bounded_by_either (cairo_operator_t op) cairo_const;
 /* cairo-color.c */
 cairo_private const cairo_color_t *
 _cairo_stock_color (cairo_stock_t stock) cairo_pure;

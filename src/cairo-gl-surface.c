@@ -37,6 +37,7 @@
 
 #include "cairoint.h"
 
+#include "cairo-composite-rectangles-private.h"
 #include "cairo-error-private.h"
 #include "cairo-gl-private.h"
 
@@ -2261,6 +2262,7 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
     cairo_gl_surface_span_renderer_t *renderer;
     cairo_status_t status;
     cairo_surface_attributes_t *src_attributes;
+    const cairo_rectangle_int_t *extents;
     GLenum err;
 
     renderer = calloc (1, sizeof (*renderer));
@@ -2269,21 +2271,24 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
 
     renderer->base.destroy = _cairo_gl_surface_span_renderer_destroy;
     renderer->base.finish = _cairo_gl_surface_span_renderer_finish;
-    if (_cairo_operator_bounded_by_mask (op))
+    if (rects->is_bounded) {
 	renderer->base.render_rows = _cairo_gl_render_bounded_spans;
-    else
+	extents = &rects->bounded;
+    } else {
 	renderer->base.render_rows = _cairo_gl_render_unbounded_spans;
-    renderer->xmin = rects->mask.x;
-    renderer->xmax = rects->mask.x + rects->width;
+	extents = &rects->unbounded;
+    }
+    renderer->xmin = extents->x;
+    renderer->xmax = extents->x + extents->width;
     renderer->op = op;
     renderer->antialias = antialias;
     renderer->dst = dst;
     renderer->clip = clip_region;
 
     status = _cairo_gl_operand_init (&renderer->setup.src, src, dst,
-				     rects->src.x, rects->src.y,
-				     rects->dst.x, rects->dst.y,
-				     rects->width, rects->height);
+				     rects->source.x, rects->source.y,
+				     extents->x, extents->y,
+				     extents->width, extents->height);
     if (unlikely (status)) {
 	free (renderer);
 	return _cairo_span_renderer_create_in_error (status);

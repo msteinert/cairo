@@ -47,6 +47,7 @@
 typedef struct _cairo_array cairo_array_t;
 typedef struct _cairo_backend cairo_backend_t;
 typedef struct _cairo_cache cairo_cache_t;
+typedef struct _cairo_composite_rectangles cairo_composite_rectangles_t;
 typedef struct _cairo_clip cairo_clip_t;
 typedef struct _cairo_clip_path cairo_clip_path_t;
 typedef struct _cairo_color cairo_color_t;
@@ -213,29 +214,6 @@ typedef struct _cairo_point_int {
 
 #define CAIRO_RECT_INT_MIN (INT_MIN >> CAIRO_FIXED_FRAC_BITS)
 #define CAIRO_RECT_INT_MAX (INT_MAX >> CAIRO_FIXED_FRAC_BITS)
-
-/* Rectangles that take part in a composite operation.
- *
- * This defines four translations that define which pixels of the
- * source pattern, mask, clip and destination surface take part in a
- * general composite operation.  The idea is that the pixels at
- *
- *	(i,j)+(src.x, src.y) of the source,
- *      (i,j)+(mask.x, mask.y) of the mask,
- *      (i,j)+(clip.x, clip.y) of the clip and
- *      (i,j)+(dst.x, dst.y) of the destination
- *
- * all combine together to form the result at (i,j)+(dst.x,dst.y),
- * for i,j ranging in [0,width) and [0,height) respectively.
- */
-typedef struct _cairo_composite_rectangles {
-        cairo_point_int_t src;
-        cairo_point_int_t mask;
-        cairo_point_int_t clip;
-        cairo_point_int_t dst;
-        int width;
-        int height;
-} cairo_composite_rectangles_t;
 
 typedef enum _cairo_direction {
     CAIRO_DIRECTION_FORWARD,

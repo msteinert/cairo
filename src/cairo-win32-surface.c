@@ -48,6 +48,7 @@
 #include "cairoint.h"
 
 #include "cairo-clip-private.h"
+#include "cairo-composite-rectangles-private.h"
 #include "cairo-error-private.h"
 #include "cairo-paginated-private.h"
 #include "cairo-win32-private.h"
@@ -1930,11 +1931,10 @@ _cairo_win32_surface_span_renderer_finish (void *abstract_renderer)
 
 	    status = dst->image->backend->composite (renderer->op,
 		    renderer->pattern, mask_pattern, dst->image,
-		    rects->src.x,
-		    rects->src.y,
+		    rects->bounded.x, rects->bounded.y,
 		    0, 0,		/* mask.x, mask.y */
-		    rects->dst.x, rects->dst.y,
-		    rects->width, rects->height,
+		    rects->bounded.x, rects->bounded.y,
+		    rects->bounded.width, rects->bounded.height,
 		    renderer->clip_region);
 	} else {
 	    /* otherwise go through the fallback_composite path which
@@ -1942,11 +1942,10 @@ _cairo_win32_surface_span_renderer_finish (void *abstract_renderer)
 	    status = _cairo_surface_fallback_composite (
 		    renderer->op,
 		    renderer->pattern, mask_pattern, &dst->base,
-		    rects->src.x,
-		    rects->src.y,
+		    rects->bounded.x, rects->bounded.y,
 		    0, 0,		/* mask.x, mask.y */
-		    rects->dst.x, rects->dst.y,
-		    rects->width, rects->height,
+		    rects->bounded.x, rects->bounded.y,
+		    rects->bounded.width, rects->bounded.height,
 		    renderer->clip_region);
 	}
 	cairo_pattern_destroy (mask_pattern);
@@ -1982,8 +1981,8 @@ _cairo_win32_surface_create_span_renderer (cairo_operator_t	 op,
     cairo_win32_surface_t *dst = abstract_dst;
     cairo_win32_surface_span_renderer_t *renderer;
     cairo_status_t status;
-    int width = rects->width;
-    int height = rects->height;
+    int width = rects->bounded.width;
+    int height = rects->bounded.height;
 
     renderer = calloc(1, sizeof(*renderer));
     if (renderer == NULL)
@@ -2013,7 +2012,7 @@ _cairo_win32_surface_create_span_renderer (cairo_operator_t	 op,
 	return _cairo_span_renderer_create_in_error (status);
     }
 
-    renderer->mask_data = renderer->mask->data - rects->mask.x - rects->mask.y * renderer->mask->stride;
+    renderer->mask_data = renderer->mask->data - rects->bounded.x - rects->bounded.y * renderer->mask->stride;
     renderer->mask_stride = renderer->mask->stride;
     return &renderer->base;
 }
