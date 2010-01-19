@@ -836,6 +836,8 @@ REFERENCE_IMAGES = \
 	rotated-clip.ref.png \
 	rotated-clip.ps.ref.png \
 	rotated-clip.xlib.ref.png \
+	rounded-rectangle-fill.xlib.ref.png \
+	rounded-rectangle-stroke.xlib.ref.png \
 	scale-down-source-surface-paint.ref.png \
 	scale-offset-image.gl.ref.png \
 	scale-offset-image.pdf.argb32.ref.png \

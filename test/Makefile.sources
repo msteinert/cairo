@@ -182,6 +182,8 @@ test_sources = \
 	rgb24-ignore-alpha.c				\
 	rotate-image-surface-paint.c			\
 	rotated-clip.c					\
+	rounded-rectangle-fill.c			\
+	rounded-rectangle-stroke.c			\
 	scale-down-source-surface-paint.c		\
 	scale-offset-image.c				\
 	scale-offset-similar.c				\
