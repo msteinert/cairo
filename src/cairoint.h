@@ -2443,6 +2443,11 @@ _cairo_bentley_ottmann_tessellate_rectangular_traps (cairo_traps_t *traps,
 						     cairo_fill_rule_t fill_rule);
 
 cairo_private cairo_status_t
+_cairo_bentley_ottmann_tessellate_boxes (const cairo_boxes_t *in,
+					 cairo_fill_rule_t fill_rule,
+					 cairo_boxes_t *out);
+
+cairo_private cairo_status_t
 _cairo_bentley_ottmann_tessellate_rectilinear_traps (cairo_traps_t *traps,
 						     cairo_fill_rule_t fill_rule);
 
