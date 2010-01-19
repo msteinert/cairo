@@ -103,6 +103,31 @@ _cairo_tor_scan_converter_create (int			xmin,
 				  int			ymax,
 				  cairo_fill_rule_t	fill_rule);
 
+typedef struct _cairo_rectangular_scan_converter {
+    cairo_scan_converter_t base;
+
+    int xmin, xmax;
+    int ymin, ymax;
+
+    struct _cairo_rectangular_scan_converter_chunk {
+	struct _cairo_rectangular_scan_converter_chunk *next;
+	void *base;
+	int count;
+	int size;
+    } chunks, *tail;
+    char buf[CAIRO_STACK_BUFFER_SIZE];
+    int num_rectangles;
+} cairo_rectangular_scan_converter_t;
+
+cairo_private void
+_cairo_rectangular_scan_converter_init (cairo_rectangular_scan_converter_t *self,
+					const cairo_rectangle_int_t *extents);
+
+cairo_private cairo_status_t
+_cairo_rectangular_scan_converter_add_box (cairo_rectangular_scan_converter_t *self,
+					   const cairo_box_t *box,
+					   int dir);
+
 typedef struct _cairo_botor_scan_converter {
     cairo_scan_converter_t base;
 
