@@ -2527,7 +2527,8 @@ cairo_private cairo_bool_t
 _cairo_pattern_is_opaque_solid (const cairo_pattern_t *pattern);
 
 cairo_private cairo_bool_t
-_cairo_pattern_is_opaque (const cairo_pattern_t *abstract_pattern);
+_cairo_pattern_is_opaque (const cairo_pattern_t *pattern,
+			  const cairo_rectangle_int_t *extents);
 
 enum {
     CAIRO_PATTERN_ACQUIRE_NONE = 0x0,

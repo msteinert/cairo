@@ -45,6 +45,7 @@
 #include "cairo-pdf-surface-private.h"
 #include "cairo-pdf-operators-private.h"
 #include "cairo-analysis-surface-private.h"
+#include "cairo-composite-rectangles-private.h"
 #include "cairo-error-private.h"
 #include "cairo-image-info-private.h"
 #include "cairo-recording-surface-private.h"
@@ -1179,25 +1180,6 @@ _cairo_pdf_surface_add_pdf_pattern (cairo_pdf_surface_t		*surface,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    if (pattern->type == CAIRO_PATTERN_TYPE_LINEAR ||
-        pattern->type == CAIRO_PATTERN_TYPE_RADIAL)
-    {
-	cairo_gradient_pattern_t *gradient;
-
-	gradient = (cairo_gradient_pattern_t *) pattern;
-
-	/* Gradients with zero stops do not produce any output */
-	if (gradient->n_stops == 0)
-	    return CAIRO_INT_STATUS_NOTHING_TO_DO;
-
-	/* Gradients with one stop are the same as solid colors */
-	if (gradient->n_stops == 1) {
-	    pattern_res->id = 0;
-	    gstate_res->id = 0;
-	    return CAIRO_STATUS_SUCCESS;
-	}
-    }
-
     status = _cairo_pattern_create_copy (&pdf_pattern.pattern, pattern);
     if (unlikely (status))
 	return status;
@@ -1212,8 +1194,9 @@ _cairo_pdf_surface_add_pdf_pattern (cairo_pdf_surface_t		*surface,
 
     /* gradient patterns require an smask object to implement transparency */
     if (pattern->type == CAIRO_PATTERN_TYPE_LINEAR ||
-        pattern->type == CAIRO_PATTERN_TYPE_RADIAL) {
-        if (_cairo_pattern_is_opaque (pattern) == FALSE) {
+        pattern->type == CAIRO_PATTERN_TYPE_RADIAL)
+    {
+        if (_cairo_pattern_is_opaque (pattern, extents) == FALSE) {
             pdf_pattern.gstate_res = _cairo_pdf_surface_new_object (surface);
 	    if (pdf_pattern.gstate_res.id == 0) {
 		cairo_pattern_destroy (pdf_pattern.pattern);
@@ -1222,14 +1205,14 @@ _cairo_pdf_surface_add_pdf_pattern (cairo_pdf_surface_t		*surface,
         }
     }
 
-    pdf_pattern.width = surface->width;
+    pdf_pattern.width  = surface->width;
     pdf_pattern.height = surface->height;
     if (extents != NULL) {
 	pdf_pattern.extents = *extents;
     } else {
 	pdf_pattern.extents.x = 0;
 	pdf_pattern.extents.y = 0;
-	pdf_pattern.extents.width = surface->width;
+	pdf_pattern.extents.width  = surface->width;
 	pdf_pattern.extents.height = surface->height;
     }
 
@@ -5214,7 +5197,8 @@ _pdf_operator_supported (cairo_operator_t op)
 static cairo_int_status_t
 _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t  *surface,
 				      cairo_operator_t      op,
-				      const cairo_pattern_t      *pattern)
+				      const cairo_pattern_t      *pattern,
+				      const cairo_rectangle_int_t	 *extents)
 {
     if (surface->force_fallbacks &&
 	surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
@@ -5248,7 +5232,7 @@ _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t  *surface,
 	    cairo_surface_pattern_t *surface_pattern = (cairo_surface_pattern_t *) pattern;
 
 	    if (_cairo_surface_is_recording (surface_pattern->surface)) {
-		if (_cairo_pattern_is_opaque (pattern)) {
+		if (_cairo_pattern_is_opaque (pattern, extents)) {
 		    return CAIRO_INT_STATUS_ANALYZE_RECORDING_SURFACE_PATTERN;
 		} else {
 		    /* FIXME: The analysis surface does not yet have
@@ -5267,7 +5251,7 @@ _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t  *surface,
 	    }
 	}
 
-	if (_cairo_pattern_is_opaque (pattern))
+	if (_cairo_pattern_is_opaque (pattern, extents))
 	    return CAIRO_STATUS_SUCCESS;
 	else
 	    return CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY;
@@ -5279,12 +5263,10 @@ _cairo_pdf_surface_analyze_operation (cairo_pdf_surface_t  *surface,
 static cairo_bool_t
 _cairo_pdf_surface_operation_supported (cairo_pdf_surface_t  *surface,
 					cairo_operator_t      op,
-					const cairo_pattern_t      *pattern)
+					const cairo_pattern_t      *pattern,
+					const cairo_rectangle_int_t *extents)
 {
-    if (_cairo_pdf_surface_analyze_operation (surface, op, pattern) != CAIRO_INT_STATUS_UNSUPPORTED)
-	return TRUE;
-    else
-	return FALSE;
+    return _cairo_pdf_surface_analyze_operation (surface, op, pattern, extents) != CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
 static cairo_int_status_t
@@ -5314,17 +5296,27 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
     cairo_status_t status;
     cairo_pdf_smask_group_t *group;
     cairo_pdf_resource_t pattern_res, gstate_res;
-    cairo_rectangle_int_t extents;
+    cairo_composite_rectangles_t extents;
+
+    status = _cairo_composite_rectangles_init_for_paint (&extents,
+							 surface->width, surface->height,
+							 op, source, clip);
+    if (unlikely (status)) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    return CAIRO_STATUS_SUCCESS;
+
+	return status;
+    }
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
-	return _cairo_pdf_surface_analyze_operation (surface, op, source);
+	return _cairo_pdf_surface_analyze_operation (surface, op, source, &extents.bounded);
     } else if (surface->paginated_mode == CAIRO_PAGINATED_MODE_FALLBACK) {
 	status = _cairo_pdf_surface_start_fallback (surface);
 	if (unlikely (status))
 	    return status;
     }
 
-    assert (_cairo_pdf_surface_operation_supported (surface, op, source));
+    assert (_cairo_pdf_surface_operation_supported (surface, op, source, &extents.bounded));
 
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (status))
@@ -5339,8 +5331,8 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
 	return status;
 
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
-	  source->extend == CAIRO_EXTEND_NONE) {
-
+	source->extend == CAIRO_EXTEND_NONE)
+    {
 	_cairo_output_stream_printf (surface->output, "q\n");
 	status = _cairo_pdf_surface_paint_surface_pattern (surface,
 							   (cairo_surface_pattern_t *) source);
@@ -5351,15 +5343,10 @@ _cairo_pdf_surface_paint (void			*abstract_surface,
 	return _cairo_output_stream_get_status (surface->output);
     }
 
-    status = _cairo_surface_paint_extents (&surface->base,
-					   op, source, clip,
-					   &extents);
-    if (unlikely (status))
-	return status;
-
     pattern_res.id = 0;
     gstate_res.id = 0;
-    status = _cairo_pdf_surface_add_pdf_pattern (surface, source, &extents,
+    status = _cairo_pdf_surface_add_pdf_pattern (surface, source,
+						 &extents.bounded,
 						 &pattern_res, &gstate_res);
     if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
 	return CAIRO_STATUS_SUCCESS;
@@ -5424,18 +5411,29 @@ _cairo_pdf_surface_mask	(void			*abstract_surface,
     cairo_pdf_surface_t *surface = abstract_surface;
     cairo_pdf_smask_group_t *group;
     cairo_status_t status;
+    cairo_composite_rectangles_t extents;
+
+    status = _cairo_composite_rectangles_init_for_mask (&extents,
+							surface->width, surface->height,
+							op, source, mask, clip);
+    if (unlikely (status)) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    return CAIRO_STATUS_SUCCESS;
+
+	return status;
+    }
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
 	cairo_status_t source_status, mask_status;
 
-	source_status = _cairo_pdf_surface_analyze_operation (surface, op, source);
+	source_status = _cairo_pdf_surface_analyze_operation (surface, op, source, &extents.bounded);
 	if (_cairo_status_is_error (source_status))
 	    return source_status;
 
 	if (mask->has_component_alpha) {
 	    mask_status = CAIRO_INT_STATUS_UNSUPPORTED;
 	} else {
-	    mask_status = _cairo_pdf_surface_analyze_operation (surface, op, mask);
+	    mask_status = _cairo_pdf_surface_analyze_operation (surface, op, mask, &extents.bounded);
 	    if (_cairo_status_is_error (mask_status))
 		return mask_status;
 	}
@@ -5448,8 +5446,8 @@ _cairo_pdf_surface_mask	(void			*abstract_surface,
 	    return status;
     }
 
-    assert (_cairo_pdf_surface_operation_supported (surface, op, source));
-    assert (_cairo_pdf_surface_operation_supported (surface, op, mask));
+    assert (_cairo_pdf_surface_operation_supported (surface, op, source, &extents.bounded));
+    assert (_cairo_pdf_surface_operation_supported (surface, op, mask, &extents.bounded));
 
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (status))
@@ -5519,31 +5517,50 @@ _cairo_pdf_surface_stroke (void			*abstract_surface,
 			   cairo_clip_t		*clip)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
-    cairo_status_t status;
     cairo_pdf_smask_group_t *group;
     cairo_pdf_resource_t pattern_res, gstate_res;
-    cairo_rectangle_int_t extents;
+    cairo_composite_rectangles_t extents;
+    cairo_status_t status;
+
+    status = _cairo_composite_rectangles_init_for_stroke (&extents,
+							  surface->width,
+							  surface->height,
+							  op, source,
+							  path, style, ctm,
+							  clip);
+    if (unlikely (status)) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    return CAIRO_STATUS_SUCCESS;
+
+	return status;
+    }
+
+    /* use the more accurate extents */
+    if (extents.is_bounded) {
+	status = _cairo_path_fixed_stroke_extents (path, style,
+						   ctm, ctm_inverse,
+						   tolerance,
+						   &extents.mask);
+	if (unlikely (status))
+	    return status;
+
+	if (! _cairo_rectangle_intersect (&extents.bounded, &extents.mask))
+	    return CAIRO_STATUS_SUCCESS;
+    }
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return _cairo_pdf_surface_analyze_operation (surface, op, source);
+	return _cairo_pdf_surface_analyze_operation (surface, op, source, &extents.bounded);
 
-    assert (_cairo_pdf_surface_operation_supported (surface, op, source));
+    assert (_cairo_pdf_surface_operation_supported (surface, op, source, &extents.bounded));
 
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (status))
 	return status;
 
-    status = _cairo_surface_stroke_extents (&surface->base,
-					    op, source, path,
-					    style, ctm, ctm_inverse,
-					    tolerance, antialias,
-					    clip, &extents);
-    if (unlikely (status))
-	return status;
-
     pattern_res.id = 0;
     gstate_res.id = 0;
-    status = _cairo_pdf_surface_add_pdf_pattern (surface, source, &extents,
+    status = _cairo_pdf_surface_add_pdf_pattern (surface, source,
+						 &extents.bounded,
 						 &pattern_res, &gstate_res);
     if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
 	return CAIRO_STATUS_SUCCESS;
@@ -5632,17 +5649,39 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
     cairo_status_t status;
     cairo_pdf_smask_group_t *group;
     cairo_pdf_resource_t pattern_res, gstate_res;
-    cairo_rectangle_int_t extents;
+    cairo_composite_rectangles_t extents;
+
+    status = _cairo_composite_rectangles_init_for_fill (&extents,
+							surface->width,
+							surface->height,
+							op, source, path,
+							clip);
+    if (unlikely (status)) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    return CAIRO_STATUS_SUCCESS;
+
+	return status;
+    }
+
+    /* use the more accurate extents */
+    if (extents.is_bounded) {
+	_cairo_path_fixed_fill_extents (path,
+					tolerance, fill_rule,
+					&extents.mask);
+
+	if (! _cairo_rectangle_intersect (&extents.bounded, &extents.mask))
+	    return CAIRO_STATUS_SUCCESS;
+    }
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE) {
-	return _cairo_pdf_surface_analyze_operation (surface, op, source);
+	return _cairo_pdf_surface_analyze_operation (surface, op, source, &extents.bounded);
     } else if (surface->paginated_mode == CAIRO_PAGINATED_MODE_FALLBACK) {
 	status = _cairo_pdf_surface_start_fallback (surface);
 	if (unlikely (status))
 	    return status;
     }
 
-    assert (_cairo_pdf_surface_operation_supported (surface, op, source));
+    assert (_cairo_pdf_surface_operation_supported (surface, op, source, &extents.bounded));
 
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (status))
@@ -5653,8 +5692,8 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
 	return status;
 
     if (source->type == CAIRO_PATTERN_TYPE_SURFACE &&
-	  source->extend == CAIRO_EXTEND_NONE) {
-
+	source->extend == CAIRO_EXTEND_NONE)
+    {
 	status = _cairo_pdf_operators_flush (&surface->pdf_operators);
 	if (unlikely (status))
 	    return status;
@@ -5675,16 +5714,10 @@ _cairo_pdf_surface_fill (void			*abstract_surface,
 	return _cairo_output_stream_get_status (surface->output);
     }
 
-    status = _cairo_surface_fill_extents (&surface->base,
-					  op, source, path, fill_rule,
-					  tolerance, antialias,
-					  clip, &extents);
-    if (unlikely (status))
-	return status;
-
     pattern_res.id = 0;
     gstate_res.id = 0;
-    status = _cairo_pdf_surface_add_pdf_pattern (surface, source, &extents,
+    status = _cairo_pdf_surface_add_pdf_pattern (surface, source,
+						 &extents.bounded,
 						 &pattern_res, &gstate_res);
     if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
 	return CAIRO_STATUS_SUCCESS;
@@ -5786,8 +5819,8 @@ _cairo_pdf_surface_fill_stroke (void			*abstract_surface,
     /* PDF rendering of fill-stroke is not the same as cairo when
      * either the fill or stroke is not opaque.
      */
-    if ( !_cairo_pattern_is_opaque (fill_source) ||
-	 !_cairo_pattern_is_opaque (stroke_source))
+    if ( !_cairo_pattern_is_opaque (fill_source, NULL) ||
+	 !_cairo_pattern_is_opaque (stroke_source, NULL))
     {
 	return CAIRO_INT_STATUS_UNSUPPORTED;
     }
@@ -5891,30 +5924,40 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
 				     cairo_clip_t		*clip)
 {
     cairo_pdf_surface_t *surface = abstract_surface;
-    cairo_status_t status;
     cairo_pdf_smask_group_t *group;
     cairo_pdf_resource_t pattern_res, gstate_res;
-    cairo_rectangle_int_t extents;
+    cairo_composite_rectangles_t extents;
+    cairo_bool_t overlap;
+    cairo_status_t status;
+
+    status = _cairo_composite_rectangles_init_for_glyphs (&extents,
+							  surface->width,
+							  surface->height,
+							  op, source,
+							  scaled_font,
+							  glyphs, num_glyphs,
+							  clip,
+							  &overlap);
+    if (unlikely (status)) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    return CAIRO_STATUS_SUCCESS;
+
+	return status;
+    }
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return _cairo_pdf_surface_analyze_operation (surface, op, source);
+	return _cairo_pdf_surface_analyze_operation (surface, op, source, &extents.bounded);
 
-    assert (_cairo_pdf_surface_operation_supported (surface, op, source));
+    assert (_cairo_pdf_surface_operation_supported (surface, op, source, &extents.bounded));
 
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (status))
 	return status;
 
-    status = _cairo_surface_glyphs_extents (&surface->base, op, source,
-					    glyphs, num_glyphs,
-					    scaled_font,
-					    clip, &extents);
-    if (unlikely (status))
-	return status;
-
     pattern_res.id = 0;
     gstate_res.id = 0;
-    status = _cairo_pdf_surface_add_pdf_pattern (surface, source, &extents,
+    status = _cairo_pdf_surface_add_pdf_pattern (surface, source,
+						 &extents.bounded,
 						 &pattern_res, &gstate_res);
     if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
 	return CAIRO_STATUS_SUCCESS;
@@ -6000,7 +6043,7 @@ _cairo_pdf_surface_show_text_glyphs (void			*abstract_surface,
 	 * be in a separate text object otherwise overlapping text
 	 * from separate calls to show_glyphs will not composite with
 	 * each other. */
-	if (! _cairo_pattern_is_opaque (source)) {
+	if (! _cairo_pattern_is_opaque (source, &extents.bounded)) {
 	    status = _cairo_pdf_operators_flush (&surface->pdf_operators);
 	    if (unlikely (status))
 		return status;

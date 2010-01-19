@@ -58,6 +58,7 @@
 #include "cairo-ps.h"
 #include "cairo-ps-surface-private.h"
 #include "cairo-pdf-operators-private.h"
+#include "cairo-composite-rectangles-private.h"
 #include "cairo-error-private.h"
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-paginated-private.h"
@@ -1742,7 +1743,8 @@ pattern_supported (cairo_ps_surface_t *surface, const cairo_pattern_t *pattern)
 static cairo_int_status_t
 _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
 				     cairo_operator_t       op,
-				     const cairo_pattern_t       *pattern)
+				     const cairo_pattern_t       *pattern,
+				     const cairo_rectangle_int_t *extents)
 {
     if (surface->force_fallbacks &&
 	surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
@@ -1788,7 +1790,7 @@ _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
 								       surface_pattern);
     }
 
-    if (_cairo_pattern_is_opaque (pattern))
+    if (_cairo_pattern_is_opaque (pattern, extents))
 	return CAIRO_STATUS_SUCCESS;
 
     return CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY;
@@ -1797,12 +1799,10 @@ _cairo_ps_surface_analyze_operation (cairo_ps_surface_t    *surface,
 static cairo_bool_t
 _cairo_ps_surface_operation_supported (cairo_ps_surface_t    *surface,
 				       cairo_operator_t       op,
-				       const cairo_pattern_t       *pattern)
+				       const cairo_pattern_t       *pattern,
+				       const cairo_rectangle_int_t *extents)
 {
-    if (_cairo_ps_surface_analyze_operation (surface, op, pattern) != CAIRO_INT_STATUS_UNSUPPORTED)
-	return TRUE;
-    else
-	return FALSE;
+    return _cairo_ps_surface_analyze_operation (surface, op, pattern, extents) != CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
 /* The "standard" implementation limit for PostScript string sizes is
@@ -3437,27 +3437,31 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 {
     cairo_ps_surface_t *surface = abstract_surface;
     cairo_output_stream_t *stream = surface->stream;
-    cairo_rectangle_int_t extents;
+    cairo_composite_rectangles_t extents;
     cairo_status_t status;
 
-    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return _cairo_ps_surface_analyze_operation (surface, op, source);
+    status = _cairo_composite_rectangles_init_for_paint (&extents,
+							 surface->width, surface->height,
+							 op, source, clip);
+    if (unlikely (status)) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    return CAIRO_STATUS_SUCCESS;
 
-    assert (_cairo_ps_surface_operation_supported (surface, op, source));
+	return status;
+    }
+
+    if (! _cairo_rectangle_intersect (&extents.bounded, &surface->page_bbox))
+	return CAIRO_STATUS_SUCCESS;
+
+    if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
+	return _cairo_ps_surface_analyze_operation (surface, op, source, &extents.bounded);
+
+    assert (_cairo_ps_surface_operation_supported (surface, op, source, &extents.bounded));
 
 #if DEBUG_PS
     _cairo_output_stream_printf (stream,
 				 "%% _cairo_ps_surface_paint\n");
 #endif
-
-    status = _cairo_surface_paint_extents (&surface->base,
-					   op, source, clip,
-					   &extents);
-    if (unlikely (status))
-	return status;
-
-    if (! _cairo_rectangle_intersect (&extents, &surface->page_bbox))
-	return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (status))
@@ -3474,13 +3478,13 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 	_cairo_output_stream_printf (stream, "q\n");
 	status = _cairo_ps_surface_paint_surface (surface,
 						 (cairo_surface_pattern_t *) source,
-						  &extents, op);
+						  &extents.bounded, op);
 	if (unlikely (status))
 	    return status;
 
 	_cairo_output_stream_printf (stream, "Q\n");
     } else {
-	status = _cairo_ps_surface_emit_pattern (surface, source, &extents, op);
+	status = _cairo_ps_surface_emit_pattern (surface, source, &extents.bounded, op);
 	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
 	    return CAIRO_STATUS_SUCCESS;
 
@@ -3488,8 +3492,8 @@ _cairo_ps_surface_paint (void			*abstract_surface,
 	    return status;
 
 	_cairo_output_stream_printf (stream, "%d %d %d %d rectfill\n",
-				     extents.x, extents.y,
-				     extents.width, extents.height);
+				     extents.bounded.x, extents.bounded.y,
+				     extents.bounded.width, extents.bounded.height);
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -3508,36 +3512,54 @@ _cairo_ps_surface_stroke (void			*abstract_surface,
 			  cairo_clip_t		*clip)
 {
     cairo_ps_surface_t *surface = abstract_surface;
+    cairo_composite_rectangles_t extents;
     cairo_int_status_t status;
-    cairo_rectangle_int_t extents;
+
+    status = _cairo_composite_rectangles_init_for_stroke (&extents,
+							  surface->width,
+							  surface->height,
+							  op, source,
+							  path, style, ctm,
+							  clip);
+    if (unlikely (status)) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    return CAIRO_STATUS_SUCCESS;
+
+	return status;
+    }
+
+    if (! _cairo_rectangle_intersect (&extents.bounded, &surface->page_bbox))
+	return CAIRO_STATUS_SUCCESS;
+
+    /* use the more accurate extents */
+    if (extents.is_bounded) {
+	status = _cairo_path_fixed_stroke_extents (path, style,
+						   ctm, ctm_inverse,
+						   tolerance,
+						   &extents.mask);
+	if (unlikely (status))
+	    return status;
+
+	if (! _cairo_rectangle_intersect (&extents.bounded, &extents.mask))
+	    return CAIRO_STATUS_SUCCESS;
+    }
+
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return _cairo_ps_surface_analyze_operation (surface, op, source);
+	return _cairo_ps_surface_analyze_operation (surface, op, source, &extents.bounded);
 
-    assert (_cairo_ps_surface_operation_supported (surface, op, source));
+    assert (_cairo_ps_surface_operation_supported (surface, op, source, &extents.bounded));
 
 #if DEBUG_PS
     _cairo_output_stream_printf (surface->stream,
 				 "%% _cairo_ps_surface_stroke\n");
 #endif
 
-    status = _cairo_surface_stroke_extents (&surface->base,
-					    op, source,
-					    path, style,
-					    ctm, ctm_inverse,
-					    tolerance, antialias,
-					    clip, &extents);
-    if (unlikely (status))
-	return status;
-
-    if (! _cairo_rectangle_intersect (&extents, &surface->page_bbox))
-	return CAIRO_STATUS_SUCCESS;
-
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (status))
 	return status;
 
-    status = _cairo_ps_surface_emit_pattern (surface, source, &extents, op);
+    status = _cairo_ps_surface_emit_pattern (surface, source, &extents.bounded, op);
     if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
         return CAIRO_STATUS_SUCCESS;
 
@@ -3562,13 +3584,38 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 			cairo_clip_t		*clip)
 {
     cairo_ps_surface_t *surface = abstract_surface;
+    cairo_composite_rectangles_t extents;
     cairo_int_status_t status;
-    cairo_rectangle_int_t extents;
+
+    status = _cairo_composite_rectangles_init_for_fill (&extents,
+							surface->width,
+							surface->height,
+							op, source, path,
+							clip);
+    if (unlikely (status)) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    return CAIRO_STATUS_SUCCESS;
+
+	return status;
+    }
+
+    if (! _cairo_rectangle_intersect (&extents.bounded, &surface->page_bbox))
+	return CAIRO_STATUS_SUCCESS;
+
+    /* use the more accurate extents */
+    if (extents.is_bounded) {
+	_cairo_path_fixed_fill_extents (path,
+					tolerance, fill_rule,
+					&extents.mask);
+
+	if (! _cairo_rectangle_intersect (&extents.bounded, &extents.mask))
+	    return CAIRO_STATUS_SUCCESS;
+    }
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return _cairo_ps_surface_analyze_operation (surface, op, source);
+	return _cairo_ps_surface_analyze_operation (surface, op, source, &extents.bounded);
 
-    assert (_cairo_ps_surface_operation_supported (surface, op, source));
+    assert (_cairo_ps_surface_operation_supported (surface, op, source, &extents.bounded));
 
 #if DEBUG_PS
     _cairo_output_stream_printf (surface->stream,
@@ -3578,17 +3625,6 @@ _cairo_ps_surface_fill (void		*abstract_surface,
     status = _cairo_pdf_operators_flush (&surface->pdf_operators);
     if (unlikely (status))
 	return status;
-
-    status = _cairo_surface_fill_extents (&surface->base,
-					  op, source,
-					  path, fill_rule,
-					  tolerance, antialias,
-					  clip, &extents);
-    if (unlikely (status))
-	return status;
-
-    if (! _cairo_rectangle_intersect (&extents, &surface->page_bbox))
-	return CAIRO_STATUS_SUCCESS;
 
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (status))
@@ -3608,14 +3644,14 @@ _cairo_ps_surface_fill (void		*abstract_surface,
 
 	status = _cairo_ps_surface_paint_surface (surface,
 						 (cairo_surface_pattern_t *) source,
-						  &extents, op);
+						  &extents.bounded, op);
 	if (unlikely (status))
 	    return status;
 
 	_cairo_output_stream_printf (surface->stream, "Q\n");
 	_cairo_pdf_operators_reset (&surface->pdf_operators);
     } else {
-	status = _cairo_ps_surface_emit_pattern (surface, source, &extents, op);
+	status = _cairo_ps_surface_emit_pattern (surface, source, &extents.bounded, op);
 	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
 	    return CAIRO_STATUS_SUCCESS;
 
@@ -3641,38 +3677,40 @@ _cairo_ps_surface_show_glyphs (void		     *abstract_surface,
 			       int		     *remaining_glyphs)
 {
     cairo_ps_surface_t *surface = abstract_surface;
+    cairo_composite_rectangles_t extents;
+    cairo_bool_t overlap;
     cairo_status_t status;
-    cairo_rectangle_int_t extents;
+
+    status = _cairo_composite_rectangles_init_for_glyphs (&extents,
+							  surface->width,
+							  surface->height,
+							  op, source,
+							  scaled_font,
+							  glyphs, num_glyphs,
+							  clip,
+							  &overlap);
+    if (unlikely (status)) {
+	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
+	    return CAIRO_STATUS_SUCCESS;
+
+	return status;
+    }
 
     if (surface->paginated_mode == CAIRO_PAGINATED_MODE_ANALYZE)
-	return _cairo_ps_surface_analyze_operation (surface, op, source);
+	return _cairo_ps_surface_analyze_operation (surface, op, source, &extents.bounded);
 
-    assert (_cairo_ps_surface_operation_supported (surface, op, source));
+    assert (_cairo_ps_surface_operation_supported (surface, op, source, &extents.bounded));
 
 #if DEBUG_PS
     _cairo_output_stream_printf (surface->stream,
 				 "%% _cairo_ps_surface_show_glyphs\n");
 #endif
 
-    if (num_glyphs <= 0)
-        return CAIRO_STATUS_SUCCESS;
-
-    status = _cairo_surface_glyphs_extents (&surface->base,
-					    op, source,
-					    glyphs, num_glyphs,
-					    scaled_font,
-					    clip, &extents);
-    if (unlikely (status))
-	return status;
-
-    if (! _cairo_rectangle_intersect (&extents, &surface->page_bbox))
-	return CAIRO_STATUS_SUCCESS;
-
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (status))
 	return status;
 
-    status = _cairo_ps_surface_emit_pattern (surface, source, &extents, op);
+    status = _cairo_ps_surface_emit_pattern (surface, source, &extents.bounded, op);
     if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
         return CAIRO_STATUS_SUCCESS;
 
@@ -3729,7 +3767,7 @@ _cairo_ps_surface_set_bounding_box (void		*abstract_surface,
 
     surface->page_bbox.x = x1;
     surface->page_bbox.y = y1;
-    surface->page_bbox.width = x2 - x1;
+    surface->page_bbox.width  = x2 - x1;
     surface->page_bbox.height = y2 - y1;
 
     _cairo_output_stream_printf (surface->stream,

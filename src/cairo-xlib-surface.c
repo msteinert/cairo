@@ -2165,6 +2165,7 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
     cairo_xlib_surface_t	*src;
     cairo_xlib_surface_t	*mask;
     cairo_int_status_t		status;
+    cairo_rectangle_int_t	src_extents;
     composite_operation_t       operation;
     int				itx, ity;
     cairo_bool_t		is_integer_translation;
@@ -2181,10 +2182,15 @@ _cairo_xlib_surface_composite (cairo_operator_t		op,
 
     X_DEBUG ((dst->dpy, "composite (dst=%x)", (unsigned int) dst->drawable));
 
+    src_extents.x = src_x;
+    src_extents.y = src_y;
+    src_extents.width  = width;
+    src_extents.height = height;
     needs_alpha_composite =
 	_operator_needs_alpha_composite (op,
 					 _surface_has_alpha (dst),
-					 ! _cairo_pattern_is_opaque (src_pattern));
+					 ! _cairo_pattern_is_opaque (src_pattern,
+								     &src_extents));
 
     _cairo_xlib_display_notify (dst->display);
 

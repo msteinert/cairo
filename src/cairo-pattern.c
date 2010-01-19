@@ -1739,6 +1739,34 @@ _cairo_pattern_is_opaque_solid (const cairo_pattern_t *pattern)
 }
 
 static cairo_bool_t
+_surface_is_opaque (const cairo_surface_pattern_t *pattern,
+		    const cairo_rectangle_int_t *r)
+{
+    if (pattern->surface->content & CAIRO_CONTENT_ALPHA)
+	return FALSE;
+
+    if (pattern->base.extend != CAIRO_EXTEND_NONE)
+	return TRUE;
+
+    if (r != NULL) {
+	cairo_rectangle_int_t extents;
+
+	if (! _cairo_surface_get_extents (pattern->surface, &extents))
+	    return TRUE;
+
+	if (r->x >= extents.x &&
+	    r->y >= extents.y &&
+	    r->x + r->width <= extents.x + extents.width &&
+	    r->y + r->height <= extents.y + extents.height)
+	{
+	    return TRUE;
+	}
+    }
+
+    return FALSE;
+}
+
+static cairo_bool_t
 _gradient_is_opaque (const cairo_gradient_pattern_t *gradient)
 {
     unsigned int i;
@@ -1760,7 +1788,8 @@ _gradient_is_opaque (const cairo_gradient_pattern_t *gradient)
  * Return value: %TRUE if the pattern is a opaque.
  **/
 cairo_bool_t
-_cairo_pattern_is_opaque (const cairo_pattern_t *abstract_pattern)
+_cairo_pattern_is_opaque (const cairo_pattern_t *abstract_pattern,
+			  const cairo_rectangle_int_t *extents)
 {
     const cairo_pattern_union_t *pattern;
 
@@ -1772,7 +1801,7 @@ _cairo_pattern_is_opaque (const cairo_pattern_t *abstract_pattern)
     case CAIRO_PATTERN_TYPE_SOLID:
 	return _cairo_pattern_is_opaque_solid (abstract_pattern);
     case CAIRO_PATTERN_TYPE_SURFACE:
-	return cairo_surface_get_content (pattern->surface.surface) == CAIRO_CONTENT_COLOR;
+	return _surface_is_opaque (&pattern->surface, extents);
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
 	return _gradient_is_opaque (&pattern->gradient.base);

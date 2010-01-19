@@ -1010,7 +1010,7 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
     if (_clipped (gstate))
 	return CAIRO_STATUS_SUCCESS;
 
-    if (_cairo_pattern_is_opaque (mask))
+    if (_cairo_pattern_is_opaque (mask, NULL))
 	return _cairo_gstate_paint (gstate);
 
     _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
