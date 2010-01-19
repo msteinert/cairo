@@ -112,6 +112,7 @@ cairo_sources = \
 	cairo-bentley-ottmann.c \
 	cairo-bentley-ottmann-rectangular.c \
 	cairo-bentley-ottmann-rectilinear.c \
+	cairo-botor-scan-converter.c \
 	cairo-boxes.c \
 	cairo.c \
 	cairo-cache.c \

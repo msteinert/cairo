@@ -148,9 +148,27 @@ _cairo_fixed_is_integer (cairo_fixed_t f)
 }
 
 static inline int
+_cairo_fixed_floor (cairo_fixed_t f)
+{
+    return f & ~CAIRO_FIXED_FRAC_MASK;
+}
+
+static inline int
 _cairo_fixed_integer_part (cairo_fixed_t f)
 {
     return f >> CAIRO_FIXED_FRAC_BITS;
+}
+
+static inline int
+_cairo_fixed_integer_round (cairo_fixed_t f)
+{
+    return (f + (CAIRO_FIXED_FRAC_MASK+1)/2) >> CAIRO_FIXED_FRAC_BITS;
+}
+
+static inline int
+_cairo_fixed_fractional_part (cairo_fixed_t f)
+{
+    return f & CAIRO_FIXED_FRAC_MASK;
 }
 
 static inline int
@@ -221,9 +239,9 @@ static inline int
 _cairo_fixed_16_16_floor (cairo_fixed_t f)
 {
     if (f >= 0)
-        return f >> 16;
+	return f >> 16;
     else
-        return -((-f - 1) >> 16) - 1;
+	return -((-f - 1) >> 16) - 1;
 }
 
 #if CAIRO_FIXED_BITS == 32

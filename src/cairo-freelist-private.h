@@ -54,6 +54,7 @@ struct _cairo_freelist_pool {
 typedef struct _cairo_freepool {
     cairo_freelist_node_t *first_free_node;
     cairo_freelist_pool_t *pools;
+    cairo_freelist_pool_t *freepools;
     unsigned nodesize;
     cairo_freelist_pool_t embedded_pool;
     uint8_t embedded_data[1000];
@@ -95,6 +96,21 @@ _cairo_freepool_init (cairo_freepool_t *freepool, unsigned nodesize);
 
 cairo_private void
 _cairo_freepool_fini (cairo_freepool_t *freepool);
+
+static inline void
+_cairo_freepool_reset (cairo_freepool_t *freepool)
+{
+    while (freepool->pools != &freepool->embedded_pool) {
+	cairo_freelist_pool_t *pool = freepool->pools;
+	freepool->pools = pool->next;
+	pool->next = freepool->freepools;
+	freepool->freepools = pool;
+    }
+
+    freepool->embedded_pool.rem = sizeof (freepool->embedded_data);
+    freepool->embedded_pool.data = freepool->embedded_data;
+}
+
 
 cairo_private void *
 _cairo_freepool_alloc_from_new_pool (cairo_freepool_t *freepool);
