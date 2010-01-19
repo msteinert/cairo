@@ -129,27 +129,29 @@ blit_with_span_renderer(
     cairo_span_renderer_t	*span_renderer,
     struct pool			*span_pool,
     int				 y,
+    int				 height,
     int				 xmin,
     int				 xmax);
 
 static glitter_status_t
-blit_empty_with_span_renderer (cairo_span_renderer_t *renderer, int y);
+blit_empty_with_span_renderer (cairo_span_renderer_t *renderer, int y, int height);
 
 #define GLITTER_BLIT_COVERAGES_ARGS \
 	cairo_span_renderer_t *span_renderer, \
 	struct pool *span_pool
 
-#define GLITTER_BLIT_COVERAGES(cells, y, xmin, xmax) do {		\
+#define GLITTER_BLIT_COVERAGES(cells, y, height,xmin, xmax) do {	\
     cairo_status_t status = blit_with_span_renderer (cells,		\
 						     span_renderer,	\
 						     span_pool,		\
-						     y, xmin, xmax);	\
+						     y, height,		\
+						     xmin, xmax);	\
     if (unlikely (status))						\
 	return status;							\
 } while (0)
 
-#define GLITTER_BLIT_COVERAGES_EMPTY(y, xmin, xmax) do {		\
-    cairo_status_t status = blit_empty_with_span_renderer (span_renderer, y); \
+#define GLITTER_BLIT_COVERAGES_EMPTY(y, height, xmin, xmax) do {		\
+    cairo_status_t status = blit_empty_with_span_renderer (span_renderer, y, height); \
     if (unlikely (status))						\
 	return status;							\
 } while (0)
@@ -310,8 +312,8 @@ typedef int grid_area_t;
 #define UNROLL3(x) x x x
 
 struct quorem {
-    int quo;
-    int rem;
+    int32_t quo;
+    int32_t rem;
 };
 
 /* Header for a chunk of memory in a memory pool. */
@@ -383,6 +385,7 @@ struct edge {
     /* Original sign of the edge: +1 for downwards, -1 for upwards
      * edges.  */
     int dir;
+    int vertical;
 };
 
 /* Number of subsample rows per y-bucket. Must be GRID_Y. */
@@ -703,7 +706,6 @@ static void
 cell_list_fini(struct cell_list *cells)
 {
     pool_fini (cells->cell_pool.base);
-    cell_list_init (cells);
 }
 
 /* Empty the cell list.  This is called at the start of every pixel
@@ -714,6 +716,26 @@ cell_list_reset (struct cell_list *cells)
     cell_list_rewind (cells);
     cells->head = &cells->tail;
     pool_reset (cells->cell_pool.base);
+}
+
+static struct cell *
+cell_list_alloc (struct cell_list *cells,
+		 struct cell **cursor,
+		 struct cell *tail,
+		 int x)
+{
+    struct cell *cell;
+
+    cell = pool_alloc (cells->cell_pool.base, sizeof (struct cell));
+    if (unlikely (NULL == cell))
+	return NULL;
+
+    *cursor = cell;
+    cell->next = tail;
+    cell->x = x;
+    cell->uncovered_area = 0;
+    cell->covered_height = 0;
+    return cell;
 }
 
 /* Find a cell at the given x-coordinate.  Returns %NULL if a new cell
@@ -738,22 +760,10 @@ cell_list_find (struct cell_list *cells, int x)
     }
     cells->cursor = cursor;
 
-    if (tail->x == x) {
+    if (tail->x == x)
 	return tail;
-    } else {
-	struct cell *cell;
 
-	cell = pool_alloc (cells->cell_pool.base, sizeof (struct cell));
-	if (unlikely (NULL == cell))
-	    return NULL;
-
-	*cursor = cell;
-	cell->next = tail;
-	cell->x = x;
-	cell->uncovered_area = 0;
-	cell->covered_height = 0;
-	return cell;
-    }
+    return cell_list_alloc (cells, cursor, tail, x);
 }
 
 /* Find two cells at x1 and x2.	 This is exactly equivalent
@@ -833,9 +843,8 @@ cell_list_find_pair(struct cell_list *cells, int x1, int x2)
 /* Add an unbounded subpixel span covering subpixels >= x to the
  * coverage cells. */
 static glitter_status_t
-cell_list_add_unbounded_subspan(
-    struct cell_list *cells,
-    grid_scaled_x_t x)
+cell_list_add_unbounded_subspan (struct cell_list *cells,
+				 grid_scaled_x_t x)
 {
     struct cell *cell;
     int ix, fx;
@@ -908,20 +917,24 @@ cell_list_render_edge(
     struct edge *edge,
     int sign)
 {
-    struct quorem x1 = edge->x;
-    struct quorem x2 = x1;
     grid_scaled_y_t y1, y2, dy;
     grid_scaled_x_t dx;
     int ix1, ix2;
     grid_scaled_x_t fx1, fx2;
 
-    x2.quo += edge->dxdy_full.quo;
-    x2.rem += edge->dxdy_full.rem;
-    if (x2.rem >= 0) {
-	++x2.quo;
-	x2.rem -= edge->dy;
+    struct quorem x1 = edge->x;
+    struct quorem x2 = x1;
+
+    if (! edge->vertical) {
+	x2.quo += edge->dxdy_full.quo;
+	x2.rem += edge->dxdy_full.rem;
+	if (x2.rem >= 0) {
+	    ++x2.quo;
+	    x2.rem -= edge->dy;
+	}
+
+	edge->x = x2;
     }
-    edge->x = x2;
 
     GRID_X_TO_INT_FRAC(x1.quo, ix1, fx1);
     GRID_X_TO_INT_FRAC(x2.quo, ix2, fx2);
@@ -1046,10 +1059,9 @@ polygon_fini (struct polygon *polygon)
  * receive new edges and clip them to the vertical range
  * [ymin,ymax). */
 static glitter_status_t
-polygon_reset(
-    struct polygon *polygon,
-    grid_scaled_y_t ymin,
-    grid_scaled_y_t ymax)
+polygon_reset (struct polygon *polygon,
+	       grid_scaled_y_t ymin,
+	       grid_scaled_y_t ymax)
 {
     unsigned h = ymax - ymin;
     unsigned num_buckets = EDGE_Y_BUCKET_INDEX(ymax + EDGE_Y_BUCKET_HEIGHT-1,
@@ -1116,30 +1128,38 @@ polygon_add_edge (struct polygon *polygon,
     dx = edge->line.p2.x - edge->line.p1.x;
     dy = edge->line.p2.y - edge->line.p1.y;
     e->dy = dy;
-    e->dxdy = floored_divrem (dx, dy);
-
-    if (ymin <= edge->top)
-	ytop = edge->top;
-    else
-	ytop = ymin;
-    if (ytop == edge->line.p1.y) {
-	e->x.quo = edge->line.p1.x;
-	e->x.rem = 0;
-    } else {
-	e->x = floored_muldivrem (ytop - edge->line.p1.y, dx, dy);
-	e->x.quo += edge->line.p1.x;
-    }
-
     e->dir = edge->dir;
+
+    ytop = edge->top >= ymin ? edge->top : ymin;
+    ybot = edge->bottom <= ymax ? edge->bottom : ymax;
     e->ytop = ytop;
-    ybot = edge->bottom < ymax ? edge->bottom : ymax;
     e->height_left = ybot - ytop;
 
-    if (e->height_left >= GRID_Y) {
-	e->dxdy_full = floored_muldivrem (GRID_Y, dx, dy);
-    } else {
+    if (dx == 0) {
+	e->vertical = TRUE;
+	e->x.quo = edge->line.p1.x;
+	e->x.rem = 0;
+	e->dxdy.quo = 0;
+	e->dxdy.rem = 0;
 	e->dxdy_full.quo = 0;
 	e->dxdy_full.rem = 0;
+    } else {
+	e->vertical = FALSE;
+	e->dxdy = floored_divrem (dx, dy);
+	if (ytop == edge->line.p1.y) {
+	    e->x.quo = edge->line.p1.x;
+	    e->x.rem = 0;
+	} else {
+	    e->x = floored_muldivrem (ytop - edge->line.p1.y, dx, dy);
+	    e->x.quo += edge->line.p1.x;
+	}
+
+	if (e->height_left >= GRID_Y) {
+	    e->dxdy_full = floored_muldivrem (GRID_Y, dx, dy);
+	} else {
+	    e->dxdy_full.quo = 0;
+	    e->dxdy_full.rem = 0;
+	}
     }
 
     _polygon_insert_edge_into_its_y_bucket (polygon, e);
@@ -1162,31 +1182,30 @@ active_list_init(struct active_list *active)
     active_list_reset(active);
 }
 
-static void
-active_list_fini(
-    struct active_list *active)
-{
-    active_list_reset(active);
-}
-
 /* Merge the edges in an unsorted list of edges into a sorted
  * list. The sort order is edges ascending by edge->x.quo.  Returns
  * the new head of the sorted list. */
 static struct edge *
 merge_unsorted_edges(struct edge *sorted_head, struct edge *unsorted_head)
 {
-    struct edge *head = unsorted_head;
     struct edge **cursor = &sorted_head;
     int x;
 
-    while (NULL != head) {
-	struct edge *prev = *cursor;
-	struct edge *next = head->next;
-	x = head->x.quo;
+    if (sorted_head == NULL) {
+	sorted_head = unsorted_head;
+	unsorted_head = unsorted_head->next;
+	sorted_head->next = NULL;
+	if (unsorted_head == NULL)
+	    return sorted_head;
+    }
 
-	if (NULL == prev || x < prev->x.quo) {
+    do {
+	struct edge *next = unsorted_head->next;
+	struct edge *prev = *cursor;
+
+	x = unsorted_head->x.quo;
+	if (x < prev->x.quo)
 	    cursor = &sorted_head;
-	}
 
 	while (1) {
 	    UNROLL3({
@@ -1197,26 +1216,28 @@ merge_unsorted_edges(struct edge *sorted_head, struct edge *unsorted_head)
 	    });
 	}
 
-	head->next = *cursor;
-	*cursor = head;
+	unsorted_head->next = *cursor;
+	*cursor = unsorted_head;
+	unsorted_head = next;
+    } while (unsorted_head != NULL);
 
-	head = next;
-    }
     return sorted_head;
 }
 
 /* Test if the edges on the active list can be safely advanced by a
  * full row without intersections or any edges ending. */
 inline static int
-active_list_can_step_full_row(
-    struct active_list *active)
+active_list_can_step_full_row (struct active_list *active)
 {
+    const struct edge *e;
+    int prev_x = INT_MIN;
+
     /* Recomputes the minimum height of all edges on the active
      * list if we have been dropping edges. */
     if (active->min_height <= 0) {
-	struct edge *e = active->head;
 	int min_height = INT_MAX;
 
+	e = active->head;
 	while (NULL != e) {
 	    if (e->height_left < min_height)
 		min_height = e->height_left;
@@ -1226,27 +1247,29 @@ active_list_can_step_full_row(
 	active->min_height = min_height;
     }
 
-    /* Check for intersections only if no edges end during the next
-     * row. */
-    if (active->min_height >= GRID_Y) {
-	grid_scaled_x_t prev_x = INT_MIN;
-	struct edge *e = active->head;
-	while (NULL != e) {
-	    struct quorem x = e->x;
+    if (active->min_height < GRID_Y)
+	return 0;
 
+    /* Check for intersections as no edges end during the next row. */
+    e = active->head;
+    while (NULL != e) {
+	struct quorem x = e->x;
+
+	if (! e->vertical) {
 	    x.quo += e->dxdy_full.quo;
 	    x.rem += e->dxdy_full.rem;
 	    if (x.rem >= 0)
 		++x.quo;
-
-	    if (x.quo <= prev_x)
-		return 0;
-	    prev_x = x.quo;
-	    e = e->next;
 	}
-	return 1;
+
+	if (x.quo <= prev_x)
+	    return 0;
+
+	prev_x = x.quo;
+	e = e->next;
     }
-    return 0;
+
+    return 1;
 }
 
 /* Merges edges on the given subpixel row from the polygon to the
@@ -1278,8 +1301,10 @@ active_list_merge_edges_from_polygon(
 	    ptail = &tail->next;
 	}
     }
-    active->head = merge_unsorted_edges(active->head, subrow_edges);
-    active->min_height = min_height;
+    if (subrow_edges) {
+	active->head = merge_unsorted_edges(active->head, subrow_edges);
+	active->min_height = min_height;
+    }
 }
 
 /* Advance the edges on the active list by one subsample row by
@@ -1440,11 +1465,13 @@ apply_nonzero_fill_rule_and_step_edges (struct active_list *active,
 		}
 	    }
 
-	    right_edge->x.quo += right_edge->dxdy_full.quo;
-	    right_edge->x.rem += right_edge->dxdy_full.rem;
-	    if (right_edge->x.rem >= 0) {
-		++right_edge->x.quo;
-		right_edge->x.rem -= right_edge->dy;
+	    if (! right_edge->vertical) {
+		right_edge->x.quo += right_edge->dxdy_full.quo;
+		right_edge->x.rem += right_edge->dxdy_full.rem;
+		if (right_edge->x.rem >= 0) {
+		    ++right_edge->x.quo;
+		    right_edge->x.rem -= right_edge->dy;
+		}
 	    }
 	}
 
@@ -1497,11 +1524,13 @@ apply_evenodd_fill_rule_and_step_edges (struct active_list *active,
 		break;
 	    }
 
-	    right_edge->x.quo += right_edge->dxdy_full.quo;
-	    right_edge->x.rem += right_edge->dxdy_full.rem;
-	    if (right_edge->x.rem >= 0) {
-		++right_edge->x.quo;
-		right_edge->x.rem -= right_edge->dy;
+	    if (! right_edge->vertical) {
+		right_edge->x.quo += right_edge->dxdy_full.quo;
+		right_edge->x.rem += right_edge->dxdy_full.rem;
+		if (right_edge->x.rem >= 0) {
+		    ++right_edge->x.quo;
+		    right_edge->x.rem -= right_edge->dy;
+		}
 	    }
 	}
 
@@ -1538,8 +1567,14 @@ blit_span(
     }
 }
 
-#define GLITTER_BLIT_COVERAGES(coverages, y, xmin, xmax) \
-	blit_cells(coverages, raster_pixels + (y)*raster_stride, xmin, xmax)
+#define GLITTER_BLIT_COVERAGES(coverages, y, height, xmin, xmax) \
+    do { \
+	int __y = y; \
+	int __h = height; \
+	do { \
+	    blit_cells(coverages, raster_pixels + (__y)*raster_stride, xmin, xmax); \
+	} while (--__h); \
+    } while (0)
 
 static void
 blit_cells(
@@ -1598,7 +1633,6 @@ static void
 _glitter_scan_converter_fini(glitter_scan_converter_t *converter)
 {
     polygon_fini(converter->polygon);
-    active_list_fini(converter->active);
     cell_list_fini(converter->coverages);
     converter->xmin=0;
     converter->ymin=0;
@@ -1712,8 +1746,36 @@ glitter_scan_converter_add_edge (glitter_scan_converter_t *converter,
 #endif
 
 #ifndef GLITTER_BLIT_COVERAGES_EMPTY
-# define GLITTER_BLIT_COVERAGES_EMPTY(y, xmin, xmax)
+# define GLITTER_BLIT_COVERAGES_EMPTY(y0, y1, xmin, xmax)
 #endif
+
+static cairo_bool_t
+active_list_is_vertical (struct active_list *active)
+{
+    struct edge *e;
+
+    for (e = active->head; e != NULL; e = e->next) {
+	if (! e->vertical)
+	    return FALSE;
+    }
+
+    return TRUE;
+}
+
+static void
+step_edges (struct active_list *active, int count)
+{
+    struct edge **cursor = &active->head;
+    struct edge *edge;
+
+    for (edge = *cursor; edge != NULL; edge = *cursor) {
+	edge->height_left -= GRID_Y * count;
+	if (edge->height_left)
+	    cursor = &edge->next;
+	else
+	    *cursor = edge->next;
+    }
+}
 
 I glitter_status_t
 glitter_scan_converter_render(
@@ -1721,7 +1783,7 @@ glitter_scan_converter_render(
     int nonzero_fill,
     GLITTER_BLIT_COVERAGES_ARGS)
 {
-    int i;
+    int i, j;
     int ymax_i = converter->ymax / GRID_Y;
     int ymin_i = converter->ymin / GRID_Y;
     int xmin_i, xmax_i;
@@ -1739,22 +1801,24 @@ glitter_scan_converter_render(
     GLITTER_BLIT_COVERAGES_BEGIN;
 
     /* Render each pixel row. */
-    for (i=0; i<h; i++) {
+    for (i = 0; i < h; i = j) {
 	int do_full_step = 0;
 	glitter_status_t status = 0;
+
+	j = i + 1;
 
 	/* Determine if we can ignore this row or use the full pixel
 	 * stepper. */
 	if (GRID_Y == EDGE_Y_BUCKET_HEIGHT && ! polygon->y_buckets[i]) {
 	    if (! active->head) {
-		GLITTER_BLIT_COVERAGES_EMPTY (i+ymin_i, xmin_i, xmax_i);
+		for (; j < h && ! polygon->y_buckets[j]; j++)
+		    ;
+		GLITTER_BLIT_COVERAGES_EMPTY (i+ymin_i, j-i, xmin_i, xmax_i);
 		continue;
 	    }
 
 	    do_full_step = active_list_can_step_full_row (active);
 	}
-
-	cell_list_reset (coverages);
 
 	if (do_full_step) {
 	    /* Step by a full pixel row's worth. */
@@ -1765,9 +1829,22 @@ glitter_scan_converter_render(
 		status = apply_evenodd_fill_rule_and_step_edges (active,
 								 coverages);
 	    }
+
+	    if (active_list_is_vertical (active)) {
+		while (j < h &&
+		       polygon->y_buckets[j] == NULL &&
+		       active->min_height >= 2*GRID_Y)
+		{
+		    active->min_height -= GRID_Y;
+		    j++;
+		}
+		if (j != i + 1)
+		    step_edges (active, j - (i + 1));
+	    }
 	} else {
-	    /* Subsample this row. */
 	    grid_scaled_y_t suby;
+
+	    /* Subsample this row. */
 	    for (suby = 0; suby < GRID_Y; suby++) {
 		grid_scaled_y_t y = (i+ymin_i)*GRID_Y + suby;
 
@@ -1788,13 +1865,13 @@ glitter_scan_converter_render(
 	if (unlikely (status))
 	    return status;
 
-	GLITTER_BLIT_COVERAGES(coverages, i+ymin_i, xmin_i, xmax_i);
+	GLITTER_BLIT_COVERAGES(coverages, i+ymin_i, j-i, xmin_i, xmax_i);
+	cell_list_reset (coverages);
 
-	if (! active->head) {
+	if (! active->head)
 	    active->min_height = INT_MAX;
-	} else {
+	else
 	    active->min_height -= GRID_Y;
-	}
     }
 
     /* Clean up the coverage blitter. */
@@ -1808,21 +1885,20 @@ glitter_scan_converter_render(
  * scan converter subclass. */
 
 static glitter_status_t
-blit_with_span_renderer(
-    struct cell_list *cells,
-    cairo_span_renderer_t *renderer,
-    struct pool *span_pool,
-    int y,
-    int xmin,
-    int xmax)
+blit_with_span_renderer (struct cell_list *cells,
+			 cairo_span_renderer_t *renderer,
+			 struct pool *span_pool,
+			 int y, int height,
+			 int xmin, int xmax)
 {
     struct cell *cell = cells->head;
     int prev_x = xmin;
     int cover = 0;
     cairo_half_open_span_t *spans;
     unsigned num_spans;
+
     if (cell == NULL)
-	return CAIRO_STATUS_SUCCESS;
+	return blit_empty_with_span_renderer (renderer, y, height);
 
     /* Skip cells to the left of the clip region. */
     while (cell != NULL && cell->x < xmin) {
@@ -1834,12 +1910,12 @@ blit_with_span_renderer(
     /* Count number of cells remaining. */
     {
 	struct cell *next = cell;
-	num_spans = 0;
-	while (next) {
+	num_spans = 1;
+	while (next != NULL) {
 	    next = next->next;
 	    ++num_spans;
 	}
-	num_spans = 2*num_spans + 1;
+	num_spans = 2*num_spans;
     }
 
     /* Allocate enough spans for the row. */
@@ -1854,6 +1930,7 @@ blit_with_span_renderer(
     for (; cell != NULL; cell = cell->next) {
 	int x = cell->x;
 	int area;
+
 	if (x >= xmax)
 	    break;
 
@@ -1873,20 +1950,26 @@ blit_with_span_renderer(
 	prev_x = x+1;
     }
 
-    if (prev_x < xmax) {
+    if (prev_x <= xmax) {
 	spans[num_spans].x = prev_x;
 	spans[num_spans].coverage = GRID_AREA_TO_ALPHA (cover);
 	++num_spans;
     }
 
+    if (prev_x < xmax && cover) {
+	spans[num_spans].x = xmax;
+	spans[num_spans].coverage = 0;
+	++num_spans;
+    }
+
     /* Dump them into the renderer. */
-    return renderer->render_row (renderer, y, spans, num_spans);
+    return renderer->render_rows (renderer, y, height, spans, num_spans);
 }
 
 static glitter_status_t
-blit_empty_with_span_renderer (cairo_span_renderer_t *renderer, int y)
+blit_empty_with_span_renderer (cairo_span_renderer_t *renderer, int y, int height)
 {
-    return renderer->render_row (renderer, y, NULL, 0);
+    return renderer->render_rows (renderer, y, height, NULL, 0);
 }
 
 struct _cairo_tor_scan_converter {

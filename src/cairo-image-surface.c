@@ -1393,11 +1393,13 @@ typedef struct _cairo_image_surface_span_renderer {
     const cairo_pattern_t *pattern;
     cairo_antialias_t antialias;
 
+    uint8_t *mask_data;
+    uint32_t mask_stride;
+
     cairo_image_surface_t *src;
     cairo_surface_attributes_t src_attributes;
     cairo_image_surface_t *mask;
     cairo_image_surface_t *dst;
-
     cairo_composite_rectangles_t composite_rectangles;
 } cairo_image_surface_span_renderer_t;
 
@@ -1406,66 +1408,46 @@ _cairo_image_surface_span_render_row (
     int                                  y,
     const cairo_half_open_span_t        *spans,
     unsigned                             num_spans,
-    cairo_image_surface_t               *mask,
-    const cairo_composite_rectangles_t  *rects)
+    uint8_t				*data,
+    uint32_t				 stride)
 {
-    int xmin = rects->mask.x;
-    int xmax = xmin + rects->width;
     uint8_t *row;
-    int prev_x = xmin;
-    int prev_alpha = 0;
     unsigned i;
 
-    /* Make sure we're within y-range. */
-    y -= rects->mask.y;
-    if (y < 0 || y >= rects->height)
+    if (num_spans == 0)
 	return;
 
-    row = (uint8_t*)(mask->data) + y*(size_t)mask->stride - xmin;
+    row = data + y * stride;
+    for (i = 0; i < num_spans - 1; i++) {
+	if (! spans[i].coverage)
+	    continue;
 
-    /* Find the first span within x-range. */
-    for (i=0; i < num_spans && spans[i].x < xmin; i++) {}
-    if (i>0)
-	prev_alpha = spans[i-1].coverage;
-
-    /* Set the intermediate spans. */
-    for (; i < num_spans; i++) {
-	int x = spans[i].x;
-
-	if (x >= xmax)
-	    break;
-
-	if (prev_alpha != 0) {
-	    /* We implement setting rendering the most common single
-	     * pixel wide span case to avoid the overhead of a memset
-	     * call.  Open coding setting longer spans didn't show a
-	     * noticeable improvement over memset. */
-	    if (x == prev_x + 1) {
-		row[prev_x] = prev_alpha;
-	    }
-	    else {
-		memset(row + prev_x, prev_alpha, x - prev_x);
-	    }
+	/* We implement setting the most common single pixel wide
+	 * span case to avoid the overhead of a memset call.
+	 * Open coding setting longer spans didn't show a
+	 * noticeable improvement over memset.
+	 */
+	if (spans[i+1].x == spans[i].x + 1) {
+	    row[spans[i].x] = spans[i].coverage;
+	} else {
+	    memset (row + spans[i].x,
+		    spans[i].coverage,
+		    spans[i+1].x - spans[i].x);
 	}
-
-	prev_x = x;
-	prev_alpha = spans[i].coverage;
-    }
-
-    if (prev_alpha != 0 && prev_x < xmax) {
-	memset(row + prev_x, prev_alpha, xmax - prev_x);
     }
 }
 
 static cairo_status_t
-_cairo_image_surface_span_renderer_render_row (
+_cairo_image_surface_span_renderer_render_rows (
     void				*abstract_renderer,
     int					 y,
+    int					 height,
     const cairo_half_open_span_t	*spans,
     unsigned				 num_spans)
 {
     cairo_image_surface_span_renderer_t *renderer = abstract_renderer;
-    _cairo_image_surface_span_render_row (y, spans, num_spans, renderer->mask, &renderer->composite_rectangles);
+    while (height--)
+	_cairo_image_surface_span_render_row (y++, spans, num_spans, renderer->mask_data, renderer->mask_stride);
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -1520,11 +1502,11 @@ _cairo_image_surface_span_renderer_finish (void *abstract_renderer)
 		&dst->base,
 		src_attributes,
 		src->width, src->height,
-		rects->width, rects->height,
+		width, height,
 		rects->src.x, rects->src.y,
 		0, 0,		/* mask.x, mask.y */
 		rects->dst.x, rects->dst.y,
-		rects->width, rects->height,
+		width, height,
 		dst->clip_region);
 	}
     }
@@ -1570,7 +1552,7 @@ _cairo_image_surface_create_span_renderer (cairo_operator_t	 op,
 
     renderer->base.destroy = _cairo_image_surface_span_renderer_destroy;
     renderer->base.finish = _cairo_image_surface_span_renderer_finish;
-    renderer->base.render_row = _cairo_image_surface_span_renderer_render_row;
+    renderer->base.render_rows = _cairo_image_surface_span_renderer_render_rows;
     renderer->op = op;
     renderer->pattern = pattern;
     renderer->antialias = antialias;
@@ -1607,6 +1589,9 @@ _cairo_image_surface_create_span_renderer (cairo_operator_t	 op,
 	_cairo_image_surface_span_renderer_destroy (renderer);
 	return _cairo_span_renderer_create_in_error (status);
     }
+
+    renderer->mask_data = renderer->mask->data - rects->mask.x - rects->mask.y * renderer->mask->stride;
+    renderer->mask_stride = renderer->mask->stride;
     return &renderer->base;
 }
 

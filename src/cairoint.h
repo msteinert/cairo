@@ -2236,8 +2236,8 @@ cairo_private void
 _cairo_image_surface_span_render_row (int				 y,
 				      const cairo_half_open_span_t	 *spans,
 				      unsigned				 num_spans,
-				      cairo_image_surface_t              *mask,
-				      const cairo_composite_rectangles_t *rects);
+				      uint8_t				*data,
+				      uint32_t				 stride);
 
 cairo_private cairo_image_transparency_t
 _cairo_image_analyze_transparency (cairo_image_surface_t      *image);

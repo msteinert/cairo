@@ -277,13 +277,15 @@ _cairo_scan_converter_create_in_error (cairo_status_t status)
 }
 
 static cairo_status_t
-_cairo_nil_span_renderer_render_row (
+_cairo_nil_span_renderer_render_rows (
     void				*abstract_renderer,
     int					 y,
+    int					 height,
     const cairo_half_open_span_t	*coverages,
     unsigned				 num_coverages)
 {
     (void) y;
+    (void) height;
     (void) coverages;
     (void) num_coverages;
     return _cairo_span_renderer_status (abstract_renderer);
@@ -312,7 +314,7 @@ _cairo_span_renderer_set_error (
 	ASSERT_NOT_REACHED;
     }
     if (renderer->status == CAIRO_STATUS_SUCCESS) {
-	renderer->render_row = _cairo_nil_span_renderer_render_row;
+	renderer->render_rows = _cairo_nil_span_renderer_render_rows;
 	renderer->finish = _cairo_nil_span_renderer_finish;
 	renderer->status = error;
     }

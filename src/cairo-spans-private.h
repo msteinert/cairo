@@ -47,26 +47,24 @@ typedef struct _cairo_half_open_span {
  * surfaces if they want to composite spans instead of trapezoids. */
 typedef struct _cairo_span_renderer cairo_span_renderer_t;
 struct _cairo_span_renderer {
+    /* Private status variable. */
+    cairo_status_t status;
+
     /* Called to destroy the renderer. */
     cairo_destroy_func_t	destroy;
 
-    /* Render the spans on row y of the source by whatever compositing
-     * method is required.  The function should ignore spans outside
-     * the bounding box set by the init() function. */
-    cairo_status_t (*render_row)(
-	void				*abstract_renderer,
-	int				 y,
-	const cairo_half_open_span_t	*coverages,
-	unsigned			 num_coverages);
+    /* Render the spans on row y of the destination by whatever compositing
+     * method is required. */
+    cairo_warn cairo_status_t
+    (*render_rows) (void *abstract_renderer,
+		    int y, int height,
+		    const cairo_half_open_span_t	*coverages,
+		    unsigned num_coverages);
 
     /* Called after all rows have been rendered to perform whatever
      * final rendering step is required.  This function is called just
      * once before the renderer is destroyed. */
-    cairo_status_t (*finish)(
-	void		      *abstract_renderer);
-
-    /* Private status variable. */
-    cairo_status_t status;
+    cairo_status_t (*finish) (void *abstract_renderer);
 };
 
 /* Scan converter interface. */

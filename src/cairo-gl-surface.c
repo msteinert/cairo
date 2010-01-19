@@ -1981,6 +1981,8 @@ typedef struct _cairo_gl_surface_span_renderer {
 
     cairo_gl_composite_setup_t setup;
 
+    int xmin, xmax;
+
     cairo_operator_t op;
     cairo_antialias_t antialias;
 
@@ -1988,7 +1990,6 @@ typedef struct _cairo_gl_surface_span_renderer {
     cairo_gl_context_t *ctx;
     cairo_region_t *clip;
 
-    cairo_composite_rectangles_t composite_rectangles;
     GLuint vbo;
     void *vbo_base;
     unsigned int vbo_size;
@@ -2019,11 +2020,11 @@ _cairo_gl_span_renderer_flush (cairo_gl_surface_span_renderer_t *renderer)
 	    cairo_region_get_rectangle (renderer->clip, i, &rect);
 
 	    glScissor (rect.x, rect.y, rect.width, rect.height);
-	    glDrawArrays (GL_LINES, 0, count);
+	    glDrawArrays (GL_QUADS, 0, count);
 	}
 	glDisable (GL_SCISSOR_TEST);
     } else {
-	glDrawArrays (GL_LINES, 0, count);
+	glDrawArrays (GL_QUADS, 0, count);
     }
 }
 
@@ -2104,72 +2105,87 @@ _cairo_gl_emit_span_vertex (cairo_gl_surface_span_renderer_t *renderer,
 
 static void
 _cairo_gl_emit_span (cairo_gl_surface_span_renderer_t *renderer,
-		     int x1, int x2, int y, uint8_t alpha)
+		     int x, int y1, int y2,
+		     uint8_t alpha)
 {
     float *vertices = _cairo_gl_span_renderer_get_vbo (renderer, 2);
 
-    _cairo_gl_emit_span_vertex (renderer, x1, y, alpha, vertices);
-    _cairo_gl_emit_span_vertex (renderer, x2, y, alpha,
+    _cairo_gl_emit_span_vertex (renderer, x, y1, alpha, vertices);
+    _cairo_gl_emit_span_vertex (renderer, x, y2, alpha,
 			       vertices + renderer->vertex_size / 4);
 }
 
-/* Emits the contents of the span renderer rows as GL_LINES with the span's
- * alpha.
- *
- * Unlike the image surface, which is compositing into a temporary, we emit
- * coverage even for alpha == 0, in case we're using an unbounded operator.
- * But it means we avoid having to do the fixup.
- */
+static void
+_cairo_gl_emit_rectangle (cairo_gl_surface_span_renderer_t *renderer,
+			  int x1, int y1,
+			  int x2, int y2,
+			  int coverage)
+{
+    _cairo_gl_emit_span (renderer, x1, y1, y2, coverage);
+    _cairo_gl_emit_span (renderer, x2, y2, y1, coverage);
+}
+
 static cairo_status_t
-_cairo_gl_surface_span_renderer_render_row (
-    void				*abstract_renderer,
-    int					 y,
-    const cairo_half_open_span_t	*spans,
-    unsigned				 num_spans)
+_cairo_gl_render_bounded_spans (void *abstract_renderer,
+				int y, int height,
+				const cairo_half_open_span_t *spans,
+				unsigned num_spans)
 {
     cairo_gl_surface_span_renderer_t *renderer = abstract_renderer;
-    int xmin = renderer->composite_rectangles.mask.x;
-    int xmax = xmin + renderer->composite_rectangles.width;
-    int prev_x = xmin;
-    int prev_alpha = 0;
-    unsigned i;
-    int x_translate;
 
-    /* Make sure we're within y-range. */
-    if (y < renderer->composite_rectangles.mask.y ||
-	y >= renderer->composite_rectangles.mask.y +
-	renderer->composite_rectangles.height)
+    if (num_spans == 0)
 	return CAIRO_STATUS_SUCCESS;
 
-    x_translate = renderer->composite_rectangles.dst.x -
-	renderer->composite_rectangles.mask.x;
-    y += renderer->composite_rectangles.dst.y -
-	renderer->composite_rectangles.mask.y;
+    do {
+	if (spans[0].coverage) {
+	    _cairo_gl_emit_rectangle (renderer,
+				      spans[0].x, y,
+				      spans[1].x, y + height,
+				      spans[0].coverage);
+	}
 
-    /* Find the first span within x-range. */
-    for (i=0; i < num_spans && spans[i].x < xmin; i++) {}
-    if (i>0)
-	prev_alpha = spans[i-1].coverage;
+	spans++;
+    } while (--num_spans > 1);
 
-    /* Set the intermediate spans. */
-    for (; i < num_spans; i++) {
-	int x = spans[i].x;
+    return CAIRO_STATUS_SUCCESS;
+}
 
-	if (x >= xmax)
-	    break;
+static cairo_status_t
+_cairo_gl_render_unbounded_spans (void *abstract_renderer,
+				  int y, int height,
+				  const cairo_half_open_span_t *spans,
+				  unsigned num_spans)
+{
+    cairo_gl_surface_span_renderer_t *renderer = abstract_renderer;
 
-	_cairo_gl_emit_span (renderer,
-			     prev_x + x_translate, x + x_translate, y,
-			     prev_alpha);
-
-	prev_x = x;
-	prev_alpha = spans[i].coverage;
+    if (num_spans == 0) {
+	_cairo_gl_emit_rectangle (renderer,
+				  renderer->xmin, y,
+				  renderer->xmax, y + height,
+				  0);
+	return CAIRO_STATUS_SUCCESS;
     }
 
-    if (prev_x < xmax) {
-	_cairo_gl_emit_span (renderer,
-			     prev_x + x_translate, xmax + x_translate, y,
-			     prev_alpha);
+    if (spans[0].x != renderer->xmin) {
+	_cairo_gl_emit_rectangle (renderer,
+				  renderer->xmin, y,
+				  spans[0].x, y + height,
+				  0);
+    }
+
+    do {
+	_cairo_gl_emit_rectangle (renderer,
+				  spans[0].x, y,
+				  spans[1].x, y + height,
+				  spans[0].coverage);
+	spans++;
+    } while (--num_spans > 1);
+
+    if (spans[0].x != renderer->xmax) {
+	_cairo_gl_emit_rectangle (renderer,
+				  spans[0].x, y,
+				  renderer->xmax, y + height,
+				  0);
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -2244,8 +2260,6 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
     cairo_gl_surface_t *dst = abstract_dst;
     cairo_gl_surface_span_renderer_t *renderer;
     cairo_status_t status;
-    int width = rects->width;
-    int height = rects->height;
     cairo_surface_attributes_t *src_attributes;
     GLenum err;
 
@@ -2255,31 +2269,30 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
 
     renderer->base.destroy = _cairo_gl_surface_span_renderer_destroy;
     renderer->base.finish = _cairo_gl_surface_span_renderer_finish;
-    renderer->base.render_row =
-	_cairo_gl_surface_span_renderer_render_row;
+    if (_cairo_operator_bounded_by_mask (op))
+	renderer->base.render_rows = _cairo_gl_render_bounded_spans;
+    else
+	renderer->base.render_rows = _cairo_gl_render_unbounded_spans;
+    renderer->xmin = rects->mask.x;
+    renderer->xmax = rects->mask.x + rects->width;
     renderer->op = op;
     renderer->antialias = antialias;
     renderer->dst = dst;
     renderer->clip = clip_region;
 
-    renderer->composite_rectangles = *rects;
-
     status = _cairo_gl_operand_init (&renderer->setup.src, src, dst,
 				     rects->src.x, rects->src.y,
 				     rects->dst.x, rects->dst.y,
-				     width, height);
+				     rects->width, rects->height);
     if (unlikely (status)) {
-	cairo_status_t status_ignored;
-
-	status_ignored = _cairo_gl_context_acquire (dst->base.device, &renderer->ctx);
-
-	_cairo_gl_surface_span_renderer_destroy (renderer);
+	free (renderer);
 	return _cairo_span_renderer_create_in_error (status);
     }
 
     status = _cairo_gl_context_acquire (dst->base.device, &renderer->ctx);
     if (unlikely (status)) {
-	_cairo_gl_surface_span_renderer_destroy (renderer);
+	_cairo_gl_operand_destroy (&renderer->setup.src);
+	free (renderer);
 	return _cairo_span_renderer_create_in_error (status);
     }
     _cairo_gl_set_destination (dst);
