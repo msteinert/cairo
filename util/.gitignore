@@ -5,6 +5,8 @@ Makefile.in
 show-edges
 show-events
 show-traps
+xml-to-trace
+trace-to-xml
 *.so
 *.la
 *.lo

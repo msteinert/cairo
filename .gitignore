@@ -29,3 +29,4 @@ stamp-h.in
 *.orig
 *.rej
 *-uninstalled.pc
+.vimrc

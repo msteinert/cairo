@@ -25,3 +25,4 @@ index.html
 *.pdb
 *~
 .*.sw?
+*.data
