@@ -1302,7 +1302,9 @@ TESTS_ENVIRONMENT = CAIRO_TEST_MODE="$(MODE)" CAIRO_TEST_TARGET="$(TARGETS)" CAI
 EXTRA_VALGRIND_FLAGS = $(CAIRO_EXTRA_VALGRIND_FLAGS)
 VALGRIND_FLAGS = \
 	--tool=memcheck --suppressions=$(srcdir)/.valgrind-suppressions \
-	--leak-check=yes --show-reachable=yes $(EXTRA_VALGRIND_FLAGS)
+	--track-origins=yes \
+	--leak-check=yes --show-reachable=yes \
+	$(EXTRA_VALGRIND_FLAGS)
 
 CLEANFILES +=					\
 	valgrind-log				\
