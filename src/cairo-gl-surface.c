@@ -846,7 +846,7 @@ _cairo_gl_surface_clone_similar (void		     *abstract_surface,
 		                              src->content,
 					      width, height);
 	if (clone == NULL)
-	    return CAIRO_INT_STATUS_UNSUPPORTED;
+	    return UNSUPPORTED ("create_similar failed");
 	if (clone->base.status)
 	    return clone->base.status;
 
@@ -866,7 +866,7 @@ _cairo_gl_surface_clone_similar (void		     *abstract_surface,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    return CAIRO_INT_STATUS_UNSUPPORTED;
+    return UNSUPPORTED ("unknown src surface type in clone_similar");
 }
 
 /** Creates a cairo-gl pattern surface for the given trapezoids */
@@ -1188,14 +1188,14 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     cairo_gl_composite_setup_t setup;
 
     if (! _cairo_gl_operator_is_supported (op))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return UNSUPPORTED ("unsupported operator");
 
     /* XXX: There is no sane way of expressing ComponentAlpha using
      * fixed-function combiners and every possible operator. Look at the
      * EXA drivers for the more appropriate fallback conditions.
      */
     if (mask && mask->has_component_alpha)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return UNSUPPORTED ("component alpha");
 
     memset (&setup, 0, sizeof (setup));
 
@@ -1385,7 +1385,7 @@ _cairo_gl_surface_composite_trapezoids (cairo_operator_t op,
     cairo_int_status_t status;
 
     if (! _cairo_gl_operator_is_supported (op))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return UNSUPPORTED ("unsupported operator");
 
     if (_cairo_surface_check_span_renderer (op,pattern,&dst->base, antialias)) {
 	status =
@@ -1438,7 +1438,7 @@ _cairo_gl_surface_fill_rectangles_fixed (void			 *abstract_surface,
     GLfloat *colors;
 
     if (! _cairo_gl_operator_is_supported (op))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return UNSUPPORTED ("unsupported operator");
 
     ctx = _cairo_gl_context_acquire (surface->ctx);
 
@@ -1533,7 +1533,7 @@ _cairo_gl_surface_fill_rectangles_glsl (void                  *abstract_surface,
     cairo_status_t status;
 
     if (! _cairo_gl_operator_is_supported (op))
-	return CAIRO_INT_STATUS_UNSUPPORTED;
+	return UNSUPPORTED ("unsupported operator");
 
     ctx = _cairo_gl_context_acquire (surface->ctx);
 
