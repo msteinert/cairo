@@ -42,95 +42,13 @@
 #include "cairoint.h"
 #include "cairo-clip-private.h"
 #include "cairo-error-private.h"
+#include "cairo-freed-pool-private.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-region-private.h"
 
-/* Keep a stash of recently freed clip_paths, since we need to
- * reallocate them frequently.
- */
-#define MAX_FREED_POOL_SIZE 4
-typedef struct {
-    void *pool[MAX_FREED_POOL_SIZE];
-    int top;
-} freed_pool_t;
-
+#if HAS_FREED_POOL
 static freed_pool_t clip_path_pool;
-
-static void *
-_atomic_fetch (void **slot)
-{
-    return _cairo_atomic_ptr_cmpxchg (slot, *slot, NULL);
-}
-
-static cairo_bool_t
-_atomic_store (void **slot, void *ptr)
-{
-    return _cairo_atomic_ptr_cmpxchg (slot, NULL, ptr) == NULL;
-}
-
-static void *
-_freed_pool_get (freed_pool_t *pool)
-{
-    void *ptr;
-    int i;
-
-    i = pool->top - 1;
-    if (i < 0)
-	i = 0;
-
-    ptr = _atomic_fetch (&pool->pool[i]);
-    if (ptr != NULL) {
-	pool->top = i;
-	return ptr;
-    }
-
-    /* either empty or contended */
-    for (i = ARRAY_LENGTH (pool->pool); i--;) {
-	ptr = _atomic_fetch (&pool->pool[i]);
-	if (ptr != NULL) {
-	    pool->top = i;
-	    return ptr;
-	}
-    }
-
-    /* empty */
-    pool->top = 0;
-    return NULL;
-}
-
-static void
-_freed_pool_put (freed_pool_t *pool, void *ptr)
-{
-    int i = pool->top;
-
-    if (_atomic_store (&pool->pool[i], ptr)) {
-	pool->top = i + 1;
-	return;
-    }
-
-    /* either full or contended */
-    for (i = 0; i < ARRAY_LENGTH (pool->pool); i++) {
-	if (_atomic_store (&pool->pool[i], ptr)) {
-	    pool->top = i + 1;
-	    return;
-	}
-    }
-
-    /* full */
-    pool->top = ARRAY_LENGTH (pool->pool);
-    free (ptr);
-}
-
-static void
-_freed_pool_reset (freed_pool_t *pool)
-{
-    int i;
-
-    for (i = 0; i < ARRAY_LENGTH (pool->pool); i++) {
-	free (pool->pool[i]);
-	pool->pool[i] = NULL;
-    }
-}
+#endif
 
 static cairo_clip_path_t *
 _cairo_clip_path_create (cairo_clip_t *clip)

@@ -63,6 +63,7 @@ cairo_private = \
 	cairo-fixed-private.h \
 	cairo-fixed-type-private.h \
 	cairo-freelist-private.h \
+	cairo-freed-pool-private.h \
 	cairo-gstate-private.h \
 	cairo-hash-private.h \
 	cairo-image-info-private.h \
@@ -116,6 +117,7 @@ cairo_sources = \
 	cairo-font-face-twin-data.c \
 	cairo-font-options.c \
 	cairo-freelist.c \
+	cairo-freed-pool.c \
 	cairo-gstate.c \
 	cairo-hash.c \
 	cairo-hull.c \
