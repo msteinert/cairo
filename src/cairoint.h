@@ -2451,6 +2451,11 @@ cairo_private cairo_status_t
 _cairo_bentley_ottmann_tessellate_rectilinear_traps (cairo_traps_t *traps,
 						     cairo_fill_rule_t fill_rule);
 
+cairo_private cairo_status_t
+_cairo_bentley_ottmann_tessellate_rectilinear_polygon_to_boxes (const cairo_polygon_t *polygon,
+								cairo_fill_rule_t fill_rule,
+								cairo_boxes_t *boxes);
+
 cairo_private int
 _cairo_traps_contain (const cairo_traps_t *traps,
 		      double x, double y);
