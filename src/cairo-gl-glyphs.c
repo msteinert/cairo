@@ -366,27 +366,35 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 
     ctx = _cairo_gl_context_acquire (dst->ctx);
 
-    /* Set up the mask to source from the incoming vertex color. */
+    /* Set up the IN operator for source IN mask.
+     *
+     * IN (normal, any op): dst.argb = src.argb * mask.aaaa
+     * IN (component, ADD): dst.argb = src.argb * mask.argb
+     *
+     * The mask channel selection for component alpha ADD will be updated in
+     * the loop over glyphs below.
+     */
     glActiveTexture (GL_TEXTURE1);
     glEnable (GL_TEXTURE_2D);
-    /* IN: dst.argb = src.argb * mask.aaaa */
     glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
     glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
     glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
 
-    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PREVIOUS);
-    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_PREVIOUS);
-    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE1);
+    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE1);
+    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_ALPHA);
     glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
 
-    /* XXX component alpha */
-    glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_RGB, GL_TEXTURE1);
-    glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_TEXTURE1);
-    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_ALPHA);
+    glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PREVIOUS);
+    glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_PREVIOUS);
+    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
     glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA);
 
     _cairo_gl_set_destination (dst);
-    _cairo_gl_set_operator (dst, op);
+    /* If we're doing some CA glyphs, we're only doing it for ADD,
+     * which doesn't require the source alpha value in blending.
+     */
+    _cairo_gl_set_operator (dst, op, FALSE);
     _cairo_gl_set_src_operand (ctx, &composite_setup);
 
     _cairo_scaled_font_freeze_cache (scaled_font);
@@ -470,8 +478,17 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 	    glBindTexture (GL_TEXTURE_2D, cache->tex);
 
 	    last_format = scaled_glyph->surface->format;
-	    if (last_format == CAIRO_FORMAT_ARGB32)
+	    /* If we're doing component alpha in this function, it should
+	     * only be in the case of CAIRO_OPERATOR_ADD.  In that case, we just
+	     * need to make sure we send the rgb bits down to the destination.
+	     */
+	    if (last_format == CAIRO_FORMAT_ARGB32) {
+		assert (op == CAIRO_OPERATOR_ADD);
+		glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
 		*has_component_alpha = TRUE;
+	    } else {
+		glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_ALPHA);
+	    }
 
 	    /* XXX component alpha */
 	}
@@ -554,6 +571,7 @@ _cairo_gl_surface_show_glyphs_via_mask (cairo_gl_surface_t	*dst,
     cairo_bool_t has_component_alpha;
     int i;
 
+    /* XXX: For non-CA, this should be CAIRO_CONTENT_ALPHA to save memory */
     mask = cairo_gl_surface_create (dst->ctx,
 	                            CAIRO_CONTENT_COLOR_ALPHA,
 				    glyph_extents->width,
@@ -613,6 +631,7 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
     cairo_bool_t overlap, use_mask = FALSE;
     cairo_bool_t has_component_alpha;
     cairo_status_t status;
+    int i;
 
     if (! GLEW_ARB_vertex_buffer_object)
 	return UNSUPPORTED ("requires ARB_vertex_buffer_object");
@@ -622,6 +641,25 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 
     if (! _cairo_operator_bounded_by_mask (op))
 	use_mask |= TRUE;
+
+    /* If any of the glyphs are component alpha, we have to go through a mask,
+     * since only _cairo_gl_surface_composite() currently supports component
+     * alpha.
+     */
+    for (i = 0; i < num_glyphs; i++) {
+	cairo_scaled_glyph_t *scaled_glyph;
+
+	status = _cairo_scaled_glyph_lookup (scaled_font,
+					     glyphs[i].index,
+					     CAIRO_SCALED_GLYPH_INFO_SURFACE,
+					     &scaled_glyph);
+	if (!_cairo_status_is_error (status) &&
+	    scaled_glyph->surface->format == CAIRO_FORMAT_ARGB32)
+	{
+	    use_mask = TRUE;
+	    break;
+	}
+    }
 
     /* For CLEAR, cairo's rendering equation (quoting Owen's description in:
      * http://lists.cairographics.org/archives/cairo/2005-August/004992.html)

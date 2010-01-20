@@ -169,7 +169,8 @@ cairo_private cairo_bool_t
 _cairo_gl_operator_is_supported (cairo_operator_t op);
 
 cairo_private void
-_cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op);
+_cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op,
+			cairo_bool_t component_alpha);
 
 cairo_private void
 _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,

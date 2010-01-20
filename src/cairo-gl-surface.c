@@ -349,7 +349,8 @@ _cairo_gl_operator_is_supported (cairo_operator_t op)
 }
 
 void
-_cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op)
+_cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op,
+			cairo_bool_t component_alpha)
 {
     struct {
 	GLenum src;
@@ -386,6 +387,13 @@ _cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op)
 	    src_factor = GL_ZERO;
 	if (src_factor == GL_DST_ALPHA)
 	    src_factor = GL_ONE;
+    }
+
+    if (component_alpha) {
+	if (dst_factor == GL_ONE_MINUS_SRC_ALPHA)
+	    dst_factor = GL_ONE_MINUS_SRC_COLOR;
+	if (dst_factor == GL_SRC_ALPHA)
+	    dst_factor = GL_SRC_COLOR;
     }
 
     glEnable (GL_BLEND);
@@ -1158,6 +1166,350 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
     }
 }
 
+/* This is like _cairo_gl_set_src_operand, but instead swizzles the source
+ * for creating the "source alpha" value (src.aaaa * mask.argb) required by
+ * component alpha rendering.
+ */
+static void
+_cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
+				 cairo_gl_composite_setup_t *setup)
+{
+    cairo_surface_attributes_t *src_attributes;
+    GLfloat constant_color[4];
+
+    src_attributes = &setup->src.operand.texture.attributes;
+
+    switch (setup->src.type) {
+    case OPERAND_CONSTANT:
+	constant_color[0] = setup->src.operand.constant.color[3];
+	constant_color[1] = setup->src.operand.constant.color[3];
+	constant_color[2] = setup->src.operand.constant.color[3];
+	constant_color[3] = setup->src.operand.constant.color[3];
+       _cairo_gl_set_tex_combine_constant_color (ctx, 0, constant_color);
+	break;
+    case OPERAND_TEXTURE:
+	constant_color[0] = 0.0;
+	constant_color[1] = 0.0;
+	constant_color[2] = 0.0;
+	constant_color[3] = 1.0;
+	_cairo_gl_set_texture_surface (0, setup->src.operand.texture.tex,
+				       src_attributes);
+	/* Set up the constant color we use to set alpha to 1 if needed. */
+	glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, constant_color);
+	/* Set up the combiner to just set color to the sampled texture. */
+	glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
+	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
+
+	/* Wire the src alpha to 1 if the surface doesn't have it.
+	 * We may have a teximage with alpha bits even though we didn't ask
+	 * for it and we don't pay attention to setting alpha to 1 in a dest
+	 * that has inadvertent alpha.
+	 */
+	if (setup->src.operand.texture.surface->base.content != CAIRO_CONTENT_COLOR) {
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE0);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE0);
+	} else {
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_CONSTANT);
+	}
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_ALPHA);
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+	break;
+    }
+}
+
+/* This is like _cairo_gl_set_src_alpha_operand, for component alpha setup
+ * of the mask part of IN to produce a "source alpha" value.
+ */
+static void
+_cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
+					    cairo_gl_composite_setup_t *setup)
+{
+    cairo_surface_attributes_t *mask_attributes;
+    GLfloat constant_color[4] = {0.0, 0.0, 0.0, 1.0};
+
+    mask_attributes = &setup->mask.operand.texture.attributes;
+
+    glActiveTexture (GL_TEXTURE1);
+    glEnable (GL_TEXTURE_2D);
+    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
+    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
+
+    glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PREVIOUS);
+    glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_PREVIOUS);
+    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
+    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA);
+
+    switch (setup->mask.type) {
+    case OPERAND_CONSTANT:
+	/* Have to have a dummy texture bound in order to use the combiner unit. */
+	glBindTexture (GL_TEXTURE_2D, ctx->dummy_tex);
+
+	glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR,
+		    setup->mask.operand.constant.color);
+
+	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
+	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_CONSTANT);
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+
+	break;
+    case OPERAND_TEXTURE:
+	_cairo_gl_set_texture_surface (1, setup->mask.operand.texture.tex,
+				       mask_attributes);
+	/* Set up the constant color we use to set alpha to 1 if needed. */
+	glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, constant_color);
+
+	/* Force the mask color to 0 if the surface should be alpha-only.
+	 * We may have a teximage with color bits if the implementation doesn't
+	 * support GL_ALPHA FBOs.
+	 */
+	if (setup->mask.operand.texture.surface->base.content !=
+	    CAIRO_CONTENT_ALPHA)
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE1);
+	else
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
+	/* Wire the mask alpha to 1 if the surface doesn't have it.
+	 * We may have a teximage with alpha bits even though we didn't ask
+	 * for it and we don't pay attention to setting alpha to 1 in a dest
+	 * that has inadvertent alpha.
+	 */
+	if (setup->mask.operand.texture.surface->base.content !=
+	    CAIRO_CONTENT_COLOR)
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE1);
+	else
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_CONSTANT);
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+	break;
+    }
+}
+
+/**
+ * implements component-alpha CAIRO_OPERATOR_SOURCE using two passes of
+ * the simpler operations CAIRO_OPERATOR_DEST_OUT and CAIRO_OPERATOR_ADD.
+ *
+ * From http://anholt.livejournal.com/32058.html:
+ *
+ * The trouble is that component-alpha rendering requires two different sources
+ * for blending: one for the source value to the blender, which is the
+ * per-channel multiplication of source and mask, and one for the source alpha
+ * for multiplying with the destination channels, which is the multiplication
+ * of the source channels by the mask alpha. So the equation for Over is:
+ *
+ * dst.A = src.A * mask.A + (1 - (src.A * mask.A)) * dst.A
+ * dst.R = src.R * mask.R + (1 - (src.A * mask.R)) * dst.R
+ * dst.G = src.G * mask.G + (1 - (src.A * mask.G)) * dst.G
+ * dst.B = src.B * mask.B + (1 - (src.A * mask.B)) * dst.B
+ *
+ * But we can do some simpler operations, right? How about PictOpOutReverse,
+ * which has a source factor of 0 and dest factor of (1 - source alpha). We
+ * can get the source alpha value (srca.X = src.A * mask.X) out of the texture
+ * blenders pretty easily. So we can do a component-alpha OutReverse, which
+ * gets us:
+ *
+ * dst.A = 0 + (1 - (src.A * mask.A)) * dst.A
+ * dst.R = 0 + (1 - (src.A * mask.R)) * dst.R
+ * dst.G = 0 + (1 - (src.A * mask.G)) * dst.G
+ * dst.B = 0 + (1 - (src.A * mask.B)) * dst.B
+ *
+ * OK. And if an op doesn't use the source alpha value for the destination
+ * factor, then we can do the channel multiplication in the texture blenders
+ * to get the source value, and ignore the source alpha that we wouldn't use.
+ * We've supported this in the Radeon driver for a long time. An example would
+ * be PictOpAdd, which does:
+ *
+ * dst.A = src.A * mask.A + dst.A
+ * dst.R = src.R * mask.R + dst.R
+ * dst.G = src.G * mask.G + dst.G
+ * dst.B = src.B * mask.B + dst.B
+ *
+ * Hey, this looks good! If we do a PictOpOutReverse and then a PictOpAdd right
+ * after it, we get:
+ *
+ * dst.A = src.A * mask.A + ((1 - (src.A * mask.A)) * dst.A)
+ * dst.R = src.R * mask.R + ((1 - (src.A * mask.R)) * dst.R)
+ * dst.G = src.G * mask.G + ((1 - (src.A * mask.G)) * dst.G)
+ * dst.B = src.B * mask.B + ((1 - (src.A * mask.B)) * dst.B)
+ *
+ * This two-pass trickery could be avoided using a new GL extension that
+ * lets two values come out of the shader and into the blend unit.
+ */
+static cairo_int_status_t
+_cairo_gl_surface_composite_component_alpha (cairo_operator_t op,
+					     const cairo_pattern_t *src,
+					     const cairo_pattern_t *mask,
+					     void *abstract_dst,
+					     int src_x,
+					     int src_y,
+					     int mask_x,
+					     int mask_y,
+					     int dst_x,
+					     int dst_y,
+					     unsigned int width,
+					     unsigned int height,
+					     cairo_region_t *clip_region)
+{
+    cairo_gl_surface_t	*dst = abstract_dst;
+    cairo_surface_attributes_t *src_attributes, *mask_attributes = NULL;
+    cairo_gl_context_t *ctx;
+    struct gl_point {
+	GLfloat x, y;
+    } vertices_stack[8], texcoord_src_stack[8], texcoord_mask_stack[8];
+    struct gl_point *vertices = vertices_stack;
+    struct gl_point *texcoord_src = texcoord_src_stack;
+    struct gl_point *texcoord_mask = texcoord_mask_stack;
+    cairo_status_t status;
+    int num_vertices, i;
+    GLenum err;
+    cairo_gl_composite_setup_t setup;
+
+    if (op != CAIRO_OPERATOR_OVER)
+	return UNSUPPORTED ("unsupported component alpha operator");
+
+    memset (&setup, 0, sizeof (setup));
+
+    status = _cairo_gl_operand_init (&setup.src, src, dst,
+				     src_x, src_y,
+				     dst_x, dst_y,
+				     width, height);
+    if (unlikely (status))
+	return status;
+    src_attributes = &setup.src.operand.texture.attributes;
+
+    status = _cairo_gl_operand_init (&setup.mask, mask, dst,
+				     mask_x, mask_y,
+				     dst_x, dst_y,
+				     width, height);
+    if (unlikely (status)) {
+	_cairo_gl_operand_destroy (&setup.src);
+	return status;
+    }
+    mask_attributes = &setup.mask.operand.texture.attributes;
+
+    ctx = _cairo_gl_context_acquire (dst->ctx);
+    _cairo_gl_set_destination (dst);
+
+    if (clip_region != NULL) {
+	int num_rectangles;
+
+	num_rectangles = cairo_region_num_rectangles (clip_region);
+	if (num_rectangles * 4 > ARRAY_LENGTH (vertices_stack)) {
+	    vertices = _cairo_malloc_ab (num_rectangles,
+					 4*3*sizeof (vertices[0]));
+	    if (unlikely (vertices == NULL)) {
+		status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+		goto CONTEXT_RELEASE;
+	    }
+
+	    texcoord_src = vertices + num_rectangles * 4;
+	    texcoord_mask = texcoord_src + num_rectangles * 4;
+	}
+
+	for (i = 0; i < num_rectangles; i++) {
+	    cairo_rectangle_int_t rect;
+
+	    cairo_region_get_rectangle (clip_region, i, &rect);
+	    vertices[4*i + 0].x = rect.x;
+	    vertices[4*i + 0].y = rect.y;
+	    vertices[4*i + 1].x = rect.x + rect.width;
+	    vertices[4*i + 1].y = rect.y;
+	    vertices[4*i + 2].x = rect.x + rect.width;
+	    vertices[4*i + 2].y = rect.y + rect.height;
+	    vertices[4*i + 3].x = rect.x;
+	    vertices[4*i + 3].y = rect.y + rect.height;
+	}
+
+	num_vertices = 4 * num_rectangles;
+    } else {
+	vertices[0].x = dst_x;
+	vertices[0].y = dst_y;
+	vertices[1].x = dst_x + width;
+	vertices[1].y = dst_y;
+	vertices[2].x = dst_x + width;
+	vertices[2].y = dst_y + height;
+	vertices[3].x = dst_x;
+	vertices[3].y = dst_y + height;
+
+	num_vertices = 4;
+    }
+
+    glVertexPointer (2, GL_FLOAT, sizeof (GLfloat) * 2, vertices);
+    glEnableClientState (GL_VERTEX_ARRAY);
+
+    if (setup.src.type == OPERAND_TEXTURE) {
+	for (i = 0; i < num_vertices; i++) {
+	    double s, t;
+
+	    s = vertices[i].x;
+	    t = vertices[i].y;
+	    cairo_matrix_transform_point (&src_attributes->matrix, &s, &t);
+	    texcoord_src[i].x = s;
+	    texcoord_src[i].y = t;
+	}
+
+	glClientActiveTexture (GL_TEXTURE0);
+	glTexCoordPointer (2, GL_FLOAT, sizeof (GLfloat)*2, texcoord_src);
+	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+    }
+
+    if (setup.mask.type == OPERAND_TEXTURE) {
+	for (i = 0; i < num_vertices; i++) {
+	    double s, t;
+
+	    s = vertices[i].x;
+	    t = vertices[i].y;
+	    cairo_matrix_transform_point (&mask_attributes->matrix, &s, &t);
+	    texcoord_mask[i].x = s;
+	    texcoord_mask[i].y = t;
+	}
+
+	glClientActiveTexture (GL_TEXTURE1);
+	glTexCoordPointer (2, GL_FLOAT, sizeof (GLfloat)*2, texcoord_mask);
+	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+    }
+
+    _cairo_gl_set_operator (dst, CAIRO_OPERATOR_DEST_OUT, TRUE);
+    _cairo_gl_set_src_alpha_operand (ctx, &setup);
+    _cairo_gl_set_component_alpha_mask_operand (ctx, &setup);
+    glDrawArrays (GL_QUADS, 0, num_vertices);
+
+    _cairo_gl_set_operator (dst, CAIRO_OPERATOR_ADD, TRUE);
+    _cairo_gl_set_src_operand (ctx, &setup);
+    glDrawArrays (GL_QUADS, 0, num_vertices);
+
+    glDisable (GL_BLEND);
+
+    glDisableClientState (GL_VERTEX_ARRAY);
+
+    glClientActiveTexture (GL_TEXTURE0);
+    glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+    glActiveTexture (GL_TEXTURE0);
+    glDisable (GL_TEXTURE_2D);
+
+    glClientActiveTexture (GL_TEXTURE1);
+    glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+    glActiveTexture (GL_TEXTURE1);
+    glDisable (GL_TEXTURE_2D);
+
+    while ((err = glGetError ()))
+	fprintf (stderr, "GL error 0x%08x\n", (int) err);
+
+  CONTEXT_RELEASE:
+    _cairo_gl_context_release (ctx);
+
+    _cairo_gl_operand_destroy (&setup.src);
+    if (mask != NULL)
+	_cairo_gl_operand_destroy (&setup.mask);
+
+    if (vertices != vertices_stack)
+	free (vertices);
+
+    return status;
+}
+
 static cairo_int_status_t
 _cairo_gl_surface_composite (cairo_operator_t		  op,
 			     const cairo_pattern_t	 *src,
@@ -1190,12 +1542,22 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     if (! _cairo_gl_operator_is_supported (op))
 	return UNSUPPORTED ("unsupported operator");
 
-    /* XXX: There is no sane way of expressing ComponentAlpha using
-     * fixed-function combiners and every possible operator. Look at the
-     * EXA drivers for the more appropriate fallback conditions.
-     */
-    if (mask && mask->has_component_alpha)
-	return UNSUPPORTED ("component alpha");
+    if (mask && mask->has_component_alpha) {
+	/* Try two-pass component alpha support, or bail. */
+	return _cairo_gl_surface_composite_component_alpha(op,
+							   src,
+							   mask,
+							   abstract_dst,
+							   src_x,
+							   src_y,
+							   mask_x,
+							   mask_y,
+							   dst_x,
+							   dst_y,
+							   width,
+							   height,
+							   clip_region);
+    }
 
     memset (&setup, 0, sizeof (setup));
 
@@ -1221,7 +1583,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 
     ctx = _cairo_gl_context_acquire (dst->ctx);
     _cairo_gl_set_destination (dst);
-    _cairo_gl_set_operator (dst, op);
+    _cairo_gl_set_operator (dst, op, FALSE);
 
     _cairo_gl_set_src_operand (ctx, &setup);
 
@@ -1443,7 +1805,7 @@ _cairo_gl_surface_fill_rectangles_fixed (void			 *abstract_surface,
     ctx = _cairo_gl_context_acquire (surface->ctx);
 
     _cairo_gl_set_destination (surface);
-    _cairo_gl_set_operator (surface, op);
+    _cairo_gl_set_operator (surface, op, FALSE);
 
     if (num_rects > N_STACK_RECTS) {
 	vertices = _cairo_malloc_ab (num_rects, sizeof (GLfloat) * 4 * 2);
@@ -1561,7 +1923,7 @@ _cairo_gl_surface_fill_rectangles_glsl (void                  *abstract_surface,
     glUseProgramObjectARB (ctx->fill_rectangles_shader);
 
     _cairo_gl_set_destination (surface);
-    _cairo_gl_set_operator (surface, op);
+    _cairo_gl_set_operator (surface, op, FALSE);
 
     gl_color[0] = color->red * color->alpha;
     gl_color[1] = color->green * color->alpha;
@@ -1922,7 +2284,7 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
 
     src_attributes = &renderer->setup.src.operand.texture.attributes;
 
-    _cairo_gl_set_operator (dst, op);
+    _cairo_gl_set_operator (dst, op, FALSE);
     _cairo_gl_set_src_operand (dst->ctx, &renderer->setup);
 
     /* Set up the mask to source from the incoming vertex color. */
