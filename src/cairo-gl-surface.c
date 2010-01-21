@@ -414,9 +414,6 @@ _cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
     GLenum err, format;
     cairo_status_t status;
 
-    if (ctx->base.status)
-	return _cairo_surface_create_in_error (ctx->base.status);
-
     assert (width <= ctx->max_framebuffer_size && height <= ctx->max_framebuffer_size);
 
     surface = calloc (1, sizeof (cairo_gl_surface_t));
@@ -424,6 +421,12 @@ _cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
     _cairo_gl_surface_init (&ctx->base, surface, content, width, height);
+
+    /* adjust the texture size after setting our real extents */
+    if (width < 1)
+	width = 1;
+    if (height < 1)
+	height = 1;
 
     switch (content) {
     default:
@@ -523,15 +526,22 @@ cairo_gl_surface_create (cairo_device_t		*abstract_device,
     if (ctx->base.backend->type != CAIRO_DEVICE_TYPE_GL)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
 
+    status = _cairo_gl_context_acquire (abstract_device, &ctx);
+    if (unlikely (status))
+	return _cairo_surface_create_in_error (status);
+
     surface = (cairo_gl_surface_t *)
 	_cairo_gl_surface_create_scratch (ctx, content, width, height);
-    if (unlikely (surface->base.status))
+    if (unlikely (surface->base.status)) {
+	_cairo_gl_context_release (ctx);
 	return &surface->base;
+    }
 
     /* Cairo surfaces start out initialized to transparent (black) */
     status = _cairo_gl_surface_clear (surface);
     if (unlikely (status)) {
 	cairo_surface_destroy (&surface->base);
+	_cairo_gl_context_release (ctx);
 	return _cairo_surface_create_in_error (status);
     }
 
@@ -603,10 +613,9 @@ _cairo_gl_surface_create_similar (void		 *abstract_surface,
 				  int		  width,
 				  int		  height)
 {
-    cairo_gl_surface_t *surface = abstract_surface;
-    cairo_gl_context_t *ctx = (cairo_gl_context_t *) surface->base.device;
-
-    assert (CAIRO_CONTENT_VALID (content));
+    cairo_surface_t *surface = abstract_surface;
+    cairo_gl_context_t *ctx = (cairo_gl_context_t *) surface->device;
+    cairo_status_t status;
 
     if (width > ctx->max_framebuffer_size ||
 	height > ctx->max_framebuffer_size)
@@ -614,12 +623,14 @@ _cairo_gl_surface_create_similar (void		 *abstract_surface,
 	return NULL;
     }
 
-    if (width < 1)
-	width = 1;
-    if (height < 1)
-	height = 1;
+    status = _cairo_gl_context_acquire (surface->device, &ctx);
+    if (unlikely (status))
+	return _cairo_surface_create_in_error (status);
 
-    return _cairo_gl_surface_create_scratch (ctx, content, width, height);
+    surface = _cairo_gl_surface_create_scratch (ctx, content, width, height);
+    _cairo_gl_context_release (ctx);
+
+    return surface;
 }
 
 cairo_status_t

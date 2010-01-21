@@ -158,7 +158,7 @@ _cairo_gl_operand_init (cairo_gl_composite_operand_t *operand,
 			int dst_x, int dst_y,
 			int width, int height);
 
-static inline cairo_status_t cairo_warn
+static always_inline cairo_status_t cairo_warn
 _cairo_gl_context_acquire (cairo_device_t *device,
 			   cairo_gl_context_t **ctx)
 {
@@ -172,12 +172,11 @@ _cairo_gl_context_acquire (cairo_device_t *device,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static inline void
+static always_inline void
 _cairo_gl_context_release (cairo_gl_context_t *ctx)
 {
     cairo_device_release (&ctx->base);
 }
-
 
 cairo_private void
 _cairo_gl_set_destination (cairo_gl_surface_t *surface);
