@@ -8860,8 +8860,13 @@ GLboolean glxewGetExtension (const char* name)
 GLenum glxewContextInit (GLXEW_CONTEXT_ARG_DEF_LIST)
 {
   int major, minor;
+
   /* initialize core GLX 1.2 */
   if (_glewInit_GLX_VERSION_1_2(GLEW_CONTEXT_ARG_VAR_INIT)) return GLEW_ERROR_GLX_VERSION_11_ONLY;
+
+  if (glXGetCurrentDisplay() == NULL)
+      return GLEW_OK;
+
   /* initialize flags */
   CONST_CAST(GLXEW_VERSION_1_0) = GL_TRUE;
   CONST_CAST(GLXEW_VERSION_1_1) = GL_TRUE;
