@@ -42,6 +42,13 @@
 slim_hidden_proto (cairo_gl_context_reference);
 slim_hidden_proto (cairo_gl_context_destroy);
 
+static cairo_int_status_t
+_cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
+				   cairo_operator_t	    op,
+				   const cairo_color_t     *color,
+				   cairo_rectangle_int_t   *rects,
+				   int			    num_rects);
+
 #define BIAS .375
 
 static inline float
@@ -379,8 +386,9 @@ _cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op,
     src_factor = blend_factors[op].src;
     dst_factor = blend_factors[op].dst;
 
-    /* We may have a visual with alpha bits despite the user requesting
-     * CAIRO_CONTENT_COLOR.  So clear out those bits in that case.
+    /* Even when the user requests CAIRO_CONTENT_COLOR, we use GL_RGBA
+     * due to texture filtering of GL_CLAMP_TO_BORDER.  So fix those
+     * bits in that case.
      */
     if (dst->base.content == CAIRO_CONTENT_COLOR) {
 	if (src_factor == GL_ONE_MINUS_DST_ALPHA)
@@ -486,10 +494,19 @@ _cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
 	format = GL_RGBA;
 	break;
     case CAIRO_CONTENT_ALPHA:
+	/* We want to be trying GL_ALPHA framebuffer objects here. */
 	format = GL_RGBA;
 	break;
     case CAIRO_CONTENT_COLOR:
-	format = GL_RGB;
+	/* GL_RGB is almost what we want here -- sampling 1 alpha when
+	 * texturing, using 1 as destination alpha factor in blending,
+	 * etc.  However, when filtering with GL_CLAMP_TO_BORDER, the
+	 * alpha channel of the border color will also be clamped to
+	 * 1, when we actually want the border color we explicitly
+	 * specified.  So, we have to store RGBA, and fill the alpha
+	 * channel with 1 when blending.
+	 */
+	format = GL_RGBA;
 	break;
     }
 
@@ -524,6 +541,24 @@ _cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
     return &surface->base;
 }
 
+static void
+_cairo_gl_surface_clear (cairo_gl_surface_t *surface)
+{
+    cairo_gl_context_t *ctx;
+
+    ctx = _cairo_gl_context_acquire (surface->ctx);
+    _cairo_gl_set_destination (surface);
+    if (surface->base.content == CAIRO_CONTENT_COLOR)
+	glClearColor (0.0, 0.0, 0.0, 1.0);
+    else
+	glClearColor (0.0, 0.0, 0.0, 0.0);
+    glClear (GL_COLOR_BUFFER_BIT);
+    _cairo_gl_context_release (ctx);
+
+    surface->base.is_clear = TRUE;
+
+}
+
 cairo_surface_t *
 cairo_gl_surface_create (cairo_gl_context_t   *ctx,
 			 cairo_content_t	content,
@@ -546,13 +581,7 @@ cairo_gl_surface_create (cairo_gl_context_t   *ctx,
 	return &surface->base;
 
     /* Cairo surfaces start out initialized to transparent (black) */
-    ctx = _cairo_gl_context_acquire (surface->ctx);
-    _cairo_gl_set_destination (surface);
-    glClearColor (0.0, 0.0, 0.0, 0.0);
-    glClear (GL_COLOR_BUFFER_BIT);
-    _cairo_gl_context_release (ctx);
-
-    surface->base.is_clear = TRUE;
+    _cairo_gl_surface_clear (surface);
 
     return &surface->base;
 }
@@ -688,6 +717,32 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
     glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
 
     cairo_surface_destroy (&clone->base);
+
+    /* If we just treated some rgb-only data as rgba, then we have to
+     * go back and fix up the alpha channel where we filled in this
+     * texture data.
+     */
+    if (!has_alpha) {
+	cairo_rectangle_int_t rect;
+	cairo_color_t color;
+
+	rect.x = dst_x;
+	rect.y = dst_y;
+	rect.width = width;
+	rect.height = height;
+
+	color.red = 0.0;
+	color.green = 0.0;
+	color.blue = 0.0;
+	color.alpha = 1.0;
+
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_TRUE);
+	_cairo_gl_surface_fill_rectangles (dst,
+					   CAIRO_OPERATOR_SOURCE,
+					   &color,
+					   &rect, 1);
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1122,7 +1177,7 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 			   cairo_gl_composite_setup_t *setup)
 {
     cairo_surface_attributes_t *src_attributes;
-    GLfloat constant_color[4] = {0.0, 0.0, 0.0, 1.0};
+    GLfloat constant_color[4] = {0.0, 0.0, 0.0, 0.0};
 
     src_attributes = &setup->src.operand.texture.attributes;
 
@@ -1134,7 +1189,7 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
     case OPERAND_TEXTURE:
 	_cairo_gl_set_texture_surface (0, setup->src.operand.texture.tex,
 				       src_attributes);
-	/* Set up the constant color we use to set alpha to 1 if needed. */
+	/* Set up the constant color we use to set color to 0 if needed. */
 	glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, constant_color);
 	/* Set up the combiner to just set color to the sampled texture. */
 	glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
@@ -1150,16 +1205,7 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE0);
 	else
 	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
-	/* Wire the src alpha to 1 if the surface doesn't have it.
-	 * We may have a teximage with alpha bits even though we didn't ask
-	 * for it and we don't pay attention to setting alpha to 1 in a dest
-	 * that has inadvertent alpha.
-	 */
-	if (setup->src.operand.texture.surface->base.content !=
-	    CAIRO_CONTENT_COLOR)
-	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE0);
-	else
-	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_CONSTANT);
+	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE0);
 	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
 	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
 	break;
@@ -1174,8 +1220,8 @@ static void
 _cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
 				 cairo_gl_composite_setup_t *setup)
 {
+    GLfloat constant_color[4] = {0.0, 0.0, 0.0, 0.0};
     cairo_surface_attributes_t *src_attributes;
-    GLfloat constant_color[4];
 
     src_attributes = &setup->src.operand.texture.attributes;
 
@@ -1194,25 +1240,13 @@ _cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
 	constant_color[3] = 1.0;
 	_cairo_gl_set_texture_surface (0, setup->src.operand.texture.tex,
 				       src_attributes);
-	/* Set up the constant color we use to set alpha to 1 if needed. */
-	glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, constant_color);
 	/* Set up the combiner to just set color to the sampled texture. */
 	glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
 	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
 	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
 
-	/* Wire the src alpha to 1 if the surface doesn't have it.
-	 * We may have a teximage with alpha bits even though we didn't ask
-	 * for it and we don't pay attention to setting alpha to 1 in a dest
-	 * that has inadvertent alpha.
-	 */
-	if (setup->src.operand.texture.surface->base.content != CAIRO_CONTENT_COLOR) {
-	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE0);
-	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE0);
-	} else {
-	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
-	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_CONSTANT);
-	}
+	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE0);
+	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE0);
 	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_ALPHA);
 	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
 	break;
@@ -1227,7 +1261,7 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 					    cairo_gl_composite_setup_t *setup)
 {
     cairo_surface_attributes_t *mask_attributes;
-    GLfloat constant_color[4] = {0.0, 0.0, 0.0, 1.0};
+    GLfloat constant_color[4] = {0.0, 0.0, 0.0, 0.0};
 
     mask_attributes = &setup->mask.operand.texture.attributes;
 
@@ -1259,7 +1293,7 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
     case OPERAND_TEXTURE:
 	_cairo_gl_set_texture_surface (1, setup->mask.operand.texture.tex,
 				       mask_attributes);
-	/* Set up the constant color we use to set alpha to 1 if needed. */
+	/* Set up the constant color we use to set color to 0 if needed. */
 	glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, constant_color);
 
 	/* Force the mask color to 0 if the surface should be alpha-only.
@@ -1271,16 +1305,7 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE1);
 	else
 	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
-	/* Wire the mask alpha to 1 if the surface doesn't have it.
-	 * We may have a teximage with alpha bits even though we didn't ask
-	 * for it and we don't pay attention to setting alpha to 1 in a dest
-	 * that has inadvertent alpha.
-	 */
-	if (setup->mask.operand.texture.surface->base.content !=
-	    CAIRO_CONTENT_COLOR)
-	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE1);
-	else
-	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_CONSTANT);
+	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE1);
 	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
 	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
 	break;
@@ -2344,13 +2369,7 @@ _cairo_gl_surface_paint (void *abstract_surface,
 {
     /* simplify the common case of clearing the surface */
     if (op == CAIRO_OPERATOR_CLEAR && clip == NULL) {
-	cairo_gl_surface_t *surface = abstract_surface;
-	cairo_gl_context_t *ctx;
-
-	ctx = _cairo_gl_context_acquire (surface->ctx);
-	_cairo_gl_set_destination (surface);
-	glClear (GL_COLOR_BUFFER_BIT);
-	_cairo_gl_context_release (ctx);
+	_cairo_gl_surface_clear (abstract_surface);
 
 	return CAIRO_STATUS_SUCCESS;
     }
