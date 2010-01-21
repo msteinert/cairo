@@ -1216,7 +1216,7 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
  * for creating the "source alpha" value (src.aaaa * mask.argb) required by
  * component alpha rendering.
  */
-static void
+void
 _cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
 				 cairo_gl_composite_setup_t *setup)
 {
