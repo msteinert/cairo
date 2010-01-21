@@ -8857,7 +8857,7 @@ GLboolean glxewGetExtension (const char* name)
   return GL_FALSE;
 }
 
-GLenum glxewContextInit (GLXEW_CONTEXT_ARG_DEF_LIST)
+static GLenum glxewContextInit (GLXEW_CONTEXT_ARG_DEF_LIST)
 {
   int major, minor;
 
@@ -9102,7 +9102,7 @@ extern GLenum wglewContextInit (void);
 extern GLenum glxewContextInit (void);
 #endif /* _WIN32 */
 
-GLenum glewInit ()
+GLenum glewInit (void)
 {
   GLenum r;
   if ( (r = glewContextInit()) ) return r;
