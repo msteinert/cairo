@@ -1662,7 +1662,7 @@ surface_pattern_supported (const cairo_surface_pattern_t *pattern)
      * don't think it's worth the extra code to support it. */
 
 /* XXX: Need to write this function here...
-    content = cairo_surface_get_content (pattern->surface);
+    content = pattern->surface->content;
     if (content == CAIRO_CONTENT_ALPHA)
 	return FALSE;
 */
@@ -1974,55 +1974,36 @@ _cairo_ps_surface_flatten_image_transparency (cairo_ps_surface_t    *surface,
 					      cairo_image_surface_t *image,
 					      cairo_image_surface_t **opaque_image)
 {
-    const cairo_color_t *background_color;
     cairo_surface_t *opaque;
     cairo_surface_pattern_t pattern;
     cairo_status_t status;
 
-    if (surface->content == CAIRO_CONTENT_COLOR_ALPHA)
-	background_color = CAIRO_COLOR_WHITE;
-    else
-	background_color = CAIRO_COLOR_BLACK;
-
     opaque = cairo_image_surface_create (CAIRO_FORMAT_RGB24,
 					 image->width,
 					 image->height);
-    if (opaque->status)
+    if (unlikely (opaque->status))
 	return opaque->status;
 
-    _cairo_pattern_init_for_surface (&pattern, &image->base);
-
-    status = _cairo_surface_fill_rectangle (opaque,
-					    CAIRO_OPERATOR_SOURCE,
-					    background_color,
-					    0, 0,
-					    image->width, image->height);
-    if (unlikely (status))
-	goto fail;
-
-    status = _cairo_surface_composite (CAIRO_OPERATOR_OVER,
-				       &pattern.base,
-				       NULL,
-				       opaque,
-				       0, 0,
-				       0, 0,
-				       0, 0,
-				       image->width,
-				       image->height,
+    if (surface->content == CAIRO_CONTENT_COLOR_ALPHA) {
+	status = _cairo_surface_paint (opaque,
+				       CAIRO_OPERATOR_SOURCE,
+				       &_cairo_pattern_white.base,
 				       NULL);
+	if (unlikely (status)) {
+	    cairo_surface_destroy (opaque);
+	    return status;
+	}
+    }
+
+    _cairo_pattern_init_for_surface (&pattern, &image->base);
+    pattern.base.filter = CAIRO_FILTER_NEAREST;
+    status = _cairo_surface_paint (opaque, CAIRO_OPERATOR_OVER, &pattern.base, NULL);
+    _cairo_pattern_fini (&pattern.base);
     if (unlikely (status))
-	goto fail;
+	return status;
 
-    _cairo_pattern_fini (&pattern.base);
     *opaque_image = (cairo_image_surface_t *) opaque;
-
     return CAIRO_STATUS_SUCCESS;
-
-fail:
-    _cairo_pattern_fini (&pattern.base);
-    cairo_surface_destroy (opaque);
-
-    return status;
 }
 
 static cairo_status_t
@@ -2448,7 +2429,7 @@ _cairo_ps_surface_emit_recording_surface (cairo_ps_surface_t *surface,
 						  &surface->cairo_to_ps);
     _cairo_output_stream_printf (surface->stream, "  q\n");
 
-    if (cairo_surface_get_content (recording_surface) == CAIRO_CONTENT_COLOR) {
+    if (recording_surface->content == CAIRO_CONTENT_COLOR) {
 	surface->content = CAIRO_CONTENT_COLOR;
 	_cairo_output_stream_printf (surface->stream,
 				     "  0 g %d %d %d %d rectfill\n",
@@ -2575,9 +2556,11 @@ _cairo_ps_surface_acquire_surface (cairo_ps_surface_t      *surface,
 	    x = -rect.x;
 	    y = -rect.y;
 
-	    pad_image = _cairo_image_surface_create_with_content (pattern->surface->content,
-								  rect.width,
-								  rect.height);
+	    pad_image =
+		_cairo_image_surface_create_with_pixman_format (NULL,
+								surface->acquired_image->pixman_format,
+								rect.width, rect.height,
+								0);
 	    if (pad_image->status) {
 		status = pad_image->status;
 		goto BAIL;
@@ -2586,16 +2569,10 @@ _cairo_ps_surface_acquire_surface (cairo_ps_surface_t      *surface,
 	    _cairo_pattern_init_for_surface (&pad_pattern, &surface->acquired_image->base);
 	    cairo_matrix_init_translate (&pad_pattern.base.matrix, -x, -y);
 	    pad_pattern.base.extend = CAIRO_EXTEND_PAD;
-	    status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
-					       &pad_pattern.base,
-					       NULL,
-					       pad_image,
-					       0, 0,
-					       0, 0,
-					       0, 0,
-					       rect.width,
-					       rect.height,
-					       NULL);
+	    status = _cairo_surface_paint (pad_image,
+					   CAIRO_OPERATOR_SOURCE,
+					   &pad_pattern.base,
+					   NULL);
 	    _cairo_pattern_fini (&pad_pattern.base);
 	    if (unlikely (status)) {
 		if (pad_image != &surface->acquired_image->base)
