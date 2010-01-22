@@ -992,6 +992,9 @@ _get_bitmap_surface (FT_Bitmap		     *bitmap,
 	return (*surface)->base.status;
     }
 
+    if (format == CAIRO_FORMAT_ARGB32)
+	pixman_image_set_component_alpha ((*surface)->pixman_image, TRUE);
+
     _cairo_image_surface_assume_ownership_of_data ((*surface));
 
     _cairo_debug_check_image_surface_is_defined (&(*surface)->base);
@@ -1202,8 +1205,8 @@ _transform_glyph_bitmap (cairo_matrix_t         * shape,
     original_to_transformed = *shape;
     
     cairo_surface_get_device_offset (&(*surface)->base, &origin_x, &origin_y);
-    orig_width = cairo_image_surface_get_width (&(*surface)->base);
-    orig_height = cairo_image_surface_get_height (&(*surface)->base);
+    orig_width = (*surface)->width;
+    orig_height = (*surface)->height;
 
     cairo_matrix_translate (&original_to_transformed,
 			    -origin_x, -origin_y);
@@ -1241,9 +1244,8 @@ _transform_glyph_bitmap (cairo_matrix_t         * shape,
     original_to_transformed.x0 -= x_min;
     original_to_transformed.y0 -= y_min;
 
-    /* Create the transformed bitmap
-     */
-    width = x_max - x_min;
+    /* Create the transformed bitmap */
+    width  = x_max - x_min;
     height = y_max - y_min;
 
     transformed_to_original = original_to_transformed;
@@ -1251,30 +1253,19 @@ _transform_glyph_bitmap (cairo_matrix_t         * shape,
     if (unlikely (status))
 	return status;
 
-    /* We need to pad out the width to 32-bit intervals for cairo-xlib-surface.c */
-    width = (width + 3) & ~3;
     image = cairo_image_surface_create (CAIRO_FORMAT_A8, width, height);
     if (unlikely (image->status))
 	return image->status;
-
-    /* Initialize it to empty
-     */
-    status = _cairo_surface_fill_rectangle (image, CAIRO_OPERATOR_CLEAR,
-				            CAIRO_COLOR_TRANSPARENT,
-					    0, 0,
-					    width, height);
-    if (unlikely (status)) {
-	cairo_surface_destroy (image);
-	return status;
-    }
 
     /* Draw the original bitmap transformed into the new bitmap
      */
     _cairo_pattern_init_for_surface (&pattern, &(*surface)->base);
     cairo_pattern_set_matrix (&pattern.base, &transformed_to_original);
 
-    status = _cairo_surface_paint (image, CAIRO_OPERATOR_OVER,
-				   &pattern.base, NULL);
+    status = _cairo_surface_paint (image,
+				   CAIRO_OPERATOR_SOURCE,
+				   &pattern.base,
+				   NULL);
 
     _cairo_pattern_fini (&pattern.base);
 
