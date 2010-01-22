@@ -677,6 +677,9 @@ _cairo_gstate_transform (cairo_gstate_t	      *gstate,
     cairo_matrix_t tmp;
     cairo_status_t status;
 
+    if (! _cairo_matrix_is_invertible (matrix))
+	return _cairo_error (CAIRO_STATUS_INVALID_MATRIX);
+
     if (_cairo_matrix_is_identity (matrix))
 	return CAIRO_STATUS_SUCCESS;
 
