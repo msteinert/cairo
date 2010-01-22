@@ -2070,7 +2070,6 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t	*scaled_font,
     cairo_surface_t *mask = NULL;
     cairo_format_t mask_format = CAIRO_FORMAT_A1; /* shut gcc up */
     cairo_surface_pattern_t mask_pattern;
-    cairo_solid_pattern_t white_pattern;
     int i;
 
     /* These operators aren't interpreted the same way by the backends;
@@ -2104,8 +2103,6 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t	*scaled_font,
     }
 
     /* Font display routine either does not exist or failed. */
-
-    _cairo_pattern_init_solid (&white_pattern, CAIRO_COLOR_WHITE, CAIRO_CONTENT_COLOR);
 
     _cairo_scaled_font_freeze_cache (scaled_font);
 
@@ -2167,7 +2164,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t	*scaled_font,
 	     * never any component alpha here.
 	     */
 	    status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
-					       &white_pattern.base,
+					       &_cairo_pattern_white.base,
 					       &mask_pattern.base,
 					       new_mask,
 					       0, 0,
@@ -2203,7 +2200,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t	*scaled_font,
 		glyph_pattern.base.has_component_alpha = TRUE;
 
 	    status = _cairo_surface_composite (CAIRO_OPERATOR_ADD,
-					       &white_pattern.base,
+					       &_cairo_pattern_white.base,
 					       &glyph_pattern.base,
 					       mask,
 					       0, 0,
@@ -2236,8 +2233,6 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t	*scaled_font,
 
 CLEANUP_MASK:
     _cairo_scaled_font_thaw_cache (scaled_font);
-
-    _cairo_pattern_fini (&white_pattern.base);
 
     if (mask != NULL)
 	cairo_surface_destroy (mask);

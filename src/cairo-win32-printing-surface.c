@@ -439,13 +439,9 @@ _cairo_win32_printing_surface_paint_recording_pattern (cairo_win32_surface_t   *
 
     old_content = surface->content;
     if (recording_surface->base.content == CAIRO_CONTENT_COLOR) {
-	cairo_pattern_t  *source;
-	cairo_solid_pattern_t black;
-
 	surface->content = CAIRO_CONTENT_COLOR;
-	_cairo_pattern_init_solid (&black, CAIRO_COLOR_BLACK, CAIRO_CONTENT_COLOR);
-	source = (cairo_pattern_t*) &black;
-	status = _cairo_win32_printing_surface_paint_solid_pattern (surface, source);
+	status = _cairo_win32_printing_surface_paint_solid_pattern (surface,
+								    &_cairo_pattern_black.base);
 	if (status)
 	    return status;
     }

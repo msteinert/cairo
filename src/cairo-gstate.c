@@ -1149,7 +1149,6 @@ BAIL:
 cairo_status_t
 _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 {
-    cairo_pattern_union_t pattern;
     cairo_clip_t clip;
     cairo_status_t status;
 
@@ -1163,16 +1162,14 @@ _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 	if (_cairo_operator_bounded_by_mask (gstate->op))
 	    return CAIRO_STATUS_SUCCESS;
 
-	_cairo_pattern_init_solid (&pattern.solid,
-				   CAIRO_COLOR_TRANSPARENT,
-				   CAIRO_CONTENT_COLOR_ALPHA);
 	status = _cairo_surface_paint (gstate->target,
 				       CAIRO_OPERATOR_CLEAR,
-				       &pattern.base,
+				       &_cairo_pattern_clear.base,
 				       _gstate_get_clip (gstate, &clip));
     } else {
-	_cairo_gstate_copy_transformed_source (gstate, &pattern.base);
+	cairo_pattern_union_t pattern;
 
+	_cairo_gstate_copy_transformed_source (gstate, &pattern.base);
 	status = _cairo_surface_fill (gstate->target,
 				      gstate->op,
 				      &pattern.base,

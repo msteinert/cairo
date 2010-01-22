@@ -68,6 +68,30 @@ const cairo_solid_pattern_t _cairo_pattern_black = {
     CAIRO_CONTENT_COLOR,                /* content */
 };
 
+const cairo_solid_pattern_t _cairo_pattern_clear = {
+    { CAIRO_PATTERN_TYPE_SOLID,		/* type */
+      CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
+      CAIRO_STATUS_SUCCESS,		/* status */
+      { 0, 0, 0, NULL },		/* user_data */
+      { 1., 0., 0., 1., 0., 0., },	/* matrix */
+      CAIRO_FILTER_DEFAULT,		/* filter */
+      CAIRO_EXTEND_GRADIENT_DEFAULT},	/* extend */
+    { 0., 0., 0., 0., 0, 0, 0, 0 },/* color (double rgba, short rgba) */
+    CAIRO_CONTENT_ALPHA,                /* content */
+};
+
+const cairo_solid_pattern_t _cairo_pattern_white = {
+    { CAIRO_PATTERN_TYPE_SOLID,		/* type */
+      CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
+      CAIRO_STATUS_SUCCESS,		/* status */
+      { 0, 0, 0, NULL },		/* user_data */
+      { 1., 0., 0., 1., 0., 0., },	/* matrix */
+      CAIRO_FILTER_DEFAULT,		/* filter */
+      CAIRO_EXTEND_GRADIENT_DEFAULT},	/* extend */
+    { 1., 1., 1., 1., 0xffff, 0xffff, 0xffff, 0xffff },/* color (double rgba, short rgba) */
+    CAIRO_CONTENT_COLOR_ALPHA,                /* content */
+};
+
 /**
  * _cairo_pattern_set_error:
  * @pattern: a pattern

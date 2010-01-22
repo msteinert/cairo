@@ -871,8 +871,9 @@ extern const cairo_private cairo_surface_backend_t _cairo_image_surface_backend;
 #define CAIRO_EXTEND_GRADIENT_DEFAULT CAIRO_EXTEND_PAD
 #define CAIRO_FILTER_DEFAULT CAIRO_FILTER_GOOD
 
+extern const cairo_private cairo_solid_pattern_t _cairo_pattern_clear;
 extern const cairo_private cairo_solid_pattern_t _cairo_pattern_black;
-
+extern const cairo_private cairo_solid_pattern_t _cairo_pattern_white;
 
 typedef struct _cairo_surface_attributes {
     cairo_matrix_t matrix;

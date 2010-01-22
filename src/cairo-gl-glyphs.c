@@ -624,7 +624,6 @@ _cairo_gl_surface_show_glyphs_via_mask (cairo_gl_surface_t	*dst,
     cairo_gl_context_t *ctx;
     cairo_surface_t *mask;
     cairo_status_t status;
-    cairo_solid_pattern_t solid;
     cairo_bool_t has_component_alpha;
     int i;
 
@@ -665,9 +664,9 @@ _cairo_gl_surface_show_glyphs_via_mask (cairo_gl_surface_t	*dst,
 	glyphs[i].y -= glyph_extents->y;
     }
 
-    _cairo_pattern_init_solid (&solid, CAIRO_COLOR_WHITE, CAIRO_CONTENT_COLOR_ALPHA);
     status = _render_glyphs ((cairo_gl_surface_t *) mask, 0, 0,
-	                     CAIRO_OPERATOR_ADD, &solid.base,
+	                     CAIRO_OPERATOR_ADD,
+			     &_cairo_pattern_white.base,
 	                     glyphs, num_glyphs, glyph_extents,
 			     scaled_font, &has_component_alpha,
 			     NULL, remaining_glyphs);
@@ -712,7 +711,6 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
     cairo_rectangle_int_t surface_extents;
     cairo_rectangle_int_t extents;
     cairo_region_t *clip_region = NULL;
-    cairo_solid_pattern_t solid_pattern;
     cairo_bool_t overlap, use_mask = FALSE;
     cairo_bool_t has_component_alpha;
     cairo_status_t status;
@@ -769,9 +767,7 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
      *    mask IN clip ? 0 : dest
      */
     if (op == CAIRO_OPERATOR_CLEAR) {
-	_cairo_pattern_init_solid (&solid_pattern, CAIRO_COLOR_WHITE,
-				   CAIRO_CONTENT_COLOR);
-	source = &solid_pattern.base;
+	source = &_cairo_pattern_white.base;
 	op = CAIRO_OPERATOR_DEST_OUT;
     }
 

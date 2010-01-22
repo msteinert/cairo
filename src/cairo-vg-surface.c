@@ -410,7 +410,6 @@ _vg_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clipper,
 						      cairo_vg_surface_t,
 						      clipper);
     cairo_vg_surface_t *mask;
-    cairo_solid_pattern_t white;
     cairo_status_t status;
 
     if (path == NULL) {
@@ -429,9 +428,9 @@ _vg_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clipper,
     if (unlikely (mask->base.status))
 	return mask->base.status;
 
-    _cairo_pattern_init_solid (&white, CAIRO_COLOR_WHITE, CAIRO_CONTENT_ALPHA);
     status = _cairo_surface_fill (&mask->base,
-				  CAIRO_OPERATOR_SOURCE, &white.base,
+				  CAIRO_OPERATOR_SOURCE,
+				  _cairo_pattern_white.base,
 				  path, fill_rule, tolerance, antialias,
 				  NULL);
     if (status) {

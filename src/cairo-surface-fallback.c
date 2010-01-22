@@ -127,7 +127,6 @@ _create_composite_mask_pattern (cairo_surface_pattern_t       *mask_pattern,
 {
     cairo_surface_t *mask;
     cairo_region_t *clip_region = NULL;
-    cairo_solid_pattern_t solid;
     cairo_status_t status;
     cairo_bool_t clip_surface = FALSE;
 
@@ -156,9 +155,8 @@ _create_composite_mask_pattern (cairo_surface_pattern_t       *mask_pattern,
     if (unlikely (mask->status))
 	return mask->status;
 
-    _cairo_pattern_init_solid (&solid, CAIRO_COLOR_WHITE, CAIRO_CONTENT_ALPHA);
     status = draw_func (draw_closure, CAIRO_OPERATOR_ADD,
-			&solid.base, mask,
+			&_cairo_pattern_white.base, mask,
 			extents->x, extents->y,
 			extents,
 			clip_region);
@@ -416,7 +414,6 @@ _clip_and_composite (cairo_clip_t                  *clip,
 		     cairo_surface_t               *dst,
 		     const cairo_rectangle_int_t   *extents)
 {
-    cairo_solid_pattern_t solid_pattern;
     cairo_status_t status;
 
     if (_cairo_rectangle_empty (extents))
@@ -424,9 +421,7 @@ _clip_and_composite (cairo_clip_t                  *clip,
 	return CAIRO_STATUS_SUCCESS;
 
     if (op == CAIRO_OPERATOR_CLEAR) {
-	_cairo_pattern_init_solid (&solid_pattern, CAIRO_COLOR_WHITE,
-				   CAIRO_CONTENT_COLOR);
-	src = &solid_pattern.base;
+	src = &_cairo_pattern_white.base;
 	op = CAIRO_OPERATOR_DEST_OUT;
     }
 
@@ -487,7 +482,6 @@ _composite_trap_region (cairo_clip_t            *clip,
 			const cairo_rectangle_int_t   *extents)
 {
     cairo_status_t status;
-    cairo_solid_pattern_t solid_pattern;
     cairo_surface_pattern_t mask_pattern;
     cairo_pattern_t *mask = NULL;
     int mask_x = 0, mask_y =0;
@@ -501,9 +495,7 @@ _composite_trap_region (cairo_clip_t            *clip,
 	    return clip_surface->status;
 
 	if (op == CAIRO_OPERATOR_CLEAR) {
-	    _cairo_pattern_init_solid (&solid_pattern, CAIRO_COLOR_WHITE,
-				       CAIRO_CONTENT_COLOR);
-	    src = &solid_pattern.base;
+	    src = &_cairo_pattern_white.base;
 	    op = CAIRO_OPERATOR_DEST_OUT;
 	}
 

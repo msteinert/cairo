@@ -2706,7 +2706,6 @@ _cairo_xcb_surface_show_glyphs (void			*abstract_dst,
     cairo_surface_attributes_t attributes;
     cairo_xcb_surface_t *src = NULL;
 
-    cairo_solid_pattern_t solid_pattern;
     cairo_region_t *clip_region = NULL;
 
     if (!CAIRO_SURFACE_RENDER_HAS_COMPOSITE_TEXT (dst) || dst->xrender_format.id == XCB_NONE)
@@ -2759,9 +2758,7 @@ _cairo_xcb_surface_show_glyphs (void			*abstract_dst,
      * so PictOpClear was never used with CompositeText before.
      */
     if (op == CAIRO_OPERATOR_CLEAR) {
-	_cairo_pattern_init_solid (&solid_pattern, CAIRO_COLOR_WHITE,
-				   CAIRO_CONTENT_COLOR);
-	src_pattern = &solid_pattern.base;
+	src_pattern = &_cairo_pattern_white.base;
 	op = CAIRO_OPERATOR_DEST_OUT;
     }
 
@@ -2826,8 +2823,6 @@ _cairo_xcb_surface_show_glyphs (void			*abstract_dst,
   BAIL:
     if (src)
         _cairo_pattern_release_surface (src_pattern, &src->base, &attributes);
-    if (src_pattern == &solid_pattern.base)
-	_cairo_pattern_fini (&solid_pattern.base);
 
     return status;
 }
