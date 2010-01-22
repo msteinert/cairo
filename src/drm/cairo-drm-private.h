@@ -38,16 +38,22 @@
 
 #include "cairo-drm.h"
 
-#include "cairo-surface-private.h"
+#include "cairo-device-private.h"
 #include "cairo-reference-count-private.h"
+#include "cairo-surface-private.h"
 
 #include <sys/types.h> /* dev_t */
+
+typedef struct _cairo_drm_device cairo_drm_device_t;
 
 typedef cairo_drm_device_t *
 (*cairo_drm_device_create_func_t) (int fd,
 				   dev_t dev,
 				   int vendor_id,
 				   int chip_id);
+
+typedef cairo_int_status_t
+(*cairo_drm_device_flush_func_t) (cairo_drm_device_t *device);
 
 typedef cairo_int_status_t
 (*cairo_drm_device_throttle_func_t) (cairo_drm_device_t *device);
@@ -76,11 +82,15 @@ typedef cairo_int_status_t
 typedef cairo_status_t
 (*cairo_drm_surface_enable_scan_out_func_t) (void *surface);
 
+typedef cairo_surface_t *
+(*cairo_drm_surface_map_to_image_func_t) (void *surface);
+
 typedef struct _cairo_drm_bo_backend {
     void (*release) (void *device, void *bo);
 } cairo_drm_bo_backend_t;
 
 typedef struct _cairo_drm_device_backend {
+    cairo_drm_device_flush_func_t flush;
     cairo_drm_device_throttle_func_t throttle;
     cairo_drm_device_destroy_func_t destroy;
 } cairo_drm_device_backend_t;
@@ -91,6 +101,7 @@ typedef struct _cairo_drm_surface_backend {
     cairo_drm_surface_create_from_cacheable_image_func_t create_from_cacheable_image;
     cairo_drm_surface_flink_func_t flink;
     cairo_drm_surface_enable_scan_out_func_t enable_scan_out;
+    cairo_drm_surface_map_to_image_func_t map_to_image;
 } cairo_drm_surface_backend_t;
 
 typedef struct _cairo_drm_bo {
@@ -101,9 +112,10 @@ typedef struct _cairo_drm_bo {
 } cairo_drm_bo_t;
 
 struct _cairo_drm_device {
-    cairo_reference_count_t ref_count;
-    cairo_status_t status;
+    cairo_device_t base;
 
+    int vendor_id;
+    int chip_id;
     dev_t id;
     int fd;
 
@@ -119,7 +131,6 @@ struct _cairo_drm_device {
 typedef struct _cairo_drm_surface {
     cairo_surface_t base;
 
-    cairo_drm_device_t *device;
     cairo_drm_bo_t *bo;
 
     cairo_format_t format;
@@ -136,16 +147,15 @@ cairo_drm_bo_reference (cairo_drm_bo_t *bo)
     return bo;
 }
 
-static inline void
-cairo_drm_bo_destroy (cairo_drm_device_t *device,
+static always_inline void
+cairo_drm_bo_destroy (cairo_device_t *abstract_device,
 		      cairo_drm_bo_t *bo)
 {
-    if (_cairo_reference_count_dec_and_test (&bo->ref_count))
+    if (_cairo_reference_count_dec_and_test (&bo->ref_count)) {
+	cairo_drm_device_t *device = (cairo_drm_device_t *) abstract_device;
 	device->bo.release (device, bo);
+    }
 }
-
-cairo_private cairo_drm_device_t *
-_cairo_drm_device_create_in_error (cairo_status_t status);
 
 cairo_private cairo_status_t
 _cairo_drm_bo_open_for_name (const cairo_drm_device_t *dev,
@@ -181,56 +191,20 @@ _cairo_drm_surface_get_extents (void *abstract_surface,
 			        cairo_rectangle_int_t *rectangle);
 
 cairo_private cairo_int_status_t
-_cairo_drm_surface_paint (void			*abstract_surface,
-			  cairo_operator_t	 op,
-			  const cairo_pattern_t	*source,
-			  cairo_clip_t		*clip);
-
-cairo_private cairo_int_status_t
-_cairo_drm_surface_mask (void			*abstract_surface,
-			  cairo_operator_t	 op,
-			  const cairo_pattern_t	*source,
-			  const cairo_pattern_t	*mask,
-			  cairo_clip_t		*clip);
-
-cairo_private cairo_int_status_t
-_cairo_drm_surface_stroke (void				*abstract_surface,
-			   cairo_operator_t		 op,
-			   const cairo_pattern_t	*source,
-			   cairo_path_fixed_t		*path,
-			   const cairo_stroke_style_t		*style,
-			   const cairo_matrix_t		*ctm,
-			   const cairo_matrix_t		*ctm_inverse,
-			   double			 tolerance,
-			   cairo_antialias_t		 antialias,
-			   cairo_clip_t			*clip);
-
-cairo_private cairo_int_status_t
-_cairo_drm_surface_fill (void			*abstract_surface,
-			 cairo_operator_t	 op,
-			 const cairo_pattern_t	*source,
-			 cairo_path_fixed_t	*path,
-			 cairo_fill_rule_t	 fill_rule,
-			 double			 tolerance,
-			 cairo_antialias_t	 antialias,
-			 cairo_clip_t		*clip);
-
-cairo_private cairo_int_status_t
-_cairo_drm_surface_show_glyphs (void			*abstract_surface,
-				cairo_operator_t	 op,
-				const cairo_pattern_t	*source,
-				cairo_glyph_t		*glyphs,
-				int			 num_glyphs,
-				cairo_scaled_font_t	*scaled_font,
-				cairo_clip_t		*clip,
-				int			*remaining_glyphs);
-
-cairo_private cairo_int_status_t
 _cairo_drm_surface_flink (void *abstract_surface);
+
+static inline cairo_drm_device_t *
+_cairo_drm_device_create_in_error (cairo_status_t status)
+{
+    return (cairo_drm_device_t *) _cairo_device_create_in_error (CAIRO_STATUS_NO_MEMORY);
+}
 
 cairo_private cairo_drm_device_t *
 _cairo_drm_device_init (cairo_drm_device_t *device,
-			int fd, dev_t id,
+			int fd,
+			dev_t devid,
+			int vendor_id,
+			int chip_id,
 			int max_surface_size);
 
 cairo_private void
@@ -242,6 +216,12 @@ cairo_private cairo_drm_device_t *
 _cairo_drm_intel_device_create (int fd, dev_t dev, int vendor_id, int chip_id);
 
 cairo_private cairo_drm_device_t *
+_cairo_drm_i915_device_create (int fd, dev_t dev, int vendor_id, int chip_id);
+
+cairo_private cairo_drm_device_t *
+_cairo_drm_i965_device_create (int fd, dev_t dev, int vendor_id, int chip_id);
+
+cairo_private cairo_drm_device_t *
 _cairo_drm_radeon_device_create (int fd, dev_t dev, int vendor_id, int chip_id);
 
 #if CAIRO_HAS_GALLIUM_SURFACE
@@ -250,8 +230,13 @@ _cairo_drm_gallium_device_create (int fd, dev_t dev, int vendor_id, int chip_id)
 #endif
 
 slim_hidden_proto (cairo_drm_device_default);
-slim_hidden_proto (cairo_drm_device_destroy);
 slim_hidden_proto (cairo_drm_device_get);
-slim_hidden_proto_no_warn (cairo_drm_device_reference);
+slim_hidden_proto (cairo_drm_device_get_for_fd);
+
+slim_hidden_proto (cairo_drm_surface_create_for_name);
+
+cairo_private cairo_bool_t
+_cairo_drm_size_is_valid (cairo_device_t *abstract_device,
+			  int width, int height);
 
 #endif /* CAIRO_DRM_PRIVATE_H */

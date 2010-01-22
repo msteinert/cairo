@@ -674,6 +674,63 @@ _cairo_lround (double d)
 #undef LSW
 }
 
+/* Convert a 32-bit IEEE single precision floating point number to a
+ * 'half' representation (s10.5)
+ */
+uint16_t
+_cairo_half_from_float (float f)
+{
+    union {
+	uint32_t ui;
+	float f;
+    } u;
+    int s, e, m;
+
+    u.f = f;
+    s =  (u.ui >> 16) & 0x00008000;
+    e = ((u.ui >> 23) & 0x000000ff) - (127 - 15);
+    m =   u.ui        & 0x007fffff;
+    if (e <= 0) {
+	if (e < -10) {
+	    /* underflow */
+	    return 0;
+	}
+
+	m = (m | 0x00800000) >> (1 - e);
+
+	/* round to nearest, round 0.5 up. */
+	if (m &  0x00001000)
+	    m += 0x00002000;
+	return s | (m >> 13);
+    } else if (e == 0xff - (127 - 15)) {
+	if (m == 0) {
+	    /* infinity */
+	    return s | 0x7c00;
+	} else {
+	    /* nan */
+	    m >>= 13;
+	    return s | 0x7c00 | m | (m == 0);
+	}
+    } else {
+	/* round to nearest, round 0.5 up. */
+	if (m &  0x00001000) {
+	    m += 0x00002000;
+
+	    if (m & 0x00800000) {
+		m =  0;
+		e += 1;
+	    }
+	}
+
+	if (e > 30) {
+	    /* overflow -> infinity */
+	    return s | 0x7c00;
+	}
+
+	return s | (e << 10) | (m >> 13);
+    }
+}
+
 
 #ifdef _WIN32
 

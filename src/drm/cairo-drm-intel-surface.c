@@ -31,84 +31,66 @@
 
 #include "cairo-drm-private.h"
 #include "cairo-drm-intel-private.h"
+
 #include "cairo-error-private.h"
 
 /* Basic generic/stub surface for intel chipsets */
 
 #define MAX_SIZE 2048
 
-typedef struct _intel_surface intel_surface_t;
-
-struct _intel_surface {
-    cairo_drm_surface_t base;
-};
-
-static inline intel_device_t *
-to_intel_device (cairo_drm_device_t *device)
+static cairo_surface_t *
+intel_surface_create_similar (void			*abstract_surface,
+			      cairo_content_t	 content,
+			      int			 width,
+			      int			 height)
 {
-    return (intel_device_t *) device;
+    return cairo_image_surface_create (_cairo_format_from_content (content),
+				       width, height);
 }
 
-static inline intel_bo_t *
-to_intel_bo (cairo_drm_bo_t *bo)
-{
-    return (intel_bo_t *) bo;
-}
-
-static cairo_status_t
-intel_batch_flush (intel_device_t *device)
-{
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-intel_surface_batch_flush (intel_surface_t *surface)
-{
-    if (to_intel_bo (surface->base.bo)->write_domain)
-	return intel_batch_flush (to_intel_device (surface->base.device));
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
+cairo_status_t
 intel_surface_finish (void *abstract_surface)
 {
     intel_surface_t *surface = abstract_surface;
 
-    return _cairo_drm_surface_finish (&surface->base);
+    return _cairo_drm_surface_finish (&surface->drm);
 }
 
-static cairo_status_t
+cairo_status_t
 intel_surface_acquire_source_image (void *abstract_surface,
-				   cairo_image_surface_t **image_out,
-				   void **image_extra)
+				    cairo_image_surface_t **image_out,
+				    void **image_extra)
 {
     intel_surface_t *surface = abstract_surface;
     cairo_surface_t *image;
     cairo_status_t status;
 
-    if (surface->base.fallback != NULL) {
-	image = surface->base.fallback;
+    /* XXX batch flush */
+
+    if (surface->drm.fallback != NULL) {
+	image = surface->drm.fallback;
 	goto DONE;
     }
 
-    image = _cairo_surface_has_snapshot (&surface->base.base,
+    image = _cairo_surface_has_snapshot (&surface->drm.base,
 	                                 &_cairo_image_surface_backend);
     if (image != NULL)
 	goto DONE;
 
-    status = intel_surface_batch_flush (surface);
-    if (unlikely (status))
-	return status;
+    if (surface->drm.base.backend->flush != NULL) {
+	status = surface->drm.base.backend->flush (surface);
+	if (unlikely (status))
+	    return status;
+    }
 
-    image = intel_bo_get_image (to_intel_device (surface->base.device),
-				to_intel_bo (surface->base.bo),
-				&surface->base);
+    image = intel_bo_get_image (to_intel_device (surface->drm.base.device),
+				to_intel_bo (surface->drm.bo),
+				&surface->drm);
     status = image->status;
     if (unlikely (status))
 	return status;
 
-    status = _cairo_surface_attach_snapshot (&surface->base.base,
+    status = _cairo_surface_attach_snapshot (&surface->drm.base,
 	                                     image,
 	                                     cairo_surface_destroy);
     if (unlikely (status)) {
@@ -122,7 +104,7 @@ DONE:
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void
+void
 intel_surface_release_source_image (void *abstract_surface,
 				    cairo_image_surface_t *image,
 				    void *image_extra)
@@ -130,180 +112,200 @@ intel_surface_release_source_image (void *abstract_surface,
     cairo_surface_destroy (&image->base);
 }
 
-static cairo_surface_t *
-intel_surface_snapshot (void *abstract_surface)
+cairo_surface_t *
+intel_surface_map_to_image (void *abstract_surface)
 {
     intel_surface_t *surface = abstract_surface;
-    cairo_status_t status;
 
-    if (surface->base.fallback != NULL)
-	return NULL;
+    if (surface->drm.fallback == NULL) {
+	cairo_surface_t *image;
+	cairo_status_t status;
+	void *ptr;
 
-    status = intel_surface_batch_flush (surface);
-    if (unlikely (status))
-	return _cairo_surface_create_in_error (status);
+	if (surface->drm.base.backend->flush != NULL) {
+	    status = surface->drm.base.backend->flush (surface);
+	    if (unlikely (status))
+		return _cairo_surface_create_in_error (status);
+	}
 
-    return intel_bo_get_image (to_intel_device (surface->base.device),
-	                       to_intel_bo (surface->base.bo),
-			       &surface->base);
-}
+	ptr = intel_bo_map (to_intel_device (surface->drm.base.device),
+			    to_intel_bo (surface->drm.bo));
+	if (unlikely (ptr == NULL))
+	    return _cairo_surface_create_in_error (CAIRO_STATUS_NO_MEMORY);
 
-static cairo_status_t
-intel_surface_acquire_dest_image (void *abstract_surface,
-				  cairo_rectangle_int_t *interest_rect,
-				  cairo_image_surface_t **image_out,
-				  cairo_rectangle_int_t *image_rect_out,
-				  void **image_extra)
-{
-    intel_surface_t *surface = abstract_surface;
-    cairo_surface_t *image;
-    cairo_status_t status;
-    void *ptr;
+	image = cairo_image_surface_create_for_data (ptr,
+						     surface->drm.format,
+						     surface->drm.width,
+						     surface->drm.height,
+						     surface->drm.stride);
+	if (unlikely (image->status)) {
+	    intel_bo_unmap (to_intel_bo (surface->drm.bo));
+	    return image;
+	}
 
-    assert (surface->base.fallback == NULL);
-
-    status = intel_surface_batch_flush (surface);
-    if (unlikely (status))
-	return status;
-
-    /* Force a read barrier, as well as flushing writes above */
-    if (to_intel_bo (surface->base.bo)->in_batch) {
-	status = intel_batch_flush (to_intel_device (surface->base.device));
-	if (unlikely (status))
-	    return status;
+	surface->drm.fallback = image;
     }
 
-    ptr = intel_bo_map (to_intel_device (surface->base.device),
-			to_intel_bo (surface->base.bo));
-    if (unlikely (ptr == NULL))
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    image = cairo_image_surface_create_for_data (ptr,
-						 surface->base.format,
-						 surface->base.width,
-						 surface->base.height,
-						 surface->base.stride);
-    status = image->status;
-    if (unlikely (status)) {
-	intel_bo_unmap (to_intel_bo (surface->base.bo));
-	return status;
-    }
-
-    surface->base.fallback = cairo_surface_reference (image);
-
-    *image_out = (cairo_image_surface_t *) image;
-    *image_extra = NULL;
-
-    image_rect_out->x = 0;
-    image_rect_out->y = 0;
-    image_rect_out->width  = surface->base.width;
-    image_rect_out->height = surface->base.height;
-
-    return CAIRO_STATUS_SUCCESS;
+    return surface->drm.fallback;
 }
 
-static void
-intel_surface_release_dest_image (void                    *abstract_surface,
-				 cairo_rectangle_int_t   *interest_rect,
-				 cairo_image_surface_t   *image,
-				 cairo_rectangle_int_t   *image_rect,
-				 void                    *image_extra)
-{
-    /* Keep the fallback until we flush, either explicitly or at the
-     * end of this context. The idea is to avoid excess migration of
-     * the buffer between GPU and CPU domains.
-     */
-    cairo_surface_destroy (&image->base);
-}
-
-static cairo_status_t
+cairo_status_t
 intel_surface_flush (void *abstract_surface)
 {
     intel_surface_t *surface = abstract_surface;
     cairo_status_t status;
 
-    if (surface->base.fallback == NULL)
-	return intel_surface_batch_flush (surface);
+    if (surface->drm.fallback == NULL)
+	return CAIRO_STATUS_SUCCESS;
 
     /* kill any outstanding maps */
-    cairo_surface_finish (surface->base.fallback);
+    cairo_surface_finish (surface->drm.fallback);
 
-    status = cairo_surface_status (surface->base.fallback);
-    cairo_surface_destroy (surface->base.fallback);
-    surface->base.fallback = NULL;
+    status = cairo_surface_status (surface->drm.fallback);
+    cairo_surface_destroy (surface->drm.fallback);
+    surface->drm.fallback = NULL;
 
-    intel_bo_unmap (to_intel_bo (surface->base.bo));
+    intel_bo_unmap (to_intel_bo (surface->drm.bo));
 
     return status;
 }
 
+static cairo_int_status_t
+intel_surface_paint (void *abstract_surface,
+		     cairo_operator_t		 op,
+		     const cairo_pattern_t	*source,
+		     cairo_clip_t		*clip)
+{
+    return _cairo_surface_paint (intel_surface_map_to_image (abstract_surface),
+				 op, source, clip);
+}
+
+static cairo_int_status_t
+intel_surface_mask (void			*abstract_surface,
+		    cairo_operator_t		 op,
+		    const cairo_pattern_t	*source,
+		    const cairo_pattern_t	*mask,
+		    cairo_clip_t		*clip)
+{
+    return _cairo_surface_mask (intel_surface_map_to_image (abstract_surface),
+				op, source, mask, clip);
+}
+
+static cairo_int_status_t
+intel_surface_stroke (void			*abstract_surface,
+		      cairo_operator_t		 op,
+		      const cairo_pattern_t	*source,
+		      cairo_path_fixed_t	*path,
+		      const cairo_stroke_style_t	*stroke_style,
+		      const cairo_matrix_t		*ctm,
+		      const cairo_matrix_t		*ctm_inverse,
+		      double			 tolerance,
+		      cairo_antialias_t		 antialias,
+		      cairo_clip_t		*clip)
+{
+    return _cairo_surface_stroke (intel_surface_map_to_image (abstract_surface),
+				  op, source, path, stroke_style, ctm, ctm_inverse,
+				  tolerance, antialias, clip);
+}
+
+static cairo_int_status_t
+intel_surface_fill (void			*abstract_surface,
+		    cairo_operator_t		 op,
+		    const cairo_pattern_t	*source,
+		    cairo_path_fixed_t		*path,
+		    cairo_fill_rule_t		 fill_rule,
+		    double			 tolerance,
+		    cairo_antialias_t		 antialias,
+		    cairo_clip_t		*clip)
+{
+    return _cairo_surface_fill (intel_surface_map_to_image (abstract_surface),
+				op, source, path, fill_rule,
+				tolerance, antialias, clip);
+}
+
+static cairo_int_status_t
+intel_surface_glyphs (void			*abstract_surface,
+		      cairo_operator_t		 op,
+		      const cairo_pattern_t	*source,
+		      cairo_glyph_t		*glyphs,
+		      int			 num_glyphs,
+		      cairo_scaled_font_t	*scaled_font,
+		      cairo_clip_t		*clip,
+		      int *num_remaining)
+{
+    *num_remaining = 0;
+    return _cairo_surface_show_text_glyphs (intel_surface_map_to_image (abstract_surface),
+					    op, source,
+					    NULL, 0,
+					    glyphs, num_glyphs,
+					    NULL, 0, 0,
+					    scaled_font, clip);
+}
+
 static const cairo_surface_backend_t intel_surface_backend = {
     CAIRO_SURFACE_TYPE_DRM,
-    _cairo_drm_surface_create_similar,
-    intel_surface_finish,
 
+    intel_surface_create_similar,
+    intel_surface_finish,
     intel_surface_acquire_source_image,
     intel_surface_release_source_image,
-    intel_surface_acquire_dest_image,
-    intel_surface_release_dest_image,
+    NULL, NULL, NULL,
+    NULL, /* composite */
+    NULL, /* fill */
+    NULL, /* trapezoids */
+    NULL, /* span */
+    NULL, /* check-span */
 
-    NULL, //intel_surface_clone_similar,
-    NULL, //intel_surface_composite,
-    NULL, //intel_surface_fill_rectangles,
-    NULL, //intel_surface_composite_trapezoids,
-    NULL, //intel_surface_create_span_renderer,
-    NULL, //intel_surface_check_span_renderer,
     NULL, /* copy_page */
     NULL, /* show_page */
     _cairo_drm_surface_get_extents,
-    NULL, /* old_show_glyphs */
+    NULL, /* old-glyphs */
     _cairo_drm_surface_get_font_options,
+
     intel_surface_flush,
-    NULL, /* mark_dirty_rectangle */
-    NULL, //intel_surface_scaled_font_fini,
-    NULL, //intel_surface_scaled_glyph_fini,
+    NULL, /* mark dirty */
+    NULL, NULL, /* font/glyph fini */
 
-    _cairo_drm_surface_paint,
-    _cairo_drm_surface_mask,
-    _cairo_drm_surface_stroke,
-    _cairo_drm_surface_fill,
-    _cairo_drm_surface_show_glyphs,
-
-    intel_surface_snapshot,
-
-    NULL, /* is_similar */
+    intel_surface_paint,
+    intel_surface_mask,
+    intel_surface_stroke,
+    intel_surface_fill,
+    intel_surface_glyphs,
 };
 
-static void
+void
 intel_surface_init (intel_surface_t *surface,
-		    cairo_content_t content,
-		    cairo_drm_device_t *device)
+		    const cairo_surface_backend_t *backend,
+		    cairo_drm_device_t *device,
+		    cairo_content_t content)
 {
-    _cairo_surface_init (&surface->base.base,
-			 &intel_surface_backend,
-			 NULL, /* device */
+    _cairo_surface_init (&surface->drm.base,
+			 backend,
+			 &device->base,
 			 content);
-    _cairo_drm_surface_init (&surface->base, device);
+    _cairo_drm_surface_init (&surface->drm, device);
 
     switch (content) {
     case CAIRO_CONTENT_ALPHA:
-	surface->base.format = CAIRO_FORMAT_A8;
+	surface->drm.format = CAIRO_FORMAT_A8;
 	break;
     case CAIRO_CONTENT_COLOR:
-	surface->base.format = CAIRO_FORMAT_RGB24;
+	surface->drm.format = CAIRO_FORMAT_RGB24;
 	break;
     default:
 	ASSERT_NOT_REACHED;
     case CAIRO_CONTENT_COLOR_ALPHA:
-	surface->base.format = CAIRO_FORMAT_ARGB32;
+	surface->drm.format = CAIRO_FORMAT_ARGB32;
 	break;
     }
+
+    surface->snapshot_cache_entry.hash = 0;
 }
 
 static cairo_surface_t *
-intel_surface_create_internal (cairo_drm_device_t *device,
-		              cairo_content_t content,
-			      int width, int height)
+intel_surface_create (cairo_drm_device_t *device,
+		      cairo_content_t content,
+		      int width, int height)
 {
     intel_surface_t *surface;
     cairo_status_t status;
@@ -312,36 +314,28 @@ intel_surface_create_internal (cairo_drm_device_t *device,
     if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    intel_surface_init (surface, content, device);
+    intel_surface_init (surface, &intel_surface_backend, device, content);
 
     if (width && height) {
-	surface->base.width  = width;
-	surface->base.height = height;
+	surface->drm.width  = width;
+	surface->drm.height = height;
 
 	/* Vol I, p134: size restrictions for textures */
 	width  = (width  + 3) & -4;
 	height = (height + 1) & -2;
-	surface->base.stride =
-	    cairo_format_stride_for_width (surface->base.format, width);
-	surface->base.bo = intel_bo_create (to_intel_device (device),
-					    surface->base.stride * height,
-					    TRUE);
-	if (surface->base.bo == NULL) {
-	    status = _cairo_drm_surface_finish (&surface->base);
+	surface->drm.stride =
+	    cairo_format_stride_for_width (surface->drm.format, width);
+	surface->drm.bo = &intel_bo_create (to_intel_device (&device->base),
+					    surface->drm.stride * height,
+					    TRUE)->base;
+	if (surface->drm.bo == NULL) {
+	    status = _cairo_drm_surface_finish (&surface->drm);
 	    free (surface);
 	    return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 	}
     }
 
-    return &surface->base.base;
-}
-
-static cairo_surface_t *
-intel_surface_create (cairo_drm_device_t *device,
-		      cairo_content_t content,
-		      int width, int height)
-{
-    return intel_surface_create_internal (device, content, width, height);
+    return &surface->drm.base;
 }
 
 static cairo_surface_t *
@@ -376,46 +370,41 @@ intel_surface_create_for_name (cairo_drm_device_t *device,
     if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    intel_surface_init (surface, content, device);
+    intel_surface_init (surface, &intel_surface_backend, device, content);
 
     if (width && height) {
-	surface->base.width  = width;
-	surface->base.height = height;
-	surface->base.stride = stride;
+	surface->drm.width  = width;
+	surface->drm.height = height;
+	surface->drm.stride = stride;
 
-	surface->base.bo = intel_bo_create_for_name (to_intel_device (device),
-						     name);
-	if (unlikely (surface->base.bo == NULL)) {
-	    status = _cairo_drm_surface_finish (&surface->base);
+	surface->drm.bo = &intel_bo_create_for_name (to_intel_device (&device->base),
+						      name)->base;
+	if (unlikely (surface->drm.bo == NULL)) {
+	    status = _cairo_drm_surface_finish (&surface->drm);
 	    free (surface);
 	    return _cairo_surface_create_in_error (_cairo_error
 						   (CAIRO_STATUS_NO_MEMORY));
 	}
     }
 
-    return &surface->base.base;
+    return &surface->drm.base;
 }
 
 static cairo_status_t
 intel_surface_enable_scan_out (void *abstract_surface)
 {
     intel_surface_t *surface = abstract_surface;
-    cairo_status_t status;
 
-    if (unlikely (surface->base.bo == NULL))
+    if (unlikely (surface->drm.bo == NULL))
 	return _cairo_error (CAIRO_STATUS_INVALID_SIZE);
 
-    status = intel_surface_batch_flush (surface);
-    if (unlikely (status))
-	return status;
-
-    if (to_intel_bo (surface->base.bo)->tiling == I915_TILING_Y) {
-	intel_bo_set_tiling (to_intel_device (surface->base.device),
-			     to_intel_bo (surface->base.bo),
-			     I915_TILING_X, surface->base.stride);
+    if (to_intel_bo (surface->drm.bo)->tiling == I915_TILING_Y) {
+	intel_bo_set_tiling (to_intel_device (surface->drm.base.device),
+			     to_intel_bo (surface->drm.bo),
+			     I915_TILING_X, surface->drm.stride);
     }
 
-    if (unlikely (to_intel_bo (surface->base.bo)->tiling == I915_TILING_Y))
+    if (unlikely (to_intel_bo (surface->drm.bo)->tiling == I915_TILING_Y))
 	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT); /* XXX */
 
     return CAIRO_STATUS_SUCCESS;
@@ -424,13 +413,7 @@ intel_surface_enable_scan_out (void *abstract_surface)
 static cairo_int_status_t
 intel_device_throttle (cairo_drm_device_t *device)
 {
-    cairo_status_t status;
-
-    status = intel_batch_flush (to_intel_device (device));
-    if (unlikely (status))
-	return status;
-
-    intel_throttle (to_intel_device (device));
+    intel_throttle (to_intel_device (&device->base));
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -455,15 +438,13 @@ _cairo_drm_intel_device_create (int fd, dev_t dev, int vendor_id, int chip_id)
 
     device = malloc (sizeof (intel_device_t));
     if (unlikely (device == NULL))
-	return _cairo_drm_device_create_in_error (CAIRO_STATUS_NO_MEMORY);
+	return (cairo_drm_device_t *) _cairo_device_create_in_error (CAIRO_STATUS_NO_MEMORY);
 
     status = intel_device_init (device, fd);
     if (unlikely (status)) {
 	free (device);
-	return _cairo_drm_device_create_in_error (status);
+	return (cairo_drm_device_t *) _cairo_device_create_in_error (status);
     }
-
-    device->base.bo.release = intel_bo_release;
 
     device->base.surface.create = intel_surface_create;
     device->base.surface.create_for_name = intel_surface_create_for_name;
@@ -471,8 +452,14 @@ _cairo_drm_intel_device_create (int fd, dev_t dev, int vendor_id, int chip_id)
     device->base.surface.flink = _cairo_drm_surface_flink;
     device->base.surface.enable_scan_out = intel_surface_enable_scan_out;
 
+    device->base.surface.map_to_image = intel_surface_map_to_image;
+
+    device->base.device.flush = NULL;
     device->base.device.throttle = intel_device_throttle;
     device->base.device.destroy = intel_device_destroy;
 
-    return _cairo_drm_device_init (&device->base, fd, dev, MAX_SIZE);
+    return _cairo_drm_device_init (&device->base,
+				   fd, dev,
+				   vendor_id, chip_id,
+				   MAX_SIZE);
 }

@@ -45,7 +45,7 @@ _cairo_boilerplate_drm_create_surface (const char		 *name,
 				       int			  id,
 				       void			**closure)
 {
-    cairo_drm_device_t *device;
+    cairo_device_t *device;
 
     device = cairo_drm_device_default ();
     if (device == NULL)

@@ -31,10 +31,13 @@
 
 #include "cairo-drm-private.h"
 #include "cairo-drm-ioctl-private.h"
+
 #include "cairo-error-private.h"
 
 #include <sys/ioctl.h>
 #include <errno.h>
+
+#define ERR_DEBUG(x) x
 
 struct drm_gem_close {
 	/** Handle of the object to be closed. */
@@ -79,8 +82,11 @@ _cairo_drm_bo_open_for_name (const cairo_drm_device_t *dev,
     do {
 	ret = ioctl (dev->fd, DRM_IOCTL_GEM_OPEN, &open);
     } while (ret == -1 && errno == EINTR);
-    if (ret == -1)
+    if (ret == -1) {
+	ERR_DEBUG((fprintf (stderr, "Failed to open bo for name %d: %s\n",
+			    name, strerror (errno))));
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
 
     bo->name = name;
     bo->size = open.size;
@@ -99,8 +105,11 @@ _cairo_drm_bo_flink (const cairo_drm_device_t *dev,
     memset (&flink, 0, sizeof (flink));
     flink.handle = bo->handle;
     ret = ioctl (dev->fd, DRM_IOCTL_GEM_FLINK, &flink);
-    if (ret == -1)
+    if (ret == -1) {
+	ERR_DEBUG((fprintf (stderr, "Failed to flink bo: %s\n",
+			    strerror (errno))));
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
 
     bo->name = flink.name;
 

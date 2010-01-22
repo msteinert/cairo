@@ -444,7 +444,6 @@ gallium_surface_create_internal (gallium_device_t *device,
 
     _cairo_surface_init (&surface->base.base,
 			 &gallium_surface_backend,
-			 NULL, /* device */
 			 content);
     _cairo_drm_surface_init (&surface->base, &device->base);
 
@@ -551,7 +550,6 @@ gallium_surface_create_for_name (cairo_drm_device_t *base_dev,
     content = _cairo_content_from_format (format);
     _cairo_surface_init (&surface->base.base,
 			 &gallium_surface_backend,
-			 NULL, /* device */
 			 content);
     _cairo_drm_surface_init (&surface->base, base_dev);
 
@@ -659,6 +657,7 @@ _cairo_drm_gallium_device_create (int fd, dev_t dev, int vendor_id, int chip_id)
     device->base.surface.enable_scan_out = NULL;
     device->base.surface.flink = gallium_surface_flink;
 
+    device->base.device.flush = NULL;
     device->base.device.throttle = NULL;
     device->base.device.destroy = gallium_device_destroy;
 

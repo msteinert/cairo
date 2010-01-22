@@ -310,12 +310,29 @@ cairo_directfb_sources = cairo-directfb-surface.c
 cairo_drm_headers = cairo-drm.h
 cairo_drm_private = drm/cairo-drm-private.h \
 		    drm/cairo-drm-intel-private.h \
+		    drm/cairo-drm-i915-private.h \
+		    drm/cairo-drm-i965-private.h \
+		    drm/cairo-drm-intel-brw-defines.h \
+		    drm/cairo-drm-intel-brw-structs.h \
+		    drm/cairo-drm-intel-brw-eu.h \
 		    drm/cairo-drm-radeon-private.h
 cairo_drm_sources = drm/cairo-drm.c \
 		    drm/cairo-drm-bo.c \
 		    drm/cairo-drm-surface.c \
 		    drm/cairo-drm-intel.c \
+		    drm/cairo-drm-intel-debug.c \
 		    drm/cairo-drm-intel-surface.c \
+		    drm/cairo-drm-i915-surface.c \
+		    drm/cairo-drm-i915-glyphs.c \
+		    drm/cairo-drm-i915-shader.c \
+		    drm/cairo-drm-i915-spans.c \
+		    drm/cairo-drm-i965-surface.c \
+		    drm/cairo-drm-i965-glyphs.c \
+		    drm/cairo-drm-i965-shader.c \
+		    drm/cairo-drm-i965-spans.c \
+		    drm/cairo-drm-intel-brw-eu.c \
+		    drm/cairo-drm-intel-brw-eu-emit.c \
+		    drm/cairo-drm-intel-brw-eu-util.c \
 		    drm/cairo-drm-radeon.c \
 		    drm/cairo-drm-radeon-surface.c
 cairo_gallium_sources = drm/cairo-drm-gallium-surface.c

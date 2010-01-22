@@ -99,9 +99,6 @@ radeon_bo_create (radeon_device_t *dev,
 cairo_private cairo_drm_bo_t *
 radeon_bo_create_for_name (radeon_device_t *dev, uint32_t name);
 
-cairo_private void
-radeon_bo_release (void *_dev, void *_bo);
-
 cairo_private cairo_surface_t *
 radeon_bo_get_image (const radeon_device_t *device,
 	             radeon_bo_t *bo,

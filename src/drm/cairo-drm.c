@@ -33,6 +33,8 @@
 #include "cairoint.h"
 
 #include "cairo-drm-private.h"
+
+#include "cairo-device-private.h"
 #include "cairo-error-private.h"
 
 #define LIBUDEV_I_KNOW_THE_API_IS_SUBJECT_TO_CHANGE
@@ -42,29 +44,6 @@
 
 static cairo_drm_device_t *_cairo_drm_known_devices;
 static cairo_drm_device_t *_cairo_drm_default_device;
-
-static const cairo_drm_device_t _nil_device = {
-    CAIRO_REFERENCE_COUNT_INVALID,
-    CAIRO_STATUS_NO_MEMORY
-};
-
-static const cairo_drm_device_t _invalid_device = {
-    CAIRO_REFERENCE_COUNT_INVALID,
-    CAIRO_STATUS_INVALID_CONTENT
-};
-
-cairo_drm_device_t *
-_cairo_drm_device_create_in_error (cairo_status_t status)
-{
-    switch ((int) status) {
-    default:
-	ASSERT_NOT_REACHED;
-    case CAIRO_STATUS_NO_MEMORY:
-	return (cairo_drm_device_t *) &_nil_device;
-    case CAIRO_STATUS_INVALID_CONTENT:
-	return (cairo_drm_device_t *) &_invalid_device;
-    }
-}
 
 static const char *
 get_udev_property(struct udev_device *device, const char *name)
@@ -81,16 +60,69 @@ get_udev_property(struct udev_device *device, const char *name)
     return NULL;
 }
 
+static void
+_device_flush (void *abstract_device)
+{
+    cairo_drm_device_t *device = abstract_device;
+
+    device->device.flush (device);
+}
+
+static void
+_device_finish (void *abstract_device)
+{
+    cairo_drm_device_t *device = abstract_device;
+
+    CAIRO_MUTEX_LOCK (_cairo_drm_device_mutex);
+    if (device->prev != NULL)
+	device->prev->next = device->next;
+    else
+	_cairo_drm_known_devices = device->next;
+    if (device->next != NULL)
+	device->next->prev = device->prev;
+
+    CAIRO_MUTEX_UNLOCK (_cairo_drm_device_mutex);
+
+    if (_cairo_atomic_ptr_cmpxchg (&_cairo_drm_default_device,
+				   device, NULL) == device)
+    {
+	cairo_device_destroy (&device->base);
+    }
+}
+
+static void
+_device_destroy (void *abstract_device)
+{
+    cairo_drm_device_t *device = abstract_device;
+
+    device->device.destroy (device);
+}
+
+static const cairo_device_backend_t _cairo_drm_device_backend = {
+    CAIRO_DEVICE_TYPE_DRM,
+
+    NULL, NULL, /* lock, unlock */
+
+    _device_flush,
+    _device_finish,
+    _device_destroy,
+};
+
 cairo_drm_device_t *
 _cairo_drm_device_init (cairo_drm_device_t *dev,
 			int fd,
 			dev_t devid,
+			int vendor_id,
+			int chip_id,
 			int max_surface_size)
 {
-    CAIRO_REFERENCE_COUNT_INIT (&dev->ref_count, 1);
-    dev->status = CAIRO_STATUS_SUCCESS;
+    assert (CAIRO_MUTEX_IS_LOCKED (_cairo_drm_device_mutex));
+
+    _cairo_device_init (&dev->base, &_cairo_drm_device_backend);
 
     dev->id = devid;
+    dev->vendor_id = vendor_id;
+    dev->chip_id = chip_id;
     dev->fd = fd;
 
     dev->max_surface_size = max_surface_size;
@@ -102,12 +134,12 @@ _cairo_drm_device_init (cairo_drm_device_t *dev,
     _cairo_drm_known_devices = dev;
 
     if (_cairo_drm_default_device == NULL)
-	_cairo_drm_default_device = cairo_drm_device_reference (dev);
+	_cairo_drm_default_device = (cairo_drm_device_t *) cairo_device_reference (&dev->base);
 
     return dev;
 }
 
-cairo_drm_device_t *
+cairo_device_t *
 cairo_drm_device_get (struct udev_device *device)
 {
     static const struct dri_driver_entry {
@@ -115,7 +147,34 @@ cairo_drm_device_get (struct udev_device *device)
 	uint32_t chip_id;
 	cairo_drm_device_create_func_t create_func;
     } driver_map[] = {
+	{ 0x8086, 0x29a2, _cairo_drm_i965_device_create }, /* I965_G */
+	{ 0x8086, 0x2982, _cairo_drm_i965_device_create }, /* G35_G */
+	{ 0x8086, 0x2992, _cairo_drm_i965_device_create }, /* I965_Q */
+	{ 0x8086, 0x2972, _cairo_drm_i965_device_create }, /* I946_GZ */
+	{ 0x8086, 0x2a02, _cairo_drm_i965_device_create }, /* I965_GM */
+	{ 0x8086, 0x2a12, _cairo_drm_i965_device_create }, /* I965_GME */
+	{ 0x8086, 0x2e02, _cairo_drm_i965_device_create }, /* IGD_E_G */
+	{ 0x8086, 0x2e22, _cairo_drm_i965_device_create }, /* G45_G */
+	{ 0x8086, 0x2e12, _cairo_drm_i965_device_create }, /* Q45_G */
+	{ 0x8086, 0x2e32, _cairo_drm_i965_device_create }, /* G41_G */
+	{ 0x8086, 0x2a42, _cairo_drm_i965_device_create }, /* GM45_GM */
+
+	{ 0x8086, 0x2582, _cairo_drm_i915_device_create }, /* I915_G */
+	{ 0x8086, 0x2592, _cairo_drm_i915_device_create }, /* I915_GM */
+	{ 0x8086, 0x258a, _cairo_drm_i915_device_create }, /* E7221_G */
+	{ 0x8086, 0x2772, _cairo_drm_i915_device_create }, /* I945_G */
+	{ 0x8086, 0x27a2, _cairo_drm_i915_device_create }, /* I945_GM */
+	{ 0x8086, 0x27ae, _cairo_drm_i915_device_create }, /* I945_GME */
+	{ 0x8086, 0x29c2, _cairo_drm_i915_device_create }, /* G33_G */
+	{ 0x8086, 0x29b2, _cairo_drm_i915_device_create }, /* Q35_G */
+	{ 0x8086, 0x29d2, _cairo_drm_i915_device_create }, /* Q33_G */
+	{ 0x8086, 0xa011, _cairo_drm_i915_device_create }, /* IGD_GM */
+	{ 0x8086, 0xa001, _cairo_drm_i915_device_create }, /* IGD_G */
+
+	/* XXX i830 */
+
 	{ 0x8086, ~0, _cairo_drm_intel_device_create },
+
 	{ 0x1002, ~0, _cairo_drm_radeon_device_create },
 #if CAIRO_HAS_GALLIUM_SURFACE
 	{ ~0, ~0, _cairo_drm_gallium_device_create },
@@ -135,16 +194,16 @@ cairo_drm_device_get (struct udev_device *device)
     CAIRO_MUTEX_LOCK (_cairo_drm_device_mutex);
     for (dev = _cairo_drm_known_devices; dev != NULL; dev = dev->next) {
 	if (dev->id == devid) {
-	    dev = cairo_drm_device_reference (dev);
+	    dev = (cairo_drm_device_t *) cairo_device_reference (&dev->base);
 	    goto DONE;
 	}
     }
 
-    dev = (cairo_drm_device_t *) &_nil_device;
     parent = udev_device_get_parent (device);
     pci_id = get_udev_property (parent, "PCI_ID");
     if (sscanf (pci_id, "%x:%x", &vendor_id, &chip_id) != 2) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	dev = (cairo_drm_device_t *)
+	    _cairo_device_create_in_error (CAIRO_STATUS_DEVICE_ERROR);
 	goto DONE;
     }
 
@@ -166,8 +225,8 @@ cairo_drm_device_get (struct udev_device *device)
 	}
 
 	if (i == ARRAY_LENGTH (driver_map)) {
-	    /* XXX should be no driver or something*/
-	    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	    dev = (cairo_drm_device_t *)
+		_cairo_device_create_in_error (CAIRO_STATUS_DEVICE_ERROR);
 	    goto DONE;
 	}
     }
@@ -190,22 +249,21 @@ cairo_drm_device_get (struct udev_device *device)
   DONE:
     CAIRO_MUTEX_UNLOCK (_cairo_drm_device_mutex);
 
-    return dev;
+    return &dev->base;
 }
 slim_hidden_def (cairo_drm_device_get);
 
-cairo_drm_device_t *
+cairo_device_t *
 cairo_drm_device_get_for_fd (int fd)
 {
     struct stat st;
     struct udev *udev;
     struct udev_device *device;
-    cairo_drm_device_t *dev = NULL;
+    cairo_device_t *dev = NULL;
 
     if (fstat (fd, &st) < 0 || ! S_ISCHR (st.st_mode)) {
 	//_cairo_error_throw (CAIRO_STATUS_INVALID_DEVICE);
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_drm_device_t *) &_nil_device;
+	return _cairo_device_create_in_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     udev = udev_new ();
@@ -220,25 +278,24 @@ cairo_drm_device_get_for_fd (int fd)
 
     return dev;
 }
+slim_hidden_def (cairo_drm_device_get_for_fd);
 
-cairo_drm_device_t *
+cairo_device_t *
 cairo_drm_device_default (void)
 {
     struct udev *udev;
     struct udev_enumerate *e;
     struct udev_list_entry *entry;
-    cairo_drm_device_t *dev;
+    cairo_device_t *dev;
 
     /* optimistic atomic pointer read */
-    dev = _cairo_drm_default_device;
+    dev = &_cairo_drm_default_device->base;
     if (dev != NULL)
 	return dev;
 
     udev = udev_new();
-    if (udev == NULL) {
-	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	return (cairo_drm_device_t *) &_nil_device;
-    }
+    if (udev == NULL)
+	return _cairo_device_create_in_error (CAIRO_STATUS_NO_MEMORY);
 
     e = udev_enumerate_new (udev);
     udev_enumerate_add_match_subsystem (e, "drm");
@@ -255,8 +312,9 @@ cairo_drm_device_default (void)
 	udev_device_unref (device);
 
 	if (dev != NULL) {
-	    if (dev->fd == -1) { /* try again, we may find a usable card */
-		cairo_drm_device_destroy (dev);
+	    if (((cairo_drm_device_t *) dev)->fd == -1) {
+		/* try again, we may find a usable card */
+		cairo_device_destroy (dev);
 		dev = NULL;
 	    } else
 		break;
@@ -265,7 +323,7 @@ cairo_drm_device_default (void)
     udev_enumerate_unref (e);
     udev_unref (udev);
 
-    cairo_drm_device_destroy (dev); /* owned by _cairo_drm_default_device */
+    cairo_device_destroy (dev); /* owned by _cairo_drm_default_device */
     return dev;
 }
 slim_hidden_def (cairo_drm_device_default);
@@ -274,90 +332,56 @@ void
 _cairo_drm_device_reset_static_data (void)
 {
     if (_cairo_drm_default_device != NULL) {
-	cairo_drm_device_destroy (_cairo_drm_default_device);
+	cairo_device_t *device = &_cairo_drm_default_device->base;
 	_cairo_drm_default_device = NULL;
+	cairo_device_destroy (device);
     }
 }
-
-cairo_drm_device_t *
-cairo_drm_device_reference (cairo_drm_device_t *device)
-{
-    if (device == NULL ||
-	CAIRO_REFERENCE_COUNT_IS_INVALID (&device->ref_count))
-    {
-	return device;
-    }
-
-    assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&device->ref_count));
-    _cairo_reference_count_inc (&device->ref_count);
-
-    return device;
-}
-slim_hidden_def (cairo_drm_device_reference);
 
 int
-cairo_drm_device_get_fd (cairo_drm_device_t *device)
+cairo_drm_device_get_fd (cairo_device_t *abstract_device)
 {
-    if (device->status)
+    cairo_drm_device_t *device = (cairo_drm_device_t *) abstract_device;
+
+    if (device->base.status)
 	return -1;
 
     return device->fd;
 }
 
-cairo_status_t
-cairo_drm_device_status (cairo_drm_device_t *device)
-{
-    if (device == NULL)
-	return CAIRO_STATUS_NULL_POINTER;
-
-    return device->status;
-}
-
 void
 _cairo_drm_device_fini (cairo_drm_device_t *device)
 {
-    CAIRO_MUTEX_LOCK (_cairo_drm_device_mutex);
-    if (device->prev != NULL)
-	device->prev->next = device->next;
-    else
-	_cairo_drm_known_devices = device->next;
-    if (device->next != NULL)
-	device->next->prev = device->prev;
-    CAIRO_MUTEX_UNLOCK (_cairo_drm_device_mutex);
-
     if (device->fd != -1)
 	close (device->fd);
 }
 
 void
-cairo_drm_device_destroy (cairo_drm_device_t *device)
+cairo_drm_device_throttle (cairo_device_t *abstract_device)
 {
-    if (device == NULL ||
-	CAIRO_REFERENCE_COUNT_IS_INVALID (&device->ref_count))
-    {
-	return;
-    }
-
-    assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&device->ref_count));
-    if (! _cairo_reference_count_dec_and_test (&device->ref_count))
-	return;
-
-    device->device.destroy (device);
-}
-slim_hidden_def (cairo_drm_device_destroy);
-
-void
-cairo_drm_device_throttle (cairo_drm_device_t *dev)
-{
+    cairo_drm_device_t *device = (cairo_drm_device_t *) abstract_device;
     cairo_status_t status;
 
-    if (unlikely (dev->status))
+    if (unlikely (device->base.status))
 	return;
 
-    if (dev->device.throttle == NULL)
+    if (device->device.throttle == NULL)
 	return;
 
-    status = dev->device.throttle (dev);
+    status = device->device.throttle (device);
     if (unlikely (status))
-	_cairo_status_set_error (&dev->status, status);
+	_cairo_status_set_error (&device->base.status, status);
+}
+
+cairo_bool_t
+_cairo_drm_size_is_valid (cairo_device_t *abstract_device,
+			  int width, int height)
+{
+    cairo_drm_device_t *device = (cairo_drm_device_t *) abstract_device;
+
+    if (unlikely (device->base.status))
+	return FALSE;
+
+    return width  <= device->max_surface_size &&
+	   height <= device->max_surface_size;
 }

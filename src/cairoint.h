@@ -949,6 +949,8 @@ _cairo_round (double r)
 
 cairo_private int
 _cairo_lround (double d) cairo_const;
+cairo_private uint16_t
+_cairo_half_from_float (float f) cairo_const;
 
 /* cairo-gstate.c */
 cairo_private cairo_status_t

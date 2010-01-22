@@ -31,6 +31,7 @@
 
 #include "cairo-drm-private.h"
 #include "cairo-drm-radeon-private.h"
+
 #include "cairo-error-private.h"
 
 /* Basic stub surface for radeon chipsets */
@@ -42,7 +43,7 @@ typedef struct _radeon_surface {
 } radeon_surface_t;
 
 static inline radeon_device_t *
-to_radeon_device (cairo_drm_device_t *device)
+to_radeon_device (cairo_device_t *device)
 {
     return (radeon_device_t *) device;
 }
@@ -53,19 +54,14 @@ to_radeon_bo (cairo_drm_bo_t *bo)
     return (radeon_bo_t *) bo;
 }
 
-static cairo_status_t
-radeon_batch_flush (radeon_device_t *device)
+static cairo_surface_t *
+radeon_surface_create_similar (void			*abstract_surface,
+			      cairo_content_t		 content,
+			      int			 width,
+			      int			 height)
 {
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static cairo_status_t
-radeon_surface_batch_flush (radeon_surface_t *surface)
-{
-    if (to_radeon_bo (surface->base.bo)->write_domain)
-	return radeon_batch_flush (to_radeon_device (surface->base.device));
-
-    return CAIRO_STATUS_SUCCESS;
+    return cairo_image_surface_create (_cairo_format_from_content (content),
+				       width, height);
 }
 
 static cairo_status_t
@@ -85,6 +81,8 @@ radeon_surface_acquire_source_image (void *abstract_surface,
     cairo_surface_t *image;
     cairo_status_t status;
 
+    /* XXX batch flush */
+
     if (surface->base.fallback != NULL) {
 	image = surface->base.fallback;
 	goto DONE;
@@ -95,13 +93,15 @@ radeon_surface_acquire_source_image (void *abstract_surface,
     if (image != NULL)
 	goto DONE;
 
-    status = radeon_surface_batch_flush (surface);
-    if (unlikely (status))
-	return status;
+    if (surface->base.base.backend->flush != NULL) {
+	status = surface->base.base.backend->flush (surface);
+	if (unlikely (status))
+	    return status;
+    }
 
-    image = radeon_bo_get_image (to_radeon_device (surface->base.device),
-	                         to_radeon_bo (surface->base.bo),
-				 &surface->base);
+    image = radeon_bo_get_image (to_radeon_device (surface->base.base.device),
+				to_radeon_bo (surface->base.bo),
+				&surface->base);
     status = image->status;
     if (unlikely (status))
 	return status;
@@ -121,94 +121,46 @@ DONE:
 }
 
 static void
-radeon_surface_release_source_image (void  *abstract_surface,
-				   cairo_image_surface_t *image,
-				   void *image_extra)
+radeon_surface_release_source_image (void *abstract_surface,
+				     cairo_image_surface_t *image,
+				     void *image_extra)
 {
     cairo_surface_destroy (&image->base);
 }
 
 static cairo_surface_t *
-radeon_surface_snapshot (void *abstract_surface)
+radeon_surface_map_to_image (radeon_surface_t *surface)
 {
-    radeon_surface_t *surface = abstract_surface;
-    cairo_status_t status;
+    if (surface->base.fallback == NULL) {
+	cairo_surface_t *image;
+	cairo_status_t status;
+	void *ptr;
 
-    if (surface->base.fallback != NULL)
-	return NULL;
+	if (surface->base.base.backend->flush != NULL) {
+	    status = surface->base.base.backend->flush (surface);
+	    if (unlikely (status))
+		return _cairo_surface_create_in_error (status);
+	}
 
-    status = radeon_surface_batch_flush (surface);
-    if (unlikely (status))
-	return _cairo_surface_create_in_error (status);
+	ptr = radeon_bo_map (to_radeon_device (surface->base.base.device),
+			    to_radeon_bo (surface->base.bo));
+	if (unlikely (ptr == NULL))
+	    return _cairo_surface_create_in_error (CAIRO_STATUS_NO_MEMORY);
 
-    return radeon_bo_get_image (to_radeon_device (surface->base.device),
-	                        to_radeon_bo (surface->base.bo),
-				&surface->base);
-}
+	image = cairo_image_surface_create_for_data (ptr,
+						     surface->base.format,
+						     surface->base.width,
+						     surface->base.height,
+						     surface->base.stride);
+	if (unlikely (image->status)) {
+	    radeon_bo_unmap (to_radeon_bo (surface->base.bo));
+	    return image;
+	}
 
-static cairo_status_t
-radeon_surface_acquire_dest_image (void *abstract_surface,
-				   cairo_rectangle_int_t *interest_rect,
-				   cairo_image_surface_t **image_out,
-				   cairo_rectangle_int_t *image_rect_out,
-				   void **image_extra)
-{
-    radeon_surface_t *surface = abstract_surface;
-    cairo_surface_t *image;
-    cairo_status_t status;
-    void *ptr;
-
-    assert (surface->base.fallback == NULL);
-
-    status = radeon_surface_batch_flush (surface);
-    if (unlikely (status))
-	return status;
-
-    /* Force a read barrier, as well as flushing writes above */
-    radeon_bo_wait (to_radeon_device (surface->base.device),
-		    to_radeon_bo (surface->base.bo));
-
-    ptr = radeon_bo_map (to_radeon_device (surface->base.device),
-			 to_radeon_bo (surface->base.bo));
-    if (unlikely (ptr == NULL))
-	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-    image = cairo_image_surface_create_for_data (ptr,
-						 surface->base.format,
-						 surface->base.width,
-						 surface->base.height,
-						 surface->base.stride);
-    status = image->status;
-    if (unlikely (status)) {
-	radeon_bo_unmap (to_radeon_bo (surface->base.bo));
-	return status;
+	surface->base.fallback = image;
     }
 
-    surface->base.fallback = cairo_surface_reference (image);
-
-    *image_out = (cairo_image_surface_t *) image;
-    *image_extra = NULL;
-
-    image_rect_out->x = 0;
-    image_rect_out->y = 0;
-    image_rect_out->width  = surface->base.width;
-    image_rect_out->height = surface->base.height;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static void
-radeon_surface_release_dest_image (void                    *abstract_surface,
-				 cairo_rectangle_int_t   *interest_rect,
-				 cairo_image_surface_t   *image,
-				 cairo_rectangle_int_t   *image_rect,
-				 void                    *image_extra)
-{
-    /* Keep the fallback until we flush, either explicitly or at the
-     * end of this context. The idea is to avoid excess migration of
-     * the buffer between GPU and CPU domains.
-     */
-    cairo_surface_destroy (&image->base);
+    return surface->base.fallback;
 }
 
 static cairo_status_t
@@ -218,7 +170,7 @@ radeon_surface_flush (void *abstract_surface)
     cairo_status_t status;
 
     if (surface->base.fallback == NULL)
-	return radeon_surface_batch_flush (surface);
+	return CAIRO_STATUS_SUCCESS;
 
     /* kill any outstanding maps */
     cairo_surface_finish (surface->base.fallback);
@@ -232,53 +184,117 @@ radeon_surface_flush (void *abstract_surface)
     return status;
 }
 
+static cairo_int_status_t
+radeon_surface_paint (void *abstract_surface,
+		     cairo_operator_t		 op,
+		     const cairo_pattern_t	*source,
+		     cairo_clip_t		*clip)
+{
+    return _cairo_surface_paint (radeon_surface_map_to_image (abstract_surface),
+				 op, source, clip);
+}
+
+static cairo_int_status_t
+radeon_surface_mask (void			*abstract_surface,
+		    cairo_operator_t		 op,
+		    const cairo_pattern_t	*source,
+		    const cairo_pattern_t	*mask,
+		    cairo_clip_t		*clip)
+{
+    return _cairo_surface_mask (radeon_surface_map_to_image (abstract_surface),
+				op, source, mask, clip);
+}
+
+static cairo_int_status_t
+radeon_surface_stroke (void			*abstract_surface,
+		      cairo_operator_t		 op,
+		      const cairo_pattern_t	*source,
+		      cairo_path_fixed_t	*path,
+		      const cairo_stroke_style_t	*stroke_style,
+		      const cairo_matrix_t		*ctm,
+		      const cairo_matrix_t		*ctm_inverse,
+		      double			 tolerance,
+		      cairo_antialias_t		 antialias,
+		      cairo_clip_t		*clip)
+{
+    return _cairo_surface_stroke (radeon_surface_map_to_image (abstract_surface),
+				  op, source, path, stroke_style, ctm, ctm_inverse,
+				  tolerance, antialias, clip);
+}
+
+static cairo_int_status_t
+radeon_surface_fill (void			*abstract_surface,
+		    cairo_operator_t		 op,
+		    const cairo_pattern_t	*source,
+		    cairo_path_fixed_t		*path,
+		    cairo_fill_rule_t		 fill_rule,
+		    double			 tolerance,
+		    cairo_antialias_t		 antialias,
+		    cairo_clip_t		*clip)
+{
+    return _cairo_surface_fill (radeon_surface_map_to_image (abstract_surface),
+				op, source, path, fill_rule,
+				tolerance, antialias, clip);
+}
+
+static cairo_int_status_t
+radeon_surface_glyphs (void			*abstract_surface,
+		      cairo_operator_t		 op,
+		      const cairo_pattern_t	*source,
+		      cairo_glyph_t		*glyphs,
+		      int			 num_glyphs,
+		      cairo_scaled_font_t	*scaled_font,
+		      cairo_clip_t		*clip,
+		      int *num_remaining)
+{
+    *num_remaining = 0;
+    return _cairo_surface_show_text_glyphs (radeon_surface_map_to_image (abstract_surface),
+					    op, source,
+					    NULL, 0,
+					    glyphs, num_glyphs,
+					    NULL, 0, 0,
+					    scaled_font, clip);
+}
+
 static const cairo_surface_backend_t radeon_surface_backend = {
     CAIRO_SURFACE_TYPE_DRM,
-    _cairo_drm_surface_create_similar,
-    radeon_surface_finish,
 
+    radeon_surface_create_similar,
+    radeon_surface_finish,
     radeon_surface_acquire_source_image,
     radeon_surface_release_source_image,
-    radeon_surface_acquire_dest_image,
-    radeon_surface_release_dest_image,
+    NULL, NULL, NULL,
+    NULL, /* composite */
+    NULL, /* fill */
+    NULL, /* trapezoids */
+    NULL, /* span */
+    NULL, /* check-span */
 
-    NULL, //radeon_surface_clone_similar,
-    NULL, //radeon_surface_composite,
-    NULL, //radeon_surface_fill_rectangles,
-    NULL, //radeon_surface_composite_trapezoids,
-    NULL, //radeon_surface_create_span_renderer,
-    NULL, //radeon_surface_check_span_renderer,
     NULL, /* copy_page */
     NULL, /* show_page */
     _cairo_drm_surface_get_extents,
-    NULL, /* old_show_glyphs */
+    NULL, /* old-glyphs */
     _cairo_drm_surface_get_font_options,
+
     radeon_surface_flush,
-    NULL, /* mark_dirty_rectangle */
-    NULL, //radeon_surface_scaled_font_fini,
-    NULL, //radeon_surface_scaled_glyph_fini,
+    NULL, /* mark dirty */
+    NULL, NULL, /* font/glyph fini */
 
-    _cairo_drm_surface_paint,
-    _cairo_drm_surface_mask,
-    _cairo_drm_surface_stroke,
-    _cairo_drm_surface_fill,
-    _cairo_drm_surface_show_glyphs,
-
-    radeon_surface_snapshot,
-
-    NULL, /* is_similar */
-
-    NULL, /* reset */
+    radeon_surface_paint,
+    radeon_surface_mask,
+    radeon_surface_stroke,
+    radeon_surface_fill,
+    radeon_surface_glyphs,
 };
 
 static void
 radeon_surface_init (radeon_surface_t *surface,
-	           cairo_content_t content,
-		   cairo_drm_device_t *device)
+		     cairo_content_t content,
+		     cairo_drm_device_t *device)
 {
     _cairo_surface_init (&surface->base.base,
 			 &radeon_surface_backend,
-			 NULL, /* device */
+			 &device->base,
 			 content);
     _cairo_drm_surface_init (&surface->base, device);
 
@@ -318,7 +334,7 @@ radeon_surface_create_internal (cairo_drm_device_t *device,
 	surface->base.stride =
 	    cairo_format_stride_for_width (surface->base.format, width);
 
-	surface->base.bo = radeon_bo_create (to_radeon_device (device),
+	surface->base.bo = radeon_bo_create (to_radeon_device (&device->base),
 					     surface->base.stride * height,
 					     RADEON_GEM_DOMAIN_GTT);
 
@@ -379,7 +395,7 @@ radeon_surface_create_for_name (cairo_drm_device_t *device,
 	surface->base.height = height;
 	surface->base.stride = stride;
 
-	surface->base.bo = radeon_bo_create_for_name (to_radeon_device (device),
+	surface->base.bo = radeon_bo_create_for_name (to_radeon_device (&device->base),
 						      name);
 
 	if (unlikely (surface->base.bo == NULL)) {
@@ -428,13 +444,12 @@ _cairo_drm_radeon_device_create (int fd, dev_t dev, int vendor_id, int chip_id)
     device->base.surface.flink = _cairo_drm_surface_flink;
     device->base.surface.enable_scan_out = NULL;
 
+    device->base.device.flush = NULL;
     device->base.device.throttle = NULL;
     device->base.device.destroy = radeon_device_destroy;
-
-    device->base.bo.release = radeon_bo_release;
 
     device->vram_limit = vram_size;
     device->gart_limit = gart_size;
 
-    return _cairo_drm_device_init (&device->base, dev, fd, MAX_SIZE);
+    return _cairo_drm_device_init (&device->base, fd, dev, vendor_id, chip_id, MAX_SIZE);
 }
