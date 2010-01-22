@@ -396,4 +396,29 @@ typedef union {
     cairo_gradient_pattern_union_t  gradient;
 } cairo_pattern_union_t;
 
+/*
+ * A #cairo_unscaled_font_t is just an opaque handle we use in the
+ * glyph cache.
+ */
+typedef struct _cairo_unscaled_font {
+    cairo_hash_entry_t			 hash_entry;
+    cairo_reference_count_t		 ref_count;
+    const cairo_unscaled_font_backend_t	*backend;
+} cairo_unscaled_font_t;
+
+typedef struct _cairo_scaled_glyph {
+    cairo_hash_entry_t hash_entry;
+
+    cairo_text_extents_t    metrics;		/* user-space metrics */
+    cairo_text_extents_t    fs_metrics;		/* font-space metrics */
+    cairo_box_t		    bbox;		/* device-space bounds */
+    int16_t                 x_advance;		/* device-space rounded X advance */
+    int16_t                 y_advance;		/* device-space rounded Y advance */
+
+    cairo_image_surface_t   *surface;		/* device-space image */
+    cairo_path_fixed_t	    *path;		/* device-space outline */
+    cairo_surface_t         *recording_surface;	/* device-space recording-surface */
+
+    void		    *surface_private;	/* for the surface backend */
+} cairo_scaled_glyph_t;
 #endif /* CAIRO_TYPES_PRIVATE_H */
