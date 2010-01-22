@@ -54,6 +54,10 @@ CAIRO_MUTEX_DECLARE (_cairo_ft_unscaled_font_map_mutex)
 CAIRO_MUTEX_DECLARE (_cairo_xlib_display_mutex)
 #endif
 
+#if CAIRO_HAS_XCB_SURFACE
+CAIRO_MUTEX_DECLARE (_cairo_xcb_connections_mutex)
+#endif
+
 #if CAIRO_HAS_GL_SURFACE
 CAIRO_MUTEX_DECLARE (_cairo_gl_context_mutex)
 #endif

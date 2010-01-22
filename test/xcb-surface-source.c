@@ -26,7 +26,6 @@
 #include "cairo-test.h"
 #if CAIRO_HAS_XCB_SURFACE
 #include <cairo-xcb.h>
-#include <cairo-xcb-xrender.h>
 #endif
 
 #include "surface-source.c"

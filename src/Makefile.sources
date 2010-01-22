@@ -250,19 +250,33 @@ cairo_xlib_private = \
 	cairo-xlib-surface-private.h \
 	cairo-xlib-xrender-private.h \
 	$(NULL)
+if BUILD_XLIB_XCB
+cairo_xlib_sources = cairo-xlib-xcb-surface.c
+else
 cairo_xlib_sources = \
 	cairo-xlib-display.c \
 	cairo-xlib-screen.c \
 	cairo-xlib-surface.c \
 	cairo-xlib-visual.c \
 	$(NULL)
+endif
 
 cairo_xlib_xrender_headers = cairo-xlib-xrender.h
 
-# XXX split xcb-xrender.  or better yet, merge it into xcb.  xcb is so recent
-# that it's hard to imagine having xcb but not render.
-cairo_xcb_headers = cairo-xcb.h cairo-xcb-xrender.h
-cairo_xcb_sources = cairo-xcb-surface.c
+cairo_xcb_headers = cairo-xcb.h
+cairo_xcb_private = cairo-xcb-private.h
+cairo_xcb_sources = \
+		    cairo-xcb-connection.c \
+		    cairo-xcb-connection-core.c \
+		    cairo-xcb-connection-render.c \
+		    cairo-xcb-connection-shm.c \
+		    cairo-xcb-screen.c \
+		    cairo-xcb-shm.c \
+		    cairo-xcb-surface.c \
+		    cairo-xcb-surface-cairo.c \
+		    cairo-xcb-surface-core.c \
+		    cairo-xcb-surface-render.c \
+		    $(NULL)
 
 cairo_qt_headers = cairo-qt.h
 cairo_qt_sources = cairo-qt-surface.cpp

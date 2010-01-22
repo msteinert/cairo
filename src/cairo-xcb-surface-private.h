@@ -1,6 +1,6 @@
-/* cairo - a vector graphics library with display and print output
+/* Cairo - a vector graphics library with display and print output
  *
- * Copyright © 2002 University of Southern California
+ * Copyright © 2009 Intel Corporation
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -25,39 +25,13 @@
  * OF ANY KIND, either express or implied. See the LGPL or the MPL for
  * the specific language governing rights and limitations.
  *
- * The Original Code is the cairo graphics library.
- *
- * The Initial Developer of the Original Code is University of Southern
- * California.
- *
- * Contributor(s):
- *	Carl D. Worth <cworth@cworth.org>
+ * Contributors(s):
+ *	Chris Wilson <chris@chris-wilson.co.uk>
  */
 
-#ifndef CAIRO_XCB_XRENDER_H
-#define CAIRO_XCB_XRENDER_H
+#ifndef CAIRO_XCB_SURFACE_PRIVATE_H
+#define CAIRO_XCB_SURFACE_PRIVATE_H
 
-#include "cairo.h"
+#include "cairo-xcb-private.h"
 
-#if CAIRO_HAS_XCB_SURFACE
-
-#include <xcb/xcb.h>
-#include <xcb/render.h>
-
-CAIRO_BEGIN_DECLS
-
-cairo_public cairo_surface_t *
-cairo_xcb_surface_create_with_xrender_format (xcb_connection_t	    *c,
-					      xcb_drawable_t	     drawable,
-					      xcb_screen_t		    *screen,
-					      xcb_render_pictforminfo_t *format,
-					      int		     width,
-					      int		     height);
-
-CAIRO_END_DECLS
-
-#else  /* CAIRO_HAS_XCB_SURFACE */
-# error Cairo was not compiled with support for the xcb backend
-#endif /* CAIRO_HAS_XCB_SURFACE */
-
-#endif /* CAIRO_XCB_XRENDER_H */
+#endif

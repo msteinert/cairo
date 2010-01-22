@@ -2555,7 +2555,23 @@ cairo_private unsigned long
 _cairo_pattern_hash (const cairo_pattern_t *pattern);
 
 cairo_private unsigned long
+_cairo_linear_pattern_hash (unsigned long hash,
+			    const cairo_linear_pattern_t *linear);
+
+cairo_private unsigned long
+_cairo_radial_pattern_hash (unsigned long hash,
+			    const cairo_radial_pattern_t *radial);
+
+cairo_private cairo_bool_t
+_cairo_linear_pattern_equal (const cairo_linear_pattern_t *a,
+			     const cairo_linear_pattern_t *b);
+
+cairo_private unsigned long
 _cairo_pattern_size (const cairo_pattern_t *pattern);
+
+cairo_private cairo_bool_t
+_cairo_radial_pattern_equal (const cairo_radial_pattern_t *a,
+			     const cairo_radial_pattern_t *b);
 
 cairo_private cairo_bool_t
 _cairo_pattern_equal (const cairo_pattern_t *a,

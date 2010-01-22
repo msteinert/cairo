@@ -2628,23 +2628,20 @@ _cairo_gradient_color_stops_hash (unsigned long hash,
     return hash;
 }
 
-static unsigned long
+unsigned long
 _cairo_linear_pattern_hash (unsigned long hash,
-			    const cairo_pattern_t *pattern)
+			    const cairo_linear_pattern_t *linear)
 {
-    const cairo_linear_pattern_t *linear = (cairo_linear_pattern_t *) pattern;
-
     hash = _cairo_hash_bytes (hash, &linear->p1, sizeof (linear->p1));
     hash = _cairo_hash_bytes (hash, &linear->p2, sizeof (linear->p2));
 
     return _cairo_gradient_color_stops_hash (hash, &linear->base);
 }
 
-static unsigned long
-_cairo_radial_pattern_hash (unsigned long hash, const cairo_pattern_t *pattern)
+unsigned long
+_cairo_radial_pattern_hash (unsigned long hash,
+			    const cairo_radial_pattern_t *radial)
 {
-    const cairo_radial_pattern_t *radial = (cairo_radial_pattern_t *) pattern;
-
     hash = _cairo_hash_bytes (hash, &radial->c1, sizeof (radial->c1));
     hash = _cairo_hash_bytes (hash, &radial->r1, sizeof (radial->r1));
     hash = _cairo_hash_bytes (hash, &radial->c2, sizeof (radial->c2));
@@ -2689,9 +2686,9 @@ _cairo_pattern_hash (const cairo_pattern_t *pattern)
     case CAIRO_PATTERN_TYPE_SOLID:
 	return _cairo_solid_pattern_hash (hash, pattern);
     case CAIRO_PATTERN_TYPE_LINEAR:
-	return _cairo_linear_pattern_hash (hash, pattern);
+	return _cairo_linear_pattern_hash (hash, (cairo_linear_pattern_t *) pattern);
     case CAIRO_PATTERN_TYPE_RADIAL:
-	return _cairo_radial_pattern_hash (hash, pattern);
+	return _cairo_radial_pattern_hash (hash, (cairo_radial_pattern_t *) pattern);
     case CAIRO_PATTERN_TYPE_SURFACE:
 	return _cairo_surface_pattern_hash (hash, pattern);
     default:
@@ -2768,13 +2765,10 @@ _cairo_gradient_color_stops_equal (const cairo_gradient_pattern_t *a,
     return TRUE;
 }
 
-static cairo_bool_t
-_cairo_linear_pattern_equal (const cairo_pattern_t *A,
-			     const cairo_pattern_t *B)
+cairo_bool_t
+_cairo_linear_pattern_equal (const cairo_linear_pattern_t *a,
+			     const cairo_linear_pattern_t *b)
 {
-    const cairo_linear_pattern_t *a = (cairo_linear_pattern_t *) A;
-    const cairo_linear_pattern_t *b = (cairo_linear_pattern_t *) B;
-
     if (a->p1.x != b->p1.x)
 	return FALSE;
 
@@ -2790,13 +2784,10 @@ _cairo_linear_pattern_equal (const cairo_pattern_t *A,
     return _cairo_gradient_color_stops_equal (&a->base, &b->base);
 }
 
-static cairo_bool_t
-_cairo_radial_pattern_equal (const cairo_pattern_t *A,
-			     const cairo_pattern_t *B)
+cairo_bool_t
+_cairo_radial_pattern_equal (const cairo_radial_pattern_t *a,
+			     const cairo_radial_pattern_t *b)
 {
-    const cairo_radial_pattern_t *a = (cairo_radial_pattern_t *) A;
-    const cairo_radial_pattern_t *b = (cairo_radial_pattern_t *) B;
-
     if (a->c1.x != b->c1.x)
 	return FALSE;
 
@@ -2858,9 +2849,11 @@ _cairo_pattern_equal (const cairo_pattern_t *a, const cairo_pattern_t *b)
     case CAIRO_PATTERN_TYPE_SOLID:
 	return _cairo_solid_pattern_equal (a, b);
     case CAIRO_PATTERN_TYPE_LINEAR:
-	return _cairo_linear_pattern_equal (a, b);
+	return _cairo_linear_pattern_equal ((cairo_linear_pattern_t *) a,
+					    (cairo_linear_pattern_t *) b);
     case CAIRO_PATTERN_TYPE_RADIAL:
-	return _cairo_radial_pattern_equal (a, b);
+	return _cairo_radial_pattern_equal ((cairo_radial_pattern_t *) a,
+					    (cairo_radial_pattern_t *) b);
     case CAIRO_PATTERN_TYPE_SURFACE:
 	return _cairo_surface_pattern_equal (a, b);
     default:

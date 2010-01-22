@@ -186,4 +186,11 @@ cairo_list_is_empty (const cairo_list_t *head)
     return head->next == head;
 }
 
+static inline cairo_bool_t
+cairo_list_is_singular (const cairo_list_t *head)
+{
+    cairo_list_validate (head);
+    return head->next == head || head->next == head->prev;
+}
+
 #endif /* CAIRO_LIST_PRIVATE_H */

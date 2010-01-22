@@ -109,10 +109,22 @@ CAIRO_ENABLE_SURFACE_BACKEND(xlib_xrender, Xlib Xrender, auto, [
 dnl ===========================================================================
 
 CAIRO_ENABLE_SURFACE_BACKEND(xcb, XCB, no, [
-  xcb_REQUIRES="xcb >= 0.9.92 xcb-render >= 0.9.92 xcb-renderutil"
-  PKG_CHECK_MODULES(xcb, $xcb_REQUIRES, , [AC_MSG_RESULT(no)
-  use_xcb="no (requires $xcb_REQUIRES http://xcb.freedesktop.org)"])
+  xcb_REQUIRES="xcb >= 0.9.92 xcb-render >= 0.9.92 xcb-shm xcb-dri2"
+  PKG_CHECK_MODULES(xcb, $xcb_REQUIRES, ,
+		    [AC_MSG_RESULT(no)
+		    use_xcb="no (requires $xcb_REQUIRES http://xcb.freedesktop.org)"])
 ])
+
+CAIRO_ENABLE_FUNCTIONS(xlib_xcb, Xlib/XCB, no, [
+  if test "x$use_xcb" == "xyes" -a "x$use_xlib" == "xyes"; then
+    xlib_xcb_REQUIRES="x11-xcb"
+    PKG_CHECK_MODULES(xlib_xcb, $xlib_xcb_REQUIRES, ,
+		      [use_xlib_xcb="no (requires $xlib_xcb_REQUIRES http://xcb.freedesktop.org)"])
+  else
+    use_xlib_xcb="no (requires both --enable-xlib and --enable-xcb)"
+  fi
+])
+AM_CONDITIONAL(BUILD_XLIB_XCB, test "x$use_xlib_xcb" = "xyes")
 
 dnl ===========================================================================
 
@@ -238,6 +250,14 @@ CAIRO_ENABLE_SURFACE_BACKEND(gallium, Gallium3D, no, [
       AC_SUBST(gallium_DIR)
   else
     use_gallium="no (requires --enable-drm)"
+  fi
+])
+
+CAIRO_ENABLE_FUNCTIONS(xcb_drm, XCB/DRM, no, [
+  if test "x$use_xcb" == "xyes" -a "x$use_drm" == "xyes"; then
+    use_xcb_drm="yes"
+  else
+    use_xcb_drm="no (requires both --enable-xcb and --enable-drm)"
   fi
 ])
 
