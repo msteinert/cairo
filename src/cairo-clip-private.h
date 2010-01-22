@@ -117,7 +117,7 @@ _cairo_clip_get_surface (cairo_clip_t *clip, cairo_surface_t *dst);
 cairo_private cairo_status_t
 _cairo_clip_combine_with_surface (cairo_clip_t *clip,
 				  cairo_surface_t *dst,
-				  const cairo_rectangle_int_t *extents);
+				  int dst_x, int dst_y);
 
 cairo_private cairo_int_status_t
 _cairo_clip_get_region (cairo_clip_t *clip,
@@ -127,6 +127,10 @@ cairo_private cairo_int_status_t
 _cairo_clip_get_boxes (cairo_clip_t *clip,
 		       cairo_box_t **boxes,
 		       int *count);
+
+cairo_private cairo_bool_t
+_cairo_clip_contains_rectangle (cairo_clip_t *clip,
+				const cairo_composite_rectangles_t *extents);
 
 cairo_private void
 _cairo_clip_drop_cache (cairo_clip_t  *clip);
