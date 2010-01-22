@@ -947,8 +947,13 @@ _cairo_round (double r)
     return floor (r + .5);
 }
 
+#if DISABLE_SOME_FLOATING_POINT
 cairo_private int
 _cairo_lround (double d) cairo_const;
+#else
+#define _cairo_lround lround
+#endif
+
 cairo_private uint16_t
 _cairo_half_from_float (float f) cairo_const;
 

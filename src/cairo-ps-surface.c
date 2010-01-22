@@ -880,8 +880,8 @@ _cairo_ps_surface_get_page_media (cairo_ps_surface_t     *surface)
 	page->name = strdup (page_name);
     } else {
 	snprintf (buf, sizeof (buf), "%dx%dmm",
-		  _cairo_lround (surface->width * 25.4/72),
-		  _cairo_lround (surface->height * 25.4/72));
+		  (int) _cairo_lround (surface->width * 25.4/72),
+		  (int) _cairo_lround (surface->height * 25.4/72));
 	page->name = strdup (buf);
     }
 

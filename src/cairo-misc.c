@@ -463,6 +463,7 @@ _cairo_operator_bounded_by_either (cairo_operator_t op)
 
 }
 
+#if DISABLE_SOME_FLOATING_POINT
 /* This function is identical to the C99 function lround(), except that it
  * performs arithmetic rounding (floor(d + .5) instead of away-from-zero rounding) and
  * has a valid input range of (INT_MIN, INT_MAX] instead of
@@ -673,6 +674,7 @@ _cairo_lround (double d)
 #undef MSW
 #undef LSW
 }
+#endif
 
 /* Convert a 32-bit IEEE single precision floating point number to a
  * 'half' representation (s10.5)
