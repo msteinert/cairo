@@ -34,6 +34,7 @@
 static cairo_user_data_key_t closure_key;
 
 struct closure {
+    cairo_device_t *device;
     Display *dpy;
     Pixmap pix;
 };
@@ -42,6 +43,9 @@ static void
 cleanup (void *data)
 {
     struct closure *arg = data;
+
+    cairo_device_finish (arg->device);
+    cairo_device_destroy (arg->device);
 
     XFreePixmap (arg->dpy, arg->pix);
     XCloseDisplay (arg->dpy);
@@ -74,6 +78,7 @@ create_source_surface (int size)
 							     DefaultScreenOfDisplay (data->dpy),
 							     xrender_format,
 							     size, size);
+    data->device = cairo_device_reference (cairo_surface_get_device (surface));
     cairo_surface_set_user_data (surface, &closure_key, data, cleanup);
 
     return surface;
