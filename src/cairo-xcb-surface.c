@@ -600,14 +600,8 @@ _get_image_surface (cairo_xcb_surface_t     *surface,
 	 * which takes data in an arbitrary format and converts it
 	 * to something supported by that library.
 	 */
-	image = (cairo_image_surface_t *)
-	    _cairo_image_surface_create_with_masks (data,
-						    &masks,
-						    extents.width,
-						    extents.height,
-						    bytes_per_line);
-	if (image->base.status)
-	    goto FAIL;
+	ASSERT_NOT_REACHED;
+	goto FAIL;
     }
 
     /* Let the surface take ownership of the data */

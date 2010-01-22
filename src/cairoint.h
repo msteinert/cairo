@@ -833,7 +833,6 @@ struct _cairo_image_surface {
     int depth;
 
     pixman_image_t *pixman_image;
-    cairo_region_t *clip_region;
 
     unsigned owns_data : 1;
     unsigned transparency : 2;
@@ -2162,8 +2161,14 @@ _cairo_format_bits_per_pixel (cairo_format_t format) cairo_const;
 cairo_private cairo_format_t
 _cairo_format_from_content (cairo_content_t content) cairo_const;
 
+cairo_private cairo_format_t
+_cairo_format_from_pixman_format (pixman_format_code_t pixman_format);
+
 cairo_private cairo_content_t
 _cairo_content_from_format (cairo_format_t format) cairo_const;
+
+cairo_private cairo_content_t
+_cairo_content_from_pixman_format (pixman_format_code_t pixman_format);
 
 cairo_private cairo_surface_t *
 _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
@@ -2185,23 +2190,9 @@ _cairo_image_surface_create_with_pixman_format (unsigned char		*data,
 						int			 stride);
 
 cairo_private cairo_surface_t *
-_cairo_image_surface_create_with_masks (unsigned char	       *data,
-					cairo_format_masks_t   *format,
-					int			width,
-					int			height,
-					int			stride);
-
-cairo_private cairo_surface_t *
 _cairo_image_surface_create_with_content (cairo_content_t	content,
 					  int			width,
 					  int			height);
-
-cairo_private cairo_surface_t *
-_cairo_image_surface_create_for_data_with_content (unsigned char	*data,
-						   cairo_content_t	 content,
-						   int			 width,
-						   int			 height,
-						   int			 stride);
 
 cairo_private void
 _cairo_image_surface_assume_ownership_of_data (cairo_image_surface_t *surface);
