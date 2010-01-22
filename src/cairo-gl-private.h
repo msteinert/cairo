@@ -91,6 +91,7 @@ struct _cairo_gl_context {
     GLint max_texture_size;
 
     cairo_gl_surface_t *current_target;
+    cairo_gl_surface_t *glyphs_temporary_mask;
     cairo_gl_glyph_cache_t glyph_cache[2];
 
     void (*make_current)(void *ctx, cairo_gl_surface_t *surface);
@@ -167,6 +168,9 @@ _cairo_gl_set_destination (cairo_gl_surface_t *surface);
 
 cairo_private cairo_bool_t
 _cairo_gl_operator_is_supported (cairo_operator_t op);
+
+cairo_private void
+_cairo_gl_surface_clear (cairo_gl_surface_t *surface);
 
 cairo_private void
 _cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op,

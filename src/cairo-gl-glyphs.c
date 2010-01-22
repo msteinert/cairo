@@ -624,12 +624,25 @@ _cairo_gl_surface_show_glyphs_via_mask (cairo_gl_surface_t	*dst,
     int i;
 
     /* XXX: For non-CA, this should be CAIRO_CONTENT_ALPHA to save memory */
-    mask = cairo_gl_surface_create (dst->ctx,
-	                            CAIRO_CONTENT_COLOR_ALPHA,
-				    glyph_extents->width,
-				    glyph_extents->height);
-    if (unlikely (mask->status))
-	return mask->status;
+    if (dst->ctx->glyphs_temporary_mask) {
+	if (glyph_extents->width <= dst->ctx->glyphs_temporary_mask->width &&
+	    glyph_extents->height <= dst->ctx->glyphs_temporary_mask->height)
+	{
+	    _cairo_gl_surface_clear (dst->ctx->glyphs_temporary_mask);
+	    mask = &dst->ctx->glyphs_temporary_mask->base;
+	} else {
+	    cairo_surface_destroy (&dst->ctx->glyphs_temporary_mask->base);
+	    dst->ctx->glyphs_temporary_mask = NULL;
+	}
+    }
+    if (!mask) {
+	mask = cairo_gl_surface_create (dst->ctx,
+					CAIRO_CONTENT_COLOR_ALPHA,
+					glyph_extents->width,
+					glyph_extents->height);
+	if (unlikely (mask->status))
+	    return mask->status;
+    }
 
     for (i = 0; i < num_glyphs; i++) {
 	glyphs[i].x -= glyph_extents->x;
@@ -661,7 +674,9 @@ _cairo_gl_surface_show_glyphs_via_mask (cairo_gl_surface_t	*dst,
 	*remaining_glyphs = num_glyphs;
     }
 
-    cairo_surface_destroy (mask);
+    if (!dst->ctx->glyphs_temporary_mask)
+	dst->ctx->glyphs_temporary_mask = (cairo_gl_surface_t *)mask;
+
     return status;
 }
 

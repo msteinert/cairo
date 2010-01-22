@@ -176,6 +176,8 @@ cairo_gl_context_destroy (cairo_gl_context_t *context)
 
     context->destroy (context);
 
+    cairo_surface_destroy (&context->glyphs_temporary_mask->base);
+
     free (context);
 }
 slim_hidden_def (cairo_gl_context_destroy);
@@ -541,7 +543,7 @@ _cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
     return &surface->base;
 }
 
-static void
+void
 _cairo_gl_surface_clear (cairo_gl_surface_t *surface)
 {
     cairo_gl_context_t *ctx;
