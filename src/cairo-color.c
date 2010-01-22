@@ -67,13 +67,14 @@ _cairo_stock_color (cairo_stock_t stock)
 	return &cairo_color_black;
     case CAIRO_STOCK_TRANSPARENT:
 	return &cairo_color_transparent;
+
+    case CAIRO_STOCK_NUM_COLORS:
+    default:
+	ASSERT_NOT_REACHED;
+	/* If the user can get here somehow, give a color that indicates a
+	 * problem. */
+	return &cairo_color_magenta;
     }
-
-    ASSERT_NOT_REACHED;
-
-    /* If the user can get here somehow, give a color that indicates a
-     * problem. */
-    return &cairo_color_magenta;
 }
 
 void

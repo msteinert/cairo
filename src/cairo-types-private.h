@@ -306,7 +306,8 @@ typedef struct _cairo_format_masks {
 typedef enum {
     CAIRO_STOCK_WHITE,
     CAIRO_STOCK_BLACK,
-    CAIRO_STOCK_TRANSPARENT
+    CAIRO_STOCK_TRANSPARENT,
+    CAIRO_STOCK_NUM_COLORS,
 } cairo_stock_t;
 
 typedef enum _cairo_image_transparency {
