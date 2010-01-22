@@ -1561,6 +1561,11 @@ _cairo_path_fixed_fill_rectilinear_to_traps (const cairo_path_fixed_t *path,
 					     cairo_fill_rule_t fill_rule,
 					     cairo_traps_t *traps);
 
+cairo_private cairo_status_t
+_cairo_path_fixed_fill_rectilinear_to_boxes (const cairo_path_fixed_t *path,
+					     cairo_fill_rule_t fill_rule,
+					     cairo_boxes_t *boxes);
+
 cairo_private cairo_region_t *
 _cairo_path_fixed_fill_rectilinear_to_region (const cairo_path_fixed_t	*path,
 					      cairo_fill_rule_t	 fill_rule,
