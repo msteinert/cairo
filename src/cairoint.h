@@ -1591,6 +1591,13 @@ _cairo_path_fixed_stroke_rectilinear_to_traps (const cairo_path_fixed_t	*path,
 					       const cairo_stroke_style_t	*stroke_style,
 					       const cairo_matrix_t	*ctm,
 					       cairo_traps_t		*traps);
+
+cairo_private cairo_int_status_t
+_cairo_path_fixed_stroke_rectilinear_to_boxes (const cairo_path_fixed_t	*path,
+					       const cairo_stroke_style_t	*stroke_style,
+					       const cairo_matrix_t	*ctm,
+					       cairo_boxes_t		*boxes);
+
 cairo_private cairo_status_t
 _cairo_path_fixed_stroke_to_traps (const cairo_path_fixed_t	*path,
 				   const cairo_stroke_style_t	*stroke_style,
