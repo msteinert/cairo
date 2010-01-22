@@ -3605,7 +3605,8 @@ _cairo_ps_surface_fill (void		*abstract_surface,
     /* use the more accurate extents */
     if (extents.is_bounded) {
 	_cairo_path_fixed_fill_extents (path,
-					tolerance, fill_rule,
+					fill_rule,
+					tolerance,
 					&extents.mask);
 
 	if (! _cairo_rectangle_intersect (&extents.bounded, &extents.mask))
