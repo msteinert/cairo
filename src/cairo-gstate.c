@@ -532,6 +532,7 @@ _cairo_gstate_set_dash (cairo_gstate_t *gstate, const double *dash, int num_dash
     for (i = 0; i < gstate->stroke_style.num_dashes; i++) {
 	if (gstate->stroke_style.dash[i] < 0)
 	    return _cairo_error (CAIRO_STATUS_INVALID_DASH);
+
 	dash_total += gstate->stroke_style.dash[i];
     }
 
@@ -562,10 +563,11 @@ _cairo_gstate_get_dash (cairo_gstate_t *gstate,
 			int            *num_dashes,
 			double         *offset)
 {
-    if (dashes)
+    if (dashes) {
 	memcpy (dashes,
 		gstate->stroke_style.dash,
 		sizeof (double) * gstate->stroke_style.num_dashes);
+    }
 
     if (num_dashes)
 	*num_dashes = gstate->stroke_style.num_dashes;
@@ -912,9 +914,10 @@ _cairo_gstate_copy_transformed_pattern (cairo_gstate_t  *gstate,
     if (! _cairo_matrix_is_identity (ctm_inverse))
 	_cairo_pattern_transform (pattern, ctm_inverse);
 
-    if (_cairo_surface_has_device_transform (gstate->target))
+    if (_cairo_surface_has_device_transform (gstate->target)) {
         _cairo_pattern_transform (pattern,
                                   &gstate->target->device_transform_inverse);
+    }
 }
 
 static void
