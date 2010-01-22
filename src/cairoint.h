@@ -1498,6 +1498,10 @@ _cairo_path_fixed_interpret_flat (const cairo_path_fixed_t *path,
 		       void				  *closure,
 		       double				  tolerance);
 
+cairo_private cairo_bool_t
+_cairo_path_fixed_extents (const cairo_path_fixed_t *path,
+			   cairo_box_t *box);
+
 cairo_private void
 _cairo_path_fixed_approximate_clip_extents (const cairo_path_fixed_t	*path,
 					    cairo_rectangle_int_t *extents);
@@ -1525,11 +1529,6 @@ _cairo_path_fixed_stroke_extents (const cairo_path_fixed_t *path,
 				  const cairo_matrix_t *ctm_inverse,
 				  double tolerance,
 				  cairo_rectangle_int_t *extents);
-
-cairo_private void
-_cairo_path_fixed_bounds (const cairo_path_fixed_t *path,
-			  double *x1, double *y1,
-			  double *x2, double *y2);
 
 cairo_private void
 _cairo_path_fixed_transform (cairo_path_fixed_t	*path,

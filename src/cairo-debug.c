@@ -221,6 +221,12 @@ _cairo_debug_print_path (FILE *stream, cairo_path_fixed_t *path)
 {
     cairo_status_t status;
 
+    printf ("path: extents=(%f, %f), (%f, %f)\n",
+	    _cairo_fixed_to_double (path->extents.p1.x),
+	    _cairo_fixed_to_double (path->extents.p1.y),
+	    _cairo_fixed_to_double (path->extents.p2.x),
+	    _cairo_fixed_to_double (path->extents.p2.y));
+
     status = _cairo_path_fixed_interpret (path,
 					  CAIRO_DIRECTION_FORWARD,
 					  _print_move_to,

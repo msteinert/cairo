@@ -806,14 +806,25 @@ _cairo_gstate_path_extents (cairo_gstate_t     *gstate,
 			    double *x1, double *y1,
 			    double *x2, double *y2)
 {
+    cairo_box_t box;
     double px1, py1, px2, py2;
 
-    _cairo_path_fixed_bounds (path,
-			      &px1, &py1, &px2, &py2);
+    if (_cairo_path_fixed_extents (path, &box)) {
+	px1 = _cairo_fixed_to_double (box.p1.x);
+	py1 = _cairo_fixed_to_double (box.p1.y);
+	px2 = _cairo_fixed_to_double (box.p2.x);
+	py2 = _cairo_fixed_to_double (box.p2.y);
 
-    _cairo_gstate_backend_to_user_rectangle (gstate,
-					     &px1, &py1, &px2, &py2,
-					     NULL);
+	_cairo_gstate_backend_to_user_rectangle (gstate,
+						 &px1, &py1, &px2, &py2,
+						 NULL);
+    } else {
+	px1 = 0.0;
+	py1 = 0.0;
+	px2 = 0.0;
+	py2 = 0.0;
+    }
+
     if (x1)
 	*x1 = px1;
     if (y1)
