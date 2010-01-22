@@ -1835,6 +1835,29 @@ _cairo_pattern_is_opaque (const cairo_pattern_t *abstract_pattern,
     return FALSE;
 }
 
+cairo_bool_t
+_cairo_pattern_is_clear (const cairo_pattern_t *abstract_pattern)
+{
+    const cairo_pattern_union_t *pattern;
+
+    if (abstract_pattern->has_component_alpha)
+	return FALSE;
+
+    pattern = (cairo_pattern_union_t *) abstract_pattern;
+    switch (pattern->type) {
+    case CAIRO_PATTERN_TYPE_SOLID:
+	return pattern->solid.color.alpha_short == 0x0000;
+    case CAIRO_PATTERN_TYPE_SURFACE:
+	return pattern->surface.surface->is_clear &&
+	       pattern->surface.surface->content & CAIRO_CONTENT_ALPHA;
+    default:
+	ASSERT_NOT_REACHED;
+    case CAIRO_PATTERN_TYPE_LINEAR:
+    case CAIRO_PATTERN_TYPE_RADIAL:
+	return FALSE;
+    }
+}
+
 /**
  * _cairo_pattern_analyze_filter:
  * @pattern: surface pattern

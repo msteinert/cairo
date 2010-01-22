@@ -1019,6 +1019,12 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
     if (_cairo_pattern_is_opaque (mask, NULL))
 	return _cairo_gstate_paint (gstate);
 
+    if (_cairo_pattern_is_clear (mask) &&
+	_cairo_operator_bounded_by_mask (gstate->op))
+    {
+	return CAIRO_STATUS_SUCCESS;
+    }
+
     _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
     _cairo_gstate_copy_transformed_mask (gstate, &mask_pattern.base, mask);
 
