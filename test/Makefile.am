@@ -41,6 +41,10 @@ if CAIRO_HAS_TEST_SURFACES
 test_sources += $(test_fallback16_surface_test_sources)
 endif
 
+if CAIRO_HAS_XCB_SURFACE
+test_sources += $(xcb_surface_test_sources)
+endif
+
 if CAIRO_HAS_XLIB_SURFACE
 test_sources += $(xlib_surface_test_sources)
 endif
@@ -1057,6 +1061,8 @@ REFERENCE_IMAGES = \
 	user-font.ref.png \
 	user-font.svg.ref.png \
 	user-font.xlib.ref.png \
+	xcb-surface-source.rgb24.ref.png \
+	xcb-surface-source.argb32.ref.png \
 	xlib-expose-event.ref.png \
 	xlib-surface-source.rgb24.ref.png \
 	xlib-surface-source.argb32.ref.png \

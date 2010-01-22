@@ -286,6 +286,9 @@ svg_surface_test_sources = \
 test_fallback16_surface_test_sources = \
 	test-fallback16-surface-source.c
 
+xcb_surface_test_sources = \
+	xcb-surface-source.c
+
 xlib_surface_test_sources = \
 	xlib-expose-event.c \
 	xlib-surface.c \
