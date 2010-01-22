@@ -2841,6 +2841,15 @@ _emit_scaled_glyphs (cairo_script_surface_t *surface,
 }
 
 static void
+to_octal (int value, char *buf, size_t size)
+{
+    do {
+	buf[--size] = '0' + (value & 7);
+	value >>= 3;
+    } while (size);
+}
+
+static void
 _emit_string_literal (cairo_script_surface_t *surface,
 		      const char *utf8, int len)
 {
@@ -2885,14 +2894,10 @@ ESCAPED_CHAR:
 	    if (isprint (c) || isspace (c)) {
 		_cairo_output_stream_printf (ctx->stream, "%c", c);
 	    } else {
-		int octal = 0;
-		while (c) {
-		    octal *= 10;
-		    octal += c&7;
-		    c /= 8;
-		}
-		_cairo_output_stream_printf (ctx->stream,
-					     "\\%03d", octal);
+		char buf[4] = { '\\' };
+
+		to_octal (c, buf+1, 3);
+		_cairo_output_stream_write (ctx->stream, buf, 4);
 	    }
 	    break;
 	}
