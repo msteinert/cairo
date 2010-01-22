@@ -2377,8 +2377,7 @@ _cairo_traps_limit (cairo_traps_t	*traps,
 
 cairo_private cairo_status_t
 _cairo_traps_init_boxes (cairo_traps_t	    *traps,
-			 const cairo_box_t    *boxes,
-			 int		     num_boxes);
+		         const cairo_boxes_t *boxes);
 
 cairo_private void
 _cairo_traps_clear (cairo_traps_t *traps);
