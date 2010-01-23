@@ -2116,25 +2116,22 @@ _cairo_gl_emit_span_vertex (cairo_gl_surface_span_renderer_t *renderer,
 }
 
 static void
-_cairo_gl_emit_span (cairo_gl_surface_span_renderer_t *renderer,
-		     int x, int y1, int y2,
-		     uint8_t alpha)
-{
-    float *vertices = _cairo_gl_span_renderer_get_vbo (renderer, 2);
-
-    _cairo_gl_emit_span_vertex (renderer, x, y1, alpha, vertices);
-    _cairo_gl_emit_span_vertex (renderer, x, y2, alpha,
-			       vertices + renderer->vertex_size / 4);
-}
-
-static void
 _cairo_gl_emit_rectangle (cairo_gl_surface_span_renderer_t *renderer,
 			  int x1, int y1,
 			  int x2, int y2,
 			  int coverage)
 {
-    _cairo_gl_emit_span (renderer, x1, y1, y2, coverage);
-    _cairo_gl_emit_span (renderer, x2, y2, y1, coverage);
+    float *vertices = _cairo_gl_span_renderer_get_vbo (renderer, 4);
+    int vsize = renderer->vertex_size / 4;
+
+    _cairo_gl_emit_span_vertex (renderer, x1, y1, coverage,
+				vertices + vsize * 0);
+    _cairo_gl_emit_span_vertex (renderer, x1, y2, coverage,
+				vertices + vsize * 1);
+    _cairo_gl_emit_span_vertex (renderer, x2, y2, coverage,
+				vertices + vsize * 2);
+    _cairo_gl_emit_span_vertex (renderer, x2, y1, coverage,
+				vertices + vsize * 3);
 }
 
 static cairo_status_t
