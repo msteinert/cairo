@@ -181,7 +181,7 @@ typedef struct _sweep_line {
     jmp_buf unwind;
 } sweep_line_t;
 
-always_inline static struct quorem
+cairo_always_inline static struct quorem
 floored_divrem (int a, int b)
 {
     struct quorem qr;
@@ -1496,7 +1496,7 @@ full_step (cairo_botor_scan_converter_t *self,
     full_reset (sweep_line);
 }
 
-always_inline static void
+cairo_always_inline static void
 sub_inc_edge (edge_t *edge,
 	      cairo_fixed_t height)
 {
@@ -1628,7 +1628,7 @@ sub_evenodd (sweep_line_t *sweep_line)
     } while (pos != &sweep_line->active);
 }
 
-always_inline static void
+cairo_always_inline static void
 sub_step (cairo_botor_scan_converter_t *self,
 	  sweep_line_t *sweep_line)
 {
@@ -1720,7 +1720,7 @@ coverage_render_vertical_runs (sweep_line_t *sweep, edge_t *edge, cairo_fixed_t 
     cell->uncovered_area += 2 * _cairo_fixed_fractional_part (edge->x.quo) * height;
 }
 
-always_inline static void
+cairo_always_inline static void
 sub_emit (cairo_botor_scan_converter_t *self,
 	  sweep_line_t *sweep,
 	  cairo_span_renderer_t *renderer)
