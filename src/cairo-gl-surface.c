@@ -545,6 +545,8 @@ cairo_gl_surface_create (cairo_device_t		*abstract_device,
 	return _cairo_surface_create_in_error (status);
     }
 
+    _cairo_gl_context_release (ctx);
+
     return &surface->base;
 }
 slim_hidden_def (cairo_gl_surface_create);
