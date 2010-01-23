@@ -64,6 +64,9 @@ _cairo_image_surface_fill (void *dst,
 			   cairo_antialias_t		 antialias,
 			   cairo_clip_t		*clip);
 
+static pixman_image_t *
+_pixman_image_for_solid (const cairo_solid_pattern_t *pattern);
+
 static cairo_bool_t
 _cairo_image_surface_is_size_valid (int width, int height)
 {
