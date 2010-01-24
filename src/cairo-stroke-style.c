@@ -239,8 +239,8 @@ _cairo_stroke_style_dash_approximate (const cairo_stroke_style_t *style,
     scale = tolerance / _cairo_matrix_transformed_circle_major_axis (ctm, 1.0);
 
     /* We stop searching for a starting point as soon as the
-       offset reaches zero.  Otherwise when an initial dash
-       segment shrinks to zero it will be skipped over. */
+     * offset reaches zero.  Otherwise when an initial dash
+     * segment shrinks to zero it will be skipped over. */
     offset = style->dash_offset;
     while (offset > 0.0 && offset >= style->dash[i]) {
 	offset -= style->dash[i];
