@@ -920,11 +920,18 @@ CreateRepeatingGradientFunction (cairo_quartz_surface_t *surface,
 
 /* Obtain a CGImageRef from a #cairo_surface_t * */
 
+typedef struct {
+    cairo_surface_t *surface;
+    cairo_image_surface_t *image_out;
+    void *image_extra;
+} quartz_source_image_t;
+
 static void
 DataProviderReleaseCallback (void *info, const void *data, size_t size)
 {
-    cairo_surface_t *surface = (cairo_surface_t *) info;
-    cairo_surface_destroy (surface);
+    quartz_source_image_t *source_img = info;
+    _cairo_surface_release_source_image (source_img->surface, source_img->image_out, source_img->image_extra);
+    free (source_img);
 }
 
 static cairo_status_t
@@ -932,11 +939,9 @@ _cairo_surface_to_cgimage (cairo_surface_t *target,
 			   cairo_surface_t *source,
 			   CGImageRef *image_out)
 {
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
-    cairo_surface_type_t stype = cairo_surface_get_type (source);
-    cairo_image_surface_t *isurf;
-    CGImageRef image;
-    void *image_extra;
+    cairo_status_t status;
+    quartz_source_image_t *source_img;
+    cairo_surface_type_t stype = source->backend->type;
 
     if (stype == CAIRO_SURFACE_TYPE_QUARTZ_IMAGE) {
 	cairo_quartz_image_surface_t *surface = (cairo_quartz_image_surface_t *) source;
@@ -958,42 +963,38 @@ _cairo_surface_to_cgimage (cairo_surface_t *target,
 	}
     }
 
-    if (stype != CAIRO_SURFACE_TYPE_IMAGE) {
-	status = _cairo_surface_acquire_source_image (source,
-						      &isurf, &image_extra);
-	if (status)
-	    return status;
-    } else {
-	isurf = (cairo_image_surface_t *) source;
+    source_img = malloc (sizeof (quartz_source_image_t));
+    if (source_img == NULL)
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    source_img->surface = source;
+
+    status = _cairo_surface_acquire_source_image (source_img->surface, &source_img->image_out, &source_img->image_extra);
+    if (status) {
+	free (source_img);
+	return status;
     }
 
-    if (isurf->width == 0 || isurf->height == 0) {
+    if (source_img->image_out->width == 0 || source_img->image_out->height == 0) {
 	*image_out = NULL;
+	DataProviderReleaseCallback (source_img,
+				     source_img->image_out->data,
+				     source_img->image_out->height * source_img->image_out->stride);
     } else {
-	cairo_image_surface_t *isurf_snap = NULL;
+	*image_out = _cairo_quartz_create_cgimage (source_img->image_out->format,
+						   source_img->image_out->width,
+						   source_img->image_out->height,
+						   source_img->image_out->stride,
+						   source_img->image_out->data,
+						   TRUE,
+						   NULL,
+						   DataProviderReleaseCallback,
+						   source_img);
 
-	isurf_snap = (cairo_image_surface_t*)
-	    _cairo_surface_snapshot (&isurf->base);
-	if (isurf_snap->base.status)
-	    return isurf_snap->base.status;
-
-	image = _cairo_quartz_create_cgimage (isurf_snap->format,
-					      isurf_snap->width,
-					      isurf_snap->height,
-					      isurf_snap->stride,
-					      isurf_snap->data,
-					      TRUE,
-					      NULL,
-					      DataProviderReleaseCallback,
-					      isurf_snap);
-
-	*image_out = image;
-	if (image == NULL)
+	/* TODO: differentiate memory error and unsupported surface type */
+	if (*image_out == NULL)
 	    status = CAIRO_INT_STATUS_UNSUPPORTED;
     }
-
-    if (&isurf->base != source)
-	_cairo_surface_release_source_image (source, isurf, image_extra);
 
     return status;
 }
