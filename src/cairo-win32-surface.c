@@ -1886,7 +1886,7 @@ typedef struct _cairo_win32_surface_span_renderer {
 } cairo_win32_surface_span_renderer_t;
 
 static cairo_status_t
-_cairo_win32_surface_span_renderer_render_row (
+_cairo_win32_surface_span_renderer_render_rows (
     void				*abstract_renderer,
     int					 y,
     int					 height,
@@ -1990,7 +1990,7 @@ _cairo_win32_surface_create_span_renderer (cairo_operator_t	 op,
 
     renderer->base.destroy = _cairo_win32_surface_span_renderer_destroy;
     renderer->base.finish = _cairo_win32_surface_span_renderer_finish;
-    renderer->base.render_row = _cairo_win32_surface_span_renderer_render_rows;
+    renderer->base.render_rows = _cairo_win32_surface_span_renderer_render_rows;
     renderer->op = op;
     renderer->pattern = pattern;
     renderer->antialias = antialias;
