@@ -421,29 +421,11 @@ cairo_surface_create_for_region (cairo_surface_t *target,
 				 int width, int height)
 {
     cairo_surface_subsurface_t *surface;
+    cairo_rectangle_int_t target_extents;
+    cairo_bool_t is_empty;
 
     if (unlikely (target->status))
 	return _cairo_surface_create_in_error (target->status);
-
-    if (target->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SUBSURFACE) {
-	/* Maintain subsurfaces as 1-depth */
-	cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) target;
-	cairo_rectangle_int_t r;
-	cairo_bool_t is_empty;
-
-	r.x = x;
-	r.y = y;
-	r.width  = width;
-	r.height = height;
-
-	is_empty = _cairo_rectangle_intersect (&r, &sub->extents);
-
-	x = r.x;
-	y = r.y;
-	width = r.width;
-	height = r.height;
-	target = sub->target;
-    }
 
     surface = malloc (sizeof (cairo_surface_subsurface_t));
     if (unlikely (surface == NULL))
@@ -455,11 +437,23 @@ cairo_surface_create_for_region (cairo_surface_t *target,
 			 target->content);
     surface->base.type = target->type;
 
-    surface->target = cairo_surface_reference (target);
     surface->extents.x = x;
     surface->extents.y = y;
     surface->extents.width = width;
     surface->extents.height = height;
+
+    if (_cairo_surface_get_extents (target, &target_extents))
+        is_empty = _cairo_rectangle_intersect (&surface->extents, &target_extents);
+
+    if (target->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SUBSURFACE) {
+	/* Maintain subsurfaces as 1-depth */
+	cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) target;
+	surface->extents.x += sub->extents.x;
+	surface->extents.y += sub->extents.y;
+	target = sub->target;
+    }
+
+    surface->target = cairo_surface_reference (target);
 
     return &surface->base;
 }
