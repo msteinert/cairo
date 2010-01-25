@@ -938,6 +938,11 @@ _cairo_clip_path_get_surface (cairo_clip_path_t *clip_path,
 						     CAIRO_CONTENT_ALPHA,
 						     clip_extents->width,
 						     clip_extents->height);
+    if (surface == NULL) {
+	surface = cairo_image_surface_create (CAIRO_FORMAT_A8,
+					      clip_extents->width,
+					      clip_extents->height);
+    }
     if (unlikely (surface->status))
 	return surface;
 
