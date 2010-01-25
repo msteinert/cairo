@@ -263,7 +263,7 @@ _cairo_win32_printing_surface_analyze_operation (cairo_win32_surface_t *surface,
 	return analyze_surface_pattern_transparency (surface_pattern);
     }
 
-    if (_cairo_pattern_is_opaque (pattern))
+    if (_cairo_pattern_is_opaque (pattern, NULL))
 	return CAIRO_STATUS_SUCCESS;
     else
 	return CAIRO_INT_STATUS_FLATTEN_TRANSPARENCY;
