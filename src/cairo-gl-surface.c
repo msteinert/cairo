@@ -1277,8 +1277,8 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 }
 
 /**
- * implements component-alpha CAIRO_OPERATOR_SOURCE using two passes of
- * the simpler operations CAIRO_OPERATOR_DEST_OUT and CAIRO_OPERATOR_ADD.
+ * implements component-alpha %CAIRO_OPERATOR_SOURCE using two passes of
+ * the simpler operations %CAIRO_OPERATOR_DEST_OUT and %CAIRO_OPERATOR_ADD.
  *
  * From http://anholt.livejournal.com/32058.html:
  *
