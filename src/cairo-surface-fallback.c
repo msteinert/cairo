@@ -274,7 +274,6 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
 	goto CLEANUP_SURFACE;
 
     _cairo_pattern_init_for_surface (&clip_pattern, clip_surface);
-    cairo_surface_destroy (clip_surface);
 
     /* Combine that with the clip */
     status = _cairo_surface_composite (CAIRO_OPERATOR_DEST_IN,
@@ -501,8 +500,6 @@ _composite_trap_region (cairo_clip_t            *clip,
 	}
 
 	_cairo_pattern_init_for_surface (&mask_pattern, clip_surface);
-	cairo_surface_destroy (clip_surface);
-
 	clip_extents = _cairo_clip_get_extents (clip);
 	mask_x = extents->x - clip_extents->x;
 	mask_y = extents->y - clip_extents->y;
