@@ -245,10 +245,8 @@ _cairo_gl_get_image_format_and_type (pixman_format_code_t pixman_format,
     case PIXMAN_g1:
     case PIXMAN_yuy2:
     case PIXMAN_yv12:
-#if PIXMAN_VERSION >= PIXMAN_VERSION_ENCODE(0,15,16)
     case PIXMAN_x2r10g10b10:
     case PIXMAN_a2r10g10b10:
-#endif
     default:
 	return FALSE;
     }
