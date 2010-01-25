@@ -259,6 +259,7 @@ _cairo_xcb_surface_finish (void *abstract_surface)
 
     cairo_list_del (&surface->link);
 
+#if CAIRO_HAS_DRM_SURFACE && CAIRO_HAS_XCB_DRM_FUNCTIONS
     if (surface->drm != NULL) {
 	cairo_surface_finish (surface->drm);
 	cairo_surface_destroy (surface->drm);
@@ -266,6 +267,7 @@ _cairo_xcb_surface_finish (void *abstract_surface)
 	xcb_dri2_destroy_drawable (surface->connection->xcb_connection,
 				   surface->drawable);
     }
+#endif
 
     status = _cairo_xcb_connection_acquire (surface->connection);
     if (status == CAIRO_STATUS_SUCCESS) {
