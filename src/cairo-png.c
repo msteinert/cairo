@@ -172,14 +172,11 @@ write_png (cairo_surface_t	*surface,
     /* Handle the various fallback formats (e.g. low bit-depth XServers)
      * by coercing them to a simpler format using pixman.
      */
-    if (image->format == CAIRO_FORMAT_INVALID) {
-	clone = _cairo_image_surface_coerce (image,
-					     _cairo_format_from_content (image->base.content));
-	status = clone->base.status;
-	if (unlikely (status))
-	    goto BAIL1;
-    } else
-	clone = image;
+    clone = _cairo_image_surface_coerce (image,
+                                         _cairo_format_from_content (image->base.content));
+    status = clone->base.status;
+    if (unlikely (status))
+        goto BAIL1;
 
     rows = _cairo_malloc_ab (clone->height, sizeof (png_byte*));
     if (unlikely (rows == NULL)) {
@@ -279,8 +276,7 @@ BAIL4:
 BAIL3:
     free (rows);
 BAIL2:
-    if (clone != image)
-	cairo_surface_destroy (&clone->base);
+    cairo_surface_destroy (&clone->base);
 BAIL1:
     _cairo_surface_release_source_image (surface, image, image_extra);
 
