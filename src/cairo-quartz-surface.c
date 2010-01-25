@@ -182,14 +182,14 @@ _cairo_quartz_create_cgimage (cairo_format_t format,
     CGImageRef image = NULL;
     CGDataProviderRef dataProvider = NULL;
     CGColorSpaceRef colorSpace = colorSpaceOverride;
-    CGBitmapInfo bitinfo;
+    CGBitmapInfo bitinfo = kCGBitmapByteOrder32Host;
     int bitsPerComponent, bitsPerPixel;
 
     switch (format) {
 	case CAIRO_FORMAT_ARGB32:
 	    if (colorSpace == NULL)
 		colorSpace = CGColorSpaceCreateDeviceRGB();
-	    bitinfo = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Host;
+	    bitinfo |= kCGImageAlphaPremultipliedFirst;
 	    bitsPerComponent = 8;
 	    bitsPerPixel = 32;
 	    break;
@@ -197,7 +197,7 @@ _cairo_quartz_create_cgimage (cairo_format_t format,
 	case CAIRO_FORMAT_RGB24:
 	    if (colorSpace == NULL)
 		colorSpace = CGColorSpaceCreateDeviceRGB();
-	    bitinfo = kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Host;
+	    bitinfo |= kCGImageAlphaNoneSkipFirst;
 	    bitsPerComponent = 8;
 	    bitsPerPixel = 32;
 	    break;
@@ -302,7 +302,7 @@ _cairo_quartz_verify_surface_size(int width, int height)
 
 typedef struct _quartz_stroke {
     CGContextRef cgContext;
-    cairo_matrix_t *ctm_inverse;
+    const cairo_matrix_t *ctm_inverse;
 } quartz_stroke_t;
 
 /* cairo path -> execute in context */
@@ -864,8 +864,8 @@ CreateRepeatingGradientFunction (cairo_quartz_surface_t *surface,
     dy = fabs (mend.y - mstart.y);
 
     if (dx > 1e-6) {
-	x_rep_start = (int) ceil(MIN(mstart.x, mend.x) / dx);
-	x_rep_end = (int) ceil((surface->extents.width - MAX(mstart.x, mend.x)) / dx);
+	x_rep_start = ceil(MIN(mstart.x, mend.x) / dx);
+	x_rep_end = ceil((surface->extents.width - MAX(mstart.x, mend.x)) / dx);
 
 	if (mend.x < mstart.x) {
 	    int swap = x_rep_end;
@@ -875,8 +875,8 @@ CreateRepeatingGradientFunction (cairo_quartz_surface_t *surface,
     }
 
     if (dy > 1e-6) {
-	y_rep_start = (int) ceil(MIN(mstart.y, mend.y) / dy);
-	y_rep_end = (int) ceil((surface->extents.width - MAX(mstart.y, mend.y)) / dy);
+	y_rep_start = ceil(MIN(mstart.y, mend.y) / dy);
+	y_rep_end = ceil((surface->extents.width - MAX(mstart.y, mend.y)) / dy);
 
 	if (mend.y < mstart.y) {
 	    int swap = y_rep_end;
