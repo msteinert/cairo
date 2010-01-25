@@ -4099,7 +4099,15 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     extents.bounded.width  = width;
     extents.bounded.height = height;
 
-    cairo_region_get_extents (clip_region, &extents.unbounded);
+    if (clip_region != NULL) {
+	cairo_region_get_extents (clip_region, &extents.unbounded);
+    } else {
+	extents.unbounded.x = 0;
+	extents.unbounded.y = 0;
+	extents.unbounded.width  = dst->width;
+	extents.unbounded.height = dst->height;
+    }
+
     extents.is_bounded = _cairo_operator_bounded_by_either (op);
 
     if (clip_region != NULL) {
