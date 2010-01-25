@@ -291,17 +291,18 @@ _cairo_type3_glyph_surface_show_glyphs (void		     *abstract_surface,
     cairo_type3_glyph_surface_t *surface = abstract_surface;
     cairo_int_status_t status;
     cairo_scaled_font_t *font;
-    cairo_matrix_t new_scale, invert_y_axis;
+    cairo_matrix_t new_ctm, invert_y_axis;
 
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (status))
 	return status;
 
     cairo_matrix_init_scale (&invert_y_axis, 1, -1);
-    cairo_matrix_multiply (&new_scale, &scaled_font->scale, &invert_y_axis);
+    cairo_matrix_multiply (&new_ctm, &invert_y_axis, &scaled_font->ctm);
+    cairo_matrix_multiply (&new_ctm, &surface->cairo_to_pdf, &new_ctm);
     font = cairo_scaled_font_create (scaled_font->font_face,
-				     &new_scale,
-				     &surface->cairo_to_pdf,
+				     &scaled_font->font_matrix,
+				     &new_ctm,
 				     &scaled_font->options);
     if (unlikely (font->status))
 	return font->status;
