@@ -706,7 +706,7 @@ _cairo_xcb_connection_put_xid (cairo_xcb_connection_t *connection,
 {
     cairo_xcb_xid_t *cache;
 
-    assert (CAIRO_MUTEX_IS_LOCKED (connection->mutex));
+    assert (CAIRO_MUTEX_IS_LOCKED (connection->device.mutex));
     cache = _cairo_freepool_alloc (&connection->xid_pool);
     if (likely (cache != NULL)) {
 	cache->xid = xid;
@@ -719,7 +719,7 @@ _cairo_xcb_connection_get_xid (cairo_xcb_connection_t *connection)
 {
     uint32_t xid;
 
-    assert (CAIRO_MUTEX_IS_LOCKED (connection->mutex));
+    assert (CAIRO_MUTEX_IS_LOCKED (connection->device.mutex));
     if (! cairo_list_is_empty (&connection->free_xids)) {
 	cairo_xcb_xid_t *cache;
 
@@ -750,7 +750,7 @@ _cairo_xcb_return_socket (void *closure)
 cairo_status_t
 _cairo_xcb_connection_take_socket (cairo_xcb_connection_t *connection)
 {
-    assert (CAIRO_MUTEX_IS_LOCKED (connection->mutex));
+    assert (CAIRO_MUTEX_IS_LOCKED (connection->device.mutex));
 
     if (unlikely (connection->device.status))
 	return connection->device.status;

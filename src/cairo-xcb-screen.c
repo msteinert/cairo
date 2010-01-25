@@ -323,7 +323,7 @@ _cairo_xcb_screen_get_gc (cairo_xcb_screen_t *screen,
 {
     int i;
 
-    assert (CAIRO_MUTEX_IS_LOCKED (screen->connection->mutex));
+    assert (CAIRO_MUTEX_IS_LOCKED (screen->connection->device.mutex));
 
     for (i = 0; i < ARRAY_LENGTH (screen->gc); i++) {
 	if (((screen->gc_depths >> (8*i)) & 0xff) == depth) {
@@ -340,7 +340,7 @@ _cairo_xcb_screen_put_gc (cairo_xcb_screen_t *screen, int depth, xcb_gcontext_t 
 {
     int i;
 
-    assert (CAIRO_MUTEX_IS_LOCKED (screen->connection->mutex));
+    assert (CAIRO_MUTEX_IS_LOCKED (screen->connection->device.mutex));
 
     for (i = 0; i < ARRAY_LENGTH (screen->gc); i++) {
 	if (((screen->gc_depths >> (8*i)) & 0xff) == 0)
@@ -366,7 +366,7 @@ _cairo_xcb_screen_store_surface_picture (cairo_xcb_screen_t *screen,
     struct pattern_cache_entry *entry;
     cairo_status_t status;
 
-    assert (CAIRO_MUTEX_IS_LOCKED (screen->connection->mutex));
+    assert (CAIRO_MUTEX_IS_LOCKED (screen->connection->device.mutex));
 
     entry = _cairo_freelist_alloc (&screen->pattern_cache_entry_freelist);
     if (unlikely (entry == NULL))
@@ -395,7 +395,7 @@ _cairo_xcb_screen_remove_surface_picture (cairo_xcb_screen_t *screen,
     struct pattern_cache_entry tmpl;
     struct pattern_cache_entry *entry;
 
-    assert (CAIRO_MUTEX_IS_LOCKED (screen->connection->mutex));
+    assert (CAIRO_MUTEX_IS_LOCKED (screen->connection->device.mutex));
 
     tmpl.key.hash = picture->unique_id;
 
@@ -412,7 +412,7 @@ _cairo_xcb_screen_store_linear_picture (cairo_xcb_screen_t *screen,
     struct pattern_cache_entry *entry;
     cairo_status_t status;
 
-    assert (CAIRO_MUTEX_IS_LOCKED (screen->connection->mutex));
+    assert (CAIRO_MUTEX_IS_LOCKED (screen->connection->device.mutex));
 
     entry = _cairo_freelist_alloc (&screen->pattern_cache_entry_freelist);
     if (unlikely (entry == NULL))
@@ -449,7 +449,7 @@ _cairo_xcb_screen_lookup_linear_picture (cairo_xcb_screen_t *screen,
     struct pattern_cache_entry tmpl;
     struct pattern_cache_entry *entry;
 
-    assert (CAIRO_MUTEX_IS_LOCKED (screen->connection->mutex));
+    assert (CAIRO_MUTEX_IS_LOCKED (screen->connection->device.mutex));
 
     tmpl.key.hash = _cairo_linear_pattern_hash (_CAIRO_HASH_INIT_VALUE, linear);
     _cairo_pattern_init_static_copy (&tmpl.pattern.base, &linear->base.base);
@@ -469,7 +469,7 @@ _cairo_xcb_screen_store_radial_picture (cairo_xcb_screen_t *screen,
     struct pattern_cache_entry *entry;
     cairo_status_t status;
 
-    assert (CAIRO_MUTEX_IS_LOCKED (screen->connection->mutex));
+    assert (CAIRO_MUTEX_IS_LOCKED (screen->connection->device.mutex));
 
     entry = _cairo_freelist_alloc (&screen->pattern_cache_entry_freelist);
     if (unlikely (entry == NULL))
@@ -505,7 +505,7 @@ _cairo_xcb_screen_lookup_radial_picture (cairo_xcb_screen_t *screen,
     struct pattern_cache_entry tmpl;
     struct pattern_cache_entry *entry;
 
-    assert (CAIRO_MUTEX_IS_LOCKED (screen->connection->mutex));
+    assert (CAIRO_MUTEX_IS_LOCKED (screen->connection->device.mutex));
 
     tmpl.key.hash = _cairo_radial_pattern_hash (_CAIRO_HASH_INIT_VALUE, radial);
     _cairo_pattern_init_static_copy (&tmpl.pattern.base, &radial->base.base);
