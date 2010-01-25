@@ -38,10 +38,14 @@ AC_ARG_ENABLE(pthread,
 
 have_pthread=no
 if test "x$use_pthread" != "xno"; then
-  pthread_REQUIRES="pthread-stubs"
+  pthread_REQUIRES="pthread"
   PKG_CHECK_MODULES(pthread, $pthread_REQUIRES,
 		    [use_pthread=yes; have_pthread=yes],
-		    [AC_CHECK_HEADERS([pthread.h], [use_pthread=yes; have_pthread=yes], [use_pthread="no (requires $pthread_REQUIRES)"])])
+		    [AC_CHECK_HEADERS([pthread.h], [use_pthread=yes;
+                                                    pthread_CFLAGS="-pthread"
+                                                    pthread_LIBS="-pthread"
+                                                    have_pthread=yes
+                                                   ], [use_pthread="no (requires $pthread_REQUIRES)"])])
   if test "x$have_pthread" = "xyes"; then
     AC_DEFINE([CAIRO_HAS_PTHREAD], 1, [Define to 1 if we have pthread support])
   fi
@@ -50,6 +54,8 @@ AM_CONDITIONAL(HAVE_PTHREAD, test "x$have_pthread" = "xyes")
 if test "x$have_pthread" = xno -a "x$use_pthread" = xyes; then
   AC_MSG_ERROR([pthread requested but not found])
 fi
+CAIRO_CFLAGS="$CAIRO_CFLAGS $pthread_CFLAGS"
+CAIRO_LIBS="$CAIRO_LIBS $pthread_LIBS"
 
 dnl ===========================================================================
 
