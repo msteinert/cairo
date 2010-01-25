@@ -37,13 +37,19 @@
 #include "cairo-freelist-private.h"
 #include "cairo-list-private.h"
 
-#include <sys/ipc.h>
-#include <sys/shm.h>
 #include <xcb/xcbext.h>
 #include <xcb/bigreq.h>
-#include <xcb/dri2.h>
-#include <xcb/shm.h>
 #include <errno.h>
+
+#if CAIRO_HAS_XCB_DRM_FUNCTIONS
+#include <xcb/dri2.h>
+#endif
+
+#if CAIRO_HAS_XCB_SHM_FUNCTIONS
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <xcb/shm.h>
+#endif
 
 typedef struct _cairo_xcb_xrender_format {
     cairo_hash_entry_t key;
@@ -383,6 +389,7 @@ _cairo_xcb_connection_query_cairo (cairo_xcb_connection_t *connection)
 }
 #endif
 
+#if CAIRO_HAS_XCB_SHM_FUNCTIONS
 static cairo_bool_t
 can_use_shm (cairo_xcb_connection_t *connection)
 {
@@ -438,6 +445,7 @@ _cairo_xcb_connection_query_shm (cairo_xcb_connection_t *connection)
     if (can_use_shm (connection))
 	connection->flags |= CAIRO_XCB_HAS_SHM;
 }
+#endif
 
 #if CAIRO_HAS_XCB_DRM_FUNCTIONS
 static void
@@ -544,7 +552,9 @@ _device_destroy (void *device)
 			       connection->visual_to_xrender_format);
     _cairo_hash_table_destroy (connection->visual_to_xrender_format);
 
+#if CAIRO_HAS_XCB_SHM_FUNCTIONS
     _cairo_xcb_connection_shm_mem_pools_fini (connection);
+#endif
     _cairo_freepool_fini (&connection->shm_info_freelist);
 
     _cairo_freepool_fini (&connection->xid_pool);
@@ -604,8 +614,10 @@ _cairo_xcb_connection_get (xcb_connection_t *xcb_connection)
     connection->has_socket = FALSE;
 
     xcb_prefetch_extension_data (xcb_connection, &xcb_big_requests_id);
-    xcb_prefetch_extension_data (xcb_connection, &xcb_shm_id);
     xcb_prefetch_extension_data (xcb_connection, &xcb_render_id);
+#if CAIRO_HAS_XCB_SHM_FUNCTIONS
+    xcb_prefetch_extension_data (xcb_connection, &xcb_shm_id);
+#endif
 #if 0
     xcb_prefetch_extension_data (xcb_connection, &xcb_cairo_id);
 #endif
@@ -655,11 +667,13 @@ _cairo_xcb_connection_get (xcb_connection_t *xcb_connection)
 #endif
 
     connection->shm = NULL;
+#if CAIRO_HAS_XCB_SHM_FUNCTIONS
     ext = xcb_get_extension_data (xcb_connection, &xcb_shm_id);
     if (ext != NULL && ext->present) {
 	_cairo_xcb_connection_query_shm (connection);
 	connection->shm = ext;
     }
+#endif
 
     connection->dri2 = NULL;
 #if CAIRO_HAS_XCB_DRM_FUNCTIONS

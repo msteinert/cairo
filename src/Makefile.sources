@@ -269,14 +269,18 @@ cairo_xcb_sources = \
 		    cairo-xcb-connection.c \
 		    cairo-xcb-connection-core.c \
 		    cairo-xcb-connection-render.c \
-		    cairo-xcb-connection-shm.c \
 		    cairo-xcb-screen.c \
-		    cairo-xcb-shm.c \
 		    cairo-xcb-surface.c \
 		    cairo-xcb-surface-cairo.c \
 		    cairo-xcb-surface-core.c \
 		    cairo-xcb-surface-render.c \
 		    $(NULL)
+if BUILD_XCB_SHM
+cairo_xcb_sources += \
+		    cairo-xcb-shm.c \
+		    cairo-xcb-connection-shm.c \
+		    $(NULL)
+endif
 
 cairo_qt_headers = cairo-qt.h
 cairo_qt_sources = cairo-qt-surface.cpp

@@ -153,6 +153,7 @@ _cairo_xcb_shm_image_create (cairo_xcb_connection_t *connection,
     cairo_xcb_shm_info_t *shm_info = NULL;
     cairo_status_t status;
 
+#if CAIRO_HAS_XCB_SHM_FUNCTIONS
     if ((connection->flags & CAIRO_XCB_HAS_SHM)) {
 	size_t size, stride;
 
@@ -185,6 +186,7 @@ _cairo_xcb_shm_image_create (cairo_xcb_connection_t *connection,
 	    }
 	}
     }
+#endif
 
     if (image == NULL) {
 	image = _cairo_image_surface_create_with_pixman_format (NULL,

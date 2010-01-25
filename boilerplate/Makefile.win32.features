@@ -59,6 +59,16 @@ enabled_cairo_boilerplate_private += $(cairo_boilerplate_xlib_xcb_private)
 enabled_cairo_boilerplate_sources += $(cairo_boilerplate_xlib_xcb_sources)
 endif
 
+supported_cairo_boilerplate_headers += $(cairo_boilerplate_xcb_shm_headers)
+all_cairo_boilerplate_headers += $(cairo_boilerplate_xcb_shm_headers)
+all_cairo_boilerplate_private += $(cairo_boilerplate_xcb_shm_private)
+all_cairo_boilerplate_sources += $(cairo_boilerplate_xcb_shm_sources)
+ifeq ($(CAIRO_HAS_XCB_SHM_FUNCTIONS),1)
+enabled_cairo_boilerplate_headers += $(cairo_boilerplate_xcb_shm_headers)
+enabled_cairo_boilerplate_private += $(cairo_boilerplate_xcb_shm_private)
+enabled_cairo_boilerplate_sources += $(cairo_boilerplate_xcb_shm_sources)
+endif
+
 unsupported_cairo_boilerplate_headers += $(cairo_boilerplate_qt_headers)
 all_cairo_boilerplate_headers += $(cairo_boilerplate_qt_headers)
 all_cairo_boilerplate_private += $(cairo_boilerplate_qt_private)

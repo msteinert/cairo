@@ -59,6 +59,7 @@ slim_hidden_proto (cairo_xcb_surface_create_with_xrender_format);
 #include "drm/cairo-drm-private.h"
 #endif
 
+#if CAIRO_HAS_XCB_SHM_FUNCTIONS
 static cairo_status_t
 _cairo_xcb_surface_create_similar_shm (cairo_xcb_surface_t *other,
 				       pixman_format_code_t pixman_format,
@@ -103,6 +104,7 @@ _cairo_xcb_surface_create_similar_shm (cairo_xcb_surface_t *other,
     *out = image;
     return CAIRO_STATUS_SUCCESS;
 }
+#endif
 
 cairo_surface_t *
 _cairo_xcb_surface_create_similar_image (cairo_xcb_surface_t *other,
@@ -127,6 +129,7 @@ _cairo_xcb_surface_create_similar_image (cairo_xcb_surface_t *other,
 	break;
     }
 
+#if CAIRO_HAS_XCB_SHM_FUNCTIONS
     if (other->flags & CAIRO_XCB_HAS_SHM) {
 	cairo_status_t status;
 
@@ -137,6 +140,7 @@ _cairo_xcb_surface_create_similar_image (cairo_xcb_surface_t *other,
 	if (_cairo_status_is_error (status))
 	    return _cairo_surface_create_in_error (status);
     }
+#endif
 
     if (image == NULL) {
 	image = _cairo_image_surface_create_with_pixman_format (NULL,
@@ -288,6 +292,7 @@ _destroy_image (pixman_image_t *image, void *data)
     free (data);
 }
 
+#if CAIRO_HAS_XCB_SHM_FUNCTIONS
 static cairo_int_status_t
 _cairo_xcb_surface_create_shm_image (cairo_xcb_surface_t *target,
 				     cairo_image_surface_t **image_out,
@@ -340,11 +345,13 @@ _cairo_xcb_surface_create_shm_image (cairo_xcb_surface_t *target,
     *shm_info_out = shm_info;
     return CAIRO_STATUS_SUCCESS;
 }
+#endif
 
 static cairo_status_t
 _get_shm_image (cairo_xcb_surface_t     *surface,
 		cairo_image_surface_t  **image_out)
 {
+#if CAIRO_HAS_XCB_SHM_FUNCTIONS
     cairo_image_surface_t *image;
     cairo_xcb_shm_info_t *shm_info;
     cairo_status_t status;
@@ -369,6 +376,9 @@ _get_shm_image (cairo_xcb_surface_t     *surface,
 
     *image_out = image;
     return CAIRO_STATUS_SUCCESS;
+#else
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+#endif
 }
 
 static cairo_status_t
@@ -588,6 +598,7 @@ _put_shm_image (cairo_xcb_surface_t    *surface,
 		xcb_gcontext_t		gc,
 		cairo_image_surface_t  *image)
 {
+#if CAIRO_HAS_XCB_SHM_FUNCTIONS
     cairo_xcb_shm_info_t *shm_info;
 
     shm_info = _cairo_user_data_array_get_data (&image->base.user_data,
@@ -608,6 +619,9 @@ _put_shm_image (cairo_xcb_surface_t    *surface,
 					     shm_info->offset);
 
     return CAIRO_STATUS_SUCCESS;
+#else
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+#endif
 }
 
 static cairo_status_t

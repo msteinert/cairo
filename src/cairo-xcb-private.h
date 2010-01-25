@@ -541,6 +541,7 @@ _cairo_xcb_connection_poly_fill_rectangle (cairo_xcb_connection_t *connection,
 					   uint32_t num_rectangles,
 					   xcb_rectangle_t *rectangles);
 
+#if CAIRO_HAS_XCB_SHM_FUNCTIONS
 cairo_private uint32_t
 _cairo_xcb_connection_shm_attach (cairo_xcb_connection_t *connection,
 				  uint32_t id,
@@ -575,6 +576,26 @@ _cairo_xcb_connection_shm_get_image (cairo_xcb_connection_t *connection,
 cairo_private void
 _cairo_xcb_connection_shm_detach (cairo_xcb_connection_t *connection,
 				  uint32_t segment);
+#else
+static inline uint64_t
+_cairo_xcb_connection_shm_put_image (cairo_xcb_connection_t *connection,
+				     xcb_drawable_t dst,
+				     xcb_gcontext_t gc,
+				     uint16_t total_width,
+				     uint16_t total_height,
+				     int16_t src_x,
+				     int16_t src_y,
+				     uint16_t width,
+				     uint16_t height,
+				     int16_t dst_x,
+				     int16_t dst_y,
+				     uint8_t depth,
+				     uint32_t shm,
+				     uint32_t offset)
+{
+    return 0;
+}
+#endif
 
 cairo_private void
 _cairo_xcb_connection_render_spans (cairo_xcb_connection_t *connection,

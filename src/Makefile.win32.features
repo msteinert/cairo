@@ -77,6 +77,20 @@ ifeq ($(CAIRO_HAS_XLIB_XCB_FUNCTIONS),1)
 enabled_cairo_pkgconf += cairo-xlib-xcb.pc
 endif
 
+supported_cairo_headers += $(cairo_xcb_shm_headers)
+all_cairo_headers += $(cairo_xcb_shm_headers)
+all_cairo_private += $(cairo_xcb_shm_private)
+all_cairo_sources += $(cairo_xcb_shm_sources)
+ifeq ($(CAIRO_HAS_XCB_SHM_FUNCTIONS),1)
+enabled_cairo_headers += $(cairo_xcb_shm_headers)
+enabled_cairo_private += $(cairo_xcb_shm_private)
+enabled_cairo_sources += $(cairo_xcb_shm_sources)
+endif
+all_cairo_pkgconf += cairo-xcb-shm.pc
+ifeq ($(CAIRO_HAS_XCB_SHM_FUNCTIONS),1)
+enabled_cairo_pkgconf += cairo-xcb-shm.pc
+endif
+
 unsupported_cairo_headers += $(cairo_qt_headers)
 all_cairo_headers += $(cairo_qt_headers)
 all_cairo_private += $(cairo_qt_private)

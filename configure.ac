@@ -109,7 +109,7 @@ CAIRO_ENABLE_SURFACE_BACKEND(xlib_xrender, Xlib Xrender, auto, [
 dnl ===========================================================================
 
 CAIRO_ENABLE_SURFACE_BACKEND(xcb, XCB, no, [
-  xcb_REQUIRES="xcb >= 0.9.92 xcb-render >= 0.9.92 xcb-shm"
+  xcb_REQUIRES="xcb >= 0.9.92 xcb-render >= 0.9.92"
   PKG_CHECK_MODULES(xcb, $xcb_REQUIRES, ,
 		    [AC_MSG_RESULT(no)
 		    use_xcb="no (requires $xcb_REQUIRES http://xcb.freedesktop.org)"])
@@ -125,6 +125,18 @@ CAIRO_ENABLE_FUNCTIONS(xlib_xcb, Xlib/XCB, no, [
   fi
 ])
 AM_CONDITIONAL(BUILD_XLIB_XCB, test "x$use_xlib_xcb" = "xyes")
+
+CAIRO_ENABLE_FUNCTIONS(xcb_shm, XCB/SHM, auto, [
+  if test "x$use_xcb" == "xyes"; then
+      xcb_shm_REQUIRES="xcb-shm"
+      PKG_CHECK_MODULES(xcb_shm, $xcb_shm_REQUIRES, ,
+			[AC_MSG_RESULT(no)
+			use_xcb_shm="no (requires $xcb_shm http://xcb.freedesktop.org)"])
+  else
+    use_xcb_drm="no (requires both --enable-xcb)"
+  fi
+])
+AM_CONDITIONAL(BUILD_XCB_SHM, test "x$use_xcb_shm" = "xyes")
 
 dnl ===========================================================================
 
