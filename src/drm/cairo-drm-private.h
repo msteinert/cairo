@@ -147,7 +147,7 @@ cairo_drm_bo_reference (cairo_drm_bo_t *bo)
     return bo;
 }
 
-static always_inline void
+static cairo_always_inline void
 cairo_drm_bo_destroy (cairo_device_t *abstract_device,
 		      cairo_drm_bo_t *bo)
 {

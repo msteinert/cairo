@@ -144,7 +144,7 @@ brw_save_call (struct brw_compile *c,
 cairo_private void
 brw_resolve_cals (struct brw_compile *c);
 
-static always_inline int
+static cairo_always_inline int
 type_sz (uint32_t type)
 {
    switch (type) {
@@ -176,7 +176,7 @@ type_sz (uint32_t type)
  * \param swizzle  one of BRW_SWIZZLE_x
  * \param writemask  WRITEMASK_X/Y/Z/W bitfield
  */
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_reg (uint32_t file,
 	 uint32_t nr,
 	 uint32_t subnr,
@@ -223,7 +223,7 @@ brw_reg (uint32_t file,
 }
 
 /** Construct float[16] register */
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_vec16_reg (uint32_t file,
 	       uint32_t nr,
 	       uint32_t subnr)
@@ -238,7 +238,7 @@ brw_vec16_reg (uint32_t file,
 }
 
 /** Construct float[8] register */
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_vec8_reg (uint32_t file,
 	      uint32_t nr,
 	      uint32_t subnr)
@@ -253,7 +253,7 @@ brw_vec8_reg (uint32_t file,
 }
 
 /** Construct float[4] register */
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_vec4_reg (uint32_t file,
 	      uint32_t nr,
 	      uint32_t subnr)
@@ -268,7 +268,7 @@ brw_vec4_reg (uint32_t file,
 }
 
 /** Construct float[2] register */
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_vec2_reg (uint32_t file,
 	      uint32_t nr,
 	      uint32_t subnr)
@@ -283,7 +283,7 @@ brw_vec2_reg (uint32_t file,
 }
 
 /** Construct float[1] register */
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_vec1_reg (uint32_t file,
 	      uint32_t nr,
 	      uint32_t subnr)
@@ -297,7 +297,7 @@ brw_vec1_reg (uint32_t file,
 		   WRITEMASK_X);
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 retype (struct brw_reg reg,
 	uint32_t type)
 {
@@ -305,7 +305,7 @@ retype (struct brw_reg reg,
    return reg;
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 suboffset (struct brw_reg reg,
 	   uint32_t delta)
 {
@@ -313,7 +313,7 @@ suboffset (struct brw_reg reg,
    return reg;
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 offset (struct brw_reg reg,
 	uint32_t delta)
 {
@@ -321,7 +321,7 @@ offset (struct brw_reg reg,
    return reg;
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 byte_offset (struct brw_reg reg,
 	     uint32_t bytes)
 {
@@ -332,7 +332,7 @@ byte_offset (struct brw_reg reg,
 }
 
 /** Construct unsigned word[16] register */
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_uw16_reg (uint32_t file,
 	      uint32_t nr,
 	      uint32_t subnr)
@@ -341,7 +341,7 @@ brw_uw16_reg (uint32_t file,
 }
 
 /** Construct unsigned word[8] register */
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_uw8_reg (uint32_t file,
 	     uint32_t nr,
 	     uint32_t subnr)
@@ -350,7 +350,7 @@ brw_uw8_reg (uint32_t file,
 }
 
 /** Construct unsigned word[2] register */
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_uw2_reg (uint32_t file,
 	     uint32_t nr,
 	     uint32_t subnr)
@@ -359,7 +359,7 @@ brw_uw2_reg (uint32_t file,
 }
 
 /** Construct unsigned word[1] register */
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_uw1_reg (uint32_t file,
 	     uint32_t nr,
 	     uint32_t subnr)
@@ -367,7 +367,7 @@ brw_uw1_reg (uint32_t file,
    return suboffset (retype (brw_vec1_reg (file, nr, 0), BRW_REGISTER_TYPE_UW), subnr);
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_imm_reg (uint32_t type)
 {
    return brw_reg (BRW_IMMEDIATE_VALUE,
@@ -382,7 +382,7 @@ brw_imm_reg (uint32_t type)
 }
 
 /** Construct float immediate register */
-static always_inline struct brw_reg brw_imm_f( float f )
+static cairo_always_inline struct brw_reg brw_imm_f( float f )
 {
    struct brw_reg imm = brw_imm_reg(BRW_REGISTER_TYPE_F);
    imm.dw1.f = f;
@@ -390,7 +390,7 @@ static always_inline struct brw_reg brw_imm_f( float f )
 }
 
 /** Construct integer immediate register */
-static always_inline struct brw_reg brw_imm_d( int32_t d )
+static cairo_always_inline struct brw_reg brw_imm_d( int32_t d )
 {
    struct brw_reg imm = brw_imm_reg(BRW_REGISTER_TYPE_D);
    imm.dw1.d = d;
@@ -398,7 +398,7 @@ static always_inline struct brw_reg brw_imm_d( int32_t d )
 }
 
 /** Construct uint immediate register */
-static always_inline struct brw_reg brw_imm_ud( uint32_t ud )
+static cairo_always_inline struct brw_reg brw_imm_ud( uint32_t ud )
 {
    struct brw_reg imm = brw_imm_reg(BRW_REGISTER_TYPE_UD);
    imm.dw1.ud = ud;
@@ -406,7 +406,7 @@ static always_inline struct brw_reg brw_imm_ud( uint32_t ud )
 }
 
 /** Construct ushort immediate register */
-static always_inline struct brw_reg brw_imm_uw( uint16_t uw )
+static cairo_always_inline struct brw_reg brw_imm_uw( uint16_t uw )
 {
    struct brw_reg imm = brw_imm_reg(BRW_REGISTER_TYPE_UW);
    imm.dw1.ud = uw | (uw << 16);
@@ -414,7 +414,7 @@ static always_inline struct brw_reg brw_imm_uw( uint16_t uw )
 }
 
 /** Construct short immediate register */
-static always_inline struct brw_reg brw_imm_w( int16_t w )
+static cairo_always_inline struct brw_reg brw_imm_w( int16_t w )
 {
    struct brw_reg imm = brw_imm_reg(BRW_REGISTER_TYPE_W);
    imm.dw1.d = w | (w << 16);
@@ -426,7 +426,7 @@ static always_inline struct brw_reg brw_imm_w( int16_t w )
  */
 
 /** Construct vector of eight signed half-byte values */
-static always_inline
+static cairo_always_inline
 struct brw_reg brw_imm_v (uint32_t v)
 {
    struct brw_reg imm = brw_imm_reg(BRW_REGISTER_TYPE_V);
@@ -438,7 +438,7 @@ struct brw_reg brw_imm_v (uint32_t v)
 }
 
 /** Construct vector of four 8-bit float values */
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_imm_vf (uint32_t v)
 {
    struct brw_reg imm = brw_imm_reg(BRW_REGISTER_TYPE_VF);
@@ -453,7 +453,7 @@ brw_imm_vf (uint32_t v)
 #define VF_ONE  0x30
 #define VF_NEG  (1<<7)
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_imm_vf4 (uint32_t v0,
 	     uint32_t v1,
 	     uint32_t v2,
@@ -470,54 +470,54 @@ brw_imm_vf4 (uint32_t v0,
    return imm;
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_address (struct brw_reg reg)
 {
    return brw_imm_uw (reg.nr * REG_SIZE + reg.subnr);
 }
 
 /** Construct float[1] general-purpose register */
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_vec1_grf (uint32_t nr, uint32_t subnr)
 {
    return brw_vec1_reg (BRW_GENERAL_REGISTER_FILE, nr, subnr);
 }
 
 /** Construct float[2] general-purpose register */
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_vec2_grf (uint32_t nr, uint32_t subnr)
 {
    return brw_vec2_reg (BRW_GENERAL_REGISTER_FILE, nr, subnr);
 }
 
 /** Construct float[4] general-purpose register */
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_vec4_grf (uint32_t nr, uint32_t subnr)
 {
    return brw_vec4_reg (BRW_GENERAL_REGISTER_FILE, nr, subnr);
 }
 
 /** Construct float[8] general-purpose register */
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_vec8_grf (uint32_t nr)
 {
    return brw_vec8_reg (BRW_GENERAL_REGISTER_FILE, nr, 0);
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_uw8_grf (uint32_t nr, uint32_t subnr)
 {
    return brw_uw8_reg (BRW_GENERAL_REGISTER_FILE, nr, subnr);
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_uw16_grf (uint32_t nr, uint32_t subnr)
 {
    return brw_uw16_reg (BRW_GENERAL_REGISTER_FILE, nr, subnr);
 }
 
 /** Construct null register (usually used for setting condition codes) */
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_null_reg (void)
 {
    return brw_vec8_reg (BRW_ARCHITECTURE_REGISTER_FILE,
@@ -525,7 +525,7 @@ brw_null_reg (void)
 			0);
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_address_reg (uint32_t subnr)
 {
    return brw_uw1_reg (BRW_ARCHITECTURE_REGISTER_FILE,
@@ -537,7 +537,7 @@ brw_address_reg (uint32_t subnr)
  * aren't xyzw.  This goes against the convention for other scalar
  * regs:
  */
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_ip_reg (void)
 {
    return brw_reg (BRW_ARCHITECTURE_REGISTER_FILE,
@@ -551,7 +551,7 @@ brw_ip_reg (void)
 		   WRITEMASK_XYZW);
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_acc_reg (void)
 {
    return brw_vec8_reg (BRW_ARCHITECTURE_REGISTER_FILE,
@@ -559,7 +559,7 @@ brw_acc_reg (void)
 			0);
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_flag_reg (void)
 {
    return brw_uw1_reg (BRW_ARCHITECTURE_REGISTER_FILE,
@@ -567,7 +567,7 @@ brw_flag_reg (void)
 		       0);
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_mask_reg (uint32_t subnr)
 {
    return brw_uw1_reg (BRW_ARCHITECTURE_REGISTER_FILE,
@@ -575,7 +575,7 @@ brw_mask_reg (uint32_t subnr)
 		       subnr);
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_message4_reg (uint32_t nr)
 {
     return brw_vec4_reg (BRW_MESSAGE_REGISTER_FILE,
@@ -583,7 +583,7 @@ brw_message4_reg (uint32_t nr)
 			 0);
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_message_reg (uint32_t nr)
 {
    return brw_vec8_reg (BRW_MESSAGE_REGISTER_FILE,
@@ -594,7 +594,7 @@ brw_message_reg (uint32_t nr)
 /* This is almost always called with a numeric constant argument, so
  * make things easy to evaluate at compile time:
  */
-static always_inline uint32_t
+static cairo_always_inline uint32_t
 cvt (uint32_t val)
 {
    switch (val) {
@@ -609,7 +609,7 @@ cvt (uint32_t val)
    return 0;
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 stride (struct brw_reg reg,
 	uint32_t vstride,
 	uint32_t width,
@@ -621,49 +621,49 @@ stride (struct brw_reg reg,
    return reg;
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 vec16 (struct brw_reg reg)
 {
    return stride (reg, 16,16,1);
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 vec8 (struct brw_reg reg)
 {
    return stride (reg, 8,8,1);
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 vec4 (struct brw_reg reg)
 {
    return stride (reg, 4,4,1);
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 vec2 (struct brw_reg reg)
 {
    return stride (reg, 2,2,1);
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 vec1 (struct brw_reg reg)
 {
    return stride (reg, 0,1,0);
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 get_element (struct brw_reg reg, uint32_t elt)
 {
    return vec1 (suboffset (reg, elt));
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 get_element_ud (struct brw_reg reg, uint32_t elt)
 {
    return vec1 (suboffset (retype (reg, BRW_REGISTER_TYPE_UD), elt));
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_swizzle (struct brw_reg reg,
 	     uint32_t x,
 	     uint32_t y,
@@ -677,14 +677,14 @@ brw_swizzle (struct brw_reg reg,
    return reg;
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_swizzle1 (struct brw_reg reg,
 	      uint32_t x)
 {
    return brw_swizzle (reg, x, x, x, x);
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_writemask (struct brw_reg reg,
 	       uint32_t mask)
 {
@@ -692,7 +692,7 @@ brw_writemask (struct brw_reg reg,
    return reg;
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_set_writemask (struct brw_reg reg,
 		   uint32_t mask)
 {
@@ -700,21 +700,21 @@ brw_set_writemask (struct brw_reg reg,
    return reg;
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 negate (struct brw_reg reg)
 {
    reg.negate ^= 1;
    return reg;
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_abs (struct brw_reg reg)
 {
    reg.abs = 1;
    return reg;
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_vec4_indirect (uint32_t subnr,
 		   int32_t offset)
 {
@@ -725,7 +725,7 @@ brw_vec4_indirect (uint32_t subnr,
    return reg;
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 brw_vec1_indirect (uint32_t subnr,
 		   int32_t offset)
 {
@@ -736,56 +736,56 @@ brw_vec1_indirect (uint32_t subnr,
    return reg;
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 deref_4f (struct brw_indirect ptr, int32_t offset)
 {
    return brw_vec4_indirect (ptr.addr_subnr, ptr.addr_offset + offset);
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 deref_1f(struct brw_indirect ptr, int32_t offset)
 {
    return brw_vec1_indirect (ptr.addr_subnr, ptr.addr_offset + offset);
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 deref_4b(struct brw_indirect ptr, int32_t offset)
 {
    return retype (deref_4f (ptr, offset), BRW_REGISTER_TYPE_B);
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 deref_1uw(struct brw_indirect ptr, int32_t offset)
 {
    return retype (deref_1f (ptr, offset), BRW_REGISTER_TYPE_UW);
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 deref_1d (struct brw_indirect ptr, int32_t offset)
 {
    return retype (deref_1f (ptr, offset), BRW_REGISTER_TYPE_D);
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 deref_1ud (struct brw_indirect ptr, int32_t offset)
 {
    return retype (deref_1f (ptr, offset), BRW_REGISTER_TYPE_UD);
 }
 
-static always_inline struct brw_reg
+static cairo_always_inline struct brw_reg
 get_addr_reg (struct brw_indirect ptr)
 {
    return brw_address_reg (ptr.addr_subnr);
 }
 
-static always_inline struct brw_indirect
+static cairo_always_inline struct brw_indirect
 brw_indirect_offset (struct brw_indirect ptr, int32_t offset)
 {
    ptr.addr_offset += offset;
    return ptr;
 }
 
-static always_inline struct brw_indirect
+static cairo_always_inline struct brw_indirect
 brw_indirect (uint32_t addr_subnr, int32_t offset)
 {
    struct brw_indirect ptr;
@@ -795,7 +795,7 @@ brw_indirect (uint32_t addr_subnr, int32_t offset)
    return ptr;
 }
 
-static always_inline struct brw_instruction *
+static cairo_always_inline struct brw_instruction *
 current_insn (struct brw_compile *p)
 {
    return &p->store[p->nr_insn];

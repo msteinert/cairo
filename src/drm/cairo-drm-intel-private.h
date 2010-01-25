@@ -242,7 +242,7 @@ cairo_private cairo_bool_t
 intel_bo_madvise (intel_device_t *device, intel_bo_t *bo, int madv);
 
 
-static always_inline void
+static cairo_always_inline void
 intel_bo_destroy (intel_device_t *device, intel_bo_t *bo)
 {
     cairo_drm_bo_destroy (&device->base.base, &bo->base);

@@ -544,7 +544,7 @@ i965_emit_relocation (i965_device_t *device,
 		      uint32_t write_domain,
 		      uint32_t offset);
 
-static always_inline uint32_t
+static cairo_always_inline uint32_t
 i965_stream_emit (i965_stream_t *stream, const void *data, size_t size)
 {
     uint32_t offset;
@@ -557,13 +557,13 @@ i965_stream_emit (i965_stream_t *stream, const void *data, size_t size)
     return offset;
 }
 
-static always_inline void
+static cairo_always_inline void
 i965_stream_align (i965_stream_t *stream, uint32_t size)
 {
     stream->used = (stream->used + size - 1) & -size;
 }
 
-static always_inline void *
+static cairo_always_inline void *
 i965_stream_alloc (i965_stream_t *stream, uint32_t align, uint32_t size)
 {
     void *ptr;
@@ -578,7 +578,7 @@ i965_stream_alloc (i965_stream_t *stream, uint32_t align, uint32_t size)
     return ptr;
 }
 
-static always_inline uint32_t
+static cairo_always_inline uint32_t
 i965_stream_offsetof (i965_stream_t *stream, const void *ptr)
 {
     return (char *) ptr - (char *) stream->data;
