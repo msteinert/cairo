@@ -263,6 +263,22 @@ _cairo_surface_detach_snapshots (cairo_surface_t *surface)
     assert (! _cairo_surface_has_snapshots (surface));
 }
 
+static cairo_bool_t
+_cairo_surface_has_mime_data (cairo_surface_t *surface)
+{
+    return surface->mime_data.num_elements != 0;
+}
+
+static void
+_cairo_surface_detach_mime_data (cairo_surface_t *surface)
+{
+    if (! _cairo_surface_has_mime_data (surface))
+	return;
+
+    _cairo_user_data_array_init (&surface->mime_data);
+    _cairo_user_data_array_fini (&surface->mime_data);
+}
+
 cairo_status_t
 _cairo_surface_attach_snapshot (cairo_surface_t *surface,
 				cairo_surface_t *snapshot,
@@ -338,7 +354,8 @@ _cairo_surface_is_writable (cairo_surface_t *surface)
 {
     return ! surface->finished &&
 	   surface->snapshot_of == NULL &&
-	   ! _cairo_surface_has_snapshots (surface);
+	   ! _cairo_surface_has_snapshots (surface) &&
+	   ! _cairo_surface_has_mime_data (surface);
 }
 
 static void
@@ -349,6 +366,7 @@ _cairo_surface_begin_modification (cairo_surface_t *surface)
     assert (surface->snapshot_of == NULL);
 
     _cairo_surface_detach_snapshots (surface);
+    _cairo_surface_detach_mime_data (surface);
 }
 
 void
@@ -1059,6 +1077,7 @@ cairo_surface_mark_dirty_rectangle (cairo_surface_t *surface,
      * modifying the surface independently of cairo (and thus having to
      * call mark_dirty()). */
     assert (! _cairo_surface_has_snapshots (surface));
+    assert (! _cairo_surface_has_mime_data (surface));
 
     surface->is_clear = FALSE;
 
