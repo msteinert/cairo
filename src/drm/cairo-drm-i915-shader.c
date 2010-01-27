@@ -1484,13 +1484,12 @@ i915_shader_acquire_surface (i915_shader_t *shader,
 		src_y = -extents->y;
 	    }
 
-	    surface_width = image->width;
-	    surface_height = image->height;
-
 	    _cairo_surface_release_source_image (surface, image, image_extra);
-
 	    if (unlikely (status))
 		return status;
+
+	    surface_width = s->intel.drm.width;
+	    surface_height = s->intel.drm.height;
 	}
 
 	src->type.fragment = FS_TEXTURE;
