@@ -1476,7 +1476,8 @@ _cairo_image_surface_fixup_unbounded (cairo_image_surface_t *dst,
 				      cairo_clip_t *clip)
 {
     pixman_image_t *mask = NULL;
-    int mask_x = 0, mask_y = 0;
+    pixman_box32_t boxes[4];
+    int i, mask_x = 0, mask_y = 0, n_boxes = 0;
 
     if (clip != NULL) {
 	cairo_surface_t *clip_surface;
@@ -1510,10 +1511,13 @@ _cairo_image_surface_fixup_unbounded (cairo_image_surface_t *dst,
 				    x, y,
 				    width, height);
 	} else {
-	    pixman_fill ((uint32_t *) dst->data, dst->stride / sizeof (uint32_t),
-			 PIXMAN_FORMAT_BPP (dst->pixman_format),
-			 x, y, width, height,
-			 0);
+            pixman_color_t color = { 0, };
+            pixman_box32_t box = { x, y, width, height };
+
+            pixman_image_fill_boxes (PIXMAN_OP_CLEAR,
+                                     dst->pixman_image,
+                                     &color,
+                                     1, &box);
 	}
 
 	return;
@@ -1521,90 +1525,57 @@ _cairo_image_surface_fixup_unbounded (cairo_image_surface_t *dst,
 
     /* top */
     if (rects->bounded.y != rects->unbounded.y) {
-	int x = rects->unbounded.x;
-	int y = rects->unbounded.y;
-	int width = rects->unbounded.width;
-	int height = rects->bounded.y - y;
-
-	if (mask != NULL) {
-	    pixman_image_composite (PIXMAN_OP_OUT_REVERSE,
-				    mask, NULL, dst->pixman_image,
-				    x + mask_x, y + mask_y,
-				    0, 0,
-				    x, y,
-				    width, height);
-	} else {
-	    pixman_fill ((uint32_t *) dst->data, dst->stride / sizeof (uint32_t),
-			 PIXMAN_FORMAT_BPP (dst->pixman_format),
-			 x, y, width, height,
-			 0);
-	}
+        boxes[n_boxes].x1 = rects->unbounded.x;
+        boxes[n_boxes].y1 = rects->unbounded.y;
+        boxes[n_boxes].x2 = rects->unbounded.x + rects->unbounded.width;
+        boxes[n_boxes].y2 = rects->bounded.y;
+        n_boxes++;
     }
 
     /* left */
     if (rects->bounded.x != rects->unbounded.x) {
-	int x = rects->unbounded.x;
-	int y = rects->bounded.y;
-	int width = rects->bounded.x - rects->unbounded.x;
-	int height = rects->bounded.height;
-
-	if (mask != NULL) {
-	    pixman_image_composite (PIXMAN_OP_OUT_REVERSE,
-				    mask, NULL, dst->pixman_image,
-				    x + mask_x, y + mask_y,
-				    0, 0,
-				    x, y,
-				    width, height);
-	} else {
-	    pixman_fill ((uint32_t *) dst->data, dst->stride / sizeof (uint32_t),
-			 PIXMAN_FORMAT_BPP (dst->pixman_format),
-			 x, y, width, height,
-			 0);
-	}
+        boxes[n_boxes].x1 = rects->unbounded.x;
+        boxes[n_boxes].y1 = rects->bounded.y;
+        boxes[n_boxes].x2 = rects->bounded.x;
+        boxes[n_boxes].y2 = rects->bounded.y + rects->bounded.height;
+        n_boxes++;
     }
 
     /* right */
     if (rects->bounded.x + rects->bounded.width != rects->unbounded.x + rects->unbounded.width) {
-	int x = rects->bounded.x + rects->bounded.width;
-	int y = rects->bounded.y;
-	int width = rects->unbounded.x + rects->unbounded.width - x;
-	int height = rects->bounded.height;
-
-	if (mask != NULL) {
-	    pixman_image_composite (PIXMAN_OP_OUT_REVERSE,
-				    mask, NULL, dst->pixman_image,
-				    x + mask_x, y + mask_y,
-				    0, 0,
-				    x, y,
-				    width, height);
-	} else {
-	    pixman_fill ((uint32_t *) dst->data, dst->stride / sizeof (uint32_t),
-			 PIXMAN_FORMAT_BPP (dst->pixman_format),
-			 x, y, width, height,
-			 0);
-	}
+        boxes[n_boxes].x1 = rects->bounded.x + rects->bounded.width;
+        boxes[n_boxes].y1 = rects->bounded.y;
+        boxes[n_boxes].x2 = rects->unbounded.x + rects->unbounded.width;
+        boxes[n_boxes].y2 = rects->bounded.y + rects->bounded.height;
+        n_boxes++;
     }
 
     /* bottom */
     if (rects->bounded.y + rects->bounded.height != rects->unbounded.y + rects->unbounded.height) {
-	int x = rects->unbounded.x;
-	int y = rects->bounded.y + rects->bounded.height;
-	int width = rects->unbounded.width;
-	int height = rects->unbounded.y + rects->unbounded.height - y;
+        boxes[n_boxes].x1 = rects->unbounded.x;
+        boxes[n_boxes].y1 = rects->bounded.y + rects->bounded.height;
+        boxes[n_boxes].x2 = rects->unbounded.x + rects->unbounded.width;
+        boxes[n_boxes].y2 = rects->unbounded.y + rects->unbounded.height;
+        n_boxes++;
+    }
 
-	if (mask != NULL) {
-	    pixman_image_composite (PIXMAN_OP_OUT_REVERSE,
-				    mask, NULL, dst->pixman_image,
-				    x + mask_x, y + mask_y,
-				    0, 0,
-				    x, y,
-				    width, height);
-	} else {
-	    pixman_fill ((uint32_t *) dst->data, dst->stride / sizeof (uint32_t),
-			 PIXMAN_FORMAT_BPP (dst->pixman_format),
-			 x, y, width, height,
-			 0);
-	}
+    if (mask != NULL) {
+        for (i = 0; i < n_boxes; i++) {
+            pixman_image_composite (PIXMAN_OP_OUT_REVERSE,
+                                    mask, NULL, dst->pixman_image,
+                                    boxes[i].x1 + mask_x, boxes[i].y1 + mask_y,
+                                    0, 0,
+                                    boxes[i].x1, boxes[i].y1,
+                                    boxes[i].x2 - boxes[i].x1, boxes[i].y2 - boxes[i].y1);
+        }
+    } else {
+        pixman_color_t color = { 0, };
+
+        pixman_image_fill_boxes (PIXMAN_OP_CLEAR,
+                                 dst->pixman_image,
+                                 &color,
+                                 n_boxes,
+                                 boxes);
     }
 }
 
