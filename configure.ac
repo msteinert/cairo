@@ -14,6 +14,7 @@ AC_PROG_LIBTOOL dnl ([1.4]) Don't remove!
 DOLT dnl Make my libtool fast!
 GTK_DOC_CHECK([1.6])
 
+AC_SYS_LARGEFILE
 AC_GNU_SOURCE
 
 dnl ===========================================================================
