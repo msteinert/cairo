@@ -32,19 +32,6 @@ if CAIRO_HAS_BEOS_SURFACE
 AM_CPPFLAGS += -Wno-multichar
 endif
 
-if CAIRO_CAN_TEST_GLITZ_AGL_SURFACE
-libcairoboilerplate_la_LIBADD += $(GLITZ_AGL_LIBS)
-endif
-if CAIRO_CAN_TEST_GLITZ_EGL_SURFACE
-libcairoboilerplate_la_LIBADD += $(GLITZ_EGL_LIBS)
-endif
-if CAIRO_CAN_TEST_GLITZ_GLX_SURFACE
-libcairoboilerplate_la_LIBADD += $(GLITZ_GLX_LIBS)
-endif
-if CAIRO_CAN_TEST_GLITZ_WGL_SURFACE
-libcairoboilerplate_la_LIBADD += $(GLITZ_WGL_LIBS)
-endif
-
 if CAIRO_HAS_WIN32_SURFACE
 libcairoboilerplate_la_LIBADD += -lwinspool
 endif

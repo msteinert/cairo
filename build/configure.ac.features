@@ -374,7 +374,6 @@ AC_DEFUN([CAIRO_REPORT],
 	echo "  PDF:           $use_pdf"
 	echo "  SVG:           $use_svg"
 	echo "  OpenGL:        $use_gl"
-	echo "  glitz:         $use_glitz"
 	echo "  BeOS:          $use_beos"
 	echo "  DirectFB:      $use_directfb"
 	echo "  OpenVG:        $use_vg"

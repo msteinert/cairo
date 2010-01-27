@@ -31,7 +31,6 @@
     <title>Surfaces</title>
     <xi:include href="xml/cairo-surface.xml"/>
     <xi:include href="xml/cairo-image.xml"/>
-    <!--xi:include href="xml/cairo-glitz.xml"/-->
     <xi:include href="xml/cairo-pdf.xml"/>
     <xi:include href="xml/cairo-png.xml"/>
     <xi:include href="xml/cairo-ps.xml"/>

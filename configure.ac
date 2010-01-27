@@ -336,44 +336,6 @@ CAIRO_ENABLE_SURFACE_BACKEND(gl, OpenGL, no, [
 
 dnl ===========================================================================
 
-GLITZ_MIN_VERSION=0.5.1
-CAIRO_ENABLE_SURFACE_BACKEND(glitz, glitz, no, [
-  glitz_REQUIRES="glitz >= $GLITZ_MIN_VERSION"
-  PKG_CHECK_MODULES(glitz, $glitz_REQUIRES, , [AC_MSG_RESULT(no)
-  use_glitz="no (requires $glitz_REQUIRES http://freedesktop.org/Software/glitz)"])
-])
-
-if test "x$use_glitz" = "xyes";then
-  PKG_CHECK_MODULES(GLITZ_AGL, glitz-agl >= $GLITZ_MIN_VERSION,
-   [have_glitz_agl=yes], [have_glitz_agl=no; AC_MSG_RESULT(no)])
-  PKG_CHECK_MODULES(GLITZ_EGL, glitz-egl >= $GLITZ_MIN_VERSION,
-   [have_glitz_egl=yes], [have_glitz_egl=no; AC_MSG_RESULT(no)])
-  PKG_CHECK_MODULES(GLITZ_GLX, glitz-glx >= $GLITZ_MIN_VERSION,
-   [have_glitz_glx=yes], [have_glitz_glx=no; AC_MSG_RESULT(no)])
-  PKG_CHECK_MODULES(GLITZ_WGL, glitz-wgl >= $GLITZ_MIN_VERSION,
-   [have_glitz_wgl=yes], [have_glitz_wgl=no; AC_MSG_RESULT(no)])
-
-  if test "x$have_glitz_agl" = "xyes";then
-    AC_DEFINE(CAIRO_CAN_TEST_GLITZ_AGL_SURFACE, 1, [define if glitz backend can be tested against agl])
-  fi
-  if test "x$have_glitz_egl" = "xyes";then
-    AC_DEFINE(CAIRO_CAN_TEST_GLITZ_EGL_SURFACE, 1, [define if glitz backend can be tested against egl])
-  fi
-  if test "x$have_glitz_glx" = "xyes";then
-    AC_DEFINE(CAIRO_CAN_TEST_GLITZ_GLX_SURFACE, 1, [define if glitz backend can be tested against glx])
-  fi
-  if test "x$have_glitz_wgl" = "xyes";then
-    AC_DEFINE(CAIRO_CAN_TEST_GLITZ_WGL_SURFACE, 1, [define if glitz backend can be tested against wgl])
-  fi
-fi
-
-AM_CONDITIONAL(CAIRO_CAN_TEST_GLITZ_AGL_SURFACE, test "x$have_glitz_agl" = "xyes")
-AM_CONDITIONAL(CAIRO_CAN_TEST_GLITZ_EGL_SURFACE, test "x$have_glitz_egl" = "xyes")
-AM_CONDITIONAL(CAIRO_CAN_TEST_GLITZ_GLX_SURFACE, test "x$have_glitz_glx" = "xyes")
-AM_CONDITIONAL(CAIRO_CAN_TEST_GLITZ_WGL_SURFACE, test "x$have_glitz_wgl" = "xyes")
-
-dnl ===========================================================================
-
 CAIRO_ENABLE_SURFACE_BACKEND(directfb, directfb, no, [
   directfb_REQUIRES=directfb
   PKG_CHECK_MODULES(directfb, $directfb_REQUIRES, , AC_MSG_RESULT(no)

@@ -26,11 +26,6 @@ cairo_boilerplate_private = \
 cairo_boilerplate_directfb_sources = cairo-boilerplate-directfb.c
 cairo_boilerplate_drm_sources = cairo-boilerplate-drm.c
 cairo_boilerplate_gl_sources = cairo-boilerplate-gl.c
-cairo_boilerplate_glitz_sources = \
-	cairo-boilerplate-glitz-agl.c \
-	cairo-boilerplate-glitz-glx.c \
-	cairo-boilerplate-glitz-wgl.c \
-	$(NULL)
 cairo_boilerplate_pdf_sources = cairo-boilerplate-pdf.c
 cairo_boilerplate_ps_sources = cairo-boilerplate-ps.c
 cairo_boilerplate_qt_sources = cairo-boilerplate-qt.cpp

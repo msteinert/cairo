@@ -287,20 +287,6 @@ ifeq ($(CAIRO_HAS_GL_SURFACE),1)
 enabled_cairo_pkgconf += cairo-gl.pc
 endif
 
-unsupported_cairo_headers += $(cairo_glitz_headers)
-all_cairo_headers += $(cairo_glitz_headers)
-all_cairo_private += $(cairo_glitz_private)
-all_cairo_sources += $(cairo_glitz_sources)
-ifeq ($(CAIRO_HAS_GLITZ_SURFACE),1)
-enabled_cairo_headers += $(cairo_glitz_headers)
-enabled_cairo_private += $(cairo_glitz_private)
-enabled_cairo_sources += $(cairo_glitz_sources)
-endif
-all_cairo_pkgconf += cairo-glitz.pc
-ifeq ($(CAIRO_HAS_GLITZ_SURFACE),1)
-enabled_cairo_pkgconf += cairo-glitz.pc
-endif
-
 unsupported_cairo_headers += $(cairo_directfb_headers)
 all_cairo_headers += $(cairo_directfb_headers)
 all_cairo_private += $(cairo_directfb_private)

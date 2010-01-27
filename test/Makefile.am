@@ -21,10 +21,6 @@ if CAIRO_HAS_QUARTZ_SURFACE
 test_sources += $(quartz_surface_test_sources)
 endif
 
-if CAIRO_HAS_GLITZ_SURFACE
-test_sources += $(glitz_surface_test_sources)
-endif
-
 if CAIRO_HAS_PDF_SURFACE
 test_sources += $(pdf_surface_test_sources)
 endif
@@ -524,10 +520,6 @@ REFERENCE_IMAGES = \
 	ft-text-vertical-layout-type3.svg.ref.png \
 	ft-text-vertical-layout-type3.xlib.ref.png \
 	get-group-target.ref.png \
-	glitz-surface-source.argb32.ref.png \
-	glitz-surface-source.rgb24.ref.png \
-	glitz-surface-source.ps2.ref.png \
-	glitz-surface-source.ps3.ref.png \
 	glyph-cache-pressure.ps2.ref.png \
 	glyph-cache-pressure.ps3.ref.png \
 	glyph-cache-pressure.quartz.ref.png \

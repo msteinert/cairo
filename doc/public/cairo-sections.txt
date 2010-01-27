@@ -559,7 +559,6 @@ cairo_matrix_destroy
 cairo_matrix_copy
 cairo_matrix_get_affine
 cairo_set_target_surface
-cairo_set_target_glitz
 cairo_set_target_image
 cairo_set_target_pdf
 cairo_set_target_png

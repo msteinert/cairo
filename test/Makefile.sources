@@ -266,8 +266,6 @@ ft_font_test_sources = \
 
 quartz_surface_test_sources = quartz-surface-source.c
 
-glitz_surface_test_sources = glitz-surface-source.c
-
 pdf_surface_test_sources = \
 	pdf-features.c \
 	pdf-mime-data.c \
