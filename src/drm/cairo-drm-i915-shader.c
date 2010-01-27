@@ -1274,7 +1274,7 @@ i915_surface_clone_subimage (i915_device_t *device,
 				      image->base.content,
 				      extents->width,
 				      extents->height,
-				      I915_TILING_DEFAULT,
+				      I915_TILING_NONE,
 				      FALSE);
     if (unlikely (clone->intel.drm.base.status))
 	return clone->intel.drm.base.status;
