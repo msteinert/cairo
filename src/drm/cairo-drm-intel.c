@@ -491,6 +491,8 @@ intel_bo_release (void *_dev, void *_bo)
     intel_bo_t *bo = _bo;
     int bucket;
 
+    assert (bo->virtual == NULL);
+
     bucket = INTEL_BO_CACHE_BUCKETS;
     if (bo->base.size & -bo->base.size)
 	bucket = ffs (bo->base.size / 4096) - 1;
@@ -982,8 +984,10 @@ intel_glyph_cache_add_glyph (intel_device_t *device,
 
 	if (width > (int) sizeof (buf)) {
 	    a8 = malloc (width);
-	    if (unlikely (a8 == NULL))
+	    if (unlikely (a8 == NULL)) {
+		intel_bo_unmap (cache->buffer.bo);
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	    }
 	}
 
 	dst += node->x;

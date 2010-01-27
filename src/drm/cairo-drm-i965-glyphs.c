@@ -448,6 +448,10 @@ i965_surface_glyphs (void			*abstract_surface,
     cairo_device_release (surface->intel.drm.base.device);
   CLEANUP_GLYPHS:
     i965_shader_fini (&glyphs.shader);
+
+    if (glyphs.tail->bo->virtual)
+	intel_bo_unmap (glyphs.tail->bo);
+
     if (glyphs.head.bo != NULL) {
 	struct i965_vbo *vbo, *next;
 

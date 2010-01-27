@@ -344,6 +344,9 @@ i965_spans_fini (i965_spans_t *spans)
 {
     i965_shader_fini (&spans->shader);
 
+    if (spans->tail->bo->virtual)
+	intel_bo_unmap (spans->tail->bo);
+
     if (spans->head.bo != NULL) {
 	struct i965_vbo *vbo, *next;
 
