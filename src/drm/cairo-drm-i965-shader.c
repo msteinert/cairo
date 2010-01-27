@@ -442,6 +442,12 @@ i965_shader_acquire_surface (i965_shader_t *shader,
 		if (s != shader->target) {
 		    int x;
 
+		    if (s->intel.drm.fallback != NULL) {
+			status = intel_surface_flush (s);
+			if (unlikely (status))
+			    return status;
+		    }
+
 		    if (to_intel_bo (s->intel.drm.bo)->batch_write_domain)
 			i965_pipelined_flush (i965_device (s));
 
@@ -510,6 +516,12 @@ i965_shader_acquire_surface (i965_shader_t *shader,
 	} else {
 	    if (s->intel.drm.base.device == shader->target->intel.drm.base.device) {
 		if (s != shader->target) {
+		    if (s->intel.drm.fallback != NULL) {
+			status = intel_surface_flush (s);
+			if (unlikely (status))
+			    return status;
+		    }
+
 		    if (to_intel_bo (s->intel.drm.bo)->batch_write_domain)
 			i965_pipelined_flush (i965_device (s));
 

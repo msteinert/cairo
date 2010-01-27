@@ -1362,6 +1362,7 @@ i915_shader_acquire_surface (i915_shader_t *shader,
     cairo_filter_t filter;
     cairo_matrix_t m;
     int src_x = 0, src_y = 0;
+    cairo_status_t status;
 
     assert (src->type.fragment == (i915_fragment_shader_t) -1);
     drm = surface = pattern->surface;
@@ -1403,6 +1404,12 @@ i915_shader_acquire_surface (i915_shader_t *shader,
 		cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) surface;
 		int x;
 
+		if (s->intel.drm.fallback != NULL) {
+		    status = intel_surface_flush (s);
+		    if (unlikely (status))
+			return status;
+		}
+
 		if (to_intel_bo (s->intel.drm.bo)->batch_write_domain) {
 		    /* XXX pipelined flush of RENDER/TEXTURE cache */
 		}
@@ -1433,6 +1440,13 @@ i915_shader_acquire_surface (i915_shader_t *shader,
 	    if (s->intel.drm.base.device == shader->target->intel.drm.base.device &&
 		s != shader->target)
 	    {
+		if (s->intel.drm.fallback != NULL) {
+		    status = intel_surface_flush (s);
+		    if (unlikely (status))
+			return status;
+		}
+
+
 		src->type.fragment = FS_TEXTURE;
 		src->surface.pixel = NONE;
 		surface_width  = s->intel.drm.width;
