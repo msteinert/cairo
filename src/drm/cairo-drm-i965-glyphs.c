@@ -449,7 +449,7 @@ i965_surface_glyphs (void			*abstract_surface,
   CLEANUP_GLYPHS:
     i965_shader_fini (&glyphs.shader);
 
-    if (glyphs.tail->bo->virtual)
+    if (glyphs.tail->bo && glyphs.tail->bo->virtual)
 	intel_bo_unmap (glyphs.tail->bo);
 
     if (glyphs.head.bo != NULL) {

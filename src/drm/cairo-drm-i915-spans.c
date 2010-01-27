@@ -612,7 +612,7 @@ i915_spans_fini (i915_spans_t *spans)
 {
     i915_shader_fini (&spans->shader);
 
-    if (spans->tail->bo->virtual)
+    if (spans->tail->bo && spans->tail->bo->virtual)
 	intel_bo_unmap (spans->tail->bo);
 
     if (spans->head.bo != NULL) {
