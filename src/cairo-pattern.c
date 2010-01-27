@@ -1530,14 +1530,14 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
 	break;
     }
 
-    pixman_image_composite (PIXMAN_OP_SRC,
-			    pixman_image,
-			    NULL,
-			    image->pixman_image,
-			    x, y,
-			    0, 0,
-			    0, 0,
-			    width, height);
+    pixman_image_composite32 (PIXMAN_OP_SRC,
+                              pixman_image,
+                              NULL,
+                              image->pixman_image,
+                              x, y,
+                              0, 0,
+                              0, 0,
+                              width, height);
 
     pixman_image_unref (pixman_image);
 

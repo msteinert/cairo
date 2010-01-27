@@ -1561,12 +1561,12 @@ _cairo_image_surface_fixup_unbounded (cairo_image_surface_t *dst,
 
     if (mask != NULL) {
         for (i = 0; i < n_boxes; i++) {
-            pixman_image_composite (PIXMAN_OP_OUT_REVERSE,
-                                    mask, NULL, dst->pixman_image,
-                                    boxes[i].x1 + mask_x, boxes[i].y1 + mask_y,
-                                    0, 0,
-                                    boxes[i].x1, boxes[i].y1,
-                                    boxes[i].x2 - boxes[i].x1, boxes[i].y2 - boxes[i].y1);
+            pixman_image_composite32 (PIXMAN_OP_OUT_REVERSE,
+                                      mask, NULL, dst->pixman_image,
+                                      boxes[i].x1 + mask_x, boxes[i].y1 + mask_y,
+                                      0, 0,
+                                      boxes[i].x1, boxes[i].y1,
+                                      boxes[i].x2 - boxes[i].x1, boxes[i].y2 - boxes[i].y1);
         }
     } else {
         pixman_color_t color = { 0, };
@@ -1793,11 +1793,11 @@ _clip_and_composite_with_mask (cairo_clip_t                  *clip,
 
     if (pattern == NULL) {
 	if (dst->pixman_format == PIXMAN_a8) {
-	    pixman_image_composite (_pixman_operator (op),
-				    mask, NULL, dst->pixman_image,
-				    0, 0, 0, 0,
-				    extents->x,      extents->y,
-				    extents->width,  extents->height);
+	    pixman_image_composite32 (_pixman_operator (op),
+                                      mask, NULL, dst->pixman_image,
+                                      0, 0, 0, 0,
+                                      extents->x,      extents->y,
+                                      extents->width,  extents->height);
 	} else {
 	    pixman_image_t *src;
 
@@ -1807,11 +1807,11 @@ _clip_and_composite_with_mask (cairo_clip_t                  *clip,
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    }
 
-	    pixman_image_composite (_pixman_operator (op),
-				    src, mask, dst->pixman_image,
-				    0, 0, 0, 0,
-				    extents->x,      extents->y,
-				    extents->width,  extents->height);
+	    pixman_image_composite32 (_pixman_operator (op),
+                                      src, mask, dst->pixman_image,
+                                      0, 0, 0, 0,
+                                      extents->x,      extents->y,
+                                      extents->width,  extents->height);
 	    pixman_image_unref (src);
 	}
     } else {
@@ -1824,12 +1824,12 @@ _clip_and_composite_with_mask (cairo_clip_t                  *clip,
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
 
-	pixman_image_composite (_pixman_operator (op),
-				src, mask, dst->pixman_image,
-				extents->x + src_x,  extents->y + src_y,
-				0, 0,
-				extents->x,          extents->y,
-				extents->width,      extents->height);
+	pixman_image_composite32 (_pixman_operator (op),
+                                  src, mask, dst->pixman_image,
+                                  extents->x + src_x,  extents->y + src_y,
+                                  0, 0,
+                                  extents->x,          extents->y,
+                                  extents->width,      extents->height);
 	pixman_image_unref (src);
     }
 
@@ -1869,12 +1869,12 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
     } else {
 	/* Initialize the temporary surface from the destination surface */
 	if (! dst->base.is_clear) {
-	    pixman_image_composite (PIXMAN_OP_SRC,
-				    dst->pixman_image, NULL, tmp,
-				    extents->x, extents->y,
-				    0, 0,
-				    0, 0,
-				    extents->width, extents->height);
+	    pixman_image_composite32 (PIXMAN_OP_SRC,
+                                      dst->pixman_image, NULL, tmp,
+                                      extents->x, extents->y,
+                                      0, 0,
+                                      0, 0,
+                                      extents->width, extents->height);
 	}
 
 	status = (*draw_func) (draw_closure,
@@ -1893,47 +1893,47 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
 
     if (! dst->base.is_clear) {
 #if PIXMAN_HAS_OP_LERP
-	pixman_image_composite (PIXMAN_OP_LERP,
-				tmp,
-				((cairo_image_surface_t *) clip_surface)->pixman_image,
-				dst->pixman_image,
-				0, 0,
-				extents->x - clip->path->extents.x,
-				extents->y - clip->path->extents.y,
-				extents->x, extents->y,
-				extents->width, extents->height);
+	pixman_image_composite32 (PIXMAN_OP_LERP,
+                                  tmp,
+                                  ((cairo_image_surface_t *) clip_surface)->pixman_image,
+                                  dst->pixman_image,
+                                  0, 0,
+                                  extents->x - clip->path->extents.x,
+                                  extents->y - clip->path->extents.y,
+                                  extents->x, extents->y,
+                                  extents->width, extents->height);
 #else
 	/* Punch the clip out of the destination */
-	pixman_image_composite (PIXMAN_OP_OUT_REVERSE,
-				((cairo_image_surface_t *) clip_surface)->pixman_image,
-				NULL, dst->pixman_image,
-				extents->x - clip->path->extents.x,
-				extents->y - clip->path->extents.y,
-				0, 0,
-				extents->x, extents->y,
-				extents->width, extents->height);
+	pixman_image_composite32 (PIXMAN_OP_OUT_REVERSE,
+                                  ((cairo_image_surface_t *) clip_surface)->pixman_image,
+                                  NULL, dst->pixman_image,
+                                  extents->x - clip->path->extents.x,
+                                  extents->y - clip->path->extents.y,
+                                  0, 0,
+                                  extents->x, extents->y,
+                                  extents->width, extents->height);
 
 	/* Now add the two results together */
-	pixman_image_composite (PIXMAN_OP_ADD,
-				tmp,
-				((cairo_image_surface_t *) clip_surface)->pixman_image,
-				dst->pixman_image,
-				0, 0,
-				extents->x - clip->path->extents.x,
-				extents->y - clip->path->extents.y,
-				extents->x, extents->y,
-				extents->width, extents->height);
+	pixman_image_composite32 (PIXMAN_OP_ADD,
+                                  tmp,
+                                  ((cairo_image_surface_t *) clip_surface)->pixman_image,
+                                  dst->pixman_image,
+                                  0, 0,
+                                  extents->x - clip->path->extents.x,
+                                  extents->y - clip->path->extents.y,
+                                  extents->x, extents->y,
+                                  extents->width, extents->height);
 #endif
     } else {
-	pixman_image_composite (PIXMAN_OP_SRC,
-				tmp,
-				((cairo_image_surface_t *) clip_surface)->pixman_image,
-				dst->pixman_image,
-				0, 0,
-				extents->x - clip->path->extents.x,
-				extents->y - clip->path->extents.y,
-				extents->x, extents->y,
-				extents->width, extents->height);
+	pixman_image_composite32 (PIXMAN_OP_SRC,
+                                  tmp,
+                                  ((cairo_image_surface_t *) clip_surface)->pixman_image,
+                                  dst->pixman_image,
+                                  0, 0,
+                                  extents->x - clip->path->extents.x,
+                                  extents->y - clip->path->extents.y,
+                                  extents->x, extents->y,
+                                  extents->width, extents->height);
     }
 
  CLEANUP_SURFACE:
@@ -1987,35 +1987,35 @@ _clip_and_composite_source (cairo_clip_t                  *clip,
 
     if (! dst->base.is_clear) {
 #if PIXMAN_HAS_OP_LERP
-	pixman_image_composite (PIXMAN_OP_LERP,
-				src, mask, dst->pixman_image,
-				extents->x + src_x, extents->y + src_y,
-				0, 0,
-				extents->x,     extents->y,
-				extents->width, extents->height);
+	pixman_image_composite32 (PIXMAN_OP_LERP,
+                                  src, mask, dst->pixman_image,
+                                  extents->x + src_x, extents->y + src_y,
+                                  0, 0,
+                                  extents->x,     extents->y,
+                                  extents->width, extents->height);
 #else
 	/* Compute dest' = dest OUT (mask IN clip) */
-	pixman_image_composite (PIXMAN_OP_OUT_REVERSE,
-				mask, NULL, dst->pixman_image,
-				0, 0, 0, 0,
-				extents->x,     extents->y,
-				extents->width, extents->height);
+	pixman_image_composite32 (PIXMAN_OP_OUT_REVERSE,
+                                  mask, NULL, dst->pixman_image,
+                                  0, 0, 0, 0,
+                                  extents->x,     extents->y,
+                                  extents->width, extents->height);
 
 	/* Now compute (src IN (mask IN clip)) ADD dest' */
-	pixman_image_composite (PIXMAN_OP_ADD,
-				src, mask, dst->pixman_image,
-				extents->x + src_x, extents->y + src_y,
-				0, 0,
-				extents->x,     extents->y,
-				extents->width, extents->height);
+	pixman_image_composite32 (PIXMAN_OP_ADD,
+                                  src, mask, dst->pixman_image,
+                                  extents->x + src_x, extents->y + src_y,
+                                  0, 0,
+                                  extents->x,     extents->y,
+                                  extents->width, extents->height);
 #endif
     } else {
-	pixman_image_composite (PIXMAN_OP_SRC,
-				src, mask, dst->pixman_image,
-				extents->x + src_x, extents->y + src_y,
-				0, 0,
-				extents->x,     extents->y,
-				extents->width, extents->height);
+	pixman_image_composite32 (PIXMAN_OP_SRC,
+                                  src, mask, dst->pixman_image,
+                                  extents->x + src_x, extents->y + src_y,
+                                  0, 0,
+                                  extents->x,     extents->y,
+                                  extents->width, extents->height);
     }
 
     pixman_image_unref (src);
@@ -2253,12 +2253,12 @@ _composite_traps (void                          *closure,
     }
 
     _pixman_image_add_traps (mask, extents->x, extents->y, info);
-    pixman_image_composite (_pixman_operator (op),
-			    src, mask, dst,
-			    extents->x + src_x, extents->y + src_y,
-			    0, 0,
-			    extents->x - dst_x, extents->y - dst_y,
-			    extents->width, extents->height);
+    pixman_image_composite32 (_pixman_operator (op),
+                              src, mask, dst,
+                              extents->x + src_x, extents->y + src_y,
+                              0, 0,
+                              extents->x - dst_x, extents->y - dst_y,
+                              extents->width, extents->height);
 
     pixman_image_unref (mask);
 
@@ -2389,11 +2389,11 @@ _fill_span (void *abstract_renderer,
     }
 
     do {
-	pixman_image_composite (PIXMAN_OP_OVER,
-				renderer->src, renderer->mask, renderer->dst,
-				0, 0, 0, 0,
-				spans[0].x, y++,
-				spans[i].x - spans[0].x, 1);
+	pixman_image_composite32 (PIXMAN_OP_OVER,
+                                  renderer->src, renderer->mask, renderer->dst,
+                                  0, 0, 0, 0,
+                                  spans[0].x, y++,
+                                  spans[i].x - spans[0].x, 1);
     } while (--height);
 
     return CAIRO_STATUS_SUCCESS;
@@ -2648,12 +2648,12 @@ _composite_unaligned_boxes (cairo_image_surface_t *dst,
 	goto CLEANUP;
     }
 
-    pixman_image_composite (_pixman_operator (op),
-			    src, mask, dst->pixman_image,
-			    extents->bounded.x + src_x, extents->bounded.y + src_y,
-			    0, 0,
-			    extents->bounded.x, extents->bounded.y,
-			    extents->bounded.width, extents->bounded.height);
+    pixman_image_composite32 (_pixman_operator (op),
+                              src, mask, dst->pixman_image,
+                              extents->bounded.x + src_x, extents->bounded.y + src_y,
+                              0, 0,
+                              extents->bounded.x, extents->bounded.y,
+                              extents->bounded.width, extents->bounded.height);
     pixman_image_unref (src);
 
   CLEANUP:
@@ -2780,12 +2780,12 @@ _composite_boxes (cairo_image_surface_t *dst,
 		if (x2 == x1 || y2 == y1)
 		    continue;
 
-		pixman_image_composite (pixman_op,
-					src, mask, dst->pixman_image,
-					x1 + src_x,  y1 + src_y,
-					x1 + mask_x, y1 + mask_y,
-					x1, y1,
-					x2 - x1, y2 - y1);
+		pixman_image_composite32 (pixman_op,
+                                          src, mask, dst->pixman_image,
+                                          x1 + src_x,  y1 + src_y,
+                                          x1 + mask_x, y1 + mask_y,
+                                          x1, y1,
+                                          x2 - x1, y2 - y1);
 	    }
 	}
 
@@ -3102,11 +3102,11 @@ _composite_mask (void				*closure,
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
-    pixman_image_composite (_pixman_operator (op), src, mask, dst,
-			    extents->x + src_x,  extents->y + src_y,
-			    extents->x + mask_x, extents->y + mask_y,
-			    extents->x - dst_x,  extents->y - dst_y,
-			    extents->width,      extents->height);
+    pixman_image_composite32 (_pixman_operator (op), src, mask, dst,
+                              extents->x + src_x,  extents->y + src_y,
+                              extents->x + mask_x, extents->y + mask_y,
+                              extents->x - dst_x,  extents->y - dst_y,
+                              extents->width,      extents->height);
 
     if (mask != NULL)
 	pixman_image_unref (mask);
@@ -3257,11 +3257,11 @@ _composite_spans (void                          *closure,
 	    goto CLEANUP_RENDERER;
 	}
 
-	pixman_image_composite (_pixman_operator (op), src, mask, dst,
-				extents->x + src_x, extents->y + src_y,
-				0, 0, /* mask.x, mask.y */
-				extents->x - dst_x, extents->y - dst_y,
-				extents->width, extents->height);
+	pixman_image_composite32 (_pixman_operator (op), src, mask, dst,
+                                  extents->x + src_x, extents->y + src_y,
+                                  0, 0, /* mask.x, mask.y */
+                                  extents->x - dst_x, extents->y - dst_y,
+                                  extents->width, extents->height);
 	pixman_image_unref (src);
     }
 
@@ -3619,10 +3619,10 @@ _composite_glyphs_via_mask (void			*closure,
 		goto CLEANUP;
 	    }
 
-	    pixman_image_composite (PIXMAN_OP_SRC,
-				    white, mask, new_mask,
-				    0, 0, 0, 0, 0, 0,
-				    extents->width, extents->height);
+	    pixman_image_composite32 (PIXMAN_OP_SRC,
+                                      white, mask, new_mask,
+                                      0, 0, 0, 0, 0, 0,
+                                      extents->width, extents->height);
 
 	    pixman_image_unref (mask);
 	    mask = new_mask;
@@ -3637,28 +3637,28 @@ _composite_glyphs_via_mask (void			*closure,
 	y = _cairo_lround (glyphs[i].y -
 			   glyph_surface->base.device_transform.y0);
 	if (glyph_surface->pixman_format == mask_format) {
-	    pixman_image_composite (PIXMAN_OP_ADD,
-				    glyph_surface->pixman_image, NULL, mask,
-				    0, 0, 0, 0,
-				    x - extents->x, y - extents->y,
-				    glyph_surface->width,
-				    glyph_surface->height);
+	    pixman_image_composite32 (PIXMAN_OP_ADD,
+                                      glyph_surface->pixman_image, NULL, mask,
+                                      0, 0, 0, 0,
+                                      x - extents->x, y - extents->y,
+                                      glyph_surface->width,
+                                      glyph_surface->height);
 	} else {
-	    pixman_image_composite (PIXMAN_OP_ADD,
-				    white, glyph_surface->pixman_image, mask,
-				    0, 0, 0, 0,
-				    x - extents->x, y - extents->y,
-				    glyph_surface->width,
-				    glyph_surface->height);
+	    pixman_image_composite32 (PIXMAN_OP_ADD,
+                                      white, glyph_surface->pixman_image, mask,
+                                      0, 0, 0, 0,
+                                      x - extents->x, y - extents->y,
+                                      glyph_surface->width,
+                                      glyph_surface->height);
 	}
     }
 
-    pixman_image_composite (_pixman_operator (op),
-			    src, mask, dst,
-			    extents->x + src_x, extents->y + src_y,
-			    0, 0,
-			    extents->x - dst_x, extents->y - dst_y,
-			    extents->width,     extents->height);
+    pixman_image_composite32 (_pixman_operator (op),
+                              src, mask, dst,
+                              extents->x + src_x, extents->y + src_y,
+                              0, 0,
+                              extents->x - dst_x, extents->y - dst_y,
+                              extents->width,     extents->height);
 
 CLEANUP:
     _cairo_scaled_font_thaw_cache (font);
@@ -3734,13 +3734,13 @@ _composite_glyphs (void				*closure,
 	    y = _cairo_lround (info->glyphs[i].y -
 			       glyph_surface->base.device_transform.y0);
 
-	    pixman_image_composite (pixman_op,
-				    src, glyph_surface->pixman_image, dst,
-				    x + src_x,  y + src_y,
-				    0, 0,
-				    x - dst_x, y - dst_y,
-				    glyph_surface->width,
-				    glyph_surface->height);
+	    pixman_image_composite32 (pixman_op,
+                                      src, glyph_surface->pixman_image, dst,
+                                      x + src_x,  y + src_y,
+                                      0, 0,
+                                      x - dst_x, y - dst_y,
+                                      glyph_surface->width,
+                                      glyph_surface->height);
 	}
     }
     _cairo_scaled_font_thaw_cache (info->font);
@@ -3954,22 +3954,22 @@ _cairo_image_surface_composite (cairo_operator_t	 op,
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
 
-	pixman_image_composite (_pixman_operator (op),
-				src, mask, dst->pixman_image,
-				src_x + src_offset_x,
-				src_y + src_offset_y,
-				mask_x + mask_offset_x,
-				mask_y + mask_offset_y,
-				dst_x, dst_y, width, height);
+	pixman_image_composite32 (_pixman_operator (op),
+                                  src, mask, dst->pixman_image,
+                                  src_x + src_offset_x,
+                                  src_y + src_offset_y,
+                                  mask_x + mask_offset_x,
+                                  mask_y + mask_offset_y,
+				  dst_x, dst_y, width, height);
 
 	pixman_image_unref (mask);
     } else {
-	pixman_image_composite (_pixman_operator (op),
-				src, NULL, dst->pixman_image,
-				src_x + src_offset_x,
-				src_y + src_offset_y,
-				0, 0,
-				dst_x, dst_y, width, height);
+	pixman_image_composite32 (_pixman_operator (op),
+                                  src, NULL, dst->pixman_image,
+                                  src_x + src_offset_x,
+                                  src_y + src_offset_y,
+                                  0, 0,
+                                  dst_x, dst_y, width, height);
     }
 
     pixman_image_unref (src);
@@ -4217,15 +4217,15 @@ _cairo_image_surface_span_renderer_finish (void *abstract_renderer)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
 
-    pixman_image_composite (_pixman_operator (renderer->op),
-			    src,
-			    renderer->mask,
-			    dst->pixman_image,
-			    rects->bounded.x + src_x,
-			    rects->bounded.y + src_y,
-			    0, 0,
-			    rects->bounded.x, rects->bounded.y,
-			    rects->bounded.width, rects->bounded.height);
+    pixman_image_composite32 (_pixman_operator (renderer->op),
+                              src,
+                              renderer->mask,
+                              dst->pixman_image,
+                              rects->bounded.x + src_x,
+                              rects->bounded.y + src_y,
+                              0, 0,
+                              rects->bounded.x, rects->bounded.y,
+                              rects->bounded.width, rects->bounded.height);
 
     if (! rects->is_bounded)
 	_cairo_image_surface_fixup_unbounded (dst, rects, NULL);
@@ -4372,12 +4372,12 @@ _cairo_image_surface_coerce_to_format (cairo_image_surface_t *surface,
     if (unlikely (clone->base.status))
 	return clone;
 
-    pixman_image_composite (PIXMAN_OP_SRC,
-			    surface->pixman_image, NULL, clone->pixman_image,
-			    0, 0,
-			    0, 0,
-			    0, 0,
-			    surface->width, surface->height);
+    pixman_image_composite32 (PIXMAN_OP_SRC,
+                              surface->pixman_image, NULL, clone->pixman_image,
+                              0, 0,
+                              0, 0,
+                              0, 0,
+                              surface->width, surface->height);
     clone->base.is_clear = FALSE;
 
     clone->base.device_transform =

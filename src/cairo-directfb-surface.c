@@ -764,14 +764,14 @@ _cairo_directfb_surface_clone_similar (void             *abstract_surface,
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
 
-	pixman_image_composite (PIXMAN_OP_SRC,
-				image_src->pixman_image,
-				NULL,
-				pixman_image,
-				src_x, src_y,
-				0, 0,
-				0, 0,
-				width, height);
+	pixman_image_composite32 (PIXMAN_OP_SRC,
+                                  image_src->pixman_image,
+                                  NULL,
+                                  pixman_image,
+                                  src_x, src_y,
+                                  0, 0,
+                                  0, 0,
+                                  width, height);
 
 	pixman_image_unref (pixman_image);
 

@@ -1052,14 +1052,14 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
         if (pixman_image == NULL)
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-        pixman_image_composite (PIXMAN_OP_SRC,
-                                image->pixman_image,
-                                NULL,
-                                pixman_image,
-                                0, 0,
-                                0, 0,
-                                0, 0,
-                                image->width, image->height);
+        pixman_image_composite32 (PIXMAN_OP_SRC,
+                                  image->pixman_image,
+                                  NULL,
+                                  pixman_image,
+                                  0, 0,
+                                  0, 0,
+                                  0, 0,
+                                  image->width, image->height);
 
 	ximage.bits_per_pixel = image_masks.bpp;
 	ximage.data = (char *) pixman_image_get_data (pixman_image);

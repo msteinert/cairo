@@ -317,12 +317,12 @@ _cairo_surface_subsurface_acquire_source_image (void                    *abstrac
 	if (unlikely ((status = image->base.status)))
 	    goto CLEANUP_IMAGE;
 
-	pixman_image_composite (PIXMAN_OP_SRC,
-				image->pixman_image, NULL, extra->image->pixman_image,
-				surface->extents.x, surface->extents.y,
-				0, 0,
-				0, 0,
-				surface->extents.width, surface->extents.height);
+	pixman_image_composite32 (PIXMAN_OP_SRC,
+                                  image->pixman_image, NULL, extra->image->pixman_image,
+                                  surface->extents.x, surface->extents.y,
+                                  0, 0,
+                                  0, 0,
+                                  surface->extents.width, surface->extents.height);
     }
 
     *image_out = image;
@@ -375,12 +375,12 @@ _cairo_surface_subsurface_snapshot (void *abstract_surface)
     if (unlikely (clone->base.status))
 	return &clone->base;
 
-    pixman_image_composite (PIXMAN_OP_SRC,
-			    image->pixman_image, NULL, clone->pixman_image,
-			    surface->extents.x, surface->extents.y,
-			    0, 0,
-			    0, 0,
-			    surface->extents.width, surface->extents.height);
+    pixman_image_composite32 (PIXMAN_OP_SRC,
+                              image->pixman_image, NULL, clone->pixman_image,
+                              surface->extents.x, surface->extents.y,
+                              0, 0,
+                              0, 0,
+                              surface->extents.width, surface->extents.height);
 
     _cairo_surface_release_source_image (surface->target, image, image_extra);
 

@@ -131,12 +131,12 @@ _cairo_surface_snapshot_copy_on_write (cairo_surface_t *surface)
 							image->height,
 							0);
     if (likely (clone->base.status == CAIRO_STATUS_SUCCESS)) {
-	pixman_image_composite (PIXMAN_OP_SRC,
-				image->pixman_image, NULL, clone->pixman_image,
-				0, 0,
-				0, 0,
-				0, 0,
-				image->width, image->height);
+	pixman_image_composite32 (PIXMAN_OP_SRC,
+                                  image->pixman_image, NULL, clone->pixman_image,
+                                  0, 0,
+                                  0, 0,
+                                  0, 0,
+                                  image->width, image->height);
 	clone->base.is_clear = FALSE;
 
 	snapshot->clone = &clone->base;

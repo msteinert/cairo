@@ -1461,12 +1461,12 @@ intel_gradient_render (intel_device_t *device,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
-    pixman_image_composite (PIXMAN_OP_SRC,
-			    gradient, NULL, image,
-			    0, 0,
-			    0, 0,
-			    0, 0,
-			    width, 1);
+    pixman_image_composite32 (PIXMAN_OP_SRC,
+                              gradient, NULL, image,
+                              0, 0,
+                              0, 0,
+                              0, 0,
+                              width, 1);
 
     pixman_image_unref (gradient);
 
