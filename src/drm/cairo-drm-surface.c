@@ -67,6 +67,8 @@ _cairo_drm_surface_init (cairo_drm_surface_t *surface,
 cairo_status_t
 _cairo_drm_surface_finish (cairo_drm_surface_t *surface)
 {
+    assert (surface->fallback == NULL);
+
     if (surface->bo != NULL)
 	cairo_drm_bo_destroy (surface->base.device, surface->bo);
 
