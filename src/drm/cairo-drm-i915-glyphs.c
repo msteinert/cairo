@@ -461,8 +461,8 @@ i915_surface_glyphs (void			*abstract_surface,
 	    if (unlikely (status))
 		goto FINISH;
 	}
-	glyph = intel_glyph_pin (scaled_glyph->surface_private);
 
+	glyph = intel_glyph_pin (scaled_glyph->surface_private);
 	if (glyph->cache->buffer.bo != last_bo) {
 	    intel_buffer_cache_t *cache = glyph->cache;
 

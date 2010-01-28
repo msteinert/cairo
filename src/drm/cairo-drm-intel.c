@@ -1182,6 +1182,9 @@ intel_get_glyph (intel_device_t *device,
 
 	assert (cache->buffer.bo->exec != NULL);
 
+	if (cache->buffer.bo->virtual != NULL)
+	    intel_bo_unmap (cache->buffer.bo);
+
 	_cairo_rtree_reset (&cache->rtree);
 	intel_bo_destroy (device, cache->buffer.bo);
 	cache->buffer.bo = NULL;
