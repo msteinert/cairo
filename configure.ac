@@ -3,6 +3,7 @@ CAIRO_PARSE_VERSION
 AC_INIT([cairo],
 	[cairo_version_major.cairo_version_minor.cairo_version_micro],
 	[http://bugs.freedesktop.org/enter_bug.cgi?product=cairo])
+AC_GNU_SOURCE
 AC_USE_SYSTEM_EXTENSIONS
 AC_CONFIG_SRCDIR(src/cairo.h)
 AC_CONFIG_HEADERS(config.h)
@@ -15,7 +16,6 @@ DOLT dnl Make my libtool fast!
 GTK_DOC_CHECK([1.6])
 
 AC_SYS_LARGEFILE
-AC_GNU_SOURCE
 
 dnl ===========================================================================
 dnl
