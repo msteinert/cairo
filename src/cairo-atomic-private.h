@@ -127,8 +127,6 @@ _cairo_atomic_ptr_cmpxchg (void **x, void *oldv, void *newv);
 
 #ifdef ATOMIC_OP_NEEDS_MEMORY_BARRIER
 
-# include "cairo-compiler-private.h"
-
 cairo_private int
 _cairo_atomic_int_get (int *x);
 

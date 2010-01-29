@@ -88,7 +88,6 @@ _cairo_atomic_ptr_cmpxchg (void **x, void *oldv, void *newv)
 
     return ret;
 }
-#endif
 
 #ifdef ATOMIC_OP_NEEDS_MEMORY_BARRIER
 int
@@ -110,4 +109,6 @@ _cairo_atomic_int_set (int *x, int value)
     *x = value;
     CAIRO_MUTEX_UNLOCK (_cairo_atomic_mutex);
 }
+#endif
+
 #endif
