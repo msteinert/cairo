@@ -759,9 +759,13 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
 
     glPixelStorei (GL_PACK_ALIGNMENT, 1);
     glPixelStorei (GL_PACK_ROW_LENGTH, image->stride / cpp);
+    if (surface->fb == 0 && GLEW_MESA_pack_invert)
+	glPixelStorei (GL_PACK_INVERT_MESA, 1);
     glReadPixels (interest->x, interest->y,
 		  interest->width, interest->height,
 		  format, type, image->data);
+    if (surface->fb == 0 && GLEW_MESA_pack_invert)
+	glPixelStorei (GL_PACK_INVERT_MESA, 0);
 
     while ((err = glGetError ()))
 	fprintf (stderr, "GL error 0x%08x\n", (int) err);
