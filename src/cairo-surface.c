@@ -275,8 +275,8 @@ _cairo_surface_detach_mime_data (cairo_surface_t *surface)
     if (! _cairo_surface_has_mime_data (surface))
 	return;
 
-    _cairo_user_data_array_init (&surface->mime_data);
     _cairo_user_data_array_fini (&surface->mime_data);
+    _cairo_user_data_array_init (&surface->mime_data);
 }
 
 cairo_status_t
