@@ -60,7 +60,9 @@
 #include "cairo-xlib-surface-private.h"
 #include "cairo-error-private.h"
 
+#if CAIRO_HAS_FC_FONT
 #include <fontconfig/fontconfig.h>
+#endif
 
 static int
 parse_boolean (const char *v)
@@ -141,7 +143,6 @@ get_integer_default (Display    *dpy,
 #define FC_HINT_MEDIUM      2
 #define FC_HINT_FULL        3
 #endif
-
 
 static void
 _cairo_xlib_init_screen_font_options (Display *dpy,
