@@ -122,6 +122,7 @@ typedef struct _cairo_gl_context {
     GLuint vbo;
     GLint max_framebuffer_size;
     GLint max_texture_size;
+    GLenum tex_target;
     cairo_bool_t using_glsl;
 
     cairo_bool_t using_shaders;

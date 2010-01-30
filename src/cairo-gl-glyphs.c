@@ -50,7 +50,8 @@ typedef struct _cairo_gl_glyph_private {
 } cairo_gl_glyph_private_t;
 
 static cairo_status_t
-_cairo_gl_glyph_cache_add_glyph (cairo_gl_glyph_cache_t *cache,
+_cairo_gl_glyph_cache_add_glyph (cairo_gl_context_t *ctx,
+				 cairo_gl_glyph_cache_t *cache,
 				 cairo_scaled_glyph_t  *scaled_glyph)
 {
     cairo_image_surface_t *glyph_surface = scaled_glyph->surface;
@@ -110,7 +111,7 @@ _cairo_gl_glyph_cache_add_glyph (cairo_gl_glyph_cache_t *cache,
     glPixelStorei (GL_UNPACK_ROW_LENGTH,
 		   glyph_surface->stride /
 		   (PIXMAN_FORMAT_BPP (glyph_surface->pixman_format) / 8));
-    glTexSubImage2D (GL_TEXTURE_2D, 0,
+    glTexSubImage2D (ctx->tex_target, 0,
 		     node->x, node->y,
 		     glyph_surface->width, glyph_surface->height,
 		     format, type,
@@ -181,10 +182,10 @@ cairo_gl_context_get_glyph_cache (cairo_gl_context_t *ctx,
 	}
 
 	glGenTextures (1, &cache->tex);
-	glBindTexture (GL_TEXTURE_2D, cache->tex);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexImage2D (GL_TEXTURE_2D, 0, internal_format,
+	glBindTexture (ctx->tex_target, cache->tex);
+	glTexParameteri (ctx->tex_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri (ctx->tex_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexImage2D (ctx->tex_target, 0, internal_format,
 		      GLYPH_CACHE_WIDTH, GLYPH_CACHE_HEIGHT, 0,
 		      internal_format, GL_FLOAT, NULL);
     }
@@ -271,7 +272,7 @@ _cairo_gl_glyphs_set_shader_fixed (cairo_gl_context_t *ctx,
      * the loop over glyphs below.
      */
     glActiveTexture (GL_TEXTURE1);
-    glEnable (GL_TEXTURE_2D);
+    glEnable (ctx->tex_target);
     glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
     glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
     glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
@@ -555,7 +556,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 	    cache = cairo_gl_context_get_glyph_cache (ctx,
 						      scaled_glyph->surface->format);
 
-	    glBindTexture (GL_TEXTURE_2D, cache->tex);
+	    glBindTexture (ctx->tex_target, cache->tex);
 
 	    last_format = scaled_glyph->surface->format;
 	    /* If we're doing component alpha in this function, it should
@@ -571,13 +572,13 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 	}
 
 	if (scaled_glyph->surface_private == NULL) {
-	    status = _cairo_gl_glyph_cache_add_glyph (cache, scaled_glyph);
+	    status = _cairo_gl_glyph_cache_add_glyph (ctx, cache, scaled_glyph);
 
 	    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
 		/* Cache is full, so flush existing prims and try again. */
 		_cairo_gl_flush_glyphs (ctx, &setup);
 		_cairo_gl_glyph_cache_unlock (cache);
-		status = _cairo_gl_glyph_cache_add_glyph (cache, scaled_glyph);
+		status = _cairo_gl_glyph_cache_add_glyph (ctx, cache, scaled_glyph);
 	    }
 
 	    if (unlikely (_cairo_status_is_error (status)))
@@ -612,12 +613,12 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     glDisableClientState (GL_TEXTURE_COORD_ARRAY);
     glActiveTexture (GL_TEXTURE0);
     glDisable (GL_TEXTURE_1D);
-    glDisable (GL_TEXTURE_2D);
+    glDisable (ctx->tex_target);
 
     glClientActiveTexture (GL_TEXTURE1);
     glDisableClientState (GL_TEXTURE_COORD_ARRAY);
     glActiveTexture (GL_TEXTURE1);
-    glDisable (GL_TEXTURE_2D);
+    glDisable (ctx->tex_target);
     _cairo_gl_use_program (NULL);
 
     glBindBufferARB (GL_ARRAY_BUFFER_ARB, 0);

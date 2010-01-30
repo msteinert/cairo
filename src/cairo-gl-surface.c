@@ -100,7 +100,6 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 
     if (! GLEW_EXT_framebuffer_object ||
 	! GLEW_ARB_texture_env_combine ||
-	! GLEW_ARB_texture_non_power_of_two ||
 	! GLEW_EXT_bgra)
     {
 	fprintf (stderr,
@@ -109,8 +108,6 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 	    fprintf (stderr, "    GL_EXT_framebuffer_object\n");
 	if (! GLEW_ARB_texture_env_combine)
 	    fprintf (stderr, "    GL_ARB_texture_env_combine\n");
-	if (! GLEW_ARB_texture_non_power_of_two)
-	    fprintf (stderr, "    GL_ARB_texture_non_power_of_two\n");
 	/* EXT_bgra is used in two places:
 	 * - draw_image to upload common pixman formats without hand-swizzling.
 	 * - get_image to download common pixman formats without hand-swizzling.
@@ -120,6 +117,19 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 
 	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT); /* XXX */
     }
+
+    if (! GLEW_ARB_texture_non_power_of_two &&
+	! GLEW_EXT_texture_rectangle ) {
+	fprintf (stderr,
+		 "Required GL extensions not available:\n");
+	fprintf (stderr, "    GL_ARB_texture_non_power_of_two, GL_EXT_texture_rectangle\n");
+    }
+
+    if (!GLEW_ARB_texture_non_power_of_two)
+	ctx->tex_target = GL_TEXTURE_RECTANGLE_EXT;
+    else
+	ctx->tex_target = GL_TEXTURE_2D;
+
 
     if (GLEW_VERSION_2_0 ||
 	(GLEW_ARB_fragment_shader &&
@@ -133,8 +143,8 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 
     /* Set up the dummy texture for tex_env_combine with constant color. */
     glGenTextures (1, &ctx->dummy_tex);
-    glBindTexture (GL_TEXTURE_2D, ctx->dummy_tex);
-    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0,
+    glBindTexture (ctx->tex_target, ctx->dummy_tex);
+    glTexImage2D (ctx->tex_target, 0, GL_RGBA, 1, 1, 0,
 		  GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
     /* PBO for any sort of texture upload */
@@ -367,45 +377,53 @@ _cairo_gl_set_operator (cairo_gl_surface_t *dst, cairo_operator_t op,
 
 static void
 _cairo_gl_set_texture_surface (int tex_unit, GLuint tex,
-			       cairo_surface_attributes_t *attributes)
+			       cairo_surface_attributes_t *attributes,
+			       GLint tex_target)
 {
+
+    if (tex_target == GL_TEXTURE_RECTANGLE_EXT) {
+	if (attributes->extend == CAIRO_EXTEND_REPEAT ||
+	    attributes->extend == CAIRO_EXTEND_REFLECT)
+	    fprintf(stderr,"cannot use rect texture for repeat/reflect\n");
+    }
+	
     glActiveTexture (GL_TEXTURE0 + tex_unit);
-    glBindTexture (GL_TEXTURE_2D, tex);
+    glBindTexture (tex_target, tex);
     switch (attributes->extend) {
     case CAIRO_EXTEND_NONE:
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameteri (tex_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri (tex_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 	break;
     case CAIRO_EXTEND_PAD:
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri (tex_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri (tex_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	break;
     case CAIRO_EXTEND_REPEAT:
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri (tex_target, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri (tex_target, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	break;
     case CAIRO_EXTEND_REFLECT:
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+	glTexParameteri (tex_target, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameteri (tex_target, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 	break;
     }
     switch (attributes->filter) {
     case CAIRO_FILTER_FAST:
     case CAIRO_FILTER_NEAREST:
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri (tex_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri (tex_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	break;
     case CAIRO_FILTER_GOOD:
     case CAIRO_FILTER_BEST:
     case CAIRO_FILTER_BILINEAR:
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri (tex_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri (tex_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	break;
     default:
     case CAIRO_FILTER_GAUSSIAN:
 	ASSERT_NOT_REACHED;
     }
-    glEnable (GL_TEXTURE_2D);
+    glEnable (tex_target);
 }
 
 void
@@ -472,10 +490,10 @@ _cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
 
     /* Create the texture used to store the surface's data. */
     glGenTextures (1, &surface->tex);
-    glBindTexture (GL_TEXTURE_2D, surface->tex);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexImage2D (GL_TEXTURE_2D, 0, format, width, height, 0,
+    glBindTexture (ctx->tex_target, surface->tex);
+    glTexParameteri (ctx->tex_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri (ctx->tex_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexImage2D (ctx->tex_target, 0, format, width, height, 0,
 		  format, GL_UNSIGNED_BYTE, NULL);
 
     /* Create a framebuffer object wrapping the texture so that we can render
@@ -485,7 +503,7 @@ _cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
     glBindFramebufferEXT (GL_FRAMEBUFFER_EXT, surface->fb);
     glFramebufferTexture2DEXT (GL_FRAMEBUFFER_EXT,
 			       GL_COLOR_ATTACHMENT0_EXT,
-			       GL_TEXTURE_2D,
+			       ctx->tex_target,
 			       surface->tex,
 			       0);
     ctx->current_target = NULL;
@@ -664,6 +682,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
     GLenum internal_format, format, type;
     cairo_bool_t has_alpha;
     cairo_image_surface_t *clone = NULL;
+    cairo_gl_context_t *ctx = (cairo_gl_context_t *) dst->base.device;
     int cpp;
 
     if (! _cairo_gl_get_image_format_and_type (src->pixman_format,
@@ -691,12 +710,12 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 
     cpp = PIXMAN_FORMAT_BPP (src->pixman_format) / 8;
 
-    glBindTexture (GL_TEXTURE_2D, dst->tex);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glBindTexture (ctx->tex_target, dst->tex);
+    glTexParameteri (ctx->tex_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri (ctx->tex_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
     glPixelStorei (GL_UNPACK_ROW_LENGTH, src->stride / cpp);
-    glTexSubImage2D (GL_TEXTURE_2D, 0,
+    glTexSubImage2D (ctx->tex_target, 0,
 	             dst_x, dst_y, width, height,
 		     format, GL_UNSIGNED_BYTE,
 		     src->data + src_y * src->stride + src_x * cpp);
@@ -1143,7 +1162,7 @@ _cairo_gl_pattern_texture_setup (cairo_gl_composite_operand_t *operand,
     cairo_matrix_t m;
     cairo_gl_surface_t *surface;
     cairo_surface_attributes_t *attributes;
-
+    cairo_gl_context_t *ctx = (cairo_gl_context_t *) dst->base.device;
     attributes = &operand->operand.texture.attributes;
 
     status = _cairo_pattern_acquire_surface (src, &dst->base,
@@ -1183,9 +1202,15 @@ _cairo_gl_pattern_texture_setup (cairo_gl_composite_operand_t *operand,
      * (unnormalized src -> unnormalized src) to
      * (unnormalized dst -> normalized src)
      */
-    cairo_matrix_init_scale (&m,
-			     1.0 / surface->width,
-			     1.0 / surface->height);
+    if (ctx->tex_target == GL_TEXTURE_RECTANGLE_EXT) {
+	cairo_matrix_init_scale (&m,
+				 1.0,
+				 1.0);
+    } else {
+	cairo_matrix_init_scale (&m,
+				 1.0 / surface->width,
+				 1.0 / surface->height);
+    }
     cairo_matrix_multiply (&attributes->matrix,
 			   &attributes->matrix,
 			   &m);
@@ -1415,8 +1440,8 @@ _cairo_gl_set_tex_combine_constant_color (cairo_gl_context_t *ctx,
     /* Fall back to fixed function */
     glActiveTexture (GL_TEXTURE0 + tex_unit);
     /* Have to have a dummy texture bound in order to use the combiner unit. */
-    glBindTexture (GL_TEXTURE_2D, ctx->dummy_tex);
-    glEnable (GL_TEXTURE_2D);
+    glBindTexture (ctx->tex_target, ctx->dummy_tex);
+    glEnable (ctx->tex_target);
 
     glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, color);
     glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
@@ -1460,7 +1485,7 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 	break;
     case OPERAND_TEXTURE:
 	_cairo_gl_set_texture_surface (0, setup->src.operand.texture.tex,
-				       src_attributes);
+				       src_attributes, ctx->tex_target);
 	if (!setup->shader) {
 	    /* Set up the constant color we use to set color to 0 if needed. */
 	    glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, constant_color);
@@ -1573,7 +1598,7 @@ _cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
 	break;
     case OPERAND_TEXTURE:
 	_cairo_gl_set_texture_surface (0, setup->src.operand.texture.tex,
-				       src_attributes);
+				       src_attributes, ctx->tex_target);
 	if (!setup->shader) {
 	    /* Set up the combiner to just set color to the sampled texture. */
 	    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
@@ -1699,9 +1724,9 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 				setup->src.operand.constant.color[2],
 				setup->src.operand.constant.color[3]);
 	} else {
-	    glBindTexture (GL_TEXTURE_2D, ctx->dummy_tex);
+	    glBindTexture (ctx->tex_target, ctx->dummy_tex);
 	    glActiveTexture (GL_TEXTURE1);
-	    glEnable (GL_TEXTURE_2D);
+	    glEnable (ctx->tex_target);
 
 	    glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR,
 			setup->mask.operand.constant.color);
@@ -1714,7 +1739,7 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 	break;
     case OPERAND_TEXTURE:
 	_cairo_gl_set_texture_surface (1, setup->mask.operand.texture.tex,
-				       mask_attributes);
+				       mask_attributes, ctx->tex_target);
 	if (!setup->shader) {
 	    /* Set up the constant color we use to set color to 0 if needed. */
 	    glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, constant_color);
@@ -1980,13 +2005,13 @@ _cairo_gl_surface_composite_component_alpha (cairo_operator_t op,
     glDisableClientState (GL_TEXTURE_COORD_ARRAY);
     glActiveTexture (GL_TEXTURE0);
     glDisable (GL_TEXTURE_1D);
-    glDisable (GL_TEXTURE_2D);
+    glDisable (ctx->tex_target);
 
     glClientActiveTexture (GL_TEXTURE1);
     glDisableClientState (GL_TEXTURE_COORD_ARRAY);
     glActiveTexture (GL_TEXTURE1);
     glDisable (GL_TEXTURE_1D);
-    glDisable (GL_TEXTURE_2D);
+    glDisable (ctx->tex_target);
 
     while ((err = glGetError ()))
 	fprintf (stderr, "GL error 0x%08x\n", (int) err);
@@ -2107,7 +2132,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 
 	case OPERAND_TEXTURE:
 	    _cairo_gl_set_texture_surface (1, setup.mask.operand.texture.tex,
-					   mask_attributes);
+					   mask_attributes, ctx->tex_target);
 
 	    if (!setup.shader) {
 		glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
@@ -2227,13 +2252,13 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     glDisableClientState (GL_TEXTURE_COORD_ARRAY);
     glActiveTexture (GL_TEXTURE0);
     glDisable (GL_TEXTURE_1D);
-    glDisable (GL_TEXTURE_2D);
+    glDisable (ctx->tex_target);
 
     glClientActiveTexture (GL_TEXTURE1);
     glDisableClientState (GL_TEXTURE_COORD_ARRAY);
     glActiveTexture (GL_TEXTURE1);
     glDisable (GL_TEXTURE_1D);
-    glDisable (GL_TEXTURE_2D);
+    glDisable (ctx->tex_target);
 
     while ((err = glGetError ()))
 	fprintf (stderr, "GL error 0x%08x\n", (int) err);
@@ -2750,11 +2775,11 @@ _cairo_gl_surface_span_renderer_finish (void *abstract_renderer)
     glDisableClientState (GL_TEXTURE_COORD_ARRAY);
     glActiveTexture (GL_TEXTURE0);
     glDisable (GL_TEXTURE_1D);
-    glDisable (GL_TEXTURE_2D);
+    glDisable (renderer->ctx->tex_target);
 
     if (!renderer->setup.shader) {
 	glActiveTexture (GL_TEXTURE1);
-	glDisable (GL_TEXTURE_2D);
+	glDisable (renderer->ctx->tex_target);
     }
 
     glDisable (GL_BLEND);
@@ -2791,6 +2816,7 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
 					cairo_region_t		*clip_region)
 {
     cairo_gl_surface_t *dst = abstract_dst;
+    cairo_gl_context_t *ctx = (cairo_gl_context_t *) dst->base.device;
     cairo_gl_surface_span_renderer_t *renderer;
     cairo_status_t status;
     cairo_surface_attributes_t *src_attributes;
@@ -2850,8 +2876,8 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
 	/* Set up the mask to source from the incoming vertex color. */
 	glActiveTexture (GL_TEXTURE1);
 	/* Have to have a dummy texture bound in order to use the combiner unit. */
-	glBindTexture (GL_TEXTURE_2D, renderer->ctx->dummy_tex);
-	glEnable (GL_TEXTURE_2D);
+	glBindTexture (ctx->tex_target, renderer->ctx->dummy_tex);
+	glEnable (ctx->tex_target);
 	glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
 	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
 	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
