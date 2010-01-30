@@ -2054,30 +2054,20 @@ _cairo_quartz_surface_stroke (void *abstract_surface,
 #define STATIC_DASH 32
 	float sdash[STATIC_DASH];
 	float *fdash = sdash;
-	double offset = style->dash_offset;
 	unsigned int max_dashes = style->num_dashes;
 	unsigned int k;
 
-	if (_cairo_stroke_style_dash_can_approximate (style, ctm, tolerance)) {
-	    double approximate_dashes[2];
-	    _cairo_stroke_style_dash_approximate (style, ctm, tolerance,
-						  &offset,
-						  approximate_dashes,
-						  &max_dashes);
-	    sdash[0] = approximate_dashes[0];
-	    sdash[1] = approximate_dashes[1];
-	} else {
-	    if (style->num_dashes%2)
-		max_dashes *= 2;
-	    if (max_dashes > STATIC_DASH)
-		fdash = _cairo_malloc_ab (max_dashes, sizeof (float));
-	    if (fdash == NULL)
-		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	if (style->num_dashes%2)
+	    max_dashes *= 2;
+	if (max_dashes > STATIC_DASH)
+	    fdash = _cairo_malloc_ab (max_dashes, sizeof (float));
+	if (fdash == NULL)
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-	    for (k = 0; k < max_dashes; k++)
-		fdash[k] = (float) style->dash[k % style->num_dashes];
-	}
-	CGContextSetLineDash (surface->cgContext, offset, fdash, max_dashes);
+	for (k = 0; k < max_dashes; k++)
+	    fdash[k] = (float) style->dash[k % style->num_dashes];
+
+	CGContextSetLineDash (surface->cgContext, style->dash_offset, fdash, max_dashes);
 	if (fdash != sdash)
 	    free (fdash);
     } else
