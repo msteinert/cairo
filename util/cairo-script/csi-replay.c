@@ -13,7 +13,8 @@ static const cairo_user_data_key_t _key;
 static cairo_surface_t *
 _similar_surface_create (void *closure,
 			 cairo_content_t content,
-			 double width, double height)
+			 double width, double height,
+			 long uid)
 {
     return cairo_surface_create_similar (closure, content, width, height);
 }
@@ -87,8 +88,9 @@ _destroy_window (void *closure)
 
 static cairo_surface_t *
 _xlib_surface_create (void *closure,
-			 cairo_content_t content,
-			 double width, double height)
+		      cairo_content_t content,
+		      double width, double height,
+		      long uid)
 {
     Display *dpy;
     XSetWindowAttributes attr;
@@ -127,7 +129,8 @@ _destroy_pixmap (void *closure)
 static cairo_surface_t *
 _xrender_surface_create (void *closure,
 			 cairo_content_t content,
-			 double width, double height)
+			 double width, double height,
+			 long uid)
 {
     Display *dpy;
     Pixmap pixmap;
@@ -210,7 +213,8 @@ _glx_get_context (cairo_content_t content)
 static cairo_surface_t *
 _glx_surface_create (void *closure,
 		     cairo_content_t content,
-		     double width, double height)
+		     double width, double height,
+		     long uid)
 {
     if (width == 0)
 	width = 1;
@@ -227,7 +231,8 @@ _glx_surface_create (void *closure,
 static cairo_surface_t *
 _pdf_surface_create (void *closure,
 		     cairo_content_t content,
-		     double width, double height)
+		     double width, double height,
+		     long uid)
 {
     return cairo_pdf_surface_create_for_stream (NULL, NULL, width, height);
 }
@@ -238,7 +243,8 @@ _pdf_surface_create (void *closure,
 static cairo_surface_t *
 _ps_surface_create (void *closure,
 		    cairo_content_t content,
-		    double width, double height)
+		    double width, double height,
+		    long uid)
 {
     return cairo_ps_surface_create_for_stream (NULL, NULL, width, height);
 }
@@ -249,7 +255,8 @@ _ps_surface_create (void *closure,
 static cairo_surface_t *
 _svg_surface_create (void *closure,
 		     cairo_content_t content,
-		     double width, double height)
+		     double width, double height,
+		     long uid)
 {
     return cairo_svg_surface_create_for_stream (NULL, NULL, width, height);
 }
@@ -258,7 +265,8 @@ _svg_surface_create (void *closure,
 static cairo_surface_t *
 _image_surface_create (void *closure,
 		       cairo_content_t content,
-		       double width, double height)
+		       double width, double height,
+		       long uid)
 {
     return cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height);
 }
@@ -316,7 +324,8 @@ main (int argc, char **argv)
 #if SINGLE_SURFACE
     hooks.closure = backends[0].create (NULL,
 					CAIRO_CONTENT_COLOR_ALPHA,
-					512, 512);
+					512, 512,
+					0);
 #endif
 
 
@@ -332,7 +341,8 @@ main (int argc, char **argv)
 		cairo_surface_destroy (hooks.closure);
 		hooks.closure = b->create (NULL,
 					   CAIRO_CONTENT_COLOR_ALPHA,
-					   512, 512);
+					   512, 512,
+					   0);
 #else
 		hooks.surface_create = b->create;
 #endif
