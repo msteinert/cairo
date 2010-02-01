@@ -53,7 +53,6 @@ typedef struct _cairo_stroker_dash {
 
     double dash_offset;
     const double *dashes;
-    double approximate_dashes[2];
     unsigned int num_dashes;
 } cairo_stroker_dash_t;
 
@@ -140,25 +139,15 @@ _cairo_stroker_dash_step (cairo_stroker_dash_t *dash, double step)
 
 static void
 _cairo_stroker_dash_init (cairo_stroker_dash_t *dash,
-			  const cairo_stroke_style_t *style,
-			  const cairo_matrix_t *ctm,
-			  double tolerance)
+			  const cairo_stroke_style_t *style)
 {
     dash->dashed = style->dash != NULL;
     if (! dash->dashed)
 	return;
 
-    if (_cairo_stroke_style_dash_can_approximate (style, ctm, tolerance)) {
-	_cairo_stroke_style_dash_approximate (style, ctm, tolerance,
-					      &dash->dash_offset,
-					      dash->approximate_dashes,
-					      &dash->num_dashes);
-	dash->dashes = dash->approximate_dashes;
-    } else {
-	dash->dashes = style->dash;
-	dash->num_dashes = style->num_dashes;
-	dash->dash_offset = style->dash_offset;
-    }
+    dash->dashes = style->dash;
+    dash->num_dashes = style->num_dashes;
+    dash->dash_offset = style->dash_offset;
 
     _cairo_stroker_dash_start (dash);
 }
@@ -192,7 +181,7 @@ _cairo_stroker_init (cairo_stroker_t		*stroker,
     stroker->has_first_face = FALSE;
     stroker->has_initial_sub_path = FALSE;
 
-    _cairo_stroker_dash_init (&stroker->dash, stroke_style, ctm, tolerance);
+    _cairo_stroker_dash_init (&stroker->dash, stroke_style);
 
     stroker->add_external_edge = NULL;
 
@@ -1534,8 +1523,7 @@ _cairo_rectilinear_stroker_init (cairo_rectilinear_stroker_t	*stroker,
     stroker->segments_size = ARRAY_LENGTH (stroker->segments_embedded);
     stroker->num_segments = 0;
 
-    /* Assume 2*EPSILON tolerance */
-    _cairo_stroker_dash_init (&stroker->dash, stroke_style, ctm, _cairo_fixed_to_double (2 * CAIRO_FIXED_EPSILON));
+    _cairo_stroker_dash_init (&stroker->dash, stroke_style);
 
     stroker->has_bounds = FALSE;
 
