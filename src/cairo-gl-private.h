@@ -87,6 +87,7 @@ typedef struct _cairo_gl_context {
     GLint fill_rectangles_color_uniform;
     GLint max_framebuffer_size;
     GLint max_texture_size;
+    cairo_bool_t using_glsl;
 
     cairo_gl_surface_t *current_target;
     cairo_gl_surface_t *glyphs_temporary_mask;

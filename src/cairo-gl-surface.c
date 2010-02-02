@@ -114,6 +114,12 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT); /* XXX */
     }
 
+    if (GLEW_ARB_fragment_shader &&
+	GLEW_ARB_vertex_shader &&
+	GLEW_ARB_shader_objects) {
+	ctx->using_glsl = TRUE;
+    }
+
     /* Set up the dummy texture for tex_env_combine with constant color. */
     glGenTextures (1, &ctx->dummy_tex);
     glBindTexture (GL_TEXTURE_2D, ctx->dummy_tex);
@@ -1977,7 +1983,10 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
 				   cairo_rectangle_int_t   *rects,
 				   int			    num_rects)
 {
-    if (GLEW_ARB_fragment_shader && GLEW_ARB_vertex_shader) {
+    cairo_gl_surface_t *surface = abstract_surface;
+    cairo_gl_context_t *ctx = (cairo_gl_context_t *) surface->base.device;
+
+    if (ctx->using_glsl) {
 	return _cairo_gl_surface_fill_rectangles_glsl(abstract_surface,
 						      op,
 						      color,
