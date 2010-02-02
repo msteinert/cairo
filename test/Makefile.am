@@ -602,6 +602,7 @@ REFERENCE_IMAGES = \
 	linear-gradient.quartz.ref.png \
 	linear-gradient.ref.png \
 	linear-gradient.xlib.ref.png \
+	linear-step-function.xfail.png \
 	linear-uniform.ref.png \
 	long-dashed-lines.ps2.ref.png \
 	long-dashed-lines.ps3.ref.png \
