@@ -267,7 +267,7 @@ i915_bo_exec (i915_device_t *device, intel_bo_t *bo, uint32_t offset)
 	}
 
 	intel_dump_batchbuffer (device->batch_header,
-				device->batch.used,
+				execbuf.batch_len,
 				device->intel.base.chip_id);
     }
 
