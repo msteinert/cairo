@@ -157,12 +157,6 @@ typedef struct _shader_impl {
 
     cairo_status_t
     (*bind_texture_to_shader) (GLuint program, const char *name, GLuint tex_unit);
-
-    GLenum
-    (*vertex_enumerator) (void);
-
-    GLenum
-    (*fragment_enumerator) (void);
 } shader_impl_t;
 
 static const shader_impl_t*
@@ -400,18 +394,6 @@ bind_texture_to_shader_arb (GLuint program, const char *name, GLuint tex_unit)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static GLenum
-vertex_enumerator_arb (void)
-{
-    return GL_VERTEX_SHADER_ARB;
-}
-
-static GLenum
-fragment_enumerator_arb (void)
-{
-    return GL_FRAGMENT_SHADER_ARB;
-}
-
 /* OpenGL Core 2.0 API. */
 static cairo_status_t
 compile_shader_core_2_0 (GLuint *shader, GLenum type, const char *text)
@@ -577,18 +559,6 @@ bind_texture_to_shader_core_2_0 (GLuint program, const char *name, GLuint tex_un
     return CAIRO_STATUS_SUCCESS;
 }
 
-static GLenum
-vertex_enumerator_core_2_0 (void)
-{
-    return GL_VERTEX_SHADER;
-}
-
-static GLenum
-fragment_enumerator_core_2_0 (void)
-{
-    return GL_FRAGMENT_SHADER;
-}
-
 static const shader_impl_t shader_impl_core_2_0 = {
     compile_shader_core_2_0,
     link_shader_core_2_0,
@@ -601,8 +571,6 @@ static const shader_impl_t shader_impl_core_2_0 = {
     bind_vec4_to_shader_core_2_0,
     bind_matrix_to_shader_core_2_0,
     bind_texture_to_shader_core_2_0,
-    vertex_enumerator_core_2_0,
-    fragment_enumerator_core_2_0
 };
 
 static const shader_impl_t shader_impl_arb = {
@@ -617,8 +585,6 @@ static const shader_impl_t shader_impl_arb = {
     bind_vec4_to_shader_arb,
     bind_matrix_to_shader_arb,
     bind_texture_to_shader_arb,
-    vertex_enumerator_arb,
-    fragment_enumerator_arb
 };
 
 static const shader_impl_t*
@@ -665,13 +631,13 @@ create_shader_program (cairo_gl_shader_program_t *program,
         return CAIRO_INT_STATUS_UNSUPPORTED;
 
     status = get_impl()->compile_shader (&program->vertex_shader,
-                                         get_impl()->vertex_enumerator(),
+                                         GL_VERTEX_SHADER,
                                          vertex_text);
     if (unlikely (status))
         goto FAILURE;
 
     status = get_impl()->compile_shader (&program->fragment_shader,
-                                         get_impl()->fragment_enumerator(),
+                                         GL_FRAGMENT_SHADER,
                                          fragment_text);
     if (unlikely (status))
         goto FAILURE;
