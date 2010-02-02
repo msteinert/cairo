@@ -78,9 +78,6 @@ _cairo_clip_path_create (cairo_clip_t *clip)
 static cairo_clip_path_t *
 _cairo_clip_path_reference (cairo_clip_path_t *clip_path)
 {
-    if (clip_path == NULL)
-	return NULL;
-
     assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&clip_path->ref_count));
 
     _cairo_reference_count_inc (&clip_path->ref_count);
@@ -200,11 +197,11 @@ cairo_clip_t *
 _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other)
 {
     if (other != NULL) {
+	clip->all_clipped = other->all_clipped;
 	if (other->path == NULL) {
-	    _cairo_clip_init (clip);
+	    clip->path = NULL;
 	    clip = NULL;
 	} else {
-	    clip->all_clipped = other->all_clipped;
 	    clip->path = _cairo_clip_path_reference (other->path);
 	}
     } else {
