@@ -1522,7 +1522,7 @@ i915_surface_create_internal (cairo_drm_device_t *base_dev,
 	surface->intel.drm.stride = cairo_format_stride_for_width (surface->intel.drm.format,
 							      width);
 	/* check for tiny surfaces for which tiling is irrelevant */
-	if (height * surface->intel.drm.stride < 4096)
+	if (height * surface->intel.drm.stride <= 4096)
 	    tiling = I915_TILING_NONE;
 
 	surface->intel.drm.stride = i915_tiling_stride (tiling,
