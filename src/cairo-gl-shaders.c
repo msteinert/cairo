@@ -589,27 +589,37 @@ fragment_enumerator_core_2_0 (void)
     return GL_FRAGMENT_SHADER;
 }
 
-#define SHADER_IMPL_DECL(x)                                             \
-    static const shader_impl_t shader_impl_ ## x = {                    \
-        compile_shader_ ## x,                                           \
-        link_shader_ ## x,                                              \
-        destroy_shader_program_ ## x,                                   \
-        create_linear_gradient_shader_program_ ## x,                    \
-        create_radial_gradient_shader_program_ ## x,                    \
-        bind_float_to_shader_ ## x,                                     \
-        bind_vec2_to_shader_ ## x,                                      \
-        bind_vec3_to_shader_ ## x,                                      \
-        bind_vec4_to_shader_ ## x,                                      \
-        bind_matrix_to_shader_ ## x,                                    \
-        bind_texture_to_shader_ ## x,                                   \
-        vertex_enumerator_ ## x,                                        \
-        fragment_enumerator_ ## x                                       \
-    }
+static const shader_impl_t shader_impl_core_2_0 = {
+    compile_shader_core_2_0,
+    link_shader_core_2_0,
+    destroy_shader_program_core_2_0,
+    create_linear_gradient_shader_program_core_2_0,
+    create_radial_gradient_shader_program_core_2_0,
+    bind_float_to_shader_core_2_0,
+    bind_vec2_to_shader_core_2_0,
+    bind_vec3_to_shader_core_2_0,
+    bind_vec4_to_shader_core_2_0,
+    bind_matrix_to_shader_core_2_0,
+    bind_texture_to_shader_core_2_0,
+    vertex_enumerator_core_2_0,
+    fragment_enumerator_core_2_0
+};
 
-SHADER_IMPL_DECL(core_2_0);
-SHADER_IMPL_DECL(arb);
-
-#undef SHADER_IMPL_DECL
+static const shader_impl_t shader_impl_arb = {
+    compile_shader_arb,
+    link_shader_arb,
+    destroy_shader_program_arb,
+    create_linear_gradient_shader_program_arb,
+    create_radial_gradient_shader_program_arb,
+    bind_float_to_shader_arb,
+    bind_vec2_to_shader_arb,
+    bind_vec3_to_shader_arb,
+    bind_vec4_to_shader_arb,
+    bind_matrix_to_shader_arb,
+    bind_texture_to_shader_arb,
+    vertex_enumerator_arb,
+    fragment_enumerator_arb
+};
 
 static const shader_impl_t*
 get_impl (void)
