@@ -625,7 +625,7 @@ typedef struct i915_image_private {
     intel_buffer_cache_t *container;
 } i915_image_private_t;
 
-#define I915_BATCH_SIZE (64*1024)
+#define I915_BATCH_SIZE (128*1024)
 #define I915_VBO_SIZE (512*1024)
 #define I915_MAX_RELOCS 2048
 
