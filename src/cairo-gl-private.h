@@ -91,11 +91,12 @@ typedef struct _cairo_gl_context {
     cairo_device_t base;
 
     GLuint dummy_tex;
-    GLint fill_rectangles_shader;
-    GLint fill_rectangles_color_uniform;
     GLint max_framebuffer_size;
     GLint max_texture_size;
     cairo_bool_t using_glsl;
+
+    cairo_bool_t using_shaders;
+    cairo_gl_shader_program_t fill_rectangles_shader;
 
     cairo_gl_surface_t *current_target;
     cairo_gl_surface_t *glyphs_temporary_mask;
@@ -236,10 +237,6 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 cairo_private void
 _cairo_gl_glyph_cache_fini (cairo_gl_glyph_cache_t *cache);
 
-cairo_private cairo_status_t
-_cairo_gl_load_glsl (GLint *shader,
-		     const char *vs_source, const char *fs_source);
-
 static inline int
 _cairo_gl_y_flip (cairo_gl_surface_t *surface, int y)
 {
@@ -289,6 +286,9 @@ bind_matrix_to_shader (GLuint program, const char *name, cairo_matrix_t* m);
 
 cairo_status_t
 bind_texture_to_shader (GLuint program, const char *name, GLuint tex_unit);
+
+void
+_cairo_gl_use_program (cairo_gl_shader_program_t *shader);
 
 slim_hidden_proto (cairo_gl_surface_create);
 

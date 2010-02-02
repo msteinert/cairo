@@ -35,89 +35,6 @@
 #include "cairo-gl-private.h"
 #include "cairo-error-private.h"
 
-static GLint
-_cairo_gl_compile_glsl(GLenum type, GLint *shader_out, const char *source)
-{
-    GLint ok;
-    GLint shader;
-
-    shader = glCreateShaderObjectARB (type);
-    glShaderSourceARB (shader, 1, (const GLchar **)&source, NULL);
-    glCompileShaderARB (shader);
-    glGetObjectParameterivARB (shader, GL_OBJECT_COMPILE_STATUS_ARB, &ok);
-    if (!ok) {
-	GLchar *info;
-	GLint size;
-
-	glGetObjectParameterivARB (shader, GL_OBJECT_INFO_LOG_LENGTH_ARB,
-				   &size);
-	info = malloc (size);
-
-	if (info)
-	    glGetInfoLogARB (shader, size, NULL, info);
-	fprintf (stderr, "Failed to compile %s: %s\n",
-		 type == GL_FRAGMENT_SHADER ? "FS" : "VS",
-		 info);
-	fprintf (stderr, "Shader source:\n%s", source);
-	fprintf (stderr, "GLSL compile failure\n");
-
-	glDeleteObjectARB (shader);
-
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
-
-    *shader_out = shader;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-cairo_status_t
-_cairo_gl_load_glsl (GLint *shader_out,
-		     const char *vs_source, const char *fs_source)
-{
-    GLint ok;
-    GLint shader, vs, fs;
-    cairo_status_t status;
-
-    shader = glCreateProgramObjectARB ();
-
-    status = _cairo_gl_compile_glsl (GL_VERTEX_SHADER_ARB, &vs, vs_source);
-    if (_cairo_status_is_error (status))
-	goto fail;
-    status = _cairo_gl_compile_glsl (GL_FRAGMENT_SHADER_ARB, &fs, fs_source);
-    if (_cairo_status_is_error (status))
-	goto fail;
-
-    glAttachObjectARB (shader, vs);
-    glAttachObjectARB (shader, fs);
-    glLinkProgram (shader);
-    glGetObjectParameterivARB (shader, GL_OBJECT_LINK_STATUS_ARB, &ok);
-    if (!ok) {
-	GLchar *info;
-	GLint size;
-
-	glGetObjectParameterivARB (shader, GL_OBJECT_INFO_LOG_LENGTH_ARB,
-				   &size);
-	info = malloc (size);
-
-	if (info)
-	    glGetInfoLogARB (shader, size, NULL, info);
-	fprintf (stderr, "Failed to link: %s\n", info);
-	free (info);
-	status = CAIRO_INT_STATUS_UNSUPPORTED;
-
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-    }
-
-    *shader_out = shader;
-
-    return CAIRO_STATUS_SUCCESS;
-
-fail:
-    glDeleteObjectARB (shader);
-    return status;
-}
-
 typedef struct _shader_impl {
     cairo_status_t
     (*compile_shader) (GLuint *shader, GLenum type, const char *text);
@@ -157,6 +74,9 @@ typedef struct _shader_impl {
 
     cairo_status_t
     (*bind_texture_to_shader) (GLuint program, const char *name, GLuint tex_unit);
+
+    void
+    (*use_program) (cairo_gl_shader_program_t *program);
 } shader_impl_t;
 
 static const shader_impl_t*
@@ -394,6 +314,12 @@ bind_texture_to_shader_arb (GLuint program, const char *name, GLuint tex_unit)
     return CAIRO_STATUS_SUCCESS;
 }
 
+static void
+use_program_arb (cairo_gl_shader_program_t *program)
+{
+    glUseProgramObjectARB (program->program);
+}
+
 /* OpenGL Core 2.0 API. */
 static cairo_status_t
 compile_shader_core_2_0 (GLuint *shader, GLenum type, const char *text)
@@ -559,6 +485,12 @@ bind_texture_to_shader_core_2_0 (GLuint program, const char *name, GLuint tex_un
     return CAIRO_STATUS_SUCCESS;
 }
 
+static void
+use_program_core_2_0 (cairo_gl_shader_program_t *program)
+{
+    glUseProgram (program->program);
+}
+
 static const shader_impl_t shader_impl_core_2_0 = {
     compile_shader_core_2_0,
     link_shader_core_2_0,
@@ -571,6 +503,7 @@ static const shader_impl_t shader_impl_core_2_0 = {
     bind_vec4_to_shader_core_2_0,
     bind_matrix_to_shader_core_2_0,
     bind_texture_to_shader_core_2_0,
+    use_program_core_2_0,
 };
 
 static const shader_impl_t shader_impl_arb = {
@@ -585,6 +518,7 @@ static const shader_impl_t shader_impl_arb = {
     bind_vec4_to_shader_arb,
     bind_matrix_to_shader_arb,
     bind_texture_to_shader_arb,
+    use_program_arb,
 };
 
 static const shader_impl_t*
@@ -712,4 +646,10 @@ cairo_status_t
 bind_texture_to_shader (GLuint program, const char *name, GLuint tex_unit)
 {
     return get_impl()->bind_texture_to_shader(program, name, tex_unit);
+}
+
+void
+_cairo_gl_use_program (cairo_gl_shader_program_t *program)
+{
+    get_impl()->use_program (program);
 }

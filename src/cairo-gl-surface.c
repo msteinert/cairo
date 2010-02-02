@@ -114,11 +114,14 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT); /* XXX */
     }
 
-    if (GLEW_ARB_fragment_shader &&
-	GLEW_ARB_vertex_shader &&
-	GLEW_ARB_shader_objects) {
+    if (GLEW_VERSION_2_0 ||
+	(GLEW_ARB_fragment_shader &&
+	 GLEW_ARB_vertex_shader &&
+	 GLEW_ARB_shader_objects)) {
 	ctx->using_glsl = TRUE;
     }
+
+    init_shader_program (&ctx->fill_rectangles_shader);
 
     /* Set up the dummy texture for tex_env_combine with constant color. */
     glGenTextures (1, &ctx->dummy_tex);
@@ -1889,7 +1892,6 @@ _cairo_gl_surface_fill_rectangles_glsl (void                  *abstract_surface,
 #define N_STACK_RECTS 4
     cairo_gl_surface_t *surface = abstract_surface;
     GLfloat vertices_stack[N_STACK_RECTS*4*2];
-    GLfloat gl_color[4];
     cairo_gl_context_t *ctx;
     int i;
     GLfloat *vertices;
@@ -1913,16 +1915,12 @@ _cairo_gl_surface_fill_rectangles_glsl (void                  *abstract_surface,
     if (unlikely (status))
 	return status;
 
-    if (ctx->fill_rectangles_shader == 0) {
-	status = _cairo_gl_load_glsl (&ctx->fill_rectangles_shader,
-				      fill_vs_source, fill_fs_source);
-	if (_cairo_status_is_error (status)) {
-	    _cairo_gl_context_release (ctx);
-	    return status;
-	}
-
-	ctx->fill_rectangles_color_uniform =
-	    glGetUniformLocationARB (ctx->fill_rectangles_shader, "color");
+    status = create_shader_program (&ctx->fill_rectangles_shader,
+				    fill_vs_source,
+				    fill_fs_source);
+    if (unlikely (status)) {
+	_cairo_gl_context_release (ctx);
+	return status;
     }
 
     if (num_rects > N_STACK_RECTS) {
@@ -1936,16 +1934,17 @@ _cairo_gl_surface_fill_rectangles_glsl (void                  *abstract_surface,
 	vertices = vertices_stack;
     }
 
-    glUseProgramObjectARB (ctx->fill_rectangles_shader);
+    _cairo_gl_use_program (&ctx->fill_rectangles_shader);
 
     _cairo_gl_set_destination (surface);
     _cairo_gl_set_operator (surface, op, FALSE);
 
-    gl_color[0] = color->red * color->alpha;
-    gl_color[1] = color->green * color->alpha;
-    gl_color[2] = color->blue * color->alpha;
-    gl_color[3] = color->alpha;
-    glUniform4fvARB (ctx->fill_rectangles_color_uniform, 1, gl_color);
+    bind_vec4_to_shader (ctx->fill_rectangles_shader.program,
+			 "color",
+			 color->red * color->alpha,
+			 color->green * color->alpha,
+			 color->blue * color->alpha,
+			 color->alpha);
 
     for (i = 0; i < num_rects; i++) {
 	vertices[i * 8 + 0] = rects[i].x;
