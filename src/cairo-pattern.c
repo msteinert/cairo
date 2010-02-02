@@ -2526,11 +2526,11 @@ _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
 	    const cairo_linear_pattern_t *linear =
 		(const cairo_linear_pattern_t *) pattern;
 
-	    if (linear->p1.x == linear->p2.x && linear->p1.y == linear->p2.y)
-		goto EMPTY;
-
 	    if (pattern->extend != CAIRO_EXTEND_NONE)
 		goto UNBOUNDED;
+
+	    if (linear->p1.x == linear->p2.x && linear->p1.y == linear->p2.y)
+		goto EMPTY;
 
 	    if (pattern->matrix.xy != 0. || pattern->matrix.yx != 0.)
 		goto UNBOUNDED;
