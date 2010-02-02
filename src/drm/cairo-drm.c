@@ -201,7 +201,7 @@ cairo_drm_device_get (struct udev_device *device)
 
     parent = udev_device_get_parent (device);
     pci_id = get_udev_property (parent, "PCI_ID");
-    if (sscanf (pci_id, "%x:%x", &vendor_id, &chip_id) != 2) {
+    if (pci_id == NULL || sscanf (pci_id, "%x:%x", &vendor_id, &chip_id) != 2) {
 	dev = (cairo_drm_device_t *)
 	    _cairo_device_create_in_error (CAIRO_STATUS_DEVICE_ERROR);
 	goto DONE;
