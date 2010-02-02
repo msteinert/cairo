@@ -514,41 +514,6 @@ BAIL:
     return status;
 }
 
-cairo_status_t
-i915_vbo_flush (i915_device_t *device)
-{
-    assert (device->vertex_count);
-
-    if (device->vbo == 0) {
-	assert (device->floats_per_vertex);
-
-	if (i915_batch_space (device) < 9 ||
-	    ! i915_check_aperture_size (device, 1, I915_VBO_SIZE))
-	{
-	    return i915_batch_flush (device);
-	}
-
-	OUT_DWORD (_3DSTATE_LOAD_STATE_IMMEDIATE_1 |
-		   I1_LOAD_S (0) |
-		   I1_LOAD_S (1) |
-		   1);
-	device->vbo = device->batch.used++;
-	device->vbo_max_index = device->batch.used;
-	OUT_DWORD ((device->floats_per_vertex << S1_VERTEX_WIDTH_SHIFT) |
-		   (device->floats_per_vertex << S1_VERTEX_PITCH_SHIFT));
-    }
-
-    OUT_DWORD (PRIM3D_RECTLIST |
-	       PRIM3D_INDIRECT_SEQUENTIAL |
-	       device->vertex_count);
-    OUT_DWORD (device->vertex_index);
-
-    device->vertex_index += device->vertex_count;
-    device->vertex_count = 0;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
 #if 0
 static float *
 i915_add_rectangles (i915_device_t *device, int num_rects, int *count)

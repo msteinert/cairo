@@ -1096,9 +1096,6 @@ i915_batch_emit_reloc (i915_device_t *device,
     i915_batch_emit_dword (device, bo->offset + offset);
 }
 
-cairo_private cairo_status_t
-i915_vbo_flush (i915_device_t *device);
-
 cairo_private void
 i915_vbo_finish (i915_device_t *device);
 

@@ -2627,6 +2627,35 @@ i915_shader_add_rectangle_general (const i915_shader_t *shader,
     /* XXX overflow! */
 }
 
+static cairo_status_t
+i915_vbo_flush (i915_device_t *device)
+{
+    assert (device->vertex_count);
+
+    if (device->vbo == 0) {
+	assert (device->floats_per_vertex);
+
+	OUT_DWORD (_3DSTATE_LOAD_STATE_IMMEDIATE_1 |
+		   I1_LOAD_S (0) |
+		   I1_LOAD_S (1) |
+		   1);
+	device->vbo = device->batch.used++;
+	device->vbo_max_index = device->batch.used;
+	OUT_DWORD ((device->floats_per_vertex << S1_VERTEX_WIDTH_SHIFT) |
+		   (device->floats_per_vertex << S1_VERTEX_PITCH_SHIFT));
+    }
+
+    OUT_DWORD (PRIM3D_RECTLIST |
+	       PRIM3D_INDIRECT_SEQUENTIAL |
+	       device->vertex_count);
+    OUT_DWORD (device->vertex_index);
+
+    device->vertex_index += device->vertex_count;
+    device->vertex_count = 0;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 cairo_status_t
 i915_shader_commit (i915_shader_t *shader,
 		    i915_device_t *device)
@@ -2639,6 +2668,12 @@ i915_shader_commit (i915_shader_t *shader,
     i915_shader_setup_dst (shader);
 
     if (i915_shader_needs_update (shader, device)) {
+	if (i915_batch_space (device) < 256) {
+	    status = i915_batch_flush (device);
+	    if (unlikely (status))
+		return status;
+	}
+
 	if (device->vertex_count) {
 	    status = i915_vbo_flush (device);
 	    if (unlikely (status))
@@ -2649,6 +2684,7 @@ i915_shader_commit (i915_shader_t *shader,
 	if (unlikely (status))
 	    return status;
 
+  update_shader:
 	i915_set_shader_target (device, shader);
 	i915_set_shader_mode (device, shader);
 	i915_set_shader_samplers (device, shader);
@@ -2662,6 +2698,14 @@ i915_shader_commit (i915_shader_t *shader,
     floats_per_vertex = 2 + i915_shader_num_texcoords (shader);
     if (device->floats_per_vertex == floats_per_vertex)
 	return CAIRO_STATUS_SUCCESS;
+
+    if (i915_batch_space (device) < 8) {
+	status = i915_batch_flush (device);
+	if (unlikely (status))
+	    return status;
+
+	goto update_shader;
+    }
 
     if (device->vertex_count) {
 	status = i915_vbo_flush (device);
