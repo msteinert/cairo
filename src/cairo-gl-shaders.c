@@ -317,7 +317,10 @@ bind_texture_to_shader_arb (GLuint program, const char *name, GLuint tex_unit)
 static void
 use_program_arb (cairo_gl_shader_program_t *program)
 {
-    glUseProgramObjectARB (program->program);
+    if (program)
+	glUseProgramObjectARB (program->program);
+    else
+	glUseProgramObjectARB (0);
 }
 
 /* OpenGL Core 2.0 API. */
@@ -488,7 +491,10 @@ bind_texture_to_shader_core_2_0 (GLuint program, const char *name, GLuint tex_un
 static void
 use_program_core_2_0 (cairo_gl_shader_program_t *program)
 {
-    glUseProgram (program->program);
+    if (program)
+	glUseProgram (program->program);
+    else
+	glUseProgram (0);
 }
 
 static const shader_impl_t shader_impl_core_2_0 = {

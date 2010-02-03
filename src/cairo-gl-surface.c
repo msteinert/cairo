@@ -117,7 +117,8 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     if (GLEW_VERSION_2_0 ||
 	(GLEW_ARB_fragment_shader &&
 	 GLEW_ARB_vertex_shader &&
-	 GLEW_ARB_shader_objects)) {
+	 GLEW_ARB_shader_objects))
+    {
 	ctx->using_glsl = TRUE;
     }
 
@@ -1160,32 +1161,43 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 
     switch (setup->src.type) {
     case OPERAND_CONSTANT:
-	_cairo_gl_set_tex_combine_constant_color (ctx, 0,
-						  setup->src.operand.constant.color);
+	if (setup->shader) {
+	    bind_vec4_to_shader(setup->shader->program,
+				"constant_source",
+				setup->src.operand.constant.color[0],
+				setup->src.operand.constant.color[1],
+				setup->src.operand.constant.color[2],
+				setup->src.operand.constant.color[3]);
+	} else {
+	    _cairo_gl_set_tex_combine_constant_color (ctx, 0,
+						      setup->src.operand.constant.color);
+	}
 	break;
     case OPERAND_TEXTURE:
 	_cairo_gl_set_texture_surface (0, setup->src.operand.texture.tex,
 				       src_attributes);
-	/* Set up the constant color we use to set color to 0 if needed. */
-	glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, constant_color);
-	/* Set up the combiner to just set color to the sampled texture. */
-	glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
-	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
+	if (!setup->shader) {
+	    /* Set up the constant color we use to set color to 0 if needed. */
+	    glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, constant_color);
+	    /* Set up the combiner to just set color to the sampled texture. */
+	    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
 
-	/* Force the src color to 0 if the surface should be alpha-only.
-	 * We may have a teximage with color bits if the implementation doesn't
-	 * support GL_ALPHA FBOs.
-	 */
-	if (setup->src.operand.texture.surface->base.content !=
-	    CAIRO_CONTENT_ALPHA)
-	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE0);
-	else
-	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
-	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE0);
-	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
-	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
-	break;
+	    /* Force the src color to 0 if the surface should be
+	     * alpha-only.  We may have a teximage with color bits if
+	     * the implementation doesn't support GL_ALPHA FBOs.
+	     */
+	    if (setup->src.operand.texture.surface->base.content !=
+		CAIRO_CONTENT_ALPHA)
+		glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE0);
+	    else
+		glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE0);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+	    break;
+	}
     }
 }
 

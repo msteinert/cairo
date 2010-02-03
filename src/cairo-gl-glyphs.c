@@ -1,6 +1,7 @@
 /* Cairo - a vector graphics library with display and print output
  *
  * Copyright © 2009 Chris Wilson
+ * Copyright © 2010 Intel Corporation
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -41,13 +42,6 @@
 #define GLYPH_CACHE_HEIGHT 1024
 #define GLYPH_CACHE_MIN_SIZE 4
 #define GLYPH_CACHE_MAX_SIZE 128
-
-typedef enum _cairo_gl_glyphs_shader {
-    CAIRO_GL_GLYPHS_SHADER_UNSET,
-    CAIRO_GL_GLYPHS_SHADER_NORMAL,
-    CAIRO_GL_GLYPHS_SHADER_CA_SOURCE_ALPHA,
-    CAIRO_GL_GLYPHS_SHADER_CA_SOURCE,
-} cairo_gl_glyphs_shader_t;
 
 typedef struct _cairo_gl_glyph_private {
     cairo_rtree_node_t node;
@@ -138,6 +132,128 @@ _cairo_gl_glyph_cache_add_glyph (cairo_gl_glyph_cache_t *cache,
 	(node->y + glyph_surface->height) / (double) cache->height;
 
     cairo_surface_destroy (&clone->base);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+_cairo_gl_glyphs_setup_shaders (cairo_gl_context_t *ctx)
+{
+    static const char *vs_source_constant =
+	"varying vec2 mask_texcoords;\n"
+	"void main()\n"
+	"{\n"
+	"	gl_Position = ftransform();\n"
+	"	mask_texcoords = gl_MultiTexCoord1.xy;\n"
+	"}\n";
+    static const char *vs_source_texture =
+	"varying vec2 source_texcoords;\n"
+	"varying vec2 mask_texcoords;\n"
+	"void main()\n"
+	"{\n"
+	"	gl_Position = ftransform();\n"
+	"	source_texcoords = gl_MultiTexCoord0.xy;\n"
+	"	mask_texcoords = gl_MultiTexCoord1.xy;\n"
+	"}\n";
+    static const char *glyphs_source_constant =
+	"uniform vec4 constant_source;\n"
+	"vec4 get_source()\n"
+	"{\n"
+	"	return constant_source;\n"
+	"}\n";
+    static const char *glyphs_source_texture =
+	"uniform sampler2D source_sampler;\n"
+	"varying vec2 source_texcoords;\n"
+	"vec4 get_source()\n"
+	"{\n"
+	"	return texture2D(source_sampler, source_texcoords);\n"
+	"}\n";
+    static const char *glyphs_source_texture_alpha =
+	"uniform sampler2D source_sampler;\n"
+	"varying vec2 source_texcoords;\n"
+	"vec4 get_source()\n"
+	"{\n"
+	"	return vec4(0, 0, 0, texture2D(source_sampler, source_texcoords).a);\n"
+	"}\n";
+    static const char *glyphs_in_normal =
+	"uniform sampler2D mask_sampler;\n"
+	"varying vec2 mask_texcoords;\n"
+	"void main()\n"
+	"{\n"
+	"	vec4 mask = texture2D(mask_sampler, mask_texcoords);\n"
+	"	gl_FragColor = get_source() * mask.a;\n"
+	"}\n";
+    static const char *glyphs_in_component_alpha_source =
+	"uniform sampler2D mask_sampler;\n"
+	"varying vec2 mask_texcoords;\n"
+	"void main()\n"
+	"{\n"
+	"	vec4 mask = texture2D(mask_sampler, mask_texcoords);\n"
+	"	gl_FragColor = get_source() * mask;\n"
+	"}\n";
+    static const char *glyphs_in_component_alpha_alpha =
+	"uniform sampler2D mask_sampler;\n"
+	"varying vec2 mask_texcoords;\n"
+	"void main()\n"
+	"{\n"
+	"	vec4 mask = texture2D(mask_sampler, mask_texcoords);\n"
+	"	gl_FragColor = get_source().a * mask;\n"
+	"}\n";
+    const char *glyphs_source_sources[CAIRO_GL_GLYPHS_SOURCE_COUNT] = {
+	glyphs_source_constant,
+	glyphs_source_texture,
+	glyphs_source_texture_alpha,
+    };
+    const char *glyphs_in_sources[CAIRO_GL_GLYPHS_SHADER_COUNT] = {
+	glyphs_in_normal,
+	glyphs_in_component_alpha_source,
+	glyphs_in_component_alpha_alpha,
+    };
+    enum cairo_gl_glyphs_shader_source source;
+    enum cairo_gl_glyphs_shader in;
+
+    for (source = 0; source < CAIRO_GL_GLYPHS_SOURCE_COUNT; source++) {
+	for (in = 0; in < CAIRO_GL_GLYPHS_SHADER_COUNT; in++) {
+	    const char *source_source = glyphs_source_sources[source];
+	    const char *in_source = glyphs_in_sources[in];
+	    char *fs_source = _cairo_malloc (strlen(source_source) +
+					     strlen(in_source) +
+					     1);
+	    const char *vs_source;
+	    cairo_status_t status;
+	    cairo_gl_shader_program_t *program = &ctx->glyphs_shaders[source][in];
+
+	    if (source == CAIRO_GL_GLYPHS_SOURCE_CONSTANT)
+		vs_source = vs_source_constant;
+	    else
+		vs_source = vs_source_texture;
+
+	    if (!fs_source)
+		return CAIRO_STATUS_NO_MEMORY;
+
+	    sprintf(fs_source, "%s%s", source_source, in_source);
+
+	    init_shader_program (program);
+	    status = create_shader_program (program,
+					    vs_source,
+					    fs_source);
+	    free (fs_source);
+
+	    if (_cairo_status_is_error (status))
+		return status;
+
+	    _cairo_gl_use_program (program);
+	    bind_texture_to_shader (program->program, "mask_sampler", 1);
+	    if (source == CAIRO_GL_GLYPHS_SOURCE_CONSTANT) {
+		vs_source = vs_source_constant;
+	    } else {
+		bind_texture_to_shader (program->program, "source_sampler", 0);
+		vs_source = vs_source_texture;
+	    }
+	}
+    }
+
+    _cairo_gl_use_program (NULL);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -254,9 +370,9 @@ typedef struct _cairo_gl_glyphs_setup
 } cairo_gl_glyphs_setup_t;
 
 static void
-_cairo_gl_glyphs_set_shader (cairo_gl_context_t *ctx,
-			     cairo_gl_glyphs_setup_t *setup,
-			     cairo_gl_glyphs_shader_t shader)
+_cairo_gl_glyphs_set_shader_fixed (cairo_gl_context_t *ctx,
+				   cairo_gl_glyphs_setup_t *setup,
+				   cairo_gl_glyphs_shader_t shader)
 {
     if (setup->shader == shader)
 	return;
@@ -294,6 +410,46 @@ _cairo_gl_glyphs_set_shader (cairo_gl_context_t *ctx,
     glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_PREVIOUS);
     glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
     glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA);
+}
+
+static void
+_cairo_gl_glyphs_set_shader_glsl (cairo_gl_context_t *ctx,
+				  cairo_gl_glyphs_setup_t *setup,
+				  cairo_gl_glyphs_shader_t shader)
+{
+    enum cairo_gl_glyphs_shader_source glyphs_source;
+
+    if (setup->shader == shader)
+	return;
+
+    if (setup->composite->src.type == OPERAND_CONSTANT) {
+	glyphs_source = CAIRO_GL_GLYPHS_SOURCE_CONSTANT;
+    } else {
+	if (setup->composite->src.operand.texture.surface->base.content !=
+	    CAIRO_CONTENT_ALPHA)
+ 	{
+	    glyphs_source = CAIRO_GL_GLYPHS_SOURCE_TEXTURE;
+	} else {
+	    glyphs_source = CAIRO_GL_GLYPHS_SOURCE_TEXTURE_ALPHA;
+	}
+    }
+
+    setup->composite->shader = &ctx->glyphs_shaders[glyphs_source][shader];
+    _cairo_gl_use_program (setup->composite->shader);
+    _cairo_gl_set_src_operand (ctx, setup->composite);
+
+    setup->shader = shader;
+}
+
+static void
+_cairo_gl_glyphs_set_shader (cairo_gl_context_t *ctx,
+			     cairo_gl_glyphs_setup_t *setup,
+			     cairo_gl_glyphs_shader_t shader)
+{
+    if (ctx->using_glsl_glyphs)
+	_cairo_gl_glyphs_set_shader_glsl (ctx, setup, shader);
+    else
+	_cairo_gl_glyphs_set_shader_fixed (ctx, setup, shader);
 }
 
 static void
@@ -440,6 +596,8 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 
     *has_component_alpha = FALSE;
 
+    memset (&composite_setup, 0, sizeof(composite_setup));
+
     status = _cairo_gl_operand_init (&composite_setup.src, source, dst,
 				     glyph_extents->x, glyph_extents->y,
 				     dst_x, dst_y,
@@ -451,6 +609,13 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     status = _cairo_gl_context_acquire (dst->base.device, &ctx);
     if (unlikely (status))
 	return status;
+
+    if (ctx->using_glsl && !ctx->glsl_glyphs_inited) {
+	cairo_status_t status = _cairo_gl_glyphs_setup_shaders (ctx);
+	if (!_cairo_status_is_error (status))
+	    ctx->using_glsl_glyphs = TRUE;
+	ctx->glsl_glyphs_inited = TRUE;
+    }
 
     _cairo_gl_set_destination (dst);
 
@@ -480,7 +645,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     if (setup.vbo_size > 4096)
 	setup.vbo_size = 4096;
     setup.op = op;
-    setup.shader = CAIRO_GL_GLYPHS_SHADER_UNSET;
+    setup.shader = CAIRO_GL_GLYPHS_SHADER_COUNT; /* unset */
 
     glGenBuffersARB (1, &vbo);
     glBindBufferARB (GL_ARRAY_BUFFER_ARB, vbo);
@@ -596,6 +761,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     glDisableClientState (GL_TEXTURE_COORD_ARRAY);
     glActiveTexture (GL_TEXTURE1);
     glDisable (GL_TEXTURE_2D);
+    _cairo_gl_use_program (NULL);
 
     if (vbo != 0) {
 	glBindBufferARB (GL_ARRAY_BUFFER_ARB, 0);
@@ -878,3 +1044,4 @@ _cairo_gl_glyph_cache_init (cairo_gl_glyph_cache_t *cache)
 		       sizeof (cairo_gl_glyph_private_t),
 		       NULL);
 }
+

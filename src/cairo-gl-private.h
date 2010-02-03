@@ -87,6 +87,20 @@ typedef struct cairo_gl_shader_program {
     cairo_bool_t build_failure;
 } cairo_gl_shader_program_t;
 
+enum cairo_gl_glyphs_shader_source {
+    CAIRO_GL_GLYPHS_SOURCE_CONSTANT,
+    CAIRO_GL_GLYPHS_SOURCE_TEXTURE,
+    CAIRO_GL_GLYPHS_SOURCE_TEXTURE_ALPHA,
+    CAIRO_GL_GLYPHS_SOURCE_COUNT,
+};
+
+typedef enum cairo_gl_glyphs_shader {
+    CAIRO_GL_GLYPHS_SHADER_NORMAL,
+    CAIRO_GL_GLYPHS_SHADER_CA_SOURCE,
+    CAIRO_GL_GLYPHS_SHADER_CA_SOURCE_ALPHA,
+    CAIRO_GL_GLYPHS_SHADER_COUNT,
+} cairo_gl_glyphs_shader_t;
+
 typedef struct _cairo_gl_context {
     cairo_device_t base;
 
@@ -94,9 +108,13 @@ typedef struct _cairo_gl_context {
     GLint max_framebuffer_size;
     GLint max_texture_size;
     cairo_bool_t using_glsl;
+    cairo_bool_t glsl_glyphs_inited;
+    cairo_bool_t using_glsl_glyphs;
 
     cairo_bool_t using_shaders;
     cairo_gl_shader_program_t fill_rectangles_shader;
+    cairo_gl_shader_program_t glyphs_shaders[CAIRO_GL_GLYPHS_SOURCE_COUNT]
+					[CAIRO_GL_GLYPHS_SHADER_COUNT];
 
     cairo_gl_surface_t *current_target;
     cairo_gl_surface_t *glyphs_temporary_mask;
@@ -134,6 +152,7 @@ typedef struct cairo_gl_composite_operand {
 typedef struct _cairo_gl_composite_setup {
     cairo_gl_composite_operand_t src;
     cairo_gl_composite_operand_t mask;
+    cairo_gl_shader_program_t *shader;
 } cairo_gl_composite_setup_t;
 
 cairo_private extern const cairo_surface_backend_t _cairo_gl_surface_backend;
