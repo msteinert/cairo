@@ -1362,6 +1362,7 @@ i915_shader_acquire_surface (i915_shader_t *shader,
     cairo_filter_t filter;
     cairo_matrix_t m;
     int src_x = 0, src_y = 0;
+    cairo_surface_t *free_me = NULL;
     cairo_status_t status;
 
     assert (src->type.fragment == (i915_fragment_shader_t) -1);
@@ -1501,6 +1502,8 @@ i915_shader_acquire_surface (i915_shader_t *shader,
 	    _cairo_surface_release_source_image (surface, image, image_extra);
 	    if (unlikely (status))
 		return status;
+
+	    free_me = &s->intel.drm.base;
 	}
 
 	src->type.fragment = FS_TEXTURE;
@@ -1557,6 +1560,9 @@ i915_shader_acquire_surface (i915_shader_t *shader,
 	cairo_matrix_translate (&src->base.matrix, NEAREST_BIAS, NEAREST_BIAS);
     cairo_matrix_init_scale (&m, 1. / surface_width, 1. / surface_height);
     cairo_matrix_multiply (&src->base.matrix, &src->base.matrix, &m);
+
+    if (free_me != NULL)
+	cairo_surface_destroy (free_me);
 
     return CAIRO_STATUS_SUCCESS;
 }
