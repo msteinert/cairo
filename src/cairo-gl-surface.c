@@ -1164,6 +1164,44 @@ _cairo_gl_solid_operand_init (cairo_gl_composite_operand_t *operand,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static cairo_status_t
+_cairo_gl_gradient_operand_init(cairo_gl_composite_operand_t *operand,
+				cairo_gradient_pattern_t *gradient)
+{
+    /* Fast path for gradients with less than 2 color stops.
+     * Required to prevent _cairo_pattern_acquire_surface() returning
+     * a solid color which is cached beyond the life of the context.
+     */
+    if (gradient->n_stops < 2) {
+	if (gradient->n_stops) {
+	    return _cairo_gl_solid_operand_init (operand,
+						 &gradient->stops->color);
+	} else {
+	    return _cairo_gl_solid_operand_init (operand,
+						 CAIRO_COLOR_TRANSPARENT);
+	}
+    } else {
+	unsigned int i;
+
+	/* Is the gradient a uniform colour?
+	 * Happens more often than you would believe.
+	 */
+	for (i = 1; i < gradient->n_stops; i++) {
+	    if (! _cairo_color_equal (&gradient->stops[0].color,
+				      &gradient->stops[i].color))
+		{
+		    break;
+		}
+	}
+	if (i == gradient->n_stops) {
+	    return _cairo_gl_solid_operand_init (operand,
+						 &gradient->stops->color);
+	}
+    }
+
+    return CAIRO_INT_STATUS_UNSUPPORTED;
+}
+
 cairo_int_status_t
 _cairo_gl_operand_init (cairo_gl_composite_operand_t *operand,
 		       const cairo_pattern_t *pattern,
@@ -1173,6 +1211,7 @@ _cairo_gl_operand_init (cairo_gl_composite_operand_t *operand,
 		       int width, int height)
 {
     operand->pattern = pattern;
+    cairo_status_t status;
 
     switch (pattern->type) {
     case CAIRO_PATTERN_TYPE_SOLID:
@@ -1180,40 +1219,10 @@ _cairo_gl_operand_init (cairo_gl_composite_operand_t *operand,
 		                             &((cairo_solid_pattern_t *) pattern)->color);
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
-	{
-	    cairo_gradient_pattern_t *src = (cairo_gradient_pattern_t *) pattern;
-
-	    /* Fast path for gradients with less than 2 color stops.
-	     * Required to prevent _cairo_pattern_acquire_surface() returning
-	     * a solid color which is cached beyond the life of the context.
-	     */
-	    if (src->n_stops < 2) {
-		if (src->n_stops) {
-		    return _cairo_gl_solid_operand_init (operand,
-			                                 &src->stops->color);
-		} else {
-		    return _cairo_gl_solid_operand_init (operand,
-			                                 CAIRO_COLOR_TRANSPARENT);
-		}
-	    } else {
-		unsigned int i;
-
-		/* Is the gradient a uniform colour?
-		 * Happens more often than you would believe.
-		 */
-		for (i = 1; i < src->n_stops; i++) {
-		    if (! _cairo_color_equal (&src->stops[0].color,
-				              &src->stops[i].color))
-		    {
-			break;
-		    }
-		}
-		if (i == src->n_stops) {
-		    return _cairo_gl_solid_operand_init (operand,
-			                                 &src->stops->color);
-		}
-	    }
-	}
+	status = _cairo_gl_gradient_operand_init (operand,
+						  (cairo_gradient_pattern_t *) pattern);
+	if (!_cairo_status_is_error (status))
+	    return status;
 
 	/* fall through */
 
