@@ -659,3 +659,203 @@ _cairo_gl_use_program (cairo_gl_shader_program_t *program)
 {
     get_impl()->use_program (program);
 }
+
+static const char *vs_no_coords =
+    "void main()\n"
+    "{\n"
+    "	gl_Position = ftransform();\n"
+    "}\n";
+static const char *vs_source_coords =
+    "varying vec2 source_texcoords;\n"
+    "void main()\n"
+    "{\n"
+    "	gl_Position = ftransform();\n"
+    "	source_texcoords = gl_MultiTexCoord0.xy;\n"
+    "}\n";
+static const char *vs_mask_coords =
+    "varying vec2 mask_texcoords;\n"
+    "void main()\n"
+    "{\n"
+    "	gl_Position = ftransform();\n"
+    "	mask_texcoords = gl_MultiTexCoord1.xy;\n"
+    "}\n";
+static const char *vs_source_mask_coords =
+    "varying vec2 source_texcoords;\n"
+    "varying vec2 mask_texcoords;\n"
+    "void main()\n"
+    "{\n"
+    "	gl_Position = ftransform();\n"
+    "	source_texcoords = gl_MultiTexCoord0.xy;\n"
+    "	mask_texcoords = gl_MultiTexCoord1.xy;\n"
+    "}\n";
+static const char *fs_source_constant =
+    "uniform vec4 constant_source;\n"
+    "vec4 get_source()\n"
+    "{\n"
+    "	return constant_source;\n"
+    "}\n";
+static const char *fs_source_texture =
+    "uniform sampler2D source_sampler;\n"
+    "varying vec2 source_texcoords;\n"
+    "vec4 get_source()\n"
+    "{\n"
+    "	return texture2D(source_sampler, source_texcoords);\n"
+    "}\n";
+static const char *fs_source_texture_alpha =
+    "uniform sampler2D source_sampler;\n"
+    "varying vec2 source_texcoords;\n"
+    "vec4 get_source()\n"
+    "{\n"
+    "	return vec4(0, 0, 0, texture2D(source_sampler, source_texcoords).a);\n"
+    "}\n";
+static const char *fs_mask_constant =
+    "uniform vec4 constant_mask;\n"
+    "vec4 get_mask()\n"
+    "{\n"
+    "	return constant_mask;\n"
+    "}\n";
+static const char *fs_mask_texture =
+    "uniform sampler2D mask_sampler;\n"
+    "varying vec2 mask_texcoords;\n"
+    "vec4 get_mask()\n"
+    "{\n"
+    "	return texture2D(mask_sampler, mask_texcoords);\n"
+    "}\n";
+static const char *fs_mask_texture_alpha =
+    "uniform sampler2D mask_sampler;\n"
+    "varying vec2 mask_texcoords;\n"
+    "vec4 get_mask()\n"
+    "{\n"
+    "	return vec4(0, 0, 0, texture2D(mask_sampler, mask_texcoords).a);\n"
+    "}\n";
+static const char *fs_mask_none =
+    "vec4 get_mask()\n"
+    "{\n"
+    "	return vec4(0, 0, 0, 1);\n"
+    "}\n";
+static const char *fs_in_normal =
+    "void main()\n"
+    "{\n"
+    "	gl_FragColor = get_source() * get_mask().a;\n"
+    "}\n";
+static const char *fs_in_component_alpha_source =
+    "void main()\n"
+    "{\n"
+    "	gl_FragColor = get_source() * get_mask();\n"
+    "}\n";
+static const char *fs_in_component_alpha_alpha =
+    "void main()\n"
+    "{\n"
+    "	gl_FragColor = get_source().a * get_mask();\n"
+    "}\n";
+
+/**
+ * This function reduces the GLSL program combinations we compile when
+ * there are non-functional differences.
+ */
+static cairo_gl_shader_program_t *
+_cairo_gl_select_program (cairo_gl_context_t *ctx,
+			  cairo_gl_shader_source_t source,
+			  cairo_gl_shader_mask_t mask,
+			  cairo_gl_shader_in_t in)
+{
+    if (in == CAIRO_GL_SHADER_IN_NORMAL &&
+	mask == CAIRO_GL_SHADER_MASK_TEXTURE_ALPHA)
+    {
+	mask = CAIRO_GL_SHADER_MASK_TEXTURE;
+    }
+    if (in == CAIRO_GL_SHADER_IN_CA_SOURCE_ALPHA &&
+	source == CAIRO_GL_SHADER_SOURCE_TEXTURE_ALPHA)
+    {
+	source = CAIRO_GL_SHADER_SOURCE_TEXTURE;
+    }
+
+    return &ctx->shaders[source][mask][in];
+}
+
+cairo_status_t
+_cairo_gl_get_program (cairo_gl_context_t *ctx,
+		       cairo_gl_shader_source_t source,
+		       cairo_gl_shader_mask_t mask,
+		       cairo_gl_shader_in_t in,
+		       cairo_gl_shader_program_t **out_program)
+{
+    const char *source_sources[CAIRO_GL_SHADER_SOURCE_COUNT] = {
+	fs_source_constant,
+	fs_source_texture,
+	fs_source_texture_alpha,
+    };
+    const char *mask_sources[CAIRO_GL_SHADER_MASK_COUNT] = {
+	fs_mask_constant,
+	fs_mask_texture,
+	fs_mask_texture_alpha,
+	fs_mask_none,
+    };
+    const char *in_sources[CAIRO_GL_SHADER_IN_COUNT] = {
+	fs_in_normal,
+	fs_in_component_alpha_source,
+	fs_in_component_alpha_alpha,
+    };
+    cairo_gl_shader_program_t *program;
+    const char *source_source, *mask_source, *in_source;
+    const char *vs_source;
+    char *fs_source;
+    cairo_status_t status;
+
+    program = _cairo_gl_select_program(ctx, source, mask, in);
+    if (program->program) {
+	*out_program = program;
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    if (program->build_failure)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    source_source = source_sources[source];
+    mask_source = mask_sources[mask];
+    in_source = in_sources[in];
+    fs_source = _cairo_malloc (strlen(source_source) +
+			       strlen(mask_source) +
+			       strlen(in_source) +
+			       1);
+
+    if (source == CAIRO_GL_SHADER_SOURCE_CONSTANT) {
+	if (mask == CAIRO_GL_SHADER_MASK_CONSTANT)
+	    vs_source = vs_no_coords;
+	else
+	    vs_source = vs_mask_coords;
+    } else {
+	if (mask == CAIRO_GL_SHADER_MASK_CONSTANT)
+	    vs_source = vs_source_coords;
+	else
+	    vs_source = vs_source_mask_coords;
+    }
+
+    if (!fs_source)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    sprintf(fs_source, "%s%s%s", source_source, mask_source, in_source);
+
+    init_shader_program (program);
+    status = create_shader_program (program,
+				    vs_source,
+				    fs_source);
+    free (fs_source);
+
+    if (_cairo_status_is_error (status))
+	return status;
+
+    _cairo_gl_use_program (program);
+    if (source != CAIRO_GL_SHADER_SOURCE_CONSTANT) {
+	bind_texture_to_shader (program->program, "source_sampler", 0);
+    }
+    if (mask != CAIRO_GL_SHADER_MASK_CONSTANT) {
+	bind_texture_to_shader (program->program, "mask_sampler", 1);
+    }
+
+    _cairo_gl_use_program (NULL);
+
+    *out_program = program;
+
+    return CAIRO_STATUS_SUCCESS;
+}

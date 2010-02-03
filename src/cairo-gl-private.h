@@ -87,19 +87,27 @@ typedef struct cairo_gl_shader_program {
     cairo_bool_t build_failure;
 } cairo_gl_shader_program_t;
 
-enum cairo_gl_glyphs_shader_source {
-    CAIRO_GL_GLYPHS_SOURCE_CONSTANT,
-    CAIRO_GL_GLYPHS_SOURCE_TEXTURE,
-    CAIRO_GL_GLYPHS_SOURCE_TEXTURE_ALPHA,
-    CAIRO_GL_GLYPHS_SOURCE_COUNT,
-};
+typedef enum cairo_gl_shader_source {
+    CAIRO_GL_SHADER_SOURCE_CONSTANT,
+    CAIRO_GL_SHADER_SOURCE_TEXTURE,
+    CAIRO_GL_SHADER_SOURCE_TEXTURE_ALPHA,
+    CAIRO_GL_SHADER_SOURCE_COUNT,
+} cairo_gl_shader_source_t;
 
-typedef enum cairo_gl_glyphs_shader {
-    CAIRO_GL_GLYPHS_SHADER_NORMAL,
-    CAIRO_GL_GLYPHS_SHADER_CA_SOURCE,
-    CAIRO_GL_GLYPHS_SHADER_CA_SOURCE_ALPHA,
-    CAIRO_GL_GLYPHS_SHADER_COUNT,
-} cairo_gl_glyphs_shader_t;
+typedef enum cairo_gl_shader_mask {
+    CAIRO_GL_SHADER_MASK_CONSTANT,
+    CAIRO_GL_SHADER_MASK_TEXTURE,
+    CAIRO_GL_SHADER_MASK_TEXTURE_ALPHA,
+    CAIRO_GL_SHADER_MASK_NONE,
+    CAIRO_GL_SHADER_MASK_COUNT,
+} cairo_gl_shader_mask_t;
+
+typedef enum cairo_gl_shader_in {
+    CAIRO_GL_SHADER_IN_NORMAL,
+    CAIRO_GL_SHADER_IN_CA_SOURCE,
+    CAIRO_GL_SHADER_IN_CA_SOURCE_ALPHA,
+    CAIRO_GL_SHADER_IN_COUNT,
+} cairo_gl_shader_in_t;
 
 typedef struct _cairo_gl_context {
     cairo_device_t base;
@@ -108,13 +116,12 @@ typedef struct _cairo_gl_context {
     GLint max_framebuffer_size;
     GLint max_texture_size;
     cairo_bool_t using_glsl;
-    cairo_bool_t glsl_glyphs_inited;
-    cairo_bool_t using_glsl_glyphs;
 
     cairo_bool_t using_shaders;
     cairo_gl_shader_program_t fill_rectangles_shader;
-    cairo_gl_shader_program_t glyphs_shaders[CAIRO_GL_GLYPHS_SOURCE_COUNT]
-					[CAIRO_GL_GLYPHS_SHADER_COUNT];
+    cairo_gl_shader_program_t shaders[CAIRO_GL_SHADER_SOURCE_COUNT]
+					[CAIRO_GL_SHADER_MASK_COUNT]
+					[CAIRO_GL_SHADER_IN_COUNT];
 
     cairo_gl_surface_t *current_target;
     cairo_gl_surface_t *glyphs_temporary_mask;
@@ -308,6 +315,13 @@ bind_texture_to_shader (GLuint program, const char *name, GLuint tex_unit);
 
 void
 _cairo_gl_use_program (cairo_gl_shader_program_t *shader);
+
+cairo_status_t
+_cairo_gl_get_program (cairo_gl_context_t *ctx,
+		       cairo_gl_shader_source_t source,
+		       cairo_gl_shader_mask_t mask,
+		       cairo_gl_shader_in_t in,
+		       cairo_gl_shader_program_t **out_program);
 
 slim_hidden_proto (cairo_gl_surface_create);
 
