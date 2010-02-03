@@ -2524,7 +2524,7 @@ _cairo_quartz_surface_mask_with_surface (cairo_quartz_surface_t *surface,
 
     CGContextSetCTM (surface->cgContext, ctm);
 
-    status = _cairo_quartz_surface_paint (surface, op, source, clip);
+    status = _cairo_quartz_surface_paint_cg (surface, op, source, clip);
 
     CGContextRestoreGState (surface->cgContext);
 
