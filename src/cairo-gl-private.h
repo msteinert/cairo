@@ -142,6 +142,8 @@ enum cairo_gl_composite_operand_type {
  */
 typedef struct cairo_gl_composite_operand {
     enum cairo_gl_composite_operand_type type;
+    cairo_gl_shader_source_t source;
+    cairo_gl_shader_mask_t mask;
     union {
 	struct {
 	    GLuint tex;

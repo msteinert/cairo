@@ -995,7 +995,13 @@ _cairo_gl_pattern_texture_setup (cairo_gl_composite_operand_t *operand,
 
     operand->operand.texture.surface = surface;
     operand->operand.texture.tex = surface->tex;
-
+    if (surface->base.content != CAIRO_CONTENT_ALPHA) {
+	operand->source = CAIRO_GL_SHADER_SOURCE_TEXTURE;
+	operand->mask = CAIRO_GL_SHADER_MASK_TEXTURE;
+    } else {
+	operand->source = CAIRO_GL_SHADER_SOURCE_TEXTURE_ALPHA;
+	operand->mask = CAIRO_GL_SHADER_MASK_TEXTURE_ALPHA;
+    }
     /* Translate the matrix from
      * (unnormalized src -> unnormalized src) to
      * (unnormalized dst -> unnormalized src)
@@ -1027,6 +1033,8 @@ _cairo_gl_solid_operand_init (cairo_gl_composite_operand_t *operand,
 	                      const cairo_color_t *color)
 {
     operand->type = OPERAND_CONSTANT;
+    operand->source = CAIRO_GL_SHADER_SOURCE_CONSTANT;
+    operand->mask = CAIRO_GL_SHADER_MASK_CONSTANT;
     operand->operand.constant.color[0] = color->red   * color->alpha;
     operand->operand.constant.color[1] = color->green * color->alpha;
     operand->operand.constant.color[2] = color->blue  * color->alpha;
@@ -1599,15 +1607,29 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 	    return status;
 	}
 	mask_attributes = &setup.mask.operand.texture.attributes;
+    } else {
+	setup.mask.mask = CAIRO_GL_SHADER_MASK_NONE;
     }
 
     status = _cairo_gl_context_acquire (dst->base.device, &ctx);
     if (unlikely (status))
 	goto CLEANUP_SHADER;
 
+    status = _cairo_gl_get_program (ctx,
+				    setup.src.source,
+				    setup.mask.mask,
+				    CAIRO_GL_SHADER_IN_NORMAL,
+				    &setup.shader);
+    if (_cairo_status_is_error (status)) {
+	/* We'll fall back to fixed function instead. */
+	setup.shader = NULL;
+	status = CAIRO_STATUS_SUCCESS;
+    }
+
     _cairo_gl_set_destination (dst);
     _cairo_gl_set_operator (dst, op, FALSE);
 
+    _cairo_gl_use_program (setup.shader);
     _cairo_gl_set_src_operand (ctx, &setup);
 
     if (mask != NULL) {
@@ -1621,20 +1643,22 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 	    _cairo_gl_set_texture_surface (1, setup.mask.operand.texture.tex,
 					   mask_attributes);
 
-	    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-	    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
-	    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
+	    if (!setup.shader) {
+		glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+		glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
+		glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
 
-	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PREVIOUS);
-	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_PREVIOUS);
-	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
-	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+		glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PREVIOUS);
+		glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_PREVIOUS);
+		glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+		glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
 
-	    /* IN: dst.argb = src.argb * mask.aaaa */
-	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_RGB, GL_TEXTURE1);
-	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_TEXTURE1);
-	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_ALPHA);
-	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA);
+		/* IN: dst.argb = src.argb * mask.aaaa */
+		glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_RGB, GL_TEXTURE1);
+		glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_TEXTURE1);
+		glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_ALPHA);
+		glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA);
+	    }
 	    break;
 	}
     }
@@ -1722,6 +1746,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 
     glDrawArrays (GL_QUADS, 0, num_vertices);
 
+    _cairo_gl_use_program (NULL);
     glDisable (GL_BLEND);
 
     glDisableClientState (GL_VERTEX_ARRAY);
