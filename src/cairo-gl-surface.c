@@ -1125,9 +1125,29 @@ _cairo_gl_operand_destroy (cairo_gl_composite_operand_t *operand)
 }
 
 static void
-_cairo_gl_set_tex_combine_constant_color (cairo_gl_context_t *ctx, int tex_unit,
+_cairo_gl_set_tex_combine_constant_color (cairo_gl_context_t *ctx,
+					  cairo_gl_composite_setup_t *setup,
+					  int tex_unit,
 					  GLfloat *color)
 {
+    if (setup->shader) {
+	const char *uniform_name;
+
+	if (tex_unit == 0)
+	    uniform_name = "constant_source";
+	else
+	    uniform_name = "constant_mask";
+
+	bind_vec4_to_shader(setup->shader->program,
+			    uniform_name,
+			    color[0],
+			    color[1],
+			    color[2],
+			    color[3]);
+	return;
+    }
+
+    /* Fall back to fixed function */
     glActiveTexture (GL_TEXTURE0 + tex_unit);
     /* Have to have a dummy texture bound in order to use the combiner unit. */
     glBindTexture (GL_TEXTURE_2D, ctx->dummy_tex);
@@ -1169,17 +1189,8 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 
     switch (setup->src.type) {
     case OPERAND_CONSTANT:
-	if (setup->shader) {
-	    bind_vec4_to_shader(setup->shader->program,
-				"constant_source",
-				setup->src.operand.constant.color[0],
-				setup->src.operand.constant.color[1],
-				setup->src.operand.constant.color[2],
-				setup->src.operand.constant.color[3]);
-	} else {
-	    _cairo_gl_set_tex_combine_constant_color (ctx, 0,
-						      setup->src.operand.constant.color);
-	}
+	_cairo_gl_set_tex_combine_constant_color (ctx, setup, 0,
+						  setup->src.operand.constant.color);
 	break;
     case OPERAND_TEXTURE:
 	_cairo_gl_set_texture_surface (0, setup->src.operand.texture.tex,
@@ -1228,24 +1239,23 @@ _cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
 	constant_color[1] = setup->src.operand.constant.color[3];
 	constant_color[2] = setup->src.operand.constant.color[3];
 	constant_color[3] = setup->src.operand.constant.color[3];
-       _cairo_gl_set_tex_combine_constant_color (ctx, 0, constant_color);
+	_cairo_gl_set_tex_combine_constant_color (ctx, setup, 0,
+						  constant_color);
 	break;
     case OPERAND_TEXTURE:
-	constant_color[0] = 0.0;
-	constant_color[1] = 0.0;
-	constant_color[2] = 0.0;
-	constant_color[3] = 1.0;
 	_cairo_gl_set_texture_surface (0, setup->src.operand.texture.tex,
 				       src_attributes);
-	/* Set up the combiner to just set color to the sampled texture. */
-	glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
-	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
+	if (!setup->shader) {
+	    /* Set up the combiner to just set color to the sampled texture. */
+	    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_REPLACE);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
 
-	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE0);
-	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE0);
-	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_ALPHA);
-	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE0);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE0);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_ALPHA);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+	}
 	break;
     }
 }
@@ -1262,49 +1272,61 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 
     mask_attributes = &setup->mask.operand.texture.attributes;
 
-    glActiveTexture (GL_TEXTURE1);
-    glEnable (GL_TEXTURE_2D);
-    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
-    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
+    if (!setup->shader) {
+	glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
+	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
 
-    glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PREVIOUS);
-    glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_PREVIOUS);
-    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
-    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA);
+	glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PREVIOUS);
+	glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_PREVIOUS);
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA);
+    }
 
     switch (setup->mask.type) {
     case OPERAND_CONSTANT:
 	/* Have to have a dummy texture bound in order to use the combiner unit. */
-	glBindTexture (GL_TEXTURE_2D, ctx->dummy_tex);
+	if (setup->shader) {
+	    bind_vec4_to_shader(setup->shader->program,
+				"constant_mask",
+				setup->src.operand.constant.color[0],
+				setup->src.operand.constant.color[1],
+				setup->src.operand.constant.color[2],
+				setup->src.operand.constant.color[3]);
+	} else {
+	    glBindTexture (GL_TEXTURE_2D, ctx->dummy_tex);
+	    glActiveTexture (GL_TEXTURE1);
+	    glEnable (GL_TEXTURE_2D);
 
-	glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR,
-		    setup->mask.operand.constant.color);
+	    glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR,
+			setup->mask.operand.constant.color);
 
-	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
-	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_CONSTANT);
-	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
-	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
-
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_CONSTANT);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+	}
 	break;
     case OPERAND_TEXTURE:
 	_cairo_gl_set_texture_surface (1, setup->mask.operand.texture.tex,
 				       mask_attributes);
-	/* Set up the constant color we use to set color to 0 if needed. */
-	glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, constant_color);
+	if (!setup->shader) {
+	    /* Set up the constant color we use to set color to 0 if needed. */
+	    glTexEnvfv (GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, constant_color);
 
-	/* Force the mask color to 0 if the surface should be alpha-only.
-	 * We may have a teximage with color bits if the implementation doesn't
-	 * support GL_ALPHA FBOs.
-	 */
-	if (setup->mask.operand.texture.surface->base.content !=
-	    CAIRO_CONTENT_ALPHA)
-	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE1);
-	else
-	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
-	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE1);
-	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
-	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+	    /* Force the mask color to 0 if the surface should be
+	     * alpha-only.  We may have a teximage with color bits if
+	     * the implementation doesn't support GL_ALPHA FBOs.
+	     */
+	    if (setup->mask.operand.texture.surface->base.content !=
+		CAIRO_CONTENT_ALPHA)
+		glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE1);
+	    else
+		glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_CONSTANT);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE1);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+	}
 	break;
     }
 }
@@ -1387,6 +1409,8 @@ _cairo_gl_surface_composite_component_alpha (cairo_operator_t op,
     int num_vertices, i;
     GLenum err;
     cairo_gl_composite_setup_t setup;
+    cairo_gl_shader_program_t *ca_source_program = NULL;
+    cairo_gl_shader_program_t *ca_source_alpha_program = NULL;
 
     if (op != CAIRO_OPERATOR_OVER)
 	return UNSUPPORTED ("unsupported component alpha operator");
@@ -1416,6 +1440,27 @@ _cairo_gl_surface_composite_component_alpha (cairo_operator_t op,
 	_cairo_gl_operand_destroy (&setup.src);
 	_cairo_gl_operand_destroy (&setup.mask);
 	return status;
+    }
+
+    status = _cairo_gl_get_program (ctx,
+				    setup.src.source,
+				    setup.mask.mask,
+				    CAIRO_GL_SHADER_IN_CA_SOURCE,
+				    &ca_source_program);
+    if (!_cairo_status_is_error (status)) {
+	status = _cairo_gl_get_program (ctx,
+					setup.src.source,
+					setup.mask.mask,
+					CAIRO_GL_SHADER_IN_CA_SOURCE_ALPHA,
+					&ca_source_alpha_program);
+	if (_cairo_status_is_error (status)) {
+	    /* We'll fall back to fixed function instead. */
+	    ca_source_program = NULL;
+	    status = CAIRO_STATUS_SUCCESS;
+	}
+    } else {
+	/* We'll fall back to fixed function instead. */
+	status = CAIRO_STATUS_SUCCESS;
     }
 
     _cairo_gl_set_destination (dst);
@@ -1499,16 +1544,22 @@ _cairo_gl_surface_composite_component_alpha (cairo_operator_t op,
 	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
     }
 
+    setup.shader = ca_source_alpha_program;
+    _cairo_gl_use_program (setup.shader);
     _cairo_gl_set_operator (dst, CAIRO_OPERATOR_DEST_OUT, TRUE);
     _cairo_gl_set_src_alpha_operand (ctx, &setup);
     _cairo_gl_set_component_alpha_mask_operand (ctx, &setup);
     glDrawArrays (GL_QUADS, 0, num_vertices);
 
+    setup.shader = ca_source_program;
+    _cairo_gl_use_program (setup.shader);
     _cairo_gl_set_operator (dst, CAIRO_OPERATOR_ADD, TRUE);
     _cairo_gl_set_src_operand (ctx, &setup);
+    _cairo_gl_set_component_alpha_mask_operand (ctx, &setup);
     glDrawArrays (GL_QUADS, 0, num_vertices);
 
     glDisable (GL_BLEND);
+    _cairo_gl_use_program (NULL);
 
     glDisableClientState (GL_VERTEX_ARRAY);
 
@@ -1635,7 +1686,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     if (mask != NULL) {
 	switch (setup.mask.type) {
 	case OPERAND_CONSTANT:
-	    _cairo_gl_set_tex_combine_constant_color (ctx, 1,
+	    _cairo_gl_set_tex_combine_constant_color (ctx, &setup, 1,
 						      setup.mask.operand.constant.color);
 	    break;
 
