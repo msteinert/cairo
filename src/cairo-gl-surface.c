@@ -100,7 +100,8 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 
     if (! GLEW_EXT_framebuffer_object ||
 	! GLEW_ARB_texture_env_combine ||
-	! GLEW_ARB_texture_non_power_of_two)
+	! GLEW_ARB_texture_non_power_of_two ||
+	! GLEW_EXT_bgra)
     {
 	fprintf (stderr,
 		 "Required GL extensions not available:\n");
@@ -110,6 +111,12 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 	    fprintf (stderr, "    GL_ARB_texture_env_combine\n");
 	if (! GLEW_ARB_texture_non_power_of_two)
 	    fprintf (stderr, "    GL_ARB_texture_non_power_of_two\n");
+	/* EXT_bgra is used in two places:
+	 * - draw_image to upload common pixman formats without hand-swizzling.
+	 * - get_image to download common pixman formats without hand-swizzling.
+	 */
+	if (! GLEW_EXT_bgra)
+	    fprintf (stderr, "    GL_EXT_bgra\n");
 
 	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT); /* XXX */
     }
