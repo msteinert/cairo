@@ -244,7 +244,6 @@ typedef struct _cairo_gl_glyphs_setup
     cairo_gl_surface_t *dst;
     cairo_operator_t op;
     cairo_bool_t component_alpha;
-    cairo_gl_shader_source_t source;
     cairo_gl_shader_in_t in;
 } cairo_gl_glyphs_setup_t;
 
@@ -303,7 +302,7 @@ _cairo_gl_glyphs_set_shader (cairo_gl_context_t *ctx,
 	cairo_status_t status;
 
 	status = _cairo_gl_get_program (ctx,
-					setup->source,
+					setup->composite->src.source,
 					CAIRO_GL_SHADER_MASK_TEXTURE,
 					in,
 					&setup->composite->shader);
@@ -505,18 +504,6 @@ _render_glyphs (cairo_gl_surface_t	*dst,
 	setup.vbo_size = 4096;
     setup.op = op;
     setup.in = CAIRO_GL_SHADER_IN_COUNT; /* unset */
-
-    if (setup.composite->src.type == OPERAND_CONSTANT) {
-	setup.source = CAIRO_GL_SHADER_SOURCE_CONSTANT;
-    } else {
-	if (setup.composite->src.operand.texture.surface->base.content !=
-	    CAIRO_CONTENT_ALPHA)
- 	{
-	    setup.source = CAIRO_GL_SHADER_SOURCE_TEXTURE;
-	} else {
-	    setup.source = CAIRO_GL_SHADER_SOURCE_TEXTURE_ALPHA;
-	}
-    }
 
     glGenBuffersARB (1, &vbo);
     glBindBufferARB (GL_ARRAY_BUFFER_ARB, vbo);
