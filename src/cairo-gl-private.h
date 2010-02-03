@@ -114,6 +114,7 @@ typedef struct _cairo_gl_context {
     cairo_device_t base;
 
     GLuint dummy_tex;
+    GLuint texture_load_pbo;
     GLint max_framebuffer_size;
     GLint max_texture_size;
     cairo_bool_t using_glsl;

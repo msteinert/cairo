@@ -137,6 +137,9 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0,
 		  GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
+    /* PBO for any sort of texture upload */
+    glGenBuffersARB (1, &ctx->texture_load_pbo);
+
     ctx->max_framebuffer_size = 0;
     glGetIntegerv (GL_MAX_RENDERBUFFER_SIZE, &ctx->max_framebuffer_size);
     ctx->max_texture_size = 0;
@@ -969,6 +972,118 @@ _cairo_gl_get_traps_pattern (cairo_gl_surface_t *dst,
     return CAIRO_STATUS_SUCCESS;
 }
 
+
+static inline void
+lerp_and_set_color (GLubyte *color,
+                    double t0, double t1, double t,
+                    double r0, double g0, double b0, double a0,
+                    double r1, double g1, double b1, double a1)
+{
+    double alpha = (t - t0) / (t1 - t0);
+    color[0] = ((1.0 - alpha) * b0 + alpha * b1) * 255.0;
+    color[1] = ((1.0 - alpha) * g0 + alpha * g1) * 255.0;
+    color[2] = ((1.0 - alpha) * r0 + alpha * r1) * 255.0;
+    color[3] = ((1.0 - alpha) * a0 + alpha * a1) * 255.0;
+}
+
+static void
+_cairo_gl_create_gradient_texture (cairo_gl_context_t *ctx,
+				   cairo_gl_surface_t *surface,
+				   cairo_gradient_pattern_t *pattern,
+				   GLuint *tex,
+				   double *first_offset,
+				   double *last_offset)
+{
+    const int tex_width = ctx->max_texture_size;
+    int n_stops = pattern->n_stops;
+    cairo_gradient_stop_t *stops = pattern->stops;
+    GLubyte *data = 0;
+    GLubyte data_stack[4] = { 0, 0, 0, 0 };
+    cairo_extend_t extend = pattern->base.extend;
+
+    if (stops == 0) {
+        data = data_stack;
+        *first_offset = 0.0;
+        *last_offset = 1.0;
+    } else {
+        int i, j = 0, stop_index;
+        double offset, r, g, b, a;
+        double prev_r = 0.0, prev_g = 0.0, prev_b = 0.0, prev_a = 0.0;
+        double delta_offsets;
+        GLuint size = tex_width * sizeof (GLubyte) * 4;
+
+        glBindBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, ctx->texture_load_pbo);
+	glBufferDataARB (GL_PIXEL_UNPACK_BUFFER_ARB, size, 0, GL_STREAM_DRAW);
+        data = glMapBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY);
+
+        *first_offset = stops[0].offset;
+        *last_offset = stops[n_stops - 1].offset;
+        delta_offsets = *last_offset - *first_offset;
+
+        for (i = 0; i < n_stops; ++i) {
+            GLubyte *color = 0;
+
+            cairo_pattern_get_color_stop_rgba (&pattern->base, i,
+                                               &offset, &r,  &g, &b, &a);
+            stop_index = (stops[i].offset - *first_offset) / delta_offsets * tex_width;
+            if (stop_index == tex_width)
+                stop_index = tex_width - 1;
+            while (j < stop_index) {
+                color = data + j * 4;
+                lerp_and_set_color (color,
+                                    (stops[i - 1].offset - *first_offset) / delta_offsets,
+                                    (stops[i].offset - *first_offset) / delta_offsets,
+                                    (j + 0.5) / tex_width,
+                                    prev_r, prev_g, prev_b, prev_a,
+                                    r, g, b, a);
+                ++j;
+            }
+
+            /* This is the exact texel for this stop; just set it. */
+            color = data + j * 4;
+            color[0] = b * 255.0;
+            color[1] = g * 255.0;
+            color[2] = r * 255.0;
+            color[3] = a * 255.0;
+            ++j;
+
+            prev_r = r;
+            prev_g = g;
+            prev_b = b;
+            prev_a = a;
+        }
+
+        glUnmapBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB);
+    }
+
+    glGenTextures (1, tex);
+    glBindTexture (GL_TEXTURE_1D, *tex);
+    glTexImage1D (GL_TEXTURE_1D, 0, GL_RGBA8, tex_width,
+                  extend == CAIRO_EXTEND_NONE ? 1 : 0,
+                  GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, stops == 0 ? data : 0);
+
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    if (stops != 0)
+        glBindBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, 0);
+
+    switch (extend) {
+    case CAIRO_EXTEND_NONE:
+	glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	break;
+    case CAIRO_EXTEND_PAD:
+	glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	break;
+    case CAIRO_EXTEND_REPEAT:
+	glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	break;
+    case CAIRO_EXTEND_REFLECT:
+	glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	break;
+    }
+}
+
 /**
  * Like cairo_pattern_acquire_surface(), but returns a matrix that transforms
  * from dest to src coords.
@@ -1193,6 +1308,8 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
     GLfloat constant_color[4] = {0.0, 0.0, 0.0, 0.0};
 
     src_attributes = &setup->src.operand.texture.attributes;
+
+    (void)_cairo_gl_create_gradient_texture;
 
     switch (setup->src.type) {
     case OPERAND_CONSTANT:
