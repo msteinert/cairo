@@ -688,6 +688,22 @@ static const char *vs_source_mask_coords =
     "	source_texcoords = gl_MultiTexCoord0.xy;\n"
     "	mask_texcoords = gl_MultiTexCoord1.xy;\n"
     "}\n";
+static const char *vs_spans_no_coords =
+    "varying float coverage;\n"
+    "void main()\n"
+    "{\n"
+    "	gl_Position = ftransform();\n"
+    "   coverage = gl_Color.a;\n"
+    "}\n";
+static const char *vs_spans_source_coords =
+    "varying vec2 source_texcoords;\n"
+    "varying float coverage;\n"
+    "void main()\n"
+    "{\n"
+    "	gl_Position = ftransform();\n"
+    "	source_texcoords = gl_MultiTexCoord0.xy;\n"
+    "   coverage = gl_Color.a;\n"
+    "}\n";
 static const char *fs_source_constant =
     "uniform vec4 constant_source;\n"
     "vec4 get_source()\n"
@@ -732,6 +748,12 @@ static const char *fs_mask_none =
     "vec4 get_mask()\n"
     "{\n"
     "	return vec4(0, 0, 0, 1);\n"
+    "}\n";
+static const char *fs_mask_spans =
+    "varying float coverage;\n"
+    "vec4 get_mask()\n"
+    "{\n"
+    "	return vec4(0, 0, 0, coverage);\n"
     "}\n";
 static const char *fs_in_normal =
     "void main()\n"
@@ -790,6 +812,7 @@ _cairo_gl_get_program (cairo_gl_context_t *ctx,
 	fs_mask_texture,
 	fs_mask_texture_alpha,
 	fs_mask_none,
+	fs_mask_spans,
     };
     const char *in_sources[CAIRO_GL_SHADER_IN_COUNT] = {
 	fs_in_normal,
@@ -820,12 +843,16 @@ _cairo_gl_get_program (cairo_gl_context_t *ctx,
 			       1);
 
     if (source == CAIRO_GL_SHADER_SOURCE_CONSTANT) {
-	if (mask == CAIRO_GL_SHADER_MASK_CONSTANT)
+	if (mask == CAIRO_GL_SHADER_MASK_SPANS)
+	    vs_source = vs_spans_no_coords;
+	else if (mask == CAIRO_GL_SHADER_MASK_CONSTANT)
 	    vs_source = vs_no_coords;
 	else
 	    vs_source = vs_mask_coords;
     } else {
-	if (mask == CAIRO_GL_SHADER_MASK_CONSTANT)
+	if (mask == CAIRO_GL_SHADER_MASK_SPANS)
+	    vs_source = vs_spans_source_coords;
+	else if (mask == CAIRO_GL_SHADER_MASK_CONSTANT)
 	    vs_source = vs_source_coords;
 	else
 	    vs_source = vs_source_mask_coords;
@@ -849,7 +876,9 @@ _cairo_gl_get_program (cairo_gl_context_t *ctx,
     if (source != CAIRO_GL_SHADER_SOURCE_CONSTANT) {
 	bind_texture_to_shader (program->program, "source_sampler", 0);
     }
-    if (mask != CAIRO_GL_SHADER_MASK_CONSTANT) {
+    if (mask != CAIRO_GL_SHADER_MASK_CONSTANT &&
+	mask != CAIRO_GL_SHADER_MASK_SPANS &&
+	mask != CAIRO_GL_SHADER_MASK_NONE) {
 	bind_texture_to_shader (program->program, "mask_sampler", 1);
     }
 

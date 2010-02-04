@@ -2338,10 +2338,13 @@ _cairo_gl_surface_span_renderer_finish (void *abstract_renderer)
     glActiveTexture (GL_TEXTURE0);
     glDisable (GL_TEXTURE_2D);
 
-    glActiveTexture (GL_TEXTURE1);
-    glDisable (GL_TEXTURE_2D);
+    if (!renderer->setup.shader) {
+	glActiveTexture (GL_TEXTURE1);
+	glDisable (GL_TEXTURE_2D);
+    }
 
     glDisable (GL_BLEND);
+    _cairo_gl_use_program (NULL);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -2417,29 +2420,38 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
     }
     _cairo_gl_set_destination (dst);
 
+    status = _cairo_gl_get_program (renderer->ctx,
+				    renderer->setup.src.source,
+				    CAIRO_GL_SHADER_MASK_SPANS,
+				    CAIRO_GL_SHADER_IN_NORMAL,
+				    &renderer->setup.shader);
+
     src_attributes = &renderer->setup.src.operand.texture.attributes;
 
+    _cairo_gl_use_program (renderer->setup.shader);
     _cairo_gl_set_operator (dst, op, FALSE);
     _cairo_gl_set_src_operand (renderer->ctx, &renderer->setup);
 
-    /* Set up the mask to source from the incoming vertex color. */
-    glActiveTexture (GL_TEXTURE1);
-    /* Have to have a dummy texture bound in order to use the combiner unit. */
-    glBindTexture (GL_TEXTURE_2D, renderer->ctx->dummy_tex);
-    glEnable (GL_TEXTURE_2D);
-    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
-    glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
+    if (!renderer->setup.shader) {
+	/* Set up the mask to source from the incoming vertex color. */
+	glActiveTexture (GL_TEXTURE1);
+	/* Have to have a dummy texture bound in order to use the combiner unit. */
+	glBindTexture (GL_TEXTURE_2D, renderer->ctx->dummy_tex);
+	glEnable (GL_TEXTURE_2D);
+	glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
+	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
 
-    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PREVIOUS);
-    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_PREVIOUS);
-    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
-    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PREVIOUS);
+	glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_PREVIOUS);
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
 
-    glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PRIMARY_COLOR);
-    glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_PRIMARY_COLOR);
-    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_ALPHA);
-    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA);
+	glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PRIMARY_COLOR);
+	glTexEnvi (GL_TEXTURE_ENV, GL_SRC1_ALPHA, GL_PRIMARY_COLOR);
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_ALPHA);
+	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA);
+    }
 
     while ((err = glGetError ()))
 	fprintf (stderr, "GL error 0x%08x\n", (int) err);

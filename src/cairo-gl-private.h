@@ -99,6 +99,7 @@ typedef enum cairo_gl_shader_mask {
     CAIRO_GL_SHADER_MASK_TEXTURE,
     CAIRO_GL_SHADER_MASK_TEXTURE_ALPHA,
     CAIRO_GL_SHADER_MASK_NONE,
+    CAIRO_GL_SHADER_MASK_SPANS,
     CAIRO_GL_SHADER_MASK_COUNT,
 } cairo_gl_shader_mask_t;
 
