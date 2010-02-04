@@ -1025,6 +1025,9 @@ _cairo_gl_create_gradient_texture (cairo_gl_context_t *ctx,
 
             cairo_pattern_get_color_stop_rgba (&pattern->base, i,
                                                &offset, &r,  &g, &b, &a);
+	    r = r * a;
+	    g = g * a;
+	    b = b * a;
             stop_index = (stops[i].offset - *first_offset) / delta_offsets * tex_width;
             if (stop_index == tex_width)
                 stop_index = tex_width - 1;
