@@ -1242,6 +1242,46 @@ _cairo_gl_gradient_operand_init(cairo_gl_composite_operand_t *operand,
 	operand->source = CAIRO_GL_SHADER_SOURCE_LINEAR_GRADIENT;
 	operand->mask = CAIRO_GL_SHADER_MASK_LINEAR_GRADIENT;
         return CAIRO_STATUS_SUCCESS;
+    } else {
+	cairo_radial_pattern_t *radial = (cairo_radial_pattern_t *) gradient;
+        double x0, y0, r0, x1, y1, r1;
+
+	x0 = _cairo_fixed_to_double (radial->c1.x);
+	x1 = _cairo_fixed_to_double (radial->c2.x);
+	y0 = _cairo_fixed_to_double (radial->c1.y);
+	y1 = _cairo_fixed_to_double (radial->c2.y);
+	r0 = _cairo_fixed_to_double (radial->r1);
+	r1 = _cairo_fixed_to_double (radial->r2);
+
+        if ((unsigned int)ctx->max_texture_size / 2 <= gradient->n_stops)
+            return CAIRO_INT_STATUS_UNSUPPORTED;
+
+        _cairo_gl_create_gradient_texture (ctx,
+					   dst,
+					   gradient,
+					   &operand->operand.radial.tex,
+					   &operand->operand.radial.first_stop_offset,
+					   &operand->operand.radial.last_stop_offset);
+
+	/* Translation matrix from the destination fragment coordinates
+	 * (pixels from lower left = 0,0) to the coordinates in the
+	 */
+	cairo_matrix_init_translate (&operand->operand.radial.m, -x0, -y0);
+	cairo_matrix_multiply (&operand->operand.radial.m,
+			       &operand->pattern->matrix,
+			       &operand->operand.radial.m);
+	cairo_matrix_translate (&operand->operand.radial.m, 0, dst->height);
+	cairo_matrix_scale (&operand->operand.radial.m, 1.0, -1.0);
+
+	operand->operand.radial.circle_1_x = x1 - x0;
+	operand->operand.radial.circle_1_y = y1 - y0;
+	operand->operand.radial.radius_0 = r0;
+	operand->operand.radial.radius_1 = r1;
+
+	operand->type = OPERAND_RADIAL_GRADIENT;
+	operand->source = CAIRO_GL_SHADER_SOURCE_RADIAL_GRADIENT;
+	operand->mask = CAIRO_GL_SHADER_MASK_RADIAL_GRADIENT;
+        return CAIRO_STATUS_SUCCESS;
     }
 
     return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -1289,6 +1329,9 @@ _cairo_gl_operand_destroy (cairo_gl_composite_operand_t *operand)
 	break;
     case OPERAND_LINEAR_GRADIENT:
 	glDeleteTextures (1, &operand->operand.linear.tex);
+	break;
+    case OPERAND_RADIAL_GRADIENT:
+	glDeleteTextures (1, &operand->operand.radial.tex);
 	break;
     case OPERAND_TEXTURE:
 	if (operand->operand.texture.surface != NULL) {
@@ -1423,6 +1466,42 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 	assert (!_cairo_status_is_error (status));
 
 	break;
+
+    case OPERAND_RADIAL_GRADIENT:
+	glActiveTexture (GL_TEXTURE0);
+	glBindTexture (GL_TEXTURE_1D, setup->src.operand.linear.tex);
+	glEnable (GL_TEXTURE_1D);
+
+        status = bind_matrix_to_shader (setup->shader->program,
+					"source_matrix",
+					&setup->src.operand.radial.m);
+	assert (!_cairo_status_is_error (status));
+
+        status = bind_vec2_to_shader (setup->shader->program,
+				      "source_circle_1",
+				      setup->src.operand.radial.circle_1_x,
+				      setup->src.operand.radial.circle_1_y);
+	assert (!_cairo_status_is_error (status));
+
+        status = bind_float_to_shader (setup->shader->program,
+				       "source_radius_0",
+				       setup->src.operand.radial.radius_0);
+	assert (!_cairo_status_is_error (status));
+
+        status = bind_float_to_shader (setup->shader->program,
+				       "source_radius_1",
+				       setup->src.operand.radial.radius_1);
+	assert (!_cairo_status_is_error (status));
+
+        status = bind_float_to_shader (setup->shader->program,
+				       "source_first_offset",
+				       setup->src.operand.radial.first_stop_offset);
+	assert (!_cairo_status_is_error (status));
+
+        status = bind_float_to_shader (setup->shader->program,
+				       "source_last_offset",
+				       setup->src.operand.radial.last_stop_offset);
+	break;
     }
 }
 
@@ -1464,6 +1543,7 @@ _cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
 	}
 	break;
     case OPERAND_LINEAR_GRADIENT:
+    case OPERAND_RADIAL_GRADIENT:
 	assert(0);
     }
 }
@@ -1497,6 +1577,48 @@ _cairo_gl_set_linear_gradient_mask_operand (cairo_gl_composite_setup_t *setup)
 			  "mask_last_offset",
 			  setup->mask.operand.linear.last_stop_offset);
     assert (!_cairo_status_is_error (status));
+}
+
+static void
+_cairo_gl_set_radial_gradient_mask_operand (cairo_gl_composite_setup_t *setup)
+{
+    cairo_status_t status;
+
+    assert(setup->shader);
+
+    glActiveTexture (GL_TEXTURE1);
+    glBindTexture (GL_TEXTURE_1D, setup->mask.operand.radial.tex);
+    glEnable (GL_TEXTURE_1D);
+
+    status = bind_matrix_to_shader (setup->shader->program,
+				    "mask_matrix",
+				    &setup->mask.operand.radial.m);
+    assert (!_cairo_status_is_error (status));
+
+    status = bind_vec2_to_shader (setup->shader->program,
+				  "mask_circle_1",
+				  setup->mask.operand.radial.circle_1_x,
+				  setup->mask.operand.radial.circle_1_y);
+    assert (!_cairo_status_is_error (status));
+
+    status = bind_float_to_shader (setup->shader->program,
+				   "mask_radius_0",
+				   setup->mask.operand.radial.radius_0);
+    assert (!_cairo_status_is_error (status));
+
+    status = bind_float_to_shader (setup->shader->program,
+				   "mask_radius_1",
+				   setup->mask.operand.radial.radius_1);
+    assert (!_cairo_status_is_error (status));
+
+    status = bind_float_to_shader (setup->shader->program,
+				   "mask_first_offset",
+				   setup->mask.operand.radial.first_stop_offset);
+    assert (!_cairo_status_is_error (status));
+
+    status = bind_float_to_shader (setup->shader->program,
+				   "mask_last_offset",
+				   setup->mask.operand.radial.last_stop_offset);
 }
 
 /* This is like _cairo_gl_set_src_alpha_operand, for component alpha setup
@@ -1570,6 +1692,10 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 
     case OPERAND_LINEAR_GRADIENT:
 	_cairo_gl_set_linear_gradient_mask_operand (setup);
+	break;
+
+    case OPERAND_RADIAL_GRADIENT:
+	_cairo_gl_set_radial_gradient_mask_operand (setup);
 	break;
     }
 }
@@ -1958,6 +2084,9 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 	    break;
 	case OPERAND_LINEAR_GRADIENT:
 	    _cairo_gl_set_linear_gradient_mask_operand (&setup);
+	    break;
+	case OPERAND_RADIAL_GRADIENT:
+	    _cairo_gl_set_radial_gradient_mask_operand (&setup);
 	    break;
 	}
     }

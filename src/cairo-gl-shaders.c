@@ -738,6 +738,39 @@ static const char *fs_source_linear_gradient =
     "    t = (t - source_first_offset) / (source_last_offset - source_first_offset);\n"
     "    return texture1D (source_sampler, t);\n"
     "}\n";
+static const char *fs_source_radial_gradient =
+    "uniform sampler1D source_sampler;\n"
+    "uniform mat4 source_matrix;\n"
+    "uniform vec2 source_circle_1;\n"
+    "uniform float source_radius_0;\n"
+    "uniform float source_radius_1;\n"
+    "uniform float source_first_offset;\n"
+    "uniform float source_last_offset;\n"
+    "\n"
+    "vec4 get_source()\n"
+    "{\n"
+    "    vec2 pos = (source_matrix * vec4 (gl_FragCoord.xy, 0.0, 1.0)).xy;\n"
+    "    \n"
+    "    float dr = source_radius_1 - source_radius_0;\n"
+    "    float dot_circle_1 = dot (source_circle_1, source_circle_1);\n"
+    "    float dot_pos_circle_1 = dot (pos, source_circle_1);\n"
+    "    \n"
+    "    float A = dot_circle_1 - dr * dr;\n"
+    "    float B = -2.0 * (dot_pos_circle_1 + source_radius_0 * dr);\n"
+    "    float C = dot (pos, pos) - source_radius_0 * source_radius_0;\n"
+    "    float det = B * B - 4.0 * A * C;\n"
+    "    det = max (det, 0.0);\n"
+    "    \n"
+    "    float sqrt_det = sqrt (det);\n"
+    "    /* This complicated bit of logic acts as\n"
+    "     * \"if (A < 0.0) sqrt_det = -sqrt_det\", without the branch.\n"
+    "     */\n"
+    "    sqrt_det *= 1.0 + 2.0 * sign (min (A, 0.0));\n"
+    "    \n"
+    "    float t = (-B + sqrt_det) / (2.0 * A);\n"
+    "    t = (t - source_first_offset) / (source_last_offset - source_first_offset);\n"
+    "    return texture1D (source_sampler, t);\n"
+    "}\n";
 static const char *fs_mask_constant =
     "uniform vec4 constant_mask;\n"
     "vec4 get_mask()\n"
@@ -769,6 +802,39 @@ static const char *fs_mask_linear_gradient =
     "{\n"
     "    vec2 pos = (mask_matrix * vec4 (gl_FragCoord.xy, 0.0, 1.0)).xy;\n"
     "    float t = dot (pos, mask_segment) / dot (mask_segment, mask_segment);\n"
+    "    t = (t - mask_first_offset) / (mask_last_offset - mask_first_offset);\n"
+    "    return texture1D (mask_sampler, t);\n"
+    "}\n";
+static const char *fs_mask_radial_gradient =
+    "uniform sampler1D mask_sampler;\n"
+    "uniform mat4 mask_matrix;\n"
+    "uniform vec2 mask_circle_1;\n"
+    "uniform float mask_radius_0;\n"
+    "uniform float mask_radius_1;\n"
+    "uniform float mask_first_offset;\n"
+    "uniform float mask_last_offset;\n"
+    "\n"
+    "vec4 get_mask()\n"
+    "{\n"
+    "    vec2 pos = (mask_matrix * vec4 (gl_FragCoord.xy, 0.0, 1.0)).xy;\n"
+    "    \n"
+    "    float dr = mask_radius_1 - mask_radius_0;\n"
+    "    float dot_circle_1 = dot (mask_circle_1, mask_circle_1);\n"
+    "    float dot_pos_circle_1 = dot (pos, mask_circle_1);\n"
+    "    \n"
+    "    float A = dot_circle_1 - dr * dr;\n"
+    "    float B = -2.0 * (dot_pos_circle_1 + mask_radius_0 * dr);\n"
+    "    float C = dot (pos, pos) - mask_radius_0 * mask_radius_0;\n"
+    "    float det = B * B - 4.0 * A * C;\n"
+    "    det = max (det, 0.0);\n"
+    "    \n"
+    "    float sqrt_det = sqrt (det);\n"
+    "    /* This complicated bit of logic acts as\n"
+    "     * \"if (A < 0.0) sqrt_det = -sqrt_det\", without the branch.\n"
+    "     */\n"
+    "    sqrt_det *= 1.0 + 2.0 * sign (min (A, 0.0));\n"
+    "    \n"
+    "    float t = (-B + sqrt_det) / (2.0 * A);\n"
     "    t = (t - mask_first_offset) / (mask_last_offset - mask_first_offset);\n"
     "    return texture1D (mask_sampler, t);\n"
     "}\n";
@@ -835,12 +901,14 @@ _cairo_gl_get_program (cairo_gl_context_t *ctx,
 	fs_source_texture,
 	fs_source_texture_alpha,
 	fs_source_linear_gradient,
+	fs_source_radial_gradient,
     };
     const char *mask_sources[CAIRO_GL_SHADER_MASK_COUNT] = {
 	fs_mask_constant,
 	fs_mask_texture,
 	fs_mask_texture_alpha,
 	fs_mask_linear_gradient,
+	fs_mask_radial_gradient,
 	fs_mask_none,
 	fs_mask_spans,
     };
@@ -873,11 +941,13 @@ _cairo_gl_get_program (cairo_gl_context_t *ctx,
 			       1);
 
     if (source == CAIRO_GL_SHADER_SOURCE_CONSTANT ||
-	source == CAIRO_GL_SHADER_SOURCE_LINEAR_GRADIENT) {
+	source == CAIRO_GL_SHADER_SOURCE_LINEAR_GRADIENT ||
+	source == CAIRO_GL_SHADER_SOURCE_RADIAL_GRADIENT) {
 	if (mask == CAIRO_GL_SHADER_MASK_SPANS)
 	    vs_source = vs_spans_no_coords;
 	else if (mask == CAIRO_GL_SHADER_MASK_CONSTANT ||
-		 mask == CAIRO_GL_SHADER_MASK_LINEAR_GRADIENT)
+		 mask == CAIRO_GL_SHADER_MASK_LINEAR_GRADIENT ||
+		 mask == CAIRO_GL_SHADER_MASK_RADIAL_GRADIENT)
 	    vs_source = vs_no_coords;
 	else
 	    vs_source = vs_mask_coords;
@@ -885,7 +955,8 @@ _cairo_gl_get_program (cairo_gl_context_t *ctx,
 	if (mask == CAIRO_GL_SHADER_MASK_SPANS)
 	    vs_source = vs_spans_source_coords;
 	else if (mask == CAIRO_GL_SHADER_MASK_CONSTANT ||
-		 mask == CAIRO_GL_SHADER_MASK_LINEAR_GRADIENT)
+		 mask == CAIRO_GL_SHADER_MASK_LINEAR_GRADIENT ||
+		 mask == CAIRO_GL_SHADER_MASK_RADIAL_GRADIENT)
 	    vs_source = vs_source_coords;
 	else
 	    vs_source = vs_source_mask_coords;
