@@ -874,12 +874,14 @@ _cairo_gl_get_program (cairo_gl_context_t *ctx,
 
     _cairo_gl_use_program (program);
     if (source != CAIRO_GL_SHADER_SOURCE_CONSTANT) {
-	bind_texture_to_shader (program->program, "source_sampler", 0);
+	status = bind_texture_to_shader (program->program, "source_sampler", 0);
+	assert (!_cairo_status_is_error (status));
     }
     if (mask != CAIRO_GL_SHADER_MASK_CONSTANT &&
 	mask != CAIRO_GL_SHADER_MASK_SPANS &&
 	mask != CAIRO_GL_SHADER_MASK_NONE) {
-	bind_texture_to_shader (program->program, "mask_sampler", 1);
+	status = bind_texture_to_shader (program->program, "mask_sampler", 1);
+	assert (!_cairo_status_is_error (status));
     }
 
     _cairo_gl_use_program (NULL);
