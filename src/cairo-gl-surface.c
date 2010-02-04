@@ -987,12 +987,12 @@ lerp_and_set_color (GLubyte *color,
 }
 
 static void
-_cairo_gl_create_gradient_texture (cairo_gl_context_t *ctx,
+_cairo_gl_create_gradient_texture (const cairo_gl_context_t *ctx,
 				   cairo_gl_surface_t *surface,
 				   cairo_gradient_pattern_t *pattern,
 				   GLuint *tex,
-				   double *first_offset,
-				   double *last_offset)
+				   float *first_offset,
+				   float *last_offset)
 {
     const int tex_width = ctx->max_texture_size;
     int n_stops = pattern->n_stops;
@@ -1061,8 +1061,7 @@ _cairo_gl_create_gradient_texture (cairo_gl_context_t *ctx,
 
     glGenTextures (1, tex);
     glBindTexture (GL_TEXTURE_1D, *tex);
-    glTexImage1D (GL_TEXTURE_1D, 0, GL_RGBA8, tex_width,
-                  extend == CAIRO_EXTEND_NONE ? 1 : 0,
+    glTexImage1D (GL_TEXTURE_1D, 0, GL_RGBA8, tex_width, 0,
                   GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, stops == 0 ? data : 0);
 
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -1169,8 +1168,11 @@ _cairo_gl_solid_operand_init (cairo_gl_composite_operand_t *operand,
 
 static cairo_status_t
 _cairo_gl_gradient_operand_init(cairo_gl_composite_operand_t *operand,
-				cairo_gradient_pattern_t *gradient)
+				cairo_gl_surface_t *dst)
 {
+    const cairo_gl_context_t *ctx = (cairo_gl_context_t *) dst->base.device;
+    cairo_gradient_pattern_t *gradient = (cairo_gradient_pattern_t *)operand->pattern;
+
     /* Fast path for gradients with less than 2 color stops.
      * Required to prevent _cairo_pattern_acquire_surface() returning
      * a solid color which is cached beyond the life of the context.
@@ -1202,6 +1204,48 @@ _cairo_gl_gradient_operand_init(cairo_gl_composite_operand_t *operand,
 	}
     }
 
+    if (!ctx->using_glsl)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    if (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR) {
+	cairo_linear_pattern_t *linear = (cairo_linear_pattern_t *) gradient;
+        double x0, y0, x1, y1;
+
+	x0 = _cairo_fixed_to_double (linear->p1.x);
+	x1 = _cairo_fixed_to_double (linear->p2.x);
+	y0 = _cairo_fixed_to_double (linear->p1.y);
+	y1 = _cairo_fixed_to_double (linear->p2.y);
+
+        if ((unsigned int)ctx->max_texture_size / 2 <= gradient->n_stops) {
+            return CAIRO_INT_STATUS_UNSUPPORTED;
+        }
+
+        _cairo_gl_create_gradient_texture (ctx,
+					   dst,
+					   gradient,
+					   &operand->operand.linear.tex,
+					   &operand->operand.linear.first_stop_offset,
+					   &operand->operand.linear.last_stop_offset);
+
+	/* Translation matrix from the destination fragment coordinates
+	 * (pixels from lower left = 0,0) to the coordinates in the
+	 */
+	cairo_matrix_init_translate (&operand->operand.linear.m, -x0, -y0);
+	cairo_matrix_multiply (&operand->operand.linear.m,
+			       &operand->pattern->matrix,
+			       &operand->operand.linear.m);
+	cairo_matrix_translate (&operand->operand.linear.m, 0, dst->height);
+	cairo_matrix_scale (&operand->operand.linear.m, 1.0, -1.0);
+
+	operand->operand.linear.segment_x = x1 - x0;
+	operand->operand.linear.segment_y = y1 - y0;
+
+	operand->type = OPERAND_LINEAR_GRADIENT;
+	operand->source = CAIRO_GL_SHADER_SOURCE_LINEAR_GRADIENT;
+	operand->mask = CAIRO_GL_SHADER_MASK_LINEAR_GRADIENT;
+        return CAIRO_STATUS_SUCCESS;
+    }
+
     return CAIRO_INT_STATUS_UNSUPPORTED;
 }
 
@@ -1222,8 +1266,7 @@ _cairo_gl_operand_init (cairo_gl_composite_operand_t *operand,
 		                             &((cairo_solid_pattern_t *) pattern)->color);
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
-	status = _cairo_gl_gradient_operand_init (operand,
-						  (cairo_gradient_pattern_t *) pattern);
+	status = _cairo_gl_gradient_operand_init (operand, dst);
 	if (!_cairo_status_is_error (status))
 	    return status;
 
@@ -1245,6 +1288,9 @@ _cairo_gl_operand_destroy (cairo_gl_composite_operand_t *operand)
 {
     switch (operand->type) {
     case OPERAND_CONSTANT:
+	break;
+    case OPERAND_LINEAR_GRADIENT:
+	glDeleteTextures (1, &operand->operand.linear.tex);
 	break;
     case OPERAND_TEXTURE:
 	if (operand->operand.texture.surface != NULL) {
@@ -1318,10 +1364,9 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 {
     cairo_surface_attributes_t *src_attributes;
     GLfloat constant_color[4] = {0.0, 0.0, 0.0, 0.0};
+    cairo_status_t status;
 
     src_attributes = &setup->src.operand.texture.attributes;
-
-    (void)_cairo_gl_create_gradient_texture;
 
     switch (setup->src.type) {
     case OPERAND_CONSTANT:
@@ -1351,8 +1396,35 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 	    glTexEnvi (GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE0);
 	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
 	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
-	    break;
 	}
+	break;
+
+    case OPERAND_LINEAR_GRADIENT:
+	glActiveTexture (GL_TEXTURE0);
+	glBindTexture (GL_TEXTURE_1D, setup->src.operand.linear.tex);
+	glEnable (GL_TEXTURE_1D);
+
+	status = bind_matrix_to_shader (setup->shader->program,
+					"source_matrix",
+					&setup->src.operand.linear.m);
+	assert (!_cairo_status_is_error (status));
+
+	status = bind_vec2_to_shader (setup->shader->program,
+				      "source_segment",
+				      setup->src.operand.linear.segment_x,
+				      setup->src.operand.linear.segment_y);
+	assert (!_cairo_status_is_error (status));
+
+	status = bind_float_to_shader (setup->shader->program,
+				       "source_first_offset",
+				       setup->src.operand.linear.first_stop_offset);
+	assert (!_cairo_status_is_error (status));
+	status = bind_float_to_shader (setup->shader->program,
+				       "source_last_offset",
+				       setup->src.operand.linear.last_stop_offset);
+	assert (!_cairo_status_is_error (status));
+
+	break;
     }
 }
 
@@ -1393,7 +1465,40 @@ _cairo_gl_set_src_alpha_operand (cairo_gl_context_t *ctx,
 	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
 	}
 	break;
+    case OPERAND_LINEAR_GRADIENT:
+	assert(0);
     }
+}
+
+static void
+_cairo_gl_set_linear_gradient_mask_operand (cairo_gl_composite_setup_t *setup)
+{
+    cairo_status_t status;
+
+    assert(setup->shader);
+
+    glActiveTexture (GL_TEXTURE1);
+    glBindTexture (GL_TEXTURE_1D, setup->mask.operand.linear.tex);
+    glEnable (GL_TEXTURE_1D);
+
+    status = bind_matrix_to_shader (setup->shader->program,
+			   "mask_matrix", &setup->mask.operand.linear.m);
+    assert (!_cairo_status_is_error (status));
+
+    status = bind_vec2_to_shader (setup->shader->program,
+			 "mask_segment",
+			 setup->mask.operand.linear.segment_x,
+			 setup->mask.operand.linear.segment_y);
+    assert (!_cairo_status_is_error (status));
+
+    status = bind_float_to_shader (setup->shader->program,
+			  "mask_first_offset",
+			  setup->mask.operand.linear.first_stop_offset);
+    assert (!_cairo_status_is_error (status));
+    status = bind_float_to_shader (setup->shader->program,
+			  "mask_last_offset",
+			  setup->mask.operand.linear.last_stop_offset);
+    assert (!_cairo_status_is_error (status));
 }
 
 /* This is like _cairo_gl_set_src_alpha_operand, for component alpha setup
@@ -1463,6 +1568,10 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
 	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
 	    glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
 	}
+	break;
+
+    case OPERAND_LINEAR_GRADIENT:
+	_cairo_gl_set_linear_gradient_mask_operand (setup);
 	break;
     }
 }
@@ -1702,11 +1811,13 @@ _cairo_gl_surface_composite_component_alpha (cairo_operator_t op,
     glClientActiveTexture (GL_TEXTURE0);
     glDisableClientState (GL_TEXTURE_COORD_ARRAY);
     glActiveTexture (GL_TEXTURE0);
+    glDisable (GL_TEXTURE_1D);
     glDisable (GL_TEXTURE_2D);
 
     glClientActiveTexture (GL_TEXTURE1);
     glDisableClientState (GL_TEXTURE_COORD_ARRAY);
     glActiveTexture (GL_TEXTURE1);
+    glDisable (GL_TEXTURE_1D);
     glDisable (GL_TEXTURE_2D);
 
     while ((err = glGetError ()))
@@ -1847,6 +1958,9 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 		glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA);
 	    }
 	    break;
+	case OPERAND_LINEAR_GRADIENT:
+	    _cairo_gl_set_linear_gradient_mask_operand (&setup);
+	    break;
 	}
     }
 
@@ -1941,11 +2055,13 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     glClientActiveTexture (GL_TEXTURE0);
     glDisableClientState (GL_TEXTURE_COORD_ARRAY);
     glActiveTexture (GL_TEXTURE0);
+    glDisable (GL_TEXTURE_1D);
     glDisable (GL_TEXTURE_2D);
 
     glClientActiveTexture (GL_TEXTURE1);
     glDisableClientState (GL_TEXTURE_COORD_ARRAY);
     glActiveTexture (GL_TEXTURE1);
+    glDisable (GL_TEXTURE_1D);
     glDisable (GL_TEXTURE_2D);
 
     while ((err = glGetError ()))
@@ -2465,6 +2581,7 @@ _cairo_gl_surface_span_renderer_finish (void *abstract_renderer)
     glClientActiveTexture (GL_TEXTURE0);
     glDisableClientState (GL_TEXTURE_COORD_ARRAY);
     glActiveTexture (GL_TEXTURE0);
+    glDisable (GL_TEXTURE_1D);
     glDisable (GL_TEXTURE_2D);
 
     if (!renderer->setup.shader) {

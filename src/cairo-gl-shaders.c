@@ -724,6 +724,20 @@ static const char *fs_source_texture_alpha =
     "{\n"
     "	return vec4(0, 0, 0, texture2D(source_sampler, source_texcoords).a);\n"
     "}\n";
+static const char *fs_source_linear_gradient =
+    "uniform sampler1D source_sampler;\n"
+    "uniform mat4 source_matrix;\n"
+    "uniform vec2 source_segment;\n"
+    "uniform float source_first_offset;\n"
+    "uniform float source_last_offset;\n"
+    "\n"
+    "vec4 get_source()\n"
+    "{\n"
+    "    vec2 pos = (source_matrix * vec4 (gl_FragCoord.xy, 0.0, 1.0)).xy;\n"
+    "    float t = dot (pos, source_segment) / dot (source_segment, source_segment);\n"
+    "    t = (t - source_first_offset) / (source_last_offset - source_first_offset);\n"
+    "    return texture1D (source_sampler, t);\n"
+    "}\n";
 static const char *fs_mask_constant =
     "uniform vec4 constant_mask;\n"
     "vec4 get_mask()\n"
@@ -743,6 +757,20 @@ static const char *fs_mask_texture_alpha =
     "vec4 get_mask()\n"
     "{\n"
     "	return vec4(0, 0, 0, texture2D(mask_sampler, mask_texcoords).a);\n"
+    "}\n";
+static const char *fs_mask_linear_gradient =
+    "uniform sampler1D mask_sampler;\n"
+    "uniform mat4 mask_matrix;\n"
+    "uniform vec2 mask_segment;\n"
+    "uniform float mask_first_offset;\n"
+    "uniform float mask_last_offset;\n"
+    "\n"
+    "vec4 get_mask()\n"
+    "{\n"
+    "    vec2 pos = (mask_matrix * vec4 (gl_FragCoord.xy, 0.0, 1.0)).xy;\n"
+    "    float t = dot (pos, mask_segment) / dot (mask_segment, mask_segment);\n"
+    "    t = (t - mask_first_offset) / (mask_last_offset - mask_first_offset);\n"
+    "    return texture1D (mask_sampler, t);\n"
     "}\n";
 static const char *fs_mask_none =
     "vec4 get_mask()\n"
@@ -806,11 +834,13 @@ _cairo_gl_get_program (cairo_gl_context_t *ctx,
 	fs_source_constant,
 	fs_source_texture,
 	fs_source_texture_alpha,
+	fs_source_linear_gradient,
     };
     const char *mask_sources[CAIRO_GL_SHADER_MASK_COUNT] = {
 	fs_mask_constant,
 	fs_mask_texture,
 	fs_mask_texture_alpha,
+	fs_mask_linear_gradient,
 	fs_mask_none,
 	fs_mask_spans,
     };
@@ -842,17 +872,20 @@ _cairo_gl_get_program (cairo_gl_context_t *ctx,
 			       strlen(in_source) +
 			       1);
 
-    if (source == CAIRO_GL_SHADER_SOURCE_CONSTANT) {
+    if (source == CAIRO_GL_SHADER_SOURCE_CONSTANT ||
+	source == CAIRO_GL_SHADER_SOURCE_LINEAR_GRADIENT) {
 	if (mask == CAIRO_GL_SHADER_MASK_SPANS)
 	    vs_source = vs_spans_no_coords;
-	else if (mask == CAIRO_GL_SHADER_MASK_CONSTANT)
+	else if (mask == CAIRO_GL_SHADER_MASK_CONSTANT ||
+		 mask == CAIRO_GL_SHADER_MASK_LINEAR_GRADIENT)
 	    vs_source = vs_no_coords;
 	else
 	    vs_source = vs_mask_coords;
     } else {
 	if (mask == CAIRO_GL_SHADER_MASK_SPANS)
 	    vs_source = vs_spans_source_coords;
-	else if (mask == CAIRO_GL_SHADER_MASK_CONSTANT)
+	else if (mask == CAIRO_GL_SHADER_MASK_CONSTANT ||
+		 mask == CAIRO_GL_SHADER_MASK_LINEAR_GRADIENT)
 	    vs_source = vs_source_coords;
 	else
 	    vs_source = vs_source_mask_coords;

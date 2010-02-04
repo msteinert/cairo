@@ -91,6 +91,7 @@ typedef enum cairo_gl_shader_source {
     CAIRO_GL_SHADER_SOURCE_CONSTANT,
     CAIRO_GL_SHADER_SOURCE_TEXTURE,
     CAIRO_GL_SHADER_SOURCE_TEXTURE_ALPHA,
+    CAIRO_GL_SHADER_SOURCE_LINEAR_GRADIENT,
     CAIRO_GL_SHADER_SOURCE_COUNT,
 } cairo_gl_shader_source_t;
 
@@ -98,6 +99,7 @@ typedef enum cairo_gl_shader_mask {
     CAIRO_GL_SHADER_MASK_CONSTANT,
     CAIRO_GL_SHADER_MASK_TEXTURE,
     CAIRO_GL_SHADER_MASK_TEXTURE_ALPHA,
+    CAIRO_GL_SHADER_MASK_LINEAR_GRADIENT,
     CAIRO_GL_SHADER_MASK_NONE,
     CAIRO_GL_SHADER_MASK_SPANS,
     CAIRO_GL_SHADER_MASK_COUNT,
@@ -137,6 +139,7 @@ typedef struct _cairo_gl_context {
 enum cairo_gl_composite_operand_type {
     OPERAND_CONSTANT,
     OPERAND_TEXTURE,
+    OPERAND_LINEAR_GRADIENT,
 };
 
 /* This union structure describes a potential source or mask operand to the
@@ -155,6 +158,14 @@ typedef struct cairo_gl_composite_operand {
 	struct {
 	    GLfloat color[4];
 	} constant;
+	struct {
+	    GLuint tex;
+	    cairo_matrix_t m;
+	    float segment_x;
+	    float segment_y;
+	    float first_stop_offset;
+	    float last_stop_offset;
+	} linear;
     } operand;
 
     const cairo_pattern_t *pattern;

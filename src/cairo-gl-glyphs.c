@@ -613,6 +613,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     glClientActiveTexture (GL_TEXTURE0);
     glDisableClientState (GL_TEXTURE_COORD_ARRAY);
     glActiveTexture (GL_TEXTURE0);
+    glDisable (GL_TEXTURE_1D);
     glDisable (GL_TEXTURE_2D);
 
     glClientActiveTexture (GL_TEXTURE1);
