@@ -980,10 +980,11 @@ lerp_and_set_color (GLubyte *color,
                     double r1, double g1, double b1, double a1)
 {
     double alpha = (t - t0) / (t1 - t0);
-    color[0] = ((1.0 - alpha) * b0 + alpha * b1) * 255.0;
-    color[1] = ((1.0 - alpha) * g0 + alpha * g1) * 255.0;
-    color[2] = ((1.0 - alpha) * r0 + alpha * r1) * 255.0;
-    color[3] = ((1.0 - alpha) * a0 + alpha * a1) * 255.0;
+    double a = ((1.0 - alpha) * a0 + alpha * a1);
+    color[0] = ((1.0 - alpha) * b0 + alpha * b1) * a * 255.0;
+    color[1] = ((1.0 - alpha) * g0 + alpha * g1) * a * 255.0;
+    color[2] = ((1.0 - alpha) * r0 + alpha * r1) * a * 255.0;
+    color[3] = a * 255.0;
 }
 
 static void
@@ -1025,9 +1026,6 @@ _cairo_gl_create_gradient_texture (const cairo_gl_context_t *ctx,
 
             cairo_pattern_get_color_stop_rgba (&pattern->base, i,
                                                &offset, &r,  &g, &b, &a);
-	    r = r * a;
-	    g = g * a;
-	    b = b * a;
             stop_index = (stops[i].offset - *first_offset) / delta_offsets * tex_width;
             if (stop_index == tex_width)
                 stop_index = tex_width - 1;
@@ -1036,7 +1034,7 @@ _cairo_gl_create_gradient_texture (const cairo_gl_context_t *ctx,
                 lerp_and_set_color (color,
                                     (stops[i - 1].offset - *first_offset) / delta_offsets,
                                     (stops[i].offset - *first_offset) / delta_offsets,
-                                    (j + 0.5) / tex_width,
+                                    (float)j / tex_width,
                                     prev_r, prev_g, prev_b, prev_a,
                                     r, g, b, a);
                 ++j;
@@ -1044,9 +1042,9 @@ _cairo_gl_create_gradient_texture (const cairo_gl_context_t *ctx,
 
             /* This is the exact texel for this stop; just set it. */
             color = data + j * 4;
-            color[0] = b * 255.0;
-            color[1] = g * 255.0;
-            color[2] = r * 255.0;
+            color[0] = b * a * 255.0;
+            color[1] = g * a * 255.0;
+            color[2] = r * a * 255.0;
             color[3] = a * 255.0;
             ++j;
 
