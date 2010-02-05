@@ -132,6 +132,13 @@ oil_profile_stamp_s390(void)
 #endif
 #endif
 
+#if defined(__APPLE__)
+#include <mach/mach_time.h>
+#undef OIL_STAMP
+#define OIL_STAMP mach_absolute_time
+#endif
+
+
 typedef struct _cairo_perf_timer {
 #if defined(CLOCK)
     struct timespec tv_start;
