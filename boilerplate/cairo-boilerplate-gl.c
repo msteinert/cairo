@@ -149,12 +149,13 @@ _cairo_boilerplate_gl_create_window (const char			 *name,
 				     int			  id,
 				     void			**closure)
 {
-    int rgb_attribs[] = { GLX_RGBA,
-			  GLX_RED_SIZE, 1,
-			  GLX_GREEN_SIZE, 1,
-			  GLX_BLUE_SIZE, 1,
-			  GLX_DOUBLEBUFFER,
-			  None };
+    int rgba_attribs[] = { GLX_RGBA,
+			   GLX_RED_SIZE, 1,
+			   GLX_GREEN_SIZE, 1,
+			   GLX_BLUE_SIZE, 1,
+			   GLX_ALPHA_SIZE, 1,
+			   GLX_DOUBLEBUFFER,
+			   None };
     XVisualInfo *vi;
     GLXContext ctx;
     gl_target_closure_t *gltc;
@@ -181,9 +182,9 @@ _cairo_boilerplate_gl_create_window (const char			 *name,
     if (mode == CAIRO_BOILERPLATE_MODE_TEST)
 	XSynchronize (gltc->dpy, 1);
 
-    vi = glXChooseVisual (dpy, DefaultScreen (dpy), rgb_attribs);
+    vi = glXChooseVisual (dpy, DefaultScreen (dpy), rgba_attribs);
     if (vi == NULL) {
-	fprintf (stderr, "Failed to create RGB, double-buffered visual\n");
+	fprintf (stderr, "Failed to create RGBA, double-buffered visual\n");
 	XCloseDisplay (dpy);
 	free (gltc);
 	return NULL;
