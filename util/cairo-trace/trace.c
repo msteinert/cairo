@@ -71,6 +71,20 @@
 	  ((((uint32_t)(p)))              >> 24))
 #endif
 
+#if WORDS_BIGENDIAN
+#define le16(x) bswap_16 (x)
+#define le32(x) bswap_32 (x)
+#define be16(x) x
+#define be32(x) x
+#define to_be32(x) x
+#else
+#define le16(x) x
+#define le32(x) x
+#define be16(x) bswap_16 (x)
+#define be32(x) bswap_32 (x)
+#define to_be32(x) bswap_32 (x)
+#endif
+
 #if CAIRO_HAS_SYMBOL_LOOKUP
 #include "lookup-symbol.h"
 #endif
@@ -1366,6 +1380,7 @@ _write_data_start (struct _data_stream *stream, uint32_t len)
     _write_base85_data_start (stream);
 
     _trace_printf ("<|");
+    len = to_be32 (len);
     _write_base85_data (stream, (unsigned char *) &len, sizeof (len));
 }
 
