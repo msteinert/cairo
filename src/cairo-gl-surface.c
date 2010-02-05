@@ -683,6 +683,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
     cairo_image_surface_t *clone = NULL;
     cairo_gl_context_t *ctx = (cairo_gl_context_t *) dst->base.device;
     int cpp;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     if (! _cairo_gl_get_image_format_and_type (src->pixman_format,
 					       &internal_format,
@@ -709,44 +710,134 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 
     cpp = PIXMAN_FORMAT_BPP (src->pixman_format) / 8;
 
-    glBindTexture (ctx->tex_target, dst->tex);
-    glTexParameteri (ctx->tex_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri (ctx->tex_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
     glPixelStorei (GL_UNPACK_ROW_LENGTH, src->stride / cpp);
-    glTexSubImage2D (ctx->tex_target, 0,
-	             dst_x, dst_y, width, height,
-		     format, GL_UNSIGNED_BYTE,
-		     src->data + src_y * src->stride + src_x * cpp);
+    if (dst->fb) {
+	glBindTexture (ctx->tex_target, dst->tex);
+	glTexParameteri (ctx->tex_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri (ctx->tex_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexSubImage2D (ctx->tex_target, 0,
+			 dst_x, dst_y, width, height,
+			 format, GL_UNSIGNED_BYTE,
+			 src->data + src_y * src->stride + src_x * cpp);
+
+	/* If we just treated some rgb-only data as rgba, then we have to
+	 * go back and fix up the alpha channel where we filled in this
+	 * texture data.
+	 */
+	if (!has_alpha) {
+	    cairo_rectangle_int_t rect;
+	    cairo_color_t color;
+
+	    rect.x = dst_x;
+	    rect.y = dst_y;
+	    rect.width = width;
+	    rect.height = height;
+
+	    color.red = 0.0;
+	    color.green = 0.0;
+	    color.blue = 0.0;
+	    color.alpha = 1.0;
+
+	    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_TRUE);
+	    _cairo_gl_surface_fill_rectangles (dst,
+					       CAIRO_OPERATOR_SOURCE,
+					       &color,
+					       &rect, 1);
+	    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	}
+    } else {
+	GLuint tex;
+	float vertices[8], texcoords[8];
+	cairo_gl_context_t *ctx;
+
+	status = _cairo_gl_context_acquire (dst->base.device, &ctx);
+	if (unlikely (status))
+	    goto fail;
+
+	if (ctx->using_glsl) {
+	    cairo_gl_shader_program_t *program;
+
+	    status = _cairo_gl_get_program (ctx,
+					    CAIRO_GL_SHADER_SOURCE_TEXTURE,
+					    CAIRO_GL_SHADER_MASK_NONE,
+					    CAIRO_GL_SHADER_IN_NORMAL,
+					    &program);
+	    if (_cairo_status_is_error (status)) {
+		_cairo_gl_context_release (ctx);
+		goto fail;
+	    }
+
+	    _cairo_gl_use_program (program);
+	} else {
+	    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	}
+
+	_cairo_gl_set_destination (dst);
+
+	glGenTextures (1, &tex);
+	glActiveTexture (GL_TEXTURE0);
+	glBindTexture (ctx->tex_target, tex);
+	glTexImage2D (ctx->tex_target, 0, internal_format, width, height, 0,
+		      format, type, src->data + src_y * src->stride + src_x * cpp);
+
+	glEnable (ctx->tex_target);
+	glDisable (GL_BLEND);
+
+	vertices[0] = dst_x;
+	vertices[1] = dst_y;
+	vertices[2] = dst_x + width;
+	vertices[3] = dst_y;
+	vertices[4] = dst_x + width;
+	vertices[5] = dst_y + height;
+	vertices[6] = dst_x;
+	vertices[7] = dst_y + height;
+
+	if (ctx->tex_target != GL_TEXTURE_RECTANGLE_EXT) {
+	    texcoords[0] = 0;
+	    texcoords[1] = 0;
+	    texcoords[2] = 1;
+	    texcoords[3] = 0;
+	    texcoords[4] = 1;
+	    texcoords[5] = 1;
+	    texcoords[6] = 0;
+	    texcoords[7] = 1;
+	} else {
+	    texcoords[0] = 0;
+	    texcoords[1] = 0;
+	    texcoords[2] = width;
+	    texcoords[3] = 0;
+	    texcoords[4] = width;
+	    texcoords[5] = height;
+	    texcoords[6] = 0;
+	    texcoords[7] = height;
+	}
+
+	glVertexPointer (2, GL_FLOAT, sizeof (float) * 2, vertices);
+	glEnableClientState (GL_VERTEX_ARRAY);
+
+	glClientActiveTexture (GL_TEXTURE0);
+	glTexCoordPointer (2, GL_FLOAT, sizeof (float) * 2, texcoords);
+	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
+
+	glDrawArrays (GL_QUADS, 0, 4);
+
+	glDisableClientState (GL_COLOR_ARRAY);
+	glDisableClientState (GL_VERTEX_ARRAY);
+	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
+
+	if (ctx->using_glsl)
+	    _cairo_gl_use_program (NULL);
+	glDeleteTextures (1, &tex);
+	glDisable (ctx->tex_target);
+
+	_cairo_gl_context_release (ctx);
+    }
+
+fail:
     glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
 
     cairo_surface_destroy (&clone->base);
-
-    /* If we just treated some rgb-only data as rgba, then we have to
-     * go back and fix up the alpha channel where we filled in this
-     * texture data.
-     */
-    if (!has_alpha) {
-	cairo_rectangle_int_t rect;
-	cairo_color_t color;
-
-	rect.x = dst_x;
-	rect.y = dst_y;
-	rect.width = width;
-	rect.height = height;
-
-	color.red = 0.0;
-	color.green = 0.0;
-	color.blue = 0.0;
-	color.alpha = 1.0;
-
-	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_TRUE);
-	_cairo_gl_surface_fill_rectangles (dst,
-					   CAIRO_OPERATOR_SOURCE,
-					   &color,
-					   &rect, 1);
-	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    }
 
     return CAIRO_STATUS_SUCCESS;
 }
