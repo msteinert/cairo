@@ -43,6 +43,20 @@
 
 #define DEBUG_SCAN 0
 
+#if WORDS_BIGENDIAN
+#define le16(x) bswap_16 (x)
+#define le32(x) bswap_32 (x)
+#define be16(x) x
+#define be32(x) x
+#define to_be32(x) x
+#else
+#define le16(x) x
+#define le32(x) x
+#define be16(x) bswap_16 (x)
+#define be32(x) bswap_32 (x)
+#define to_be32(x) bswap_32 (x)
+#endif
+
 /*
  * whitespace:
  * 0 - nul
@@ -639,7 +653,7 @@ base85_end (csi_t *ctx, csi_scanner_t *scan, cairo_bool_t deflate)
     }
 
     if (deflate) {
-	uLongf len = *(uint32_t *) scan->buffer.base;
+        uLongf len = be32 (*(uint32_t *) scan->buffer.base);
 	Bytef *source = (Bytef *) (scan->buffer.base + sizeof (uint32_t));
 
 	status = csi_string_deflate_new (ctx, &obj,
@@ -765,20 +779,6 @@ scan_read (csi_scanner_t *scan, csi_file_t *src, void *ptr, int len)
 	len -= ret;
     } while (_csi_unlikely (len));
 }
-
-#if WORDS_BIGENDIAN
-#define le16(x) bswap_16 (x)
-#define le32(x) bswap_32 (x)
-#define be16(x) x
-#define be32(x) x
-#define to_be32(x) x
-#else
-#define le16(x) x
-#define le32(x) x
-#define be16(x) bswap_16 (x)
-#define be32(x) bswap_32 (x)
-#define to_be32(x) bswap_32 (x)
-#endif
 
 static void
 string_read (csi_t *ctx,
