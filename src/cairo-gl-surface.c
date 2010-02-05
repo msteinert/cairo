@@ -139,6 +139,7 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
 
     /* PBO for any sort of texture upload */
     glGenBuffersARB (1, &ctx->texture_load_pbo);
+    glGenBuffersARB (1, &ctx->vbo);
 
     ctx->max_framebuffer_size = 0;
     glGetIntegerv (GL_MAX_RENDERBUFFER_SIZE, &ctx->max_framebuffer_size);
@@ -2481,7 +2482,6 @@ typedef struct _cairo_gl_surface_span_renderer {
     cairo_gl_context_t *ctx;
     cairo_region_t *clip;
 
-    GLuint vbo;
     void *vbo_base;
     unsigned int vbo_size;
     unsigned int vbo_offset;
@@ -2525,10 +2525,9 @@ _cairo_gl_span_renderer_get_vbo (cairo_gl_surface_span_renderer_t *renderer,
 {
     unsigned int offset;
 
-    if (renderer->vbo == 0) {
+    if (renderer->vbo_size == 0) {
 	renderer->vbo_size = 16384;
-	glGenBuffersARB (1, &renderer->vbo);
-	glBindBufferARB (GL_ARRAY_BUFFER_ARB, renderer->vbo);
+	glBindBufferARB (GL_ARRAY_BUFFER_ARB, renderer->ctx->vbo);
 
 	if (renderer->setup.src.type == OPERAND_TEXTURE)
 	    renderer->vertex_size = 4 * sizeof (float) + sizeof (uint32_t);
@@ -2701,7 +2700,6 @@ _cairo_gl_surface_span_renderer_finish (void *abstract_renderer)
     _cairo_gl_span_renderer_flush (renderer);
 
     glBindBufferARB (GL_ARRAY_BUFFER_ARB, 0);
-    glDeleteBuffersARB (1, &renderer->vbo);
     glDisableClientState (GL_VERTEX_ARRAY);
     glDisableClientState (GL_COLOR_ARRAY);
 

@@ -457,7 +457,6 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     cairo_gl_composite_setup_t composite_setup;
     cairo_status_t status;
     int i = 0;
-    GLuint vbo = 0;
 
     *has_component_alpha = FALSE;
 
@@ -505,8 +504,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     setup.op = op;
     setup.in = CAIRO_GL_SHADER_IN_COUNT; /* unset */
 
-    glGenBuffersARB (1, &vbo);
-    glBindBufferARB (GL_ARRAY_BUFFER_ARB, vbo);
+    glBindBufferARB (GL_ARRAY_BUFFER_ARB, ctx->vbo);
 
     glVertexPointer (2, GL_FLOAT, setup.vertex_size * sizeof (GLfloat),
 		     (void *)(uintptr_t)(0));
@@ -622,11 +620,7 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     glDisable (GL_TEXTURE_2D);
     _cairo_gl_use_program (NULL);
 
-    if (vbo != 0) {
-	glBindBufferARB (GL_ARRAY_BUFFER_ARB, 0);
-	glDeleteBuffersARB (1, &vbo);
-    }
-
+    glBindBufferARB (GL_ARRAY_BUFFER_ARB, 0);
     _cairo_gl_context_release (ctx);
 
     _cairo_gl_operand_destroy (&composite_setup.src);
