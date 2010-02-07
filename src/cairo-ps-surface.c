@@ -955,6 +955,11 @@ _cairo_ps_surface_create_for_stream_internal (cairo_output_stream_t *stream,
     surface->use_string_datasource = FALSE;
     surface->current_pattern_is_solid_color = FALSE;
 
+    surface->page_bbox.x = 0;
+    surface->page_bbox.y = 0;
+    surface->page_bbox.width  = width;
+    surface->page_bbox.height = height;
+
     _cairo_surface_clipper_init (&surface->clipper,
 				 _cairo_ps_surface_clipper_intersect_clip_path);
 
