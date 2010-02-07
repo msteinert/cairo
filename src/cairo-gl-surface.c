@@ -973,31 +973,58 @@ _cairo_gl_get_traps_pattern (cairo_gl_surface_t *dst,
     return CAIRO_STATUS_SUCCESS;
 }
 
-
-static inline void
-lerp_and_set_color (GLubyte *color,
-                    double t0, double t1, double t,
-                    double r0, double g0, double b0, double a0,
-                    double r1, double g1, double b1, double a1)
+static int
+_cairo_gl_gradient_sample_width (const cairo_gradient_pattern_t *gradient)
 {
-    double alpha = (t - t0) / (t1 - t0);
-    double a = ((1.0 - alpha) * a0 + alpha * a1);
-    color[0] = ((1.0 - alpha) * b0 + alpha * b1) * a * 255.0;
-    color[1] = ((1.0 - alpha) * g0 + alpha * g1) * a * 255.0;
-    color[2] = ((1.0 - alpha) * r0 + alpha * r1) * a * 255.0;
-    color[3] = a * 255.0;
+    unsigned int n;
+    int width;
+
+    width = 8;
+    for (n = 1; n < gradient->n_stops; n++) {
+	double dx = gradient->stops[n].offset - gradient->stops[n-1].offset;
+	double delta, max;
+	int ramp;
+
+	if (dx == 0)
+	    continue;
+
+	max = gradient->stops[n].color.red -
+	      gradient->stops[n-1].color.red;
+
+	delta = gradient->stops[n].color.green -
+	        gradient->stops[n-1].color.green;
+	if (delta > max)
+	    max = delta;
+
+	delta = gradient->stops[n].color.blue -
+	        gradient->stops[n-1].color.blue;
+	if (delta > max)
+	    max = delta;
+
+	delta = gradient->stops[n].color.alpha -
+	        gradient->stops[n-1].color.alpha;
+	if (delta > max)
+	    max = delta;
+
+	ramp = 128 * max / dx;
+	if (ramp > width)
+	    width = ramp;
+    }
+
+    width = (width + 7) & -8;
+    return MIN (width, 1024);
 }
 
 static cairo_status_t
 _render_gradient (const cairo_gl_context_t *ctx,
 		  cairo_gradient_pattern_t *pattern,
-		  void *bytes)
+		  void *bytes,
+		  int width)
 {
     pixman_image_t *gradient, *image;
     pixman_gradient_stop_t pixman_stops_stack[32];
     pixman_gradient_stop_t *pixman_stops;
     pixman_point_fixed_t p1, p2;
-    int width;
     unsigned int i;
 
     pixman_stops = pixman_stops_stack;
@@ -1015,8 +1042,6 @@ _render_gradient (const cairo_gl_context_t *ctx,
 	pixman_stops[i].color.blue  = pattern->stops[i].color.blue_short;
 	pixman_stops[i].color.alpha = pattern->stops[i].color.alpha_short;
     }
-
-    width = ctx->max_texture_size;
 
     p1.x = 0;
     p1.y = 0;
@@ -1059,16 +1084,18 @@ _cairo_gl_create_gradient_texture (const cairo_gl_context_t *ctx,
 				   float *first_offset,
 				   float *last_offset)
 {
-    const int tex_width = ctx->max_texture_size;
+    int tex_width;
     GLubyte *data;
 
     assert (pattern->n_stops != 0);
+
+    tex_width = _cairo_gl_gradient_sample_width (pattern);
 
     glBindBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, ctx->texture_load_pbo);
     glBufferDataARB (GL_PIXEL_UNPACK_BUFFER_ARB, tex_width * sizeof (uint32_t), 0, GL_STREAM_DRAW);
     data = glMapBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY);
 
-    _render_gradient (ctx, pattern, data);
+    _render_gradient (ctx, pattern, data, tex_width);
     *first_offset = 0.;
     *last_offset  = 1.;
 
