@@ -988,6 +988,69 @@ lerp_and_set_color (GLubyte *color,
     color[3] = a * 255.0;
 }
 
+static cairo_status_t
+_render_gradient (const cairo_gl_context_t *ctx,
+		  cairo_gradient_pattern_t *pattern,
+		  void *bytes)
+{
+    pixman_image_t *gradient, *image;
+    pixman_gradient_stop_t pixman_stops_stack[32];
+    pixman_gradient_stop_t *pixman_stops;
+    pixman_point_fixed_t p1, p2;
+    int width;
+    unsigned int i;
+
+    pixman_stops = pixman_stops_stack;
+    if (unlikely (pattern->n_stops > ARRAY_LENGTH (pixman_stops_stack))) {
+	pixman_stops = _cairo_malloc_ab (pattern->n_stops,
+					 sizeof (pixman_gradient_stop_t));
+	if (unlikely (pixman_stops == NULL))
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+
+    for (i = 0; i < pattern->n_stops; i++) {
+	pixman_stops[i].x = _cairo_fixed_16_16_from_double (pattern->stops[i].offset);
+	pixman_stops[i].color.red   = pattern->stops[i].color.red_short;
+	pixman_stops[i].color.green = pattern->stops[i].color.green_short;
+	pixman_stops[i].color.blue  = pattern->stops[i].color.blue_short;
+	pixman_stops[i].color.alpha = pattern->stops[i].color.alpha_short;
+    }
+
+    width = ctx->max_texture_size;
+
+    p1.x = 0;
+    p1.y = 0;
+    p2.x = width << 16;
+    p2.y = 0;
+
+    gradient = pixman_image_create_linear_gradient (&p1, &p2,
+						    pixman_stops,
+						    pattern->n_stops);
+    if (pixman_stops != pixman_stops_stack)
+	free (pixman_stops);
+
+    if (unlikely (gradient == NULL))
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+
+    image = pixman_image_create_bits (PIXMAN_a8r8g8b8, width, 1,
+				      bytes, sizeof(uint32_t)*width);
+    if (unlikely (image == NULL)) {
+	pixman_image_unref (gradient);
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+    }
+
+    pixman_image_composite (PIXMAN_OP_SRC,
+			    gradient, NULL, image,
+			    0, 0,
+			    0, 0,
+			    0, 0,
+			    width, 1);
+
+    pixman_image_unref (gradient);
+    pixman_image_unref (image);
+    return CAIRO_STATUS_SUCCESS;
+}
+
 static void
 _cairo_gl_create_gradient_texture (const cairo_gl_context_t *ctx,
 				   cairo_gl_surface_t *surface,
@@ -997,79 +1060,31 @@ _cairo_gl_create_gradient_texture (const cairo_gl_context_t *ctx,
 				   float *last_offset)
 {
     const int tex_width = ctx->max_texture_size;
-    int n_stops = pattern->n_stops;
-    cairo_gradient_stop_t *stops = pattern->stops;
-    GLubyte *data = 0;
-    GLubyte data_stack[4] = { 0, 0, 0, 0 };
-    cairo_extend_t extend = pattern->base.extend;
+    GLubyte *data;
 
-    if (stops == 0) {
-        data = data_stack;
-        *first_offset = 0.0;
-        *last_offset = 1.0;
-    } else {
-        int i, j = 0, stop_index;
-        double offset, r, g, b, a;
-        double prev_r = 0.0, prev_g = 0.0, prev_b = 0.0, prev_a = 0.0;
-        double delta_offsets;
-        GLuint size = tex_width * sizeof (GLubyte) * 4;
+    assert (pattern->n_stops != 0);
 
-        glBindBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, ctx->texture_load_pbo);
-	glBufferDataARB (GL_PIXEL_UNPACK_BUFFER_ARB, size, 0, GL_STREAM_DRAW);
-        data = glMapBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY);
+    glBindBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, ctx->texture_load_pbo);
+    glBufferDataARB (GL_PIXEL_UNPACK_BUFFER_ARB, tex_width * sizeof (uint32_t), 0, GL_STREAM_DRAW);
+    data = glMapBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY);
 
-        *first_offset = stops[0].offset;
-        *last_offset = stops[n_stops - 1].offset;
-        delta_offsets = *last_offset - *first_offset;
+    _render_gradient (ctx, pattern, data);
+    *first_offset = 0.;
+    *last_offset  = 1.;
 
-        for (i = 0; i < n_stops; ++i) {
-            GLubyte *color = 0;
-
-            cairo_pattern_get_color_stop_rgba (&pattern->base, i,
-                                               &offset, &r,  &g, &b, &a);
-            stop_index = (stops[i].offset - *first_offset) / delta_offsets * tex_width;
-            if (stop_index == tex_width)
-                stop_index = tex_width - 1;
-            while (j < stop_index) {
-                color = data + j * 4;
-                lerp_and_set_color (color,
-                                    (stops[i - 1].offset - *first_offset) / delta_offsets,
-                                    (stops[i].offset - *first_offset) / delta_offsets,
-                                    (float)j / tex_width,
-                                    prev_r, prev_g, prev_b, prev_a,
-                                    r, g, b, a);
-                ++j;
-            }
-
-            /* This is the exact texel for this stop; just set it. */
-            color = data + j * 4;
-            color[0] = b * a * 255.0;
-            color[1] = g * a * 255.0;
-            color[2] = r * a * 255.0;
-            color[3] = a * 255.0;
-            ++j;
-
-            prev_r = r;
-            prev_g = g;
-            prev_b = b;
-            prev_a = a;
-        }
-
-        glUnmapBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB);
-    }
+    glUnmapBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB);
 
     glGenTextures (1, tex);
     glBindTexture (GL_TEXTURE_1D, *tex);
     glTexImage1D (GL_TEXTURE_1D, 0, GL_RGBA8, tex_width, 0,
-                  GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, stops == 0 ? data : 0);
+                  GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, 0);
+
+    glBindBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, 0);
 
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    if (stops != 0)
-        glBindBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, 0);
-
-    switch (extend) {
+    switch (pattern->base.extend) {
     case CAIRO_EXTEND_NONE:
 	glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	break;
