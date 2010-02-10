@@ -538,11 +538,11 @@ intel_bo_set_tiling (const intel_device_t *device,
     if (bo->virtual)
 	intel_bo_unmap (bo);
 
-    set_tiling.handle = bo->base.handle;
-    set_tiling.tiling_mode = tiling;
-    set_tiling.stride = stride;
-
     do {
+	set_tiling.handle = bo->base.handle;
+	set_tiling.tiling_mode = tiling;
+	set_tiling.stride = stride;
+
 	ret = ioctl (device->base.fd, DRM_IOCTL_I915_GEM_SET_TILING, &set_tiling);
     } while (ret == -1 && errno == EINTR);
     if (ret == 0) {
