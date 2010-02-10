@@ -1670,12 +1670,13 @@ _ft_done_face (void *closure)
     cairo_script_interpreter_destroy (ctx);
 }
 
-#ifdef HAVE_MMAP
-/* manual form of swapping for swapless systems like tiny */
 struct mmap_vec {
     const uint8_t *bytes;
     size_t num_bytes;
 };
+
+#ifdef HAVE_MMAP
+/* manual form of swapping for swapless systems like tiny */
 static void *
 _mmap_bytes (const struct mmap_vec *vec, int count)
 {
