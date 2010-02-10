@@ -351,8 +351,6 @@ i965_exec (i965_device_t *device, uint32_t offset)
 	ret = ioctl (device->intel.base.fd, DRM_IOCTL_I915_GEM_EXECBUFFER2, &execbuf);
     } while (ret != 0 && errno == EINTR);
     if (unlikely (ret)) {
-	int n;
-
 	if (errno == ENOMEM)
 	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	else
@@ -364,9 +362,9 @@ i965_exec (i965_device_t *device, uint32_t offset)
 
 	fprintf (stderr, "   %d buffers:\n",
 		 device->exec.count);
-	for (n = 0; n < i; n++) {
+	for (i = 0; i < device->exec.count; i++) {
 	    fprintf (stderr, "     exec[%d] = %d\n",
-		     n, device->exec.bo[n]->base.size);
+		     i, device->exec.bo[i]->base.size);
 	}
 
 	intel_dump_batchbuffer ((uint32_t *) device->batch.data,
