@@ -506,8 +506,9 @@ _cairo_xcb_surface_core_copy_boxes (cairo_xcb_surface_t		*dst,
 	_cairo_xcb_connection_change_gc (dst->connection, gc, mask, values);
 
 	for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
-	    xcb_rects = (xcb_rectangle_t *) chunk->base;
 	    int i;
+
+	    xcb_rects = (xcb_rectangle_t *) chunk->base;
 
 	    for (i = 0; i < chunk->count; i++) {
 		int x1 = _cairo_fixed_integer_round (chunk->base[i].p1.x);

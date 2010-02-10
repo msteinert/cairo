@@ -9,7 +9,7 @@ dnl MAYBE_WARN in an ignorable way (like adding whitespace)
 # cast image data from uint8_t to uin32_t.
 
 MAYBE_WARN="-Wall -Wextra \
--Wold-style-definition \
+-Wold-style-definition -Wdeclaration-after-statement \
 -Wmissing-declarations -Werror-implicit-function-declaration \
 -Wnested-externs -Wpointer-arith -Wwrite-strings \
 -Wsign-compare -Wstrict-prototypes -Wmissing-prototypes \

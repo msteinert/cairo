@@ -292,14 +292,14 @@ static cairo_status_t
 bind_matrix_to_shader_arb (GLuint program, const char *name, cairo_matrix_t* m)
 {
     GLint location = glGetUniformLocationARB (program, name);
-    if (location == -1)
-        return CAIRO_INT_STATUS_UNSUPPORTED;
     float gl_m[16] = {
         m->xx, m->xy, 0,     m->x0,
         m->yx, m->yy, 0,     m->y0,
         0,     0,     1,     0,
         0,     0,     0,     1
     };
+    if (location == -1)
+        return CAIRO_INT_STATUS_UNSUPPORTED;
     glUniformMatrix4fvARB (location, 1, GL_TRUE, gl_m);
     return CAIRO_STATUS_SUCCESS;
 }
@@ -466,14 +466,14 @@ static cairo_status_t
 bind_matrix_to_shader_core_2_0 (GLuint program, const char *name, cairo_matrix_t* m)
 {
     GLint location = glGetUniformLocation (program, name);
-    if (location == -1)
-        return CAIRO_INT_STATUS_UNSUPPORTED;
     float gl_m[16] = {
         m->xx, m->xy, 0,     m->x0,
         m->yx, m->yy, 0,     m->y0,
         0,     0,     1,     0,
         0,     0,     0,     1
     };
+    if (location == -1)
+        return CAIRO_INT_STATUS_UNSUPPORTED;
     glUniformMatrix4fv (location, 1, GL_TRUE, gl_m);
     return CAIRO_STATUS_SUCCESS;
 }

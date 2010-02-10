@@ -1311,8 +1311,9 @@ _cairo_gl_operand_init (cairo_gl_composite_operand_t *operand,
 		       int dst_x, int dst_y,
 		       int width, int height)
 {
-    operand->pattern = pattern;
     cairo_status_t status;
+
+    operand->pattern = pattern;
 
     switch (pattern->type) {
     case CAIRO_PATTERN_TYPE_SOLID:
