@@ -391,7 +391,6 @@ AC_DEFUN([CAIRO_REPORT],
 	echo "  GLEW functions:  $use_glew"
 	echo "  GLX functions:   $use_glx"
 	echo "  EGL functions:   $use_egl"
-	echo "  Eagle functions: $use_eagle"
 	echo "  X11-xcb functions: $use_xlib_xcb"
 	echo "  XCB-drm functions: $use_xcb_drm"
 	echo "  XCB-shm functions: $use_xcb_shm"

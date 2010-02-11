@@ -72,18 +72,6 @@ cairo_gl_surface_create_for_window (cairo_device_t *device,
 				    int width, int height);
 #endif
 
-#if CAIRO_HAS_EAGLE_FUNCTIONS
-#include <eagle.h>
-
-cairo_public cairo_device_t *
-cairo_eagle_device_create (EGLDisplay display, EGLContext context);
-
-cairo_public cairo_surface_t *
-cairo_gl_surface_create_for_eagle (cairo_device_t *device,
-				   EGLSurface surface,
-				   int width, int height);
-#endif
-
 CAIRO_END_DECLS
 
 #else  /* CAIRO_HAS_GL_SURFACE */

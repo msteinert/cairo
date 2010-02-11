@@ -332,7 +332,6 @@ CAIRO_ENABLE_SURFACE_BACKEND(gl, OpenGL, no, [
     CAIRO_CFLAGS="$CAIRO_CFLAGS -I\$(top_srcdir)/src/glew"
   fi
   need_glx_functions=yes
-  need_eagle_functions=yes
 ])
 
 dnl ===========================================================================
@@ -353,17 +352,6 @@ CAIRO_ENABLE_SURFACE_BACKEND(vg, OpenVG, no, [
       vg_NONPKGCONFIG_LIBS="-lOpenVG"
       need_egl_functions=yes
       need_glx_functions=yes
-  fi
-])
-
-CAIRO_ENABLE_FUNCTIONS(eagle, eagle, auto, [
-  if test "x$need_eagle_functions" = "xyes"; then
-      eagle_REQUIRES="eagle"
-      PKG_CHECK_MODULES(eagle, $eagle_REQUIRES, ,
-                       [AC_MSG_RESULT(no)
-                       use_eagle="no (requires eagle)"])
-  else
-      use_eagle="no (not required by any backend)"
   fi
 ])
 
