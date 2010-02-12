@@ -2025,9 +2025,6 @@ _clip_and_composite (cairo_image_surface_t	*dst,
     cairo_bool_t need_clip_surface = FALSE;
 
     if (clip != NULL) {
-	cairo_rectangle_int_t rect;
-	cairo_bool_t is_empty;
-
 	status = _cairo_clip_get_region (clip, &clip_region);
 	if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
 	    return CAIRO_STATUS_SUCCESS;
@@ -2035,17 +2032,22 @@ _clip_and_composite (cairo_image_surface_t	*dst,
 	assert (! _cairo_status_is_error (status));
 	need_clip_surface = status == CAIRO_INT_STATUS_UNSUPPORTED;
 
-	cairo_region_get_extents (clip_region, &rect);
-	is_empty = ! _cairo_rectangle_intersect (&extents->unbounded, &rect);
-	if (unlikely (is_empty))
-	    return CAIRO_STATUS_SUCCESS;
+	if (clip_region != NULL) {
+	    cairo_rectangle_int_t rect;
+	    cairo_bool_t is_empty;
 
-	is_empty = ! _cairo_rectangle_intersect (&extents->bounded, &rect);
-	if (unlikely (is_empty && extents->is_bounded))
-	    return CAIRO_STATUS_SUCCESS;
+	    cairo_region_get_extents (clip_region, &rect);
+	    is_empty = ! _cairo_rectangle_intersect (&extents->unbounded, &rect);
+	    if (unlikely (is_empty))
+		return CAIRO_STATUS_SUCCESS;
 
-	if (clip_region != NULL && cairo_region_num_rectangles (clip_region) == 1)
-	    clip_region = NULL;
+	    is_empty = ! _cairo_rectangle_intersect (&extents->bounded, &rect);
+	    if (unlikely (is_empty && extents->is_bounded))
+		return CAIRO_STATUS_SUCCESS;
+
+	    if (cairo_region_num_rectangles (clip_region) == 1)
+		clip_region = NULL;
+	}
     }
 
     if (clip_region != NULL) {
