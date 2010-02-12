@@ -644,7 +644,7 @@ _composite_boxes_spans (void			*closure,
 
     status = converter.base.generate (&converter.base, renderer);
 
-  CLEANUP:
+CLEANUP:
     converter.base.destroy (&converter.base);
     return status;
 }
@@ -657,8 +657,6 @@ i915_fixup_unbounded (i915_surface_t *dst,
     i915_shader_t shader;
     cairo_status_t status;
 
-    i915_shader_init (&shader, dst, CAIRO_OPERATOR_CLEAR);
-
     if (clip != NULL) {
 	cairo_region_t *clip_region = NULL;
 
@@ -666,8 +664,8 @@ i915_fixup_unbounded (i915_surface_t *dst,
 	assert (status == CAIRO_STATUS_SUCCESS || CAIRO_INT_STATUS_UNSUPPORTED);
 	assert (clip_region == NULL);
 
-	if (status == CAIRO_INT_STATUS_UNSUPPORTED)
-	    i915_shader_set_clip (&shader, clip);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    clip = NULL;
     } else {
 	if (extents->bounded.width == extents->unbounded.width &&
 	    extents->bounded.height == extents->unbounded.height)
@@ -676,8 +674,24 @@ i915_fixup_unbounded (i915_surface_t *dst,
 	}
     }
 
-    status = i915_shader_commit (&shader,
-				 (i915_device_t *) dst->intel.drm.base.device);
+    if (clip != NULL) {
+	i915_shader_init (&shader, dst, CAIRO_OPERATOR_DEST_OVER);
+	i915_shader_set_clip (&shader, clip);
+	status = i915_shader_acquire_pattern (&shader,
+					      &shader.source,
+					      &_cairo_pattern_white.base,
+					      &extents->unbounded);
+	assert (status == CAIRO_STATUS_SUCCESS);
+    } else {
+	i915_shader_init (&shader, dst, CAIRO_OPERATOR_CLEAR);
+	status = i915_shader_acquire_pattern (&shader,
+					      &shader.source,
+					      &_cairo_pattern_clear.base,
+					      &extents->unbounded);
+	assert (status == CAIRO_STATUS_SUCCESS);
+    }
+
+    status = i915_shader_commit (&shader, i915_device (dst));
     if (unlikely (status))
 	return status;
 
@@ -732,13 +746,11 @@ i915_fixup_unbounded_boxes (i915_surface_t *dst,
     cairo_region_t *clip_region = NULL;
     cairo_status_t status;
     struct _cairo_boxes_chunk *chunk;
-    i915_shader_t shader;
     int i;
 
     if (boxes->num_boxes <= 1)
 	return i915_fixup_unbounded (dst, extents, clip);
 
-    i915_shader_init (&shader, dst, CAIRO_OPERATOR_CLEAR);
     _cairo_boxes_init (&clear);
 
     box.p1.x = _cairo_fixed_from_int (extents->unbounded.x + extents->unbounded.width);
@@ -749,8 +761,8 @@ i915_fixup_unbounded_boxes (i915_surface_t *dst,
     if (clip != NULL) {
 	status = _cairo_clip_get_region (clip, &clip_region);
 	assert (status == CAIRO_STATUS_SUCCESS || CAIRO_INT_STATUS_UNSUPPORTED);
-	if (status == CAIRO_INT_STATUS_UNSUPPORTED)
-	    i915_shader_set_clip (&shader, clip);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    clip = NULL;
     }
 
     if (clip_region == NULL) {
@@ -794,6 +806,24 @@ i915_fixup_unbounded_boxes (i915_surface_t *dst,
     }
 
     if (likely (status == CAIRO_STATUS_SUCCESS && clear.num_boxes)) {
+	i915_shader_t shader;
+
+	if (clip != NULL) {
+	    i915_shader_init (&shader, dst, CAIRO_OPERATOR_DEST_OVER);
+	    i915_shader_set_clip (&shader, clip);
+	    status = i915_shader_acquire_pattern (&shader,
+						  &shader.source,
+						  &_cairo_pattern_white.base,
+						  &extents->unbounded);
+	    assert (status == CAIRO_STATUS_SUCCESS);
+	} else {
+	    i915_shader_init (&shader, dst, CAIRO_OPERATOR_CLEAR);
+	    status = i915_shader_acquire_pattern (&shader,
+						  &shader.source,
+						  &_cairo_pattern_clear.base,
+						  &extents->unbounded);
+	    assert (status == CAIRO_STATUS_SUCCESS);
+	}
 	status = i915_shader_commit (&shader,
 				     (i915_device_t *) dst->intel.drm.base.device);
 	if (likely (status == CAIRO_STATUS_SUCCESS)) {
