@@ -34,6 +34,9 @@
 
 #include <cairo-gl.h>
 
+#include <X11/X.h>
+#include <X11/Xutil.h> /* for XDestroyImage */
+
 typedef struct _gl_target_closure {
     Display *dpy;
     int screen;
