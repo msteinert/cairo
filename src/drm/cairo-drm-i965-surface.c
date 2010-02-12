@@ -1071,47 +1071,6 @@ _clip_and_composite_boxes (i965_surface_t *dst,
 					  extents, clip);
 }
 
-static cairo_bool_t
-box_is_aligned (const cairo_box_t *box)
-{
-    return
-	_cairo_fixed_is_integer (box->p1.x) &&
-	_cairo_fixed_is_integer (box->p1.y) &&
-	_cairo_fixed_is_integer (box->p2.x) &&
-	_cairo_fixed_is_integer (box->p2.y);
-}
-
-static inline cairo_status_t
-_clip_to_boxes (cairo_clip_t **clip,
-		const cairo_composite_rectangles_t *extents,
-		cairo_box_t **boxes,
-		int *num_boxes)
-{
-    cairo_status_t status;
-    const cairo_rectangle_int_t *rect;
-
-    rect = extents->is_bounded ? &extents->bounded: &extents->unbounded;
-
-    if (*clip == NULL)
-	goto EXTENTS;
-
-    status = _cairo_clip_rectangle (*clip, rect);
-    if (unlikely (status))
-	return status;
-
-    status = _cairo_clip_get_boxes (*clip, boxes, num_boxes);
-    if (status != CAIRO_INT_STATUS_UNSUPPORTED) {
-	if (extents->is_bounded || (*num_boxes == 1 && box_is_aligned (*boxes)))
-	    *clip = NULL;
-	return status;
-    }
-
-  EXTENTS:
-    _cairo_box_from_rectangle (&(*boxes)[0], rect);
-    *num_boxes = 1;
-    return CAIRO_STATUS_SUCCESS;
-}
-
 static cairo_int_status_t
 i965_surface_paint (void			*abstract_dst,
 		    cairo_operator_t		 op,
@@ -1145,7 +1104,7 @@ i965_surface_paint (void			*abstract_dst,
 	have_clip = TRUE;
     }
 
-    status = _clip_to_boxes (&clip, &extents, &clip_boxes, &num_boxes);
+    status = _cairo_clip_to_boxes (&clip, &extents, &clip_boxes, &num_boxes);
     if (unlikely (status)) {
 	if (have_clip)
 	    _cairo_clip_fini (&local_clip);
@@ -1333,7 +1292,7 @@ i965_surface_stroke (void			*abstract_dst,
 	have_clip = TRUE;
     }
 
-    status = _clip_to_boxes (&clip, &extents, &clip_boxes, &num_boxes);
+    status = _cairo_clip_to_boxes (&clip, &extents, &clip_boxes, &num_boxes);
     if (unlikely (status)) {
 	if (have_clip)
 	    _cairo_clip_fini (&local_clip);
@@ -1440,7 +1399,7 @@ i965_surface_fill (void			*abstract_dst,
 	have_clip = TRUE;
     }
 
-    status = _clip_to_boxes (&clip, &extents, &clip_boxes, &num_boxes);
+    status = _cairo_clip_to_boxes (&clip, &extents, &clip_boxes, &num_boxes);
     if (unlikely (status)) {
 	if (have_clip)
 	    _cairo_clip_fini (&local_clip);

@@ -128,6 +128,12 @@ _cairo_clip_get_boxes (cairo_clip_t *clip,
 		       cairo_box_t **boxes,
 		       int *count);
 
+cairo_private cairo_status_t
+_cairo_clip_to_boxes (cairo_clip_t **clip,
+		      cairo_composite_rectangles_t *extents,
+		      cairo_box_t **boxes,
+		      int *num_boxes);
+
 cairo_private cairo_bool_t
 _cairo_clip_contains_rectangle (cairo_clip_t *clip,
 				const cairo_composite_rectangles_t *extents);
