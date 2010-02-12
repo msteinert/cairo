@@ -33,6 +33,7 @@ test_sources = \
 	clip-stroke-unbounded.c				\
 	clip-text.c					\
 	clip-twice.c					\
+	clip-twice-rectangle.c				\
 	clip-unbounded.c				\
 	clip-zero.c					\
 	clipped-group.c					\
