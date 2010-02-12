@@ -707,7 +707,7 @@ i915_set_shader_program (i915_device_t *device,
 	break;
 
     case FS_LINEAR:
-	i915_shader_linear_color (device, shader->source.base.mode,
+	i915_shader_linear_color (device, shader->mask.base.mode,
 				  FS_T0 + texture_offset, /* input */
 				  FS_C0 + constant_offset,
 				  FS_C0 + constant_offset + 1, /* colour ramp */
@@ -722,7 +722,7 @@ i915_set_shader_program (i915_device_t *device,
 	break;
 
     case FS_RADIAL:
-	i915_shader_radial_coord (device, shader->source.base.mode,
+	i915_shader_radial_coord (device, shader->mask.base.mode,
 				  FS_T0 + texture_offset, /* input */
 				  FS_C0 + constant_offset,
 				  FS_C0 + constant_offset + 1, /* gradient constants */
