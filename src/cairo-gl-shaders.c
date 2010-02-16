@@ -717,12 +717,26 @@ static const char *fs_source_texture =
     "{\n"
     "	return texture2D(source_sampler, source_texcoords);\n"
     "}\n";
+static const char *fs_source_texture_rect =
+    "uniform sampler2DRect source_sampler;\n"
+    "varying vec2 source_texcoords;\n"
+    "vec4 get_source()\n"
+    "{\n"
+    "	return texture2DRect(source_sampler, source_texcoords);\n"
+    "}\n";
 static const char *fs_source_texture_alpha =
     "uniform sampler2D source_sampler;\n"
     "varying vec2 source_texcoords;\n"
     "vec4 get_source()\n"
     "{\n"
     "	return vec4(0, 0, 0, texture2D(source_sampler, source_texcoords).a);\n"
+    "}\n";
+static const char *fs_source_texture_alpha_rect =
+    "uniform sampler2DRect source_sampler;\n"
+    "varying vec2 source_texcoords;\n"
+    "vec4 get_source()\n"
+    "{\n"
+    "	return vec4(0, 0, 0, texture2DRect(source_sampler, source_texcoords).a);\n"
     "}\n";
 static const char *fs_source_linear_gradient =
     "uniform sampler1D source_sampler;\n"
@@ -784,12 +798,26 @@ static const char *fs_mask_texture =
     "{\n"
     "	return texture2D(mask_sampler, mask_texcoords);\n"
     "}\n";
+static const char *fs_mask_texture_rect =
+    "uniform sampler2DRect mask_sampler;\n"
+    "varying vec2 mask_texcoords;\n"
+    "vec4 get_mask()\n"
+    "{\n"
+    "	return texture2DRect(mask_sampler, mask_texcoords);\n"
+    "}\n";
 static const char *fs_mask_texture_alpha =
     "uniform sampler2D mask_sampler;\n"
     "varying vec2 mask_texcoords;\n"
     "vec4 get_mask()\n"
     "{\n"
     "	return vec4(0, 0, 0, texture2D(mask_sampler, mask_texcoords).a);\n"
+    "}\n";
+static const char *fs_mask_texture_alpha_rect =
+    "uniform sampler2DRect mask_sampler;\n"
+    "varying vec2 mask_texcoords;\n"
+    "vec4 get_mask()\n"
+    "{\n"
+    "	return vec4(0, 0, 0, texture2DRect(mask_sampler, mask_texcoords).a);\n"
     "}\n";
 static const char *fs_mask_linear_gradient =
     "uniform sampler1D mask_sampler;\n"
@@ -935,6 +963,22 @@ _cairo_gl_get_program (cairo_gl_context_t *ctx,
     source_source = source_sources[source];
     mask_source = mask_sources[mask];
     in_source = in_sources[in];
+
+    /* For ARB_texture_rectangle, rewrite sampler2D and texture2D to
+     * sampler2DRect and texture2DRect.
+     */
+    if (ctx->tex_target == GL_TEXTURE_RECTANGLE_EXT) {
+	if (source_source == fs_source_texture)
+	    source_source = fs_source_texture_rect;
+	else if (source_source == fs_source_texture_alpha)
+	    source_source = fs_source_texture_alpha_rect;
+
+	if (mask_source == fs_mask_texture)
+	    mask_source = fs_mask_texture_rect;
+	else if (mask_source == fs_mask_texture_alpha)
+	    mask_source = fs_mask_texture_alpha_rect;
+    }
+
     fs_source = _cairo_malloc (strlen(source_source) +
 			       strlen(mask_source) +
 			       strlen(in_source) +

@@ -119,10 +119,10 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     }
 
     if (! GLEW_ARB_texture_non_power_of_two &&
-	! GLEW_EXT_texture_rectangle ) {
+	! GLEW_ARB_texture_rectangle ) {
 	fprintf (stderr,
 		 "Required GL extensions not available:\n");
-	fprintf (stderr, "    GL_ARB_texture_non_power_of_two, GL_EXT_texture_rectangle\n");
+	fprintf (stderr, "    GL_ARB_texture_non_power_of_two, GL_ARB_texture_rectangle\n");
     }
 
     if (!GLEW_ARB_texture_non_power_of_two)
@@ -382,11 +382,10 @@ _cairo_gl_set_texture_surface (int tex_unit, GLuint tex,
 {
 
     if (tex_target == GL_TEXTURE_RECTANGLE_EXT) {
-	if (attributes->extend == CAIRO_EXTEND_REPEAT ||
-	    attributes->extend == CAIRO_EXTEND_REFLECT)
-	    fprintf(stderr,"cannot use rect texture for repeat/reflect\n");
+	assert (attributes->extend != CAIRO_EXTEND_REPEAT &&
+		attributes->extend != CAIRO_EXTEND_REFLECT);
     }
-	
+
     glActiveTexture (GL_TEXTURE0 + tex_unit);
     glBindTexture (tex_target, tex);
     switch (attributes->extend) {
@@ -1174,6 +1173,16 @@ _cairo_gl_pattern_texture_setup (cairo_gl_composite_operand_t *operand,
 					     attributes);
     if (unlikely (status))
 	return status;
+
+    if (ctx->tex_target == GL_TEXTURE_RECTANGLE_EXT &&
+	(attributes->extend == CAIRO_EXTEND_REPEAT ||
+	 attributes->extend == CAIRO_EXTEND_REFLECT))
+    {
+	_cairo_pattern_release_surface (operand->pattern,
+					&surface->base,
+					attributes);
+	return UNSUPPORTED ("EXT_texture_rectangle with repeat/reflect");
+    }
 
     assert (surface->base.backend == &_cairo_gl_surface_backend);
 
