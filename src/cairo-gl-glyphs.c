@@ -125,12 +125,16 @@ _cairo_gl_glyph_cache_add_glyph (cairo_gl_context_t *ctx,
     glyph_private->cache = cache;
 
     /* compute tex coords */
-    glyph_private->p1.x = node->x / (double) cache->width;
-    glyph_private->p1.y = node->y / (double) cache->height;
-    glyph_private->p2.x =
-	(node->x + glyph_surface->width) / (double) cache->width;
-    glyph_private->p2.y =
-	(node->y + glyph_surface->height) / (double) cache->height;
+    glyph_private->p1.x = node->x;
+    glyph_private->p1.y = node->y;
+    glyph_private->p2.x = node->x + glyph_surface->width;
+    glyph_private->p2.y = node->y + glyph_surface->height;
+    if (ctx->tex_target != GL_TEXTURE_RECTANGLE_EXT) {
+	glyph_private->p1.x /= cache->width;
+	glyph_private->p1.y /= cache->height;
+	glyph_private->p2.x /= cache->width;
+	glyph_private->p2.y /= cache->height;
+    }
 
     cairo_surface_destroy (&clone->base);
 
