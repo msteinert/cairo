@@ -93,6 +93,7 @@ typedef struct _cairo_test_runner {
     cairo_bool_t exit_on_failure;
     cairo_bool_t list_only;
     cairo_bool_t full_test;
+    cairo_bool_t exact_test_names;
 } cairo_test_runner_t;
 
 typedef enum {
@@ -315,7 +316,7 @@ static void
 usage (const char *argv0)
 {
     fprintf (stderr,
-	     "Usage: %s [-afx] [test-names|keywords ...]\n"
+	     "Usage: %s [-afxlt] [test-names|keywords ...]\n"
 	     "       %s -l\n"
 	     "\n"
 	     "Run the cairo conformance test suite over the given tests (all by default)\n"
@@ -324,10 +325,11 @@ usage (const char *argv0)
 	     "  -a	all; run the full set of tests. By default the test suite\n"
 	     "          skips similar surface and device offset testing.\n"
 	     "  -f	foreground; do not fork\n"
+	     "  -t	exact test names, no keyword matching\n"
 	     "  -x	exit on first failure\n"
 	     "  -l	list only; just list selected test case names without executing\n"
 	     "\n"
-	     "If test names are given they are used as exact matches either to a specific\n"
+	     "If test names are given they are used as matches either to a specific\n"
 	     "test case or to a keyword, so a command such as\n"
 	     "\"cairo-test-suite text\" can be used to run all text test cases.\n",
 	     argv0, argv0);
@@ -339,7 +341,7 @@ _parse_cmdline (cairo_test_runner_t *runner, int *argc, char **argv[])
     int c;
 
     while (1) {
-	c = _cairo_getopt (*argc, *argv, ":aflx");
+	c = _cairo_getopt (*argc, *argv, ":aflxt");
 	if (c == -1)
 	    break;
 
@@ -355,6 +357,9 @@ _parse_cmdline (cairo_test_runner_t *runner, int *argc, char **argv[])
 	    break;
 	case 'x':
 	    runner->exit_on_failure = TRUE;
+	    break;
+	case 't':
+	    runner->exact_test_names = TRUE;
 	    break;
 	default:
 	    fprintf (stderr, "Internal error: unhandled option: %c\n", c);
@@ -708,6 +713,9 @@ main (int argc, char **argv)
 		} else if (invert) {
 		    found = TRUE;
 		}
+
+		if (runner.exact_test_names)
+		    continue;
 
 		/* XXX keyword match */
 		if (keywords != NULL && strstr (keywords, match) != NULL) {
