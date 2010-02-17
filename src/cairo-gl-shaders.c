@@ -625,14 +625,11 @@ static const char *fs_source_linear_gradient =
     "uniform sampler1D source_sampler;\n"
     "uniform mat4 source_matrix;\n"
     "uniform vec2 source_segment;\n"
-    "uniform float source_first_offset;\n"
-    "uniform float source_last_offset;\n"
     "\n"
     "vec4 get_source()\n"
     "{\n"
     "    vec2 pos = (source_matrix * vec4 (gl_FragCoord.xy, 0.0, 1.0)).xy;\n"
     "    float t = dot (pos, source_segment) / dot (source_segment, source_segment);\n"
-    "    t = (t - source_first_offset) / (source_last_offset - source_first_offset);\n"
     "    return texture1D (source_sampler, t);\n"
     "}\n";
 static const char *fs_source_radial_gradient =
@@ -641,8 +638,6 @@ static const char *fs_source_radial_gradient =
     "uniform vec2 source_circle_1;\n"
     "uniform float source_radius_0;\n"
     "uniform float source_radius_1;\n"
-    "uniform float source_first_offset;\n"
-    "uniform float source_last_offset;\n"
     "\n"
     "vec4 get_source()\n"
     "{\n"
@@ -662,7 +657,6 @@ static const char *fs_source_radial_gradient =
     "    sqrt_det *= sign(A);\n"
     "    \n"
     "    float t = (-B + sqrt_det) / (2.0 * A);\n"
-    "    t = (t - source_first_offset) / (source_last_offset - source_first_offset);\n"
     "    return texture1D (source_sampler, t);\n"
     "}\n";
 static const char *fs_mask_constant =
@@ -703,14 +697,11 @@ static const char *fs_mask_linear_gradient =
     "uniform sampler1D mask_sampler;\n"
     "uniform mat4 mask_matrix;\n"
     "uniform vec2 mask_segment;\n"
-    "uniform float mask_first_offset;\n"
-    "uniform float mask_last_offset;\n"
     "\n"
     "vec4 get_mask()\n"
     "{\n"
     "    vec2 pos = (mask_matrix * vec4 (gl_FragCoord.xy, 0.0, 1.0)).xy;\n"
     "    float t = dot (pos, mask_segment) / dot (mask_segment, mask_segment);\n"
-    "    t = (t - mask_first_offset) / (mask_last_offset - mask_first_offset);\n"
     "    return texture1D (mask_sampler, t);\n"
     "}\n";
 static const char *fs_mask_radial_gradient =
@@ -719,8 +710,6 @@ static const char *fs_mask_radial_gradient =
     "uniform vec2 mask_circle_1;\n"
     "uniform float mask_radius_0;\n"
     "uniform float mask_radius_1;\n"
-    "uniform float mask_first_offset;\n"
-    "uniform float mask_last_offset;\n"
     "\n"
     "vec4 get_mask()\n"
     "{\n"
@@ -740,7 +729,6 @@ static const char *fs_mask_radial_gradient =
     "    sqrt_det *= sign(A);\n"
     "    \n"
     "    float t = (-B + sqrt_det) / (2.0 * A);\n"
-    "    t = (t - mask_first_offset) / (mask_last_offset - mask_first_offset);\n"
     "    return texture1D (mask_sampler, t);\n"
     "}\n";
 static const char *fs_mask_none =

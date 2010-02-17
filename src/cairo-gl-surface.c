@@ -1189,9 +1189,7 @@ static void
 _cairo_gl_create_gradient_texture (const cairo_gl_context_t *ctx,
 				   cairo_gl_surface_t *surface,
 				   cairo_gradient_pattern_t *pattern,
-				   GLuint *tex,
-				   float *first_offset,
-				   float *last_offset)
+				   GLuint *tex)
 {
     int tex_width;
     GLubyte *data;
@@ -1205,8 +1203,6 @@ _cairo_gl_create_gradient_texture (const cairo_gl_context_t *ctx,
     data = glMapBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY);
 
     _render_gradient (ctx, pattern, data, tex_width);
-    *first_offset = 0.;
-    *last_offset  = 1.;
 
     glUnmapBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB);
 
@@ -1389,9 +1385,7 @@ _cairo_gl_gradient_operand_init(cairo_gl_composite_operand_t *operand,
         _cairo_gl_create_gradient_texture (ctx,
 					   dst,
 					   gradient,
-					   &operand->operand.linear.tex,
-					   &operand->operand.linear.first_stop_offset,
-					   &operand->operand.linear.last_stop_offset);
+					   &operand->operand.linear.tex);
 
 	/* Translation matrix from the destination fragment coordinates
 	 * (pixels from lower left = 0,0) to the coordinates in the
@@ -1427,9 +1421,7 @@ _cairo_gl_gradient_operand_init(cairo_gl_composite_operand_t *operand,
         _cairo_gl_create_gradient_texture (ctx,
 					   dst,
 					   gradient,
-					   &operand->operand.radial.tex,
-					   &operand->operand.radial.first_stop_offset,
-					   &operand->operand.radial.last_stop_offset);
+					   &operand->operand.radial.tex);
 
 	/* Translation matrix from the destination fragment coordinates
 	 * (pixels from lower left = 0,0) to the coordinates in the
@@ -1624,16 +1616,6 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 				      setup->src.operand.linear.segment_x,
 				      setup->src.operand.linear.segment_y);
 	assert (!_cairo_status_is_error (status));
-
-	status = bind_float_to_shader (setup->shader->program,
-				       "source_first_offset",
-				       setup->src.operand.linear.first_stop_offset);
-	assert (!_cairo_status_is_error (status));
-	status = bind_float_to_shader (setup->shader->program,
-				       "source_last_offset",
-				       setup->src.operand.linear.last_stop_offset);
-	assert (!_cairo_status_is_error (status));
-
 	break;
 
     case OPERAND_RADIAL_GRADIENT:
@@ -1661,15 +1643,6 @@ _cairo_gl_set_src_operand (cairo_gl_context_t *ctx,
 				       "source_radius_1",
 				       setup->src.operand.radial.radius_1);
 	assert (!_cairo_status_is_error (status));
-
-        status = bind_float_to_shader (setup->shader->program,
-				       "source_first_offset",
-				       setup->src.operand.radial.first_stop_offset);
-	assert (!_cairo_status_is_error (status));
-
-        status = bind_float_to_shader (setup->shader->program,
-				       "source_last_offset",
-				       setup->src.operand.radial.last_stop_offset);
 	break;
     }
 }
@@ -1737,15 +1710,6 @@ _cairo_gl_set_linear_gradient_mask_operand (cairo_gl_composite_setup_t *setup)
 			 setup->mask.operand.linear.segment_x,
 			 setup->mask.operand.linear.segment_y);
     assert (!_cairo_status_is_error (status));
-
-    status = bind_float_to_shader (setup->shader->program,
-			  "mask_first_offset",
-			  setup->mask.operand.linear.first_stop_offset);
-    assert (!_cairo_status_is_error (status));
-    status = bind_float_to_shader (setup->shader->program,
-			  "mask_last_offset",
-			  setup->mask.operand.linear.last_stop_offset);
-    assert (!_cairo_status_is_error (status));
 }
 
 static void
@@ -1779,15 +1743,6 @@ _cairo_gl_set_radial_gradient_mask_operand (cairo_gl_composite_setup_t *setup)
 				   "mask_radius_1",
 				   setup->mask.operand.radial.radius_1);
     assert (!_cairo_status_is_error (status));
-
-    status = bind_float_to_shader (setup->shader->program,
-				   "mask_first_offset",
-				   setup->mask.operand.radial.first_stop_offset);
-    assert (!_cairo_status_is_error (status));
-
-    status = bind_float_to_shader (setup->shader->program,
-				   "mask_last_offset",
-				   setup->mask.operand.radial.last_stop_offset);
 }
 
 /* This is like _cairo_gl_set_src_alpha_operand, for component alpha setup

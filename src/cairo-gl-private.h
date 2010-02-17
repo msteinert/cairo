@@ -168,8 +168,6 @@ typedef struct cairo_gl_composite_operand {
 	    cairo_matrix_t m;
 	    float segment_x;
 	    float segment_y;
-	    float first_stop_offset;
-	    float last_stop_offset;
 	} linear;
 	struct {
 	    GLuint tex;
@@ -178,8 +176,6 @@ typedef struct cairo_gl_composite_operand {
 	    float circle_1_y;
 	    float radius_0;
 	    float radius_1;
-	    float first_stop_offset;
-	    float last_stop_offset;
 	} radial;
     } operand;
 
