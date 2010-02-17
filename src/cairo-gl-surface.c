@@ -1166,6 +1166,8 @@ _render_gradient (const cairo_gl_context_t *ctx,
     if (unlikely (gradient == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
+    pixman_image_set_filter (gradient, PIXMAN_FILTER_BILINEAR, NULL, 0);
+
     image = pixman_image_create_bits (PIXMAN_a8r8g8b8, width, 1,
 				      bytes, sizeof(uint32_t)*width);
     if (unlikely (image == NULL)) {
@@ -1213,7 +1215,7 @@ _cairo_gl_create_gradient_texture (const cairo_gl_context_t *ctx,
 
     glBindBufferARB (GL_PIXEL_UNPACK_BUFFER_ARB, 0);
 
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     switch (pattern->base.extend) {
