@@ -46,12 +46,6 @@ typedef struct _shader_impl {
     (*destroy_shader_program) (cairo_gl_shader_program_t *program);
 
     cairo_status_t
-    (*create_linear_gradient_shader_program) (cairo_gl_shader_program_t *program);
-
-    cairo_status_t
-    (*create_radial_gradient_shader_program) (cairo_gl_shader_program_t *program);
-
-    cairo_status_t
     (*bind_float_to_shader) (GLuint program, const char *name,
                              float value);
 
@@ -81,69 +75,6 @@ typedef struct _shader_impl {
 
 static const shader_impl_t*
 get_impl (void);
-
-static const char * const minimal_vert_text_110 =
-    "#version 110\n"
-    "\n"
-    "void main ()\n"
-    "{ gl_Position = ftransform(); }\n";
-
-/* This fragment shader was adapted from Argiris Kirtzidis' cairo-gral
- * library, found at git://github.com/akyrtzi/cairo-gral.git.  Argiris' shader
- * was adapted from the original algorithm in pixman.
- */
-static const char * const radial_gradient_frag_text_110 =
-    "#version 110\n"
-    "\n"
-    "uniform sampler1D tex;\n"
-    "uniform mat4 matrix;\n"
-    "uniform vec2 circle_1;\n"
-    "uniform float radius_0;\n"
-    "uniform float radius_1;\n"
-    "uniform float first_offset;\n"
-    "uniform float last_offset;\n"
-    "\n"
-    "void main ()\n"
-    "{\n"
-    "    vec2 pos = (matrix * vec4 (gl_FragCoord.xy, 0.0, 1.0)).xy;\n"
-    "    \n"
-    "    float dr = radius_1 - radius_0;\n"
-    "    float dot_circle_1 = dot (circle_1, circle_1);\n"
-    "    float dot_pos_circle_1 = dot (pos, circle_1);\n"
-    "    \n"
-    "    float A = dot_circle_1 - dr * dr;\n"
-    "    float B = -2.0 * (dot_pos_circle_1 + radius_0 * dr);\n"
-    "    float C = dot (pos, pos) - radius_0 * radius_0;\n"
-    "    float det = B * B - 4.0 * A * C;\n"
-    "    det = max (det, 0.0);\n"
-    "    \n"
-    "    float sqrt_det = sqrt (det);\n"
-    "    /* This complicated bit of logic acts as\n"
-    "     * \"if (A < 0.0) sqrt_det = -sqrt_det\", without the branch.\n"
-    "     */\n"
-    "    sqrt_det *= 1.0 + 2.0 * sign (min (A, 0.0));\n"
-    "    \n"
-    "    float t = (-B + sqrt_det) / (2.0 * A);\n"
-    "    t = (t - first_offset) / (last_offset - first_offset);\n"
-    "    gl_FragColor = texture1D (tex, t);\n"
-    "}\n";
-
-static const char * const linear_gradient_frag_text_110 =
-    "#version 110\n"
-    "\n"
-    "uniform sampler1D tex;\n"
-    "uniform mat4 matrix;\n"
-    "uniform vec2 segment;\n"
-    "uniform float first_offset;\n"
-    "uniform float last_offset;\n"
-    "\n"
-    "void main ()\n"
-    "{\n"
-    "    vec2 pos = (matrix * vec4 (gl_FragCoord.xy, 0.0, 1.0)).xy;\n"
-    "    float t = dot (pos, segment) / dot (segment, segment);\n"
-    "    t = (t - first_offset) / (last_offset - first_offset);\n"
-    "    gl_FragColor = texture1D (tex, t);\n"
-    "}\n";
 
 /* ARB_shader_objects / ARB_vertex_shader / ARB_fragment_shader extensions
    API. */
@@ -224,22 +155,6 @@ destroy_shader_program_arb (cairo_gl_shader_program_t *program)
         glDeleteObjectARB (program->fragment_shader);
     if (program->program)
         glDeleteObjectARB (program->program);
-}
-
-static cairo_status_t
-create_linear_gradient_shader_program_arb (cairo_gl_shader_program_t *program)
-{
-    return create_shader_program (program,
-                                  minimal_vert_text_110,
-                                  linear_gradient_frag_text_110);
-}
-
-static cairo_status_t
-create_radial_gradient_shader_program_arb (cairo_gl_shader_program_t *program)
-{
-    return create_shader_program (program,
-                                  minimal_vert_text_110,
-                                  radial_gradient_frag_text_110);
 }
 
 static cairo_status_t
@@ -401,22 +316,6 @@ destroy_shader_program_core_2_0 (cairo_gl_shader_program_t *program)
 }
 
 static cairo_status_t
-create_linear_gradient_shader_program_core_2_0 (cairo_gl_shader_program_t *program)
-{
-    return create_shader_program (program,
-                                  minimal_vert_text_110,
-                                  linear_gradient_frag_text_110);
-}
-
-static cairo_status_t
-create_radial_gradient_shader_program_core_2_0 (cairo_gl_shader_program_t *program)
-{
-    return create_shader_program (program,
-                                  minimal_vert_text_110,
-                                  radial_gradient_frag_text_110);
-}
-
-static cairo_status_t
 bind_float_to_shader_core_2_0 (GLuint program, const char *name,
                                float value)
 {
@@ -501,8 +400,6 @@ static const shader_impl_t shader_impl_core_2_0 = {
     compile_shader_core_2_0,
     link_shader_core_2_0,
     destroy_shader_program_core_2_0,
-    create_linear_gradient_shader_program_core_2_0,
-    create_radial_gradient_shader_program_core_2_0,
     bind_float_to_shader_core_2_0,
     bind_vec2_to_shader_core_2_0,
     bind_vec3_to_shader_core_2_0,
@@ -516,8 +413,6 @@ static const shader_impl_t shader_impl_arb = {
     compile_shader_arb,
     link_shader_arb,
     destroy_shader_program_arb,
-    create_linear_gradient_shader_program_arb,
-    create_radial_gradient_shader_program_arb,
     bind_float_to_shader_arb,
     bind_vec2_to_shader_arb,
     bind_vec3_to_shader_arb,
@@ -598,18 +493,6 @@ create_shader_program (cairo_gl_shader_program_t *program,
     program->build_failure = TRUE;
 
     return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-cairo_status_t
-create_linear_gradient_shader_program (cairo_gl_shader_program_t *program)
-{
-    return get_impl()->create_linear_gradient_shader_program(program);
-}
-
-cairo_status_t
-create_radial_gradient_shader_program (cairo_gl_shader_program_t *program)
-{
-    return get_impl()->create_radial_gradient_shader_program(program);
 }
 
 cairo_status_t

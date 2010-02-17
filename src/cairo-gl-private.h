@@ -314,12 +314,6 @@ create_shader_program (cairo_gl_shader_program_t *program,
                        const char *fragment_text);
 
 cairo_status_t
-create_linear_gradient_shader_program (cairo_gl_shader_program_t *program);
-
-cairo_status_t
-create_radial_gradient_shader_program (cairo_gl_shader_program_t *program);
-
-cairo_status_t
 bind_float_to_shader (GLuint program, const char *name,
                       float value);
 
