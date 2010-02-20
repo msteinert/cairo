@@ -50,7 +50,9 @@ draw (cairo_t *cr, int width, int height)
     cairo_show_text (cr, "Hello");
     cairo_scaled_font_destroy (scaled_font);
     cairo_font_options_destroy (font_options);
-    return cairo_status (cr);
+
+    return cairo_test_status_from_status (cairo_test_get_context (cr),
+                                          cairo_status(cr));
 }
 
 CAIRO_TEST (scaled_font_zero_matrix,
