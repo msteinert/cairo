@@ -43,7 +43,9 @@
 #include "cairo-xcb.h"
 #include "cairo-xcb-private.h"
 
+#if CAIRO_HAS_XCB_DRM_FUNCTIONS
 #include <xcb/dri2.h>
+#endif
 
 #define AllPlanes ((unsigned) -1)
 #define CAIRO_ASSUME_PIXMAP 20
