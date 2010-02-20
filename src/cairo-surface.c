@@ -816,7 +816,7 @@ _cairo_mime_data_destroy (void *ptr)
 /**
  * cairo_surface_set_mime_data:
  * @surface: a #cairo_surface_t
- * @mime_type: the mime type of the image data
+ * @mime_type: the MIME type of the image data
  * @data: the image data to attach to the surface
  * @length: the length of the image data
  * @destroy: a #cairo_destroy_func_t which will be called when the
@@ -827,6 +827,20 @@ _cairo_mime_data_destroy (void *ptr)
  * Attach an image in the format @mime_type to @surface. To remove
  * the data from a surface, call this function with same mime type
  * and %NULL for @data.
+ *
+ * The attached image (or filename) data can later be used by backends
+ * which support it (currently: PDF, PS, SVG and Win32 Printing
+ * surfaces) to emit this data instead of making a snapshot of the
+ * @surface.  This approach tends to be faster and requires less
+ * memory and disk space.
+ *
+ * The recognized MIME types are the following: #CAIRO_MIME_TYPE_JPEG,
+ * #CAIRO_MIME_TYPE_PNG, #CAIRO_MIME_TYPE_JP2, #CAIRO_MIME_TYPE_URI.
+ *
+ * See corresponding backend surface docs for details about which MIME
+ * types it can handle. Caution: the associated MIME data will be
+ * discarded if you draw on the surface afterwards. Use this function
+ * with care.
  *
  * Since: 1.10
  *

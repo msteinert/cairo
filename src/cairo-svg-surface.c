@@ -203,6 +203,22 @@ cairo_svg_surface_create_for_stream (cairo_write_func_t		 write_func,
  * Creates a SVG surface of the specified size in points to be written
  * to @filename.
  *
+ * The SVG surface backend recognizes the following MIME types for the
+ * data attached to a surface (see cairo_surface_set_mime_data()) when
+ * it is used as a source pattern for drawing on this surface:
+ * #CAIRO_MIME_TYPE_JPEG, #CAIRO_MIME_TYPE_PNG,
+ * #CAIRO_MIME_TYPE_URI. If any of them is specified, the SVG backend
+ * emits a href with the content of MIME data instead of a surface
+ * snapshot (PNG, Base64-encoded) in the corresponding image tag.
+ *
+ * The unofficial MIME type #CAIRO_MIME_TYPE_URI is examined
+ * first. If present, the URI is emitted as is: assuring the
+ * correctness of URI is left to the client code.
+ *
+ * If #CAIRO_MIME_TYPE_URI is not present, but #CAIRO_MIME_TYPE_JPEG
+ * or #CAIRO_MIME_TYPE_PNG is specified, the corresponding data is
+ * Base64-encoded and emitted.
+ *
  * Return value: a pointer to the newly created surface. The caller
  * owns the surface and should call cairo_surface_destroy() when done
  * with it.
@@ -1171,6 +1187,45 @@ _cairo_svg_surface_emit_operator_for_style (cairo_output_stream_t *output,
     }
 }
 
+/**
+ * _cairo_svg_surface_emit_attr_value:
+ *
+ * Write the value to output the stream as a sequence of characters,
+ * while escaping those which have special meaning in the XML
+ * attribute's value context: &amp; and &quot;.
+ **/
+static void
+_cairo_svg_surface_emit_attr_value (cairo_output_stream_t *stream,
+				    const unsigned char *value,
+				    unsigned int length)
+{
+    const unsigned char *p;
+    const unsigned char *q;
+    unsigned int i;
+
+    /* we'll accumulate non-special chars in [q, p) range */
+    p = value;
+    q = p;
+    for (i = 0; i < length; i++, p++) {
+	if (*p == '&' || *p == '"') {
+	    /* flush what's left before special char */
+	    if (p != q) {
+		_cairo_output_stream_write (stream, q, p - q);
+		q = p + 1;
+	    }
+
+	    if (*p == '&')
+		_cairo_output_stream_printf (stream, "&amp;");
+	    else // p == '"'
+		_cairo_output_stream_printf (stream, "&quot;");
+	}
+    }
+
+    /* flush the trailing chars if any */
+    if (p != q)
+	_cairo_output_stream_write (stream, q, p - q);
+}
+
 static cairo_status_t
 _cairo_svg_surface_emit_surface (cairo_svg_document_t *document,
 				 cairo_surface_t *surface)
@@ -1178,6 +1233,8 @@ _cairo_svg_surface_emit_surface (cairo_svg_document_t *document,
     cairo_rectangle_int_t extents;
     cairo_bool_t is_bounded;
     cairo_status_t status;
+    const unsigned char *uri;
+    unsigned int uri_len;
 
     if (_cairo_user_data_array_get_data (&surface->user_data,
 					 (cairo_user_data_key_t *) document))
@@ -1195,10 +1252,17 @@ _cairo_svg_surface_emit_surface (cairo_svg_document_t *document,
 
     _cairo_output_stream_printf (document->xml_node_defs, " xlink:href=\"");
 
-    status = _cairo_surface_base64_encode (surface,
-					   document->xml_node_defs);
-    if (unlikely (status))
-	return status;
+    cairo_surface_get_mime_data (surface, CAIRO_MIME_TYPE_URI,
+				 &uri, &uri_len);
+    if (uri != NULL) {
+	_cairo_svg_surface_emit_attr_value (document->xml_node_defs,
+					    uri, uri_len);
+    } else {
+	status = _cairo_surface_base64_encode (surface,
+					       document->xml_node_defs);
+	if (unlikely (status))
+	    return status;
+    }
 
     _cairo_output_stream_printf (document->xml_node_defs, "\"/>\n");
 

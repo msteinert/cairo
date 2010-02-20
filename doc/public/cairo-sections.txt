@@ -176,6 +176,7 @@ cairo_svg_version_to_string
 CAIRO_MIME_TYPE_JP2
 CAIRO_MIME_TYPE_JPEG
 CAIRO_MIME_TYPE_PNG
+CAIRO_MIME_TYPE_URI
 cairo_surface_t
 cairo_content_t
 cairo_surface_create_similar

@@ -48,6 +48,13 @@ The Portable Network Graphics image file format (ISO/IEC 15948). Since 1.10
 
 
 
+<!-- ##### MACRO CAIRO_MIME_TYPE_URI ##### -->
+<para>
+URI for an image file (unofficial MIME type). Since 1.10
+</para>
+
+
+
 <!-- ##### TYPEDEF cairo_surface_t ##### -->
 <para>
 
