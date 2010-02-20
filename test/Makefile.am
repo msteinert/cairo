@@ -143,7 +143,6 @@ REFERENCE_IMAGES = \
 	alpha-similar.svg.argb32.xfail.png \
 	alpha-similar.svg.rgb24.xfail.png \
 	big-line.ref.png \
-	big-line.xlib-fallback.ref.png \
 	big-line.xlib.ref.png \
 	bilevel-image.ref.png \
 	bitmap-font.ref.png \
@@ -165,6 +164,7 @@ REFERENCE_IMAGES = \
 	clear.ps.argb32.ref.png \
 	clear.svg12.argb32.xfail.png \
 	clear.svg12.rgb24.xfail.png \
+	clear-source.ref.png \
 	clip-all.ref.png \
 	clip-device-offset.argb32.ref.png \
 	clip-device-offset.rgb24.ref.png \
@@ -833,6 +833,7 @@ REFERENCE_IMAGES = \
 	rotate-image-surface-paint.quartz.ref.png \
 	rotate-image-surface-paint.ref.png \
 	rotate-image-surface-paint.svg.xfail.png \
+	rotate-image-surface-paint.svg.ref.png \
 	rotated-clip.ref.png \
 	rotated-clip.ps.ref.png \
 	rotated-clip.xlib.ref.png \
@@ -1059,6 +1060,7 @@ REFERENCE_IMAGES = \
 	user-font.xlib.ref.png \
 	xcb-surface-source.rgb24.ref.png \
 	xcb-surface-source.argb32.ref.png \
+	xcomposite-projection.ref.png \
 	xlib-expose-event.ref.png \
 	xlib-surface-source.rgb24.ref.png \
 	xlib-surface-source.argb32.ref.png \
