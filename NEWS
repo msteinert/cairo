@@ -1,9 +1,119 @@
-API changes:
+Snapshot 1.9.6 (2010-02-19)
+===========================
+API additions
+-------------
+    Add cairo_device_t
 
+    The device is a generic method for accessing the underlying interface
+    with the native graphics subsystem, typically the X connection or
+    perhaps the GL context. By exposing a cairo_device_t on a surface and
+    its various methods we enable finer control over interoperability with
+    external interactions of the device by applications. The use case in
+    mind is, for example, a multi-threaded gstreamer which needs to serialise
+    its own direct access to the device along with Cairo's across many
+    threads.
+
+    Secondly, the cairo_device_t is a unifying API for the mismash of
+    backend specific methods for controlling creation of surfaces with
+    explicit devices and a convenient hook for debugging and introspection.
+
+    The principal components of the API are the memory management of:
+
+      cairo_device_reference(),
+      cairo_device_finish() and
+      cairo_device_destroy();
+
+    along with a pair of routines for serialising interaction:
+
+      cairo_device_acquire() and
+      cairo_device_release()
+
+    and a method to flush any outstanding accesses:
+
+      cairo_device_flush().
+
+    The device for a particular surface may be retrieved using:
+
+      cairo_surface_get_device().
+
+    The device returned is owned by the surface.
+
+API changes (to API new in the cairo 1.9.x series)
+--------------------------------------------------
   cairo_recording_surface_create()
   cairo_recording_surface_ink_extents()
 
-    Renamed meta-surfaces to recording-surfaces for clarity.
+    These are the replacement names for the functions previously named
+    cairo_meta_surface_create and cairo_meta_surface_ink_extents.
+
+  cairo_surface_set_mime_data
+
+    This interface is now changed such that the MIME data will be
+    detached if the surface is modified at all. This guarantees that
+    the MIME data will not become out of synch due to surface
+    modifications, and also means that for the MIME data to be useful,
+    it must be set after all modifications to the surface are
+    complete.
+
+API removal (of experiment API)
+-------------------------------
+  The cairo-glitz backend is removed entirely, (in favor of the new
+  cairo-gl backend). See below for more on cairo-gl.
+
+Generic fixes
+-------------
+
+  Many improvements for drawing of dashed strokes
+
+	Fix incorrect handling of negative offset
+	Faster computation of first dash (avoids near-infinite looping)
+	Approximate extremely fine dash patterns with appropriate alpha value
+
+  Optimize spans-based renderers for repeated rows, (such as in a rounded rectangle)
+
+Backend-specific improvements
+-----------------------------
+cairo-drm
+
+  This is a new, direct-rendering backend that supports Intel graphics
+  chipsets in the i915 and i965 families. It's still experimental and
+  will likely remain that way for a while. It's already got extremely
+  good performance on the hardware it supports, so if nothing else
+  provides a working proof and performance target for the cairo-gl
+  work for Intel graphics.
+
+cairo-gl
+
+  Start using GLSL to accelerate many operations. Many thanks to Eric
+  Anholt and T. Zachary Laine for this work. For the first time, we
+  have what looks like what will be a very compelling OpenGL-based
+  backend for cairo (in terms of both quality and performance).
+
+  See this writeup from Eric for more details on recent progress of
+  cairo-gl (which he presented at FOSDEM 2010):
+
+	http://anholt.livejournal.com/42146.html
+
+cairo-image
+
+  The image backend is made dramatically faster (3-5 times faster for
+  benchmarks consisting primarily of glyph rendering).
+
+cairo-quartz fixes:
+
+  Many fixes from Robert O'Callahan and Andrea Canciani including:
+
+	Fixed gradient pattern painting
+	Improved A8 image handling
+	Fixes for "unbounded" and other compositing operators
+
+cairo-pdf fixes:
+
+  Improvements to embedding of JPEG and JPEG2000 data.
+
+cairo-ps fixes:
+
+  Fix printing of rotated user fonts.
 
 Snapshot 1.9.4 (2009-10-15)
 ===========================
