@@ -867,7 +867,8 @@ _composite_spans_draw_func (void                          *closure,
      * we'd like to place the result. */
     rects.bounded.x -= dst_x;
     rects.bounded.y -= dst_y;
-    rects.unbounded = rects.bounded;;
+    rects.unbounded = rects.bounded;
+    rects.is_bounded = _cairo_operator_bounded_by_either (op);
 
     return _cairo_surface_composite_polygon (dst, op, src,
 					     info->fill_rule,
