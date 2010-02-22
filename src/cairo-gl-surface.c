@@ -2922,6 +2922,12 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
 				    CAIRO_GL_SHADER_MASK_SPANS,
 				    CAIRO_GL_SHADER_IN_NORMAL,
 				    &renderer->setup.shader);
+    if (_cairo_status_is_error (status)) {
+	_cairo_gl_operand_destroy (&renderer->setup.src);
+	_cairo_gl_context_release (renderer->ctx);
+	free (renderer);
+	return _cairo_span_renderer_create_in_error (status);
+}
 
     src_attributes = &renderer->setup.src.operand.texture.attributes;
 

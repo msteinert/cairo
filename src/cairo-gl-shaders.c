@@ -542,7 +542,13 @@ bind_texture_to_shader (GLuint program, const char *name, GLuint tex_unit)
 void
 _cairo_gl_use_program (cairo_gl_shader_program_t *program)
 {
-    get_impl()->use_program (program);
+    const shader_impl_t *impl;
+
+    impl = get_impl ();
+    if (impl == NULL)
+	return;
+
+    impl->use_program (program);
 }
 
 static const char *vs_no_coords =
@@ -827,6 +833,9 @@ _cairo_gl_get_program (cairo_gl_context_t *ctx,
     if (program->build_failure)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
+    if (get_impl () == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
     source_source = source_sources[source];
     mask_source = mask_sources[mask];
     in_source = in_sources[in];
@@ -850,6 +859,8 @@ _cairo_gl_get_program (cairo_gl_context_t *ctx,
 			       strlen(mask_source) +
 			       strlen(in_source) +
 			       1);
+    if (unlikely (fs_source == NULL))
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     if (source == CAIRO_GL_SHADER_SOURCE_CONSTANT ||
 	source == CAIRO_GL_SHADER_SOURCE_LINEAR_GRADIENT ||
@@ -872,9 +883,6 @@ _cairo_gl_get_program (cairo_gl_context_t *ctx,
 	else
 	    vs_source = vs_source_mask_coords;
     }
-
-    if (!fs_source)
-	return CAIRO_STATUS_NO_MEMORY;
 
     sprintf(fs_source, "%s%s%s", source_source, mask_source, in_source);
 
@@ -902,6 +910,5 @@ _cairo_gl_get_program (cairo_gl_context_t *ctx,
     _cairo_gl_use_program (NULL);
 
     *out_program = program;
-
     return CAIRO_STATUS_SUCCESS;
 }
