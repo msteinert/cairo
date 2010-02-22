@@ -422,6 +422,9 @@ active_edges_to_traps (sweep_line_t	*sweep,
 
 		winding += right->dir;
 		if (winding == 0) {
+		    if (right->next == &sweep->tail)
+			break;
+
 		    /* skip co-linear edges */
 		    if (likely (right->x != right->next->x))
 			break;
@@ -449,6 +452,9 @@ active_edges_to_traps (sweep_line_t	*sweep,
 		    edge_end_box (sweep,
 				  right, top, do_traps, container);
 		}
+
+		if (pos == &sweep->tail)
+		    break;
 
 		/* skip co-linear edges */
 		if (right->x != pos->x)
