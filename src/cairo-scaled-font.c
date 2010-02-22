@@ -2163,7 +2163,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t	*scaled_font,
 	    /* Note that we only upgrade masks, i.e. A1 -> A8 -> ARGB32, so there is
 	     * never any component alpha here.
 	     */
-	    status = _cairo_surface_composite (CAIRO_OPERATOR_SOURCE,
+	    status = _cairo_surface_composite (CAIRO_OPERATOR_ADD,
 					       &_cairo_pattern_white.base,
 					       &mask_pattern.base,
 					       new_mask,
