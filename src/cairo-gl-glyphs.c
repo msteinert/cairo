@@ -656,6 +656,7 @@ _cairo_gl_surface_show_glyphs_via_mask (cairo_gl_surface_t	*dst,
 	return status;
 
     /* XXX: For non-CA, this should be CAIRO_CONTENT_ALPHA to save memory */
+    mask = NULL;
     if (ctx->glyphs_temporary_mask) {
 	if (glyph_extents->width  <= ctx->glyphs_temporary_mask->width &&
 	    glyph_extents->height <= ctx->glyphs_temporary_mask->height)
