@@ -73,9 +73,6 @@ typedef struct _shader_impl {
     (*use_program) (cairo_gl_shader_program_t *program);
 } shader_impl_t;
 
-static const shader_impl_t*
-get_impl (void);
-
 /* ARB_shader_objects / ARB_vertex_shader / ARB_fragment_shader extensions
    API. */
 static cairo_status_t
@@ -425,6 +422,7 @@ static const shader_impl_t shader_impl_arb = {
 static const shader_impl_t*
 get_impl (void)
 {
+    /* XXX multiple device support? */
     if (GLEW_VERSION_2_0) {
         return &shader_impl_core_2_0;
     } else if (GLEW_ARB_shader_objects &&
@@ -433,7 +431,6 @@ get_impl (void)
         return &shader_impl_arb;
     }
 
-    ASSERT_NOT_REACHED;
     return NULL;
 }
 
@@ -458,6 +455,7 @@ create_shader_program (cairo_gl_shader_program_t *program,
                        const char *fragment_text)
 {
     cairo_status_t status;
+    const shader_impl_t *impl;
 
     if (program->program != 0)
         return CAIRO_STATUS_SUCCESS;
@@ -465,21 +463,25 @@ create_shader_program (cairo_gl_shader_program_t *program,
     if (program->build_failure)
         return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    status = get_impl()->compile_shader (&program->vertex_shader,
-                                         GL_VERTEX_SHADER,
-                                         vertex_text);
+    impl = get_impl ();
+    if (impl == NULL)
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+
+    status = impl->compile_shader (&program->vertex_shader,
+				   GL_VERTEX_SHADER,
+				   vertex_text);
     if (unlikely (status))
         goto FAILURE;
 
-    status = get_impl()->compile_shader (&program->fragment_shader,
-                                         GL_FRAGMENT_SHADER,
-                                         fragment_text);
+    status = impl->compile_shader (&program->fragment_shader,
+				   GL_FRAGMENT_SHADER,
+				   fragment_text);
     if (unlikely (status))
         goto FAILURE;
 
-    status = get_impl()->link_shader (&program->program,
-                                      program->vertex_shader,
-                                      program->fragment_shader);
+    status = impl->link_shader (&program->program,
+				program->vertex_shader,
+				program->fragment_shader);
     if (unlikely (status))
         goto FAILURE;
 
