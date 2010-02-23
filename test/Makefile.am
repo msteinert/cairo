@@ -144,6 +144,7 @@ REFERENCE_IMAGES = \
 	alpha-similar.svg.rgb24.xfail.png \
 	big-line.ref.png \
 	big-line.xlib.ref.png \
+	bug-bo-rectangular.ref.png \
 	bilevel-image.ref.png \
 	bitmap-font.ref.png \
 	bitmap-font.rgb24.ref.png \
