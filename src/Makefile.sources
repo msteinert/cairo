@@ -321,7 +321,9 @@ cairo_directfb_sources = cairo-directfb-surface.c
 
 cairo_drm_headers = cairo-drm.h
 cairo_drm_private = drm/cairo-drm-private.h \
+		    drm/cairo-drm-ioctl-private.h \
 		    drm/cairo-drm-intel-private.h \
+		    drm/cairo-drm-intel-ioctl-private.h \
 		    drm/cairo-drm-i915-private.h \
 		    drm/cairo-drm-i965-private.h \
 		    drm/cairo-drm-intel-brw-defines.h \
