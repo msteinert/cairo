@@ -2302,7 +2302,7 @@ _trace_mask_to_path (cairo_image_surface_t *mask,
     cairo_fixed_t px, py;
     cairo_status_t status;
 
-    mask = _cairo_image_surface_coerce (mask, CAIRO_FORMAT_A1);
+    mask = _cairo_image_surface_coerce_to_format (mask, CAIRO_FORMAT_A1);
     status = mask->base.status;
     if (unlikely (status))
 	return status;

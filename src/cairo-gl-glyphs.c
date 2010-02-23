@@ -71,8 +71,7 @@ _cairo_gl_glyph_cache_add_glyph (cairo_gl_context_t *ctx,
     {
 	cairo_bool_t is_supported;
 
-	clone = _cairo_image_surface_coerce (glyph_surface,
-		                             _cairo_format_from_content (glyph_surface->base.content));
+	clone = _cairo_image_surface_coerce (glyph_surface);
 	if (unlikely (clone->base.status))
 	    return clone->base.status;
 

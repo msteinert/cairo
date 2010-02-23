@@ -1202,9 +1202,7 @@ _emit_image_surface (cairo_script_surface_t *surface,
 	uint32_t len;
 
 	if (image->format == CAIRO_FORMAT_INVALID) {
-	    clone =
-		_cairo_image_surface_coerce (image,
-					     _cairo_format_from_content (image->base.content));
+	    clone = _cairo_image_surface_coerce (image);
 	} else {
 	    clone = (cairo_image_surface_t *)
 		cairo_surface_reference (&image->base);

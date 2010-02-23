@@ -693,8 +693,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
     {
 	cairo_bool_t is_supported;
 
-	clone = _cairo_image_surface_coerce (src,
-		_cairo_format_from_content (src->base.content));
+	clone = _cairo_image_surface_coerce (src);
 	if (unlikely (clone->base.status))
 	    return clone->base.status;
 

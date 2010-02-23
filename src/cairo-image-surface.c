@@ -4320,8 +4320,18 @@ const cairo_surface_backend_t _cairo_image_surface_backend = {
 /* A convenience function for when one needs to coerce an image
  * surface to an alternate format. */
 cairo_image_surface_t *
-_cairo_image_surface_coerce (cairo_image_surface_t	*surface,
-			     cairo_format_t		 format)
+_cairo_image_surface_coerce (cairo_image_surface_t *surface)
+{
+    return _cairo_image_surface_coerce_to_format (surface,
+		                                  _cairo_format_from_content (surface->base.content));
+        
+}
+
+/* A convenience function for when one needs to coerce an image
+ * surface to an alternate format. */
+cairo_image_surface_t *
+_cairo_image_surface_coerce_to_format (cairo_image_surface_t *surface,
+			               cairo_format_t	      format)
 {
     cairo_image_surface_t *clone;
     cairo_status_t status;

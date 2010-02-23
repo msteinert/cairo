@@ -2205,8 +2205,12 @@ cairo_private void
 _cairo_image_surface_assume_ownership_of_data (cairo_image_surface_t *surface);
 
 cairo_private cairo_image_surface_t *
-_cairo_image_surface_coerce (cairo_image_surface_t	*surface,
-			     cairo_format_t		 format);
+_cairo_image_surface_coerce (cairo_image_surface_t	*surface);
+
+cairo_private cairo_image_surface_t *
+_cairo_image_surface_coerce_to_format (cairo_image_surface_t	*surface,
+			               cairo_format_t		 format);
+
 cairo_private void
 _cairo_image_surface_span_render_row (int				 y,
 				      const cairo_half_open_span_t	 *spans,

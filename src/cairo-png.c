@@ -172,8 +172,7 @@ write_png (cairo_surface_t	*surface,
     /* Handle the various fallback formats (e.g. low bit-depth XServers)
      * by coercing them to a simpler format using pixman.
      */
-    clone = _cairo_image_surface_coerce (image,
-                                         _cairo_format_from_content (image->base.content));
+    clone = _cairo_image_surface_coerce (image);
     status = clone->base.status;
     if (unlikely (status))
         goto BAIL1;

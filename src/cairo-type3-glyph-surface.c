@@ -120,7 +120,7 @@ _cairo_type3_glyph_surface_emit_image (cairo_type3_glyph_surface_t *surface,
     cairo_status_t status;
 
     /* The only image type supported by Type 3 fonts are 1-bit masks */
-    image = _cairo_image_surface_coerce (image, CAIRO_FORMAT_A1);
+    image = _cairo_image_surface_coerce_to_format (image, CAIRO_FORMAT_A1);
     status = image->base.status;
     if (unlikely (status))
 	return status;

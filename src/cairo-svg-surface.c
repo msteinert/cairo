@@ -736,8 +736,8 @@ _cairo_svg_document_emit_bitmap_glyph_data (cairo_svg_document_t	*document,
     if (unlikely (status))
 	return status;
 
-    image = _cairo_image_surface_coerce (scaled_glyph->surface,
-					 CAIRO_FORMAT_A1);
+    image = _cairo_image_surface_coerce_to_format (scaled_glyph->surface,
+					           CAIRO_FORMAT_A1);
     status = image->base.status;
     if (unlikely (status))
 	return status;

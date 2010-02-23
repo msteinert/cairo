@@ -1342,29 +1342,16 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 	    _cairo_surface_release_source_image (source, image, image_extra);
 	} else {
 	    cairo_image_surface_t *conv;
-	    cairo_format_t format;
 	    xcb_render_pictformat_t render_format;
 
 	    /* XXX XRenderPutImage! */
 
-	    switch (image->base.content) {
-	    case CAIRO_CONTENT_ALPHA:
-		format = CAIRO_FORMAT_A8;
-		break;
-	    case CAIRO_CONTENT_COLOR:
-		format = CAIRO_FORMAT_RGB24;
-		break;
-	    case CAIRO_CONTENT_COLOR_ALPHA:
-		format = CAIRO_FORMAT_ARGB32;
-		break;
-	    }
-
-	    conv = _cairo_image_surface_coerce (image, format);
+	    conv = _cairo_image_surface_coerce (image);
 	    _cairo_surface_release_source_image (source, image, image_extra);
 	    if (unlikely (conv->base.status))
 		return (cairo_xcb_picture_t *) conv;
 
-	    render_format = target->screen->connection->standard_formats[format];
+	    render_format = target->screen->connection->standard_formats[conv->format];
 	    picture = _picture_from_image (target, render_format, conv, NULL);
 	    cairo_surface_destroy (&conv->base);
 	}
@@ -4000,8 +3987,8 @@ _cairo_xcb_surface_add_glyph (cairo_xcb_connection_t *connection,
      * format.
      */
     if (glyph_surface->format != glyphset_info->format) {
-	glyph_surface = _cairo_image_surface_coerce (glyph_surface,
-						     glyphset_info->format);
+	glyph_surface = _cairo_image_surface_coerce_to_format (glyph_surface,
+						               glyphset_info->format);
 	status = glyph_surface->base.status;
 	if (unlikely (status))
 	    goto BAIL;
