@@ -298,45 +298,45 @@ _cairo_gl_y_flip (cairo_gl_surface_t *surface, int y)
 	return (surface->height - 1) - y;
 }
 
-void
+cairo_private void
 init_shader_program (cairo_gl_shader_program_t *program);
 
-void
+cairo_private void
 destroy_shader_program (cairo_gl_shader_program_t *program);
 
-cairo_status_t
+cairo_private cairo_status_t
 create_shader_program (cairo_gl_shader_program_t *program,
                        const char *vertex_text,
                        const char *fragment_text);
 
-cairo_status_t
+cairo_private cairo_status_t
 bind_float_to_shader (GLuint program, const char *name,
                       float value);
 
-cairo_status_t
+cairo_private cairo_status_t
 bind_vec2_to_shader (GLuint program, const char *name,
                      float value0, float value1);
 
-cairo_status_t
+cairo_private cairo_status_t
 bind_vec3_to_shader (GLuint program, const char *name,
                      float value0, float value1,
                      float value2);
 
-cairo_status_t
+cairo_private cairo_status_t
 bind_vec4_to_shader (GLuint program, const char *name,
                      float value0, float value1,
                      float value2, float value3);
 
-cairo_status_t
+cairo_private cairo_status_t
 bind_matrix_to_shader (GLuint program, const char *name, cairo_matrix_t* m);
 
-cairo_status_t
+cairo_private cairo_status_t
 bind_texture_to_shader (GLuint program, const char *name, GLuint tex_unit);
 
-void
+cairo_private void
 _cairo_gl_use_program (cairo_gl_shader_program_t *shader);
 
-cairo_status_t
+cairo_private cairo_status_t
 _cairo_gl_get_program (cairo_gl_context_t *ctx,
 		       cairo_gl_shader_source_t source,
 		       cairo_gl_shader_mask_t mask,
