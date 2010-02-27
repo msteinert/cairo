@@ -1208,6 +1208,8 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
     if (pattern->surface->type == CAIRO_SURFACE_TYPE_IMAGE) {
 	cairo_image_surface_t *source = (cairo_image_surface_t *) pattern->surface;
 	cairo_surface_type_t type;
+	cairo_bool_t has_identity_transform =
+	    _cairo_matrix_is_identity (&pattern->base.matrix);
 
 	if (source->base.backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT)
 	    source = (cairo_image_surface_t *) ((cairo_surface_snapshot_t *) pattern->surface)->target;
@@ -1215,6 +1217,7 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 	type = source->base.backend->type;
 	if (type == CAIRO_SURFACE_TYPE_IMAGE) {
 	    if (extend != CAIRO_EXTEND_NONE &&
+		has_identity_transform &&
 		extents->x >= 0 && extents->y >= 0 &&
 		extents->x + extents->width  <= source->width &&
 		extents->y + extents->height <= source->height)
@@ -1247,6 +1250,7 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 	    source = (cairo_image_surface_t *) sub->target;
 
 	    if (extend != CAIRO_EXTEND_NONE &&
+		has_identity_transform &&
 		extents->x >= 0 && extents->y >= 0 &&
 		extents->x + extents->width  <= sub->extents.width &&
 		extents->y + extents->height <= sub->extents.height)
