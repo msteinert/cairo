@@ -226,6 +226,7 @@ test_sources = \
 	surface-pattern-big-scale-down.c		\
 	surface-pattern-operator.c			\
 	surface-pattern-scale-down.c			\
+	surface-pattern-scale-down-extend.c		\
 	surface-pattern-scale-up.c			\
 	text-antialias-gray.c				\
 	text-antialias-none.c				\
