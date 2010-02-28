@@ -564,9 +564,15 @@ _cairo_boilerplate_xcb_finish_surface (cairo_surface_t		*surface)
 	if (ev->response_type == 0 /* trust me! */) {
 	    xcb_generic_error_t *error = (xcb_generic_error_t *) ev;
 
+#if XCB_GENERIC_ERROR_HAS_MAJOR_MINOR_CODES
 	    fprintf (stderr,
 		     "Detected error during xcb run: %d major=%d, minor=%d\n",
 		     error->error_code, error->major_code, error->minor_code);
+#else
+	    fprintf (stderr,
+		     "Detected error during xcb run: %d\n",
+		     error->error_code);
+#endif
 	    free (error);
 
 	    status = CAIRO_STATUS_WRITE_ERROR;
