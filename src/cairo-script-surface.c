@@ -817,14 +817,15 @@ _emit_stroke_style (cairo_script_surface_t *surface,
 static const char *
 _format_to_string (cairo_format_t format)
 {
-    static const char *names[] = {
-	"ARGB32",	/* CAIRO_FORMAT_ARGB32 */
-	"RGB24",	/* CAIRO_FORMAT_RGB24 */
-	"A8",		/* CAIRO_FORMAT_A8 */
-	"A1"		/* CAIRO_FORMAT_A1 */
-    };
-    assert (format < ARRAY_LENGTH (names));
-    return names[format];
+    switch (format) {
+    case CAIRO_FORMAT_ARGB32:  return "ARGB32";
+    case CAIRO_FORMAT_RGB24:   return "RGB24";
+    case CAIRO_FORMAT_A8:      return "A8";
+    case CAIRO_FORMAT_A1:      return "A1";
+    case CAIRO_FORMAT_INVALID: return "INVALID";
+    }
+    ASSERT_NOT_REACHED;
+    return "INVALID";
 }
 
 static cairo_status_t
@@ -1057,6 +1058,7 @@ _write_image_surface (cairo_output_stream_t *output,
 	    data += stride;
 	}
 	break;
+    case CAIRO_FORMAT_INVALID:
     default:
 	ASSERT_NOT_REACHED;
 	break;
@@ -1110,6 +1112,7 @@ _write_image_surface (cairo_output_stream_t *output,
 	    data += stride;
 	}
 	break;
+    case CAIRO_FORMAT_INVALID:
     default:
 	ASSERT_NOT_REACHED;
 	break;
@@ -1229,6 +1232,9 @@ _emit_image_surface (cairo_script_surface_t *surface,
 	    break;
 	case CAIRO_FORMAT_ARGB32:
 	    len = clone->width * 4;
+	    break;
+	case CAIRO_FORMAT_INVALID:
+	    ASSERT_NOT_REACHED;
 	    break;
 	}
 	len *= clone->height;

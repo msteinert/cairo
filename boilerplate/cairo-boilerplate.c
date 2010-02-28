@@ -115,7 +115,7 @@ cairo_boilerplate_format_from_content (cairo_content_t content)
 	case CAIRO_CONTENT_ALPHA: format = CAIRO_FORMAT_A8; break;
 	default:
 	    assert (0); /* not reached */
-	    format = (cairo_format_t) -1;
+	    format = CAIRO_FORMAT_INVALID;
 	    break;
     }
 

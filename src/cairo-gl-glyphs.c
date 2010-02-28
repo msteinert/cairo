@@ -164,6 +164,9 @@ cairo_gl_context_get_glyph_cache (cairo_gl_context_t *ctx,
 	cache = &ctx->glyph_cache[1];
 	format = CAIRO_FORMAT_A8;
 	break;
+    case CAIRO_FORMAT_INVALID:
+	ASSERT_NOT_REACHED;
+	return NULL;
     }
 
     if (unlikely (cache->tex == 0)) {
@@ -182,6 +185,9 @@ cairo_gl_context_get_glyph_cache (cairo_gl_context_t *ctx,
 	    case CAIRO_FORMAT_A8:
 		internal_format = GL_ALPHA;
 		break;
+	    case CAIRO_FORMAT_INVALID:
+		ASSERT_NOT_REACHED;
+		return NULL;
 	}
 
 	glGenTextures (1, &cache->tex);

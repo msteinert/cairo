@@ -176,6 +176,9 @@ _create_dc_and_bitmap (cairo_win32_surface_t *surface,
     surface->is_dib = FALSE;
 
     switch (format) {
+    default:
+    case CAIRO_FORMAT_INVALID:
+	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT);
     case CAIRO_FORMAT_ARGB32:
     case CAIRO_FORMAT_RGB24:
 	num_palette = 0;
@@ -336,6 +339,9 @@ _cairo_win32_surface_create_for_dc (HDC             original_dc,
     cairo_win32_surface_t *surface;
     unsigned char *bits;
     int rowstride;
+
+    if (! CAIRO_FORMAT_VALID (format))
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
 
     surface = malloc (sizeof (cairo_win32_surface_t));
     if (surface == NULL)

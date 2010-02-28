@@ -591,6 +591,7 @@ _cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
 	    pict_format = PictStandardA8; break;
 	case CAIRO_FORMAT_RGB24:
 	    pict_format = PictStandardRGB24; break;
+	case CAIRO_FORMAT_INVALID:
 	default:
 	    ASSERT_NOT_REACHED;
 	case CAIRO_FORMAT_ARGB32:

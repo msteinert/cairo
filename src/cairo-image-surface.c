@@ -277,6 +277,7 @@ _cairo_format_to_pixman_format_code (cairo_format_t format)
 	ret = PIXMAN_x8r8g8b8;
 	break;
     case CAIRO_FORMAT_ARGB32:
+    case CAIRO_FORMAT_INVALID:
     default:
 	ret = PIXMAN_a8r8g8b8;
 	break;
@@ -626,7 +627,7 @@ _cairo_format_from_content (cairo_content_t content)
     }
 
     ASSERT_NOT_REACHED;
-    return CAIRO_FORMAT_ARGB32;
+    return CAIRO_FORMAT_INVALID;
 }
 
 cairo_content_t
@@ -640,6 +641,8 @@ _cairo_content_from_format (cairo_format_t format)
     case CAIRO_FORMAT_A8:
     case CAIRO_FORMAT_A1:
 	return CAIRO_CONTENT_ALPHA;
+    case CAIRO_FORMAT_INVALID:
+	break;
     }
 
     ASSERT_NOT_REACHED;
@@ -658,6 +661,7 @@ _cairo_format_bits_per_pixel (cairo_format_t format)
 	return 8;
     case CAIRO_FORMAT_A1:
 	return 1;
+    case CAIRO_FORMAT_INVALID:
     default:
 	ASSERT_NOT_REACHED;
 	return 0;

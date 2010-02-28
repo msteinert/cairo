@@ -230,6 +230,7 @@ write_png (cairo_surface_t	*surface,
 	png_set_packswap (png);
 #endif
 	break;
+    case CAIRO_FORMAT_INVALID:
     default:
 	status = _cairo_error (CAIRO_STATUS_INVALID_FORMAT);
 	goto BAIL4;

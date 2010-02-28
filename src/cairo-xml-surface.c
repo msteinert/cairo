@@ -72,17 +72,6 @@ slim_hidden_proto (cairo_xml_for_recording_surface);
 static const cairo_surface_backend_t _cairo_xml_surface_backend;
 
 static const char *
-_direction_to_string (cairo_bool_t backward)
-{
-    static const char *names[] = {
-	"FORWARD",
-	"BACKWARD"
-    };
-    assert (backward < ARRAY_LENGTH (names));
-    return names[backward];
-}
-
-static const char *
 _operator_to_string (cairo_operator_t op)
 {
     static const char *names[] = {
@@ -214,14 +203,15 @@ _content_to_string (cairo_content_t content)
 static const char *
 _format_to_string (cairo_format_t format)
 {
-    static const char *names[] = {
-	"ARGB32",	/* CAIRO_FORMAT_ARGB32 */
-	"RGB24",	/* CAIRO_FORMAT_RGB24 */
-	"A8",		/* CAIRO_FORMAT_A8 */
-	"A1"		/* CAIRO_FORMAT_A1 */
-    };
-    assert (format < ARRAY_LENGTH (names));
-    return names[format];
+    switch (format) {
+    case CAIRO_FORMAT_ARGB32:  return "ARGB32";
+    case CAIRO_FORMAT_RGB24:   return "RGB24";
+    case CAIRO_FORMAT_A8:      return "A8";
+    case CAIRO_FORMAT_A1:      return "A1";
+    case CAIRO_FORMAT_INVALID: return "INVALID";
+    }
+    ASSERT_NOT_REACHED;
+    return "INVALID";
 }
 
 static void

@@ -708,7 +708,6 @@ intel_bo_put_image (intel_device_t *dev,
     offset = dst_y * stride;
     data = src->data + src_y * src->stride;
     switch (src->format) {
-    default:
     case CAIRO_FORMAT_ARGB32:
     case CAIRO_FORMAT_RGB24:
 	offset += 4 * dst_x;
@@ -726,6 +725,8 @@ intel_bo_put_image (intel_device_t *dev,
 				       src_x, src_y,
 				       width, height,
 				       dst_x, dst_y);
+    default:
+	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT);
     }
 
     if (bo->tiling == I915_TILING_NONE) {
@@ -1016,8 +1017,6 @@ intel_glyph_cache_add_glyph (intel_device_t *device,
 	}
 	break;
 
-    default:
-	ASSERT_NOT_REACHED;
     case CAIRO_FORMAT_RGB24:
     case CAIRO_FORMAT_ARGB32:
 	dst  += 4*node->x;
@@ -1028,6 +1027,9 @@ intel_glyph_cache_add_glyph (intel_device_t *device,
 	    src += glyph_surface->stride;
 	}
 	break;
+    default:
+	ASSERT_NOT_REACHED;
+	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT);
     }
 
     /* leave mapped! */
@@ -1113,6 +1115,7 @@ intel_get_glyph_cache (intel_device_t *device,
 	break;
     default:
 	ASSERT_NOT_REACHED;
+	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT);
     }
 
     if (unlikely (cache->buffer.bo == NULL)) {
@@ -1227,7 +1230,9 @@ intel_buffer_cache_init (intel_buffer_cache_t *cache,
     switch (format) {
     case CAIRO_FORMAT_A1:
     case CAIRO_FORMAT_RGB24:
+    case CAIRO_FORMAT_INVALID:
 	ASSERT_NOT_REACHED;
+	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT);
     case CAIRO_FORMAT_ARGB32:
 	cache->buffer.map0 = MAPSURF_32BIT | MT_32BIT_ARGB8888;
 	cache->buffer.stride = width * 4;

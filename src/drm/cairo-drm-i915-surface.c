@@ -1594,6 +1594,7 @@ i915_buffer_cache_init (intel_buffer_cache_t *cache,
     cache->buffer.height = height;
 
     switch (format) {
+    case CAIRO_FORMAT_INVALID:
     case CAIRO_FORMAT_A1:
     case CAIRO_FORMAT_RGB24:
 	ASSERT_NOT_REACHED;

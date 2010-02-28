@@ -618,6 +618,9 @@ compare_images (cairo_surface_t *a,
 	    bb += stride;
 	}
 	break;
+
+    case CAIRO_FORMAT_INVALID:
+	break;
     }
 
     return TRUE;
@@ -831,7 +834,7 @@ request_image (struct client *c,
     unsigned long offset = -1;
     int len;
 
-    assert (format != (cairo_format_t) -1);
+    assert (format != CAIRO_FORMAT_INVALID);
 
     len = sprintf (buf, ".image %lu %d %d %d %d\n",
 		   closure->id, format, width, height, stride);
@@ -900,14 +903,14 @@ send_surface (struct client *c,
 {
     cairo_surface_t *source = closure->surface;
     cairo_surface_t *image;
-    cairo_format_t format = (cairo_format_t) -1;
+    cairo_format_t format = CAIRO_FORMAT_INVALID;
     cairo_t *cr;
     int width, height, stride;
     void *data;
     unsigned long serial;
 
     get_surface_size (source, &width, &height, &format);
-    if (format == (cairo_format_t) -1)
+    if (format == CAIRO_FORMAT_INVALID)
 	format = format_for_content (cairo_surface_get_content (source));
 
     stride = cairo_format_stride_for_width (format, width);

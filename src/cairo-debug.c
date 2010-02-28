@@ -110,6 +110,7 @@ _cairo_debug_check_image_surface_is_defined (const cairo_surface_t *surface)
     case CAIRO_FORMAT_ARGB32:
 	width = image->width*4;
 	break;
+    case CAIRO_FORMAT_INVALID:
     default:
 	/* XXX compute width from pixman bpp */
 	return;

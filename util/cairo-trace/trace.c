@@ -1439,6 +1439,7 @@ _format_to_string (cairo_format_t format)
 {
 #define f(name) case CAIRO_FORMAT_ ## name: return #name
     switch (format) {
+	f(INVALID);
 	f(ARGB32);
 	f(RGB24);
 	f(A8);
@@ -1570,6 +1571,7 @@ _emit_image (cairo_surface_t *image,
     case CAIRO_FORMAT_A8:     len =  width; break;
     case CAIRO_FORMAT_RGB24:  len = 3*width; break;
     default:
+    case CAIRO_FORMAT_INVALID:
     case CAIRO_FORMAT_ARGB32: len = 4*width; break;
     }
 
@@ -1607,6 +1609,7 @@ _emit_image (cairo_surface_t *image,
 	    data += stride;
 	}
 	break;
+    case CAIRO_FORMAT_INVALID:
     default:
 	break;
     }
@@ -1659,6 +1662,7 @@ _emit_image (cairo_surface_t *image,
 	    data += stride;
 	}
 	break;
+    case CAIRO_FORMAT_INVALID:
     default:
 	break;
     }

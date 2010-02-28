@@ -2231,6 +2231,7 @@ cairo_surface_has_show_text_glyphs (cairo_surface_t *surface);
 
 /**
  * cairo_format_t:
+ * @CAIRO_FORMAT_INVALID: no such format exists or is supported.
  * @CAIRO_FORMAT_ARGB32: each pixel is a 32-bit quantity, with
  *   alpha in the upper 8 bits, then red, then green, then blue.
  *   The 32-bit quantities are stored native-endian. Pre-multiplied
@@ -2257,10 +2258,11 @@ cairo_surface_has_show_text_glyphs (cairo_surface_t *surface);
  * New entries may be added in future versions.
  **/
 typedef enum _cairo_format {
-    CAIRO_FORMAT_ARGB32,
-    CAIRO_FORMAT_RGB24,
-    CAIRO_FORMAT_A8,
-    CAIRO_FORMAT_A1
+    CAIRO_FORMAT_INVALID   = -1,
+    CAIRO_FORMAT_ARGB32    = 0,
+    CAIRO_FORMAT_RGB24     = 1,
+    CAIRO_FORMAT_A8        = 2,
+    CAIRO_FORMAT_A1        = 3
     /* The value of 4 is reserved by a deprecated enum value.
      * The next format added must have an explicit value of 5.
     CAIRO_FORMAT_RGB16_565 = 4,

@@ -2844,6 +2844,7 @@ _image_read_raw (csi_file_t *src,
 	len = 3 * width * height;
 	break;
     default:
+    case CAIRO_FORMAT_INVALID:
     case CAIRO_FORMAT_ARGB32:
 	len = 4 * width * height;
 	break;
@@ -2894,6 +2895,7 @@ _image_read_raw (csi_file_t *src,
 #endif
 		}
 		break;
+	    case CAIRO_FORMAT_INVALID:
 	    case CAIRO_FORMAT_ARGB32:
 		/* stride == width */
 		break;
@@ -2968,6 +2970,7 @@ _image_read_raw (csi_file_t *src,
 #endif
 	    }
 	    break;
+	case CAIRO_FORMAT_INVALID:
 	case CAIRO_FORMAT_ARGB32:
 	    /* stride == width */
 	    break;
@@ -2994,6 +2997,7 @@ _image_read_raw (csi_file_t *src,
 	    break;
 
 	case CAIRO_FORMAT_RGB24:
+	case CAIRO_FORMAT_INVALID:
 	default:
 	    break;
 	}
@@ -6140,6 +6144,7 @@ _integer_constants[] = {
     { "A8",			CAIRO_FORMAT_A8 },
     { "RGB24",			CAIRO_FORMAT_RGB24 },
     { "ARGB32",			CAIRO_FORMAT_ARGB32 },
+    { "INVALID",		CAIRO_FORMAT_INVALID },
 
     { NULL, 0 }
 };
