@@ -1627,6 +1627,7 @@ i965_surface_create_for_name (cairo_drm_device_t *base_dev,
     case CAIRO_FORMAT_A8:
 	content = CAIRO_CONTENT_ALPHA;
 	break;
+    case CAIRO_FORMAT_INVALID:
     default:
     case CAIRO_FORMAT_A1:
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));

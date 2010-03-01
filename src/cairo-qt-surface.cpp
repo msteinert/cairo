@@ -300,6 +300,8 @@ static QImage::Format
 _qimage_format_from_cairo_format (cairo_format_t fmt)
 {
     switch (fmt) {
+    case CAIRO_FORMAT_INVALID:
+	ASSERT_NOT_REACHED;
     case CAIRO_FORMAT_ARGB32:
         return QImage::Format_ARGB32_Premultiplied;
     case CAIRO_FORMAT_RGB24:

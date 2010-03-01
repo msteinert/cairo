@@ -2076,6 +2076,7 @@ i965_get_card_format (cairo_format_t format)
     case CAIRO_FORMAT_A8:
 	return BRW_SURFACEFORMAT_A8_UNORM;
     case CAIRO_FORMAT_A1:
+    case CAIRO_FORMAT_INVALID:
     default:
 	ASSERT_NOT_REACHED;
 	return 0;
@@ -2092,6 +2093,7 @@ i965_get_dest_format (cairo_format_t format)
     case CAIRO_FORMAT_A8:
         return BRW_SURFACEFORMAT_A8_UNORM;
     case CAIRO_FORMAT_A1:
+    case CAIRO_FORMAT_INVALID:
     default:
 	ASSERT_NOT_REACHED;
 	return 0;

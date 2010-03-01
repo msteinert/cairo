@@ -1537,6 +1537,7 @@ i915_surface_create_for_name (cairo_drm_device_t *base_dev,
 
     switch (format) {
     default:
+    case CAIRO_FORMAT_INVALID:
     case CAIRO_FORMAT_A1:
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
     case CAIRO_FORMAT_ARGB32:
@@ -1686,6 +1687,7 @@ i915_surface_create_from_cacheable_image_internal (i915_device_t *device,
 	format = CAIRO_FORMAT_A8;
 	bpp = 1;
 	break;
+    case CAIRO_FORMAT_INVALID:
     default:
 	ASSERT_NOT_REACHED;
 	status = _cairo_error (CAIRO_STATUS_INVALID_FORMAT);
