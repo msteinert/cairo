@@ -60,8 +60,7 @@ clip_and_paint (cairo_t *cr,
         if (GENERATE_REF) {
             do_clip (cr, w, h);
             cairo_paint (cr);
-        }
-        else {
+        } else {
             if (clip_where == CLIP_OUTSIDE_GROUP)
                 do_clip (cr, w, h);
             cairo_push_group (cr); {
@@ -70,6 +69,8 @@ clip_and_paint (cairo_t *cr,
                 cairo_paint (cr);
             }
             cairo_pop_group_to_source (cr);
+            if (clip_where == CLIP_OUTSIDE_GROUP)
+		cairo_reset_clip (cr);
             cairo_paint (cr);
         }
     }
