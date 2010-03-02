@@ -1404,11 +1404,8 @@ _cairo_surface_fallback_composite (cairo_operator_t		 op,
     cairo_status_t status;
 
     status = _fallback_init (&state, dst, dst_x, dst_y, width, height);
-    if (unlikely (status)) {
-	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
-	    status = CAIRO_STATUS_SUCCESS;
+    if (unlikely (status))
 	return status;
-    }
 
     /* We know this will never fail with the image backend; but
      * instead of calling into it directly, we call
@@ -1482,11 +1479,8 @@ _cairo_surface_fallback_fill_rectangles (cairo_surface_t         *surface,
     }
 
     status = _fallback_init (&state, surface, x1, y1, x2 - x1, y2 - y1);
-    if (unlikely (status)) {
-	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
-	    status = CAIRO_STATUS_SUCCESS;
+    if (unlikely (status))
 	return status;
-    }
 
     /* If the fetched image isn't at 0,0, we need to offset the rectangles */
 
@@ -1540,11 +1534,8 @@ _cairo_surface_fallback_composite_trapezoids (cairo_operator_t		op,
     cairo_status_t status;
 
     status = _fallback_init (&state, dst, dst_x, dst_y, width, height);
-    if (unlikely (status)) {
-	if (status == CAIRO_INT_STATUS_NOTHING_TO_DO)
-	    status = CAIRO_STATUS_SUCCESS;
+    if (unlikely (status))
 	return status;
-    }
 
     /* If the destination image isn't at 0,0, we need to offset the trapezoids */
 
