@@ -3918,13 +3918,17 @@ _cairo_image_surface_composite (cairo_operator_t	 op,
     extents.bounded.width  = width;
     extents.bounded.height = height;
 
+    extents.unbounded.x = 0;
+    extents.unbounded.y = 0;
+    extents.unbounded.width  = dst->width;
+    extents.unbounded.height = dst->height;
+
     if (clip_region != NULL) {
-	cairo_region_get_extents (clip_region, &extents.unbounded);
-    } else {
-	extents.unbounded.x = 0;
-	extents.unbounded.y = 0;
-	extents.unbounded.width  = dst->width;
-	extents.unbounded.height = dst->height;
+	cairo_rectangle_int_t rect;
+
+	cairo_region_get_extents (clip_region, &rect);
+	if (! _cairo_rectangle_intersect (&extents.unbounded, &rect))
+	    return CAIRO_STATUS_SUCCESS;
     }
 
     extents.is_bounded = _cairo_operator_bounded_by_either (op);
@@ -4066,13 +4070,17 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     extents.bounded.width  = width;
     extents.bounded.height = height;
 
+    extents.unbounded.x = 0;
+    extents.unbounded.y = 0;
+    extents.unbounded.width  = dst->width;
+    extents.unbounded.height = dst->height;
+
     if (clip_region != NULL) {
-	cairo_region_get_extents (clip_region, &extents.unbounded);
-    } else {
-	extents.unbounded.x = 0;
-	extents.unbounded.y = 0;
-	extents.unbounded.width  = dst->width;
-	extents.unbounded.height = dst->height;
+	cairo_rectangle_int_t rect;
+
+	cairo_region_get_extents (clip_region, &rect);
+	if (! _cairo_rectangle_intersect (&extents.unbounded, &rect))
+	    return CAIRO_STATUS_SUCCESS;
     }
 
     extents.is_bounded = _cairo_operator_bounded_by_either (op);
