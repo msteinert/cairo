@@ -1574,12 +1574,13 @@ _cairo_surface_fallback_composite_trapezoids (cairo_operator_t		op,
 						  width, height,
 						  traps, num_traps,
 						  clip_region);
+ FAIL:
     if (offset_traps != NULL)
 	free (offset_traps);
 
- FAIL:
     if (fallback_region != NULL)
 	cairo_region_destroy (fallback_region);
+
     _fallback_fini (&state);
 
     return status;
