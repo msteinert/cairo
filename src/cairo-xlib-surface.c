@@ -1154,7 +1154,9 @@ _draw_image_surface (cairo_xlib_surface_t   *surface,
 		int dither_adjustment = dither_row[x_off];
 		int a, r, g, b;
 
-		if (image_masks.bpp <= 8)
+		if (image_masks.bpp == 1)
+		    in_pixel = !! (((uint8_t*)row)[x/8] & (1 << (x & 7)));
+		else if (image_masks.bpp <= 8)
 		    in_pixel = ((uint8_t*)row)[x];
 		else if (image_masks.bpp <= 16)
 		    in_pixel = ((uint16_t*)row)[x];
