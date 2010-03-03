@@ -960,15 +960,23 @@ i915_set_shader_program (i915_device_t *device,
     }
 
     if (source_reg != FS_OC) {
-	if (source_reg == ~0U)
-	    if (source_pure)
-		i915_fs_mov (FS_OC, i915_fs_operand_pure (source_pure));
-	    else
+	if (source_reg == ~0U) {
+	    if (source_pure) {
+		if ((shader->content & CAIRO_CONTENT_COLOR) == 0) {
+		    if (source_pure & (1 << 3))
+			i915_fs_mov (FS_OC, i915_fs_operand_one ());
+		    else
+			i915_fs_mov (FS_OC, i915_fs_operand_zero ());
+		} else
+		    i915_fs_mov (FS_OC, i915_fs_operand_pure (source_pure));
+	    } else {
 		i915_fs_mov (FS_OC, i915_fs_operand_one ());
-	else if ((shader->content & CAIRO_CONTENT_COLOR) == 0)
+	    }
+	} else if ((shader->content & CAIRO_CONTENT_COLOR) == 0) {
 	    i915_fs_mov (FS_OC, i915_fs_operand (source_reg, W, W, W, W));
-	else
+	} else {
 	    i915_fs_mov (FS_OC, i915_fs_operand_reg (source_reg));
+	}
     } else {
 	if ((shader->content & CAIRO_CONTENT_COLOR) == 0)
 	    i915_fs_mov (FS_OC, i915_fs_operand (FS_OC, W, W, W, W));
