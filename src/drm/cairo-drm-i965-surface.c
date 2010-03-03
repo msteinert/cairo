@@ -1660,6 +1660,9 @@ _i965_device_flush (cairo_drm_device_t *device)
 {
     cairo_status_t status;
 
+    if (unlikely (device->base.finished))
+	return CAIRO_STATUS_SUCCESS;
+
     status = cairo_device_acquire (&device->base);
     if (likely (status == CAIRO_STATUS_SUCCESS))
 	status = i965_device_flush ((i965_device_t *) device);
