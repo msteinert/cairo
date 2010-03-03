@@ -987,21 +987,23 @@ _clipped (cairo_gstate_t *gstate)
 }
 
 static cairo_operator_t
-_reduce_op (cairo_gstate_t *gstate,
-	    const cairo_pattern_union_t *pattern)
+_reduce_op (cairo_gstate_t *gstate)
 {
     cairo_operator_t op;
+    const cairo_pattern_t *pattern;
 
     op = gstate->op;
+    pattern = gstate->source;
     if (op == CAIRO_OPERATOR_SOURCE &&
 	pattern->type == CAIRO_PATTERN_TYPE_SOLID)
     {
-	if (pattern->solid.color.alpha_short <= 0x00ff) {
+	const cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *) pattern;
+	if (solid->color.alpha_short <= 0x00ff) {
 	    op = CAIRO_OPERATOR_CLEAR;
 	} else if ((gstate->target->content & CAIRO_CONTENT_ALPHA) == 0) {
-	    if ((pattern->solid.color.red_short |
-		 pattern->solid.color.green_short |
-		 pattern->solid.color.blue_short) <= 0x00ff)
+	    if ((solid->color.red_short |
+		 solid->color.green_short |
+		 solid->color.blue_short) <= 0x00ff)
 	    {
 		op = CAIRO_OPERATOR_CLEAR;
 	    }
@@ -1014,9 +1016,11 @@ _reduce_op (cairo_gstate_t *gstate,
 cairo_status_t
 _cairo_gstate_paint (cairo_gstate_t *gstate)
 {
-    cairo_pattern_union_t pattern;
+    cairo_pattern_union_t source_pattern;
+    const cairo_pattern_t *pattern;
     cairo_clip_t clip;
     cairo_status_t status;
+    cairo_operator_t op;
 
     if (unlikely (gstate->source->status))
 	return gstate->source->status;
@@ -1027,11 +1031,16 @@ _cairo_gstate_paint (cairo_gstate_t *gstate)
     if (_clipped (gstate))
 	return CAIRO_STATUS_SUCCESS;
 
-    _cairo_gstate_copy_transformed_source (gstate, &pattern.base);
+    op = _reduce_op (gstate);
+    if (op == CAIRO_OPERATOR_CLEAR) {
+	pattern = &_cairo_pattern_clear.base;
+    } else {
+	_cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
+	pattern = &source_pattern.base;
+    }
 
     status = _cairo_surface_paint (gstate->target,
-				   _reduce_op (gstate, &pattern),
-				   &pattern.base,
+				   op, pattern,
 				   _gstate_get_clip (gstate, &clip));
     _cairo_clip_fini (&clip);
 
@@ -1043,6 +1052,8 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
 		    cairo_pattern_t *mask)
 {
     cairo_pattern_union_t source_pattern, mask_pattern;
+    const cairo_pattern_t *source;
+    cairo_operator_t op;
     cairo_clip_t clip;
     cairo_status_t status;
 
@@ -1067,40 +1078,44 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
+    op = _reduce_op (gstate);
+    if (op == CAIRO_OPERATOR_CLEAR) {
+	source = &_cairo_pattern_clear.base;
+    } else {
+	_cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
+	source = &source_pattern.base;
+    }
     _cairo_gstate_copy_transformed_mask (gstate, &mask_pattern.base, mask);
 
-    if (source_pattern.type == CAIRO_PATTERN_TYPE_SOLID &&
+    if (source->type == CAIRO_PATTERN_TYPE_SOLID &&
 	mask_pattern.type == CAIRO_PATTERN_TYPE_SOLID)
     {
+	const cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *) source;
 	cairo_color_t combined;
 
 	if (mask_pattern.base.has_component_alpha) {
 #define M(R, A, B, c) R.c = A.c * B.c
-	    M(combined, source_pattern.solid.color, mask_pattern.solid.color, red);
-	    M(combined, source_pattern.solid.color, mask_pattern.solid.color, green);
-	    M(combined, source_pattern.solid.color, mask_pattern.solid.color, blue);
-	    M(combined, source_pattern.solid.color, mask_pattern.solid.color, alpha);
+	    M(combined, solid->color, mask_pattern.solid.color, red);
+	    M(combined, solid->color, mask_pattern.solid.color, green);
+	    M(combined, solid->color, mask_pattern.solid.color, blue);
+	    M(combined, solid->color, mask_pattern.solid.color, alpha);
 #undef M
 	} else {
-	    combined = source_pattern.solid.color;
+	    combined = solid->color;
 	    _cairo_color_multiply_alpha (&combined, mask_pattern.solid.color.alpha);
 	}
 
 	_cairo_pattern_init_solid (&source_pattern.solid, &combined,
-				   source_pattern.solid.content |
-				   mask_pattern.solid.content);
+				   solid->content | mask_pattern.solid.content);
 
-	status = _cairo_surface_paint (gstate->target,
-				       _reduce_op (gstate, &source_pattern),
+	status = _cairo_surface_paint (gstate->target, op,
 				       &source_pattern.base,
 				       _gstate_get_clip (gstate, &clip));
     }
     else
     {
-	status = _cairo_surface_mask (gstate->target,
-				      _reduce_op (gstate, &source_pattern),
-				      &source_pattern.base,
+	status = _cairo_surface_mask (gstate->target, op,
+				      source,
 				      &mask_pattern.base,
 				      _gstate_get_clip (gstate, &clip));
     }
@@ -1142,7 +1157,7 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
     _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
 
     status = _cairo_surface_stroke (gstate->target,
-				    _reduce_op (gstate, &source_pattern),
+				    gstate->op,
 				    &source_pattern.base,
 				    path,
 				    &style,
@@ -1238,14 +1253,19 @@ _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 				       &_cairo_pattern_clear.base,
 				       _gstate_get_clip (gstate, &clip));
     } else {
-	cairo_pattern_union_t pattern;
+	cairo_pattern_union_t source_pattern;
+	const cairo_pattern_t *pattern;
 	cairo_operator_t op;
 	cairo_rectangle_int_t extents;
 	cairo_box_t box;
 
-	_cairo_gstate_copy_transformed_source (gstate, &pattern.base);
-
-	op = _reduce_op (gstate, &pattern);
+	op = _reduce_op (gstate);
+	if (op == CAIRO_OPERATOR_CLEAR) {
+	    pattern = &_cairo_pattern_clear.base;
+	} else {
+	    _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
+	    pattern = &source_pattern.base;
+	}
 
 	/* Toolkits often paint the entire background with a fill */
 	if (_cairo_surface_get_extents (gstate->target, &extents) &&
@@ -1255,12 +1275,12 @@ _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 	    box.p2.x >= _cairo_fixed_from_int (extents.x + extents.width) &&
 	    box.p2.y >= _cairo_fixed_from_int (extents.y + extents.height))
 	{
-	    status = _cairo_surface_paint (gstate->target, op, &pattern.base,
+	    status = _cairo_surface_paint (gstate->target, op, pattern,
 					   _gstate_get_clip (gstate, &clip));
 	}
 	else
 	{
-	    status = _cairo_surface_fill (gstate->target, op, &pattern.base,
+	    status = _cairo_surface_fill (gstate->target, op, pattern,
 					  path,
 					  gstate->fill_rule,
 					  gstate->tolerance,
@@ -1861,10 +1881,12 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
 				cairo_text_cluster_flags_t  cluster_flags)
 {
     cairo_pattern_union_t source_pattern;
+    const cairo_pattern_t *pattern;
     cairo_glyph_t stack_transformed_glyphs[CAIRO_STACK_ARRAY_LENGTH (cairo_glyph_t)];
     cairo_glyph_t *transformed_glyphs;
     cairo_text_cluster_t stack_transformed_clusters[CAIRO_STACK_ARRAY_LENGTH (cairo_text_cluster_t)];
     cairo_text_cluster_t *transformed_clusters;
+    cairo_operator_t op;
     cairo_status_t status;
     cairo_clip_t clip;
 
@@ -1916,7 +1938,13 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
     if (status || num_glyphs == 0)
 	goto CLEANUP_GLYPHS;
 
-    _cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
+    op = _reduce_op (gstate);
+    if (op == CAIRO_OPERATOR_CLEAR) {
+	pattern = &_cairo_pattern_clear.base;
+    } else {
+	_cairo_gstate_copy_transformed_source (gstate, &source_pattern.base);
+	pattern = &source_pattern.base;
+    }
 
     /* For really huge font sizes, we can just do path;fill instead of
      * show_glyphs, as show_glyphs would put excess pressure on the cache,
@@ -1931,9 +1959,7 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
     if (cairo_surface_has_show_text_glyphs (gstate->target) ||
 	_cairo_scaled_font_get_max_scale (gstate->scaled_font) <= 10240)
     {
-	status = _cairo_surface_show_text_glyphs (gstate->target,
-						  _reduce_op (gstate, &source_pattern),
-						  &source_pattern.base,
+	status = _cairo_surface_show_text_glyphs (gstate->target, op, pattern,
 						  utf8, utf8_len,
 						  transformed_glyphs, num_glyphs,
 						  transformed_clusters, num_clusters,
@@ -1952,9 +1978,7 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
 						&path);
 
 	if (status == CAIRO_STATUS_SUCCESS) {
-	    status = _cairo_surface_fill (gstate->target,
-					  _reduce_op (gstate, &source_pattern),
-					  &source_pattern.base,
+	    status = _cairo_surface_fill (gstate->target, op, pattern,
 					  &path,
 					  CAIRO_FILL_RULE_WINDING,
 					  gstate->tolerance,
