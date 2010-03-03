@@ -318,7 +318,7 @@ i915_shader_linear_color (i915_device_t *device,
 
     /* interpolate */
     i915_fs_mad (out, 0,
-		 i915_fs_operand (tmp, -X, -X, -X, -X),
+		 i915_fs_operand (tmp, NEG_X, NEG_X, NEG_X, NEG_X),
 		 i915_fs_operand_reg (c0),
 		 i915_fs_operand_reg (c0));
     i915_fs_mad (out, 0,
@@ -385,7 +385,7 @@ i915_shader_radial_coord (i915_device_t *device,
 	i915_fs_mad (FS_U0, MASK_X | MASK_Y,
 		     i915_fs_operand (in, X, Y, ZERO, ZERO),
 		     i915_fs_operand (g0, Z, Z, ZERO, ZERO),
-		     i915_fs_operand (g0, -X, -Y, ZERO, ZERO));
+		     i915_fs_operand (g0, NEG_X, NEG_Y, ZERO, ZERO));
 	i915_fs_dp2add (FS_U0, MASK_X,
 			i915_fs_operand (FS_U0, X, Y, ZERO, ZERO),
 			i915_fs_operand (FS_U0, X, Y, ZERO, ZERO),
@@ -418,7 +418,7 @@ i915_shader_radial_coord (i915_device_t *device,
 	/* u1.x = pdx² + pdy² - r1²; [C] */
 	i915_fs_dp3 (FS_U1, MASK_X,
 		     i915_fs_operand (FS_U0, X, Y, Z, ZERO),
-		     i915_fs_operand (FS_U0, X, Y, -Z, ZERO));
+		     i915_fs_operand (FS_U0, X, Y, NEG_Z, ZERO));
 	/* u1.x = C, u1.y = B, u1.z=-4*A; */
 	i915_fs_mov_masked (FS_U1, MASK_Y, i915_fs_operand (FS_U0, W, W, W, W));
 	i915_fs_mov_masked (FS_U1, MASK_Z, i915_fs_operand (g0, W, W, W, W));
@@ -433,8 +433,8 @@ i915_shader_radial_coord (i915_device_t *device,
 	i915_fs_rsq (out, MASK_X, i915_fs_operand (FS_U1, X, X, X, X));
 	i915_fs_mad (out, MASK_X | MASK_Y,
 		     i915_fs_operand (out, X, X, ZERO, ZERO),
-		     i915_fs_operand (FS_U1, X, -X, ZERO, ZERO),
-		     i915_fs_operand (FS_U0, -W, -W, ZERO, ZERO));
+		     i915_fs_operand (FS_U1, X, NEG_X, ZERO, ZERO),
+		     i915_fs_operand (FS_U0, NEG_W, NEG_W, ZERO, ZERO));
 	/* out.x = (-B + sqrt (B² - 4*A*C)) / (2 * A),
 	 * out.y = (-B - sqrt (B² - 4*A*C)) / (2 * A)
 	 */
@@ -816,7 +816,7 @@ i915_set_shader_program (i915_device_t *device,
 		dest_reg = FS_OC;
 	    } else {
 		i915_fs_add (FS_U0,
-			     i915_fs_operand (source_reg, -W, -W, -W, -W),
+			     i915_fs_operand (source_reg, NEG_W, NEG_W, NEG_W, NEG_W),
 			     i915_fs_operand_one ());
 		i915_fs_mul (FS_U0,
 			     i915_fs_operand_reg (FS_U0),
@@ -847,7 +847,7 @@ i915_set_shader_program (i915_device_t *device,
 		source_reg = FS_R3;
 	    } else {
 		i915_fs_add (FS_U0,
-			     i915_fs_operand (source_reg, -W, -W, -W, -W),
+			     i915_fs_operand (source_reg, NEG_W, NEG_W, NEG_W, NEG_W),
 			     i915_fs_operand_one ());
 		i915_fs_mul (FS_R3,
 			     i915_fs_operand_reg (FS_U0),
@@ -932,7 +932,7 @@ i915_set_shader_program (i915_device_t *device,
 
 	    i915_fs_add (mask_reg,
 			 i915_fs_operand_one (),
-			 i915_fs_operand (mask_reg, -W, -W, -W, -W));
+			 i915_fs_operand (mask_reg, NEG_W, NEG_W, NEG_W, NEG_W));
 
 	    if (dest_reg != FS_OC) {
 		if (dest_reg == ~0U) {

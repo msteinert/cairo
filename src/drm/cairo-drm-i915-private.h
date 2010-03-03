@@ -306,11 +306,11 @@
 #define FS_U3			((REG_TYPE_U << REG_TYPE_SHIFT) | 3)
 
 #define X_CHANNEL_SHIFT (REG_TYPE_SHIFT + 3)
-#define Y_CHANNEL_SHIFT (X_CHANNEL_SHIFT + 3)
-#define Z_CHANNEL_SHIFT (Y_CHANNEL_SHIFT + 3)
-#define W_CHANNEL_SHIFT (Z_CHANNEL_SHIFT + 3)
+#define Y_CHANNEL_SHIFT (X_CHANNEL_SHIFT + 4)
+#define Z_CHANNEL_SHIFT (Y_CHANNEL_SHIFT + 4)
+#define W_CHANNEL_SHIFT (Z_CHANNEL_SHIFT + 4)
 
-#define REG_CHANNEL_MASK 0x7
+#define REG_CHANNEL_MASK 0xf
 
 #define REG_NR(reg)		((reg) & REG_NR_MASK)
 #define REG_TYPE(reg)		(((reg) >> REG_TYPE_SHIFT) & REG_TYPE_MASK)
@@ -320,12 +320,18 @@
 #define REG_W(reg)		(((reg) >> W_CHANNEL_SHIFT) & REG_CHANNEL_MASK)
 
 enum i915_fs_channel {
-    X_CHANNEL_VAL = 1,
+    X_CHANNEL_VAL = 0,
     Y_CHANNEL_VAL,
     Z_CHANNEL_VAL,
     W_CHANNEL_VAL,
     ZERO_CHANNEL_VAL,
-    ONE_CHANNEL_VAL
+    ONE_CHANNEL_VAL,
+
+    NEG_X_CHANNEL_VAL = X_CHANNEL_VAL | 0x8,
+    NEG_Y_CHANNEL_VAL = Y_CHANNEL_VAL | 0x8,
+    NEG_Z_CHANNEL_VAL = Z_CHANNEL_VAL | 0x8,
+    NEG_W_CHANNEL_VAL = W_CHANNEL_VAL | 0x8,
+    NEG_ONE_CHANNEL_VAL = ONE_CHANNEL_VAL | 0x8
 };
 
 #define i915_fs_operand(reg, x, y, z, w) \
@@ -342,7 +348,7 @@ enum i915_fs_channel {
     i915_fs_operand(reg, X, Y, Z, W)
 
 #define i915_fs_operand_reg_negate(reg)					\
-    i915_fs_operand(reg, -X, -Y, -Z, -W)
+    i915_fs_operand(reg, NEG_X, NEG_Y, NEG_Z, NEG_W)
 
 /**
  * Returns an operand containing (0.0, 0.0, 0.0, 0.0).
@@ -360,7 +366,7 @@ enum i915_fs_channel {
 #define i915_fs_operand_one() i915_fs_operand(FS_R0, ONE, ONE, ONE, ONE)
 
 #define i915_get_hardware_channel_val(val, shift, negate) \
-    (((int) val < 0) ?  (~val << shift) | negate : (val - 1) << shift)
+    (((val & 0x7) << shift) | ((val & 0x8) ? negate : 0))
 
 /**
  * Outputs a fragment shader command to declare a sampler or texture register.
