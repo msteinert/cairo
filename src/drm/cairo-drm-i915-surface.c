@@ -334,6 +334,8 @@ i915_batch_add_reloc (i915_device_t *device,
 void
 i915_vbo_finish (i915_device_t *device)
 {
+    assert (CAIRO_MUTEX_IS_LOCKED (device->intel.base.base.mutex));
+
     if (device->vbo_used == 0)
 	return;
 
@@ -446,6 +448,8 @@ i915_batch_flush (i915_device_t *device)
     cairo_status_t status;
     uint32_t length, offset;
     int n;
+
+    assert (CAIRO_MUTEX_IS_LOCKED (device->intel.base.base.mutex));
 
     i915_vbo_finish (device);
 
@@ -655,6 +659,7 @@ i915_fixup_unbounded (i915_surface_t *dst,
 		      cairo_clip_t *clip)
 {
     i915_shader_t shader;
+    i915_device_t *device;
     cairo_status_t status;
 
     if (clip != NULL) {
@@ -691,9 +696,14 @@ i915_fixup_unbounded (i915_surface_t *dst,
 	assert (status == CAIRO_STATUS_SUCCESS);
     }
 
-    status = i915_shader_commit (&shader, i915_device (dst));
+    device =  i915_device (dst);
+    status = cairo_device_acquire (&device->intel.base.base);
     if (unlikely (status))
 	return status;
+
+    status = i915_shader_commit (&shader, device);
+    if (unlikely (status))
+	goto BAIL;
 
     /* top */
     if (extents->bounded.y != extents->unbounded.y) {
@@ -732,7 +742,9 @@ i915_fixup_unbounded (i915_surface_t *dst,
     }
 
     i915_shader_fini (&shader);
-    return CAIRO_STATUS_SUCCESS;
+  BAIL:
+    cairo_device_release (&device->intel.base.base);
+    return status;
 }
 
 static cairo_status_t
@@ -807,6 +819,7 @@ i915_fixup_unbounded_boxes (i915_surface_t *dst,
 
     if (likely (status == CAIRO_STATUS_SUCCESS && clear.num_boxes)) {
 	i915_shader_t shader;
+	i915_device_t *device;
 
 	if (clip != NULL) {
 	    i915_shader_init (&shader, dst, CAIRO_OPERATOR_DEST_OVER);
@@ -824,20 +837,29 @@ i915_fixup_unbounded_boxes (i915_surface_t *dst,
 						  &extents->unbounded);
 	    assert (status == CAIRO_STATUS_SUCCESS);
 	}
-	status = i915_shader_commit (&shader,
-				     (i915_device_t *) dst->intel.drm.base.device);
-	if (likely (status == CAIRO_STATUS_SUCCESS)) {
-	    for (chunk = &clear.chunks; chunk != NULL; chunk = chunk->next) {
-		for (i = 0; i < chunk->count; i++) {
-		    int x1 = _cairo_fixed_integer_part (chunk->base[i].p1.x);
-		    int y1 = _cairo_fixed_integer_part (chunk->base[i].p1.y);
-		    int x2 = _cairo_fixed_integer_part (chunk->base[i].p2.x);
-		    int y2 = _cairo_fixed_integer_part (chunk->base[i].p2.y);
 
-		    shader.add_rectangle (&shader, x1, y1, x2 - x1, y2 - y1);
-		}
+	device =  i915_device (dst);
+	status = cairo_device_acquire (&device->intel.base.base);
+	if (unlikely (status))
+	    goto err_shader;
+
+	status = i915_shader_commit (&shader, device);
+	if (unlikely (status))
+	    goto err_device;
+
+	for (chunk = &clear.chunks; chunk != NULL; chunk = chunk->next) {
+	    for (i = 0; i < chunk->count; i++) {
+		int x1 = _cairo_fixed_integer_part (chunk->base[i].p1.x);
+		int y1 = _cairo_fixed_integer_part (chunk->base[i].p1.y);
+		int x2 = _cairo_fixed_integer_part (chunk->base[i].p2.x);
+		int y2 = _cairo_fixed_integer_part (chunk->base[i].p2.y);
+
+		shader.add_rectangle (&shader, x1, y1, x2 - x1, y2 - y1);
 	    }
 	}
+err_device:
+	cairo_device_release (&device->intel.base.base);
+err_shader:
 	i915_shader_fini (&shader);
     }
 
@@ -860,6 +882,7 @@ _composite_boxes (i915_surface_t *dst,
     const struct _cairo_boxes_chunk *chunk;
     cairo_status_t status;
     i915_shader_t shader;
+    i915_device_t *device;
     int i;
 
     /* If the boxes are not pixel-aligned, we will need to compute a real mask */
@@ -885,25 +908,34 @@ _composite_boxes (i915_surface_t *dst,
 	    i915_shader_set_clip (&shader, clip);
     }
 
-    status = i915_shader_commit (&shader,
-				 (i915_device_t *) dst->intel.drm.base.device);
-    if (likely (status == CAIRO_STATUS_SUCCESS)) {
-	for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
-	    cairo_box_t *box = chunk->base;
-	    for (i = 0; i < chunk->count; i++) {
-		int x1 = _cairo_fixed_integer_round (box[i].p1.x);
-		int y1 = _cairo_fixed_integer_round (box[i].p1.y);
-		int x2 = _cairo_fixed_integer_round (box[i].p2.x);
-		int y2 = _cairo_fixed_integer_round (box[i].p2.y);
+    device = i915_device (dst);
+    status = cairo_device_acquire (&device->intel.base.base);
+    if (unlikely (status))
+	goto err_shader;
 
-		if (x2 > x1 && y2 > y1)
-		    shader.add_rectangle (&shader, x1, y1, x2 - x1, y2 - y1);
-	    }
+    status = i915_shader_commit (&shader, device);
+    if (unlikely (status))
+	goto err_device;
+
+    for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
+	cairo_box_t *box = chunk->base;
+	for (i = 0; i < chunk->count; i++) {
+	    int x1 = _cairo_fixed_integer_round (box[i].p1.x);
+	    int y1 = _cairo_fixed_integer_round (box[i].p1.y);
+	    int x2 = _cairo_fixed_integer_round (box[i].p2.x);
+	    int y2 = _cairo_fixed_integer_round (box[i].p2.y);
+
+	    if (x2 > x1 && y2 > y1)
+		shader.add_rectangle (&shader, x1, y1, x2 - x1, y2 - y1);
 	}
-
-	if (! extents->is_bounded)
-	    status = i915_fixup_unbounded_boxes (dst, extents, clip, boxes);
     }
+
+    if (! extents->is_bounded)
+	status = i915_fixup_unbounded_boxes (dst, extents, clip, boxes);
+
+  err_device:
+    cairo_device_release (&device->intel.base.base);
+  err_shader:
     i915_shader_fini (&shader);
 
     return status;
@@ -1041,6 +1073,7 @@ i915_surface_mask (void				*abstract_dst,
 		   cairo_clip_t			*clip)
 {
     i915_surface_t *dst = abstract_dst;
+    i915_device_t *device;
     cairo_composite_rectangles_t extents;
     i915_shader_t shader;
     cairo_clip_t local_clip;
@@ -1077,14 +1110,14 @@ i915_surface_mask (void				*abstract_dst,
 					  source,
 					  &extents.bounded);
     if (unlikely (status))
-	goto BAIL;
+	goto err_shader;
 
     status = i915_shader_acquire_pattern (&shader,
 					  &shader.mask,
 					  mask,
 					  &extents.bounded);
     if (unlikely (status))
-	goto BAIL;
+	goto err_shader;
 
     if (clip != NULL) {
 	status = _cairo_clip_get_region (clip, &clip_region);
@@ -1094,10 +1127,14 @@ i915_surface_mask (void				*abstract_dst,
 	    i915_shader_set_clip (&shader, clip);
     }
 
-    status = i915_shader_commit (&shader,
-				 (i915_device_t *) dst->intel.drm.base.device);
+    device = i915_device (dst);
+    status = cairo_device_acquire (&device->intel.base.base);
     if (unlikely (status))
-	goto BAIL;
+	goto err_shader;
+
+    status = i915_shader_commit (&shader, device);
+    if (unlikely (status))
+	goto err_device;
 
     if (clip_region != NULL) {
 	unsigned int n, num_rectangles;
@@ -1122,7 +1159,9 @@ i915_surface_mask (void				*abstract_dst,
     if (! extents.is_bounded)
 	status = i915_fixup_unbounded (dst, &extents, clip);
 
-  BAIL:
+  err_device:
+    cairo_device_release (&device->intel.base.base);
+  err_shader:
     i915_shader_fini (&shader);
     if (have_clip)
 	_cairo_clip_fini (&local_clip);

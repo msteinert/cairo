@@ -2669,6 +2669,8 @@ i915_shader_commit (i915_shader_t *shader,
     unsigned floats_per_vertex;
     cairo_status_t status;
 
+    assert (CAIRO_MUTEX_IS_LOCKED (device->intel.base.base.mutex));
+
     i915_shader_combine_source (shader, device);
     i915_shader_combine_mask (shader);
     i915_shader_setup_dst (shader);
