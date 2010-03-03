@@ -1472,6 +1472,7 @@ intel_gradient_render (intel_device_t *device,
 	pixman_image_unref (image);
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
+    intel_bo_set_tiling (device, buffer->bo, I915_TILING_NONE, 0);
 
     intel_bo_write (device, buffer->bo, 0, 4*width, pixman_image_get_data (image));
     pixman_image_unref (image);
