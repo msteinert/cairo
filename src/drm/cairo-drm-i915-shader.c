@@ -640,7 +640,7 @@ i915_set_shader_program (i915_device_t *device,
 	/* XXX can we defer premultiplication? */
 	i915_fs_mul (out_reg,
 		     i915_fs_operand_reg (FS_U3),
-		     i915_fs_operand (FS_U3, W, W, W, W));
+		     i915_fs_operand (FS_U3, W, W, W, ONE));
 
 	constant_offset += 2;
 	texture_offset += 1;
@@ -711,11 +711,7 @@ i915_set_shader_program (i915_device_t *device,
 				  FS_T0 + texture_offset, /* input */
 				  FS_C0 + constant_offset,
 				  FS_C0 + constant_offset + 1, /* colour ramp */
-				  FS_U3); /* unpremultiplied output */
-	i915_fs_mul (FS_R1,
-		     i915_fs_operand_reg (FS_U3),
-		     i915_fs_operand (source_reg, W, W, W, W));
-
+				  FS_R1); /* unpremultiplied output */
 	constant_offset += 2;
 	texture_offset += 1;
 	mask_reg = FS_R1;
