@@ -372,8 +372,8 @@ i915_shader_radial_init (struct i915_shader_radial *r,
 /* Max instruction count: 10 */
 static void
 i915_shader_radial_coord (i915_device_t *device,
-			   enum i915_shader_radial_mode mode,
-			   int in, int g0, int g1, int out)
+			  enum i915_shader_radial_mode mode,
+			  int in, int g0, int g1, int out)
 {
     switch (mode) {
     case RADIAL_ONE:
@@ -651,9 +651,9 @@ i915_set_shader_program (i915_device_t *device,
 	i915_shader_radial_coord (device, shader->source.base.mode,
 				  FS_T0, /* input */
 				  FS_C0, FS_C1, /* gradient constants */
-				  FS_U3); /* coordinate */
+				  FS_R0); /* coordinate */
 
-	i915_fs_texld (out_reg, FS_S0, FS_U3);
+	i915_fs_texld (out_reg, FS_S0, FS_R0);
 	constant_offset += 2;
 	texture_offset += 1;
 	sampler_offset += 1;
@@ -722,9 +722,9 @@ i915_set_shader_program (i915_device_t *device,
 				  FS_T0 + texture_offset, /* input */
 				  FS_C0 + constant_offset,
 				  FS_C0 + constant_offset + 1, /* gradient constants */
-				  FS_U3); /* coordinate */
+				  FS_R1); /* coordinate */
 
-	i915_fs_texld (FS_R1, FS_S0 + sampler_offset, FS_U3);
+	i915_fs_texld (FS_R1, FS_S0 + sampler_offset, FS_R1);
 	constant_offset += 2;
 	texture_offset += 1;
 	sampler_offset += 1;
