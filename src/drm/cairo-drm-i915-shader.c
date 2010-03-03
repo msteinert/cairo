@@ -1220,7 +1220,7 @@ i915_shader_acquire_radial (i915_shader_t *shader,
 
     i915_shader_radial_init (&src->radial, radial);
 
-    src->type.vertex = VS_RADIAL;
+    src->type.vertex = VS_TEXTURE;
     src->type.fragment = FS_RADIAL;
     src->type.pattern = PATTERN_RADIAL;
     src->base.texfmt = TEXCOORDFMT_2D;
@@ -2590,7 +2590,6 @@ i915_composite_vertex (float *v,
     case VS_LINEAR:
 	*v++ = i915_shader_linear_texcoord (&shader->source.linear, x, y);
 	break;
-    case VS_RADIAL:
     case VS_TEXTURE:
 	s = x, t = y;
 	cairo_matrix_transform_point (&shader->source.base.matrix, &s, &t);
@@ -2607,11 +2606,6 @@ i915_composite_vertex (float *v,
 	break;
     case VS_LINEAR:
 	*v++ = i915_shader_linear_texcoord (&shader->mask.linear, x, y);
-	break;
-    case VS_RADIAL:
-	s = x, t = y;
-	cairo_matrix_transform_point (&shader->mask.base.matrix, &s, &t);
-	*v++ = s; *v++ = t;
 	break;
     case VS_TEXTURE:
 	s = x, t = y;

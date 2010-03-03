@@ -96,10 +96,6 @@ i915_emit_glyph_rectangle_general (i915_device_t *device,
     case VS_LINEAR:
 	*v++ = i915_shader_linear_texcoord (&shader->source.linear, s, t);
 	break;
-    case VS_RADIAL:
-	cairo_matrix_transform_point (&shader->source.base.matrix, &s, &t);
-	*v++ = s; *v++ = t;
-	break;
     case VS_TEXTURE:
 	cairo_matrix_transform_point (&shader->source.base.matrix, &s, &t);
 	*v++ = s; *v++ = t;
@@ -120,10 +116,6 @@ i915_emit_glyph_rectangle_general (i915_device_t *device,
     case VS_LINEAR:
 	*v++ = i915_shader_linear_texcoord (&shader->source.linear, s, t);
 	break;
-    case VS_RADIAL:
-	cairo_matrix_transform_point (&shader->source.base.matrix, &s, &t);
-	*v++ = s; *v++ = t;
-	break;
     case VS_TEXTURE:
 	cairo_matrix_transform_point (&shader->source.base.matrix, &s, &t);
 	*v++ = s; *v++ = t;
@@ -143,10 +135,6 @@ i915_emit_glyph_rectangle_general (i915_device_t *device,
 	break;
     case VS_LINEAR:
 	*v++ = i915_shader_linear_texcoord (&shader->source.linear, s, t);
-	break;
-    case VS_RADIAL:
-	cairo_matrix_transform_point (&shader->source.base.matrix, &s, &t);
-	*v++ = s; *v++ = t;
 	break;
     case VS_TEXTURE:
 	cairo_matrix_transform_point (&shader->source.base.matrix, &s, &t);
@@ -387,7 +375,6 @@ i915_surface_glyphs (void			*abstract_surface,
 	break;
     default:
     case VS_LINEAR:
-    case VS_RADIAL:
     case VS_TEXTURE:
     case VS_TEXTURE_16:
 	emit_func = i915_emit_glyph_rectangle_general;

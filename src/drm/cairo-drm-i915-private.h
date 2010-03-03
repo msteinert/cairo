@@ -711,7 +711,6 @@ enum {
 typedef enum {
     VS_CONSTANT,
     VS_LINEAR,
-    VS_RADIAL,
     VS_TEXTURE,
     VS_TEXTURE_16,
 } i915_vertex_shader_t;

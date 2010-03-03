@@ -179,41 +179,9 @@ i915_span_linear (i915_spans_t *spans,
 }
 
 static void
-i915_span_radial (i915_spans_t *spans,
-		  int x0, int x1, int y0, int y1,
-		  int alpha)
-{
-    float *vertices;
-    float a = alpha / 255.;
-    double s, t;
-
-    vertices = spans->get_rectangle (spans);
-
-    *vertices++ = x1;
-    *vertices++ = y1;
-    s = x0, t = y0;
-    cairo_matrix_transform_point (&spans->shader.source.base.matrix, &s, &t);
-    *vertices++ = s; *vertices++ = t;
-    *vertices++ = a;
-
-    *vertices++ = x0;
-    *vertices++ = y1;
-    s = x1, t = y0;
-    cairo_matrix_transform_point (&spans->shader.source.base.matrix, &s, &t);
-    *vertices++ = s; *vertices++ = t;
-    *vertices++ = a;
-
-    *vertices++ = x0;
-    *vertices++ = y0;
-    s = x1, t = y1;
-    cairo_matrix_transform_point (&spans->shader.source.base.matrix, &s, &t);
-    *vertices++ = s; *vertices++ = t;
-    *vertices++ = a;
-}
-
-static void
 i915_span_texture (i915_spans_t *spans,
-		   int x0, int x1, int y0, int y1, int alpha)
+		   int x0, int x1, int y0, int y1,
+		   int alpha)
 {
     float *vertices;
     float a = alpha / 255.;
@@ -300,7 +268,6 @@ i915_span_generic (i915_spans_t *spans,
     case VS_LINEAR:
 	*vertices++ = i915_shader_linear_texcoord (&spans->shader.source.linear, s, t);
 	break;
-    case VS_RADIAL:
     case VS_TEXTURE:
 	cairo_matrix_transform_point (&spans->shader.source.base.matrix, &s, &t);
 	*vertices++ = s; *vertices++ = t;
@@ -326,7 +293,6 @@ i915_span_generic (i915_spans_t *spans,
     case VS_LINEAR:
 	*vertices++ = i915_shader_linear_texcoord (&spans->shader.source.linear, s, t);
 	break;
-    case VS_RADIAL:
     case VS_TEXTURE:
 	cairo_matrix_transform_point (&spans->shader.source.base.matrix, &s, &t);
 	*vertices++ = s; *vertices++ = t;
@@ -352,7 +318,6 @@ i915_span_generic (i915_spans_t *spans,
     case VS_LINEAR:
 	*vertices++ = i915_shader_linear_texcoord (&spans->shader.source.linear, s, t);
 	break;
-    case VS_RADIAL:
     case VS_TEXTURE:
 	cairo_matrix_transform_point (&spans->shader.source.base.matrix, &s, &t);
 	*vertices++ = s; *vertices++ = t;
@@ -585,9 +550,6 @@ i915_spans_init (i915_spans_t *spans,
 	    break;
 	case VS_LINEAR:
 	    spans->span = i915_span_linear;
-	    break;
-	case VS_RADIAL:
-	    spans->span = i915_span_radial;
 	    break;
 	case VS_TEXTURE:
 	    spans->span = i915_span_texture;
