@@ -90,6 +90,7 @@ static cairo_surface_t *
 create_source_surface (int size)
 {
 #if CAIRO_HAS_XCB_SURFACE
+    xcb_connection_t *connection;
     xcb_render_pictforminfo_t *render_format;
     struct closure *data;
     cairo_surface_t *surface;
@@ -97,30 +98,34 @@ create_source_surface (int size)
     xcb_void_cookie_t cookie;
     void *formats;
 
-    data = xmalloc (sizeof (struct closure));
+    connection = xcb_connect (NULL, NULL);
+    if (connection == NULL)
+	return NULL;
 
-    data->connection = xcb_connect (NULL, NULL);
-    render_format = find_depth (data->connection, 32, &formats);
+    data = xmalloc (sizeof (struct closure));
+    data->connection = connection;
+
+    render_format = find_depth (connection, 32, &formats);
     if (render_format == NULL) {
-	xcb_disconnect (data->connection);
+	xcb_disconnect (connection);
 	free (data);
 	return NULL;
     }
 
-    root = xcb_setup_roots_iterator (xcb_get_setup (data->connection)).data;
+    root = xcb_setup_roots_iterator (xcb_get_setup (connection)).data;
 
-    data->pixmap = xcb_generate_id (data->connection);
-    cookie = xcb_create_pixmap_checked (data->connection, 32,
+    data->pixmap = xcb_generate_id (connection);
+    cookie = xcb_create_pixmap_checked (connection, 32,
 					data->pixmap, root->root, size, size);
     /* slow, but sure */
-    if (xcb_request_check (data->connection, cookie) != NULL) {
+    if (xcb_request_check (connection, cookie) != NULL) {
 	free (formats);
-	xcb_disconnect (data->connection);
+	xcb_disconnect (connection);
 	free (data);
 	return NULL;
     }
 
-    surface = cairo_xcb_surface_create_with_xrender_format (data->connection,
+    surface = cairo_xcb_surface_create_with_xrender_format (connection,
 							    root,
 							    data->pixmap,
 							    render_format,
