@@ -1450,6 +1450,7 @@ intel_gradient_render (intel_device_t *device,
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     pixman_image_set_filter (gradient, PIXMAN_FILTER_BILINEAR, NULL, 0);
+    pixman_image_set_repeat (gradient, PIXMAN_REPEAT_PAD);
 
     image = pixman_image_create_bits (PIXMAN_a8r8g8b8, width, 1, NULL, 0);
     if (unlikely (image == NULL)) {
