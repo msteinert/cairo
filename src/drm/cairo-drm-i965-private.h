@@ -339,9 +339,8 @@ struct i965_stream {
 };
 
 #define I965_BATCH_SIZE (16 * 4096)
-#define I965_SURFACE_SIZE (16 * 4096)
 #define I965_GENERAL_SIZE (16 * 4096)
-#define I965_CONSTANT_SIZE (16 * 4096)
+#define I965_SURFACE_SIZE (32 * 4096)
 #define I965_VERTEX_SIZE (128 * 4096)
 
 #define I965_TILING_DEFAULT I915_TILING_Y
@@ -402,12 +401,12 @@ struct i965_device {
 
     i965_stream_t batch;
     uint8_t batch_base[I965_BATCH_SIZE];
-    struct drm_i915_gem_relocation_entry batch_relocations[1024];
+    struct drm_i915_gem_relocation_entry batch_relocations[2048];
 
     i965_stream_t surface;
     uint8_t surface_base[I965_SURFACE_SIZE];
     struct i965_pending_relocation surface_pending_relocations[1];
-    struct drm_i915_gem_relocation_entry surface_relocations[512];
+    struct drm_i915_gem_relocation_entry surface_relocations[1024];
 
     i965_stream_t general;
     uint8_t general_base[I965_GENERAL_SIZE];
@@ -416,10 +415,6 @@ struct i965_device {
     i965_stream_t vertex;
     uint8_t vertex_base[I965_VERTEX_SIZE];
     struct i965_pending_relocation vertex_pending_relocations[512];
-
-    i965_stream_t constant;
-    uint8_t constant_base[I965_CONSTANT_SIZE];
-    struct i965_pending_relocation constant_pending_relocations[512];
 
     struct {
 	size_t gtt_size;

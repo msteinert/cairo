@@ -290,8 +290,7 @@ static void
 i965_device_reset (i965_device_t *device)
 {
     device->exec.count = 0;
-    device->exec.gtt_size = I965_CONSTANT_SIZE +
-	                    I965_VERTEX_SIZE +
+    device->exec.gtt_size = I965_VERTEX_SIZE +
 	                    I965_SURFACE_SIZE +
 			    I965_GENERAL_SIZE +
 			    I965_BATCH_SIZE;
@@ -532,14 +531,8 @@ i965_device_flush (i965_device_t *device)
 
     /* Combine vertex+constant+surface+batch streams? */
     max = aligned = device->vertex.used;
-    if (device->constant.used) {
-	aligned = (aligned + 63) & -64;
-	aligned += device->constant.used;
-	if (device->constant.used > max)
-	    max = device->constant.used;
-    }
     if (device->surface.used) {
-	aligned = (aligned + 31) & -32;
+	aligned = (aligned + 63) & -64;
 	aligned += device->surface.used;
 	if (device->surface.used > max)
 	    max = device->surface.used;
@@ -564,15 +557,10 @@ i965_device_flush (i965_device_t *device)
 	    _copy_to_bo_and_apply_relocations (device, bo, &device->vertex, 0);
 
 	aligned = device->vertex.used;
-	if (device->constant.used) {
-	    aligned = (aligned + 63) & -64;
-	    _copy_to_bo_and_apply_relocations (device, bo, &device->constant, aligned);
-	    aligned += device->constant.used;
-	}
 
 	batch_num_relocations = device->batch.num_relocations;
 	if (device->surface.used) {
-	    aligned = (aligned + 31) & -32;
+	    aligned = (aligned + 63) & -64;
 	    _copy_to_bo_and_apply_relocations (device, bo, &device->surface, aligned);
 
 	    batch_num_relocations = device->batch.num_relocations;
@@ -624,49 +612,8 @@ i965_device_flush (i965_device_t *device)
 	}
     } else {
 	i965_stream_commit (device, &device->vertex);
-
-	if (device->constant.used && device->surface.used){
-	    aligned = (device->constant.used + 31) & -32;
-	    aligned += device->surface.used;
-
-	    max = MAX (device->constant.used, device->surface.used);
-	    if (aligned <= next_bo_size (max)) {
-		if (aligned <= 8192)
-		    max = aligned;
-
-		bo = intel_bo_create (&device->intel, max, FALSE);
-		if (unlikely (bo == NULL))
-		    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
-		assert (aligned <= bo->base.size);
-
-		_copy_to_bo_and_apply_relocations (device, bo, &device->constant, 0);
-
-		aligned = (device->constant.used + 31) & -32;
-
-		_copy_to_bo_and_apply_relocations (device, bo, &device->surface, aligned);
-
-		if (device->surface.num_relocations) {
-		    assert (bo->exec != NULL);
-
-		    for (n = 0; n < device->surface.num_relocations; n++)
-			device->surface.relocations[n].offset += aligned;
-
-		    bo->exec->relocs_ptr = (uintptr_t) device->surface.relocations;
-		    bo->exec->relocation_count = device->surface.num_relocations;
-		}
-
-		i965_stream_reset (&device->surface);
-		i965_stream_reset (&device->constant);
-
-		intel_bo_destroy (&device->intel, bo);
-	    }
-	} else {
-	    if (device->constant.used)
-		i965_stream_commit (device, &device->constant);
-	    if (device->surface.used)
-		i965_stream_commit (device, &device->surface);
-	}
+	if (device->surface.used)
+	    i965_stream_commit (device, &device->surface);
 
 	bo = intel_bo_create (&device->intel, device->batch.used, FALSE);
 	if (unlikely (bo == NULL))
@@ -697,7 +644,6 @@ i965_device_flush (i965_device_t *device)
 
     i965_stream_reset (&device->vertex);
     i965_stream_reset (&device->surface);
-    i965_stream_reset (&device->constant);
     i965_stream_reset (&device->batch);
 
     intel_glyph_cache_unpin (&device->intel);
@@ -1871,12 +1817,6 @@ _cairo_drm_i965_device_create (int fd, dev_t dev, int vendor_id, int chip_id)
 		      device->vertex_base, sizeof (device->vertex_base),
 		      device->vertex_pending_relocations,
 		      ARRAY_LENGTH (device->vertex_pending_relocations),
-		      NULL, 0);
-
-    i965_stream_init (&device->constant,
-		      device->constant_base, sizeof (device->constant_base),
-		      device->constant_pending_relocations,
-		      ARRAY_LENGTH (device->constant_pending_relocations),
 		      NULL, 0);
 
     cairo_list_init (&device->flush);

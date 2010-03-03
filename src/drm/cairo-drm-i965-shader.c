@@ -2572,17 +2572,12 @@ i965_emit_composite (i965_device_t *device,
 	assert (size <= 64 * URB_CS_ENTRY_SIZE);
 	assert (((sizeof (float) * shader->constants_size + 31) & -32) == 32 * i965_shader_const_urb_length (shader));
 
-	OUT_BATCH (BRW_CONSTANT_BUFFER | (1 << 8));
-	assert ((device->constant.used & 63) == 0);
-	i965_stream_add_pending_relocation (&device->constant,
-					    device->batch.used,
-					    I915_GEM_DOMAIN_INSTRUCTION, 0,
-					    device->constant.used + size / 64 - 1);
-	OUT_BATCH (0); /* pending relocation */
-
-	device->constants = i965_stream_alloc (&device->constant, 0, size);
+	device->constants = i965_stream_alloc (&device->surface, 64, size);
 	memcpy (device->constants, shader->constants, size);
 	device->constants_size = shader->constants_size;
+
+	OUT_BATCH (BRW_CONSTANT_BUFFER | (1 << 8));
+	OUT_BATCH (i965_stream_offsetof (&device->surface, device->constants) + size / 64 - 1);
     }
 
     i965_emit_vertex_element (device, shader);
@@ -2595,6 +2590,8 @@ i965_flush_vertices (i965_device_t *device)
 
     if (device->vertex.used == device->vertex.committed)
 	return;
+
+    assert (device->vertex.used > device->vertex.committed);
 
     vertex_start = device->vertex.committed / device->vertex_size;
     vertex_count =
@@ -2630,10 +2627,6 @@ i965_flush_vertices (i965_device_t *device)
     OUT_BATCH (0);
 
     device->vertex.committed = device->vertex.used;
-
-#if 1
-    OUT_BATCH (MI_FLUSH);
-#endif
 }
 
 void
@@ -2723,13 +2716,6 @@ recheck:
 		  device->surface.num_relocations + 4 > device->surface.max_relocations))
     {
 	i965_stream_commit (device, &device->surface);
-	goto recheck;
-    }
-
-    if (unlikely (device->constant.used + sizeof (device->constants) > device->constant.size ||
-		  device->constant.num_pending_relocations == device->constant.max_pending_relocations))
-    {
-	i965_stream_commit (device, &device->constant);
 	goto recheck;
     }
 
