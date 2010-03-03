@@ -985,7 +985,7 @@ i915_set_shader_program (i915_device_t *device,
     FS_END ();
 }
 
-static void
+static cairo_bool_t
 i915_shader_linear_init (struct i915_shader_linear *l,
 			 const cairo_linear_pattern_t *linear)
 {
@@ -994,9 +994,12 @@ i915_shader_linear_init (struct i915_shader_linear *l,
 
     dx = _cairo_fixed_to_double (linear->p2.x - linear->p1.x);
     dy = _cairo_fixed_to_double (linear->p2.y - linear->p1.y);
-    sf = 1. / (dx * dx + dy * dy);
-    dx *= sf;
-    dy *= sf;
+    sf = dx * dx + dy * dy;
+    if (sf <= 1e-5)
+	return FALSE;
+
+    dx /= sf;
+    dy /= sf;
 
     x0 = _cairo_fixed_to_double (linear->p1.x);
     y0 = _cairo_fixed_to_double (linear->p1.y);
@@ -1015,6 +1018,8 @@ i915_shader_linear_init (struct i915_shader_linear *l,
 	l->dy = m.xy;
 	l->offset = m.x0;
     }
+
+    return TRUE;
 }
 
 static cairo_bool_t
@@ -1130,8 +1135,8 @@ i915_shader_acquire_linear (i915_shader_t *shader,
     cairo_bool_t mode = LINEAR_TEXTURE;
     cairo_status_t status;
 
-    i915_shader_linear_init (&src->linear, linear);
-    if (linear->base.n_stops == 2 &&
+    if (i915_shader_linear_init (&src->linear, linear) &&
+	linear->base.n_stops == 2 &&
 	linear->base.stops[0].offset == 0.0 &&
 	linear->base.stops[1].offset == 1.0)
     {
