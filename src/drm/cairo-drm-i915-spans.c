@@ -280,8 +280,13 @@ i915_span_generic (i915_spans_t *spans,
     *vertices++ = alpha;
     if (spans->need_clip_surface) {
 	s = x1, t = y1;
-	cairo_matrix_transform_point (&spans->shader.source.base.matrix, &s, &t);
-	*vertices++ = s; *vertices++ = t;
+	cairo_matrix_transform_point (&spans->shader.clip.base.matrix, &s, &t);
+	*vertices++ = texcoord_2d_16 (s, t);
+    }
+    if (spans->shader.need_combine) {
+	s = x1, t = y1;
+	cairo_matrix_transform_point (&spans->shader.dst.base.matrix, &s, &t);
+	*vertices++ = texcoord_2d_16 (s, t);
     }
 
     /* bottom left */
@@ -305,8 +310,13 @@ i915_span_generic (i915_spans_t *spans,
     *vertices++ = alpha;
     if (spans->need_clip_surface) {
 	s = x0, t = y1;
-	cairo_matrix_transform_point (&spans->shader.source.base.matrix, &s, &t);
-	*vertices++ = s; *vertices++ = t;
+	cairo_matrix_transform_point (&spans->shader.clip.base.matrix, &s, &t);
+	*vertices++ = texcoord_2d_16 (s, t);
+    }
+    if (spans->shader.need_combine) {
+	s = x0, t = y1;
+	cairo_matrix_transform_point (&spans->shader.dst.base.matrix, &s, &t);
+	*vertices++ = texcoord_2d_16 (s, t);
     }
 
     /* top left */
@@ -330,8 +340,13 @@ i915_span_generic (i915_spans_t *spans,
     *vertices++ = alpha;
     if (spans->need_clip_surface) {
 	s = x0, t = y0;
-	cairo_matrix_transform_point (&spans->shader.source.base.matrix, &s, &t);
-	*vertices++ = s; *vertices++ = t;
+	cairo_matrix_transform_point (&spans->shader.clip.base.matrix, &s, &t);
+	*vertices++ = texcoord_2d_16 (s, t);
+    }
+    if (spans->shader.need_combine) {
+	s = x0, t = y0;
+	cairo_matrix_transform_point (&spans->shader.dst.base.matrix, &s, &t);
+	*vertices++ = texcoord_2d_16 (s, t);
     }
 }
 
@@ -543,28 +558,6 @@ i915_spans_init (i915_spans_t *spans,
     if (unlikely (status))
 	return status;
 
-    if (! spans->need_clip_surface) {
-	switch (spans->shader.source.type.vertex) {
-	case VS_CONSTANT:
-	    spans->span = i915_span_constant;
-	    break;
-	case VS_LINEAR:
-	    spans->span = i915_span_linear;
-	    break;
-	case VS_TEXTURE:
-	    spans->span = i915_span_texture;
-	    break;
-	case VS_TEXTURE_16:
-	    spans->span = i915_span_texture16;
-	    break;
-	default:
-	    spans->span = i915_span_generic;
-	    break;
-	}
-    } else {
-	spans->span = i915_span_generic;
-    }
-
     spans->rectangle_size = 3 * (2 + i915_shader_num_texcoords (&spans->shader));
     return CAIRO_STATUS_SUCCESS;
 }
@@ -625,6 +618,28 @@ i915_clip_and_composite_spans (i915_surface_t		*dst,
     status = i915_shader_commit (&spans.shader, device);
     if (unlikely (status))
 	goto CLEANUP_DEVICE;
+
+    if (!spans.shader.need_combine && ! spans.need_clip_surface) {
+	switch (spans.shader.source.type.vertex) {
+	case VS_CONSTANT:
+	    spans.span = i915_span_constant;
+	    break;
+	case VS_LINEAR:
+	    spans.span = i915_span_linear;
+	    break;
+	case VS_TEXTURE:
+	    spans.span = i915_span_texture;
+	    break;
+	case VS_TEXTURE_16:
+	    spans.span = i915_span_texture16;
+	    break;
+	default:
+	    spans.span = i915_span_generic;
+	    break;
+	}
+    } else {
+	spans.span = i915_span_generic;
+    }
 
     status = draw_func (draw_closure, &spans.renderer, spans.extents);
     if (spans.clip_region != NULL && status == CAIRO_STATUS_SUCCESS) {
