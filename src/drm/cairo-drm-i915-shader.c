@@ -2407,14 +2407,13 @@ i915_shader_set_clip (i915_shader_t *shader,
 	SS3_NORMALIZED_COORDS |
 	i915_texture_extend (CAIRO_EXTEND_NONE);
 
+    clip_extents = _cairo_clip_get_extents (clip);
     cairo_matrix_init_scale (&shader->clip.base.matrix,
 			     1. / s->intel.drm.width,
 			     1. / s->intel.drm.height);
-
-    clip_extents = _cairo_clip_get_extents (clip);
     cairo_matrix_translate (&shader->clip.base.matrix,
-			    NEAREST_BIAS + clip_extents->x,
-			    NEAREST_BIAS + clip_extents->y);
+			    NEAREST_BIAS - clip_extents->x,
+			    NEAREST_BIAS - clip_extents->y);
 }
 
 static cairo_status_t
@@ -2534,7 +2533,6 @@ i915_shader_setup_dst (i915_shader_t *shader)
     cairo_matrix_init_scale (&shader->dst.base.matrix,
 			     1. / s->intel.drm.width,
 			     1. / s->intel.drm.height);
-
     cairo_matrix_translate (&shader->dst.base.matrix,
 			    NEAREST_BIAS,
 			    NEAREST_BIAS);
