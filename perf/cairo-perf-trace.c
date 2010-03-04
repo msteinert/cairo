@@ -53,6 +53,10 @@
 #include <sys/stat.h>
 #include <dirent.h>
 
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
 #include <signal.h>
 
 #if HAVE_FCFINI
@@ -671,8 +675,10 @@ parse_options (cairo_perf_t *perf, int argc, char *argv[])
 
     if (verbose && perf->summary == NULL)
 	perf->summary = stderr;
+#if HAVE_UNISTD_H
     if (perf->summary && isatty (fileno (perf->summary)))
 	perf->summary_continuous = TRUE;
+#endif
 
     if (optind < argc) {
 	perf->names = &argv[optind];
@@ -702,9 +708,11 @@ have_trace_filenames (cairo_perf_t *perf)
     if (perf->num_names == 0)
 	return FALSE;
 
+#if HAVE_UNISTD_H
     for (i = 0; i < perf->num_names; i++)
 	if (access (perf->names[i], R_OK) == 0)
 	    return TRUE;
+#endif
 
     return FALSE;
 }
