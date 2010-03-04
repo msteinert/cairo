@@ -742,23 +742,37 @@ i915_set_shader_program (i915_device_t *device,
     if (mask_reg != ~0U) {
 	if (! shader->need_combine &&
 	    shader->clip.type.fragment != FS_TEXTURE &&
-	    shader->content != CAIRO_CONTENT_ALPHA)
+	    (shader->content != CAIRO_CONTENT_ALPHA || source_reg == ~0U))
 	{
 	    out_reg = FS_OC;
 	}
 	if (source_reg == ~0U) {
 	    if (source_pure) {
 		if (shader->mask.type.fragment == FS_SPANS) {
-		    i915_fs_mov (out_reg,
-				 i915_fs_operand_impure (mask_reg, X, source_pure));
+		    if (out_reg == FS_OC && shader->content == CAIRO_CONTENT_ALPHA) {
+			if (source_pure & (1 << 3))
+			    i915_fs_mov (out_reg, i915_fs_operand (mask_reg, X, X, X, X));
+			else
+			    i915_fs_mov (out_reg, i915_fs_operand_zero ());
+		    } else {
+			i915_fs_mov (out_reg,
+				     i915_fs_operand_impure (mask_reg, X, source_pure));
+		    }
 		} else {
 		    /* XXX ComponentAlpha
 		       i915_fs_mov (out_reg,
 		       i915_fs_operand_pure (mask_reg,
 		       shader->source.solid.pure));
 		       */
-		    i915_fs_mov (out_reg,
-				 i915_fs_operand_impure (mask_reg, W, source_pure));
+		    if (out_reg == FS_OC && shader->content == CAIRO_CONTENT_ALPHA) {
+			if (source_pure & (1 << 3))
+			    i915_fs_mov (out_reg, i915_fs_operand (mask_reg, W, W, W, W));
+			else
+			    i915_fs_mov (out_reg, i915_fs_operand_zero ());
+		    } else {
+			i915_fs_mov (out_reg,
+				     i915_fs_operand_impure (mask_reg, W, source_pure));
+		    }
 		}
 		source_reg = out_reg;
 	    } else if (shader->mask.type.fragment == FS_SPANS) {
@@ -770,18 +784,30 @@ i915_set_shader_program (i915_device_t *device,
 	    }
 	} else {
 	    if (shader->mask.type.fragment == FS_SPANS) {
-		i915_fs_mul (out_reg,
-			     i915_fs_operand_reg (source_reg),
-			     i915_fs_operand (mask_reg, X, X, X, X));
+		    if (out_reg == FS_OC && shader->content == CAIRO_CONTENT_ALPHA) {
+			i915_fs_mul (out_reg,
+				     i915_fs_operand (source_reg, W, W, W, W),
+				     i915_fs_operand (mask_reg, X, X, X, X));
+		    } else {
+			i915_fs_mul (out_reg,
+				     i915_fs_operand_reg (source_reg),
+				     i915_fs_operand (mask_reg, X, X, X, X));
+		    }
 	    } else {
 		/* XXX ComponentAlpha
 		i915_fs_mul (FS_R0,
 			     i915_fs_operand_reg (source_reg),
 			     i915_fs_operand_reg (mask_reg));
 		 */
-		i915_fs_mul (out_reg,
-			     i915_fs_operand_reg (source_reg),
-			     i915_fs_operand (mask_reg, W, W, W, W));
+		if (out_reg == FS_OC && shader->content == CAIRO_CONTENT_ALPHA) {
+		    i915_fs_mul (out_reg,
+				 i915_fs_operand (source_reg, W, W, W, W),
+				 i915_fs_operand (mask_reg, W, W, W, W));
+		} else {
+		    i915_fs_mul (out_reg,
+				 i915_fs_operand_reg (source_reg),
+				 i915_fs_operand (mask_reg, W, W, W, W));
+		}
 	    }
 
 	    source_reg = out_reg;
@@ -977,9 +1003,6 @@ i915_set_shader_program (i915_device_t *device,
 	} else {
 	    i915_fs_mov (FS_OC, i915_fs_operand_reg (source_reg));
 	}
-    } else {
-	if ((shader->content & CAIRO_CONTENT_COLOR) == 0)
-	    i915_fs_mov (FS_OC, i915_fs_operand (FS_OC, W, W, W, W));
     }
 
     FS_END ();
