@@ -1343,6 +1343,16 @@ i915_surface_fill (void			*abstract_dst,
     if (_cairo_clip_contains_rectangle (clip, &extents))
 	clip = NULL;
 
+    if (extents.is_bounded && clip != NULL) {
+	cairo_clip_path_t *clip_path;
+
+	if (((clip_path = _clip_get_solitary_path (clip)) != NULL) &&
+	    _cairo_path_fixed_equal (&clip_path->path, path))
+	{
+	    clip = NULL;
+	}
+    }
+
     if (clip != NULL) {
 	clip = _cairo_clip_init_copy (&local_clip, clip);
 	have_clip = TRUE;
