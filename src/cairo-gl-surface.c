@@ -209,7 +209,7 @@ _cairo_gl_get_image_format_and_type (pixman_format_code_t pixman_format,
 	*has_alpha = FALSE;
 	return TRUE;
     case PIXMAN_b8g8r8a8:
-	*internal_format = GL_BGRA;
+	*internal_format = GL_RGBA;
 	*format = GL_BGRA;
 	*type = GL_UNSIGNED_INT_8_8_8_8;
 	return TRUE;
