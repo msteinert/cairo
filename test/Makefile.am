@@ -130,6 +130,7 @@ REFERENCE_IMAGES = \
 	a1-image-sample.ref.png \
 	a1-image-sample.gl.xfail.png \
 	a1-mask.ref.png \
+	a1-mask-sample.ref.png \
 	a1-traps-sample.ref.png \
 	a8-mask.ref.png \
 	alpha-similar.gl.argb32.xfail.png \
