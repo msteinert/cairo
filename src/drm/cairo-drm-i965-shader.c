@@ -793,8 +793,8 @@ i965_shader_set_clip (i965_shader_t *shader,
 			     1. / s->intel.drm.height);
 
     cairo_matrix_translate (&shader->clip.base.matrix,
-			    NEAREST_BIAS + clip->path->extents.x,
-			    NEAREST_BIAS + clip->path->extents.y);
+			    NEAREST_BIAS - clip->path->extents.x,
+			    NEAREST_BIAS - clip->path->extents.y);
 }
 
 static cairo_bool_t
@@ -2513,14 +2513,17 @@ i965_emit_composite (i965_device_t *device,
     uint32_t draw_rectangle;
 
     if (i965_shader_needs_surface_update (shader, device)) {
-	/* Binding table pointers */
+	uint32_t offset;
+
+	offset = emit_binding_table (device, shader);
+
+	/* Only the PS uses the binding table */
 	OUT_BATCH (BRW_3DSTATE_BINDING_TABLE_POINTERS | 4);
 	OUT_BATCH (0); /* vs */
 	OUT_BATCH (0); /* gs */
 	OUT_BATCH (0); /* clip */
 	OUT_BATCH (0); /* sf */
-	/* Only the PS uses the binding table */
-	OUT_BATCH (emit_binding_table (device, shader));
+	OUT_BATCH (offset);
 
 	device->target = shader->target;
 	device->source = shader->source.base.bo;

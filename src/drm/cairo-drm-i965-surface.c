@@ -725,6 +725,7 @@ i965_fixup_unbounded (i965_surface_t *dst,
 		      cairo_clip_t *clip)
 {
     i965_shader_t shader;
+    i965_device_t *device;
     cairo_status_t status;
 
     i965_shader_init (&shader, dst, CAIRO_OPERATOR_CLEAR);
@@ -755,10 +756,14 @@ i965_fixup_unbounded (i965_surface_t *dst,
 	return status;
     }
 
-    status = i965_shader_commit (&shader, i965_device (dst));
-    if (unlikely (status)) {
-	i965_shader_fini (&shader);
+    device = i965_device (dst);
+    status = cairo_device_acquire (&device->intel.base.base);
+    if (unlikely (status))
 	return status;
+
+    status = i965_shader_commit (&shader, device);
+    if (unlikely (status)) {
+	goto BAIL;
     }
 
     /* top */
@@ -818,7 +823,9 @@ i965_fixup_unbounded (i965_surface_t *dst,
     }
 
     i965_shader_fini (&shader);
-    return CAIRO_STATUS_SUCCESS;
+  BAIL:
+    cairo_device_release (&device->intel.base.base);
+    return status;
 }
 
 static cairo_status_t
@@ -903,19 +910,31 @@ i965_fixup_unbounded_boxes (i965_surface_t *dst,
     }
 
     if (likely (status == CAIRO_STATUS_SUCCESS && clear.num_boxes)) {
-	status = i965_shader_commit (&shader, i965_device (dst));
-	if (likely (status == CAIRO_STATUS_SUCCESS)) {
-	    for (chunk = &clear.chunks; chunk != NULL; chunk = chunk->next) {
-		for (i = 0; i < chunk->count; i++) {
-		    int x1 = _cairo_fixed_integer_part (chunk->base[i].p1.x);
-		    int y1 = _cairo_fixed_integer_part (chunk->base[i].p1.y);
-		    int x2 = _cairo_fixed_integer_part (chunk->base[i].p2.x);
-		    int y2 = _cairo_fixed_integer_part (chunk->base[i].p2.y);
+	i965_device_t *device;
 
-		    i965_shader_add_rectangle (&shader, x1, y1, x2 - x1, y2 - y1);
-		}
+	device = i965_device (dst);
+	status = cairo_device_acquire (&device->intel.base.base);
+	if (unlikely (status))
+	    goto err_shader;
+
+	status = i965_shader_commit (&shader, device);
+	if (unlikely (status))
+	    goto err_device;
+
+	for (chunk = &clear.chunks; chunk != NULL; chunk = chunk->next) {
+	    for (i = 0; i < chunk->count; i++) {
+		int x1 = _cairo_fixed_integer_part (chunk->base[i].p1.x);
+		int y1 = _cairo_fixed_integer_part (chunk->base[i].p1.y);
+		int x2 = _cairo_fixed_integer_part (chunk->base[i].p2.x);
+		int y2 = _cairo_fixed_integer_part (chunk->base[i].p2.y);
+
+		i965_shader_add_rectangle (&shader, x1, y1, x2 - x1, y2 - y1);
 	    }
 	}
+
+err_device:
+	cairo_device_release (&device->intel.base.base);
+err_shader:
 	i965_shader_fini (&shader);
     }
 
@@ -938,6 +957,7 @@ _composite_boxes (i965_surface_t *dst,
     const struct _cairo_boxes_chunk *chunk;
     cairo_status_t status;
     i965_shader_t shader;
+    i965_device_t *device;
     int i;
 
     /* If the boxes are not pixel-aligned, we will need to compute a real mask */
@@ -963,25 +983,35 @@ _composite_boxes (i965_surface_t *dst,
 	    i965_shader_set_clip (&shader, clip);
     }
 
-    status = i965_shader_commit (&shader, i965_device (dst));
-    if (likely (status == CAIRO_STATUS_SUCCESS)) {
-	for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
-	    cairo_box_t *box = chunk->base;
-	    for (i = 0; i < chunk->count; i++) {
-		int x1 = _cairo_fixed_integer_round (box[i].p1.x);
-		int y1 = _cairo_fixed_integer_round (box[i].p1.y);
-		int x2 = _cairo_fixed_integer_round (box[i].p2.x);
-		int y2 = _cairo_fixed_integer_round (box[i].p2.y);
+    device = i965_device (dst);
+    status = cairo_device_acquire (&device->intel.base.base);
+    if (unlikely (status))
+	goto err_shader;
 
-		if (x2 > x1 && y2 > y1)
-		    i965_shader_add_rectangle (&shader, x1, y1, x2 - x1, y2 - y1);
-	    }
+    status = i965_shader_commit (&shader, i965_device (dst));
+    if (unlikely (status))
+	goto err_device;
+
+    for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
+	cairo_box_t *box = chunk->base;
+	for (i = 0; i < chunk->count; i++) {
+	    int x1 = _cairo_fixed_integer_round (box[i].p1.x);
+	    int y1 = _cairo_fixed_integer_round (box[i].p1.y);
+	    int x2 = _cairo_fixed_integer_round (box[i].p2.x);
+	    int y2 = _cairo_fixed_integer_round (box[i].p2.y);
+
+	    if (x2 > x1 && y2 > y1)
+		i965_shader_add_rectangle (&shader, x1, y1, x2 - x1, y2 - y1);
 	}
     }
-    i965_shader_fini (&shader);
 
-    if (status == CAIRO_STATUS_SUCCESS && ! extents->is_bounded)
+    if (! extents->is_bounded)
 	status = i965_fixup_unbounded_boxes (dst, extents, clip, boxes);
+
+  err_device:
+    cairo_device_release (&device->intel.base.base);
+  err_shader:
+    i965_shader_fini (&shader);
 
     return status;
 }
@@ -1081,6 +1111,7 @@ i965_surface_mask (void				*abstract_dst,
     i965_surface_t *dst = abstract_dst;
     cairo_composite_rectangles_t extents;
     i965_shader_t shader;
+    i965_device_t *device;
     cairo_clip_t local_clip;
     cairo_region_t *clip_region = NULL;
     cairo_bool_t need_clip_surface = FALSE;
@@ -1115,14 +1146,14 @@ i965_surface_mask (void				*abstract_dst,
 					  source,
 					  &extents.bounded);
     if (unlikely (status))
-	goto BAIL;
+	goto err_shader;
 
     status = i965_shader_acquire_pattern (&shader,
 					  &shader.mask,
 					  mask,
 					  &extents.bounded);
     if (unlikely (status))
-	goto BAIL;
+	goto err_shader;
 
     if (clip != NULL) {
 	status = _cairo_clip_get_region (clip, &clip_region);
@@ -1132,9 +1163,14 @@ i965_surface_mask (void				*abstract_dst,
 	    i965_shader_set_clip (&shader, clip);
     }
 
-    status = i965_shader_commit (&shader, i965_device (dst));
+    device = i965_device (dst);
+    status = cairo_device_acquire (&device->intel.base.base);
     if (unlikely (status))
-	goto BAIL;
+	goto err_shader;
+
+    status = i965_shader_commit (&shader, device);
+    if (unlikely (status))
+	goto err_device;
 
     if (clip_region != NULL) {
 	unsigned int n, num_rectangles;
@@ -1160,7 +1196,9 @@ i965_surface_mask (void				*abstract_dst,
     if (! extents.is_bounded)
 	status = i965_fixup_unbounded (dst, &extents, clip);
 
-  BAIL:
+  err_device:
+    cairo_device_release (&device->intel.base.base);
+  err_shader:
     i965_shader_fini (&shader);
     if (have_clip)
 	_cairo_clip_fini (&local_clip);
@@ -1509,7 +1547,7 @@ i965_surface_create_internal (cairo_drm_device_t *base_dev,
 	    tiling = I915_TILING_NONE;
 #endif
 	surface->intel.drm.stride = i965_tiling_stride (tiling,
-						       	surface->intel.drm.stride);
+							surface->intel.drm.stride);
 
 	height = i965_tiling_height (tiling, height);
 	assert (height <= I965_MAX_SIZE);

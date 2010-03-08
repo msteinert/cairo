@@ -696,7 +696,7 @@ i915_fixup_unbounded (i915_surface_t *dst,
 	assert (status == CAIRO_STATUS_SUCCESS);
     }
 
-    device =  i915_device (dst);
+    device = i915_device (dst);
     status = cairo_device_acquire (&device->intel.base.base);
     if (unlikely (status))
 	return status;
@@ -838,7 +838,7 @@ i915_fixup_unbounded_boxes (i915_surface_t *dst,
 	    assert (status == CAIRO_STATUS_SUCCESS);
 	}
 
-	device =  i915_device (dst);
+	device = i915_device (dst);
 	status = cairo_device_acquire (&device->intel.base.base);
 	if (unlikely (status))
 	    goto err_shader;
