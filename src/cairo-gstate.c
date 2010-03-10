@@ -2134,6 +2134,7 @@ _cairo_gstate_transform_glyphs_to_backend (cairo_gstate_t	*gstate,
 	if (! drop) {
 	    memcpy (transformed_glyphs, glyphs,
 		    num_glyphs * sizeof (cairo_glyph_t));
+	    j = num_glyphs;
 	} else if (num_clusters == 0) {
 	    for (i = 0; i < num_glyphs; i++) {
 		transformed_glyphs[j].index = glyphs[i].index;
