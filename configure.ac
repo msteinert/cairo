@@ -324,8 +324,9 @@ CAIRO_ENABLE_SURFACE_BACKEND(gl, OpenGL, no, [
 	  fi])
 
   have_glew="no"
-  AC_CHECK_LIB(GLEW, glewInit,
-	       [AC_CHECK_HEADER(GL/glew.h, [have_glew="yes"], [])])
+  # Disable system GLEW since it assumes X and crashes with EGL
+  #AC_CHECK_LIB(GLEW, glewInit,
+  #	       [AC_CHECK_HEADER(GL/glew.h, [have_glew="yes"], [])])
   if test "x$have_glew" = "xyes"; then
     gl_NONPKGCONFIG_LIBS="-lGLEW $gl_NONPKGCONFIG_LIBS"
     use_glew="yes (system library)"
@@ -335,6 +336,7 @@ CAIRO_ENABLE_SURFACE_BACKEND(gl, OpenGL, no, [
     CAIRO_CFLAGS="$CAIRO_CFLAGS -I\$(top_srcdir)/src/glew"
   fi
   need_glx_functions=yes
+  need_egl_functions=yes
 ])
 
 dnl ===========================================================================
@@ -360,27 +362,31 @@ CAIRO_ENABLE_SURFACE_BACKEND(vg, OpenVG, no, [
 
 CAIRO_ENABLE_FUNCTIONS(egl, EGL, auto, [
   if test "x$need_egl_functions" = "xyes"; then
-    AC_CHECK_HEADER(EGL/egl.h,, [use_egl="no (EGL headers not found)"])
-    if test "x$use_egl" = "xyes"; then
-      egl_NONPKGCONFIG_CFLAGS=
-      egl_NONPKGCONFIG_LIBS=
-      save_LIBS="$LIBS"
-      other_egl_LIBS=""
-      # Temporary workaround for missing link from egl13
-      AC_CHECK_LIB(csi, csi_stream_attachresource, other_egl_LIBS="-lcsi")
-      LIBS="$other_egl_LIBS $LIBS"
-      for egl_lib in EGL egl13 egl12 egl11; do
-	if test -z "$egl_NONPKGCONFIG_LIBS"; then
-          AC_CHECK_LIB($egl_lib, eglGetError, egl_NONPKGCONFIG_LIBS="-l$egl_lib")
-	fi
-      done
-      if test -z "$egl_NONPKGCONFIG_LIBS"; then
-        use_egl="no (EGL library not found)"
-      else
-        egl_NONPKGCONFIG_LIBS="$egl_NONPKGCONFIG_LIBS $other_egl_LIBS"
-      fi
-      LIBS="$save_LIBS"
-    fi
+      egl_REQUIRES="egl"
+      PKG_CHECK_MODULES(egl, $egl_REQUIRES, ,
+		    [egl_REQUIRES=""
+		     AC_CHECK_HEADER(EGL/egl.h,, [use_egl="no (EGL headers not found)"])
+		     if test "x$use_egl" = "xyes"; then
+			 egl_NONPKGCONFIG_CFLAGS=
+			 egl_NONPKGCONFIG_LIBS=
+			 save_LIBS="$LIBS"
+			 other_egl_LIBS=""
+			 # Temporary workaround for missing link from egl13
+			 AC_CHECK_LIB(csi, csi_stream_attachresource, other_egl_LIBS="-lcsi")
+			 LIBS="$other_egl_LIBS $LIBS"
+			 for egl_lib in EGL egl13 egl12 egl11; do
+			     if test -z "$egl_NONPKGCONFIG_LIBS"; then
+				 AC_CHECK_LIB($egl_lib, eglGetError, egl_NONPKGCONFIG_LIBS="-l$egl_lib")
+			     fi
+			 done
+			 if test -z "$egl_NONPKGCONFIG_LIBS"; then
+			     use_egl="no (EGL library not found)"
+			 else
+			     egl_NONPKGCONFIG_LIBS="$egl_NONPKGCONFIG_LIBS $other_egl_LIBS"
+			 fi
+			 LIBS="$save_LIBS"
+		     fi
+  	])
   else
       use_egl="no (not required by any backend)"
   fi

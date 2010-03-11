@@ -72,6 +72,20 @@ cairo_gl_surface_create_for_window (cairo_device_t *device,
 				    int width, int height);
 #endif
 
+#if CAIRO_HAS_EGL_FUNCTIONS
+#include <EGL/egl.h>
+
+cairo_public cairo_device_t *
+cairo_egl_device_create (EGLDisplay dpy, EGLContext egl);
+
+cairo_public cairo_surface_t *
+cairo_gl_surface_create_for_egl (cairo_device_t	*device,
+				 EGLSurface	 egl,
+				 int		 width,
+				 int		 height);
+
+#endif
+
 CAIRO_END_DECLS
 
 #else  /* CAIRO_HAS_GL_SURFACE */
