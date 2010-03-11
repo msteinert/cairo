@@ -118,6 +118,8 @@ _cairo_surface_composite_trapezoids_as_polygon (cairo_surface_t	*surface,
 
     rects.unbounded = rects.bounded;
 
+    rects.is_bounded = _cairo_operator_bounded_by_either (op);
+
     converter = _create_scan_converter (CAIRO_FILL_RULE_WINDING,
 					antialias,
 					&rects);
