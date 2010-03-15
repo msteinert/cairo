@@ -925,18 +925,22 @@ i915_set_shader_program (i915_device_t *device,
 		} else {
 		    out_reg = FS_OC;
 		    if (shader->content == CAIRO_CONTENT_ALPHA)
-			out_reg = FS_U0;
+			out_reg = FS_R3;
 		    i915_fs_mov (out_reg,
 				 i915_fs_operand_reg_pure (mask_reg, source_pure));
 		    source_reg = out_reg;
 		}
 	    } else if (mask_reg) {
 		out_reg = FS_OC;
-		if (shader->content == CAIRO_CONTENT_ALPHA)
-		    out_reg = FS_U0;
-		i915_fs_mul (out_reg,
-			     i915_fs_operand_reg (source_reg),
-			     i915_fs_operand (mask_reg, W, W, W, W));
+		if ((shader->content & CAIRO_CONTENT_COLOR) == 0) {
+		    i915_fs_mul (out_reg,
+				 i915_fs_operand (source_reg, W, W, W, W),
+				 i915_fs_operand (mask_reg, W, W, W, W));
+		} else {
+		    i915_fs_mul (out_reg,
+				 i915_fs_operand_reg (source_reg),
+				 i915_fs_operand (mask_reg, W, W, W, W));
+		}
 
 		source_reg = out_reg;
 	    }
@@ -944,14 +948,14 @@ i915_set_shader_program (i915_device_t *device,
 	    /* (source OP dest)  LERP_clip dest */
 	    if (source_reg == ~0U) {
 		if (source_pure == 0) {
-		    i915_fs_mov (FS_U0,
+		    i915_fs_mov (FS_R3,
 				 i915_fs_operand (mask_reg, W, W, W, W));
 		} else {
-		    i915_fs_mov (FS_U0,
+		    i915_fs_mov (FS_R3,
 				 i915_fs_operand_impure (mask_reg, W, source_pure));
 		}
 	    } else {
-		i915_fs_mul (FS_U0,
+		i915_fs_mul (FS_R3,
 			     i915_fs_operand_reg (source_reg),
 			     i915_fs_operand (mask_reg, W, W, W, W));
 	    }
@@ -978,9 +982,9 @@ i915_set_shader_program (i915_device_t *device,
 
 	    source_reg = FS_OC;
 	    if (shader->content != CAIRO_CONTENT_COLOR_ALPHA)
-		source_reg = FS_U0;
+		source_reg = FS_R3;
 	    i915_fs_add (source_reg,
-			 i915_fs_operand_reg (FS_U0),
+			 i915_fs_operand_reg (FS_R3),
 			 i915_fs_operand_reg (mask_reg));
 	}
     }
