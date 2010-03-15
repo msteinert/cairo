@@ -249,6 +249,7 @@ i915_span_generic (i915_spans_t *spans,
 {
     double s, t;
     float *vertices;
+    float a = alpha / 255.;
 
     /* Each vertex is:
      *   2 vertex coordinates
@@ -277,7 +278,7 @@ i915_span_generic (i915_spans_t *spans,
 	*vertices++ = texcoord_2d_16 (s, t);
 	break;
     }
-    *vertices++ = alpha;
+    *vertices++ = a;
     if (spans->need_clip_surface) {
 	s = x1, t = y1;
 	cairo_matrix_transform_point (&spans->shader.clip.base.matrix, &s, &t);
@@ -307,7 +308,7 @@ i915_span_generic (i915_spans_t *spans,
 	*vertices++ = texcoord_2d_16 (s, t);
 	break;
     }
-    *vertices++ = alpha;
+    *vertices++ = a;
     if (spans->need_clip_surface) {
 	s = x0, t = y1;
 	cairo_matrix_transform_point (&spans->shader.clip.base.matrix, &s, &t);
@@ -337,7 +338,7 @@ i915_span_generic (i915_spans_t *spans,
 	*vertices++ = texcoord_2d_16 (s, t);
 	break;
     }
-    *vertices++ = alpha;
+    *vertices++ = a;
     if (spans->need_clip_surface) {
 	s = x0, t = y0;
 	cairo_matrix_transform_point (&spans->shader.clip.base.matrix, &s, &t);
