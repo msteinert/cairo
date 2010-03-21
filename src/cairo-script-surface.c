@@ -140,7 +140,6 @@ struct _cairo_script_surface {
     operand_t operand;
     cairo_bool_t emitted;
     cairo_bool_t defined;
-    cairo_bool_t is_clear;
     cairo_bool_t active;
 
     double width, height;
@@ -970,7 +969,7 @@ _emit_recording_surface_pattern (cairo_script_surface_t *surface,
 	return similar->base.status;
 
     cairo_surface_set_device_offset (&similar->base, -rect.x, -rect.y);
-    surface->is_clear = TRUE;
+    similar->base.is_clear = TRUE;
 
     _get_target (surface);
     _cairo_output_stream_printf (to_context (surface)->stream,
@@ -1365,7 +1364,8 @@ _emit_surface_pattern (cairo_script_surface_t *surface,
     surface_pattern = (cairo_surface_pattern_t *) pattern;
     source = surface_pattern->surface;
 
-    switch ((int) source->type) {
+    /* XXX true subsurface support. */
+    switch ((int) source->backend->type) {
     case CAIRO_SURFACE_TYPE_RECORDING:
 	return _emit_recording_surface_pattern (surface, pattern);
     case CAIRO_SURFACE_TYPE_SCRIPT:
@@ -1733,10 +1733,19 @@ _cairo_script_surface_create_similar (void	       *abstract_surface,
 				 surface->base.unique_id);
     surface->emitted = TRUE;
     surface->defined = TRUE;
-    surface->is_clear = TRUE;
+    surface->base.is_clear = TRUE;
     target_push (surface);
 
     return &surface->base;
+}
+
+static void
+_device_flush (void *abstract_device)
+{
+    cairo_script_context_t *ctx = abstract_device;
+    cairo_status_t status;
+
+    status = _cairo_output_stream_flush (ctx->stream);
 }
 
 static void
@@ -1859,6 +1868,9 @@ _cairo_script_surface_finish (void *abstract_surface)
 	}
     }
 
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = _cairo_output_stream_flush (to_context (surface)->stream);
+
     return status;
 }
 
@@ -1961,11 +1973,19 @@ _cairo_script_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clip
     return CAIRO_STATUS_SUCCESS;
 }
 
-static void
+static cairo_status_t
 active (cairo_script_surface_t *surface)
 {
+    cairo_status_t status;
+
+    status = cairo_device_acquire (surface->base.device);
+    if (unlikely (status))
+	return status;
+
     if (surface->active++ == 0)
 	to_context (surface)->active++;
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static void
@@ -1975,10 +1995,10 @@ inactive (cairo_script_surface_t *surface)
     cairo_list_t sorted;
 
     if (--surface->active)
-	return;
+	goto DONE;
 
     if (--ctx->active)
-	return;
+	goto DONE;
 
     cairo_list_init (&sorted);
     while (! cairo_list_is_empty (&ctx->deferred)) {
@@ -2047,6 +2067,9 @@ inactive (cairo_script_surface_t *surface)
 	cairo_list_del (&df->link);
 	free (df);
     }
+
+DONE:
+    cairo_device_release (surface->base.device);
 }
 
 static cairo_int_status_t
@@ -2058,43 +2081,41 @@ _cairo_script_surface_paint (void			*abstract_surface,
     cairo_script_surface_t *surface = abstract_surface;
     cairo_status_t status;
 
-    if (op == CAIRO_OPERATOR_CLEAR) {
-	if (surface->is_clear)
-	    goto DONE;
-    }
-
-    active (surface);
+    status = active (surface);
+    if (unlikely (status))
+	return status;
 
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     status = _emit_context (surface);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     status = _emit_source (surface, op, source);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     status = _emit_operator (surface, op);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     _cairo_output_stream_puts (to_context (surface)->stream,
 			       "paint\n");
 
-    surface->is_clear = op == CAIRO_OPERATOR_CLEAR && clip == NULL;
-
     inactive (surface);
 
-  DONE:
     if (_cairo_surface_wrapper_is_active (&surface->wrapper)) {
 	return _cairo_surface_wrapper_paint (&surface->wrapper,
 					     op, source, clip);
     }
 
     return CAIRO_STATUS_SUCCESS;
+
+BAIL:
+    inactive (surface);
+    return status;
 }
 
 static cairo_int_status_t
@@ -2107,35 +2128,32 @@ _cairo_script_surface_mask (void			*abstract_surface,
     cairo_script_surface_t *surface = abstract_surface;
     cairo_status_t status;
 
-    if (op == CAIRO_OPERATOR_CLEAR) {
-	if (surface->is_clear)
-	    goto DONE;
-    }
-
-    active (surface);
+    status = active (surface);
+    if (unlikely (status))
+	return status;
 
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     status = _emit_context (surface);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     status = _emit_source (surface, op, source);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     status = _emit_operator (surface, op);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     if (_cairo_pattern_equal (source, mask)) {
 	_cairo_output_stream_puts (to_context (surface)->stream, "/source get");
     } else {
 	status = _emit_pattern (surface, mask);
 	if (unlikely (status))
-	    return status;
+	    goto BAIL;
     }
 
     assert (surface->cr.current_operator == op);
@@ -2143,17 +2161,18 @@ _cairo_script_surface_mask (void			*abstract_surface,
     _cairo_output_stream_puts (to_context (surface)->stream,
 			       " mask\n");
 
-    surface->is_clear = FALSE;
-
     inactive (surface);
 
-  DONE:
     if (_cairo_surface_wrapper_is_active (&surface->wrapper)) {
 	return _cairo_surface_wrapper_mask (&surface->wrapper,
 					    op, source, mask, clip);
     }
 
     return CAIRO_STATUS_SUCCESS;
+
+BAIL:
+    inactive (surface);
+    return status;
 }
 
 static cairo_int_status_t
@@ -2172,40 +2191,37 @@ _cairo_script_surface_stroke (void				*abstract_surface,
     cairo_bool_t matrix_updated = FALSE;
     cairo_status_t status;
 
-    if (op == CAIRO_OPERATOR_CLEAR) {
-	if (surface->is_clear)
-	    goto DONE;
-    }
-
-    active (surface);
+    status = active (surface);
+    if (unlikely (status))
+	return status;
 
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     status = _emit_context (surface);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     status = _emit_identity (surface, &matrix_updated);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     status = _emit_path (surface, path);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     status = _emit_source (surface, op, source);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     status = _emit_scaling_matrix (surface, ctm, &matrix_updated);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     status = _emit_operator (surface, op);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     if (_scaling_matrix_equal (&surface->cr.current_ctm,
 			       &surface->cr.current_stroke_matrix))
@@ -2220,25 +2236,22 @@ _cairo_script_surface_stroke (void				*abstract_surface,
 
     status = _emit_stroke_style (surface, style, matrix_updated);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     if (! path->is_rectilinear) {
 	status = _emit_tolerance (surface, tolerance, matrix_updated);
 	if (unlikely (status))
-	    return status;
+	    goto BAIL;
     }
 
     status = _emit_antialias (surface, antialias);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     _cairo_output_stream_puts (to_context (surface)->stream, "stroke+\n");
 
-    surface->is_clear = FALSE;
-
     inactive (surface);
 
-  DONE:
     if (_cairo_surface_wrapper_is_active (&surface->wrapper)) {
 	return _cairo_surface_wrapper_stroke (&surface->wrapper,
 					      op, source, path,
@@ -2249,6 +2262,10 @@ _cairo_script_surface_stroke (void				*abstract_surface,
     }
 
     return CAIRO_STATUS_SUCCESS;
+
+BAIL:
+    inactive (surface);
+    return status;
 }
 
 static cairo_int_status_t
@@ -2266,62 +2283,56 @@ _cairo_script_surface_fill (void			*abstract_surface,
     cairo_status_t status;
     cairo_box_t box;
 
-    if (op == CAIRO_OPERATOR_CLEAR) {
-	if (surface->is_clear)
-	    goto DONE;
-    }
-
-    active (surface);
+    status = active (surface);
+    if (unlikely (status))
+	return status;
 
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     status = _emit_context (surface);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     status = _emit_identity (surface, &matrix_updated);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     status = _emit_source (surface, op, source);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     if (! _cairo_path_fixed_is_box (path, &box)) {
 	status = _emit_fill_rule (surface, fill_rule);
 	if (unlikely (status))
-	    return status;
+	    goto BAIL;
     }
 
     if (! path->is_rectilinear) {
 	status = _emit_tolerance (surface, tolerance, matrix_updated);
 	if (unlikely (status))
-	    return status;
+	    goto BAIL;
     }
 
     if (! path->maybe_fill_region) {
 	status = _emit_antialias (surface, antialias);
 	if (unlikely (status))
-	    return status;
+	    goto BAIL;
     }
 
     status = _emit_path (surface, path);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     status = _emit_operator (surface, op);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     _cairo_output_stream_puts (to_context (surface)->stream, "fill+\n");
 
-    surface->is_clear = FALSE;
-
     inactive (surface);
 
-  DONE:
     if (_cairo_surface_wrapper_is_active (&surface->wrapper)) {
 	return _cairo_surface_wrapper_fill (&surface->wrapper,
 					    op, source, path,
@@ -2332,6 +2343,10 @@ _cairo_script_surface_fill (void			*abstract_surface,
     }
 
     return CAIRO_STATUS_SUCCESS;
+
+BAIL:
+    inactive (surface);
+    return status;
 }
 
 static cairo_surface_t *
@@ -2933,36 +2948,33 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
     int n;
     cairo_output_stream_t *base85_stream = NULL;
 
-    if (op == CAIRO_OPERATOR_CLEAR) {
-	if (surface->is_clear)
-	    goto DONE;
-    }
-
-    active (surface);
+    status = active (surface);
+    if (unlikely (status))
+	return status;
 
     status = _cairo_surface_clipper_set_clip (&surface->clipper, clip);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     status = _emit_context (surface);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     status = _emit_source (surface, op, source);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     status = _emit_scaled_font (surface, scaled_font);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     status = _emit_operator (surface, op);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     status = _emit_scaled_glyphs (surface, scaled_font, glyphs, num_glyphs);
     if (unlikely (status))
-	return status;
+	goto BAIL;
 
     /* (utf8) [cx cy [glyphs]] [clusters] backward show_text_glyphs */
     /* [cx cy [glyphs]] show_glyphs */
@@ -3000,7 +3012,7 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 						 &scaled_glyph);
 	    if (unlikely (status)) {
 		_cairo_scaled_font_thaw_cache (scaled_font);
-		return status;
+		goto BAIL;
 	    }
 
 	    if ((long unsigned) scaled_glyph->surface_private > 256)
@@ -3022,7 +3034,7 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 					     CAIRO_SCALED_GLYPH_INFO_METRICS,
 					     &scaled_glyph);
 	if (unlikely (status))
-	    break;
+	    goto BAIL;
 
 	if (fabs (glyphs[n].x - x) > 1e-5 || fabs (glyphs[n].y - y) > 1e-5) {
 	    if (fabs (glyphs[n].y - y) < 1e-5) {
@@ -3137,7 +3149,7 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 	    }
 	    status = _cairo_output_stream_destroy (base85_stream);
 	    if (unlikely (status))
-		return status;
+		goto BAIL;
 
 	    _cairo_output_stream_puts (ctx->stream, "~>");
 	}
@@ -3150,11 +3162,8 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
 				   "] show-glyphs\n");
     }
 
-    surface->is_clear = FALSE;
-
     inactive (surface);
 
-  DONE:
     if (_cairo_surface_wrapper_is_active (&surface->wrapper)){
 	return _cairo_surface_wrapper_show_text_glyphs (&surface->wrapper,
 							op, source,
@@ -3167,6 +3176,10 @@ _cairo_script_surface_show_text_glyphs (void			    *abstract_surface,
     }
 
     return CAIRO_STATUS_SUCCESS;
+
+BAIL:
+    inactive (surface);
+    return status;
 }
 
 static cairo_bool_t
@@ -3300,7 +3313,6 @@ _cairo_script_surface_create_internal (cairo_script_context_t *ctx,
 
     surface->emitted = FALSE;
     surface->defined = FALSE;
-    surface->is_clear = FALSE;
     surface->active = FALSE;
     surface->operand.type = SURFACE;
     cairo_list_init (&surface->operand.link);
@@ -3315,7 +3327,7 @@ static const cairo_device_backend_t _cairo_script_device_backend = {
 
     NULL, NULL, /* lock, unlock */
 
-    NULL,  /* flush */
+    _device_flush,  /* flush */
     NULL,  /* finish */
     _device_destroy
 };
