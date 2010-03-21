@@ -1374,6 +1374,7 @@ csi_status_t
 _csi_scan_file (csi_t *ctx, csi_file_t *src)
 {
     csi_status_t status;
+    int old_line_number;
 
     /* This function needs to be reentrant to handle recursive scanners.
      * i.e. one script executes a second.
@@ -1384,11 +1385,14 @@ _csi_scan_file (csi_t *ctx, csi_file_t *src)
 	    ctx->scanner.depth = 0;
 	    return status;
 	}
-
-	ctx->scanner.line_number = 0; /* XXX broken by recursive scanning */
     }
 
+    old_line_number = ctx->scanner.line_number;
+    ctx->scanner.line_number = 0;
+
     _scan_file (ctx, src);
+
+    ctx->scanner.line_number = old_line_number;
 
     --ctx->scanner.depth;
     return CSI_STATUS_SUCCESS;
