@@ -2004,8 +2004,10 @@ _cairo_ps_surface_flatten_image_transparency (cairo_ps_surface_t    *surface,
     pattern.base.filter = CAIRO_FILTER_NEAREST;
     status = _cairo_surface_paint (opaque, CAIRO_OPERATOR_OVER, &pattern.base, NULL);
     _cairo_pattern_fini (&pattern.base);
-    if (unlikely (status))
+    if (unlikely (status)) {
+	cairo_surface_destroy (opaque);
 	return status;
+    }
 
     *opaque_image = (cairo_image_surface_t *) opaque;
     return CAIRO_STATUS_SUCCESS;
