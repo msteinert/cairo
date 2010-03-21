@@ -273,11 +273,14 @@ _cairo_script_render_page (const char *filename,
 
     csi = cairo_script_interpreter_create ();
     cairo_script_interpreter_install_hooks (csi, &hooks);
-    cairo_script_interpreter_run (csi, filename);
-    status = cairo_script_interpreter_destroy (csi);
-    if (surface == NULL) {
-	return "cairo-script interpreter failed";
+    status = cairo_script_interpreter_run (csi, filename);
+    if (status) {
+	cairo_surface_destroy (surface);
+	surface = NULL;
     }
+    status = cairo_script_interpreter_destroy (csi);
+    if (surface == NULL)
+	return "cairo-script interpreter failed";
 
     if (status == CAIRO_STATUS_SUCCESS)
 	status = cairo_surface_status (surface);
