@@ -122,7 +122,6 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
 	goto FAIL_CLEANUP_SURFACE;
 
     surface->page_num = 1;
-    surface->page_is_blank = TRUE;
 
     return &surface->base;
 
@@ -157,7 +156,7 @@ _cairo_paginated_surface_finish (void *abstract_surface)
     cairo_paginated_surface_t *surface = abstract_surface;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
-    if (surface->page_is_blank == FALSE || surface->page_num == 1) {
+    if (! surface->base.is_clear || surface->page_num == 1) {
 	/* Bypass some of the sanity checking in cairo-surface.c, as we
 	 * know that the surface is finished...
 	 */
@@ -486,7 +485,6 @@ _cairo_paginated_surface_show_page (void *abstract_surface)
 	return status;
 
     surface->page_num++;
-    surface->page_is_blank = TRUE;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -517,12 +515,6 @@ _cairo_paginated_surface_paint (void			*abstract_surface,
 {
     cairo_paginated_surface_t *surface = abstract_surface;
 
-    /* Optimize away erasing of nothing. */
-    if (surface->page_is_blank && op == CAIRO_OPERATOR_CLEAR)
-	return CAIRO_STATUS_SUCCESS;
-
-    surface->page_is_blank = FALSE;
-
     return _cairo_surface_paint (surface->recording_surface, op, source, clip);
 }
 
@@ -534,12 +526,6 @@ _cairo_paginated_surface_mask (void		*abstract_surface,
 			       cairo_clip_t		*clip)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
-
-    /* Optimize away erasing of nothing. */
-    if (surface->page_is_blank && op == CAIRO_OPERATOR_CLEAR)
-	return CAIRO_STATUS_SUCCESS;
-
-    surface->page_is_blank = FALSE;
 
     return _cairo_surface_mask (surface->recording_surface, op, source, mask, clip);
 }
@@ -557,12 +543,6 @@ _cairo_paginated_surface_stroke (void			*abstract_surface,
 				 cairo_clip_t		*clip)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
-
-    /* Optimize away erasing of nothing. */
-    if (surface->page_is_blank && op == CAIRO_OPERATOR_CLEAR)
-	return CAIRO_STATUS_SUCCESS;
-
-    surface->page_is_blank = FALSE;
 
     return _cairo_surface_stroke (surface->recording_surface, op, source,
 				  path, style,
@@ -582,12 +562,6 @@ _cairo_paginated_surface_fill (void			*abstract_surface,
 			       cairo_clip_t		*clip)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
-
-    /* Optimize away erasing of nothing. */
-    if (surface->page_is_blank && op == CAIRO_OPERATOR_CLEAR)
-	return CAIRO_STATUS_SUCCESS;
-
-    surface->page_is_blank = FALSE;
 
     return _cairo_surface_fill (surface->recording_surface, op, source,
 				path, fill_rule,
@@ -618,12 +592,6 @@ _cairo_paginated_surface_show_text_glyphs (void			      *abstract_surface,
 					   cairo_clip_t		      *clip)
 {
     cairo_paginated_surface_t *surface = abstract_surface;
-
-    /* Optimize away erasing of nothing. */
-    if (surface->page_is_blank && op == CAIRO_OPERATOR_CLEAR)
-	return CAIRO_STATUS_SUCCESS;
-
-    surface->page_is_blank = FALSE;
 
     return _cairo_surface_show_text_glyphs (surface->recording_surface, op, source,
 					    utf8, utf8_len,
