@@ -257,7 +257,10 @@ _cairo_xcb_surface_finish (void *abstract_surface)
     cairo_xcb_surface_t *surface = abstract_surface;
     cairo_status_t status;
 
-    assert (surface->fallback == NULL);
+    if (surface->fallback != NULL) {
+	cairo_surface_finish (surface->fallback);
+	cairo_surface_destroy (surface->fallback);
+    }
 
     cairo_list_del (&surface->link);
 
@@ -683,7 +686,7 @@ static cairo_status_t
 _cairo_xcb_surface_flush (void *abstract_surface)
 {
     cairo_xcb_surface_t *surface = abstract_surface;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+    cairo_status_t status;
 
     if (surface->drm != NULL && ! surface->marked_dirty)
 	return surface->drm->backend->flush (surface->drm);
@@ -691,12 +694,14 @@ _cairo_xcb_surface_flush (void *abstract_surface)
     if (likely (surface->fallback == NULL))
 	return CAIRO_STATUS_SUCCESS;
 
-    if (! surface->base.finished) {
-	status = _put_image (surface,
-			     (cairo_image_surface_t *) surface->fallback);
+    status = surface->base.status;
+    if (status == CAIRO_STATUS_SUCCESS && ! surface->base.finished) {
+	status = cairo_surface_status (surface->fallback);
 
-	if (status == CAIRO_STATUS_SUCCESS)
-	    status = cairo_surface_status (surface->fallback);
+	if (status == CAIRO_STATUS_SUCCESS) {
+	    status = _put_image (surface,
+				 (cairo_image_surface_t *) surface->fallback);
+	}
 
 	if (status == CAIRO_STATUS_SUCCESS) {
 	    status = _cairo_surface_attach_snapshot (&surface->base,
