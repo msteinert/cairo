@@ -119,6 +119,7 @@ _cairo_surface_snapshot_copy_on_write (cairo_surface_t *surface)
     status = _cairo_surface_acquire_source_image (snapshot->target, &image, &extra);
     if (unlikely (status)) {
 	snapshot->target = _cairo_surface_create_in_error (status);
+	status = _cairo_surface_set_error (surface, status);
 	return;
     }
 
@@ -140,6 +141,7 @@ _cairo_surface_snapshot_copy_on_write (cairo_surface_t *surface)
 	snapshot->clone = &clone->base;
     } else {
 	snapshot->clone = &clone->base;
+	status = _cairo_surface_set_error (surface, clone->base.status);
     }
 
     _cairo_surface_release_source_image (snapshot->target, image, extra);
