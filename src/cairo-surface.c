@@ -1885,6 +1885,27 @@ _cairo_surface_fill_rectangles (cairo_surface_t		*surface,
 						     rects, num_rects));
 }
 
+static cairo_status_t
+_pattern_has_error (const cairo_pattern_t *pattern)
+{
+    const cairo_surface_pattern_t *spattern;
+
+    if (unlikely (pattern->status))
+	return pattern->status;
+
+    if (pattern->type != CAIRO_PATTERN_TYPE_SURFACE)
+	return CAIRO_STATUS_SUCCESS;
+
+    spattern = (const cairo_surface_pattern_t *) pattern;
+    if (unlikely (spattern->surface->status))
+	return spattern->surface->status;
+
+    if (unlikely (spattern->surface->finished))
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
 cairo_status_t
 _cairo_surface_paint (cairo_surface_t	*surface,
 		      cairo_operator_t	 op,
@@ -1901,6 +1922,10 @@ _cairo_surface_paint (cairo_surface_t	*surface,
 
     if (op == CAIRO_OPERATOR_CLEAR && surface->is_clear)
 	return CAIRO_STATUS_SUCCESS;
+
+    status = _pattern_has_error (source);
+    if (unlikely (status))
+	return status;
 
     _cairo_surface_begin_modification (surface);
 
@@ -1942,6 +1967,14 @@ _cairo_surface_mask (cairo_surface_t		*surface,
 	if (spattern->surface->is_clear)
 	    return CAIRO_STATUS_SUCCESS;
     }
+
+    status = _pattern_has_error (source);
+    if (unlikely (status))
+	return status;
+
+    status = _pattern_has_error (mask);
+    if (unlikely (status))
+	return status;
 
     _cairo_surface_begin_modification (surface);
 
@@ -1990,6 +2023,14 @@ _cairo_surface_fill_stroke (cairo_surface_t	    *surface,
     {
 	return CAIRO_STATUS_SUCCESS;
     }
+
+    status = _pattern_has_error (fill_source);
+    if (unlikely (status))
+	return status;
+
+    status = _pattern_has_error (stroke_source);
+    if (unlikely (status))
+	return status;
 
     _cairo_surface_begin_modification (surface);
 
@@ -2053,6 +2094,10 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
     if (op == CAIRO_OPERATOR_CLEAR && surface->is_clear)
 	return CAIRO_STATUS_SUCCESS;
 
+    status = _pattern_has_error (source);
+    if (unlikely (status))
+	return status;
+
     _cairo_surface_begin_modification (surface);
 
     if (surface->backend->stroke != NULL) {
@@ -2098,6 +2143,10 @@ _cairo_surface_fill (cairo_surface_t	*surface,
 
     if (op == CAIRO_OPERATOR_CLEAR && surface->is_clear)
 	return CAIRO_STATUS_SUCCESS;
+
+    status = _pattern_has_error (source);
+    if (unlikely (status))
+	return status;
 
     _cairo_surface_begin_modification (surface);
 
@@ -2323,11 +2372,9 @@ cairo_bool_t
 _cairo_surface_get_extents (cairo_surface_t         *surface,
 			    cairo_rectangle_int_t   *extents)
 {
-    cairo_bool_t bounded = FALSE;
+    cairo_bool_t bounded;
 
-    if (unlikely (surface->status || surface->finished))
-	return TRUE;
-
+    bounded = FALSE;
     if (surface->backend->get_extents != NULL)
 	bounded = surface->backend->get_extents (surface, extents);
 
@@ -2422,6 +2469,10 @@ _cairo_surface_show_text_glyphs (cairo_surface_t	    *surface,
 
     if (op == CAIRO_OPERATOR_CLEAR && surface->is_clear)
 	return CAIRO_STATUS_SUCCESS;
+
+    status = _pattern_has_error (source);
+    if (unlikely (status))
+	return status;
 
     _cairo_surface_begin_modification (surface);
 
