@@ -512,11 +512,13 @@ static void
 _device_finish (void *device)
 {
     cairo_xcb_connection_t *connection = device;
+    cairo_bool_t was_cached = FALSE;
 
     if (! cairo_list_is_empty (&connection->link)) {
 	CAIRO_MUTEX_LOCK (_cairo_xcb_connections_mutex);
 	cairo_list_del (&connection->link);
 	CAIRO_MUTEX_UNLOCK (_cairo_xcb_connections_mutex);
+	was_cached = TRUE;
     }
 
     while (! cairo_list_is_empty (&connection->fonts)) {
@@ -536,6 +538,9 @@ _device_finish (void *device)
 					 link);
 	_cairo_xcb_screen_finish (screen);
     }
+
+    if (was_cached)
+	cairo_device_destroy (device);
 }
 
 static void
