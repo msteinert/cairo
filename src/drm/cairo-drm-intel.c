@@ -839,6 +839,7 @@ intel_device_init (intel_device_t *device, int fd)
 	device->glyph_cache[n].buffer.bo = NULL;
 	cairo_list_init (&device->glyph_cache[n].rtree.pinned);
     }
+    cairo_list_init (&device->fonts);
 
     device->gradient_cache.size = 0;
 
@@ -890,7 +891,17 @@ _intel_glyph_cache_fini (intel_device_t *device, intel_buffer_cache_t *cache)
 void
 intel_device_fini (intel_device_t *device)
 {
+    cairo_scaled_font_t *scaled_font, *next_scaled_font;
     int n;
+
+    cairo_list_foreach_entry_safe (scaled_font,
+				   next_scaled_font,
+				   cairo_scaled_font_t,
+				   &device->fonts,
+				   link)
+    {
+	_cairo_scaled_font_revoke_ownership (scaled_font);
+    }
 
     for (n = 0; n < ARRAY_LENGTH (device->glyph_cache); n++)
 	_intel_glyph_cache_fini (device, &device->glyph_cache[n]);
@@ -1077,12 +1088,7 @@ intel_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 void
 intel_scaled_font_fini (cairo_scaled_font_t *scaled_font)
 {
-    intel_device_t *device;
-
-    device = scaled_font->surface_private;
-    if (device != NULL) {
-	/* XXX decouple? */
-    }
+    cairo_list_del (&scaled_font->link);
 }
 
 static cairo_status_t

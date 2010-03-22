@@ -206,6 +206,7 @@ typedef struct _intel_device {
 
     cairo_bool_t glyph_cache_mapped;
     intel_buffer_cache_t glyph_cache[2];
+    cairo_list_t fonts;
 
     struct {
 	intel_gradient_cache_t cache[GRADIENT_CACHE_SIZE];

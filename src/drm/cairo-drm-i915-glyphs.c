@@ -389,9 +389,9 @@ i915_surface_glyphs (void			*abstract_surface,
 
     _cairo_scaled_font_freeze_cache (scaled_font);
     if (scaled_font->surface_private == NULL) {
-	/* XXX couple into list to remove on context destruction */
 	scaled_font->surface_private = device;
 	scaled_font->surface_backend = surface->intel.drm.base.backend;
+	cairo_list_add (&scaled_font->link, &device->intel.fonts);
     }
 
     memset (glyph_cache, 0, sizeof (glyph_cache));
