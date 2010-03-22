@@ -1067,21 +1067,10 @@ intel_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 
     glyph = scaled_glyph->surface_private;
     if (glyph != NULL) {
+	/* XXX thread-safety? Probably ok due to the frozen scaled-font. */
 	glyph->node.owner = NULL;
-	if (! glyph->node.pinned) {
-	    intel_buffer_cache_t *cache;
-
-	    /* XXX thread-safety? Probably ok due to the frozen scaled-font. */
-	    cache = glyph->cache;
-	    assert (cache != NULL);
-
-	    glyph->node.state = CAIRO_RTREE_NODE_AVAILABLE;
-	    cairo_list_move (&glyph->node.link,
-			     &cache->rtree.available);
-
-	    if (! glyph->node.parent->pinned)
-		_cairo_rtree_node_collapse (&cache->rtree, glyph->node.parent);
-	}
+	if (! glyph->node.pinned)
+	    _cairo_rtree_node_remove (&glyph->cache->rtree, &glyph->node);
     }
 }
 
