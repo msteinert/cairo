@@ -4236,16 +4236,20 @@ _composite_glyphs (void				*closure,
 						 glyph_index,
 						 CAIRO_SCALED_GLYPH_INFO_METRICS,
 						 &scaled_glyph);
-	    if (unlikely (status))
+	    if (unlikely (status)) {
+		cairo_surface_destroy (&src->base);
 		return status;
+	    }
 
 	    /* Send unseen glyphs to the server */
 	    if (_cairo_xcb_scaled_glyph_get_glyphset_info (scaled_glyph) == NULL) {
 		status = _cairo_xcb_surface_add_glyph (dst->connection,
 						       info->font,
 						       &scaled_glyph);
-		if (unlikely (status))
+		if (unlikely (status)) {
+		    cairo_surface_destroy (&src->base);
 		    return status;
+		}
 	    }
 
 	    glyph_cache[cache_index] = scaled_glyph;
@@ -4304,8 +4308,10 @@ _composite_glyphs (void				*closure,
 					 info->glyphs, i,
 					 old_width, request_size,
 					 glyphset_info);
-	    if (unlikely (status))
+	    if (unlikely (status)) {
+		cairo_surface_destroy (&src->base);
 		return status;
+	    }
 
 	    info->glyphs += i;
 	    info->num_glyphs -= i;
@@ -4347,6 +4353,8 @@ _composite_glyphs (void				*closure,
 				     width, request_size,
 				     glyphset_info);
     }
+
+    cairo_surface_destroy (&src->base);
 
     return status;
 }
