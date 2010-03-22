@@ -71,8 +71,19 @@ static void
 _gl_destroy (void *device)
 {
     cairo_gl_context_t *ctx = device;
+    cairo_scaled_font_t *scaled_font, *next_scaled_font;
 
     ctx->destroy (ctx);
+
+    cairo_list_foreach_entry_safe (scaled_font,
+				   next_scaled_font,
+				   cairo_scaled_font_t,
+				   &ctx->fonts,
+				   link)
+    {
+	_cairo_scaled_font_revoke_ownership (scaled_font);
+    }
+
     free (ctx);
 }
 
@@ -94,6 +105,7 @@ _cairo_gl_context_init (cairo_gl_context_t *ctx)
     _cairo_device_init (&ctx->base, &_cairo_gl_device_backend);
 
     memset (ctx->glyph_cache, 0, sizeof (ctx->glyph_cache));
+    cairo_list_init (&ctx->fonts);
 
     if (glewInit () != GLEW_OK)
 	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT); /* XXX */
@@ -3023,7 +3035,7 @@ const cairo_surface_backend_t _cairo_gl_surface_backend = {
     _cairo_gl_surface_get_font_options,
     NULL, /* flush */
     NULL, /* mark_dirty_rectangle */
-    NULL, /* scaled_font_fini */
+    _cairo_gl_surface_scaled_font_fini,
     _cairo_gl_surface_scaled_glyph_fini,
     _cairo_gl_surface_paint,
     NULL, /* mask */

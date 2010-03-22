@@ -742,6 +742,7 @@ _cairo_scaled_font_init (cairo_scaled_font_t               *scaled_font,
     scaled_font->surface_private = NULL;
 
     scaled_font->backend = backend;
+    cairo_list_init (&scaled_font->link);
 
     return CAIRO_STATUS_SUCCESS;
 }

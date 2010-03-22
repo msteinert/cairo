@@ -226,6 +226,12 @@ _cairo_gl_surface_owns_font (cairo_gl_surface_t *surface,
 }
 
 void
+_cairo_gl_surface_scaled_font_fini (cairo_scaled_font_t  *scaled_font)
+{
+    cairo_list_del (&scaled_font->link);
+}
+
+void
 _cairo_gl_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 				     cairo_scaled_font_t  *scaled_font)
 {
@@ -493,9 +499,9 @@ _render_glyphs (cairo_gl_surface_t	*dst,
     }
 
     if (scaled_font->surface_private == NULL) {
-	/* XXX couple into list to remove on context destruction */
 	scaled_font->surface_private = ctx;
 	scaled_font->surface_backend = &_cairo_gl_surface_backend;
+	cairo_list_add (&scaled_font->link, &ctx->fonts);
     }
 
     /* Create our VBO so that we can accumulate a bunch of glyph primitives

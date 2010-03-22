@@ -134,6 +134,7 @@ typedef struct _cairo_gl_context {
     cairo_gl_surface_t *current_target;
     cairo_gl_surface_t *glyphs_temporary_mask;
     cairo_gl_glyph_cache_t glyph_cache[2];
+    cairo_list_t fonts;
 
     void (*make_current)(void *ctx, cairo_gl_surface_t *surface);
     void (*swap_buffers)(void *ctx, cairo_gl_surface_t *surface);
@@ -268,6 +269,9 @@ cairo_private cairo_bool_t
 _cairo_gl_get_image_format_and_type (pixman_format_code_t pixman_format,
 				     GLenum *internal_format, GLenum *format,
 				     GLenum *type, cairo_bool_t *has_alpha);
+
+cairo_private void
+_cairo_gl_surface_scaled_font_fini ( cairo_scaled_font_t  *scaled_font);
 
 cairo_private void
 _cairo_gl_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
