@@ -1499,6 +1499,10 @@ _cairo_ps_surface_finish (void *abstract_surface)
     int i, num_comments;
     char **comments;
 
+    status = surface->base.status;
+    if (unlikely (status))
+	goto CLEANUP;
+
     _cairo_ps_surface_emit_header (surface);
 
     status = _cairo_ps_surface_emit_font_subsets (surface);
