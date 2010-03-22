@@ -892,17 +892,6 @@ EMPTY:
 }
 
 void
-_cairo_gl_glyph_cache_fini (cairo_gl_glyph_cache_t *cache)
-{
-    if (cache->tex == 0)
-	return;
-
-    glDeleteTextures (1, &cache->tex);
-
-    _cairo_rtree_fini (&cache->rtree);
-}
-
-void
 _cairo_gl_glyph_cache_init (cairo_gl_glyph_cache_t *cache)
 {
     cache->tex = 0;
@@ -913,5 +902,17 @@ _cairo_gl_glyph_cache_init (cairo_gl_glyph_cache_t *cache)
 		       GLYPH_CACHE_MIN_SIZE,
 		       sizeof (cairo_gl_glyph_private_t),
 		       NULL);
+}
+
+void
+_cairo_gl_glyph_cache_fini (cairo_gl_context_t *ctx,
+			    cairo_gl_glyph_cache_t *cache)
+{
+    _cairo_rtree_fini (&cache->rtree);
+
+    if (cache->tex) {
+	/* XXX Is this safe? */
+	glDeleteTextures (1, &cache->tex);
+    }
 }
 

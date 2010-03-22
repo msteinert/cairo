@@ -280,6 +280,10 @@ _cairo_gl_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 cairo_private void
 _cairo_gl_glyph_cache_init (cairo_gl_glyph_cache_t *cache);
 
+cairo_private void
+_cairo_gl_glyph_cache_fini (cairo_gl_context_t *ctx,
+			    cairo_gl_glyph_cache_t *cache);
+
 cairo_private cairo_int_status_t
 _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 			       cairo_operator_t		 op,
@@ -289,9 +293,6 @@ _cairo_gl_surface_show_glyphs (void			*abstract_dst,
 			       cairo_scaled_font_t	*scaled_font,
 			       cairo_clip_t		*clip,
 			       int			*remaining_glyphs);
-
-cairo_private void
-_cairo_gl_glyph_cache_fini (cairo_gl_glyph_cache_t *cache);
 
 static inline int
 _cairo_gl_y_flip (cairo_gl_surface_t *surface, int y)

@@ -72,6 +72,7 @@ _gl_destroy (void *device)
 {
     cairo_gl_context_t *ctx = device;
     cairo_scaled_font_t *scaled_font, *next_scaled_font;
+    int n;
 
     ctx->destroy (ctx);
 
@@ -83,6 +84,9 @@ _gl_destroy (void *device)
     {
 	_cairo_scaled_font_revoke_ownership (scaled_font);
     }
+
+    for (n = 0; n < ARRAY_LENGTH (ctx->glyph_cache); n++)
+	_cairo_gl_glyph_cache_fini (ctx, &ctx->glyph_cache[n]);
 
     free (ctx);
 }
