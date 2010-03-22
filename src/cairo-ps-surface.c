@@ -886,6 +886,7 @@ _cairo_ps_surface_get_page_media (cairo_ps_surface_t     *surface)
     }
 
     if (unlikely (page->name == NULL)) {
+	free (page);
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	return NULL;
     }
