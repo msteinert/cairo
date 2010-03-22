@@ -705,40 +705,48 @@ i915_fixup_unbounded (i915_surface_t *dst,
     if (unlikely (status))
 	goto BAIL;
 
-    /* top */
-    if (extents->bounded.y != extents->unbounded.y) {
+    if (extents->bounded.width == 0 || extents->bounded.height == 0) {
 	shader.add_rectangle (&shader,
 			      extents->unbounded.x,
 			      extents->unbounded.y,
 			      extents->unbounded.width,
-			      extents->bounded.y - extents->unbounded.y);
-    }
+			      extents->unbounded.height);
+    } else {
+	/* top */
+	if (extents->bounded.y != extents->unbounded.y) {
+	    shader.add_rectangle (&shader,
+				  extents->unbounded.x,
+				  extents->unbounded.y,
+				  extents->unbounded.width,
+				  extents->bounded.y - extents->unbounded.y);
+	}
 
-    /* left */
-    if (extents->bounded.x != extents->unbounded.x) {
-	shader.add_rectangle (&shader,
-			      extents->unbounded.x,
-			      extents->bounded.y,
-			      extents->bounded.x - extents->unbounded.x,
-			      extents->bounded.height);
-    }
+	/* left */
+	if (extents->bounded.x != extents->unbounded.x) {
+	    shader.add_rectangle (&shader,
+				  extents->unbounded.x,
+				  extents->bounded.y,
+				  extents->bounded.x - extents->unbounded.x,
+				  extents->bounded.height);
+	}
 
-    /* right */
-    if (extents->bounded.x + extents->bounded.width != extents->unbounded.x + extents->unbounded.width) {
-	shader.add_rectangle (&shader,
-			      extents->bounded.x + extents->bounded.width,
-			      extents->bounded.y,
-			      extents->unbounded.x + extents->unbounded.width - (extents->bounded.x + extents->bounded.width),
-			      extents->bounded.height);
-    }
+	/* right */
+	if (extents->bounded.x + extents->bounded.width != extents->unbounded.x + extents->unbounded.width) {
+	    shader.add_rectangle (&shader,
+				  extents->bounded.x + extents->bounded.width,
+				  extents->bounded.y,
+				  extents->unbounded.x + extents->unbounded.width - (extents->bounded.x + extents->bounded.width),
+				  extents->bounded.height);
+	}
 
-    /* bottom */
-    if (extents->bounded.y + extents->bounded.height != extents->unbounded.y + extents->unbounded.height) {
-	shader.add_rectangle (&shader,
-			      extents->unbounded.x,
-			      extents->bounded.y + extents->bounded.height,
-			      extents->unbounded.width,
-			      extents->unbounded.y + extents->unbounded.height - (extents->bounded.y + extents->bounded.height));
+	/* bottom */
+	if (extents->bounded.y + extents->bounded.height != extents->unbounded.y + extents->unbounded.height) {
+	    shader.add_rectangle (&shader,
+				  extents->unbounded.x,
+				  extents->bounded.y + extents->bounded.height,
+				  extents->unbounded.width,
+				  extents->unbounded.y + extents->unbounded.height - (extents->bounded.y + extents->bounded.height));
+	}
     }
 
     i915_shader_fini (&shader);

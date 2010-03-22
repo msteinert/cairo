@@ -1486,6 +1486,30 @@ _cairo_image_surface_fixup_unbounded (cairo_image_surface_t *dst,
 	}
     }
 
+    /* wholly unbounded? */
+    if (rects->bounded.width == 0 || rects->bounded.height == 0) {
+	int x = rects->unbounded.x;
+	int y = rects->unbounded.y;
+	int width = rects->unbounded.width;
+	int height = rects->unbounded.height;
+
+	if (mask != NULL) {
+	    pixman_image_composite (PIXMAN_OP_OUT_REVERSE,
+				    mask, NULL, dst->pixman_image,
+				    x + mask_x, y + mask_y,
+				    0, 0,
+				    x, y,
+				    width, height);
+	} else {
+	    pixman_fill ((uint32_t *) dst->data, dst->stride / sizeof (uint32_t),
+			 PIXMAN_FORMAT_BPP (dst->pixman_format),
+			 x, y, width, height,
+			 0);
+	}
+
+	return;
+    }
+
     /* top */
     if (rects->bounded.y != rects->unbounded.y) {
 	int x = rects->unbounded.x;

@@ -2101,37 +2101,45 @@ _cairo_xcb_surface_fixup_unbounded (cairo_xcb_surface_t *dst,
     }
 
     n = 0;
-    /* top */
-    if (rects->bounded.y != rects->unbounded.y) {
+    if (rects->bounded.width == 0 || rects->bounded.height == 0) {
 	xrects[n].x = rects->unbounded.x;
 	xrects[n].width = rects->unbounded.width;
 	xrects[n].y = rects->unbounded.y;
-	xrects[n].height = rects->bounded.y - rects->unbounded.y;
+	xrects[n].height = rects->unbounded.height;
 	n++;
-    }
-    /* left */
-    if (rects->bounded.x != rects->unbounded.x) {
-	xrects[n].x = rects->unbounded.x;
-	xrects[n].width = rects->bounded.x - rects->unbounded.x;
-	xrects[n].y = rects->bounded.y;
-	xrects[n].height = rects->bounded.height;
-	n++;
-    }
-    /* right */
-    if (rects->bounded.x + rects->bounded.width != rects->unbounded.x + rects->unbounded.width) {
-	xrects[n].x = rects->bounded.x + rects->bounded.width;
-	xrects[n].width = rects->unbounded.x + rects->unbounded.width - xrects[n].x;
-	xrects[n].y = rects->bounded.y;
-	xrects[n].height = rects->bounded.height;
-	n++;
-    }
-    /* bottom */
-    if (rects->bounded.y + rects->bounded.height != rects->unbounded.y + rects->unbounded.height) {
-	xrects[n].x = rects->unbounded.x;
-	xrects[n].width = rects->unbounded.width;
-	xrects[n].y = rects->bounded.y + rects->bounded.height;
-	xrects[n].height = rects->unbounded.y + rects->unbounded.height - xrects[n].y;
-	n++;
+    } else {
+	/* top */
+	if (rects->bounded.y != rects->unbounded.y) {
+	    xrects[n].x = rects->unbounded.x;
+	    xrects[n].width = rects->unbounded.width;
+	    xrects[n].y = rects->unbounded.y;
+	    xrects[n].height = rects->bounded.y - rects->unbounded.y;
+	    n++;
+	}
+	/* left */
+	if (rects->bounded.x != rects->unbounded.x) {
+	    xrects[n].x = rects->unbounded.x;
+	    xrects[n].width = rects->bounded.x - rects->unbounded.x;
+	    xrects[n].y = rects->bounded.y;
+	    xrects[n].height = rects->bounded.height;
+	    n++;
+	}
+	/* right */
+	if (rects->bounded.x + rects->bounded.width != rects->unbounded.x + rects->unbounded.width) {
+	    xrects[n].x = rects->bounded.x + rects->bounded.width;
+	    xrects[n].width = rects->unbounded.x + rects->unbounded.width - xrects[n].x;
+	    xrects[n].y = rects->bounded.y;
+	    xrects[n].height = rects->bounded.height;
+	    n++;
+	}
+	/* bottom */
+	if (rects->bounded.y + rects->bounded.height != rects->unbounded.y + rects->unbounded.height) {
+	    xrects[n].x = rects->unbounded.x;
+	    xrects[n].width = rects->unbounded.width;
+	    xrects[n].y = rects->bounded.y + rects->bounded.height;
+	    xrects[n].height = rects->unbounded.y + rects->unbounded.height - xrects[n].y;
+	    n++;
+	}
     }
 
     if (dst->flags & CAIRO_XCB_RENDER_HAS_FILL_RECTANGLES) {

@@ -766,60 +766,67 @@ i965_fixup_unbounded (i965_surface_t *dst,
 	goto BAIL;
     }
 
-    /* top */
-    if (extents->bounded.y != extents->unbounded.y) {
-	cairo_rectangle_int_t rect;
-
-	rect.x = extents->unbounded.x;
-	rect.y = extents->unbounded.y;
-	rect.width  = extents->unbounded.width;
-	rect.height = extents->bounded.y - rect.y;
-
+    if (extents->bounded.width == 0 || extents->bounded.height == 0) {
 	i965_shader_add_rectangle (&shader,
-				   rect.x, rect.y,
-				   rect.width, rect.height);
-    }
+				   extents->unbounded.x,
+				   extents->unbounded.y,
+				   extents->unbounded.width,
+				   extents->unbounded.height);
+    } else { /* top */
+	if (extents->bounded.y != extents->unbounded.y) {
+	    cairo_rectangle_int_t rect;
 
-    /* left */
-    if (extents->bounded.x != extents->unbounded.x) {
-	cairo_rectangle_int_t rect;
+	    rect.x = extents->unbounded.x;
+	    rect.y = extents->unbounded.y;
+	    rect.width  = extents->unbounded.width;
+	    rect.height = extents->bounded.y - rect.y;
 
-	rect.x = extents->unbounded.x;
-	rect.y = extents->bounded.y;
-	rect.width  = extents->bounded.x - extents->unbounded.x;
-	rect.height = extents->bounded.height;
+	    i965_shader_add_rectangle (&shader,
+				       rect.x, rect.y,
+				       rect.width, rect.height);
+	}
 
-	i965_shader_add_rectangle (&shader,
-				   rect.x, rect.y,
-				   rect.width, rect.height);
-    }
+	/* left */
+	if (extents->bounded.x != extents->unbounded.x) {
+	    cairo_rectangle_int_t rect;
 
-    /* right */
-    if (extents->bounded.x + extents->bounded.width != extents->unbounded.x + extents->unbounded.width) {
-	cairo_rectangle_int_t rect;
+	    rect.x = extents->unbounded.x;
+	    rect.y = extents->bounded.y;
+	    rect.width  = extents->bounded.x - extents->unbounded.x;
+	    rect.height = extents->bounded.height;
 
-	rect.x = extents->bounded.x + extents->bounded.width;
-	rect.y = extents->bounded.y;
-	rect.width  = extents->unbounded.x + extents->unbounded.width - rect.x;
-	rect.height = extents->bounded.height;
+	    i965_shader_add_rectangle (&shader,
+				       rect.x, rect.y,
+				       rect.width, rect.height);
+	}
 
-	i965_shader_add_rectangle (&shader,
-				   rect.x, rect.y,
-				   rect.width, rect.height);
-    }
+	/* right */
+	if (extents->bounded.x + extents->bounded.width != extents->unbounded.x + extents->unbounded.width) {
+	    cairo_rectangle_int_t rect;
 
-    /* bottom */
-    if (extents->bounded.y + extents->bounded.height != extents->unbounded.y + extents->unbounded.height) {
-	cairo_rectangle_int_t rect;
+	    rect.x = extents->bounded.x + extents->bounded.width;
+	    rect.y = extents->bounded.y;
+	    rect.width  = extents->unbounded.x + extents->unbounded.width - rect.x;
+	    rect.height = extents->bounded.height;
 
-	rect.x = extents->unbounded.x;
-	rect.y = extents->bounded.y + extents->bounded.height;
-	rect.width  = extents->unbounded.width;
-	rect.height = extents->unbounded.y + extents->unbounded.height - rect.y;
+	    i965_shader_add_rectangle (&shader,
+				       rect.x, rect.y,
+				       rect.width, rect.height);
+	}
 
-	i965_shader_add_rectangle (&shader,
-				   rect.x, rect.y,
-				   rect.width, rect.height);
+	/* bottom */
+	if (extents->bounded.y + extents->bounded.height != extents->unbounded.y + extents->unbounded.height) {
+	    cairo_rectangle_int_t rect;
+
+	    rect.x = extents->unbounded.x;
+	    rect.y = extents->bounded.y + extents->bounded.height;
+	    rect.width  = extents->unbounded.width;
+	    rect.height = extents->unbounded.y + extents->unbounded.height - rect.y;
+
+	    i965_shader_add_rectangle (&shader,
+				       rect.x, rect.y,
+				       rect.width, rect.height);
+	}
     }
 
     i965_shader_fini (&shader);
