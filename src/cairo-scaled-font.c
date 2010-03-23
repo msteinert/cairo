@@ -198,8 +198,10 @@ _cairo_scaled_glyph_fini (cairo_scaled_font_t *scaled_font,
     if (scaled_glyph->path != NULL)
 	_cairo_path_fixed_destroy (scaled_glyph->path);
 
-    if (scaled_glyph->recording_surface != NULL)
+    if (scaled_glyph->recording_surface != NULL) {
+	cairo_surface_finish (scaled_glyph->recording_surface);
 	cairo_surface_destroy (scaled_glyph->recording_surface);
+    }
 }
 
 #define ZOMBIE 0
@@ -2511,8 +2513,11 @@ _cairo_scaled_glyph_set_recording_surface (cairo_scaled_glyph_t *scaled_glyph,
 					   cairo_scaled_font_t *scaled_font,
 					   cairo_surface_t *recording_surface)
 {
-    if (scaled_glyph->recording_surface != NULL)
-	cairo_surface_destroy (recording_surface);
+    if (scaled_glyph->recording_surface != NULL) {
+	cairo_surface_finish (scaled_glyph->recording_surface);
+	cairo_surface_destroy (scaled_glyph->recording_surface);
+    }
+
     scaled_glyph->recording_surface = recording_surface;
 }
 
