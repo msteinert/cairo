@@ -155,7 +155,7 @@ typedef struct _cairo_surface cairo_surface_t;
  * cairo_xcb_device_create() creates a device that wraps the connection
  * to an X Windows System using the XCB library.
  *
- * The type of a surface can be queried with cairo_device_get_type().
+ * The type of a device can be queried with cairo_device_get_type().
  *
  * Memory management of #cairo_device_t is done with
  * cairo_device_reference() and cairo_device_destroy().
@@ -2617,7 +2617,7 @@ cairo_public cairo_region_t *
 cairo_region_copy (const cairo_region_t *original);
 
 cairo_public cairo_region_t *
-cairo_region_reference (cairo_region_t *);
+cairo_region_reference (cairo_region_t *region);
 
 cairo_public void
 cairo_region_destroy (cairo_region_t *region);

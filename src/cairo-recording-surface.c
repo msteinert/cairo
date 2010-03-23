@@ -196,26 +196,22 @@ _cairo_recording_surface_finish (void *abstract_surface)
 	switch (command->header.type) {
 	case CAIRO_COMMAND_PAINT:
 	    _cairo_pattern_fini_snapshot (&command->paint.source.base);
-	    free (command);
 	    break;
 
 	case CAIRO_COMMAND_MASK:
 	    _cairo_pattern_fini_snapshot (&command->mask.source.base);
 	    _cairo_pattern_fini_snapshot (&command->mask.mask.base);
-	    free (command);
 	    break;
 
 	case CAIRO_COMMAND_STROKE:
 	    _cairo_pattern_fini_snapshot (&command->stroke.source.base);
 	    _cairo_path_fixed_fini (&command->stroke.path);
 	    _cairo_stroke_style_fini (&command->stroke.style);
-	    free (command);
 	    break;
 
 	case CAIRO_COMMAND_FILL:
 	    _cairo_pattern_fini_snapshot (&command->fill.source.base);
 	    _cairo_path_fixed_fini (&command->fill.path);
-	    free (command);
 	    break;
 
 	case CAIRO_COMMAND_SHOW_TEXT_GLYPHS:
@@ -224,16 +220,18 @@ _cairo_recording_surface_finish (void *abstract_surface)
 	    free (command->show_text_glyphs.glyphs);
 	    free (command->show_text_glyphs.clusters);
 	    cairo_scaled_font_destroy (command->show_text_glyphs.scaled_font);
-	    free (command);
 	    break;
 
 	default:
 	    ASSERT_NOT_REACHED;
 	}
+
+	_cairo_clip_fini (&command->header.clip);
+	free (command);
     }
 
     _cairo_array_fini (&recording_surface->commands);
-    _cairo_clip_reset (&recording_surface->clip);
+    _cairo_clip_fini (&recording_surface->clip);
 
     return CAIRO_STATUS_SUCCESS;
 }
