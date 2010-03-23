@@ -42,23 +42,26 @@ create_surface (cairo_t *target, cairo_content_t content, surface_type_t type)
     cairo_t *cr;
 
     surface = cairo_surface_create_similar (cairo_get_target (target),
-                                            content,
-                                            SIZE, SIZE);
+					    content,
+					    SIZE, SIZE);
 
     if (type == CLEAR)
-        return surface;
+	return surface;
 
     cr = cairo_create (surface);
+    cairo_surface_destroy (surface);
+
     cairo_set_source_rgb (cr, 0.75, 0, 0);
     cairo_paint (cr);
-    cairo_destroy (cr);
 
     if (type == PAINTED)
-        return surface;
+	goto DONE;
 
-    cr = cairo_create (surface);
     cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
     cairo_paint (cr);
+
+DONE:
+    surface = cairo_surface_reference (cairo_get_target (cr));
     cairo_destroy (cr);
 
     return surface;
@@ -117,28 +120,29 @@ glyphs (cairo_t *cr, cairo_surface_t *surface)
 
 typedef void (* operation_t) (cairo_t *cr, cairo_surface_t *surface);
 static operation_t operations[] = {
-  paint,
-  fill,
-  stroke,
-  mask,
-  mask_self,
-  glyphs
+    paint,
+    fill,
+    stroke,
+    mask,
+    mask_self,
+    glyphs
 };
 
-static cairo_test_status_t
+    static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
     cairo_content_t contents[] = { CAIRO_CONTENT_COLOR_ALPHA, CAIRO_CONTENT_COLOR, CAIRO_CONTENT_ALPHA };
     unsigned int content, type, ops;
-    cairo_surface_t *surface;
 
     cairo_set_source_rgb (cr, 0.5, 0.5, 0.5);
     cairo_paint (cr);
     cairo_translate (cr, SPACE, SPACE);
 
     for (type = 0; type <= PAINTED; type++) {
-        for (content = 0; content < ARRAY_LENGTH (contents); content++) {
-            surface = create_surface (cr, contents[content], type);
+	for (content = 0; content < ARRAY_LENGTH (contents); content++) {
+	    cairo_surface_t *surface;
+
+	    surface = create_surface (cr, contents[content], type);
 
             cairo_save (cr);
             for (ops = 0; ops < ARRAY_LENGTH (operations); ops++) {
@@ -149,6 +153,8 @@ draw (cairo_t *cr, int width, int height)
             }
             cairo_restore (cr);
             cairo_translate (cr, SIZE + SPACE, 0);
+
+	    cairo_surface_destroy (surface);
         }
     }
 
