@@ -426,7 +426,6 @@ _get_target (cairo_script_surface_t *surface)
 						 depth);
 		}
 		_cairo_output_stream_puts (ctx->stream, "/target get ");
-		target_push (surface);
 	    }
 	} else {
 	    _cairo_output_stream_puts (ctx->stream, "/target get ");
@@ -1500,6 +1499,7 @@ _emit_source (cairo_script_surface_t *surface,
     if (unlikely (status))
 	return status;
 
+    assert (target_is_active (surface));
     _cairo_output_stream_puts (to_context (surface)->stream,
 			       " set-source\n");
     return CAIRO_STATUS_SUCCESS;
@@ -1700,10 +1700,16 @@ _cairo_script_surface_create_similar (void	       *abstract_surface,
 
     ctx = to_context (other);
 
+    status = cairo_device_acquire (&ctx->base);
+    if (unlikely (status))
+	return _cairo_surface_create_in_error (status);
+
     if (! other->emitted) {
 	status = _emit_surface (other);
-	if (unlikely (status))
+	if (unlikely (status)) {
+	    cairo_device_release (&ctx->base);
 	    return _cairo_surface_create_in_error (status);
+	}
 
 	target_push (other);
     }
@@ -1712,8 +1718,10 @@ _cairo_script_surface_create_similar (void	       *abstract_surface,
 	passthrough =
 	    _cairo_surface_wrapper_create_similar (&other->wrapper,
 						   content, width, height);
-	if (unlikely (passthrough->status))
+	if (unlikely (passthrough->status)) {
+	    cairo_device_release (&ctx->base);
 	    return passthrough;
+	}
     }
 
     surface = _cairo_script_surface_create_internal (ctx,
@@ -1722,8 +1730,10 @@ _cairo_script_surface_create_similar (void	       *abstract_surface,
 						     passthrough);
     cairo_surface_destroy (passthrough);
 
-    if (unlikely (surface->base.status))
+    if (unlikely (surface->base.status)) {
+	cairo_device_release (&ctx->base);
 	return &surface->base;
+    }
 
     _get_target (other);
     _cairo_output_stream_printf (ctx->stream,
@@ -1736,6 +1746,7 @@ _cairo_script_surface_create_similar (void	       *abstract_surface,
     surface->base.is_clear = TRUE;
     target_push (surface);
 
+    cairo_device_release (&ctx->base);
     return &surface->base;
 }
 
@@ -1825,6 +1836,10 @@ _cairo_script_surface_finish (void *abstract_surface)
     _cairo_path_fixed_fini (&surface->cr.current_path);
     _cairo_surface_clipper_reset (&surface->clipper);
 
+    status = cairo_device_acquire (&ctx->base);
+    if (unlikely (status))
+	return status;
+
     if (surface->emitted) {
 	assert (! surface->active);
 
@@ -1871,6 +1886,8 @@ _cairo_script_surface_finish (void *abstract_surface)
     if (status == CAIRO_STATUS_SUCCESS)
 	status = _cairo_output_stream_flush (to_context (surface)->stream);
 
+    cairo_device_release (&ctx->base);
+
     return status;
 }
 
@@ -1880,13 +1897,19 @@ _cairo_script_surface_copy_page (void *abstract_surface)
     cairo_script_surface_t *surface = abstract_surface;
     cairo_status_t status;
 
-    status = _emit_context (surface);
+    status = cairo_device_acquire (surface->base.device);
     if (unlikely (status))
 	return status;
 
+    status = _emit_context (surface);
+    if (unlikely (status))
+	goto BAIL;
+
     _cairo_output_stream_puts (to_context (surface)->stream, "copy-page\n");
 
-    return CAIRO_STATUS_SUCCESS;
+BAIL:
+    cairo_device_release (surface->base.device);
+    return status;
 }
 
 static cairo_int_status_t
@@ -1895,13 +1918,19 @@ _cairo_script_surface_show_page (void *abstract_surface)
     cairo_script_surface_t *surface = abstract_surface;
     cairo_status_t status;
 
-    status = _emit_context (surface);
+    status = cairo_device_acquire (surface->base.device);
     if (unlikely (status))
 	return status;
 
+    status = _emit_context (surface);
+    if (unlikely (status))
+	goto BAIL;
+
     _cairo_output_stream_puts (to_context (surface)->stream, "show-page\n");
 
-    return CAIRO_STATUS_SUCCESS;
+BAIL:
+    cairo_device_release (surface->base.device);
+    return status;
 }
 
 static cairo_status_t
@@ -1994,9 +2023,11 @@ inactive (cairo_script_surface_t *surface)
     cairo_script_context_t *ctx = to_context (surface);
     cairo_list_t sorted;
 
+    assert (surface->active > 0);
     if (--surface->active)
 	goto DONE;
 
+    assert (ctx->active > 0);
     if (--ctx->active)
 	goto DONE;
 
@@ -2459,14 +2490,22 @@ _cairo_script_surface_scaled_font_fini (cairo_scaled_font_t *scaled_font)
 
     font_private = scaled_font->surface_private;
     if (font_private != NULL) {
-	_cairo_output_stream_printf (font_private->ctx->stream,
-				     "/f%lu undef /sf%lu undef\n",
-				     font_private->id,
-				     font_private->id);
+	cairo_status_t status;
+	cairo_device_t *device;
 
-	_bitmap_release_id (&font_private->ctx->font_id, font_private->id);
-	cairo_list_del (&font_private->link);
-	free (font_private);
+	status = cairo_device_acquire (device = &font_private->ctx->base);
+	if (likely (status == CAIRO_STATUS_SUCCESS)) {
+	    _cairo_output_stream_printf (font_private->ctx->stream,
+					 "/f%lu undef /sf%lu undef\n",
+					 font_private->id,
+					 font_private->id);
+
+	    _bitmap_release_id (&font_private->ctx->font_id, font_private->id);
+	    cairo_list_del (&font_private->link);
+	    free (font_private);
+
+	    cairo_device_release (device);
+	}
 
 	scaled_font->surface_private = NULL;
     }
