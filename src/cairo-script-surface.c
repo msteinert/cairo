@@ -238,6 +238,16 @@ _bitmap_next_id (struct _bitmap *b,
     return CAIRO_STATUS_SUCCESS;
 }
 
+static void
+_bitmap_fini (struct _bitmap *b)
+{
+    while (b != NULL) {
+	struct _bitmap *next = b->next;
+	free (b);
+	b = next;
+    }
+}
+
 static const char *
 _direction_to_string (cairo_bool_t backward)
 {
@@ -1786,6 +1796,9 @@ _device_destroy (void *abstract_device)
 						  NULL, NULL);
 	assert (status == CAIRO_STATUS_SUCCESS);
     }
+
+    _bitmap_fini (ctx->surface_id.next);
+    _bitmap_fini (ctx->font_id.next);
 
     status = _cairo_output_stream_destroy (ctx->stream);
 
