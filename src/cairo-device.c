@@ -118,6 +118,8 @@ _cairo_device_init (cairo_device_t *device,
     device->mutex_depth = 0;
 
     device->finished = FALSE;
+
+    _cairo_user_data_array_init (&device->user_data);
 }
 
 cairo_device_t *
@@ -192,6 +194,8 @@ cairo_device_destroy (cairo_device_t *device)
 
     cairo_device_finish (device);
 
+    _cairo_user_data_array_fini (&device->user_data);
+
     assert (device->mutex_depth == 0);
     CAIRO_MUTEX_FINI (device->mutex);
 
@@ -262,4 +266,78 @@ _cairo_device_set_error (cairo_device_t *device,
     _cairo_status_set_error (&device->status, status);
 
     return _cairo_error (status);
+}
+
+/**
+ * cairo_device_get_reference_count:
+ * @device: a #cairo_device_t
+ *
+ * Returns the current reference count of @device.
+ *
+ * Return value: the current reference count of @device.  If the
+ * object is a nil object, 0 will be returned.
+ *
+ * Since: 1.10
+ **/
+unsigned int
+cairo_device_get_reference_count (cairo_device_t *device)
+{
+    if (device == NULL ||
+	CAIRO_REFERENCE_COUNT_IS_INVALID (&device->ref_count))
+	return 0;
+
+    return CAIRO_REFERENCE_COUNT_GET_VALUE (&device->ref_count);
+}
+
+/**
+ * cairo_device_get_user_data:
+ * @device: a #cairo_device_t
+ * @key: the address of the #cairo_user_data_key_t the user data was
+ * attached to
+ *
+ * Return user data previously attached to @device using the
+ * specified key.  If no user data has been attached with the given
+ * key this function returns %NULL.
+ *
+ * Return value: the user data previously attached or %NULL.
+ *
+ * Since: 1.10
+ **/
+void *
+cairo_device_get_user_data (cairo_device_t		 *device,
+			    const cairo_user_data_key_t *key)
+{
+    return _cairo_user_data_array_get_data (&device->user_data,
+					    key);
+}
+
+/**
+ * cairo_device_set_user_data:
+ * @device: a #cairo_device_t
+ * @key: the address of a #cairo_user_data_key_t to attach the user data to
+ * @user_data: the user data to attach to the #cairo_device_t
+ * @destroy: a #cairo_destroy_func_t which will be called when the
+ * #cairo_t is destroyed or when new user data is attached using the
+ * same key.
+ *
+ * Attach user data to @device.  To remove user data from a surface,
+ * call this function with the key that was used to set it and %NULL
+ * for @data.
+ *
+ * Return value: %CAIRO_STATUS_SUCCESS or %CAIRO_STATUS_NO_MEMORY if a
+ * slot could not be allocated for the user data.
+ *
+ * Since: 1.10
+ **/
+cairo_status_t
+cairo_device_set_user_data (cairo_device_t		 *device,
+			    const cairo_user_data_key_t *key,
+			    void			 *user_data,
+			    cairo_destroy_func_t	  destroy)
+{
+    if (CAIRO_REFERENCE_COUNT_IS_INVALID (&device->ref_count))
+	return device->status;
+
+    return _cairo_user_data_array_set_data (&device->user_data,
+					    key, user_data, destroy);
 }

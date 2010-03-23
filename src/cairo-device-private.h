@@ -44,6 +44,7 @@
 struct _cairo_device {
     cairo_reference_count_t ref_count;
     cairo_status_t status;
+    cairo_user_data_array_t user_data;
 
     const cairo_device_backend_t *backend;
 

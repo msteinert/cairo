@@ -2026,6 +2026,20 @@ cairo_device_finish (cairo_device_t *device);
 cairo_public void
 cairo_device_destroy (cairo_device_t *device);
 
+cairo_public unsigned int
+cairo_device_get_reference_count (cairo_device_t *device);
+
+cairo_public void *
+cairo_device_get_user_data (cairo_device_t		 *device,
+			    const cairo_user_data_key_t *key);
+
+cairo_public cairo_status_t
+cairo_device_set_user_data (cairo_device_t		 *device,
+			    const cairo_user_data_key_t *key,
+			    void			 *user_data,
+			    cairo_destroy_func_t	  destroy);
+
+
 /* Surface manipulation */
 
 cairo_public cairo_surface_t *
