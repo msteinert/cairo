@@ -1772,7 +1772,9 @@ _device_destroy (void *abstract_device)
 				       cairo_script_surface_font_private_t,
 				       link);
 	cairo_list_del (&font->link);
-	_cairo_script_surface_scaled_font_fini (font->parent);
+	if (font->parent->surface_private == font)
+	    font->parent->surface_private = NULL;
+	free (font);
     }
 
     while (! cairo_list_is_empty (&ctx->defines)) {
