@@ -92,11 +92,15 @@ create_source (cairo_surface_t *similar)
                                            2, 2);
 
     cr = cairo_create (source);
+    cairo_surface_destroy (source);
+
     for (i = 0; i < 4; i++) {
       cairo_set_source_rgb (cr, colors[i][0], colors[i][1], colors[i][2]);
       cairo_rectangle (cr, i % 2, i / 2, 1, 1);
       cairo_fill (cr);
     }
+
+    source = cairo_surface_reference (cairo_get_target (cr));
     cairo_destroy (cr);
 
     return source;
@@ -127,6 +131,8 @@ draw (cairo_t *cr, int width, int height)
 	    break;
         }
     }
+
+    cairo_surface_destroy (source);
 
     cairo_set_source_rgb (cr, 0.5, 0.5, 0.5);
     cairo_paint (cr);
