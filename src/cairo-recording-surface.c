@@ -130,6 +130,9 @@ cairo_recording_surface_create (cairo_content_t		 content,
 
     recording_surface->content = content;
 
+    recording_surface->unbounded = TRUE;
+    _cairo_clip_init (&recording_surface->clip);
+
     /* unbounded -> 'infinite' extents */
     if (extents != NULL) {
 	recording_surface->extents_pixels = *extents;
@@ -140,16 +143,14 @@ cairo_recording_surface_create (cairo_content_t		 content,
 	recording_surface->extents.width = ceil (extents->x + extents->width) - recording_surface->extents.x;
 	recording_surface->extents.height = ceil (extents->y + extents->height) - recording_surface->extents.y;
 
-	status = _cairo_clip_init_rectangle (&recording_surface->clip, &recording_surface->extents);
+	status = _cairo_clip_rectangle (&recording_surface->clip,
+					&recording_surface->extents);
 	if (unlikely (status)) {
 	    free (recording_surface);
 	    return _cairo_surface_create_in_error (status);
 	}
 
 	recording_surface->unbounded = FALSE;
-    } else {
-	recording_surface->unbounded = TRUE;
-	_cairo_clip_init (&recording_surface->clip);
     }
 
     _cairo_array_init (&recording_surface->commands, sizeof (cairo_command_t *));
@@ -190,8 +191,6 @@ _cairo_recording_surface_finish (void *abstract_surface)
     elements = _cairo_array_index (&recording_surface->commands, 0);
     for (i = 0; i < num_elements; i++) {
 	cairo_command_t *command = elements[i];
-
-	_cairo_clip_reset (&command->header.clip);
 
 	switch (command->header.type) {
 	case CAIRO_COMMAND_PAINT:

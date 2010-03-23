@@ -76,10 +76,6 @@ struct _cairo_clip {
 cairo_private void
 _cairo_clip_init (cairo_clip_t *clip);
 
-cairo_private cairo_status_t
-_cairo_clip_init_rectangle (cairo_clip_t *clip,
-			    const cairo_rectangle_int_t *rect);
-
 cairo_private_no_warn cairo_clip_t *
 _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other);
 

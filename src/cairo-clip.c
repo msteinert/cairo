@@ -164,33 +164,23 @@ _cairo_clip_intersect_rectangle (cairo_clip_t *clip,
     status = _cairo_path_fixed_close_path (&clip_path->path);
     assert (status == CAIRO_STATUS_SUCCESS);
 
-    clip_path->extents = *rect;
     clip_path->fill_rule = CAIRO_FILL_RULE_WINDING;
     clip_path->tolerance = 1;
     clip_path->antialias = CAIRO_ANTIALIAS_DEFAULT;
     clip_path->flags |= CAIRO_CLIP_PATH_IS_BOX;
 
+    clip_path->extents = *rect;
+    if (clip_path->prev != NULL) {
+	if (! _cairo_rectangle_intersect (&clip_path->extents,
+					  &clip_path->prev->extents))
+	{
+	    _cairo_clip_set_all_clipped (clip);
+	}
+    }
+
     /* could preallocate the region if it proves worthwhile */
 
     return CAIRO_STATUS_SUCCESS;
-}
-
-/* XXX consider accepting a matrix, no users yet. */
-cairo_status_t
-_cairo_clip_init_rectangle (cairo_clip_t *clip,
-			    const cairo_rectangle_int_t *rect)
-{
-    _cairo_clip_init (clip);
-
-    if (rect == NULL)
-	return CAIRO_STATUS_SUCCESS;
-
-    if (rect->width == 0 || rect->height == 0) {
-	_cairo_clip_set_all_clipped (clip);
-	return CAIRO_STATUS_SUCCESS;
-    }
-
-    return _cairo_clip_intersect_rectangle (clip, rect);
 }
 
 cairo_clip_t *
@@ -361,6 +351,7 @@ _cairo_clip_path_reapply_clip_path_transform (cairo_clip_t      *clip,
     status = _cairo_path_fixed_init_copy (&clip_path->path,
 					  &other_path->path);
     if (unlikely (status)) {
+	clip->path = clip->path->prev;
 	_cairo_clip_path_destroy (clip_path);
 	return status;
     }
@@ -403,6 +394,7 @@ _cairo_clip_path_reapply_clip_path_translate (cairo_clip_t      *clip,
     status = _cairo_path_fixed_init_copy (&clip_path->path,
 					  &other_path->path);
     if (unlikely (status)) {
+	clip->path = clip->path->prev;
 	_cairo_clip_path_destroy (clip_path);
 	return status;
     }

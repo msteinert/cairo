@@ -277,17 +277,17 @@ _paint_fallback_image (cairo_paginated_surface_t *surface,
      * filtering (if possible) to avoid introducing potential artifacts. */
     pattern.base.filter = CAIRO_FILTER_NEAREST;
 
-    status = _cairo_clip_init_rectangle (&clip, rect);
-    if (unlikely (status))
-	goto CLEANUP_IMAGE;
+    _cairo_clip_init (&clip);
+    status = _cairo_clip_rectangle (&clip, rect);
+    if (likely (status == CAIRO_STATUS_SUCCESS)) {
+	status = _cairo_surface_paint (surface->target,
+				       CAIRO_OPERATOR_SOURCE,
+				       &pattern.base, &clip);
+    }
 
-    status = _cairo_surface_paint (surface->target,
-				   CAIRO_OPERATOR_SOURCE,
-				   &pattern.base, &clip);
-
-    _cairo_clip_reset (&clip);
-
+    _cairo_clip_fini (&clip);
     _cairo_pattern_fini (&pattern.base);
+
 CLEANUP_IMAGE:
     cairo_surface_destroy (image);
 

@@ -113,11 +113,9 @@ _cairo_surface_wrapper_paint (cairo_surface_wrapper_t *wrapper,
 							&wrapper->target->device_transform);
 	    if (unlikely (status))
 		goto FINISH;
-	} else {
-	    _cairo_clip_init_copy (&clip_copy, clip);
-	}
 
-	dev_clip = &clip_copy;
+	    dev_clip = &clip_copy;
+	}
 
 	_copy_transformed_pattern (&source_copy.base, source, &wrapper->target->device_transform_inverse);
 	source = &source_copy.base;
@@ -156,11 +154,8 @@ _cairo_surface_wrapper_mask (cairo_surface_wrapper_t *wrapper,
 	    if (unlikely (status))
 		goto FINISH;
 
-	} else {
-	    _cairo_clip_init_copy (&clip_copy, clip);
+	    dev_clip = &clip_copy;
 	}
-
-	dev_clip = &clip_copy;
 
 	_copy_transformed_pattern (&source_copy.base, source, &wrapper->target->device_transform_inverse);
 	source = &source_copy.base;
@@ -422,11 +417,12 @@ _cairo_surface_wrapper_show_text_glyphs (cairo_surface_wrapper_t *wrapper,
 	int i;
 
 	if (clip != NULL) {
-	    dev_clip = &clip_copy;
 	    status = _cairo_clip_init_copy_transformed (&clip_copy, clip,
 							&wrapper->target->device_transform);
 	    if (unlikely (status))
 		goto FINISH;
+
+	    dev_clip = &clip_copy;
 	}
 
 	dev_glyphs = _cairo_malloc_ab (num_glyphs, sizeof (cairo_glyph_t));
