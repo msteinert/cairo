@@ -836,3 +836,16 @@ cairo_boilerplate_version_string (void)
 {
     return CAIRO_VERSION_STRING;
 }
+
+void
+cairo_boilerplate_fini (void)
+{
+    while (cairo_boilerplate_targets != NULL) {
+	struct cairo_boilerplate_target_list *next;
+
+	next = cairo_boilerplate_targets->next;
+
+	free (cairo_boilerplate_targets);
+	cairo_boilerplate_targets = next;
+    }
+}

@@ -216,6 +216,9 @@ cairo_boilerplate_version (void);
 const char*
 cairo_boilerplate_version_string (void);
 
+void
+cairo_boilerplate_fini (void);
+
 #include "cairo-boilerplate-system.h"
 
 CAIRO_END_DECLS

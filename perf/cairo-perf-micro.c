@@ -476,6 +476,8 @@ static void
 cairo_perf_fini (cairo_perf_t *perf)
 {
     cairo_boilerplate_free_targets (perf->targets);
+    cairo_boilerplate_fini ();
+
     free (perf->times);
     cairo_debug_reset_static_data ();
 #if HAVE_FCFINI

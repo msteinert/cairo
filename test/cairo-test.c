@@ -256,6 +256,8 @@ cairo_test_fini (cairo_test_context_t *ctx)
     if (ctx->own_targets)
 	cairo_boilerplate_free_targets (ctx->targets_to_test);
 
+    cairo_boilerplate_fini ();
+
     cairo_debug_reset_static_data ();
 #if HAVE_FCFINI
     FcFini ();
