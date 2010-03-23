@@ -4394,15 +4394,12 @@ _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
 
     if (clip != NULL) {
 	clip = _cairo_clip_init_copy (&local_clip, clip);
-	have_clip = TRUE;
-    }
-
-    if (clip != NULL && extents.is_bounded) {
-	clip = _cairo_clip_init_copy (&local_clip, clip);
-	status = _cairo_clip_rectangle (clip, &extents.bounded);
-	if (unlikely (status)) {
-	    _cairo_clip_fini (&local_clip);
-	    return status;
+	if (extents.is_bounded) {
+	    status = _cairo_clip_rectangle (clip, &extents.bounded);
+	    if (unlikely (status)) {
+		_cairo_clip_fini (&local_clip);
+		return status;
+	    }
 	}
 	have_clip = TRUE;
     }
