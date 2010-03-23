@@ -2564,6 +2564,9 @@ _composite_boxes (cairo_xcb_surface_t *dst,
 	status = _render_composite_boxes (dst, op, src,
 					  need_clip_mask ? &mask.base : NULL,
 					  &extents->bounded, boxes);
+
+	if (need_clip_mask)
+	    _cairo_pattern_fini (&mask.base);
     }
 
     if (status == CAIRO_STATUS_SUCCESS && ! extents->is_bounded) {
