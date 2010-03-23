@@ -41,6 +41,7 @@ draw (cairo_t *cr, int width, int height)
 
     image = cairo_test_create_surface_from_png (ctx, png_filename);
     cairo_set_source_surface (cr, image, 0, 0);
+    cairo_surface_destroy (image);
 
     /* simple clip */
     cairo_save (cr);
