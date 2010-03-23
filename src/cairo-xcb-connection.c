@@ -539,6 +539,13 @@ _device_finish (void *device)
 	_cairo_xcb_screen_finish (screen);
     }
 
+    if (connection->has_socket) {
+	/* Send a request so that xcb takes the socket from us, preventing
+	 * a later use-after-free on shutdown of the connection.
+	 */
+	xcb_no_operation (connection->xcb_connection);
+    }
+
     if (was_cached)
 	cairo_device_destroy (device);
 }
