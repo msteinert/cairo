@@ -2612,9 +2612,12 @@ _clip_and_composite_boxes (cairo_xcb_surface_t *dst,
 	return status;
 
     info.antialias = antialias;
-    return _clip_and_composite (dst, op, src,
-				_composite_traps, &info,
-				extents, clip);
+    status = _clip_and_composite (dst, op, src,
+				  _composite_traps, &info,
+				  extents, clip);
+
+    _cairo_traps_fini (&info.traps);
+    return status;
 }
 
 static cairo_bool_t
