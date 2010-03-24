@@ -47,6 +47,7 @@ _cairo_surface_snapshot_finish (void *abstract_surface)
 {
     cairo_surface_snapshot_t *surface = abstract_surface;
 
+    cairo_surface_finish (surface->clone);
     cairo_surface_destroy (surface->clone);
 
     return CAIRO_STATUS_SUCCESS;
