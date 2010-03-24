@@ -197,6 +197,7 @@ _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other)
 	}
     } else {
 	_cairo_clip_init (clip);
+	clip = NULL;
     }
 
     return clip;
