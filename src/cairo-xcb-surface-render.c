@@ -4365,6 +4365,23 @@ _composite_glyphs (void				*closure,
     return status;
 }
 
+static cairo_bool_t
+_surface_owns_font (cairo_xcb_surface_t *dst,
+		    cairo_scaled_font_t *scaled_font)
+{
+    cairo_xcb_font_t *font_private;
+
+    font_private = scaled_font->surface_private;
+    if ((scaled_font->surface_backend != NULL &&
+	 scaled_font->surface_backend != dst->base.backend) ||
+	(font_private != NULL && font_private->connection != dst->connection))
+    {
+	return FALSE;
+    }
+
+    return TRUE;
+}
+
 cairo_int_status_t
 _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
 				  cairo_operator_t	 op,
@@ -4414,17 +4431,20 @@ _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
     if (surface->flags & CAIRO_XCB_RENDER_HAS_COMPOSITE_GLYPHS) {
 	_cairo_scaled_font_freeze_cache (scaled_font);
 
-	status = _can_composite_glyphs (surface, scaled_font, glyphs, num_glyphs);
-	if (likely (status == CAIRO_STATUS_SUCCESS)) {
-	    composite_glyphs_info_t info;
+	if (_surface_owns_font (surface, scaled_font)) {
+	    status = _can_composite_glyphs (surface,
+					    scaled_font, glyphs, num_glyphs);
+	    if (likely (status == CAIRO_STATUS_SUCCESS)) {
+		composite_glyphs_info_t info;
 
-	    info.font = scaled_font;
-	    info.glyphs = (cairo_xcb_glyph_t *) glyphs;
-	    info.num_glyphs = num_glyphs;
+		info.font = scaled_font;
+		info.glyphs = (cairo_xcb_glyph_t *) glyphs;
+		info.num_glyphs = num_glyphs;
 
-	    status = _clip_and_composite (surface, op, source,
-					  _composite_glyphs, &info,
-					  &extents, clip);
+		status = _clip_and_composite (surface, op, source,
+					      _composite_glyphs, &info,
+					      &extents, clip);
+	    }
 	}
 
 	_cairo_scaled_font_thaw_cache (scaled_font);
