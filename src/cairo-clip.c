@@ -190,7 +190,8 @@ _cairo_clip_init_copy (cairo_clip_t *clip, cairo_clip_t *other)
 	clip->all_clipped = other->all_clipped;
 	if (other->path == NULL) {
 	    clip->path = NULL;
-	    clip = NULL;
+	    if (! clip->all_clipped)
+		clip = NULL;
 	} else {
 	    clip->path = _cairo_clip_path_reference (other->path);
 	}
