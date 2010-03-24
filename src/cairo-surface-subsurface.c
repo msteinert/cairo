@@ -69,7 +69,8 @@ _cairo_surface_subsurface_paint (void *abstract_surface,
     cairo_status_t status;
     cairo_clip_t target_clip;
 
-    status = _cairo_clip_rectangle (_cairo_clip_init_copy (&target_clip, clip), &rect);
+    _cairo_clip_init_copy (&target_clip, clip);
+    status = _cairo_clip_rectangle (&target_clip, &rect);
     if (unlikely (status))
 	goto CLEANUP;
 
@@ -93,7 +94,8 @@ _cairo_surface_subsurface_mask (void *abstract_surface,
     cairo_status_t status;
     cairo_clip_t target_clip;
 
-    status = _cairo_clip_rectangle (_cairo_clip_init_copy (&target_clip, clip), &rect);
+    _cairo_clip_init_copy (&target_clip, clip);
+    status = _cairo_clip_rectangle (&target_clip, &rect);
     if (unlikely (status))
 	goto CLEANUP;
 
@@ -120,7 +122,8 @@ _cairo_surface_subsurface_fill (void			*abstract_surface,
     cairo_status_t status;
     cairo_clip_t target_clip;
 
-    status = _cairo_clip_rectangle (_cairo_clip_init_copy (&target_clip, clip), &rect);
+    _cairo_clip_init_copy (&target_clip, clip);
+    status = _cairo_clip_rectangle (&target_clip, &rect);
     if (unlikely (status))
 	goto CLEANUP;
 
@@ -150,7 +153,8 @@ _cairo_surface_subsurface_stroke (void				*abstract_surface,
     cairo_status_t status;
     cairo_clip_t target_clip;
 
-    status = _cairo_clip_rectangle (_cairo_clip_init_copy (&target_clip, clip), &rect);
+    _cairo_clip_init_copy (&target_clip, clip);
+    status = _cairo_clip_rectangle (&target_clip, &rect);
     if (unlikely (status))
 	goto CLEANUP;
 
@@ -179,7 +183,8 @@ _cairo_surface_subsurface_glyphs (void			*abstract_surface,
     cairo_status_t status;
     cairo_clip_t target_clip;
 
-    status = _cairo_clip_rectangle (_cairo_clip_init_copy (&target_clip, clip), &rect);
+    _cairo_clip_init_copy (&target_clip, clip);
+    status = _cairo_clip_rectangle (&target_clip, &rect);
     if (unlikely (status))
 	goto CLEANUP;
 
