@@ -184,6 +184,7 @@ _cairo_recording_surface_finish (void *abstract_surface)
 
     if (recording_surface->commands_owner) {
 	cairo_surface_destroy (recording_surface->commands_owner);
+	_cairo_clip_fini (&recording_surface->clip);
 	return CAIRO_STATUS_SUCCESS;
     }
 
