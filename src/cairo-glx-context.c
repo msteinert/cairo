@@ -52,6 +52,9 @@ typedef struct _cairo_glx_context {
     Display *display;
     Window dummy_window;
     GLXContext context;
+
+    GLXContext prev_context;
+    GLXDrawable prev_drawable;
 } cairo_glx_context_t;
 
 typedef struct _cairo_glx_surface {
@@ -61,14 +64,38 @@ typedef struct _cairo_glx_surface {
 } cairo_glx_surface_t;
 
 static void
-_glx_make_current (void *abstract_ctx,
-	           cairo_gl_surface_t *abstract_surface)
+_glx_acquire (void *abstract_ctx)
+{
+    cairo_glx_context_t *ctx = abstract_ctx;
+
+    ctx->prev_context = glXGetCurrentContext ();
+    ctx->prev_drawable = glXGetCurrentDrawable ();
+
+    /* XXX: This is necessary with current code, but shouldn't be */
+    if (ctx->prev_context != ctx->context)
+        glXMakeCurrent (ctx->display, ctx->dummy_window, ctx->context);
+}
+
+static void
+_glx_make_current (void *abstract_ctx, cairo_gl_surface_t *abstract_surface)
 {
     cairo_glx_context_t *ctx = abstract_ctx;
     cairo_glx_surface_t *surface = (cairo_glx_surface_t *) abstract_surface;
 
     /* Set the window as the target of our context. */
     glXMakeCurrent (ctx->display, surface->win, ctx->context);
+}
+
+static void
+_glx_release (void *abstract_ctx)
+{
+    cairo_glx_context_t *ctx = abstract_ctx;
+
+    if (ctx->prev_context != glXGetCurrentContext () ||
+        ctx->prev_drawable != glXGetCurrentDrawable ())
+        glXMakeCurrent (ctx->display, 
+                        ctx->prev_drawable,
+                        ctx->prev_context);
 }
 
 static void
@@ -162,7 +189,11 @@ cairo_glx_device_create (Display *dpy, GLXContext gl_ctx)
     ctx->display = dpy;
     ctx->dummy_window = dummy;
     ctx->context = gl_ctx;
+    ctx->prev_context = NULL;
+    ctx->prev_drawable = None;
 
+    ctx->base.acquire = _glx_acquire;
+    ctx->base.release = _glx_release;
     ctx->base.make_current = _glx_make_current;
     ctx->base.swap_buffers = _glx_swap_buffers;
     ctx->base.destroy = _glx_destroy;
@@ -172,6 +203,8 @@ cairo_glx_device_create (Display *dpy, GLXContext gl_ctx)
 	free (ctx);
 	return _cairo_gl_context_create_in_error (status);
     }
+
+    ctx->base.release (ctx);
 
     return &ctx->base.base;
 }

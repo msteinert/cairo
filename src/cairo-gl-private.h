@@ -136,7 +136,10 @@ typedef struct _cairo_gl_context {
     cairo_gl_glyph_cache_t glyph_cache[2];
     cairo_list_t fonts;
 
-    void (*make_current)(void *ctx, cairo_gl_surface_t *surface);
+    void (*acquire) (void *ctx);
+    void (*release) (void *ctx);
+
+    void (*make_current) (void *ctx, cairo_gl_surface_t *surface);
     void (*swap_buffers)(void *ctx, cairo_gl_surface_t *surface);
     void (*destroy) (void *ctx);
 } cairo_gl_context_t;

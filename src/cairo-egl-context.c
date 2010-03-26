@@ -104,6 +104,8 @@ cairo_egl_device_create (EGLDisplay dpy, EGLContext egl)
     ctx->display = dpy;
     ctx->context = egl;
 
+    ctx->base.acquire = NULL; /* FIXME */
+    ctx->base.release = NULL; /* FIXME */
     ctx->base.make_current = _egl_make_current;
     ctx->base.swap_buffers = _egl_swap_buffers;
     ctx->base.destroy = _egl_destroy;

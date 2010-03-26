@@ -68,6 +68,23 @@ static cairo_bool_t _cairo_surface_is_gl (cairo_surface_t *surface)
 }
 
 static void
+_gl_lock (void *device)
+{
+    cairo_gl_context_t *ctx = (cairo_gl_context_t *) device;
+
+    ctx->acquire (ctx);
+}
+
+static void
+_gl_unlock (void *device)
+{
+    cairo_gl_context_t *ctx = (cairo_gl_context_t *) device;
+
+    ctx->release (ctx);
+    ctx->current_target = NULL;
+}
+
+static void
 _gl_destroy (void *device)
 {
     cairo_gl_context_t *ctx = device;
@@ -94,7 +111,8 @@ _gl_destroy (void *device)
 static const cairo_device_backend_t _cairo_gl_device_backend = {
     CAIRO_DEVICE_TYPE_GL,
 
-    NULL, NULL, /* lock, unlock */
+    _gl_lock,
+    _gl_unlock,
 
     NULL, /* flush */
     NULL, /* finish */
