@@ -78,8 +78,6 @@ struct _i915_spans {
 	unsigned int count;
     } head, *tail;
 
-    int rectangle_size;
-
     unsigned int vbo_offset;
     float *vbo_base;
 };
@@ -96,11 +94,9 @@ i915_accumulate_rectangle (i915_spans_t *spans)
     float *vertices;
     uint32_t size;
 
-    size = spans->rectangle_size;
+    size = spans->device->rectangle_size;
     if (unlikely (spans->vbo_offset + size > I915_VBO_SIZE)) {
 	struct vbo *vbo;
-
-	intel_bo_unmap (spans->tail->bo);
 
 	vbo = malloc (sizeof (struct vbo));
 	if (unlikely (vbo == NULL)) {
@@ -111,7 +107,9 @@ i915_accumulate_rectangle (i915_spans_t *spans)
 	spans->tail = vbo;
 
 	vbo->next = NULL;
-	vbo->bo = intel_bo_create (&spans->device->intel, I915_VBO_SIZE, FALSE);
+	vbo->bo = intel_bo_create (&spans->device->intel,
+				   I915_VBO_SIZE, I915_VBO_SIZE,
+				   FALSE, I915_TILING_NONE, 0);
 	vbo->count = 0;
 
 	spans->vbo_offset = 0;
@@ -123,6 +121,25 @@ i915_accumulate_rectangle (i915_spans_t *spans)
     spans->tail->count += 3;
 
     return vertices;
+}
+
+static void
+i915_span_zero (i915_spans_t *spans,
+		int x0, int x1, int y0, int y1,
+		int alpha)
+{
+    float *vertices;
+
+    vertices = spans->get_rectangle (spans);
+
+    *vertices++ = x1;
+    *vertices++ = y1;
+
+    *vertices++ = x0;
+    *vertices++ = y1;
+
+    *vertices++ = x0;
+    *vertices++ = y0;
 }
 
 static void
@@ -264,6 +281,7 @@ i915_span_generic (i915_spans_t *spans,
     *vertices++ = x1; *vertices++ = y1;
     s = x1, t = y1;
     switch (spans->shader.source.type.vertex) {
+    case VS_ZERO:
     case VS_CONSTANT:
 	break;
     case VS_LINEAR:
@@ -294,6 +312,7 @@ i915_span_generic (i915_spans_t *spans,
     *vertices++ = x0; *vertices++ = y1;
     s = x0, t = y1;
     switch (spans->shader.source.type.vertex) {
+    case VS_ZERO:
     case VS_CONSTANT:
 	break;
     case VS_LINEAR:
@@ -324,6 +343,7 @@ i915_span_generic (i915_spans_t *spans,
     *vertices++ = x0; *vertices++ = y0;
     s = x0, t = y0;
     switch (spans->shader.source.type.vertex) {
+    case VS_ZERO:
     case VS_CONSTANT:
 	break;
     case VS_LINEAR:
@@ -349,6 +369,78 @@ i915_span_generic (i915_spans_t *spans,
 	cairo_matrix_transform_point (&spans->shader.dst.base.matrix, &s, &t);
 	*vertices++ = texcoord_2d_16 (s, t);
     }
+}
+
+static cairo_status_t
+i915_zero_spans_mono (void *abstract_renderer,
+		      int y, int height,
+		      const cairo_half_open_span_t *half,
+		      unsigned num_spans)
+{
+    i915_spans_t *spans = abstract_renderer;
+    int x0, x1;
+
+    if (num_spans == 0)
+	return CAIRO_STATUS_SUCCESS;
+
+    do {
+	while (num_spans && half[0].coverage < 128)
+	    half++, num_spans--;
+	if (num_spans == 0)
+	    break;
+
+	x0 = x1 = half[0].x;
+	while (num_spans--) {
+	    half++;
+
+	    x1 = half[0].x;
+	    if (half[0].coverage < 128)
+		break;
+	}
+
+	i915_span_zero (spans,
+			x0, x1,
+			y, y + height,
+			0);
+    } while (num_spans);
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
+i915_zero_spans (void *abstract_renderer,
+		 int y, int height,
+		 const cairo_half_open_span_t *half,
+		 unsigned num_spans)
+{
+    i915_spans_t *spans = abstract_renderer;
+    int x0, x1;
+
+    if (num_spans == 0)
+	return CAIRO_STATUS_SUCCESS;
+
+    do {
+	while (num_spans && half[0].coverage == 0)
+	    half++, num_spans--;
+	if (num_spans == 0)
+	    break;
+
+	x0 = x1 = half[0].x;
+	while (num_spans--) {
+	    half++;
+
+	    x1 = half[0].x;
+	    if (half[0].coverage == 0)
+		break;
+	}
+
+	i915_span_zero (spans,
+			x0, x1,
+			y, y + height,
+			0);
+    } while (num_spans);
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -491,6 +583,7 @@ i915_spans_init (i915_spans_t *spans,
 		 const cairo_pattern_t *pattern,
 		 cairo_antialias_t antialias,
 		 cairo_clip_t *clip,
+		 double opacity,
 		 const cairo_composite_rectangles_t *extents)
 {
     cairo_status_t status;
@@ -542,7 +635,8 @@ i915_spans_init (i915_spans_t *spans,
 	assert (! extents->is_bounded);
 	spans->get_rectangle = i915_accumulate_rectangle;
 	spans->head.bo = intel_bo_create (&spans->device->intel,
-					  I915_VBO_SIZE, FALSE);
+					  I915_VBO_SIZE, I915_VBO_SIZE,
+					  FALSE, I915_TILING_NONE, 0);
 	if (unlikely (spans->head.bo == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -550,7 +644,7 @@ i915_spans_init (i915_spans_t *spans,
     }
     spans->vbo_offset = 0;
 
-    i915_shader_init (&spans->shader, dst, op);
+    i915_shader_init (&spans->shader, dst, op, opacity);
     if (spans->need_clip_surface)
 	i915_shader_set_clip (&spans->shader, clip);
 
@@ -559,7 +653,6 @@ i915_spans_init (i915_spans_t *spans,
     if (unlikely (status))
 	return status;
 
-    spans->rectangle_size = 3 * (2 + i915_shader_num_texcoords (&spans->shader));
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -567,9 +660,6 @@ static void
 i915_spans_fini (i915_spans_t *spans)
 {
     i915_shader_fini (&spans->shader);
-
-    if (spans->tail->bo && spans->tail->bo->virtual)
-	intel_bo_unmap (spans->tail->bo);
 
     if (spans->head.bo != NULL) {
 	struct vbo *vbo, *next;
@@ -591,19 +681,25 @@ i915_clip_and_composite_spans (i915_surface_t		*dst,
 			       i915_spans_func_t	 draw_func,
 			       void			*draw_closure,
 			       const cairo_composite_rectangles_t*extents,
-			       cairo_clip_t		*clip)
+			       cairo_clip_t		*clip,
+			       double opacity)
 {
     i915_spans_t spans;
     i915_device_t *device;
     cairo_status_t status;
     struct vbo *vbo;
 
+    if (i915_surface_needs_tiling (dst)) {
+	ASSERT_NOT_REACHED;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
     if (op == CAIRO_OPERATOR_CLEAR) {
 	pattern = &_cairo_pattern_white.base;
 	op = CAIRO_OPERATOR_DEST_OUT;
     }
 
-    status = i915_spans_init (&spans, dst, op, pattern, antialias, clip, extents);
+    status = i915_spans_init (&spans, dst, op, pattern, antialias, clip, opacity, extents);
     if (unlikely (status))
 	return status;
 
@@ -615,13 +711,28 @@ i915_clip_and_composite_spans (i915_surface_t		*dst,
     if (unlikely (status))
 	goto CLEANUP_SPANS;
 
+    if (dst->deferred_clear) {
+	status = i915_surface_clear (dst);
+	if (unlikely (status))
+	    goto CLEANUP_SPANS;
+    }
+
     device = i915_device (dst);
     status = i915_shader_commit (&spans.shader, device);
     if (unlikely (status))
 	goto CLEANUP_DEVICE;
 
-    if (!spans.shader.need_combine && ! spans.need_clip_surface) {
+    if (! spans.shader.need_combine && ! spans.need_clip_surface) {
 	switch (spans.shader.source.type.vertex) {
+	case VS_ZERO:
+	    spans.span = i915_span_zero;
+	    if (extents->is_bounded) {
+		if (antialias == CAIRO_ANTIALIAS_NONE)
+		    spans.renderer.render_rows = i915_zero_spans_mono;
+		else
+		    spans.renderer.render_rows = i915_zero_spans;
+	    }
+	    break;
 	case VS_CONSTANT:
 	    spans.span = i915_span_constant;
 	    break;
@@ -644,8 +755,6 @@ i915_clip_and_composite_spans (i915_surface_t		*dst,
 
     status = draw_func (draw_closure, &spans.renderer, spans.extents);
     if (spans.clip_region != NULL && status == CAIRO_STATUS_SUCCESS) {
-	intel_bo_unmap (spans.tail->bo);
-
 	i915_vbo_finish (device);
 
 	OUT_DWORD (_3DSTATE_SCISSOR_ENABLE_CMD | ENABLE_SCISSOR_RECT);
@@ -656,7 +765,8 @@ i915_clip_and_composite_spans (i915_surface_t		*dst,
 
 	    OUT_DWORD (_3DSTATE_LOAD_STATE_IMMEDIATE_1 | I1_LOAD_S (0) | I1_LOAD_S (1) | 1);
 	    i915_batch_emit_reloc (device, vbo->bo, 0,
-				   I915_GEM_DOMAIN_VERTEX, 0);
+				   I915_GEM_DOMAIN_VERTEX, 0,
+				   FALSE);
 	    OUT_DWORD ((device->floats_per_vertex << S1_VERTEX_WIDTH_SHIFT) |
 		       (device->floats_per_vertex << S1_VERTEX_PITCH_SHIFT) |
 		       vbo->count);

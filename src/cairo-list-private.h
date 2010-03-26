@@ -73,19 +73,38 @@ typedef struct _cairo_list {
 	     &pos->member != (head);					\
 	     pos = cairo_list_entry(pos->member.prev, type, member))
 
+#define cairo_list_foreach_entry_reverse_safe(pos, n, type, head, member)	\
+	for (pos = cairo_list_entry((head)->prev, type, member),\
+	     n = cairo_list_entry (pos->member.prev, type, member);\
+	     &pos->member != (head);					\
+	     pos = n, n = cairo_list_entry (n->member.prev, type, member))
+
 #ifdef CAIRO_LIST_DEBUG
+static inline void
+_cairo_list_validate (const cairo_list_t *link)
+{
+    assert (link->next->prev == link);
+    assert (link->prev->next == link);
+}
 static inline void
 cairo_list_validate (const cairo_list_t *head)
 {
     cairo_list_t *link;
 
-    cairo_list_foreach (link, head) {
-	assert (link->next->prev == link);
-	assert (link->prev->next == link);
-    }
+    cairo_list_foreach (link, head)
+	_cairo_list_validate (link);
+}
+static inline cairo_bool_t
+cairo_list_is_empty (const cairo_list_t *head);
+static inline void
+cairo_list_validate_is_empty (const cairo_list_t *head)
+{
+    assert (head->next == NULL || (cairo_list_is_empty (head) && head->next == head->prev));
 }
 #else
+#define _cairo_list_validate(link)
 #define cairo_list_validate(head)
+#define cairo_list_validate_is_empty(head)
 #endif
 
 static inline void
@@ -110,6 +129,7 @@ static inline void
 cairo_list_add (cairo_list_t *entry, cairo_list_t *head)
 {
     cairo_list_validate (head);
+    cairo_list_validate_is_empty (entry);
     __cairo_list_add (entry, head, head->next);
     cairo_list_validate (head);
 }
@@ -118,6 +138,7 @@ static inline void
 cairo_list_add_tail (cairo_list_t *entry, cairo_list_t *head)
 {
     cairo_list_validate (head);
+    cairo_list_validate_is_empty (entry);
     __cairo_list_add (entry, head->prev, head);
     cairo_list_validate (head);
 }
@@ -157,10 +178,8 @@ cairo_list_move_tail (cairo_list_t *entry, cairo_list_t *head)
 static inline void
 cairo_list_swap (cairo_list_t *entry, cairo_list_t *other)
 {
-    cairo_list_validate (head);
     __cairo_list_add (entry, other->prev, other->next);
     cairo_list_init (other);
-    cairo_list_validate (head);
 }
 
 static inline cairo_bool_t

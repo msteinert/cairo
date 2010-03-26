@@ -36,6 +36,8 @@
 #include "cairo-drm-intel-ioctl-private.h"
 #include "cairo-freelist-private.h"
 
+#include <setjmp.h>
+
 #define I915_VERBOSE 1
 
 #define I915_MAX_TEX_INDIRECT 4
@@ -652,17 +654,22 @@ struct i915_device {
 
     cairo_bool_t debug;
 
+    i915_shader_t *shader; /* note: only valid during geometry emission */
+
     struct i915_batch {
 	intel_bo_t *target_bo[I915_MAX_RELOCS];
-	size_t gtt_size;
+	size_t gtt_avail_size;
+	size_t est_gtt_size;
+	size_t total_gtt_size;
+
+	uint16_t fences;
+	uint16_t fences_avail;
+	uint16_t reloc_count;
+	uint16_t exec_count;
+	uint16_t used;
 
 	struct drm_i915_gem_exec_object2 exec[I915_MAX_RELOCS];
-	int exec_count;
-
 	struct drm_i915_gem_relocation_entry reloc[I915_MAX_RELOCS];
-	uint16_t reloc_count;
-
-	uint16_t used;
     } batch;
 
     uint32_t vbo;
@@ -677,8 +684,6 @@ struct i915_device {
     uint32_t last_vbo_offset;
     uint32_t last_vbo_space;
 
-    i915_shader_t *current_shader;
-
     i915_surface_t *current_target;
     uint32_t current_size;
     uint32_t current_diffuse;
@@ -691,9 +696,12 @@ struct i915_device {
     uint32_t current_blend;
     uint32_t current_constants[8*4];
     uint32_t current_n_constants;
-    uint32_t current_samplers[2*(3+3*4)];
+    uint32_t current_samplers[2*4];
+    uint32_t current_maps[4*4];
     uint32_t current_n_samplers;
+    uint32_t current_n_maps;
     uint32_t last_source_fragment;
+    uint32_t clear_alpha;
 
     cairo_list_t image_caches[2];
 
@@ -709,6 +717,7 @@ enum {
 };
 
 typedef enum {
+    VS_ZERO,
     VS_CONSTANT,
     VS_LINEAR,
     VS_TEXTURE,
@@ -744,6 +753,7 @@ struct i915_surface {
     uint32_t map0, map1;
     uint32_t colorbuf;
 
+    cairo_bool_t deferred_clear;
     uint32_t offset;
     uint32_t is_current_texture;
 
@@ -787,8 +797,10 @@ struct i915_shader {
 
     cairo_operator_t op;
     uint32_t blend;
+    float opacity;
     cairo_content_t content;
 
+    cairo_bool_t committed;
     cairo_bool_t need_combine;
 
     i915_add_rectangle_func_t add_rectangle;
@@ -834,6 +846,8 @@ struct i915_shader {
 	    i915_packed_pixel_t pixel;
 	} surface;
     } source, mask, clip, dst;
+
+    jmp_buf unwind;
 };
 
 enum i915_shader_linear_mode {
@@ -862,11 +876,12 @@ i915_clip_and_composite_spans (i915_surface_t		*dst,
 			       i915_spans_func_t	 draw_func,
 			       void			*draw_closure,
 			       const cairo_composite_rectangles_t*extents,
-			       cairo_clip_t		*clip);
+			       cairo_clip_t		*clip,
+			       double			 opacity);
 
 cairo_private cairo_surface_t *
 i915_surface_create_internal (cairo_drm_device_t *base_dev,
-		              cairo_content_t content,
+		              cairo_format_t format,
 			      int width, int height,
 			      uint32_t tiling,
 			      cairo_bool_t gpu_target);
@@ -904,8 +919,9 @@ i915_tiling_stride (int format, uint32_t stride)
 {
     uint32_t tile_width;
 
+    /* use 64B alignment so that the buffer may be used as a scanout */
     if (format == I915_TILING_NONE)
-	return (stride + 31) & -32;
+	return (stride + 63) & -64;
 
     tile_width = 512;
     /* XXX Currently the kernel enforces a tile_width of 512 for TILING_Y.
@@ -943,7 +959,7 @@ i915_tiling_size (uint32_t tiling, uint32_t size)
     return fence;
 }
 
-static inline cairo_bool_t cairo_pure
+static inline cairo_bool_t cairo_const
 i915_texture_filter_is_nearest (cairo_filter_t filter)
 {
     switch (filter) {
@@ -959,7 +975,7 @@ i915_texture_filter_is_nearest (cairo_filter_t filter)
     }
 }
 
-static inline uint32_t cairo_pure
+static inline uint32_t cairo_const
 i915_texture_filter (cairo_filter_t filter)
 {
     switch (filter) {
@@ -979,7 +995,7 @@ i915_texture_filter (cairo_filter_t filter)
     }
 }
 
-static inline uint32_t cairo_pure
+static inline uint32_t cairo_const
 i915_texture_extend (cairo_extend_t extend)
 {
     switch (extend) {
@@ -1003,7 +1019,7 @@ i915_texture_extend (cairo_extend_t extend)
     }
 }
 
-static inline uint32_t cairo_pure
+static inline uint32_t cairo_const
 BUF_tiling (uint32_t tiling)
 {
     switch (tiling) {
@@ -1015,7 +1031,8 @@ BUF_tiling (uint32_t tiling)
 }
 
 #define OUT_DWORD(dword) i915_batch_emit_dword (device, dword)
-#define OUT_RELOC(surface, read, write) i915_batch_emit_reloc (device, to_intel_bo (surface->intel.drm.bo), surface->offset, read, write)
+#define OUT_RELOC(surface, read, write) i915_batch_emit_reloc (device, to_intel_bo (surface->intel.drm.bo), surface->offset, read, write, FALSE)
+#define OUT_RELOC_FENCED(surface, read, write) i915_batch_emit_reloc (device, to_intel_bo (surface->intel.drm.bo), surface->offset, read, write, TRUE)
 
 #define FS_LOCALS							\
     uint32_t *_shader_start
@@ -1039,26 +1056,54 @@ i915_batch_space (i915_device_t *device)
 }
 
 static inline cairo_bool_t
-i915_check_aperture_size (const i915_device_t *device, int relocs, size_t size)
+i915_check_aperture_size (const i915_device_t *device, int relocs, size_t est_size, size_t size)
 {
-    return device->batch.reloc_count + relocs < I915_MAX_RELOCS &&
-	   device->batch.gtt_size + size <= device->intel.gtt_avail_size;
+    return device->batch.reloc_count + relocs < I915_MAX_RELOCS - 2 &&
+	   device->batch.est_gtt_size + est_size <= device->batch.gtt_avail_size &&
+	   device->batch.total_gtt_size + size <= device->intel.gtt_avail_size;
 }
 
 static inline cairo_bool_t
 i915_check_aperture (const i915_device_t *device, intel_bo_t **bo_array, int count)
 {
-    uint32_t relocs = 0, size = 0;
+    uint32_t relocs = 0, est_size = 0, size = 0;
 
     while (count--) {
 	const intel_bo_t *bo = *bo_array++;
 	if (bo->exec == NULL) {
 	    relocs++;
 	    size += bo->base.size;
+	    if (!bo->busy)
+		est_size += bo->base.size;
 	}
     }
 
-    return i915_check_aperture_size (device, relocs, size);
+    return i915_check_aperture_size (device, relocs, est_size, size);
+}
+
+static inline cairo_bool_t
+i915_check_aperture_and_fences (const i915_device_t *device, intel_bo_t **bo_array, int count)
+{
+    uint32_t relocs = 0, est_size = 0, size = 0;
+    uint32_t fences = 0;
+
+    while (count--) {
+	const intel_bo_t *bo = *bo_array++;
+	if (bo->exec == NULL) {
+	    relocs++;
+	    size += bo->base.size;
+	    if (!bo->busy)
+		est_size += bo->base.size;
+	    if (bo->tiling != I915_TILING_NONE)
+		fences++;
+	} else if (bo->tiling != I915_TILING_NONE) {
+	    if ((bo->exec->flags & EXEC_OBJECT_NEEDS_FENCE) == 0)
+		fences++;
+	}
+    }
+
+    return i915_check_aperture_size (device, relocs, est_size, size) &&
+	   device->batch.fences + fences <= device->batch.fences_avail;
 }
 
 #define BATCH_PTR(device) &(device)->batch_base[(device)->batch.used]
@@ -1073,7 +1118,8 @@ i915_batch_add_reloc (i915_device_t *device, uint32_t pos,
 		      intel_bo_t *bo,
 		      uint32_t offset,
 		      uint32_t read_domains,
-		      uint32_t write_domain);
+		      uint32_t write_domain,
+		      cairo_bool_t needs_fence);
 
 static inline void
 i915_batch_fill_reloc (i915_device_t *device, uint32_t pos,
@@ -1084,7 +1130,8 @@ i915_batch_fill_reloc (i915_device_t *device, uint32_t pos,
 {
     i915_batch_add_reloc (device, pos,
 	                  bo, offset,
-			  read_domains, write_domain);
+			  read_domains, write_domain,
+			  FALSE);
     device->batch_base[pos] = bo->offset + offset;
 }
 
@@ -1093,13 +1140,18 @@ i915_batch_emit_reloc (i915_device_t *device,
 		       intel_bo_t *bo,
 		       uint32_t offset,
 		       uint32_t read_domains,
-		       uint32_t write_domain)
+		       uint32_t write_domain,
+		       cairo_bool_t needs_fence)
 {
     i915_batch_add_reloc (device, device->batch.used,
 	                  bo, offset,
-			  read_domains, write_domain);
+			  read_domains, write_domain,
+			  needs_fence);
     i915_batch_emit_dword (device, bo->offset + offset);
 }
+
+cairo_private void
+i915_vbo_flush (i915_device_t *device);
 
 cairo_private void
 i915_vbo_finish (i915_device_t *device);
@@ -1114,6 +1166,7 @@ i915_add_rectangle (i915_device_t *device)
     uint32_t size;
 
     assert (device->floats_per_vertex);
+    assert (device->rectangle_size == 3*device->floats_per_vertex*sizeof(float));
 
     size = device->rectangle_size;
     if (unlikely (device->vbo_offset + size > I915_VBO_SIZE))
@@ -1131,10 +1184,17 @@ i915_device (i915_surface_t *surface)
     return (i915_device_t *) surface->intel.drm.base.device;
 }
 
+cairo_private cairo_status_t
+i915_surface_clear (i915_surface_t *dst);
+
+cairo_private void
+i915_set_dst (i915_device_t *device, i915_surface_t *dst);
+
 cairo_private void
 i915_shader_init (i915_shader_t *shader,
 		  i915_surface_t *dst,
-		  cairo_operator_t op);
+		  cairo_operator_t op,
+		  double opacity);
 
 cairo_private cairo_status_t
 i915_shader_acquire_pattern (i915_shader_t *shader,
@@ -1167,5 +1227,44 @@ cairo_private cairo_status_t
 i915_fixup_unbounded (i915_surface_t *dst,
 		      const cairo_composite_rectangles_t *extents,
 		      cairo_clip_t *clip);
+
+static inline cairo_bool_t
+i915_surface_needs_tiling (i915_surface_t *dst)
+{
+    return dst->intel.drm.width > 2048 || dst->intel.drm.height > 2048;
+}
+
+cairo_private cairo_status_t
+i915_surface_copy_subimage (i915_device_t *device,
+			    i915_surface_t *src,
+			    const cairo_rectangle_int_t *extents,
+			    cairo_bool_t flush,
+			    i915_surface_t **clone_out);
+
+static inline uint32_t
+pack_float (float f)
+{
+    union {
+	float f;
+	uint32_t ui;
+    } t;
+    t.f = f;
+    return t.ui;
+}
+
+static inline cairo_status_t
+i915_surface_fallback_flush (i915_surface_t *surface)
+{
+    cairo_status_t status;
+
+    if (unlikely (surface->intel.drm.fallback != NULL))
+	return intel_surface_flush (&surface->intel);
+
+    status = CAIRO_STATUS_SUCCESS;
+    if (unlikely (surface->deferred_clear))
+	status = i915_surface_clear (surface);
+
+    return status;
+}
 
 #endif /* CAIRO_DRM_I915_PRIVATE_H */

@@ -271,7 +271,6 @@ i965_surface_clone (i965_device_t *device,
 
     status = intel_bo_put_image (&device->intel,
 				 to_intel_bo (clone->intel.drm.bo),
-				 clone->intel.drm.stride,
 				 image,
 				 0, 0,
 				 image->width, image->height,
@@ -317,7 +316,6 @@ i965_surface_clone_subimage (i965_device_t *device,
 
     status = intel_bo_put_image (to_intel_device (clone->intel.drm.base.device),
 				 to_intel_bo (clone->intel.drm.bo),
-				 clone->intel.drm.stride,
 				 image,
 				 extents->x, extents->y,
 				 extents->width, extents->height,
@@ -668,8 +666,6 @@ i965_shader_acquire_surface (i965_shader_t *shader,
     src->base.matrix = pattern->base.matrix;
     if (src_x | src_y)
 	cairo_matrix_translate (&src->base.matrix, src_x, src_x);
-    if (src->base.filter == BRW_MAPFILTER_NEAREST)
-	cairo_matrix_translate (&src->base.matrix, NEAREST_BIAS, NEAREST_BIAS);
     cairo_matrix_init_scale (&m, 1. / src->base.width, 1. / src->base.height);
     cairo_matrix_multiply (&src->base.matrix, &src->base.matrix, &m);
 
@@ -793,8 +789,7 @@ i965_shader_set_clip (i965_shader_t *shader,
 			     1. / s->intel.drm.height);
 
     cairo_matrix_translate (&shader->clip.base.matrix,
-			    NEAREST_BIAS - clip_x,
-			    NEAREST_BIAS - clip_y);
+			    -clip_x, -clip_y);
 }
 
 static cairo_bool_t
@@ -888,9 +883,6 @@ i965_shader_setup_dst (i965_shader_t *shader)
     cairo_matrix_init_scale (&channel->base.matrix,
 			     1. / s->intel.drm.width,
 			     1. / s->intel.drm.height);
-    cairo_matrix_translate (&channel->base.matrix,
-			    NEAREST_BIAS,
-			    NEAREST_BIAS);
 
     channel->surface.surface = &clone->intel.drm.base;
 
@@ -2827,7 +2819,6 @@ i965_clipped_vertices (i965_device_t *device,
 	size = vertex_count * device->vertex_size;
 	ptr = intel_bo_map (&device->intel, vbo->bo);
 	memcpy (device->vertex.data + device->vertex.used, ptr, size);
-	intel_bo_unmap (vbo->bo);
 	device->vertex.committed = device->vertex.used += size;
 
 	for (i = 0; i < num_rectangles; i++) {

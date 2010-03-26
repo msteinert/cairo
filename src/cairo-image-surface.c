@@ -264,7 +264,7 @@ _pixman_format_to_masks (pixman_format_code_t	 format,
     }
 }
 
-static pixman_format_code_t
+pixman_format_code_t
 _cairo_format_to_pixman_format_code (cairo_format_t format)
 {
     pixman_format_code_t ret;

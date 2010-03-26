@@ -283,34 +283,21 @@ static const cairo_surface_backend_t radeon_surface_backend = {
 
 static void
 radeon_surface_init (radeon_surface_t *surface,
-		     cairo_content_t content,
-		     cairo_drm_device_t *device)
+		     cairo_drm_device_t *device,
+		     cairo_format_t format,
+		     int width, int height)
 {
     _cairo_surface_init (&surface->base.base,
 			 &radeon_surface_backend,
 			 &device->base,
-			 content);
-    _cairo_drm_surface_init (&surface->base, device);
-
-    switch (content) {
-    case CAIRO_CONTENT_ALPHA:
-	surface->base.format = CAIRO_FORMAT_A8;
-	break;
-    case CAIRO_CONTENT_COLOR:
-	surface->base.format = CAIRO_FORMAT_RGB24;
-	break;
-    default:
-	ASSERT_NOT_REACHED;
-    case CAIRO_CONTENT_COLOR_ALPHA:
-	surface->base.format = CAIRO_FORMAT_ARGB32;
-	break;
-    }
+			 _cairo_content_from_format (format));
+    _cairo_drm_surface_init (&surface->base, format, width, height);
 }
 
 static cairo_surface_t *
 radeon_surface_create_internal (cairo_drm_device_t *device,
-		              cairo_content_t content,
-			      int width, int height)
+				cairo_format_t format,
+				int width, int height)
 {
     radeon_surface_t *surface;
     cairo_status_t status;
@@ -319,12 +306,9 @@ radeon_surface_create_internal (cairo_drm_device_t *device,
     if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    radeon_surface_init (surface, content, device);
+    radeon_surface_init (surface, device, format, width, height);
 
     if (width && height) {
-	surface->base.width  = width;
-	surface->base.height = height;
-
 	surface->base.stride =
 	    cairo_format_stride_for_width (surface->base.format, width);
 
@@ -344,10 +328,22 @@ radeon_surface_create_internal (cairo_drm_device_t *device,
 
 static cairo_surface_t *
 radeon_surface_create (cairo_drm_device_t *device,
-		     cairo_content_t content,
-		     int width, int height)
+		       cairo_format_t format,
+		       int width, int height)
 {
-    return radeon_surface_create_internal (device, content, width, height);
+    switch (format) {
+    default:
+    case CAIRO_FORMAT_INVALID:
+    case CAIRO_FORMAT_A1:
+    case CAIRO_FORMAT_RGB16_565:
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
+    case CAIRO_FORMAT_ARGB32:
+    case CAIRO_FORMAT_RGB24:
+    case CAIRO_FORMAT_A8:
+	break;
+    }
+
+    return radeon_surface_create_internal (device, format, width, height);
 }
 
 static cairo_surface_t *
@@ -358,7 +354,6 @@ radeon_surface_create_for_name (cairo_drm_device_t *device,
 {
     radeon_surface_t *surface;
     cairo_status_t status;
-    cairo_content_t content;
 
     switch (format) {
     default:
@@ -367,13 +362,8 @@ radeon_surface_create_for_name (cairo_drm_device_t *device,
     case CAIRO_FORMAT_RGB16_565:
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
     case CAIRO_FORMAT_ARGB32:
-	content = CAIRO_CONTENT_COLOR_ALPHA;
-	break;
     case CAIRO_FORMAT_RGB24:
-	content = CAIRO_CONTENT_COLOR;
-	break;
     case CAIRO_FORMAT_A8:
-	content = CAIRO_CONTENT_ALPHA;
 	break;
     }
 
@@ -384,11 +374,9 @@ radeon_surface_create_for_name (cairo_drm_device_t *device,
     if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    radeon_surface_init (surface, content, device);
+    radeon_surface_init (surface, device, format, width, height);
 
     if (width && height) {
-	surface->base.width  = width;
-	surface->base.height = height;
 	surface->base.stride = stride;
 
 	surface->base.bo = radeon_bo_create_for_name (to_radeon_device (&device->base),

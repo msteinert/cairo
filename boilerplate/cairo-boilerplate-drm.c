@@ -46,12 +46,20 @@ _cairo_boilerplate_drm_create_surface (const char		 *name,
 				       void			**closure)
 {
     cairo_device_t *device;
+    cairo_format_t format;
 
     device = cairo_drm_device_default ();
     if (device == NULL)
 	return NULL; /* skip tests if no supported h/w found */
 
-    return *closure = cairo_drm_surface_create (device, content, width, height);
+    switch (content) {
+    case CAIRO_CONTENT_ALPHA: format = CAIRO_FORMAT_A8; break;
+    case CAIRO_CONTENT_COLOR: format = CAIRO_FORMAT_RGB24; break;
+    default:
+    case CAIRO_CONTENT_COLOR_ALPHA: format = CAIRO_FORMAT_ARGB32; break;
+    }
+
+    return *closure = cairo_drm_surface_create (device, format, width, height);
 }
 
 static void
@@ -59,7 +67,7 @@ _cairo_boilerplate_drm_synchronize (void *closure)
 {
     cairo_surface_t *image;
 
-    image = cairo_drm_surface_map (closure);
+    image = cairo_drm_surface_map_to_image (closure);
     if (cairo_surface_status (image) == CAIRO_STATUS_SUCCESS)
 	cairo_drm_surface_unmap (closure, image);
 }

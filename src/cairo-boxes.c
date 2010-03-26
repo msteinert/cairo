@@ -240,6 +240,37 @@ _cairo_boxes_add (cairo_boxes_t *boxes,
 }
 
 void
+_cairo_boxes_extents (const cairo_boxes_t *boxes,
+		      cairo_rectangle_int_t *extents)
+{
+    const struct _cairo_boxes_chunk *chunk;
+    cairo_box_t box;
+    int i;
+
+    box.p1.y = box.p1.x = INT_MAX;
+    box.p2.y = box.p2.x = INT_MIN;
+
+    for (chunk = &boxes->chunks; chunk != NULL; chunk = chunk->next) {
+	const cairo_box_t *b = chunk->base;
+	for (i = 0; i < chunk->count; i++) {
+	    if (b[i].p1.x < box.p1.x)
+		box.p1.x = b[i].p1.x;
+
+	    if (b[i].p1.y < box.p1.y)
+		box.p1.y = b[i].p1.y;
+
+	    if (b[i].p2.x > box.p2.x)
+		box.p2.x = b[i].p2.x;
+
+	    if (b[i].p2.y > box.p2.y)
+		box.p2.y = b[i].p2.y;
+	}
+    }
+
+    _cairo_box_round_to_rectangle (&box, extents);
+}
+
+void
 _cairo_boxes_clear (cairo_boxes_t *boxes)
 {
     struct _cairo_boxes_chunk *chunk, *next;

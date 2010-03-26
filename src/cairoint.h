@@ -2180,6 +2180,9 @@ cairo_private cairo_surface_t *
 _cairo_image_surface_create_for_pixman_image (pixman_image_t		*pixman_image,
 					      pixman_format_code_t	 pixman_format);
 
+pixman_format_code_t
+_cairo_format_to_pixman_format_code (cairo_format_t format);
+
 cairo_private cairo_bool_t
 _pixman_format_from_masks (cairo_format_masks_t *masks,
 			   pixman_format_code_t *format_ret);
@@ -2518,6 +2521,10 @@ _cairo_pattern_is_opaque (const cairo_pattern_t *pattern,
 
 cairo_private cairo_bool_t
 _cairo_pattern_is_clear (const cairo_pattern_t *pattern);
+
+cairo_private_no_warn cairo_filter_t
+_cairo_pattern_analyze_filter (const cairo_pattern_t	*pattern,
+			       double			*pad_out);
 
 enum {
     CAIRO_PATTERN_ACQUIRE_NONE = 0x0,

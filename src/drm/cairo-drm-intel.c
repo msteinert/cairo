@@ -49,15 +49,37 @@
 #define IMAGE_CACHE_WIDTH 1024
 #define IMAGE_CACHE_HEIGHT 1024
 
+int
+intel_get (int fd, int param)
+{
+    struct intel_getparam gp;
+    int value;
+
+    gp.param = param;
+    gp.value = &value;
+    if (ioctl (fd, DRM_IOCTL_I915_GETPARAM, &gp) < 0)
+	return 0;
+
+    VG (VALGRIND_MAKE_MEM_DEFINED (&value, sizeof (value)));
+
+    return value;
+}
+
 cairo_bool_t
 intel_info (int fd, uint64_t *gtt_size)
 {
     struct drm_i915_gem_get_aperture info;
-    int ret;
 
-    ret = ioctl (fd, DRM_IOCTL_I915_GEM_GET_APERTURE, &info);
-    if (ret == -1)
+    if (! intel_get (fd, I915_PARAM_HAS_GEM))
 	return FALSE;
+
+    if (! intel_get (fd, I915_PARAM_HAS_EXECBUF2))
+	return FALSE;
+
+    if (ioctl (fd, DRM_IOCTL_I915_GEM_GET_APERTURE, &info) < 0)
+	return FALSE;
+
+    VG (VALGRIND_MAKE_MEM_DEFINED (&info, sizeof (info)));
 
     if (gtt_size != NULL)
 	*gtt_size = info.aper_size;
@@ -75,6 +97,15 @@ intel_bo_write (const intel_device_t *device,
     struct drm_i915_gem_pwrite pwrite;
     int ret;
 
+    assert (bo->tiling == I915_TILING_NONE);
+    assert (size);
+    assert (offset < bo->base.size);
+    assert (size+offset <= bo->base.size);
+
+    intel_bo_set_tiling (device, bo);
+
+    assert (bo->_tiling == I915_TILING_NONE);
+
     memset (&pwrite, 0, sizeof (pwrite));
     pwrite.handle = bo->base.handle;
     pwrite.offset = offset;
@@ -83,6 +114,9 @@ intel_bo_write (const intel_device_t *device,
     do {
 	ret = ioctl (device->base.fd, DRM_IOCTL_I915_GEM_PWRITE, &pwrite);
     } while (ret == -1 && errno == EINTR);
+    assert (ret == 0);
+
+    bo->busy = FALSE;
 }
 
 void
@@ -95,6 +129,15 @@ intel_bo_read (const intel_device_t *device,
     struct drm_i915_gem_pread pread;
     int ret;
 
+    assert (bo->tiling == I915_TILING_NONE);
+    assert (size);
+    assert (offset < bo->base.size);
+    assert (size+offset <= bo->base.size);
+
+    intel_bo_set_tiling (device, bo);
+
+    assert (bo->_tiling == I915_TILING_NONE);
+
     memset (&pread, 0, sizeof (pread));
     pread.handle = bo->base.handle;
     pread.offset = offset;
@@ -103,25 +146,48 @@ intel_bo_read (const intel_device_t *device,
     do {
 	ret = ioctl (device->base.fd, DRM_IOCTL_I915_GEM_PREAD, &pread);
     } while (ret == -1 && errno == EINTR);
+    assert (ret == 0);
+
+    bo->cpu = TRUE;
+    bo->busy = FALSE;
 }
 
 void *
 intel_bo_map (const intel_device_t *device, intel_bo_t *bo)
 {
     struct drm_i915_gem_set_domain set_domain;
-    int ret;
     uint32_t domain;
+    int ret;
 
-    assert (bo->virtual == NULL);
+    intel_bo_set_tiling (device, bo);
 
-    if (bo->tiling != I915_TILING_NONE) {
-	struct drm_i915_gem_mmap_gtt mmap_arg;
-	void *ptr;
+    if (bo->virtual != NULL)
+	return bo->virtual;
+
+    if (bo->cpu && bo->tiling == I915_TILING_NONE) {
+	struct drm_i915_gem_mmap mmap_arg;
 
 	mmap_arg.handle = bo->base.handle;
 	mmap_arg.offset = 0;
+	mmap_arg.size = bo->base.size;
+	mmap_arg.addr_ptr = 0;
+
+	do {
+	    ret = ioctl (device->base.fd, DRM_IOCTL_I915_GEM_MMAP, &mmap_arg);
+	} while (ret == -1 && errno == EINTR);
+	if (unlikely (ret != 0)) {
+	    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
+	    return NULL;
+	}
+
+	bo->virtual = (void *) (uintptr_t) mmap_arg.addr_ptr;
+	domain = I915_GEM_DOMAIN_CPU;
+    } else {
+	struct drm_i915_gem_mmap_gtt mmap_arg;
+	void *ptr;
 
 	/* Get the fake offset back... */
+	mmap_arg.handle = bo->base.handle;
 	do {
 	    ret = ioctl (device->base.fd,
 			 DRM_IOCTL_I915_GEM_MMAP_GTT, &mmap_arg);
@@ -141,27 +207,11 @@ intel_bo_map (const intel_device_t *device, intel_bo_t *bo)
 	}
 
 	bo->virtual = ptr;
-    } else {
-	struct drm_i915_gem_mmap mmap_arg;
-
-	mmap_arg.handle = bo->base.handle;
-	mmap_arg.offset = 0;
-	mmap_arg.size = bo->base.size;
-	mmap_arg.addr_ptr = 0;
-
-	do {
-	    ret = ioctl (device->base.fd, DRM_IOCTL_I915_GEM_MMAP, &mmap_arg);
-	} while (ret == -1 && errno == EINTR);
-	if (unlikely (ret != 0)) {
-	    _cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	    return NULL;
-	}
-
-	bo->virtual = (void *) (uintptr_t) mmap_arg.addr_ptr;
+	domain = I915_GEM_DOMAIN_GTT;
     }
 
-    domain = bo->tiling == I915_TILING_NONE ?
-	     I915_GEM_DOMAIN_CPU : I915_GEM_DOMAIN_GTT;
+    VG (VALGRIND_MAKE_MEM_DEFINED (bo->virtual, bo->base.size));
+
     set_domain.handle = bo->base.handle;
     set_domain.read_domains = domain;
     set_domain.write_domain = domain;
@@ -178,6 +228,7 @@ intel_bo_map (const intel_device_t *device, intel_bo_t *bo)
 	return NULL;
     }
 
+    bo->busy = FALSE;
     return bo->virtual;
 }
 
@@ -189,19 +240,23 @@ intel_bo_unmap (intel_bo_t *bo)
 }
 
 cairo_bool_t
-intel_bo_is_inactive (const intel_device_t *device, const intel_bo_t *bo)
+intel_bo_is_inactive (const intel_device_t *device, intel_bo_t *bo)
 {
     struct drm_i915_gem_busy busy;
+
+    if (! bo->busy)
+	return TRUE;
 
     /* Is this buffer busy for our intended usage pattern? */
     busy.handle = bo->base.handle;
     busy.busy = 1;
     ioctl (device->base.fd, DRM_IOCTL_I915_GEM_BUSY, &busy);
 
+    bo->busy = busy.busy;
     return ! busy.busy;
 }
 
-void
+cairo_bool_t
 intel_bo_wait (const intel_device_t *device, const intel_bo_t *bo)
 {
     struct drm_i915_gem_set_domain set_domain;
@@ -214,6 +269,8 @@ intel_bo_wait (const intel_device_t *device, const intel_bo_t *bo)
     do {
 	ret = ioctl (device->base.fd, DRM_IOCTL_I915_GEM_SET_DOMAIN, &set_domain);
     } while (ret == -1 && errno == EINTR);
+
+    return ret == 0;
 }
 
 static inline int
@@ -238,11 +295,8 @@ intel_bo_cache_remove (intel_device_t *device,
 
     cairo_list_del (&bo->cache_list);
 
-    if (device->bo_cache[bucket].num_entries-- >
-	device->bo_cache[bucket].min_entries)
-    {
-	device->bo_cache_size -= bo->base.size;
-    }
+    device->bo_cache[bucket].num_entries--;
+    device->bo_cache_size -= 4096 * (1 << bucket);
 
     _cairo_freepool_free (&device->bo_pool, bo);
 }
@@ -259,6 +313,36 @@ intel_bo_madvise (intel_device_t *device,
     madv.retained = TRUE;
     ioctl (device->base.fd, DRM_IOCTL_I915_GEM_MADVISE, &madv);
     return madv.retained;
+}
+
+static void
+intel_bo_set_real_size (intel_device_t *device,
+			intel_bo_t *bo,
+			size_t size)
+{
+    struct drm_i915_gem_real_size arg;
+    int ret;
+
+    return;
+
+    if (size == bo->base.size)
+	return;
+
+    arg.handle = bo->base.handle;
+    arg.size = size;
+    do {
+	ret = ioctl (device->base.fd, DRM_IOCTL_I915_GEM_REAL_SIZE, &arg);
+    } while (ret == -1 && errno == EINTR);
+
+    if (ret == 0) {
+	if (size > bo->base.size) {
+	    assert (bo->exec == NULL);
+	    bo->cpu = TRUE;
+	    bo->busy = FALSE;
+	}
+
+	bo->base.size = size;
+    }
 }
 
 static void
@@ -282,89 +366,131 @@ intel_bo_cache_purge (intel_device_t *device)
 
 intel_bo_t *
 intel_bo_create (intel_device_t *device,
-	         uint32_t size,
-	         cairo_bool_t gpu_target)
+	         uint32_t max_size,
+	         uint32_t real_size,
+	         cairo_bool_t gpu_target,
+		 uint32_t tiling,
+		 uint32_t stride)
 {
-    intel_bo_t *bo = NULL;
+    intel_bo_t *bo;
     uint32_t cache_size;
     struct drm_i915_gem_create create;
     int bucket;
     int ret;
 
-    cache_size = pot ((size + 4095) & -4096);
+    max_size = (max_size + 4095) & -4096;
+    real_size = (real_size + 4095) & -4096;
+    cache_size = pot (max_size);
     bucket = ffs (cache_size / 4096) - 1;
+    if (bucket >= INTEL_BO_CACHE_BUCKETS)
+	cache_size = max_size;
+
+    if (gpu_target) {
+	intel_bo_t *first = NULL;
+
+	cairo_list_foreach_entry (bo, intel_bo_t,
+				  &device->bo_in_flight,
+				  cache_list)
+	{
+	    assert (bo->exec != NULL);
+	    if (tiling && bo->_tiling &&
+		(bo->_tiling != tiling || bo->_stride != stride))
+	    {
+		continue;
+	    }
+
+	    if (real_size <= bo->base.size) {
+		if (real_size >= bo->base.size/2) {
+		    cairo_list_del (&bo->cache_list);
+		    bo = intel_bo_reference (bo);
+		    goto DONE;
+		}
+
+		if (first == NULL)
+		    first = bo;
+	    }
+	}
+
+	if (first != NULL) {
+	    cairo_list_del (&first->cache_list);
+	    bo = intel_bo_reference (first);
+	    goto DONE;
+	}
+    }
+
+    bo = NULL;
+
     CAIRO_MUTEX_LOCK (device->bo_mutex);
     if (bucket < INTEL_BO_CACHE_BUCKETS) {
-	size = cache_size;
-
+	int loop = MIN (3, INTEL_BO_CACHE_BUCKETS - bucket);
 	/* Our goal is to avoid clflush which occur on CPU->GPU
 	 * transitions, so we want to minimise reusing CPU
 	 * write buffers. However, by the time a buffer is freed
 	 * it is most likely in the GPU domain anyway (readback is rare!).
 	 */
-  retry:
-	if (gpu_target) {
-	    do {
-		cairo_list_foreach_entry_reverse (bo,
-						  intel_bo_t,
-						  &device->bo_cache[bucket].list,
-						  cache_list)
+	do {
+	    if (gpu_target) {
+		intel_bo_t *next;
+
+		cairo_list_foreach_entry_reverse_safe (bo, next,
+						       intel_bo_t,
+						       &device->bo_cache[bucket].list,
+						       cache_list)
 		{
+		    if (real_size > bo->base.size)
+			continue;
+
 		    /* For a gpu target, by the time our batch fires, the
 		     * GPU will have finished using this buffer. However,
 		     * changing tiling may require a fence deallocation and
 		     * cause serialisation...
 		     */
 
-		    if (device->bo_cache[bucket].num_entries-- >
-			device->bo_cache[bucket].min_entries)
+		    if (tiling && bo->_tiling &&
+			(bo->_tiling != tiling || bo->_stride != stride))
 		    {
-			device->bo_cache_size -= bo->base.size;
+			continue;
 		    }
+
+		    device->bo_cache[bucket].num_entries--;
+		    device->bo_cache_size -= 4096 * (1 << bucket);
 		    cairo_list_del (&bo->cache_list);
 
 		    if (! intel_bo_madvise (device, bo, I915_MADV_WILLNEED)) {
 			_cairo_drm_bo_close (&device->base, &bo->base);
 			_cairo_freepool_free (&device->bo_pool, bo);
-			goto retry;
-		    }
-
-		    goto DONE;
+		    } else
+			goto INIT;
 		}
+	    }
 
-		/* As it is unlikely to trigger clflush, we can use the
-		 * first available buffer into which we fit.
-		 */
-	    } while (++bucket < INTEL_BO_CACHE_BUCKETS);
-	} else {
-	    if (! cairo_list_is_empty (&device->bo_cache[bucket].list)) {
+	    while (! cairo_list_is_empty (&device->bo_cache[bucket].list)) {
 		bo = cairo_list_first_entry (&device->bo_cache[bucket].list,
 					     intel_bo_t, cache_list);
 		if (intel_bo_is_inactive (device, bo)) {
-		    if (device->bo_cache[bucket].num_entries-- >
-			device->bo_cache[bucket].min_entries)
-		    {
-			device->bo_cache_size -= bo->base.size;
-		    }
+		    device->bo_cache[bucket].num_entries--;
+		    device->bo_cache_size -= 4096 * (1 << bucket);
 		    cairo_list_del (&bo->cache_list);
 
 		    if (! intel_bo_madvise (device, bo, I915_MADV_WILLNEED)) {
 			_cairo_drm_bo_close (&device->base, &bo->base);
 			_cairo_freepool_free (&device->bo_pool, bo);
-			goto retry;
-		    }
-
-		    goto DONE;
-		}
+		    } else
+			goto SIZE;
+		} else
+		    break;
 	    }
-	}
+	} while (--loop && ++bucket);
     }
 
     if (device->bo_cache_size > device->bo_max_cache_size_high) {
+	cairo_bool_t not_empty;
+
 	intel_bo_cache_purge (device);
 
 	/* trim caches by discarding the most recent buffer in each bucket */
-	while (device->bo_cache_size > device->bo_max_cache_size_low) {
+	do {
+	    not_empty = FALSE;
 	    for (bucket = INTEL_BO_CACHE_BUCKETS; bucket--; ) {
 		if (device->bo_cache[bucket].num_entries >
 		    device->bo_cache[bucket].min_entries)
@@ -373,30 +499,36 @@ intel_bo_create (intel_device_t *device,
 						intel_bo_t, cache_list);
 
 		    intel_bo_cache_remove (device, bo, bucket);
+		    not_empty = TRUE;
 		}
 	    }
-	}
+	} while (not_empty && device->bo_cache_size > device->bo_max_cache_size_low);
     }
 
     /* no cached buffer available, allocate fresh */
     bo = _cairo_freepool_alloc (&device->bo_pool);
     if (unlikely (bo == NULL)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
-	goto UNLOCK;
+	CAIRO_MUTEX_UNLOCK (device->bo_mutex);
+	return bo;
     }
 
     cairo_list_init (&bo->cache_list);
 
     bo->base.name = 0;
-    bo->base.size = size;
 
     bo->offset = 0;
     bo->virtual = NULL;
+    bo->cpu = TRUE;
 
-    bo->tiling = I915_TILING_NONE;
-    bo->stride = 0;
-    bo->swizzle = I915_BIT_6_SWIZZLE_NONE;
+    bucket = ffs (cache_size / 4096) - 1;
+    if (bucket > INTEL_BO_CACHE_BUCKETS)
+	bucket = INTEL_BO_CACHE_BUCKETS;
+    bo->bucket = bucket;
+    bo->_tiling = I915_TILING_NONE;
+    bo->_stride = 0;
     bo->purgeable = 0;
+    bo->busy = FALSE;
 
     bo->opaque0 = 0;
     bo->opaque1 = 0;
@@ -406,23 +538,27 @@ intel_bo_create (intel_device_t *device,
     bo->batch_write_domain = 0;
     cairo_list_init (&bo->link);
 
-    create.size = size;
+    create.size = cache_size;
     create.handle = 0;
     ret = ioctl (device->base.fd, DRM_IOCTL_I915_GEM_CREATE, &create);
     if (unlikely (ret != 0)) {
 	_cairo_error_throw (CAIRO_STATUS_NO_MEMORY);
 	_cairo_freepool_free (&device->bo_pool, bo);
-	bo = NULL;
-	goto UNLOCK;
+	CAIRO_MUTEX_UNLOCK (device->bo_mutex);
+	return NULL;
     }
 
     bo->base.handle = create.handle;
+    bo->full_size = bo->base.size = create.size;
 
-DONE:
+SIZE:
+    intel_bo_set_real_size (device, bo, real_size);
+INIT:
     CAIRO_REFERENCE_COUNT_INIT (&bo->base.ref_count, 1);
-UNLOCK:
     CAIRO_MUTEX_UNLOCK (device->bo_mutex);
-
+DONE:
+    bo->tiling = tiling;
+    bo->stride = stride;
     return bo;
 }
 
@@ -449,9 +585,13 @@ intel_bo_create_for_name (intel_device_t *device, uint32_t name)
     CAIRO_REFERENCE_COUNT_INIT (&bo->base.ref_count, 1);
     cairo_list_init (&bo->cache_list);
 
+    bo->full_size = bo->base.size;
     bo->offset = 0;
     bo->virtual = NULL;
     bo->purgeable = 0;
+    bo->busy = TRUE;
+    bo->cpu = FALSE;
+    bo->bucket = INTEL_BO_CACHE_BUCKETS;
 
     bo->opaque0 = 0;
     bo->opaque1 = 0;
@@ -471,8 +611,7 @@ intel_bo_create_for_name (intel_device_t *device, uint32_t name)
 	goto FAIL;
     }
 
-    bo->tiling = get_tiling.tiling_mode;
-    bo->swizzle = get_tiling.swizzle_mode;
+    bo->_tiling = bo->tiling = get_tiling.tiling_mode;
     // bo->stride = get_tiling.stride; /* XXX not available from get_tiling */
 
     return bo;
@@ -491,24 +630,26 @@ intel_bo_release (void *_dev, void *_bo)
     intel_bo_t *bo = _bo;
     int bucket;
 
-    assert (bo->virtual == NULL);
+    if (bo->virtual != NULL)
+	intel_bo_unmap (bo);
 
-    bucket = INTEL_BO_CACHE_BUCKETS;
-    if (bo->base.size & -bo->base.size)
-	bucket = ffs (bo->base.size / 4096) - 1;
+    assert (bo->exec == NULL);
+    assert (cairo_list_is_empty (&bo->cache_list));
+
+    bucket = bo->bucket;
 
     CAIRO_MUTEX_LOCK (device->bo_mutex);
     if (bo->base.name == 0 &&
 	bucket < INTEL_BO_CACHE_BUCKETS &&
 	intel_bo_madvise (device, bo, I915_MADV_DONTNEED))
     {
-	if (++device->bo_cache[bucket].num_entries >
-	    device->bo_cache[bucket].min_entries)
-	{
-	    device->bo_cache_size += bo->base.size;
-	}
+	device->bo_cache[bucket].num_entries++;
+	device->bo_cache_size += 4096 * (1 << bucket);
 
-	cairo_list_add_tail (&bo->cache_list, &device->bo_cache[bucket].list);
+	if (bo->busy)
+	    cairo_list_add_tail (&bo->cache_list, &device->bo_cache[bucket].list);
+	else
+	    cairo_list_add (&bo->cache_list, &device->bo_cache[bucket].list);
     }
     else
     {
@@ -520,36 +661,26 @@ intel_bo_release (void *_dev, void *_bo)
 
 void
 intel_bo_set_tiling (const intel_device_t *device,
-	             intel_bo_t *bo,
-		     uint32_t tiling,
-		     uint32_t stride)
+	             intel_bo_t *bo)
 {
     struct drm_i915_gem_set_tiling set_tiling;
     int ret;
 
-    if (bo->tiling == tiling &&
-	(tiling == I915_TILING_NONE || bo->stride == stride))
-    {
+    if (bo->tiling == bo->_tiling &&
+	(bo->tiling == I915_TILING_NONE || bo->stride == bo->_stride))
 	return;
-    }
-
-    assert (bo->exec == NULL);
-
-    if (bo->virtual)
-	intel_bo_unmap (bo);
 
     do {
 	set_tiling.handle = bo->base.handle;
-	set_tiling.tiling_mode = tiling;
-	set_tiling.stride = stride;
+	set_tiling.tiling_mode = bo->tiling;
+	set_tiling.stride = bo->stride;
 
 	ret = ioctl (device->base.fd, DRM_IOCTL_I915_GEM_SET_TILING, &set_tiling);
     } while (ret == -1 && errno == EINTR);
-    if (ret == 0) {
-	bo->tiling = set_tiling.tiling_mode;
-	bo->swizzle = set_tiling.swizzle_mode;
-	bo->stride = set_tiling.stride;
-    }
+
+    assert (ret == 0);
+    bo->_tiling = bo->tiling;
+    bo->_stride = bo->stride;
 }
 
 cairo_surface_t *
@@ -568,26 +699,11 @@ intel_bo_get_image (const intel_device_t *device,
     if (unlikely (image->base.status))
 	return &image->base;
 
-    if (bo->tiling == I915_TILING_NONE) {
-	if (image->stride == surface->stride) {
-	    size = surface->stride * surface->height;
-	    intel_bo_read (device, bo, 0, size, image->data);
-	} else {
-	    int offset;
+    intel_bo_set_tiling (device, bo);
 
-	    size = surface->width;
-	    if (surface->format != CAIRO_FORMAT_A8)
-		size *= 4;
-
-	    offset = 0;
-	    row = surface->height;
-	    dst = image->data;
-	    while (row--) {
-		intel_bo_read (device, bo, offset, size, dst);
-		offset += surface->stride;
-		dst += image->stride;
-	    }
-	}
+    if (bo->tiling == I915_TILING_NONE && image->stride == surface->stride) {
+	size = surface->stride * surface->height;
+	intel_bo_read (device, bo, 0, size, image->data);
     } else {
 	const uint8_t *src;
 
@@ -606,16 +722,14 @@ intel_bo_get_image (const intel_device_t *device,
 	    dst += image->stride;
 	    src += surface->stride;
 	}
-
-	intel_bo_unmap (bo);
     }
 
     return &image->base;
 }
 
 static cairo_status_t
-_intel_bo_put_a1_image (intel_device_t *dev,
-			intel_bo_t *bo, int stride,
+_intel_bo_put_a1_image (intel_device_t *device,
+			intel_bo_t *bo,
 			cairo_image_surface_t *src,
 			int src_x, int src_y,
 			int width, int height,
@@ -628,13 +742,13 @@ _intel_bo_put_a1_image (intel_device_t *dev,
 
     data = src->data + src_y * src->stride;
 
-    if (bo->tiling == I915_TILING_NONE && width == stride) {
+    if (bo->tiling == I915_TILING_NONE && width == bo->stride) {
 	uint8_t *p;
 	int size;
 
-	size = stride * height;
+	size = bo->stride * height;
 	if (size > (int) sizeof (buf)) {
-	    a8 = _cairo_malloc_ab (stride, height);
+	    a8 = _cairo_malloc_ab (bo->stride, height);
 	    if (a8 == NULL)
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
@@ -649,11 +763,11 @@ _intel_bo_put_a1_image (intel_device_t *dev,
 	    }
 
 	    data += src->stride;
-	    p += stride;
+	    p += bo->stride;
 	}
 
-	intel_bo_write (dev, bo,
-			dst_y * stride + dst_x, /* XXX  bo_offset */
+	intel_bo_write (device, bo,
+			dst_y * bo->stride + dst_x, /* XXX  bo_offset */
 			size, a8);
     } else {
 	uint8_t *dst;
@@ -664,14 +778,14 @@ _intel_bo_put_a1_image (intel_device_t *dev,
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
 
-	dst = intel_bo_map (dev, bo);
+	dst = intel_bo_map (device, bo);
 	if (dst == NULL) {
 	    if (a8 != buf)
 		free (a8);
 	    return _cairo_error (CAIRO_STATUS_DEVICE_ERROR);
 	}
 
-	dst += dst_y * stride + dst_x; /* XXX  bo_offset */
+	dst += dst_y * bo->stride + dst_x; /* XXX  bo_offset */
 	while (height--) {
 	    for (x = 0; x < width; x++) {
 		int i = src_x + x;
@@ -681,10 +795,9 @@ _intel_bo_put_a1_image (intel_device_t *dev,
 	    }
 
 	    memcpy (dst, a8, width);
-	    dst  += stride;
+	    dst  += bo->stride;
 	    data += src->stride;
 	}
-	intel_bo_unmap (bo);
     }
 
     if (a8 != buf)
@@ -694,8 +807,8 @@ _intel_bo_put_a1_image (intel_device_t *dev,
 }
 
 cairo_status_t
-intel_bo_put_image (intel_device_t *dev,
-		    intel_bo_t *bo, int stride,
+intel_bo_put_image (intel_device_t *device,
+		    intel_bo_t *bo,
 		    cairo_image_surface_t *src,
 		    int src_x, int src_y,
 		    int width, int height,
@@ -705,7 +818,9 @@ intel_bo_put_image (intel_device_t *dev,
     int size;
     int offset;
 
-    offset = dst_y * stride;
+    intel_bo_set_tiling (device, bo);
+
+    offset = dst_y * bo->stride;
     data = src->data + src_y * src->stride;
     switch (src->format) {
     case CAIRO_FORMAT_ARGB32:
@@ -725,8 +840,7 @@ intel_bo_put_image (intel_device_t *dev,
 	size    = width;
 	break;
     case CAIRO_FORMAT_A1:
-	return _intel_bo_put_a1_image (dev,
-				       bo, stride, src,
+	return _intel_bo_put_a1_image (device, bo, src,
 				       src_x, src_y,
 				       width, height,
 				       dst_x, dst_y);
@@ -735,28 +849,21 @@ intel_bo_put_image (intel_device_t *dev,
 	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT);
     }
 
-    if (bo->tiling == I915_TILING_NONE) {
-	if (src->stride == stride) {
-	    intel_bo_write (dev, bo, offset, stride * height, data);
-	} else while (height--) {
-	    intel_bo_write (dev, bo, offset, size, data);
-	    offset += stride;
-	    data += src->stride;
-	}
+    if (bo->tiling == I915_TILING_NONE && src->stride == bo->stride) {
+	intel_bo_write (device, bo, offset, bo->stride * height, data);
     } else {
 	uint8_t *dst;
 
-	dst = intel_bo_map (dev, bo);
+	dst = intel_bo_map (device, bo);
 	if (unlikely (dst == NULL))
 	    return _cairo_error (CAIRO_STATUS_DEVICE_ERROR);
 
 	dst += offset;
 	while (height--) {
 	    memcpy (dst, data, size);
-	    dst  += stride;
+	    dst  += bo->stride;
 	    data += src->stride;
 	}
-	intel_bo_unmap (bo);
     }
 
     return CAIRO_STATUS_SUCCESS;
@@ -771,6 +878,7 @@ _intel_device_init_bo_cache (intel_device_t *device)
     device->bo_cache_size = 0;
     device->bo_max_cache_size_high = device->gtt_max_size / 2;
     device->bo_max_cache_size_low = device->gtt_max_size / 4;
+    cairo_list_init (&device->bo_in_flight);
 
     for (i = 0; i < INTEL_BO_CACHE_BUCKETS; i++) {
 	struct _intel_bo_cache *cache = &device->bo_cache[i];
@@ -805,7 +913,6 @@ _intel_snapshot_cache_entry_destroy (void *closure)
 						   snapshot_cache_entry);
 
     surface->snapshot_cache_entry.hash = 0;
-    cairo_surface_destroy (&surface->drm.base);
 }
 
 cairo_status_t
@@ -839,7 +946,6 @@ intel_device_init (intel_device_t *device, int fd)
     if (unlikely (status))
 	return status;
 
-    device->glyph_cache_mapped = FALSE;
     for (n = 0; n < ARRAY_LENGTH (device->glyph_cache); n++) {
 	device->glyph_cache[n].buffer.bo = NULL;
 	cairo_list_init (&device->glyph_cache[n].rtree.pinned);
@@ -926,25 +1032,6 @@ intel_throttle (intel_device_t *device)
 }
 
 void
-intel_glyph_cache_unmap (intel_device_t *device)
-{
-    int n;
-
-    if (likely (! device->glyph_cache_mapped))
-	return;
-
-    for (n = 0; n < ARRAY_LENGTH (device->glyph_cache); n++) {
-	if (device->glyph_cache[n].buffer.bo != NULL &&
-	    device->glyph_cache[n].buffer.bo->virtual != NULL)
-	{
-	    intel_bo_unmap (device->glyph_cache[n].buffer.bo);
-	}
-    }
-
-    device->glyph_cache_mapped = FALSE;
-}
-
-void
 intel_glyph_cache_unpin (intel_device_t *device)
 {
     int n;
@@ -984,6 +1071,8 @@ intel_glyph_cache_add_glyph (intel_device_t *device,
     if (unlikely (status))
 	return status;
 
+    /* XXX streaming upload? */
+
     height = glyph_surface->height;
     src = glyph_surface->data;
     dst = cache->buffer.bo->virtual;
@@ -1002,10 +1091,8 @@ intel_glyph_cache_add_glyph (intel_device_t *device,
 
 	if (width > (int) sizeof (buf)) {
 	    a8 = malloc (width);
-	    if (unlikely (a8 == NULL)) {
-		intel_bo_unmap (cache->buffer.bo);
+	    if (unlikely (a8 == NULL))
 		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    }
 	}
 
 	dst += node->x;
@@ -1051,9 +1138,6 @@ intel_glyph_cache_add_glyph (intel_device_t *device,
 	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT);
     }
 
-    /* leave mapped! */
-    device->glyph_cache_mapped = TRUE;
-
     scaled_glyph->surface_private = node;
 
     glyph= (intel_glyph_t *) node;
@@ -1064,14 +1148,17 @@ intel_glyph_cache_add_glyph (intel_device_t *device,
     sf_x = 1. / cache->buffer.width;
     sf_y = 1. / cache->buffer.height;
     glyph->texcoord[0] =
-	texcoord_2d_16 (sf_x * (node->x + glyph_surface->width + NEAREST_BIAS),
-		        sf_y * (node->y + glyph_surface->height + NEAREST_BIAS));
+	texcoord_2d_16 (sf_x * (node->x + glyph_surface->width),
+		        sf_y * (node->y + glyph_surface->height));
     glyph->texcoord[1] =
-	texcoord_2d_16 (sf_x * (node->x + NEAREST_BIAS),
-		        sf_y * (node->y + glyph_surface->height + NEAREST_BIAS));
+	texcoord_2d_16 (sf_x * node->x,
+		        sf_y * (node->y + glyph_surface->height));
     glyph->texcoord[2] =
-	texcoord_2d_16 (sf_x * (node->x + NEAREST_BIAS),
-	                sf_y * (node->y + NEAREST_BIAS));
+	texcoord_2d_16 (sf_x * node->x,
+	                sf_y * node->y);
+
+    glyph->width  = glyph_surface->width;
+    glyph->height = glyph_surface->height;
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1190,9 +1277,6 @@ intel_get_glyph (intel_device_t *device,
 
 	assert (cache->buffer.bo->exec != NULL);
 
-	if (cache->buffer.bo->virtual != NULL)
-	    intel_bo_unmap (cache->buffer.bo);
-
 	_cairo_rtree_reset (&cache->rtree);
 	intel_bo_destroy (device, cache->buffer.bo);
 	cache->buffer.bo = NULL;
@@ -1225,6 +1309,7 @@ intel_buffer_cache_init (intel_buffer_cache_t *cache,
 			int width, int height)
 {
     const uint32_t tiling = I915_TILING_Y;
+    uint32_t stride, size;
 
     assert ((width & 3) == 0);
     assert ((height & 1) == 0);
@@ -1233,6 +1318,7 @@ intel_buffer_cache_init (intel_buffer_cache_t *cache,
     cache->buffer.height = height;
 
     switch (format) {
+    default:
     case CAIRO_FORMAT_A1:
     case CAIRO_FORMAT_RGB16_565:
     case CAIRO_FORMAT_RGB24:
@@ -1241,25 +1327,28 @@ intel_buffer_cache_init (intel_buffer_cache_t *cache,
 	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT);
     case CAIRO_FORMAT_ARGB32:
 	cache->buffer.map0 = MAPSURF_32BIT | MT_32BIT_ARGB8888;
-	cache->buffer.stride = width * 4;
+	stride = width * 4;
 	break;
     case CAIRO_FORMAT_A8:
 	cache->buffer.map0 = MAPSURF_8BIT | MT_8BIT_I8;
-	cache->buffer.stride = width;
+	stride = width;
 	break;
     }
-    cache->buffer.map0 |= ((height - 1) << MS3_HEIGHT_SHIFT) |
-	((width - 1)  << MS3_WIDTH_SHIFT);
-    cache->buffer.map1 = ((cache->buffer.stride / 4) - 1) << MS4_PITCH_SHIFT;
 
+    size = height * stride;
     cache->buffer.bo = intel_bo_create (device,
-					height * cache->buffer.stride, FALSE);
+					size, size,
+					FALSE, tiling, stride);
     if (unlikely (cache->buffer.bo == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-    intel_bo_set_tiling (device, cache->buffer.bo, tiling, cache->buffer.stride);
+    cache->buffer.stride = stride;
 
-    cache->buffer.map0 |= MS3_tiling (cache->buffer.bo->tiling);
+    cache->buffer.offset = 0;
+    cache->buffer.map0 |= MS3_tiling (tiling);
+    cache->buffer.map0 |= ((height - 1) << MS3_HEIGHT_SHIFT) |
+	                  ((width - 1)  << MS3_WIDTH_SHIFT);
+    cache->buffer.map1 = ((stride / 4) - 1) << MS4_PITCH_SHIFT;
 
     cache->ref_count = 0;
     cairo_list_init (&cache->link);
@@ -1272,16 +1361,8 @@ intel_snapshot_cache_insert (intel_device_t *device,
 			     intel_surface_t *surface)
 {
     cairo_status_t status;
-    int bpp;
 
-    bpp = 1;
-    if (surface->drm.format != CAIRO_FORMAT_A8)
-	bpp = 4;
-
-    surface->snapshot_cache_entry.hash = (unsigned long) surface;
-    surface->snapshot_cache_entry.size =
-	surface->drm.width * surface->drm.height * bpp;
-
+    surface->snapshot_cache_entry.size = surface->drm.bo->size;
     if (surface->snapshot_cache_entry.size >
 	device->snapshot_cache_max_size)
     {
@@ -1291,14 +1372,13 @@ intel_snapshot_cache_insert (intel_device_t *device,
     if (device->snapshot_cache.freeze_count == 0)
 	_cairo_cache_freeze (&device->snapshot_cache);
 
+    surface->snapshot_cache_entry.hash = (unsigned long) surface;
     status = _cairo_cache_insert (&device->snapshot_cache,
 	                          &surface->snapshot_cache_entry);
     if (unlikely (status)) {
 	surface->snapshot_cache_entry.hash = 0;
 	return status;
     }
-
-    cairo_surface_reference (&surface->drm.base);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1314,7 +1394,7 @@ intel_surface_detach_snapshot (cairo_surface_t *abstract_surface)
 	device = (intel_device_t *) surface->drm.base.device;
 	_cairo_cache_remove (&device->snapshot_cache,
 		             &surface->snapshot_cache_entry);
-	surface->snapshot_cache_entry.hash = 0;
+	assert (surface->snapshot_cache_entry.hash == 0);
     }
 }
 
@@ -1470,12 +1550,13 @@ intel_gradient_render (intel_device_t *device,
 
     pixman_image_unref (gradient);
 
-    buffer->bo = intel_bo_create (device, 4*width, FALSE);
+    buffer->bo = intel_bo_create (device,
+				  4*width, 4*width,
+				  FALSE, I915_TILING_NONE, 4*width);
     if (unlikely (buffer->bo == NULL)) {
 	pixman_image_unref (image);
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
-    intel_bo_set_tiling (device, buffer->bo, I915_TILING_NONE, 0);
 
     intel_bo_write (device, buffer->bo, 0, 4*width, pixman_image_get_data (image));
     pixman_image_unref (image);
@@ -1486,8 +1567,7 @@ intel_gradient_render (intel_device_t *device,
     buffer->stride = 4*width;
     buffer->format = CAIRO_FORMAT_ARGB32;
     buffer->map0 = MAPSURF_32BIT | MT_32BIT_ARGB8888;
-    buffer->map0 |= MS3_tiling (buffer->bo->tiling);
-    buffer->map0 |= ((width - 1)  << MS3_WIDTH_SHIFT);
+    buffer->map0 |= ((width - 1) << MS3_WIDTH_SHIFT);
     buffer->map1 = (width - 1) << MS4_PITCH_SHIFT;
 
     if (device->gradient_cache.size < GRADIENT_CACHE_SIZE) {

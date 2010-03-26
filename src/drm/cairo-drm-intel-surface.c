@@ -53,7 +53,16 @@ intel_surface_finish (void *abstract_surface)
 {
     intel_surface_t *surface = abstract_surface;
 
+    intel_bo_in_flight_add (to_intel_device (surface->drm.base.device),
+			    to_intel_bo (surface->drm.bo));
     return _cairo_drm_surface_finish (&surface->drm);
+}
+
+static void
+surface_finish_and_destroy (cairo_surface_t *surface)
+{
+    cairo_surface_finish (surface);
+    cairo_surface_destroy (surface);
 }
 
 cairo_status_t
@@ -64,8 +73,7 @@ intel_surface_acquire_source_image (void *abstract_surface,
     intel_surface_t *surface = abstract_surface;
     cairo_surface_t *image;
     cairo_status_t status;
-
-    /* XXX batch flush */
+    void *ptr;
 
     if (surface->drm.fallback != NULL) {
 	image = surface->drm.fallback;
@@ -83,14 +91,20 @@ intel_surface_acquire_source_image (void *abstract_surface,
 	    return status;
     }
 
-    image = intel_bo_get_image (to_intel_device (surface->drm.base.device),
-				to_intel_bo (surface->drm.bo),
-				&surface->drm);
-    status = image->status;
-    if (unlikely (status))
-	return status;
+    ptr = intel_bo_map (to_intel_device (surface->drm.base.device),
+			to_intel_bo (surface->drm.bo));
+    if (unlikely (ptr == NULL))
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
-     _cairo_surface_attach_snapshot (&surface->drm.base, image, cairo_surface_destroy);
+    image = cairo_image_surface_create_for_data (ptr,
+						 surface->drm.format,
+						 surface->drm.width,
+						 surface->drm.height,
+						 surface->drm.stride);
+    if (unlikely (image->status))
+	return image->status;
+
+    _cairo_surface_attach_snapshot (&surface->drm.base, image, surface_finish_and_destroy);
 
 DONE:
     *image_out = (cairo_image_surface_t *) cairo_surface_reference (image);
@@ -132,10 +146,8 @@ intel_surface_map_to_image (void *abstract_surface)
 						     surface->drm.width,
 						     surface->drm.height,
 						     surface->drm.stride);
-	if (unlikely (image->status)) {
-	    intel_bo_unmap (to_intel_bo (surface->drm.bo));
+	if (unlikely (image->status))
 	    return image;
-	}
 
 	surface->drm.fallback = image;
     }
@@ -158,8 +170,6 @@ intel_surface_flush (void *abstract_surface)
     status = cairo_surface_status (surface->drm.fallback);
     cairo_surface_destroy (surface->drm.fallback);
     surface->drm.fallback = NULL;
-
-    intel_bo_unmap (to_intel_bo (surface->drm.bo));
 
     return status;
 }
@@ -271,34 +281,21 @@ void
 intel_surface_init (intel_surface_t *surface,
 		    const cairo_surface_backend_t *backend,
 		    cairo_drm_device_t *device,
-		    cairo_content_t content)
+		    cairo_format_t format,
+		    int width, int height)
 {
     _cairo_surface_init (&surface->drm.base,
 			 backend,
 			 &device->base,
-			 content);
-    _cairo_drm_surface_init (&surface->drm, device);
-
-    switch (content) {
-    case CAIRO_CONTENT_ALPHA:
-	surface->drm.format = CAIRO_FORMAT_A8;
-	break;
-    case CAIRO_CONTENT_COLOR:
-	surface->drm.format = CAIRO_FORMAT_RGB24;
-	break;
-    default:
-	ASSERT_NOT_REACHED;
-    case CAIRO_CONTENT_COLOR_ALPHA:
-	surface->drm.format = CAIRO_FORMAT_ARGB32;
-	break;
-    }
+			 _cairo_content_from_format (format));
+    _cairo_drm_surface_init (&surface->drm, format, width, height);
 
     surface->snapshot_cache_entry.hash = 0;
 }
 
 static cairo_surface_t *
 intel_surface_create (cairo_drm_device_t *device,
-		      cairo_content_t content,
+		      cairo_format_t format,
 		      int width, int height)
 {
     intel_surface_t *surface;
@@ -308,12 +305,10 @@ intel_surface_create (cairo_drm_device_t *device,
     if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    intel_surface_init (surface, &intel_surface_backend, device, content);
+    intel_surface_init (surface, &intel_surface_backend, device,
+			format, width, height);
 
     if (width && height) {
-	surface->drm.width  = width;
-	surface->drm.height = height;
-
 	/* Vol I, p134: size restrictions for textures */
 	width  = (width  + 3) & -4;
 	height = (height + 1) & -2;
@@ -321,7 +316,8 @@ intel_surface_create (cairo_drm_device_t *device,
 	    cairo_format_stride_for_width (surface->drm.format, width);
 	surface->drm.bo = &intel_bo_create (to_intel_device (&device->base),
 					    surface->drm.stride * height,
-					    TRUE)->base;
+					    surface->drm.stride * height,
+					    TRUE, I915_TILING_NONE, surface->drm.stride)->base;
 	if (surface->drm.bo == NULL) {
 	    status = _cairo_drm_surface_finish (&surface->drm);
 	    free (surface);
@@ -339,7 +335,6 @@ intel_surface_create_for_name (cairo_drm_device_t *device,
 			       int width, int height, int stride)
 {
     intel_surface_t *surface;
-    cairo_content_t content;
     cairo_status_t status;
 
     switch (format) {
@@ -348,14 +343,9 @@ intel_surface_create_for_name (cairo_drm_device_t *device,
     case CAIRO_FORMAT_A1:
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
     case CAIRO_FORMAT_ARGB32:
-	content = CAIRO_CONTENT_COLOR_ALPHA;
-	break;
     case CAIRO_FORMAT_RGB16_565:
     case CAIRO_FORMAT_RGB24:
-	content = CAIRO_CONTENT_COLOR;
-	break;
     case CAIRO_FORMAT_A8:
-	content = CAIRO_CONTENT_ALPHA;
 	break;
     }
 
@@ -366,11 +356,10 @@ intel_surface_create_for_name (cairo_drm_device_t *device,
     if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    intel_surface_init (surface, &intel_surface_backend, device, content);
+    intel_surface_init (surface, &intel_surface_backend,
+			device, format, width, height);
 
     if (width && height) {
-	surface->drm.width  = width;
-	surface->drm.height = height;
 	surface->drm.stride = stride;
 
 	surface->drm.bo = &intel_bo_create_for_name (to_intel_device (&device->base),
@@ -394,14 +383,7 @@ intel_surface_enable_scan_out (void *abstract_surface)
     if (unlikely (surface->drm.bo == NULL))
 	return _cairo_error (CAIRO_STATUS_INVALID_SIZE);
 
-    if (to_intel_bo (surface->drm.bo)->tiling == I915_TILING_Y) {
-	intel_bo_set_tiling (to_intel_device (surface->drm.base.device),
-			     to_intel_bo (surface->drm.bo),
-			     I915_TILING_X, surface->drm.stride);
-    }
-
-    if (unlikely (to_intel_bo (surface->drm.bo)->tiling == I915_TILING_Y))
-	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT); /* XXX */
+    to_intel_bo (surface->drm.bo)->tiling = I915_TILING_X;
 
     return CAIRO_STATUS_SUCCESS;
 }

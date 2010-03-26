@@ -72,6 +72,10 @@ _cairo_boxes_add (cairo_boxes_t *boxes,
 		  const cairo_box_t *box);
 
 cairo_private void
+_cairo_boxes_extents (const cairo_boxes_t *boxes,
+		      cairo_rectangle_int_t *extents);
+
+cairo_private void
 _cairo_boxes_clear (cairo_boxes_t *boxes);
 
 cairo_private void

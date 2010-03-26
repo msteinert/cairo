@@ -258,6 +258,19 @@ CAIRO_ENABLE_SURFACE_BACKEND(drm, DRM, no, [
   use_drm="no (requires $drm_REQUIRES, udev is available from git://git.kernel.org/pub/scm/linux/hotplug/udev.git)"])
 ])
 
+CAIRO_ENABLE_FUNCTIONS(drm_xr, DRM Xr (DDX), no, [
+  if test "x$use_drm" == "xyes"; then
+      drm_xr_REQUIRES="xorg-server >= 1.6 xproto xextproto >= 7.0.99.1 renderproto x11"
+      PKG_CHECK_MODULES(drm_xr, $drm_xr_REQUIRES, ,
+			[AC_MSG_RESULT(no)
+			use_drm_xr="no (requires $drm_xr)"])
+      drm_xr_CFLAGS=`echo "$drm_xr_CFLAGS" | $SED -e 's/-fvisibility=hidden//g'`
+  else
+    use_drm_xr="no (requires --enable-drm)"
+  fi
+])
+AM_CONDITIONAL(BUILD_DRM_XR, test "x$use_drm_xr" = "xyes")
+
 CAIRO_ENABLE_SURFACE_BACKEND(gallium, Gallium3D, no, [
   if test "x$use_drm" = "xyes"; then
       AC_ARG_WITH([gallium],

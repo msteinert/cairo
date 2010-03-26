@@ -32,6 +32,22 @@
 
 #include "cairo-drm-intel-command-private.h"
 
+#define I915_PARAM_IRQ_ACTIVE            1
+#define I915_PARAM_ALLOW_BATCHBUFFER     2
+#define I915_PARAM_LAST_DISPATCH         3
+#define I915_PARAM_CHIPSET_ID            4
+#define I915_PARAM_HAS_GEM               5
+#define I915_PARAM_NUM_FENCES_AVAIL      6
+#define I915_PARAM_HAS_OVERLAY           7
+#define I915_PARAM_HAS_PAGEFLIPPING	 8
+#define I915_PARAM_HAS_EXECBUF2          9
+
+struct intel_getparam {
+	int param;
+	int *value;
+};
+
+
 /** @{
  * Intel memory domains
  *
@@ -331,7 +347,9 @@ struct drm_i915_gem_get_aperture {
 	uint64_t aper_available_size;
 };
 
+#define DRM_I915_GETPARAM	0x06
 
+#define DRM_IOCTL_I915_GETPARAM         DRM_IOWR(DRM_COMMAND_BASE + DRM_I915_GETPARAM, struct intel_getparam)
 #define DRM_IOCTL_I915_GEM_EXECBUFFER	DRM_IOW(DRM_COMMAND_BASE + DRM_I915_GEM_EXECBUFFER, struct drm_i915_gem_execbuffer)
 #define DRM_IOCTL_I915_GEM_BUSY		DRM_IOWR(DRM_COMMAND_BASE + DRM_I915_GEM_BUSY, struct drm_i915_gem_busy)
 #define DRM_IOCTL_I915_GEM_THROTTLE	DRM_IO ( DRM_COMMAND_BASE + DRM_I915_GEM_THROTTLE)
@@ -413,5 +431,12 @@ struct drm_i915_gem_execbuffer2 {
 #define I915_GEM_MEDIA_PIPELINE 0x2
 #define DRM_I915_GEM_EXECBUFFER2	0x29
 #define DRM_IOCTL_I915_GEM_EXECBUFFER2	DRM_IOW(DRM_COMMAND_BASE + DRM_I915_GEM_EXECBUFFER2, struct drm_i915_gem_execbuffer2)
+
+struct drm_i915_gem_real_size {
+	uint32_t handle;
+	uint64_t size;
+};
+#define DRM_I915_GEM_REAL_SIZE	0x2a
+#define DRM_IOCTL_I915_GEM_REAL_SIZE	DRM_IOWR (DRM_COMMAND_BASE + DRM_I915_GEM_REAL_SIZE, struct drm_i915_gem_real_size)
 
 #endif /* CAIRO_DRM_INTEL_IOCTL_PRIVATE_H */

@@ -36,28 +36,15 @@
 
 #include "cairo-error-private.h"
 
-cairo_surface_t *
-_cairo_drm_surface_create_similar (void			*abstract_surface,
-			           cairo_content_t	 content,
-				   int			 width,
-				   int			 height)
-{
-    cairo_drm_surface_t *surface = abstract_surface;
-    cairo_drm_device_t *device = (cairo_drm_device_t *) surface->base.device;
-
-    if (width > device->max_surface_size || height > device->max_surface_size)
-	return NULL;
-
-    return device->surface.create (device, content, width, height);
-}
-
 void
 _cairo_drm_surface_init (cairo_drm_surface_t *surface,
-			 cairo_drm_device_t *device)
+			 cairo_format_t format,
+			 int width, int height)
 {
     surface->bo = NULL;
-    surface->width  = 0;
-    surface->height = 0;
+    surface->format = format;
+    surface->width  = width;
+    surface->height = height;
     surface->stride = 0;
 
     surface->fallback = NULL;
@@ -100,14 +87,11 @@ _cairo_drm_surface_get_extents (void *abstract_surface,
 
 cairo_surface_t *
 cairo_drm_surface_create (cairo_device_t *abstract_device,
-			  cairo_content_t content,
+			  cairo_format_t format,
 			  int width, int height)
 {
     cairo_drm_device_t *device = (cairo_drm_device_t *) abstract_device;
     cairo_surface_t *surface;
-
-    if (! CAIRO_CONTENT_VALID (content))
-	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_CONTENT));
 
     if (device != NULL && device->base.status)
     {
@@ -118,8 +102,7 @@ cairo_drm_surface_create (cairo_device_t *abstract_device,
 	     width == 0 || width > device->max_surface_size ||
 	     height == 0 || height > device->max_surface_size)
     {
-	surface = cairo_image_surface_create (_cairo_format_from_content (content),
-					      width, height);
+	surface = cairo_image_surface_create (format, width, height);
     }
     else if (device->base.finished)
     {
@@ -127,7 +110,9 @@ cairo_drm_surface_create (cairo_device_t *abstract_device,
     }
     else
     {
-	surface = device->surface.create (device, content, width, height);
+	surface = device->surface.create (device, format, width, height);
+	if (surface->status == CAIRO_STATUS_INVALID_SIZE)
+	    surface = cairo_image_surface_create (format, width, height);
     }
 
     return surface;
@@ -334,7 +319,7 @@ cairo_drm_surface_get_stride (cairo_surface_t *abstract_surface)
 
 /* XXX drm or general surface layer? naming? */
 cairo_surface_t *
-cairo_drm_surface_map (cairo_surface_t *abstract_surface)
+cairo_drm_surface_map_to_image (cairo_surface_t *abstract_surface)
 {
     cairo_drm_surface_t *surface;
     cairo_drm_device_t *device;

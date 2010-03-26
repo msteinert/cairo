@@ -111,7 +111,6 @@ _cairo_freepool_reset (cairo_freepool_t *freepool)
     freepool->embedded_pool.data = freepool->embedded_data;
 }
 
-
 cairo_private void *
 _cairo_freepool_alloc_from_new_pool (cairo_freepool_t *freepool);
 

@@ -58,7 +58,7 @@ cairo_drm_device_throttle (cairo_device_t *device);
 
 cairo_public cairo_surface_t *
 cairo_drm_surface_create (cairo_device_t *device,
-			  cairo_content_t content,
+			  cairo_format_t format,
 			  int width, int height);
 
 cairo_public cairo_surface_t *
@@ -105,7 +105,7 @@ cairo_drm_surface_get_stride (cairo_surface_t *surface);
  *  will also disassociate the mapping.)
 */
 cairo_public cairo_surface_t *
-cairo_drm_surface_map (cairo_surface_t *surface);
+cairo_drm_surface_map_to_image (cairo_surface_t *surface);
 
 cairo_public void
 cairo_drm_surface_unmap (cairo_surface_t *drm_surface,

@@ -41,6 +41,25 @@
 #include "cairo-rtree-private.h"
 
 static void
+i915_emit_glyph_rectangle_zero (i915_device_t *device,
+				i915_shader_t *shader,
+				int x1, int y1,
+				int x2, int y2,
+				intel_glyph_t *glyph)
+{
+    float *v;
+
+    /* Each vertex is:
+     *   2 vertex coordinates
+     */
+
+    v = i915_add_rectangle (device);
+    *v++ = x2; *v++ = y2;
+    *v++ = x1; *v++ = y2;
+    *v++ = x1; *v++ = y1;
+}
+
+static void
 i915_emit_glyph_rectangle_constant (i915_device_t *device,
 				    i915_shader_t *shader,
 				    int x1, int y1,
@@ -91,6 +110,7 @@ i915_emit_glyph_rectangle_general (i915_device_t *device,
     *v++ = x2; *v++ = y2;
     s = x2, t = y2;
     switch (shader->source.type.vertex) {
+    case VS_ZERO:
     case VS_CONSTANT:
 	break;
     case VS_LINEAR:
@@ -111,6 +131,7 @@ i915_emit_glyph_rectangle_general (i915_device_t *device,
     *v++ = x1; *v++ = y2;
     s = x1, t = y2;
     switch (shader->source.type.vertex) {
+    case VS_ZERO:
     case VS_CONSTANT:
 	break;
     case VS_LINEAR:
@@ -131,6 +152,7 @@ i915_emit_glyph_rectangle_general (i915_device_t *device,
     *v++ = x1; *v++ = y1;
     s = x1, t = y2;
     switch (shader->source.type.vertex) {
+    case VS_ZERO:
     case VS_CONSTANT:
 	break;
     case VS_LINEAR:
@@ -168,7 +190,7 @@ i915_surface_mask_internal (i915_surface_t *dst,
     cairo_region_t *clip_region = NULL;
     cairo_status_t status;
 
-    i915_shader_init (&shader, dst, op);
+    i915_shader_init (&shader, dst, op, 1.);
 
     status = i915_shader_acquire_pattern (&shader, &shader.source,
 					  source, &extents->bounded);
@@ -176,6 +198,7 @@ i915_surface_mask_internal (i915_surface_t *dst,
 	return status;
 
     shader.mask.type.vertex = VS_TEXTURE_16;
+    shader.mask.type.pattern = PATTERN_TEXTURE;
     shader.mask.type.fragment = FS_TEXTURE;
     shader.mask.base.content = mask->intel.drm.base.content;
     shader.mask.base.texfmt = TEXCOORDFMT_2D_16;
@@ -188,20 +211,19 @@ i915_surface_mask_internal (i915_surface_t *dst,
 	i915_texture_extend (CAIRO_EXTEND_NONE);
 
     cairo_matrix_init_translate (&shader.mask.base.matrix,
-				 -extents->bounded.x + NEAREST_BIAS,
-				 -extents->bounded.y + NEAREST_BIAS);
+				 -extents->bounded.x,
+				 -extents->bounded.y);
     cairo_matrix_scale (&shader.mask.base.matrix,
 			1. / mask->intel.drm.width,
 			1. / mask->intel.drm.height);
 
-    shader.mask.base.bo = to_intel_bo (mask->intel.drm.bo);
+    shader.mask.base.bo = intel_bo_reference (to_intel_bo (mask->intel.drm.bo));
     shader.mask.base.offset[0] = 0;
     shader.mask.base.map[0] = mask->map0;
     shader.mask.base.map[1] = mask->map1;
 
     if (clip != NULL) {
 	status = _cairo_clip_get_region (clip, &clip_region);
-	assert (status == CAIRO_STATUS_SUCCESS || status == CAIRO_INT_STATUS_UNSUPPORTED);
 
 	if (clip_region != NULL && cairo_region_num_rectangles (clip_region) == 1)
 	    clip_region = NULL;
@@ -240,7 +262,7 @@ i915_surface_mask_internal (i915_surface_t *dst,
 			      extents->bounded.y + extents->bounded.height);
     }
 
-    if ((extents->is_bounded & CAIRO_OPERATOR_BOUND_BY_MASK) == 0)
+    if (! extents->is_bounded)
 	status = i915_fixup_unbounded (dst, extents, clip);
 
 CLEANUP_DEVICE:
@@ -300,16 +322,32 @@ i915_surface_glyphs (void			*abstract_surface,
 	have_clip = TRUE;
     }
 
-    if (overlap || (extents.is_bounded & CAIRO_OPERATOR_BOUND_BY_MASK) == 0) {
-	cairo_content_t content;
+    if (clip != NULL) {
+	status = _cairo_clip_get_region (clip, &clip_region);
+	if (unlikely (_cairo_status_is_error (status) ||
+		      status == CAIRO_INT_STATUS_NOTHING_TO_DO))
+	{
+	    if (have_clip)
+		_cairo_clip_fini (&local_clip);
+	    return status;
+	}
+    }
 
-	content = CAIRO_CONTENT_ALPHA;
+    if (i915_surface_needs_tiling (surface)) {
+	ASSERT_NOT_REACHED;
+	return CAIRO_INT_STATUS_UNSUPPORTED;
+    }
+
+    if (overlap || ! extents.is_bounded) {
+	cairo_format_t format;
+
+	format = CAIRO_FORMAT_A8;
 	if (scaled_font->options.antialias == CAIRO_ANTIALIAS_SUBPIXEL)
-	    content |= CAIRO_CONTENT_COLOR;
+	    format = CAIRO_FORMAT_ARGB32;
 
 	mask = (i915_surface_t *)
 	    i915_surface_create_internal (&i915_device (surface)->intel.base,
-					  CAIRO_CONTENT_ALPHA,
+					  format,
 					  extents.bounded.width,
 					  extents.bounded.height,
 					  I915_TILING_DEFAULT,
@@ -317,16 +355,13 @@ i915_surface_glyphs (void			*abstract_surface,
 	if (unlikely (mask->intel.drm.base.status))
 	    return mask->intel.drm.base.status;
 
-	status = _cairo_surface_paint (&mask->intel.drm.base,
-				       CAIRO_OPERATOR_CLEAR,
-				       &_cairo_pattern_clear.base,
-				       NULL);
+	status = i915_surface_clear (mask);
 	if (unlikely (status)) {
 	    cairo_surface_destroy (&mask->intel.drm.base);
 	    return status;
 	}
 
-	i915_shader_init (&shader, mask, CAIRO_OPERATOR_ADD);
+	i915_shader_init (&shader, mask, CAIRO_OPERATOR_ADD, 1.);
 
 	status = i915_shader_acquire_pattern (&shader, &shader.source,
 					      &_cairo_pattern_white.base,
@@ -339,7 +374,7 @@ i915_surface_glyphs (void			*abstract_surface,
 	mask_x = -extents.bounded.x;
 	mask_y = -extents.bounded.y;
     } else {
-	i915_shader_init (&shader, surface, op);
+	i915_shader_init (&shader, surface, op, 1.);
 
 	status = i915_shader_acquire_pattern (&shader, &shader.source,
 					      source, &extents.bounded);
@@ -348,7 +383,6 @@ i915_surface_glyphs (void			*abstract_surface,
 
 	if (clip != NULL) {
 	    status = _cairo_clip_get_region (clip, &clip_region);
-	    assert (status == CAIRO_STATUS_SUCCESS || status == CAIRO_INT_STATUS_UNSUPPORTED);
 
 	    if (clip_region != NULL && cairo_region_num_rectangles (clip_region) == 1)
 		clip_region = NULL;
@@ -370,6 +404,9 @@ i915_surface_glyphs (void			*abstract_surface,
 	i915_texture_extend (CAIRO_EXTEND_NONE);
 
     switch (shader.source.type.vertex) {
+    case VS_ZERO:
+	emit_func = i915_emit_glyph_rectangle_zero;
+	break;
     case VS_CONSTANT:
 	emit_func = i915_emit_glyph_rectangle_constant;
 	break;
@@ -466,8 +503,13 @@ i915_surface_glyphs (void			*abstract_surface,
 	    last_bo = cache->buffer.bo;
 	}
 
-	x1 += mask_x; x2 += mask_x;
-	y1 += mask_y; y2 += mask_y;
+	x2 = x1 + glyph->width;
+	y2 = y1 + glyph->height;
+
+	if (mask_x)
+	    x1 += mask_x, x2 += mask_x;
+	if (mask_y)
+	    y1 += mask_y, y2 += mask_y;
 
 	/* XXX clip glyph */
 	emit_func (device, &shader, x1, y1, x2, y2, glyph);

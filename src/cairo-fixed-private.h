@@ -135,6 +135,16 @@ _cairo_fixed_from_26_6 (uint32_t i)
 #endif
 }
 
+static inline cairo_fixed_t
+_cairo_fixed_from_16_16 (uint32_t i)
+{
+#if CAIRO_FIXED_FRAC_BITS > 16
+    return i << (CAIRO_FIXED_FRAC_BITS - 16);
+#else
+    return i >> (16 - CAIRO_FIXED_FRAC_BITS);
+#endif
+}
+
 static inline double
 _cairo_fixed_to_double (cairo_fixed_t f)
 {
@@ -242,12 +252,18 @@ _cairo_fixed_16_16_from_double (double d)
 }
 
 static inline int
-_cairo_fixed_16_16_floor (cairo_fixed_t f)
+_cairo_fixed_16_16_floor (cairo_fixed_16_16_t f)
 {
     if (f >= 0)
 	return f >> 16;
     else
 	return -((-f - 1) >> 16) - 1;
+}
+
+static inline double
+_cairo_fixed_16_16_to_double (cairo_fixed_16_16_t f)
+{
+    return ((double) f) / (double) (1 << 16);
 }
 
 #if CAIRO_FIXED_BITS == 32

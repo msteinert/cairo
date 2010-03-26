@@ -394,6 +394,7 @@ AC_DEFUN([CAIRO_REPORT],
 	echo "  X11-xcb functions: $use_xlib_xcb"
 	echo "  XCB-drm functions: $use_xcb_drm"
 	echo "  XCB-shm functions: $use_xcb_shm"
+	echo "  DRM-Xr functions: $use_drm_xr"
 	echo ""
 	echo "The following features and utilities:"
 	echo "  cairo-trace:                $use_trace"

@@ -42,10 +42,7 @@
 
 #include "cairo-drm-intel-ioctl-private.h"
 
-#define NEAREST_BIAS (-.375)
-
 #define INTEL_TILING_DEFAULT I915_TILING_Y
-
 
 #define INTEL_BO_CACHE_BUCKETS 12 /* cache surfaces up to 16 MiB */
 
@@ -57,24 +54,28 @@
 typedef struct _intel_bo {
     cairo_drm_bo_t base;
 
+    cairo_list_t link;
     cairo_list_t cache_list;
 
     uint32_t offset;
-    void *virtual;
-
-    uint32_t tiling;
-    uint32_t swizzle;
-    uint32_t stride;
-    cairo_bool_t purgeable;
+    uint32_t batch_read_domains;
+    uint32_t batch_write_domain;
 
     uint32_t opaque0;
     uint32_t opaque1;
 
-    struct drm_i915_gem_exec_object2 *exec;
-    uint32_t batch_read_domains;
-    uint32_t batch_write_domain;
+    uint32_t full_size;
+    uint16_t stride;
+    uint16_t _stride;
+    uint32_t bucket :4;
+    uint32_t tiling :4;
+    uint32_t _tiling :4;
+    uint32_t purgeable :1;
+    uint32_t busy :1;
+    uint32_t cpu :1;
 
-    cairo_list_t link;
+    struct drm_i915_gem_exec_object2 *exec;
+    void *virtual;
 } intel_bo_t;
 
 #define INTEL_BATCH_SIZE (64*1024)
@@ -82,11 +83,10 @@ typedef struct _intel_bo {
 #define INTEL_MAX_RELOCS 2048
 
 static inline void
-intel_bo_mark_purgeable (intel_bo_t *bo,
-			 cairo_bool_t purgeable)
+intel_bo_mark_purgeable (intel_bo_t *bo)
 {
     if (bo->base.name == 0)
-	bo->purgeable = purgeable;
+	bo->purgeable = 1;
 }
 
 typedef struct _intel_vertex_buffer intel_vertex_buffer_t;
@@ -168,6 +168,7 @@ typedef struct _intel_glyph {
     intel_buffer_cache_t *cache;
     void **owner;
     float texcoord[3];
+    int width, height;
 } intel_glyph_t;
 
 typedef struct _intel_gradient_cache {
@@ -200,11 +201,11 @@ typedef struct _intel_device {
     size_t bo_cache_size;
     size_t bo_max_cache_size_high;
     size_t bo_max_cache_size_low;
+    cairo_list_t bo_in_flight;
 
     cairo_mutex_t mutex;
     intel_batch_t batch;
 
-    cairo_bool_t glyph_cache_mapped;
     intel_buffer_cache_t glyph_cache[2];
     cairo_list_t fonts;
 
@@ -242,12 +243,22 @@ intel_bo_reference (intel_bo_t *bo)
 cairo_private cairo_bool_t
 intel_bo_madvise (intel_device_t *device, intel_bo_t *bo, int madv);
 
-
 static cairo_always_inline void
 intel_bo_destroy (intel_device_t *device, intel_bo_t *bo)
 {
     cairo_drm_bo_destroy (&device->base.base, &bo->base);
 }
+
+static inline void
+intel_bo_in_flight_add (intel_device_t *device,
+			intel_bo_t *bo)
+{
+    if (bo->base.name == 0 && bo->exec != NULL && cairo_list_is_empty (&bo->cache_list))
+	cairo_list_add (&bo->cache_list, &device->bo_in_flight);
+}
+
+cairo_private int
+intel_get (int fd, int param);
 
 cairo_private cairo_bool_t
 intel_info (int fd, uint64_t *gtt_size);
@@ -260,23 +271,24 @@ intel_device_fini (intel_device_t *dev);
 
 cairo_private intel_bo_t *
 intel_bo_create (intel_device_t *dev,
-	         uint32_t size,
-	         cairo_bool_t gpu_target);
+	         uint32_t max_size,
+	         uint32_t real_size,
+	         cairo_bool_t gpu_target,
+		 uint32_t tiling,
+		 uint32_t stride);
 
 cairo_private intel_bo_t *
 intel_bo_create_for_name (intel_device_t *dev, uint32_t name);
 
 cairo_private void
 intel_bo_set_tiling (const intel_device_t *dev,
-	             intel_bo_t *bo,
-		     uint32_t tiling,
-		     uint32_t stride);
+	             intel_bo_t *bo);
 
 cairo_private cairo_bool_t
 intel_bo_is_inactive (const intel_device_t *device,
-		      const intel_bo_t *bo);
+		      intel_bo_t *bo);
 
-cairo_private void
+cairo_private cairo_bool_t
 intel_bo_wait (const intel_device_t *device, const intel_bo_t *bo);
 
 cairo_private void
@@ -318,7 +330,7 @@ intel_bo_get_image (const intel_device_t *device,
 
 cairo_private cairo_status_t
 intel_bo_put_image (intel_device_t *dev,
-		    intel_bo_t *bo, int stride,
+		    intel_bo_t *bo,
 		    cairo_image_surface_t *src,
 		    int src_x, int src_y,
 		    int width, int height,
@@ -328,7 +340,8 @@ cairo_private void
 intel_surface_init (intel_surface_t *surface,
 		    const cairo_surface_backend_t *backend,
 		    cairo_drm_device_t *device,
-		    cairo_content_t content);
+		    cairo_format_t format,
+		    int width, int height);
 
 cairo_private cairo_status_t
 intel_buffer_cache_init (intel_buffer_cache_t *cache,
@@ -352,9 +365,6 @@ intel_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 
 cairo_private void
 intel_scaled_font_fini (cairo_scaled_font_t *scaled_font);
-
-cairo_private void
-intel_glyph_cache_unmap (intel_device_t *device);
 
 cairo_private void
 intel_glyph_cache_unpin (intel_device_t *device);
@@ -404,17 +414,6 @@ intel_dump_batchbuffer (const void *batch,
 			uint32_t length,
 			int devid);
 
-static inline float cairo_const
-texcoord_2d_16 (double x, double y)
-{
-    union {
-	uint32_t ui;
-	float f;
-    } u;
-    u.ui = (_cairo_half_from_float (y) << 16) | _cairo_half_from_float (x);
-    return u.f;
-}
-
 static inline uint32_t cairo_const
 MS3_tiling (uint32_t tiling)
 {
@@ -424,6 +423,17 @@ MS3_tiling (uint32_t tiling)
     case I915_TILING_X: return MS3_TILED_SURFACE;
     case I915_TILING_Y: return MS3_TILED_SURFACE | MS3_TILE_WALK;
     }
+}
+
+static inline float cairo_const
+texcoord_2d_16 (double x, double y)
+{
+    union {
+	uint32_t ui;
+	float f;
+    } u;
+    u.ui = (_cairo_half_from_float (y) << 16) | _cairo_half_from_float (x);
+    return u.f;
 }
 
 #define PCI_CHIP_I810			0x7121

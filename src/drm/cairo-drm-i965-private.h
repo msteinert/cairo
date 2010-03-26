@@ -646,7 +646,7 @@ i965_shader_add_rectangle (const i965_shader_t *shader,
 
 cairo_private cairo_surface_t *
 i965_surface_create_internal (cairo_drm_device_t *base_dev,
-		              cairo_content_t content,
+			      cairo_format_t format,
 			      int width, int height,
 			      uint32_t tiling,
 			      cairo_bool_t gpu_target);

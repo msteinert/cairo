@@ -720,6 +720,7 @@ debug_copy_blit (struct debug_stream *stream,
     uint32_t *ptr = (uint32_t *)(stream->ptr + stream->offset);
     uint32_t j = 0;
 
+    fprintf (stderr, "%04x:  ", stream->offset);
     fprintf (stderr, "%s (%d dwords):\n", name, len);
     fprintf (stderr, "\t0x%08x\n",  ptr[j++]);
 

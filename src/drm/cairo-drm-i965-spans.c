@@ -87,8 +87,6 @@ i965_spans_accumulate_rectangle (i965_spans_t *spans)
     if (unlikely (spans->vbo_offset + size > I965_VERTEX_SIZE)) {
 	struct i965_vbo *vbo;
 
-	intel_bo_unmap (spans->tail->bo);
-
 	vbo = malloc (sizeof (struct i965_vbo));
 	if (unlikely (vbo == NULL)) {
 	    /* throw error! */
@@ -98,7 +96,9 @@ i965_spans_accumulate_rectangle (i965_spans_t *spans)
 	spans->tail = vbo;
 
 	vbo->next = NULL;
-	vbo->bo = intel_bo_create (&spans->device->intel, I965_VERTEX_SIZE, FALSE);
+	vbo->bo = intel_bo_create (&spans->device->intel,
+				   I965_VERTEX_SIZE, I965_VERTEX_SIZE,
+				   FALSE, I915_TILING_NONE, 0);
 	vbo->count = 0;
 
 	spans->vbo_offset = 0;
@@ -326,7 +326,8 @@ i965_spans_init (i965_spans_t *spans,
     } else {
 	spans->get_rectangle = i965_spans_accumulate_rectangle;
 	spans->head.bo = intel_bo_create (&spans->device->intel,
-					  I965_VERTEX_SIZE, FALSE);
+					  I965_VERTEX_SIZE, I965_VERTEX_SIZE,
+					  FALSE, I915_TILING_NONE, 0);
 	if (unlikely (spans->head.bo == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -343,9 +344,6 @@ static void
 i965_spans_fini (i965_spans_t *spans)
 {
     i965_shader_fini (&spans->shader);
-
-    if (spans->tail->bo && spans->tail->bo->virtual)
-	intel_bo_unmap (spans->tail->bo);
 
     if (spans->head.bo != NULL) {
 	struct i965_vbo *vbo, *next;
@@ -397,10 +395,8 @@ i965_clip_and_composite_spans (i965_surface_t		*dst,
 	goto CLEANUP_DEVICE;
 
     status = draw_func (draw_closure, &spans.renderer, spans.extents);
-    if (spans.clip_region != NULL && status == CAIRO_STATUS_SUCCESS) {
-	intel_bo_unmap (spans.tail->bo);
+    if (spans.clip_region != NULL && status == CAIRO_STATUS_SUCCESS)
 	i965_clipped_vertices (device, &spans.head, spans.clip_region);
-    }
 
   CLEANUP_DEVICE:
     cairo_device_release (dst->intel.drm.base.device);

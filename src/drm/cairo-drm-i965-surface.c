@@ -168,7 +168,9 @@ i965_stream_commit (i965_device_t *device,
 
     assert (stream->used);
 
-    bo = intel_bo_create (&device->intel, stream->used, FALSE);
+    bo = intel_bo_create (&device->intel,
+			  stream->used, stream->used,
+			  FALSE, I915_TILING_NONE, 0);
 
     /* apply pending relocations */
     for (n = 0; n < stream->num_pending_relocations; n++) {
@@ -373,22 +375,25 @@ i965_exec (i965_device_t *device, uint32_t offset)
 
     /* XXX any write target within the batch should now be in error */
     for (i = 0; i < device->exec.count; i++) {
+	intel_bo_t *bo = device->exec.bo[i];
 	cairo_bool_t ret;
 
-	device->exec.bo[i]->offset = device->exec.exec[i].offset;
-	device->exec.bo[i]->exec = NULL;
-	device->exec.bo[i]->batch_read_domains = 0;
-	device->exec.bo[i]->batch_write_domain = 0;
+	bo->offset = device->exec.exec[i].offset;
+	bo->exec = NULL;
+	bo->batch_read_domains = 0;
+	bo->batch_write_domain = 0;
 
-	if (device->exec.bo[i]->purgeable) {
-	    ret = intel_bo_madvise (&device->intel,
-				    device->exec.bo[i],
-				    I915_MADV_DONTNEED);
+	if (bo->virtual)
+	    intel_bo_unmap (bo);
+	bo->cpu = FALSE;
+
+	if (bo->purgeable)
+	    ret = intel_bo_madvise (&device->intel, bo, I915_MADV_DONTNEED);
 	    /* ignore immediate notification of purging */
-	}
 
-	cairo_list_init (&device->exec.bo[i]->link);
-	intel_bo_destroy (&device->intel, device->exec.bo[i]);
+	cairo_list_del (&bo->cache_list);
+	cairo_list_init (&bo->link);
+	intel_bo_destroy (&device->intel, bo);
     }
     cairo_list_init (&device->flush);
 
@@ -496,7 +501,8 @@ i965_device_flush (i965_device_t *device)
 
 	bo = intel_bo_create (&device->intel,
 			      device->general.used,
-			      FALSE);
+			      device->general.used,
+			      FALSE, I915_TILING_NONE, 0);
 	if (unlikely (bo == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -547,7 +553,9 @@ i965_device_flush (i965_device_t *device)
 	if (aligned <= 8192)
 	    max = aligned;
 
-	bo = intel_bo_create (&device->intel, max, FALSE);
+	bo = intel_bo_create (&device->intel,
+			      max, max,
+			      FALSE, I915_TILING_NONE, 0);
 	if (unlikely (bo == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -615,7 +623,9 @@ i965_device_flush (i965_device_t *device)
 	if (device->surface.used)
 	    i965_stream_commit (device, &device->surface);
 
-	bo = intel_bo_create (&device->intel, device->batch.used, FALSE);
+	bo = intel_bo_create (&device->intel,
+			      device->batch.used, device->batch.used,
+			      FALSE, I915_TILING_NONE, 0);
 	if (unlikely (bo == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -638,8 +648,6 @@ i965_device_flush (i965_device_t *device)
 	aligned = 0;
     }
 
-    intel_glyph_cache_unmap (&device->intel);
-
     status = i965_exec (device, aligned);
 
     i965_stream_reset (&device->vertex);
@@ -652,6 +660,29 @@ i965_device_flush (i965_device_t *device)
     i965_device_reset (device);
 
     return status;
+}
+
+static cairo_surface_t *
+i965_surface_create_similar (void *abstract_other,
+			     cairo_content_t content,
+			     int width, int height)
+{
+    i965_surface_t *other;
+    cairo_format_t format;
+
+    if (width > 8192 || height > 8192)
+	return NULL;
+
+    other = abstract_other;
+    if (content == other->intel.drm.base.content)
+	format = other->intel.drm.format;
+    else
+	format = _cairo_format_from_content (content);
+
+    return i965_surface_create_internal ((cairo_drm_device_t *) other->intel.drm.base.device,
+					 format,
+					 width, height,
+					 I965_TILING_DEFAULT, TRUE);
 }
 
 static cairo_status_t
@@ -1462,7 +1493,7 @@ CLEANUP_BOXES:
 static const cairo_surface_backend_t i965_surface_backend = {
     CAIRO_SURFACE_TYPE_DRM,
 
-    _cairo_drm_surface_create_similar,
+    i965_surface_create_similar,
     i965_surface_finish,
     intel_surface_acquire_source_image,
     intel_surface_release_source_image,
@@ -1494,10 +1525,12 @@ static const cairo_surface_backend_t i965_surface_backend = {
 
 static void
 i965_surface_init (i965_surface_t *surface,
-	           cairo_content_t content,
-		   cairo_drm_device_t *device)
+		   cairo_drm_device_t *device,
+	           cairo_format_t format,
+		   int width, int height)
 {
-    intel_surface_init (&surface->intel, &i965_surface_backend, device, content);
+    intel_surface_init (&surface->intel, &i965_surface_backend, device,
+			format, width, height);
     surface->stream = 0;
 }
 
@@ -1523,7 +1556,7 @@ i965_tiling_height (uint32_t tiling, int height)
 
 cairo_surface_t *
 i965_surface_create_internal (cairo_drm_device_t *base_dev,
-		              cairo_content_t content,
+		              cairo_format_t format,
 			      int width, int height,
 			      uint32_t tiling,
 			      cairo_bool_t gpu_target)
@@ -1535,47 +1568,36 @@ i965_surface_create_internal (cairo_drm_device_t *base_dev,
     if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    i965_surface_init (surface, content, base_dev);
+    i965_surface_init (surface, base_dev, format, width, height);
 
     if (width && height) {
-	uint32_t size;
-
-	surface->intel.drm.width  = width;
-	surface->intel.drm.height = height;
+	uint32_t size, stride;
+	intel_bo_t *bo;
 
 	width = (width + 3) & -4;
-	surface->intel.drm.stride = cairo_format_stride_for_width (surface->intel.drm.format,
-							      width);
-	surface->intel.drm.stride = (surface->intel.drm.stride + 63) & ~63;
-
-#if 0
-	/* check for tiny surfaces for which tiling is irrelevant */
-	if (height * surface->intel.drm.stride < 4096)
-	    tiling = I915_TILING_NONE;
-#endif
-	surface->intel.drm.stride = i965_tiling_stride (tiling,
-							surface->intel.drm.stride);
+	stride = cairo_format_stride_for_width (surface->intel.drm.format, width);
+	stride = (stride + 63) & ~63;
+	stride = i965_tiling_stride (tiling, stride);
+	surface->intel.drm.stride = stride;
 
 	height = i965_tiling_height (tiling, height);
 	assert (height <= I965_MAX_SIZE);
 
-	size = surface->intel.drm.stride * height;
-	if (tiling != I915_TILING_NONE)
-	    size = (size + 4095) & -4096;
-
-	surface->intel.drm.bo = &intel_bo_create (to_intel_device (&base_dev->base),
-						  size, gpu_target)->base;
-	if (surface->intel.drm.bo == NULL) {
+	size = stride * height;
+	bo = intel_bo_create (to_intel_device (&base_dev->base),
+			      size, size,
+			      gpu_target, tiling, stride);
+	if (bo == NULL) {
 	    status_ignored = _cairo_drm_surface_finish (&surface->intel.drm);
 	    free (surface);
 	    return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 	}
 
-	intel_bo_set_tiling (to_intel_device (&base_dev->base),
-			     to_intel_bo (surface->intel.drm.bo),
-			     tiling, surface->intel.drm.stride);
+	bo->tiling = tiling;
+	bo->stride = stride;
+	surface->intel.drm.bo = &bo->base;
 
-	assert (surface->intel.drm.bo->size >= (size_t) surface->intel.drm.stride*height);
+	assert (bo->base.size >= (size_t) stride*height);
     }
 
     return &surface->intel.drm.base;
@@ -1583,9 +1605,21 @@ i965_surface_create_internal (cairo_drm_device_t *base_dev,
 
 static cairo_surface_t *
 i965_surface_create (cairo_drm_device_t *device,
-		     cairo_content_t content, int width, int height)
+		     cairo_format_t format, int width, int height)
 {
-    return i965_surface_create_internal (device, content, width, height,
+    switch (format) {
+    case CAIRO_FORMAT_ARGB32:
+    case CAIRO_FORMAT_RGB16_565:
+    case CAIRO_FORMAT_RGB24:
+    case CAIRO_FORMAT_A8:
+	break;
+    case CAIRO_FORMAT_INVALID:
+    default:
+    case CAIRO_FORMAT_A1:
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
+    }
+
+    return i965_surface_create_internal (device, format, width, height,
 	                                 I965_TILING_DEFAULT, TRUE);
 }
 
@@ -1597,7 +1631,6 @@ i965_surface_create_for_name (cairo_drm_device_t *base_dev,
 {
     i965_device_t *device;
     i965_surface_t *surface;
-    cairo_content_t content;
     cairo_status_t status_ignored;
     int min_stride;
 
@@ -1610,14 +1643,9 @@ i965_surface_create_for_name (cairo_drm_device_t *base_dev,
 
     switch (format) {
     case CAIRO_FORMAT_ARGB32:
-	content = CAIRO_CONTENT_COLOR_ALPHA;
-	break;
     case CAIRO_FORMAT_RGB16_565:
     case CAIRO_FORMAT_RGB24:
-	content = CAIRO_CONTENT_COLOR;
-	break;
     case CAIRO_FORMAT_A8:
-	content = CAIRO_CONTENT_ALPHA;
 	break;
     case CAIRO_FORMAT_INVALID:
     default:
@@ -1629,7 +1657,7 @@ i965_surface_create_for_name (cairo_drm_device_t *base_dev,
     if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    i965_surface_init (surface, content, base_dev);
+    i965_surface_init (surface, base_dev, format, width, height);
 
     device = (i965_device_t *) base_dev;
     surface->intel.drm.bo = &intel_bo_create_for_name (&device->intel, name)->base;
@@ -1639,8 +1667,6 @@ i965_surface_create_for_name (cairo_drm_device_t *base_dev,
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
 
-    surface->intel.drm.width = width;
-    surface->intel.drm.height = height;
     surface->intel.drm.stride = stride;
 
     return &surface->intel.drm.base;
