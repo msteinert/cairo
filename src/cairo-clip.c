@@ -1036,7 +1036,9 @@ _cairo_clip_path_get_surface (cairo_clip_path_t *clip_path,
 	{
 	    /* a simple box only affects the extents */
 	}
-	else if (prev->path.is_rectilinear)
+	else if (prev->path.is_rectilinear ||
+		prev->surface == NULL ||
+		prev->surface->backend != target->backend)
 	{
 	    if (need_translate) {
 		_cairo_path_fixed_translate (&prev->path,
