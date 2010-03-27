@@ -165,6 +165,7 @@ typedef struct _cairo_boilerplate_target {
     cairo_boilerplate_write_to_png_t		 write_to_png;
     cairo_boilerplate_cleanup_t			 cleanup;
     cairo_boilerplate_wait_t			 synchronize;
+    cairo_bool_t				 is_measurable;
     cairo_bool_t				 is_vector;
     cairo_bool_t				 is_recording;
 } cairo_boilerplate_target_t;

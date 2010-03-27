@@ -76,7 +76,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	NULL,
-	_cairo_boilerplate_drm_synchronize
+	_cairo_boilerplate_drm_synchronize,
+	TRUE, FALSE, FALSE
     },
     {
 	"drm", "drm", NULL, NULL,
@@ -87,7 +88,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	NULL,
-	_cairo_boilerplate_drm_synchronize
+	_cairo_boilerplate_drm_synchronize,
+	FALSE, FALSE, FALSE
     },
 };
 CAIRO_BOILERPLATE (drm, targets)

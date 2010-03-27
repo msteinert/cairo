@@ -216,7 +216,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
-	_cairo_boilerplate_directfb_cleanup
+	_cairo_boilerplate_directfb_cleanup,
+	NULL, TRUE, FALSE, FALSE
     },
     {
 	"directfb-bitmap", "directfb", NULL, NULL,
@@ -226,7 +227,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
-	_cairo_boilerplate_directfb_cleanup
+	_cairo_boilerplate_directfb_cleanup,
+	NULL, FALSE, FALSE, FALSE
     },
 };
 CAIRO_BOILERPLATE (directfb, targets);

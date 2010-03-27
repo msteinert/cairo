@@ -37,7 +37,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_skia_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
-	cairo_surface_write_to_png
+	cairo_surface_write_to_png,
+	NULL, NULL, TRUE, FALSE, FALSE
     },
     {
 	"skia", "skia", NULL, NULL,
@@ -46,7 +47,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_skia_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
-	cairo_surface_write_to_png
+	cairo_surface_write_to_png,
+	NULL, NULL, FALSE, FALSE, FALSE
     },
 };
 CAIRO_BOILERPLATE (skia, targets)

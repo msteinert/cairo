@@ -332,7 +332,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_gl_cleanup,
-	_cairo_boilerplate_gl_synchronize
+	_cairo_boilerplate_gl_synchronize,
+	TRUE, FALSE, FALSE
     },
     {
 	"gl", "gl", NULL, NULL,
@@ -343,7 +344,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_gl_cleanup,
-	_cairo_boilerplate_gl_synchronize
+	_cairo_boilerplate_gl_synchronize,
+	FALSE, FALSE, FALSE
     },
     {
 	"gl-window", "gl", NULL, NULL,
@@ -355,7 +357,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_gl_cleanup,
-	_cairo_boilerplate_gl_synchronize
+	_cairo_boilerplate_gl_synchronize,
+	FALSE, FALSE, FALSE
     },
 #if CAIRO_HAS_EGL_FUNCTIONS
     {
@@ -367,7 +370,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_egl_cleanup,
-	_cairo_boilerplate_egl_synchronize
+	_cairo_boilerplate_egl_synchronize,
+	TRUE, FALSE, FALSE
     },
 #endif
 };

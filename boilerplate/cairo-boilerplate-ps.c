@@ -306,7 +306,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_ps_get_image_surface,
 	_cairo_boilerplate_ps_surface_write_to_png,
 	_cairo_boilerplate_ps_cleanup,
-	NULL, TRUE, TRUE
+	NULL, FALSE, TRUE, TRUE
     },
     {
 	"ps2", "ps", ".ps", NULL,
@@ -318,7 +318,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_ps_get_image_surface,
 	_cairo_boilerplate_ps_surface_write_to_png,
 	_cairo_boilerplate_ps_cleanup,
-	NULL, TRUE, TRUE
+	NULL, FALSE, TRUE, TRUE
     },
     {
 	"ps3", "ps", ".ps", NULL,
@@ -331,7 +331,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_ps_get_image_surface,
 	_cairo_boilerplate_ps_surface_write_to_png,
 	_cairo_boilerplate_ps_cleanup,
-	NULL, TRUE, TRUE
+	NULL, FALSE, TRUE, TRUE
     },
     {
 	"ps3", "ps", ".ps", NULL,
@@ -343,7 +343,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_ps_get_image_surface,
 	_cairo_boilerplate_ps_surface_write_to_png,
 	_cairo_boilerplate_ps_cleanup,
-	NULL, TRUE, TRUE
+	NULL, FALSE, TRUE, TRUE
     },
 #endif
 };

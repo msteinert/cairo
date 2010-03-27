@@ -353,7 +353,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_win32_printing_get_image_surface,
 	_cairo_boilerplate_win32_printing_surface_write_to_png,
 	_cairo_boilerplate_win32_printing_cleanup,
-	NULL, TRUE, TRUE
+	NULL, FALSE, TRUE, TRUE
     },
     {
 	"win32-printing", "win32", ".ps", NULL,
@@ -364,7 +364,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_win32_printing_get_image_surface,
 	_cairo_boilerplate_win32_printing_surface_write_to_png,
 	_cairo_boilerplate_win32_printing_cleanup,
-	NULL, TRUE, TRUE
+	NULL, FALSE, TRUE, TRUE
     },
 #endif
 };

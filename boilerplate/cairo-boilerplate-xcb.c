@@ -601,7 +601,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xcb_cleanup,
-	_cairo_boilerplate_xcb_synchronize
+	_cairo_boilerplate_xcb_synchronize,
+	TRUE, FALSE, FALSE
     },
     {
 	"xcb", "xlib", NULL, NULL,
@@ -613,7 +614,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xcb_cleanup,
-	_cairo_boilerplate_xcb_synchronize
+	_cairo_boilerplate_xcb_synchronize,
+	FALSE, FALSE, FALSE
     },
     {
 	"xcb-window", "xlib", NULL, NULL,
@@ -625,7 +627,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xcb_cleanup,
-	_cairo_boilerplate_xcb_synchronize
+	_cairo_boilerplate_xcb_synchronize,
+	FALSE, FALSE, FALSE
     },
     {
 	"xcb-window&", "xlib", NULL, NULL,
@@ -637,7 +640,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xcb_cleanup,
-	_cairo_boilerplate_xcb_synchronize
+	_cairo_boilerplate_xcb_synchronize,
+	FALSE, FALSE, FALSE
     },
     {
 	"xcb-render-0.0", "xlib-fallback", NULL, NULL,
@@ -649,7 +653,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xcb_cleanup,
-	_cairo_boilerplate_xcb_synchronize
+	_cairo_boilerplate_xcb_synchronize,
+	TRUE, FALSE, FALSE
     },
     {
 	"xcb-render-0.0", "xlib-fallback", NULL, NULL,
@@ -661,7 +666,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xcb_cleanup,
-	_cairo_boilerplate_xcb_synchronize
+	_cairo_boilerplate_xcb_synchronize,
+	FALSE, FALSE, FALSE
     },
     {
 	"xcb-fallback", "xlib-fallback", NULL, NULL,
@@ -673,7 +679,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xcb_cleanup,
-	_cairo_boilerplate_xcb_synchronize
+	_cairo_boilerplate_xcb_synchronize,
+	FALSE, FALSE, FALSE
     },
 };
 CAIRO_BOILERPLATE (xcb, targets)

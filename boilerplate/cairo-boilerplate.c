@@ -149,6 +149,23 @@ _cairo_boilerplate_image_create_surface (const char			 *name,
     return cairo_image_surface_create (format, ceil (width), ceil (height));
 }
 
+static cairo_surface_t *
+_cairo_boilerplate_image16_create_surface (const char			 *name,
+					   cairo_content_t		  content,
+					   double			  width,
+					   double			  height,
+					   double			  max_width,
+					   double			  max_height,
+					   cairo_boilerplate_mode_t	  mode,
+					   int                            id,
+					   void				**closure)
+{
+    *closure = NULL;
+
+    /* XXX force CAIRO_CONTENT_COLOR */
+    return cairo_image_surface_create (CAIRO_FORMAT_RGB16_565, ceil (width), ceil (height));
+}
+
 #if CAIRO_HAS_RECORDING_SURFACE
 static cairo_surface_t *
 _cairo_boilerplate_recording_create_surface (const char		     *name,
@@ -301,7 +318,9 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	NULL, _cairo_boilerplate_image_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
-	cairo_surface_write_to_png
+	cairo_surface_write_to_png,
+	NULL, NULL,
+	TRUE, FALSE, FALSE
     },
     {
 	"image", "image", NULL, NULL,
@@ -309,7 +328,19 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	NULL, _cairo_boilerplate_image_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
-	cairo_surface_write_to_png
+	cairo_surface_write_to_png,
+	NULL, NULL,
+	FALSE, FALSE, FALSE
+    },
+    {
+	"image16", "image", NULL, NULL,
+	CAIRO_SURFACE_TYPE_IMAGE, CAIRO_CONTENT_COLOR, 0,
+	NULL, _cairo_boilerplate_image16_create_surface,
+	NULL, NULL,
+	_cairo_boilerplate_get_image_surface,
+	cairo_surface_write_to_png,
+	NULL, NULL,
+	TRUE, FALSE, FALSE
     },
 #if CAIRO_HAS_RECORDING_SURFACE
     {
@@ -321,7 +352,7 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	NULL, NULL,
-	FALSE, TRUE
+	FALSE, FALSE, TRUE
     },
     {
 	"recording", "image", NULL, NULL,
@@ -332,7 +363,7 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	NULL, NULL,
-	FALSE, TRUE
+	FALSE, FALSE, TRUE
     },
 #endif
 };

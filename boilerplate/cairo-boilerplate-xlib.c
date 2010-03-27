@@ -445,7 +445,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xlib_cleanup,
-	_cairo_boilerplate_xlib_synchronize
+	_cairo_boilerplate_xlib_synchronize,
+	TRUE, FALSE, FALSE
     },
     {
 	"xlib", "xlib", NULL, "xlib-reference",
@@ -456,7 +457,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xlib_cleanup,
-	_cairo_boilerplate_xlib_synchronize
+	_cairo_boilerplate_xlib_synchronize,
+	FALSE, FALSE, FALSE
     },
     {
 	"xlib-reference", "xlib", NULL, NULL,
@@ -467,7 +469,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	NULL, /* get_image */
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xlib_cleanup,
-	_cairo_boilerplate_xlib_synchronize
+	_cairo_boilerplate_xlib_synchronize,
+	FALSE, FALSE, FALSE
     },
 #endif
 #if CAIRO_HAS_XLIB_SURFACE
@@ -482,7 +485,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xlib_cleanup,
-	_cairo_boilerplate_xlib_synchronize
+	_cairo_boilerplate_xlib_synchronize,
+	FALSE, FALSE, FALSE
     },
 #endif
 };

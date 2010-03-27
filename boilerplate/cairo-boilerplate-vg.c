@@ -311,7 +311,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_vg_cleanup_glx,
-	_cairo_boilerplate_vg_synchronize
+	_cairo_boilerplate_vg_synchronize,
+	TRUE, FALSE, FALSE
     },
     {
 	"vg-glx", "vg", NULL, NULL,
@@ -322,7 +323,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_vg_cleanup_glx,
-	_cairo_boilerplate_vg_synchronize
+	_cairo_boilerplate_vg_synchronize,
+	FALSE, FALSE, FALSE
     },
 #endif
 #if CAIRO_HAS_EGL_FUNCTIONS
@@ -335,7 +337,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_vg_cleanup_egl,
-	_cairo_boilerplate_vg_synchronize
+	_cairo_boilerplate_vg_synchronize,
+	TRUE, FALSE, FALSE
     },
     {
 	"vg-egl", "vg", NULL, NULL,
@@ -346,7 +349,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_vg_cleanup_egl,
-	_cairo_boilerplate_vg_synchronize
+	_cairo_boilerplate_vg_synchronize,
+	FALSE, FALSE, FALSE
     },
 #endif
 };

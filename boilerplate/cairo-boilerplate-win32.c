@@ -56,7 +56,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_win32_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
-	cairo_surface_write_to_png
+	cairo_surface_write_to_png,
+	NULL, NULL, TRUE, FALSE, FALSE
     },
     /* Testing the win32 surface isn't interesting, since for
      * ARGB images it just chains to the image backend
@@ -68,7 +69,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_win32_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
-	cairo_surface_write_to_png
+	cairo_surface_write_to_png,
+	NULL, NULL, FALSE, FALSE, FALSE
     },
 };
 CAIRO_BOILERPLATE (win32, targets)

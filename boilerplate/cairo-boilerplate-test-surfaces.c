@@ -237,7 +237,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_test_fallback_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
-	cairo_surface_write_to_png
+	cairo_surface_write_to_png,
+	NULL, NULL, FALSE, FALSE, FALSE
     },
     {
 	"test-fallback", "image", NULL, NULL,
@@ -247,7 +248,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_test_fallback_create_surface,
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
-	cairo_surface_write_to_png
+	cairo_surface_write_to_png,
+	NULL, NULL, FALSE, FALSE, FALSE
     },
     {
 	"test-fallback16", "image", NULL, NULL,
@@ -257,7 +259,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_test_fallback16_create_surface,
 	NULL, NULL,
 	NULL, /* _cairo_boilerplate_get_image_surface, */
-	cairo_surface_write_to_png
+	cairo_surface_write_to_png,
+	NULL, NULL, FALSE, FALSE, FALSE
     },
     {
 	"test-fallback16", "image", NULL, NULL,
@@ -267,7 +270,8 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_test_fallback16_create_surface,
 	NULL, NULL,
 	NULL, /* _cairo_boilerplate_get_image_surface, */
-	cairo_surface_write_to_png
+	cairo_surface_write_to_png,
+	NULL, NULL, FALSE, FALSE, FALSE
     },
 #if CAIRO_HAS_TEST_PAGINATED_SURFACE
     {
@@ -280,8 +284,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_test_paginated_get_image_surface,
 	_cairo_boilerplate_test_paginated_surface_write_to_png,
 	_cairo_boilerplate_test_paginated_cleanup,
-	NULL,
-	FALSE, TRUE,
+	NULL, FALSE, TRUE, FALSE
     },
     {
 	"test-paginated", "image", NULL, NULL,
@@ -293,8 +296,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_test_paginated_get_image_surface,
 	_cairo_boilerplate_test_paginated_surface_write_to_png,
 	_cairo_boilerplate_test_paginated_cleanup,
-	NULL,
-	FALSE, TRUE
+	NULL, FALSE, TRUE, FALSE
     },
 #endif
 #if CAIRO_HAS_TEST_WRAPPING_SURFACE
@@ -307,6 +309,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
+	NULL, NULL, FALSE, FALSE, FALSE
     },
 #endif
 #if CAIRO_HAS_TEST_NULL_SURFACE
@@ -319,7 +322,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	NULL, NULL,
 	NULL, NULL, NULL,
 	NULL,
-	TRUE, FALSE
+	TRUE, TRUE, FALSE
     },
 #endif
 };

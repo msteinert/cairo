@@ -62,63 +62,6 @@ typedef struct _cairo_perf_case {
 
 const cairo_perf_case_t perf_cases[];
 
-/* Some targets just aren't that interesting for performance testing,
- * (not least because many of these surface types use a recording-surface
- * and as such defer the "real" rendering to later, so our timing
- * loops wouldn't count the real work, just the recording by the
- * recording-surface. */
-static cairo_bool_t
-target_is_measurable (const cairo_boilerplate_target_t *target)
-{
-    switch ((int) target->expected_type) {
-    case CAIRO_SURFACE_TYPE_IMAGE:
-	if (strcmp (target->name, "pdf") == 0 ||
-	    strcmp (target->name, "ps") == 0)
-	{
-	    return FALSE;
-	}
-	else
-	{
-	    return TRUE;
-	}
-    case CAIRO_SURFACE_TYPE_XLIB:
-	if (strcmp (target->name, "xlib-fallback") == 0 ||
-	    strcmp (target->name, "xlib-reference") == 0)
-	{
-	    return FALSE;
-	}
-	else
-	{
-	    return TRUE;
-	}
-    case CAIRO_SURFACE_TYPE_XCB:
-    case CAIRO_SURFACE_TYPE_GLITZ:
-    case CAIRO_SURFACE_TYPE_QUARTZ:
-    case CAIRO_SURFACE_TYPE_WIN32:
-    case CAIRO_SURFACE_TYPE_BEOS:
-    case CAIRO_SURFACE_TYPE_DIRECTFB:
-#if CAIRO_VERSION > CAIRO_VERSION_ENCODE(1,1,2)
-    case CAIRO_SURFACE_TYPE_OS2:
-#endif
-#if CAIRO_VERSION >= CAIRO_VERSION_ENCODE(1,9,4)
-    case CAIRO_SURFACE_TYPE_QT:
-#endif
-#if CAIRO_HAS_GL_SURFACE
-    case CAIRO_SURFACE_TYPE_GL:
-#endif
-#if CAIRO_HAS_DRM_SURFACE
-    case CAIRO_SURFACE_TYPE_DRM:
-#endif
-#if CAIRO_HAS_SKIA_SURFACE
-    case CAIRO_SURFACE_TYPE_SKIA:
-#endif
-	return TRUE;
-
-    default:
-	return FALSE;
-    }
-}
-
 static const char *
 _content_to_string (cairo_content_t content, cairo_bool_t similar)
 {
@@ -514,7 +457,7 @@ main (int argc, char *argv[])
     for (i = 0; i < perf.num_targets; i++) {
         const cairo_boilerplate_target_t *target = perf.targets[i];
 
-	if (! target_is_measurable (target))
+	if (! target->is_measurable)
 	    continue;
 
 	perf.target = target;
