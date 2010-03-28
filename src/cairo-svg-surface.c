@@ -206,17 +206,17 @@ cairo_svg_surface_create_for_stream (cairo_write_func_t		 write_func,
  * The SVG surface backend recognizes the following MIME types for the
  * data attached to a surface (see cairo_surface_set_mime_data()) when
  * it is used as a source pattern for drawing on this surface:
- * #CAIRO_MIME_TYPE_JPEG, #CAIRO_MIME_TYPE_PNG,
- * #CAIRO_MIME_TYPE_URI. If any of them is specified, the SVG backend
+ * %CAIRO_MIME_TYPE_JPEG, %CAIRO_MIME_TYPE_PNG,
+ * %CAIRO_MIME_TYPE_URI. If any of them is specified, the SVG backend
  * emits a href with the content of MIME data instead of a surface
  * snapshot (PNG, Base64-encoded) in the corresponding image tag.
  *
- * The unofficial MIME type #CAIRO_MIME_TYPE_URI is examined
+ * The unofficial MIME type %CAIRO_MIME_TYPE_URI is examined
  * first. If present, the URI is emitted as is: assuring the
  * correctness of URI is left to the client code.
  *
- * If #CAIRO_MIME_TYPE_URI is not present, but #CAIRO_MIME_TYPE_JPEG
- * or #CAIRO_MIME_TYPE_PNG is specified, the corresponding data is
+ * If %CAIRO_MIME_TYPE_URI is not present, but %CAIRO_MIME_TYPE_JPEG
+ * or %CAIRO_MIME_TYPE_PNG is specified, the corresponding data is
  * Base64-encoded and emitted.
  *
  * Return value: a pointer to the newly created surface. The caller

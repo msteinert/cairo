@@ -834,8 +834,8 @@ _cairo_mime_data_destroy (void *ptr)
  * @surface.  This approach tends to be faster and requires less
  * memory and disk space.
  *
- * The recognized MIME types are the following: #CAIRO_MIME_TYPE_JPEG,
- * #CAIRO_MIME_TYPE_PNG, #CAIRO_MIME_TYPE_JP2, #CAIRO_MIME_TYPE_URI.
+ * The recognized MIME types are the following: %CAIRO_MIME_TYPE_JPEG,
+ * %CAIRO_MIME_TYPE_PNG, %CAIRO_MIME_TYPE_JP2, %CAIRO_MIME_TYPE_URI.
  *
  * See corresponding backend surface docs for details about which MIME
  * types it can handle. Caution: the associated MIME data will be
