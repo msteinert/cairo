@@ -2148,6 +2148,7 @@ _cairo_scaled_font_show_glyphs (cairo_scaled_font_t	*scaled_font,
 	    case CAIRO_FORMAT_A1:
 		mask_format = glyph_surface->format;
 		break;
+	    case CAIRO_FORMAT_RGB16_565:
 	    case CAIRO_FORMAT_RGB24:
 	    case CAIRO_FORMAT_INVALID:
 	    default:

@@ -2073,6 +2073,8 @@ i965_get_card_format (cairo_format_t format)
 	return BRW_SURFACEFORMAT_B8G8R8A8_UNORM;
     case CAIRO_FORMAT_RGB24:
 	return BRW_SURFACEFORMAT_B8G8R8X8_UNORM;
+    case CAIRO_FORMAT_RGB16_565:
+	return BRW_SURFACEFORMAT_B5G6R5_UNORM;
     case CAIRO_FORMAT_A8:
 	return BRW_SURFACEFORMAT_A8_UNORM;
     case CAIRO_FORMAT_A1:
@@ -2090,6 +2092,8 @@ i965_get_dest_format (cairo_format_t format)
     case CAIRO_FORMAT_ARGB32:
     case CAIRO_FORMAT_RGB24:
         return BRW_SURFACEFORMAT_B8G8R8A8_UNORM;
+    case CAIRO_FORMAT_RGB16_565:
+        return BRW_SURFACEFORMAT_B5G6R5_UNORM;
     case CAIRO_FORMAT_A8:
         return BRW_SURFACEFORMAT_A8_UNORM;
     case CAIRO_FORMAT_A1:

@@ -620,6 +620,7 @@ compare_images (cairo_surface_t *a,
 	break;
 
     case CAIRO_FORMAT_INVALID:
+    case CAIRO_FORMAT_RGB16_565: /* XXX */
 	break;
     }
 

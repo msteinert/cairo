@@ -2840,6 +2840,9 @@ _image_read_raw (csi_file_t *src,
     case CAIRO_FORMAT_A8:
 	len = width * height;
 	break;
+    case CAIRO_FORMAT_RGB16_565:
+	len = 2 * width * height;
+	break;
     case CAIRO_FORMAT_RGB24:
 	len = 3 * width * height;
 	break;
@@ -2880,6 +2883,17 @@ _image_read_raw (csi_file_t *src,
 		for (x = width; x--; )
 		    row[x] = *--bp;
 		break;
+	    case CAIRO_FORMAT_RGB16_565:
+		for (x = width; x--; ) {
+#ifdef WORDS_BIGENDIAN
+		    row[2*x + 1] = *--bp;
+		    row[2*x + 0] = *--bp;
+#else
+		    row[2*x + 0] = *--bp;
+		    row[2*x + 1] = *--bp;
+#endif
+		}
+		break;
 	    case CAIRO_FORMAT_RGB24:
 		for (x = width; x--; ) {
 #ifdef WORDS_BIGENDIAN
@@ -2913,6 +2927,17 @@ _image_read_raw (csi_file_t *src,
 	case CAIRO_FORMAT_A8:
 	    for (x = width; x--; )
 		data[x] = *--bp;
+	    break;
+	case CAIRO_FORMAT_RGB16_565:
+	    for (x = width; x--; ) {
+#ifdef WORDS_BIGENDIAN
+		data[2*x + 1] = *--bp;
+		data[2*x + 0] = *--bp;
+#else
+		data[2*x + 0] = *--bp;
+		data[2*x + 1] = *--bp;
+#endif
+	    }
 	    break;
 	case CAIRO_FORMAT_RGB24:
 	    for (x = width; --x>1; ) {
@@ -2982,6 +3007,14 @@ _image_read_raw (csi_file_t *src,
 	    for (x = 0; x < len; x++) {
 		uint8_t byte = data[x];
 		data[x] = CSI_BITSWAP8_IF_LITTLE_ENDIAN (byte);
+	    }
+	    break;
+	case CAIRO_FORMAT_RGB16_565:
+	    {
+		uint32_t *rgba = (uint32_t *) data;
+		for (x = len/2; x--; rgba++) {
+		    *rgba = bswap_16 (*rgba);
+		}
 	    }
 	    break;
 	case CAIRO_FORMAT_ARGB32:
@@ -5221,6 +5254,7 @@ _similar (csi_t *ctx)
 	case CAIRO_FORMAT_ARGB32:
 	    content = CAIRO_CONTENT_COLOR_ALPHA;
 	    break;
+	case CAIRO_FORMAT_RGB16_565:
 	case CAIRO_FORMAT_RGB24:
 	    content = CAIRO_CONTENT_COLOR;
 	    break;
@@ -6140,6 +6174,7 @@ _integer_constants[] = {
 
     { "A1",			CAIRO_FORMAT_A1 },
     { "A8",			CAIRO_FORMAT_A8 },
+    { "RGB16_565",		CAIRO_FORMAT_RGB16_565 },
     { "RGB24",			CAIRO_FORMAT_RGB24 },
     { "ARGB32",			CAIRO_FORMAT_ARGB32 },
     { "INVALID",		CAIRO_FORMAT_INVALID },

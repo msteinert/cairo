@@ -714,6 +714,11 @@ intel_bo_put_image (intel_device_t *dev,
 	data   += 4 * src_x;
 	size    = 4 * width;
 	break;
+    case CAIRO_FORMAT_RGB16_565:
+	offset += 2 * dst_x;
+	data   += 2 * src_x;
+	size    = 2 * width;
+	break;
     case CAIRO_FORMAT_A8:
 	offset += dst_x;
 	data   += src_x;
@@ -1029,7 +1034,6 @@ intel_glyph_cache_add_glyph (intel_device_t *device,
 	}
 	break;
 
-    case CAIRO_FORMAT_RGB24:
     case CAIRO_FORMAT_ARGB32:
 	dst  += 4*node->x;
 	width = 4*glyph_surface->width;
@@ -1040,6 +1044,8 @@ intel_glyph_cache_add_glyph (intel_device_t *device,
 	}
 	break;
     default:
+    case CAIRO_FORMAT_RGB16_565:
+    case CAIRO_FORMAT_RGB24:
     case CAIRO_FORMAT_INVALID:
 	ASSERT_NOT_REACHED;
 	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT);
@@ -1101,7 +1107,6 @@ intel_get_glyph_cache (intel_device_t *device,
 
     switch (format) {
     case CAIRO_FORMAT_ARGB32:
-    case CAIRO_FORMAT_RGB24:
 	cache = &device->glyph_cache[0];
 	format = CAIRO_FORMAT_ARGB32;
 	break;
@@ -1111,6 +1116,8 @@ intel_get_glyph_cache (intel_device_t *device,
 	format = CAIRO_FORMAT_A8;
 	break;
     default:
+    case CAIRO_FORMAT_RGB16_565:
+    case CAIRO_FORMAT_RGB24:
     case CAIRO_FORMAT_INVALID:
 	ASSERT_NOT_REACHED;
 	return _cairo_error (CAIRO_STATUS_INVALID_FORMAT);
@@ -1227,6 +1234,7 @@ intel_buffer_cache_init (intel_buffer_cache_t *cache,
 
     switch (format) {
     case CAIRO_FORMAT_A1:
+    case CAIRO_FORMAT_RGB16_565:
     case CAIRO_FORMAT_RGB24:
     case CAIRO_FORMAT_INVALID:
 	ASSERT_NOT_REACHED;

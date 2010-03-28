@@ -828,6 +828,7 @@ _format_to_string (cairo_format_t format)
     switch (format) {
     case CAIRO_FORMAT_ARGB32:  return "ARGB32";
     case CAIRO_FORMAT_RGB24:   return "RGB24";
+    case CAIRO_FORMAT_RGB16_565: return "RGB16_565";
     case CAIRO_FORMAT_A8:      return "A8";
     case CAIRO_FORMAT_A1:      return "A1";
     case CAIRO_FORMAT_INVALID: return "INVALID";
@@ -1095,6 +1096,17 @@ _write_image_surface (cairo_output_stream_t *output,
 	    data += stride;
 	}
 	break;
+    case CAIRO_FORMAT_RGB16_565:
+	for (row = image->height; row--; ) {
+	    uint16_t *src = (uint16_t *) data;
+	    uint16_t *dst = (uint16_t *) rowdata;
+	    int col;
+	    for (col = 0; col < width; col++)
+		dst[col] = bswap_16 (src[col]);
+	    _cairo_output_stream_write (output, rowdata, 2*width);
+	    data += stride;
+	}
+	break;
     case CAIRO_FORMAT_RGB24:
 	for (row = image->height; row--; ) {
 	    uint8_t *src = data;
@@ -1234,6 +1246,9 @@ _emit_image_surface (cairo_script_surface_t *surface,
 	    break;
 	case CAIRO_FORMAT_A8:
 	    len = clone->width;
+	    break;
+	case CAIRO_FORMAT_RGB16_565:
+	    len = clone->width * 2;
 	    break;
 	case CAIRO_FORMAT_RGB24:
 	    len = clone->width * 3;

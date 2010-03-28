@@ -1600,6 +1600,7 @@ i915_surface_create_for_name (cairo_drm_device_t *base_dev,
     case CAIRO_FORMAT_ARGB32:
 	content = CAIRO_CONTENT_COLOR_ALPHA;
 	break;
+    case CAIRO_FORMAT_RGB16_565:
     case CAIRO_FORMAT_RGB24:
 	content = CAIRO_CONTENT_COLOR;
 	break;
@@ -1655,6 +1656,7 @@ i915_buffer_cache_init (intel_buffer_cache_t *cache,
     case CAIRO_FORMAT_INVALID:
     case CAIRO_FORMAT_A1:
     case CAIRO_FORMAT_RGB24:
+    case CAIRO_FORMAT_RGB16_565:
 	ASSERT_NOT_REACHED;
     case CAIRO_FORMAT_ARGB32:
 	cache->buffer.map0 = MAPSURF_32BIT | MT_32BIT_ARGB8888;
@@ -1734,6 +1736,7 @@ i915_surface_create_from_cacheable_image_internal (i915_device_t *device,
     switch (image->format) {
     case CAIRO_FORMAT_ARGB32:
     case CAIRO_FORMAT_RGB24:
+    case CAIRO_FORMAT_RGB16_565:
 	caches = &device->image_caches[0];
 	format = CAIRO_FORMAT_ARGB32;
 	bpp = 4;

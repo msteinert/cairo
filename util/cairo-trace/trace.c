@@ -1442,6 +1442,7 @@ _format_to_string (cairo_format_t format)
 	f(INVALID);
 	f(ARGB32);
 	f(RGB24);
+	f(RGB16_565);
 	f(A8);
 	f(A1);
     }
@@ -1567,9 +1568,10 @@ _emit_image (cairo_surface_t *image,
     }
 
     switch (format) {
-    case CAIRO_FORMAT_A1:     len = (width + 7)/8; break;
-    case CAIRO_FORMAT_A8:     len =  width; break;
-    case CAIRO_FORMAT_RGB24:  len = 3*width; break;
+    case CAIRO_FORMAT_A1:        len = (width + 7)/8; break;
+    case CAIRO_FORMAT_A8:        len =  width; break;
+    case CAIRO_FORMAT_RGB16_565: len = 2*width; break;
+    case CAIRO_FORMAT_RGB24:     len = 3*width; break;
     default:
     case CAIRO_FORMAT_INVALID:
     case CAIRO_FORMAT_ARGB32: len = 4*width; break;
@@ -1589,6 +1591,12 @@ _emit_image (cairo_surface_t *image,
     case CAIRO_FORMAT_A8:
 	for (row = height; row--; ) {
 	    _write_data (&stream, data, width);
+	    data += stride;
+	}
+	break;
+    case CAIRO_FORMAT_RGB16_565:
+	for (row = height; row--; ) {
+	    _write_data (&stream, data, 2*width);
 	    data += stride;
 	}
 	break;
@@ -1634,6 +1642,17 @@ _emit_image (cairo_surface_t *image,
     case CAIRO_FORMAT_A8:
 	for (row = height; row--; ) {
 	    _write_data (&stream, rowdata, width);
+	    data += stride;
+	}
+	break;
+    case CAIRO_FORMAT_RGB16_565: /* XXX endianness */
+	for (row = height; row--; ) {
+	    uint16_t *src = data;
+	    uint16_t *dst = (uint16_t *)rowdata;
+	    int col;
+	    for (col = 0; col < width; col++)
+		dst[col] = bswap_16 (src[col]);
+	    _write_data (&stream, rowdata, 2*width);
 	    data += stride;
 	}
 	break;

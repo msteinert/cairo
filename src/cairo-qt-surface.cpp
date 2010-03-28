@@ -306,6 +306,8 @@ _qimage_format_from_cairo_format (cairo_format_t fmt)
         return QImage::Format_ARGB32_Premultiplied;
     case CAIRO_FORMAT_RGB24:
         return QImage::Format_RGB32;
+    case CAIRO_FORMAT_RGB16_565:
+        return QImage::Format_RGB16;
     case CAIRO_FORMAT_A8:
         return QImage::Format_Indexed8; // XXX not quite
     case CAIRO_FORMAT_A1:

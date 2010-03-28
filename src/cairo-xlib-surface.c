@@ -3752,7 +3752,9 @@ _cairo_xlib_scaled_font_get_glyphset_info_for_format (cairo_scaled_font_t *scale
     switch (format) {
     default:
     case CAIRO_FORMAT_INVALID:
+    case CAIRO_FORMAT_RGB16_565:
     case CAIRO_FORMAT_RGB24:
+	ASSERT_NOT_REACHED;
     case CAIRO_FORMAT_ARGB32: glyphset_index = GLYPHSET_INDEX_ARGB32; break;
     case CAIRO_FORMAT_A8:     glyphset_index = GLYPHSET_INDEX_A8;     break;
     case CAIRO_FORMAT_A1:     glyphset_index = GLYPHSET_INDEX_A1;     break;
@@ -3814,7 +3816,9 @@ _cairo_xlib_scaled_font_get_glyphset_info_for_pending_free_glyph (
 	switch (surface->format) {
 	default:
 	case CAIRO_FORMAT_INVALID:
+	case CAIRO_FORMAT_RGB16_565:
 	case CAIRO_FORMAT_RGB24:
+	    ASSERT_NOT_REACHED;
 	case CAIRO_FORMAT_ARGB32: i = GLYPHSET_INDEX_ARGB32; break;
 	case CAIRO_FORMAT_A8:     i = GLYPHSET_INDEX_A8;     break;
 	case CAIRO_FORMAT_A1:     i = GLYPHSET_INDEX_A1;     break;
@@ -4002,6 +4006,7 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 	    data = (uint8_t *) new;
 	}
 	break;
+    case CAIRO_FORMAT_RGB16_565:
     case CAIRO_FORMAT_RGB24:
     case CAIRO_FORMAT_INVALID:
     default:

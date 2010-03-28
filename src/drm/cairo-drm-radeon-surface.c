@@ -370,6 +370,7 @@ radeon_surface_create_for_name (cairo_drm_device_t *device,
     default:
     case CAIRO_FORMAT_INVALID:
     case CAIRO_FORMAT_A1:
+    case CAIRO_FORMAT_RGB16_565:
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
     case CAIRO_FORMAT_ARGB32:
 	content = CAIRO_CONTENT_COLOR_ALPHA;

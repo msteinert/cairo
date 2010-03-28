@@ -356,6 +356,7 @@ intel_surface_create_for_name (cairo_drm_device_t *device,
     case CAIRO_FORMAT_ARGB32:
 	content = CAIRO_CONTENT_COLOR_ALPHA;
 	break;
+    case CAIRO_FORMAT_RGB16_565:
     case CAIRO_FORMAT_RGB24:
 	content = CAIRO_CONTENT_COLOR;
 	break;
