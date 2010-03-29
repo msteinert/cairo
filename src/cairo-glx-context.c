@@ -209,6 +209,36 @@ cairo_glx_device_create (Display *dpy, GLXContext gl_ctx)
     return &ctx->base.base;
 }
 
+Display *
+cairo_glx_device_get_display (cairo_device_t *device)
+{
+    cairo_glx_context_t *ctx;
+
+    if (device->backend->type != CAIRO_DEVICE_TYPE_GL) {
+	_cairo_error_throw (CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
+	return NULL;
+    }
+
+    ctx = (cairo_glx_context_t *) device;
+
+    return ctx->display;
+}
+
+GLXContext
+cairo_glx_device_get_context (cairo_device_t *device)
+{
+    cairo_glx_context_t *ctx;
+
+    if (device->backend->type != CAIRO_DEVICE_TYPE_GL) {
+	_cairo_error_throw (CAIRO_STATUS_DEVICE_TYPE_MISMATCH);
+	return NULL;
+    }
+
+    ctx = (cairo_glx_context_t *) device;
+
+    return ctx->context;
+}
+
 cairo_surface_t *
 cairo_gl_surface_create_for_window (cairo_device_t	*device,
 				    Window		 win,

@@ -66,6 +66,12 @@ cairo_gl_surface_glfinish (cairo_surface_t *surface);
 cairo_public cairo_device_t *
 cairo_glx_device_create (Display *dpy, GLXContext gl_ctx);
 
+cairo_public Display *
+cairo_glx_device_get_display (cairo_device_t *device);
+
+cairo_public GLXContext
+cairo_glx_device_get_context (cairo_device_t *device);
+
 cairo_public cairo_surface_t *
 cairo_gl_surface_create_for_window (cairo_device_t *device,
 				    Window win,
