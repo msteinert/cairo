@@ -2498,7 +2498,11 @@ _cairo_scaled_glyph_set_surface (cairo_scaled_glyph_t *scaled_glyph,
     /* sanity check the backend glyph contents */
     _cairo_debug_check_image_surface_is_defined (&surface->base);
     scaled_glyph->surface = surface;
-    scaled_glyph->has_info |= CAIRO_SCALED_GLYPH_INFO_SURFACE;
+
+    if (surface != NULL)
+	scaled_glyph->has_info |= CAIRO_SCALED_GLYPH_INFO_SURFACE;
+    else
+	scaled_glyph->has_info &= ~CAIRO_SCALED_GLYPH_INFO_SURFACE;
 }
 
 void
@@ -2508,8 +2512,13 @@ _cairo_scaled_glyph_set_path (cairo_scaled_glyph_t *scaled_glyph,
 {
     if (scaled_glyph->path != NULL)
 	_cairo_path_fixed_destroy (scaled_glyph->path);
+
     scaled_glyph->path = path;
-    scaled_glyph->has_info |= CAIRO_SCALED_GLYPH_INFO_PATH;
+
+    if (path != NULL)
+	scaled_glyph->has_info |= CAIRO_SCALED_GLYPH_INFO_PATH;
+    else
+	scaled_glyph->has_info &= ~CAIRO_SCALED_GLYPH_INFO_PATH;
 }
 
 void
@@ -2523,7 +2532,11 @@ _cairo_scaled_glyph_set_recording_surface (cairo_scaled_glyph_t *scaled_glyph,
     }
 
     scaled_glyph->recording_surface = recording_surface;
-    scaled_glyph->has_info |= CAIRO_SCALED_GLYPH_INFO_RECORDING_SURFACE;
+
+    if (recording_surface != NULL)
+	scaled_glyph->has_info |= CAIRO_SCALED_GLYPH_INFO_RECORDING_SURFACE;
+    else
+	scaled_glyph->has_info &= ~CAIRO_SCALED_GLYPH_INFO_RECORDING_SURFACE;
 }
 
 static cairo_bool_t
