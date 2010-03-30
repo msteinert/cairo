@@ -3603,14 +3603,22 @@ _can_composite_glyphs (cairo_xcb_surface_t *dst,
 		       cairo_glyph_t *glyphs,
 		       int num_glyphs)
 {
+    unsigned long glyph_cache[64];
     cairo_status_t status;
     const int max_glyph_size = dst->connection->maximum_request_length - 64;
     int i;
+
+    memset (glyph_cache, 0, sizeof (glyph_cache));
 
     /* first scan for oversized glyphs, and fallback in that case */
     for (i = 0; i < num_glyphs; i++) {
 	cairo_scaled_glyph_t *scaled_glyph;
 	int width, height, len;
+	int g;
+
+	g = glyphs[i].index % ARRAY_LENGTH (glyph_cache);
+	if (glyph_cache[g] == glyphs[i].index)
+	    continue;
 
 	status = _cairo_scaled_glyph_lookup (scaled_font,
 					     glyphs[i].index,
@@ -3629,6 +3637,8 @@ _can_composite_glyphs (cairo_xcb_surface_t *dst,
 	len = CAIRO_STRIDE_FOR_WIDTH_BPP (width, 32) * height;
 	if (len >= max_glyph_size)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
+
+	glyph_cache[g] = glyphs[i].index;
     }
 
     return CAIRO_STATUS_SUCCESS;
