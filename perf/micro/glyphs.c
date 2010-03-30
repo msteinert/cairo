@@ -28,17 +28,29 @@
 #include "cairo-perf.h"
 
 static cairo_perf_ticks_t
-do_glyphs (cairo_t *cr, int width, int height, int loops)
+do_glyphs (double font_size,
+	   cairo_antialias_t antialias,
+	   cairo_t *cr, int width, int height, int loops)
 {
     const char text[] = "the jay, pig, fox, zebra and my wolves quack";
     cairo_scaled_font_t *scaled_font;
     cairo_glyph_t *glyphs = NULL, *glyphs_copy;
     cairo_text_extents_t extents;
+    cairo_font_options_t *options;
     cairo_status_t status;
     double x, y;
     int num_glyphs, n;
 
-    cairo_set_font_size (cr, 9);
+    options = cairo_font_options_create ();
+    cairo_font_options_set_antialias (options, antialias);
+    cairo_set_font_options (cr, options);
+    cairo_font_options_destroy (options);
+
+    cairo_select_font_face (cr,
+			    "@cairo:",
+			    CAIRO_FONT_SLANT_NORMAL,
+			    CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_set_font_size (cr, font_size);
     scaled_font = cairo_get_scaled_font (cr);
     status = cairo_scaled_font_text_to_glyphs (scaled_font, 0., 0.,
 					       text, -1,
@@ -71,15 +83,12 @@ do_glyphs (cairo_t *cr, int width, int height, int loops)
 		    glyphs_copy[n].y += y;
 		}
 		cairo_show_glyphs (cr, glyphs_copy, num_glyphs);
-		if (cairo_status (cr) != CAIRO_STATUS_SUCCESS)
-		    goto out;
 
 		x += extents.width;
 	    } while (x < width);
 	    y += extents.height;
 	} while (y < height);
     }
-out:
 
     cairo_perf_timer_stop ();
 
@@ -90,17 +99,29 @@ out:
 }
 
 static double
-count_glyphs (cairo_t *cr, int width, int height)
+count_glyphs (double font_size,
+	      cairo_antialias_t antialias,
+	      cairo_t *cr, int width, int height)
 {
     const char text[] = "the jay, pig, fox, zebra and my wolves quack";
     cairo_scaled_font_t *scaled_font;
     cairo_glyph_t *glyphs = NULL;
     cairo_text_extents_t extents;
+    cairo_font_options_t *options;
     cairo_status_t status;
     int num_glyphs;
     int glyphs_per_line, lines_per_loop;
 
-    cairo_set_font_size (cr, 9);
+    options = cairo_font_options_create ();
+    cairo_font_options_set_antialias (options, antialias);
+    cairo_set_font_options (cr, options);
+    cairo_font_options_destroy (options);
+
+    cairo_select_font_face (cr,
+			    "@cairo:",
+			    CAIRO_FONT_SLANT_NORMAL,
+			    CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_set_font_size (cr, font_size);
     scaled_font = cairo_get_scaled_font (cr);
     status = cairo_scaled_font_text_to_glyphs (scaled_font, 0., 0.,
 					       text, -1,
@@ -120,11 +141,59 @@ count_glyphs (cairo_t *cr, int width, int height)
     return glyphs_per_line * lines_per_loop / 1000.; /* kiloglyphs */
 }
 
+#define DECL(name,size, aa) \
+static cairo_perf_ticks_t \
+do_glyphs##name (cairo_t *cr, int width, int height, int loops) \
+{ \
+    return do_glyphs (size, aa, cr, width, height, loops); \
+} \
+\
+static double \
+count_glyphs##name (cairo_t *cr, int width, int height) \
+{ \
+    return count_glyphs (size, aa, cr, width, height); \
+}
+
+DECL(8, 8, CAIRO_ANTIALIAS_GRAY)
+DECL(10, 10, CAIRO_ANTIALIAS_GRAY)
+DECL(12, 12, CAIRO_ANTIALIAS_GRAY)
+DECL(16, 16, CAIRO_ANTIALIAS_GRAY)
+DECL(20, 20, CAIRO_ANTIALIAS_GRAY)
+DECL(24, 24, CAIRO_ANTIALIAS_GRAY)
+DECL(32, 32, CAIRO_ANTIALIAS_GRAY)
+DECL(40, 40, CAIRO_ANTIALIAS_GRAY)
+DECL(48, 48, CAIRO_ANTIALIAS_GRAY)
+
+DECL(8ca, 8, CAIRO_ANTIALIAS_SUBPIXEL)
+DECL(48ca, 48, CAIRO_ANTIALIAS_SUBPIXEL)
+
+DECL(8mono, 8, CAIRO_ANTIALIAS_NONE)
+DECL(48mono, 48, CAIRO_ANTIALIAS_NONE)
+
 void
 glyphs (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
     if (! cairo_perf_can_run (perf, "glyphs", NULL))
 	return;
 
-    cairo_perf_cover_sources_and_operators (perf, "glyphs", do_glyphs, count_glyphs);
+    cairo_perf_cover_sources_and_operators (perf, "glyphs8mono", do_glyphs8mono, count_glyphs8mono);
+    cairo_perf_cover_sources_and_operators (perf, "glyphs8", do_glyphs8, count_glyphs8);
+    cairo_perf_cover_sources_and_operators (perf, "glyphs8ca", do_glyphs8ca, count_glyphs8ca);
+
+    cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+    cairo_set_source_rgb (cr, 0, 0, 0);
+
+    cairo_perf_run (perf, "glyphs8", do_glyphs8, count_glyphs8);
+    cairo_perf_run (perf, "glyphs10", do_glyphs10, count_glyphs10);
+    cairo_perf_run (perf, "glyphs12", do_glyphs12, count_glyphs12);
+    cairo_perf_run (perf, "glyphs16", do_glyphs16, count_glyphs16);
+    cairo_perf_run (perf, "glyphs20", do_glyphs20, count_glyphs20);
+    cairo_perf_run (perf, "glyphs24", do_glyphs24, count_glyphs24);
+    cairo_perf_run (perf, "glyphs32", do_glyphs32, count_glyphs32);
+    cairo_perf_run (perf, "glyphs40", do_glyphs40, count_glyphs40);
+    cairo_perf_run (perf, "glyphs48", do_glyphs48, count_glyphs48);
+
+    cairo_perf_cover_sources_and_operators (perf, "glyphs48mono", do_glyphs48mono, count_glyphs48mono);
+    cairo_perf_cover_sources_and_operators (perf, "glyphs48", do_glyphs48, count_glyphs48);
+    cairo_perf_cover_sources_and_operators (perf, "glyphs48ca", do_glyphs48ca, count_glyphs48ca);
 }
