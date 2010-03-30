@@ -2483,6 +2483,8 @@ _cairo_scaled_glyph_set_metrics (cairo_scaled_glyph_t *scaled_glyph,
 
     scaled_glyph->x_advance = _cairo_lround (device_x_advance);
     scaled_glyph->y_advance = _cairo_lround (device_y_advance);
+
+    scaled_glyph->has_info |= CAIRO_SCALED_GLYPH_INFO_METRICS;
 }
 
 void
@@ -2496,6 +2498,7 @@ _cairo_scaled_glyph_set_surface (cairo_scaled_glyph_t *scaled_glyph,
     /* sanity check the backend glyph contents */
     _cairo_debug_check_image_surface_is_defined (&surface->base);
     scaled_glyph->surface = surface;
+    scaled_glyph->has_info |= CAIRO_SCALED_GLYPH_INFO_SURFACE;
 }
 
 void
@@ -2506,6 +2509,7 @@ _cairo_scaled_glyph_set_path (cairo_scaled_glyph_t *scaled_glyph,
     if (scaled_glyph->path != NULL)
 	_cairo_path_fixed_destroy (scaled_glyph->path);
     scaled_glyph->path = path;
+    scaled_glyph->has_info |= CAIRO_SCALED_GLYPH_INFO_PATH;
 }
 
 void
@@ -2519,6 +2523,7 @@ _cairo_scaled_glyph_set_recording_surface (cairo_scaled_glyph_t *scaled_glyph,
     }
 
     scaled_glyph->recording_surface = recording_surface;
+    scaled_glyph->has_info |= CAIRO_SCALED_GLYPH_INFO_RECORDING_SURFACE;
 }
 
 static cairo_bool_t
@@ -2645,6 +2650,8 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
     cairo_scaled_glyph_t	*scaled_glyph;
     cairo_scaled_glyph_info_t	 need_info;
 
+    *scaled_glyph_ret = NULL;
+
     if (unlikely (scaled_font->status))
 	return scaled_font->status;
 
@@ -2659,7 +2666,7 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
     if (scaled_glyph == NULL) {
 	status = _cairo_scaled_font_allocate_glyph (scaled_font, &scaled_glyph);
 	if (unlikely (status))
-	    goto CLEANUP;
+	    goto err;
 
 	memset (scaled_glyph, 0, sizeof (cairo_scaled_glyph_t));
 	_cairo_scaled_glyph_set_index (scaled_glyph, index);
@@ -2671,14 +2678,14 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
 						     info | CAIRO_SCALED_GLYPH_INFO_METRICS);
 	if (unlikely (status)) {
 	    _cairo_scaled_font_free_last_glyph (scaled_font, scaled_glyph);
-	    goto CLEANUP;
+	    goto err;
 	}
 
 	status = _cairo_hash_table_insert (scaled_font->glyphs,
 					   &scaled_glyph->hash_entry);
 	if (unlikely (status)) {
 	    _cairo_scaled_font_free_last_glyph (scaled_font, scaled_glyph);
-	    goto CLEANUP;
+	    goto err;
 	}
     }
 
@@ -2686,69 +2693,29 @@ _cairo_scaled_glyph_lookup (cairo_scaled_font_t *scaled_font,
      * Check and see if the glyph, as provided,
      * already has the requested data and amend it if not
      */
-    need_info = 0;
-    if ((info & CAIRO_SCALED_GLYPH_INFO_SURFACE) != 0 &&
-	scaled_glyph->surface == NULL)
-    {
-	need_info |= CAIRO_SCALED_GLYPH_INFO_SURFACE;
-    }
-
-    if ((info & CAIRO_SCALED_GLYPH_INFO_PATH) != 0 &&
-	scaled_glyph->path == NULL)
-    {
-	need_info |= CAIRO_SCALED_GLYPH_INFO_PATH;
-    }
-
-    if ((info & CAIRO_SCALED_GLYPH_INFO_RECORDING_SURFACE) != 0 &&
-	scaled_glyph->recording_surface == NULL)
-    {
-	need_info |= CAIRO_SCALED_GLYPH_INFO_RECORDING_SURFACE;
-    }
-
+    need_info = info & ~scaled_glyph->has_info;
     if (need_info) {
 	status = scaled_font->backend->scaled_glyph_init (scaled_font,
 							  scaled_glyph,
 							  need_info);
 	if (unlikely (status))
-	    goto CLEANUP;
+	    goto err;
 
 	/* Don't trust the scaled_glyph_init() return value, the font
 	 * backend may not even know about some of the info.  For example,
 	 * no backend other than the user-fonts knows about recording-surface
 	 * glyph info. */
-
-	if ((info & CAIRO_SCALED_GLYPH_INFO_SURFACE) != 0 &&
-	    scaled_glyph->surface == NULL)
-	{
-	    status = CAIRO_INT_STATUS_UNSUPPORTED;
-	    goto CLEANUP;
-	}
-
-	if ((info & CAIRO_SCALED_GLYPH_INFO_PATH) != 0 &&
-	    scaled_glyph->path == NULL)
-	{
-	    status = CAIRO_INT_STATUS_UNSUPPORTED;
-	    goto CLEANUP;
-	}
-
-	if ((info & CAIRO_SCALED_GLYPH_INFO_RECORDING_SURFACE) != 0 &&
-	    scaled_glyph->recording_surface == NULL)
-	{
-	    status = CAIRO_INT_STATUS_UNSUPPORTED;
-	    goto CLEANUP;
-	}
+	if (info & ~scaled_glyph->has_info)
+	    return CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-  CLEANUP:
-    if (unlikely (status)) {
-	/* It's not an error for the backend to not support the info we want. */
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    status = _cairo_scaled_font_set_error (scaled_font, status);
-	*scaled_glyph_ret = NULL;
-    } else {
-	*scaled_glyph_ret = scaled_glyph;
-    }
+    *scaled_glyph_ret = scaled_glyph;
+    return CAIRO_STATUS_SUCCESS;
 
+err:
+    /* It's not an error for the backend to not support the info we want. */
+    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	status = _cairo_scaled_font_set_error (scaled_font, status);
     return status;
 }
 
