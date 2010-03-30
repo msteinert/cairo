@@ -66,5 +66,5 @@ unaligned_clip (cairo_perf_t *perf, cairo_t *cr, int width, int height)
     if (! cairo_perf_can_run (perf, "unaligned-clip", NULL))
 	return;
 
-    cairo_perf_run (perf, "unaligned-clip", do_unaligned_clip);
+    cairo_perf_run (perf, "unaligned-clip", do_unaligned_clip, NULL);
 }

@@ -112,7 +112,7 @@ rectangles (cairo_perf_t *perf, cairo_t *cr, int width, int height)
         rects[i].height = (rand () % (height / 10)) + 1;
     }
 
-    MODE (perf, "one-rectangle", do_rectangle);
-    MODE (perf, "rectangles", do_rectangles);
-    MODE (perf, "rectangles-once", do_rectangles_once);
+    MODE (perf, "one-rectangle", do_rectangle, NULL);
+    MODE (perf, "rectangles", do_rectangles, NULL);
+    MODE (perf, "rectangles-once", do_rectangles_once, NULL);
 }

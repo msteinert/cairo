@@ -99,6 +99,9 @@ typedef struct _cairo_perf {
 typedef cairo_perf_ticks_t
 (*cairo_perf_func_t) (cairo_t *cr, int width, int height, int loops);
 
+typedef double
+(*cairo_count_func_t) (cairo_t *cr, int width, int height);
+
 cairo_bool_t
 cairo_perf_can_run (cairo_perf_t	*perf,
 		    const char		*name,
@@ -107,12 +110,14 @@ cairo_perf_can_run (cairo_perf_t	*perf,
 void
 cairo_perf_run (cairo_perf_t		*perf,
 		const char		*name,
-		cairo_perf_func_t	 perf_func);
+		cairo_perf_func_t	 perf_func,
+		cairo_count_func_t	 count_func);
 
 void
 cairo_perf_cover_sources_and_operators (cairo_perf_t		*perf,
 					const char		*name,
-					cairo_perf_func_t	 perf_func);
+					cairo_perf_func_t	 perf_func,
+					cairo_count_func_t	 count_func);
 
 /* reporter convenience routines */
 

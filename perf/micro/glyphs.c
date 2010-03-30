@@ -57,11 +57,11 @@ do_glyphs (cairo_t *cr, int width, int height, int loops)
     cairo_scaled_font_glyph_extents (scaled_font,
 				     glyphs, num_glyphs,
 				     &extents);
-    y = 0;
 
     cairo_perf_timer_start ();
 
     while (loops--) {
+	y = 0;
 	do {
 	    x = 0;
 	    do {
@@ -89,11 +89,42 @@ out:
     return cairo_perf_timer_elapsed ();
 }
 
+static double
+count_glyphs (cairo_t *cr, int width, int height)
+{
+    const char text[] = "the jay, pig, fox, zebra and my wolves quack";
+    cairo_scaled_font_t *scaled_font;
+    cairo_glyph_t *glyphs = NULL;
+    cairo_text_extents_t extents;
+    cairo_status_t status;
+    int num_glyphs;
+    int glyphs_per_line, lines_per_loop;
+
+    cairo_set_font_size (cr, 9);
+    scaled_font = cairo_get_scaled_font (cr);
+    status = cairo_scaled_font_text_to_glyphs (scaled_font, 0., 0.,
+					       text, -1,
+					       &glyphs, &num_glyphs,
+					       NULL, NULL,
+					       NULL);
+    if (status)
+	return 0;
+
+    cairo_scaled_font_glyph_extents (scaled_font,
+				     glyphs, num_glyphs,
+				     &extents);
+    cairo_glyph_free (glyphs);
+
+    glyphs_per_line = num_glyphs * width / extents.width + 1;
+    lines_per_loop = height / extents.height + 1;
+    return glyphs_per_line * lines_per_loop / 1000.; /* kiloglyphs */
+}
+
 void
 glyphs (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
     if (! cairo_perf_can_run (perf, "glyphs", NULL))
 	return;
 
-    cairo_perf_cover_sources_and_operators (perf, "glyphs", do_glyphs);
+    cairo_perf_cover_sources_and_operators (perf, "glyphs", do_glyphs, count_glyphs);
 }

@@ -332,18 +332,18 @@ spiral (cairo_perf_t *perf, cairo_t *cr, int width, int height)
     if (! cairo_perf_can_run (perf, "spiral", NULL))
 	return;
 
-    cairo_perf_run (perf, "spiral-box-nonalign-evenodd-fill", draw_spiral_eo_na_box);
-    cairo_perf_run (perf, "spiral-box-nonalign-nonzero-fill", draw_spiral_nz_na_box);
-    cairo_perf_run (perf, "spiral-box-pixalign-evenodd-fill", draw_spiral_eo_pa_box);
-    cairo_perf_run (perf, "spiral-box-pixalign-nonzero-fill", draw_spiral_nz_pa_box);
-    cairo_perf_run (perf, "spiral-diag-nonalign-evenodd-fill", draw_spiral_eo_na_di);
-    cairo_perf_run (perf, "spiral-diag-nonalign-nonzero-fill", draw_spiral_nz_na_di);
-    cairo_perf_run (perf, "spiral-diag-pixalign-evenodd-fill", draw_spiral_eo_pa_di);
-    cairo_perf_run (perf, "spiral-diag-pixalign-nonzero-fill", draw_spiral_nz_pa_di);
-    cairo_perf_run (perf, "spiral-rect-nonalign-evenodd-fill", draw_spiral_eo_na_re);
-    cairo_perf_run (perf, "spiral-rect-nonalign-nonzero-fill", draw_spiral_nz_na_re);
-    cairo_perf_run (perf, "spiral-rect-pixalign-evenodd-fill", draw_spiral_eo_pa_re);
-    cairo_perf_run (perf, "spiral-rect-pixalign-nonzero-fill", draw_spiral_nz_pa_re);
-    cairo_perf_run (perf, "spiral-nonalign-stroke", draw_spiral_stroke_na);
-    cairo_perf_run (perf, "spiral-pixalign-stroke", draw_spiral_stroke_pa);
+    cairo_perf_run (perf, "spiral-box-nonalign-evenodd-fill", draw_spiral_eo_na_box, NULL);
+    cairo_perf_run (perf, "spiral-box-nonalign-nonzero-fill", draw_spiral_nz_na_box, NULL);
+    cairo_perf_run (perf, "spiral-box-pixalign-evenodd-fill", draw_spiral_eo_pa_box, NULL);
+    cairo_perf_run (perf, "spiral-box-pixalign-nonzero-fill", draw_spiral_nz_pa_box, NULL);
+    cairo_perf_run (perf, "spiral-diag-nonalign-evenodd-fill", draw_spiral_eo_na_di, NULL);
+    cairo_perf_run (perf, "spiral-diag-nonalign-nonzero-fill", draw_spiral_nz_na_di, NULL);
+    cairo_perf_run (perf, "spiral-diag-pixalign-evenodd-fill", draw_spiral_eo_pa_di, NULL);
+    cairo_perf_run (perf, "spiral-diag-pixalign-nonzero-fill", draw_spiral_nz_pa_di, NULL);
+    cairo_perf_run (perf, "spiral-rect-nonalign-evenodd-fill", draw_spiral_eo_na_re, NULL);
+    cairo_perf_run (perf, "spiral-rect-nonalign-nonzero-fill", draw_spiral_nz_na_re, NULL);
+    cairo_perf_run (perf, "spiral-rect-pixalign-evenodd-fill", draw_spiral_eo_pa_re, NULL);
+    cairo_perf_run (perf, "spiral-rect-pixalign-nonzero-fill", draw_spiral_nz_pa_re, NULL);
+    cairo_perf_run (perf, "spiral-nonalign-stroke", draw_spiral_stroke_na, NULL);
+    cairo_perf_run (perf, "spiral-pixalign-stroke", draw_spiral_stroke_pa, NULL);
 }

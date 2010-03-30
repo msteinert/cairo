@@ -295,7 +295,8 @@ typedef void (*set_source_func_t) (cairo_t *cr, int width, int height);
 void
 cairo_perf_cover_sources_and_operators (cairo_perf_t		*perf,
 					const char		*name,
-					cairo_perf_func_t	 perf_func)
+					cairo_perf_func_t	 perf_func,
+					cairo_count_func_t	 count_func)
 {
     unsigned int i, j;
     char *expanded_name;
@@ -332,7 +333,7 @@ cairo_perf_cover_sources_and_operators (cairo_perf_t		*perf,
 
 	    xasprintf (&expanded_name, "%s_%s_%s",
 		       name, sources[i].name, operators[j].name);
-	    cairo_perf_run (perf, expanded_name, perf_func);
+	    cairo_perf_run (perf, expanded_name, perf_func, count_func);
 	    free (expanded_name);
 	}
     }

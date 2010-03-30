@@ -99,5 +99,5 @@ pattern_create_radial (cairo_perf_t *perf, cairo_t *cr, int width, int height)
     }
 
     cairo_perf_run (perf, "pattern-create-radial",
-                          do_pattern_create_radial);
+                          do_pattern_create_radial, NULL);
 }

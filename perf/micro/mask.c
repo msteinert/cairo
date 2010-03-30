@@ -279,21 +279,21 @@ mask (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 	return;
 
     cairo_perf_cover_sources_and_operators (perf, "mask-solid",
-					    do_mask_solid);
+					    do_mask_solid, NULL);
     cairo_perf_cover_sources_and_operators (perf, "mask-image",
-					    do_mask_image);
+					    do_mask_image, NULL);
     cairo_perf_cover_sources_and_operators (perf, "mask-image-half",
-					    do_mask_image_half);
+					    do_mask_image_half, NULL);
     cairo_perf_cover_sources_and_operators (perf, "mask-image-double",
-					    do_mask_image_double);
+					    do_mask_image_double, NULL);
     cairo_perf_cover_sources_and_operators (perf, "mask-similar",
-					    do_mask_similar);
+					    do_mask_similar, NULL);
     cairo_perf_cover_sources_and_operators (perf, "mask-similar-half",
-					    do_mask_similar_half);
+					    do_mask_similar_half, NULL);
     cairo_perf_cover_sources_and_operators (perf, "mask-similar-double",
-					    do_mask_similar_double);
+					    do_mask_similar_double, NULL);
     cairo_perf_cover_sources_and_operators (perf, "mask-linear",
-					    do_mask_linear);
+					    do_mask_linear, NULL);
     cairo_perf_cover_sources_and_operators (perf, "mask-radial",
-					    do_mask_radial);
+					    do_mask_radial, NULL);
 }

@@ -92,6 +92,6 @@ stroke (cairo_perf_t *perf, cairo_t *cr, int width, int height)
     if (! cairo_perf_can_run (perf, "stroke", NULL))
 	return;
 
-    cairo_perf_cover_sources_and_operators (perf, "stroke", do_stroke);
-    cairo_perf_cover_sources_and_operators (perf, "strokes", do_strokes);
+    cairo_perf_cover_sources_and_operators (perf, "stroke", do_stroke, NULL);
+    cairo_perf_cover_sources_and_operators (perf, "strokes", do_strokes, NULL);
 }

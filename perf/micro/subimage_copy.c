@@ -73,5 +73,5 @@ subimage_copy (cairo_perf_t *perf, cairo_t *cr, int width, int height)
     cairo_set_source_surface (cr, image, 0, 0);
     cairo_surface_destroy (image);
 
-    cairo_perf_run (perf, "subimage-copy", do_subimage_copy);
+    cairo_perf_run (perf, "subimage-copy", do_subimage_copy, NULL);
 }

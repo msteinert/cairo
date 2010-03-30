@@ -45,5 +45,5 @@ paint_with_alpha (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 	return;
 
     cairo_perf_cover_sources_and_operators (perf, "paint-with-alpha",
-					    do_paint_with_alpha);
+					    do_paint_with_alpha, NULL);
 }

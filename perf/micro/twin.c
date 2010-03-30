@@ -52,5 +52,5 @@ twin (cairo_perf_t *perf,
     if (! cairo_perf_can_run (perf, "twin", NULL))
 	return;
 
-    cairo_perf_run (perf, "twin", do_twin);
+    cairo_perf_run (perf, "twin", do_twin, NULL);
 }

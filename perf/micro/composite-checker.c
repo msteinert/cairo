@@ -107,7 +107,7 @@ composite_checker (cairo_perf_t *perf,
     cairo_pattern_set_filter (src_pattern, CAIRO_FILTER_NEAREST);
     cairo_surface_destroy (image);
 
-    cairo_perf_run (perf, "composite-checker", do_composite_checker);
+    cairo_perf_run (perf, "composite-checker", do_composite_checker, NULL);
 
     cairo_pattern_destroy (checkerboard);
     cairo_pattern_destroy (src_pattern);
