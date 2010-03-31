@@ -38,6 +38,12 @@ do_paint_with_alpha (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
+static double
+count_paint_with_alpha (cairo_t *cr, int width, int height)
+{
+    return width * height / 1e6; /* Mpix/s */
+}
+
 void
 paint_with_alpha (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
@@ -45,5 +51,6 @@ paint_with_alpha (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 	return;
 
     cairo_perf_cover_sources_and_operators (perf, "paint-with-alpha",
-					    do_paint_with_alpha, NULL);
+					    do_paint_with_alpha,
+					    count_paint_with_alpha);
 }

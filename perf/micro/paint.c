@@ -38,11 +38,17 @@ do_paint (cairo_t *cr, int width, int height, int loops)
     return cairo_perf_timer_elapsed ();
 }
 
+static double
+count_paint (cairo_t *cr, int width, int height)
+{
+    return width * height / 1e6; /* Mpix/s */
+}
+
 void
 paint (cairo_perf_t *perf, cairo_t *cr, int width, int height)
 {
     if (! cairo_perf_can_run (perf, "paint", NULL))
 	return;
 
-    cairo_perf_cover_sources_and_operators (perf, "paint", do_paint, NULL);
+    cairo_perf_cover_sources_and_operators (perf, "paint", do_paint, count_paint);
 }
