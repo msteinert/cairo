@@ -1795,6 +1795,9 @@ _gradient_is_opaque (const cairo_gradient_pattern_t *gradient)
 {
     unsigned int i;
 
+    if (gradient->n_stops == 0)
+	return FALSE;
+
     for (i = 0; i < gradient->n_stops; i++)
 	if (! CAIRO_COLOR_IS_OPAQUE (&gradient->stops[i].color))
 	    return FALSE;
