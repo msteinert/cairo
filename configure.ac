@@ -718,6 +718,11 @@ AC_SUBST(glib_CFLAGS)
 AC_SUBST(glib_LIBS)
 AM_CONDITIONAL(BUILD_SPHINX, test "x$have_glib" = "xyes")
 
+save_LIBS="$LIBS"
+AC_CHECK_LIB(rt, shm_open, shm_LIBS="-lrt")
+AC_SUBST(shm_LIBS)
+LIBS="$save_LIBS"
+
 dnl ===========================================================================
 
 AC_ARG_ENABLE(some-floating-point,

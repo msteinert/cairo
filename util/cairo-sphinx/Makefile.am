@@ -23,7 +23,7 @@ cairo_sphinx_LDADD = \
 	$(top_builddir)/src/libcairo.la 			\
 	$(glib_LIBS) 						\
 	$(CAIRO_LDADD)						\
-	-lrt							\
+	$(shm_LIBS)						\
 	$(real_pthread_LIBS)
 cairo_sphinx_DEPENDENCIES = \
         $(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
