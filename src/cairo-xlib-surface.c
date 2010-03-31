@@ -4001,7 +4001,8 @@ _cairo_xlib_surface_add_glyph (Display *dpy,
 	    n = new;
 	    d = (uint32_t *) data;
 	    do {
-		*n++ = bswap_32 (*d++);
+		*n++ = bswap_32 (*d);
+		d++;
 	    } while (--c);
 	    data = (uint8_t *) new;
 	}
