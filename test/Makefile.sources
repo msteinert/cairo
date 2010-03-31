@@ -106,6 +106,7 @@ test_sources = \
 	gradient-alpha.c				\
 	gradient-constant-alpha.c			\
 	gradient-zero-stops.c				\
+	gradient-zero-stops-mask.c			\
 	group-clip.c					\
 	group-paint.c					\
 	group-unaligned.c				\

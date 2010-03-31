@@ -540,6 +540,8 @@ REFERENCE_IMAGES = \
 	gradient-constant-alpha.rgb24.ref.png \
 	gradient-zero-stops.ref.png \
 	gradient-zero-stops.rgb24.ref.png \
+	gradient-zero-stops-mask.argb32.ref.png \
+	gradient-zero-stops-mask.rgb24.ref.png \
 	group-clip.ref.png \
 	group-paint.ref.png \
 	group-unaligned.pdf.new.png \
