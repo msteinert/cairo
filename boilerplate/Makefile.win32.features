@@ -199,14 +199,6 @@ enabled_cairo_boilerplate_private += $(cairo_boilerplate_png_private)
 enabled_cairo_boilerplate_sources += $(cairo_boilerplate_png_sources)
 endif
 
-supported_cairo_boilerplate_headers += $(cairo_boilerplate_glew_headers)
-all_cairo_boilerplate_headers += $(cairo_boilerplate_glew_headers)
-all_cairo_boilerplate_private += $(cairo_boilerplate_glew_private)
-all_cairo_boilerplate_sources += $(cairo_boilerplate_glew_sources)
-enabled_cairo_boilerplate_headers += $(cairo_boilerplate_glew_headers)
-enabled_cairo_boilerplate_private += $(cairo_boilerplate_glew_private)
-enabled_cairo_boilerplate_sources += $(cairo_boilerplate_glew_sources)
-
 unsupported_cairo_boilerplate_headers += $(cairo_boilerplate_gl_headers)
 all_cairo_boilerplate_headers += $(cairo_boilerplate_gl_headers)
 all_cairo_boilerplate_private += $(cairo_boilerplate_gl_private)
