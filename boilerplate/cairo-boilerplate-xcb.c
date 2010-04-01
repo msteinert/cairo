@@ -28,6 +28,8 @@
 
 #include <cairo-xcb.h>
 
+#include <assert.h>
+
 static const cairo_user_data_key_t xcb_closure_key;
 
 typedef struct _xcb_target_closure {
@@ -437,8 +439,9 @@ _cairo_boilerplate_xcb_create_render_0_0 (const char		 *name,
 	return tmp;
     }
 
-    cairo_xcb_device_debug_cap_xrender_version (cairo_surface_get_device (tmp),
-                                                0, 0);
+    xtc->device = cairo_device_reference (cairo_surface_get_device (tmp));
+    cairo_xcb_device_debug_cap_xrender_version (xtc->device, 0, 0);
+
     /* recreate with impaired connection */
     surface = cairo_xcb_surface_create_with_xrender_format (c, root,
 							    xtc->drawable,
@@ -447,7 +450,8 @@ _cairo_boilerplate_xcb_create_render_0_0 (const char		 *name,
     free (formats);
     cairo_surface_destroy (tmp);
 
-    xtc->device = cairo_device_reference (cairo_surface_get_device (surface));
+    assert (cairo_surface_get_device (surface) == xtc->device);
+
     status = cairo_surface_set_user_data (surface, &xcb_closure_key, xtc, NULL);
     if (status == CAIRO_STATUS_SUCCESS)
 	return surface;
@@ -668,7 +672,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_xcb_cleanup,
 	_cairo_boilerplate_xcb_synchronize,
-	TRUE, FALSE, FALSE
+	FALSE, FALSE, FALSE
     },
     {
 	"xcb-render-0.0", "xlib-fallback", NULL, NULL,

@@ -993,10 +993,11 @@ _reduce_op (cairo_gstate_t *gstate)
     const cairo_pattern_t *pattern;
 
     op = gstate->op;
+    if (op != CAIRO_OPERATOR_SOURCE)
+	return op;
+
     pattern = gstate->source;
-    if (op == CAIRO_OPERATOR_SOURCE &&
-	pattern->type == CAIRO_PATTERN_TYPE_SOLID)
-    {
+    if (pattern->type == CAIRO_PATTERN_TYPE_SOLID) {
 	const cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *) pattern;
 	if (solid->color.alpha_short <= 0x00ff) {
 	    op = CAIRO_OPERATOR_CLEAR;
@@ -1008,6 +1009,17 @@ _reduce_op (cairo_gstate_t *gstate)
 		op = CAIRO_OPERATOR_CLEAR;
 	    }
 	}
+    } else if (pattern->type == CAIRO_PATTERN_TYPE_SURFACE) {
+	const cairo_surface_pattern_t *surface = (cairo_surface_pattern_t *) pattern;
+	if (surface->surface->is_clear &&
+	    surface->surface->content & CAIRO_CONTENT_ALPHA)
+	{
+	    op = CAIRO_OPERATOR_CLEAR;
+	}
+    } else {
+	const cairo_gradient_pattern_t *gradient = (cairo_gradient_pattern_t *) pattern;
+	if (gradient->n_stops == 0)
+	    op = CAIRO_OPERATOR_CLEAR;
     }
 
     return op;

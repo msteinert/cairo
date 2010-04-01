@@ -2510,7 +2510,7 @@ _core_boxes (cairo_xcb_surface_t *dst,
 	return _cairo_xcb_surface_core_fill_boxes (dst, CAIRO_COLOR_TRANSPARENT, boxes);
 
     if (op == CAIRO_OPERATOR_OVER) {
-	if (_cairo_pattern_is_opaque (src, &extents->bounded))
+	if (dst->base.is_clear || _cairo_pattern_is_opaque (src, &extents->bounded))
 	    op = CAIRO_OPERATOR_SOURCE;
     }
     if (op != CAIRO_OPERATOR_SOURCE)
@@ -2635,7 +2635,8 @@ _upload_image_inplace (cairo_xcb_surface_t *surface,
     cairo_image_surface_t *image;
     xcb_gcontext_t gc;
     cairo_status_t status;
-    int len, tx, ty;
+    int tx, ty;
+    int len, bpp;
 
     if (source->type != CAIRO_PATTERN_TYPE_SURFACE)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -2698,21 +2699,24 @@ _upload_image_inplace (cairo_xcb_surface_t *surface,
     gc = _cairo_xcb_screen_get_gc (surface->screen, surface->drawable, image->depth);
 
     /* Do we need to trim the image? */
-    len = CAIRO_STRIDE_FOR_WIDTH_BPP (image->width, PIXMAN_FORMAT_BPP (image->pixman_format));
+    bpp = PIXMAN_FORMAT_BPP (image->pixman_format);
+    len = CAIRO_STRIDE_FOR_WIDTH_BPP (extents->width, bpp);
     if (len == image->stride) {
 	_cairo_xcb_connection_put_image (surface->connection,
 					 surface->drawable, gc,
-					 image->width, image->height,
+					 extents->width, extents->height,
 					 extents->x, extents->y,
 					 image->depth,
 					 image->stride,
-					 image->data);
+					 image->data +
+					 (extents->y + ty) * image->stride +
+					 (extents->x + tx) * bpp/8);
     } else {
 	_cairo_xcb_connection_put_subimage (surface->connection,
 					    surface->drawable, gc,
 					    extents->x + tx, extents->y + ty,
-					    image->width, image->height,
-					    PIXMAN_FORMAT_BPP (image->pixman_format) / 8,
+					    extents->width, extents->height,
+					    bpp / 8,
 					    image->stride,
 					    extents->x, extents->y,
 					    image->depth,
@@ -2756,6 +2760,19 @@ _clip_and_composite_boxes (cairo_xcb_surface_t *dst,
 	op = CAIRO_OPERATOR_SOURCE;
 	dst->deferred_clear = FALSE;
 
+	status = _upload_image_inplace (dst, src, &extents->bounded);
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+	    return status;
+    }
+
+    if (dst->deferred_clear) {
+	_cairo_xcb_surface_clear (dst);
+
+	if (op == CAIRO_OPERATOR_OVER)
+	    op = CAIRO_OPERATOR_SOURCE;
+    }
+
+    if (clip == NULL && op == CAIRO_OPERATOR_SOURCE && boxes->num_boxes == 1) {
 	status = _upload_image_inplace (dst, src, &extents->bounded);
 	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	    return status;
@@ -3772,6 +3789,7 @@ typedef struct {
     cairo_scaled_font_t *font;
     cairo_xcb_glyph_t *glyphs;
     int num_glyphs;
+    cairo_bool_t use_mask;
 } composite_glyphs_info_t;
 
 static cairo_status_t
@@ -4312,7 +4330,8 @@ _emit_glyphs_chunk (cairo_xcb_surface_t *dst,
 		    int num_glyphs,
 		    int width,
 		    int estimated_req_size,
-		    cairo_xcb_font_glyphset_info_t *glyphset_info)
+		    cairo_xcb_font_glyphset_info_t *glyphset_info,
+		    xcb_render_pictformat_t mask_format)
 {
     cairo_xcb_render_composite_text_func_t composite_text_func;
     uint8_t stack_buf[CAIRO_STACK_BUFFER_SIZE];
@@ -4368,7 +4387,7 @@ _emit_glyphs_chunk (cairo_xcb_surface_t *dst,
 			 _render_operator (op),
 			 src->picture,
 			 dst->picture,
-			 glyphset_info->xrender_format,
+			 mask_format,
 			 glyphset_info->glyphset,
 			 src->x + glyphs[0].i.x,
 			 src->y + glyphs[0].i.y,
@@ -4382,11 +4401,12 @@ _emit_glyphs_chunk (cairo_xcb_surface_t *dst,
 
 static cairo_status_t
 _composite_glyphs (void				*closure,
-		  cairo_xcb_surface_t	*dst,
-		  cairo_operator_t	 op,
-		  const cairo_pattern_t	*pattern,
-		  int dst_x, int dst_y,
-		  const cairo_rectangle_int_t *extents,
+		  cairo_xcb_surface_t		*dst,
+		  cairo_operator_t		 op,
+		  const cairo_pattern_t		*pattern,
+		  int				 dst_x,
+		  int				 dst_y,
+		  const cairo_rectangle_int_t	*extents,
 		  cairo_region_t		*clip_region)
 {
     composite_glyphs_info_t *info = closure;
@@ -4495,7 +4515,8 @@ _composite_glyphs (void				*closure,
 	    status = _emit_glyphs_chunk (dst, op, src,
 					 info->glyphs, i,
 					 old_width, request_size,
-					 glyphset_info);
+					 glyphset_info,
+					 info->use_mask ? glyphset_info->xrender_format : 0);
 	    if (unlikely (status)) {
 		cairo_surface_destroy (&src->base);
 		return status;
@@ -4539,7 +4560,8 @@ _composite_glyphs (void				*closure,
 	status = _emit_glyphs_chunk (dst, op, src,
 				     info->glyphs, i,
 				     width, request_size,
-				     glyphset_info);
+				     glyphset_info,
+				     info->use_mask ? glyphset_info->xrender_format : 0);
     }
 
     cairo_surface_destroy (&src->base);
@@ -4577,6 +4599,7 @@ _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
     cairo_clip_t local_clip;
     cairo_bool_t have_clip = FALSE;
     cairo_status_t status;
+    cairo_bool_t overlap;
 
     if (unlikely (! _operator_is_supported (surface->flags, op)))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
@@ -4590,7 +4613,7 @@ _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
 							  op, source,
 							  scaled_font,
 							  glyphs, num_glyphs,
-							  clip, NULL);
+							  clip, &overlap);
     if (unlikely (status))
 	return status;
 
@@ -4600,10 +4623,37 @@ _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
     if (clip != NULL) {
 	clip = _cairo_clip_init_copy (&local_clip, clip);
 	if (extents.is_bounded) {
+	    cairo_region_t *clip_region = NULL;
+
 	    status = _cairo_clip_rectangle (clip, &extents.bounded);
 	    if (unlikely (status)) {
 		_cairo_clip_fini (&local_clip);
 		return status;
+	    }
+
+	    status = _cairo_clip_get_region (clip, &clip_region);
+	    if (unlikely (_cairo_status_is_error (status) ||
+			  status == CAIRO_INT_STATUS_NOTHING_TO_DO))
+	    {
+		_cairo_clip_fini (&local_clip);
+		return status;
+	    }
+
+	    if (clip_region != NULL) {
+		cairo_rectangle_int_t rect;
+		cairo_bool_t is_empty;
+
+		cairo_region_get_extents (clip_region, &rect);
+		is_empty = ! _cairo_rectangle_intersect (&extents.unbounded, &rect);
+		if (unlikely (is_empty))
+		    return CAIRO_STATUS_SUCCESS;
+
+		is_empty = ! _cairo_rectangle_intersect (&extents.bounded, &rect);
+		if (unlikely (is_empty && extents.is_bounded))
+		    return CAIRO_STATUS_SUCCESS;
+
+		if (cairo_region_num_rectangles (clip_region) == 1)
+		    clip = NULL;
 	    }
 	}
 	have_clip = TRUE;
@@ -4622,6 +4672,7 @@ _cairo_xcb_surface_render_glyphs (cairo_xcb_surface_t	*surface,
 		info.font = scaled_font;
 		info.glyphs = (cairo_xcb_glyph_t *) glyphs;
 		info.num_glyphs = num_glyphs;
+		info.use_mask = overlap || clip != NULL || ! extents.is_bounded;
 
 		status = _clip_and_composite (surface, op, source,
 					      _composite_glyphs, &info,

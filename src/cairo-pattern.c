@@ -1857,7 +1857,7 @@ _cairo_pattern_is_clear (const cairo_pattern_t *abstract_pattern)
 	ASSERT_NOT_REACHED;
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
-	return FALSE;
+	return pattern->gradient.base.n_stops == 0;
     }
 }
 
