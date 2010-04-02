@@ -59,6 +59,12 @@
 
 #include <ctype.h>
 
+#ifdef WORDS_BIGENDIAN
+#define to_be32(x) x
+#else
+#define to_be32(x) bswap_32(x)
+#endif
+
 #define _cairo_output_stream_puts(S, STR) \
     _cairo_output_stream_write ((S), (STR), strlen (STR))
 
@@ -1267,6 +1273,7 @@ _emit_image_surface (cairo_script_surface_t *surface,
 
 	    base85_stream = _cairo_base85_stream_create (ctx->stream);
 
+	    len = to_be32 (len);
 	    _cairo_output_stream_write (base85_stream, &len, sizeof (len));
 
 	    zlib_stream = _cairo_deflate_stream_create (base85_stream);
@@ -2585,7 +2592,7 @@ _emit_type42_font (cairo_script_surface_t *surface,
 				 load_flags);
 
     base85_stream = _cairo_base85_stream_create (ctx->stream);
-    len = size;
+    len = to_be32 (size);
     _cairo_output_stream_write (base85_stream, &len, sizeof (len));
 
     zlib_stream = _cairo_deflate_stream_create (base85_stream);
