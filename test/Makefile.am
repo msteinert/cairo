@@ -568,6 +568,7 @@ REFERENCE_IMAGES = \
 	infinite-join.ps2.ref.png \
 	infinite-join.ps3.ref.png \
 	infinite-join.ref.png \
+	inverse-text.ref.png \
 	joins.ps.ref.png \
 	joins.ref.png \
 	large-clip.ref.png \
