@@ -108,9 +108,7 @@ _cairo_rtree_node_collapse (cairo_rtree_t *rtree, cairo_rtree_node_t *node)
 	node->children[0] = NULL;
 	node->state = CAIRO_RTREE_NODE_AVAILABLE;
 	cairo_list_move (&node->link, &rtree->available);
-
-	node = node->parent;
-    } while (node != NULL && ! node->pinned);
+    } while ((node = node->parent) != NULL);
 }
 
 cairo_status_t
@@ -193,8 +191,7 @@ _cairo_rtree_node_remove (cairo_rtree_t *rtree, cairo_rtree_node_t *node)
     node->state = CAIRO_RTREE_NODE_AVAILABLE;
     cairo_list_move (&node->link, &rtree->available);
 
-    if (! node->parent->pinned)
-	_cairo_rtree_node_collapse (rtree, node->parent);
+    _cairo_rtree_node_collapse (rtree, node->parent);
 }
 
 cairo_int_status_t
@@ -230,8 +227,16 @@ _cairo_rtree_evict_random (cairo_rtree_t	 *rtree,
 		           int			  height,
 		           cairo_rtree_node_t		**out)
 {
-    cairo_rtree_node_t *node;
+    cairo_rtree_node_t *node, *next;
     int i, cnt;
+
+    /* propagate pinned from children to root */
+    cairo_list_foreach_entry_safe (node, next, cairo_rtree_node_t,
+				   &rtree->pinned, link)
+    {
+	if (node->parent != NULL)
+	    _cairo_rtree_pin (rtree, node->parent);
+    }
 
     cnt = 0;
     cairo_list_foreach_entry (node, cairo_rtree_node_t,
@@ -269,22 +274,6 @@ _cairo_rtree_evict_random (cairo_rtree_t	 *rtree,
     }
 
     return CAIRO_INT_STATUS_UNSUPPORTED;
-}
-
-void *
-_cairo_rtree_pin (cairo_rtree_t *rtree, cairo_rtree_node_t *node)
-{
-    void *ptr = node;
-
-    while (node->pinned == FALSE) {
-	cairo_list_move (&node->link, &rtree->pinned);
-	node->pinned = TRUE;
-	node = node->parent;
-	if (node == NULL)
-	    break;
-    }
-
-    return ptr;
 }
 
 void

@@ -113,8 +113,16 @@ _cairo_rtree_evict_random (cairo_rtree_t	 *rtree,
 		           int			  height,
 		           cairo_rtree_node_t	**out);
 
-cairo_private void *
-_cairo_rtree_pin (cairo_rtree_t *rtree, cairo_rtree_node_t *node);
+static inline void *
+_cairo_rtree_pin (cairo_rtree_t *rtree, cairo_rtree_node_t *node)
+{
+    if (node->pinned == FALSE) {
+	cairo_list_move (&node->link, &rtree->pinned);
+	node->pinned = TRUE;
+    }
+
+    return node;
+}
 
 cairo_private void
 _cairo_rtree_unpin (cairo_rtree_t *rtree);
