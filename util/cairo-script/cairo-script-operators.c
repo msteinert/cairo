@@ -126,19 +126,17 @@ _csi_proxy_destroy (void *closure)
     cairo_script_interpreter_destroy (ctx);
 }
 
-static unsigned long
-_csi_blob_hash (const uint8_t *bytes, int len)
+static void
+_csi_blob_hash (csi_blob_t *blob, const uint32_t *data, int len)
 {
+    unsigned long hash = blob->hash;
     /* very simple! */
-    unsigned long hash = 5381;
-    unsigned long *data = (unsigned long *) bytes;
-    len /= sizeof (unsigned long);
     while (len--) {
 	unsigned long c = *data++;
 	hash *= 33;
 	hash ^= c;
     }
-    return hash;
+    blob->hash = hash;
 }
 
 static csi_boolean_t
@@ -152,10 +150,6 @@ _csi_blob_equal (const csi_list_t *link, void *data)
     if (A->len != B->len)
 	return FALSE;
 
-    if (A->hash == 0)
-	A->hash = _csi_blob_hash (A->bytes, A->len);
-    if (B->hash == 0)
-	B->hash = _csi_blob_hash (B->bytes, B->len);
     if (A->hash != B->hash)
 	return FALSE;
 
@@ -165,7 +159,7 @@ _csi_blob_equal (const csi_list_t *link, void *data)
 static void
 _csi_blob_init (csi_blob_t *blob, uint8_t *bytes, int len)
 {
-    blob->hash = 0;
+    blob->hash = 5381;
     blob->len = len;
     blob->bytes = bytes;
 }
@@ -1760,6 +1754,7 @@ _ft_create_for_source (csi_t *ctx,
     /* check for an existing FT_Face (kept alive by the font cache) */
     /* XXX index/flags */
     _csi_blob_init (&tmpl, (uint8_t *) source->string, source->len);
+    _csi_blob_hash (&tmpl, (uint32_t *) source->string, source->len / sizeof (uint32_t));
     link = _csi_list_find (ctx->_faces, _csi_blob_equal, &tmpl);
     if (link) {
 	if (--source->base.ref == 0)
@@ -1869,6 +1864,7 @@ _ft_create_for_pattern (csi_t *ctx,
     void *bytes;
 
     _csi_blob_init (&tmpl, (uint8_t *) string->string, string->len);
+    _csi_blob_hash (&tmpl, (uint32_t *) string->string, string->len / sizeof (uint32_t));
     link = _csi_list_find (ctx->_faces, _csi_blob_equal, &tmpl);
     if (link) {
 	if (--string->base.ref == 0)
@@ -3082,6 +3078,22 @@ _image_tag_done (void *closure)
     cairo_script_interpreter_destroy (ctx);
 }
 
+static void
+_image_hash (csi_blob_t *blob,
+	     cairo_surface_t *surface)
+{
+    uint32_t  value;
+
+    value = cairo_image_surface_get_width (surface);
+    _csi_blob_hash (blob, &value, 1);
+
+    value = cairo_image_surface_get_height (surface);
+    _csi_blob_hash (blob, &value, 1);
+
+    value = cairo_image_surface_get_format (surface);
+    _csi_blob_hash (blob, &value, 1);
+}
+
 static cairo_surface_t *
 _image_cached (csi_t *ctx, cairo_surface_t *surface)
 {
@@ -3097,6 +3109,7 @@ _image_cached (csi_t *ctx, cairo_surface_t *surface)
     stride = cairo_image_surface_get_stride (surface);
     height = cairo_image_surface_get_height (surface);
     _csi_blob_init (&tmpl, data, stride * height);
+    _image_hash (&tmpl, surface);
     link = _csi_list_find (ctx->_images, _csi_blob_equal, &tmpl);
     if (link) {
 	cairo_surface_destroy (surface);
