@@ -2445,7 +2445,6 @@ void
 _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
 			    cairo_rectangle_int_t         *extents)
 {
-    cairo_matrix_t imatrix;
     double x1, y1, x2, y2;
     cairo_status_t status;
 
@@ -2558,14 +2557,21 @@ _cairo_pattern_get_extents (const cairo_pattern_t         *pattern,
 	ASSERT_NOT_REACHED;
     }
 
-    imatrix = pattern->matrix;
-    status = cairo_matrix_invert (&imatrix);
-    /* cairo_pattern_set_matrix ensures the matrix is invertible */
-    assert (status == CAIRO_STATUS_SUCCESS);
+    if (_cairo_matrix_is_translation (&pattern->matrix)) {
+	x1 -= pattern->matrix.x0; x2 -= pattern->matrix.x0;
+	y1 -= pattern->matrix.y0; y2 -= pattern->matrix.y0;
+    } else {
+	cairo_matrix_t imatrix;
 
-    _cairo_matrix_transform_bounding_box (&imatrix,
-					  &x1, &y1, &x2, &y2,
-					  NULL);
+	imatrix = pattern->matrix;
+	status = cairo_matrix_invert (&imatrix);
+	/* cairo_pattern_set_matrix ensures the matrix is invertible */
+	assert (status == CAIRO_STATUS_SUCCESS);
+
+	_cairo_matrix_transform_bounding_box (&imatrix,
+					      &x1, &y1, &x2, &y2,
+					      NULL);
+    }
 
     x1 = floor (x1);
     if (x1 < CAIRO_RECT_INT_MIN)
