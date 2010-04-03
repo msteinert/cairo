@@ -265,8 +265,6 @@ cairo_reference (cairo_t *cr)
 void
 cairo_destroy (cairo_t *cr)
 {
-    cairo_surface_t *surface;
-
     if (cr == NULL || CAIRO_REFERENCE_COUNT_IS_INVALID (&cr->ref_count))
 	return;
 
@@ -279,15 +277,6 @@ cairo_destroy (cairo_t *cr)
 	if (_cairo_gstate_restore (&cr->gstate, &cr->gstate_freelist))
 	    break;
     }
-
-    /* The context is expected (>99% of all use cases) to be held for the
-     * duration of a single expose event/sequence of graphic operations.
-     * Therefore, on destroy we explicitly flush the Cairo pipeline of any
-     * pending operations.
-     */
-    surface = _cairo_gstate_get_original_target (cr->gstate);
-    if (surface != NULL)
-	cairo_surface_flush (surface);
 
     _cairo_gstate_fini (cr->gstate);
     cr->gstate_freelist = cr->gstate_freelist->next; /* skip over tail[1] */
