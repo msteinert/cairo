@@ -1962,10 +1962,10 @@ _cairo_surface_mask (cairo_surface_t		*surface,
 	return CAIRO_STATUS_SUCCESS;
 
     /* If the mask is blank, this is just an expensive no-op */
-    if (mask->type == CAIRO_PATTERN_TYPE_SURFACE) {
-	const cairo_surface_pattern_t *spattern = (cairo_surface_pattern_t *) mask;
-	if (spattern->surface->is_clear)
-	    return CAIRO_STATUS_SUCCESS;
+    if (_cairo_pattern_is_clear (mask) &&
+	_cairo_operator_bounded_by_mask (op))
+    {
+	return CAIRO_STATUS_SUCCESS;
     }
 
     status = _pattern_has_error (source);
