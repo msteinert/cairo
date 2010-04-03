@@ -2821,36 +2821,46 @@ _image_read_raw (csi_file_t *src,
 {
     cairo_surface_t *image;
     uint8_t *bp, *data;
-    int rem, len, ret, x, stride;
+    int rem, len, ret, x, rowlen, stride;
     cairo_status_t status;
 
-    image = cairo_image_surface_create (format, width, height);
-    status = cairo_surface_status (image);
-    if (status)
+    stride = cairo_format_stride_for_width (format, width);
+    data = malloc (stride * height);
+    if (data == NULL)
+	return CAIRO_STATUS_NO_MEMORY;
+
+    image = cairo_image_surface_create_for_data (data, format,
+						 width, height, stride);
+    status = cairo_surface_set_user_data (image,
+					  (const cairo_user_data_key_t *) image,
+					  data, free);
+    if (status) {
+	cairo_surface_destroy (image);
+	free (image);
 	return status;
+    }
 
     switch (format) {
     case CAIRO_FORMAT_A1:
-	len = (width+7)/8 * height;
+	rowlen = (width+7)/8;
 	break;
     case CAIRO_FORMAT_A8:
-	len = width * height;
+	rowlen = width;
 	break;
     case CAIRO_FORMAT_RGB16_565:
-	len = 2 * width * height;
+	rowlen = 2 * width;
 	break;
     case CAIRO_FORMAT_RGB24:
-	len = 3 * width * height;
+	rowlen = 3 * width;
 	break;
     default:
     case CAIRO_FORMAT_INVALID:
     case CAIRO_FORMAT_ARGB32:
-	len = 4 * width * height;
+	rowlen = 4 * width;
 	break;
     }
+    len = rowlen * height;
 
-    stride = cairo_image_surface_get_stride (image);
-    data = cairo_image_surface_get_data (image);
     bp = data;
     rem = len;
     while (rem) {
@@ -2870,7 +2880,7 @@ _image_read_raw (csi_file_t *src,
 	    /* XXX pixel conversion */
 	    switch (format) {
 	    case CAIRO_FORMAT_A1:
-		for (x = (width+7)/8; x--; ) {
+		for (x = rowlen; x--; ) {
 		    uint8_t byte = *--bp;
 		    row[x] = CSI_BITSWAP8_IF_LITTLE_ENDIAN (byte);
 		}
@@ -2910,12 +2920,14 @@ _image_read_raw (csi_file_t *src,
 		/* stride == width */
 		break;
 	    }
+
+	    memset (row + rowlen, 0, stride - rowlen);
 	}
 
 	/* need to treat last row carefully */
 	switch (format) {
 	case CAIRO_FORMAT_A1:
-	    for (x = (width+7)/8; x--; ) {
+	    for (x = rowlen; x--; ) {
 		uint8_t byte = *--bp;
 		data[x] = CSI_BITSWAP8_IF_LITTLE_ENDIAN (byte);
 	    }
@@ -2996,6 +3008,7 @@ _image_read_raw (csi_file_t *src,
 	    /* stride == width */
 	    break;
 	}
+	memset (data + rowlen, 0, stride - rowlen);
     } else {
 #ifndef WORDS_BIGENDIAN
 	switch (format) {
