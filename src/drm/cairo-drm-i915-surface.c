@@ -1784,8 +1784,7 @@ i915_surface_create_from_cacheable_image_internal (i915_device_t *device,
 			   IMAGE_CACHE_WIDTH,
 			   IMAGE_CACHE_HEIGHT,
 			   4,
-			   sizeof (i915_image_private_t),
-			   NULL);
+			   sizeof (i915_image_private_t));
 
 	status = _cairo_rtree_insert (&cache->rtree, width, height, &node);
 	assert (status == CAIRO_STATUS_SUCCESS);

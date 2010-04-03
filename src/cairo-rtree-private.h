@@ -62,7 +62,6 @@ typedef struct _cairo_rtree_node {
 typedef struct _cairo_rtree {
     cairo_rtree_node_t root;
     int min_size;
-    void (*evict) (void *node);
     cairo_list_t pinned;
     cairo_list_t available;
     cairo_list_t evictable;
@@ -98,8 +97,7 @@ _cairo_rtree_init (cairo_rtree_t	*rtree,
 	           int			 width,
 		   int			 height,
 		   int			 min_size,
-		   int			 node_size,
-		   void			 (*evict) (void *node));
+		   int			 node_size);
 
 cairo_private cairo_int_status_t
 _cairo_rtree_insert (cairo_rtree_t	     *rtree,

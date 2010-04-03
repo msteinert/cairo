@@ -1133,7 +1133,7 @@ intel_get_glyph_cache (intel_device_t *device,
 	_cairo_rtree_init (&cache->rtree,
 			   INTEL_GLYPH_CACHE_WIDTH,
 			   INTEL_GLYPH_CACHE_HEIGHT,
-			   0, sizeof (intel_glyph_t), NULL);
+			   0, sizeof (intel_glyph_t));
     }
 
     *out = cache;

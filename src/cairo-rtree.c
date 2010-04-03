@@ -80,8 +80,6 @@ _cairo_rtree_node_destroy (cairo_rtree_t *rtree, cairo_rtree_node_t *node)
     if (node->state == CAIRO_RTREE_NODE_OCCUPIED) {
 	if (node->owner != NULL)
 	    *node->owner = NULL;
-	if (rtree->evict != NULL)
-	    rtree->evict (node);
     } else {
 	for (i = 0; i < 4 && node->children[i] != NULL; i++)
 	    _cairo_rtree_node_destroy (rtree, node->children[i]);
@@ -257,8 +255,6 @@ _cairo_rtree_evict_random (cairo_rtree_t	 *rtree,
 	    if (node->state == CAIRO_RTREE_NODE_OCCUPIED) {
 		if (node->owner != NULL)
 		    *node->owner = NULL;
-		if (rtree->evict != NULL)
-		    rtree->evict (node);
 	    } else {
 		for (i = 0; i < 4 && node->children[i] != NULL; i++)
 		    _cairo_rtree_node_destroy (rtree, node->children[i]);
@@ -331,11 +327,8 @@ _cairo_rtree_init (cairo_rtree_t	*rtree,
 	           int			 width,
 		   int			 height,
 		   int			 min_size,
-		   int			 node_size,
-		   void			 (*evict) (void *node))
+		   int			 node_size)
 {
-    rtree->evict = evict;
-
     assert (node_size >= (int) sizeof (cairo_rtree_node_t));
     _cairo_freepool_init (&rtree->node_freepool, node_size);
 
@@ -360,8 +353,6 @@ _cairo_rtree_reset (cairo_rtree_t *rtree)
     if (rtree->root.state == CAIRO_RTREE_NODE_OCCUPIED) {
 	if (rtree->root.owner != NULL)
 	    *rtree->root.owner = NULL;
-	if (rtree->evict != NULL)
-	    rtree->evict (&rtree->root);
     } else {
 	for (i = 0; i < 4 && rtree->root.children[i] != NULL; i++)
 	    _cairo_rtree_node_destroy (rtree, rtree->root.children[i]);
@@ -385,8 +376,6 @@ _cairo_rtree_fini (cairo_rtree_t *rtree)
     if (rtree->root.state == CAIRO_RTREE_NODE_OCCUPIED) {
 	if (rtree->root.owner != NULL)
 	    *rtree->root.owner = NULL;
-	if (rtree->evict != NULL)
-	    rtree->evict (&rtree->root);
     } else {
 	for (i = 0; i < 4 && rtree->root.children[i] != NULL; i++)
 	    _cairo_rtree_node_destroy (rtree, rtree->root.children[i]);

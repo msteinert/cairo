@@ -905,8 +905,7 @@ _cairo_gl_glyph_cache_init (cairo_gl_glyph_cache_t *cache)
 		       GLYPH_CACHE_WIDTH,
 		       GLYPH_CACHE_HEIGHT,
 		       GLYPH_CACHE_MIN_SIZE,
-		       sizeof (cairo_gl_glyph_private_t),
-		       NULL);
+		       sizeof (cairo_gl_glyph_private_t));
 }
 
 void
