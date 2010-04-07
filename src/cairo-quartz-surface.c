@@ -2145,19 +2145,19 @@ _cairo_quartz_surface_stroke_cg (void *abstract_surface,
 
     action = _cairo_quartz_setup_source (surface, source);
 
-    _cairo_quartz_cairo_matrix_to_quartz (ctm, &strokeTransform);
-    CGContextConcatCTM (surface->cgContext, strokeTransform);
-
     CGContextBeginPath (surface->cgContext);
 
     stroke.cgContext = surface->cgContext;
-    stroke.ctm_inverse = ctm_inverse;
+    stroke.ctm_inverse = NULL;
     rv = _cairo_quartz_cairo_path_to_quartz_context (path, &stroke);
     if (rv)
 	goto BAIL;
 
     if (!_cairo_operator_bounded_by_mask (op) && CGContextCopyPathPtr)
 	path_for_unbounded = CGContextCopyPathPtr (surface->cgContext);
+
+    _cairo_quartz_cairo_matrix_to_quartz (ctm, &strokeTransform);
+    CGContextConcatCTM (surface->cgContext, strokeTransform);
 
     if (action == DO_SOLID || action == DO_PATTERN) {
 	CGContextStrokePath (surface->cgContext);
@@ -2186,12 +2186,12 @@ _cairo_quartz_surface_stroke_cg (void *abstract_surface,
 
     if (path_for_unbounded) {
 	CGContextSaveGState (surface->cgContext);
-	CGContextConcatCTM (surface->cgContext, strokeTransform);
 
 	CGContextBeginPath (surface->cgContext);
 	CGContextAddPath (surface->cgContext, path_for_unbounded);
 	CGPathRelease (path_for_unbounded);
 
+	CGContextConcatCTM (surface->cgContext, strokeTransform);
 	CGContextReplacePathWithStrokedPath (surface->cgContext);
 
 	CGContextAddRect (surface->cgContext, CGContextGetClipBoundingBox (surface->cgContext));
