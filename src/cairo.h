@@ -2672,14 +2672,14 @@ cairo_region_subtract_rectangle (cairo_region_t *dst,
 				 const cairo_rectangle_int_t *rectangle);
 
 cairo_public cairo_status_t
-cairo_region_intersect (cairo_region_t *dst, cairo_region_t *other);
+cairo_region_intersect (cairo_region_t *dst, const cairo_region_t *other);
 
 cairo_public cairo_status_t
 cairo_region_intersect_rectangle (cairo_region_t *dst,
 				  const cairo_rectangle_int_t *rectangle);
 
 cairo_public cairo_status_t
-cairo_region_union (cairo_region_t *dst, cairo_region_t *other);
+cairo_region_union (cairo_region_t *dst, const cairo_region_t *other);
 
 cairo_public cairo_status_t
 cairo_region_union_rectangle (cairo_region_t *dst,
