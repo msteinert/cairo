@@ -52,14 +52,14 @@ END
     exit 1
 }
 
-benchmarks="cairo-perf-micro"
+benchmark="cairo-perf-micro"
 
 # First, pull off any known options
 while true; do
     case $1 in
         -f|--force) force_cairo_perf="true";;
         -h|--html) html_output="$2"; shift ;;
-        -t|--trace) benchmarks="${benchmarks} cairo-perf-trace";;
+        -t|--trace) benchmark="cairo-perf-trace";;
         *) break;;
     esac
 
@@ -178,7 +178,7 @@ build() {
     (cd boilerplate && make libcairoboilerplate.la)
 
     cd perf
-    make cairo-perf cairo-perf-trace
+    make ${benchmark}
 }
 
 # Usage: run_cairo_perf_if_not_cached <rev> <suffix>
@@ -214,9 +214,7 @@ run_cairo_perf_if_not_cached() {
     }
 
     echo "Running \"cairo-perf $CAIRO_PERF_OPTIONS\" against $rev. Results will be cached in:"
-    for cmd in $benchmarks; do
-	(./$cmd $CAIRO_PERF_OPTIONS || echo "*** Performance test crashed") >> $perf
-    done
+    {./$benchmark $CAIRO_PERF_OPTIONS || echo "*** Performance test crashed"} >> $perf
 
     cd $owd
 }
