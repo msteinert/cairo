@@ -128,7 +128,7 @@ _cairo_boxes_add_internal (cairo_boxes_t *boxes,
 					       sizeof (cairo_box_t),
 					       sizeof (struct _cairo_boxes_chunk));
 
-	if (unlikely (chunk == NULL)) {
+	if (unlikely (chunk->next == NULL)) {
 	    boxes->status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	    return;
 	}
