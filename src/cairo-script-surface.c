@@ -49,13 +49,16 @@
 #include "cairo-analysis-surface-private.h"
 #include "cairo-device-private.h"
 #include "cairo-error-private.h"
-#include "cairo-ft-private.h"
 #include "cairo-list-private.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-output-stream-private.h"
 #include "cairo-scaled-font-private.h"
 #include "cairo-surface-clipper-private.h"
 #include "cairo-surface-wrapper-private.h"
+
+#if CAIRO_HAS_FT_FONT
+#include "cairo-ft-private.h"
+#endif
 
 #include <ctype.h>
 
@@ -2588,7 +2591,11 @@ _emit_type42_font (cairo_script_surface_t *surface,
 	return status;
     }
 
+#if CAIRO_HAS_FT_FONT
     load_flags = _cairo_ft_scaled_font_get_load_flags (scaled_font);
+#else
+    load_flags = 0;
+#endif
     _cairo_output_stream_printf (ctx->stream,
 				 "<< "
 				 "/type 42 "
