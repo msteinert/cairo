@@ -269,6 +269,12 @@ cairo_boilerplate_xlib_surface_disable_render (cairo_surface_t *abstract_surface
 
     return CAIRO_STATUS_SUCCESS;
 }
+#else
+cairo_status_t
+cairo_boilerplate_xlib_surface_disable_render (cairo_surface_t *abstract_surface)
+{
+    return CAIRO_STATUS_SUCCESS;
+}
 #endif
 
 
