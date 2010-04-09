@@ -214,7 +214,7 @@ run_cairo_perf_if_not_cached() {
     }
 
     echo "Running \"cairo-perf $CAIRO_PERF_OPTIONS\" against $rev. Results will be cached in:"
-    {./$benchmark $CAIRO_PERF_OPTIONS || echo "*** Performance test crashed"} >> $perf
+    { ./$benchmark $CAIRO_PERF_OPTIONS || echo "*** Performance test crashed"; } >> $perf
 
     cd $owd
 }
