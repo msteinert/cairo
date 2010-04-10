@@ -87,6 +87,10 @@ _cairo_clip_init_copy_transformed (cairo_clip_t    *clip,
 cairo_private void
 _cairo_clip_reset (cairo_clip_t *clip);
 
+cairo_private cairo_bool_t
+_cairo_clip_equal (const cairo_clip_t *clip_a,
+		   const cairo_clip_t *clip_b);
+
 #define _cairo_clip_fini(clip) _cairo_clip_reset (clip)
 
 cairo_private cairo_status_t

@@ -228,9 +228,8 @@ _cairo_clip_intersect_path (cairo_clip_t       *clip,
 
     if (clip->path != NULL) {
 	if (clip->path->fill_rule == fill_rule &&
-	    (path->is_rectilinear ||
-	     (tolerance == clip->path->tolerance &&
-	      antialias == clip->path->antialias)) &&
+	    (path->is_rectilinear || tolerance == clip->path->tolerance) &&
+	    antialias == clip->path->antialias &&
 	    _cairo_path_fixed_equal (&clip->path->path, path))
 	{
 	    return CAIRO_STATUS_SUCCESS;
@@ -280,6 +279,41 @@ _cairo_clip_intersect_path (cairo_clip_t       *clip,
 	clip_path->flags |= CAIRO_CLIP_PATH_IS_BOX;
 
     return CAIRO_STATUS_SUCCESS;
+}
+
+cairo_bool_t
+_cairo_clip_equal (const cairo_clip_t *clip_a,
+		   const cairo_clip_t *clip_b)
+{
+    const cairo_clip_path_t *clip_path_a, *clip_path_b;
+
+    clip_path_a = clip_a->path;
+    clip_path_b = clip_b->path;
+
+    while (clip_path_a && clip_path_b) {
+	if (clip_path_a == clip_path_b)
+	    return TRUE;
+
+	if (clip_path_a->is_rectilinear != clip_path_b->is_rectilinear)
+	    return FALSE;
+
+	if (clip_path_a->fill_rule != clip_path_b->fill_rule)
+	    return FALSE;
+
+	if (clip_path_a->tolerance != clip_path_b->tolerance)
+	    return FALSE;
+
+	if (clip_path_a->antialias != clip_path_b->antialias)
+	    return FALSE;
+
+	if (! _cairo_path_fixed_equal (&clip_path_a->path, &clip_path_b->path))
+	    return FALSE;
+
+	clip_path_a = clip_path_a->prev;
+	clip_path_b = clip_path_b->prev;
+    }
+
+    return clip_path_a == clip_path_b; /* ie both NULL */
 }
 
 cairo_status_t
