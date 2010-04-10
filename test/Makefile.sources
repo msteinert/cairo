@@ -17,6 +17,7 @@ test_sources = \
 	clear.c						\
 	clear-source.c					\
 	clip-all.c					\
+	clip-contexts.c					\
 	clip-disjoint.c					\
 	clip-device-offset.c				\
 	clip-empty.c					\
