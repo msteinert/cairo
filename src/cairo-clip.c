@@ -294,9 +294,6 @@ _cairo_clip_equal (const cairo_clip_t *clip_a,
 	if (clip_path_a == clip_path_b)
 	    return TRUE;
 
-	if (clip_path_a->is_rectilinear != clip_path_b->is_rectilinear)
-	    return FALSE;
-
 	if (clip_path_a->fill_rule != clip_path_b->fill_rule)
 	    return FALSE;
 
