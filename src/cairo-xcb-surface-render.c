@@ -51,7 +51,6 @@ typedef struct _cairo_xcb_picture {
 
     cairo_surface_t *owner;
 
-    cairo_xcb_connection_t *connection;
     cairo_xcb_screen_t *screen;
     xcb_render_picture_t picture;
     xcb_render_pictformat_t xrender_format;
@@ -67,6 +66,12 @@ typedef struct _cairo_xcb_picture {
     int x0, y0;
     int x, y;
 } cairo_xcb_picture_t;
+
+static inline cairo_xcb_connection_t *
+_picture_to_connection (cairo_xcb_picture_t *picture)
+{
+    return (cairo_xcb_connection_t *) picture->base.device;
+}
 
 static void
 _cairo_xcb_surface_ensure_picture (cairo_xcb_surface_t *surface);
@@ -84,21 +89,24 @@ static cairo_status_t
 _cairo_xcb_picture_finish (void *abstract_surface)
 {
     cairo_xcb_picture_t *surface = abstract_surface;
+    cairo_xcb_connection_t *connection = _picture_to_connection (surface);
     cairo_status_t status;
 
-    if (surface->owner != NULL) {
+    if (surface->owner != NULL)
 	cairo_surface_destroy (surface->owner);
-    } else {
-	status = _cairo_xcb_connection_acquire (surface->connection);
-	if (unlikely (status))
-	    return status;
 
-	if (_cairo_xcb_connection_take_socket (surface->connection) == CAIRO_STATUS_SUCCESS) {
-	    _cairo_xcb_connection_render_free_picture (surface->connection,
-						       surface->picture);
-	}
-	_cairo_xcb_connection_release (surface->connection);
+    status = _cairo_xcb_connection_acquire (connection);
+    if (unlikely (status))
+	return status;
+
+    _cairo_xcb_screen_remove_surface_picture (surface->screen, &surface->base);
+
+    if (surface->owner == NULL) {
+	if (_cairo_xcb_connection_take_socket (connection) == CAIRO_STATUS_SUCCESS)
+	    _cairo_xcb_connection_render_free_picture (connection, surface->picture);
     }
+
+    _cairo_xcb_connection_release (connection);
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -130,10 +138,9 @@ _cairo_xcb_picture_create (cairo_xcb_screen_t *screen,
 
     _cairo_surface_init (&surface->base,
 			 &_cairo_xcb_picture_backend,
-			 NULL,
+			 &screen->connection->device,
 			 _cairo_content_from_pixman_format (pixman_format));
 
-    surface->connection = screen->connection;
     surface->screen = screen;
     surface->owner = NULL;
     surface->picture = _cairo_xcb_connection_get_xid (screen->connection);
@@ -165,10 +172,9 @@ _cairo_xcb_picture_copy (cairo_xcb_surface_t *target)
 
     _cairo_surface_init (&surface->base,
 			 &_cairo_xcb_picture_backend,
-			 NULL,
+			 target->base.device,
 			 target->base.content);
 
-    surface->connection = target->connection;
     surface->screen = target->screen;
     surface->owner = cairo_surface_reference (&target->base);
     _cairo_xcb_surface_ensure_picture (target);
@@ -484,7 +490,7 @@ _cairo_xcb_picture_set_matrix (cairo_xcb_picture_t *picture,
 					(pixman_transform_t *) &transform, xc, yc);
 
 	if (memcmp (&picture->transform, &transform, sizeof (xcb_render_transform_t))) {
-	    _cairo_xcb_connection_render_set_picture_transform (picture->connection,
+	    _cairo_xcb_connection_render_set_picture_transform (_picture_to_connection(picture),
 								picture->picture,
 								&transform);
 
@@ -540,7 +546,7 @@ _cairo_xcb_picture_set_filter (cairo_xcb_picture_t *picture,
 	break;
     }
 
-    _cairo_xcb_connection_render_set_picture_filter (picture->connection,
+    _cairo_xcb_connection_render_set_picture_filter (_picture_to_connection (picture),
 						     picture->picture,
 						     len, (char *) render_filter);
     picture->filter = filter;
@@ -575,7 +581,7 @@ _cairo_xcb_picture_set_extend (cairo_xcb_picture_t *picture,
 	break;
     }
 
-    _cairo_xcb_connection_render_change_picture (picture->connection,
+    _cairo_xcb_connection_render_change_picture (_picture_to_connection (picture),
 						 picture->picture,
 						 XCB_RENDER_CP_REPEAT, pa);
     picture->extend = extend;
@@ -592,7 +598,7 @@ _cairo_xcb_picture_set_component_alpha (cairo_xcb_picture_t *picture,
 
     pa[0] = ca;
 
-    _cairo_xcb_connection_render_change_picture (picture->connection,
+    _cairo_xcb_connection_render_change_picture (_picture_to_connection (picture),
 						 picture->picture,
 						 XCB_RENDER_CP_COMPONENT_ALPHA,
 						 pa);
@@ -642,7 +648,7 @@ _solid_picture (cairo_xcb_surface_t *target,
 	    rect.x = rect.y = 0;
 	    rect.width = rect.height = 1;
 
-	    _cairo_xcb_connection_render_fill_rectangles (picture->connection,
+	    _cairo_xcb_connection_render_fill_rectangles (_picture_to_connection (picture),
 							  XCB_RENDER_PICT_OP_SRC,
 							  picture->picture,
 							  xcb_color, 1, &rect);
@@ -1086,15 +1092,6 @@ setup_picture:
     return picture;
 }
 
-static void
-_decouple_cached_picture (cairo_surface_t *surface)
-{
-    cairo_xcb_picture_t *picture = (cairo_xcb_picture_t *) surface;
-
-    if (! picture->base.finished)
-	_cairo_xcb_screen_remove_surface_picture (picture->screen, &picture->base);
-}
-
 static cairo_xcb_picture_t *
 _copy_to_picture (cairo_xcb_surface_t *source,
 		  cairo_bool_t force)
@@ -1372,7 +1369,7 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 
     status = _cairo_surface_attach_snapshot (source,
 					     &picture->base,
-					     _decouple_cached_picture);
+					     cairo_surface_finish);
     if (unlikely (status)) {
 	cairo_surface_destroy (&picture->base);
 	return (cairo_xcb_picture_t *) _cairo_surface_create_in_error (status);

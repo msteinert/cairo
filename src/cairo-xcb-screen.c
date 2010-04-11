@@ -116,7 +116,8 @@ _surface_cache_entry_destroy (void *closure)
 {
     struct pattern_cache_entry *entry = closure;
 
-    cairo_surface_finish (entry->picture);
+    if (entry->picture->snapshot_of != NULL)
+	_cairo_surface_detach_snapshot (entry->picture);
     cairo_surface_destroy (entry->picture);
     _cairo_freelist_free (&entry->screen->pattern_cache_entry_freelist, entry);
 }
@@ -381,6 +382,7 @@ _cairo_xcb_screen_store_surface_picture (cairo_xcb_screen_t *screen,
     status = _cairo_cache_insert (&screen->surface_pattern_cache,
 				  &entry->key);
     if (unlikely (status)) {
+	cairo_surface_destroy (picture);
 	_cairo_freelist_free (&screen->pattern_cache_entry_freelist, entry);
 	return status;
     }
