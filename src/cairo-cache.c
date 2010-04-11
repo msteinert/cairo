@@ -175,9 +175,7 @@ _cairo_cache_thaw (cairo_cache_t *cache)
 {
     assert (cache->freeze_count > 0);
 
-    cache->freeze_count--;
-
-    if (cache->freeze_count == 0)
+    if (--cache->freeze_count == 0)
 	_cairo_cache_shrink_to_accommodate (cache, 0);
 }
 
@@ -241,9 +239,6 @@ static void
 _cairo_cache_shrink_to_accommodate (cairo_cache_t *cache,
 				    unsigned long  additional)
 {
-    if (cache->freeze_count)
-	return;
-
     while (cache->size + additional > cache->max_size) {
 	if (! _cairo_cache_remove_random (cache))
 	    return;
@@ -268,7 +263,8 @@ _cairo_cache_insert (cairo_cache_t	 *cache,
 {
     cairo_status_t status;
 
-    _cairo_cache_shrink_to_accommodate (cache, entry->size);
+    if (entry->size && ! cache->freeze_count)
+	_cairo_cache_shrink_to_accommodate (cache, entry->size);
 
     status = _cairo_hash_table_insert (cache->hash_table,
 				       (cairo_hash_entry_t *) entry);
