@@ -34,20 +34,23 @@
 #include "cairoint.h"
 
 #include "cairo-drm-private.h"
+#include "cairo-error-private.h"
 
 #include <dlfcn.h>
 
 #include <state_tracker/drm_api.h>
-#include <pipe/p_inlines.h>
+#include <pipe/p_format.h>
 #include <pipe/p_screen.h>
 #include <pipe/p_context.h>
+#include <pipe/p_state.h>
+
+#include <util/u_inlines.h>
 
 typedef struct _gallium_surface gallium_surface_t;
 typedef struct _gallium_device gallium_device_t;
 
 struct _gallium_device {
-    cairo_drm_device_t base;
-    cairo_mutex_t mutex;
+    cairo_drm_device_t drm;
 
     void *dlhandle;
     struct drm_api *api;
@@ -59,34 +62,25 @@ struct _gallium_device {
 };
 
 struct _gallium_surface {
-    cairo_drm_surface_t base;
+    cairo_drm_surface_t drm;
 
-    struct pipe_buffer *buffer;
     enum pipe_format pipe_format;
 
-    struct pipe_texture *texture;
+    struct pipe_resource *texture;
+    struct pipe_transfer *map_transfer;
 
     cairo_surface_t *fallback;
 };
 
 static cairo_surface_t *
 gallium_surface_create_internal (gallium_device_t *device,
-				 cairo_content_t content,
 				 enum pipe_format format,
 				 int width, int height);
 
-static gallium_device_t *
-gallium_device_acquire (cairo_drm_device_t *base_dev)
+static inline gallium_device_t *
+gallium_device (gallium_surface_t *surface)
 {
-    gallium_device_t *device = (gallium_device_t *) base_dev;
-    CAIRO_MUTEX_LOCK (device->mutex);
-    return device;
-}
-
-static void
-gallium_device_release (gallium_device_t *device)
-{
-    CAIRO_MUTEX_UNLOCK (device->mutex);
+    return (gallium_device_t *) surface->drm.base.device;
 }
 
 static cairo_format_t
@@ -103,6 +97,19 @@ _cairo_format_from_pipe_format (enum pipe_format format)
 }
 
 static enum pipe_format
+pipe_format_from_format (cairo_format_t format)
+{
+    switch ((int) format) {
+    case CAIRO_FORMAT_A8:
+	return PIPE_FORMAT_A8_UNORM;
+    case CAIRO_FORMAT_ARGB32:
+	return PIPE_FORMAT_A8R8G8B8_UNORM;
+    default:
+	return (enum pipe_format) -1;
+    }
+}
+
+static enum pipe_format
 pipe_format_from_content (cairo_content_t content)
 {
     if (content == CAIRO_CONTENT_ALPHA)
@@ -115,13 +122,17 @@ static cairo_bool_t
 format_is_supported_destination (gallium_device_t *device,
 	                         enum pipe_format format)
 {
+    if (format == (enum pipe_format) -1)
+	return FALSE;
+
     return device->screen->is_format_supported (device->screen,
 					        format,
 						0,
-						PIPE_TEXTURE_USAGE_RENDER_TARGET,
+						PIPE_BIND_RENDER_TARGET,
 						0);
 }
 
+#if 0
 static cairo_bool_t
 format_is_supported_source (gallium_device_t *device,
 	                    enum pipe_format format)
@@ -129,9 +140,10 @@ format_is_supported_source (gallium_device_t *device,
     return device->screen->is_format_supported (device->screen,
 					        format,
 						0,
-						PIPE_TEXTURE_USAGE_SAMPLER,
+						PIPE_BIND_SAMPLER_VIEW,
 						0);
 }
+#endif
 
 static cairo_surface_t *
 gallium_surface_create_similar (void			*abstract_src,
@@ -140,26 +152,32 @@ gallium_surface_create_similar (void			*abstract_src,
 				int			 height)
 {
     gallium_surface_t *other = abstract_src;
-    gallium_device_t *device;
+    gallium_device_t *device = gallium_device (other);
     enum pipe_format pipe_format;
     cairo_surface_t *surface = NULL;
+    cairo_status_t status;
 
-    device = gallium_device_acquire (other->base.device);
+    status = cairo_device_acquire (&device->drm.base);
+    if (unlikely (status))
+	return _cairo_surface_create_in_error (status);
 
     if (MAX (width, height) > device->max_size)
 	goto RELEASE;
 
-    pipe_format = pipe_format_from_content (content);
+    if (content == other->drm.base.content)
+	pipe_format = other->pipe_format;
+    else
+	pipe_format = pipe_format_from_content (content);
 
     if (! format_is_supported_destination (device, pipe_format))
 	goto RELEASE;
 
     surface = gallium_surface_create_internal (device,
-					       content, pipe_format,
+					       pipe_format,
 					       width, height);
 
 RELEASE:
-    gallium_device_release (device);
+    cairo_device_release (&device->drm.base);
 
     return surface;
 }
@@ -168,24 +186,56 @@ static cairo_status_t
 gallium_surface_finish (void *abstract_surface)
 {
     gallium_surface_t *surface = abstract_surface;
-    gallium_device_t *device;
+    gallium_device_t *device = gallium_device (surface);
+    cairo_status_t status;
 
-    device = gallium_device_acquire (surface->base.device);
-    device->screen->buffer_destroy (surface->buffer);
-    gallium_device_release (device);
+    status = cairo_device_acquire (&device->drm.base);
+    if (likely (status == CAIRO_STATUS_SUCCESS)) {
+	pipe_resource_reference (&surface->texture, NULL);
+	cairo_device_release (&device->drm.base);
+    }
 
-    return _cairo_drm_surface_finish (&surface->base);
+    return _cairo_drm_surface_finish (&surface->drm);
 }
 
-static void
-gallium_surface_unmap (void *closure)
+static cairo_surface_t *
+gallium_surface_map_to_image (gallium_surface_t *surface)
 {
-    gallium_surface_t *surface = closure;
-    gallium_device_t *device;
+    gallium_device_t *device = gallium_device (surface);
+    cairo_status_t status;
+    void *ptr = NULL;
 
-    device = gallium_device_acquire (surface->base.device);
-    pipe_buffer_unmap (device->screen, surface->buffer);
-    gallium_device_release (device);
+    status = cairo_device_acquire (&device->drm.base);
+    if (unlikely (status))
+	return _cairo_surface_create_in_error (status);
+
+    surface->map_transfer =
+	  pipe_get_transfer (device->pipe,
+			     surface->texture, 0, 0, 0,
+			     PIPE_TRANSFER_MAP_DIRECTLY |
+			     PIPE_TRANSFER_READ_WRITE,
+			     0, 0,
+			     surface->drm.width,
+			     surface->drm.height);
+    if (likely (surface->map_transfer != NULL))
+	ptr = device->pipe->transfer_map (device->pipe, surface->map_transfer);
+
+    cairo_device_release (&device->drm.base);
+
+    if (unlikely (ptr == NULL)) {
+	if (surface->map_transfer != NULL) {
+	    device->pipe->transfer_destroy (device->pipe,
+					    surface->map_transfer);
+	    surface->map_transfer = NULL;
+	}
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
+    }
+
+    return cairo_image_surface_create_for_data (ptr,
+						surface->drm.format,
+						surface->drm.width,
+						surface->drm.height,
+						surface->map_transfer->stride);
 }
 
 static cairo_status_t
@@ -194,10 +244,11 @@ gallium_surface_acquire_source_image (void *abstract_surface,
 				      void **image_extra)
 {
     gallium_surface_t *surface = abstract_surface;
-    gallium_device_t *device;
+    gallium_device_t *device = gallium_device (surface);
     cairo_format_t format;
-    cairo_image_surface_t *image;
+    cairo_surface_t *image;
     cairo_status_t status;
+    struct pipe_transfer *transfer;
     void *ptr;
 
     if (surface->fallback != NULL) {
@@ -207,14 +258,12 @@ gallium_surface_acquire_source_image (void *abstract_surface,
 	return CAIRO_STATUS_SUCCESS;
     }
 
-    if (unlikely (surface->base.width == 0 || surface->base.height == 0)) {
-	image = (cairo_image_surface_t *)
-	    cairo_image_surface_create (surface->base.format, 0, 0);
-	status = image->base.status;
-	if (unlikely (status))
-	    return status;
+    if (unlikely (surface->drm.width == 0 || surface->drm.height == 0)) {
+	image = cairo_image_surface_create (surface->drm.format, 0, 0);
+	if (unlikely (image->status))
+	    return image->status;
 
-	*image_out = image;
+	*image_out = (cairo_image_surface_t *) image;
 	*image_extra = NULL;
 	return CAIRO_STATUS_SUCCESS;
     }
@@ -223,30 +272,28 @@ gallium_surface_acquire_source_image (void *abstract_surface,
     if (format == CAIRO_FORMAT_INVALID)
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
-    device = gallium_device_acquire (surface->base.device);
-    ptr = pipe_buffer_map (device->screen, surface->buffer,
-			   PIPE_BUFFER_USAGE_CPU_READ);
-    gallium_device_release (device);
-
-    image = (cairo_image_surface_t *)
-	cairo_image_surface_create_for_data (ptr, format,
-					     surface->base.width,
-					     surface->base.height,
-					     surface->base.stride);
-    if (unlikely (image->base.status))
-	return image->base.status;
-
-    status = _cairo_user_data_array_set_data (&image->base.user_data,
-					      (cairo_user_data_key_t *) &surface->fallback,
-					      surface,
-					      gallium_surface_unmap);
-    if (unlikely (status)) {
-	cairo_surface_destroy (&image->base);
+    status = cairo_device_acquire (&device->drm.base);
+    if (unlikely (status))
 	return status;
-    }
+
+    transfer = pipe_get_transfer (device->pipe,
+				  surface->texture, 0, 0, 0,
+				  PIPE_TRANSFER_READ,
+				  0, 0,
+				  surface->drm.width,
+				  surface->drm.height);
+    ptr = device->pipe->transfer_map (device->pipe, transfer);
+    cairo_device_release (&device->drm.base);
+
+    image = cairo_image_surface_create_for_data (ptr, format,
+						 surface->drm.width,
+						 surface->drm.height,
+						 surface->drm.stride);
+    if (unlikely (image->status))
+	return image->status;
 
     *image_out = (cairo_image_surface_t *) image;
-    *image_extra = NULL;
+    *image_extra = transfer;
     return CAIRO_STATUS_SUCCESS;
 }
 
@@ -256,101 +303,161 @@ gallium_surface_release_source_image (void *abstract_surface,
 				      void *image_extra)
 {
     cairo_surface_destroy (&image->base);
-}
 
-static cairo_status_t
-gallium_surface_acquire_dest_image (void *abstract_surface,
-				    cairo_rectangle_int_t *interest_rect,
-				    cairo_image_surface_t **image_out,
-				    cairo_rectangle_int_t *image_rect_out,
-				    void **image_extra)
-{
-    gallium_surface_t *surface = abstract_surface;
-    gallium_device_t *device;
-    cairo_surface_t *image;
-    cairo_format_t format;
-    cairo_status_t status;
-    void *ptr;
+    if (image_extra != NULL) {
+	gallium_device_t *device = gallium_device (abstract_surface);
 
-    assert (surface->fallback == NULL);
-
-    format = _cairo_format_from_pipe_format (surface->pipe_format);
-    if (format == CAIRO_FORMAT_INVALID)
-	return CAIRO_INT_STATUS_UNSUPPORTED;
-
-    device = gallium_device_acquire (surface->base.device);
-    ptr = pipe_buffer_map (device->screen, surface->buffer,
-			   PIPE_BUFFER_USAGE_CPU_READ_WRITE);
-    gallium_device_release (device);
-
-    image = cairo_image_surface_create_for_data (ptr, format,
-						 surface->base.width,
-						 surface->base.height,
-						 surface->base.stride);
-    if (unlikely (image->status))
-	return image->status;
-
-    status = _cairo_user_data_array_set_data (&image->user_data,
-					      (cairo_user_data_key_t *) &surface->fallback,
-					      surface,
-					      gallium_surface_unmap);
-    if (unlikely (status)) {
-	cairo_surface_destroy (image);
-	return status;
+	device->pipe->transfer_unmap (device->pipe, image_extra);
+	device->pipe->transfer_destroy (device->pipe, image_extra);
     }
-
-    surface->fallback = cairo_surface_reference (image);
-
-    *image_out = (cairo_image_surface_t *) image;
-    *image_extra = NULL;
-
-    image_rect_out->x = 0;
-    image_rect_out->y = 0;
-    image_rect_out->width  = surface->base.width;
-    image_rect_out->height = surface->base.height;
-
-    return CAIRO_STATUS_SUCCESS;
-}
-
-static void
-gallium_surface_release_dest_image (void                    *abstract_surface,
-				    cairo_rectangle_int_t   *interest_rect,
-				    cairo_image_surface_t   *image,
-				    cairo_rectangle_int_t   *image_rect,
-				    void                    *image_extra)
-{
-    /* Keep the fallback until we flush, either explicitly or at the
-     * end of this device. The idea is to avoid excess migration of
-     * the buffer between GPU and CPU domains.
-     */
-    cairo_surface_destroy (&image->base);
 }
 
 static cairo_status_t
 gallium_surface_flush (void *abstract_surface)
 {
     gallium_surface_t *surface = abstract_surface;
-    gallium_device_t *device;
+    gallium_device_t *device = gallium_device (surface);
     cairo_status_t status;
 
-    if (surface->fallback == NULL)
+    if (surface->fallback == NULL) {
+	device->pipe->flush (device->pipe,
+			     PIPE_FLUSH_RENDER_CACHE,
+			     NULL);
 	return CAIRO_STATUS_SUCCESS;
+    }
 
     /* kill any outstanding maps */
     cairo_surface_finish (surface->fallback);
 
-    device = gallium_device_acquire (surface->base.device);
-    pipe_buffer_flush_mapped_range (device->screen,
-				    surface->buffer,
-				    0,
-				    surface->base.stride * surface->base.height);
-    gallium_device_release (device);
+    status = cairo_device_acquire (&device->drm.base);
+    if (likely (status == CAIRO_STATUS_SUCCESS)) {
+	device->pipe->transfer_unmap (device->pipe,
+				      surface->map_transfer);
+	device->pipe->transfer_destroy (device->pipe,
+					surface->map_transfer);
+	surface->map_transfer = NULL;
+	cairo_device_release (&device->drm.base);
+    }
 
     status = cairo_surface_status (surface->fallback);
     cairo_surface_destroy (surface->fallback);
     surface->fallback = NULL;
 
     return status;
+}
+
+static cairo_int_status_t
+gallium_surface_paint (void			*abstract_surface,
+			  cairo_operator_t	 op,
+			  const cairo_pattern_t	*source,
+			  cairo_clip_t		*clip)
+{
+    gallium_surface_t *surface = abstract_surface;
+
+    if (surface->fallback == NULL) {
+	/* XXX insert magic */
+	surface->fallback = gallium_surface_map_to_image (surface);
+    }
+
+    return _cairo_surface_paint (surface->fallback, op, source, clip);
+}
+
+static cairo_int_status_t
+gallium_surface_mask (void			*abstract_surface,
+			 cairo_operator_t	 op,
+			 const cairo_pattern_t	*source,
+			 const cairo_pattern_t	*mask,
+			 cairo_clip_t		*clip)
+{
+    gallium_surface_t *surface = abstract_surface;
+
+    if (surface->fallback == NULL) {
+	/* XXX insert magic */
+	surface->fallback = gallium_surface_map_to_image (surface);
+    }
+
+    return _cairo_surface_mask (surface->fallback,
+				op, source, mask,
+				clip);
+}
+
+static cairo_int_status_t
+gallium_surface_stroke (void				*abstract_surface,
+			   cairo_operator_t		 op,
+			   const cairo_pattern_t	*source,
+			   cairo_path_fixed_t		*path,
+			   const cairo_stroke_style_t	*style,
+			   const cairo_matrix_t		*ctm,
+			   const cairo_matrix_t		*ctm_inverse,
+			   double			 tolerance,
+			   cairo_antialias_t		 antialias,
+			   cairo_clip_t			*clip)
+{
+    gallium_surface_t *surface = abstract_surface;
+
+    if (surface->fallback == NULL) {
+	/* XXX insert magic */
+	surface->fallback = gallium_surface_map_to_image (surface);
+    }
+
+    return _cairo_surface_stroke (surface->fallback,
+				  op, source,
+				  path, style,
+				  ctm, ctm_inverse,
+				  tolerance, antialias,
+				  clip);
+}
+
+static cairo_int_status_t
+gallium_surface_fill (void			*abstract_surface,
+			 cairo_operator_t	 op,
+			 const cairo_pattern_t	*source,
+			 cairo_path_fixed_t	*path,
+			 cairo_fill_rule_t	 fill_rule,
+			 double			 tolerance,
+			 cairo_antialias_t	 antialias,
+			 cairo_clip_t		*clip)
+{
+    gallium_surface_t *surface = abstract_surface;
+
+    if (surface->fallback == NULL) {
+	/* XXX insert magic */
+	surface->fallback = gallium_surface_map_to_image (surface);
+    }
+
+    return _cairo_surface_fill (surface->fallback,
+				op, source,
+				path, fill_rule,
+				tolerance, antialias,
+				clip);
+}
+
+static cairo_int_status_t
+gallium_surface_glyphs (void				*abstract_surface,
+			   cairo_operator_t		 op,
+			   const cairo_pattern_t	*source,
+			   cairo_glyph_t		*glyphs,
+			   int				 num_glyphs,
+			   cairo_scaled_font_t		*scaled_font,
+			   cairo_clip_t			*clip,
+			   int *num_remaining)
+{
+    gallium_surface_t *surface = abstract_surface;
+
+    *num_remaining = 0;
+
+    if (surface->fallback == NULL) {
+	/* XXX insert magic */
+	surface->fallback = gallium_surface_map_to_image (surface);
+    }
+
+    return _cairo_surface_show_text_glyphs (surface->fallback,
+					    op, source,
+					    NULL, 0,
+					    glyphs, num_glyphs,
+					    NULL, 0, 0,
+					    scaled_font,
+					    clip);
 }
 
 static const cairo_surface_backend_t gallium_surface_backend = {
@@ -360,9 +467,9 @@ static const cairo_surface_backend_t gallium_surface_backend = {
 
     gallium_surface_acquire_source_image,
     gallium_surface_release_source_image,
-    gallium_surface_acquire_dest_image,
-    gallium_surface_release_dest_image,
 
+    NULL, //gallium_surface_acquire_dest_image,
+    NULL, //gallium_surface_release_dest_image,
     NULL, //gallium_surface_clone_similar,
     NULL, //gallium_surface_composite,
     NULL, //gallium_surface_fill_rectangles,
@@ -379,11 +486,11 @@ static const cairo_surface_backend_t gallium_surface_backend = {
     NULL, //gallium_surface_scaled_font_fini,
     NULL, //gallium_surface_scaled_glyph_fini,
 
-    _cairo_drm_surface_paint,
-    _cairo_drm_surface_mask,
-    _cairo_drm_surface_stroke,
-    _cairo_drm_surface_fill,
-    _cairo_drm_surface_show_glyphs,
+    gallium_surface_paint,
+    gallium_surface_mask,
+    gallium_surface_stroke,
+    gallium_surface_fill,
+    gallium_surface_glyphs,
 
     NULL, /* snapshot */
 
@@ -412,6 +519,8 @@ _gallium_fake_bo_create (uint32_t size, uint32_t name)
 {
     cairo_drm_bo_t *bo;
 
+    /* XXX integrate with winsys handle */
+
     bo = malloc (sizeof (cairo_drm_bo_t));
 
     CAIRO_REFERENCE_COUNT_INIT (&bo->ref_count, 1);
@@ -430,38 +539,45 @@ _gallium_fake_bo_release (void *dev, void *bo)
 
 static cairo_surface_t *
 gallium_surface_create_internal (gallium_device_t *device,
-				 cairo_content_t content,
 				 enum pipe_format pipe_format,
 				 int width, int height)
 {
     gallium_surface_t *surface;
+    struct pipe_resource template;
     cairo_status_t status;
+    cairo_format_t format;
     int stride, size;
 
     surface = malloc (sizeof (gallium_surface_t));
     if (unlikely (surface == NULL))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    _cairo_surface_init (&surface->base.base,
+    format = _cairo_format_from_pipe_format (pipe_format);
+    _cairo_surface_init (&surface->drm.base,
 			 &gallium_surface_backend,
-			 content);
-    _cairo_drm_surface_init (&surface->base, &device->base);
+			 &device->drm.base,
+			 _cairo_content_from_format (format));
+    _cairo_drm_surface_init (&surface->drm, format, width, height);
 
     stride = gallium_format_stride_for_width (pipe_format, width);
     size = stride * height;
 
-    surface->base.width = width;
-    surface->base.height = height;
-    surface->base.stride = stride;
-    surface->base.bo = _gallium_fake_bo_create (size, 0);
+    surface->drm.stride = stride;
+    surface->drm.bo = _gallium_fake_bo_create (size, 0);
 
-    surface->buffer = pipe_buffer_create (device->screen,
-					  0,
-					  PIPE_BUFFER_USAGE_GPU_READ_WRITE |
-					  PIPE_BUFFER_USAGE_CPU_READ_WRITE,
-					  size);
-    if (unlikely (surface->buffer == NULL)) {
-	status = _cairo_drm_surface_finish (&surface->base);
+    memset(&template, 0, sizeof(template));
+    template.target = PIPE_TEXTURE_2D;
+    template.format = pipe_format;
+    template.width0 = width;
+    template.height0 = height;
+    template.depth0 = 1;
+    template.last_level = 0;
+    template.bind = PIPE_BIND_RENDER_TARGET;
+    surface->texture = device->screen->resource_create (device->screen,
+							&template);
+
+    if (unlikely (surface->texture == NULL)) {
+	status = _cairo_drm_surface_finish (&surface->drm);
 	free (surface);
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
@@ -469,42 +585,43 @@ gallium_surface_create_internal (gallium_device_t *device,
     surface->pipe_format = pipe_format;
     surface->texture = NULL;
 
-    return &surface->base.base;
+    return &surface->drm.base;
 }
 
 static cairo_surface_t *
 gallium_surface_create (cairo_drm_device_t *base_dev,
-			cairo_content_t content,
+			cairo_format_t format,
 			int width, int height)
 {
-    gallium_device_t *device;
+    gallium_device_t *device = (gallium_device_t *) base_dev;
     cairo_surface_t *surface;
     enum pipe_format pipe_format;
+    cairo_status_t status;
 
-    device = gallium_device_acquire (base_dev);
+    status = cairo_device_acquire (&device->drm.base);
 
     if (MAX (width, height) > device->max_size) {
 	surface = _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
 	goto RELEASE;
     }
 
-    pipe_format = pipe_format_from_content (content);
-
+    pipe_format = pipe_format_from_format (format);
     if (! format_is_supported_destination (device, pipe_format)) {
 	surface = _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
 	goto RELEASE;
     }
 
     surface = gallium_surface_create_internal (device,
-					       content, pipe_format,
+					       pipe_format,
 					       width, height);
 
 RELEASE:
-    gallium_device_release (device);
+    cairo_device_release (&device->drm.base);
 
     return surface;
 }
 
+#if 0
 static cairo_surface_t *
 gallium_surface_create_for_name (cairo_drm_device_t *base_dev,
 				 unsigned int name,
@@ -534,50 +651,53 @@ gallium_surface_create_for_name (cairo_drm_device_t *base_dev,
 	break;
     }
 
-    device = gallium_device_acquire (base_dev);
+    status = cairo_device_acquire (&device->drm.base);
 
     if (MAX (width, height) > device->max_size) {
-	gallium_device_release (device);
+	cairo_device_release (&device->drm.base);
 	free (surface);
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_SIZE));
     }
 
     if (! format_is_supported_destination (device, surface->pipe_format)) {
-	gallium_device_release (device);
+	cairo_device_release (&device->drm.base);
 	free (surface);
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_FORMAT));
     }
 
     content = _cairo_content_from_format (format);
-    _cairo_surface_init (&surface->base.base,
+    _cairo_surface_init (&surface->drm.base,
 			 &gallium_surface_backend,
 			 content);
-    _cairo_drm_surface_init (&surface->base, base_dev);
+    _cairo_drm_surface_init (&surface->drm, base_dev);
 
-    surface->base.bo = _gallium_fake_bo_create (height * stride, name);
+    surface->drm.bo = _gallium_fake_bo_create (height * stride, name);
 
-    surface->base.width  = width;
-    surface->base.height = height;
-    surface->base.stride = stride;
+    surface->drm.width  = width;
+    surface->drm.height = height;
+    surface->drm.stride = stride;
 
+#if 0
+    /* XXX screen->create_from_handle */
     surface->buffer = device->api->buffer_from_handle (device->api,
 						       device->screen,
 						       "cairo-gallium alien",
 						       name);
     if (unlikely (surface->buffer == NULL)) {
-	status = _cairo_drm_surface_finish (&surface->base);
-	gallium_device_release (device);
+	status = _cairo_drm_surface_finish (&surface->drm);
+	cairo_device_release (&device->drm.base);
 	free (surface);
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
     }
+#endif
 
     surface->texture = NULL;
 
     surface->fallback = NULL;
 
-    gallium_device_release (device);
+    cairo_device_release (&device->drm.base);
 
-    return &surface->base.base;
+    return &surface->drm.base;
 }
 
 static cairo_int_status_t
@@ -587,18 +707,19 @@ gallium_surface_flink (void *abstract_surface)
     gallium_device_t *device;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
-    device = gallium_device_acquire (surface->base.device);
+    status = cairo_device_acquire (&device->drm.base);
     if (! device->api->global_handle_from_buffer (device->api,
 						  device->screen,
 						  surface->buffer,
-						  &surface->base.bo->name))
+						  &surface->drm.bo->name))
     {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
-    gallium_device_release (device);
+    cairo_device_release (&device->drm.base);
 
     return status;
 }
+#endif
 
 static void
 gallium_device_destroy (void *abstract_device)
@@ -608,8 +729,6 @@ gallium_device_destroy (void *abstract_device)
     device->pipe->destroy (device->pipe);
     device->screen->destroy (device->screen);
     device->api->destroy (device->api);
-
-    CAIRO_MUTEX_FINI (device->mutex);
 
     dlclose (device->dlhandle);
     free (device);
@@ -649,20 +768,18 @@ _cairo_drm_gallium_device_create (int fd, dev_t dev, int vendor_id, int chip_id)
 
     device->dlhandle = handle;
 
-    CAIRO_MUTEX_INIT (device->mutex);
+    device->drm.surface.create = gallium_surface_create;
+    device->drm.surface.create_for_name = NULL;
+    //device->drm.surface.create_for_name = gallium_surface_create_for_name;
+    device->drm.surface.enable_scan_out = NULL;
+    //device->drm.surface.flink = gallium_surface_flink;
+    device->drm.surface.flink = NULL;
 
-    device->base.status = CAIRO_STATUS_SUCCESS;
+    device->drm.device.flush = NULL;
+    device->drm.device.throttle = NULL;
+    device->drm.device.destroy = gallium_device_destroy;
 
-    device->base.surface.create = gallium_surface_create;
-    device->base.surface.create_for_name = gallium_surface_create_for_name;
-    device->base.surface.enable_scan_out = NULL;
-    device->base.surface.flink = gallium_surface_flink;
-
-    device->base.device.flush = NULL;
-    device->base.device.throttle = NULL;
-    device->base.device.destroy = gallium_device_destroy;
-
-    device->base.bo.release = _gallium_fake_bo_release;
+    device->drm.bo.release = _gallium_fake_bo_release;
 
     device->api = ctor ();
     if (device->api == NULL) {
@@ -679,13 +796,16 @@ _cairo_drm_gallium_device_create (int fd, dev_t dev, int vendor_id, int chip_id)
     device->max_size = 1 << device->screen->get_param (device->screen,
 						       PIPE_CAP_MAX_TEXTURE_2D_LEVELS);
 
-    device->pipe = device->api->create_context (device->api, device->screen);
+    device->pipe = device->screen->context_create (device->screen, device);
     if (device->pipe == NULL) {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	goto CLEANUP_SCREEN;
     }
 
-    return _cairo_drm_device_init (&device->base, fd, dev, device->max_size);
+    return _cairo_drm_device_init (&device->drm,
+				   fd, dev,
+				   0, 0,
+				   device->max_size);
 
 CLEANUP_SCREEN:
     device->screen->destroy (device->screen);
