@@ -888,10 +888,12 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
 			     cairo_rectangle_int_t   *rect_out)
 {
     cairo_image_surface_t *image;
+    cairo_gl_context_t *ctx;
     GLenum err;
     GLenum format, type;
     cairo_format_t cairo_format;
     unsigned int cpp;
+    cairo_status_t status;
 
     /* Want to use a switch statement here but the compiler gets whiny. */
     if (surface->base.content == CAIRO_CONTENT_COLOR_ALPHA) {
@@ -924,6 +926,9 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
      * it the destination.  But then, this is the fallback path, so let's not
      * fall back instead.
      */
+    status = _cairo_gl_context_acquire (surface->base.device, &ctx);
+    if (unlikely (status))
+        return status;
     _cairo_gl_set_destination (surface);
 
     glPixelStorei (GL_PACK_ALIGNMENT, 1);
@@ -938,6 +943,8 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
 
     while ((err = glGetError ()))
 	fprintf (stderr, "GL error 0x%08x\n", (int) err);
+
+    _cairo_gl_context_release (ctx);
 
     *image_out = image;
     if (rect_out != NULL)
