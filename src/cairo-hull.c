@@ -95,6 +95,13 @@ _cairo_hull_vertex_compare (const void *av, const void *bv)
     cairo_hull_t *b = (cairo_hull_t *) bv;
     int ret;
 
+    /* Some libraries are reported to actually compare identical
+     * pointers and require the result to be 0. This is the crazy world we
+     * have to live in.
+     */
+    if (a == b)
+	return 0;
+
     ret = _cairo_slope_compare (&a->slope, &b->slope);
 
     /*
