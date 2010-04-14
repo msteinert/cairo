@@ -680,8 +680,14 @@ cairo_gl_surface_swapbuffers (cairo_surface_t *abstract_surface)
     }
 
     if (! surface->fb) {
-	cairo_gl_context_t *ctx = (cairo_gl_context_t *) surface->base.device;
+	cairo_gl_context_t *ctx;
+        
+        if (_cairo_gl_context_acquire (surface->base.device, &ctx))
+            return;
+
 	ctx->swap_buffers (ctx, surface);
+
+        _cairo_gl_context_release (ctx);
     }
 }
 
@@ -721,7 +727,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
     GLenum internal_format, format, type;
     cairo_bool_t has_alpha;
     cairo_image_surface_t *clone = NULL;
-    cairo_gl_context_t *ctx = (cairo_gl_context_t *) dst->base.device;
+    cairo_gl_context_t *ctx;
     int cpp;
     cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
@@ -748,6 +754,10 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
     }
 
     cpp = PIXMAN_FORMAT_BPP (src->pixman_format) / 8;
+
+    status = _cairo_gl_context_acquire (dst->base.device, &ctx);
+    if (unlikely (status))
+	return status;
 
     glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
     glPixelStorei (GL_UNPACK_ROW_LENGTH, src->stride / cpp);
@@ -875,6 +885,8 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 
 fail:
     glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
+
+    _cairo_gl_context_release (ctx);
 
     cairo_surface_destroy (&clone->base);
 
