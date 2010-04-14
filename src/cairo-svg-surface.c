@@ -251,30 +251,39 @@ _cairo_surface_is_svg (cairo_surface_t *surface)
 
 /* If the abstract_surface is a paginated surface, and that paginated
  * surface's target is a svg_surface, then set svg_surface to that
- * target. Otherwise return %CAIRO_STATUS_SURFACE_TYPE_MISMATCH.
+ * target. Otherwise return FALSE.
  */
-static cairo_status_t
+static cairo_bool_t
 _extract_svg_surface (cairo_surface_t		 *surface,
 		      cairo_svg_surface_t	**svg_surface)
 {
     cairo_surface_t *target;
+    cairo_status_t status_ignored;
 
     if (surface->status)
-	return surface->status;
+	return FALSE;
 
-    if (! _cairo_surface_is_paginated (surface))
-	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+    if (! _cairo_surface_is_paginated (surface)) {
+	status_ignored = _cairo_surface_set_error (surface,
+						   _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
+	return FALSE;
+    }
 
     target = _cairo_paginated_surface_get_target (surface);
-    if (target->status)
-	return target->status;
+    if (target->status) {
+	status_ignored = _cairo_surface_set_error (surface,
+						   target->status);
+	return FALSE;
+    }
 
-    if (! _cairo_surface_is_svg (target))
-	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+    if (! _cairo_surface_is_svg (target)) {
+	status_ignored = _cairo_surface_set_error (surface,
+						   _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
+	return FALSE;
+    }
 
     *svg_surface = (cairo_svg_surface_t *) target;
-
-    return CAIRO_STATUS_SUCCESS;
+    return TRUE;
 }
 
 /**
@@ -297,13 +306,9 @@ cairo_svg_surface_restrict_to_version (cairo_surface_t		*abstract_surface,
 				       cairo_svg_version_t	 version)
 {
     cairo_svg_surface_t *surface = NULL; /* hide compiler warning */
-    cairo_status_t status;
 
-    status = _extract_svg_surface (abstract_surface, &surface);
-    if (unlikely (status)) {
-	status = _cairo_surface_set_error (abstract_surface, status);
+    if (! _extract_svg_surface (abstract_surface, &surface))
 	return;
-    }
 
     if (version < CAIRO_SVG_VERSION_LAST)
 	surface->document->svg_version = version;
