@@ -652,6 +652,9 @@ cairo_gl_surface_swapbuffers (cairo_surface_t *abstract_surface)
     cairo_gl_surface_t *surface = (cairo_gl_surface_t *) abstract_surface;
     cairo_status_t status;
 
+    if (unlikely (abstract_surface->status))
+	return;
+
     if (! _cairo_surface_is_gl (abstract_surface)) {
 	status = _cairo_surface_set_error (abstract_surface,
 		                           CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
