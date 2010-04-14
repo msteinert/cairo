@@ -486,30 +486,39 @@ _cairo_surface_is_pdf (cairo_surface_t *surface)
 
 /* If the abstract_surface is a paginated surface, and that paginated
  * surface's target is a pdf_surface, then set pdf_surface to that
- * target. Otherwise return %CAIRO_STATUS_SURFACE_TYPE_MISMATCH.
+ * target. Otherwise return FALSE.
  */
-static cairo_status_t
+static cairo_bool_t
 _extract_pdf_surface (cairo_surface_t		 *surface,
 		      cairo_pdf_surface_t	**pdf_surface)
 {
     cairo_surface_t *target;
+    cairo_status_t status_ignored;
 
     if (surface->status)
-	return surface->status;
+	return FALSE;
 
-    if (! _cairo_surface_is_paginated (surface))
-	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+    if (! _cairo_surface_is_paginated (surface)) {
+	status_ignored = _cairo_surface_set_error (surface,
+						   _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
+	return FALSE;
+    }
 
     target = _cairo_paginated_surface_get_target (surface);
-    if (target->status)
-	return target->status;
+    if (target->status) {
+	status_ignored = _cairo_surface_set_error (surface,
+						   target->status);
+	return FALSE;
+    }
 
-    if (! _cairo_surface_is_pdf (target))
-	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+    if (! _cairo_surface_is_pdf (target)) {
+	status_ignored = _cairo_surface_set_error (surface,
+						   _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
+	return FALSE;
+    }
 
     *pdf_surface = (cairo_pdf_surface_t *) target;
-
-    return CAIRO_STATUS_SUCCESS;
+    return TRUE;
 }
 
 /**
@@ -534,11 +543,8 @@ cairo_pdf_surface_restrict_to_version (cairo_surface_t 		*abstract_surface,
     cairo_pdf_surface_t *surface = NULL; /* hide compiler warning */
     cairo_status_t status;
 
-    status = _extract_pdf_surface (abstract_surface, &surface);
-    if (status) {
-	status = _cairo_surface_set_error (abstract_surface, status);
+    if (! _extract_pdf_surface (abstract_surface, &surface))
 	return;
-    }
 
     if (version < CAIRO_PDF_VERSION_LAST)
 	surface->pdf_version = version;
@@ -614,11 +620,8 @@ cairo_pdf_surface_set_size (cairo_surface_t	*surface,
     cairo_pdf_surface_t *pdf_surface = NULL; /* hide compiler warning */
     cairo_status_t status;
 
-    status = _extract_pdf_surface (surface, &pdf_surface);
-    if (unlikely (status)) {
-	status = _cairo_surface_set_error (surface, status);
+    if (! _extract_pdf_surface (surface, &pdf_surface))
 	return;
-    }
 
     _cairo_pdf_surface_set_size_internal (pdf_surface,
 					  width_in_points,
