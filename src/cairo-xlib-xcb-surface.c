@@ -396,6 +396,9 @@ cairo_xlib_surface_set_size (cairo_surface_t *abstract_surface,
     cairo_xlib_xcb_surface_t *surface = (cairo_xlib_xcb_surface_t *) abstract_surface;
     cairo_status_t status;
 
+    if (unlikely (abstract_surface->status))
+	return;
+
     if (surface->base.type != CAIRO_SURFACE_TYPE_XLIB) {
 	status = _cairo_surface_set_error (abstract_surface,
 		                           CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
@@ -413,6 +416,9 @@ cairo_xlib_surface_set_drawable (cairo_surface_t   *abstract_surface,
 {
     cairo_xlib_xcb_surface_t *surface = (cairo_xlib_xcb_surface_t *)abstract_surface;
     cairo_status_t status;
+
+    if (unlikely (abstract_surface->status))
+	return;
 
     if (surface->base.type != CAIRO_SURFACE_TYPE_XLIB) {
 	status = _cairo_surface_set_error (abstract_surface,

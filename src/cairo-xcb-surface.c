@@ -1322,6 +1322,9 @@ cairo_xcb_surface_set_size (cairo_surface_t *abstract_surface,
     cairo_xcb_surface_t *surface;
     cairo_status_t status_ignored;
 
+    if (unlikely (abstract_surface->status))
+	return;
+
     if (abstract_surface->type != CAIRO_SURFACE_TYPE_XCB) {
 	status_ignored = _cairo_surface_set_error (abstract_surface,
 						   CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
