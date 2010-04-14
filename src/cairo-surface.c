@@ -231,6 +231,9 @@ _cairo_surface_allocate_unique_id (void)
 cairo_device_t *
 cairo_surface_get_device (cairo_surface_t *surface)
 {
+    if (unlikely (surface->status))
+	return _cairo_device_create_in_error (surface->status);
+
     return surface->device;
 }
 
