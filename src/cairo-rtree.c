@@ -95,8 +95,6 @@ _cairo_rtree_node_collapse (cairo_rtree_t *rtree, cairo_rtree_node_t *node)
 {
     int i;
 
-    assert (node->pinned == FALSE);
-
     do {
 	assert (node->state == CAIRO_RTREE_NODE_DIVIDED);
 
