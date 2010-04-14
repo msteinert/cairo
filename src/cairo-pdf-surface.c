@@ -541,7 +541,6 @@ cairo_pdf_surface_restrict_to_version (cairo_surface_t 		*abstract_surface,
 				       cairo_pdf_version_t  	 version)
 {
     cairo_pdf_surface_t *surface = NULL; /* hide compiler warning */
-    cairo_status_t status;
 
     if (! _extract_pdf_surface (abstract_surface, &surface))
 	return;
@@ -618,7 +617,6 @@ cairo_pdf_surface_set_size (cairo_surface_t	*surface,
 			    double		 height_in_points)
 {
     cairo_pdf_surface_t *pdf_surface = NULL; /* hide compiler warning */
-    cairo_status_t status;
 
     if (! _extract_pdf_surface (surface, &pdf_surface))
 	return;

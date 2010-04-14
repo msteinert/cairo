@@ -1097,30 +1097,38 @@ _cairo_surface_is_ps (cairo_surface_t *surface)
 
 /* If the abstract_surface is a paginated surface, and that paginated
  * surface's target is a ps_surface, then set ps_surface to that
- * target. Otherwise return %CAIRO_STATUS_SURFACE_TYPE_MISMATCH.
+ * target. Otherwise return FALSE.
  */
-static cairo_status_t
+static cairo_bool_t
 _extract_ps_surface (cairo_surface_t	 *surface,
 		     cairo_ps_surface_t **ps_surface)
 {
     cairo_surface_t *target;
+    cairo_status_t status_ignored;
 
     if (surface->status)
-	return surface->status;
+	return FALSE;
 
-    if (! _cairo_surface_is_paginated (surface))
-	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+    if (! _cairo_surface_is_paginated (surface)) {
+	status_ignored = _cairo_surface_set_error (surface,
+						   _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
+	return FALSE;
+    }
 
     target = _cairo_paginated_surface_get_target (surface);
-    if (target->status)
-	return target->status;
+    if (target->status) {
+	status_ignored = _cairo_surface_set_error (surface, target->status);
+	return FALSE;
+    }
 
-    if (! _cairo_surface_is_ps (target))
-	return _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH);
+    if (! _cairo_surface_is_ps (target)) {
+	status_ignored = _cairo_surface_set_error (surface,
+						   _cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
+	return FALSE;
+    }
 
     *ps_surface = (cairo_ps_surface_t *) target;
-
-    return CAIRO_STATUS_SUCCESS;
+    return TRUE;
 }
 
 /**
@@ -1144,13 +1152,9 @@ cairo_ps_surface_restrict_to_level (cairo_surface_t  *surface,
                                     cairo_ps_level_t  level)
 {
     cairo_ps_surface_t *ps_surface = NULL;
-    cairo_status_t status;
 
-    status = _extract_ps_surface (surface, &ps_surface);
-    if (unlikely (status)) {
-	status = _cairo_surface_set_error (surface, status);
+    if (! _extract_ps_surface (surface, &ps_surface))
 	return;
-    }
 
     if (level < CAIRO_PS_LEVEL_LAST)
 	ps_surface->ps_level = level;
@@ -1219,13 +1223,9 @@ cairo_ps_surface_set_eps (cairo_surface_t	*surface,
 			  cairo_bool_t           eps)
 {
     cairo_ps_surface_t *ps_surface = NULL;
-    cairo_status_t status;
 
-    status = _extract_ps_surface (surface, &ps_surface);
-    if (unlikely (status)) {
-	status = _cairo_surface_set_error (surface, status);
+    if (! _extract_ps_surface (surface, &ps_surface))
 	return;
-    }
 
     ps_surface->eps = eps;
 }
@@ -1244,13 +1244,10 @@ cairo_public cairo_bool_t
 cairo_ps_surface_get_eps (cairo_surface_t	*surface)
 {
     cairo_ps_surface_t *ps_surface = NULL;
-    cairo_status_t status;
 
-    status = _extract_ps_surface (surface, &ps_surface);
-    if (unlikely (status)) {
-	status = _cairo_surface_set_error (surface, status);
+    /* XXX this should not call _cairo_surface_set_error on error */
+    if (! _extract_ps_surface (surface, &ps_surface))
 	return FALSE;
-    }
 
     return ps_surface->eps;
 }
@@ -1278,13 +1275,9 @@ cairo_ps_surface_set_size (cairo_surface_t	*surface,
 			   double		 height_in_points)
 {
     cairo_ps_surface_t *ps_surface = NULL;
-    cairo_status_t status;
 
-    status = _extract_ps_surface (surface, &ps_surface);
-    if (unlikely (status)) {
-	status = _cairo_surface_set_error (surface, status);
+    if (! _extract_ps_surface (surface, &ps_surface))
 	return;
-    }
 
     ps_surface->width = width_in_points;
     ps_surface->height = height_in_points;
@@ -1389,11 +1382,8 @@ cairo_ps_surface_dsc_comment (cairo_surface_t	*surface,
     cairo_status_t status;
     char *comment_copy;
 
-    status = _extract_ps_surface (surface, &ps_surface);
-    if (unlikely (status)) {
-	status = _cairo_surface_set_error (surface, status);
+    if (! _extract_ps_surface (surface, &ps_surface))
 	return;
-    }
 
     /* A couple of sanity checks on the comment value. */
     if (comment == NULL) {
@@ -1441,18 +1431,12 @@ void
 cairo_ps_surface_dsc_begin_setup (cairo_surface_t *surface)
 {
     cairo_ps_surface_t *ps_surface = NULL;
-    cairo_status_t status;
 
-    status = _extract_ps_surface (surface, &ps_surface);
-    if (unlikely (status)) {
-	status = _cairo_surface_set_error (surface, status);
+    if (! _extract_ps_surface (surface, &ps_surface))
 	return;
-    }
 
     if (ps_surface->dsc_comment_target == &ps_surface->dsc_header_comments)
-    {
 	ps_surface->dsc_comment_target = &ps_surface->dsc_setup_comments;
-    }
 }
 
 /**
@@ -1476,13 +1460,9 @@ void
 cairo_ps_surface_dsc_begin_page_setup (cairo_surface_t *surface)
 {
     cairo_ps_surface_t *ps_surface = NULL;
-    cairo_status_t status;
 
-    status = _extract_ps_surface (surface, &ps_surface);
-    if (unlikely (status)) {
-	status = _cairo_surface_set_error (surface, status);
+    if (! _extract_ps_surface (surface, &ps_surface))
 	return;
-    }
 
     if (ps_surface->dsc_comment_target == &ps_surface->dsc_header_comments ||
 	ps_surface->dsc_comment_target == &ps_surface->dsc_setup_comments)
