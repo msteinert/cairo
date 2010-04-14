@@ -5005,6 +5005,7 @@ _set_source_image (csi_t *ctx)
      * principally to remove the pixman ops from the profiles.
      */
     if (_csi_likely (_matching_images (surface, source))) {
+	cairo_surface_flush (surface);
 	memcpy (cairo_image_surface_get_data (surface),
 		cairo_image_surface_get_data (source),
 		cairo_image_surface_get_height (source) * cairo_image_surface_get_stride (source));
