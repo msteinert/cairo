@@ -1929,7 +1929,7 @@ _cairo_gl_surface_composite_component_alpha (cairo_operator_t op,
     cairo_gl_shader_program_t *ca_source_program = NULL;
     cairo_gl_shader_program_t *ca_source_alpha_program = NULL;
 
-    if (op != CAIRO_OPERATOR_OVER)
+    if (op != CAIRO_OPERATOR_OVER && op != CAIRO_OPERATOR_ADD)
 	return UNSUPPORTED ("unsupported component alpha operator");
 
     memset (&setup, 0, sizeof (setup));
@@ -2061,12 +2061,14 @@ _cairo_gl_surface_composite_component_alpha (cairo_operator_t op,
 	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
     }
 
-    setup.shader = ca_source_alpha_program;
-    _cairo_gl_use_program (setup.shader);
-    _cairo_gl_set_operator (dst, CAIRO_OPERATOR_DEST_OUT, TRUE);
-    _cairo_gl_set_src_alpha_operand (ctx, &setup);
-    _cairo_gl_set_component_alpha_mask_operand (ctx, &setup);
-    glDrawArrays (GL_QUADS, 0, num_vertices);
+    if (op == CAIRO_OPERATOR_OVER) {
+	setup.shader = ca_source_alpha_program;
+	_cairo_gl_use_program (setup.shader);
+	_cairo_gl_set_operator (dst, CAIRO_OPERATOR_DEST_OUT, TRUE);
+	_cairo_gl_set_src_alpha_operand (ctx, &setup);
+	_cairo_gl_set_component_alpha_mask_operand (ctx, &setup);
+	glDrawArrays (GL_QUADS, 0, num_vertices);
+    }
 
     setup.shader = ca_source_program;
     _cairo_gl_use_program (setup.shader);
