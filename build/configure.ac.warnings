@@ -17,7 +17,7 @@ MAYBE_WARN="-Wall -Wextra \
 -Wbad-function-cast -Wvolatile-register-var \
 -Wstrict-aliasing=2 -Winit-self -Wunsafe-loop-optimizations \
 -Wno-missing-field-initializers -Wno-unused-parameter \
--Wno-attributes -Wno-long-long -Winline"
+-Wno-attributes -Wno-long-long -Winline -Wlogical-op"
 
 dnl Sun Studio 12 likes to rag at us for abusing enums like
 dnl having cairo_status_t variables hold cairo_int_status_t
@@ -27,7 +27,7 @@ MAYBE_WARN="$MAYBE_WARN -erroff=E_ENUM_TYPE_MISMATCH_ARG \
 
 dnl We also abuse the warning-flag facility to enable other compiler
 dnl options.  Namely, the following:
-MAYBE_WARN="$MAYBE_WARN -fno-strict-aliasing -fno-common"
+MAYBE_WARN="$MAYBE_WARN -fno-strict-aliasing -fno-common -flto"
 
 dnl Also to turn various gcc/glibc-specific preprocessor checks
 MAYBE_WARN="$MAYBE_WARN -Wp,-D_FORTIFY_SOURCE=2"
