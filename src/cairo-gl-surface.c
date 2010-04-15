@@ -1575,18 +1575,21 @@ _cairo_gl_set_tex_combine_constant_color (cairo_gl_context_t *ctx,
 {
     if (setup->shader) {
 	const char *uniform_name;
+        cairo_status_t status;
 
 	if (tex_unit == 0)
 	    uniform_name = "constant_source";
 	else
 	    uniform_name = "constant_mask";
 
-	bind_vec4_to_shader(setup->shader->program,
-			    uniform_name,
-			    color[0],
-			    color[1],
-			    color[2],
-			    color[3]);
+	status = bind_vec4_to_shader(setup->shader->program,
+                                     uniform_name,
+                                     color[0],
+                                     color[1],
+                                     color[2],
+                                     color[3]);
+        assert (! _cairo_status_is_error (status));
+
 	return;
     }
 
@@ -1833,12 +1836,14 @@ _cairo_gl_set_component_alpha_mask_operand (cairo_gl_context_t *ctx,
     case OPERAND_CONSTANT:
 	/* Have to have a dummy texture bound in order to use the combiner unit. */
 	if (setup->shader) {
-	    bind_vec4_to_shader(setup->shader->program,
-				"constant_mask",
-				setup->src.operand.constant.color[0],
-				setup->src.operand.constant.color[1],
-				setup->src.operand.constant.color[2],
-				setup->src.operand.constant.color[3]);
+            cairo_status_t status;
+	    status = bind_vec4_to_shader(setup->shader->program,
+                                         "constant_mask",
+                                         setup->src.operand.constant.color[0],
+                                         setup->src.operand.constant.color[1],
+                                         setup->src.operand.constant.color[2],
+                                         setup->src.operand.constant.color[3]);
+            assert (! _cairo_status_is_error (status));
 	} else {
 	    glBindTexture (ctx->tex_target, ctx->dummy_tex);
 	    glActiveTexture (GL_TEXTURE1);
@@ -2593,12 +2598,13 @@ _cairo_gl_surface_fill_rectangles_glsl (void                  *abstract_surface,
     _cairo_gl_set_destination (surface);
     _cairo_gl_set_operator (surface, op, FALSE);
 
-    bind_vec4_to_shader (ctx->fill_rectangles_shader.program,
-			 "color",
-			 color->red * color->alpha,
-			 color->green * color->alpha,
-			 color->blue * color->alpha,
-			 color->alpha);
+    status = bind_vec4_to_shader (ctx->fill_rectangles_shader.program,
+                                  "color",
+                                  color->red * color->alpha,
+                                  color->green * color->alpha,
+                                  color->blue * color->alpha,
+                                  color->alpha);
+    assert (! _cairo_status_is_error (status));
 
     for (i = 0; i < num_rects; i++) {
 	vertices[i * 8 + 0] = rects[i].x;
