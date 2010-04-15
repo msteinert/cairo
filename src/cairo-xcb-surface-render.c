@@ -3840,6 +3840,18 @@ _native_byte_order_lsb (void)
     return *((char *) &x) == 1;
 }
 
+static int
+_cairo_xcb_get_glyphset_index_for_format (cairo_format_t format)
+{
+    if (format == CAIRO_FORMAT_A8)
+        return GLYPHSET_INDEX_A8;
+    if (format == CAIRO_FORMAT_A1)
+        return GLYPHSET_INDEX_A1;
+
+    assert (format == CAIRO_FORMAT_ARGB32);
+    return GLYPHSET_INDEX_ARGB32;
+}
+
 static cairo_xcb_font_glyphset_info_t *
 _cairo_xcb_scaled_font_get_glyphset_info_for_format (cairo_scaled_font_t *scaled_font,
 						     cairo_format_t       format)
@@ -3848,17 +3860,7 @@ _cairo_xcb_scaled_font_get_glyphset_info_for_format (cairo_scaled_font_t *scaled
     cairo_xcb_font_glyphset_info_t *glyphset_info;
     int glyphset_index;
 
-    switch (format) {
-    default:
-    case CAIRO_FORMAT_INVALID:
-    case CAIRO_FORMAT_RGB16_565:
-    case CAIRO_FORMAT_RGB24:
-	ASSERT_NOT_REACHED;
-    case CAIRO_FORMAT_ARGB32: glyphset_index = GLYPHSET_INDEX_ARGB32; break;
-    case CAIRO_FORMAT_A8:     glyphset_index = GLYPHSET_INDEX_A8;     break;
-    case CAIRO_FORMAT_A1:     glyphset_index = GLYPHSET_INDEX_A1;     break;
-    }
-
+    glyphset_index = _cairo_xcb_get_glyphset_index_for_format (format);
     font_private = scaled_font->surface_private;
     glyphset_info = &font_private->glyphset_info[glyphset_index];
     if (glyphset_info->glyphset == XCB_NONE) {
@@ -3914,16 +3916,7 @@ _cairo_xcb_scaled_font_get_glyphset_info_for_pending_free_glyph (
 	return NULL;
 
     if (surface != NULL) {
-	switch (surface->format) {
-	default:
-	case CAIRO_FORMAT_INVALID:
-	case CAIRO_FORMAT_RGB16_565:
-	case CAIRO_FORMAT_RGB24:
-	    ASSERT_NOT_REACHED;
-	case CAIRO_FORMAT_ARGB32: i = GLYPHSET_INDEX_ARGB32; break;
-	case CAIRO_FORMAT_A8:     i = GLYPHSET_INDEX_A8;     break;
-	case CAIRO_FORMAT_A1:     i = GLYPHSET_INDEX_A1;     break;
-	}
+        i = _cairo_xcb_get_glyphset_index_for_format (surface->format);
 
 	if (_cairo_xcb_glyphset_info_has_pending_free_glyph (
 						&font_private->glyphset_info[i],
@@ -4032,8 +4025,8 @@ _cairo_xcb_surface_add_glyph (cairo_xcb_connection_t *connection,
     data = glyph_surface->data;
 
     /* flip formats around */
-    switch (scaled_glyph->surface->format) {
-    case CAIRO_FORMAT_A1:
+    switch (_cairo_xcb_get_glyphset_index_for_format (scaled_glyph->surface->format)) {
+    case GLYPHSET_INDEX_A1:
 	/* local bitmaps are always stored with bit == byte */
 	if (_native_byte_order_lsb() != (connection->root->bitmap_format_bit_order == XCB_IMAGE_ORDER_LSB_FIRST)) {
 	    int		    c = glyph_surface->stride * glyph_surface->height;
@@ -4059,10 +4052,10 @@ _cairo_xcb_surface_add_glyph (cairo_xcb_connection_t *connection,
 	}
 	break;
 
-    case CAIRO_FORMAT_A8:
+    case GLYPHSET_INDEX_A8:
 	break;
 
-    case CAIRO_FORMAT_ARGB32:
+    case GLYPHSET_INDEX_ARGB32:
 	if (_native_byte_order_lsb() != (connection->root->image_byte_order == XCB_IMAGE_ORDER_LSB_FIRST)) {
 	    unsigned int c = glyph_surface->stride * glyph_surface->height / 4;
 	    const uint32_t *d;
@@ -4084,9 +4077,6 @@ _cairo_xcb_surface_add_glyph (cairo_xcb_connection_t *connection,
 	}
 	break;
 
-    case CAIRO_FORMAT_RGB16_565:
-    case CAIRO_FORMAT_RGB24:
-    case CAIRO_FORMAT_INVALID:
     default:
 	ASSERT_NOT_REACHED;
 	break;
