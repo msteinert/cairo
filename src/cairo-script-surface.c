@@ -1065,12 +1065,6 @@ _write_image_surface (cairo_output_stream_t *output,
 	    data += stride;
 	}
 	break;
-    case CAIRO_FORMAT_RGB16_565:
-	for (row = image->height; row--; ) {
-	    _cairo_output_stream_write (output, data, 2*width);
-	    data += stride;
-	}
-	break;
     case CAIRO_FORMAT_RGB24:
 	for (row = image->height; row--; ) {
 	    int col;
