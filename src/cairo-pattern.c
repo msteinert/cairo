@@ -1585,7 +1585,7 @@ _cairo_pattern_solid_surface_matches (
     if (CAIRO_REFERENCE_COUNT_GET_VALUE (&cache->surface->ref_count) != 1)
 	return FALSE;
 
-    if (! _cairo_surface_is_similar (cache->surface, dst, pattern->content))
+    if (! _cairo_surface_is_similar (cache->surface, dst))
 	return FALSE;
 
     return TRUE;
@@ -1674,8 +1674,7 @@ _cairo_pattern_acquire_surface_for_solid (const cairo_solid_pattern_t	     *patt
 	    goto UNLOCK;
 	}
 
-	if (unlikely (! _cairo_surface_is_similar (surface,
-						   dst, pattern->content)))
+	if (unlikely (! _cairo_surface_is_similar (surface, dst)))
 	{
 	    /* In the rare event of a substitute surface being returned,
 	     * don't cache the fallback.

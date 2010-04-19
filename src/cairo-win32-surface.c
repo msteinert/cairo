@@ -1865,8 +1865,7 @@ cairo_win32_surface_get_image (cairo_surface_t *surface)
 
 static cairo_bool_t
 _cairo_win32_surface_is_similar (void *surface_a,
-	                         void *surface_b,
-				 cairo_content_t content)
+	                         void *surface_b)
 {
     cairo_win32_surface_t *a = surface_a;
     cairo_win32_surface_t *b = surface_b;

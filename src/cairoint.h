@@ -769,8 +769,7 @@ struct _cairo_surface_backend {
 
     cairo_bool_t
     (*is_similar)		(void			*surface_a,
-	                         void			*surface_b,
-				 cairo_content_t         content);
+	                         void			*surface_b);
 
     cairo_warn cairo_int_status_t
     (*fill_stroke)		(void			*surface,
@@ -1744,8 +1743,7 @@ _cairo_surface_detach_snapshot (cairo_surface_t *snapshot);
 
 cairo_private cairo_bool_t
 _cairo_surface_is_similar (cairo_surface_t *surface_a,
-	                   cairo_surface_t *surface_b,
-			   cairo_content_t  content);
+	                   cairo_surface_t *surface_b);
 
 cairo_private cairo_bool_t
 _cairo_surface_get_extents (cairo_surface_t         *surface,

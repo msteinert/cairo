@@ -2821,35 +2821,9 @@ _cairo_xlib_surface_scaled_glyph_fini (cairo_scaled_glyph_t *scaled_glyph,
 
 static cairo_bool_t
 _cairo_xlib_surface_is_similar (void		*surface_a,
-	                        void		*surface_b,
-				cairo_content_t	 content)
+	                        void		*surface_b)
 {
-    cairo_xlib_surface_t *a = surface_a;
-    cairo_xlib_surface_t *b = surface_b;
-    XRenderPictFormat *xrender_format = b->xrender_format;
-    cairo_xlib_display_t *display;
-
-    if (! _cairo_xlib_surface_same_screen (a, b))
-	return FALSE;
-
-    if (_cairo_xlib_display_acquire (b->base.device, &display))
-        return FALSE;
-
-    /* now inspect the content to check that a is similar to b */
-    if (xrender_format == NULL && b->visual != NULL)
-        xrender_format = XRenderFindVisualFormat (display->display, b->visual);
-
-    if (xrender_format == NULL ||
-	_xrender_format_to_content (xrender_format) != content)
-    {
-	xrender_format = _cairo_xlib_display_get_xrender_format (
-					  display,
-					  _cairo_format_from_content (content));
-    }
-
-    cairo_device_release (&display->base);
-
-    return a->xrender_format == xrender_format;
+    return _cairo_xlib_surface_same_screen (surface_a, surface_b);
 }
 
 static const cairo_surface_backend_t cairo_xlib_surface_backend = {

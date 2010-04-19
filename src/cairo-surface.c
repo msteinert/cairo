@@ -1663,14 +1663,13 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
  **/
 cairo_bool_t
 _cairo_surface_is_similar (cairo_surface_t *surface_a,
-	                   cairo_surface_t *surface_b,
-			   cairo_content_t content)
+	                   cairo_surface_t *surface_b)
 {
     if (surface_a->backend != surface_b->backend)
 	return FALSE;
 
     if (surface_a->backend->is_similar != NULL)
-	return surface_a->backend->is_similar (surface_a, surface_b, content);
+	return surface_a->backend->is_similar (surface_a, surface_b);
 
     return TRUE;
 }
