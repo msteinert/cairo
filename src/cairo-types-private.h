@@ -356,7 +356,6 @@ struct _cairo_pattern {
 struct _cairo_solid_pattern {
     cairo_pattern_t base;
     cairo_color_t color;
-    cairo_content_t content;
 };
 
 typedef struct _cairo_surface_pattern {

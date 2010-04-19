@@ -415,8 +415,7 @@ _cairo_gstate_get_source (cairo_gstate_t *gstate)
 {
     if (gstate->source == &_cairo_pattern_black.base) {
 	/* do not expose the static object to the user */
-	gstate->source = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK,
-						      CAIRO_CONTENT_COLOR);
+        gstate->source = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK);
     }
 
     return gstate->source;
@@ -861,7 +860,7 @@ _init_solid_for_color_stop (cairo_solid_pattern_t *solid,
 			    color->green,
 			    color->blue,
 			    color->alpha);
-    _cairo_pattern_init_solid (solid, &premult, CAIRO_CONTENT_COLOR_ALPHA);
+    _cairo_pattern_init_solid (solid, &premult);
 }
 
 static void
@@ -884,8 +883,7 @@ _cairo_gstate_copy_pattern (cairo_pattern_t *pattern,
             if (_cairo_surface_get_extents (surface->surface, &extents) &&
                 (extents.width == 0 || extents.height == 0)) {
                 _cairo_pattern_init_solid ((cairo_solid_pattern_t *) pattern,
-                                           CAIRO_COLOR_TRANSPARENT,
-                                           surface->surface->content);
+                                           CAIRO_COLOR_TRANSPARENT);
 
                 return;
             }
@@ -904,8 +902,7 @@ _cairo_gstate_copy_pattern (cairo_pattern_t *pattern,
 						&src->stops->color);
 		} else {
 		    _cairo_pattern_init_solid ((cairo_solid_pattern_t *) pattern,
-					       CAIRO_COLOR_TRANSPARENT,
-					       CAIRO_CONTENT_ALPHA);
+					       CAIRO_COLOR_TRANSPARENT);
 		}
 
 		return;
@@ -1147,8 +1144,7 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
 	    _cairo_color_multiply_alpha (&combined, mask_pattern.solid.color.alpha);
 	}
 
-	_cairo_pattern_init_solid (&source_pattern.solid, &combined,
-				   solid->content | mask_pattern.solid.content);
+	_cairo_pattern_init_solid (&source_pattern.solid, &combined);
 
 	status = _cairo_surface_paint (gstate->target, op,
 				       &source_pattern.base,

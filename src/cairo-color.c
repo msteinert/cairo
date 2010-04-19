@@ -210,3 +210,19 @@ _cairo_color_stop_equal (const cairo_color_stop_t *color_a,
 
     return TRUE;
 }
+
+cairo_content_t
+_cairo_color_get_content (const cairo_color_t *color)
+{
+    if (CAIRO_COLOR_IS_OPAQUE (color))
+        return CAIRO_CONTENT_COLOR;
+
+    if (color->red_short == 0 &&
+	color->green_short == 0 &&
+	color->blue_short == 0)
+    {
+        return CAIRO_CONTENT_ALPHA;
+    }
+
+    return CAIRO_CONTENT_COLOR_ALPHA;
+}

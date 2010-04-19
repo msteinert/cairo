@@ -480,7 +480,7 @@ _cairo_surface_create_similar_solid (cairo_surface_t	 *other,
     if (surface == NULL || surface->status)
 	return surface;
 
-    _cairo_pattern_init_solid (&pattern, color, content);
+    _cairo_pattern_init_solid (&pattern, color);
     status = _cairo_surface_paint (surface,
 				   color == CAIRO_COLOR_TRANSPARENT ?
 				   CAIRO_OPERATOR_CLEAR : CAIRO_OPERATOR_SOURCE,
@@ -507,7 +507,7 @@ _cairo_surface_create_solid_pattern_surface (cairo_surface_t	   *other,
     }
 
     return _cairo_surface_create_similar_solid (other,
-						solid_pattern->content,
+						_cairo_color_get_content (&solid_pattern->color),
 						1, 1,
 						&solid_pattern->color,
 						FALSE);

@@ -855,11 +855,9 @@ _emit_solid_pattern (cairo_script_surface_t *surface,
     cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *) pattern;
     cairo_script_context_t *ctx = to_context (surface);
 
-    if (solid->content & CAIRO_CONTENT_ALPHA &&
-	! CAIRO_COLOR_IS_OPAQUE (&solid->color))
+    if (! CAIRO_COLOR_IS_OPAQUE (&solid->color))
     {
-	if (! (solid->content & CAIRO_CONTENT_COLOR) ||
-	    ! (surface->base.content & CAIRO_CONTENT_COLOR) ||
+	if (! (surface->base.content & CAIRO_CONTENT_COLOR) ||
 	    ((solid->color.red_short   == 0 || solid->color.red_short   == 0xffff) &&
 	     (solid->color.green_short == 0 || solid->color.green_short == 0xffff) &&
 	     (solid->color.blue_short  == 0 || solid->color.blue_short  == 0xffff) ))
@@ -3379,8 +3377,7 @@ _cairo_script_implicit_context_init (cairo_script_implicit_context_t *cr)
     cr->current_antialias = CAIRO_ANTIALIAS_DEFAULT;
     _cairo_stroke_style_init (&cr->current_style);
     _cairo_pattern_init_solid (&cr->current_source.solid,
-			       CAIRO_COLOR_BLACK,
-			       CAIRO_CONTENT_COLOR);
+			       CAIRO_COLOR_BLACK);
     _cairo_path_fixed_init (&cr->current_path);
     cairo_matrix_init_identity (&cr->current_ctm);
     cairo_matrix_init_identity (&cr->current_stroke_matrix);

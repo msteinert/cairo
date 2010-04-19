@@ -65,7 +65,6 @@ const cairo_solid_pattern_t _cairo_pattern_black = {
       CAIRO_FILTER_DEFAULT,		/* filter */
       CAIRO_EXTEND_GRADIENT_DEFAULT},	/* extend */
     { 0., 0., 0., 1., 0, 0, 0, 0xffff },/* color (double rgba, short rgba) */
-    CAIRO_CONTENT_COLOR,                /* content */
 };
 
 const cairo_solid_pattern_t _cairo_pattern_clear = {
@@ -77,7 +76,6 @@ const cairo_solid_pattern_t _cairo_pattern_clear = {
       CAIRO_FILTER_DEFAULT,		/* filter */
       CAIRO_EXTEND_GRADIENT_DEFAULT},	/* extend */
     { 0., 0., 0., 0., 0, 0, 0, 0 },/* color (double rgba, short rgba) */
-    CAIRO_CONTENT_ALPHA,                /* content */
 };
 
 const cairo_solid_pattern_t _cairo_pattern_white = {
@@ -89,7 +87,6 @@ const cairo_solid_pattern_t _cairo_pattern_white = {
       CAIRO_FILTER_DEFAULT,		/* filter */
       CAIRO_EXTEND_GRADIENT_DEFAULT},	/* extend */
     { 1., 1., 1., 1., 0xffff, 0xffff, 0xffff, 0xffff },/* color (double rgba, short rgba) */
-    CAIRO_CONTENT_COLOR_ALPHA,                /* content */
 };
 
 /**
@@ -420,15 +417,10 @@ _cairo_pattern_create_copy (cairo_pattern_t	  **pattern_out,
 
 void
 _cairo_pattern_init_solid (cairo_solid_pattern_t *pattern,
-			   const cairo_color_t	 *color,
-			   cairo_content_t	  content)
+			   const cairo_color_t	 *color)
 {
-    if (content == CAIRO_CONTENT_COLOR_ALPHA && CAIRO_COLOR_IS_OPAQUE (color))
-	content = CAIRO_CONTENT_COLOR;
-
     _cairo_pattern_init (&pattern->base, CAIRO_PATTERN_TYPE_SOLID);
     pattern->color = *color;
-    pattern->content = content;
 }
 
 void
@@ -486,8 +478,7 @@ _cairo_pattern_init_radial (cairo_radial_pattern_t *pattern,
 }
 
 cairo_pattern_t *
-_cairo_pattern_create_solid (const cairo_color_t *color,
-			     cairo_content_t	  content)
+_cairo_pattern_create_solid (const cairo_color_t *color)
 {
     cairo_solid_pattern_t *pattern;
 
@@ -502,7 +493,7 @@ _cairo_pattern_create_solid (const cairo_color_t *color,
 	}
     }
 
-    _cairo_pattern_init_solid (pattern, color, content);
+    _cairo_pattern_init_solid (pattern, color);
     CAIRO_REFERENCE_COUNT_INIT (&pattern->base.ref_count, 1);
 
     return &pattern->base;
@@ -518,7 +509,7 @@ _cairo_pattern_create_in_error (cairo_status_t status)
 
     CAIRO_MUTEX_INITIALIZE ();
 
-    pattern = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK, CAIRO_CONTENT_COLOR);
+    pattern = _cairo_pattern_create_solid (CAIRO_COLOR_BLACK);
     if (pattern->status == CAIRO_STATUS_SUCCESS)
 	status = _cairo_pattern_set_error (pattern, status);
 
@@ -558,7 +549,7 @@ cairo_pattern_create_rgb (double red, double green, double blue)
 
     CAIRO_MUTEX_INITIALIZE ();
 
-    return _cairo_pattern_create_solid (&color, CAIRO_CONTENT_COLOR);
+    return _cairo_pattern_create_solid (&color);
 }
 slim_hidden_def (cairo_pattern_create_rgb);
 
@@ -598,7 +589,7 @@ cairo_pattern_create_rgba (double red, double green, double blue,
 
     CAIRO_MUTEX_INITIALIZE ();
 
-    return _cairo_pattern_create_solid (&color, CAIRO_CONTENT_COLOR_ALPHA);
+    return _cairo_pattern_create_solid (&color);
 }
 slim_hidden_def (cairo_pattern_create_rgba);
 
@@ -1566,7 +1557,6 @@ _cairo_pattern_acquire_surface_for_gradient (const cairo_gradient_pattern_t *pat
 #define MAX_SURFACE_CACHE_SIZE 16
 static struct {
     struct _cairo_pattern_solid_surface_cache{
-	cairo_content_t  content;
 	cairo_color_t    color;
 	cairo_surface_t *surface;
     } cache[MAX_SURFACE_CACHE_SIZE];
@@ -1579,7 +1569,7 @@ _cairo_pattern_solid_surface_matches (
 	const cairo_solid_pattern_t			    *pattern,
 	cairo_surface_t					    *dst)
 {
-    if (cache->content != pattern->content)
+    if (cairo_surface_get_content (cache->surface) != _cairo_color_get_content (&pattern->color))
 	return FALSE;
 
     if (CAIRO_REFERENCE_COUNT_GET_VALUE (&cache->surface->ref_count) != 1)
@@ -1690,7 +1680,6 @@ _cairo_pattern_acquire_surface_for_solid (const cairo_solid_pattern_t	     *patt
     to_destroy = solid_surface_cache.cache[i].surface;
     solid_surface_cache.cache[i].surface = surface;
     solid_surface_cache.cache[i].color   = pattern->color;
-    solid_surface_cache.cache[i].content = pattern->content;
 
 DONE:
     *out = cairo_surface_reference (solid_surface_cache.cache[i].surface);
@@ -2210,7 +2199,7 @@ _init_solid_for_color_stop (cairo_solid_pattern_t *solid,
 			    color->green,
 			    color->blue,
 			    color->alpha);
-    _cairo_pattern_init_solid (solid, &premult, CAIRO_CONTENT_COLOR_ALPHA);
+    _cairo_pattern_init_solid (solid, &premult);
 }
 
 /**
@@ -2275,8 +2264,7 @@ _cairo_pattern_acquire_surface (const cairo_pattern_t	   *pattern,
 		_init_solid_for_color_stop (&solid, &src->stops->color);
 	    } else {
 		_cairo_pattern_init_solid (&solid,
-					   CAIRO_COLOR_TRANSPARENT,
-					   CAIRO_CONTENT_ALPHA);
+					   CAIRO_COLOR_TRANSPARENT);
 	    }
 
 	    status = _cairo_pattern_acquire_surface_for_solid (&solid, dst,
@@ -2393,8 +2381,7 @@ _cairo_pattern_acquire_surfaces (const cairo_pattern_t	    *src,
 	combined = src_solid->color;
 	_cairo_color_multiply_alpha (&combined, mask_solid->color.alpha);
 
-	_cairo_pattern_init_solid (&src_tmp.solid, &combined,
-				   src_solid->content | mask_solid->content);
+	_cairo_pattern_init_solid (&src_tmp.solid, &combined);
 
 	src = &src_tmp.base;
 	mask = NULL;
@@ -2608,7 +2595,6 @@ _cairo_solid_pattern_hash (unsigned long hash,
 {
     const cairo_solid_pattern_t *solid = (cairo_solid_pattern_t *) pattern;
 
-    hash = _cairo_hash_bytes (hash, &solid->content, sizeof (solid->content));
     hash = _cairo_hash_bytes (hash, &solid->color, sizeof (solid->color));
 
     return hash;
@@ -2747,9 +2733,6 @@ _cairo_solid_pattern_equal (const cairo_pattern_t *A,
 {
     const cairo_solid_pattern_t *a = (cairo_solid_pattern_t *) A;
     const cairo_solid_pattern_t *b = (cairo_solid_pattern_t *) B;
-
-    if (a->content != b->content)
-	return FALSE;
 
     return _cairo_color_equal (&a->color, &b->color);
 }

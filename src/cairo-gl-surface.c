@@ -1022,7 +1022,7 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_dst,
     if (unlikely (status))
         goto CLEANUP;
 
-    _cairo_pattern_init_solid (&solid, color, CAIRO_CONTENT_COLOR_ALPHA);
+    _cairo_pattern_init_solid (&solid, color);
     status = _cairo_gl_composite_set_source (&setup, &solid.base,
                                              0, 0,
                                              0, 0,

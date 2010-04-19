@@ -1017,6 +1017,9 @@ cairo_private cairo_bool_t
 _cairo_color_stop_equal (const cairo_color_stop_t *color_a,
 			 const cairo_color_stop_t *color_b) cairo_pure;
 
+cairo_content_t
+_cairo_color_get_content (const cairo_color_t *color) cairo_pure;
+
 /* cairo-font-face.c */
 
 extern const cairo_private cairo_font_face_t _cairo_font_face_nil;
@@ -2180,8 +2183,7 @@ _cairo_pattern_init_snapshot (cairo_pattern_t       *pattern,
 
 cairo_private void
 _cairo_pattern_init_solid (cairo_solid_pattern_t	*pattern,
-			   const cairo_color_t		*color,
-			   cairo_content_t		 content);
+			   const cairo_color_t		*color);
 
 cairo_private void
 _cairo_pattern_init_for_surface (cairo_surface_pattern_t *pattern,
@@ -2203,8 +2205,7 @@ cairo_private void
 _cairo_pattern_fini_snapshot (cairo_pattern_t *pattern);
 
 cairo_private cairo_pattern_t *
-_cairo_pattern_create_solid (const cairo_color_t	*color,
-			     cairo_content_t		 content);
+_cairo_pattern_create_solid (const cairo_color_t	*color);
 
 cairo_private void
 _cairo_pattern_transform (cairo_pattern_t      *pattern,

@@ -1432,8 +1432,8 @@ _cairo_xlib_surface_create_solid_pattern_surface (void                  *abstrac
 	return NULL;
 
     image = (cairo_image_surface_t *)
-	    _cairo_image_surface_create_with_content (solid_pattern->content,
-						      width, height);
+	_cairo_image_surface_create_with_content (_cairo_color_get_content (&solid_pattern->color),
+						  width, height);
     status = image->base.status;
     if (unlikely (status))
 	goto BAIL;
@@ -2427,7 +2427,7 @@ _cairo_xlib_surface_solid_fill_rectangles (cairo_xlib_surface_t    *surface,
     GC gc;
     int i;
 
-    _cairo_pattern_init_solid (&solid, color, CAIRO_CONTENT_COLOR);
+    _cairo_pattern_init_solid (&solid, color);
 
     status = _cairo_xlib_display_acquire (surface->base.device, &display);
     if (unlikely (status))

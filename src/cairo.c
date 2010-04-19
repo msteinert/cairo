@@ -2144,8 +2144,8 @@ cairo_paint_with_alpha (cairo_t *cr,
 	return;
     }
 
-    _cairo_color_init_rgba (&color, 1., 1., 1., alpha);
-    _cairo_pattern_init_solid (&pattern, &color, CAIRO_CONTENT_ALPHA);
+    _cairo_color_init_rgba (&color, 0., 0., 0., alpha);
+    _cairo_pattern_init_solid (&pattern, &color);
 
     status = _cairo_gstate_mask (cr->gstate, &pattern.base);
     if (unlikely (status))
