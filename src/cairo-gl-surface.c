@@ -881,7 +881,8 @@ fail:
 
     _cairo_gl_context_release (ctx);
 
-    cairo_surface_destroy (&clone->base);
+    if (clone)
+        cairo_surface_destroy (&clone->base);
 
     return CAIRO_STATUS_SUCCESS;
 }
