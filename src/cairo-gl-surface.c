@@ -798,11 +798,6 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
     } else {
 	GLuint tex;
 	float vertices[8], texcoords[8];
-	cairo_gl_context_t *ctx;
-
-	status = _cairo_gl_context_acquire (dst->base.device, &ctx);
-	if (unlikely (status))
-	    goto fail;
 
 	if (ctx->using_glsl) {
 	    cairo_gl_shader_program_t *program;
@@ -879,8 +874,6 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 	    _cairo_gl_use_program (NULL);
 	glDeleteTextures (1, &tex);
 	glDisable (ctx->tex_target);
-
-	_cairo_gl_context_release (ctx);
     }
 
 fail:
