@@ -500,14 +500,14 @@ _cairo_pdf_operators_clip (cairo_pdf_operators_t	*pdf_operators,
     }
 
     switch (fill_rule) {
+    default:
+	ASSERT_NOT_REACHED;
     case CAIRO_FILL_RULE_WINDING:
 	pdf_operator = "W";
 	break;
     case CAIRO_FILL_RULE_EVEN_ODD:
 	pdf_operator = "W*";
 	break;
-    default:
-	ASSERT_NOT_REACHED;
     }
 
     _cairo_output_stream_printf (pdf_operators->stream,
@@ -834,14 +834,14 @@ _cairo_pdf_operators_fill (cairo_pdf_operators_t	*pdf_operators,
 	return status;
 
     switch (fill_rule) {
+    default:
+	ASSERT_NOT_REACHED;
     case CAIRO_FILL_RULE_WINDING:
 	pdf_operator = "f";
 	break;
     case CAIRO_FILL_RULE_EVEN_ODD:
 	pdf_operator = "f*";
 	break;
-    default:
-	ASSERT_NOT_REACHED;
     }
 
     _cairo_output_stream_printf (pdf_operators->stream,
@@ -862,14 +862,14 @@ _cairo_pdf_operators_fill_stroke (cairo_pdf_operators_t		*pdf_operators,
     const char *operator;
 
     switch (fill_rule) {
+    default:
+	ASSERT_NOT_REACHED;
     case CAIRO_FILL_RULE_WINDING:
 	operator = "B";
 	break;
     case CAIRO_FILL_RULE_EVEN_ODD:
 	operator = "B*";
 	break;
-    default:
-	ASSERT_NOT_REACHED;
     }
 
     return _cairo_pdf_operators_emit_stroke (pdf_operators,
