@@ -138,8 +138,7 @@ _cairo_win32_tmpfile (void);
 
 #define ASSERT_NOT_REACHED		\
 do {					\
-    static const int NOT_REACHED = 0;	\
-    assert (NOT_REACHED);		\
+    assert (!"reached");		\
 } while (0)
 #define COMPILE_TIME_ASSERT1(condition, line)		\
     typedef int compile_time_assertion_at_line_##line##_failed [(condition)?1:-1]
