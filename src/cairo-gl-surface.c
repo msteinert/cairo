@@ -767,7 +767,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 	glTexParameteri (ctx->tex_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexSubImage2D (ctx->tex_target, 0,
 			 dst_x, dst_y, width, height,
-			 format, GL_UNSIGNED_BYTE,
+			 format, type,
 			 src->data + src_y * src->stride + src_x * cpp);
 
 	/* If we just treated some rgb-only data as rgba, then we have to
