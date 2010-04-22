@@ -1356,7 +1356,7 @@ _cairo_gl_pattern_texture_setup (cairo_gl_composite_operand_t *operand,
 
 
     /* Translate the matrix from
-     * (unnormalized src -> unnormalized src) to
+     * (unnormalized dst -> unnormalized src) to
      * (unnormalized dst -> normalized src)
      */
     if (ctx->tex_target == GL_TEXTURE_RECTANGLE_EXT) {
