@@ -797,7 +797,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 	}
     } else {
 	GLuint tex;
-	float vertices[8], texcoords[8];
+	GLfloat vertices[8], texcoords[8];
 
 	if (ctx->using_glsl) {
 	    cairo_gl_shader_program_t *program;
@@ -857,11 +857,11 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 	    texcoords[7] = height;
 	}
 
-	glVertexPointer (2, GL_FLOAT, sizeof (float) * 2, vertices);
+        glVertexPointer (2, GL_FLOAT, sizeof (GLfloat) * 2, vertices);
 	glEnableClientState (GL_VERTEX_ARRAY);
 
 	glClientActiveTexture (GL_TEXTURE0);
-	glTexCoordPointer (2, GL_FLOAT, sizeof (float) * 2, texcoords);
+	glTexCoordPointer (2, GL_FLOAT, sizeof (GLfloat) * 2, texcoords);
 	glEnableClientState (GL_TEXTURE_COORD_ARRAY);
 
 	glDrawArrays (GL_QUADS, 0, 4);
