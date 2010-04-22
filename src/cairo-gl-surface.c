@@ -822,6 +822,8 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 	glGenTextures (1, &tex);
 	glActiveTexture (GL_TEXTURE0);
 	glBindTexture (ctx->tex_target, tex);
+	glTexParameteri (ctx->tex_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri (ctx->tex_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexImage2D (ctx->tex_target, 0, internal_format, width, height, 0,
 		      format, type, src->data + src_y * src->stride + src_x * cpp);
 
