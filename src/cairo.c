@@ -491,46 +491,57 @@ cairo_push_group (cairo_t *cr)
 void
 cairo_push_group_with_content (cairo_t *cr, cairo_content_t content)
 {
+    cairo_surface_t *group_surface;
+    cairo_clip_t *clip;
     cairo_status_t status;
-    cairo_rectangle_int_t extents;
-    const cairo_rectangle_int_t *clip_extents;
-    cairo_surface_t *parent_surface, *group_surface = NULL;
-    cairo_bool_t is_empty;
 
     if (unlikely (cr->status))
 	return;
 
-    parent_surface = _cairo_gstate_get_target (cr->gstate);
+    clip = _cairo_gstate_get_clip (cr->gstate);
+    if (clip->all_clipped) {
+	group_surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 0, 0);
+	status = group_surface->status;
+	if (unlikely (status))
+	    goto bail;
+    } else {
+	cairo_surface_t *parent_surface;
+	const cairo_rectangle_int_t *clip_extents;
+	cairo_rectangle_int_t extents;
+	cairo_bool_t is_empty;
 
-    /* Get the extents that we'll use in creating our new group surface */
-    is_empty = _cairo_surface_get_extents (parent_surface, &extents);
-    clip_extents = _cairo_clip_get_extents (_cairo_gstate_get_clip (cr->gstate));
-    if (clip_extents != NULL)
-	is_empty = _cairo_rectangle_intersect (&extents, clip_extents);
+	parent_surface = _cairo_gstate_get_target (cr->gstate);
 
-    group_surface = _cairo_surface_create_similar_solid (parent_surface,
-							 content,
-							 extents.width,
-							 extents.height,
-							 CAIRO_COLOR_TRANSPARENT,
-							 TRUE);
-    status = group_surface->status;
-    if (unlikely (status))
-	goto bail;
+	/* Get the extents that we'll use in creating our new group surface */
+	is_empty = _cairo_surface_get_extents (parent_surface, &extents);
+	clip_extents = _cairo_clip_get_extents (_cairo_gstate_get_clip (cr->gstate));
+	if (clip_extents != NULL)
+	    is_empty = _cairo_rectangle_intersect (&extents, clip_extents);
 
-    /* Set device offsets on the new surface so that logically it appears at
-     * the same location on the parent surface -- when we pop_group this,
-     * the source pattern will get fixed up for the appropriate target surface
-     * device offsets, so we want to set our own surface offsets from /that/,
-     * and not from the device origin. */
-    cairo_surface_set_device_offset (group_surface,
-                                     parent_surface->device_transform.x0 - extents.x,
-                                     parent_surface->device_transform.y0 - extents.y);
+	group_surface = _cairo_surface_create_similar_solid (parent_surface,
+							     content,
+							     extents.width,
+							     extents.height,
+							     CAIRO_COLOR_TRANSPARENT,
+							     TRUE);
+	status = group_surface->status;
+	if (unlikely (status))
+	    goto bail;
 
-    /* If we have a current path, we need to adjust it to compensate for
-     * the device offset just applied. */
-    _cairo_path_fixed_transform (cr->path,
-				 &group_surface->device_transform);
+	/* Set device offsets on the new surface so that logically it appears at
+	 * the same location on the parent surface -- when we pop_group this,
+	 * the source pattern will get fixed up for the appropriate target surface
+	 * device offsets, so we want to set our own surface offsets from /that/,
+	 * and not from the device origin. */
+	cairo_surface_set_device_offset (group_surface,
+					 parent_surface->device_transform.x0 - extents.x,
+					 parent_surface->device_transform.y0 - extents.y);
+
+	/* If we have a current path, we need to adjust it to compensate for
+	 * the device offset just applied. */
+	_cairo_path_fixed_transform (cr->path,
+				     &group_surface->device_transform);
+    }
 
     /* create a new gstate for the redirect */
     cairo_save (cr);
