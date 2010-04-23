@@ -433,8 +433,8 @@ run:
 check-valgrind:
 	$(MAKE) $(AM_MAKEFLAGS) check TESTS_ENVIRONMENT='$(TESTS_ENVIRONMENT) CAIRO_TEST_MODE="$(MODE),foreground CAIRO_TEST_TIMEOUT=0" $(top_builddir)/libtool --mode=execute valgrind $(VALGRIND_FLAGS)' 2>&1 | tee valgrind-log
 
-%.log: %.c cairo-test-suite
-	-./cairo-test-suite $(<:.c=)
+#%.log: %.c cairo-test-suite
+#-./cairo-test-suite $(<:.c=)
 
 NOLOG_TESTS_LOG = $(NOLOG_TESTS:=.log)
 

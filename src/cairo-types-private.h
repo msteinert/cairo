@@ -44,6 +44,8 @@
 #include "cairo-list-private.h"
 #include "cairo-reference-count-private.h"
 
+CAIRO_BEGIN_DECLS
+
 /**
  * SECTION:cairo-types
  * @Title: Types
@@ -224,12 +226,6 @@ typedef enum _cairo_paginated_mode {
     CAIRO_PAGINATED_MODE_RENDER,	/* render page contents */
     CAIRO_PAGINATED_MODE_FALLBACK	/* paint fallback images */
 } cairo_paginated_mode_t;
-
-/* Sure wish C had a real enum type so that this would be distinct
- * from #cairo_status_t. Oh well, without that, I'll use this bogus 100
- * offset.  We want to keep it fit in int8_t as the compiler may choose
- * that for #cairo_status_t */
-typedef enum _cairo_int_status cairo_int_status_t;
 
 typedef enum _cairo_internal_surface_type {
     CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT = 0x1000,
@@ -419,4 +415,7 @@ typedef struct _cairo_scaled_glyph {
 
     void		    *surface_private;	/* for the surface backend */
 } cairo_scaled_glyph_t;
+
+CAIRO_END_DECLS
+
 #endif /* CAIRO_TYPES_PRIVATE_H */

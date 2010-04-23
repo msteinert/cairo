@@ -41,6 +41,7 @@
 
 #include "cairo-boxes-private.h"
 #include "cairo-compiler-private.h"
+#include "cairo-error-private.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-reference-count-private.h"
 

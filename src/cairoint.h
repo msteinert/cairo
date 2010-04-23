@@ -71,6 +71,7 @@
 #include <pixman.h>
 
 #include "cairo-compiler-private.h"
+#include "cairo-error-private.h"
 
 #if CAIRO_HAS_PS_SURFACE || CAIRO_HAS_SCRIPT_SURFACE || CAIRO_HAS_XML_SURFACE
 #define CAIRO_HAS_DEFLATE_STREAM 1

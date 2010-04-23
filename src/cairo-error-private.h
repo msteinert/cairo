@@ -46,6 +46,10 @@
 
 CAIRO_BEGIN_DECLS
 
+/* Sure wish C had a real enum type so that this would be distinct
+ * from #cairo_status_t. Oh well, without that, I'll use this bogus 100
+ * offset.  We want to keep it fit in int8_t as the compiler may choose
+ * that for #cairo_status_t */
 enum _cairo_int_status {
     CAIRO_INT_STATUS_SUCCESS = 0,
 
@@ -97,6 +101,8 @@ enum _cairo_int_status {
     CAIRO_INT_STATUS_ANALYZE_RECORDING_SURFACE_PATTERN,
 };
 
+typedef enum _cairo_int_status cairo_int_status_t;
+
 #define _cairo_status_is_error(status) \
     (status != CAIRO_STATUS_SUCCESS && status < CAIRO_STATUS_LAST_STATUS)
 
@@ -107,7 +113,7 @@ static inline cairo_status_t
 _cairo_public_status (cairo_int_status_t status)
 {
     assert (status <= CAIRO_INT_STATUS_LAST_STATUS);
-    return status;
+    return (cairo_status_t) status;
 }
 
 cairo_private cairo_status_t

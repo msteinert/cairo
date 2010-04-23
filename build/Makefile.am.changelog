@@ -54,7 +54,7 @@ DISTCLEANFILES += ChangeLog.cache-*
 
 ChangeLog.cache-*..: .git
 
-ChangeLog%: $(srcdir)/ChangeLog%
+#ChangeLog%: $(srcdir)/ChangeLog%
 
 $(srcdir)/ChangeLog.cache-% $(srcdir)/ChangeLog.pre-%:
 	@echo Creating $@

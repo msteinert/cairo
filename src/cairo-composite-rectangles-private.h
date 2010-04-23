@@ -111,4 +111,6 @@ _cairo_composite_rectangles_intersect_mask_extents (cairo_composite_rectangles_t
 cairo_private void
 _cairo_composite_rectangles_fini (cairo_composite_rectangles_t *extents);
 
+CAIRO_END_DECLS
+
 #endif /* CAIRO_COMPOSITE_RECTANGLES_PRIVATE_H */

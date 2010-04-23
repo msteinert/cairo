@@ -40,6 +40,7 @@
 
 typedef enum _cairo_backend_type {
     CAIRO_TYPE_DEFAULT,
+    CAIRO_TYPE_SKIA,
 } cairo_backend_type_t;
 
 struct _cairo_backend {

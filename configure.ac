@@ -9,7 +9,8 @@ AC_GNU_SOURCE
 AC_USE_SYSTEM_EXTENSIONS
 AC_CONFIG_SRCDIR(src/cairo.h)
 AC_CONFIG_HEADERS(config.h)
-AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define])
+#AM_INIT_AUTOMAKE([1.9.6 gnu -Wall no-define])
+AM_INIT_AUTOMAKE([1.9.6])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_LIBTOOL_WIN32_DLL dnl Must be called before AC_PROG_LIBTOOL
 AC_PROG_LIBTOOL dnl ([1.4]) Don't remove!
@@ -199,9 +200,17 @@ CAIRO_ENABLE_SURFACE_BACKEND(skia, Skia, no, [
 	      [AS_HELP_STRING([--with-skia=/path/to/skia],
 			      [directory to find compiled skia sources])],
 	      [skia_DIR="$withval"],
-	      [skia_DIR="`pwd`/../mesa"])
+	      [skia_DIR="`pwd`/../skia"])
+  AC_ARG_WITH([skia-bulid],
+	      [AS_HELP_STRING([--with-skia-build=(Release|Debug)]
+			      [build of skia to link with, default is Relese])],
+	      [skia_BUILD="$withval"],
+	      [skia_BUILD="Release"])
   skia_NONPKGCONFIG_CFLAGS="-I$skia_DIR/include/config -I$skia_DIR/include/core -I$skia_DIR/include/effects"
-  skia_NONPKGCONFIG_LIBS="$skia_DIR/out/libskia.a"
+  if test "x$(skia_BUILD)" = x"Relese"; then
+  	skia_NONPKGCONFIG_CFLAGS="-DSK_RELEASE -DSK_CAN_USE_FLOAT $skia_NONPKGCONFIG_CFLAGS"
+  fi
+  skia_NONPKGCONFIG_LIBS="--start-group $skia_DIR/out/$skia_BUILD/obj.target/gyp/libeffects.a $skia_DIR/out/$skia_BUILD/obj.target/gyp/libimages.a $skia_DIR/out/$skia_BUILD/obj.target/gyp/libutils.a $skia_DIR/out/$skia_BUILD/obj.target/gyp/libopts.a $skia_DIR/out/$skia_BUILD/obj.target/gyp/libcore.a -end-group"
   AC_SUBST(skia_DIR)
 ])
 

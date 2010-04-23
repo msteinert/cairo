@@ -40,6 +40,8 @@
 #include "cairoint.h"
 #include "cairo-atomic-private.h"
 
+CAIRO_BEGIN_DECLS
+
 #if HAS_ATOMIC_OPS
 /* Keep a stash of recently freed clip_paths, since we need to
  * reallocate them frequently.
@@ -129,5 +131,7 @@ typedef int freed_pool_t;
 #define _freed_pool_reset(ptr) assert((ptr) != NULL)
 
 #endif
+
+CAIRO_END_DECLS
 
 #endif /* CAIRO_FREED_POOL_PRIVATE_H */

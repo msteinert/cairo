@@ -43,12 +43,13 @@ libcairoperf_la_SOURCES = \
 	$(libcairoperf_headers)
 libcairoperf_la_LIBADD = $(CAIROPERF_LIBS)
 
-cairo_perf_trace_SOURCES = \
+cairo_perf_trace_SOURCES = a.cpp \
 	$(cairo_perf_trace_sources)	\
 	$(cairo_perf_trace_external_sources)
 cairo_perf_trace_LDADD =		\
 	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
-	$(LDADD)
+	$(LDADD) $(CAIRO_LIBS)
+skia = -Wl,--start-group @skia_DIR@/out/Debug/obj.target/gyp/libeffects.a @skia_DIR@/out/Debug/obj.target/gyp/libimages.a @skia_DIR@/out/Debug/obj.target/gyp/libutils.a @skia_DIR@/out/Debug/obj.target/gyp/libopts.a @skia_DIR@/out/Debug/obj.target/gyp/libcore.a -Wl,--end-group
 cairo_perf_trace_DEPENDENCIES = \
 	$(top_builddir)/util/cairo-script/libcairo-script-interpreter.la \
 	$(LDADD)
