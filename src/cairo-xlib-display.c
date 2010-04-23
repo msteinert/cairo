@@ -205,15 +205,15 @@ _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
     XSync (dpy, False);
     old_handler = XSetErrorHandler (_noop_error_handler);
 
-    if (cairo_device_acquire (&display->base))
-        return 0;
-    _cairo_xlib_display_notify (display);
-    _cairo_xlib_call_close_display_hooks (display);
-    _cairo_xlib_display_discard_screens (display);
+    if (cairo_device_acquire (&display->base)) {
+	_cairo_xlib_display_notify (display);
+	_cairo_xlib_call_close_display_hooks (display);
+	_cairo_xlib_display_discard_screens (display);
 
-    /* catch any that arrived before marking the display as closed */
-    _cairo_xlib_display_notify (display);
-    cairo_device_release (&display->base);
+	/* catch any that arrived before marking the display as closed */
+	_cairo_xlib_display_notify (display);
+	cairo_device_release (&display->base);
+    }
 
     XSync (dpy, False);
     XSetErrorHandler (old_handler);
@@ -234,7 +234,9 @@ _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
     CAIRO_MUTEX_UNLOCK (_cairo_xlib_display_mutex);
 
     assert (display != NULL);
-    _cairo_xlib_display_destroy (display);
+
+    cairo_device_finish (&display->base);
+    cairo_device_destroy (&display->base);
 
     /* Return value in accordance with requirements of
      * XESetCloseDisplay */
