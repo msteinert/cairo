@@ -174,6 +174,7 @@ REFERENCE_IMAGES = \
 	clip-disjoint.ref.png \
 	clip-disjoint.xlib.ref.png \
 	clip-empty.ref.png \
+	clip-empty-group.ref.png \
 	clip-empty-save.ref.png \
 	clip-fill.ref.png \
 	clip-fill.ps.xfail.png \

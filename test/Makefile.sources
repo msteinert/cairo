@@ -21,6 +21,7 @@ test_sources = \
 	clip-disjoint.c					\
 	clip-device-offset.c				\
 	clip-empty.c					\
+	clip-empty-group.c				\
 	clip-empty-save.c				\
 	clip-fill.c					\
 	clip-fill-no-op.c				\
