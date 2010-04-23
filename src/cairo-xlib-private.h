@@ -112,8 +112,8 @@ struct _cairo_xlib_screen {
     cairo_array_t visuals;
 };
 
-cairo_private cairo_status_t
-_cairo_xlib_display_get (Display *display, cairo_xlib_display_t **out);
+cairo_private cairo_device_t *
+_cairo_xlib_device_create (Display *display);
 
 cairo_private void
 _cairo_xlib_display_add_screen (cairo_xlib_display_t *display,

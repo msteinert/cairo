@@ -254,15 +254,22 @@ static const cairo_device_backend_t _cairo_xlib_device_backend = {
     _cairo_xlib_display_destroy,
 };
 
-cairo_status_t
-_cairo_xlib_display_get (Display *dpy,
-			 cairo_xlib_display_t **out)
+/**
+ * cairo_xlib_device_create:
+ * @dpy: the display to create the device for
+ *
+ * Gets the device belonging to @dpy, or creates it if it doesn't exist yet.
+ *
+ * Returns: the device belonging to @dpy
+ **/
+cairo_device_t *
+_cairo_xlib_device_create (Display *dpy)
 {
     cairo_xlib_display_t *display;
     cairo_xlib_display_t **prev;
+    cairo_device_t *device;
     XExtCodes *codes;
     const char *env;
-    cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
     /* There is an apparent deadlock between this mutex and the
      * mutex for the display, but it's actually safe. For the
@@ -284,18 +291,14 @@ _cairo_xlib_display_get (Display *dpy,
 		display->next = _cairo_xlib_display_list;
 		_cairo_xlib_display_list = display;
 	    }
-	    break;
+            device = cairo_device_reference (&display->base);
+	    goto UNLOCK;
 	}
-    }
-
-    if (display != NULL) {
-        cairo_device_reference (&display->base);
-	goto UNLOCK;
     }
 
     display = malloc (sizeof (cairo_xlib_display_t));
     if (unlikely (display == NULL)) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	device = _cairo_device_create_in_error (CAIRO_STATUS_NO_MEMORY);
 	goto UNLOCK;
     }
 
@@ -326,9 +329,8 @@ _cairo_xlib_display_get (Display *dpy,
 
     codes = XAddExtension (dpy);
     if (unlikely (codes == NULL)) {
-	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	device = _cairo_device_create_in_error (CAIRO_STATUS_NO_MEMORY);
 	free (display);
-	display = NULL;
 	goto UNLOCK;
     }
 
@@ -433,10 +435,11 @@ _cairo_xlib_display_get (Display *dpy,
     display->next = _cairo_xlib_display_list;
     _cairo_xlib_display_list = display;
 
+    device = &display->base;
+
 UNLOCK:
     CAIRO_MUTEX_UNLOCK (_cairo_xlib_display_mutex);
-    *out = display;
-    return status;
+    return device;
 }
 
 void

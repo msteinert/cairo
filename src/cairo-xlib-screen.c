@@ -307,7 +307,6 @@ _cairo_xlib_screen_destroy (cairo_xlib_screen_t *info)
 
         cairo_device_release (&display->base);
     }
-    cairo_device_destroy (info->device);
 
     _cairo_array_fini (&info->visuals);
 
@@ -320,12 +319,20 @@ _cairo_xlib_screen_get (Display *dpy,
 			cairo_xlib_screen_t **out)
 {
     cairo_xlib_display_t *display;
+    cairo_device_t *device;
     cairo_xlib_screen_t *info;
     cairo_status_t status;
 
-    status = _cairo_xlib_display_get (dpy, &display);
-    if (likely (status == CAIRO_STATUS_SUCCESS))
-	status = _cairo_xlib_display_get_screen (display, screen, &info);
+    device = _cairo_xlib_device_create (dpy);
+    status = device->status;
+    if (unlikely (status))
+        goto CLEANUP_DEVICE;
+
+    status =  _cairo_xlib_display_acquire (device, &display);
+    if (unlikely (status))
+        goto CLEANUP_DEVICE;
+
+    status = _cairo_xlib_display_get_screen (display, screen, &info);
     if (unlikely (status))
 	goto CLEANUP_DISPLAY;
 
@@ -341,7 +348,7 @@ _cairo_xlib_screen_get (Display *dpy,
     }
 
     CAIRO_REFERENCE_COUNT_INIT (&info->ref_count, 2); /* Add one for display cache */
-    info->device = &display->base;
+    info->device = device;
     info->screen = screen;
     info->has_render = FALSE;
     info->has_font_options = FALSE;
@@ -366,10 +373,12 @@ _cairo_xlib_screen_get (Display *dpy,
     _cairo_xlib_display_add_screen (display, info);
 
     *out = info;
-    return CAIRO_STATUS_SUCCESS;
 
   CLEANUP_DISPLAY:
-    cairo_device_destroy ((cairo_device_t *) display);
+    cairo_device_release (&display->base);
+
+  CLEANUP_DEVICE:
+    cairo_device_destroy (device);
     return status;
 }
 
