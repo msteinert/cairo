@@ -108,6 +108,14 @@ _cairo_xlib_display_discard_screens (cairo_xlib_display_t *display)
 }
 
 static void
+_cairo_xlib_display_finish (void *abstract_display)
+{
+    cairo_xlib_display_t *display = abstract_display;
+
+    display->display = NULL;
+}
+
+static void
 _cairo_xlib_display_destroy (void *abstract_display)
 {
     cairo_xlib_display_t *display = abstract_display;
@@ -201,22 +209,23 @@ _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
     if (display == NULL)
 	return 0;
 
-    /* protect the notifies from triggering XErrors */
-    XSync (dpy, False);
-    old_handler = XSetErrorHandler (_noop_error_handler);
+    if (! cairo_device_acquire (&display->base)) {
+      /* protect the notifies from triggering XErrors */
+      XSync (dpy, False);
+      old_handler = XSetErrorHandler (_noop_error_handler);
 
-    if (cairo_device_acquire (&display->base)) {
-	_cairo_xlib_display_notify (display);
-	_cairo_xlib_call_close_display_hooks (display);
-	_cairo_xlib_display_discard_screens (display);
+      _cairo_xlib_display_notify (display);
+      _cairo_xlib_call_close_display_hooks (display);
+      _cairo_xlib_display_discard_screens (display);
 
-	/* catch any that arrived before marking the display as closed */
-	_cairo_xlib_display_notify (display);
-	cairo_device_release (&display->base);
+      /* catch any that arrived before marking the display as closed */
+      _cairo_xlib_display_notify (display);
+
+      XSync (dpy, False);
+      XSetErrorHandler (old_handler);
+
+      cairo_device_release (&display->base);
     }
-
-    XSync (dpy, False);
-    XSetErrorHandler (old_handler);
 
     /*
      * Unhook from the global list
@@ -250,7 +259,7 @@ static const cairo_device_backend_t _cairo_xlib_device_backend = {
     NULL,
 
     NULL, /* flush */
-    NULL, /* finish */
+    _cairo_xlib_display_finish,
     _cairo_xlib_display_destroy,
 };
 
