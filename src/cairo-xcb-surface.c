@@ -43,6 +43,8 @@
 #include "cairo-xcb.h"
 #include "cairo-xcb-private.h"
 
+#include "cairo-default-context-private.h"
+
 #define AllPlanes ((unsigned) -1)
 #define CAIRO_ASSUME_PIXMAP 20
 #define XLIB_COORD_MAX 32767
@@ -923,6 +925,7 @@ _cairo_xcb_surface_glyphs (void				*abstract_surface,
 
 const cairo_surface_backend_t _cairo_xcb_surface_backend = {
     CAIRO_SURFACE_TYPE_XCB,
+    _cairo_default_context_create,
 
     _cairo_xcb_surface_create_similar,
     _cairo_xcb_surface_finish,

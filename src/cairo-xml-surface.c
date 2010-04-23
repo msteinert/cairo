@@ -46,6 +46,7 @@
 
 #include "cairo-clip-private.h"
 #include "cairo-device-private.h"
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 #include "cairo-output-stream-private.h"
 #include "cairo-recording-surface-private.h"
@@ -989,6 +990,8 @@ _cairo_xml_surface_glyphs (void			    *abstract_surface,
 static const cairo_surface_backend_t
 _cairo_xml_surface_backend = {
     CAIRO_SURFACE_TYPE_XML,
+    _cairo_default_context_create,
+
     _cairo_xml_surface_create_similar,
     NULL,
     NULL, NULL, /* source image */

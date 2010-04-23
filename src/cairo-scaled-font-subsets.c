@@ -630,6 +630,7 @@ _cairo_sub_font_map_glyph (cairo_sub_font_t	*sub_font,
 	 * create a separate subset just for the .notdef glyph.
 	 */
 	is_latin = FALSE;
+	latin_character = -1;
 	if (sub_font->use_latin_subset &&
 	    (! _cairo_font_face_is_user (sub_font->scaled_font->font_face)))
 	{

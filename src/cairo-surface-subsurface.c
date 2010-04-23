@@ -442,8 +442,17 @@ _cairo_surface_subsurface_snapshot (void *abstract_surface)
     return &snapshot->base;
 }
 
+static cairo_t *
+_cairo_surface_subsurface_create_context(void *target)
+{
+    cairo_surface_subsurface_t *surface = target;
+    return cairo_create (surface->target);
+}
+
 static const cairo_surface_backend_t _cairo_surface_subsurface_backend = {
     CAIRO_SURFACE_TYPE_SUBSURFACE,
+    _cairo_surface_subsurface_create_context,
+
     _cairo_surface_subsurface_create_similar,
     _cairo_surface_subsurface_finish,
 

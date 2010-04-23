@@ -43,6 +43,7 @@
 
 #include "test-wrapping-surface.h"
 
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 #include "cairo-surface-wrapper-private.h"
 
@@ -234,6 +235,8 @@ _test_wrapping_surface_show_text_glyphs (void			    *abstract_surface,
 
 static const cairo_surface_backend_t test_wrapping_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_WRAPPING,
+    _cairo_default_context_create,
+
     _test_wrapping_surface_create_similar,
     _test_wrapping_surface_finish,
     _test_wrapping_surface_acquire_source_image,

@@ -43,6 +43,7 @@
 #include "cairoint.h"
 #include "cairo-svg.h"
 #include "cairo-analysis-surface-private.h"
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 #include "cairo-image-info-private.h"
 #include "cairo-recording-surface-private.h"
@@ -2574,6 +2575,8 @@ _cairo_svg_surface_get_font_options (void                  *abstract_surface,
 
 static const cairo_surface_backend_t cairo_svg_surface_backend = {
 	CAIRO_SURFACE_TYPE_SVG,
+	_cairo_default_context_create,
+
 	NULL, /* create_similar: handled by wrapper */
 	_cairo_svg_surface_finish,
 	NULL, /* acquire_source_image */

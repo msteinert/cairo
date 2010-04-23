@@ -46,6 +46,7 @@
 
 #include "cairoint.h"
 
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 #include "cairo-paginated-private.h"
 
@@ -1861,6 +1862,8 @@ _cairo_surface_is_win32_printing (cairo_surface_t *surface)
 
 static const cairo_surface_backend_t cairo_win32_printing_surface_backend = {
     CAIRO_SURFACE_TYPE_WIN32_PRINTING,
+    _cairo_default_context_create,
+
     _cairo_win32_printing_surface_create_similar,
     _cairo_win32_surface_finish,
     NULL, /* acquire_source_image */

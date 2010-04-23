@@ -1,7 +1,6 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2005 Red Hat, Inc.
- * Copyright © 2006 Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -13,7 +12,7 @@
  *
  * You should have received a copy of the LGPL along with this library
  * in the file COPYING-LGPL-2.1; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  * You should have received a copy of the MPL along with this library
  * in the file COPYING-MPL-1.1
  *
@@ -34,24 +33,26 @@
  *	Carl D. Worth <cworth@redhat.com>
  */
 
-#ifndef CAIRO_PATH_PRIVATE_H
-#define CAIRO_PATH_PRIVATE_H
+#ifndef CAIRO_DEFAULT_CONTEXT_PRIVATE_H
+#define CAIRO_DEFAULT_CONTEXT_PRIVATE_H
 
-#include "cairoint.h"
+#include "cairo-private.h"
+#include "cairo-gstate-private.h"
+#include "cairo-path-fixed-private.h"
 
-cairo_private cairo_path_t *
-_cairo_path_create (cairo_path_fixed_t *path,
-		    cairo_t		*cr);
+typedef struct _cairo_default_context cairo_default_context_t;
 
-cairo_private cairo_path_t *
-_cairo_path_create_flat (cairo_path_fixed_t *path,
-			 cairo_t	    *cr);
+struct _cairo_default_context {
+    cairo_t base;
 
-cairo_private cairo_path_t *
-_cairo_path_create_in_error (cairo_status_t status);
+    cairo_gstate_t *gstate;
+    cairo_gstate_t  gstate_tail[2];
+    cairo_gstate_t *gstate_freelist;
 
-cairo_private cairo_status_t
-_cairo_path_append_to_context (const cairo_path_t	*path,
-			       cairo_t			*cr);
+    cairo_path_fixed_t path[1];
+};
 
-#endif /* CAIRO_PATH_DATA_PRIVATE_H */
+cairo_private cairo_t *
+_cairo_default_context_create (void *target);
+
+#endif /* CAIRO_DEFAULT_CONTEXT_PRIVATE_H */

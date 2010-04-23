@@ -60,6 +60,7 @@
 #include "cairo-pdf-operators-private.h"
 #include "cairo-pdf-shading-private.h"
 #include "cairo-composite-rectangles-private.h"
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 #include "cairo-scaled-font-subsets-private.h"
 #include "cairo-paginated-private.h"
@@ -3931,6 +3932,8 @@ _cairo_ps_surface_supports_fine_grained_fallbacks (void	    *abstract_surface)
 
 static const cairo_surface_backend_t cairo_ps_surface_backend = {
     CAIRO_SURFACE_TYPE_PS,
+    _cairo_default_context_create,
+
     NULL, /* create similar: handled by wrapper */
     _cairo_ps_surface_finish,
     NULL, /* acquire_source_image */

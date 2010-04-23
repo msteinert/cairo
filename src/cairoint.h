@@ -409,7 +409,7 @@ struct _cairo_font_face {
 };
 
 cairo_private void
-_cairo_reset_static_data (void);
+_cairo_default_context_reset_static_data (void);
 
 cairo_private void
 _cairo_toy_font_face_reset_static_data (void);
@@ -598,6 +598,9 @@ extern const cairo_private struct _cairo_font_face_backend _cairo_quartz_font_fa
 
 struct _cairo_surface_backend {
     cairo_surface_type_t type;
+
+    cairo_t *
+    (*create_context)		(void			*surface);
 
     cairo_surface_t *
     (*create_similar)		(void			*surface,
@@ -1357,7 +1360,7 @@ _cairo_path_fixed_stroke_rectilinear_to_boxes (const cairo_path_fixed_t	*path,
 					       const cairo_matrix_t	*ctm,
 					       cairo_boxes_t		*boxes);
 
-cairo_private cairo_status_t
+cairo_private cairo_int_status_t
 _cairo_path_fixed_stroke_to_traps (const cairo_path_fixed_t	*path,
 				   const cairo_stroke_style_t	*stroke_style,
 				   const cairo_matrix_t	*ctm,
@@ -2404,6 +2407,7 @@ slim_hidden_proto (cairo_format_stride_for_width);
 slim_hidden_proto (cairo_get_current_point);
 slim_hidden_proto (cairo_get_line_width);
 slim_hidden_proto (cairo_get_matrix);
+slim_hidden_proto (cairo_get_scaled_font);
 slim_hidden_proto (cairo_get_target);
 slim_hidden_proto (cairo_get_tolerance);
 slim_hidden_proto (cairo_glyph_allocate);
@@ -2511,6 +2515,7 @@ slim_hidden_proto (cairo_user_font_face_create);
 slim_hidden_proto (cairo_user_font_face_set_init_func);
 slim_hidden_proto (cairo_user_font_face_set_render_glyph_func);
 slim_hidden_proto (cairo_user_font_face_set_unicode_to_glyph_func);
+slim_hidden_proto (cairo_device_to_user);
 slim_hidden_proto (cairo_user_to_device);
 slim_hidden_proto (cairo_user_to_device_distance);
 slim_hidden_proto (cairo_version_string);

@@ -42,6 +42,7 @@
 
 #include "cairo-tee.h"
 
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 #include "cairo-tee-surface-private.h"
 #include "cairo-surface-wrapper-private.h"
@@ -395,6 +396,8 @@ _cairo_tee_surface_show_text_glyphs (void		    *abstract_surface,
 
 static const cairo_surface_backend_t cairo_tee_surface_backend = {
     CAIRO_SURFACE_TYPE_TEE,
+    _cairo_default_context_create, /* XXX */
+
     _cairo_tee_surface_create_similar,
     _cairo_tee_surface_finish,
     _cairo_tee_surface_acquire_source_image,

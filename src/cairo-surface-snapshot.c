@@ -89,6 +89,7 @@ _cairo_surface_snapshot_get_extents (void                  *abstract_surface,
 
 static const cairo_surface_backend_t _cairo_surface_snapshot_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT,
+    NULL,
 
     NULL, /* create similar */
     _cairo_surface_snapshot_finish,

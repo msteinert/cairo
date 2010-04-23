@@ -39,6 +39,7 @@
 #include "cairo-vg.h"
 
 #include "cairo-cache-private.h"
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 #include "cairo-path-fixed-private.h"
 #include "cairo-recording-surface-private.h"
@@ -1547,6 +1548,8 @@ _vg_surface_finish (void *abstract_surface)
 
 static const cairo_surface_backend_t cairo_vg_surface_backend = {
     CAIRO_SURFACE_TYPE_VG,
+    _cairo_default_context_create, /* XXX */
+
     _vg_surface_create_similar,
     _vg_surface_finish,
 

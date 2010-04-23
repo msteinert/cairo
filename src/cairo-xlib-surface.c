@@ -52,6 +52,7 @@
 #include "cairo-xlib-private.h"
 #include "cairo-xlib-surface-private.h"
 #include "cairo-clip-private.h"
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 #include "cairo-scaled-font-private.h"
 #include "cairo-surface-snapshot-private.h"
@@ -3133,6 +3134,8 @@ _cairo_xlib_surface_is_similar (void		*surface_a,
 
 static const cairo_surface_backend_t cairo_xlib_surface_backend = {
     CAIRO_SURFACE_TYPE_XLIB,
+    _cairo_default_context_create,
+
     _cairo_xlib_surface_create_similar,
     _cairo_xlib_surface_finish,
     _cairo_xlib_surface_acquire_source_image,

@@ -32,6 +32,7 @@
 #include "cairo-drm-private.h"
 #include "cairo-drm-radeon-private.h"
 
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 
 /* Basic stub surface for radeon chipsets */
@@ -252,6 +253,7 @@ radeon_surface_glyphs (void			*abstract_surface,
 
 static const cairo_surface_backend_t radeon_surface_backend = {
     CAIRO_SURFACE_TYPE_DRM,
+    _cairo_default_context_create,
 
     radeon_surface_create_similar,
     radeon_surface_finish,

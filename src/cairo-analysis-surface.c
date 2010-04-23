@@ -37,6 +37,7 @@
 #include "cairoint.h"
 
 #include "cairo-analysis-surface-private.h"
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 #include "cairo-paginated-private.h"
 #include "cairo-recording-surface-private.h"
@@ -646,6 +647,8 @@ _cairo_analysis_surface_show_text_glyphs (void			    *abstract_surface,
 
 static const cairo_surface_backend_t cairo_analysis_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_ANALYSIS,
+    NULL,
+
     NULL, /* create_similar */
     _cairo_analysis_surface_finish,
     NULL, /* acquire_source_image */
@@ -843,6 +846,7 @@ typedef cairo_int_status_t
 
 static const cairo_surface_backend_t cairo_null_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_NULL,
+    _cairo_default_context_create, /* XXX */
 
     NULL, /* create_similar */
     NULL, /* finish */

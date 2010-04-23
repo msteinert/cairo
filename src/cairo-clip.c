@@ -513,10 +513,13 @@ static cairo_status_t
 _cairo_clip_apply_clip_path (cairo_clip_t *clip,
 			     const cairo_clip_path_t *path)
 {
-    cairo_status_t status;
+    if (path->prev != NULL) {
+	cairo_status_t status;
 
-    if (path->prev != NULL)
 	status = _cairo_clip_apply_clip_path (clip, path->prev);
+	if (unlikely (status))
+	    return status;
+    }
 
     return _cairo_clip_intersect_path (clip,
 				       &path->path,

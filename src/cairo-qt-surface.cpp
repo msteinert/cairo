@@ -40,6 +40,7 @@
 #include "cairoint.h"
 
 #include "cairo-clip-private.h"
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 #include "cairo-region-private.h"
 #include "cairo-surface-clipper-private.h"
@@ -1551,6 +1552,8 @@ _cairo_qt_surface_mark_dirty (void *abstract_surface,
 
 static const cairo_surface_backend_t cairo_qt_surface_backend = {
     CAIRO_SURFACE_TYPE_QT,
+    _cairo_default_context_create,
+
     _cairo_qt_surface_create_similar,
     _cairo_qt_surface_finish,
     _cairo_qt_surface_acquire_source_image,

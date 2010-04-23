@@ -641,8 +641,17 @@ _cairo_paginated_surface_snapshot (void *abstract_other)
     return _cairo_surface_snapshot (other->recording_surface);
 }
 
+static cairo_t *
+_cairo_paginated_context_create (void *target)
+{
+    cairo_paginated_surface_t *surface = target;
+    return cairo_create (surface->recording_surface);
+}
+
 static const cairo_surface_backend_t cairo_paginated_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_PAGINATED,
+    _cairo_paginated_context_create,
+
     _cairo_paginated_surface_create_similar,
     _cairo_paginated_surface_finish,
     _cairo_paginated_surface_acquire_source_image,

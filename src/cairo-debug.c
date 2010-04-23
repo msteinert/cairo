@@ -87,7 +87,7 @@ cairo_debug_reset_static_data (void)
     _cairo_drm_device_reset_static_data ();
 #endif
 
-    _cairo_reset_static_data ();
+    _cairo_default_context_reset_static_data ();
 
     CAIRO_MUTEX_FINALIZE ();
 }

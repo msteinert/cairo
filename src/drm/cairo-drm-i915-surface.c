@@ -103,6 +103,7 @@
 #include "cairo-boxes-private.h"
 #include "cairo-cache-private.h"
 #include "cairo-composite-rectangles-private.h"
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 #include "cairo-freelist-private.h"
 #include "cairo-list-private.h"
@@ -2338,6 +2339,7 @@ i915_surface_fill (void			*abstract_dst,
 
 static const cairo_surface_backend_t i915_surface_backend = {
     CAIRO_SURFACE_TYPE_DRM,
+    _cairo_default_context_create,
 
     i915_surface_create_similar,
     i915_surface_finish,

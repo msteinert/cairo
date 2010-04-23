@@ -47,6 +47,7 @@
 #include "cairo-pdf-shading-private.h"
 #include "cairo-analysis-surface-private.h"
 #include "cairo-composite-rectangles-private.h"
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 #include "cairo-image-info-private.h"
 #include "cairo-recording-surface-private.h"
@@ -6566,6 +6567,8 @@ _cairo_pdf_surface_set_paginated_mode (void			*abstract_surface,
 
 static const cairo_surface_backend_t cairo_pdf_surface_backend = {
     CAIRO_SURFACE_TYPE_PDF,
+    _cairo_default_context_create,
+
     NULL, /* create similar: handled by wrapper */
     _cairo_pdf_surface_finish,
     NULL, /* acquire_source_image */

@@ -39,6 +39,7 @@
 #include "cairoint.h"
 
 #include "cairo-os2-private.h"
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 
 #if CAIRO_HAS_FC_FONT
@@ -1438,6 +1439,8 @@ _cairo_os2_surface_mark_dirty_rectangle (void *surface,
 
 static const cairo_surface_backend_t cairo_os2_surface_backend = {
     CAIRO_SURFACE_TYPE_OS2,
+    _cairo_default_context_create,
+
     NULL, /* create_similar */
     _cairo_os2_surface_finish,
     _cairo_os2_surface_acquire_source_image,

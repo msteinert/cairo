@@ -1382,7 +1382,7 @@ BAIL:
     return status;
 }
 
-cairo_status_t
+cairo_int_status_t
 _cairo_path_fixed_stroke_to_traps (const cairo_path_fixed_t	*path,
 				   const cairo_stroke_style_t	*stroke_style,
 				   const cairo_matrix_t	*ctm,
@@ -1390,7 +1390,7 @@ _cairo_path_fixed_stroke_to_traps (const cairo_path_fixed_t	*path,
 				   double		 tolerance,
 				   cairo_traps_t	*traps)
 {
-    cairo_status_t status;
+    cairo_int_status_t status;
     cairo_polygon_t polygon;
 
     /* Before we do anything else, we attempt the rectilinear

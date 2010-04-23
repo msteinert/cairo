@@ -91,6 +91,7 @@ _cairo_gstate_init (cairo_gstate_t  *gstate,
     gstate->next = NULL;
 
     gstate->op = CAIRO_GSTATE_OPERATOR_DEFAULT;
+    gstate->opacity = 1.;
 
     gstate->tolerance = CAIRO_GSTATE_TOLERANCE_DEFAULT;
     gstate->antialias = CAIRO_ANTIALIAS_DEFAULT;
@@ -147,6 +148,7 @@ _cairo_gstate_init_copy (cairo_gstate_t *gstate, cairo_gstate_t *other)
     VG (VALGRIND_MAKE_MEM_UNDEFINED (gstate, sizeof (cairo_gstate_t)));
 
     gstate->op = other->op;
+    gstate->opacity = other->opacity;
 
     gstate->tolerance = other->tolerance;
     gstate->antialias = other->antialias;
@@ -426,6 +428,20 @@ cairo_operator_t
 _cairo_gstate_get_operator (cairo_gstate_t *gstate)
 {
     return gstate->op;
+}
+
+cairo_status_t
+_cairo_gstate_set_opacity (cairo_gstate_t *gstate, double op)
+{
+    gstate->opacity = op;
+
+    return CAIRO_STATUS_SUCCESS;
+}
+
+double
+_cairo_gstate_get_opacity (cairo_gstate_t *gstate)
+{
+    return gstate->opacity;
 }
 
 cairo_status_t
@@ -1066,6 +1082,8 @@ _cairo_gstate_mask (cairo_gstate_t  *gstate,
     if (_clipped (gstate))
 	return CAIRO_STATUS_SUCCESS;
 
+    assert (gstate->opacity == 1.0);
+
     if (_cairo_pattern_is_opaque (mask, NULL))
 	return _cairo_gstate_paint (gstate);
 
@@ -1142,6 +1160,8 @@ _cairo_gstate_stroke (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 
     if (_clipped (gstate))
 	return CAIRO_STATUS_SUCCESS;
+
+    assert (gstate->opacity == 1.0);
 
     memcpy (&style, &gstate->stroke_style, sizeof (gstate->stroke_style));
     if (_cairo_stroke_style_dash_can_approximate (&gstate->stroke_style, &gstate->ctm, gstate->tolerance)) {
@@ -1242,6 +1262,8 @@ _cairo_gstate_fill (cairo_gstate_t *gstate, cairo_path_fixed_t *path)
 
     if (_clipped (gstate))
 	return CAIRO_STATUS_SUCCESS;
+
+    assert (gstate->opacity == 1.0);
 
     if (_cairo_path_fixed_fill_is_empty (path)) {
 	if (_cairo_operator_bounded_by_mask (gstate->op))
@@ -1580,22 +1602,14 @@ _cairo_gstate_unset_scaled_font (cairo_gstate_t *gstate)
 }
 
 cairo_status_t
-_cairo_gstate_select_font_face (cairo_gstate_t       *gstate,
-				const char           *family,
-				cairo_font_slant_t    slant,
-				cairo_font_weight_t   weight)
+_cairo_gstate_set_font_size (cairo_gstate_t *gstate,
+			     double          size)
 {
-    cairo_font_face_t *font_face;
-    cairo_status_t status;
+    _cairo_gstate_unset_scaled_font (gstate);
 
-    font_face = cairo_toy_font_face_create (family, slant, weight);
-    if (font_face->status)
-	return font_face->status;
+    cairo_matrix_init_scale (&gstate->font_matrix, size, size);
 
-    status = _cairo_gstate_set_font_face (gstate, font_face);
-    cairo_font_face_destroy (font_face);
-
-    return status;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 cairo_status_t
@@ -1810,31 +1824,6 @@ _cairo_gstate_get_font_extents (cairo_gstate_t *gstate,
 }
 
 cairo_status_t
-_cairo_gstate_text_to_glyphs (cairo_gstate_t	         *gstate,
-			      double		          x,
-			      double		          y,
-			      const char	         *utf8,
-			      int		          utf8_len,
-			      cairo_glyph_t	        **glyphs,
-			      int		         *num_glyphs,
-			      cairo_text_cluster_t      **clusters,
-			      int		         *num_clusters,
-			      cairo_text_cluster_flags_t *cluster_flags)
-{
-    cairo_status_t status;
-
-    status = _cairo_gstate_ensure_scaled_font (gstate);
-    if (unlikely (status))
-	return status;
-
-    return cairo_scaled_font_text_to_glyphs (gstate->scaled_font, x, y,
-					     utf8, utf8_len,
-					     glyphs, num_glyphs,
-					     clusters, num_clusters,
-					     cluster_flags);
-}
-
-cairo_status_t
 _cairo_gstate_set_font_face (cairo_gstate_t    *gstate,
 			     cairo_font_face_t *font_face)
 {
@@ -1873,20 +1862,16 @@ _cairo_gstate_glyph_extents (cairo_gstate_t *gstate,
 
 cairo_status_t
 _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
-				const char		   *utf8,
-				int			    utf8_len,
 				const cairo_glyph_t	   *glyphs,
 				int			    num_glyphs,
-				const cairo_text_cluster_t *clusters,
-				int			    num_clusters,
-				cairo_text_cluster_flags_t  cluster_flags)
+				cairo_glyph_text_info_t    *info)
 {
     cairo_pattern_union_t source_pattern;
     const cairo_pattern_t *pattern;
     cairo_glyph_t stack_transformed_glyphs[CAIRO_STACK_ARRAY_LENGTH (cairo_glyph_t)];
     cairo_glyph_t *transformed_glyphs;
     cairo_text_cluster_t stack_transformed_clusters[CAIRO_STACK_ARRAY_LENGTH (cairo_text_cluster_t)];
-    cairo_text_cluster_t *transformed_clusters;
+    cairo_text_cluster_t *transformed_clusters = NULL;
     cairo_operator_t op;
     cairo_status_t status;
     cairo_clip_t clip;
@@ -1906,8 +1891,6 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
 	return status;
 
     transformed_glyphs = stack_transformed_glyphs;
-    transformed_clusters = stack_transformed_clusters;
-
     if (num_glyphs > ARRAY_LENGTH (stack_transformed_glyphs)) {
 	transformed_glyphs = cairo_glyph_allocate (num_glyphs);
 	if (unlikely (transformed_glyphs == NULL)) {
@@ -1916,26 +1899,32 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
 	}
     }
 
-    /* Just in case */
-    if (!clusters)
-	num_clusters = 0;
-
-    if (num_clusters > ARRAY_LENGTH (stack_transformed_clusters)) {
-	transformed_clusters = cairo_text_cluster_allocate (num_clusters);
-	if (unlikely (transformed_clusters == NULL)) {
-	    status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
-	    goto CLEANUP_GLYPHS;
+    if (info != NULL) {
+	transformed_clusters = stack_transformed_clusters;
+	if (info->num_clusters > ARRAY_LENGTH (stack_transformed_clusters)) {
+	    transformed_clusters = cairo_text_cluster_allocate (info->num_clusters);
+	    if (unlikely (transformed_clusters == NULL)) {
+		status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
+		goto CLEANUP_GLYPHS;
+	    }
 	}
-    }
 
-    status = _cairo_gstate_transform_glyphs_to_backend (gstate,
-							glyphs, num_glyphs,
-							clusters,
-							num_clusters,
-							cluster_flags,
-							transformed_glyphs,
-							&num_glyphs,
-							transformed_clusters);
+	status = _cairo_gstate_transform_glyphs_to_backend (gstate,
+							    glyphs, num_glyphs,
+							    info->clusters,
+							    info->num_clusters,
+							    info->cluster_flags,
+							    transformed_glyphs,
+							    &num_glyphs,
+							    transformed_clusters);
+    } else {
+	status = _cairo_gstate_transform_glyphs_to_backend (gstate,
+							    glyphs, num_glyphs,
+							    NULL, 0, 0,
+							    transformed_glyphs,
+							    &num_glyphs,
+							    NULL);
+    }
 
     if (status || num_glyphs == 0)
 	goto CLEANUP_GLYPHS;
@@ -1961,13 +1950,22 @@ _cairo_gstate_show_text_glyphs (cairo_gstate_t		   *gstate,
     if (cairo_surface_has_show_text_glyphs (gstate->target) ||
 	_cairo_scaled_font_get_max_scale (gstate->scaled_font) <= 10240)
     {
-	status = _cairo_surface_show_text_glyphs (gstate->target, op, pattern,
-						  utf8, utf8_len,
-						  transformed_glyphs, num_glyphs,
-						  transformed_clusters, num_clusters,
-						  cluster_flags,
-						  gstate->scaled_font,
-						  _gstate_get_clip (gstate, &clip));
+	if (info != NULL) {
+	    status = _cairo_surface_show_text_glyphs (gstate->target, op, pattern,
+						      info->utf8, info->utf8_len,
+						      transformed_glyphs, num_glyphs,
+						      transformed_clusters, info->num_clusters,
+						      info->cluster_flags,
+						      gstate->scaled_font,
+						      _gstate_get_clip (gstate, &clip));
+	} else {
+	    status = _cairo_surface_show_text_glyphs (gstate->target, op, pattern,
+						      NULL, 0,
+						      transformed_glyphs, num_glyphs,
+						      NULL, 0, 0,
+						      gstate->scaled_font,
+						      _gstate_get_clip (gstate, &clip));
+	}
     }
     else
     {
@@ -2028,7 +2026,7 @@ _cairo_gstate_glyph_path (cairo_gstate_t      *gstate,
 							glyphs, num_glyphs,
 							NULL, 0, 0,
 							transformed_glyphs,
-							NULL, NULL);
+							&num_glyphs, NULL);
     if (unlikely (status))
 	goto CLEANUP_GLYPHS;
 

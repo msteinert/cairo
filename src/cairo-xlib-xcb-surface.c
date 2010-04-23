@@ -46,6 +46,8 @@
 #include "cairo-xcb-private.h"
 #include "cairo-xlib-xrender-private.h"
 
+#include "cairo-default-context-private.h"
+
 #include <X11/Xlib-xcb.h>
 #include <X11/Xlibint.h>	/* For XESetCloseDisplay */
 
@@ -60,7 +62,7 @@ struct cairo_xlib_xcb_display_t {
 };
 typedef struct cairo_xlib_xcb_display_t cairo_xlib_xcb_display_t;
 
-/* List of all cairo_xlib_xcb_display_t alive,
+/* List of all #cairo_xlib_xcb_display_t alive,
  * protected by _cairo_xlib_display_mutex */
 static cairo_list_t displays;
 
@@ -232,6 +234,8 @@ _cairo_xlib_xcb_surface_mark_dirty (void *abstract_surface,
 
 static const cairo_surface_backend_t _cairo_xlib_xcb_surface_backend = {
     CAIRO_SURFACE_TYPE_XLIB,
+    _cairo_default_context_create, /* XXX */
+
     _cairo_xlib_xcb_surface_create_similar,
     _cairo_xlib_xcb_surface_finish,
     _cairo_xlib_xcb_surface_acquire_source_image,

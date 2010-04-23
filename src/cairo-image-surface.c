@@ -42,6 +42,7 @@
 #include "cairo-boxes-private.h"
 #include "cairo-clip-private.h"
 #include "cairo-composite-rectangles-private.h"
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 #include "cairo-region-private.h"
 #include "cairo-scaled-font-private.h"
@@ -4601,6 +4602,8 @@ _cairo_surface_is_image (const cairo_surface_t *surface)
 
 const cairo_surface_backend_t _cairo_image_surface_backend = {
     CAIRO_SURFACE_TYPE_IMAGE,
+    _cairo_default_context_create,
+
     _cairo_image_surface_create_similar,
     _cairo_image_surface_finish,
     _cairo_image_surface_acquire_source_image,

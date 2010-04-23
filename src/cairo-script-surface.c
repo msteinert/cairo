@@ -3405,6 +3405,8 @@ _cairo_script_surface_get_extents (void *abstract_surface,
 static const cairo_surface_backend_t
 _cairo_script_surface_backend = {
     CAIRO_SURFACE_TYPE_SCRIPT,
+    _cairo_default_context_create,
+
     _cairo_script_surface_create_similar,
     _cairo_script_surface_finish,
     _cairo_script_surface_acquire_source_image,

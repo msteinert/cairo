@@ -34,6 +34,7 @@
 #include "cairoint.h"
 
 #include "cairo-drm-private.h"
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 
 #include <dlfcn.h>
@@ -462,6 +463,8 @@ gallium_surface_glyphs (void				*abstract_surface,
 
 static const cairo_surface_backend_t gallium_surface_backend = {
     CAIRO_SURFACE_TYPE_DRM,
+    _cairo_default_context_create,
+
     gallium_surface_create_similar,
     gallium_surface_finish,
 

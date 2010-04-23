@@ -49,6 +49,7 @@
 
 #include "test-paginated-surface.h"
 
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 #include "cairo-paginated-private.h"
 
@@ -240,6 +241,7 @@ _test_paginated_surface_set_paginated_mode (void			*abstract_surface,
 
 static const cairo_surface_backend_t test_paginated_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_PAGINATED,
+    _cairo_default_context_create,
 
     /* Since we are a paginated user, we get to regard most of the
      * surface backend interface as historical cruft and ignore it. */

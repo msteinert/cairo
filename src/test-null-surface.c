@@ -40,6 +40,7 @@
 
 #include "test-null-surface.h"
 
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 
 slim_hidden_proto (_cairo_test_null_surface_create);
@@ -133,6 +134,7 @@ _cairo_null_surface_has_show_text_glyphs (void *surface)
 
 static const cairo_surface_backend_t null_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_NULL,
+    _cairo_default_context_create,
 
     _cairo_null_surface_create_similar,
     NULL, /* finish */

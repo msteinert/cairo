@@ -79,6 +79,7 @@
 #include "cairoint.h"
 #include "cairo-analysis-surface-private.h"
 #include "cairo-clip-private.h"
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 #include "cairo-recording-surface-private.h"
 #include "cairo-surface-wrapper-private.h"
@@ -707,6 +708,8 @@ _cairo_surface_is_recording (const cairo_surface_t *surface)
 
 static const cairo_surface_backend_t cairo_recording_surface_backend = {
     CAIRO_SURFACE_TYPE_RECORDING,
+    _cairo_default_context_create,
+
     _cairo_recording_surface_create_similar,
     _cairo_recording_surface_finish,
     _cairo_recording_surface_acquire_source_image,

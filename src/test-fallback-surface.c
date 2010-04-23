@@ -54,6 +54,7 @@
 #include "cairoint.h"
 
 #include "test-fallback-surface.h"
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 
 typedef struct _test_fallback_surface {
@@ -207,6 +208,8 @@ _test_fallback_surface_get_extents (void		  *abstract_surface,
 
 static const cairo_surface_backend_t test_fallback_surface_backend = {
     CAIRO_INTERNAL_SURFACE_TYPE_TEST_FALLBACK,
+    _cairo_default_context_create,
+
     _test_fallback_surface_create_similar,
     _test_fallback_surface_finish,
     _test_fallback_surface_acquire_source_image,

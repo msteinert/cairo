@@ -49,6 +49,7 @@
 
 #include "cairo-clip-private.h"
 #include "cairo-composite-rectangles-private.h"
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 #include "cairo-paginated-private.h"
 #include "cairo-win32-private.h"
@@ -2089,6 +2090,8 @@ _cairo_win32_surface_create_span_renderer (cairo_operator_t	 op,
 
 static const cairo_surface_backend_t cairo_win32_surface_backend = {
     CAIRO_SURFACE_TYPE_WIN32,
+    _cairo_default_context_create,
+
     _cairo_win32_surface_create_similar,
     _cairo_win32_surface_finish,
     _cairo_win32_surface_acquire_source_image,

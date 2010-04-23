@@ -64,6 +64,8 @@ typedef struct _cairo_color_stop cairo_color_stop_t;
 typedef struct _cairo_device_backend cairo_device_backend_t;
 typedef struct _cairo_font_face_backend     cairo_font_face_backend_t;
 typedef struct _cairo_gstate cairo_gstate_t;
+typedef struct _cairo_gstate_backend cairo_gstate_backend_t;
+typedef struct _cairo_glyph_text_info cairo_glyph_text_info_t;
 typedef struct _cairo_hash_entry cairo_hash_entry_t;
 typedef struct _cairo_hash_table cairo_hash_table_t;
 typedef struct _cairo_image_surface cairo_image_surface_t;
@@ -174,6 +176,16 @@ struct _cairo_font_options {
     cairo_round_glyph_positions_t round_glyph_positions;
 };
 
+struct _cairo_glyph_text_info {
+    const char *utf8;
+    int utf8_len;
+
+    const cairo_text_cluster_t *clusters;
+    int num_clusters;
+    cairo_text_cluster_flags_t cluster_flags;
+};
+
+
 /* XXX: Right now, the _cairo_color structure puts unpremultiplied
    color in the doubles and premultiplied color in the shorts. Yes,
    this is crazy insane, (but at least we don't export this
@@ -209,7 +221,7 @@ struct _cairo_color_stop {
 typedef enum _cairo_paginated_mode {
     CAIRO_PAGINATED_MODE_ANALYZE,	/* analyze page regions */
     CAIRO_PAGINATED_MODE_RENDER,	/* render page contents */
-    CAIRO_PAGINATED_MODE_FALLBACK 	/* paint fallback images */
+    CAIRO_PAGINATED_MODE_FALLBACK	/* paint fallback images */
 } cairo_paginated_mode_t;
 
 /* Sure wish C had a real enum type so that this would be distinct

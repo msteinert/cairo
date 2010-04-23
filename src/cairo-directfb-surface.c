@@ -39,6 +39,7 @@
 #include "cairo-directfb.h"
 
 #include "cairo-clip-private.h"
+#include "cairo-default-context-private.h"
 #include "cairo-error-private.h"
 
 #include <pixman.h>
@@ -1827,6 +1828,8 @@ _cairo_directfb_surface_is_similar (void *surface_a, void *surface_b)
 static cairo_surface_backend_t
 _cairo_directfb_surface_backend = {
          CAIRO_SURFACE_TYPE_DIRECTFB, /*type*/
+	 _cairo_default_context_create,
+
         _cairo_directfb_surface_create_similar,/*create_similar*/
         _cairo_directfb_surface_finish, /*finish*/
         _cairo_directfb_surface_acquire_source_image,/*acquire_source_image*/

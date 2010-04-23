@@ -62,6 +62,7 @@ cairo_private = \
 	cairo-combsort-private.h \
 	cairo-compiler-private.h \
 	cairo-composite-rectangles-private.h \
+	cairo-default-context-private.h \
 	cairo-device-private.h \
 	cairo-error-private.h \
 	cairo-fixed-private.h \
@@ -122,6 +123,7 @@ cairo_sources = \
 	cairo-color.c \
 	cairo-composite-rectangles.c \
 	cairo-debug.c \
+	cairo-default-context.c \
 	cairo-device.c \
 	cairo-error.c \
 	cairo-fixed.c \
