@@ -1212,6 +1212,12 @@ _cairo_clip_combine_with_surface (cairo_clip_t *clip,
 	    return status;
 	}
 
+	if (clip_path->flags & CAIRO_CLIP_PATH_IS_BOX &&
+	    clip_path->path.maybe_fill_region)
+	{
+	    continue;
+	}
+
 	if (need_translate) {
 	    _cairo_path_fixed_translate (&clip_path->path,
 					 _cairo_fixed_from_int (-dst_x),
