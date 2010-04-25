@@ -942,7 +942,8 @@ _cairo_clip_path_to_boxes (cairo_clip_path_t *clip_path,
 
 static cairo_surface_t *
 _cairo_clip_path_get_surface (cairo_clip_path_t *clip_path,
-			      cairo_surface_t *target)
+			      cairo_surface_t *target,
+			      int *tx, int *ty)
 {
     const cairo_rectangle_int_t *clip_extents = &clip_path->extents;
     cairo_bool_t need_translate;
@@ -950,9 +951,19 @@ _cairo_clip_path_get_surface (cairo_clip_path_t *clip_path,
     cairo_clip_path_t *prev;
     cairo_status_t status;
 
+    while (clip_path->prev != NULL &&
+	   clip_path->flags & CAIRO_CLIP_PATH_IS_BOX &&
+	   clip_path->path.maybe_fill_region)
+    {
+	clip_path = clip_path->prev;
+    }
+
+    clip_extents = &clip_path->extents;
     if (clip_path->surface != NULL &&
 	clip_path->surface->backend == target->backend)
     {
+	*tx = clip_extents->x;
+	*ty = clip_extents->y;
 	return clip_path->surface;
     }
 
@@ -1046,16 +1057,17 @@ _cairo_clip_path_get_surface (cairo_clip_path_t *clip_path,
 	{
 	    cairo_surface_pattern_t pattern;
 	    cairo_surface_t *prev_surface;
+	    int prev_tx, prev_ty;
 
-	    prev_surface = _cairo_clip_path_get_surface (prev, target);
+	    prev_surface = _cairo_clip_path_get_surface (prev, target, &prev_tx, &prev_ty);
 	    if (unlikely (prev_surface->status))
 		goto BAIL;
 
 	    _cairo_pattern_init_for_surface (&pattern, prev_surface);
 	    pattern.base.filter = CAIRO_FILTER_NEAREST;
 	    cairo_matrix_init_translate (&pattern.base.matrix,
-					 clip_extents->x - prev->extents.x,
-					 clip_extents->y - prev->extents.y);
+					 clip_extents->x - prev_tx,
+					 clip_extents->y - prev_ty);
 	    status = _cairo_surface_paint (surface,
 					   CAIRO_OPERATOR_IN,
 					   &pattern.base,
@@ -1071,6 +1083,8 @@ _cairo_clip_path_get_surface (cairo_clip_path_t *clip_path,
 	prev = prev->prev;
     }
 
+    *tx = clip_extents->x;
+    *ty = clip_extents->y;
     cairo_surface_destroy (clip_path->surface);
     return clip_path->surface = surface;
 
@@ -1158,11 +1172,11 @@ _cairo_debug_print_clip (FILE *stream, cairo_clip_t *clip)
 }
 
 cairo_surface_t *
-_cairo_clip_get_surface (cairo_clip_t *clip, cairo_surface_t *target)
+_cairo_clip_get_surface (cairo_clip_t *clip, cairo_surface_t *target, int *tx, int *ty)
 {
     /* XXX is_clear -> all_clipped */
     assert (clip->path != NULL);
-    return _cairo_clip_path_get_surface (clip->path, target);
+    return _cairo_clip_path_get_surface (clip->path, target, tx, ty);
 }
 
 cairo_status_t

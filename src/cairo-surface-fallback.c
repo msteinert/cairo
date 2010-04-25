@@ -222,6 +222,7 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
     cairo_surface_pattern_t pattern;
     cairo_surface_pattern_t clip_pattern;
     cairo_surface_t *clip_surface;
+    int clip_x, clip_y;
     cairo_status_t status;
 
     /* We'd be better off here creating a surface identical in format
@@ -266,7 +267,7 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
 	goto CLEANUP_SURFACE;
 
     assert (clip->path != NULL);
-    clip_surface = _cairo_clip_get_surface (clip, dst);
+    clip_surface = _cairo_clip_get_surface (clip, dst, &clip_x, &clip_y);
     if (unlikely (clip_surface->status))
 	goto CLEANUP_SURFACE;
 
@@ -275,8 +276,8 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
     /* Combine that with the clip */
     status = _cairo_surface_composite (CAIRO_OPERATOR_DEST_IN,
 				       &clip_pattern.base, NULL, intermediate,
-				       extents->x - clip->path->extents.x,
-				       extents->y - clip->path->extents.y,
+				       extents->x - clip_x,
+				       extents->y - clip_y,
 				       0, 0,
 				       0, 0,
 				       extents->width, extents->height,
@@ -287,8 +288,8 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
     /* Punch the clip out of the destination */
     status = _cairo_surface_composite (CAIRO_OPERATOR_DEST_OUT,
 				       &clip_pattern.base, NULL, dst,
-				       extents->x - clip->path->extents.x,
-				       extents->y - clip->path->extents.y,
+				       extents->x - clip_x,
+				       extents->y - clip_y,
 				       0, 0,
 				       extents->x, extents->y,
 				       extents->width, extents->height,
@@ -477,9 +478,9 @@ _composite_trap_region (cairo_clip_t            *clip,
 
     if (clip != NULL) {
 	cairo_surface_t *clip_surface = NULL;
-	const cairo_rectangle_int_t *clip_extents;
+	int clip_x, clip_y;
 
-	clip_surface = _cairo_clip_get_surface (clip, dst);
+	clip_surface = _cairo_clip_get_surface (clip, dst, &clip_x, &clip_y);
 	if (unlikely (clip_surface->status))
 	    return clip_surface->status;
 
@@ -489,9 +490,8 @@ _composite_trap_region (cairo_clip_t            *clip,
 	}
 
 	_cairo_pattern_init_for_surface (&mask_pattern, clip_surface);
-	clip_extents = _cairo_clip_get_extents (clip);
-	mask_x = extents->x - clip_extents->x;
-	mask_y = extents->y - clip_extents->y;
+	mask_x = extents->x - clip_x;
+	mask_y = extents->y - clip_y;
 	mask = &mask_pattern.base;
     }
 

@@ -112,7 +112,7 @@ cairo_private const cairo_rectangle_int_t *
 _cairo_clip_get_extents (const cairo_clip_t *clip);
 
 cairo_private cairo_surface_t *
-_cairo_clip_get_surface (cairo_clip_t *clip, cairo_surface_t *dst);
+_cairo_clip_get_surface (cairo_clip_t *clip, cairo_surface_t *dst, int *tx, int *ty);
 
 cairo_private cairo_status_t
 _cairo_clip_combine_with_surface (cairo_clip_t *clip,

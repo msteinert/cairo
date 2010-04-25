@@ -762,10 +762,11 @@ i965_shader_set_clip (i965_shader_t *shader,
 		      cairo_clip_t *clip)
 {
     cairo_surface_t *clip_surface;
+    int clip_x, clip_y;
     union i965_shader_channel *channel;
     i965_surface_t *s;
 
-    clip_surface = _cairo_clip_get_surface (clip, &shader->target->intel.drm.base);
+    clip_surface = _cairo_clip_get_surface (clip, &shader->target->intel.drm.base, &clip_x, &clip_y);
     assert (clip_surface->status == CAIRO_STATUS_SUCCESS);
     assert (clip_surface->type == CAIRO_SURFACE_TYPE_DRM);
     s = (i965_surface_t *) clip_surface;
@@ -793,8 +794,8 @@ i965_shader_set_clip (i965_shader_t *shader,
 			     1. / s->intel.drm.height);
 
     cairo_matrix_translate (&shader->clip.base.matrix,
-			    NEAREST_BIAS - clip->path->extents.x,
-			    NEAREST_BIAS - clip->path->extents.y);
+			    NEAREST_BIAS - clip_x,
+			    NEAREST_BIAS - clip_y);
 }
 
 static cairo_bool_t

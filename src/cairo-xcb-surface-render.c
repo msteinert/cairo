@@ -1894,6 +1894,7 @@ _clip_and_composite_combine (cairo_clip_t		*clip,
 {
     cairo_xcb_surface_t *tmp;
     cairo_surface_t *clip_surface;
+    int clip_x, clip_y;
     xcb_render_picture_t clip_picture;
     cairo_status_t status;
 
@@ -1952,7 +1953,7 @@ _clip_and_composite_combine (cairo_clip_t		*clip,
     if (unlikely (status))
 	goto CLEANUP_SURFACE;
 
-    clip_surface = _cairo_clip_get_surface (clip, &dst->base);
+    clip_surface = _cairo_clip_get_surface (clip, &dst->base, &clip_x, &clip_y);
     if (unlikely (clip_surface->status))
 	goto CLEANUP_SURFACE;
 
@@ -1972,8 +1973,8 @@ _clip_and_composite_combine (cairo_clip_t		*clip,
 	_cairo_xcb_connection_render_composite (dst->connection,
 						XCB_RENDER_PICT_OP_OUT_REVERSE,
 						clip_picture, XCB_NONE, dst->picture,
-						extents->x - clip->path->extents.x,
-						extents->y - clip->path->extents.y,
+						extents->x - clip_x,
+						extents->y - clip_y,
 						0, 0,
 						extents->x,     extents->y,
 						extents->width, extents->height);
@@ -1983,8 +1984,8 @@ _clip_and_composite_combine (cairo_clip_t		*clip,
 						XCB_RENDER_PICT_OP_ADD,
 						tmp->picture, clip_picture, dst->picture,
 						0, 0,
-						extents->x - clip->path->extents.x,
-						extents->y - clip->path->extents.y,
+						extents->x - clip_x,
+						extents->y - clip_y,
 						extents->x,     extents->y,
 						extents->width, extents->height);
     }
@@ -2182,12 +2183,9 @@ _cairo_xcb_surface_fixup_unbounded_with_mask (cairo_xcb_surface_t *dst,
     cairo_xcb_surface_t *mask;
     int mask_x, mask_y;
 
-    mask = (cairo_xcb_surface_t *) _cairo_clip_get_surface (clip, &dst->base);
+    mask = (cairo_xcb_surface_t *) _cairo_clip_get_surface (clip, &dst->base, &mask_x, &mask_y);
     if (unlikely (mask->base.status))
 	return mask->base.status;
-
-    mask_x = - clip->path->extents.x;
-    mask_y = - clip->path->extents.y;
 
     /* top */
     if (rects->bounded.y != rects->unbounded.y) {
@@ -2199,7 +2197,7 @@ _cairo_xcb_surface_fixup_unbounded_with_mask (cairo_xcb_surface_t *dst,
 	_cairo_xcb_connection_render_composite (dst->connection,
 						XCB_RENDER_PICT_OP_OUT_REVERSE,
 						mask->picture, XCB_NONE, dst->picture,
-						x + mask_x, y + mask_y,
+						x - mask_x, y - mask_y,
 						0, 0,
 						x, y,
 						width, height);
@@ -2215,7 +2213,7 @@ _cairo_xcb_surface_fixup_unbounded_with_mask (cairo_xcb_surface_t *dst,
 	_cairo_xcb_connection_render_composite (dst->connection,
 						XCB_RENDER_PICT_OP_OUT_REVERSE,
 						mask->picture, XCB_NONE, dst->picture,
-						x + mask_x, y + mask_y,
+						x - mask_x, y - mask_y,
 						0, 0,
 						x, y,
 						width, height);
@@ -2231,7 +2229,7 @@ _cairo_xcb_surface_fixup_unbounded_with_mask (cairo_xcb_surface_t *dst,
 	_cairo_xcb_connection_render_composite (dst->connection,
 						XCB_RENDER_PICT_OP_OUT_REVERSE,
 						mask->picture, XCB_NONE, dst->picture,
-						x + mask_x, y + mask_y,
+						x - mask_x, y - mask_y,
 						0, 0,
 						x, y,
 						width, height);
@@ -2247,7 +2245,7 @@ _cairo_xcb_surface_fixup_unbounded_with_mask (cairo_xcb_surface_t *dst,
 	_cairo_xcb_connection_render_composite (dst->connection,
 						XCB_RENDER_PICT_OP_OUT_REVERSE,
 						mask->picture, XCB_NONE, dst->picture,
-						x + mask_x, y + mask_y,
+						x - mask_x, y - mask_y,
 						0, 0,
 						x, y,
 						width, height);
@@ -2541,16 +2539,17 @@ _composite_boxes (cairo_xcb_surface_t *dst,
 
 	if (need_clip_mask) {
 	    cairo_surface_t *clip_surface;
+	    int clip_x, clip_y;
 
-	    clip_surface = _cairo_clip_get_surface (clip, &dst->base);
+	    clip_surface = _cairo_clip_get_surface (clip, &dst->base, &clip_x, &clip_y);
 	    if (unlikely (clip_surface->status))
 		return clip_surface->status;
 
 	    _cairo_pattern_init_for_surface (&mask, clip_surface);
 	    mask.base.filter = CAIRO_FILTER_NEAREST;
 	    cairo_matrix_init_translate (&mask.base.matrix,
-					 -clip->path->extents.x,
-					 -clip->path->extents.y);
+					 -clip_x,
+					 -clip_y);
 
 	    if (op == CAIRO_OPERATOR_CLEAR) {
 		src = NULL;

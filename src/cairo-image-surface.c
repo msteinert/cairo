@@ -1481,13 +1481,14 @@ _cairo_image_surface_fixup_unbounded (cairo_image_surface_t *dst,
 
     if (clip != NULL) {
 	cairo_surface_t *clip_surface;
+	int clip_x, clip_y;
 
-	clip_surface = _cairo_clip_get_surface (clip, &dst->base);
+	clip_surface = _cairo_clip_get_surface (clip, &dst->base, &clip_x, &clip_y);
 	assert (clip_surface->status == CAIRO_STATUS_SUCCESS);
 
 	mask = ((cairo_image_surface_t *) clip_surface)->pixman_image;
-	mask_x = -clip->path->extents.x;
-	mask_y = -clip->path->extents.y;
+	mask_x = -clip_x;
+	mask_y = -clip_y;
     } else {
 	if (rects->bounded.width  == rects->unbounded.width &&
 	    rects->bounded.height == rects->unbounded.height)
@@ -1852,6 +1853,7 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
 {
     pixman_image_t *tmp;
     cairo_surface_t *clip_surface;
+    int clip_x, clip_y;
     cairo_status_t status;
 
     tmp  = pixman_image_create_bits (dst->pixman_format,
@@ -1887,7 +1889,7 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
 	goto CLEANUP_SURFACE;
 
     assert (clip->path != NULL);
-    clip_surface = _cairo_clip_get_surface (clip, &dst->base);
+    clip_surface = _cairo_clip_get_surface (clip, &dst->base, &clip_x, &clip_y);
     if (unlikely (clip_surface->status))
 	goto CLEANUP_SURFACE;
 
@@ -1898,8 +1900,8 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
                                   ((cairo_image_surface_t *) clip_surface)->pixman_image,
                                   dst->pixman_image,
                                   0, 0,
-                                  extents->x - clip->path->extents.x,
-                                  extents->y - clip->path->extents.y,
+                                  extents->x - clip_x,
+                                  extents->y - clip_y,
                                   extents->x, extents->y,
                                   extents->width, extents->height);
 #else
@@ -1907,8 +1909,8 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
 	pixman_image_composite32 (PIXMAN_OP_OUT_REVERSE,
                                   ((cairo_image_surface_t *) clip_surface)->pixman_image,
                                   NULL, dst->pixman_image,
-                                  extents->x - clip->path->extents.x,
-                                  extents->y - clip->path->extents.y,
+                                  extents->x - clip_x,
+                                  extents->y - clip_y,
                                   0, 0,
                                   extents->x, extents->y,
                                   extents->width, extents->height);
@@ -1919,8 +1921,8 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
                                   ((cairo_image_surface_t *) clip_surface)->pixman_image,
                                   dst->pixman_image,
                                   0, 0,
-                                  extents->x - clip->path->extents.x,
-                                  extents->y - clip->path->extents.y,
+                                  extents->x - clip_x,
+                                  extents->y - clip_y,
                                   extents->x, extents->y,
                                   extents->width, extents->height);
 #endif
@@ -1930,8 +1932,8 @@ _clip_and_composite_combine (cairo_clip_t                  *clip,
                                   ((cairo_image_surface_t *) clip_surface)->pixman_image,
                                   dst->pixman_image,
                                   0, 0,
-                                  extents->x - clip->path->extents.x,
-                                  extents->y - clip->path->extents.y,
+                                  extents->x - clip_x,
+                                  extents->y - clip_y,
                                   extents->x, extents->y,
                                   extents->width, extents->height);
     }
@@ -2741,13 +2743,14 @@ _composite_boxes (cairo_image_surface_t *dst,
 
 	if (need_clip_mask) {
 	    cairo_surface_t *clip_surface;
+	    int clip_x, clip_y;
 
-	    clip_surface = _cairo_clip_get_surface (clip, &dst->base);
+	    clip_surface = _cairo_clip_get_surface (clip, &dst->base, &clip_x, &clip_y);
 	    if (unlikely (clip_surface->status))
 		return clip_surface->status;
 
-	    mask_x = -clip->path->extents.x;
-	    mask_y = -clip->path->extents.y;
+	    mask_x = -clip_x;
+	    mask_y = -clip_y;
 
 	    if (op == CAIRO_OPERATOR_CLEAR) {
 		pattern = NULL;
@@ -2831,9 +2834,9 @@ _clip_and_composite_boxes (cairo_image_surface_t *dst,
     info.num_traps = traps.num_traps;
     info.traps = traps.traps;
     info.antialias = antialias;
-    status =  _clip_and_composite (dst, op, src,
-				   _composite_traps, &info,
-				   extents, clip);
+    status = _clip_and_composite (dst, op, src,
+				  _composite_traps, &info,
+				  extents, clip);
 
     _cairo_traps_fini (&traps);
     return status;

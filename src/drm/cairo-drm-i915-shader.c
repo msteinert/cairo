@@ -2403,11 +2403,11 @@ i915_shader_set_clip (i915_shader_t *shader,
 		      cairo_clip_t *clip)
 {
     cairo_surface_t *clip_surface;
-    const cairo_rectangle_int_t *clip_extents;
+    int clip_x, clip_y;
     union i915_shader_channel *channel;
     i915_surface_t *s;
 
-    clip_surface = _cairo_clip_get_surface (clip, &shader->target->intel.drm.base);
+    clip_surface = _cairo_clip_get_surface (clip, &shader->target->intel.drm.base, &clip_x, &clip_y);
     assert (clip_surface->status == CAIRO_STATUS_SUCCESS);
     assert (clip_surface->type == CAIRO_SURFACE_TYPE_DRM);
 
@@ -2434,13 +2434,12 @@ i915_shader_set_clip (i915_shader_t *shader,
 	SS3_NORMALIZED_COORDS |
 	i915_texture_extend (CAIRO_EXTEND_NONE);
 
-    clip_extents = _cairo_clip_get_extents (clip);
     cairo_matrix_init_scale (&shader->clip.base.matrix,
 			     1. / s->intel.drm.width,
 			     1. / s->intel.drm.height);
     cairo_matrix_translate (&shader->clip.base.matrix,
-			    NEAREST_BIAS - clip_extents->x,
-			    NEAREST_BIAS - clip_extents->y);
+			    NEAREST_BIAS - clip_x,
+			    NEAREST_BIAS - clip_y);
 }
 
 static cairo_status_t
