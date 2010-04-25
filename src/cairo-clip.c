@@ -1190,26 +1190,6 @@ _cairo_clip_combine_with_surface (cairo_clip_t *clip,
 
     assert (clip_path != NULL);
 
-    if (clip_path->surface != NULL &&
-	clip_path->surface->backend == dst->backend)
-    {
-	cairo_surface_pattern_t pattern;
-
-	_cairo_pattern_init_for_surface (&pattern, clip_path->surface);
-	pattern.base.filter = CAIRO_FILTER_NEAREST;
-	cairo_matrix_init_translate (&pattern.base.matrix,
-				     -dst_x + clip_path->extents.x,
-				     -dst_y + clip_path->extents.y);
-	status = _cairo_surface_paint (dst,
-				       CAIRO_OPERATOR_IN,
-				       &pattern.base,
-				       NULL);
-
-	_cairo_pattern_fini (&pattern.base);
-
-	return status;
-    }
-
     need_translate = dst_x | dst_y;
     do {
 	if (clip_path->surface != NULL &&
@@ -1219,8 +1199,8 @@ _cairo_clip_combine_with_surface (cairo_clip_t *clip,
 
 	    _cairo_pattern_init_for_surface (&pattern, clip_path->surface);
 	    cairo_matrix_init_translate (&pattern.base.matrix,
-					 -dst_x + clip_path->extents.x,
-					 -dst_y + clip_path->extents.y);
+					 dst_x - clip_path->extents.x,
+					 dst_y - clip_path->extents.y);
 	    pattern.base.filter = CAIRO_FILTER_NEAREST;
 	    status = _cairo_surface_paint (dst,
 					   CAIRO_OPERATOR_IN,
