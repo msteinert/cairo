@@ -33,6 +33,7 @@ test_sources = \
 	clip-nesting.c					\
 	clip-operator.c					\
 	clip-push-group.c				\
+	clip-shape.c					\
 	clip-stroke.c					\
 	clip-stroke-no-op.c				\
 	clip-stroke-unbounded.c				\
