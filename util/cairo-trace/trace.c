@@ -738,8 +738,11 @@ get_prog_name (char *buf, int length)
 
     file = fopen ("/proc/self/cmdline", "rb");
     if (file != NULL) {
-	fgets (buf, length, file);
+	slash = fgets (buf, length, file);
 	fclose (file);
+
+	if (slash == NULL)
+	    return;
     } else {
 	char const *name = getenv ("CAIRO_TRACE_PROG_NAME");
 	if (name != NULL) {
