@@ -500,7 +500,7 @@ cairo_region_intersect (cairo_region_t *dst, const cairo_region_t *other)
     if (other->status)
 	return _cairo_region_set_error (dst, other->status);
 
-    if (! pixman_region32_intersect (&dst->rgn, &dst->rgn, &other->rgn))
+    if (! pixman_region32_intersect (&dst->rgn, &dst->rgn, CONST_CAST &other->rgn))
 	return _cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
 
     return CAIRO_STATUS_SUCCESS;
@@ -563,7 +563,7 @@ cairo_region_union (cairo_region_t *dst,
     if (other->status)
 	return _cairo_region_set_error (dst, other->status);
 
-    if (! pixman_region32_union (&dst->rgn, &dst->rgn, &other->rgn))
+    if (! pixman_region32_union (&dst->rgn, &dst->rgn, CONST_CAST &other->rgn))
 	return _cairo_region_set_error (dst, CAIRO_STATUS_NO_MEMORY);
 
     return CAIRO_STATUS_SUCCESS;
