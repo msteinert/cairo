@@ -1150,12 +1150,6 @@ _get_font_face_id (cairo_font_face_t *font_face)
     return _get_id (FONT_FACE, font_face);
 }
 
-static bool
-_has_font_face_id (cairo_font_face_t *font_face)
-{
-    return _has_id (FONT_FACE, font_face);
-}
-
 static void
 _emit_font_face_id (cairo_font_face_t *font_face)
 {
@@ -1190,12 +1184,6 @@ _create_pattern_id (cairo_pattern_t *pattern)
     }
 
     return obj->token;
-}
-
-static long
-_get_pattern_id (cairo_pattern_t *pattern)
-{
-    return _get_id (PATTERN, pattern);
 }
 
 static void
@@ -1867,21 +1855,9 @@ _emit_context (cairo_t *cr)
 }
 
 static void
-_emit_font_face (cairo_font_face_t *font_face)
-{
-    _emit_current (_get_object (FONT_FACE, font_face));
-}
-
-static void
 _emit_pattern (cairo_pattern_t *pattern)
 {
     _emit_current (_get_object (PATTERN, pattern));
-}
-
-static void
-_emit_scaled_font (cairo_scaled_font_t *scaled_font)
-{
-    _emit_current (_get_object (SCALED_FONT, scaled_font));
 }
 
 static void
