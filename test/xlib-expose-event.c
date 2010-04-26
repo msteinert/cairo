@@ -175,36 +175,7 @@ draw (const cairo_test_context_t *ctx,
 }
 
 static cairo_test_status_t
-compare (const cairo_test_context_t *ctx, cairo_surface_t *surface)
-{
-    cairo_t *cr;
-    cairo_surface_t *image, *reference, *diff;
-    cairo_status_t status;
-    buffer_diff_result_t result;
-
-    diff = cairo_image_surface_create (CAIRO_FORMAT_RGB24, SIZE, SIZE);
-
-    /* copy the pixmap to an image buffer */
-    image = cairo_image_surface_create (CAIRO_FORMAT_RGB24, SIZE, SIZE);
-    cr = cairo_create (image);
-    cairo_set_source_surface (cr, surface, 0, 0);
-    cairo_paint (cr);
-    cairo_destroy (cr);
-    cairo_surface_write_to_png (image, "xlib-expose-event.out.png");
-
-    reference = cairo_test_create_surface_from_png (ctx, "xlib-expose-event.ref.png");
-    status = image_diff (ctx, reference, image, diff, &result);
-
-    cairo_surface_destroy (reference);
-    cairo_surface_destroy (image);
-    cairo_surface_destroy (diff);
-
-    return status == CAIRO_STATUS_SUCCESS && ! result.pixels_changed ?
-	CAIRO_TEST_SUCCESS : CAIRO_TEST_FAILURE;
-}
-
-static cairo_test_status_t
-preamble (cairo_test_context_t *ctx)
+draw_func (cairo_t *cr, int width, int height)
 {
     Display *dpy;
     Drawable drawable;
@@ -212,20 +183,19 @@ preamble (cairo_test_context_t *ctx)
     cairo_surface_t *surface;
     cairo_rectangle_t region[4];
     int i, j;
-    cairo_test_status_t result = CAIRO_TEST_UNTESTED;
+    const cairo_test_context_t *ctx;
+    
+    ctx = cairo_test_get_context (cr);
+    surface = cairo_get_target (cr);
 
-    if (! cairo_test_is_target_enabled (ctx, "xlib"))
-	goto CLEANUP_TEST;
+    if (cairo_surface_get_type (surface) != CAIRO_SURFACE_TYPE_XLIB)
+        return CAIRO_TEST_UNTESTED;
 
-    dpy = XOpenDisplay (NULL);
-    if (dpy == NULL) {
-	cairo_test_log (ctx, "xlib-expose-event: Cannot open display, skipping\n");
-	goto CLEANUP_TEST;
-    }
+    dpy = cairo_xlib_surface_get_display (surface);
 
     if (! check_visual (dpy)) {
 	cairo_test_log (ctx, "xlib-expose-event: default visual is not RGB24 or BGR24, skipping\n");
-	goto CLEANUP_DISPLAY;
+        return CAIRO_TEST_UNTESTED;
     }
 
     screen = DefaultScreen (dpy);
@@ -263,22 +233,19 @@ preamble (cairo_test_context_t *ctx)
 	}
     }
 
-    result = compare (ctx, surface);
-
+    cairo_set_source_surface (cr, surface, 0, 0);
     cairo_surface_destroy (surface);
+    cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+    cairo_paint (cr);
 
     XFreePixmap (dpy, drawable);
 
-  CLEANUP_DISPLAY:
-    XCloseDisplay (dpy);
-
-  CLEANUP_TEST:
-    return result;
+    return CAIRO_TEST_SUCCESS;
 }
 
 CAIRO_TEST (xlib_expose_event,
 	    "Emulate a typical expose event",
 	    "xlib", /* keywords */
 	    NULL, /* requirements */
-	    0, 0,
-	    preamble, NULL)
+	    SIZE, SIZE,
+	    NULL, draw_func)
