@@ -2775,6 +2775,10 @@ slim_hidden_proto (cairo_surface_write_to_png_stream);
 
 #endif
 
+cairo_private_no_warn cairo_filter_t
+_cairo_pattern_analyze_filter (const cairo_pattern_t	*pattern,
+			       double			*pad_out);
+
 CAIRO_END_DECLS
 
 #include "cairo-mutex-private.h"

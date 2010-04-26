@@ -1203,21 +1203,54 @@ _acquire_source_cleanup (pixman_image_t *pixman_image,
     free (data);
 }
 
+static cairo_filter_t
+sampled_area (const cairo_surface_pattern_t *pattern,
+	      const cairo_rectangle_int_t *extents,
+	      cairo_rectangle_int_t *sample)
+{
+    cairo_filter_t filter;
+    double x1, x2, y1, y2;
+    double pad;
+
+    x1 = extents->x;
+    y1 = extents->y;
+    x2 = extents->x + (int) extents->width;
+    y2 = extents->y + (int) extents->height;
+
+    if (_cairo_matrix_is_translation (&pattern->base.matrix)) {
+	x1 += pattern->base.matrix.x0; x2 += pattern->base.matrix.x0;
+	y1 += pattern->base.matrix.y0; y2 += pattern->base.matrix.y0;
+    } else {
+	_cairo_matrix_transform_bounding_box (&pattern->base.matrix,
+					      &x1, &y1, &x2, &y2,
+					      NULL);
+    }
+
+    filter = _cairo_pattern_analyze_filter (&pattern->base, &pad);
+    sample->x = floor (x1 - pad);
+    sample->y = floor (y1 - pad);
+    sample->width  = ceil (x2 + pad) - sample->x;
+    sample->height = ceil (y2 + pad) - sample->y;
+
+    return filter;
+}
+
 static pixman_image_t *
 _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 			   const cairo_rectangle_int_t *extents,
 			   int *ix, int *iy)
 {
     pixman_image_t *pixman_image;
-    cairo_bool_t is_pixel_exact;
+    cairo_rectangle_int_t sample;
     cairo_extend_t extend;
+    cairo_filter_t filter;
     double tx, ty;
 
     tx = pattern->base.matrix.x0;
     ty = pattern->base.matrix.y0;
 
     extend = pattern->base.extend;
-    is_pixel_exact = _cairo_matrix_is_pixel_exact (&pattern->base.matrix);
+    filter = sampled_area (pattern, extents, &sample);
 
     pixman_image = NULL;
     if (pattern->surface->type == CAIRO_SURFACE_TYPE_IMAGE) {
@@ -1230,10 +1263,10 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 	type = source->base.backend->type;
 	if (type == CAIRO_SURFACE_TYPE_IMAGE) {
 	    if (extend != CAIRO_EXTEND_NONE &&
-		is_pixel_exact &&
-		extents->x >= 0 && extents->y >= 0 &&
-		extents->x + extents->width  <= source->width &&
-		extents->y + extents->height <= source->height)
+		sample.x >= 0 &&
+		sample.y >= 0 &&
+		sample.x + sample.width  <= source->width &&
+		sample.y + sample.height <= source->height)
 	    {
 		extend = CAIRO_EXTEND_NONE;
 	    }
@@ -1241,7 +1274,7 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 	    /* avoid allocating a 'pattern' image if we can reuse the original */
 	    if (extend == CAIRO_EXTEND_NONE &&
 		_cairo_matrix_is_translation (&pattern->base.matrix) &&
-		_nearest_sample (pattern->base.filter, &tx, &ty))
+		_nearest_sample (filter, &tx, &ty))
 	    {
 		*ix = tx;
 		*iy = ty;
@@ -1262,19 +1295,17 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 	    sub = (cairo_surface_subsurface_t *) source;
 	    source = (cairo_image_surface_t *) sub->target;
 
-	    if (extend != CAIRO_EXTEND_NONE &&
-		is_pixel_exact &&
-		extents->x >= 0 && extents->y >= 0 &&
-		extents->x + extents->width  <= sub->extents.width &&
-		extents->y + extents->height <= sub->extents.height)
+	    if (sample.x >= sub->extents.x &&
+		sample.y >= sub->extents.y &&
+		sample.x + sample.width  <= sub->extents.x + sub->extents.width &&
+		sample.y + sample.height <= sub->extents.y + sub->extents.height)
 	    {
-		extend = CAIRO_EXTEND_NONE;
 		is_contained = TRUE;
 	    }
 
 	    if (is_contained &&
 		_cairo_matrix_is_translation (&pattern->base.matrix) &&
-		_nearest_sample (pattern->base.filter, &tx, &ty))
+		_nearest_sample (filter, &tx, &ty))
 	    {
 		*ix = tx + sub->extents.x;
 		*iy = ty + sub->extents.y;
@@ -1313,15 +1344,6 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 	}
 
 	source = cleanup->image;
-	if (extend != CAIRO_EXTEND_NONE &&
-	    is_pixel_exact &&
-	    extents->x >= 0 && extents->y >= 0 &&
-	    extents->x + extents->width <= source->width &&
-	    extents->y + extents->height <= source->height)
-	{
-	    extend = CAIRO_EXTEND_NONE;
-	}
-
 	pixman_image = pixman_image_create_bits (source->pixman_format,
 						 source->width,
 						 source->height,
@@ -1340,7 +1362,7 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
     }
 
     if (! _cairo_matrix_is_translation (&pattern->base.matrix) ||
-	! _nearest_sample (pattern->base.filter, &tx, &ty))
+	! _nearest_sample (filter, &tx, &ty))
     {
 	pixman_transform_t pixman_transform;
 	cairo_matrix_t m;
@@ -1389,7 +1411,7 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
     {
 	pixman_filter_t pixman_filter;
 
-	switch (pattern->base.filter) {
+	switch (filter) {
 	case CAIRO_FILTER_FAST:
 	    pixman_filter = PIXMAN_FILTER_FAST;
 	    break;

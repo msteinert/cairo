@@ -1875,7 +1875,7 @@ _cairo_pattern_is_clear (const cairo_pattern_t *abstract_pattern)
  *      the filter radius, so we just guess base on what we know that
  *      backends do currently (see bug #10508)
  */
-static cairo_filter_t
+cairo_filter_t
 _cairo_pattern_analyze_filter (const cairo_pattern_t	*pattern,
 			       double			*pad_out)
 {
