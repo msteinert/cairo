@@ -1662,7 +1662,7 @@ _emit_image (cairo_surface_t *image,
 	break;
     case CAIRO_FORMAT_RGB16_565: /* XXX endianness */
 	for (row = height; row--; ) {
-	    uint16_t *src = data;
+	    uint16_t *src = (uint16_t *) data;
 	    uint16_t *dst = (uint16_t *)rowdata;
 	    int col;
 	    for (col = 0; col < width; col++)
