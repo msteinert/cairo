@@ -355,18 +355,22 @@ _cairo_path_to_quartz_context_close_path (void *closure)
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_status_t
+static void
 _cairo_quartz_cairo_path_to_quartz_context (cairo_path_fixed_t *path,
 					    CGContextRef closure)
 {
+    cairo_status_t status;
+
     CGContextBeginPath (closure);
-    return _cairo_path_fixed_interpret (path,
-					CAIRO_DIRECTION_FORWARD,
-					_cairo_path_to_quartz_context_move_to,
-					_cairo_path_to_quartz_context_line_to,
-					_cairo_path_to_quartz_context_curve_to,
-					_cairo_path_to_quartz_context_close_path,
-					closure);
+    status = _cairo_path_fixed_interpret (path,
+					  CAIRO_DIRECTION_FORWARD,
+					  _cairo_path_to_quartz_context_move_to,
+					  _cairo_path_to_quartz_context_line_to,
+					  _cairo_path_to_quartz_context_curve_to,
+					  _cairo_path_to_quartz_context_close_path,
+					  closure);
+
+    assert (status == CAIRO_STATUS_SUCCESS);
 }
 
 /*
@@ -1956,9 +1960,7 @@ _cairo_quartz_surface_fill_cg (void *abstract_surface,
 
     action = _cairo_quartz_setup_source (surface, source);
 
-    rv = _cairo_quartz_cairo_path_to_quartz_context (path, surface->cgContext);
-    if (rv)
-        goto BAIL;
+    _cairo_quartz_cairo_path_to_quartz_context (path, surface->cgContext);
 
     if (!_cairo_operator_bounded_by_mask(op) && CGContextCopyPathPtr)
 	path_for_unbounded = CGContextCopyPathPtr (surface->cgContext);
@@ -1990,7 +1992,6 @@ _cairo_quartz_surface_fill_cg (void *abstract_surface,
 	rv = CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-  BAIL:
     _cairo_quartz_teardown_source (surface, source);
 
     CGContextRestoreGState (surface->cgContext);
@@ -2116,9 +2117,7 @@ _cairo_quartz_surface_stroke_cg (void *abstract_surface,
 
     action = _cairo_quartz_setup_source (surface, source);
 
-    rv = _cairo_quartz_cairo_path_to_quartz_context (path, surface->cgContext);
-    if (rv)
-	goto BAIL;
+    _cairo_quartz_cairo_path_to_quartz_context (path, surface->cgContext);
 
     if (!_cairo_operator_bounded_by_mask (op) && CGContextCopyPathPtr)
 	path_for_unbounded = CGContextCopyPathPtr (surface->cgContext);
@@ -2146,7 +2145,6 @@ _cairo_quartz_surface_stroke_cg (void *abstract_surface,
 	rv = CAIRO_INT_STATUS_UNSUPPORTED;
     }
 
-  BAIL:
     _cairo_quartz_teardown_source (surface, source);
 
     CGContextRestoreGState (surface->cgContext);
@@ -2637,7 +2635,6 @@ _cairo_quartz_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clip
 {
     cairo_quartz_surface_t *surface =
 	cairo_container_of (clipper, cairo_quartz_surface_t, clipper);
-    cairo_status_t status;
 
     ND((stderr, "%p _cairo_quartz_surface_intersect_clip_path path: %p\n", surface, path));
 
@@ -2657,9 +2654,7 @@ _cairo_quartz_surface_clipper_intersect_clip_path (cairo_surface_clipper_t *clip
     } else {
 	CGContextSetShouldAntialias (surface->cgContext, (antialias != CAIRO_ANTIALIAS_NONE));
 
-	status = _cairo_quartz_cairo_path_to_quartz_context (path, surface->cgContext);
-	if (status)
-	    return status;
+	_cairo_quartz_cairo_path_to_quartz_context (path, surface->cgContext);
 
 	if (fill_rule == CAIRO_FILL_RULE_WINDING)
 	    CGContextClip (surface->cgContext);
