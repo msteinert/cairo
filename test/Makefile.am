@@ -550,7 +550,7 @@ REFERENCE_IMAGES = \
 	finer-grained-fallbacks.ps3.argb32.ref.png \
 	finer-grained-fallbacks.ps3.ref.png \
 	finer-grained-fallbacks.ps3.rgb24.ref.png \
-	finer-grained-fallbacks.ref.png \
+	finer-grained-fallbacks.argb32.ref.png \
 	finer-grained-fallbacks.rgb24.ref.png \
 	finer-grained-fallbacks.svg12.argb32.ref.png \
 	finer-grained-fallbacks.svg12.rgb24.ref.png \
