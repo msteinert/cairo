@@ -46,11 +46,16 @@ static cairo_status_t
 _cairo_surface_snapshot_finish (void *abstract_surface)
 {
     cairo_surface_snapshot_t *surface = abstract_surface;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
 
-    cairo_surface_finish (surface->clone);
-    cairo_surface_destroy (surface->clone);
+    if (surface->clone != NULL) {
+	cairo_surface_finish (surface->clone);
+	status = surface->clone->status;
 
-    return CAIRO_STATUS_SUCCESS;
+	cairo_surface_destroy (surface->clone);
+    }
+
+    return status;
 }
 
 static cairo_status_t
