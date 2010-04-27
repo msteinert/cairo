@@ -1926,6 +1926,12 @@ _cairo_surface_paint (cairo_surface_t	*surface,
     if (op == CAIRO_OPERATOR_CLEAR && surface->is_clear)
 	return CAIRO_STATUS_SUCCESS;
 
+    if (op == CAIRO_OPERATOR_OVER &&
+	_cairo_pattern_is_clear (source))
+    {
+	return CAIRO_STATUS_SUCCESS;
+    }
+
     status = _pattern_has_error (source);
     if (unlikely (status))
 	return status;
@@ -1967,6 +1973,12 @@ _cairo_surface_mask (cairo_surface_t		*surface,
     /* If the mask is blank, this is just an expensive no-op */
     if (_cairo_pattern_is_clear (mask) &&
 	_cairo_operator_bounded_by_mask (op))
+    {
+	return CAIRO_STATUS_SUCCESS;
+    }
+
+    if (op == CAIRO_OPERATOR_OVER &&
+	_cairo_pattern_is_clear (source))
     {
 	return CAIRO_STATUS_SUCCESS;
     }
@@ -2097,6 +2109,12 @@ _cairo_surface_stroke (cairo_surface_t		*surface,
     if (op == CAIRO_OPERATOR_CLEAR && surface->is_clear)
 	return CAIRO_STATUS_SUCCESS;
 
+    if (op == CAIRO_OPERATOR_OVER &&
+	_cairo_pattern_is_clear (source))
+    {
+	return CAIRO_STATUS_SUCCESS;
+    }
+
     status = _pattern_has_error (source);
     if (unlikely (status))
 	return status;
@@ -2146,6 +2164,12 @@ _cairo_surface_fill (cairo_surface_t	*surface,
 
     if (op == CAIRO_OPERATOR_CLEAR && surface->is_clear)
 	return CAIRO_STATUS_SUCCESS;
+
+    if (op == CAIRO_OPERATOR_OVER &&
+	_cairo_pattern_is_clear (source))
+    {
+	return CAIRO_STATUS_SUCCESS;
+    }
 
     status = _pattern_has_error (source);
     if (unlikely (status))
