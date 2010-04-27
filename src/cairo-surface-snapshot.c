@@ -156,6 +156,7 @@ _cairo_surface_snapshot_copy_on_write (cairo_surface_t *surface)
 
     _cairo_surface_release_source_image (snapshot->target, image, extra);
     snapshot->target = snapshot->clone;
+    snapshot->base.type = snapshot->target->type;
 }
 
 /**
@@ -213,6 +214,7 @@ _cairo_surface_snapshot (cairo_surface_t *surface)
 			 &_cairo_surface_snapshot_backend,
 			 NULL, /* device */
 			 surface->content);
+    snapshot->base.type = surface->type;
 
     snapshot->target = surface;
     snapshot->clone = NULL;
