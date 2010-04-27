@@ -1235,6 +1235,74 @@ sampled_area (const cairo_surface_pattern_t *pattern,
     return filter;
 }
 
+static uint16_t
+expand_channel (uint16_t v, uint32_t bits)
+{
+    int offset = 16 - bits;
+    while (offset > 0) {
+	v |= v >> bits;
+	offset -= bits;
+	bits += bits;
+    }
+    return v;
+}
+
+static pixman_image_t *
+_pixel_to_solid (cairo_image_surface_t *image, int x, int y)
+{
+    uint32_t pixel;
+    pixman_color_t color;
+
+    switch (image->format) {
+    default:
+    case CAIRO_FORMAT_INVALID:
+	ASSERT_NOT_REACHED;
+	return NULL;
+
+    case CAIRO_FORMAT_A1:
+	pixel = *(uint8_t *) (image->data + y * image->stride + x/8);
+	return pixel & (1 << (x&7)) ? _pixman_white_image () : _pixman_transparent_image ();
+
+    case CAIRO_FORMAT_A8:
+	color.alpha = *(uint8_t *) (image->data + y * image->stride + x);
+	color.alpha |= color.alpha << 8;
+	if (color.alpha == 0)
+	    return _pixman_transparent_image ();
+
+	color.red = color.green = color.blue = 0;
+	return pixman_image_create_solid_fill (&color);
+
+    case CAIRO_FORMAT_RGB16_565:
+	pixel = *(uint16_t *) (image->data + y * image->stride + 2 * x);
+	if (pixel == 0)
+	    return _pixman_black_image ();
+	if (pixel == 0xffff)
+	    return _pixman_white_image ();
+
+	color.alpha = 0xffff;
+	color.red = expand_channel ((pixel >> 11 & 0x1f) << 11, 5);
+	color.green = expand_channel ((pixel >> 5 & 0x3f) << 10, 6);
+	color.blue = expand_channel ((pixel & 0x1f) << 11, 5);
+	return pixman_image_create_solid_fill (&color);
+
+    case CAIRO_FORMAT_ARGB32:
+    case CAIRO_FORMAT_RGB24:
+	pixel = *(uint32_t *) (image->data + y * image->stride + 4 * x);
+	color.alpha = image->format == CAIRO_FORMAT_ARGB32 ? (pixel >> 24) | (pixel >> 16 & 0xff00) : 0xffff;
+	if (color.alpha == 0)
+	    return _pixman_transparent_image ();
+	if (pixel == 0xffffffff)
+	    return _pixman_white_image ();
+	if (color.alpha == 0xffff && (pixel & 0xffffff) == 0)
+	    return _pixman_black_image ();
+
+	color.red = (pixel >> 16 & 0xff) | (pixel >> 8 & 0xff00);
+	color.green = (pixel >> 8 & 0xff) | (pixel & 0xff00);
+	color.blue = (pixel & 0xff) | (pixel << 8 & 0xff00);
+	return pixman_image_create_solid_fill (&color);
+    }
+}
+
 static pixman_image_t *
 _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 			   const cairo_rectangle_int_t *extents,
@@ -1271,6 +1339,21 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 		extend = CAIRO_EXTEND_NONE;
 	    }
 
+	    if (sample.width == 1 && sample.height == 1) {
+		if (sample.x < 0 ||
+		    sample.y < 0 ||
+		    sample.x >= source->width ||
+		    sample.y >= source->height)
+		{
+		    if (extend == CAIRO_EXTEND_NONE)
+			return _pixman_transparent_image ();
+		}
+		else
+		{
+		    return _pixel_to_solid (source, sample.x, sample.y);
+		}
+	    }
+
 	    /* avoid allocating a 'pattern' image if we can reuse the original */
 	    if (extend == CAIRO_EXTEND_NONE &&
 		_cairo_matrix_is_translation (&pattern->base.matrix) &&
@@ -1295,12 +1378,23 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 	    sub = (cairo_surface_subsurface_t *) source;
 	    source = (cairo_image_surface_t *) sub->target;
 
-	    if (sample.x >= sub->extents.x &&
-		sample.y >= sub->extents.y &&
-		sample.x + sample.width  <= sub->extents.x + sub->extents.width &&
-		sample.y + sample.height <= sub->extents.y + sub->extents.height)
+	    if (sample.x >= 0 &&
+		sample.y >= 0 &&
+		sample.x + sample.width  <= sub->extents.width &&
+		sample.y + sample.height <= sub->extents.height)
 	    {
 		is_contained = TRUE;
+	    }
+
+	    if (sample.width == 1 && sample.height == 1) {
+		if (is_contained) {
+		    return _pixel_to_solid (source,
+					    sub->extents.x + sample.x,
+					    sub->extents.y + sample.y);
+		} else {
+		    if (extend == CAIRO_EXTEND_NONE)
+			return _pixman_transparent_image ();
+		}
 	    }
 
 	    if (is_contained &&
@@ -1327,36 +1421,54 @@ _pixman_image_for_surface (const cairo_surface_pattern_t *pattern,
 
     if (pixman_image == NULL) {
 	struct acquire_source_cleanup *cleanup;
-	cairo_image_surface_t *source = (cairo_image_surface_t *) pattern->surface;
+	cairo_image_surface_t *image;
+	void *extra;
 	cairo_status_t status;
 
-	cleanup = malloc (sizeof (*cleanup));
-	if (unlikely (cleanup == NULL))
+	status = _cairo_surface_acquire_source_image (pattern->surface, &image, &extra);
+	if (unlikely (status))
 	    return NULL;
+
+	if (sample.width == 1 && sample.height == 1) {
+	    if (sample.x < 0 ||
+		sample.y < 0 ||
+		sample.x >= image->width ||
+		sample.y >= image->height)
+	    {
+		if (extend == CAIRO_EXTEND_NONE) {
+		    pixman_image = _pixman_transparent_image ();
+		    _cairo_surface_release_source_image (pattern->surface, image, extra);
+		    return pixman_image;
+		}
+	    }
+	    else
+	    {
+		pixman_image = _pixel_to_solid (image, sample.x, sample.y);
+		_cairo_surface_release_source_image (pattern->surface, image, extra);
+		return pixman_image;
+	    }
+	}
+
+	pixman_image = pixman_image_create_bits (image->pixman_format,
+						 image->width,
+						 image->height,
+						 (uint32_t *) image->data,
+						 image->stride);
+	if (unlikely (pixman_image == NULL)) {
+	    _cairo_surface_release_source_image (pattern->surface, image, extra);
+	    return NULL;
+	}
+
+	cleanup = malloc (sizeof (*cleanup));
+	if (unlikely (cleanup == NULL)) {
+	    _cairo_surface_release_source_image (pattern->surface, image, extra);
+	    pixman_image_unref (pixman_image);
+	    return NULL;
+	}
 
 	cleanup->surface = pattern->surface;
-	status = _cairo_surface_acquire_source_image (pattern->surface,
-						      &cleanup->image,
-						      &cleanup->image_extra);
-	if (unlikely (status)) {
-	    free (cleanup);
-	    return NULL;
-	}
-
-	source = cleanup->image;
-	pixman_image = pixman_image_create_bits (source->pixman_format,
-						 source->width,
-						 source->height,
-						 (uint32_t *) source->data,
-						 source->stride);
-	if (unlikely (pixman_image == NULL)) {
-	    _cairo_surface_release_source_image (pattern->surface,
-						 cleanup->image,
-						 cleanup->image_extra);
-	    free (cleanup);
-	    return NULL;
-	}
-
+	cleanup->image = image;
+	cleanup->image_extra = extra;
 	pixman_image_set_destroy_function (pixman_image,
 					   _acquire_source_cleanup, cleanup);
     }
@@ -4240,7 +4352,6 @@ _cairo_image_surface_span_renderer_finish (void *abstract_renderer)
     src = _pixman_image_for_pattern (renderer->pattern, &rects->bounded, &src_x, &src_y);
     if (src == NULL)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
 
     pixman_image_composite32 (_pixman_operator (renderer->op),
                               src,
