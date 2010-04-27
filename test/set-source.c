@@ -67,6 +67,7 @@ draw (cairo_t *cr, int width, int height)
     }
 
     cairo_pattern_destroy (pattern);
+    cairo_surface_finish (surface); /* data will go out of scope */
     cairo_surface_destroy (surface);
 
     return CAIRO_TEST_SUCCESS;

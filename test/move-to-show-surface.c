@@ -62,6 +62,8 @@ draw (cairo_t *cr, int width, int height)
 	cairo_set_source_surface (cr, surface,
 				  i % 2, i / 2);
 	cairo_paint (cr);
+
+	cairo_surface_finish (surface); /* colors will go out of scope */
 	cairo_surface_destroy (surface);
     }
 

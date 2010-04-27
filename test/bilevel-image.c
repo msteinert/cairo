@@ -46,9 +46,11 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_set_source_surface (cr, mask, 0, 0);
     cairo_pattern_set_filter (cairo_get_source (cr), CAIRO_FILTER_NEAREST);
-    cairo_surface_destroy (mask);
 
     cairo_paint (cr);
+
+    cairo_surface_finish (mask); /* data goes out of scope */
+    cairo_surface_destroy (mask);
 
     return CAIRO_TEST_SUCCESS;
 }

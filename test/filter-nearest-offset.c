@@ -94,6 +94,7 @@ draw (cairo_t *cr, int width, int height)
 	}
     }
 
+    cairo_surface_finish (surface); /* data goes out of scope */
     cairo_surface_destroy (surface);
 
     return CAIRO_TEST_SUCCESS;

@@ -57,6 +57,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_translate (cr, 2, 2);
     cairo_mask_surface (cr, mask, 4, 4);
 
+    cairo_surface_finish (mask); /* data goes out of scope */
     cairo_surface_destroy (mask);
 
     return CAIRO_TEST_SUCCESS;

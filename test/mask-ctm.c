@@ -39,7 +39,6 @@ draw (cairo_t *cr, int width, int height)
     mask_surface = cairo_image_surface_create_for_data ((unsigned char *) data,
 							CAIRO_FORMAT_ARGB32, 2, 2, 8);
     mask = cairo_pattern_create_for_surface (mask_surface);
-    cairo_surface_destroy (mask_surface);
 
     cairo_set_source_rgb (cr, 1.0, 0, 0);
 
@@ -65,6 +64,9 @@ draw (cairo_t *cr, int width, int height)
     cairo_mask (cr, mask);
 
     cairo_pattern_destroy (mask);
+
+    cairo_surface_finish (mask_surface); /* data goes out of scope */
+    cairo_surface_destroy (mask_surface);
 
     return CAIRO_TEST_SUCCESS;
 }
