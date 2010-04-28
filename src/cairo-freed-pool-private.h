@@ -53,13 +53,13 @@ typedef struct {
 static inline void *
 _atomic_fetch (void **slot)
 {
-    return _cairo_atomic_ptr_cmpxchg (slot, *slot, NULL);
+    return _cairo_atomic_ptr_cmpxchg_return_old (slot, *slot, NULL);
 }
 
 static inline cairo_bool_t
 _atomic_store (void **slot, void *ptr)
 {
-    return _cairo_atomic_ptr_cmpxchg (slot, NULL, ptr) == NULL;
+    return _cairo_atomic_ptr_cmpxchg (slot, NULL, ptr);
 }
 
 cairo_private void *

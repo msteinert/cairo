@@ -84,7 +84,7 @@ _device_finish (void *abstract_device)
     CAIRO_MUTEX_UNLOCK (_cairo_drm_device_mutex);
 
     if (_cairo_atomic_ptr_cmpxchg (&_cairo_drm_default_device,
-				   device, NULL) == device)
+				   device, NULL))
     {
 	cairo_device_destroy (&device->base);
     }

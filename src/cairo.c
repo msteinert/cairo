@@ -142,7 +142,7 @@ _context_get (void)
 	    return malloc (sizeof (cairo_t));
 
 	new = old | (1 << avail);
-    } while (_cairo_atomic_int_cmpxchg (&_context_stash.occupied, old, new) != old);
+    } while (! _cairo_atomic_int_cmpxchg (&_context_stash.occupied, old, new));
 
     return &_context_stash.pool[avail];
 }
@@ -163,7 +163,7 @@ _context_put (cairo_t *cr)
     do {
 	old = _cairo_atomic_int_get (&_context_stash.occupied);
 	new = old & avail;
-    } while (_cairo_atomic_int_cmpxchg (&_context_stash.occupied, old, new) != old);
+    } while (! _cairo_atomic_int_cmpxchg (&_context_stash.occupied, old, new));
 }
 #else
 #define _context_get() malloc (sizeof (cairo_t))

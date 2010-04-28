@@ -873,7 +873,7 @@ _pixman_transparent_image (void)
 	image = pixman_image_create_solid_fill (&color);
 
 	if (_cairo_atomic_ptr_cmpxchg (&__pixman_transparent_image,
-				       NULL, image) == NULL)
+				       NULL, image))
 	{
 	    pixman_image_ref (image);
 	}
@@ -902,7 +902,7 @@ _pixman_black_image (void)
 	image = pixman_image_create_solid_fill (&color);
 
 	if (_cairo_atomic_ptr_cmpxchg (&__pixman_black_image,
-				       NULL, image) == NULL)
+				       NULL, image))
 	{
 	    pixman_image_ref (image);
 	}
@@ -931,7 +931,7 @@ _pixman_white_image (void)
 	image = pixman_image_create_solid_fill (&color);
 
 	if (_cairo_atomic_ptr_cmpxchg (&__pixman_white_image,
-				       NULL, image) == NULL)
+				       NULL, image))
 	{
 	    pixman_image_ref (image);
 	}

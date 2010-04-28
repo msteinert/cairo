@@ -62,7 +62,7 @@ _cairo_atomic_int_dec_and_test (int *x)
 }
 
 int
-_cairo_atomic_int_cmpxchg (int *x, int oldv, int newv)
+_cairo_atomic_int_cmpxchg_return_old_impl (int *x, int oldv, int newv)
 {
     int ret;
 
@@ -76,7 +76,7 @@ _cairo_atomic_int_cmpxchg (int *x, int oldv, int newv)
 }
 
 void *
-_cairo_atomic_ptr_cmpxchg (void **x, void *oldv, void *newv)
+_cairo_atomic_ptr_cmpxchg_return_old_impl (void **x, void *oldv, void *newv)
 {
     void *ret;
 
