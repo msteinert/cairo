@@ -949,7 +949,8 @@ _cairo_surface_fallback_paint (cairo_surface_t		*surface,
 
     status = _clip_and_composite_trapezoids (source, op, surface,
 					     &traps, CAIRO_ANTIALIAS_DEFAULT,
-					     clip, &extents.bounded);
+					     clip,
+                                             extents.is_bounded ? &extents.bounded : &extents.unbounded);
     _cairo_traps_fini (&traps);
 
 CLEANUP_BOXES:
@@ -1022,7 +1023,8 @@ _cairo_surface_fallback_mask (cairo_surface_t		*surface,
     return _clip_and_composite (clip, op, source,
 				_cairo_surface_mask_draw_func,
 				(void *) mask,
-				surface, &extents.bounded);
+				surface,
+                                extents.is_bounded ? &extents.bounded : &extents.unbounded);
 }
 
 cairo_status_t
@@ -1108,7 +1110,8 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
 
 	status = _clip_and_composite (clip, op, source,
 				      _composite_spans_draw_func,
-				      &info, surface, &extents.bounded);
+				      &info, surface,
+                                      extents.is_bounded ? &extents.bounded : &extents.unbounded);
 	goto CLEANUP;
     }
 
@@ -1122,7 +1125,8 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
   DO_TRAPS:
     status = _clip_and_composite_trapezoids (source, op, surface,
 					     &traps, antialias,
-					     clip, &extents.bounded);
+					     clip,
+                                             extents.is_bounded ? &extents.bounded : &extents.unbounded);
   CLEANUP:
     _cairo_traps_fini (&traps);
     _cairo_polygon_fini (&polygon);
@@ -1224,7 +1228,8 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
 
 	status = _clip_and_composite (clip, op, source,
 				      _composite_spans_draw_func,
-				      &info, surface, &extents.bounded);
+				      &info, surface,
+                                      extents.is_bounded ? &extents.bounded : &extents.unbounded);
 	goto CLEANUP;
     }
 
@@ -1238,7 +1243,8 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
   DO_TRAPS:
     status = _clip_and_composite_trapezoids (source, op, surface,
 					     &traps, antialias,
-					     clip, &extents.bounded);
+					     clip,
+                                             extents.is_bounded ? &extents.bounded : &extents.unbounded);
   CLEANUP:
     _cairo_traps_fini (&traps);
     _cairo_polygon_fini (&polygon);
@@ -1350,7 +1356,7 @@ _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
 				_cairo_surface_old_show_glyphs_draw_func,
 				&glyph_info,
 				surface,
-				&extents.bounded);
+                                extents.is_bounded ? &extents.bounded : &extents.unbounded);
 }
 
 cairo_surface_t *
