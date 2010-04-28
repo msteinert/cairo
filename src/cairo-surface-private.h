@@ -86,8 +86,10 @@ struct _cairo_surface {
     /* A "snapshot" surface is immutable. See _cairo_surface_snapshot. */
     cairo_surface_t *snapshot_of;
     cairo_surface_func_t snapshot_detach;
-    /* current snapshots of this surface, or place upon snapshot list */
+    /* current snapshots of this surface*/
     cairo_list_t snapshots;
+    /* place upon snapshot list */
+    cairo_list_t snapshot;
 
     /*
      * Surface font options, falling back to backend's default options,

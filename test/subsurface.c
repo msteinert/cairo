@@ -63,6 +63,11 @@ draw (cairo_t *cr, int width, int height)
 
     for (i = 0; i < 5; i++) {
 	cairo_set_source_surface (cr, region[5-i-1], 20 * i, 20);
+	cairo_paint (cr);
+    }
+
+    for (i = 0; i < 5; i++) {
+	cairo_set_source_surface (cr, region[5-i-1], 20 * i, 40);
 	cairo_paint_with_alpha (cr, .5);
     }
 
@@ -76,5 +81,5 @@ CAIRO_TEST (subsurface,
 	    "Tests clipping of both source and destination using subsurfaces",
 	    "subsurface", /* keywords */
 	    NULL, /* requirements */
-	    100, 40,
+	    100, 60,
 	    NULL, draw)

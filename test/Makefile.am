@@ -1070,6 +1070,7 @@ REFERENCE_IMAGES = \
 	stroke-image.xlib.ref.png \
 	subsurface.ref.png \
 	subsurface.image16.ref.png \
+	subsurface-reflect.ref.png \
 	subsurface-repeat.ref.png \
 	subsurface-similar-repeat.ref.png \
 	surface-pattern-big-scale-down.ref.png \

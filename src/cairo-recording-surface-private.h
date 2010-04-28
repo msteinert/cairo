@@ -157,6 +157,7 @@ _cairo_recording_surface_replay_and_create_regions (cairo_surface_t *surface,
 						    cairo_surface_t *target);
 cairo_private cairo_status_t
 _cairo_recording_surface_replay_region (cairo_surface_t			*surface,
+					const cairo_rectangle_int_t *surface_extents,
 					cairo_surface_t			*target,
 					cairo_recording_region_type_t	region);
 

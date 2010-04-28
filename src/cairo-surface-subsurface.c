@@ -36,17 +36,26 @@
 #include "cairoint.h"
 
 #include "cairo-error-private.h"
+#include "cairo-recording-surface-private.h"
 #include "cairo-surface-offset-private.h"
 #include "cairo-surface-subsurface-private.h"
+
+static const cairo_surface_backend_t _cairo_surface_subsurface_backend;
 
 static cairo_status_t
 _cairo_surface_subsurface_finish (void *abstract_surface)
 {
     cairo_surface_subsurface_t *surface = abstract_surface;
+    cairo_status_t status = CAIRO_STATUS_SUCCESS;
+
+    if (surface->owns_target) {
+	cairo_surface_finish (surface->target);
+	status = surface->target->status;
+    }
 
     cairo_surface_destroy (surface->target);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static cairo_surface_t *
@@ -284,6 +293,46 @@ _cairo_surface_subsurface_acquire_source_image (void                    *abstrac
     struct extra *extra;
     uint8_t *data;
 
+    if (surface->target->type == CAIRO_SURFACE_TYPE_RECORDING) {
+	cairo_recording_surface_t *meta = (cairo_recording_surface_t *) surface->target;
+	cairo_surface_t *snapshot;
+
+	snapshot = _cairo_surface_has_snapshot (&surface->base,
+						&_cairo_image_surface_backend);
+	if (snapshot != NULL) {
+	    *image_out = (cairo_image_surface_t *) cairo_surface_reference (snapshot);
+	    *extra_out = NULL;
+	    return CAIRO_STATUS_SUCCESS;
+	}
+
+	if (! _cairo_surface_has_snapshot (&meta->base,
+					   &_cairo_image_surface_backend))
+	{
+	    image = (cairo_image_surface_t *)
+		_cairo_image_surface_create_with_content (meta->content,
+							  surface->extents.width,
+							  surface->extents.height);
+	    if (unlikely (image->base.status))
+		return image->base.status;
+
+	    cairo_surface_set_device_offset (&image->base,
+					     -surface->extents.x,
+					     -surface->extents.y);
+
+	    status = _cairo_recording_surface_replay (&meta->base, &image->base);
+	    if (unlikely (status)) {
+		cairo_surface_destroy (&image->base);
+		return status;
+	    }
+
+	    _cairo_surface_attach_snapshot (&surface->base, &image->base, NULL);
+
+	    *image_out = image;
+	    *extra_out = NULL;
+	    return CAIRO_STATUS_SUCCESS;
+	}
+    }
+
     extra = malloc (sizeof (struct extra));
     if (unlikely (extra == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
@@ -344,10 +393,13 @@ _cairo_surface_subsurface_release_source_image (void                   *abstract
 						void                   *abstract_extra)
 {
     cairo_surface_subsurface_t *surface = abstract_surface;
-    struct extra *extra = abstract_extra;
 
-    _cairo_surface_release_source_image (surface->target, extra->image, extra->image_extra);
-    free (extra);
+    if (abstract_extra != NULL) {
+	struct extra *extra = abstract_extra;
+
+	_cairo_surface_release_source_image (surface->target, extra->image, extra->image_extra);
+	free (extra);
+    }
 
     cairo_surface_destroy (&image->base);
 }
@@ -356,37 +408,23 @@ static cairo_surface_t *
 _cairo_surface_subsurface_snapshot (void *abstract_surface)
 {
     cairo_surface_subsurface_t *surface = abstract_surface;
-    cairo_image_surface_t *image, *clone;
-    void *image_extra;
-    cairo_status_t status;
+    cairo_surface_subsurface_t *snapshot;
 
-    /* XXX Alternatively we could snapshot the target and return a subsurface
-     * of that.
-     */
+    snapshot = malloc (sizeof (cairo_surface_subsurface_t));
+    if (unlikely (snapshot == NULL))
+	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_NO_MEMORY));
 
-    status = _cairo_surface_acquire_source_image (surface->target, &image, &image_extra);
-    if (unlikely (status))
-	return _cairo_surface_create_in_error (status);
+    _cairo_surface_init (&snapshot->base,
+			 &_cairo_surface_subsurface_backend,
+			 NULL, /* device */
+			 surface->target->content);
+    snapshot->target = _cairo_surface_snapshot (surface->target);
+    snapshot->owns_target = TRUE;
 
-    clone = (cairo_image_surface_t *)
-	_cairo_image_surface_create_with_pixman_format (NULL,
-							image->pixman_format,
-							surface->extents.width,
-							surface->extents.height,
-							0);
-    if (likely (clone->base.status == CAIRO_STATUS_SUCCESS)) {
-	pixman_image_composite32 (PIXMAN_OP_SRC,
-				  image->pixman_image, NULL, clone->pixman_image,
-				  surface->extents.x, surface->extents.y,
-				  0, 0,
-				  0, 0,
-				  surface->extents.width, surface->extents.height);
-	clone->base.is_clear = FALSE;
-    }
+    snapshot->base.type = snapshot->target->type;
+    snapshot->extents = surface->extents;
 
-    _cairo_surface_release_source_image (surface->target, image, image_extra);
-
-    return &clone->base;
+    return &snapshot->base;
 }
 
 static const cairo_surface_backend_t _cairo_surface_subsurface_backend = {
@@ -486,6 +524,7 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
     }
 
     surface->target = cairo_surface_reference (target);
+    surface->owns_target = FALSE;
 
     return &surface->base;
 }

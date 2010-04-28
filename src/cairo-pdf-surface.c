@@ -2224,7 +2224,9 @@ _cairo_pdf_surface_emit_recording_surface (cairo_pdf_surface_t  *surface,
 				     surface->height);
     }
 
-    status = _cairo_recording_surface_replay_region (recording_surface, &surface->base,
+    status = _cairo_recording_surface_replay_region (recording_surface,
+						     NULL,
+						     &surface->base,
 						     CAIRO_RECORDING_REGION_NATIVE);
     assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
     if (unlikely (status))

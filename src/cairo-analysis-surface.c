@@ -40,6 +40,7 @@
 #include "cairo-error-private.h"
 #include "cairo-paginated-private.h"
 #include "cairo-recording-surface-private.h"
+#include "cairo-surface-subsurface-private.h"
 #include "cairo-region-private.h"
 
 typedef struct {
@@ -100,10 +101,11 @@ _analyze_recording_surface_pattern (cairo_analysis_surface_t *surface,
     cairo_bool_t old_has_ctm;
     cairo_matrix_t old_ctm, p2d;
     cairo_status_t status;
+    cairo_surface_t *source;
 
     assert (pattern->type == CAIRO_PATTERN_TYPE_SURFACE);
     surface_pattern = (const cairo_surface_pattern_t *) pattern;
-    assert (_cairo_surface_is_recording (surface_pattern->surface));
+    assert (surface_pattern->surface->type == CAIRO_SURFACE_TYPE_RECORDING);
 
     old_ctm = surface->ctm;
     old_has_ctm = surface->has_ctm;
@@ -115,8 +117,13 @@ _analyze_recording_surface_pattern (cairo_analysis_surface_t *surface,
     cairo_matrix_multiply (&surface->ctm, &p2d, &surface->ctm);
     surface->has_ctm = ! _cairo_matrix_is_identity (&surface->ctm);
 
-    status = _cairo_recording_surface_replay_and_create_regions (surface_pattern->surface,
-							    &surface->base);
+    source = surface_pattern->surface;
+    if (source->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SUBSURFACE) {
+	cairo_surface_subsurface_t *sub = (cairo_surface_subsurface_t *) source;
+	source = sub->target;
+    }
+
+    status = _cairo_recording_surface_replay_and_create_regions (source, &surface->base);
 
     surface->ctm = old_ctm;
     surface->has_ctm = old_has_ctm;

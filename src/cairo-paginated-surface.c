@@ -362,6 +362,7 @@ _paint_page (cairo_paginated_surface_t *surface)
 		                              CAIRO_PAGINATED_MODE_RENDER);
 
 	status = _cairo_recording_surface_replay_region (surface->recording_surface,
+							 NULL,
 							 surface->target,
 							 CAIRO_RECORDING_REGION_NATIVE);
 	assert (status != CAIRO_INT_STATUS_UNSUPPORTED);

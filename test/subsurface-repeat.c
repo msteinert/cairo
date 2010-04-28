@@ -36,7 +36,7 @@ draw (cairo_t *cr, int width, int height)
 
     /* fill the centre */
     region = cairo_surface_create_for_rectangle (cairo_get_target (cr),
-                                                 0, 0, 20, 20);
+						 20, 20, 20, 20);
     cr_region = cairo_create (region);
     cairo_surface_destroy (region);
 
@@ -58,8 +58,12 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_set_source_surface (cr, cairo_get_target (cr_region), 20, 20);
     cairo_destroy (cr_region);
+
+    /* repeat the pattern around the outside, but do not overwrite...*/
     cairo_pattern_set_extend (cairo_get_source (cr), CAIRO_EXTEND_REPEAT);
-    cairo_paint (cr);
+    cairo_rectangle (cr, 0, 0, width, height);
+    cairo_rectangle (cr, 20, 40, 20, -20);
+    cairo_fill (cr);
 
     return CAIRO_TEST_SUCCESS;
 }

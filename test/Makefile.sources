@@ -227,6 +227,7 @@ test_sources = \
 	spline-decomposition.c				\
 	subsurface.c                                    \
 	subsurface-repeat.c                             \
+	subsurface-reflect.c                            \
 	subsurface-similar-repeat.c                     \
 	surface-finish-twice.c				\
 	surface-pattern.c				\

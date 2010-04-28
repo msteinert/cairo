@@ -786,6 +786,7 @@ _cairo_recording_surface_get_path (cairo_surface_t    *surface,
 #define _clip(c) ((c)->header.clip.path ? &(c)->header.clip : NULL)
 static cairo_status_t
 _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
+					  const cairo_rectangle_int_t *surface_extents,
 					  cairo_surface_t	     *target,
 					  cairo_recording_replay_type_t type,
 					  cairo_recording_region_type_t region)
@@ -802,13 +803,17 @@ _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
     if (unlikely (target->status))
 	return _cairo_surface_set_error (surface, target->status);
 
+    assert (_cairo_surface_is_recording (surface));
+
     _cairo_surface_wrapper_init (&wrapper, target);
+    _cairo_surface_wrapper_set_extents (&wrapper, surface_extents);
 
     recording_surface = (cairo_recording_surface_t *) surface;
     status = CAIRO_STATUS_SUCCESS;
 
     num_elements = recording_surface->commands.num_elements;
     elements = _cairo_array_index (&recording_surface->commands, 0);
+
     for (i = recording_surface->replay_start_idx; i < num_elements; i++) {
 	cairo_command_t *command = elements[i];
 
@@ -975,7 +980,7 @@ cairo_status_t
 _cairo_recording_surface_replay (cairo_surface_t *surface,
 				 cairo_surface_t *target)
 {
-    return _cairo_recording_surface_replay_internal (surface,
+    return _cairo_recording_surface_replay_internal (surface, NULL,
 						     target,
 						     CAIRO_RECORDING_REPLAY,
 						     CAIRO_RECORDING_REGION_ALL);
@@ -991,7 +996,7 @@ cairo_status_t
 _cairo_recording_surface_replay_and_create_regions (cairo_surface_t *surface,
 						    cairo_surface_t *target)
 {
-    return _cairo_recording_surface_replay_internal (surface,
+    return _cairo_recording_surface_replay_internal (surface, NULL,
 						     target,
 						     CAIRO_RECORDING_CREATE_REGIONS,
 						     CAIRO_RECORDING_REGION_ALL);
@@ -999,10 +1004,11 @@ _cairo_recording_surface_replay_and_create_regions (cairo_surface_t *surface,
 
 cairo_status_t
 _cairo_recording_surface_replay_region (cairo_surface_t          *surface,
+					const cairo_rectangle_int_t *surface_extents,
 					cairo_surface_t          *target,
 					cairo_recording_region_type_t  region)
 {
-    return _cairo_recording_surface_replay_internal (surface,
+    return _cairo_recording_surface_replay_internal (surface, surface_extents,
 						     target,
 						     CAIRO_RECORDING_REPLAY,
 						     region);

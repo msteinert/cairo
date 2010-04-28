@@ -69,6 +69,7 @@ const cairo_surface_t name = {					\
     NULL,				/* snapshot_of */	\
     NULL,				/* snapshot_detach */	\
     { NULL, NULL },			/* snapshots */		\
+    { NULL, NULL },			/* snapshot */		\
     { CAIRO_ANTIALIAS_DEFAULT,		/* antialias */		\
       CAIRO_SUBPIXEL_ORDER_DEFAULT,	/* subpixel_order */	\
       CAIRO_HINT_STYLE_DEFAULT,		/* hint_style */	\
@@ -258,13 +259,10 @@ _cairo_surface_detach_mime_data (cairo_surface_t *surface)
 static void
 _cairo_surface_detach_snapshots (cairo_surface_t *surface)
 {
-    if (surface->snapshot_of != NULL)
-	return;
-
     while (_cairo_surface_has_snapshots (surface)) {
 	_cairo_surface_detach_snapshot (cairo_list_first_entry (&surface->snapshots,
 								cairo_surface_t,
-								snapshots));
+								snapshot));
     }
 }
 
@@ -274,7 +272,7 @@ _cairo_surface_detach_snapshot (cairo_surface_t *snapshot)
     assert (snapshot->snapshot_of != NULL);
 
     snapshot->snapshot_of = NULL;
-    cairo_list_del (&snapshot->snapshots);
+    cairo_list_del (&snapshot->snapshot);
 
     if (snapshot->snapshot_detach != NULL)
 	snapshot->snapshot_detach (snapshot);
@@ -288,7 +286,6 @@ _cairo_surface_attach_snapshot (cairo_surface_t *surface,
 				 cairo_surface_func_t detach_func)
 {
     assert (surface != snapshot);
-    assert (surface->snapshot_of == NULL);
     assert (snapshot->snapshot_of != surface);
 
     cairo_surface_reference (snapshot);
@@ -299,7 +296,7 @@ _cairo_surface_attach_snapshot (cairo_surface_t *surface,
     snapshot->snapshot_of = surface;
     snapshot->snapshot_detach = detach_func;
 
-    cairo_list_add (&snapshot->snapshots, &surface->snapshots);
+    cairo_list_add (&snapshot->snapshot, &surface->snapshots);
 
     assert (_cairo_surface_has_snapshot (surface, snapshot->backend) == snapshot);
 }
@@ -311,7 +308,7 @@ _cairo_surface_has_snapshot (cairo_surface_t *surface,
     cairo_surface_t *snapshot;
 
     cairo_list_foreach_entry (snapshot, cairo_surface_t,
-			      &surface->snapshots, snapshots)
+			      &surface->snapshots, snapshot)
     {
 	/* XXX is_similar? */
 	if (snapshot->backend == backend)

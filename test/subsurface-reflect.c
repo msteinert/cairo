@@ -28,28 +28,15 @@
 static cairo_test_status_t
 draw (cairo_t *cr, int width, int height)
 {
-    cairo_surface_t *similar;
     cairo_surface_t *region;
     cairo_t *cr_region;
 
     cairo_set_source_rgb (cr, .5, .5, .5);
     cairo_paint (cr);
 
-    similar = cairo_surface_create_similar (cairo_get_target (cr),
-					    CAIRO_CONTENT_COLOR,
-					    60, 60);
-    cr_region = cairo_create (similar);
-    cairo_surface_destroy (similar);
-
-    cairo_set_source_rgb (cr_region, .5, .5, .0);
-    cairo_paint (cr_region);
-    similar = cairo_surface_reference (cairo_get_target (cr_region));
-    cairo_destroy (cr_region);
-
     /* fill the centre */
-    region = cairo_surface_create_for_rectangle (similar, 20, 20, 20, 20);
-    cairo_surface_destroy (similar);
-
+    region = cairo_surface_create_for_rectangle (cairo_get_target (cr),
+						 20, 20, 20, 20);
     cr_region = cairo_create (region);
     cairo_surface_destroy (region);
 
@@ -72,15 +59,18 @@ draw (cairo_t *cr, int width, int height)
     cairo_set_source_surface (cr, cairo_get_target (cr_region), 20, 20);
     cairo_destroy (cr_region);
 
-    cairo_pattern_set_extend (cairo_get_source (cr), CAIRO_EXTEND_REPEAT);
-    cairo_paint (cr);
+    /* reflect the pattern around the outside, but do not overwrite...*/
+    cairo_pattern_set_extend (cairo_get_source (cr), CAIRO_EXTEND_REFLECT);
+    cairo_rectangle (cr, 0, 0, width, height);
+    cairo_rectangle (cr, 20, 40, 20, -20);
+    cairo_fill (cr);
 
     return CAIRO_TEST_SUCCESS;
 }
 
-CAIRO_TEST (subsurface_similar_repeat,
-	    "Tests source clipping through an intermediate with repeat",
-	    "subsurface, repeat", /* keywords */
+CAIRO_TEST (subsurface_reflect,
+	    "Tests source clipping with reflect",
+	    "subsurface, reflect", /* keywords */
 	    NULL, /* requirements */
 	    60, 60,
 	    NULL, draw)
