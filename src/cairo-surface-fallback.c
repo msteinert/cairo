@@ -127,7 +127,7 @@ _create_composite_mask_pattern (cairo_surface_pattern_t       *mask_pattern,
 				const cairo_rectangle_int_t   *extents)
 {
     cairo_surface_t *mask;
-    cairo_region_t *clip_region = NULL;
+    cairo_region_t *clip_region = NULL, *fallback_region = NULL;
     cairo_status_t status;
     cairo_bool_t clip_surface = FALSE;
 
@@ -153,6 +153,18 @@ _create_composite_mask_pattern (cairo_surface_pattern_t       *mask_pattern,
     if (unlikely (mask->status))
 	return mask->status;
 
+    if (clip_region && (extents->x || extents->y)) {
+	fallback_region = cairo_region_copy (clip_region);
+	status = fallback_region->status;
+	if (unlikely (status))
+	    goto CLEANUP_SURFACE;
+
+	cairo_region_translate (fallback_region,
+				-extents->x,
+				-extents->y);
+	clip_region = fallback_region;
+    }
+
     status = draw_func (draw_closure, CAIRO_OPERATOR_ADD,
 			&_cairo_pattern_white.base, mask,
 			extents->x, extents->y,
@@ -167,6 +179,8 @@ _create_composite_mask_pattern (cairo_surface_pattern_t       *mask_pattern,
     _cairo_pattern_init_for_surface (mask_pattern, mask);
 
  CLEANUP_SURFACE:
+    if (fallback_region)
+        cairo_region_destroy (fallback_region);
     cairo_surface_destroy (mask);
 
     return status;
