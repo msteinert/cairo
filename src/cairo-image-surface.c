@@ -4140,8 +4140,8 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
     cairo_image_surface_t *surface = abstract_surface;
 
     pixman_color_t pixman_color;
-    pixman_rectangle16_t stack_rects[CAIRO_STACK_ARRAY_LENGTH (pixman_rectangle16_t)];
-    pixman_rectangle16_t *pixman_rects = stack_rects;
+    pixman_box32_t stack_boxes[CAIRO_STACK_ARRAY_LENGTH (pixman_rectangle16_t)];
+    pixman_box32_t *pixman_boxes = stack_boxes;
     int i;
 
     cairo_int_status_t status;
@@ -4154,31 +4154,31 @@ _cairo_image_surface_fill_rectangles (void		      *abstract_surface,
     pixman_color.blue  = color->blue_short;
     pixman_color.alpha = color->alpha_short;
 
-    if (num_rects > ARRAY_LENGTH (stack_rects)) {
-	pixman_rects = _cairo_malloc_ab (num_rects, sizeof (pixman_rectangle16_t));
-	if (unlikely (pixman_rects == NULL))
+    if (num_rects > ARRAY_LENGTH (stack_boxes)) {
+	pixman_boxes = _cairo_malloc_ab (num_rects, sizeof (pixman_rectangle16_t));
+	if (unlikely (pixman_boxes == NULL))
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
     for (i = 0; i < num_rects; i++) {
-	pixman_rects[i].x = rects[i].x;
-	pixman_rects[i].y = rects[i].y;
-	pixman_rects[i].width = rects[i].width;
-	pixman_rects[i].height = rects[i].height;
+	pixman_boxes[i].x1 = rects[i].x;
+	pixman_boxes[i].y1 = rects[i].y;
+	pixman_boxes[i].x2 = rects[i].x + rects[i].width;
+	pixman_boxes[i].y2 = rects[i].y + rects[i].height;
     }
 
     status = CAIRO_STATUS_SUCCESS;
-    if (! pixman_image_fill_rectangles (_pixman_operator (op),
-					surface->pixman_image,
-					&pixman_color,
-					num_rects,
-					pixman_rects))
+    if (! pixman_image_fill_boxes (_pixman_operator (op),
+                                   surface->pixman_image,
+                                   &pixman_color,
+                                   num_rects,
+                                   pixman_boxes))
     {
 	status = _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
 
-    if (pixman_rects != stack_rects)
-	free (pixman_rects);
+    if (pixman_boxes != stack_boxes)
+	free (pixman_boxes);
 
     return status;
 }
