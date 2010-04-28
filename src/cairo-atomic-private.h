@@ -111,6 +111,36 @@ typedef unsigned long long cairo_atomic_intptr_t;
 
 #endif
 
+#if HAVE_OS_ATOMIC_OPS
+#include <libkern/OSAtomic.h>
+
+#define HAS_ATOMIC_OPS 1
+
+typedef int32_t cairo_atomic_int_t;
+
+# define _cairo_atomic_int_get(x) (OSMemoryBarrier(), *(x))
+
+# define _cairo_atomic_int_inc(x) ((void) OSAtomicIncrement32Barrier (x))
+# define _cairo_atomic_int_dec_and_test(x) (OSAtomicDecrement32Barrier (x) == 0)
+# define _cairo_atomic_int_cmpxchg(x, oldv, newv) OSAtomicCompareAndSwap32Barrier(oldv, newv, x)
+
+#if SIZEOF_VOID_P==4
+typedef int32_t cairo_atomic_intptr_t;
+# define _cairo_atomic_ptr_cmpxchg(x, oldv, newv) \
+    OSAtomicCompareAndSwap32Barrier((cairo_atomic_intptr_t)oldv, (cairo_atomic_intptr_t)newv, (cairo_atomic_intptr_t *)x)
+
+#elif SIZEOF_VOID_P==8
+typedef int64_t cairo_atomic_intptr_t;
+# define _cairo_atomic_ptr_cmpxchg(x, oldv, newv) \
+    OSAtomicCompareAndSwap64Barrier((cairo_atomic_intptr_t)oldv, (cairo_atomic_intptr_t)newv, (cairo_atomic_intptr_t *)x)
+
+#else
+#error No matching integer pointer type
+#endif
+
+# define _cairo_atomic_ptr_get(x) (OSMemoryBarrier(), *(x))
+
+#endif
 
 #ifndef HAS_ATOMIC_OPS
 
