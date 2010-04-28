@@ -5274,6 +5274,38 @@ _similar (csi_t *ctx)
 }
 
 static csi_status_t
+_subsurface (csi_t *ctx)
+{
+    csi_object_t obj;
+    long x, y, width, height;
+    cairo_surface_t *target;
+    csi_status_t status;
+
+    check (5);
+
+    status = _csi_ostack_get_integer (ctx, 0, &height);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_integer (ctx, 1, &width);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_integer (ctx, 2, &y);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_integer (ctx, 3, &x);
+    if (_csi_unlikely (status))
+	return status;
+    status = _csi_ostack_get_surface (ctx, 4, &target);
+    if (_csi_unlikely (status))
+	return status;
+
+    obj.type = CSI_OBJECT_TYPE_SURFACE;
+    obj.datum.surface = cairo_surface_create_for_region (target, x, y, width, height);
+    pop (5);
+    return push (&obj);
+}
+
+static csi_status_t
 _show_text (csi_t *ctx)
 {
     csi_status_t status;
@@ -6051,6 +6083,7 @@ _defs[] = {
     { "sin", NULL },
     { "sqrt", NULL },
     { "sub", _sub },
+    { "subsurface", _subsurface },
     { "surface", _surface },
     { "string", NULL },
     { "stroke", _stroke },

@@ -3494,6 +3494,42 @@ cairo_surface_create_similar (cairo_surface_t *other,
     return ret;
 }
 
+cairo_surface_t *
+cairo_surface_create_for_region (cairo_surface_t *target,
+				 int x, int y,
+				 int width, int height)
+{
+    cairo_surface_t *ret;
+    long surface_id;
+
+    _enter_trace ();
+
+    ret = DLCALL (cairo_surface_create_for_region, target, x, y, width, height);
+    surface_id = _create_surface_id (ret);
+
+    _emit_line_info ();
+    if (target != NULL && _write_lock ()) {
+	Object *obj;
+
+	obj = _get_object (SURFACE, target);
+	if (obj->defined)
+	    _trace_printf ("s%ld ", obj->token);
+	else if (current_stack_depth == obj->operand + 1)
+	    _trace_printf ("dup ");
+	else
+	    _trace_printf ("%d index ", current_stack_depth - obj->operand - 1);
+	_trace_printf ("%d %d %d %d subsurface %% s%ld\n",
+		       x, y, width, height,
+		       surface_id);
+
+	_push_operand (SURFACE, ret);
+	_write_unlock ();
+    }
+
+    _exit_trace ();
+    return ret;
+}
+
 static void CAIRO_PRINTF_FORMAT(2, 3)
 _emit_surface_op (cairo_surface_t *surface, const char *fmt, ...)
 {
