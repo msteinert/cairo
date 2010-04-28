@@ -1319,8 +1319,7 @@ REPEAT:
 				  &result);
 	_xunlink (ctx, diff_png_path);
 	if (diff_status ||
-	    (result.pixels_changed &&
-	     result.max_diff > target->error_tolerance))
+            image_diff_is_failure (&result, target->error_tolerance))
 	{
 	    /* that failed, so check against the specific backend */
 	    ref_image = cairo_test_get_reference_image (ctx, ref_png_path,
@@ -1345,8 +1344,7 @@ REPEAT:
 				cairo_status_to_string (diff_status));
 		ret = CAIRO_TEST_FAILURE;
 	    }
-	    else if (result.pixels_changed &&
-		     result.max_diff > target->error_tolerance)
+	    else if (image_diff_is_failure (&result, target->error_tolerance))
 	    {
 		ret = CAIRO_TEST_FAILURE;
 
@@ -1403,8 +1401,7 @@ REPEAT:
 						  diff_image,
 						  &result);
 			if (diff_status == CAIRO_STATUS_SUCCESS &&
-			    (result.pixels_changed == 0 ||
-			     result.max_diff > target->error_tolerance))
+			    !image_diff_is_failure (&result, target->error_tolerance))
 			{
 			    ret = CAIRO_TEST_XFAILURE;
 			}

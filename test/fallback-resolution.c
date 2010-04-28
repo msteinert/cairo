@@ -234,8 +234,7 @@ check_result (cairo_test_context_t *ctx,
 	cairo_test_log (ctx, "Error: Failed to compare images: %s\n",
 			cairo_status_to_string (status));
 	ret = FALSE;
-    } else if (result.pixels_changed &&
-	       result.max_diff > target->error_tolerance)
+    } else if (image_diff_is_failure (&result, target->error_tolerance))
     {
 	ret = FALSE;
 

@@ -250,9 +250,9 @@ do_test (const cairo_test_context_t *ctx,
 		    use_pixmap ?
 		    "           " :
 		    (offscreen ? ", offscreen" : ",  onscreen"),
-		    result.pixels_changed ? "FAIL" : "PASS");
+		    image_diff_is_failure (&result, 0) ? "FAIL" : "PASS");
 
-    if (result.pixels_changed)
+    if (image_diff_is_failure (&result, 0))
 	return CAIRO_TEST_FAILURE;
     else
 	return CAIRO_TEST_SUCCESS;

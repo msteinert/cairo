@@ -723,8 +723,7 @@ matches_reference (struct slave *slave)
 	    return FALSE;
 	}
 
-	if (slave->result.pixels_changed &&
-	    slave->result.max_diff > slave->target->error_tolerance) {
+	if (image_diff_is_failure (&slave->result, slave->target->error_tolerance)) {
 	    slave->difference = diff;
 	    return FALSE;
 	} else {
