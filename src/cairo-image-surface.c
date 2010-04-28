@@ -943,6 +943,16 @@ _pixman_white_image (void)
 }
 #else
 static pixman_image_t *
+_pixman_transparent_image (void)
+{
+    return _pixman_image_for_solid (&_cairo_pattern_clear);
+}
+static pixman_image_t *
+_pixman_black_image (void)
+{
+    return _pixman_image_for_solid (&_cairo_pattern_black);
+}
+static pixman_image_t *
 _pixman_white_image (void)
 {
     return _pixman_image_for_solid (&_cairo_pattern_white);
