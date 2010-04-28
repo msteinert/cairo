@@ -58,7 +58,6 @@ CAIRO_BEGIN_DECLS
 typedef int cairo_atomic_int_t;
 
 # define _cairo_atomic_int_get(x) (*x)
-# define _cairo_atomic_int_set(x, value) ((*x) = value)
 
 # define _cairo_atomic_int_inc(x) ((void) __sync_fetch_and_add(x, 1))
 # define _cairo_atomic_int_dec_and_test(x) (__sync_fetch_and_add(x, -1) == 1)
@@ -87,7 +86,6 @@ typedef long long cairo_atomic_intptr_t;
 typedef  AO_t cairo_atomic_int_t;
 
 # define _cairo_atomic_int_get(x) (AO_load_full (x))
-# define _cairo_atomic_int_set(x, value) (AO_store_full (x))
 
 # define _cairo_atomic_int_inc(x) ((void) AO_fetch_and_add1_full(x))
 # define _cairo_atomic_int_dec_and_test(x) (AO_fetch_and_sub1_full(x) == 1)
@@ -126,18 +124,10 @@ cairo_private void *
 _cairo_atomic_ptr_cmpxchg (void **x, void *oldv, void *newv);
 
 #ifdef ATOMIC_OP_NEEDS_MEMORY_BARRIER
-
 cairo_private int
 _cairo_atomic_int_get (int *x);
-
-cairo_private void
-_cairo_atomic_int_set (int *x, int value);
-
 #else
-
 # define _cairo_atomic_int_get(x) (*x)
-# define _cairo_atomic_int_set(x, value) ((*x) = value)
-
 #endif
 
 #endif

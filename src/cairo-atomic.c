@@ -101,14 +101,6 @@ _cairo_atomic_int_get (int *x)
 
     return ret;
 }
-
-void
-_cairo_atomic_int_set (int *x, int value)
-{
-    CAIRO_MUTEX_LOCK (_cairo_atomic_mutex);
-    *x = value;
-    CAIRO_MUTEX_UNLOCK (_cairo_atomic_mutex);
-}
 #endif
 
 #endif

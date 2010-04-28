@@ -50,7 +50,6 @@ typedef struct {
 #define CAIRO_REFERENCE_COUNT_INIT(RC, VALUE) ((RC)->ref_count = (VALUE))
 
 #define CAIRO_REFERENCE_COUNT_GET_VALUE(RC) _cairo_atomic_int_get (&(RC)->ref_count)
-#define CAIRO_REFERENCE_COUNT_SET_VALUE(RC, VALUE) _cairo_atomic_int_set (&(RC)->ref_count, (VALUE))
 
 #define CAIRO_REFERENCE_COUNT_INVALID_VALUE ((cairo_atomic_int_t) -1)
 #define CAIRO_REFERENCE_COUNT_INVALID {CAIRO_REFERENCE_COUNT_INVALID_VALUE}
