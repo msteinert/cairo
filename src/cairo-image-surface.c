@@ -1649,12 +1649,12 @@ _cairo_image_surface_fixup_unbounded (cairo_image_surface_t *dst,
 	int height = rects->unbounded.height;
 
 	if (mask != NULL) {
-	    pixman_image_composite (PIXMAN_OP_OUT_REVERSE,
-				    mask, NULL, dst->pixman_image,
-				    x + mask_x, y + mask_y,
-				    0, 0,
-				    x, y,
-				    width, height);
+	    pixman_image_composite32 (PIXMAN_OP_OUT_REVERSE,
+                                      mask, NULL, dst->pixman_image,
+                                      x + mask_x, y + mask_y,
+                                      0, 0,
+                                      x, y,
+                                      width, height);
 	} else {
             pixman_color_t color = { 0, };
             pixman_box32_t box = { x, y, width, height };
