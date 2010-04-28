@@ -261,6 +261,7 @@ test_sources = \
 	user-font-proxy.c				\
 	user-font-rescale.c				\
 	xcomposite-projection.c				\
+	xlib-expose-event.c 				\
 	zero-alpha.c
 
 pthread_test_sources =					\
@@ -302,7 +303,6 @@ xcb_surface_test_sources = \
 	xcb-surface-source.c
 
 xlib_surface_test_sources = \
-	xlib-expose-event.c \
 	xlib-surface.c \
 	xlib-surface-source.c
 
