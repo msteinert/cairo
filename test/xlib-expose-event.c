@@ -36,10 +36,7 @@
 #include <stdlib.h>
 
 #include "cairo.h"
-#include "cairo-xlib.h"
 #include "cairo-test.h"
-
-#include "cairo-boilerplate-xlib.h"
 
 #include "buffer-diff.h"
 
@@ -47,31 +44,6 @@
 #define NLOOPS 10
 
 static const char *png_filename = "romedalen.png";
-
-static cairo_bool_t
-check_visual (Display *dpy)
-{
-    Visual *visual = DefaultVisual (dpy, DefaultScreen (dpy));
-
-    if ((visual->red_mask   == 0xff0000 &&
-	 visual->green_mask == 0x00ff00 &&
-	 visual->blue_mask  == 0x0000ff) ||
-	(visual->red_mask   == 0x0000ff &&
-	 visual->green_mask == 0x00ff00 &&
-	 visual->blue_mask  == 0xff0000))
-	return 1;
-    else
-	return 0;
-}
-
-static void
-clear (cairo_surface_t *surface)
-{
-    cairo_t *cr = cairo_create (surface);
-    cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-    cairo_paint (cr);
-    cairo_destroy (cr);
-}
 
 static void
 draw_mask (cairo_t *cr)
@@ -82,14 +54,9 @@ draw_mask (cairo_t *cr)
     surface = cairo_surface_create_similar (cairo_get_group_target (cr),
 	                                    CAIRO_CONTENT_ALPHA,
 					    50, 50);
-    cairo_boilerplate_xlib_surface_disable_render (surface);
-
     cr2 = cairo_create (surface);
     cairo_surface_destroy (surface);
 
-    /* This complex clip and forcing of fallbacks is to reproduce bug
-     * http://bugs.freedesktop.org/show_bug.cgi?id=10921
-     */
     cairo_rectangle (cr2,
 	             0, 0,
 	             40, 40);
@@ -151,11 +118,11 @@ draw_image (const cairo_test_context_t *ctx, cairo_t *cr)
 
 static void
 draw (const cairo_test_context_t *ctx,
-      cairo_surface_t *surface,
+      cairo_t *cr,
       cairo_rectangle_t *region,
       int n_regions)
 {
-    cairo_t *cr = cairo_create (surface);
+    cairo_save (cr);
     if (region != NULL) {
 	int i;
 	for (i = 0; i < n_regions; i++) {
@@ -171,42 +138,20 @@ draw (const cairo_test_context_t *ctx,
     cairo_pop_group_to_source (cr);
     cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
     cairo_paint (cr);
-    cairo_destroy (cr);
+    cairo_restore (cr);
 }
 
 static cairo_test_status_t
 draw_func (cairo_t *cr, int width, int height)
 {
-    Display *dpy;
-    Drawable drawable;
-    int screen;
-    cairo_surface_t *surface;
     cairo_rectangle_t region[4];
-    int i, j;
     const cairo_test_context_t *ctx;
-    
+    int i, j;
+
     ctx = cairo_test_get_context (cr);
-    surface = cairo_get_target (cr);
 
-    if (cairo_surface_get_type (surface) != CAIRO_SURFACE_TYPE_XLIB)
-        return CAIRO_TEST_UNTESTED;
-
-    dpy = cairo_xlib_surface_get_display (surface);
-
-    if (! check_visual (dpy)) {
-	cairo_test_log (ctx, "xlib-expose-event: default visual is not RGB24 or BGR24, skipping\n");
-        return CAIRO_TEST_UNTESTED;
-    }
-
-    screen = DefaultScreen (dpy);
-    drawable = XCreatePixmap (dpy, DefaultRootWindow (dpy),
-			      SIZE, SIZE, DefaultDepth (dpy, screen));
-    surface = cairo_xlib_surface_create (dpy,
-					 drawable,
-					 DefaultVisual (dpy, screen),
-					 SIZE, SIZE);
-    clear (surface);
-    draw (ctx, surface, NULL, 0);
+    cairo_push_group_with_content (cr, CAIRO_CONTENT_COLOR);
+    draw (ctx, cr, NULL, 0);
     for (i = 0; i < NLOOPS; i++) {
 	for (j = 0; j < NLOOPS; j++) {
 	    region[0].x = i * SIZE / NLOOPS;
@@ -229,16 +174,13 @@ draw_func (cairo_t *cr, int width, int height)
 	    region[3].width = SIZE / 4;
 	    region[3].height = SIZE / 4;
 
-	    draw (ctx, surface, region, 4);
+	    draw (ctx, cr, region, 4);
 	}
     }
 
-    cairo_set_source_surface (cr, surface, 0, 0);
-    cairo_surface_destroy (surface);
+    cairo_pop_group_to_source (cr);
     cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
     cairo_paint (cr);
-
-    XFreePixmap (dpy, drawable);
 
     return CAIRO_TEST_SUCCESS;
 }
