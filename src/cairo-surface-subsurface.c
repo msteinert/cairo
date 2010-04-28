@@ -293,7 +293,7 @@ _cairo_surface_subsurface_acquire_source_image (void                    *abstrac
 	goto CLEANUP;
 
     /* only copy if we need to perform sub-byte manipulation */
-    if (PIXMAN_FORMAT_BPP (extra->image->pixman_format) > 8) {
+    if (PIXMAN_FORMAT_BPP (extra->image->pixman_format) >= 8) {
 	assert ((PIXMAN_FORMAT_BPP (extra->image->pixman_format) % 8) == 0);
 
 	data = extra->image->data + surface->extents.y * extra->image->stride;
@@ -324,6 +324,8 @@ _cairo_surface_subsurface_acquire_source_image (void                    *abstrac
                                   0, 0,
                                   surface->extents.width, surface->extents.height);
     }
+
+    image->base.is_clear = FALSE;
 
     *image_out = image;
     *extra_out = extra;
@@ -372,15 +374,15 @@ _cairo_surface_subsurface_snapshot (void *abstract_surface)
 							surface->extents.width,
 							surface->extents.height,
 							0);
-    if (unlikely (clone->base.status))
-	return &clone->base;
-
-    pixman_image_composite32 (PIXMAN_OP_SRC,
-                              image->pixman_image, NULL, clone->pixman_image,
-                              surface->extents.x, surface->extents.y,
-                              0, 0,
-                              0, 0,
-                              surface->extents.width, surface->extents.height);
+    if (likely (clone->base.status == CAIRO_STATUS_SUCCESS)) {
+	pixman_image_composite32 (PIXMAN_OP_SRC,
+				  image->pixman_image, NULL, clone->pixman_image,
+				  surface->extents.x, surface->extents.y,
+				  0, 0,
+				  0, 0,
+				  surface->extents.width, surface->extents.height);
+	clone->base.is_clear = FALSE;
+    }
 
     _cairo_surface_release_source_image (surface->target, image, image_extra);
 
