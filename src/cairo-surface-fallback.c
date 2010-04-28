@@ -538,18 +538,33 @@ _composite_traps_draw_func (void                          *closure,
 			    cairo_region_t		  *clip_region)
 {
     cairo_composite_traps_info_t *info = closure;
+    cairo_status_t status;
+    cairo_region_t *extents_region = NULL;
 
     if (dst_x != 0 || dst_y != 0)
 	_cairo_traps_translate (info->traps, - dst_x, - dst_y);
 
-    return _cairo_surface_composite_trapezoids (op,
-						src, dst, info->antialias,
-						extents->x,         extents->y,
-						extents->x - dst_x, extents->y - dst_y,
-						extents->width,     extents->height,
-						info->traps->traps,
-						info->traps->num_traps,
-						clip_region);
+    if (clip_region == NULL &&
+        !_cairo_operator_bounded_by_source (op)) {
+        extents_region = cairo_region_create_rectangle (extents);
+        if (unlikely (extents_region->status))
+            return extents_region->status;
+        clip_region = extents_region;
+    }
+
+    status = _cairo_surface_composite_trapezoids (op,
+                                                  src, dst, info->antialias,
+                                                  extents->x,         extents->y,
+                                                  extents->x - dst_x, extents->y - dst_y,
+                                                  extents->width,     extents->height,
+                                                  info->traps->traps,
+                                                  info->traps->num_traps,
+                                                  clip_region);
+
+    if (extents_region)
+        cairo_region_destroy (extents_region);
+
+    return status;
 }
 
 enum {
@@ -971,24 +986,39 @@ _cairo_surface_mask_draw_func (void                          *closure,
 			       cairo_region_t		    *clip_region)
 {
     cairo_pattern_t *mask = closure;
+    cairo_status_t status;
+    cairo_region_t *extents_region = NULL;
+
+    if (clip_region == NULL &&
+        !_cairo_operator_bounded_by_source (op)) {
+        extents_region = cairo_region_create_rectangle (extents);
+        if (unlikely (extents_region->status))
+            return extents_region->status;
+        clip_region = extents_region;
+    }
 
     if (src) {
-	return _cairo_surface_composite (op,
-					 src, mask, dst,
-					 extents->x,         extents->y,
-					 extents->x,         extents->y,
-					 extents->x - dst_x, extents->y - dst_y,
-					 extents->width,     extents->height,
-					 clip_region);
+	status = _cairo_surface_composite (op,
+                                           src, mask, dst,
+                                           extents->x,         extents->y,
+                                           extents->x,         extents->y,
+                                           extents->x - dst_x, extents->y - dst_y,
+                                           extents->width,     extents->height,
+                                           clip_region);
     } else {
-	return _cairo_surface_composite (op,
-					 mask, NULL, dst,
-					 extents->x,         extents->y,
-					 0,                  0, /* unused */
-					 extents->x - dst_x, extents->y - dst_y,
-					 extents->width,     extents->height,
-					 clip_region);
+	status = _cairo_surface_composite (op,
+                                           mask, NULL, dst,
+                                           extents->x,         extents->y,
+                                           0,                  0, /* unused */
+                                           extents->x - dst_x, extents->y - dst_y,
+                                           extents->width,     extents->height,
+                                           clip_region);
     }
+
+    if (extents_region)
+        cairo_region_destroy (extents_region);
+
+    return status;
 }
 
 cairo_status_t
@@ -1272,6 +1302,15 @@ _cairo_surface_old_show_glyphs_draw_func (void                          *closure
 {
     cairo_show_glyphs_info_t *glyph_info = closure;
     cairo_status_t status;
+    cairo_region_t *extents_region = NULL;
+
+    if (clip_region == NULL &&
+        !_cairo_operator_bounded_by_source (op)) {
+        extents_region = cairo_region_create_rectangle (extents);
+        if (unlikely (extents_region->status))
+            return extents_region->status;
+        clip_region = extents_region;
+    }
 
     /* Modifying the glyph array is fine because we know that this function
      * will be called only once, and we've already made a copy of the
@@ -1296,19 +1335,24 @@ _cairo_surface_old_show_glyphs_draw_func (void                          *closure
 					     glyph_info->glyphs,
 					     glyph_info->num_glyphs,
 					     clip_region);
-    if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	return status;
 
-    return _cairo_scaled_font_show_glyphs (glyph_info->font,
-					   op,
-					   src, dst,
-					   extents->x,         extents->y,
-					   extents->x - dst_x,
-					   extents->y - dst_y,
-					   extents->width,     extents->height,
-					   glyph_info->glyphs,
-					   glyph_info->num_glyphs,
-					   clip_region);
+    if (status == CAIRO_INT_STATUS_UNSUPPORTED) {
+	status = _cairo_scaled_font_show_glyphs (glyph_info->font,
+                                                 op,
+                                                 src, dst,
+                                                 extents->x,         extents->y,
+                                                 extents->x - dst_x,
+                                                 extents->y - dst_y,
+                                                 extents->width,     extents->height,
+                                                 glyph_info->glyphs,
+                                                 glyph_info->num_glyphs,
+                                                 clip_region);
+    }
+
+    if (extents_region)
+        cairo_region_destroy (extents_region);
+
+    return status;
 }
 
 cairo_status_t
