@@ -1008,7 +1008,7 @@ _emit_recording_surface_pattern (cairo_script_surface_t *surface,
     cairo_list_del (&similar->operand.link);
     assert (target_is_active (surface));
 
-    _cairo_output_stream_puts (to_context (surface)->stream, "pop");
+    _cairo_output_stream_puts (to_context (surface)->stream, "pop ");
     cairo_surface_destroy (&similar->base);
 
     return CAIRO_STATUS_SUCCESS;
