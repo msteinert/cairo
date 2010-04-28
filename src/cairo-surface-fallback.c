@@ -907,8 +907,8 @@ _cairo_surface_fallback_paint (cairo_surface_t		*surface,
     cairo_status_t status;
     cairo_traps_t traps;
 
-    extents.is_bounded = _cairo_surface_get_extents (surface, &rect);
-    assert (extents.is_bounded || clip);
+    if (!_cairo_surface_get_extents (surface, &rect))
+        ASSERT_NOT_REACHED;
 
     status = _cairo_composite_rectangles_init_for_paint (&extents,
 							 rect.width,
@@ -1001,8 +1001,8 @@ _cairo_surface_fallback_mask (cairo_surface_t		*surface,
     cairo_rectangle_int_t rect;
     cairo_status_t status;
 
-    extents.is_bounded = _cairo_surface_get_extents (surface, &rect);
-    assert (extents.is_bounded || clip);
+    if (!_cairo_surface_get_extents (surface, &rect))
+        ASSERT_NOT_REACHED;
 
     status = _cairo_composite_rectangles_init_for_mask (&extents,
 							rect.width, rect.height,
@@ -1045,8 +1045,8 @@ _cairo_surface_fallback_stroke (cairo_surface_t		*surface,
     cairo_rectangle_int_t rect;
     cairo_status_t status;
 
-    extents.is_bounded = _cairo_surface_get_extents (surface, &rect);
-    assert (extents.is_bounded || clip);
+    if (!_cairo_surface_get_extents (surface, &rect))
+        ASSERT_NOT_REACHED;
 
     status = _cairo_composite_rectangles_init_for_stroke (&extents,
 							  rect.width,
@@ -1151,8 +1151,8 @@ _cairo_surface_fallback_fill (cairo_surface_t		*surface,
     cairo_rectangle_int_t rect;
     cairo_status_t status;
 
-    extents.is_bounded = _cairo_surface_get_extents (surface, &rect);
-    assert (extents.is_bounded || clip);
+    if (!_cairo_surface_get_extents (surface, &rect))
+        ASSERT_NOT_REACHED;
 
     status = _cairo_composite_rectangles_init_for_fill (&extents,
 							rect.width,
@@ -1319,8 +1319,8 @@ _cairo_surface_fallback_show_glyphs (cairo_surface_t		*surface,
     cairo_rectangle_int_t rect;
     cairo_status_t status;
 
-    extents.is_bounded = _cairo_surface_get_extents (surface, &rect);
-    assert (extents.is_bounded || clip);
+    if (!_cairo_surface_get_extents (surface, &rect))
+        ASSERT_NOT_REACHED;
 
     status = _cairo_composite_rectangles_init_for_glyphs (&extents,
 							  rect.width,
