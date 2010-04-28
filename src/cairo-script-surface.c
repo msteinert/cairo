@@ -54,6 +54,8 @@
 #include "cairo-output-stream-private.h"
 #include "cairo-scaled-font-private.h"
 #include "cairo-surface-clipper-private.h"
+#include "cairo-surface-snapshot-private.h"
+#include "cairo-surface-subsurface-private.h"
 #include "cairo-surface-wrapper-private.h"
 
 #if CAIRO_HAS_FT_FONT
@@ -958,18 +960,13 @@ _emit_radial_pattern (cairo_script_surface_t *surface,
 
 static cairo_status_t
 _emit_recording_surface_pattern (cairo_script_surface_t *surface,
-				 const cairo_pattern_t *pattern)
+				 cairo_recording_surface_t *source)
 {
     cairo_script_implicit_context_t old_cr;
-    cairo_surface_pattern_t *surface_pattern;
-    cairo_recording_surface_t *source;
     cairo_script_surface_t *similar;
     cairo_status_t status;
     cairo_box_t bbox;
     cairo_rectangle_int_t rect;
-
-    surface_pattern = (cairo_surface_pattern_t *) pattern;
-    source = (cairo_recording_surface_t *) surface_pattern->surface;
 
     /* first measure the extents */
     status = _cairo_recording_surface_get_bbox (source, &bbox, NULL);
@@ -1011,7 +1008,7 @@ _emit_recording_surface_pattern (cairo_script_surface_t *surface,
     cairo_list_del (&similar->operand.link);
     assert (target_is_active (surface));
 
-    _cairo_output_stream_puts (to_context (surface)->stream, "pop pattern");
+    _cairo_output_stream_puts (to_context (surface)->stream, "pop");
     cairo_surface_destroy (&similar->base);
 
     return CAIRO_STATUS_SUCCESS;
@@ -1019,16 +1016,9 @@ _emit_recording_surface_pattern (cairo_script_surface_t *surface,
 
 static cairo_status_t
 _emit_script_surface_pattern (cairo_script_surface_t *surface,
-			      const cairo_pattern_t *pattern)
+			      cairo_script_surface_t *source)
 {
-    cairo_surface_pattern_t *surface_pattern;
-    cairo_script_surface_t *source;
-
-    surface_pattern = (cairo_surface_pattern_t *) pattern;
-    source = (cairo_script_surface_t *) surface_pattern->surface;
-
     _get_target (source);
-    _cairo_output_stream_puts (to_context (surface)->stream, "pattern");
 
     return CAIRO_STATUS_SUCCESS;
 }
@@ -1227,7 +1217,7 @@ _emit_image_surface (cairo_script_surface_t *surface,
 					 (cairo_user_data_key_t *) ctx))
     {
 	_cairo_output_stream_printf (ctx->stream,
-				     "s%u pattern ",
+				     "s%u ",
 				     image->base.unique_id);
 	return CAIRO_STATUS_SUCCESS;
     }
@@ -1364,16 +1354,13 @@ _emit_image_surface (cairo_script_surface_t *surface,
 	_cairo_output_stream_puts (ctx->stream, "~> set-mime-data\n");
     }
 
-    _cairo_output_stream_puts (ctx->stream, "pattern");
-
     return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
 _emit_image_surface_pattern (cairo_script_surface_t *surface,
-			     const cairo_pattern_t *pattern)
+			     cairo_surface_t *source)
 {
-    cairo_surface_pattern_t *surface_pattern;
     cairo_surface_t *snapshot;
     cairo_image_surface_t *image;
     cairo_status_t status;
@@ -1382,8 +1369,7 @@ _emit_image_surface_pattern (cairo_script_surface_t *surface,
     /* XXX keeping a copy is nasty, but we want to hook into the surface's
      * lifetime. Using a snapshot is a convenient method.
      */
-    surface_pattern = (cairo_surface_pattern_t *) pattern;
-    snapshot = _cairo_surface_snapshot (surface_pattern->surface);
+    snapshot = _cairo_surface_snapshot (source);
     status = _cairo_surface_acquire_source_image (snapshot, &image, &extra);
     if (likely (status == CAIRO_STATUS_SUCCESS)) {
 	status = _emit_image_surface (surface, image);
@@ -1395,24 +1381,68 @@ _emit_image_surface_pattern (cairo_script_surface_t *surface,
 }
 
 static cairo_status_t
+_emit_subsurface_pattern (cairo_script_surface_t *surface,
+			  cairo_surface_subsurface_t *sub)
+{
+    cairo_surface_t *source = sub->target;
+    cairo_status_t status;
+
+    switch ((int) source->backend->type) {
+    case CAIRO_SURFACE_TYPE_RECORDING:
+	status = _emit_recording_surface_pattern (surface, (cairo_recording_surface_t *) source);
+	break;
+    case CAIRO_SURFACE_TYPE_SCRIPT:
+	status = _emit_script_surface_pattern (surface, (cairo_script_surface_t *) source);
+	break;
+    default:
+	status = _emit_image_surface_pattern (surface, source);
+	break;
+    }
+    if (unlikely (status))
+	return status;
+
+    _cairo_output_stream_printf (to_context (surface)->stream,
+				 "%d %d %d %d subsurface ",
+				 sub->extents.x,
+				 sub->extents.y,
+				 sub->extents.width,
+				 sub->extents.height);
+    return CAIRO_STATUS_SUCCESS;
+}
+
+static cairo_status_t
 _emit_surface_pattern (cairo_script_surface_t *surface,
 		       const cairo_pattern_t *pattern)
 {
     cairo_surface_pattern_t *surface_pattern;
     cairo_surface_t *source;
+    cairo_status_t status;
 
     surface_pattern = (cairo_surface_pattern_t *) pattern;
     source = surface_pattern->surface;
 
-    /* XXX true subsurface support. */
+    if (source->backend->type == CAIRO_INTERNAL_SURFACE_TYPE_SNAPSHOT)
+	source = ((cairo_surface_snapshot_t *) source)->target;
+
     switch ((int) source->backend->type) {
     case CAIRO_SURFACE_TYPE_RECORDING:
-	return _emit_recording_surface_pattern (surface, pattern);
+	status = _emit_recording_surface_pattern (surface, (cairo_recording_surface_t *) source);
+	break;
     case CAIRO_SURFACE_TYPE_SCRIPT:
-	return _emit_script_surface_pattern (surface, pattern);
+	status = _emit_script_surface_pattern (surface, (cairo_script_surface_t *) source);
+	break;
+    case CAIRO_INTERNAL_SURFACE_TYPE_SUBSURFACE:
+	status = _emit_subsurface_pattern (surface, (cairo_surface_subsurface_t *) source);
+	break;
     default:
-	return _emit_image_surface_pattern (surface, pattern);
+	status = _emit_image_surface_pattern (surface, source);
+	break;
     }
+    if (unlikely (status))
+	return status;
+
+    _cairo_output_stream_puts (to_context (surface)->stream, "pattern");
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -2823,6 +2853,8 @@ _emit_scaled_glyph_bitmap (cairo_script_surface_t *surface,
     status = _emit_image_surface (surface, scaled_glyph->surface);
     if (unlikely (status))
 	return status;
+
+    _cairo_output_stream_puts (ctx->stream, "pattern ");
 
     if (! _cairo_matrix_is_identity (&scaled_font->font_matrix)) {
 	_cairo_output_stream_printf (ctx->stream,
