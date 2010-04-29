@@ -197,6 +197,7 @@ _cairo_boilerplate_ps_finish_surface (cairo_surface_t		*surface)
 	if (status)
 	    return status;
 
+	cairo_surface_finish (surface);
 	status = cairo_surface_status (surface);
 	if (status)
 	    return status;
@@ -269,8 +270,10 @@ static void
 _cairo_boilerplate_ps_cleanup (void *closure)
 {
     ps_target_closure_t *ptc = closure;
-    if (ptc->target)
+    if (ptc->target) {
+	cairo_surface_finish (ptc->target);
 	cairo_surface_destroy (ptc->target);
+    }
     free (ptc->filename);
     free (ptc);
 }

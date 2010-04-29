@@ -180,13 +180,11 @@ _cairo_boilerplate_recording_create_surface (const char		     *name,
 {
     cairo_rectangle_t extents;
 
-    *closure = NULL;
-
     extents.x = 0;
     extents.y = 0;
     extents.width = width;
     extents.height = height;
-    return cairo_recording_surface_create (content, &extents);
+    return *closure = cairo_recording_surface_create (content, &extents);
 }
 #endif
 
@@ -353,7 +351,8 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
-	NULL, NULL,
+	(cairo_boilerplate_cleanup_t) cairo_surface_finish,
+	NULL,
 	FALSE, FALSE, TRUE
     },
     {
@@ -364,7 +363,8 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
-	NULL, NULL,
+	(cairo_boilerplate_cleanup_t) cairo_surface_finish,
+	NULL,
 	FALSE, FALSE, TRUE
     },
 #endif
