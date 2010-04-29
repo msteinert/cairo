@@ -41,6 +41,7 @@
 #include "cairo.h"
 
 #include "cairo-types-private.h"
+#include "cairo-list-private.h"
 #include "cairo-reference-count-private.h"
 #include "cairo-clip-private.h"
 
@@ -85,8 +86,8 @@ struct _cairo_surface {
     /* A "snapshot" surface is immutable. See _cairo_surface_snapshot. */
     cairo_surface_t *snapshot_of;
     cairo_surface_func_t snapshot_detach;
-    /* current snapshots of this surface */
-    cairo_array_t snapshots;
+    /* current snapshots of this surface, or place upon snapshot list */
+    cairo_list_t snapshots;
 
     /*
      * Surface font options, falling back to backend's default options,

@@ -1281,16 +1281,15 @@ i915_surface_clone (i915_device_t *device,
     if (unlikely (clone->intel.drm.base.status))
 	return clone->intel.drm.base.status;
 
-    status = _cairo_surface_attach_snapshot (&image->base,
-					     &clone->intel.drm.base,
-					     intel_surface_detach_snapshot);
-    if (likely (status == CAIRO_STATUS_SUCCESS))
-	status = intel_snapshot_cache_insert (&device->intel, &clone->intel);
-
+    status = intel_snapshot_cache_insert (&device->intel, &clone->intel);
     if (unlikely (status)) {
 	cairo_surface_destroy (&clone->intel.drm.base);
 	return status;
     }
+
+    _cairo_surface_attach_snapshot (&image->base,
+				    &clone->intel.drm.base,
+				    intel_surface_detach_snapshot);
 
     *clone_out = clone;
     return CAIRO_STATUS_SUCCESS;

@@ -2033,7 +2033,7 @@ _cairo_surface_clone_similar (cairo_surface_t  *surface,
 cairo_private cairo_surface_t *
 _cairo_surface_snapshot (cairo_surface_t *surface);
 
-cairo_private cairo_status_t
+cairo_private void
 _cairo_surface_attach_snapshot (cairo_surface_t *surface,
 				cairo_surface_t *snapshot,
 				cairo_surface_func_t detach_func);

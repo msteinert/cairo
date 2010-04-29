@@ -982,12 +982,8 @@ _vg_setup_surface_source (cairo_vg_context_t *context,
 	return status;
     }
 
-    status = _cairo_surface_attach_snapshot (spat->surface, &clone->base,
-					     _vg_surface_remove_from_cache);
-    if (unlikely (status)) {
-	cairo_surface_destroy (&clone->base);
-	return status;
-    }
+    _cairo_surface_attach_snapshot (spat->surface, &clone->base,
+				    _vg_surface_remove_from_cache);
 
 DONE:
     cairo_surface_destroy (&context->source->base);

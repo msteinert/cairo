@@ -269,11 +269,7 @@ _cairo_recording_surface_acquire_source_image (void			 *abstract_surface,
 	return status;
     }
 
-    status = _cairo_surface_attach_snapshot (&surface->base, image, NULL);
-    if (unlikely (status)) {
-	cairo_surface_destroy (image);
-	return status;
-    }
+    _cairo_surface_attach_snapshot (&surface->base, image, NULL);
 
     *image_out = (cairo_image_surface_t *) image;
     *image_extra = NULL;

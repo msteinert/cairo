@@ -68,11 +68,7 @@ const cairo_surface_t name = {					\
     0.0,				/* y_fallback_resolution */	\
     NULL,				/* snapshot_of */	\
     NULL,				/* snapshot_detach */	\
-    { 0,	/* size */					\
-      0,	/* num_elements */				\
-      0,	/* element_size */				\
-      NULL,	/* elements */					\
-    },					/* snapshots */		\
+    { NULL, NULL },			/* snapshots */		\
     { CAIRO_ANTIALIAS_DEFAULT,		/* antialias */		\
       CAIRO_SUBPIXEL_ORDER_DEFAULT,	/* subpixel_order */	\
       CAIRO_HINT_STYLE_DEFAULT,		/* hint_style */	\
@@ -240,30 +236,7 @@ cairo_surface_get_device (cairo_surface_t *surface)
 static cairo_bool_t
 _cairo_surface_has_snapshots (cairo_surface_t *surface)
 {
-    return surface->snapshots.num_elements != 0;
-}
-
-static void
-_cairo_surface_detach_snapshots (cairo_surface_t *surface)
-{
-    cairo_surface_t **snapshots;
-    unsigned int i;
-
-    if (! _cairo_surface_has_snapshots (surface))
-	return;
-
-    snapshots = _cairo_array_index (&surface->snapshots, 0);
-    for (i = 0; i < surface->snapshots.num_elements; i++) {
-	snapshots[i]->snapshot_of = NULL;
-
-	if (snapshots[i]->snapshot_detach != NULL)
-	    snapshots[i]->snapshot_detach (snapshots[i]);
-
-	cairo_surface_destroy (snapshots[i]);
-    }
-    surface->snapshots.num_elements = 0;
-
-    assert (! _cairo_surface_has_snapshots (surface));
+    return ! cairo_list_is_empty (&surface->snapshots);
 }
 
 static cairo_bool_t
@@ -282,14 +255,43 @@ _cairo_surface_detach_mime_data (cairo_surface_t *surface)
     _cairo_user_data_array_init (&surface->mime_data);
 }
 
-cairo_status_t
-_cairo_surface_attach_snapshot (cairo_surface_t *surface,
-				cairo_surface_t *snapshot,
-				cairo_surface_func_t detach_func)
+static void
+_cairo_surface_detach_snapshots (cairo_surface_t *surface)
 {
-    cairo_status_t status;
+    if (surface->snapshot_of != NULL)
+	return;
 
+    while (_cairo_surface_has_snapshots (surface)) {
+	_cairo_surface_detach_snapshot (cairo_list_first_entry (&surface->snapshots,
+								cairo_surface_t,
+								snapshots));
+    }
+}
+
+void
+_cairo_surface_detach_snapshot (cairo_surface_t *snapshot)
+{
+    assert (snapshot->snapshot_of != NULL);
+
+    snapshot->snapshot_of = NULL;
+    cairo_list_del (&snapshot->snapshots);
+
+    if (snapshot->snapshot_detach != NULL)
+	snapshot->snapshot_detach (snapshot);
+
+    cairo_surface_destroy (snapshot);
+}
+
+void
+_cairo_surface_attach_snapshot (cairo_surface_t *surface,
+				 cairo_surface_t *snapshot,
+				 cairo_surface_func_t detach_func)
+{
     assert (surface != snapshot);
+    assert (surface->snapshot_of == NULL);
+    assert (snapshot->snapshot_of != surface);
+
+    cairo_surface_reference (snapshot);
 
     if (snapshot->snapshot_of != NULL)
 	_cairo_surface_detach_snapshot (snapshot);
@@ -297,59 +299,26 @@ _cairo_surface_attach_snapshot (cairo_surface_t *surface,
     snapshot->snapshot_of = surface;
     snapshot->snapshot_detach = detach_func;
 
-    status = _cairo_array_append (&surface->snapshots, &snapshot);
-    if (unlikely (status))
-	return status;
+    cairo_list_add (&snapshot->snapshots, &surface->snapshots);
 
-    cairo_surface_reference (snapshot);
-    return CAIRO_STATUS_SUCCESS;
+    assert (_cairo_surface_has_snapshot (surface, snapshot->backend) == snapshot);
 }
 
 cairo_surface_t *
 _cairo_surface_has_snapshot (cairo_surface_t *surface,
 			     const cairo_surface_backend_t *backend)
 {
-    cairo_surface_t **snapshots;
-    unsigned int i;
+    cairo_surface_t *snapshot;
 
-    /* XXX is_similar? */
-    snapshots = _cairo_array_index (&surface->snapshots, 0);
-    for (i = 0; i < surface->snapshots.num_elements; i++) {
-	if (snapshots[i]->backend == backend)
-	    return snapshots[i];
+    cairo_list_foreach_entry (snapshot, cairo_surface_t,
+			      &surface->snapshots, snapshots)
+    {
+	/* XXX is_similar? */
+	if (snapshot->backend == backend)
+	    return snapshot;
     }
 
     return NULL;
-}
-
-void
-_cairo_surface_detach_snapshot (cairo_surface_t *snapshot)
-{
-    cairo_surface_t *surface;
-    cairo_surface_t **snapshots;
-    unsigned int i;
-
-    assert (snapshot->snapshot_of != NULL);
-    surface = snapshot->snapshot_of;
-
-    snapshots = _cairo_array_index (&surface->snapshots, 0);
-    for (i = 0; i < surface->snapshots.num_elements; i++) {
-	if (snapshots[i] == snapshot)
-	    break;
-    }
-    assert (i < surface->snapshots.num_elements);
-
-    surface->snapshots.num_elements--;
-    memmove (&snapshots[i],
-	     &snapshots[i+1],
-	     sizeof (cairo_surface_t *)*(surface->snapshots.num_elements - i));
-
-    snapshot->snapshot_of = NULL;
-
-    if (snapshot->snapshot_detach != NULL)
-	snapshot->snapshot_detach (snapshot);
-
-    cairo_surface_destroy (snapshot);
 }
 
 static cairo_bool_t
@@ -403,7 +372,7 @@ _cairo_surface_init (cairo_surface_t			*surface,
     surface->x_fallback_resolution = CAIRO_SURFACE_FALLBACK_RESOLUTION_DEFAULT;
     surface->y_fallback_resolution = CAIRO_SURFACE_FALLBACK_RESOLUTION_DEFAULT;
 
-    _cairo_array_init (&surface->snapshots, sizeof (cairo_surface_t *));
+    cairo_list_init (&surface->snapshots);
     surface->snapshot_of = NULL;
 
     surface->has_font_options = FALSE;
@@ -630,7 +599,6 @@ cairo_surface_destroy (cairo_surface_t *surface)
 
     _cairo_user_data_array_fini (&surface->user_data);
     _cairo_user_data_array_fini (&surface->mime_data);
-    _cairo_array_fini (&surface->snapshots);
 
     free (surface);
 }
@@ -1532,11 +1500,7 @@ _cairo_recording_surface_clone_similar (cairo_surface_t  *surface,
 	    return status;
 	}
 
-	status = _cairo_surface_attach_snapshot (src, similar, NULL);
-	if (unlikely (status)) {
-	    cairo_surface_destroy (similar);
-	    return status;
-	}
+	_cairo_surface_attach_snapshot (src, similar, NULL);
 
 	src_x = src_y = 0;
     }

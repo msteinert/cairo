@@ -228,13 +228,9 @@ _cairo_surface_snapshot (cairo_surface_t *surface)
     snapshot->base.device_transform = surface->device_transform;
     snapshot->base.device_transform_inverse = surface->device_transform_inverse;
 
-    status = _cairo_surface_attach_snapshot (surface,
-					     &snapshot->base,
-					     _cairo_surface_snapshot_copy_on_write);
-    if (unlikely (status)) {
-	cairo_surface_destroy (&snapshot->base);
-	return _cairo_surface_create_in_error (status);
-    }
+    _cairo_surface_attach_snapshot (surface,
+				    &snapshot->base,
+				    _cairo_surface_snapshot_copy_on_write);
 
     return &snapshot->base;
 }

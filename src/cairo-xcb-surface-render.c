@@ -1367,13 +1367,9 @@ _cairo_xcb_surface_picture (cairo_xcb_surface_t *target,
 	return (cairo_xcb_picture_t *) _cairo_surface_create_in_error (status);
     }
 
-    status = _cairo_surface_attach_snapshot (source,
-					     &picture->base,
-					     cairo_surface_finish);
-    if (unlikely (status)) {
-	cairo_surface_destroy (&picture->base);
-	return (cairo_xcb_picture_t *) _cairo_surface_create_in_error (status);
-    }
+    _cairo_surface_attach_snapshot (source,
+				    &picture->base,
+				    cairo_surface_finish);
 
 setup_picture:
     filter = pattern->base.filter;

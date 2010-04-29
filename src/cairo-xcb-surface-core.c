@@ -405,11 +405,7 @@ _cairo_xcb_surface_pixmap (cairo_xcb_surface_t *target,
     if (unlikely (pixmap->base.status))
 	return pixmap;
 
-    status = _cairo_surface_attach_snapshot (source, &pixmap->base, NULL);
-    if (unlikely (status)) {
-	cairo_surface_destroy (&pixmap->base);
-	return (cairo_xcb_pixmap_t *) _cairo_surface_create_in_error (status);
-    }
+    _cairo_surface_attach_snapshot (source, &pixmap->base, NULL);
 
     if (pattern->base.extend != CAIRO_EXTEND_NONE) {
 	if (extents->x < 0 || extents->y < 0 ||
