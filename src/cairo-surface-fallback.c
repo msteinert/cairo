@@ -799,13 +799,15 @@ _clip_and_composite_trapezoids (const cairo_pattern_t *src,
     {
 	cairo_region_t *trap_region = NULL;
 
-	status = _fill_rectangles (dst, op, src, traps, clip);
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
+        if (_cairo_operator_bounded_by_source (op)) {
+            status = _fill_rectangles (dst, op, src, traps, clip);
+            if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+                return status;
 
-	status = _composite_rectangle (dst, op, src, traps, clip);
-	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
-	    return status;
+            status = _composite_rectangle (dst, op, src, traps, clip);
+            if (status != CAIRO_INT_STATUS_UNSUPPORTED)
+                return status;
+        }
 
 	status = _cairo_traps_extract_region (traps, &trap_region);
 	if (unlikely (_cairo_status_is_error (status)))
