@@ -4200,6 +4200,8 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 {
     cairo_image_surface_t	*dst = abstract_dst;
     cairo_composite_rectangles_t extents;
+    cairo_pattern_union_t        source_pattern;
+    cairo_matrix_t               translate;
     composite_traps_info_t	 info;
     cairo_status_t		 status;
 
@@ -4245,6 +4247,10 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 	    return status;
     }
 
+    _cairo_pattern_init_static_copy (&source_pattern.base, pattern);
+    cairo_matrix_init_translate (&translate, src_x, src_y);
+    _cairo_pattern_transform (&source_pattern.base, &translate);
+
     info.traps = traps;
     info.num_traps = num_traps;
     info.antialias = antialias;
@@ -4252,7 +4258,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 			       dst->pixman_image,
 			       dst->pixman_format,
 			       op,
-			       pattern,
+			       &source_pattern.base,
 			       0, 0,
 			       &extents.bounded,
 			       clip_region);
