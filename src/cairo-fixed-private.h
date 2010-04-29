@@ -166,6 +166,12 @@ _cairo_fixed_integer_round (cairo_fixed_t f)
 }
 
 static inline int
+_cairo_fixed_integer_round_down (cairo_fixed_t f)
+{
+    return (f + CAIRO_FIXED_FRAC_MASK/2) >> CAIRO_FIXED_FRAC_BITS;
+}
+
+static inline int
 _cairo_fixed_fractional_part (cairo_fixed_t f)
 {
     return f & CAIRO_FIXED_FRAC_MASK;
