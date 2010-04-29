@@ -223,6 +223,8 @@ _cairo_boilerplate_get_image_surface (cairo_surface_t *src,
 	    cairo_device_t *ctx;
 	    char *filename;
 
+            cairo_surface_destroy (surface);
+
 	    xasprintf (&filename, "%s.out.trace", test_name);
 	    ctx = cairo_script_create (filename);
 	    surface = cairo_script_surface_create_for_target (ctx, image);
