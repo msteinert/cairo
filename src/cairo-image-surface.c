@@ -3111,7 +3111,7 @@ _clip_and_composite_trapezoids (cairo_image_surface_t *dst,
     /* Otherwise render the trapezoids to a mask and composite in the usual
      * fashion.
      */
-    info.traps = traps->traps;;
+    info.traps = traps->traps;
     info.num_traps = traps->num_traps;
     info.antialias = antialias;
     return _clip_and_composite (dst, op, src,

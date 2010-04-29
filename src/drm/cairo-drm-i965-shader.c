@@ -2120,7 +2120,7 @@ i965_stream_add_pending_relocation (i965_stream_t *stream,
 
     stream->pending_relocations[n].offset = target_offset;
     stream->pending_relocations[n].read_domains = read_domains;
-    stream->pending_relocations[n].write_domain = write_domain;;
+    stream->pending_relocations[n].write_domain = write_domain;
     stream->pending_relocations[n].delta = delta;
 }
 
