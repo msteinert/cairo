@@ -549,6 +549,7 @@ _composite_traps_draw_func (void                          *closure,
         extents_region = cairo_region_create_rectangle (extents);
         if (unlikely (extents_region->status))
             return extents_region->status;
+        cairo_region_translate (extents_region, -dst_x, -dst_y);
         clip_region = extents_region;
     }
 
@@ -976,14 +977,14 @@ CLEANUP_BOXES:
 }
 
 static cairo_status_t
-_cairo_surface_mask_draw_func (void                          *closure,
-			       cairo_operator_t               op,
-			       const cairo_pattern_t         *src,
-			       cairo_surface_t               *dst,
-			       int                            dst_x,
-			       int                            dst_y,
+_cairo_surface_mask_draw_func (void                        *closure,
+			       cairo_operator_t             op,
+			       const cairo_pattern_t       *src,
+			       cairo_surface_t             *dst,
+			       int                          dst_x,
+			       int                          dst_y,
 			       const cairo_rectangle_int_t *extents,
-			       cairo_region_t		    *clip_region)
+			       cairo_region_t		   *clip_region)
 {
     cairo_pattern_t *mask = closure;
     cairo_status_t status;
@@ -994,6 +995,7 @@ _cairo_surface_mask_draw_func (void                          *closure,
         extents_region = cairo_region_create_rectangle (extents);
         if (unlikely (extents_region->status))
             return extents_region->status;
+        cairo_region_translate (extents_region, -dst_x, -dst_y);
         clip_region = extents_region;
     }
 
@@ -1309,6 +1311,7 @@ _cairo_surface_old_show_glyphs_draw_func (void                          *closure
         extents_region = cairo_region_create_rectangle (extents);
         if (unlikely (extents_region->status))
             return extents_region->status;
+        cairo_region_translate (extents_region, -dst_x, -dst_y);
         clip_region = extents_region;
     }
 
