@@ -5277,22 +5277,22 @@ static csi_status_t
 _subsurface (csi_t *ctx)
 {
     csi_object_t obj;
-    long x, y, width, height;
+    double x, y, width, height;
     cairo_surface_t *target;
     csi_status_t status;
 
     check (5);
 
-    status = _csi_ostack_get_integer (ctx, 0, &height);
+    status = _csi_ostack_get_number (ctx, 0, &height);
     if (_csi_unlikely (status))
 	return status;
-    status = _csi_ostack_get_integer (ctx, 1, &width);
+    status = _csi_ostack_get_number (ctx, 1, &width);
     if (_csi_unlikely (status))
 	return status;
-    status = _csi_ostack_get_integer (ctx, 2, &y);
+    status = _csi_ostack_get_number (ctx, 2, &y);
     if (_csi_unlikely (status))
 	return status;
-    status = _csi_ostack_get_integer (ctx, 3, &x);
+    status = _csi_ostack_get_number (ctx, 3, &x);
     if (_csi_unlikely (status))
 	return status;
     status = _csi_ostack_get_surface (ctx, 4, &target);
@@ -5300,7 +5300,7 @@ _subsurface (csi_t *ctx)
 	return status;
 
     obj.type = CSI_OBJECT_TYPE_SURFACE;
-    obj.datum.surface = cairo_surface_create_for_region (target, x, y, width, height);
+    obj.datum.surface = cairo_surface_create_for_rectangle (target, x, y, width, height);
     pop (5);
     return push (&obj);
 }

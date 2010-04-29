@@ -422,10 +422,34 @@ static const cairo_surface_backend_t _cairo_surface_subsurface_backend = {
     _cairo_surface_subsurface_snapshot,
 };
 
+/**
+ * cairo_surface_create_for_rectangle:
+ * @target: an existing surface for which the sub-surface will point to
+ * @x: the x-origin of the sub-surface from the top-left of the target surface (in device-space units)
+ * @y: the y-origin of the sub-surface from the top-left of the target surface (in device-space units)
+ * @width: width of the sub-surface (in device-space units)
+ * @height: height of the sub-surface (in device-space units)
+ *
+ * Create a new surface that is a rectangle within the target surface.
+ * All operations drawn to this surface are then clipped and translated
+ * onto the target surface. Nothing drawn via this sub-surface outside of
+ * its bounds is drawn onto the target surface, making this a useful method
+ * for passing constrained child surfaces to library routines that draw
+ * directly onto the parent surface, i.e. with no further backend allocations,
+ * double buffering or copies.
+ *
+ * Return value: a pointer to the newly allocated surface. The caller
+ * owns the surface and should call cairo_surface_destroy() when done
+ * with it.
+ *
+ * This function always returns a valid pointer, but it will return a
+ * pointer to a "nil" surface if @other is already in an error state
+ * or any other error occurs.
+ **/
 cairo_surface_t *
-cairo_surface_create_for_region (cairo_surface_t *target,
-				 int x, int y,
-				 int width, int height)
+cairo_surface_create_for_rectangle (cairo_surface_t *target,
+				    double x, double y,
+				    double width, double height)
 {
     cairo_surface_subsurface_t *surface;
     cairo_rectangle_int_t target_extents;
@@ -444,10 +468,11 @@ cairo_surface_create_for_region (cairo_surface_t *target,
 			 target->content);
     surface->base.type = target->type;
 
-    surface->extents.x = x;
-    surface->extents.y = y;
-    surface->extents.width = width;
-    surface->extents.height = height;
+    /* XXX forced integer alignment */
+    surface->extents.x = ceil (x);
+    surface->extents.y = ceil (y);
+    surface->extents.width = floor (x + width) - surface->extents.x;
+    surface->extents.height = floor (y + height) - surface->extents.y;
 
     if (_cairo_surface_get_extents (target, &target_extents))
         is_empty = _cairo_rectangle_intersect (&surface->extents, &target_extents);

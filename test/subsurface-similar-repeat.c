@@ -46,7 +46,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_destroy (cr_region);
 
     /* fill the centre */
-    region = cairo_surface_create_for_region (similar, 20, 20, 20, 20);
+    region = cairo_surface_create_for_rectangle (similar, 20, 20, 20, 20);
     cairo_surface_destroy (similar);
     cr_region = cairo_create (region);
     cairo_surface_destroy (region);

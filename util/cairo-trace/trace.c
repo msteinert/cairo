@@ -3495,16 +3495,16 @@ cairo_surface_create_similar (cairo_surface_t *other,
 }
 
 cairo_surface_t *
-cairo_surface_create_for_region (cairo_surface_t *target,
-				 int x, int y,
-				 int width, int height)
+cairo_surface_create_for_rectangle (cairo_surface_t *target,
+                                    double x, double y,
+                                    double width, double height)
 {
     cairo_surface_t *ret;
     long surface_id;
 
     _enter_trace ();
 
-    ret = DLCALL (cairo_surface_create_for_region, target, x, y, width, height);
+    ret = DLCALL (cairo_surface_create_for_rectangle, target, x, y, width, height);
     surface_id = _create_surface_id (ret);
 
     _emit_line_info ();
@@ -3518,7 +3518,7 @@ cairo_surface_create_for_region (cairo_surface_t *target,
 	    _trace_printf ("dup ");
 	else
 	    _trace_printf ("%d index ", current_stack_depth - obj->operand - 1);
-	_trace_printf ("%d %d %d %d subsurface %% s%ld\n",
+	_trace_printf ("%f %f %f %f subsurface %% s%ld\n",
 		       x, y, width, height,
 		       surface_id);
 
