@@ -196,9 +196,28 @@ _cairo_surface_snapshot (cairo_surface_t *surface)
     if (surface->backend->snapshot != NULL) {
 	cairo_surface_t *snap;
 
-	snap = surface->backend->snapshot (surface);
+	snap = _cairo_surface_has_snapshot (surface, surface->backend);
 	if (snap != NULL)
+	    return cairo_surface_reference (snap);
+
+	snap = surface->backend->snapshot (surface);
+	if (snap != NULL) {
+	    if (unlikely (snap->status))
+		return snap;
+
+	    status = _cairo_surface_copy_mime_data (snap, surface);
+	    if (unlikely (status)) {
+		cairo_surface_destroy (snap);
+		return _cairo_surface_create_in_error (status);
+	    }
+
+	    snap->device_transform = surface->device_transform;
+	    snap->device_transform_inverse = surface->device_transform_inverse;
+
+	    _cairo_surface_attach_snapshot (surface, snap, NULL);
+
 	    return snap;
+	}
     }
 
     snapshot = (cairo_surface_snapshot_t *)
