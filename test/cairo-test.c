@@ -1228,24 +1228,28 @@ REPEAT:
 
 	    if (cairo_test_files_equal (test_filename, pass_filename)) {
 		cairo_test_log (ctx, "PNG file exactly matches last pass.\n");
+                have_result = TRUE;
 		cairo_surface_destroy (test_image);
 		ret = CAIRO_TEST_SUCCESS;
 		goto UNWIND_CAIRO;
 	    }
 	    if (cairo_test_files_equal (out_png_path, ref_png_path)) {
-		cairo_test_log (ctx, "PNG file exactly reference image.\n");
+		cairo_test_log (ctx, "PNG file exactly matches reference image.\n");
+                have_result = TRUE;
 		cairo_surface_destroy (test_image);
 		ret = CAIRO_TEST_SUCCESS;
 		goto UNWIND_CAIRO;
 	    }
 	    if (cairo_test_files_equal (out_png_path, new_png_path)) {
-		cairo_test_log (ctx, "PNG file exactly current failure image.\n");
+		cairo_test_log (ctx, "PNG file exactly matches current failure image.\n");
+                have_result = TRUE;
 		cairo_surface_destroy (test_image);
 		ret = CAIRO_TEST_NEW;
 		goto UNWIND_CAIRO;
 	    }
 	    if (cairo_test_files_equal (out_png_path, xfail_png_path)) {
-		cairo_test_log (ctx, "PNG file exactly known failure image.\n");
+		cairo_test_log (ctx, "PNG file exactly matches known failure image.\n");
+                have_result = TRUE;
 		cairo_surface_destroy (test_image);
 		ret = CAIRO_TEST_XFAILURE;
 		goto UNWIND_CAIRO;
@@ -1260,18 +1264,21 @@ REPEAT:
 	} else {
 	    if (cairo_test_files_equal (out_png_path, ref_png_path)) {
 		cairo_test_log (ctx, "PNG file exactly matches reference image.\n");
+		have_result = TRUE;
 		cairo_surface_destroy (test_image);
 		ret = CAIRO_TEST_SUCCESS;
 		goto UNWIND_CAIRO;
 	    }
 	    if (cairo_test_files_equal (out_png_path, new_png_path)) {
 		cairo_test_log (ctx, "PNG file exactly matches current failure image.\n");
+		have_result = TRUE;
 		cairo_surface_destroy (test_image);
 		ret = CAIRO_TEST_NEW;
 		goto UNWIND_CAIRO;
 	    }
 	    if (cairo_test_files_equal (out_png_path, xfail_png_path)) {
 		cairo_test_log (ctx, "PNG file exactly matches known failure image.\n");
+		have_result = TRUE;
 		cairo_surface_destroy (test_image);
 		ret = CAIRO_TEST_XFAILURE;
 		goto UNWIND_CAIRO;
@@ -1280,18 +1287,21 @@ REPEAT:
 
 	if (cairo_test_files_equal (out_png_path, base_ref_png_path)) {
 	    cairo_test_log (ctx, "PNG file exactly reference image.\n");
+	    have_result = TRUE;
 	    cairo_surface_destroy (test_image);
 	    ret = CAIRO_TEST_SUCCESS;
 	    goto UNWIND_CAIRO;
 	}
 	if (cairo_test_files_equal (out_png_path, base_new_png_path)) {
 	    cairo_test_log (ctx, "PNG file exactly current failure image.\n");
+	    have_result = TRUE;
 	    cairo_surface_destroy (test_image);
 	    ret = CAIRO_TEST_NEW;
 	    goto UNWIND_CAIRO;
 	}
 	if (cairo_test_files_equal (out_png_path, base_xfail_png_path)) {
 	    cairo_test_log (ctx, "PNG file exactly known failure image.\n");
+	    have_result = TRUE;
 	    cairo_surface_destroy (test_image);
 	    ret = CAIRO_TEST_XFAILURE;
 	    goto UNWIND_CAIRO;
