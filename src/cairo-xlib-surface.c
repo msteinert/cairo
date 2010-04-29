@@ -1503,7 +1503,7 @@ _cairo_xlib_surface_can_repaint_solid_pattern_surface (void *abstract_surface,
 static cairo_status_t
 _cairo_xlib_surface_set_matrix (cairo_xlib_display_t *display,
                                 cairo_xlib_surface_t *surface,
-				cairo_matrix_t	     *matrix,
+				const cairo_matrix_t *matrix,
 				double                xc,
 				double                yc)
 {
@@ -1638,11 +1638,11 @@ _cairo_xlib_surface_set_component_alpha (cairo_xlib_surface_t *surface,
 }
 
 static cairo_int_status_t
-_cairo_xlib_surface_set_attributes (cairo_xlib_display_t            *display,
-                                    cairo_xlib_surface_t	    *surface,
-				    cairo_surface_attributes_t	    *attributes,
-				    double			     xc,
-				    double			     yc)
+_cairo_xlib_surface_set_attributes (cairo_xlib_display_t             *display,
+                                    cairo_xlib_surface_t	     *surface,
+				    const cairo_surface_attributes_t *attributes,
+				    double			      xc,
+				    double			      yc)
 {
     cairo_int_status_t status;
     XRenderPictureAttributes pa;
