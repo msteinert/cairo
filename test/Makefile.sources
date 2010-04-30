@@ -228,6 +228,8 @@ test_sources = \
 	subsurface.c                                    \
 	subsurface-repeat.c                             \
 	subsurface-reflect.c                            \
+	subsurface-modify-child.c                       \
+	subsurface-modify-parent.c                      \
 	subsurface-similar-repeat.c                     \
 	surface-finish-twice.c				\
 	surface-pattern.c				\

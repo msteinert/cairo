@@ -1075,6 +1075,8 @@ REFERENCE_IMAGES = \
 	subsurface.image16.ref.png \
 	subsurface-reflect.ref.png \
 	subsurface-repeat.ref.png \
+	subsurface-modify-child.ref.png \
+	subsurface-modify-parent.ref.png \
 	subsurface-similar-repeat.ref.png \
 	surface-pattern-big-scale-down.ref.png \
 	surface-pattern-big-scale-down.ps.xfail.png \
