@@ -1,6 +1,7 @@
 /* cairo - a vector graphics library with display and print output
  *
  * Copyright © 2007 Chris Wilson
+ * Copyright © 2010 Andrea Canciani
  *
  * This library is free software; you can redistribute it and/or
  * modify it either under the terms of the GNU Lesser General Public
@@ -32,6 +33,7 @@
  *
  * Contributor(s):
  *	Chris Wilson <chris@chris-wilson.co.uk>
+ *	Andrea Canciani <ranma42@gmail.com>
  */
 
 #ifndef CAIRO_ATOMIC_PRIVATE_H
