@@ -801,7 +801,10 @@ _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
 	return surface->status;
 
     if (unlikely (target->status))
-	return _cairo_surface_set_error (surface, target->status);
+	return target->status;
+
+    if (unlikely (surface->finished))
+	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
 
     assert (_cairo_surface_is_recording (surface));
 
