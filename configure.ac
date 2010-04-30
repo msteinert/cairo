@@ -551,7 +551,7 @@ dnl ===========================================================================
 
 # poppler-0.9.2 has an important bug fixes for user-font and an
 # enhancement not to gobble nearly 1GiB of memory during test/large-font.
-POPPLER_VERSION_REQUIRED=0.9.2
+POPPLER_VERSION_REQUIRED=0.13.3
 test_pdf=no
 any2ppm_pdf=no
 if test "x$use_pdf" = "xyes"; then
