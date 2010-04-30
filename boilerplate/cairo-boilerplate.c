@@ -184,7 +184,14 @@ _cairo_boilerplate_recording_create_surface (const char		     *name,
     extents.y = 0;
     extents.width = width;
     extents.height = height;
-    return *closure = cairo_recording_surface_create (content, &extents);
+    return *closure = cairo_surface_reference (cairo_recording_surface_create (content, &extents));
+}
+
+static void
+_cairo_boilerplate_recording_surface_cleanup (void *closure)
+{
+    cairo_surface_finish (closure);
+    cairo_surface_destroy (closure);
 }
 #endif
 
@@ -351,7 +358,7 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
-	(cairo_boilerplate_cleanup_t) cairo_surface_finish,
+	_cairo_boilerplate_recording_surface_cleanup,
 	NULL,
 	FALSE, FALSE, TRUE
     },
@@ -363,7 +370,7 @@ static const cairo_boilerplate_target_t builtin_targets[] = {
 	NULL, NULL,
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
-	(cairo_boilerplate_cleanup_t) cairo_surface_finish,
+	_cairo_boilerplate_recording_surface_cleanup,
 	NULL,
 	FALSE, FALSE, TRUE
     },
