@@ -1227,14 +1227,9 @@ sampled_area (const cairo_surface_pattern_t *pattern,
     x2 = extents->x + (int) extents->width;
     y2 = extents->y + (int) extents->height;
 
-    if (_cairo_matrix_is_translation (&pattern->base.matrix)) {
-	x1 += pattern->base.matrix.x0; x2 += pattern->base.matrix.x0;
-	y1 += pattern->base.matrix.y0; y2 += pattern->base.matrix.y0;
-    } else {
-	_cairo_matrix_transform_bounding_box (&pattern->base.matrix,
-					      &x1, &y1, &x2, &y2,
-					      NULL);
-    }
+    _cairo_matrix_transform_bounding_box (&pattern->base.matrix,
+                                          &x1, &y1, &x2, &y2,
+                                          NULL);
 
     filter = _cairo_pattern_analyze_filter (&pattern->base, &pad);
     sample->x = floor (x1 - pad);
