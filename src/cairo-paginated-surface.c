@@ -473,7 +473,6 @@ _cairo_paginated_surface_show_page (void *abstract_surface)
     if (unlikely (status))
 	return status;
 
-    cairo_surface_finish (surface->recording_surface);
     status = surface->recording_surface->status;
     if (unlikely (status))
 	return status;
