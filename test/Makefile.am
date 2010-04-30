@@ -877,6 +877,9 @@ REFERENCE_IMAGES = \
 	pthread-same-source.image16.ref.png \
 	pthread-same-source.ref.png \
 	pthread-similar.ref.png \
+	pthread-show-text.ref.png \
+	pthread-show-text.image16.ref.png \
+	pthread-show-text.ps.ref.png \
 	ps-surface-source.image16.ref.png \
 	ps-surface-source.rgb24.ref.png \
 	ps-surface-source.argb32.ref.png \
