@@ -1465,10 +1465,11 @@ _cairo_recording_surface_clone_similar (cairo_surface_t  *surface,
     if (recorder->unbounded ||
 	width*height*8 < recorder->extents.width*recorder->extents.height)
     {
-	/* XXX use _solid to perform an initial CLEAR? */
-	similar = _cairo_surface_create_similar_scratch (surface,
-							 src->content,
-							 width, height);
+	similar = _cairo_surface_create_similar_solid (surface,
+						       src->content,
+						       width, height,
+                                                       CAIRO_COLOR_TRANSPARENT,
+                                                       FALSE);
 	if (similar == NULL)
 	    return CAIRO_INT_STATUS_UNSUPPORTED;
 	if (unlikely (similar->status))
