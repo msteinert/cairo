@@ -614,7 +614,6 @@ REFERENCE_IMAGES = \
 	group-clip.ref.png \
 	group-paint.ref.png \
 	group-unaligned.image16.ref.png \
-	group-unaligned.pdf.new.png \
 	group-unaligned.ps.ref.png \
 	group-unaligned.ref.png \
 	group-unaligned.svg.argb32.xfail.png \
