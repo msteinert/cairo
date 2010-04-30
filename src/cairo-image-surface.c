@@ -4063,8 +4063,8 @@ _cairo_image_surface_composite (cairo_operator_t	 op,
     extents.source.width  = width;
     extents.source.height = height;
 
-    extents.mask.x = dst_x;
-    extents.mask.y = dst_y;
+    extents.mask.x = mask_x;
+    extents.mask.y = mask_y;
     extents.mask.width  = width;
     extents.mask.height = height;
 
@@ -4088,7 +4088,7 @@ _cairo_image_surface_composite (cairo_operator_t	 op,
 
     extents.is_bounded = _cairo_operator_bounded_by_either (op);
 
-    src = _pixman_image_for_pattern (src_pattern, &extents.bounded, &src_offset_x, &src_offset_y);
+    src = _pixman_image_for_pattern (src_pattern, &extents.source, &src_offset_x, &src_offset_y);
     if (unlikely (src == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
@@ -4096,7 +4096,7 @@ _cairo_image_surface_composite (cairo_operator_t	 op,
 	pixman_image_t *mask;
 	int mask_offset_x, mask_offset_y;
 
-	mask = _pixman_image_for_pattern (mask_pattern, &extents.bounded, &mask_offset_x, &mask_offset_y);
+	mask = _pixman_image_for_pattern (mask_pattern, &extents.mask, &mask_offset_x, &mask_offset_y);
 	if (unlikely (mask == NULL)) {
 	    pixman_image_unref (src);
 	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
