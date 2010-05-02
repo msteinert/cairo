@@ -26,6 +26,8 @@
 
 #include "cairo-boilerplate-private.h"
 
+#if CAIRO_CAN_TEST_PDF_SURFACE
+
 #include <cairo-pdf.h>
 #include <cairo-pdf-surface-private.h>
 #include <cairo-paginated-surface-private.h>
@@ -230,6 +232,7 @@ _cairo_boilerplate_pdf_force_fallbacks (cairo_surface_t *abstract_surface,
     surface = (cairo_pdf_surface_t*) paginated->target;
     surface->force_fallbacks = TRUE;
 }
+#endif
 
 static const cairo_boilerplate_target_t targets[] = {
 #if CAIRO_CAN_TEST_PDF_SURFACE
