@@ -948,6 +948,10 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 								font_matrix,
 								ctm,
 								options);
+	    if (unlikely (font_face->status)) {
+		_cairo_scaled_font_map_unlock ();
+		return _cairo_scaled_font_create_in_error (font_face->status);
+	    }
 	}
 
 	_cairo_scaled_font_init_key (&key, font_face,
@@ -960,6 +964,10 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 								font_matrix,
 								ctm,
 								options);
+	    if (unlikely (font_face->status)) {
+		_cairo_scaled_font_map_unlock ();
+		return _cairo_scaled_font_create_in_error (font_face->status);
+	    }
 	}
 
 	_cairo_scaled_font_init_key (&key, font_face,
