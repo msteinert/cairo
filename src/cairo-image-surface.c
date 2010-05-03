@@ -871,6 +871,8 @@ _pixman_transparent_image (void)
 	color.alpha = 0x00;
 
 	image = pixman_image_create_solid_fill (&color);
+	if (unlikely (image == NULL))
+	    return NULL;
 
 	if (_cairo_atomic_ptr_cmpxchg (&__pixman_transparent_image,
 				       NULL, image))
@@ -900,6 +902,8 @@ _pixman_black_image (void)
 	color.alpha = 0xffff;
 
 	image = pixman_image_create_solid_fill (&color);
+	if (unlikely (image == NULL))
+	    return NULL;
 
 	if (_cairo_atomic_ptr_cmpxchg (&__pixman_black_image,
 				       NULL, image))
@@ -929,6 +933,8 @@ _pixman_white_image (void)
 	color.alpha = 0xffff;
 
 	image = pixman_image_create_solid_fill (&color);
+	if (unlikely (image == NULL))
+	    return NULL;
 
 	if (_cairo_atomic_ptr_cmpxchg (&__pixman_white_image,
 				       NULL, image))
@@ -1125,6 +1131,9 @@ _pixman_image_for_gradient (const cairo_gradient_pattern_t *pattern,
 
     if (pixman_stops != pixman_stops_static)
 	free (pixman_stops);
+
+    if (unlikely (pixman_image == NULL))
+	return NULL;
 
     tx = pattern->base.matrix.x0;
     ty = pattern->base.matrix.y0;
@@ -3805,7 +3814,8 @@ _composite_glyphs_via_mask (void			*closure,
 
 CLEANUP:
     _cairo_scaled_font_thaw_cache (font);
-    pixman_image_unref (mask);
+    if (mask != NULL)
+	pixman_image_unref (mask);
     pixman_image_unref (src);
     pixman_image_unref (white);
 
