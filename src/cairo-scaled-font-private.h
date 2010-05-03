@@ -108,7 +108,7 @@ struct _cairo_scaled_font {
     cairo_mutex_t mutex;
 
     cairo_hash_table_t *glyphs;
-    cairo_scaled_glyph_page_t *glyph_pages;
+    cairo_list_t glyph_pages;
     cairo_bool_t cache_frozen;
     cairo_bool_t global_cache_frozen;
 
