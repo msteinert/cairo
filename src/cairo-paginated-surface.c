@@ -160,8 +160,7 @@ _cairo_paginated_surface_finish (void *abstract_surface)
 	/* Bypass some of the sanity checking in cairo-surface.c, as we
 	 * know that the surface is finished...
 	 */
-	if (surface->base.backend->show_page != NULL)
-	    status = surface->base.backend->show_page (&surface->base);
+	status = _cairo_paginated_surface_show_page (surface);
     }
 
      /* XXX We want to propagate any errors from destroy(), but those are not
@@ -169,11 +168,10 @@ _cairo_paginated_surface_finish (void *abstract_surface)
       * and check the status afterwards. However, we can only call finish()
       * on the target, if we own it.
       */
-    if (CAIRO_REFERENCE_COUNT_GET_VALUE (&surface->target->ref_count) == 1) {
+    if (CAIRO_REFERENCE_COUNT_GET_VALUE (&surface->target->ref_count) == 1)
 	cairo_surface_finish (surface->target);
-	if (status == CAIRO_STATUS_SUCCESS)
-	    status = cairo_surface_status (surface->target);
-    }
+    if (status == CAIRO_STATUS_SUCCESS)
+	status = cairo_surface_status (surface->target);
     cairo_surface_destroy (surface->target);
 
     cairo_surface_finish (surface->recording_surface);
@@ -477,15 +475,17 @@ _cairo_paginated_surface_show_page (void *abstract_surface)
     if (unlikely (status))
 	return status;
 
-    cairo_surface_destroy (surface->recording_surface);
+    if (! surface->base.finished) {
+	cairo_surface_destroy (surface->recording_surface);
 
-    surface->recording_surface = _create_recording_surface_for_target (surface->target,
-								       surface->content);
-    status = surface->recording_surface->status;
-    if (unlikely (status))
-	return status;
+	surface->recording_surface = _create_recording_surface_for_target (surface->target,
+									   surface->content);
+	status = surface->recording_surface->status;
+	if (unlikely (status))
+	    return status;
 
-    surface->page_num++;
+	surface->page_num++;
+    }
 
     return CAIRO_STATUS_SUCCESS;
 }
