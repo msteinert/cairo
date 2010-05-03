@@ -101,7 +101,7 @@ typedef enum {
     GT
 } cairo_test_compare_op_t;
 
-static cairo_test_list_t *tests;
+static cairo_test_t *tests;
 
 static void CAIRO_BOILERPLATE_PRINTF_FORMAT(2,3)
 _log (cairo_test_context_t *ctx,
@@ -638,7 +638,7 @@ int
 main (int argc, char **argv)
 {
     cairo_test_runner_t runner;
-    cairo_test_list_t *list;
+    cairo_test_t *test;
     cairo_test_status_t *target_status;
     unsigned int n, m;
     char targets[4096];
@@ -687,18 +687,18 @@ main (int argc, char **argv)
 				 runner.base.num_targets);
     }
 
-    for (list = tests; list != NULL; list = list->next) {
+    for (test = tests; test != NULL; test = test->next) {
 	cairo_test_context_t ctx;
 	cairo_test_status_t status;
 	cairo_bool_t failed = FALSE, xfailed = FALSE, crashed = FALSE, skipped = TRUE;
 	cairo_bool_t in_preamble = FALSE;
-	char *name = cairo_test_get_name (list->test);
+	char *name = cairo_test_get_name (test);
 	int i;
 
 	/* check for restricted runs */
 	if (argc) {
 	    cairo_bool_t found = FALSE;
-	    const char *keywords = list->test->keywords;
+	    const char *keywords = test->keywords;
 
 	    for (i = 0; i < argc; i++) {
 		const char *match = argv[i];
@@ -733,8 +733,8 @@ main (int argc, char **argv)
 	}
 
 	/* check to see if external requirements match */
-	if (list->test->requirements != NULL) {
-	    const char *requirements = list->test->requirements;
+	if (test->requirements != NULL) {
+	    const char *requirements = test->requirements;
 	    const char *str;
 
 	    str = strstr (requirements, "cairo");
@@ -775,7 +775,7 @@ main (int argc, char **argv)
 	    goto TEST_NEXT;
 	}
 
-	_cairo_test_context_init_for_test (&ctx, &runner.base, list->test);
+	_cairo_test_context_init_for_test (&ctx, &runner.base, test);
 	memset (target_status, 0,
 		sizeof (cairo_test_status_t) * ctx.num_targets);
 
@@ -795,7 +795,7 @@ main (int argc, char **argv)
 	    case CAIRO_TEST_NEW:
 	    case CAIRO_TEST_FAILURE:
 		runner.fails_preamble = _list_prepend (runner.fails_preamble,
-						       list->test);
+						       test);
 		in_preamble = TRUE;
 		failed = TRUE;
 		goto TEST_DONE;
@@ -803,7 +803,7 @@ main (int argc, char **argv)
 	    case CAIRO_TEST_NO_MEMORY:
 	    case CAIRO_TEST_CRASHED:
 		runner.crashes_preamble = _list_prepend (runner.crashes_preamble,
-							 list->test);
+							 test);
 		in_preamble = TRUE;
 		failed = TRUE;
 		goto TEST_DONE;
@@ -861,13 +861,13 @@ main (int argc, char **argv)
 		target_status[n] = CAIRO_TEST_CRASHED;
 		runner.num_crashed_per_target[n]++;
 		runner.crashes_per_target[n] = _list_prepend (runner.crashes_per_target[n],
-							      list->test);
+							      test);
 		crashed = TRUE;
 	    } else if (target_failed) {
 		target_status[n] = CAIRO_TEST_FAILURE;
 		runner.num_failed_per_target[n]++;
 		runner.fails_per_target[n] = _list_prepend (runner.fails_per_target[n],
-							    list->test);
+							    test);
 
 		failed = TRUE;
 	    } else if (target_xfailed) {
@@ -947,8 +947,6 @@ main (int argc, char **argv)
 
     }
 
-    _list_free (tests);
-
     if (runner.list_only) {
 	printf ("\n");
 	return CAIRO_TEST_SUCCESS;
@@ -966,7 +964,8 @@ main (int argc, char **argv)
 }
 
 void
-cairo_test_register (const cairo_test_t *test)
+cairo_test_register (cairo_test_t *test)
 {
-    tests = _list_prepend (tests, test);
+    test->next = tests;
+    tests = test;
 }

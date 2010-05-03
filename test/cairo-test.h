@@ -138,6 +138,7 @@ typedef cairo_test_status_t
 (cairo_test_draw_function_t) (cairo_t *cr, int width, int height);
 
 struct _cairo_test {
+    struct _cairo_test *next;
     const char *name;
     const char *description;
     const char *keywords;
@@ -177,8 +178,8 @@ struct _cairo_test {
 #define CAIRO_TEST(name, description, keywords, requirements, width, height, preamble, draw) \
 void _register_##name (void); \
 void _register_##name (void) { \
-    static const cairo_test_t test = { \
-	#name, description, \
+    static cairo_test_t test = { \
+	NULL, #name, description, \
 	keywords, requirements, \
 	width, height, \
 	preamble, draw \
@@ -187,7 +188,7 @@ void _register_##name (void) { \
 }
 
 void
-cairo_test_register (const cairo_test_t *test);
+cairo_test_register (cairo_test_t *test);
 
 /* The full context for the test.
  * For ordinary tests (using the CAIRO_TEST()->draw interface) the context
