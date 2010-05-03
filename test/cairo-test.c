@@ -917,10 +917,23 @@ REPEAT:
 	goto UNWIND_SURFACE;
     }
 
-    cairo_surface_set_user_data (surface,
-				 &cairo_boilerplate_output_basename_key,
-				 base_path,
-				 NULL);
+    if (cairo_surface_set_user_data (surface,
+				     &cairo_boilerplate_output_basename_key,
+				     base_path,
+				     NULL))
+    {
+#if HAVE_MEMFAULT
+	cairo_surface_destroy (surface);
+
+	if (target->cleanup)
+	    target->cleanup (closure);
+
+	goto REPEAT;
+#else
+	ret = CAIRO_TEST_FAILURE;
+	goto UNWIND_SURFACE;
+#endif
+    }
 
     cairo_surface_set_device_offset (surface, dev_offset, dev_offset);
 

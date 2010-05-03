@@ -111,6 +111,7 @@ draw (cairo_t *cr, int width, int height)
 {
     cairo_surface_t *surface;
     cairo_surface_t *similar;
+    cairo_status_t status;
     cairo_t *cr2;
 
     cairo_set_source_rgb (cr, 0, 0, 0);
@@ -143,21 +144,27 @@ draw (cairo_t *cr, int width, int height)
     cairo_fill (cr);
 
     /* destroy the surface last, as this triggers XCloseDisplay */
+    cairo_surface_finish (surface);
+    status = cairo_surface_status (surface);
     cairo_surface_destroy (surface);
 
-    return CAIRO_TEST_SUCCESS;
+    return cairo_test_status_from_status (cairo_test_get_context (cr),
+					  status);
 }
 
 static cairo_test_status_t
 preamble (cairo_test_context_t *ctx)
 {
     cairo_surface_t *surface;
+    cairo_status_t status;
 
     surface = create_source_surface (SOURCE_SIZE);
     if (surface == NULL) /* can't create the source so skip the test */
 	return CAIRO_TEST_UNTESTED;
 
+    cairo_surface_finish (surface);
+    status = cairo_surface_status (surface);
     cairo_surface_destroy (surface);
 
-    return CAIRO_TEST_SUCCESS;
+    return cairo_test_status_from_status (ctx, status);
 }

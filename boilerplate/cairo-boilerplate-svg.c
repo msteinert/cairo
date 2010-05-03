@@ -242,7 +242,7 @@ static void
 _cairo_boilerplate_svg_cleanup (void *closure)
 {
     svg_target_closure_t *ptc = closure;
-    if (ptc->target) {
+    if (ptc->target != NULL) {
 	cairo_surface_finish (ptc->target);
 	cairo_surface_destroy (ptc->target);
     }

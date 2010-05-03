@@ -113,9 +113,16 @@ draw (cairo_t *cr, int width, int height)
     thread_data_t thread_data[N_THREADS];
     cairo_test_status_t test_status = CAIRO_TEST_SUCCESS;
     cairo_surface_t *source;
+    cairo_status_t status;
     int i;
 
     source = create_source (cairo_get_target (cr));
+    status = cairo_surface_status (source);
+    if (status) {
+	cairo_surface_destroy (source);
+	return cairo_test_status_from_status (cairo_test_get_context (cr),
+					      status);
+    }
 
     for (i = 0; i < N_THREADS; i++) {
         thread_data[i].target = cairo_surface_create_similar (cairo_get_target (cr),

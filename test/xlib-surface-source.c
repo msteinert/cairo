@@ -79,7 +79,12 @@ create_source_surface (int size)
 							     xrender_format,
 							     size, size);
     data->device = cairo_device_reference (cairo_surface_get_device (surface));
-    cairo_surface_set_user_data (surface, &closure_key, data, cleanup);
+    if (cairo_surface_set_user_data (surface, &closure_key, data, cleanup)) {
+	cairo_surface_finish (surface);
+	cairo_surface_destroy (surface);
+	cleanup (data);
+	return NULL;
+    }
 
     return surface;
 #else
