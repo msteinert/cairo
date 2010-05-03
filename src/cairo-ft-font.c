@@ -2624,12 +2624,10 @@ _cairo_ft_resolve_pattern (FcPattern		      *pattern,
     }
 
     status = _cairo_ft_unscaled_font_create_for_pattern (resolved, &unscaled);
-    if (unlikely (status)) {
+    if (unlikely (status || unscaled == NULL)) {
 	font_face = (cairo_font_face_t *)&_cairo_font_face_nil;
 	goto FREE_RESOLVED;
     }
-
-    assert (unscaled != NULL);
 
     _get_pattern_ft_options (resolved, &ft_options);
     font_face = _cairo_ft_font_face_create (unscaled, &ft_options);
