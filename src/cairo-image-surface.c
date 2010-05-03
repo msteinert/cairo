@@ -4243,7 +4243,9 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
     }
 
     _cairo_pattern_init_static_copy (&source_pattern.base, pattern);
-    cairo_matrix_translate (&source_pattern.base.matrix, src_x, src_y);
+    cairo_matrix_translate (&source_pattern.base.matrix,
+                            src_x - extents.bounded.x,
+                            src_y - extents.bounded.y);
 
     info.traps = traps;
     info.num_traps = num_traps;
