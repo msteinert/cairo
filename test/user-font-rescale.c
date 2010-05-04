@@ -258,10 +258,11 @@ get_user_font_face (cairo_font_face_t *substitute_font,
 					       &glyphs, &num_glyphs,
 					       NULL, NULL, NULL);
     cairo_font_options_destroy (options);
-    cairo_scaled_font_destroy (measure);
 
-    if (status)
+    if (status) {
+	cairo_scaled_font_destroy (measure);
 	return status;
+    }
 
     /* find the glyph range the text covers */
     max_index = glyphs[0].index;
@@ -282,11 +283,16 @@ get_user_font_face (cairo_font_face_t *substitute_font,
 	widths[glyphs[i].index - min_index] = extents.x_advance;
     }
 
+    status = cairo_scaled_font_status (measure);
+    cairo_scaled_font_destroy (measure);
     cairo_glyph_free (glyphs);
 
-    status = create_rescaled_font (substitute_font,
-				   min_index, count, widths,
-				   out);
+    if (status == CAIRO_STATUS_SUCCESS) {
+	status = create_rescaled_font (substitute_font,
+				       min_index, count, widths,
+				       out);
+    }
+
     free (widths);
     return status;
 }
