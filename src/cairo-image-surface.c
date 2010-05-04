@@ -1886,9 +1886,16 @@ _create_composite_mask_pattern (cairo_clip_t                  *clip,
 
     /* Is it worth setting the clip region here? */
     if (clip_region != NULL) {
+	pixman_bool_t ret;
+
 	pixman_region32_translate (&clip_region->rgn, -extents->x, -extents->y);
-	pixman_image_set_clip_region32 (mask, &clip_region->rgn);
+	ret = pixman_image_set_clip_region32 (mask, &clip_region->rgn);
 	pixman_region32_translate (&clip_region->rgn, extents->x, extents->y);
+
+	if (! ret) {
+	    pixman_image_unref (mask);
+	    return NULL;
+	}
     }
 
     status = draw_func (draw_closure,
