@@ -97,7 +97,7 @@ draw (cairo_t *cr, int width, int height)
     free (filename);
     if (! pattern) {
 	cairo_test_log (ctx, "FcFreeTypeQuery failed.\n");
-	return CAIRO_TEST_FAILURE;
+	return cairo_test_status_from_status (ctx, CAIRO_STATUS_NO_MEMORY);
     }
 
     font_face = cairo_ft_font_face_create_for_pattern (pattern);
@@ -108,7 +108,7 @@ draw (cairo_t *cr, int width, int height)
 			filename,
 			cairo_status_to_string (status));
 	FcPatternDestroy (pattern);
-	return CAIRO_TEST_FAILURE;
+	return cairo_test_status_from_status (ctx, status);
     }
 
     if (cairo_font_face_get_type (font_face) != CAIRO_FONT_TYPE_FT) {
