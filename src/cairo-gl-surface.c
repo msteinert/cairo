@@ -91,7 +91,7 @@ _gl_destroy (void *device)
     cairo_scaled_font_t *scaled_font, *next_scaled_font;
     int n;
 
-    ctx->destroy (ctx);
+    ctx->acquire (ctx);
 
     cairo_list_foreach_entry_safe (scaled_font,
 				   next_scaled_font,
@@ -104,6 +104,8 @@ _gl_destroy (void *device)
 
     for (n = 0; n < ARRAY_LENGTH (ctx->glyph_cache); n++)
 	_cairo_gl_glyph_cache_fini (ctx, &ctx->glyph_cache[n]);
+
+    ctx->destroy (ctx);
 
     free (ctx);
 }
