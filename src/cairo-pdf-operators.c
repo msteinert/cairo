@@ -1381,8 +1381,7 @@ _cairo_pdf_operators_show_text_glyphs (cairo_pdf_operators_t	  *pdf_operators,
     status = cairo_matrix_invert (&pdf_operators->font_matrix_inverse);
     if (status == CAIRO_STATUS_INVALID_MATRIX)
 	return CAIRO_STATUS_SUCCESS;
-    if (unlikely (status))
-	return status;
+    assert (status == CAIRO_STATUS_SUCCESS);
 
     pdf_operators->is_new_text_object = FALSE;
     if (pdf_operators->in_text_object == FALSE) {
