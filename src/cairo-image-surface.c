@@ -3838,21 +3838,19 @@ _composite_glyphs (void				*closure,
     cairo_scaled_glyph_t *glyph_cache[64];
     pixman_op_t pixman_op = _pixman_operator (op);
     pixman_image_t *src = NULL;
-    int src_x, src_y;
+    int src_x = 0, src_y = 0;
     cairo_status_t status;
     int i;
 
     if (pattern != NULL) {
 	src = _pixman_image_for_pattern (pattern, extents, &src_x, &src_y);
-	if (unlikely (src == NULL))
-	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
-
 	src_x -= dst_x;
 	src_y -= dst_y;
     } else {
 	src = _pixman_white_image ();
-	src_x = src_y = 0;
     }
+    if (unlikely (src == NULL))
+	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
     memset (glyph_cache, 0, sizeof (glyph_cache));
     status = CAIRO_STATUS_SUCCESS;
