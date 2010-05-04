@@ -1150,6 +1150,7 @@ _cairo_pdf_surface_add_source_surface (cairo_pdf_surface_t	*surface,
     src_surface.surface = cairo_surface_reference (source);
     surface_entry->surface_res = _cairo_pdf_surface_new_object (surface);
     if (surface_entry->surface_res.id == 0) {
+	cairo_surface_destroy (source);
 	free (surface_entry);
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
     }
@@ -1159,6 +1160,7 @@ _cairo_pdf_surface_add_source_surface (cairo_pdf_surface_t	*surface,
 
     status = _cairo_array_append (&surface->page_surfaces, &src_surface);
     if (unlikely (status)) {
+	cairo_surface_destroy (source);
 	free (surface_entry);
 	return status;
     }
