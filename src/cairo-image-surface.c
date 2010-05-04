@@ -2191,8 +2191,9 @@ _clip_and_composite (cairo_image_surface_t	*dst,
 	status = _cairo_clip_get_region (clip, &clip_region);
 	if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
 	    return CAIRO_STATUS_SUCCESS;
+	if (unlikely (_cairo_status_is_error (status)))
+	    return status;
 
-	assert (! _cairo_status_is_error (status));
 	need_clip_surface = status == CAIRO_INT_STATUS_UNSUPPORTED;
 
 	if (clip_region != NULL) {
