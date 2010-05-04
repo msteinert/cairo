@@ -532,6 +532,7 @@ _cairo_ps_surface_analyze_user_font_subset (cairo_scaled_font_subset_t *font_sub
 	    break;
 
     }
+    cairo_surface_finish (type3_surface);
     cairo_surface_destroy (type3_surface);
 
     return status;
@@ -616,6 +617,7 @@ _cairo_ps_surface_emit_type3_font_subset (cairo_ps_surface_t		*surface,
                 font_bbox.p2.y = bbox.p2.y;
         }
     }
+    cairo_surface_finish (type3_surface);
     cairo_surface_destroy (type3_surface);
     if (unlikely (status))
 	return status;
