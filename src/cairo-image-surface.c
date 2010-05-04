@@ -1618,7 +1618,7 @@ _pixman_image_for_pattern (const cairo_pattern_t *pattern,
     }
 }
 
-static void
+static cairo_status_t
 _cairo_image_surface_fixup_unbounded (cairo_image_surface_t *dst,
 				      const cairo_composite_rectangles_t *rects,
 				      cairo_clip_t *clip)
@@ -1641,7 +1641,7 @@ _cairo_image_surface_fixup_unbounded (cairo_image_surface_t *dst,
 	if (rects->bounded.width  == rects->unbounded.width &&
 	    rects->bounded.height == rects->unbounded.height)
 	{
-	    return;
+	    return CAIRO_STATUS_SUCCESS;
 	}
     }
 
@@ -1663,13 +1663,14 @@ _cairo_image_surface_fixup_unbounded (cairo_image_surface_t *dst,
             pixman_color_t color = { 0, };
             pixman_box32_t box = { x, y, width, height };
 
-            pixman_image_fill_boxes (PIXMAN_OP_CLEAR,
-                                     dst->pixman_image,
-                                     &color,
-                                     1, &box);
+            if (! pixman_image_fill_boxes (PIXMAN_OP_CLEAR,
+					   dst->pixman_image,
+					   &color,
+					   1, &box))
+		return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 	}
 
-	return;
+	return CAIRO_STATUS_SUCCESS;
     }
 
     /* top */
@@ -1720,12 +1721,17 @@ _cairo_image_surface_fixup_unbounded (cairo_image_surface_t *dst,
     } else {
         pixman_color_t color = { 0, };
 
-        pixman_image_fill_boxes (PIXMAN_OP_CLEAR,
-                                 dst->pixman_image,
-                                 &color,
-                                 n_boxes,
-                                 boxes);
+        if (! pixman_image_fill_boxes (PIXMAN_OP_CLEAR,
+				       dst->pixman_image,
+				       &color,
+				       n_boxes,
+				       boxes))
+	{
+	    return _cairo_error (CAIRO_STATUS_NO_MEMORY);
+	}
     }
+
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -1740,10 +1746,8 @@ _cairo_image_surface_fixup_unbounded_boxes (cairo_image_surface_t *dst,
     struct _cairo_boxes_chunk *chunk;
     int i;
 
-    if (boxes->num_boxes <= 1 && clip_region == NULL) {
-	_cairo_image_surface_fixup_unbounded (dst, extents, NULL);
-	return CAIRO_STATUS_SUCCESS;
-    }
+    if (boxes->num_boxes <= 1 && clip_region == NULL)
+	return _cairo_image_surface_fixup_unbounded (dst, extents, NULL);
 
     _cairo_boxes_init (&clear);
 
@@ -2256,8 +2260,8 @@ _clip_and_composite (cairo_image_surface_t	*dst,
     }
 
     if (status == CAIRO_STATUS_SUCCESS && ! extents->is_bounded) {
-	_cairo_image_surface_fixup_unbounded (dst, extents,
-					      need_clip_surface ? clip : NULL);
+	status = _cairo_image_surface_fixup_unbounded (dst, extents,
+						       need_clip_surface ? clip : NULL);
     }
 
     if (clip_region != NULL)
@@ -4096,6 +4100,7 @@ _cairo_image_surface_composite (cairo_operator_t	 op,
     if (unlikely (src == NULL))
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
+    status = CAIRO_STATUS_SUCCESS;
     if (mask_pattern != NULL) {
 	pixman_image_t *mask;
 	int mask_offset_x, mask_offset_y;
@@ -4127,12 +4132,12 @@ _cairo_image_surface_composite (cairo_operator_t	 op,
     pixman_image_unref (src);
 
     if (! extents.is_bounded)
-	_cairo_image_surface_fixup_unbounded (dst, &extents, NULL);
+	status = _cairo_image_surface_fixup_unbounded (dst, &extents, NULL);
 
     if (clip_region != NULL)
 	_cairo_image_surface_unset_clip_region (dst);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static cairo_int_status_t
@@ -4269,7 +4274,7 @@ _cairo_image_surface_composite_trapezoids (cairo_operator_t	op,
 			       clip_region);
 
     if (status == CAIRO_STATUS_SUCCESS && ! extents.is_bounded)
-	_cairo_image_surface_fixup_unbounded (dst, &extents, NULL);
+	status = _cairo_image_surface_fixup_unbounded (dst, &extents, NULL);
 
     if (clip_region != NULL)
 	_cairo_image_surface_unset_clip_region (dst);
@@ -4361,10 +4366,9 @@ _cairo_image_surface_span_renderer_finish (void *abstract_renderer)
     cairo_image_surface_t *dst = renderer->dst;
     pixman_image_t *src;
     int src_x, src_y;
+    cairo_status_t status;
 
     if (renderer->clip_region != NULL) {
-	cairo_status_t status;
-
 	status = _cairo_image_surface_set_clip_region (dst, renderer->clip_region);
 	if (unlikely (status))
 	    return status;
@@ -4374,6 +4378,7 @@ _cairo_image_surface_span_renderer_finish (void *abstract_renderer)
     if (src == NULL)
 	return _cairo_error (CAIRO_STATUS_NO_MEMORY);
 
+    status = CAIRO_STATUS_SUCCESS;
     pixman_image_composite32 (_pixman_operator (renderer->op),
                               src,
                               renderer->mask,
@@ -4385,12 +4390,12 @@ _cairo_image_surface_span_renderer_finish (void *abstract_renderer)
                               rects->bounded.width, rects->bounded.height);
 
     if (! rects->is_bounded)
-	_cairo_image_surface_fixup_unbounded (dst, rects, NULL);
+	status = _cairo_image_surface_fixup_unbounded (dst, rects, NULL);
 
     if (renderer->clip_region != NULL)
 	 _cairo_image_surface_unset_clip_region (dst);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static cairo_bool_t
