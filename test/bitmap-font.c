@@ -101,13 +101,13 @@ draw (cairo_t *cr, int width, int height)
     }
 
     font_face = cairo_ft_font_face_create_for_pattern (pattern);
+    FcPatternDestroy (pattern);
 
     status = cairo_font_face_status (font_face);
     if (status) {
 	cairo_test_log (ctx, "Error creating font face for %s: %s\n",
 			filename,
 			cairo_status_to_string (status));
-	FcPatternDestroy (pattern);
 	return cairo_test_status_from_status (ctx, status);
     }
 
@@ -115,11 +115,11 @@ draw (cairo_t *cr, int width, int height)
 	cairo_test_log (ctx, "Unexpected value from cairo_font_face_get_type: %d (expected %d)\n",
 			cairo_font_face_get_type (font_face), CAIRO_FONT_TYPE_FT);
 	cairo_font_face_destroy (font_face);
-	FcPatternDestroy (pattern);
 	return CAIRO_TEST_FAILURE;
     }
 
     cairo_set_font_face (cr, font_face);
+    cairo_font_face_destroy (font_face);
 
     font_options = cairo_font_options_create ();
 
@@ -135,9 +135,6 @@ draw (cairo_t *cr, int width, int height)
     cairo_font_extents (cr, &font_extents);
     CHECK_FONT_EXTENTS ("default");
 
-    FcPatternDestroy (pattern);
-    cairo_font_face_destroy (font_face);
-
     cairo_font_options_set_hint_metrics (font_options, CAIRO_HINT_METRICS_ON);
     cairo_set_font_options (cr, font_options);
 
@@ -145,7 +142,6 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_move_to (cr, 1, font_extents.ascent - 1);
     cairo_set_source_rgb (cr, 0.0, 0.0, 1.0); /* blue */
-
 
     cairo_font_options_set_hint_style (font_options, CAIRO_HINT_STYLE_NONE);
     cairo_set_font_options (cr, font_options);
