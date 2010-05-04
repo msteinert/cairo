@@ -2088,7 +2088,8 @@ _cairo_xlib_surface_acquire_pattern_surface (cairo_xlib_display_t *display,
 	    surface = (cairo_xlib_surface_t *)
 		_cairo_xlib_surface_create_internal (dst->screen, None,
 						     NULL, format,
-						     0, 0, 32);
+                                                     /* what could possibly go wrong? */
+						     XLIB_COORD_MAX, XLIB_COORD_MAX, 32);
 	    if (unlikely (surface->base.status)) {
 		XRenderFreePicture (display->display, picture);
 		return surface->base.status;
