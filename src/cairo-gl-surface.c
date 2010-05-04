@@ -964,13 +964,20 @@ static cairo_status_t
 _cairo_gl_surface_finish (void *abstract_surface)
 {
     cairo_gl_surface_t *surface = abstract_surface;
-    cairo_gl_context_t *ctx = (cairo_gl_context_t *) surface->base.device;
+    cairo_status_t status;
+    cairo_gl_context_t *ctx;
+
+    status = _cairo_gl_context_acquire (surface->base.device, &ctx);
+    if (unlikely (status))
+        return status;
 
     glDeleteFramebuffersEXT (1, &surface->fb);
     glDeleteTextures (1, &surface->tex);
 
     if (ctx->current_target == surface)
 	ctx->current_target = NULL;
+
+    _cairo_gl_context_release (ctx);
 
     return CAIRO_STATUS_SUCCESS;
 }
