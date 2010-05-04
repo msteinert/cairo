@@ -122,6 +122,7 @@ _cairo_paginated_surface_create (cairo_surface_t				*target,
 	goto FAIL_CLEANUP_SURFACE;
 
     surface->page_num = 1;
+    surface->base.is_clear = TRUE;
 
     return &surface->base;
 
@@ -485,6 +486,7 @@ _cairo_paginated_surface_show_page (void *abstract_surface)
 	    return status;
 
 	surface->page_num++;
+	surface->base.is_clear = TRUE;
     }
 
     return CAIRO_STATUS_SUCCESS;
