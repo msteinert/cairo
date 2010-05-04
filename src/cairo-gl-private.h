@@ -217,7 +217,8 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 			      int dst_x, int dst_y);
 
 cairo_private cairo_int_status_t
-_cairo_gl_operand_init (cairo_gl_composite_operand_t *operand,
+_cairo_gl_operand_init (cairo_gl_context_t *ctx,
+                        cairo_gl_composite_operand_t *operand,
 			const cairo_pattern_t *pattern,
 			cairo_gl_surface_t *dst,
 			int src_x, int src_y,
