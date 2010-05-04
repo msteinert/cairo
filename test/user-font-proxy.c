@@ -49,14 +49,20 @@ test_scaled_font_init (cairo_scaled_font_t  *scaled_font,
 		       cairo_t              *cr,
 		       cairo_font_extents_t *extents)
 {
+    cairo_status_t status;
+
     cairo_set_font_face (cr,
 			 cairo_font_face_get_user_data (cairo_scaled_font_get_font_face (scaled_font),
 							&fallback_font_key));
 
-    cairo_scaled_font_set_user_data (scaled_font,
-				     &fallback_font_key,
-				     cairo_scaled_font_reference (cairo_get_scaled_font (cr)),
-				     (cairo_destroy_func_t) cairo_scaled_font_destroy);
+    status = cairo_scaled_font_set_user_data (scaled_font,
+					      &fallback_font_key,
+					      cairo_scaled_font_reference (cairo_get_scaled_font (cr)),
+					      (cairo_destroy_func_t) cairo_scaled_font_destroy);
+    if (unlikely (status)) {
+	cairo_scaled_font_destroy (cairo_get_scaled_font (cr));
+	return status;
+    }
 
     cairo_font_extents (cr, extents);
 
