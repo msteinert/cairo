@@ -121,15 +121,22 @@ draw (cairo_t *cr, int width, int height)
 
     cairo_set_font_face (cr, font_face);
 
-#define CHECK_FONT_EXTENTS(comment) if (check_font_extents (ctx, cr, (comment)) != CAIRO_TEST_SUCCESS) return CAIRO_TEST_FAILURE
+    font_options = cairo_font_options_create ();
+
+#define CHECK_FONT_EXTENTS(comment) do {\
+    cairo_test_status_t test_status; \
+    test_status = check_font_extents (ctx, cr, (comment)); \
+    if (test_status != CAIRO_TEST_SUCCESS) { \
+	cairo_font_options_destroy (font_options); \
+	return test_status; \
+    } \
+} while (0)
 
     cairo_font_extents (cr, &font_extents);
     CHECK_FONT_EXTENTS ("default");
 
     FcPatternDestroy (pattern);
     cairo_font_face_destroy (font_face);
-
-    font_options = cairo_font_options_create ();
 
     cairo_font_options_set_hint_metrics (font_options, CAIRO_HINT_METRICS_ON);
     cairo_set_font_options (cr, font_options);
