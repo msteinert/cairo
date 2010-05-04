@@ -77,22 +77,23 @@ draw (cairo_t *cr, int width, int height)
         }
     }
 
+    pthread_yield ();
+
     for (i = 0; i < N_THREADS; i++) {
 	void *surface;
 
         if (pthread_equal (threads[i], pthread_self ()))
             break;
 
-        if (pthread_join (threads[i], &surface) != 0) {
+        if (pthread_join (threads[i], &surface) == 0) {
+	    cairo_set_source_surface (cr, surface, 0, 0);
+	    cairo_surface_destroy (surface);
+	    cairo_paint (cr);
+
+	    cairo_translate (cr, 0, HEIGHT);
+	} else {
             test_status = CAIRO_TEST_FAILURE;
-	    break;
 	}
-
-        cairo_set_source_surface (cr, surface, 0, 0);
-        cairo_surface_destroy (surface);
-        cairo_paint (cr);
-
-        cairo_translate (cr, 0, HEIGHT);
     }
 
     return test_status;
