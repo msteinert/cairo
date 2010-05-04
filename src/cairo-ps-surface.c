@@ -706,28 +706,23 @@ _cairo_ps_surface_emit_font_subsets (cairo_ps_surface_t *surface)
 						      _cairo_ps_surface_analyze_user_font_subset,
 						      surface);
     if (unlikely (status))
-	goto BAIL;
+	return status;
 
     status = _cairo_scaled_font_subsets_foreach_unscaled (surface->font_subsets,
                                                           _cairo_ps_surface_emit_unscaled_font_subset,
                                                           surface);
     if (unlikely (status))
-	goto BAIL;
+	return status;
 
     status = _cairo_scaled_font_subsets_foreach_scaled (surface->font_subsets,
                                                         _cairo_ps_surface_emit_scaled_font_subset,
                                                         surface);
     if (unlikely (status))
-	goto BAIL;
+	return status;
 
-    status = _cairo_scaled_font_subsets_foreach_user (surface->font_subsets,
-						      _cairo_ps_surface_emit_scaled_font_subset,
-						      surface);
-BAIL:
-    _cairo_scaled_font_subsets_destroy (surface->font_subsets);
-    surface->font_subsets = NULL;
-
-    return status;
+    return _cairo_scaled_font_subsets_foreach_user (surface->font_subsets,
+						    _cairo_ps_surface_emit_scaled_font_subset,
+						    surface);
 }
 
 static cairo_status_t
@@ -1497,6 +1492,8 @@ _cairo_ps_surface_finish (void *abstract_surface)
     _cairo_ps_surface_emit_footer (surface);
 
 CLEANUP:
+    _cairo_scaled_font_subsets_destroy (surface->font_subsets);
+
     status2 = _cairo_output_stream_destroy (surface->stream);
     if (status == CAIRO_STATUS_SUCCESS)
 	status = status2;
