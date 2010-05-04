@@ -895,7 +895,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     cairo_status_t status;
     cairo_scaled_font_map_t *font_map;
     cairo_font_face_t *original_font_face = font_face;
-    cairo_scaled_font_t key, *old = NULL, *scaled_font = NULL;
+    cairo_scaled_font_t key, *old = NULL, *scaled_font = NULL, *dead = NULL;
     double det;
 
     status = font_face->status;
@@ -926,6 +926,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	_cairo_scaled_font_matches (scaled_font,
 	                            font_face, font_matrix, ctm, options))
     {
+	assert (scaled_font->hash_entry.hash != ZOMBIE);
 	assert (! scaled_font->placeholder);
 
 	if (likely (scaled_font->status == CAIRO_STATUS_SUCCESS)) {
@@ -942,6 +943,8 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	_cairo_hash_table_remove (font_map->hash_table,
 				  &scaled_font->hash_entry);
 	scaled_font->hash_entry.hash = ZOMBIE;
+	dead = scaled_font;
+	font_map->mru_scaled_font = NULL;
 
 	if (font_face->backend->get_implementation != NULL) {
 	    font_face = font_face->backend->get_implementation (font_face,
@@ -950,6 +953,7 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 								options);
 	    if (unlikely (font_face->status)) {
 		_cairo_scaled_font_map_unlock ();
+		cairo_scaled_font_destroy (scaled_font);
 		return _cairo_scaled_font_create_in_error (font_face->status);
 	    }
 	}
@@ -1049,6 +1053,9 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	if (font_face != original_font_face)
 	    cairo_font_face_destroy (font_face);
 
+	if (dead != NULL)
+	    cairo_scaled_font_destroy (dead);
+
 	status = _cairo_font_face_set_error (font_face, status);
 	return _cairo_scaled_font_create_in_error (status);
     }
@@ -1057,6 +1064,9 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
 	_cairo_scaled_font_map_unlock ();
 	if (font_face != original_font_face)
 	    cairo_font_face_destroy (font_face);
+
+	if (dead != NULL)
+	    cairo_scaled_font_destroy (dead);
 
 	return scaled_font;
     }
@@ -1083,6 +1093,9 @@ cairo_scaled_font_create (cairo_font_face_t          *font_face,
     cairo_scaled_font_destroy (old);
     if (font_face != original_font_face)
 	cairo_font_face_destroy (font_face);
+
+    if (dead != NULL)
+	cairo_scaled_font_destroy (dead);
 
     if (unlikely (status)) {
 	/* We can't call _cairo_scaled_font_destroy here since it expects
