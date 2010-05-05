@@ -443,7 +443,8 @@ _cairo_clip_path_reapply_clip_path_translate (cairo_clip_t      *clip,
     clip_path->flags = other_path->flags;
     if (other_path->region != NULL) {
 	clip_path->region = cairo_region_copy (other_path->region);
-	if (unlikely (status = clip_path->region->status)) {
+	status = clip_path->region->status;
+	if (unlikely (status)) {
 	    clip->path = clip->path->prev;
 	    _cairo_clip_path_destroy (clip_path);
 	    return status;
