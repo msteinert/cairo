@@ -125,7 +125,6 @@ typedef struct _cairo_gl_context {
     GLenum tex_target;
     cairo_bool_t using_glsl;
 
-    cairo_bool_t using_shaders;
     cairo_gl_shader_program_t fill_rectangles_shader;
     cairo_gl_shader_program_t shaders[CAIRO_GL_SHADER_SOURCE_COUNT]
 					[CAIRO_GL_SHADER_MASK_COUNT]
