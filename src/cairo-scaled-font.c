@@ -2620,7 +2620,7 @@ _cairo_scaled_font_allocate_glyph (cairo_scaled_font_t *scaled_font,
 	return status;
     }
 
-    cairo_list_add (&page->link, &scaled_font->glyph_pages);
+    cairo_list_add_tail (&page->link, &scaled_font->glyph_pages);
 
     *scaled_glyph = &page->glyphs[page->num_glyphs++];
     return CAIRO_STATUS_SUCCESS;
