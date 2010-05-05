@@ -419,19 +419,19 @@ cairo_gl_surface_create (cairo_device_t		*abstract_device,
 			 int			 width,
 			 int			 height)
 {
-    cairo_gl_context_t *ctx = (cairo_gl_context_t *) abstract_device;
+    cairo_gl_context_t *ctx;
     cairo_gl_surface_t *surface;
     cairo_status_t status;
 
     if (! CAIRO_CONTENT_VALID (content))
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_INVALID_CONTENT));
 
-    if (ctx == NULL) {
+    if (abstract_device == NULL) {
 	return cairo_image_surface_create (_cairo_format_from_content (content),
 					   width, height);
     }
 
-    if (ctx->base.backend->type != CAIRO_DEVICE_TYPE_GL)
+    if (abstract_device->backend->type != CAIRO_DEVICE_TYPE_GL)
 	return _cairo_surface_create_in_error (_cairo_error (CAIRO_STATUS_SURFACE_TYPE_MISMATCH));
 
     status = _cairo_gl_context_acquire (abstract_device, &ctx);
