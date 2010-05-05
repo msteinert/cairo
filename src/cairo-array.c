@@ -261,7 +261,7 @@ _cairo_array_append (cairo_array_t	*array,
 }
 
 /**
- * _cairo_array_append:
+ * _cairo_array_append_multiple:
  * @array: a #cairo_array_t
  *
  * Append one or more items onto the array by growing the array by
