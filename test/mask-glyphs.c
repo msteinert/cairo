@@ -32,13 +32,14 @@ static const char *png_filename = "romedalen.png";
 #define WIDTH 800
 #define HEIGHT 600
 
-static int
+static cairo_status_t
 _image_to_glyphs (cairo_surface_t *image,
 		  int channel,
 		  int level,
 		  cairo_scaled_font_t *scaled_font,
+		  double tx, double ty,
 		  cairo_glyph_t *glyphs,
-		  double tx, double ty)
+		  int *num_glyphs)
 {
     int width, height, stride;
     const unsigned char *data;
@@ -62,6 +63,7 @@ _image_to_glyphs (cairo_surface_t *image,
 		char c = n % 26 + 'a';
 		int count = 1;
 		cairo_glyph_t *glyphs_p = &glyphs[n];
+		cairo_status_t status;
 
 		xx = 4 * (x - width/2.) + width/2.;
 		yy = 4 * (y - height/2.) + height/2.;
@@ -76,6 +78,10 @@ _image_to_glyphs (cairo_surface_t *image,
 						  &glyphs_p, &count,
 						  NULL, NULL,
 						  NULL);
+		status = cairo_scaled_font_status (scaled_font);
+		if (status)
+		    return status;
+
 		assert (glyphs_p == &glyphs[n]);
 		assert (count == 1);
 		n++;
@@ -83,7 +89,8 @@ _image_to_glyphs (cairo_surface_t *image,
 	}
     }
 
-    return n;
+    *num_glyphs = n;
+    return CAIRO_STATUS_SUCCESS;
 }
 
 static cairo_status_t
@@ -112,10 +119,8 @@ _render_image (cairo_t *cr,
     hh = cairo_image_surface_get_height (image);
 
     glyphs = cairo_glyph_allocate (ww * hh);
-    if (glyphs == NULL) {
-	cairo_surface_destroy (image);
+    if (glyphs == NULL)
 	return CAIRO_STATUS_NO_MEMORY;
-    }
 
     tx = (width - ww) / 2.;
     ty = (height - hh) / 2.;
@@ -126,11 +131,16 @@ _render_image (cairo_t *cr,
     for (i = 0; i < sizeof (channel) / sizeof (channel[0]); i++) {
 	cairo_push_group_with_content (cr, CAIRO_CONTENT_ALPHA);
 	for (n = 0; n < 256; n++) {
+	    cairo_status_t status;
 	    int num_glyphs;
 
-	    num_glyphs = _image_to_glyphs (image, channel[i].shift, n,
-					   scaled_font,
-					   glyphs, tx, ty);
+	    status = _image_to_glyphs (image, channel[i].shift, n,
+				       scaled_font,
+				       tx, ty, glyphs, &num_glyphs);
+	    if (status) {
+		cairo_glyph_free (glyphs);
+		return status;
+	    }
 
 	    cairo_set_source_rgba (cr,
 				   0, 0, 0,
@@ -161,6 +171,10 @@ draw (cairo_t *cr, int width, int height)
     cairo_paint (cr);
 
     image = cairo_test_create_surface_from_png (ctx, png_filename);
+    status = cairo_surface_status (image);
+    if (status)
+	return cairo_test_status_from_status (ctx, status);
+
     status = _render_image (cr, width, height, image);
     cairo_surface_destroy (image);
 
