@@ -154,7 +154,6 @@ cairo_recording_surface_create (cairo_content_t		 content,
     }
 
     _cairo_array_init (&recording_surface->commands, sizeof (cairo_command_t *));
-    recording_surface->commands_owner = NULL;
 
     recording_surface->replay_start_idx = 0;
 
@@ -181,12 +180,6 @@ _cairo_recording_surface_finish (void *abstract_surface)
     cairo_recording_surface_t *recording_surface = abstract_surface;
     cairo_command_t **elements;
     int i, num_elements;
-
-    if (recording_surface->commands_owner) {
-	cairo_surface_destroy (recording_surface->commands_owner);
-	_cairo_clip_fini (&recording_surface->clip);
-	return CAIRO_STATUS_SUCCESS;
-    }
 
     num_elements = recording_surface->commands.num_elements;
     elements = _cairo_array_index (&recording_surface->commands, 0);
@@ -613,6 +606,7 @@ _cairo_recording_surface_snapshot (void *abstract_other)
 {
     cairo_recording_surface_t *other = abstract_other;
     cairo_recording_surface_t *recording_surface;
+    cairo_status_t status;
 
     recording_surface = malloc (sizeof (cairo_recording_surface_t));
     if (unlikely (recording_surface == NULL))
@@ -626,13 +620,20 @@ _cairo_recording_surface_snapshot (void *abstract_other)
     recording_surface->extents_pixels = other->extents_pixels;
     recording_surface->extents = other->extents;
     recording_surface->unbounded = other->unbounded;
-    recording_surface->replay_start_idx = other->replay_start_idx;
     recording_surface->content = other->content;
 
-    _cairo_array_init_snapshot (&recording_surface->commands, &other->commands);
-    recording_surface->commands_owner = cairo_surface_reference (&other->base);
-
     _cairo_clip_init_copy (&recording_surface->clip, &other->clip);
+
+    /* XXX We should in theory be able to reuse the original array, but we
+     * need to handle reference cycles during subsurface and self-copy.
+     */
+    recording_surface->replay_start_idx = 0;
+    _cairo_array_init (&recording_surface->commands, sizeof (cairo_command_t *));
+    status = _cairo_recording_surface_replay (&other->base, &recording_surface->base);
+    if (unlikely (status)) {
+	cairo_surface_destroy (&recording_surface->base);
+	return _cairo_surface_create_in_error (status);
+    }
 
     return &recording_surface->base;
 }

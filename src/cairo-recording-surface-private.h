@@ -132,7 +132,6 @@ typedef struct _cairo_recording_surface {
     cairo_clip_t clip;
 
     cairo_array_t commands;
-    cairo_surface_t *commands_owner;
 
     int replay_start_idx;
 } cairo_recording_surface_t;
