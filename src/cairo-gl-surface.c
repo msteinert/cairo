@@ -536,20 +536,23 @@ _cairo_gl_surface_create_similar (void		 *abstract_surface,
 				  int		  height)
 {
     cairo_surface_t *surface = abstract_surface;
-    cairo_gl_context_t *ctx = (cairo_gl_context_t *) surface->device;
+    cairo_gl_context_t *ctx;
     cairo_status_t status;
-
-    if (width > ctx->max_framebuffer_size ||
-	height > ctx->max_framebuffer_size)
-    {
-	return NULL;
-    }
 
     status = _cairo_gl_context_acquire (surface->device, &ctx);
     if (unlikely (status))
 	return _cairo_surface_create_in_error (status);
 
+    if (width > ctx->max_framebuffer_size ||
+	height > ctx->max_framebuffer_size)
+    {
+	surface = NULL;
+        goto RELEASE;
+    }
+
     surface = _cairo_gl_surface_create_scratch (ctx, content, width, height);
+
+RELEASE:
     _cairo_gl_context_release (ctx);
 
     return surface;
