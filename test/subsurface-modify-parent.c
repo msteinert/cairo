@@ -59,6 +59,7 @@ draw (cairo_t *cr, int width, int height)
     cairo_fill (cr);
 
     cairo_set_source_surface (cr, region, 20, 20);
+    cairo_surface_destroy (region);
 
     /* repeat the pattern around the outside, but do not overwrite...*/
     cairo_pattern_set_extend (cairo_get_source (cr), CAIRO_EXTEND_REPEAT);
