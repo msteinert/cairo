@@ -905,6 +905,12 @@ REFERENCE_IMAGES = \
 	radial-gradient-source.image16.ref.png \
 	radial-gradient-source.argb32.ref.png \
 	radial-gradient-source.rgb24.ref.png \
+	radial-gradient-mask.argb32.ref.png \
+	radial-gradient-mask.rgb24.ref.png \
+	radial-gradient-mask.image16.ref.png \
+	radial-gradient-mask-source.argb32.ref.png \
+	radial-gradient-mask-source.rgb24.ref.png \
+	radial-gradient-mask-source.image16.ref.png \
 	random-intersections-eo.image16.ref.png \
 	random-intersections-eo.ps.ref.png \
 	random-intersections-eo.quartz.ref.png \

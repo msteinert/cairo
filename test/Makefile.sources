@@ -181,6 +181,8 @@ test_sources = \
 	push-group-color.c				\
 	radial-gradient.c				\
 	radial-gradient-source.c			\
+	radial-gradient-mask.c				\
+	radial-gradient-mask-source.c			\
 	random-intersections-eo.c			\
 	random-intersections-nonzero.c			\
 	random-intersections-curves-eo.c		\
