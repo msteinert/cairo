@@ -319,7 +319,7 @@ _cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
 				  int			height)
 {
     cairo_gl_surface_t *surface;
-    GLenum err, format;
+    GLenum format;
     cairo_status_t status;
 
     assert (width <= ctx->max_framebuffer_size && height <= ctx->max_framebuffer_size);
@@ -378,10 +378,6 @@ _cairo_gl_surface_create_scratch (cairo_gl_context_t   *ctx,
 			       surface->tex,
 			       0);
     ctx->current_target = NULL;
-
-    while ((err = glGetError ())) {
-	fprintf (stderr, "GL error in surface create: 0x%08x\n", err);
-    }
 
     status = glCheckFramebufferStatusEXT (GL_FRAMEBUFFER_EXT);
     if (status != GL_FRAMEBUFFER_COMPLETE_EXT)
@@ -740,7 +736,6 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
 {
     cairo_image_surface_t *image;
     cairo_gl_context_t *ctx;
-    GLenum err;
     GLenum format, type;
     cairo_format_t cairo_format;
     unsigned int cpp;
@@ -791,9 +786,6 @@ _cairo_gl_surface_get_image (cairo_gl_surface_t      *surface,
 		  format, type, image->data);
     if (surface->fb == 0 && GLEW_MESA_pack_invert)
 	glPixelStorei (GL_PACK_INVERT_MESA, 0);
-
-    while ((err = glGetError ()))
-	fprintf (stderr, "GL error 0x%08x\n", (int) err);
 
     _cairo_gl_context_release (ctx);
 
@@ -1813,7 +1805,6 @@ _cairo_gl_surface_composite_component_alpha (cairo_operator_t op,
     struct gl_point *texcoord_mask = texcoord_mask_stack;
     cairo_status_t status;
     int num_vertices, i;
-    GLenum err;
     cairo_gl_composite_setup_t setup;
     cairo_gl_shader_program_t *ca_source_program = NULL;
     cairo_gl_shader_program_t *ca_source_alpha_program = NULL;
@@ -1984,9 +1975,6 @@ _cairo_gl_surface_composite_component_alpha (cairo_operator_t op,
     glDisable (GL_TEXTURE_1D);
     glDisable (ctx->tex_target);
 
-    while ((err = glGetError ()))
-	fprintf (stderr, "GL error 0x%08x\n", (int) err);
-
   CLEANUP:
     _cairo_gl_operand_destroy (&setup.src);
     if (mask != NULL)
@@ -2026,7 +2014,6 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     struct gl_point *texcoord_mask = texcoord_mask_stack;
     cairo_status_t status;
     int num_vertices, i;
-    GLenum err;
     cairo_gl_composite_setup_t setup;
 
     if (! _cairo_gl_operator_is_supported (op))
@@ -2234,9 +2221,6 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     glActiveTexture (GL_TEXTURE1);
     glDisable (GL_TEXTURE_1D);
     glDisable (ctx->tex_target);
-
-    while ((err = glGetError ()))
-	fprintf (stderr, "GL error 0x%08x\n", (int) err);
 
     if (vertices != vertices_stack)
 	free (vertices);
@@ -2797,7 +2781,6 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
     cairo_status_t status;
     cairo_surface_attributes_t *src_attributes;
     const cairo_rectangle_int_t *extents;
-    GLenum err;
 
     renderer = calloc (1, sizeof (*renderer));
     if (unlikely (renderer == NULL))
@@ -2876,9 +2859,6 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
 	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_ALPHA);
 	glTexEnvi (GL_TEXTURE_ENV, GL_OPERAND1_ALPHA, GL_SRC_ALPHA);
     }
-
-    while ((err = glGetError ()))
-	fprintf (stderr, "GL error 0x%08x\n", (int) err);
 
     return &renderer->base;
 }

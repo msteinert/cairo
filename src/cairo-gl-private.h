@@ -194,6 +194,12 @@ typedef struct _cairo_gl_composite_setup {
 
 cairo_private extern const cairo_surface_backend_t _cairo_gl_surface_backend;
 
+#define _cairo_gl_check_error() do { \
+    GLenum err; \
+    while ((err = glGetError ())) \
+	fprintf (stderr, "%s:%d: GL error 0x%08x\n", __FILE__,__LINE__, (int) err); \
+} while (0)
+
 static inline cairo_device_t *
 _cairo_gl_context_create_in_error (cairo_status_t status)
 {
@@ -251,11 +257,10 @@ _cairo_gl_context_acquire (cairo_device_t *device,
     return CAIRO_STATUS_SUCCESS;
 }
 
-static cairo_always_inline void
-_cairo_gl_context_release (cairo_gl_context_t *ctx)
-{
-    cairo_device_release (&ctx->base);
-}
+#define _cairo_gl_context_release(ctx) do {\
+    _cairo_gl_check_error (); \
+    cairo_device_release (&(ctx)->base); \
+} while (0)
 
 cairo_private void
 _cairo_gl_set_destination (cairo_gl_context_t *ctx, cairo_gl_surface_t *surface);
