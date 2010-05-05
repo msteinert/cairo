@@ -2786,7 +2786,6 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
 					cairo_region_t		*clip_region)
 {
     cairo_gl_surface_t *dst = abstract_dst;
-    cairo_gl_context_t *ctx = (cairo_gl_context_t *) dst->base.device;
     cairo_gl_surface_span_renderer_t *renderer;
     cairo_status_t status;
     cairo_surface_attributes_t *src_attributes;
@@ -2819,17 +2818,18 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
 	return _cairo_span_renderer_create_in_error (status);
     }
 
-    status = _cairo_gl_operand_init (ctx, &renderer->setup.src, src, dst,
+    status = _cairo_gl_operand_init (renderer->ctx,
+                                     &renderer->setup.src, src, dst,
 				     rects->source.x, rects->source.y,
 				     extents->x, extents->y,
 				     extents->width, extents->height);
     if (unlikely (status)) {
-        _cairo_gl_context_release (ctx);
+        _cairo_gl_context_release (renderer->ctx);
 	free (renderer);
 	return _cairo_span_renderer_create_in_error (status);
     }
 
-    _cairo_gl_set_destination (ctx, dst);
+    _cairo_gl_set_destination (renderer->ctx, dst);
 
     status = _cairo_gl_get_program (renderer->ctx,
 				    renderer->setup.src.source,
@@ -2853,8 +2853,8 @@ _cairo_gl_surface_create_span_renderer (cairo_operator_t	 op,
 	/* Set up the mask to source from the incoming vertex color. */
 	glActiveTexture (GL_TEXTURE1);
 	/* Have to have a dummy texture bound in order to use the combiner unit. */
-	glBindTexture (ctx->tex_target, renderer->ctx->dummy_tex);
-	glEnable (ctx->tex_target);
+	glBindTexture (renderer->ctx->tex_target, renderer->ctx->dummy_tex);
+	glEnable (renderer->ctx->tex_target);
 	glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
 	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
 	glTexEnvi (GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_MODULATE);
