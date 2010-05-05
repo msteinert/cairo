@@ -2944,12 +2944,3 @@ const cairo_surface_backend_t _cairo_gl_surface_backend = {
     _cairo_gl_surface_show_glyphs, /* show_glyphs */
     NULL  /* snapshot */
 };
-
-/** Call glFinish(), used for accurate performance testing. */
-cairo_status_t
-cairo_gl_surface_glfinish (cairo_surface_t *surface)
-{
-    glFinish ();
-
-    return CAIRO_STATUS_SUCCESS;
-}

@@ -234,7 +234,12 @@ _cairo_boilerplate_gl_synchronize (void *closure)
 {
     gl_target_closure_t *gltc = closure;
 
-    cairo_gl_surface_glfinish (gltc->surface);
+    if (cairo_device_acquire (gltc->device))
+        return;
+
+    glFinish ();
+
+    cairo_device_release (gltc->device);
 }
 
 #if CAIRO_HAS_EGL_FUNCTIONS
@@ -312,14 +317,6 @@ _cairo_boilerplate_egl_create_surface (const char		 *name,
 
     return surface;
 }
-
-static void
-_cairo_boilerplate_egl_synchronize (void *closure)
-{
-    egl_target_closure_t *gltc = closure;
-
-    cairo_gl_surface_glfinish (gltc->surface);
-}
 #endif
 
 static const cairo_boilerplate_target_t targets[] = {
@@ -370,7 +367,7 @@ static const cairo_boilerplate_target_t targets[] = {
 	_cairo_boilerplate_get_image_surface,
 	cairo_surface_write_to_png,
 	_cairo_boilerplate_egl_cleanup,
-	_cairo_boilerplate_egl_synchronize,
+	_cairo_boilerplate_gl_synchronize,
 	TRUE, FALSE, FALSE
     },
 #endif

@@ -57,9 +57,6 @@ cairo_gl_surface_get_height (cairo_surface_t *abstract_surface);
 cairo_public void
 cairo_gl_surface_swapbuffers (cairo_surface_t *surface);
 
-cairo_public cairo_status_t
-cairo_gl_surface_glfinish (cairo_surface_t *surface);
-
 #if CAIRO_HAS_GLX_FUNCTIONS
 #include <GL/glx.h>
 
