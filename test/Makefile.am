@@ -1230,6 +1230,7 @@ REFERENCE_IMAGES = \
 	xcomposite-projection.ref.png \
 	xcomposite-projection.image16.ref.png \
 	xlib-expose-event.ref.png \
+	xlib-expose-event.image16.ref.png \
 	xlib-surface-source.rgb24.ref.png \
 	xlib-surface-source.argb32.ref.png \
 	xlib-surface-source.image16.ref.png \
