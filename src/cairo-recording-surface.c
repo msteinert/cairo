@@ -156,6 +156,7 @@ cairo_recording_surface_create (cairo_content_t		 content,
     _cairo_array_init (&recording_surface->commands, sizeof (cairo_command_t *));
 
     recording_surface->replay_start_idx = 0;
+    recording_surface->base.is_clear = TRUE;
 
     return &recording_surface->base;
 }
@@ -628,6 +629,8 @@ _cairo_recording_surface_snapshot (void *abstract_other)
      * need to handle reference cycles during subsurface and self-copy.
      */
     recording_surface->replay_start_idx = 0;
+    recording_surface->base.is_clear = TRUE;
+
     _cairo_array_init (&recording_surface->commands, sizeof (cairo_command_t *));
     status = _cairo_recording_surface_replay (&other->base, &recording_surface->base);
     if (unlikely (status)) {
@@ -806,6 +809,9 @@ _cairo_recording_surface_replay_internal (cairo_surface_t	     *surface,
 
     if (unlikely (surface->finished))
 	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
+
+    if (surface->is_clear)
+	return CAIRO_STATUS_SUCCESS;
 
     assert (_cairo_surface_is_recording (surface));
 
