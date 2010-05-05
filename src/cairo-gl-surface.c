@@ -637,7 +637,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 	GLuint tex;
 	GLfloat vertices[8], texcoords[8];
 
-	if (ctx->using_glsl) {
+	if (_cairo_gl_device_has_glsl (&ctx->base)) {
 	    cairo_gl_shader_program_t *program;
 
 	    status = _cairo_gl_get_program (ctx,
@@ -710,7 +710,7 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 	glDisableClientState (GL_VERTEX_ARRAY);
 	glDisableClientState (GL_TEXTURE_COORD_ARRAY);
 
-	if (ctx->using_glsl)
+	if (_cairo_gl_device_has_glsl (&ctx->base))
 	    _cairo_gl_use_program (NULL);
 	glDeleteTextures (1, &tex);
 	glDisable (ctx->tex_target);
@@ -1268,7 +1268,7 @@ _cairo_gl_gradient_operand_init(cairo_gl_context_t *ctx,
 	}
     }
 
-    if (!ctx->using_glsl)
+    if (! _cairo_gl_device_has_glsl (&ctx->base))
 	return CAIRO_INT_STATUS_UNSUPPORTED;
 
     if (gradient->base.type == CAIRO_PATTERN_TYPE_LINEAR) {
@@ -2487,9 +2487,8 @@ _cairo_gl_surface_fill_rectangles (void			   *abstract_surface,
 				   int			    num_rects)
 {
     cairo_gl_surface_t *surface = abstract_surface;
-    cairo_gl_context_t *ctx = (cairo_gl_context_t *) surface->base.device;
 
-    if (ctx->using_glsl) {
+    if (_cairo_gl_device_has_glsl (surface->base.device)) {
 	return _cairo_gl_surface_fill_rectangles_glsl(abstract_surface,
 						      op,
 						      color,

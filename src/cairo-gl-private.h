@@ -224,6 +224,12 @@ _cairo_gl_operand_init (cairo_gl_context_t *ctx,
 			int dst_x, int dst_y,
 			int width, int height);
 
+static cairo_always_inline cairo_bool_t
+_cairo_gl_device_has_glsl (cairo_device_t *device)
+{
+    return ((cairo_gl_context_t *) device)->using_glsl;
+}
+
 static cairo_always_inline cairo_status_t cairo_warn
 _cairo_gl_context_acquire (cairo_device_t *device,
 			   cairo_gl_context_t **ctx)

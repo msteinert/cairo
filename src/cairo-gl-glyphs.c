@@ -316,7 +316,7 @@ _cairo_gl_glyphs_set_shader (cairo_gl_context_t *ctx,
     if (setup->in == in)
 	return;
 
-    if (ctx->using_glsl) {
+    if (_cairo_gl_device_has_glsl (&ctx->base)) {
 	cairo_status_t status;
 
 	status = _cairo_gl_get_program (ctx,
