@@ -270,25 +270,22 @@ void
 _cairo_xlib_screen_close_display (cairo_xlib_display_t *display,
                                   cairo_xlib_screen_t  *info)
 {
-    cairo_xlib_visual_info_t **visuals;
     Display *dpy;
-    cairo_atomic_int_t old;
     int i;
 
     dpy = display->display;
-
-    old = info->gc_depths;
-    info->gc_depths = 0;
-
     for (i = 0; i < ARRAY_LENGTH (info->gc); i++) {
-	if ((old >> (8*i)) & 0xff)
+	if ((info->gc_depths >> (8*i)) & 0xff)
 	    XFreeGC (dpy, info->gc[i]);
     }
+    info->gc_depths = 0;
 
-    visuals = _cairo_array_index (&info->visuals, 0);
-    for (i = 0; i < _cairo_array_num_elements (&info->visuals); i++)
-	_cairo_xlib_visual_info_destroy (dpy, visuals[i]);
-    _cairo_array_truncate (&info->visuals, 0);
+    while (! cairo_list_is_empty (&info->visuals)) {
+        _cairo_xlib_visual_info_destroy (dpy,
+                                         cairo_list_first_entry (&info->visuals,
+                                                                 cairo_xlib_visual_info_t,
+                                                                 link));
+    }
 }
 
 void
@@ -307,8 +304,6 @@ _cairo_xlib_screen_destroy (cairo_xlib_screen_t *info)
 
         cairo_device_release (&display->base);
     }
-
-    _cairo_array_fini (&info->visuals);
 
     free (info);
 }
@@ -354,8 +349,7 @@ _cairo_xlib_screen_get (Display *dpy,
     info->gc_depths = 0;
     memset (info->gc, 0, sizeof (info->gc));
 
-    _cairo_array_init (&info->visuals,
-		       sizeof (cairo_xlib_visual_info_t*));
+    cairo_list_init (&info->visuals);
 
     _cairo_xlib_display_add_screen (display, info);
 
@@ -436,56 +430,32 @@ _cairo_xlib_screen_put_gc (cairo_xlib_display_t *display,
 cairo_status_t
 _cairo_xlib_screen_get_visual_info (cairo_xlib_display_t *display,
                                     cairo_xlib_screen_t *info,
-				    Visual *visual,
+				    Visual *v,
 				    cairo_xlib_visual_info_t **out)
 {
-    cairo_xlib_visual_info_t **visuals, *ret = NULL;
+    cairo_xlib_visual_info_t *visual;
     cairo_status_t status;
-    int i, n_visuals;
 
-    visuals = _cairo_array_index (&info->visuals, 0);
-    n_visuals = _cairo_array_num_elements (&info->visuals);
-    for (i = 0; i < n_visuals; i++) {
-	if (visuals[i]->visualid == visual->visualid) {
-	    ret = visuals[i];
-	    break;
+    cairo_list_foreach_entry (visual,
+                              cairo_xlib_visual_info_t,
+                              &info->visuals,
+                              link)
+    {
+	if (visual->visualid == v->visualid) {
+            *out = visual;
+            return CAIRO_STATUS_SUCCESS;
 	}
-    }
-
-    if (ret != NULL) {
-	*out = ret;
-	return CAIRO_STATUS_SUCCESS;
     }
 
     status = _cairo_xlib_visual_info_create (display->display,
 					     XScreenNumberOfScreen (info->screen),
-					     visual->visualid,
-					     &ret);
+					     v->visualid,
+					     &visual);
     if (unlikely (status))
 	return status;
 
-    if (n_visuals != _cairo_array_num_elements (&info->visuals)) {
-	/* check that another thread has not added our visual */
-	int new_visuals = _cairo_array_num_elements (&info->visuals);
-	visuals = _cairo_array_index (&info->visuals, 0);
-	for (i = n_visuals; i < new_visuals; i++) {
-	    if (visuals[i]->visualid == visual->visualid) {
-		_cairo_xlib_visual_info_destroy (display->display, ret);
-		ret = visuals[i];
-		break;
-	    }
-	}
-	if (i == new_visuals)
-	    status = _cairo_array_append (&info->visuals, &ret);
-    } else
-	status = _cairo_array_append (&info->visuals, &ret);
-
-    if (unlikely (status)) {
-	_cairo_xlib_visual_info_destroy (display->display, ret);
-	return status;
-    }
-
-    *out = ret;
+    cairo_list_add (&visual->link, &info->visuals);
+    *out = visual;
     return CAIRO_STATUS_SUCCESS;
 }
 

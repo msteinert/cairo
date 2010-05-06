@@ -43,6 +43,7 @@
 #include "cairo-compiler-private.h"
 #include "cairo-device-private.h"
 #include "cairo-freelist-private.h"
+#include "cairo-list-private.h"
 #include "cairo-reference-count-private.h"
 #include "cairo-types-private.h"
 
@@ -87,6 +88,7 @@ struct _cairo_xlib_display {
 };
 
 typedef struct _cairo_xlib_visual_info {
+    cairo_list_t link;
     VisualID visualid;
     struct { uint8_t a, r, g, b; } colors[256];
     uint8_t cube_to_pseudocolor[CUBE_SIZE][CUBE_SIZE][CUBE_SIZE];
@@ -108,7 +110,7 @@ struct _cairo_xlib_screen {
     GC gc[4];
     cairo_atomic_int_t gc_depths; /* 4 x uint8_t */
 
-    cairo_array_t visuals;
+    cairo_list_t visuals;
 };
 
 cairo_private cairo_device_t *
