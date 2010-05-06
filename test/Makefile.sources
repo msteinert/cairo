@@ -286,6 +286,9 @@ ft_font_test_sources = \
 	ft-text-vertical-layout-type3.c \
 	ft-text-antialias-none.c
 
+gl_surface_test_sources = \
+	gl-surface-source.c
+
 quartz_surface_test_sources = quartz-surface-source.c
 
 pdf_surface_test_sources = \

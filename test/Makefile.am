@@ -16,6 +16,10 @@ test_sources += $(ft_font_test_sources)
 endif
 endif
 
+if CAIRO_HAS_GL_SURFACE
+test_sources += $(gl_surface_test_sources)
+endif
+
 # Need to add quartz-surface-source
 if CAIRO_HAS_QUARTZ_SURFACE
 test_sources += $(quartz_surface_test_sources)
@@ -591,6 +595,9 @@ REFERENCE_IMAGES = \
 	ft-text-vertical-layout-type3.svg.ref.png \
 	ft-text-vertical-layout-type3.xlib.ref.png \
 	get-group-target.ref.png \
+	gl-surface-source.rgb24.ref.png \
+	gl-surface-source.argb32.ref.png \
+	gl-surface-source.image16.ref.png \
 	glyph-cache-pressure.image16.ref.png \
 	glyph-cache-pressure.ps2.ref.png \
 	glyph-cache-pressure.ps3.ref.png \
