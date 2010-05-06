@@ -122,9 +122,40 @@ _cairo_set_error (cairo_t *cr, cairo_status_t status)
     _cairo_status_set_error (&cr->status, _cairo_error (status));
 }
 
-#if HAS_ATOMIC_OPS
 /* We keep a small stash of contexts to reduce malloc pressure */
 #define CAIRO_STASH_SIZE 4
+#if CAIRO_NO_MUTEX
+static struct {
+    cairo_t pool[CAIRO_STASH_SIZE];
+    int occupied;
+} _context_stash;
+
+static cairo_t *
+_context_get (void)
+{
+    int avail;
+
+    avail = ffs (~_context_stash.occupied) - 1;
+    if (avail >= CAIRO_STASH_SIZE)
+	return malloc (sizeof (cairo_t));
+
+    _context_stash.occupied |= 1 << avail;
+    return &_context_stash.pool[avail];
+}
+
+static void
+_context_put (cairo_t *cr)
+{
+    if (cr < &_context_stash.pool[0] ||
+	cr >= &_context_stash.pool[CAIRO_STASH_SIZE])
+    {
+	free (cr);
+	return;
+    }
+
+    _context_stash.occupied &= ~(1 << (cr - &_context_stash.pool[0]));
+}
+#elif HAS_ATOMIC_OPS
 static struct {
     cairo_t pool[CAIRO_STASH_SIZE];
     cairo_atomic_int_t occupied;
