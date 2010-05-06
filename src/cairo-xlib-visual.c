@@ -180,7 +180,7 @@ _cairo_xlib_visual_info_create (Display *dpy,
 }
 
 void
-_cairo_xlib_visual_info_destroy (Display *dpy, cairo_xlib_visual_info_t *info)
+_cairo_xlib_visual_info_destroy (cairo_xlib_visual_info_t *info)
 {
     /* No need for XFreeColors() whilst using DefaultColormap */
     free (info);

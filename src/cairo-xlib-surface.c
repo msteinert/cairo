@@ -415,8 +415,6 @@ _cairo_xlib_surface_finish (void *abstract_surface)
 
     cairo_device_release (&display->base);
 
-    _cairo_xlib_screen_destroy (surface->screen);
-
     cairo_region_destroy (surface->clip_region);
 
     return status;
@@ -2947,8 +2945,6 @@ _cairo_xlib_surface_create_internal (cairo_xlib_screen_t	*screen,
     cairo_xlib_surface_t *surface;
     cairo_xlib_display_t *display;
     cairo_status_t status;
-      
-    CAIRO_MUTEX_INITIALIZE ();
 
     if (depth == 0) {
 	if (xrender_format) {
@@ -3019,7 +3015,7 @@ found:
     surface->close_display_hook.func = _cairo_xlib_surface_detach_display;
     _cairo_xlib_add_close_display_hook (display,
 					&surface->close_display_hook);
-    
+
     cairo_device_release (&display->base);
 
     _cairo_surface_init (&surface->base,
@@ -3027,7 +3023,7 @@ found:
 			 screen->device,
 			 _xrender_format_to_content (xrender_format));
 
-    surface->screen = _cairo_xlib_screen_reference (screen);
+    surface->screen = screen;
 
     surface->drawable = drawable;
     surface->owns_pixmap = FALSE;
@@ -3161,7 +3157,6 @@ cairo_xlib_surface_create (Display     *dpy,
 {
     Screen *scr;
     cairo_xlib_screen_t *screen;
-    cairo_surface_t *surface;
     cairo_status_t status;
 
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX) {
@@ -3179,12 +3174,9 @@ cairo_xlib_surface_create (Display     *dpy,
 
     X_DEBUG ((dpy, "create (drawable=%x)", (unsigned int) drawable));
 
-    surface = _cairo_xlib_surface_create_internal (screen, drawable,
-						   visual, NULL,
-						   width, height, 0);
-    _cairo_xlib_screen_destroy (screen);
-
-    return surface;
+    return _cairo_xlib_surface_create_internal (screen, drawable,
+                                                visual, NULL,
+                                                width, height, 0);
 }
 slim_hidden_def (cairo_xlib_surface_create);
 
@@ -3209,7 +3201,6 @@ cairo_xlib_surface_create_for_bitmap (Display  *dpy,
 				      int	height)
 {
     cairo_xlib_screen_t *screen;
-    cairo_surface_t *surface;
     cairo_status_t status;
 
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
@@ -3221,12 +3212,9 @@ cairo_xlib_surface_create_for_bitmap (Display  *dpy,
 
     X_DEBUG ((dpy, "create_for_bitmap (drawable=%x)", (unsigned int) bitmap));
 
-    surface = _cairo_xlib_surface_create_internal (screen, bitmap,
-						   NULL, NULL,
-						   width, height, 1);
-    _cairo_xlib_screen_destroy (screen);
-
-    return surface;
+    return _cairo_xlib_surface_create_internal (screen, bitmap,
+                                                NULL, NULL,
+                                                width, height, 1);
 }
 
 #if CAIRO_HAS_XLIB_XRENDER_SURFACE
@@ -3259,7 +3247,6 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
 					       int		    height)
 {
     cairo_xlib_screen_t *screen;
-    cairo_surface_t *surface;
     cairo_status_t status;
 
     if (width > XLIB_COORD_MAX || height > XLIB_COORD_MAX)
@@ -3271,12 +3258,9 @@ cairo_xlib_surface_create_with_xrender_format (Display		    *dpy,
 
     X_DEBUG ((dpy, "create_with_xrender_format (drawable=%x)", (unsigned int) drawable));
 
-    surface = _cairo_xlib_surface_create_internal (screen, drawable,
-						   NULL, format,
-						   width, height, 0);
-    _cairo_xlib_screen_destroy (screen);
-
-    return surface;
+    return _cairo_xlib_surface_create_internal (screen, drawable,
+                                                NULL, format,
+                                                width, height, 0);
 }
 slim_hidden_def (cairo_xlib_surface_create_with_xrender_format);
 

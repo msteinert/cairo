@@ -73,10 +73,10 @@ _cairo_xlib_remove_close_display_hook_internal (cairo_xlib_display_t *display,
 static void
 _cairo_xlib_call_close_display_hooks (cairo_xlib_display_t *display)
 {
-    cairo_xlib_screen_t	    *screen;
-    cairo_xlib_hook_t		    *hook;
+    cairo_xlib_screen_t *screen;
+    cairo_xlib_hook_t *hook;
 
-    for (screen = display->screens; screen != NULL; screen = screen->next)
+    cairo_list_foreach_entry (screen, cairo_xlib_screen_t, &display->screens, link)
 	_cairo_xlib_screen_close_display (display, screen);
 
     while (TRUE) {
@@ -89,22 +89,6 @@ _cairo_xlib_call_close_display_hooks (cairo_xlib_display_t *display)
 	hook->func (display, hook);
     }
     display->closed = TRUE;
-}
-
-static void
-_cairo_xlib_display_discard_screens (cairo_xlib_display_t *display)
-{
-    cairo_xlib_screen_t *screens;
-
-    screens = display->screens;
-    display->screens = NULL;
-
-    while (screens != NULL) {
-	cairo_xlib_screen_t *screen = screens;
-	screens = screen->next;
-
-	_cairo_xlib_screen_destroy (screen);
-    }
 }
 
 static void
@@ -131,6 +115,12 @@ _cairo_xlib_display_destroy (void *abstract_display)
 	_cairo_freelist_free (&display->wq_freelist, job);
     }
     _cairo_freelist_fini (&display->wq_freelist);
+
+    while (! cairo_list_is_empty (&display->screens)) {
+	_cairo_xlib_screen_destroy (cairo_list_first_entry (&display->screens,
+                                                            cairo_xlib_screen_t,
+                                                            link));
+    }
 
     free (display);
 }
@@ -216,7 +206,6 @@ _cairo_xlib_close_display (Display *dpy, XExtCodes *codes)
 
       _cairo_xlib_display_notify (display);
       _cairo_xlib_call_close_display_hooks (display);
-      _cairo_xlib_display_discard_screens (display);
 
       /* catch any that arrived before marking the display as closed */
       _cairo_xlib_display_notify (display);
@@ -353,7 +342,7 @@ _cairo_xlib_device_create (Display *dpy)
 
     cairo_device_reference (&display->base); /* add one for the CloseDisplay */
     display->display = dpy;
-    display->screens = NULL;
+    cairo_list_init (&display->screens);
     display->workqueue = NULL;
     display->close_display_hooks = NULL;
     display->closed = FALSE;
@@ -610,56 +599,21 @@ _cairo_xlib_display_get_xrender_format (cairo_xlib_display_t	*display,
     return xrender_format;
 }
 
-void
-_cairo_xlib_display_remove_screen (cairo_xlib_display_t *display,
-				   cairo_xlib_screen_t *screen)
-{
-    cairo_xlib_screen_t **prev;
-    cairo_xlib_screen_t *list;
-
-    for (prev = &display->screens; (list = *prev); prev = &list->next) {
-	if (list == screen) {
-	    *prev = screen->next;
-	    break;
-	}
-    }
-}
-
-cairo_status_t
+cairo_xlib_screen_t *
 _cairo_xlib_display_get_screen (cairo_xlib_display_t *display,
-				Screen *screen,
-				cairo_xlib_screen_t **out)
+				Screen *screen)
 {
-    cairo_xlib_screen_t *info = NULL, **prev;
+    cairo_xlib_screen_t *info;
 
-    if (display->closed)
-	return _cairo_error (CAIRO_STATUS_SURFACE_FINISHED);
-
-    for (prev = &display->screens; (info = *prev); prev = &(*prev)->next) {
+    cairo_list_foreach_entry (info, cairo_xlib_screen_t, &display->screens, link) {
 	if (info->screen == screen) {
-	    /*
-	     * MRU the list
-	     */
-	    if (prev != &display->screens) {
-		*prev = info->next;
-		info->next = display->screens;
-		display->screens = info;
-	    }
-	    break;
-	}
+            if (display->screens.next != &info->link)
+                cairo_list_move (&info->link, &display->screens);
+            return info;
+        }
     }
 
-    *out = info;
-    return CAIRO_STATUS_SUCCESS;
-}
-
-
-void
-_cairo_xlib_display_add_screen (cairo_xlib_display_t *display,
-				cairo_xlib_screen_t *screen)
-{
-    screen->next = display->screens;
-    display->screens = screen;
+    return NULL;
 }
 
 void

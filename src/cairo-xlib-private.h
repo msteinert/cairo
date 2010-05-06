@@ -71,7 +71,7 @@ struct _cairo_xlib_display {
     cairo_xlib_display_t *next;
 
     Display *display;
-    cairo_xlib_screen_t *screens;
+    cairo_list_t screens;
 
     int render_major;
     int render_minor;
@@ -98,8 +98,7 @@ typedef struct _cairo_xlib_visual_info {
 } cairo_xlib_visual_info_t;
 
 struct _cairo_xlib_screen {
-    cairo_xlib_screen_t *next;
-    cairo_reference_count_t ref_count;
+    cairo_list_t link;
 
     cairo_device_t *device;
     Screen *screen;
@@ -116,18 +115,9 @@ struct _cairo_xlib_screen {
 cairo_private cairo_device_t *
 _cairo_xlib_device_create (Display *display);
 
-cairo_private void
-_cairo_xlib_display_add_screen (cairo_xlib_display_t *display,
-				cairo_xlib_screen_t *screen);
-
-cairo_private cairo_status_t
+cairo_private cairo_xlib_screen_t *
 _cairo_xlib_display_get_screen (cairo_xlib_display_t *display,
-				Screen *screen,
-				cairo_xlib_screen_t **out);
-
-cairo_private void
-_cairo_xlib_display_remove_screen (cairo_xlib_display_t *display,
-				   cairo_xlib_screen_t *screen);
+				Screen *screen);
 
 cairo_private void
 _cairo_xlib_add_close_display_hook (cairo_xlib_display_t *display, cairo_xlib_hook_t *hook);
@@ -170,8 +160,6 @@ _cairo_xlib_screen_get (Display *dpy,
 			Screen *screen,
 			cairo_xlib_screen_t **out);
 
-cairo_private cairo_xlib_screen_t *
-_cairo_xlib_screen_reference (cairo_xlib_screen_t *info);
 cairo_private void
 _cairo_xlib_screen_destroy (cairo_xlib_screen_t *info);
 
@@ -207,6 +195,6 @@ _cairo_xlib_visual_info_create (Display *dpy,
 				cairo_xlib_visual_info_t **out);
 
 cairo_private void
-_cairo_xlib_visual_info_destroy (Display *dpy, cairo_xlib_visual_info_t *info);
+_cairo_xlib_visual_info_destroy (cairo_xlib_visual_info_t *info);
 
 #endif /* CAIRO_XLIB_PRIVATE_H */

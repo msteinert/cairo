@@ -256,16 +256,6 @@ _cairo_xlib_init_screen_font_options (Display *dpy,
     cairo_font_options_set_hint_metrics (&info->font_options, CAIRO_HINT_METRICS_ON);
 }
 
-cairo_xlib_screen_t *
-_cairo_xlib_screen_reference (cairo_xlib_screen_t *info)
-{
-    assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&info->ref_count));
-
-    _cairo_reference_count_inc (&info->ref_count);
-
-    return info;
-}
-
 void
 _cairo_xlib_screen_close_display (cairo_xlib_display_t *display,
                                   cairo_xlib_screen_t  *info)
@@ -274,36 +264,24 @@ _cairo_xlib_screen_close_display (cairo_xlib_display_t *display,
     int i;
 
     dpy = display->display;
+
     for (i = 0; i < ARRAY_LENGTH (info->gc); i++) {
 	if ((info->gc_depths >> (8*i)) & 0xff)
 	    XFreeGC (dpy, info->gc[i]);
     }
     info->gc_depths = 0;
-
-    while (! cairo_list_is_empty (&info->visuals)) {
-        _cairo_xlib_visual_info_destroy (dpy,
-                                         cairo_list_first_entry (&info->visuals,
-                                                                 cairo_xlib_visual_info_t,
-                                                                 link));
-    }
 }
 
 void
 _cairo_xlib_screen_destroy (cairo_xlib_screen_t *info)
 {
-    cairo_xlib_display_t *display;
-
-    assert (CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&info->ref_count));
-
-    if (! _cairo_reference_count_dec_and_test (&info->ref_count))
-	return;
-
-    if (! _cairo_xlib_display_acquire (info->device, &display)) {
-        _cairo_xlib_display_remove_screen (display, info);
-        _cairo_xlib_screen_close_display (display, info);
-
-        cairo_device_release (&display->base);
+    while (! cairo_list_is_empty (&info->visuals)) {
+        _cairo_xlib_visual_info_destroy (cairo_list_first_entry (&info->visuals,
+                                                                 cairo_xlib_visual_info_t,
+                                                                 link));
     }
+
+    cairo_list_del (&info->link);
 
     free (info);
 }
@@ -327,12 +305,9 @@ _cairo_xlib_screen_get (Display *dpy,
     if (unlikely (status))
         goto CLEANUP_DEVICE;
 
-    status = _cairo_xlib_display_get_screen (display, screen, &info);
-    if (unlikely (status))
-	goto CLEANUP_DISPLAY;
-
+    info = _cairo_xlib_display_get_screen (display, screen);
     if (info != NULL) {
-	*out = _cairo_xlib_screen_reference (info);
+	*out = info;
 	goto CLEANUP_DISPLAY;
     }
 
@@ -342,7 +317,6 @@ _cairo_xlib_screen_get (Display *dpy,
 	goto CLEANUP_DISPLAY;
     }
 
-    CAIRO_REFERENCE_COUNT_INIT (&info->ref_count, 2); /* Add one for display cache */
     info->device = device;
     info->screen = screen;
     info->has_font_options = FALSE;
@@ -350,8 +324,7 @@ _cairo_xlib_screen_get (Display *dpy,
     memset (info->gc, 0, sizeof (info->gc));
 
     cairo_list_init (&info->visuals);
-
-    _cairo_xlib_display_add_screen (display, info);
+    cairo_list_add (&info->link, &display->screens);
 
     *out = info;
 
