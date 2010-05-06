@@ -280,6 +280,8 @@ _cairo_xlib_device_create (Display *dpy)
     XExtCodes *codes;
     const char *env;
 
+    CAIRO_MUTEX_INITIALIZE ();
+
     /* There is an apparent deadlock between this mutex and the
      * mutex for the display, but it's actually safe. For the
      * app to call XCloseDisplay() while any other thread is
