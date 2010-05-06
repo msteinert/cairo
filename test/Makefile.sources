@@ -228,6 +228,7 @@ test_sources = \
 	source-surface-scale-paint.c			\
 	spline-decomposition.c				\
 	subsurface.c                                    \
+	subsurface-image-repeat.c                       \
 	subsurface-repeat.c                             \
 	subsurface-reflect.c                            \
 	subsurface-pad.c                                \
