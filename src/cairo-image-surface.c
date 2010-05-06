@@ -1632,7 +1632,8 @@ _cairo_image_surface_fixup_unbounded (cairo_image_surface_t *dst,
 	int clip_x, clip_y;
 
 	clip_surface = _cairo_clip_get_surface (clip, &dst->base, &clip_x, &clip_y);
-	assert (clip_surface->status == CAIRO_STATUS_SUCCESS);
+	if (unlikely (clip_surface->status))
+	    return clip_surface->status;
 
 	mask = ((cairo_image_surface_t *) clip_surface)->pixman_image;
 	mask_x = -clip_x;
