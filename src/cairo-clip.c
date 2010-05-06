@@ -1067,7 +1067,8 @@ _cairo_clip_path_get_surface (cairo_clip_path_t *clip_path,
 	    int prev_tx, prev_ty;
 
 	    prev_surface = _cairo_clip_path_get_surface (prev, target, &prev_tx, &prev_ty);
-	    if (unlikely (prev_surface->status))
+	    status = prev_surface->status;
+	    if (unlikely (status))
 		goto BAIL;
 
 	    _cairo_pattern_init_for_surface (&pattern, prev_surface);
