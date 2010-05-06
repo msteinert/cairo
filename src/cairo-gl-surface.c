@@ -658,6 +658,8 @@ _cairo_gl_surface_draw_image (cairo_gl_surface_t *dst,
 	    glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	}
 
+	status = CAIRO_STATUS_SUCCESS;
+
 	_cairo_gl_set_destination (ctx, dst);
 
 	glGenTextures (1, &tex);
@@ -727,7 +729,7 @@ fail:
     if (clone)
         cairo_surface_destroy (&clone->base);
 
-    return CAIRO_STATUS_SUCCESS;
+    return status;
 }
 
 static cairo_status_t
@@ -1372,7 +1374,7 @@ _cairo_gl_operand_init (cairo_gl_context_t *ctx,
     case CAIRO_PATTERN_TYPE_LINEAR:
     case CAIRO_PATTERN_TYPE_RADIAL:
 	status = _cairo_gl_gradient_operand_init (ctx, operand, dst);
-	if (!_cairo_status_is_error (status))
+	if (status != CAIRO_INT_STATUS_UNSUPPORTED)
 	    return status;
 
 	/* fall through */
@@ -1846,26 +1848,27 @@ _cairo_gl_surface_composite_component_alpha (cairo_operator_t op,
     }
     mask_attributes = &setup.mask.operand.texture.attributes;
 
+    /* We'll fall back to fixed function instead. */
+    ca_source_program = NULL;
+    ca_source_alpha_program = NULL;
+
     status = _cairo_gl_get_program (ctx,
 				    setup.src.source,
 				    setup.mask.mask,
 				    CAIRO_GL_SHADER_IN_CA_SOURCE,
 				    &ca_source_program);
-    if (!_cairo_status_is_error (status)) {
-	status = _cairo_gl_get_program (ctx,
-					setup.src.source,
-					setup.mask.mask,
-					CAIRO_GL_SHADER_IN_CA_SOURCE_ALPHA,
-					&ca_source_alpha_program);
-	if (_cairo_status_is_error (status)) {
-	    /* We'll fall back to fixed function instead. */
-	    ca_source_program = NULL;
-	    status = CAIRO_STATUS_SUCCESS;
-	}
-    } else {
-	/* We'll fall back to fixed function instead. */
-	status = CAIRO_STATUS_SUCCESS;
-    }
+    if (_cairo_status_is_error (status))
+	goto CLEANUP;
+
+    status = _cairo_gl_get_program (ctx,
+				    setup.src.source,
+				    setup.mask.mask,
+				    CAIRO_GL_SHADER_IN_CA_SOURCE_ALPHA,
+				    &ca_source_alpha_program);
+    if (_cairo_status_is_error (status))
+	goto CLEANUP;
+
+    status = CAIRO_STATUS_SUCCESS;
 
     _cairo_gl_set_destination (ctx, dst);
 
@@ -2077,16 +2080,17 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 	setup.mask.mask = CAIRO_GL_SHADER_MASK_NONE;
     }
 
+    /* We'll fall back to fixed function instead. */
+    setup.shader = NULL;
     status = _cairo_gl_get_program (ctx,
 				    setup.src.source,
 				    setup.mask.mask,
 				    CAIRO_GL_SHADER_IN_NORMAL,
 				    &setup.shader);
-    if (_cairo_status_is_error (status)) {
-	/* We'll fall back to fixed function instead. */
-	setup.shader = NULL;
-	status = CAIRO_STATUS_SUCCESS;
-    }
+    if (_cairo_status_is_error (status))
+	goto CLEANUP_SHADER;
+
+    status = CAIRO_STATUS_SUCCESS;
 
     _cairo_gl_set_destination (ctx, dst);
     _cairo_gl_set_operator (dst, op, FALSE);
@@ -2234,6 +2238,9 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
     while ((err = glGetError ()))
 	fprintf (stderr, "GL error 0x%08x\n", (int) err);
 
+    if (vertices != vertices_stack)
+	free (vertices);
+
   CLEANUP_SHADER:
     _cairo_gl_operand_destroy (&setup.src);
     if (mask != NULL)
@@ -2241,9 +2248,7 @@ _cairo_gl_surface_composite (cairo_operator_t		  op,
 
     _cairo_gl_context_release (ctx);
 
-    if (vertices != vertices_stack)
-	free (vertices);
-
+    assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
     return status;
 }
 
@@ -2298,6 +2303,7 @@ _cairo_gl_surface_composite_trapezoids (cairo_operator_t op,
 
     _cairo_pattern_fini (&traps_pattern.base);
 
+    assert (status != CAIRO_INT_STATUS_UNSUPPORTED);
     return status;
 }
 
