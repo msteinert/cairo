@@ -101,7 +101,6 @@ struct _cairo_xlib_screen {
 
     cairo_device_t *device;
     Screen *screen;
-    cairo_bool_t has_render;
 
     cairo_bool_t has_font_options;
     cairo_font_options_t font_options;

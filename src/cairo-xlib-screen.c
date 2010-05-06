@@ -167,16 +167,16 @@ _cairo_xlib_init_screen_font_options (Display *dpy,
 
     if (!get_integer_default (dpy, "rgba", &xft_rgba))
     {
+        cairo_xlib_display_t *display = (cairo_xlib_display_t *) info->device;
+
 	xft_rgba = FC_RGBA_UNKNOWN;
 
 #if RENDER_MAJOR > 0 || RENDER_MINOR >= 6
-	if (info->has_render)
-	{
+        if (display->render_major > 0 || display->render_minor >= 6) {
 	    int render_order = XRenderQuerySubpixelOrder (dpy,
 							  XScreenNumberOfScreen (info->screen));
 
-	    switch (render_order)
-	    {
+	    switch (render_order) {
 	    default:
 	    case SubPixelUnknown:
 		xft_rgba = FC_RGBA_UNKNOWN;
@@ -350,21 +350,12 @@ _cairo_xlib_screen_get (Display *dpy,
     CAIRO_REFERENCE_COUNT_INIT (&info->ref_count, 2); /* Add one for display cache */
     info->device = device;
     info->screen = screen;
-    info->has_render = FALSE;
     info->has_font_options = FALSE;
     info->gc_depths = 0;
     memset (info->gc, 0, sizeof (info->gc));
 
     _cairo_array_init (&info->visuals,
 		       sizeof (cairo_xlib_visual_info_t*));
-
-    if (screen) {
-	int event_base, error_base;
-
-	info->has_render =
-	    XRenderQueryExtension (dpy, &event_base, &error_base) &&
-	    (XRenderFindVisualFormat (dpy, DefaultVisual (dpy, DefaultScreen (dpy))) != 0);
-    }
 
     _cairo_xlib_display_add_screen (display, info);
 
