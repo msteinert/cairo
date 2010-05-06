@@ -182,6 +182,8 @@ slim_hidden_def (cairo_device_finish);
 void
 cairo_device_destroy (cairo_device_t *device)
 {
+    cairo_user_data_array_t user_data;
+
     if (device == NULL ||
 	CAIRO_REFERENCE_COUNT_IS_INVALID (&device->ref_count))
     {
@@ -194,12 +196,15 @@ cairo_device_destroy (cairo_device_t *device)
 
     cairo_device_finish (device);
 
-    _cairo_user_data_array_fini (&device->user_data);
-
     assert (device->mutex_depth == 0);
     CAIRO_MUTEX_FINI (device->mutex);
 
+    user_data = device->user_data;
+
     device->backend->destroy (device);
+
+    _cairo_user_data_array_fini (&user_data);
+
 }
 slim_hidden_def (cairo_device_destroy);
 

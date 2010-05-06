@@ -592,10 +592,10 @@ cairo_surface_destroy (cairo_surface_t *surface)
     /* paranoid check that nobody took a reference whilst finishing */
     assert (! CAIRO_REFERENCE_COUNT_HAS_REFERENCE (&surface->ref_count));
 
-    cairo_device_destroy (surface->device);
-
     _cairo_user_data_array_fini (&surface->user_data);
     _cairo_user_data_array_fini (&surface->mime_data);
+
+    cairo_device_destroy (surface->device);
 
     free (surface);
 }
