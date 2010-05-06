@@ -133,10 +133,11 @@ _create_composite_mask_pattern (cairo_surface_pattern_t       *mask_pattern,
 
     if (clip != NULL) {
 	status = _cairo_clip_get_region (clip, &clip_region);
-	assert (! _cairo_status_is_error (status));
-
-	/* The all-clipped state should never propagate this far. */
-	assert (status != CAIRO_INT_STATUS_NOTHING_TO_DO);
+	if (unlikely (_cairo_status_is_error (status) ||
+		      status == CAIRO_INT_STATUS_NOTHING_TO_DO))
+	{
+	    return status;
+	}
 
 	clip_surface = status == CAIRO_INT_STATUS_UNSUPPORTED;
     }
@@ -346,11 +347,12 @@ _clip_and_composite_source (cairo_clip_t                  *clip,
 
     if (clip != NULL) {
 	status = _cairo_clip_get_region (clip, &clip_region);
-	assert (! _cairo_status_is_error (status));
-	if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
-	    return CAIRO_STATUS_SUCCESS;
+	if (unlikely (_cairo_status_is_error (status) ||
+		      status == CAIRO_INT_STATUS_NOTHING_TO_DO))
+	{
+	    return status;
+	}
     }
-
 
     /* Create a surface that is mask IN clip */
     status = _create_composite_mask_pattern (&mask_pattern,
@@ -444,9 +446,11 @@ _clip_and_composite (cairo_clip_t                  *clip,
 
 	if (clip != NULL) {
 	    status = _cairo_clip_get_region (clip, &clip_region);
-	    assert (! _cairo_status_is_error (status));
-	    if (unlikely (status == CAIRO_INT_STATUS_NOTHING_TO_DO))
-		return CAIRO_STATUS_SUCCESS;
+	    if (unlikely (_cairo_status_is_error (status) ||
+			  status == CAIRO_INT_STATUS_NOTHING_TO_DO))
+	    {
+		return status;
+	    }
 
 	    clip_surface = status == CAIRO_INT_STATUS_UNSUPPORTED;
 	}
