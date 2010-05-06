@@ -366,10 +366,6 @@ _cairo_xlib_screen_get (Display *dpy,
 	    (XRenderFindVisualFormat (dpy, DefaultVisual (dpy, DefaultScreen (dpy))) != 0);
     }
 
-    /* Small window of opportunity for two screen infos for the same
-     * Screen - just wastes a little bit of memory but should not cause
-     * any corruption.
-     */
     _cairo_xlib_display_add_screen (display, info);
 
     *out = info;
