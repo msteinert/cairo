@@ -32,17 +32,12 @@
 struct closure {
     Display *dpy;
     GLXContext ctx;
-
-    cairo_device_t *device;
 };
 
 static void
 cleanup (void *data)
 {
     struct closure *arg = data;
-
-    cairo_device_finish (arg->device);
-    cairo_device_destroy (arg->device);
 
     glXDestroyContext (arg->dpy, arg->ctx);
     XCloseDisplay (arg->dpy);
@@ -65,6 +60,7 @@ create_source_surface (int size)
     XVisualInfo *visinfo;
     GLXContext ctx;
     struct closure *arg;
+    cairo_device_t *device;
     cairo_surface_t *surface;
     Display *dpy;
 
@@ -89,20 +85,20 @@ create_source_surface (int size)
     arg = xmalloc (sizeof (struct closure));
     arg->dpy = dpy;
     arg->ctx = ctx;
-    arg->device = cairo_glx_device_create (dpy, ctx);
-    surface = cairo_gl_surface_create (arg->device,
-				       CAIRO_CONTENT_COLOR_ALPHA,
-				       size, size);
-
-    if (cairo_surface_set_user_data (surface,
-				     (cairo_user_data_key_t *) create_source_surface,
-				     arg,
-				     cleanup))
+    device = cairo_glx_device_create (dpy, ctx);
+    if (cairo_device_set_user_data (device,
+				    (cairo_user_data_key_t *) cleanup,
+				    arg,
+				    cleanup))
     {
-	cairo_surface_destroy (surface);
 	cleanup (arg);
 	return NULL;
     }
+
+    surface = cairo_gl_surface_create (device,
+				       CAIRO_CONTENT_COLOR_ALPHA,
+				       size, size);
+    cairo_device_destroy (device);
 
     return surface;
 }
