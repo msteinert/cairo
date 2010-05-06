@@ -62,6 +62,8 @@ draw (cairo_t *cr, int width, int height)
     cairo_set_source_rgba (cr, 0, 0, 1, .5);
     cairo_paint (cr);
 
+    cairo_destroy (cr2);
+
     return CAIRO_TEST_SUCCESS;
 }
 
