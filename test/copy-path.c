@@ -100,25 +100,25 @@ draw (cairo_t *cr, int width, int height)
      * propagate the error. */
     cr_error = cairo_create (NULL);
     path = cairo_copy_path (cr_error);
-    if (path->status == CAIRO_STATUS_SUCCESS ||
-	path->status != cairo_status (cr_error)) {
+    if (path->status != CAIRO_STATUS_NULL_POINTER) {
 	cairo_test_log (ctx,
 			"Error: cairo_copy_path returned status of %s rather than propagating %s\n",
 			cairo_status_to_string (path->status),
-			cairo_status_to_string (cairo_status (cr_error)));
+			cairo_status_to_string (CAIRO_STATUS_NULL_POINTER));
 	cairo_path_destroy (path);
+	cairo_destroy (cr_error);
 	return CAIRO_TEST_FAILURE;
     }
     cairo_path_destroy (path);
 
     path = cairo_copy_path_flat (cr_error);
-    if (path->status == CAIRO_STATUS_SUCCESS ||
-	path->status != cairo_status (cr_error)) {
+    if (path->status != CAIRO_STATUS_NULL_POINTER) {
 	cairo_test_log (ctx,
 			"Error: cairo_copy_path_flat returned status of %s rather than propagating %s\n",
 			cairo_status_to_string (path->status),
-			cairo_status_to_string (cairo_status (cr_error)));
+			cairo_status_to_string (CAIRO_STATUS_NULL_POINTER));
 	cairo_path_destroy (path);
+	cairo_destroy (cr_error);
 	return CAIRO_TEST_FAILURE;
     }
     cairo_path_destroy (path);
@@ -129,11 +129,12 @@ draw (cairo_t *cr, int width, int height)
     cairo_new_path (cr);
     path = cairo_copy_path (cr);
     if (path->status != CAIRO_STATUS_SUCCESS) {
+	cairo_status_t status = path->status;
 	cairo_test_log (ctx,
 			"Error: cairo_copy_path returned status of %s\n",
-			cairo_status_to_string (path->status));
+			cairo_status_to_string (status));
 	cairo_path_destroy (path);
-	return CAIRO_TEST_FAILURE;
+	return cairo_test_status_from_status (ctx, status);
     }
     if (path->num_data != 0) {
 	cairo_test_log (ctx,
@@ -148,7 +149,7 @@ draw (cairo_t *cr, int width, int height)
 	cairo_test_log (ctx,
 			"Error: cairo_append_path failed with a copy of an empty path, returned status of %s\n",
 			cairo_status_to_string (cairo_status (cr)));
-	return CAIRO_TEST_FAILURE;
+	return cairo_test_status_from_status (ctx, cairo_status (cr));
     }
 
     /* We draw in the default black, so paint white first. */
@@ -206,38 +207,52 @@ preamble (cairo_test_context_t *ctx)
     cairo_status_t status;
 
     surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 1, 1);
+    status = cairo_surface_status (surface);
+    if (status) {
+	cairo_surface_destroy (surface);
+	return cairo_test_status_from_status (ctx, status);
+    }
 
     /* Test a few error cases for cairo_append_path_data */
-    cr = cairo_create (surface);
+#define CAIRO_CREATE() do {\
+    cr = cairo_create (surface); \
+    status = cairo_status (cr); \
+    if (status) { \
+	cairo_destroy (cr); \
+	cairo_surface_destroy (surface); \
+	return cairo_test_status_from_status (ctx, status); \
+    } \
+} while (0)
+    CAIRO_CREATE ();
     cairo_append_path (cr, NULL);
     status = cairo_status (cr);
     cairo_destroy (cr);
     if (status != CAIRO_STATUS_NULL_POINTER) {
 	cairo_surface_destroy (surface);
-	return CAIRO_TEST_FAILURE;
+	return cairo_test_status_from_status (ctx, status);
     }
 
-    cr = cairo_create (surface);
+    CAIRO_CREATE ();
     path.status = -1;
     cairo_append_path (cr, &path);
     status = cairo_status (cr);
     cairo_destroy (cr);
     if (status != CAIRO_STATUS_INVALID_STATUS) {
 	cairo_surface_destroy (surface);
-	return CAIRO_TEST_FAILURE;
+	return cairo_test_status_from_status (ctx, status);
     }
 
-    cr = cairo_create (surface);
+    CAIRO_CREATE ();
     path.status = CAIRO_STATUS_NO_MEMORY;
     cairo_append_path (cr, &path);
     status = cairo_status (cr);
     cairo_destroy (cr);
     if (status != CAIRO_STATUS_NO_MEMORY) {
 	cairo_surface_destroy (surface);
-	return CAIRO_TEST_FAILURE;
+	return cairo_test_status_from_status (ctx, status);
     }
 
-    cr = cairo_create (surface);
+    CAIRO_CREATE ();
     path.data = NULL;
     path.num_data = 0;
     path.status = CAIRO_STATUS_SUCCESS;
@@ -246,10 +261,10 @@ preamble (cairo_test_context_t *ctx)
     cairo_destroy (cr);
     if (status != CAIRO_STATUS_SUCCESS) {
 	cairo_surface_destroy (surface);
-	return CAIRO_TEST_FAILURE;
+	return cairo_test_status_from_status (ctx, status);
     }
 
-    cr = cairo_create (surface);
+    CAIRO_CREATE ();
     path.data = NULL;
     path.num_data = 1;
     path.status = CAIRO_STATUS_SUCCESS;
@@ -258,10 +273,10 @@ preamble (cairo_test_context_t *ctx)
     cairo_destroy (cr);
     if (status != CAIRO_STATUS_NULL_POINTER) {
 	cairo_surface_destroy (surface);
-	return CAIRO_TEST_FAILURE;
+	return cairo_test_status_from_status (ctx, status);
     }
 
-    cr = cairo_create (surface);
+    CAIRO_CREATE ();
     /* Intentionally insert bogus header.length value (otherwise would be 2) */
     data.header.type = CAIRO_PATH_MOVE_TO;
     data.header.length = 1;
@@ -272,18 +287,18 @@ preamble (cairo_test_context_t *ctx)
     cairo_destroy (cr);
     if (status != CAIRO_STATUS_INVALID_PATH_DATA) {
 	cairo_surface_destroy (surface);
-	return CAIRO_TEST_FAILURE;
+	return cairo_test_status_from_status (ctx, status);
     }
 
     /* And test the degnerate case */
-    cr = cairo_create (surface);
+    CAIRO_CREATE ();
     path.num_data = 0;
     cairo_append_path (cr, &path);
     status = cairo_status (cr);
     cairo_destroy (cr);
     if (status != CAIRO_STATUS_SUCCESS) {
 	cairo_surface_destroy (surface);
-	return CAIRO_TEST_FAILURE;
+	return cairo_test_status_from_status (ctx, status);
     }
 
     cairo_surface_destroy (surface);
