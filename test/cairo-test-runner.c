@@ -94,6 +94,7 @@ typedef struct _cairo_test_runner {
     cairo_bool_t list_only;
     cairo_bool_t full_test;
     cairo_bool_t exact_test_names;
+    cairo_bool_t force_pass;
 } cairo_test_runner_t;
 
 typedef enum {
@@ -532,6 +533,9 @@ _runner_fini (cairo_test_runner_t *runner)
 
     cairo_test_fini (&runner->base);
 
+    if (runner->force_pass)
+	return CAIRO_TEST_SUCCESS;
+
     return runner->num_failed + runner->num_crashed ?
 	CAIRO_TEST_FAILURE :
 	runner->num_passed + runner->num_xfailed ?
@@ -670,6 +674,12 @@ main (int argc, char **argv)
 	if (strstr (env, "exit-on-failure")) {
 	    runner.exit_on_failure = TRUE;
 	}
+    }
+
+    if (getenv ("CAIRO_TEST_FORCE_PASS")) {
+	const char *env = getenv ("CAIRO_TEST_FORCE_PASS");
+
+	runner.force_pass = atoi (env);
     }
 
     _parse_cmdline (&runner, &argc, &argv);
