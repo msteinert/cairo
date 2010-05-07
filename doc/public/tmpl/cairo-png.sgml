@@ -20,6 +20,9 @@ any surface to a PNG file.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### SECTION Image ##### -->
+
+
 <!-- ##### MACRO CAIRO_HAS_PNG_FUNCTIONS ##### -->
 <para>
 Defined if the PNG functions are available.

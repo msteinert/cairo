@@ -20,6 +20,9 @@ Apple OS X Quartz rendering system.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### SECTION Image ##### -->
+
+
 <!-- ##### MACRO CAIRO_HAS_QUARTZ_SURFACE ##### -->
 <para>
 Defined if the Quartz surface backend is available.

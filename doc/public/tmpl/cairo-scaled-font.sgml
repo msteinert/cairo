@@ -22,6 +22,9 @@ size and transformation and a certain set of font options.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### SECTION Image ##### -->
+
+
 <!-- ##### TYPEDEF cairo_scaled_font_t ##### -->
 <para>
 

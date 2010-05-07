@@ -29,6 +29,9 @@ The cairo drawing context
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### SECTION Image ##### -->
+
+
 <!-- ##### TYPEDEF cairo_t ##### -->
 <para>
 

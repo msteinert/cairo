@@ -20,6 +20,9 @@ PostScript files and is a multi-page vector surface backend.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### SECTION Image ##### -->
+
+
 <!-- ##### MACRO CAIRO_HAS_PS_SURFACE ##### -->
 <para>
 Defined if the PostScript surface backend is available.

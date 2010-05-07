@@ -20,6 +20,9 @@ Microsoft Windows systems.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### SECTION Image ##### -->
+
+
 <!-- ##### MACRO CAIRO_HAS_WIN32_FONT ##### -->
 <para>
 Defined if the Microsoft Windows font backend is available.

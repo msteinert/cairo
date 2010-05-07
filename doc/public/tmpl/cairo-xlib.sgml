@@ -24,6 +24,9 @@ if it is available.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### SECTION Image ##### -->
+
+
 <!-- ##### MACRO CAIRO_HAS_XLIB_SURFACE ##### -->
 <para>
 Defined if the Xlib surface backend is available.

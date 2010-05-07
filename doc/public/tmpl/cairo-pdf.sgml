@@ -20,6 +20,9 @@ PDF files and is a multi-page vector surface backend.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### SECTION Image ##### -->
+
+
 <!-- ##### MACRO CAIRO_HAS_PDF_SURFACE ##### -->
 <para>
 Defined if the PDF surface backend is available.

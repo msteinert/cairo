@@ -24,6 +24,9 @@ if it is available.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### SECTION Image ##### -->
+
+
 <!-- ##### MACRO CAIRO_HAS_XLIB_XRENDER_SURFACE ##### -->
 <para>
 Defined if the XLib/XRender surface functions are available.

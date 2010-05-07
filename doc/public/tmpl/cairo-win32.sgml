@@ -29,6 +29,9 @@ The surface returned by the other win32 constructors is of surface type
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### SECTION Image ##### -->
+
+
 <!-- ##### MACRO CAIRO_HAS_WIN32_SURFACE ##### -->
 <para>
 Defined if the Microsoft Windows surface backend is available.

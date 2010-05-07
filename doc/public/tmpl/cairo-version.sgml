@@ -117,6 +117,9 @@ if (cairo_version() >= CAIRO_VERSION_ENCODE(1, 0, 0))
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### SECTION Image ##### -->
+
+
 <!-- ##### MACRO CAIRO_VERSION ##### -->
 <para>
 The version of cairo available at compile-time, encoded using
@@ -187,6 +190,7 @@ The parameters to this macro must expand to numerical literals.
 
 </para>
 
+@void: 
 @Returns: 
 
 
@@ -195,6 +199,7 @@ The parameters to this macro must expand to numerical literals.
 
 </para>
 
+@void: 
 @Returns: 
 
 

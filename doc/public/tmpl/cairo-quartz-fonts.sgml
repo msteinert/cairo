@@ -21,6 +21,9 @@ implementation of the font backend methods.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### SECTION Image ##### -->
+
+
 <!-- ##### MACRO CAIRO_HAS_QUARTZ_FONT ##### -->
 <para>
 Defined if the Quartz font backend is available.

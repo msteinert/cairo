@@ -20,6 +20,9 @@ SVG files and is a multi-page vector surface backend.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### SECTION Image ##### -->
+
+
 <!-- ##### MACRO CAIRO_HAS_SVG_SURFACE ##### -->
 <para>
 Defined if the SVG surface backend is available.

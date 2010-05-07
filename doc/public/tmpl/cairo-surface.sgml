@@ -27,6 +27,9 @@ cairo_<emphasis>backend</emphasis>_surface_create().
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### SECTION Image ##### -->
+
+
 <!-- ##### MACRO CAIRO_MIME_TYPE_JP2 ##### -->
 <para>
 The Joint Photographic Experts Group (JPEG) 2000 image coding standard (ISO/IEC 15444-1). Since 1.10
@@ -224,6 +227,12 @@ URI for an image file (unofficial MIME type). Since 1.10
 @CAIRO_SURFACE_TYPE_SCRIPT: 
 @CAIRO_SURFACE_TYPE_QT: 
 @CAIRO_SURFACE_TYPE_RECORDING: 
+@CAIRO_SURFACE_TYPE_VG: 
+@CAIRO_SURFACE_TYPE_GL: 
+@CAIRO_SURFACE_TYPE_DRM: 
+@CAIRO_SURFACE_TYPE_TEE: 
+@CAIRO_SURFACE_TYPE_XML: 
+@CAIRO_SURFACE_TYPE_SKIA: 
 
 <!-- ##### FUNCTION cairo_surface_get_type ##### -->
 <para>

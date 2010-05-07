@@ -22,6 +22,9 @@ other application to draw "funky" fonts.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### SECTION Image ##### -->
+
+
 <!-- ##### MACRO CAIRO_HAS_USER_FONT ##### -->
 <para>
 Defined if the user font backend is available.
@@ -88,6 +91,7 @@ this feature (1.8 and later).
 
 </para>
 
+@void: 
 @Returns: 
 
 

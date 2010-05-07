@@ -22,6 +22,9 @@ output on a particular display.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### SECTION Image ##### -->
+
+
 <!-- ##### TYPEDEF cairo_font_options_t ##### -->
 <para>
 
@@ -33,6 +36,7 @@ output on a particular display.
 
 </para>
 
+@void: 
 @Returns: 
 
 

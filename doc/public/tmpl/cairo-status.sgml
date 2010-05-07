@@ -33,6 +33,9 @@ code is required before or after each individual cairo function call.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### SECTION Image ##### -->
+
+
 <!-- ##### ENUM cairo_status_t ##### -->
 <para>
 
@@ -72,6 +75,8 @@ code is required before or after each individual cairo function call.
 @CAIRO_STATUS_INVALID_WEIGHT: 
 @CAIRO_STATUS_INVALID_SIZE: 
 @CAIRO_STATUS_USER_FONT_NOT_IMPLEMENTED: 
+@CAIRO_STATUS_DEVICE_TYPE_MISMATCH: 
+@CAIRO_STATUS_DEVICE_ERROR: 
 @CAIRO_STATUS_LAST_STATUS: 
 
 <!-- ##### FUNCTION cairo_status_to_string ##### -->
@@ -88,5 +93,6 @@ code is required before or after each individual cairo function call.
 
 </para>
 
+@void: 
 
 

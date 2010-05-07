@@ -45,6 +45,9 @@ Cairo has two sets of text rendering capabilities:
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### SECTION Image ##### -->
+
+
 <!-- ##### STRUCT cairo_glyph_t ##### -->
 <para>
 

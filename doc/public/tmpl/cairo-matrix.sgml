@@ -33,6 +33,9 @@ Generic matrix operations
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### SECTION Image ##### -->
+
+
 <!-- ##### STRUCT cairo_matrix_t ##### -->
 <para>
 

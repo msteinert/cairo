@@ -20,6 +20,9 @@ systems, but can be used on other platforms too.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### SECTION Image ##### -->
+
+
 <!-- ##### MACRO CAIRO_HAS_FT_FONT ##### -->
 <para>
 Defined if the FreeType font backend is available.

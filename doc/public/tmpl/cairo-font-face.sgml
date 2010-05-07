@@ -28,6 +28,9 @@ cairo_get_font_face().
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### SECTION Image ##### -->
+
+
 <!-- ##### TYPEDEF cairo_font_face_t ##### -->
 <para>
 

@@ -28,6 +28,9 @@ cairo_set_source_<emphasis>type</emphasis>() functions.
 <!-- ##### SECTION Stability_Level ##### -->
 
 
+<!-- ##### SECTION Image ##### -->
+
+
 <!-- ##### TYPEDEF cairo_pattern_t ##### -->
 <para>
 
