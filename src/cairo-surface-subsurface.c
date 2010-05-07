@@ -522,12 +522,12 @@ cairo_surface_create_for_rectangle (cairo_surface_t *target,
 	surface->extents.x += sub->extents.x;
 	surface->extents.y += sub->extents.y;
 	target = sub->target;
+    } else {
+	ret = _cairo_matrix_is_integer_translation (&target->device_transform, &tx, &ty);
+	assert (ret);
+	surface->extents.x += tx;
+	surface->extents.y += ty;
     }
-
-    ret = _cairo_matrix_is_integer_translation (&target->device_transform, &tx, &ty);
-    assert (ret);
-    surface->extents.x += tx;
-    surface->extents.y += ty;
 
     surface->target = cairo_surface_reference (target);
     surface->owns_target = FALSE;
