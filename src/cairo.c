@@ -70,6 +70,26 @@ static const cairo_t _cairo_nil = {
   }}
 };
 
+static const cairo_t _cairo_nil__null_pointer = {
+  CAIRO_REFERENCE_COUNT_INVALID,	/* ref_count */
+  CAIRO_STATUS_NULL_POINTER,	/* status */
+  { 0, 0, 0, NULL },		/* user_data */
+  NULL,				/* gstate */
+  {{ 0 }, { 0 }},		/* gstate_tail */
+  NULL,				/* gstate_freelist */
+  {{				/* path */
+    { 0, 0 },			/* last_move_point */
+    { 0, 0 },			/* current point */
+    FALSE,			/* has_current_point */
+    FALSE,			/* has_last_move_point */
+    FALSE,			/* has_curve_to */
+    FALSE,			/* is_box */
+    FALSE,			/* maybe_fill_region */
+    TRUE,			/* is_empty_fill */
+    { {0, 0}, {0, 0}},		/* extents */
+    {{{NULL,NULL}}}		/* link */
+  }}
+};
 #include <assert.h>
 
 /**
@@ -231,7 +251,9 @@ cairo_create (cairo_surface_t *target)
     cairo_status_t status;
 
     /* special case OOM in order to avoid another allocation */
-    if (target && target->status == CAIRO_STATUS_NO_MEMORY)
+    if (target == NULL)
+	return (cairo_t *) &_cairo_nil__null_pointer;
+    if (target->status == CAIRO_STATUS_NO_MEMORY)
 	return (cairo_t *) &_cairo_nil;
 
     cr = _context_get ();
